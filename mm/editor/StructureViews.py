@@ -242,6 +242,17 @@ class SeqWidget(StructureObjWidget):
         if self.root.dropbox:
             self.dropbox.draw(display_list);
 
+    def get_nearest_node_index(self, pos):
+        # Return the index of the node at the specific drop position.
+        assert self.is_hit(pos);
+        x,y = pos;
+        # Working from left to right:
+        for i in range(len(self.children)):
+            l,t,w,h = self.children[i].get_box();
+            if x <= l+(w/2.0):
+                return i;
+        return -1;
+
     def get_minsize(self):
         # Return the minimum size that I can be.
 
@@ -394,6 +405,7 @@ class DropBoxWidget(Interactive.Interactive):
         return sizes_notime.MINSIZE, sizes_notime.MINSIZE;
     # Hmm.. as I said. Easy.
         
+
 class VerticalWidget(StructureObjWidget):
     def get_minsize(self):
         # Return the minimum size that I can be.
@@ -425,6 +437,17 @@ class VerticalWidget(StructureObjWidget):
         #assert min_height < 1.0 and min_height > 0.0
 
         return min_width, min_height
+
+    def get_nearest_node_index(self, pos):
+        # Return the index of the node at the specific drop position.
+        assert self.is_hit(pos);
+        x,y = pos;
+        # Working from left to right:
+        for i in range(len(self.children)):
+            l,t,w,h = self.children[i].get_box();
+            if y <= t+(h/2.0):
+                return i;
+        return -1;
 
     def get_minsize_abs(self):
         mw=0; mh=0

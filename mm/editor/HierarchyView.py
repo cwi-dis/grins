@@ -500,7 +500,6 @@ class HierarchyView(HierarchyViewDialog):
 
 	def dropfile(self, maybenode, window, event, params):
 		# Called when a file is dragged-and-dropped onto this HeirachyView
-
 		x, y, filename = params
 
 		if maybenode is not None:
@@ -557,13 +556,15 @@ class HierarchyView(HierarchyViewDialog):
 				# if no such child, return -1 (which means
 				# at the end)
 
-				children = obj.node.children
-				for i in range(len(children)):
-					box = children[i].views['struct_view'].get_box();
-					if (x,y)[not horizontal] <= (box[not horizontal] + box[(not horizontal) + 2]) / 2:
-						break
-				else:
-					i = -1
+				i = obj.get_nearest_node_index((x,y));
+
+##				children = obj.node.children
+##				for i in range(len(children)):
+##					box = children[i].views['struct_view'].get_box();
+##					if (x,y)[not horizontal] <= (box[not horizontal] + box[(not horizontal) + 2]) / 2:
+##						break
+##				else:
+##					i = -1
 			self.create(0, url, i)
 		else:
 			# check that URL compatible with node's channel
@@ -675,8 +676,7 @@ class HierarchyView(HierarchyViewDialog):
 		Clipboard.setclip('node', node.DeepCopy())
 		self.aftersetfocus()
 
-		print "TODO: should HierarchyView.py commit the Editmanager??"
-
+		
 	def create(self, where, url = None, index = -1, chtype = None, ntype = None):
 		# Create a new node in the Structure view.
 		# (assuming..) 'where' is -1:before, 0:here, 1:after. -mjvdg
@@ -797,7 +797,6 @@ class HierarchyView(HierarchyViewDialog):
 			if not lightweight:
 				import AttrEdit
 				AttrEdit.showattreditor(self.toplevel, node, chtype = chtype)
-		print "DEBUG: Should HierarchyView.create() commit??";
 
 	def insertparent(self, type):
 		node = self.focusnode
@@ -920,8 +919,18 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Copy node at position src to position dst
 	def copynode(self, dst, src):
+		print """
+TODO:
+    This copies a node. Should it move the node instead?
+    This should also be done in the MMNode structure, not here.
+    Drop on a sequence view -> seqview.node.insertat(index, newnode);
+    or: drop on a MMNode -> Clobber it. MMNode.replace_with(newnode);
+    for example.
+    """
+		
 		xd, yd = dst
 		xs, ys = src
+		# Problem: dstobj will be an internal node.
 		dstobj = self.whichhit(xd, yd)
 		srcobj = self.whichhit(xs, ys)
 
@@ -1075,7 +1084,6 @@ class HierarchyView(HierarchyViewDialog):
 		# Now a bad hack.
 		# Return the scene object which is at position x,y.
 		# Used for dragging and dropping objects.
-		print "TODO: better to call self.scene_graph.get_obj_at.. directly.."
 		return self.scene_graph.get_obj_at((x,y))
 		
 ##		hitobj = None
