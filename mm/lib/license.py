@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # License dialog
 import string
 import sys
