@@ -258,10 +258,7 @@ class SvgEllipse(SvgElement):
 
 		rx, ry = self.attrdict.get('rx'), self.attrdict.get('ry')
 		self.attrdict['rx'] = SVGLength(self, rx)
-		self.attrdict['ry'] = SVGLength(self, rx)
-
-		cx = self.getCoordinate('cx', 0)
-		cy = self.getCoordinate('cy', 0)
+		self.attrdict['ry'] = SVGLength(self, ry)
 
 class SvgLine(SvgElement):
 	def parseAttributes(self):
