@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"
+                      "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
+<smil>
+  <head>
+    <meta name="title" content=" root-layout "/>
+    <meta name="generator" content="GRiNS editor 0.5 win32 patchlevel 0"/>
+    <layout>
+      <root-layout id="root-layout-" title=" root-layout " width="437" height="363"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="ASFAudioChannel" title="ASFAudioChannel"/>
+    </layout>
+  </head>
+  <body>
+    <audio id="ASF-Audio" region="ASFAudioChannel" src="audio.asf"/>
+  </body>
+</smil>
