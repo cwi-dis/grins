@@ -113,6 +113,7 @@ class GRiNSDlgBar(window.Wnd):
 class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 	wndpos=None
 	wndsize=None
+	wndismax=0
 	def __init__(self):
 		window.MDIFrameWnd.__init__(self)
 		cmifwnd._CmifWnd.__init__(self)
@@ -131,8 +132,10 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		self.DockControlBar(self._wndToolBar)
 		if IsPlayer:
 			self.setPlayerToolbar()
+			self.LoadAccelTable(grinsRC.IDR_GRINS)
 		else:
 			self.setEditorFrameToolbar()
+			self.LoadAccelTable(grinsRC.IDR_GRINSED)
 
 	# Register the window class
 	def registerwndclass(self):
@@ -155,15 +158,22 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			MDIFrameWnd.wndsize=win32mu.Point(((3*scr_width_pxl/4),(3*scr_height_pxl/4)))
 		cs.cx,cs.cy=MDIFrameWnd.wndsize.tuple()
 
+		# initial pos
 		if not MDIFrameWnd.wndpos:
 			MDIFrameWnd.wndpos=win32mu.Point((scr_width_pxl/8,scr_height_pxl/8))
 		cs.x,cs.y=MDIFrameWnd.wndpos.tuple()
+
+		# if the user has maximized the window, repect his selection
+		if MDIFrameWnd.wndismax:
+			cs.x=win32con.CW_USEDEFAULT
+			cs.y=win32con.SW_SHOWMAXIMIZED
 
 		# menu from MenuTemplate
 		# hold instance for dynamic menus
 		self._mainmenu=win32menu.Menu()
 		self._mainmenu.create_from_menubar_spec_list(MenuTemplate.MENUBAR,self.get_cmdclass_id)
 		cs.hMenu=self._mainmenu.GetHandle()
+		
 		return cs.to_csd()
 
 	# return commnds class id
@@ -186,6 +196,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		self.HookMessage(self.onSize,win32con.WM_SIZE)
 		self.HookMessage(self.onMove,win32con.WM_MOVE)
 		self.HookMessage(self.onKey,win32con.WM_KEYDOWN)
+		self.HookMessage(self.onInitMenu,win32con.WM_INITMENU)
 
 		# the view is responsible for user input
 		# so do not hook other messages
@@ -218,7 +229,11 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 		return 0
 
+	def onInitMenu(self,params):
+		self.PostMessage(WM_KICKIDLE)
+		
 	def onKey(self,key):
+		self.PostMessage(WM_KICKIDLE)
 		print key
 
 	# Mirrors mdi window-menu to tab bar (not impl)
@@ -251,6 +266,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		self.HookCommandUpdate(self.OnUpdateCmdEnable,afxres.ID_WINDOW_CASCADE)
 		self.HookCommandUpdate(self.OnUpdateCmdEnable,afxres.ID_WINDOW_TILE_VERT)
 		self.HookCommandUpdate(self.OnUpdateCmdEnable,afxres.ID_WINDOW_TILE_HORZ)
+		self.PostMessage(WM_KICKIDLE)
 
 	# Tabs Notification response
 	def OnNotifyTcnSelChange(self, nm, nmrest=(0,)):
@@ -361,6 +377,10 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			self.RecalcLayout()			
 		self.ActivateFrame()
 
+	# Returns the grins document
+	def getgrinsdoc(self):
+		return self._cmifdoc
+
 	# Called by the core system to create a view
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
 		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
@@ -381,6 +401,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		sv=self.newviewobj('sview_')
 		sv.settext(text)
 		self.showview(sv,'sview_')
+		if self._cmifdoc:
+			sv.GetParent().SetWindowText('Source (%s)'%self._cmifdoc.basename)
 		return sv
 
 	# Returns the form server
@@ -398,8 +420,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		rc= win32mu.Rect(self.GetClientRect())
 		return rc.width()/8,rc.height()/8,7*rc.width()/8,7*rc.height()/8
 
-	# Close all views
-	# simulate user	closing
+	# Close all views directly
 	def close_all_views(self):
 		currentChild=None
 		count=0
@@ -409,7 +430,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			if currentChild:l.append(currentChild)
 			else: break
 		for w in l:
-			w.SendMessage(win32con.WM_CLOSE)
+			w.DestroyWindow()
 
 	# Activate tab
 	def setviewtab(self,viewno):
@@ -427,17 +448,12 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		self.ActivateFrame()
 
 	# Close the opened document
-	def close_X(self):
-		__main__.toplevel._subwindows.remove(self)
-		self.DestroyWindow()	
-		if len(__main__.toplevel._subwindows)==0:
-			__main__.toplevel.createmainwnd()
-
 	def close(self):
 		# 1. destroy cascade menus
 		self._mainmenu.clear_cascade_menus()
 
 		# 2. then the document
+		__main__.toplevel.cleardocmap(self._cmifdoc)
 		self._cmifdoc=None
 		self.set_commandlist(None,'document')
 		self.settitle(None,'document')
@@ -450,8 +466,18 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		# 3. if there is another top-level frame
 		# we should close self frame
 		if len(__main__.toplevel._subwindows)>1:
+			__main__.toplevel._subwindows.remove(self)
+			self. close_all_views()
 			self.DestroyWindow()	
-	
+		else:
+			# clean image cache
+			from win32ig import win32ig
+			win32ig.deltemp()
+			__main__.toplevel._image_size_cache = {}
+			__main__.toplevel._image_cache = {}
+
+			
+
 	# Response to resizing		
 	def onSize(self,params):
 		self.RecalcLayout()
@@ -460,8 +486,10 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		self._rect=self._canvas=0,0,msg.width(),msg.height()
 		if hasattr(self,'_wndDlgBar'):
 			self._wndDlgBar.sizeto(msg.width(),msg.height())
-		rc=self.GetWindowRect()
-		MDIFrameWnd.wndsize=win32mu.Point((rc[2]-rc[0],rc[3]-rc[1]))
+		MDIFrameWnd.wndismax=msg.maximized()
+		if not msg.maximized():
+			rc=self.GetWindowRect()
+			MDIFrameWnd.wndsize=win32mu.Point((rc[2]-rc[0],rc[3]-rc[1]))
 
 	# Response to mouse move
 	def onMove(self,params):
@@ -501,6 +529,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			id=usercmd_ui.id
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,id)
 			contextcmds[id]=cmd
+		self.PostMessage(WM_KICKIDLE)
 
 	# Return the command ids with other contexts
 	def othercmdids(self,except_context):
@@ -535,6 +564,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		if onoff==0:flags = flags | win32con.MF_UNCHECKED
 		else:flags = flags | win32con.MF_CHECKED
 		(self.GetMenu()).CheckMenuItem(id,flags)
+		self.PostMessage(WM_KICKIDLE)
+
 
 	####=========dynamic menu
 	#	('fond', (<method Player.channel_callback of Player instance at 1c68510>, ('fond',)), 't', 1)
@@ -578,14 +609,17 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			if cbd.has_key(id):
 				if not cbd[id]:return
 				apply(apply,cbd[id])
-				submenu=self.get_cascade_menu(id)
-				if id not in submenu._toggles.keys():return
-				state=submenu.GetMenuState(id,win32con.MF_BYCOMMAND)
-				if state & win32con.MF_CHECKED:
-					submenu.CheckMenuItem(id,win32con.MF_BYCOMMAND | win32con.MF_UNCHECKED)
-				else:
-					submenu.CheckMenuItem(id,win32con.MF_BYCOMMAND | win32con.MF_CHECKED)
-				return
+				break
+		self.PostMessage(WM_KICKIDLE)
+
+# items are checked/unchecked by the core system
+#				submenu=self.get_cascade_menu(id)
+#				if id not in submenu._toggles.keys():return
+#				state=submenu.GetMenuState(id,win32con.MF_BYCOMMAND)
+#				if state & win32con.MF_CHECKED:
+#					submenu.CheckMenuItem(id,win32con.MF_BYCOMMAND | win32con.MF_UNCHECKED)
+#				else:
+#					submenu.CheckMenuItem(id,win32con.MF_BYCOMMAND | win32con.MF_CHECKED)
 
 	# Set callback for dynamic menu
 	def set_dyncbd(self,cbd,menu):
@@ -611,7 +645,15 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 	# Response to a user command (menu selection)
 	def OnUserCmd(self,id,code):
 		cmd=None
-		
+
+		# special manipulation of exit to close first and release resources
+		if id==usercmdui.EXIT_UI.id:
+			cmd=self.GetUserCmd(usercmd.CLOSE)
+			if cmd:apply(apply,cmd.callback)
+			cmd=self.GetUserCmd(usercmd.EXIT)
+			if cmd:apply(apply,cmd.callback)
+			return
+
 		# look first self._active_child cmds
 		if self._active_child and self._active_child._view._strid in self._activecmds.keys():
 			contextcmds=self._activecmds[self._active_child._view._strid]
@@ -632,6 +674,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 					self.check_menu_item(id)
 					apply(apply,cmd.callback)
 				return
+		self.PostMessage(WM_KICKIDLE)
 
 	# Check the menu item with id
 	def check_menu_item(self,id):
@@ -654,7 +697,9 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			contextcmds=self._activecmds[context]
 			if contextcmds.has_key(id):
 				cmd=contextcmds[id]
+				break
 		return cmd
+
 
 	# Fire a command class instance
 	def fire_cmd(self,cmdcl):
@@ -662,7 +707,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		self.OnUserCmd(id,0)
 	
 	# Compose and set the title  	
-	def settitle(self,title,context='view'):
+	def settitle(self,title,context='document'):
 		self._qtitle[context]=title
 		qtitle=''
 		if self._qtitle['document']:
@@ -681,6 +726,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		if len(__main__.toplevel._subwindows)>1:
 			self.PostMessage(win32con.WM_COMMAND,usercmdui.CLOSE_UI.id)
 		else:
+			self.SendMessage(win32con.WM_COMMAND,usercmdui.CLOSE_UI.id)
 			self.PostMessage(win32con.WM_COMMAND,usercmdui.EXIT_UI.id)
 
 	# Bring to top of peers
@@ -693,6 +739,13 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 	# Called by the framework before destroying the window
 	def OnDestroy(self, msg):
+		if self._wndToolBar:
+			self._wndToolBar.DestroyWindow()
+			del self._wndToolBar
+		if self._mainmenu:
+			self.SetMenu(None) 
+			self._mainmenu.DestroyMenu()
+			del self._mainmenu
 		if self in __main__.toplevel._subwindows:
 			__main__.toplevel._subwindows.remove(self)
 		window.MDIFrameWnd.OnDestroy(self, msg)
