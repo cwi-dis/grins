@@ -575,7 +575,6 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 	def onMultiSelChanged(self, selections):
 		if self._listener != None:
 			self._listener.onMultiSelChanged(selections)
-
 	# 
 	# interface implementation: function called from an external module
 	#
@@ -757,15 +756,14 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 		self.update()
 		
 	def drawTracker(self, dc):
-		if not self._selected: return
-		wnd = self._selected
-		if wnd != self._viewport:
-			rgn = self._viewport.getClipRgn()
-			dc.SelectClipRgn(rgn)
-		nHandles = wnd.getDragHandleCount()		
-		for ix in range(1,nHandles+1):
-			x, y, w, h = wnd.getDragHandleRect(ix)
-			dc.PatBlt((x, y), (w, h), win32con.DSTINVERT);
+		for wnd in self._selections:
+			if wnd != self._viewport:
+				rgn = self._viewport.getClipRgn()
+				dc.SelectClipRgn(rgn)
+			nHandles = wnd.getDragHandleCount()		
+			for ix in range(1,nHandles+1):
+				x, y, w, h = wnd.getDragHandleRect(ix)
+				dc.PatBlt((x, y), (w, h), win32con.DSTINVERT);
 
 	#
 	# Scaling support
