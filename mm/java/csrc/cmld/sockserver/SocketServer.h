@@ -6,7 +6,7 @@ class Connection;
 class SocketServer
 	{
 	public:
-	SocketServer(u_short port);
+	SocketServer(u_short port, void *pContext=NULL);
 	~SocketServer();
 
 	bool start();
@@ -15,9 +15,13 @@ class SocketServer
 	bool stop();
 
 	void onSocketProcessing();
+
+	void setContext(void *pContext){m_pContext=pContext;}
+	void *getContext(){return m_pContext;}
 	
 	private:
 	u_short m_port;
+	void *m_pContext;
 	SOCKET m_listeningSocket;
 	map<SOCKET, Connection*> m_connections;
 	bool m_connStatusChanged;
