@@ -48,7 +48,7 @@ def main(dtd = "http://www.w3.org/AudioVideo/Group/DTD/SMIL20.dtd"):
 	try:
 		x.parse('''<?xml version="1.0" encoding="latin-1" standalone="no"?>
 <!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 2.0//EN" "%s">
-<smil xmlns="http://www.w3.org/TR/REC-smil/2000/SMIL20/Language"/>
+<smil xmlns="http://www.w3.org/2000/SMIL20/CR/Language"/>
 ''' % dtd)
 	except fxmllib.Error, info:
 		print str(info)
