@@ -34,6 +34,7 @@ MENUBAR=(
 		(ALL, CASCADE, 'Export', (
 			(ALL, ENTRY, 'RealSystem G2...', None, EXPORT_SMIL),
 			(ALL, ENTRY, 'Upload RealSystem G2...', None, UPLOAD_SMIL),
+			(ALL, ENTRY, 'Generate HTML page...', None, EXPORT_HTML),
 			)),
 		(ALL, ENTRY, 'Restore', None, RESTORE),
 		(ALL, SEP,),

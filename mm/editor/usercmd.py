@@ -60,6 +60,8 @@ class EXPORT_SMIL(_CommandBase):
 	help = 'Save document in new file as pure SMIL'
 class UPLOAD_SMIL(_CommandBase):
 	help = 'Upload pure SMIL document and media items to FTP server'
+class EXPORT_HTML(_CommandBase):
+	help = 'Create a template webpage linking to your presentation'
 class RESTORE(_CommandBase):
 	help = 'Restore document from file (undo all unsaved changes)'
 class PROPERTIES(_CommandBase):
