@@ -29,6 +29,7 @@ class DDWnd(MfcOsWnd):
 	
 	def OnDestroy(self, params):
 		self.KillTimer(self.__timer_id)
+		del self.__objBuffer
 		del self.__frontBuffer
 		del self.__backBuffer
 		del self.__clipper
@@ -40,20 +41,16 @@ class DDWnd(MfcOsWnd):
 	def OnTimer(self, params):
 		sd = self.__backBuffer.GetSurfaceDesc()
 		w, h = sd.GetSize()
+
 		hdc = self.__backBuffer.GetDC()
 		dc = win32ui.CreateDCFromHandle(hdc)
-
 		dc.PatBlt( (0, 0), (w, h), win32con.BLACKNESS)
-		
-		rc = self.__x, self.__y, self.__x + self.__cx, self.__y + self.__cy
-
-		if self.__img>=0:
-			gear32sd.device_rect_set(self.__img,rc)
-			gear32sd.display_desktop_pattern_set(self.__img,0)
-			gear32sd.display_image(self.__img,hdc)
-
 		dc.Detach()
 		self.__backBuffer.ReleaseDC(hdc)
+
+		rc = self.__x, self.__y, self.__x + self.__cx, self.__y + self.__cy
+		flags = ddraw.DDBLT_WAIT | ddraw.DDBLT_KEYSRC
+		self.__backBuffer.Blt(rc, self.__objBuffer, (0, 0, self.__cx, self.__cy), flags)
 
 		rcFront = self.GetClientRect()
 		rcFront = self.ClientToScreen(rcFront)
@@ -73,6 +70,18 @@ class DDWnd(MfcOsWnd):
 		self.__img = gear32sd.load_file(filename)
 		if self.__img:
 			self.__cx, self.__cy, depth = gear32sd.image_dimensions_get(self.__img)
+		
+		self.__objBuffer = self.__ddraw.CreateSurface(self.__cx, self.__cy)
+		hdc = self.__objBuffer.GetDC()
+		if self.__img>=0:
+			rc = (0, 0, self.__cx, self.__cy)
+			gear32sd.device_rect_set(self.__img,rc)
+			gear32sd.display_desktop_pattern_set(self.__img,0)
+			gear32sd.display_image(self.__img,hdc)
+		self.__objBuffer.ReleaseDC(hdc)
+
+		# set source colorkey to black
+		self.__objBuffer.SetColorKey(ddraw.DDCKEY_SRCBLT, (0, 0))
 
 	def __advance(self, rc):
 		x, y, vx, vy = self.__x, self.__y,self.__vx, self.__vy
