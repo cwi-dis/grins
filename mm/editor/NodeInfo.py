@@ -104,32 +104,34 @@ class NodeInfo(NodeInfoDialog):
 		layout = MMAttrdefs.getattr(self.node, 'layout')
 		if layout == 'undefined':
 			layoutchannels = []
-			channelnames1 = []
-			channelnames2 = self.newchannels[:]
 		else:
 			layoutchannels = self.context.layouts.get(layout, [])
-			channelnames1 = self.newchannels[:]
-			channelnames2 = []
+		channelnames1 = []
 		for ch in layoutchannels:
 			channelnames1.append(ch.name)
 		channelnames1.sort()
+		channelnames2 = self.newchannels
+		channelnames3 = []
 		for chname in self.context.channelnames:
 			if chname not in channelnames1:
-				channelnames2.append(chname)
-		channelnames2.sort()
-		if channelnames1 and channelnames2:
+				channelnames3.append(chname)
+		channelnames3.sort()
+		all = channelnames1
+		if channelnames2:
 			# add separator between lists
-			sep = [None]
-		else:
-			sep = []
-		allchannelnames = channelnames1 + sep + channelnames2
-		if allchannelnames:
-			sep = [None]
-		else:
-			sep = []
-		self.allchannelnames = [UNDEFINED] + sep + \
-				       allchannelnames + \
-				       sep + [NEW_CHANNEL]
+			if all:
+				all.append(None)
+			all = all + channelnames2
+		if channelnames3:
+			# add separator between lists
+			if all:
+				all.append(None)
+			all = all + channelnames3
+		if not self.newchannels:
+			if all:
+				all.append(None)
+			all = all + [NEW_CHANNEL]
+		self.allchannelnames = [UNDEFINED, None] + all
 
 	def getvalues(self, always):
 		#
