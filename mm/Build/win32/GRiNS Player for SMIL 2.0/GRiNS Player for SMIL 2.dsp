@@ -225,10 +225,6 @@ SOURCE=.\M_AnimateChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_AnimationData.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_Animators.c
 # End Source File
 # Begin Source File
