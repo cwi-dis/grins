@@ -62,7 +62,7 @@ looks more like a close button for the View.
 dialog titled `Name for Layout' - I think the dialog Title should read
 `Layout name' and the dialog text should read `Layout name:'with the
 `:' to match the dialog `New channel'.
-	Sjoerd: Maybe the dialog should be called "New lyaout" and the 
+	Sjoerd: Maybe the dialog should be called "New layout" and the 
 	prompt should be "Layout name:".  The new channel dialog
 	should then be called "New channel" and the prompt should be
 	"Channel name:".
