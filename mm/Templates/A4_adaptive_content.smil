@@ -19,24 +19,24 @@
   <body>
     <par>
     <switch id="Adaptive_Content">
-	  <seq>
-      <video id="Choice-1_Video" region="videoRegion" src="media/video.mpg" system-bitrate="56000"/>
+	  <seq id="Video_Sequence">
+        <video id="Video_Clip_1" region="videoRegion" src="media/video.mpg"/>
 	  </seq>
-	  <seq>
-      <img id="Choice-2_RealPix-Slideshow" region="realpixRegion" src="media/realpix-template.rp" dur="10s" system-bitrate="28800"/>
+	  <seq id="RealPix_Sequence">
+        <img id="RealPix-Slideshow_1" region="realpixRegion" src="media/realpix-template.rp" dur="10s" system-bitrate="28800"/>
 	  </seq>
-	  <seq>
-      <text id="Choice-3_Realtext" region="realtextRegion" src="media/realtext-template.rp" system-bitrate="14400"/>
+	  <seq id="RealText_Sequence">
+        <text id="Realtext_1" region="realtextRegion" src="media/realtext-template.rp" system-bitrate="14400"/>
 	  </seq>
     </switch>
-	  <seq>
-        <audio id="Background-Audio" region="audioRegion_1" src="media/background-sound.aiff"/>
+	  <seq id="Audio_Sequence">
+        <audio id="Clip_1" region="audioRegion_2" src="media/background-sound.aiff"/>
 	  </seq>
-	  <seq>
-        <audio id="Additional-Audio" region="audioRegion_2" src="media/background-sound.aiff"/>
+	  <seq id="Background_Audio">
+        <audio id="Bkgd-Clip_1" region="audioRegion_1" src="media/background-sound.aiff"/>
 	  </seq>
-	  <seq>
-        <img id="Background-Image" region="bkgd_imageRegion" src="media/hd_bkgd-image.jpg"/>
+	  <seq id="Background_Images">
+        <img id="Image_1" region="bkgd_imageRegion" src="media/hd_bkgd-image.jpg"/>
 	  </seq>
     </par>
   </body>

@@ -17,8 +17,8 @@
   </head>
   <body>
     <par id="RealPix_Slideshow">
-      <img id="RealPix_1" region="realpixRegion" src="media/realpix-template.rp" dur="10s"/>
-	  <seq id="Audio_Sequence>
+      <img id="RealPix_Sequence" region="realpixRegion" src="media/realpix-template.rp" dur="10s"/>
+	  <seq id="Audio_Sequence">
         <audio id="Clip_1" region="audioRegion_2" src="media/background-sound.aiff"/>
 	  </seq>
 	  <seq id="Background_Audio">
