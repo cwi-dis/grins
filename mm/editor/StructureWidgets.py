@@ -1657,19 +1657,14 @@ class MediaWidget(MMNodeWidget):
 		ad = Duration.get(node, wanterror = 0)
 		if dur > ad:
 			dur = ad
-		if dur > t2 - t0:
-			dur = t2 - t0
-		if ad > t2 - t0:
-			ad = t2 - t0
 
 		displist.drawfbox(color, (x,y,w,16)) # top bar
 		if dur >= 0 and t2 > t0:
-##			dw = min(int(w*float(dur)/(t2-t0) + .5), w)
 			if dur == 0:
 				align = 'right'
 			else:
 				align = 'left'
-			dw = timemapper.interptime2pixel(t0+dur, align) - x
+			dw = timemapper.interptime2pixel(t0+min(dur, t2-t0), align) - x
 			if dw < 0: dw = 0
 			if dw > w: dw = w
 		else:
@@ -1680,7 +1675,7 @@ class MediaWidget(MMNodeWidget):
 		if dw < w:
 			if ad > dur:
 ##				adw = min(int(w*float(ad-dur)/(t2-t0) + .5), w-dw)
-				adw = timemapper.interptime2pixel(t0+ad) - x - dw
+				adw = timemapper.interptime2pixel(t0+min(ad, t2-t0)) - x - dw
 				if adw < 0: adw = 0
 				if adw > w-dw: adw = w-dw
 			else:
@@ -1689,6 +1684,9 @@ class MediaWidget(MMNodeWidget):
 				displist.drawfbox(REPEATCOLOR, (x+dw, y+16, adw, h-16))
 			if dw+adw < w:
 				displist.drawfbox(FREEZECOLOR, (x+dw+adw, y+16, w-dw-adw, h-16))
+		if dur > t2-t0:
+			# duration truncated
+			displist.drawfbox(TRUNCCOLOR, (x+w-TRUNCSIZE,y,TRUNCSIZE,h))
 
 	def draw_selected(self, displist):
 		self.__draw_box(displist, (255,255,255))
@@ -1740,20 +1738,22 @@ class MediaWidget(MMNodeWidget):
 			displist.drawbox((x+w/12, y+h/6, 5*(w/6), 4*(h/6)))
 		else:
 			image_filename = self.__get_image_filename()
+			box = None
 			if image_filename != None and w > 0 and h > 0:
 				try:
 					if CENTER:
 						coordinates = (x+w/12, y+h/6, 5*(w/6), 4*(h/6))
 					else:
 						coordinates = (x+(MINSIZE/12), y, 5*(w/6), 4*(h/6))
-					box = displist.display_image_from_file(
-						image_filename,
-						center = CENTER,
-						coordinates = coordinates,
-						fit = 'icon')
+					if coordinates[2] > 4 and coordinates[3] > 4:
+						box = displist.display_image_from_file(
+							image_filename,
+							center = CENTER,
+							coordinates = coordinates,
+							fit = 'icon')
 				except windowinterface.error:
 					pass					# Shouldn't I use another icon or something?
-				else:
+				if box is not None:
 					displist.fgcolor(TEXTCOLOR)
 					displist.drawbox(box)
 
@@ -1865,19 +1865,21 @@ class CommentWidget(MMNodeWidget):
 		# Draw the image.
 		image_filename = os.path.join(self.mother.datadir, 'comment.tiff')
 		if w > 0 and h > 0:
+			box = None
 			try:
 				if CENTER:
 					coordinates = (x+w/12, y+h/6, 5*(w/6), 4*(h/6))
 				else:
 					coordinates = (x+(MINSIZE/12), y, 5*(w/6), 4*(h/6))
-				box = displist.display_image_from_file(
-					image_filename,
-					center = CENTER,
-					coordinates = coordinates,
-					fit = 'icon')
+				if coordinates[2] > 4 and coordinates[3] > 4:
+					box = displist.display_image_from_file(
+						image_filename,
+						center = CENTER,
+						coordinates = coordinates,
+						fit = 'icon')
 			except windowinterface.error:
 				pass					# Shouldn't I use another icon or something?
-			else:
+			if box is not None:
 				displist.fgcolor(TEXTCOLOR)
 				displist.drawbox(box)
 

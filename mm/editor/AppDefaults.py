@@ -31,6 +31,7 @@ EXPCOLOR = settings.get('structure_expcolor')
 COLCOLOR = settings.get('structure_colcolor')
 FREEZECOLOR = settings.get('structure_freezecolor')
 REPEATCOLOR = settings.get('structure_repeatcolor')
+TRUNCCOLOR = settings.get('structure_trunccolor')
 ECBORDERCOLOR = settings.get('structure_ecbordercolor')
 FOREIGNCOLOR = settings.get('structure_foreigncolor')
 
@@ -69,6 +70,7 @@ GAPSIZE = 4 #2						# size of gap between nodes
 HEDGSIZE = 4 #3						# size of edges
 VEDGSIZE = 4 #3						# size of edges
 DRAGHANDLESIZE = 4
+TRUNCSIZE = 4
 DROPAREASIZE = 32		# size of the decoration at the end of a "roll of film"
 FLATBOX = 0
 TIMEBARHEIGHT = 0
