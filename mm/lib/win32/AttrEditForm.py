@@ -184,10 +184,11 @@ class OptionsRadioCtrl(AttrCtrl):
 	def OnReset(self,id,code):
 		if self._attr:
 			self._attr.reset_callback()
-
+		
 	def OnRadio(self,id,code):
 		self.sethelp()
-		self.enableApply()
+		if code==win32con.BN_CLICKED:
+			self.enableApply()
 
 class OptionsCheckCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
@@ -252,7 +253,8 @@ class OptionsCheckCtrl(AttrCtrl):
 
 	def OnCheck(self,id,code):
 		self.sethelp()
-		self.enableApply()
+		if code==win32con.BN_CLICKED:
+			self.enableApply()
 
 ##################################
 class FileCtrl(AttrCtrl):
