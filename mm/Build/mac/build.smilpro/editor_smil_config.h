@@ -10,13 +10,13 @@
 #define USE_TOOLBOX		/* Include toolbox modules in core Python */
 #define USE_QT			/* Include quicktime modules in core Python */
 #define USE_WASTE		/* Include waste module in core Python */
-#define USE_MACSPEECH		/* Include macspeech module in core Python */
+/* #define USE_MACSPEECH		/* Include macspeech module in core Python */
 #define USE_IMG	       		/* Include img modules in core Python */
-#define USE_MACCTB		/* Include ctb module in core Python */
+/* #define USE_MACCTB		/* Include ctb module in core Python */
 /* #define USE_STDWIN		/* Include stdwin module in core Python */
 /* #define USE_MACTCP		/* Include mactcp (*not* socket) modules in core */
-#define USE_TK			/* Include _tkinter module in core Python */
-#define MAC_TCL			/* This *must* be on if USE_TK is on */
+/* #define USE_TK			/* Include _tkinter module in core Python */
+/* #define MAC_TCL			/* This *must* be on if USE_TK is on */
 /* #define USE_MAC_SHARED_LIBRARY	/* Enable code to add shared-library resources */
 #define USE_MAC_APPLET_SUPPORT	/* Enable code to run a PYC resource */
 /* #define USE_MAC_DYNAMIC_LOADING		/* Enable dynamically loaded modules */
@@ -33,10 +33,12 @@
 
 #if __POWERPC__
 #define WITH_RMA_SUPPORT	/* Support for real media types */
-#define WITH_REALPRODUCER_SUPPORT /* Support for realmedia conversion */
 #endif
 
-#ifndef WITH_RMA_SUPPORT
+#ifdef WITH_RMA_SUPPORT
+#define _MACINTOSH 1
+#define _MACPPC
+#else
 #define initrma	0
 #endif
 
