@@ -3,9 +3,11 @@
 import SourceViewDialog
 import windowinterface
 import SMILTreeRead, SMILTreeWrite
+from ViewDialog import ViewDialog
 
-class SourceView(SourceViewDialog.SourceViewDialog):
+class SourceView(SourceViewDialog.SourceViewDialog, ViewDialog):
 	def __init__(self, toplevel):
+		self.last_geometry = None
 		self.toplevel = toplevel
 		self.editmgr = self.toplevel.editmgr
 		self.setRoot(self.toplevel.root)

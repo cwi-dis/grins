@@ -32,7 +32,8 @@ class HierarchyViewDialog(ViewDialog):
 		else:
 			x, y, w, h = -1, -1, -1, -1
 		adornments = {'doubleclick': ATTRIBUTES}
-		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1, 
+		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1,
+			 units=windowinterface.UNIT_PXL,
 			commandlist=self.commands, canvassize = (w, h), adornments=adornments)
 		self.window.set_toggle(THUMBNAIL, self.thumbnails)
 		self.window.register(WMEVENTS.Mouse0Release, self.mouse0release, None)
