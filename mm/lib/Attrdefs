@@ -113,6 +113,9 @@
 (name (name) '' 'Node name' default
 	'Name given to a node' raw)
 
+(noanchors (bool) 0 'Ignore anchors' default
+	'Ignore anchors and other HTML tags' channel)
+
 (nonlocal (bool) 0 'Remote only' default
 	'Ignore incoming messages from local machine' raw)
 
