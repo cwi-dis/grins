@@ -35,6 +35,7 @@ def usage(msg):
 class Main:
 	def __init__(self, opts, files):
 		import TopLevel, windowinterface
+		self.splash = None
 		self.tops = []
 		self._mm_callbacks = {}
 		try:
@@ -78,12 +79,8 @@ class Main:
 		for top in self.tops:
 			top.setready()
 
-		try:
-			import splash
-		except ImportError:
-			pass
-		else:
-			splash.unsplash()
+		if self.splash is not None:
+			self.splash.unsplash()
 
 	def do_exit(self, *args):
 		for top in self.tops:
@@ -138,7 +135,7 @@ def main():
 	try:
 		import splash
 	except ImportError:
-		pass
+		splash = None
 	else:
 		splash.splash(findfile(os.path.join('lib','cmifed.rgb')))
 	try:
@@ -192,6 +189,8 @@ def main():
 	windowinterface.usewindowlock(GLLock.gl_lock)
 
 	m = Main(opts, files)
+
+	m.splash = splash
 
 	try:
 		try:
