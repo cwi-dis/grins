@@ -156,6 +156,9 @@ class EditMgr:
 			if xn==xuid and (xs,de,ys) == (xside,delay,yside):
 				self.addstep('delsyncarc',xnode,xs,de,ynode,ys)
 				list.remove(item)
+				if not list:
+					# no sync arcs left
+					ynode.DelAttr('synctolist')
 				break
 		else:
 			raise MMExc.AssertError, 'bad delsyncarc call'
