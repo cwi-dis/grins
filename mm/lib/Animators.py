@@ -1263,8 +1263,12 @@ class AnimateElementParser:
 			self.__grinsattrname = self.__attrname = 'position'
 			if settings.activeFullSmilCss:
 				if self.__target.__class__ == MMNode.MMNode:
-					rc, rcm = self.__target.getPxGeomMedia()
-					x, y, w, h = rc
+					rcs = self.__target.getPxGeomMedia()
+					if rcs:
+						rc, rcm =rcs
+						x, y, w, h = rc
+					else:
+						return 0
 				else:
 					x, y, w, h = self.__target.getPxGeom()
 				self.__domval = complex(x, y)
