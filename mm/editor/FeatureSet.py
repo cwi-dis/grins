@@ -37,6 +37,7 @@ __version__ = "$Id$";
 
 	UNIFIED_FOCUS,			# All views share their focus
 	CUSTOM_REGIONS,			# Allow to create/delete its own region
+    MULTIPLE_TOPLAYOUT,     # Allow multiple toplayout
 
 	CREATE_TEMPLATES,		# Enable template creation features
 	ADVANCED_PROPERTIES,		# Enable advanced property editing
@@ -61,4 +62,4 @@ __version__ = "$Id$";
 	SHOW_MEDIA_CHILDREN,
 
 	AUTO_EVALUATE,		# Don't need trial license to evaluate
-] = range(37)				# don't forget to update this range!
+] = range(38)				# don't forget to update this range!
