@@ -3,6 +3,14 @@ import WMEVENTS
 import win32ui, win32con
 Sdk=win32ui.GetWin32Sdk()
 
+# add missing const
+win32con.MK_ALT = 0x20
+DROPEFFECT_NONE = 0
+DROPEFFECT_COPY = 1
+DROPEFFECT_MOVE = 2
+DROPEFFECT_LINK = 4
+DROPEFFECT_SCROLL = 0x80000000
+
 class DropTarget:
 	cfmap={'FileName':Sdk.RegisterClipboardFormat('FileName')}
 	def __init__(self):
