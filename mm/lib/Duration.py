@@ -90,7 +90,12 @@ def get(node, ignoreloop=0, wanterror=0, ignoredur=0):
 		except ValueError:
 			clipend = 0
 		if clipend:
-			dur = min(dur, clipend)
+			if dur is None:
+				dur = clipend
+			else:
+				dur = min(dur, clipend)
+		if dur is None:
+			dur = 100	# XXX we have no clue, but we don't want to crash
 		dur = max(dur - clipbegin, 0)
 		return loop * dur
 	return duration
