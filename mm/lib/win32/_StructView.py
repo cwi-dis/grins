@@ -56,6 +56,11 @@ class _StructView(DisplayListView):
 		tooltip.addToolText( (0,0,600,400), 'Hierarchy View' )
 		self._tooltip = tooltip
 
+	def OnDestroy(self, params):
+		DisplayListView.OnDestroy(self, params)
+		if self._tooltip:
+			self._tooltip.destroy()
+
 	def PaintOn(self,dc):
 		# only paint the rect that needs repainting
 		rect=win32mu.Rect(dc.GetClipBox())
