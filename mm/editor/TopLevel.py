@@ -91,6 +91,10 @@ class TopLevel() = ViewDialog(), BasicDialog():
 		# The top four buttons in the menu open/close views.
 		# They show a light which indicates whether the view
 		# is open or closed.
+		# The fifth button opens/closes the Help window,
+		# which is almost, but not quite, completely like a view.
+		#
+		# Their callbacks are set later, in makeviews.
 		#
 		x, y, w, h = 0, height, width, bheight
 		#
@@ -109,11 +113,6 @@ class TopLevel() = ViewDialog(), BasicDialog():
 		y = y - h
 		self.svbutton = \
 		    form.add_lightbutton(PUSH_BUTTON,x,y,w,h, 'Style sheet')
-		#
-		# The fifth button in the top row is labeled "Help".
-		# This behaves almost like a view but has a different
-		# callback since its init function is costly;
-		# also it is not closed by Restore.
 		#
 		y = y - h
 		self.helpbutton = \
