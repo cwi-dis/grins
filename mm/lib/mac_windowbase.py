@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import Win
 import Qd
 import Fm
