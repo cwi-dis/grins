@@ -1924,9 +1924,11 @@ BEGIN
     CONTROL         "",IDC_ANIMATE_ENABLE,"Button",BS_AUTOCHECKBOX | 
                     WS_DISABLED | WS_TABSTOP,63,80,10,8
     CONTROL         "0%",IDC_ANIMATE_P0L,"Static",SS_LEFTNOWORDWRAP | 
-                    WS_GROUP,92,88,22,8
+                    WS_GROUP,89,88,22,8
     CONTROL         "100%",IDC_ANIMATE_P100L,"Static",SS_LEFTNOWORDWRAP | 
-                    WS_GROUP,285,87,19,8
+                    WS_GROUP,285,88,19,8
+    CONTROL         "50%",IDC_ANIMATE_P50L,"Static",SS_LEFTNOWORDWRAP | 
+                    WS_GROUP,189,88,22,8
 END
 
 IDD_EDITATTR_EVENTLIST DIALOGEX 0, 0, 300, 164
