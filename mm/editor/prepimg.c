@@ -78,7 +78,7 @@ writepacked(n, rsptr, gsptr, bsptr)
 	}
 	n *= sizeof(long);
 	if (write(ofd, (char *) parray, n) != n) {
-		perror("write");
+		perror("prepimg: write error (disk full?)");
 		exit(1);
 	}
 }
