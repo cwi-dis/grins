@@ -920,6 +920,10 @@ class KeyTimesSlider(window.Wnd):
 
 		self._listener = None		
 
+		# preview support
+		self.fiber = None
+		self.previewdur = 5.0
+
 	def setListener(self, listener):
 		self._listener = listener
 
@@ -1115,16 +1119,50 @@ class KeyTimesSlider(window.Wnd):
 		return self._keyTimesData
 
 	def enable(self, flag):
+		if self._enabled == flag: 
+			return
 		self._enabled = flag
 		if not flag:
 			self.EnableWindow(0)
+			self._parent.EnablePreview(0)
 		else:
 			self.EnableWindow(1)
+			self._parent.EnablePreview(1)
 		self.updateKeyTimes()
 
 	def isEnabled(self):
 		return self._enabled
 
+	# 
+	#	preview support
+	#
+	def play(self, dur=5.0):
+		self.previewdur = dur
+		import windowinterface, time
+		if self.fiber is None:
+			self.start = time.time()
+			self.fiber = windowinterface.setidleproc(self.onIdle)
 
+	def stop(self):
+		import windowinterface
+		if self.fiber is not None:
+			windowinterface.cancelidleproc(self.fiber)
+			self.fiber = None
 		
+	def onIdle(self):
+		import time
+		t_sec = time.time() - self.start
+		if t_sec >= self.previewdur:
+			self.start = time.time()
+			t_sec = 0
+		pos = t_sec/float(self.previewdur)
+		self.setCursorPos(pos)
+		if self._listener:
+			self._listener.onCursorPosChanged(pos)
+
+	def OnDestroy(self, msg):
+		if self.fiber is not None:
+			self.stop()
+
+
 
