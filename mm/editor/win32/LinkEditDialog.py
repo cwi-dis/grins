@@ -118,6 +118,9 @@ class LinkEditDialog:
 			self.__window.close()
 		self.__window=None
 
+	def settitle(self,title):
+		pass
+
 	# Interface to the left list and associated buttons.
 	def lefthide(self):
 		"""Hide the left list with associated buttons."""
