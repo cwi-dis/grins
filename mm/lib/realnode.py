@@ -244,13 +244,14 @@ class SlideShow:
 			self.rp = rp
 		rp = self.rp
 		attrdict = node.GetAttrDict()
-		if attrdict['bitrate'] != rp.bitrate:
+		bitrate = MMAttrdefs.getattr(node, 'bitrate')
+		if bitrate != rp.bitrate:
 			if rp is oldrp:
-				rp.bitrate = attrdict['bitrate']
+				rp.bitrate = bitrate
 				changed = 1
 			else:
 				attrdict['bitrate'] = rp.bitrate
-		size = attrdict.get('size', (256, 256))
+		size = MMAttrdefs.getattr(node, 'size')
 		if size != (rp.width, rp.height):
 			if rp is oldrp:
 				rp.width, rp.height = size
@@ -259,66 +260,73 @@ class SlideShow:
 				if rp.width == 0 and rp.height == 0:
 					rp.width, rp.height = node.GetChannel().get('base_winoff',(0,0,256,256))[2:4]
 				attrdict['size'] = rp.width, rp.height
-		if attrdict['duration'] != rp.duration:
+		duration = MMAttrdefs.getattr(node, 'duration')
+		if duration != rp.duration:
 			if rp is oldrp:
-				rp.duration = attrdict['duration']
+				rp.duration = duration
 				changed = 1
 			else:
 				attrdict['duration'] = rp.duration
-		aspect = attrdict.get('aspect', 1)
+		aspect = MMAttrdefs.getattr(node, 'aspect')
 		if (rp.aspect == 'true') != aspect:
 			if rp is oldrp:
 				rp.aspect = ['false','true'][aspect]
 				changed = 1
 			else:
 				attrdict['aspect'] = rp.aspect == 'true'
-		if attrdict.get('author') != rp.author:
+		author = MMAttrdefs.getattr(node, 'author')
+		if author != rp.author:
 			if rp is oldrp:
-				rp.author = attrdict.get('author')
+				rp.author = author
 				changed = 1
-			elif rp.author is not None:
+			elif rp.author:
 				attrdict['author'] = rp.author
-			else:
+			elif attrdict.has_key('author'):
 				del attrdict['author']
-		if attrdict.get('copyright') != rp.copyright:
+		copyright = MMAttrdefs.getattr(node, 'copyright')
+		if copyright != rp.copyright:
 			if rp is oldrp:
 				rp.copyright = attrdict.get('copyright')
 				changed = 1
-			elif rp.copyright is not None:
+			elif rp.copyright:
 				attrdict['copyright'] = rp.copyright
-			else:
+			elif attrdict.has_key('copyright'):
 				del attrdict['copyright']
-		if attrdict.get('title') != rp.title:
+		title = MMAttrdefs.getattr(node, 'title')
+		if title != rp.title:
 			if rp is oldrp:
 				rp.title = attrdict.get('title')
 				changed = 1
-			elif rp.title is not None:
+			elif rp.title:
 				attrdict['title'] = rp.title
-			else:
+			elif attrdict.has_key('title'):
 				del attrdict['title']
-		if attrdict.get('href') != rp.url:
+		href = MMAttrdefs.getattr(node, 'href')
+		if href != rp.url:
 			if rp is oldrp:
 				rp.url = attrdict.get('href')
 				changed = 1
-			elif rp.url is not None:
+			elif rp.url:
 				attrdict['href'] = rp.url
-			else:
+			elif attrdict.has_key('href'):
 				del attrdict['href']
-		if attrdict.get('maxfps') != rp.maxfps:
+		maxfps = MMAttrdefs.getattr(node, 'maxfps')
+		if maxfps != rp.maxfps:
 			if rp is oldrp:
-				rp.maxfps = attrdict.get('maxfps')
+				rp.maxfps = maxfps
 				changed = 1
 			elif rp.maxfps is not None:
 				attrdict['maxfps'] = rp.maxfps
-			else:
+			elif attrdict.has_key('maxfps'):
 				del attrdict['maxfps']
-		if attrdict.get('preroll') != rp.preroll:
+		preroll = MMAttrdefs.getattr(node, 'preroll')
+		if preroll != rp.preroll:
 			if rp is oldrp:
-				rp.preroll = attrdict.get('preroll')
+				rp.preroll = preroll
 				changed = 1
 			elif rp.preroll is not None:
 				attrdict['preroll'] = rp.preroll
-			else:
+			elif attrdict.has_key('preroll'):
 				del attrdict['preroll']
 		if hasattr(node, 'expanded'):
 			if oldrp is rp:
