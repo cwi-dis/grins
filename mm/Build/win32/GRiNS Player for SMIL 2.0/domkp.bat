@@ -186,7 +186,7 @@ rem do not use python -O for this
 
 %PYTHON_EXE% -O %COMPILE% >> log.txt
 
-%PYTHON_EXE% -O %FREEZE% -s windows -i FreezeOpts -e %GRINS_HOME%\win32\grins_extensions.ini %main_script% >> log.txt
+%PYTHON_EXE% -O %FREEZE% -s windows -i FreezeOpts -e %GRINS_HOME%\win32\grins_extensions.ini %main_script% -m encodings encodings.ascii encodings.latin_1 encodings.utf_16 encodings.utf_16_be encodings.utf_16_le encodings.utf_8 >> log.txt
 
 : Make the target
 rem echo Executing NMAKE
