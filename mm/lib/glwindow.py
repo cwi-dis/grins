@@ -65,6 +65,11 @@ class glwindow:
 		# REDRAW event.  This may also mean a resize!
 		pass
 	#
+	def rawkey(self, val):
+		# raw key event (0-255)
+		# 'val' is the key code as defined in DEVICE.py or <device.h>
+		pass
+	#
 	def keybd(self, val):
 		# KEYBD event.
 		# 'val' is the ASCII value of the character.
@@ -197,6 +202,12 @@ def dispatch(dev, val):
 			window.winquit()
 		else:
 			report('WINQUIT for unregistered window')
+	elif 0 <= dev <= 255:
+		if focuswindow:
+			focuswindow.setwin()
+			focuswindow.rawkey(dev, val)
+		else:
+			report('raw key event with no focus window')
 	elif dispmap.has_key(`dev`+':'+`val`):
 		callback, arg = dispmap[`dev`+':'+`val`]
 		callback(arg)
