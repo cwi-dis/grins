@@ -17,6 +17,7 @@ class AssetsViewDialog:
 			'setview': self.setview_callback,
 			'select': self.select_callback,
 			'sort': self.sort_callback,
+			'startdrag': self.startdrag_callback,
 			 }
 
 	def destroy(self):
@@ -57,6 +58,7 @@ class AssetsViewDialog:
 	def getselection(self):
 		return self.__window.getSelected()
 
+			
 #### support win32 model
 	def createviewobj(self):
 		if self.__window: return
