@@ -225,7 +225,8 @@ def DrawLine(dc,l,rgb=(0,0,0),width=1,style=win32con.PS_SOLID):
 
 def FillPolygon(dc,pts,rgb):
 	br=Sdk.CreateBrush(win32con.BS_SOLID,RGB(rgb),0)
-	pen=Sdk.CreatePen(win32con.PS_SOLID,0,RGB(rgb))
+##	pen=Sdk.CreatePen(win32con.PS_SOLID,0,RGB(rgb))
+	pen=Sdk.CreatePen(win32con.PS_NULL,0,RGB(rgb))
 	oldpen=dc.SelectObjectFromHandle(pen)
 	oldbr=dc.SelectObjectFromHandle(br)
 	pm = dc.SetPolyFillMode(win32con.WINDING);
