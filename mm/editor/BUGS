@@ -3,11 +3,63 @@
 *** to the "FIXED" section at the end of this file!             ***
 *******************************************************************
 
+-------------------------- LYNDA'S NOTES --------------------------
+
+*    Menus in hierarchy and time chart window are different:
+     In Time chart you can use the right mouse button anywhere in the
+     window.  In the Hierarchy you need to go to the menu.
+     (Shortcuts are the same?)
+     The reason is that the Hierarchy window was produced with the Forms
+     library.
+
+*    The ordering of channels in the Time chart window cannot be changed.
+     (I had wanted to put a frequently occurring channel next tot he two
+     which are always there.)
+
+*    I hadn't noticed that there was a visual difference between leaf nodes
+     and non-leaf nodes in the Hierarchy view.  Leaf nodes have their names
+     in the middle.  Non-leaf nodes have their names at the top, and have a
+     small box top left.
+
+*    It would be nice to see, in the Hierarchy window, which nodes have their
+     time explicitly defined.  However, there are perhaps more things which
+     could be shown in the window, and a list of priorities could usfully be
+     made. 
+     
+*    Some of the information in "Node Attribute" and "Node Information" is
+     the same, but the format is different.  This is because the desired
+     methods of editing the attributes haven't been implmented.
+
+*    It would be nice if the user could change the automatically specified
+     width of the parallel nodes in the Hierarchy window.
+     One solution would be to take into account the number of channels
+     involved with each node and to divide the width accordingly.
+
+*    I was unable to use the input text box for Immediate text without
+     further (human) help. The interface is very strange.
+
+*    I wanted to be able to change the node type
+                                  *** of many similar nodes ***
+                                                 later.  This is because I
+     want to draw some pictures, but until then I want a temporary text
+     window.  This is possible by creating a style and making the channel
+     part of the style information.
+
 ------------------------------ BUGS -------------------------------
 
-Timing: (opt)calctimes isn't a very meaningful name.
+Player: crash if playing node with undefined channel
 
-MovieChannel: center the image.
+?: turning borders off for a channel might affect the wrong window
+
+all: When a FORM is iconified, things hang.
+
+all: When a view FORM is closed using 4DWm's close menu item, it takes
+a while before events get handled again.
+
+Timing: sometimes calctimes for partial tree is affects lay-out in
+channel view.
+
+Timing: (opt)calctimes isn't a very meaningful name.
 
 edit mgr: doesn't fix channel dictionary
 
@@ -26,6 +78,8 @@ general: sometimes, after a while the entire CMIF editor hangs...
 
 ------------------------------ PERFORMANCE ------------------------
 
+Timing: takes ages -- why?
+
 movie channel: takes so much priority that sound doesn't play and
 buttons don't react
 
@@ -39,15 +93,22 @@ general: need to use CVS for project management
 
 ------------------------------ FEATURES ---------------------------
 
-arc edit: larger delay range
+channel view: want to cut and paste channels
 
-player: "keep" attribute (default 1)
+channel view: need to warn if a channel with nodes is deleted
+
+player: "keep" attribute (default 1) [what's this?]
 
 block & channel view: want to show other view's focus
 
-block & channel view: use channel colors instead of default gray / yellow
+block & channel view: use channel colors instead of default (gray)
 
 ------------------------------ NITS -------------------------------
+
+node info: could use a 'convert to ext' button for imm text nodes.
+
+block & channel views: show only 'info' in menu, but support shortcuts
+for attributes and anchors.
 
 Need uniform approach to configuration files/directories (help directory,
 Attrdefs, .cmif_editors -- what else?)
@@ -183,3 +244,14 @@ channel view: help is printed on stdout
 
 channel view: uninformative dialog box for unknown keyboard input
 (should beep)
+
+arc edit: larger delay range
+
+MovieChannel: center the image.
+
+*    I would very much like to see unused channels not appear on the
+     screen.  So that text windows can appear where the film window was,
+     and so on.  Otherwise all the channels have to occupy different places
+     on the screen, and only half are ever used at any one time, and the
+     presentation has no cohesion.
+     *** solution: channel windows pop up when a new node is displayed ***
