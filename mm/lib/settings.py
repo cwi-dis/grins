@@ -32,7 +32,6 @@ default_settings = {
 	'cmif': 0,			# Show cmif-only attributes
 	'debug': 0,			# Show debug commands
 	'checkext': 1,			# Guess Mime type based on extension
-	'vertical_structure': 0,	# Orientation of Structure View
 	'no_canvas_resize': 1,	 # Don't resize canvas after window resize (X)
 	'hierarchy_minimum_sizes': 0,	# Leaf nodes drawn using min. size
 	'structure_name_size': 1,

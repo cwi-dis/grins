@@ -32,7 +32,6 @@ except AttributeError:
 	slideshow_view = 0;
 
 import settings
-DISPLAY_VERTICAL = settings.get('vertical_structure')
 hierarchy_minimum_sizes = settings.get('hierarchy_minimum_sizes')
 root_expanded = settings.get('root_expanded')
 structure_name_size = settings.get('structure_name_size')
@@ -568,7 +567,7 @@ class HierarchyView(HierarchyViewDialog):
 		# in other words, interior is false if this is a leaf node (TODO: confirm -mjvdg)
 		if interior:
 			# If the node is in ('par'...) then it is vertical
-			horizontal = (t in ('par', 'alt', 'excl', 'prio')) == DISPLAY_VERTICAL
+			horizontal = (t not in ('par', 'alt', 'excl', 'prio'))
 			i = -1
 			# if node is expanded, determine where in the node
 			# the file is dropped, else create at end
@@ -1086,12 +1085,8 @@ class HierarchyView(HierarchyViewDialog):
 		if self.timescale:
 			cw, ch = self.canvassize
 			w, h, t0 = node.boxsize
-			if DISPLAY_VERTICAL:
-				top = t0 / ch
-				bottom = top + h / ch
-			else:
-				left = t0 / cw
-				right = left + w / cw
+			left = t0 / cw
+			right = left + w / cw
 		if not hasattr(node, 'expanded') or \
 		   not node.GetChildren():
 			if hierarchy_minimum_sizes:
@@ -1108,13 +1103,13 @@ class HierarchyView(HierarchyViewDialog):
 		right = right - self.horedge
 		children = node.GetChildren()
 		size = 0
-		horizontal = (ntype in ('par', 'alt', 'excl', 'prio')) == DISPLAY_VERTICAL
+		horizontal = (ntype not in ('par', 'alt', 'excl', 'prio'))
 		# animate++
 		if ntype in MMNode.leaftypes and node.GetChildren():
 			horizontal = 0
 		for child in children:
 			size = size + child.boxsize[not horizontal]
-			if DISPLAY_VERTICAL != horizontal:
+			if horizontal:
 				size = size + child.boxsize[2]
 		# size is minimum size required for children in mm
 # use this to make drop area also proportional to available size
@@ -1135,7 +1130,7 @@ class HierarchyView(HierarchyViewDialog):
 		maxb = 0
 		for child in children:
 			size = child.boxsize[not horizontal]
-			if DISPLAY_VERTICAL != horizontal:
+			if horizontal:
 				size = size + child.boxsize[2]
 			if horizontal:
 				right = left + size * factor
@@ -1188,10 +1183,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.arrheight = float(self.sizes.ARRSIZE) / rh
 		self.errwidth = float(self.sizes.ERRSIZE) / rw
 		self.errheight = float(self.sizes.ERRSIZE) / rh
-		if DISPLAY_VERTICAL:
-			self.droparea = float(self.sizes.DROPAREA) / rw
-		else:
-			self.droparea = float(self.sizes.DROPAREA) / rh
+		self.droparea = float(self.sizes.DROPAREA) / rw
 		list = []
 		if self.timescale:
 			timebarheight = float(self.sizes.TIMEBARHEIGHT)/rh
@@ -1237,10 +1229,7 @@ class HierarchyView(HierarchyViewDialog):
 			Timing.needtimes(self.root)
 			self.timescalefactor = settings.get('time_scale_factor')
 		width, height, begin = self.sizeboxes(self.root)
-		if DISPLAY_VERTICAL:
-			height = height + begin
-		else:
-			width = width + begin
+		width = width + begin
 		cwidth, cheight = window.getcanvassize(self.sizes.SIZEUNIT)
 		mwidth = mheight = 0 # until we have a way to get the min. size
 		if not hierarchy_minimum_sizes and \
@@ -1500,12 +1489,8 @@ class HierarchyView(HierarchyViewDialog):
 			minsize = dur
 		else:
 			begin = 0
-		if DISPLAY_VERTICAL:
-			minwidth = self.sizes.MINSIZE
-			minheight = minsize
-		else:
-			minwidth = minsize
-			minheight = self.sizes.MINSIZE
+		minwidth = minsize
+		minheight = self.sizes.MINSIZE
 		if self.timescale:
 			pass # Don't mess with the size, it is important
 		elif structure_name_size:
@@ -1527,7 +1512,7 @@ class HierarchyView(HierarchyViewDialog):
 			return node.boxsize
 		nchildren = len(children)
 		width = height = 0
-		horizontal = (ntype in ('par', 'alt', 'excl', 'prio')) == DISPLAY_VERTICAL
+		horizontal = (ntype not in ('par', 'alt', 'excl', 'prio'))
 		for child in children:
 			w, h, b = self.sizeboxes(child)
 			if horizontal:
@@ -1540,10 +1525,7 @@ class HierarchyView(HierarchyViewDialog):
 				if w > width:
 					width = w
 				height = height + h + self.sizes.GAPSIZE
-			if DISPLAY_VERTICAL:
-				height = height + b
-			else:
-				width = width + b
+			width = width + b
 		if ntype == 'seq':
 			if horizontal:
 				width = width + self.sizes.DROPAREA
@@ -1849,17 +1831,7 @@ class Object:
 			r1 = r - hmargin*2
 			b1 = b - vmargin*2
 			if l1 < r1 and t1 < b1:
-				if (node.GetType() in ('par', 'alt', 'excl', 'prio')) == DISPLAY_VERTICAL:
-					# Draw verticle lines.
-					stepsize = (r1-l1)/2
-					while stepsize > hmargin*4:
-						stepsize = stepsize / 2
-					x = l1
-					while x <= r1:
-						d.drawline(TEXTCOLOR,
-							   [(x, t1), (x, b1)])
-						x = x + stepsize
-				else:
+				if node.GetType() in ('par', 'alt', 'excl', 'prio'):
 					# Draw horizontal lines
 					stepsize = (b1-t1)/2
 					while stepsize > vmargin*4:
@@ -1870,6 +1842,16 @@ class Object:
 						d.drawline(TEXTCOLOR,
 							   [(l1, y), (r1, y)])
 						y = y + stepsize
+				else:
+					# Draw verticle lines.
+					stepsize = (r1-l1)/2
+					while stepsize > hmargin*4:
+						stepsize = stepsize / 2
+					x = l1
+					while x <= r1:
+						d.drawline(TEXTCOLOR,
+							   [(x, t1), (x, b1)])
+						x = x + stepsize
 
 	def drawchannelname(self, l, t, r, b):
 		d = self.mother.new_displist
