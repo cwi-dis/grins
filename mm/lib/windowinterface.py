@@ -930,6 +930,11 @@ class _Window:
 				return retval[:-1] + (image,)
 			except:		# any error...
 				del _image_cache[cachekey]
+				import posix
+				try:
+					posix.unlink(filename)
+				except posix.error:
+					pass
 		f = open(file, 'r')
 		magic = f.read(4)
 		if magic[:2] == '\001\332':
@@ -961,6 +966,11 @@ class _Window:
 				  retval[7], retval[8])
 		except:			# any error...
 			print 'Warning: caching image failed'
+			import posix
+			try:
+				posix.unlink(filename)
+			except posix.error:
+				pass
 			return retval
 		_image_cache[cachekey] = retval[:-1] + (filename,)
 		return retval
