@@ -35,6 +35,13 @@ ITEM_INPUT_CANCEL=2
 ITEM_INPUT_PROMPT=3
 ITEM_INPUT_TEXT=4
 
+# For messages and questions:
+ID_MESSAGE_DIALOG=521
+ID_QUESTION_DIALOG=522
+ITEM_QUESTION_TEXT=1
+ITEM_QUESTION_OK=2
+ITEM_QUESTION_CANCEL=3
+
 # XXXX Debugging code: assure the resource file is available
 try:
 	Res.GetResource('DLOG', ID_SELECT_DIALOG)
@@ -946,7 +953,69 @@ class MACDialog:
 		"""
 		self._window.setcursor(cursor)
 		
+			
+class _ModelessDialog(MACDialog):
+	def __init__(self, title, dialogid, text, okcallback, cancelcallback=None):
+		MACDialog.__init__(self, title, dialogid, [], ITEM_QUESTION_OK, ITEM_QUESTION_CANCEL)
+		self.okcallback = okcallback
+		self.cancelcallback = cancelcallback
+		self._setlabel(ITEM_QUESTION_TEXT, text)
+		self.show()
 		
+	def do_itemhit(self, item, event):
+		if item == ITEM_QUESTION_OK:
+			self.close()
+			if self.okcallback:
+				func, arglist = self.okcallback
+				apply(func, arglist)
+		elif item == ITEM_QUESTION_CANCEL:
+			self.close()
+			if self.cancelcallback:
+				func, arglist = self.cancelcallback
+				apply(func, arglist)
+		else:
+			print 'Unknown modeless dialog event', item, event
+			
+def _ModalDialog(title, dialogid, text, okcallback, cancelcallback=None):
+	d = Dlg.GetNewDialog(dialogid, -1)
+	d.SetDialogDefaultItem(ITEM_QUESTION_OK)
+	if cancelcallback:
+		d.SetDialogCancelItem(ITEM_QUESTION_CANCEL)
+	tp, h, rect = d.GetDialogItem(ITEM_QUESTION_TEXT)
+	Dlg.SetDialogItemText(h, text)
+	w = d.GetDialogWindow()
+	w.ShowWindow()
+	while 1:
+		n = Dlg.ModalDialog(None)
+		if n == ITEM_QUESTION_OK:
+			del d
+			del w
+			if okcallback:
+				func, arglist = okcallback
+				apply(func, arglist)
+			return
+		elif n == ITEM_QUESTION_CANCEL:
+			del d
+			del w
+			if cancelcallback:
+				func, arglist = cancelcallback
+				apply(func, arglist)
+			return
+		else:
+			print 'Unknown modal dialog item', n
+			
+def showmessage(text, mtype = 'message', grab = 1, callback = None,
+		     cancelCallback = None, name = 'message',
+		     title = 'message'):
+	if mtype == 'question' or cancelCallback:
+		dlgid = ID_QUESTION_DIALOG
+	else:
+		dlgid = ID_MESSAGE_DIALOG
+	if grab:
+		_ModalDialog(title, dlgid, text, callback, cancelCallback)
+	else:
+		_ModelessDialog(title, dlgid, text, callback, cancelCallback)
+
 # XXXX Do we need a control-window too?
 
 class FileDialog:
