@@ -14,8 +14,13 @@ def getfullinfo(filename):
 		print 'EOF on sound file', filename
 		return f, 1, 0, 1, 8000, 'eof', []
 	except aifc.Error, msg:
-		print 'error in sound file', filename, ':', msg
-		return f, 1, 0, 1, 8000, 'error', []
+		import sunau
+		f.seek(0)
+		try:
+			a = sunau.openfp(f, 'r')
+		except sunau.Error:
+			print 'error in sound file', filename, ':', msg
+			return f, 1, 0, 1, 8000, 'error', []
 	dummy = a.readframes(0)		# sets file pointer to start of data
 	if a.getcomptype() != 'NONE':
 		print 'cannot read compressed AIFF-C files for now', filename
