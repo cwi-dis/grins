@@ -383,7 +383,13 @@ class MMParser:
 	#
 	def getnexttoken(self):
 		while 1:
-			while tokenprog.match(self.nextline, self.pos) < 0:
+			while 1:
+				res = tokenprog.match(self.nextline, self.pos)
+				if type(res) is type(0):
+					if res >= 0:
+						break
+				elif res is not None:
+					break
 				#
 				# End of line hit
 				#
@@ -413,7 +419,10 @@ class MMParser:
 			#
 			# Found a token
 			#
-			self.tokstart, self.pos = tokenprog.regs[3]
+			if type(res) is type(0):
+				self.tokstart, self.pos = tokenprog.regs[3]
+			else:
+				self.tokstart, self.pos = res.regs[3]
 			token = self.nextline[self.tokstart:self.pos]
 			if token != '\n': return token
 	#
