@@ -167,6 +167,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		geometry = self.getgeometry()
 		if geometry is not None:
 			self.last_geometry = geometry
+			return self.last_geometry
 
 	def setlayout(self, layout = None, channel = None, selectchannelcb = None):
 		self.curlayout = layout
