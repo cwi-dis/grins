@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<smil xmlns="http://www.w3.org/2000/SMIL20/CR/Language" xmlns:GRiNS="http://www.oratrix.com/">
+<smil xmlns="http://www.w3.org/2001/SMIL20/Language" xmlns:GRiNS="http://www.oratrix.com/">
   <head>
     <meta name="title" content="Slideshow with Dual Audio"/>
-    <meta name="template_name" content="Slideshow with Background Audio and Voice Overs"/>
-    <meta name="template_description" content="A slideshow with background audio, voice-overs and a background image."/>
+    <meta name="template_name" content="Slideshow with Background Music and Voice Overs"/>
+    <meta name="template_description" content="A slideshow with background msuic, voice-overs and a background image."/>
     <meta name="template_snapshot" content="icons/slideshow_2A.bmp"/>
     <meta name="project_html_page" content="external_player.html"/>
     <layout>
@@ -21,10 +21,10 @@
     <GRiNS:viewinfo view="assets" top="420" left="49" width="399" height="433"/>
   </head>
   <body GRiNS:hidden="true">
-    <par id="BasicSlideshow" GRiNS:thumbnailScale="false" GRiNS:thumbnailIcon="icons/slideshow_2A.bmp" GRiNS:project_default_region_image="Images" GRiNS:project_default_region_sound="audio_1" GRiNS:project_default_region_text="Images" GRiNS:showtime="cfocus">
-      <seq id="ImagesAndAudioSequence" GRiNS:emptyDur="10s" GRiNS:emptyText="Place ImageAudio object from Asset View here." GRiNS:emptyColor="#c0c0c0">
+    <par id="BasicSlideshow" GRiNS:thumbnailScale="false" GRiNS:thumbnailIcon="icons/slideshow_2A.bmp" GRiNS:project_default_region_image="Images" GRiNS:project_default_region_sound="audio_1" GRiNS:project_default_region_text="Images" GRiNS:showtime="bwstrip" GRiNS:timezoom="4.975">
+      <seq id="ImagesAndAudioSequence" GRiNS:emptyDur="10s" GRiNS:emptyText="Place ImageAudio object from Asset View here." GRiNS:emptyColor="#c0c0c0" GRiNS:nonEmptyIcon="icons/DropRight.gif">
       </seq>
-      <seq id="BkgdClip" GRiNS:emptyText="Place Background Audio here." GRiNS:emptyColor="#c0c0c0"/>
+      <seq id="BkgdClip" region="audio_2" GRiNS:emptyText="Place Background Music here." GRiNS:emptyColor="#c0c0c0"/>
       <img id="BkgdImg" fill="freeze" region="bkgd_image" src="media/Back3.gif"/>
     </par>
     <GRiNS:assets skip-content="true">
