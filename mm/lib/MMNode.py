@@ -1074,10 +1074,15 @@ class MMNode(MMNodeBase.MMNode):
 		#
 		# Trickery to handle dur and end correctly:
 		#
-		if scheddone_events and terminate_events:
+		if scheddone_events and \
+		   (terminate_events or terminating_children):
 			# Terminate_events means we have a specified
 			# duration. We obey this, and ignore scheddone
 			# events from our children.
+			# Terminating_children means we have a
+			# terminator attribute that points to a child.
+			# We obey this also and ignore scheddone
+			# events from our other children.
 			srlist.append( (scheddone_events, []) )
 			scheddone_events = []
 			
