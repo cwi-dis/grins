@@ -139,6 +139,8 @@ class Scheduler(scheduler):
 		for pn in arm_events:
 			d = pn.GetRawAttr('arm_duration')
 			c = self.getchannel(pn)
+			if not c:
+				continue # Node is not on any channel...
 			pn.setarmedmode(ARM_SCHEDULED)
 			# XXX Attempted fix by Jack: get rid of
 			# multiple-arms of first few events
@@ -207,6 +209,8 @@ class Scheduler(scheduler):
 	def seek_done(self):
 		for node in self.seek_nodelist:
 		    ch = self.getchannel(node)
+		    if not ch:
+			    continue # Node is not on any channel...
 		    if self.measure_armtimes:
 			    ch.arm_and_measure(node)
 		    else:
@@ -358,9 +362,10 @@ class Scheduler(scheduler):
 				pass
 			d = pn.GetRawAttr('arm_duration')
 			c = self.getchannel(pn)
-			pn.setarmedmode(ARM_SCHEDULED)
-			pn.prearm_event = self.rtpool.enter(pn.t0, d, \
-				c.arm_only, pn)
+			if c:
+				pn.setarmedmode(ARM_SCHEDULED)
+				pn.prearm_event = self.rtpool.enter(pn.t0, d, \
+					c.arm_only, pn)
 	#
 	# Channel access utilities.
 	#
