@@ -118,7 +118,7 @@ class textwindow:
 		self.__window = w
 		self.__text = t
 
-	def settext(self, text):
+	def settext(self, text, colors=[]):
 		self.__text.settext(text)
 
 	def gettext(self):
