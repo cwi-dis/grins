@@ -16,10 +16,10 @@ Exact version for your Operating system:
 Machine hardware:
 	(e.g. IBM Thinkpad 600X, Pentium III 500Mhz, 128Mb memory)
 	
-Is the problem reproducible?
+Can the problem be repeated?
 	(yes, no, don't know, didn't try)
 	
-If it is reproducible, could you tell us how to repeat it:
+If it is possible to repeat the problem could you tell us how to do it:
 	
 	
 Description of the problem:
