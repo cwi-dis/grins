@@ -5076,7 +5076,16 @@ class MMNode(MMTreeElement):
 	def applyAnimationData(self, editmgr):
 		if self._animationData:
 			self._animationData.applyData(editmgr, replace=1)
-		
+
+			# temporary test
+			if 0:
+				print '-----------------------------'
+				self._animationData.createAnimators()
+				t = 0.0
+				for i in range(11):
+					print 'rect=', self._animationData.getRectAt(t)
+					t = t + 0.1
+
 class FakeRootNode(MMNode):
 	def __init__(self, root):
 		self.__root = root	# the real root
