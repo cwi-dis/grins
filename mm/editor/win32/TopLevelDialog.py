@@ -32,7 +32,7 @@ class TopLevelDialog:
 	def show(self):
 		if self.window is not None:
 			return
-		import settings
+		import settings, bitrates, languages
 		bitrate = settings.get('system_bitrate')
 		rates = []
 		initbitrate = bitrates.bitrates[0][1]
