@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<smil xmlns="http://www.w3.org/2001/SMIL20/Language" xmlns:GRiNS="http://www.oratrix.com/">
+  <head>
+    <meta name="title" content=" SMIL "/>
+    <meta name="generator" content="GRiNS Pro for SMIL 2.0, v2.0 alpha win32 build 84"/>
+    <layout>
+      <root-layout id="SMIL-" title=" SMIL " backgroundColor="yellow" width="400" height="300" GRiNS:collapsed="false"/>
+      <region id="unnamed-region" title="unnamed region" left="87" width="240" top="61" height="190" z-index="1" fit="fill" backgroundColor="black" GRiNS:collapsed="false"/>
+      <region id="region1" left="0" width="240" top="0" height="190" z-index="1" backgroundColor="silver" GRiNS:collapsed="false" GRiNS:previewShowOption="'onSelected'"/>
+      <region id="region2" left="161" width="240" top="110" height="190" backgroundColor="silver" GRiNS:collapsed="false"/>
+    </layout>
+    <transition id="fade" dur="4" type="fade"/>
+    <GRiNS:viewinfo view="structure" top="20" left="20" width="640" height="512"/>
+  </head>
+  <body>
+    <video region="unnamed-region" src="fashion.mov" left="-87" width="240" top="-61" height="190" transIn="fade" transOut="fade">
+      <animateMotion dur="5s" fill="freeze" from="-87 -61" to="0 0" calcMode="linear"/>
+    </video>
+  </body>
+</smil>
