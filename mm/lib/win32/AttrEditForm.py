@@ -1185,7 +1185,7 @@ class SystemScreenSizeCtrl(IntTupleCtrl):
 		self._wnd._attrinfo.settext(self.gethelp())
 
 	def gethelp(self):
-		return "Play node only if screen bigger than the specified pixel value (leave empty for Not set)"
+		return "Play node only if screen bigger than the specified pixel value (leave height and width empty for Not set)"
 	
 	def setvalue(self, val):
 		if val == '':
@@ -3849,7 +3849,6 @@ class SystemGroup(PreferencesGroup):
 		a = self.getattr('system_screen_depth')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_61,grinsRC.IDC_62))
 		a = self.getattr('system_screen_size')
-#		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_71,grinsRC.IDC_72))
 		cd[a] = SystemScreenSizeCtrl(wnd,a,(grinsRC.IDC_GROUP8, grinsRC.IDC_WIDTHV,grinsRC.IDC_HEIGHTV))
 		return cd
 
