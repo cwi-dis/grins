@@ -356,7 +356,8 @@ def initattrdefs():
 
 	if __debug__:
 		import cmif
-		filename = cmif.findfile(os.path.join('lib', 'Attrdefs'))
+		filename = os.path.join(os.path.dirname(cmif.__file__), 'AttrDefs')
+##		filename = cmif.findfile(os.path.join('lib', 'Attrdefs'))
 		try:
 			fp = open(filename, 'r')
 		except IOError:
