@@ -199,7 +199,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Dialog"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Select:",IDC_STATIC1,9,9,111,8
+    LTEXT           "Select:",IDC_LABEL,9,9,111,8
     COMBOBOX        IDC_COMBO1,9,23,115,57,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     DEFPUSHBUTTON   "OK",IDOK,129,23,50,14
@@ -2446,6 +2446,19 @@ BEGIN
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
 END
 
+IDD_SELECT_MULTI DIALOG DISCARDABLE  0, 0, 160, 153
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,103,132,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,7,132,50,14
+    CONTROL         "List1",IDC_LIST1,"SysListView32",LVS_LIST | 
+                    LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | 
+                    WS_TABSTOP,7,21,146,102
+    LTEXT           "Select items:",IDC_LABEL,7,7,146,8,WS_TABSTOP
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2833,6 +2846,14 @@ BEGIN
     IDD_EDITATTR_LAYOUT3, DIALOG
     BEGIN
         RIGHTMARGIN, 295
+    END
+
+    IDD_SELECT_MULTI, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 153
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 146
     END
 END
 #endif    // APSTUDIO_INVOKED
