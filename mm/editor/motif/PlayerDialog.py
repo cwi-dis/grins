@@ -41,5 +41,9 @@ class PlayerDialog(PlayerDialogBase):
 		'close': [ CLOSE_WINDOW, ],
 		}
 
+	def show(self, subwindowof=None):
+		PlayerDialogBase.show(self, subwindowof)
+		self._window.set_toggle(SYNCCV, self.sync_cv)
+
 	def get_adornments(self, channel):
 		return self.adornments2
