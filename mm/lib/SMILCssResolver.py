@@ -180,8 +180,7 @@ class Node:
 	def unlink(self):
 		self.isInit = 0
 		try:
-			index = self.container.children.index(self)
-			del self.container.children[index]
+			self.container.children.remove(self)
 		except:
 			pass
 		self.container = None
