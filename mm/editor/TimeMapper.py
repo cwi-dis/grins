@@ -21,44 +21,43 @@ class TimeMapper:
 		self.offset = offset
 		self.width = width
 
-	def adddependency(self, t0, t1, minpixeldistance, id):
+	def adddependency(self, t0, t1, minpixeldistance):
 		if not self.collecting:
 			raise Error, 'Adding dependency while not collecting data anymore'
-		self.dependencies.append((t1, t0, minpixeldistance, id))
+		self.dependencies.append((t1, t0, minpixeldistance))
 		self.collisiondict[t0] = 0
 		self.collisiondict[t1] = 0
 		
-	def addcollision(self, time, minpixeldistance, id):
+	def addcollision(self, time, minpixeldistance):
 		if not self.collecting:
 			raise Error, 'Adding collision while not collecting data anymore'
-		self.collisions.append((time, minpixeldistance, id))
+		self.collisions.append((time, minpixeldistance))
 		self.collisiondict[time] = 0
 		
-	def calculate(self, realtime=0):
+	def calculate(self, realtime=0, min_pixels_per_second = 0):
 		if not self.collecting:
 			raise Error, 'Calculate called while not collecting data'
 		self.collecting = 0
 		self.dependencies.sort()
-		self.collisions.sort()
 		if DEBUG:
 			print 'DEPENDENCIES'
 			for item in self.dependencies:
-				print '\t%f\t%f\t%d\t%s'%item
+				print '\t%f\t%f\t%d'%item
 			print 'COLLISIONS'
+			self.collisions.sort()
 			for item in self.collisions:
-				print '\t%f\t%d\t%s'%item
-		for time, pixels, id in self.collisions:
+				print '\t%f\t%d'%item
+		for time, pixels in self.collisions:
 			oldpixels = self.collisiondict[time]
 			if pixels > oldpixels:
 				self.collisiondict[time] = pixels
 		self.times = self.collisiondict.keys()
 		self.times.sort()
 		if realtime:
-			min_pixels_per_second = 0
-			for t1, t0, pixels, id in self.dependencies:
+			for t1, t0, pixels in self.dependencies:
 				if t1 != t0 and pixels/(t1-t0) > min_pixels_per_second:
 					min_pixels_per_second = pixels/(t1-t0)
-			min_pixels_per_second = int(min_pixels_per_second+0.5)
+##			min_pixels_per_second = int(min_pixels_per_second+0.5)
 		else:
 			min_pixels_per_second = 2
 		minpos = 0
@@ -66,9 +65,9 @@ class TimeMapper:
 		for t in self.times:
 			if t != prev_t: # for times[0] don't add the dependency
 				if realtime:
-					self.dependencies.append((t, prev_t, (t-prev_t)*min_pixels_per_second, None))
+					self.dependencies.append((t, prev_t, (t-prev_t)*min_pixels_per_second))
 				else:
-					self.dependencies.append((t, prev_t, min_pixels_per_second, None))
+					self.dependencies.append((t, prev_t, min_pixels_per_second))
 ##			minpos = minpos + (t-prev_t) * min_pixels_per_second
 			self.minpos[t] = minpos
 			minpos = minpos + self.collisiondict[t] + 1
@@ -80,9 +79,9 @@ class TimeMapper:
 				print '\t%f\t%f'%(t, self.minpos[t])
 			print 'DEPENDENCIES NOW'
 			for item in self.dependencies:
-				print '\t%f\t%f\t%d\t%s'%item
-		pushover = {}
-		for t1, t0, pixels, id in self.dependencies:
+				print '\t%f\t%f\t%d'%item
+##		pushover = {}
+		for t1, t0, pixels in self.dependencies:
 			t0maxpos = self.minpos[t0] + self.collisiondict[t0]
 			t1minpos = t0maxpos + pixels
 			if t1minpos > self.minpos[t1]:
@@ -102,6 +101,10 @@ class TimeMapper:
 				print t, self.minpos[t], self.minpos[t] + self.collisiondict[t]
 			print self.minpos
 		self.range = self.minpos[self.times[0]], self.minpos[self.times[-1]] + self.collisiondict[self.times[-1]] + 1
+		if realtime:
+			return min_pixels_per_second
+		else:
+			return 0
 		
 	def pixel2time(self, pxl):
 		if self.collecting:
@@ -136,6 +139,8 @@ class TimeMapper:
 		return tm + (pos - mp)
 		
 	def __pixel2pixel(self, pos):
+		if self.width == 0:
+			return pos
 		return int(pos * self.width / float(self.range[1] - self.range[0]) + self.offset)
 
 	def time2pixel(self, time, align='left'):

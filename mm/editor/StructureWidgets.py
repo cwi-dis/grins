@@ -216,10 +216,10 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def adddependencies(self, timemapper):
 		t0, t1, t2, download, begindelay = self.GetTimes('virtual')
 		w, h = self.get_minsize()
-		if t0 != t1:
-			timemapper.adddependency(t0, t1, w, self)
-		if t2 != t1 and t0 != t2:
-			timemapper.adddependency(t0, t2, w, self)
+##		if t0 != t1:
+##			timemapper.adddependency(t0, t1, w)
+		if t0 != t2:
+			timemapper.adddependency(t0, t2, w)
 
 	def addcollisions(self, mastert0, mastertend, timemapper, mytimes = None):
 		edge = 0
@@ -233,7 +233,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if download:
 			# Slightly special case. We register a collision on t0, and then continue
 			# computing with t0 minus the delays
-			timemapper.addcollision(t0, edge, self)
+			timemapper.addcollision(t0, edge)
 			t0 = t0 - (download)
 		ledge = redge = edge
 		if t0 == tend:
@@ -243,19 +243,21 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			elif t0 == mastert0:
 				ledge = ledge + w
 			else:
-				timemapper.addcollision(t0, w+2*edge, self)
+				timemapper.addcollision(t0, w+2*edge)
 		elif t0 == t1:
 			ledge = 4*HEDGSIZE
-			timemapper.addcollision(t0, ledge, self)
+			timemapper.addcollision(t0, ledge)
 		if t0 != mastert0:
-			timemapper.addcollision(t0, ledge, self)
+			timemapper.addcollision(t0, ledge)
 			ledge = 0
 		if tend != mastertend:
-			timemapper.addcollision(tend, redge, self)
+			timemapper.addcollision(tend, redge)
 			redge = 0
 		return ledge, redge
 
 	def init_timemapper(self, timemapper):
+		if not self.node.WillPlay():
+			return None
 		if timemapper is None and (hasattr(self, 'showtime') or self.node.showtime):
 			timemapper = TimeMapper.TimeMapper()
 			if self.node.GetType() not in ('excl', 'prio'):
@@ -276,13 +278,19 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			if self.timemapper is not None:
 				t0, t1, t2, download, begindelay = self.GetTimes('virtual')
 				p0, p1 = self.addcollisions(t0, t2, timemapper, (t0, t1, t2, download, begindelay))
-				self.timemapper.addcollision(t0, p0, self)
-				self.timemapper.addcollision(t2, p1, self)
+				self.timemapper.addcollision(t0, p0)
+				self.timemapper.addcollision(t2, p1)
 				if hasattr(self, 'showtime'):
 					showtime = self.showtime
 				else:
 					showtime = self.node.showtime
-				timemapper.calculate(showtime == 'cfocus')
+				min_pxl_per_sec = 0
+				if self.timeline is None or self.timeline.minwidth == 0:
+					try:
+						min_pxl_per_sec = self.node.__min_pxl_per_sec
+					except AttributeError:
+						pass
+				self.node.__min_pxl_per_sec = timemapper.calculate(showtime == 'cfocus', min_pixels_per_second = min_pxl_per_sec)
 				t0, t1, t2, dummy, dummy = self.GetTimes('virtual')
 				w = timemapper.time2pixel(t2, align='right') - timemapper.time2pixel(t0)
 				if w > self.boxsize[0]:
@@ -994,8 +1002,8 @@ class HorizontalWidget(StructureObjWidget):
 					l = lmin
 				r = tm.time2pixel(tend) + neededpixel1
 				if t0 == tend:
-					r = min(r + neededpixel0 + neededpixel1, tm.time2pixel(tend, 'right'), l + w, self.pos_abs[2]-HEDGSIZE)
-				max_r = r
+					r = min(r + neededpixel0 + neededpixel1, tm.time2pixel(tend, 'right'), l + w)
+				max_r = min(r, self.pos_abs[2]-HEDGSIZE)
 			else:
 				r = l + w + thisnode_free_width
 				if chindex == len(self.children)-1:
@@ -1058,14 +1066,14 @@ class HorizontalWidget(StructureObjWidget):
 				neededpixel0 = neededpixel0 + GAPSIZE
 			if thistend == mastertend:
 				maxneededpixel1 = neededpixel1 = neededpixel1 + maxneededpixel1
-			timemapper.addcollision(thist0, neededpixel0, self)
-			timemapper.addcollision(thistend, neededpixel1, self)
+			timemapper.addcollision(thist0, neededpixel0)
+			timemapper.addcollision(thistend, neededpixel1)
 			t0 = nextt0
 		if myt0 != mastert0:
-			timemapper.addcollision(myt0, maxneededpixel0, self)
+			timemapper.addcollision(myt0, maxneededpixel0)
 			maxneededpixel0 = 0
 		if mytend != mastertend:
-			timemapper.addcollision(mytend, maxneededpixel1, self)
+			timemapper.addcollision(mytend, maxneededpixel1)
 			maxneededpixel1 = 0
 		return maxneededpixel0, maxneededpixel1
 
@@ -1269,10 +1277,10 @@ class VerticalWidget(StructureObjWidget):
 			maxneededpixel1 = maxneededpixel0 + maxneededpixel1
 			maxneededpixel0 = 0
 		if t0 != mastert0:
-			timemapper.addcollision(t0, maxneededpixel0, self)
+			timemapper.addcollision(t0, maxneededpixel0)
 			maxneededpixel0 = 0
 		if tend != mastertend:
-			timemapper.addcollision(tend, maxneededpixel1, self)
+			timemapper.addcollision(tend, maxneededpixel1)
 			maxneededpixel1 = 0
 		return maxneededpixel0, maxneededpixel1
 
@@ -1654,6 +1662,7 @@ class MediaWidget(MMNodeWidget):
 				align = 'left'
 			dw = timemapper.interptime2pixel(t0+dur, align) - x
 			if dw < 0: dw = 0
+			if dw > w: dw = w
 		else:
 			dw = w
 		self.need_draghandles = x,x+dw,y+h-8
@@ -1664,6 +1673,7 @@ class MediaWidget(MMNodeWidget):
 ##				adw = min(int(w*float(ad-dur)/(t2-t0) + .5), w-dw)
 				adw = timemapper.interptime2pixel(t0+ad) - x - dw
 				if adw < 0: adw = 0
+				if adw > w-dw: adw = w-dw
 			else:
 				adw = 0
 			if adw > 0:
@@ -2039,10 +2049,7 @@ class TimelineWidget(MMWidgetDecoration):
 	# A widget showing the timeline
 	def __init__(self, mmwidget, mother):
 		MMWidgetDecoration.__init__(self, mmwidget, mother)
-		try:
-			self.minwidth = mmwidget.node.__mintlwidth
-		except AttributeError:
-			self.minwidth = 0
+		self.minwidth = 0
 		mmwidget.GetTimes('virtual')
 
 	def recalc_minsize(self):
@@ -2055,8 +2062,6 @@ class TimelineWidget(MMWidgetDecoration):
 
 	def setminwidth(self, width):
 		self.minwidth = width
-		# stash away a copy of the width in a more permanent place
-		self.get_mmwidget().node.__mintlwidth = width
 
 	def moveto(self, coords, timemapper):
 		MMWidgetDecoration.moveto(self, coords)
@@ -2113,7 +2118,7 @@ class TimelineWidget(MMWidgetDecoration):
 				label = '%02d:%02.2d'%(int(t0)/60, int(t0)%60)
 			displist.centerstring(min, label_top, max, label_bot, label)
 			return
-		labelwidth = displist.strsize('000:00 ')[0]
+		labelwidth = displist.strsizePXL('000:00 ')[0]
 		halflabelwidth = labelwidth / 2
 		lastlabelpos = x - halflabelwidth - 1
 		lb, ub, quantum, factor = setlim(t0, t2)
@@ -2146,12 +2151,18 @@ class TimelineWidget(MMWidgetDecoration):
 		i = 1
 		while i < mod:
 			i = i * 10
-		if i / 2 <= mod:
-			mod = i / 2
-		elif i / 5 <= mod:
+		if i / 5 > mod:
 			mod = i / 5
+		elif i / 2 > mod:
+			mod = i / 2
 		else:
-			mod = i / 10
+			mod = i
+##		if i / 2 <= mod:
+##			mod = i / 2
+##		elif i / 5 <= mod:
+##			mod = i / 5
+##		else:
+##			mod = i / 10
 		mod = mod * quantum
 		for t in range(int(lb+.5), int(ub+.5) + quantum, quantum):
 			time = float(t) / factor
