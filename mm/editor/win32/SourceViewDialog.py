@@ -73,6 +73,10 @@ class SourceViewDialog:
 			self.__textwindow.close()
 			self.__textwindow = None
 
+		if self.findDlg:
+			self.findDlg.hide()
+			self.findDlg = None
+			
 	def setcommandlist(self, commandlist):
 		if self.__textwindow:
 			self.__textwindow.set_commandlist(commandlist)
