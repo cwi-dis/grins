@@ -19,10 +19,10 @@ from NodeInfoForm import NodeInfoForm
 from ArcInfoForm import ArcInfoForm
 
 appform={
-	0:{'cmd':-1,'hosted':0,'title':'Property Editor','id':'attr_edit','obj':None,'class':AttrEditForm},
-	1:{'cmd':-1,'hosted':0,'title':'Anchor Editor','id':'anchor_edit','obj':None,'class':AnchorEditForm,'freezesize':1},
-	2:{'cmd':-1,'hosted':0,'title':'NodeInfo Editor','id':'node_info','obj':None,'class':NodeInfoForm,'freezesize':1},
-	3:{'cmd':-1,'hosted':1,'title':'ArcInfo Editor','id':'arc_info','obj':None,'class':ArcInfoForm},
+	0:{'cmd':-1,'title':'Property Editor','id':'attr_edit','obj':None,'class':AttrEditForm},
+	1:{'cmd':-1,'title':'Anchor Editor','id':'anchor_edit','obj':None,'class':AnchorEditForm,'freezesize':1},
+	2:{'cmd':-1,'title':'NodeInfo Editor','id':'node_info','obj':None,'class':NodeInfoForm,'freezesize':1},
+	3:{'cmd':-1,'title':'ArcInfo Editor','id':'arc_info','obj':None,'class':ArcInfoForm,'freezesize':1},
 	}
 
 # interface needed for FormServer contructor argument
@@ -61,6 +61,10 @@ class ChildFrame(window.MDIChildWnd):
 	def PreCreateWindow(self, csd):
 		csd=self._obj_.PreCreateWindow(csd)
 		cs=win32mu.CreateStruct(csd)
+		if hasattr(self._form,'getcreatesize'):
+			cx,cy=self._form.getcreatesize()
+			if cx:cs.cx=cx
+			if cx:cs.cy=cy
 		if self._freezesize:
 			cs.style = win32con.WS_CHILD|win32con.WS_OVERLAPPED |win32con.WS_CAPTION|win32con.WS_BORDER|win32con.WS_SYSMENU|win32con.WS_MINIMIZEBOX
 		return cs.to_csd()
