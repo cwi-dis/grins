@@ -1,10 +1,10 @@
-# Microsoft Developer Studio Project File - Name="aud2rm" - Package Owner=<4>
+# Microsoft Developer Studio Project File - Name="vaud2rm" - Package Owner=<4>
 # Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102
 
-CFG=aud2rm - Win32 Debug
+CFG=vaud2rm - Win32 Release
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -13,7 +13,7 @@ CFG=aud2rm - Win32 Debug
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "aud2rm.mak" CFG="aud2rm - Win32 Debug"
+!MESSAGE NMAKE /f "aud2rm.mak" CFG="vaud2rm - Win32 Release"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
@@ -81,7 +81,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 ..\..\lib\strmbasd.lib ..\..\lib\quartz.lib msvcrtd.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\..\bin\aud2rm.ax" /align:0x1000 /debug:mapped,full /subsystem:windows,4.0
+# ADD LINK32 ..\..\lib\strmbasd.lib ..\..\lib\quartz.lib msvcrtd.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib user32.lib gdi32.lib comctl32.lib ole32.lib olepro32.lib oleaut32.lib uuid.lib /nologo /base:"0x1d1c0000" /entry:"DllEntryPoint@12" /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\..\bin\aud2rm_d.ax" /align:0x1000 /debug:mapped,full /subsystem:windows,4.0
 
 !ENDIF 
 
@@ -156,10 +156,12 @@ DEP_CPP_RPROD=\
 	"..\..\..\..\mmpython\producer\include\rmapckts.h"\
 	"..\..\..\..\mmpython\producer\include\rmbldeng.h"\
 	"..\..\..\..\mmpython\producer\include\rmmetain.h"\
-	{$(INCLUDE)}"pnbastsd.h"\
-	{$(INCLUDE)}"pnresult.h"\
-	{$(INCLUDE)}"pntypes.h"\
-	{$(INCLUDE)}"rmavalue.h"\
+	
+NODEP_CPP_RPROD=\
+	".\mavalue.h"\
+	".\nbastsd.h"\
+	".\nresult.h"\
+	".\ntypes.h"\
 	
 # End Source File
 # End Target
