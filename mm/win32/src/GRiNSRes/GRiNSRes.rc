@@ -196,9 +196,9 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "GRiNS Preferences"
 FONT 8, "MS Sans Serif"
 BEGIN
-    COMBOBOX        IDC_COMBO1,123,8,90,73,CBS_DROPDOWNLIST | CBS_SORT | 
+    COMBOBOX        IDC_COMBO1,85,8,128,73,CBS_DROPDOWNLIST | CBS_SORT | 
                     WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_COMBO2,123,25,90,135,CBS_DROPDOWNLIST | CBS_SORT | 
+    COMBOBOX        IDC_COMBO2,85,25,128,135,CBS_DROPDOWNLIST | CBS_SORT | 
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "Closed-captions preferred over overdub",IDC_CHECK1,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,43,140,10
@@ -209,9 +209,8 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,163,88,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,7,88,50,14
     PUSHBUTTON      "Factory settings",IDC_RESET,64,88,95,14
-    LTEXT           "Internet connection speed (bps)",IDC_STATIC,11,10,101,8
-    LTEXT           "Preferred language (2-char abbrev)",IDC_STATIC,11,27,
-                    111,8
+    LTEXT           "System bitrate:",IDC_STATIC,11,10,47,8
+    LTEXT           "System language:",IDC_STATIC,11,27,57,8
 END
 
 IDD_CREATE_BOX DIALOG DISCARDABLE  0, 0, 336, 33
@@ -916,19 +915,19 @@ STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
     GROUPBOX        "",IDC_GROUP1,6,5,287,81
-    LTEXT           "Bitrate:",IDC_11,12,19,96,8
+    LTEXT           "System bitrate:",IDC_11,12,19,96,8
     COMBOBOX        IDC_12,109,17,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "Captions:",IDC_21,12,35,96,8
-    CONTROL         "on",IDC_22,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
+    LTEXT           "System captions:",IDC_21,12,35,96,8
+    CONTROL         "off",IDC_22,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
                     WS_TABSTOP,116,35,24,10
-    CONTROL         "off",IDC_23,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,196,
+    CONTROL         "on",IDC_23,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,196,
                     35,24,10
     GROUPBOX        "",IDC_GROUP1,109,29,174,17
-    LTEXT           "Language:",IDC_31,12,51,96,8
+    LTEXT           "System language:",IDC_31,12,51,96,8
     COMBOBOX        IDC_32,109,49,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "Overdub or Caption:",IDC_41,12,67,96,8
+    LTEXT           "System overdub or caption:",IDC_41,12,67,96,8
     CONTROL         "caption",IDC_42,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
                     WS_TABSTOP,116,67,39,10
     CONTROL         "overdub",IDC_43,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
@@ -1534,19 +1533,19 @@ STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
     GROUPBOX        "",IDC_GROUP1,6,5,287,96
-    LTEXT           "Bitrate:",IDC_11,12,19,96,8
+    LTEXT           "System bitrate:",IDC_11,12,19,96,8
     COMBOBOX        IDC_12,109,17,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "Captions:",IDC_21,12,35,96,8
-    CONTROL         "on",IDC_22,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
+    LTEXT           "System captions:",IDC_21,12,35,96,8
+    CONTROL         "off",IDC_22,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
                     WS_TABSTOP,116,35,24,10
-    CONTROL         "off",IDC_23,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,196,
+    CONTROL         "on",IDC_23,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,196,
                     35,24,10
     GROUPBOX        "",IDC_GROUP1,109,29,174,17
-    LTEXT           "Language:",IDC_31,12,51,96,8
+    LTEXT           "System language:",IDC_31,12,51,96,8
     COMBOBOX        IDC_32,109,49,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "Overdub or Caption:",IDC_41,12,67,96,8
+    LTEXT           "System overdub or caption:",IDC_41,12,67,96,8
     CONTROL         "caption",IDC_42,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
                     WS_TABSTOP,116,67,39,10
     CONTROL         "overdub",IDC_43,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,

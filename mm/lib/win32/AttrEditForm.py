@@ -3056,13 +3056,13 @@ class PreferencesGroup(SystemGroup):
 	def createctrls(self,wnd):
 		cd = {}
 		a = self.getattr('system_bitrate')
-		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_11, grinsRC.IDC_12))
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_11, grinsRC.IDC_12))
 		a = self.getattr('system_captions')
-		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23))
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23))
 		a = self.getattr('system_language')
-		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_31, grinsRC.IDC_32))
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_31, grinsRC.IDC_32))
 		a = self.getattr('system_overdub_or_caption')
-		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43))
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43))
 		return cd
 
 class Preferences1Group(PreferencesGroup):
