@@ -142,7 +142,7 @@ def getsyncarc(writer, node, isend):
 	if not srcside and \
 	   (srcuid == parent.GetUID() and
 	    (ptype == 'par' or (ptype == 'seq' and index == 0))) or \
-	   (ptype == 'seq' and index > 0 and
+	   (srcside and ptype == 'seq' and index > 0 and
 	    srcuid == siblings[index-1].GetUID()):
 		# sync arc from parent/previous node
 		rv = '%.3fs' % delay
@@ -354,7 +354,7 @@ class SMILWriter:
 			if not self.ids_used.has_key(name):
 				self.ids_used[name] = 0
 				self.ch2name[ch] = name
-			if not ch.has_key('base_window'):
+			if not ch.has_key('base_window') and ch['type'] not in ('sound', 'shell', 'python', 'null', 'vcr', 'socket', 'cmif', 'midi', 'external'):
 				self.top_levels.append(ch)
 			# also check if we need to use the CMIF extension
 			if not self.uses_cmif_extension and \
