@@ -1656,6 +1656,19 @@ BEGIN
 END
 #endif    // APSTUDIO_INVOKED
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON_OPEN           ICON    DISCARDABLE     "res\\icon_ope.ico"
+IDI_ICON_CLOSED         ICON    DISCARDABLE     "res\\ico00004.ico"
+IDI_ICON_BANDWIDTHBAD   ICON    DISCARDABLE     "res\\ico00005.ico"
+IDI_ICON_BANDWIDTHGOOD  ICON    DISCARDABLE     "res\\ico00006.ico"
+IDI_ICON_ERROR          ICON    DISCARDABLE     "res\\ico00007.ico"
 #endif    // Dutch (Netherlands) resources
 /////////////////////////////////////////////////////////////////////////////
 

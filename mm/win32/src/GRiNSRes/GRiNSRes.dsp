@@ -125,7 +125,27 @@ SOURCE=.\RES\ico00003.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\ico00004.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\ico00005.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\ico00006.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\ico00007.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\icon1.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\icon_ope.ico
 # End Source File
 # Begin Source File
 
