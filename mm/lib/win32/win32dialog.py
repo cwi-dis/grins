@@ -748,7 +748,9 @@ class ModelessMessageBox(ResDialog):
 class showmessage:
 	def __init__(self, text, mtype = 'message', grab = 1, callback = None,
 		     cancelCallback = None, name = 'message',
-		     title = 'GRiNS', parent = None):
+		     title = 'GRiNS', parent = None, identity = None):
+		# XXXX If identity != None the user should have the option of not
+		# showing this message again
 		self._wnd=None
 		if grab==0:
 			self._wnd=ModelessMessageBox(text,title,parent)
