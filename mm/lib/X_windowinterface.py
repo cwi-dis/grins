@@ -610,11 +610,11 @@ class _Window:
 			self._active_display_list.render(expose = 1)
 			for but in buttons:
 				but.highlight()
-##		else:
-##			# clear the window
-##			toplevel._win_lock.acquire()
-##			self._gc.FillRectangle(0, 0, self._width, self._height)
-##			toplevel._win_lock.release()
+		elif not call_data:
+			# clear the window
+			toplevel._win_lock.acquire()
+			self._gc.FillRectangle(0, 0, self._width, self._height)
+			toplevel._win_lock.release()
 
 	def _do_resize(self):
 		x, y, w, h = self._sizes
