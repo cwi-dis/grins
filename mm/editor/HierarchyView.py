@@ -687,6 +687,7 @@ class HierarchyView(HierarchyViewDialog):
 				self.click(px, py)
 		else:
 			# start dragging
+			self.mousedrag(1)
 			obj, side, timemapper, timeline = rv
 			if timeline is not None:
 				x,y,w,h = timeline.get_box()
@@ -700,6 +701,7 @@ class HierarchyView(HierarchyViewDialog):
 		if self.__dragside is not None:
 			obj, side, timemapper, timeline = self.__dragside
 			self.__dragside = None
+			self.mousedrag(0)
 			if timeline is not None:
 				apply(self.window.drawxorline, self.__line)
 				self.__line = None

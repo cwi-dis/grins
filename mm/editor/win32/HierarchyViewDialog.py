@@ -175,3 +175,15 @@ class HierarchyViewDialog(ViewDialog):
 				self.copynode((x, y), (xf, yf))
 			return 1
 		return 0
+
+	# this method is called when the mouse is dragged
+	# begin != 0 means that you start the drag, otherwise, assume that the drag is finished
+	# on some plateform (at least Windows), it allows to tell to the system to continue to
+	# send the event even if the mouse go outside the window (during dragging)
+	def mousedrag(self, begin):
+		if begin == 1:
+			self.window.SetCapture()
+		else:
+			self.window.ReleaseCapture()
+
+		

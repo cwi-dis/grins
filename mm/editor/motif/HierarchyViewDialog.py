@@ -215,3 +215,10 @@ class HierarchyViewDialog(ViewDialog):
 		# parameter to dialogs
 		##return self.window
 		return self.window
+
+	# this method is called when the mouse is dragged
+	# begin != 0 means that you start the drag, otherwise, assume that the drag is finished
+	# on some plateform (at least Windows), it allows to tell to the system to continue to
+	# send the event even if the mouse go outside the window (during dragging)
+	def mousedrag(self, begin):
+		pass
