@@ -46,9 +46,9 @@ class LayoutViewDialog(windowinterface.MACDialog):
 
 	def destroy(self):
 		self.close()
-		del self.__layoutlist
-		del self.__channellist
-		del self.__otherlist
+		self.__layoutlist = None
+		self.__channellist = None
+		self.__otherlist = None
 			
 	def do_itemhit(self, item, event):
 		if item == ITEM_LAYOUT_LIST:
