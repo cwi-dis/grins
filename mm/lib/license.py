@@ -85,11 +85,18 @@ class WaitLicense:
 		return 1
 
 	def cancel_callback(self):
-		sys.exit(0)
+		import sys
+		if sys.platform=='win32':
+			import windowinterface
+			windowinterface.forceclose()
+		else:
+			sys.exit(0)
 
 	def ok_callback(self, str):
 		import settings
-		del self.dialog
+		import sys
+		if sys.platform!='win32':
+			del self.dialog
 		settings.set('license', str)
 		if self.get_or_ask():
 			# The license appears ok. Save it.
