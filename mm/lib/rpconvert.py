@@ -241,7 +241,10 @@ def rpconvert(node, errorfunc = None):
 		if tagdict.get('href'):
 			anchor = ctx.newnode('anchor')
 			em.addnode(newnode, -1, anchor)
-			em.addlink((anchor, tagdict['href'], DIR_1TO2, TYPE_FORK, A_SRC_PLAY, A_DEST_PLAY))
+			em.setnodeattr(anchor, 'sourcePlaystate', 'play')
+			em.setnodeattr(anchor, 'destinationPlaystate', 'play')
+			em.setnodeattr(anchor, 'show', 'new')
+			em.addlink((anchor, tagdict['href'], DIR_1TO2))
 	em.commit()
 
 def convertrp(node, errorfunc = None):
