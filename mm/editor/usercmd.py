@@ -72,6 +72,8 @@ class EXPORT_WMP(_CommandBase):		# mjvdg 11-oct-2000
 	help = 'Save document in a new file as a Windows Media document.'
 class UPLOAD_WMP(_CommandBase):		# mjvdg 11-oct-2000
 	help = 'Upload document as Windows Media document to FTP server';
+class EXPORT_HTML_TIME(_CommandBase):	
+	help = 'Save document in a new file as an Internet Explorer HTML+TIME document.'
 class EXPORT_HTML(_CommandBase):
 	help = 'Create a template webpage linking to your presentation'
 class RESTORE(_CommandBase):
