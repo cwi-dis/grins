@@ -1495,7 +1495,7 @@ class HierarchyView(HierarchyViewDialog):
 				return 0
 		elif where == 0 and node.GetChannelType()!='animate':
 			# Special condition for animate
-			ntype = self.get_selected_widget().GetType()
+			ntype = self.get_selected_widget().get_node().GetType()
 			if ntype not in MMNode.interiortypes and \
 			   (ntype != 'ext' or
 			    node.GetChannelType() != 'animate'): 
@@ -1512,10 +1512,10 @@ class HierarchyView(HierarchyViewDialog):
 			# Add (using editmgr) a child to the node with focus
 			# Index is the index in the list of children
 			# Node is the new node
-			em.addnode(self.get_selected_widget(), index, node)
+			em.addnode(self.get_selected_widget().get_node(), index, node)
 		else:
 			children = parent.GetChildren()
-			i = children.index(self.get_selected_widget())
+			i = children.index(self.get_selected_widget().get_node())
 			if where > 0:	# Insert after
 				i = i+1
 				em.addnode(parent, i, node)
