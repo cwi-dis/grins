@@ -2010,7 +2010,8 @@ class _SubWindow(_CommonWindow):
 			raise 'Subwindow in scrollable parent not implemented'
 		self._rect = x, y, w, h
 		if w <= 0 or h <= 0:
-			raise 'Empty subwindow', coordinates
+			print 'Empty subwindow', coordinates
+			coordinates = 0, 0, 1, 1
 		self._sizes = coordinates
 		
 		if parent._transparent:
