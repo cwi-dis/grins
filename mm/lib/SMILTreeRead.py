@@ -2271,6 +2271,10 @@ def ReadFileContext(url, context, printfunc = None, new_file = 0, check_compatib
 		context.setbaseurl(baseurl)
 	data = u.read()
 	u.close()
+	# convert Windows CRLF sequences to LF
+	data = string.join(string.split(data, '\r\n'), '\n')
+	# then convert Macintosh CR to LF
+	data = string.join(string.split(data, '\r'), '\n')
 	p.feed(data)
 	p.close()
 	root = p.GetRoot()
