@@ -189,7 +189,7 @@ class HierarchyView(HierarchyViewDialog):
 			DELETE(callback = (self.deletecall, ())),
 			CUT(callback = (self.cutcall, ())),
 			]
-		self.noaudiocommands = [
+		self.createanchorcommands = [
 			CREATEANCHOR(callback = (self.createanchorcall, ())),
 			]
 		self.noslidecommands = [
@@ -328,8 +328,9 @@ class HierarchyView(HierarchyViewDialog):
 			   (is_realpix and MMAttrdefs.getattr(fnode, 'file')):
 				commands = commands + self.interiorcommands
 			if fntype not in MMNode.interiortypes and \
-			   fnode.GetChannelType() != 'sound':
-				commands = commands + self.noaudiocommands
+			   fnode.GetChannelType() != 'sound' and \
+			   not self.toplevel.links.islinksrc(fnode):
+				commands = commands + self.createanchorcommands
 		if fnode is not self.root:
 			# can't do certain things to the root
 			if fnode.__class__ is not SlideMMNode:

@@ -79,13 +79,24 @@ class LinkEditLight:
 ##			print 'lost anchor:', a
 			self.interesting.remove(a)
 
+	def islinksrc(self, node):
+		alist = MMAttrdefs.getattr(node, 'anchorlist')
+		uid = node.GetUID()
+		hlinks = self.context.hyperlinks
+		for a in alist:
+			anchor = uid, a[A_ID]
+			if a[A_TYPE] in SourceAnchors and \
+			   hlinks.findsrclinks(anchor):
+				return 1
+		return 0
+
 	# Method to return a whole-node anchor for a node, or optionally
 	# create one.
 	# If an anchor of type ATYPE_DEST is requested, we may return one
 	# of type ATYPE_WHOLE, since that can serve as a destination anchor.
 	# If an anchor of type ATYPE_WHOLE is requested, we may upgrade an
 	# anchor of ATYPE_DEST to ATYPE_WHOLE.
-	def wholenodeanchor(self, node, type=ATYPE_WHOLE, notransaction = 0, create = 1):
+	def wholenodeanchor(self, node, type=ATYPE_WHOLE, notransaction = 0, create = 1, interesting = 1):
 		alist = MMAttrdefs.getattr(node, 'anchorlist')[:]
 		dest = whole = None
 		for i in range(len(alist)):
@@ -118,7 +129,8 @@ class LinkEditLight:
 		if not notransaction:
 			em.commit()
 		rv = (node.GetUID(), a[A_ID])
-		self.interesting.append(rv)
+		if interesting:
+			self.interesting.append(rv)
 		return rv
 
 	def finish_link(self, node, notransaction = 0):
