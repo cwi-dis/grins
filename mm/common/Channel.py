@@ -1143,7 +1143,7 @@ class ChannelWindow(Channel):
 				menu.append('', 'raise', (self.popup, ()))
 				menu.append('', 'lower', (self.popdown, ()))
 				menu.append(None)
-				menu.append('', 'push focus',
+				menu.append('', 'select in timeline view',
 					    (self.focuscall, ()))
 				menu.append(None)
 				menu.append('', 'highlight',
@@ -1193,7 +1193,7 @@ class ChannelWindow(Channel):
 					units = units, adornments = adornments,
 					commandlist = self.commandlist)
 			if hasattr(self._player, 'editmgr'):
-				menu.append('', 'push focus',
+				menu.append('', 'select in timeline view',
 					    (self.focuscall, ()))
 		if self._attrdict.has_key('bgcolor'):
 			self.window.bgcolor(self._attrdict['bgcolor'])
