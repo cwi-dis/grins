@@ -35,8 +35,12 @@ class MovieChannel(ChannelWindow):
 
 		fn = self.getfileurl(node)
 		fn = urllib.url2pathname(fn)
-
-		movieResRef = Qt.OpenMovieFile(fn, 1)
+		
+		try:
+			movieResRef = Qt.OpenMovieFile(fn, 1)
+		except Qt.Error, arg:
+			self.errormsg(node, 'Cannot open: '+`arg`)
+			return 1
 		self.arm_movie, dummy = Qt.NewMovieFromFile(movieResRef, QuickTime.newMovieActive)
 		return 1
 		

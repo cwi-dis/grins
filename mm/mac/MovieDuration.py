@@ -7,7 +7,11 @@ import QuickTime
 
 def getduration(filename):
 	filename = urllib.url2pathname(filename)
-	movieResRef = Qt.OpenMovieFile(filename, 1)
+	try:
+		movieResRef = Qt.OpenMovieFile(filename, 1)
+	except Qt.Error, arg:
+		print 'Cannot open QT movie:',filename, arg
+		return 0
 	movie, dummy = Qt.NewMovieFromFile(movieResRef,
 		QuickTime.newMovieDontResolveDataRefs)
 	duration = movie.GetMovieDuration()
