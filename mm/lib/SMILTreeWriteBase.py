@@ -729,6 +729,35 @@ def getmimetype(writer, node):
 def getdescr(writer, node, attr):
 	return node.GetRawAttrDef(attr, None) or None
 
+def wallclock2string(wallclock):
+	# This code is used also in the EventEditor.
+	yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn = wallclock
+	if yr is not None:
+		date = '%04d-%02d-%02dT' % (yr, mt, dy)
+	else:
+		date = ''
+	# time is optional if there is a date
+	if date and hr == mn == sc == 0:
+		time = ''
+		date = date[:-1] # remove T at end
+	elif sc == 0:
+		# seconds are optional
+		time = '%02d:%02d' % (hr, mn)
+	elif int(sc) == sc:
+		# fraction of seconds is optional
+		time = '%02d:%02d:%02d' % (hr, mn, int(sc))
+	else:
+		time = '%02d:%02d:%05.2f' % (hr, mn, sc)
+	if tzhr is not None:
+		if tzsg == '+' and tzhr == tzmn == 0:
+			# UTC/GMT can be abbreviated to just "Z"
+			tz = 'Z'
+		else:
+			tz = '%s%02d:%02d' % (tzsg, tzhr, tzmn)
+	else:
+		tz = ''
+	return 'wallclock(%s%s%s)' % (date, time, tz)
+
 def getsyncarc(writer, node, isend):
 	if isend:
 		attr = 'endlist'
