@@ -54,7 +54,6 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		self._subwindows = []
 		self._displists = []
 		self._active_displist = None
-		self._curcursor = ''
 		self._curpos = None
 		self._callbacks = {}
 		self._accelerators = {}
@@ -81,7 +80,12 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		self._parent = None
 		self._bgcolor = __main__.toplevel._bgcolor
 		self._fgcolor = __main__.toplevel._fgcolor
+
+		# default cursor for this window
 		self._cursor = ''
+
+		# current cursor
+		self._curcursor = ''
 
 		# frame wnd indicator if not None
 		# contains the color of the frame
@@ -572,7 +576,7 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		msg=win32mu.Win32Msg(params)
 		point=msg.pos()
 		if not self.setcursor_from_point(point,self):
-			self.setcursor('arrow')
+			self.setcursor(self._cursor)
 
 	# Set the cursor for the window passed as argument 
 	# to 'hand' if the point lies in a box
@@ -584,7 +588,8 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 			if button._inside(x,y):
 				w.setcursor('hand')
 				return 1
-		else: return 0
+		else: 
+			return 0
 
 
 	# Set the cursor given its string id		
@@ -601,24 +606,19 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		elif strid=='' or strid=='arrow':
 			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
 			strid='arrow'
+		elif strid=='draghand':
+			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAG_HAND)
 		else:
-			print 'cmifwnd:: missing cursor ',strid
 			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
 			strid='arrow'
+
 		if self._window_type==MPEG:Sdk.SetCursor(cursor)
 		else: self.SetWndCursor(cursor)
-		self.setsyscursor(strid)
+		self._curcursor = strid
 
-	# set/get current cursor string identifier
-	def setsyscursor(self,strid):
-		self._curcursor=strid
-#		__main__.toplevel._cursor=strid
-	def getsyscursor(self):
-		return self._curcursor
-		#return __main__.toplevel._cursor
 	# return true if the cursor can change on move
 	def cursorCanChangeOnMove(self):
-		return self._curcursor in ('','arrow','hand')
+		return self._curcursor in ('','arrow','hand', 'draghand')
 
 	# Apply window cursor
 	def SetWndCursor(self,cursor):
