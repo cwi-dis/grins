@@ -30,6 +30,7 @@ def gencommerciallicense():
 	name = None
 	license = codelicense(newid, date, features, name)
 	grinsdb.loglicense(license)
+	dbase.close()
 	return license
 	
 def main():
@@ -133,6 +134,7 @@ def main():
 			license = codelicense(thisid, date, features, name)
 			grinsdb.loglicense(license)
 			addfield(dbase, email, 'License', license)
+	dbase.close()
 	if outfile:
 		sys.stdout.close()
 		try:
