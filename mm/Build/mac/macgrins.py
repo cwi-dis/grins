@@ -39,7 +39,7 @@ import macfs
 # Set variable for standalone cmif:
 #
 try:
-	import MMNode
+	import SR
 except ImportError:
 	STANDALONE=0
 else:
@@ -111,6 +111,7 @@ else:
 # macfreeze: exclude TERMIOS
 # macfreeze: exclude cmifex
 # macfreeze: exclude readline
+# macfreeze: exclude staticlicense
 #
 # And here's the code for non-standalone version of the editor:
 
