@@ -134,8 +134,11 @@ class _StructView(DisplayListView):
 	# we must return DROPEFFECT_NONE
 	# when paste at x, y is not allowed
 	def dragnode(self, dataobj, kbdstate, x, y):
+		#print "DEBUG: dragging."
+		#import traceback
+		#traceback.print_stack()
 		node=dataobj.GetGlobalData(self.CF_NODE)
-		if node:
+		if node and self._dragging:
 			x, y = self._DPtoLP((x,y))
 			x, y = self._pxl2rel((x, y),self._canvas)
 			xf, yf = self._dragging
@@ -149,6 +152,7 @@ class _StructView(DisplayListView):
 		return DropTarget.DROPEFFECT_NONE
 
 	def dropnode(self, dataobj, effect, x, y):
+		#print "DEBUG: dropped."
 		DROP_FAILED, DROP_SUCCEEDED = 0, 1
 		node = dataobj.GetGlobalData(self.CF_NODE) 
 		if node and self._dragging:

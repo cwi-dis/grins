@@ -46,7 +46,8 @@ class TemporalView(TemporalViewDialog):
 			#THUMBNAIL(callback = (self.thumbnailcall, ())),
 			EXPANDALL(callback = (self.expandallcall, (1,))),
 			COLLAPSEALL(callback = (self.expandallcall, (0,))),
-
+			PLAYNODE(callback = (self.playcall, ())),
+			PLAYFROM(callback = (self.playfromcall, ())),
 			]
 		self.navigatecommands = [
 			TOPARENT(callback = (self.toparent, ())),
@@ -325,6 +326,7 @@ class TemporalView(TemporalViewDialog):
 		print "Dropping a file!"
 
 	def ev_dragnode(self, dummy, window, event, params):
+		print "DEBUG: ev_dragnode called."
 		x,y,mode, xf, yf= params[0:5]
 		x,y = self.rel2abs((x,y))
 		xf, yf = self.rel2abs((xf, yf))
@@ -422,7 +424,21 @@ class TemporalView(TemporalViewDialog):
 		if self.focusobj: self.focusobj.copycall()
 
 	def copyfocus(self):
-		print "TODO: copy a node."
+		import Clipboard
+		# Copies the node with focus to the clipboard.
+		if len(self.selected_nodes) == 1 and isinstance(self.selected_nodes[0], MMWidget):
+			node = self.selected_nodes[0].node
+			print "DEBUG: Node: ", node
+			if not node:
+				windowinterface.beep()
+				return
+			t, n = Clipboard.getclip()
+			if t == 'node' and n is not None:
+				n.Destroy()
+			Clipboard.setclip('node', node.DeepCopy())
+			print "DEBUG: Copied node to clipboard."
+		else:
+			print "Warning: Multiple selection copy not done yet."
 
 	def createbeforecall(self, chtype=None):
 		if self.focusobj: self.focusobj.createbeforecall(chtype)
