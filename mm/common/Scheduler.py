@@ -391,7 +391,6 @@ class Scheduler(scheduler):
 			sctx.stop()
 			return None
 		self.starting_to_play = 1
-		self.ui.showstate() # Give the anxious user a clue...
 		return sctx
 	#
 	def _remove_sctx(self, sctx):
@@ -430,7 +429,6 @@ class Scheduler(scheduler):
 			sctx.stop()
 		to_stop = None
 ##		print 'Now', self.sctx_list
-		self.ui.showstate()
 		if self.starting_to_play:
 			self.starting_to_play = 0
 		self.playing = 0
@@ -457,7 +455,6 @@ class Scheduler(scheduler):
 		# algorithm. For now, we're eager, on both queues.
 		#
 		if debugtimer: print 'timer_callback'
-		self.toplevel.setwaiting()
 		now = self.timefunc()
 		while self.queue and self.queue[0][0] <= now:
 			when, prio, action, argument = self.queue[0]
@@ -471,11 +468,6 @@ class Scheduler(scheduler):
 		for action in queue:
 			self.runone(action)
 		self.updatetimer()
-		#self.ui.showtime()
-		# if we're going to be called very soon, don't bother
-		# calling setready
-		if self.delay == 0 or self.delay > 0.01:
-			self.toplevel.setready()
 	#
 	# FutureWork returns true if any of the scheduler contexts
 	# has possible future work. Each context's FutureWork has to be
@@ -528,8 +520,6 @@ class Scheduler(scheduler):
 				# It is overdue. Make the callback happen
 				# fast.
 				delay = 0.001
-##			else:
-##				self.ui.showtime()
 			if debugtimer: print 'updatetimer: timed events' #DBG
 		elif not self.FutureWork():
 			#
@@ -537,7 +527,6 @@ class Scheduler(scheduler):
 			# We're thru.
 			#
 			if debugtimer: print 'updatetimer: no more work' #DBG
-##			self.ui.showtime()
 			self.stop_all()
 			return
 		else:
@@ -545,9 +534,6 @@ class Scheduler(scheduler):
 			# Nothing to do for the moment.
 			# Tick every second, so we see the timer run.
 			#
-##			delay = 1
-##			self.ui.showtime()
-			#self.ui.showpauseanchor(1) # Does not work look nice
 			if debugtimer:  'updatetimer: idle' #DBG
 			return
 		if debugtimer: print 'updatetimer: delay=', delay
