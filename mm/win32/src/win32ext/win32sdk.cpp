@@ -755,8 +755,93 @@ sdk_shell_execute( PyObject *self, PyObject *args )
 	// If there is an error, the method raises an exception.
 	}
 
+/////////////////////// 
+// New
 
+// @pymethod |PyWin32Sdk|DragQueryPoint|Retrieves the position of the mouse pointer at the time a file was dropped during a drag-and-drop operation. 
+static PyObject *
+sdk_drag_query_point( PyObject *self, PyObject *args )
+{
+	HDROP hDrop;
+	// @pyparm int|hDrop||Handle identifying the structure containing the file names.
+	if (!PyArg_ParseTuple(args, "i:DragQueryPoint", &hDrop))
+		return NULL;
+	POINT pt;
+	GUI_BGN_SAVE;
+	BOOL ret=::DragQueryPoint(hDrop,&pt); // @pyseeapi DragQueryPoint
+	GUI_END_SAVE;
+	return Py_BuildValue("i(ii)",ret,pt.x,pt.y);
+}
 
+// @pymethod |PyWin32Sdk|IsClipboardFormatAvailable|Determines whether the clipboard contains data in the specified format. 
+static PyObject *
+sdk_is_clipboard_format_available(PyObject *self, PyObject *args)
+{
+	// @pyparm int|format||Specifies a standard or registered clipboard format.
+	UINT format;   
+	if (!PyArg_ParseTuple (args, "i",&format))
+		return NULL;
+	GUI_BGN_SAVE;
+	BOOL ret=::IsClipboardFormatAvailable(format); // @pyseeapi IsClipboardFormatAvailable
+	GUI_END_SAVE;
+	return Py_BuildValue("i",ret);
+}
+
+// @pymethod |PyWin32Sdk|GetClipboardTextData|GetClipboardData in CF_TEXT format
+static PyObject *
+sdk_get_clipboard_text_data(PyObject *self, PyObject *args) 
+	{
+	HWND hWndNewOwner=NULL;
+	if (!PyArg_ParseTuple (args, "|i",&hWndNewOwner))
+		return NULL;
+	::OpenClipboard(hWndNewOwner);
+	HANDLE hClipMem=::GetClipboardData(CF_TEXT);
+	if(!hClipMem) 
+		{
+		::CloseClipboard();
+		return Py_BuildValue("s","");
+		}
+	LPSTR lpClipMem=(LPSTR)GlobalLock(hClipMem);
+	CString str(lpClipMem);
+	::GlobalUnlock(lpClipMem);
+	::CloseClipboard();
+	return Py_BuildValue("s",(LPCTSTR)str);
+	}
+
+//////////////////////////////////
+// Copy/Paste support
+static CLIPFORMAT cfFileName=NULL;
+
+static PyObject*
+sdk_is_clipboard_file_data_available(PyObject *self, PyObject *args) 
+	{
+	CHECK_NO_ARGS2(args,IsClipboardFileDataAvailable);
+	if(!cfFileName)cfFileName = ::RegisterClipboardFormat(_T("FileName"));
+	COleDataObject dataObject;
+	if(!dataObject.AttachClipboard())
+		return Py_BuildValue("i",0);
+	HGLOBAL hObjDesc = dataObject.GetGlobalData(cfFileName);
+	if(!hObjDesc)
+		return Py_BuildValue("i",0);
+	return Py_BuildValue("i",1);
+	}
+
+static PyObject*
+sdk_get_clipboard_file_data(PyObject *self, PyObject *args) 
+	{
+	CHECK_NO_ARGS2(args,GetClipboardFileData);
+	if(!cfFileName)cfFileName = ::RegisterClipboardFormat(_T("FileName"));
+	COleDataObject dataObject;
+	if(!dataObject.AttachClipboard())
+		return Py_BuildValue("s","");
+	HGLOBAL hObjDesc = dataObject.GetGlobalData(cfFileName);
+	if(!hObjDesc)
+		return Py_BuildValue("s","");
+	LPSTR lpClipMem=(LPSTR)GlobalLock(hObjDesc);
+	CString str(lpClipMem);
+	::GlobalUnlock(lpClipMem);
+	return Py_BuildValue("s",(LPCTSTR)str);
+	}
 
  // @object PyWin32Sdk|A module wrapper object.  It is a general utility object, and is not associated with an MFC object.
 BEGIN_PYMETHODDEF(Win32Sdk)
@@ -795,9 +880,15 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 
 	{"GetCurrentDirectory",sdk_get_current_directory,1}, 
 	{"SetCurrentDirectory",sdk_set_current_directory,1}, 
-
 	{"ShellExecute",sdk_shell_execute,1}, 
 
+	{"DragQueryPoint",sdk_drag_query_point,1}, // @pymeth DragQueryPoint|Retrieves the position of the mouse pointer at the time a file was dropped during a drag-and-drop operation.
+	{"IsClipboardFormatAvailable",sdk_is_clipboard_format_available,1}, // @pymeth IsClipboardFormatAvailable|Determines whether the clipboard contains data in the specified format. 
+	{"GetClipboardTextData",sdk_get_clipboard_text_data,1}, // @pymeth GetClipboardTextData|GetClipboardData in CF_TEXT format
+	{"IsClipboardFileDataAvailable",sdk_is_clipboard_file_data_available,1}, 
+	{"GetClipboardFileData",sdk_get_clipboard_file_data,1}, 
+
+	///////////////////////////////////////////////////// Temporary
 	{"ParseDrawItemStruct",sdk_parse_drawitemstruct,1},// undocumented!
 	{"CrackNMHDR",sdk_crack_nmhdr,1}, // undocumented!
 	{"New",sdk_new,1}, // undocumented!
