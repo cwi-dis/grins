@@ -38,6 +38,15 @@ EXPCOLOR = settings.get('structure_expcolor')
 COLCOLOR = settings.get('structure_colcolor')
 ECBORDERCOLOR = settings.get('structure_ecbordercolor')
 
+def half(x): return x/2
+LEAFCOLOR_NOPLAY = tuple(map(half, LEAFCOLOR))
+RPCOLOR_NOPLAY = tuple(map(half, RPCOLOR))
+SLIDECOLOR_NOPLAY = tuple(map(half, SLIDECOLOR))
+BAGCOLOR_NOPLAY = tuple(map(half, BAGCOLOR))
+ALTCOLOR_NOPLAY = tuple(map(half, ALTCOLOR))
+PARCOLOR_NOPLAY = tuple(map(half, PARCOLOR))
+SEQCOLOR_NOPLAY = tuple(map(half, SEQCOLOR))
+del half
 
 # Focus color assignments (from light to dark gray)
 
@@ -955,20 +964,34 @@ class HierarchyView(HierarchyViewDialog):
 # Recursive procedure to calculate geometry of boxes.
 def sizeboxes(node):
 	ntype = node.GetType()
+	minsize = MINSIZE
+	structure_duration = 0
+	if structure_duration and ntype in MMNode.leaftypes:
+		import Duration, math
+		dur = Duration.get(node)
+		if dur < 0:
+			dur = 0
+		elif dur > 1000:
+			dur = 1000
+		minsize = minsize + math.log(dur+1)
+	if DISPLAY_VERTICAL:
+		minwidth = MINSIZE
+		minheight = minsize
+	else:
+		minwidth = minsize
+		minheight = MINSIZE
 	if structure_name_size:
 		name = MMAttrdefs.getattr(node, 'name')
 		namewidth = (name and f_title.strsize(name)[0]) or 0
 		if ntype in MMNode.interiortypes or \
 		   (ntype == 'ext' and node.GetChannelType() == 'RealPix'):
 			namewidth = namewidth + ARRSIZE
-		minwidth = min(MAXSIZE, max(MINSIZE, namewidth)) + HOREXTRASIZE
+		minwidth = max(min(MAXSIZE, namewidth), minwidth) + HOREXTRASIZE
 	else:
-		minwidth = MINSIZE + HOREXTRASIZE
+		minwidth = minwidth + HOREXTRASIZE
 	children = node.GetChildren()
 	if not hasattr(node, 'expanded') or not children:
-##		if node.__class__ is SlideMMNode:
-##			return 2*MINSIZE, MINSIZE + LABSIZE
-		node.boxsize = minwidth, MINSIZE + LABSIZE
+		node.boxsize = minwidth, minheight + LABSIZE
 		return node.boxsize
 	nchildren = len(children)
 	width = height = 0
@@ -1092,21 +1115,43 @@ class Object:
 		l, t, r, b = self.box
 		node = self.node
 		nt = node.GetType()
+		willplay = node.WillPlay()
 		if nt in MMNode.leaftypes:
 			if node.GetChannelType() == 'RealPix':
-				color = RPCOLOR
+				if willplay:
+					color = RPCOLOR
+				else:
+					color = RPCOLOR_NOPLAY
 			else:
-				color = LEAFCOLOR
+				if willplay:
+					color = LEAFCOLOR
+				else:
+					color = LEAFCOLOR_NOPLAY
 		elif nt == 'seq':
-			color = SEQCOLOR
+			if willplay:
+				color = SEQCOLOR
+			else:
+				color = SEQCOLOR_NOPLAY
 		elif nt == 'par':
-			color = PARCOLOR
+			if willplay:
+				color = PARCOLOR
+			else:
+				color = PARCOLOR_NOPLAY
 		elif nt == 'bag':
-			color = BAGCOLOR
+			if willplay:
+				color = BAGCOLOR
+			else:
+				color = BAGCOLOR_NOPLAY
 		elif nt == 'alt':
-			color = ALTCOLOR
+			if willplay:
+				color = ALTCOLOR
+			else:
+				color = ALTCOLOR_NOPLAY
 		elif nt == 'slide':
-			color = SLIDECOLOR
+			if willplay:
+				color = SLIDECOLOR
+			else:
+				color = SLIDECOLOR_NOPLAY
 		else:
 			color = 255, 0, 0 # Red -- error indicator
 		d.drawfbox(color, (l, t, r - l, b - t))
@@ -1124,10 +1169,12 @@ class Object:
 ##			if b1-t1 >= titleheight and \
 ##			   r-l >= hmargin * 2.5:
 			ctype = node.GetChannelType()
+			if node.__class__ is SlideMMNode and \
+			   MMAttrdefs.getattr(node, 'tag') in ('fadein', 'crossfade', 'wipe'):
+				ctype = 'image'
 			f = os.path.join(self.mother.datadir, '%s.tiff' % ctype)
 			url = node.GetAttrDef('file', None)
-			if url and self.mother.thumbnails and \
-			   (ctype == 'image' or node.__class__ is SlideMMNode):
+			if url and self.mother.thumbnails and ctype == 'image':
 				if node.__class__ is SlideMMNode:
 					url = MMurl.basejoin(MMAttrdefs.getattr(node.parent, 'file'), url)
 				url = node.context.findurl(url)
@@ -1137,8 +1184,7 @@ class Object:
 					# f not reassigned!
 					pass
 			ih = min(b1-t1, titleheight+chnameheight)
-			if self.mother.thumbnails and \
-			   node.__class__ is SlideMMNode and \
+			if node.__class__ is SlideMMNode and \
 			   MMAttrdefs.getattr(node, 'tag') in ('fill','fadeout'):
 				d.drawfbox(MMAttrdefs.getattr(node, 'color'), (l+hmargin, (t1+b1-ih)/2, r-l-2*hmargin, ih))
 				d.fgcolor(TEXTCOLOR)
