@@ -41,20 +41,6 @@ class TopLevelDialog:
 			return
 		self.source = windowinterface.textwindow(source)
 
-	# in the source view, the user may have done some changements without apply them.
-	# return 1 if the user want to continue (not cancel)
-	def closeSourceView(self):
-		return 1
-
-	def mayclose(self):
-		prompt = 'You haven\'t saved your changes yet;\n' + \
-			 'do you want to save them before closing?'
-		return windowinterface.GetYesNoCancel(prompt)
-##		rv = EasyDialogs.AskYesNoCancel(prompt, 1)
-##		if rv < 0: return 2
-##		if rv > 0: return 0
-##		return 1
-
 	# set the list of command specific to the system
 	def set_commandlist(self):
 		pass
