@@ -218,6 +218,8 @@ class NEW_BEFORE_PAR(_CommandBase):
 	help = 'Create new parallel node before selected node'
 class NEW_BEFORE_EXCL(_CommandBase):
 	help = 'Create new exclusive node before selected node'
+class NEW_BEFORE_PRIO(_CommandBase):
+	help = 'Create new priority class node before selected node'
 class NEW_BEFORE_SWITCH(_CommandBase):
 	help = 'Create new alt node before selected node'
 class NEW_BEFORE_ANIMATION(_CommandBase):
@@ -244,6 +246,8 @@ class NEW_AFTER_PAR(_CommandBase):
 	help = 'Create new parallel node after selected node'
 class NEW_AFTER_EXCL(_CommandBase):
 	help = 'Create new exclusive node after selected node'
+class NEW_AFTER_PRIO(_CommandBase):
+	help = 'Create new priority class node after selected node'
 class NEW_AFTER_SWITCH(_CommandBase):
 	help = 'Create new alt node after selected node'
 class NEW_AFTER_ANIMATION(_CommandBase):
@@ -270,6 +274,8 @@ class NEW_UNDER_PAR(_CommandBase):
 	help = 'Create new parallel node under selected node'
 class NEW_UNDER_EXCL(_CommandBase):
 	help = 'Create new exclusive node under selected node'
+class NEW_UNDER_PRIO(_CommandBase):
+	help = 'Create new priority class node under selected node'
 class NEW_UNDER_SWITCH(_CommandBase):
 	help = 'Create new alt node under selected node'
 class NEW_UNDER_ANIMATION(_CommandBase):
@@ -280,6 +286,8 @@ class NEW_PAR(_CommandBase):
 	help = 'Create new parallel node above selected node'
 class NEW_EXCL(_CommandBase):
 	help = 'Create new exclusive node above selected node'
+class NEW_PRIO(_CommandBase):
+	help = 'Create new priority class node above selected node'
 class NEW_SWITCH(_CommandBase):
 	help = 'Create new alt node above selected node'
 class NEW_ANIMATION(_CommandBase):
@@ -307,6 +315,13 @@ class RPCONVERT(_CommandBase):
 class FIND_EVENT_SOURCE(_CommandBase):
 	help = 'Find the source of this event'
 
+# Pseudo-commands for drag/drop
+class DRAG_NODE(_CommandBase): pass
+class DRAG_PAR(_CommandBase): pass
+class DRAG_SEQ(_CommandBase): pass
+class DRAG_SWITCH(_CommandBase): pass
+class DRAG_EXCL(_CommandBase): pass
+class DRAG_PRIO(_CommandBase): pass
 #
 # Command to hierarchy/channel view
 #
