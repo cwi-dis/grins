@@ -43,11 +43,14 @@ class InputValidator:
 		return 0
 
 class IntTupleValidator(InputValidator):
-	def __init__(self,sep=''):
+	def __init__(self,sep='',sm=None):
 		InputValidator.__init__(self)
 		self._sep=sep
-		tl=[(1,2,'d'),(2,2,'d'),(2,3,'s'),(3,2,'d')]
-		self._fsm=fsm.FSM(tl,1)
+		if not sm:
+			tl=[(1,2,'d'),(2,2,'d'),(2,3,'s'),(3,2,'d')]
+			self._fsm=fsm.FSM(tl,1)
+		else:
+			self._fsm=sm
 
 	def inttuplefilter(self,ch):
 		code=ord(ch[0])
@@ -57,10 +60,8 @@ class IntTupleValidator(InputValidator):
 			return 's'
 		return 'null'
 
-	def isIntTuple(self, vk, val):
-		charcode = Sdk.MapVirtualKey(vk,2)
-		if charcode<32:return 1
-		nval=val+chr(charcode)
+	def isIntTuple(self, ch, val):
+		nval=val+ch
 		self._fsm.reset(1)
 		for ch in nval:
 			if not self._fsm.advance(self.inttuplefilter(ch),ch):
@@ -68,22 +69,29 @@ class IntTupleValidator(InputValidator):
 		return 1
 
 	def onKey(self, vk, val):
-		if self.isIntTuple(vk, val):
+		charcode = Sdk.MapVirtualKey(vk,2)
+		if charcode<32:return 1
+
+		if self.isIntTuple(chr(charcode), val):
 			return 1
 		else:
 			win32api.MessageBeep(win32con.MB_ICONEXCLAMATION)
 			return 0
 
-# not very usefull yet since it is just a tuple validator
-# but accepts also strings
+# no bounds checking yet
 class ColorValidator(IntTupleValidator):
 	def __init__(self,sep=''):
-		IntTupleValidator.__init__(self,sep)
-		
+		tl=[ (1,2,'d'), (2,2,'d'), (2,3,'s'), (3,4,'d'), (4,4,'d'), (4,5,'s'), (5,5,'d') ]
+		sm=fsm.FSM(tl,1)
+		IntTupleValidator.__init__(self,sep,sm)
+
 	def onKey(self, vk, val):
+		charcode = Sdk.MapVirtualKey(vk,2)
+		if charcode<32:return 1
+
 		if self.isalpha_en(val) and self.isvk_alpha_en(vk):
 			return 1
-		elif self.isIntTuple(vk, val):
+		elif self.isIntTuple(chr(charcode), val):
 			return 1
 		win32api.MessageBeep(win32con.MB_ICONEXCLAMATION)
 		return 0
