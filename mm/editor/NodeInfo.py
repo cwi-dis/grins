@@ -116,7 +116,8 @@ class NodeInfo(NodeInfoDialog):
 		self.children_nodes = self.node.GetChildren()
 		self.children = []
 		for i in self.children_nodes:
-			self.children.append(MMAttrdefs.getattr(i, 'name'))
+			self.children.append(
+				i.GetRawAttrDef('name', '#' + i.GetUID()))
 
 	def ch_immtext(self):
 		if self.type != 'imm':
