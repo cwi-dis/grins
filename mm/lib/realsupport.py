@@ -924,7 +924,7 @@ def writeRT(file, rp, node):
 	ch = node.GetChannel(attrname='captionchannel')
 	width, height = ch.get('base_winoff',(0,0,320,180))[2:4]
 	
-	color = node.GetAttrDef('bgcolor', ch.get('bgcolor', (0,0,0))
+	color = node.GetAttrDef('bgcolor', ch.get('bgcolor', (0,0,0)))
 	f = open(file, 'w')
 	f.write('<window width="%d" height="%d"' % (int(width), int(height)))
 	dur = rp.duration or _calcdur(rp.tags)
