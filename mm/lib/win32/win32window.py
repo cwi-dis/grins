@@ -1591,7 +1591,6 @@ class Region(Window):
 				r, g, b = entry[1]
 				convbgcolor = dds.GetColorMatch((r,g,b))
 				dds.BltFill((xc, yc, xc+wc, yc+hc), convbgcolor)
-
 			if self._video:
 				# get video info
 				vdds, vrcDst, vrcSrc = self._video
@@ -1923,7 +1922,7 @@ class Region(Window):
 		if units != UNIT_PXL:
 			coordinates = self._convert_coordinates(coordinates, units=units)
 		
-		if coordinates==self._rectb:
+		if coordinates==self._rectb and not mediacoords:
 			return
 		
 		x, y, w, h = coordinates
@@ -1950,10 +1949,7 @@ class Region(Window):
 			del self._scalesurf
 			self._scalesurf = None
 
-		if self._resizing:
-			self._mediacoords = mediacoords
-		else:
-			self._mediacoords = None
+		self._mediacoords = mediacoords
 										
 		# resize/move
 		self._rect = 0, 0, w, h # client area in pixels
