@@ -93,6 +93,40 @@ class FullPopupMenu:
 	def popup(self, x, y, event, window=None):
 		self._themenu.popup(x, y, event, window=window)
 
+class ContextualPopupMenu:
+	"""This is a contextual (right-mouse) popup menu that maps to usercmds"""
+	def __init__(self, list, callbackfunc):
+		self._themenu = mw_globals.toplevel._addpopup()
+		self._fill_menu(self._themenu, list, callbackfunc)
+		
+	def delete(self):
+		self._themenu.delete()
+		self._themenu = None
+		self._cmd_to_item = {}
+		
+	def _fill_menu(self, menu, list, callbackfunc):
+		self._cmd_to_item = {}
+		for item in list:
+			if item[0] == MenuTemplate.SEP:
+				menu.addseparator()
+			elif item[0] == MenuTemplate.ENTRY:
+				itemstring = item[1]
+				cmd = item[3]
+				callback = (callbackfunc, (cmd,))
+				m = MenuItem(menu, itemstring, '',
+					     callback)
+				self._cmd_to_item[cmd] = m
+			else:
+				raise 'Only SEP or ENTRY in popup', list
+				
+	def update_menu_enabled(self, testfunc):
+		for cmd, mentry in self._cmd_to_item.items():
+			must_be_enabled = testfunc(cmd)
+			mentry.enable(must_be_enabled)
+						
+	def popup(self, x, y, event, window=None):
+		self._themenu.popup(x, y, event, window=window)
+
 class SelectPopupMenu(PopupMenu):
 	def __init__(self, list):
 		PopupMenu.__init__(self, mw_globals.toplevel._menubar)
