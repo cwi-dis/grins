@@ -24,6 +24,7 @@ from MMNode import alltypes, leaftypes, interiortypes
 import MMAttrdefs
 import Timing
 from ArmStates import *
+from MMExc import *
 
 
 # Color assignments (RGB)
@@ -38,6 +39,9 @@ TEXTCOLOR = 0, 0, 0			# Black
 FOCUSCOLOR = 255, 0, 0			# Red
 LOCKEDCOLOR = 0, 255, 0			# Green
 LINECOLOR = 255, 255, 255		# White
+ANCHORCOLOR = 255, 127, 0		# Orange
+
+ABOXSIZE = 6
 
 # Arm colors
 armcolors = { \
@@ -582,6 +586,11 @@ class NodeBox(GO):
 
 	def init(self, mother, node, cname):
 		self.node = node
+		try:
+			alist = self.node.GetRawAttr('anchorlist')
+			self.hasanchors = (alist <> [])
+		except NoSuchAttrError:
+			self.hasanchors = 0
 		node.cv_obj = self
 		self.cname = cname # Channel name
 		name = MMAttrdefs.getattr(node, 'name')
@@ -642,6 +651,17 @@ class NodeBox(GO):
 		gl.v2f(self.right, self.bottom)
 		gl.v2f(self.left, self.bottom)
 		gl.endpolygon()
+
+		if self.hasanchors:
+			gl.RGBcolor(ANCHORCOLOR)
+			gl.bgnpolygon()
+			l, t = self.left, self.top
+			gl.v2f(l, t)
+			gl.v2f(l+ABOXSIZE, t)
+			gl.v2f(l+ABOXSIZE, t+ABOXSIZE)
+			gl.v2f(l, t+ABOXSIZE)
+			gl.endpolygon()
+				
 
 		# Outline the box; in a different color if we are selected
 		if self.locked:
