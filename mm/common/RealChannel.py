@@ -154,7 +154,7 @@ class RealChannel:
 		self.__rmaplayer.OpenURL(url)
 		t0 = self.__channel._scheduler.timefunc()
 		if t0 > node.start_time:
-			print 'skipping',node.start_time,t0,t0-node.start_time
+##			print 'skipping',node.start_time,t0,t0-node.start_time
 			self.__rmaplayer.Seek(int((t0-node.start_time)*1000))
 		self.__rmaplayer.Begin()
 		self.__engine.startusing()
