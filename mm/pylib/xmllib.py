@@ -99,7 +99,7 @@ class XMLParser:
     # Interface -- initialize and reset this instance
     def __init__(self, **kw):
         self.__fixed = 0
-        self.__encoding = None
+        self.__encoding = 'utf-8'
         if kw.has_key('accept_unquoted_attributes'):
             self.__accept_unquoted_attributes = kw['accept_unquoted_attributes']
         if kw.has_key('accept_missing_endtag_name'):
