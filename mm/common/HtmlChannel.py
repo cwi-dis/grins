@@ -62,9 +62,18 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.htmlw.AddCallback('anchorCallback', self.cbanchor, None)
 		self.htmlw.AddCallback('submitFormCallback', self.cbform, None)
 		self.htmlw.AddCallback('destroyCallback', self.cbdestroy, None)
+		self.htmlw.AddCallback('linkCallback', self.cblink, None)
+		self.htmlw.SetResolveImage(self.resolveImage)
+		self.htmlw.SetResolveDelayedImage(self.resolveImage)
 
 	def cbdestroy(self, widget, userdata, calldata):
+		self.htmlw.FreeImageInfo()
 		self.htmlw = None
+
+	def cblink(self, widget, userdata, calldata):
+		href = calldata.href
+		if href:
+			self.url = href
 
 	def _box_callback(self, *pgeom):
 		if pgeom:
@@ -115,17 +124,14 @@ class HtmlChannel(Channel.ChannelWindow):
 		
 	def do_play(self, node):
 		self.url = self.armed_url
-		arg = {'text': self.armed_str, 'headerText':'',
-		       'footerText':''}
-		self.htmlw.SetValues(arg)
+		self.htmlw.SetText(self.armed_str, '', '')
 		self.fixanchorlist(node)
 		self.play_node = node
 
 	def stopplay(self, node):
 		Channel.ChannelWindow.stopplay(self, node)
 		if self.htmlw:
-			self.htmlw.SetValues({'text': '', 'headerText': '',
-					      'footerText': ''})
+			self.htmlw.SetText('', '', '')
 
 	def getstring(self, node):
 		if node.type == 'imm':
@@ -141,6 +147,9 @@ class HtmlChannel(Channel.ChannelWindow):
 					  'Cannot open '+filename+':<P>'+ \
 					  `(sys.exc_type, sys.exc_value)`+ \
 					  '<P>\n'
+			# use undocumented feature so we can cleanup
+			if urllib._urlopener.tempcache is None:
+				urllib._urlopener.tempcache = {}
 			text = fp.read()
 			fp.close()
 			if text[-1:] == '\n':
@@ -250,9 +259,45 @@ class HtmlChannel(Channel.ChannelWindow):
 				  'Cannot open '+self.url+':<P>'+ \
 				  `(sys.exc_type, sys.exc_value)`+ \
 				  '<P>\n'
-		self.htmlw.text = newtext
+		self.htmlw.SetText(newtext, None, None, 0, tag)
 ##		self.htmlw.footerText = '<P>[<A HREF="'+self.armed_url+\
 ##			  '">BACK</A> to CMIF node]<P>'
+
+	def resolveImage(self, widget, src, noload = 0):
+		import X
+		src = urllib.basejoin(self.url, src)
+		try:
+			return image_cache[src]
+		except KeyError:
+			pass
+		if noload:
+			return None
+		try:
+			filename, info = urllib.urlretrieve(src)
+		except IOError:
+			return None
+		import img, imgformat
+		visual = widget.visual
+		if visual.c_class == X.TrueColor and visual.depth == 8:
+			format = windowinterface.myxrgb8
+		else:
+			format = imgformat.xcolormap
+		try:
+			reader = img.reader(format, filename)
+		except:
+			return
+		if hasattr(reader, 'transparent') and hasattr(reader, 'colormap'):
+			reader.colormap[reader.transparent] = windowinterface.toplevel._colormap.QueryColor(widget.background)[1:4]
+		if format is windowinterface.myxrgb8:
+			colors = map(lambda x: (x, x, x), range(256))
+		else:
+			colors = map(lambda x: x, reader.colormap)
+		dict = {'width': reader.width, 'height': reader.height,
+			'image_data': reader.read(), 'colors': colors}
+		image_cache[src] = dict
+		return dict
+
+image_cache = {}
 
 def addquery(href, list):
 	if not list: return href
@@ -315,3 +360,5 @@ def normalize(name):
 			name, newname)
 	return newname
 	
+# cleanup temporary files when we finish
+windowinterface.addclosecallback(urllib.urlcleanup, ())
