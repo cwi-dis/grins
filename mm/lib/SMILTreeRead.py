@@ -907,6 +907,20 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		node._internalchtype = chtype
 		# end experimental		
 
+	def __newTopRegion(self):
+		attrs = {}
+		
+		for key, val in self.attributes['root-layout'].items():
+			if val is not None:
+				attrs[key] = val
+		self.__tops[None] = {'width':0,
+				     'height':0,
+				     'declwidth':0,
+				     'declheight':0,
+				     'attrs':attrs}
+
+		self.__childregions[None] = []
+
 	def EndNode(self):
 		node = self.__node
 		try:
@@ -954,11 +968,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif self.__tops.has_key(region):
 				self.error('unknown region')
 		else:
-			if CASCADE:
-				region = 'unnamed region %d' % self.__regionno
-				self.__regionno = self.__regionno + 1
-			else:
-				region = 'unnamed region'
+#			if CASCADE:
+#				region = 'unnamed region %d' % self.__regionno
+#				self.__regionno = self.__regionno + 1
+#			else:
+			region = 'unnamed region'
 		node.__region = region
 		ch = self.__regions.get(region)
 		if ch is None:
@@ -969,14 +983,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val is not None:
 					ch[key] = val
 			ch['id'] = region
-			ch['left'] = '%dpx' % self.__defleft
-			ch['top'] = '%dpx' % self.__deftop
-			self.__defleft = self.__defleft + 20
-			self.__deftop = self.__deftop + 10
+#			ch['left'] = '%dpx' % self.__defleft
+#			ch['top'] = '%dpx' % self.__deftop
+#			self.__defleft = self.__defleft + 20
+#			self.__deftop = self.__deftop + 10
 			self.start_region(ch, checkid = 0)
 			self.end_region()
 			self.__in_layout = LAYOUT_NONE
 			ch = self.__regions[region]
+			
 		width = height = 0
 		l = ch.get('left')
 		w = ch.get('width')
@@ -990,23 +1005,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if t is not None and h is not None and b is not None:
 			del ch['bottom']
 			b = None
-		top = self.__topregion.get(node.__region)
+		top = self.__topregion.get(region)
 		# if top doesn't exist (and visible media, we create have to default top window)
 #		import ChannelMap
 		if top == None: #and ChannelMap.isvisiblechannel(mtype):
 			if not self.__tops.has_key(None):
-				attrs = {}
-				for key, val in self.attributes['root-layout'].items():
-					if val is not None:
-						attrs[key] = val
-				self.__tops[None] = {'width':0,
-						     'height':0,
-						     'declwidth':0,
-						     'declheight':0,
-						     'attrs':attrs}
-				self.__childregions[None] = []
-			self.__childregions[None].append(ch.get('id'))
-
+				self.__newTopRegion()
+			id = ch.get('id')
+			for child in self.__childregions[None]:
+				if child == id:
+					break
+			else:
+				self.__childregions[None].append(id)
 		import ChannelMap
 		if not ChannelMap.isvisiblechannel(mtype):
 			# not visible region
@@ -1493,7 +1503,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		
 		for r in self.__childregions[region]:
 			self.__calcsize2(top, r, w, h)
-
+				
 	def FixSyncArcs(self, node):
 		save_lineno = self.lineno
 		for attr, val, lineno in node.__syncarcs:
@@ -2259,7 +2269,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			attrdict['base_window'] = self.__viewport
 			self.__childregions[self.__viewport].append(id)
 		else:
-			pass
 #			if not self.__tops.has_key(None):
 #				attrs = {}
 #				for key, val in self.attributes['root-layout'].items():
@@ -2271,7 +2280,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 #						     'declheight':0,
 #						     'attrs':attrs}
 #				self.__childregions[None] = []
-#			self.__childregions[None].append(id)
+			if not self.__tops.has_key(None):
+				self.__newTopRegion()
+			self.__childregions[None].append(id)
 
 		self.__region = id, self.__region
 		self.__regionlist.append(id)
