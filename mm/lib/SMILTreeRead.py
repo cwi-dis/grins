@@ -2648,6 +2648,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__in_smil = 1
 		self.NewContainer('seq', attributes)
 		self.__set_defaultregpoints()
+		self.__rootLayoutId = None
 		
 	def end_smil(self):
 		from realnode import SlideShow
@@ -3154,8 +3155,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__childregions[self.__viewport].append(id)
 		else:
 			if settings.activeFullSmilCss:
-				if not self.__tops.has_key(None):
+				if self.__rootLayoutId == None:
 					attrdict['base_window'] = layout_name
+				else:
+					attrdict['base_window'] = self.__rootLayoutId					
 #			if not self.__tops.has_key(None):
 #				attrs = {}
 #				for key, val in self.attributes['root-layout'].items():
@@ -3188,7 +3191,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# ignore outside of smil-basic-layout/smil-extended-layout
 			return
 		self.__fix_attributes(attributes)
-		id = self.__checkid(attributes)
+		self.__rootLayoutId = id = self.__checkid(attributes)
 		self.__root_layout = attributes
 		width = attributes['width']
 		if width[-2:] == 'px':
