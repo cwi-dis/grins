@@ -192,9 +192,9 @@ MENUBAR=(
 
 
 	('&Linking', (
-		((features.EXPORT_SMIL2,), ENTRY, 'Create simple link source', None, CREATEANCHOR),
-		((features.EXPORT_SMIL2,), ENTRY, '&Finish simple link to selection', None, FINISH_LINK),
-		((features.EXPORT_SMIL2,), SEP,),
+		((features.INTERNAL_LINKS,), ENTRY, 'Create simple link source', None, CREATEANCHOR),
+		((features.INTERNAL_LINKS,), ENTRY, '&Finish simple link to selection', None, FINISH_LINK),
+		((features.INTERNAL_LINKS,), SEP,),
 		((features.EXPORT_REAL,), ENTRY, 'Create link to context window...', None, CREATEANCHOR_CONTEXT),
 		((features.EXPORT_REAL,), ENTRY, 'Create link to browser window...', None, CREATEANCHOR_BROWSER),
 		(FLAG_ALL, ENTRY, 'Create full link source and edit...', None, CREATEANCHOREXTENDED),
@@ -394,9 +394,9 @@ POPUP_HVIEW_LEAF = (
 		(FLAG_ALL, ENTRY, 'Use as event &source', None, CREATE_EVENT_SOURCE),
 		(FLAG_ALL, ENTRY, 'Create &begin event', None, CREATE_BEGIN_EVENT),
 		(FLAG_ALL, ENTRY, 'Create &end event', None, CREATE_END_EVENT),
-		((features.EXPORT_SMIL2,), SEP,),
-		((features.EXPORT_SMIL2,), ENTRY, 'Create simple link source', None, CREATEANCHOR),
-		((features.EXPORT_SMIL2,), ENTRY, 'Finish simple link to selection', None, FINISH_LINK),
+		((features.INTERNAL_LINKS,), SEP,),
+		((features.INTERNAL_LINKS,), ENTRY, 'Create simple link source', None, CREATEANCHOR),
+		((features.INTERNAL_LINKS,), ENTRY, 'Finish simple link to selection', None, FINISH_LINK),
 		(FLAG_PRO, SEP,),
 		((features.EXPORT_REAL,), ENTRY, 'Create link to context window...', None, CREATEANCHOR_CONTEXT),
 		((features.EXPORT_REAL,), ENTRY, 'Create link to browser window...', None, CREATEANCHOR_BROWSER),
