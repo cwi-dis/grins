@@ -3897,7 +3897,7 @@ class FileGroup(AttrGroup):
 
 	def getpageresid(self):
 		if self.canpreview():
-			if self._mtypesig ('image', 'svg', 'html', 'text'): 
+			if self._mtypesig in ('image', 'svg', 'html', 'text'): 
 				# static media
 				return grinsRC.IDD_EDITATTR_PF1
 			else: 
