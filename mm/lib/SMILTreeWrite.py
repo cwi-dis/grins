@@ -228,6 +228,8 @@ def getsrc(writer, node):
 			node.DelAttr('file')
 			return 'data:image/vnd.rn-realpix;base64,' + \
 			       string.join(string.split(base64.encodestring(data), '\n'), '')
+##			return 'data:image/vnd.rn-realpix;charset=ISO-8859-1,' + \
+##			       MMurl.quote(data)
 		if not val:
 			val = writer.gen_rpfile()
 			do_write = 1
@@ -1046,7 +1048,6 @@ class SMILWriter(SMIL):
 
 	def writelayout(self):
 		"""Write the layout section"""
-		compatibility = features.compatibility
 		attrlist = []
 		if self.smilboston:
 			attrlist.append(('type', SMIL_EXTENDED))
@@ -1067,7 +1068,7 @@ class SMILWriter(SMIL):
 				pass
 			elif ch.has_key('bgcolor'):
 				bgcolor = ch['bgcolor']
-				if compatibility != features.G2 or \
+				if features.compatibility != features.G2 or \
 				   bgcolor != (0,0,0):
 					if self.smilboston:
 						attrlist.append(('backgroundColor', '#%02x%02x%02x' % bgcolor))
@@ -1089,7 +1090,7 @@ class SMILWriter(SMIL):
 					attrlist.append(('width', '%d' % int(w + .5)))
 					attrlist.append(('height', '%d' % int(h + .5)))
 			if self.smilboston:
-				self.writetag('top-layout', attrlist)
+				self.writetag('topLayout', attrlist)
 				self.push()
 				self.writeregion(ch)
 				self.pop()
@@ -1101,10 +1102,8 @@ class SMILWriter(SMIL):
 		self.pop()
 
 	def writeregion(self, ch):
-		import settings
-		compatibility = settings.get('compatibility')
 		mtype, xtype = mediatype(ch['type'], error=1)
-		isvisual = mtype in ('img', 'video', 'text')
+		isvisual = mtype in ('img', 'video', 'text', 'animation', 'textstream')
 		if ch['type'] == 'layout' and \
 		   not ch.has_key('base_window'):
 			# top-level layout channel has been handled
@@ -1173,7 +1172,7 @@ class SMILWriter(SMIL):
 			transparent = ch.get('transparent', 0)
 			bgcolor = ch.get('bgcolor')
 			if transparent == 0:
-				if compatibility == features.G2:
+				if features.compatibility == features.G2:
 					# in G2, setting a
 					# background-color implies
 					# transparent==never, so set
@@ -1196,7 +1195,7 @@ class SMILWriter(SMIL):
 			# the color is the default (g2-compatible) color: white for text channels
 			# and black for others.
 			if bgcolor is not None and \
-			   (compatibility != features.G2 or
+			   (features.compatibility != features.G2 or
 			    ((ch['type'] not in ('text', 'RealText') or
 			      bgcolor != (255,255,255)) and
 			     bgcolor != (0,0,0))):
