@@ -34,8 +34,21 @@ class ChannelViewDialog(ViewDialog):
 		self.window.set_toggle(TOGGLE_ARCS, self.showarcs)
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
 		self.window.register(WMEVENTS.ResizeWindow, self.resize, None)
-		self.window.register(WMEVENTS.DropFile, self.dropfile, None)
 		self.window.register(WMEVENTS.PasteFile, self.dropfile, None)
+		self.window.register(WMEVENTS.DragFile, self.dropeffect, None)
+		self.window.register(WMEVENTS.DropFile, self.dropfile, None)
+
+	def dropeffect(self, dummy, window, event, params):
+		import MMNode
+		import windowinterface
+		x, y, filename = params
+		obj = self.whichhit(x, y)
+		if not obj or not obj.is_node_object:
+			print 'DROPEFFECT_NONE'
+			return windowinterface.DROPEFFECT_NONE
+		else:
+			return windowinterface.DROPEFFECT_MOVE
+
 
 	def hide(self, *rest):
 		self.save_geometry()

@@ -44,8 +44,9 @@ class HierarchyViewDialog(ViewDialog):
 		self.window.set_toggle(THUMBNAIL, self.thumbnails)
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
 		self.window.register(WMEVENTS.ResizeWindow, self.redraw, None)
-		self.window.register(WMEVENTS.DropFile, self.dropfile, None)
 		self.window.register(WMEVENTS.PasteFile, self.dropfile, None)
+		self.window.register(WMEVENTS.DragFile, self.dropeffect, None)
+		self.window.register(WMEVENTS.DropFile, self.dropfile, None)
 
 	def hide(self, *rest):
 		self.save_geometry()
@@ -71,3 +72,15 @@ class HierarchyViewDialog(ViewDialog):
 	def helpcall(self):
 		import Help
 		Help.givehelp('Hierarchy')
+
+	def dropeffect(self, dummy, window, event, params):
+		import MMNode
+		import windowinterface
+		x, y, filename = params
+		obj = self.whichhit(x, y)
+		if not obj:
+			return windowinterface.DROPEFFECT_NONE
+		elif obj.node.GetType() in MMNode.leaftypes:
+			return windowinterface.DROPEFFECT_MOVE
+		else:
+			return windowinterface.DROPEFFECT_COPY
