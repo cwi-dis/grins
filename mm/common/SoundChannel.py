@@ -95,15 +95,17 @@ class SoundChannel(Channel):
 		return '<SoundChannel instance, name=' + `self.name` + '>'
 	#
 	def getduration(self, node):
-		# NB This never uses the 'duration' attribute!
+		import SoundDuration
 		filename = self.getfilename(node)
 		try:
-			return duration_cache.get(filename)
+			return SoundDuration.get(filename)
 		except IOError:
-			print 'cannot get duration for sound file ' + filename
+			print 'cannot open sound file to get duration:',
+			print `filename`
 			return MMAttrdefs.getattr(node, 'duration')
 	#
 	def arm(self, node):
+		import SoundDuration
 		if not self.is_showing():
 			return
 		filename = self.getfilename(node)
@@ -113,7 +115,7 @@ class SoundChannel(Channel):
 				  armdone, 0)
 			glwindow.devregister(`self.deviceno`+':'+`mm.stopped`,\
 				  stopped, 0)
-			self.armed_info = getinfo(filename)
+			self.armed_info = SoundDuration.getinfo(filename)
 			prepare(self.armed_info)	# Do a bit of readahead
 			f, nchannels, nsampframes, sampwidth, samprate, format = self.armed_info
 ##			print 'SoundChannel.arm: self.threads = ' + `self.threads`
@@ -211,28 +213,6 @@ class SoundChannel(Channel):
 		self.threads = None
 		Channel.destroy(self)
 
-def getduration(filename):
-	f, nchannels, nsampframes, sampwidth, samprate, format = \
-		getinfo(filename)
-	duration = float(nsampframes) / samprate
-	return duration
-
-
-def getinfo(filename):
-	f = open(filename, 'r')
-	try:
-		a = aifc.openfp(f, 'r')
-	except EOFError:
-		print 'EOF on sound file', filename
-		return f, 1, 0, 1, 8000, 'eof'
-	except aifc.Error, msg:
-		print 'error in sound file', filename, ':', msg
-		return f, 1, 0, 1, 8000, 'error'
-	dummy = a.readframes(0)		# sets file pointer to start of data
-	if a.getcomptype() != 'NONE':
-		print 'cannot read compressed AIFF-C files for now', filename
-		return f, 1, 0, 1, 8000, 'error'
-	return a.getfp(), a.getnchannels(), a.getnframes(), a.getsampwidth(), a.getframerate(), 'AIFF'
 
 def prepare((f, nchannels, nsampframes, sampwidth, samprate, format)):
 	pass
@@ -245,13 +225,6 @@ def prepare((f, nchannels, nsampframes, sampwidth, samprate, format)):
 #
 def restore():
 	cleanup()
-
-
-# Cache durations
-
-import FileCache
-
-duration_cache = FileCache.FileCache().init(getduration)
 
 
 # Cache conversions to AIFF files

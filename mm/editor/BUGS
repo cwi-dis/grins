@@ -5,6 +5,8 @@
 
 --------------------------- BIG PLANS -----------------------------
 
+rewrite the scheduler
+
 redo the user interface for creating and editing hyperlinks to be more
 intuitive
 
@@ -66,9 +68,6 @@ correctly
 
 Auto-firing anchors on interior nodes don't work
 
-block view calculates geometry wrong after sequence of zoom in -
-enlarge window - zoom out
-
 When starting a document with the pause button: (a) no images or texts
 appear; and (b) the cursor stays a watch.
 
@@ -83,12 +82,6 @@ needed to fix them.  E.g. after changing a bag node to a seq node...
 
 [see various mails from Lynda, listed above as CRASHES]
 
-block view: sometimes the outermost box size is calculated wrong and
-part of the window remains unused.  (Hard to reproduce; usually after
-heavy inserting / deleting of nodes and/or zooming in/out?)  [maybe
-fixed by the fix that fixes crash on modifying the root node?]  [maybe
-replaced by zoom in - resize - zoom out problem, above]
-
 player: *sometimes* crash in opt_prearm at self.rtpool.enter(...) when
 playing node w/o channel [hard to reproduce?]
 
@@ -100,11 +93,6 @@ toplevel: sometimes complaint about unknown command when clicking in
 toplevel menu while things are busy?
 
 ---------------------- FIX OUTSIDE OUR CONTROL --------------------
-
-FORMS: When a window is iconified, the first redraw operation to that
-window hangs the entire application.
-
-block view: on resize, the menu bar changes height in a weird way
 
 ------------------------------ PERFORMANCE ------------------------
 
@@ -163,15 +151,14 @@ player: when playing a subtree, should make sure that at least one
      window.  In the Hierarchy you need to go to the menu.
      (Shortcuts are the same?)
      The reason is that the Hierarchy window was produced with the Forms
-     library.
+     library.  [Fixed by new hierarchy view]
 
 *    The ordering of channels in the Time chart window cannot be changed.
      (I had wanted to put a frequently occurring channel next tot he two
      which are always there.)
 
 *    It would be nice to see, in the Hierarchy window, which nodes have their
-     time explicitly defined.  [first part is fixed --Guido]
-     However, there are perhaps more things which
+     time explicitly defined.  However, there are perhaps more things which
      could be shown in the window, and a list of priorities could usfully be
      made. 
 
@@ -224,7 +211,7 @@ player: when playing a subtree, should make sure that at least one
     have one selected then there is no "Edit Anchor" button.  If you then
     choose to look at the anchors "From Block View Focus" then the "Anchor
     editor..." button appears.  I'd like the button to be available
-    whenever an Anchor is selected.
+    whenever an Anchor is selected.  [Fixed --Guido]
 
     (I'd also quite like an "OK" button in the Link editor (even if it
     doesn't actually *do* anything), since I always have the feeling when I
@@ -617,6 +604,17 @@ is opened after the channel view) causes a crash.
 
 --- 2 Feb 1992 ---
 
+block view calculates geometry wrong after sequence of zoom in -
+enlarge window - zoom out 
+
+block view: sometimes the outermost box size is calculated wrong and
+part of the window remains unused.  (Hard to reproduce; usually after
+heavy inserting / deleting of nodes and/or zooming in/out?)  [maybe
+fixed by the fix that fixes crash on modifying the root node?]  [maybe
+replaced by zoom in - resize - zoom out problem, above]
+
+block view: on resize, the menu bar changes height in a weird way
+
 rewrite the block view without using FORMS, so user interface can be
 improved
 
@@ -634,3 +632,6 @@ should call a function of the toplevel).  (Also this might put
 absolute filenames in the attributes???)  [Fixed by moving the hack
 to the context, where it belongs.  Initialized when the first file
 is read into the context.]
+
+FORMS: When a window is iconified, the first redraw operation to that
+window hangs the entire application.  [Fixed since FORMS 2.1a]

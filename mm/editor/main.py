@@ -3,8 +3,6 @@
 import sys
 import getopt
 
-gl_lock = None				# global graphics lock
-
 def usage(msg):
 	sys.stdout = sys.stderr
 	print msg
@@ -55,6 +53,7 @@ def main():
 	import SoundChannel
 	import ImageChannel
 	import Channel
+	import GLLock
 	#
 	stats = 0
 	#
@@ -67,9 +66,7 @@ def main():
 			import Help
 			Help.sethelpdir(arg)
 	#
-	import thread
-	global gl_lock
-	gl_lock = thread.allocate_lock()
+	GLLock.init()
 	tops = []
 	for fn in files:
 		top = TopLevel.TopLevel().init(fn)
@@ -100,12 +97,12 @@ def main():
 			glfd = gl.qgetfd()
 			while 1:
 				locked = None
-				if gl_lock:
-					gl_lock.acquire()
+				if GLLock.gl_lock:
+					GLLock.gl_lock.acquire()
 					locked = 1
 				result = fl.check_forms()
 				if locked:
-					gl_lock.release()
+					GLLock.gl_lock.release()
 				ifdlist, ofdlist, efdlist = select.select([glfd], [], [], 0.1)
 ##			fl.do_forms()
 			# This point isn't reached

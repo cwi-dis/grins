@@ -17,13 +17,14 @@ import VFile
 
 from ArmStates import *
 
-import main				# for gl_lock
+import GLLock
 
 # Errors that VFile operations may raise
 VerrorList = VFile.Error, os.error, IOError, RuntimeError, EOFError
 
 from Channel import Channel
 from ChannelWindow import ChannelWindow
+
 
 class MovieWindow(ChannelWindow):
 	#
@@ -218,12 +219,12 @@ class MovieChannel(Channel):
 	#
 	def destroy(self):
 ##		print 'MovieChannel.destroy'
-		if main.gl_lock:
-			main.gl_lock.release()
+		if GLLock.gl_lock:
+			GLLock.gl_lock.release()
 		self.threads.close()
 		self.threads = None
-		if main.gl_lock:
-			main.gl_lock.acquire()
+		if GLLock.gl_lock:
+			GLLock.gl_lock.acquire()
 		self.window.destroy()
 	#
 	def save_geometry(self):
@@ -237,9 +238,8 @@ class MovieChannel(Channel):
 				  armdone, 0)
 			glwindow.devregister(`self.deviceno`+':'+`mm.stopped`,\
 				  stopped, 0)
-			if not main.gl_lock:
-				import thread
-				main.gl_lock = thread.allocate_lock()
+			if not GLLock.gl_lock:
+				GLLock.init()
 			self.threads.arm(self.window.vfile.fp, 0, 0, \
 				  {'width': self.window.vfile.width, \
 				   'height': self.window.vfile.height, \
@@ -252,7 +252,7 @@ class MovieChannel(Channel):
 				   'scale': MMAttrdefs.getattr(node, 'scale'), \
 				   'wid': self.window.wid, \
 				   'bgcolor': MMAttrdefs.getattr(node, 'bgcolor'), \
-				   'gl_lock': main.gl_lock}, \
+				   'gl_lock': GLLock.gl_lock}, \
 				   None)
 		self.armed_node = node
 	#
@@ -315,11 +315,11 @@ class MovieChannel(Channel):
 		self.node = None
 	#
 	def stop(self):
-		if main.gl_lock:
-			main.gl_lock.release()
+		if GLLock.gl_lock:
+			GLLock.gl_lock.release()
 		self.threads.stop()
-		if main.gl_lock:
-			main.gl_lock.acquire()
+		if GLLock.gl_lock:
+			GLLock.gl_lock.acquire()
 		Channel.stop(self)
 	#
 	def setrate(self, rate):
@@ -349,12 +349,14 @@ class MovieChannel(Channel):
 		self.node = None # Attempt to fix obscure bug --Guido
 	#
 	def getduration(self, node):
-		# To estimate the duration: read the header and the first
-		# image; use stat to get the total file size; use this
-		# to estimate the number of images; multiply this with
-		# the time listed for the first image...
+		import MovieDuration
 		filename = self.getfilename(node)
-		return duration_cache.get(filename)
+		try:
+			return MovieDuration.get(filename)
+		except IOError:
+			print 'cannot open movie file to get duration:',
+			print `filename`
+			return MMAttrdefs.getattr(node, 'duration')
 	#
 	def setwaiting(self):
 		self.window.setwaiting()
@@ -362,36 +364,3 @@ class MovieChannel(Channel):
 	def setready(self):
 		self.window.setready()
 	#
-
-
-def getfilesize(filename):
-	from stat import ST_SIZE
-	try:
-		st = os.stat(filename)
-		return st[ST_SIZE]
-	except os.error:
-		return -1
-
-
-# Cache durations
-
-def getduration(filename):
-	totalsize = getfilesize(filename)
-	try:
-		vfile = VFile.RandomVinFile().init(filename)
-	except VerrorList:
-		print 'Cannot open movie file',
-		print `filename`, 'to get duration'
-		return 0.0
-	pos1 = vfile.fp.tell()
-	try:
-		time = vfile.skipnextframe()
-	except EOFError:
-		return 0.0
-	pos2 = vfile.fp.tell()
-	imagesize = pos2 - pos1
-	imagecount = (totalsize - pos1) / imagesize
-	return 0.001 * time * imagecount
-
-import FileCache
-duration_cache = FileCache.FileCache().init(getduration)
