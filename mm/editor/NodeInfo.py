@@ -11,6 +11,8 @@ import MMAttrdefs
 import MMParser
 import MMWrite
 
+import NodeEdit
+
 import NodeInfoForm
 
 # from ChannelMap import channelmap
@@ -438,6 +440,8 @@ class NodeInfo() = Dialog():
 		self.changed = 1
 		self.filename = result
 		self.file_input.set_input(result)
+	def conteditor_callback(self, (obj, dummy)):
+	    NodeEdit.showeditor(self.node)
 	#
 	# Callbacks for 'par' and 'seq' type nodes
 	#
