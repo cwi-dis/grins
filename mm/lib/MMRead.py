@@ -40,8 +40,13 @@ def _newctx():
 	return MMNode.MMNodeContext().init(MMNode.MMNode)
 
 def _readparser(p, filename):
+	#
+	# Read a single node (this is a whole tree!) from the file.
+	# If an error occurs, format a nice error message, and
+	# re-raise the exception.
+	#
 	try:
-		node = p.getnode()
+		root = p.getnode()
 	except EOFError:
 		p.reporterror(filename, 'Unexpected EOF', sys.stderr)
 		raise EOFError
@@ -58,22 +63,42 @@ def _readparser(p, filename):
 		p.reporterror(filename, 'Type error: ' + msg, sys.stderr)
 		raise TypeError, msg
 	#
+	# Make sure that there is no garbage in the file after the node.
+	#
 	token = p.peektoken()
 	if token <> '':
 		msg = 'Node ends before EOF'
 		p.reporterror(filename, msg, sys.stderr)
 		raise SyntaxError, msg
 	#
+	# Move the style dictionary from the root attribute list
+	# to the context.
+	#
 	try:
-		node.context.addstyles(node.GetRawAttr('styledict'))
-		node.DelAttr('styledict')
+		root.context.addstyles(root.GetRawAttr('styledict'))
+		root.DelAttr('styledict')
 	except NoSuchAttrError:
 		pass
 	#
+	# Move the channel list from the root attribute list
+	# to the context.
+	#
 	try:
-		node.context.addchannels(node.GetRawAttr('channellist'))
-		node.DelAttr('channellist')
+		root.context.addchannels(root.GetRawAttr('channellist'))
+		root.DelAttr('channellist')
 	except NoSuchAttrError:
 		pass
 	#
-	return node
+	# Make sure that all channel names used in the document are
+	# defined in the channel list.
+	#
+	usedchannelnames = root.GetSummary('channel')
+	for cname in usedchannelnames:
+		msg = ''
+		if cname not in root.context.channelnames:
+			msg = 'undefined channel name used: ' + `cname` + '\n'
+			sys.stderr.write(msg)
+		if msg:
+			raise TypeError, msg
+	#
+	return root
