@@ -254,7 +254,6 @@ class Player(PlayerCore):
 			windowinterface.showmessage('No such channel: '+name)
 			return
 		ch.set_visible(onoff)
-		self.toplevel.channelview.channels_changed()
 		self.makemenu()
 
 	def showstate(self):
