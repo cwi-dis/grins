@@ -321,6 +321,33 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		for v in self.views:
 			v.fixtitle()
 
+	def relative_url(self, url):
+		# Make a URL relative to self.dirname, if possible
+		utype, host, pathname, params, query, fragment = urlparse(url)
+		if (utype and utype != 'file') or host or query or fragment:
+			# nonlocal url
+			return url
+		cwd = self.dirname
+		if cwd:
+			cwd = MMurl.url2pathname(cwd)
+			if not os.path.isabs(cwd):
+				cwd = os.path.join(os.getcwd(), cwd)
+		else:
+			# If we have no document dirname we use relative to cwd
+			cwd = os.getcwd()
+		if os.path.isdir(pathname):
+			dir, file = pathname, os.curdir
+		else:
+			dir, file = os.path.split(pathname)
+		# XXXX maybe should check that dir gets shorter!
+		while len(dir) > len(cwd):
+			dir, f = os.path.split(dir)
+			file = os.path.join(f, file)
+		if dir == cwd:
+			pathname = file
+		return MMurl.pathname2url(pathname)
+
+
 	def save_to_file(self, filename, cleanSMIL = 0):
 		# Get rid of hyperlinks outside the current tree and clipboard
 		# (XXX We shouldn't *save* the links to/from the clipboard,

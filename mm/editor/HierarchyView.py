@@ -287,6 +287,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.setfocusobj(obj)
 		if event == WMEVENTS.DropFile:
 			url = MMurl.pathname2url(filename)
+			url = self.toplevel.relative_url(url)
 		else:
 			url = filename
 		t = obj.node.GetType()

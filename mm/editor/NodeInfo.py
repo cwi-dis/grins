@@ -508,6 +508,7 @@ class NodeInfo(NodeInfoDialog):
 
 	def browserfile_callback(self, pathname):
 		import MMurl
+		# XXXX Should use self.toplevel.relative_url()
 		if os.path.isabs(pathname):
 			cwd = self.toplevel.dirname
 			if cwd:
