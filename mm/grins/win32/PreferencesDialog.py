@@ -40,6 +40,9 @@ class _PreferencesDialog(win32dialog.ResDialog,ControlsDict):
 
 	# Class constructor. Calls base class constructors and associates ids to controls
 	def __init__(self,cbd=None,parent=None):
+		langs = languages.l2a.keys()
+		langs.sort()
+		self.__languages = langs
 		win32dialog.ResDialog.__init__(self,grinsRC.IDD_PREFERENCES,parent)
 		ControlsDict.__init__(self)
 
@@ -63,10 +66,7 @@ class _PreferencesDialog(win32dialog.ResDialog,ControlsDict):
 		br.setoptions(bitrates.names)
 		lang = self['system_language']
 		lang.resetcontent()
-		langs = languages.l2a.keys()
-		langs.sort()
-		self.__languages = langs
-		lang.setoptions(langs)
+		lang.setoptions(self.__languages)
 
 	# Create the actual OS window
 	def create(self):
