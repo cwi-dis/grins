@@ -628,11 +628,11 @@ class MMRegPoint:
 		if self.attrdict.has_key('left'):
 			x = self.attrdict['left']
 			if type(x) is type(1.0):
-				x = int(x*boxwidth+0.5)
+				x = int(x*boxwidth)
 		elif self.attrdict.has_key('right'):
 			right = self.attrdict['right']
 			if type(right) is type(1.0):
-				right = int(right*boxwidth+0.5)
+				right = int(right*boxwidth)
 			x = boxwidth-right
 		else:
 			x = 0
@@ -644,11 +644,11 @@ class MMRegPoint:
 		if self.attrdict.has_key('top'):
 			y = self.attrdict['top']
 			if type(y) is type(1.0):
-				y = int(y*boxheight+0.5)
+				y = int(y*boxheight)
 		elif self.attrdict.has_key('bottom'):
 			bottom = self.attrdict['bottom']
 			if type(bottom) is type(1.0):
-				bottom = int(bottom*boxheight+0.5)
+				bottom = int(bottom*boxheight)
 			y = boxheight-bottom
 		else:
 			y = 0
