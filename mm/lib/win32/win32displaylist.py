@@ -58,7 +58,6 @@ def _get_icon(which):
 class _DisplayList:
 	def __init__(self, window, bgcolor):
 		self.starttime = 0
-		r, g, b = bgcolor
 		self._window = window			
 		window._displists.append(self)
 		self._buttons = []
@@ -68,8 +67,7 @@ class _DisplayList:
 		self._canvas = window._canvas
 		self._linewidth = 1
 		self._list = []
-		if window._transparent <= 0 or bgcolor is not None:
-			self._list.append(('clear', self._canvas))
+		self._list.append(('clear', bgcolor))
 		self._optimdict = {}
 		self._rendered = 0
 		self._font = None
@@ -168,8 +166,8 @@ class _DisplayList:
 	def _do_render(self, entry, dc, region):
 		cmd = entry[0]
 		w = self._window
-		if cmd == 'clear':
-			dc.FillSolidRect(entry[1],RGB(self._bgcolor))
+		if cmd == 'clear' and entry[1]:
+			dc.FillSolidRect(self._canvas,RGB(entry[1]))
 		elif cmd == 'fg':
 			self._curfg = entry[1]
 		elif cmd == 'image':
