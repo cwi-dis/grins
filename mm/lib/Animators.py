@@ -1199,8 +1199,8 @@ class AnimateElementParser:
 		dt =  self.__accelerate + self.__decelerate
 		if dt>1.0:
 			# *the timing module draft says accelerate is clamped to 1 and decelerate=1-accelerate
-			self.__accelerate = self.__accelerate/dt
-			self.__decelerate = self.__decelerate/dt
+			self.__accelerate = min(self.__accelerate, 1.0)
+			self.__decelerate = 1.0 - self.__accelerate
 		self.__autoReverse = MMAttrdefs.getattr(anim, 'autoReverse')
 		
 		if not timeManipulations and \
@@ -2136,8 +2136,3 @@ class AnimateElementParser:
 				i = i+1
 		l.append(str[end:])
 		return l
-
-
-
- 
- 
