@@ -1741,6 +1741,8 @@ class _TimingInfo:
 clipre = None
 clock_val = None
 
+nonascii = None
+
 class MMNode(MMTreeElement):
 	# MMNode is the base class from which other Node classes are implemented.
 	# Each Node forms a doubly-linked n-tree - MMNode.children[] stores the
@@ -2235,7 +2237,20 @@ class MMNode(MMTreeElement):
 		return terminator
 
 	def GetFile(self):
-		file = self.GetAttr('file')
+		global nonascii
+		if self.type == 'imm':
+			chtype = self.GetChannelType()
+			if chtype == 'html':
+				mime = 'text/html'
+			else:
+				mime = ''
+			data = string.join(self.GetValues(), '\n')
+			if nonascii is None:
+				nonascii = re.compile('[\200-\377]')
+			if nonascii.search(data):
+				mime = mime + ';charset=ISO-8859-1'
+			return 'data:%s,%s' % (mime, MMurl.quote(data))
+		file = self.GetAttrDef('file', '')
 		return self.context.findurl(file)
 
 	def GetMarkerVal(self, url):
