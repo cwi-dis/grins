@@ -6,20 +6,20 @@ from appcon import *
 class DocumentFrame:
 	def __init__(self):
 		self._activecmds={'app':{},'document':{},'pview_':{}}
-	
+		self._dyncmds = {}
+
 	def set_commandlist(self, commandlist, context):
-		if not self._activecmds.has_key(context):
-			self._activecmds[context] = {}
+		self._activecmds[context] = {}
 		if commandlist:
 			for cmd in 	commandlist:
 				self._activecmds[context][cmd.__class__] = cmd
-		print 'DocumentFrame.set_commandlist', commandlist, context
+		#print 'DocumentFrame.set_commandlist', commandlist, context
 
 	def setcoords(self,coords, units=UNIT_MM):
 		print 'DocumentFrame.setcoords', coords, units
 
 	def set_dynamiclist(self, command, list):
-		pass #print 'DocumentFrame.set_dynamiclist', command, list
+		print 'DocumentFrame.set_dynamiclist', command, list
 
 	def set_toggle(self, cmdcl, onoff):
 		print 'DocumentFrame.set_toggle',  cmdcl, onoff
@@ -28,22 +28,21 @@ class DocumentFrame:
 		print 'DocumentFrame.setplayerstate', state
 
 	def execute_cmd(self, cmdclass):
-		dict = self._activecmds['pview_']
-		cmd = None
-		if dict: cmd = dict.get(cmdclass)
-		if cmd is not None and cmd.callback:
-			apply(apply, cmd.callback)
-			return
-		dict = self._activecmds['document']
-		if dict: cmd = dict.get(cmdclass)
-		if cmd is not None and cmd.callback:
-			apply(apply, cmd.callback)
-			return
-		dict = self._activecmds['app']
-		if dict: cmd = dict.get(cmdclass)
-		if cmd is not None and cmd.callback:
-			apply(apply, cmd.callback)
-			return
+		for ctx in ('pview_', 'document', 'app'):
+			dict = self._activecmds[ctx]
+			if dict: 
+				cmd = dict.get(cmdclass)
+				if cmd is not None and cmd.callback:
+					apply(apply, cmd.callback)
+					return
+
+	def get_cmd_instance(self, cmdclass):
+		for ctx in ('pview_', 'document', 'app'):
+			dict = self._activecmds[ctx]
+			if dict: 
+				cmd = dict.get(cmdclass)
+				if cmd is not None and cmd.callback:
+					return cmd
 
 #########################				
 import wingeneric
@@ -74,19 +73,57 @@ class MainWnd(wingeneric.Wnd, DocumentFrame):
 		cmdid = winstruct.Win32Msg(params).id()
 		import usercmdui
 		cmd = usercmdui.id2usercmd(cmdid)
-		print cmd
-		self.execute_cmd(cmd)
+		if cmd:
+			self.execute_cmd(cmd)
+			return 
+		for cbd in self._dyncmds.values():
+			if cbd.has_key(cmdid):
+				apply(apply, cbd[cmdid])
+				return
+
 
 	def setMenu(self):
 		import win32menu, MenuTemplate, usercmdui
-		self._mainmenu = win32menu.Menu()
+		mainmenu = win32menu.Menu()
 		template = MenuTemplate.MENUBAR
-		self._mainmenu.create_from_menubar_spec_list(template,  usercmdui.usercmd2id)
-		self.SetMenu(self._mainmenu.GetHandle())
+		mainmenu.create_from_menubar_spec_list(template,  usercmdui.usercmd2id)
+		self.SetMenu(mainmenu._obj_)
 		self.DrawMenuBar()
+		self._mainmenu = mainmenu
 	
+	def set_toggle(self, cmdcl, onoff):
+		import usercmdui
+		id = usercmdui.usercmd2id(cmdcl)
+		flags = win32con.MF_BYCOMMAND
+		if onoff==0:
+			flags = flags | win32con.MF_UNCHECKED
+		else:
+			flags = flags | win32con.MF_CHECKED
+		self.GetMenu().CheckMenuItem(id, flags)
+
+	def updateUI(self):
+		pass
+
 	def get_toplevel(self):
 		import __main__
 		return __main__.toplevel
+
+	def set_dynamiclist(self, command, list):
+		import win32menu, usercmdui
+		submenu = self._mainmenu.get_cascade_menu(command)
+		if not submenu:
+			return
+		cmd_instance = self.get_cmd_instance(command)
+		if cmd_instance is None:
+			return
+		idstart = usercmdui.usercmd2id(command) + 1
+		menuspec = []
+		callback = cmd_instance.callback
+		self._dyncmds[command] = {}
+		for entry in list:
+			entry = (entry[0], (callback, entry[1])) + entry[2:]
+			menuspec.append(entry)
+		self._mainmenu.clear_cascade(command)
+		win32menu._create_menu(submenu, menuspec, idstart, self._dyncmds[command])
 
 	
