@@ -131,6 +131,9 @@ int mpeg2audio_replace_buffer(mpeg2audio_t *audio, long new_allocation);
 
 bool mpeg2audio_decode_audio(mpeg2audio_t *audio, float *output_f, short *output_i, 
 		int channel, long start_position, long out_len, long *pwritelen);
+int mpeg2audio_read_raw(mpeg2audio_t *audio, unsigned char *output, long *size, long max_size);
+bool mpeg2audio_decode_audio(mpeg2audio_t *audio, short *output_i, 
+		int channel, long start_position, long len, long *pwritelen);
 
 
 #endif
