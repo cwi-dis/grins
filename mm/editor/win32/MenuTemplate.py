@@ -131,6 +131,11 @@ MENUBAR=(
 			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_VIDEO),
 			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_VIDEO),
 		)),
+		(FLAG_ALL, CASCADE, 'Animation node', (
+			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_ANIMATION),
+			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_ANIMATION),
+			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_ANIMATION),
+		)),
 		(FLAG_ALL, CASCADE, '&Parallel node', (
 			(FLAG_ALL, ENTRY, '&Parent', None, NEW_PAR),
 			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_PAR),
@@ -285,6 +290,11 @@ POPUP_HVIEW_LEAF = (
 				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_VIDEO),
 				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_VIDEO),
 				)),
+			(FLAG_ALL, CASCADE, 'Animation node', (
+				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_ANIMATION),
+				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_ANIMATION),
+				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_ANIMATION),
+				)),
 			(FLAG_ALL, CASCADE, '&Parallel node', (
 				(FLAG_ALL, ENTRY, '&Parent', None, NEW_PAR),
 				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_PAR),
@@ -386,6 +396,11 @@ POPUP_HVIEW_STRUCTURE = (
 				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_VIDEO),
 				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_VIDEO),
 				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_VIDEO),
+				)),
+			(FLAG_ALL, CASCADE, 'Animation node', (
+				(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_ANIMATION),
+				(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_ANIMATION),
+				(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_ANIMATION),
 				)),
 			(FLAG_ALL, CASCADE, '&Parallel node', (
 				(FLAG_ALL, ENTRY, '&Parent', None, NEW_PAR),
