@@ -1,4 +1,3 @@
-import Timing
 import Bandwidth
 
 class BandwidthAccumulator:
@@ -7,10 +6,14 @@ class BandwidthAccumulator:
 	# starttime.
 	#
 
-	def __init__(self, max):
-		self.max = max
-		self.used = [(0, 0)]
+	def __init__(self, maxbw):
+		self.initialmax = maxbw
+		self.used = [(0, 0, maxbw)]
 		self.maxused = 0
+		self.overflow = []
+		
+	def getmaxandused(self):
+		return self.initialmax, self.maxused
 
 	def _findslot(self, t0):
 		"""Find the slot in which t0 falls"""
@@ -24,7 +27,7 @@ class BandwidthAccumulator:
 			if self.used[i][0] <= t0:
 				break
 		else:
-			self.used.append((t0, 0))
+			self.used.append((t0, 0, self.initialmax))
 			return len(self.used)-1
 		return i
 
@@ -32,11 +35,11 @@ class BandwidthAccumulator:
 		"""Create a slot from t0 to t1, or possibly shorter,
 		return the slot index and the new t1"""
 		i = self._findslot(t0)
-		t_i, bandwidth = self.used[i]
+		t_i, bandwidth, maxbw = self.used[i]
 		# If the slot doesn't start exactly at t0 we split it
 		# in two.
 		if t_i < t0:
-			self.used[i:i] = [(t0, bandwidth)]
+			self.used[i:i] = [(t0, bandwidth, maxbw)]
 		# Next, if the end time doesn't fit lower it. The higher
 		# layers will handle the trailing end by iterating.
 		if i > 0 and t1 > self.used[i-1][0]:
@@ -44,7 +47,7 @@ class BandwidthAccumulator:
 		# Finally, if the slot continues after t1 we create a new
 		# slot.
 		if i == 0 or t1 < self.used[i-1][0]:
-			self.used[i:i] = [(t1, bandwidth)]
+			self.used[i:i] = [(t1, bandwidth, maxbw)]
 			i = i + 1
 		# Now slot i points to the (new) t0,t1 range.
 		return i, t1
@@ -53,7 +56,8 @@ class BandwidthAccumulator:
 		"""Return the available bandwidth at t0 and the time
 		t1 at which that value may change"""
 		i = self._findslot(t0)
-		bw = self.max - self.used[i][1]
+		dummyt0, oldbw, maxbw = self.used[i]
+		bw = maxbw - oldbw
 		if bw < 0:
 			bw = 0
 		if i == 0:
@@ -67,18 +71,18 @@ class BandwidthAccumulator:
 		overflow = 0
 		while 1:
 			i, cur_t1 = self._find(t0, t1)
-			t0_0, oldbw = self.used[i]
-			if bwtype <= 1 and bandwidth > self.max:
+			t0_0, oldbw, maxbw = self.used[i]
+			if bwtype <= 1 and bandwidth+oldbw > maxbw:
 				curbwtype = bwtype + 2
 			else:
 				curbwtype = bwtype
 			newbw = oldbw + bandwidth
 			boxes.append((t0, cur_t1, oldbw, newbw,
 				      curbwtype))
-			self.used[i] = (t0, newbw)
-			if newbw > self.max:
+			self.used[i] = (t0, newbw, maxbw)
+			if newbw > maxbw:
 				# Compute how much too much we've used
-				bottombw = max(oldbw, self.max)
+				bottombw = max(oldbw, maxbw)
 				overflow = overflow + (newbw-bottombw)*(cur_t1-t0)
 			if newbw > self.maxused:
 				self.maxused = newbw
@@ -93,32 +97,32 @@ class BandwidthAccumulator:
 		# is enough before t1 passes
 		overflow = 0
 		size = float(size)
-		sizetmp = size
+		sizeremain = size
 		tcur = tnext = t0
 		overall_t0 = overall_t1 = None
-		while sizetmp > 0 and tnext < t1:
+		while sizeremain > 0 and tnext < t1:
 			availbw, tnext = self._findavailbw(tcur)
 			if tnext > t1:
 				tnext = t1
 			size_in_slot = availbw*(tnext-tcur)
 			if size_in_slot > 0:
-				sizetmp = sizetmp - size_in_slot
+				sizeremain = sizeremain - size_in_slot
 			tcur = tnext
-		if sizetmp > 0:
+		if sizeremain > 0:
 			# It didn't fit. We reserve continuous bandwidth
 			# so the picture makes sense.
 			if t1 == t0:
 				t1 = t0 + 0.1
 			dummy, boxes = self.reserve(t0, t1, size/(t1-t0), bwtype=2)
-			return sizetmp, t0, t1, boxes
+			return sizeremain, t0, t1, boxes
 		# It did fit. Do the reservations.
 		boxes = []
 		while size > 0:
 			if t0 >= t1:
 				raise 'Bandwidth algorithm error'
 			i, tnext = self._find(t0, t1)
-			t0_0, bw = self.used[i]
-			bwfree = self.max - bw
+			t0_0, oldbw, maxbw = self.used[i]
+			bwfree = maxbw - oldbw
 			size_in_slot = bwfree*(tnext-t0)
 			if size_in_slot <= 0:
 				t0 = tnext
@@ -129,18 +133,18 @@ class BandwidthAccumulator:
 				tnext = t0 + size/bwfree
 				i, tnext = self._find(t0, tnext)
 				size_in_slot = size
-			boxes.append((t0, tnext, bw, self.max, 0))
+			boxes.append((t0, tnext, oldbw, maxbw, 0))
 			if overall_t0 is None:
 				overall_t0 = t0
 			overall_t1 = tnext
-			self.used[i] = t0, self.max
-			if self.max > self.maxused:
-				self.maxused = self.max
+			self.used[i] = t0, maxbw, maxbw
+			if maxbw > self.maxused:
+				self.maxused = maxbw
 			size = int(size - size_in_slot)
 			t0 = tnext
 		return 0, overall_t0, overall_t1, boxes
 
-def compute_bandwidth(root):
+def compute_bandwidth(root, seticons=1):
 	"""Compute bandwidth usage of a tree. Sets error icons, and returns
 	a tuple (bandwidth, prerolltime, delaycount, errorseconds, errorcount)"""
 	import settings
@@ -150,10 +154,6 @@ def compute_bandwidth(root):
 	errorcount = 0
 	errorseconds = 0
 	errornodes = {}
-	#
-	# Compute t0/t1 values
-	#
-	Timing.needtimes(root)
 	#
 	# Get list (sorted by begin time) of all bandwidth requirements
 	#
@@ -179,7 +179,7 @@ def compute_bandwidth(root):
 	for t0, t1, node, prearm, bandwidth in allbandwidthdata:
 		if bandwidth:
 			overflow, dummy = accum.reserve(t0, t1, bandwidth)
-			if overflow:
+			if overflow and seticons:
 				msg = 'Uses %d bps more bandwidth than available'%overflow
 				node.set_infoicon('bandwidthbad', msg)
 				errornodes[node] = 1
@@ -195,7 +195,7 @@ def compute_bandwidth(root):
 			if overflow:
 ##				print 'preroll overflow', overflow, node
 				errorseconds = errorseconds + (overflow/maxbandwidth)
-				if not errornodes.has_key(node):
+				if seticons and not errornodes.has_key(node):
 					msg = 'Needs at least %d more seconds to load'%round(0.5+overflow/maxbandwidth)
 					node.set_infoicon('bandwidthbad', msg)
 					errornodes[node] = 1
@@ -213,9 +213,10 @@ def compute_bandwidth(root):
 	#
 	# Finally show "bandwidth fine" icon on all nodes that deserve it
 	#
-	for t0, t1, node, prearm, bandwidth in allbandwidthdata:
-		if not errornodes.has_key(node):
-			node.set_infoicon('bandwidthgood')
+	if seticons:
+		for t0, t1, node, prearm, bandwidth in allbandwidthdata:
+			if not errornodes.has_key(node):
+				node.set_infoicon('bandwidthgood')
 	
 	return maxbandwidth, prerolltime, delaycount, errorseconds, errorcount
 	
