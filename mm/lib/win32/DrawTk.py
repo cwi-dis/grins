@@ -65,7 +65,6 @@ class SelectTool(DrawTool):
 
 	def onLButtonDown(self,view,flags,point):
 		local = view.ClientToCanvas(point)
-
 		drawObj=None
 		tk=view.drawTk
 		tk.selectMode = DrawTk.SM_NONE
@@ -169,8 +168,6 @@ class SelectTool(DrawTool):
 			position = Rect(drawObj._position.tuple())
 			if tk.selectMode == DrawTk.SM_MOVE:
 				position.moveByPt(delta)
-				if delta.x!=0 or delta.y!=0:
-					position.round()
 				drawObj.moveTo(position,view)
 				if delta.x+delta.y:view.SetDrawObjDirty(1)
 			elif tk.ixDragHandle != 0:
@@ -197,8 +194,6 @@ class RectTool(DrawTool):
 
 	def onLButtonDown(self,view,flags,point):
 		tk=view.drawTk
-		if not tk.InDrawArea(point):
-			return
 		DrawTool.onLButtonDown(self,view,flags,point)
 		local=view.ClientToCanvas(point)
 		drawObj = DrawRect(Rect((local.x,local.y,local.x,local.y)), units = self._client_units)
@@ -214,9 +209,7 @@ class RectTool(DrawTool):
 
 	def onLButtonUp(self,view,flags,point):
 		tk=view.drawTk
-		if not tk.InDrawArea(point):
-			return
-		if point.iseq(tk.down) or not tk.InDrawArea(point):
+		if point.iseq(tk.down):
 			# don't create empty objects...
 			if len(view._selection):
 				drawObj = view._selection[len(view._selection)-1]
