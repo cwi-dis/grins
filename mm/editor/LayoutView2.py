@@ -57,13 +57,13 @@ class Node:
 
 	def updateAttrdict(self):
 		self.importAttrdict()
+		if self._graphicCtrl != None:
+			self._graphicCtrl.setAttrdict(self._curattrdict)
 
 	def updateAllAttrdict(self):
 		self.updateAttrdict()
 		for child in self._children:
-			child.updateAttrdict()
-		if self._graphicCtrl != None:
-			self._graphicCtrl.setAttrdict(self._curattrdict)
+			child.updateAllAttrdict()
 					
 class Region(Node):
 	def __init__(self, name, dict, ctx):
@@ -132,7 +132,7 @@ class Region(Node):
 		self._ctx.applyGeomOnRegion(self, geom)
 
 	def onProperties(self):
-		print 'properties on region'
+		self._ctx.selectBgColor(self)
 		
 class Viewport(Node):
 	def __init__(self, name, dict, ctx):
@@ -176,13 +176,20 @@ class Viewport(Node):
 	def updateAllAsOutLines(self, value):
 		for child in self._children:
 			child.updateAllAsOutLines(value)
-		# refresh all
+		# for now refresh all
 		self.showAllNodes()
 
 	#
 	# end update visualization mothods
 	#
 
+	def updateAllAttrdict(self):
+		Node.updateAllAttrdict(self)
+		
+		# for now refresh all
+		if self._graphicCtrl != None:
+			self.showAllNodes()
+		
 	def onSelected(self):
 		self._ctx.onPreviousSelectViewport(self)
 
@@ -200,7 +207,7 @@ class Viewport(Node):
 		self._ctx.applyGeomOnViewport(self, geom[2:])
 
 	def onProperties(self):
-		print 'properties on viewport'
+		self._ctx.selectBgColor(self)
 		
 ###########################
 
@@ -309,6 +316,8 @@ class LayoutView2(LayoutViewDialog2):
 		for viewportName in viewportNameList:	
 			viewport = self._viewports[viewportName]
 			viewport.updateAllAttrdict()
+		if self.currentNodeSelected != None:
+			self.currentNodeSelected.select()
 			
 	# extra pass to initialize map the region name list to the node object
 	def __initRegionList(self, node, isRoot=1):
@@ -350,6 +359,15 @@ class LayoutView2(LayoutViewDialog2):
 						self.updateRegionOnDialogBox(region)
 						break
 
+	def selectBgColor(self, node):
+		dict = node.getDocDict()
+		bgcolor = dict.get('bgcolor')
+		transparent = dict.get('transparent')
+		
+		newbg = self.chooseBgColor(bgcolor)
+		if newbg != None:
+			self.applyBgColor(node, newbg, transparent)
+	
 	#
 	# dialog box update methods
 	#
@@ -373,11 +391,18 @@ class LayoutView2(LayoutViewDialog2):
 		# apply new size
 		# pass by edit manager
 		
-		# test if possible at this time
+		# test if possible 
 		if self.editmgr.transaction():
 			self.editmgr.setchannelattr(region.getName(), 'base_winoff', geom)
 			self.editmgr.commit()
 
+	def applyBgColor(self, node, bgcolor, transparent):
+		# test if possible 
+		if self.editmgr.transaction():
+			self.editmgr.setchannelattr(node.getName(), 'bgcolor', bgcolor)
+			self.editmgr.setchannelattr(node.getName(), 'transparent', transparent)
+			self.editmgr.commit()
+	
 	def updateViewportOnDialogBox(self, viewport):
 
 		# update region list
@@ -390,7 +415,11 @@ class LayoutView2(LayoutViewDialog2):
 		geom = dict.get('winsize')		
 
 		# clear and disable not valid fields
-		self.dialogCtrl.setSelecterCtrl('RegionSel',-1)			
+		self.dialogCtrl.setSelecterCtrl('RegionSel',-1)
+		self.dialogCtrl.enable('SendBack',0)
+		self.dialogCtrl.enable('BringFront',0)
+		self.dialogCtrl.enable('ShowRbg',0)
+		self.dialogCtrl.enable('RegionZ',0)
 		
 		self.dialogCtrl.enable('RegionX',0)
 		self.dialogCtrl.enable('RegionY',0)
@@ -416,6 +445,11 @@ class LayoutView2(LayoutViewDialog2):
 				self.dialogCtrl.setSelecterCtrl('RegionSel',index)
 								
 		# enable valid fields
+		self.dialogCtrl.enable('SendBack',1)
+		self.dialogCtrl.enable('BringFront',1)
+		self.dialogCtrl.enable('ShowRbg',1)
+		self.dialogCtrl.enable('RegionZ',1)
+
 		self.dialogCtrl.enable('RegionX',1)
 		self.dialogCtrl.enable('RegionY',1)
 
@@ -444,7 +478,7 @@ class LayoutView2(LayoutViewDialog2):
 			w = value
 		elif ctrlName == 'RegionH':
 			h = value
-		self.updateGeomOnViewport(self.currentNodeSelected, (w,h))
+		self.applyGeomOnViewport(self.currentNodeSelected, (w,h))
 
 	def __updateGeomOnRegion(self, ctrlName, value):
 		dict = self.currentNodeSelected.getDocDict()
@@ -457,7 +491,7 @@ class LayoutView2(LayoutViewDialog2):
 			w = value
 		elif ctrlName == 'RegionH':
 			h = value			
-		self.updateGeomOnRegion(self.currentNodeSelected, (x,y,w,h))
+		self.applyGeomOnRegion(self.currentNodeSelected, (x,y,w,h))
 		
 	def __updateGeom(self, ctrlName, value):
 		if self.currentNodeSelected != None:
@@ -467,6 +501,9 @@ class LayoutView2(LayoutViewDialog2):
 				self.__updateGeomOnRegion(ctrlName, value)
 				
 
+	def __selectBgColor(self):
+		if self.currentNodeSelected != None:
+			self.selectBgColor(self.currentNodeSelected)
 	#
 	# interface implementation of 'previous tree node' 
 	#
@@ -475,6 +512,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.selectRegion(region.getName())				
 
 	def onPreviousSelectViewport(self, viewport):
+		self.currentNodeSelected = viewport	
 		self.updateViewportOnDialogBox(viewport)
 		
 	#
@@ -509,3 +547,14 @@ class LayoutView2(LayoutViewDialog2):
 		elif ctrlName == 'RegionZ':
 			value = int(value)
 			self.__updateZOrder(value)
+
+	def onButtonClickCtrl(self, ctrlName):
+		if ctrlName == 'BgColor':
+			self.__selectBgColor()
+		elif ctrlName == 'SendBack':
+			print 'send back pressed'
+		elif ctrlName == 'BringFront':
+			print 'bring front pressed'
+		elif ctrlName == 'ShowRbg':
+			print 'ShowRbg pressed'
+					 

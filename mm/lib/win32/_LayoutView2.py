@@ -220,10 +220,23 @@ class _LayoutView2(GenFormView):
 				ctrlName = 'ShowNames'
 			elif id == self['AsOutLine']._id:
 				ctrlName = 'AsOutLine'
+			elif id == self['ShowRbg']._id:
+				ctrlName = 'ShowRbg'
 			if ctrlName != None:
 				value = self[ctrlName].getcheck()
 				self._dialogHandler.onCheckCtrl(ctrlName, value)
-			return 
+				return 
+
+			if id == self['BgColor']._id:
+				ctrlName = 'BgColor'
+			elif id == self['SendBack']._id:
+				ctrlName = 'SendBack'
+			elif id == self['BringFront']._id:
+				ctrlName = 'BringFront'
+		
+			if ctrlName != None:
+				self._dialogHandler.onButtonClickCtrl(ctrlName)
+				return
 
 		if nmsg==win32con.EN_CHANGE:
 			ctrlName = None
@@ -242,10 +255,6 @@ class _LayoutView2(GenFormView):
 			if ctrlName != None:
 				self.lastModifyCtrlField = ctrlName
 				
-			return
-		
-		if id==self['BgColor']._id:
-			self.onBgColor()
 			return
 			
 		# process rest
@@ -301,18 +310,6 @@ class _LayoutView2(GenFormView):
 			if z>=0:
 				region.updatezindex(z)
 				self._layout.update()
-
-	def onBgColor(self):
-		name = self['RegionSel'].getvalue()
-		region = self._layout.getRegion(name)
-		if not region: return
-		r, g, b = region._bgcolor or (255, 255, 255)
-		dlg = win32ui.CreateColorDialog(win32api.RGB(r,g,b),win32con.CC_ANYCOLOR,self)
-		if dlg.DoModal() == win32con.IDOK:
-			newcol = dlg.GetColor()
-			rgb = win32ui.GetWin32Sdk().GetRGBValues(newcol)
-			region.updatebgcolor(rgb)
-			self._layout.update()
 
 
 	#
@@ -878,7 +875,7 @@ class Region(win32window.Window, UserEventMng):
 		self._attrdict = attrdict
 
 		if oldGeom != newGeom:
-			self.updatecoordinates(newGeom, units=UNIT_PXL)			
+			self.updatecoordinates(newGeom, units=UNIT_PXL)
 		if newBgcolor != oldBgcolor:
 			self.updatebgcolor(newBgcolor)
 		if newZ != oldZ:
