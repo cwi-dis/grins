@@ -120,13 +120,13 @@ MENUBAR=(
 		(SEP,),
 		(CASCADE, 'New node', (
 			(ENTRY, 'Before', None, NEW_BEFORE),
-			(ENTRY, 'After', None, NEW_AFTER),
-			(ENTRY, 'Under', None, NEW_UNDER),
+			(ENTRY, 'After', 'K', NEW_AFTER),
+			(ENTRY, 'Under', 'D', NEW_UNDER),
 			(ENTRY, 'Par parent', None, NEW_PAR),
 			(ENTRY, 'Seq parent', None, NEW_SEQ),
 			(ENTRY, 'Choice parent', None, NEW_CHOICE),
 			(ENTRY, 'Alt parent', None, NEW_ALT))),
-		(ENTRY, 'New channel', None, NEW_CHANNEL),
+		(ENTRY, 'New channel', 'M', NEW_CHANNEL),
 		(ENTRY, 'Move channel', None, MOVE_CHANNEL),
 		(ENTRY, 'Copy channel', None, COPY_CHANNEL),
 		(ENTRY, 'Toggle channel state', None, TOGGLE_ONOFF))),
@@ -164,7 +164,7 @@ MENUBAR=(
 		(ENTRY, 'Show anchors', 'T', ANCHORS),
 		(ENTRY, 'Edit content', 'E', CONTENT),
 		(SEP,),
-		(ENTRY, 'Finish hyperlink to focus...', 'L', FINISH_LINK),
+		(ENTRY, 'Finish hyperlink to focus...', 'H', FINISH_LINK),
 		(ENTRY, 'Finish syncarc to focus...', 'L', FINISH_ARC))))
 		
 			
