@@ -29,43 +29,58 @@ from wndusercmd import TOOLBAR_GENERAL
 class ToolbarMixin:
 
 	def __init__(self):
-		self.__bars = {}
+		#
+		# Toolbars. Indexed by PyCCmdUI identity, 
+		# values are GRiNSToolbar instances.
+		#
+		self._bars = {}
+		#
+		# Pulldown adornments. Indexed by pulldown name,
+		# values are (valuelist, callback, initialvalue).
+		# The callback dict is indexed by combo id, values
+		# are (combo, callback)
+		self._pulldowndict = {}
+		self._pulldowncallbackdict = {}
+		#
 		for template in ToolbarTemplate.TOOLBARS:
 			name, command, resid, buttonlist = template
 			barid = usercmdui.class2ui[command].id
-			self.__bars[barid] = None
+			self._bars[barid] = None
 
 	def CreateToolbars(self):
 		self.EnableDocking(afxres.CBRS_ALIGN_ANY)
 		for template in ToolbarTemplate.TOOLBARS:
 			self._setToolbarFromTemplate(template)
+		self._recalcPulldownEnable()
 
 	def DestroyToolbars(self):
-		for bar in self.__bars.values():
+		for bar in self._bars.values():
 			bar.DestroyWindow()
-		self.__bars = {}
+		self._bars = {}
+		self._pulldowndict = {}
+		self._pulldowncallbackdict = {}
 
 	def ShowToolbars(self, flag):
 		# Show/hide all toolbars. Jack thinks this isn't needed
 		# anymore.
 		if flag:
 			# XXX This is wrong, it shows *all* bars!
-			for bar in self.__bars.values():
+			for bar in self._bars.values():
 				bar.ShowWindow(win32con.SW_SHOW)
 				self.ShowControlBar(bar,1,0)
 				bar.RedrawWindow()
 		else:
-			for bar in self.__bars.values():
+			for bar in self._bars.values():
 				bar.ShowWindow(win32con.SW_HIDE)
 
 	def OnCreate(self, createStruct):
-		for id in self.__bars.keys():
+		for id in self._bars.keys():
 			self.HookCommand(self.OnShowToolbarCommand, id)
 			self.HookCommandUpdate(self.OnUpdateToolbarCommand, id)
 
 	def OnShowToolbarCommand(self, id, code):
 		barid = id
-		bar = self.__bars[barid]
+		bar = self._bars[barid]
 		flag = not bar.IsWindowVisible()
 		if flag:
 			self.ShowControlBar(bar,1,0)
@@ -75,24 +90,22 @@ class ToolbarMixin:
 
 	def OnUpdateToolbarCommand(self, cmdui):
 		barid = cmdui.m_nID
-		bar = self.__bars[barid]
+		bar = self._bars[barid]
 		cmdui.Enable(1)
 		cmdui.SetCheck(bar.IsWindowVisible())
 
-	def _setToolbarFromTemplate(self, template, adornments=None):
+	def _setToolbarFromTemplate(self, template):
 		# First count number of buttons
 		name, command, resid, buttonlist = template
 
 		# Create the toolbar
 		barid = usercmdui.class2ui[command].id
 		bar = GRiNSToolbar(self, name, resid, 0)
-		self.__bars[barid] = bar
+		self._bars[barid] = bar
 		self.DockControlBar(bar)
 
 		# Initialize it
 		nbuttons = len(buttonlist)
-		if buttonlist and buttonlist[-1].type == 'pulldown':
-			nbuttons = nbuttons - 1
 		bar.SetButtons(nbuttons)
 		buttonindex = 0
 		for button in buttonlist:
@@ -104,45 +117,54 @@ class ToolbarMixin:
 				bar.SetButtonInfo(buttonindex, afxexttb.ID_SEPARATOR,
 					afxexttb.TBBS_SEPARATOR, button.width)
 			elif button.type == 'pulldown':
-				if adornments:
-					buttonindex = self._fillCombos(bar, buttonindex, adornments)
+				self._createPulldown(bar, buttonindex, button.name)
 			else:
 				raise 'Unknown toolbar item type', button.type
 			buttonindex = buttonindex+1
-		self.ShowControlBar(self.__bars[barid],1,0)
-		self.__bars[barid].RedrawWindow()
+		self.ShowControlBar(self._bars[barid],1,0)
+		self._bars[barid].RedrawWindow()
 
-			
-	# Set the editor toolbar to the state without a document
-	def setEditorFrameToolbar(self):
-		pass
-##		self._setToolbarFromTemplate(ToolbarTemplate.FRAME_TEMPLATE)
+	def setToolbarPulldowns(self, pulldowndict):
+		self._pulldowndict = pulldowndict
+		self._recalcPulldownEnable()
 
-	# Set the editor toolbar to the state with a document
-	def setEditorDocumentToolbar(self, adornments):
-		pass
-##		num_buttons = self._setToolbarFromTemplate(ToolbarTemplate.GENERAL_TEMPLATE, adornments)
+	def _recalcPulldownEnable(self):
+		# Loop over the bars and their pulldowns and set
+		# the correct list and enable/disable
+		self._pulldowncallbackdict = {}
+		for bar in self._bars.values():
+			if not bar:
+				continue
+			for name, pulldown in bar._toolbarCombos.items():
+				pulldowninit = self._pulldowndict.get(name, None)
+				self._recalcSinglePulldown(pulldown, name, pulldowninit)
 
-	# Set the player toolbar
-	def setPlayerToolbar(self):
-		pass
-##		self._setToolbarFromTemplate(ToolbarTemplate.PLAYER_TEMPLATE)
+	def _recalcSinglePulldown(self, combo, name, init):
+		combo.resetcontent()
+		if not init:
+			# Disable.
+			combo.addstring(name)
+			combo.setcursel(0)
+			combo.enable(0)
+		else:
+			# Enable.
+			values, callback, initvalue = init
+			for v in values:
+				combo.addstring(v)
+			combo.setcursel(values.index(initvalue))
+			combo.enable(1)
+			id = combo._id
+			self._pulldowncallbackdict[id] = (combo, callback)
 
-	def _fillCombos(self, bar, index, adornments):
-		if adornments.has_key('pulldown'):
-			for list, cb, init in adornments['pulldown']:
-				bar.SetButtonInfo(index,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
-				index = index + 1
-				# the return object is a components.ComboBox
-				global ID_TOOLBAR_COMBO
-				tbcb = self.createToolBarCombo(bar, index, ID_TOOLBAR_COMBO, TOOLBAR_COMBO_WIDTH, TOOLBAR_COMBO_HEIGHT, self.onToolbarCombo)
-				ID_TOOLBAR_COMBO = ID_TOOLBAR_COMBO + 1
-				index = index + 1
-				self._toolbarCombo.append((tbcb, cb))
-				for str in list:
-					tbcb.addstring(str)
-				tbcb.setcursel(list.index(init))
-		return index
+	def _createPulldown(self, bar, index, name):
+			# the return object is a components.ComboBox
+			global ID_TOOLBAR_COMBO
+			tbcb = self.createToolBarCombo(bar, index, ID_TOOLBAR_COMBO, TOOLBAR_COMBO_WIDTH, TOOLBAR_COMBO_HEIGHT, self.onToolbarCombo)
+			ID_TOOLBAR_COMBO = ID_TOOLBAR_COMBO + 1
+			bar._toolbarCombos[name] = tbcb
+			tbcb.addstring(name)
+			tbcb.setcursel(0)
+			tbcb.enable(0)
 
 	def createToolBarCombo(self, bar, index, ctrlid, width, ddheight, responseCb=None):
 		bar.SetButtonInfo(index, ctrlid, afxexttb.TBBS_SEPARATOR, width)
@@ -170,10 +192,9 @@ class ToolbarMixin:
 
 	def onToolbarCombo(self, id, code):
 		if code==win32con.CBN_SELCHANGE:
-			for tbcb, cb in self._toolbarCombo:
-				if tbcb._id == id:
-					cb(tbcb.getvalue())
-					return
+			tbcb, cb = self._pulldowncallbackdict.get(id, (None, None))
+			if not cb or not tbcb:
+				print 'No callback for pulldown:', id
 
 class GRiNSToolbar(window.Wnd):
 	def __init__(self, parent, name, resid, enabledrag):
@@ -197,6 +218,13 @@ class GRiNSToolbar(window.Wnd):
 		if self._enableToolDrag:
 			self.hookMessages()
 			self._dragging = None
+		#
+		# Dropdown combos in this toolbar. Indexed by dropdown name
+		# (found in ToolbarTemplate and in the windowinterface.newdocument
+		# adornments).
+		# Values are comboobjects.
+		#
+		self._toolbarCombos = {}
 
 	def hookMessages(self):
 		self.HookMessage(self.onLButtonDown,win32con.WM_LBUTTONDOWN)
