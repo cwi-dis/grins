@@ -1243,7 +1243,7 @@ class HierarchyView(HierarchyViewDialog):
 		else: 
 			self.focusnode = widget.node
 			widget.select()
-			self.window.scrollvisible(widget.get_box())
+			self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
 		self.aftersetfocus()
 		self.editmgr.setglobalfocus("MMNode", widget.node); 
 
