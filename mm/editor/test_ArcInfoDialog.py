@@ -9,6 +9,7 @@ if os.name == 'posix':
 	sys.path.append("../lib")
 elif os.name == 'mac':
 	sys.path.append("::lib")
+	sys.path.append("::mac")
 # etc...
 
 
