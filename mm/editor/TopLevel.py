@@ -34,6 +34,8 @@ class TopLevel(ViewDialog, BasicDialog):
 	def init(self, filename):
 		self = ViewDialog.init(self, 'toplevel_')
 		self.filename = filename
+		self.select_fdlist = []
+		self.select_dict = {}
 		self.dirname, self.basename = os.path.split(self.filename)
 		if self.basename[-5:] == '.cmif':
 			self.basename = self.basename[:-5]
@@ -480,3 +482,18 @@ class TopLevel(ViewDialog, BasicDialog):
 
 	def del_anchor(self, button):
 		glwindow.del_anchor(button)
+	#
+	# Select interface:
+	#
+	def select_setcallback(self, fd, cb, arg):
+		if cb == None:
+			self.select_fdlist.remove(fd)
+			del self.select_dict[fd]
+			return
+		if not self.select_dict.has_key(fd):
+			self.select_fdlist.append(fd)
+		self.select_dict[fd] = (cb, arg)
+
+	def select_ready(self, fd):
+		cb, arg = self.select_dict[fd]
+		apply(cb, arg)
