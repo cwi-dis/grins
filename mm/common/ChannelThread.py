@@ -144,6 +144,9 @@ class ChannelThread(_ChannelThread, Channel):
 		Channel.armstop(self)
 
 	def stopplay(self, node, curtime):
+		if node.GetType() == 'anchor':
+			self.stop_anchor(node, curtime)
+			return
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
@@ -202,6 +205,9 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		ChannelWindow.armstop(self)
 
 	def stopplay(self, node, curtime):
+		if node.GetType() == 'anchor':
+			self.stop_anchor(node, curtime)
+			return
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
@@ -223,6 +229,9 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 	def play(self, node, curtime):
 		if debug:
 			print 'ChannelWindowThread.play('+`self`+','+`node`+')'
+		if node.GetType() == 'anchor':
+			self.play_anchor(node, curtime)
+			return
 		self.play_0(node, curtime)
 		if not self._is_shown or not node.ShouldPlay() \
 		   or self.syncplay:

@@ -8,12 +8,8 @@ from MMurl import urlretrieve
 
 
 class ImageChannel(ChannelWindow):
-	_our_attrs = ['fit']
 	node_attrs = ChannelWindow.node_attrs + ['project_quality']
-	if CMIF_MODE:
-		node_attrs = node_attrs + _our_attrs
-	else:
-		chan_attrs = ChannelWindow.chan_attrs + _our_attrs
+	chan_attrs = ChannelWindow.chan_attrs + ['fit']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)

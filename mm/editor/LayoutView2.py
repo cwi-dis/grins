@@ -58,8 +58,8 @@ class TreeHelper:
 	def _isValidMMNode(self, node):
 		if node == None:
 			return 0
-		from MMTypes import leaftypes
-		if not node.type in leaftypes:
+		from MMTypes import playabletypes
+		if not node.type in playabletypes:
 			return 0
 		chtype = node.GetChannelType()
 		if chtype == None or chtype == 'animate':

@@ -31,10 +31,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		'clipbegin', 'clipend',
 		'project_audiotype', 'project_videotype', 'project_targets',
 		'project_perfect', 'project_mobile']
-	if Channel.CMIF_MODE:
-		node_attrs = node_attrs + _our_attrs
-	else:
-		chan_attrs = Channel.ChannelWindow.chan_attrs + _our_attrs
+	chan_attrs = Channel.ChannelWindow.chan_attrs + _our_attrs
 	_window_type = windowinterface.MPEG
 
 	def __init__(self, name, attrdict, scheduler, ui):
@@ -290,6 +287,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		return (x, y), (w, h)
 		
 	def play(self, node, curtime):
+		if node.GetType() == 'anchor':
+			self.play_anchor(node, curtime)
+			return
 		self.need_armdone = 1
 		self.play_0(node, curtime)
 		if self._is_shown and node.ShouldPlay() \
@@ -323,6 +323,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.__playing = None
 
 	def stopplay(self, node, curtime):
+		if node.GetType() == 'anchor':
+			self.stop_anchor(node, curtime)
+			return
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return

@@ -105,6 +105,7 @@ class RealChannel:
 		del self.__channel
 
 	def release_player(self):
+		if realenginedebug: print 'release_player'
 		self.__rmaplayer = None
 
 	def prepare_player(self, node = None):

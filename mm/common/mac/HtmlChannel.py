@@ -18,11 +18,7 @@ import WMEVENTS
 error = 'HtmlChannel.error'
 
 class HtmlChannel(Channel.ChannelWindow):
-	_our_attrs = ['fgcolor']
-	if Channel.CMIF_MODE:
-		node_attrs = Channel.ChannelWindow.node_attrs + _our_attrs
-	else:
-		chan_attrs = Channel.ChannelWindow.chan_attrs + _our_attrs
+	chan_attrs = Channel.ChannelWindow.chan_attrs + ['fgcolor']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
@@ -102,32 +98,6 @@ class HtmlChannel(Channel.ChannelWindow):
 	def __repr__(self):
 		return '<HtmlChannel instance, name=' + `self._name` + '>'
 
-	def updatefixedanchors(self, node):
-		if self._armstate != Channel.AIDLE or \
-		   self._playstate != Channel.PIDLE:
-			if self._played_node == node:
-				# Ok, all is well, we've played it.
-				return 1
-			windowinterface.showmessage('Cannot recompute anchorlist (channel busy)')
-			return 1
-		windowinterface.setcursor('watch')
-		context = Channel.AnchorContext()
-		self.startcontext(context)
-		save_syncarm = self.syncarm
-		self.syncarm = 1
-		self.arm(node)
-		save_synplay = self.syncplay
-		self.syncplay = 1
-		self.play(node, 0)
-		self.stopplay(node, 0)
-		self.syncarm = save_syncarm
-		self.syncplay = save_synplay
-		windowinterface.setcursor('')
-		return 1
-
-#	def seekanchor(self, node, aid, args):
-#		windowinterface.showmessage('JUMP:'+`aid`+`args`)
-		
 	def do_arm(self, node, same=0):
 		if not same:
 			try:
@@ -136,6 +106,21 @@ class HtmlChannel(Channel.ChannelWindow):
 				self.armed_str = '<H1>Cannot Open</H1>\n'+arg+'\n<P>\n'
 		if self._is_shown and not self.htmlw:
 			self._after_creation()
+		anchors = {}
+		for c in node.GetSchedChildren():
+			if c.GetType() != 'anchor':
+				continue
+			fragment = MMAttrdefs.getattr(c, 'fragment')
+			if not fragment:
+				continue
+			if anchors.has_key(fragment):
+				print 'fragment',fragment,'used in multiple anchors'
+				# ignore all but first
+			else:
+				anchors[fragment] = c.GetUID()
+		parser = parsehtml.Parser(anchors)
+		parser.feed(self.armed_str)
+		self.armed_str = parser.close()
 		return 1
 
 ##	_boldfonts = [('boldFont', 9.0),
@@ -164,10 +149,12 @@ class HtmlChannel(Channel.ChannelWindow):
 		htmlw.setcolors(bg, fg, an)
 		
 		htmlw.insert_html(self.played_str, self.url, tag)
-		self.fixanchorlist(node)
 		self.play_node = node
 
 	def stopplay(self, node, curtime):
+		if node.GetType() == 'anchor':
+			self.stop_anchor(node, curtime)
+			return
 		Channel.ChannelWindow.stopplay(self, node, curtime)
 		if self.htmlw:
 			self.htmlw.insert_html('', '')
@@ -198,44 +185,14 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.cbcmifanchor(href, list)
 
 	def cbcmifanchor(self, href, list):
-		aname = href[5:]
-		tp = self.findanchortype(aname)
-		if tp == None:
-			windowinterface.showmessage('Unknown CMIF anchor: '+aname)
+		uid = href[5:]
+		try:
+			node = self.play_node.GetContext().mapuid(uid)
+		except:
+			windowinterface.showmessage('Unknown CMIF anchor: '+uid, grab = 1, parent = self.window)
 			return
-		if tp == ATYPE_PAUSE:
-			f = self.pause_triggered
-		else:
-			f = self.anchor_triggered
-		f(self.play_node, [(aname, tp)], list)
-
-	def findanchortype(self, name):
-		for a in MMAttrdefs.getattr(self.play_node, 'anchorlist'):
-			if a.aid == name:
-				return a.atype
-		return None
-
-	def fixanchorlist(self, node):
-		allanchorlist = self.htmlw.GetHRefs()
-		anchorlist = []
-		for a in allanchorlist:
-			if a[:5] == 'cmif:':
-				anchorlist.append(a[5:])
-		if len(anchorlist) == 0:
-			return
-		nodeanchorlist = MMAttrdefs.getattr(node, 'anchorlist')[:]
-		oldanchorlist = map(lambda x: x.aid, nodeanchorlist)
-		newanchorlist = []
-		for a in anchorlist:
-			if a not in oldanchorlist:
-				newanchorlist.append(a)
-		if not newanchorlist:
-			return
-		from MMNode import MMAnchor
-		for a in newanchorlist:
-			nodeanchorlist.append(MMAnchor(a, ATYPE_NORMAL, [], (0,0), None))
-		node.SetAttr('anchorlist', nodeanchorlist)
-		MMAttrdefs.flushcache(node)
+		# XXX we're losing the list arg here
+		self.onclick(node)
 
 	#
 	# The stuff below has little to do with CMIF per se, it implements

@@ -47,9 +47,9 @@ class Parser(SGMLParser):
 			 'tr': ('th', 'td'),
 			 }
 
-	def __init__(self, idlist = []):
+	def __init__(self, iddict = []):
 		SGMLParser.__init__(self, 0)
-		self.__idlist = idlist
+		self.__iddict = iddict
 
 	def reset(self):
 		SGMLParser.reset(self)
@@ -71,16 +71,16 @@ class Parser(SGMLParser):
 		for i in range(len(attrs)-1, -1, -1):
 			a, v = attrs[i]
 			if (a == 'id' or (tag == 'a' and a == 'name')) and \
-			   v in self.__idlist:
+			   self.__iddict.has_key(v):
 				del attrs[i]
 				if tag == 'a':
 					for j in range(len(attrs)):
 						if attrs[j][0] == 'href':
 							del attrs[j]
 							break
-					attrs.append(('href', 'cmif:%s'%v))
+					attrs.append(('href', 'cmif:%s'%self.__iddict[v]))
 				else:
-					id = v
+					id = self.__iddict[v]
 				break
 			elif a == 'id':
 				del attrs[i]
@@ -94,13 +94,13 @@ class Parser(SGMLParser):
 		if tag not in self.__emptytags:
 			self.__stack.append(tag)
 		if id:
-			self.__data.append('<a href="cmif:%s'%id)
+			self.__data.append('<a href="cmif:%s"'%id)
 			if name:
 				self.__data.append(' name="%s"'%name)
 			self.__data.append('>')
 			self.__stack.append('a')
 		elif name:
-			self.__data.append('<a name="%s">&nbsp;</a>'%name)
+			self.__data.append('<a name="%s"> </a>'%name)
 
 	def unknown_endtag(self, tag):
 		while self.__stack and self.__stack[-1] != tag:

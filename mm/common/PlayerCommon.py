@@ -68,12 +68,7 @@ class PlayerCommon:
 		ctx.channels.append(chan)
 		ctx.channelnames.append(chname)
 		ctx.channeldict[chname] = chan
-		#
 
-#		# XXX store the name of the new channel (for the scheduler: GetAllChannels method) in the node
-#		node._rendererName = chname
-#		#
-		
 		self.newchannel(chname, chan)
 		self.channelnames.append(chname)
 		renderer = self.channels[chname]

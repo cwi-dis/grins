@@ -24,15 +24,11 @@ windowinterface.select_setcallback(mv.GetEventFD(), _selcb, ())
 mv.SetSelectEvents(mv.MV_EVENT_MASK_STOP)
 
 class VideoChannel(Channel.ChannelWindowAsync):
-	_our_attrs = ['fit']
 	node_attrs = Channel.ChannelWindowAsync.node_attrs + [
 		'clipbegin', 'clipend',
 		'project_audiotype', 'project_videotype', 'project_targets',
 		'project_perfect', 'project_mobile']
-	if Channel.CMIF_MODE:
-		node_attrs = node_attrs + _our_attrs
-	else:
-		chan_attrs = Channel.ChannelWindowAsync.chan_attrs + _our_attrs
+	chan_attrs = Channel.ChannelWindowAsync.chan_attrs + ['fit']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
@@ -223,6 +219,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.playdone(1, curtime)
 
 	def stopplay(self, node, curtime):
+		if node.GetType() == 'anchor':
+			self.stop_anchor(node, curtime)
+			return
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return

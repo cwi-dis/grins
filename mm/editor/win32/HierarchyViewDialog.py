@@ -147,7 +147,7 @@ class HierarchyViewDialog(ViewDialog):
 				return windowinterface.DROPEFFECT_NONE
 		# All seems fine. Return copy or link depending on
 		# the node type.
-		if node.GetType() in MMNode.leaftypes:
+		if node.GetType() in MMNode.playabletypes:
 			self.droppable_widget = obj
 			rv = windowinterface.DROPEFFECT_LINK
 		else:

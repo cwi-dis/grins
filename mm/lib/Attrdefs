@@ -27,6 +27,21 @@
 # A definition need not be wholly contained in a single input line;
 # blank lines and comments may be inserted freely.
 
+(accesskey (string) '' 'Access key' default
+	'Key to actuate anchor' raw (smil2 cmif))
+
+(actuate (enum onRequest onLoad) onRequest 'Anchor type' default
+	'How the anchor gets actuated' raw (smil2 cmif))
+
+(fragment (string) '' 'Fragment name' default
+	'Fragment identifier' raw (smil2 cmif))
+
+(ashape (enum rect poly circle) rect 'Anchor shape' default
+	'Shape of anchor' raw (smil2 cmif))
+
+(acoords (list (enclosed (float))) () 'Coordinates' acoords
+	'Anchor coordinates' raw (smil2 cmif))
+
 (abstract (string) '' 'Abstract' default 'A brief description of the contents (informational only)' raw (g2 qt smil10 smil2 cmif snap))
 
 (alt (string) '' 'Alternate text' default

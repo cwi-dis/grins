@@ -52,22 +52,14 @@ class Selecter:
 	# Return 1 if the anchor fired, 0 if nothing happened.
 	# XXXX This routine should also get a source-context arg.
 	#
-	def anchorfired(self, old_sctx, node, anchorlist, arg):
+	def anchorfired(self, old_sctx, node, arg):
 		#self.showpauseanchor(0) # also see Scheduler.py
-		destlist = []
-		pause_anchor = 0
 		# Firing an anchor continues the player if it was paused.
 		if self.scheduler.getpaused():
 			self.pause(0)
-		for i in anchorlist:
-			if i[1] == ATYPE_PAUSE:
-				pause_anchor = 1
-			aid = (node.GetUID(), i[0])
-			rv = self.context.hyperlinks.findsrclinks(aid)
-			destlist = destlist + rv
+		destlist = self.context.hyperlinks.findsrclinks(node)
 		if not destlist:
-			if not pause_anchor:
-				windowinterface.showmessage( \
+			windowinterface.showmessage(
 				'No hyperlink source at this anchor')
 			return 0
 		root = node.GetRoot()
@@ -76,27 +68,18 @@ class Selecter:
 				continue
 			if not self.gotoanchor(dest, arg):
 				return 0
-## 		if arg:
-## 			windowinterface.showmessage('Args:'+`arg`)
 		return 1
 
 	def gotoanchor(self, link, arg):
 		anchor2 = link[ANCHOR2]
 		ltype = link[TYPE]
-		if ltype != TYPE_JUMP or type(anchor2) is not type(()) or \
-		   '/' in anchor2[0]:	# cmif compatibility
+		if ltype != TYPE_JUMP or type(anchor2) is type(''):
 			return self.toplevel.jumptoexternal(anchor2, ltype, link[STYPE], link[DTYPE])
-		dest_uid, dest_aid = anchor2
-		try:
-			seek_node = self.context.mapuid(dest_uid)
-		except NoSuchUIDError:
-			windowinterface.showmessage('Dangling hyperlink selected')
-			return 0
-		return self.gotonode(seek_node, dest_aid, arg)
+		return self.gotonode(anchor2, arg)
 
-	def gotonode(self, seek_node, dest_aid, arg):
+	def gotonode(self, seek_node, arg):
 		# First check whether this is an indirect anchor
-		if Scheduler.debugevents: print 'gotonode',seek_node,dest_aid,arg
+		if Scheduler.debugevents: print 'gotonode',seek_node,arg
 		self.scheduler.setpaused(1)
 		timestamp = self.scheduler.timefunc()
 		sctx = self.scheduler.sctx_list[0]

@@ -1,5 +1,5 @@
 __version__ = "$Id$"
-from Channel import ChannelWindowAsync, CMIF_MODE, SourceAnchors, PLAYING
+from Channel import ChannelWindowAsync, SourceAnchors, PLAYING
 import windowinterface
 import time
 import MMurl
@@ -17,14 +17,10 @@ if not QT_AVAILABLE:
 debug = 0 # os.environ.has_key('CHANNELDEBUG')
 
 class VideoChannel(ChannelWindowAsync):
-	_our_attrs = ['fit']
 	node_attrs = ChannelWindowAsync.node_attrs + \
 		     ['clipbegin', 'clipend', 'project_audiotype', 'project_videotype', 'project_targets',
 		     'project_perfect', 'project_mobile']
-	if CMIF_MODE:
-		node_attrs = node_attrs + _our_attrs
-	else:
-		chan_attrs = ChannelWindowAsync.chan_attrs + _our_attrs
+	chan_attrs = ChannelWindowAsync.chan_attrs + ['fit']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
@@ -336,6 +332,9 @@ class VideoChannel(ChannelWindowAsync):
 		ChannelWindowAsync.playstop(self, curtime)
 		
 	def stopplay(self, node, curtime):
+		if node.GetType() == 'anchor':
+			self.stop_anchor(node, curtime)
+			return
 		if self.window:
 			self.window.setredrawfunc(None)
 			self.window._mac_setredrawguarantee(None)

@@ -95,6 +95,9 @@ class SVGChannel(Channel.ChannelWindow):
 				self.svgplayer.play()
 
 	def stopplay(self, node, curtime):
+		if node.GetType() == 'anchor':
+			self.stop_anchor(node, curtime)
+			return
 		if self.window:
 			self.window.setredrawdds(None)
 			if self.svgplayer:
@@ -216,6 +219,9 @@ class SVGOsChannel(Channel.ChannelWindow):
 		return 1
 
 	def stopplay(self, node, curtime):
+		if node.GetType() == 'anchor':
+			self.stop_anchor(node, curtime)
+			return
 		if self.window and hasattr(self.window,'DestroySvgCtrl'):
 			self.window.DestroySvgCtrl()
 		Channel.ChannelWindow.stopplay(self, node, curtime)

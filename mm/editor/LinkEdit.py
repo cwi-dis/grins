@@ -110,7 +110,7 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 	def __repr__(self):
 		return '<LinkEdit instance, root=' + `self.root` + '>'
 
-	def show(self, node = None, aid = None):
+	def show(self, node = None, anchor = None):
 		if self.is_showing():
 			LinkBrowserDialog.show(self)
 		else:
@@ -123,21 +123,14 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 			self.left.fillfunc = self.fill_node
 			self.left.focus = None
 			self.reloadanchors(self.left, 0)
-			if aid is None:
-				# if no aid given, select first
-				# destination-only anchor, or, if there is
-				# none, first whole-node anchor
-				for anchor in self.left.anchors:
-					atype = self.findanchor(anchor).atype
-					if atype == ATYPE_DEST:
-						aid = anchor[1]
-						break
-					if atype == ATYPE_WHOLE and aid is None:
-						aid = anchor[1]
-						# no break, we prefer ATYPE_DEST
-			if aid is not None:
+			if anchor is None:
+				# if no anchor given, select first
+				# anchor
+				if self.left.anchors:
+					anchor = self.left.anchors[0]
+			if anchor is not None:
 				for i in range(len(self.left.anchors)):
-					if self.left.anchors[i][1] == aid:
+					if self.left.anchors[i] is anchor:
 						self.left.focus = i
 						break
 				self.right.node = None
@@ -200,7 +193,7 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 		str.anchors = getanchors(self.root, 1)
 
 	def fill_relation(self, str):
-		if str <> self.right:
+		if str != self.right:
 			print 'LinkEdit: left anchorlist cannot be related!'
 		str.browser_setlabel('Related')
 		str.anchors = []
@@ -209,7 +202,7 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 		lfocus = self.left.anchors[self.left.focus]
 		links = self.context.hyperlinks.findalllinks(lfocus, None)
 		for l in links:
-			if not l[ANCHOR2] in str.anchors:
+			if l[ANCHOR2] not in str.anchors:
 				str.anchors.append(l[ANCHOR2])
 
 	def fill_dangling(self, str):
@@ -230,7 +223,6 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 	def fill_external(self, str):
 		str.browser_setlabel('External')
 		str.anchors = self.context.getexternalanchors()
-##		str.anchors = self.toplevel.getallexternalanchors()
 
 	def fill_keep(self, str):
 		str.browser_setlabel('Kept')
@@ -351,11 +343,10 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 				str.browser_makevisible(str.focus)
 			str.browser_show()
 			anchor = str.anchors[str.focus]
-			if type(anchor) is type(()):
-				node = self.context.mapuid(anchor[0])
+			if type(anchor) is type(''):
+				str.buttons_setsensitive(0)
 			else:
-				node = None
-			str.buttons_setsensitive(node is not None)
+				str.buttons_setsensitive(1)
 		else:
 			str.buttons_setsensitive(0)
 		if str.node:
@@ -413,18 +404,16 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 			link = self.links[self.linkfocus]
 			lfocus = link[ANCHOR1]
 			rfocus = link[ANCHOR2]
-		lanchor = self.findanchor(lfocus)
-		ranchor = self.findanchor(rfocus)
-		if lanchor is None or ranchor is None or \
-		   lanchor == ranchor or \
-		   ((lanchor.atype not in SourceAnchors or
-		     hlinks.findsrclinks(lfocus) or
-		     ranchor.atype not in DestinationAnchors) and \
-		    (lanchor.atype not in DestinationAnchors or
-		     ranchor.atype not in SourceAnchors or
+		if lfocus is None or rfocus is None or \
+		   lfocus is rfocus or \
+		   ((type(lfocus) is type('') or
+		     lfocus.GetType() != 'anchor' or
+		     hlinks.findsrclinks(lfocus)) and \
+		    (type(rfocus) is type('') or
+		     rfocus.GetType() != 'anchor' or
 		     hlinks.findsrclinks(rfocus))):
 			# can only add links between a source and a
-			# destionation anchor, and only if the source
+			# destination anchor, and only if the source
 			# anchor is not already used as a link source
 			self.addsetsensitive(0)
 
@@ -452,15 +441,10 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 			if n1 == n2:
 				windowinterface.beep()
 				return
-			a1 = self.findanchor(n1)
-			a2 = self.findanchor(n2)
-			if a1 is None or a2 is None:
-				print 'LinkEdit: cannot find anchors!'
-				return
 			hlinks = self.context.hyperlinks
-			if a1.atype not in SourceAnchors or hlinks.findsrclinks(n1):
+			if type(n1) is type('') or n1.GetType() != 'anchor' or hlinks.findsrclinks(n1):
 				# left node can only be destination
-				if a2.atype not in SourceAnchors or hlinks.findsrclinks(n2):
+				if type(n2) is type('') or n2.GetType() != 'anchor' or hlinks.findsrclinks(n2):
 					print 'LinkEdit: 2 destination achors!'
 					return
 				dir = DIR_2TO1
@@ -481,16 +465,14 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 			print 'LinkEdit: show without a focus!'
 			return
 		anchor = str.anchors[str.focus]
-		if type(anchor) is not type(()):
+		if type(anchor) is type(''):
 			# external anchor
-			print 'LinkEdit: anchor with unknown node UID!'
+			print 'LinkEdit: external anchor!'
 			return
-		uid = anchor[0]
-		try:
-			node = self.context.mapuid(uid)
-		except NoSuchUIDError:
-			print 'LinkEdit: anchor with unknown node UID!'
-			return
+		if anchor.GetType() == 'anchor':
+			node = anchor.GetParent()
+		else:
+			node = anchor
 		top = self.toplevel
 		top.setwaiting()
 		self.editmgr.setglobalfocus([node])
@@ -582,14 +564,16 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 		if not em.transaction(): return
 		em.dellink(l)
 		# maybe add anchors of old link to interesting
-		a = self.findanchor(l[ANCHOR1])
-		if a.atype in SourceAnchors and \
-		   not self.context.hyperlinks.findsrclinks(l[ANCHOR1]):
-			self.set_interesting(l[ANCHOR1])
-		a = self.findanchor(l[ANCHOR2])
-		if a.atype in SourceAnchors and \
-		   not self.context.hyperlinks.findsrclinks(l[ANCHOR2]):
-			self.set_interesting(l[ANCHOR2])
+		a = l[ANCHOR1]
+		if type(a) is not type('') and \
+		   a.GetType() == 'anchor' and \
+		   not self.context.hyperlinks.findsrclinks(a):
+			self.set_interesting(a)
+		a = l[ANCHOR2]
+		if type(a) is not type('') and \
+		   a.GetType() == 'anchor' and \
+		   not self.context.hyperlinks.findsrclinks(a):
+			self.set_interesting(a)
 		em.commit()
 		self.updateform()
 
@@ -598,26 +582,21 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 			print 'LinkEdit: edit w/o focus!'
 			return
 		self.startlinkedit(1)
-##		self.updateform()
 
 	def anchoredit_callback(self, str):
 		if str.focus is None:
 			print 'LinkEdit: anchoredit without a focus!'
 			return
 		anchor = str.anchors[str.focus]
-		if type(anchor) is not type(()):
+		if type(anchor) is type(''):
 			# external anchor
-			print 'LinkEdit: anchor with unknown node UID!'
+			print 'LinkEdit: external anchor!'
 			return
-		uid = anchor[0]
-		try:
-			node = self.context.mapuid(uid)
-		except NoSuchUIDError:
-			print 'LinkEdit: anchor with unknown node UID!'
-			return
-		AttrEdit.showattreditor(self.toplevel, node, '.anchorlist')
-##		import AnchorEdit
-##		AnchorEdit.showanchoreditor(self.toplevel, node)
+##		if anchor.GetType() == 'anchor':
+##			node = anchor.GetParent()
+##		else:
+##			node = anchor
+		AttrEdit.showattreditor(self.toplevel, anchor)
 
 	def GetHierarchyViewFocus(self):
 		if self.toplevel.hierarchyview is None:
@@ -648,14 +627,16 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 			l = self.links[self.linkfocus]
 			em.dellink(l)
 			# maybe add anchors of old link to interesting
-			a = self.findanchor(l[ANCHOR1])
-			if a.atype in SourceAnchors and \
-			   not self.context.hyperlinks.findsrclinks(l[ANCHOR1]):
-				self.set_interesting(l[ANCHOR1])
-			a = self.findanchor(l[ANCHOR2])
-			if a.atype in SourceAnchors and \
-			   not self.context.hyperlinks.findsrclinks(l[ANCHOR2]):
-				self.set_interesting(l[ANCHOR2])
+			a = l[ANCHOR1]
+			if type(a) is not type('') and \
+			   a.GetType() == 'anchor' and \
+			   not self.context.hyperlinks.findsrclinks(a):
+				self.set_interesting(a)
+			a = l[ANCHOR2]
+			if type(a) is not type('') and \
+			   a.GetType() == 'anchor' and \
+			   not self.context.hyperlinks.findsrclinks(a):
+				self.set_interesting(a)
 		em.addlink(editlink)
 		# remove anchors involved in this link from interesting
 		if editlink[ANCHOR1] in self.interesting:
@@ -667,36 +648,27 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 class LinkEditEditor(LinkEditorDialog):
 	def __init__(self, parent, title, editlink, isnew):
 		self.parent = parent
-		a1, a2, dir, type, stype, dtype = self.editlink = editlink
+		a1, a2, dir, ltype, stype, dtype = self.editlink = editlink
 		self.changed = isnew
-		ltype = parent.findanchor(a1).atype
-		rtype = parent.findanchor(a2).atype
 		hlinks = parent.context.hyperlinks
 		llinks = rlinks = []
-		if ltype in SourceAnchors:
+		if type(a1) is not type('') and a1.GetType() == 'anchor':
 			llinks = hlinks.findsrclinks(a1)
 			if not isnew and dir in (DIR_1TO2, DIR_2WAY) and llinks:
 				del llinks[0]
-		if rtype in SourceAnchors:
+		if type(a2) is not type('') and a2.GetType() == 'anchor':
 			rlinks = hlinks.findsrclinks(a2)
 			if not isnew and dir in (DIR_2TO1, DIR_2WAY) and rlinks:
 				del rlinks[0]
 		# XXX To do extend this interface with the new types
 		# for now, keep the compatibility
+		leftsrc = type(a1) is not type('') and a1.GetType() == 'anchor' and not llinks
+		rightsrc = type(a2) is not type('') and a2.GetType() == 'anchor' and not rlinks
 		LinkEditorDialog.__init__(self, title, dirstr, typestr,
-					  dir, type,
-					  [ltype in SourceAnchors and
-					   not llinks and
-					   rtype in DestinationAnchors,
-					   ltype in DestinationAnchors and
-					   rtype in SourceAnchors and
-					   not rlinks,
-					   ltype in SourceAnchors and
-					   not llinks and
-					   ltype in DestinationAnchors and
-					   rtype in SourceAnchors and
-					   not rlinks and
-					   rtype in DestinationAnchors])
+					  dir, ltype,
+					  [leftsrc,
+					   rightsrc,
+					   leftsrc and rightsrc])
 		self.oksetsensitive(self.changed)
 
 	def run(self):
@@ -735,15 +707,12 @@ class LinkEditEditor(LinkEditorDialog):
 # General functions
 #
 def getanchors(node, recursive):
-	rawanchors = MMAttrdefs.getattr(node, 'anchorlist')
-	uid = node.GetUID()
 	anchors = []
-	for i in rawanchors:
-		anchors.append((uid, i.aid))
-	if recursive and node.GetType() in interiortypes:
-		children = node.GetChildren()
-		for i in children:
-			anchors = anchors + getanchors(i, 1)
+	for c in node.GetChildren():
+		if c.GetType() == 'anchor':
+			anchors.append(c)
+		elif recursive:
+			anchors.extend(getanchors(c, recursive))
 	return anchors
 
 # Return a dest-only anchor for a node

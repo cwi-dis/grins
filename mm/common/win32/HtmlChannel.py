@@ -54,10 +54,7 @@ import parsehtml
 error = 'HtmlChannel.error'
 	
 class HtmlChannel(Channel.ChannelWindow):
-	if Channel.CMIF_MODE:
-		node_attrs = Channel.ChannelWindow.node_attrs + ['fgcolor']
-	else:
-		chan_attrs = Channel.ChannelWindow.chan_attrs + ['fgcolor']
+	chan_attrs = Channel.ChannelWindow.chan_attrs + ['fgcolor']
 	_window_type = windowinterface.HTM
 
 	def __init__(self, name, attrdict, scheduler, ui):
@@ -100,12 +97,18 @@ class HtmlChannel(Channel.ChannelWindow):
 			self.armed_str = self.getstring(node)
 		else:
 			self.armed_str = None
-		anchors = []
-		for a in node.GetRawAttrDef('anchorlist', []):
-			atype = a.atype
-			if atype in SourceAnchors and \
-			   atype not in WholeAnchors:
-				anchors.append(a.aid)
+		anchors = {}
+		for c in node.GetSchedChildren():
+			if c.GetType() != 'anchor':
+				continue
+			fragment = MMAttrdefs.getattr(c, 'fragment')
+			if not fragment:
+				continue
+			if anchors.has_key(fragment):
+				print 'fragment',fragment,'used in multiple anchors'
+				# ignore all but first
+			else:
+				anchors[fragment] = c.GetUID()
 		if anchors:
 			if self.armed_str is None:
 				self.armed_str = self.getstring(node)
@@ -150,6 +153,9 @@ class HtmlChannel(Channel.ChannelWindow):
 
 
 	def stopplay(self, node, curtime):
+		if node.GetType() == 'anchor':
+			self.stop_anchor(node, curtime)
+			return
 #		if self.window:
 #			self.window.SetImmHtml(' ')
 		if self.window:
@@ -170,9 +176,6 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.__armed=1
 
 #################################
-	def updatefixedanchors(self, node):
-		return 1
-			
 	def defanchor(self, node, anchor, cb):
 		# Anchors don't get edited in the HtmlChannel.  You
 		# have to edit the text to change the anchor.  We
@@ -181,18 +184,18 @@ class HtmlChannel(Channel.ChannelWindow):
 		apply(cb, (anchor,))
 
 	def cbanchor(self, href):
-		if href[:5] <> 'cmif:':
+		if href[:5] != 'cmif:':
 			self.www_jump(href, 'GET', None, None)
 			return
 		self.cbcmifanchor(href, None)
 
 	def cbform(self, widget, userdata, calldata):
-		if widget <> self.htmlw:
+		if widget != self.htmlw:
 			raise 'kaboo kaboo'
 		href = calldata.href
 		list = map(lambda a,b: (a,b),
 			   calldata.attribute_names, calldata.attribute_values)
-		if not href or href[:5] <> 'cmif:':
+		if not href or href[:5] != 'cmif:':
 			self.www_jump(href, calldata.method,
 				      calldata.enctype, list)
 			return
@@ -202,43 +205,16 @@ class HtmlChannel(Channel.ChannelWindow):
 		# Workaround for something that turns "cmif:xx" anchors
 		# into "cmif:///xx" anchors
 		if href[:8] == "cmif:///":
-			aname = href[8:]
+			uid = href[8:]
 		else:
-			aname = href[5:]
-		tp = self.findanchortype(aname)
-		if tp == None:
-			windowinterface.showmessage('Unknown CMIF anchor: '+aname)
+			uid = href[5:]
+		try:
+			node = self.play_node.GetContext().mapuid(uid)
+		except:
+			windowinterface.showmessage('Unknown CMIF anchor: '+uid, grab = 1, parent = self.window)
 			return
-		self.onclick(self.play_node, [(aname, tp)], list)
-
-	def findanchortype(self, name):
-		for a in MMAttrdefs.getattr(self.play_node, 'anchorlist'):
-			if a.aid == name:
-				return a.atype
-		return None
-
-	def fixanchorlist(self, node):
-		allanchorlist = [] #self.htmlw.GetHRefs()
-		anchorlist = []
-		for a in allanchorlist:
-			if a[:5] == 'cmif:':
-				anchorlist.append(a[5:])
-		if len(anchorlist) == 0:
-			return
-		nodeanchorlist = MMAttrdefs.getattr(node, 'anchorlist')[:]
-		oldanchorlist = map(lambda x: x.aid, nodeanchorlist)
-		newanchorlist = []
-		for a in anchorlist:
-			if a not in oldanchorlist:
-				newanchorlist.append(a)
-		if not newanchorlist:
-			return
-		from MMNode import MMAnchor
-		for a in newanchorlist:
-			nodeanchorlist.append(MMAnchor(a, ATYPE_NORMAL, [], (0,0), None))
-		node.SetAttr('anchorlist', nodeanchorlist)
-		MMAttrdefs.flushcache(node)
-
+		# XXX we're losing the list arg here
+		self.onclick(node)
 
 	#
 	# The stuff below has little to do with CMIF per se, it implements
@@ -247,7 +223,7 @@ class HtmlChannel(Channel.ChannelWindow):
 	def www_jump(self, href, method, enctype, list):
 		#
 		# Check that we understand what is happening
-		if enctype <> None:
+		if enctype is not None:
 			print 'HtmlChannel: unknown enctype:', enctype
 			return
 		if method not in (None, 'GET'):
@@ -258,6 +234,10 @@ class HtmlChannel(Channel.ChannelWindow):
 			print 'list:', list
 			return
 		if href:
+			if href[:6] == 'about:':
+				return
+			if href[:4] == 'res:':
+				return
 			if href == 'XXXX:play/node':
 				self.htmlw.insert_html(self.played_str, self.played_url)
 				self.url = self.played_url
@@ -272,6 +252,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		# XXXX do something with the tag
 		u = None
 		try:
+			u = MMurl.urlopen(self.url)
 ## Old code:
 ##			if u.headers.maintype == 'image':
 ##				newtext = '<IMG SRC="%s">\n' % self.url

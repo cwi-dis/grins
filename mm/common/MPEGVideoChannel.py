@@ -1,21 +1,17 @@
 __version__ = "$Id$"
 
-from ChannelThread import ChannelWindowThread, CMIF_MODE
+from ChannelThread import ChannelWindowThread
 import MMurl
 from MMExc import *			# exceptions
 from AnchorDefs import *
 
 
 class VideoChannel(ChannelWindowThread):
-	attrs = ['fit', 'project_videotype', 'project_targets']
 	node_attrs = ChannelWindowThread.node_attrs + [
 		'clipbegin', 'clipend',
 		'project_audiotype', 'project_videotype', 'project_targets',
 		'project_perfect', 'project_mobile']
-	if CMIF_MODE:
-		node_attrs = node_attrs + attrs
-	else:
-		chan_attrs = ChannelWindowThread.chan_attrs + attrs
+	chan_attrs = ChannelWindowThread.chan_attrs + ['fit', 'project_videotype', 'project_targets']
 
 	def threadstart(self):
 		import mpegchannel
@@ -71,6 +67,9 @@ class VideoChannel(ChannelWindowThread):
 	# the note in mpegchannelmodule.c
 	#
 	def play(self, node, curtime):
+		if node.GetType() == 'anchor':
+			self.play_anchor(node, curtime)
+			return
 		self.need_armdone = 0
 		self.play_0(node, curtime)
 		if not self._is_shown or self.syncplay:

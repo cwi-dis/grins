@@ -92,6 +92,9 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 	def play(self, node, curtime):
 		if realwindowchanneldebug:
 			print 'play', self, node
+		if node.GetType() == 'anchor':
+			self.play_anchor(node, curtime)
+			return
 		self.need_armdone = 0
 		self.play_0(node, curtime)
 		if self._is_shown and node.ShouldPlay() \

@@ -6,7 +6,7 @@ __version__ = "$Id$"
 import windowinterface
 import MMExc
 import MMAttrdefs
-from MMNode import alltypes, leaftypes, interiortypes, MMAnchor
+from MMNode import MMAnchor
 import settings
 
 
@@ -105,8 +105,7 @@ class AnchorEditor(AnchorEditorDialog):
 			return
 		self.uid = self.node.GetUID()
 		self.name = self.node.GetRawAttrDef('name', self.uid)
-		hasfixed = self.toplevel.player.updatefixedanchors(self.node)
-		self.editable = (not hasfixed)
+		self.editable = 1	# XXX should some anchors (e.g. on HTML) not be editable?
 		anchorlist = MMAttrdefs.getattr(self.node, 'anchorlist')
 		if anchorlist <> self.anchorlist:
 			# Communicate new anchors to Link editor:
