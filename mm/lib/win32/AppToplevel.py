@@ -387,6 +387,12 @@ class _Toplevel:
 					self._timers[i] = (tt + t, cb, tid)
 				return
 		raise 'unknown timer', id
+	
+	def getcurtime(self):
+		return float(Sdk.GetTickCount())/TICKS_PER_SECOND
+		
+	def settimevirtual(self, virtual):
+		pass
 
 	# Register for receiving timeslices
 	def setidleproc(self, cb):

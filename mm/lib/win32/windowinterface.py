@@ -35,6 +35,8 @@ getscreensize = toplevel.getscreensize
 getscreendepth = toplevel.getscreendepth
 
 canceltimer = toplevel.canceltimer
+getcurtime = toplevel.getcurtime
+settimevirtual = toplevel.settimevirtual
 
 setready=toplevel.setready
 setwaiting=toplevel.setwaiting
