@@ -48,7 +48,9 @@ class Main(MainDialog):
 				sys.exit(0)
 		self.tmpopts = opts
 		self.tmpfiles = files
-		if hasattr(features, 'license_features_needed') and features.license_features_needed:
+
+		flag = sys.platform == 'win32' and windowinterface.is_embedded()
+		if hasattr(features, 'license_features_needed') and features.license_features_needed and not flag:
 			import license
 			self.tmplicensedialog = license.WaitLicense(self.do_init,
 					   features.license_features_needed)
