@@ -174,6 +174,8 @@ class ChannelView(ViewDialog, GLDialog):
 			self.future_focus = None
 		elif self.focus is None:
 			focus = '', None
+		elif type(self.focus) == type(()):
+			focus = self.focus
 		elif self.focus.__class__ == ChannelBox:
 			focus = 'c', self.focus.channel
 		elif self.focus.__class__ == NodeBox:
@@ -566,8 +568,10 @@ class ChannelView(ViewDialog, GLDialog):
 	# Focus stuff (see also recalc)
 
 	def deselect(self):
-		if self.focus:
+		if self.focus and type(self.focus) != type(()):
 			self.focus.deselect()
+		else:
+			self.focus = None
 
 	def select(self, x, y):
 		self.deselect()
@@ -584,7 +588,7 @@ class ChannelView(ViewDialog, GLDialog):
 	# Global focus stuff
 
 	def getfocus(self):
-		if self.focus:
+		if self.focus and type(self.focus) != type(()):
 			return self.focus.getnode()
 		else:
 			return None
