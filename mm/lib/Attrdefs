@@ -89,10 +89,10 @@
 	'Channels used in this document (root node only)' normal (all))
 
 (clipbegin (string) '' 'Clip begin' default
-	'Start of range of frames to be played. Simplest form is "npt=3s".' channel (g2_pro qt_pro))
+	'Start of range of frames to be played. Simplest form is "npt=3s".' channel (g2_pro qt_pro smil10 cmif))
 
 (clipend (string) '' 'Clip end' default
-	'End of range of frames to be played. Simplest form is "npt=3s".' channel (g2_pro qt_pro))
+	'End of range of frames to be played. Simplest form is "npt=3s".' channel (g2_pro qt_pro smil10 cmif))
 
 (comment (string) '' 'Comment' default
 	 'A comment (authoring convenience only)' raw (cmif))
@@ -104,10 +104,10 @@
 	channel (cmif))
 
 (cview_winpos  (tuple (float) (float)) (-1 -1) 'Time chart winpos' hidden
-	 'Window position for Time chart view' raw (g2_pro qt_pro))
+	 'Window position for Time chart view' raw (g2_pro qt_pro smil10 cmif))
 
 (cview_winsize  (tuple (float) (float)) (115.234375 115.234375) 'Time chart winsize' hidden
-	 'Window size for Time chart view' raw (g2_pro qt_pro))
+	 'Window size for Time chart view' raw (g2_pro qt_pro smil10 cmif))
 
 (drawbox (bool) 1 'Draw anchor boxes' default
 	'Draw anchors as boxes' channel (cmif))
@@ -146,10 +146,10 @@
 	'Hyperlinks within this document (root node only)' raw (all))
 
 (layout (name) undefined 'Screen' layoutname
-	'Screen for this node and its descendants. Authoring convenience only, controls channels displayed in menus.' inherited (g2_pro qt_pro))
+	'Screen for this node and its descendants. Authoring convenience only, controls channels displayed in menus.' inherited (g2_pro qt_pro smil10 cmif))
 
 (layouts (list (enclosed (tuple (name) (list (name))))) () 'List of screens'
-	hidden 'List of layouts within this document (root node only)' raw (g2_pro qt_pro))
+	hidden 'List of layouts within this document (root node only)' raw (g2_pro qt_pro smil10 cmif))
 
 (links_winpos  (tuple (float) (float)) (-1 -1) 'Link edit window position' hidden
 	 'Position of link edit window' raw (all))
@@ -173,7 +173,7 @@
 	'TTL for outgoing multicast messages' raw (cmif))
 
 (mimetype (string) '' 'MIME type' default
-	'MIME type of media object' raw (g2_pro qt_pro))
+	'MIME type of media object' raw (g2_pro qt_pro smil10 cmif))
 
 (name (name) '' 'Node name' default
 	'Name for the node' raw (all))
@@ -289,7 +289,7 @@
 	 'Window size for top level menu' raw (all))
 
 (transparent (int) 0 'Transparent' transparency
-	'Determines transparency of window, overrides background color' raw (g2_pro))
+	'Determines transparency of window, overrides background color' raw (g2_pro smil10 cmif))
 
 (type (name) null 'Channel type' channeltype
 	'Type of media this channel will be used for' raw (all))
@@ -301,7 +301,7 @@
 	'Application name (unix only)' channel (cmif))
 
 (units (int) 0 'Units' units
-	'What the size/position numbers are measured in' raw (g2_pro qt_pro))
+	'What the size/position numbers are measured in' raw (g2_pro qt_pro smil10 cmif))
 
 (usergroups (list (enclosed (tuple (name) (tuple (string) (bool) (bool)))))
 	() 'User groups' hidden
