@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=3237099799
+  File Checksum=2632771577
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1176,6 +1176,16 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=c:\Winnt\system32\Oleaut32.dll
+  Destination=%SYS32%\Oleaut32.dll
+  Flags=0000001010000011
+end
+item: Install File
+  Source=c:\Winnt\system32\mfc42.dll
+  Destination=%SYS32%\mfc42.dll
+  Flags=0001001010000011
+end
+item: Install File
   Source=d:\ufs\mm\cmif\Templates\qsg1.bmp
   Destination=%MAINDIR%\Templates\qsg1.bmp
   Flags=0000000010000010
@@ -1429,11 +1439,6 @@ item: Install File
   Source=c:\Winnt\system32\Msvcirt.dll
   Destination=%SYS32%\Msvcirt.dll
   Flags=0000001010000011
-end
-item: Install File
-  Source=c:\Winnt\system32\Mfc42d.dll
-  Destination=%SYS32%\Mfc42d.dll
-  Flags=0001001010000011
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\imgcolormap.pyd
