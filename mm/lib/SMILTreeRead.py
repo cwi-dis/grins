@@ -6,7 +6,7 @@ import MMNode, MMAttrdefs
 from MMExc import *
 from MMTypes import *
 import MMurl
-from windowinterface import UNIT_PXL
+## from windowinterface import UNIT_PXL
 from HDTL import HD, TL
 import string
 from AnchorDefs import *
@@ -16,14 +16,15 @@ import os
 
 error = 'SMILTreeRead.error'
 
-SMILdtd = "http://dejavu.cs.vu.nl/~symm/validator/SMIL10.dtd"
+SMILpubid = "-//W3C//DTD SMIL 1.0//EN"
+SMILdtd = "http://www.w3.org/AudioVideo/Group/SMIL10.dtd"
 
 LAYOUT_NONE = 0				# must be 0
 LAYOUT_SMIL = 1
 LAYOUT_UNKNOWN = -1
 
-layout_name = 'SMIL'			# name of layout channel
-SMIL_BASIC = 'text/smil-basic'
+layout_name = ' SMIL '			# name of layout channel
+SMIL_BASIC = 'text/smil-basic-layout'
 
 coordre = re.compile(r'^(?P<x>\d+%?),(?P<y>\d+%?),'
 		     r'(?P<w>\d+%?),(?P<h>\d+%?)$')
@@ -49,11 +50,43 @@ clock = re.compile(r'(?P<name>local|remote):'
 		   r'(?P<fraction>\.\d+)?'
 		   r'(?:Z(?P<sign>[-+])(?P<ohours>\d{2}):(?P<omin>\d{2}))?$')
 screen_size = re.compile(r'\d+X\d+$')
-range = re.compile('^(?:'
+range_re = re.compile('^(?:'
 		   '(?:(?P<npt>npt)=(?P<nptstart>[^-]*)-(?P<nptend>[^-]*))|'
 		   '(?:(?P<smpte>smpte(?:-30-drop|-25)?)=(?P<smptestart>[^-]*)-(?P<smpteend>[^-]*))'
 		   ')$')
 smpte_time = re.compile(r'(?:(?:\d{2}:)?\d{2}:)?\d{2}(?P<f>\.\d{2})?$')
+
+colors = {
+	'transparent': 'transparent',
+	'inherit': 'inherit',
+
+	# color values taken from HTML 4.0 spec
+	'aqua': (0x00, 0xFF, 0xFF),
+	'black': (0x00, 0x00, 0x00),
+	'blue': (0x00, 0x00, 0xFF),
+	'fuchsia': (0xFF, 0x00, 0xFF),
+	'gray': (0x80, 0x80, 0x80),
+	'green': (0x00, 0x80, 0x00),
+	'lime': (0x00, 0xFF, 0x00),
+	'maroon': (0x80, 0x00, 0x00),
+	'navy': (0x00, 0x00, 0x80),
+	'olive': (0x80, 0x80, 0x00),
+	'purple': (0x80, 0x00, 0x80),
+	'red': (0xFF, 0x00, 0x00),
+	'silver': (0xC0, 0xC0, 0xC0),
+	'teal': (0x00, 0x80, 0x80),
+	'white': (0xFF, 0xFF, 0xFF),
+	'yellow': (0xFF, 0xFF, 0x00),
+	}
+color = re.compile('(?:'
+		   '#(?P<hex>[0-9a-fA-F]{3}|'		# #f00
+			    '[0-9a-fA-F]{6})|'		# #ff0000
+		   'rgb\((?: *(?P<ri>[0-9]+) *,'	# rgb(255, 0, 0)
+			   ' *(?P<gi>[0-9]+) *,'
+			   ' *(?P<bi>[0-9]+) *|'
+			   ' *(?P<rp>[0-9]+) *% *,'	# rgb(100%, 0%, 0%)
+			   ' *(?P<gp>[0-9]+) *% *,'
+			   ' *(?P<bp>[0-9]+) *% *)\))$')
 
 class SMILParser(xmllib.XMLParser):
 	def __init__(self, context, verbose = 0):
@@ -69,6 +102,7 @@ class SMILParser(xmllib.XMLParser):
 		self.__in_a = None
 		self.__context = context
 		self.__root = None
+		self.__root_layout = None
 		self.__container = None
 		self.__node = None	# the media object we're in
 		self.__channels = {}
@@ -80,6 +114,9 @@ class SMILParser(xmllib.XMLParser):
 		self.par_attributes['sync'] = None # reset in case it changed
 		self.__title = layout_name
 		self.__base = ''
+		self.__dict__['start_root-layout'] = self.start_0root_layout
+		self.__dict__['end_root-layout'] = self.end_0root_layout
+		self.__dict__['root-layout_attributes'] = self.root_layout_attributes
 
 	def GetRoot(self):
 		if not self.__root:
@@ -167,40 +204,42 @@ class SMILParser(xmllib.XMLParser):
 			elif attr == 'begin' or attr == 'end':
 				node.__syncarcs.append(attr, val)
 			elif attr == 'dur':
-				if attributes.has_key('begin') and \
-				   attributes.has_key('end'):
-					self.warning('ignoring dur attribute')
+				if val == 'indefinite':
+					node.attrdict['duration'] = -1
 				else:
 					try:
 						node.attrdict['duration'] = self.__parsecounter(val, 0)
 					except error, msg:
 						self.syntax_error(msg)
 			elif attr == 'repeat':
-				try:
-					repeat = string.atoi(val)
-				except string.atoi_error:
-					self.syntax_error('bad repeat attribute')
+				if val == 'indefinite':
+					node.attrdict['loop'] = 0
 				else:
-					if repeat < 0:
-						self.warning('bad repeat value')
+					try:
+						repeat = string.atoi(val)
+					except string.atoi_error:
+						self.syntax_error('bad repeat attribute')
 					else:
-						node.attrdict['loop'] = repeat
-			elif attr == 'bitrate':
+						if repeat <= 0:
+							self.warning('bad repeat value')
+						else:
+							node.attrdict['loop'] = repeat
+			elif attr == 'system-bitrate':
 				try:
 					bitrate = string.atoi(val)
 				except string.atoi_error:
 					self.syntax_error('bad bitrate attribute')
-				# XXXX bitrate is ignored
-			elif attr == 'screen-size':
+				# XXXX system-bitrate is ignored
+			elif attr == 'system-screen-size':
 				if screen_size.match(val) is None:
 					self.syntax_error('bad screen-size attribute')
-				# XXXX screen-size is ignored
-			elif attr == 'screen-depth':
+				# XXXX system-screen-size is ignored
+			elif attr == 'system-screen-depth':
 				try:
 					depth = string.atoi(val)
 				except string.atoi_error:
 					self.syntax_error('bad screen-depth attribute')
-				# XXXX screen-depth is ignored
+				# XXXX system-screen-depth is ignored
 
 	def NewNode(self, mediatype, attributes):
 		if not self.__in_smil:
@@ -221,6 +260,7 @@ class SMILParser(xmllib.XMLParser):
 		else:
 			nodetype = 'imm'
 			self.__nodedata = []
+			self.__data = []
 		self.__is_ext = is_ext
 
 		# find out type of file
@@ -254,6 +294,9 @@ class SMILParser(xmllib.XMLParser):
 			mediatype = mtype[0]
 			subtype = mtype[1]
 
+		if attributes['encoding'] not in ('base64', 'UTF'):
+			self.syntax_error('bad encoding parameter')
+
 		# create the node
 		if not self.__root:
 			node = self.MakeRoot(nodetype)
@@ -276,11 +319,20 @@ class SMILParser(xmllib.XMLParser):
 		mediatype, subtype = node.__mediatype
 
 		if not self.__is_ext:
-			nodedata = string.join(self.__nodedata, '')
+			encoding = attributes['encoding']
+			data = string.split(string.join(self.__nodedata, ''), '\n')
+			for i in range(len(data)-1, -1, -1):
+				tmp = string.join(string.split(data[i]))
+				if tmp:
+					data[i] = tmp
+				else:
+					del data[i]
+			self.__data.append(string.join(data, '\n'))
+			nodedata = string.join(self.__data, '')
 ## 			res = self.__whitespace.match(nodedata)
 ## 			if res is not None:
 ## 				self.syntax_error('no src attribute and no content data')
-			if mediatype != 'text':
+			if encoding == 'base64':
 				# create data URL for base64 encoded data
 				url = 'data:%s/%s;base64,%s' % (mediatype, subtype, nodedata)
 				node.type = 'ext'
@@ -309,7 +361,8 @@ class SMILParser(xmllib.XMLParser):
 					{'minwidth': 0, 'minheight': 0,
 					 'left': 0, 'top': 0,
 					 'width': 0, 'height': 0,
-					 'z-index': 0, 'scale': 'meet'}
+					 'z-index': 0, 'fit': 'meet',
+					 'background-color': 'transparent'}
 		if mediatype in ('image', 'video'):
 			x, y, w, h = ch['left'], ch['top'], ch['width'], ch['height']
 			# if we don't know the channel size and
@@ -318,7 +371,7 @@ class SMILParser(xmllib.XMLParser):
 			if w > 0 and h > 0 and \
 			   type(w) == type(h) == type(0) and \
 			   (x == y == 0 or type(x) == type(y) == type(0)) and \
-			   ch['scale'] != 'visible':
+			   ch['fit'] != 'visible':
 				# size and position is given in pixels
 				pass
 			elif node.attrdict.has_key('file'):
@@ -354,7 +407,7 @@ class SMILParser(xmllib.XMLParser):
 						ch['minwidth'] = width
 					if ch['minheight'] < height:
 						ch['minheight'] = height
-					if ch['scale'] == 'visible':
+					if ch['fit'] == 'visible':
 						w = ch['width']
 						if type(w) is type(0) and w < width:
 							ch['width'] = width
@@ -369,10 +422,10 @@ class SMILParser(xmllib.XMLParser):
 				ch['minheight'] = 100
 
 		# range attribute for video
-		range = attributes.get('range')
-		if mediatype == 'video' and range is not None:
+		range_at = attributes.get('range')
+		if mediatype == 'video' and range_at is not None:
 			try:
-				start, end = self.__parserange(range)
+				start, end = self.__parserange(range_at)
 			except error, msg:
 				self.syntax_error(msg)
 			else:
@@ -541,6 +594,31 @@ class SMILParser(xmllib.XMLParser):
 				attrdict = self.__channels[channel]
 				if self.__layout is None:
 					# create a layout channel
+					bg = None
+					if self.__root_layout is not None:
+						attrs = self.__root_layout
+						width = attrs['width']
+						try:
+							width = string.atoi(width)
+						except string.atoi_error:
+							self.syntax_error('root-layout width not an integer')
+						else:
+							if width < 0:
+								self.syntax_error('root-layout width not a positive integer')
+							elif width > 0:
+								self.__width = width
+						height = attrs['height']
+						try:
+							height = string.atoi(height)
+						except string.atoi_error:
+							self.syntax_error('root-layout height not an integer')
+						else:
+							if height < 0:
+								self.syntax_error('root-layout height not a positive integer')
+							elif height > 0:
+								self.__height = height
+						bg = attrs['background-color']
+						bg = self.__convert_color(bg)
 					layout = MMNode.MMChannel(ctx,
 								  self.__title)
 					ctx.channeldict[self.__title] = layout
@@ -548,34 +626,43 @@ class SMILParser(xmllib.XMLParser):
 					ctx.channels.insert(0, layout)
 					self.__layout = layout
 					layout['type'] = 'layout'
+					if bg is not None and \
+					   bg != 'transparent' and \
+					   bg != 'inherit':
+						layout['bgcolor'] = bg
 					if self.__width == 0:
 						self.__width = 640
 					if self.__height == 0:
 						self.__height = 480
 					layout['winsize'] = \
 						self.__width, self.__height
-					layout['units'] = UNIT_PXL
+					layout['units'] = 2 # UNIT_PXL
 				ch['base_window'] = self.__title
-				if mediatype == 'text':
-					ch['transparent'] = -1
-				else:
+				title = attrdict.get('title')
+				if title is not None:
+					ch['comment'] = title
+				bg = attrdict['background-color']
+				if bg == 'transparent':
 					ch['transparent'] = 1
+				else:
+					ch['transparent'] = -1
+					ch['bgcolor'] = bg
 				ch['z'] = attrdict['z-index']
 				x = attrdict['left']
 				y = attrdict['top']
 				w = attrdict['width']
 				h = attrdict['height']
-				scale = attrdict['scale']
-				if scale == 'meet':
+				fit = attrdict['fit']
+				if fit == 'meet':
 					ch['scale'] = 0
-				elif scale == 'hidden':
+				elif fit == 'hidden':
 					ch['scale'] = 1
-				elif scale == 'slice':
+				elif fit == 'slice':
 					ch['scale'] = -1
-				elif scale == 'visible':
+				elif fit == 'visible':
 					ch['scale'] = 1
 				ch['center'] = 0
-				# other scale options not implemented
+				# other fit options not implemented
 				if type(x) is type(0):
 					x = float(x) / self.__width
 				if type(w) is type(0):
@@ -680,7 +767,6 @@ class SMILParser(xmllib.XMLParser):
 		self.__in_body = 1
 		# fill in defaults for seq
 		attributes['repeat'] = '1'
-		attributes['fill'] = 'remove'
 		self.NewContainer('seq', attributes)
 
 	def end_body(self):
@@ -714,7 +800,8 @@ class SMILParser(xmllib.XMLParser):
 				return
 			self.par_attributes['sync'] = content
 		elif name == 'title':
-			self.__title = content
+			# make sure __title cannot be a SMIL channel id
+			self.__title = ' %s ' % content
 		elif name == 'base':
 			self.__base = content
 		# we currently ignore all other meta element
@@ -749,7 +836,9 @@ class SMILParser(xmllib.XMLParser):
 		self.__in_layout = LAYOUT_NONE
 
 	channel_attributes = {'id':None, 'left':'0', 'top':'0', 'z-index':'0',
-			      'width':'0', 'height':'0', 'scale':'meet'}
+			      'width':'0', 'height':'0', 'fit':'meet',
+			      'background-color':'transparent',
+			      'skip-content':'true', 'title':None}
 	def start_channel(self, attributes):
 		if not self.__in_layout:
 			self.syntax_error('channel not in layout')
@@ -764,6 +853,16 @@ class SMILParser(xmllib.XMLParser):
 			    'height': 0,
 			    'minwidth': 0,
 			    'minheight': 0,}
+
+		val = attributes.get('id')
+		if val is None:
+			self.syntax_error('channel without id attribute')
+			return
+		if self.__channels.has_key(val):
+			self.syntax_error('multiple channel tags for id=%s' % val)
+			return
+		attrdict['id'] = val
+		self.__channels[val] = attrdict
 
 		for attr in ('left', 'top', 'width', 'height'):
 			val = attributes[attr]
@@ -795,31 +894,40 @@ class SMILParser(xmllib.XMLParser):
 			val = 0
 		attrdict['z-index'] = val
 
-		val = attributes['scale']
+		val = attributes['fit']
 		if val not in ['meet', 'slice', 'fill', 'visible', 'hidden',
 			       'auto', 'scroll']:
-			self.syntax_error('illegal scale attribute')
-		attrdict['scale'] = val
+			self.syntax_error('illegal fit attribute')
+		attrdict['fit'] = val
 
-		val = attributes.get('id')
-		if val is None:
-			self.syntax_error('channel without id attribute')
-			return
-		attrdict['id'] = val
-		if self.__channels.has_key(val):
-			self.syntax_error('multiple channel tags for id=%s' % val)
-		self.__channels[val] = attrdict
+		val = self.__convert_color(attributes['background-color'])
+		if val is not None:
+			attrdict['background-color'] = val
+
+		attrdict['title'] = attributes.get('title')
 
 	def end_channel(self):
+		pass
+
+	root_layout_attributes = {'background-color':'transparent',
+				  'id':None, 'height':'0', 'width':'0',
+				  'skip-content':'true', 'title':None}
+	def start_0root_layout(self, attributes):
+		self.__root_layout = attributes
+
+	def end_0root_layout(self):
 		pass
 
 	# container nodes
 
 	par_attributes = {'title':None, 'id':None, 'endsync':None, 'sync':None,
-			  'dur':None, 'repeat':'1', 'fill':'remove',
+			  'dur':None, 'repeat':'1',
 			  'channel':None, 'begin':None, 'end':None,
-			  'bitrate':None, 'language':None, 'screen-size':None,
-			  'screen-depth':None}
+			  'system-bitrate':None, 'system-language':None,
+			  'system-captions':None,
+			  'system-overdub-or-captions':None,
+			  'system-required':None, 'system-screen-size':None,
+			  'system-screen-depth':None}
 	def start_par(self, attributes):
 		# XXXX we ignore sync for now
 		self.NewContainer('par', attributes)
@@ -858,9 +966,12 @@ class SMILParser(xmllib.XMLParser):
 				self.warning('unknown idref in endsync attribute')
 
 	seq_attributes = {'id':None, 'title':None, 'dur':None, 'begin':None,
-			  'end':None, 'repeat':'1', 'fill':'remove',
-			  'bitrate':None, 'language':None,
-			  'screen-size':None, 'screen-depth':None}
+			  'end':None, 'repeat':'1',
+			  'system-bitrate':None, 'system-language':None,
+			  'system-captions':None,
+			  'system-overdub-or-captions':None,
+			  'system-required':None, 'system-screen-size':None,
+			  'system-screen-depth':None}
 	def start_seq(self, attributes):
 		self.NewContainer('seq', attributes)
 
@@ -871,8 +982,12 @@ class SMILParser(xmllib.XMLParser):
 
 	end_bag = EndContainer
 
-	switch_attributes = {'id':None, 'bitrate':None, 'language':None,
-			     'screen-size':None, 'screen-depth':None}
+	switch_attributes = {'id':None,
+			     'system-bitrate':None, 'system-language':None,
+			     'system-captions':None,
+			     'system-overdub-or-captions':None,
+			     'system-required':None, 'system-screen-size':None,
+			     'system-screen-depth':None}
 	def start_switch(self, attributes):
 		if self.__in_head:
 			if self.__in_head_switch:
@@ -892,11 +1007,15 @@ class SMILParser(xmllib.XMLParser):
 
 	basic_attributes = {'id':None, 'src':None, 'type':None, 'channel':None,
 			    'dur':None, 'begin':None, 'end':None, 'repeat':'1',
-			    'fill':'remove', 'bitrate':None, 'language':None,
-			    'screen-size':None, 'screen-depth':None,
-			    'alt':None, 'longdesc':None, 'title':None}
+			    'fill':None, 'encoding':'base64',
+			    'alt':None, 'longdesc':None, 'title':None,
+			    'clip-begin':None, 'clip-end':None,
+			    'system-bitrate':None, 'system-language':None,
+			    'system-captions':None,
+			    'system-overdub-or-captions':None,
+			    'system-required':None, 'system-screen-size':None,
+			    'system-screen-depth':None}
 	ref_attributes = basic_attributes.copy()
-	ref_attributes['range'] = None
 	def start_ref(self, attributes):
 		self.NewNode(None, attributes)
 
@@ -904,6 +1023,7 @@ class SMILParser(xmllib.XMLParser):
 		self.EndNode()
 
 	text_attributes = basic_attributes
+	text_attributes['encoding'] = 'UTF'
 	def start_text(self, attributes):
 		self.NewNode('text', attributes)
 
@@ -939,6 +1059,7 @@ class SMILParser(xmllib.XMLParser):
 		self.EndNode()
 
 	textstream_attributes = ref_attributes
+	textstream_attributes['encoding'] = 'UTF'
 	def start_textstream(self, attributes):
 		self.NewNode('textstream', attributes)
 
@@ -946,6 +1067,7 @@ class SMILParser(xmllib.XMLParser):
 		self.EndNode()
 
 	cmif_cmif_attributes = basic_attributes
+	cmif_cmif_attributes['encoding'] = 'UTF'
 	def start_cmif_cmif(self, attributes):
 		self.NewNode('cmif_cmif', attributes)
 
@@ -953,6 +1075,7 @@ class SMILParser(xmllib.XMLParser):
 		self.EndNode()
 
 	cmif_socket_attributes = basic_attributes
+	cmif_socket_attributes['encoding'] = 'UTF'
 	def start_cmif_socket(self, attributes):
 		self.NewNode('cmif_socket', attributes)
 
@@ -960,6 +1083,7 @@ class SMILParser(xmllib.XMLParser):
 		self.EndNode()
 
 	cmif_shell_attributes = basic_attributes
+	cmif_shell_attributes['encoding'] = 'UTF'
 	def start_cmif_shell(self, attributes):
 		self.NewNode('cmif_shell', attributes)
 
@@ -997,7 +1121,7 @@ class SMILParser(xmllib.XMLParser):
 	anchor_attributes = {'id':None, 'href':None, 'show':'replace',
 			     'xml-link':'simple', 'inline':'true',
 			     'coords':None, 'z-index':'0', 'begin':None,
-			     'end':None, 'iid':None}
+			     'end':None, 'fragment-id':None}
 	def start_anchor(self, attributes):
 		if self.__node is None:
 			self.syntax_error('anchor not in media object')
@@ -1067,8 +1191,8 @@ class SMILParser(xmllib.XMLParser):
 		except AttributeError:
 			self.__node.__anchorlist = anchorlist = []
 		aid = _uniqname(map(lambda a: a[2], anchorlist), None)
-		if attributes.has_key('iid'):
-			aid = attributes['iid']
+		if attributes.has_key('fragment-id'):
+			aid = attributes['fragment-id']
 			atype = ATYPE_NORMAL
 		elif nname is not None and aid[:len(nname)+1] == nname + '-':
 			# undo CMIF encoding of anchor ID
@@ -1099,18 +1223,27 @@ class SMILParser(xmllib.XMLParser):
 	def handle_doctype(self, tag, pubid, syslit, data):
 		if tag != 'smil':
 			self.error('not a SMIL document')
-		if pubid is not None or syslit != SMILdtd or data:
+		if pubid != SMILpubid or syslit != SMILdtd or data:
 			self.syntax_error('invalid DOCTYPE')
 
 	def handle_proc(self, name, data):
 		self.warning('ignoring processing instruction %s' % name)
 
 	# Example -- handle cdata, could be overridden
-	def handle_cdata(self, data):
+	def handle_cdata(self, cdata):
 		if self.__node is None or self.__is_ext:
 			self.warning('ignoring CDATA')
 			return
-		self.__nodedata.append(data)
+		data = string.split(string.join(self.__nodedata, ''), '\n')
+		for i in range(len(data)-1, -1, -1):
+			tmp = string.join(string.split(data[i]))
+			if tmp:
+				data[i] = tmp
+			else:
+				del data[i]
+		self.__data.append(string.join(data, '\n'))
+		self.__nodedata = []
+		self.__data.append(cdata)
 
 ## 	# Example -- handle special instructions, could be overridden
 ## 	def handle_special(self, data):
@@ -1210,7 +1343,7 @@ class SMILParser(xmllib.XMLParser):
 		return name, counter, delay
 
 	def __parserange(self, val):
-		res = range.match(val)
+		res = range_re.match(val)
 		if res is None:
 			raise error, 'bogus range parameter'
 		if res.group('npt'):
@@ -1271,6 +1404,39 @@ class SMILParser(xmllib.XMLParser):
 			anchorlist.append(a)
 		return node.GetUID(), a[2]
 
+	def __convert_color(self, val):
+		if colors.has_key(val):
+			return colors[val]
+		res = color.match(val)
+		if res is None:
+			self.syntax_error('bad color specification')
+			return
+		else:
+			hex = res.group('hex')
+			if hex is not None:
+				if len(hex) == 3:
+					r = string.atoi(hex[0]*2, 16)
+					g = string.atoi(hex[1]*2, 16)
+					b = string.atoi(hex[2]*2, 16)
+				else:
+					r = string.atoi(hex[0:2], 16)
+					g = string.atoi(hex[2:4], 16)
+					b = string.atoi(hex[4:6], 16)
+			else:
+				r = res.group('ri')
+				if r is not None:
+					r = string.atoi(r)
+					g = string.atoi(res.group('gi'))
+					b = string.atoi(res.group('bi'))
+				else:
+					r = int(string.atof(res.group('rp')) * 255 / 100.0 + 0.5)
+					g = int(string.atof(res.group('gp')) * 255 / 100.0 + 0.5)
+					b = int(string.atof(res.group('bp')) * 255 / 100.0 + 0.5)
+		if r > 255: r = 255
+		if g > 255: g = 255
+		if b > 255: b = 255
+		return r, g, b
+
 	# the rest is to check that the nesting of elements is done
 	# properly (i.e. according to the SMIL DTD)
 
@@ -1283,7 +1449,7 @@ class SMILParser(xmllib.XMLParser):
 	__allowed_content = {
 		'smil': ('head', 'body'),
 		'head': ('layout', 'switch', 'meta'),
-		'layout': ('channel',),
+		'layout': ('channel', 'root-layout',),
 		'channel': __empty,
 		'meta': __empty,
 		'body': __container_content,
