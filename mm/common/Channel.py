@@ -1269,9 +1269,8 @@ class ChannelWindow(Channel):
 			units = self._attrdict.get('units',
 						   windowinterface.UNIT_MM)
 			x, y, w, h = self.window.getgeometry(units = units)
-			if (self._attrdict['winpos'] != (x, y) or
-			    self._attrdict['winsize'] != (w, h)) and \
-			    self.editmgr.transaction():
+			if self._attrdict.get('winsize') != (w, h) and \
+			   self.editmgr.transaction():
 				self.save_geometry()
 				self.editmgr.commit()
 
