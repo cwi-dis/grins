@@ -8,8 +8,6 @@ import MMAttrdefs
 from MMExc import *
 from MMNode import alltypes, leaftypes, interiortypes
 
-from ChannelMap import channelmap
-
 HD, TL = 0, 1	# Same as in Player!
 
 lastnode = {}
@@ -111,6 +109,7 @@ def cleanup(node):
 def getduration(node):
 	if node.GetType() in interiortypes:
 		raise CheckError, 'Timing.getduration() on non-leaf'
+	from ChannelMap import channelmap
 	try:
 		cname = MMAttrdefs.getattr(node, 'channel')
 		cattrs = node.context.channeldict[cname]
