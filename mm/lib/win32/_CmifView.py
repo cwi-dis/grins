@@ -508,10 +508,10 @@ class _CmifPlayerView(_CmifView):
 
 		# not in a subwindow, handle it ourselves
 		disp = self._active_displist
-		point = self._DPtoLP(point)
-		x,y = self._pxl2rel(point,self._canvas)
-		buttons = []
-		if disp is not None:
+		if disp:
+			point = self._DPtoLP(point)
+			x,y = self._pxl2rel(point,self._canvas)
+			buttons = []
 			for button in disp._buttons:
 				if button._inside(x,y):
 					buttons.append(button)

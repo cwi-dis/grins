@@ -197,7 +197,6 @@ class Window:
 	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
 		return self.newwindow(coordinates, pixmap, transparent, z, type_channel, units)
 
-	
 	def ltrb(self, xywh):
 		x,y,w,h = xywh
 		return x, y, x+w, y+h
@@ -615,6 +614,7 @@ class Window:
 		return X+x, Y+y, w, h
 
 	def inside(self, point):
+		if self.is_closed(): return 0
 		x, y, w, h = self.getwindowpos()
 		l, t, r, b = x, y, x+w, y+h
 		xp, yp = point
@@ -757,7 +757,7 @@ class SubWindow(Window):
 		self._resizing = 0
 		self._scale = 1
 		self._orgrect = self._rect
-				
+						
 	def __repr__(self):
 		return '<_SubWindow instance at %x>' % id(self)
 		
@@ -778,7 +778,6 @@ class SubWindow(Window):
 			dl.close()
 		del self._topwindow
 		del self._convert_color
-		Window.close(self)
 
 	#
 	# OS windows simulation support
@@ -920,19 +919,19 @@ class SubWindow(Window):
 
 	def onMouseEvent(self,point, ev):
 		cont, stop = 0, 1
+		if self.is_closed(): return cont
 		for wnd in self._subwindows:
 			if wnd.inside(point):
 				if wnd.onMouseEvent(point, ev):
 					return stop
-		
-		x, y, w, h = self.getwindowpos()
-		xp, yp = point
-		point= xp-x, yp-y
+			
 		disp = self._active_displist
-		#point = self._DPtoLP(point)
-		x,y = self._pxl2rel(point,self._canvas)
-		buttons = []
-		if disp is not None:
+		if disp:
+			x, y, w, h = self.getwindowpos()
+			xp, yp = point
+			point= xp-x, yp-y
+			x,y = self._pxl2rel(point,self._canvas)
+			buttons = []
 			for button in disp._buttons:
 				if button._inside(x,y):
 					buttons.append(button)
