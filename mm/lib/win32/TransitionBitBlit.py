@@ -64,11 +64,13 @@ class BlitterClass:
 		try:
 			succeeded = rgn.CreatePolygonRgn(npl)
 		except:
+			print 'CreatePolygonRgn exception:', npl			
 			succeeded = 0
-
-		if not succeeded:
-			print 'CreatePolygonRgn failed. pointlist:', npl
-			return None
+			rgn = None
+		else:
+			if not succeeded:
+				print 'CreatePolygonRgn failed:', npl
+				rgn = None
 		return rgn
 
 class R1R2BlitterClass(BlitterClass):
