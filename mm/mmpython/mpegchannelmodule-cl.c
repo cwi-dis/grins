@@ -313,6 +313,7 @@ mpeg_arm(self, file, delay, duration, attrdict, anchorlist)
 	int cbufsize;
 	int framesize;
 	CL_BufferHdl bufHandle, frameHandle;
+	int scheme;
 	char *inbuf;
 	char *framebuf;
 
@@ -382,11 +383,18 @@ mpeg_arm(self, file, delay, duration, attrdict, anchorlist)
 	    ERROR(mpeg_arm, err_object, "cannot read header");
 	    return 0;
 	}
-	if ( clQueryScheme(header) != CL_MPEG_VIDEO) {
+	scheme = clQueryScheme(header);
+	if (scheme < 0) {
+	    ERROR(mpeg_arm, err_object, "unknown compression scheme");
+	    return 0;
+	}
+#if 0
+	if ( scheme != CL_MPEG_VIDEO) {
 	    ERROR(mpeg_arm, err_object, "Not an MPEG file");
 	    return 0;
 	}
-	headersize = clQueryMaxHeaderSize(CL_MPEG_VIDEO);
+#endif
+	headersize = clQueryMaxHeaderSize(scheme);
 	if ( (header=realloc(header, headersize)) == NULL ) {
 	    ERROR(mpeg_arm, err_object, "not enough memory for header");
 	    return 0;
@@ -396,7 +404,7 @@ mpeg_arm(self, file, delay, duration, attrdict, anchorlist)
 	    ERROR(mpeg_arm, err_object, "cannot read header");
 	    return 0;
 	}
-	clOpenDecompressor(CL_MPEG_VIDEO, &decHandle); /* XXXX Error chk */
+	clOpenDecompressor(scheme, &decHandle); /* XXXX Error chk */
 	PRIV->m_arm.m_decHdl = decHandle;
 	headersize = clReadHeader(decHandle, headersize, header); /* XXXX */
 	dprintf(("mpeg_armer: headersize %d\n", headersize));
