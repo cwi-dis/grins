@@ -495,7 +495,7 @@ def getcmifattr(writer, node, attr, default = None):
 def getmimetype(writer, node):
 	if node.GetType() not in mediatypes: # XXX or prefetch?
 		return
-	if writer.copydir:
+	if writer.copydir and writer.convert and MMAttrdefs.getattr(node, 'project_convert'):
 		# MIME type may be changed by copying, so better not to return any
 		return
 	return node.GetRawAttrDef('mimetype', None)
@@ -2711,7 +2711,7 @@ class SMILWriter(SMIL, BaseSMILWriter):
 			if type(node) == type({}):
 				convert = node.get('project_convert', 1)
 			else:
-				convert = node.GetRawAttrDef('project_convert', 1)
+				convert = MMAttrdefs.getattr(node, 'project_convert')
 		else:
 			convert = 0
 
