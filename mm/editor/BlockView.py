@@ -1,3 +1,5 @@
+# Hierarchy window (for historic reasons called "Block View")
+
 import fl
 from FL import *
 import gl
@@ -8,6 +10,7 @@ from Dialog import BasicDialog
 from ViewDialog import ViewDialog
 from MMNode import alltypes, leaftypes, interiortypes
 import Clipboard
+
 
 # XXX Test for forms 1.5 compat:
 forms_v20 = 1
@@ -23,45 +26,19 @@ else:
     print 'no FORMS 2.0'
 
 
-#
-# There are two methods :
-#	1. new (w, h, root) which returns the form and a box which
-#	   acts as a "canvas" over the form. w, h are the width and height.
-#	2. blockview(form, (x, y, w, h), node) which makes the blockview.
-#	   node is a node in the tree.
-
-#
-# We use the FRAME_BOX because it looks good. :-)
-#
-# 
-
-# TODO :
-#
-#	1. Get and use defaults ! [Need the interface to the default
-#	   database].
-#
-#	2. Fill in the duration on SEQ children. This is trivial as
-#	   as soon as we figure out how do calculate the duration !
-#
-
-##################### CLASS DEFINITION : blockview 
-#
-
-# some constants that can be used to expiriment with how the
-# blocks are placed on top of each other.
-#
-LMARG = 10 # left margin width
-RMARG = 10 # right margin width
-TMARG = 5 # top margin width (half as wide)
-BMARG = 5 # bottom margin width (half as wide)
-MMARG = 5 # margin between title button and real buttons
-BH=20	# the height of the open/close button and title
-BW=10   # width of open/close button
-
+# Parametrization of the lay-out
+LMARG = 10	# left margin width
+RMARG = 10	# right margin width
+TMARG = 5 	# top margin width (half as wide)
+BMARG = 5 	# bottom margin width (half as wide)
+MMARG = 5 	# margin between title button and real buttons
+BH = 20   	# the height of the open/close button and title
+BW = 10   	# width of open/close button
 MENUH = 20	# Height of menu bar
 ZOOMW = 20	# Width of zoo buttons
 
-class BlockView(ViewDialog, BasicDialog ):
+
+class BlockView(ViewDialog, BasicDialog):
 	#
 	# init() method compatible with the other views.
 	#
@@ -139,47 +116,56 @@ class BlockView(ViewDialog, BasicDialog ):
 	#
 	def addtocommand(self, (key, func)) :
 		self.commanddict[key] = func
+
+	# XXX The menu definitions should be done in such a way that
+	# XXX you only need to edit a single line to change a shortcut!
+
 	def addmenus(self, (x,y,w,h)):
 		f = self.form
 		menubar = f.add_box(FLAT_BOX,x,y,w,h,'')
 		zoominbut = f.add_button(NORMAL_BUTTON, x+w-ZOOMW,y,ZOOMW,h,'Z')
-		zoominbut.set_call_back(self._button_callback,'+')
+		zoominbut.set_call_back(self._button_callback,'Z')
 		zoomoutbut = f.add_button(NORMAL_BUTTON, x+w-2*ZOOMW,y,ZOOMW,h,'z')
-		zoomoutbut.set_call_back(self._button_callback,'-')
+		zoomoutbut.set_call_back(self._button_callback,'z')
 		w = w-2*ZOOMW
 
 		edit_menu = f.add_menu(PUSH_MENU,x,y,w/3,h,'Edit')
-		edit_menu.set_menu('i Insert before|a Insert after|u Insert child%l|d Delete')
-		cmdmap = 'iaud'
+		edit_menu.set_menu('m Insert before...|n Insert after...|u Insert child...%l|d Delete')
+		cmdmap = 'mnud'
 		edit_menu.set_call_back(self._menu_callback,cmdmap);
 		clipboard_menu = f.add_menu(PUSH_MENU,x+w/3,y,w/3,h,'Clipboard')
-		clipboard_menu.set_menu('I Paste before|A Paste after|U Paste as child%l|D Cut|C Copy')
-		cmdmap = 'IAUDC'
+		clipboard_menu.set_menu('M Paste before|N Paste after|U Paste child%l|D Cut|C Copy')
+		cmdmap = 'MNUDC'
 		clipboard_menu.set_call_back(self._menu_callback,cmdmap);
 		operation_menu = f.add_menu(PUSH_MENU,x+2*w/3,y,w/3,h,'Operation')
-		operation_menu.set_menu('h Help|p Play|+ Zoom|- Unzoom%l|o Open info|e Open attr|E Edit contents')
-		cmdmap = 'hp+-oeE'
+		operation_menu.set_menu('h Help...|p Play node|Z Zoom in|z Zoom out%l|i Node info...|a Node attr...|e Edit contents...')
+		cmdmap = 'hpZznae'
 		operation_menu.set_call_back(self._menu_callback,cmdmap);
 	#
 	# submit a number to default commands.
 	#
 	def _initcommanddict(self) :
-		self.addtocommand('e', attreditfunc)
-		self.addtocommand('E', conteditfunc)
-		self.addtocommand('a', InsertAfterNode)
-		self.addtocommand('i', InsertBeforeNode)
+		# Edit menu
+		self.addtocommand('m', InsertBeforeNode)
+		self.addtocommand('n', InsertAfterNode)
 		self.addtocommand('u', InsertChildNode)
 		self.addtocommand('d', DeleteNode)
-		self.addtocommand('A', CInsertAfterNode)
-		self.addtocommand('I', CInsertBeforeNode)
+
+		# Clipboard menu
+		self.addtocommand('M', CInsertBeforeNode)
+		self.addtocommand('N', CInsertAfterNode)
 		self.addtocommand('U', CInsertChildNode)
 		self.addtocommand('D', CDeleteNode)
 		self.addtocommand('C', CopyNode)
+
+		# Operations menu
 		self.addtocommand('h', helpfunc)
-		self.addtocommand('o', infofunc)
 		self.addtocommand('p', playfunc)
-		self.addtocommand('-', unzoomfunc)
-		self.addtocommand('+', zoomfunc)
+		self.addtocommand('Z', zoomfunc)
+		self.addtocommand('z', unzoomfunc)
+		self.addtocommand('i', infofunc)
+		self.addtocommand('a', attreditfunc)
+		self.addtocommand('e', conteditfunc)
 	#
 
 	# blockview gets a region in the form where it recursively
@@ -220,7 +206,7 @@ class BlockView(ViewDialog, BasicDialog ):
 			    if type == 'seq':
 				    h = h / len(kids)
 				    dx, dy = 0, h
-			    else: 				 # parallel node
+			    else: # parallel node
 				    w = w / len(kids)
 				    dx, dy = w, 0
 			    toosmall = ((h < TMARG+BMARG+BH) or \
@@ -424,6 +410,7 @@ class BlockView(ViewDialog, BasicDialog ):
 			return 1
 		return self.isclosedlocal(node)
 
+
 def helpfunc (bv) :
 	bv.toplevel.help.givehelp('Hierarchy')
 
@@ -568,7 +555,9 @@ def CInsertChildNode(bv):
 	_InsertChildNode(bv,1)
 #
 def unzoomfunc (bv) :
-	if bv.rootview == bv.root : return
+	if bv.rootview == bv.root :
+		gl.ringbell()
+		return
 
 	bv.form.freeze_form ()
 
