@@ -67,9 +67,10 @@ MENUBAR=(
 
 	('View', (
 		(TOGGLE, 'Player', '1', PLAYERVIEW),
-		(TOGGLE, 'Hierarchy', '2', HIERARCHYVIEW),
-		(TOGGLE, 'Channel/timeline', '3', CHANNELVIEW),
-		(TOGGLE, 'Hyperlinks', '4', LINKVIEW),
+		(TOGGLE, 'Payout', '2', LAYOUTVIEW),
+		(TOGGLE, 'Hierarchy', '3', HIERARCHYVIEW),
+		(TOGGLE, 'Channel/timeline', '4', CHANNELVIEW),
+		(TOGGLE, 'Hyperlinks', '5', LINKVIEW),
 		(SEP,),
 		(ENTRY, 'Zoom in', None, ZOOMIN),
 		(ENTRY, 'Zoom out', None, ZOOMOUT),

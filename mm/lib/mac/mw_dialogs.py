@@ -23,6 +23,8 @@ from mw_windows import DialogWindow
 # give too many stuff in one object (window, dialogwindow, per-dialog info, editor
 # info)?
 class MACDialog:
+	item_to_command = {}
+	
 	def __init__(self, title, resid, allitems=[], default=None, cancel=None):
 		self._itemlist_shown = allitems[:]
 		self._window = DialogWindow(resid, title=title, default=default, cancel=cancel)
@@ -30,6 +32,12 @@ class MACDialog:
 		# Override event handler:
 		self._window.do_itemhit = self.do_itemhit
 		
+	def do_itemhit(self, item, event):
+		if self.item_to_command.has_key(item):
+			self._window.call_command(self.item_to_command[item])
+			return 1
+		return 0
+
 	def _showitemlist(self, itemlist):
 		"""Make sure the items in itemlist are visible and active"""
 		for item in itemlist:
