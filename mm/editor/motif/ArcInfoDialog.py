@@ -53,7 +53,7 @@ class ArcInfoDialog:
 					srclist, srcinit,
 					None, top = None, left = None,
 						  right = None)
-		b1 = s1.Button('Push focus', (self.pushsrcfocus_callback, ()),
+		b1 = s1.Button('Sync selection', (self.pushsrcfocus_callback, ()),
 			       top = self.__src_choice, left = None,
 			       right = None, bottom = None)
 		s2 = s.SubWindow(top = None, left = s1, right = None)
@@ -61,7 +61,7 @@ class ArcInfoDialog:
 					dstlist, dstinit,
 					None, top = None,
 					left = None, right = None)
-		b2 = s2.Button('Push focus', (self.pushdstfocus_callback, ()),
+		b2 = s2.Button('Sync selection', (self.pushdstfocus_callback, ()),
 			       top = self.__dst_choice, left = None,
 			       right = None, bottom = None)
 		if delay > 10.0:
