@@ -725,7 +725,7 @@ class Viewport(win32window.Window, UserEventMng):
 		self._ctx.unselect(self)
 	
 	def setAttrdict(self, attrdict):
-		print 'setAttrdict', attrdict
+		# print 'setAttrdict', attrdict
 		newBgcolor = attrdict.get('bgcolor')
 		oldBgcolor = self._attrdict.get('bgcolor')
 		newGeom = attrdict.get('wingeom')
