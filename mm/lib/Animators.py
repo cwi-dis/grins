@@ -623,7 +623,7 @@ class EffectiveAnimator:
 		
 		# helper variables
 		self.__layout = None
-		self.__layoutContents = []
+		self.__subChannels = []
 
 	def getDOMValue(self):
 		return self.__domval
@@ -732,7 +732,7 @@ class EffectiveAnimator:
 			if type == 'layout' and chan._name == name:
 				return chan
 
-	def __appendLayoutChannels(self, region, childs):
+	def __appendSubChannels(self, region, childs):
 		from Channel import channels
 		for chan in channels:
 			chtype = chan._attrdict.get('type')
@@ -740,7 +740,7 @@ class EffectiveAnimator:
 				base_window = chan._attrdict.get('base_window')
 				if base_window == region._name:
 					childs.append(chan)
-					self.__appendLayoutChannels(chan, childs)
+					self.__appendSubChannels(chan, childs)
 
 	# update region attributes display value
 	def __updateregion(self, value):
@@ -751,44 +751,62 @@ class EffectiveAnimator:
 		# locate region and its contents (once)
 		if not self.__layout:
 			self.__layout = self.__getLayoutChannel(regionname)
-			self.__appendLayoutChannels(self.__layout, self.__layoutContents)			
+			self.__appendSubChannels(self.__layout, self.__subChannels)			
+		if not self.__layout:
+			return
 
 		region = self.__layout._attrdict
-		cssregion = self.getCssObj(region)
-
-		# fit (scale): ['hidden':1, 'meet':0, 'slice': -1, 'fill':-3]
-		scale = cssregion.getScale()
 
 		if attr == 'position':
+			cssregion = self.getCssObj(region)
 			cssregion.move(value)
+			cssregion.update()
 			coords = cssregion.getPxGeom()
-			self.__updatecoordinates(coords, UNIT_PXL, scale)
-			for lch in self.__layoutContents:
-				reg = lch._attrdict
-				cssreg = self.getCssObj(reg)
-				if lch.window:
-					lch.window.updatecoordinates(cssreg.getPxGeom(), UNIT_PXL, cssreg.getScale())
+			if self.__layout.window:
+				self.__layout.window.updatecoordinates(coords, UNIT_PXL, cssregion.getScale(), None)
+			for subch in self.__subChannels:
+				cssreg = self.getCssObj(subch._attrdict)
+				mediacoords = None
+				if cssreg.media:
+					cssreg.media.update()
+					mediacoords = cssreg.media.getPxGeom()
+				if subch.window:
+					subch.window.updatecoordinates(cssreg.getPxGeom(), UNIT_PXL, cssreg.getScale(), mediacoords)
 
 		elif attr in ('left','top','width','height','right','bottom'):
+			cssregion = self.getCssObj(region)
 			cssregion.changeRawAttr(attr, value)
+			cssregion.update()
 			coords = cssregion.getPxGeom()
-			self.__updatecoordinates(coords, UNIT_PXL, scale)
-			for lch in self.__layoutContents:
-				reg = lch._attrdict
-				cssreg = self.getCssObj(reg)
-				if lch.window:
-					lch.window.updatecoordinates(cssreg.getPxGeom(), UNIT_PXL, cssreg.getScale())
+			if self.__layout.window:
+				self.__layout.window.updatecoordinates(coords, UNIT_PXL, cssregion.getScale(), None)
+			for subch in self.__subChannels:
+				cssreg = self.getCssObj(subch._attrdict)
+				mediacoords = None
+				if cssreg.media:
+					cssreg.media.update()
+					mediacoords = cssreg.media.getPxGeom()
+				if subch.window:
+					subch.window.updatecoordinates(cssreg.getPxGeom(), UNIT_PXL, cssreg.getScale(), mediacoords)
 
 		elif attr=='z':
-			self.__updatezindex(value)
+			if self.__layout.window:
+				self.__layout.window.updatezindex(value)
 			region.SetPresentationAttr(attr, value)
 
 		elif attr=='bgcolor':
-			self.__updatebgcolor(value)
+			if self.__layout.window:
+				self.__layout.window.updatebgcolor(value)
+			for subch in self.__subChannels:
+				# check for inherited attr
+				if not subch._attrdict.get('bgcolor') and subch.window: 
+					subch.window.updatebgcolor(color)
 			region.SetPresentationAttr(attr, value)
 
 		elif attr=='soundLevel':
-			self.__updatesoundlevel(value)
+			for subch in self.__subChannels:
+				if hasattr(subch,'updatesoundlevel'):
+					subch.updatesoundlevel(value)
 			region.SetPresentationAttr(attr, value)
 		else:
 			print 'update',attr,'of region',regionname,'to',value,'(unsupported)'
@@ -796,28 +814,7 @@ class EffectiveAnimator:
 		if debug: 
 			print 'update',attr,'of region',regionname,'to',value
 
-	def __updatecoordinates(self, coords, units = UNIT_PXL, scale=None):
-		if self.__layout and self.__layout.window:
-			self.__layout.window.updatecoordinates(coords, units, scale)
-
-	def __updatezindex(self, z):
-		if self.__layout and self.__layout.window:
-			self.__layout.window.updatezindex(z)
-			
-	def __updatebgcolor(self, color):
-		if self.__layout and self.__layout.window:
-			self.__layout.window.updatebgcolor(color)
-			# update content with inherited backgroundColor
-			for lch in self.__layoutContents:
-				# check for inherited attr
-				if not lch._attrdict.get('bgcolor') and lch.window: 
-					lch.window.updatebgcolor(color)
-			
-	def __updatesoundlevel(self, level):
-		for chan in self.__layoutContents:
-			if hasattr(chan,'updatesoundlevel'):
-				chan.updatesoundlevel(level)
-	
+				
 	# update area attributes display value
 	def __updatearea(self, value):
 		attr = self.__attr
@@ -839,31 +836,34 @@ class EffectiveAnimator:
 	def __updatesubregion(self, value):
 		if not self.__chan:
 			return
-
 		chan = self.__chan
-		mmchan = self.__node.GetChannel()
-		region = mmchan.GetLayoutChannel()
-		cssregion = self.getCssObj(region)
-
-		scale = cssregion.getScale()
 
 		if self.__attr == 'position':
 			csssubregion = self.getCssObj(self.__node)
-			csssubregion.link(cssregion)
 			csssubregion.move(value)
+			csssubregion.update()
 			coords = csssubregion.getPxGeom()
-			csssubregion.unlink()
+			scale = csssubregion.getScale()
+			mediacoords = None
+			if csssubregion.media:
+				csssubregion.media.update()
+				mediacoords = csssubregion.media.getPxGeom()
 			if chan.window:
-				chan.window.updatecoordinates(coords, UNIT_PXL, scale)
+				chan.window.updatecoordinates(coords, UNIT_PXL, scale, mediacoords)
 
 		elif self.__attr in ('left','top','width','height','right','bottom'):
 			csssubregion = self.getCssObj(self.__node)
-			csssubregion.link(cssregion)
 			csssubregion.changeRawAttr(self.__attr, value)
+			csssubregion.update()
 			coords = csssubregion.getPxGeom()
-			csssubregion.unlink()
+			scale = csssubregion.getScale()
+			mediacoords = None
+			if csssubregion.media:
+				csssubregion.media.update()
+				mediacoords = csssubregion.media.getPxGeom()
+			print coords, scale, mediacoords
 			if chan.window:
-				chan.window.updatecoordinates(coords, UNIT_PXL, scale)
+				chan.window.updatecoordinates(coords, UNIT_PXL, scale, mediacoords)
 		
 		elif self.__attr=='bgcolor':
 			if chan.window:
