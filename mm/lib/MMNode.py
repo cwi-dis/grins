@@ -1404,14 +1404,15 @@ class MMChannel(MMTreeElement):
 			if parent is not None:
 				return parent.name
 			raise KeyError, key
+		if key == 'base_winoff':
+			# keep the compatibility with old version
+			parent = self.GetParent()
+			if parent is not None:
+				return self.getPxGeom()
+			raise KeyError, key
 		if self.attrdict.has_key(key):
 			return self.attrdict[key]
-		else:
-			if key == 'base_winoff':
-				# keep the compatibility with old version
-				return self.getPxGeom()
-
-			raise KeyError, key
+		raise KeyError, key
 
 	def Extract(self):
 		MMTreeElement.Extract(self)
@@ -1484,7 +1485,6 @@ class MMChannel(MMTreeElement):
 			parent = self.context.channeldict[value]
 			parent._addchild(self)
 			return
-						
 		elif key == 'base_winoff':
 			# keep the compatibility with old version
 			self.setPxGeom(value)
@@ -1494,7 +1494,6 @@ class MMChannel(MMTreeElement):
 			return
 		elif self.isCssAttr(key):
 			self.setCssAttr(key, value)
-			
 		self.attrdict[key] = value
 
 	def __delitem__(self, key):
@@ -1506,14 +1505,15 @@ class MMChannel(MMTreeElement):
 		del self.attrdict[key]
 		
 	def has_key(self, key):
-		if key == 'base_window':
+		if key in ('base_window', 'base_winoff'):
 			return self.GetParent() is not None
 		return self.attrdict.has_key(key)
 
 	def keys(self):
-		keys = self.attrdict.keys()
+		keys = sebnaself.attrdict.keys()
 		if self.GetParent() is not None:
 			keys.append('base_window')
+			keys.append('base_winoff')
 		return keys
 
 	def items(self):
@@ -1521,6 +1521,7 @@ class MMChannel(MMTreeElement):
 		parent = self.GetParent()
 		if parent is not None:
 			items.append(('base_window', parent.name))
+			items.append(('base_winoff', self.getPxGeom()))
 		return items
 
 	def get(self, key, default = None):
@@ -1691,7 +1692,7 @@ _repeat_regexp = None
 # Sjoerd: if you have free time, could you describe (better than I can) what this is at some stage
 # (low priority documentation nag). -mjvdg
 class MMSyncArc:
-	def __init__(self, dstnode, action, srcnode=None, srcanchor=None,
+	def __init__(self, dstnode, action, srcnode=None,
 		     channel=None, event=None, marker=None, wallclock=None,
 		     accesskey=None, delay=None, implicit=0):
 		# dstnode is the destination MMNode for this syncarc, i.e. what is started, ended etc.
@@ -1702,7 +1703,6 @@ class MMSyncArc:
 		#    'end' means that self determines when the node ends.
 		# -mjvdg
 		if __debug__:
-			assert srcanchor is None
 			assert event is None or marker is None
 			if wallclock is not None:
 				assert srcnode is None
@@ -1852,7 +1852,7 @@ class MMSyncArc:
 				srcnode = self.dstnode.context.mapuid(uidremap[uid])
 
 		return MMSyncArc(dstnode, action, srcnode,
-				 None, self.channel, self.event,
+				 self.channel, self.event,
 				 self.marker, self.wallclock,
 				 self.accesskey, self.delay, self.implicit)
 
