@@ -687,10 +687,9 @@ class ChannelWrapper(Wrapper):
 class DocumentWrapper(Wrapper):
 	__stdnames = ['title', 'author', 'copyright', 'base']
 	__publishnamesext = [
-			'project_ftp_host', 'project_ftp_user', 'project_ftp_dir']
+			'project_ftp_host', 'project_ftp_user', 'project_ftp_dir', 'project_smil_url']
 	__publishnames = [
-			'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media',
-			'project_smil_url']
+			'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media']
 	__qtnames = ['autoplay', 'qttimeslider', 'qtnext', 'qtchaptermode', 'immediateinstantiation']
 
 	def __init__(self, toplevel):
