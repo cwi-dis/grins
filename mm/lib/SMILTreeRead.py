@@ -1233,7 +1233,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def NewNode(self, tagname, attributes):
 		# update progress bar if needed
-		self.__udpateProgressHandler()
+		self.__updateProgressHandler()
 		
 		# mimetype -- the MIME type of the node as specified in attr
 		# mtype -- the MIME type of the node as calculated
@@ -2525,7 +2525,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def start_region(self, attributes, checkid = 1):
 		# update progress bar if needed
-		self.__udpateProgressHandler()
+		self.__updateProgressHandler()
 			
 		if not self.__in_layout:
 			self.syntax_error('region not in layout')
@@ -4305,7 +4305,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__saved_attrdict = attrdict
 
 	# update progress bar if needed
-	def __udpateProgressHandler(self):
+	def __updateProgressHandler(self):
 		import windowinterface
 		if self.__progressCallback != None:
 			callback, intervalTime = self.__progressCallback
