@@ -14,6 +14,7 @@ class TimeMapper:
 		self.collisions = []
 		self.collisiondict = {}
 		self.stalldict = {}
+		self.markerdict = {}	# map interesting pixels to times
 		self.minpos = {}
 		self.offset = 0
 		self.width = 0
@@ -25,6 +26,8 @@ class TimeMapper:
 		# recalculate mapping so that collisions stay same
 		# size but between collisions we give proportinately
 		# more/fewer pixels to times
+		assert type(offset) is type(0)
+		assert type(width) is type(0)
 		if __debug__:
 			if DEBUG: print 'setoffset',offset,width
 		coll = 0
@@ -57,6 +60,7 @@ class TimeMapper:
 			self.width = width
 
 	def adddependency(self, t0, t1, minpixeldistance, node):
+		assert type(minpixeldistance) is type(0)
 		if not self.collecting:
 			raise Error, 'Adding dependency while not collecting data anymore'
 		if __debug__:
@@ -66,19 +70,19 @@ class TimeMapper:
 		self.collisiondict[t1] = 0
 
 	def addmarker(self, time):
-		if self.collisiondict.has_key(time):
-			return
-		self.collisiondict[time] = 0
 		if self.collecting:
+			# when we're collecting, store the exact specified time
+			if not self.collisiondict.has_key(time):
+				self.collisiondict[time] = 0
 			return
-		# Not collecting anymore, so we hand-update the other
-		# data structures
+		# not collecting anymore
+		# add value to markerdict for later use in pixel2time
+		# make sure the time we store is the central time of the pixel
 		px = self.interptime2pixel(time)
-		self.times.append(time)
-		self.times.sort()
-		self.minpos[time] = px
+		self.markerdict[px] = self.pixel2time(px)[0]
 
 	def addcollision(self, time, minpixeldistance):
+		assert type(minpixeldistance) is type(0)
 		if not self.collecting:
 			raise Error, 'Adding collision while not collecting data anymore'
 		if __debug__:
@@ -188,8 +192,13 @@ class TimeMapper:
 			return 0
 
 	def pixel2time(self, pxl):
+		assert type(pxl) is type(0)
 		if self.collecting:
 			raise Error, 'pixel2time called while still collecting data'
+		if self.markerdict.has_key(pxl):
+			# hit a marker that was added after the mapper was finalized
+			# do as if it is an exact value
+			return self.markerdict[pxl], 1
 		if self.width == 0:
 			pos = pxl - self.offset
 		else:
@@ -262,6 +271,7 @@ class TimeMapper:
 		return tm + (pos - mp), 0
 
 	def __pixel2pixel(self, pos):
+		assert type(pos) is type(0)
 		if self.width == 0:
 			return pos
 		return int(pos / float(self.range[1] - self.range[0]) * self.width + self.offset + .5)
@@ -300,7 +310,7 @@ class TimeMapper:
 				beforepos = self.minpos[aftertime]
 				afterpos = self.minpos[aftertime]+self.collisiondict[aftertime]
 				width = afterpos - beforepos
-				return self.__pixel2pixel(beforepos + factor*width + 0.5)
+				return self.__pixel2pixel(int(beforepos + factor*width + 0.5))
 		if time < self.times[0]:
 			return self.__pixel2pixel(self.minpos[self.times[0]])
 		if time > self.times[-1]:
@@ -314,7 +324,7 @@ class TimeMapper:
 		beforepos = self.minpos[beforetime] + self.collisiondict[beforetime]
 		afterpos = self.minpos[aftertime]
 		width = afterpos - beforepos
-		return self.__pixel2pixel(beforepos + factor*width + 0.5)
+		return self.__pixel2pixel(int(beforepos + factor*width + 0.5))
 
 	def gettimesegments(self, range=None):
 		# Return a list of (time, leftpixel, rightpixel) tuples
