@@ -807,7 +807,7 @@ class EffectiveAnimator:
 			for subch in self.__subChannels:
 				# check for inherited attr
 				if not subch._attrdict.get('bgcolor') and subch.window: 
-					subch.window.updatebgcolor(color)
+					subch.window.updatebgcolor(value)
 			region.SetPresentationAttr(attr, value)
 
 		elif attr=='soundLevel':
