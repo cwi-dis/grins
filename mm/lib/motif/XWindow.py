@@ -544,17 +544,18 @@ class _Window(_AdornmentSupport):
 		val = self._form.GetValues(['width', 'height'])
 		fwidth = val['width']
 		fheight = val['height']
+		# cwidth, cheight: size of clipping window (i.e. visible size)
+		# fwidth, fheight: size of canvas (i.e. total drawable size)
 		if fwidth > cwidth:
+			# drawable not completely visible in X direction
+			# we may need to change the scroll position
 			value, slider_size, increment, page_increment = hs.ScrollBarGetValues()
-##			margin = hs.height + 2 * hs.shadowThickness
-##			cwidth = cwidth - margin
+			# value: x coordinate of first visible pixel
 			changed = 0
 			if w < cwidth:
+				# horizontal extent fits
 				if value <= x:
-					if x + w <= value + cwidth:
-						# it's visible
-						pass
-					else:
+					if x + w > value + cwidth:
 						# left visible, right not
 						value = x + w - cwidth
 						changed = 1
@@ -567,18 +568,18 @@ class _Window(_AdornmentSupport):
 					value = x
 					changed = 1
 			if changed:
+				# do it for horizontal scrollbar
 				hs.ScrollBarSetValues(value, slider_size, increment, page_increment, 1)
 		if fheight > cheight:
+			# drawable not completely visible in Y direction
+			# we may need to change the scroll position
 			value, slider_size, increment, page_increment = vs.ScrollBarGetValues()
-##			margin = vs.width + 2 * vs.shadowThickness
-##			cheight = cheight - margin
+			# value: y coordinate of first visible pixel
 			changed = 0
 			if h < cheight:
+				# vertical extent fits
 				if value <= y:
-					if y + h <= value + cheight:
-						# it's visible
-						pass
-					else:
+					if y + h > value + cheight:
 						# top visible, bottom not
 						value = y + h - cheight
 						changed = 1
@@ -591,6 +592,7 @@ class _Window(_AdornmentSupport):
 					value = y
 					changed = 1
 			if changed:
+				# do it for vertical scrollbar
 				vs.ScrollBarSetValues(value, slider_size, increment, page_increment, 1)
 
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
