@@ -97,7 +97,6 @@ class _Toplevel(mac_windowbase._Toplevel):
 		mac_windowbase._Toplevel._handle_event(self, event)
 
 	def _do_user_item(self, wid, item):
-		print 'UserItem', wid, item
 		try:
 			win = self._wid_to_window[wid]
 		except KeyError:
@@ -117,7 +116,6 @@ class _Toplevel(mac_windowbase._Toplevel):
 			if modifiers & Events.cmdKey:
 				return 0	# Let menu code handle it
 			c = chr(message & Events.charCodeMask)
-			print 'dlg keydown', `c`, event
 			pass # Do command-key processing
 			# Do default key processing
 			if c == '\r':
@@ -882,7 +880,6 @@ class DialogWindow(_Window):
 		print 'Dialog %s item %d event %s'%(self, item, event)
 		
 	def do_itemdraw(self, item):
-		print 'Draw item', item
 		try:
 			w = self._widgetdict[item]
 		except KeyError:
@@ -891,13 +888,6 @@ class DialogWindow(_Window):
 			w._redraw()
 		
 	def _redraw(self, rgn):
-##		#print 'redraw dialogwindow', self, self._bgcolor, self._fgcolor
-##		Qd.SetPort(self._wid)
-##		Qd.ClipRect(self._wid.GetWindowPort().portRect)
-##		Qd.RGBBackColor(self._bgcolor)
-##		Qd.RGBForeColor(self._fgcolor)
-##		for w in self._widgetlist:
-##			w._redraw(rgn)
 		pass
 			
 	def _activate(self, onoff):
@@ -937,6 +927,9 @@ class MACDialog:
 			if item in self._itemlist_shown:
 				continue
 			self._dialog.ShowDialogItem(item)
+			tp, h, rect = self._dialog.GetDialogItem(item)
+			if tp == 7:		# User control
+				h.as_Control().ShowControl()
 			self._itemlist_shown.append(item)
 		
 	def _hideitemlist(self, itemlist):
@@ -945,6 +938,9 @@ class MACDialog:
 			if item not in self._itemlist_shown:
 				continue
 			self._dialog.HideDialogItem(item)
+			tp, h, rect = self._dialog.GetDialogItem(item)
+			if tp == 7:		# User control
+				h.as_Control().HideControl()
 			self._itemlist_shown.remove(item)
 			
 	def _setsensitive(self, itemlist, sensitive):
@@ -958,6 +954,16 @@ class MACDialog:
 				ctl.HiliteControl(255)
 		if sensitive:
 			self._showitemlist(itemlist)
+
+	def _setctlvisible(self, itemlist, visible):
+		"""Set or reset item visibility"""
+		for item in itemlist:
+			tp, h, rect = self._dialog.GetDialogItem(item)
+			ctl = h.as_Control()
+			if visible:
+				ctl.ShowControl()
+			else:
+				ctl.HideControl()
 
 	def _settextsensitive(self, itemlist, sensitive):
 		"""Set or reset item sensitivity to user input"""
@@ -1263,7 +1269,7 @@ class SelectWidget:
 		self.itemnum = ctlid
 		self.menu = None
 		self.choice = None
-		tp, h, rect = self.wid.GetDialogItem(self.itemnum)
+		tp, h, self.rect = self.wid.GetDialogItem(self.itemnum)
 		self.control = h.as_Control()
 		self.setitems(items, default)
 		self.usercallback = callback
@@ -1286,10 +1292,14 @@ class SelectWidget:
 		self.menu = SelectPopupMenu(items)
 		mhandle, mid = self.menu.getpopupinfo()
 		self.control.SetPopupData(mhandle, mid)
+		self.control.SetControlMinimum(1)
+		self.control.SetControlMaximum(len(items)+1)
 		if default != None:
 			self.select(default)
 		
 	def select(self, item):
+		if item in self.data:
+			item = self.data.index(item)
 		self.control.SetControlValue(item+1)
 		
 	def click(self, event=None):
