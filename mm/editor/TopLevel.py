@@ -512,7 +512,14 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if self.player: self.player.stop_callback()
 		self.export_to_html_time(pathname)
 		if sys.platform=='win32':
-			windowinterface.shell_execute(pathname,'open')
+			# Hardcoded for now. Should be read from the registry
+			iepath = r'C:\Program Files\Internet Explorer'
+			iepath = os.path.join(iepath, 'iexplore.exe')
+			try:
+				import win32api
+				win32api.WinExec(iepath + ' ' + pathname)
+			except:
+				pass
 
 
 	def export(self, exporttype):
