@@ -37,13 +37,13 @@ class TransitionView(TransitionViewDialog):
 		self.editmgr.unregister(self)
 		TransitionViewDialog.hide(self)
 
-	def transaction(self):
+	def transaction(self,type):
 		return 1		# It's always OK to start a transaction
 
 	def rollback(self):
 		pass
 
-	def commit(self):
+	def commit(self, type=None):
 		transitions = self.context.transitions
 		trnames = transitions.keys()
 		trnames.sort()

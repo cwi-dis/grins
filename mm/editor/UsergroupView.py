@@ -37,13 +37,13 @@ class UsergroupView(UsergroupViewDialog):
 		self.editmgr.unregister(self)
 		UsergroupViewDialog.hide(self)
 
-	def transaction(self):
+	def transaction(self, type):
 		return 1		# It's always OK to start a transaction
 
 	def rollback(self):
 		pass
 
-	def commit(self):
+	def commit(self, type=None):
 		usergroups = self.context.usergroups
 		for key in self.editors.keys():
 			if not usergroups.has_key(key):
@@ -101,13 +101,13 @@ class UsergroupEdit(UsergroupEditDialog):
 		self.__editmgr.register(self)
 		UsergroupEditDialog.__init__(self, ugroup, title, ustate, override, uid)
 
-	def transaction(self):
+	def transaction(self, type):
 		return 1		# It's always OK to start a transaction
 
 	def rollback(self):
 		pass
 
-	def commit(self):
+	def commit(self, type):
 		if self.__parent is not None:
 			self.restore_callback()
 
