@@ -879,26 +879,6 @@ BEGIN
     LTEXT           "Node type",IDC_31,12,56,73,8
 END
 
-IDD_EDITATTR_FO1 DIALOG DISCARDABLE  0, 0, 300, 164
-STYLE WS_CHILD
-FONT 8, "MS Sans Serif"
-BEGIN
-    LTEXT           "Fadeout",IDC_11,12,24,73,8
-    CONTROL         "off",IDC_12,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,92,
-                    20,24,10
-    CONTROL         "on",IDC_13,"Button",BS_AUTORADIOBUTTON,140,21,24,10
-    GROUPBOX        "",IDC_GROUP1,87,15,199,18
-    LTEXT           "",IDC_31,13,40,73,8
-    EDITTEXT        IDC_32,87,38,199,12,ES_AUTOHSCROLL
-    LTEXT           "",IDC_41,13,56,73,8
-    EDITTEXT        IDC_42,87,54,199,12,ES_AUTOHSCROLL
-    LTEXT           "Fadeout Color",IDC_21,13,72,73,8
-    EDITTEXT        IDC_22,87,70,146,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "&Pick Color...",IDC_23,236,70,50,12
-    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
-    GROUPBOX        "Fadeout",IDC_GROUP1,6,10,287,115
-END
-
 IDD_EDITATTR_S1R3S5 DIALOG DISCARDABLE  0, 0, 300, 164
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
@@ -1092,6 +1072,29 @@ BEGIN
     COMBOBOX        IDC_52,179,112,110,52,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     GROUPBOX        "Image quality",IDC_51,173,102,121,29
+END
+
+IDD_EDITATTR_TF1 DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_22,86,14,199,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_12,86,30,199,12,ES_AUTOHSCROLL
+    CONTROL         "off",IDC_32,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,11,
+                    59,24,10
+    CONTROL         "on",IDC_33,"Button",BS_AUTORADIOBUTTON,48,59,24,10
+    EDITTEXT        IDC_42,86,70,199,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_52,86,86,199,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_62,86,102,146,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Pick Color...",IDC_63,235,102,50,12
+    LTEXT           "Transition duration",IDC_11,12,32,73,8
+    LTEXT           "Begin time",IDC_21,12,16,73,8
+    LTEXT           "Fadeout begin time",IDC_41,12,72,73,8
+    LTEXT           "Fadeout duration",IDC_51,12,88,73,8
+    LTEXT           "Fadeout color",IDC_61,12,104,73,8
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    GROUPBOX        "Fadeout",IDC_31,6,49,286,79
+    GROUPBOX        "Fadein",IDC_GROUP1,6,4,286,45
 END
 
 

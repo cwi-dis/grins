@@ -2135,7 +2135,6 @@ class DurationParGroup(AttrGroup):
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_P4
 
-
 # base_winoff
 class LayoutGroup(AttrGroup):
 	data=attrgrsdict['base_winoff']
@@ -2389,25 +2388,29 @@ class FileGroup(AttrGroup):
 		return	cd
 
 
-class FadeoutGroup(AttrGroup):
-	data=attrgrsdict['fadeout']
+class TimingFadeoutGroup(AttrGroup):
+	data=attrgrsdict['timingfadeout']
 
 	def __init__(self):
 		AttrGroup.__init__(self,self.data)
 
 	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_FO1
+		return grinsRC.IDD_EDITATTR_TF1
 
 	def createctrls(self,wnd):
 		cd = {}
+		a = self.getattr('tduration')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
+		a = self.getattr('start')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
 		a = self.getattr('fadeout')
-		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13))
-		a = self.getattr('fadeoutcolor')
-		cd[a] = ColorCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23))
+		cd[a] = OptionsRadioNocolonCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32,grinsRC.IDC_33))
 		a = self.getattr('fadeouttime')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
-		a = self.getattr('fadeoutduration')
 		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42))
+		a = self.getattr('fadeoutduration')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_51,grinsRC.IDC_52))
+		a = self.getattr('fadeoutcolor')
+		cd[a] = ColorCtrl(wnd,a,(grinsRC.IDC_61,grinsRC.IDC_62,grinsRC.IDC_63))
 		return cd
 
 ##	def oninitdialog(self,wnd):
@@ -2451,11 +2454,11 @@ groupsui={
 
 	'timing1':DurationGroup,
 	'timing2':Duration2Group,
+	'timingfadeout':TimingFadeoutGroup,
 	'timingpar':DurationParGroup,
 	'webserver':WebserverGroup,
 	'mediaserver':MediaserverGroup,
 	'file':FileGroup,
-	'fadeout':FadeoutGroup,
 	'wipe':WipeGroup,
 	}
 ###########################

@@ -110,6 +110,7 @@
 #define IDD_EDITATTR_CH1                352
 #define IDD_EDITATTR_D1                 353
 #define IDD_EDITATTR_LS1O3              354
+#define IDD_EDITATTR_TF1                355
 #define IDC_EXPLANATION                 1002
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
@@ -232,7 +233,9 @@
 #define IDC_13                          1156
 #define IDC_31                          1157
 #define IDC_32                          1158
+#define IDC_33x                         1158
 #define IDC_33                          1159
+#define IDC_34                          1159
 #define IDC_41                          1160
 #define IDC_42                          1161
 #define IDC_43                          1162
@@ -273,6 +276,7 @@
 #define IDC_STALLCOUNT                  1198
 #define IDC_ERRORCOUNT                  1199
 #define IDC_CANCEL                      1202
+#define IDC_32x                         1203
 #define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
@@ -351,7 +355,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        276
 #define _APS_NEXT_COMMAND_VALUE         32860
-#define _APS_NEXT_CONTROL_VALUE         1203
+#define _APS_NEXT_CONTROL_VALUE         1204
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
