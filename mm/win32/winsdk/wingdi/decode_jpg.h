@@ -14,15 +14,13 @@
 #endif
 
 #ifndef JPEGLIB_H
+// avoid macro redefinition warning
 #undef HAVE_STDDEF_H
 #undef HAVE_STDLIB_H
 extern "C" {
 #include "../../../../lib-src/jpeg/jpeglib.h"
 }
-#define HAVE_STDDEF_H
-#define HAVE_STDLIB_H
 #endif
-
 
 class JpgDecoder : public ImgDecoder
 	{
@@ -40,6 +38,9 @@ class JpgDecoder : public ImgDecoder
 
 	private:
 	void write_pixel_rows(j_decompress_ptr cinfo, surface<le::trible> *psurf);
+	
+	void create_buffer(int row_width);
+	void free_buffer();
 
 	JSAMPARRAY m_dbuffer;
 	JDIMENSION m_dbuffer_height;
@@ -48,18 +49,32 @@ class JpgDecoder : public ImgDecoder
 
 inline JpgDecoder::JpgDecoder(memfile& mf, HDC hDC, ERROR_FUNCT ef)
 :	ImgDecoder(mf, hDC, ef), 
-	m_dbuffer(NULL), m_dbuffer_height(1),
+	m_dbuffer(0), m_dbuffer_height(1),
 	m_cur_output_row(0)
 	{
 	}
 
 inline JpgDecoder::~JpgDecoder()
 	{
-	if(m_dbuffer != NULL)
+	if(m_dbuffer != 0) free_buffer();
+	}
+
+inline void JpgDecoder::create_buffer(int row_width)
+	{
+	if(m_dbuffer != 0) free_buffer();
+	m_dbuffer = new JSAMPROW[m_dbuffer_height];
+	for(JDIMENSION i=0;i<m_dbuffer_height;i++)
+		m_dbuffer[i] = new JSAMPLE[row_width];
+	}
+
+inline void JpgDecoder::free_buffer()
+	{
+	if(m_dbuffer != 0)
 		{
 		for(JDIMENSION i=0;i<m_dbuffer_height;i++)
 			delete[] m_dbuffer[i];
 		delete[] m_dbuffer;
+		m_dbuffer = 0;
 		}
 	}
 
@@ -103,17 +118,8 @@ inline DIBSurf* JpgDecoder::decode()
 	JDIMENSION row_width = cinfo.output_width * cinfo.output_components;
 	
 	// release/create buffer
-	if(m_dbuffer != NULL)
-		{
-		for(JDIMENSION i=0;i<m_dbuffer_height;i++)
-			delete[] m_dbuffer[i];
-		delete[] m_dbuffer;
-		m_dbuffer = NULL;
-		}
-	m_dbuffer_height = 1;
-	m_dbuffer = new JSAMPROW[m_dbuffer_height];
-	for(JDIMENSION i=0;i<m_dbuffer_height;i++)
-		m_dbuffer[i] = new JSAMPLE[row_width];
+	if(m_dbuffer != 0) free_buffer();
+	create_buffer(row_width);
 
 	int width = cinfo.output_width;
 	int height = cinfo.output_height;
@@ -125,6 +131,7 @@ inline DIBSurf* JpgDecoder::decode()
 	if(hBmp==NULL || pBits==NULL)
 		{
 		(*m_ef)("CreateDIBSection", "");
+		jpeg_destroy_decompress(&cinfo);
 		return NULL;
 		}
 
@@ -139,9 +146,10 @@ inline DIBSurf* JpgDecoder::decode()
 			write_pixel_rows(&cinfo, psurf);
 		}
 
-	// cleanup
+	// jpeg cleanup
 	jpeg_finish_decompress(&cinfo);
 	jpeg_destroy_decompress(&cinfo);
+
 	return new DIBSurf(hBmp, psurf);
 	}
 
