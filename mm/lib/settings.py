@@ -12,7 +12,7 @@ SMIL10 = 'SMIL 1.0'
 G2 = 'g2'
 
 # settings that cannot be changed when running
-noprearm = 0				# don't prearm
+noprearm = 1				# don't prearm
 
 # Defaults:
 default_settings = {
