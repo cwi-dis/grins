@@ -122,8 +122,8 @@ class _DisplayList:
 		   render_now = 1
 		else:
 			render_now = self._can_render_now()
+		Qd.SetPort(window._wid)
 		if render_now:
-			Qd.SetPort(window._wid)
 			if not window._clip:
 				window._mkclip()
 			saveclip = Qd.NewRgn()
