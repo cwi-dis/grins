@@ -160,6 +160,8 @@ class MMParser:
 		tuple = ()
 		for func, arg in funcarglist:
 			v = func(self, arg)
+			if v is None and func == self.basicparsers['optenclosed']:
+				continue
 			tuple = tuple + (v,)
 		return tuple
 	#
@@ -242,6 +244,11 @@ class MMParser:
 #				pass
 #		raise MTypeError, 'union'
 	#
+	def getoptenclosedvalue(self, (func, arg)):
+		t = self.peektoken()
+		if t == '(':
+			return self.getenclosedvalue((func, arg))
+
 	def getenclosedvalue(self, (func, arg)):
 		self.open()
 		v = func(self, arg)
@@ -277,6 +284,8 @@ class MMParser:
 		elif type == 'attrdict':
 			pass
 		elif type == 'enclosed':
+			arg = self.gettypevalue(None)
+		elif type == 'optenclosed':
 			arg = self.gettypevalue(None)
 		elif type == 'type':
 			pass
@@ -326,6 +335,7 @@ class MMParser:
 		'namedict': getnamedictvalue, \
 		'attrdict': getattrdictvalue, \
 		'enclosed': getenclosedvalue, \
+		'optenclosed':getoptenclosedvalue, \
 		'type': gettypevalue, \
 		'any': getanyvalue, \
 		}
