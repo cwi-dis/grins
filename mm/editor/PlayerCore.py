@@ -240,10 +240,13 @@ class PlayerCore(Selecter):
 				i = self.context.channelnames.index(name)
 				self.channelnames.insert(i, name)
 		if self.showing:
-			# (3) Update visibility of all channels
+			# (3) reset all variable _want_shown to zero
+			for name in self.channelnames:
+				self.channels[name]._want_shown = 0
+			# (4) Update visibility of all channels
 			for name in self.channelnames:
 				self.channels[name].check_visible()
-			# (4) Update layout and menu
+			# (5) Update layout and menu
 			self.setlayout(self.curlayout, self.curchannel)
 		self.__checkichannels()
 
