@@ -98,6 +98,16 @@ class ImageLib:
 		if self._transpdict.has_key(img):
 			del self._transpdict[img]
 
+	# Create a DDB
+	def createDDB(self,img, w=0, h=0):
+		if img<0:return
+		if w==0 or h==0:
+			w,h,d=self.size(img)
+		hbmp,hpal=self.lib.image_create_ddb(img,w,h)
+		bmp = win32ui.CreateBitmapFromHandle(hbmp)
+		win32ui.GetWin32Sdk().DeleteObject(hpal)
+		return bmp
+
 	# Return the absolute filename
 	def toabs(self,filename):
 		import os,ntpath
