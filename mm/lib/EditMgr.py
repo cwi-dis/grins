@@ -194,6 +194,14 @@ class EditMgr:
 	# experimental SMIL Boston layout code
 	def defnewchannel(self, node, layoutchannel):
 		type = node._internalchtype
+		if type is None:
+			import MMAttrdefs
+			types = self.context.compatchtypes(MMAttrdefs.getattr(node, 'file'))
+			if types:
+				type = types[0]
+			else:
+				# couldn't figure out a channel type
+				type = 'null' # choose a default
 		lname = layoutchannel.name
 		name = lname + ' %d'
 		i = 0
@@ -203,9 +211,9 @@ class EditMgr:
 		self.context.addchannel(name, 0, type)
 		ch = self.context.channeldict[name]
 		ch['base_window'] = lname
-		if ch.has_key('base_winoff'):
+		if layoutchannel.has_key('base_winoff'):
 			x, y, w, h = layoutchannel['base_winoff']
-		elif ch.has_key('winsize'):
+		elif layoutchannel.has_key('winsize'):
 			w, h = layoutchannel['winsize']
 		else:
 			w, h = 100, 100	
