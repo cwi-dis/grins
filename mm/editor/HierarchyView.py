@@ -529,11 +529,11 @@ class HierarchyView(HierarchyViewDialog):
 			windowinterface.beep()
 			return
 		if obj.node is self.focusnode:
-			# Double click -- zoom in or out
-			if self.viewroot is not self.focusnode:
-				self.viewroot = self.focusnode
-				self.recalc()
-				self.draw()
+##			# Double click -- zoom in or out
+##			if self.viewroot is not self.focusnode:
+##				self.viewroot = self.focusnode
+##				self.recalc()
+##				self.draw()
 			return
 		self.init_display()
 		self.setfocusobj(obj)
@@ -891,34 +891,30 @@ class Object:
 			color = 255, 0, 0 # Red -- error indicator
 		d.drawfbox(color, (l, t, r - l, b - t))
 		self.drawfocus()
-		# Draw the name, centered in the box
-		if node.GetType() in MMNode.leaftypes:
-			b1 = b
-			# Leave space for the channel if at all possible
-			if b1-t-vmargin >= 2*titleheight:
-				b1 = b1 - titleheight
-				# And draw it now
-				self.drawchannelname(l+hmargin/2, b1,
-						     r-hmargin/2, b-vmargin/2)
-				# draw thumbnail if enough space
-				if self.mother.thumbnails and \
-				   b1-t-vmargin >= 2*titleheight and \
-				   r-l >= hmargin * 4.5 and \
-				   node.GetChannelType() == 'image':
-					import MMurl
-					try:
-						f = MMurl.urlretrieve(node.context.findurl(MMAttrdefs.getattr(node, 'file')))[0]
-					except IOError:
-						pass
-					else:
-						box = d.display_image_from_file(f, center = 0, coordinates = (l+hmargin, t+vmargin, r-l-2*hmargin, 2*titleheight))
-						d.fgcolor(TEXTCOLOR)
-						d.drawbox(box)
-						t = box[1] + box[3]
-		else:
-			b1 = min(b, t + titleheight + vmargin)
+##		if node.GetChannelType() == 'image': import pdb; pdb.set_trace()
+		t1 = min(b, t + titleheight + vmargin)
+		if node.GetType() in MMNode.leaftypes and \
+		   b-t-vmargin >= 2*titleheight:
+			b1 = b - titleheight
+			# draw channel name along bottom of box
+			self.drawchannelname(l+hmargin/2, b1,
+					     r-hmargin/2, b-vmargin/2)
+			# draw thumbnail if enough space
+			if self.mother.thumbnails and \
+			   b1-t1 >= 2*titleheight and \
+			   r-l >= hmargin * 4.5 and \
+			   node.GetChannelType() == 'image':
+				import MMurl
+				try:
+					f = MMurl.urlretrieve(node.context.findurl(MMAttrdefs.getattr(node, 'file')))[0]
+				except IOError:
+					pass
+				else:
+					box = d.display_image_from_file(f, center = 1, coordinates = (l+hmargin, (t1+b1)/2-titleheight, r-l-2*hmargin, 2*titleheight))
+					d.fgcolor(TEXTCOLOR)
+					d.drawbox(box)
 		d.fgcolor(TEXTCOLOR)
-		d.centerstring(l, t, r, b1, self.name)
+		d.centerstring(l, t, r, t1, self.name)
 		# If this is a node with suppressed detail,
 		# draw some lines
 		if self.boxtype == LEAFBOX and \
