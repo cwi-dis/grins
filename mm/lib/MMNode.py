@@ -732,7 +732,7 @@ class MMNode:
 	# Find the first mini-document in a tree
 
 	def FirstMiniDocument(self):
-		if self.GetType() <> 'bag':
+		if self.IsMiniDocument():
 			return self
 		for child in self.GetChildren():
 			mini = child.FirstMiniDocument()
@@ -743,7 +743,7 @@ class MMNode:
 	# Find the last mini-document in a tree
 
 	def LastMiniDocument(self):
-		if self.GetType() <> 'bag':
+		if self.IsMiniDocument():
 			return self
 		res = None
 		for child in self.GetChildren():
