@@ -1,0 +1,15 @@
+;/***********************************************************
+;Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
+;
+;                        All Rights Reserved
+;
+;******************************************************************/
+
+LIBRARY         vidpipe.ax
+DESCRIPTION     'Oratrix Video Pipe Filter'
+EXPORTS
+                DllGetClassObject PRIVATE
+                DllCanUnloadNow PRIVATE
+                DllUnregisterServer PRIVATE
+                DllRegisterServer PRIVATE
+
