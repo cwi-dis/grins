@@ -1147,8 +1147,10 @@ class ChannelWindow(Channel):
 			STOP(callback = (ui.stop_callback, ())),
 			MAGIC_PLAY(callback = (ui.magic_play, ())),
 			CHANNELS(callback = ui.channel_callback),
-			SCHEDDUMP(callback = (ui.scheduler.dump, ())),
 			]
+		if __debug__:
+			self.commandlist.append(
+				SCHEDDUMP(callback = (ui.scheduler.dump, ())))
 
 	def destroy(self):
 		del self._player.ChannelWinDict[self._name]
