@@ -21,27 +21,7 @@ toplevel=None
 import os
 import sys
 	
-def GuessCMIFRoot():
-	try:
-		# hopefully we can import this
-		import win32api
-	except ImportError:
-		pass
-	else:
-		selfDir = win32api.GetFullPathName(os.path.join(os.path.split(sys.argv[0])[0], "." ))
-		l = selfDir.split('\\')
-		dir = ''
-		for s in l:
-			dir = dir + s
-			for sub in ('editor','grins','common','lib'):
-				if not os.path.exists(os.path.join(dir, sub)):
-					break
-			else:
-				return dir
-			dir = dir + '\\'
-	return r'D:\ufs\mm\cmif'	# default, in case we can't find the directory dynamically
-
-CMIFDIR = GuessCMIFRoot()
+CMIFDIR=r'\cmif'
 
 # TEMP TEST FOLDER
 
@@ -55,8 +35,8 @@ else:
 
 CMIFPATH = [
 	os.path.join(CMIFDIR, r'bin\win32'),
-	os.path.join(CMIFDIR, r'%s\ambulant\win32' % specificPath),
-	os.path.join(CMIFDIR, r'%s\ambulant' % specificPath),
+	os.path.join(CMIFDIR, r'%s\smil20\win32' % specificPath),
+	os.path.join(CMIFDIR, r'%s\smil20' % specificPath),
 	os.path.join(CMIFDIR, r'%s\win32' % specificPath),
 ##	os.path.join(CMIFDIR, r'mmextensions\real\win32'),
 	os.path.join(CMIFDIR, r'common\win32'),
@@ -88,7 +68,7 @@ from win32con import *
 import win32ui
 import traceback
 
-from version import registryname, registrykey, dllname
+from version import registryname, registrykey
 win32ui.SetAppName(registryname)
 win32ui.SetRegistryKey(registrykey)
 
@@ -121,6 +101,7 @@ def Boot(what = 0):
 	# Locate the GRiNSRes.dll file.  This is presumably in the same directory as
 	# the extensionmodules, or if frozen, in the main directory
 	# This call allows Pythonwin to automatically find resources in it.
+	from version import dllname
 	import win32ui
 	dllPath = os.path.split(win32ui.__file__)[0]
 	try:
@@ -140,5 +121,20 @@ def Boot(what = 0):
 			import cmifed
 	except SystemExit, rc:
 		win32ui.GetMainFrame().PostMessage(WM_CLOSE)
+
+
+def GuessCMIFRoot():
+	selfDir = win32api.GetFullPathName(os.path.join(os.path.split(sys.argv[0])[0], "." ))
+	l = selfDir.split('\\')
+	dir = ''
+	for s in l:
+		dir = dir + s
+		for sub in ('editor','grins','common','lib'):
+			if not os.path.exists(os.path.join(dir, sub)):
+				break
+		else:
+			return dir
+		dir = dir + '\\'
+	return r'D:\ufs\mm\cmif'	# default, in case we can't find the directory dynamically
 
 Boot(WHAT)

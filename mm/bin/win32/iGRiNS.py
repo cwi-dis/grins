@@ -7,7 +7,7 @@
 
 ##################### Settings
 
-WHAT=PLAYER  # <-- What to run
+WHAT=EDITOR  # <-- What to run
 what=WHAT
 
 # if WHAT is SUBSYSTEM specify subsystemModuleName
@@ -55,17 +55,17 @@ else:
 
 CMIFPATH = [
 	os.path.join(CMIFDIR, r'bin\win32'),
-	os.path.join(CMIFDIR, r'%s\ambulant\win32' % specificPath),
-	os.path.join(CMIFDIR, r'%s\ambulant' % specificPath),
 	os.path.join(CMIFDIR, r'%s\win32' % specificPath),
-##	os.path.join(CMIFDIR, r'mmextensions\real\win32'),
+	os.path.join(CMIFDIR, r'%s\g2pro' % specificPath),
+	os.path.join(CMIFDIR, r'%s\g2pro\win32' % specificPath),
+	os.path.join(CMIFDIR, r'mmextensions\real\win32'),
 	os.path.join(CMIFDIR, r'common\win32'),
 	os.path.join(CMIFDIR, r'lib\win32'),
 	os.path.join(CMIFDIR, r'%s' % specificPath),
 	os.path.join(CMIFDIR, r'common'),
 	os.path.join(CMIFDIR, r'lib'),
 	os.path.join(CMIFDIR, r'pylib'),
-##	os.path.join(CMIFDIR, r'pylib\audio'),
+#	os.path.join(CMIFDIR, r'pylib\audio'),
 	os.path.join(CMIFDIR, r'win32\src\Build'),
 	os.path.join(os.path.split(CMIFDIR)[0], r'python\Lib')
 ]
@@ -87,10 +87,6 @@ import win32api
 from win32con import *
 import win32ui
 import traceback
-
-from version import registryname, registrykey, dllname
-win32ui.SetAppName(registryname)
-win32ui.SetRegistryKey(registrykey)
 
 def SafeCallbackCaller(fn, args):
 	try:
@@ -121,6 +117,7 @@ def Boot(what = 0):
 	# Locate the GRiNSRes.dll file.  This is presumably in the same directory as
 	# the extensionmodules, or if frozen, in the main directory
 	# This call allows Pythonwin to automatically find resources in it.
+	from version import dllname
 	import win32ui
 	dllPath = os.path.split(win32ui.__file__)[0]
 	try:
@@ -131,14 +128,12 @@ def Boot(what = 0):
 		win32ui.MessageBox("The application resource DLL '%s' can not be located\r\n\r\nPlease correct this problem, and restart the application" % dllname)
 		# For now just continue!?!?!
 	# run the given cmif file
-	try:
-		if what==PLAYER:
-			import grins
-		elif what==SUBSYSTEM:
-			exec 'import %s\n' % subsystemModuleName
-		else:
-			import cmifed
-	except SystemExit, rc:
-		win32ui.GetMainFrame().PostMessage(WM_CLOSE)
+	if what==PLAYER:
+		import grins
+	elif what==SUBSYSTEM:
+		exec 'import %s\n' % subsystemModuleName
+	else:
+		import cmifed
+
 
 Boot(WHAT)

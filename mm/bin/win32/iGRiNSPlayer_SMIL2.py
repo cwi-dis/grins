@@ -55,8 +55,8 @@ else:
 
 CMIFPATH = [
 	os.path.join(CMIFDIR, r'bin\win32'),
-	os.path.join(CMIFDIR, r'%s\ambulant\win32' % specificPath),
-	os.path.join(CMIFDIR, r'%s\ambulant' % specificPath),
+	os.path.join(CMIFDIR, r'%s\smil20\win32' % specificPath),
+	os.path.join(CMIFDIR, r'%s\smil20' % specificPath),
 	os.path.join(CMIFDIR, r'%s\win32' % specificPath),
 ##	os.path.join(CMIFDIR, r'mmextensions\real\win32'),
 	os.path.join(CMIFDIR, r'common\win32'),
