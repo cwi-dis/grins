@@ -2404,7 +2404,8 @@ class SMILWriter(SMIL):
 			windowinterface.showmessage(msg)
 			u = MMurl.urlopen(srcurl)
 		if convert and u.headers.maintype == 'image' and \
-		   u.headers.subtype != 'svg-xml':
+		   u.headers.subtype != 'svg-xml' and \
+		   string.find(u.headers.subtype, 'real') < 0:
 			from realconvert import convertimagefile
 			# XXXX This is a hack. convertimagefile may change the filename (and
 			# will, currently, to '.jpg').
