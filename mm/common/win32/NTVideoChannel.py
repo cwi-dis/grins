@@ -230,7 +230,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			else:
 				if not self.__windowless_wm_rendering:
 					self.window.CreateOSWindow(rect=self.getMediaWndRect())
-				if not self.__mc.playit(node, self.window, start_time):
+				if not self.__mc.playit(node, curtime, self.window, start_time):
 					windowinterface.showmessage('Failed to play media file', mtype = 'warning')
 					self.playdone(0, curtime)
 

@@ -623,10 +623,10 @@ class Channel:
 			else:
 				node = self._played_node
 				sctx = self._playcontext
-			sctx.sched_arcs(node, event, external = 1)
+			sctx.sched_arcs(node, self._scheduler.timefunc(), event, external = 1)
 		else:
 			self._played_node.event(self._playcontext.parent.timefunc(), event)
-			self._playcontext.sched_arc(self._played_node, arc, event, external = 1)
+			self._playcontext.sched_arc(self._played_node, arc, self._scheduler.timefunc(), event, external = 1)
 
 	def play_1(self, curtime):
 		# This does the final part of playing a node.  This
