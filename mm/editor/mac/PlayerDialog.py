@@ -30,7 +30,7 @@ class PlayerDialog:
 
 	# Adornments for first channel window opened and further windows:
 	adornments = MenuTemplate.PLAYER_ADORNMENTS
-	adornments2 = {}
+	adornments2 = MenuTemplate.CHANNEL_ADORNMENTS
 	
 	def __init__(self, coords, title):
 		"""Create the Player dialog.
