@@ -143,7 +143,7 @@ def InitEditors():
     # XXX Should add the directory where the .cmif file resides...
     # XXX (toplevel.dirname)
     import cmif
-    dirs = ['.', os.environ['HOME'], cmif.findfile('mm4')]
+    dirs = ['.', os.environ['HOME'], cmif.findfile('editor')]
     for dirname in dirs:
     	filename = os.path.join(dirname, '.cmif_editors')
     	try:
@@ -161,19 +161,22 @@ def showeditor(node):
 	done = _convert(node)
 	if not done: return
     if node.GetType() <> 'ext':
-	# Only extern nodes can be edited.
+	print 'NodeEdit.showeditor: Only extern nodes can be edited'
 	gl.ringbell()
 	return
     filename = MMAttrdefs.getattr(node,'file')
     chtype = node.GetChannelType()
     try:
-	if not channeleditors.has_key(chtype): raise _LocalError
+	if not channeleditors.has_key(chtype):
+	    print 'NodeEdit.showeditor: no editors for chtype', chtype
+	    raise _LocalError
 	editor = channeleditors[chtype]
 	if type(editor) == type(''):
 	    cmd = editor
 	else:
 	    cmd = _showmenu(editor)
 	    if cmd == None:
+		print 'NodeEdit.showeditor: no editor chosen'
 		raise _LocalError
 	cmd = 'file='+filename+' ; '+cmd+' &'
 	void = os.system(cmd)
