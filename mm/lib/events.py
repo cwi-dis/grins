@@ -94,7 +94,7 @@ class _Events:
 				if not w:
 					break
 				w = w._parent_window
-				if w == windowinterface._toplevel:
+				if w == windowinterface.toplevel:
 					break
 		return 0
 

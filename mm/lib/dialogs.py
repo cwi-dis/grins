@@ -46,7 +46,7 @@ NOMSG = ' No '				# text of "No" answer of showquestion
 DEFBUTTON = '!'				# indicates this is default button
 DEFANSWER = '\r', '\n'			# keys that trigger default answer
 
-import windowinterface, events, EVENTS, string
+import windowinterface, EVENTS, string
 
 from debug import debug
 
@@ -222,10 +222,10 @@ class Dialog:
 
 	def eventloop(self):
 		windowinterface.startmonitormode()
-		events.startmodal()
+		windowinterface.startmodal()
 		self.events = []
 		while 1:
-			window, event, value = events.readevent()
+			window, event, value = windowinterface.readevent()
 			retval = self.checkevent(window, event, value)
 			if retval:
 				for (window, event, value) in self.events:
@@ -233,7 +233,7 @@ class Dialog:
 						  event, value)
 				self.events = []
 				windowinterface.endmonitormode()
-				events.endmodal()
+				windowinterface.endmodal()
 				return retval
 
 	def close(self):
@@ -246,13 +246,6 @@ def showdialog(*text):
 	return r
 
 def showmessage(text):
-##	if hasattr(windowinterface, 'Xt'):
-##		import Xm, Xmd
-##		dialog = Xm.CreateMessageDialog(windowinterface._toplevel._main, 'popup', {'messageString': text})
-##		Xm.MessageBoxGetChild(dialog, Xmd.DIALOG_CANCEL_BUTTON).UnmanageChild()
-##		Xm.MessageBoxGetChild(dialog, Xmd.DIALOG_HELP_BUTTON).UnmanageChild()
-##		dialog.ManageChild()
-##		return
 	dummy = showdialog(text, DEFBUTTON + DONEMSG)
 
 def showquestion(text):
@@ -279,7 +272,7 @@ def multchoice(prompt, list, defindex):
 	return None
 		
 def getstring(prompt):
-	events.startmodal()
+	windowinterface.startmodal()
 	fg = 0, 0, 0
 	bg = 255, 255, 255
 	w = windowinterface.newwindow(0,0,50,10,'DIALOG')
@@ -301,10 +294,10 @@ def getstring(prompt):
 	redraw = 0
 	curpos = 0
 	while 1:
-		win, ev, val = events.readevent()
+		win, ev, val = windowinterface.readevent()
 		if ev == EVENTS.WindowExit:
 			w.close()
-			events.endmodal()
+			windowinterface.endmodal()
 			return None
 		elif ev == EVENTS.ResizeWindow:
 			redraw = 1
@@ -316,7 +309,7 @@ def getstring(prompt):
 					curpos = curpos - 1
 			elif val in ('\033', '\n', '\r'):
 				w.close()
-				events.endmodal()
+				windowinterface.endmodal()
 				return str
 			elif ' ' <= val <= '~':
 				str = str[:curpos] + val + str[curpos:]
