@@ -870,7 +870,7 @@ class _DisplayList:
 				  image[(im_w*im_y+im_x)*depth:]))
 			d.append(gl.pixmode, (GL.PM_STRIDE, 0))
 		return float(win_x) / window._rect[_WIDTH], \
-			  float(win_y) / window._rect[_HEIGHT}, \
+			  float(win_y) / window._rect[_HEIGHT], \
 			  float(win_w) / window._rect[_WIDTH], \
 			  float(win_h) / window._rect[_HEIGHT]
 
@@ -1171,7 +1171,7 @@ class _Window:
 		gl.gconfig()
 		gl.reshapeviewport()
 		width, height = gl.getsize()
-		self._rect = (0, 0) + width, height
+		self._rect = 0, 0, width, height
 		gl.ortho2(-0.5, width - 0.5, -0.5, height - 0.5)
 		toplevel._win_lock.release()
 		self._bgcolor = self._parent_window._bgcolor
@@ -1262,6 +1262,15 @@ class _Window:
 
 	def is_closed(self):
 		return not hasattr(self, '_displaylists')
+
+	def showwindow(self):
+		self._drawbox = 1
+		self._redraw()
+
+	def dontshowwindow(self):
+		if self._drawbox:
+			self._drawbox = 0
+			self._redraw()
 
 	def fgcolor(self, *color):
 		if debug: print `self`+'.fgcolor()'
@@ -1437,7 +1446,7 @@ class _Window:
 
 	def _prepare_image_from_file(self, file, crop, scale):
 		global _cache_full
-		crop = top, bottom, left, right
+		top, bottom, left, right = crop
 		cachekey = `file`+':'+`self._rect[_WIDTH]`+'x'+`self._rect[_HEIGHT]`
 		if _image_cache.has_key(cachekey):
 			retval = _image_cache[cachekey]
