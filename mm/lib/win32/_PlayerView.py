@@ -9,7 +9,7 @@ from appcon import *
 # kick toplevel.serve_events()
 import __main__
 
-import win32ui
+import win32ui, win32api
 
 # win32 structures helpers
 import win32mu
@@ -33,6 +33,7 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		win32window.DDWndLayer.__init__(self, self, bgcolor)
 
 		self._viewport = None
+		self._ddmsgs = 0
 
 	def init(self, rc, title='View', units= UNIT_MM, adornments=None, canvassize=None, commandlist=None, bgcolor=None):
 		DisplayListView.init(self, rc, title=title, units=units, adornments=adornments, canvassize=canvassize,
@@ -43,10 +44,7 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		self.setClientRect(w, h)
 
 		mainframe = self.GetParent().GetMDIFrame()
-		if hasattr(mainframe, '_pbar') and mainframe._pbar is not None:
-			flag = not mainframe._pbar.IsWindowVisible()
-			if flag:
-				mainframe._pbar.show()
+		mainframe.assertPanelVisible()
 			
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
 		return self._viewport.newwindow(coordinates, pixmap, transparent, z, type_channel, units, bgcolor)
@@ -163,13 +161,17 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 	def update(self, rc=None, exclwnd=None):
 		if not self._ddraw or not self._frontBuffer or not self._backBuffer:
 			return
+		if not self.IsWindowVisible():
+			return
 		if self._frontBuffer.IsLost():
+			win32api.Sleep(0)
 			if not self._frontBuffer.Restore():
 				# we can't do anything for this
 				# system is busy with video memory
 				self.InvalidateRect(self.GetClientRect())
 				return
 		if self._backBuffer.IsLost():
+			win32api.Sleep(0)
 			if not self._backBuffer.Restore():
 				# and for this either
 				# system should be out of memory
@@ -180,7 +182,9 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		if rc and (rc[2]==0 or rc[3]==0): 
 			return 
 
-		self.paint(rc, exclwnd)
+		if not self.paint(rc, exclwnd):
+			self.InvalidateRect(self.GetClientRect())
+			return	
 		
 		if rc is None:
 			x, y, w, h = self._viewport._rect
@@ -193,7 +197,10 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		try:
 			self._frontBuffer.Blt(rcFront, self._backBuffer, rcBack)
 		except ddraw.error, arg:
-			print 'PlayerView.update', arg
+			if self._ddmsgs < 10:
+				print 'PlayerView.update', self._ddmsgs,  arg
+			self._ddmsgs = self._ddmsgs + 1
+			self.InvalidateRect(self.GetClientRect())
 	
 	def getDrawBuffer(self):
 		return self._backBuffer
@@ -215,14 +222,20 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		if self._convbgcolor == None:
 			self._convbgcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255, 255, 255) )
 		try:
+			if self._backBuffer.IsLost() and not self._backBuffer.Restore():
+				return 0
 			self._backBuffer.BltFill(rcPaint, self._convbgcolor)
 		except ddraw.error, arg:
-			print 'PlayerView.paint',arg
-			return
+			if self._ddmsgs < 10:
+				print 'PlayerView.paint',self._ddmsgs, arg
+			self._ddmsgs = self._ddmsgs + 1
+			return 0
 
 		if self._viewport:
 			self._viewport.paint(rc, exclwnd)
-		
+
+		return 1
+
 	def setClientRect(self, w, h):
 		w1, h1 = self.GetClientRect()[2:]
 		dw = w - w1
