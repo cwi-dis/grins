@@ -118,6 +118,9 @@ class _Toplevel:
 	def pop(self):
 		pass
 
+	def push(self):
+		pass
+
 	def getsize(self):
 		return _mscreenwidth, _mscreenheight
 
@@ -525,6 +528,13 @@ class _Window:
 		if toplevel._win_lock:
 			toplevel._win_lock.acquire()
 		self._form.RaiseWindow()
+		if toplevel._win_lock:
+			toplevel._win_lock.release()
+
+	def push(self):
+		if toplevel._win_lock:
+			toplevel._win_lock.acquire()
+		self._form.LowerWindow()
 		if toplevel._win_lock:
 			toplevel._win_lock.release()
 
