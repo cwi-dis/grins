@@ -187,6 +187,15 @@ class EditableMMNode(MMNode.MMNode):
 		em.addsyncarc(self, 'beginlist', e)
 		em.commit()
 
+	def GetCollapsedParent(self):
+		i = self.parent		# Don't return self if I'm collapsed.
+		while i is not None:
+			if i.collapsed == 1:
+				return i
+			else:
+				i = i.parent
+		return None
+
 ######################################################################
 	# Commands from the menus.
 	# Note that the commands should control the EditMgr - they
