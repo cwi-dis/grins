@@ -103,6 +103,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		ViewServer.__init__(self,self)
 		self._do_init(__main__.toplevel)
 		self._formServer=FormServer(self)
+		self.__playerstate = wndusercmd.TB_STOP
 	
 	# Create the OS window and set the toolbar	
 	def create(self,title):
@@ -599,6 +600,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 				id=usercmd_ui.id
 				self.enable_cmd(id)
 				self._activecmds[context][id]=cmd
+		self.setplayerstate(self.__playerstate)
 
 	# Dissable context commands
 	def dissable_context(self,context):
@@ -638,6 +640,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 	def setplayerstate(self, state):
 		import Player
 
+		self.__playerstate = state
 		tb_id_play=usercmdui.class2ui[wndusercmd.TB_PLAY].id
 		tb_id_pause=usercmdui.class2ui[wndusercmd.TB_PAUSE].id
 		tb_id_stop=usercmdui.class2ui[wndusercmd.TB_STOP].id

@@ -331,6 +331,10 @@
 #define IDC_IMMINSTMEDIA1               1236
 #define IDC_IMMINSTMEDIA2               1237
 #define IDC_IMMINSTMEDIA3               1238
+#define IDC_QTCOMPOSITEMODE             1239
+#define IDC_FRAME1                      1240
+#define IDC_FRAME2                      1241
+#define ID_STATIC4                      1242
 #define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
@@ -409,7 +413,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        288
 #define _APS_NEXT_COMMAND_VALUE         32860
-#define _APS_NEXT_CONTROL_VALUE         1239
+#define _APS_NEXT_CONTROL_VALUE         1241
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
