@@ -8,9 +8,8 @@ import MMAttrdefs
 
 class ViewDialog:
 	#
-	def init(self, geom_name):
+	def __init__(self, geom_name):
 		self.geom_name = geom_name
-		return self
 	#
 	def __repr__(self):
 		return '<ViewDialog instance, geom_name=' \
