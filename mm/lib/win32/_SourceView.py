@@ -13,14 +13,17 @@ import win32mu
 
 import usercmd
 
-from pywinlib.mfc import window,object,docview
+from pywinlib.mfc import window, object, docview
 import windowinterface
-import afxres,commctrl
+import afxres, commctrl
 
 import grinsRC, components
 from GenFormView import GenFormView
 
-class _SourceView(GenFormView):
+# XXX: this version is currently inactive 
+# XXX: will be removed soon
+# XXX: kept temporary for some days just for ref
+class _SourceViewXXX(GenFormView):
 	# Class contructor. Calls the base RichEditView constructor
 	def __init__(self,doc,bgcolor=None):
 		self.__showing = 0
@@ -210,3 +213,210 @@ class _SourceView(GenFormView):
 		if hasattr(self,'_obj_') and self._obj_:
 			self.GetParent().DestroyWindow()
 		self._cbdict = None
+
+
+###################################
+import win32ui, win32con, afxres
+
+import win32mu
+
+from pywinlib.mfc import docview
+
+import grinsRC, components
+from GenView import GenView
+					
+class _SourceView(GenView, docview.EditView):
+	def __init__(self, doc, bgcolor=None):
+		self.__showing = 0
+
+		# base init
+		GenView.__init__(self, bgcolor)
+		docview.EditView.__init__(self, doc)
+
+		# view decor
+		self._dlgBar = win32ui.CreateDialogBar()
+		self.__ok = components.Button(self._dlgBar,grinsRC.IDC_BUTTON1)
+		self.__apply = components.Button(self._dlgBar,grinsRC.IDC_BUTTON2)
+		self.__revert = components.Button(self._dlgBar,grinsRC.IDC_BUTTON3)
+
+		self.__text=''
+		self.__mother = None
+		self.__readonly = 0
+		self.__closecallback = None
+		self.__map0 = []
+		self.__map1 = []
+
+	def OnCreate(self, cs):
+		# create dialog bar and attach controls (though attachement effects are not used for buttons)
+		# dialog bar is not needed if we are readonly (player)
+		if self.__readonly: 
+			return
+		AFX_IDW_DIALOGBAR = 0xE805
+		self._dlgBar.CreateWindow(self.GetParent(), grinsRC.IDD_SOURCEEDIT1, afxres.CBRS_ALIGN_BOTTOM, AFX_IDW_DIALOGBAR)
+		self.__ok.attach_to_parent()
+		self.__apply.attach_to_parent()
+		self.__revert.attach_to_parent()
+
+	# Called by the framework after the OS window has been created
+	def OnInitialUpdate(self):
+		# redirect all command messages to self.OnCmd
+		self.GetParent().HookMessage(self.OnCmd, win32con.WM_COMMAND)
+
+		# we are now showing of course
+		self.__showing = 1
+
+		# set text and readonly flag
+		self.SetWindowText(self.__text)
+		self.SetReadOnly(self.__readonly)
+		
+		# enable/dissable dialog bar components according to MFC convention 
+		self.enableDlgBarComponent(self.__ok, 1)
+		self.enableDlgBarComponent(self.__apply, 0)
+		self.enableDlgBarComponent(self.__revert, 0)
+
+	def OnCmd(self, params):
+		if not self.is_showing():
+			return
+		editCtrl = self.GetEditCtrl()
+		if not editCtrl: 
+			return
+
+		# crack win32 message
+		msg=win32mu.Win32Msg(params)
+		code = msg.HIWORD_wParam()
+		id = msg.LOWORD_wParam()
+		hctrl = msg._lParam
+
+		# response/dispatch cmd
+		if hctrl == editCtrl.GetSafeHwnd():
+			if code == win32con.EN_CHANGE:
+				self.enableDlgBarComponent(self.__apply, 1)
+				self.enableDlgBarComponent(self.__revert, 1)
+		elif id == self.__ok._id:
+			self.__ok_callback()
+		elif id == self.__apply._id:
+			self.__apply_callback()
+		elif id == self.__revert._id:
+			self.__revert_callback()
+
+	def __ok_callback(self):
+		if self.__closecallback is not None:
+			apply(apply, self.__closecallback)
+		elif self.__mother is not None:
+			self.__mother.close_callback()
+
+	def __apply_callback(self):
+		if self.__mother is not None:
+			self.__mother.apply_callback()
+
+	def __revert_callback(self):
+		self.SetWindowText(self.__text)
+		self.SetModifiedFlag(1)
+		self.enableDlgBarComponent(self.__apply, 0)
+		self.enableDlgBarComponent(self.__revert, 0)
+
+	def setclosecmd(self, cmdid):
+		self._closecmdid = cmdid
+
+	def set_readonly(self, readonly):
+		self.__readonly = readonly
+		if self.__showing:
+			self.SetReadOnly(self.__readonly)
+
+	def set_closecallback(self, callback):
+		self.__closecallback = callback
+
+	# Set the text to be shown
+	def settext(self, text):
+		self.__text = self.__convert2ws(text)
+		# if already visible, update text in window
+		if self.__showing:
+			self.SetWindowText(self.__text)
+			
+	def gettext(self):
+		return self.GetWindowText()
+
+	def select_chars(self, startchar, endchar, scroll = 1, pop = 1):
+		# the text between startchar and endchar will be selected.
+		for p0, p1 in self.__map0:
+			if p0 <= startchar:
+				startchar = p1 + (startchar - p0)
+				break
+		for p0, p1 in self.__map0:
+			if p0 <= endchar:
+				endchar = p1 + (endchar - p0)
+				break
+		startline = len(self.__map1) - 1
+		for p0, p1 in self.__map1:
+			startline = startline - 1
+			if p0 <= startchar:
+				startchar = p1 + (startchar - p0)
+				break
+		endline = len(self.__map1) - 1
+		for p0, p1 in self.__map1:
+			endline = endline - 1
+			if p0 <= endchar:
+				endchar = p1 + (endchar - p0)
+				break
+		self.SetSel(startchar, endchar, not scroll)
+		if pop: self.pop()
+
+	def is_changed(self):
+		# Return true or false depending on whether the source view has been changed.
+		return self.IsModified()
+	
+	def set_mother(self, mother):
+		self.__mother = mother
+
+	# Convert the text from unix or mac to windows
+	def __convert2ws(self, text):
+		import string
+		# together the following three mappings normalize
+		# end-of-line sequences in any combination of the
+		# three standards to the Windows standard
+
+		# first map \r\n to \n (Windows to Unix)
+		# must do this first since we don't want to convert
+		# \r\n to \n\n in the next convertion
+		rn = string.split(text, '\r\n')
+		text = string.join(rn, '\n')
+		# then map left over \r to \n (Mac to Unix)
+		r = string.split(text, '\r')
+		text = string.join(r, '\n')
+		# finally map \n to \r\n (Unix to Windows)
+		n = string.split(text, '\n')
+		text = string.join(n, '\r\n')
+
+		# calculate mappings of char positions
+		pos0 = pos1 = 0
+		for line in rn:
+			self.__map0.append((pos0, pos1))
+			pos0 = pos0 + len(line) + 2
+			pos1 = pos1 + len(line) + 1
+		self.__map0.reverse()
+		pos0 = pos1 = 0
+		for line in n:
+			self.__map1.append((pos0, pos1))
+			pos0 = pos0 + len(line) + 1
+			pos1 = pos1 + len(line) + 2
+		self.__map1.reverse()
+		return text
+
+	# Called by the framework to close the view		
+	def close(self):
+		# 1. clean self contents
+		self.__text=None
+		self.__mother = None
+		self.__closecallback = None
+		self.__ok = None
+		self.__apply = None
+		self.__revert = None
+
+		# 2. destroy OS window if it exists
+		if hasattr(self,'_obj_') and self._obj_:
+			self.GetParent().DestroyWindow()
+		self._cbdict = None
+ 
+
+
+ 
