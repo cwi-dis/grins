@@ -20,6 +20,7 @@ attrgrs=(
 		'subregionanchor',
 		'aspect',
 		'project_quality',
+		'project_convert',
 		]},
 
 	{'name':'subregion1',
