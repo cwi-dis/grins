@@ -35,7 +35,7 @@
 (alt (string) '' 'Alternate text' default
 	'Alternate text for media object' raw (g2 qt smil10 smil2 cmif snap))
 
-(anchorlist (list (enclosed (tuple (any) (int) (enclosed (list (any))) (optenclosed (tuple (float) (float))))))
+(anchorlist (list (enclosed (tuple (any) (int) (enclosed (list (any))) (enclosed (tuple (float) (float))) (any))))
 	() 'Anchors' hidden 'List of anchors on this node' raw (g2 qt smil10 smil2 cmif snap))
 
 (arm_duration (float) -1.0 'Arm duration' hidden

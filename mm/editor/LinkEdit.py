@@ -706,7 +706,7 @@ class LinkEditEditor(LinkEditorDialog):
 			rlinks = hlinks.findsrclinks(a2)
 			if not isnew and dir in (DIR_2TO1, DIR_2WAY) and rlinks:
 				del rlinks[0]
-		# To do extend this interface with the new types
+		# XXX To do extend this interface with the new types
 		# for now, keep the compatibility
 		LinkEditorDialog.__init__(self, title, dirstr, typestr,
 					  dir, type,
@@ -733,7 +733,7 @@ class LinkEditEditor(LinkEditorDialog):
 		l = self.editlink
 		if l[DIR] != linkdir:
 			self.changed = 1
-			# for now, ignore sourcePlaystate and destinationPlaystate
+			# XXX for now, ignore sourcePlaystate and destinationPlaystate
 			self.editlink = l[ANCHOR1], l[ANCHOR2], linkdir, \
 					l[TYPE], A_SRC_PLAY, A_DEST_PLAY
 			self.linkdirsetchoice(linkdir)
@@ -744,7 +744,7 @@ class LinkEditEditor(LinkEditorDialog):
 		l = self.editlink
 		if l[TYPE] != linktype:
 			self.changed = 1
-			# for now, ignore sourcePlaystate and destinationPlaystate
+			# XXX for now, ignore sourcePlaystate and destinationPlaystate
 			self.editlink = l[ANCHOR1], l[ANCHOR2], l[DIR], \
 					linktype, A_SRC_PLAY, A_DEST_PLAY
 			self.linktypesetchoice(linktype)
