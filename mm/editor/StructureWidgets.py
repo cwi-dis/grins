@@ -43,6 +43,7 @@ class MMNodeWidget(Widgets.Widget):
         Widgets.Widget.__init__(self, root)
         self.node = node               # : MMNode
         self.node.views['struct_view'] = self
+        self.name = MMAttrdefs.getattr(self.node, 'name')
         
     def destroy(self):
         # Prevent cyclic dependancies.
@@ -186,8 +187,11 @@ class StructureObjWidget(MMNodeWidget):
     # A view of a seq, par, excl or something else that might exist.
     def __init__(self, node, root):
         MMNodeWidget.__init__(self, node, root)
+        assert self is not None
         # Create more nodes under me if there are any.
         self.children = []
+        self.collapsed = 0;             # Whether this node is collapsed or not.
+        self.collapsebutton = CollapseButtonWidget(self, root);
         for i in self.node.children:
             bob = create_MMNode_widget(i, root)
             if bob == None:
@@ -198,6 +202,11 @@ class StructureObjWidget(MMNodeWidget):
     def destroy(self):
         MMNodeWidget.destroy(self)
         self.children = None
+
+    def collapse(self):
+        self.collapsed = 1;
+    def uncollapse(self):
+        self.collapsed = 0;
 
     def get_obj_at(self, pos):
         # Return the MMNode widget at position x,y
@@ -211,19 +220,24 @@ class StructureObjWidget(MMNodeWidget):
         else:
             return None
 
+    def recalc(self):
+        self.collapsebutton.recalc();
+
     def draw(self, displist):
         # This is a base class for other classes.. this code only gets
         # called once the aggregating node has been called.
         # Draw only the children.
-        for i in self.children:
-            i.draw(displist)
+        if not self.collapsed:
+            for i in self.children:
+                i.draw(displist)
+
         # Draw the title.
         displist.fgcolor(CTEXTCOLOR);
         displist.usefont(f_title)
         l,t,r,b = self.pos_rel;
         b = t + self.get_rely(sizes_notime.TITLESIZE) + self.get_rely(sizes_notime.VEDGSIZE);
-        displist.centerstring(l,t,r,b, self.node.GetChannelName())
-
+        displist.centerstring(l,t,r,b, self.name)
+        self.collapsebutton.draw(displist);
 
 class SeqWidget(StructureObjWidget):
     def __init__(self, node, root):
@@ -407,6 +421,8 @@ class SeqWidget(StructureObjWidget):
         
         self.dropbox.moveto((l,t,r,b));
 
+        StructureObjWidget.recalc(self);
+
 
 class DropBoxWidget(Widgets.Widget):
     # This is the stupid drop-box at the end of a sequence. Looks like a
@@ -491,7 +507,7 @@ class VerticalWidget(StructureObjWidget):
         # Algorithm: Iterate through each of the MMNodes children's views and find their minsizes.
         # Apportion free space equally, based on the size of self.
         # TODO: This does not test for maxheight()
-        
+
         l, t, r, b = self.pos_rel
         # Add the titlesize;
         t = t + self.get_rely(sizes_notime.TITLESIZE)
@@ -544,6 +560,7 @@ class VerticalWidget(StructureObjWidget):
             medianode.moveto((l,t,r,b))
             medianode.recalc()
             t = b + self.get_rely(sizes_notime.GAPSIZE)
+        StructureObjWidget.recalc(self);
 
     def draw(self, display_list):
         if self.root.pushbackbars:
@@ -772,3 +789,24 @@ class PushBackBarWidget(Widgets.Widget):
 
     def select(self):
         self.parent.select()
+
+class CollapseButtonWidget(Widgets.Widget):
+    def __init__(self, parent, root):
+        Widgets.Widget.__init__(self, root);
+        self.parent=parent;
+        self.root=root
+
+    def recalc(self):
+        l,t,w,h = self.parent.get_box();
+        l=l+self.get_relx(sizes_notime.HEDGSIZE)
+        t = t+self.get_rely(sizes_notime.VEDGSIZE)
+        r = l + self.get_relx(10);      # This is pretty bad code..
+        b = t+self.get_rely(10);
+        self.moveto((l,t,r,b));
+            
+    def draw(self, displist):
+        if self.parent.collapsed:
+            displist.drawicon(self.get_box(), 'closed')
+        else:
+            displist.drawicon(self.get_box(), 'open')
+        
