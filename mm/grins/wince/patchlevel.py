@@ -3,4 +3,4 @@ __version__ = "$Id$"
 # Contains the subversion of the application in the
 # format <platform> patchlevel <number>
 
-patchlevel = 'winCE build 131'
+patchlevel = 'winCE build 132'
