@@ -122,6 +122,21 @@ class PathSeg:
 		else:
 			return ''
 
+	def translate(self, dx, dy):
+		t = self._type
+		if t == PathSeg.SVG_PATHSEG_MOVETO_ABS: 
+			self._x, self._y = self._x+dx, self._y+dy
+		elif t == PathSeg.SVG_PATHSEG_LINETO_ABS: 
+			self._x, self._y = self._x+dx, self._y+dy
+		elif t == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_ABS: 
+			self._x1, self._y1 = self._x1+dx, self._y1+dy
+			self._x2, self._y2 = self._x2+dx, self._y2+dy
+			self._x, self._y = self._x+dx, self._y+dy
+		elif t == PathSeg.SVG_PATHSEG_LINETO_HORIZONTAL_ABS: 
+			self._x = self._x+dx
+		elif t == PathSeg.SVG_PATHSEG_LINETO_VERTICAL_ABS: 
+			self._y = self._y+dy
+
 class SVGPath:
 	def __init__(self,  pathstr):
 		self._pathSegList = []
@@ -550,6 +565,7 @@ class StringTokenizer:
 def tocomplex(pt):
 	return complex(pt[0],pt[1])
 
+
 class Path:
 	SEG_MOVETO = 0
 	SEG_LINETO = 1
@@ -558,50 +574,90 @@ class Path:
 	SEG_CLOSE = 4
 
 	def __init__(self, pathstr=''):
-		self.__ptTypes = []
-		self.__ptCoords = []
-		self._svgpath = None
-		self._points = []
+		self.__ptTypes = []  # types of linearized segments 
+		self.__ptCoords = [] # points of linearized segments 
+
+		self.__svgpath = None # the SVG path instance
+
+		self.__segTypes = []  # types of SVG segments 
+		self.__segCoords = [] # points of SVG segments 
+		
 		self.__length = 0
+		self.__lenValues = [0,] # curve in parametric form
+
 		if pathstr:
-			self._svgpath = SVGPath(pathstr)
-			self._points = self._svgpath.createPath(self)
+			self.__svgpath = SVGPath(pathstr)
+			self.__svgpath.createPath(self)
 			self.__length = self.__getLength()
 
 	def constructFromSVGPathString(self, pathstr):
-		self._svgpath = SVGPath(pathstr)
-		self._points = self._svgpath.createPath(self)
-		self.__length = self.__getLength()
+		self.__svgpath = SVGPath(pathstr)
+		self._points = self.__svgpath.createPath(self)
+		#self.__length = self.__getLength()
 
 	def constructFromPoints(self, coords):
-		self._points = coords[:]
 		n = len(coords)
 		if n==0: return
 		self.moveTo(coords[0])
 		for i in range(1,n):
 			self.lineTo(coords[i])
-		self.__length = self.__getLength()
-		
+		#self.__length = self.__getLength()
+	
+	def getLengthValues(self):
+		return self.__lenValues
+
 	def getPoints(self):
 		points = []
-		for x, y in self._points:
-			points.append(complex(x,y))
+		n = len(self.__segCoords)
+		if n==0: return points
+		x, y = self.__segCoords[0]
+		points.append(complex(x,y))
+		for i in range(1,n):
+			if self.__segTypes[i] != Path.SEG_MOVETO:
+				x, y = self.__segCoords[i]
+				points.append(complex(x,y))
+		assert(len(points)==len(self.__lenValues))
 		return points
 
+	def getNumOfSegments(self):
+		return len(self.__lenValues)-1
+
+	def getSegment(self, index):
+		ptlast = pt  = complex(0, 0)
+		segtype = Path.SEG_LINETO
+		segcounter = 0
+		for i in range(len(self.__segCoords)):
+			if self.__segTypes[i] == Path.SEG_MOVETO:
+				x, y = self.__segCoords[i]
+				pt = complex(x, y)
+			elif self.__segTypes[i] == Path.SEG_LINETO:
+				x, y = self.__segCoords[i]
+				pt = complex(x, y)
+				segtype = Path.SEG_LINETO
+				if segcounter == index: break
+				segcounter = segcounter + 1
+			elif self.__segTypes[i] == Path.SEG_CUBICTO:
+				x, y = self.__segCoords[i]
+				pt = complex(x, y)
+				segtype = Path.SEG_CUBICTO
+				if segcounter == index: break
+				segcounter = segcounter + 1
+			ptlast = pt
+		return ptlast, pt, segtype
+
 	def translate(self, dx, dy):
-		points = []
-		for x, y in self._points:
-			points.append(complex(x+dx,y+dy))
-		self._points = points
+		if self.__svgpath:
+			for seg in self.__svgpath._pathSegList:
+				seg.translate(dx, dy)
 
 	# main query method
-	# get point at length t
-	def getPointAt(self, t):
+	# get point at length s
+	def getPointAtLength(self, s):
 		n = len(self.__ptTypes)
 		if n==0: return complex(0, 0)
 		elif n==1: return tocomplex(self.__ptCoords[0])
-		if t<=0: return tocomplex(self.__ptCoords[0])
-		elif t>=self.__length: return tocomplex(self.__ptCoords[n-1])
+		if s<=0: return tocomplex(self.__ptCoords[0])
+		elif s>=self.__length: return tocomplex(self.__ptCoords[n-1])
 
 		d = 0.0
 		xq, yq = self.__ptCoords[0] 
@@ -612,8 +668,8 @@ class Path:
 				x, y = self.__ptCoords[i]
 				dx = x - xp; dy = y - yp
 				ds = math.sqrt(dx*dx+dy*dy)
-				if t>=d and t <= (d + ds):
-					f = (t-d)/ds
+				if s>=d and s <= (d + ds):
+					f = (s-d)/ds
 					xq, yq = xp + f*(x-xp), yp + f*(y-yp)	
 					break
 				d = d + ds
@@ -623,6 +679,8 @@ class Path:
 	def getLength(self):
 		return self.__length
 	
+	# compute length of path
+	# (its an approximation since its done after linearization)
 	def __getLength(self):
 		d = 0.0
 		n = len(self.__ptTypes)
@@ -637,29 +695,62 @@ class Path:
 		return d
 	
 	def __repr__(self):
-		return repr(self._svgpath)
+		return repr(self.__svgpath)
 	
+	#
+	# SVG path callbacks
+	# 
 	def moveTo(self, pt):
 		n = len(self.__ptTypes)
 		if n>0 and self.__ptTypes[n - 1] == Path.SEG_MOVETO:
 			self.__ptCoords[n - 1] = pt
 		else:
 			self.__ptTypes.append(Path.SEG_MOVETO)
-			self.__ptCoords.append(pt)						
+			self.__ptCoords.append(pt)	
+								
+		n = len(self.__segTypes)
+		if n>0 and self.__segTypes[n - 1] == Path.SEG_MOVETO:
+			self.__segCoords[n - 1] = pt
+		else:
+			self.__segTypes.append(Path.SEG_MOVETO)
+			self.__segCoords.append(pt)						
 
 	def lineTo(self, pt):
+		n =  len(self.__ptCoords)
+		if n == 0: xp, yp = 0, 0
+		else: xp, yp = 	self.__ptCoords[n-1]
+
 		self.__ptTypes.append(Path.SEG_LINETO)
-		self.__ptCoords.append(pt)						
+		self.__ptCoords.append(pt)
+								
+		self.__segTypes.append(Path.SEG_LINETO)
+		self.__segCoords.append(pt)	
+		
+		x, y = pt				
+		dx = x - xp; dy = y - yp
+		self.__length = self.__length + math.sqrt(dx*dx+dy*dy)
+		self.__lenValues.append(self.__length)
 
 	def curveTo(self, pt1, pt2, pt):
-		n = len(self.__ptTypes)
+		n =  len(self.__ptCoords)
+		if n == 0: xp, yp = 0, 0
+		else: xp, yp = 	self.__ptCoords[n-1]
+
 		pt0 = self.__ptCoords[n - 1]
 		points = self.findCubicPoints(pt0, pt1, pt2, pt)
 		n = len(points)
 		if n==0: return
-		self.moveTo(points[0])
 		for i in range(1,n):
-			self.lineTo(points[i])
+			self.__ptTypes.append(Path.SEG_LINETO)
+			self.__ptCoords.append(points[i])
+			x, y = points[i]				
+			dx = x - xp; dy = y - yp
+			self.__length = self.__length + math.sqrt(dx*dx+dy*dy)
+			xp, yp = x, y
+
+		self.__segTypes.append(Path.SEG_CUBICTO)
+		self.__segCoords.append(pt)						
+		self.__lenValues.append(self.__length)
 
 	def quadTo(self, pt1, pt2, pt):
 		pass
@@ -671,6 +762,9 @@ class Path:
 		if len(self.__ptCoords)>0:
 			self.lineTo(self.__ptCoords[0])
 
+	#
+	# Helpers
+	# 
 	def getCoords(self, i):
 		return None
 
@@ -694,7 +788,7 @@ class Path:
 		points.append(pt4)
 		return points
 
-	def findCubicPointsBySubdivision(self, pt1, pt2, pt3, pt4, niters=3):
+	def findCubicPointsBySubdivision(self, pt1, pt2, pt3, pt4, niters=8):
 		z1 = complex(pt1[0],pt1[1])
 		z2 = complex(pt2[0],pt2[1])
 		z3 = complex(pt3[0],pt3[1])
