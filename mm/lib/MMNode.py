@@ -1529,7 +1529,8 @@ class MMNode:
 	# if we need to use often this method, we should optimize it
 	def getPxAbsGeomMedia(self):
 		if self._subRegCssId == None or self._mediaCssId == None:
-			return None
+			print 'no geometry on media:',self
+			return ((0,0,100,100), (0,0,100,100))
 		
 		# a dynamic link should be enough for this method
 		# it avoid to keep a synchonization with the css resolver
