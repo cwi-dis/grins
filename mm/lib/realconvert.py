@@ -414,8 +414,255 @@ def _win_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	del b
 		
 def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
+	global engine
+	import MMAttrdefs, MMurl
 	u.close()
-	return
+	try:
+		import videoreader
+	except ImportError:
+		return
+	fin = MMurl.urlretrieve(srcurl)[0]
+	reader = videoreader.reader(srcurl)
+	if not reader:
+		return
+	# ignore suggested extension and make our own
+	file = os.path.splitext(file)[0] + '.rm'
+	fullpath = os.path.join(dstdir, file)
+	if engine is None:
+		engine = producer.CreateRMBuildEngine()
+	for pin in engine.GetPins():
+		if pin.GetOutputMimeType() == producer.MIME_REALVIDEO:
+			videopin = pin
+		elif pin.GetOutputMimeType() == producer.MIME_REALAUDIO:
+			audiopin = pin
+	engine.SetDoOutputMimeType(producer.MIME_REALAUDIO, 0)
+	engine.SetDoOutputMimeType(producer.MIME_REALVIDEO, 1)
+	engine.SetDoOutputMimeType(producer.MIME_REALEVENT, 0)
+	engine.SetDoOutputMimeType(producer.MIME_REALIMAGEMAP, 0)
+	engine.SetDoOutputMimeType(producer.MIME_REALPIX, 0)
+	engine.SetRealTimeEncoding(0)
+	cp = engine.GetClipProperties()
+	ts = engine.GetTargetSettings()
+	ts.RemoveAllTargetAudiences()
+	if node is not None:
+		cp.SetTitle(MMAttrdefs.getattr(node, 'title'))
+		cp.SetAuthor(MMAttrdefs.getattr(node, 'author'))
+		cp.SetCopyright(MMAttrdefs.getattr(node, 'copyright'))
+		ts.SetVideoQuality(MMAttrdefs.getattr(node, 'project_videotype'))
+		ts.SetAudioContent(MMAttrdefs.getattr(node, 'project_audiotype'))
+		target = MMAttrdefs.getattr(node, 'project_targets')
+		ntargets = 0
+		for i in range(6):
+			if (1 << i) & target:
+				ts.AddTargetAudience(i)
+				ntargets = ntargets + 1
+		if ntargets == 0:
+			ts.AddTargetAudience(producer.ENC_TARGET_28_MODEM)
+			ntargets = ntargets + 1
+	else:
+		# we don't know nothin' about the node so use some defaults
+		cp.SetTitle('')
+		cp.SetAuthor('')
+		cp.SetCopyright('')
+		ts.AddTargetAudience(producer.ENC_TARGET_28_MODEM)
+		ntargets = 1
+		ts.SetVideoQuality(producer.ENC_VIDEO_QUALITY_NORMAL)
+	engine.SetDoMultiRateEncoding(ntargets != 1)
+	cp.SetPerfectPlay(1)
+	cp.SetMobilePlay(0)
+	cp.SetSelectiveRecord(0)
+	cp.SetDoOutputServer(0)
+	cp.SetDoOutputFile(1)
+	cp.SetOutputFilename(fullpath)
+	
+	has_video = reader.HasVideo()
+	if has_video:
+		import imgformat
+		import pdb ; pdb.set_trace() #DBG
+		video_props = videopin.GetPinProperties()
+		video_props.SetFrameRate(reader.GetVideoFrameRate())
+		video_fmt = reader.GetVideoFormat()
+		# XXXX To be done better
+		if video_fmt.getformat() == imgformat.macrgb:
+			prod_format = producer.ENC_VIDEO_FORMAT_BGR32_NONINVERTED
+		else:
+			raise 'Unsupported video format', video_fmt.getformat()
+		w, h = video_fmt.getsize()
+		video_props.SetVideoSize(w, h)
+		video_props.SetVideoFormat(prod_format)
+		video_props.SetCroppingEnabled(0)
+
+		video_sample = engine.CreateMediaSample()
+		
+		video_frame_millisecs = int(1000.0 / reader.GetVideoFrameRate())
+		
+	has_audio = reader.HasAudio()
+	if has_audio:
+		audio_props = audiopin.GetPinProperties()
+		audio_props.SetSampleRate(reader.GetAudioFrameRate())
+		audio_fmt = reader.GetAudioFormat()
+		audio_props.SetNumChannels(audio_fmt.getnchannels())
+		audio_props.SetSampleSize(audio_fmt.getbps())
+
+		audio_sample = engine.CreateMediaSample()
+		
+	engine.PrepareToEncode()
+	
+	if has_audio:
+		nbytes = audiopin.GetSuggestedInputSize()
+		nbpf = audio_fmt.getblocksize() / audio_fmt.getfpb()
+		audio_inputsize_frames = nbytes / nbpf
+		
+		audio_frame_millisecs = int(1000.0 * audio_inputsize_frames / reader.GetAudioFrameRate())
+
+	audio_done = video_done = 0
+	audio_flags = video_flags = 0
+	audio_time = video_time = 0
+	audio_data = reader.ReadAudio(audio_inputsize_frames)
+	if not audio_data:
+		audio_done = 1
+	video_data = reader.ReadVideo()
+	if not video_data:
+		video_done = 1
+	while not audio_done or not video_done:
+		if not audio_done:
+			next_audio_data = reader.ReadAudio(audio_inputsize_frames)
+			if not next_audio_data:
+				audio_done = 1
+				audio_flags = producer.MEDIA_SAMPLE_END_OF_STREAM
+			audio_sample.SetBuffer(audio_data, audio_time, audio_flags)
+			audiopin.Encode(audio_sample)
+			audio_time = audio_time + audio_frame_millisecs
+			audio_data = next_audio_data
+		if not video_done:
+			next_video_data = reader.ReadVideo()
+			if not next_video_data:
+				video_done = 1
+				video_flags = producer.SAMPLE_END_OF_STREAM
+			video_sample.SetBuffer(video_data, video_time, video_flags)
+			video_pin.Encode(video_sample)
+			video_time = video_time + video_frame_millisecs
+			video_data = next_video_data
+	engine.DoneEncoding()
+		
+	
+##	# prepare filter graph
+##	b = dshow.CreateGraphBuilder()
+##	b.RenderFile(fin)
+##	renderer=b.FindFilterByName('Video Renderer')
+##	enumpins=renderer.EnumPins()
+##	pin=enumpins.Next()
+##	lastpin=pin.ConnectedTo()
+##	b.RemoveFilter(renderer)
+##	try:
+##		vf = dshow.CreateFilter('Video Real Media Converter')
+##	except:
+##		print 'Video real media converter filter is not installed'
+##		return file
+##	b.AddFilter(vf,'VRMC')
+##	enumpins=vf.EnumPins()
+##	pin=enumpins.Next()
+##	b.Connect(lastpin,pin)
+##	#b.Render(lastpin)
+##
+##	try:
+##		rconv=vf.QueryIRealConverter()
+##	except:
+##		print 'Filter does not support interface IRealConverter'
+##		return file
+##	try:
+##		ukeng=engine.QueryInterfaceUnknown()
+##	except:
+##		print 'RMABuildEngine QueryInterfaceUnknown failed'
+##		return file
+##	rconv.SetInterface(ukeng,'IRMABuildEngine')
+##	try:
+##		uk=videopin.QueryInterfaceUnknown()
+##	except:
+##		print 'RMAInputPin QueryInterfaceUnknown failed'
+##		return file
+##	rconv.SetInterface(uk,'IRMAInputPin')
+##
+##	# we are ready for video, check for audio
+##	# find default audio renderer filter
+##	try:
+##		aurenderer=b.FindFilterByName('Default DirectSound Device')
+##	except:
+##		aurenderer=None
+##	if not aurenderer:
+##		try:
+##			aurenderer=b.FindFilterByName('Default WaveOut Device')
+##		except:
+##			aurenderer=None
+##	# replace audio renderer with aud2rm filter
+##	if aurenderer:
+##		enumpins=aurenderer.EnumPins()
+##		pin=enumpins.Next()
+##		lastpin=pin.ConnectedTo()
+##		b.RemoveFilter(aurenderer)
+##		try:
+##			af = dshow.CreateFilter('Audio Real Media Converter')
+##		except:
+##			aurenderer=None
+##		else:
+##			b.AddFilter(af,'ARMC')
+##			enumpins=af.EnumPins()
+##			pin=enumpins.Next()
+##			b.Connect(lastpin,pin)
+##			#b.Render(lastpin)
+##
+##	# set engine and audio pin
+##	if aurenderer:
+##		try:
+##			arconv=af.QueryIRealConverter()
+##		except:
+##			aurenderer=None
+##		else:
+##			arconv.SetInterface(ukeng,'IRMABuildEngine')
+##	if aurenderer:
+##		try:
+##			uk=audiopin.QueryInterfaceUnknown()
+##		except:
+##			aurenderer=None
+##		else:
+##			arconv.SetInterface(uk,'IRMAInputPin')
+##
+##	# enable audio
+##	if aurenderer:
+##		engine.SetDoOutputMimeType(producer.MIME_REALAUDIO, 1)
+##		ts.SetAudioContent(producer.ENC_AUDIO_CONTENT_VOICE)
+##
+##	# PinProperties,MediaSample,PrepareToEncode,Encode, DoneEncoding
+##	# are all managed by our dshow filter
+##
+##	# do encoding
+##	mc = b.QueryIMediaControl()
+##	mp = b.QueryIMediaPosition()
+##	dur = int(1000*mp.GetDuration()+0.5) # dur in msec
+##	mc.Run()
+##	
+##	if sys.platform=='win32':
+##		# remove messages in queue
+##		# dispatch only paint message
+##		import win32ui
+##		import windowinterface
+##		win32ui.PumpWaitingMessages(0,0)
+##		windowinterface.setwaiting()
+##		while b.WaitForCompletion(0)==0:
+##			now=int(1000*mp.GetCurrentPosition()+0.5)
+##			if progress:
+##				apply(progress[0], progress[1] + (now, dur))
+##			win32ui.PumpWaitingMessages(0,0)
+##			windowinterface.setwaiting()
+##		mc.Stop()
+##		win32ui.PumpWaitingMessages(0,0)
+##		windowinterface.setready()
+##	else:
+##		b.WaitForCompletion()
+##		mc.Stop()
+##	
+##	del b
+##	return
 	if os.name == 'mac':
 		import macfs
 		import macostools
