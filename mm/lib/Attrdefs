@@ -241,7 +241,7 @@
 (tag (string) 'fill' 'Transition type' transition
 	'Type of transition effect.' normal)
 
-(terminator (name) 'LAST' 'Endsync child' CMIFtermnodename
+(terminator (name) 'LAST' 'Endsync child' termnodename
 	'Name of child that terminates parallel node' normal)
 
 (textalign (string) 'center' 'Alignment' CMIFdefault
