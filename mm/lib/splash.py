@@ -49,14 +49,18 @@ class _Splash:
 		self.main = None
 		self.__initialized = 0
 
-	def splash(self, file):
+	def splash(self):
 		self.wininit()
 		if self.visual.depth < 24:
 			return 0
-		import img
 		try:
-			rdr = img.reader(self.imgformat, file)
-		except IOError:
+			import splashimg
+		except ImportError:
+			return 0
+		import imgconvert
+		try:
+			rdr = imgconvert.stackreader(self.imgformat, splashimg.reader())
+		except imgconvert.unsupported_error:
 			return 0
 		main = self.main
 		data = rdr.read()

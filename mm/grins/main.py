@@ -126,7 +126,7 @@ def main():
 	except ImportError:
 		splash = None
 	else:
-		splash.splash(findfile(os.path.join('lib','cmifed.rgb')))
+		splash.splash()
 
 	if ('-q', '') in opts:
 		sys.stdout = open('/dev/null', 'w')

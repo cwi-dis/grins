@@ -148,7 +148,7 @@ def main():
 	except ImportError:
 		splash = None
 	else:
-		splash.splash(findfile(os.path.join('lib','cmifed.rgb')))
+		splash.splash()
 	try:
 		import signal, pdb
 	except ImportError:
