@@ -600,7 +600,13 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAGMOVE)
 		elif strid=='stop':
 			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_STOP)
+		elif strid=='link':
+			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAGLINK)
+		elif strid=='' or strid=='arrow':
+			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
+			strid='arrow'
 		else:
+			print 'cmifwnd:: missing cursor ',strid
 			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
 			strid='arrow'
 		if self._window_type==MPEG:Sdk.SetCursor(cursor)
