@@ -393,21 +393,15 @@ def getsubregionatt(writer, node, attr):
 	
 	val = MMAttrdefs.getattr(node, attr)
 	if val is not None:
-		units = MMAttrdefs.getattr(node, 'units')
-		if units is None:
-			units = UNIT_PXL
+#		units = MMAttrdefs.getattr(node, 'units')
+#		if units is None:
+#			units = UNIT_PXL
 			
 		# save only if subregion positioning is different as region
-		if attr == 'left' or attr == 'top':
-			if val == 0:
-				return None
-		else:
-			if units == UNIT_PXL and val == 0:
-				return None
-			elif units == UNIT_SCREEN and val == 1.0:
-				return None
+		if val == 0:
+			return None
 
-		if units == UNIT_SCREEN:
+		if type(val) == type (0.0):
 			return fmtfloat(100*val, '%', prec = 1)
 		else:
 			return str(val)
