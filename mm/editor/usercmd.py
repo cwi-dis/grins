@@ -85,6 +85,19 @@ class LAYOUTVIEW(_CommandBase):
 class USERGROUPVIEW(_CommandBase):
 	help = 'Show/hide User Group Editor'
 
+# These are to hide the various views. They are basically
+# a workaround for Windows, where the "close" command is
+# implemented (for reasons unknown) by sending a command to
+# the TopLevel.
+class HIDE_PLAYERVIEW(_CommandBase): pass
+class HIDE_HIERARCHYVIEW(_CommandBase): pass
+class HIDE_CHANNELVIEW(_CommandBase): pass
+class HIDE_LINKVIEW(_CommandBase): pass
+class HIDE_LAYOUTVIEW(_CommandBase): pass
+class HIDE_USERGROUPVIEW(_CommandBase): pass
+class HIDE_SOURCE(_CommandBase): pass
+
+
 #
 # Player view commands
 #

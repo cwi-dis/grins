@@ -265,9 +265,8 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 
 	# Bring window in front of peers
 	def pop(self, poptop=1):
-		# Do nothing
-		# Improperly used by core system
-		pass
+		if poptop:
+			self.activate()
 
 	# Bring window in front of peers
 	def activate(self):
