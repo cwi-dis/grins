@@ -95,8 +95,10 @@ class HtmlChannel(Channel.ChannelWindow):
 
 	def do_play(self, node):
 		if node.type == 'ext':
-			url=self.getfileurl(node)
+			href=self.getfileurl(node)
+			url, tag = MMurl.splittag(href)
 			url=self.toabs(url)
+			if tag:url=url+'#'+tag
 		else: 
 			url=self.totemp(node,self.armed_str)
 
@@ -110,10 +112,11 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.play_node=node
 		
 		self.window.setanchorcallback(self.cbanchor)
-		self.window.RetrieveUrl(url)
+		self.window.RetrieveUrl(url)	
 		self.window.setredrawfunc(self.redraw)
 
 	def redraw(self):
+		#self.window.RedrawWindow()
 		self.window.Refresh()
 
 	def stopplay(self, node):
