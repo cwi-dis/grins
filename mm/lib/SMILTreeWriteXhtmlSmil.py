@@ -121,7 +121,7 @@ import Duration
 import tokenizer
 
 # debug flags
-debug = 1
+debug = 0
 
 class SMILXhtmlSmilWriter(SMIL):
 	def __init__(self, node, fp, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0,
@@ -134,6 +134,9 @@ class SMILXhtmlSmilWriter(SMIL):
 		# some abbreviations
 		self.context = ctx = node.GetContext()
 		self.hyperlinks = ctx.hyperlinks
+
+		# used by SMILTreeWrite module
+		self.addattrs = 0 # add attributes to make processing faster
 
 		self.root = node
 		self.fp = fp
