@@ -1,3 +1,4 @@
+
 /***********************************************************
 Copyright 1991-1999 by Oratrix Development BV, Amsterdam, The Netherlands.
 
@@ -16,6 +17,9 @@ Copyright 1991-1999 by Oratrix Development BV, Amsterdam, The Netherlands.
 #pragma comment (lib,"amstrmid.lib")
 #pragma comment (lib,"guids.lib")
 #pragma comment (lib,"strmbase.lib")
+
+// ++ streams support
+#include <amstream.h>
 
 #define  OATRUE (-1)
 #define  OAFALSE (0)
@@ -347,6 +351,92 @@ newEnumFiltersObject()
 	EnumFiltersObject *self;
 
 	self = PyObject_NEW(EnumFiltersObject, &EnumFiltersType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+
+//////////////////
+// Streams
+
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	// use a specialization of IMultiMediaStream
+	IAMMultiMediaStream *pI; // 
+} MultiMediaStreamObject;
+
+staticforward PyTypeObject MultiMediaStreamType;
+
+static MultiMediaStreamObject *
+newMultiMediaStreamObject()
+{
+	MultiMediaStreamObject *self;
+
+	self = PyObject_NEW(MultiMediaStreamObject, &MultiMediaStreamType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IMediaStream *pI;
+} MediaStreamObject;
+
+staticforward PyTypeObject MediaStreamType;
+
+static MediaStreamObject *
+newMediaStreamObject()
+{
+	MediaStreamObject *self;
+	self = PyObject_NEW(MediaStreamObject, &MediaStreamType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IDirectDrawMediaStream *pI;
+} DirectDrawMediaStreamObject;
+
+staticforward PyTypeObject DirectDrawMediaStreamType;
+
+static DirectDrawMediaStreamObject *
+newDirectDrawMediaStreamObject()
+{
+	DirectDrawMediaStreamObject *self;
+	self = PyObject_NEW(DirectDrawMediaStreamObject, &DirectDrawMediaStreamType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IDirectDrawStreamSample *pI;
+} DirectDrawStreamSampleObject;
+
+staticforward PyTypeObject DirectDrawStreamSampleType;
+
+static DirectDrawStreamSampleObject *
+newDirectDrawStreamSampleObject()
+{
+	DirectDrawStreamSampleObject *self;
+	self = PyObject_NEW(DirectDrawStreamSampleObject, &DirectDrawStreamSampleType);
 	if (self == NULL)
 		return NULL;
 	self->pI = NULL;
@@ -2129,6 +2219,404 @@ static PyTypeObject MediaPositionType = {
 // End of code for MediaPosition object 
 ////////////////////////////////////////////
 
+/////////////////////////////////////////////
+// MultiMediaStream object
+
+static char MultiMediaStream_Initialize__doc__[] =
+""
+;
+
+static PyObject *
+MultiMediaStream_Initialize(MultiMediaStreamObject *self, PyObject *args)
+{
+	HRESULT hr;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	IGraphBuilder* pGraphBuilder=NULL;
+	hr = self->pI->Initialize(STREAMTYPE_READ,0,pGraphBuilder);
+	if (FAILED(hr)) {
+		seterror("Initialize", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+
+static char MultiMediaStream_AddMediaStream__doc__[] =
+""
+;
+
+static PyObject *
+MultiMediaStream_AddMediaStream(MultiMediaStreamObject *self, PyObject *args)
+{
+	HRESULT hr;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	hr = self->pI->AddMediaStream(NULL,&MSPID_PrimaryVideo,0,NULL);
+	if (FAILED(hr)) {
+		seterror("AddMediaStream", hr);
+		return NULL;
+	}
+	hr = self->pI->AddMediaStream(NULL,&MSPID_PrimaryAudio,AMMSF_ADDDEFAULTRENDERER,NULL);
+	if (FAILED(hr)) {
+		seterror("MultiMediaStream_AddMediaStream", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char MultiMediaStream_OpenFile__doc__[] =
+""
+;
+static PyObject *
+MultiMediaStream_OpenFile(MultiMediaStreamObject *self, PyObject *args)
+{
+	HRESULT hr;
+	char *pszFile;
+	if (!PyArg_ParseTuple(args, "s", &pszFile))
+		return NULL;
+	WCHAR wPath[MAX_PATH];
+	MultiByteToWideChar(CP_ACP,0,pszFile,-1,wPath,MAX_PATH);
+	hr = self->pI->OpenFile(wPath,0);
+	if (FAILED(hr)) {
+		seterror("MultiMediaStream_OpenFile", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char MultiMediaStream_Render__doc__[] =
+""
+;
+static PyObject *
+MultiMediaStream_Render(MultiMediaStreamObject *self, PyObject *args)
+{
+	DWORD dwFlags=AMMSF_NOCLOCK;
+	if (!PyArg_ParseTuple(args, "|i", &dwFlags))
+		return NULL;
+	HRESULT hr = self->pI->Render(dwFlags);
+	if (FAILED(hr)) {
+		seterror("MultiMediaStream_Render", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char MultiMediaStream_GetDuration__doc__[] =
+""
+;
+static PyObject *
+MultiMediaStream_GetDuration(MultiMediaStreamObject *self, PyObject *args)
+{
+	HRESULT hr;
+	STREAM_TIME duration;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	hr = self->pI->GetDuration(&duration);
+	if (FAILED(hr)) {
+		seterror("MultiMediaStream_GetDuration", hr);
+		return NULL;
+	}
+	return PyInt_FromLong((long) duration);
+}
+
+
+static char MultiMediaStream_GetMediaStream__doc__[] =
+""
+;
+
+static PyObject *
+MultiMediaStream_GetMediaStream(MultiMediaStreamObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	IMediaStream *pPrimaryVidStream;
+	HRESULT hr = self->pI->GetMediaStream(MSPID_PrimaryVideo,&pPrimaryVidStream);
+	if (FAILED(hr)) {
+		seterror("MultiMediaStream_GetMediaStream", hr);
+		return NULL;
+	}
+	IDirectDrawMediaStream *pDDStream;
+	hr=pPrimaryVidStream->QueryInterface(IID_IDirectDrawMediaStream,(void**)&pDDStream);
+	pPrimaryVidStream->Release();
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static struct PyMethodDef MultiMediaStream_methods[] = {
+	{"Initialize", (PyCFunction)MultiMediaStream_Initialize, METH_VARARGS, MultiMediaStream_Initialize__doc__},
+	{"AddMediaStream", (PyCFunction)MultiMediaStream_AddMediaStream, METH_VARARGS, MultiMediaStream_AddMediaStream__doc__},
+	{"OpenFile", (PyCFunction)MultiMediaStream_OpenFile, METH_VARARGS, MultiMediaStream_OpenFile__doc__},
+	{"Render", (PyCFunction)MultiMediaStream_Render, METH_VARARGS, MultiMediaStream_Render__doc__},
+	{"GetDuration", (PyCFunction)MultiMediaStream_GetDuration, METH_VARARGS, MultiMediaStream_GetDuration__doc__},
+	{"GetMediaStream", (PyCFunction)MultiMediaStream_GetMediaStream, METH_VARARGS, MultiMediaStream_GetMediaStream__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}
+};
+
+
+static void
+MultiMediaStream_dealloc(MultiMediaStreamObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+MultiMediaStream_getattr(MultiMediaStreamObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(MultiMediaStream_methods, (PyObject *)self, name);
+}
+
+static char MultiMediaStreamType__doc__[] =
+""
+;
+
+static PyTypeObject MultiMediaStreamType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"MultiMediaStream",			/*tp_name*/
+	sizeof(MultiMediaStreamObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)MultiMediaStream_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)MultiMediaStream_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	MultiMediaStreamType__doc__ /* Documentation string */
+};
+
+// End of code for MultiMediaStream object 
+/////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////
+// MediaStream object
+
+static char MediaStream_Ping__doc__[] =
+""
+;
+
+static PyObject *
+MediaStream_Ping(MediaStreamObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+
+static struct PyMethodDef MediaStream_methods[] = {
+	{"Ping", (PyCFunction)MediaStream_Ping, METH_VARARGS, MediaStream_Ping__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}
+};
+
+
+static void
+MediaStream_dealloc(MediaStreamObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+MediaStream_getattr(MediaStreamObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(MediaStream_methods, (PyObject *)self, name);
+}
+
+static char MediaStreamType__doc__[] =
+""
+;
+
+static PyTypeObject MediaStreamType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"MediaStream",			/*tp_name*/
+	sizeof(MediaStreamObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)MediaStream_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)MediaStream_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	MediaStreamType__doc__ /* Documentation string */
+};
+
+// End of code for MediaStream object 
+/////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////
+// DirectDrawMediaStream object
+
+static char DirectDrawMediaStream_Ping__doc__[] =
+""
+;
+
+static PyObject *
+DirectDrawMediaStream_Ping(DirectDrawMediaStreamObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+
+static struct PyMethodDef DirectDrawMediaStream_methods[] = {
+	{"Ping", (PyCFunction)DirectDrawMediaStream_Ping, METH_VARARGS, DirectDrawMediaStream_Ping__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}
+};
+
+
+static void
+DirectDrawMediaStream_dealloc(DirectDrawMediaStreamObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+DirectDrawMediaStream_getattr(DirectDrawMediaStreamObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(DirectDrawMediaStream_methods, (PyObject *)self, name);
+}
+
+static char DirectDrawMediaStreamType__doc__[] =
+""
+;
+
+static PyTypeObject DirectDrawMediaStreamType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"DirectDrawMediaStream",			/*tp_name*/
+	sizeof(DirectDrawMediaStreamObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)DirectDrawMediaStream_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)DirectDrawMediaStream_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	DirectDrawMediaStreamType__doc__ /* Documentation string */
+};
+
+// End of code for DirectDrawMediaStream object 
+/////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////
+// DirectDrawStreamSample object
+
+static char DirectDrawStreamSample_Ping__doc__[] =
+""
+;
+
+static PyObject *
+DirectDrawStreamSample_Ping(DirectDrawStreamSampleObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+
+static struct PyMethodDef DirectDrawStreamSample_methods[] = {
+	{"Ping", (PyCFunction)DirectDrawStreamSample_Ping, METH_VARARGS, DirectDrawStreamSample_Ping__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}
+};
+
+
+static void
+DirectDrawStreamSample_dealloc(DirectDrawStreamSampleObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+DirectDrawStreamSample_getattr(DirectDrawStreamSampleObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(DirectDrawStreamSample_methods, (PyObject *)self, name);
+}
+
+static char DirectDrawStreamSampleType__doc__[] =
+""
+;
+
+static PyTypeObject DirectDrawStreamSampleType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"DirectDrawStreamSample",			/*tp_name*/
+	sizeof(DirectDrawStreamSampleObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)DirectDrawStreamSample_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)DirectDrawStreamSample_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	DirectDrawStreamSampleType__doc__ /* Documentation string */
+};
+
+// End of code for DirectDrawStreamSample object 
+/////////////////////////////////////////////////////////////
+
+
 ///////////////////////////////////////////
 // MODULE
 //
@@ -2274,10 +2762,35 @@ CreateFilter(PyObject *self, PyObject *args)
 	return (PyObject *) obj;
 	}
 
+static char CreateMultiMediaStream__doc__[] =
+""
+;
+static PyObject *
+CreateMultiMediaStream(PyObject *self, PyObject *args)
+{
+	HRESULT hr;
+	MultiMediaStreamObject *obj;
+
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+
+	obj = newMultiMediaStreamObject();
+	if (obj == NULL)
+		return NULL;
+
+	hr=CoCreateInstance(CLSID_AMMultiMediaStream,NULL,CLSCTX_INPROC_SERVER,
+				 IID_IAMMultiMediaStream,(void**)&obj->pI);
+	if (FAILED(hr)) {
+		Py_DECREF(obj);
+		seterror("CreateMultiMediaStream", hr);
+		return NULL;
+	}
+	return (PyObject *) obj;
+}
+
 static char CoInitialize__doc__[] =
 ""
 ;
-
 static PyObject*
 CoInitialize(PyObject *self, PyObject *args) 
 	{
@@ -2304,6 +2817,7 @@ CoUninitialize(PyObject *self, PyObject *args)
 static struct PyMethodDef DShow_methods[] = {
 	{"CreateGraphBuilder", (PyCFunction)CreateGraphBuilder, METH_VARARGS, CreateGraphBuilder__doc__},
 	{"CreateFilter", (PyCFunction)CreateFilter, METH_VARARGS, CreateFilter__doc__},
+	{"CreateMultiMediaStream", (PyCFunction)CreateMultiMediaStream, METH_VARARGS, CreateMultiMediaStream__doc__},
 	{"CoInitialize", (PyCFunction)CoInitialize, METH_VARARGS, CoInitialize__doc__},
 	{"CoUninitialize", (PyCFunction)CoUninitialize, METH_VARARGS, CoUninitialize__doc__},
 
