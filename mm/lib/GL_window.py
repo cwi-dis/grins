@@ -775,7 +775,7 @@ def showquestion(text):
 	d = _Question(text)
 	return d.run()
 
-def FileDialog(prompt, directory, filter, file, cb_ok, cb_cancel):
+def FileDialog(prompt, directory, filter, file, cb_ok, cb_cancel, existing=0):
 	import fl
 	filename = fl.show_file_selector(prompt, directory, filter, file)
 	if filename:
