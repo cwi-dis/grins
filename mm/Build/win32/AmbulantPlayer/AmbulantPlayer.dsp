@@ -890,19 +890,7 @@ SOURCE=.\M_realnode.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_RealPixChannel.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_realsupport.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_RealTextChannel.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_RealWindowChannel.c
 # End Source File
 # Begin Source File
 
