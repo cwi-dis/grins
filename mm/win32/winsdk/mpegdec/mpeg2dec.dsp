@@ -64,7 +64,7 @@ LINK32=link.exe
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "." /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "UNICODE" /D "_UNICODE" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "." /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "UNICODE" /D "_UNICODE" /D "FPM_DEFAULT" /D "MP3LIB_EXPORTS" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -201,7 +201,7 @@ SOURCE=.\audio\layer2.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\audio\layer3.cpp
+SOURCE=.\audio\layer3p.cpp
 # End Source File
 # Begin Source File
 
@@ -365,6 +365,10 @@ SOURCE=..\common\platform.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\profiler.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\strutil.h
 # End Source File
 # Begin Source File
@@ -382,6 +386,90 @@ SOURCE=..\common\video.h
 # Begin Source File
 
 SOURCE=..\common\xg.h
+# End Source File
+# End Group
+# Begin Group "testaudio"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\CE\mp3lib\bit.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\CE\mp3lib\bit.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\CE\mp3lib\config.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\CE\mp3lib\fixed.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\CE\mp3lib\fixed.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\CE\mp3lib\frame.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\CE\mp3lib\frame.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\CE\mp3lib\global.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\CE\mp3lib\huffman.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\CE\mp3lib\huffman.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\CE\mp3lib\layer3.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\CE\mp3lib\layer3.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\CE\mp3lib\mp3lib.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\CE\mp3lib\mp3lib.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\CE\mp3lib\resample.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\CE\mp3lib\resample.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\CE\mp3lib\stream.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\CE\mp3lib\stream.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\CE\mp3lib\synth.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\CE\mp3lib\synth.h
 # End Source File
 # End Group
 # End Target
