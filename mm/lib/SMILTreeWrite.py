@@ -428,14 +428,6 @@ def getfitatt(writer, node, attr):
 			fit = 'fill'
 	return fit
 
-def getregpointatt(writer, node, attr):
-	try:
-		regpoint = node.GetRawAttr(attr)
-	except:
-		regpoint = None
-
-	return regpoint
-
 def getbgcoloratt(writer, node, attr):
 	try:
 		# if transparent, there is no backgroundColor attribute
@@ -567,7 +559,9 @@ def getsyncarc(writer, node, isend):
 				tz = ''
 			list.append('wallclock(%s%s%s)' % (date, time, tz))
 		elif arc.marker is None:
-			if arc.srcanchor:
+			if arc.channel is not None:
+				name = writer.ch2name[arc.channel]
+			elif arc.srcanchor:
 				aid = (arc.srcnode.GetUID(), arc.srcanchor)
 				name = writer.aid2name[aid]
 			elif arc.srcnode is None:
@@ -964,7 +958,7 @@ smil_attrs=[
 	("bottom", lambda writer, node:getsubregionatt(writer, node, 'bottom')),
 	("fit", lambda writer, node:getfitatt(writer, node, 'scale')),
 	# registration points
-	("regPoint", lambda writer, node:getcmifattr(writer, node, "regPoint")),
+	("regPoint", lambda writer, node:getcmifattr(writer, node, "regPoint", 'topLeft')),
 	("regAlign", lambda writer, node:getcmifattr(writer, node, "regAlign", 'topLeft')),
 	
 	("backgroundColor", lambda writer, node:getbgcoloratt(writer, node, "bgcolor")),	

@@ -629,22 +629,6 @@ class MMChannel:
 		elif self.attrdict.has_key(name):
 			return self.attrdict[name]
 
-	#
-	# Emulate the dictionary interface
-	#
-	def __getitem__(self, key):
-		if self.attrdict.has_key(key):
-			return self.attrdict[key]
-		else:
-			# special case for background color
-			if key == 'bgcolor' and \
-			   self.attrdict.has_key('base_window') and \
-			   self.attrdict.get('transparent', 0) <= 0:
-				pname = self.attrdict['base_window']
-				pchan = self.context.channeldict[pname]
-				return pchan['bgcolor']
-			raise KeyError, key
-
 	def setvisiblechannelattrs(self):
 		from windowinterface import UNIT_PXL
 		if not settings.get('cmif'):
@@ -665,6 +649,22 @@ class MMChannel:
 				self.attrdict['bgcolor'] = 255,255,255
 			else:
 				self.attrdict['bgcolor'] = 0,0,0
+
+	#
+	# Emulate the dictionary interface
+	#
+	def __getitem__(self, key):
+		if self.attrdict.has_key(key):
+			return self.attrdict[key]
+		else:
+			# special case for background color
+			if key == 'bgcolor' and \
+			   self.attrdict.has_key('base_window') and \
+			   self.attrdict.get('transparent', 0) <= 0:
+				pname = self.attrdict['base_window']
+				pchan = self.context.channeldict[pname]
+				return pchan['bgcolor']
+			raise KeyError, key
 
 	def __setitem__(self, key, value):
 		if key == 'type':
@@ -707,22 +707,50 @@ class MMChannel:
 # The Sync Arc class
 #
 class MMSyncArc:
-	def __init__(self, dstnode, action, srcnode=None, srcanchor=None, event=None, marker=None, wallclock=None, delay=None):
+	def __init__(self, dstnode, action, srcnode=None, srcanchor=None,
+		     channel=None, event=None, marker=None, wallclock=None,
+		     delay=None):
 		self.__isresolvedcalled = 0
 		if __debug__:
-			if event is None and marker is None:
+			assert event is None or marker is None
+			if wallclock is not None:
 				assert srcnode is None
-			else:
-				assert srcnode is not None
-			if srcnode is None:
-				assert event is None and marker is None
-			else:
+				assert srcanchor is None
+				assert channel is None
+				assert event is None
+				assert marker is None
+				assert delay == 0
+			elif channel is not None:
+				assert srcnode is None
+				assert srcanchor is None
+				assert event is not None
+				assert marker is None
+				assert delay is not None
+			elif srcnode is not None:
+				if srcnode == 'syncbase':
+					assert marker is None
+					assert srcanchor is None
+				elif srcnode == 'prev':
+					assert marker is None
+					assert srcanchor is None
 				assert event is not None or marker is not None
+			else:
+				# wallclock is None and channel is None
+				# and srcnode is None:
+				# indefinite
+				assert srcanchor is None
+				assert event is None
+				assert marker is None
+				assert delay is None
 		self.dstnode = dstnode
 		self.isstart = action == 'begin'
 		self.ismin = action == 'min'
-		self.srcnode = srcnode	# None if syncbase; "prev" if previous; else MMNode instance
+		self.srcnode = srcnode	# None if not associated with a node,
+					# "syncbase" if syncbase;
+					# "prev" if previous;
+					# else MMNode instance
 		self.srcanchor = srcanchor
+		self.channel = channel	# MMChannel instance or None
 		self.event = event
 		self.marker = marker
 		self.wallclock = wallclock
@@ -750,20 +778,24 @@ class MMSyncArc:
 			else:
 				tz = ''
 			return '<MMSyncArc instance, wallclock=%s%s%s>' % (date, time, tz)
-		if self.srcnode is None:
+		if self.delay is None:
+			src = 'indefinite'
+		elif self.channel is not None:
+			src = self.channel.name
+		elif self.srcnode == 'syncbase':
 			src = 'syncbase'
 		elif self.srcnode == 'prev':
 			src = 'prev'
 		else:
 			src = `self.srcnode`
-		if self.srcanchor is not None:
-			src = src + '#' + self.srcanchor
+			if self.srcanchor is not None:
+				src = src + '#' + self.srcanchor
 		if self.event is not None:
 			src = src + '.' + self.event
 		if self.marker is not None:
 			src = src + '.marker(%s)' % self.marker
 		if self.delay is None:
-			src = src + '+indefinite'
+			pass		# we've handled indefinite already
 		elif self.delay > 0:
 			src = src + '+%g' % self.delay
 		elif self.delay < 0:
@@ -784,11 +816,13 @@ class MMSyncArc:
 	def refnode(self):
 		node = self.dstnode
 		pnode = node.GetSchedParent()
-		if self.wallclock is not None:
-			refnode = pnode or node
-			refnode = refnode.looping_body_self or refnode
-		elif self.srcnode == 'prev' or \
-		     (self.srcnode is None and
+		if self.wallclock is not None or self.channel is not None:
+			return node.GetRoot()
+
+		assert self.srcnode is not None
+
+		if self.srcnode == 'prev' or \
+		     (self.srcnode == 'syncbase' and
 		      (pnode is None or pnode.type == 'seq')):
 			if pnode is None:
 				return node
@@ -797,7 +831,7 @@ class MMSyncArc:
 				if c is node:
 					break
 				refnode = c
-		elif self.srcnode is None:
+		elif self.srcnode == 'syncbase':
 			# pnode is not None
 			refnode = pnode.looping_body_self or pnode
 		elif self.srcnode is node:
@@ -810,11 +844,13 @@ class MMSyncArc:
 		if self.timestamp is not None:
 			return 1
 		if self.delay is None:
-			return 0
+			return 0	# indefinite
 		if self.wallclock is not None:
 			if timefunc is not None:
 				return 1
 			return 0
+		if self.channel is not None:
+			return self.dstnode.GetRoot().eventhappened((self.channel._name, self.event))
 		if self.dstnode.GetSchedParent() is None:
 			# if destination is root node, only offsets are resolved
 			if self.event is None and self.marker is None:
@@ -903,7 +939,10 @@ class MMSyncArc:
 				return tm + t1 - t0 + self.delay
 			t = time.mktime((yr,mt,dy,hr,mn,sc,0,0,-1))
 			return t + t1 - t0 + self.delay
-				
+
+		if self.channel is not None:
+			return self.dstnode.GetRoot().happenings[(self.channel._name, self.event)]
+
 		refnode = self.refnode()
 		atimes = (0, 0)
 		if self.srcanchor is not None:
@@ -1113,7 +1152,7 @@ class MMNode:
 		for c in self.children:
 			c.resetall(sched)
 		for arc in self.FilterArcList(MMAttrdefs.getattr(self, 'beginlist') + MMAttrdefs.getattr(self, 'endlist')) + self.durarcs:
-			refnode = self.__find_refnode(arc)
+			refnode = arc.refnode()
 			if arc in refnode.sched_children:
 				refnode.sched_children.remove(arc)
 			if arc.qid is not None:
@@ -2035,9 +2074,6 @@ class MMNode:
 ##				c.EndPruneTree()
 ##			del self.wtd_children
 
-	def __find_refnode(self, arc):
-		return arc.refnode()
-
 	def isresolved(self):
 		if self.start_time is not None:
 			return self.start_time
@@ -2431,7 +2467,7 @@ class MMNode:
 			node.sched_children.remove(arc)
 		body.arcs = []
 		for arc in body.durarcs:
-			refnode = body.__find_refnode(arc)
+			refnode = arc.refnode()
 			refnode.sched_children.remove(arc)
 			if arc.qid is not None:
 				try:
@@ -2445,7 +2481,7 @@ class MMNode:
 			beginlist = self.FilterArcList(beginlist)
 			for arc in beginlist:
 				#print 'deleting arc',`arc`
-				refnode = child.__find_refnode(arc)
+				refnode = arc.refnode()
 				refnode.sched_children.remove(arc)
 				if arc.qid is not None:
 					try:
@@ -2456,7 +2492,7 @@ class MMNode:
 ##				arc.timestamp = None
 			for arc in self.FilterArcList(MMAttrdefs.getattr(child, 'endlist')):
 				#print 'deleting arc',`arc`
-				refnode = child.__find_refnode(arc)
+				refnode = arc.refnode()
 				refnode.sched_children.remove(arc)
 				if arc.qid is not None:
 					try:
@@ -2555,7 +2591,7 @@ class MMNode:
 			else:
 				schedule = 0
 				for arc in beginlist:
-					refnode = child.__find_refnode(arc)
+					refnode = arc.refnode()
 					refnode.add_arc(arc)
 					if arc.event == 'begin' and \
 					   refnode is self_body and \
@@ -2573,7 +2609,7 @@ class MMNode:
 			elif schedule or termtype == 'ALL':
 				scheddone_events.append((SCHED_DONE, child))
 			for arc in self.FilterArcList(MMAttrdefs.getattr(child, 'endlist')):
-				refnode = child.__find_refnode(arc)
+				refnode = arc.refnode()
 				refnode.add_arc(arc)
 			cdur = child.calcfullduration()
 			if cdur is not None and child.fullduration is not None:
@@ -3143,7 +3179,6 @@ class MMNode:
 		newlist = []
 		for arc in arclist:
 			refnode = arc.refnode()
-			skip = 0
 			if refnode.canplay is None:
 				path = refnode.GetPath()
 				for node in path:

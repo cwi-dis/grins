@@ -113,6 +113,7 @@ class LayoutChannel(ChannelWindow):
 					units = units, adornments = adornments,
 					commandlist = self.commandlist,
 					bgcolor = bgcolor)
+			self.event((self._attrdict, 'viewportOpenEvent'))
 ##			if hasattr(self._player, 'editmgr'):
 ##				menu.append(('', 'select in timeline view',
 ##					     (self.focuscall, ())))
