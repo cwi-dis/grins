@@ -1,10 +1,11 @@
-import string, MMurl
-
-cache = {}
+import string, MMurl, urlcache
 
 def GetSize(url, maintype = None, subtype = None):
-	if cache.has_key(url):
-		return cache[url]
+	cache = urlcache.urlcache[url]
+	width = cache.get('width')
+	height = cache.get('height')
+	if width is not None and height is not None:
+		return width, height
 	u = None
 	if maintype is None:
 		u = MMurl.urlopen(url)
@@ -24,7 +25,8 @@ def GetSize(url, maintype = None, subtype = None):
 		width, height = GetVideoSize(file)
 	else:
 		width = height = 0
-	cache[url] = width, height
+	cache['width'] = width
+	cache['height'] = height
 	return width, height
 
 def GetImageSize(file):
