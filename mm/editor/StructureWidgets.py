@@ -179,6 +179,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		pass
 
 	def get_node(self):
+		assert self.node is not None
 		return self.node
 
 	def add_event_icons(self):
@@ -209,6 +210,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 
 	def collapse_all(self):		  # Is this doable using a higher-order function?
 		return
+
+	def iscollapsed(self):
+		return 0
 
 	def isvisible(self):
 		# a node is visible if none of its ancestors is collapsed
@@ -673,13 +677,13 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 #	def deletecall(self):
 #		self.mother.deletefocus(0)
 
-	def cutcall(self):
-		self.mother.deletefocus(1)
+#	def cutcall(self):
+#		self.mother.deletefocus(1)
 
-	def copycall(self):
-		mother = self.mother
-		mother.toplevel.setwaiting()
-		mother.copyfocus()
+#	def copycall(self):
+#		mother = self.mother
+#		mother.toplevel.setwaiting()
+#		mother.copyfocus()
 
 	def createbeforecall(self, chtype=None):
 		self.mother.create(-1, chtype=chtype)
@@ -708,14 +712,14 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def createaltcall(self):
 		self.mother.insertparent('switch')
 
-	def pastebeforecall(self):
-		self.mother.paste(-1)
+##	def pastebeforecall(self):
+##		self.mother.paste(-1)
 
-	def pasteaftercall(self):
-		self.mother.paste(1)
+##	def pasteaftercall(self):
+##		self.mother.paste(1)
 
-	def pasteundercall(self):
-		self.mother.paste(0)
+##	def pasteundercall(self):
+##		self.mother.paste(0)
 
 	def show_mesg(self, msg = None):
 		if msg is None:
@@ -959,6 +963,8 @@ class StructureObjWidget(MMNodeWidget):
 
 		MMNodeWidget.draw(self, displist)
 
+	def get_popupmenu(self):
+		return self.mother.interior_popupmenu
 
 #
 # The HorizontalWidget is any sideways-drawn StructureObjWidget.
@@ -1965,6 +1971,9 @@ class MediaWidget(MMNodeWidget):
 				return self
 		else:
 			return None
+
+	def get_popupmenu(self):
+		return self.mother.leaf_popupmenu
 
 
 class CommentWidget(MMNodeWidget):

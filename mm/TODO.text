@@ -1,25 +1,5 @@
 TODO for Michael :-) 
 ---------------------------------------------
 
-* Ask alain about me implementing 'find' in the source view.
-
-* Merging two nodes - go through the attributes and find wrong ones
-* Open URL.. dialog - test it more.
-
-* Add something to the editmanager to test whether the structure has changed and whether we should redraw the structure view.
-
-* Look closely at the preferences dialog.
-* clean out the EditableObjects.py
-* Arrows between hyperlinks.
-* help doesn't work in the event editor.
-
-* HierarchyView - event icons don't always undisplay themselves.
-
-* Can't reference another node in the event editor.
-* Editing events directly from the Structure view.
-
-* Multiple selection (not needed?)
-	- Dragging and dropping.
-	- properties
-
-* Structure widgets optimisation - make them constructed with MMNodes.
+* Subclass the icons.
+* Multiple node operations - undo doesn't always work.
