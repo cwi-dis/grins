@@ -31,9 +31,11 @@ def _qread():
 	global _last_forms
 	while not _last_forms:
 		_last_forms = fl.do_forms()
-	retval = _real_qread()
+	dev, val = _real_qread()
+	import glwindow
+	glwindow.dispatch(dev, val)
 	_last_forms = None
-	return retval
+	return 0, 0
 
 def _qtest():
 	global _last_forms
