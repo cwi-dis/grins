@@ -283,6 +283,7 @@ sound_player(self)
 			}
 			if (c == 'r') {
 				PRIV->s_port = ALopenport("sound channel", "w", config);
+				portfd = ALgetfd(PRIV->s_port);
 				release_lock(PRIV->s_lock);
 				continue;
 			} else {
