@@ -1070,7 +1070,15 @@ def getinfo(url, fp = None, printfunc = None):
 		info = rmff(url, fp)
 	elif head == '.ra\375':
 		# RealAudio
+		import struct
 		info = {}
+		data = fp.read(32)
+		if data[:2] == '\000\004':
+			# version 4 RealAudio
+			# number of encoded bytes, bytes per minute
+			nbytes, bpm = struct.unpack('>ii', data[8:8+8])
+			info['duration'] = nbytes * 60. / bpm
+			info['bitrate'] = int(bpm / 60. * 8 + .5)
 	else:
 		# unknown format
 		info = {}
