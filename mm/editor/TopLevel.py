@@ -46,11 +46,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			url = '//%s%s' % (host, url)
 		if utype:
 			url = '%s:%s' % (utype, url)
-		self.filename = url
-		self.source = None
 		self.read_it()
-		self.makeviews()
-		self.window = None
+
 		self.commandlist = [
 			PLAY(callback = (self.play_callback, ())),
 			PLAYERVIEW(callback = (self.view_callback, (0,))),
@@ -70,6 +67,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		   hasattr(windowinterface, 'textwindow'):
 			self.commandlist.append(
 				SOURCE(callback = (self.source_callback, ())))
+
+		self.filename = url
+		self.window = None
+		self.source = None
+		TopLevelDialog.__init__(self)
+		self.makeviews()
 
 	def __repr__(self):
 		return '<TopLevel instance, url=' + `self.filename` + '>'

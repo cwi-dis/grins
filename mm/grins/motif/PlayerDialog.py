@@ -75,6 +75,10 @@ class PlayerDialog:
 		self.__commandlist = []
 		self.__channels = []
 		self.__channeldict = {}
+		
+	def preshow(self):
+		# If anything has to be done before showing the channels do it here.
+		pass
 
 	def topcommandlist(self, list):
 		if list != self.__topcommandlist:

@@ -37,6 +37,8 @@ class NEW_DOCUMENT(_CommandBase):
 	help = 'Create new document'
 class OPEN(_CommandBase):
 	help = 'Open existing document'
+class OPEN_LOCAL_FILE(_CommandBase):
+	help = 'Open existing document'
 class TRACE(_CommandBase):
 	help = 'DEBUG: toggle trace flag'
 class DEBUG(_CommandBase):
@@ -140,8 +142,10 @@ class PLAYFROM(_CommandBase):
 	help = 'Start playing from the selected node'
 class PUSHFOCUS(_CommandBase):
 	help = 'Select the selected node in other views'
-class FINISH_LINK(_CommandBase): pass
-class FINISH_ARC(_CommandBase): pass
+class FINISH_LINK(_CommandBase): 
+	help = 'Create hyperlink from recent anchor to focus'
+class FINISH_ARC(_CommandBase): 
+	help = 'Lock focus, create sync arc to next selected node' 
 class THUMBNAIL(_CommandBase):
 	help = 'Toggle between showing and not showing thumbnails'
 
