@@ -1,5 +1,7 @@
 # experimental layout view
 
+treeVersion = 0
+
 import windowinterface
 import win32ui, win32api, win32con
 
@@ -30,8 +32,13 @@ class LayoutViewDialog2:
 		# for now, avoid to define one handler by ctrl	
 		self.dialogCtrl=w.getDialogComponent()
 		self.dialogCtrl.setDialogHandler(self)
-		
+
+		if treeVersion:
+			# tree control
+			self.treeCtrl = w.getTreeComponent()
+
 		self.__window = w
+		
 
 	def destroy(self):
 		if self.__window is None:
@@ -104,3 +111,5 @@ class LayoutViewDialog2:
 					    cancelCallback = cancelCallBack,
 					    parent = self.__window)
 		w.show()
+
+

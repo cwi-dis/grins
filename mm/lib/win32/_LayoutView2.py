@@ -1,5 +1,7 @@
 # Experimental layout view for light region view
 
+treeVersion = 0
+
 # editor features
 import features
 
@@ -40,51 +42,66 @@ from GenFormView import GenFormView
 
 class _LayoutView2(GenFormView):
 	def __init__(self,doc,bgcolor=None):
-		if features.CUSTOM_REGIONS in features.feature_set:
-			GenFormView.__init__(self,doc,grinsRC.IDD_LAYOUT3)
+		if treeVersion:
+			GenFormView.__init__(self,doc,grinsRC.IDD_LAYOUT_T1)			
 		else:
-			GenFormView.__init__(self,doc,grinsRC.IDD_LAYOUT2)
+			if features.CUSTOM_REGIONS in features.feature_set:
+				GenFormView.__init__(self,doc,grinsRC.IDD_LAYOUT3)
+			else:
+				GenFormView.__init__(self,doc,grinsRC.IDD_LAYOUT2)
 		self._layout = None
 		self._mmcontext = None
 
-		# Initialize control objects
-		# save them in directory: accessible directly from LayoutViewDialog class
-		# note: if you modify the key names, you also have to modify them in LayoutViewDialog
-		self.__ctrlNames=n=('ViewportSel','RegionSel','RegionX','RegionY',
+		if not treeVersion:
+			# Initialize control objects
+			# save them in directory: accessible directly from LayoutViewDialog class
+			# note: if you modify the key names, you also have to modify them in LayoutViewDialog
+			self.__ctrlNames=n=('ViewportSel','RegionSel','RegionX','RegionY',
 							'RegionW','RegionH','RegionZ', 'ShowNames',
 							'AsOutLine',
 							'ShowRbg', 'SendBack', 'BringFront', 'MediaSel',
 							'ViewportCheck','RegionCheck','MediaCheck','HideRegion','HideMedia')
-		if features.CUSTOM_REGIONS in features.feature_set:
-			n = n + ('NewRegion', 'DelRegion', 'NewView', 'ShowAllRegions')
+			if features.CUSTOM_REGIONS in features.feature_set:
+				n = n + ('NewRegion', 'DelRegion', 'NewView', 'ShowAllRegions')
 			
-		i = 0
-		self[n[i]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_VIEWPORT_SEL); i=i+1
-		self[n[i]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_REGION_SEL); i=i+1
-		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_X); i=i+1
-		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Y); i=i+1
-		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_W); i=i+1
-		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_H); i=i+1
-		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Z); i=i+1
-		self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_NAMES); i=i+1
-		self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_AS_OUTLINE); i=i+1
-		self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_RBG); i=i+1
-		self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_SENDBACK); i=i+1
-		self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_BRINGFRONT); i=i+1
-		self[n[i]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_MEDIA_SEL); i=i+1
-		self[n[i]]=components.RadioButton(self,grinsRC.IDC_LAYOUT_VIEWPORT_RADIO); i=i+1
-		self[n[i]]=components.RadioButton(self,grinsRC.IDC_LAYOUT_REGION_RADIO); i=i+1
-		self[n[i]]=components.RadioButton(self,grinsRC.IDC_LAYOUT_MEDIA_RADIO); i=i+1
-		self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_HIDEREGION); i=i+1
-		self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_HIDEMEDIA); i=i+1
-		if features.CUSTOM_REGIONS in features.feature_set:
-			self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_NEWREGION); i=i+1
-			self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_DELREGION); i=i+1
-			self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_NEWVIEW); i=i+1
-			self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_ALLREGIONS); i=i+1
-		
-		# Initialize control objects whose command are activable as well from menu bar
-		self[ATTRIBUTES]=components.Button(self,grinsRC.IDCMD_ATTRIBUTES)
+			i = 0
+			self[n[i]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_VIEWPORT_SEL); i=i+1
+			self[n[i]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_REGION_SEL); i=i+1
+			self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_X); i=i+1
+			self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Y); i=i+1
+			self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_W); i=i+1
+			self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_H); i=i+1
+			self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Z); i=i+1
+			self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_NAMES); i=i+1
+			self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_AS_OUTLINE); i=i+1
+			self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_RBG); i=i+1
+			self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_SENDBACK); i=i+1
+			self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_BRINGFRONT); i=i+1
+			self[n[i]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_MEDIA_SEL); i=i+1
+			self[n[i]]=components.RadioButton(self,grinsRC.IDC_LAYOUT_VIEWPORT_RADIO); i=i+1
+			self[n[i]]=components.RadioButton(self,grinsRC.IDC_LAYOUT_REGION_RADIO); i=i+1
+			self[n[i]]=components.RadioButton(self,grinsRC.IDC_LAYOUT_MEDIA_RADIO); i=i+1
+			self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_HIDEREGION); i=i+1
+			self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_HIDEMEDIA); i=i+1
+			if features.CUSTOM_REGIONS in features.feature_set:
+				self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_NEWREGION); i=i+1
+				self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_DELREGION); i=i+1
+				self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_NEWVIEW); i=i+1
+				self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_ALLREGIONS); i=i+1
+		else:
+			self.__ctrlNames=n=('RegionX','RegionY','RegionW','RegionH','RegionZ','ShowAllMedias')
+			
+			i = 0
+			self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_X); i=i+1
+			self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Y); i=i+1
+			self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_W); i=i+1
+			self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_H); i=i+1
+			self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Z); i=i+1
+			self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_ALLMEDIAS); i=i+1
+			
+		if not treeVersion:
+			# Initialize control objects whose command are activable as well from menu bar
+			self[ATTRIBUTES]=components.Button(self,grinsRC.IDCMD_ATTRIBUTES)
 		
 		self._activecmds={}
 
@@ -98,9 +115,14 @@ class _LayoutView2(GenFormView):
 		self._previousHandler = None
 		self._layout = LayoutManager()
 
+		if treeVersion:
+			# tree component
+			self._treeComponent = TreeManager()
+		
 		# allow to valid the field with the return key
 		self.lastModifyCtrlField = None
-		
+			
+			
 	# special initialization because previous control is not managed like any another component
 	# allow to have a handle on previous component from an external module
 	def getPreviousComponent(self):
@@ -113,6 +135,10 @@ class _LayoutView2(GenFormView):
 	# define a handler for callbacks fnc
 	def setDialogHandler(self, handler):
 		self._dialogHandler = handler
+
+	# tree component
+	def getTreeComponent(self):
+		return self._treeComponent
 
 	def OnInitialUpdate(self):
 		GenFormView.OnInitialUpdate(self)
@@ -128,7 +154,11 @@ class _LayoutView2(GenFormView):
 		rc = l2-l1, t2-t1, r2-l2, b2-t2
 		bgcolor = (255, 255, 255)
 		self._layout.onInitialUpdate(self, rc, bgcolor)
-		
+
+		# initialize the control tree
+		if treeVersion:
+			self._treeComponent.onInitialUpdate(self)
+			
 		# we have to notify layout if has capture
 		self.HookMessage(self.onMouse,win32con.WM_LBUTTONDOWN)
 		self.HookMessage(self.onMouse,win32con.WM_LBUTTONUP)
@@ -218,17 +248,18 @@ class _LayoutView2(GenFormView):
 		if nmsg==win32con.LBN_SELCHANGE:
 			ctrlName = None
 		
-			if id == self['ViewportSel']._id:
-				ctrlName = 'ViewportSel'
-			elif id == self['RegionSel']._id:
-				ctrlName = 'RegionSel'
-			elif id == self['MediaSel']._id:
-				ctrlName = 'MediaSel'
-			if ctrlName != None:
-				self[ctrlName].callcb()
-				value = self[ctrlName].getvalue()
-				self._dialogHandler.onSelecterCtrl(ctrlName, value)				
-				return
+			if not treeVersion:
+				if id == self['ViewportSel']._id:
+					ctrlName = 'ViewportSel'
+				elif id == self['RegionSel']._id:
+					ctrlName = 'RegionSel'
+				elif id == self['MediaSel']._id:
+					ctrlName = 'MediaSel'
+				if ctrlName != None:
+					self[ctrlName].callcb()
+					value = self[ctrlName].getvalue()
+					self._dialogHandler.onSelecterCtrl(ctrlName, value)				
+					return
 
 			# multi selection ctrl			
 #			if id == self['RegionList']._id:
@@ -243,44 +274,49 @@ class _LayoutView2(GenFormView):
 		if nmsg==win32con.BN_CLICKED:
 			ctrlName = None
 			
-			if id == self['ShowNames']._id:
-				ctrlName = 'ShowNames'
-			elif id == self['AsOutLine']._id:
-				ctrlName = 'AsOutLine'
-			elif id == self['ShowRbg']._id:
-				ctrlName = 'ShowRbg'
-			elif id == self['ViewportCheck']._id:
-				ctrlName = 'ViewportCheck'
-			elif id == self['RegionCheck']._id:
-				ctrlName = 'RegionCheck'
-			elif id == self['MediaCheck']._id:
-				ctrlName = 'MediaCheck'
-			if ctrlName == None:
-				if features.CUSTOM_REGIONS in features.feature_set:
-					if id == self['ShowAllRegions']._id:
-						ctrlName = 'ShowAllRegions'
+			if not treeVersion:
+				if id == self['ShowNames']._id:
+					ctrlName = 'ShowNames'
+				elif id == self['AsOutLine']._id:
+					ctrlName = 'AsOutLine'
+				elif id == self['ShowRbg']._id:
+					ctrlName = 'ShowRbg'
+				elif id == self['ViewportCheck']._id:
+					ctrlName = 'ViewportCheck'
+				elif id == self['RegionCheck']._id:
+					ctrlName = 'RegionCheck'
+				elif id == self['MediaCheck']._id:
+					ctrlName = 'MediaCheck'
+				if ctrlName == None:
+					if features.CUSTOM_REGIONS in features.feature_set:
+						if id == self['ShowAllRegions']._id:
+							ctrlName = 'ShowAllRegions'
+			else:
+				if id == self['ShowAllMedias']._id:
+					ctrlName = 'ShowAllMedias'
 						
 			if ctrlName != None:
 				value = self[ctrlName].getcheck()
 				self._dialogHandler.onCheckCtrl(ctrlName, value)
 				return 
 
-			if id == self['SendBack']._id:
-				ctrlName = 'SendBack'
-			elif id == self['BringFront']._id:
-				ctrlName = 'BringFront'
-			elif id == self['HideRegion']._id:
-				ctrlName = 'HideRegion'
-			elif id == self['HideMedia']._id:
-				ctrlName = 'HideMedia'
-			if ctrlName == None:
-				if features.CUSTOM_REGIONS in features.feature_set:
-					if id == self['NewRegion']._id:
-						ctrlName = 'NewRegion'
-					elif id == self['DelRegion']._id:
-						ctrlName = 'DelRegion'
-					elif id == self['NewView']._id:
-						ctrlName = 'NewView'
+			if not treeVersion:
+				if id == self['SendBack']._id:
+					ctrlName = 'SendBack'
+				elif id == self['BringFront']._id:
+					ctrlName = 'BringFront'
+				elif id == self['HideRegion']._id:
+					ctrlName = 'HideRegion'
+				elif id == self['HideMedia']._id:
+					ctrlName = 'HideMedia'
+				if ctrlName == None:
+					if features.CUSTOM_REGIONS in features.feature_set:
+						if id == self['NewRegion']._id:
+							ctrlName = 'NewRegion'
+						elif id == self['DelRegion']._id:
+							ctrlName = 'DelRegion'
+						elif id == self['NewView']._id:
+							ctrlName = 'NewView'
 		
 			if ctrlName != None:
 				self._dialogHandler.onButtonClickCtrl(ctrlName)
@@ -392,6 +428,72 @@ class _LayoutView2(GenFormView):
 #			rgb = win32ui.GetWin32Sdk().GetRGBValues(newcol)
 #			shape.updatebgcolor(rgb)
 #			self._layout.update()
+
+###########################
+# tree component management
+# the tree component is based on the PyCTreeCtrl python class, which is itself based
+# on MFC CTreeCtrl class. So it's not a lightweight component as Button, List,
+# that we manage in componenent module
+
+class TreeManager:
+	def __init__(self):
+		self.__imageList = win32ui.CreateImageList(32, 32, 0, 10, 5)
+		self.bitmapNameToId = {}
+		
+	def onInitialUpdate(self, parent):
+		# get the tree control form the dialog box ressource
+		import win32con, win32ui
+		Sdk=win32ui.GetWin32Sdk()
+		parentHwnd = parent.GetSafeHwnd()
+		self.treeCtrl = parent.GetDlgItem(grinsRC.IDC_TREE1)
+
+		# init the image list used in the tree
+		self.__initImageList()
+
+	def _loadbmp(self, idRes):
+		import win32dialog
+		return win32dialog.loadBitmapFromResId(idRes)
+
+	def __addImage(self, bitmap):
+		return self.__imageList.Add(bitmap.GetHandle(), 0)
+		
+	def __initImageList(self):
+		# initialize
+		import grinsRC
+
+		# viewport
+		bitmap = self._loadbmp(grinsRC.IDB_VIEWPORT)
+		id = self.__addImage(bitmap)
+		self.bitmapNameToId['viewport'] = id
+		# region
+		bitmap = self._loadbmp(grinsRC.IDB_REGION)
+		id = self.__addImage(bitmap)
+		self.bitmapNameToId['region'] = id
+		# media nodes
+		for name, idRes in [('image',grinsRC.IDB_IMAGE), ('sound',grinsRC.IDB_SOUND),
+							('video',grinsRC.IDB_VIDEO), ('text',grinsRC.IDB_TEXT),
+							('html',grinsRC.IDB_HTML)]:
+			bitmap = self._loadbmp(idRes)
+			id = self.__addImage(bitmap)
+			self.bitmapNameToId[name] = id
+
+		self.treeCtrl.SetImageList(self.__imageList, commctrl.LVSIL_NORMAL)
+
+	def insertNode(self, parent, text, imageName, selectedImageName):
+		iImage = self.bitmapNameToId.get(imageName)
+		iSelectedImage = self.bitmapNameToId.get(selectedImageName)
+		mask = int(commctrl.TVIF_TEXT|commctrl.TVIF_IMAGE|commctrl.TVIF_SELECTEDIMAGE)
+		ret = self.treeCtrl.InsertItem(mask,
+						text, # text
+						iImage, # iImage
+						iSelectedImage, # iSelectedImage
+						commctrl.TVIS_BOLD , # state
+						0, #state mask
+						None, #lParam
+						parent, # parent
+						commctrl.TVI_FIRST) 
+		return ret
+								  		
 
 ###########################
 class LayoutManager(window.Wnd, win32window.DrawContext):
