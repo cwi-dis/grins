@@ -171,6 +171,9 @@
 (macprog (string) '' 'Mac program signature' default
 	'4-byte application signature (mac only)' channel (cmif))
 
+(max (float) 0.0 'Maximum duration' default
+	'Maximum duration of a node or subtree' normal (smil2))
+
 (mcgroup (string) '' 'Multicast group' default
 	'IP Multicast group address to listen to' raw (cmif))
 
@@ -179,6 +182,9 @@
 
 (mimetype (string) '' 'MIME type' default
 	'MIME type of media object' raw (g2_pro qt_pro smil10 cmif))
+
+(min (float) 0.0 'Minimum duration' default
+	'Minimum duration of a node or subtree' normal (smil2))
 
 (name (name) '' 'Node name' default
 	'Name for the node' raw (all))

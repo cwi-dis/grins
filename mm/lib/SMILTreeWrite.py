@@ -191,6 +191,53 @@ def WriteBareString(node, cleanSMIL = 0):
 #
 # Functions to encode data items
 #
+def fmtfloat(val, suffix = '', withsign = 0, prec = -1):
+	if val < 0:
+		val = -val
+		sign = '-'
+	elif withsign:
+		sign = '+'
+	else:
+		sign = ''
+	str = '%g' % val
+	if 'e' in str:
+		str, x = string.split(str, 'e')
+		strs = string.split(str, '.')
+		if len(strs) == 1:
+			str1 = strs[0]
+			str2 = ''
+		else:
+			str1, str2 = strs
+		if x[0] == '-':
+			x = int(x[1:])
+			str = '0'*x + str1 + str2
+			str = str[:len(str1)] + '.' + str[len(str1):]
+		else:
+			x = int(x)
+			str = str1 + str2 + '0'*x
+			str = str[:len(str1) + x] + '.' + str[len(str1) + x:]
+	if '.' in str:
+		while str[-1] == '0':
+			str = str[:-1]
+		if str[-1] == '.':
+			str = str[:-1]
+	if prec >= 0:
+		if '.' in str:
+			str1, str2 = string.split(str, '.')
+		else:
+			str1 = str
+			str2 = ''
+		if prec == 0:
+			str = str1
+		else:
+			str2 = str2 + '0'*prec
+			str = str1 + '.' + str2[:prec]
+	while str[:1] == '0' and str[1:2] in '0123456789':
+		str = str[1:]
+	if not str:
+		str = '0'
+	return sign + str + suffix
+
 def getid(writer, node):
 	uid = node.GetUID()
 	name = writer.uid2name[uid]
@@ -361,8 +408,7 @@ def getsubregionatt(writer, node, attr):
 				return None
 
 		if units == UNIT_SCREEN:
-			val = val*100
-			return "%.1f%%" % val
+			return fmtfloat(100*val, '%', prec = 1)
 		else:
 			return str(val)
 	return None
@@ -443,30 +489,33 @@ def getduration(writer, node, attr = 'duration'):
 	if duration < 0:		# infinite duration...
 		return 'indefinite'
 	else:
-		duration = '%.3f' % duration
-		if duration[-4:] == '.000':
-			duration = duration[:-4]
-		return duration + 's'
+		return fmtfloat(duration, 's')
+
+def getmin(writer, node):
+	min = MMAttrdefs.getattr(node, 'min')
+	if not min:
+		return None		# 0 or None
+	return fmtfloat(min, 's')
+
+def getmax(writer, node):
+	max = node.GetRawAttrDef('max', None)
+	if max is None:
+		return None
+	return fmtfloat(max, 's')
 
 def getspeed(writer, node, attr = 'speed'):
 	speed = MMAttrdefs.getattr(node, attr)
 	if not speed:
 		return '1'
 	else:
-		speed = '%.3f' % speed
-		if speed[-4:] == '.000':
-			speed = speed[:-4]
-		return speed
+		return fmtfloat(speed)
 
 def getproportion(writer, node, attr, defstr='0'):
 	prop = MMAttrdefs.getattr(node, attr)
 	if not prop:
 		return defstr
 	else:
-		prop = '%.3f' % prop
-		if prop[-4:] == '.000':
-			prop = prop[:-4]
-		return prop
+		return fmtfloat(prop)
 
 def getfill(writer, node, attr):
 	fill = getcmifattr(writer, node, attr)
@@ -492,7 +541,7 @@ def getsyncarc(writer, node, isend):
 			nomultiple = 1
 			list.append('indefinite')
 		elif arc.srcnode is None and arc.event is None and arc.marker is None and arc.wallclock is None:
-			list.append('%gs' % arc.delay)
+			list.append(fmtfloat(arc.delay, 's'))
 		elif arc.wallclock is not None:
 			yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn = arc.wallclock
 			if yr is not None:
@@ -518,10 +567,7 @@ def getsyncarc(writer, node, isend):
 			if arc.event is not None:
 				name = name + escape_name(arc.event, 0)
 			if arc.delay is not None:
-				if arc.delay > 0:
-					name = '%s+%g' % (name, arc.delay)
-				elif arc.delay < 0:
-					name = name + '%g' % arc.delay
+				name = name + fmtfloat(arc.delay, withsign = 1)
 			list.append(name)
 		else:
 			list.append('%s.marker(%s)' % (escape_name(writer.uid2name[arc.srcnode.GetUID()]), arc.marker))
@@ -550,7 +596,7 @@ def getsyncarc(writer, node, isend):
 ##				      node.GetRawAttrDef('name', '<unnamed>'),\
 ##				      node.GetUID()
 ##			else:
-##				return '%.3fs' % delay
+##				return fmtfloat(delay, 's')
 ##	if not arc:
 ##		return
 ##	if not writer.uid2name.has_key(srcuid):
@@ -574,7 +620,7 @@ def getsyncarc(writer, node, isend):
 ##	   (srcside and ptype == 'seq' and index > 0 and
 ##	    srcuid == siblings[index-1].GetUID()):
 ##		# sync arc from parent/previous node
-##		rv = '%.3fs' % delay
+##		rv = fmtfloat(delay, 's')
 ##	elif srcside == 1:
 ##		srcname = writer.uid2name[srcuid]
 ##		rv = 'id(%s)'%srcname
@@ -584,9 +630,9 @@ def getsyncarc(writer, node, isend):
 ##				print '** Delay required with end syncarc',\
 ##				      node.GetRawAttrDef('name', '<unnamed>'),\
 ##				      node.GetUID()
-####			rv = rv+'+%.3f'%delay
+####			rv = rv+fmtfloat(delay, withsign=1)
 ##		else:
-##			rv = rv+'(%.3fs)' % delay
+##			rv = rv+'(%s)' % fmtfloat(delay, 's')
 ##		for s in siblings:
 ##			if srcuid == s.GetUID():
 ##				# in scope
@@ -649,7 +695,7 @@ def getsyncarc(writer, node, isend):
 ##	print '*  Fixing out of scope syncarc to',\
 ##	      node.GetRawAttrDef('name', '<unnamed>'),\
 ##	      node.GetUID()
-##	return '%.3fs' % delay
+##	return fmtfloat(delay, 's')
 
 def fixsyncarc(writer, node, srcuid, srcside, delay, dstside, rv):
 	if writer.smilboston:
@@ -698,7 +744,7 @@ def fixsyncarc(writer, node, srcuid, srcside, delay, dstside, rv):
 	print '*  Fixing out of scope syncarc to',\
 	      node.GetRawAttrDef('name', '<unnamed>'),\
 	      node.GetUID()
-	return '%.3fs' % delay
+	return fmtfloat(delay, 's')
 
 def getterm(writer, node):
 	terminator = MMAttrdefs.getattr(node, 'terminator')
@@ -854,6 +900,8 @@ smil_attrs=[
 	("longdesc", lambda writer, node: getdescr(writer, node, 'longdesc')),
 	("begin", lambda writer, node: getsyncarc(writer, node, 0)),
 	("dur", getduration),
+	("min", getmin),
+	("max", getmax),
 	("end", lambda writer, node: getsyncarc(writer, node, 1)),
 	("fill", lambda writer, node: getfill(writer, node, 'fill')),
 	("fillDefault", lambda writer, node: getfill(writer, node, 'fillDefault')),
@@ -1925,7 +1973,7 @@ class SMILWriter(SMIL):
 			if key == 'immediateinstantiationmedia':
 				attrlist.append(('%s:immediate-instantiation' % NSQTprefix, intToEnumString(val,{0:'false',1:'true'})))
 			if key == 'bitratenecessary':
-				attrlist.append(('%s:bitrate' % NSQTprefix, intToString(val)))
+				attrlist.append(('%s:bitrate' % NSQTprefix, '%d' % val))
 			if key == 'systemmimetypesupported':
 				attrlist.append(('%s:system-mime-type-supported' % NSQTprefix, val))
 			if key == 'attachtimebase':
@@ -2054,9 +2102,9 @@ class SMILWriter(SMIL):
 				attrlist.append(('fragment', id))
 		begin, end = times
 		if begin:
-			attrlist.append(('begin', '%.3fs' % begin))
+			attrlist.append(('begin', fmtfloat(begin, 's')))
 		if end:
-			attrlist.append(('end', '%.3fs' % end))
+			attrlist.append(('end', fmtfloat(end, 's')))
 		self.writetag('anchor', attrlist)
 
 	def newfile(self, srcurl):
@@ -2236,6 +2284,3 @@ def intToEnumString(intValue, dict):
 		return dict[intValue]
 	else:
 		return dict[0]
-
-def intToString(intValue):
-	return '%d' % intValue

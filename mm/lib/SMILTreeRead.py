@@ -429,6 +429,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						attrdict['duration'] = self.__parsecounter(val)
 					except error, msg:
 						self.syntax_error(msg)
+			elif attr in ('min', 'max'):
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				try:
+					attrdict[attr] = self.__parsecounter(val)
+				except error, msg:
+					self.syntax_error(msg)
+				else:
+					if attr == 'min' and \
+					   attrdict[attr] == 0:
+						del attrdict[attr]
 			elif attr == 'repeat' or attr == 'repeatCount':
 				if attr == 'repeatCount':
 					if self.__context.attributes.get('project_boston') == 0:
