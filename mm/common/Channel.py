@@ -170,8 +170,8 @@ class Channel:
 		pass
 
 	def mustreshow(self):
-		"""Return true if channel needs to be redisplayed after
-		a commit"""
+		# Return true if channel needs to be redisplayed after
+		# a commit
 		return 0
 
 	# return true is the channel is showing
@@ -318,7 +318,7 @@ class Channel:
 		self.after_show(force)
 
 	def _get_parent_channel(self, creating=0):
-		"""Return the parent (basewindow) channel, if it exists"""
+		# Return the parent (basewindow) channel, if it exists
 		# First, check that there is a base_window attribute
 		# and that it isn't "undefined".
 		pname = self._attrdict.get('base_window', 'undefined')

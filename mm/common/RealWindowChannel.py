@@ -4,9 +4,8 @@ __version__ = "$Id$"
 # WIN32 RealWindowChannel.
 #
 
-""" @win32doc|RealWindowChannel
+# @win32doc|RealWindowChannel
 
-"""
 import Channel, RealChannel
 
 realwindowchanneldebug=0

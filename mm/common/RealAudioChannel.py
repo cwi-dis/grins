@@ -4,9 +4,8 @@ __version__ = "$Id$"
 # WIN32 RealAudioChannel.
 #
 
-""" @win32doc|RealAudioChannel
+# @win32doc|RealAudioChannel
 
-"""
 import Channel, RealChannel
 
 class RealAudioChannel(Channel.ChannelAsync):
