@@ -512,6 +512,12 @@ class TreeManager:
 						commctrl.TVI_FIRST)
 		return item
 
+	def updateNode(self, item, text, imageName, selectedImageName):
+		iImage = self.bitmapNameToId.get(imageName)
+		iSelectedImage = self.bitmapNameToId.get(selectedImageName)
+		self.treeCtrl.SetItemText(item, text)
+		self.treeCtrl.SetItemImage(item, iImage, iSelectedImage)
+
 	# ExpandBranch - Expands a branch completely
 	def expandBranch(self, item):
 		treeCtrl = self.treeCtrl

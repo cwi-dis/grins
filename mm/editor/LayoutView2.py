@@ -750,6 +750,8 @@ class TreeHelper:
 					tNode =  self.__nodeList.get(nodeRef)
 					if tNode == None:
 						tNode = self.__nodeList[nodeRef] = TreeNodeHelper(nodeRef, TYPE_MEDIA)
+					else:
+						tNode.checkMainUpdate()
 					if not tParentNode.hasChild(tNode):
 						tNode.isNew = 1
 						tParentNode.addChild(tNode)
@@ -775,6 +777,8 @@ class TreeHelper:
 				tNode = self.__nodeList[nodeRef] = TreeNodeHelper(nodeRef, TYPE_VIEWPORT)
 			else:
 				tNode = self.__nodeList[nodeRef] = TreeNodeHelper(nodeRef, TYPE_REGION)
+		else:
+			tNode.checkMainUpdate()
 		if parentRef != None:
 			if not tParentNode.hasChild(tNode):
 				tNode.isNew = 1
@@ -832,6 +836,10 @@ class TreeHelper:
 		elif node.isNew:
 			self.__onNewNode(parent, node)
 		else:
+			# detect if need to update the main attributes. basicly id and type
+			if node.isUpdated:
+				self._context.onMainUpdate(node.nodeRef)
+				node.isUpdated = 0
 			# if no changment, check in children
 			for child in node.children.keys():
 				self.__detectMutation(node, child)
@@ -905,9 +913,15 @@ class TreeNodeHelper:
 	def __init__(self, nodeRef, type):
 		self.isNew = 1
 		self.isUsed = 1
+		self.isUpdated = 0
 		self.nodeRef = nodeRef
 		self.children = {}
 		self.type = type
+		if type == TYPE_MEDIA:
+			self.name = nodeRef.attrdict.get('name')
+			self.mediatype = nodeRef.GetChannelType()
+		else:
+			self.name = nodeRef.name
 
 	def hasChild(self, child):
 		return self.children.has_key(child)
@@ -915,6 +929,20 @@ class TreeNodeHelper:
 	def addChild(self, child):
 		self.children[child] = 1
 
+	def checkMainUpdate(self):
+		nodeRef = self.nodeRef
+		if self.type == TYPE_MEDIA:
+			name = nodeRef.attrdict.get('name')
+			mediatype = nodeRef.GetChannelType()
+			if name != self.name or mediatype != self.mediatype:
+				self.isUpdated = 1
+				self.name = name
+				self.mediatype = mediatype
+		else:
+			name = nodeRef.name
+			if name != self.name:
+				self.isUpdated = 1
+				self.name = name
 		
 #
 # Main layout view code
@@ -1124,6 +1152,10 @@ class LayoutView2(LayoutViewDialog2):
 			if treeVersion:
 				self.removeNodeInTreeCtrl(nodeRef)
 
+	def onMainUpdate(self, nodeRef):
+		if treeVersion:
+			self.updateNodeInTreeCtrl(nodeRef)
+		
 	#
 	#
 	#
@@ -2269,6 +2301,21 @@ class LayoutView2(LayoutViewDialog2):
 		ret = self.treeCtrl.insertNode(self.nodeRefToNodeTreeCtrlId[pNodeRef], nodeRef.name, 'region', 'region')
 		self.nodeRefToNodeTreeCtrlId[nodeRef] = ret
 		self.nodeTreeCtrlIdToNodeRef[ret] = nodeRef
+
+	def updateNodeInTreeCtrl(self, nodeRef):
+		nodeType = self.getNodeType(nodeRef)
+		if nodeType == TYPE_MEDIA:
+			type = nodeRef.GetChannelType()
+			name = nodeRef.attrdict.get('name')
+		elif nodeType == TYPE_REGION:
+			type = 'region'
+			name = nodeRef.name
+		else:
+			type = 'viewport'
+			name = nodeRef.name
+		if name == None:
+			name=''
+		self.treeCtrl.updateNode(self.nodeRefToNodeTreeCtrlId[nodeRef], name, type, type)
 		
 	def removeNodeInTreeCtrl(self, nodeRef):
 		nodeTreeCtrlId = self.nodeRefToNodeTreeCtrlId.get(nodeRef)
