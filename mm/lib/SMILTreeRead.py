@@ -37,8 +37,8 @@ _S = xmllib._S
 #		     _opS + r'(?P<y0>\d+%?)' + _opS + r',' +
 #		     _opS + r'(?P<x1>\d+%?)' + _opS + r',' +
 #		     _opS + r'(?P<y1>\d+%?)' + _opS + r'$')
-coordre = re.compile(_opS + r'(((?P<pixel>\d+)(?!\.|%|\d))|((?P<pourcent>\d+(\.\d+)?)%))' + _opS )
-coordrewithsep = re.compile(_opS + r',' + _opS + r'(((?P<pixel>\d+)(?!\.|%|\d))|((?P<pourcent>\d+(\.\d+)?)%))' + _opS )
+coordre = re.compile(_opS + r'(((?P<pixel>\d+)(?!\.|%|\d))|((?P<percent>\d+(\.\d+)?)%))' + _opS )
+coordrewithsep = re.compile(_opS + r',' + _opS + r'(((?P<pixel>\d+)(?!\.|%|\d))|((?P<percent>\d+(\.\d+)?)%))' + _opS )
 
 idref = re.compile(r'id\(' + _opS + r'(?P<id>' + xmllib._Name + r')' + _opS + r'\)')
 clock_val = (_opS +
@@ -242,13 +242,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		
 		# Show the parse errors to the user:
 		if self.__printfunc is not None and self.__printdata:
-			data = string.join(self.__printdata, '\n')
+			data = '\n'.join(self.__printdata)
 			# first 30 lines should be enough
-			data = string.split(data, '\n')
+			data = data.split('\n')
 			if len(data) > 30:
 				data = data[:30]
 				data.append('. . .')
-			self.__printfunc(string.join(data, '\n'))
+			self.__printfunc('\n'.join(data))
 			self.__printdata = []
 		self.elements = {}
 
@@ -297,7 +297,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				event = 'begin'
 			list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode,event=event,delay=delay))
 		else:
-			vals = string.split(val, ';')
+			vals = val.split(';')
 			if len(vals) > 1:
 				boston = 'multiple %s values' % attr
 			for val in vals:
@@ -375,17 +375,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					# above
 					if tokens[i] in ('-','+'):
 						try:
-							offset = self.__parsecounter(string.join(tokens[i:], ''), withsign = 1)
+							offset = self.__parsecounter(''.join(tokens[i:]), withsign = 1)
 						except error:
 							self.syntax_error('bad offset value or unescaped - in identifier')
 							if tokens[i] == '-':
 								# try to fix it
-								tokens[i-1:i+2] = [string.join(tokens[i-1:i+2], '')]
+								tokens[i-1:i+2] = [''.join(tokens[i-1:i+2])]
 								continue
 							ok = 0
 							break
 						del tokens[i:]
-						val = string.join(tokens, '')
+						val = ''.join(tokens)
 						break
 					i = i + 1
 				else:
@@ -426,7 +426,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					# event value
 					# XXX this includes things like
 					# repeat(3)
-					list.append(MMNode.MMSyncArc(node, attr, srcnode = node, event = string.join(string.split(string.join(tokens, ''), '\\'), ''), delay = offset or 0))
+					list.append(MMNode.MMSyncArc(node, attr, srcnode = node, event = ''.join(''.join(tokens).split('\\')), delay = offset or 0))
 					continue
 
 				if tokens[0] == '.' or tokens[1] != '.':
@@ -437,7 +437,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					if len(tokens) != 3:
 						self.syntax_error('bad syncbase value')
 						continue
-					name = string.join(string.split(tokens[0], '\\'), '')
+					name = ''.join(tokens[0].split('\\'))
 					event = tokens[2] # tokens[-1]
 				else:
 					try:
@@ -471,8 +471,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					if '.' in tokens[2:]:
 						self.syntax_error('bad event specification')
 						continue
-					name = string.join(string.split(tokens[0], '\\'), '')
-					event = string.join(string.split(string.join(tokens[2:], ''), '\\'), '')
+					name = ''.join(tokens[0].split('\\'))
+					event = ''.join(''.join(tokens[2:]).split('\\'))
 
 				if not boston:
 					boston = 'SMIL-2.0 time value'
@@ -527,7 +527,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if res is not None:
 					val = res.group('name')
 				attrdict['name'] = val
-			elif attr in ('abstract', 'copyright', 'title'):
+			elif attr in ('abstract', 'copyright', 'title', 'author', 'alt', 'longdesc'):
 				if val:
 					attrdict[attr] = val
 			elif attr == 'src':
@@ -541,6 +541,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				   (offsetvalue.match(val) is None or
 				    val[0] == '-'):
 					self.syntax_error('bad begin attribute for child of seq node')
+					# accept anyway ...
 				node.__syncarcs.append((attr, val, self.lineno))
 			elif attr == 'dur':
 				if val == 'indefinite':
@@ -786,7 +787,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if not attrdict.has_key('system_required'):
 					attrdict['system_required'] = []
 					nsdict = self.getnamespace()
-					for v in map(string.strip, string.split(val, '+')):
+					for v in map(string.strip, val.split('+')):
 						nsuri = nsdict.get(v)
 						if not nsuri:
 							self.syntax_error('no namespace declaration for %s in effect' % v)
@@ -798,7 +799,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.__context.attributes['project_boston'] = 1
 				attrdict['system_required'] = []
 				nsdict = self.getnamespace()
-				for v in map(string.strip, string.split(val, '+')):
+				for v in map(string.strip, val.split('+')):
 					nsuri = nsdict.get(v)
 					if not nsuri:
 						self.syntax_error('no namespace declaration for %s in effect' % v)
@@ -808,13 +809,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
-				attrdict['system_component'] = string.split(val)
+				attrdict['system_component'] = val.split()
 			elif attr == 'customTest':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
 				attrdict['u_group'] = []
-				for v in map(string.strip, string.split(val, '+')):
+				for v in map(string.strip, val.split('+')):
 					if self.__custom_tests.has_key(v):
 						attrdict['u_group'].append(v)
 					else:
@@ -823,14 +824,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
-				val = map(string.strip, string.split(val, ';'))
+				val = map(string.strip, val.split(';'))
 				attrdict['transIn'] = val
 				# XXX Should we warn on non-existent IDs?
 			elif attr == 'transOut':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
-				val = map(string.strip, string.split(val, ';'))
+				val = map(string.strip, val.split(';'))
 				attrdict['transOut'] = val
 				# XXX Should we warn on non-existent IDs?
 			elif attr == 'layout':
@@ -838,8 +839,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['layout'] = val
 				else:
 					self.syntax_error("unknown layout `%s'" % val)
-			elif attr == 'title':
-				attrdict['title'] = val
 			elif attr == 'fill':
 				if node.type in interiortypes or \
 				   val in ('hold', 'transition', 'auto', 'default'):
@@ -924,6 +923,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('bad z-index attribute')
 					val = -1
 				attrdict['z'] = val
+			elif attr == 'regPoint':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				attrdict['regPoint'] = val
+			elif attr == 'regAlign':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val in ('topLeft', 'topMid', 'topRight', 'midLeft', 'center', 'midRight', 'bottomLeft', 'bottomMid', 'bottomRight'):
+					attrdict['regAlign'] = val
+				else:
+					self.syntax_error('bad regAlign attribute')
 			elif attr == 'speed':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
@@ -998,8 +1010,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
-				vals = string.split(val, ';')
-				if attrdict.has_key('keyTimes') and len(vals) != len(string.split(attrdict['keyTimes'], ';'))-1:
+				vals = val.split(';')
+				if attrdict.has_key('keyTimes') and len(vals) != len(attrdict['keyTimes'].split(';'))-1:
 					self.syntax_error("bad %s attribute (wrong number of control points)" % attr)
 				else:
 					for v in vals:
@@ -1012,8 +1024,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
-				vals = string.split(val, ';')
-				if attrdict.has_key('keySplines') and len(vals) != len(string.split(attrdict['keySplines'], ';'))+1:
+				vals = val.split(';')
+				if attrdict.has_key('keySplines') and len(vals) != len(attrdict['keySplines'].split(';'))+1:
 					self.syntax_error("bad %s attribute (wrong number of control points)" % attr)
 				else:
 					for v in vals:
@@ -1048,6 +1060,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif attr == 'collapsed':
 				if val == 'true':
 					node.collapsed = 1
+				else:
+					self.syntax_error('bad %s attribute' % attr)
+			elif attr == 'skip-content':
+				if val in ('true', 'false'):
+					attrdict['skip_content'] = val == 'true'
 				else:
 					self.syntax_error('bad %s attribute' % attr)
 			elif compatibility.QT == features.compatibility and \
@@ -1152,7 +1169,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if res is not None and res.group('base64') is None:
 				mtype = res.group('type') or 'text/plain'
 				if mtype == 'text/plain':
-					data = string.split(MMurl.unquote(res.group('data')), '\n')
+					data = MMurl.unquote(res.group('data')).split('\n')
 					nodetype = 'imm'
 					del attributes['src']
 		elif tagname != 'brush':
@@ -1201,7 +1218,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 			mediatype = tagname
 			if mtype is not None:
-				mtype = string.split(mtype, '/')
+				mtype = mtype.split('/')
 ##				if tagname is not None and mtype[0]!=tagname and \
 ##				   (tagname[:5]!='cmif_' or mtype!=['text','plain']):
 ##					self.warning("file type doesn't match element", self.lineno)
@@ -1419,15 +1436,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		if not self.__is_ext:
 			# don't warn since error message already printed
-			data = string.split(string.join(self.__nodedata, ''), '\n')
+			data = ''.join(self.__nodedata).split('\n')
 			for i in range(len(data)-1, -1, -1):
-				tmp = string.join(string.split(data[i]))
+				tmp = ' '.join(data[i].split())
 				if tmp:
 					data[i] = tmp
 				else:
 					del data[i]
-			self.__data.append(string.join(data, '\n'))
-			nodedata = string.join(self.__data, '')
+			self.__data.append('\n'.join(data))
+			nodedata = ''.join(self.__data)
 			res = self.__whitespace.match(nodedata)
 			if res is not None:
 				self.syntax_error('no src attribute and no content data')
@@ -1438,7 +1455,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				node.attrdict['file'] = url
 			else:
 				# other data is immediate
-				nodedata = string.split(nodedata, '\n')
+				nodedata = nodedata.split('\n')
 				node.values = nodedata
 
 		# connect to region
@@ -1534,7 +1551,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if clip_begin:
 			res = clip.match(clip_begin)
 			if res:
-				node.attrdict['clipbegin'] = string.join(string.split(clip_begin), '')
+				node.attrdict['clipbegin'] = ''.join(clip_begin.split())
 				if res.group('clock') and \
 				   not self.__context.attributes.get('project_boston'):
 					self.syntax_error('invalid clip-begin attribute; should be "npt=<time>"')
@@ -1556,7 +1573,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if clip_end:
 			res = clip.match(clip_end)
 			if res:
-				node.attrdict['clipend'] = string.join(string.split(clip_end), '')
+				node.attrdict['clipend'] = ''.join(clip_end.split())
 				if res.group('clock') and \
 				   not self.__context.attributes.get('project_boston'):
 					self.syntax_error('invalid clip-end attribute; should be "npt=<time>"')
@@ -1653,7 +1670,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				values.append(s)
 			sl = node.attrdict.get('values')
 			if sl: 
-				sl = string.split(sl,';')
+				sl = sl.split(';')
 				for s in sl:
 					values.append(s)
 			for s in values:
@@ -1805,6 +1822,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif attr in ('attrs','declwidth','declheight','skip-content'):
 				# special key
 				pass
+			elif attr == 'showEditBackground':
+				layout[attr] = val in ('on','true')
 			else:
 				# parse all other attributes
 				try:
@@ -1932,6 +1951,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		ch['z'] = attrdict['z-index']
 		del attrdict['z-index']
 		
+		if attrdict.has_key('showEditBackground'):
+			ch['showEditBackground'] = attrdict['showEditBackground'] in ('on', 'true')
+			del attrdict['showEditBackground']
+
 		# keep all original constraints
 		# if a value is not specified,  it's a CSS auto value
 		if mtype == 'layout':
@@ -2147,7 +2170,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attributes[key[len(QTns)+1:]] = val
 			if key[:len(SMIL2)] == SMIL2:
 				del attributes[key]
-				attributes[string.split(key,' ',1)[1]] = val
+				attributes[key.split(' ',1)[1]] = val
 		if features.compatibility == features.QT:
 			self.parseQTAttributeOnSmilElement(attributes)
 
@@ -2229,7 +2252,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			node.slideshow = SlideShow(node, self.__new_file)
 		del self.__realpixnodes
 		self.FixAnimateTargets()
-		metadata = string.join(self.__metadata, '')
+		metadata = ''.join(self.__metadata)
 		self.__context.metadata = metadata
 		MMAttrdefs.flushcache(self.__root)
 
@@ -2300,7 +2323,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			pass
 		elif name == 'project_links':
 			# space-separated list of external anchors
-			self.__context.externalanchors = string.split(content)
+			self.__context.externalanchors = content.split()
 		elif name == 'generator':
 			if self.__check_compatibility:
 				import DefCompatibilityCheck, windowinterface, version
@@ -3130,7 +3153,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if regions is None:
 			self.syntax_error('required attribute regions missing in GRiNS layout element')
 			return
-		self.__layouts[id] = string.split(regions)
+		self.__layouts[id] = regions.split()
 
 	def end_Glayout(self):
 		pass
@@ -3363,7 +3386,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 		if href[:1] != '#':
 			# external link
-			href = string.join(string.split(href, ' '), '%20')
+			href = '%20'.join(href.split(' '))
 			href = MMurl.basejoin(self.__base, attributes['href'])
 			if href not in self.__context.externalanchors:
 				self.__context.externalanchors.append(href)
@@ -3386,7 +3409,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	# all string can't be specify in only one regular expression, because we don't know the number of points
 	# Instead, there is a first regular expression which parse the first number, then a second which parse
 	# the separateur caractere and the next number
-	# return value: list of numbers (values expressed in pourcent or pixel)
+	# return value: list of numbers (values expressed in percent or pixel)
 	# or None if error
 
 	def __parseCoords(self, data):
@@ -3400,8 +3423,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if pixelvalue is not None:
 			value = string.atoi(pixelvalue)
 		else:
-			pourcentvalue= res.group('pourcent')
-			value = string.atof(pourcentvalue) / 100.0
+			percentvalue= res.group('percent')
+			value = string.atof(percentvalue) / 100.0
 		l.append(value)
 
 		while (endParse < len(data)):
@@ -3420,8 +3443,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if pixelvalue is not None:
 				value = string.atoi(pixelvalue)
 			else:
-				pourcentvalue= res.group('pourcent')
-				value = string.atof(pourcentvalue) / 100.0
+				percentvalue= res.group('percent')
+				value = string.atof(percentvalue) / 100.0
 			l.append(value)
 
 		return l
@@ -3517,7 +3540,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 ##			self.warning('required attribute href missing', self.lineno)
 		if href is not None and href[:1] != '#':
 			href = MMurl.basejoin(self.__base, href)
-			href = string.join(string.split(href, ' '), '%20')
+			href = '%20'.join(href.split(' '))
 			if href not in self.__context.externalanchors:
 				self.__context.externalanchors.append(href)
 		uid = self.__node.GetUID()
@@ -3797,7 +3820,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__container is not None:
 			node = self.__context.newnode('comment')
 			self.__container._addchild(node)
-			node.values = string.split(data, '\n')
+			node.values = data.split('\n')
 		else:
 			self.__context.comment = self.__context.comment + data
 
@@ -3807,14 +3830,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if self.__in_layout != LAYOUT_UNKNOWN:
 				self.warning('ignoring CDATA', self.lineno)
 			return
-		data = string.split(string.join(self.__nodedata, ''), '\n')
+		data = ''.join(self.__nodedata).split('\n')
 		for i in range(len(data)-1, -1, -1):
-			tmp = string.join(string.split(data[i]))
+			tmp = ' '.join(data[i].split())
 			if tmp:
 				data[i] = tmp
 			else:
 				del data[i]
-		self.__data.append(string.join(data, '\n'))
+		self.__data.append('\n'.join(data))
 		self.__nodedata = []
 		self.__data.append(cdata)
 
@@ -3869,7 +3892,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	
 	def error(self, message, lineno = None):
 		if self.__printfunc is None and self.__printdata:
-			msg = string.join(self.__printdata, '\n') + '\n'
+			msg = '\n'.join(self.__printdata) + '\n'
 		else:
 			msg = ''
 		if lineno is None:
@@ -3887,16 +3910,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__printfunc is not None:
 			msg = 'Fatal error while parsing at line %d: %s' % (self.lineno, str(value))
 			if self.__printdata:
-				data = string.join(self.__printdata, '\n')
+				data = '\n'.join(self.__printdata)
 				# first 30 lines should be enough
-				data = string.split(data, '\n')
+				data = data.split('\n')
 				if len(data) > 30:
 					data = data[:30]
 					data.append('. . .')
 			else:
 				data = []
 			data.insert(0, msg)
-			self.__printfunc(string.join(data, '\n'))
+			self.__printfunc('\n'.join(data))
 			self.__printdata = []
 		raise MSyntaxError # re-raise
 
@@ -4010,13 +4033,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	# the rest is to check that the nesting of elements is done
 	# properly (i.e. according to the SMIL DTD)
 	def finish_starttag(self, tagname, attrdict, method):
-		nstag = string.split(tagname, ' ')
+		nstag = tagname.split(' ')
 		if len(nstag) == 2 and \
 		   (nstag[0] in [SMIL1, GRiNSns]+SMIL2ns or extensions.has_key(nstag[0])):
 			ns, tagname = nstag
 			d = {}
 			for key, val in attrdict.items():
-				nstag = string.split(key, ' ')
+				nstag = key.split(' ')
 				if len(nstag) == 2 and \
 				   nstag[0] in [SMIL1, GRiNSns]+SMIL2ns:
 					key = nstag[1]
@@ -4029,7 +4052,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.syntax_error("element `%s' not allowed in namespace `%s'" % (tagname, ns))
 		if len(self.stack) > 1:
 			ptag = self.stack[-2][2]
-			nstag = string.split(ptag, ' ')
+			nstag = ptag.split(' ')
 			if len(nstag) == 2 and \
 			   nstag[0] in [SMIL1, GRiNSns]+SMIL2ns:
 				pns, ptag = nstag
@@ -4088,13 +4111,13 @@ class SMILMetaCollector(xmllib.XMLParser):
 	# the rest is to check that the nesting of elements is done
 	# properly (i.e. according to the SMIL DTD)
 	def finish_starttag(self, tagname, attrdict, method):
-		nstag = string.split(tagname, ' ')
+		nstag = tagname.split(' ')
 		if len(nstag) == 2 and \
 		   nstag[0] in [SMIL1, GRiNSns]+SMIL2ns:
 			ns, tagname = nstag
 			d = {}
 			for key, val in attrdict.items():
-				nstag = string.split(key, ' ')
+				nstag = key.split(' ')
 				if len(nstag) == 2 and \
 				   nstag[0] in [SMIL1, GRiNSns]+SMIL2ns:
 					key = nstag[1]
@@ -4124,8 +4147,6 @@ def ReadFile(url, printfunc = None, new_file = 0, check_compatibility = 0):
 	return rv
 
 def ReadFileContext(url, context, printfunc = None, new_file = 0, check_compatibility = 0):
-	from time import time
-	t0 = time()
 	p = SMILParser(context, printfunc, new_file, check_compatibility)
 	u = MMurl.urlopen(url)
 	if not new_file:
@@ -4139,9 +4160,13 @@ def ReadFileContext(url, context, printfunc = None, new_file = 0, check_compatib
 	data = u.read()
 	u.close()
 	# convert Windows CRLF sequences to LF
-	data = string.join(string.split(data, '\r\n'), '\n')
+	data = '\n'.join(data.split('\r\n'))
 	# then convert Macintosh CR to LF
-	data = string.join(string.split(data, '\r'), '\n')
+	data = '\n'.join(data.split('\r'))
+##	import profile
+##	pr = profile.Profile()
+##	root = pr.runcall(__doParse, p, data)
+##	pr.dump_stats('profile.stats')
 	root = __doParse(p, data)
 	# XXX keep the original source for the player
 	# note: for the editor, save all the time the source on the root is not pertinent (
@@ -4153,10 +4178,12 @@ def ReadFileContext(url, context, printfunc = None, new_file = 0, check_compatib
 
 def __doParse(parser, data):
 	try:
+##		from time import time
+##		t0 = time()
 		parser.feed(data)
 		parser.close()
-		## t1 = time()
-		##	print 'parsed in %g' % (t1-t0)
+##		t1 = time()
+##		print 'parsed in %g' % (t1-t0)
 		root = parser.GetRoot()
 		context = root.GetContext()			
 	except MSyntaxError:
@@ -4192,7 +4219,7 @@ def ReadString(string, name, printfunc = None, check_compatibility = 0):
 				 printfunc, check_compatibility)
 
 def ReadStringContext(string, name, context, printfunc = None, check_compatibility = 0):
-	p = SMILParser(context, printfunc, check_compatibility)
+	p = SMILParser(context, printfunc = printfunc, check_compatibility = check_compatibility)
 	root = __doParse(p, string)
 	return root
 
@@ -4238,11 +4265,11 @@ except:
 				escape = 0
 			elif c in '-+. ()':
 				if t:
-					tokens.append(string.join(t, ''))
+					tokens.append(''.join(t))
 				tokens.append(c)
 				t = []
 			else:
 				t.append(c)
 		if t:
-			tokens.append(string.join(t, ''))
+			tokens.append(''.join(t))
 		return tokens

@@ -47,11 +47,12 @@ class MMParser:
 		# Initialize the table of attribute parsers.
 		# XXX This should become an argument in the future!
 		#
-		if context is not None:
-			self.attrparsers = makeattrparsers(MMParser)
-		else:
-			# MMParser called from MMAttrdefs!!!
-			self.attrparsers = {}
+		self.attrparsers = {}
+##		if context is not None:
+##			self.attrparsers = makeattrparsers(MMParser)
+##		else:
+##			# MMParser called from MMAttrdefs!!!
+##			self.attrparsers = {}
 		#
 		# Reset the scanner interface.
 		#
@@ -212,28 +213,32 @@ class MMParser:
 		name = self.gettoken()
 		if name[0] not in letters:
 			raise MSyntaxError, (name, 'attr name')
+		if not self.attrparsers.has_key(name):
+			import MMAttrdefs
+			if MMAttrdefs.attrdefs.has_key(name):
+				self.attrparsers[name] = MMAttrdefs.usetypedef(MMAttrdefs.attrdefs[name][0], MMParser.basicparsers)
+			else:
+				print 'Warning: unrecognized attr', name
+				if name[-4:] == 'dict':
+					# Default syntax for dictionaries
+					value = \
+					    self.getnamedictvalue( \
+						(MMParser.getanyvalue, None))
+				elif name[-4:] == 'list':
+					# Default syntax for lists
+					value = self.getlistvalue( \
+						(MMParser.getanyvalue, None))
+				else:
+					# Default syntax for other things
+					# (returned as lists if more than one item,
+					# else as single value)
+					value = self.getlistvalue( \
+						(MMParser.getanyvalue, None))
+					if len(value) == 1:
+						value = value[0]
 		if self.attrparsers.has_key(name):
 			func, arg = self.attrparsers[name]
 			value = func(self, arg)
-		else:
-			print 'Warning: unrecognized attr', name
-			if name[-4:] == 'dict':
-				# Default syntax for dictionaries
-				value = \
-				    self.getnamedictvalue( \
-				    	(MMParser.getanyvalue, None))
-			elif name[-4:] == 'list':
-				# Default syntax for lists
-				value = self.getlistvalue( \
-					(MMParser.getanyvalue, None))
-			else:
-				# Default syntax for other things
-				# (returned as lists if more than one item,
-				# else as single value)
-				value = self.getlistvalue( \
-					(MMParser.getanyvalue, None))
-				if len(value) == 1:
-					value = value[0]
 		self.close()
 		return name, value
 	#
