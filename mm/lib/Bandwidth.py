@@ -107,51 +107,51 @@ def getstreamdata(node, target=0):
 	urlcache.urlcache[url]['bandwidth'] = bits, None, prerollbitrate, None
 	return bits, None, prerollbitrate, None
 
-def GetSize(url, target=0, attrs = {}, convert = 1):
-	val = urlcache.urlcache[url].get('filesize')
-	if val is not None:
-		return val
+##def GetSize(url, target=0, attrs = {}, convert = 1):
+##	val = urlcache.urlcache[url].get('filesize')
+##	if val is not None:
+##		return val
 
-	# We skip bandwidth retrieval for nonlocal urls (too expensive)
-	type, rest = MMurl.splittype(url)
-	if type and type != 'file':
-##		print "DBG: Bandwidth.GetSize: skip nonlocal", url
-		return None
-	host, rest = MMurl.splithost(rest)
-	if host and host != 'localhost':
-##		print "DBG: Bandwidth.GetSize: skip nonlocal", url
-		return None
+##	# We skip bandwidth retrieval for nonlocal urls (too expensive)
+##	type, rest = MMurl.splittype(url)
+##	if type and type != 'file':
+####		print "DBG: Bandwidth.GetSize: skip nonlocal", url
+##		return None
+##	host, rest = MMurl.splithost(rest)
+##	if host and host != 'localhost':
+####		print "DBG: Bandwidth.GetSize: skip nonlocal", url
+##		return None
 
-	# Okay, get the filesize
-	try:
-		filename, hdrs = MMurl.urlretrieve(url)
-	except IOError:
-		raise Error, 'Cannot open: %s'%url
-	tmp = None
-	if target and hdrs.maintype == 'image' and hdrs.subtype != 'svg-xml' and convert:
-		import tempfile
-		tmp = tempfile.mktemp('.jpg')
-		dir, file = os.path.split(tmp)
-		try:
-			import realconvert
-			cfile = realconvert.convertimagefile(None, url, dir, file, attrs)
-		except:
-			# XXXX Too many different errors can occur in convertimagefile:
-			# I/O errors, image file errors, etc.
-			raise Error, 'Cannot convert to RealMedia.'
-		if cfile: file = cfile
-		filename = tmp = os.path.join(dir, file)
-	try:
-		# XXXX Incorrect for mac (resource fork size)
-		statb = os.stat(filename)
-	except os.error:
-##		print "DBG: Bandwidth.get: nonexisting", filename
-		raise Error, 'Tempfile does not exist: %s'%filename
-	if tmp:
-		try:
-			os.unlink(tmp)
-		except:
-			pass
-	filesize = statb[ST_SIZE]
-	urlcache.urlcache[url]['filesize'] = filesize
-	return filesize
+##	# Okay, get the filesize
+##	try:
+##		filename, hdrs = MMurl.urlretrieve(url)
+##	except IOError:
+##		raise Error, 'Cannot open: %s'%url
+##	tmp = None
+##	if target and hdrs.maintype == 'image' and hdrs.subtype != 'svg-xml' and convert:
+##		import tempfile
+##		tmp = tempfile.mktemp('.jpg')
+##		dir, file = os.path.split(tmp)
+##		try:
+##			import realconvert
+##			cfile = realconvert.convertimagefile(None, url, dir, file, attrs)
+##		except:
+##			# XXXX Too many different errors can occur in convertimagefile:
+##			# I/O errors, image file errors, etc.
+##			raise Error, 'Cannot convert to RealMedia.'
+##		if cfile: file = cfile
+##		filename = tmp = os.path.join(dir, file)
+##	try:
+##		# XXXX Incorrect for mac (resource fork size)
+##		statb = os.stat(filename)
+##	except os.error:
+####		print "DBG: Bandwidth.get: nonexisting", filename
+##		raise Error, 'Tempfile does not exist: %s'%filename
+##	if tmp:
+##		try:
+##			os.unlink(tmp)
+##		except:
+##			pass
+##	filesize = statb[ST_SIZE]
+##	urlcache.urlcache[url]['filesize'] = filesize
+##	return filesize
