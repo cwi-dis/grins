@@ -7,6 +7,7 @@ import string
 import fl
 import gl
 from FL import *
+import flp
 
 import MMExc
 import MMAttrdefs
@@ -14,8 +15,6 @@ import MMParser
 import MMWrite
 
 import NodeEdit
-
-import NodeInfoForm
 
 from MMNode import alltypes, leaftypes, interiortypes
 
@@ -31,6 +30,7 @@ _global = Struct()
 
 _global.cwd = posix.getcwd()+'/'
 _global.dir = ''
+_global.forms = None
 
 
 # There are two basic calls into this module (but see below for more):
@@ -46,10 +46,10 @@ _global.dir = ''
 def _shownodeinfo(node,new):
 	try:
 		nodeinfo = node.nodeinfo
-	except NameError:
+	except NameError:	# BCOMPAT
 		nodeinfo = NodeInfo().init(node)
 		node.nodeinfo = nodeinfo
-	except AttributeError: # new style exceptions
+	except AttributeError:
 		nodeinfo = NodeInfo().init(node)
 		node.nodeinfo = nodeinfo
 	nodeinfo.open(new)
@@ -61,9 +61,9 @@ def shownewnodeinfo(node): _shownodeinfo(node,1)
 def hidenodeinfo(node):
 	try:
 		nodeinfo = node.nodeinfo
-	except NameError:
-		return # No node info form active
-	except AttributeError: # new style exceptions
+	except NameError:	# BCOMPAT
+		return
+	except AttributeError:
 		return # No node info form active
 	nodeinfo.close()
 
@@ -75,9 +75,9 @@ def hidenodeinfo(node):
 def hasnodeinfo(node):
 	try:
 		nodeinfo = node.nodeinfo
-	except NameError:
-		return 0 # No node info form active
-	except AttributeError: # new style exceptions
+	except NameError:	# BCOMPAT
+		return 0
+	except AttributeError:
 		return 0 # No node info form active
 	return nodeinfo.showing
 #
@@ -93,16 +93,12 @@ class NodeInfo() = Dialog():
 		#
 		title = self.maketitle()
 		self = Dialog.init(self, (FORMWIDTH, FORMHEIGHT, title,''))
-		void = NodeInfoForm.mk_form_main(self, self.form)
-		self.imm_group = self.form.bgn_group()
-		void = NodeInfoForm.mk_form_imm(self, self.form)
-		self.form.end_group()
-		self.ext_group = self.form.bgn_group()
-		void = NodeInfoForm.mk_form_ext(self, self.form)
-		self.form.end_group()
-		self.int_group = self.form.bgn_group()
-		void = NodeInfoForm.mk_form_int(self, self.form)
-		self.form.end_group()
+		if _global.forms = None:
+		    _global.forms = flp.parse_forms('NodeInfoForm')
+		#
+		for i in _global.forms.keys():
+		    flp.merge_full_form(self, self.form, _global.forms[i])
+		self.text_input.set_input_return(1)
 		#
 		return self
 	#
@@ -251,9 +247,9 @@ class NodeInfo() = Dialog():
 		self.channel_select.addto_choice(i)
 	    try:
 		self.channel_select.set_choice(self.allchannelnames.index(self.channelname)+1)
-	    except RuntimeError: # the .index() failed
+	    except RuntimeError:	# BCOMPAT
 		self.channel_select.set_choice(0)
-	    except ValueError: # the .index() failed (new style Python)
+	    except ValueError:
 		self.channel_select.set_choice(0)
 	    #
 	    self.styles_browser.clear_browser()
