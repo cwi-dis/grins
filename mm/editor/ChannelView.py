@@ -96,7 +96,7 @@ begend = ('begin', 'end')
 
 CHANGAP = 0.5
 NOTHUMB_CHANHEIGHT = 5.0
-THUMB_CHANHEIGHT = 15.0
+THUMB_CHANHEIGHT = 2.0 + settings.get('thumbnail_size')
 TSHEIGHT = f_title.fontheight() * 4
 STRIPHEIGHT = f_title.fontheight() * 5
 
@@ -480,8 +480,10 @@ class ChannelView(ChannelViewDialog):
 			self.new_displist.close()
 		self.new_displist = displist
 		bl, fh, ps = displist.usefont(f_title)
-		self.channelright = displist.strsize('999999')[0]
-		self.nodetop = min(self.channelright * 2, self.channelright + .05)
+##		self.channelright = displist.strsize('999999')[0]
+##		self.nodetop = min(self.channelright * 2, self.channelright + .05)
+		self.channelright = displist.strsize('999999999999')[0]
+		self.nodetop = self.channelright + displist.get3dbordersize()[1]
 		self.timescaleborder = 1.0 - float(TSHEIGHT) / height
 		if self.showbandwidthstrip:
 			stripheight = float(STRIPHEIGHT) / height
@@ -1720,6 +1722,7 @@ class ChannelBox(GO, ChannelBoxCommand):
 		y = self.ycenter
 
 		d = self.mother.new_displist
+		xindent, yindent = d.get3dbordersize()
 
 		# Draw a diamond
 		cd = self.mother.context.channeldict[self.name]
@@ -1746,13 +1749,21 @@ class ChannelBox(GO, ChannelBoxCommand):
 		d.drawbox((l, t, r - l, b - t))
 
 		# Draw the name
+		xindent, yindent = d.get3dbordersize()
+		thumb_r = r - xindent
+		thumb_l = thumb_r - d.strsize('999')[0]
+		name_t = t + yindent
+		name_b = b - yindent
+		name_l = l + xindent
+		name_r = thumb_l
 		d.fgcolor(TEXTCOLOR)
-		d.centerstring(l, t, r, b, self.name)
+		d.centerstring(name_l, name_t, name_r, name_b, self.name)
 
 ## 		# Draw the channel type
 		f = os.path.join(self.mother.datadir, '%s.tiff' % self.ctype)
 		try:
-			d.display_image_from_file(f, center = 1, coordinates = (r, t, self.mother.nodetop-r, b-t))
+			d.display_image_from_file(f, center = 1, 
+					coordinates = (thumb_l, name_t, thumb_r-thumb_l, name_b-name_t))
 		except windowinterface.error:
 			import ChannelMap
 			map = ChannelMap.shortcuts
@@ -1776,6 +1787,10 @@ class ChannelBox(GO, ChannelBoxCommand):
 ##		d.drawline(BORDERCOLOR, [(0.0, bottom),
 ##					 (1.0, bottom)])
 		d.draw3dhline(GUTTERTOPCOLOR, GUTTERBOTTOMCOLOR, 0.0, 1.0, bottom)
+##  		r = self.right
+##  		xindent, yindent = d.get3dbordersize()
+##  		x = r+xindent/2
+##  		d.drawline(BORDERCOLOR, [(x, top), (x, bottom)])
 
 	# Menu stuff beyond what GO offers
 
