@@ -143,32 +143,38 @@ class SVGGraphics:
 	def tkClipBox(self, clipbox):
 		pass
 
+	def delRegion(self, rgn):
+		pass
+
+	def inside(self, rgn, pt):
+		return 0
+
 	#
 	#  plaform line art interface
 	#  renderers requests for execution
 	#
-	def drawRect(self, pos, size, rxy, style, tf):
+	def drawRect(self, pos, size, rxy, style, tf, a=0):
 		print 'rect', pos, size, style, tf
 
-	def drawCircle(self, center, r, style, tf):
+	def drawCircle(self, center, r, style, tf, a=0):
 		print 'circle', center, r, style, tf
 
-	def drawEllipse(self, center, rxy, style, tf):
+	def drawEllipse(self, center, rxy, style, tf, a=0):
 		print 'ellipse', center, rxy, style, tf
 
-	def drawLine(self, pt1, pt2, style, tf):
+	def drawLine(self, pt1, pt2, style, tf, a=0):
 		print 'line', pt1, pt2, style, tf
 
-	def drawPolyline(self, points, style, tf):
+	def drawPolyline(self, points, style, tf, a=0):
 		print 'polyline', points, style, tf
 
-	def drawPolygon(self, points, style, tf):
+	def drawPolygon(self, points, style, tf, a=0):
 		print 'polygon', points, style, tf
 
-	def drawPath(self, path, style, tf):
+	def drawPath(self, path, style, tf, a=0):
 		print 'path', path, style, tf
 
-	def drawText(self, text, pos, style, tf):
+	def drawText(self, text, pos, style, tf, a=0):
 		print text, pos, style, tf
 
 
