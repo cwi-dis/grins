@@ -1336,6 +1336,10 @@ SOURCE=.\grins\motif\TopLevelDialog.py
 # End Group
 # Begin Source File
 
+SOURCE=.\grins\features.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\grins\grins.py
 # End Source File
 # Begin Source File
