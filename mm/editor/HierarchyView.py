@@ -360,6 +360,19 @@ class HierarchyView(HierarchyViewDialog):
 				self.render()
 				return
 			obj.node.SetAttr('file', url)
+			if t == 'slide' and \
+			   (MMAttrdefs.getattr(obj.node, 'displayfull') or
+			    MMAttrdefs.getattr(obj.node, 'fullimage')):
+				import Sizes
+				purl = MMAttrdefs.getattr(obj.node.GetParent(), 'file')
+				url = MMurl.basejoin(purl, url)
+				url = obj.node.GetContext().findurl(url)
+				w, h = Sizes.GetSize(url)
+				if w != 0 and h != 0:
+					if MMAttrdefs.getattr(obj.node, 'displayfull'):
+						obj.node.SetAttr('subregionwh',(w,h))
+					if MMAttrdefs.getattr(obj.node, 'fullimage'):
+						obj.node.SetAttr('imgcropwh', (w,h))
 			em.commit()
 
 	def dragfile(self, dummy, window, event, params):
@@ -484,7 +497,9 @@ class HierarchyView(HierarchyViewDialog):
 					pnode = self.focusnode
 				purl = ctx.findurl(MMAttrdefs.getattr(pnode, 'file'))
 				w,h = Sizes.GetSize(MMurl.basejoin(purl,url))
-				node.SetAttr('subregionwh', (w,h))
+				if w != 0 and h != 0:
+					node.SetAttr('subregionwh', (w,h))
+					node.SetAttr('imgcropwh', (w,h))
 			else:
 				node.SetAttr('tag', 'fill')
 		else:
@@ -1356,7 +1371,7 @@ class DummyRP:
 	aspect = 'true'
 	author = None
 	bitrate = 14400
-	width = height = 256
+	width = height = 0
 	duration = 0
 	copyright = None
 	maxfps = None
@@ -1403,6 +1418,9 @@ class SlideShow:
 		self.rp = rp
 		attrdict = node.GetAttrDict()
 		attrdict['bitrate'] = rp.bitrate
+		if rp.width == 0 and rp.height == 0:
+			# no size specified, initialize with channel size
+			rp.width, rp.height = node.GetChannel().get('base_winoff',(0,0,256,256))[2:4]
 		attrdict['size'] = rp.width, rp.height
 		attrdict['duration'] = rp.duration
 		if rp.aspect != 'true':
@@ -1538,6 +1556,8 @@ class SlideShow:
 				rp.width, rp.height = size
 				changed = 1
 			else:
+				if rp.width == 0 and rp.height == 0:
+					rp.width, rp.height = node.GetChannel().get('base_winoff',(0,0,256,256))[2:4]
 				attrdict['size'] = rp.width, rp.height
 		if attrdict['duration'] != rp.duration:
 			if rp is oldrp:
