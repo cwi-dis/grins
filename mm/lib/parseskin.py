@@ -16,6 +16,8 @@ error = 'parseskin.error'
 # command	shape coordinates
 # component	URI
 # profile	profile name
+# SmilBaseSet	"SMIL-3GPP-R4" or "SMIL-3GPP-R5"
+# SmilModules	list of SMIL module names
 #
 # The key is a single, possibly quoted, character.  If either ", ', or
 # a space character needs to be specified, it must be surrounded with
@@ -24,7 +26,7 @@ error = 'parseskin.error'
 # for ENTER, \b for BACKSPACE, and \n for LINEFEED.
 #
 # The possible commands are:
-# "open", "play", "pause", "stop", "exit".
+# "open", "play", "pause", "stop", "exit", "tab".
 #
 # The possible shapes and coordinates are:
 # "rect" with 4 numbers giving x, y, width, and height;
@@ -72,6 +74,7 @@ def parsegskin(file):
 	dict = {}
 	lineno = 0
 	profile = settings.SMIL_20_MODULES
+	modules = []
 	while 1:
 		line = file.readline()
 		if not line:
@@ -116,6 +119,15 @@ def parsegskin(file):
 				profile = settings.SMIL_BASIC_MODULES
 			else:
 				profile = settings.SMIL_20_MODULES
+			continue
+		if cmd == 'SmilBaseSet':
+			if rest == 'SMIL-3GPP-R4':
+				profile = settings.SMIL_PSS4_MODULES
+			elif rest == 'SMIL-3GPP-R5':
+				profile = settings.SMIL_PSS5_MODULES
+			continue
+		if cmd == 'SmilModules':
+			modules.extend(rest.split())
 			continue
 		if cmd == 'key':
 			quote = None
@@ -227,5 +239,5 @@ def parsegskin(file):
 		raise error, 'image missing from skin description file'
 	if not dict.has_key('display'):
 		raise error, 'display region missing from skin description file'
-	settings.switch_profile(profile)
+	settings.switch_profile(profile + modules)
 	return dict
