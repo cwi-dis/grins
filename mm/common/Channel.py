@@ -355,8 +355,7 @@ class Channel:
 		self._playstate = PLAYING
 		self._played_node = node
 		self._anchors = {}
-		self._played_anchors = self._armed_anchors
-		self._armed_anchors = []
+		self._played_anchors = self._armed_anchors[:]
 		durationattr = MMAttrdefs.getattr(node, 'duration')
 		self._has_pause = (durationattr < 0)
 		for (name, type, button) in self._played_anchors:
@@ -557,8 +556,8 @@ class Channel:
 		if self._armstate != ARMED:
 			raise error, 'not armed'
 		self._armstate = AIDLE
-		self._armed_anchors = []
 		# self._armed_node = None # XXXX Removed for arm-caching
+		# self._armed_anchors = []
 
 	def startcontext(self, ctx):
 		# Called by the scheduler to start a new context.  The
