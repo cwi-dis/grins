@@ -39,9 +39,13 @@ def _read_long(file):
 	return int(x)
 
 class reader:
-	def __init__(self, filename):
-		self.__filename = filename # only needed for __repr__
-		self.__file = file = open(filename, 'rb')
+	def __init__(self, file):
+		if type(file) == type(''):
+			self.__filename = file # only needed for __repr__
+			self.__file = file = open(file, 'rb')
+		else:
+			self.__filename = '<unknown filename>'
+			self.__file = file
 		self.__framesread = 0
 		magic = file.read(4)
 		if magic != '.snd':
