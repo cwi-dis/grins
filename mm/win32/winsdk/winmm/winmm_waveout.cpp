@@ -78,6 +78,8 @@ PyObject* Winmm_WaveOutOpen(PyObject *self, PyObject *args)
 			seterror("waveOutOpen", "WAVERR_BADFORMAT, Attempted to open with an unsupported waveform-audio format.");
 		else if(mmres == WAVERR_SYNC)
 			seterror("waveOutOpen", "WAVERR_SYNC, Device is synchronous but waveOutOpen was called without using the WAVE_ALLOWSYNC flag");
+		else if(mmres == MMSYSERR_ALLOCATED)
+			seterror("waveOutOpen", "MMSYSERR_ALLOCATED, Device already allocated");
 		else
 			seterror("waveOutOpen", mmres);
 		return NULL;
