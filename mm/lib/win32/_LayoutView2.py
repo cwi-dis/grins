@@ -50,7 +50,7 @@ class _LayoutView2(GenFormView):
 		self._mmcontext = None
 		self._slider = None
 
-		self.__ctrlNames=n=('RegionX','RegionY','RegionW','RegionH','RegionZ')
+		self.__ctrlNames=n=('RegionX','RegionY','RegionW','RegionH','RegionZ','AnimateEnable')
 		self.__listeners = {}
 		
 		# save the current value.
@@ -62,6 +62,7 @@ class _LayoutView2(GenFormView):
 		self.__values['RegionW'] = None
 		self.__values['RegionH'] = None
 		self.__values['RegionZ'] = None
+		self.__values['AnimateEnable'] = None
 		
 		i = 0
 		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_X); i=i+1
@@ -69,6 +70,7 @@ class _LayoutView2(GenFormView):
 		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_W); i=i+1
 		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_H); i=i+1
 		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Z); i=i+1
+		self[n[i]]=components.CheckButton(self,grinsRC.IDC_ANIMATE_ENABLE); i=i+1
 			
 		# Initialize control objects whose command are activable as well from menu bar
 		self[ATTRIBUTES]=components.Button(self,usercmd2id(ATTRIBUTES))
@@ -341,16 +343,19 @@ class _LayoutView2(GenFormView):
 		
 		if nmsg==win32con.BN_CLICKED:
 			ctrlName = None
+
+			if id == self['AnimateEnable']._id:
+				ctrlName = 'AnimateEnable'
 									
 			if ctrlName != None:
 				value = self[ctrlName].getcheck()
-				listener = self.__listeners.get(self.lastModifyCtrlField)
+				listener = self.__listeners.get(ctrlName)
 				if listener != None:
 					listener.onCheckCtrl(ctrlName, value)
 				return 
 		
 			if ctrlName != None:
-				listener = self.__listeners.get(self.lastModifyCtrlField)
+				listener = self.__listeners.get(ctrlName)
 				if listener != None:
 					listener.onButtonClickCtrl(ctrlName)
 				return
