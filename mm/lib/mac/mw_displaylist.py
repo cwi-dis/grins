@@ -244,6 +244,7 @@ class _DisplayList:
 			l, t, w, h = entry[2]
 			r, b = l + w, t + h
 ##			print '3Dbox', (l, t, r, b) # DBG
+##			print 'window', window.qdrect() # DBG
 			# l, r, t, b are the corners
 			l3 = l + SIZE_3DBORDER
 			t3 = t + SIZE_3DBORDER
@@ -269,16 +270,16 @@ class _DisplayList:
 			Qd.PaintPoly(polyhandle)
 			# draw topleft
 			Qd.RGBForeColor(clt)
-			Qd.PaintRect((l, t, l3, t3))
+			Qd.PaintRect((l+xscrolloffset, t+yscrolloffset, l3+xscrolloffset, t3+yscrolloffset))
 			# draw topright
 			Qd.RGBForeColor(ctr)
-			Qd.PaintRect((r3, t, r, t3))
+			Qd.PaintRect((r3+xscrolloffset, t+yscrolloffset, r+xscrolloffset, t3+yscrolloffset))
 			# draw botright
 			Qd.RGBForeColor(crb)
-			Qd.PaintRect((r3, b3, r, b))
+			Qd.PaintRect((r3+xscrolloffset, b3+yscrolloffset, r+xscrolloffset, b+yscrolloffset))
 			# draw leftbot
 			Qd.RGBForeColor(cbl)
-			Qd.PaintRect((l, b3, l3, b))
+			Qd.PaintRect((l+xscrolloffset, b3+yscrolloffset, l3+xscrolloffset, b+yscrolloffset))
 ##			l = l+1
 ##			t = t+1
 ##			r = r-1
@@ -466,7 +467,9 @@ class _DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
+##		print '3DBOX orig', coordinates
 		coordinates = window._convert_coordinates(coordinates)
+##		print 'conv', coordinates
 		cl = window._convert_color(cl)
 		ct = window._convert_color(ct)
 		cr = window._convert_color(cr)
