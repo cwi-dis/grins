@@ -17,6 +17,9 @@ class FileCache:
 		self.cache = {}
 		return self
 
+	def __repr__(self):
+		return '<FileCache instance, func=' + self.func + '>'
+
 	def flushall(self):
 		if self.rm:
 			for file in self.cache.keys():
