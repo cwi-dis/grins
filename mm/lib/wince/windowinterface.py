@@ -78,10 +78,8 @@ def newwindow(x, y, w, h, title,
 		      pixmap = 0, units = UNIT_MM,
 		      adornments = None, canvassize = None,
 		      commandlist = None, resizable = 1, bgcolor = None):
-	import winuser
-	winuser.MessageBox('new viewport request')
-	import wintk_window
-	context = wintk_window.ViewportContext(getactivedocframe(), w, h, units, bgcolor or (0,0,0))
+	import base_layout
+	context = base_layout.ViewportContext(getactivedocframe(), w, h, units, bgcolor or (0,0,0))
 	return context._viewport
 
 newcmwindow = newwindow
