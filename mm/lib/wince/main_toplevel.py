@@ -53,10 +53,10 @@ class Toplevel:
 		if preload_list:
 			self._mainwnd.setStatusMsg('Loading module %s' % preload_list[0])
 			try:
-				exec 'import %s' % preload_list[0]
+				__import__(preload_list[0])
 			except:
 				pass
-			preload_list = preload_list[1:]
+			del preload_list[0]
 		elif preload_list_msg == 0:
 			self._mainwnd.setStatusMsg('')
 			self._mainwnd.setReady()
