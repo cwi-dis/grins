@@ -61,9 +61,9 @@ def GetImageSize(file):
 		return 0, 0
 
 def GetSvgSize(url):
-	import svgparser
+	import svgdom
 	try:
-		return svgparser.GetSvgSize(url)
+		return svgdom.GetSvgSize(url)
 	except:
 		return 0, 0
 		
