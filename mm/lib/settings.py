@@ -23,7 +23,7 @@ default_settings = {
 ##	'system_screen_size': windowinterface.getscreensize(), # Size of screen
 ##	'system_screen_depth': windowinterface.getscreendepth(), # Depth of screen
 	'system_required': (),		# Needs special handling in match...
-##	'license': '',
+	'license': '',
 	'license_user' : '',
 	'license_organization' : '',
 	'compatibility': G2,		# Try to be compatible with...
