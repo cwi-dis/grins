@@ -70,7 +70,7 @@ implements SMILDocument, SMILController, SMILRenderer
       
     public void open(String fn, String license) throws GRiNSException
         {
-        if(hgrins!=0) return;
+        if(hgrins != 0) return;
         initializeThreadContext();
         
         // connect to GRiNS
@@ -90,13 +90,30 @@ implements SMILDocument, SMILController, SMILRenderer
             throw new GRiNSException("Invalid license");
             }
         
+        // try opening document
         nopen(hgrins, fn);
+        
+        // make the operation looks synchronous
+        dur = -2.0;
+        int retry = 100; // maxTimeToWait = retry*100 msec
+        while(dur < 1.0 && retry > 0)
+            {
+            relax(100);
+            dur = ngetDuration(hgrins);
+            retry--;
+            }
+        if(dur<0) 
+            {
+            close();
+            throw new GRiNSException("Failed to open document");
+            }
+        // document is open
+        
         if(canvas!=null && canvas.isDisplayable())
             {
             nsetTopLayoutWindow(hgrins, 0, canvas);   
             nupdate(hgrins);
             }
-        dur = ngetDuration(hgrins);
         frameRate = ngetFrameRate(hgrins);
         monitor = new GRiNSPlayerMonitor(this, 100);
         monitor.start();
