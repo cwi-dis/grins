@@ -385,22 +385,23 @@ class SelectElementDlg(ResDialog):
 			return SelectElementDlg.tag2imgid.get(self._tag) or grinsRC.IDB_IMAGE
 
 		def getDisplayName(self):
-			# 1. no MMObj -> tag 
-			dname = self._tag
-			if self._mmobj is None: 
-				return dname
-			
-			# 2. MMObj with id -> tag id="..."
-			id = self.getId()
-			if id:
-				dname = dname + ' id=\"' + id + '\"'
-
-			# 3. MMObj with region -> tag id="..."
-			regname = self.getRegName()
-			if regname:
-				dname = dname + ' region=\"' + regname + '\"'
-
-			return dname
+			return self.getId()
+##			# 1. no MMObj -> tag 
+##			dname = self._tag
+##			if self._mmobj is None: 
+##				return dname
+##			
+##			# 2. MMObj with id -> tag id="..."
+##			id = self.getId()
+##			if id:
+##				dname = dname + ' id=\"' + id + '\"'
+##
+##			# 3. MMObj with region -> tag id="..."
+##			regname = self.getRegName()
+##			if regname:
+##				dname = dname + ' region=\"' + regname + '\"'
+##
+##			return dname
 		
 		def getRegName(self):
 			if not self.isRegion():
@@ -554,7 +555,6 @@ class SelectElementDlg(ResDialog):
 				enable = 0
 			elif self._filter == 'node' and self._selwrapper.getTag() in self.ctrlinteriortypes:
 				enable = 0
-		print 'enable', enable
 		self._bselect.enable(enable)
 
 	# replacement of DoModal within a platform independent context
