@@ -34,20 +34,37 @@
 #include "frame.h"
 #include "synth.h"
 #include "resample.h"
-  struct mad_stream stream;
-  struct mad_frame frame;
-   struct mad_synth synth;
-static   int remainder=0;
-static int currentpos;
-static int framepos;
-static int begin=1;
-static int seeking=0;
-static int resample_rate;
-static int resample;
-static int equalizer=0;
-unsigned long  clipped=0;
-mad_fixed_t attenuation=MAD_F_ONE;
+
+struct Mp3libState {
+Mp3libState()
+:	remainder(0),
+	currentpos(0),
+	framepos(0),
+	begin(1),
+	seeking(0),
+	resample_rate(0),
+	resample(0),
+	equalizer(0),
+	clipped(0),
+	attenuation(MAD_F_ONE)
+	{}
+struct mad_stream stream;
+struct mad_frame frame;
+struct mad_synth synth;
+int remainder;
+int currentpos;
+int framepos;
+int begin;
+int seeking;
+int resample_rate;
+int resample;
+int equalizer;
+unsigned long  clipped;
+mad_fixed_t attenuation;
+};
+
 static DWORD conf_attsensitivity = MAD_F(0x02000000) * 4;
+
 #ifndef MS_NO_COREDLL
 BOOL APIENTRY DllMain( HANDLE hModule, 
                        DWORD  ul_reason_for_call, 
@@ -65,9 +82,6 @@ BOOL APIENTRY DllMain( HANDLE hModule,
     return TRUE;
 }
 #endif
-
-
-
 
 static
 mad_fixed_t const resample_table[9][9] = {
@@ -419,7 +433,7 @@ unsigned int pack_pcm(unsigned char *data, unsigned int nsamples,
   unsigned char const *start;
   register signed long sample0, sample1;
   //int effective;
-  int bytes;
+  //int bytes;
 
   start     = data;
 //  effective = resolution;//(resolution > 24) ? 24 : resolution;
@@ -452,23 +466,36 @@ unsigned int pack_pcm(unsigned char *data, unsigned int nsamples,
   return data - start;
 }
 
+MP3LIB_API void mp3_lib_create_instance(void **pp)
+	{
+	if(pp != NULL && *pp == NULL)
+		*pp = new Mp3libState();
+	}
+
+MP3LIB_API void mp3_lib_release_instance(void *vps)
+	{
+	Mp3libState *ps = (Mp3libState*) vps;
+	delete ps;
+	}
+
 // This is an example of an exported function.
-MP3LIB_API void mp3_lib_init(int Equalizer,char* eq)
+MP3LIB_API void mp3_lib_init(void *vps, int Equalizer,char* eq)
 {
 	//MessageBox(GetActiveWindow(),_T("In"),_T(""),MB_OK);
-	if (begin)
+	Mp3libState *ps = (Mp3libState*) vps;
+	if (ps->begin)
 	{
-	  mad_stream_init(&stream);
-	  mad_frame_init(&frame);
-	 mad_synth_init(&synth);
-	 currentpos=0;
-	 framepos=0;
-		begin=1;
-		seeking=1;
+	  mad_stream_init(&ps->stream);
+	  mad_frame_init(&ps->frame);
+	  mad_synth_init(&ps->synth);
+	  ps->currentpos=0;
+	  ps->framepos=0;
+	  ps->begin=1;
+	  ps->seeking=1;
 	}
-	equalizer=Equalizer;
-	clipped=0;
-	attenuation=MAD_F_ONE;
+	ps->equalizer=Equalizer;
+	ps->clipped=0;
+	ps->attenuation=MAD_F_ONE;
 	if (eq)
 	{
 		set_eq(1,eq,eq[10]);
@@ -476,39 +503,41 @@ MP3LIB_API void mp3_lib_init(int Equalizer,char* eq)
 
 }
 // This is an example of an exported function.
-MP3LIB_API void mp3_lib_finalize(void)
+MP3LIB_API void mp3_lib_finalize(void *vps)
 {
-  mad_frame_finish(&frame);
-  mad_stream_finish(&stream);
-  mad_synth_finish(&synth);
-	begin=1;
+  Mp3libState *ps = (Mp3libState*) vps;
+  mad_frame_finish(&ps->frame);
+  mad_stream_finish(&ps->stream);
+  mad_synth_finish(&ps->synth);
+  ps->begin = 1;
 }
 
 //static char buffer[40000];
-MP3LIB_API int mp3_lib_decode_header(unsigned char * inbuff, int insize, int* Freq, int* ch, int* BitRate)
+MP3LIB_API int mp3_lib_decode_header(void *vps, unsigned char * inbuff, int insize, int* Freq, int* ch, int* BitRate)
 {
-	  resample=0;
-   	  mad_stream_buffer(&stream, (const unsigned char *)inbuff, insize);
-	  while (mad_frame_decode(&frame, &stream) == -1);
+	  Mp3libState *ps = (Mp3libState*) vps;
+	  ps->resample=0;
+   	  mad_stream_buffer(&ps->stream, (const unsigned char *)inbuff, insize);
+	  while (mad_frame_decode(&ps->frame, &ps->stream) == -1);
 	  if (!*Freq)
 	  {
-		*Freq=frame.header.samplerate;
+		*Freq=ps->frame.header.samplerate;
 	  }
 	  else
 	  {
-		  resample=1;
-		  resample_rate=*Freq;
+		  ps->resample=1;
+		  ps->resample_rate=*Freq;
 	  }
-	  *BitRate=frame.header.bitrate;
-	  *ch=(frame.header.mode > 0) ? 2 : 1;
-	  mp3_lib_finalize();
-	  mp3_lib_init(equalizer,0);
+	  *BitRate=ps->frame.header.bitrate;
+	  *ch=(ps->frame.header.mode > 0) ? 2 : 1;
+	  mp3_lib_finalize(vps);
+	  mp3_lib_init(vps, ps->equalizer,0);
 	  return 1;
 }
 
-MP3LIB_API int mp3_lib_decode_buffer(unsigned char * inbuff, int insize, char *outmemory, int outmemsize, int *done, int* inputpos)
+MP3LIB_API int mp3_lib_decode_buffer(void *vps,unsigned char * inbuff, int insize, char *outmemory, int outmemsize, int *done, int* inputpos)
 {
-
+	Mp3libState *ps = (Mp3libState*) vps;
 	int retval=0;
 	resample_state rs;
     mad_fixed_t const *ch1, *ch2;
@@ -522,11 +551,11 @@ MP3LIB_API int mp3_lib_decode_buffer(unsigned char * inbuff, int insize, char *o
 //	    int remainder = stream.bufend - stream.this_frame;
 //		memcpy(buffer, stream.this_frame, remainder);
 //		memcpy(buffer+remainder,inbuff,insize+remainder);
-		mad_stream_buffer(&stream, (const unsigned char *)inbuff, insize);
-		currentpos+=framepos;
-		begin=0;
+		mad_stream_buffer(&ps->stream, (const unsigned char *)inbuff, insize);
+		ps->currentpos+=ps->framepos;
+		ps->begin=0;
 	}
-	else if (begin)
+	else if (ps->begin)
 	{
 		*done=0;
 		return 1;
@@ -534,23 +563,23 @@ MP3LIB_API int mp3_lib_decode_buffer(unsigned char * inbuff, int insize, char *o
 	int nch;
 	int output_length=0;
 	mad_fixed_t clipping=0;
-	int err=mad_frame_decode(&frame, &stream);
+	int err=mad_frame_decode(&ps->frame, &ps->stream);
 	if (err==-1)
 	{
-		if (stream.error == MAD_ERROR_BUFLEN)
+		if (ps->stream.error == MAD_ERROR_BUFLEN)
 		{
 
-			framepos=(int)(stream.this_frame-stream.buffer);
-			*inputpos=currentpos+framepos;
+			ps->framepos=(int)(ps->stream.this_frame-ps->stream.buffer);
+			*inputpos=ps->currentpos+ps->framepos;
 			*done=0;
-			return stream.bufend - stream.this_frame+1;
+			return ps->stream.bufend - ps->stream.this_frame+1;
 //				retval=stream.bufend - stream.this_frame+1;			
 		}
 		else //if((stream.error ==MAD_ERROR_LOSTSYNC||(stream.error==MAD_ERROR_BADDATAPTR)))
 		{
-			stream.sync=0;
-			framepos=(int)(stream.this_frame-stream.buffer);
-			*inputpos=currentpos+framepos;
+			ps->stream.sync=0;
+			ps->framepos=(int)(ps->stream.this_frame-ps->stream.buffer);
+			*inputpos=ps->currentpos+ps->framepos;
 			*done=0;
 			return 0;
 		}
@@ -559,44 +588,44 @@ MP3LIB_API int mp3_lib_decode_buffer(unsigned char * inbuff, int insize, char *o
 //			return -1;
 //		}
 	}
-	seeking=0;
-	framepos=(int)(stream.this_frame-stream.buffer);
-	*inputpos=currentpos+framepos;
-	if (equalizer)
+	ps->seeking=0;
+	ps->framepos=(int)(ps->stream.this_frame-ps->stream.buffer);
+	*inputpos=ps->currentpos+ps->framepos;
+	if (ps->equalizer)
 	{
-		attenuate_filter(&frame,attenuation);
-		equalizer_filter(&frame,eqfactor);
+		attenuate_filter(&ps->frame,ps->attenuation);
+		equalizer_filter(&ps->frame,eqfactor);
 	}
-	mad_synth_frame(&synth,&frame);
-	nch= synth.pcm.channels;
-	ch1 = synth.pcm.samples[0];
-	ch2 = synth.pcm.samples[1];
-	if (resample)
+	mad_synth_frame(&ps->synth,&ps->frame);
+	nch= ps->synth.pcm.channels;
+	ch1 = ps->synth.pcm.samples[0];
+	ch2 = ps->synth.pcm.samples[1];
+	if (ps->resample)
 	{
 		int t;
-		rch1=(long*)malloc(sizeof(ch1[0])*(synth.pcm.length));
-		resample_init(&rs,synth.pcm.samplerate,resample_rate);
-		t=resample_block(&rs,synth.pcm.length,ch1,rch1);
+		rch1=(long*)malloc(sizeof(ch1[0])*(ps->synth.pcm.length));
+		resample_init(&rs,ps->synth.pcm.samplerate,ps->resample_rate);
+		t=resample_block(&rs,ps->synth.pcm.length,ch1,rch1);
 		if (nch == 1)
 		{
 			rch2 = 0;
 		}
 		else
 		{
-			rch2=(long*)malloc(sizeof(ch1[1])*(synth.pcm.length));
+			rch2=(long*)malloc(sizeof(ch1[1])*(ps->synth.pcm.length));
 			resample_init(&rs,48000,44100);
-			t=resample_block(&rs,synth.pcm.length,ch2,rch2);
+			t=resample_block(&rs,ps->synth.pcm.length,ch2,rch2);
 		}
-		synth.pcm.length=t;
+		ps->synth.pcm.length=t;
 		*done=pack_pcm(((unsigned char *)outmemory),
-			 synth.pcm.length, rch1, rch2, resolution, &clipped,&clipping);
+			 ps->synth.pcm.length, rch1, rch2, resolution, &ps->clipped,&clipping);
 		free(rch1);
 		if (rch2)
 			free(rch2);
-		if (equalizer)
+		if (ps->equalizer)
 		{
-			attenuation =
-			  mad_f_tofixed(mad_f_todouble(attenuation) /
+			ps->attenuation =
+			  mad_f_tofixed(mad_f_todouble(ps->attenuation) /
 					mad_f_todouble(MAD_F_ONE +
 							   mad_f_mul(clipping,
 								 conf_attsensitivity)));
@@ -606,11 +635,11 @@ MP3LIB_API int mp3_lib_decode_buffer(unsigned char * inbuff, int insize, char *o
 	if (nch == 1)
 		ch2 = 0;
 	*done=pack_pcm(((unsigned char *)outmemory),
-		 synth.pcm.length, ch1, ch2, resolution, &clipped,&clipping);
-		if (equalizer)
+		 ps->synth.pcm.length, ch1, ch2, resolution, &ps->clipped,&clipping);
+		if (ps->equalizer)
 		{
-			attenuation =
-			  mad_f_tofixed(mad_f_todouble(attenuation) /
+			ps->attenuation =
+			  mad_f_tofixed(mad_f_todouble(ps->attenuation) /
 					mad_f_todouble(MAD_F_ONE +
 							   mad_f_mul(clipping,
 								 conf_attsensitivity)));
