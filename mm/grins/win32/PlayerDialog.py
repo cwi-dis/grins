@@ -207,6 +207,9 @@ class PlayerDialog:
 		self.__channels[i] = channel, onoff
 		self.setchannels(self.__channels)
 
+	def after_chan_show(self, channel=None):
+		pass
+
 	def setstate(self, state):
 		ostate = self.__state
 		self.__state = state

@@ -79,6 +79,9 @@ class PlayerDialog(PlayerDialogBase):
 			self.setchannels()
 			self.setusergroups()
 
+	def after_chan_show(self, channel=None):
+		pass
+
 	def setstate(self, state = None):
 		commandlist = self.__topcommandlist + \
 			      self.toplevel.main.commandlist
