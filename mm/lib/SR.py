@@ -11,20 +11,18 @@ __version__ = "$Id$"
 # All *DONE events are 'upcalls'.
 # The *STOP events have no corresponding upcalls.
 #
-[NO_EVENT, SCHED, SCHED_DONE, PLAY, PLAY_DONE, SCHED_STOP, PLAY_STOP,
-	SYNC, SYNC_DONE, PLAY_ARM, ARM_DONE, SCHED_FINISH, BAG_START,
-	BAG_STOP, BAG_DONE, TERMINATE, LOOPSTART, LOOPSTART_DONE,
-	LOOPEND, LOOPEND_DONE, LOOPRESTART, PLAY_OPTIONAL_ARM,
-	SCHED_STOPPING, SCHED_START] = range(24)
+[NO_EVENT, SCHED, SCHED_DONE, PLAY, PLAY_DONE, SCHED_STOP, PLAY_STOP,\
+	  SYNC, SYNC_DONE, PLAY_ARM, ARM_DONE, SCHED_FINISH, BAG_START, \
+	  BAG_STOP, BAG_DONE, TERMINATE, LOOPSTART, LOOPSTART_DONE, \
+	  LOOPEND, LOOPEND_DONE, LOOPRESTART, PLAY_OPTIONAL_ARM] = range(22)
 
 ## side_effects = (PLAY, PLAY_STOP, PLAY_ARM)
 
-op_names = [ 'NO_EVENT', 'SCHED', 'SCHED_DONE', 'PLAY', 'PLAY_DONE',
-	     'SCHED_STOP', 'PLAY_STOP', 'SYNC', 'SYNC_DONE',
-	     'PLAY_ARM', 'ARM_DONE', 'SCHED_FINISH', 'BAG_START',
-	     'BAG_STOP', 'BAG_DONE', 'TERMINATE', 'LOOPSTART',
-	     'LOOPSTART_DONE', 'LOOPEND', 'LOOPEND_DONE', 'LOOPRESTART',
-	     'PLAY_OPTIONAL_ARM', 'SCHED_STOPPING', 'SCHED_START' ]
+op_names = [ 'NO_EVENT', 'SCHED', 'SCHED_DONE', 'PLAY', 'PLAY_DONE', \
+	  'SCHED_STOP', 'PLAY_STOP', 'SYNC', 'SYNC_DONE', \
+	  'PLAY_ARM', 'ARM_DONE', 'SCHED_FINISH', 'BAG_START', \
+	  'BAG_STOP', 'BAG_DONE', 'TERMINATE', 'LOOPSTART', 'LOOPSTART_DONE', \
+	  'LOOPEND', 'LOOPEND_DONE', 'LOOPRESTART', 'PLAY_OPTIONAL_ARM']
 
 def ev2string(ev):
 	try:
@@ -33,7 +31,7 @@ def ev2string(ev):
 			delay, node = node
 			if type(node) == type(0):
 				return 'SYNC(%e, %d)' % (delay, node)
-			return 'SYNC(%e, %s)' % (delay, _getname(node))
+			return 'SYNC(%e, %s)'%(delay, _getname(node))
 		if opcode == SYNC_DONE and type(node) == type(0):
 			return 'SYNC_DONE(%d)' % node
 		name = _getname(node)
@@ -42,9 +40,9 @@ def ev2string(ev):
 		return 'ILL-FORMED-EVENT:'+`ev`
 		
 def _getname(node):
-	uid = node.GetUID()
-	name = node.GetAttrDef('name', '') + '#' + uid
-	return name
+		uid = node.GetUID()
+		name = node.GetAttrDef('name', '') + '#' + uid
+		return name
 
 def evlist2string(evlist):
 	first = 1
