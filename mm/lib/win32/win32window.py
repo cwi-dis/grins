@@ -2051,9 +2051,14 @@ class DrawContext:
 	def update(self, rc=None):
 		pass
 	
+	# the entity registered through this method 
+	# will receive update notifications 
 	def addListener(self, entity):
 		self._listeners.append(entity)
 
+	#
+	# update section
+	#
 	def moveSelectionTo(self, point):
 		xp, yp = point
 		xl, yl = self._last
@@ -2065,7 +2070,14 @@ class DrawContext:
 		if self._selected:
 			self._selected.moveDragHandleTo(self._ixDragHandle, point)
 			self.__notifyListeners(self._selected)
-	
+
+	def select(self, shape):
+		self._selected = shape
+		self.__notifyListeners(shape)
+			
+	#
+	# Mouse input
+	#
 	def onLButtonDown(self, flags, point):
 		self._curtool.onLButtonDown(flags, point)
 
@@ -2141,9 +2153,9 @@ class SelectTool(DrawTool):
 			shape = ctx.getMouseTarget(point)
 			if shape:
 				ctx._selmode = SM_MOVE
-				ctx._selected = shape
+				ctx.select(shape)
 			else:
-				ctx._selected = None
+				ctx.select(None)
 				self._ctx.update()
 
 		ctx._last = point
