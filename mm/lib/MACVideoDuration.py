@@ -5,9 +5,14 @@ __version__ = "$Id$"
 import FileCache
 import MMurl
 import Qt
+if not Qt.available():
+	Qt = None
 import QuickTime
 
 def getduration(filename):
+	if not Qt:
+		print 'QuickTime not available, cannot obtain movie duration'
+		return 0
 	try:
 		filename = MMurl.urlretrieve(filename)[0]
 	except IOError:

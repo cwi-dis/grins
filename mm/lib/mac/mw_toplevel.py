@@ -12,6 +12,8 @@ import MacOS
 import sys
 import MenuTemplate
 import Qt
+if not Qt.available():
+	Qt = None
 import Scrap
 import TE
 import AE
@@ -183,16 +185,16 @@ class _Event(AEServer):
 				if self._mouse_timer:
 					self.cancelmousetimer()
 				self._handle_event(event)
-				if self._active_movies:
+				if self._active_movies and Qt:
 					Qt.MoviesTask(0)
 				gotone, event = Evt.WaitNextEvent(self._eventmask, 0)
-			if self._active_movies:
+			if self._active_movies and Qt:
 				Qt.MoviesTask(0)
 			return 1
 		else:
 			if self._mouse_tracker:
 				self._mouse_tracker(event)
-			if self._active_movies:
+			if self._active_movies and Qt:
 				Qt.MoviesTask(0)
 			if Dlg.IsDialogEvent(event):
 				self._handle_dialogevent(event)
