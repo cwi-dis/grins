@@ -281,10 +281,6 @@ SOURCE=.\M_audio__what.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_Bandwidth.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_base64.c
 # End Source File
 # Begin Source File
@@ -397,10 +393,6 @@ SOURCE=.\M_fmtfloat.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_fnmatch.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_Font.c
 # End Source File
 # Begin Source File
@@ -434,10 +426,6 @@ SOURCE=.\M_getpass.c
 # Begin Source File
 
 SOURCE=.\M_gifparser.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_glob.c
 # End Source File
 # Begin Source File
 
@@ -486,30 +474,6 @@ SOURCE=.\M_IconMixin.c
 # Begin Source File
 
 SOURCE=.\M_ImageChannel.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_img.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_imgbmp.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_imgconvert.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_imghdr.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_imgsgi.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_imgxbm.c
 # End Source File
 # Begin Source File
 
@@ -893,10 +857,6 @@ SOURCE=.\M_RealChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_realconvert.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_RealDuration.c
 # End Source File
 # Begin Source File
@@ -1121,6 +1081,10 @@ SOURCE=.\M_Toolbars.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_ToolbarState.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_ToolbarTemplate.c
 # End Source File
 # Begin Source File
@@ -1229,6 +1193,10 @@ SOURCE=.\M_win32mu.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_win32reg.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_win32transitions.c
 # End Source File
 # Begin Source File
@@ -1246,6 +1214,10 @@ SOURCE=.\M_winerror.c
 # Begin Source File
 
 SOURCE=.\M_winplayerdlg.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_winqt.c
 # End Source File
 # Begin Source File
 
