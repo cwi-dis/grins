@@ -551,6 +551,8 @@ class LayoutView2(LayoutViewDialog2):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandViewportList = [
 				ATTRIBUTES(callback = (self.__editProperties, ())),
+				NEW_REGION(callback = (self.__newRegion, ())),
+				DELETE(callback = (self.__delNode, ())),
 				]
 		else:
 			self.commandViewportList = [
@@ -561,6 +563,8 @@ class LayoutView2(LayoutViewDialog2):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandRegionList = [
 				ATTRIBUTES(callback = (self.__editProperties, ())),
+				NEW_REGION(callback = (self.__newRegion, ())),
+				DELETE(callback = (self.__delNode, ())),
 				]
 		else:
 			self.commandRegionList = [
