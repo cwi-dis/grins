@@ -295,7 +295,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 
 	def usergroup_callback(self, name):
 		self.toplevel.setwaiting()
-		title, u_state, override = self.context.usergroups[name]
+		title, u_state, override, uid = self.context.usergroups[name]
 		if override == 'allowed':
 			em = self.context.editmgr
 			if not em.transaction():
@@ -305,7 +305,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			else:
 				u_state = 'RENDERED'
 			em.delusergroup(name)
-			em.addusergroup(name, (title, u_state, override))
+			em.addusergroup(name, (title, u_state, override, uid))
 			em.commit()
 		self.setusergroup(name, u_state == 'RENDERED')
 
@@ -370,7 +370,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 
 	def makeugroups(self):
 		ugroups = []
-		for name, (title, u_state, override) in self.context.usergroups.items():
+		for name, (title, u_state, override, uid) in self.context.usergroups.items():
 			if override != 'allowed':
 				continue
 			if not title:
