@@ -1402,9 +1402,9 @@ class MMNode:
 	def GetParent(self):
 		return self.parent
 
-	def GetSchedParent(self):
+	def GetSchedParent(self, check_playability = 1):
 		parent = self.parent
-		while parent is not None and (parent.type == 'prio' or parent.type == 'alt'):
+		while parent is not None and (parent.type == 'prio' or (check_playability and parent.type == 'alt')):
 			parent = parent.parent
 		return parent
 
@@ -1711,7 +1711,7 @@ class MMNode:
 		downloadlag = 0.0
 		if self.timing_info_dict.has_key(which):
 			dummy, dummy, dummy, downloadlag = self.timing_info_dict[which].GetTimes()
-		print 'GetDelays', which, begindelay, downloadlag, self
+##		print 'GetDelays', which, begindelay, downloadlag, self
 		return begindelay, downloadlag
 	#
 	# Presentation values management
