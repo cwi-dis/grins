@@ -2214,7 +2214,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					elif fit == 'slice':
 						scale = -1
 					elif fit == 'fill':
-						scale = -3					
+						scale = -3
+					else:
+						# default value : hidden
+						scale = 1
 					cssResolver.setRawAttrs(cssId, [('scale', scale)])
 
 				# don't take into account the regAlign and regPoint on region since it's not allow anymore
