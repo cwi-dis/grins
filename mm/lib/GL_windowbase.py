@@ -3,7 +3,7 @@
 import gl, GL, DEVICE
 import fm
 import string
-from EVENTS import *
+from WMEVENTS import *
 _Accelerator = 1024
 import os
 debug = os.environ.has_key('WINDOWDEBUG')

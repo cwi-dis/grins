@@ -13,7 +13,7 @@ toplevel = None
 myxrgb8 = None
 
 from types import *
-from EVENTS import *
+from WMEVENTS import *
 r = Xlib.CreateRegion()
 RegionType = type(r)
 del r

@@ -7,7 +7,7 @@ from MMExc import *
 import MMAttrdefs
 from ViewDialog import ViewDialog
 import Timing
-import windowinterface, EVENTS
+import windowinterface, WMEVENTS
 
 BLACK = 0, 0, 0
 GREY = 100, 100, 100
@@ -94,9 +94,9 @@ class Player(ViewDialog, PlayerCore):
 		self.subwin = []
 		self.resize()
 		self.showing = 1
-		window.register(EVENTS.Mouse0Release, self._mouse, None)
-		window.register(EVENTS.ResizeWindow, self.resize, None)
-		window.register(EVENTS.WindowExit, self.hide, None)
+		window.register(WMEVENTS.Mouse0Release, self._mouse, None)
+		window.register(WMEVENTS.ResizeWindow, self.resize, None)
+		window.register(WMEVENTS.WindowExit, self.hide, None)
 		self.toplevel.setwaiting()
 		self.toplevel.checkviews()
 		self.showchannels()

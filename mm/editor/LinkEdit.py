@@ -4,7 +4,7 @@ from MMExc import *
 import MMAttrdefs
 import AttrEdit
 from ViewDialog import ViewDialog
-import windowinterface, EVENTS
+import windowinterface, WMEVENTS
 from AnchorDefs import A_TYPE, A_ID, ATYPE_WHOLE
 
 from MMNode import interiortypes
