@@ -95,12 +95,12 @@ class MMNodeContext:
 
 	def mapuid(self, uid):
 		if not self.uidmap.has_key(uid):
-			raise NoSuchUIDError, 'in mapuid()'
+			raise NoSuchUIDError, 'in mapuid'
 		return self.uidmap[uid]
 
 	def knownode(self, uid, node):
 		if self.uidmap.has_key(uid):
-			raise DuplicateUIDError, 'in knownode()'
+			raise DuplicateUIDError, 'in knownode'
 		self.uidmap[uid] = node
 
 	def forgetnode(self, uid):
@@ -722,7 +722,13 @@ class MMSyncArc:
 		self.delay = delay
 		self.qid = None
 		self.timestamp = None
+		self.deparcs = []	# arcs dependent on this one
+		self.depends = None	# arc this one depends on
 		if debug: print 'MMSyncArc.__init__', `self`
+
+	if debug:
+		def __del__(self):
+			print 'MMSyncArc.__del__',`self`
 
 	def __repr__(self):
 		if self.wallclock is not None:
@@ -932,7 +938,14 @@ class MMSyncArc:
 				return refnode.isresolved() + self.delay
 			return refnode.start_time + self.delay
 		return refnode.happenings[('event', event)] + self.delay
-			
+
+	def cancel(self, sched):
+		sched.cancel(self.qid)
+		self.qid = None
+		for a in self.deparcs:
+			a.cancel(sched)
+			a.depends = None
+		self.deparcs = []
 
 class MMNode_body:
 	"""Helper for looping nodes"""
@@ -2731,8 +2744,11 @@ class MMNode:
 							return c.__calcendtime(syncbase)
 					termtype = 'LAST' # fallback
 				val = -1
+				scheduled_children = 0
 				for c in self.GetSchedChildren():
 					e, mc = c.__calcendtime(syncbase)
+					if e is not None:
+						scheduled_children = 1
 					if not mc:
 						maybecached = 0
 					if termtype == 'FIRST':
@@ -2754,6 +2770,9 @@ class MMNode:
 							return -1, maybecached
 						if val < 0 or e > val:
 							val = e
+				if not scheduled_children and \
+				   termtype == 'LAST':
+					return 0, 1
 				return val, maybecached
 			if self.type == 'seq':
 				val = 0
@@ -2824,6 +2843,9 @@ class MMNode:
 			if MMAttrdefs.getattr(self, 'autoReverse'):
 				duration = 2.0 * duration
 		
+		mintime = self.attrdict.get('min', 0)
+		if mintime > 0 and duration  is not None and duration >= 0 and duration < mintime:
+			maybecached = 0
 		if maybecached:
 			self.fullduration = duration
 		else:
