@@ -507,6 +507,7 @@ DirectDrawSurface_SetPalette(DirectDrawSurfaceObject *self, PyObject *args)
 	return Py_None;
 }
 
+
 static char DirectDrawSurface_Blt__doc__[] =
 ""
 ;
@@ -525,8 +526,32 @@ DirectDrawSurface_Blt(DirectDrawSurfaceObject *self, PyObject *args)
 			&dwFlags,
 			&DDBLTFXType,&pbltfx
 			))
-		return NULL;	
+		return NULL;
+
 	HRESULT hr;
+
+	// check first destination surface
+	hr = self->pI->IsLost();
+	if(hr==DDERR_SURFACELOST)
+		hr = self->pI->Restore();
+	
+	if(hr!=DD_OK){
+		// we can not do the blt now
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+
+
+	// abd then the source
+	hr = ddsFrom->pI->IsLost();
+	if(hr!=DD_OK){
+		// no point in proceeding
+		// what we have draw at the source surface
+		// has been lost
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+				
 	Py_BEGIN_ALLOW_THREADS
 	hr = self->pI->Blt(&rcTo,ddsFrom->pI,&rcFrom,dwFlags,NULL);
 	Py_END_ALLOW_THREADS
@@ -757,7 +782,7 @@ HRESULT BltBlend8(IDirectDrawSurface *surf,
 	ZeroMemory(&desc2, sizeof(desc2));
 	desc2.dwSize=sizeof(desc2);
 	HRESULT hr;
-	hr=surf->Lock(0,&desc,DDLOCK_WAIT | DDLOCK_READONLY,0);
+	hr=surf->Lock(0,&desc,DDLOCK_WAIT ,0);
 	if(hr!=DD_OK) return hr;
 	hr=from->Lock(0,&desc1,DDLOCK_WAIT | DDLOCK_READONLY,0);
 	if(hr!=DD_OK) return hr;
@@ -818,7 +843,7 @@ HRESULT BltBlend16(IDirectDrawSurface *surf,
 	ZeroMemory(&desc2, sizeof(desc2));
 	desc2.dwSize=sizeof(desc2);
 	HRESULT hr;
-	hr=surf->Lock(0,&desc,DDLOCK_WAIT | DDLOCK_READONLY,0);
+	hr=surf->Lock(0,&desc,DDLOCK_WAIT,0);
 	if(hr!=DD_OK) return hr;
 	hr=from->Lock(0,&desc1,DDLOCK_WAIT | DDLOCK_READONLY,0);
 	if(hr!=DD_OK) return hr;
@@ -873,7 +898,7 @@ HRESULT BltBlend24(IDirectDrawSurface *surf,
 	ZeroMemory(&desc2, sizeof(desc2));
 	desc2.dwSize=sizeof(desc2);
 	HRESULT hr;
-	hr=surf->Lock(0,&desc,DDLOCK_WAIT | DDLOCK_READONLY,0);
+	hr=surf->Lock(0,&desc,DDLOCK_WAIT,0);
 	if(hr!=DD_OK) return hr;
 	hr=from->Lock(0,&desc1,DDLOCK_WAIT | DDLOCK_READONLY,0);
 	if(hr!=DD_OK) return hr;
@@ -930,7 +955,7 @@ HRESULT BltBlend32(IDirectDrawSurface *surf,
 	ZeroMemory(&desc2, sizeof(desc2));
 	desc2.dwSize=sizeof(desc2);
 	HRESULT hr;
-	hr=surf->Lock(0,&desc,DDLOCK_WAIT | DDLOCK_READONLY,0);
+	hr=surf->Lock(0,&desc,DDLOCK_WAIT,0);
 	if(hr!=DD_OK) return hr;
 	hr=from->Lock(0,&desc1,DDLOCK_WAIT | DDLOCK_READONLY,0);
 	if(hr!=DD_OK) return hr;
