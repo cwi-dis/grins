@@ -1,20 +1,11 @@
 #ifndef INC_COMSTL
 #define INC_COMSTL
 
-class ComModule
-	{
-	public:
-	virtual ~ComModule(){}
-	virtual void lock() = 0;
-	virtual void unlock() = 0;
-	virtual void* getContext() const = 0;
-	};
-
-template <class T>
+template <class T, class M>
 class ComCreator
 	{
 	public:
-	static HRESULT WINAPI CreateInstance(REFIID riid, void** ppv, ComModule *pModule)
+	static HRESULT WINAPI CreateInstance(REFIID riid, void** ppv, M *pModule)
 		{
 		HRESULT hr = E_OUTOFMEMORY;
 		T* p = NULL;
@@ -41,7 +32,7 @@ class InterfaceCaster
 		}
 	};
 
-template <class T>
+template <class T, class M>
 class ClassFactory : public IClassFactory
 	{
 	public:
@@ -68,7 +59,7 @@ class ClassFactory : public IClassFactory
 	virtual HRESULT __stdcall CreateInstance(IUnknown* pUnknownOuter,const IID& iid,void** ppv)
 		{
 		if(pUnknownOuter) return CLASS_E_NOAGGREGATION;
-		return ComCreator<T>::CreateInstance(iid, ppv, m_pModule);
+		return ComCreator<T, M>::CreateInstance(iid, ppv, m_pModule);
 		}
 	virtual HRESULT __stdcall LockServer(BOOL bLock)
 		{
@@ -78,11 +69,11 @@ class ClassFactory : public IClassFactory
 		}
 
 	// Implementation
-	ClassFactory(ComModule *p) : m_cRef(1), m_pModule(p) { /*cout << "ClassFactory" << endl;*/}
+	ClassFactory(M *p) : m_cRef(1), m_pModule(p) { /*cout << "ClassFactory" << endl;*/}
 	~ClassFactory() {/*cout << "~ClassFactory" << endl;*/}
 
 	private:
-	ComModule *m_pModule;
+	M *m_pModule;
 	long m_cRef ;
 	};
 
