@@ -1099,7 +1099,7 @@ class NodeBox(GO):
 					break
 		node.cv_obj = self
 		node.set_armedmode = self.set_armedmode
-		if node.armedmode == None:
+		if not hasattr(node, 'armedmode') or node.armedmode == None:
 			node.armedmode = ARM_NONE
 		name = MMAttrdefs.getattr(node, 'name')
 		self.locked = 0
