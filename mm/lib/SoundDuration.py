@@ -9,7 +9,7 @@ def getfullinfo(url):
 	try:
 		filename = urlretrieve(url)[0]
 		a = audio.reader(filename)
-	except (audio.Error, IOError), msg:
+	except (audio.Error, IOError, EOFError), msg:
 		print 'error in sound file', url, ':', msg
 		return 0, 8000, []
 	return a.getnframes(), a.getframerate(), a.getmarkers()
