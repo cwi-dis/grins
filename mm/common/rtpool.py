@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 #
 # Module rtpool.
 # Keeps a pool of actions and durations and returns the best fitting one.
