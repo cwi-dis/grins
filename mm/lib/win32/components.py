@@ -319,9 +319,12 @@ class ListBox(Control):
 	# Multi-select list support
 	def getselcount(self):
 		return self.sendmessage(win32con.LB_GETSELCOUNT)
-	def getselitems(self, itemNumber):
-		return self.sendmessage_gt(win32con.LB_GETSELITEMS, itemNumber)
-	
+	def getselitems(self, itemCount=None):
+		if itemCount == None:
+			itemCount = self.getselcount()
+		return self.sendmessage_gt(win32con.LB_GETSELITEMS, itemCount)
+	def multiselect(self, item, onoff):
+		return self.sendmessage(win32con.LB_SETSEL, onoff, item)
 	# cmif interface
 	# initialize cmif related part
 	def __icmif(self):
