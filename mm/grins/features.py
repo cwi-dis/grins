@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Features for GRiNS player
 
 from compatibility import *
