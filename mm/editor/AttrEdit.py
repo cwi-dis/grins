@@ -1801,7 +1801,10 @@ class AttrEditorField(AttrEditorDialogField):
 
 	def getdefault(self):
 		return self.valuerepr(self.wrapper.getdefault(self.__name))
-		
+
+	def getdefaultvalue(self):
+		return self.wrapper.getdefault(self.__name)
+
 	def isdefault(self):
 		v = self.wrapper.getvalue(self.__name)
 		if v is None or v == self.wrapper.getdefault(self.__name):

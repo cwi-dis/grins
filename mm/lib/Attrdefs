@@ -517,7 +517,7 @@
 	'Reduces background opacity' normal (advanced g2 smil2))
 (backgroundOpacity (float) 1.0 'Background opacity' percent
 	'Makes transparent backgrounds opaque' normal (advanced g2 smil2))
-(chromaKey (tuple (int) (int) (int)) (0 0 0) 'Chroma key' color
+(chromaKey (tuple (int) (int) (int)) (-255 -255 -255) 'Chroma key' color
 	'Turns selected color transparent' normal (advanced g2 smil2))
 (chromaKeyOpacity (float) 0.0 'Chroma key opacity' percent
 	'Adds opacity to chroma key' normal (advanced g2 smil2))

@@ -787,6 +787,9 @@ class ColorCtrl(AttrCtrl):
 	def drawOn(self,dc):
 		rc=self._indicatorRC
 		ct=self.getdispcolor()
+		for c in ct:
+			if not (0 <= c <= 255):
+				return
 		dc.FillSolidRect(rc, win32mu.RGB(ct))
 		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
 		dc.FrameRectFromHandle(rc,br)
@@ -811,7 +814,11 @@ class ColorCtrl(AttrCtrl):
 		if colors.has_key(colorstring):
 			return colors[colorstring]
 		list = string.split(string.strip(colorstring))
-		r = g = b = 0
+		default = self._attr.getdefaultvalue()
+		# this is for CssColorAttrEditorField
+		if len(default) == 2 and len(default[1]) == 3:
+			default = default[1]
+		r, g, b = default
 		if len(list) == 3:
 			try:
 				r = string.atoi(list[0])
