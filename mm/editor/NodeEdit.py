@@ -177,6 +177,7 @@ def showeditor(node):
 	gl.ringbell()
 	return
     filename = MMAttrdefs.getattr(node,'file')
+    LocalError = 'LocalError'
     try:
 	chtype = _getchtype(node)
 	editor = channeleditors[chtype]
@@ -185,10 +186,10 @@ def showeditor(node):
 	else:
 	    cmd = _showmenu(editor)
 	    if cmd = None:
-		raise RuntimeError
+		raise LocalError
 	cmd = 'file='+filename+' ; '+cmd+' &'
 	void = posix.system(cmd)
-    except RuntimeError:
+    except LocalError:
 	gl.ringbell()
 
 # Simple test program. Only tests editor file parsing.
