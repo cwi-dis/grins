@@ -214,13 +214,15 @@ class _CommonWindow:
 		self._wtd_cursor = ''
 		self._z = z
 		self._updatezorder()
-		print 'Window opened', hex(id(self))
+##		print 'Window opened', hex(id(self))
 		
 	def close(self):
 		"""Close window and all subwindows"""
-		print 'Closing window', hex(id(self)), self.qdrect()
+##		print 'Closing window', hex(id(self)), self.qdrect()
 		if self._parent is None:
 			return		# already closed
+		if not self._istoplevel:
+			self._parent._clipchanged()
 		if _in_create_box is self:
 			self.cancel_create_box()
 		self._set_movie_active(0)
@@ -271,8 +273,9 @@ class _CommonWindow:
 		at TopLevel"""
 		pass
 
-	def _clipchanged(self):
-		"""Called when the clipping region is possibly changed"""
+	# _clipchanged is different for subwindows and toplevel windows
+	
+	def _zapclip(self):
 		if not self._parent or not self._onscreen_wid:
 			return
 		if self._clip:
@@ -283,8 +286,7 @@ class _CommonWindow:
 		self._clipincludingchildren = None
 		# And inform our children...
 		for ch in self._subwindows:
-			ch._clipchanged()
-		self._buttonschanged()
+			ch._zapclip()
 			
 	def _mac_getclip(self, includechildren=0):
 		"""Get the clip region for ourselves, or for ourselves plus our children"""
@@ -710,9 +712,8 @@ class _CommonWindow:
 			if self._active_displist:
 				# Get our own button region, and clip it to our clip region
 				rgn = self._active_displist._get_button_region()
-				if not self._clip:
-					self._mkclip()
-				Qd.SectRgn(rgn, self._clip, rgn)
+				clip = self._mac_getclip()
+				Qd.SectRgn(rgn, clip, rgn)
 				Qd.UnionRgn(self._button_region, rgn, self._button_region)
 				Qd.DisposeRgn(rgn)
 		return self._button_region
@@ -868,11 +869,11 @@ class _CommonWindow:
 	def _do_resize(self):
 		"""The (sub)window has changed size through external means. Recompute
 		everything for ourselves and our children"""
-		if self._istoplevel:
-			self._clipchanged()
-		else:
+##		print 'resizing', self
+		self._clipchanged()
+		if not self._istoplevel:
 			self._sizes = self._parent._pxl2rel(self._rect)
-			self._parent._clipchanged()
+##			print 'sizes', self._sizes
 		for d in self._displists[:]:
 			d.close()
 		self._do_resize0()
@@ -895,6 +896,7 @@ class _CommonWindow:
 		except KeyError:
 			pass
 		else:
+##			print 'ResizeWindow for', self
 			func(arg, self, ResizeWindow, None)
 		
 	def _redraw_now(self, rgn):
@@ -909,8 +911,6 @@ class _CommonWindow:
 		"""Set clipping and color, redraw, redraw children"""
 		if self._parent is None:
 			return
-		if not self._clip or not self._clipincludingchildren:
-			self._mkclip()
 			
 		olddrawenviron = self._mac_setwin()
 		
@@ -925,8 +925,9 @@ class _CommonWindow:
 		# Next do ourselves
 		saveclip = Qd.NewRgn()
 		Qd.GetClip(saveclip)
-		if not Qd.EmptyRgn(self._clip):
-			Qd.SetClip(self._clip)
+		clip = self._mac_getclip()
+		if not Qd.EmptyRgn(clip):
+			Qd.SetClip(clip)
 			if not self._outline_color is None:
 				Qd.RGBForeColor(self._outline_color)
 				rect = self.qdrect()
@@ -946,7 +947,8 @@ class _CommonWindow:
 					child._redraw(rgn)
 		# Then do the transition on our full clip (including children)
 		# XXX should only be done in topmost window
-		Qd.SetClip(self._clipincludingchildren)
+		clipincludingchildren = self._mac_getclip(includechildren=1)
+		Qd.SetClip(clipincludingchildren)
 		if self._transition and self._transition.ismaster(self):
 			self._transition.changed()
 		Qd.SetClip(saveclip)
@@ -961,8 +963,8 @@ class _CommonWindow:
 	def _do_redraw(self):
 		"""Do actual redraw"""
 		if self._active_displist:
-			if not self._transparent:
-				Qd.EraseRect(self.qdrect())
+##			if not self._transparent:
+##				Qd.EraseRect(self.qdrect())
 			self._active_displist._render()
 		elif self._frozen and not self._transition:
 ##			self._mac_setwin(mw_globals.BM_ONSCREEN)
@@ -1035,6 +1037,7 @@ class _CommonWindow:
 		# create region for whole window
 		self._clipincludingchildren = Qd.NewRgn()
 		Qd.RectRgn(self._clipincludingchildren, self.qdrect())
+##		print '_mkclip', self, self.qdrect()
 ##		self._clipvisible(self._clipincludingchildren)
 		self._clipsubtractsiblings()
 		# create region for the part of the window that _we_ (as opposed
@@ -1064,6 +1067,7 @@ class _CommonWindow:
 		# If we're not transparent, or transparent-when-empty and non-empty
 		# we redraw everything
 		if not self._transparent:
+##			print '_getredrawguarantee', self, self.qdrect()
 			Qd.RectRgn(r, self.qdrect())
 			return r
 		didsome = 0
@@ -1083,6 +1087,10 @@ class _CommonWindow:
 		if not didsome:
 			Qd.DisposeRgn(r)
 			return
+		r2 = Qd.NewRgn()
+		Qd.RectRgn(r2, self.qdrect())
+		Qd.SectRgn(r, r2, r)
+		Qd.DisposeRgn(r2)
 		return r
 					
 	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN, modeless=0):
@@ -1183,9 +1191,8 @@ class _CommonWindow:
 	def _rb_redraw(self):
 		if not self._rb_box:
 			return
-		if not self._clipincludingchildren:
-			self._mkclip()
-		Qd.SetClip(self._clipincludingchildren)
+		clipincludingchildren = self._mac_getclip(includechildren=1)
+		Qd.SetClip(clipincludingchildren)
 		if self._onscreen_wid == Win.FrontWindow():
 			Qd.RGBForeColor((0xffff, 0, 0))
 		else:
@@ -1244,9 +1251,8 @@ class _CommonWindow:
 		#
 		# Otherwise first erase old box, then draw the new one.
 		#
-		if not self._clipincludingchildren:
-			self._mkclip()
-		Qd.SetClip(self._clipincludingchildren)
+		clipincludingchildren = self._mac_getclip(includechildren=1)
+		Qd.SetClip(clipincludingchildren)
 		port = self._onscreen_wid.GetWindowPort()
 		oldmode = port.pnMode
 		Qd.RGBForeColor((0xffff, 0, 0))
@@ -1383,21 +1389,20 @@ class _CommonWindow:
 		
 		old_x, old_y, old_w, old_h = self._rect
 		if units == self._units and w == old_w and h == old_h:
-			if self._istoplevel:
-				self._clipchanged()
-			else:
-				self._parent._clipchanged()
+			self._clipchanged()
 			self._do_move(x-old_x, y-old_y)
 		else:
+##			print 'OLD RECT', self._rect, self.qdrect()
 			self._rect = x, y, w, h
 			self._units = units
 			self._do_resize()
+##			print 'NEW RECT', self._rect, self.qdrect()
 		Win.InvalRect(self.qdrect())
 
 	def updatezindex(self, z):
 		self._z = z
 		self._updatezorder(redraw=1)
-		print 'window.updatezindex',z
+##		print 'window.updatezindex',z
 
 	def updatebgcolor(self, color):
 		self._bgcolor = self._convert_color(color)
@@ -1468,7 +1473,7 @@ class _CommonWindow:
 			self._mac_create_gworld(BM_PASSIVE, 1, self.qdrect())
 			self._frozen = how
 		elif self._frozen:
-			print 'freeze_content(None)' # DBG
+##			print 'freeze_content(None)' # DBG
 			self._mac_dispose_gworld(BM_PASSIVE)
 			self._frozen = None
 			self._mac_invalwin()
@@ -1492,7 +1497,6 @@ class _CommonWindow:
 		if self._frozen == 'transition':
 			# We are frozen, so we have already saved the contents
 			self._frozen = None
-			print 'transition_setup_before clear freeze'
 		else:
 			# Make sure our screen pixels reflect the actual current
 			# situation, so we can grab them
@@ -1567,7 +1571,7 @@ class _OffscreenMixin:
 		del self.__bitmaps
 
 	def _mac_create_gworld(self, which, copybits, area):
-		print 'DBG: create_gworld', which, copybits, area
+##		print 'DBG: create_gworld', which, copybits, area
 		if which < 0:
 			raise 'Incorrect gworld indicator'
 		cur_port, cur_dev = Qdoffs.GetGWorld()
@@ -2259,6 +2263,14 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 	def _is_on_top(self):
 		return 1
 		
+	def _clipchanged(self):
+		"""Called when the clipping region is possibly changed"""
+		if not self._parent or not self._onscreen_wid:
+			return
+		self._zapclip()
+		self._buttonschanged()
+		self._zapregions()
+		
 	def _updatezorder(self, redraw=0, tobottom=0):
 		pass
 		
@@ -2509,6 +2521,12 @@ class _SubWindow(_CommonWindow):
 	def getgeometry(self, units=UNIT_MM):
 		return self._sizes
 
+	def _clipchanged(self):
+		"""Called when the clipping region is possibly changed"""
+		if not self._parent or not self._onscreen_wid:
+			return
+		self._parent._clipchanged()
+		
 	def _updatezorder(self, redraw=0, tobottom=0):
 		"""Our Z-order has changed. Change the stacking order in our parent"""
 		parent = self._parent
@@ -2565,19 +2583,20 @@ class _SubWindow(_CommonWindow):
 		if not self._parent:
 			return
 		# First clip ourselves to our parent.
-		if not self._parent._clipincludingchildren:
-			self._parent._mkclip()
-		Qd.SectRgn(self._clipincludingchildren, self._parent._clipincludingchildren,
-				self._clipincludingchildren)
-		# Next subtract our higher-stacked siblings
-		for w in self._parent._subwindows:
-			if w == self:
-				# Stop when we meet ourselves
-				break
-			r = w._getredrawguarantee()
-			if r:
-				Qd.DiffRgn(self._clipincludingchildren, r, self._clipincludingchildren)
-				Qd.DisposeRgn(r)
+		pclip = self._parent._mac_getclip(includechildren=1)
+		Qd.SectRgn(self._clipincludingchildren, pclip, self._clipincludingchildren)
+		# Next subtract our higher-stacked siblings recursively up
+		ancestor = self
+		while not ancestor._istoplevel:
+			for w in ancestor._parent._subwindows:
+				if w == ancestor:
+					# Stop when we meet ourselves
+					break
+				r = w._getredrawguarantee()
+				if r:
+					Qd.DiffRgn(self._clipincludingchildren, r, self._clipincludingchildren)
+					Qd.DisposeRgn(r)
+			ancestor = ancestor._parent
 
 	def _do_resize1(self):
 		# calculate new size of subwindow after resize
