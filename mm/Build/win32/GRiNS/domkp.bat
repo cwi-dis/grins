@@ -88,6 +88,7 @@ rem ****************************
 echo -x HierarchyView >> FreezeOpts
 
 rem Audio stuff not supported on this platform
+echo -x audio >> FreezeOpts
 echo -x audio.convert >> FreezeOpts
 echo -x audio.devsun >> FreezeOpts
 echo -x audio.devmac >> FreezeOpts
