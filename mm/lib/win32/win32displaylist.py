@@ -363,7 +363,10 @@ class _DisplayList:
 				dc.DrawIcon((x, y), entry[2])
 
 	# Return true if the ltrb and xywh rectangles have overlap
-	def _overlap(self, (l, t, r, b), (x, y, w, h)):
+	def _overlap(self, region, (x, y, w, h)):
+		if not region:
+			return 1	# default is overlap
+		l, t, r, b = region
 		if x>r or x+w < l:
 			return 0
 		if y>b or y+h < t:
