@@ -86,8 +86,7 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		for a in self._attrfields:
 			label = a._createwidget(self)
 			browser_values.append(label)
-		tp, h, rect = self._dialog.GetDialogItem(ITEM_SELECT)
-		self._attrbrowser = self._window.ListWidget(rect, browser_values)
+		self._attrbrowser = self._window.ListWidget(ITEM_SELECT, browser_values)
 		self._selectattr(0)
 		
 		self.show()
@@ -160,7 +159,7 @@ class AttrEditorDialog(windowinterface.MACDialog):
 
 	def _selectattr(self, item):
 		if self._cur_attrfield:
-			if self._cur_attrfield == self._attrfields[item]:
+			if item and self._cur_attrfield == self._attrfields[item]:
 				return
 			self._cur_attrfield._save()
 		else:
@@ -190,6 +189,8 @@ class AttrEditorDialog(windowinterface.MACDialog):
 class AttrEditorDialogField:
 	def _createwidget(self, parent):
 		self.__parent = parent
+		t = self.gettype()
+		self.__type = t
 		label = self.getlabel()
 		value = self.getcurrent()
 		return '%s=%s' % (label, value)
@@ -279,15 +280,7 @@ class AttrEditorDialogField:
 		
 	def close(self):
 		"""Close the instance and free all resources."""
-		t = self.__type
-		if t == 'option-button':
-			del self.__list
-			del self.__label
-		elif t == 'option-menu':
-			del self.__list
-		elif t == 'file':
-			del self.__text
-		del self.__widget
+		del self.__parent
 		del self.__type
 
 	def _option_click(self):
