@@ -26,10 +26,10 @@ debug = 0
 debugParser = 0
 
 # animateMotion default origin
-# though I don't know what its values are in smil20-profile
 # assume origin in ('default', 'layout', 'parent', 'topLayout')
 regionOrigin = 'parent' # smil20-profile ??? IE5.5 defaults to 'layout'
 mediaOrigin = 'layout' # smil20-profile
+
 
 # An Animator represents an animate element at run time.
 # An Animator entity implements interpolation taking into 
@@ -1772,7 +1772,12 @@ class AnimateElementParser:
 		values =  self.getValues()
 		if values:
 			try:
-				return tuple(map(self.safeatof, string.split(values,';')))
+				sl = string.split(values,';')
+				vl = []
+				for s in sl:
+					if s: 
+						vl.append(self.safeatof(s))
+				return tuple(vl)	
 			except ValueError:
 				return ()
 		
@@ -1808,9 +1813,10 @@ class AnimateElementParser:
 			strcoord = string.split(values,';')
 			coords = []
 			for str in strcoord:
-				pt = self.__getNumPair(str)
-				if pt!=None:
-					coords.append(pt)
+				if str:
+					pt = self.__getNumPair(str)
+					if pt!=None:
+						coords.append(pt)
 			return tuple(coords)
 
 		if self.__animtype == 'from-to':
