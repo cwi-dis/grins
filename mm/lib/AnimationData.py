@@ -195,12 +195,26 @@ class AnimationData:
 		else:
 			hasKeyTime = 0
 			self._times = [1.0]
-			# the duration for all elements is relative to the animated node
+			maxDuration = 0.1
+			coeffTime = 1 # if diff from 1, it means the duration has been changed without update
+			# determinate the max duration we have, and the coeff to re-compute the right pourcent time
+			for anim in animations:
+				for anim in animations:
+					begin = 0
+					beginlist = anim.attrdict.get('beginlist')
+					if beginlist != None and list(beginlist) > 0:
+						syncArc = beginlist[0]
+						begin = syncArc.delay
+						if begin is None: begin = 0
+					duration = anim.attrdict.get('duration')
+					if duration is None: duration = 0
+					maxDuration = max(maxDuration, begin+duration)
 			targetNode = self._target.getTargetNode()
 			targetDuration = targetNode.attrdict.get('duration')
-			if targetDuration is None:
-				targetDuration = 0
-				
+			if targetDuration is None or targetDuration == 0:
+				targetDuration = 0.1
+			coeffTime = float(targetDuration)/maxDuration				
+			
 		animateMotionValues = [(0,0)] 
 		animateWidthValues = [1]
 		animateHeightValues = [1] 
@@ -237,7 +251,13 @@ class AnimationData:
 						begin = 0
 				else:
 					begin = 0
-
+					
+				begin = begin * coeffTime # re-ajust time if changed
+				anim._animBegin = begin/targetDuration
+				duration = anim.attrdict.get('duration')
+				if duration is None: duration = 0
+				anim._animDuration = duration/targetDuration
+				
 				isNew, ind = self.__newTime(begin, targetDuration)
 				if isNew:
 					if ind < len(animateMotionValues):
@@ -276,6 +296,9 @@ class AnimationData:
 				animateWidthValues = _animateWidthValues 
 				animateHeightValues = _animateHeightValues
 				animateColorValues = _animateColorValues
+
+		if not hasKeyTime:
+			self.updateTimes()
 						
 		n = len(self._times)
 
@@ -500,8 +523,8 @@ class AnimationData:
 	def updateTimes(self):		
 		targetNode = self._target.getTargetNode()
 		targetDuration = targetNode.attrdict.get('duration')
-		if targetDuration is None:
-			targetDuration = 0
+		if targetDuration is None or targetDuration == 0:
+			targetDuration = 0.1
 		
 		animations = self._target.getAnimations()
 		for anim in animations:
