@@ -2287,6 +2287,7 @@ class MMNode(MMTreeElement):
 		self.canplay = None
 		self.infoicon = ''	# An alert icon
 		self.errormessage = None # An error message to accompany the alert icon
+		self.errormessage_fixcallback = None
 		self.bwboxes = None # Used-bandwidth boxes
 		self.force_switch_choice = 0
 		self.views = {}		# Used from the structure view to find the structureWidget for this node.
@@ -4781,13 +4782,15 @@ class MMNode(MMTreeElement):
 	# method for maintaining node's info-icon state when the HierarchyView is
 	# not active
 	#
-	def set_infoicon(self, icon, msg=None):
+	def set_infoicon(self, icon, msg=None, fixcallback=None):
 		self.infoicon = icon
 		self.errormessage = msg
+		self.errormessage_fixcallback = fixcallback
 
 	def clear_infoicon(self):
 		self.infoicon = ''
 		self.errormessage = None
+		self.errormessage_fixcallback = None
 		for ch in self.children:
 			ch.clear_infoicon()
 			

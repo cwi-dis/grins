@@ -863,7 +863,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def cleanup(self):
 		self.destroy()
 
-	def set_infoicon(self, icon, msg=None):
+	def set_infoicon(self, icon, msg=None, fixcallback=None):
 		# Sets the information icon to this icon.
 		# icon is a string, msg is a string.
 		# XXXX This is wrong.
@@ -873,6 +873,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			return
 		self.node.infoicon = icon
 		self.node.errormessage = msg
+		self.node.errormessage_fixcallback = fixcallback
 		if self.infoicon is None:
 			# create a new info icon
 			self.infoicon = self.iconbox.add_icon('infoicon', callback = self.show_mesg)
@@ -900,7 +901,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				self.mother.extra_displist.close()
 			self.mother.extra_displist = d
 
-	def set_infoicon_invisible(self, icon, msg=None):
+	def set_infoicon_invisible(self, icon, msg=None, fixcallback=None):
 ##		print 'set_infoicon_invisible',self.node,icon,self.mother.calculating
 		node = self.node
 		if node.infoicon == icon and node.errormessage == msg:
@@ -908,6 +909,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			return
 		node.infoicon = icon
 		node.errormessage = msg
+		node.errormessage_fixcallback = fixcallback
 		if not msg:
 			# don't propagate message-less info
 			return
@@ -1072,10 +1074,17 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 ##		self.mother.paste(0)
 
 	def show_mesg(self, msg = None):
+		fixcallback = None
 		if msg is None:
 			msg = self.node.errormessage
+			fixcallback = self.node.errormessage_fixcallback
 		if msg:
-			windowinterface.showmessage(msg, parent=self.mother.window)
+			if fixcallback:
+				ok = windowinterface.GetYesNo(msg, parent=self.mother.window)
+				if ok == 0: # AAAAAAAARGH!
+					apply(apply, fixcallback)
+			else:
+				windowinterface.showmessage(msg, parent=self.mother.window)
 
 	def get_popupmenu(self):
 		return []
