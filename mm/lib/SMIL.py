@@ -6,24 +6,29 @@ SMILpubid = '-//W3C//DTD SMIL 1.0//EN'
 SMILdtd = 'http://www.w3.org/TR/REC-smil/SMIL10.dtd'
 SMIL1 = 'http://www.w3.org/TR/REC-smil'
 SMILBostonPubid = '-//W3C//DTD SMIL 2.0//EN'
-SMILBostonDtd = 'http://www.w3.org/2001/SMIL20/PR/SMIL20.dtd'
-SMIL2 = 'http://www.w3.org/2001/SMIL20/PR/'
+SMILBostonDtd = 'http://www.w3.org/2001/SMIL20/SMIL20.dtd'
+SMIL2 = 'http://www.w3.org/2001/SMIL20/'
 # namespaces recognized by GRiNS
 # the first one is the required default namespace, but SMIL1
 # doesn't generate a warning
-SMIL2ns = ['http://www.w3.org/2001/SMIL20/PR/Language',
+SMIL2ns = ['http://www.w3.org/2001/SMIL20/Language',
+	   'http://www.w3.org/2001/SMIL20/',
+	   'http://www.w3.org/2001/SMIL20/PR/Language',
 	   'http://www.w3.org/2001/SMIL20/PR/',
 	   'http://www.w3.org/2001/SMIL20/WD/Language',
 	   'http://www.w3.org/2001/SMIL20/WD/',
 	   'http://www.w3.org/2000/SMIL20/CR/Language',
 	   'http://www.w3.org/2000/SMIL20/CR/',
-	   'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/Language',
-	   'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/',
-	   'http://www.w3.org/TR/REC-smil/2000/SMIL20/Language',
-	   'http://www.w3.org/TR/REC-smil/2000/SMIL20',
+##	   'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/Language',
+##	   'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/',
+##	   'http://www.w3.org/TR/REC-smil/2000/SMIL20/Language',
+##	   'http://www.w3.org/TR/REC-smil/2000/SMIL20',
 	   SMIL1]
 SMIL2DTDs = [SMILBostonDtd,
+	     'http://www.w3.org/2001/SMIL20/PR/SMIL20.dtd'
 	     'http://www.w3.org/2001/SMIL20/WD/SMIL20.dtd',
+	     'http://www.w3.org/2000/SMIL20/CR/SMIL20.dtd',
+##	     'http://www.w3.org/TR/REC-smil/2000/SMIL20/SMIL20.dtd',
 	     ]
 GRiNSns = 'http://www.oratrix.com/'
 QTns = 'http://www.apple.com/quicktime/resources/smilextensions'
@@ -32,8 +37,8 @@ QTns = 'http://www.apple.com/quicktime/resources/smilextensions'
 # namespaces they are valid in
 limited = {
 	# viewport was changed to topLayout after CR
-	'viewport': SMIL2ns[4:],
-	'topLayout': SMIL2ns[:6],
+	'viewport': SMIL2ns[6:],
+	'topLayout': SMIL2ns[:8],
 	}
 
 import string
