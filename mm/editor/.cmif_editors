@@ -36,7 +36,9 @@ image:imged:imged $file
 image:ipaste:ipaste $file
 
 sound:sounded:/ufs/sjoerd/bin.sgi/sounded $file
-sound:playaiff:playaiff $file
+sound:soundeditor:soundeditor $file
+sound:sfplay:sfplay $file
+sound:sfinfo:sfinfo $file
 
 null:emacs:emacs $file
 null:emacsclient:emacsclient $file
