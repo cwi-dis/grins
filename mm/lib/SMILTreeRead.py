@@ -1373,7 +1373,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__ids[id] = 0
 		self.NewContainer('bag', attributes)
 		self.__container.__choice_index = attributes.get('choice-index')
-		if self.__container.__choice_index == None:
+		if self.__container.__choice_index is None:
 			self.__container.__choice_index = attributes.get('bag-index')
 
 	def end_choice(self):
