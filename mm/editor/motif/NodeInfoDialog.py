@@ -175,6 +175,37 @@ class NodeInfoDialog:
 		"""
 		self.__window.settitle(title)
 
+	def __oknew(self, w, client_data, call_data):
+		self.newchan_ok_callback(call_data.value)
+
+	def __cancelnew(self, w, client_data, call_data):
+		self.undefined_ok_callback()
+
+	def __returnnew(self, w, client_data, call_data):
+		w.Parent().DestroyWidget()
+
+	def chanundef(self, default):
+		import Xmd
+		if hasattr(self.__window, '_shell'):
+			w = self.__window._shell
+		else:
+			w = shell.__window._main
+		d = w.CreatePromptDialog('undefined',
+			{'selectionLabelString': 'Channel is undefined.\nCreate channel named:',
+			 'textString': default,
+			 'cancelLabelString': 'Leave undefined',
+			 'dialogStyle': Xmd.DIALOG_FULL_APPLICATION_MODAL,
+			 'helpLabelString': 'Cancel',
+			 'colormap': windowinterface.toplevel._default_colormap,
+			 'visual': windowinterface.toplevel._default_visual,
+			 'depth': windowinterface.toplevel._default_visual.depth})
+		d.AddCallback('okCallback', self.__oknew, None)
+		d.AddCallback('cancelCallback', self.__cancelnew, None)
+		d.AddCallback('helpCallback', self.__returnnew, None)
+		d.Parent().AddWMProtocolCallback(windowinterface.toplevel._delete_window, self.__cancelnew, None)
+		d.ManageChild()
+##		windowinterface.showmessage('Channel is undefined\nare you sure you want this?', mtype = 'question', callback = (self.undefined_ok_callback, ()), parent = self.__window)
+
 	# Interface to the list of channel names.  This part consists
 	# of a label and a list of strings of which one is always the
 	# current selection.  Only one element of the list needs to be
