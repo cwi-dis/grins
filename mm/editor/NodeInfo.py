@@ -315,12 +315,12 @@ class NodeInfo(NodeInfoDialog):
 		if file == '' or file == '/dev/null':
 			dir, file = cwd, ''
 		else:
-			import urllib
-			type, file = urllib.splittype(file)
+			import MMurl
+			type, file = MMurl.splittype(file)
 			if type:
 				windowinterface.showmessage('Cannot browse URLs')
 				return
-			file = urllib.url2pathname(file)
+			file = MMurl.url2pathname(file)
 			file = os.path.join(cwd, file)
 			if os.path.isdir(file):
 				dir, file = file, ''
@@ -330,7 +330,7 @@ class NodeInfo(NodeInfoDialog):
 					   self.browserfile_callback, None)
 
 	def browserfile_callback(self, pathname):
-		import urllib
+		import MMurl
 		if os.path.isabs(pathname):
 			cwd = self.toplevel.dirname
 			if not cwd:
@@ -347,7 +347,7 @@ class NodeInfo(NodeInfoDialog):
 				file = os.path.join(f, file)
 			if dir == cwd:
 				pathname = file
-		pathname = urllib.pathname2url(pathname)
+		pathname = MMurl.pathname2url(pathname)
 		self.ch_filename = 1
 		self.changed = 1
 		self.filename = pathname
