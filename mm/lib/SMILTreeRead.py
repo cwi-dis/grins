@@ -2609,6 +2609,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			except UnicodeError:
 				self.syntax_error("bad encoding for attribute value")
 				continue
+			except LookupError:
+				self.syntax_error("unknown encoding")
+				continue
 			try:
 				val = uval.encode('iso-8859-1')
 			except UnicodeError:
@@ -4446,9 +4449,7 @@ def ReadFile(url, printfunc = None, new_file = 0, check_compatibility = 0, progr
 	if os.name == 'mac':
 		import splash
 		splash.splash('loaddoc')	# Show "loading document" splash screen
-	# by mjvdg:
 	rv = ReadFileContext(url, MMNode.MMNodeContext(EditableObjects.EditableMMNode), printfunc, new_file, check_compatibility, progressCallback)
-	# rv = ReadFileContext(url, MMNode.MMNodeContext(MMNode.MMNode), printfunc, new_file, check_compatibility)
 	if os.name == 'mac':
 		splash.splash('initdoc')	# and "Initializing document" (to be removed in mainloop)
 	return rv
@@ -4476,8 +4477,8 @@ def ReadFileContext(url, context, printfunc = None, new_file = 0, check_compatib
 ##	pr.dump_stats('profile.stats')
 	root = __doParse(p, data)
 	# XXX keep the original source for the player
-	# note: for the editor, save all the time the source on the root is not pertinent (
-	# it doesn't reflect the real status of the document). Therefor, to the editor
+	# note: for the editor, always saving the source on the root is not pertinent (
+	# it doesn't reflect the real status of the document). Therefore, to the editor
 	# the only source to keep is: the source which has generated an error (see MMErrors)
 	# XXX: to improve
 	root.source = data
