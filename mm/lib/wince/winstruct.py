@@ -42,6 +42,11 @@ def rectAnd(ltrb1, ltrb2):
 	if t >= b: return None
 	return l, t, r, b
 
+def rectEqualSize(ltrb1, ltrb2):
+	l1, t1, r1, b1 = normalize(ltrb1)	
+	l2, t2, r2, b2 = normalize(ltrb2)
+	return r1-l1 == r2-l2 and b1-t1 == b2-t2
+
 def inflate(ltrb, dx = 1, dy = 1):
 	l, t, r, b = normalize(ltrb)
 	return l-dx, t-dy, r+dx, b+dy 
