@@ -170,8 +170,8 @@ class _PlayerView(_CmifView, win32window.DDWndLayer):
 		if rc[2]!=self._canvas[2] or rc[3]!=self._canvas[3]:
 			if self._convbgcolor == None:
 				r, g, b = self._bgcolor
-				self._convbgcolor = self._backBuffer.GetColorMatch((r,g,b))
-			self._backBuffer.BltFill(self.GetClientRect(), self._convbgcolor)
+				self._convbgcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255, 255, 255) )
+			self._backBuffer.BltFill(rc, self._convbgcolor)
 		
 		if self._viewport:	
 			self._viewport.paint()

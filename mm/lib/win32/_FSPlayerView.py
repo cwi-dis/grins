@@ -42,7 +42,7 @@ class _FSPlayerView(window.Wnd, win32window.DDWndLayer):
 		win32window.DDWndLayer.__init__(self, self, bgcolor)
 		self._viewports = []
 		self._curcursor = ''
-
+		
 	def create(self, title, x, y, w, h):
 		clstyle = win32con.CS_HREDRAW | win32con.CS_VREDRAW | win32con.CS_DBLCLKS
 		brush=Sdk.GetStockObject(win32con.WHITE_BRUSH)
@@ -109,6 +109,8 @@ class _FSPlayerView(window.Wnd, win32window.DDWndLayer):
 	def OnPaint(self):
 		from __main__ import toplevel
 		toplevel.serve_events()
+		win32ui.PumpWaitingMessages(win32con.WM_MOUSEFIRST,win32con.WM_MOUSELAST)
+		win32api.Sleep(0)
 		self.update()
 	
 	def paint(self):
@@ -119,7 +121,10 @@ class _FSPlayerView(window.Wnd, win32window.DDWndLayer):
 				# system should be out of memory
 				return
 		x, y, w, h = self.GetClientRect()
-		self._backBuffer.BltFill((0, 0, w, h), 0)
+
+		# for full screen mode default to black if none is given
+		ddcolor = self._backBuffer.GetColorMatch(self._bgcolor or (0,0,0))
+		self._backBuffer.BltFill((0, 0, w, h), ddcolor)
 
 		rv = self._viewports[:]
 		rv.reverse()
@@ -192,7 +197,9 @@ class _FSPlayerView(window.Wnd, win32window.DDWndLayer):
 		flags = 0
 		pt=msg.pos()
 		for v in self._viewports:
-			v.onMouseMove(flags, pt)
+			if v.onMouseMove(flags, pt):
+				return
+		self.setcursor('arrow')
 
 	def onLButtonDblClick(self, params):
 		msg = win32mu.Win32Msg(params)
@@ -212,28 +219,26 @@ class ViewportWnd:
 		self._ctx = ctx
 		self.CreateSurface = ctx.CreateSurface
 		self._dh = dh = win32api.GetSystemMetrics(win32con.SM_CYCAPTION)
-		self._dw = dw = 2
+		self._dm = dm = 1
 		x, y, w, h = rc
-		if not bgcolor: bgcolor = (0,0,0)
-		self._viewport = win32window.Viewport(self, dw/2, dh, w, h, bgcolor)
+		self._viewport = win32window.Viewport(self, dm, dh, w, h, bgcolor)
 
 		self._title = title
 		self._z = 0
 		self.insertAt(self._z)
 
-		self._rect = self._canvas = 0, 0, w+dw, h+dh
-		self._rectb = x, y, w+dw, h+dh
+		self._rect = self._canvas = 0, 0, w+2*dm, h+dh+dm
+		self._rectb = x, y, w+2*dm, h+dh
 		self._bgcolor = bgcolor
 				
-		self.__drawBuffer = self._ctx.CreateSurface(w+dw, h+dh)
+		self.__drawBuffer = self._ctx.CreateSurface(w+2*dm, h+dh+dm)
 
-		r, g, b = bgcolor
-		self._convbgcolor = self.__drawBuffer.GetColorMatch((r, g, b))
-		self.__drawBuffer.BltFill((0, dh, w+dw, dh+h), self._convbgcolor)
+		self._convbgcolor = self.__drawBuffer.GetColorMatch(bgcolor or (255,255,255))
+		self.__drawBuffer.BltFill(self._rect, self._convbgcolor)
+		
+		# draw not viewport area
 		self.__metaPaintOnDDS()
 		
-		self.draw3dRect(self.__drawBuffer, self._rect, (255,255,255), (200,200,200))
-
 		# Tragging support
 		self._offset = 0, 0
 		self._tragged = 0 
@@ -244,7 +249,7 @@ class ViewportWnd:
 
 	def getClientPos(self):
 		x, y, w, h = self._rectb
-		return x+self._dw/2, y+self._dh, w-self._dw, h-self._dh
+		return x+self._dm, y+self._dh, w-2*self._dm, h-self._dh-self._dm
 		
 	def pointInCaption(self, point):
 		x, y, w, h = self.getCaptionPos()
@@ -294,6 +299,9 @@ class ViewportWnd:
 				return None
 		return self.__drawBuffer
 		
+	def getDirectDraw(self):
+		return self._ctx.getDirectDraw()
+
 	def __metaPaintOnDDS(self):
 		dds = self.getDrawBuffer()
 		if not dds: return
@@ -313,6 +321,8 @@ class ViewportWnd:
 
 		dc.Detach()
 		dds.ReleaseDC(hdc)
+		
+		self.draw3dRect(self.__drawBuffer, self._rect, (225,225,225), (200,200,200))
 
 	def update(self):
 		self.paint()
@@ -347,7 +357,7 @@ class ViewportWnd:
 		if self.pointInClient(point):
 			x, y, w, h = self._rectb
 			xp, yp = point
-			self._viewport.onMouseEvent((xp-x-self._dw/2,yp-y-self._dh),Mouse0Press)
+			self._viewport.onMouseEvent((xp-x-self._dm,yp-y-self._dh),Mouse0Press)
 
 		return isTarget
 
@@ -357,7 +367,7 @@ class ViewportWnd:
 		if self.pointInClient(point):
 			x, y, w, h = self._rectb
 			xp, yp = point
-			self._viewport.onMouseEvent((xp-x-self._dw/2,yp-y-self._dh),Mouse0Release)
+			self._viewport.onMouseEvent((xp-x-self._dm,yp-y-self._dh),Mouse0Release)
 
 	def onMouseMove(self, flags, point):
 		if self._tragged:
@@ -368,7 +378,8 @@ class ViewportWnd:
 		if self.pointInClient(point):
 			x, y, w, h = self._rectb
 			xp, yp = point
-			self._viewport.onMouseMove(flags, (xp-x-self._dw/2,yp-y-self._dh))
+			self._viewport.onMouseMove(flags, (xp-x-self._dm,yp-y-self._dh))
+		return self.pointInRect(point)
 
 	def __getPaintRects(self):
 		W, H = self._ctx.getSize()
