@@ -213,6 +213,7 @@
 #define IDD_EDITATTR_MF2                416
 #define IDD_EDITATTR_PF2                417
 #define IDD_EDITATTR_F2                 418
+#define IDD_EDITATTR_EVENTLIST2         419
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -492,7 +493,9 @@
 #define IDC_EDIT11                      1298
 #define IDC_TZHR                        1298
 #define IDC_EDIT13                      1299
+#define IDC_RESTARTNODEV                1299
 #define IDC_81                          1300
+#define IDC_RESTARTDEFAULTV             1300
 #define IDC_LAYOUT_SHOW_ALLREGIONS      1301
 #define IDC_LAYOUT_AS_OUTLINE           1302
 #define IDC_SUBREG_X                    1303
@@ -539,6 +542,7 @@
 #define IDC_EVENTTABNAME                1346
 #define IDC_EVENTLASSOO                 1347
 #define IDC_RADIO_ALL                   1348
+#define IDC_EVENTLASSOO2                1348
 #define IDC_RADIO_UNUSED                1349
 #define IDC_RESULT                      1350
 #define IDC_YR                          1351
@@ -588,6 +592,8 @@
 #define IDC_EVENTSENSITIVITYV           1418
 #define IDC_ERASEV1                     1419
 #define IDC_ERASEV2                     1420
+#define IDC_RESTARTNODEL                1421
+#define IDC_RESTARTDEFAULTL             1422
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -676,7 +682,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        411
 #define _APS_NEXT_COMMAND_VALUE         32877
-#define _APS_NEXT_CONTROL_VALUE         1421
+#define _APS_NEXT_CONTROL_VALUE         1422
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
