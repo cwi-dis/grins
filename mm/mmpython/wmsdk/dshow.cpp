@@ -8,6 +8,7 @@ Copyright 1991-1999 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include "Python.h"
 
 #include <streams.h>
+#include <objbase.h>
 #include <stdio.h>
 #include <UUIDS.H> // CLSID_FilterGraph,...
 
@@ -16,6 +17,13 @@ Copyright 1991-1999 by Oratrix Development BV, Amsterdam, The Netherlands.
 #pragma comment (lib,"guids.lib")
 #pragma comment (lib,"strmbase.lib")
 
+#include <initguid.h>
+DEFINE_GUID(IID_IRealConverter,
+0xe8d61c44, 0xd313, 0x472a, 0x84, 0x68, 0x2b, 0x1e, 0xd5, 0xb0, 0x5c, 0xab);
+struct IRealConverter : public IUnknown
+	{
+	virtual HRESULT __stdcall SetInterface(IUnknown *p,LPCOLESTR hint)=0;
+	};
 
 static PyObject *ErrorObject;
 
@@ -177,6 +185,50 @@ newMediaControlObject()
 }
 
 
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IRealConverter* pRealConverter;
+} RealConverterObject;
+
+staticforward PyTypeObject RealConverterType;
+
+static RealConverterObject *
+newRealConverterObject()
+{
+	RealConverterObject *self;
+
+	self = PyObject_NEW(RealConverterObject, &RealConverterType);
+	if (self == NULL)
+		return NULL;
+	self->pRealConverter = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IUnknown* pUk;
+} UnknownObject;
+
+staticforward PyTypeObject UnknownType;
+
+static UnknownObject *
+newUnknownObject()
+{
+	UnknownObject *self;
+
+	self = PyObject_NEW(UnknownObject, &UnknownType);
+	if (self == NULL)
+		return NULL;
+	self->pUk = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+
 ////////////////////////////////////////////////////
 
 static char GraphBuilder_AddSourceFilter__doc__[] =
@@ -271,6 +323,7 @@ GraphBuilder_QueryIMediaControl(GraphBuilderObject *self, PyObject *args)
 	}
 	return (PyObject *) obj;
 }
+
 
 
 
@@ -484,6 +537,30 @@ BaseFilter_QueryIFileSinkFilter(BaseFilterObject *self, PyObject *args)
 	return (PyObject *) obj;
 }
 
+
+
+static char BaseFilter_QueryIRealConverter__doc__[] =
+""
+;
+
+static PyObject *
+BaseFilter_QueryIRealConverter(BaseFilterObject *self, PyObject *args)
+{
+	HRESULT res;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+
+	RealConverterObject *obj = newRealConverterObject();
+	res = self->pFilter->QueryInterface(IID_IRealConverter,(void**)&obj->pRealConverter);
+	if (FAILED(res)) {
+		seterror("BaseFilter_QueryIRealConverter", res);
+		Py_DECREF(obj);
+		obj->pRealConverter=NULL;
+		return NULL;
+	}
+	return (PyObject *) obj;
+}
+
 static char BaseFilter_EnumPins__doc__[] =
 ""
 ;
@@ -507,6 +584,7 @@ BaseFilter_EnumPins(BaseFilterObject *self, PyObject *args)
 static struct PyMethodDef BaseFilter_methods[] = {
 	{"FindPin", (PyCFunction)BaseFilter_FindPin, METH_VARARGS, BaseFilter_FindPin__doc__},
 	{"QueryIFileSinkFilter", (PyCFunction)BaseFilter_QueryIFileSinkFilter, METH_VARARGS, BaseFilter_QueryIFileSinkFilter__doc__},
+	{"QueryIRealConverter", (PyCFunction)BaseFilter_QueryIRealConverter, METH_VARARGS, BaseFilter_QueryIRealConverter__doc__},
 	{"EnumPins", (PyCFunction)BaseFilter_EnumPins, METH_VARARGS, BaseFilter_EnumPins__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
@@ -907,6 +985,133 @@ static PyTypeObject EnumPinsType = {
 // End of code for EnumPins object 
 ////////////////////////////////////////////
 
+////////////////////////////////////////////
+// RealConverter object 
+
+static char RealConverter_SetInterface__doc__[] =
+""
+;
+
+static PyObject *
+RealConverter_SetInterface(RealConverterObject *self, PyObject *args)
+{
+	UnknownObject *obj;
+	char *hint;
+	if (!PyArg_ParseTuple(args, "Os",&obj, &hint))
+		return NULL;
+	WCHAR wsz[MAX_PATH];
+	MultiByteToWideChar(CP_ACP,0,hint,-1,wsz,MAX_PATH);
+	self->pRealConverter->SetInterface(obj->pUk,wsz);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static struct PyMethodDef RealConverter_methods[] = {
+	{"SetInterface", (PyCFunction)RealConverter_SetInterface, METH_VARARGS, RealConverter_SetInterface__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+RealConverter_dealloc(RealConverterObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pRealConverter);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+RealConverter_getattr(RealConverterObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(RealConverter_methods, (PyObject *)self, name);
+}
+
+static char RealConverterType__doc__[] =
+""
+;
+
+static PyTypeObject RealConverterType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"RealConverter",			/*tp_name*/
+	sizeof(RealConverterObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)RealConverter_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)RealConverter_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	RealConverterType__doc__ /* Documentation string */
+};
+
+// End of code for RealConverter object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// Unknown object 
+
+
+static struct PyMethodDef Unknown_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+Unknown_dealloc(UnknownObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pUk);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+Unknown_getattr(UnknownObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(Unknown_methods, (PyObject *)self, name);
+}
+
+static char UnknownType__doc__[] =
+""
+;
+
+static PyTypeObject UnknownType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"Unknown",			/*tp_name*/
+	sizeof(UnknownObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)Unknown_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)Unknown_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	UnknownType__doc__ /* Documentation string */
+};
+
+// End of code for Unknown object 
+////////////////////////////////////////////
 
 ///////////////////////////////////////////
 // MODULE
