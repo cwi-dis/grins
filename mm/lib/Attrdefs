@@ -403,6 +403,9 @@
 (winsize (tuple (float) (float)) (0 0) 'Window size' default
 	'Initial window size' raw (g2 qt smil10 cmif))
 
+(xmllang (string) '' 'Media language' default
+	'The language of the media item' raw (smil2 cmif))
+
 (z (int) 0 'Z order' default
 	'Stacking order for regions, higher numbers are on top' normal (g2 qt smil10 smil2 cmif snap))
 
