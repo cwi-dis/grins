@@ -369,9 +369,10 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			self.iconbox.del_icon(self.infoicon)
 			self.infoicon.destroy()
 			self.infoicon = None
-		node.set_infoicon = self.set_infoicon
-		node.set_armedmode = self.set_armedmode
-		self.set_armedmode(node.armedmode, redraw = 0)
+		if not isinstance(self, CommentWidget):
+			node.set_infoicon = self.set_infoicon
+			node.set_armedmode = self.set_armedmode
+			self.set_armedmode(node.armedmode, redraw = 0)
 		ixsize = self.iconbox.recalc_minsize()[0]
 		if self.collapsebutton is not None:
 			ixsize = ixsize + self.collapsebutton.recalc_minsize()[0]
