@@ -1516,12 +1516,14 @@ class MMChannel(MMTreeElement):
 		return 1
 
 class MMRegionAssociation:
-	def __init__(self, media, region):
-		self.media = media
-		self.region = region
+	def __init__(self, mediaNode):
+		self.mediaNode = mediaNode
 
 	def getClassName(self):
 		return 'RegionAssociation'
+
+	def getMediaNode(self):
+		return self.mediaNode
 
 # MMChannel tree class
 #

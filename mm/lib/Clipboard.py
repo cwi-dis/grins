@@ -54,9 +54,14 @@ class Clipboard:
 		data = self.getclip()
 		new_data = []
 		for node in data:
-			if hasattr(node, 'getClassName') and node.getClassName() in ('MMNode', 'Region', 'Viewport'):
-				# We return the old one and put the new one on the clipboard
-				new_data.append(node.DeepCopy())
+			if hasattr(node, 'getClassName'):
+				if hasattr(node, 'DeepCopy'):
+					# We return the old one and put the new one on the clipboard
+					new_data.append(node.DeepCopy())
+				else: 
+					# Don't have DeepCopy method. So we guess we don't need to copy
+					# the object in this case
+					new_data.append(node)
 		self.__owned = 0 # So setclip doesn't destroy what we are going to return
 		self.setclip(new_data, owned=1)
 		return data

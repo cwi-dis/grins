@@ -15,7 +15,7 @@ debugAlign = 0
 debug2 = 0
 debugPreview = 0
 
-COPY_PASTE_MEDIAS = 0
+COPY_PASTE_MEDIAS = 1
 
 TYPE_ABSTRACT, TYPE_REGION, TYPE_MEDIA, TYPE_VIEWPORT = range(4)
 
@@ -691,40 +691,15 @@ class LayoutView2(LayoutViewDialog2):
 	def isValidMMNode(self, node):
 		return self.treeHelper._isValidMMNode(node)
 
-	def focusOnList(self, focusobject, keepShowedNodes=0):
-		# update command list
-
-		# determine if all the objects are siblings
-		areSibling = 1
-		previousObject = None
-		nodeType = None
-		for object in focusobject:
-			if nodeType is None:
-				nodeType = self.getNodeType(object)
-			if areSibling and previousObject is not None and not self.areSibling(previousObject, object):
-				areSibling = 0
-			previousObject = object
-
-		self.currentSelectedNodeList = focusobject
-
-		# update widgets
-		for id, widget in self.widgetList.items():
-			widget.selectNodeList(focusobject, keepShowedNodes)
-
-		if len(focusobject) == 0:
-			self.updateCommandList(self.commandNoSItemList)
-		elif len(focusobject) == 1:
-			if nodeType == TYPE_REGION:
-				self.updateCommandList(self.commandRegionList)
-			elif nodeType == TYPE_VIEWPORT:
-				self.updateCommandList(self.commandViewportList)
-			else:
-				self.updateCommandList(self.commandMediaList)
-		elif areSibling:
-			self.updateCommandList(self.commandMultiSiblingSItemList)
-		else:
-			self.updateCommandList(self.commandMultiSItemList)
-
+	# make a list of nodes selected in this view
+	def makeSelectedNodeList(self, selList):
+		targetList = []
+		for nodeRef in selList:
+			if self.existRef(nodeRef):
+				# keep only seleted nodes belong to this view
+				targetList.append(nodeRef)
+		self.currentSelectedNodeList = targetList
+		
 		# XXX to implement
 #	def toStopState(self):
 #		# save current state
@@ -777,19 +752,17 @@ class LayoutView2(LayoutViewDialog2):
 			className = node.getClassName()
 			if className == 'Viewport':
 				activePaste = 1
-				break
 			elif len(self.currentSelectedNodeList) == 1: # only single selection
 				selectedNode = self.currentSelectedNodeList[0]
 				selectedType = self.getNodeType(selectedNode)
-				if selectedType in (TYPE_VIEWPORT, TYPE_REGION) and \
-					className == 'Region':
+				if selectedType in (TYPE_VIEWPORT, TYPE_REGION) and className == 'Region':
 					activePaste = 1
+				elif className == 'RegionAssociation' and selectedType == TYPE_REGION and COPY_PASTE_MEDIAS:
+					activePaste = 1
+				else:
+					# no valid paste
+					activePaste = 0
 					break
-				elif className == 'MMNode' and selectedType == TYPE_REGION and COPY_PASTE_MEDIAS:
-					# check that the media is valid and still in the 'body' part
-					if self.existRef(selectedNode):
-						activePaste = 1
-						break
 
 		if activePaste:
 			commandlist.append(PASTE(callback = (self.onPaste, ())))
@@ -798,7 +771,40 @@ class LayoutView2(LayoutViewDialog2):
 		
 	def updateFocus(self, keepShowedNodes=0):
 		if debug: print 'LayoutView.updateFocus: focus on List'
-		self.focusOnList(self.currentFocus, keepShowedNodes)
+
+		focusobject = self.currentFocus
+
+		# determine if all the objects are siblings
+		areSibling = 1
+		previousObject = None
+		nodeType = None
+		for object in focusobject:
+			if nodeType is None:
+				nodeType = self.getNodeType(object)
+			if areSibling and previousObject is not None and not self.areSibling(previousObject, object):
+				areSibling = 0
+			previousObject = object
+
+		self.makeSelectedNodeList(focusobject)	
+		localSelList = self.currentSelectedNodeList
+
+		# update widgets
+		for id, widget in self.widgetList.items():
+			widget.selectNodeList(localSelList, keepShowedNodes)
+
+		if len(localSelList) == 0:
+			self.updateCommandList(self.commandNoSItemList)
+		elif len(localSelList) == 1:
+			if nodeType == TYPE_REGION:
+				self.updateCommandList(self.commandRegionList)
+			elif nodeType == TYPE_VIEWPORT:
+				self.updateCommandList(self.commandViewportList)
+			else:
+				self.updateCommandList(self.commandMediaList)
+		elif areSibling:
+			self.updateCommandList(self.commandMultiSiblingSItemList)
+		else:
+			self.updateCommandList(self.commandMultiSItemList)
 
 	def globalfocuschanged(self, focusobject):
 		if debug: print 'LayoutView.globalfocuschanged focusobject=',focusobject
@@ -1506,20 +1512,20 @@ class LayoutView2(LayoutViewDialog2):
 		self.zoomOut()
 
 	def onContent(self):
-		if self.currentSelectedNodeList != None:
+		if len(self.currentSelectedNodeList) > 0:
 			import NodeEdit
 			NodeEdit.showeditor(self.currentSelectedNodeList[0])
 		
 	def onEditProperties(self):
-		if self.currentSelectedNodeList != None:
+		if len(self.currentSelectedNodeList) > 0:
 			self.editProperties(self.currentSelectedNodeList[0])
 
 	def onLayoutProperties(self):
-		if self.currentSelectedNodeList != None:
+		if len(self.currentSelectedNodeList) > 0:
 			self.editProperties(self.currentSelectedNodeList[0])
 
 	def onAnchors(self):
-		if self.currentSelectedNodeList != None:
+		if len(self.currentSelectedNodeList) > 0:
 			self.editProperties(self.currentSelectedNodeList[0])
 							
 	def onSelectBgColor(self):
@@ -1593,35 +1599,44 @@ class LayoutView2(LayoutViewDialog2):
 		
 		self.newViewport()
 
-	# make a list of objects to copy into the clipboard:
-	# exclude nodes which are not a part of this view or which
-	# are a child-parent relationship. In the last case, return only the parent node
-	def makeClipboardList(self, checkDel = 1):
-		nodeRefList=[]
-		# make a list of recognized node that are not relationship
-		for i in self.currentSelectedNodeList:
-			for j in self.currentSelectedNodeList:
-				if j is not i and j.IsAncestorOf(i):
+	# make a list of node that are not relationship
+	def makeListWithoutRelationShip(self, nodeList):
+		retNodeList = []
+		# make a list of node that are not relationship
+		for i in nodeList:
+			for j in nodeList:
+				if j is not i and self.IsAncestorOf(j,i):
 					break
 			else:
-				nodeRefList.append(i)
-
+				retNodeList.append(i)
+		return retNodeList
+				
+	# make a list of objects to copy into the clipboard:
+	def makeClipboardList(self, isACopy = 1):		
+		# make a list of node that are not relationship
+		nodeRefList= self.makeListWithoutRelationShip(self.currentSelectedNodeList)
+		
 		clipList = []
 		currentViewportList = self.getViewportRefList()
 		# make a list compatible with the clipboard
 		for nodeRef in nodeRefList:
 			nodeType = self.getNodeType(nodeRef)
 			if nodeType == TYPE_MEDIA:
-				import MMNode
-				node = MMNode.MMRegionAssociation(None, None)
-				clipList.append(node)
+				if isACopy:
+					clipList.append(nodeRef.DeepCopy())
+				else:
+					import MMNode
+					node = MMNode.MMRegionAssociation(nodeRef)
+					clipList.append(node)
 			elif nodeType in (TYPE_REGION, TYPE_VIEWPORT):
-				clipList.append(nodeRef)
-
-				if checkDel and len(currentViewportList) == 1 and nodeRef is currentViewportList[0]:
+				if isACopy:
+					clipList.append(nodeRef.DeepCopy())
+				elif len(currentViewportList) == 1 and nodeRef is currentViewportList[0]:
 					msg = "you can't delete or cut the last viewport"
 					windowinterface.showmessage(msg, mtype = 'error')
 					return []
+				else:
+					clipList.append(nodeRef)
 		
 		return clipList
 
@@ -1630,16 +1645,11 @@ class LayoutView2(LayoutViewDialog2):
 		# it avoids some recursives transactions and some crashs
 		self.flushChangement()
 
-		nodeList = self.makeClipboardList(checkDel = 0)
+		nodeList = self.makeClipboardList(1)
 		if len(nodeList) == 0 or not self.editmgr.transaction():
 			return
 		
-		# copy all nodes before to put them into the clipboard
-		cNodeList = []
-		for node in nodeList:
-			cNodeList.append(node.DeepCopy())
-
-		self.editmgr.setclip(cNodeList, owned = 1)
+		self.editmgr.setclip(nodeList, owned = 1)
 		
 		self.editmgr.commit()
 		
@@ -1648,7 +1658,7 @@ class LayoutView2(LayoutViewDialog2):
 		# it avoids some recursives transactions and some crashs
 		self.flushChangement()
 
-		nodeList = self.makeClipboardList(checkDel = 1)
+		nodeList = self.makeClipboardList(0)
 		
 		if len(nodeList) == 0 or not self.editmgr.transaction():
 			return
@@ -1656,11 +1666,13 @@ class LayoutView2(LayoutViewDialog2):
 		pnode = None
 		for node in nodeList:
 			className = node.getClassName()
-			if className in ('Region', 'Viewport', 'MMNode'):
+			if className == 'RegionAssociation':
+				mediaNode = node.getMediaNode()
+				pnode = self.getParentNodeRef(mediaNode)
+				self.editmgr.setnodeattr(mediaNode, 'channel', None)
+			elif className in ('Region', 'Viewport'):
 				pnode = self.getParentNodeRef(node)
-			if className in ('Region', 'Viewport'):
 				self.editmgr.delchannel(node)
-
 		if pnode:
 			self.setglobalfocus([pnode])
 		else:
@@ -1675,50 +1687,33 @@ class LayoutView2(LayoutViewDialog2):
 		# it avoids some recursives transactions and some crashes
 		self.flushChangement()
 
-		# for now, only single selection make senses
-		if len(self.currentSelectedNodeList) != 1:
-			return
-		
-		selectedNode = self.currentSelectedNodeList[0]
-		selectedNodeType = self.getNodeType(selectedNode)
+		selectedNodeType = None
+		if len(self.currentSelectedNodeList) > 0:		
+			selectedNode = self.currentSelectedNodeList[0]
+			selectedNodeType = self.getNodeType(selectedNode)
 		
 		if not self.editmgr.transaction():
 			return
 
 		nodeList = self.editmgr.getclipcopy()
 
-		newFocus = []			
+		newFocus = []
 		for node in nodeList:
 			className = node.getClassName()
-			if className not in ('Region', 'Viewport','RegionAssociation'):
-				continue
-#			cNode = node.CopyIntoContext(self.context)
 
 			if className == 'Region':
 				if selectedNodeType in (TYPE_REGION, TYPE_VIEWPORT):
 					self.editmgr.addchannel(selectedNode, -1, node)
+				newFocus.append(node)
 			elif className == 'RegionAssociation':
-				if selectedNodeType in (TYPE_REGION, TYPE_VIEWPORT):
-					self.editmgr.setnodeattr(node, 'channel', selectedNode.name)					
+				if selectedNodeType == TYPE_REGION:
+					mediaNode = node.getMediaNode()
+					self.editmgr.setnodeattr(mediaNode, 'channel', selectedNode.name)					
+					newFocus.append(mediaNode)
 			elif className == 'Viewport':
 				self.editmgr.addchannel(None, -1, node)
-			newFocus = [node]			
-#			if type == 'region':
-#				cNode = node.CopyIntoContext(self.context, selectedNode)
-#			elif type == 'viewport':
-#				cNode = node.CopyIntoContext(self.context, None)
-#			elif type == 'media' and COPY_PASTE_MEDIAS:
-#				doPaste = 0
-#				if self.existRef(node):
-#					ret = windowinterface.GetOKCancel("Do you really want to move the media to the selected region ?", self.toplevel.window)
-#					if ret == 0:
-#						# ok
-#						doPaste = 1
-#				else:
-#					doPaste = 1
-#				if doPaste and self.getNodeType(selectedNode) == TYPE_REGION:
-#					cNode = node
-#					self.editmgr.setnodeattr(node, 'channel', selectedNode.name)
+				newFocus.append(node)
+			
 		# update the focus
 		self.setglobalfocus(newFocus)
 		self.editmgr.commit()
@@ -1921,6 +1916,9 @@ class LayoutView2(LayoutViewDialog2):
 			self.editmgr.addglobalfocus(nodeRefList)
 		else:
 			self.editmgr.delglobalfocus(nodeRefList)
+		self.currentFocus = self.editmgr.getglobalfocus()
+		self.makeSelectedNodeList(self.currentFocus)
+		self.updateFocus(keepShowedNodes)
 					
 #
 # common class for all widgets
