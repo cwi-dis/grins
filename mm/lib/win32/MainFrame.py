@@ -81,6 +81,7 @@ from _TransitionView import _TransitionView
 from _LinkView import _LinkView
 from _CmifView import _CmifView, _CmifStructView
 from _SourceView import _SourceView
+from _LayoutView2 import _LayoutView2
 
 #  Player views
 # from _CmifView import _CmifPlayerView
@@ -93,6 +94,7 @@ _HierarchyView=_CmifStructView
 _ChannelView=_CmifStructView
 _LinkView=_LinkView
 _LayoutView=_LayoutView
+_LayoutView2=_LayoutView2
 
 # player document views
 if IsPlayer:
@@ -104,6 +106,7 @@ if IsPlayer:
 	usercmd.HIDE_USERGROUPVIEW=None
 	usercmd.HIDE_TRANSITIONVIEW=None
 	usercmd.HIDE_SOURCE=usercmd.SOURCE
+	usercmd.HIDE_LAYOUTVIEW2=None
 
 appview={
 	0:{'cmd':usercmd.HIDE_PLAYERVIEW,'title':'Player','id':'pview_','class':_PlayerView,},
@@ -115,6 +118,7 @@ appview={
 	6:{'cmd':usercmd.HIDE_TRANSITIONVIEW,'title':'Transitions','id':'trview_','class':_TransitionView,'freezesize':1},
 	7:{'cmd':usercmd.HIDE_SOURCE,'title':'Source','id':'sview_','class':_SourceView,'hosted':0},
 	8:{'cmd':-1,'title':'','id':'cmifview_','class':_CmifView,'hosted':0},
+	9:{'cmd':usercmd.HIDE_LAYOUTVIEW2,'title':'Layout view 2','id':'lview2_','class':_LayoutView2,'freezesize':1},
 }
 
 
