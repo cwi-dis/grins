@@ -200,9 +200,9 @@ class Widget:
 #        assert (r-l) < mw and (b-t) < mh
 
         if r < l:
-            print "Widget: Error: box is right-to-left"
+            print "Widget: Error: box is right-to-left", self
         if t > b:
-            print "Widget: Error: box is upside down."
+            print "Widget: Error: box is upside down.", self
 
 #        assert r <= 1.0 and r >= 0.0 and l <= 1.0 and l >= 0.0
 #        assert t >= 0.0 and t <= 1.0 and b >= 0.0 and b <= 1.0
