@@ -240,6 +240,24 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		self.HookCommandUpdate(self.OnUpdateEditPaste,id)
 		return 0
 
+	# override DropTarget.OnDragOver to protect childs
+	def OnDragOver(self,filename,kbdstate,x,y):
+		client=self.GetMDIClient()
+		wnd=client.ChildWindowFromPoint((x,y))
+		
+		# in the client area but over a child
+		if wnd and wnd.GetSafeHwnd()!=client.GetSafeHwnd():
+			return DROPEFFECT_NONE
+			
+		# allow drops on the window captions
+		# if not wnd: # not in the client area
+		#	return DROPEFFECT_NONE
+
+		# in the free area
+		x,y=self._DPtoLP((x,y))
+		x,y = self._inverse_coordinates((x, y),self._canvas)
+		return self.onEventEx(DragFile,(x, y, filename))
+
 	# drag and drop files support for MainFrame
 	# enable drop files
 	def dragAcceptFiles(self):
