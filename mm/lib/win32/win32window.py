@@ -2539,7 +2539,7 @@ import gear32sd
 
 class _ResizeableDisplayList(_DisplayList):
 	def __init__(self, window, bgcolor):
-		_DisplayList.__init__(self, window, bgcolor)
+		_DisplayList.__init__(self, window, bgcolor, UNIT_SCREEN)
 
 	def _do_render(self, entry, dc, region):
 		cmd = entry[0]
