@@ -448,20 +448,55 @@ class _Window(_AdornmentSupport):
 		else:
 			raise error, 'bad units specified'
 
+	def getcanvassize(self, units = UNIT_MM):
+		if self._scrwin is None:
+			raise error, 'no scrollable window'
+		val = self._form.GetValues(['width', 'height'])
+		width = val['width']
+		height = val['height']
+		if units == UNIT_MM:
+			return float(width) / toplevel._hmm2pxl, \
+			       float(height) / toplevel._vmm2pxl
+		elif units == UNIT_SCREEN:
+			return float(width) / toplevel._screenwidth, \
+			       float(height) / toplevel._screenheight
+		elif units == UNIT_PXL:
+			return width, height
+		else:
+			raise error, 'bad units specified'
+
 	def setcanvassize(self, code):
 		if self._scrwin is None:
 			raise error, 'no scrollable window'
 		# this triggers a resizeCallback
 		auto = self._scrwin.scrollBarDisplayPolicy == Xmd.AS_NEEDED
 		clipwin = self._scrwin.clipWindow
-		if auto:
-			val = clipwin.GetValues(['width', 'height'])
-			cwidth = val['width']
-			cheight = val['height']
-			val = self._form.GetValues(['width', 'height'])
-			fwidth = val['width']
-			fheight = val['height']
-		if code == RESET_CANVAS:
+		val = clipwin.GetValues(['width', 'height'])
+		cwidth = val['width']
+		cheight = val['height']
+		val = self._form.GetValues(['width', 'height'])
+		fwidth = val['width']
+		fheight = val['height']
+		forceevent = 0
+		if type(code) is type(()):
+			units, width, height = code
+			if units == UNIT_MM:
+				width = int(float(width) * toplevel._hmm2pxl + 0.5)
+				height = int(float(height) * toplevel._vmm2pxl + 0.5)
+			elif units == UNIT_SCREEN:
+				width = int(float(width) * toplevel._screenwidth + 0.5)
+				height = int(float(height) * toplevel._screenheight + 0.5)
+			elif units == UNIT_PXL:
+				width = int(width)
+				height = int(height)
+			if width < cwidth:
+				width = cwidth
+			if height < cheight:
+				height = cheight
+			attrs = {'width': width, 'height': height}
+			if width == fwidth and height == fheight:
+				forceevent = 1
+		elif code == RESET_CANVAS:
 			if auto and cwidth < fwidth:
 				# there is a vertical scrollbar which will go
 				vs = self._scrwin.verticalScrollBar
@@ -474,24 +509,28 @@ class _Window(_AdornmentSupport):
 				vmargin = hs.height + 2 * hs.shadowThickness
 			else:
 				vmargin = 0
-			self._form.SetValues({'width': clipwin.width + hmargin,
-					      'height': clipwin.height + vmargin})
+			attrs = {'width': clipwin.width + hmargin,
+				 'height': clipwin.height + vmargin}
 		elif code == DOUBLE_HEIGHT:
-			attrs = {'height': self._form.height * 2}
+			attrs = {'height': fheight * 2}
 			if auto and cwidth == fwidth:
-				# there's will be a vertical scrollbar
+				# there will be a vertical scrollbar
 				vs = self._scrwin.verticalScrollBar
 				hmargin = vs.width + 2 * vs.shadowThickness
 				attrs['width'] = cwidth - hmargin
-			self._form.SetValues(attrs)
 		elif code == DOUBLE_WIDTH:
-			attrs = {'width': self._form.width * 2}
+			attrs = {'width': fwidth * 2}
 			if auto and cheight == fheight:
-				# there's will be a horizontal scrollbar
+				# there will be a horizontal scrollbar
 				hs = self._scrwin.horizontalScrollBar
 				vmargin = hs.height + 2 * hs.shadowThickness
 				attrs['height'] = cheight - vmargin
-			self._form.SetValues(attrs)
+		else:
+			# unrecognized code
+			return
+		self._form.SetValues(attrs)
+		if forceevent:
+			self._resize_callback(self._form, 1, None)
 
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
 		return _SubWindow(self, coordinates, 0, pixmap, transparent, z, units)
@@ -1192,7 +1231,7 @@ class _Window(_AdornmentSupport):
 		val = self._form.GetValues(['width', 'height'])
 		x, y = self._rect[:2]
 		width, height = val['width'], val['height']
-		if self._rect == (x, y, width, height):
+		if self._rect == (x, y, width, height) and client_data is None:
 			return
 		self._arrowcache = {}
 		__w = toplevel._in_create_box
