@@ -100,12 +100,12 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 
 	# Called by the core system to create a subwindow
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
-		raise error, 'overwrite newwindow'
+		raise error, 'override newwindow'
 		return None
 
 	# Called by the core system to create a subwindow
 	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
-		raise error, 'overwrite newcmwindow'
+		raise error, 'override newcmwindow'
 		return None
 		
 	# Called by the core system to craete a new display list
@@ -450,13 +450,16 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		frame=(w.GetParent()).GetMDIFrame()		
 		return frame
 
-	# Returns the coordinates of this window
-	def getgeometry(self, units = UNIT_MM):
-		if self._obj_==None or self.IsWindow()==0:return
+	# Returns the coordinates of this window in pix
+	def getpixgeometry(self):
 		(flags,showCmd,ptMinPosition,ptMaxPosition,rcNormalPosition)=\
 			self.GetWindowPlacement()
 		rc=rcNormalPosition
-		x,y,w,h=rc[0],rc[1],rc[2]-rc[0],rc[3]-rc[1]
+		return rc[0],rc[1],rc[2]-rc[0],rc[3]-rc[1]
+		
+	# Returns the coordinates of this window
+	def getgeometry(self, units = UNIT_MM):
+		x,y,w,h=self.getpixgeometry()
 		toplevel=__main__.toplevel
 		if units == UNIT_MM:
 			return float(x) / toplevel._pixel_per_mm_x, float(y) / toplevel._pixel_per_mm_y, \
@@ -758,8 +761,10 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			for w,xf,yf in exec_list:
 				hdwp=w._resize_wnds_tree(hdwp,xf,yf)
 			Sdk.EndDeferWindowPos(hdwp)
-
-		self._create_displists_tree()
+		
+		# call create_displists_tree only for childs
+		for w in self._subwindows:
+			w._create_displists_tree()
 
 	# destroy all display lists for this wnd and iteratively 
 	# for its childs, for the childs of its childs, etc	
@@ -775,6 +780,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		for w in self._subwindows:
 			w._create_displists_tree()
 		self.onEvent(ResizeWindow)
+		
 
 	# resize self wnd and iteratively 
 	# all its childs, and for the childs all of their childs, etc
