@@ -403,6 +403,10 @@ SOURCE=.\editor\win32\PlayerDialog.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\editor\win32\SourceViewDialog.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\editor\win32\ToolbarTemplate.py
 # End Source File
 # Begin Source File
@@ -717,6 +721,10 @@ SOURCE=.\editor\Player.py
 # Begin Source File
 
 SOURCE=.\editor\PlayerCore.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\SourceView.py
 # End Source File
 # Begin Source File
 
