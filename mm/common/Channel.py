@@ -627,6 +627,7 @@ class Channel:
 				sctx = self._playcontext
 			sctx.sched_arcs(node, event, external = 1)
 		else:
+			self._played_node.event(self._playcontext.parent.timefunc(), event)
 			self._playcontext.sched_arc(self._played_node, arc, event, external = 1)
 
 	def play_1(self):
