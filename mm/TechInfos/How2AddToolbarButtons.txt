@@ -1,0 +1,21 @@
+This is a recipe for how to add toolbar buttons and toolbars.
+It is valid as of May 2001.
+
+1. Add the new buttons to the toolbar resource. Use IDR_TB_EDITOR
+   for the editor.
+2. Check whether an IDUC_ commandID is already appropriate, else
+   add one. Add this commandID to usercmdui as well, and link it
+   to the usercmd command.
+3. Add the tooltips for the new button.
+4. Add the button index number to lib/win32/ToolbarIcons
+If this is a whole new toolbar:
+    5. Add a toolbar command to wndusercmd
+	6. Add the new command to MenuTemplate, in the View->Toolbar
+	   section
+	7. Add an IDW_ resourceID for the bar to the start of
+	   ToolbarTemplate
+	8. Add a template for the toolbar to ToolbarTemplate. The parameters
+	   are the title, the wndusercmd to enable/disable it, the IDW_
+	   resourceID and the GrinsRes toolbar resource from step 1.
+9. Add a Button() command to the toolbar, specifying the usercmd and
+   the index number from step 4.
