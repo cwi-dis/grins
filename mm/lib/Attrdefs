@@ -162,7 +162,7 @@
 (longdesc (string) '' 'Long description URL' default
 	'Link (URL) to a long description of the media object' raw light)
 
-(loop (int) 1 'Loop' default
+(loop (float) 1 'Loop' default
 	'Number of times the node should loop, 0 for indefinite' raw light)
 
 (macprog (string) '' 'Mac program signature' default
@@ -253,6 +253,9 @@
 
 (queuesize (float) 0 'Queue size' default
 	'Audio playback queue size' channel cmif)
+
+(repeatdur (float) 0 'Repeat duration' default
+	'Time the node should loop, 0 for indefinite' raw smil2)
 
 (restart (enum always whenNotActive never) always 'Restart node' restart
 	'When can the node be restart' raw smil2)
