@@ -314,7 +314,7 @@ class VideoStream:
 	def prepare_player(self, node, window):
 		if not window:
 			raise error, 'not a window'
-		ddobj = window._topwindow._ddraw
+		ddobj = window._topwindow.getDirectDraw()
 		self.__mmstream = win32dxm.MMStream(ddobj)
 
 		url=self.__channel.getfileurl(node)
