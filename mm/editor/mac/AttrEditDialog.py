@@ -1352,11 +1352,22 @@ class FadeoutTabPage(MultiTabPage, ColorTabPage):
 class AreaTabPage(MultiDictTabPage):
 	"""Not useable on its own: subclassed further down"""
 			
+	def init_controls(self, item0):
+		rv = MultiDictTabPage.init_controls(self, item0)
+		self._area = self.attreditor._window.AreaWidget(item0+self.ITEM_PREVIEW)
+		self._area.setinfo((0, 0, 640, 480)) # XXX
+		return rv
+
 	def do_itemhit(self, item, event):
 		if item-self.item0 in self._checkboxes:
 			self.attreditor._togglebutton(item)
 			return 1
+		elif item-self.item0 in self._xywhfields:
+			self._labels_to_preview()
+			return 1
 		elif item-self.item0 in self._otherfields:
+			return 1
+		elif item-self.item0 == self.ITEM_PREVIEW:
 			return 1
 		return 0
 		
@@ -1370,6 +1381,7 @@ class AreaTabPage(MultiDictTabPage):
 		self.attreditor._setlabel(self.item0+self.ITEM_Y, y)
 		self.attreditor._setlabel(self.item0+self.ITEM_W, w)
 		self.attreditor._setlabel(self.item0+self.ITEM_H, h)
+		self._labels_to_preview()
 		
 	def _getxywh(self):
 		x, y = self._getpoint(self._xyfield)
@@ -1397,6 +1409,36 @@ class AreaTabPage(MultiDictTabPage):
 	def _savexywh(self, x, y, w, h):
 		self._attr_to_field[self._xyfield]._savevaluefrompage(x+' '+y)
 		self._attr_to_field[self._whfield]._savevaluefrompage(w+' '+h)
+		
+	def _labels_to_preview(self):
+		x = self._getlabelpixel(self.ITEM_X)
+		y = self._getlabelpixel(self.ITEM_Y)
+		w = self._getlabelpixel(self.ITEM_W)
+		h = self._getlabelpixel(self.ITEM_H)
+		xywh = self._values_to_pixels((x, y, w, h))
+		print 'area now', xywh
+		self._area.set(xywh)
+		
+	def _preview_callback(self, xywh):
+		y, w, h, y = self._pixels_to_values(xywh)
+		self.attreditor._setlabel(self.item0+self.ITEM_X, `x`)
+		self.attreditor._setlabel(self.item0+self.ITEM_Y, `y`)
+		self.attreditor._setlabel(self.item0+self.ITEM_W, `w`)
+		self.attreditor._setlabel(self.item0+self.ITEM_H, `h`)
+		
+	def _getlabelpixel(self, item):
+		str = self.attreditor._getlabel(self.item0+item)
+		try:
+			num = string.atof(str)
+		except ValueError:
+			num = 0
+		return num
+		
+	def _values_to_pixels(self, (x, y, w, h)):
+		return int(x), int(y), int(w), int(h)
+		
+	def _pixels_to_values(self, (x, y, w, h)):
+		return (x, y, w, h)
 
 class SourceAreaTabPage(AreaTabPage):
 	TAB_LABEL='Source area'
@@ -1408,7 +1450,8 @@ class SourceAreaTabPage(AreaTabPage):
 	ITEM_Y=7
 	ITEM_W=9
 	ITEM_H=11
-	N_ITEMS=11
+	ITEM_PREVIEW=12
+	N_ITEMS=12
 	_attr_to_checkbox = {
 		'fullimage': ITEM_WHOLE,
 	}
@@ -1416,7 +1459,8 @@ class SourceAreaTabPage(AreaTabPage):
 	_whfield = 'imgcropwh'
 	attrs_on_page = ['fullimage', 'imgcropxy', 'imgcropwh']
 	_checkboxes = (ITEM_WHOLE, )
-	_otherfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H)
+	_xywhfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H)
+	_otherfields = ()
 	helpstring = 'Use these fields to use only part of the source image in the transition.'
 			
 class DestinationAreaTabPage(AreaTabPage):
@@ -1430,7 +1474,8 @@ class DestinationAreaTabPage(AreaTabPage):
 	ITEM_W=9
 	ITEM_H=11
 	ITEM_ASPECT=12
-	N_ITEMS=12
+	ITEM_PREVIEW=13
+	N_ITEMS=13
 	_attr_to_checkbox = {
 		'displayfull': ITEM_WHOLE,
 		'aspect': ITEM_ASPECT,
@@ -1439,7 +1484,8 @@ class DestinationAreaTabPage(AreaTabPage):
 	_whfield = 'subregionwh'
 	attrs_on_page = ['displayfull', 'aspect', 'subregionxy', 'subregionwh']
 	_checkboxes = (ITEM_WHOLE, ITEM_ASPECT)
-	_otherfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H)
+	_xywhfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H)
+	_otherfields = ()
 	
 class Destination1AreaTabPage(DestinationAreaTabPage):
 	# Destination area without "keep aspect" checkbox (fadeout)
@@ -1472,14 +1518,13 @@ class ChannelAreaTabPage(AreaTabPage):
 	_xywhfield = 'base_winoff'
 	attrs_on_page = ['base_winoff', 'units', 'z']
 	_checkboxes = ()
-	_otherfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H, ITEM_UNITS, ITEM_Z)
+	_xywhfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H)
+	_otherfields = (ITEM_UNITS, ITEM_Z)
 	helpstring = 'Coordinates of this channel. Higher Z values are on top.'
 
 	def init_controls(self, item0):
 		rv = AreaTabPage.init_controls(self, item0)
 		self._unitspopup = self.attreditor._window.SelectWidget(self.item0+self.ITEM_UNITS, [], None)
-		self._area = self.attreditor._window.AreaWidget(self.item0+self.ITEM_PREVIEW)
-		self._area.setinfo((0, 0, 640, 480)) # XXX
 		return rv
 		
 	def do_itemhit(self, item, event):
@@ -1496,9 +1541,6 @@ class ChannelAreaTabPage(AreaTabPage):
 			value = self._attr_to_field[name]._getvalueforpage()
 			self.attreditor._setlabel(self.item0+item, value)
 		AreaTabPage.update(self)
-		x, y, w, h = self._getxywh() # XXX
-		x, y, w, h = string.atoi(x), string.atoi(y), string.atoi(w), string.atoi(h) # XXX
-		self._area.set((x, y, w, h)) # XXX
 		
 	def _getxywh(self):
 		str = self._attr_to_field[self._xywhfield]._getvalueforpage()
@@ -1528,7 +1570,8 @@ class ChannelAreaLiteTabPage(AreaTabPage):
 	ITEM_W=7
 	ITEM_H=9
 	ITEM_Z=11
-	N_ITEMS=11
+	ITEM_PREVIEW=12
+	N_ITEMS=12
 	_attr_to_checkbox = {
 	}
 	_attr_to_string = {
@@ -1537,7 +1580,8 @@ class ChannelAreaLiteTabPage(AreaTabPage):
 	_xywhfield = 'base_winoff'
 	attrs_on_page = ['base_winoff', 'z']
 	_checkboxes = ()
-	_otherfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H, ITEM_Z)
+	_xywhfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H)
+	_otherfields = (ITEM_Z,)
 	helpstring = 'Coordinates of this channel. Higher Z values are on top.'
 
 	def init_controls(self, item0):
