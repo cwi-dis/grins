@@ -633,7 +633,7 @@ class Channel:
 			self.syncarm = 1
 			self.stoparm()
 			self.syncarm = save_syncarm
-			self._playcontext.arm_ready(self)
+			self._armcontext.arm_ready(self)
 		if self._playstate != PIDLE and self._played_node is node:
 			# hack to not generate play_done event
 			save_syncplay = self.syncplay
