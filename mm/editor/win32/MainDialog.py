@@ -72,7 +72,10 @@ class MainDialog:
 		import settings
 		if not hasarguments and not settings.get('no_initial_dialog'):
 			f = windowinterface.getmainwnd()
-			windowinterface.OpenAppDialog(self.new_callback, self.openfile_callback, self.never_again, parent=f)
+			doclist = self.get_recent_files()
+			windowinterface.OpenAppDialog(self.new_callback, 
+				self.openfile_callback, self.never_again,
+				doclist, self.openURL_callback, parent=f)
 		
 	def getparentwindow(self):
 		# Used by machine-independent code to pass as parent
