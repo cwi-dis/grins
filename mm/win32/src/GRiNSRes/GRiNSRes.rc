@@ -473,6 +473,28 @@ BEGIN
     PUSHBUTTON      "&Delete",IDCMD_DELETE_GROUP,74,109,34,13
 END
 
+IDD_LAYOUT2 DIALOG DISCARDABLE  0, 0, 115, 210
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "New...",IDCMD_NEW_LAYOUT,7,48,25,13
+    PUSHBUTTON      "Rename...",IDCMD_RENAME,34,48,35,13
+    PUSHBUTTON      "Delete",IDCMD_DELETE,73,48,34,13
+    LISTBOX         IDC_LAYOUTS,6,13,102,35,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Layouts",-1,6,3,102,10,SS_SUNKEN
+    PUSHBUTTON      "New...",IDCMD_NEW_CHANNEL,6,120,25,13
+    PUSHBUTTON      "Remove",IDCMD_REMOVE_CHANNEL,77,120,31,13
+    PUSHBUTTON      "Properties...",IDCMD_ATTRIBUTES,33,120,41,13
+    LISTBOX         IDC_LAYOUT_CHANNELS,6,78,102,41,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Layout channels",-1,6,68,102,10,SS_SUNKEN
+    PUSHBUTTON      "Add to layout",IDCMD_ADD_CHANNEL,52,194,56,13
+    LISTBOX         IDC_OTHER_CHANNELS,6,152,102,41,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Other channels",-1,6,142,102,10,SS_SUNKEN
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -680,6 +702,13 @@ BEGIN
     IDD_USERGROUP, DIALOG
     BEGIN
         LEFTMARGIN, 6
+    END
+
+    IDD_LAYOUT2, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 114
+        BOTTOMMARGIN, 208
     END
 END
 #endif    // APSTUDIO_INVOKED
