@@ -57,8 +57,13 @@ class AttrCtrl:
 	def drawOn(self,dc):
 		pass
 
-	def enableApply(self,flag=1):
+	def enableApply(self,flag=-1):
 		if self._wnd._form._prsht:
+			if flag==-1:
+				if self._attr.getcurrent()!=self.getvalue():
+					flag=1
+				else:
+					flag=0	
 			self._wnd._form._prsht.enableApply(flag)
 
 # temp stuff not safe
@@ -303,7 +308,8 @@ class FileCtrl(AttrCtrl):
 		elif code==win32con.EN_CHANGE:
 			if hasattr(self._wnd,'onAttrChange'):
 				self._wnd.onAttrChange()
-			self.enableApply()
+				self.enableApply()
+
 
 ##################################
 class ColorCtrl(AttrCtrl):
@@ -403,6 +409,7 @@ class ColorCtrl(AttrCtrl):
 		elif code==win32con.EN_CHANGE:
 			self.invalidateInd()
 			self.enableApply()
+
 
 ##################################
 class StringCtrl(AttrCtrl):
