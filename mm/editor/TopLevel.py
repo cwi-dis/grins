@@ -727,7 +727,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			bwname = "%dbps"%bandwidth
 		msg = 'Computing bandwidth usage at %s...'%bwname
 		dialog = windowinterface.BandwidthComputeDialog(msg)
-		bandwidth, prerolltime, delaycount, errorseconds, errorcount = \
+		bandwidth, prerolltime, delaycount, errorseconds, errorcount , stalls = \
 			BandwidthCompute.compute_bandwidth(self.root)
 		dialog.setinfo(prerolltime, errorseconds, delaycount, errorcount)
 		dialog.done(do_export_callback, cancancel=1)
