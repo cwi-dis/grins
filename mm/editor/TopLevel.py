@@ -61,11 +61,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			RESTORE(callback = (self.restore_callback, ())),
 			CLOSE(callback = (self.close_callback, ())),
 			]
+		self.__save = None
 		if self.main.cansave():
 			self.commandlist = self.commandlist + [
-				SAVE(callback = (self.save_callback, ())),
 				SAVE_AS(callback = (self.saveas_callback, ())),
 				]
+			self.__save = SAVE(callback = (self.save_callback, ()))
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
 			self.commandlist.append(
@@ -283,6 +284,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		print 'done saving.'
 		self.changed = 0
 		self.new_file = 0
+		self.setcommands(self.commandlist)
 		return 1
 
 	def restore_callback(self):
@@ -411,6 +413,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.changed = 1
 		MMAttrdefs.flushcache(self.root)
 		Timing.changedtimes(self.root)
+		if self.__save is not None:
+			self.setcommands(self.commandlist + [self.__save])
 
 	def rollback(self):
 		# Nothing has happened.
