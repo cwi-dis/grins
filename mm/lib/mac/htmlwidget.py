@@ -477,7 +477,7 @@ class HTMLWidget:
 			dummy, self.anchor_begin_pos = self.ted.WEGetSelection()
 		elif self.anchor_begin_pos >= 0:
 			dummy, endpos = self.ted.WEGetSelection()
-			self.anchor_offsets.append(self.anchor_begin_pos, endpos)
+			self.anchor_offsets.append((self.anchor_begin_pos, endpos))
 			self.anchor_begin_pos = -1
 		self.new_font(self.html_font)
 

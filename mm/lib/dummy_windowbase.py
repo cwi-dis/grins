@@ -38,7 +38,7 @@ class _Toplevel:
 		self.__init__()		# clears all lists
 
 	def addclosecallback(self, func, args):
-		self._closecallbacks.append(func, args)
+		self._closecallbacks.append((func, args))
 
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0):
 		return _Window(self, x, y, w, h, title, 0, pixmap, 0)
@@ -116,7 +116,7 @@ class _Toplevel:
 				self._timers.insert(i, (sec - t, cb, self._timer_id))
 				return self._timer_id
 			t = t + time
-		self._timers.append(sec - t, cb, self._timer_id)
+		self._timers.append((sec - t, cb, self._timer_id))
 		return self._timer_id
 
 	def canceltimer(self, id):
@@ -279,7 +279,7 @@ class _DisplayList:
 	def fgcolor(self, color):
 		r, g, b = color
 
-	def newbutton(self, coordinates, z = 0, times = None):
+	def newbutton(self, coordinates):
 		return _Button(self, coordinates)
 
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
