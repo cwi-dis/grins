@@ -26,21 +26,13 @@ class GraphChannel(ChannelWindow):
 	def do_arm(self, node, same=0):
 	        if same and self.armed_display:
 		    return 1
+		self.armed_type = MMAttrdefs.getattr(node, 'gtype')
 		str = self.getstring(node)
 		toks = self.tokenizestring(str)
 		self.parsetokens(toks)
-		# XXXX For lines
-		maxy = 0.0
-		miny = 999999999.0
-		length = 2
-		for d in self.datapoints:
-			if not d:
-				continue
-			if len(d) > length:
-				length = len(d)
-			mind, maxd = min(d), max(d)
-			miny = min(miny, mind)
-			maxy = max(maxy, maxd)
+
+		miny, maxy, minx, maxx = self.findminmax()
+
 		leftalign = (MMAttrdefs.getattr(node, 'align') == 'left')
 		axis_x, axis_y = MMAttrdefs.getattr(node, 'axis')
 		if axis_y >= 0:
@@ -48,28 +40,58 @@ class GraphChannel(ChannelWindow):
 		if miny == maxy:
 			miny = miny - 0.5
 			maxy = maxy + 0.5
-		for d in self.datapoints:
-			if len(d) < length:
-				d2 = [None]*(length-len(d))
-				if leftalign:
-					d[len(d):] = d2
-				else:
-					d[:0] = d2
-		self.ranges = (0, length-1, miny, maxy)
-		tp = MMAttrdefs.getattr(node, 'gtype')
+			
+		if self.armed_type <> 'scatter':
+			length = int(maxx-minx+1)
+			for d in self.datapoints:
+				if len(d) < length:
+					d2 = [None]*(length-len(d))
+					if leftalign:
+						d[len(d):] = d2
+					else:
+						d[:0] = d2
+		self.ranges = (minx, maxx, miny, maxy)
 		if axis_x >= 0:
-			self.do_xaxis(axis_x, (tp in ('bar', 'hline')))
+			self.do_xaxis(axis_x,
+				      (self.armed_type in ('bar', 'hline')))
 		if axis_y >= 0:
 			self.do_yaxis(axis_y)
-		if tp == 'line':
-			self.do_line(node)
-		elif tp == 'hline':
-			self.do_hline(node)
-		elif tp == 'bar':
-			self.do_bar(node)
+		if self.armed_type == 'line':
+			self.do_line()
+		elif self.armed_type == 'hline':
+			self.do_hline()
+		elif self.armed_type == 'bar':
+			self.do_bar()
+		elif self.armed_type == 'scatter':
+			self.do_scatter()
 		else:
-			self.errormsg(node, 'Unknown graphtype '+tp)
+			self.errormsg(node,
+				      'Unknown graphtype '+self.armed_type)
 		return 1
+
+	def findminmax(self):
+		if self.armed_type == 'scatter':
+			minx = miny = 99999.0
+			maxx = maxy = -99999.0
+			for d in self.datapoints:
+				if not d: continue
+				for x, y in d:
+					minx = min(minx, x)
+					miny = min(miny, y)
+					maxx = max(maxx, x)
+					maxy = max(maxy, y)
+		else:
+			minx = 0
+			maxx = 0
+			miny = 99999.0
+			maxy = -99999.0
+			for d in self.datapoints:
+				if not d: continue
+				miny = min(miny, min(d))
+				maxy = max(maxy, max(d))
+				maxx = max(maxx, len(d))
+		return minx, maxx, miny, maxy
+				
 
 	def do_xaxis(self, step, isbar):
 		minx, maxx, miny, maxy = self.ranges
@@ -101,7 +123,7 @@ class GraphChannel(ChannelWindow):
 				 (x-0.025, (maxy-i)*ystepsize+YOFF)])
 			i = i + step
 
-	def do_line(self, node):
+	def do_line(self):
 		minx, maxx, miny, maxy = self.ranges
 		minx = 0.0
 		xstepsize = XRANGE / (maxx-minx)
@@ -119,7 +141,22 @@ class GraphChannel(ChannelWindow):
 			del colorlist[0]
 			self.armed_display.drawline(c, d2)
 
-	def do_bar(self, node):
+	def do_scatter(self):
+		minx, maxx, miny, maxy = self.ranges
+		xstepsize = XRANGE / (maxx-minx)
+		ystepsize = YRANGE / (maxy-miny)
+		colorlist = self.needcolors(len(self.datapoints))
+		for d in self.datapoints:
+			c = colorlist[0]
+			del colorlist[0]
+			for point in d:
+				if point is None: continue
+				x, y = point
+				x = XOFF+(x*xstepsize)
+				y = YOFF+(y*ystepsize)
+				self.armed_display.drawmarker(c, (x,y))
+
+	def do_bar(self):
 		minx, maxx, miny, maxy = self.ranges
 		minx = 0.0
 		if miny > 0.0:
@@ -142,7 +179,7 @@ class GraphChannel(ChannelWindow):
 						  (x, ytop, xsmallstep, ysize))
 				x = x + xstepsize
 			
-	def do_hline(self, node):
+	def do_hline(self):
 		minx, maxx, miny, maxy = self.ranges
 		minx = 0.0
 		xstepsize = XRANGE / (1+maxx-minx)
@@ -187,18 +224,35 @@ class GraphChannel(ChannelWindow):
 	def tokenizestring(self, str):
 		items = string.split(str)
 		for i in range(len(items)):
-			try:
-				items[i] = string.atof(items[i])
-			except string.atof_error:
-				pass
+			if ',' in items[i]:
+				subitems = string.split(items[i], ',')
+				try:
+					subitems = map(string.atof, subitems)
+					items[i] = tuple(subitems)
+				except string.atof_error:
+					pass
+			else:
+				try:
+					items[i] = string.atof(items[i])
+				except string.atof_error:
+					pass
 		return items
 
 	def parsetokens(self, str):
 		self.datapoints = []
 		curdatapoints = []
+		tuples = (self.armed_type == 'scatter')
 		for i in str:
 			if type(i) in (type(0.0), type(0)):
-				curdatapoints.append(i)
+				if tuples:
+					print 'GraphChannel: x,y expected:',i
+				else:
+					curdatapoints.append(i)
+			elif type(i) == type(()):
+				if tuples:
+					curdatapoints.append(i)
+				else:
+					print 'GraphChannel: single value expected:', i
 			elif type(i) is type(''):
 				if i == 'next':
 					if curdatapoints:
