@@ -218,7 +218,7 @@
 	'Channel type (channel dictionary only)' raw)
 
 (u_group (name) undefined 'User group' usergroup
-	'Name of user group' normal)
+	'Name of user group' inherited)
 
 (unixprog (string) '' 'Unix program name' default
 	'Application name (unix only)' channel)
