@@ -3636,6 +3636,7 @@ IDI_UNKNOWN             ICON    DISCARDABLE     "res\\unknown.ico"
 IDI_OPENEDEYE           ICON    DISCARDABLE     "RES\\openedeye.ico"
 IDI_OPENEDEYEKEY        ICON    DISCARDABLE     "RES\\openedeyekey.ico"
 IDI_CLOSEDEYE           ICON    DISCARDABLE     "RES\\closedeye.ico"
+IDI_PAUSING             ICON    DISCARDABLE     "res\\pausing.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

@@ -138,14 +138,14 @@ class SoundChannel(Channel.ChannelAsync):
 		self.playdone(0, curtime)
 
 	# toggles between pause and run
-	def setpaused(self, paused):
+	def setpaused(self, paused, timestamp):
 		if self.__rc:
 			self.__rc.pauseit(paused)
 		elif self.__mc is not None:
 			self.__mc.pauseit(paused)
 		elif self.__qc is not None:
 			self.__qc.pauseit(paused)
-		Channel.ChannelAsync.setpaused(self, paused)
+		Channel.ChannelAsync.setpaused(self, paused, timestamp)
 
 
 	def stopplay(self, node, curtime):
