@@ -83,7 +83,6 @@ class ImageChannel(ChannelWindow):
 			raise error, 'Arm state must be idle when defining an anchor'
 		if self._playstate != PIDLE:
 			raise error, 'Play state must be idle when defining an anchor'
-		windowinterface.setcursor('watch')
 		self._anchor_context = AnchorContext()
 		self.startcontext(self._anchor_context)
 		save_syncarm = self.syncarm
@@ -103,7 +102,6 @@ class ImageChannel(ChannelWindow):
 		self.syncplay = save_syncplay
 		self._anchor = anchor
 		box = anchor[2]
-		windowinterface.setcursor('')
 		self._anchor_cb = cb
 		msg = 'Draw anchor in ' + self._name + '.'
 		if box == []:
