@@ -554,6 +554,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 				apply(callback[0], callback[1])
 		elif self._topwindow==self:
 			if self._popupmenu:
+				self.onLButtonDown(params)
 				menu = self._popupmenu
 			else:
 				menu=self._parent.get_submenu('&Tools')
