@@ -645,7 +645,7 @@ attrgrs=(
 		]},
 
 	{'name':'Layout3',
-	'title':'Subregion',
+	'title':'Top Layout',
 	'attrs':[
 		'cssbgcolor',
 		'width', 'height',
