@@ -143,6 +143,7 @@ void myWin::SetScroll(CString str)
 	si.nPage = m_nPageSize;
 
 	SetScrollInfo (SB_VERT, &si, TRUE);
+	RedrawWindow();
 	//::SendMessage(this->m_hWnd,WM_PAINT,(WPARAM)GetDC()->m_hDC,0);
 }
 
@@ -166,3 +167,4 @@ void myWin::GetDim(CString s,char* fcname,int size)
 	align = s;
 	strcpy(facename,fcname);
 	m_cyChar = size;
+}

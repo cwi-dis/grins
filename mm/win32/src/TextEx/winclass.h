@@ -24,3 +24,4 @@ class myWin : public CWnd
     afx_msg void OnVScroll (UINT, UINT, CScrollBar*);
 
     DECLARE_MESSAGE_MAP ()
+};
