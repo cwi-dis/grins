@@ -84,12 +84,10 @@ class AudioDevMAC:
 			0)
 		header = h1+h2+h3+h4
 		self.__gc.append((header, data))
-		print 'DBG SndDoCommand'
 		self.__chan.SndDoCommand((bufferCmd, 0, header), 0)
 		self.__chan.SndDoCommand((callBackCmd, 0, 0), 0)
 
 	def __callback(self, *args):
-		print 'DBG __callback!', args
 		del self.__gc[0]
 		if self.__usercallback:
 			self.__usercallback()
