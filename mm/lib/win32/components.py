@@ -515,6 +515,24 @@ class TabCtrl(Control):
 	def getcursel(self):
 		return self.sendmessage(commctrl.TCM_GETCURSEL)
 
+####################################################
+# Tooltip control
+class Tooltip(Control):
+	def __init__(self, parent=None, id=-1):
+		Control.__init__(self, parent, id)
+
+	def createWindow(self, rc=(0,0,0,0), title=''):
+		Sdk.InitCommonControlsEx()
+		hwnd = self._parent.GetSafeHwnd()
+		rcd = win32con.CW_USEDEFAULT, win32con.CW_USEDEFAULT, win32con.CW_USEDEFAULT, win32con.CW_USEDEFAULT
+		self._hwnd = Sdk.CreateWindowEx(win32con.WS_EX_TOPMOST, 'tooltips_class32', title, 
+			win32con.WS_POPUP | commctrl.TTS_NOPREFIX | commctrl.TTS_ALWAYSTIP, rcd, hwnd, self._id)
+		Sdk.SetWindowPos(self._hwnd, win32con.HWND_TOPMOST, (0,0,0,0),
+			win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_NOACTIVATE)
+
+	def addTool(self, rc):
+		hwnd = self._parent.GetSafeHwnd()
+		Sdk.AddToolInfo(self._hwnd, hwnd, self._id, rc)
 
 ##############################
 # Base class for controls creation classes
