@@ -46,7 +46,7 @@ class _LayoutView2(GenFormView):
 		# note: if you modify the key names, you also have to modify them in LayoutViewDialog
 		self.__ctrlNames=n=('ViewportSel','RegionSel','RegionX','RegionY',
 							'RegionW','RegionH','RegionZ', 'BgColor', 'ShowNames',
-							'AsOutLine', 'RegionList', 'ShowRbg', 'SendBack', 'BringFront')
+							'AsOutLine', 'RegionList', 'ShowRbg', 'SendBack', 'BringFront', 'MediaSel')
 		self[n[0]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_VIEWPORT_SEL)
 		self[n[1]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_REGION_SEL)
 		self[n[2]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_X)
@@ -61,6 +61,7 @@ class _LayoutView2(GenFormView):
 		self[n[11]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_RBG)
 		self[n[12]]=components.Button(self,grinsRC.IDC_LAYOUT_SENDBACK)
 		self[n[13]]=components.Button(self,grinsRC.IDC_LAYOUT_BRINGFRONT)
+		self[n[14]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_MEDIA_SEL)
 		
 		# Initialize control objects whose command are activable as well from menu bar
 		self[ATTRIBUTES]=components.Button(self,grinsRC.IDCMD_ATTRIBUTES)
@@ -197,6 +198,8 @@ class _LayoutView2(GenFormView):
 				ctrlName = 'ViewportSel'
 			elif id == self['RegionSel']._id:
 				ctrlName = 'RegionSel'
+			elif id == self['MediaSel']._id:
+				ctrlName = 'MediaSel'
 			if ctrlName != None:
 				self[ctrlName].callcb()
 				value = self[ctrlName].getvalue()
