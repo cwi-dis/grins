@@ -347,7 +347,11 @@ class _LayoutView2(GenFormView):
 	def onViewCreated(self, frame, view, strid):
 		if strid == 'attr_edit':
 			if self._showAttributesPage is not None:
+				previous = view.showAllAttributes(1)
 				view.setcurattrbyname(self._showAttributesPage)
+				# restore?
+				#if previous==0:
+				#	previous = view.showAllAttributes(0)
 			frame.removeViewCreationListener(self)
 			self._showAttributesPage = None
 
