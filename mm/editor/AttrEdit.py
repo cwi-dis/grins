@@ -406,6 +406,8 @@ class ChannelWrapper(Wrapper):
 
 
 class DocumentWrapper(Wrapper):
+	__stdnames = ['title', 'author', 'copyright', 'base']
+
 	def __init__(self, toplevel):
 		Wrapper.__init__(self, toplevel, toplevel.context)
 
@@ -458,9 +460,13 @@ class DocumentWrapper(Wrapper):
 		pass
 
 	def attrnames(self):
-		names = self.context.attributes.keys()
+		attrs = self.context.attributes
+		names = attrs.keys()
+		for name in self.__stdnames:
+			if attrs.has_key(name):
+				names.remove(name)
 		names.sort()
-		return ['title', 'base'] + names
+		return self.__stdnames + names
 
 	def valuerepr(self, name, value):
 		if name in ('title', 'base'):
