@@ -80,7 +80,7 @@ class Main(MainDialog):
 			OPEN(callback = (self.open_callback, ())),
 			OPENFILE(callback = (self.openfile_callback, ())),
 			OPEN_RECENT(callback = self.open_recent_callback),	# Dynamic cascade
-			RELOAD(callback = (self.reload_callback, ())), 
+#			RELOAD(callback = (self.reload_callback, ())), 
 			PREFERENCES(callback = (self.preferences_callback, ())),
 			CHECKVERSION(callback=(self.checkversion_callback, ())),
 			EXIT(callback = (self.close_callback, ())),
@@ -144,12 +144,12 @@ class Main(MainDialog):
 			doclist.append( (base, (url,)))
 		self.set_recent_list(doclist)
 
-	def reload_callback(self):
-		# er.. on which toplevel?
-		print "DEBUG: grins.py: reload_callback called."
-		print "DEBUG: self.tops is: ", self.tops
-		for i in self.tops:
-			i.reload_callback()
+#	def reload_callback(self):
+#		# er.. on which toplevel?
+#		print "DEBUG: grins.py: reload_callback called."
+#		print "DEBUG: self.tops is: ", self.tops
+#		for i in self.tops:
+#			i.reload_callback()
 
 	def close_callback(self, exitcallback=None):
 		for top in self.tops[:]:
