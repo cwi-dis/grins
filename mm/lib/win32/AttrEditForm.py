@@ -976,6 +976,7 @@ class CssColorCtrl(ColorCtrl):
 			self.currentValue = 'transparent'
 		self.invalidateInd()
 		self.enableApply()
+		self.sethelp()
 		
 	def onTransparentCheck(self, id, code):
 		self.enable(0)
@@ -983,6 +984,7 @@ class CssColorCtrl(ColorCtrl):
 		self.__updateText()
 		self.invalidateInd()
 		self.enableApply()
+		self.sethelp()
 
 	def onInheritCheck(self, id, code):
 		self.enable(0)
@@ -990,6 +992,7 @@ class CssColorCtrl(ColorCtrl):
 		self.__updateText()
 		self.invalidateInd()
 		self.enableApply()
+		self.sethelp()
 
 	def __updateText(self):
 		value = self.currentValue
@@ -1006,6 +1009,25 @@ class CssColorCtrl(ColorCtrl):
 		self.__setting = 1
 		self._attrval.settext(txt)
 		self.__setting = 0
+
+	def __getTransparentHelp(self):
+		return 'Transparent color'
+
+	def __getInheritHelp(self):
+		return 'Inherit the color from the parent region'
+		
+	def gethelp(self):
+		if self.currentValue == 'transparent':
+			return self.__getTransparentHelp()
+		elif self.currentValue == 'inherit':
+			return self.__getInheritHelp()
+		return ColorCtrl.gethelp(self)
+		
+	def settooltips(self,tooltipctrl):
+		ColorCtrl.settooltips(self, tooltipctrl)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[3]),'Non-transparent color',None,0)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[4]),self.__getTransparentHelp(),None,0)
+		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[5]),self.__getInheritHelp(),None,0)
 		
 # Ctrl representing a css pos value
 class CssPosCtrl(AttrCtrl):
