@@ -117,6 +117,7 @@ class sizes_time:
 	VEDGSIZE = 3 #3						# size of edges
 	FLATBOX = 1
 	TIMEBARHEIGHT = f_timescale.strsizePXL('X')[1]*3
+	DROPAREA = MINSIZE + HOREXTRASIZE
 
 class sizes_notime:
 	SIZEUNIT = windowinterface.UNIT_PXL # units for the following
@@ -135,6 +136,7 @@ class sizes_notime:
 	VEDGSIZE = 3 #3						# size of edges
 	FLATBOX = 0
 	TIMEBARHEIGHT = 0
+	DROPAREA = MINSIZE + HOREXTRASIZE
 
 ##class othersizes:
 ##	SIZEUNIT = windowinterface.UNIT_MM # units for the following
@@ -1079,7 +1081,7 @@ class HierarchyView(HierarchyViewDialog):
 	# Recursively position the boxes. Minimum sizes are already set, we may only have
 	# to extend them.
 	def makeboxes(self, list, node, box):
-		t = node.GetType()
+		ntype = node.GetType()
 		left, top, right, bottom = box
 		if self.timescale:
 			cw, ch = self.canvassize
@@ -1106,21 +1108,27 @@ class HierarchyView(HierarchyViewDialog):
 		right = right - self.horedge
 		children = node.GetChildren()
 		size = 0
-		horizontal = (t in ('par', 'alt', 'excl', 'prio')) == DISPLAY_VERTICAL
+		horizontal = (ntype in ('par', 'alt', 'excl', 'prio')) == DISPLAY_VERTICAL
 		# animate++
-		if t in MMNode.leaftypes and node.GetChildren():
+		if ntype in MMNode.leaftypes and node.GetChildren():
 			horizontal = 0
 		for child in children:
 			size = size + child.boxsize[not horizontal]
 			if DISPLAY_VERTICAL != horizontal:
 				size = size + child.boxsize[2]
 		# size is minimum size required for children in mm
+# use this to make drop area also proportional to available size
+##		if ntype == 'seq':
+##			size = size + self.sizes.DROPAREA
 		if horizontal:
 			gapsize = self.horgap
 			totsize = right - left
 		else:
 			gapsize = self.vergap
 			totsize = bottom - top
+# use this to have a fixed size drop area
+		if ntype == 'seq':
+			totsize = totsize - self.droparea
 		# totsize is total available size for all children with inter-child gap
 		factor = (totsize - (len(children) - 1) * gapsize) / size
 		maxr = 0
@@ -1140,6 +1148,13 @@ class HierarchyView(HierarchyViewDialog):
 			else:
 				top = b + gapsize
 				if r > maxr: maxr = r
+		if ntype == 'seq':
+			if horizontal:
+##				left = left + self.sizes.DROPAREA * factor
+				left = left + self.droparea
+			else:
+##				right = right + self.sizes.DROPAREA * factor
+				right = right + self.droparea
 		if horizontal:
 			maxr = left - gapsize + self.horedge
 			maxb = maxb + self.veredge
@@ -1173,6 +1188,10 @@ class HierarchyView(HierarchyViewDialog):
 		self.arrheight = float(self.sizes.ARRSIZE) / rh
 		self.errwidth = float(self.sizes.ERRSIZE) / rw
 		self.errheight = float(self.sizes.ERRSIZE) / rh
+		if DISPLAY_VERTICAL:
+			self.droparea = float(self.sizes.DROPAREA) / rw
+		else:
+			self.droparea = float(self.sizes.DROPAREA) / rh
 		list = []
 		if self.timescale:
 			timebarheight = float(self.sizes.TIMEBARHEIGHT)/rh
@@ -1525,6 +1544,11 @@ class HierarchyView(HierarchyViewDialog):
 				height = height + b
 			else:
 				width = width + b
+		if ntype == 'seq':
+			if horizontal:
+				width = width + self.sizes.DROPAREA
+			else:
+				height = height + self.sizes.DROPAREA
 		if horizontal:
 			width = width - self.sizes.GAPSIZE
 		else:
