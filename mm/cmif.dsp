@@ -779,7 +779,7 @@ SOURCE=.\lib\win32\ViewServer.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\lib\win32\wc.py
+SOURCE=.\lib\win32\win32dialog.py
 # End Source File
 # Begin Source File
 
@@ -1172,6 +1172,10 @@ SOURCE=.\lib\SMIL.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\SMILTree.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\SMILTreeRead.py
 # End Source File
 # Begin Source File
@@ -1432,6 +1436,14 @@ SOURCE=.\pylib\xmllib.py
 # Begin Source File
 
 SOURCE=.\bin\win32\iGRiNS.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\bin\win32\iGRiNSlight.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\bin\win32\iGRiNSplayer.py
 # End Source File
 # End Group
 # End Group
