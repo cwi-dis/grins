@@ -241,6 +241,20 @@ static PyObject* ig_image_delete(PyObject *self, PyObject *args)
 	}
 	
 
+static PyObject *ig_color_promote(PyObject *self, PyObject *args)
+{
+	long img;
+	int mode;
+
+	if (!PyArg_ParseTuple(args, "li", &img, &mode))
+		return NULL;
+	if (IG_IP_color_promote((HIGEAR) img, (AT_MODE) mode)) {
+		PyErr_SetString(PyExc_ValueError, "bad image handle");
+		return NULL;
+	}
+	RETURN_NONE;
+}
+
 static PyObject *ig_area_get(PyObject *self, PyObject *args)
 {
 	long img;
@@ -286,6 +300,7 @@ BEGIN_PYMETHODDEF(ig)
 	{ "load_gif", ig_load_gif, 1},
 #endif
 	{ "load_mem", ig_load_mem, 1},
+	{ "color_promote", ig_color_promote, 1},
 	{ "area_get", ig_area_get, 1},
 	{ "image_dimensions_get",ig_image_dimensions_get, 1},
 	{ "display_transparent_set",ig_display_transparent_set,1},

@@ -66,6 +66,9 @@ class ImageLib:
 			data = self.lib.area_get(img, crop)
 		return data
 
+	def color_promote(self, img, flag):
+		self.lib.color_promote(img, flag)
+
 	# Render image
 	def render(self,hdc,bgcolor,mask, img, 
 		src_x, src_y,dest_x, dest_y, width, height,rcKeep):
