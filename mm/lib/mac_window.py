@@ -1169,21 +1169,21 @@ class _ListWidget:
 		self.list.LActivate(onoff)
 		
 class SelectWidget:
-	def __init__(self, wid, ctlid, items=[], default=None, labelctl=None, callback=None):
+	def __init__(self, wid, ctlid, items=[], default=None, callback=None):
 		self.wid = wid
-		self.control = ctlid
+		self.itemnum = ctlid
 		self.menu = None
 		self.choice = None
-		self.labelctl = labelctl
+		tp, h, rect = self.wid.GetDialogItem(self.itemnum)
+		self.control = h.as_Control()
 		self.setitems(items, default)
-		tp, h, rect = self.wid.GetDialogItem(self.control)
-		self.topleft = rect[0], rect[1]
 		self.usercallback = callback
 		
 	def delete(self):
 		self.menu.delete()
 		del self.menu
 		del self.wid
+		del self.control
 		
 	def setitems(self, items=[], default=None):
 		items = items[:]
@@ -1191,35 +1191,26 @@ class SelectWidget:
 			items.append('')
 		self.choice = None
 		self.data = items
+		if self.menu:
+			self.menu.delete()
+			del self.menu
+		self.menu = SelectPopupMenu(items)
+		mhandle, mid = self.menu.getpopupinfo()
+		self.control.SetPopupData(mhandle, mid)
 		if default != None:
 			self.select(default)
-		menuitems=[]
-		for i in range(len(items)):
-			menuitems.append(items[i], (self._callback, (i,)))
-		self.menu = FullPopupMenu(menuitems, title=None)
 		
 	def select(self, item):
-		self.choice = self.data[item]
-		if self.labelctl:
-			tp, h, rect = self.wid.GetDialogItem(self.labelctl)
-			Dlg.SetDialogItemText(h, self.choice)
+		self.control.SetControlValue(item+1)
 		
-	def click(self, event):
-		Qd.SetPort(self.wid)
-		y, x = Qd.LocalToGlobal(self.topleft)
-		self.menu.popup(x, y, event, self.wid)
-		
-	def _callback(self, item):
-		self.select(item)
-		if self.usercallback:
-			self.usercallback()
+	def click(self, event=None):
+		self.usercallback()
 		
 	def getselect(self):
-		if self.labelctl:
-			tp, h, rect = self.wid.GetDialogItem(self.labelctl)
-			return Dlg.GetDialogItemText(h)
-		else:
-			return self.choice
+		item = self.control.GetControlValue()-1
+		if 0 <= item < len(self.data):
+			return self.data[item]
+		return None
 		
 class SelectionDialog(DialogWindow):
 	def __init__(self, listprompt, selectionprompt, itemlist, default):
