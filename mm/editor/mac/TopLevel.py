@@ -560,9 +560,6 @@ class TopLevel(ViewDialog):
 	# Global hyperjump interface
 	#
 	def jumptoexternal(self, uid, aid, atype):
-		# XXXX Should check that document isn't active already,
-		# XXXX and, if so, should jump that instance of the
-		# XXXX document.
 		import MMurl
 		if '/' not in uid:
 			url = self.filename
@@ -575,7 +572,8 @@ class TopLevel(ViewDialog):
 		if not utype and not host:
 			filename = MMurl.url2pathname(url)
 			if not os.path.isabs(filename) and self.dirname:
-				filename = os.path.join(self.dirname, filename)
+				dirname = MMurl.url2pathname(self.dirname)
+				filename = os.path.join(dirname, filename)
 			url = MMurl.pathname2url(filename)
 		if host:
 			url = '//%s%s' % (host, url)
