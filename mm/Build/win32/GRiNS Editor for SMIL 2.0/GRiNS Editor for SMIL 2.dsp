@@ -409,10 +409,6 @@ SOURCE=.\M_FeatureSet.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_FileCache.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_flags.c
 # End Source File
 # Begin Source File
@@ -438,6 +434,10 @@ SOURCE=.\M_GenFormView.c
 # Begin Source File
 
 SOURCE=.\M_GenWnd.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_GeometricPrimitives.c
 # End Source File
 # Begin Source File
 
@@ -642,10 +642,6 @@ SOURCE=.\M_MMNode.c
 # Begin Source File
 
 SOURCE=.\M_MMParser.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_MMRead.c
 # End Source File
 # Begin Source File
 
@@ -873,6 +869,62 @@ SOURCE=.\M_pywin__tools__hierlist.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_pywinlib.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__framework.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__framework__app.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__framework__cmdline.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__framework__interact.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__framework__scriptutils.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__framework__winout.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__mfc.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__mfc__afxres.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__mfc__dialog.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__mfc__docview.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__mfc__object.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__mfc__thread.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__mfc__window.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_Queue.c
 # End Source File
 # Begin Source File
@@ -937,6 +989,10 @@ SOURCE=.\M_rfc822.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_rpconvert.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_sched.c
 # End Source File
 # Begin Source File
@@ -965,11 +1021,19 @@ SOURCE=.\M_SMIL.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_SMILCssResolver.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_SMILTreeRead.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\M_SMILTreeWrite.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_SMILTreeWriteHtmlTime.c
 # End Source File
 # Begin Source File
 
@@ -1029,11 +1093,27 @@ SOURCE=.\M_svgpath.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_swfparser.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_sysmetrics.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\M_tempfile.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_TemporalView.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_TemporalViewDialog.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_TemporalWidgets.c
 # End Source File
 # Begin Source File
 
@@ -1182,10 +1262,6 @@ SOURCE=.\M_win32menu.c
 # Begin Source File
 
 SOURCE=.\M_win32mu.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_win32traceutil.c
 # End Source File
 # Begin Source File
 

@@ -149,15 +149,11 @@ echo -x CORBA.services
 echo -x readline >> FreezeOpts
 echo -x pwd >> FreezeOpts
 
-rem Windows specific stuff we just dont want!!
-echo -x win32ui  >> FreezeOpts
-echo -x win32dbg >> FreezeOpts
-
-rem exclude RMASDK
-echo -x rma >> FreezeOpts
-
-rem exlude img related pyds
-REM echo -x img >> FreezeOpts
+rem Windows PYDs
+echo -x _socket >> FreezeOpts
+echo -x ddraw >> FreezeOpts
+echo -x dshow >> FreezeOpts
+echo -x gear32sd >> FreezeOpts
 echo -x imgcolormap >> FreezeOpts
 echo -x imgformat >> FreezeOpts
 echo -x imggif >> FreezeOpts
@@ -168,13 +164,12 @@ echo -x imgpgm >> FreezeOpts
 echo -x imgpng >> FreezeOpts
 echo -x imgppm >> FreezeOpts
 echo -x imgtiff >> FreezeOpts
-
-rem producer stuff
 echo -x producer >> FreezeOpts
-echo -x dshow >> FreezeOpts
-
-rem python16 stuff
-echo -x _socket >> FreezeOpts
+echo -x rma >> FreezeOpts
+echo -x win32api >> FreezeOpts
+echo -x win32trace >> FreezeOpts
+echo -x win32ui >> FreezeOpts
+echo -x wmfapi >> FreezeOpts
 
 rem EXCLUDE_WHAT
 echo -x %EXCLUDE_WHAT% >> FreezeOpts
