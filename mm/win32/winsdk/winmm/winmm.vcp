@@ -223,6 +223,7 @@ DEP_CPP_WINMM=\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	"..\common\charconv.h"\
 	".\utils.h"\
+	".\winmm_waveout.h"\
 	
 
 !ELSEIF  "$(CFG)" == "winmm - Win32 (WCE ARM) Debug"
