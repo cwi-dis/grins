@@ -149,7 +149,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__check_compatibility = check_compatibility
 		if new_file and type(new_file) == type(''):
 			self.__base = new_file
-		self.__validchannels = {}
+		self.__validchannels = {'undefined':0}
 		for chtype in ChannelMap.getvalidchanneltypes():
 			self.__validchannels[chtype] = 1
 
@@ -427,7 +427,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__is_ext = 1
 		if not url:
 			url = None
-		if url is not None:
+		if url == '#':
+			url = None
+		elif url[:1] == '#':
+			# just a #name URL, not valid here
+			self.syntax_error('no proper src attribute')
+			url = None
+		elif url is not None:
 			url, tag = MMurl.splittag(url)
 			url = MMurl.basejoin(self.__base, url)
 			url = self.__context.findurl(url)
@@ -466,16 +472,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			except:
 				self.warning('cannot open file %s' % url, self.lineno)
 				# we have no idea what type the file is
-				mtype = 'text/plain'
 			else:
 				mtype = u.headers.type
 				u.close()
-
-		if mtype is None and tagname is None:
-			# we've tried, but we just don't know what
-			# we're dealing with
-			self.syntax_error('unknown object type')
-			return
 
 		mediatype = tagname
 		if mtype is not None:
@@ -528,8 +527,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			chtype = 'socket'
 		elif mediatype == 'cmif_shell':
 			chtype = 'shell'
+		elif mediatype is None:
+			chtype = 'undefined'
 		else:
-			chtype = 'null'
+			chtype = 'undefined'
 			prtype = mediatype
 			if subtype:
 				prtype = prtype+'/'+subtype
@@ -1000,6 +1001,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		attrdict = self.__regions.get(region, {})
 		mtype = node.__chantype
 		del node.__chantype
+		if mtype == 'undefined':
+			return
 		ctx = self.__context
 		# find a channel of the right type that represents
 		# this node's region
