@@ -1128,8 +1128,6 @@ class SMILParser(xmllib.XMLParser):
 				counter = 0
 			elif counter == 'end':
 				counter = -1	# special event
-			else:
-				raise error, 'bogus presentation counter'
 		else:
 			counter = 0
 		if delay is not None:
