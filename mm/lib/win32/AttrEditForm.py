@@ -1089,8 +1089,6 @@ class AttrEditFormNew(GenFormView):
 			raise error, 'os window not exists'
 		if attrobj not in self._attriblist:
 			raise error, 'item not in list'
-		if self._pages[attrobj]._attr!=attrobj:
-			raise error, 'wrong redirection'
 		return self._pages[attrobj].getvalue(attrobj)
 
 	# Called by the core system to set a value on the list
