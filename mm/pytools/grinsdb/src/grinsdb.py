@@ -5,6 +5,7 @@ a record last"""
 import maildb
 import os
 import time
+import string
 
 DATABASE="/ufs/mm/clients"
 
@@ -25,3 +26,15 @@ class GrinsDmdbObject(maildb.DmdbObject):
 
 def Database(dir=DATABASE):
 	return maildb.MdbDatabase(dir, GrinsDmdbObject)
+
+def uniqueid():
+	"""This function assumses everything is correct: the id file
+	exists, contains an integer and isn't locked"""
+	fname = os.path.join(DATABASE, ".uniqueid")
+	lname = fname + ".LCK"
+	os.link(fname, lname)
+	oldid = open(fname).read()
+	newid = string.atoi(oldid)+1
+	open(fname, 'w').write('%d\n'%newid)
+	os.unlink(lname)
+	return newid
