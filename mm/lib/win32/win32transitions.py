@@ -101,9 +101,11 @@ class TransitionEngine:
 			# i.e. do not paint children
 			if self.__outtrans:
 				wnd.updateBackDDS(self._tosurf, exclwnd=wnd) 
+				wnd._paintOnDDS(wnd._fromsurf, wnd._rect)
 			else:
+				#wnd.updateBackDDS(wnd._fromsurf, exclwnd=wnd) 
 				wnd._paintOnDDS(self._tosurf, wnd._rect)
-		
+	
 		fromsurf = 	wnd._fromsurf
 		tosurf = self._tosurf	
 		tmpsurf  = self._tmp
