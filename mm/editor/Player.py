@@ -53,8 +53,21 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			self.updateuibaglist = self.dummy_updateuibaglist
 
 	def destroy(self):
+		if not hasattr(self, 'toplevel'):
+			# already destroyed
+			return
 		self.hide()
 		self.close()
+		del self.channelnames
+		del self.channels
+		del self.channeltypes
+		del self.seek_node
+		del self.seek_nodelist
+		del self.toplevel
+		del self.set_timer
+		del self.timer_callback
+		if hasattr(self, 'updateuibaglist'):
+			del self.updateuibaglist
 
 	def fixtitle(self):
 		self.settitle('Player (' + self.toplevel.basename + ')')
