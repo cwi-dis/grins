@@ -90,16 +90,16 @@ def isbadlink(root, link):
 		if node.GetRoot() == root:
 			alist = node.GetAttrDef('anchorlist', [])
 			for a in alist:
-				if aid1 == a[A_ID]:
+				if aid1 == a.aid:
 					if dir == DIR_1TO2:
-						if a[A_TYPE] in SourceAnchors:
+						if a.atype in SourceAnchors:
 							srcok = 1
 					elif dir == DIR_2TO1:
-						if a[A_TYPE] in DestinationAnchors:
+						if a.atype in DestinationAnchors:
 							srcok = 1
 					else:
-						if a[A_TYPE] in SourceAnchors and \
-						   a[A_TYPE] in DestinationAnchors:
+						if a.atype in SourceAnchors and \
+						   a.atype in DestinationAnchors:
 							srcok = 1
 					break
 	if uidmap.has_key(uid2):
@@ -107,16 +107,16 @@ def isbadlink(root, link):
 		if node.GetRoot() == root:
 			alist = node.GetAttrDef('anchorlist', [])
 			for a in alist:
-				if aid2 == a[A_ID]:
+				if aid2 == a.aid:
 					if dir == DIR_1TO2:
-						if a[A_TYPE] in DestinationAnchors:
+						if a.atype in DestinationAnchors:
 							dstok = 1
 					elif dir == DIR_2TO1:
-						if a[A_TYPE] in SourceAnchors:
+						if a.atype in SourceAnchors:
 							dstok = 1
 					else:
-						if a[A_TYPE] in SourceAnchors and \
-						   a[A_TYPE] in DestinationAnchors:
+						if a.atype in SourceAnchors and \
+						   a.atype in DestinationAnchors:
 							dstok = 1
 					break
 	return not srcok or not dstok
