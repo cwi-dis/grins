@@ -488,17 +488,17 @@ class HierarchyView(HierarchyViewDialog):
 		if self.need_resize:
 			self.need_resize = 0
 			# Easiest to create the timemapper always
-			self.timemapper = TimeMapper.TimeMapper()
 			x,y = self.scene_graph.get_minsize_abs()
 			self.mcanvassize = x,y
 
 			if x < 1.0 or y < 1.0:
 				print "Error: unconverted relative coordinates found. HierarchyView:497"
-			self.scene_graph.adddependencies()
-			self.scene_graph.addcollisions(None, None)
 			if self.timescale:
+				self.timemapper = TimeMapper.TimeMapper()
+				self.scene_graph.adddependencies()
+				self.scene_graph.addcollisions(None, None)
 				self.timemapper.calculate()
-				t0, t1, t2, dummy, dummy = self.root.GetTimes()
+				t0, t1, t2, dummy, dummy = self.root.GetTimes('bandwidth')
 				maxx = self.timemapper.time2pixel(t1, align='right')
 				if maxx > x:
 					x = maxx
