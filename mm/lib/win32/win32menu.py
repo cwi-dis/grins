@@ -138,7 +138,8 @@ class Menu:
 		flags=win32con.MF_STRING|win32con.MF_ENABLED
 		id=-1
 		for item in list:
-			if (item[0] & self._optional_flags) != item[0]:
+#			if (item[0] & self._optional_flags) != item[0]:
+			if (item[0] & self._optional_flags) == 0:
 				continue
 			if item[1]==ENTRY:
 				if self._cb_obj2id:id=self._cb_obj2id(item[4])
