@@ -2409,8 +2409,20 @@ class MMNode(MMTreeElement):
 				terminator = 'MEDIA'
 		return terminator
 
-	def GetFile(self):
+	def GetFile(self, orig = 0):
 		global nonascii
+		file = self.attrdict.get('file', '')
+		if not orig and self.type == 'ext' and hasattr(self, 'slideshow'):
+			chtype = self.GetChannelType()
+			if chtype == 'RealPix':
+				import base64, realnode
+				self.SetAttr('file', 'dummy.rp')
+				data = realnode.writenode(self, tostring = 1, silent = 1)
+				self.DelAttr('file')
+				if file:
+					self.SetAttr('file', file)
+				return 'data:image/vnd.rn-realpix;base64,' + \
+				       string.join(string.split(base64.encodestring(data), '\n'), '')
 		if self.type == 'imm':
 			chtype = self.GetChannelType()
 			if chtype == 'html':
@@ -2423,13 +2435,12 @@ class MMNode(MMTreeElement):
 			if nonascii.search(data):
 				mime = mime + ';charset=ISO-8859-1'
 			return 'data:%s,%s' % (mime, MMurl.quote(data))
-		file = self.GetAttrDef('file', '')
 		return self.context.findurl(file)
 
 	def GetMarkerVal(self, url):
 		if url[:1] == '#':
 			raise ValueError('#marker not supported')
-		url = MMurl.basejoin(self.GetFile(), url)
+		url = MMurl.basejoin(self.GetFile(1), url)
 		url, tag = MMurl.splittag(url)
 		try:
 			markers = parsemarkerfile(url)

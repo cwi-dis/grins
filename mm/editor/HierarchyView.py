@@ -456,7 +456,7 @@ class HierarchyView(HierarchyViewDialog):
 		
 	def draw(self):
 		# Recalculate the size of all boxes and draw on screen.
-		if self.drawing == 1:
+		if self.drawing:
 			return
 		self.drawing = 1
 
@@ -626,7 +626,7 @@ class HierarchyView(HierarchyViewDialog):
 			raise RuntimeError, 'bad node passed to globalsetfocus'
 		self.select_node(node, 1)
 
-	def globalfocuschanged(self, focustype, focusobject):
+	def globalfocuschanged(self, focustype, focusobject, redraw = 1):
 		# for now, catch only MMNode focus
 		#print "DEBUG: HierarchyView received globalfocuschanged with ", focustype
 		# XXX Temporary: pick first item of multiselect. Michael will
@@ -643,11 +643,9 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		if self.selected_widget is not None and self.selected_widget.get_node() is focusobject:
 			return
-		self.select_node(focusobject, 1)
-		self.aftersetfocus()
-##		self.need_resize = 0
-##		self.need_redraw = 0
-		self.draw()
+		self.select_node(focusobject, external = 1, scroll = redraw)
+		if redraw:
+			self.draw()
 
 	#################################################
 	# Event handlers                                #
@@ -1070,12 +1068,11 @@ class HierarchyView(HierarchyViewDialog):
 		self.focusnode = None
 
 		self.refresh_scene_graph()
-		self.need_resize = 1
 		focustype, focusobject = self.editmgr.getglobalfocus()
 		if focustype is None and focusobject is None:
 			self.editmgr.setglobalfocus('MMNode', self.root)
 		else:
-			self.globalfocuschanged(focustype, focusobject)
+			self.globalfocuschanged(focustype, focusobject, redraw = 0)
 		if self.need_redraw:
 			self.draw()
 
@@ -1541,13 +1538,13 @@ class HierarchyView(HierarchyViewDialog):
 		self.aftersetfocus()
 		self.need_redraw_selection = 1
 
-	def select_node(self, node, external = 0):
+	def select_node(self, node, external = 0, scroll = 1):
 		# Set the focus to a specfic MMNode (obviously the focus did not come from the UI)
 		if not node:
-			self.select_widget(None, external)
+			self.select_widget(None, external, scroll)
 		elif node.views.has_key('struct_view'):
 			widget = node.views['struct_view']
-			self.select_widget(widget, external)
+			self.select_widget(widget, external, scroll)
 
 	def select_arrow(self, arrow):
 		caller, colour, src, dest = arrow

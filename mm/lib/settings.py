@@ -82,6 +82,8 @@ default_settings = {
 	'structure_ctextcolor': (50, 50, 50),	# Very dark gray
 	'structure_expcolor': (200, 200, 200), # Open disclosure triangle
 	'structure_colcolor': (200, 200, 200), # Closed disclosure triangle
+	'structure_freezecolor': (200, 200, 200),
+	'structure_repeatcolor': (100, 100, 100),
 	'structure_ecbordercolor': (40, 40, 40), # triangle border
 	'structure_focusleft': (200, 200, 200),
 	'structure_focustop': (200, 200, 200),
