@@ -184,12 +184,18 @@ class Wrapper: # Base class -- common operations
 		self.toplevel = toplevel
 		self.context = context
 		self.editmgr = context.geteditmgr()
+		self.__closing = 0
 	def __repr__(self):
 		return '<%s instance>' % self.__class__.__name__
 	def close(self):
+		self.__closing = 1
 		del self.context
-		del self.editmgr
 		del self.toplevel
+	def closing(self):
+		return self.__closing
+	def closesoon(self):
+		# we're going to close soon, no more updates to the screen
+		self.__closing = 1
 	def getcontext(self):
 		return self.context
 	def register(self, object):
@@ -1468,7 +1474,7 @@ class AttrEditor(AttrEditorDialog):
 		self.wrapper.close()
 		del self.attrlist
 		del self.wrapper
-		
+
 	def pagechange_allowed(self):
 		# Optionally save/revert changes made to properties and return 1 if
 		# it is OK to change tabs or change the node the dialog points to.
@@ -1606,10 +1612,11 @@ class AttrEditor(AttrEditorDialog):
 		if checkType:
 			self.checkType(self.wrapper.node)
 			
-		editmgr = self.wrapper.editmgr
+		if close:
+			self.wrapper.closesoon()
+		self.wrapper.commit()
 		if close:
 			self.close()
-		editmgr.commit()
 
 	# but need to check if mimetype compatible, with region type, url, ...
 	# for now, do nothing
@@ -1672,7 +1679,9 @@ class AttrEditor(AttrEditorDialog):
 		return 1
 
 	def commit(self, type):
-		if not self.wrapper.stillvalid():
+		if self.wrapper.closing():
+			pass
+		elif not self.wrapper.stillvalid():
 			self.close()
 		else:
 			self.redisplay()
