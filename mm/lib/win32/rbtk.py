@@ -15,6 +15,7 @@ import components
 import DrawTk
 from win32mu import Point,Rect
 import win32ui,win32con,win32api
+import appcon
 import __main__
 
 
@@ -23,7 +24,7 @@ class _rbtk:
 		self._next_create_box = []
 
 	# Called by the core system to create or resize a box
-	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN):
+	def create_box(self, msg, callback, box = None, units = appcon.UNIT_SCREEN):
 		#print "Creating box in:",self._title
 		#print 'active_displist=',self._active_displist
 
