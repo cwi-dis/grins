@@ -14,10 +14,12 @@
 #endif
 
 #ifndef JPEGLIB_H
+#undef HAVE_STDDEF_H
 #undef HAVE_STDLIB_H
 extern "C" {
 #include "../../../../lib-src/jpeg/jpeglib.h"
 }
+#define HAVE_STDDEF_H
 #define HAVE_STDLIB_H
 #endif
 
