@@ -170,6 +170,9 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		if item != None:
 			self._cur_attrfield = self._attrfields[item] # XXXX?
 			self._cur_attrfield._show()
+			
+	def _is_current(self, attrfield):
+		return (attrfield is self._cur_attrfield)
 		
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from
@@ -192,8 +195,8 @@ class AttrEditorDialogField:
 		t = self.gettype()
 		self.__type = t
 		label = self.getlabel()
-		value = self.getcurrent()
-		return '%s=%s' % (label, value)
+		self.__value = self.getcurrent()
+		return '%s' % label
 
 ##	def _createwidget(self, parent, form, left, right, top, bottom):
 ##		"""Create the widgets for this attribute.  (internal method)
@@ -246,11 +249,16 @@ class AttrEditorDialogField:
 ##		return w
 
 	def _save(self):
-		pass # Save values from dialog items
+		t = self.__type
+		if t == 'option':
+			self.__value = self.__parent._option.getselect()
+		self.__value =  self.__parent._getlabel(ITEM_STRING)
+		print '_save', t, self.__value
 		
 	def _show(self):
 		t = self.gettype()
-		value = self.getcurrent()
+		value = self.__value
+		print '_show', t, value
 		explanation = self.gethelptext()
 		if t == 'file':
 			toshow=ITEMLIST_FILE
@@ -282,6 +290,7 @@ class AttrEditorDialogField:
 		"""Close the instance and free all resources."""
 		del self.__parent
 		del self.__type
+		del self.__value
 
 	def _option_click(self):
 		pass
@@ -289,30 +298,26 @@ class AttrEditorDialogField:
 	def _file_browse_click(self):
 		pass
 		
-	def __option_callback(self):
-		"""Callback called when a new option is to be selected."""
-		_MySelectionDialog(self.getlabel(), self.__label,
-				   self.getoptions(),
-				   self.__option_done_callback)
-
-	def __option_done_callback(self, value):
-		"""Callback called when a new option was selected."""
-		self.__widget.setlabel(value)
-		self.__label = value
-
+##	def __option_callback(self):
+##		"""Callback called when a new option is to be selected."""
+##		_MySelectionDialog(self.getlabel(), self.__label,
+##				   self.getoptions(),
+##				   self.__option_done_callback)
+##
+##	def __option_done_callback(self, value):
+##		"""Callback called when a new option was selected."""
+##		self.__widget.setlabel(value)
+##		self.__label = value
+##
 	def getvalue(self):
 		"""Return the current value of the attribute.
 
 		The return value is a string giving the current value.
 		"""
-		t = self.__type
-		if t == 'option-button':
-			return self.__label
-		if t == 'option-menu':
-			return self.__widget.getvalue()
-		if t == 'file':
-			return self.__text.gettext()
-		return self.__widget.gettext()
+		if self.__parent._is_current(self):
+			self._save()
+		print 'getvalue', self.__value
+		return self.__value
 
 	def setvalue(self, value):
 		"""Set the current value of the attribute.
@@ -320,36 +325,27 @@ class AttrEditorDialogField:
 		Arguments (no defaults):
 		value -- string giving the new value
 		"""
+		print 'setvalue', value
+		self.__value = value
+		if not self.__parent._is_current(self):
+			return
+		print 'and show it'
 		t = self.__type
-		if t == 'option-button':
+		if t == 'option':
 			if not value:
 				value = self.__list[0]
-			self.__widget.setlabel(value)
-			self.__label = value
-		elif t == 'option-menu':
-			if not value:
-				value = self.__list[0]
-			self.__widget.setvalue(value)
-		elif t == 'file':
-			self.__text.settext(value)
+			self.__parent._option.select(value)
 		else:
-			self.__widget.settext(value)
+			self.__parent._setlabel(ITEM_STRING, value)
 
 	def recalcoptions(self):
 		"""Recalculate the list of options and set the value."""
-		if self.__type[:6] == 'option':
+		if not self.__parent._is_current(self):
+			return
+		if self.__type == 'option':
 			val = self.getcurrent()
 			list = self.getoptions()
-			if self.__type == 'option-button':
-				self.__widget.setlabel(val)
-				self.__label = val
-			else:
-				if list != self.__list:
-					self.__widget.setoptions(
-						list, list.index(val))
-				else:
-					self.__widget.setvalue(val)
-			self.__list = list
+			self.__parent._option.setitems(list, val)
 
 	# Methods to be overridden by the sub class.
 	def gettype(self):
