@@ -7,7 +7,7 @@ import MMAttrdefs
 import dialogs
 error = 'Channel.error'
 
-from ChannelWMdeps import ChannelWM, ChannelWindowWM, _ChannelThreadWM
+from ChannelWMdeps import ChannelWM, ChannelWindowWM
 
 channel_device = 1
 
@@ -704,7 +704,7 @@ class ChannelWindow(ChannelWindowWM, Channel):
 			self.played_display.close()
 			self.played_display = None
 
-class _ChannelThread(_ChannelThreadWM):
+class _ChannelThread:
 	def init(self):
 		self.threads = None
 		return self
@@ -749,7 +749,6 @@ class _ChannelThread(_ChannelThreadWM):
 			return 0
 		self._player.toplevel.main.setmmcallback(self._deviceno & 0x3f,
 			  self._mmcallback)
-		self.do_show_wmdep()
 		return 1
 
 	def do_hide(self):
@@ -760,12 +759,10 @@ class _ChannelThread(_ChannelThreadWM):
 			self.threads = None
 		self._player.toplevel.main.setmmcallback(self._deviceno & 0x3f,
 			  None)
-		self.do_hide_wmdep()
 
 	def play(self, node):
 		if debug:
 			print 'ChannelThread.play('+`self`+','+`node`+')'
-		self.play_wmdep()
 		self.play_0(node)
 		if not self.is_showing() or self.syncplay:
 			self.play_1()
