@@ -239,8 +239,8 @@ class _Window(WIN32_windowbase._Window):
 		#self._gc_rb = form.GetGC(v)
 		#self._gc_rb = self._hWnd.GetDC()
 
-		print "---START OF create_box---"
-		print "box--->", box
+#		print "---START OF create_box---"
+#		print "box--->", box
 
 		if box:
 			x, y, w, h = self._convert_coordinates(box)
@@ -254,7 +254,7 @@ class _Window(WIN32_windowbase._Window):
 				x, w = x + w, -w
 			if h < 0:
 				y, h = y + h, -h
-			print "x, y, w, h is now--->", x, y, w, h
+#			print "x, y, w, h is now--->", x, y, w, h
 			self._rb_box = x, y, w, h
 			self._rb_start_x = x
 			self._rb_start_y = y
@@ -264,11 +264,11 @@ class _Window(WIN32_windowbase._Window):
 			self._rb_start_x, self._rb_start_y, self._rb_width, \
 					  self._rb_height = self._rect
 			self._rb_box = self._rect
-			print "self._rect of create_box--->", self._rect
+#			print "self._rect of create_box--->", self._rect
 		#Htmlex.SetCursor(self._hWnd, 2)
 		cmifex.SetCursor(win32Cursors['hand'])
 		self._cur_cur = 2
-		print "---END OF create_box---"
+#		print "---END OF create_box---"
 
 
 	def find_topwin_channel(self, box):
@@ -488,25 +488,25 @@ class _Window(WIN32_windowbase._Window):
 
 
 	def _rb_done(self, par1, par2):
-		print 'Create box done'
+#		print 'Create box done'
 		self.unregister(WMEVENTS.Mouse0Release)
 		self.unregister(WMEVENTS.Mouse0Press)
 		self._hWnd.HookMessage(self._null_rb, win32con.WM_MOUSEMOVE)
 
 		callback = self._rb_callback
 		self._rb_finish()
-		print 'BOX IS:'
-		print self._rb_cvbox()
-		print self._rect
+#		print 'BOX IS:'
+#		print self._rb_cvbox()
+#		print self._rect
 		apply(callback, self._rb_cvbox())
 
-		print 'BEFORE RESTORING :'
-		print self._old_callbacks
-		print self._callbacks
+#		print 'BEFORE RESTORING :'
+#		print self._old_callbacks
+#		print self._callbacks
 		#restore message handlers (callbacks)
 		for k in self._old_callbacks.keys():
 			self._callbacks[k] = self._old_callbacks[k]
-		print 'restoring------------', self._callbacks
+#		print 'restoring------------', self._callbacks
 		for k in self._old_callbacks.keys():
 			del self._old_callbacks[k]
 
@@ -643,17 +643,17 @@ class _Window(WIN32_windowbase._Window):
 	#def _start_rb(self, w, data, event):
 	#def _start_rb(self, params):
 	def _start_rb(self, dummy, window, ev, val):
-		print '---START OF start_rb---'
+#		print '---START OF start_rb---'
 		# called on mouse press
 		if  not _in_create_box:
 			return
 		point = (val[0], val[1])
-		print "point--->", point
+#		print "point--->", point
 		vl = self._convert_coordinates(point)
 		#wx, wy, ww, wh = self._hWnd.GetClientRect()
 		#vl = (int(point[0]*ww), int(point[1]*wh))
 
-		print "vl--->", vl
+#		print "vl--->", vl
 
 		#Just examine the case where we have 'nested' windows
 		#That happens when an anchor lies on a child window
@@ -680,13 +680,13 @@ class _Window(WIN32_windowbase._Window):
 		self._rb_display.render()
 		self._rb_curdisp.close()
 		event = self._rb_constrain(event)
-		print "final value of event", event
+#		print "final value of event", event
 		if self._rb_box:
 			x = self._rb_start_x
 			y = self._rb_start_y
 			w = self._rb_width
 			h = self._rb_height
-			print 'START X, START Y, W, H :', x, y, w, h
+#			print 'START X, START Y, W, H :', x, y, w, h
 			if w < 0:
 				x, w = x + w, -w
 			if h < 0:
@@ -719,7 +719,7 @@ class _Window(WIN32_windowbase._Window):
 				if not self._rb_cy:
 					self._rb_start_y = y + h
 					self._rb_height = event[1] - self._rb_start_y
-				print 'else of self._rb_cx and self._rb_cy --->', self._rb_start_x, self._rb_start_y, self._rb_width, self._rb_height
+#				print 'else of self._rb_cx and self._rb_cy --->', self._rb_start_x, self._rb_start_y, self._rb_width, self._rb_height
 
 			if self._rb_cx or self._rb_cy:
 				if self._rb_cx and self._rb_cy:
@@ -748,9 +748,9 @@ class _Window(WIN32_windowbase._Window):
 			self._rb_start_y = event[1]
 			self._rb_width = self._rb_height = 0
 			self._rb_cx = self._rb_cy = 0
-			print 'else of if box--->', self._rb_start_x, self._rb_start_y, self._rb_width, self._rb_height
+#			print 'else of if box--->', self._rb_start_x, self._rb_start_y, self._rb_width, self._rb_height
 		self._rb_draw()
-		print '---END OF start_rb---'
+#		print '---END OF start_rb---'
 
 	#def _do_rb(self, w, data, event):
 	def _do_rb(self, params):
@@ -778,7 +778,7 @@ class _Window(WIN32_windowbase._Window):
 	def _end_rb(self, dummy, window, ev, val):
 		# called on mouse release
 		self._hWnd.ReleaseCapture()
-		print "---START OF _end_rb---"
+#		print "---START OF _end_rb---"
 		self._cur_cur = 2
 		if  not _in_create_box:
 			return
@@ -789,7 +789,7 @@ class _Window(WIN32_windowbase._Window):
 		#wx, wy, ww, wh = self._hWnd.GetClientRect()
 
 		vl = self._convert_coordinates((val[0],val[1]))
-		print "vl--->", vl
+#		print "vl--->", vl
 
         #Just examine the case where we have 'nested' windows
 		#That happens when an anchor lies on a child window
@@ -819,7 +819,7 @@ class _Window(WIN32_windowbase._Window):
 		cmifex.SetCursor(0)
 		#del self._rb_cx
 		#del self._rb_cy
-		print "---END OF _end_rb---"
+#		print "---END OF _end_rb---"
 
 class _SubWindow(WIN32_windowbase._BareSubWindow, _Window):
 	# assistant comments for finding the proper order of the constructor's args
@@ -1072,9 +1072,9 @@ class FileDialog:
 		self.cb_ok = cb_ok
 		self.cb_cancel = cb_cancel
 
-		print 'PARAMETERS ARE:----------------'
-		print 'prompt-directory-filter-file'
-		print prompt, "  ",  directory, "  ", filter, " ", file
+#		print 'PARAMETERS ARE:----------------'
+#		print 'prompt-directory-filter-file'
+#		print prompt, "  ",  directory, "  ", filter, " ", file
 
 		self._form = None
 
@@ -1101,11 +1101,11 @@ class FileDialog:
 		file = nturl2path.url2pathname(file)
 		if existing == OPEN_FILE:
 			#id, flname, directory, fltr = cmifex2.CreateFileOpenDlg(prompt,file,directory,fltr)
-			print 'GIVEN TO F DIALOG: ', file, '---', filter
+#			print 'GIVEN TO F DIALOG: ', file, '---', filter
 			#id, flname, fltr =  Htmlex.FDlg(prompt, file, filter)
 			id, flname, fltr = cmifex2.CreateFileOpenDlg(prompt,file,filter)
 			directory, name = os.path.split(flname)
-			print id, flname, directory, fltr
+#			print id, flname, directory, fltr
 		#if type == SAVE_CMIF:
 		else:
 			id, flname, fltr = cmifex2.CreateFileSaveDlg(prompt,file,filter)
@@ -1138,7 +1138,7 @@ class FileDialog:
 		return self._form is None
 
 	def _cancel_callback(self):
-		print "Cancel button pressed!!!"
+#		print "Cancel button pressed!!!"
 		self.close()
 
 
@@ -1168,7 +1168,7 @@ class FileDialog:
 		if (self.cb_ok!=None):
 			ret = self.cb_ok(filename)
 			if ret:
-				print "ret-->", ret;
+#				print "ret-->", ret;
 				if type(ret) is StringType:
 					win32ui.MessageBox(ret, "Warning !", win32con.MB_OK)
 				return
@@ -1212,7 +1212,7 @@ class SelectionDialog:
 			attrs['listLabelString'] = listprompt
 		if selectionprompt:
 			attrs['selectionLabelString'] = selectionprompt
-		print attrs
+#		print attrs
 	#	form = toplevel._main.CreateSelectionDialog('selectDialog',
 	#						    attrs)
 	#	self._form = form
@@ -1318,7 +1318,7 @@ class SelectionDialog:
 
 
 	def _ok_callback(self, params):
-		print params
+#		print params
 		if self.is_closed():
 			return
 		str = cmifex2.GetText(self._combo)
@@ -1394,7 +1394,7 @@ class SelectionMenuDialog:
 			attrs['listLabelString'] = listprompt
 		if selectionprompt:
 			attrs['selectionLabelString'] = selectionprompt
-		print attrs
+#		print attrs
 
 		self._menuselection = None
 
@@ -1544,7 +1544,7 @@ class InputDialog:
 			client_data(value)
 
 	def _cancel(self, params):
-		print "Cancel pressed"
+#		print "Cancel pressed"
 		if self.is_closed():
 			return
 		self.close()
@@ -1765,7 +1765,7 @@ class Label(_Widget):
 		label.  OPTIONS is an optional dictionary with
 		options.  The only options recognized are the
 		attachment options.'''
-		print "Label control", parent, text, options
+#		print "Label control", parent, text, options
 		attrs = {}
 		self._attachments(attrs, options)
 		#if useGadget:
@@ -2131,7 +2131,7 @@ class PulldownMenu(_Widget):
 	def _menu_callback(self, params):
 		if params[3] != 0:
 			return
-		print "menu-->", params
+#		print "menu-->", params
 		item = params[2]
 		if self._callback_dict.has_key(item):
 			try:
@@ -2271,7 +2271,7 @@ class _List:
 		self._list.SendMessage(win32con.WM_LBUTTONDBLCLK,0,0)
 
 	def is_visible(self, pos):
-		print "pos -->>>", pos
+#		print "pos -->>>", pos
 	#	if pos < 0:
 	#		pos = len(self._itemlist) - 1
 	#	top = self._list.topItemPosition - 1
@@ -2354,7 +2354,7 @@ class Selection(_Widget, _List):
 			#w.UnmanageChild()
 			list = cmifex2.CreateListbox(" ",selection,0,top,width,height-25,0)
 			top = top + height - 25
-			print "No item label"
+#			print "No item label"
 		else:
 			#w.labelString = itemprompt
 			list = cmifex2.CreateListbox(" ",selection,0,top,width,height-50,0)
@@ -2645,7 +2645,7 @@ class TextInput(_Widget):
 			self._edit = cmifex2.CreateEdit(inittext,text,0,0,width,height,editable)
 			self._label = None
 		else:
-			print cmifex2.GetStringLength(text, prompt)
+#			print cmifex2.GetStringLength(text, prompt)
 			self._label = cmifex2.CreateStatic(prompt,text,0,0,cmifex2.GetStringLength(text, prompt),25,'left')
 			self._edit = cmifex2.CreateEdit(inittext,text,cmifex2.GetStringLength(text, prompt),0,width-cmifex2.GetStringLength(text, prompt),height,editable)
 
@@ -2749,7 +2749,7 @@ class TextEdit(_Widget):
 		top = attrs['top']
 		width = attrs['right']
 		height = attrs['bottom']
-		print  parent._hWnd,left,top,width,height,editable
+#		print  parent._hWnd,left,top,width,height,editable
 		str1 = 'klh'
 		text = cmifex2.CreateMultiEdit(str1,parent._hWnd,left,top,width,height,editable)
 		self._cb = None
