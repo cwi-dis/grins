@@ -1109,8 +1109,16 @@ class LayoutnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	# Choose from the current channel names
 	def getoptions(self):
+		import settings
 		list = []
 		ctx = self.wrapper.context
+		if settings.get('lightweight'):
+			chtype = self.wrapper.node.GetContext().getchannel(self.wrapper.getvalue(self.getname())).get('type')
+			chlist = ctx.compatchannels(None, chtype)
+			if not chlist and not chtype:
+				chlist = ctx.channelnames[:]
+			chlist.sort()
+			return chlist or ['undefined']
 		for name in ctx.channelnames:
 			if ctx.channeldict[name].attrdict['type'] != 'layout':
 				list.append(name)

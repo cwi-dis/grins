@@ -85,6 +85,45 @@ class MMNodeContext:
 	#
 	# Channel administration
 	#
+	def compatchannels(self, url = None, chtype = None):
+		# return a list of channels compatible with the given URL
+		if url:
+			# ignore chtype if url is set
+			import mimetypes, string
+			mtype = mimetypes.guess_type(url)[0]
+			if not mtype:
+				return []
+			maintype, subtype = string.split(string.lower(mtype), '/')
+			if maintype == 'image':
+				if string.find(subtype, 'real') >= 0:
+					chtype = 'RealPix'
+				else:
+					chtype = 'image'
+			elif maintype == 'audio':
+				chtype = 'sound'
+			elif maintype == 'video':
+				chtype = 'video'
+			elif maintype == 'text':
+				if subtype == 'html':
+					chtype = 'html'
+				elif string.find(subtype, 'real') >= 0:
+					chtype = 'RealText'
+				else:
+					chtype = 'text'
+			elif string.find(subtype, 'flash') >= 0:
+				# Shockwave Flash or RealFlash
+				chtype = 'video'
+			else:
+				return []
+		chlist = []
+		for ch in self.channels:
+			if ch['type'] == chtype:
+				chlist.append(ch.name)
+			if chtype == 'image' and ch['type'] == 'RealPix':
+				chlist.append(ch.name)
+		chlist.sort()
+		return chlist
+
 	def addchannels(self, list):
 		import MMNode
 		for name, dict in list:
