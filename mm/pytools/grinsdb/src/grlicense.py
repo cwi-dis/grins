@@ -37,6 +37,8 @@ PRODUCT_TO_FEATURE = {
 	
 	"smil2player": ["smil2player"],
 	"SM2": ["smil2player"],
+	"G2P": ["smil2player"],
+        "G2PT": ["smil2player"],
 	
 	"smil2lite": ["smil2lite"],
 	"smil2pro": ["smil2pro"],
