@@ -1667,29 +1667,31 @@ class AttrEditFormNew(GenFormView):
 				w,h=ch.attrdict['winsize']
 				self._winsize=(w,h)
 				self._channels_rc[ch.name]=((0,0,w,h),units)
+				self._layoutch=ch
 			elif ch.attrdict.has_key('base_winoff'):
 				self._channels_rc[ch.name]=(ch.attrdict['base_winoff'],units)
 
 		if hasattr(a.wrapper,'node'):
 			self._node=a.wrapper.node
-			if self._node.attrdict.has_key('channel'):
-				chname=self._node.attrdict['channel']
-				self._channel=self._channels[chname]
-			else:
-				chname='Default'
-				self._channel=None
+			chname=self.getchannel(self._node)
+			self._channel=self._channels[chname]
 		else:
 			self._node=None		
 
 		if hasattr(a.wrapper,'channel'):
 			self._channel=a.wrapper.channel
 	
+	def getchannel(self,node):
+		if node.attrdict.has_key('channel'):
+			return node.attrdict['channel']
+		while node.parent:
+			node=node.parent
+			if node.attrdict.has_key('channel'):
+				return node.attrdict['channel']
+		return self._layoutch.name
+
 	def GetBBox(self):
 		if not self._channel:
-			if self._node.parent:
-				# RealPix interior nodes
-				chname=self._node.parent.attrdict['channel']
-				return self._channels_rc[chname][0]
 			w,h=self._winsize
 			return (0,0,w,h)
 		else:
@@ -1697,6 +1699,7 @@ class AttrEditFormNew(GenFormView):
 				return self._channels_rc[self._channel.name][0]
 			else:
 				return self._channels_rc[self._channel.attrdict['base_window']][0]
+
 	def GetCBox(self):
 		if not self._channel:
 			w,h=self._winsize
