@@ -93,6 +93,9 @@ class HierarchyViewDialog(ViewDialog):
 
 	def dropeffect(self, dummy, window, event, params):
 		x, y, filename = params
+		if x < 1.0 and y < 1.0:
+			x = x * self.mcanvassize[0]
+			y = y * self.mcanvassize[1]		
 		obj = self.whichhit(x, y)
 		if not obj:
 			return windowinterface.DROPEFFECT_NONE
@@ -110,6 +113,11 @@ class HierarchyViewDialog(ViewDialog):
 
 	def dragnode(self, dummy, window, event, params):
 		x, y, cmd, xf, yf = params
+		if x < 1.0 and y < 1.0:
+			x = x * self.mcanvassize[0]
+			y = y * self.mcanvassize[1]
+			xf = xf * self.mcanvassize[0]
+			yf = yf * self.mcanvassize[1]
 		obj = self.whichhit(x, y)
 		objSrc = self.whichhit(xf, yf)
 		if obj and obj.node.GetType() in MMNode.interiortypes:
@@ -123,6 +131,11 @@ class HierarchyViewDialog(ViewDialog):
 			
 	def dropnode(self, dummy, window, event, params):
 		x, y, cmd, xf, yf = params
+		if x < 1.0 and y < 1.0:
+			x = x * self.mcanvassize[0]
+			y = y * self.mcanvassize[1]
+			xf = xf * self.mcanvassize[0]
+			yf = yf * self.mcanvassize[1]
 		objSrc = self.whichhit(xf, yf)
 		objDst = self.whichhit(x, y)
 		if objSrc and objDst and objDst.node.GetType() in MMNode.interiortypes:
