@@ -49,7 +49,7 @@ class view () :
 		self._initcommanddict()
 		self.channellist = []
 		self.arrowlist = []
-		Timing.calctimes(root)
+#		Timing.calctimes(root)
 	 	duration = self.calcDuration(root) # for channel headers
 		self.channellist.sort()
 		self.nrchannels = len(self.channellist)
@@ -105,6 +105,7 @@ class view () :
 		self.addtocommand('h', helpfunc, 'help message')
 		self.addtocommand('l', lock_focus, 'lock current focus')
 		self.addtocommand('m', modify_arrow, 'modify timing arc')
+		self.addtocommand('o', infofunc, 'open node info window')
 		self.addtocommand('p', play_focus, 'play current focus')
 		self.addtocommand('r', redrawfunc, 'redraw')
 		self.addtocommand('t', add_arrow, 'add timing arc')
@@ -660,3 +661,12 @@ def deletearrow(self):
 
 def play_focus(self):
 	self.play_focus()
+
+import NodeInfo
+
+def infofunc (bv) :
+	node = bv.focus
+	if node = None:
+		fl.show_message ('No node selected','','')
+		return
+	NodeInfo.shownodeinfo(node)
