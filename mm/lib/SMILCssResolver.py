@@ -61,21 +61,23 @@ class SMILCssResolver:
 			listener(attrname, value)
 
 	def newRegion(self):
-		node = RegionNode()
+		node = RegionNode(self)
 
 		return node
 
 	def link(self, node, container):
-		if container == None:
+		if container == None or node == None:
 			# nothing to do
 			return 
 		node.link(container)
 
 	def unlink(self, node):
+		if node == None:
+			return
 		node.unlink()
 		
 	def newMedia(self):
-		node = MediaNode()
+		node = MediaNode(self)
 
 		return node
 
@@ -110,10 +112,10 @@ class SMILCssResolver:
 # ###############################################################################
 
 class Node:
-	def __init__(self):
+	def __init__(self, context):
 		self.children = []
 		self.container = None
-		self.context = None
+		self.context = context
 		self.pxValuesListener = None
 		self.rawValuesListener = None
 
@@ -151,8 +153,11 @@ class Node:
 			self.changeAlignAttr(name, value)
 			
 	def link(self, container):
+		# if already link, unlink before
+		if self.container != None:
+			print 'SMILCssResolver: Warning: node is already linked'
+			self.unlink()
 		self.container = container
-		self.context = container.context		
 		container.children.append(self)
 
 	def unlink(self):
@@ -238,12 +243,14 @@ class Node:
 		self._onGeomChanged()
 
 class RegionNode(Node):
-	def __init__(self):
-		Node.__init__(self)
+	def __init__(self, context):
+		Node.__init__(self, context)
 
 	def _initialUpdate(self):
 		self.pxleft, self.pxwidth = self._resolveCSS2Rule(self.left, self.width, self.right, self.container.pxwidth)
+		if self.pxwidth <= 0: self.pxwidth = 1
 		self.pxtop, self.pxheight = self._resolveCSS2Rule(self.top, self.height, self.bottom, self.container.pxheight)
+		if self.pxheight <= 0: self.pxheight = 1
 		self._onGeomChanged()
 
 	def setRawAttrs(self, attrList):
@@ -399,6 +406,7 @@ class RegionNode(Node):
 				self.pxleft = pxleft
 			if pxwidth != self.pxwidth:
 				self._onChangePxValue('width',pxwidth)
+				if pxwidth <= 0: pxwidth = 1
 				self.pxwidth = pxwidth
 
 				if self.pxValuesHasChanged:
@@ -424,6 +432,7 @@ class RegionNode(Node):
 				self.pxtop = pxtop
 			if pxheight != self.pxheight:
 				self._onChangePxValue('height',pxheight)
+				if pxheight <= 0: pxheight = 1
 				self.pxheight = pxheight
 				
 				if self.pxValuesHasChanged:
@@ -512,25 +521,30 @@ class RegionNode(Node):
 			if type(self.width) is type(0.0):
 				self.width = float(value)/self.container.pxwidth
 				self._onChangeRawValue('width',self.width)
+				if value <= 0: value = 1
 				self.pxwidth = value
 			elif type(self.width) is type(0):
 				self.width = value
 				self._onChangeRawValue('width',self.width)
+				if value <= 0: value = 1
 				self.pxwidth = value
 			elif type(self.left) is not None and type(self.right) is not None:
 				if type(self.right) is type(0.0):
 					offset = value-self.pxwidth
 					self.right = float(self.right-offset)/self.container.pxwidth
 					self._onChangeRawValue('right',self.right)
+					if value <= 0: value = 1
 					self.pxwidth = value
 				elif type(self.right) is type(0):
 					offset = value-self.pxwidth
 					self.right = self.width-offset
 					self._onChangeRawValue('right',self.right)
+					if value <= 0: value = 1
 					self.pxwidth = value
 			else:
 				self.width = value
 				self._onChangeRawValue('width',self.width)
+				if value <= 0: value = 1
 				self.pxwidth = value
 
 			for child in self.children:
@@ -564,25 +578,30 @@ class RegionNode(Node):
 			if type(self.height) is type(0.0):
 				self.height = float(value)/self.container.pxheight
 				self._onChangeRawValue('height',self.height)
+				if value <= 0: value = 1
 				self.pxheight = value
 			elif type(self.height) is type(0):
 				self.height = value
 				self._onChangeRawValue('height',self.height)
+				if value <= 0: value = 1
 				self.pxheight = value
 			elif type(self.top) is not None and type(self.bottom) is not None:
 				if type(self.bottom) is type(0.0):
 					offset = value-self.pxheight
 					self.bottom = float(self.bottom-offset)/self.container.pxheight
 					self._onChangeRawValue('bottom',self.bottom)
+					if value <= 0: value = 1
 					self.pxheight = value
 				elif type(self.bottom) is type(0):
 					offset = value-self.pxheight
 					self.bottom = self.bottom-offset
 					self._onChangeRawValue('bottom',self.bottom)
+					if value <= 0: value = 1
 					self.pxheight = value
 			else:
 				self.height = value
 				self._onChangeRawValue('height',self.height)
+				if value <= 0: value = 1
 				self.pxheight = value
 
 			for child in self.children:
@@ -729,8 +748,7 @@ class RegionNode(Node):
 			
 class RootNode(RegionNode):
 	def __init__(self, context):
-		Node.__init__(self)
-		self.context = context
+		Node.__init__(self, context)
 
 	def copyRawAttrs(self, srcNode):
 		self.pxwidth = srcNode.pxwidth
@@ -776,8 +794,8 @@ class RootNode(RegionNode):
 		self.isInit = 1
 		
 class MediaNode(Node):
-	def __init__(self):
-		Node.__init__(self)
+	def __init__(self, context):
+		Node.__init__(self, context)
 		self.alignHandler = None
 		self.intrinsicWidth = None
 		self.intrinsicHeight = None
@@ -791,6 +809,8 @@ class MediaNode(Node):
 
 	def _initialUpdate(self):
 		self.pxleft, self.pxtop, self.pxwidth, self.pxheight = self._getMediaSpaceArea()
+		if self.pxwidth <= 0: self.pxwidth = 1
+		if self.pxheight <= 0: self.pxheight = 1
 		self._onGeomChanged()
 
 	# return the tuple x,y alignment in pourcent value
@@ -1078,6 +1098,10 @@ class MediaNode(Node):
 
 		# print 'area geom = ',area_left, area_top, area_width, area_height
 
+		# avoid crashes
+		if area_width <= 0: area_width = 1
+		if area_height <= 0: area_height = 1
+		
 		return area_left, area_top, area_width, area_height
 
 	def getScale(self):
