@@ -531,7 +531,7 @@ class FileDialog:
 					dftext = extlist[0]
 				description = grins_mimetypes.descriptions.get(f, f)
 				# Turn the extension list into the ; separated pattern list
-				extlist = string.join(map(lambda x:"*."+x, extlist), ';')
+				extlist = string.join(map(lambda x:"*"+x, extlist), ';')
 				newfilter.append('%s (%s)|%s'%(description, extlist, extlist))
 			filter = string.join(newfilter, '|') + '||'
 ##		else:
