@@ -426,7 +426,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif tagname == 'text':
 				chtype = 'RealText'
 			else:
-				chtype = 'video'
+				if mediatype == 'audio':
+					chtype = 'sound'
+				elif mediatype == 'image':
+					chtype = 'RealPix'
+				elif mediatype == 'text':
+					chtype = 'RealText'
+				else:
+					chtype = 'video'
 		elif mediatype == 'audio':
 			chtype = 'sound'
 		elif mediatype == 'image':
