@@ -5,6 +5,7 @@ import MMExc
 import TopLevel
 import SoundChannel
 import getopt
+import image
 
 def main():
 	playnow = 0
@@ -22,10 +23,10 @@ def main():
 	#
 	top = TopLevel.TopLevel().init(filename)
 	top.show()
-	if playnow:
-		top.player.playsubtree(top.root)
 	#
 	try:
+		if playnow:
+			top.player.playsubtree(top.root)
 		top.run()
 		top.destroy()
 	except MMExc.ExitException, status:
@@ -33,7 +34,10 @@ def main():
 	except KeyboardInterrupt:
 		print 'Interrupt.'
 	finally:
-		SoundChannel.restore()
+		try:
+			SoundChannel.restore()
+		finally:
+			image.zapcache()
 	#
 	if stats:
 		import MMNode
