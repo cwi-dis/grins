@@ -55,7 +55,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			# remote file
 			self.dirname = ''
 		mtype = MMmimetypes.guess_type(base)[0]
-		if mtype in ('application/x-grins-project', 'application/smil', 'application/x-grins-cmif'):
+		if mtype in ('application/x-grins-project', 'application/smil',
+##			     'application/x-grins-cmif',
+			     ):
 			self.basename = posixpath.splitext(base)[0]
 		else:
 			self.basename = base
@@ -387,9 +389,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		else:
 			cwd = os.getcwd()
 		filetypes = ['application/x-grins-project', 'application/smil']
-		import settings
-		if settings.get('cmif'):
-			filetypes.append('application/x-grins-cmif')
+##		import settings
+##		if settings.get('cmif'):
+##			filetypes.append('application/x-grins-cmif')
 		dftfilename = ''
 		if self.filename:
 			utype, host, path, params, query, fragment = urlparse(self.filename)
@@ -737,7 +739,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			# remote file
 			self.dirname = ''
 		mtype = MMmimetypes.guess_type(base)[0]
-		if mtype in ('application/x-grins-project', 'application/smil', 'application/x-grins-cmif'):
+		if mtype in ('application/x-grins-project', 'application/smil',
+##			     'application/x-grins-cmif',
+			     ):
 			self.basename = posixpath.splitext(base)[0]
 		else:
 			self.basename = base
@@ -774,11 +778,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if exporting and mimetype != 'application/smil':
 			windowinterface.showmessage('Publish to SMIL (*.smi or *.smil) files only')
 			return
-		if mimetype == 'application/x-grins-cmif':
-			if features.lightweight:
-				windowinterface.showmessage('cannot write CMIF files in this version', mtype = 'error')
-				return 0
-		elif mimetype == 'application/smil':
+##		if mimetype == 'application/x-grins-cmif':
+##			if features.lightweight:
+##				windowinterface.showmessage('cannot write CMIF files in this version', mtype = 'error')
+##				return 0
+		if mimetype == 'application/smil':
 			if not exporting:
 				answer = windowinterface.GetOKCancel('You will lose GRiNS specific information by saving your project as SMIL.')
 				if answer != 0:
@@ -794,10 +798,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			pass
 ##		print 'saving to', filename, '...'
 		try:
-			if mimetype == 'application/x-grins-cmif':
-				import MMWrite
-				MMWrite.WriteFile(self.root, filename, evallicense=evallicense)
-			else:
+##			if mimetype == 'application/x-grins-cmif':
+##				import MMWrite
+##				MMWrite.WriteFile(self.root, filename, evallicense=evallicense)
+##			else:
 				if compatibility.QT == features.compatibility:
 					cleanSMIL = 0
 					if mimetype == 'application/smil':
@@ -1039,12 +1043,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##					# XXXX Not sure about this, this may mess up code in read_it
 ##					self.new_file = 1
 
-		elif mtype == 'application/x-grins-cmif':
-			if features.lightweight:
-				windowinterface.showmessage('cannot read CMIF files in this version', mtype = 'error')
-				raise Error, filename
-			import MMRead
-			self.root = MMRead.ReadFile(filename)
+##		elif mtype == 'application/x-grins-cmif':
+##			if features.lightweight:
+##				windowinterface.showmessage('cannot read CMIF files in this version', mtype = 'error')
+##				raise Error, filename
+##			import MMRead
+##			self.root = MMRead.ReadFile(filename)
 		else:
 			if sys.platform == 'win32':
 				# XXX: experimental code
@@ -1184,7 +1188,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				utype, url2 = MMurl.splittype(url)
 				mtype = MMmimetypes.guess_type(url)[0]
 				if mtype in ('application/smil', 'application/x-grins-project', \
-					'application/x-grins-cmif'):
+##					     'application/x-grins-cmif',
+					     ):
 					# in this case, the document is handle by grins
 					top = TopLevel(self.main, url, 0)
 				else:
@@ -1253,7 +1258,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			fn = './' + fn
 		rv = []
 		for a in MMAttrdefs.getattr(self.root, 'anchorlist'):
-			rv.append((fn, a[A_ID]))
+			rv.append((fn, a.aid))
 		return rv
 
 	def getallexternalanchors(self):
