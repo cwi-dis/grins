@@ -428,6 +428,13 @@ def makergbfile(filename):
 		filename = temp
 	return filename
 
+def rmcache(original, cached):
+	if cached != original:
+		try:
+			os.unlink(cached)
+		except os.error:
+			pass
+
 def cleanup():
 	import os
 	rgbcache.flushall()
@@ -438,4 +445,4 @@ def cleanup():
 			pass
 	temps[:] = []
 
-rgbcache = FileCache.FileCache().init(makergbfile)
+rgbcache = FileCache.FileCache().init(makergbfile, rmcache)

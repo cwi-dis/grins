@@ -452,6 +452,13 @@ def makeaiff(filename):
 		filename = temp
 	return filename
 
+def rmcache(original, cached):
+	if cached != original:
+		try:
+			os.unlink(cached)
+		except os.error:
+			pass
+
 def cleanup():
 	import os
 	aiffcache.flushall()
@@ -462,4 +469,4 @@ def cleanup():
 			pass
 	temps[:] = []
 
-aiffcache = FileCache.FileCache().init(makeaiff)
+aiffcache = FileCache.FileCache().init(makeaiff, rmcache)
