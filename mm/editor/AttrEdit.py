@@ -810,7 +810,7 @@ class TransitionWrapper(Wrapper):
 
 	def __init__(self, toplevel, trname):
 		Wrapper.__init__(self, toplevel, toplevel.context)
- 		self.__trname = trname
+		self.__trname = trname
 		
 	def __repr__(self):
 		return '<TransitionWrapper instance for %s, file=%s>' % (self.__trname, self.toplevel.filename)
