@@ -1850,7 +1850,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 #				cssResolver.setRawAttrs(cssId, [('regPoint', attrdict['regPoint'])])
 				del attrdict['regPoint']
 														
-		ch['center'] = 0
 		# other fit options not implemented
 
 		# keep all attributes that we didn't use
