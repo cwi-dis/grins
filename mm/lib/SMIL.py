@@ -121,7 +121,7 @@ ATTRIBUTES = {
 	'transOut': ['BasicTransitions'],
 	'vertRepeat': ['TransitionModifiers'],
 	'width': ['HierarchicalLayout'],
-	'xml:lang\t': ['MediaDescription'],
+	'xml:lang': ['MediaDescription'],
 	'z-index': ['HierarchicalLayout'],
 	}
 ELEMENTS = {
@@ -340,20 +340,20 @@ ELEMENTS = {
 		'smil': [
 			'id',
 			'class',
-			'xml:lang',
+##			'xml:lang',
 			'title',
 			'xmlns',
 		],
 		'head': [
 			'id',
 			'class',
-			'xml:lang',
+##			'xml:lang',
 			'title',
 		],
 		'body': [
 			'id',
 			'class',
-			'xml:lang',
+##			'xml:lang',
 			'title',
 		],
 	},
