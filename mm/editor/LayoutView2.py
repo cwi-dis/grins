@@ -331,7 +331,7 @@ class LayoutView2(LayoutViewDialog2):
 		LayoutViewDialog2.__init__(self)
 
 		# current state
-		self.currentSelectedNodeList = None
+		self.currentSelectedNodeList = []
 		self.currentFocus = None
 		self.currentFocusType = None
 		# allow to identify if the focus has been fixed by this view
@@ -506,7 +506,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.treeHelper.destroy()
 
 		# clear all variables state
-		self.currentSelectedNodeList = None
+		self.currentSelectedNodeList = []
 		self.currentFocus = None
 		self.currentFocusType = None
 		self.myfocus = None
@@ -1461,7 +1461,7 @@ class LayoutView2(LayoutViewDialog2):
 		# it avoids some recursives transactions and some crashs
 		self.flushChangement()
 		
-		if self.currentSelectedNodeList != None:
+		if len(self.currentSelectedNodeList) > 0:
 			self.selectBgColor(self.currentSelectedNodeList[0])
 
 	def onSendBack(self):
@@ -1469,7 +1469,7 @@ class LayoutView2(LayoutViewDialog2):
 		# it avoids some recursives transactions and some crashs
 		self.flushChangement()
 		
-		if self.currentSelectedNodeList != None:
+		if len(self.currentSelectedNodeList) > 0:
 			self.sendBack(self.currentSelectedNodeList[0])
 
 	def onBringFront(self):
@@ -1477,7 +1477,7 @@ class LayoutView2(LayoutViewDialog2):
 		# it avoids some recursives transactions and some crashs
 		self.flushChangement()
 		
-		if self.currentSelectedNodeList != None:
+		if len(self.currentSelectedNodeList) > 0:
 			self.bringFront(self.currentSelectedNodeList[0])
 
 	def onShowEditBackground(self, value):
@@ -1485,7 +1485,7 @@ class LayoutView2(LayoutViewDialog2):
 		# it avoids some recursives transactions and some crashs
 		self.flushChangement()
 		
-		if self.currentSelectedNodeList != None:
+		if len(self.currentSelectedNodeList) > 0:
 			nodeRef = self.currentSelectedNodeList
 			nodeType = self.getNodeType(self.currentSelectedNodeList[0])
 			if nodeType in (TYPE_REGION, TYPE_VIEWPORT):
@@ -1505,7 +1505,7 @@ class LayoutView2(LayoutViewDialog2):
 		# it avoids some recursives transactions and some crashs
 		self.flushChangement()
 		
-		if self.currentSelectedNodeList != None:
+		if len(self.currentSelectedNodeList) > 0:
 			nodeType = self.getNodeType(self.currentSelectedNodeList[0])
 			if nodeType == TYPE_VIEWPORT:
 				self.delViewport(self.currentSelectedNodeList[0])
@@ -1517,7 +1517,7 @@ class LayoutView2(LayoutViewDialog2):
 		# it avoids some recursives transactions and some crashs
 		self.flushChangement()
 		
-		if self.currentSelectedNodeList != None:
+		if len(self.currentSelectedNodeList) > 0:
 			self.newRegion(self.currentSelectedNodeList[0])
 
 	def onNewViewport(self):
@@ -1531,9 +1531,11 @@ class LayoutView2(LayoutViewDialog2):
 		self.__cleanClipboard()
 		
 		# for now, support only single selection
-		if self.currentSelectedNodeList != None:
+		if len(self.currentSelectedNodeList) == 1:
 			selectedNode = self.currentSelectedNodeList[0]
 			self.__copyIntoClipboard(selectedNode)
+			# XXX just useful to update command list
+			self.updateFocus()
 
 	def onCut(self):
 		self.__cleanClipboard()
@@ -1543,7 +1545,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.flushChangement()
 		
 		# for now, support only simple selection
-		if self.currentSelectedNodeList != None:
+		if len(self.currentSelectedNodeList) == 1:
 			selectedNode = self.currentSelectedNodeList[0]
 			self.__copyIntoClipboard(selectedNode)
 			
@@ -1567,7 +1569,8 @@ class LayoutView2(LayoutViewDialog2):
 		# it avoids some recursives transactions and some crashes
 		self.flushChangement()
 
-		if self.currentSelectedNodeList != None:
+		# for now, support only simple selection
+		if len(self.currentSelectedNodeList) == 1:
 			selectedNode = self.currentSelectedNodeList[0]
 			type, node = Clipboard.getclip()
 			cNode = None
@@ -1824,7 +1827,7 @@ class ZFieldWidget(LightWidget):
 			self.__onZOrderChanged(value)
 
 	def __onZOrderChanged(self, value):
-		if self._context.currentSelectedNodeList != None:
+		if len(self._context.currentSelectedNodeList)  > 0:
 			nodeRef = self._context.currentSelectedNodeList[0]
 			nodeType = self._context.getNodeType(nodeRef)
 			if nodeType == TYPE_REGION:
@@ -1956,7 +1959,7 @@ class GeomFieldWidget(LightWidget):
 					self.__onGeomOnMediaChanged(ctrlName, value)
 
 	def __onGeomOnViewportChanged(self, ctrlName, value):
-		if self._context.currentSelectedNodeList != None:
+		if len(self._context.currentSelectedNodeList) > 0:
 			nodeRef = self._context.currentSelectedNodeList[0]
 			w,h = nodeRef.getPxGeom()
 			if ctrlName == 'RegionW':
@@ -1966,7 +1969,7 @@ class GeomFieldWidget(LightWidget):
 			self._context.applyGeom(nodeRef, (0,0,w,h))
 
 	def __onGeomOnRegionChanged(self, ctrlName, value):
-		if self._context.currentSelectedNodeList != None:		
+		if len(self._context.currentSelectedNodeList) > 0:		
 			nodeRef = self._context.currentSelectedNodeList[0]
 			x,y,w,h = nodeRef.getPxGeom()
 			if ctrlName == 'RegionX':
@@ -1980,7 +1983,7 @@ class GeomFieldWidget(LightWidget):
 			self._context.applyGeom(nodeRef, (x,y,w,h))
 
 	def __onGeomOnMediaChanged(self, ctrlName, value):
-		if self._context.currentSelectedNodeList != None:
+		if len(self._context.currentSelectedNodeList) > 0:
 			nodeRef = self._context.currentSelectedNodeList[0]
 			x,y,w,h = nodeRef.getPxGeom()
 			if ctrlName == 'RegionX':
