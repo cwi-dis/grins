@@ -836,6 +836,10 @@ class ChannelWindow(Channel):
 	def do_show(self):
 		if debug:
 			print 'ChannelWindow.do_show('+`self`+')'
+		try:
+			del self.winoff
+		except AttributeError:
+			pass
 		# create a window for this channel
 		for chan in channels:
 			if self in chan._subchannels:
@@ -987,8 +991,9 @@ class ChannelWindow(Channel):
 		self.play_0(node)
 		if self._is_shown and self.window:
 			try:
+				winoff = self.winoff
 				winoff = MMAttrdefs.getattr(node, 'base_winoff')
-			except KeyError:
+			except (AttributeError, KeyError):
 				pass
 			else:
 				if winoff != self.winoff:
