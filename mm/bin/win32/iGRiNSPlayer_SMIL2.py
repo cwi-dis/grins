@@ -28,9 +28,11 @@ CMIFDIR=r'd:\ufs\mm\cmif'
 if what==PLAYER:
 	specificPath = "grins"
 	os.environ['GRiNSApp']='GRiNS'
+	registryname = "Player 2.0"
 else:
 	specificPath = "editor"
 	os.environ['GRiNSApp']='GRiNSed'
+	registryname = "Editor 2.0"
 
 
 CMIFPATH = [
@@ -67,6 +69,9 @@ import win32api
 from win32con import *
 import win32ui
 import traceback
+
+win32ui.SetAppName(registryname)
+win32ui.SetRegistryKey("Oratrix GRiNS")
 
 def SafeCallbackCaller(fn, args):
 	try:
