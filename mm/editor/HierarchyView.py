@@ -908,12 +908,46 @@ class HierarchyView(HierarchyViewDialog):
 	######################################################################
 	# Copy and paste properties of a node (or multiple nodes)
 	def copypropertiescall(self):
-		self.focusnode.copypropertiescall()
-		
+		if not hasattr(windowinterface, 'mmultchoice'):
+			windowinterface.beep()
+			return
+		assert(self.focusnode)
+		node = self.focusnode
+		context = node.context
+		attrlist = node.getattrnames()
+		defattrlist = attrlist[:]
+		# Remove ones we don't normally copy
+		if 'name' in defattrlist:
+			defattrlist.remove('name')
+		if 'file' in defattrlist:
+			defattrlist.remove('file')
+		copylist = windowinterface.mmultchoice('Select properties to copy', attrlist, defattrlist)
+		if not copylist: return
+		newnode = context.newattrcontainer()
+		dict = self._copyattrdict(node, newnode, copylist)
+		# XXXX Clear clip
+		context.editmgr.setclip('properties', newnode)
+
 	def pastepropertiescall(self):
-		for node in self.get_multi_nodes():
-			node.pastepropertiescall()
-	
+		nodes = self.get_multi_nodes()
+		assert(nodes)
+		em = self.root.context.editmgr
+		tp, clipnode = em.getclip()
+		if tp != 'properties':
+			windowinterface.beep()
+			return
+		assert isinstance(clipnode, MMNode.MMAttrContainer)
+		if not em.transaction():
+			return
+		for node in nodes:
+			allowedlist = node.getallattrnames()
+			wanted = []
+			for attrname in allowedlist:
+				if clipnode.attrdict.has_key(attrname):
+					wanted.append(attrname)
+			prop = self._copyattrdict(clipnode, node, wanted, editmgr=em)
+		em.commit()
+		
 	######################################################################
 	# Cut a node.
 	def cutcall(self):
@@ -1857,6 +1891,29 @@ class HierarchyView(HierarchyViewDialog):
 			return_me = return_me + self.find_events_to_node(node, c)
 		return return_me
 		
+	def _copyattrdict(self, oldnode, newnode, attrnamelist=None, editmgr=None):
+		# Copy (part of) a nodes attrdict to another node
+		attrdict = oldnode.attrdict
+		uidremap = {oldnode.GetUID() : newnode.GetUID()}
+		# None means copy all attributes
+		if attrnamelist is None:
+			attrnamelist = attrdict.keys()
+		for attrname in attrnamelist:
+			attrvalue = attrdict[attrname]
+			# beginlist and endlist need special handling because the arcs contain
+			# backreferences to the node
+			if attrname in ('beginlist', 'endlist'):
+				new = []
+				for arc in attrvalue:
+					new.append(arc.copy(uidremap))
+				attrvalue = new
+			else:
+				attrvalue = MMNode._valuedeepcopy(attrvalue)
+			# Now either set the value through the edit mgr or manually
+			if editmgr:
+				editmgr.setnodeattr(newnode, attrname, attrvalue)
+			else:
+				newnode.attrdict[attrname] = attrvalue
 
 	def popup_error(self, message):
 		# I should have done this a long time ago.
