@@ -50,16 +50,25 @@ PLATFORM_TO_PLATFORM = {
 	"SUN": "sunos5",
 	"SGI": "irix6",
 	None: "ALLPLATFORMS",
+	"ALLPLATFORMS": "ALLPLATFORMS",
 	}
 
-def gencommerciallicense(version=None, platform=None):
+def gencommerciallicense(version=None, platform=None,
+			 user=None, organization=None):
 	features = PRODUCT_TO_FEATURE[version]
 	features = features + [PLATFORM_TO_PLATFORM[platform]]
 	features = encodefeatures(features)
 	dbase = grinsdb.Database()
 	newid = grinsdb.uniqueid()
 	date = None
-	name = None
+	if user and organization:
+		name = user + ',' + organization
+	elif user:
+		name = user + ','
+	elif organization:
+		name = organization
+	else:
+		name = None
 	license = codelicense(newid, date, features, name)
 	grinsdb.loglicense(license)
 	dbase.close()
@@ -80,7 +89,7 @@ def genevaluationlicense(version=None, valid=14, platform=None):
 	
 def main():
 	try:
-		options, args = getopt.getopt(sys.argv[1:], "lcrn:d:f:u:Eo:")
+		options, args = getopt.getopt(sys.argv[1:], "lcrn:d:f:u:Eo:D:")
 	except getopt.error:
 		usage()
 		sys.exit(1)
@@ -93,6 +102,7 @@ def main():
 	name = None
 	features = []
 	outfile = None
+	decode = None
 	for opt, optarg in options:
 		if opt == '-l':
 			list = 1
@@ -103,6 +113,8 @@ def main():
 		if opt == '-E':
 			eval = 1
 			create = 1
+		if opt == '-D':
+			decode = optarg
 		if opt == '-n':
 			try:
 				newid = string.atoi(optarg)
@@ -130,10 +142,14 @@ def main():
 		print "Error: evaluation licenses need a date"
 		usage()
 		sys.exit(1)
-	if list + create  + remove != 1:
-		print "Error: exactly one of -c, -r or -l should be specified"
+	if (not not decode) + list + create  + remove != 1:
+		print "Error: exactly one of -D, -c, -r or -l should be specified"
 		usage()
 		sys.exit(1)
+	if decode:
+		info = decodelicense(decode)
+		print info
+		sys.exit(0)
 	if (list or remove) and (newid or date or features or name):
 		print "Error: -l and -r exclusive with all other options"
 		usage()
@@ -201,6 +217,7 @@ def usage():
 	print " -f f1,f2,... Enable these features (default: all features, all platforms!)"
 	print " -u name      Encode this licenseename"
 	print " -o file      Write output to file (with backup)"
+	print " -D license   Decode a license and print information"
 
 def getdefaultfeatures():
 	return encodefeatures(["ALLPRODUCTS", "ALLPLATFORMS"])
@@ -307,6 +324,33 @@ def codelicense(uniqid, date, features, user):
 	all.append(license)
 	return string.join(all, '-')
 
+def decodelicense(lic):
+	status = 'Valid'
+	uniqid = ''
+	date = (0,0,0)
+	features = 0
+	user = ''
+	fnames = []
+	try:
+		uniqid, date, features, user = license._decodelicense(lic)
+		fnames, dummy, dummy = license._parselicense(lic)
+	except license.Error, arg:
+		status = 'Invalid: %s'%arg
+	fnames = string.join(fnames, ',')
+	if date[0] >= 3000:
+		date = 'indefinite'
+	else:
+		date = "%04.4d/%02.2d/%02.2d"%date
+	report="""
+License: %s
+Status: %s
+Unique ID: %s
+Expiry Date: %s
+Features: %s (0x%x)
+Licensee Name: %s
+"""%(lic, status, uniqid, date, fnames, features, user)
+	return report
+		
 if __name__ == '__main__':
 	main()
 	
