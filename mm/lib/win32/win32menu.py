@@ -164,9 +164,10 @@ class Menu:
 		n=sm.GetMenuItemCount()
 		for i in range(n):
 			sm.DeleteMenu(0,win32con.MF_BYPOSITION) 
-	def clear_cascade_menus(self):
+	def clear_cascade_menus(self,exceptions=[]):
 		for cl in self._dynamic_cascade_dict.keys():
-			self.clear_cascade(cl)
+			if cl not in exceptions:
+				self.clear_cascade(cl)
 
 	def AppendPopup(self,submenu,str):
 		nextpos = self.GetMenuItemCount()+1;
