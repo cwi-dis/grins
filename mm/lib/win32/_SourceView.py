@@ -241,8 +241,10 @@ class _SourceView(GenView, docview.RichEditView):
 		if self.__showing:
 			# during the setting, the EN_CHANGE event is ignore
 			self.__setting = 1
+			self.LockWindowUpdate()
 			self.SetWindowText(self.__text)
 			self._setcolors()
+			self.UnlockWindowUpdate()
 			self.SetModify(0)
 			self.__setting = 0
 			# raz apply and revert
