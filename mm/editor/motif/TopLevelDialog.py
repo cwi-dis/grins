@@ -7,8 +7,8 @@ from flags import *
 class TopLevelDialog:
 	adornments = {
 		'toolbar': [
-			(FLAG_ALL, 'Play', PLAY),
-			(FLAG_ALL, 'Player', PLAYERVIEW),
+			(FLAG_ALL, 'Preview', PLAY),
+			(FLAG_ALL, 'Previewer View', PLAYERVIEW),
 			(FLAG_ALL, 'Structure View', HIERARCHYVIEW),
 			(FLAG_PRO, 'Layout View', LAYOUTVIEW),
 			(FLAG_PRO, 'Hyperlinks', LINKVIEW),
