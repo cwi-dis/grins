@@ -652,6 +652,22 @@ class BandwidthTabPage(MultiStringTabPage):
 	_items_on_page = _attr_to_item.values()
 	helpstring = 'These fields control bandwidth (and CPU) usage of this RealPix slideshow.'
 
+class BandwidthLiteTabPage(MultiStringTabPage):
+	TAB_LABEL='Bandwidth'
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_BANDWIDTH_LITE
+	ITEM_GROUP=1
+	ITEM_PREROLL=3
+	ITEM_BITRATE=5
+	N_ITEMS=5
+	_attr_to_item = {
+		'preroll': ITEM_PREROLL,
+		'bitrate': ITEM_BITRATE,
+	}
+	attrs_on_page = ['preroll', 'bitrate']
+	_items_on_page = _attr_to_item.values()
+	helpstring = 'These fields control bandwidth usage of this RealPix slideshow.'
+
 class UploadTabPage(MultiStringTabPage):
 	TAB_LABEL='Upload'
 	
@@ -931,6 +947,52 @@ class Conversion3TabPage(ConversionTabPage):
 	# Lightweight audio: no convert/mobile/perfect buttons, no video
 	items_to_hide = [2, 12, 13, 14, 15]
 	attrs_on_page = ['project_targets', 'project_audiotype']
+
+class GeneralLiteTabPage(MultiTabPage):
+	TAB_LABEL='General'
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_GENERAL_LITE
+	ITEM_GROUP=1
+	ITEM_NODENAME=3
+	ITEM_NODETYPE=5
+	N_ITEMS=5
+	_attr_to_item = {
+		'name': ITEM_NODENAME,
+		'.type': ITEM_NODETYPE,
+	}
+	attrs_on_page = ['name', '.type']
+	helpstring = 'Name of this item (used in links) and how to play it.'
+	
+	def init_controls(self, item0):
+		rv = MultiTabPage.init_controls(self, item0)
+		self._typepopup = self.attreditor._window.SelectWidget(self.item0+self.ITEM_NODETYPE, [], None)
+		return rv
+
+	def close(self):
+		self._typepopup.delete()
+		TabPage.close(self)
+		
+	def do_itemhit(self, item, event):
+		if item == self.item0+self.ITEM_NODENAME:
+			return 1
+		elif item == self.item0+self.ITEM_NODETYPE:
+			# popup
+			self.call_optional_cb(self.fieldlist[1])
+			return 1
+		return 0
+		
+	def update(self):
+		value = self.fieldlist[0]._getvalueforpage()
+		self.attreditor._setlabel(self.item0+self.ITEM_NODENAME, value)
+		value = self.fieldlist[1]._getvalueforpage()
+		list = self.fieldlist[1].getoptions()
+		self._typepopup.setitems(list, value)
+
+	def save(self):
+		value = self.attreditor._getlabel(self.item0+self.ITEM_NODENAME)
+		self.fieldlist[0]._savevaluefrompage(value)
+		value = self._typepopup.getselectvalue()
+		self.fieldlist[1]._savevaluefrompage(value)
 
 class GeneralTabPage(MultiTabPage):
 	TAB_LABEL='General'
@@ -1393,10 +1455,6 @@ class AreaTabPage(MultiDictTabPage):
 		self._area.setinfo(self.getmaxarea())
 		return rv
 		
-	def getmaxarea(self):
-		x0, y0, x1, y1 = Qd.qd.screenBits.bounds
-		return x0, y0, (x1-x0), (y1-y0)
-
 	def do_itemhit(self, item, event):
 		if item-self.item0 in self._checkboxes:
 			self.attreditor._togglebutton(item)
@@ -1485,6 +1543,25 @@ class AreaTabPage(MultiDictTabPage):
 		
 	def _pixels_to_values(self, (x, y, w, h)):
 		return (x, y, w, h)
+
+	def getmaxarea(self):
+		x0, y0, x1, y1 = Qd.qd.screenBits.bounds
+		return x0, y0, (x1-x0), (y1-y0)
+
+	def getmaxareaforchannel(self):
+		# This is a hack. We have to find the parent channel and get its dimensions.
+		wrapper = self.attreditor.wrapper
+		channel = wrapper.channel
+		if not channel.has_key('base_window'):
+			x0, y0, x1, y1 = Qd.qd.screenBits.bounds
+			return x0, y0, (x1-x0), (y1-y0)
+		basename = channel['base_window']
+		basechannel = channel.context.channeldict[basename]
+		if basechannel.has_key('winsize'):
+			w, h = basechannel['winsize']
+			return 0, 0, w, h
+		x0, y0, x1, y1 = Qd.qd.screenBits.bounds
+		return x0, y0, (x1-x0), (y1-y0)
 
 class SourceAreaTabPage(AreaTabPage):
 	TAB_LABEL='Source area'
@@ -1610,19 +1687,7 @@ class ChannelAreaTabPage(AreaTabPage):
 		self._attr_to_field[self._xywhfield]._savevaluefrompage(x+' '+y+' '+w+' '+h)
 		
 	def getmaxarea(self):
-		# This is a hack. We have to find the parent channel and get its dimensions.
-		wrapper = self.attreditor.wrapper
-		channel = wrapper.channel
-		if not channel.has_key('base_window'):
-			x0, y0, x1, y1 = Qd.qd.screenBits.bounds
-			return x0, y0, (x1-x0), (y1-y0)
-		basename = channel['base_window']
-		basechannel = channel.context.channeldict[basename]
-		if basechannel.has_key('winsize'):
-			w, h = basechannel['winsize']
-			return 0, 0, w, h
-		x0, y0, x1, y1 = Qd.qd.screenBits.bounds
-		return x0, y0, (x1-x0), (y1-y0)
+		return self.getmaxareaforchannel()
 
 class ChannelAreaLiteTabPage(AreaTabPage):
 	TAB_LABEL='Position and Size'
@@ -1674,6 +1739,9 @@ class ChannelAreaLiteTabPage(AreaTabPage):
 
 	def _savexywh(self, x, y, w, h):
 		self._attr_to_field[self._xywhfield]._savevaluefrompage(x+' '+y+' '+w+' '+h)
+
+	def getmaxarea(self):
+		return self.getmaxareaforchannel()
 #
 # List of classes handling pages with multiple attributes. The order is
 # important: we loop over these classes in order, and if all attributes
@@ -1688,6 +1756,7 @@ MULTI_ATTR_CLASSES = [
 	ChannelAreaTabPage,
 	ChannelAreaLiteTabPage,
 	GeneralTabPage,
+	GeneralLiteTabPage,
 	TimingTabPage,
 	TransitionTabPage,
 	Transition1TabPage,
@@ -1706,6 +1775,7 @@ MULTI_ATTR_CLASSES = [
 	Conversion3TabPage,
 	ImageConversionTabPage,
 	BandwidthTabPage,
+	BandwidthLiteTabPage,
 	SourceAreaTabPage,
 	DestinationAreaTabPage,
 	Destination1AreaTabPage,
