@@ -558,6 +558,15 @@ attrgrs=(
 	 'attrs':['endlist',],
 	 },
 
+	{'name':'containerlayout',
+	'title':'Layout',
+	'attrs':[
+		'project_default_region_image',
+		'project_default_region_video',
+		'project_default_region_sound',
+		'project_default_region_text',
+		]},
+
 	)
 
 
