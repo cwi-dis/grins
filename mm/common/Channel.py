@@ -296,11 +296,13 @@ class Channel(ChannelWM):
 		# when they are finished playing the node.
 		if debug:
 			print 'Channel.play_1('+`self`+')'
-		if self.armed_duration > 0:
-			self._qid = self._scheduler.enter(self.armed_duration,\
-				  0, self.playdone, 0)
-		else:
-			self.playdone(0)
+		if not self.syncplay:
+			if self.armed_duration > 0:
+				self._qid = self._scheduler.enter(\
+					  self.armed_duration, 0, \
+					  self.playdone, 0)
+			else:
+				self.playdone(0)
 		self.armdone()
 
 	def playdone(self, dummy):
@@ -594,17 +596,57 @@ class ChannelWindow(ChannelWindowWM, Channel):
 			self.window.bgcolor(self._attrdict['bgcolor'])
 		if self._attrdict.has_key('fgcolor'):
 			self.window.fgcolor(self._attrdict['fgcolor'])
-		self.do_show_wmdep()
+		import events, EVENTS
+		events.register(self.window, EVENTS.ResizeWindow, \
+			  self.resize, None)
 		return 1
 
 	def do_hide(self):
 		if debug:
 			print 'ChannelWindow.do_hide('+`self`+')'
-		self.do_hide_wmdep()
+		import events, EVENTS
+		events.unregister(self.window, EVENTS.ResizeWindow)
 		if self.window:
 			self.window.close()
 			self.window = None
 			self.armed_display = self.played_display = None
+
+	def resize(self, arg, window, event, value):
+		if debug:
+			print 'ChannelWindow.resize'+`self,arg,window,event,value`
+		import windowinterface
+		windowinterface.setcursor('watch')
+		if hasattr(self, 'threads'):
+			# hack for MovieChannel
+			self.threads.resized()
+			windowinterface.setcursor('')
+			return
+		self.wait_for_arm()
+		armstate = self._armstate
+		armed_node = self._armed_node
+		if self._playstate in (PLAYING, PLAYED):
+			node = self._played_node
+			self._armstate = AIDLE
+			self.syncarm = 1
+			self.arm(node)
+			playstate = self._playstate
+			if playstate in (PLAYING, PLAYED):
+				# if still in one of these states...
+				self._playstate = PIDLE
+				self.armed_duration = 0
+				self.syncplay = 1
+				self.nopop = 1
+				self.play(node)
+				self.nopop = 0
+				self._playstate = playstate
+			self._armstate = AIDLE
+		if armstate == ARMED:
+			self._armstate = AIDLE
+			self.syncarm = 1
+			self.arm(armed_node)
+		self.syncarm = 0
+		self.syncplay = 0
+		windowinterface.setcursor('')
 
 	def arm_0(self, node):
 		Channel.arm_0(self, node)
@@ -676,10 +718,10 @@ class _ChannelThread(_ChannelThreadWM):
 	def do_hide(self):
 		if debug:
 			print 'ChannelThread.do_hide('+`self`+')'
-		self.do_hide_wmdep()
 		if self.threads:
 			self.threads.close()
 			self.threads = None
+		self.do_hide_wmdep()
 
 	def play(self, node):
 		if debug:
@@ -781,17 +823,9 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 			ChannelWindow.do_hide(self)
 		return 0
 
-	def do_show_wmdep(self):
-		ChannelWindow.do_show_wmdep(self)
-		_ChannelThread.do_show_wmdep(self)
-
 	def do_hide(self):
 		_ChannelThread.do_hide(self)
 		ChannelWindow.do_hide(self)
-
-	def do_hide_wmdep(self):
-		ChannelWindow.do_hide_wmdep(self)
-		_ChannelThread.do_hide_wmdep(self)
 
 	def playstop(self):
 		_ChannelThread.playstop(self)
