@@ -10,7 +10,7 @@ import Xlib
 
 class VideoChannel(Channel.ChannelWindowAsync):
 	node_attrs = Channel.ChannelWindowAsync.node_attrs + \
-		     ['bucolor', 'hicolor', 'scale', 'loop', 'range']
+		     ['bucolor', 'hicolor', 'scale', 'center', 'loop', 'range']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
@@ -87,6 +87,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		movie.SetPlaySpeed(1)
 		scale = MMAttrdefs.getattr(node, 'scale')
 		self.armed_scale = scale
+		center = MMAttrdefs.getattr(node, 'center')
 		x, y, w, h = self.window._rect
 		if scale > 0:
 			track = movie.FindTrackByMedium(mv.DM_IMAGE)
@@ -97,9 +98,12 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			height = min(height * scale, h)
 			movie.SetViewSize(width, height)
 			width, height = movie.QueryViewSize(width, height)
-			movie.SetViewOffset(x + (w - width) / 2,
-					    self.window._form.height - y - (h + height) / 2,
-					    mv.DM_TRUE)
+			if center:
+				x = x + (w - width) / 2
+				y = self.window._form.height - y - (h + height) / 2
+			else:
+				y = self.window._form.height - y - h
+			movie.SetViewOffset(x, y, mv.DM_TRUE)
 		else:
 			movie.SetViewSize(w, h)
 			# X coordinates don't work, so use GL coordinates
