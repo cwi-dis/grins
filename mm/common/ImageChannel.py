@@ -445,6 +445,7 @@ def makergbfile(filename):
 	return filename
 
 def rmcache(original, cached):
+	import os
 	if cached != original:
 		try:
 			os.unlink(cached)
