@@ -30,45 +30,41 @@ from ArmStates import *
 from MMTypes import *
 import os
 import Bandwidth
+import settings
 
 OPTION_TIMESCALEBOX_BOXES = 0		# Turn on for measure-tape timeline
 
 
-def fix(r, g, b): return r, g, b	# Hook for color conversions
-
-
 # Color assignments (RGB)
 
-BGCOLOR = fix(200, 200, 200)		# Light gray
-BORDERCOLOR = fix(75, 75, 75)		# Dark gray
-BORDERLIGHT = fix(255, 255, 255)	# White
-CHANNELCOLOR = fix(240, 240, 240)	# Very light gray
-CHANNELOFFCOLOR = fix(160, 160, 160)	# Darker gray
-NODECOLOR = fix(208, 182, 160)		# Pale pinkish, match hierarchy view
-ALTNODECOLOR = fix(255, 224, 200)	# Same but brighter
-NODEOFFCOLOR = CHANNELOFFCOLOR
-ALTNODEOFFCOLOR = BGCOLOR
-ARROWCOLOR = fix(0, 0, 255)		# Blue
-TEXTCOLOR = fix(0, 0, 0)		# Black
-FOCUSCOLOR = fix(255, 0, 0)		# Red (for sync arcs only now)
-LOCKEDCOLOR = fix(200, 255, 0)		# Yellowish green
-ANCHORCOLOR = fix(255, 127, 0)		# Orange/pinkish
+BGCOLOR = settings.get('timeline_bgcolor')
+BORDERCOLOR = settings.get('timeline_bordercolor')
+CHANNELCOLOR = settings.get('timeline_channelcolor')
+CHANNELOFFCOLOR = settings.get('timeline_channeloffcolor')
+NODECOLOR = settings.get('timeline_nodecolor')
+ALTNODECOLOR = settings.get('timeline_altnodecolor')
+NODEOFFCOLOR = settings.get('timeline_nodeoffcolor')
+ALTNODEOFFCOLOR = settings.get('timeline_altnodeoffcolor')
+ARROWCOLOR = settings.get('timeline_arrowcolor')
+TEXTCOLOR = settings.get('timeline_textcolor')
+FOCUSCOLOR = settings.get('timeline_focuscolor')
+LOCKEDCOLOR = settings.get('timeline_lockedcolor')
+ANCHORCOLOR = settings.get('timeline_anchorcolor')
 
 # Focus color assignments (from light to dark gray)
 
-FOCUSBORDER = fix(0, 0, 0)
-FOCUSLEFT   = fix(244, 244, 244)
-FOCUSTOP    = fix(204, 204, 204)
-FOCUSRIGHT  = fix(40, 40, 40)
-FOCUSBOTTOM = fix(91, 91, 91)
+FOCUSLEFT = settings.get('timeline_focusleft')
+FOCUSTOP = settings.get('timeline_focustop')
+FOCUSRIGHT = settings.get('timeline_focusright')
+FOCUSBOTTOM = settings.get('timeline_focusbottom')
 
 # Arm colors
-ARMACTIVECOLOR = (255, 255, 0)
-ARMINACTIVECOLOR = (255, 200, 0)
-ARMERRORCOLOR = (255, 0, 0)
-PLAYACTIVECOLOR = (0, 255, 0)
-PLAYINACTIVECOLOR = (0, 127, 0)
-PLAYERRORCOLOR = (255, 0, 0)
+ARMACTIVECOLOR = settings.get('timeline_armactivecolor')
+ARMINACTIVECOLOR = settings.get('timeline_arminactivecolor')
+ARMERRORCOLOR = settings.get('timeline_armerrorcolor')
+PLAYACTIVECOLOR = settings.get('timeline_playactivecolor')
+PLAYINACTIVECOLOR = settings.get('timeline_playinactivecolor')
+PLAYERRORCOLOR = settings.get('timeline_playerrorcolor')
 
 armcolors = { \
 	     ARM_SCHEDULED: (200, 200, 0), \
@@ -1455,7 +1451,6 @@ class BandwidthStripBox(GO, BandwidthStripBoxCommand):
 		self.is_bandwidth_strip = 1
 		self.boxes = []
 		self.focusboxes = []
-		import settings
 		self.bandwidth = settings.get('system_bitrate')
 		self.bwname = self._bwstr(self.bandwidth)
 
