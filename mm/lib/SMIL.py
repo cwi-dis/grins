@@ -761,7 +761,6 @@ class SMIL:
 			__layout:None,
 			GRiNSns+' ' 'bgcolor':None,
 			GRiNSns+' ' 'comment':None,
-			GRiNSns+' ' 'scale':None,
 			GRiNSns+' ' 'captionchannel':None,
 			GRiNSns+' ' 'thumbnailScale':None,
 			GRiNSns+' ' 'thumbnailIcon':None,

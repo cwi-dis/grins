@@ -45,7 +45,7 @@
 (abstract (string) '' 'Abstract' default 'A brief description of the contents (informational only)' raw (g2 qt smil10 smil2 cmif snap))
 
 (alt (string) '' 'Alternate text' default
-	'Alternate text for media object' raw (advanced g2 qt smil10 smil2 cmif snap))
+	'Alternate text for media object' raw (g2 qt smil10 smil2 cmif snap))
 
 (author (string) '' 'Author' default 'Author (informational only)' raw (g2 qt smil10 smil2 cmif snap))
 
@@ -65,20 +65,20 @@
 	'Color used for background of window' region (g2 qt smil10 smil2 cmif snap))
 
 (cssbgcolor (tuple (name) (tuple (int) (int) (int))) (transparent 0 0 0) 'Background color' csscolor
-	'Color used for background of window' region (smil2 snap))
+	'Color used for background of window' region (advanced smil2 snap))
 
 (left (string) '' 'Left' csspos
-	'Left' region (smil2 snap))
+	'Left' region (advanced smil2 snap))
 (width (string) '' 'Width' csspos
-	'Width' region (smil2 snap))
+	'Width' region (advanced smil2 snap))
 (right (string) '' 'Right' csspos
-	'Right' region (smil2 snap))
+	'Right' region (advanced smil2 snap))
 (top (string) '' 'Top' csspos
-	'Top' region (smil2 snap))
+	'Top' region (advanced smil2 snap))
 (height (string) '' 'Height' csspos
-	'Height' region (smil2 snap))
+	'Height' region (advanced smil2 snap))
 (bottom (string) '' 'Bottom' csspos
-	'Bottom' region (smil2 snap))
+	'Bottom' region (advanced smil2 snap))
 
 #(bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
 #	'Color used for background of window. Overriden by "transparent".' channel (g2 qt smil10 smil2 cmif))
@@ -87,7 +87,7 @@
 	'Peak bitrate reserved for this item, in bits per second' raw (g2 qt smil10 smil2 cmif snap))
 
 (channel (name) undefined 'Region' channelname
-	'Name of region used to render this node' inherited (g2 qt smil10 smil2 cmif))
+	'Name of region used to render this node' inherited (advanced g2 qt smil10 smil2 cmif))
 
 (clipbegin (string) '' 'Clip begin' default
 	'Start of range of frames to be played. Simplest form is "npt=3s".' raw (advanced g2_pro qt_pro smil10 smil2 cmif))
@@ -169,7 +169,7 @@
 	hidden 'List of layouts within this document (root node only)' raw (cmif))
 
 (longdesc (string) '' 'Long description URL' default
-	'Link (URL) to a long description of the media object' raw (advanced g2 qt smil10 smil2 cmif snap))
+	'Link (URL) to a long description of the media object' raw (g2 qt smil10 smil2 cmif snap))
 
 (loop (float) 1 'Repeat count' default
 	'Number of times the node should repeat' raw (g2 qt smil10 smil2 cmif))
@@ -294,7 +294,7 @@
 	'Position of the element in the tabbing order of the document' raw (advanced cmif smil2))
 
 (regionName (name) 'undefined' 'Region name' default
-	'Region name' raw (cmif smil2 snap))
+	'Region name' raw (advanced cmif smil2 snap))
 
 (repeatdur (float) 0 'Repeat duration' default
 	'Time the node should repeat' raw (smil2))
@@ -305,11 +305,8 @@
 (restartDefault (enum inherit always whenNotActive never) inherit 'Restart default' restart
 	'Default value for the restart property on the children of this node' inherited (template cmif smil2 snap))
 
-(scale (float) 1.0 'Scale factor' scale
-	'Aspect ratio is maintained for all options' channel (g2 qt smil10 smil2 cmif snap))
-
 (fit (enum meet hidden slice scroll fill) hidden 'Fit' fit
-	'Fit value' channel (g2 qt smil10 smil2 cmif snap))
+	'Fit value' channel (advanced g2 qt smil10 smil2 cmif snap))
 
 (sensitivity (int) 0 'Event sensitivity' sensitivity
 	'Event sensitivity of media (percentage in range 0 - 100)' raw (advanced cmif smil2))
@@ -408,7 +405,7 @@
 	'The language of the media item' raw (advanced smil2 cmif))
 
 (z (int) 0 'Z order' default
-	'Stacking order for regions, higher numbers are on top' normal (g2 qt smil10 smil2 cmif snap))
+	'Stacking order for regions, higher numbers are on top' normal (advanced g2 qt smil10 smil2 cmif snap))
 
 # SMIL system test attributes
 (system_audiodesc (bool) 0 'System audio descriptions' bool3
@@ -714,10 +711,10 @@
 # region
 
 (showBackground (enum always whenActive) always 'Show background' default
-	'Show when node is active the background color or always' raw (smil2))
+	'Show when node is active the background color or always' raw (advanced smil2))
 
 (soundLevel (float) 1 'Sound level' percent
-	'Specifies the relative volume in percent' raw (smil2))
+	'Specifies the relative volume in percent' raw (advanced smil2))
 
 # settings
 (vertical_icons (bool) 1 'Vertical icons' default

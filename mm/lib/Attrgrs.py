@@ -141,12 +141,25 @@ attrgrs=(
 		'transOut',
 		]},
 
+	{'name':'.cname-real',
+	'title':'General',
+	'attrs':[
+		'.cname',
+		'title',
+		'alt',
+		'longdesc',
+		'regionName',
+		'opacity',
+		]},
+
 	{'name':'.cname',
 	'title':'General',
 	'attrs':[
 		'.cname',
-		'type',
 		'title',
+		'alt',
+		'longdesc',
+		'regionName',
 		]},
 
 	{'name':'name',
@@ -168,6 +181,7 @@ attrgrs=(
 	'title': 'Info',
 	'match': 'first',
 	'attrs':[
+		'name',
 		'title',
 		'abstract',
 		'alt',
