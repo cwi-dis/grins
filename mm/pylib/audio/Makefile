@@ -57,8 +57,8 @@ clean:
 clobber: clean
 	 rm -f *.dvi *.ps *.texi *.info *.info-[0-9]*
 
-PYFILES = __init__.py aifc.py au.py dev.py devmac.py devsgi.py devsun.py \
-	devwin.py file.py format.py merge.py select.py wav.py what.py
+PYFILES = __init__.py aifc.py au.py convert.py dev.py devmac.py devsgi.py \
+	devsun.py devwin.py file.py format.py merge.py select.py wav.py what.py
 DOCFILES = boilerplate.tex lib.tex libaudio.tex
 dist:	$(PYFILES) $(DOCFILES) Makefile
 	tar cf - $(PYFILES) $(DOCFILES) Makefile | gzip > audio.tar.gz
