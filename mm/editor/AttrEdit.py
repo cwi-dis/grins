@@ -45,7 +45,7 @@ def getwrapperclass(selvaluelist):
 			selvalue.GetChannelType() == 'RealPix' and \
 			not hasattr(selvalue, 'slideshow'):
 			return None
-	elif className == 'MMChannel':
+	elif className in ('Region','Viewport'):
 		wrapperclass = ChannelWrapper
 		
 	return wrapperclass
@@ -948,7 +948,7 @@ class ChannelWrapper(Wrapper):
 		editmgr = self.editmgr
 		if not editmgr.transaction():
 			return # Not possible at this time
-		editmgr.delchannel(self.channel.name)
+		editmgr.delchannel(self.channel)
 		editmgr.commit()
 	#
 	# Return a list of attribute names that make sense for this channel,
@@ -1682,9 +1682,10 @@ class AttrEditor(AttrEditorDialog):
 					# multiple root windows
 					root = ''
 		index = len(context.channelnames)
-		em.addchannel(channelname, index, 'layout')
 		if root:
-			em.setchannelattr(channelname, 'base_window', key)
+			channel = context.newchannel(channelname, index, 'layout')
+			parent = context.getchannel(key)
+			em.addchannel(parent, index, channel)
 
 	#
 	# EditMgr interface

@@ -399,6 +399,13 @@ class MMNodeContext:
 		self.channelnames.insert(i, name)
 		self.channels.insert(i, c)
 
+	# for edition operations, use this method instead to use addchannel
+	# it's consistent with the MMNode operations.
+	# To add a node, editmgr needs an instance of MMChannel
+	def newchannel(self, name, i, type):
+		self.addchannel(name, i, type)
+		return self.getchannel(name)
+	
 	def copychannel(self, name, i, orig):
 		if name in self.channelnames:
 			raise CheckError, 'copychannel: existing name'
@@ -722,6 +729,10 @@ class MMNodeContext:
 		top_levels = []
 		for chan in self.channels:
 			if chan.GetParent() is None:
+				# XXX temporar. Currently, it's the only way to know whether it's a real viewport
+				# or a channel which has been extracted
+#				import SMILCssResolver
+#				if isinstance(chan._cssId, SMILCssResolver.RootNode) and chan.GetType() == 'layout':
 				top_levels.append(chan)
 		return top_levels
 
@@ -1109,6 +1120,11 @@ class MMChannel(MMTreeElement):
 		self.d_attrdict = {}
 		self.views = {}
 		self._cssId = None
+
+		# XXX allow to know if the node is part of the current document or clipboard
+		self.inDocument = 1
+		self.isRoot = 1
+		
 		if type == 'layout':
 			# by default it's a viewport
 			self._cssId = self.newCssId(1)
@@ -1119,76 +1135,44 @@ class MMChannel(MMTreeElement):
 	#
 	# clipboard method supports
 	#
-	
-	# export the sub tree. The result is a region tree independant of any context. It's important because
-	# the context is not all the time the same, and CopyIntoContext have to work whatever the context
-	def deepExport(self):
-		node = self.__deepExport()
-		return node
 
-	def __deepExport(self):
-		channel = MMChannel(None, self.name, None)
-		channel['type'] = self.get('type')
-		self.__attrsExport(channel)
+	#
+	# Make a "deep copy" of a subtree within the current context
+	#	
+	def DeepCopy(self):
+		cNode = self.__deepCopy(self.context)
+		# XXX allow to know if the node is part of the current document or clipboard
+		cNode.inDocument = 0
+		return cNode
+
+	def __deepCopy(self, context):
+		cName = self.__getName(context, self.name)
+		cChannel = context.newchannel(cName, -1, self.get('type'))
+		
+		self.__attrsCopy(context, cChannel)
 		for child in self.GetChildren():
 			if child.get('type') == 'layout':
-				cChild = child.__deepExport()
-				cChild.AddToTree(channel, -1)
-		return channel
+				cChild = child.__deepCopy(context)
+				cChild['base_window'] = cName
+		return cChannel
 
-	def __attrsExport(self, channelTarget):
-		# copy attributes on this node, except base_window
-		# if you copy base_window, it doesn't work, because the current context will be affected
-		# (see __setitem__ method).
-		for attrName, attrValue in self.items():
-			if attrName != 'base_window' and attrName != 'base_winoff':
-				# special action for positioning attributes
-				if attrName not in _CssAttrs:
-					channelTarget[attrName] = attrValue
-				else:
-					#XXX for now, change the original name to make working
-					channelTarget['css_'+attrName] = attrValue
-		# keep the 'collapsed' information
-		channelTarget['collapsed'] = self.collapsed
-
-		
-	# copy the a tree into a parent region of a specified context
-	# REQUIEREMENTS:
-	#  - the sub tree had to be created with deepExport only
-	#  - this method have to be called into a edit manager transaction
-
-	def CopyIntoContext(self, context, parentRegion):
-		cRegion = self.__copyIntoContext(context)
-		if parentRegion != None:
-			context.editmgr.setchannelattr(cRegion.name, 'base_window', parentRegion.name)
-		self.__attrsImport(context, cRegion)
-		return cRegion
-
-	def __copyIntoContext(self, context):
-		cName = self.__getName(context, self.name)
-		context.editmgr.addchannel(cName, -1, self.get('type'))
-		cRegion = context.getchannel(cName)
-		for child in self.GetChildren():
-			cChild = child.__copyIntoContext(context)
-			context.editmgr.setchannelattr(cChild.name, 'base_window', cName)
-			child.__attrsImport(context, cChild)
-		
-		return cRegion
-
-	def __attrsImport(self, context, channelTarget):
+	def __attrsCopy(self, context, channelTarget):
 		# copy attributes on this node
-		for attrName, attrValue in self.attrdict.items():
-			# special action for positioning attributes. See also deepexport method
-			for attr in _CssAttrs:
-				#XXX retrieve the original name 
-				if ('css_'+attr) == attrName:
-					attrName = attr
-					break
-			if attrName != 'type':
-				context.editmgr.setchannelattr(channelTarget.name, attrName, attrValue)
-		# restore the 'collapsed' information
-		channelTarget.collapsed = self.get('collapsed')
-					
+		for attrName, attrValue in self.items():
+			if attrName != 'base_winoff' and attrName != 'base_window':
+				channelTarget[attrName] = attrValue
+		# keep the 'collapsed' information
+		channelTarget.collapsed = self.collapsed
+		# save whether it's a toplayout or a region
+		channelTarget.isRoot = self.isRoot
+
+	#
+	# Copy a subtree (deeply) into a new context
+	#
+	def CopyIntoContext(self, context):
+		cChannel = self._deepcopy(context)
+		return cChannel
+
 	# compute a region name according to a base name
 	def __getName(self, context, name):
 		# first, try the suggested name. It's important for cut operations
@@ -1210,7 +1194,10 @@ class MMChannel(MMTreeElement):
 	# allow to know the class name without use 'import xxx; isinstance'
 	# note: this method should be implemented for all basic classes of the document
 	def getClassName(self):
-		return 'MMChannel'
+		if self.isRoot:
+			return 'Viewport'
+		else:
+			return 'Region'
 
 	def __repr__(self):
 		return '<%s instance, name=%s>' % (self.__class__.__name__, `self.name`)
@@ -1238,6 +1225,12 @@ class MMChannel(MMTreeElement):
 		if self.has_key('base_window'):
 			del self['base_window']
 		self.context = None
+
+	def Destroy(self):
+		# XXX this call doesn't remove all.
+		# for channels, we need to remove as well the channels from the context,
+		# all references to this channel, ...
+		MMTreeElement.Destroy(self)
 
 	def stillvalid(self):
 		return self.context is not None
@@ -1327,6 +1320,9 @@ class MMChannel(MMTreeElement):
 		MMTreeElement.Extract(self)
 		if self.attrdict.get('type') == 'layout' and self._cssId != None:
 			self.context.cssResolver.unlink(self._cssId)
+
+		# XXX allow to know if the node is part of the current document or clipboard
+		self.inDocument = 0
 		
 	def __setitem__(self, key, value):
 		if key == 'type':
@@ -1334,6 +1330,7 @@ class MMChannel(MMTreeElement):
 			if ChannelMap.isvisiblechannel(value) and (not self.attrdict.has_key(key) or not ChannelMap.isvisiblechannel(self.attrdict[key])):
 				self.setvisiblechannelattrs(value)
 		elif key == 'base_window':
+			self.isRoot	= 0
 			parent = self.GetParent()
 			if parent is not None:
 				self.Extract()
@@ -1347,8 +1344,14 @@ class MMChannel(MMTreeElement):
 				# XXX don't re-intialize css id if base_window was already set
 				# XXX NOTE: This part needs to be improved
 				if parent is None:
+					oldId = self._cssId
 					self.newCssId(0)
-					
+					# the css id has changed, reset the values
+					for attr in _CssAttrs:
+						val = self.GetAttrDef(attr, None)
+						if val is not None:
+							self.setCssAttr(attr, val)
+										
 				pchan = self.context.channeldict.get(value)
 				if pchan is None:
 					print 'Error: The parent channel '+self.name+' have to be created before to set base_window'
@@ -1493,6 +1496,25 @@ class MMChannel(MMTreeElement):
 		if animated and self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
 		return self.attrdict.get(name, default)
+
+	# allow to know whether this node is a part of the document or not
+	# it may be a part of the clipboard
+	def isInDocument(self):
+		channel = self
+		while (channel != None):
+			if not channel.inDocument:
+				return 0
+			channel = channel.GetParent()
+
+		return 1
+
+class MMRegionAssociation:
+	def __init__(self, media, region):
+		self.media = media
+		self.region = region
+
+	def getClassName(self):
+		return 'RegionAssociation'
 
 # MMChannel tree class
 #

@@ -189,6 +189,9 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			channels = context.channels
 		channeldict = {}
 		for ch in channels:
+			# exclude regions/viewport which are not a part of the document
+			if not ch.isInDocument():
+				continue
 			chname = ch.name
 			channeldict[chname] = 0
 			if not self.channels.has_key(chname):
