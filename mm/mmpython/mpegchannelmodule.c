@@ -58,12 +58,16 @@ struct mpeg_data {
 };
 struct mpeg {
 	long m_width, m_height;	/* width and height of window */
+	int initial_clear_done;  /* True after initial clear */
 	struct mpeg_data m_play; /* mpeg being played */
 	struct mpeg_data m_arm; /* movie being armed */
 	int m_pipefd[2];	/* pipe for synchronization with player */
 };
 
 #define PRIV	((struct mpeg *) self->mm_private)
+
+/* Forward: */
+void mpeg_display_frame();
 
 static int
 init_colormap(bgcolor)
@@ -266,7 +270,7 @@ mpeg_armer(self)
 {
 	int cbufsize;
 	int framesize;
-	int fd;
+	int fd, i;
 	CL_Handle decHandle;
 	CL_BufferHdl bufHandle, frameHandle;
 	char *inbuf;
@@ -307,6 +311,7 @@ mpeg_armer(self)
 	}
 
 	framesize = PRIV->m_arm.m_width * PRIV->m_arm.m_height * sizeof(long);
+	dprintf(("mpeg_arm: cbufsize=%d, dbufsize=%d\n", cbufsize, framesize));
 	inbuf = malloc(cbufsize);
 	framebuf = malloc(framesize);
 	if ( inbuf == NULL || framebuf == NULL ) {
@@ -325,8 +330,8 @@ mpeg_armer(self)
 	PRIV->m_arm.m_decHdl = decHandle;
 	
 	PRIV->m_arm.m_feof = mpeg_fill_inbuffer(bufHandle, fd);
-	if( clDecompress(decHandle, 1, 0, NULL, NULL) != 1) {
-	    dprintf(("mpeg_armer: clDecompress failed\n"));
+	if( (i=clDecompress(decHandle, 1, 0, NULL, NULL)) != 1) {
+	    printf("mpeg_armer: clDecompress failed, %d\n", i);
 	    mpeg_free_old(&PRIV->m_arm, 0);
 	    return;
 	}
@@ -371,13 +376,21 @@ mpeg_play(self)
 	    PRIV->m_play.m_bgindex = init_colormap(PRIV->m_play.m_bgcolor);
 	}
 	gconfig();
-	if ( rgb_mode )
-	  RGBcolor((PRIV->m_play.m_bgcolor >> 16) & 0xff,
-		   (PRIV->m_play.m_bgcolor >>  8) & 0xff,
-		   (PRIV->m_play.m_bgcolor      ) & 0xff);
-	else
-	  color(PRIV->m_play.m_bgindex);
-	clear();
+	if ( !PRIV->initial_clear_done ) {
+	    if ( rgb_mode )
+	      RGBcolor((PRIV->m_play.m_bgcolor >> 16) & 0xff,
+		       (PRIV->m_play.m_bgcolor >>  8) & 0xff,
+		       (PRIV->m_play.m_bgcolor      ) & 0xff);
+	    else
+	      color(PRIV->m_play.m_bgindex);
+	    clear();
+	    /*
+	    ** Note: this is not correct in all cases. If a node
+	    ** overrides the background color we should reset this
+	    ** to 0 (but that's too much work for the moment).
+	    */
+	    PRIV->initial_clear_done = 1;
+	}
 	pixmode(PM_SIZE, 32);
 	/* DEBUG: should call:
 	 * release_lock(gl_lock);
@@ -509,7 +522,7 @@ mpeg_display_frame(p, w, h)
 	  scale = 1;
     }
     xorig = (w - p->m_width * scale) / 2;
-    yorig = (w - p->m_height * scale) / 2;
+    yorig = (h - p->m_height * scale) / 2;
     rectzoom(scale, scale);
     lrectwrite(xorig, yorig,
 	       xorig + p->m_width - 1,
@@ -621,7 +634,15 @@ static int
 mpeg_finished(self)
 	mmobject *self;
 {
-	if (PRIV->m_play.m_wid >= 0) {
+        int need_clear;
+
+	/*
+	** We don't need a clear if there's another node arming.
+	*/
+	need_clear = (PRIV->m_arm.m_decHdl == NULL);
+	/* XXXX 405 CL bug workaround: see MpegChannel for details */
+	need_clear = 0;
+	if (need_clear && PRIV->m_play.m_wid >= 0) {
 		winset(PRIV->m_play.m_wid);
 		if (PRIV->m_play.m_bgindex >= 0)
 			color(PRIV->m_play.m_bgindex);
