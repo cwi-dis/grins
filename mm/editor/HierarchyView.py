@@ -900,7 +900,16 @@ class HierarchyView(HierarchyViewDialog):
 			if not self.editmgr.transaction():
 				return
 			self.toplevel.setwaiting()
-			r = node.GetParent().GetRoot()
+			parent = node.GetParent()
+			siblings = parent.GetChildren()
+			nf = siblings.index(node)
+			if nf < len(siblings)-1:
+				self.select_node(siblings[nf+1])
+			elif nf > 0:
+				self.select_node(siblings[nf-1])
+			else:
+				self.select_node(parent)
+			r = parent.GetRoot()
 			self.editmgr.delnode(node)
 			self.fixsyncarcs(r, node) #  TODO: shouldn't this be done in the editmanager? -mjvdg
 			Clipboard.setclip('node', node)
