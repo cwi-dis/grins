@@ -18,6 +18,7 @@ class HierarchyViewDialog(ViewDialog):
 			      'a': ATTRIBUTES,
 			      'e': CONTENT,
 			      't': ANCHORS,
+			      'T': CREATEANCHOR,
 			      'L': FINISH_LINK,
 			      'f': PUSHFOCUS,
 			      'z': ZOOMOUT,
@@ -59,6 +60,7 @@ class HierarchyViewDialog(ViewDialog):
 				('Edit contents...', CONTENT),
 				('Edit anchors...', ANCHORS),
 				None,
+				('Create simple anchor', CREATEANCHOR),
 				('Finish hyperlink...', FINISH_LINK)
 				]),
 			('Focus', [
