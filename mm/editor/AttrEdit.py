@@ -597,11 +597,6 @@ class AttrEditor(Dialog):
 
 # Class for one attribute definitition.
 
-# XXX Still to do: use type-specific objects for common cases,
-# e.g.: on/off buttons for booleans, sliders for numbers (?),
-# and input fields without quotes for strings.
-# XXX The class has the wrong type of interface to do that!
-
 class ButtonRow:
 	#
 	def init(b, (attreditor, name)):
@@ -851,23 +846,83 @@ class ChanneltypeButtonRow(PopupButtonRow):
 	#
 
 
-allfontnames = None
-
-class FontButtonRow(PopupButtonRow):
+class FontButtonRow(ButtonRow):
 	# Choose from all possible font names
-	# XXX the menu doesn't fit on the screen -- what to do?
 	#
-	def choices(b):
-		global allfontnames
-		if allfontnames == None:
-			import fm
-			allfontnames = fm.enumerate()
-			import TextChannel
-			for name in TextChannel.fontmap.keys():
-				if name <> '':
-					allfontnames.append(name)
-			allfontnames.sort()
-		return allfontnames
+	def makevalueinput(b, (x, y, w, h)):
+		b.value = b.form.add_button(INOUT_BUTTON, x, y, w-1, h, '')
+		b.value.set_call_back(b.valuecallback, None)
+	#
+	def valuecallback(b, dummy):
+		print '-->', b.value.get_button()
+		value = dofontmenu()
+		b.value.set_button(0)
+		if value <> None and value <> b.currentvalue:
+			b.currentvalue = value
+			b.isdefault = 0
+			b.changed = 1
+			b.attreditor.setchanged(1)
+			b.update()
+	#
+	def update_specific(b):
+		b.value.label = b.currentvalue
+	#
+
+
+fontnames = None
+fontmenu = None
+
+def dofontmenu():
+	global fontmenu, fontnames
+	if fontmenu == None:
+		initfontmenu()
+	i = gl.dopup(fontmenu)
+	if 1 <= i <= len(fontnames):
+		return fontnames[i-1]
+	else:
+		return None
+
+def initfontmenu():
+	global fontnames, fontmenu
+	import fm
+	import string
+	import TextChannel
+	fontnames = fm.enumerate()
+	for name in TextChannel.fontmap.keys():
+		if name <> '':
+			fontnames.append(name)
+	fontnames.sort()
+	last = None
+	dict = {}
+	for name in fontnames:
+		if '-' in name:
+			i = string.index(name, '-')
+			head, tail = name[:i], name[i:]
+		else:
+			head, tail = name, ''
+		if dict.has_key(head):
+			dict[head].append(tail)
+		else:
+			dict[head] = [tail]
+	heads = dict.keys()
+	heads.sort()
+	top = gl.newpup()
+	gl.addtopup(top, 'Fonts %t', 0)
+	for head in heads:
+		if len(dict[head]) > 1:
+			dict[head].sort()
+			sub = gl.newpup()
+			for tail in dict[head]:
+				name = head + tail
+				gl.addtopup(sub, \
+				    name + '%x' + `fontnames.index(name)+1`, 0)
+			gl.addtopup(top, head + ' -> %m', sub)
+		else:
+			tail = dict[head][0]
+			name = head + tail
+			gl.addtopup(top, \
+				name + '%x' + `fontnames.index(name)+1`, 0)
+	fontmenu = top
 
 
 # Routine to hide all attribute editors in a tree and its context.
