@@ -363,6 +363,10 @@ SOURCE=.\editor\win32\AttrEditDialog.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\editor\win32\ErrorsViewDialog.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\editor\win32\HierarchyViewDialog.py
 # End Source File
 # Begin Source File
@@ -684,6 +688,10 @@ SOURCE=.\editor\EditableObjects.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\editor\ErrorsView.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\editor\features.py
 # End Source File
 # Begin Source File
@@ -864,6 +872,10 @@ SOURCE=.\lib\win32\Font.py
 # Begin Source File
 
 SOURCE=.\lib\win32\GenFormView.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\win32\GenView.py
 # End Source File
 # Begin Source File
 
