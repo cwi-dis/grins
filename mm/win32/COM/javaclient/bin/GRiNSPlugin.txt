@@ -2,12 +2,14 @@ GRiNS Player plug-in
 
 Requirements:
 	GRiNS Player 2 (Build 44 or later)
-	Java 2 Runtime Environment
+	Java 2 Runtime Environment (1.3)
 	
-In case of problems:
-	1. Check that grinsp.jar and grinsp.dll have been copied
- 	   to the extensions folder of the Java 2 Runtime Environment
-	   (usually C:\Program Files\JavaSoft\JRE\1.3\lib\ext)
+
+Installation:
+	
+	1. Copy grinsp.jar and grinsp.dll to the extensions folder 
+	of the Java 2 Runtime Environment
+	(usually C:\Program Files\JavaSoft\JRE\1.3\lib\ext)
 
 	2. Check that grinsproxy.dll  exists in GRiNS Player folder
 
@@ -18,4 +20,9 @@ In case of problems:
 
 	4. Check that GRiNS Player starts without displaying a licence dialog
 
-	5. Check that the smil filename you pass as a param exists
+
+Use:
+	Open GRiNSPlayer.html with IE
+	type or paste the smil filename or url of the file you want to open
+	press open and the play
+	(You can pass also the filename as param in GRiNSPlayer.html)
