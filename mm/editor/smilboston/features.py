@@ -16,6 +16,7 @@ feature_set = [
 	       UNIFIED_FOCUS,
 	       H_MODIFY_STRUCTURE, CUSTOM_REGIONS,
 	CREATE_TEMPLATES,
+	ADVANCED_PROPERTIES,
 				];
 
 version = 'pro'                         # I'm not sure here.. mjvdg
