@@ -123,7 +123,7 @@ class NodeWrapper(Wrapper):
 
 	def maketitle(self):
 		name = MMAttrdefs.getattr(self.node, 'name')
-		return 'Attributes for node: ' + name
+		return 'Properties of node ' + name
 
 	def getattr(self, name): # Return the attribute or a default
 		return MMAttrdefs.getattr(self.node, name)
@@ -200,7 +200,7 @@ class ChannelWrapper(Wrapper):
 		return self.channel.stillvalid()
 
 	def maketitle(self):
-		return 'Attributes for channel: ' + self.channel.name
+		return 'Properties of channel ' + self.channel.name
 
 	def getattr(self, name):
 		if name == '.cname': return self.channel.name

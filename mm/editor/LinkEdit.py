@@ -658,7 +658,7 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 			
 	def editorshow(self, editlink, isnew):
 		self.editorhide()
-		self.editor = LinkEditEditor(self, "Hyperlink attributes", editlink, isnew)
+		self.editor = LinkEditEditor(self, "Hyperlink properties", editlink, isnew)
 		
 	def editsave(self, editlink):
 		em = self.editmgr
