@@ -317,7 +317,10 @@ class _Window:
 			w = int(float(w) * toplevel._screenwidth + 0.5)
 			h = int(float(h) * toplevel._screenheight + 0.5)
 		elif units == UNIT_PXL:
-			pass
+			x = int(x)
+			y = int(y)
+			w = int(w)
+			h = int(h)
 		else:
 			raise error, 'bad units specified'
 		# XXX--somehow set the position
