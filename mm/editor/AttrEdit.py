@@ -249,12 +249,14 @@ class NodeWrapper(Wrapper):
 		newlinks = []
 		oldanchors = self.__findanchors()
 		oldanchonames = oldanchors.keys()
+		dstlinks = []
 		for aid in oldanchors.keys():
 			anchor = uid, aid
 			for link in hlinks.findsrclinks(anchor):
 				editmgr.dellink(link)
 			if anchor in linkview.interesting:
 				linkview.interesting.remove(anchor)
+			dstlinks = dstlinks + hlinks.finddstlinks(anchor)
 		for aid in newanchors.keys():
 			anchor = uid, aid
 			atype, aargs, links = newanchors[aid]
@@ -267,6 +269,12 @@ class NodeWrapper(Wrapper):
 			else:
 				linkview.set_interesting(anchor)
 		editmgr.setnodeattr(node, 'anchorlist', anchorlist or None)
+		if dstlinks:
+			dstanchor = linkview.wholenodeanchor(self.node, type = ATYPE_DEST, notransaction = 1, create = 1, interesting = 0)
+			for link in dstlinks:
+				editmgr.dellink(link)
+				a1, a2, dir, type = link
+				editmgr.addlink((a1, anchor, dir, type))
 
 	def getattr(self, name): # Return the attribute or a default
 		if name == '.hyperlink':
@@ -373,6 +381,9 @@ class NodeWrapper(Wrapper):
 			namelist.append('terminator')
 		if ntype in ('par', 'seq'):
 			namelist.append('duration')
+		if ntype == 'alt':
+			namelist.remove('begin')
+			namelist.remove('loop')
 		if ntype in leaftypes:
 			namelist.append('alt')
 			namelist.append('longdesc')
@@ -380,6 +391,10 @@ class NodeWrapper(Wrapper):
 				namelist.append('.hyperlink')
 		if ntype == 'imm':
 			namelist.append('.values')
+		if 'layout' in namelist and not self.context.layouts:
+			# no sense bothering the user with an attribute that
+			# doesn't do anything...
+			namelist.remove('layout')
 		# Get the channel class (should be a subroutine!)
 		if ChannelMap.channelmap.has_key(ctype):
 			cclass = ChannelMap.channelmap[ctype]
@@ -824,7 +839,7 @@ class PreferenceWrapper(Wrapper):
 	def attrnames(self):
 		import settings
 		attrs = self.__strprefs.keys() + self.__intprefs.keys() + self.__boolprefs.keys() + self.__specprefs.keys()
-		if settings.get('compatibitity') != settings.G2:
+		if settings.get('compatibility') != settings.G2:
 			attrs.remove('cmif')
 			attrs.remove('html_control')
 		elif os.name in ('posix', 'mac'):
