@@ -9,7 +9,6 @@ import MMNode
 from MMTypes import *
 from Hlinks import DIR_1TO2, TYPE_JUMP, TYPE_FORK, A_SRC_PLAY, A_SRC_STOP, A_DEST_PLAY
 import features
-import string
 import os
 import sys
 import flags
@@ -316,7 +315,7 @@ class NodeWrapper(Wrapper):
 			import posixpath
 			mimetype = urlcache.mimetype(self.root.context.findurl(url))
 			if mimetype:
-				mimetype = string.split(mimetype, '/')[0]
+				mimetype = mimetype.split('/')[0]
 			if not mimetype:
 				mimetype = ''
 			path = urlparse.urlparse(url)[2]
@@ -941,6 +940,8 @@ class PreferenceWrapper(Wrapper):
 		'system_overdub_or_caption': 'Text captions (subtitles) or overdub',
 ##		'system_overdub_or_subtitle': 'Overdub or subtitles',
 		}
+	if features.EDIT_COMPONENTS in features.feature_set:
+		__specprefs['components'] = 'URLs of components file'
 
 	def __init__(self):
 		self.toplevel = None
@@ -1002,6 +1003,10 @@ class PreferenceWrapper(Wrapper):
 			return (('bool', None), self.getdefault(name),
 				defs[2] or name, 'captionoverdub',
 				self.__specprefs[name], 'raw', flags.FLAG_ALL)
+		elif name == 'components':
+			return (('string', None), self.getdefault(name),
+				defs[2] or name, 'file',
+				self.__specprefs[name], 'raw', flags.FLAG_ALL)
 
 	def stillvalid(self):
 		return 1
@@ -1061,7 +1066,7 @@ class PreferenceWrapper(Wrapper):
 		if self.__strprefs.has_key(name):
 			return value
 		elif self.__intprefs.has_key(name):
-			return string.atoi(value)
+			return int(value)
 		elif self.__boolprefs.has_key(name):
 			if str == 'on': return 1
 			return 0
@@ -1366,7 +1371,7 @@ class AttrEditor(AttrEditorDialog):
 ##				# unknown type, not compatible
 ##				return 0
 ##			# compatible if image and not RealPix
-##			return mtype[:5] == 'image' and string.find(mtype, 'real') < 0
+##			return mtype[:5] == 'image' and mtype.find('real') < 0
 ##		b = self._findattr('channel')
 ##		if b is not None:
 ##			str = b.getvalue()
@@ -1679,7 +1684,11 @@ class FileAttrEditorField(StringAttrEditorField):
 
 	def browser_callback(self):
 		import os, MMurl, urlparse
-		cwd = self.wrapper.toplevel.dirname
+		if self.wrapper.toplevel is not None:
+			cwd = self.wrapper.toplevel.dirname
+		else:
+			import cmif
+			cwd = os.path.dirname(cmif.findfile(os.curdir))
 		if cwd:
 			cwd = MMurl.url2pathname(cwd)
 			if not os.path.isabs(cwd):
@@ -1713,7 +1722,7 @@ class FileAttrEditorField(StringAttrEditorField):
 				chtype = None
 		mtypes = ChannelMime.ChannelMime.get(chtype, [])
 		if chtype:
-			mtypes = ['/%s file' % string.capitalize(chtype)] + mtypes
+			mtypes = ['/%s file' % chtype.capitalize()] + mtypes
 		windowinterface.FileDialog('Choose File for ' + self.label,
 					   dir, mtypes, file, self.setpathname, None,
 					   existing=1)
@@ -1724,7 +1733,10 @@ class FileAttrEditorField(StringAttrEditorField):
 			url = ''
 		else:
 			url = MMurl.pathname2url(pathname)
-			url = self.wrapper.context.relativeurl(url)
+			if self.wrapper.toplevel is None:
+				url = MMurl.canonURL(url)
+			else:
+				url = self.wrapper.context.relativeurl(url)
 ##		if not self.attreditor.checkurl(url):
 ##			self.attreditor.showmessage('file not compatible with channel', mtype = 'error')
 ##			return
@@ -1753,13 +1765,13 @@ class TextAttrEditorField(AttrEditorField):
 			if self.nodefault:
 				return self.getdefault()
 			return ''
-		return string.join(value, '\n')
+		return '\n'.join(value)
 
 	def parsevalue(self, str):
 		# Return internal representation of string.
 		if str == '':
 			return None
-		return string.split(str, '\n')
+		return str.split('\n')
 
 class TupleAttrEditorField(AttrEditorField):
 	type = 'tuple'
@@ -1858,20 +1870,20 @@ import colors
 class ColorAttrEditorField(TupleAttrEditorField):
 	type = 'color'
 	def parsevalue(self, str):
-		str = string.lower(string.strip(str))
+		str = str.strip().lower()
 		if colors.colors.has_key(str):
 			return colors.colors[str]
 		if str[:1] == '#':
 			rgb = []
 			if len(str) == 4:
 				for i in range(1, 4):
-					rgb.append(string.atoi(str[i], 16) * 16)
+					rgb.append(int(str[i], 16) * 16)
 			elif len(str) == 7:
 				for i in range(1, 7, 2):
-					rgb.append(string.atoi(str[i:i+2], 16))
+					rgb.append(int(str[i:i+2], 16))
 			elif len(str) == 13:
 				for i in range(1, 13, 4):
-					rgb.append(string.atoi(str[i:i+4], 16)/256)
+					rgb.append(int(str[i:i+4], 16)/256)
 			else:
 				raise RuntimeError, 'Bad color specification'
 			str = ''
@@ -1909,7 +1921,7 @@ class CssColorAttrEditorField(CssAttrEditorField):
 
 	type = 'csscolor'
 	def parsevalue(self, str):
-		str = string.lower(string.strip(str))
+		str = str.strip().lower()
 		if str == 'transparent' or str == '':
 			nstr = 'transparent 0 0 0'
 		elif str == 'inherit':
@@ -1927,13 +1939,12 @@ class CssColorAttrEditorField(CssAttrEditorField):
 
 	def valuerepr(self, value):
 		str = AttrEditorField.valuerepr(self, value)
-		import string
-		svalue = string.split(str)
+		svalue = str.split()
 		type = svalue[0]
 		if type == 'transparent' or type == 'inherit':
 			return type
 
-		color = string.atoi(svalue[1]), string.atoi(svalue[2]), string.atoi(svalue[3])
+		color = int(svalue[1]), int(svalue[2]), int(svalue[3])
 		if colors.rcolors.has_key(color):
 			return colors.rcolors[color]
 		return svalue[1]+' '+svalue[2]+' '+svalue[3]		
@@ -1964,7 +1975,6 @@ class CssPosAttrEditorField(CssAttrEditorField):
 
 	type = 'csspos'
 	def parsevalue(self, str):
-		import string
 		val = None
 		if str == '':
 			pass
@@ -2459,7 +2469,7 @@ class RMTargetsAttrEditorField(PopupAttrEditorField):
 	def parsevalue(self, str):
 		if str == DEFAULT:
 			return self.getdefaultvalue()
-		strs = string.split(str, ',')
+		strs = str.split(',')
 		rv = 0
 		for str in strs:
 			rv = rv | (1 << self.__values.index(str))
@@ -2472,7 +2482,7 @@ class RMTargetsAttrEditorField(PopupAttrEditorField):
 		for i in range(len(self.__values)):
 			if value & (1 << i):
 				strs.append(self.__values[i])
-		str = string.join(strs, ',')
+		str = ','.join(strs)
 		return str
 
 class RMAudioAttrEditorField(PopupAttrEditorFieldNoDefault):
@@ -2743,17 +2753,20 @@ class ListAttrEditorField(AttrEditorField):
 	def valuerepr(self, value):
 		if value is None:
 			return ''
-		return string.join(value)
+		return ' '.join(value)
 
 	def parsevalue(self, str):
 		if not str:
 			return None
-		return string.split(str)
+		return str.split()
 
 class UsergroupAttrEditorField(ListAttrEditorField):
 	pass
 
 class ReqListAttrEditorField(ListAttrEditorField):
+	pass
+
+class ComponentsListAttrEditorField(ListAttrEditorField):
 	pass
 
 class TermnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
@@ -2962,6 +2975,7 @@ DISPLAYERS = {
 	'channelname': ChannelnameAttrEditorField,
 	'channeltype': ChanneltypeAttrEditorField,
 	'color': ColorAttrEditorField,
+	'complist': ComponentsListAttrEditorField,
 	'cpu': CpuAttrEditorField,
 	'csscolor': CssColorAttrEditorField,
 	'csspos': CssPosAttrEditorField,
