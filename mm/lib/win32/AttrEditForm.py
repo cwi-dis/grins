@@ -4541,7 +4541,10 @@ class BeginList2Group(BeginListGroup):
 	def createctrls(self,wnd):
 		cd = BeginListGroup.createctrls(self, wnd)
 		a = self.getattr('restart')
-		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_RESTARTNODEL,grinsRC.IDC_RESTARTNODEV))
+		residToHide = ()
+		if not a.mustshow():
+			residToHide = (grinsRC.IDC_EVENTLASSOO2,)		
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_RESTARTNODEL,grinsRC.IDC_RESTARTNODEV), residToHide)
 		a = self.getattr('restartDefault')
 		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_RESTARTDEFAULTL,grinsRC.IDC_RESTARTDEFAULTV))
 		return cd
