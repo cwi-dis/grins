@@ -182,7 +182,7 @@ class Selecter:
 		destlist = []
 		pause_anchor = 0
 		# Firing an anchor continues the player if it was paused.
-		if self.pausing:
+		if self.scheduler.getpaused():
 			self.pause(0)
 		for i in anchorlist:
 			if i[A_TYPE] == ATYPE_PAUSE:
