@@ -1255,52 +1255,27 @@ class _CommonWindow:
 
 	# Experimental transition interface
 	def begintransition(self, inout, runit, dict):
-		rect = self.qdrect()
-		if self._transition:
-			print 'Multiple Transitions!'
+		if not self._transition_setup_before():
 			return
-		if self._frozen == 'transition':
-			# We are frozen, so we have already saved the contents
-			self._frozen = None
-		else:
-			# Make sure our screen pixels reflect the actual current
-			# situation, so we can grab them
-			Qd.SetPort(self._onscreen_wid)
-			updrgn = Qd.NewRgn()
-			Qd.RectRgn(updrgn, rect)
-			self._redraw_now(updrgn)
-			del updrgn
-			
-			self._mac_create_gworld(BM_PASSIVE, 1, rect)
-		self._mac_create_gworld(BM_DRAWING, 0, rect)
-		#
-		# Tell upper layers, if they are interested (VideoChannels and such may have to
-		# tell their underlying libraries)
-		#
-		if self._eventhandlers.has_key(OSWindowChanged):
-			func, arg = self._eventhandlers[OSWindowChanged]
-			func(arg, self, OSWindowChanged, (0, 0, 0))
-			
-		# XXXX should probably skip this if the window is transparent and empty
 		self._transition = mw_transitions.TransitionEngine(self, inout, runit, dict)
-		if self._transition.need_tmp_wid():
-			self._mac_create_gworld(BM_TEMP, 0, rect)
+		self._transition_setup_after()
 		
 	def jointransition(self, window):
 		# Join the transition already created on "window".
-		if self._transition:
-			print 'Joining with another transition active'
+		if not window._transition:
+			print 'Joining without a transition', self, window, window._transition
+			return
+		if not self._transition_setup_before():
 			return
 		self._transition = window._transition
-		if not self._transition:
-			print 'Joining without a transition'
-			return
 		self._transition.join(self)
+		self._transition_setup_after()
 
 	def endtransition(self):
 		if not self._transition:
 			return
-		has_tmp = self._transition.need_tmp_wid()
+##		has_tmp = self._transition.need_tmp_wid()
+		has_tmp = 1
 		self._transition.endtransition()
 		self._transition = None
 		self._mac_dispose_gworld(BM_DRAWING)
@@ -1340,7 +1315,42 @@ class _CommonWindow:
 			self._mac_dispose_gworld(BM_PASSIVE)
 			self._frozen = None
 			self._mac_invalwin()
-		
+			
+	def _transition_setup_before(self):
+		"""Check that begintransition() is allowed, create the offscreen bitmaps 
+		and set the event handler"""
+		rect = self.qdrect()
+		if self._transition:
+			print 'Multiple Transitions!'
+			return 0
+		if self._frozen == 'transition':
+			# We are frozen, so we have already saved the contents
+			self._frozen = None
+		else:
+			# Make sure our screen pixels reflect the actual current
+			# situation, so we can grab them
+			Qd.SetPort(self._onscreen_wid)
+			updrgn = Qd.NewRgn()
+			Qd.RectRgn(updrgn, rect)
+			self._redraw_now(updrgn)
+			del updrgn
+			
+			self._mac_create_gworld(BM_PASSIVE, 1, rect)
+		self._mac_create_gworld(BM_DRAWING, 0, rect)
+		#
+		# Tell upper layers, if they are interested (VideoChannels and such may have to
+		# tell their underlying libraries)
+		#
+		if self._eventhandlers.has_key(OSWindowChanged):
+			func, arg = self._eventhandlers[OSWindowChanged]
+			func(arg, self, OSWindowChanged, (0, 0, 0))
+		return 1
+	
+	def _transition_setup_after(self):
+##		if self._transition.need_tmp_wid():
+		if 1:
+			self._mac_create_gworld(BM_TEMP, 0, self.qdrect())
+	
 	def _dump_bits(self, which):
 		srcbits = self._mac_getoswindowpixmap(which)
 		currect = srcbits
