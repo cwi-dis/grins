@@ -8,9 +8,6 @@ import os, windowinterface
 import settings
 from AppDefaults import *
 
-# remove this. TODO
-import whrandom
-
 def create_MMNode_widget(node, root):
 	assert root != None
 	ntype = node.GetType()
@@ -595,6 +592,8 @@ class TimeStripSeqWidget(SeqWidget):
 
 class ImageBoxWidget(MMNodeWidget):
 	# Common baseclass for dropbox and channelbox
+	# This is only for images shown as part of the sequence views; This
+	# is not used for any image on screen.
 	def __repr__(self):
 		return "ImageBoxWidget"
 	
@@ -1109,7 +1108,7 @@ class MediaWidget(MMNodeWidget):
 		else:
 			# print "Error: lagwidth is < 0"
 			self.downloadtime_lag = 0
-		# print "            set downloadtime_lag to: ", self.downloadtime_lag
+# print "            set downloadtime_lag to: ", self.downloadtime_lag
 
 	def show_mesg(self):
 		if self.node.errormessage:
@@ -1327,7 +1326,7 @@ class PushBackBarWidget(Widgets.Widget):
 		displist.fgcolor(TEXTCOLOR)
 		displist.drawfbox(COLCOLOR, (x, y, w*redfraction, h))
 		displist.drawfbox(LEAFCOLOR, (x+w*redfraction, y, w*(1-redfraction), h))
-		displist.drawbox(self.get_box())
+		displist.draw3dbox(FOCUSLEFT, FOCUSTOP, COLCOLOR, FOCUSBOTTOM, self.get_box())
 
 	def drawselected(self, displist):
 		redfraction = self.parent.downloadtime_lag_errorfraction

@@ -1,7 +1,7 @@
 __version__ = "$Id$"
 
 from ViewDialog import ViewDialog
-import WMEVENTS
+import WMEVENTS, windowinterface
 import MMAttrdefs
 from usercmd import *
 
@@ -12,7 +12,6 @@ class TemporalViewDialog(ViewDialog):
 		ViewDialog.__init__(self, 'cview_')
 
 	def show(self):
-		windowinterface.showmessage("Hi. This is where the new experimental view will go.")
 		title = 'Temporal View (' + self.toplevel.basename + ')'
 		self.load_geometry()
 		x,y,w,h = self.last_geometry
