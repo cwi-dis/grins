@@ -41,7 +41,7 @@ class FileCache:
 			entry = self.cache[file]
 			mt, sz, res = entry
 			if mt == mtime and sz == size:
-				if self.check == None or \
+				if self.check is None or \
 					  self.check(file, res):
 					return res
 			if self.rm:

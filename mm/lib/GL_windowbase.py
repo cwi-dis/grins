@@ -311,7 +311,7 @@ class _Event:
 						  ifdlist, ofdlist, [],
 						  timeout)
 			except select.error, msg:
-				if type(msg) == TupleType and msg[0] == 4:
+				if type(msg) is TupleType and msg[0] == 4:
 					# ignode EINTR
 					ifdlist = []
 				else:
@@ -369,7 +369,7 @@ class _Event:
 			if _window_list.has_key(val):
 				win = _window_list[val]
 				win._must_redraw = 1
-				if win._parent_window == toplevel:
+				if win._parent_window is toplevel:
 					toplevel._win_lock.acquire()
 					gl.winset(win._window_id)
 					w, h = gl.getsize()
@@ -494,7 +494,7 @@ class _Event:
 				if not w:
 					break
 				w = w._parent_window
-				if w == toplevel:
+				if w is toplevel:
 					break
 		return 0
 
@@ -566,14 +566,14 @@ class _Event:
 	def remove_window_callbacks(self, window):
 		# called when window closes
 		for (w, e) in self._windows.keys():
-			if w == window:
+			if w is window:
 				self.unregister(w, e)
 
 	def setcallback(self, event, func, arg):
 		self.register(None, event, func, arg)
 
 	def select_setcallback(self, fd, cb, args, mask = ReadMask):
-		if type(fd) <> IntType:
+		if type(fd) is not IntType:
 			fd = fd.fileno()
 		if cb is None:
 			del self._select_dict[fd]
@@ -709,7 +709,7 @@ class _Button:
 	def hicolor(self, *color):
 		if self.is_closed():
 			raise error, 'button already closed'
-		if len(color) == 1 and type(color[0]) == TupleType:
+		if len(color) == 1 and type(color[0]) is TupleType:
 			color = color[0]
 		if len(color) != 3:
 			raise TypeError, 'arg count mismatch'
@@ -719,7 +719,7 @@ class _Button:
 		if self.is_closed():
 			raise error, 'button already closed'
 		dispobj = self._dispobj
-		if dispobj._window._active_display_list != dispobj:
+		if dispobj._window._active_display_list is not dispobj:
 			raise error, 'can only highlight rendered button'
 		# if button color and highlight color are all equal to
 		# the background color then don't draw the box (and
@@ -742,7 +742,7 @@ class _Button:
 			return
 		self._highlighted = 0
 		dispobj = self._dispobj
-		if dispobj._window._active_display_list != dispobj:
+		if dispobj._window._active_display_list is not dispobj:
 			raise error, 'can only unhighlight rendered button'
 		if self._hiwidth > self._linewidth:
 			dispobj.render()
@@ -841,7 +841,7 @@ class _DisplayList:
 			gl.clear()
 			self._clonestart = 0
 		for funcargs in self._displaylist[self._clonestart:]:
-			if type(funcargs) == TupleType:
+			if type(funcargs) is TupleType:
 				func, args = funcargs
 				func(args)
 			else:
@@ -867,7 +867,7 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(color) == 1 and type(color[0]) == TupleType:
+		if len(color) == 1 and type(color[0]) is TupleType:
 			color = color[0]
 		if len(color) != 3:
 			raise TypeError, 'arg count mismatch'
@@ -881,7 +881,7 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == TupleType:
+		if len(coordinates) == 1 and type(coordinates) is TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -949,7 +949,7 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == TupleType:
+		if len(coordinates) == 1 and type(coordinates) is TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -969,7 +969,7 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == TupleType:
+		if len(coordinates) == 1 and type(coordinates) is TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -1134,7 +1134,7 @@ class _DisplayList:
 		if self._curcolor != self._fgcolor:
 			d.append(gl.RGBcolor, self._fgcolor)
 			self._curcolor = self._fgcolor
-		if self._curfont != f:
+		if self._curfont is not f:
 			d.append(f.setfont)
 			self._curfont = f
 		x, y = oldx, oldy = self._curpos
@@ -1249,7 +1249,7 @@ class _Window:
 	def getgeometry(self):
 		if self.is_closed():
 			raise error, 'window already closed'
-		if self._parent_window != toplevel:
+		if self._parent_window is not toplevel:
 			return self._sizes
 		toplevel._win_lock.acquire()
 		gl.winset(self._window_id)
@@ -1314,7 +1314,7 @@ class _Window:
 		dummy = event.testevent()	# read all pending events
 		q = []
 		for (win, ev, val) in event._queue:
-			if win == self:
+			if win is self:
 				if parent in (None, toplevel):
 					# delete event if we have no parent:
 					continue
@@ -1342,7 +1342,7 @@ class _Window:
 		if debug: print `self`+'.fgcolor()'
 		if self.is_closed():
 			raise error, 'window already closed'
-		if len(color) == 1 and type(color[0]) == TupleType:
+		if len(color) == 1 and type(color[0]) is TupleType:
 			color = color[0]
 		if len(color) != 3:
 			raise TypeError, 'arg count mismatch'
@@ -1352,7 +1352,7 @@ class _Window:
 		if debug: print `self`+'.bgcolor()'
 		if self.is_closed():
 			raise error, 'window already closed'
-		if len(color) == 1 and type(color[0]) == TupleType:
+		if len(color) == 1 and type(color[0]) is TupleType:
 			color = color[0]
 		if len(color) != 3:
 			raise TypeError, 'arg count mismatch'
@@ -1367,7 +1367,7 @@ class _Window:
 	def settitle(self, title):
 		if self.is_closed():
 			raise error, 'window already closed'
-		if self._parent_window != toplevel:
+		if self._parent_window is not toplevel:
 			raise error, 'can only settitle at top-level'
 		toplevel._win_lock.acquire()
 		gl.winset(self._window_id)
@@ -1379,7 +1379,7 @@ class _Window:
 		if self.is_closed():
 			raise error, 'window already closed'
 		list = _DisplayList(self)
-		if len(bgcolor) == 1 and type(bgcolor[0]) == TupleType:
+		if len(bgcolor) == 1 and type(bgcolor[0]) is TupleType:
 			bgcolor = bgcolor[0]
 		if len(bgcolor) == 3:
 			list._bgcolor = list._curcolor = bgcolor
@@ -1419,7 +1419,7 @@ class _Window:
 
 	def _resize(self):
 		toplevel._win_lock.acquire()
-		if self._parent_window != toplevel:
+		if self._parent_window is not toplevel:
 			x, y, w, h = self._sizes
 			x0, y0, x1, y1 = \
 				  self._parent_window._convert_coordinates(
@@ -1805,7 +1805,7 @@ class Dialog(_DummyButtons):
 		self._looping = 0
 		self._finish = None
 		mx, my, winwidth, winheight = self._calcsize()
-		if len(coordinates) == 1 and type(coordinates) == TupleType:
+		if len(coordinates) == 1 and type(coordinates) is TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) == 0:
 			coordinates = mx, my, winwidth, winheight
@@ -1839,7 +1839,7 @@ class Dialog(_DummyButtons):
 		mw = 0			# max width of a button
 		mh = 0			# max height in lines of a button
 		nsep = 0		# number of separators
-		if type(prompt) == StringType:
+		if type(prompt) is StringType:
 			mw = 0
 			for txt in string.splitfields(prompt, '\n'):
 				width, height = font.strsize(txt)
@@ -1857,7 +1857,7 @@ class Dialog(_DummyButtons):
 			if entry is None:
 				nsep = nsep + 1
 				continue
-			if type(entry) == TupleType:
+			if type(entry) is TupleType:
 				label, callback = entry[:2]
 			else:
 				label, callback = '', entry, None
@@ -1930,13 +1930,13 @@ class Dialog(_DummyButtons):
 			bm = (self.widest_button + self.INTERBUTTONGAP) * \
 				(len(self._buttons) - 1) + \
 			     self.widest_button + '\n' * (self.buttonlines - 1)
-		if type(self.message) == StringType:
+		if type(self.message) is StringType:
 			m = self.message + '\n' + '\n' + bm
 		else:
 			m = bm
 		bl, fh, ps = d.fitfont(self.FONT, m, 0.10)
 		yorig = 0.05 + bl
-		if type(self.message) == StringType:
+		if type(self.message) is StringType:
 			w, h = d.strsize(self.message)
 			if self.CENTERLINES:
 				for str in string.splitfields(self.message, '\n'):
@@ -1959,13 +1959,13 @@ class Dialog(_DummyButtons):
 			buttonheight = mh * len(self._buttons)
 ##			buttonheight = buttonheight + (len(self._buttons) - 1) * sh
 			buttonheight = buttonheight + self.nseparators * sh
-			if type(self.message) == StringType:
+			if type(self.message) is StringType:
 				ybase = 1.0 - 0.05 - buttonheight
 			else:
 				ybase = (1.0 - buttonheight) * 0.5
 		else:
 			sh = 0
-			if type(self.message) == StringType:
+			if type(self.message) is StringType:
 				ybase = 1.0 - 0.05 - mh
 			else:
 				ybase = (1.0 - mh) * 0.5
@@ -1977,7 +1977,7 @@ class Dialog(_DummyButtons):
 					    (1, ybase + sh * 0.5)])
 				ybase = ybase + sh
 				continue
-			if type(entry) == TupleType:
+			if type(entry) is TupleType:
 				butstr, callback = entry[:2]
 			else:
 				butstr = entry
@@ -2075,7 +2075,7 @@ class Dialog(_DummyButtons):
 				newlist.append(entry)
 			else:
 				label, callback = entry
-				if type(callback) == ListType:
+				if type(callback) is ListType:
 					callback = self._convert_menu_list(callback)
 				newlist.append('', label, callback)
 		return newlist
