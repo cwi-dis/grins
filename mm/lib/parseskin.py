@@ -15,6 +15,7 @@ error = 'parseskin.error'
 # "key"		key shape coordinates
 # command	shape coordinates
 # component	URI
+# profile	profile name
 #
 # The key is a single, possibly quoted, character.  If either ", ', or
 # a space character needs to be specified, it must be surrounded with
@@ -37,6 +38,13 @@ error = 'parseskin.error'
 # The component command may be repeated and all components are
 # returned as a single list
 #
+# The profile can be one of (without the quotes):
+#	"SMIL 2.0 Language Profile" (default)
+#	"3GPP PSS5 Profile"
+#	"3GPP PSS4 Profile"
+#	"SMIL 2.0 Basic Language Profile"
+#	"SMIL MMS Profile"
+#
 # Example skin definition file:
 #	image Classic.gif
 #	display 0 0 240 268
@@ -48,11 +56,22 @@ error = 'parseskin.error'
 #	skin rect 110 272 18 18
 #	tab rocker right			# right side of rocker panel
 #	activate rocker center			# center of rocker panel
+#	profile 3GPP PSS5 Profile		# use 3GPP PSS5 profile
 
 import string				# for whitespace
+import re
+import settings
+
+# we cheat: we're not nearly so fuzzy as we claim to be
+mms = re.compile(r'\bmms\b', re.IGNORECASE)
+pss4 = re.compile(r'\bpss4\b', re.IGNORECASE)
+pss5 = re.compile(r'\bpss4\b', re.IGNORECASE)
+basic = re.compile(r'\bbasic\b', re.IGNORECASE)
+
 def parsegskin(file):
 	dict = {}
 	lineno = 0
+	profile = settings.SMIL_20_MODULES
 	while 1:
 		line = file.readline()
 		if not line:
@@ -85,6 +104,18 @@ def parsegskin(file):
 				dict['component'].append(v)
 			else:
 				dict['component'] = [v]
+			continue
+		if cmd == 'profile':
+			if mms.search(rest) is not None:
+				profile = settings.SMIL_MMS_MODULES
+			elif pss4.search(rest) is not None:
+				profile = settings.SMIL_PSS4_MODULES
+			elif pss5.search(rest) is not None:
+				profile = settings.SMIL_PSS5_MODULES
+			elif basic.search(rest) is not None:
+				profile = settings.SMIL_BASIC_MODULES
+			else:
+				profile = settings.SMIL_20_MODULES
 			continue
 		if cmd == 'key':
 			quote = None
@@ -196,4 +227,5 @@ def parsegskin(file):
 		raise error, 'image missing from skin description file'
 	if not dict.has_key('display'):
 		raise error, 'display region missing from skin description file'
+	settings.switch_profile(profile)
 	return dict

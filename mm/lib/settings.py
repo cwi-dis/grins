@@ -211,6 +211,7 @@ default_settings = {
 	'license_organization' : '',
 	'baselicense': '',
 	'skin': '',			# URL for skin definition file
+	'askskin': 1,			# Ask for skin file when opening file in player
 
 	'default_sync_behavior_locked' : 0,
 	'default_sync_tolerance' : 0.1,
@@ -506,6 +507,8 @@ def set(setting, value):
 		windowinterface.showmessage('You have to restart GRiNS for some of these changes to take effect.')
 	user_settings[setting] = value
 	if setting == 'skin':
+		global _screensize
+		_screensize = None
 		read_components_from_skin()
 	commit(auto=1)
 
