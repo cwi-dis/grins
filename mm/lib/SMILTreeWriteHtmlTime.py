@@ -1083,15 +1083,18 @@ class SMILHtmlTimeWriter(SMIL):
 			elif arc.accesskey is not None:
 				pass
 			elif arc.marker is None:
+				srcnode = arc.srcnode
+				if type(srcnode) is type('') and srcnode not in ('prev', 'syncbase'):
+					srcnode = arc.refnode()
 				if arc.channel is not None:
 					pass
 				elif arc.srcanchor is not None:
-					aid = (arc.srcnode.GetUID(), arc.srcanchor)
+					aid = (srcnode.GetUID(), arc.srcanchor)
 					self.ids_used[self.aid2name[aid]] = 1
-				elif arc.srcnode in ('syncbase', 'prev'):
+				elif srcnode in ('syncbase', 'prev'):
 					pass
-				elif arc.srcnode is not node:
-					self.ids_used[self.uid2name[arc.srcnode.GetUID()]] = 1
+				elif srcnode is not node:
+					self.ids_used[self.uid2name[srcnode.GetUID()]] = 1
 			else:
 				self.ids_used[self.uid2name[arc.srcnode.GetUID()]] = 1
 		for child in node.children:

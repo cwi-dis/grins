@@ -580,21 +580,29 @@ def getsyncarc(writer, node, isend):
 				key = key + fmtfloat(arc.delay, withsign = 1)
 			list.append(key)
 		elif arc.marker is None:
+			srcnode = arc.srcnode
+			if type(srcnode) is type('') and srcnode not in ('prev', 'syncbase') and writer.cleanSMIL:
+				# XPath
+				srcnode = arc.refnode()
 			if arc.channel is not None:
 				name = writer.ch2name[arc.channel]
-			elif arc.srcnode == 'syncbase':
+			elif srcnode == 'syncbase':
 				name = ''
-			elif arc.srcnode == 'prev':
+			elif srcnode == 'prev':
 				name = 'prev'
-			elif writer.prune and arc.srcnode is not None and not arc.srcnode.WillPlay():
+			elif type(srcnode) is type(''):
+				name = 'xpath(%s)' % srcnode
+				if writer.prune and not arc.refnode().WillPlay():
+					continue
+			elif writer.prune and srcnode is not None and not srcnode.WillPlay():
 				continue
 			elif arc.srcanchor:
-				aid = (arc.srcnode.GetUID(), arc.srcanchor)
+				aid = (srcnode.GetUID(), arc.srcanchor)
 				name = escape_name(writer.aid2name[aid])
-			elif arc.srcnode is node:
+			elif srcnode is node:
 				name = ''
 			else:
-				name = escape_name(writer.uid2name[arc.srcnode.GetUID()])
+				name = escape_name(writer.uid2name[srcnode.GetUID()])
 			if arc.event is not None:
 				if name:
 					name = name + '.'
@@ -1031,7 +1039,7 @@ class SMILWriter(SMIL):
 		self.__isopen = 0
 		self.__stack = []
 
-		self.__cleanSMIL = cleanSMIL
+		self.cleanSMIL = cleanSMIL
 		self.uses_grins_namespace = not cleanSMIL and grinsExt
 		self.uses_qt_namespace = features.compatibility == features.QT and not cleanSMIL
 		self.smilboston = ctx.attributes.get('project_boston', 0)
@@ -1150,7 +1158,7 @@ class SMILWriter(SMIL):
 			hasprefix = 1
 		else:
 			hasprefix = 0
-		if not hasprefix and not self.__cleanSMIL:
+		if not hasprefix and not self.cleanSMIL:
 			for attr, val in attrs:
 				if (attr == xmlnsGRiNS) or (attr == xmlnsQT):
 					hasprefix = 1
@@ -1165,14 +1173,14 @@ class SMILWriter(SMIL):
 					break
 		if not hasprefix:
 			if tag[:len(NSGRiNSprefix)] == NSGRiNSprefix:
-				if self.__cleanSMIL:
+				if self.cleanSMIL:
 					# ignore this tag
 					# XXX is this correct?
 					return
 				attrs.insert(0, (xmlnsGRiNS, GRiNSns))
 				hasprefix = 1
 			elif tag[:len(NSQTprefix)] == NSQTprefix:
-				if self.__cleanSMIL:
+				if self.cleanSMIL:
 					# ignore this tag
 					# XXX is this correct?
 					return
@@ -1233,7 +1241,7 @@ class SMILWriter(SMIL):
 		fp.write(SMILdecl)	# MUST come first
 		if self.evallicense:
 			fp.write('<!--%s-->\n' % EVALcomment)
-		if self.__cleanSMIL:
+		if self.cleanSMIL:
 			if self.smilboston:
 				fp.write(doctype2)
 			else:
@@ -1285,7 +1293,7 @@ class SMILWriter(SMIL):
 		for key, val in ctx.attributes.items():
 			# for export don't write attributes starting with project_, they are meant
 			# for internal information-keeping only
-			if self.__cleanSMIL and key[:8] == 'project_':
+			if self.cleanSMIL and key[:8] == 'project_':
 				continue
 			if key == 'qttimeslider':
 				continue
@@ -1309,7 +1317,7 @@ class SMILWriter(SMIL):
 					val = 'off'
 			self.writetag('meta', [('name', key),
 					       ('content', val)])
-		if not self.__cleanSMIL and ctx.externalanchors:
+		if not self.cleanSMIL and ctx.externalanchors:
 			links = []
 			for link in ctx.externalanchors:
 				links.append(string.join(string.split(link, ' '), '%20'))
@@ -1520,17 +1528,23 @@ class SMILWriter(SMIL):
 			elif arc.accesskey is not None:
 				pass
 			elif arc.marker is None:
+				srcnode = arc.srcnode
+				if type(srcnode) is type('') and srcnode not in ('prev', 'syncbase'):
+					if not self.cleanSMIL:
+						continue
+					# XPath
+					srcnode = arc.refnode()
 				if arc.channel is not None:
 					pass
-				elif arc.srcnode in ('syncbase', 'prev'):
+				elif srcnode in ('syncbase', 'prev'):
 					pass
-				elif self.prune and arc.srcnode is not None and not arc.srcnode.WillPlay():
+				elif self.prune and srcnode is not None and not srcnode.WillPlay():
 					pass
 				elif arc.srcanchor is not None:
-					aid = (arc.srcnode.GetUID(), arc.srcanchor)
+					aid = (srcnode.GetUID(), arc.srcanchor)
 					self.ids_used[self.aid2name[aid]] = 1
-				elif arc.srcnode is not node:
-					self.ids_used[self.uid2name[arc.srcnode.GetUID()]] = 1
+				elif srcnode is not node:
+					self.ids_used[self.uid2name[srcnode.GetUID()]] = 1
 			else:
 				self.ids_used[self.uid2name[arc.srcnode.GetUID()]] = 1
 		for child in node.children:
@@ -1713,7 +1727,7 @@ class SMILWriter(SMIL):
 				    ((ch['type'] not in ('text', 'RealText') or
 				      bgcolor != (255,255,255)) and
 				     bgcolor != (0,0,0))) and \
-				     (not self.__cleanSMIL or ch['type'] != 'RealText'):
+				     (not self.cleanSMIL or ch['type'] != 'RealText'):
 					bgcolor = translatecolor(bgcolor)
 					attrlist.append(('background-color',
 							 bgcolor))

@@ -173,16 +173,17 @@ def prep2(node, root):
 		if arc.srcnode is None or arc.srcnode == 'prev':
 			# can't deal with this at the moment
 			continue
-		# arc.srcnode is a MMNode instance
+		srcnode = arc.refnode()
+		# srcnode is a MMNode instance
 		if arc.event in ('begin','end'):
-			if arc.srcnode.CommonAncestor(root) is not root:
+			if srcnode.CommonAncestor(root) is not root:
 				# out of scope
 				continue
 			if arc.event == 'begin':
 				xside = HD
 			else:
 				xside = TL
-			adddep(arc.srcnode, xside, arc.delay, node, HD)
+			adddep(srcnode, xside, arc.delay, node, HD)
 			break
 	for c in node.GetSchedChildren(1):
 		prep2(c, root)

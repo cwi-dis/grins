@@ -1248,6 +1248,15 @@ from fmtfloat import fmtfloat
 
 class EventCtrl(AttrCtrl):
 	# This is an editor for the 'begin' and 'end'tabs.
+	_radiobuttons = {
+		grinsRC.IDC_RDELAY: 'delay',
+		grinsRC.IDC_RNODE: 'node',
+		grinsRC.IDC_RLAYOUT: 'region',
+		grinsRC.IDC_RINDEFINITE: 'indefinite',
+		grinsRC.IDC_RACCESSKEY: 'accesskey',
+		grinsRC.IDC_RWALLCLOCK: 'wallclock',
+		}
+
 	def __init__(self, wnd, attr, resid):
 		#'wnd': <AttrEditForm.SingleAttrPage instance at 1cabbe8>,
 		#'attr': <TimelistAttrEditorField instance, name=beginlist>, 
@@ -1279,32 +1288,23 @@ class EventCtrl(AttrCtrl):
 		self._old_eventlist = None
 		self._old_eventlist_selection = None
 
-		g = grinsRC
-		self._radiobuttons = {
-			g.IDC_RDELAY: 'delay',
-			g.IDC_RNODE: 'node',
-			g.IDC_RLAYOUT: 'region',
-			g.IDC_RINDEFINITE: 'indefinite',
-			g.IDC_RACCESSKEY: 'accesskey',
-			g.IDC_RWALLCLOCK: 'wallclock',
-			}
 		self._radiobuttonwidgets = {}
 		
 		self._node = self._wnd._form._node	# MMNode. Needed for creating new nodes.
 					# now that also feels like a hack. Oh well.
 	__tooltips = [
-			(grinsRC.IDC_EVENTLIST, 'Lists the begin or end conditions for this node.'),
-			(grinsRC.IDC_NEWBUTTON, 'Add a new condition for this node to begin or end'), # begin or end.. hmm.
-			(grinsRC.IDC_DELETEBUTTON, 'Remove a condition for this node to begin or end'),
-			(grinsRC.IDC_EVENTTYPE, 'Sets the type of this event'),
-			(grinsRC.IDC_EDITOFFSET, 'Sets the delay on this node'),
-			(grinsRC.IDC_RDELAY, 'This event fires after the delay'),
-			(grinsRC.IDC_RNODE, 'This event fires relative to the start or end of another node'),
-			(grinsRC.IDC_RLAYOUT, 'This event fires to something which happens with a region'),
-			(grinsRC.IDC_RINDEFINITE, 'This event never fires.\nIf this is the only event, the node will either never start or never end'),
-			(grinsRC.IDC_RACCESSKEY, 'This event fires when the user presses the specified key on the keyboard.'),
-			(grinsRC.IDC_RWALLCLOCK, 'This event fires at a certain time of day.'),
-			]
+		(grinsRC.IDC_EVENTLIST, 'Lists the begin or end conditions for this node.'),
+		(grinsRC.IDC_NEWBUTTON, 'Add a new condition for this node to begin or end'), # begin or end.. hmm.
+		(grinsRC.IDC_DELETEBUTTON, 'Remove a condition for this node to begin or end'),
+		(grinsRC.IDC_EVENTTYPE, 'Sets the type of this event'),
+		(grinsRC.IDC_EDITOFFSET, 'Sets the delay on this node'),
+		(grinsRC.IDC_RDELAY, 'This event fires after the delay'),
+		(grinsRC.IDC_RNODE, 'This event fires relative to the start or end of another node'),
+		(grinsRC.IDC_RLAYOUT, 'This event fires to something which happens with a region'),
+		(grinsRC.IDC_RINDEFINITE, 'This event never fires.\nIf this is the only event, the node will either never start or never end'),
+		(grinsRC.IDC_RACCESSKEY, 'This event fires when the user presses the specified key on the keyboard.'),
+		(grinsRC.IDC_RWALLCLOCK, 'This event fires at a certain time of day.'),
+		]
 
 	def OnInitCtrl(self):
 		self._initctrl=self
@@ -1403,9 +1403,9 @@ class EventCtrl(AttrCtrl):
 			self._list.setcursel(sel)
 
 	def setvalue(self, val):
-		if isinstance(val, type(())):
+		if type(val) is type(()):
 			self._node, self._value = val	# store for later use.
-		elif isinstance(val, type([])):
+		elif type(val) is type([]):
 			self._value = val
 		else:
 			print "ERROR: ListCtrl.setvalue received an invalid value."
@@ -1436,6 +1436,7 @@ class EventCtrl(AttrCtrl):
 			self._radiobuttonwidgets[cause].setcheck(1)
 			if not self._eventstruct.has_node():
 				self._radiobuttonwidgets['node'].enable(0)
+
 	def set_eventwidget(self):
 		# Sets the value of the event widget.
 		if not self._eventstruct:
@@ -1474,6 +1475,7 @@ class EventCtrl(AttrCtrl):
 		else:
 			self._textwidget.settext("")
 		self._thingnamewidget.settext(name)
+
 	def set_resultwidget(self):
 		if not self._eventstruct:
 			self._resultwidget.settext("")
@@ -1491,6 +1493,7 @@ class EventCtrl(AttrCtrl):
 		else:
 			self._offsetwidget.settext("")
 			self._offsetwidget.enable(0)
+
 	def set_repeatwidget(self):
 		# Only for event widgets or markers.
 		if not self._eventstruct:

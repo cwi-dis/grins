@@ -123,24 +123,20 @@ class EventStruct:
 		elif x.wallclock is not None:
 			self.cause = 'wallclock'
 			self.delay = None
-			self.thing = x.wallclock
 		elif x.accesskey is not None:
 			self.cause = 'accesskey'
-			self.thing = x.accesskey
 		elif x.marker is not None:
 			self.cause = 'node'
 			self.event = 'marker'
-			self.thing = x.marker
 		elif x.channel is not None:
 			self.cause = 'region'
-			self.thing = x.channel.name
 		else:
 			self.cause = 'node'
 			if isinstance(x.srcnode, MMNode.MMNode):
-				self.thing = x.srcnode.GetName()
+				pass
 			elif x.srcnode == 'syncbase':
 				self.cause = 'delay'
-			else:
+			elif type(x.srcnode) is not type('') and x.srcnode != 'prev':
 				print "DEBUG: EventEditor.__init_set_vars got strange looking event.", x.srcnode
 		# The event.
 		if self.cause == 'node' or self.cause == 'region':
@@ -150,7 +146,6 @@ class EventStruct:
 	def clear_vars(self):
 		# Resets all the variables.
 		self.event = None
-		self.thing = None
 		self._setcause = None	# These variables (_setx) override the defaults and will be committed.
 		self._setevent = None
 		self._setoffset = None
@@ -190,7 +185,9 @@ class EventStruct:
 
 		# Now for the offset things
 		elif c == 'node':
-			_, r, _, _ = self.get_thing_string()
+			n, r, _, _ = self.get_thing_string()
+			if n == 'XPath:':
+				r = 'xpath(%s)' % r
 			e = self.get_event()
 			if r: r = r + '.' + e
 			else: r = e
@@ -234,6 +231,7 @@ class EventStruct:
 			return self._setcause
 		else:
 			return self.cause
+
 	def set_cause(self, newcause):
 		assert newcause in CAUSES
 		if newcause == 'node' and not self.has_node():
@@ -253,8 +251,11 @@ class EventStruct:
 			self.set_event('topLayoutOpenEvent')
 			self.set_offset(0)
 		self._setcause = newcause
+
 	def has_node(self):
 		if isinstance(self._syncarc.srcnode, MMNode.MMNode):
+			return 1
+		elif type(self._syncarc.srcnode) is type('') and self._syncarc.srcnode not in ('prev', 'syncbase'):
 			return 1
 		else:
 			return 0
@@ -307,6 +308,10 @@ class EventStruct:
 				thing = self._setnode
 			elif isinstance(self._syncarc, MMNode.MMSyncArc) and isinstance(self._syncarc.srcnode, MMNode.MMNode):
 				thing = self._syncarc.srcnode.GetName()
+			elif type(self._syncarc.srcnode) is type('') and self._syncarc.srcnode not in ('prev','syncbase'):
+				name = 'XPath:'
+				thing = self._syncarc.srcnode
+				readonly = 0
 			else:
 				thing = "SomeNode"
 		elif c == 'region':
@@ -346,6 +351,7 @@ class EventStruct:
 		if thing is None:
 			thing = ""
 		return (name, thing, number, readonly)
+
 	def set_thing_string(self, newthing):
 		# TODO: do some sanity checking here.
 		c = self.get_cause()
@@ -420,17 +426,6 @@ class EventStruct:
 		for i in viewports:
 			names.append(i.name)
 		return names
-
-	def get_node(self):
-		if self._setnode:
-			return self._setnode
-		else:
-			if not self._syncarc.srcnode:
-				return None
-			n = self._syncarc.srcnode.name
-			return n
-
-#       def set_node(self, node): ... how? Where does 'node' come from?
 
 	def get_marker(self):
 		if self._setmarker:
