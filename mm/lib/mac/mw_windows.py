@@ -33,6 +33,7 @@ from mw_globals import RESET_CANVAS, DOUBLE_HEIGHT, DOUBLE_WIDTH
 from mw_globals import FALSE, TRUE
 from mw_globals import _X, _Y, _WIDTH, _HEIGHT
 from mw_globals import ARR_LENGTH, ARR_SLANT, ARR_HALFWIDTH
+from mw_globals import BM_ONSCREEN, BM_DRAWING, BM_PASSIVE, BM_TEMP
 import mw_displaylist
 import mw_menucmd
 import mw_widgets
@@ -887,76 +888,67 @@ class _CommonWindow:
 		if self._active_displist:
 			self._active_displist._render()
 		elif self._frozen:
-			self._mac_setwin(0)
+			self._mac_setwin(mw_globals.BM_ONSCREEN)
 			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
 			Qd.RGBForeColor((0, 0, 0))
-			dst = self._mac_getoswindowpixmap(0)
-			src = self._mac_getoswindowpixmap(2)
+			dst = self._mac_getoswindowpixmap(mw_globals.BM_ONSCREEN)
+			src = self._mac_getoswindowpixmap(mw_globals.BM_PASSIVE)
 			rect = self.qdrect()
 			Qd.CopyBits(src, dst, rect, rect, QuickDraw.srcCopy, None)
 			self._mac_setwin() # Don't think this is needed...
 		elif self._transparent == 0 or self._istoplevel:
 			Qd.EraseRect(self.qdrect())
 			
-	def _mac_setwin(self, which=None):
-		"""Start drawing (by upper layer) in this window"""
-		if which == None:
-			if self._transition:
-				which = 1
-			else:
-				which = 0
-		if which == 0:
-			rv = Qd.GetPort()
-			Qd.SetPort(self._onscreen_wid)
-		elif which == 1:
-			rv = Qdoffs.GetGWorld()
-			Qdoffs.SetGWorld(self._drawing_wid, None)
+	def _mac_getdrawingbitmapindex(self):
+		"""Return either BM_DRAWING or BM_ONSCREEN depending on whether we're in a transition"""
+		if self._transition:
+			return BM_DRAWING
 		else:
-			raise 'unexpected setwin indicator'
-		return rv
+			return BM_ONSCREEN
+			
+	def _mac_setwin(self, which=None):
+		"""Start drawing (by upper layer) in this window. This window decides whether
+		to activate the onscreen or offscreen window and then recursively calls the
+		parent to actually set the window."""
+		if not self._parent:
+			return
+		if which == None:
+			which = self._mac_getdrawingbitmapindex()
+		return self._parent._mac_setwin(which)
 			
 	def _mac_unsetwin(self, arg):
+		"""Revert a previous _mac_setwin. The argument is the return value of _mac_setwin,
+		which can be either a WindowPtr or a GrafPort, GDevice tuple."""
 		if type(arg) == type(()):
 			apply(Qdoffs.SetGWorld, arg)
 		else:
 			Qd.SetPort(arg)
 		
 	def _mac_invalwin(self):
-		"""Schedule a full redraw for this window"""
+		"""Schedule a full redraw for the area occupied by this window. This may cause
+		siblings and parents and such to redraw too."""
 		if self._onscreen_wid:
 			Qd.SetPort(self._onscreen_wid)
 			Win.InvalRect(self.qdrect())
 		
-	def _mac_getoswindow(self):
-		return self._drawing_wid
+	def _mac_getoswindow(self, which=None):
+		"""Return the WindowPtr or GrafPort of the current drawing window."""
+		# XXXX I think this should be obsoleted by _mac_getoswindowport
+		if which == None:
+			which = self._mac_getdrawingbitmapindex()
+		return self._parent._mac_getoswindow(which)
 		
-	def _mac_getoswindowport(self):
-		if self._drawing_wid == self._onscreen_wid:
-			return self._drawing_wid.GetWindowPort()
-		else:
-			return self._drawing_gworld.as_GrafPtr()
+	def _mac_getoswindowport(self, which=None):
+		"""Return the GrafPort for the current drawing window."""
+		if which == None:
+			which = self._mac_getdrawingbitmapindex()
+		return self._parent._mac_getoswindowport(which)
 			
 	def _mac_getoswindowpixmap(self, which=None):
 		if which == None:
-			if self._transition:
-				which = 1
-			else:
-				which = 0
-		if which == 0:
-			return self._onscreen_wid.GetWindowPort().portBits
-		elif which == 1:
-			return self._drawing_bitmap
-		elif which == 2:
-			return self._passive_bitmap
-		elif which == 3:
-			return self._tmp_bitmap
-		else:
-			raise 'unexpected pixmap indicator'
+			which = self._mac_getdrawingbitmapindex()
+		return self._parent._mac_getoswindowpixmap(which)
 					
-	_mac_invalwin = None
-	_mac_getoswindow = None
-	_mac_getoswindowpixmap = None
-	
 	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN, modeless=0):
 		global _in_create_box
 		if _in_create_box:
@@ -1265,6 +1257,7 @@ class _CommonWindow:
 	# Experimental transition interface
 	def begintransition(self, inout, runit, dict):
 ##		print 'Transition', dict['trtype']
+		rect = self.qdrect()
 		if self._transition:
 			print 'Multiple Transitions!'
 			return
@@ -1272,16 +1265,17 @@ class _CommonWindow:
 			# We are frozen, so we have already saved the contents
 			self._frozen = None
 		else:
-			##copybits = (self._transparent != 0)
+			# Make sure our screen pixels reflect the actual current
+			# situation, so we can grab them
 			Qd.SetPort(self._onscreen_wid)
 			updrgn = Qd.NewRgn()
-			Qd.RectRgn(updrgn, self.qdrect())
+			Qd.RectRgn(updrgn, rect)
 			self._redraw_now(updrgn)
 			del updrgn
-			print 'transition creating passive source', self
-			self._passive_gworld, self._passive_wid, self._passive_bitmap = self._create_offscreen_wid(1)
-		print 'transition creating active source', self
-		self._drawing_gworld, self._drawing_wid, self._drawing_bitmap = self._create_offscreen_wid(0)
+			
+			self._mac_create_gworld(BM_PASSIVE, 1, rect)
+##		print 'transition creating active source', self
+		self._mac_create_gworld(BM_DRAWING, 0, rect)
 		#
 		# Tell upper layers, if they are interested (VideoChannels and such may have to
 		# tell their underlying libraries)
@@ -1289,35 +1283,35 @@ class _CommonWindow:
 		if self._eventhandlers.has_key(OSWindowChanged):
 			func, arg = self._eventhandlers[OSWindowChanged]
 			func(arg, self, OSWindowChanged, (0, 0, 0))
-
+			
 		# XXXX should probably skip this if the window is transparent and empty
 		self._transition = mw_transitions.TransitionEngine(self, inout, runit, dict)
 		if self._transition.need_tmp_wid():
-			self._tmp_gworld, self._tmp_wid, self._tmp_bitmap = self._create_offscreen_wid(0)
+			self._mac_create_gworld(BM_TEMP, 0, rect)
 		
+	def jointransition(self, window):
+		# Join the transition already created on "window".
+		pass
+
 	def endtransition(self):
 ##		print 'EndTransition', self._transition
 		if not self._transition:
 			return
+		has_tmp = self._transition.need_tmp_wid()
 		self._transition.endtransition()
 		self._transition = None
-		self._passive_wid = None
-		self._passive_gworld = None
-		self._passive_bitmap = None
-		self._tmp_wid = None
-		self._tmp_gworld = None
-		self._tmp_bitmap = None
-		old_drawing_wid = self._drawing_wid
-		self._drawing_wid = self._onscreen_wid
-		self._drawing_gworld = None
+		self._mac_dispose_gworld(BM_DRAWING)
+		self._mac_dispose_gworld(BM_PASSIVE)
+		if has_tmp:
+			self._mac_dispose_gworld(BM_TEMP)
 		self._mac_invalwin()
 		# Tell upper layers, if they are interested
-		if old_drawing_wid != self._drawing_wid and self._eventhandlers.has_key(OSWindowChanged):
+		if self._eventhandlers.has_key(OSWindowChanged):
 			func, arg = self._eventhandlers[OSWindowChanged]
 			func(arg, self, OSWindowChanged, (0, 0, 0))
 		
 	def changed(self):
-		"""Called if upper layers have modified _drawing_wid"""
+		"""Called if upper layers have modified the drawing surface"""
 		if self._transition:
 			self._transition.changed()
 		
@@ -1331,16 +1325,17 @@ class _CommonWindow:
 		how='hold' forever,
 		how=None clears a previous how='hold'. This basically means the next
 		close() of a display list does not do an erase."""
-		print 'DBG: freeze', how, self
-		self._frozen = how
-		if self._frozen:
+##		print 'DBG: freeze', how, self
+		if how:
 			print 'freeze_content creating passive source'
-			self._passive_gworld, self._passive_wid, self._passive_bitmap = self._create_offscreen_wid(1)
-		else:
-			print 'freeze_content clearing passive source'
-			self._passive_gworld = None
-			self._passive_wid = None
-			self._passive_bitmap = None
+			if self._frozen:
+				# Dispose possible old frozen bitmap
+				self._mac_dispose_gworld(BM_PASSIVE)
+			self._mac_create_gworld(BM_PASSIVE, 1, self.qdrect())
+			self._frozen = 1
+		elif self._frozen:
+			self._mac_dispose_gworld(BM_PASSIVE)
+			self._frozen = 0
 			self._mac_invalwin()
 		
 	def _dump_bits(self, which):
@@ -1350,6 +1345,12 @@ class _CommonWindow:
 		Qd.SetPort(self._onscreen_wid)
 		Qd.CopyBits(srcbits, self._onscreen_wid.GetWindowPort().portBits, currect, currect, QuickDraw.srcCopy, None)
 		Qd.SetPort(old)
+
+	def _mac_create_gworld(self, which, copybits, area):
+		self._parent._mac_create_gworld(which, copybits, area)
+		
+	def _mac_dispose_gworld(self, which):
+		self._parent._mac_dispose_gworld(which)
 
 def calc_extra_size(adornments, canvassize):
 	"""Return the number of pixels needed for toolbar and scrollbars"""
@@ -1368,26 +1369,16 @@ def calc_extra_size(adornments, canvassize):
 	return extraw, extrah, minw, minh
 		
 class _OffscreenMixin:
-	def __init__(self, wid):
-		self.__wids = [self._onscreen_wid, None, None]
+	def __init__(self):
+		self.__wids = [None, None, None]
 		self.__gworlds = [None, None, None]
 		self.__bitmaps = [None, None, None]
 		self.__refcounts = [0, 0, 0]
-		self._drawing_wid = wid
-		self._drawing_gworld = None
-		self._drawing_bitmap = None
-		self._passive_wid = None
-		self._passive_gworld = None
-		self._passive_bitmap = None
-		self._tmp_wid = None
-		self._tmp_gworld = None
-		self._tmp_bitmap = None
 
 	def close(self):
 		del self.__wids
 		del self.__gworlds
 		del self.__bitmaps
-		del self._onscreen_wid
 
 	def _mac_create_gworld(self, which, copybits, area):
 		if which < 0:
@@ -1433,7 +1424,7 @@ class _OffscreenMixin:
 		else:
 			Qd.RGBBackColor(self._bgcolor)
 			Qd.EraseRect(area)
-			print 'Erase offscreen', cur_rect
+##			print 'Erase offscreen', cur_rect
 		Qdoffs.SetGWorld(cur_port, cur_dev)
 		
 	def _mac_dispose_gworld(self, which):
@@ -1444,41 +1435,61 @@ class _OffscreenMixin:
 			raise 'gworld refcount < 0'
 		if self.__refcounts[which]:
 			return
-		if which == BM_DRAWING:
-			self.__wids[which] = self._onscreen_wid
-		else:
-			self.__wids[which] = None
+		self.__wids[which] = None
 		self.__bitmaps[which] = None
 		self.__gworlds[which] = None
 
-	def _mac_getoswindow(self):
-		return self.__wids[BM_DRAWING]
+	def _mac_setwin(self, which=None):
+		"""Start drawing (by upper layer) in this window. This window decides whether
+		to activate the onscreen or offscreen window and then recursively calls the
+		parent to actually set the window."""
+		if not self._parent:
+			return
+		if which == None:
+			which = self._mac_getdrawingbitmapindex()
+		if which == BM_DRAWING and self.__wids[BM_DRAWING] == None:
+			which = BM_ONSCREEN
+##		print 'DBG setport', which
+		if which == BM_ONSCREEN:
+			rv = Qd.GetPort()
+			Qd.SetPort(self._onscreen_wid)
+		else:
+			rv = Qdoffs.GetGWorld()
+			Qdoffs.SetGWorld(self.__wids[which], None)
+		return rv
+			
+	def _mac_getoswindow(self, which=None):
+		"""Return the WindowPtr or GrafPort of the current drawing window."""
+		# XXXX I think this should be obsoleted by _mac_getoswindowport
+		if which == None:
+			which = self._mac_getdrawingbitmapindex()
+		if which == BM_DRAWING and self.__wids[BM_DRAWING] == None:
+			which = BM_ONSCREEN
+		if which == BM_ONSCREEN:
+			return self._onscreen_wid
+		else:
+			return self.__wids[which]
 		
-	def _mac_getoswindowport(self, which=BM_DRAWING):
+	def _mac_getoswindowport(self, which=None):
+		"""Return the GrafPort for the current drawing window."""
+		if which == None:
+			which = self._mac_getdrawingbitmapindex()
+		if which == BM_DRAWING and self.__wids[BM_DRAWING] == None:
+			which = BM_ONSCREEN
 		if which == BM_ONSCREEN:
 			return self._onscreen_wid.GetWindowPort()
-		elif which == BM_DRAWING:
-			# Slightly tricky: getting the port is different for onscreen and
-			# offscfreen bitmaps.
-			if self.__wids[BM_DRAWING] == self.onscreen_wid:
-				return self._onscreen_wid.GetWindowPort()
-			else:
-				return self.self.__wids[BM_DRAWING].as_GrafPtr()
 		else:
-			# The others aren't needed (yet)
-			raise '_mac_getoswindowport unexpected flag: %d'%which
+			return self.__wids[which]
 			
 	def _mac_getoswindowpixmap(self, which=None):
 		if which == None:
-			if self._transition:
-				which = BM_DRAWING
-			else:
-				which = BM_ONSCREEN
+			which = self._mac_getdrawingbitmapindex()
+		if which == BM_DRAWING and self.__wids[BM_DRAWING] == None:
+			which = BM_ONSCREEN
 		if which == BM_ONSCREEN:
 			return self._onscreen_wid.GetWindowPort().portBits
 		else:
 			return self.__bitmaps[which]
-					
 			
 class _ScrollMixin:
 	"""Mixin class for scrollable/resizable toplevel windows"""
@@ -1956,7 +1967,7 @@ class _AdornmentsMixin:
 			self._popupmenu.delete()
 		self._popupmenu = None
 		
-class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
+class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _CommonWindow):
 	"""Toplevel window"""
 	
 	def __init__(self, parent, wid, x, y, w, h, defcmap = 0, pixmap = 0, 
@@ -1966,6 +1977,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		self._istoplevel = 1
 		self._resizable = resizable
 		self._drop_enabled = 0
+		_OffscreenMixin.__init__(self)
 		_CommonWindow.__init__(self, parent, wid)
 		
 		self._transparent = 0
@@ -2005,6 +2017,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		_ScrollMixin.close(self)
 		_AdornmentsMixin.close(self)
 		_CommonWindow.close(self)
+		_OffscreenMixin.close(self)
 		_WindowGroup.close(self, closegroup=0)
 		self.arrowcache = {}
 				

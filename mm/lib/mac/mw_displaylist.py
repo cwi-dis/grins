@@ -219,15 +219,14 @@ class _DisplayList:
 		scheduling the update event"""
 		# First check that no update events are pending.
 		window = self._window
+		if window._transition:
+			return 0
 		rgn = Qd.NewRgn()
 		window._onscreen_wid.GetWindowUpdateRgn(rgn)
 		ok = Qd.EmptyRgn(rgn)
 		# Next check that we're topmost
 		if ok:
 			ok = window._is_on_top()
-		# Finally check that we're not in a transition
-		if ok:
-			ok = (window._onscreen_wid == window._drawing_wid)
 		Qd.DisposeRgn(rgn)
 		return ok
 		
@@ -235,6 +234,7 @@ class _DisplayList:
 		self._really_rendered = 1
 		window = self._window
 		grafport = window._mac_getoswindowport()
+##		print 'DBG render to', grafport
 		window._active_displist = self
 		self._restorecolors()
 		if clonestart:

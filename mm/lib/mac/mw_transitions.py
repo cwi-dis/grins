@@ -97,7 +97,7 @@ class MatrixWipeTransition(TransitionClass):
 		for i in range(vindex):
 			rgn2 = Qd.NewRgn()
 			rect = (x0, self.vboundaries[i], x1, self.vboundaries[i+1])
-			print 'vi', i, rect
+##			print 'vi', i, rect
 			Qd.RectRgn(rgn2, rect)
 			Qd.UnionRgn(rgn, rgn2, rgn)
 			Qd.DisposeRgn(rgn2)
@@ -106,7 +106,7 @@ class MatrixWipeTransition(TransitionClass):
 		for i in range(hindex):
 			rgn2 = Qd.NewRgn()
 			rect = (self.hboundaries[i], ylasttop, self.hboundaries[i+1], ylastbottom)
-			print 'hi', i, rect
+##			print 'hi', i, rect
 			Qd.RectRgn(rgn2, rect)
 			Qd.UnionRgn(rgn, rgn2, rgn)
 			Qd.DisposeRgn(rgn2)
@@ -237,13 +237,14 @@ class TransitionEngine:
 		if self.currentparameters == oldparameters and not mustredraw:
 			return
 ##		print self.currentparameters
-		dst = self.window._mac_getoswindowpixmap(0)
-		src_active = self.window._mac_getoswindowpixmap(1)
-		src_passive = self.window._mac_getoswindowpixmap(2)
-		tmp = self.window._mac_getoswindowpixmap(3)
-		self.window._mac_setwin(0)
-		print 'TRANS', src_active, src_passive, dst, self.window
-		print 'TRANSARGS', self.currentparameters
+		dst = self.window._mac_getoswindowpixmap(mw_globals.BM_ONSCREEN)
+		src_active = self.window._mac_getoswindowpixmap(mw_globals.BM_DRAWING)
+		src_passive = self.window._mac_getoswindowpixmap(mw_globals.BM_PASSIVE)
+		tmp = self.window._mac_getoswindowpixmap(mw_globals.BM_TEMP)
+		self.window._mac_setwin(mw_globals.BM_ONSCREEN)
+##		print 'TRANS', src_active, src_passive, dst, self.window
+##		print 'TRANSW', self.window._mac_getoswindowport(mw_globals.BM_DRAWING), self.window._mac_getoswindowport(mw_globals.BM_PASSIVE), self.window._mac_getoswindowport(mw_globals.BM_ONSCREEN)
+##		print 'TRANSARGS', self.currentparameters
 		Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
 		Qd.RGBForeColor((0, 0, 0))
 		self.transitiontype._updatebitmap(self.currentparameters, src_active, src_passive, tmp, dst)
