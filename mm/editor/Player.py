@@ -17,6 +17,7 @@ import Timing
 import rtpool
 from MMNode import alltypes, leaftypes, interiortypes
 from ArmStates import *
+from AnchorEdit import A_ID, A_TYPE, ATYPE_PAUSE
 
 
 # The player algorithm treats the head and tail (begin and end) sides
@@ -98,7 +99,9 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	# Extend BasicDialog show/hide/destroy methods.
 	#
 	def show(self):
-		if self.showing: return
+		if self.is_showing():
+			self.pop()
+			return
 		self.makechannels()
 		self.fullreset()
 		BasicDialog.show(self)
@@ -723,19 +726,24 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	#
 	def anchorfired(self, node, anchorlist):
 		destlist = []
+		pause_anchor = 0
 		for i in anchorlist:
-			aid = (node.GetUID(), i[0])
+			if i[A_TYPE] == ATYPE_PAUSE:
+				pause_anchor = 1
+			aid = (node.GetUID(), i[A_ID])
 			rv = self.context.hyperlinks.findsrclink(aid)
 			destlist = destlist + rv
 		print 'Player: Destinations:', destlist
 		if not destlist:
+			if pause_anchor:
+				return 0
 			fl.show_message('No hyperlink sourced at this anchor'\
 				  , '', '')
-			return
+			return 0
 		if len(destlist) <> 1:
 			fl.show_message('Sorry, multiple links not supported' \
 				  , '', '')
-			return
+			return 0
 		dest = destlist[0][1]
 		if destlist[0][0] <> 0:
 			fl.show_message('Sorry, will JUMP anyway', '', '')
@@ -749,6 +757,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.playroot = self.root
 		dummy = self.resume_1_playing(1.0)
 		self.resume_2_playing()
+		return 1
 
 #
 # del_timing removes all arm_duration attributes (so they will be recalculated)

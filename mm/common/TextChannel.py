@@ -14,6 +14,9 @@ import fm
 from Channel import Channel
 from ChannelWindow import ChannelWindow
 
+from AnchorEdit import A_ID, A_TYPE, A_ARGS, ATYPE_NORMAL, ATYPE_PAUSE, \
+	  ATYPE_AUTO
+
 # find last occurence of space in string such that the size (according to some
 # size calculating function) of the initial substring is smaller than a given
 # number.  If there is no such substrings the first space in the string is
@@ -50,9 +53,9 @@ def between(v, x0, x1):
 
 class TextWindow(ChannelWindow):
 	#
-	def init(self, (title, attrdict, player)):
+	def init(self, (title, attrdict, ch)):
 		self = ChannelWindow.init(self, title, attrdict)
-		self.player = player
+		self.channel = ch
 		self.text = [] # Initially, display no text
 		self.node = None
 		self.vobj = None
@@ -76,7 +79,9 @@ class TextWindow(ChannelWindow):
 			self.hicolor = 255, 0, 0
 	#
 	def show(self):
-		if self.wid <> 0: return
+		if self.is_showing():
+			self.pop()
+			return
 		self.resetfont()
 		ChannelWindow.show(self)
 		fl.qdevice(DEVICE.MOUSE3)
@@ -96,7 +101,8 @@ class TextWindow(ChannelWindow):
 			if val == 1:
 				self.pm = (mx, my)
 			else:
-				self.anchors[0] = (self.anchors[0][0], \
+				a = self.anchors[0]
+				self.anchors[0] = (a[0], a[1], \
 					  [self.pm[0], self.pm[1], mx, my])
 				self.redraw()
 			return
@@ -110,14 +116,19 @@ class TextWindow(ChannelWindow):
 			print 'mouse: no anchors on this node'
 		al2 = []
 		for a in self.anchors:
-			x0, y0, x1, y1 = a[1][0], a[1][1], a[1][2], a[1][3]
+			args = a[A_ARGS]
+			x0, y0, x1, y1 = args[0], args[1], args[2], args[3]
 			if between(mx, x0, x1) and between(my, y0, y1):
 				al2.append(a)
 		if not al2:
 			print 'Mouse: No anchor selected'
 			gl.ringbell()
 			return
-		self.player.anchorfired(self.node, al2)
+		rv = self.channel.player.anchorfired(self.node, al2)
+		# If this was a paused anchor and it didn't fire
+		# stop showing the node
+		if rv == 0 and len(al2) == 1 and al2[0][A_TYPE] == ATYPE_PAUSE:
+			self.channel.done(0)
 	#
 	def resetfont(self):
 		# Get the default colors
@@ -161,7 +172,8 @@ class TextWindow(ChannelWindow):
 		self.node = node
 		self.resetfont()
 		self.anchors = []
-		self.pop()
+		if text <> '':
+			self.pop()
 		self.redraw()
 		# to show addtext feature
 		#self.addtext(text)
@@ -254,7 +266,7 @@ class TextWindow(ChannelWindow):
 			curbase = curbase + self.fontheight
 		# Draw the anchors.
 		gl.RGBcolor(self.hicolor)
-		for dummy, a in self.anchors:
+		for dummy, tp, a in self.anchors:
 			if len(a) <> 4: continue
 			gl.bgnclosedline()
 			gl.v2i(a[0], a[1])
@@ -299,7 +311,7 @@ class TextChannel(Channel):
 	#
 	def init(self, (name, attrdict, player)):
 		self = Channel.init(self, name, attrdict, player)
-		self.window = TextWindow().init(name, attrdict, player)
+		self.window = TextWindow().init(name, attrdict, self)
 		return self
 	#
 	def show(self):
@@ -344,9 +356,16 @@ class TextChannel(Channel):
 			self.window.setanchors([])
 			return
 		al2 = []
+		self.autoanchor = None
+		self.haspauseanchor = 0
 		for a in alist:
-			if len(a[1]) == 0: continue
-			if len(a[1]) <> 4:
+			if a[A_TYPE] == ATYPE_AUTO:
+				self.autoanchor = a
+			if a[A_TYPE] == ATYPE_PAUSE:
+				self.haspauseanchor = 1
+			if not a[A_TYPE] in (ATYPE_NORMAL, ATYPE_PAUSE):
+				continue
+			if len(a[A_ARGS]) <> 4:
 				print 'TextChannel: funny-sized anchor'
 			else:
 				al2.append(a)
