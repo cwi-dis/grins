@@ -350,7 +350,7 @@ class Selecter:
 			if sctx:
 				str = 'node '
 			else:
-				str = 'choice/alt '
+				str = 'choice '
 			str = str + nodename(mini)
 			str = str + ' in '
 			str = str + nodename(bag)
@@ -364,7 +364,7 @@ class Selecter:
 			if sctx:
 				str = 'node '
 			else:
-				str = 'choice/alt '
+				str = 'choice '
 			str = str + nodename(mini)
 			str = str + ' in '
 			str = str + nodename(bag)
