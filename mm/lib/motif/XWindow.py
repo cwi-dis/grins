@@ -763,7 +763,7 @@ class _Window(_AdornmentSupport):
 					self._menuaccel.append(key)
 		self._menu = menu
 		
-	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN):
+	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN, modeless=0):
 		import Xcursorfont
 		if toplevel._in_create_box:
 			toplevel._in_create_box._next_create_box.append((self, msg, callback, box, units))
