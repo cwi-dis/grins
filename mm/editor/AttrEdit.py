@@ -26,7 +26,7 @@ NEW_CHANNEL = 'New channel...'
 # editor is allowed per node, and extra show calls are also ignored
 # (actually, this pops up the window, to draw the user's attention...).
 
-def showattreditor(toplevel, node, initattr = None):
+def showattreditor(toplevel, node, initattr = None, chtype = None):
 	try:
 		attreditor = node.attreditor
 	except AttributeError:
@@ -39,7 +39,7 @@ def showattreditor(toplevel, node, initattr = None):
 				node.slideshow = realnode.SlideShow(node)
 		else:
 			wrapperclass = SlideWrapper
-		attreditor = AttrEditor(wrapperclass(toplevel, node), initattr=initattr)
+		attreditor = AttrEditor(wrapperclass(toplevel, node), initattr=initattr, chtype=chtype)
 		node.attreditor = attreditor
 	else:
 		attreditor.pop()
@@ -920,8 +920,9 @@ class PreferenceWrapper(Wrapper):
 from AttrEditDialog import AttrEditorDialog, AttrEditorDialogField
 
 class AttrEditor(AttrEditorDialog):
-	def __init__(self, wrapper, new = 0, initattr = None):
+	def __init__(self, wrapper, new = 0, initattr = None, chtype = None):
 		self.__new = new
+		self.__chtype = chtype
 		self.wrapper = wrapper
 		wrapper.register(self)
 		self.__open_dialog(initattr)
@@ -1222,7 +1223,7 @@ class AttrEditor(AttrEditorDialog):
 			# interior node, doesn't make much sense
 			return 'null'
 		if not url:
-			return 'null'
+			return self.__chtype or 'null'
 		import MMmimetypes
 		mtype = MMmimetypes.guess_type(url)[0]
 		if mtype is None:
