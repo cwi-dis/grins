@@ -123,10 +123,11 @@ def GetSize(url, target=0, attrs = {}, convert = 1):
 		raise Error, 'Media item does not exist'
 	tmp = None
 	if target and hdrs.maintype == 'image' and convert:
-		import tempfile, realconvert
+		import tempfile
 		tmp = tempfile.mktemp('.jpg')
 		dir, file = os.path.split(tmp)
 		try:
+			import realconvert
 			cfile = realconvert.convertimagefile(None, url, dir, file, attrs)
 		except:
 			# XXXX Too many different errors can occur in convertimagefile:
