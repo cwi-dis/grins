@@ -1324,11 +1324,11 @@ class MMSyncArc:
 		node = self.dstnode
 		pnode = node.GetSchedParent()
 		if self.wallclock is not None or self.channel is not None or self.accesskey is not None:
-			return node.GetRoot()
+			return node.GetSchedRoot()
 
 		if self.srcnode is None:
 			# indefinite
-			return node.GetRoot()
+			return node.GetSchedRoot()
 
 		if self.srcnode == 'prev' or \
 		     (self.srcnode == 'syncbase' and
@@ -1372,7 +1372,7 @@ class MMSyncArc:
 			# if there is a schedule context it's resolved
 			return sctx is not None
 		if self.channel is not None:
-			return self.dstnode.GetRoot().eventhappened((self.channel._name, self.getevent()))
+			return self.dstnode.GetSchedRoot().eventhappened((self.channel._name, self.getevent()))
 		if self.dstnode.GetSchedParent() is None:
 			# if destination is root node, only offsets are resolved
 			if self.event is None and self.marker is None:
@@ -1473,7 +1473,7 @@ class MMSyncArc:
 			return t + t1 - t0 + self.delay
 
 		if self.channel is not None:
-			return self.dstnode.GetRoot().happenings[(self.channel._name, self.event)]
+			return self.dstnode.GetSchedRoot().happenings[(self.channel._name, self.event)]
 
 		refnode = self.refnode()
 		atimes = (0, 0)
@@ -2239,6 +2239,16 @@ class MMNode:
 			root = x
 			x = x.parent
 		return root
+
+	def GetSchedRoot(self):
+		root = None
+		x = self
+		while x is not None:
+			if hasattr(x, 'fakeparent'):
+				return x.fakeparent
+			root = x
+			x = x.parent
+		return root		# backup plan
 
 	def GetPath(self):
 		path = []
