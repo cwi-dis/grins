@@ -199,10 +199,10 @@ class reader:
 			self.__comptype = 'NONE'
 			self.__compname = 'not compressed'
 		if nchannels > 2:
-			raise audio.Error, 'Unsupported format'
+			raise audio.Error, 'Unsupported format (nchannels=%d)'%nchannels
 		if self.__comptype == 'NONE':
 			if bps > 16:
-				raise audio.Error, 'Unsupported format'
+				raise audio.Error, 'Unsupported format (bps=%d)'%bps
 			if nchannels == 1:
 				if bps <= 8:
 					self.__format = linear_8_mono_signed
@@ -219,7 +219,7 @@ class reader:
 			elif nchannels == 2:
 				self.__format = ulaw_stereo
 		else:
-			raise audio.Error, 'Unsupported format'
+			raise audio.Error, 'Unsupported format (compression=%s)'%self.__comptype
 
 	def __read_ssnd_chunk(self, chunk):
 		self.__ssnd_chunk = chunk
