@@ -21,8 +21,7 @@ class HtmlChannel(ChannelWindow):
 		self = ChannelWindow.init(self, name, attrdict, scheduler, ui)
 		self.want_default_colormap = 1
 		self.htmlw = None
-		if name[0] >= 'A' and name[0] <= 'Z':
-			print 'HtmlChannel: Uppercase names are prone to disappointing results'
+		self.widget_name = normalize(name)
 		return self
 
 	def do_show(self):
@@ -31,22 +30,19 @@ class HtmlChannel(ChannelWindow):
 		# that we don't use (except as a parent), but it doesn't harm
 		# us either.
 		#
-		print 'DOSHOW'
 		if not ChannelWindow.do_show(self):
 			return 0
-		print 'DOIESHOW'
 		#
 		# Step 2 - Create a values dictionary with width/height
 		# for use when we create the HTML widget.
 		#
 		wd = self.window
-		print 'WINDOW=', wd
 		wh = wd._form.GetValues(['width', 'height'])
-		print 'GO FOR IT'
 		#
 		# Create the widget
 		#
-		self.htmlw = self.window._form.CreateManagedWidget('h', HTML.html, wh)
+		self.htmlw = self.window._form.CreateManagedWidget(
+			self.widget_name, HTML.html, wh)
 		#
 		# Set callbacks.
 		#
@@ -55,10 +51,8 @@ class HtmlChannel(ChannelWindow):
 		return 1
 
 	def resize(self, arg, window, event, value):
-		# XXXX For reasons unknown, this one does not seem to work...
-		print 'RESIZE'
 		wh = self.window._form.GetValues(['width', 'height'])
-		self.htmlw._form.SetValues(wh)
+		self.htmlw.SetValues(wh)
 		
 
 	def __repr__(self):
@@ -85,14 +79,11 @@ class HtmlChannel(ChannelWindow):
 		windowinterface.showmessage('JUMP:'+`aid`+`args`)
 		
 	def do_arm(self, node):
-		print 'DO_ARM'
 		self.armed_str = self.getstring(node)
 		return 1
 		
 	def do_play(self, node):
-		print 'DO_PLAY'
 		self.url = self.armed_url
-		print 'URL=', self.url
 		arg = {'text': self.armed_str, 'headerText':'',
 		       'footerText':''}
 		self.htmlw.SetValues(arg)
@@ -134,7 +125,6 @@ class HtmlChannel(ChannelWindow):
 		if widget <> self.htmlw:
 			raise 'kaboo kaboo'
 		rawevent, elid, text, href = HTML.anchor_cbarg(calldata)
-		print 'ANCHORFIRED', (elid, text, href)
 		if href[:5] <> 'cmif:':
 			self.www_jump(href, 'GET', None, None)
 			return
@@ -145,7 +135,6 @@ class HtmlChannel(ChannelWindow):
 			raise 'kaboo kaboo'
 		rawevent, href, method, enctype, list = \
 			  HTML.form_cbarg(calldata)
-		print 'FORMFIRED', (href, method, enctype, list)
 		if not href or href[:5] <> 'cmif:':
 			self.www_jump(href, method, enctype, list)
 			return
@@ -171,14 +160,11 @@ class HtmlChannel(ChannelWindow):
 		return None
 
 	def fixanchorlist(self, node):
-		print 'FIXANCHORLIST'
 		allanchorlist = HTML.GetHRefs(self.htmlw)
-		print len(allanchorlist), 'anchors'
 		anchorlist = []
 		for a in allanchorlist:
 			if a[:5] == 'cmif:':
 				anchorlist.append(a[5:])
-		print len(anchorlist), 'cmif-anchors'
 		if len(anchorlist) == 0:
 			return
 		nodeanchorlist = MMAttrdefs.getattr(node, 'anchorlist')[:]
@@ -188,10 +174,8 @@ class HtmlChannel(ChannelWindow):
 			if a not in oldanchorlist:
 				newanchorlist.append(a)
 		if not newanchorlist:
-			print 'Nothing to fix'
 			return
 		for a in newanchorlist:
-			print 'Add anchor', a
 			nodeanchorlist.append(a, ATYPE_NORMAL, [])
 		node.SetAttr('anchorlist', nodeanchorlist)
 		MMAttrdefs.flushcache(node)
@@ -208,6 +192,10 @@ class HtmlChannel(ChannelWindow):
 			return
 		if method not in (None, 'GET'):
 			print 'HtmlChannel: unknown method:', method
+			print 'href:', href
+			print 'method:', method
+			print 'enctype:', enctype
+			print 'list:', list
 			return
 		href = urljoin(self.url, href)
 		if list:
@@ -265,3 +253,28 @@ def addquery(href, list):
 #
 def urlget(newurl):
 	return urllib.urlopen(newurl).read()
+
+#
+# Turn a CMIF channel name into a name acceptable for an X widget
+#
+def normalize(name):
+	# Step one - remove everything except letters and digits
+	newname = ''
+	for c in name:
+		if not c in string.letters + string.digits:
+			c = ' '
+		newname = newname + c
+	# Split in words
+	words = string.split(newname)
+	# uncapitalize first word
+	word = words[0]
+	newname = string.lower(word[0]) + word[1:]
+	# capitalize other words
+	for word in words[1:]:
+		word = string.upper(word[0]) + word[1:]
+		newname = newname + word
+	if newname <> name:
+		print 'HtmlChannel: "%s" has resource name "%s"'%(
+			name, newname)
+	return newname
+	
