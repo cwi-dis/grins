@@ -95,6 +95,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.need_redraw_select = 0
 		
 		self.begin_event_source = None # This is the specially selected "I am the node from which a new begin event will be made to"
+		self.old_begin_event_source = None
 		self.droppable_widget = None # ahh.. something that sjoerd added. Assume that it's used for the fancy drop-notification.
 		self.old_droppable_widget = None
 
@@ -508,6 +509,10 @@ class HierarchyView(HierarchyViewDialog):
 		if self.need_redraw or self.base_display_list is None:
 			# Make a new display list.
 			d = self.window.newdisplaylist(BGCOLOR, windowinterface.UNIT_PXL)
+			if self.begin_event_source:
+				# Set the dangling icon
+				widget = self.begin_event_source.views['struct_view']
+				widget.set_dangling_event()
 			self.scene_graph.draw(d) # Keep it for later!
 			self.need_redraw = 0
 			self.droppable_widget = None
@@ -515,18 +520,24 @@ class HierarchyView(HierarchyViewDialog):
 			self.old_selected_widget = None
 			self.old_selected_icon = None
 			self.old_multi_selected_widgets = []
+			self.old_begin_event_source = None
 		elif self.selected_widget is self.old_selected_widget and \
 		     self.selected_icon is self.old_selected_icon and \
 		     self.droppable_widget is self.old_droppable_widget and \
 		     len(self.old_multi_selected_widgets)==0 and \
+		     self.begin_event_source is self.old_begin_event_source and \
 		     not self.need_redraw_selection:
 			# nothing to do
 			self.redrawing = 0
 			return
 		else:
 			d = self.base_display_list.clone()
-
+			
 		# 2. Undraw stuff.
+		if self.old_begin_event_source:
+			self.old_begin_event_source.views['struct_view'].draw_unselected(d)
+		if self.begin_event_source:
+			self.begin_event_source.views['struct_view'].draw_unselected(d)
 		for i in self.old_multi_selected_widgets:
 			i.draw_unselected(d)
 		self.old_multi_selected_widgets = []
@@ -1736,10 +1747,27 @@ class HierarchyView(HierarchyViewDialog):
 
 	def create_begin_event_source(self):
 		if self.selected_widget:
+			if self.begin_event_source:
+				# Clear the old dangling icon
+				widget = self.begin_event_source.views['struct_view']
+				widget.clear_dangling_event()
+				self.old_begin_event_source = self.begin_event_source
 			self.begin_event_source = self.selected_widget.get_node() # which works even if it's an icon.
+			# XXXX Is this good enough? Will the event be redrawn if a global redraw is done?
+			self.selected_widget.set_dangling_event()
+			self.draw()
+		else:
+			windowinterface.beep() # Should not happen
+			
 	def create_begin_event_dest(self):
 		if self.selected_widget and self.begin_event_source:
-			self.selected_widget.get_node().NewBeginEvent(self.begin_event_source, 'activateEvent')
+			src = self.begin_event_source
+			self.begin_event_source = None
+			self.old_begin_event_source = None
+			self.selected_widget.get_node().NewBeginEvent(src, 'activateEvent')
+			# I assume a draw is not needed (due to NewBeginEvent)...
+		else:
+			windowinterface.beep() # Should not happen
 
 	def find_event_source(self):
 		# This feels like the wrong place for a function like this.

@@ -523,10 +523,24 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 
 	def get_cause_event_icon(self):
 		# Returns the start position of an event arrow.
+		# Note that the "dangling" event icon overrides this one
 		if self.cause_event_icon is None:
 			self.cause_event_icon = self.iconbox.add_icon('causeevent').set_properties(arrowable = 1, arrowdirection=1).set_contextmenu(self.mother.event_popupmenu_source)
 		return self.cause_event_icon
 
+	def set_dangling_event(self):
+		if self.cause_event_icon:
+			self.iconbox.del_icon(self.cause_event_icon)
+		self.cause_event_icon = self.iconbox.add_icon('danglingev')
+		
+	def clear_dangling_event(self):
+		# XXXX Note that this is not really correct: if there was a causeevent icon before
+		# we installed the dangling icon we now lose it.
+		if self.cause_event_icon:
+			self.iconbox.del_icon(self.cause_event_icon)
+		self.cause_event_icon = None
+		
+		
 	def getlinkicons(self):
 		# Returns the icon to show for incoming and outgiong hyperlinks.
 		links = self.node.context.hyperlinks
@@ -2313,7 +2327,12 @@ class IconBox(MMWidgetDecoration):
 		if arrowto:
 			icon.add_arrow(arrowto)
 		i = 0
-		for n in ('error', 'linkdst', 'beginevent', 'linksrc','causeevent','endevent'):
+		for n in ('error', 
+			      'danglingev', 'danglinganchor',
+			      'linkdst', 'beginevent',
+			      'linksrc','causeevent',
+			      'endevent',  # Not sure where this one should go....
+			      ):
 			if iconname == n:
 				self._iconlist.insert(i, icon)
 				break
@@ -2323,6 +2342,10 @@ class IconBox(MMWidgetDecoration):
 			self._iconlist.append(icon)
 		self.recalc_minsize()
 		return icon
+		
+	def del_icon(self, icon):
+		self._iconlist.remove(icon)
+		self.recalc_minsize()
 
 	def recalc_minsize(self):
 		# Always the number of icons.
