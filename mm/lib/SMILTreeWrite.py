@@ -2263,9 +2263,9 @@ class SMILWriter(SMIL):
 
 		if convert and u.headers.maintype == 'audio' and \
 		   string.find(u.headers.subtype, 'real') < 0:
-		 	from realconvert import convertaudiofile
+			from realconvert import convertaudiofile
 			# XXXX This is a hack. convertaudiofile may change the filename (and
-		  	# will, currently, to '.ra').
+			# will, currently, to '.ra').
 			if self.progress:
 				self.progress("Converting %s"%os.path.split(file)[1], None, None, None, None)
 				progress = (self.progress, ("Converting %s"%os.path.split(file)[1], None, None))
