@@ -31,7 +31,6 @@ def create_MMNode_widget(node, mother):
 		return SwitchWidget(node, mother)
 	elif ntype == 'ext':
 		return MediaWidget(node, mother)
-	# TODO: test for a realmedia MMslide node.
 	elif ntype == 'imm':
 		return MediaWidget(node, mother)
 	elif ntype == 'excl':
