@@ -3,17 +3,11 @@
 This is a very simple dialog, it consists of four choices and three
 callback functions.
 
-Thex choices are labeled `New', `Open Location...', `Open File...', and
-`Exit'.  If either of the Open choices is selected, a dialog window
-asks for a URL or a file name respectively, and if one is selected,
-the callback self.open_callback is called with the selected location
-(always passed in the form of a URL).
-
-If the New choice is selected, the callback self.new_callback is
-called without arguments.  If the Exit choice is selected, the
-callback self.close_callback is called without arguments.  Also, if
-the dialog window is closed in some other way, the callback
-self.close_callback is also called.
+The choices are labeled `New', `Open...', `Preferences...', `Help',
+and `Exit'.  If the Open choice is selected, a dialog window asks for
+a URL and also has a `Browse...' button to browse the file system.  If
+a URL is selected, the callback self.open_callback is called with the
+selected location (always passed in the form of a URL).
 
 """
 
@@ -29,7 +23,8 @@ class MainDialog:
 		title -- string to be displayed as window title
 		"""
 
-		pass
+		self.__recent = []
+		self.__lasturl = ''
 
 	def open_callback(self):
 		import windowinterface
@@ -42,8 +37,9 @@ class MainDialog:
 				horizontalSpacing = 5, verticalSpacing = 5)
 		b = f.Button('Browse...', (self.__openfile_callback, ()),
 			     top = None, right = None, bottom = None)
-		t = f.TextInput('Open:', '', None, (self.__tcallback, ()),
-				left = None, right = b, top = None, bottom = None)
+		t = f.ListEdit('Open:', self.__lasturl, (self.__tcallback, ()),
+			       self.__recent,
+			       left = None, right = b, top = None, bottom = None)
 		s = w.Separator(top = f, left = None, right = None)
 		r = w.ButtonRow([('Open', (self.__tcallback, ())),
 				 ('Cancel', (self.__ccallback, ()))],
@@ -62,27 +58,46 @@ class MainDialog:
 		text = self.__text.gettext()
 		self.__ccallback()
 		if text:
+			self.__lasturl = text
 			self.openURL_callback(text)
 
 	def __openfile_callback(self):
 		import windowinterface
 		windowinterface.setwaiting()
-		windowinterface.FileDialog('Open file', '.', '*.smil', '',
+		# provide a default directory and file name for the
+		# browser based on the current selection (if any)
+		dir = '.'
+		file = ''
+		url = self.__text.gettext() or self.__lasturl
+		if url:
+			import MMurl
+			type, rest = MMurl.splittype(url)
+			if not type or type == 'file':
+				import os
+				dir, file = os.path.split(MMurl.url2pathname(MMurl.splithost(rest)[1]))
+		windowinterface.FileDialog('Open file', dir, '*.smil', file,
 					   self.__filecvt, None, 1,
 					   parent = self.__owindow)
 
 	def __filecvt(self, filename):
 		import os, MMurl
-		if os.path.isabs(filename):
-			cwd = os.getcwd()
-			if os.path.isdir(filename):
-				dir, file = filename, os.curdir
-			else:
-				dir, file = os.path.split(filename)
-			# XXXX maybe should check that dir gets shorter!
-			while len(dir) > len(cwd):
-				dir, f = os.path.split(dir)
-				file = os.path.join(f, file)
-			if dir == cwd:
-				filename = file
-		self.__text.settext(MMurl.pathname2url(filename))
+##		if os.path.isabs(filename):
+##			cwd = os.getcwd()
+##			if os.path.isdir(filename):
+##				dir, file = filename, os.curdir
+##			else:
+##				dir, file = os.path.split(filename)
+##			# XXXX maybe should check that dir gets shorter!
+##			while len(dir) > len(cwd):
+##				dir, f = os.path.split(dir)
+##				file = os.path.join(f, file)
+##			if dir == cwd:
+##				filename = file
+		self.__lasturl = MMurl.pathname2url(filename)
+		self.__text.settext(self.__lasturl)
+
+	def set_recent_list(self, list):
+		recent = []
+		for base, url in list:
+			recent.append(url[0])
+		self.__recent = recent
