@@ -31,6 +31,12 @@ import WMEVENTS
 import features
 import version
 
+_documentation = [('QuickStart', GRINS_QSG),
+		  ('Howto-Basic', GRINS_TUTORIAL),
+		  ('TDG', GRINS_TDG),
+		  ('REFM', GRINS_REFERENCE),
+		  ('TDG', GRINS_DEMOS),]
+
 class MainDialog:
 	adornments = {}
 	def __init__(self, title, hasarguments=1):
@@ -54,34 +60,14 @@ class MainDialog:
 				HELP_CONTENTS(callback = (self.help_contents_callback, ())))
 		self.commandlist.append(
 			GRINS_WEB(callback = (self.grins_web_callback, ('http://www.oratrix.com/GRiNS/',))))
-		for qsg in ('QuickStart.pdf', 'QuickStart.html'):
-			qsg = cmif.findfile(qsg)
-			if os.path.exists(qsg):
-				qsg = MMurl.pathname2url(qsg)
-				self.commandlist.append(
-					GRINS_QSG(callback = (self.grins_web_callback, (qsg,))))
-				break
-		for tutorial in ('tutorials.pdf', 'tutorials.html'):
-			tutorial = cmif.findfile(tutorial)
-			if os.path.exists(tutorial):
-				tutorial = MMurl.pathname2url(tutorial)
-				self.commandlist.append(
-					GRINS_TUTORIAL(callback = (self.grins_web_callback, (tutorial,))))
-				break
-		for tdg in ('TDG.pdf', 'TDG.html'):
-			tdg = cmif.findfile(tdg)
-			if os.path.exists(tdg):
-				tdg = MMurl.pathname2url(tdg)
-				self.commandlist.append(
-					GRINS_TDG(callback = (self.grins_web_callback, (tdg,))))
-				break
-		for refm in ('REFM.pdf', 'REFM.html'):
-			refm = cmif.findfile(refm)
-			if os.path.exists(refm):
-				refm = MMurl.pathname2url(refm)
-				self.commandlist.append(
-					GRINS_REFERENCE(callback = (self.grins_web_callback, (refm,))))
-				break
+		for base, cmd in _documentation:
+			for ext in ['.pdf', '.html']:
+				file = cmif.findfile(base + ext)
+				if os.path.exists(file):
+					url = MMurl.pathname2url(file)
+					self.commandlist.append(
+						cmd(callback = (self.grins_web_callback, (url,))))
+					break
 		import windowinterface
 		# register events for all frame wnds
 		windowinterface.register_event(WMEVENTS.PasteFile, self.pastefile, None)

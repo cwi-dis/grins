@@ -26,17 +26,6 @@ class PASTE_DOCUMENT(_CommandBase):
 class PASTE_FILE(_CommandBase):
 	help = 'Paste file'
 
-class GRINS_WEB(_CommandBase):
-	help = 'GRiNS on the Web'
-class GRINS_QSG(_CommandBase):
-	help = 'GRiNS QuickStart Guide'
-class GRINS_TUTORIAL(_CommandBase):
-	help = 'GRiNS Tutorial Users Guide'
-class GRINS_TDG(_CommandBase):
-	help = 'GRiNS Template Design Guide'
-class GRINS_REFERENCE(_CommandBase):
-	help = 'GRiNS Reference Manual'
-
 class TOOLBAR_GENERAL(_CommandBase):
 	help = 'Show/Hide the general toolbar'
 class TOOLBAR_PLAYER(_CommandBase):
