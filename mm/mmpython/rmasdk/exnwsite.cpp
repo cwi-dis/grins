@@ -18,6 +18,9 @@
 #ifdef _UNIX
 #include <X11/Xlib.h>
 #endif
+#ifdef _MACINTOSH
+#include <Events.h>
+#endif
 
 #include "pncom.h"
 #include "pntypes.h"
