@@ -270,4 +270,7 @@ class RealChannel:
 			if self.__qid:
 				self.__channel._scheduler.cancel(self.__qid)
 			self.__qid = 0
-			self.__rmaplayer.Pause()
+			try:
+				self.__rmaplayer.Pause()
+			except rma.error, arg:
+				windowinterface.settimer(0.1,(self.__channel.errormsg,(None,arg)))
