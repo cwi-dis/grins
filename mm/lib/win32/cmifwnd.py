@@ -771,7 +771,10 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		if type(how) is type(()):
 			import sysmetrics
 			units, width, height = how
-			w, h = sysmetrics.to_pixels(0,0,w,h,units)[2:4]
+			w, h = sysmetrics.to_pixels(0,0,width,height,units)[2:4]
+			rw, rh = self._rect[2:4]
+			if w < rw: w = rw
+			if h < rh: h = rh
 		elif how == DOUBLE_WIDTH:
 			w = w * 2
 		elif how == DOUBLE_HEIGHT:
