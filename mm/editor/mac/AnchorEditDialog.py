@@ -135,7 +135,7 @@ class AnchorEditorDialog(windowinterface.MACDialog):
 			(what, message, when, where, modifiers) = event
 			Qd.SetPort(self._dialog)
 			where = Qd.GlobalToLocal(where)
-			is_double, item = self.__anchor_browser.click(where, modifiers)
+			item, is_double = self.__anchor_browser.click(where, modifiers)
 			self._setidfromlist()
 			self.anchor_callback()
 		elif item == ITEM_ID:
