@@ -8,10 +8,7 @@
 #include "StdAfx.h"
 
 //Python Header Files
-#define Py_USE_NEW_NAMES
 #include "Python.h"
-#include "modsupport.h"
-#include "abstract.h"
 
 //PythonWin Header Files
 #include "win32ui.h"
