@@ -720,7 +720,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.__in_layout = LAYOUT_NONE
 				# we're going to change this locally...
 				attrdict = self.__regions[region].copy()
-				del attrdict['id']
+				if attrdict.has_key('id'): del attrdict['id']
 				if self.__layout is None:
 					# create a layout channel
 					self.CreateLayout()
