@@ -1913,7 +1913,7 @@ class SMILWriter(SMIL):
 						extensions[ans] = 'x%s' % len(extensions)
 						attrlist.append(('xmlns:%s' % extensions[ans], ans))
 					attr = '%s:%s' % (extensions[ans], attr)
-				attrlist.append((attr, val))
+				attrlist.append((attr, val, None))
 		else:
 			attrs = smil_attrs
 			if xtype != 'body':
