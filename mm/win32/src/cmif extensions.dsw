@@ -75,6 +75,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "GRiNS Player SMIL2"="..\..\Build\win32\GRiNS Player for SMIL 2.0\GRiNS Player for SMIL 2.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "GRiNS QT Pro"="..\..\Build\win32\GRiNS QT\GRiNS QT Pro.dsp" - Package Owner=<4>
 
 Package=<5>
