@@ -9,7 +9,7 @@
 #include "stdafx.h"
 
 
-#include "..\..\..\cmif\win32\\Accusoft\\Gear\\gear.h" // Accusoft DLL header.
+#include "..\..\..\cmif\win32\Accusoft\Gear\gear.h" // Accusoft DLL header.
 
 #pragma comment (lib,"d:\\ufs\\mm\\cmif\\win32\\Accusoft\\Gear\\Gear32sd.lib")
 
