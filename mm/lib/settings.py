@@ -26,7 +26,7 @@ default_settings = {
 	'license': '',
 	'license_user' : '',
 	'license_organization' : '',
-	'compatibility': G2,		# Try to be compatible with...
+	'compatibility': SMIL10,		# Try to be compatible with...
 	'cmif': 0,			# Show cmif-only attributes
 	'debug': 0,			# Show debug commands
 	'checkext': 1,			# Guess Mime type based on extension
@@ -93,6 +93,9 @@ default_settings = {
 	'timeline_playactivecolor': (0, 255, 0),
 	'timeline_playinactivecolor': (0, 127, 0),
 	'timeline_playerrorcolor': (255, 0, 0),
+	# Locations on the net
+	'templatedir_url': 'http://www.oratrix.com/GRiNS/data',
+	'helpdir_url': 'http://www.oratrix.com/GRiNS/help',
 }
 
 user_settings = {}
