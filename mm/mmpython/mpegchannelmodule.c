@@ -2,7 +2,7 @@
 #include <fcntl.h>
 #include <stropts.h>
 #include <poll.h>
-#include "allobjects.h"
+#include "Python.h"
 #include "modsupport.h"
 #include "thread.h"
 #include "mmmodule.h"
@@ -38,7 +38,7 @@ static int mpegchannel_debug = 0;
 
 #define ERROR(func, errortype, msg)	{				   \
 			dprintf((# func "(%lx): " msg "\n", (long) self)); \
-			err_setstr(errortype, msg);			   \
+			PyErr_SetString(errortype, msg);		   \
 		    }
 
 
@@ -64,13 +64,13 @@ int rgb_mode;
 int pixel_size;
 
 static type_lock gl_lock;
-extern type_lock getlocklock PROTO((object *));
+extern type_lock getlocklock Py_PROTO((PyObject *));
 
 struct mpeg_data {
 	int m_width;		/* width of movie */
 	int m_height;		/* height of movie */
 	double m_scale;		/* movie scale (magnification) factor */
-	object *m_f;		/* file where movie comes from */
+	PyObject *m_f;		/* file where movie comes from */
 	int m_feof;		/* True if end-of-file */
 	long m_timediff;	/* time between frames (millisecs) */
 	char *m_frame;		/* one frame */
@@ -149,7 +149,7 @@ static void
 mpeg_free_old(p, keepfile)
     struct mpeg_data *p;
 {
-    if ( !keepfile && p->m_f ){ XDECREF(p->m_f); p->m_f = NULL; }
+    if ( !keepfile && p->m_f ){ Py_XDECREF(p->m_f); p->m_f = NULL; }
     if ( p->m_frameHdl ){ clDestroyBuf(p->m_frameHdl); p->m_frameHdl = NULL;}
     if ( p->m_frame )	{ free(p->m_frame); p->m_frame = NULL; }
     if ( p->m_inbufHdl ){ clDestroyBuf(p->m_inbufHdl); p->m_inbufHdl = NULL;}
@@ -163,35 +163,35 @@ static int
 mpeg_init(self)
 	mmobject *self;
 {
-	object *v;
+	PyObject *v;
 
 	denter(mpeg_init);
 	self->mm_private = malloc(sizeof(struct mpeg));
 	if (self->mm_private == NULL) {
 		dprintf(("mpeg_init(%lx): malloc failed\n", (long) self));
-		(void) err_nomem();
+		(void) PyErr_NoMemory();
 		return 0;
 	}
 	bzero((char *)self->mm_private, sizeof(struct mpeg));
 	if (pipe(PRIV->m_pipefd) < 0) {
-		ERROR(mpeg_init, RuntimeError, "cannot create pipe");
+		ERROR(mpeg_init, PyExc_RuntimeError, "cannot create pipe");
 		goto error_return_no_close;
 	}
 #ifdef USE_GL
 	PRIV->m_wid = -1;
-	v = dictlookup(self->mm_attrdict, "wid");
-	if (v && is_intobject(v)) {
+	v = PyDict_GetItemString(self->mm_attrdict, "wid");
+	if (v && PyInt_Check(v)) {
 		if (windowsystem != 0 && windowsystem != WIN_GL) {
-			ERROR(mpeg_init, RuntimeError,
+			ERROR(mpeg_init, PyExc_RuntimeError,
 			      "cannot use two window systems simultaneously");
 			goto error_return;
 		}
 		windowsystem = WIN_GL;
-		PRIV->m_wid = getintvalue(v);
+		PRIV->m_wid = PyInt_AsLong(v);
 #ifndef sun_xyzzy
-		v = dictlookup(self->mm_attrdict, "gl_lock");
+		v = PyDict_GetItemString(self->mm_attrdict, "gl_lock");
 		if (v == NULL || (gl_lock = getlocklock(v)) == NULL) {
-			ERROR(mpeg_init, RuntimeError,
+			ERROR(mpeg_init, PyExc_RuntimeError,
 			      "no graphics lock specified\n");
 			return 0;
 		}
@@ -201,27 +201,27 @@ mpeg_init(self)
 	}
 #endif /* USE_GL */
 #ifdef USE_XM
-	v = dictlookup(self->mm_attrdict, "widget");
+	v = PyDict_GetItemString(self->mm_attrdict, "widget");
 	if (v && is_widgetobject(v)) {
 		if (windowsystem != 0 && windowsystem != WIN_X) {
-			ERROR(mpeg_init, RuntimeError,
+			ERROR(mpeg_init, PyExc_RuntimeError,
 			      "cannot use two window systems simultaneously");
 			goto error_return;
 		}
 		windowsystem = WIN_X;
 		PRIV->m_widget = getwidgetvalue(v);
-		v = dictlookup(self->mm_attrdict, "gc");
+		v = PyDict_GetItemString(self->mm_attrdict, "gc");
 		if (v && is_gcobject(v))
 			PRIV->m_gc = PyGC_GetGC(v);
 		else {
-			ERROR(mpeg_init, RuntimeError, "no gc specified");
+			ERROR(mpeg_init, PyExc_RuntimeError, "no gc specified");
 			goto error_return;
 		}
-		v = dictlookup(self->mm_attrdict, "visual");
+		v = PyDict_GetItemString(self->mm_attrdict, "visual");
 		if (v && is_visualobject(v))
 			PRIV->m_visual = getvisualinfovalue(v)->visual;
 		else {
-			ERROR(mpeg_init, RuntimeError, "no visual specified");
+			ERROR(mpeg_init, PyExc_RuntimeError, "no visual specified");
 			goto error_return;
 		}
 	}
@@ -234,7 +234,7 @@ mpeg_init(self)
 	    && PRIV->m_widget == NULL
 #endif
 	    ) {
-		ERROR(mpeg_init, RuntimeError, "no window specified");
+		ERROR(mpeg_init, PyExc_RuntimeError, "no window specified");
 		goto error_return;
 	}
 	return 1;		/* normal return */
@@ -267,13 +267,13 @@ mpeg_dealloc(self)
 static int
 mpeg_arm(self, file, delay, duration, attrdict, anchorlist)
 	mmobject *self;
-	object *file;
+	PyObject *file;
 	int delay, duration;
-	object *attrdict, *anchorlist;
+	PyObject *attrdict, *anchorlist;
 {
-	object *v;
+	PyObject *v;
 	char *format;
-	object *err_object = RuntimeError;
+	PyObject *err_object = PyExc_RuntimeError;
         char *header;
 	int headersize;
 	int fd;
@@ -292,45 +292,45 @@ mpeg_arm(self, file, delay, duration, attrdict, anchorlist)
 	** Get parameters passed from python: window-id, scale,
 	** background color and the gl semaphore.
 	*/
-	v = dictlookup(attrdict, "error");
-	if (v && is_stringobject(v))
+	v = PyDict_GetItemString(attrdict, "error");
+	if (v && PyString_Check(v))
 	  err_object = v;
 	
-	v = dictlookup(attrdict, "scale");
-	if (v && is_floatobject(v))
-		PRIV->m_arm.m_scale = getfloatvalue(v);
+	v = PyDict_GetItemString(attrdict, "scale");
+	if (v && PyFloat_Check(v))
+		PRIV->m_arm.m_scale = PyFloat_AsDouble(v);
 	else {
-		err_setstr(RuntimeError, "scale not specified");
+		PyErr_SetString(PyExc_RuntimeError, "scale not specified");
 		return 0;
 	}
-	v = dictlookup(attrdict, "bgcolor");
-	if (v && is_tupleobject(v) && gettuplesize(v) == 3) {
+	v = PyDict_GetItemString(attrdict, "bgcolor");
+	if (v && PyTuple_Check(v) && PyTuple_Size(v) == 3) {
 		int i, c;
-		object *t;
+		PyObject *t;
 
 		PRIV->m_arm.m_bgcolor = 0;
 		for (i = 0; i < 3; i++) {
-			t = gettupleitem(v, i);
-			if (!is_intobject(t)) {
-				err_setstr(RuntimeError, "bad color specification");
+			t = PyTuple_GetItem(v, i);
+			if (!PyInt_Check(t)) {
+				PyErr_SetString(PyExc_RuntimeError, "bad color specification");
 				return 0;
 			}
-			c = getintvalue(t);
+			c = PyInt_AsLong(t);
 			if (c < 0 || c > 255) {
-				err_setstr(RuntimeError, "bad color specification");
+				PyErr_SetString(PyExc_RuntimeError, "bad color specification");
 				return 0;
 			}
 			PRIV->m_arm.m_bgcolor = (PRIV->m_arm.m_bgcolor << 8) | c;
 		}
 	} else {
-		ERROR(mpeg_arm, RuntimeError, "no background color specified");
+		ERROR(mpeg_arm, PyExc_RuntimeError, "no background color specified");
 		return 0;
 	}
 #ifdef USE_GL
 	PRIV->m_arm.m_bgindex = -1;
 #endif
 
-	XINCREF(file);
+	Py_XINCREF(file);
 	PRIV->m_arm.m_f = file;
 	/*
 	** Read the MPEG file header and initialize the decompressor.
@@ -338,7 +338,7 @@ mpeg_arm(self, file, delay, duration, attrdict, anchorlist)
 	** pass reasonable errors back to the CMIF mainline in case of errors
 	** like unrecognized file type.
 	*/
-	fd = fileno(getfilefile(PRIV->m_arm.m_f));
+	fd = fileno(PyFile_AsFile(PRIV->m_arm.m_f));
 	dprintf(("mpeg_arm(%lx): fd: %d\n", (long) self, fd));
 	headersize = clQueryMaxHeaderSize(CL_MPEG_VIDEO);
 	if ( (header=malloc(headersize)) == NULL ) {
@@ -437,7 +437,7 @@ mpeg_armer(self)
 #endif
 
 	PRIV->m_arm.m_feof = mpeg_fill_inbuffer(PRIV->m_arm.m_inbufHdl,
-					fileno(getfilefile(PRIV->m_arm.m_f)));
+					fileno(PyFile_AsFile(PRIV->m_arm.m_f)));
 	if ( !PRIV->m_arm.m_feof ) {
 	    if ( clDecompress(PRIV->m_arm.m_decHdl, 1, 0, NULL, NULL) == FAILURE ) {
 		printf("mpeg_armer: clDecompress failed\n");
@@ -458,7 +458,7 @@ mpeg_play(self)
 	bzero((char *)&PRIV->m_arm, sizeof(PRIV->m_arm));
 	if (PRIV->m_play.m_frame == NULL) {
 		/* apparently the arm failed */
-		ERROR(mpeg_play, RuntimeError, "asynchronous arm failed");
+		ERROR(mpeg_play, PyExc_RuntimeError, "asynchronous arm failed");
 		return 0;
 	}
 	/* empty the pipe */
@@ -556,7 +556,7 @@ mpeg_player(self)
 
 	denter(mpeg_player);
 	dprintf(("mpeg_player(%lx): width = %d, height = %d\n", (long) self, PRIV->m_play.m_width, PRIV->m_play.m_height));
-	fd = fileno(getfilefile(PRIV->m_play.m_f));
+	fd = fileno(PyFile_AsFile(PRIV->m_play.m_f));
 	timediff_wanted = PRIV->m_play.m_timediff;
 	while (1) {
 	        /*
@@ -880,21 +880,21 @@ mpegchannel_dealloc(self)
 	if (self != mpeg_chan_obj) {
 		dprintf(("mpegchannel_dealloc: arg != mpeg_chan_obj\n"));
 	}
-	DEL(self);
+	PyMem_DEL(self);
 	mpeg_chan_obj = NULL;
 }
 
-static object *
+static PyObject *
 mpegchannel_getattr(self, name)
 	channelobject *self;
 	char *name;
 {
-	err_setstr(AttributeError, name);
+	PyErr_SetString(PyExc_AttributeError, name);
 	return NULL;
 }
 
-static typeobject Mpegchanneltype = {
-	OB_HEAD_INIT(&Typetype)
+static PyTypeObject Mpegchanneltype = {
+	PyObject_HEAD_INIT(&PyType_Type)
 	0,			/*ob_size*/
 	"channel:mpeg",	/*tp_name*/
 	sizeof(channelobject),	/*tp_size*/
@@ -908,28 +908,28 @@ static typeobject Mpegchanneltype = {
 	0,			/*tp_repr*/
 };
 
-static object *
+static PyObject *
 mpegchannel_init(self, args)
 	channelobject *self;
-	object *args;
+	PyObject *args;
 {
 	channelobject *p;
 
-	if (!getnoarg(args))
+	if (!PyArg_NoArgs(args))
 		return NULL;
 	if (mpeg_chan_obj == NULL) {
-		mpeg_chan_obj = NEWOBJ(channelobject, &Mpegchanneltype);
+		mpeg_chan_obj = PyObject_NEW(channelobject, &Mpegchanneltype);
 		if (mpeg_chan_obj == NULL)
 			return NULL;
 		mpeg_chan_obj->chan_funcs = &mpeg_channel_funcs;
 	} else {
-		INCREF(mpeg_chan_obj);
+		Py_INCREF(mpeg_chan_obj);
 	}
-	return (object *) mpeg_chan_obj;
+	return (PyObject *) mpeg_chan_obj;
 }
 
-static struct methodlist mpegchannel_methods[] = {
-	{"init",		(method)mpegchannel_init},
+static PyMethodDef mpegchannel_methods[] = {
+	{"init",		(PyCFunction)mpegchannel_init},
 	{NULL,			NULL}
 };
 
@@ -944,7 +944,7 @@ initmpegchannel()
 	mpegchannel_debug = getenv("MPEGDEBUG") != 0;
 #endif
 	dprintf(("initmpegchannel\n"));
-	(void) initmodule("mpegchannel", mpegchannel_methods);
+	(void) Py_InitModule("mpegchannel", mpegchannel_methods);
 
 	/* This always works: */
 	cl_format_wanted = CL_RGBX;
