@@ -609,26 +609,35 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# Returns the initializer dictionary used
 		# to create the toolbar pulldown menus for
 		# preview playback preferences
-		import settings, bitrates, languages
-		bitrate = settings.get('system_bitrate')
-		rates = []
-		initbitrate = bitrates.bitrates[0][1]
-		for val, str in bitrates.bitrates:
-			rates.append(str)
-			if val <= bitrate:
-				initbitrate = str
-		language = settings.get('system_language')
-		langs = []
-		initlang = 'English'	# we know this occurs
-		for val, str in languages.languages:
-			langs.append(str)
-			if language == val:
-				initlang = str
-
-		return {
-				'Bitrate': (rates, self.bitratecb, initbitrate),
-				'Language': (langs, self.languagecb, initlang),
-		}
+##		import time
+#		t = time.time()
+		alltests = self.root.GetAllSystemTests()
+##		print 'ALLSYSTEMTESTS', time.time()-t, alltests
+		dict = {}
+		if 'system_bitrate' in alltests:
+			alltests.remove('system_bitrate')
+			import bitrates
+			bitrate = settings.get('system_bitrate')
+			rates = []
+			initbitrate = bitrates.bitrates[0][1]
+			for val, str in bitrates.bitrates:
+				rates.append(str)
+				if val <= bitrate:
+					initbitrate = str
+			dict['Bitrate'] = (rates, self.bitratecb, initbitrate)
+		if 'system_language' in alltests:
+			alltests.remove('system_language')
+			import languages
+			language = settings.get('system_language')
+			langs = []
+			initlang = 'English'	# we know this occurs
+			for val, str in languages.languages:
+				langs.append(str)
+				if language == val:
+					initlang = str
+			dict['Language'] = (langs, self.languagecb, initlang)
+		# The rest can probably be used verbatim
+		return dict
 
 	def update_toolbarpulldowns(self):
 		self.setsettingsdict(self.getsettingsdict())
