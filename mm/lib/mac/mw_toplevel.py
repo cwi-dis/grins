@@ -70,6 +70,10 @@ MINIMAL_TIMEOUT=0	# How long we yield at the very least
 MAXIMAL_TIMEOUT=int(0.5*TICKS_PER_SECOND)	# Check at least every half second
 DOUBLECLICK_TIME=Evt.GetDblTime()
 
+MEMORY_CHECK_INTERVAL=5		# Check memory every 5 seconds
+MEMORY_WARN=1000000			# Warn if largest block < 1Mb
+MEMORY_ALERT_ID=514
+
 class _Event(AEServer):
 	"""This class is only used as a base-class for toplevel.
 	the separation is for clarity only."""
@@ -144,6 +148,8 @@ class _Event(AEServer):
 		
 	def mainloop(self):
 		"""The event mainloop"""
+		last_memory_check = Evt.TickCount()
+		memory_warned = 0
 		self._initcommands()
 		while 1:
 			while self._timers:
@@ -178,6 +184,13 @@ class _Event(AEServer):
 			if not self._eventloop(timeout):
 				for rtn in self._idles:
 					rtn()
+				if not memory_warned and \
+						Evt.TickCount() > last_memory_check+MEMORY_CHECK_INTERVAL*TICKS_PER_SECOND:
+					last_memory_check = Evt.TickCount()
+					if MacOS.MaxBlock() < MEMORY_WARN:
+						Dlg.CautionAlert(MEMORY_ALERT_ID, None)
+						memory_warned = 1
+					
 								
 	def _eventloop(self, timeout):
 		"""Do the eventloop once with timeout. If this returns
