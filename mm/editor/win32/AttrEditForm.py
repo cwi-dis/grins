@@ -1784,7 +1784,10 @@ class EventCtrl(AttrCtrl):
 			newcause = self.__radiobuttons[id]
 			if self._radiobuttonwidgets[newcause].getcheck():
 				if newcause == 'node' and not self._eventstruct.has_node():
-					dlg = win32dialog.SelectElementDlg(self._wnd._form, self._node.GetRoot(), self._eventstruct.get_node(), filter = 'node')
+
+					dlg = win32dialog.SelectElementDlg(self._wnd._form, self._node.GetRoot(),
+						self._node, filter = 'node',
+						title='Source node for event:')
 					if dlg.show():
 						self._eventstruct.set_node(dlg.getmmobject())
 				self._eventstruct.set_cause(newcause)
@@ -1827,8 +1830,11 @@ class EventCtrl(AttrCtrl):
 					self._eventstruct.set_region(dlg.getmmobject().name)
 			elif c == 'node':
 				# Pop up a node select dialog.
+				dftselect = self._eventstruct.get_node()
+				if not dftselect:
+					dftselect = self._node
 				dlg = win32dialog.SelectElementDlg(self._wnd._form, self._node.GetRoot(),
-					self._eventstruct.get_node(), filter = 'node')
+					dftselect, filter = 'node', title='Source node for this event')
 				if dlg.show():
 					self._eventstruct.set_node(dlg.getmmobject())
 					self._eventstruct.check_event()
