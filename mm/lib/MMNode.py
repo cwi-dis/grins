@@ -915,10 +915,33 @@ class MMNode:
 
 	# methods that have to do with playback
 	def reset(self):
+		if debug: print 'MMNode.reset', `self`
 		self.happenings = {}
 		self.playing = MMStates.IDLE
 		self.sctx = None
 		self.start_time = self.end_time = None
+
+	def resetall(self):
+		self.reset()
+		for c in self.children:
+			c.resetall()
+		for arc in MMAttrdefs.getattr(self, 'beginlist') + MMAttrdefs.getattr(self, 'endlist'):
+			refnode = self.__find_refnode(arc)
+			if arc in refnode.sched_children:
+				refnode.sched_children.remove(arc)
+			if arc.qid is not None:
+				self.cancel(arc.qid)
+				arc.qid = None
+				arc.triggered = 0
+		self.sched_children = []
+		self.looping_body_self = None
+		self.realpix_body = None
+		self.caption_body = None
+		self.curloopcount = 0
+		self.srdict = {}
+		self.events = {}
+		self.scheduled_children = 0
+		self.arcs = []
 
 	def startplay(self, sctx):
 		self.playing = MMStates.PLAYING
