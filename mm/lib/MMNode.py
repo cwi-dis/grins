@@ -932,6 +932,8 @@ class MMChannel(MMTreeElement):
 	def _destroy(self):
 		if self.attrdict.get('type') == 'layout':
 			self.context.cssResolver.unlink(self._cssId)
+		if self.has_key('base_window'):
+			del self['base_window']
 		self.context = None
 
 	def stillvalid(self):
