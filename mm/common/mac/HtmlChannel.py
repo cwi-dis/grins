@@ -12,21 +12,13 @@ import windowinterface
 import MMurl
 import urlparse
 import htmlwidget
-import settings
-if settings.get('html_control'):
-	try:
-		import macos9htmlwidget
-	except ImportError:
-		pass
-	else:
-		htmlwidget = macos9htmlwidget
 from TextChannel import getfont, mapfont
 import WMEVENTS
 
 error = 'HtmlChannel.error'
 
 class HtmlChannel(Channel.ChannelWindow):
-	_our_attrs = ['fgcolor', 'font']
+	_our_attrs = ['fgcolor']
 	if Channel.CMIF_MODE:
 		node_attrs = Channel.ChannelWindow.node_attrs + _our_attrs
 	else:
@@ -68,7 +60,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		#
 		# Create the widget
 		#
-		self.htmlw = htmlwidget.HTMLWidget(wd, wd.qdrect(), self._name)
+		self.htmlw = htmlwidget.HTMLWidget(wd._mac_getoswindow(), wd.qdrect(), self._name)
 		bg = wd._bgcolor
 		fg = wd._fgcolor
 		an = fg # Not needed anyway, and we have to provide something...
@@ -85,7 +77,8 @@ class HtmlChannel(Channel.ChannelWindow):
 ##		self.htmlw.AddCallback('destroyCallback', self.cbdestroy, None)
 ##		self.htmlw.AddCallback('linkCallback', self.cblink, None)
 
-	def redraw(self):
+	def redraw(self, rgn=None):
+		# rgn (region to be redrawn, None for everything) ignored for now
 		if self.htmlw:
 			self.htmlw.do_update()
 			
@@ -167,7 +160,7 @@ class HtmlChannel(Channel.ChannelWindow):
 
 		bg = self.played_display._bgcolor
 		fg = self.played_display._fgcolor
-		an = self.window._convert_color(self.getbucolor(node))
+		an = self.window._convert_color(self.gethicolor(node))
 		htmlw.setcolors(bg, fg, an)
 		
 		htmlw.insert_html(self.played_str, self.url, tag)
@@ -218,8 +211,8 @@ class HtmlChannel(Channel.ChannelWindow):
 
 	def findanchortype(self, name):
 		for a in MMAttrdefs.getattr(self.play_node, 'anchorlist'):
-			if a[A_ID] == name:
-				return a[A_TYPE]
+			if a.aid == name:
+				return a.atype
 		return None
 
 	def fixanchorlist(self, node):
@@ -231,15 +224,16 @@ class HtmlChannel(Channel.ChannelWindow):
 		if len(anchorlist) == 0:
 			return
 		nodeanchorlist = MMAttrdefs.getattr(node, 'anchorlist')[:]
-		oldanchorlist = map(lambda x:x[0], nodeanchorlist)
+		oldanchorlist = map(lambda x: x.aid, nodeanchorlist)
 		newanchorlist = []
 		for a in anchorlist:
 			if a not in oldanchorlist:
 				newanchorlist.append(a)
 		if not newanchorlist:
 			return
+		from MMNode import MMAnchor
 		for a in newanchorlist:
-			nodeanchorlist.append((a, ATYPE_NORMAL, [], (0,0)))
+			nodeanchorlist.append(MMAnchor(a, ATYPE_NORMAL, [], (0,0), None))
 		node.SetAttr('anchorlist', nodeanchorlist)
 		MMAttrdefs.flushcache(node)
 
