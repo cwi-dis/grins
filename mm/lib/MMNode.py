@@ -4062,6 +4062,7 @@ class MMNode(MMTreeElement):
 
 	def gensr_body_interior(self, curtime, sched_actions, scheddone_actions,
 				self_body=None, path=None, sctx=None):
+		if debug: print 'gensr_body_interior',self,curtime,path
 		srdict = {}
 		srlist = []
 		schedstop_actions = []
@@ -4126,6 +4127,9 @@ class MMNode(MMTreeElement):
 ##			self_body.arcs.append((self_body, arc))
 			self_body.add_arc(arc, curtime, sctx)
 
+		if self.type == 'seq':
+			starttime = self.isresolved(sctx)
+
 		for child in wtd_children:
 			chname = MMAttrdefs.getattr(child, 'name')
 			beginlist = child.GetBeginList()
@@ -4135,9 +4139,10 @@ class MMNode(MMTreeElement):
 				t = child.isresolved(sctx)
 				if t is not None and t < curtime:
 					d = child.calcfullduration(sctx)
-					if d is not None and t + d < curtime:
+					if d is not None and d >= 0 and t + d <= curtime:
 						if debug: print 'removing',child,'from wtd_children'
 						self.wtd_children.remove(child)
+						defbegin = t - starttime + d
 						continue
 			if path and path[0] is child:
 				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = sctx.parent.timefunc() - self.start_time)
@@ -4164,6 +4169,7 @@ class MMNode(MMTreeElement):
 					   arc.delay is not None:
 						schedule = 1
 			if self.type == 'seq':
+				defbegin = 0
 				pass
 			elif termtype in ('FIRST', chname): ## or
 ##			   (len(wtd_children) == 1 and
