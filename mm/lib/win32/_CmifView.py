@@ -184,8 +184,12 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		self._title=title
 		#self._parent.settitle(title,'view')
 
-	# Called when the view is activated/deactivated 
-	def onActivate(self,f):
+	# Called when the view is activated 
+	def activate(self):
+		pass
+
+	# Called when the view is deactivated 
+	def deactivate(self):
 		pass
 
 	# Initialize the view using the arguments passed by the core system 
