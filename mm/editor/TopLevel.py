@@ -854,6 +854,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		import AttrEdit
 		AttrEdit.showdocumentattreditor(self, initattr = initattr)
 
+	#
+	# support for external text editor (mac and unix)
+	#
+	
 	def edit_callback(self):
 		if not self.editmgr.transaction():
 			return
@@ -880,9 +884,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			if self.views[i] is not None and \
 			   self.views[i].is_showing():
 				showing.append(i)
-		self.editmgr.unregister(self)
-		self.editmgr.destroy() # kills subscribed views
-		self.context.seteditmgr(None)
+#		self.editmgr.unregister(self)
+#		self.editmgr.destroy() # kills subscribed views
+#		self.context.seteditmgr(None)
 		self.root.Destroy()
 		save_new = self.new_file
 		self.new_file = 1
@@ -895,14 +899,18 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		except os.error:
 			pass
 		del self.__edittmp
-		self.context = self.root.GetContext()
-		self.editmgr = EditMgr.EditMgr(self.root)
-		self.context.seteditmgr(self.editmgr)
-		self.editmgr.register(self)
+#		self.context = self.root.GetContext()
+#		self.editmgr = EditMgr.EditMgr(self.root)
+#		self.context.seteditmgr(self.editmgr)
+#		self.editmgr.register(self)
 		self.makeviews()
 		for i in showing:
 			self.views[i].show()
 		self.changed = 1
+
+	#
+	#
+	#
 
 	def fixtitle(self):
 		utype, host, path, params, query, fragment = urlparse(self.filename)
