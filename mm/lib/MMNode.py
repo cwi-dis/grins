@@ -707,7 +707,7 @@ class MMChannel:
 		if animated: return self._icssId
 		else: return self._cssId
 
-	def setCssAttr(self, name, value, animated):
+	def setCssAttr(self, name, value, animated=0):
 		if animated:
 			resolver = self.context.icssResolver
 			id = self._icssId
@@ -716,7 +716,7 @@ class MMChannel:
 			id = self._cssId
 		resolver.setRawAttr(id, name, value)
 
-	def getCssAttr(self, name, defaultValue=None):
+	def getCssAttr(self, name, defaultValue=None, animated=0):
 		if animated:
 			resolver = self.context.icssResolver
 			id = self._icssId
@@ -727,7 +727,7 @@ class MMChannel:
 		if value == None:
 			return defaultValue
 
-	def getCssRawAttr(self, name, defaultValue=None):
+	def getCssRawAttr(self, name, defaultValue=None, animated=0):
 		if animated:
 			resolver = self.context.icssResolver
 			id = self._icssId
@@ -747,7 +747,45 @@ class MMChannel:
 	#
 	# Set animated attribute
 	#
-	def SetPresentationAttr(self, name, value):
+	def SetPresentationAttr(self, key, value):
+		if key == 'type':
+			pass
+		elif key == 'base_window':
+			if settings.activeFullSmilCss:
+				if self.attrdict.get('type') == 'layout':
+					pchan = self.context.channeldict.get(value)
+					if pchan == None:
+						print 'Error: The parent channel '+self.name+' have to be created before to set base_window'
+					else:
+						self.context.icssResolver.link(self._icssId, pchan._icssId)
+		elif key == 'base_winoff':
+			if settings.activeFullSmilCss:
+				# keep the compatibility with old version
+				self.setPxGeom(value, animated=1)
+				return
+		self.d_attrdict[key] = value
+
+	def GetPresentationAttr(self, key):
+		if self.d_attrdict.has_key(key):
+			return self.d_attrdict[key]
+		else:
+			# special case for background color
+			if key == 'bgcolor' and \
+			   self.attrdict.has_key('base_window') and \
+			   self.d_attrdict.get('transparent', 0) <= 0:
+				pname = self.attrdict['base_window']
+				pchan = self.context.channeldict[pname]
+				return pchan['bgcolor']
+			if settings.activeFullSmilCss:
+				if key == 'base_winoff':
+					# keep the compatibility with old version
+					return self.getPxGeom(animated=1)
+				elif self.isCssAttr(key):
+					# keep the compatibility with old version
+					return self.getCssAttr(key, animated=1)
+		return self.get(key)
+
+	def SetPresentationAttrXXX(self, name, value):
 		if self.attrdict.has_key(name):
 			self.d_attrdict[name] = value
 		elif name in ('position', 'left', 'top', 'width', 'height','right','bottom') and\
@@ -775,7 +813,7 @@ class MMChannel:
 				w, h = value
 				d[n] = x, y, w, h
 
-	def GetPresentationAttr(self, name):
+	def GetPresentationAttrXXX(self, name):
 		if self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
 		elif self.attrdict.has_key(name):
