@@ -75,10 +75,10 @@ class Main(MainDialog):
 			top = TopLevel.TopLevel(self, url)
 		except IOError:
 			import windowinterface
-			windowinterface.showmessage('error opening URL %s' % url)
+			windowinterface.showmessage('error opening document %s' % url)
 		except MSyntaxError:
 			import windowinterface
-			windowinterface.showmessage('parsing URL %s failed' % url)
+			windowinterface.showmessage('parsing document %s failed' % url)
 		else:
 			self.tops.append(top)
 			top.show()
