@@ -64,14 +64,14 @@ class PlayerCore():
 	# Internal reset.
 	#
 	def fullreset(self):
-		self.resetchannels()
+##		self.resetchannels()
 		self.reset()
 		self.playroot = self.userplayroot = self.root
 		self.measure_armtimes = 0
 	#
 	def reset(self):
 		self.scheduler.resettimer()
-		self.softresetchannels()
+##		self.softresetchannels()
 	#
 	# State transitions.
 	#
@@ -80,10 +80,10 @@ class PlayerCore():
 		self.seeking = 0
 		if not self.playing:
 			self.playroot = self.userplayroot
-			if not self.scheduler.start_playing(1.0):
+			if not self.scheduler.start_playing(0):
 				return
 		else:
-			self.scheduler.setrate(1.0)
+			self.scheduler.setpaused(0)
 		self.showstate()
 	#
 	def playsubtree(self, node):
@@ -116,13 +116,13 @@ class PlayerCore():
 	def pause(self):
 		self.seeking = 0
 		if self.playing:
-			if self.scheduler.getrate() == 0.0: # Paused: continue
-				self.scheduler.setrate(1)
+			if self.scheduler.getpaused(): # Paused: continue
+				self.scheduler.setpaused(0)
 			else:			# Running: pause
-				self.scheduler.setrate(0)
+				self.scheduler.setpaused(1)
 				self.setready() # Cancel possible watch cursor
 		else:
-			dummy = self.scheduler.start_playing(0.0)
+			dummy = self.scheduler.start_playing(1)
 			self.setready()
 		self.showstate()
 	#
@@ -196,7 +196,9 @@ class PlayerCore():
 	#
 	def showchannels(self):
 		for name in self.channelnames:
-			self.channels[name].show()
+			ch = self.channels[name]
+			if ch.may_show():
+				ch.show()
 		self.makemenu()
 	#
 	def hidechannels(self):
@@ -231,14 +233,20 @@ class PlayerCore():
 		self.channels[name] = ch
 		self.channeltypes[name] = type
 	#
-	def resetchannels(self):
-		for cname in self.channelnames:
-			self.channels[cname].reset()
+##	def resetchannels(self):
+##		for cname in self.channelnames:
+##			self.channels[cname].reset()
 	#
-	def softresetchannels(self):
-		for cname in self.channelnames:
-			self.channels[cname].softreset()
+##	def softresetchannels(self):
+##		for cname in self.channelnames:
+##			self.channels[cname].softreset()
 	#
 	def stopchannels(self):
 		for cname in self.channelnames:
 			self.channels[cname].stop()
+
+	def add_anchor(self, button, func, arg):
+		self.toplevel.add_anchor(button, func, arg)
+
+	def del_anchor(self, button):
+		self.toplevel.del_anchor(button)

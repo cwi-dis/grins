@@ -5,6 +5,7 @@ import gl
 import GL
 import fl
 from FL import *
+import GLLock
 import flp
 from Scheduler import del_timing
 from PlayerCore import PlayerCore
@@ -91,27 +92,53 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 	#
 	# FORMS callbacks.
 	#
+	def before_call(self):
+##		print 'callback start'
+		self.waslocked = 0
+		if GLLock.gl_lock:
+##			print 'try acquire'
+			if not GLLock.gl_lock.acquire(0):
+##				print 'acquire failed'
+				self.waslocked = 1
+##			print 'release'
+			GLLock.gl_lock.release()
+	def after_call(self):
+##		print 'callback end'
+		if self.waslocked:
+##			print 're-acquire'
+			GLLock.gl_lock.acquire()
 	def play_callback(self, obj, arg):
+		self.before_call()
 		self.play()
+		self.after_call()
 	#
 	def pause_callback(self, obj, arg):
+		self.before_call()
 		self.pause()
+		self.after_call()
 	#
 	def stop_callback(self, obj, arg):
+		self.before_call()
 		self.stop()
+		self.after_call()
 
 	def timer_callback(self, obj, arg):
+		self.before_call()
 		self.scheduler.timer_callback()
+		self.after_call()
 	#
 	def cmenu_callback(self, obj, arg):
+		self.before_call()
 		i = self.cmenubutton.get_menu() - 1
 		if 0 <= i < len(self.channelnames):
 			name = self.channelnames[i]
 			self.channels[name].flip_visible()
 			self.toplevel.channelview.channels_changed()
 			self.makemenu()
+		self.after_call()
 	#
 	def omenu_callback(self, obj, arg):
+		self.before_call()
 		i = self.omenubutton.get_menu()
 		if i == 1:
 			self.measure_armtimes = (not self.measure_armtimes)
@@ -135,6 +162,7 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		else:
 			print 'Player: Option menu: funny choice', i
 		self.makeomenu()
+		self.after_call()
 		
 	def dummy_callback(self, *dummy):
 		pass
@@ -147,9 +175,9 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 			self.stopbutton.set_button(1)
 		else:
 			self.stopbutton.set_button(0)
-			rate = self.scheduler.getrate()
-			self.playbutton.set_button(rate == 1.0)
-			self.pausebutton.set_button(rate == 0.0)
+			paused = self.scheduler.getpaused()
+			self.playbutton.set_button(not paused)
+			self.pausebutton.set_button(paused)
 		if self.userplayroot is self.root:
 			self.partbutton.label = ''
 		else:
@@ -164,10 +192,10 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		self.showtime()
 	#
 	def showtime(self):
-		if self.scheduler.getrate():
-			self.statebutton.lcol = self.statebutton.col2
-		else:
+		if self.scheduler.getpaused():
 			self.statebutton.lcol = GL.YELLOW
+		else:
+			self.statebutton.lcol = self.statebutton.col2
 		#if self.msec_origin == 0:
 		#	self.statebutton.label = '--:--'
 		#	return
