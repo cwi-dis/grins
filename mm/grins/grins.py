@@ -284,7 +284,9 @@ def findfile(name):
 		elif os.environ.has_key('CMIF'):
 			cmifpath = [os.environ['CMIF']]
 		else:
-			cmifpath = [DEFAULTDIR]
+			import sys
+			cmifpath = [os.path.split(sys.executable)[0],
+				    DEFAULTDIR]
 	for dir in cmifpath:
 		fullname = os.path.join(dir, name)
 		if os.path.exists(fullname):
