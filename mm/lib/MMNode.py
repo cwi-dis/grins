@@ -694,7 +694,11 @@ class MMNode:
 		if self.type in bagtypes:
 			return [], None
 		if self.type in leaftypes:
-			return [MMAttrdefs.getattr(self, 'channel')], None
+			list = [MMAttrdefs.getattr(self, 'channel')]
+			captionchannel = MMAttrdefs.getattr(self, 'captionchannel')
+			if captionchannel and captionchannel != 'undefined':
+				list.append(captionchannel)
+			return list, None
 		errnode = None
 		overlap = []
 		list = []
