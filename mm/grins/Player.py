@@ -115,9 +115,10 @@ class Player(PlayerCore, PlayerDialog):
 
 	def get_geometry(self):
 		h, v = self.root.GetRawAttrDef('player_winpos', (None, None))
-		width, height = MMAttrdefs.getattr(self.root, 'player_winsize')
+		winsize = MMAttrdefs.getattr(self.root, 'player_winsize')
+		width, height = winsize or (640, 480)
 		return h, v, width, height
-		
+
 	def after_chan_show(self, chan = None):
 		PlayerDialog.after_chan_show(self, chan)
 		PlayerCore.after_chan_show(self, chan)
