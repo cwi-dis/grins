@@ -75,8 +75,8 @@ BASESETUP=
 
 # === Variables set by makesetup ===
 
-MODOBJS=	@MODOBJS@
-MODLIBS=	@MODLIBS@
+MODOBJS=	_MODOBJS_
+MODLIBS=	_MODLIBS_
 
 # === Definitions added by makesetup ===
 
