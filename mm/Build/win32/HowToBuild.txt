@@ -43,7 +43,7 @@ changes to various files.
 Edit cmif\bin\pythonwin.ini and replace all occurences of the string
 "d:\ufs\mm" (or "D:\ufs\mm") to the absolute path name of the folder
 you created above.  In other words, to the folder with the cmif and
-python subfolders.  Also make the same change in cmif\iGRiNS.py.
+python subfolders.  Also make the same change in cmif\bin\win32\iGRiNS.py.
 
 You should now be able to double click cmif\bin\win32\pythonwin.exe
 which should start a Python interpreter in a window.  If this works,
