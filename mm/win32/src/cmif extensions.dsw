@@ -56,9 +56,6 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name gear32sd
     End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name python16
-    End Project Dependency
 }}}
 
 ###############################################################################
@@ -125,6 +122,24 @@ Package=<5>
 
 Package=<4>
 {{{
+    Begin Project Dependency
+    Project_Dep_Name _socket
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "_socket"=..\..\..\python\PCbuild\_socket.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name python16
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -149,9 +164,6 @@ Package=<5>
 
 Package=<4>
 {{{
-    Begin Project Dependency
-    Project_Dep_Name python16
-    End Project Dependency
 }}}
 
 ###############################################################################
@@ -164,9 +176,6 @@ Package=<5>
 
 Package=<4>
 {{{
-    Begin Project Dependency
-    Project_Dep_Name python16
-    End Project Dependency
 }}}
 
 ###############################################################################
@@ -293,9 +302,6 @@ Package=<5>
 
 Package=<4>
 {{{
-    Begin Project Dependency
-    Project_Dep_Name python16
-    End Project Dependency
 }}}
 
 ###############################################################################
@@ -333,7 +339,7 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name python16
+    Project_Dep_Name PyWinTypes
     End Project Dependency
 }}}
 
@@ -347,9 +353,6 @@ Package=<5>
 
 Package=<4>
 {{{
-    Begin Project Dependency
-    Project_Dep_Name python16
-    End Project Dependency
 }}}
 
 ###############################################################################
@@ -367,12 +370,6 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name win32trace
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name python16
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name PyWinTypes
     End Project Dependency
 }}}
 
