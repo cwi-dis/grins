@@ -250,13 +250,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 	# FORMS callbacks.
 	#
 	def play_callback(self):
-		self.play_entry()
-	def pause_callback(self):
-		self.pause_entry()
-	def stop_callback(self):
-		self.stop_entry()
-		
-	def play_entry(self):
 		self.toplevel.setwaiting()
 		self.show()
 		if self.playing and self.pausing:
@@ -270,7 +263,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			# nothing, restore state.
 			self.showstate()
 
-	def pause_entry(self):
+	def pause_callback(self):
 		if self.showing:			
 			self.toplevel.setwaiting()
 			if self.playing and self.pausing:
@@ -284,7 +277,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 				self.pause(1)
 				self.play()
 
-	def stop_entry(self):
+	def stop_callback(self):
 		if self.showing:			
 			self.toplevel.setwaiting()
 			self.cc_stop()
