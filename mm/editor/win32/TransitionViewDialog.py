@@ -1,9 +1,7 @@
-"""Dialog for the Transition View.
+# Dialog for the Transition View.
 
-The Transition View is a window that displays a list of transitions and
-gives the ability to edit these.
-
-"""
+# The Transition View is a window that displays a list of transitions and
+# gives the ability to edit these.
 
 __version__ = "$Id$"
 
@@ -75,18 +73,17 @@ class TransitionViewDialog(ViewDialog.ViewDialog):
 
 #### data interchange
 	def getgroup(self):
-		"""Return name of currently selected user group."""
+		# Return name of currently selected user group.
 		if not self.__window:self.createviewobj()
 		return self.__window.getgroup()
 
 	def setgroups(self, ugroups, pos):
-		"""Set the list of transitions .
-
-		Arguments (no defaults):
-		ugroups -- list of strings giving the names of the user groups
-		pos -- None or index in ugroups list--the initially
-			selected element in the list
-		"""
+		# Set the list of transitions .
+		#
+		# Arguments (no defaults):
+		# ugroups -- list of strings giving the names of the user groups
+		# pos -- None or index in ugroups list--the initially
+		#	selected element in the list
 		if not self.__window:self.createviewobj()
 		self.__window.setgroups(ugroups, pos)
 
