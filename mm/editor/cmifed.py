@@ -67,11 +67,9 @@ class Main(MainDialog):
 		import windowinterface
 		
 		have_templates = 0
-		if os.environ.has_key('CMIF'):
-			cmifdir = os.environ['CMIF']
-			templatedir = os.path.join(cmifdir, 'Templates')
-			if os.path.exists(templatedir):
-				have_templates = 1
+		templatedir = findfile('Templates')
+		if os.path.exists(templatedir):
+			have_templates = 1
 		if have_templates:
 			windowinterface.FileDialog('Select a template', templatedir, '*', '',
 				self._new_ok_callback, None, 1)
