@@ -512,6 +512,7 @@ class MMNode_body:
 	def __init__(self, parent):
 		self.parent = parent
 		self.sched_children = []
+		self.arcs = []
 
 	def __repr__(self):
 		return "<%s body of %s>"%(self.helpertype, self.parent.__repr__())
@@ -604,6 +605,7 @@ class MMNode:
 		self.events = {}	# events others are interested in
 		self.sched_children = []
 		self.scheduled_children = 0
+		self.arcs = []
 
 	#
 	# Return string representation of self
@@ -1499,7 +1501,9 @@ class MMNode:
 		if loopdur != 0:
 			if loopdur < 0:
 				loopdur = None
-			self.sched_children.append(MMSyncArc(self, 'end', event='begin', delay=loopdur))
+			arc = MMSyncArc(self, 'end', event='begin', delay=loopdur)
+			self.arcs.append((self, arc))
+			self.sched_children.append(arc)
 
 ##		if is_realpix:
 ##			duration = 0
@@ -1745,38 +1749,12 @@ class MMNode:
 			if self.looping_body_self:
 				return
 			body = self
-		duration = MMAttrdefs.getattr(self, 'duration')
-		if duration > 0:
-			for i in range(len(body.sched_children)):
-				arc = body.sched_children[i]
-				if arc.dstnode is body and \
-				   not arc.isstart and \
-				   arc.event == 'begin' and \
-				   arc.marker is None and \
-				   arc.delay == duration:
-					print 'deleting arc',`arc`
-					del body.sched_children[i]
-					if arc.qid is not None:
-						self.cancel(arc.qid)
-						arc.qid = None
-					break
+		for node, arc in body.arcs:
+			node.sched_children.remove(arc)
+		body.arcs = []
 		for child in self.wtd_children:
 			beginlist = MMAttrdefs.getattr(child, 'beginlist')
-			if not beginlist:
-				for i in range(len(body.sched_children)):
-					arc = body.sched_children[i]
-					if arc.dstnode is child and \
-					   arc.isstart and \
-					   arc.event == 'begin' and \
-					   arc.delay == 0 and \
-					   arc.marker is None:
-						print 'deleting arc',`arc`
-						del body.sched_children[i]
-						if arc.qid is not None:
-							self.cancel(arc.qid)
-							arc.qid = None
-						break
-			else:
+			if beginlist:
 				for arc in beginlist:
 					print 'deleting arc',`arc`
 					refnode = child.__find_refnode(arc)
@@ -1812,18 +1790,21 @@ class MMNode:
 			defbegin = None
 
 		duration = MMAttrdefs.getattr(self, 'duration')
-		if duration > 0:
-			self_body.sched_children.append(MMSyncArc(self_body, 'end', event='begin', delay=duration))
-		elif duration < 0:
+		if duration < 0:
 			# indefinite duration
-			# XXX
-			pass
+			duration = None
+		if duration is None or duration > 0:
+			arc = MMSyncArc(self_body, 'end', event='begin', delay=duration)
+			self_body.arcs.append((self_body, arc))
+			self_body.sched_children.append(arc)
 
 		for child in self.wtd_children:
 			chname = MMAttrdefs.getattr(child, 'name')
 			beginlist = MMAttrdefs.getattr(child, 'beginlist')
 			if not beginlist:
-				srcnode.sched_children.append(MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = defbegin))
+				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = defbegin)
+				self_body.arcs.append((srcnode, arc))
+				srcnode.sched_children.append(arc)
 				schedule = defbegin is not None
 			else:
 				schedule = 0
@@ -1888,7 +1869,9 @@ class MMNode:
 
 		duration = MMAttrdefs.getattr(self, 'duration')
 		if duration > 0:
-			self_body.sched_children.append(MMSyncArc(self_body, 'end', event='begin', delay=duration))
+			arc = MMSyncArc(self_body, 'end', event='begin', delay=duration)
+			self_body.arcs.append((self_body, arc))
+			self_body.sched_children.append(arc)
 		elif duration < 0:
 			# indefinite duration
 			# XXX
