@@ -21,6 +21,8 @@ irix*) make=smake;;
 sunos5) make=gmake;;
 esac
 
+unset LANG # sort order in various programs is affected differently by LANG
+
 CHAMELEON=`pwd`
 
 freeze=no
