@@ -79,7 +79,7 @@ class _ImageMixin:
 		Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
 		Qd.RGBForeColor((0, 0, 0))
 		Qd.CopyBits(pixmap,
-		      self.wid.GetWindowPort().portBits,
+		      self.wid.GetWindowPort().GetPortBitMapForCopyBits(),
 		      srcrect, dstrect,
 		      QuickDraw.srcCopy+QuickDraw.ditherCopy,
 		      None)
