@@ -20,7 +20,8 @@ import afxres, commctrl
 
 # UserCmds
 from usercmd import *
-from usercmdui import *
+
+from usercmdui import usercmd2id
 
 # GRiNS resource ids
 import grinsRC
@@ -66,7 +67,7 @@ class _LayoutView2(GenFormView):
 		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Z); i=i+1
 			
 		# Initialize control objects whose command are activable as well from menu bar
-		self[ATTRIBUTES]=components.Button(self,grinsRC.IDUC_ATTRIBUTES)
+		self[ATTRIBUTES]=components.Button(self,usercmd2id(ATTRIBUTES))
 		
 		self._activecmds={}
 
@@ -307,20 +308,20 @@ class _LayoutView2(GenFormView):
 			return
 			
 		# process rest
-		cmd=None
-		contextcmds=self._activecmds
-		if contextcmds.has_key(id):
-			cmd=contextcmds[id]
-		if cmd is not None and cmd.callback is not None:
-			apply(apply,cmd.callback)
+		self.onUserCmd(id, nmsg)
 
 	def onUserCmd(self, id, code=0):
-		cmd=None
-		contextcmds=self._activecmds
-		if contextcmds.has_key(id):
-			cmd=contextcmds[id]
-		if cmd is not None and cmd.callback is not None:
-			apply(apply,cmd.callback)
+		if id == usercmd2id(CANVAS_ZOOM_IN):
+			self.OnZoomIn(id, code)
+		elif id == usercmd2id(CANVAS_ZOOM_OUT):
+			self.OnZoomOut(id, code)
+		else:
+			cmd=None
+			contextcmds = self._activecmds
+			if contextcmds.has_key(id):
+				cmd = contextcmds[id]
+			if cmd is not None and cmd.callback is not None:
+				apply(apply,cmd.callback)
 
 	def showScale(self, scale):
 		t=components.Static(self,grinsRC.IDC_LAYOUT_SCALE)
@@ -794,7 +795,7 @@ class LayoutManager(LayoutManagerBase):
  	def setpopup(self, menutemplate, which):
 		import win32menu
 		popup = win32menu.Menu('popup')
-		popup.create_popup_from_menubar_spec_list(menutemplate, self.usercmd2id)
+		popup.create_popup_from_menubar_spec_list(menutemplate, usercmd2id)
 		if which == 'region':
 			if self._regionpopup:
 				self._regionpopup.DestroyMenu()
@@ -806,13 +807,6 @@ class LayoutManager(LayoutManagerBase):
 		else:
 			popup.DestroyMenu()
 	
-	# menu callback which maps usercmds to ids			
-	def usercmd2id(self, cmdcl):
-		import usercmdui
-		if usercmdui.class2ui.has_key(cmdcl):
-			return usercmdui.class2ui[cmdcl].id
-		else: return -1
-
 	# return item type in ('topLayout', 'region', 'subregion')
 	def getItemType(self, item):
 		# XXX: not correct, just a test
