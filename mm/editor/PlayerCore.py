@@ -116,7 +116,7 @@ class PlayerCore(Selecter):
 		if ch == None:
 			return None
 		if not ch.is_showing():
-			ch.flip_visible()
+			ch.set_visible(1)
 			self.makemenu()
 		return ch
 	#	

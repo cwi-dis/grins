@@ -148,12 +148,15 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 	#
 	def stop_callback(self, obj, arg):
 ##		self.before_call()
+		self.cc_stop()
+##		self.after_call()
+
+	def cc_stop(self):
 		self.stopbutton.lcol = MYBLUE
 		self.continuous = 0
 		self.stop()
 		if self.pausing:
 			self.pause(0)
-##		self.after_call()
 
 	def timer_callback(self, obj, arg):
 ##		self.before_call()
@@ -165,10 +168,19 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		i = self.cmenubutton.get_menu() - 1
 		if 0 <= i < len(self.channelnames):
 			name = self.channelnames[i]
-			self.channels[name].flip_visible()
-			self.toplevel.channelview.channels_changed()
-			self.makemenu()
+			isvis = self.channels[name].get_visible()
+			self.cc_enable_ch(name, (not isvis))
 ##		self.after_call()
+
+	def cc_enable_ch(self, name, onoff):
+		try:
+			ch = self.channels[name]
+		except KeyError:
+			dialogs.showmessage('No such channel: '+name)
+			return
+		ch.set_visible(onoff)
+		self.toplevel.channelview.channels_changed()
+		self.makemenu()
 	#
 	def omenu_callback(self, obj, arg):
 ##		self.before_call()
