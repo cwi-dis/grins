@@ -103,7 +103,7 @@ class PlayerCore():
 			self.show()
 		if self.playing:
 			self.stop()
-		ch = self.scheduler.getchannelbynode(node)
+		ch = self.getchannelbynode(node)
 		if ch == None:
 			fl.show_message('Cannot set internal anchor', \
 				  '(node not on a channel)', '')
