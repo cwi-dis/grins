@@ -588,31 +588,30 @@ class _CmifPlayerView(_CmifView):
 
 	def clear(self):
 		dds = self._backBuffer
-		sd = dds.GetSurfaceDesc()
-		w, h = sd.GetSize()
+		x, y, w, h = self.getwindowpos()
 		if self._convbgcolor == None:
 			r, g, b = self._bgcolor
 			self._convbgcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
-		dds.BltFill((0, 0, w, h), self._convbgcolor)
+		dds.BltFill((x, y, x+w, y+h), self._convbgcolor)
 
-	def paint(self):
-		self.clear()
-		
+	def paint(self):		
 		# first paint self
-		dc = self.GetDDDC()
-		if not dc: return
-		x, y, w, h = self.getwindowpos()
-		rgn = win32ui.CreateRgn()
-		rgn.CreateRectRgn((x,y,x+w,y+h))
-		dc.SelectClipRgn(rgn)
-		rgn.DeleteObject()
-		x0, y0 = dc.SetWindowOrg((-x,-y))
 		if self._active_displist:
+			dc = self.GetDDDC()
+			if not dc: return
+			x, y, w, h = self.getwindowpos()
+			rgn = win32ui.CreateRgn()
+			rgn.CreateRectRgn((x,y,x+w,y+h))
+			dc.SelectClipRgn(rgn)
+			rgn.DeleteObject()
+			x0, y0 = dc.SetWindowOrg((-x,-y))
 			self._active_displist._render(dc,None)
-		if self._redrawfunc:
-			self._redrawfunc()
-		dc.SetWindowOrg((x0,y0))
-		self.ReleaseDDDC(dc)
+			if self._redrawfunc:
+				self._redrawfunc()
+			dc.SetWindowOrg((x0,y0))
+			self.ReleaseDDDC(dc)
+		else:
+			self.clear()
 
 		# then paint children bottom up
 		L = self._subwindows[:]

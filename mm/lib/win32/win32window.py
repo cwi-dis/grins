@@ -927,11 +927,6 @@ class SubWindow(Window):
 
 	def __paintOnDDS(self, dds, rel=None):
 		x, y, w, h = self.getwindowpos(rel)
-		if self._transparent == 0:
-			if self._convbgcolor == None:
-				r, g, b = self._bgcolor
-				self._convbgcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
-			dds.BltFill((x, y, x+w, y+h), self._convbgcolor)
 		if self._active_displist:
 			hdc = dds.GetDC()
 			dc = win32ui.CreateDCFromHandle(hdc)
@@ -953,6 +948,11 @@ class SubWindow(Window):
 				xv, yv, wv, hv = vrcDst
 				ltrb_dst = x+xv, y+yv, x+xv+wv, y+yv+hv
 				dds.Blt(ltrb_dst, vdds, vrcSrc, ddraw.DDBLT_WAIT)
+		elif self._transparent == 0:
+			if self._convbgcolor == None:
+				r, g, b = self._bgcolor
+				self._convbgcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
+			dds.BltFill((x, y, x+w, y+h), self._convbgcolor)
 				
 	def paintOnDDS(self, dds, rel=None):
 		x, y, w, h = self.getwindowpos(rel)
