@@ -1249,7 +1249,6 @@ class SMILWriter(SMIL):
 			if (not hasanyprefix) or \
 			   ((hasGRiNSprefix and self.uses_grins_namespace) or \
 			   (hasQTprefix and self.uses_qt_namespace)):
-			        if val is None: print tag, attr
 				write(' %s=%s' % (attr, nameencode(val)))
 		self.__isopen = 1
 		self.__stack.append((tag, hasprefix))
