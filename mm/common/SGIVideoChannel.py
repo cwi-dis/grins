@@ -250,7 +250,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		t0 = self._scheduler.timefunc()
 		if t0 > self._played_node.start_time:
 			print 'skipping',self._played_node.start_time,t0,t0-self._played_node.start_time
-			movie.SetCurrentFrame(self.__begin + t0 - self._played_node.start_time)
+			track = movie.FindTrackByMedium(mv.DM_IMAGE)
+			movie.SetCurrentFrame(self.__begin + (t0 - self._played_node.start_time) * track.GetImageRate())
 		begin = movie.GetStartTime(1000) / 1000.0
 		if self.__end:
 			movie.SetEndFrame(self.__end)
