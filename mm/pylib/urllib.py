@@ -1,18 +1,23 @@
-__version__ = "$Id$"
-
 # Open an arbitrary URL
 #
-# See the following document for a tentative description of URLs:
-#     Uniform Resource Locators              Tim Berners-Lee
-#     INTERNET DRAFT                                    CERN
-#     IETF URL Working Group                    14 July 1993
-#     draft-ietf-uri-url-01.txt
+# See the following document for more info on URLs:
+# "Names and Addresses, URIs, URLs, URNs, URCs", at
+# http://www.w3.org/pub/WWW/Addressing/Overview.html
+#
+# See also the HTTP spec (from which the error codes are derived):
+# "HTTP - Hypertext Transfer Protocol", at
+# http://www.w3.org/pub/WWW/Protocols/
+#
+# Related standards and specs:
+# - RFC1808: the "relative URL" spec. (authoritative status)
+# - RFC1738 - the "URL standard". (authoritative status)
+# - RFC1630 - the "URI spec". (informational status)
 #
 # The object returned by URLopener().open(file) will differ per
 # protocol.  All you know is that is has methods read(), readline(),
 # readlines(), fileno(), close() and info().  The read*(), fileno()
 # and close() methods work like those of open files. 
-# The info() method returns an mimetools.Message object which can be
+# The info() method returns a mimetools.Message object which can be
 # used to query various info about the object, if available.
 # (mimetools.Message objects are queried with the getheader() method.)
 
@@ -23,7 +28,7 @@ import os
 import sys
 
 
-__version__ = '1.5'
+__version__ = '1.6'
 
 # Helper for non-unix systems
 if os.name == 'mac':
@@ -45,11 +50,14 @@ else:
 
 # Shortcut for basic usage
 _urlopener = None
-def urlopen(url, data = None):
+def urlopen(url, data=None):
 	global _urlopener
 	if not _urlopener:
 		_urlopener = FancyURLopener()
-	return _urlopener.open(url, data)
+	if data is None:
+		return _urlopener.open(url)
+	else:
+		return _urlopener.open(url, data)
 def urlretrieve(url, filename=None):
 	global _urlopener
 	if not _urlopener:
@@ -100,8 +108,8 @@ class URLopener:
 		self.cleanup()
 
 	def cleanup(self):
-		import os
 		if self.tempcache:
+			import os
 			for url in self.tempcache.keys():
 				try:
 					os.unlink(self.tempcache[url][0])
@@ -116,7 +124,7 @@ class URLopener:
 
 	# External interface
 	# Use URLopener().open(file) instead of open(file, 'r')
-	def open(self, fullurl, data = None):
+	def open(self, fullurl, data=None):
 		fullurl = unwrap(fullurl)
 		type, url = splittype(fullurl)
  		if not type: type = 'file'
@@ -131,7 +139,10 @@ class URLopener:
 			import regsub
 			name = regsub.gsub('-', '_', name)
 		if not hasattr(self, name):
-			return self.open_unknown(fullurl, data)
+			if data is None:
+				return self.open_unknown(fullurl)
+			else:
+				return self.open_unknown(fullurl, data)
 		try:
 			if data is None:
 				return getattr(self, name)(url)
@@ -141,7 +152,7 @@ class URLopener:
 			raise IOError, ('socket error', msg), sys.exc_traceback
 
 	# Overridable interface to open unknown URL type
-	def open_unknown(self, fullurl, data = None):
+	def open_unknown(self, fullurl, data=None):
 		type, url = splittype(fullurl)
 		raise IOError, ('url error', 'unknown url type', type)
 
@@ -185,7 +196,7 @@ class URLopener:
 	# Each method named open_<type> knows how to open that type of URL
 
 	# Use HTTP protocol
-	def open_http(self, url, data = None):
+	def open_http(self, url, data=None):
 		import httplib
 		if type(url) is type(""):
 			host, selector = splithost(url)
@@ -193,13 +204,14 @@ class URLopener:
 		else:
 			host, selector = url
 			urltype, rest = splittype(selector)
+			user_passwd = None
 			if string.lower(urltype) == 'http':
 			    realhost, rest = splithost(rest)
 			    user_passwd, realhost = splituser(realhost)
 			    if user_passwd:
 				selector = "%s://%s%s" % (urltype,
 							  realhost, rest)
-			print "proxy via http:", host, selector
+			#print "proxy via http:", host, selector
 		if not host: raise IOError, ('http error', 'no host given')
 		if user_passwd:
 			import base64
@@ -247,7 +259,7 @@ class URLopener:
 		raise IOError, ('http error', errcode, errmsg, headers)
 
 	# Use Gopher protocol
-	def open_gopher(self, url, data = None):
+	def open_gopher(self, url):
 		import gopherlib
 		host, selector = splithost(url)
 		if not host: raise IOError, ('gopher error', 'no host given')
@@ -262,7 +274,7 @@ class URLopener:
 		return addinfourl(fp, noheaders(), self.openedurl)
 
 	# Use local file or FTP depending on form of URL
-	def open_file(self, url, data = None):
+	def open_file(self, url):
 		if url[:2] == '//':
 			return self.open_ftp(url)
 		else:
@@ -281,7 +293,7 @@ class URLopener:
 		raise IOError, ('local file error', 'not on local host')
 
 	# Use FTP protocol
-	def open_ftp(self, url, data = None):
+	def open_ftp(self, url):
 		host, path = splithost(url)
 		if not host: raise IOError, ('ftp error', 'no host given')
 		host, port = splitport(host)
@@ -689,6 +701,12 @@ def unquote(s):
 		i = j+3
 	return string.joinfields(res, '')
 
+def unquote_plus(s):
+    if '+' in s:
+	import regsub
+	s = regsub.gsub('+', ' ', s)
+    return unquote(s)
+
 always_safe = string.letters + string.digits + '_,.-'
 def quote(s, safe = '/'):
 	safe = always_safe + safe
@@ -699,6 +717,14 @@ def quote(s, safe = '/'):
 		else:
 			res.append('%%%02x' % ord(c))
 	return string.joinfields(res, '')
+
+def quote_plus(s, safe = '/'):
+    if ' ' in s:
+	import regsub
+	s = regsub.gsub(' ', '+', s)
+	return quote(s, safe + '+')
+    else:
+	return quote(s, safe)
 
 
 # Proxy handling
