@@ -92,7 +92,7 @@ class ChannelView(ViewDialog, GLDialog):
 
 	def show(self):
 		if self.is_showing():
-			GLDialog.show(self) # for side effect on current window
+			self.setwin()
 			return
 		GLDialog.show(self)
 		self.initwindow()
@@ -132,7 +132,6 @@ class ChannelView(ViewDialog, GLDialog):
 		pass # Nothing changed
 
 	def commit(self):
-		GLDialog.show(self) # For gl.winset() effect
 		if self.focus is None:
 			focus = '', None
 		elif self.focus.__class__ == ChannelBox:
@@ -144,9 +143,11 @@ class ChannelView(ViewDialog, GLDialog):
 		else:
 			focus = '', None
 		self.cleanup()
-		self.recalc(focus)
-		self.reshape()
-		self.draw()
+		if self.is_showing():
+			self.setwin()
+			self.recalc(focus)
+			self.reshape()
+			self.draw()
 
 	def kill(self):
 		self.destroy()
@@ -243,6 +244,7 @@ class ChannelView(ViewDialog, GLDialog):
 	# Recompute the locations where the objects should be drawn
 
 	def reshape(self):
+		Timing.optcalctimes(self.root)
 		for obj in self.objects:
 			obj.reshape()
 
@@ -326,7 +328,7 @@ class ChannelView(ViewDialog, GLDialog):
 				obj = node.cv_obj
 			except:
 				return
-			GLDialog.show(self)
+			self.setwin()
 			self.deselect()
 			obj.select()
 
@@ -671,7 +673,7 @@ class NodeBox(GO):
 
 	def infocall(self):
 		import NodeInfo
-		NodeInfo.shownodeinfo(self.toplevel, self.node)
+		NodeInfo.shownodeinfo(self.mother.toplevel, self.node)
 
 	def editcall(self):
 		import NodeEdit
@@ -679,7 +681,7 @@ class NodeBox(GO):
 	
 	def anchorcall(self):
 		import AnchorEdit
-		AnchorEdit.showanchoreditor(self.toplevel, self.node)
+		AnchorEdit.showanchoreditor(self.mother.toplevel, self.node)
 
 	def lockcall(self):
 		self.lock()
