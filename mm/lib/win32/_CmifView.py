@@ -71,6 +71,7 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		self._dc=None
 
 		self._topwindow = self # from the app's view this is a topwindow
+
 		self._parent._subwindows.insert(0, self)
 
 		r= {win32con.WM_RBUTTONDOWN:self.onRButtonDown,
@@ -79,7 +80,6 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 			win32con.WM_LBUTTONUP:self.onLButtonUp,
 			win32con.WM_MOUSEMOVE:self.onMouseMove,
 			win32con.WM_SIZE:self.onSize,
-			win32con.WM_EXITSIZEMOVE:self.onExitSizeMove,
 			}
 		self._enable_response(r)
 	
@@ -111,14 +111,11 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		# redraw the background of transparent children 
 		#cs.style=cs.style|win32con.WS_CLIPCHILDREN
 		return cs.to_csd()
-	
+
 	# The response of the view for the WM_SIZE (Resize) message						
 	def onSize(self,params):
 		msg=win32mu.Win32Msg(params)
 		if msg.minimized(): return
-		if not self._canscroll:
-			self._do_resize(msg.width(),msg.height())
-		# after _do_resize because it uses old self._rect
 		self._rect=0,0,msg.width(),msg.height()
 		self.fitCanvas(msg.width(),msg.height())
 
@@ -130,14 +127,6 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		self._scroll(-1)
 		self._destroy_displists_tree()
 		self._create_displists_tree()
-
-	# The response of the view on completion of move or resize
-	def onExitSizeMove(self,params):
-		print 'onExitSizeMove'
-#		if not self._canscroll and self._prevrect:
-#			l,t,w,h=self._prevrect
-#			self._do_resize(w,h)
-#		self._rect=self._prevrect
 		
 	# Adjusts the scroll sizes of the scroll view. Part of the set canvas sequence. 
 	def _scroll(self,how):
@@ -306,6 +295,48 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		dc.FillSolidRect(rc,win32mu.RGB(color))
 		return 1
 
+	# Returns the coordinates of this window in pix
+	# override cmifwnd method to adjust/mangle for frame
+	def getpixgeometry(self):
+		(flags,showCmd,ptMinPosition,ptMaxPosition,rcNormalPosition)=\
+			self.GetWindowPlacement()
+		rc=win32mu.Rect(rcNormalPosition)
+		ptList=[(0,0),]
+		townd=self._parent.GetMDIClient()
+		x,y= self.MapWindowPoints(townd,ptList)[0]
+		from sysmetrics import cycaption,cyborder,cxborder,cxframe
+		y=y-cycaption-8
+		x=x-2*cxframe
+		return x,y,rc.width(),rc.height()
+
+
+#################################################
+# Specialization of _CmifView for player		
+class _CmifPlayerView(_CmifView):
+	# Class contructor. initializes base classes
+	def __init__(self,doc):
+		_CmifView.__init__(self,doc)
+
+	# The response of the view for the WM_SIZE (Resize) message						
+	def onSize(self,params):
+		msg=win32mu.Win32Msg(params)
+		if msg.minimized(): return
+		self._do_resize(msg.width(),msg.height())
+		# after _do_resize because it uses old self._rect
+		self._rect=0,0,msg.width(),msg.height()
+		self.fitCanvas(msg.width(),msg.height())
+
+	def fitCanvas(self,width,height):		
+		x,y,w,h=self._canvas
+		if width>w:w=width
+		if height>h:h=height	
+		self._canvas = (x,y,w,h)
+		self._scroll(-1)
+
+	def onAfterResize(self,params):
+		self.onEvent(ResizeWindow)
+
+#################################################
 # Specialization of _CmifView for smooth drawing		
 class _CmifStructView(_CmifView):
 	# Class contructor. initializes base classes
@@ -396,7 +427,7 @@ class _CmifStructView(_CmifView):
 			self._drag_cmd_send=0
 
 				
-
+#################################################
 class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 
 	# Class contructor. Initializes the class and creates the OS window
