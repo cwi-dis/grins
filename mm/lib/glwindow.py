@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # A GL window object class
 
 # This is an abstract class; you use it as a base class if you want
