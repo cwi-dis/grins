@@ -849,9 +849,9 @@ DirectDrawSurface_Blt(DirectDrawSurfaceObject *self, PyObject *args)
 		return Py_None;
 		}
 	
-	Py_BEGIN_ALLOW_THREADS
+	//Py_BEGIN_ALLOW_THREADS
 	hr = self->pI->Blt(&rcToFinal,ddsFrom->pI,&rcFromFinal,dwFlags | DDBLT_WAIT,NULL);
-	Py_END_ALLOW_THREADS
+	//Py_END_ALLOW_THREADS
 
 	if (FAILED(hr)){
 		char sz[160];
@@ -1213,14 +1213,17 @@ HRESULT BltBlend16(IDirectDrawSurface *surf,
 	ZeroMemory(&desc2, sizeof(desc2));
 	desc2.dwSize=sizeof(desc2);
 	HRESULT hr;
+
 	hr=surf->Lock(0,&desc,DDLOCK_WAIT,0);
 	if(hr!=DD_OK) return hr;
+
 	hr=from->Lock(0,&desc1,DDLOCK_WAIT | DDLOCK_READONLY,0);
 	if(hr!=DD_OK)
 		{	
 		surf->Unlock(0);
 		return hr;
 		}
+
 	hr=to->Lock(0,&desc2,DDLOCK_WAIT | DDLOCK_READONLY,0);
 	if(hr!=DD_OK)
 		{	
@@ -1475,7 +1478,7 @@ DirectDrawSurface_BltBlend(DirectDrawSurfaceObject *self, PyObject *args)
 	DWORD width = self->rc.right - self->rc.left;
 	DWORD height = self->rc.bottom - self->rc.top;
 	
-	Py_BEGIN_ALLOW_THREADS
+	//Py_BEGIN_ALLOW_THREADS
 	if (dwRGBBitCount==8)
 		hr=BltBlend8(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
 	else if (dwRGBBitCount==16)
@@ -1484,7 +1487,7 @@ DirectDrawSurface_BltBlend(DirectDrawSurfaceObject *self, PyObject *args)
 		hr=BltBlend24(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
 	else if (dwRGBBitCount==32)
 		hr=BltBlend32(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
-	Py_END_ALLOW_THREADS
+	//Py_END_ALLOW_THREADS
 		
 	if (FAILED(hr)){
 		seterror("DirectDrawSurface_BltBlend", hr);
@@ -1609,9 +1612,9 @@ DirectDrawSurface_BltFill(DirectDrawSurfaceObject *self, PyObject *args)
 	ZeroMemory(&bltfx,sizeof(bltfx));
 	bltfx.dwSize = sizeof(bltfx);
 	bltfx.dwFillColor = ddcolor;
-	Py_BEGIN_ALLOW_THREADS
+	//Py_BEGIN_ALLOW_THREADS
 	hr=self->pI->Blt(&rcInSurf, 0, 0, DDBLT_COLORFILL | DDBLT_WAIT,&bltfx);
-	Py_END_ALLOW_THREADS
+	//Py_END_ALLOW_THREADS
 		
 	if (FAILED(hr)){
 		seterror("DirectDrawSurface_BltFill", hr);
@@ -1680,7 +1683,7 @@ DirectDrawSurface_Blt_RGB32_On_RGB32(DirectDrawSurfaceObject *self, PyObject *ar
 		return NULL;
 	}	
 	
-	Py_BEGIN_ALLOW_THREADS	
+	//Py_BEGIN_ALLOW_THREADS	
 	RGBQUAD *p = (RGBQUAD*)pImageBits;
 	for(int row=h-1;row>=0;row--)
 		{
@@ -1690,7 +1693,7 @@ DirectDrawSurface_Blt_RGB32_On_RGB32(DirectDrawSurfaceObject *self, PyObject *ar
 			*(DWORD*)surfpixel++ = (p->rgbRed << loREDbit)|(p->rgbGreen << loGREENbit)| (p->rgbBlue << loBLUEbit);
 			}
 		}
-	Py_END_ALLOW_THREADS
+	//Py_END_ALLOW_THREADS
 		
 	self->pI->Unlock(0);
 	Py_INCREF(Py_None);
@@ -1718,7 +1721,7 @@ DirectDrawSurface_Blt_RGB32_On_RGB24(DirectDrawSurfaceObject *self, PyObject *ar
 		return NULL;
 	}
 	
-	Py_BEGIN_ALLOW_THREADS	
+	//Py_BEGIN_ALLOW_THREADS	
 	RGBQUAD *p = (RGBQUAD*)pImageBits;
 	for(int row=h-1;row>=0;row--)
 		{
@@ -1731,7 +1734,7 @@ DirectDrawSurface_Blt_RGB32_On_RGB24(DirectDrawSurfaceObject *self, PyObject *ar
 			surfpixel++;
 			}
 		}
-	Py_END_ALLOW_THREADS
+	//Py_END_ALLOW_THREADS
 		
 	self->pI->Unlock(0);
 	Py_INCREF(Py_None);
@@ -1761,7 +1764,7 @@ DirectDrawSurface_Blt_RGB32_On_RGB16(DirectDrawSurfaceObject *self, PyObject *ar
 	int rs = 8-numREDbits;
 	int gs = 8-numGREENbits;
 	int bs = 8-numBLUEbits;	
-	Py_BEGIN_ALLOW_THREADS	
+	//Py_BEGIN_ALLOW_THREADS	
 	RGBQUAD *p = (RGBQUAD*)pImageBits;	
 	for(int row=h-1;row>=0;row--)
 		{
@@ -1771,7 +1774,7 @@ DirectDrawSurface_Blt_RGB32_On_RGB16(DirectDrawSurfaceObject *self, PyObject *ar
 			*surfpixel++ = WORD(((p->rgbRed >> rs) << loREDbit) | ((p->rgbGreen>>gs) << loGREENbit) | ((p->rgbBlue>>bs) << loBLUEbit));
 			}
 		}
-	Py_END_ALLOW_THREADS
+	//Py_END_ALLOW_THREADS
 		
 	self->pI->Unlock(0);
 	Py_INCREF(Py_None);
@@ -1799,7 +1802,7 @@ DirectDrawSurface_Blt_RGB32_On_RGB8(DirectDrawSurfaceObject *self, PyObject *arg
 		return NULL;
 	}	
 
-	Py_BEGIN_ALLOW_THREADS	
+	//Py_BEGIN_ALLOW_THREADS	
 	RGBQUAD *p = (RGBQUAD*)pImageBits;	
 	for(int row=h-1;row>=0;row--)
 		{
@@ -1809,7 +1812,7 @@ DirectDrawSurface_Blt_RGB32_On_RGB8(DirectDrawSurfaceObject *self, PyObject *arg
 			*surfpixel++ = FindColour(p->rgbRed,p->rgbGreen,p->rgbBlue);
 			}
 		}
-	Py_END_ALLOW_THREADS
+	//Py_END_ALLOW_THREADS
 		
 	self->pI->Unlock(0);
 	Py_INCREF(Py_None);
@@ -1837,7 +1840,7 @@ DirectDrawSurface_Blt_RGB24_On_RGB32(DirectDrawSurfaceObject *self, PyObject *ar
 		return NULL;
 	}
 	
-	Py_BEGIN_ALLOW_THREADS	
+	//Py_BEGIN_ALLOW_THREADS	
 	RGBTRIPLE *p = (RGBTRIPLE*)pImageBits;
 	for(int row=h-1;row>=0;row--)
 		{
@@ -1847,7 +1850,7 @@ DirectDrawSurface_Blt_RGB24_On_RGB32(DirectDrawSurfaceObject *self, PyObject *ar
 			*(DWORD*)surfpixel++ = (p->rgbtRed << loREDbit) | (p->rgbtGreen << loGREENbit) | (p->rgbtBlue << loBLUEbit);
 			}
 		}
-	Py_END_ALLOW_THREADS
+	//Py_END_ALLOW_THREADS
 		
 	self->pI->Unlock(0);
 	Py_INCREF(Py_None);
@@ -1875,7 +1878,7 @@ DirectDrawSurface_Blt_RGB24_On_RGB24(DirectDrawSurfaceObject *self, PyObject *ar
 		return NULL;
 	}
 	
-	Py_BEGIN_ALLOW_THREADS	
+	//Py_BEGIN_ALLOW_THREADS	
 	RGBTRIPLE *p = (RGBTRIPLE*)pImageBits;
 	for(int row=h-1;row>=0;row--)
 		{
@@ -1888,7 +1891,7 @@ DirectDrawSurface_Blt_RGB24_On_RGB24(DirectDrawSurfaceObject *self, PyObject *ar
 			surfpixel++;
 			}
 		}
-	Py_END_ALLOW_THREADS	
+	//Py_END_ALLOW_THREADS	
 
 	self->pI->Unlock(0);
 	Py_INCREF(Py_None);
@@ -1918,7 +1921,7 @@ DirectDrawSurface_Blt_RGB24_On_RGB16(DirectDrawSurfaceObject *self, PyObject *ar
 	int rs = 8-numREDbits;
 	int gs = 8-numGREENbits;
 	int bs = 8-numBLUEbits;	
-	Py_BEGIN_ALLOW_THREADS	
+	//Py_BEGIN_ALLOW_THREADS	
 	RGBTRIPLE *p = (RGBTRIPLE *)pImageBits;
 	for(int row=h-1;row>=0;row--)
 		{
@@ -1928,7 +1931,7 @@ DirectDrawSurface_Blt_RGB24_On_RGB16(DirectDrawSurfaceObject *self, PyObject *ar
 			*surfpixel++ = WORD(((p->rgbtRed >> rs) << loREDbit) | ((p->rgbtGreen>>gs) << loGREENbit) | ((p->rgbtBlue>>bs) << loBLUEbit));
 			}
 		}
-	Py_END_ALLOW_THREADS	
+	//Py_END_ALLOW_THREADS	
 
 	self->pI->Unlock(0);
 	Py_INCREF(Py_None);
@@ -1956,7 +1959,7 @@ DirectDrawSurface_Blt_RGB24_On_RGB8(DirectDrawSurfaceObject *self, PyObject *arg
 		return NULL;
 	}
 	
-	Py_BEGIN_ALLOW_THREADS		
+	//Py_BEGIN_ALLOW_THREADS		
 	RGBTRIPLE *p = (RGBTRIPLE *)pImageBits;
 	for(int row=h-1;row>=0;row--)
 		{
@@ -1966,7 +1969,7 @@ DirectDrawSurface_Blt_RGB24_On_RGB8(DirectDrawSurfaceObject *self, PyObject *arg
 			*surfpixel++ = FindColour(p->rgbtRed,p->rgbtGreen,p->rgbtBlue);
 			}
 		}
-	Py_END_ALLOW_THREADS	
+	//Py_END_ALLOW_THREADS	
 	
 	self->pI->Unlock(0);
 	Py_INCREF(Py_None);
@@ -2034,7 +2037,7 @@ DirectDrawSurface_Blt_YUV420_On_RGB32(DirectDrawSurfaceObject *self, PyObject *a
 	BYTE *pCb = pImageBits + w*h;
 	BYTE *pCr = pCb + w*h/4;
 	
-	Py_BEGIN_ALLOW_THREADS		
+	//Py_BEGIN_ALLOW_THREADS		
 	for(DWORD row=0;row<h;row++)
 		{
 		RGBQUAD* surfpixel=(RGBQUAD*)((BYTE*)desc.lpSurface+row*desc.lPitch);
@@ -2055,7 +2058,7 @@ DirectDrawSurface_Blt_YUV420_On_RGB32(DirectDrawSurfaceObject *self, PyObject *a
 			*((DWORD*)surfpixel++) = (r << loREDbit) | (g << loGREENbit) | (b << loBLUEbit);
 			}
 		}
-	Py_END_ALLOW_THREADS
+	//Py_END_ALLOW_THREADS
 		
 	self->pI->Unlock(0);
 	Py_INCREF(Py_None);
@@ -2085,7 +2088,7 @@ DirectDrawSurface_Blt_YUV420_On_RGB24(DirectDrawSurfaceObject *self, PyObject *a
 	BYTE *pYp = pImageBits;
 	BYTE *pCb = pImageBits + w*h;
 	BYTE *pCr = pCb + w*h/4;
-	Py_BEGIN_ALLOW_THREADS		
+	//Py_BEGIN_ALLOW_THREADS		
 	for(DWORD row=0;row<h;row++)
 		{
 		RGBTRIPLE* surfpixel=(RGBTRIPLE*)((BYTE*)desc.lpSurface+row*desc.lPitch);
@@ -2112,7 +2115,7 @@ DirectDrawSurface_Blt_YUV420_On_RGB24(DirectDrawSurfaceObject *self, PyObject *a
 			surfpixel++;
 			}
 		}
-	Py_END_ALLOW_THREADS		
+	//Py_END_ALLOW_THREADS		
 	self->pI->Unlock(0);
 	Py_INCREF(Py_None);
 	return Py_None;	
@@ -2145,7 +2148,7 @@ DirectDrawSurface_Blt_YUV420_On_RGB16(DirectDrawSurfaceObject *self, PyObject *a
 	BYTE *pYp = pImageBits;
 	BYTE *pCb = pImageBits + w*h;
 	BYTE *pCr = pCb + w*h/4;
-	Py_BEGIN_ALLOW_THREADS	
+	//Py_BEGIN_ALLOW_THREADS	
 	for(DWORD row=0;row<h;row++)
 		{
 		WORD *surfpixel=(WORD*)((BYTE*)desc.lpSurface+row*desc.lPitch);
@@ -2166,7 +2169,7 @@ DirectDrawSurface_Blt_YUV420_On_RGB16(DirectDrawSurfaceObject *self, PyObject *a
 			*surfpixel++ = ((r >> rs) << loREDbit) | ((g>>gs) << loGREENbit) | ((b>>bs) << loBLUEbit);
 			}
 		}
-	Py_END_ALLOW_THREADS		
+	//Py_END_ALLOW_THREADS		
 	self->pI->Unlock(0);
 	Py_INCREF(Py_None);
 	return Py_None;	
@@ -2196,7 +2199,7 @@ DirectDrawSurface_Blt_YUV420_On_RGB8(DirectDrawSurfaceObject *self, PyObject *ar
 	BYTE *pYp = pImageBits;
 	BYTE *pCb = pImageBits + w*h;
 	BYTE *pCr = pCb + w*h/4;
-	Py_BEGIN_ALLOW_THREADS	
+	//Py_BEGIN_ALLOW_THREADS	
 	for(DWORD row=0;row<h;row++)
 		{
 		BYTE* surfpixel= ((BYTE*)desc.lpSurface+row*desc.lPitch);
@@ -2217,7 +2220,7 @@ DirectDrawSurface_Blt_YUV420_On_RGB8(DirectDrawSurfaceObject *self, PyObject *ar
 			*surfpixel++ = FindColour(r,g,b);
 			}
 		}
-	Py_END_ALLOW_THREADS	
+	//Py_END_ALLOW_THREADS	
 	
 	self->pI->Unlock(0);
 	Py_INCREF(Py_None);
@@ -2265,15 +2268,12 @@ static void
 DirectDrawSurface_dealloc(DirectDrawSurfaceObject *self)
 {
 	/* XXXX Add your own cleanup code here */
-	Py_BEGIN_ALLOW_THREADS
+	//Py_BEGIN_ALLOW_THREADS
 	if(self->releaseI && self->pI)
 		{
-		//try {
-			self->pI->Release();
-		//	}
-		//catch(...){}
+		self->pI->Release();
 		}
-	Py_END_ALLOW_THREADS
+	//Py_END_ALLOW_THREADS
 	PyMem_DEL(self);
 }
 
