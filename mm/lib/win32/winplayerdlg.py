@@ -13,11 +13,6 @@ from pywinlib.mfc import window
 
 IDW_TOOLBAR_PLAYER_PANEL = 0xe805
 
-DEFAULT_PLAYER_ATTRIBUTES = [ ('option','Bitrate'),
-	('option', 'Language'),
-	('boolean', 'boolean attribute 1'),
-	('boolean', 'boolean attribute 2'),]
-
 class ResItem:
 	classid = 0x0082
 	style = win32con.WS_CHILD | win32con.WS_VISIBLE
@@ -35,7 +30,7 @@ class Option(ResItem):
 	def __init__(self, name, width=80, height=12):
 		ResItem.__init__(self, name, width, height)
 	def getResourceList(self, x, y):
-		return [self.classid, self.name, self.id, (x, y, self.width, 48), self.style]
+		return [self.classid, self.name, self.id, (x, y, self.width, 128), self.style]
 
 class Boolean(ResItem):
 	classid = 0x0080
@@ -60,7 +55,7 @@ class PlayerDlgBar(window.Wnd):
 		self._resitems = []
 		self._ctrls = {}
 
-	def createWindow(self, parent, attributes = DEFAULT_PLAYER_ATTRIBUTES):
+	def createWindow(self, parent, attributes):
 		self._parent = parent
 		self.createResourceItems(attributes)
 		CBRS_GRIPPER = 0x00400000
@@ -68,21 +63,23 @@ class PlayerDlgBar(window.Wnd):
 			afxres.CBRS_SIZE_DYNAMIC | CBRS_GRIPPER | afxres.CBRS_FLOAT_MULTI, IDW_TOOLBAR_PLAYER_PANEL)
 		self.EnableDocking(afxres.CBRS_ALIGN_ANY);
 		parent.EnableDocking(afxres.CBRS_ALIGN_ANY);
-		#l, t, r, b = parent.GetWindowRect()
-		#parent.FloatControlBar(self, (l+100, (t+b)/2) )
+		self.ShowWindow(win32con.SW_HIDE)
+		l, t, r, b = parent.GetMDIClient().GetWindowRect()
+		parent.FloatControlBar(self, (r-150, t+2) )
 		self.setButtonIcons()
 		self.createComponents()
 		self.hookCommands()
-		self.ShowWindow(win32con.SW_HIDE)
+		self.hide()
 
 	def show(self):
 		self.ShowWindow(win32con.SW_SHOW)
-		l, t, r, b = self._parent.GetWindowRect()
-		self._parent.FloatControlBar(self, (l+100, (t+b)/2) )
+		self._parent.DockControlBar(self)
+		l, t, r, b = self._parent.GetMDIClient().GetWindowRect()
+		self._parent.FloatControlBar(self, (r-150, t+2) )
 
 	def hide(self):
-		self._parent.DockControlBar(self)
 		self.ShowWindow(win32con.SW_HIDE)
+		self._parent.DockControlBar(self)
 
 	def createResourceItems(self, attributes):
 		id = 1
@@ -144,6 +141,15 @@ class PlayerDlgBar(window.Wnd):
 		for ctrl in self._ctrls.values():
 			ctrl.attach_to_parent()
 
+	def setOption(self, name, info):
+		ctrl = self._ctrls.get(name)
+		if ctrl is not None:
+			assert isinstance(ctrl,  components.ComboBox),''
+			optionlist = info[0]
+			initoption = info[2]
+			ctrl.initoptions(optionlist, optionlist.index(initoption))
+			ctrl.setcb(info[1])
+
 	def hookCommands(self):
 		for ctrl in self._ctrls.values():
 			if isinstance(ctrl, components.ComboBox):
@@ -153,8 +159,16 @@ class PlayerDlgBar(window.Wnd):
 
 	def onCombo(self, id, code):
 		if code == win32con.CBN_SELCHANGE:
-			print 'onCombo', id	
+			for ctrl in self._ctrls.values():
+				if ctrl._id == id:
+					if ctrl._cb:
+						ctrl._cb(ctrl.getvalue())
+					break
 				
 	def onCheck(self, id, code):
 		if code==win32con.BN_CLICKED:
-			print 'onCheck', id		
+			for ctrl in self._ctrls.values():
+				if ctrl._id == id:
+					if ctrl._cb:
+						ctrl._cb(ctrl.getcheck())
+					break

@@ -45,4 +45,6 @@ class TOOLBAR_LINKING(_CommandBase):
 	help = 'Show the timing/linking toolbar'
 class TOOLBAR_CONTAINERS(_CommandBase):
 	help = 'Show the structure container toolbar'
+class PLAYER_PANEL(_CommandBase):
+	help = 'Show/Hide the player controls'
 
