@@ -20,9 +20,9 @@ class Exporter:
 		self.topwindow = None
 		self.completed = 0
 
-		self.progress = windowinterface.ProgressDialog("Exporting", self.cancel_callback, None, 0)
+		self.progress = windowinterface.ProgressDialog("Exporting", self.cancel_callback, None, 0, 1)
 		self.progress.set('Exporting document to WMP...')
-
+		
 		self.timefunc = self.player.scheduler.timefunc
 		self.player.exportplay(self)
 		
