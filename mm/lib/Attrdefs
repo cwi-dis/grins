@@ -27,7 +27,7 @@
 # A definition need not be wholly contained in a single input line;
 # blank lines and comments may be inserted freely.
 
-(align (string) 'left' 'Alignment' default
+(align (string) 'left' 'Alignment' CMIFdefault
 	'Alignment of short datasets' channel)
 
 (anchorlist (list (enclosed (tuple (any) (int) (enclosed (list (any))))))
@@ -36,13 +36,13 @@
 (arm_duration (float) -1.0 'Arm duration' hidden
 	'Time needed to arm this event before displaying' raw)
 
-(axis (tuple (float) (float)) (-1.0 -1.0) 'Axis' default
+(axis (tuple (float) (float)) (-1.0 -1.0) 'Axis' CMIFdefault
 	'Draw axis if >0, specifies tick-interval' channel)
 
-(bag_index (name) undefined 'Choice index' childnodename
+(bag_index (name) undefined 'Choice index' CMIFchildnodename
 	'Name of child auto-started when choice node plays' normal)
 
-(base_window (name) 'undefined' 'Channel base window' basechannelname
+(base_window (name) 'undefined' 'Channel base window' CMIFbasechannelname
 	'Name of window in which channelwin is created' raw)
 
 (base_winoff (tuple (float) (float) (float) (float)) (0.0 0.0 1.0 1.0)
@@ -54,16 +54,16 @@
 (bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
 	'Color used for background of window' channel)
 
-(bgimg (string) '' 'Background image' file
+(bgimg (string) '' 'Background image' CMIFfile
 	'Background image for window' channel)
 
-(textalign (string) 'center' 'Alignment' default
+(textalign (string) 'center' 'Alignment' CMIFdefault
 	'Alignment of text in window' channel)
 
-(border (int) 1 'Channel border' default
+(border (int) 1 'Channel border' CMIFdefault
 	'Determines whether channel window has a border (1=yes)' raw)
 
-(center (bool) 1 'Center image' default
+(center (bool) 1 'Center image' CMIFdefault
 	'Determines whether image is centered' channel)
 
 (channel (name) undefined 'Channel' channelname
@@ -82,7 +82,7 @@
 (comment (string) '' 'Comment' default
 	 'An arbitrary comment string, not interpreted' raw)
 
-(crop (tuple (float) (float) (float) (float)) (0 0 0 0) 'Image crop' default
+(crop (tuple (float) (float) (float) (float)) (0 0 0 0) 'Image crop' CMIFdefault
     'Crop image.  Values are fractions to crop from top, bottom, left, right.'
 	channel)
 
@@ -92,7 +92,7 @@
 (cview_winsize  (tuple (float) (float)) (115.234375 115.234375) 'Time chart winsize' hidden
 	 'Window size for Time chart view' raw)
 
-(drawbox (bool) 1 'Draw anchor boxes' default
+(drawbox (bool) 1 'Draw anchor boxes' CMIFdefault
 	'Draw anchors as boxes' channel)
 
 (duration (float) 0.0 'Duration' default
@@ -104,16 +104,16 @@
 (file (string) '/dev/null' 'File' file
 	'File name for external node' channel)
 
-(font (string) 'Times-Roman' 'Font' font
+(font (string) 'Times-Roman' 'Font' CMIFfont
 	'Font used to display text' channel)
 
-(gtype (string) 'line' 'Graphtype' default
+(gtype (string) 'line' 'Graphtype' CMIFdefault
 	'Type of graph: bar, line, hline' channel)
 
-(hicolor (tuple (int) (int) (int)) (255 0 0) 'Hilight color' color
+(hicolor (tuple (int) (int) (int)) (255 0 0) 'Hilight color' CMIFcolor
 	'Color used for highlighted anchors in window' channel)
 
-(bucolor (tuple (int) (int) (int)) (255 0 0) 'Button color' color
+(bucolor (tuple (int) (int) (int)) (255 0 0) 'Button color' CMIFcolor
 	'Color used for anchors in window' channel)
 
 (hview_winpos (tuple (float) (float)) (-1 -1) 'Hierarchy winpos' hidden
@@ -143,13 +143,13 @@
 (loop (int) 1 'Loop' default
 	'Number of times the node should loop (0 is infinite)' raw)
 
-(macprog (string) '' 'Mac program signature' default
+(macprog (string) '' 'Mac program signature' CMIFdefault
 	'4-byte application signature (mac only)' channel)
 
-(mcgroup (string) '' 'Multicast group' default
+(mcgroup (string) '' 'Multicast group' CMIFdefault
 	'IP Multicast group address to listen to' raw)
 
-(mcttl (int) 3 'Multicast TTL' default
+(mcttl (int) 3 'Multicast TTL' CMIFdefault
 	'TTL for outgoing multicast messages' raw)
 
 (mimetype (string) '' 'MIME type' default
@@ -158,10 +158,10 @@
 (name (name) '' 'Node name' default
 	'Name given to a node' raw)
 
-(noanchors (bool) 0 'Ignore anchors' default
+(noanchors (bool) 0 'Ignore anchors' CMIFdefault
 	'Ignore anchors and other HTML tags' channel)
 
-(nonlocal (bool) 0 'Remote only' default
+(nonlocal (bool) 0 'Remote only' CMIFdefault
 	'Ignore incoming messages from local machine' raw)
 
 (player_winpos (tuple (float) (float)) (-1 -1) 'Player winpos' hidden
@@ -170,25 +170,25 @@
 (player_winsize (tuple (float) (float)) (83.544921875 46.09375) 'Player winsize' hidden
 	 'Window size for player control panel' raw)
 
-(port (int) 7000 'UDP port' default
+(port (int) 7000 'UDP port' CMIFdefault
 	'UDP port for external hyperjumps' raw)
 
-(pointsize (float) 0 'Point size' default
+(pointsize (float) 0 'Point size' CMIFdefault
 	'Point size of text displayed in window' channel)
 
-(popup (bool) 1 'Popup on play' default
+(popup (bool) 1 'Popup on play' CMIFdefault
 	'Determines whether channel pops up upon playing a node' raw)
 
-(queuesize (float) 0 'Queue size' default
+(queuesize (float) 0 'Queue size' CMIFdefault
 	'Audio playback queue size' channel)
 
 (scale (float) 0.0 'Scale factor' default
 	'Image magnification (0.0 means fit in window)' channel)
 
-(scalefilter (name) '' 'Scaling filter' default
+(scalefilter (name) '' 'Scaling filter' CMIFdefault
 	'Name of filter used after image scaling' channel)
 
-(style (list (name)) () 'Style(s)' default
+(style (list (name)) () 'Style(s)' CMIFdefault
 	'List of style names that apply to this node/subtree' raw)
 
 (style_winpos (tuple (float) (float)) (-1 -1) 'Style editor winpos' hidden
@@ -220,25 +220,25 @@
 (u_group (name) undefined 'User group' usergroup
 	'Name of user group' inherited)
 
-(unixprog (string) '' 'Unix program name' default
+(unixprog (string) '' 'Unix program name' CMIFdefault
 	'Application name (unix only)' channel)
 
 (units (int) 0 'Units' units
 	'Units for top-level windows' raw)
 
-(video (bool) 0 'Video output' default
+(video (bool) 0 'Video output' CMIFdefault
 	'Do image smoothing for video output' channel)
 
 (visible (bool) 1 'Channel visibility' default
 	'Determines visibility of channel' raw)
 
-(wanturl (bool) 0 'Pass URL' default
+(wanturl (bool) 0 'Pass URL' CMIFdefault
 	'Pass URL to program (otherwise pass filename)' channel)
 	
 (winpos (tuple (float) (float)) (-1 -1) 'Window position' hidden
 	'Initial window position (x, y) (x axis pointing down!)' raw)
 
-(winprog (string) '' 'Windows program name' default
+(winprog (string) '' 'Windows program name' CMIFdefault
 	'Application name (windows only)' channel)
 
 (winsize (tuple (float) (float)) (0 0) 'Window size' hidden
