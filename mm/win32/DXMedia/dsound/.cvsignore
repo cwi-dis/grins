@@ -1,1 +1,7 @@
 Release
+Debug
+*.plg
+*.aps
+*.dsw
+*.ncb
+*.opt
