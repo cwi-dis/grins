@@ -400,14 +400,14 @@ class LinkBrowserDialog:
 		pass
 
 class LinkEditorDialog:
-	def __init__(self, title, dirstr, typestr, dir, type):
+	def __init__(self, title, dirstr, typestr, dir, type, dirsens):
 		cbd = {
 				'OK':(self.ok_callback, ()),
 				'Cancel':(self.cancel_callback, ()),
 				'LinkDir':(self.linkdir_callback, ()),
 				'LinkType':(self.linktype_callback, ()),
 		}
-		self.window = windowinterface.LinkPropDlg(cbd, dir, type,
+		self.window = windowinterface.LinkPropDlg(cbd, dir, type, dirsens,
 							  parent = self.parent.window)
 
 	def show(self):
@@ -429,16 +429,6 @@ class LinkEditorDialog:
 		"""Make the Add button (in)sensitive.
 
 		Arguments (no defaults):
-		sensitive -- boolean indicating whether to make
-			sensitive or insensitive
-		"""
-		pass
-
-	def linkdirsetsensitive(self, pos, sensitive):
-		"""Make an entry in the link dir menu (in)sensitive.
-
-		Arguments (no defaults):
-		pos -- the index of the entry to be made (in)sensitve
 		sensitive -- boolean indicating whether to make
 			sensitive or insensitive
 		"""
