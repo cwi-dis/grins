@@ -1,6 +1,6 @@
 // CMIF_ADD
 //
-// kk@epsilon.com.gr
+// kk@oratrix.com
 //
 //
 // Note that this source file contains embedded documentation.
@@ -908,6 +908,22 @@ sdk_get_focus(PyObject *self, PyObject *args)
 	return Py_BuildValue("i", hWnd);
 	}
 
+static PyObject*
+sdk_co_initialize(PyObject *self, PyObject *args) 
+	{
+	CHECK_NO_ARGS2(args,CoInitialize);
+	HRESULT hr=CoInitialize(NULL);
+	return Py_BuildValue("i",hr);
+	}
+static PyObject*
+sdk_co_uninitialize(PyObject *self, PyObject *args) 
+	{
+	CHECK_NO_ARGS2(args,CoUninitialize);
+	CoUninitialize();
+	RETURN_NONE;
+	}
+
+
  // @object PyWin32Sdk|A module wrapper object.  It is a general utility object, and is not associated with an MFC object.
 BEGIN_PYMETHODDEF(Win32Sdk)
 	{"CreatePen",sdk_create_pen,	1},		// @pymeth CreatePen|Creates a pen and returns its handle
@@ -958,6 +974,9 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 
 	{"GetDialogBaseUnits",sdk_get_dialog_base_units,1}, 
 	{"GetFocus",sdk_get_focus,1}, 
+	{"CoInitialize",sdk_co_initialize,1}, 
+	{"CoUninitialize",sdk_co_uninitialize,1}, 
+
 	///////////////////////////////////////////////////// Temporary
 	{"ParseDrawItemStruct",sdk_parse_drawitemstruct,1},// undocumented!
 	{"CrackNMHDR",sdk_crack_nmhdr,1}, // undocumented!
