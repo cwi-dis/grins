@@ -77,6 +77,9 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name wingdi
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name Qt
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -206,6 +209,18 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name _socket
     End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "Qt"=..\QT\frommacpython\Qt.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
 }}}
 
 ###############################################################################
