@@ -144,6 +144,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'autoReverse': __truefalse,
 		'autoplay': __truefalse,
 		'chapter-mode': {'all':0,'clip':1},
+		'clipBoundary': {'parent':'parent', 'children':'children'},
+		'coordinated': __truefalse,
+		'defaultState': __truefalse,
+		'direction': {'forward':'forward', 'reverse':'reverse'},
 		'erase': {'never':'never', 'whenDone':'whenDone'},
 		'fill': {'freeze':'freeze', 'remove':'remove', 'hold':'hold', 'transition':'transition', 'auto':'auto', 'default':'default'},
 		'fillDefault': {'freeze':'freeze', 'remove':'remove', 'hold':'hold', 'transition':'transition', 'auto':'auto', 'inherit':'inherit'},
@@ -151,6 +155,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'immediate-instantiation': __truefalse,
 		'mode': {'in':'in', 'out':'out'},
 		'origin': {'parent':'parent', 'element':'element'},
+		'override': {'visible':'visible', 'hidden':'hidden'},
 		'syncMaster': __truefalse,
 		'systemAudioDesc': __onoff,
 		'system-captions': __onoff,
@@ -3100,28 +3105,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		title = attributes.get('title', '')
-		u_state = attributes.get('defaultState','false')
-		if u_state not in ('true', 'false'):
-			self.syntax_error('invalid defaultState attribute value')
-		override = attributes.get('override', 'hidden')
-		nsdict = self.getnamespace()
-		if override in ('allowed', 'not-allowed'):
-			for ns in nsdict.values():
-				if ns in limited['viewport']:
-					break
-				else:
-					self.syntax_error('allowed/not-allowed deprecated in favor of visible/hidden')
-			override = {'allowed':'visible', 'not-allowed':'hidden'}[override]
-		elif override in ('visible', 'hidden'):
-			for ns in nsdict.values():
-				if ns in limited['topLayout']:
-					break
-				else:
-					self.syntax_error('visible/hidden not available in old namespace')
-		else:
-			self.syntax_error('invalid override attribute value')
+		u_state = None
+		if attributes.has_key('defaultstate'):
+			u_state = self.parseenumvalue('defaultstate', attributes['defaultstate'])
+		override = None
+		if attributes.has_key('override'):
+			override = self.parseEnumValue('override', attributes['override'])
 		uid = attributes.get('uid', '')
-		self.__custom_tests[id] = title, u_state == 'true', override, uid
+		self.__custom_tests[id] = title, u_state is not None and u_state == 'true', override or 'hidden', uid
 
 	def end_custom_test(self):
 		pass
@@ -3155,16 +3146,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif name == 'skip-content':
 				continue
 			elif name == 'coordinated':
-				if value == 'true':
-					value = 1
-				elif value == 'false':
-					value = 0
-				else:
-					self.syntax_error("error parsing value of `%s' attribute" % name)
+				value = self.parseEnumValue(name, value)
+				if value is None:
 					continue
 			elif name == 'clipBoundary':
-				if value not in ('parent', 'children'):
-					self.syntax_error("error parsing value of `%s' attribute" % name)
+				value = self.parseEnumValue(name, value)
+				if value is None:
 					continue
 			elif name in ('startProgress', 'endProgress'):
 				try:
@@ -3173,8 +3160,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error("error parsing value of `%s' attribute" % name)
 					continue
 			elif name == 'direction':
-				if value not in ('forward', 'reverse'):
-					self.syntax_error("error parsing value of `%s' attribute" % name)
+				value = self.parseEnumValue(name, value)
+				if value is None:
 					continue
 			elif name in ('horzRepeat', 'vertRepeat', 'borderWidth'):
 				try:
