@@ -100,11 +100,10 @@ class LayoutViewDialog2:
 		return None
 
 	def askname(self, default, title, applyCallback,  cancelCallBack = None):
-		w=windowinterface.LayoutNameDlg('Name for region',
+		w=windowinterface.InputDialog(title,
 					    default,
 					    applyCallback,
 					    cancelCallback = cancelCallBack,
 					    parent = self.__window)
-		w.show()
 
 
