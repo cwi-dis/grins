@@ -150,7 +150,7 @@ MENUBAR=(
 		)),
 
 	('&View', (
-		(LIGHT, ENTRY, '&Expand/Collapse', None, EXPAND),
+		(LIGHT, ENTRY, '&Expand/Collapse\tCtrl+I', None, EXPAND),
 		(LIGHT, ENTRY, 'E&xpand all', None, EXPANDALL),
 		(LIGHT, ENTRY, '&Collapse all', None, COLLAPSEALL),
 		(SMIL, SEP,),
@@ -261,7 +261,7 @@ POPUP_HVIEW_STRUCTURE = (
 		(LIGHT, ENTRY, 'P&lay node', None, PLAYNODE),
 		(LIGHT, ENTRY, 'Pla&y from node', None, PLAYFROM),
 		(LIGHT, SEP,),
-		(LIGHT, ENTRY, '&Expand/Collapse', '\t', EXPAND),
+		(LIGHT, ENTRY, '&Expand/Collapse', None, EXPAND),
 		(LIGHT, ENTRY, 'E&xpand all', None, EXPANDALL),
 		(LIGHT, ENTRY, 'C&ollapse all', None, COLLAPSEALL),
 		(LIGHT, SEP,),
@@ -293,7 +293,7 @@ POPUP_CVIEW_CHANNEL = (
 		(LIGHT, ENTRY, '&Move channel', None, MOVE_CHANNEL),
 		(LIGHT, ENTRY, '&Copy channel', None, COPY_CHANNEL),
 		(LIGHT, SEP,),
-		(LIGHT, ENTRY, '&Properties...', 'A', ATTRIBUTES),
+		(LIGHT, ENTRY, '&Properties...', None, ATTRIBUTES),
 
 )
 
@@ -302,17 +302,17 @@ POPUP_CVIEW_NODE = (
 		(LIGHT, ENTRY, 'Play from &node', None, PLAYFROM),
 		(LIGHT, SEP,),
 		(LIGHT, ENTRY, 'Create si&mple anchor', None, CREATEANCHOR),
-		(LIGHT, ENTRY, 'Finish hyperlin&k to selection...', 'H', FINISH_LINK),
-		(LIGHT, ENTRY, 'Create &syncarc from selection...', 'L', FINISH_ARC),
+		(LIGHT, ENTRY, 'Finish hyperlin&k to selection...', None, FINISH_LINK),
+		(LIGHT, ENTRY, 'Create &syncarc from selection...', None, FINISH_ARC),
 		(LIGHT, SEP,),
-		(SMIL, ENTRY, '&Info...', 'I', INFO),
-		(LIGHT, ENTRY, 'P&roperties...', 'A', ATTRIBUTES),
-		(SMIL, ENTRY, '&Anchors...', 'T', ANCHORS),
-		(LIGHT, ENTRY, '&Edit content', 'E', CONTENT),
+		(SMIL, ENTRY, '&Info...', None, INFO),
+		(LIGHT, ENTRY, 'P&roperties...', None, ATTRIBUTES),
+		(SMIL, ENTRY, '&Anchors...', None, ANCHORS),
+		(LIGHT, ENTRY, '&Edit content', None, CONTENT),
 )
 
 POPUP_CVIEW_SYNCARC = (
-		(SMIL, ENTRY, '&Info...', 'I', INFO),
+		(SMIL, ENTRY, '&Info...', None, INFO),
 		(LIGHT, SEP,),
 		(LIGHT, ENTRY, '&Delete', None, DELETE),
 )
@@ -320,16 +320,17 @@ POPUP_CVIEW_SYNCARC = (
 MAIN_FRAME_POPUP = (
 		(LIGHT, ENTRY, '&Paste document', None, PASTE_DOCUMENT),
 		(LIGHT, SEP,),
-		(LIGHT, ENTRY, '&New\tCtrl+N', 'N', NEW_DOCUMENT),
-		(LIGHT, ENTRY, '&Open...\tCtrl+O', 'O', OPENFILE),
-		(LIGHT, ENTRY, 'Open &URL...\tCtrl+L', 'O', OPEN),
+		(LIGHT, ENTRY, '&New', None, NEW_DOCUMENT),
+		(LIGHT, ENTRY, '&Open...', None, OPENFILE),
+		(LIGHT, ENTRY, 'Open &URL...', None, OPEN),
 		(LIGHT, DYNAMICCASCADE, 'Open &recent', OPEN_RECENT),
 		(LIGHT, SEP,),
-		(LIGHT, ENTRY, '&Save\tCtrl+S', 'S', SAVE),
+		(LIGHT, ENTRY, '&Save', None, SAVE),
 		(LIGHT, ENTRY, 'Save &as...', None, SAVE_AS),
+		(LIGHT, ENTRY, 'Revert &to saved', None, RESTORE),
+		(LIGHT, SEP,),
 		(LIGHT, ENTRY, 'Publish for &G2...', None, EXPORT_SMIL),
 		(LIGHT, ENTRY, 'Pu&blish for G2 and upload...', None, UPLOAD_SMIL),
-		(LIGHT, ENTRY, 'Revert &to saved', None, RESTORE),
 		(LIGHT, SEP,),
 		(LIGHT, ENTRY, '&Document Properties...', None, PROPERTIES),
 		(LIGHT|DBG, SEP,),
