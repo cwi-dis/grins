@@ -11,6 +11,7 @@ TODO for Michael :-)
 * Hyperlinks have dissapeared.
 * Multiple selection.
 * Errors in the player - make them selectable in a menu somewhere.
+* Dragging and dropping on the top-leftmost icon crashes the editor.
 
 --> Assets window
 	- File-based assets? Explorer window?

@@ -44,6 +44,8 @@ class HierarchyViewDialog(ViewDialog):
 				canvassize = (w, h),
 				commandlist = self.commands,strid='hview_')
 
+		# By the way, it might be helpful to know that a window here is a _StructView.
+		# the window.register method is in a base class, win23window.py:register()
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
 		self.window.register(WMEVENTS.Mouse0Release, self.mouse0release, None)
 		self.window.register(WMEVENTS.ResizeWindow, self.redraw, None)

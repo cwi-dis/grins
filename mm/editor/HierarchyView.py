@@ -70,6 +70,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.multi_selected_widgets = [] # When there are multiple selected widgets.
 					# For the meanwhile, you can only multi-select MMWidgets which have nodes.
 		self.old_multi_selected_widgets = [] # The old list of widgets that need to all be unselected.
+		self.need_redraw_select = 0
 		
 		self.begin_event_source = None # This is the specially selected "I am the node from which a new begin event will be made to"
 		self.droppable_widget = None # ahh.. something that sjoerd added. Assume that it's used for the fancy drop-notification.
@@ -544,7 +545,8 @@ class HierarchyView(HierarchyViewDialog):
 		elif self.selected_widget is self.old_selected_widget and \
 		     self.selected_icon is self.old_selected_icon and \
 		     self.droppable_widget is self.old_droppable_widget and \
-		     len(self.multi_selected_widgets)==len(self.old_multi_selected_widgets) :
+		     len(self.old_multi_selected_widgets)==0 and \
+		     not self.need_redraw_selection:
 			# nothing to do
 			self.redrawing = 0
 			return
@@ -552,6 +554,10 @@ class HierarchyView(HierarchyViewDialog):
 			d = self.base_display_list.clone()
 
 		# 2. Undraw stuff.
+		for i in self.old_multi_selected_widgets:
+			i.draw_unselected(d)
+		self.old_multi_selected_widgets = []
+
 		if self.old_droppable_widget is not None:
 			if self.old_droppable_widget is self.selected_widget:
 				pass
@@ -572,8 +578,6 @@ class HierarchyView(HierarchyViewDialog):
 		if self.droppable_widget is not None:
 			self.droppable_widget.draw_box(d)
 			self.old_droppable_widget = self.droppable_widget
-		for i in self.old_multi_selected_widgets:
-			i.draw_unselected(d)
 
 		# Multiple selection.
 		for i in self.multi_selected_widgets:
@@ -593,6 +597,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.base_display_list = newdl
 		if d is not newdl:
 			self.extra_displist = d	# remember so that we can close later
+		self.need_redraw_selection = 0
 		self.redrawing = 0
 
 	def add_arrow(self, color, source, dest):
@@ -688,10 +693,15 @@ class HierarchyView(HierarchyViewDialog):
 			keystatus = allparams[2] # is a bunch of boolean flags for each key.
 			ctrlstatus = keystatus & win32con.MK_CONTROL # i.e. 0x8 or 0x0
 			shiftstatus = keystatus & win32con.MK_SHIFT # i.e. 0x4 or 0x0
+			# This will annoy Jack: :-) 
+			which_mouse_button = keystatus & win32con.MK_RBUTTON # you also have MK_LBUTTON
 		else:
 			# Add more bad hacks here for each platform :-).
 			ctrlstatus = 0	# status of the ctrl key (or whatever equiv.)
 			shiftstatus = 0	# status of the shift key.
+			which_mouse_button = 0
+		# By the way.. allparams has all sorts of useful information in it, such as the x and y coords.
+		# It's usually called lword or something in the MFC docs.
 		# end bad hack.
 
 		if x >= 1 or y >= 1:
@@ -701,7 +711,9 @@ class HierarchyView(HierarchyViewDialog):
 		y = y * self.mcanvassize[1] #  to floats in the windowinterface.
 		self.mousehitx = x
 		self.mousehity = y
-		if ctrlstatus:
+		if which_mouse_button:
+			self.rightclick(x,y)
+		elif ctrlstatus:
 			self.ctrlclick(x, y)
 		elif shiftstatus:
 			self.shiftclick(x,y)
@@ -1319,15 +1331,21 @@ class HierarchyView(HierarchyViewDialog):
 			self.editmgr.setglobalfocus("MMNode", self.focusnode)
 
 	def also_select_widget(self, widget):
-		# Add this widget to the multi-select box.
-		if widget is self.selected_widget or widget in self.multi_selected_widgets:
-			return
-		if isinstance(widget, StructureWidgets.MMNodeWidget):
-			self.multi_selected_widgets.append(widget)
-			widget.select()
-		elif isinstance(widget, StructureWidgets.MMWidgetDecoration):
+		# Select another widget without losing the selection (ctrl-click).
+		if isinstance(widget, StructureWidgets.MMWidgetDecoration):
 			widget = widget.get_mmwidget()
 			self.multi_selected_widgets.append(widget)
+
+		if widget is self.selected_widget:
+			return
+		elif widget in self.multi_selected_widgets:
+			# Toggle multi-selective widgets.
+			self.multi_selected_widgets.remove(widget)
+			self.old_multi_selected_widgets.append(widget)
+		elif isinstance(widget, StructureWidgets.MMNodeWidget):
+			self.multi_selected_widgets.append(widget)
+			widget.select()
+		self.need_redraw_selection = 1
 
 	def select_node(self, node, external = 0):
 		# Set the focus to a specfic MMNode (obviously the focus did not come from the UI)
@@ -1336,7 +1354,9 @@ class HierarchyView(HierarchyViewDialog):
 		elif node.views.has_key('struct_view'):
 			widget = node.views['struct_view']
 			self.select_widget(widget, external)
-		
+
+	# TODO: Jack: I know that this is going to mess the mac stuff up.
+	# I'm not quite sure how to do right-clicks on a mac. Sorry. -mjvdg.
 	def click(self, x, y):
 		# Called only from self.mouse, which is the event handler.
 		clicked_widget = self.scene_graph.get_clicked_obj_at((x,y))
@@ -1344,12 +1364,16 @@ class HierarchyView(HierarchyViewDialog):
 		self.select_widget(clicked_widget, scroll=0)
 		# The calling method will re-draw the screen.
 	def ctrlclick(self, x, y):
-		print "DEBUG: ctrlclick ", x, y
 		clicked_widget = self.scene_graph.get_clicked_obj_at((x,y))
 		clicked_widget.mouse0press((x,y))
 		self.also_select_widget(clicked_widget)
 	def shiftclick(self, x, y):
 		self.click(x,y)
+	def rightclick(self, x, y):
+		print "DEBUG: rightclick."
+		if len(self.multi_selected_widgets) == 0:
+			# You don't want to reselect only one widget.
+			self.click(x,y)
 
 	# Find the smallest object containing (x, y)
 	def whichhit(self, x, y):
