@@ -69,6 +69,9 @@
 (closed (bool) 0 'Closed' default
 	'If on, the node is closed in the hierarchy view' raw)
 
+(comment (string) '' 'Comment' default
+	 'An arbitrary comment string, not interpreted' raw)
+
 (duration (float) 0.0 'Duration' default
 	'Duration of a node/subtree (in seconds)' channel)
 
