@@ -87,13 +87,13 @@ F90=df.exe
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo
+# ADD BSC32 /nologo /o"Debug/grinsproxy_d.bsc"
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 rpcndr.lib rpcns4.lib rpcrt4.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 rpcndr.lib rpcns4.lib rpcrt4.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /out:"Debug/grinsproxy_d.dll" /pdbtype:sept
 # Begin Custom Build
-TargetPath=.\Debug\grinsproxy.dll
-InputPath=.\Debug\grinsproxy.dll
+TargetPath=.\Debug\grinsproxy_d.dll
+InputPath=.\Debug\grinsproxy_d.dll
 SOURCE="$(InputPath)"
 
 "..\..\..\..\bin\win32\grinsproxy_d.dll" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
