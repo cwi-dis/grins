@@ -998,6 +998,13 @@ class ChannelWrapper(Wrapper):
 			if 'traceImage' in rv: rv.remove('traceImage')
 			if 'fit' not in rv: rv.append('fit')
 			if 'showBackground' not in rv: rv.append('showBackground')
+			if 'top' not in rv: rv.append('top')
+			if 'height' not in rv: rv.append('height')
+			if 'bottom' not in rv: rv.append('bottom')
+			if 'left' not in rv: rv.append('left')
+			if 'width' not in rv: rv.append('width')
+			if 'right' not in rv: rv.append('right')
+			if 'z' not in rv: rv.append('z')
 ##		if not cmifmode():
 ##			if 'file' in rv: rv.remove('file')
 ##			if 'fit' in rv: rv.remove('fit')
