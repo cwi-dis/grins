@@ -1612,13 +1612,32 @@ class Region(Window):
 				self._convbgcolor = dds.GetColorMatch((r,g,b))
 			dds.BltFill((xc, yc, xc+wc, yc+hc), self._convbgcolor)
 
-					
+
+	# same as getwindowpos
+	# but rel is not an ancestor
+	def getrelativepos(self, rel):
+		if rel == self:
+			return self._rect
+		rc1 = rel.getwindowpos()
+		rc2 = self.getwindowpos()
+		rc3 = self.rectAnd(rc1, rc2)
+		return rc3[0]-rc1[0], rc3[1]-rc1[1], rc3[2], rc3[3]
+
+	# same as getClipRgn
+	# but rel is not an ancestor
+	def getrelativeClipRgn(self, rel):
+		x, y, w, h = self.getrelativepos(rel);
+		rgn = win32ui.CreateRgn()
+		rgn.CreateRectRgn((x,y,x+w,y+h))
+		return rgn
+						
 	# paint on surface dds relative to ancestor rel			
 	def paintOnDDS(self, dds, rel=None, exclwnd=None):
 		#print 'paintOnDDS', self, 'subwindows', len(self._subwindows), self._rect
 		# first paint self
-		rgn = self.getClipRgn(rel)
-		dst = self.getwindowpos(rel)
+		rgn = self.getrelativeClipRgn(rel)
+		dst = self.getrelativepos(rel)
+		print dst
 		try:
 			self._paintOnDDS(dds, dst, rgn)
 		except ddraw.error, arg:
@@ -1774,11 +1793,11 @@ class Region(Window):
 		src = self._drawsurf
 		dst = self._topwindow.getDrawBuffer()
 
-		dstDC = self.__getDC(dst)	
+		dstDC = self.__getDC(dst)
 		srcDC = self.__getDC(src)	
+
 		rgn = self.getChildrenRgnComplement(self._topwindow)
 		dstDC.SelectClipRgn(rgn)
-		rgn.DeleteObject()
 		x, y, w, h = self.getwindowpos()
 		try:
 			dstDC.BitBlt((x, y),(w, h),srcDC,(0, 0), win32con.SRCCOPY)
@@ -1786,6 +1805,7 @@ class Region(Window):
 			print arg			
 		self.__releaseDC(dst,dstDC)
 		self.__releaseDC(src,srcDC)
+		rgn.DeleteObject()
 				
 		# 2. do a normal painting to paint children
 		L = self._subwindows[:]
