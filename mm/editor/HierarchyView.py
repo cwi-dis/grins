@@ -753,7 +753,7 @@ class HierarchyView(HierarchyViewDialog):
 		left, top, right, bottom = box
 		if not hasattr(node, 'expanded') or \
 		   not node.GetChildren():
-			if hierarchy_minimum_sizes:
+			if not self.timescale and hierarchy_minimum_sizes:
 				right = left + self.horsize
 ##				if node.__class__ is SlideMMNode:
 ##					right = right + self.horsize
@@ -993,14 +993,16 @@ def sizeboxes(node, structure_duration):
 			dur = 0
 		elif dur > 1000:
 			dur = 1000
-		minsize = minsize + math.log(dur+1)
+		minsize = dur
 	if DISPLAY_VERTICAL:
 		minwidth = MINSIZE
 		minheight = minsize
 	else:
 		minwidth = minsize
 		minheight = MINSIZE
-	if structure_name_size:
+	if structure_duration:
+		pass
+	elif structure_name_size:
 		name = MMAttrdefs.getattr(node, 'name')
 		namewidth = (name and f_title.strsize(name)[0]) or 0
 		if ntype in MMNode.interiortypes or \
