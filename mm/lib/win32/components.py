@@ -17,7 +17,6 @@ Sdk=win32ui.GetWin32Sdk()
 import grinsRC
 import win32mu
 import string
-import features
 import math
 
 [FALSE, TRUE] = range(2)

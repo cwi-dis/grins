@@ -110,9 +110,6 @@ class MainDialog:
 		import windowinterface
 		f=windowinterface.getmainwnd()
 		filetypes = ['/SMIL presentation', 'application/x-grins-project', 'application/smil']
-##		import features
-##		if not features.lightweight:
-##			filetypes.append('application/x-grins-cmif')
 		windowinterface.FileDialog('Open file', 'Desktop', filetypes, '',
 					   self.__openfile_done, None, 1,
 					   parent = f)

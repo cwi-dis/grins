@@ -15,7 +15,6 @@ import re
 from cmif import findfile
 import windowinterface
 import compatibility
-import features
 from fmtfloat import round
 from nameencode import nameencode
 
