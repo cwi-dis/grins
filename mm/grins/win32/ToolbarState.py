@@ -1,13 +1,16 @@
 __version__ = "$Id$"
 
-# machine generated bar state by regedit tool
+from version import registryname, registrykey
 
-DefaultState = """
-[HKEY_CURRENT_USER\Software\Oratrix GRiNS]
+# machine generated bar state by regedit tool with a little hand editing
+# to change "Oratrix GRiNS" into %(registrykey)s and "Editor 2.0" into %(registryname)s.
 
-[HKEY_CURRENT_USER\Software\Oratrix GRiNS\Player 2.0]
+DefaultState = r"""
+[HKEY_CURRENT_USER\Software\%(registrykey)s]
 
-[HKEY_CURRENT_USER\Software\Oratrix GRiNS\Player 2.0\GRiNSToolBars-Bar0]
+[HKEY_CURRENT_USER\Software\%(registrykey)s\%(registryname)s]
+
+[HKEY_CURRENT_USER\Software\%(registrykey)s\%(registryname)s\GRiNSToolBars-Bar0]
 "BarID"=dword:0000e81b
 "Bars"=dword:00000004
 "Bar#0"=dword:00000000
@@ -15,7 +18,7 @@ DefaultState = """
 "Bar#2"=dword:0000e804
 "Bar#3"=dword:00000000
 
-[HKEY_CURRENT_USER\Software\Oratrix GRiNS\Player 2.0\GRiNSToolBars-Bar1]
+[HKEY_CURRENT_USER\Software\%(registrykey)s\%(registryname)s\GRiNSToolBars-Bar1]
 "BarID"=dword:0000e804
 "XPos"=dword:0000007b
 "YPos"=dword:fffffffe
@@ -29,7 +32,7 @@ DefaultState = """
 "MRUFloatXPos"=dword:80000000
 "MRUFloatYPos"=dword:0c050c03
 
-[HKEY_CURRENT_USER\Software\Oratrix GRiNS\Player 2.0\GRiNSToolBars-Bar2]
+[HKEY_CURRENT_USER\Software\%(registrykey)s\%(registryname)s\GRiNSToolBars-Bar2]
 "BarID"=dword:0000e803
 "XPos"=dword:fffffffe
 "YPos"=dword:fffffffe
@@ -43,9 +46,9 @@ DefaultState = """
 "MRUFloatXPos"=dword:80000000
 "MRUFloatYPos"=dword:00000000
 
-[HKEY_CURRENT_USER\Software\Oratrix GRiNS\Player 2.0\GRiNSToolBars-Summary]
+[HKEY_CURRENT_USER\Software\%(registrykey)s\%(registryname)s\GRiNSToolBars-Summary]
 "Bars"=dword:00000003
 "ScreenCX"=dword:00000500
 "ScreenCY"=dword:00000400
 
-"""
+""" % {'registryname': registryname, 'registrykey': registrykey}
