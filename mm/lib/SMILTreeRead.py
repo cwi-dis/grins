@@ -2940,6 +2940,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if not DefCompatibilityCheck.isCompatibleVersion(content):
 					if windowinterface.GetOKCancel('This document was created by "'+content+'"\n\n'+'GRiNS '+version.version+' may be able to read the document, but some features may be lost\n\nDo you wish to continue?',parent=None):
 						raise UserCancel
+					self.__context.enableSave = 1
 		elif name == 'project_boston':
 			content = content == 'on'
 			boston = self.__context.attributes.get('project_boston')
