@@ -42,9 +42,6 @@ class MainDialog:
 			(UserCmd.EXIT, (self.close_callback, ()))]
 		self.__window = w = windowinterface.windowgroup(title, cmdlist, globalgroup=1)
 
-	def __del__(self):
-		print 'CLOSING?'
-		import pdb ; pdb.set_trace()
 	def __openURL_callback(self):
 		import windowinterface
 		windowinterface.InputDialog('Open location', '',
