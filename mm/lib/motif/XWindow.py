@@ -942,7 +942,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 		depth = format.descr['align'] / 8
 		reader = None
 		if type(file) is not type(''):
-			reader = file()
+			reader = file.reader()
 			xsize = reader.width
 			ysize = reader.height
 		elif toplevel._image_size_cache.has_key(file):
@@ -983,11 +983,15 @@ class _Window(_AdornmentSupport, _RubberBand):
 		left = int(left * scale + .5)
 		right = int(right * scale + .5)
 		try:
-			if type(file) is not type(''):
-				raise 'x'
-			key = '%s@%f' % (`file`, scale)
+			if type(file) is type(''):
+				key = '%s@%f' % (`file`, scale)
+			else:
+				key = '%s@%f' % (file.__name__, scale)
 			cfile, w, h, mask = toplevel._image_cache[key]
-			image = open(cfile, 'rb').read()
+			if type(file) is type(''):
+				image = open(cfile, 'rb').read()
+			else:
+				image = cfile
 		except:			# reading from cache failed
 			w, h = xsize, ysize
 			if not reader:
@@ -998,7 +1002,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 				if type(file) is type(''):
 					r = img.reader(imgformat.xrgb8, file)
 				else:
-					r = imgconvert.stackreader(imgformat.xrgb8, file())
+					r = imgconvert.stackreader(imgformat.xrgb8, file.reader())
 				for i in range(len(r.colormap)):
 					r.colormap[i] = 255, 255, 255
 				r.colormap[r.transparent] = 0, 0, 0
@@ -1067,6 +1071,8 @@ class _Window(_AdornmentSupport, _RubberBand):
 						os.unlink(cfile)
 					except:
 						pass
+			else:
+				toplevel._image_cache[key] = image, w, h, mask
 		# x -- left edge of window
 		# y -- top edge of window
 		# width -- width of window
