@@ -1,10 +1,10 @@
-# Microsoft Developer Studio Project File - Name="GRiNS Hutchinson" - Package Owner=<4>
+# Microsoft Developer Studio Project File - Name="GRiNS Mobile" - Package Owner=<4>
 # Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Application" 0x0101
 
-CFG=GRiNS Hutchinson - Win32 Debug
+CFG=GRiNS Mobile - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -13,12 +13,12 @@ CFG=GRiNS Hutchinson - Win32 Debug
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "Hutchinson.mak" CFG="GRiNS Hutchinson - Win32 Debug"
+!MESSAGE NMAKE /f "Hutchinson.mak" CFG="GRiNS Mobile - Win32 Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
-!MESSAGE "GRiNS Hutchinson - Win32 Release" (based on "Win32 (x86) Application")
-!MESSAGE "GRiNS Hutchinson - Win32 Debug" (based on "Win32 (x86) Application")
+!MESSAGE "GRiNS Mobile - Win32 Release" (based on "Win32 (x86) Application")
+!MESSAGE "GRiNS Mobile - Win32 Debug" (based on "Win32 (x86) Application")
 !MESSAGE 
 
 # Begin Project
@@ -29,7 +29,7 @@ CPP=cl.exe
 MTL=midl.exe
 RSC=rc.exe
 
-!IF  "$(CFG)" == "GRiNS Hutchinson - Win32 Release"
+!IF  "$(CFG)" == "GRiNS Mobile - Win32 Release"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
@@ -51,22 +51,22 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo /o"./GRiNS_H3G.bsc"
+# ADD BSC32 /nologo /o"./GRiNS_MS2.bsc"
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 python16.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386 /out:"./GRiNS_H3G.exe" /libpath:"..\..\..\..\python\PCbuild" /libpath:"..\..\..\..\python\Extensions\win32\Build"
+# ADD LINK32 python16.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386 /out:"./GRiNS_MS2.exe" /libpath:"..\..\..\..\python\PCbuild" /libpath:"..\..\..\..\python\Extensions\win32\Build"
 # Begin Custom Build
 OutDir=.\.
-InputPath=.\GRiNS_H3G.exe
+InputPath=.\GRiNS_MS2.exe
 SOURCE="$(InputPath)"
 
-"..\..\..\bin\win32\GRiNS_H3G.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	del ..\..\..\bin\win32\GRiNS_H3G.exe 
-	copy $(OutDir)\GRiNS_H3G.exe ..\..\..\bin\win32 
+"..\..\..\bin\win32\GRiNS_MS2.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	del ..\..\..\bin\win32\GRiNS_MS2.exe 
+	copy $(OutDir)\GRiNS_MS2.exe ..\..\..\bin\win32 
 	
 # End Custom Build
 
-!ELSEIF  "$(CFG)" == "GRiNS Hutchinson - Win32 Debug"
+!ELSEIF  "$(CFG)" == "GRiNS Mobile - Win32 Debug"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
@@ -87,18 +87,18 @@ SOURCE="$(InputPath)"
 # ADD RSC /l 0x408 /d "_DEBUG" /d "_AFXDLL"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo /o"Debug/GRiNS_H3G.bsc"
+# ADD BSC32 /nologo /o"Debug/GRiNS_MS2.bsc"
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 python16_d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /out:"Debug/GRiNS_H3G_d.exe" /pdbtype:sept /libpath:"..\..\..\..\python\PCbuild" /libpath:"..\..\..\..\python\Extensions\win32\Build"
+# ADD LINK32 python16_d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /out:"Debug/GRiNS_MS2_d.exe" /pdbtype:sept /libpath:"..\..\..\..\python\PCbuild" /libpath:"..\..\..\..\python\Extensions\win32\Build"
 # Begin Custom Build
 OutDir=.\Debug
-InputPath=.\Debug\GRiNS_H3G_d.exe
+InputPath=.\Debug\GRiNS_MS2_d.exe
 SOURCE="$(InputPath)"
 
-"..\..\..\bin\win32\GRiNS_H3G_d.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	del ..\..\..\bin\win32\GRiNS_H3G_d.exe 
-	copy $(OutDir)\GRiNS_H3G_d.exe ..\..\..\bin\win32 
+"..\..\..\bin\win32\GRiNS_MS2_d.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	del ..\..\..\bin\win32\GRiNS_MS2_d.exe 
+	copy $(OutDir)\GRiNS_MS2_d.exe ..\..\..\bin\win32 
 	
 # End Custom Build
 
@@ -106,8 +106,8 @@ SOURCE="$(InputPath)"
 
 # Begin Target
 
-# Name "GRiNS Hutchinson - Win32 Release"
-# Name "GRiNS Hutchinson - Win32 Debug"
+# Name "GRiNS Mobile - Win32 Release"
+# Name "GRiNS Mobile - Win32 Debug"
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
