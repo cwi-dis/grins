@@ -103,6 +103,8 @@ class _Window(_AdornmentSupport):
 			self._visual = parent._visual
 		self._depth = self._visual.depth
 		# convert to pixels
+		if x < 0: x = None
+		if y < 0: y = None
 		if units == UNIT_MM:
 			if x is not None:
 				x = int(float(x) * toplevel._hmm2pxl + 0.5)
