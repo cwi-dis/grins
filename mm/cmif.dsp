@@ -755,10 +755,6 @@ SOURCE=.\lib\win32\Font.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\lib\win32\FormServer.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\lib\win32\fsm.py
 # End Source File
 # Begin Source File
@@ -800,10 +796,6 @@ SOURCE=.\lib\win32\splash.py
 # Begin Source File
 
 SOURCE=.\lib\win32\sysmetrics.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\win32\ViewServer.py
 # End Source File
 # Begin Source File
 
