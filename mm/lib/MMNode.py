@@ -12,6 +12,8 @@ class MMNodeContext():
 		self.nextuid = 1
 		self.uidmap = {}
 		self.styledict = {}
+		self.channelnames = []
+		self.channeldict = {}
 		self.nodeclass = nodeclass
 		return self
 	#
@@ -54,6 +56,12 @@ class MMNodeContext():
 		# XXX How to handle duplicates?
 		for key in dict.keys():
 			self.styledict[key] = dict[key]
+	#
+	def addchannels(self, list):
+		_stat('addchannels')
+		for name, dict in list:
+			self.channelnames.append(name)
+			self.channeldict[name] = dict
 	#
 	# Look for an attribute in the style definitions.
 	# Raise NoSuchAttrError if the attribute is undefined.
