@@ -940,15 +940,15 @@ class SubWindow(Window):
 	def _image_handle(self, file):
 		return  __main__.toplevel._image_cache[file]
 
-
 	#
 	# Mouse and cursor related support
 	#
-
+	
 	def onMouseEvent(self,point, ev):
 		cont, stop = 0, 1
 		if self.is_closed(): return cont
 		for wnd in self._subwindows:
+			# test that point is inside the window (not the media space area)
 			if wnd.inside(point):
 				if wnd.onMouseEvent(point, ev):
 					return stop
@@ -963,12 +963,30 @@ class SubWindow(Window):
 			for button in disp._buttons:
 				if button._inside(x,y):
 					buttons.append(button)
-			self.onEvent(ev,(x, y, buttons))
-			if self._transparent==0:
+			if self.onEvent(ev,(x, y, buttons)):
+				# a button has received event, so we have to stop
 				return stop
+
+		# at this point, we didn't find a "anchor button" associated to this event
+		if self._transparent==0:
+			# if window is not transparent, we have to stop to look for whichever the
+			# display list (existing or not)
+			return stop
+		else:
+			if disp:
+				# if the channel is transparent, we have to check if the event location
+				# is inside or outside the media. Note: the media area depend of media type
+				# Currently, only win32displaylist give this information (it's at least the
+				# case for images).
+				if disp._insideMedia(x,y):
+					# event inside the media, we have to stop
+					return stop
+				else:
+					# outside the media, and transparent window. So check the next window
+					return cont
 			else:
+				# not active display list and transparent window. So check the next window
 				return cont
-		return cont
 
 	def setcursor_from_point(self, point):
 		cont, stop = 0, 1
@@ -982,18 +1000,34 @@ class SubWindow(Window):
 			xp, yp = point
 			point = xp-x, yp-y
 			x, y = self._pxl2rel(point,self._canvas)
+
 			for button in self._active_displist._buttons:
 				if button._inside(x,y):
 					self.setcurcursor('hand')
 					return stop
 			
-			if self._transparent==0:
-				self.setcurcursor('arrow')
-				return stop
+		# at this point, we don't find a "valid button"
+		if self._transparent==0:
+			# if window is not transparent, we have to stop to look for whichever the
+			# display list
+			self.setcurcursor('arrow')
+			return stop
+		else:
+			if self._active_displist:
+				# if the channel is transparent, we have to check if the event location
+				# is inside or outside the media. Note: the media area depend of media type
+				# Currently, only win32displaylist give this information (it's at least the
+				# case for image).
+				if self._active_displist._insideMedia(x,y):
+					# event inside the media, we have to stop
+					self.setcurcursor('arrow')
+					return stop
+				else:
+					# outside the media, and transparent window. So check the next window
+					return cont
 			else:
-				return cont
-
-		return cont
+				# not active display list and transparent window. So check the next window
+				return cont 
 
 	#
 	# Box creation section
