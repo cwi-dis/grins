@@ -1,17 +1,6 @@
 # Movie channel
 
-# For now, this play only movies recorded by Jack's "camcorder" program.
-# The format is the following:
-#	first line: "CMIF video 1.0"
-#	second line: "(width, height, packfactor)"
-#	each image:
-#		one line: "(time, datasize)"
-#		datasize bytes of binary data
-# For compatibility with some old movies the header line, pack factor and
-# data size are optional.  Default pack factor is 2; default data size is
-# (width/2) * (height/2) if pack factor is nonzero, or width*height*4
-# if it is zero (indicating a color movie).
-# An EOF indicates the end of the file; 
+# This uses the "VFile" to read and display a "variety" of video formats.
 
 import sys
 

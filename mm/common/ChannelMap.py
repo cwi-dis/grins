@@ -6,6 +6,7 @@ from TextChannel import TextChannel
 from SoundChannel import SoundChannel
 from ImageChannel import ImageChannel
 from MovieChannel import MovieChannel
+from ShellChannel import ShellChannel
 
 channelmap = { \
 	'null': 	NullChannel, \
@@ -13,6 +14,7 @@ channelmap = { \
 	'sound':	SoundChannel, \
 	'image': 	ImageChannel, \
 	'movie': 	MovieChannel, \
+	'shell': 	ShellChannel, \
 	}
 
 channeltypes = ['null', 'text', 'image']

@@ -5,6 +5,8 @@
 
 ------------------------------ BUGS -------------------------------
 
+Auto-firing anchors on interior nodes don't work
+
 TextChannel init() doesn't set arm_node to None.
 
 block view calculates geometry wrong after sequence of zoom in -
