@@ -36,6 +36,8 @@ public:
 
 	static PyObject *SetOsWindow(PyObject *self, PyObject *args);
 	static PyObject *ShowInNewWindow(PyObject *self, PyObject *args);
+	
+	static PyObject *SetPositionAndSize(PyObject *self, PyObject *args);
 
 protected:
 	PlayerObject();
@@ -274,6 +276,29 @@ PlayerObject::ShowInNewWindow(PyObject *self, PyObject *args)
 	RETURN_NONE;
 }
 
+PyObject *
+PlayerObject::SetPositionAndSize(PyObject *self, PyObject *args)
+{
+	int x, y, h, w;
+	PNxPoint pos;
+	PNxSize size;
+	
+	if (!PyArg_ParseTuple(args, "(ii)(ii)", &x, &y, &h, &w))
+		return NULL;
+	pos.x = x;
+	pos.y = y;
+	size.cx = h;
+	size.cy = w;
+	
+	ExampleClientContext *pCC = ((PlayerObject*)self)->pContext;
+	if(pCC) {
+		ExampleSiteSupplier *ss=pCC->m_pSiteSupplier;
+		if (ss)
+			ss->SetOsWindowPosSize(pos, size);
+	}
+	RETURN_NONE;
+}
+
 static struct PyMethodDef PyRMPlayer_methods[] = {
 	{"OpenURL",PlayerObject::OpenURL,1}, 
 	{"Begin",PlayerObject::Begin,1}, 
@@ -288,6 +313,7 @@ static struct PyMethodDef PyRMPlayer_methods[] = {
 	{"SetVideoSurface",PlayerObject::SetPyVideoSurface,1},
 	{"SetOsWindow",PlayerObject::SetOsWindow,1}, // alias
 	{"ShowInNewWindow",PlayerObject::ShowInNewWindow,1}, // alias
+	{"SetPositionAndSize", PlayerObject::SetPositionAndSize, 1},
 	{NULL, 	NULL}
 	};
 
