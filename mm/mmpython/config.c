@@ -62,17 +62,17 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #include "patchlevel.h"
 
-#define VERSION "0.9.%d BETA (%s)"
+#define VERSION "0.9.%d (%s)"
 
 #ifdef __DATE__
 #define DATE __DATE__
 #else
-#define DATE ">= 27 Mar 1993"
+#define DATE ">= 29 Jul 1993"
 #endif
 
 #ifdef USE_STDWIN
 #ifdef macintosh
-#include ":::src:stdwin:H:stdwin.h"
+#include ":::stdwin:H:stdwin.h"
 #else /* !macintosh */
 #include "stdwin.h"
 #endif /* !macintosh */
@@ -141,7 +141,7 @@ donecalls()
 
 #ifdef MSDOS
 /* In MS-DOS, the delimiter is a semicolon */
-#define PYTHONPATH ".;C\\python\\lib"
+#define PYTHONPATH ".;..\\lib;\\python\\lib"
 #endif /* MSDOS */
 
 #ifndef PYTHONPATH
@@ -294,6 +294,27 @@ extern void initmd5();
 #endif
 #ifdef USE_ARRAY
 extern void initarray();
+#endif
+#ifdef USE_XT
+extern void initXt();
+#endif
+#ifdef USE_XAW
+extern void initXaw();
+#endif
+#ifdef USE_XM
+extern void initXm();
+#endif
+#ifdef USE_GLX
+extern void initGlx();
+#endif
+#ifdef USE_HTML
+extern void initHTML();
+#endif
+#ifdef USE_MALLOC
+extern void initmalloc();
+#endif
+#ifdef USE_XLIB
+extern void initXlib();
 #endif
 /* -- ADDMODULE MARKER 1 -- */
 extern void initmm();
@@ -453,10 +474,38 @@ struct {
        {"array", initarray},
 #endif
 
+#ifdef USE_XT
+	{"Xt", initXt},
+#endif
+
+#ifdef USE_XAW
+	{"Xaw", initXaw},
+#endif
+
+#ifdef USE_XM
+	{"Xm", initXm},
+#endif
+
+#ifdef USE_GLX
+	{"Glx", initGlx},
+#endif
+
+#ifdef USE_HTML
+	{"HTML", initHTML},
+#endif
+
+#ifdef USE_MALLOC
+       {"malloc", initmalloc},
+#endif
+
+#ifdef USE_XLIB
+       {"Xlib", initXlib},
+#endif
+
 /* -- ADDMODULE MARKER 2 -- */
-{"mm", initmm},
-{"moviechannel", initmoviechannel},
-{"soundchannel", initsoundchannel},
+	{"mm", initmm},
+	{"moviechannel", initmoviechannel},
+	{"soundchannel", initsoundchannel},
 
 	{0,		0}		/* Sentinel */
 };

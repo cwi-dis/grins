@@ -9,7 +9,7 @@ error = 'Channel.error'
 
 from ChannelWMdeps import ChannelWM, ChannelWindowWM, _ChannelThreadWM
 
-channel_device = 0x4001
+channel_device = 1
 
 # arm states
 AIDLE = 1
@@ -728,6 +728,8 @@ class _ChannelThread(_ChannelThreadWM):
 			print 'Warning: cannot import mm, so channel ' + \
 				  `self._name` + ' remains hidden'
 			return 0
+		self._player.toplevel.main.setmmcallback(self._deviceno & 0x3f,
+			  self._mmcallback)
 		self.do_show_wmdep()
 		return 1
 
@@ -737,6 +739,8 @@ class _ChannelThread(_ChannelThreadWM):
 		if self.threads:
 			self.threads.close()
 			self.threads = None
+		self._player.toplevel.main.setmmcallback(self._deviceno & 0x3f,
+			  None)
 		self.do_hide_wmdep()
 
 	def play(self, node):
@@ -792,6 +796,9 @@ class _ChannelThread(_ChannelThreadWM):
 				raise error, 'armdone event when not arming'
 		else:
 			raise error, 'unrecognized event '+`value`
+
+	def _mmcallback(self, val):
+		self.callback(0, 0, 0, val)
 
 class ChannelThread(_ChannelThread, Channel):
 	def init(self, name, attrdict, scheduler, ui):
