@@ -71,9 +71,10 @@ def findfont(fontname, pointsize):
 	return fontobj	
 
 def delfonts():
+	global _fontcache
 	for key in _fontcache.keys():
 		_fontcache[key].close()
-
+	_fontcache = {}
 
 # The methods of the font_object are:
 #	close()
@@ -107,16 +108,18 @@ class _Font:
 
 	# Delete the associated OS font
 	def __del__(self):
-		if self._hfont != None:
-			self.close()
+		if self._hfont and Sdk:
+			Sdk.DeleteObject(self._hfont)
+
 	# Returns the handle to this font
 	def handle(self):
 		return self._hfont
 
 	# Close this object and release resources
 	def close(self):
-		Sdk.DeleteObject(self._hfont)
-		self._hfont = 0
+		if self._hfont and Sdk:
+			Sdk.DeleteObject(self._hfont)
+			self._hfont = 0
 
 	# Returns true if this is closed
 	def is_closed(self):
