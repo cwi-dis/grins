@@ -23,7 +23,6 @@ methods also.
 __version__ = "$Id$"
 
 import windowinterface, win32api, win32con
-from win32modules import cmifex2
 
 class AttrEditorDialog:
 	def __init__(self, title, attriblist):
@@ -81,7 +80,7 @@ class AttrEditorDialog:
 		max = 0
 
 
-		rsbw = cmifex2.GetStringLength(self.__window._hWnd,'Reset') + 10
+		rsbw = windowinterface.GetStringLength(self.__window._wnd,'Reset') + 10
 
 		ls = [('Cancel', (self.cancel_callback, ())),
 			 ('Restore', (self.restore_callback, ())),
@@ -93,7 +92,7 @@ class AttrEditorDialog:
 		for item in ls:
 			label = item[0]
 			if label:
-				length = cmifex2.GetStringLength(self.__window._hWnd,label)
+				length = windowinterface.GetStringLength(self.__window._wnd,label)
 			hbw = hbw + length + 15
 
 		if hbw>550:
@@ -107,7 +106,7 @@ class AttrEditorDialog:
 			label = a.getlabel()
 			if (label==None or label==''):
 				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
+			length = windowinterface.GetStringLength(self.__window._wnd,label)
 			if length>butw:
 				butw = length
 		butw = butw + 10
@@ -147,14 +146,14 @@ class AttrEditorDialog:
 					      left = butw, top = tp, right = max/2-rsbw-10, bottom = 20)
 			tp = tp + 25
 
-		cmifex2.ResizeWindow(w._hWnd, self._w, self._h)
-		self.__window._hWnd.HookKeyStroke(self.helpcall,104)
+		windowinterface.ResizeWindow(w._wnd, self._w, self._h)
+		self.__window._wnd.HookKeyStroke(self.helpcall,104)
 		w.show()
 
 
 	def helpcall(self, params=None):
 		import Help
-		Help.givehelp(self.__window._hWnd, 'Channel/Node Attributes Dialog')
+		Help.givehelp(self.__window._wnd, 'Channel/Node Attributes Dialog')
 
 
 	def close(self):
@@ -239,7 +238,7 @@ class AttrEditorDialogField:
 			w = form.SubWindow(top = top, bottom = bottom,
 					   left = left, right = right)
 
-			wt = cmifex2.GetStringLength(w._hWnd,'Browser...')+10
+			wt = windowinterface.GetStringLength(w._wnd,'Browser...')+10
 
 			brwsr = w.Button('Browser...',
 					 (self.browser_callback, ()),

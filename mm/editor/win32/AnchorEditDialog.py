@@ -1,7 +1,7 @@
 __version__ = "$Id$"
 
-#import windowinterface
-import windowinterface, cmifex2, win32api, win32con
+import windowinterface
+import win32api, win32con
 
 class AnchorEditorDialog:
 	def __init__(self, title, typelabels, list, initial):
@@ -59,7 +59,7 @@ class AnchorEditorDialog:
 			label = item[0]
 			if (label==None or label==''):
 				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
+			length = windowinterface.GetStringLength(self.__window._wnd,label)
 			if length>vbw:
 				vbw = length
 		vbw = vbw + 30
@@ -76,10 +76,10 @@ class AnchorEditorDialog:
 			label = item
 			if (label==None or label==''):
 				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
+			length = windowinterface.GetStringLength(self.__window._wnd,label)
 			if length>ebw:
 				ebw = length
-		ebw = ebw + cmifex2.GetStringLength(self.__window._hWnd,'Type: ')+30
+		ebw = ebw + windowinterface.GetStringLength(self.__window._wnd,'Type: ')+30
 		max = ebw
 
 		ls = [('Cancel', (self.cancel_callback, ())),
@@ -93,7 +93,7 @@ class AnchorEditorDialog:
 			label = item[0]
 			if (label==None or label==''):
 				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
+			length = windowinterface.GetStringLength(self.__window._wnd,label)
 			hbw = hbw + length + 15
 
 		if max<hbw:
@@ -106,7 +106,7 @@ class AnchorEditorDialog:
 			label = item
 			if (label==None or label==''):
 				label=' '
-			length = cmifex2.GetStringLength(self.__window._hWnd,label)
+			length = windowinterface.GetStringLength(self.__window._wnd,label)
 			if length>sbw:
 				sbw = length
 		sbw = sbw + 10
@@ -150,14 +150,14 @@ class AnchorEditorDialog:
 			None, 'Id:', list, initial, (self.anchor_callback, ()),
 			bottom = btm, left = 3, right = max, top=3,
 			enterCallback = (self.id_callback, ()))
-		cmifex2.ResizeWindow(w._hWnd, self._w, self._h)
-		self.__window._hWnd.HookKeyStroke(self.helpcall,104)
+		windowinterface.ResizeWindow(w._wnd, self._w, self._h)
+		self.__window._wnd.HookKeyStroke(self.helpcall,104)
 		w.show()
 
 
 	def helpcall(self, params=None):
 		import Help
-		Help.givehelp(self.__window._hWnd, 'Edit Anchor Dialog')
+		Help.givehelp(self.__window._wnd, 'Edit Anchor Dialog')
 
 
 	def close(self):
@@ -219,10 +219,10 @@ class AnchorEditorDialog:
 
 	def selection_setselection(self, pos):
 		self.__anchor_browser.selectitem(pos)
-		str = cmifex2.Get(self.__anchor_browser._list)
+		str = windowinterface.GetString(self.__anchor_browser._list)
 		#print str
 		if str!='':
-			cmifex2.SetCaption(self.__anchor_browser._edit,str)
+			windowinterface.SetCaption(self.__anchor_browser._edit,str)
 
 	def selection_getselection(self):
 		return self.__anchor_browser.getselected()
