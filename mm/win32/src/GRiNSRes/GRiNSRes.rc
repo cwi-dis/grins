@@ -1568,6 +1568,17 @@ BEGIN
     EDITTEXT        IDC_KEY,54,44,152,14,ES_AUTOHSCROLL
 END
 
+IDD_PROGRESS DIALOG DISCARDABLE  0, 0, 186, 62
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Progress..."
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Cancel",IDCANCEL,129,41,50,14
+    LTEXT           "Static",IDC_MESSAGE,7,7,172,8
+    CONTROL         "Progress1",IDC_PROGRESS1,"msctls_progress32",PBS_SMOOTH | 
+                    WS_DISABLED | WS_BORDER,7,22,172,11
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1583,6 +1594,14 @@ BEGIN
         RIGHTMARGIN, 206
         TOPMARGIN, 7
         BOTTOMMARGIN, 84
+    END
+
+    IDD_PROGRESS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 55
     END
 END
 #endif    // APSTUDIO_INVOKED
