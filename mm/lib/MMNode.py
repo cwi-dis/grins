@@ -15,6 +15,7 @@ alltypes = leaftypes + interiortypes
 class MMNodeContext:
 	#
 	def init(self, nodeclass):
+		##_stat('init')
 		self.nodeclass = nodeclass
 		self.nextuid = 1
 		self.uidmap = {}
@@ -26,6 +27,7 @@ class MMNodeContext:
 		return self
 	#
 	def __repr__(self):
+		##_stat('__repr__')
 		return '<MMNodeContext instance, channelnames=' \
 			+ `self.channelnames` + '>'
 	#
