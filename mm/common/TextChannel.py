@@ -221,7 +221,7 @@ def fix_anchorlist(node, taglist):
 		if not anchor_types.has_key(name):
 			print 'Add text anchor to anchorlist:', name
 			anchors.append(name, ATYPE_NORMAL, [])
-			anchor_types[name] = ATYPE_NORMA
+			anchor_types[name] = ATYPE_NORMAL
 		taglist[i] = taglist[i] + (anchor_types[name],)
 	if anchors <> oldanchors:
 		print 'New anchors:', anchors
