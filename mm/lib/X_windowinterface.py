@@ -115,7 +115,7 @@ def _setcursor(form, cursor):
 		toplevel._win_lock.release()
 
 # three menu utility functions
-def _menu_callback(widget, (func, arg), call_data):
+def _generic_callback(widget, (func, arg), call_data):
 	apply(func, arg)
 
 def _create_menu(menu, list, acc = None):
@@ -153,8 +153,8 @@ def _create_menu(menu, list, acc = None):
 				attrs['acceleratorText'] = accelerator
 			button = menu.CreateManagedWidget('menuLabel',
 						Xm.PushButtonGadget, attrs)
-			button.AddCallback('activateCallback', _menu_callback,
-					   callback)
+			button.AddCallback('activateCallback',
+					   _generic_callback, callback)
 
 class _DummyLock:
 	def acquire(self):
@@ -1036,9 +1036,13 @@ class _Window:
 			d.drawbox(box)
 		d.render()
 		self._rb_curdisp = d
-		self._rb_dialog = Dialog(None, msg, 0, 0,
-				[('Done', (self._rb_done, ())),
-				 ('Cancel', (self._rb_cancel, ()))])
+##		self._rb_dialog = Dialog(None, msg, 0, 0,
+##				[('Done', (self._rb_done, ())),
+##				 ('Cancel', (self._rb_cancel, ()))])
+		self._rb_dialog = showmessage(
+			msg, type = 'message', grab = 0,
+			callback = (self._rb_done, ()),
+			cancelCallback = (self._rb_cancel, ()))
 		self._rb_callback = callback
 		form = self._form
 		form.AddEventHandler(X.ButtonPressMask, FALSE,
@@ -2532,16 +2536,13 @@ def mainloop():
 def canceltimer(id):
 	event.canceltimer(id)
 
-##def showmessage(text):
-##	dummy = Dialog(None, text, TRUE, FALSE, ['Done'])
-
 class _Question:
 	def __init__(self, text):
 		self.looping = FALSE
 		self.answer = None
-		self.dialog = Dialog(None, text, TRUE, FALSE,
-				[('Yes', (self.callback, (TRUE,))),
-				 ('No', (self.callback, (FALSE,)))])
+		showmessage(text, type = 'question',
+			    callback = (self.callback, (TRUE,)),
+			    cancelCallback = (self.callback, (FALSE,)))
 
 	def run(self):
 		try:
@@ -4014,6 +4015,7 @@ class Window(_WindowHelpers, _MenuSupport):
 			self._form = toplevel._main.CreateFormDialog(
 				'grabDialog', attrs)
 		else:
+			wattrs['iconName'] = title
 			self._shell = toplevel._main.CreatePopupShell(Name,
 				Xt.ApplicationShell, wattrs)
 			self._form = self._shell.CreateManagedWidget(
@@ -4137,7 +4139,11 @@ class Window(_WindowHelpers, _MenuSupport):
 
 	def settitle(self, title):
 		if self._title != title:
-			self._form.dialogTitle = title
+			try:
+				self._shell.title = title
+				self._shell.iconName = title
+			except AttributeError:
+				self._form.dialogTitle = title
 			self._title = title
 
 	def getgeometry(self):
@@ -4180,34 +4186,57 @@ def Dialog(title, prompt, grab, vertical, list):
 	w.show()
 	return w
 
-def showmessage(text, type = 'message', grab = 1, callback = None,
-		cancelCallback = None):
-	if type == 'error':
-		func = toplevel._main.CreateErrorDialog
-	elif type == 'warning':
-		func = toplevel._main.CreateWarningDialog
-	elif type == 'information':
-		func = toplevel._main.CreateInformationDialog
-	elif type == 'question':
-		func = toplevel._main.CreateQuestionDialog
-	else:
-		func = toplevel._main.CreateMessageDialog
-	if grab:
-		dialogStyle = Xmd.DIALOG_FULL_APPLICATION_MODAL
-	else:
-		dialogStyle = Xmd.DIALOG_MODELESS
-	w = func('message', {'messageString': text,
-			     'dialogStyle': dialogStyle,
-			     'visual': toplevel._default_visual,
-			     'depth': toplevel._default_visual.depth,
-			     'colormap': toplevel._default_colormap})
-	w.MessageBoxGetChild(Xmd.DIALOG_HELP_BUTTON).UnmanageChild()
-	if type == 'question':
-		if cancelCallback:
-			w.AddCallback('cancelCallback', _generic_callback,
-				      cancelCallback)
-	else:
-		w.MessageBoxGetChild(Xmd.DIALOG_CANCEL_BUTTON).UnmanageChild()
-	if callback:
-		w.AddCallback('okCallback', _generic_callback, callback)
-	w.ManageChild()
+class showmessage:
+	def __init__(self, text, type = 'message', grab = 1, callback = None,
+		     cancelCallback = None, name = 'message',
+		     title = 'message'):
+		if type == 'error':
+			func = toplevel._main.CreateErrorDialog
+		elif type == 'warning':
+			func = toplevel._main.CreateWarningDialog
+		elif type == 'information':
+			func = toplevel._main.CreateInformationDialog
+		elif type == 'question':
+			func = toplevel._main.CreateQuestionDialog
+		else:
+			func = toplevel._main.CreateMessageDialog
+		if grab:
+			dialogStyle = Xmd.DIALOG_FULL_APPLICATION_MODAL
+		else:
+			dialogStyle = Xmd.DIALOG_MODELESS
+		self._grab = grab
+		w = func(name, {'messageString': text,
+				'title': title,
+				'dialogStyle': dialogStyle,
+				'resizePolicy': Xmd.RESIZE_NONE,
+				'visual': toplevel._default_visual,
+				'depth': toplevel._default_visual.depth,
+				'colormap': toplevel._default_colormap})
+		w.MessageBoxGetChild(Xmd.DIALOG_HELP_BUTTON).UnmanageChild()
+		if type == 'question' or cancelCallback:
+			w.AddCallback('cancelCallback',
+				      self._callback, cancelCallback)
+		else:
+			w.MessageBoxGetChild(Xmd.DIALOG_CANCEL_BUTTON).UnmanageChild()
+		w.AddCallback('okCallback', self._callback, callback)
+		w.AddCallback('destroyCallback', self._destroy, None)
+		w.ManageChild()
+		self._widget = w
+
+	def close(self):
+		if self._widget:
+			w = self._widget
+			self._widget = None
+			w.UnmanageChild()
+			w.DestroyWidget()
+
+	def _callback(self, widget, callback, call_data):
+		if not self._widget:
+			return
+		if callback:
+			apply(callback[0], callback[1])
+		if self._grab:
+			self.close()
+
+	def _destroy(self, widget, client_data, call_data):
+		self._widget = None
