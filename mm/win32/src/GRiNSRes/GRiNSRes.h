@@ -49,6 +49,7 @@
 #define IDD_NODE_INFO                   234
 #define IDC_DRAGMOVE                    237
 #define IDC_DRAGLINK                    238
+#define IDB_SPLASHPLAY                  243
 #define IDC_PLAY                        1001
 #define IDC_PAUSE                       1002
 #define IDC_PLAYER                      1010
@@ -176,7 +177,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        239
+#define _APS_NEXT_RESOURCE_VALUE        244
 #define _APS_NEXT_COMMAND_VALUE         32827
 #define _APS_NEXT_CONTROL_VALUE         1117
 #define _APS_NEXT_SYMED_VALUE           104
