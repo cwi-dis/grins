@@ -68,6 +68,9 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name vid2wm
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name grinspapi
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -253,6 +256,33 @@ Package=<4>
 ###############################################################################
 
 Project: "gear32sd"=..\ACCUSOFT\src\gear32sd.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "grinspapi"=..\COM\grinscomsvr\grinspapi.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name grinsproxy
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "grinsproxy"=..\COM\grinscomsvr\idl\grinsproxy.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
