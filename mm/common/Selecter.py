@@ -147,7 +147,7 @@ class Selecter:
 				else:
 					seeknode = None
 				sctx = self.scheduler.play(mini, seeknode, \
-					  END_STOP)
+					  None, END_STOP)
 				if not sctx:
 					dummy = self.killconflictingbags( \
 						  baglist)
@@ -215,21 +215,19 @@ class Selecter:
 			self.toplevel.setready()
 			dialogs.showmessage('Dangling hyperlink selected')
 			return 0
-		#if self.ui.play_all_bags:
-		#	seek_node = seek_node.FirstMiniDocument()
-		#else:
-		if 1:
-			while seek_node.GetType() == 'bag':
-				seek_node = choosebagitem(seek_node, 1)
-				if seek_node == None:
-					self.toplevel.setready()
-					return 0
+		while seek_node.GetType() == 'bag':
+			dest_aid = None
+			seek_node = choosebagitem(seek_node, 1)
+			if seek_node == None:
+				self.toplevel.setready()
+				return 0
 		baglist = self.findbaglist(seek_node)
 		baglist = self.killconflictingbags(baglist)
 		if not self.startbaglist(baglist[1:]):
 			return 0
 		mini, sctx, bag, parent = baglist[0]
-		new_sctx = self.scheduler.play(mini, seek_node, END_STOP)
+		new_sctx = self.scheduler.play(mini, seek_node, dest_aid, \
+			  END_STOP)
 		if not new_sctx:
 			dummy = self.killconflictingbags(baglist)
 			self.toplevel.setready()
@@ -257,7 +255,7 @@ class Selecter:
 			node = choosebagitem(bag, 0)
 			if node:
 				new_sctx = self.scheduler.play(node, \
-					  None, END_STOP)
+					  None, None, END_STOP)
 			else:
 ##				print 'bag_event: no node to play'
 				new_sctx = None
