@@ -11,6 +11,7 @@ if os.name == 'posix':
 	window = X_window
 elif os.name == 'mac':
 	sys.path.append("::lib")
+	sys.path.append("::mac")
 	import mac_window
 	window = mac_window
 # etc...
