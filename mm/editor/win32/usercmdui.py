@@ -30,7 +30,6 @@ from grinsRC import *
 
 # set starting id for buttons without resources
 idbegin=grinsRC._APS_NEXT_COMMAND_VALUE
-idend=idbegin
 
 # map from cmd classes to CommandUI instances
 class2ui={}
@@ -56,6 +55,7 @@ def get_cascade(id):
 	for c in casc2ui.keys():
 		if casc2ui[c]==ind:return c
 	
+idend=idbegin + len(casc2ui)*m
 
 class CommandUI:
 	def __init__(self,cmdcl,iduc=None):
