@@ -126,7 +126,7 @@ class TreeBuilder(xmllib.XMLParser):
 		self.__currentNode = self.__doc
 		self.__withinElement = 0
 		self.__stack = []
-	
+
 	def unknown_starttag(self, tag, attrs):
 		# XXX: hard code grins namespace for now
 		for name, value in attrs.items():
@@ -364,20 +364,20 @@ class SMILElement(Element):
 #############################################
 class SMILLayoutElement(SMILElement):
 	rwattrs = ('TYPE',)
-    def __init__(self, ownerDocument, nodeName='LAYOUT'):
-        SMILElement.__init__(self, ownerDocument, 'LAYOUT', nodeName)
+	def __init__(self, ownerDocument, nodeName='LAYOUT'):
+		SMILElement.__init__(self, ownerDocument, 'LAYOUT', nodeName)
 
-    def __setattr__(self, name, value):
-        if name in rwattrs:
-            self.setAttribute(name, value)
-        else:
-            return SMILElement.__setattr__(self, name, value)
+	def __setattr__(self, name, value):
+		if name in rwattrs:
+			self.setAttribute(name, value)
+		else:
+			return SMILElement.__setattr__(self, name, value)
 
-    def _get_Type(self):
-        return self.getAttribute('TYPE')
+	def _get_Type(self):
+		return self.getAttribute('TYPE')
 
-    def _set_Type(self,type):
-        self.setAttribute('TYPE',type)
+	def _set_Type(self,type):
+		self.setAttribute('TYPE',type)
 
 	def getResolved(self):
 		return 1
@@ -398,7 +398,7 @@ class SMILAnimation(SMILElement, ElementTargetAttributes, ElementTime, ElementTi
 	ADDITIVE_SUM = 1
 	ACCUMULATE_NONE = 0
 	ACCUMULATE_SUM  = 1
-	
+
 	def getAdditive(self):
 		return 0
 	def getAdditive(self, additive):
