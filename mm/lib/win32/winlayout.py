@@ -771,6 +771,10 @@ class LayoutWnd:
 		elif key == win32con.VK_UP: dy = -1
 		elif key == win32con.VK_RIGHT: dx = 1
 		elif key == win32con.VK_LEFT: dx = -1
+		elif key == win32con.VK_DELETE:
+			parent = self.GetParent()
+			if hasattr(parent, 'OnDelete'):
+				parent.OnDelete()
 		if dx or dy:
 			self._drawContext.moveSelectionBy(dx, dy)
 		return 1
