@@ -146,8 +146,7 @@ class ArcInfoDialog(windowinterface.MACDialog):
 		pos -- 0 <= pos < len(srclist) -- the requested position
 		"""
 		for i in range(2):
-			tp, h, rect = self._dialog.GetDialogItem(ITEMLIST_SRC[i])
-			ctl = h.as_Control()
+			ctl = self._dialog.GetDialogItemAsControl(ITEMLIST_SRC[i])
 			if i == pos:
 				ctl.SetControlValue(1)
 			else:
@@ -156,8 +155,7 @@ class ArcInfoDialog(windowinterface.MACDialog):
 	def src_getpos(self):
 		"""Return the current selection in the source list."""
 		for i in range(2):
-			tp, h, rect = self._dialog.GetDialogItem(ITEMLIST_SRC[i])
-			ctl = h.as_Control()
+			ctl = self._dialog.GetDialogItemAsControl(ITEMLIST_SRC[i])
 			if ctl.GetControlValue():
 				return i
 		raise 'No src position set?'
@@ -170,8 +168,7 @@ class ArcInfoDialog(windowinterface.MACDialog):
 		pos -- 0 <= pos < len(srclist) -- the requested position
 		"""
 		for i in range(2):
-			tp, h, rect = self._dialog.GetDialogItem(ITEMLIST_DST[i])
-			ctl = h.as_Control()
+			ctl = self._dialog.GetDialogItemAsControl(ITEMLIST_DST[i])
 			if i == pos:
 				ctl.SetControlValue(1)
 			else:
@@ -180,8 +177,7 @@ class ArcInfoDialog(windowinterface.MACDialog):
 	def dst_getpos(self):
 		"""Return the current selection in the destination list."""
 		for i in range(2):
-			tp, h, rect = self._dialog.GetDialogItem(ITEMLIST_DST[i])
-			ctl = h.as_Control()
+			ctl = self._dialog.GetDialogItemAsControl(ITEMLIST_DST[i])
 			if ctl.GetControlValue():
 				return i
 		raise 'No destination position set?'
