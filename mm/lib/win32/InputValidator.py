@@ -1,6 +1,7 @@
 import win32ui, win32con, win32api
 Sdk=win32ui.GetWin32Sdk()
 
+import string
 import fsm
 
 ###############################
@@ -14,7 +15,7 @@ class InputValidator:
 	# Return 0 to refuse it
 	# vk: the new input char as a virual key
 	# val: the string already in the edit box
-	def onKey(self, vk, val):
+	def onKey(self, vk, val, pos):
 		return 1
 
 	def isdigit(self,str,sep=''):
@@ -60,38 +61,59 @@ class IntTupleValidator(InputValidator):
 			return 's'
 		return 'null'
 
-	def isIntTuple(self, ch, val):
-		nval=val+ch
+	def isIntTuple(self, val):
 		self._fsm.reset(1)
-		for ch in nval:
+		for ch in val:
 			if not self._fsm.advance(self.inttuplefilter(ch),ch):
 				return 0
 		return 1
 
-	def onKey(self, vk, val):
+	def onKey(self, vk, val, pos):
 		charcode = Sdk.MapVirtualKey(vk,2)
+		# accept control chars
 		if charcode<32:return 1
-
-		if self.isIntTuple(chr(charcode), val):
+		
+		# accept anything if not at the end
+		if pos!=len(val): return 1
+		
+		nval=val+chr(charcode)
+		if self.isIntTuple(nval):
 			return 1
 		else:
 			win32api.MessageBeep(win32con.MB_ICONEXCLAMATION)
 			return 0
 
-# no bounds checking yet
 class ColorValidator(IntTupleValidator):
 	def __init__(self,sep=''):
-		tl=[ (1,2,'d'), (2,2,'d'), (2,3,'s'), (3,4,'d'), (4,4,'d'), (4,5,'s'), (5,5,'d') ]
+		ch=self.checkcolor
+		cl=self.clearbuf
+		tl=[ (1,2,'d'), (2,2,'d',ch), (2,3,'s',cl), (3,4,'d'), (4,4,'d',ch), 
+			(4,5,'s',cl), (5,5,'d',ch) ]
 		sm=fsm.FSM(tl,1)
 		IntTupleValidator.__init__(self,sep,sm)
 
-	def onKey(self, vk, val):
+	def onKey(self, vk, val, pos):
 		charcode = Sdk.MapVirtualKey(vk,2)
+		# accept control chars
 		if charcode<32:return 1
-
+		
+		# accept anything if not at the end
+		if pos!=len(val): return 1
+		
+		nval=val+chr(charcode)
 		if self.isalpha_en(val) and self.isvk_alpha_en(vk):
 			return 1
-		elif self.isIntTuple(chr(charcode), val):
+		elif self.isIntTuple(nval):
 			return 1
 		win32api.MessageBeep(win32con.MB_ICONEXCLAMATION)
 		return 0
+	
+	def checkcolor(self,str):
+		if string.atoi(str)>255:
+			return 0
+		return 1
+
+	def clearbuf(self,str):
+		self._fsm._input=''
+		return 1
+
