@@ -272,6 +272,11 @@ class TabPage:
 	def do_itemhit(self, item, event):
 		return 0	# To be overridden
 		
+	def call_optional_cb(self, field):
+		if hasattr(field, 'optioncb'):
+			self.save()
+			field.optioncb()
+		
 class MultiTabPage(TabPage):
 	def createwidget(self):
 		for f in self.fieldlist:
@@ -425,7 +430,7 @@ class ColorTabPage(SingleDefaultTabPage):
 			self.attreditor._enable_ok()
 			return 1
 		elif item == self.item0+self.ITEM_PICK:
-			self._select_color()
+			self._select_color(self.item0+self.ITEM_STRING)
 			return 1
 		return 0
 
@@ -438,9 +443,9 @@ class ColorTabPage(SingleDefaultTabPage):
 		value = self.fieldlist[0]._getvalueforpage()
 		self.attreditor._setlabel(self.item0+self.ITEM_STRING, value)
 
-	def _select_color(self):
+	def _select_color(self, stringitem):
 		import ColorPicker
-		value = self.attreditor._getlabel(self.item0+self.ITEM_STRING)
+		value = self.attreditor._getlabel(stringitem)
 		import string
 		rgb = string.split(string.strip(value))
 		if len(rgb) == 3:
@@ -463,8 +468,8 @@ class ColorTabPage(SingleDefaultTabPage):
 		if ok:
 			r, g, b = color
 			value = "%d %d %d"%((r>>8), (g>>8), (b>>8))
-			self.attreditor._setlabel(self.item0+self.ITEM_STRING, value)
-			self.attreditor._selectinputfield(self.item0+self.ITEM_STRING)
+			self.attreditor._setlabel(stringitem, value)
+			self.attreditor._selectinputfield(stringitem)
 		
 class OptionTabPage(SingleTabPage):
 	attrs_on_page=None
@@ -503,7 +508,7 @@ class OptionTabPage(SingleTabPage):
 		self._option.setitems(list, value)
 
 	def _option_click(self):
-		pass
+		self.call_optional_cb(self.fieldlist[0])
 
 class ChannelTabPage(OptionTabPage):
 	attrs_on_page=['channel']
@@ -523,6 +528,7 @@ class ChannelTabPage(OptionTabPage):
 		return OptionTabPage.do_itemhit(self, item, event)
 
 	def _option_click(self):
+		self.call_optional_cb(self.fieldlist[0])
 		self._fixbutton()
 		
 	def update(self):
@@ -727,6 +733,7 @@ class ImageConversionTabPage(MultiTabPage):
 			self.attreditor._togglebutton(item)
 			return 1
 		elif item-self.item0 == self.ITEM_QUALITY:
+			self.call_optional_cb(self.fieldlist[1])
 			return 1
 		return 0
 		
@@ -807,8 +814,10 @@ class ConversionTabPage(MultiDictTabPage):
 
 	def do_itemhit(self, item, event):
 		if item-self.item0 == self.ITEM_AUDIOTYPE:
+			self.call_optional_cb(self._attr_to_field['project_audiotype'])
 			return 1
 		elif item-self.item0 == self.ITEM_VIDEOTYPE:
+			self.call_optional_cb(self._attr_to_field['project_videotype'])
 			return 1
 		elif item-self.item0 in self._items_on_page:
 			# The rest are all toggle buttons
@@ -912,6 +921,7 @@ class GeneralTabPage(MultiTabPage):
 		if item == self.item0+self.ITEM_NODENAME:
 			return 1
 		elif item == self.item0+self.ITEM_CHANNEL:
+			self.call_optional_cb(self.fieldlist[1])
 			self._fixbutton()
 			return 1
 		elif item == self.item0+self.ITEM_CHANNELPROPS:
@@ -919,6 +929,7 @@ class GeneralTabPage(MultiTabPage):
 			return 1
 		elif item == self.item0+self.ITEM_NODETYPE:
 			# popup
+			self.call_optional_cb(self.fieldlist[2])
 			return 1
 		return 0
 		
@@ -976,6 +987,7 @@ class ChGeneralTabPage(MultiTabPage):
 		if item == self.item0+self.ITEM_CHNAME:
 			return 1
 		elif item == self.item0+self.ITEM_CHTYPE:
+			self.call_optional_cb(self.fieldlist[1])
 			return 1
 		elif item == self.item0+self.ITEM_TITLE:
 			return 1
@@ -1044,11 +1056,13 @@ class SystemPropertiesTabPage(MultiTabPage):
 		
 	def do_itemhit(self, item, event):
 		if item == self.item0+self.ITEM_BITRATE:
+			self.call_optional_cb(self.fieldlist[0])
 			return 1
 		elif item-self.item0 in self.ILIST_CAPTION:
 			self.do_radio(item-self.item0, self.ILIST_CAPTION)
 			return 1
 		elif item == self.item0+self.ITEM_LANGUAGE:
+			self.call_optional_cb(self.fieldlist[2])
 			return 1
 		elif item-self.item0 in self.ILIST_OVERDUB_CAPTION:
 			self.do_radio(item-self.item0, self.ILIST_OVERDUB_CAPTION)
@@ -1147,7 +1161,7 @@ class SystemPropertiesPrefTabPage(SystemPropertiesTabPage):
 	ILIST_CAPTION=(ITEM_CAPTION_OFF, ITEM_CAPTION_ON)
 	ILIST_OVERDUB_CAPTION=(ITEM_OVERDUB_CAPTION_OVERDUB, ITEM_OVERDUB_CAPTION_CAPTION)
 
-class TransitionTabPage(MultiDictTabPage):
+class TransitionTabPage(MultiDictTabPage, ColorTabPage):
 	TAB_LABEL='Transition'
 	
 	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_TRANSITION
@@ -1177,42 +1191,15 @@ class TransitionTabPage(MultiDictTabPage):
 
 	def do_itemhit(self, item, event):
 		if item-self.item0 == self.item0+self.ITEM_TYPE:
+			self.call_optional_cb(self._attr_to_field['tag'])
 			return 1
 		elif item-self.item0 in self._items_on_page:
 			# text field
 			return 1
 		elif item-self.item0 == self.ITEM_PICK:
-			self._select_color()
+			self._select_color(self.item0+self.ITEM_COLOR)
 			return 1
 		return 0
-		
-	def _select_color(self):
-		import ColorPicker
-		value = self.attreditor._getlabel(self.item0+self.ITEM_COLOR)
-		import string
-		rgb = string.split(string.strip(value))
-		if len(rgb) == 3:
-			r = g = b = 0
-			try:
-				r = string.atoi(rgb[0])
-				g = string.atoi(rgb[1])
-				b = string.atoi(rgb[2])
-			except ValueError:
-				pass
-			if r > 255: r = 255
-			if g > 255: g = 255
-			if b > 255: b = 255
-			if r < 0: r = 0
-			if g < 0: g = 0
-			if b < 0: b = 0
-		else:
-			r = g = b = 0
-		color, ok = ColorPicker.GetColor("Select color", ( (r|r<<8), (g|g<<8), b|b<<8))
-		if ok:
-			r, g, b = color
-			value = "%d %d %d"%((r>>8), (g>>8), (b>>8))
-			self.attreditor._setlabel(self.item0+self.ITEM_COLOR, value)
-			self.attreditor._selectinputfield(self.item0+self.ITEM_COLOR)
 
 	def update(self):
 		for attr, item in self._attr_to_item.items():
@@ -1276,9 +1263,11 @@ class WipeTabPage(MultiTabPage):
 		
 	def do_itemhit(self, item, event):
 		if item == self.item0+self.ITEM_TYPE:
+			self.call_optional_cb(self.fieldlist[0])
 			return 1
 		elif item == self.item0+self.ITEM_DIRECTION:
 			# popup
+			self.call_optional_cb(self.fieldlist[1])
 			return 1
 		return 0
 		
@@ -1296,6 +1285,52 @@ class WipeTabPage(MultiTabPage):
 		value = self._directionpopup.getselectvalue()
 		self.fieldlist[1]._savevaluefrompage(value)
 
+class FadeoutTabPage(MultiTabPage, ColorTabPage):
+	TAB_LABEL='Fadeout'
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_FADEOUT
+	ITEM_GROUP=1
+	ITEM_FADEOUT=2
+	ITEM_BEGIN=4
+	ITEM_DURATION=6
+	ITEM_COLOR=8
+	ITEM_COLORPICK=9
+	N_ITEMS=9
+	_attr_to_item = {
+		'fadeouttime': ITEM_BEGIN,
+		'fadeoutduration': ITEM_DURATION,
+		'fadeoutcolor': ITEM_COLOR,
+	}
+	attrs_on_page = ['fadeout', 'fadeouttime', 'fadeoutduration', 'fadeoutcolor']
+	_items_on_page = _attr_to_item.values()
+	
+	def do_itemhit(self, item, event):
+		if item == self.item0+self.ITEM_FADEOUT:
+			self.attreditor._togglebutton(self.item0+self.ITEM_FADEOUT)
+		elif item == self.item0+self.ITEM_COLORPICK:
+			self._select_color(self.item0+self.ITEM_COLOR)
+		elif item-self.item0 in self._items_on_page:
+			return 1
+		return 0
+		
+	def update(self):
+		value = self.fieldlist[0]._getvalueforpage()
+		self.attreditor._setbutton(self.item0+self.ITEM_FADEOUT, (value=='on'))
+		for field in self.fieldlist[1:]:
+			attr = field.getname()
+			item = self._attr_to_item[attr]
+			value = field._getvalueforpage()
+			self.attreditor._setlabel(self.item0+item, value)
+
+	def save(self):
+		value = self.attreditor._getbutton(self.item0+self.ITEM_FADEOUT)
+		self.fieldlist[0]._savevaluefrompage(['off', 'on'][value])
+		for field in self.fieldlist[1:]:
+			attr = field.getname()
+			item = self._attr_to_item[attr]
+			value = self.attreditor._getlabel(self.item0+item)
+			field._savevaluefrompage(value)
+		
 class AreaTabPage(MultiDictTabPage):
 	"""Not useable on its own: subclassed further down"""
 			
@@ -1423,6 +1458,12 @@ class ChannelAreaTabPage(AreaTabPage):
 		self._unitspopup = self.attreditor._window.SelectWidget(self.item0+self.ITEM_UNITS, [], None)
 		return rv
 		
+	def do_itemhit(self, item, event):
+		if item-self.item0 == ITEM_UNITS:
+			self.call_optional_cb(self._attr_to_field['units'])
+			return 1
+		return AreaTabPage.do_itemhit(self, item, event)
+		
 	def update(self):
 		value = self._attr_to_field['units']._getvalueforpage()
 		list = self._attr_to_field['units'].getoptions()
@@ -1533,6 +1574,7 @@ MULTI_ATTR_CLASSES = [
 	ClipTabPage,
 	UploadTabPage,
 	WipeTabPage,
+	FadeoutTabPage,
 ]
 #
 # List of classes handling a generic page for a single attribute.
