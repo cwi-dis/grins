@@ -205,7 +205,7 @@ def converttextfile(u, dstdir, file, node):
 		import macfs
 		import macostools
 		fss = macfs.FSSpec(fullpath)
-		fss.SetCreatorType('PNst', 'PNRM')
+		fss.SetCreatorType('PNst', 'PNRA')
 		macostools.touched(fss)
 	return file
 
