@@ -27,6 +27,7 @@ error = 'Scheduler.error'
 
 class SchedulerContext:
 	def __init__(self, parent, node, seeknode):
+		self.queue = []
 		self.active = 1
 		self.parent = parent
 		self.srdict = {}
@@ -465,7 +466,9 @@ class SchedulerContext:
 				if debugevents: print 'not allowed to start',self.parent.timefunc()
 				srdict = pnode.gensr_child(node, runchild = 0, curtime = self.parent.timefunc())
 				self.srdict.update(srdict)
-				self.parent.event(self, (SR.SCHED_DONE, node), timestamp)
+				ev = (SR.SCHED_DONE, node)
+				if debugevents: print 'trigger: queueing',SR.ev2string(ev), timestamp, self.parent.timefunc()
+				self.parent.event(self, ev, timestamp)
 				return
 		# if node is playing (or not stopped), must terminate it first
 		if node.playing not in (MMStates.IDLE, MMStates.PLAYED):
@@ -559,7 +562,9 @@ class SchedulerContext:
 			node.stopplay(timestamp)
 ##			self.sched_arcs(node, 'begin', timestamp=timestamp)
 ##			self.sched_arcs(node, 'end', timestamp=timestamp)
-			self.parent.event(self, (SR.SCHED_DONE, node), timestamp)
+			ev = (SR.SCHED_DONE, node)
+			if debugevents: print 'trigger: queueing(2)',SR.ev2string(ev), timestamp, self.parent.timefunc()
+			self.parent.event(self, ev, timestamp)
 
 	def gototime(self, node, gototime, timestamp, path = None):
 		# XXX trigger syncarcs that should go off after gototime?
@@ -623,7 +628,7 @@ class SchedulerContext:
 				self.sched_arcs(node, 'begin', timestamp = resolved)
 		return
 
-	def do_terminate(self, node, timestamp, fill = 'remove', cancelarcs = 0):
+	def do_terminate(self, node, timestamp, fill = 'remove', cancelarcs = 0, chkevent = 1):
 		if debugevents: print 'do_terminate',node,timestamp,fill,self.parent.timefunc()
 		if debugdump: self.parent.dump()
 		for arc in node.durarcs + MMAttrdefs.getattr(node, 'endlist'):
@@ -661,13 +666,14 @@ class SchedulerContext:
 		self.flushqueue()
 		self.parent.paused = paused
 		ev = (SR.SCHED_STOPPING, node)
-		if self.srdict.has_key(ev):
-			for q in self.parent.runqueues[PRIO_INTERN]:
+		if chkevent and self.srdict.has_key(ev):
+			for q in self.queue + self.parent.runqueues[PRIO_INTERN]:
 				if q[:3] == (self, ev, 0):
 					# already queued
 					break
 			else:
 				# not yet queued
+				if debugevents: print 'queueing',SR.ev2string(ev), timestamp, self.parent.timefunc()
 				self.parent.event(self, ev, timestamp)
 		if fill == 'remove':
 			ev = (SR.SCHED_STOP, node)
@@ -692,10 +698,10 @@ class SchedulerContext:
 	def flushqueue(self):
 		if debugevents: print 'flushqueue',self.parent.timefunc()
 		while 1:
-			queue = self.parent.selectqueue()
-			if not queue:
+			self.queue = self.parent.selectqueue()
+			if not self.queue:
 				break
-			for action in queue:
+			for action in self.queue:
 				if not self.parent.playing:
 					break
 				ts = None
@@ -703,6 +709,7 @@ class SchedulerContext:
 					ts = action[3]
 					action = action[:3]
 				self.parent.runone(action, ts)
+		self.queue = []
 
 	def freeze_play(self, node, timestamp = None):
 		if debugevents: print 'freeze_play',`node`,self.parent.timefunc()
@@ -1163,9 +1170,9 @@ class Scheduler(scheduler):
 					return
 				if arg.GetFill() == 'remove':
 					for ch in arg.GetSchedChildren():
-						sctx.do_terminate(ch, timestamp)
+						sctx.do_terminate(ch, timestamp, chkevent = 0)
 				else:
-					sctx.do_terminate(arg, timestamp, fill = arg.GetFill())
+					sctx.do_terminate(arg, timestamp, fill = arg.GetFill(), chkevent = 0)
 				adur = arg.calcfullduration()
 				if arg.fullduration is None or adur is None or adur < 0:
 					sctx.sched_arcs(arg, 'end', timestamp=timestamp)
