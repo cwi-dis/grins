@@ -1110,7 +1110,7 @@ class MMChannelTree:
 	# WORKING HERE (mjvdg) working here
 	# This is currently failing when I load the bridge demo with the temporal view.
 
-	def getsubregions(self, chan):
+	def getsubregions(self, chan, all=0):
 		# Returns a list of all the sub-regions of a certain channel (which could be a region).
 		if type(chan) is not type(''):
 			chan = chan.name
@@ -1118,7 +1118,7 @@ class MMChannelTree:
 		if self.subchans.has_key(chan):
 			kids = self.subchans[chan]
 			for i in kids:
-				if i.get('type') =='layout':
+				if i.get('type') =='layout' or all:
 					return_me.append(i)
 			return return_me
 		else:
@@ -1153,13 +1153,14 @@ class MMChannelTree:
 		for top in self.top_levels:
 			csstop = resolver.getCssObj(top)
 			csstop.updateAll()
+			#csstop.dump()
 		return resolver
 
 	def __appendCssRegions(self, resolver, regarg, cssregarg):
 		blackhole = self.__ctx.cssResolver
 		subregs = self.getsubregions(regarg.name)
 		for reg in subregs:
-			cssreg = resolver.newRegion(reg)	
+			cssreg = resolver.newRegion(reg)
 			cssreg.copyRawAttrs(blackhole.getCssObj(reg))
 			cssreg.link(cssregarg)
 			self.__appendCssRegions(resolver, reg, cssreg)
@@ -1178,6 +1179,7 @@ class MMChannelTree:
 					reg = mmchan.GetLayoutChannel()
 					csssubreg.link(resolver.getCssObj(reg))
 					csssubreg.media.link(csssubreg)
+			self.__appendCssNodes(resolver, node)
 
 	def __calc1(self):
 		import ChannelMap
