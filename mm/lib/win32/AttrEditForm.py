@@ -72,11 +72,15 @@ class AttrCtrl:
 		if not self._initctrl: return
 		if not hasattr(self._wnd,'_attrinfo'): return
 		infoc=self._wnd._attrinfo
-		hd=self._attr.gethelpdata()
-		if hd[1] and self.want_default_help:
-			infoc.settext("%s (leave empty for %s)"%(hd[2], hd[1]))
+		try:
+			hd = self._attr.gethelpdata()
+		except:
+			print 'gethelpdata on', self._attr, 'failed'
 		else:
-			infoc.settext(hd[2])
+			if hd[1] and self.want_default_help:
+				infoc.settext("%s (leave empty for %s)"%(hd[2], hd[1]))
+			else:
+				infoc.settext(hd[2])
 	
 	def getcurrent(self):
 		return self._attr.getcurrent()
@@ -2258,13 +2262,7 @@ class AnchorlistPage(LayoutPage):
 		except IOError, arg:
 ##			print 'failed to retrieve',url
 			return
-		from win32ig import win32ig
-		try:
-			img = win32ig.load(f)
-		except error:
-##			print 'failed to load',f
-			return
-		#self._layoutctrl.SetBkImg(img)
+		self._layoutctrl.setImage(f, fit='fill', mediadisplayrect = None)
 		
 ############################
 # Base class for media renderers
