@@ -1398,9 +1398,15 @@ class _Window:
 		return x, y, w, h
 
 	def pop(self):
+		if debug: print `self`+'.pop()'
 		if self.is_closed():
 			raise error, 'window already closed'
-		self._parent_window.pop()
+# The following statement was commented out because it had the
+# undesirable effect that when the second of two subwindows was
+# popped, the first disappeared under its parent window.  It may be
+# that the current situation also has undesirable side effects, but I
+# haven't seen them yet.  --sjoerd
+##		self._parent_window.pop()
 		if toplevel._win_lock:
 			toplevel._win_lock.acquire()
 		gl.winset(self._window_id)
