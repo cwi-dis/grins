@@ -371,7 +371,8 @@ class AnchorlistCtrl(AttrCtrl):
 		self._rename = components.Button(wnd, grinsRC.IDC_RENAME)
 		self._delete = components.Button(wnd, grinsRC.IDC_DELETE)
 		self._link = components.Button(wnd, grinsRC.IDC_LINK)
-		self._type = components.ComboBox(wnd, grinsRC.IDC_ATYPE)
+##		self._type = components.ComboBox(wnd, grinsRC.IDC_ATYPE)
+		self._type = components.CheckButton(wnd, grinsRC.IDC_ATYPE)
 		self._xywh = []		# x,y,w,h coordinates
 		for i in range(2,2+4):
 			self._xywh.append(components.Edit(wnd, getattr(grinsRC, 'IDC_1%d' % i)))
@@ -394,9 +395,10 @@ class AnchorlistCtrl(AttrCtrl):
 		self.__anchorlinks = self._attr.getcurrent() or {}
 		self._wnd.HookCommand(self.OnList, grinsRC.IDC_ALIST)
 		self._type.attach_to_parent()
-		self._type.resetcontent()
-		self._type.setoptions(AnchorDefs.TypeLabels)
-		self._type.setcursel(None)
+##		self._type.resetcontent()
+##		self._type.setoptions(AnchorDefs.TypeLabels)
+##		self._type.setcursel(None)
+		self._type.setcheck(0)
 		self._wnd.HookCommand(self.OnType, grinsRC.IDC_ATYPE)
 		self._new.attach_to_parent()
 		self._new.enable(1)
@@ -454,8 +456,10 @@ class AnchorlistCtrl(AttrCtrl):
 			typelist = []
 			index = None
 			for i in range(len(AnchorDefs.TypeValues)):
-				if AnchorDefs.TypeValues[i] == AnchorDefs.ATYPE_COMP:
-					pass
+				if AnchorDefs.TypeValues[i] == AnchorDefs.ATYPE_DEST:
+					continue
+				elif AnchorDefs.TypeValues[i] == AnchorDefs.ATYPE_COMP:
+					continue
 				elif AnchorDefs.TypeValues[i] in AnchorDefs.WholeAnchors:
 					if self.__editable or atype in AnchorDefs.WholeAnchors:
 						typelist.append(AnchorDefs.TypeLabels[i])
@@ -463,12 +467,13 @@ class AnchorlistCtrl(AttrCtrl):
 					typelist.append(AnchorDefs.TypeLabels[i])
 				if atype == AnchorDefs.TypeValues[i]:
 					index = len(typelist) - 1
-			self._type.resetcontent()
-			self._type.setoptions(typelist)
-			self._type.setcursel(index)
+##			self._type.resetcontent()
+##			self._type.setoptions(typelist)
+##			self._type.setcursel(index)
 ##			for c in self._se:
 ##				c.enable(1)
 			if atype not in AnchorDefs.WholeAnchors:
+				self._type.setcheck(1)
 				for i in range(4):
 					self._xywh[i].enable(1)
 				if aargs:
@@ -478,6 +483,7 @@ class AnchorlistCtrl(AttrCtrl):
 				if self._wnd._layoutctrl:
 					self._wnd.create_box(self._wnd.getcurrentbox())
 			else:
+				self._type.setcheck(0)
 				for c in self._xywh:
 					c.settext('')
 					c.enable(0)
@@ -587,18 +593,18 @@ class AnchorlistCtrl(AttrCtrl):
 		self.enableApply()
 
 	def OnType(self, id, code):
-		if self.__curanchor is None or code != win32con.CBN_SELCHANGE:
+		if self.__curanchor is None or code != win32con.BN_CLICKED:
 			return
 		atype, aargs, links = self.__anchorlinks[self.__curanchor]
-# when we change the contents of _type depending on what is allowed, use this:
-		atype = AnchorDefs.TypeValues[AnchorDefs.TypeLabels.index(self._type.getvalue())]
-##		atype = AnchorDefs.TypeValues[self._type.getcursel()]
+		if self._type.getcheck():
+			atype = AnchorDefs.ATYPE_NORMAL
+		else:
+			atype = AnchorDefs.ATYPE_WHOLE
 		self.__anchorlinks[self.__curanchor] = atype, aargs, links
 		self.fill(newlist = 0)
 		self.enableApply()
 
 	def OnLink(self, id, code):
-		print 'OnLink',id,code
 		if self.__curanchor is None:
 			return None
 		self._attr.wrapper.toplevel.links.show(self._attr.wrapper.node, self.__curanchor)

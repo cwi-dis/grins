@@ -193,14 +193,14 @@ class LinkBrowserDialog:
 		"""
 		self.window.leftmakevisible(pos)
 		
-	def leftbuttonssetsensitive(self, sensitive):
+	def leftbuttonssetsensitive(self, sensitive, bottom = 0):
 		"""Make the left buttons (in)sensitive.
 
 		Arguments (no defaults):
 		sensitive -- boolean indicating whether to make
 			sensitive or insensitive
 		"""
-		self.window.leftbuttonssetsensitive(sensitive)
+		self.window.leftbuttonssetsensitive(sensitive, bottom)
 
 	# Interface to the right list and associated buttons.
 	def righthide(self):
@@ -275,14 +275,14 @@ class LinkBrowserDialog:
 		"""
 		self.window.rightmakevisible(pos)
 
-	def rightbuttonssetsensitive(self, sensitive):
+	def rightbuttonssetsensitive(self, sensitive, bottom = 0):
 		"""Make the right buttons (in)sensitive.
 
 		Arguments (no defaults):
 		sensitive -- boolean indicating whether to make
 			sensitive or insensitive
 		"""
-		self.window.rightbuttonssetsensitive(sensitive)
+		self.window.rightbuttonssetsensitive(sensitive, bottom)
 
 	# Interface to the middle list and associated buttons.
 	def middlehide(self):
