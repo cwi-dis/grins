@@ -127,21 +127,23 @@ class EditMgr():
 		if list = None:
 			list = []
 			ynode.SetAttr('synctolist', list)
+		xuid = xnode.GetUID()
 		for item in list:
 			xn, xs, de, ys = item
-			if xn=xnode and (xs,ys) = (xside,yside):
-				self.addstep('delsyncarc',xn,xs,de,ynode,ys)
+			if xn=xuid and (xs,ys) = (xside,yside):
+				self.addstep('delsyncarc',xnode,xs,de,ynode,ys)
 				list.remove(item)
 				break
 		self.addstep('addsyncarc', xnode, xside, delay, ynode, yside)
-		list.append(xnode, xside, delay, yside)
+		list.append(xuid, xside, delay, yside)
 	#
 	def delsyncarc(self, (xnode, xside, delay, ynode, yside)):
 		list = ynode.GetRawAttrDef('synctolist', [])
+		xuid = xnode.GetUID()
 		for item in list:
 			xn, xs, de, ys = item
-			if xn=xnode and (xs,de,ys) = (xside,delay,yside):
-				self.addstep('delsyncarc',xn,xs,de,ynode,ys)
+			if xn=xuid and (xs,de,ys) = (xside,delay,yside):
+				self.addstep('delsyncarc',xnode,xs,de,ynode,ys)
 				list.remove(item)
 				break
 		else:
@@ -149,11 +151,12 @@ class EditMgr():
 	#
 	def setsyncarcdelay(self, (xnode, xside, delay, ynode, yside)):
 		list = ynode.GetRawAttrDef('synctolist', [])
+		xuid = xnode.GetUID()
 		for i in range(len(list)):
 			xn, xs, de, ys = item = list[i]
-			if xn = xnode and (xs, ys) = (xside, yside):
+			if xn = xuid and (xs, ys) = (xside, yside):
 				self.addstep('setsyncarcdelay', \
-					xn, xs, delay, ynode, ys)
+					xnode, xs, delay, ynode, ys)
 				list[i] = (xn, xs, delay, ys)
 				break
 		else:
