@@ -2,7 +2,7 @@
 <smil xmlns:GRiNS="http://www.oratrix.com/">
   <head>
     <meta name="title" content="Simple RealPix Slideshow with background audio"/>
-    <meta name="generator" content="GRiNS editor 1.0.1alpha win32 patchlevel 16"/>
+    <meta name="generator" content="GRiNS Pro for RealSystem G2, v1.5.1 "/>
     <meta name="template_name" content="RealPix Slideshow"/>
     <meta name="template_description" content="Realpix slideshow with two soundtracks and a background image"/>
     <meta name="template_snapshot" content="rp_2x_audio.bmp"/>
