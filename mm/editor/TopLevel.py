@@ -395,6 +395,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def setwaiting(self):
 		windowinterface.setwaiting()
 
+	def prefschanged(self):
+		if not self.editmgr.transaction():
+			return
+		self.root.ResetPlayability()
+		self.editmgr.commit()
 	#
 	# EditMgr interface (as dependent client).
 	# This is the first registered client; hence its commit routine

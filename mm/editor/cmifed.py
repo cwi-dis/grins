@@ -169,7 +169,11 @@ class Main(MainDialog):
 			
 	def preferences_callback(self):
 		import Preferences
-		Preferences.showpreferences(1)
+		Preferences.showpreferences(1, self.prefschanged)
+
+	def prefschanged(self):
+		for top in self.tops:
+			top.prefschanged()
 
 	def new_top(self, top):
 		top.show()
