@@ -205,41 +205,45 @@ class AnimationData:
 		if not em.transaction():
 			return 0
 
-		anim = 	existing.get('pos')
-		if anim is not None:
-			self._updateNode(anim, keyTimes, animateMotionValues)
-		else:
-			anim = context.newanimatenode('animateMotion')
-			anim.targetnode = self._target.getTargetNode()
-			self._updateNode(anim, keyTimes, animateMotionValues, None, targname)
-			em.addnode(parent, 0, anim)
+		if self._writeAnimateMotion:
+			anim = 	existing.get('pos')
+			if anim is not None:
+				self._updateNode(anim, keyTimes, animateMotionValues)
+			else:
+				anim = context.newanimatenode('animateMotion')
+				anim.targetnode = self._target.getTargetNode()
+				self._updateNode(anim, keyTimes, animateMotionValues, None, targname)
+				em.addnode(parent, 0, anim)
 
-		anim = 	existing.get('width')
-		if anim is not None:
-			self._updateNode(anim, keyTimes, animateWidthValues)
-		else:
-			anim = context.newanimatenode('animate')
-			anim.targetnode = self._target.getTargetNode()
-			self._updateNode(anim, keyTimes, animateWidthValues, 'width', targname)
-			em.addnode(parent, 1, anim)
+		if self._writeAnimateWidth:
+			anim = 	existing.get('width')
+			if anim is not None:
+				self._updateNode(anim, keyTimes, animateWidthValues)
+			else:
+				anim = context.newanimatenode('animate')
+				anim.targetnode = self._target.getTargetNode()
+				self._updateNode(anim, keyTimes, animateWidthValues, 'width', targname)
+				em.addnode(parent, 1, anim)
 
-		anim = 	existing.get('height')
-		if anim is not None:
-			self._updateNode(anim, keyTimes, animateHeightValues)
-		else:
-			anim = context.newanimatenode('animate')
-			anim.targetnode = self._target.getTargetNode()
-			self._updateNode(anim, keyTimes, animateHeightValues, 'height', targname)
-			em.addnode(parent, 2, anim)
+		if self._writeAnimateHeight:
+			anim = 	existing.get('height')
+			if anim is not None:
+				self._updateNode(anim, keyTimes, animateHeightValues)
+			else:
+				anim = context.newanimatenode('animate')
+				anim.targetnode = self._target.getTargetNode()
+				self._updateNode(anim, keyTimes, animateHeightValues, 'height', targname)
+				em.addnode(parent, 2, anim)
 
-		anim = 	existing.get('color')
-		if anim is not None:
-			self._updateNode(anim, keyTimes, animateColorValues)
-		else:
-			anim = context.newanimatenode('animateColor')
-			anim.targetnode = self._target.getTargetNode()
-			self._updateNode(anim, keyTimes, animateColorValues, 'backgroundColor', targname)
-			em.addnode(parent, 3, anim)
+		if self._writeAnimateColor:
+			anim = 	existing.get('color')
+			if anim is not None:
+				self._updateNode(anim, keyTimes, animateColorValues)
+			else:
+				anim = context.newanimatenode('animateColor')
+				anim.targetnode = self._target.getTargetNode()
+				self._updateNode(anim, keyTimes, animateColorValues, 'backgroundColor', targname)
+				em.addnode(parent, 3, anim)
 		
 		em.commit()
 		return 1
@@ -254,17 +258,53 @@ class AnimationData:
 			node.attrdict['targetElement'] = targname
 		node.attrdict['keyTimes'] = times
 		node.attrdict['values'] = values
+	
+	def _setWriteFlagsOn(self):
+		self._writeAnimateMotion = 1
+		self._writeAnimateWidth = 1
+		self._writeAnimateHeight = 1
+		self._writeAnimateColor = 1
 
 	def _dataToValuesAttr(self):
 		animateMotionValues = [] 
 		animateWidthValues = []
 		animateHeightValues = [] 
 		animateColorValues = []
+		
 		for rect, color in self._data:
 			animateMotionValues.append(rect[:2])						
 			animateWidthValues.append(rect[2])
 			animateHeightValues.append(rect[3])
 			animateColorValues.append(color)
+
+		self._setWriteFlagsOn()
+
+		if self._domrect:
+			self._writeAnimateMotion = 0
+			for v in animateMotionValues:
+				if v != self._domrect[:2]:
+					self._writeAnimateMotion = 1
+					break
+
+			self._writeAnimateWidth = 0
+			for v in animateWidthValues:
+				if v != self._domrect[2]:
+					self._writeAnimateWidth = 1
+					break
+
+			self._writeAnimateHeight = 0
+			for v in animateHeightValues:
+				if v != self._domrect[3]:
+					self._writeAnimateHeight = 1
+					break
+
+		if self._domcolor:
+			self._writeAnimateColor = 0
+			for v in animateColorValues:
+				if v != self._domcolor:
+					self._writeAnimateColor = 1
+					break
+			
 		animateMotionValues = self._posListToStr(animateMotionValues)
 		animateWidthValues = self._intListToStr(animateWidthValues)
 		animateHeightValues = self._intListToStr(animateHeightValues)
