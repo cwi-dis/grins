@@ -3139,13 +3139,20 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__seen_layout and not self.__in_head_switch:
 			self.syntax_error('multiple layouts without switch')
 		if attributes.get('type', SMIL_BASIC) == SMIL_BASIC:
-			if self.__seen_layout > 0:
-				# if we've seen SMIL_BASIC/SMIL_EXTENDED
-				# already, ignore this one
-				self.__in_layout = LAYOUT_UNKNOWN
+			attrdict = {}
+			self.AddTestAttrs(attrdict, attributes)
+			for attr, val in attrdict.items():
+				if not settings.match(attr, val):
+					self.__in_layout = LAYOUT_UNKNOWN
+					break
 			else:
-				self.__in_layout = LAYOUT_SMIL
-			self.__seen_layout = LAYOUT_SMIL
+				if self.__seen_layout > 0:
+					# if we've seen SMIL_BASIC/SMIL_EXTENDED
+					# already, ignore this one
+					self.__in_layout = LAYOUT_UNKNOWN
+				else:
+					self.__in_layout = LAYOUT_SMIL
+				self.__seen_layout = LAYOUT_SMIL
 		else:
 			self.__in_layout = LAYOUT_UNKNOWN
 			if not self.__seen_layout:
