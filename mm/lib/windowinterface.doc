@@ -28,10 +28,9 @@ The functions are:
 	setcursor(cursor)
 		Set the cursor glyph for all windows.  The value of
 		the argument is a string with a symbolic name for the
-		cursor.  Currently just the name 'watch' is defined to
-		set the cursor to a watch cursor.  The empty string ''
-		sets the cursor back to the default arrow cursor.
-		[ Not implemented in the X version. ]
+		cursor.  Currently the names 'watch', 'channel', and
+		'link' are defined.  The empty string '' sets the
+		cursor back to the default arrow cursor.
 
 	getsize() -> width, height
 		Returns the size of the monitor in mm.
