@@ -126,6 +126,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__node = None	# the media object we're in
 		self.__regions = {}	# mapping from region id to chan. attrs
 		self.__region2channel = {} # mapping from region to channels
+		self.__region = None	# keep track of nested regions
+		self.__regionlist = []
+		self.__childregions = {None: []}
 		self.__ids = {}		# collect all id's here
 		self.__width = self.__height = 0
 		self.__root_width = self.__root_height = 0 # w,h in root-layout
@@ -549,12 +552,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					 'z-index': 0, 'fit': 'hidden',
 					 'background-color': 'transparent'}
 		width = height = 0
+		x, y, w, h = ch['left'], ch['top'], ch['width'], ch['height']
 		if self.__width > 0 and self.__height > 0:
 			# we don't have to calculate minimum sizes
 			pass
 		elif mtype in ('image', 'movie', 'video', 'mpeg',
 			       'RealPix', 'RealText', 'RealVideo'):
-			x, y, w, h = ch['left'], ch['top'], ch['width'], ch['height']
 			# if we don't know the region size and
 			# position in pixels, we need to look at the
 			# media objects to figure out the size to use.
@@ -575,9 +578,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				else:
 					node.__size = width, height
 		elif mtype in ('text', 'label', 'html', 'graph'):
-			# want to make them at least visible...
-			width = 200
-			height = 100
+			if w > 0 and h > 0 and \
+			   type(w) == type(h) == type(0) and \
+			   (x == y == 0 or type(x) == type(y) == type(0)):
+				# size and position is given in pixels
+				pass
+			else:
+				# want to make them at least visible...
+				width = 200
+				height = 100
 		if ch['minwidth'] < width:
 			ch['minwidth'] = width
 		if ch['minheight'] < height:
@@ -671,34 +680,124 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		root.setgensr()
 
 	def FixSizes(self):
-		# calculate minimum required size of top-level window
-		if self.__width > 0 and self.__height > 0:
-			# there was a root-layout tag which specified the size
-			return
-		for attrdict in self.__regions.values():
-			try:
-				width = _minsize(attrdict['left'],
-						 attrdict['width'],
-						 attrdict['minwidth'])
-			except KeyError:
-				continue
-			except error, msg:
-				self.syntax_error(msg)
-			else:
-				if width > self.__width:
-					self.__width = width
+		self.__calcsize1(None)
+		for r in self.__childregions[None]:
+			self.__calcsize2(r, self.__width, self.__height)
 
-			try:
-				height = _minsize(attrdict['top'],
-						  attrdict['height'],
-						  attrdict['minheight'])
-			except KeyError:
+	def __calcsize1(self, region):
+		minwidth = minheight = 0
+		for r in self.__childregions[region]:
+			w, h = self.__calcsize1(r)
+			if w > minwidth:
+				minwidth = w
+			if h > minheight:
+				minheight = h
+		if region is None:
+			if self.__width == 0:
+				self.__width = minwidth
+			if self.__height == 0:
+				self.__height = minheight
+			minwidth = self.__width
+			minheight = self.__height
+		else:
+			attrdict = self.__regions[region]
+			if attrdict.get('minwidth', 0) < minwidth:
+				attrdict['minwidth'] = minwidth
+			if attrdict.get('minheight', 0) < minheight:
+				attrdict['minheight'] = minheight
+			minwidth = _minsize(attrdict.get('left', 0),
+					    attrdict.get('width', 0),
+					    attrdict.get('minwidth', 0))
+			minheight = _minsize(attrdict.get('top', 0),
+					     attrdict.get('height', 0),
+					     attrdict.get('minheight', 0))
+		return minwidth, minheight
+
+	def __calcsize2(self, region, width, height):
+		from windowinterface import UNIT_PXL, UNIT_SCREEN
+		attrdict = self.__regions[region]
+		x = attrdict.get('left', 0)
+		y = attrdict.get('top', 0)
+		w = attrdict.get('width', 0)
+		h = attrdict.get('height', 0)
+		# if size of root-layout specified, convert to pixels
+		if self.__root_width:
+			if type(x) is type(0.0):
+				x = int(x * width + .5)
+				attrdict['left'] = x
+			if type(w) is type(0.0):
+				w = int(w * width + .5)
+				attrdict['width'] = w
+		if self.__root_height:
+			if type(y) is type(0.0):
+				y = int(y * height + .5)
+				attrdict['top'] = y
+			if type(h) is type(0.0):
+				h = int(h * height + .5)
+				attrdict['height'] = h
+		#
+		thetype = None # type of 1st elem != 0
+		broken = 0
+		for val in x, y, w, h:
+			if val == 0:
 				continue
-			except error, msg:
-				self.syntax_error(msg)
+			if thetype is None:
+				thetype = type(val)
+				continue
+			elif type(val) is thetype:
+				continue
+			broken = 1
+			break
+		else:
+			# all the same type or 0
+			if thetype is type(0) or thetype is None:
+				units = UNIT_PXL
 			else:
-				if height > self.__height:
-					self.__height = height
+				units = UNIT_SCREEN
+			attrdict['units'] = units
+			if w == 0 and type(width) is type(0):
+				if units == UNIT_PXL:
+					w = width - int(x)
+				else:
+					w = 1.0 - x
+			if h == 0 and type(height) is type(0):
+				if units == UNIT_PXL:
+					h = height - int(y)
+				else:
+					h = 1.0 - y
+		if broken:
+			# we only get here if there
+			# are multiple values != 0 of
+			# different types
+			# not all the same units, convert
+			# everything to relative sizes
+			if type(x) is type(0):
+				x = float(x) / width
+			if type(w) is type(0) or w == 0:
+				if w == 0:
+					w = 1.0 - x
+				else:
+					w = float(w) / width
+			if type(y) is type(0):
+				y = float(y) / height
+			if type(h) is type(0) or h == 0:
+				if h == 0:
+					h = 1.0 - y
+				else:
+					h = float(h) / height
+			attrdict['units'] = UNIT_SCREEN
+		attrdict['left'] = x
+		attrdict['top'] = y
+		attrdict['width'] = w
+		attrdict['height'] = h
+
+		if type(w) is type(0.0):
+			w = int(w * width + .5)
+		if type(h) is type(0.0):
+			h = int(h * height + .5)
+		
+		for r in self.__childregions[region]:
+			self.__calcsize2(r, w, h)
 
 	def FixSyncArcs(self, node):
 		for attr, val in node.__syncarcs:
@@ -740,8 +839,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__width = 640
 		if self.__height == 0:
 			self.__height = 480
-		layout['winsize'] = \
-			self.__width, self.__height
+		layout['winsize'] = self.__width, self.__height
 		layout['units'] = UNIT_PXL
 
 	def FixBaseWindow(self):
@@ -750,12 +848,25 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		for ch in self.__context.channels:
 			if ch is self.__layout:
 				continue
-			ch['base_window'] = self.__base_win
+			if ch.has_key('base_window'):
+				basewin = ch['base_window']
+				basechans = self.__region2channel.get(basewin)
+				if len(basechans) == 0:
+					raise error, 'no base channels?'
+				elif len(basechans) == 1:
+					ch['base_window'] = basechans[0].name
+				else:
+					raise error, 'not implemented yet'
+			else:
+				ch['base_window'] = self.__base_win
 
 	def __fillchannel(self, ch, attrdict, mtype):
-		from windowinterface import UNIT_PXL, UNIT_SCREEN
 		attrdict = attrdict.copy() # we're going to change this...
-		if attrdict.has_key('type'): del attrdict['type']
+		if attrdict.has_key('type'):
+			del attrdict['type']
+		if attrdict.has_key('base_window'):
+			ch['base_window'] = attrdict['base_window']
+			del attrdict['base_window']
 		if mtype in ('text', 'image', 'movie', 'video', 'mpeg',
 			     'html', 'label', 'graph', 'layout', 'RealPix',
 			     'RealText', 'RealVideo'):
@@ -789,6 +900,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			y = attrdict['top']; del attrdict['top']
 			w = attrdict['width']; del attrdict['width']
 			h = attrdict['height']; del attrdict['height']
+			ch['units'] = attrdict['units']; del attrdict['units']
 			fit = attrdict['fit']; del attrdict['fit']
 			if fit == 'hidden':
 				ch['scale'] = 1
@@ -799,82 +911,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ch['center'] = 0
 			# other fit options not implemented
 
-			# check types of x,y,w,h: if all the
-			# same, set units appropriately, else
-			# convert all to relative (float).  if
-			# there was a root-layout, and it
-			# contained sizes, convert relative
-			# sizes to absolute sizes first.
-			if type(x) is type(0.0) and self.__root_width:
-				x = int(x * self.__root_width + .5)
-			if type(w) is type(0.0) and self.__root_width:
-				w = int(w * self.__root_width + .5)
-			if type(y) is type(0.0) and self.__root_height:
-				y = int(y * self.__root_height + .5)
-			if type(h) is type(0.0) and self.__root_height:
-				h = int(h * self.__root_height + .5)
-			thetype = None # type of 1st elem != 0
-			broken = 0
-			for val in x, y, w, h:
-				if val == 0:
-					continue
-				if thetype is None:
-					thetype = type(val)
-					continue
-				elif type(val) is thetype:
-					continue
-				broken = 1
-				break
-			else:
-				# all the same type or 0
-				if thetype is type(0):
-					units = UNIT_PXL
-				else:
-					units = UNIT_SCREEN
-				ch['units'] = units
-				if w == 0 and self.__width != 0:
-					if units == UNIT_PXL:
-						w = self.__width - x
-					else:
-						w = 1.0 - x
-				if h == 0 and self.__height != 0:
-					if units == UNIT_PXL:
-						h = self.__height - y
-					else:
-						h = 1.0 - y
-			if broken:
-				# we only get here if there
-				# are multiple values != 0 of
-				# different types
-				# not all the same units, convert
-				# everything to relative sizes
-				if type(x) is type(0):
-					x = float(x) / self.__width
-				if type(w) is type(0):
-					if w == 0:
-						try:
-							width = node.__size[0]
-						except AttributeError:
-							# rest of window
-							w = 1.0 - x
-						else:
-							w = float(width) / self.__width
-					else:
-						w = float(w) / self.__width
-				if type(y) is type(0):
-					y = float(y) / self.__height
-				if type(h) is type(0):
-					if h == 0:
-						try:
-							height = node.__size[1]
-						except AttributeError:
-							# rest of window
-							h = 1.0 - y
-						else:
-							h = float(height) / self.__height
-					else:
-						h = float(h) / self.__height
-				ch['units'] = UNIT_SCREEN
 			ch['base_winoff'] = x, y, w, h
 		# keep all attributes that we didn't use
 		for attr, val in attrdict.items():
@@ -888,7 +924,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		ctx = self.__context
 		if self.__layout is None:
 			self.CreateLayout()
-		for region, attrdict in self.__regions.items():
+		for region in self.__regionlist:
+			attrdict = self.__regions[region]
 			chtype = attrdict.get('type')
 			if chtype is None or not channelmap.has_key(chtype):
 				continue
@@ -1238,7 +1275,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__in_layout != LAYOUT_SMIL:
 			# ignore outside of smil-basic-layout
 			return
-
 		id = None
 		attrdict = {'left': 0,
 			    'top': 0,
@@ -1310,9 +1346,25 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		if id is None:
 			self.syntax_error('region without id attribute')
+			return
+
+		if self.__region is not None:
+			pregion = self.__region[0]
+			attrdict['base_window'] = pregion
+			self.__childregions[pregion].append(id)
+		else:
+			self.__childregions[None].append(id)
+
+		self.__region = id, self.__region
+		self.__regionlist.append(id)
+		self.__childregions[id] = []
 
 	def end_region(self):
-		pass
+		if self.__region is None:
+			# </region> without <region>
+			# error message will be taken care of by XMLparser.
+			return
+		self.__region = self.__region[1]
 
 	def start_root_layout(self, attributes):
 		for key, val in attributes.items():
@@ -1811,8 +1863,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def handle_doctype(self, tag, pubid, syslit, data):
 		if tag != 'smil':
 			self.error('not a SMIL document', self.lineno)
-		if pubid != SMILpubid or syslit != SMILdtd or data:
+		if data:
 			self.syntax_error('invalid DOCTYPE')
+			return
+		if pubid == SMILpubid and syslit == SMILdtd:
+			# SMIL version 1.0
+			self.entities['region'] = []
+		elif pubid == SMILBostonPubid and syslit == SMILBostonDtd:
+			# SMIL Boston
+			self.entities['region'] = ['region']
+			self.__context.attributes['project_boston'] = 1
 
 	def handle_proc(self, name, data):
 		self.warning('ignoring processing instruction %s' % name, self.lineno)
@@ -2128,7 +2188,7 @@ def ReadStringContext(string, name, context, printfunc = None):
 	return root
 
 def _minsize(start, extent, minsize):
-	# Determine minimum size for top-level window given that it
+	# Determine minimum size for parent window given that it
 	# has to contain a subwindow with the given start and extent
 	# values.  Start and extent can be integers or floats.  The
 	# type determines whether they are interpreted as pixel values

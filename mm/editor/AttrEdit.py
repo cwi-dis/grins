@@ -673,9 +673,9 @@ class ChannelWrapper(Wrapper):
 
 class DocumentWrapper(Wrapper):
 	__stdnames = ['title', 'author', 'copyright', 'base', 
-			'project_ftp_host', 'project_ftp_user', 'project_ftp_dir',
-			'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media',
-			'project_smil_url']
+		      'project_ftp_host', 'project_ftp_user', 'project_ftp_dir',
+		      'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media',
+		      'project_smil_url', 'project_boston']
 
 	def __init__(self, toplevel):
 		Wrapper.__init__(self, toplevel, toplevel.context)
@@ -708,6 +708,8 @@ class DocumentWrapper(Wrapper):
 		return None		# unrecognized
 
 	def getdefault(self, name):
+		if name == 'project_boston':
+			return 0
 		return ''
 
 	def setattr(self, name, value):
@@ -910,17 +912,20 @@ class AttrEditor(AttrEditorDialog):
 		allnamelist = wrapper.attrnames()
 		namelist = []
 		lightweight = settings.get('lightweight')
+		smil2 = 0
+		if hasattr(wrapper, 'context'):
+			smil2 = wrapper.context.attributes.get('project_boston', 0)
 		if not lightweight:
 			cmif = settings.get('cmif')
 		else:
 			cmif = 0
 		for name in allnamelist:
 			flags = wrapper.getdef(name)[6]
-			if flags != 'light':
-				if lightweight or \
-				   (not cmif and flags == 'cmif'):
-					continue
-			namelist.append(name)
+			if cmif or \
+			   (smil2 and (flags == 'smil2' or flags == 'smil' or flags == 'light')) or \
+			   (not lightweight and (flags == 'smil' or flags == 'light')) or \
+			   (lightweight and flags == 'light'):
+				namelist.append(name)
 		self.__namelist = namelist
 		initattrinst = None
 		for i in range(len(namelist)):

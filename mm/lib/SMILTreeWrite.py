@@ -38,6 +38,7 @@ NSprefix = 'GRiNS'
 SMILdecl = '<?xml version="1.0" encoding="ISO-8859-1"?>\n'
 EVALcomment = '<!-- Created with an evaluation copy of GRiNS -->\n'
 doctype = '<!DOCTYPE smil PUBLIC "%s"\n%s"%s">\n' % (SMILpubid,' '*22,SMILdtd)
+doctype2 = '<!DOCTYPE smil PUBLIC "%s"\n%s"%s">\n' % (SMILBostonPubid,' '*22,SMILBostonDtd)
 xmlns = 'xmlns:%s' % NSprefix
 
 nonascii = re.compile('[\200-\377]')
@@ -698,6 +699,7 @@ class SMILWriter(SMIL):
 		self.__isopen = 0
 		self.__stack = []
 
+		self.smilboston = ctx.attributes.get('project_boston', 0)
 		self.uses_cmif_extension = not cleanSMIL
 		self.root = node
 		self.fp = fp
@@ -713,6 +715,7 @@ class SMILWriter(SMIL):
 
 		self.ch2name = {}
 		self.top_levels = []
+		self.__subchans = {}
 		self.calcchnames1(node)
 
 		self.uid2name = {}
@@ -805,7 +808,10 @@ class SMILWriter(SMIL):
 		if self.evallicense:
 			fp.write(EVALcomment)
 		if not self.uses_cmif_extension:
-			fp.write(doctype)
+			if self.smilboston:
+				fp.write(doctype2)
+			else:
+				fp.write(doctype)
 		attrlist = []
 		if self.uses_cmif_extension:
 			attrlist.append((xmlns, GRiNSns))
@@ -833,6 +839,8 @@ class SMILWriter(SMIL):
 			# for export don't write attributes starting with project_, they are meant
 			# for internal information-keeping only
 			if self.__cleanSMIL and key[:8] == 'project_':
+				continue
+			if key == 'project_boston':
 				continue
 			self.writetag('meta', [('name', key),
 					       ('content', val)])
@@ -931,6 +939,11 @@ class SMILWriter(SMIL):
 			if not self.ids_used.has_key(name):
 				self.ids_used[name] = 0
 				self.ch2name[ch] = name
+			if ch.has_key('base_window'):
+				pch = ch['base_window']
+				if not self.__subchans.has_key(pch):
+					self.__subchans[pch] = []
+				self.__subchans[pch].append(ch)
 			if not ch.has_key('base_window') and \
 			   ch['type'] not in ('sound', 'shell', 'python',
 					      'null', 'vcr', 'socket', 'cmif',
@@ -952,6 +965,12 @@ class SMILWriter(SMIL):
 		"""Calculate unique names for channels; second pass"""
 		context = node.GetContext()
 		channels = context.channels
+		if self.top_levels:
+			top0 = self.top_levels[0]
+			if not self.__subchans.has_key(top0):
+				self.__subchans[top0] = []
+		else:
+			top0 = None
 		for ch in channels:
 			if not self.ch2name.has_key(ch):
 				name = identify(ch.name)
@@ -963,6 +982,14 @@ class SMILWriter(SMIL):
 				name = nn
 				self.ids_used[name] = 0
 				self.ch2name[ch] = name
+			if not ch.has_key('base_window') and \
+			   ch['type'] in ('sound', 'shell', 'python',
+					  'null', 'vcr', 'socket', 'cmif',
+					  'midi', 'external') and top0:
+				self.__subchans[top0].append(ch)
+			if not ch in self.top_levels and \
+			   self.__subchans.get(ch.name):
+				self.smilboston = 1
 
 	def calcanames(self, node):
 		"""Calculate unique names for anchors"""
@@ -1039,121 +1066,134 @@ class SMILWriter(SMIL):
 					attrlist.append(('width', '%d' % int(w + .5)))
 					attrlist.append(('height', '%d' % int(h + .5)))
 			self.writetag('root-layout', attrlist)
-		for ch in channels:
-			mtype, xtype = mediatype(ch['type'], error=1)
-			isvisual = mtype in ('img', 'video', 'text')
-			if len(self.top_levels) == 1 and \
-			   ch['type'] == 'layout' and \
-			   not ch.has_key('base_window'):
-				# top-level layout channel has been handled
-				continue
-			attrlist = [('id', self.ch2name[ch])]
-			title = ch.get('title')
-			if title:
-				attrlist.append(('title', title))
-			elif self.ch2name[ch] != ch.name:
-				attrlist.append(('title', ch.name))
-			# if toplevel window, define a region elt, but
-			# don't define coordinates (i.e., use defaults)
-			if ch.has_key('base_window') and \
-			   ch.has_key('base_winoff'):
-				x, y, w, h = ch['base_winoff']
-				units = ch.get('units', 2)
-				if units == 0:		# UNIT_MM
-					# convert mm to pixels (assuming 100 dpi)
-					x = int(x / 25.4 * 100 + .5)
-					y = int(y / 25.4 * 100 + .5)
-					w = int(w / 25.4 * 100 + .5)
-					h = int(h / 25.4 * 100 + .5)
-				elif units == 1:	# UNIT_SCREEN
-					if x+w >= 1.0: w = 0
-					if y+h >= 1.0: h = 0
-				elif units == 2:	# UNIT_PXL
-					x = int(x)
-					y = int(y)
-					w = int(w)
-					h = int(h)
-				for name, value in [('left', x), ('top', y), ('width', w), ('height', h)]:
-					if not value:
-						continue
-					if type(value) is type(0.0):
-						value = '%d%%' % int(value*100)
-					else:
-						value = '%d' % value
-					attrlist.append((name, value))
-			if isvisual:
-				z = ch.get('z', 0)
-				if z > 0:
-					attrlist.append(('z-index', "%d" % z))
-				scale = ch.get('scale', 0)
-				if scale == 0:
-					fit = 'meet'
-				elif scale == -1:
-					fit = 'slice'
-				elif scale == 1:
-					fit = 'hidden'
-				else:
-					fit = None
-					print '** Channel uses unsupported scale value', name
-				if fit is not None and fit != 'hidden':
-					attrlist.append(('fit', fit))
-
-				# SMIL says: either background-color
-				# or transparent; if different, set
-				# GRiNS attributes
-			# We have the following possibilities:
-			#		no bgcolor	bgcolor set
-			#transp -1	no attr		b-g="bg"
-			#transp  0	GR:tr="0"	GR:tr="0" b-g="bg"
-			#transp  1	b-g="trans"	b-g="trans" (ignore bg)
-				transparent = ch.get('transparent', 0)
-				bgcolor = ch.get('bgcolor')
-				if transparent == 0:
-					if compatibility == settings.G2:
-						# in G2, setting a
-						# background-color implies
-						# transparent==never, so set
-						# background-color if not
-						# transparent
-						attrlist.append(('background-color',
-								 "#%02x%02x%02x" % (bgcolor or (0,0,0))))
-						bgcolor = None # skip below
-					# non-SMIL extension:
-					# permanently visible region
-					attrlist.append(('%s:transparent' % NSprefix,
-							 '0'))
-				#
-				# We write the background color only if it is not None.
-				# We also refrain from writing it if we're in G2 compatability mode and
-				# the color is the default (g2-compatible) color: white for text channels
-				# and black for others.
-				if bgcolor is not None and \
-				   (compatibility != settings.G2 or
-				    ((ch['type'] not in ('text', 'RealText') or
-				      bgcolor != (255,255,255)) and
-				     bgcolor != (0,0,0))):
-					attrlist.append(('background-color',
-							 "#%02x%02x%02x" % bgcolor))
-				# Since background-color="transparent" is the
-				# default, we don't need to actually write that
-##				if transparent == 1:
-##					attrlist.append(('background-color',
-##							 'transparent'))
-##					# having a bg color on a transparent
-##					# region is nonsense...
-####					if bgcolor is not None:
-####						attrlist.append(('%s:bgcolor' % NSprefix,
-####								 "#%02x%02x%02x" % bgcolor))
-				if ch.get('center', 1):
-					attrlist.append(('%s:center' % NSprefix, '1'))
-				if ch.get('drawbox', 1):
-					attrlist.append(('%s:drawbox' % NSprefix, '1'))
-
-			for key, val in ch.items():
-				if not cmif_chan_attrs_ignore.has_key(key):
-					attrlist.append(('%s:%s' % (NSprefix, key), MMAttrdefs.valuerepr(key, val)))
-			self.writetag('region', attrlist)
+		for ch in self.top_levels:
+			self.writeregion(ch)
 		self.pop()
+
+	def writeregion(self, ch):
+		import settings
+		compatibility = settings.get('compatibility')
+		mtype, xtype = mediatype(ch['type'], error=1)
+		isvisual = mtype in ('img', 'video', 'text')
+		if len(self.top_levels) == 1 and \
+		   ch['type'] == 'layout' and \
+		   not ch.has_key('base_window'):
+			# top-level layout channel has been handled
+			for sch in self.__subchans[ch.name]:
+				self.writeregion(sch)
+			return
+		attrlist = [('id', self.ch2name[ch])]
+		title = ch.get('title')
+		if title:
+			attrlist.append(('title', title))
+		elif self.ch2name[ch] != ch.name:
+			attrlist.append(('title', ch.name))
+		# if toplevel window, define a region elt, but
+		# don't define coordinates (i.e., use defaults)
+		if ch.has_key('base_window') and \
+		   ch.has_key('base_winoff'):
+			x, y, w, h = ch['base_winoff']
+			units = ch.get('units', 2)
+			if units == 0:		# UNIT_MM
+				# convert mm to pixels (assuming 100 dpi)
+				x = int(x / 25.4 * 100 + .5)
+				y = int(y / 25.4 * 100 + .5)
+				w = int(w / 25.4 * 100 + .5)
+				h = int(h / 25.4 * 100 + .5)
+			elif units == 1:	# UNIT_SCREEN
+				if x+w >= 1.0: w = 0
+				if y+h >= 1.0: h = 0
+			elif units == 2:	# UNIT_PXL
+				x = int(x)
+				y = int(y)
+				w = int(w)
+				h = int(h)
+			for name, value in [('left', x), ('top', y), ('width', w), ('height', h)]:
+				if not value:
+					continue
+				if type(value) is type(0.0):
+					value = '%d%%' % int(value*100)
+				else:
+					value = '%d' % value
+				attrlist.append((name, value))
+		if isvisual:
+			z = ch.get('z', 0)
+			if z > 0:
+				attrlist.append(('z-index', "%d" % z))
+			scale = ch.get('scale', 0)
+			if scale == 0:
+				fit = 'meet'
+			elif scale == -1:
+				fit = 'slice'
+			elif scale == 1:
+				fit = 'hidden'
+			else:
+				fit = None
+				print '** Channel uses unsupported scale value', name
+			if fit is not None and fit != 'hidden':
+				attrlist.append(('fit', fit))
+
+			# SMIL says: either background-color
+			# or transparent; if different, set
+			# GRiNS attributes
+		# We have the following possibilities:
+		#		no bgcolor	bgcolor set
+		#transp -1	no attr		b-g="bg"
+		#transp  0	GR:tr="0"	GR:tr="0" b-g="bg"
+		#transp  1	b-g="trans"	b-g="trans" (ignore bg)
+			transparent = ch.get('transparent', 0)
+			bgcolor = ch.get('bgcolor')
+			if transparent == 0:
+				if compatibility == settings.G2:
+					# in G2, setting a
+					# background-color implies
+					# transparent==never, so set
+					# background-color if not
+					# transparent
+					attrlist.append(('background-color',
+							 "#%02x%02x%02x" % (bgcolor or (0,0,0))))
+					bgcolor = None # skip below
+				# non-SMIL extension:
+				# permanently visible region
+				attrlist.append(('%s:transparent' % NSprefix,
+						 '0'))
+			#
+			# We write the background color only if it is not None.
+			# We also refrain from writing it if we're in G2 compatability mode and
+			# the color is the default (g2-compatible) color: white for text channels
+			# and black for others.
+			if bgcolor is not None and \
+			   (compatibility != settings.G2 or
+			    ((ch['type'] not in ('text', 'RealText') or
+			      bgcolor != (255,255,255)) and
+			     bgcolor != (0,0,0))):
+				attrlist.append(('background-color',
+						 "#%02x%02x%02x" % bgcolor))
+			# Since background-color="transparent" is the
+			# default, we don't need to actually write that
+##			if transparent == 1:
+##				attrlist.append(('background-color',
+##						 'transparent'))
+##				# having a bg color on a transparent
+##				# region is nonsense...
+####				if bgcolor is not None:
+####					attrlist.append(('%s:bgcolor' % NSprefix,
+####							 "#%02x%02x%02x" % bgcolor))
+			if ch.get('center', 1):
+				attrlist.append(('%s:center' % NSprefix, '1'))
+			if ch.get('drawbox', 1):
+				attrlist.append(('%s:drawbox' % NSprefix, '1'))
+
+		for key, val in ch.items():
+			if not cmif_chan_attrs_ignore.has_key(key):
+				attrlist.append(('%s:%s' % (NSprefix, key), MMAttrdefs.valuerepr(key, val)))
+		self.writetag('region', attrlist)
+		subchans = self.__subchans.get(ch.name)
+		if subchans:
+			self.push()
+			for sch in subchans:
+				self.writeregion(sch)
+			self.pop()
 
 	def writeusergroups(self):
 		u_groups = self.root.GetContext().usergroups

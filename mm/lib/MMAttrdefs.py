@@ -75,7 +75,7 @@ def readattrdefs(fp, filename):
 			inheritance = parser.getenumvalue(
 				['raw', 'normal', 'inherited', 'channel'])
 			flags = parser.getenumvalue(
-				['light', 'smil', 'cmif'])
+				['light', 'smil', 'smil2', 'cmif'])
 			parser.close()
 			if dict.has_key(attrname):
 			    if verbose:
@@ -129,7 +129,7 @@ def usetypedef(typedef, mapping):
 		arg = []
 		for td in rest:
 			arg.append(usetypedef(td, mapping))
-	elif type in ('list', 'dict', 'namedict', 'enclosed', 'optenclosed'):
+	elif type in ('list', 'dict', 'namedict', 'enclosed'):
 		arg = usetypedef(rest, mapping)
 	return func, arg
 
