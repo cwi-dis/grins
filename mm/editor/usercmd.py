@@ -168,6 +168,8 @@ class TOGGLE_UNUSED(_CommandBase):
 	help = 'Toggle showing unused channels'
 class TOGGLE_ARCS(_CommandBase):
 	help = 'Toggle showing synchronization arcs'
+class TOGGLE_BWSTRIP(_CommandBase):
+	help = 'Toggle showing bandwidth usage strip'
 class NEXT_MINIDOC(_CommandBase):
 	help = 'Display next mini document'
 class PREV_MINIDOC(_CommandBase): pass

@@ -103,6 +103,7 @@ MENUBAR=(
 		(TOGGLE, 'Display unused channels', None, TOGGLE_UNUSED),
 		(TOGGLE, 'Display sync arcs', None, TOGGLE_ARCS),
 		(TOGGLE, 'Display image thumbnails', None, THUMBNAIL),
+		(TOGGLE, 'Display bandwidth usage', None, TOGGLE_BWSTRIP),
 		(SEP,),
 		(TOGGLE, 'Timeline view follows player', None, SYNCCV),
 		(ENTRY, 'Highlight channel in player', None, HIGHLIGHT),
