@@ -3,3 +3,7 @@ IGRiNSPlayerAuto_i.c
 IGRiNSPlayerAuto_p.c
 Release
 dlldata.c
+*.dsw
+*.ncb
+*.plg
+*.opt
