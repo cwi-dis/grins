@@ -7,5 +7,4 @@ const TCHAR *grins_bin = TEXT("\\Program Files\\GRiNS\\bin\\wince");
 
 const TCHAR *grins_startup_cmd = TEXT("import startup");
 
-
 #endif
