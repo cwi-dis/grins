@@ -37,7 +37,7 @@
 #		attribute definition.  If this fails your tree is broken!
 
 
-from MMNode import _stat
+from MMStat import _stat
 from MMExc import *
 import MMParser
 import sys
