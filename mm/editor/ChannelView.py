@@ -632,6 +632,7 @@ class ChannelView(ChannelViewDialog):
 
 	def scantree(self, node, focus):
 		t = node.GetType()
+		obj = None
 		if t in leaftypes:
 			channel = node.GetChannel()
 			if channel:
@@ -650,11 +651,12 @@ class ChannelView(ChannelViewDialog):
 						self.channelnodes[channel].append(obj)
 					else:
 						self.channelnodes[channel] = [obj]
-		else:
+		if obj is None:
+			# channelless leaf node or interior node
 			obj = INodeBox(self, node)
 			self.objects.append(obj)
-			for c in node.GetChildren():
-				self.scantree(c, focus)
+		for c in node.GetChildren():
+			self.scantree(c, focus)
 
 	# Arc stuff
 
