@@ -10,13 +10,16 @@ from MMNode import alltypes, leaftypes, interiortypes
 import Clipboard
 
 # XXX Test for forms 1.5 compat:
+forms_v20 = 1
 try:
     dummy = fl.get_rgbmode
-    forms_v20 = 1
+except AttributeError:
+    forms_v20 = 0
+
+if forms_v20:
     del dummy
     print 'using FORMS 2.0'
-except:
-    forms_v20 = 0
+else:
     print 'no FORMS 2.0'
 
 
@@ -58,7 +61,7 @@ BW=10   # width of open/close button
 MENUH = 20	# Height of menu bar
 ZOOMW = 20	# Width of zoo buttons
 
-class BlockView () = ViewDialog(), BasicDialog () :
+class BlockView(ViewDialog, BasicDialog ):
 	#
 	# init() method compatible with the other views.
 	#
@@ -74,10 +77,6 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		return self.new(width, height, self.root)
 	def show(self):
 		if self.showing: return
-#		try:
-#			self.form.doublebuf = 1
-#		except:
-#			pass # Old versions of Python don't accept this...
 		self.editmgr.register(self)
 		BasicDialog.show(self)
 	def hide(self):
@@ -218,7 +217,7 @@ class BlockView () = ViewDialog(), BasicDialog () :
 			if kids:
 			    h = h - TMARG - BMARG - MMARG - BH
 			    w = w - LMARG - RMARG
-			    if type = 'seq':
+			    if type == 'seq':
 				    h = h / len(kids)
 				    dx, dy = 0, h
 			    else: 				 # parallel node
@@ -239,7 +238,7 @@ class BlockView () = ViewDialog(), BasicDialog () :
 				# w,h = w-LMARG-RMARG,h-TMARG-BMARG
 				w,h = w-RMARG,h-TMARG
 			    if not self.isclosedlocal(node):
-				if node.GetType() = 'seq':
+				if node.GetType() == 'seq':
 				    kids = kids[:]
 				    kids.reverse()
 				for child in kids :
@@ -268,13 +267,13 @@ class BlockView () = ViewDialog(), BasicDialog () :
 	#
 	def fixfocus(self):
 		focus = self.focus
-		if focus = self.root or not self.isclosed(focus):
+		if focus == self.root or not self.isclosed(focus):
 		    self.setfocus(focus)
 		    return
 		parent = focus.GetParent()
 		while self.isclosed(parent):
 		    focus = parent
-		    if focus = self.root:
+		    if focus == self.root:
 			break
 		    parent = focus.GetParent()
 		self.setfocus(focus)
@@ -282,7 +281,7 @@ class BlockView () = ViewDialog(), BasicDialog () :
 	# presentlabels : sets the appropiate labels in the FORMS object.
 	#
 	def presentlabels (self, node) :
-		if len(node.GetChildren ()) = 0 :
+		if len(node.GetChildren ()) == 0 :
 			node.bv_obj.label = MMAttrdefs.getattr(node, 'name')
 			return
 		node.bv_labeltext.label = MMAttrdefs.getattr(node, 'name')
@@ -304,7 +303,7 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		mx, my = fl.get_mouse ()
 
 		node = self._find_node (self.rootview, (mx, my))
-		if node = None :
+		if node == None :
 			print 'no node'
 			raise 'block view'
 
@@ -395,12 +394,12 @@ class BlockView () = ViewDialog(), BasicDialog () :
 	#
 	def fromclipboard(self):
 		type, data = Clipboard.getclip()
-		if type <> 'node' or data = None:
+		if type <> 'node' or data == None:
 			return None
 		Clipboard.setclip(type, data.DeepCopy())
 		return data
 	def toclipboard(self, node):
-		if node = None:
+		if node == None:
 			type, data = '', None
 		else:
 			type, data = 'node', node
@@ -443,7 +442,7 @@ def conteditfunc (bv) :
 
 def CopyNode(bv):
 	node = bv.focus
-	if node = None:
+	if node == None:
 		gl.ringbell()
 		return
 	Clipboard.setclip('node', node.DeepCopy())
@@ -456,7 +455,7 @@ def _DeleteNode (bv,cb) :
 	node = bv.focus
 	em = bv.editmgr
 	parent = node.GetParent ()
-	if parent = None :
+	if parent == None :
 		fl.show_message ('sorry, cannot delete root','','')
 		return
 	#
@@ -469,7 +468,7 @@ def _DeleteNode (bv,cb) :
 	#
 	children = parent.GetChildren()
 	nf = children.index(node)
-	if nf = len(children)-1:
+	if nf == len(children)-1:
 		nf = nf - 1
 	#
 	# And zap the node and move to the clipboard
@@ -502,7 +501,7 @@ def _doInsertNode (bv, after, cb) :
 	node = bv.focus
 	parent = node.GetParent()
 	em = bv.editmgr
-	if parent = None : return
+	if parent == None : return
 
 	if not em.transaction(): return
 
@@ -515,7 +514,7 @@ def _doInsertNode (bv, after, cb) :
 	    newnode = bv.fromclipboard()
 	else:
 	    newnode = bv.GetNewNode()
-	if newnode = None:
+	if newnode == None:
 	    gl.ringbell()
 	    node.context.editmgr.rollback()
 	    return
@@ -551,7 +550,7 @@ def _InsertChildNode (bv,cb) :
 	    newnode = bv.fromclipboard()
 	else:
 	    newnode = bv.GetNewNode()
-	if newnode = None:
+	if newnode == None:
 	    gl.ringbell()
 	    node.context.editmgr.rollback()
 	    return
@@ -569,7 +568,7 @@ def CInsertChildNode(bv):
 	_InsertChildNode(bv,1)
 #
 def unzoomfunc (bv) :
-	if bv.rootview = bv.root : return
+	if bv.rootview == bv.root : return
 
 	bv.form.freeze_form ()
 
@@ -587,7 +586,7 @@ def zoomfunc (bv) :
 
 	while node.GetParent() <> bv.rootview :
 		node = node.GetParent()
-		if node = None :
+		if node == None :
 		    gl.ringbell()
 		    return
 
