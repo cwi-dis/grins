@@ -9,6 +9,14 @@ extern "C" {
 #endif
 /*
  * Class:     GRiNSPlayer
+ * Method:    initializeThreadContext
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_GRiNSPlayer_initializeThreadContext
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     GRiNSPlayer
  * Method:    nclose
  * Signature: (I)V
  */
@@ -150,6 +158,14 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_nstop
  */
 JNIEXPORT void JNICALL Java_GRiNSPlayer_nupdate
   (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     GRiNSPlayer
+ * Method:    uninitializeThreadContext
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_GRiNSPlayer_uninitializeThreadContext
+  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }
