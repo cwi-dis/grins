@@ -6,18 +6,18 @@ from MMNode import MMSyncArc, MMAnchor
 from AnchorDefs import ATYPE_WHOLE
 from Hlinks import DIR_1TO2, TYPE_FORK, A_SRC_PLAY, A_DEST_PLAY
 
-def rpconvert(node):
+def rpconvert(node, errorfunc = None):
 	# convert a RealPix node into a par node with children,
 	# together representing the RealPix node
 	ctx = node.GetContext()
 	# check that node is a RealPix node
 	furl = node.GetAttr('file')
 	if node.GetType() != 'ext' or not furl:
-		print 'not a RealPix node'
+		if errorfunc is not None: errorfunc('not a RealPix node')
 		return
 	ch = node.GetChannel()
 	if not ch:
-		print 'no region associated with node'
+		if errorfunc is not None: errorfunc('no region associated with node')
 		return
 	url = ctx.findurl(furl)
 	if furl[:5] == 'data:':
@@ -25,11 +25,11 @@ def rpconvert(node):
 	try:
 		f = MMurl.urlopen(url)
 	except IOError:
-		print 'cannot open RealPix file'
+		if errorfunc is not None: errorfunc('cannot open RealPix file')
 		return
 	head = f.read(4)
 	if head != '<imf':
-		print 'not a RealPix file'
+		if errorfunc is not None: errorfunc('not a RealPix file')
 		f.close()
 		return
 
@@ -114,12 +114,12 @@ def rpconvert(node):
 	# this had better be in pixels
 	rw, rh = region.getPxGeom()[2:]
 	i = 0				# used to create unique channel name
-##	start = 0			# start time of last transition
+	start = 0
 	for tagdict in tags:
 		transition = tagdict['tag']
-		start = tagdict.get('start', 0)
+		start = tagdict.get('start', 0) + start
 		if transition in ('viewchange', 'animate'):
-			print "ignoring transition we can't convert"
+			if errorfunc is not None: errorfunc("ignoring transition we can't convert")
 			continue
 		if transition in ('fadeout', 'fill'):
 			chtype = 'brush'
@@ -137,14 +137,6 @@ def rpconvert(node):
 				em.setnodeattr(newnode, 'fit', 'fill')
 			base = posixpath.splitext(posixpath.split(tagdict['file'])[1])[0]
 			em.setnodeattr(newnode, 'name', base)
-#		chname = ctx.newChannelName(regionname)
-#		em.addchannel(chname, -1, chtype)
-#		em.setchannelattr(chname, 'base_window', regionname)
-		# XXX are these two correct?
-#		em.setchannelattr(chname, 'transparent', region.get('transparent', 0))
-#		em.setchannelattr(chname, 'bgcolor', region.get('bgcolor', (255,255,255)))
-#		em.setchannelattr(chname, 'center', 0)
-#		em.setchannelattr(chname, 'z', -1)
 
 		# calculate subregion positioning
 		# first work in source (RealPix) coordinates
@@ -187,12 +179,10 @@ def rpconvert(node):
 		# transition of a brush to represent the background
 		# and the image.  For now, just use a transparent
 		# background so that it isn't too ugly.
-##		em.setnodeattr(newnode, 'bgcolor', (0,0,0))
-##		em.setnodeattr(newnode, 'transparent', 0)
 		em.setnodeattr(newnode, 'transparent', 1)
-#		em.setnodeattr(newnode, 'channel', chname)
 		em.setnodeattr(newnode, 'channel', regionname)
 		em.addsyncarc(newnode, 'beginlist', MMSyncArc(newnode, 'begin', srcnode='syncbase', delay=start))
+		start = 0
 		if transition in ('fadein', 'fadeout', 'crossfade', 'wipe'):
 			# the real transtions
 			trdict = {'dur': tagdict.get('tduration', 0),
@@ -252,7 +242,7 @@ def rpconvert(node):
 	em.commit()
 ##	convertrp(node)
 
-def convertrp(node):
+def convertrp(node, errorfunc = None):
 	# Convert a seq node into a RealPix node.  The seq's children
 	# must all be images, playing to the same region, the images
 	# must not have an effective fill value "transition" (other
@@ -261,7 +251,7 @@ def convertrp(node):
 	# one end syncarc which specifies a simple offset.
 	ctx = node.GetContext()
 	if node.GetType() != 'seq':
-		print 'not a seq node'
+		if errorfunc is not None: errorfunc('not a seq node')
 		return
 	import realnode
 	rp = realnode.DummyRP()
@@ -274,14 +264,19 @@ def convertrp(node):
 	for c in node.GetChildren():
 		# first some checks
 		if c.GetType() != 'ext':
-			print 'child not an external node'
+			if errorfunc is not None: errorfunc('child not an external node')
 			return
 		if region is None:
 			region = c.GetChannel()
 			rp.width, rp.height = region.getPxGeom()[2:]
-			bgcolor = c['bgcolor']
+			if region.get('transparent', 1):
+				bgcolor = (0, 0, 0)
+			else:
+				bgcolor = region.get('bgcolor')
+				if bgcolor is None:
+					bgcolor = (0, 0, 0)
 		elif c.GetChannel() != region:
-			print 'different region'
+			if errorfunc is not None: errorfunc('different region')
 			return
 		tagdict = {}
 		rp.tags.append(tagdict)
@@ -289,10 +284,10 @@ def convertrp(node):
 		beginlist = c.GetAttrDef('beginlist', [])
 		if beginlist:
 			if len(beginlist) > 1:
-				print 'too many begin values'
+				if errorfunc is not None: errorfunc('too many begin values')
 				return
 			if beginlist[0].srcnode != 'syncbase':
-				print 'begin not a syncbase value'
+				if errorfunc is not None: errorfunc('begin not a syncbase value')
 			start = start + beginlist[0].delay
 		if fill == 'freeze':
 			# need to update start of out transition
@@ -305,10 +300,10 @@ def convertrp(node):
 		endlist = c.GetAttrDef('endlist', [])
 		if endlist:
 			if len(endlist) > 1:
-				print 'too many end values'
+				if errorfunc is not None: errorfunc('too many end values')
 				return
 			if endlist[0].srcnode != 'syncbase':
-				print 'end not a syncbase value'
+				if errorfunc is not None: errorfunc('end not a syncbase value')
 			start = endlist[0].delay
 		dur = c.GetAttrDef('duration', None)
 		if dur is not None:
@@ -318,7 +313,7 @@ def convertrp(node):
 		# set file
 		file = c.GetAttrDef('file', None)
 		if not file:
-			print 'no file specified on image'
+			if errorfunc is not None: errorfunc('no file specified on image')
 			return
 		tagdict['file'] = file
 
@@ -341,7 +336,7 @@ def convertrp(node):
 			   trdict.get('horzRepeat', 1) != 1 or \
 			   trdict.get('vertRepeat', 1) != 1 or \
 			   trdict.get('borderWidth', 0) != 0:
-				print 'translation of transition looses information'
+				if errorfunc is not None: errorfunc('translation of transition looses information')
 			tagdict['tduration'] = trdict.get('dur', 1)
 			trtype = tagdict.get('trtype', 'fade')
 			if trtype == 'barWipe':
@@ -376,20 +371,20 @@ def convertrp(node):
 			elif trtype == 'fade':
 				tagdict['tag'] = 'fadein'
 			else:
-				print 'untranslatable transition'
+				if errorfunc is not None: errorfunc('untranslatable transition')
 				tagdict['tag'] = 'fadein'
 				tagdict['tduration'] = 0
 
 		subRegGeom, mediaGeom = c.getPxGeomMedia()
-		effSubRegGeom = intersect((rp.width, rp.height), subRegGeom)
-		effMediaGeom = intersect(effSubRegGeom[2:], mediaGeom)
+		effSubRegGeom = intersect((0, 0, rp.width, rp.height), subRegGeom)
+		effMediaGeom = intersect(effSubRegGeom, mediaGeom)
 		tagdict['displayfull'] = 0
 		tagdict['subregionxy'] = effMediaGeom[:2]
 		tagdict['subregionwh'] = effMediaGeom[2:]
 		if effMediaGeom == mediaGeom:
 			tagdict['fullimage'] = 1
 		else:
-			width, height = apply(self.GetDefaultMediaSize, mediaGeom[2:])
+			width, height = apply(c.GetDefaultMediaSize, mediaGeom[2:])
 			tagdict['fullimage'] = 0
 			tagdict['imgcropxy'] = int(width * effMediaGeom[0] / float(mediaGeom[2]) + .5), int(height * effMediaGeom[1] / float(mediaGeom[3]) + .5)
 			tagdict['imgcropwh'] = int(width * effMediaGeom[2] / float(mediaGeom[2]) + .5), int(height * effMediaGeom[3] / float(mediaGeom[3]) + .5)
@@ -397,7 +392,7 @@ def convertrp(node):
 		fill = c.GetFill()
 		if fill == 'transition':
 			fill = 'remove'
-			print 'fill="transition" replaced by fill="remove"'
+			if errorfunc is not None: errorfunc('fill="transition" replaced by fill="remove"')
 		if fill != 'hold':
 			tagdict = {}
 			rp.tags.append(tagdict)
@@ -432,12 +427,23 @@ def convertrp(node):
 		# seq duration overrides calculated duration
 		rp.duration = dur
 	if fill == 'freeze':
-			# need to update start of out transition
-			rp.tags[-1]['start'] = start - rp.tags[-1]['tduration']
-			start = rp.tags[-1]['tduration']
-##	realsupport.writeRP('rp.rp', rp, node)
+		# need to update start of out transition
+		rp.tags[-1]['start'] = start - rp.tags[-1]['tduration']
+		start = rp.tags[-1]['tduration']
+	em = ctx.editmgr
+	if not em.transaction():
+		# not allowed to do it at this point
+		return
+	for c in node.GetChildren()[:]:
+		em.delnode(c)
+	em.setnodetype(node, 'ext')
+	em.setnodeattr(node, 'channel', region.name)
+	import base64
+	em.setnodeattr(node, 'file', 'data:image/vnd.rn-realpix;base64,' +
+		       ''.join(base64.encodestring(realsupport.writeRP('rp.rp', rp, node, tostring = 1)).split('\n')))
+	em.commit()
 
-def intersect((width, height), (x,y,w,h)):
+def intersect((left, top, width, height), (x,y,w,h)):
 	# calculate the intersection of a parent region (width,height)
 	# with a child region (x,y,w,h)
 	if x < 0:
@@ -450,4 +456,4 @@ def intersect((width, height), (x,y,w,h)):
 		h = height - y
 	if w <= 0 or h <= 0:
 		x = y = w = h = 0
-	return x,y,w,h
+	return left+x,top+y,w,h
