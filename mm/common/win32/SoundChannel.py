@@ -118,7 +118,7 @@ class SoundChannel(Channel):
 
 	def do_arm(self, node, same=0):
 		if debug:print 'SoundChannel.do_arm('+`self`+','+`node`+'same'+')'
-		if node in self._builders.keys():
+		if self._builders.has_key(node):
 			return 1
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
@@ -156,7 +156,7 @@ class SoundChannel(Channel):
 
 	def do_play(self, node):
 		if debug: print 'SoundChannel.do_play('+`self`+','+`node`+')'
-		if node not in self._builders.keys():
+		if not self._builders.has_key(node):
 			print 'node not armed'
 			self.playdone(0)
 			return
@@ -167,7 +167,7 @@ class SoundChannel(Channel):
 		# get duration in secs (float)
 		duration = MMAttrdefs.getattr(node, 'duration')
 		if duration > 0:
-			self._scheduler.enter(duration, 0, self._stopplay, ())
+			self.__qid = self._scheduler.enter(duration, 0, self._stopplay, ())
 
 		self._playBuilder=self._builders[node]
 		if not self._playBuilder:
@@ -191,9 +191,9 @@ class SoundChannel(Channel):
 		self.register_for_timeslices()
 		self.__playdone=0
 
-#		if self.play_loop == 0 and duration == 0:
-#			self.__playdone=1
-#			self.playdone(0)
+		if self.play_loop == 0 and duration == 0:
+			self.__playdone=1
+			self.playdone(0)
 
 	# scheduler callback, at end of duration
 	def _stopplay(self):
@@ -222,7 +222,8 @@ class SoundChannel(Channel):
 
 	# capture end of media
 	def OnGraphNotify(self,params):
-		if self._playBuilder and not self.__playdone:
+		if debug: print 'SoundChannel: OnGraphNotify',`self`
+		if self._playBuilder:
 			t_msec=self._playBuilder.GetPosition()
 			if t_msec>=self._playEnd:self.OnMediaEnd()
 
@@ -250,6 +251,7 @@ class SoundChannel(Channel):
 
 	############################### ui delays management
 	def on_idle_callback(self):
+		if debug: print 'SoundChannel.on_idle_callback',`self`
 		if self._playBuilder and not self.__playdone:
 			t_msec=self._playBuilder.GetPosition()
 			if t_msec>=self._playEnd:self.OnMediaEnd()
