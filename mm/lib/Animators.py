@@ -1163,71 +1163,60 @@ class AnimateElementParser:
 
 		################
 		# to-only animation for additive attributes
+		# needs always special handling
 		if self.__animtype == 'to' and self.__isadditive and self.__calcMode!='discrete':
+			anim = None
 			if self.__attrtype == 'int':
 				v = string.atoi(self.getTo())
 				anim = EffValueAnimator(attr, domval, v, dur)
 				anim.setRetunedValuesConverter(_round)
-				self.__setTimeManipulators(anim)
-				return anim
 			elif self.__attrtype == 'float':
 				v = string.atof(self.getTo())
 				anim = EffValueAnimator(attr, domval, v, dur)
-				self.__setTimeManipulators(anim)
-				return anim
 			elif self.__attrtype == 'color':
 				values = self.__getColorValues()
 				anim = EffColorAnimator(attr, domval, values, dur)
-				self.__setTimeManipulators(anim)
-				return anim
 			elif self.__attrtype == 'position':
 				coords = self.__getNumPairInterpolationValues()
 				anim = EffMotionAnimator(attr, domval, coords, dur)
-				self.__setTimeManipulators(anim)
-				return anim
 			elif self.__attrtype == 'inttuple':
 				coords = self.__getNumTupleInterpolationValues()
 				anim = EffIntTupleAnimator(attr, domval, coords, dur)
+			if anim:
 				self.__setTimeManipulators(anim)
-				return anim
-			return None
+			return anim
 
 		################
 		# by-only animation for additive attributes
+		# like normal 'values' type except that the attribute must be additive
 		if self.__animtype == 'by':
 			if not self.__isadditive:
-				return self.nullAnimator()
+				return None
+			anim = None
 			if self.__attrtype == 'int':
 				values = self.__getNumInterpolationValues()
 				anim = Animator(attr, domval, values, dur, mode, times, splines, accumulate, additive='sum')
 				anim.setRetunedValuesConverter(_round)
-				self.__setTimeManipulators(anim)
-				return anim
 			elif self.__attrtype == 'float':
 				values = self.__getNumInterpolationValues()
 				anim = Animator(attr, domval, values, dur, mode, times, splines, accumulate, additive='sum')
-				self.__setTimeManipulators(anim)
-				return anim
 			elif self.__attrtype == 'color':
 				values = self.__getColorValues()
 				anim = ColorAnimator(attr, domval, values, dur, mode, times, splines, accumulate, additive='sum')
-				self.__setTimeManipulators(anim)
-				return anim
 			elif self.__attrtype == 'position':
 				path = svgpath.Path()
 				coords = self.__getNumPairInterpolationValues()
 				path.constructFromPoints(coords)
 				anim = MotionAnimator(attr, domval, path, dur, mode, times, splines, accumulate, additive='sum')
-				self.__setTimeManipulators(anim)
-				return anim			
-			return None
+			if anim: 
+				self.__setTimeManipulators(anim)			
+			return anim
 
 		################
 		# animateColor or attrtype=='color'
 		if self.__elementTag == 'animateColor' or self.__attrtype=='color':
 			values = self.__getColorValues()
-			anim = ColorAnimator(attr, domval, values, dur, mode, times, splines,
-				accumulate, additive)
+			anim = ColorAnimator(attr, domval, values, dur, mode, times, splines, accumulate, additive)
 			self.__setTimeManipulators(anim)
 			return anim
 
@@ -1282,13 +1271,8 @@ class AnimateElementParser:
 			values = self.__getNumTupleInterpolationValues()
 			anim = FloatTupleAnimator(attr, domval, values, dur, mode, times, splines,
 				accumulate, additive)
-
-		# 5. Return a default if anything else failed
-		if not anim:
-			print 'Dont know how to animate attribute.',self.__attrname,self.__attrtype
-			return self.nullAnimator()
-
-		self.__setTimeManipulators(anim)
+		if anim:
+			self.__setTimeManipulators(anim)
 		return anim
 
 	# return an animator for the 'set' animate element
@@ -1305,10 +1289,11 @@ class AnimateElementParser:
 		value = self.getTo()
 		if value==None or value=='':
 			print 'set element without attribute to'
-			return self.nullAnimator()
-
+			return None
 
 		dur = self.getDuration()
+
+		anim = None
 
 		if self.__attrtype == 'int':
 			value = string.atoi(value)
@@ -1337,14 +1322,7 @@ class AnimateElementParser:
 
 		if anim:
 			self.__setTimeManipulators(anim)
-			return anim
 
-		return self.nullAnimator()
-
-	def nullAnimator(self):
-		dur = self.getDuration()
-		anim = SetAnimator(self.__attrname, self.__domval, self.__domval, dur)
-		self.__setTimeManipulators(anim)
 		return anim
 
 	def getAttrName(self):
