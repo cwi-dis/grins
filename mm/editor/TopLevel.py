@@ -399,8 +399,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			else:
 				import SMILTreeWrite
 				SMILTreeWrite.WriteFile(self.root, filename,
-						     cleanSMIL = cleanSMIL,
-						     evallicense=evallicense)
+							cleanSMIL = cleanSMIL,
+							copyFiles = cleanSMIL,
+							evallicense=evallicense)
 		except IOError, msg:
 			windowinterface.showmessage('Save operation failed.\n'+
 						    'File: '+filename+'\n'+
@@ -456,6 +457,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.context = self.root.GetContext()
 		if self.new_file:
 			self.context.baseurl = ''
+			if type(self.new_file) == type(''):
+				self.context.template = self.new_file
 		self.editmgr = EditMgr(self.root)
 		self.context.seteditmgr(self.editmgr)
 		self.editmgr.register(self)
