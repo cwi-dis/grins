@@ -482,6 +482,10 @@ def CopyNode(bv):
 
 def _DeleteNode(bv, cb):
     node = bv.focus
+    if node == bv.rootview:
+	# This would crash
+	fl.show_message('Please zoom out first', '', '')
+	return
     em = bv.editmgr
     parent = node.GetParent()
     if parent == None:
