@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 from sgmllib import SGMLParser
 import sys
 import string
