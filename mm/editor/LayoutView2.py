@@ -2262,9 +2262,9 @@ class LayoutView2(LayoutViewDialog2):
 		if ctrlName in ('RegionX','RegionY','RegionW','RegionH'):
 			try:
 				value = int(value)
-				self.__updateGeom(ctrlName, value)
 			except:
 				value = None
+			self.__updateGeom(ctrlName, value)
 		elif ctrlName == 'RegionZ':
 			try:
 				value = int(value)
