@@ -458,7 +458,6 @@ def writenode(node, evallicense = 0):
 			f.close()
 		except:
 			windowinterface.showmessage("cannot write `%s' for node `%s'" % (url, MMAttrdefs.getattr(node, 'name') or '<unnamed>'))
-			import pdb ; pdb.set_trace()
 		else:
 			del node.tmpfile
 	else:
