@@ -49,7 +49,8 @@ class _Toplevel:
 		self._timerWnd.HookMessage(self._timer_callback, win32con.WM_TIMER)
 		self._timerWnd.HookMessage(self._message_callback,WM_MAINLOOP)
 	
-		self._topframewindow=None
+		self._mainwnd=None
+		self.genericwnd=AppWnds.MfcOsWnd
 
 	def _do_init(self):
 		if self._initialized:
@@ -83,6 +84,8 @@ class _Toplevel:
 		self._inputs = []
 		self.MainDialog = None
 
+		self._viewcounter=0
+
 		#indicates wheather sr-events are being served by the timer interface
 		self.serving = 0     
 
@@ -106,31 +109,58 @@ class _Toplevel:
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
 		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
 		      adornments = None, canvassize = None,
-		      commandlist = None, context='channel', resizable = 1):
+		      commandlist = None, resizable = 1):
+		return self._mainwnd.newwindow(self, x, y, w, h, title, 0, pixmap, units,
+			       adornments, canvassize, commandlist, resizable)
+
+	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE,
+			type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
+			adornments = None, canvassize = None,
+			commandlist = None, resizable = 1):
+		return self._mainwnd._newwindow(self, x, y, w, h, title, 1, pixmap, units,
+			       adornments, canvassize, commandlist, resizable)
+
+	############ SDI Model Support
+	def createmainwnd(self, x, y, w, h, title,
+		      units = UNIT_MM,adornments = None, commandlist = None):
+		if self._mainwnd==None:
+			self._mainwnd= AppWnds._FrameWnd()
+			self._mainwnd.create(title)
+			self._mainwnd.init_cmif(x, y, w, h, title,
+				units, adornments,commandlist)
+		return self._mainwnd
 		
-		if self._topframewindow==None:
-			self._topframewindow= AppWnds._FrameWnd(self, x, y, w, h, title,visible_channel,type_channel,
-				pixmap, units, adornments, canvassize,commandlist,resizable)
-		if context=='frame':
-			return self._topframewindow
-		if context=='document':
-			return self._topframewindow.newdocument(title,adornments,commandlist)
-		if context=='view':
-			self._curview = self._topframewindow.newview(self, x, y, w, h, title,visible_channel,type_channel,
-				pixmap, units, adornments, canvassize,commandlist,resizable)
-			return self._curview			
-		# temp for player until I find out why common.channel  
-		# calls create_window with pchan arg None again and again			
-		return self._curview
+	def getmainwnd(self):
+		return self._mainwnd
+		
+	def newdocument(self,title,adornments=None,commandlist=None):
+		return self._mainwnd.newdocument(title,adornments,commandlist)
+
+	def newview(self, x, y, w, h, title, units = UNIT_MM,
+		      adornments = None, canvassize = None,
+		      commandlist = None, context='view'):
+		return self._mainwnd.newview(x, y, w, h, title,
+				units, adornments, canvassize,commandlist,context)
+
+	def newviewobj(self,context='view'):
+		return self._mainwnd.newviewobj(context)
+
+	def showview(self,view,context='view'):
+		self._mainwnd.showview(view,context)
+	def createview(self,view):
+		self._mainwnd.createview(view)
+
+
+	############ /SDI Model Support	
 
 	def setwaiting(self,context):
 		self.setcursor('watch')
-		if self._topframewindow:
-			self._topframewindow.setwaiting(context)
+		if self._mainwnd:
+			self._mainwnd.setwaiting(context)
 	def setready(self,context):
 		self.setcursor('')
-		if self._topframewindow:
-			self._topframewindow.setready(context)
+		if self._mainwnd:
+			self._mainwnd.setready(context)
 
 	def getsize(self):
 		"""size of the screen in mm"""

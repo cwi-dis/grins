@@ -38,7 +38,7 @@ def GetStringLength(wnd,str):
 	wnd.ReleaseDC(dc)
 	return cx
 
-def textwindow(text):
+def textwindow_X(text):
 	from win32modules import cmifex2
 	w = Window('Source', resizable = 1, deleteCallback = 'hide', havpar = 0)
 	t = w.TextEdit(text, None, editable = 0, top = 35, left = 0, right = 80*7, bottom = 300, rows = 30, columns = 80)
@@ -46,6 +46,12 @@ def textwindow(text):
 	cmifex2.ResizeWindow(w._wnd, 80*7+20, 380)
 	w.show()
 	return w
+
+def textwindow(text):
+	sv=toplevel.newviewobj('sview_')
+	sv.settext(text)
+	toplevel.showview(sv,'sview_')
+	return sv
 
 def ResizeWindow(wnd,w, h):
 	from win32modules import cmifex2
@@ -100,8 +106,21 @@ def SetCaption(wnd,str):
 # Shortcuts
 
 newwindow = toplevel.newwindow
-
 newcmwindow = toplevel.newwindow
+
+# SDI Model Support
+
+createmainwnd=toplevel.createmainwnd
+getmainwnd=toplevel.getmainwnd
+
+newdocument=toplevel.newdocument
+
+newviewobj=toplevel.newviewobj
+newview=toplevel.newview
+showview=toplevel.showview
+createview=toplevel.createview
+
+# /SDI Model Support
 
 close = toplevel.close
 
@@ -130,6 +149,5 @@ setready=toplevel.setready
 setwaiting=toplevel.setwaiting
 
 genericwnd=toplevel.genericwnd
-
 
 from components import *
