@@ -16,6 +16,7 @@ import commctrl
 Sdk=win32ui.GetWin32Sdk()
 import grinsRC
 import win32mu
+import string
 
 [FALSE, TRUE] = range(2)
 error = 'lib.win32.components.error'
@@ -476,6 +477,10 @@ class SplashDlg(ResDialog):
 		self._versionc = Static(self,grinsRC.IDC_VERSION_MSG)
 		self._msgc = Static(self,grinsRC.IDC_MESSAGE)
 		self._version=version
+		if string.find(version, 'player') >= 0:
+			self._splashbmp = grinsRC.IDB_SPLASHPLAY
+		else:
+			self._splashbmp = grinsRC.IDB_SPLASH
 
 		self.CreateWindow()
 		self.CenterWindow()
@@ -514,7 +519,7 @@ class SplashDlg(ResDialog):
 		import __main__
 		resdll=__main__.resdll
 		self._bmp=win32ui.CreateBitmap()
-		self._bmp.LoadBitmap(grinsRC.IDB_SPLASH,resdll)
+		self._bmp.LoadBitmap(self._splashbmp,resdll)
 
 # Implementation of the about dialog
 class AboutDlg(ResDialog):
@@ -523,6 +528,10 @@ class AboutDlg(ResDialog):
 		self._splash = WndCtrl(self,grinsRC.IDC_SPLASH)
 		self._versionc = Static(self,grinsRC.IDC_VERSION_MSG)
 		self._version=version
+		if string.find(version, 'player') >= 0:
+			self._splashbmp = grinsRC.IDB_SPLASHPLAY
+		else:
+			self._splashbmp = grinsRC.IDB_SPLASH
 	def OnInitDialog(self):	
 		self.attach_handles_to_subwindows()	
 		self._splash.create_wnd_from_handle()
@@ -556,7 +565,7 @@ class AboutDlg(ResDialog):
 		import __main__
 		resdll=__main__.resdll
 		self._bmp=win32ui.CreateBitmap()
-		self._bmp.LoadBitmap(grinsRC.IDB_SPLASH,resdll)
+		self._bmp.LoadBitmap(self._splashbmp,resdll)
 
 # Implementation of the open loaction dialog
 class OpenLocationDlg(ResDialog):
