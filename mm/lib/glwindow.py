@@ -91,10 +91,8 @@ class glwindow:
 
 # Global state
 
-class Struct: pass
-state = Struct()
-state.focuswindow = None
-state.focuswid = None
+focuswindow = None
+focuswid = None
 
 
 # Old functions that used to be more complicated:
@@ -109,6 +107,7 @@ from DEVICE import REDRAW, KEYBD, MOUSE3, MOUSE2, MOUSE1, INPUTCHANGE
 from DEVICE import WINSHUT, WINQUIT
 
 def dispatch(dev, val):
+	global focuswindow, focuswid
 	if dev == REDRAW:
 		# Ignore events for unregistered windows
 		key = `val`
@@ -119,30 +118,30 @@ def dispatch(dev, val):
 		else:
 			report('REDRAW event for unregistered window')
 	elif dev == KEYBD:
-		if state.focuswindow:
-			gl.winset(state.focuswid)
-			state.focuswindow.keybd(val)
+		if focuswindow:
+			gl.winset(focuswid)
+			focuswindow.keybd(val)
 		else:
 			report('KEYBD event with no focus window')
 	elif dev in (MOUSE3, MOUSE2, MOUSE1): # In left-to-right order
-		if state.focuswindow:
-			gl.winset(state.focuswid)
-			state.focuswindow.mouse(dev, val)
+		if focuswindow:
+			gl.winset(focuswid)
+			focuswindow.mouse(dev, val)
 		else:
 			report('MOUSE event with no focus window')
 	elif dev == INPUTCHANGE:
-		if state.focuswindow:
-			gl.winset(state.focuswid)
-			state.focuswindow.leavewindow()
-			state.focuswindow = None
-			state.focuswid = None
+		if focuswindow:
+			gl.winset(focuswid)
+			focuswindow.leavewindow()
+			focuswindow = None
+			focuswid = None
 		if val <> 0:
 			key = `val`
 			if windowmap.has_key(key):
-				state.focuswindow = windowmap[key]
-				state.focuswid = val
+				focuswindow = windowmap[key]
+				focuswid = val
 				gl.winset(val)
-				state.focuswindow.enterwindow()
+				focuswindow.enterwindow()
 			else:
 				report('INPUTCHANGE for unregistered window')
 	elif dev == WINSHUT:
@@ -200,8 +199,10 @@ def setgeometry(arg):
 		scrheight = gl.getgdesc(GL.GD_YPMAX)
 		x, y = h, scrheight-v-height
 		# Correction for window manager frame size
-		x = x - WMCORR_X
-		y = y + WMCORR_Y
+		import calcwmcorr
+		wmcorr_x, wmcorr_y = calcwmcorr.calcwmcorr()
+		x = x - wmcorr_x
+		y = y + wmcorr_y
 		gl.prefposition(x, x+width-1, y, y+height-1)
 
 
@@ -226,24 +227,3 @@ def relocate(arg):
 	x1, x2 = h, h + width
 	y1, y2 = scrheight-v-height, scrheight-v
 	gl.winposition(x1, x2, y1, y2)
-
-
-# Hack, hack: some X window managers interpret the prefered position
-# and size as including the window frame.  Different window managers
-# have different deviations of the window position.  This wouldn't
-# be a big problem, except that if you repeatedly close a window and
-# reopen it at its last position, it tends to drift away.
-# To compensate for this, the user can set the environment variable
-# WMCORR to the (x,y) correction constants.  For TWM, for instance,
-# WMCORR=1,21 appears to be valid.  For 4Dwm, use WMCORR=0,0 (default).
-# The correction is applied by setgeometry().
-
-import posix
-if posix.environ.has_key('WMCORR'):
-	WMCORR_X, WMCORR_Y = eval(posix.environ['WMCORR'])
-	# Make sure they are integers:
-	WMCORR_X = int(WMCORR_X)
-	WMCORR_Y = int(WMCORR_Y)
-else:
-	import calcwmcorr
-	WMCORR_X, WMCORR_Y = calcwmcorr.WMCORR
