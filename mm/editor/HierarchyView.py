@@ -68,6 +68,17 @@ class HierarchyView(ViewDialog):
 		self.destroynode = None	# node to be destroyed later
 		ViewDialog.__init__(self, 'hview_')
 		self.menu = [
+			('Canvas', [
+				(None, 'Double height',
+				 (self.canvascall,
+				  (windowinterface.DOUBLE_HEIGHT,))),
+				(None, 'Double width',
+				 (self.canvascall,
+				  (windowinterface.DOUBLE_WIDTH,))),
+				(None, 'Reset',
+				 (self.canvascall,
+				  (windowinterface.RESET_CANVAS,))),
+				]),
 			('Edit', [
 				(None, 'New node', [
 					(None, 'Before focus',
@@ -129,7 +140,7 @@ class HierarchyView(ViewDialog):
 		title = 'Hierarchy View (' + self.toplevel.basename + ')'
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
-		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1, menubar=self.menu)
+		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1, menubar=self.menu, canvassize = (w, h))
 		if self.waiting:
 			self.window.setcursor('watch')
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
@@ -631,6 +642,9 @@ class HierarchyView(ViewDialog):
 
 ##  	def helpcall(self):
 ## 		if self.focusobj: self.focusobj.helpcall()
+
+	def canvascall(self, code):
+		self.window.setcanvassize(code)
 
 	def playcall(self):
 		if self.focusobj: self.focusobj.playcall()

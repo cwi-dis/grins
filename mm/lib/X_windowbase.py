@@ -15,6 +15,8 @@ SINGLE, HTM, TEXT, MPEG = 0, 1, 2, 3
 
 UNIT_MM, UNIT_SCREEN, UNIT_PXL = 0, 1, 2
 
+RESET_CANVAS, DOUBLE_HEIGHT, DOUBLE_WIDTH = 0, 1, 2
+
 Version = 'X'
 
 toplevel = None
@@ -105,11 +107,11 @@ class _Toplevel:
 	def addclosecallback(self, func, args):
 		self._closecallbacks.append(func, args)
 
-	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0, units = UNIT_MM, menubar = None):
-		return _Window(self, x, y, w, h, title, 0, pixmap, units, menubar)
+	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0, units = UNIT_MM, menubar = None, canvassize = None):
+		return _Window(self, x, y, w, h, title, 0, pixmap, units, menubar, canvassize)
 
-	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0, units = UNIT_MM, menubar = None):
-		return _Window(self, x, y, w, h, title, 1, pixmap, units, menubar)
+	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0, units = UNIT_MM, menubar = None, canvassize = None):
+		return _Window(self, x, y, w, h, title, 1, pixmap, units, menubar, canvassize)
 
 	def setcursor(self, cursor):
 		for win in self._subwindows:
@@ -253,6 +255,8 @@ class _Window:
 	# _shell: the Xt.ApplicationShell widget used for the window
 	#	(top-level windows only)
 	# _form: the Xm.DrawingArea widget used for the window
+	# _scrwin: the Xm.ScrolledWindow widget used for scrolling the canvas
+	# _clipcanvas: the Xm.DrawingArea widget used by the Xm.ScrolledWindow
 	# _colormap: the colormap used by the window (top-level
 	#	windows only)
 	# _visual: the visual used by the window (top-level windows
@@ -299,7 +303,7 @@ class _Window:
 	# _exp_reg: a region in which the exposed area is built up
 	#	(top-level window only)
 	def __init__(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0,
-		     units = UNIT_MM, menubar = None):
+		     units = UNIT_MM, menubar = None, canvassize = None):
 		self._title = title
 		parent._subwindows.insert(0, self)
 		self._do_init(parent)
@@ -404,6 +408,39 @@ class _Window:
 					     toplevel._default_colormap,
 					     self._accelerators)
 			self._menubar = mb
+		if canvassize is not None:
+			form = form.CreateScrolledWindow('scrolledWindow',
+				{'scrollingPolicy': Xmd.AUTOMATIC,
+				 'width': attrs['width'],
+				 'height': attrs['height'],
+				 'leftAttachment': Xmd.ATTACH_FORM,
+				 'rightAttachment': Xmd.ATTACH_FORM,
+				 'bottomAttachment': Xmd.ATTACH_FORM,
+				 'topAttachment': attrs['topAttachment'],
+				 'topWidget': attrs.get('topWidget',0)})
+			form.ManageChild()
+			self._scrwin = form
+			for w in form.children:
+				if w.Class() == Xm.DrawingArea:
+					w.AddCallback('resizeCallback',
+						self._scr_resize_callback,
+						form)
+					self._clipcanvas = w
+					break
+			width, height = canvassize
+			# convert to pixels
+			if units == UNIT_MM:
+				width = int(float(width) * toplevel._hmm2pxl + 0.5)
+				height = int(float(height) * toplevel._vmm2pxl + 0.5)
+			elif units == UNIT_SCREEN:
+				width = int(float(width) * toplevel._screenwidth + 0.5)
+				height = int(float(height) * toplevel._screenheight + 0.5)
+			elif units == UNIT_PXL:
+				width = int(width)
+				height = int(height)
+			spacing = form.spacing
+			attrs['width'] = width - spacing
+			attrs['height'] = height - spacing
 		form = form.CreateManagedWidget('toplevel',
 						Xm.DrawingArea, attrs)
 		self._form = form
@@ -466,6 +503,7 @@ class _Window:
 		self._transparent = 0
 		self._showing = 0
 		self._redrawfunc = None
+		self._scrwin = None	# Xm.ScrolledWindow widget if any
 
 	def close(self):
 		if self._parent is None:
@@ -521,7 +559,14 @@ class _Window:
 
 	def getgeometry(self, units = UNIT_MM):
 		x, y = self._shell.TranslateCoords(0, 0)
-		w, h = self._rect[2:]
+		for w in self._shell.children[0].children:
+			if w.Class() == Xm.ScrolledWindow:
+				val = w.GetValues(['width', 'height'])
+				w = val['width']
+				h = val['height']
+				break
+		else:
+			w, h = self._rect[2:]
 		if units == UNIT_MM:
 			return float(x) / toplevel._hmm2pxl, \
 			       float(y) / toplevel._vmm2pxl, \
@@ -536,6 +581,26 @@ class _Window:
 			return x, y, w, h
 		else:
 			raise error, 'bad units specified'
+
+	def setcanvassize(self, code):
+		if self._scrwin is None:
+			raise error, 'no scrollable window'
+		# this triggers a resizeCallback
+		sp = self._scrwin.spacing
+		w = self._scrwin.width
+		h = self._scrwin.height
+		if code == RESET_CANVAS:
+			self._form.SetValues({'width': w-sp, 'height': h-sp})
+		elif code == DOUBLE_HEIGHT:
+			attrs = {'height': self._form.height * 2}
+			if self._clipcanvas.width == self._form.width:
+				attrs['width'] = self._form.width - 27
+			self._form.SetValues(attrs)
+		elif code == DOUBLE_WIDTH:
+			attrs = {'width': self._form.width * 2}
+			if self._clipcanvas.height == self._form.height:
+				attrs['height'] = self._form.height - 27
+			self._form.SetValues(attrs)
 
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
 		return _SubWindow(self, coordinates, 0, pixmap, transparent, z)
@@ -1004,6 +1069,13 @@ class _Window:
 				w._do_expose(region, 1)
 		if self._showing:
 			self.showwindow()
+
+	def _scr_resize_callback(self, w, form, call_data):
+		if self.is_closed():
+			return
+		width = max(self._form.width, w.width)
+		height = max(self._form.height, w.height)
+		self._form.SetValues({'width': width, 'height': height})
 
 	def _resize_callback(self, form, client_data, call_data):
 		val = self._form.GetValues(['width', 'height'])

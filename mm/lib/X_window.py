@@ -23,26 +23,27 @@ ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
 class _Toplevel(X_windowbase._Toplevel):
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
 		      type_channel = SINGLE, pixmap = None, units = UNIT_MM,
-		      menubar = None):
+		      menubar = None, canvassize = None):
 ## 		if pixmap is None:
 ## 			pixmap = toplevel._depth <= 8
-		return _Window(self, x, y, w, h, title, 0, pixmap, units, menubar)
+		return _Window(self, x, y, w, h, title, 0, pixmap, units, menubar, canvassize)
 
 	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE,
 			type_channel = SINGLE, pixmap = None, units = UNIT_MM,
-			menubar = None):
+			menubar = None, canvassize = None):
 ## 		if pixmap is None:
 ## 			pixmap = toplevel._depth <= 8
-		return _Window(self, x, y, w, h, title, 1, pixmap, units, menubar)
+		return _Window(self, x, y, w, h, title, 1, pixmap, units, menubar, canvassize)
 
 	def getsize(self):
 		return toplevel._mscreenwidth, toplevel._mscreenheight
 
 class _Window(X_windowbase._Window):
 	def __init__(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0,
-		     units = UNIT_MM, menubar = None):
+		     units = UNIT_MM, menubar = None, canvassize = None):
 		X_windowbase._Window.__init__(self, parent, x, y, w, h, title,
-					      defcmap, pixmap, units, menubar)
+					      defcmap, pixmap, units, menubar,
+					      canvassize)
 		self.arrowcache = {}
 		self._next_create_box = []
 
