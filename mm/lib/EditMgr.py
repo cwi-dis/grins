@@ -30,7 +30,7 @@ class EditMgr():
 	def transaction(self):
 		if self.busy: raise MMExc.AssertError, 'recursive transaction'
 		done = []
-		for x in self.registry:
+		for x in self.registry[:]:
 			if not x.transaction():
 				for x in done:
 					x.rollback()
@@ -43,7 +43,7 @@ class EditMgr():
 	#
 	def commit(self):
 		if not self.busy: raise MMExc.AssertError, 'invalid commit'
-		for x in self.registry:
+		for x in self.registry[:]:
 			x.commit()
 		self.busy = 0
 		del self.undostep # To frustrate invalid addstep calls
@@ -51,7 +51,7 @@ class EditMgr():
 	def rollback(self):
 		if not self.busy: raise MMExc.AssertError, 'invalid rollback'
 		# XXX undo changes made in this transaction
-		for x in self.registry:
+		for x in self.registry[:]:
 			x.rollback()
 		self.busy = 0
 		del self.undostep # To frustrate invalid addstep calls
