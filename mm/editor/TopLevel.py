@@ -295,6 +295,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.viewsdisabled = 0
 		
 		self.showviews()
+		# A new file we immedeately save
+		if self.new_file:
+			self.saveas_callback()
 		
 	def showdefaultviews(self):
 		viewinfo = self.root.context.getviewinfo()
