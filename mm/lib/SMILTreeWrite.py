@@ -592,7 +592,7 @@ def getsyncarc(writer, node, isend):
 				name = writer.ch2name[arc.channel]
 			elif arc.srcanchor:
 				aid = (arc.srcnode.GetUID(), arc.srcanchor)
-				name = writer.aid2name[aid]
+				name = escape_name(writer.aid2name[aid])
 			elif arc.srcnode == 'syncbase':
 				name = ''
 			elif arc.srcnode == 'prev':
