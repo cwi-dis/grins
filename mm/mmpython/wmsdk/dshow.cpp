@@ -17,6 +17,9 @@ Copyright 1991-1999 by Oratrix Development BV, Amsterdam, The Netherlands.
 #pragma comment (lib,"guids.lib")
 #pragma comment (lib,"strmbase.lib")
 
+#define  OATRUE (-1)
+#define  OAFALSE (0)
+
 #include <initguid.h>
 DEFINE_GUID(IID_IRealConverter,
 0xe8d61c44, 0xd313, 0x472a, 0x84, 0x68, 0x2b, 0x1e, 0xd5, 0xb0, 0x5c, 0xab);
@@ -161,7 +164,7 @@ newFileSinkFilterObject()
 	return self;
 }
 
-
+//
 typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
@@ -183,8 +186,33 @@ newMediaControlObject()
 	/* XXXX Add your own initializers here */
 	return self;
 }
+//
 
 
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IVideoWindow* pI;
+} VideoWindowObject;
+
+staticforward PyTypeObject VideoWindowType;
+
+
+static VideoWindowObject *
+newVideoWindowObject()
+{
+	VideoWindowObject *self;
+
+	self = PyObject_NEW(VideoWindowObject, &VideoWindowType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+//
 typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
@@ -398,6 +426,28 @@ GraphBuilder_QueryIMediaPosition(GraphBuilderObject *self, PyObject *args)
 	return (PyObject *) obj;
 }
 
+static char GraphBuilder_QueryIVideoWindow__doc__[] =
+""
+;
+static PyObject *
+GraphBuilder_QueryIVideoWindow(GraphBuilderObject *self, PyObject *args)
+{
+	HRESULT res;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	VideoWindowObject *obj = newVideoWindowObject();
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pGraphBuilder->QueryInterface(IID_IVideoWindow, (void **) &obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)) {
+		seterror("GraphBuilder_QueryIVideoWindow", res);
+		obj->pI=NULL;
+		Py_DECREF(obj);
+		return NULL;
+	}
+	return (PyObject *) obj;
+}
+
 
 static char GraphBuilder_WaitForCompletion__doc__[] =
 ""
@@ -522,6 +572,7 @@ static struct PyMethodDef GraphBuilder_methods[] = {
 	{"FindFilterByName", (PyCFunction)GraphBuilder_FindFilterByName, METH_VARARGS, GraphBuilder_FindFilterByName__doc__},
 	{"RemoveFilter", (PyCFunction)GraphBuilder_RemoveFilter, METH_VARARGS, GraphBuilder_RemoveFilter__doc__},
 	{"QueryIMediaPosition", (PyCFunction)GraphBuilder_QueryIMediaPosition, METH_VARARGS, GraphBuilder_QueryIMediaPosition__doc__},
+	{"QueryIVideoWindow", (PyCFunction)GraphBuilder_QueryIVideoWindow, METH_VARARGS, GraphBuilder_QueryIVideoWindow__doc__},
 	{"Connect", (PyCFunction)GraphBuilder_Connect, METH_VARARGS, GraphBuilder_Connect__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
@@ -1091,6 +1142,165 @@ static PyTypeObject EnumPinsType = {
 };
 
 // End of code for EnumPins object 
+////////////////////////////////////////////
+
+/////////////////////////////////////////////
+// VideoWindow
+
+
+static char VideoWindow_put_Owner__doc__[] =
+""
+;
+
+static PyObject *
+VideoWindow_put_Owner(VideoWindowObject *self, PyObject *args)
+{
+	HRESULT res;
+	HWND hWnd;
+	if (!PyArg_ParseTuple(args, "i",&hWnd))
+		return NULL;
+	Py_BEGIN_ALLOW_THREADS
+	// temp batch intil split
+	res = self->pI->put_Owner((OAHWND)hWnd);
+	res = self->pI->put_MessageDrain((OAHWND)hWnd);
+	res = self->pI->put_WindowStyle(WS_CHILD|WS_CLIPSIBLINGS|WS_CLIPCHILDREN);
+	res = self->pI->put_AutoShow(OAFALSE);
+	res = self->pI->SetWindowForeground(OAFALSE);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)) {
+		seterror("VideoWindow_put_Owner", res);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+
+static char VideoWindow_SetWindowPosition__doc__[] =
+""
+;
+
+static PyObject *
+VideoWindow_SetWindowPosition(VideoWindowObject *self, PyObject *args)
+{
+	HRESULT res;
+	long x,y,w,h;
+	if (!PyArg_ParseTuple(args,"(llll):SetWindowPosition", &x,&y,&w,&h))
+		return NULL;
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pI->SetWindowPosition(x,y,w,h);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)) {
+		seterror("VideoWindow_SetWindowPosition", res);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+
+static char VideoWindow_GetWindowPosition__doc__[] =
+""
+;
+
+static PyObject *
+VideoWindow_GetWindowPosition(VideoWindowObject *self, PyObject *args)
+{
+	HRESULT res;
+	long x=0,y=0,w=0,h=0;
+	if (!PyArg_ParseTuple(args,""))
+		return NULL;
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pI->GetWindowPosition(&x,&y,&w,&h);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)) {
+		seterror("VideoWindow_GetWindowPosition", res);
+		return NULL;
+	}
+	// Temp fix. We must find a better way
+	long dh=GetSystemMetrics(SM_CYCAPTION)+2*GetSystemMetrics(SM_CYFRAME);
+	long dw=2*GetSystemMetrics(SM_CXFRAME);
+	return Py_BuildValue("(llll)",x,y,(w>0?w-dw:0),(h>0?h-dh:0));
+}
+
+
+
+static char VideoWindow_put_Visible__doc__[] =
+""
+;
+
+static PyObject *
+VideoWindow_put_Visible(VideoWindowObject *self, PyObject *args)
+{
+	HRESULT res;
+	int flag; 
+	if(!PyArg_ParseTuple(args,"i:SetVisible",&flag))
+		return NULL;
+	long visible=flag?-1:0; // OATRUE (-1),OAFALSE (0)	
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pI->put_Visible(visible);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)) {
+		seterror("VideoWindow_put_Visible", res);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static struct PyMethodDef VideoWindow_methods[] = {
+	{"put_Owner", (PyCFunction)VideoWindow_put_Owner, METH_VARARGS, VideoWindow_put_Owner__doc__},
+	{"SetWindowPosition", (PyCFunction)VideoWindow_SetWindowPosition, METH_VARARGS, VideoWindow_SetWindowPosition__doc__},
+	{"GetWindowPosition", (PyCFunction)VideoWindow_GetWindowPosition, METH_VARARGS, VideoWindow_GetWindowPosition__doc__},
+	{"put_Visible", (PyCFunction)VideoWindow_put_Visible, METH_VARARGS, VideoWindow_put_Visible__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+VideoWindow_dealloc(VideoWindowObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+VideoWindow_getattr(VideoWindowObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(VideoWindow_methods, (PyObject *)self, name);
+}
+
+static char VideoWindowType__doc__[] =
+""
+;
+
+static PyTypeObject VideoWindowType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"VideoWindow",			/*tp_name*/
+	sizeof(VideoWindowObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)VideoWindow_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)VideoWindow_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	VideoWindowType__doc__ /* Documentation string */
+};
+
+// End of VideoWindow
 ////////////////////////////////////////////
 
 ////////////////////////////////////////////
