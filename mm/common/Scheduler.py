@@ -411,7 +411,11 @@ class SchedulerContext:
 				# a higher priority element has cropped up in
 				# the queue: reinsert this one so that the
 				# other one can be handled first
-				arc.qid = parent.enterabs(arc.qid[0], arc.qid[1], self.trigger, (curtime,arc,None,None,timestamp))
+				# must insert it before all other equal priority events
+				i = 0
+				while i < len(parent.queue) and parent.queue[i][:2] < arc.qid[:2]:
+					i = i+1
+				parent.queue.insert(i, (arc.qid[0], arc.qid[1], self.trigger, (curtime,arc,None,None,timestamp)))
 				parent.updatetimer(curtime)
 				return
 			if not arc.isstart and node.playing in (MMStates.IDLE, MMStates.PLAYED):
