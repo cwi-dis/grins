@@ -994,7 +994,7 @@ class MMChannel(MMTreeElement):
 		cRegion = self.__copyIntoContext(context)
 		if parentRegion != None:
 			context.editmgr.setchannelattr(cRegion.name, 'base_window', parentRegion.name)
-			self.__attrsImport(context, cRegion)
+		self.__attrsImport(context, cRegion)
 		return cRegion
 
 	def __copyIntoContext(self, context):
