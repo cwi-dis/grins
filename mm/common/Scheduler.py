@@ -1396,9 +1396,9 @@ class Scheduler(scheduler):
 			return self.time_pause - self.time_origin
 		return time.time() - self.time_origin
 
-	def resettimer(self):
-		self.time_origin = time.time()
-		self.time_pause = self.time_origin
+	def resettimer(self, starttime = 0):
+		self.time_origin = time.time() - starttime
+		self.time_pause = self.time_origin + starttime
 
 	def getpaused(self):
 		return self.paused
