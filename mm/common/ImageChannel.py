@@ -88,7 +88,7 @@ class ImageChannel() = Channel():
 	# respectively to nodes belonging to this channel.
 	#
 	chan_attrs = ['winsize', 'winpos']
-	node_attrs = ['file', 'wait_for_close']
+	node_attrs = ['file', 'wait_for_close', 'duration']
 	#
 	def init(self, (name, attrdict, player)):
 		self = Channel.init(self, (name, attrdict, player))
