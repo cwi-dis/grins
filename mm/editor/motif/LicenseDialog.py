@@ -190,7 +190,12 @@ class EnterkeyDialog:
 				  {'topAttachment': Xmd.ATTACH_FORM,
 				   'leftAttachment': Xmd.ATTACH_FORM,
 				   'rightAttachment': Xmd.ATTACH_FORM})
-		l1 = f1.CreateLabel('label1',
+##		l1 = f1.CreateLabel('label1',
+##				    {'topAttachment': Xmd.ATTACH_FORM,
+##				     'leftAttachment': Xmd.ATTACH_FORM,
+##				     'bottomAttachment': Xmd.ATTACH_FORM,
+##				     'labelString': 'Name:'})
+		l1 = f1.CreateManagedWidget('label1', Xm.Label,
 				    {'topAttachment': Xmd.ATTACH_FORM,
 				     'leftAttachment': Xmd.ATTACH_FORM,
 				     'bottomAttachment': Xmd.ATTACH_FORM,
@@ -208,7 +213,12 @@ class EnterkeyDialog:
 				   'topWidget': f1,
 				   'leftAttachment': Xmd.ATTACH_FORM,
 				   'rightAttachment': Xmd.ATTACH_FORM})
-		l2 = f2.CreateLabel('label2',
+##		l2 = f2.CreateLabel('label2',
+##				    {'topAttachment': Xmd.ATTACH_FORM,
+##				     'leftAttachment': Xmd.ATTACH_FORM,
+##				     'bottomAttachment': Xmd.ATTACH_FORM,
+##				     'labelString': 'Organization:'})
+		l2 = f2.CreateManagedWidget('label2', Xm.Label,
 				    {'topAttachment': Xmd.ATTACH_FORM,
 				     'leftAttachment': Xmd.ATTACH_FORM,
 				     'bottomAttachment': Xmd.ATTACH_FORM,
@@ -227,7 +237,12 @@ class EnterkeyDialog:
 				   'leftAttachment': Xmd.ATTACH_FORM,
 				   'rightAttachment': Xmd.ATTACH_FORM,
 				   'bottomAttachment': Xmd.ATTACH_FORM})
-		l3 = f3.CreateLabel('label3',
+##		l3 = f3.CreateLabel('label3',
+##				    {'topAttachment': Xmd.ATTACH_FORM,
+##				     'leftAttachment': Xmd.ATTACH_FORM,
+##				     'bottomAttachment': Xmd.ATTACH_FORM,
+##				     'labelString': 'License key:'})
+		l3 = f3.CreateManagedWidget('label3', Xm.Label,
 				    {'topAttachment': Xmd.ATTACH_FORM,
 				     'leftAttachment': Xmd.ATTACH_FORM,
 				     'bottomAttachment': Xmd.ATTACH_FORM,
