@@ -1732,6 +1732,7 @@ class MMNode:
 		copy = context.newnode(self.type)
 		context.nodeclass = nodeclass
 		uidremap[self.uid] = copy.uid
+		# note that beginlist/endlist are fixed later
 		copy.attrdict = _valuedeepcopy(self.attrdict)
 		copy.values = _valuedeepcopy(self.values)
 		children = self.children
@@ -1751,43 +1752,43 @@ class MMNode:
 
 	def _fixuidrefs(self, uidremap):
 		# XXX Are there any other attributes that reference uids?
-		self._fixsyncarcs(uidremap)
+		self._fixsyncarcs('beginlist', uidremap)
+		self._fixsyncarcs('endlist', uidremap)
 		for child in self.children:
 			child._fixuidrefs(uidremap)
 
-	def _fixsyncarcs(self, uidremap):
+	def _fixsyncarcs(self, attr, uidremap):
 		# XXX Exception-wise, this function knows about the
 		# semantics and syntax of an attribute...
 		try:
-			arcs = self.GetRawAttr('synctolist')
+			arcs = self.GetRawAttr(attr)
 		except NoSuchAttrError:
 			return
 		if not arcs:
-			self.DelAttr('synctolist')
+			self.DelAttr(attr)
 			return
 		newarcs = []
-		for xuid, xside, delay, yside in arcs:
-			if uidremap.has_key(xuid):
-				xuid = uidremap[xuid]
-			if yside == HD:
-				if self.parent.type == 'seq' and xside == TL:
-					prev = None
-					for n in self.parent.children:
-						if n is self:
-							break
-						prev = n
-					if prev is not None and prev.uid == xuid:
-						self.SetAttr('begin', delay)
-						continue
-				elif xside == HD and self.parent.uid == xuid:
-					self.SetAttr('begin', delay)
-					continue
-			newarcs.append((xuid, xside, delay, yside))
-		if newarcs <> arcs:
-			if not newarcs:
-				self.DelAttr('synctolist')
+		for arc in arcs:
+			if arc.isstart:
+				action = 'begin'
+			elif arc.ismin:
+				action = 'min'
 			else:
-				self.SetAttr('synctolist', newarcs)
+				action = 'end'
+			uid = arc.dstnode.uid
+			if uidremap.has_key(uid):
+				dstnode = self.context.mapuid(uidremap[uid])
+			srcnode = arc.srcnode
+			if isinstance(srcnode, MMNode):
+				# if it's a string or None, we just copy
+				uid = srcnode.uid
+				if uidremap.has_key(uid):
+					srcnode = self.context.mapuid(uidremap[uid])
+			arc = MMSyncArc(dstnode, action, srcnode,
+					 arc.srcanchor, arc.channel, arc.event,
+					 arc.marker, arc.wallclock, arc.delay)
+			newarcs.append(arc)
+		self.SetAttr(attr, newarcs)
 
 	#
 	# Public methods for modifying a tree
@@ -1816,7 +1817,7 @@ class MMNode:
 		MMAttrdefs.flushcache(self)
 ##		self._updsummaries([name])
 		# Special case if it is the filename - set the name of this function.
-		if name == 'file' and value not in [None, '']  and MMAttrdefs.getattr(self, 'name') in [None, '']:
+		if name == 'file' and value and not MMAttrdefs.getattr(self, 'name'):
 			shortname = os.path.splitext(os.path.basename(value))[0]
 			self.SetAttr('name', shortname)
 
@@ -3283,8 +3284,14 @@ def _valuedeepcopy(value):
 		for i in range(len(copy)):
 			copy[i] = _valuedeepcopy(copy[i])
 		return copy
+	if type(value) is type(()):
+		copy = []
+		for v in value:
+			copy.append(_valuedeepcopy(v))
+		return tuple(copy)
 	# XXX Assume everything else is immutable.  Not quite true...
 	return value
+
 # When a subtree is copied, certain hyperlinks must be copied as well.
 # - When copying into another context, all hyperlinks within the copied
 #   subtree must be copied.
