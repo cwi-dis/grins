@@ -249,7 +249,7 @@ class NodeInfo(NodeInfoDialog):
 			units = ch.get('units', UNIT_SCREEN)
 			if units == UNIT_PXL:
 				import Sizes
-				w, h = Sizes.GetSize(self.url)
+				w, h = Sizes.GetSize(context.findurl(self.url))
 				if w == 0:
 					w = 100 # default size
 				if h == 0:
