@@ -589,11 +589,13 @@ static PyObject *
 DirectDrawSurface_SetColorKey(DirectDrawSurfaceObject *self, PyObject *args)
 {
 	DWORD dwFlags = DDCKEY_SRCBLT;
-	DWORD dwLow =0, dwHigh=0; // black
+	DWORD dwLow = 0, dwHigh=0; // black
 	if (!PyArg_ParseTuple(args, "|i(ii)",&dwFlags,&dwLow,&dwHigh))
 		return NULL;	
 	HRESULT hr;
-	DDCOLORKEY ck = {dwLow, dwHigh};
+	DDCOLORKEY ck;
+	ck.dwColorSpaceLowValue = dwLow;
+	ck.dwColorSpaceHighValue = dwHigh;
 	hr = self->pI->SetColorKey(dwFlags,&ck);
 	if (FAILED(hr)){
 		seterror("DirectDrawSurface_SetColorKey", hr);
@@ -1295,11 +1297,11 @@ static struct constentry _ddgbs[] ={
 	};
 
 static struct constentry _ddckey[] ={
-	{"DDCKEY_COLORSPACE",},
-	{"DDCKEY_DESTBLT",},
-	{"DDCKEY_DESTOVERLAY",},
-	{"DDCKEY_SRCBLT",},
-	{"DDCKEY_SRCOVERLAY",},
+	{"DDCKEY_COLORSPACE",DDCKEY_COLORSPACE},
+	{"DDCKEY_DESTBLT",DDCKEY_DESTBLT},
+	{"DDCKEY_DESTOVERLAY",DDCKEY_DESTOVERLAY},
+	{"DDCKEY_SRCBLT",DDCKEY_SRCBLT},
+	{"DDCKEY_SRCOVERLAY",DDCKEY_SRCOVERLAY},
 	{NULL,0}
 	};
 
