@@ -901,11 +901,16 @@ class MMChannelTree:
 		self.__calc2(node)
 		self.__node = node
 
-	def __del__(self):
-		context = self.__node.GetContext()
-		channels = context.channels
-		for ch in channels:
-			del ch.__parent
+	# warning: this method allow to clean the private varible '__parent': optimization
+	# it doesn't work if you add a new MMChannel instance in document, then
+	# delete MMChannelTree. If you want to make working this method, you have to keep
+	# a separate channel name list, or protect this method against crashes, ...
+	# So, don't activate this method without the requiered modifications
+#	def __del__(self):
+#		context = self.__node.GetContext()
+#		channels = context.channels
+#		for ch in channels:
+#			del ch.__parent
 
 	def getchannel(self, chan):
 		if type(chan) != type(''):
@@ -926,6 +931,7 @@ class MMChannelTree:
 			return chan.__parent
 		context = self.__node.GetContext()
 		chan = context.channeldict.get(chan)
+		print chan
 		if chan: return chan.__parent
 		return None
 
@@ -957,11 +963,14 @@ class MMChannelTree:
 	def getviewports(self):
 		return self.top_levels
 
-#	def getviewport(self, chan):
-#		# Returns the name of this node's viewport.
-#		print "TODO"
-#		return None
-# Kleanthis: have you called this "self.top_levels"??
+	def getviewport(self, chan):
+		# Returns the viewport associated to the channel
+		iChan = chan
+		pChan = self.getparent(chan)
+		while pChan != None:
+			iChan = pChan
+			pChan = self.getparent(pChan)
+		return iChan
 
 	def __calc1(self, node):
 		# Find the base windows, aka viewports.
