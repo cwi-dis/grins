@@ -75,7 +75,7 @@ _y_pixel_per_mm = _y_pixel_per_inch / 25.4
 # Height of menu bar and height of window title
 #
 _screen_top_offset = 26	# XXXX Should be gotten from GetMBarHeight()
-_window_top_offset=18	# XXXX Is this always correct?
+_window_top_offset=21	# XXXX Is this always correct?
 
 #
 # Event loop parameters
@@ -652,7 +652,7 @@ class _Toplevel(_Event):
 		self._bgcolor = 0xffff, 0xffff, 0xffff # white
 		self._fgcolor =      0,      0,      0 # black
 		self._next_xpos = 16
-		self._next_ypos = 24
+		self._next_ypos = 54
 		self._command_handler = None
 		self._cursor_is_default = 1
 		self._cur_cursor = None		# The currently active cursor
@@ -931,11 +931,11 @@ class _Toplevel(_Event):
 		x = self._next_xpos
 		y = self._next_ypos
 		if x < 200:
-			self._next_xpos = self._next_xpos + 8
+			self._next_xpos = self._next_xpos + 20
 		else:
 			self._next_xpos = 16
 		if y < 100:
-			self._next_ypos = self._next_ypos + 40
+			self._next_ypos = self._next_ypos + 28
 		else:
 			self._next_ypos = 44
 		return x, y
