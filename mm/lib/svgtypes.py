@@ -348,9 +348,21 @@ class SVGPercent(SVGAttr):
 
 class SVGLength(SVGAttr):
 	classre = re.compile(signedNumberPat + lengthUnitsPat + '?$')
-	#unitstopx = {'px':1.0, 'pt':1.25, 'pc':15.0, 'mm': 3.543307, 'cm':35.43307, 'in':90.0}
-	unitstopx = {'px': 1.0, 'pt': 1.0, 'pc': 12.0, 'mm': 2.8346456, 'cm': 28.346456, 'in': 72.0}
-	defaultunit = 'px'
+	unitstopx = {'px': 1.0, 'pt': 1.0, 'pc': 12.0, 'mm': 2.845275590551181, 'cm': 28.45275590551181, 'in': 72.27}
+	defaultunit = None # uu, user units
+	
+	import sys
+	if sys.platform == 'win32':
+		import win32ui, win32con
+		wnd	= win32ui.GetWin32Sdk().GetDesktopWindow()
+		dc = wnd.GetDC();
+		dpi = dc.GetDeviceCaps(win32con.LOGPIXELSX)
+		unitstopx['in'] = dpi
+		unitstopx['pt'] = dpi/72.27
+		unitstopx['cm'] = dpi/2.54
+		unitstopx['mm'] = dpi/25.4
+		unitstopx['pc'] = 12.0*dpi/72.27
+
 	def __init__(self, node, attr, str, default=None):
 		SVGAttr.__init__(self, node, attr, str, default)
 		self._units = None
@@ -380,49 +392,43 @@ class SVGLength(SVGAttr):
 		else:	
 			return fmtfloat(self._value, suffix = self._units)
 
-	def getValue(self, units='px'):
+	# return length in user units
+	# user units is a function of the pos in the DOM tree
+	def getValue(self):
 		if self._value is not None:
-			if self._units=='%':
+			if not self._units:		# user units
+				return self._value
+			elif self._units=='%':	# percent
 				parent = self._node.getParent()
 				if parent is not None and parent.getType()!='#document':
-					f1 = parent.getXMLAttr(self._attr).getValue() / 100.0
+					return parent.getXMLAttr(self._attr).getValue(ctx = ctx) / 100.0
 				else:
-					f1 = 0
-			else:
-				f1 = self.unitstopx.get(self._units or 'px')
-			pixels = f1*self._value
-			if units == 'px':
-				return int(pixels)
-			f2 = self.unitstopx.get(units)
-			return pixels/f2
-		return self._default
+					# no ref for percent, top svg element
+					if self.__class__ == SVGWidth:
+						return 640
+					elif self.__class__ == SVGHeight:
+						return 480
+					else:
+						return 640
+			else:					# concrete units
+				# convert to pixels (viewport coordinates)
+				f1 = self.unitstopx.get(self._units)
+				pixels = f1*self._value
+				
+				# transform to user units
+				tm = self._node.getViewportToUserTM()
+				if self.__class__ == SVGWidth:
+					return tm.mapwidth(pixels)
+				elif self.__class__ == SVGHeight:
+					return tm.mapheight(pixels)
+				else:
+					return tm.mapwidth(pixels)
 
-	def getUnits(self):
-		return self._units
+		return self._default
 
 	def isDefault(self):
 		return self._value == self._default
 
-	def getDeviceValue(self, tm, f):
-		val = self.getValue()
-		if self._units is not None:
-			tm = tm.copy()
-			tm.inverse()
-			if f == 'w':
-				return int(tm.UWtoDW(val))
-			elif f == 'h':
-				return int(tm.UHtoDH(val))
-		return val
-	
-	def getElement(self):
-		return self._node
-	
-	def setValue(self, val, units='px'):
-		self._value = val
-		self._units = units
-
-	def setDefault(self, default):
-		self._default = default	
 
 class SVGWidth(SVGLength):
 	pass
@@ -1172,6 +1178,17 @@ class TM:
 		self.matrix(tm.elements)
 
 	# helpers
+	def mappoint(self, point):
+		a, b, c, d, e, f = self.elements
+		xu, yu = point
+		return a*xu + c*yu + e, b*xu + d*yu + f
+
+	def mapwidth(self, w):
+		return self.elements[0]*w
+
+	def mapheight(self, h):
+		return self.elements[3]*h
+
 	def UPtoDP(self, point):
 		a, b, c, d, e, f = self.elements
 		xu, yu = point
