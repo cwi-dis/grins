@@ -167,8 +167,10 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		self._ok_enabled = 1
 		self._setsensitive([ITEM_APPLY, ITEM_OK], 1)
 		
-	def pagechange_allowed(self):
-		return 1
+	def fixbuttonstate(self):
+		# Fix the state of the floow selection and show all
+		# buttons, apply/ok sensitivity and possibly labels.
+		pass
 
 	def do_itemhit(self, item, event):
 		if item == ITEM_SELECT:

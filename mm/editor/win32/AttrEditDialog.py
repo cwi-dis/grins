@@ -101,6 +101,15 @@ class AttrEditorDialog:
 	def setcurattr(self, attr):
 		self.__window.setcurattr(attr)
 
+	def fixbuttonstate(self):
+		# Fix the state of the floow selection and show all
+		# buttons, apply/ok sensitivity and possibly labels.
+		w = self.__window
+		w._showAll_initial = self.show_all_attributes
+		w._followSelection_initial = self.follow_selection
+		# XXX communicate ok/cancel state to dialog
+		pass
+
 	def pop(self):
 ##		"""Pop the dialog window to the foreground."""
 		if self.__window:
