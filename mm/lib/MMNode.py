@@ -2698,6 +2698,11 @@ class MMNode(MMTreeElement):
 					if isanimatedgif(u):
 						chtypes = ['RealVideo']
 					u.close()
+		elif computedMimeType == 'image/svg-xml':
+			if 'svg' in valid:
+				return 'svg'
+			else:
+				return 'null'
 		for chtype in chtypes:
 			while chtype not in valid:
 				if chtype == 'RealVideo':
