@@ -1460,23 +1460,28 @@ class SlideShow:
 					except:
 						windowinterface.showmessage('error while reading RealPix file with URL %s in node %s on channel %s' % (url, MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
 						rp = DummyRP()
-				self.url = url
 				if rp is not self.rp and hasattr(node, 'tmpfile'):
 					# new content, delete temp file
 ##					windowinterface.showmessage('You have edited the content of the slideshow file in node %s on channel %s' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), mtype = 'warning')
-					choice = windowinterface.multchoice('You have edited the content of the slideshow file in node %s on channel %s.\nWhat do you want to do?' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()), ['Discard changes, open new file', 'Save changed file, open new file', 'Cancel'], 2)
+					choice = windowinterface.multchoice('Save changes to %s?' % self.url, ['Yes', 'No', 'Cancel'], 2)
 					if choice == 2:
 						# cancel
 						node.SetAttr('file', self.url)
 						self.update()
 						return
-					if choice == 1:
+					if choice == 0:
+						# yes, save file
+						node.SetAttr('file', self.url)
 						writenodes(node)
-					try:
-						os.unlink(node.tmpfile)
-					except:
-						pass
-					del node.tmpfile
+						node.SetAttr('file', url)
+					else:
+						# no, discard changes
+						try:
+							os.unlink(node.tmpfile)
+						except:
+							pass
+						del node.tmpfile
+				self.url = url
 				self.rp = rp
 		rp = self.rp
 		attrdict = node.GetAttrDict()
