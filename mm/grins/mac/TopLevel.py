@@ -1,6 +1,7 @@
 __version__ = "$Id$"
 
 import windowinterface, WMEVENTS
+import Timing
 
 class TopLevel:
 	def __init__(self, main, filename):
@@ -17,7 +18,7 @@ class TopLevel:
 		print 'URL=', self.filename
 		self.main = main
 		self.waiting = 0
-		self.root = MMTree.ReadFile(self.filename)
+		self.read_it()
 		self.player = Player.Player(self)
 		self._last_timer_id = None
 
@@ -36,6 +37,40 @@ class TopLevel:
 
 	def hide(self):
 		self.player.hide()
+
+
+	def read_it(self):
+		import time
+		import mimetypes
+		self.changed = 0
+		print 'parsing', self.filename, '...'
+		t0 = time.time()
+		mtype = mimetypes.guess_type(self.filename)[0]
+		if mtype is None or mtype == 'text/html':
+			import SMILTree
+			self.root = SMILTree.ReadString('''\
+<smil>
+  <head>
+    <layout>
+      <channel id="html"/>
+    </layout>
+  </head>
+  <body>
+    <text src="%s" channel="html"/>
+  </body>
+</smil>
+''' % self.filename, self.filename)
+		elif mtype == 'application/smil':
+			import SMILTree
+			self.root = SMILTree.ReadFile(self.filename)
+		elif mtype == 'applicatin/x-cmif':
+			self.root = MMTree.ReadFile(self.filename)
+		else:
+			raise MSyntaxError, 'unknown file type'
+		t1 = time.time()
+		print 'done in', round(t1-t0, 3), 'sec.'
+		Timing.changedtimes(self.root)
+		self.context = self.root.GetContext()
 
 	def play(self):
 		self.setwaiting()
