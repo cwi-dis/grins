@@ -11,6 +11,8 @@ class WMWriter
 	HRESULT __stdcall SetVideoInputProps(DWORD dwInputNum,IUnknown *pI);
 
 	HRESULT __stdcall SetAudioFormat(WAVEFORMATEX *pWFX);
+	HRESULT __stdcall SetVideoFormat(WMVIDEOINFOHEADER *pVIH);
+	
 	HRESULT __stdcall BeginWriting();
 	HRESULT __stdcall EndWriting();
 
@@ -27,7 +29,7 @@ class WMWriter
 	
 	DWORD m_dwVideoInputNum;
 	IWMInputMediaProps *m_pIVideoInputProps;
-
+	
 	bool m_bWriting;
 	};
 

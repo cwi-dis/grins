@@ -81,13 +81,49 @@ HRESULT __stdcall WMWriter::SetAudioFormat(WAVEFORMATEX *pWFX)
     pType->cbFormat = sizeof(WAVEFORMATEX)+pWFX->cbSize;
 	pType->pbFormat = (BYTE*)pWFX;
 	hr = m_pIAudioInputProps->SetMediaType(pType);
-	delete [] (BYTE*)pType;
 	if(FAILED(hr))
 		{
 		LogError("SetMediaType",hr);
 		return hr;
 		}
 	hr = m_pIWMWriter->SetInputProps(m_dwAudioInputNum,m_pIAudioInputProps);
+	if(FAILED(hr))
+		{
+		LogError("SetMediaType",hr);
+		return hr;
+		}
+	return S_OK;
+	}
+
+
+HRESULT __stdcall WMWriter::SetVideoFormat(WMVIDEOINFOHEADER *pVIH)
+	{
+	if(!m_pIVideoInputProps) return E_UNEXPECTED;
+	DWORD cbType = 512;
+	char buf[512];
+	WM_MEDIA_TYPE *pType=(WM_MEDIA_TYPE*)buf;
+	HRESULT hr = m_pIVideoInputProps->GetMediaType(pType,&cbType);
+	if(FAILED(hr))
+		{
+		LogError("GetMediaType",hr);
+		return hr;
+		}
+    pType->majortype = WMMEDIATYPE_Video;
+    pType->subtype = WMMEDIASUBTYPE_RGB24;
+    pType->bFixedSizeSamples=TRUE;
+    pType->bTemporalCompression=FALSE;
+    pType->lSampleSize = pVIH->bmiHeader.biSizeImage;
+    pType->formattype = WMFORMAT_VideoInfo;
+    pType->pUnk = NULL;
+    pType->cbFormat = sizeof(WMVIDEOINFOHEADER);
+	pType->pbFormat = (BYTE*)pVIH;
+	hr = m_pIVideoInputProps->SetMediaType(pType);
+	if(FAILED(hr))
+		{
+		LogError("SetMediaType",hr);
+		return hr;
+		}
+	hr = m_pIWMWriter->SetInputProps(m_dwVideoInputNum,m_pIVideoInputProps);
 	if(FAILED(hr))
 		{
 		LogError("SetMediaType",hr);
