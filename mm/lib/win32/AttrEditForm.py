@@ -1106,6 +1106,7 @@ class FloatTupleCtrl(TupleCtrl):
 					s = st[i]
 				self._attrval[i].settext(s)
 
+import SMILTreeWrite
 class EventCtrl(AttrCtrl):
 	# This is a list control, but it's specific to events. If you
 	# want a generic list control, you'll need to rename this.
@@ -1321,7 +1322,7 @@ class EventCtrl(AttrCtrl):
 		r = self._eventstruct.get_offset()
 		#if r:
 		self._offsetwidget.setreadonly(0)
-		self._offsetwidget.settext(`r`)
+		self._offsetwidget.settext(SMILTreeWrite.fmtfloat(r))
 		#else:
 		#	self._offsetwidget.settext("")
 		#	self._offsetwidget.setreadonly(1)

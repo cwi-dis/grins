@@ -4,7 +4,7 @@
 # TODO: how do I reference other nodes?
 
 import EventEditorDialog
-import MMNode, windowinterface
+import MMNode, windowinterface, SMILTreeWrite
 
 CAUSES = [				# What causes the event
 	# This list is incomplete
@@ -233,9 +233,9 @@ class EventStruct:
 			return r
 		else:
 			if d < 0:
-				d = `d`
+				d = SMILTreeWrite.fmtfloat(d)
 			else:
-				d = "+"+`d`
+				d = "+"+SMILTreeWrite.fmtfloat(d)
 		return r+d
 		
 	def get_cause(self):
@@ -368,11 +368,13 @@ class EventStruct:
 	def get_repeat(self):
 		if self._setrepeat:
 			return self._setrepeat
-		else:
+		elif self.get_event() and self.get_event().startswith("repeat"):
 			a = self._syncarc.get_repeat()
 			if a:
 				return a
 			else:
 				return 1
+		else:
+			return None
 	def set_repeat(self, repeat):
 		self._setrepeat = repeat
