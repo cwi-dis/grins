@@ -584,8 +584,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				import SMILTreeWrite
 				if cleanSMIL:
 					# XXX enabling this currently crashes the application on Windows during video conversion
-					progress = windowinterface.ProgressDialog("Exporting")
-					progress.set('Exporting document...')
+					progress = windowinterface.ProgressDialog("Publishing")
+					progress.set('Publishing document...')
 					progress = progress.set
 				else:
 					progress = None
