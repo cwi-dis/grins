@@ -157,7 +157,7 @@ class reader:
 		data = self.__data_chunk.read(nbytes)
 		nframes = len(data) * fmt.getfpb() / fmt.getblocksize()
 		self.__framesread = self.__framesread + nframes
-		return data
+		return data, nframes
 
 	def rewind(self):
 		self.__data_chunk.rewind()
