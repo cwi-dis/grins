@@ -48,6 +48,8 @@ DEFANSWER = '\r', '\n'			# keys that trigger default answer
 
 import windowinterface, events, EVENTS, string
 
+from debug import debug
+
 class Dialog:
 	def init(self, text):
 		if len(text) <= 1:
@@ -184,6 +186,8 @@ class Dialog:
 		self.highlighted = []
 
 	def checkevent(self, window, event, value):
+		if debug:
+			print 'checkevent',`window`,`event`,`value`
 		if event == EVENTS.Mouse0Press:
 			for but in value[2]:
 				try:
@@ -211,6 +215,8 @@ class Dialog:
 		elif (window, event) == (self.window, EVENTS.ResizeWindow):
 			self.draw_window()
 		else:
+			if debug:
+				'checkevent: remembering'
 			self.events.append(window, event, value)
 		return None
 
