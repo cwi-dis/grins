@@ -1,0 +1,83 @@
+To build the GRiNS extensions with the "All GRiNS Extensions.dsw" workspace
+you have to do a couple of things to your VC environment:
+
+- Add the following directories to the include search path
+  (Tools->Options->Directories->Include paths):
+     ....\python\Include
+     ....\python\PC
+     ....\python\Extensions\win32\src       [*]
+     ....\python\Extensions\pythonwin       [*]
+- Add the following directories to the library search path
+  (Tools->Options->Directories->Library paths):
+     ....\python\PCbuild
+     ....\python\Extensions\win32\build     [*]
+     ....\python\Extensions\pythonwin\build [*]
+
+[*] This is assuming you have installed the pythonwin and win32 extensions
+under "Python\Extensions", otherwise you will have to adapt these paths.
+
+Now first build Python (projects python15.dsp, python.dsp and pythonw.dsp
+in the Python\PCbuild directory). Next build PyWinTypes and win32api
+(from Python\Extensions\win32), win32ui and pythonwin (from
+python\Extensions\pythonwin). It may be a good idea to create a workspace
+that contains all these.
+
+It's probably a good idea to test Python at this spot.
+
+Continue by building the GRiNS extension dll's. The workspace "GRiNS Extensions"
+in ...\cmif\win32\src will do this for you.
+
+There is one step that may need fixing: the GRiNSRes project uses h2py.py to create
+the Python source with resource definitions. If this fails look at the project settings
+for GRiNSRes, Custom Build section, and set the correct path for h2py.py.
+
+To run GRiNS, get a command prompt, go to the main cmif directory, and
+run "python GRiNS.py".
+
+If you want to see standard output (which is usually lost) you can try the following:
+- set the GRINS_REMOTE_TRACE environment variable to 1.
+- run the PythonWin Tools->Trace collector debugging tool
+- run "python GRiNS.py" in a console window. The output will appear in the
+  trace window in PythonWin
+
+Once the version that runs from source works you can try to freeze it. The script
+that does all the work is in ...\cmif\Build\win32\domk.bat. It needs some environment
+variables to tell it where Python is and where the win32 extensions are. Optionally
+you can also tell it where freeze is, and until the latest changes to freeze have
+been incorporated into the main Python sources you have to use
+...\cmif\pytools\freeze\freeze.py for freezing grins. You may also have to copy
+a new version of frozenmain.c, from ...\cmif\pylib\frozenmain.c to
+...\python\Python\frozenmain.c .
+
+If the "nmake" step in the domk script doesn't work: execute the script
+"c:\program files\devstudio\vc\bin\vcvars32.bat" to setup the correct environment
+variables to use VC from the command line and try again. Domk sets up some environment
+variables of it's own too: if you get weird results you may want to start a new dos
+prompt before you try again.
+
+Now everything is built, and it only has to be moved to the right place:
+- Create a directory where you're going to test.
+- Copy ...\cmif\Build\win32\runGRiNS.exe there (as GRiNS.exe, for instance)
+- Copy ...\cmif\win32\src\Build\mcidll.dll there
+- Copy ...\cmif\win32\src\Build\GRiNSRes.dll there
+- Copy ...\python\Extensions\Pythonwin\Build\win32ui.pyd there
+- Copy ...\python\Extensions\win32\Build\System\PyWinTypes15.dll there
+- Copy ...\python\PCBuild\python15.dll there.
+- Copy ...\cmif\win32\accusoft\gear\Gear32sd.dll there.
+- To make this Python fully independent of another installed Python change the
+  key it uses to do lookups in the registry:
+  1. Start devstudio
+  2. Open this copy of python15.dll as a resource file
+  3. Open the string table, and the only string in it.
+  4. The value is something like "1.5.1", change it to (for instance) "grins-1.5.1".
+
+	Sidebar: there are a number of simple things you can do to domk if you want to
+	build debug versions of GRiNS or so. 
+	- NMAKE DEBUG=1 builds a debuggable version (you need the *_d.dll files in
+	  your run directory).
+	- Removing the "-s windows" from the freeze command line will make a frozen
+	  program that does have stdout/stderr connected to your console window. This
+	  allows you to set PYTHONVERBOSE and/or PYTHONINSPECT to debug. Some of
+	  the output still goes to the trace window so you'll probably still want the
+	  GRINS_REMOTE_TRACE explained above.
+
