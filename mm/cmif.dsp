@@ -712,7 +712,7 @@ SOURCE=.\editor\EventEditor.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\editor\features.py
+SOURCE=.\editor\FeatureSet.py
 # End Source File
 # Begin Source File
 
