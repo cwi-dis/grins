@@ -15,6 +15,7 @@ from fmtfloat import fmtfloat
 import Duration
 import ArmStates
 from Hlinks import ANCHOR1, ANCHOR2
+import features
 
 TIMELINE_AT_TOP = 1
 TIMELINE_IN_FOCUS = 1
@@ -209,9 +210,10 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		node = self.node
 		dangling = None
 		hlinks = node.GetContext().hyperlinks
-## since we now show the anchor nodes, we don't need to show the anchors on the media element anymore
-##		nodes = filter(lambda x: x.GetType() == 'anchor', node.GetChildren())
-		nodes = []
+		if not features.SHOW_MEDIA_CHILDREN in features.feature_set and node.GetType() not in MMTypes.interiortypes:
+			nodes = filter(lambda x: x.GetType() == 'anchor', node.GetChildren())
+		else:
+			nodes = []
 		for x in [node] + nodes:
 			links = hlinks.findsrclinks(x)
 			if x is not node and dangling is None and not links:
@@ -1013,8 +1015,11 @@ class StructureObjWidget(MMNodeWidget):
 		MMNodeWidget.__init__(self, node, mother, parent)
 		# Create more nodes under me if there are any.
 		self.children = []
+		ntype = node.GetType()
 		for i in self.node.GetChildren():
 			if i.GetAttrDef('internal', 0) or i.GetType() == 'animpar':
+				continue
+			if not features.SHOW_MEDIA_CHILDREN in features.feature_set and ntype not in MMTypes.interiortypes:
 				continue
 			bob = create_MMNode_widget(i, mother, self)
 			if bob is not None:
@@ -1024,7 +1029,6 @@ class StructureObjWidget(MMNodeWidget):
 				icon = 'closed'
 			else:
 				icon = 'open'
-			ntype = node.GetType()
 			if ntype not in ('par', 'seq', 'switch', 'prio', 'excl'):
 				ntype = ''
 			icon = ntype + icon

@@ -58,6 +58,7 @@ __version__ = "$Id$";
 	H_TIMESTRIP,			# Show snap!-like documents with correct toplevel par/seq
 	H_PLAYABLE,			# Toggle showing of playability of nodes
 	H_THUMBNAILS,			# Toggle showing of image thumbnails
+	SHOW_MEDIA_CHILDREN,
 
 	AUTO_EVALUATE,		# Don't need trial license to evaluate
-] = range(36)				# don't forget to update this range!
+] = range(37)				# don't forget to update this range!
