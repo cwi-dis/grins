@@ -36,6 +36,7 @@ class _Toplevel:
 		self._cursor = ''
 		self._image_size_cache = {}
 		self._image_cache = {}
+		self._cm_cache = {}
 		# file descriptor handling
 		self._fdiddict = {}
 		# window system initialization
@@ -184,6 +185,7 @@ class _Toplevel:
 			self._colormap = v_best.CreateColormap(X.AllocNone)
 			if self._depth == 8:
 				self._setupimg()
+			print 'Using TrueColor visual of depth',self._depth
 			return
 		# no TrueColor visuals available, use a PseudoColor visual
 		visuals = dpy.GetVisualInfo({'depth': 8,
@@ -210,6 +212,7 @@ class _Toplevel:
 				  X.DoRed|X.DoGreen|X.DoBlue))
 		self._colormap.StoreColors(xcolors)
 		self._setupimg()
+		print 'Using PseudoColor visual of depth',self._depth
 
 	def _setupimg(self):
 		import imgcolormap, imgconvert
@@ -259,8 +262,8 @@ class _Toplevel:
 	def _convert_color(self, color, defcm):
 		r, g, b = color
 		if defcm:
-			if _cm_cache.has_key(`r,g,b`):
-				return _cm_cache[`r,g,b`]
+			if self._cm_cache.has_key(`r,g,b`):
+				return self._cm_cache[`r,g,b`]
 			ri = int(r / 255.0 * 65535.0)
 			gi = int(g / 255.0 * 65535.0)
 			bi = int(b / 255.0 * 65535.0)
@@ -289,7 +292,7 @@ class _Toplevel:
 				print "Warning: colormap full, using 'close' color",
 				print 'original:',`r,g,b`,'new:',`int(color[1]/65535.0*255.0),int(color[2]/65535.0*255.0),int(color[3]/65535.0*255.0)`
 			# cache the result
-			_cm_cache[`r,g,b`] = color[0]
+			self._cm_cache[`r,g,b`] = color[0]
 			return color[0]
 		r = int(float(r) / 255. * float(self._red_mask) + .5)
 		g = int(float(g) / 255. * float(self._green_mask) + .5)
@@ -1596,7 +1599,12 @@ _fontmap = {
 	  'Courier': '-*-courier-medium-r-normal-*-*-*-*-*-*-*-iso8859-1',
 	  'Courier-Bold': '-*-courier-bold-r-normal-*-*-*-*-*-*-*-iso8859-1',
 	  'Courier-Oblique': '-*-courier-medium-o-normal-*-*-*-*-*-*-*-iso8859-1',
-	  'Courier-Bold-Oblique': '-*-courier-bold-o-normal-*-*-*-*-*-*-*-iso8859-1'
+	  'Courier-Bold-Oblique': '-*-courier-bold-o-normal-*-*-*-*-*-*-*-iso8859-1',
+	  'Greek': ['-*-times new roman-regular-r-*-*-*-*-*-*-p-*-iso8859-7',
+		    '-*-*-medium-r-*--*-*-*-*-*-*-iso8859-7'],
+	  'Greek-Bold': ['-*-times new roman-bold-r-*--*-*-*-*-p-*-iso8859-7',
+			 '-*-*-bold-r-*-*-*-*-*-*-*-*-iso8859-7'],
+	  'Greek-Italic': '-*-times new roman-regular-i-*-*-*-*-*-*-p-*-iso8859-7',
 	  }
 fonts = _fontmap.keys()
 
@@ -1632,28 +1640,57 @@ def findfont(fontname, pointsize):
 	except KeyError:
 		pass
 	try:
-		fontname = _fontmap[fontname]
+		fontnames = _fontmap[fontname]
 	except KeyError:
 		raise error, 'Unknown font ' + `fontname`
-	parsedfontname = _parsefontname(fontname)
-	fontlist = toplevel._main.ListFonts(fontname)
+	if type(fontnames) == type(''):
+		fontnames = [fontnames]
+	fontlist = []
+	for fontname in fontnames:
+		fontlist = toplevel._main.ListFonts(fontname)
+		if fontlist:
+			break
+	if not fontlist:
+		# if no matching fonts, use Courier, same encoding
+		parsedfont = _parsefontname(fontname)
+		font = '-*-courier-*-r-*-*-*-*-*-*-*-*-%s-%s' % \
+		       (parsedfont[_REGISTRY], parsedfont[_ENCODING])
+		fontlist = toplevel._main.ListFonts(font)
+	if not fontlist:
+		# if still no matching fonts, use any font, same encoding
+		parsedfont = _parsefontname(fontname)
+		font = '-*-*-*-*-*-*-*-*-*-*-*-*-%s-%s' % \
+		       (parsedfont[_REGISTRY], parsedfont[_ENCODING])
+		fontlist = toplevel._main.ListFonts(font)
+	if not fontlist:
+		# if still no matching fonts, use Courier, any encoding
+		fontlist = toplevel._main.ListFonts('-*-courier-*-r-*-*-*-*-*-*-*-*-*-*')
+	if not fontlist:
+		# if still no matching fonts, use any font, any encoding
+		fontlist = toplevel._main.ListFonts('-*-*-*-*-*-*-*-*-*-*-*-*-*-*')
+	if not fontlist:
+		# if no fonts at all, give up
+		raise error, 'no fonts available'
 	pixelsize = pointsize * toplevel._dpi_y / 72.0
 	bestsize = 0
 	psize = pointsize
 	for font in fontlist:
 		parsedfont = _parsefontname(font)
-		if parsedfont[_PIXELS] == '0':
-			# scalable font
-			parsedfont[_PIXELS] = '*'
-			parsedfont[_POINTS] = `int(pointsize * 10)`
-			parsedfont[_RES_X] = `toplevel._dpi_x`
-			parsedfont[_RES_Y] = `toplevel._dpi_y`
-			parsedfont[_AVG_WIDTH] = '*'
-			thefont = _makefontname(parsedfont)
-			psize = pointsize
-			break
+##		# scale the font if possible
+##		if parsedfont[_PIXELS] == '0':
+##			# scalable font
+##			parsedfont[_PIXELS] = '*'
+##			parsedfont[_POINTS] = `int(pointsize * 10)`
+##			parsedfont[_RES_X] = `toplevel._dpi_x`
+##			parsedfont[_RES_Y] = `toplevel._dpi_y`
+##			parsedfont[_AVG_WIDTH] = '*'
+##			thefont = _makefontname(parsedfont)
+##			psize = pointsize
+##			break
 		p = string.atoi(parsedfont[_PIXELS])
-		if p <= pixelsize and p > bestsize:
+		# either use closest, or use next smaller
+		if abs(pixelsize - p) < abs(pixelsize - bestsize): # closest
+##		if p <= pixelsize and p > bestsize: # biggest <= wanted
 			bestsize = p
 			thefont = font
 			psize = p * 72.0 / toplevel._dpi_y
@@ -1665,6 +1702,8 @@ class _Font:
 	def __init__(self, fontname, pointsize):
 		self._font = toplevel._main.LoadQueryFont(fontname)
 		self._pointsize = pointsize
+		self._fontname = fontname
+		print 'Using', fontname
 
 	def close(self):
 		self._font = None
@@ -1841,7 +1880,10 @@ class Dialog:
 
 	def create_menu(self, list, title = None):
 		self.destroy_menu()
-		menu = self._widget.CreatePopupMenu('dialogMenu', {})
+		menu = self._widget.CreatePopupMenu('dialogMenu',
+				{'colormap': toplevel._default_colormap,
+				 'visual': toplevel._default_visual,
+				 'depth': toplevel._default_visual.depth})
 		if title:
 			list = [title, None] + list
 		_create_menu(menu, list)
@@ -1949,7 +1991,10 @@ def _create_menu(menu, list, acc = None):
 		else:
 			accelerator, label, callback = entry
 		if type(callback) is ListType:
-			submenu = menu.CreatePulldownMenu('submenu', {})
+			submenu = menu.CreatePulldownMenu('submenu',
+				{'colormap': toplevel._default_colormap,
+				 'visual': toplevel._default_visual,
+				 'depth': toplevel._default_visual.depth})
 			button = menu.CreateManagedWidget(
 				'submenuLabel', Xm.CascadeButtonGadget,
 				{'labelString': label, 'subMenuId': submenu})
