@@ -13,7 +13,6 @@ import win32con
 
 import math
 
-
 class SVGWinGraphics(svggraphics.SVGGraphics):
 	#
 	#  platform toolkit interface
@@ -25,7 +24,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 
 		# context vars
 		self.tk = Tk()
-		self.tk.saveid = wingdi.SaveDC(hdc)
+		self.saveidorg = self.tk.saveid = wingdi.SaveDC(hdc)
 		self._tkstack = []
 
 		wingdi.SetGraphicsMode(hdc, win32con.GM_ADVANCED)
@@ -41,6 +40,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 	# we start rendering
 	def tkOnBeginRendering(self, size, viewbox):
 		cx, cy = size
+		self.tkClipBox((0, 0, cx, cy))
 		wingdi.SetMapMode(self.hdc, win32con.MM_ISOTROPIC)
 		vcx, vcy = wingdi.GetViewportExtEx(self.hdc)
 		if vcy<0: vcy = -vcy
@@ -66,20 +66,20 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		stroke = self.getStyleAttr('stroke')
 		strokeWidth = self.getStyleAttr('stroke-width')
 		if stroke is not None and stroke!='none':
-			self.tk.pen = wingdi.ExtCreatePen(strokeWidth, stroke)
+			self.tk.pen = wingdi.ExtCreatePen(strokeWidth.getValue(), stroke.getValue())
 			wingdi.SelectObject(self.hdc, self.tk.pen)
 
 		# establish tk brush
 		fill = self.getStyleAttr('fill')
 		if fill is not None and fill != 'none':
-			self.tk.brush = wingdi.CreateSolidBrush(fill)
+			self.tk.brush = wingdi.CreateSolidBrush(fill.getValue())
 			wingdi.SelectObject(self.hdc, self.tk.brush)
 
 		# establish tk font
 		fontFamily = self.getStyleAttr('font-family')
 		fontSize = self.getStyleAttr('font-size')
 		if fontFamily is not None:
-			self.tk.font = wingdi.CreateFontIndirect({'name': fontFamily, 'height':fontSize,  'outprecision':win32con.OUT_OUTLINE_PRECIS, })
+			self.tk.font = wingdi.CreateFontIndirect({'name': fontFamily, 'height':fontSize.getValue(),  'outprecision':win32con.OUT_OUTLINE_PRECIS, })
 			wingdi.SelectObject(self.hdc, self.tk.font)
 
 		# establish tk transform
@@ -111,6 +111,19 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		other.hdc = self.hdc
 		other.tk = self.tk
 		other._tkstack = self._tkstack
+
+	def tkClipBox(self, clipbox):
+		if clipbox is not None:
+			x, y, w, h = clipbox
+			ltrb = x, y, x+w, y+h
+			tm = svgtypes.TM(wingdi.GetWorldTransform(self.hdc))
+			ltrb = tm.URtoDR(ltrb)
+			wingdi.SetWorldTransform(self.hdc, [1, 0, 0, 1, 0, 0])
+			rgn = wingdi.CreateRectRgn(ltrb)
+			wingdi.SelectClipRgn(self.hdc, rgn)
+			wingdi.DeleteObject(rgn)
+			wingdi.SetWorldTransform(self.hdc, tm.getElements())
+
 	#
 	#  platform line art interface
 	#
@@ -136,7 +149,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		if fill is not None and fill != 'none':
 			contextFill = self.getStyleAttr('fill')
 			if contextFill != fill:
-				brush = wingdi.CreateSolidBrush(fill)
+				brush = wingdi.CreateSolidBrush(fill.getValue())
 				brush = wingdi.SelectObject(self.hdc, brush)
 			try:
 				if stroke and stroke != 'none':
@@ -159,7 +172,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 			contextStroke = self.getStyleAttr('stroke')
 			contextStrokeWidth = self.getStyleAttr('stroke-width')
 			if contextStroke != stroke or contextStrokeWidth != strokeWidth:
-				pen = wingdi.ExtCreatePen(strokeWidth, stroke)
+				pen = wingdi.ExtCreatePen(strokeWidth.getValue(), stroke.getValue())
 				pen = wingdi.SelectObject(self.hdc, pen)
 			try:
 				wingdi.StrokePath(self.hdc)
@@ -220,11 +233,13 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		fontFamily = self.getStyleAttr('font-family', style)
 		fontSize = self.getStyleAttr('font-size', style)
 		if fontFamily is not None:
-			contextFontfamily = self.getStyleAttr('font-family')
+			contextFontFamily = self.getStyleAttr('font-family')
 			contextFontSize = self.getStyleAttr('font-size')
-			if contextFontfamily != fontFamily or contextFontSize != fontSize:
-				font = wingdi.CreateFontIndirect({'name': fontFamily, 'height':fontSize, 'outprecision':win32con.OUT_OUTLINE_PRECIS})
+			if contextFontFamily != fontFamily or contextFontSize != fontSize:
+				dsize = fontSize.getDeviceValue(self.ctm, 'h')				
+				font = wingdi.CreateFontIndirect({'name': fontFamily, 'height':dsize, 'outprecision':win32con.OUT_OUTLINE_PRECIS})
 				wingdi.SelectObject(self.hdc, font)
+
 		if tflist:
 			tm = self.ctm.copy()
 			tm.applyTfList(tflist)
@@ -238,9 +253,12 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 			# text will be invisible
 			# make it visible as black
 			fill = 0, 0, 0
-
-		if fill is not None and fill != 'none':
 			oldcolor = wingdi.SetTextColor(self.hdc, fill)
+			wingdi.TextOut(self.hdc, pos, text)
+			wingdi.SetTextColor(self.hdc, oldcolor)
+
+		elif fill is not None and fill != 'none':
+			oldcolor = wingdi.SetTextColor(self.hdc, fill.getValue())
 			wingdi.TextOut(self.hdc, pos, text)
 			wingdi.SetTextColor(self.hdc, oldcolor)
 
@@ -256,7 +274,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 			contextStroke = self.getStyleAttr('stroke')
 			contextStrokeWidth = self.getStyleAttr('stroke-width')
 			if contextStroke != stroke or contextStrokeWidth != strokeWidth:
-				pen = wingdi.ExtCreatePen(strokeWidth, stroke)
+				pen = wingdi.ExtCreatePen(strokeWidth.getValue(), stroke.getValue())
 				pen = wingdi.SelectObject(self.hdc, pen)
 			wingdi.StrokePath(self.hdc)
 			if pen:
@@ -457,8 +475,8 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 							tm.translate([cx, cy])
 							tm.rotate([angle])
 							tm.inverse()
-							x1, y1 = tm.UPtoVP((lastX, lastY))
-							x2, y2 = tm.UPtoVP((seg._x, seg._y))
+							x1, y1 = tm.UPtoDP((lastX, lastY))
+							x2, y2 = tm.UPtoDP((seg._x, seg._y))
 
 							oldtf = wingdi.GetWorldTransform(self.hdc)
 							tm = self.ctm.copy()
@@ -498,8 +516,8 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 							tm.translate([cx, cy])
 							tm.rotate([angle])
 							tm.inverse()
-							x1, y1 = tm.UPtoVP((lastX, lastY))
-							x2, y2 = tm.UPtoVP((lastX + seg._x, lastY + seg._y))
+							x1, y1 = tm.UPtoDP((lastX, lastY))
+							x2, y2 = tm.UPtoDP((lastX + seg._x, lastY + seg._y))
 
 							oldtf = wingdi.GetWorldTransform(self.hdc)
 							tm = self.ctm.copy()
