@@ -12,6 +12,9 @@ import grpasswd
 ADDPASSWDCMD="ssh trawler.cwi.nl /ufs/jack/bin/addgrinspasswd '%s' '%s' '%s'"
 DIR="/usr/local/www.cwi.nl/GRiNS/player"
 
+# Keys on which we want to index
+KEYS=['email']
+
 # PASSWD=os.path.join(DIR, ".htpasswd")
 PASSWD="/ufs/jack/test"
 
@@ -21,12 +24,15 @@ def main():
 	if len(sys.argv) > 2:
 		print "Usage checkdb [newpasswdfile]"
 		sys.exit(1)
-	dbase = grinsdb.Database()
+	dbase = grinsdb.Database(indexed=0)
+	index = grinsdb.Index(keys=KEYS)
 	allids = dbase.search(None, None)
 	emaildict = {}
 	badids = []
 	for id in allids:
+		print id
 		obj = dbase.open(id)
+		index.update(id, obj)
 		if not obj.has_key('email'):
 			badids.append(id)
 			continue
@@ -35,6 +41,7 @@ def main():
 			emaildict[email].append(id)
 		else:
 			emaildict[email] = [id]
+	del index
 	if badids:
 		print 'Bad messages:',
 		for id in badids:
