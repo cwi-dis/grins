@@ -4,6 +4,8 @@ import time
 
 error = 'windowinterface.error'
 
+Version = 'X'
+
 # Colors
 _DEF_BGCOLOR = 255,255,255		# white
 _DEF_FGCOLOR =   0,  0,  0		# black

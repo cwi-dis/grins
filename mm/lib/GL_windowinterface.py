@@ -25,6 +25,7 @@ from debug import debug
 import time, select
 
 error = 'windowinterface.error'
+Version = 'GL'
 
 from fl_or_gl import *
 
