@@ -134,8 +134,9 @@ class VideoChannel(ChannelWindowAsync):
 			end = movie_end
 			dur = end - begin
 		t0 = self._scheduler.timefunc()
-		if t0 > node.start_time:
-			extra_delay = (t0-node.start_time)*tbrate
+		start_time = node.get_start_time()
+		if t0 > start_time:
+			extra_delay = (t0-start_time)*tbrate
 		else:
 			extra_delay = 0
 		if debug: print "DBG: movie Rate, end,", tbrate, movie_end

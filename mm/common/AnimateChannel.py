@@ -143,7 +143,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		return self.__targetChannel
 		
 	def __startAnimate(self):
-		self.__start = self.__animating.start_time
+		self.__start = self.__animating.get_start_time()
 		if self.__start is None:
 			print 'Warning: None start_time for node',self.__animating
 			self.__start = 0
@@ -229,4 +229,3 @@ class AnimateChannel(Channel.ChannelAsync):
 			else:
 				windowinterface.canceltimer(self.__fiber_id)
 			self.__fiber_id = None
- 

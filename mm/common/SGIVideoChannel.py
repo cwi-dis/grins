@@ -182,8 +182,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		window = self.window
 		self.played_movie = movie = self.armed_movie
 		self.armed_movie = None
+		start_time = node.get_start_time()
 		if movie is None:
-			self.playdone(0, node.start_time)
+			self.playdone(0, start_time)
 			return
 		self.played_scale = self.armed_scale
 		self.played_size = self.armed_size
@@ -194,12 +195,12 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if self.__begin:
 			movie.SetStartTime(long(self.__begin * 1000L), 1000)
 		t0 = self._scheduler.timefunc()
-		if t0 > node.start_time:
+		if t0 > start_time:
 			if __debug__:
-				print 'skipping',node.start_time,t0,t0-node.start_time
-			late = t0 - node.start_time
+				print 'skipping',start_time,t0,t0-start_time
+			late = t0 - start_time
 			if late > self.__mediadur:
-				self.playdone(0, node.start_time + self.__mediadur)
+				self.playdone(0, start_time + self.__mediadur)
 				return
 			movie.SetCurrentTime(long((self.__begin + late) * 1000L), 1000)
 		begin = movie.GetStartTime(1000) / 1000.0
@@ -216,7 +217,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				'Cannot play movie node %s on channel %s:\n%s'%
 					(name, self._name, msg),
 				mtype = 'warning')
-			self.playdone(0, node.start_time)
+			self.playdone(0, start_time)
 			return
 		self.event('beginEvent')
 		movie.Play()
@@ -294,7 +295,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if not self.__stopped:
 			if self.__qid:
 				return
-			self.playdone(0, self._played_node.start_time + self.__mediadur)
+			node = self._played_node
+			start_time = node.get_start_time()
+			self.playdone(0, start_time + self.__mediadur)
 
 	# Convert pixel offsets into relative offsets.
 	# If the offsets are in the range [0..1], we don't need to do

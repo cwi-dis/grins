@@ -183,10 +183,11 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.__playing = node
 		self.__type = node.__type
 		self.__subtype = node.__subtype
+		start_time = node.get_start_time()
 
 		if not self.__ready:
 			# arming failed, so don't even try playing
-			self.playdone(0, node.start_time)
+			self.playdone(0, start_time)
 			return
 		if node.__type == 'real':
 			bpp = self.window._topwindow.getRGBBitCount()
@@ -198,12 +199,12 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			if not self.__windowless_real_rendering:
 				self.window.CreateOSWindow(rect=self.getMediaWndRect())
 			if not self.__rc:
-				self.playdone(0, node.start_time)
+				self.playdone(0, start_time)
 				return
 			if self.__windowless_real_rendering:
-				res =self.__rc.playit(node,windowless=1)
+				res =self.__rc.playit(node,windowless=1,start_time=start_time)
 			else:
-				res = self.__rc.playit(node, self._getoswindow(), self._getoswinpos())
+				res = self.__rc.playit(node, self._getoswindow(), self._getoswinpos(), start_time = start_time)
 			if not res:
 				import windowinterface, MMAttrdefs
 				name = MMAttrdefs.getattr(node, 'name')
@@ -215,13 +216,13 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				self.playdone(0, node,start_time)
 		else:
 			if not self.__mc:
-				self.playdone(0, node.start_time)
+				self.playdone(0, start_time)
 			else:
 				if not self.__windowless_wm_rendering:
 					self.window.CreateOSWindow(rect=self.getMediaWndRect())
-				if not self.__mc.playit(node, self.window):
+				if not self.__mc.playit(node, self.window, start_time):
 					windowinterface.showmessage('Failed to play media file', mtype = 'warning')
-					self.playdone(0, node.start_time)
+					self.playdone(0, start_time)
 
 	# toggles between pause and run
 	def setpaused(self, paused):

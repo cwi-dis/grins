@@ -650,12 +650,14 @@ class Channel:
 		# this node
 		self.armdone()
 		if not self.syncplay:
+			node = self._played_node
+			start_time = node.get_start_time()
 			if not self.armed_duration:
-				self.playdone(0, end_time = self._played_node.start_time)
+				self.playdone(0, end_time = start_time)
 ##			elif self.armed_duration > 0:
 ##				self._qid = self._scheduler.enterabs(
-##					self._played_node.start_time+self.armed_duration, 0,
-##					self.playdone, (0, self._played_node.start_time+self.armed_duration))
+##					start_time+self.armed_duration, 0,
+##					self.playdone, (0, start_time+self.armed_duration))
 		else:
 			self.playdone(0)
 			
@@ -1768,7 +1770,8 @@ class ChannelWindow(Channel):
 				self.__out_trans_qid = self._scheduler.enterabs(outtranstime, 0,
 					self.schedule_out_trans, (out_trans, outtranstime, node))
 		if in_trans <> None and self.window:
-			otherwindow = self._find_multiregion_transition(in_trans, node.start_time)
+			start_time = node.get_start_time()
+			otherwindow = self._find_multiregion_transition(in_trans, start_time)
 			if otherwindow:
 				self.window.jointransition(otherwindow, (self.endtransition, (node,)))
 			else:
