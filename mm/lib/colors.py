@@ -18,4 +18,10 @@ colors = {
 	'teal': (0x00, 0x80, 0x80),
 	'white': (0xFF, 0xFF, 0xFF),
 	'yellow': (0xFF, 0xFF, 0x00),
+	'orange': (0xFF, 0xA5, 0x00),
 	}
+
+rcolors = {}
+for name, color in colors.items():
+	rcolors[color] = name
+del name, color
