@@ -43,7 +43,7 @@ class ChannelWM:
 
 class ChannelWindowWM:
 	def save_geometry(self):
-		if self.is_showing():
+		if self._is_shown:
 			x, y, w, h = self.window.getgeometry()
 			self._attrdict['winpos'] = x, y
 			self._attrdict['winsize'] = w, h
