@@ -217,6 +217,7 @@ class _SourceViewXXX(GenFormView):
 
 ###################################
 import win32ui, win32con, afxres
+Sdk=win32ui.GetWin32Sdk()
 
 import win32mu
 
@@ -597,7 +598,6 @@ class _SourceView(GenView, docview.RichEditView):
 
 	# return true if the system clipboard doen't contain text datas
 	def isClipboardEmpty(self):
-		Sdk=win32ui.GetWin32Sdk()
 		n = Sdk.IsClipboardFormatAvailable(win32con.CF_TEXT)
 		return n <= 0
 
@@ -665,6 +665,19 @@ class _SourceView(GenView, docview.RichEditView):
 		
 		# update the caret pos. Not done automaticly
 		self.__caretPos = self.GetCharPos(min+len(replaceText))
+
+	def activate(self):
+		self._is_active=1
+		frame = self.GetParent().GetMDIFrame()
+		frame.set_commandlist(self._commandlist,self._strid)
+		self.set_menu_state()
+		frame.LoadAccelTable(grinsRC.IDR_SOURCE_EDIT)
+
+	def deactivate(self):
+		self._is_active=0
+		frame = self.GetParent().GetMDIFrame()
+		frame.set_commandlist(None,self._strid)
+		frame.LoadAccelTable(grinsRC.IDR_GRINSED)
 
 
 	
