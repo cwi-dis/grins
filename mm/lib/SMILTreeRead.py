@@ -819,6 +819,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				else:
 					# for inherit value, we assume there is no transparent and bgcolor attribute
 					pass
+			elif attr == 'z-index':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0 in media object' % attr)
+				self.__context.attributes['project_boston'] = 1
+				try:
+					val = string.atoi(val)
+				except string.atoi_error:
+					self.syntax_error('bad z-index attribute')
+					val = -1
+				attrdict['z'] = val
 			elif attr == 'speed':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
