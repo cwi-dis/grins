@@ -345,7 +345,9 @@ class HierarchyView(HierarchyViewDialog):
 				commands = commands + self.rpconvertcommands
 		if fntype == 'seq':
 			for c in fnode.GetChildren():
-				if c.GetType() != 'ext' or c.GetChannelType() != 'image':
+				ctype = c.GetType()
+				if (ctype != 'ext' or c.GetChannelType() != 'image') and \
+				   ctype != 'brush':
 					break
 			else:
 				commands = commands + self.convertrpcommands

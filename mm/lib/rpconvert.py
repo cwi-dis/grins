@@ -88,6 +88,7 @@ def rpconvert(node, errorfunc = None):
 				del fadeouts[0]
 			else:
 				break
+		tagdict['start'] = start - prevstart
 		tags.append(tagdict)
 		if tagdict['tag'] == 'fadein' and tagdict.get('fadeout', 0):
 			fodict = tagdict.copy()
@@ -186,14 +187,16 @@ def rpconvert(node, errorfunc = None):
 		if transition in ('fadein', 'fadeout', 'crossfade', 'wipe'):
 			# the real transtions
 			trdict = {'dur': tagdict.get('tduration', 0),
-				  'direction': 'forward',
-				  'startProgress': 0.0,
-				  'endProgress': 1.0,
-				  'horzRepeat': 1,
-				  'vertRepeat': 1,
-				  'borderWidth': 0,
-				  'coordinated': 0,
-				  'clipBoundary': 'children',
+# defaults
+##				  'direction': 'forward',
+##				  'startProgress': 0.0,
+##				  'endProgress': 1.0,
+##				  'horzRepeat': 1,
+##				  'vertRepeat': 1,
+##				  'borderWidth': 0,
+# removed from SMIL 2.0
+##				  'coordinated': 0,
+##				  'clipBoundary': 'children',
 				  }
 			if transition == 'wipe':
 				dir = tagdict['direction']
@@ -240,7 +243,6 @@ def rpconvert(node, errorfunc = None):
 			em.setnodeattr(newnode, 'anchorlist', [MMAnchor('0', ATYPE_WHOLE, [], (0, 0), None)])
 			em.addlink(((newnode.GetUID(), '0'), tagdict['href'], DIR_1TO2, TYPE_FORK, A_SRC_PLAY, A_DEST_PLAY))
 	em.commit()
-##	convertrp(node)
 
 def convertrp(node, errorfunc = None):
 	# Convert a seq node into a RealPix node.  The seq's children
@@ -263,7 +265,8 @@ def convertrp(node, errorfunc = None):
 	fill = None
 	for c in node.GetChildren():
 		# first some checks
-		if c.GetType() != 'ext':
+		ctype = c.GetType()
+		if ctype not in ('ext', 'brush'):
 			if errorfunc is not None: errorfunc('child not an external node')
 			return
 		if region is None:
@@ -310,26 +313,35 @@ def convertrp(node, errorfunc = None):
 			if not endlist or dur < start:
 				start = dur
 
-		# set file
-		file = c.GetAttrDef('file', None)
-		if not file:
-			if errorfunc is not None: errorfunc('no file specified on image')
-			return
-		tagdict['file'] = file
+		if ctype == 'ext':
+			# set file
+			file = c.GetAttrDef('file', None)
+			if not file:
+				if errorfunc is not None: errorfunc('no file specified on image')
+				return
+			tagdict['file'] = file
+		else:
+			fgcolor = c.GetAttrDef('fgcolor', (0,0,0))
 
 		# figure out the transition
 		transIn = c.GetAttrDef('transIn', [])
 		if transIn:
 			for tr in transIn:
 				trdict = ctx.transitions.get(tr)
-				if trdict.get('trtype', 'fade') in ('fade', 'barWipe', 'pushWipe'):
+				trtype = trdict.get('trtype', 'fade')
+				if (ctype == 'brush' and trtype == 'fade') or \
+				   (ctype != 'brush' and trtype in ('fade', 'barWipe', 'pushWipe')):
 					break
 			else:
 				trdict = None
 		if not transIn or trdict is None:
 			# no transition
-			tagdict['tduration'] = 0
-			tagdict['tag'] = 'fadein'
+			if ctype == 'ext':
+				tagdict['tag'] = 'fadein'
+				tagdict['tduration'] = 0
+			else:
+				tagdict['tag'] = 'fill'
+				tagdict['color'] = fgcolor
 		else:
 			if trdict.get('startProgress', 0.0) != 0 or \
 			   trdict.get('endProgress', 1.0) != 1 or \
@@ -339,7 +351,10 @@ def convertrp(node, errorfunc = None):
 				if errorfunc is not None: errorfunc('translation of transition looses information')
 			tagdict['tduration'] = trdict.get('dur', 1)
 			trtype = tagdict.get('trtype', 'fade')
-			if trtype == 'barWipe':
+			if ctype == 'brush':
+				tagdict['tag'] = 'fadeout'
+				tagdict['color'] = fgcolor
+			elif trtype == 'barWipe':
 				tagdict['tag'] = 'wipe'
 				tagdict['wipetype'] = 'normal'
 				if trdict.get('subtype', 'leftToRight') == 'leftToRight':
