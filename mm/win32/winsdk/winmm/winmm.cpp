@@ -21,7 +21,7 @@ Copyright 1991-2002 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include "winmm_mp3dec.h"
 #endif
 
-PyObject *ErrorObject;
+PyObject *WinMM_ErrorObject;
 
 static PyObject* WaveOutGetNumDevs(PyObject *self, PyObject *args)
 {
@@ -150,8 +150,8 @@ void initwinmm()
 
 	// add 'error'
 	d = PyModule_GetDict(m);
-	ErrorObject = PyString_FromString("winmm.error");
-	PyDict_SetItemString(d, "error", ErrorObject);
+	WinMM_ErrorObject = PyString_FromString("winmm.error");
+	PyDict_SetItemString(d, "error", WinMM_ErrorObject);
 
 	// add symbolic constants of enum
 	FATAL_ERROR_IF(SetItemEnum(d, wave_formats)<0)

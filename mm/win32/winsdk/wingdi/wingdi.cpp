@@ -15,7 +15,7 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include "wingdi_surf.h"
 #endif
 
-PyObject *ErrorObject;
+PyObject *WinGDI_ErrorObject;
 
 static struct PyMethodDef wingdi_methods[] = {
 	{"CreateDCFromHandle", (PyCFunction)Wingdi_CreateDCFromHandle, METH_VARARGS, ""},
@@ -69,8 +69,8 @@ void initwingdi()
 
 	// add 'error'
 	d = PyModule_GetDict(m);
-	ErrorObject = PyString_FromString("wingdi.error");
-	PyDict_SetItemString(d, "error", ErrorObject);
+	WinGDI_ErrorObject = PyString_FromString("wingdi.error");
+	PyDict_SetItemString(d, "error", WinGDI_ErrorObject);
 
 	// Check for errors
 	if (PyErr_Occurred())

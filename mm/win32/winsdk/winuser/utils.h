@@ -9,18 +9,18 @@
 #include "../common/charconv.h"
 #endif
 
-extern PyObject *ErrorObject;
+#define seterror WinUser_seterror
+
+extern PyObject *WinUser_ErrorObject;
 
 inline PyObject* none() { Py_INCREF(Py_None); return Py_None;}
 
-extern PyObject *ErrorObject;
-
-inline void seterror(const char *msg){ PyErr_SetString(ErrorObject, msg);}
+inline void seterror(const char *msg){ PyErr_SetString(WinUser_ErrorObject, msg);}
 
 inline void seterror(const char *funcname, const char *msg)
 	{
-	PyErr_Format(ErrorObject, "%s failed, %s", funcname, msg);
-	PyErr_SetString(ErrorObject, msg);
+	PyErr_Format(WinUser_ErrorObject, "%s failed, %s", funcname, msg);
+	PyErr_SetString(WinUser_ErrorObject, msg);
 	}
 
 inline void seterror(const char *funcname, DWORD err)
@@ -36,7 +36,7 @@ inline void seterror(const char *funcname, DWORD err)
 		 NULL 
 		);
 	TextPtr tmsg(pszmsg);
-	PyErr_Format(ErrorObject, "%s failed, error = %x, %s", funcname, err, tmsg.str());
+	PyErr_Format(WinUser_ErrorObject, "%s failed, error = %x, %s", funcname, err, tmsg.str());
 	LocalFree(pszmsg);
 	}
 
