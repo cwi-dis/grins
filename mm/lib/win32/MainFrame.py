@@ -62,6 +62,7 @@ if settings.user_settings.get('use_nodoc_menubar'):
 	USE_NODOC_MENUBAR = 1
 else:
 	USE_NODOC_MENUBAR = 0
+import features
 
 
 ###########################################################
@@ -114,11 +115,14 @@ appview={
 ###########################################################
 
 # forms served
-from AttrEditForm import AttrEditForm
+if features.editor:
+	from AttrEditForm import AttrEditForm
 
-appform={
-	'attr_edit':{'cmd':-1,'title':'Property Editor','id':'attr_edit','obj':None,'class':AttrEditForm,'freezesize':1},
-	}
+	appform={
+		'attr_edit':{'cmd':-1,'title':'Property Editor','id':'attr_edit','obj':None,'class':AttrEditForm,'freezesize':1},
+		}
+else:
+	appform={}
 
 import features
 if not features.lightweight:
