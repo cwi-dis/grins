@@ -38,6 +38,8 @@ def _qread():
 	return 0, 0
 
 def _qtest():
+	if not mayblock():
+		return None
 	global _last_forms
 	if not _last_forms:
 		_last_forms = fl.check_forms()
