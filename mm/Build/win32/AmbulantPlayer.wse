@@ -1,6 +1,6 @@
 Document Type: WSE
 item: Global
-  Version=9.02
+  Version=9.01
   Title=Ambulant/G Player for SMIL 2.0 Installation
   Flags=00010100
   Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
@@ -8,8 +8,8 @@ item: Global
   Japanese Font Name=MS Gothic
   Japanese Font Size=9
   Progress Bar DLL=%_WISE_%\Progress\WIZ%_EXE_OS_TYPE_%.DLL
-  Start Gradient=204 51 0
-  End Gradient=153 51 0
+  Start Gradient=214 207 189
+  End Gradient=214 207 189
   Windows Flags=00000100000000110010110000001000
   Log Pathname=%MAINDIR%\INSTALL.LOG
   Message Font=MS Sans Serif
@@ -23,7 +23,7 @@ item: Global
   Patch Memory=4000
   MIF PDF Version=1.0
   MIF SMS Version=2.0
-  EXE Filename=..\..\bin\win32\AmbulantG-2.exe
+  EXE Filename=..\..\bin\win32\AmbulantG-2a.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
