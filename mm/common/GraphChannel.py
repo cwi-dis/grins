@@ -27,6 +27,7 @@ class GraphChannel(ChannelWindow):
 	def do_arm(self, node, same=0):
 	        if same and self.armed_display:
 		    return 1
+		self.limits = None
 		self.armed_type = MMAttrdefs.getattr(node, 'gtype')
 		str = self.getstring(node)
 		toks = self.tokenizestring(str)
@@ -71,6 +72,8 @@ class GraphChannel(ChannelWindow):
 
 	def findminmax(self):
 		if self.armed_type == 'scatter':
+			if self.limits:
+				return self.limits
 			minx = miny = maxx = maxy =None
 			for d in self.datapoints:
 				if not d: continue
@@ -84,13 +87,15 @@ class GraphChannel(ChannelWindow):
 					maxx = max(maxx, x)
 					maxy = max(maxy, y)
 		else:
+			if self.limits:
+				print 'Sorry, limits only for scatterplots'
 			minx = 0
-			minx = miny = maxx = maxy =None
+			miny = maxx = maxy =None
 			for d in self.datapoints:
 				if not d: continue
-				if miny == None: miny = y
+				if miny == None: miny = d[0]
 				if maxx == None: maxx = len(d)
-				if maxy == None: maxy = y
+				if maxy == None: maxy = d[0]
 				miny = min(miny, min(d))
 				maxy = max(maxy, max(d))
 				maxx = max(maxx, len(d))
@@ -157,7 +162,7 @@ class GraphChannel(ChannelWindow):
 				if point is None: continue
 				x, y = point
 				x = XOFF+((x-minx)*xstepsize)
-				y = YOFF+((y-miny)*ystepsize)
+				y = YOFF+((maxy-y)*ystepsize)
 				self.armed_display.drawmarker(c, (x,y))
 
 	def do_bar(self):
@@ -246,6 +251,8 @@ class GraphChannel(ChannelWindow):
 		self.datapoints = []
 		curdatapoints = []
 		tuples = (self.armed_type == 'scatter')
+		limits = []
+		in_limits = 0
 		for i in str:
 			if type(i) in (type(0.0), type(0)):
 				if tuples:
@@ -253,20 +260,29 @@ class GraphChannel(ChannelWindow):
 				else:
 					curdatapoints.append(i)
 			elif type(i) == type(()):
+				if in_limits:
+					limits.append(i[0])
+					limits.append(i[1])
+					continue
 				if tuples:
 					curdatapoints.append(i)
 				else:
 					print 'GraphChannel: single value expected:', i
 			elif type(i) is type(''):
 				if i == 'next':
+					in_limits = 0
 					if curdatapoints:
 						self.datapoints.append(
 							  curdatapoints)
 						curdatapoints = []
+				elif i == 'limits':
+					in_limits = 1
 				else:
 					print 'GraphChannel: unknown cmd:', i
 		if curdatapoints:
 			self.datapoints.append(curdatapoints)
+		if limits:
+			self.limits = tuple(limits)
 
 	# This can be done better by spacing the colors out in HLS space
 	def needcolors(self, num):
