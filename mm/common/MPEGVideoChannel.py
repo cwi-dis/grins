@@ -41,7 +41,6 @@ class VideoChannel(ChannelWindowThread):
 			import MMAttrdefs, GLLock
 			arminfo = {'scale': float(MMAttrdefs.getattr(node, 'scale')),
 				   'bgcolor': self.getbgcolor(node),
-				   'center': MMAttrdefs.getattr(node, 'center'),
 				   }
 			self.threads.arm(fp, 0, 0, arminfo, None,
 				  self.syncarm)

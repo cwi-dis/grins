@@ -23,7 +23,7 @@ windowinterface.select_setcallback(mv.GetEventFD(), _selcb, ())
 mv.SetSelectEvents(mv.MV_EVENT_MASK_STOP)
 
 class VideoChannel(Channel.ChannelWindowAsync):
-	_our_attrs = ['scale', 'center']
+	_our_attrs = ['scale']
 	node_attrs = Channel.ChannelWindowAsync.node_attrs + [
 		'clipbegin', 'clipend',
 		'project_audiotype', 'project_videotype', 'project_targets',
@@ -133,7 +133,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		movie.SetPlaySpeed(1)
 		scale = MMAttrdefs.getattr(node, 'scale')
 		self.armed_scale = scale
-		center = MMAttrdefs.getattr(node, 'center')
 		x, y, w, h = self.window._rect
 		track = movie.FindTrackByMedium(mv.DM_IMAGE)
 		if scale > 0:
@@ -144,13 +143,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			height = min(height * scale, h)
 			movie.SetViewSize(width, height)
 			width, height = movie.QueryViewSize(width, height)
-			if center:
-				imbox = float((w - width) / 2)/w, float((h - height) / 2)/h, float(width)/w, float(height)/h
-				x = x + (w - width) / 2
-				y = self.window._form.height - y - (h + height) / 2
-			else:
-				imbox = 0, 0, float(width)/w, float(height)/h
-				y = self.window._form.height - y - height
+			imbox = 0, 0, float(width)/w, float(height)/h
+			y = self.window._form.height - y - height
 			movie.SetViewOffset(x, y, mv.DM_TRUE)
 		else:
 			imbox = 0, 0, 1, 1
