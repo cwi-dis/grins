@@ -660,18 +660,23 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		for cbd in self._dyncmds.values():
 			if cbd.has_key(id):
 				if not cbd[id]:return
+				# call check_cascade_menu_entry before
+				# apply because the call may result
+				# in a call to set_dynamiclist
+				self.check_cascade_menu_entry(id)
 				apply(apply,cbd[id])
 				break
 		self.PostMessage(WM_KICKIDLE)
 
-# items are checked/unchecked by the core system
-#				submenu=self.get_cascade_menu(id)
-#				if id not in submenu._toggles.keys():return
-#				state=submenu.GetMenuState(id,win32con.MF_BYCOMMAND)
-#				if state & win32con.MF_CHECKED:
-#					submenu.CheckMenuItem(id,win32con.MF_BYCOMMAND | win32con.MF_UNCHECKED)
-#				else:
-#					submenu.CheckMenuItem(id,win32con.MF_BYCOMMAND | win32con.MF_CHECKED)
+	# items are checked/unchecked by the core system
+	def check_cascade_menu_entry(self,id):
+		submenu=self.get_cascade_menu(id)
+		if id not in submenu._toggles.keys():return
+		state=submenu.GetMenuState(id,win32con.MF_BYCOMMAND)
+		if state & win32con.MF_CHECKED:
+			submenu.CheckMenuItem(id,win32con.MF_BYCOMMAND | win32con.MF_UNCHECKED)
+		else:
+			submenu.CheckMenuItem(id,win32con.MF_BYCOMMAND | win32con.MF_CHECKED)
 
 	# Set callback for dynamic menu
 	def set_dyncbd(self,cbd,menu):
