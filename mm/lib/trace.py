@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import sys
 from time import time
 
