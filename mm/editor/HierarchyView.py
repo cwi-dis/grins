@@ -2128,7 +2128,7 @@ class HierarchyView(HierarchyViewDialog):
 		dialog = windowinterface.BandwidthComputeDialog(msg, parent=self.getparentwindow())
 		bandwidth, prerolltime, delaycount, errorseconds, errorcount, stalls = \
 			BandwidthCompute.compute_bandwidth(self.root)
-		print 'DBG: stalls:', stalls
+		if __debug__: print 'DBG: stalls:', stalls
 		dialog.setinfo(prerolltime, errorseconds, delaycount, errorcount)
 		dialog.done()
 		self.need_redraw = 1
