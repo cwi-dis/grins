@@ -125,13 +125,13 @@ class ArcInfo(ArcInfoDialog):
 
 	# Edit manager interface (as dependent client)
 
-	def transaction(self):
+	def transaction(self, type):
 		return 1
 
 	def rollback(self):
 		pass
 
-	def commit(self):
+	def commit(self, type):
 		if not self.stillvalid():
 			self.close()
 		else:
