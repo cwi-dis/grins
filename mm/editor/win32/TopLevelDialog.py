@@ -20,9 +20,8 @@ class TopLevelDialog:
 		self.commandlist = self.commandlist + [
 			PAUSE(callback = (self.pause_callback, ())),
 			STOP(callback = (self.stop_callback, ())),
-			TB_PLAY(callback = (self.play_callback, ())),
-			TB_PAUSE(callback = (self.pause_callback, ())),
-			TB_STOP(callback = (self.stop_callback, ())),
+			PLAY(callback = (self.play_callback, ())),
+			PAUSE(callback = (self.pause_callback, ())),
 			SCHEDDUMP(callback = (self.__dump, ())),
 		]
 
