@@ -870,13 +870,13 @@ class SMILHtmlTimeWriter(SMIL):
 			return
 		self.smilboston = 1
 		for ugroup in usergroups.keys():
-			name = identify(ugroup)
+			name = identify(ugroup, html = 1)
 			if self.ids_used.has_key(name):
 				i = 0
-				nn = '%s-%d' % (name, i)
+				nn = '%s_%d' % (name, i)
 				while self.ids_used.has_key(nn):
 					i = i+1
-					nn = '%s-%d' % (name, i)
+					nn = '%s_%d' % (name, i)
 				name = nn
 			self.ids_used[name] = 1
 			self.ugr2name[ugroup] = name
@@ -888,13 +888,13 @@ class SMILHtmlTimeWriter(SMIL):
 			return
 		self.uses_grins_namespaces = 1
 		for layout in layouts.keys():
-			name = identify(layout)
+			name = identify(layout, html = 1)
 			if self.ids_used.has_key(name):
 				i = 0
-				nn = '%s-%d' % (name, i)
+				nn = '%s_%d' % (name, i)
 				while self.ids_used.has_key(nn):
 					i = i+1
-					nn = '%s-%d' % (name, i)
+					nn = '%s_%d' % (name, i)
 				name = nn
 			self.ids_used[name] = 1
 			self.layout2name[layout] = name
@@ -906,13 +906,13 @@ class SMILHtmlTimeWriter(SMIL):
 			return
 		self.smilboston = 1
 		for transition in transitions.keys():
-			name = identify(transition)
+			name = identify(transition, html = 1)
 			if self.ids_used.has_key(name):
 				i = 0
-				nn = '%s-%d' % (name, i)
+				nn = '%s_%d' % (name, i)
 				while self.ids_used.has_key(nn):
 					i = i+1
-					nn = '%s-%d' % (name, i)
+					nn = '%s_%d' % (name, i)
 				name = nn
 			self.ids_used[name] = 1
 			self.transition2name[transition] = name
@@ -923,7 +923,7 @@ class SMILHtmlTimeWriter(SMIL):
 		uid = node.GetUID()
 		name = node.GetRawAttrDef('name', '')
 		if name:
-			name = identify(name)
+			name = identify(name, html = 1)
 			if not self.ids_used.has_key(name):
 				self.ids_used[name] = 1
 				self.uid2name[uid] = name
@@ -943,15 +943,15 @@ class SMILHtmlTimeWriter(SMIL):
 		if not self.uid2name.has_key(uid):
 			isused = name != ''
 			if isused:
-				name = identify(name)
+				name = identify(name, html = 1)
 			else:
 				name = 'node'
 			# find a unique name by adding a number to the name
 			i = 0
-			nn = '%s-%d' % (name, i)
+			nn = '%s_%d' % (name, i)
 			while self.ids_used.has_key(nn):
 				i = i+1
-				nn = '%s-%d' % (name, i)
+				nn = '%s_%d' % (name, i)
 			name = nn
 			self.ids_used[name] = isused
 			self.uid2name[uid] = name
@@ -966,7 +966,7 @@ class SMILHtmlTimeWriter(SMIL):
 		context = node.GetContext()
 		channels = context.channels
 		for ch in channels:
-			name = identify(ch.name)
+			name = identify(ch.name, html = 1)
 			if not self.ids_used.has_key(name):
 				self.ids_used[name] = 0
 				self.ch2name[ch] = name
@@ -1004,12 +1004,12 @@ class SMILHtmlTimeWriter(SMIL):
 			top0 = None
 		for ch in channels:
 			if not self.ch2name.has_key(ch):
-				name = identify(ch.name)
+				name = identify(ch.name, html = 1)
 				i = 0
-				nn = '%s-%d' % (name, i)
+				nn = '%s_%d' % (name, i)
 				while self.ids_used.has_key(nn):
 					i = i+1
-					nn = '%s-%d' % (name, i)
+					nn = '%s_%d' % (name, i)
 				name = nn
 				self.ids_used[name] = 0
 				self.ch2name[ch] = name
@@ -1045,16 +1045,16 @@ class SMILHtmlTimeWriter(SMIL):
 			if a.atype in SourceAnchors:
 				if isidre.match(a.aid) is None or \
 				   self.ids_used.has_key(a.aid):
-					aname = '%s-%s' % (self.uid2name[uid], a.aid)
-					aname = identify(aname)
+					aname = '%s_%s' % (self.uid2name[uid], a.aid)
+					aname = identify(aname, html = 1)
 				else:
-					aname = a.aid
+					aname = identify(a.aid, html = 1)
 				if self.ids_used.has_key(aname):
 					i = 0
-					nn = '%s-%d' % (aname, i)
+					nn = '%s_%d' % (aname, i)
 					while self.ids_used.has_key(nn):
 						i = i+1
-						nn = '%s-%d' % (aname, i)
+						nn = '%s_%d' % (aname, i)
 					aname = nn
 				self.aid2name[aid] = aname
 				self.ids_used[aname] = 0
