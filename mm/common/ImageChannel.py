@@ -12,6 +12,8 @@ import imgfile
 from Channel import Channel
 from ChannelWindow import ChannelWindow
 
+from AnchorEdit import A_ID, A_TYPE, A_ARGS, ATYPE_NORMAL, ATYPE_PAUSE
+
 def between(v, x0, x1):
 	return ((x0 <= v and v <= x1) or (x1 <= v and v <= x0))
 
@@ -27,25 +29,27 @@ class ImageWindow(ChannelWindow):
 		return self
 	#
 	def show(self):
-		if self.wid <> 0:
-			self.setwin()
+		if self.is_showing():
+			self.pop()
 			return
 		ChannelWindow.show(self)
 		fl.qdevice(DEVICE.MOUSE3)
 		self.render()
 	#
 	def redraw(self):
-		if self.wid == 0: return
+		if not self.is_showing():
+			return
 		gl.reshapeviewport()
 		self.render()
 	#
 	def clear(self):
 		self.node = None
 		self.parray = None
+		self.anchors = []
 		self.xsize = self.ysize = 0
 		self.setcolors()
-		if self.wid <> 0:
-			gl.winset(self.wid)
+		if self.is_showing():
+			self.setwin()
 			gl.RGBcolor(self.bgcolor)
 			gl.clear()
 	#
@@ -73,7 +77,8 @@ class ImageWindow(ChannelWindow):
 			if val == 1:
 				self.pm = (mx, my)
 			else:
-				self.anchors[0] = (self.anchors[0][0], \
+				a = self.anchors[0]
+				self.anchors[0] = (a[0], a[1], \
 					  [self.pm[0], self.pm[1], mx, my])
 				self.redraw()
 			return
@@ -87,14 +92,16 @@ class ImageWindow(ChannelWindow):
 			print 'mouse: no anchors on this node'
 		al2 = []
 		for a in self.anchors:
-			x0, y0, x1, y1 = a[1][0], a[1][1], a[1][2], a[1][3]
+			args = a[A_ARGS]
+			x0, y0, x1, y1 = args[0], args[1], args[2], args[3]
 			if between(mx, x0, x1) and between(my, y0, y1):
 				al2.append(a)
 		if not al2:
 			print 'Mouse: No anchor selected'
 			gl.ringbell()
 			return
-		self.player.anchorfired(self.node, al2)
+		rv = self.player.anchorfired(self.node, al2)
+		# XXXX Check for ATYPE_PAUSE anchor.
 	#
 	def armimage(self, (filename, node)):
 		self.parray = None
@@ -112,9 +119,8 @@ class ImageWindow(ChannelWindow):
 		except imgfile.error, msg:
 			print 'Cannot read image file', filename, ':', msg
 	def showimage(self):
-		if self.wid:
-			self.pop()
-			gl.winset(self.wid)
+		if self.is_showing():
+			self.pop() # Implies gl.winset()
 			self.render()
 	def setanchors(self, anchors):
 		self.anchors = anchors
@@ -146,7 +152,7 @@ class ImageWindow(ChannelWindow):
 			gl.lrectwrite(x, y, x+self.xsize-1, y+self.ysize-1, \
 					self.parray)
 			gl.RGBcolor(self.hicolor)
-			for dummy, a in self.anchors:
+			for dummy, tp, a in self.anchors:
 				if len(a) <> 4: continue
 				x0, y0, x1, y1 = a[0], a[1], a[2], a[3]
 				x0 = int(x0 * self.scale + x)
@@ -229,8 +235,9 @@ class ImageChannel(Channel):
 			return
 		al2 = []
 		for a in alist:
-			if len(a[1]) == 0: continue
-			if len(a[1]) <> 4:
+			if a[A_TYPE] not in (ATYPE_NORMAL, ATYPE_PAUSE):
+				continue
+			if len(a[A_ARGS]) <> 4:
 				print 'ImageChannel: funny-sized anchor'
 			else:
 				al2.append(a)
