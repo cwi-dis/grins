@@ -27,6 +27,7 @@ class SchedulerContext:
 		self.parent = parent
 		self.sractions = []
 		self.srevents = {}
+		self.unexpected_armdone = {}
 		self.playroot = node
 		#self.parent.ui.duration_ind.label = '??:??'
 
@@ -47,23 +48,31 @@ class SchedulerContext:
 		del self.sractions
 		del self.parent
 		del self.playroot
+		for v in self.prearmlists.values():
+			if v:
+				v.root().destroy()
+		del self.prearmlists
 
 	#
 	# Dump - Dump a scheduler context
 	#
-	def dump(self):
+	def dump(self, events=None, actions=None):
+		if not events:
+			events = self.srevents
+		if not actions:
+			actions = self.sractions
 		print '------------------------------'
 		print '--------- events:'
-		for ev in self.srevents.keys():
-			print SR.ev2string(ev),'\t', self.srevents[ev]
+		for ev in events.keys():
+			print SR.ev2string(ev),'\t', events[ev]
 		print '--------- actions:'
-		for i in range(len(self.sractions)):
-			if self.sractions[i]:
-				ac, list = self.sractions[i]
+		for i in range(len(actions)):
+			if actions[i]:
+				ac, list = actions[i]
 				print '%d\t%d\t%s' % (i, ac, SR.evlist2string(list))
-		print '------------ #prearms outstanding:'
-		for i in self.channels:
-			print i, '\t', len(self.prearmlists[i])
+##		print '------------ #prearms outstanding:'
+##		for i in self.channels:
+##			print i, '\t', len(self.prearmlists[i])
 		print '----------------------------------'
 
 	#
@@ -72,17 +81,17 @@ class SchedulerContext:
 	def gen_prearms(self, s_node):
 		if not s_node:
 			s_node = self.playroot
-		if hasattr(s_node, 'prearmlists'):
-			self.prearmlists = {}
-			for cn, val in s_node.prearmlists.items():
-				ch = self.parent.ui.getchannelbyname(cn)
-				self.prearmlists[ch] = val[:]
-			self.channels = self.prearmlists.keys()
-			self.channelnames = s_node.prearmlists.keys()
-			self.parent.channels_in_use = \
-					self.parent.channels_in_use + \
-					self.channels
-			return 1
+##		if hasattr(s_node, 'prearmlists'):
+##			self.prearmlists = {}
+##			for cn, val in s_node.prearmlists.items():
+##				ch = self.parent.ui.getchannelbyname(cn)
+##				self.prearmlists[ch] = val[:]
+##			self.channels = self.prearmlists.keys()
+##			self.channelnames = s_node.prearmlists.keys()
+##			self.parent.channels_in_use = \
+##					self.parent.channels_in_use + \
+##					self.channels
+##			return 1
 		#
 		# Create channel lists
 		#
@@ -118,17 +127,31 @@ class SchedulerContext:
 		#
 		# Create per-channel list of prearms
 		#
-		self.prearmlists = {}
-		for ch in self.channels:
-			self.prearmlists[ch] = []
-		GenAllPrearms(self.parent.ui, self.playroot, self.prearmlists)
+		self.prearmlists = GenAllPrearms(self.parent.ui,
+						 self.playroot, self.channels)
+##		for ch, v in self.prearmlists.items():
+##			print '-------', ch
+##			v.dump(0)
 		self.playroot.EndPruneTree()
 		mini = self.playroot.FindMiniDocument()
 		Timing.needtimes(mini)
-		s_node.prearmlists = {}
-		for ch, val in self.prearmlists.items():
-			s_node.prearmlists[ch._name] = val[:]
+##		s_node.prearmlists = {}
+##		for ch, val in self.prearmlists.items():
+##			s_node.prearmlists[ch._name] = val[:]
 		return 1
+	
+	def cancelprearms(self, node):
+		"""Cancel prearms for node and its descendents, it has
+		just been terminated"""
+		for list in self.prearmlists.values():
+			list.cancel(node)
+
+##	def revive(self, node):
+##		"""Node, probably looping, is being entered. Revive prearms
+##		and reset the loopcount to the initial value"""
+##		for list in self.prearmlists.values():
+##			list.revive(node)
+		
 	#
 	def startcontextchannels(self):
 		for ch in self.channels:
@@ -147,12 +170,14 @@ class SchedulerContext:
 	# getnextprearm returns next prearm event due for given channel
 	#
 	def getnextprearm(self, ch):
-		chlist = self.prearmlists[ch]
-		if not chlist:
+		if not self.prearmlists.has_key(ch):
 			return None
-		ev = chlist[0]
-		del chlist[0]
-		return ev
+		if not self.prearmlists[ch]:
+			return None
+		self.prearmlists[ch], node = self.prearmlists[ch].next()
+		if not node:
+			return None
+		return (SR.PLAY_ARM, node)
 	#
 	# run_initial_prearms schedules the first prearms.
 	# Prearms that are immedeately needed are scheduled in a hi-pri queue,
@@ -189,10 +214,37 @@ class SchedulerContext:
 		self.parent.ui.sctx_empty(self) # XXXX
 		return 0
 	#
-	# XXXX
+	# Initialize SR actions and events before playing
 	#
 	def prepare_minidoc(self, seeknode):
 		self.sractions, self.srevents = self.playroot.GenAllSR(seeknode)
+	#
+	# Re-initialize SR actions and events for a looping node, preparing
+	# for the next time through the loop
+	#
+	def restartloop(self, node):
+		# XXXX Not a good idea, this algorithm: a looping node
+		# will cause actions to grow without bound.
+		actions, events = node.GenLoopSR(len(self.sractions))
+		self.sractions[len(self.sractions):] = actions
+		for key, value in events.items():
+			if self.srevents.has_key(key):
+				raise 'Duplicate event', SR.ev2string(key)
+			self.srevents[key] = value
+			#
+			# ARMDONE events may have arrived too early.
+			# Re-schedule them.
+			#
+			if self.unexpected_armdone.has_key(key):
+				self.parent.event(self, key)
+				del self.unexpected_armdone[key]
+	#
+	# Tell arm datastructures that we will go through the loop at
+	# least once more after the current loop is finished.
+	#
+	def arm_moreloops(self, node):
+		for tree in self.prearmlists.values():
+			tree.root().looponcemore(node)
 
 	#
 	# Start minidoc starts playing what we've prepared
@@ -261,6 +313,9 @@ class SchedulerContext:
 			del self.srevents[ev]
 		except KeyError:
 			if ev[0] == SR.TERMINATE:
+				return []
+			elif ev[0] == SR.ARM_DONE:
+				self.unexpected_armdone[ev] = 1
 				return []
 			raise error, 'Scheduler: Unknown event: %s' % SR.ev2string(ev)
 		srlist = self.sractions[actionpos]
@@ -560,6 +615,12 @@ class Scheduler(scheduler):
 			self.ui.bag_event(sctx, todo)
 		elif action == SR.TERMINATE:
 			self.do_terminate(sctx, arg)
+		elif action == SR.LOOPSTART:
+			self.do_loopstart(sctx, arg)
+		elif action == SR.LOOPEND:
+			self.do_loopend(sctx, arg)
+		elif action == SR.LOOPRESTART:
+			self.do_looprestart(sctx, arg)
 		else:
 			if action == SR.SCHED_STOP and \
 			   arg.GetType() in interiortypes:
@@ -605,6 +666,8 @@ class Scheduler(scheduler):
 	#
 	def do_terminate(self, sctx, node):
 		if node.GetType() in interiortypes:
+			# Remove prearms for all our descendents
+			sctx.cancelprearms(node)
 			# turn action into event
 			self.event(sctx, (SR.TERMINATE, node))
 		else:
@@ -629,10 +692,10 @@ class Scheduler(scheduler):
 					if events[i][1] == node:
 						del events[i]
 			chan = self.ui.getchannelbynode(node)
-			prearmlist = sctx.prearmlists[chan]
-			for i in range(len(prearmlist)-1,-1,-1):
-				if prearmlist[i][1] == node:
-					del prearmlist[i]
+##			prearmlist = sctx.prearmlists[chan]
+##			for i in range(len(prearmlist)-1,-1,-1):
+##				if prearmlist[i][1] == node:
+##					del prearmlist[i]
 			node.set_armedmode(ARM_DONE)
 			chan.terminate(node)
 			do_arm = 0
@@ -645,6 +708,53 @@ class Scheduler(scheduler):
 			if do_arm:
 				sctx.arm_ready(chan)
 
+	#
+	# LOOPSTART SR - Enter a loop at the top.
+	# (resets loopcounter to initial value and generates LOOPSTART_DONE)
+	#
+	def do_loopstart(self, sctx, node):
+##		print 'LOOPSTART', node
+		if not node.moreloops(decrement=1):
+			raise 'Loopstart without more loops!'
+		sctx.arm_moreloops(node)
+		self.event(sctx, (SR.LOOPSTART_DONE, node))
+
+	#
+	# LOOPEND SR - End of loop. Either loop once more or continue
+	#
+	def do_loopend(self, sctx, node):
+##		print 'LOOPEND', node
+		if node.moreloops():
+			#
+			# This is tricky. We first have to do the SCHED_STOP
+			# actions (stopping all descendents, probably), and
+			# only after that we can re-install the new srlist
+			# and go back into the loop. We do this by scheduling
+			# scheduling the (pseudo-) sr LOOPRESTART in a low
+			# priority queue. do_looprestart will then be
+			# called after all the cleaun actions.
+			#
+##			print 'MORE TO PLAY'
+			self.add_runqueue(sctx, PRIO_INTERN,
+					  (SR.SCHED_STOP, node))
+			self.add_runqueue(sctx, PRIO_START,
+					  (SR.LOOPRESTART, node))
+		else:
+##			print 'NO MORE TO PLAY'
+			self.event(sctx, (SR.LOOPEND_DONE, node))
+	#
+	# LOOPRESTART - Regenerate loop events and restart
+	#
+	def do_looprestart(self, sctx, node):
+##		print 'LOOPRESTART', node
+		if not node.moreloops(decrement=1):
+			raise 'Looprestart without more loops!'
+		if node.moreloops():
+			# If this is still not the last loop we also
+			# set the arm-structures to loop once more.
+			sctx.arm_moreloops(node)
+		sctx.restartloop(node)
+		self.event(sctx, (SR.LOOPSTART_DONE, node))
 	#
 	# Execute a SYNC SR
 	#
@@ -710,22 +820,181 @@ class Scheduler(scheduler):
 			sctx.setpaused(paused)
 		self.updatetimer()
 
+class ArmStorageTree:
+	def __init__(self, node):
+		self.children = []
+		self.index = 0
+		self.parent = None
+		self.node = node
+		self.onemoretime = 0
+
+	def setparents(self):
+		"""Last stage of tree buildup: link children back to parent"""
+		for c in self.children:
+			c.parent = self
+
+	def destroy(self):
+		"""Destroy the whole tree starting at any node"""
+		if self.parent:
+			raise 'Destroy with parent!'
+		for c in self.children:
+			c.parent = None
+			c.destroy()
+		del self.parent
+		del self.children
+
+##	def moreloops(self):
+##		rv = self.node.moreloops()
+##		if rv:
+##			print 'MORE TO ARM=', rv, self.node
+##		return rv
+
+	def cancel(self, node):
+		"""Cancel arms for node and descendents, knowing that
+		node is currently active (so somewhere between current and
+		root)"""
+		if node == self.node:
+			self.do_cancel()
+		elif self.parent:
+			self.parent.cancel(node)
+
+	def do_cancel(self):
+		"""Cancel arm for this node and its descendents"""
+		self.index = len(self.children)+1
+		for ch in self.children[self.index:]:
+			ch.do_cancel()
+			
+##	def revive(self, node):
+##		"""Revive arms and reset loopcount for node and its
+##		descendents, knowing node is somewhere in the subtree
+##		under the current active node"""
+##		# XXXX Is that true? Is the node under the subtree when
+##		# we enter it?
+##		if node == self.node:
+##			self.do_revive()
+##		else:
+##			for ch in self.children:
+###				ch.revive(node)
+##	def do_revive(self):
+##		"""Revive arms and reset loopcounter for this node and its
+##		descendents"""
+##		self.index = 0
+##		for ch in self.children:
+##			ch.do_revive()
+
+##	def dump(self, level):
+##		print ' '*level, self, self.node, self.parent, self.index
+##		for c in self.children:
+##			c.dump(level+2)
+
+	def next(self):
+		"""Return next ArmStorage to query and next node to arm"""
+		if self.index >= len(self.children) and self.onemoretime:
+##			print 'ONEMOREARM', self.node
+			for ch in self.children:
+				ch.do_looponcemore()
+			self.onemoretime = 0
+			self.index = 0
+		if self.index < len(self.children):
+			self.index = self.index + 1
+			return self.children[self.index-1].next()
+		if not self.parent:
+			return self, None
+		# Remove ourselves if we're empty anyway
+		parent = self.parent
+##		if len(self.children) == 0:
+##			self.parent.children.remove(self)
+##			self.parent = None
+		return parent.next()
+		
+	def append(self, x):
+		self.children.append(x)
+
+	def isempty(self):
+		return len(self.children) == 0
+
+	def looponcemore(self, node):
+		if self.node == node:
+			self.do_looponcemore()
+		else:
+			for ch in self.children:
+				ch.looponcemore(node)
+
+	def do_looponcemore(self):
+##		print 'LOOPONCEMORE', self.node
+		self.onemoretime = 1
+##		for ch in self.children:
+##			ch.do_looponcemore()
+
+	def root(self):
+		if self.parent:
+			return self.parent.root()
+		return self
+
+class ArmStorageLeaf:
+	def __init__(self, node):
+		self.node = node
+		self.parent = None
+
+	def destroy(self):
+		del self.parent
+		del self.node
+
+	def root(self):
+		return self
+
+	def do_cancel(self):
+##		print 'CANCELARM', self.node
+		pass
+
+##	def do_revive(self):
+##		pass
+
+	def next(self):
+		node = self.node
+		return self.parent, node
+
+##	def dump(self, level):
+##		print ' '*level, 'LEAF', self.node
+
+	def isempty(self):
+		return 0
+
+	def looponcemore(self, node):
+		pass
+
+	def do_looponcemore(self):
+		pass
+		
 #
 # GenAllPrearms fills the prearmlists dictionary with all arms needed.
 #
-def GenAllPrearms(ui, node, prearmlists):
+def GenAllPrearms(ui, node, channels):
 	nodetype = node.GetType()
 	if nodetype in bagtypes:
-		return
+		return {}
 	if nodetype in leaftypes:
 		chan = ui.getchannelbynode(node)
-		prearmlists[chan].append((SR.PLAY_ARM, node))
-		return
+		return {chan : ArmStorageLeaf(node)}
+	#
+	# For now, create internal data structure for each interior node
+	#
+	prearmlists = {}
+	for ch in channels:
+		prearmlists[ch] = ArmStorageTree(node)
 	for child in node.GetWtdChildren():
-		GenAllPrearms(ui, child, prearmlists)
+		newprearmlists = GenAllPrearms(ui, child, channels)
+		for key, value in newprearmlists.items():
+			prearmlists[key].append(value)
 		# XXXX hack to only play first child in alt nodes
 		if nodetype == 'alt':
-			return
+			break
+	for k, v in prearmlists.items():
+		if v.isempty():
+			del prearmlists[k]
+		else:
+			v.setparents()
+	return prearmlists
 
 #  Remove all arm_duration attributes (so they will be recalculated)
 
