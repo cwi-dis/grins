@@ -1670,14 +1670,15 @@ class EventCtrl(AttrCtrl):
 	def _radiobuttoncallback(self, id, code):
 		if code == win32con.BN_CLICKED and self._eventstruct:
 			newcause = self.__radiobuttons[id]
-			if newcause == 'node' and not self._eventstruct.has_node():
-				dlg = win32dialog.SelectElementDlg(self._wnd._form, self._node.GetRoot(), self._eventstruct.get_node(), filter = 'node')
-				if dlg.show():
-					self._eventstruct.set_node(dlg.getmmobject())
-			self._eventstruct.set_cause(newcause)
-			self.enableApply()
-			self.update()
-			self.selected_radiobutton = newcause
+			if self._radiobuttonwidgets[newcause].getcheck():
+				if newcause == 'node' and not self._eventstruct.has_node():
+					dlg = win32dialog.SelectElementDlg(self._wnd._form, self._node.GetRoot(), self._eventstruct.get_node(), filter = 'node')
+					if dlg.show():
+						self._eventstruct.set_node(dlg.getmmobject())
+				self._eventstruct.set_cause(newcause)
+				self.enableApply()
+				self.update()
+				self.selected_radiobutton = newcause
 
 	def _repeatwidgetcallback(self, id, code):
 		if code == win32con.EN_CHANGE and self._eventstruct:
