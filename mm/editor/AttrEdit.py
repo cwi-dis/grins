@@ -248,16 +248,16 @@ class NodeWrapper(Wrapper):
 		anchors = {}
 		uid = self.node.GetUID()
 		hlinks = self.context.hyperlinks
-		for aid, atype, aargs, times in alist:
+		for aid, atype, aargs, times, access in alist:
 			links = []
 			if atype == ATYPE_DEST:
 				# don't show destination-only anchors
 				continue
-			for a1, a2, ldir, ltype, stype, dtype in hlinks.findsrclinks((uid, aid)):
-				links.append((a2, ldir, ltype, stype, dtype))
+			for link in hlinks.findsrclinks((uid, aid)):
+				links.append(link[1:])
 			links.sort()
 			times = times[0], times[1] - times[0]
-			anchors[aid] = atype, aargs, times, links
+			anchors[aid] = atype, aargs, times, access, links
 		return anchors
 
 	def __setanchors(self, newanchors):
@@ -286,16 +286,16 @@ class NodeWrapper(Wrapper):
 				linkview.interesting.remove(anchor)
 		rename = {}
 		for aid, a in newanchors.items():
-			if len(a) > 4 and a[4]:
-				rename[a[4]] = aid
+			if len(a) > 5 and a[5]:
+				rename[a[5]] = aid
 		for aid, a in newanchors.items():
 			anchor = uid, aid
 			oldname = aid
-			atype, aargs, times, links = a[:4]
+			atype, aargs, times, access, links = a[:5]
 			times = times[0], times[0] + times[1]
-			if len(a) > 4:
-				oldname = a[4]
-			anchorlist.append((aid, atype, aargs, times))
+			if len(a) > 5:
+				oldname = a[5]
+			anchorlist.append((aid, atype, aargs, times, access))
 			if links:
 				if anchor in linkview.interesting:
 					linkview.interesting.remove(anchor)
@@ -303,14 +303,15 @@ class NodeWrapper(Wrapper):
 					editmgr.addlink((anchor,) + link)
 			else:
 				linkview.set_interesting(anchor)
-			for a1, a2, dir, type in dstlinks.get(oldname, []):
+			for link in dstlinks.get(oldname, []):
 				# check whether src anchor renamed
+				a1 = link[0]
 				if a1[0] == uid:
 					a1 = uid, rename.get(a1[1], a1[1])
 					# check whether src anchor deleted
 					if not newanchors.has_key(a1[1]):
 						continue
-				editmgr.addlink((a1, anchor, dir, type))
+				editmgr.addlink((a1,) + link[1:])
 		editmgr.setnodeattr(node, 'anchorlist', anchorlist or None)
 
 	def getattr(self, name): # Return the attribute or a default
@@ -573,12 +574,12 @@ class NodeWrapper(Wrapper):
 				'Data for node', 'raw', flags.FLAG_ALL)
 		if name == '.anchorlist':
 			# our own version of the anchorlist:
-			# [(AnchorID, AnchorType, AnchorArgs, AnchorTimes, LinkList) ... ]
+			# [(AnchorID, AnchorType, AnchorArgs, AnchorTimes, AccessKey, LinkList) ... ]
 			# the LinkList is a list of hyperlinks, each a tuple:
 			# (Anchor, Dir, Type)
 			# where Anchor is either a (NodeID,AnchorID) tuple or
 			# a string giving the external destination
-			return (('list', ('enclosed', ('tuple', [('any', None), ('int', None), ('enclosed', ('list', ('any', None))), ('enclosed', ('tuple', [('float', 0), ('float', 0)])), ('enclosed', ('list', ('any', None)))]))), [],
+			return (('list', ('enclosed', ('tuple', [('any', None), ('int', None), ('enclosed', ('list', ('any', None))), ('enclosed', ('tuple', [('float', 0), ('float', 0)])), 'any', ('enclosed', ('list', ('any', None)))]))), [],
 				'Anchors', '.anchorlist',
 				'List of anchors on this node', 'raw', flags.FLAG_ALL)
 		return MMAttrdefs.getdef(name)

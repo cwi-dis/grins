@@ -120,9 +120,9 @@ class LinkEditLight:
 			return None
 		if type == ATYPE_WHOLE and dest is not None:
 			# we can upgrade the destination-only anchor
-			alist[i] = a = (alist[i][0], ATYPE_WHOLE, alist[i][2], alist[i][3])
+			alist[i] = a = (alist[i][0], ATYPE_WHOLE,) + alist[i][2:]
 		else:
-			a = ('0', type, [], (0,0))
+			a = ('0', type, [], (0,0), None)
 			alist.append(a)
 		em.setnodeattr(node, 'anchorlist', alist[:])
 		if not notransaction:
