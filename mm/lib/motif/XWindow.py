@@ -164,11 +164,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 			h = int(h)
 		else:
 			raise error, 'bad units specified'
-		# XXX--somehow set the position
-		if x is None or y is None:
-			geometry = None
-		else:
-			geometry = '+%d+%d' % (x, y)
 		if not title:
 			title = ''
 		attrs = {'minWidth': min(w, 60),
@@ -177,8 +172,9 @@ class _Window(_AdornmentSupport, _RubberBand):
 			 'visual': self._visual,
 			 'depth': self._depth,
 			 'title': title}
-		if geometry:
-			attrs['geometry'] = geometry
+		# set the position
+		if x is not None and y is not None:
+			attrs['geometry'] = '+%d+%d' % (x, y)
 		if title:
 			attrs['iconName'] = title
 		shell = parent._main.CreatePopupShell(
