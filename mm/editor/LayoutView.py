@@ -11,7 +11,14 @@ class LayoutView(LayoutViewDialog):
 		self.root = toplevel.root
 		self.context = self.root.context
 		self.editmgr = self.context.editmgr
-		self.curlayout = ALL_LAYOUTS
+		layouts = self.context.layouts
+		if layouts:
+			if len(layouts) == 1:
+				self.curlayout = layouts.keys()[0]
+			else:
+				self.curlayout = None
+		else:
+			self.curlayout = ALL_LAYOUTS
 		self.curchannel = None
 		self.curother = None
 		LayoutViewDialog.__init__(self)
