@@ -279,7 +279,7 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 		link = srcanchor, dstanchor, DIR_1TO2, TYPE_JUMP
 		em.addlink(link)
 		em.commit()
-		
+
 	def set_interesting(self, anchor):
 		self.interesting.append(anchor)
 
@@ -745,7 +745,7 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 		self.hide()
 
 
-	
+
 
 #
 # General functions
