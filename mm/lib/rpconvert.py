@@ -1,6 +1,9 @@
 __version__ = "$Id$"
 
-import MMurl, realsupport, MMNode
+import MMurl, realsupport
+from MMNode import MMSyncArc, MMAnchor
+from AnchorDefs import ATYPE_WHOLE
+from Hlinks import DIR_1TO2, TYPE_FORK, A_SRC_PLAY, A_DEST_PLAY
 
 def rpconvert(node):
 	# convert a RealPix node into a par node with children,
@@ -43,9 +46,12 @@ def rpconvert(node):
 		# not allowed to do it at this point
 		return
 
+	ctx.attributes['project_boston'] = 1 # It's definitely a SMIL 2.0 document now
+
 	# convert the ext node to a par node
 	em.setnodeattr(node, 'file', None)
 	em.setnodetype(node, 'par')
+	em.setnodeattr(node, 'channel', None)
 
 	# First deal with fadein transitions that specify an
 	# associated fadeout.  We just create an explicit fadeout for
@@ -105,12 +111,17 @@ def rpconvert(node):
 			chtype = 'brush'
 		else:
 			chtype = 'image'
+		newnode._internalchtype = chtype
 		chname = '%s %d' % (regionname, i)
 		while ctx.channeldict.has_key(chname):
 			i = i + 1
 			chname = '%s %d' % (regionname, i)
 		em.addchannel(chname, len(ctx.channelnames), chtype)
 		em.setchannelattr(chname, 'base_window', regionname)
+		em.setchannelattr(chname, 'transparent', 1)
+		em.setchannelattr(chname, 'center', 0)
+		em.setchannelattr(chname, 'drawbox', 0)
+		em.setchannelattr(chname, 'z', -1)
 		if tagdict.get('displayfull', 0):
 			x, y, w, h = 0, 0, rw, rh
 		else:
@@ -130,7 +141,7 @@ def rpconvert(node):
 		else:
 			em.setnodeattr(newnode, 'scale', -3)
 		start = start + tagdict.get('start', 0)
-		em.setnodeattr(newnode, 'beginlist', [MMNode.MMSyncArc(node, 'begin', srcnode='syncbase', delay=start)])
+		em.setnodeattr(newnode, 'beginlist', [MMSyncArc(newnode, 'begin', srcnode='syncbase', delay=start)])
 		if transition in ('fadein', 'crossfade', 'wipe'):
 			em.setnodeattr(newnode, 'file', MMurl.basejoin(furl, tagdict['file']))
 		elif transition in ('fill', 'fadeout'):
@@ -177,4 +188,8 @@ def rpconvert(node):
 					trname = '%s %d' % (transition, j)
 				em.addtransition(trname, trdict)
 			em.setnodeattr(newnode, 'transIn', [trname])
+
+		if tagdict.get('href'):
+			em.setnodeattr(newnode, 'anchorlist', [MMAnchor('0', ATYPE_WHOLE, [], (0, 0), None)])
+			em.addlink(((newnode.GetUID(), '0'), tagdict['href'], DIR_1TO2, TYPE_FORK, A_SRC_PLAY, A_DEST_PLAY))
 	em.commit()
