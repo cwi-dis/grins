@@ -22,7 +22,7 @@ import math
 import MenuTemplate
 import usercmd
 import struct
-import macfs
+import Carbon.File
 import string
 
 #
@@ -2634,7 +2634,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 		tp = data[0:4]
 		cr = data[4:8]
 		flags = struct.unpack("h", data[8:10])
-		fss = macfs.RawFSSpec(data[10:])
+		fss = Carbon.File.FSSpec(rawdata=data[10:])
 		return tp, cr, flags, fss
 	
 class _SubWindow(_CommonWindow):
