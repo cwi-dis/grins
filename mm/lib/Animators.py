@@ -15,7 +15,7 @@ import windowinterface
 import settings
 
 debug = 0
-debugParser = 1
+debugParser = 0
 
 # An Animator represents an animate element at run time.
 # An Animator entity implements interpolation taking into 
@@ -1035,8 +1035,11 @@ smil_attrs = {'left':(lambda node:getregionattr(node,'left')),
 	'src': (lambda node:getrenamed(node,'file')),
 	}
 
-additivetypes = ['int','float','color','position','inttuple','floattuple']
+additivetypes = ['int', 'float', 'color', 'position', 'inttuple', 'floattuple']
 alltypes = ['string',] + additivetypes
+
+animatetypes = ['invalid', 'values', 'from-to', 'from-by', 'to', 'by']
+
 
 # implNote
 # main decision attrs:
@@ -1059,7 +1062,8 @@ class AnimateElementParser:
 		self.__hasValidTarget = 0	# valid target node and attribute
 
 		self.__grinsattrname = ''	# grins internal target attribute name
-
+		self.__animtype = 'invalid'	# in animatetypes (see above)
+		self.__isadditive = 0
 			
 		############################
 		# Locate target node
@@ -1107,19 +1111,54 @@ class AnimateElementParser:
 		# do we have a valid target attribute?
 		self.__hasValidTarget = self.__checkTarget()
 
+		self.__isadditive = self.__attrtype in additivetypes
+
 		# verify
 		if debugParser:
 			print self.__grinsattrname, self.__attrname, self.__domval, self.__attrtype
 
-		########################################
-		# Cache some attributes
-	
-		# Read enumeration attributes
-		self.__additive = MMAttrdefs.getattr(anim, 'additive')
-		self.__calcMode = MMAttrdefs.getattr(anim, 'calcMode')
-		self.__accumulate = MMAttrdefs.getattr(anim, 'accumulate')
 
+		########################################
+		# find animation type i.e. one of 
+		# ['invalid', 'values', 'from-to', 'from-by', 'to', 'by']
+
+		self.__animtype = self.getAnimationType()
+		if self.__animtype == 'invalid':
+			print 'Syntax error: Invalid animation values'
+			print '\t',self
+			
+		# verify
+		if debugParser:
+			print 'animation type: ', self.__animtype
+
+		
+		########################################
+		# Read enumeration attributes
+
+		# additive has the default value 'replace' see SMIL.py
+		self.__additive = MMAttrdefs.getattr(anim, 'additive')
+		if self.__additive == 'sum' and not self.__isadditive:
+			print 'Warning: additive attribute will be ignored. The target attribute does not support additive animation.'
+			self.__additive = 'replace'
+
+		# accumulate has the default value 'none' see SMIL.py
+		self.__accumulate = MMAttrdefs.getattr(anim, 'accumulate')
+		if self.__accumulate == 'sum' and not self.__isadditive:
+			print 'Warning: accumulate attribute will be ignored. The target attribute does not support additive animation.'
+			self.__accumulate = 'none'
+
+		# calcMode has the default value 'paced' for animateMotion
+		# end 'linear' for all the other cases
+		self.__calcMode = MMAttrdefs.getattr(anim, 'calcMode')
+		if not self.__calcMode:
+			if self.__elementTag == 'animateMotion':
+				self.__calcMode = 'paced'
+			else:
+				self.__calcMode = 'linear'
+				
+		########################################
 		# Read time manipulation attributes
+
 		# speed="1" is a no-op, and speed="-1" means play backwards
 		# This speed is relative to parent.
 		# The context absolute speed is set elsewhere.  
@@ -1449,11 +1488,10 @@ class AnimateElementParser:
 	def __canBeAdditive(self):
 		return self.__attrtype == 'int' or self.__attrtype == 'float'
 
-	# animation (value) types
-	VALUES_ERROR, VALUES, FROM_TO, FROM_BY, NONE_TO, NONE_BY = range(6)
+
 	def getAnimationType(self):
 		if self.getValues()!=None or self.getPath()!=None:
-			return AnimateElementParser.VALUES
+			return 'values'
 
 		v1 = self.getFrom()
 		v2 = self.getTo()
@@ -1461,18 +1499,18 @@ class AnimateElementParser:
 		
 		# if we don't have 'values' then 'to' or 'by' must be given
 		if v2==None and dv==None:
-			return AnimateElementParser.VALUES_ERROR
+			return 'invalid'
 
 		if v1!=None:
 			if v2!=None:			
-				return AnimateElementParser.FROM_TO
+				return 'from-to'
 			else:
-				return AnimateElementParser.FROM_BY
+				return 'from-by'
 		else:
 			if v2!=None:			
-				return AnimateElementParser.NONE_TO
+				return 'to'
 			else:
-				return AnimateElementParser.NONE_BY
+				return 'by'
 
 	def safeatof(self, s):
 		if s[-1]=='%':
