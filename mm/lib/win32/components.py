@@ -850,7 +850,7 @@ class BandwidthComputeDialog(ResDialog):
 		self.init_subwindows()
 		return ResDialog.OnInitDialog(self)
 
-	def setinfo(self, prerolltime, errorseconds, errorcount):
+	def setinfo(self, prerolltime, errorseconds, delaycount, errorcount):
 		print 'setinfo called'
 		self._preroll.settext('%d s'%prerolltime)
 		self._stalltime.settext('%d s'%errorseconds)

@@ -453,7 +453,7 @@ class BandwidthComputeDialog:
 	def __init__(self, title):
 		self.title = title
 
-	def setinfo(self, prerolltime, errorseconds, errorcount):
+	def setinfo(self, prerolltime, errorseconds, delaycount, errorcount):
 		self.msg = "%s\nPreroll time: %d\nStall time: %d\nStalling node count: %d\n" % \
 			(self.title, prerolltime, errorseconds, errorcount)
 
