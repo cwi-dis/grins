@@ -21,12 +21,6 @@ from AnchorEdit import A_ID, A_TYPE, ATYPE_PAUSE
 from HDTL import HD, TL
 
 
-# Nominal Control Panel dimensions
-
-CPWIDTH = 300
-CPHEIGHT = 100
-
-
 # The Player class normally has only a single instance.
 #
 # It implements a queue using "virtual time" using an invisible timer
@@ -538,9 +532,13 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.reset()
 		self.setrate(rate)
 		self.showstate() # Give the anxious user a clue...
-		Timing.needtimes(self.playroot)
-		arm_events = Timing.getinitial(self.playroot)
-		Timing.prepare(self.playroot)	# XXX Attempt by Jack
+		mini = findminidocument(self.playroot)
+		Timing.needtimes(mini)
+		if mini == self.playroot:
+			arm_events = Timing.getinitial(mini)
+		else:
+			arm_events = []
+		Timing.prepare(self.playroot)
 		return arm_events
 	#
 	def resume_2_playing(self):
@@ -627,8 +625,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 				print 'Player: Play node w/o channel'
 				doit = 0
 			if doit and self.seeking:
-			    t = self.seek_node.t0
-			    if (node.t0 <= t) and (node.t1 > t):
+			    if node.t0 <= self.seek_node.t0 < node.t1:
 				    self.seek_nodelist.append(node)
 			    else:
 				    d = chan.getduration(node)

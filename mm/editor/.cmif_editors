@@ -20,7 +20,7 @@
 # Three files are read, in this order, if they exist:
 #	./.cmif_editors
 #	$HOME/.cmif_editors
-#	/ufs/guido/mm/demo/mm4/.cmif_editors
+#	$CMIF/mm4/.cmif_editors [$CMIF default is /ufs/guido/mm/demo]
 # Early entries have preference over later entries with the same channel
 # type and label string.
 # Entries will be placed in the menu in alphabetic order.

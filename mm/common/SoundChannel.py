@@ -103,7 +103,8 @@ class SoundChannel(Channel):
 		if not self.is_showing():
 			#callback(arg)
 			# XXX Try by Jack to get Guido's timing model:
-			self.player.enter(node.t1-node.t0, 0,  callback, arg)
+			dummy = \
+			  self.player.enter(node.t1-node.t0, 0,  callback, arg)
 			return
 		if self.armed_node <> node:
 			print 'SoundChannel: not the armed node'

@@ -185,7 +185,8 @@ class MovieChannel(Channel):
 	#
 	def play(self, (node, callback, arg)):
 		if not self.is_showing():
-			self.player.enter(node.t1-node.t0, 0, callback, arg)
+			dummy = \
+			  self.player.enter(node.t1-node.t0, 0, callback, arg)
 			return
 	        if node <> self.armed_node:
 			print 'MovieChannel: node not armed'
