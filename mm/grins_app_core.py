@@ -115,15 +115,12 @@ class GrinsApp(thread.WinApp):
 
 		
 	def InitInstance(self):
-		#win32ui.MessageBox('InitInstance')
-		afx=win32ui.GetAfx()
+		afx = win32ui.GetAfx()
 		afx.OleInit()
 		afx.EnableControlContainer()
-		win32ui.SetAppName("GRiNS")
 		self.LoadMainFrame()
 		from pywinlib.framework import interact
 		interact.CreateInteractiveWindow()
-		# Maximize the interactive window.
 		interact.edit.currentView.GetParent().ShowWindow(win32con.SW_MAXIMIZE)
 
 	def Run(self):
@@ -131,7 +128,6 @@ class GrinsApp(thread.WinApp):
 		return self.ExitInstance()
 
 	def ExitInstance(self):
-		#win32ui.MessageBox('Exit Instance')
 		if self.frame and hasattr(self.frame,'DestroyWindow'):
 			self.frame.DestroyWindow()
 		self.frame = None
@@ -157,7 +153,6 @@ class GrinsApp(thread.WinApp):
 
 	def BootGrins(self):
 		raise RuntimeError, "You must subclass this object"
-
 
 	#
 	#  Idle processing
