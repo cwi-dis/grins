@@ -9,34 +9,10 @@ from MMExc import *
 from MMTypes import *
 from HDTL import HD, TL
 
-real_interiortypes = ('par', 'seq', 'alt')
+real_interiortypes = ('par', 'seq', 'switch', 'excl')
 
-
-# The routine 'changedtimes' signifies that the timing might have changed
-# (but is not needed at the moment), and the routine 'needtimes' signifies
-# that somebody needs correct timing (possibly resulting in a recalc).
-# Finally, 'do_times' does the actual calculation.
-# As an option, 'hastimes' can be used to check whether the timings
-# are correct (this is used to set the 'calculate times' button).
-
-def changedtimes(node):
-	if hasattr(node, 'initial_arms'):
-		del node.initial_arms
-	for child in node.GetChildren():
-		changedtimes(child)
-
-def hastimes(node):
-	if hasattr(node, 'initial_arms'):
-		if node.initial_arms is not None:
-			return 1
-	return 0
-
-def needtimes(node):
-	if hasattr(node, 'initial_arms'):
-		if node.initial_arms is not None:
-			return # The cached value is valid
-	do_times(node)
-
+# Yuck, global variable.
+timingtype = 'virtual'
 
 # Calculate the nominal times for each node in the given subtree.
 # When the function is done, each node has two instance variables
@@ -50,24 +26,13 @@ def needtimes(node):
 # Any circularities in the sync arcs are detected and "reported"
 # as exceptions.
 
-def do_times(node):
-	t0 = time.time()
-##	print 'do_times...'
-
-	# These globals are used only while in do_times();
-	# they are changed by decrememt()
-
-	global getd_times # Used to calculate time spent in getduration()
-	getd_times = 0
-
-	global last_node # Keeps track of the last node played per channel
-	last_node = {}
-
-	global initial_arms # Keeps track of the first node played per channel
-	initial_arms = []
-
+def computetimes(node, which):
+	global timingtype
+	timingtype = which
 	node.t1 = 0
 	del node.t1
+	
+	
 
 	prepare(node)
 	_do_times_work(node)
@@ -80,17 +45,9 @@ def do_times(node):
 ##			  '(ignoring sync arcs and trying again)')
 ##		prep1(node)
 ##		_do_times_work(node)
+		print 'No endtime for', node
 		node.t1 = node.t0 + 10.0
-		node.timing_discont = 9.9
-	t1 = time.time()
 	propdown(node, node.t1, node.t0)
-	t2 = time.time()
-
-	node.initial_arms = initial_arms
-
-##	print 'done in', round(t2-t0, 3), 'sec.'
-##	print '(of which', round(getd_times, 3), 'sec. in getduration()',
-##	print 'and', round(t2-t1, 3), 'sec. in propdown)'
 
 def _do_times_work(node):
 	pt = pseudotime(0.0)
@@ -99,27 +56,14 @@ def _do_times_work(node):
 	decrement(q, 0, node, HD)
 	q.run()
 
-# Interface to get the "initial arms" nodes of a tree.
-# Call only after needtimes has calculated them.
-
-def getinitial(node):
-	return node.initial_arms # AttributeError here if called at wrong time
-
-
 # Interface to the prep1() and prep2() functions; these are also used
 # by the player (which uses a different version of decrement()).
 # This adds instance variables 'counter' and 'deps' to each node,
 # with meanings that can be deduced from the code below. :-) :-) :-)
 #
 def prepare(node):
-##	print '\tprepare...'
-	t0 = time.time()
 	prep1(node)
-	t1 = time.time()
 	prep2(node, node)
-	t2 = time.time()
-##	print '\tdone in', round(t1-t0, 3), '+', round(t2-t1, 3),
-##	print '=', round(t2-t0, 3), 'sec'
 	if node.counter[HD] <> 0:
 		raise CheckError, 'head of node has dependencies!?!'
 
@@ -136,16 +80,14 @@ def cleanup(node):
 	node.counter = node.deps = None
 	del node.counter
 	del node.deps
-	type = node.GetType()
-	if type in interiortypes:
-		for c in node.GetChildren():
-			cleanup(c)
+	for c in node.GetChildren():
+		cleanup(c)
 
 
 # Return a node's nominal duration, in seconds, as a floating point value.
 # Should only be applied to leaf nodes.
 #
-from AnchorDefs import A_TYPE, ATYPE_PAUSE, ATYPE_ARGS
+##from AnchorDefs import ATYPE_PAUSE, ATYPE_ARGS
 #
 is_warned = 0
 
@@ -155,19 +97,18 @@ def getduration(node):
 ##		return 0
 	import Duration
 	d = Duration.get(node)
-	node.timing_discont = 0
 	if d > 0:
 		return d
 	# Check for pausing anchor
 ##	for a in node.GetRawAttrDef('anchorlist', []):
-##		if a[A_TYPE] in (ATYPE_PAUSE, ATYPE_ARGS):
+##		if a.atype in (ATYPE_PAUSE, ATYPE_ARGS):
 ##			if not is_warned:
 ##				print 'Warning: document contains (obsolete) pausing anchors'
 ##				is_warned = 1
 ##			break
 	if d < 0:
-		node.timing_discont = 9.9
-		return 10
+		print 'Duration < 0 for', node
+		return 0
 	return 0
 
 
@@ -183,13 +124,13 @@ def prep1(node):
 	type = node.GetType()
 	if type == 'seq': # XXX not right!
 		xnode, xside = node, HD
-		for c in node.GetChildren():
+		for c in node.GetSchedChildren(0):
 			prep1(c)
 			adddep(xnode, xside, 0, c, HD)
 			xnode, xside = c, TL
 		adddep(xnode, xside, 0, node, TL)
-	elif type in ('par', 'alt'):
-		for c in node.GetChildren():
+	elif type in ('par', 'switch', 'excl') or (type in leaftypes and node.GetSchedChildren(0)):
+		for c in node.GetSchedChildren(0):
 			prep1(c)
 			adddep(node, HD, 0, c, HD)
 			adddep(c, TL, 0, node, TL)
@@ -197,51 +138,35 @@ def prep1(node):
 		dur = MMAttrdefs.getattr(node, 'duration')
 		if dur >= 0:
 			adddep(node, HD, dur, node, TL)
-	elif type in bagtypes:
-		adddep(node, HD, 0, node, TL)
 	else:
-		# Special case -- delay -1 means execute leaf node
-		# of leaf node when playing
-		if hasattr(node, 'prearm_event'):
-			del node.prearm_event
 		adddep(node, HD, -1, node, TL)
 
 
 def prep2(node, root):
-##	if not node.GetSummary('synctolist'): return
-	arcs = MMAttrdefs.getattr(node, 'synctolist')
-	delay = node.GetAttrDef('begin', 0.0)
-	parent = node.GetParent()
+	# XXX we only deal with a single offset syncarc; all others are ignored
+	delay = None
+	# We ask the node for its begindelay.
+	# If we're computing timing with download lags we should also get the
+	# lag (which has been computed before we're called), otherwise the lag will be
+	# zero. 
+	delay, downloadlag = node.GetDelays(timingtype)
+	delay = delay + downloadlag
+	parent = node.GetSchedParent(0)
 	if delay > 0 and parent is not None:
 		if parent.GetType() == 'seq':
-			xnode = None
-			xside = TL
-			for n in parent.GetChildren():
+			xnode = parent
+			xside = HD
+			for n in parent.GetSchedChildren(0):
 				if n is node:
 					break
 				xnode = n
-			if xnode is None:
-				# first child in seq
-				xnode = parent
-				xside = HD
+				xside = TL
 		else:
 			xnode = parent
 			xside = HD
-		# don't modify the list!!
-		arcs = [(xnode.GetUID(), xside, delay, HD)] + arcs
-	for arc in arcs:
-		xuid, xside, delay, yside = arc
-		try:
-			xnode = node.MapUID(xuid)
-		except NoSuchUIDError:
-			# Skip sync arc from non-existing node
-			continue
-		# skip out-of-minidocument sync arcs
-		if xnode.FindMiniDocument() is node.FindMiniDocument():
-			adddep(xnode, xside, delay, node, yside)
-	#
-	if node.GetType() in real_interiortypes:
-		for c in node.GetChildren(): prep2(c, root)
+		adddep(xnode, xside, delay, node, HD)
+	for c in node.GetSchedChildren(0):
+		prep2(c, root)
 
 
 # propdown - propagate timing down the tree again
@@ -252,31 +177,40 @@ def propdown(node, stoptime, dftstarttime=0):
 		node.t0 = dftstarttime
 	if not hasattr(node, 't1'):
 		node.t1 = stoptime
-		node.timing_discont = node.t1 - node.t0 - 0.1
 
-	if not node.t0t1_inherited:
+	if node.GetFill() == 'remove':
 		stoptime = node.t1
-	if tp in ('par', 'alt'):
-		for c in node.GetChildren():
+
+	node.t2 = stoptime
+
+	if tp in ('par', 'switch', 'excl', 'prio') or tp in leaftypes:
+		for c in node.GetSchedChildren(0):
 			propdown(c, stoptime, node.t0)
 	elif tp == 'seq': # XXX not right!
-		children = node.GetChildren()
+		children = node.GetSchedChildren(0)
 		if not children:
 			return
-		lastchild = children[-1]
-		children = children[:-1]
 		nextstart = node.t0
-		for c in children:
-			propdown(c, c.t1, nextstart)
+		for i in range(len(children)):
+			c = children[i]
+			fill = c.GetFill()
+			if fill == 'freeze':
+				if i == len(children)-1:
+					endtime = node.t2
+				elif hasattr(children[i+1], 't0'):
+					endtime = children[i+1].t0
+				else:
+					endtime = node.t2
+			elif fill == 'hold':
+				endtime = node.t2
+			else:
+				endtime = c.t1
+			propdown(c, endtime, nextstart)
 			nextstart = c.t1
-		propdown(lastchild, stoptime, nextstart)
-	elif node.t0t1_inherited:
-		node.t1 = stoptime
-
 
 def adddep(xnode, xside, delay, ynode, yside):
 	ynode.counter[yside] = ynode.counter[yside] + 1
-	if delay >= 0:
+	if delay >= 0 and xside in (HD, TL):
 		xnode.deps[xside].append((delay, ynode, yside))
 
 
@@ -295,27 +229,10 @@ def decrement(q, delay, node, side):
 	elif side == TL:
 		node.t1 = q.timefunc()
 	node.node_to_arm = None
-	if node.GetType() in interiortypes:
-		node.t0t1_inherited = 1
-	elif side == HD:
-		t0 = time.time()
+	node.t0t1_inherited = node.GetFill() != 'remove'
+	if node.GetType() not in interiortypes and side == HD and not node.GetSchedChildren(0):
 		dt = getduration(node)
-		node.t0t1_inherited = (dt == 0 and len(node.deps[TL]) <= 1)
-			# Don't mess if it has timing deps
-		t1 = time.time()
-		global getd_times
-		getd_times = getd_times + (t1-t0)
 		id = q.enter(dt, 0, decrement, (q, 0, node, TL))
-		if node.GetChannel():
-			cname = node.GetChannelName()
-			if node.GetRawAttrDef('arm_duration', -1) >= 0:
-				if last_node.has_key(cname):
-					ln = last_node[cname]
-					ln.node_to_arm = node
-				else:
-					global initial_arms
-					initial_arms.append(node)
-			last_node[cname] = node
 	for d, n, s in node.deps[side]:
 		decrement(q, d, n, s)
 

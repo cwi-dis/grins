@@ -10,13 +10,11 @@ import re
 
 class TextChannel(ChannelWindow):
 	if CMIF_MODE:
-		node_attrs = ChannelWindow.node_attrs + ['bucolor', 'hicolor',
-						 'fgcolor', 'font',
-						 'pointsize', 'noanchors']
+		node_attrs = ChannelWindow.node_attrs + [
+						 'fgcolor']
 	else:
-		chan_attrs = ChannelWindow.chan_attrs + ['bucolor', 'hicolor',
-						 'fgcolor', 'font',
-						 'pointsize', 'noanchors']
+		chan_attrs = ChannelWindow.chan_attrs + [
+						 'fgcolor']
 
 	def updatefixedanchors(self, node):
 		try:
@@ -33,25 +31,16 @@ class TextChannel(ChannelWindow):
 		if same and self.armed_display:
 			return 1
 		fgcolor = self.getfgcolor(node)
-		bucolor = self.getbucolor(node)
-		drawbox = MMAttrdefs.getattr(node, 'drawbox')
 		try:
 			str = self.getstring(node)
 		except error, arg:
 			self.errormsg(node, arg)
 			str = ''
 		parlist = extract_paragraphs(str)
-		if MMAttrdefs.getattr(node, 'noanchors'):
-			taglist = []
-		else:
-			taglist = extract_taglist(parlist)
+		taglist = extract_taglist(parlist)
 		fix_anchorlist(node, taglist)
-##			if taglist: print `taglist`
 		fontspec = getfont(node)
 		fontname, pointsize = mapfont(fontspec)
-		ps = getpointsize(node)
-		if ps != 0:
-			pointsize = ps
 		baseline, fontheight, pointsize = \
 			  self.armed_display.setfont(fontname, pointsize)
 		margin = self.armed_display.strsize('m')[0] / 2
@@ -68,15 +57,13 @@ class TextChannel(ChannelWindow):
 		# all text, then draw a button the size of the whole
 		# channel.
 		if len(taglist) == 1:
-			par0, chr0, par1, chr1, name, type, times = taglist[0]
+			par0, chr0, par1, chr1, name, type, times, access = taglist[0]
 			if par0 == 0 and chr0 == 0 and \
 			   par1 == len(parlist)-1 and chr1 == len(parlist[-1]):
 				taglist = []
 				buttons.append((name, (0.0,0.0,1.0,1.0), type, times))
-				if not drawbox:
-					self.armed_display.fgcolor(bucolor)
 		pline, pchar = 0, 0
-		for (par0, chr0, par1, chr1, name, type, times) in taglist:
+		for (par0, chr0, par1, chr1, name, type, times, access) in taglist:
 			# first convert paragraph # and character #
 			# to line and character.
 			line0, char0 = map_parpos_to_linepos(par0, \
@@ -95,8 +82,6 @@ class TextChannel(ChannelWindow):
 			# write the anchor text and remember its
 			# position (note: the anchor may span several
 			# lines)
-			if not drawbox:
-				self.armed_display.fgcolor(bucolor)
 			for line in range(pline, line1):
 				box = self.armed_display.writestr(curlines[line][pchar:])
 				buttons.append((name, box, type, times))
@@ -112,16 +97,9 @@ class TextChannel(ChannelWindow):
 			dummy = self.armed_display.writestr(curlines[line][pchar:] + '\n')
 			pchar = 0
 ##			print 'buttons:',`buttons`
-		hicolor = self.gethicolor(node)
-		if drawbox:
-			self.armed_display.fgcolor(bucolor)
-		else:
-			self.armed_display.fgcolor(self.getbgcolor(node))
+		self.armed_display.fgcolor(self.getbgcolor(node))
 		for (name, box, type, times) in buttons:
 			button = self.armed_display.newbutton(box, times = times)
-			if drawbox:
-				button.hicolor(hicolor)
-				button.hiwidth(3)
 			self.setanchor(name, type, button, times)
 ##			dummy = self.armed_display.writestr(string.joinfields(curlines, '\n'))
 		# Draw a little square if some text did not fit.
@@ -172,12 +150,7 @@ def map_parpos_to_linepos(parno, charno, last, curlines, partoline):
 	return 0, 0
 
 def getfont(node):
-	import MMAttrdefs
-	return MMAttrdefs.getattr(node, 'font')
-
-def getpointsize(node):
-	import MMAttrdefs
-	return MMAttrdefs.getattr(node, 'pointsize')
+	return 'Times-Roman'
 
 # Turn a text string into a list of strings, each representing a paragraph.
 # Tabs are expanded to spaces (since the font mgr doesn't handle tabs),
@@ -257,6 +230,7 @@ def fix_anchorlist(node, taglist):
 	if not taglist:
 		return
 	import MMAttrdefs
+	from MMNode import MMAnchor
 	names_in_anchors = []
 	names_in_taglist = []
 	anchor_types = {}
@@ -265,24 +239,24 @@ def fix_anchorlist(node, taglist):
 	anchors = oldanchors[:]
 	i = 0
 	while i < len(anchors):
-		aid, atype, args, times = a = anchors[i]
-		if atype in [ATYPE_DEST, ATYPE_AUTO, ATYPE_COMP]:
+		a = anchors[i]
+		if a.atype in [ATYPE_DEST, ATYPE_AUTO, ATYPE_COMP]:
 			pass
-		elif aid not in names_in_anchors:
+		elif a.aid not in names_in_anchors:
 			print 'Remove text anchor from anchorlist:', a
 			anchors.remove(a)
 			i = i - 1	# compensate for later increment
 		else:
-			names_in_taglist.append(aid)
-			anchor_types[aid] = atype, times
+			names_in_taglist.append(a.aid)
+			anchor_types[aid] = a.atype, a.atimes, a.aaccess
 		i = i + 1
 	for i in range(len(taglist)):
 		item = taglist[i]
 		name = item[4]
 		if not anchor_types.has_key(name):
 			print 'Add text anchor to anchorlist:', name
-			anchors.append((name, ATYPE_NORMAL, [], (0,0)))
-			anchor_types[name] = ATYPE_NORMAL, (0, 0)
+			anchors.append(MMAnchor(name, ATYPE_NORMAL, [], (0,0), None))
+			anchor_types[name] = ATYPE_NORMAL, (0, 0), None
 		taglist[i] = taglist[i] + anchor_types[name]
 	if anchors <> oldanchors:
 		print 'New anchors:', anchors

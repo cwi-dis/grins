@@ -10,6 +10,7 @@ import audio, audio.dev, audio.merge, audio.convert
 import MMurl
 import os
 import string
+import settings
 
 debug = os.environ.has_key('CHANNELDEBUG')
 
@@ -18,7 +19,7 @@ SECONDS_TO_BUFFER=4
 
 class SoundChannel(ChannelAsync):
 	node_attrs = ChannelAsync.node_attrs + [
-		'duration', 'clipbegin', 'clipend',
+		'clipbegin', 'clipend',
 		'project_audiotype', 'project_targets',
 		'project_perfect', 'project_mobile']
 
@@ -31,6 +32,7 @@ class SoundChannel(ChannelAsync):
 		self.arm_fp = None
 		self.play_fp = None
 		self.__qid = None
+		self.__evid = []
 		self.__rc = None
 		self.__playing = None
 
@@ -95,12 +97,9 @@ class SoundChannel(ChannelAsync):
 			return 1
 		if player is None:
 			return 1
-		self.arm_loop = loopcount = self.getloop(node)
-		if loopcount == 0:
-			loopcount = None
 		try:
 			fn = MMurl.urlretrieve(fn)[0]
-			self.arm_fp = audio.reader(fn, loop=loopcount)
+			self.arm_fp = audio.reader(fn)
 			rate = self.arm_fp.getframerate()
 		except IOError:
 			self.errormsg(node, '%s: Cannot open audio file' % fn)
@@ -117,64 +116,91 @@ class SoundChannel(ChannelAsync):
 			self.arm_fp = None
 			self.armed_duration = 0
 			return 1
-		self.armed_duration = MMAttrdefs.getattr(node, 'duration')
+		self.armed_duration = duration = node.GetAttrDef('duration', None)
 		begin = int(self.getclipbegin(node, 'sec') * rate + .5)
 		end = int(self.getclipend(node, 'sec') * rate + .5)
-		if begin or end:
-			from audio.select import select
-			self.arm_fp = select(self.arm_fp, [(begin, end)])
+		if begin or end or duration:
+			if duration is not None and duration > 0:
+				duration = int(duration * rate + .5)
+				if not end or (begin or 0) + duration < end:
+					end = (begin or 0) + duration
+			if begin or (end and end < self.arm_fp.getnframes()):
+				from audio.select import select
+				self.arm_fp = select(self.arm_fp, [(begin, end)])
+		self.armed_markers = {}
+		for mid, mpos, mname in self.arm_fp.getmarkers() or []:
+			self.armed_markers[mname] = mpos
 		self.__ready = 1
 		return 1
+
+	def __marker(self, node, marker):
+		if self._played_node == node:
+			node.marker(self._scheduler.timefunc(), marker)
 
 	def do_play(self, node):
 		self.__playing = node
 		self.__type = node.__type
+		start_time = node.get_start_time()
 		if not self.__ready:
 			# arming failed, so don't even try playing
-			self.playdone(0)
+			self.playdone(0, start_time)
 			return
 		if node.__type == 'real':
-			if not self.__rc or not self.__rc.playit(node):
-				self.playdone(0)
+			if not self.__rc or not self.__rc.playit(node, start_time = start_time):
+				self.playdone(0, start_time)
 			return
 		if not self.arm_fp or player is None:
 ##			print 'SoundChannel: not playing'
 			self.play_fp = None
 			self.arm_fp = None
-			self.playdone(0)
+			self.playdone(0, start_time)
 			return
 
 		if debug: print 'SoundChannel: play', node
 		self.play_fp = self.arm_fp
-		self.play_loop = self.arm_loop
+		self.play_markers = self.armed_markers
 		self.arm_fp = None
-		if self.armed_duration > 0:
-			self.__qid = self._scheduler.enter(
-				self.armed_duration, 0, self.__stopplay, ())
+		self.armed_markers = {}
+		rate = self.play_fp.getframerate()
+		for arc in node.sched_children:
+			mark = arc.marker
+			if mark is None or not self.play_markers.has_key(mark):
+				continue
+			t = self.play_markers[mark] / float(rate) + (arc.delay or 0)
+			arc.dstnode.parent.scheduled_children = arc.dstnode.parent.scheduled_children + 1
+			if t <= 0:
+				self._playcontext.trigger(arc)
+			else:
+				qid = self._scheduler.enter(t, 0, self._playcontext.trigger, (arc,))
+				self.__evid.append(qid)
+		for marker, t in self.play_markers.items():
+			qid = self._scheduler.enter(t, 0, self.__marker, (node, marker))
+			self.__evid.append(qid)
+		t0 = self._scheduler.timefunc()
+		if t0 > start_time and not settings.get('noskip'):
+			late = t0 - start_time
+			mediadur = float(self.play_fp.getnframes()) / rate
+			if late > mediadur:
+				self.playdone(0, start_time + mediadur)
+				return
+			from audio.select import select
+			if __debug__: print 'skipping',start_time,t0,late
+			self.play_fp = select(self.play_fp, [(int((late)*rate+.5), None)])
+		self.event('beginEvent')
 		try:
-			player.play(self.play_fp, (self.my_playdone, ()))
+			player.play(self.play_fp, (self.my_playdone, (start_time + mediadur,)))
 		except audio.Error, msg:
 			print 'error reading file %s: %s' % (self.getfileurl(node), msg)
-			self.playdone(0)
+			self.playdone(0, node.get_start_time())
 			return
-		if self.play_loop == 0 and self.armed_duration == 0:
-			self.playdone(0)
 
-	def __stopplay(self):
-		self.__qid = None
-		if self.play_fp is not None:
-			player.stop(self.play_fp)
-			self.play_fp = None
-		self.playdone(0)
-
-	def my_playdone(self):
+	def my_playdone(self, endtime):
 		if debug: print 'SoundChannel: playdone',`self`
 		if self.play_fp:
 			self.play_fp = None
 			if self.__qid is not None:
 				return
-			self.playdone(0)
-			return
+			self.playdone(0, endtime)
 
 	def playstop(self):
 		if debug: print 'SoundChannel: playstop'
@@ -183,6 +209,12 @@ class SoundChannel(ChannelAsync):
 				if self.__rc:
 					self.__rc.stopit()
 			else:
+				for qid in self.__evid:
+					try:
+						self._scheduler.cancel(qid)
+					except:
+						pass
+				self.__evid = []
 				if self.__qid is not None:
 					self._scheduler.cancel(self.__qid)
 					self.__qid = None
@@ -213,9 +245,9 @@ class SoundChannel(ChannelAsync):
 				nframes = 1
 			rate = self.play_fp.getframerate()
 			self.play_fp = None
-			if self.__qid is not None or self.play_loop == 0:
+			if self.__qid is not None:
 				return
-			self._qid = self._scheduler.enter(
+			self.__qid = self._scheduler.enter(
 				float(nframes) / rate, 0,
 				self.playdone, (0,))
 		if self.__rc:
@@ -335,7 +367,7 @@ class Player:
 			self.__playsome()
 
 	def setpaused(self, paused):
-		if self.__pausing == paused:
+		if (not self.__pausing) == (not paused):
 			return
 		self.__pausing = paused
 		if not self.__merger:
