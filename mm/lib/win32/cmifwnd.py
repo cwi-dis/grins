@@ -123,12 +123,12 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			for ix in range(numfiles):
 				filename=win32api.DragQueryFile(hDrop,ix)
 				self.onDropEvent(DropFile,(x, y, filename))
-				print 'DropFile',x,y,filename
+##				print 'DropFile',x,y,filename
 		win32api.DragFinish(hDrop)
 	
 	def onDropEvent(self, event, (x, y, filename)):
 		x,y = self._inverse_coordinates((x, y),self._canvas)
-		print 'DROP', (x, y, filename)
+##		print 'DROP', (x, y, filename)
 		self.onEvent(event, (x, y, filename))
 	
 	# copy/paste files support
@@ -555,7 +555,8 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			try:
 				func(arg, self, event, params)
 			except Continue:
-				pass
+				return 0
+		return 1
 			
 	# Hook messages
 	def _enable_response(self,dict,wnd=None):
@@ -569,15 +570,15 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 #	the coordinates coming here are client rect pixel coordinates
 	def onMouseEvent(self,point, ev):
 		disp = self._active_displist
-		if not disp: return 0
+##		if not disp: return 0
 		point = self._DPtoLP(point)
 		x,y = self._inverse_coordinates(point,self._canvas)
 		buttons = []
-		for button in disp._buttons:
-			if button._inside(x,y):
-				buttons.append(button)
-		self.onEvent(ev,(x, y, buttons))
-		return len(buttons)>0
+		if disp is not None:
+			for button in disp._buttons:
+				if button._inside(x,y):
+					buttons.append(button)
+		return self.onEvent(ev,(x, y, buttons))
 
 	# Response to left button down
 	def onLButtonDown(self, params):
