@@ -11,7 +11,7 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "utils.h"
 
-PyObject *ErrorObject;
+PyObject *WinKernel_ErrorObject;
 
 static PyObject* GetVersionEx(PyObject *self, PyObject *args)
 {
@@ -168,8 +168,8 @@ void initwinkernel()
 
 	// add 'error'
 	d = PyModule_GetDict(m);
-	ErrorObject = PyString_FromString("winkernel.error");
-	PyDict_SetItemString(d, "error", ErrorObject);
+	WinKernel_ErrorObject = PyString_FromString("winkernel.error");
+	PyDict_SetItemString(d, "error", WinKernel_ErrorObject);
 
 
 	// Check for errors

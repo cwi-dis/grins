@@ -10,7 +10,7 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "Python.h"
 
-PyObject *ErrorObject;
+PyObject *WinUser_ErrorObject;
 
 #include "winuser_app.h"
 #include "winuser_main.h"
@@ -72,8 +72,8 @@ void initwinuser()
 
 	// add 'error'
 	d = PyModule_GetDict(m);
-	ErrorObject = PyString_FromString("winuser.error");
-	PyDict_SetItemString(d, "error", ErrorObject);
+	WinUser_ErrorObject = PyString_FromString("winuser.error");
+	PyDict_SetItemString(d, "error", WinUser_ErrorObject);
 
 	// Check for errors
 	if (PyErr_Occurred())
