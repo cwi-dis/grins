@@ -25,11 +25,6 @@ import MMAttrdefs
 import Timing
 from ArmStates import *
 
-import NodeInfo
-import NodeEdit
-import AttrEdit
-import ArcInfo
-
 
 # Color assignments (RGB)
 
@@ -151,6 +146,9 @@ class ChannelView(ViewDialog, GLDialog):
 		self.recalc(focus)
 		self.reshape()
 		self.draw()
+
+	def kill(self):
+		self.destroy()
 
 	# Event interface (override glwindow methods)
 
@@ -451,6 +449,7 @@ class GO:
 		editmgr.addchannel(name, self.newchannelindex(), 'null')
 		editmgr.commit()
 		# NB: when we get here, this object is nearly dead already!
+		import AttrEdit
 		AttrEdit.showchannelattreditor(context, name)
 
 	def newchannelindex(self):
@@ -532,6 +531,7 @@ class ChannelBox(GO):
 	# Menu stuff beyond what GO offers
 
 	def attrcall(self):
+		import AttrEdit
 		AttrEdit.showchannelattreditor(self.mother.context, self.name)
 
 	def delcall(self):
@@ -642,12 +642,15 @@ class NodeBox(GO):
 		self.mother.toplevel.player.playsubtree(self.node)
 
 	def attrcall(self):
+		import AttrEdit
 		AttrEdit.showattreditor(self.node)
 
 	def infocall(self):
+		import NodeInfo
 		NodeInfo.shownodeinfo(self.node)
 
 	def editcall(self):
+		import NodeEdit
 		NodeEdit.showeditor(self.node)
 
 	def lockcall(self):
@@ -672,6 +675,7 @@ class NodeBox(GO):
 		editmgr.addsyncarc(snode, sside, delay, dnode, dsize)
 		editmgr.commit()
 		# NB: when we get here, this object is nearly dead already!
+		import ArcInfo
 		ArcInfo.showarcinfo(root, snode, sside, delay, dnode, dsize)
 
 	commandlist = c = GO.commandlist[:]
@@ -755,6 +759,7 @@ class ArcBox(GO):
 	# Menu stuff beyond what GO offers
 
 	def infocall(self):
+		import ArcInfo
 		ArcInfo.showarcinfo(self.mother.root, \
 			self.snode, self.sside, self.delay, \
 			self.dnode, self.dside)
