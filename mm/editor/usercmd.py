@@ -162,11 +162,11 @@ class PLAYFROM(_CommandBase):
 class PUSHFOCUS(_CommandBase):
 	help = 'Select the selected node in other views'
 class CREATEANCHOR(_CommandBase):
-	help = 'Create a simple fullnode anchor on the focus'
+	help = 'Create a simple fullnode anchor on the selection'
 class FINISH_LINK(_CommandBase): 
-	help = 'Create hyperlink from recent anchor to focus'
+	help = 'Create hyperlink from recent anchor to selection'
 class FINISH_ARC(_CommandBase): 
-	help = 'Lock focus, create sync arc to next selected node' 
+	help = 'Lock selection, create sync arc to next selected node' 
 class THUMBNAIL(_CommandBase):
 	help = 'Toggle between showing and not showing thumbnails'
 
