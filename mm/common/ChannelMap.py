@@ -46,3 +46,19 @@ for t in ct:
 	if t not in commonchanneltypes:
 		otherchanneltypes.append(t)
 del ct, t
+
+shortcuts = {
+	'null': 	'0',
+	'text': 	'T',
+	'sound':	 'S',
+	'image': 	'I',
+	'movie': 	'M',
+	'python': 	'P',
+	'shell': 	'!',
+	'vcr': 		'V',
+	'socket': 	's',
+	'mpeg': 	'm',
+	'cmif': 	'C',
+	'html': 	'H',
+	'graph': 	'G',
+	}
