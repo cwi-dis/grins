@@ -321,12 +321,17 @@ def convertvideofile(u, srcurl, dstdir, file, node):
 	mc = b.QueryIMediaControl()
 	mc.Run()
 
-	# b.WaitForCompletion() # wait infinite			
-	while b.WaitForCompletion(50)==0:   # wait for 50 msec, returns 0 on timeout	
-		# update progress indicator
-		pass
-
-	mc.Stop()
-	del b
-
+	import sys
+	if sys.platform=='win32':
+		# remove messages in queue
+		# dispatch only paint message
+		import win32ui
+		while b.WaitForCompletion(0)==0:
+			win32ui.PumpWaitingMessages()
+		mc.Stop()
+		win32ui.PumpWaitingMessages()
+	else:
+		b.WaitForCompletion()
+		mc.Stop()
+				
 	return file
