@@ -2491,19 +2491,28 @@ class QualityAttrEditorField(PopupAttrEditorFieldNoDefault):
 	def valuerepr(self, value):
 		return self.__values[self.__valuesmap.index(value)]
 
-class FitAttrEditorField(PopupAttrEditorFieldNoDefault):
-	__values = ['show whole image', 'actual size', 'fill whole region', 'scroll image if necessary', 'show whole image in whole region']
+class FitAttrEditorField(PopupAttrEditorField):
+	__values = ['show whole media', 'actual size', 'fill whole region', 'scroll media if necessary', 'show whole media in whole region']
 	__valuesmap = ['meet', 'hidden', 'slice', 'scroll', 'fill']
 
 	# Choose from a list of unit types
 	def getoptions(self):
-		return self.__values
+		self.default = 'default [%s]' % self.getdefault()
+		return [self.default] + self.__values
 
 	def parsevalue(self, str):
+		if str == self.default:
+			return None
 		return self.__valuesmap[self.__values.index(str)]
 
 	def valuerepr(self, value):
+		if value is None:
+			return self.default
 		return self.__values[self.__valuesmap.index(value)]
+
+	def getcurrent(self):
+		val = self.wrapper.getvalue(self.getname())
+		return self.valuerepr(val)
 
 class TransitionAttrEditorField(PopupAttrEditorField):
 	default = 'No transition'
