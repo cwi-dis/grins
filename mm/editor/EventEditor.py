@@ -1,20 +1,9 @@
 # This module is a collection of useful functions for working with events.
 
+# TODO: the cancel button doesn't work yet.
+
 import EventEditorDialog
 import MMNode, windowinterface
-
-# An event struct is a temporary representation of an event; it is intended to be used
- # with the dialog and is only passed between functions as a copy or representation of
-# the event. It looks like the following:
-
-# ( cause, event, extrainfo, offset)
-# where cause is one of the CAUSES in the list below,
-# event is one of the EVENTS in the list below,
-# extrainfo depends on the event
-# offset is an integer.
-
-# This is the list of node clauses. Note that they are also hard-coded into
-# win32/AttrEditForm.py
 
 CAUSES = [				# What causes the event
 	# This list is incomplete
@@ -51,65 +40,6 @@ EVENTS_REGION = [			# no offsets at all!
 	'outOfBoundsEvent',
 	]
 
-def syncarc2string(a):
-	# This should really be in the MMSyncArc class.
-	# This should also not be used. It needs to be fixed up a bit.
-##	s = ['unknown event.']
-##	if a.wallclock is not None:
-##		yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn = a.wallclock
-##		if yr is not None:
-##			date = '%04d-%02d-%02dT' % (yr, mt, dy)
-##		else:
-##			date = ''
-##		time = '%02d:%02d:%05.2f' % (hr, mn, sc)
-##		if tzhr is not None:
-##			tz = '%s%02d:%02d' % (tzsg, tzhr, tzmn)
-##		else:
-##			tz = ''
-##		s.append('wallclock(' + date + time + tz + ')')
-##		continue
-##	if a.marker is not None:
-##		s.append('')
-##		continue
-##	if a.delay is None:
-##		s.append('indefinite')
-##		continue
-##	if a.channel is not None:
-##		s.append('')
-##		continue
-##	if a.accesskey is not None:
-##		s.append('accesskey(%s)' % a.accesskey)
-##		continue
-##	if a.srcnode == 'syncbase':
-##		s.append('%gs' % a.delay)
-##	elif a.srcnode == 'prev':
-##		s.append('prev.%s+%gs' % (a.event, a.delay))
-##	else:
-##		s.append('Yes, there is an event here, but I dont know what it is.')
-##		continue
-##	return s[0]
-	return "This is an event."
-
-def eventstruct2string(a):
-	# Converts a event struct to a string.
-	print "TODO."
-
-def eventstruct2syncarc(a):
-	# Creates a new syncarc given the information supplied in eventstruct.
-	pass
-
-def syncarc2eventstruct(a):
-	# Converts the given syncarc into an event structure
-	pass
-	
-def showeventeditor(syncarc):
-	# Edits that specific syncarc.
-	print "TODO - show event editor.", toplevel, syncarc
-
-def newevent():
-	# Pops up the window and returns a new syncarc (or None if the user cancels.)
-	print "DEBUG: newevent not implemented", toplevel
-
 class EventEditor(EventEditorDialog.EventEditorDialog):
 	# This isn't a view - it's a modal dialog for an eventstruct
 	# It lives as long as it's dialog box is showing.
@@ -138,22 +68,14 @@ class EventEditor(EventEditorDialog.EventEditorDialog):
 
 
 class EventStruct:
-	# This encapsulates an event.
-	def __init__(self, syncarc):
+	# This encapsulates an event. An event is essentually a syncarc; this is a
+	# copy of that syncarc which can return another syncarc.
+	def __init__(self, syncarc, node):
 		# if syncarc is None, make a new one. 
 		self._syncarc = syncarc
-		self.cause = None
-		self.event = None
-		self.delay = None
-		self.thing = None
-		self._setcause = None	# These variables (_setx) override the defaults and will be committed.
-		self._setevent = None
-		self._setoffset = None
-		#self._setthing = None
-		self._setnode = None
-		self._setregion = None
-		self._setkey = None
-		self._setwallclock = None
+		self._node = node
+		self.cause = None	# Cause is always set.
+		self.clear_vars()
 		if self._syncarc:
 			self.set_vars()
 		else:
@@ -168,12 +90,12 @@ class EventStruct:
 			assert 0
 			# TODO: here, make a new syncarc.
 		s = self._syncarc
+
 		if self._setcause:
+			# Only causes without parameters (i.e. indefinite and prev)
 			c = self._setcause
 			if c == 'indefinite':
 				s.delay = None
-			elif c == 'marker':
-				print "TODO: marker code not written."
 			elif c == 'prev':
 				s.srcnode = 'prev'
 			else:
@@ -189,8 +111,8 @@ class EventStruct:
 			print "TODO: don't know how to set region."
 		elif c == 'accessKey' and self._setkey:
 			s.accesskey = self._setkey
-		#elif c == '
-		#
+		elif c == 'marker' and self._setmarker:
+			s.marker = self._setmarker
 		return self._syncarc
 
 	def set_vars(self):
@@ -230,6 +152,22 @@ class EventStruct:
 		if self.cause == 'node' or self.cause == 'region':
 			self.event = x.event
 
+	def clear_vars(self):
+		# Resets all the variables.
+		self.event = None
+		self.delay = None
+		self.thing = None
+		self._setcause = None	# These variables (_setx) override the defaults and will be committed.
+		self._setevent = None
+		self._setoffset = None
+		#self._setthing = None
+		self._setnode = None
+		self._setregion = None
+		self._setkey = None
+		self._setmarker = None	# for later reference - a marker is a special element within the actual media.
+					# e.g. a video could have markers at certain times.
+		self._setwallclock = None
+
 	def as_string(self):
 		# Must always return a string.
 		c = self.get_cause()
@@ -238,13 +176,30 @@ class EventStruct:
 		if c == 'indefinite':
 			return c
 		elif c == 'marker':
-			return "TODO: marker"	# TODO!!
+			if s is None and self._setmarker is None:
+				marker = "?"
+			elif s is None and self._setmarker:
+				marker = self._setmarker
+			elif s.marker:
+				marker = s.marker
+			else:
+				marker = ""
+			return "marker('"+marker+"')"
 		elif c == 'wallclock':
-			return "TODO: wallclock"
+			if s is None and self._setwallclock:
+				wc = self._setwallclock
+			elif s is None and not self._setwallclock:
+				wc = ""
+			elif s.wallclock:
+				wc = s.wallclock
+			else:
+				wc = ""
+			return "wallclock( "+wc+" )"
 		# Now for the offset things
 		elif c == 'node':
 			_, r, _, _ = self.get_thing_string()
-			r = r + '.' + self.get_event()
+			if r: r = r + '.' + self.get_event()
+			else: r = self.get_event()
 			##if isinstance(s, MMNode.MMSyncArc):
 ##				if isinstance(s.srcnode, MMNode.MMNode):
 ##					r = s.srcnode.GetName() + "." + self.get_event()
@@ -254,7 +209,8 @@ class EventStruct:
 ##				r = 'unknown'
 		elif c == 'region':
 			_, r, _, _ = self.get_thing_string()
-			r = r + '.' + self.get_event()
+			if r: r = r + '.' + self.get_event()
+			else: r = self.get_event()
 ##			if self._setregion:
 ##				r = self._setregion
 ##			elif isinstance(s, MMNode.MMSyncArc):
@@ -263,15 +219,15 @@ class EventStruct:
 ##				r = 'unknown'
 		elif c == 'prev':
 			if self._setevent:
-				r = 'prev' + self._setevent
-			elif isinstance(s, MMNode.MMSyncArc):
+				r = 'prev' + "." + self._setevent
+			elif isinstance(s, MMNode.MMSyncArc) and s.event:
 				r = 'prev' + "." + s.event
 			else:
 				r = 'prev'
 		elif c == 'accessKey':
 			if self._setkey:
 				r = 'accessKey(' + self._setkey + ')'
-			elif isinstance(self._syncarc, MMNode.MMSyncArc):
+			elif isinstance(self._syncarc, MMNode.MMSyncArc) and self._syncarc.accesskey:
 				r = 'accessKey(' + self._syncarc.accesskey + ')'
 			else:
 				r = 'accessKey(?)'
@@ -297,11 +253,17 @@ class EventStruct:
 	def set_cause(self, newcause):
 		self._setcause = newcause
 	def get_event(self):
+		# Only return the element which is in EVENTS_whatever list.
 		if self._setevent:
 			return self._setevent
+		elif not self.event: # This should _never_ happen anyway..
+					# if it does then there is something wrong with the event lists.
+			return None
 		elif self.event.startswith('repeat'):
 			# TODO: repeated times.
 			return 'repeat'
+		elif self.event.startswith('marker'):
+			return 'marker'
 		else:
 			return self.event
 	def get_event_index(self):
@@ -317,7 +279,7 @@ class EventStruct:
 	def set_event(self, newevent):
 		self._setevent = newevent
 	def get_possible_events(self):
-		if self.get_cause() == 'node':
+		if self.get_cause() == 'node' or self.get_cause() == 'prev':
 			return EVENTS_NODE
 		elif self.get_cause() == 'region':
 			return EVENTS_REGION
@@ -340,7 +302,7 @@ class EventStruct:
 			elif isinstance(self._syncarc, MMNode.MMSyncArc):
 				thing = self._syncarc.srcnode.GetName()
 			else:
-				thing = "Unknown"
+				thing = "SomeNode"
 		elif c == 'region':
 			print "TODO: display a region properly."
 			name = "Region:"
@@ -350,7 +312,7 @@ class EventStruct:
 			elif isinstance(self._syncarc, MMNode.MMSyncArc):
 				thing = self._syncarc.channel
 			else:
-				thing = "unknown"
+				thing = "SomeRegion"
 			#return ("Region:", repr(self._syncarc.channel), 0, 0)
 		elif c == 'accessKey':
 			name = "Key:"
@@ -363,8 +325,8 @@ class EventStruct:
 			#return ("Key:", self._syncarc.accesskey, 0, 0)
 		elif c == 'wallclock':
 			name = "Wallclock:"
-			if self._setthing:
-				thing = self._setthing
+			if self._setwallclock:
+				thing = self._setwallclock
 			elif isinstance(self._syncarc, MMNode.MMSyncArc):
 				thing = self._syncarc.wallclock
 			else:
@@ -374,6 +336,8 @@ class EventStruct:
 			readonly = 1
 			thing = ""
 			name = ""
+		if thing is None:
+			thing = ""
 		return (name, thing, number, readonly)
 	def set_thing_string(self, newthing):
 		# TODO: do some sanity checking here.
@@ -386,6 +350,8 @@ class EventStruct:
 			self._setwallclock = newthing
 		elif c == 'accessKey':
 			self._setkey = newthing
+		elif c in CAUSES:
+			pass
 		else:
 			print "DEBUG: Unknown cause: ", c
 		return None		# return an error otherwise.
