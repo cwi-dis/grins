@@ -32,6 +32,7 @@ class SoundChannel(ChannelAsync):
 		self.play_fp = None
 		self.__qid = None
 		self.__rc = None
+		self.__playing = None
 
 	def do_show(self, pchan):
 		if not ChannelAsync.do_show(self, pchan):
@@ -100,7 +101,6 @@ class SoundChannel(ChannelAsync):
 		try:
 			fn = MMurl.urlretrieve(fn)[0]
 			self.arm_fp = audio.reader(fn, loop=loopcount)
-			rate = self.arm_fp.getframerate()
 		except IOError:
 			self.errormsg(node, '%s: Cannot open audio file' % fn)
 			self.arm_fp = None
@@ -111,12 +111,13 @@ class SoundChannel(ChannelAsync):
 			self.arm_fp = None
 			self.armed_duration = 0
 			return 1
-		except audio.Error, msg:
-			self.errormsg(node, '%s: %s' % (fn, msg))
+		except audio.Error:
+			self.errormsg(node, '%s: Unknown audio file type' % fn)
 			self.arm_fp = None
 			self.armed_duration = 0
 			return 1
 		self.armed_duration = MMAttrdefs.getattr(node, 'duration')
+		rate = self.arm_fp.getframerate()
 		begin = int(self.getclipbegin(node, 'sec') * rate + .5)
 		end = int(self.getclipend(node, 'sec') * rate + .5)
 		if begin or end:
@@ -126,6 +127,7 @@ class SoundChannel(ChannelAsync):
 		return 1
 
 	def do_play(self, node):
+		self.__playing = node
 		self.__type = node.__type
 		if not self.__ready:
 			# arming failed, so don't even try playing
@@ -168,46 +170,26 @@ class SoundChannel(ChannelAsync):
 	def my_playdone(self):
 		if debug: print 'SoundChannel: playdone',`self`
 		if self.play_fp:
-##			if self.play_loop:
-##				self.play_loop = self.play_loop - 1
-##				if self.play_loop:
-##					self.play_fp.rewind()
-##					player.play(self.play_fp,
-##						    (self.my_playdone, ()))
-##					return
-				self.play_fp = None
-				if self.__qid is not None:
-					return
-				self.playdone(0)
-				return
-##			self.play_fp.rewind()
-##			player.play(self.play_fp, (self.my_playdone, ()))
-
-	def stopplay(self, node):
-		if debug: print 'SoundChannel: stopplay'
-		if self.__type == 'real':
-			if self.__rc:
-				self.__rc.stopit()
-		else:
+			self.play_fp = None
 			if self.__qid is not None:
-				self._scheduler.cancel(self.__qid)
-				self.__qid = None
-			if self.play_fp:
-				player.stop(self.play_fp)
-				self.play_fp = None
-		ChannelAsync.stopplay(self, node)
+				return
+			self.playdone(0)
+			return
 
 	def playstop(self):
 		if debug: print 'SoundChannel: playstop'
-		if self.__type == 'real':
-			ChannelAsync.playstop(self)
-			return
-		if self.__qid is not None:
-			self._scheduler.cancel(self.__qid)
-			self.__qid = None
-		if self.play_fp:
-			player.stop(self.play_fp)
-			self.play_fp = None
+		if self.__playing:
+			if self.__type == 'real':
+				if self.__rc:
+					self.__rc.stopit()
+			else:
+				if self.__qid is not None:
+					self._scheduler.cancel(self.__qid)
+					self.__qid = None
+				if self.play_fp:
+					player.stop(self.play_fp)
+					self.play_fp = None
+			self.__playing = None
 		self.playdone(1)
 
 	def setpaused(self, paused):
