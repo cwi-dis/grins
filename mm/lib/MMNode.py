@@ -5095,6 +5095,27 @@ class MMNode(MMTreeElement):
 ##			if 'transparent' in retlist: retlist.remove('transparent')
 		return retlist
 
+	def GetAllSystemTests(self, list=None):
+		# Return all system test attributes used in the
+		# tree
+		rv = []
+		if list is None:
+			list = ['system_audiodesc', 'system_bitrate',
+				'system_captions', 'system_cpu',
+				'system_language', 'system_operating_system',
+				'system_overdub_or_caption', 'system_required',
+				'system_screen_size', 'system_screen_depth']
+		for aname in list:
+			if self.attrdict.has_key(aname):
+				rv.append(aname)
+		for aname in rv:
+			list.remove(aname)
+		for ch in self.children:
+			if not list:
+				return rv # Fat chance:-)
+			rv = rv + ch.GetAllSystemTests(list)
+		return rv
+
 	#
 	# animation editor support
 	#
