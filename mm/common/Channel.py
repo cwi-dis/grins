@@ -789,6 +789,8 @@ class Channel:
 ### dictionary with channels that have windows
 ##ChannelWinDict = {}
 
+_button = None				# the currently highlighted button
+
 class ChannelWindow(Channel):
 	chan_attrs = Channel.chan_attrs + ['base_winoff', 'transparent', 'units', 'popup', 'z']
 	node_attrs = Channel.node_attrs + ['duration', 'bgcolor']
@@ -874,7 +876,12 @@ class ChannelWindow(Channel):
 			self.window.setcursor('')
 
 	def mousepress(self, arg, window, event, value):
+		global _button
 		# a mouse button was pressed
+		if _button is not None and not _button.is_closed():
+			# probably doesn't occur...
+			_button.unhighlight()
+		_button = None
 		buttons = value[2]
 		if len(buttons) == 0:
 			try:
@@ -888,19 +895,12 @@ class ChannelWindow(Channel):
 		elif len(buttons) == 1:
 			button = buttons[0]
 			button.highlight()
-			try:
-				f, a = self._anchors[button]
-			except KeyError:
-				pass
-			else:
-				a = self.setanchorargs(a, button, value)
-				self._player.toplevel.setwaiting()
-				dummy = apply(f, a)
-				self._player.toplevel.setready()
-			if not button.is_closed():
-				button.unhighlight()
+			_button = button
 
 	def mouserelease(self, arg, window, event, value):
+		global _button
+		if hasattr(self._player, 'editmgr'):
+			self.unhighlight()
 		buttons = value[2]
 		if len(buttons) == 0:
 			try:
@@ -909,8 +909,21 @@ class ChannelWindow(Channel):
 				transparent = 0
 			if transparent:
 				raise windowinterface.Continue
-			if hasattr(self._player, 'editmgr'):
-				self.unhighlight()
+		elif len(buttons) == 1:
+			button = buttons[0]
+			if _button is button:
+				try:
+					f, a = self._anchors[button]
+				except KeyError:
+					pass
+				else:
+					a = self.setanchorargs(a, button, value)
+					self._player.toplevel.setwaiting()
+					dummy = apply(f, a)
+					self._player.toplevel.setready()
+		if _button and not _button.is_closed():
+			_button.unhighlight()
+		_button = None
 
 	def setanchorargs(self, (node, nametypelist, args), button, value):
 		# Return the (node, nametypelist, args) tuple.
