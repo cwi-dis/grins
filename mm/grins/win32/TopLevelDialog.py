@@ -22,7 +22,7 @@ class TopLevelDialog:
 				adornments = {'pulldown': self.getsettingsdict()}, commandlist = self.commandlist)
 
 	def setsettingsdict(self, dict):
-		if self.window:
+		if self.window and hasattr(self.window, 'settoolbarpulldowns'):
 			self.window.settoolbarpulldowns(dict)
 
 	def hide(self):
