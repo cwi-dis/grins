@@ -23,33 +23,39 @@ class reader:
 
 	def read(self):
 		return ''' % vars())
-	f.write("'")
+	f.write("'''\\\n")
+	n = 0
 	for i in xrange(len(data)):
 		c = data[i]
 		if c >= '\200':
-			f.write('\\%03o' % ord(c))
+			c = '\\%03o' % ord(c)
 		elif c == "'":
-			f.write("\\'")
+			c = "\\'"
 		elif c == '\\':
-			f.write('\\\\')
+			c = '\\\\'
 		elif c >= ' ':
-			f.write(c)
+			c = c
 		elif c == '\n':
-			f.write('\\n')
+			c = '\\n'
 		elif c == '\f':
-			f.write('\\f')
+			c = '\\f'
 		elif c == '\b':
-			f.write('\\b')
+			c = '\\b'
 		elif c == '\t':
-			f.write('\\t')
+			c = '\\t'
 		elif c == '\r':
-			f.write('\\r')
+			c = '\\r'
 		else:
 			nc = data[i+1:i+2]
 			if '0' <= nc <= '7':
-				f.write('\\%03o' % ord(c))
+				c = '\\%03o' % ord(c)
 			else:
-				f.write('\\%o' % ord(c))
-	f.write("'\n")
+				c = '\\%o' % ord(c)
+		f.write(c)
+		n = n + len(c)
+		if n >= 72:
+			f.write('\\\n')
+			n = 0
+	f.write("'''\n")
 
 main()
