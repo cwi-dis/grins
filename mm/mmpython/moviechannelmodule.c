@@ -913,10 +913,6 @@ movie_player(self)
 	long offset;
 	int fd;
 	object *v, *t0, *t;
-#ifdef USE_GL
-	long xorig, yorig;
-	double scale;
-#endif
 	struct pollfd pollfd;
 	int i;
 	int size;
@@ -1153,9 +1149,6 @@ movie_resized(self)
 		dprintf(("movie_resized(%lx): size %d x %d\n", (long) self,
 			 width, height));
 		if (PRIV->m_play.m_frame) {
-			long xorig, yorig;
-			double scale;
-
 			if (PRIV->m_play.m_bframe == NULL)
 				pixmode(PM_SIZE, 8);
 			if (PRIV->m_play.m_bgindex >= 0) {
