@@ -1382,11 +1382,17 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			try:
 				self.root = SMILTreeRead.ReadFile(filename, self.printfunc, self.new_file, check_compatibility, \
 												  progressCallback=(self.progressCallback, 0.5))
-			except (UserCancel, IOError):				
+			except (UserCancel, IOError):
 				# the progress dialog will disappear
 				self.progress = None
 				# re-raise
 				raise
+
+			ctx = self.root.GetContext()
+			if hasattr(ctx, 'enableSave') and ctx.enableSave:
+				# enableSave can only be set when check_compatibility is true
+				self.changed = 1
+				del ctx.enableSave
 			
 			# just update that the loading is finished
 			self.progressCallback(1.0)
