@@ -94,7 +94,7 @@ class AttrEditorDialog:
 		apply(windowinterface.showmessage, args, nkw)
 
 	def askchannelname(self, default, cb):
-		windowinterface.InputDialog('Name for new channel',
+		windowinterface.InputDialog('Name for new region',
 					    default,
 					    cb,
 					    cancelCallback = (cb, ()),
