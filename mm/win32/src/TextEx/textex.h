@@ -21,7 +21,7 @@ void puttext(HWND hwnd, char* str,char* facename,int size,int trasp,COLORREF bkc
 
 CString findmaxword(HDC dc,CString word);
 int countlines (HDC dc,CString str,char* fcname,int sz,RECT rect);
-RECT findrect(HDC dc,CString str,char* fcname,int sz,CString bigline,CString algn,RECT r);
+void findrect(HDC dc,CString str,char* fcname,int sz,CString bigline,CString algn,RECT r,RECT &r2);
 
 BOOL IsAnchor(CString str);
 
@@ -37,3 +37,4 @@ void SaveList(int ID,CString anchor,int x1,int y1,int x2,int y2);
 }
 #endif
 
+#endif

@@ -5,6 +5,9 @@
 
 static PyObject *TextExError;
 static PyObject *CallbackMap = NULL;
+WNDPROC		orgProc;
+BOOL flag=FALSE;
+
 
 
 PyIMPORT CWnd *GetWndPtr(PyObject *);
@@ -339,7 +342,7 @@ client area, else if we have a label channel the rectangle depends of the algn p
 
 
 
-RECT findrect(HDC dc,CString str,char* fcname,int sz,CString bigline,CString algn,RECT r)
+void findrect(HDC dc,CString str,char* fcname,int sz,CString bigline,CString algn,RECT r,RECT &r2)
 {
 	SIZE size;
 	HFONT hfont=NULL;
@@ -425,7 +428,7 @@ RECT findrect(HDC dc,CString str,char* fcname,int sz,CString bigline,CString alg
 		}
 	}
 	
-	return rectangle;
+	r2 = rectangle;
 }
 
 
@@ -518,7 +521,7 @@ void GetAnchorList(myWin* hwnd, CString str, char* facename,int sz,int id,CStrin
 
 	HDC dc = ::GetDC(hwnd->m_hWnd);
 	bline = findmaxword(dc,clearstring(str));
-	tmprect = findrect(dc,clearstring(str),facename,sz,bline,align,rect);
+	findrect(dc,clearstring(str),facename,sz,bline,align,rect,tmprect);
 	
 	if(align.IsEmpty())
 	{
@@ -1098,7 +1101,7 @@ NOTES:
 area.
 */
 
-void puttext(myWin* hwnd, char* str,char* facename,int size,int trasp,COLORREF bkcolor,COLORREF fontcolor,CString align)
+void puttext(myWin* hwnd, char* str,char* facename,int size,int trasp,COLORREF bkcolor,COLORREF fontcolor,CString align,int x,int y)
 {
 	RECT rect;   
 	HDC dc = ::GetDC(hwnd->m_hWnd);
@@ -1114,25 +1117,33 @@ void puttext(myWin* hwnd, char* str,char* facename,int size,int trasp,COLORREF b
 		SetBkMode(dc, TRANSPARENT);
 		color = GetBkColor(dc);
 		hbr = CreateSolidBrush(color);
-		FillRect(dc,&rect,hbr);
+		//FillRect(dc,&rect,hbr);
 		DeleteObject(hbr);
 	}
 	else
 	{
 		SetBkMode(dc, TRANSPARENT);
 		hbr = CreateSolidBrush(bkcolor);
-		FillRect(dc,&rect,hbr);
+		//FillRect(dc,&rect,hbr);
 		DeleteObject(hbr);
 	}
 	
 	color = GetTextColor(dc);
 	SetTextColor(dc,fontcolor);
 
-	bline = findmaxword(dc,tmp);
-	rect = findrect(dc,tmp,facename,size,bline,align,rect);
-	
-	rect.top -= hwnd->m_nScrollPos;
-	
+	if((x!=0)||(y!=0))
+	{
+		rect.left = x;
+		rect.top = y;
+	}
+	else
+	{
+		bline = findmaxword(dc,tmp);
+		findrect(dc,tmp,facename,size,bline,align,rect,rect);
+		
+		rect.top -= hwnd->m_nScrollPos;
+	}
+
 	hfont = EzCreateFont(dc, facename, size*10, 0, 0, TRUE);
 	SelectObject(dc, hfont);
 	DrawText(dc,str,-1,&rect,DT_LEFT|DT_WORDBREAK);
@@ -1199,16 +1210,16 @@ void SaveList(int ID,CString anchor,int x1,int y1,int x2,int y2)
 static PyObject* py_example_PutText(PyObject *self, PyObject *args)
 {
 	char *bit,*ch,*facename,*align;
-	int size,id,bktrasp,bkred,bkblue,bkgreen,fred,fblue,fgreen;
+	int size,id,bktrasp,bkred,bkblue,bkgreen,fred,fblue,fgreen,x,y;
 	myWin *obWnd;
 	CString tmp,algn;
 	PyObject *testOb = Py_None;
 	COLORREF bkcolor,fontcolor;
 
 	
-	if(!PyArg_ParseTuple(args, "iOssii(iii)(iii)s", &id, &testOb, &bit, &facename, &size, 
+	if(!PyArg_ParseTuple(args, "iOssii(iii)(iii)s(ii)", &id, &testOb, &bit, &facename, &size, 
 		                                       &bktrasp, &bkred, &bkgreen, &bkblue, 
-											   &fred, &fgreen, &fblue, &align))
+											   &fred, &fgreen, &fblue, &align, &x, &y))
 	{
 		TextExErrorFunc("PutTex(CallbackID, Window Handler, string, Font, Font Size)");
 		Py_INCREF(Py_None);
@@ -1228,7 +1239,7 @@ static PyObject* py_example_PutText(PyObject *self, PyObject *args)
 	ch=new char[strlen(tmp)+1];
 	strcpy(ch, tmp);
 	
-	puttext(obWnd,ch,facename,size,bktrasp,bkcolor,fontcolor,algn);
+	puttext(obWnd,ch,facename,size,bktrasp,bkcolor,fontcolor,algn,x,y);
 
 	delete ch;
 
@@ -1379,6 +1390,54 @@ static PyObject* py_example_SetScrollPos(PyObject *self, PyObject *args)
 
 
 
+LRESULT CALLBACK MyWndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
+{
+
+	switch (iMsg)
+	{
+		case WM_CLOSE:
+			if (!flag)
+			{
+				ShowWindow(hwnd, SW_HIDE);
+			}
+			//flag = FALSE;
+			//MessageBox(hwnd, "Window Hidden", "Test", MB_OK);
+			return 0;	
+		case WM_DESTROY:
+			if (!flag)
+			{
+				return CallWindowProc(orgProc, hwnd, iMsg, wParam, lParam) ;
+			}
+			//flag = FALSE;
+			//MessageBox(hwnd, "Window Hidden", "Test", MB_OK);
+			return 0;	
+	}
+	return CallWindowProc(orgProc, hwnd, iMsg, wParam, lParam) ;
+}
+
+
+
+static PyObject* py_example_SetFlag(PyObject *self, PyObject *args)
+{
+	int x;
+			
+	if(!PyArg_ParseTuple(args, "i", &x))
+	{
+		Py_INCREF(Py_None);
+		TextExErrorFunc("SetFlag(flag)");
+		return Py_None;
+	}
+
+	if (x==1)
+		flag = TRUE;
+	else flag = FALSE;
+
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+
+
 static PyObject* py_example_CreateWindow(PyObject *self, PyObject *args)
 {
 	char *wndName;
@@ -1414,7 +1473,8 @@ static PyObject* py_example_CreateWindow(PyObject *self, PyObject *args)
 						textClass, wndName,
 						ws_flags,
 						x, y, nWidth, nHeight,
-						mainWnd->m_hWnd,
+						//mainWnd->m_hWnd
+						NULL,
 						NULL))
 		TRACE("CmifEx CreateWindow OK!\n");
 	else
@@ -1424,6 +1484,7 @@ static PyObject* py_example_CreateWindow(PyObject *self, PyObject *args)
 		return Py_None;
 	}		
   
+	orgProc = (WNDPROC)SetWindowLong(newWnd->m_hWnd, GWL_WNDPROC, (LONG)MyWndProc);
 	testWnd = testWnd->make(testWnd->type, (CWnd*)(newWnd));
 	testOb = testWnd->GetGoodRet();
 
@@ -1549,6 +1610,7 @@ static PyMethodDef TextExMethods[] =
 	{ "GetScrollPos", (PyCFunction)py_example_GetScrollPos, 1},
 	{ "SetScrollPos", (PyCFunction)py_example_SetScrollPos, 1},
 	{ "ClearXY", (PyCFunction)py_example_ClearXY, 1},
+	{ "SetFlag", (PyCFunction)py_example_SetFlag, 1},
 	#ifdef _DEBUG
 	{ "_idMap",			py_callbackex_CallbackMap,		1 },
     #endif
