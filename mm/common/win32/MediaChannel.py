@@ -84,9 +84,8 @@ class MediaChannel:
 		self._notifyWindow = None
 		self.__window = None
 
-		# asx flag
-		self._armedIsAsx=0
-		self._armedAsx=None
+		# asx support
+		self.initASX()
 
 		# release any resources on exit
 		import windowinterface
@@ -129,8 +128,9 @@ class MediaChannel:
 			return 0
 
 		url=self.getfileurl(node)
+		self._armIsAsx=0
 		if self.isASX(url):
-			self._armedIsAsx=1
+			self._armIsAsx=1
 			return self.prepareASX(node)
 		
 		url = MMurl.canonURL(url)
@@ -149,7 +149,7 @@ class MediaChannel:
 		self.release_player()
 		self._playBuilder=self._armBuilder
 		self._armBuilder=None
-			
+		self.arm2playASX()		
 		self.play_loop = self.getloop(node)
 
 		# get duration in secs (float)
@@ -212,15 +212,27 @@ class MediaChannel:
 		center = MMAttrdefs.getattr(node, 'center')
 
 		if scale > 0:
-			width = min(width * scale, w)
-			height = min(height * scale, h)
+			width = int(width * scale)
+			height = int(height * scale)
+			if width>w or height>h:
+				wscale=float(w)/width
+				hscale=float(h)/height
+				scale=min(wscale,hscale)
+				width = min(int(width * scale), w)
+				height = min(int(height * scale), h)
+				center=1	
 			if center:
 				x = x + (w - width) / 2
 				y = y + (h - height) / 2
 		else:
 			# fit in window
-			width = w
-			height = h
+			wscale=float(w)/width
+			hscale=float(h)/height
+			scale=min(wscale,hscale)
+			width = min(int(width * scale), w)
+			height = min(int(height * scale), h)
+			x = x + (w - width) / 2
+			y = y + (h - height) / 2
 
 		rcMediaWnd=(x, y, width,height)
 		builder.SetWindowPosition(rcMediaWnd)
@@ -244,13 +256,27 @@ class MediaChannel:
 				self._playBuilder.SetPosition(self._playBegin)
 				self._playBuilder.Run()
 				return
-			# no more loops
+			# no more loops but check for ASX playlist
 			self.__playdone=1
 			self.playdone(0)
 			return
 		# self.play_loop is 0 so repeat
 		self._playBuilder.SetPosition(0)
 		self._playBuilder.Run()
+
+	################## AFX support
+	def initASX(self):
+		self._armIsAsx=0
+		self._armAsxPlayList=[]
+		self._armAsxIndex=0
+		self._playIsAsx=0
+		self._playAsxPlayList=[]
+		self._playAsxIndex=0
+
+	def arm2playASX(self):
+		self._playIsAsx=self._armIsAsx
+		self._playAsxPlayList=self._armAsxPlayList
+		self._playAsxIndex=self._armAsxIndex
 
 	def isASX(self,url):
 		import posixpath
@@ -262,14 +288,25 @@ class MediaChannel:
 		x=ASXParser.ASXParser()
 		url=self.getfileurl(node)
 		x.read(url)
-		if not x._playlist:
-			return -1
-		asf_url=x._playlist[0]
-		if not self._armBuilder.RenderFile(asf_url):
-			print 'Failed to render',asf_url
+		
+		# set ASX armed info
+		self._armAsxPlayList=x._playlist
+		self._armAsxIndex=0
+
+		if not self.armNextAsf():
 			return -1
 		return 1
 
+	def armNextAsf(self):
+		if self._armAsxIndex >= len(self._armAsxPlayList):
+			return 0
+		asf_url=self._armAsxPlayList[self._armAsxIndex]
+		self._armAsxIndex=self._armAsxIndex+1
+		if not self._armBuilder.RenderFile(asf_url):
+			print 'Failed to render',asf_url
+			return 0
+		return 1
+		
 	############################################################## 
 	# ui delays management:
 	# What the following methods implement is a safe
