@@ -17,6 +17,10 @@ import os
 def fix(r, g, b): return r, g, b	# Hook for color conversions
 
 
+import settings
+DISPLAY_VERTICAL = settings.get('vertical_structure')
+
+
 # Color assignments (RGB)
 
 BGCOLOR = fix(200, 200, 200)		# Light gray
@@ -233,22 +237,6 @@ class HierarchyView(HierarchyViewDialog):
 		self.toplevel.setwaiting()
 		x, y = params[0:2]
 		self.select(x, y)
-
-## 	# this doesn't work yet...
-## 	def rawkey(self, dev, val):
-## 		# raw key event (0-255)
-## 		# 'val' is the key code as defined in DEVICE or <device.h>
-## 		if val == 0: return # up
-## 		if dev in (DEVICE.LEFTARROWKEY, DEVICE.PAD4):
-## 			self.tosibling(-1)
-## 		if dev in (DEVICE.RIGHTARROWKEY, DEVICE.PAD6):
-## 			self.tosibling(1)
-## 		if dev in (DEVICE.UPARROWKEY, DEVICE.PAD8):
-## 			self.toparent()
-## 		if dev in (DEVICE.DOWNARROWKEY, DEVICE.PAD2):
-## 			self.tochild(0)
-## 		if dev in (DEVICE.PAD5, DEVICE.PADPERIOD):
-## 			self.zoomhere()
 
 	#################################################
 	# Edit manager interface (as dependent client)  #
@@ -792,7 +780,7 @@ def makeboxes(list, node, left, top, right, bottom,
 
 	# the two branches here are basically identical--the
 	# horizontal and vertical directions have been exchanged
-	if t in ('par', 'alt'):
+	if (t in ('par', 'alt')) == DISPLAY_VERTICAL:
 		# children laid out horizontally
 		# needed is the minimum space needed to draw all children
 		needed = nchildren * (minwidth + hmargin) - hmargin
@@ -934,7 +922,7 @@ class Object:
 			r1 = r - hmargin*2
 			b1 = b - vmargin*2
 			if l1 < r1 and t1 < b1:
-				if node.GetType() == 'par':
+				if (node.GetType() in ('par', 'alt')) == DISPLAY_VERTICAL:
 					x = l1
 					while x < r1:
 						d.drawline(TEXTCOLOR,
