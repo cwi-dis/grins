@@ -248,8 +248,10 @@ class _Splash:
 			l = w.CreateManagedWidget('version', Xm.Label, attrs)
 		shell.Popup(0)
 		gc = w.CreateGC({})
+		descr = rdr.format.descr
 		image = self.visual.CreateImage(self.visual.depth, X.ZPixmap,
-						0, data, width, height, 32, 0)
+				0, data, width, height, descr['align'], 0)
+		image.byte_order = self.byteorder
 		w.AddCallback('exposeCallback', self.expose,
 			      (gc.PutImage, (image, 0, 0, 0, 0, width, height)))
 		gc.PutImage(image, 0, 0, 0, 0, width, height)
@@ -269,6 +271,13 @@ class _Splash:
 		if self.__initialized:
 			return
 		self.__initialized = 1
+		import struct
+		if struct.pack('i', 1)[:1] == '\001':
+			# little endian
+			self.byteorder = X.LSBFirst
+		else:
+			# big endian
+			self.byteorder = X.MSBFirst
 		Xt.ToolkitInitialize()
 		Xt.SetFallbackResources(resources)
 		try:
