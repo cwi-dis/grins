@@ -58,7 +58,10 @@ if sys.platform == 'mac':
 			# File doesn't exist. Give the long talk.
 			windowinterface.showmessage('Extension for "%s" not recognized.\nFor use with GRiNS (and for use on the web in general) please give your file the correct extension.'%filename_lastpart, identity='nomimetype')
 			return None, None
-		descr = _ic_instance.maptypecreator(type, creator, url)
+		try:
+			descr = _ic_instance.maptypecreator(type, creator, url)
+		except:
+			descr = None
 		if not descr:
 			windowinterface.showmessage('Extension for "%s" not recognized.\nFor use with GRiNS (and for use on the web in general) please give your file the correct extension.'%filename_lastpart, identity='nomimetype')
 			return None, None
