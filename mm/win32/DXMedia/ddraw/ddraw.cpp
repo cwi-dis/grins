@@ -765,8 +765,28 @@ DirectDrawSurface_Blt(DirectDrawSurfaceObject *self, PyObject *args)
 		return Py_None;
 		}
 	
+	if(!EqualRect(&rcToInSurf,&rcTo)){
+		// find part of source mapped to the clipped destination
+		// apply linear afine transformation from destination -> source
+		// x^p = ((x_2^p - x_1^p)*x + (x_1^p*x_2-x_2^p*x_1))/(x_2-x_1)
+		// rem: primes represent source coordinates
+		int x1p = rcFrom.left, x2p = rcFrom.right;
+		int x1 = rcTo.left, x2 = rcTo.right;
+		int l = rcToInSurf.left, r = rcToInSurf.right;
+		int lp = int(floor(0.5+((x2p - x1p)*l + (x1p*x2-x2p*x1))/double(x2-x1)));
+		int rp = int(floor(0.5+((x2p - x1p)*r + (x1p*x2-x2p*x1))/double(x2-x1)));
+		rcFromInSurf.left = lp; rcFromInSurf.right = rp;
+		
+		int y1p = rcFrom.top, y2p = rcFrom.bottom;
+		int y1 = rcTo.top, y2 = rcTo.bottom;
+		int t = rcToInSurf.top, b = rcToInSurf.bottom;
+		int tp = int(floor(0.5+((y2p - y1p)*t + (y1p*y2-y2p*y1))/double(y2-y1)));
+		int bp = int(floor(0.5+((y2p - y1p)*b + (y1p*y2-y2p*y1))/double(y2-y1)));
+		rcFromInSurf.top = tp; rcFromInSurf.bottom = bp;
+		}
+	
 	Py_BEGIN_ALLOW_THREADS
-	hr = self->pI->Blt(&rcTo,ddsFrom->pI,&rcFrom,dwFlags,NULL);
+	hr = self->pI->Blt(&rcToInSurf,ddsFrom->pI,&rcFromInSurf,dwFlags,NULL);
 	Py_END_ALLOW_THREADS
 	if (FAILED(hr)){
 		seterror("DirectDrawSurface_Blt", hr);
@@ -1519,7 +1539,7 @@ DirectDrawSurface_Blt_RGB32_On_RGB16(DirectDrawSurfaceObject *self, PyObject *ar
 	int rs = 8-numREDbits;
 	int gs = 8-numGREENbits;
 	int bs = 8-numBLUEbits;	
-	Py_BEGIN_ALLOW_THREADS		
+	Py_BEGIN_ALLOW_THREADS	
 	RGBQUAD *p = (RGBQUAD*)pImageBits;	
 	for(int row=h-1;row>=0;row--)
 		{
@@ -1529,8 +1549,8 @@ DirectDrawSurface_Blt_RGB32_On_RGB16(DirectDrawSurfaceObject *self, PyObject *ar
 			*surfpixel++ = WORD(((p->rgbRed >> rs) << loREDbit) | ((p->rgbGreen>>gs) << loGREENbit) | ((p->rgbBlue>>bs) << loBLUEbit));
 			}
 		}
-	Py_END_ALLOW_THREADS	
-
+	Py_END_ALLOW_THREADS
+		
 	self->pI->Unlock(0);
 	Py_INCREF(Py_None);
 	return Py_None;	
