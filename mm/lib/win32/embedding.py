@@ -148,12 +148,15 @@ class SliderPeer:
 		player = smildoc.player
 		ctx = player.userplayroot.GetContext()
 		# indefinite: -1, unknown: 0, else: >0
-		fulldur = player.userplayroot.calcfullduration(ctx)
+		fulldur = player.userplayroot.calcfullduration(None)
 		if not fulldur: fulldur = 0
-		# update peer for dur
+		framerate = 25
+		# update peer for dur and first video/audio frameRate
 		try:
 			from __main__ import commodule
-			if id: commodule.AdviceSetDur(peerid, fulldur)
+			if peerid: 
+				commodule.AdviceSetDur(peerid, fulldur)
+				commodule.AdviceSetFrameRate(peerid, framerate)
 		except: pass
 		self.updateposcallback = player.setstarttime
 		self.timefunction = player.scheduler.timefunc
