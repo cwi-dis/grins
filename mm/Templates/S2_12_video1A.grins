@@ -1,14 +1,13 @@
 <?xml version="1.0"?>
 <smil xmlns="http://www.w3.org/2001/SMIL20/Language" xmlns:GRiNS="http://www.oratrix.com/" xmlns:rn="http://features.real.com/2001/SMIL20/Extensions">
   <head>
-    <meta name="title" content="SMIL 2.0 320x240 Video with background music and image"/>
-    <meta name="template_name" content="Broadband SMIL 2.0 Videoshow"/>
-    <meta name="template_description" content="A slideshow with background music, voice/text captions and a background image."/>
+    <meta name="title" content="320x240 Video with background music and image"/>
+    <meta name="template_name" content="Broadband Videoshow"/>
+    <meta name="template_description" content="A 320x240 videoshow with background audio and a background image."/>
     <meta name="template_snapshot" content="T-icons/video_2_1A.bmp"/>
-    <meta name="generator" content="GRiNS Pro for SMIL 2.0, v2.2 win32 build 134"/>
     <meta name="project_html_page" content="external_player.html"/>
     <layout>
-      <root-layout id="Player-Window" backgroundColor="black" width="330" height="270" GRiNS:editBackground=" 192 192 192" GRiNS:showEditBackground="off"/>
+      <root-layout id="Broadband_Videoshow" backgroundColor="black" width="330" height="270" GRiNS:editBackground=" 192 192 192" GRiNS:showEditBackground="off"/>
       <region id="audio" GRiNS:type="sound"/>
       <region id="bkgd_image" width="330" height="270" GRiNS:type="image"/>
       <region id="Video" left="7" width="320" top="7" height="240" z-index="1" GRiNS:type="video"/>

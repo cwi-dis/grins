@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<smil xmlns="http://www.w3.org/2000/SMIL20/CR/Language" xmlns:GRiNS="http://www.oratrix.com/">
+  <head>
+    <meta name="title" content="Mobile Slideshow with Audio"/>
+    <meta name="template_name" content="Mobile Slideshow with Background Audio"/>
+    <meta name="template_description" content="A slideshow with audio for a mobile device."/>
+    <meta name="template_snapshot" content="icons/slideshow_1M.bmp"/>
+    <meta name="project_html_page" content="external_player.html"/>
+    <layout>
+      <topLayout id="Basic_GRiNS_Slideshow" width="359" height="683"  GRiNS:editBackground="192 192 0" GRiNS:showEditBackground="1">
+        <region id="audio" GRiNS:type="sound"/>
+        <region id="bkgd_image" width="359" height="683" backgroundColor="#FeFAc9" GRiNS:type="image" z-index="0" GRiNS:editBackground="192 0 192" GRiNS:showEditBackground="1"/>
+        <region id="Images" fit="meet" top="144" left="77" width="205" height="260" z-index="1" backgroundColor="#FeFAc9" GRiNS:type="image" GRiNS:editBackground="0 192 192" GRiNS:showEditBackground="1"/>
+      </topLayout>
+    </layout>
+    <transition id="fade" type="fade"/>
+    <transition id="slideover" type="slideWipe"/>
+    <transition id="push" type="pushWipe"/>
+  </head>
+  <body GRiNS:hidden="true">
+    <par id="BasicSlideshow" GRiNS:thumbnailScale="false" GRiNS:thumbnailIcon="icons/slideshow_1M.bmp" GRiNS:project_default_region_image="Images" GRiNS:project_default_region_sound="audio" GRiNS:project_default_region_text="Images" GRiNS:showtime="cfocus">
+      <seq id="ImageSet" fillDefault="freeze" GRiNS:emptyShow="true" GRiNS:emptyIcon="icons/image.tiff" GRiNS:emptyDur="40s" GRiNS:emptyText="Place Main Images here." GRiNS:emptyColor="#a0a0a0"/>
+      <seq id="BkgdClip" GRiNS:emptyText="Place Background Audio here." GRiNS:emptyShow="true" GRiNS:emptyIcon="icons/sound.tiff" GRiNS:emptyColor="#c0c0c0"/>
+      <img id="BkgdImg" fill="freeze" region="bkgd_image" src="media/Mobile.gif"/>
+    </par>
+  </body>
+</smil>
