@@ -902,7 +902,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 		self._wndToolBar.SetButtonInfo(1,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6);
 
-		id=usercmdui.class2ui[usercmd.OPEN].id
+		id=usercmdui.class2ui[usercmd.OPENFILE].id
 		self._wndToolBar.SetButtonInfo(2,id,afxexttb.TBBS_BUTTON, 1)
 
 		id=usercmdui.class2ui[usercmd.SAVE].id
@@ -921,7 +921,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 		self._wndToolBar.SetButtonInfo(1,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6);
 
-		id=usercmdui.class2ui[usercmd.OPEN].id
+		id=usercmdui.class2ui[usercmd.OPENFILE].id
 		self._wndToolBar.SetButtonInfo(2,id,afxexttb.TBBS_BUTTON, 1)
 
 		id=usercmdui.class2ui[usercmd.SAVE].id
@@ -964,7 +964,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 	def setPlayerToolbar(self):
 		self._wndToolBar.SetButtons(9)
 
-		id=usercmdui.class2ui[usercmd.OPEN].id
+		id=usercmdui.class2ui[usercmd.OPENFILE].id
 		self._wndToolBar.SetButtonInfo(0,id,afxexttb.TBBS_BUTTON, 1)
 
 		# Play Toolbar
