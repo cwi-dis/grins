@@ -82,6 +82,7 @@ class Channel:
 			print 'Channel() -> '+`self`
 		channels.append(self)
 		if hasattr(ui, 'editmgr'):
+			self.editmgr = ui.editmgr
 			ui.editmgr.register(self)
 		self._curvals = {}
 
@@ -1262,6 +1263,17 @@ class ChannelWindow(Channel):
 			print 'ChannelWindow.resize'+`self,arg,window,event,value`
 		self._player.toplevel.setwaiting()
 		self.replaynode()
+		if not self._player.playing and \
+		   self._attrdict.get('base_window','undefined') == 'undefined' and \
+		   hasattr(self, 'editmgr'):
+			units = self._attrdict.get('units',
+						   windowinterface.UNIT_MM)
+			x, y, w, h = self.window.getgeometry(units = units)
+			if (self._attrdict['winpos'] != (x, y) or
+			    self._attrdict['winsize'] != (w, h)) and \
+			    self.editmgr.transaction():
+				self.save_geometry()
+				self.editmgr.commit()
 
 	def arm_0(self, node):
 		same = Channel.arm_0(self, node)
