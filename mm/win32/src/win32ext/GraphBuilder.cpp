@@ -154,9 +154,9 @@ static PyObject* py_pause(PyObject *self, PyObject *args)
 	RETURN_NONE;
 	}
 
-// Get the duration (in msec) of the rendered file
+// Get the duration (in secs) of the rendered file
 // Arguments: No
-// Return Values: duration in msecs
+// Return Values: duration in secs
 
 static PyObject* py_get_duration(PyObject *self, PyObject *args)
 	{
@@ -181,9 +181,9 @@ static PyObject* py_get_duration(PyObject *self, PyObject *args)
 	return Py_BuildValue("d",-1.0);
 	}
 
-// Get the current sample position (in msec) within the stream
+// Get the current sample position (in sec) within the stream
 // Arguments: No
-// Return Values: position within the stream in msecs
+// Return Values: position within the stream in secs
 static PyObject* py_get_position(PyObject *self, PyObject *args)
 	{
 	CHECK_NO_ARGS2(args,GetPosition);
@@ -202,7 +202,7 @@ static PyObject* py_get_position(PyObject *self, PyObject *args)
         hr = pGraphBuilder->m_pIMP->get_CurrentPosition(&tCurrent);
 		GUI_END_SAVE;
 		if (SUCCEEDED(hr))
-			return Py_BuildValue("d", tCurrent); // in msec
+			return Py_BuildValue("d", tCurrent); // in sec
         }
 	//RETURN_ERR("GetPosition failed");
 	return Py_BuildValue("d", 0.0);
@@ -233,7 +233,7 @@ static PyObject* py_set_position(PyObject *self, PyObject *args)
         }
 	RETURN_NONE;
 	}
-// Get the end position (in msec) within the stream
+// Get the end position (in sec) within the stream
 // Arguments: No
 // Return Values: position within the stream in msecs
 static PyObject* py_get_stoptime(PyObject *self, PyObject *args)
@@ -260,8 +260,8 @@ static PyObject* py_get_stoptime(PyObject *self, PyObject *args)
 	return Py_BuildValue("d", -1.0);
 	}
 
-// Set end position (in msec) within the stream
-// Arguments: position in msec
+// Set end position (in sec) within the stream
+// Arguments: position in sec
 // Return Values: None
 static PyObject* py_set_stoptime(PyObject *self, PyObject *args)
 	{
