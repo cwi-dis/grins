@@ -278,7 +278,9 @@ class Window:
 						return cont
 					elif disp._alphaSensitivity == 'alpha':
 						# xxx to do: check if the point is transparent.
-						# if yes, return true
+						# if yes, return cont
+						if disp.isTransparent(point):
+							return cont
 						return stop
 					else: 
 						# default value (opaque)
@@ -327,7 +329,9 @@ class Window:
 						return cont
 					elif self._active_displist._alphaSensitivity == 'alpha':
 						# xxx to do: check if the point is transparent.
-						# if yes, return true
+						# if yes, return cont
+						if self._active_displist.isTransparent(point):
+							return cont
 						self.setcursor(self._cursor)
 						return stop
 					else: 
@@ -639,7 +643,7 @@ class Window:
 	# mediasize: natural size of media
 	# mediadisplayrect: computed layout rect according to smil rules 
 	#					including regPoint/Align and fit (here is assumed correct)
-	# fit: 'hidden':1, 'meet':0, 'slice':-1, 'scroll':-2, 'fill':-3
+	# fit: 'hidden':1, 'meet':0, 'slice':-1, ('meed_hidden'=-2,) 'fill':-3', 'scroll':-4
 	# returns: source rect for blit operation
 	def _getmediacliprect(self, mediasize, mediadisplayrect, fit=1):
 		wm, hm = mediasize
@@ -979,6 +983,17 @@ class Window:
 	def update(self, rc=None):
 		self._topwindow.update(rc)
 
+	# return all ancestors of self including topwindow
+	def getAncestors(self):
+		if self == self._topwindow:
+			return []
+		L = []
+		wnd = self._parent
+		while wnd and wnd != self._topwindow:
+			L.append(wnd)
+			wnd = wnd._parent
+		L.append(self._topwindow)
+		return L
 	#
 	# Animations interface
 	#
@@ -2719,12 +2734,22 @@ class MSDrawContext(DrawContext):
 	def moveSelectionTo(self, point):
 		xp, yp = point
 		xl, yl = self._moveRefPt
-		for shape in self._selections:
+		# Shapes in selections may have a parent child relationship.
+		# If its so, remove from selection list those that
+		# their movement will occur indirectly by an ancestor movement 
+		selections = self._selections[:]
+		for shape in selections[:]:
+			L = shape.getAncestors()
+			for ancshape in L:
+				if ancshape in selections:
+					selections.remove(shape)
+					break
+		for shape in selections:
 			shape.invalidateDragHandles()
 			shape.moveBy((xp-xl, yp-yl))
 			shape.invalidateDragHandles()
 		for obj in self._listeners:
-			obj.onDSelMove(self._selections)
+			obj.onDSelMove(selections)
 
 	def moveSelectionHandleTo(self, point):
 		if self._selected:
@@ -2806,7 +2831,10 @@ class Shape:
 	
 	def isResizeable(self):
 		return 1
-									
+
+	def getAncestors(self):
+		return []
+										
 class DrawTool:
 	def __init__(self, ctx):
 		self._ctx = ctx
@@ -3006,7 +3034,7 @@ class _ResizeableDisplayList(_DisplayList):
 		else:
 			_DisplayList._do_render(self, entry, dc, region)
 
-	scale2fit = {1:'hidden',0:'meet',-1:'slice',-2:'scroll',-3:'fill'}
+	scale2fit = {1:'hidden',0:'meet',-1:'slice',-2:'meed_hidden',-3:'fill', -4:'scroll'}
 	def newimage(self, filename, fit='hidden'):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
