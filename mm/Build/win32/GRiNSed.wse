@@ -1416,48 +1416,8 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\slide-1.jpg
-  Destination=%MAINDIR%\Templates\media\slide-1.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\simple.rp
-  Destination=%MAINDIR%\Templates\media\simple.rp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\realpix-template.rp
-  Destination=%MAINDIR%\Templates\media\realpix-template.rp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\hd_slide_1.jpg
-  Destination=%MAINDIR%\Templates\media\hd_slide_1.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\bkgd-image.jpg
-  Destination=%MAINDIR%\Templates\media\bkgd-image.jpg
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\A5_empty.smil
-  Destination=%MAINDIR%\Templates\A5_empty.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\A4_adaptive_content.smil
-  Destination=%MAINDIR%\Templates\A4_adaptive_content.smil
-  Flags=0000000010000010
-end
-item: Install File
   Source=d:\ufs\mm\cmif\Templates\A3_videoshow-bkgdaudio-img.smil
   Destination=%MAINDIR%\Templates\A3_videoshow-bkgdaudio-img.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\A2_rp-slideshow-bkgdaudio-img.smil
-  Destination=%MAINDIR%\Templates\A2_rp-slideshow-bkgdaudio-img.smil
   Flags=0000000010000010
 end
 item: Install File
@@ -1536,8 +1496,23 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\external_player.html
-  Destination=%MAINDIR%\Templates\external_player.html
+  Source=d:\ufs\mm\cmif\Templates\A4_adaptive_content.smil
+  Destination=%MAINDIR%\Templates\A4_adaptive_content.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\A5_empty.smil
+  Destination=%MAINDIR%\Templates\A5_empty.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\A2_rp-slideshow-bgaud-img.smil
+  Destination=%MAINDIR%\Templates\A2_rp-slideshow-bgaud-img.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\embedded_htmllayout_player.html
+  Destination=%MAINDIR%\Templates\embedded_htmllayout_player.html
   Flags=0000000010000010
 end
 item: Install File
@@ -1546,8 +1521,33 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\embedded_htmllayout_player.html
-  Destination=%MAINDIR%\Templates\embedded_htmllayout_player.html
+  Source=d:\ufs\mm\cmif\Templates\external_player.html
+  Destination=%MAINDIR%\Templates\external_player.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\slide-1.jpg
+  Destination=%MAINDIR%\Templates\media\slide-1.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\simple.rp
+  Destination=%MAINDIR%\Templates\media\simple.rp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\realpix-template.rp
+  Destination=%MAINDIR%\Templates\media\realpix-template.rp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\hd_slide_1.jpg
+  Destination=%MAINDIR%\Templates\media\hd_slide_1.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\bkgd-image.jpg
+  Destination=%MAINDIR%\Templates\media\bkgd-image.jpg
   Flags=0000000010000010
 end
 item: Install File
