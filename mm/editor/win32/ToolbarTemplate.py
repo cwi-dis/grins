@@ -1,7 +1,9 @@
 #
 # Template file for the application toolbars.
 # The template is a list of toolbars. Each toolbar
-# has a name, a menu-command-id (to show/hide it),
+# has a name, a type (normally 'toolbar'), an initial
+# state ('docked', 'floating' or 'hidden')
+# a menu-command-id (to show/hide it),
 # a resource-id (of the toolbar resource with the bitmaps)
 # and a list of "buttons".
 # Each button has a type, command-id, and an icon-index
@@ -35,7 +37,7 @@ IDW_TOOLBAR_PLAYER=0xe801
 IDW_TOOLBAR_ALIGNMENT=0xe802
 IDW_TOOLBAR_LINKING=0xe803
 IDW_TOOLBAR_CONTAINERS=0xe804
-
+IDW_TOOLBAR_PLAYER_PANEL = 0xe805
 
 class Button:
 	def __init__(self, cmdid, iconindex):
@@ -56,7 +58,7 @@ class Pulldown:
 		self.width = width
 
 GENERAL_TEMPLATE = (
-	('General', wndusercmd.TOOLBAR_GENERAL, IDW_TOOLBAR_GENERAL, grinsRC.IDR_TB_COMMON, 0, (
+	('General', 'toolbar', 'docked', wndusercmd.TOOLBAR_GENERAL, IDW_TOOLBAR_GENERAL, grinsRC.IDR_TB_COMMON, 0, (
 		Button(usercmd.NEW_DOCUMENT, TBICON_NEW),
 		Separator(6),
 		Button(usercmd.OPENFILE, TBICON_OPENFILE),
@@ -67,16 +69,16 @@ GENERAL_TEMPLATE = (
 		Separator(6),
 		Button(wndusercmd.CLOSE_ACTIVE_WINDOW, TBICON_CLOSE_WINDOW),
 		Separator(12),
-		Pulldown('Bitrate'),
-		Pulldown('Language'),
-		Separator(12),
+##		Pulldown('Bitrate'),
+##		Pulldown('Language'),
+##		Separator(12),
 		Button(usercmd.HELP, TBICON_HELP),
 		)
 	)
 )
 
 FRAME_TEMPLATE = (
-	('General', wndusercmd.TOOLBAR_GENERAL, IDW_TOOLBAR_GENERAL, grinsRC.IDR_TB_COMMON, 0, (
+	('General', 'toolbar', 'docked', wndusercmd.TOOLBAR_GENERAL, IDW_TOOLBAR_GENERAL, grinsRC.IDR_TB_COMMON, 0, (
 		Button(usercmd.NEW_DOCUMENT, TBICON_NEW),
 		Separator(6),
 		Button(usercmd.OPENFILE, TBICON_OPENFILE),
@@ -85,7 +87,7 @@ FRAME_TEMPLATE = (
 	)
 )
 PLAYER_TEMPLATE = (
-	('Player Controls', wndusercmd.TOOLBAR_PLAYER, IDW_TOOLBAR_PLAYER, grinsRC.IDR_TB_COMMON, 0, (
+	('Player Controls', 'toolbar', 'docked', wndusercmd.TOOLBAR_PLAYER, IDW_TOOLBAR_PLAYER, grinsRC.IDR_TB_COMMON, 0, (
 		Button(usercmd.PLAY, TBICON_PLAY),
 		Button(usercmd.PAUSE, TBICON_PAUSE),
 		Button(usercmd.STOP, TBICON_STOP),
@@ -94,7 +96,7 @@ PLAYER_TEMPLATE = (
 )
 
 LINKING_TEMPLATE = (
-	('Region alignment', wndusercmd.TOOLBAR_LINKING, IDW_TOOLBAR_LINKING, grinsRC.IDR_TB_EDITOR, 0, (
+	('Region alignment', 'toolbar', 'docked', wndusercmd.TOOLBAR_LINKING, IDW_TOOLBAR_LINKING, grinsRC.IDR_TB_EDITOR, 0, (
 		Button(usercmd.CREATEANCHOR, TBICON_CREATE_ANCHOR),
 		Button(usercmd.FINISH_LINK, TBICON_FINISH_LINK),
 		Separator(6),
@@ -106,7 +108,7 @@ LINKING_TEMPLATE = (
 )
 
 ALIGN_TEMPLATE = (
-	('Linking and Timing', wndusercmd.TOOLBAR_ALIGNMENT, IDW_TOOLBAR_ALIGNMENT, grinsRC.IDR_TB_EDITOR, 0, (
+	('Linking and Timing', 'toolbar', 'docked', wndusercmd.TOOLBAR_ALIGNMENT, IDW_TOOLBAR_ALIGNMENT, grinsRC.IDR_TB_EDITOR, 0, (
 		Button(usercmd.ALIGN_LEFT, TBICON_ALIGN_LEFT),
 		Button(usercmd.ALIGN_CENTER, TBICON_ALIGN_VERTICAL),
 		Button(usercmd.ALIGN_RIGHT, TBICON_ALIGN_RIGHT),
@@ -122,7 +124,7 @@ ALIGN_TEMPLATE = (
 )
 
 CONTAINERS_TEMPLATE = (
-	('Containers', wndusercmd.TOOLBAR_CONTAINERS, IDW_TOOLBAR_CONTAINERS, grinsRC.IDR_TB_EDITOR, 1, (
+	('Containers', 'toolbar', 'docked', wndusercmd.TOOLBAR_CONTAINERS, IDW_TOOLBAR_CONTAINERS, grinsRC.IDR_TB_EDITOR, 1, (
 		Button(usercmd.DRAG_PAR, TBICON_PAR),
 		Button(usercmd.DRAG_SEQ, TBICON_SEQ),
 		Button(usercmd.DRAG_SWITCH, TBICON_SWITCH),
@@ -141,7 +143,7 @@ CONTAINERS_TEMPLATE = (
 
 TOOLBARS=[
 	GENERAL_TEMPLATE,
-	PLAYER_TEMPLATE,
+##	PLAYER_TEMPLATE,
 	CONTAINERS_TEMPLATE,
 	LINKING_TEMPLATE,
 	ALIGN_TEMPLATE,
