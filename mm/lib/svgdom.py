@@ -214,7 +214,7 @@ class SvgElement(SvgNode):
 
 	def parseStyle(self):
 		val = self.attrdict.get('style')
-		style = SVGStyle(self, val)
+		style = SVGStyle(self, 'style', val)
 
 		classname = self.get('class')
 		if classname is not None:
@@ -293,8 +293,15 @@ class SvgG(SvgElement):
 
 class SvgSvg(SvgElement):
 	def parseAttributes(self):
-		pass
-						
+		width = self.get('width')
+		height = self.get('height')
+		if width is None: 
+			width = self.getXMLAttr('width')
+			width.setValue(100) # should be 100%
+		if height is None:
+			height = self.getXMLAttr('height')
+			height.setValue(100) # should be 100%
+							
 	def getSize(self):
 		return self.get('width'), self.get('height')
 
@@ -308,7 +315,7 @@ class SvgStyle(SvgElement):
 
 	def setready(self):
 		if self.cdata:
-			self.textcssdefs = SVGTextCss(self, self.cdata)
+			self.textcssdefs = SVGTextCss(self, 'text/css', self.cdata)
 		else:
 			self.textcssdefs = None
 
@@ -329,9 +336,9 @@ class SvgStyle(SvgElement):
 class SvgDefs(SvgElement):
 	def parseAttributes(self):
 		self.document.appendDefs(self)
+		self.defs = {} # not seen yet
 
 	def setready(self):
-		self.defs = {}
 		node = self.firstchild
 		while node:
 			defid = node.get('id')
@@ -341,13 +348,28 @@ class SvgDefs(SvgElement):
 
 class SvgUse(SvgElement):
 	def parseAttributes(self):
+		# postpone finding use ref
+		# we may be in defs
+		self.what = None
+
+	def locateDef(self):
 		what = None
 		href = self.get('xlink:href')
 		if href:
 			if href[0] == '#':
 				what = self.document.getElementDef(href[1:])
 		self.what = what
+		
+#
+# Time elements
+#
+class SvgPar(SvgElement, svgtime.Par):
+	def __init__(self, type, document):
+		SvgElement.__init__(self, type, document)
 
+	def timeInit(self, ttype, timeroot):
+		svgtime.Par.__init__(self, ttype, timeroot or self)
+			
 #
 # Animate elements
 #
@@ -358,7 +380,7 @@ class AnimateElement(SvgElement, svgtime.TimeElement):
 		self.document.appendTimeElement(self)
 
 		self.animator = None
-		self._targetAttr = None
+		self.targetAttr = None
 
 		self.checkValues()
 
@@ -449,33 +471,34 @@ class AnimateElement(SvgElement, svgtime.TimeElement):
 			L = []
 			for substr in sl:
 				if substr:
-					L.append(ValueClass(self, substr).getValue())
+					L.append(ValueClass(self, '', substr).getValue())
 			return L
 		elif self._animtype == 'from-to':
-			return ValueClass(self, self.attrdict.get('from')).getValue(), ValueClass(self, self.attrdict.get('to')).getValue()
+			return ValueClass(self, '', self.attrdict.get('from')).getValue(), ValueClass(self, '', self.attrdict.get('to')).getValue()
 		elif self._animtype == 'from-by':
-			v1 = ValueClass(self, self.attrdict.get('from')).getValue()
-			dv = ValueClass(self, self.attrdict.get('by')).getValue()
+			v1 = ValueClass(self, '', self.attrdict.get('from')).getValue()
+			dv = ValueClass(self, '', self.attrdict.get('by')).getValue()
 			return v1, v1+dv
 		elif self.__animtype == 'to':
-			return 	ValueClass(self, self.attrdict.get('to')).getValue()
+			return 	ValueClass(self, '', self.attrdict.get('to')).getValue()
 		elif self._animtype == 'by':
-			return 0, ValueClass(self, self.attrdict.get('by')).getValue()
+			return 0, ValueClass(self, '', self.attrdict.get('by')).getValue()
 		return None
 
-	def beginElement(self):
-		if self.isActive():
-			return 0
-		svgtime.TimeElement.beginElement(self)
-		if self.animator:
-			self._targetAttr.appendAnimator(self.animator)	
+	def enterActiveState(self):
+		assert self._state == self.WAITBEGIN and self._interval is not None, 'invalid transition'
+		svgtime.TimeElement.enterActiveState(self)
+		dur = self.getDur()
+		if self.animator and svgtime.isdefinite(dur):
+			self.animator.prepareInterval(dur)
+			self.targetAttr.appendAnimator(self.animator)	
 
 	def removeElement(self):
-		if not self.isAlive():
+		if not self.isFilled():
 			return
 		svgtime.TimeElement.removeElement(self)
 		if self.animator:
-			self._targetAttr.removeAnimator(self.animator)
+			self.targetAttr.removeAnimator(self.animator)
 
 	def resetElement(self):
 		svgtime.TimeElement.resetElement(self)
@@ -483,23 +506,15 @@ class AnimateElement(SvgElement, svgtime.TimeElement):
 			self.animator.reset()
 
 	def createSyncArcs(self):
-		attr = self.getXMLAttr('begin', create = 0)
-		if attr is not None and attr._syncbase is not None:
-			src = self.getDocument().getElementWithId(attr._syncbase)
-			if src:
-				arc = svgtime.SvgSyncArc(src, attr._syncevent, self, 'begin', attr)
-				src.addSyncArc(arc)
-			else:
-				print 'can not find element with id', attr._syncbase, self.getDocument().ids
+		attr = self.getXMLAttr('begin')
+		if attr.isEmpty():
+			parent = self.getTimeParent()
+			if parent and parent.getTimeType()=='par':
+				attr.addSync(parent, 'begin')
+		attr.createSyncArcs()
 
-		attr = self.getXMLAttr('end', create = 0)
-		if attr is not None and attr._syncbase is not None:
-			src = self.getDocument().getElementWithId(attr._syncbase)
-			if src:
-				arc = svgtime.SvgSyncArc(src, attr._syncevent, self, 'end', attr)
-				src.addSyncArc(arc)
-			else:
-				print 'can not find element with id', attr._syncbase, self.getDocument().ids
+		attr = self.getXMLAttr('end')
+		attr.createSyncArcs()
 
 class SvgAnimate(AnimateElement):
 	def parseAttributes(self):
@@ -509,15 +524,12 @@ class SvgAnimate(AnimateElement):
 		assert self._targetElement != None, 'invalid target element'
 		name = self.attrdict.get('attributeName')
 		attrtype = self.get('attributeType')
-		self._targetAttr = self._targetElement.getAttrOfType(name, attrtype)
-		assert isinstance(self._targetAttr, Animateable), 'target attribute %s is not animateable' % name
+		self.targetAttr = self._targetElement.getAttrOfType(name, attrtype)
+		assert isinstance(self.targetAttr, Animateable), 'target attribute %s is not animateable' % name
 
 		dict = self.copyAnimAttrs()
-		dict['values'] = self.getValues(self._targetAttr.__class__)
-		dict['dur'] = self._dur
-		if self._dur == 'indefinite' or self._dur==0:
-			return
-		self.animator = svganimators.Animator(self, self._targetAttr, dict)
+		dict['values'] = self.getValues(self.targetAttr.__class__)
+		self.animator = svganimators.Animator(self, self.targetAttr, dict)
 
 				
 class SvgSet(AnimateElement):
@@ -530,19 +542,16 @@ class SvgSet(AnimateElement):
 
 		name = self.attrdict.get('attributeName')
 		attrtype = self.get('attributeType')
-		self._targetAttr = self._targetElement.getAttrOfType(name, attrtype)
-		assert isinstance(self._targetAttr, Animateable), 'target attribute %s is not animateable' % name
+		self.targetAttr = self._targetElement.getAttrOfType(name, attrtype)
+		assert isinstance(self.targetAttr, Animateable), 'target attribute %s is not animateable' % name
 
-		AttrClass = self._targetAttr.__class__
-		val = AttrClass(self, self.get('to')).getValue()
+		AttrClass = self.targetAttr.__class__
+		val = AttrClass(self, '', self.get('to')).getValue()
 
 		dict = self.copyAnimAttrs()
 		dict['values'] = (val, )
-		dict['dur'] = self._dur
 		dict['calcMode'] = 'discrete'
-		if self._dur == 'indefinite' or self._dur==0:
-			return
-		self.animator = svganimators.SetAnimator(self, self._targetAttr, dict)
+		self.animator = svganimators.SetAnimator(self, self.targetAttr, dict)
 
 class SvgAnimateTransform(AnimateElement):
 	def parseAttributes(self):
@@ -554,21 +563,18 @@ class SvgAnimateTransform(AnimateElement):
 		name = self.attrdict.get('attributeName')
 		attrtype = self.get('attributeType')
 		assert name == 'transform', 'animateTransform with unknown attributeName %s' % name
-		self._targetAttr = self._targetElement.getAttrOfType(name, attrtype)
-		assert isinstance(self._targetAttr, Animateable), 'target attribute %s is not animateable' % name
+		self.targetAttr = self._targetElement.getAttrOfType(name, attrtype)
+		assert isinstance(self.targetAttr, Animateable), 'target attribute %s is not animateable' % name
 
 		dict = self.copyAnimAttrs()
 		tftype = dict['type'] = self.get('type')
-		if self._dur == 'indefinite' or self._dur==0:
-			return None
-		dict['dur'] = self._dur
 
 		if tftype in ('rotate', 'skewX', 'skewY'):
 			dict['values'] = self.getValues(SVGAngle)
-			self.animator = svganimators.TransformAnimator(self, self._targetAttr, dict)
+			self.animator = svganimators.TransformAnimator(self, self.targetAttr, dict)
 		elif tftype in ('translate', 'scale'):
 			dict['values'] = self.getValues(SVGNumberList)
-			self.animator = svganimators.VectorTransformAnimator(self, self._targetAttr, dict)
+			self.animator = svganimators.VectorTransformAnimator(self, self.targetAttr, dict)
 		else:
 			assert 0, 'invalid animateTransform type %s' % tftype
 
@@ -579,20 +585,17 @@ class SvgAnimateMotion(AnimateElement):
 	def createAnimator(self):
 		assert self._targetElement != None, 'invalid target element'
 
-		self._targetAttr = self._targetElement.getAttrOfType('transform', 'XML')
-		assert isinstance(self._targetAttr, Animateable), 'target attribute %s is not animateable' % name
+		self.targetAttr = self._targetElement.getAttrOfType('transform', 'XML')
+		assert isinstance(self.targetAttr, Animateable), 'target attribute %s is not animateable' % name
 
 		dict = self.copyAnimAttrs()
-		dict['dur'] = self._dur
 		dict['rotate'] = self.get('rotate')
-		if self._dur == 'indefinite' or self._dur==0:
-			return
 
 		import svgpath
 		path = svgpath.Path()
 		path.constructFromSVGPathString(self.get('path'))
 		dict['path'] = path
-		self.animator = svganimators.MotionAnimator(self, self._targetAttr, dict)
+		self.animator = svganimators.MotionAnimator(self, self.targetAttr, dict)
 
 class SvgAnimateColor(AnimateElement):
 	def parseAttributes(self):
@@ -603,17 +606,14 @@ class SvgAnimateColor(AnimateElement):
 
 		name = self.attrdict.get('attributeName')
 		attrtype = self.get('attributeType')
-		self._targetAttr = self._targetElement.getAttrOfType(name, attrtype)
+		self.targetAttr = self._targetElement.getAttrOfType(name, attrtype)
 
-		assert isinstance(self._targetAttr, Animateable), 'target attribute %s is not animateable' % name
-		assert self._targetAttr.__class__ == SVGColor, 'animateColor on a not color attribute %s' % name
+		assert isinstance(self.targetAttr, Animateable), 'target attribute %s is not animateable' % name
+		assert self.targetAttr.__class__ == SVGColor, 'animateColor on a not color attribute %s' % name
 
 		dict = self.copyAnimAttrs()
 		dict['values'] = self.getValues(SVGColor)
-		dict['dur'] = self._dur
-		if self._dur == 'indefinite' or self._dur==0:
-			return
-		self.animator = svganimators.ColorAnimator(self, self._targetAttr, dict)
+		self.animator = svganimators.ColorAnimator(self, self.targetAttr, dict)
 
 ####################3
 class SvgView(SvgElement):
@@ -900,7 +900,9 @@ class SvgDocument(SvgNode):
 		self.entitydefs = None
 		self.styles = []
 		self.ids = {}
-		self.timeRoot = svgtime.SvgPar('#timeroot', None)
+		self.timeRoot = SvgPar('#timeroot', self)
+		self.timeRoot.timeInit('par', None)
+		self.timeRoot.attrdict['dur'] = 'indefinite'
 
 		# create DOM
 		p = SvgDOMBuilder(self)
@@ -918,7 +920,7 @@ class SvgDocument(SvgNode):
 		self.doctypetag, self.doctypepubid, self.doctypesyslit, self.doctypedata = tag, pubid, syslit, data
 		if data:
 			# parse any entities def
-			self.entitydefs = SVGEntityDefs(self, data).getValue()
+			self.entitydefs = SVGEntityDefs(self, 'entity', data).getValue()
 
 	def getDocType(self):
 		return self.doctypetag, self.doctypepubid, self.doctypesyslit, self.doctypedata
@@ -970,7 +972,8 @@ class SvgDocument(SvgNode):
 
 	def setready(self):
 		SvgNode.setready(self)
-		self.buildTimeGraph()
+		if self.timeRoot.getFirstTimeChild() is not None:
+			self.buildTimeGraph()
 
 	#
 	# document repository
@@ -993,7 +996,7 @@ class SvgDocument(SvgNode):
 	def getClassStyle(self, classname):
 		L = self.styles[:]
 		L.reverse()
-		cs = SVGStyle(None, None)
+		cs = SVGStyle(None, None, None)
 		for el in L:
 			textcssdefs = el.textcssdefs.getValue()
 			cst = textcssdefs.get(classname)
@@ -1022,24 +1025,11 @@ class SvgDocument(SvgNode):
 	def buildTimeGraph(self):
 		iter = self.createDOMParamIterator(self.timeRoot, self, self.buildTimeGraphCallback)
 		while iter.advance(): pass
-		iter = self.createDOMParamIterator(self.timeRoot, self, self.resolveTimeGraphRefs)
-		while iter.advance(): pass
 
 	def buildTimeGraphCallback(self, node):
-		node.calcBasicTiming()
 		node.createSyncArcs()
 		if isinstance(node, AnimateElement):
 			node.createAnimator()
-
-	def resolveTimeGraphRefs(self, node):
-		bt = node.get('begin') or 0
-		if svgtime.isdefinite(bt):
-			for arc in node.beginSyncArcs:
-				arc.updateDependant(bt)
-		et = node.get('end')
-		if svgtime.isdefinite(et):
-			for arc in node.endSyncArcs:
-				arc.updateDependant(et)
 
 	#  navigator interface
 	def getNavFirstChild(self, node):
