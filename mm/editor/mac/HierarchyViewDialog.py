@@ -27,7 +27,10 @@ class HierarchyViewDialog(ViewDialog):
 			return
 		title = 'Structure View (' + self.toplevel.basename + ')'
 		self.load_geometry()
-		x, y, w, h = self.last_geometry
+		if self.last_geometry:
+			x, y, w, h = self.last_geometry
+		else:
+			x, y, w, h = -1, -1, -1, -1
 		adornments = {'doubleclick': ATTRIBUTES}
 		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1, 
 			commandlist=self.commands, canvassize = (w, h), adornments=adornments)
