@@ -21,7 +21,19 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
 OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 ******************************************************************/
-
+#ifdef _WIN32
+#define WITHOUT_FRAMEWORKS
+#include <windows.h>
+#include "QTML.h"
+#include "Movies.h"
+#include "TextUtils.h"
+#include "MacTypes.h"
+#include "Events.h"
+#include "Files.h"
+#include "AEDataModel.h"
+#include "Controls.h"
+#include "Lists.h"
+#else
 #ifdef WITHOUT_FRAMEWORKS
 #include <Types.h>
 #include <Files.h>
@@ -29,6 +41,7 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <StandardFile.h>
 #else
 #include <Carbon/Carbon.h>
+#endif
 #endif
 
 #include "pymactoolbox.h"
