@@ -37,11 +37,11 @@ implements CMLMediator, ActionListener
 		//{{INIT_CONTROLS
 		setLayout(null);
 		setSize(500,220);
-		label1.setText("URL:");
-		add(label1);
-		label1.setBounds(16,12,52,24);
-		add(textField1);
-		textField1.setBounds(84,12,324,24);
+		labelURL.setText("URL:");
+		add(labelURL);
+		labelURL.setBounds(16,12,52,24);
+		add(textFieldURL);
+		textFieldURL.setBounds(84,12,324,24);
 		buttonOpen.setLabel("Open");
 		add(buttonOpen);
 		buttonOpen.setBackground(java.awt.Color.lightGray);
@@ -49,34 +49,54 @@ implements CMLMediator, ActionListener
 		buttonPlay.setLabel("Play");
 		add(buttonPlay);
 		buttonPlay.setBackground(java.awt.Color.lightGray);
-		buttonPlay.setBounds(84,60,60,24);
+		buttonPlay.setBounds(216,60,60,24);
 		buttonPause.setLabel("Pause");
 		add(buttonPause);
 		buttonPause.setBackground(java.awt.Color.lightGray);
-		buttonPause.setBounds(216,60,60,24);
+		buttonPause.setBounds(282,60,60,24);
 		buttonStop.setLabel("Stop");
 		add(buttonStop);
 		buttonStop.setBackground(java.awt.Color.lightGray);
 		buttonStop.setBounds(348,60,60,24);
-		add(textArea1);
-		textArea1.setBounds(16,144,476,64);
-		label2.setText("Debug messages:");
-		add(label2);
-		label2.setBounds(16,120,108,20);
+		add(textAreaMsgs);
+		textAreaMsgs.setBounds(16,144,476,64);
+		labelDebugMessages.setText("Debug messages:");
+		add(labelDebugMessages);
+		labelDebugMessages.setBounds(16,120,108,20);
+		buttonClose.setLabel("Close");
+		add(buttonClose);
+		buttonClose.setBackground(java.awt.Color.lightGray);
+		buttonClose.setBounds(420,60,60,24);
+		buttonOnClick.setLabel("OnClick");
+		add(buttonOnClick);
+		buttonOnClick.setBackground(java.awt.Color.lightGray);
+		buttonOnClick.setBounds(216,104,60,24);
+		textFieldOnClick.setText("0,0");
+		add(textFieldOnClick);
+		textFieldOnClick.setBounds(276,104,76,24);
 		//}}
 		
 		getParameters();
+		buttonOpen.addActionListener(this);
+		buttonClose.addActionListener(this);
+		buttonPlay.addActionListener(this);
+		buttonPause.addActionListener(this);
+		buttonStop.addActionListener(this);
+		buttonOnClick.addActionListener(this);
 	}
 	
 	//{{DECLARE_CONTROLS
-	java.awt.Label label1 = new java.awt.Label();
-	java.awt.TextField textField1 = new java.awt.TextField();
+	java.awt.Label labelURL = new java.awt.Label();
+	java.awt.TextField textFieldURL = new java.awt.TextField();
 	java.awt.Button buttonOpen = new java.awt.Button();
 	java.awt.Button buttonPlay = new java.awt.Button();
 	java.awt.Button buttonPause = new java.awt.Button();
 	java.awt.Button buttonStop = new java.awt.Button();
-	java.awt.TextArea textArea1 = new java.awt.TextArea();
-	java.awt.Label label2 = new java.awt.Label();
+	java.awt.TextArea textAreaMsgs = new java.awt.TextArea();
+	java.awt.Label labelDebugMessages = new java.awt.Label();
+	java.awt.Button buttonClose = new java.awt.Button();
+	java.awt.Button buttonOnClick = new java.awt.Button();
+	java.awt.TextField textFieldOnClick = new java.awt.TextField();
 	//}}
 	
     // Ovveride Applet.start
@@ -91,17 +111,21 @@ implements CMLMediator, ActionListener
     public void actionPerformed(ActionEvent event){
 		Object object = event.getSource();
 		if (object == buttonOpen)
-			openDocument(textField1.getText());
+			openDocument(textFieldURL.getText());
+		else if (object == buttonClose)
+			closeDocument();
 		else if (object == buttonPlay)
 			playDocument();
 		else if (object == buttonPause)
 			pauseDocument();				
 		else if (object == buttonStop)
 			stopDocument();
+		else if (object == buttonOnClick)
+			onClickDocument(textFieldOnClick.getText());
     }
     
 	private void message(String str) {
-	    textArea1.append(str+"\n");
+	    textAreaMsgs.append(str+"\n");
 	}
 	
 	private void errormessage(String str) {
@@ -157,6 +181,10 @@ implements CMLMediator, ActionListener
         sendcmd("<open src=\"" + src + "\"/>\n");   
    }
    
+   public void closeDocument(){
+        sendcmd("<close/>\n");  
+   }
+   
    public void playDocument(){
         sendcmd("<play/>\n");  
    }
@@ -167,6 +195,10 @@ implements CMLMediator, ActionListener
    
    public void pauseDocument(){
         sendcmd("<pause/>\n");   
+   }
+   
+   public void onClickDocument(String pos){
+        sendcmd("<onClick position=\"" + pos + "\"/>\n");   
    }
    
    
