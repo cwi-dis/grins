@@ -177,12 +177,15 @@ class EnterkeyDialog:
 		else:
 			parent = windowinterface.toplevel._main
 		self.__ok_callback = ok_callback
+		visual = windowinterface.toplevel._visual
 		w = parent.CreateTemplateDialog('license',
 			{'cancelLabelString': 'Cancel',
 			 'okLabelString': 'OK',
 ##			 'resizePolicy': Xmd.RESIZE_NONE,
 			 'noResize': 1,
-			 'dialogStyle': Xmd.DIALOG_FULL_APPLICATION_MODAL})
+			 'dialogStyle': Xmd.DIALOG_FULL_APPLICATION_MODAL,
+			 'visual': visual, 'depth': visual.depth,
+			 'colormap': windowinterface.toplevel._colormap})
 		w.AddCallback('cancelCallback', self.__cancel, None)
 		w.AddCallback('okCallback', self.__ok, None)
 		s = w.CreateForm('form', {})
@@ -190,12 +193,7 @@ class EnterkeyDialog:
 				  {'topAttachment': Xmd.ATTACH_FORM,
 				   'leftAttachment': Xmd.ATTACH_FORM,
 				   'rightAttachment': Xmd.ATTACH_FORM})
-##		l1 = f1.CreateLabel('label1',
-##				    {'topAttachment': Xmd.ATTACH_FORM,
-##				     'leftAttachment': Xmd.ATTACH_FORM,
-##				     'bottomAttachment': Xmd.ATTACH_FORM,
-##				     'labelString': 'Name:'})
-		l1 = f1.CreateManagedWidget('label1', Xm.Label,
+		l1 = f1.CreateLabel('label1',
 				    {'topAttachment': Xmd.ATTACH_FORM,
 				     'leftAttachment': Xmd.ATTACH_FORM,
 				     'bottomAttachment': Xmd.ATTACH_FORM,
@@ -213,12 +211,7 @@ class EnterkeyDialog:
 				   'topWidget': f1,
 				   'leftAttachment': Xmd.ATTACH_FORM,
 				   'rightAttachment': Xmd.ATTACH_FORM})
-##		l2 = f2.CreateLabel('label2',
-##				    {'topAttachment': Xmd.ATTACH_FORM,
-##				     'leftAttachment': Xmd.ATTACH_FORM,
-##				     'bottomAttachment': Xmd.ATTACH_FORM,
-##				     'labelString': 'Organization:'})
-		l2 = f2.CreateManagedWidget('label2', Xm.Label,
+		l2 = f2.CreateLabel('label2',
 				    {'topAttachment': Xmd.ATTACH_FORM,
 				     'leftAttachment': Xmd.ATTACH_FORM,
 				     'bottomAttachment': Xmd.ATTACH_FORM,
@@ -237,12 +230,7 @@ class EnterkeyDialog:
 				   'leftAttachment': Xmd.ATTACH_FORM,
 				   'rightAttachment': Xmd.ATTACH_FORM,
 				   'bottomAttachment': Xmd.ATTACH_FORM})
-##		l3 = f3.CreateLabel('label3',
-##				    {'topAttachment': Xmd.ATTACH_FORM,
-##				     'leftAttachment': Xmd.ATTACH_FORM,
-##				     'bottomAttachment': Xmd.ATTACH_FORM,
-##				     'labelString': 'License key:'})
-		l3 = f3.CreateManagedWidget('label3', Xm.Label,
+		l3 = f3.CreateLabel('label3',
 				    {'topAttachment': Xmd.ATTACH_FORM,
 				     'leftAttachment': Xmd.ATTACH_FORM,
 				     'bottomAttachment': Xmd.ATTACH_FORM,
