@@ -11,6 +11,7 @@ import struct
 import math
 import time
 from AnchorDefs import *
+import CheckInsideArea
 #
 # Stuff needed from other mw_ modules:
 #
@@ -239,8 +240,15 @@ class _DisplayList:
 			if cmd == 'image':
 				xscrolloffset, yscrolloffset = window._scrolloffset()
 				mask, image, srcx, srcy, dstx, dsty, w, h = entry[1:]
-				dstx, dsty = dstx+xscrolloffset, dsty+yscrolloffset
-				dstrect = dstx, dsty, dstx+w, dsty+h
+				dstx0, dsty0 = dstx+xscrolloffset, dsty+yscrolloffset
+				dstx1, dsty1 = dstx+w, dsty+h
+				# XXXX Not really correct as we only cater for square sections.
+				winx0, winy0, winx1, winy1 = window.qdrect()
+				if dstx0 < winx0: dstx0 = winx0
+				if dsty0 < winy0: dsty0 = winy0
+				if dstx1 > winx1: dstx1 = winx1
+				if dsty1 > winy1: dsty1 = winy1
+				dstrect = dstx0, dsty0, dstx1, dsty1
 				r = Qd.NewRgn()
 				Qd.RectRgn(r, dstrect)
 				return r
@@ -297,7 +305,9 @@ class _DisplayList:
 			h = dstrect[3]-dstrect[1]
 			srcrect = srcx, srcy, srcx+w, srcy+h
 			self._setblackwhitecolors()
+			clip = window._mac_getclip()
 			if mask:
+				# XXXX We should also take note of the clip here.
 				Qd.CopyMask(image[0], mask[0],
 					    grafport.portBits,
 					    srcrect, srcrect, dstrect)
@@ -306,7 +316,7 @@ class _DisplayList:
 				      grafport.portBits,
 				      srcrect, dstrect,
 				      QuickDraw.srcCopy+QuickDraw.ditherCopy,
-				      None)
+				      clip)
 			self._restorecolors()
 		elif cmd == 'line':
 			color = entry[1]
