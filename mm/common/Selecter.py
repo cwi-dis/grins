@@ -29,7 +29,7 @@ class Selecter:
 		if not list:
 			return
 		list = self.killconflictingbags(list)
-		if not self.startbaglist(list):
+		if not self.startbaglist(list, None):
 			return
 		self.playing = 1
 		self.updateuibaglist()
@@ -147,8 +147,7 @@ class Selecter:
 	#
 	# startbaglist - Start everything in a bag.
 	#
-	def startbaglist(self, baglist):
-		prevslot = None
+	def startbaglist(self, baglist, prevslot):
 		for slot in baglist:
 			if slot[RS_NODE].GetType() <> 'bag':
 				mini, sctx, bag, parent = slot
@@ -164,6 +163,7 @@ class Selecter:
 					return 0
 				slot = mini, sctx, bag, parent
 			self.runslots.append(slot)
+			prevslot = slot
 		return 1
 		
 	#
@@ -250,10 +250,17 @@ class Selecter:
 			seek_node = choosebagitem(seek_node, 1)
 			if seek_node is None:
 				return 0
+##		print 'BEFORE KILL FOR', seek_node #DBG
+##		self.dumpbaglist() #DBG
 		baglist = self.findbaglist(seek_node)
+##		print 'BAGLIST', baglist #DBG
 		baglist = self.killconflictingbags(baglist)
-		if not self.startbaglist(baglist[1:]):
+##		print 'AFTER KILL FOR', seek_node # DBG
+##		self.dumpbaglist() # DBG
+		if not self.startbaglist(baglist[1:], baglist[0]):
 			return 0
+##		print 'AFTER STARTBAGLIST' #DBG
+##		self.dumpbaglist() # DBG
 		mini, sctx, bag, parent = baglist[0]
 		new_sctx = self.scheduler.play(mini, seek_node, dest_aid, arg)
 		if not new_sctx:
@@ -261,6 +268,8 @@ class Selecter:
 			return 0
 		self.runslots.append(mini, new_sctx, bag, parent)
 		self.updateuibaglist()
+##		print 'AFTER APPEND FOR', seek_node #DBG
+##		self.dumpbaglist() ##DBG
 		return 1
 	#
 	def followcompanchors(self, node, aid):
@@ -278,8 +287,8 @@ class Selecter:
 ## 		print 'bagevent in', sctx, SR.ev2string((event, bag))
 		if event == SR.BAG_START:
 			if self.findslotbybag(bag) is not None:
-				print 'bag_event: Bag already active:', bag
-				self.dumpbaglist()
+##				print 'bag_event: Bag already active:', bag
+##				self.dumpbaglist()
 				return
 			# Find corresponding minidoc
 			slot = self.findslotbysctx(sctx)
