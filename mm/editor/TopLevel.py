@@ -12,6 +12,7 @@ import Timing
 from ViewDialog import ViewDialog
 from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
 from usercmd import *
+import mimetypes
 
 # an empty document
 EMPTY = """
@@ -50,12 +51,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		else:
 			# remote file
 			self.dirname = ''
-		if base[-5:] == '.cmif':
-			self.basename = base[:-5]
-		elif base[-4:] == '.smi':
-			self.basename = base[:-4]
-		elif base[-5:] == '.smil':
-			self.basename = base[:-5]
+		mtype = mimetypes.guess_type(base)[0]
+		if mtype in ('application/smil', 'application/x-grins-cmif'):
+			self.basename = posixpath.splitext(base)[0]
 		else:
 			self.basename = base
 		url = urlunparse((utype, host, path, params, query, None))
@@ -279,12 +277,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		#
 		# Invent HTML file name and SMIL file url, and generate webpage
 		#
-		if filename[-4:] == '.smi':
-			htmlfilename = filename[:-4] + '.html'
-		elif filename[-5:] == '.smil':
-			htmlfilename = filename[:-5] + '.html'
-		else:
-			htmlfile = filename + '.html'
+		htmlfilename = os.path.splitext(filename)[0] + '.html'
 		smilurl = MMurl.pathname2url(filename)
 
 		# Make a back-up of the original file...
@@ -340,9 +333,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			windowinterface.showmessage('Please save your work first')
 			return
 		filename, smilurl, self.w_ftpinfo, self.m_ftpinfo = self.get_upload_info()
-		if filename[-4:] != '.smi' and filename[-5:] != '.smil':
-			windowinterface.showmessage('Your document name must end in .smi or .smil')
-			return
 			
 		missing = ''
 		attr = None
@@ -433,6 +423,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# XXXX This may be wrong, because it uses the "project" filename
 		utype, host, path, params, query, fragment = urlparse(self.filename)
 		dir, filename = posixpath.split(path)
+		filename = posixpath.splitext(filename)[0] + \
+			   mimetypes.guess_extension('application/smil')
 		
 		# URL of the SMIL file as it appears on the net
 		if attrs.has_key('project_smil_url'):
@@ -453,7 +445,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			return
 		self.setwaiting()
 		import SMILTreeWrite, tempfile
-		tmp = tempfile.mktemp('.smil')
+		tmp = tempfile.mktemp(mimetypes.guess_extension('application/smil'))
 		self.__edittmp = tmp
 		SMILTreeWrite.WriteFile(self.root, tmp)
 		self.do_edit(tmp)
@@ -502,12 +494,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		else:
 			# remote file
 			self.dirname = ''
-		if base[-5:] == '.cmif':
-			self.basename = base[:-5]
-		elif base[-4:] == '.smi':
-			self.basename = base[:-4]
-		elif base[-5:] == '.smil':
-			self.basename = base[:-5]
+		mtype = mimetypes.guess_type(base)[0]
+		if mtype in ('application/smil', 'application/x-grins-cmif'):
+			self.basename = posixpath.splitext(base)[0]
 		else:
 			self.basename = base
 		self.window.settitle(MMurl.unquote(self.basename))
@@ -646,10 +635,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		#
 		# Invent HTML file name and SMIL file url, and generate webpage
 		#
-		if filename[-4:] == '.smi':
-			htmlfilename = filename[:-4] + '.html'
-		elif filename[-5:] == '.smil':
-			htmlfilename = filename[:-5] + '.html'
+		htmlfilename = os.path.splitext(filename)[0] + '.html'
 		# XXXX We should generate from the previously saved HTML file
 		oldhtmlfilename = ''
 		try:
@@ -720,7 +706,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def do_read_it(self, filename):
 ##		import time
-		import mimetypes
 ##		print 'parsing', filename, '...'
 ##		t0 = time.time()
 		mtype = mimetypes.guess_type(filename)[0]
