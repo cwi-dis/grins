@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 
-from audio import Error
+import audio
 from format import *
 import string
 
@@ -93,7 +93,7 @@ class dvi2linear(audio_filter):
 			if pos is p:
 				break
 		else:
-			raise Error, 'seeking to position not retrieved with getpos'
+			raise audio.Error, 'seeking to position not retrieved with getpos'
 		self._rdr.setpos(pos)
 		self.__state = s
 
@@ -125,7 +125,7 @@ class linear2dvi(audio_filter):
 			if pos is p:
 				break
 		else:
-			raise Error, 'seeking to position not retrieved with getpos'
+			raise audio.Error, 'seeking to position not retrieved with getpos'
 		self._rdr.setpos(pos)
 		self.__state = s
 
@@ -188,7 +188,7 @@ class swap(audio_filter):
 		elif width == 4:
 			self.__fmt = 'l'
 		else:
-			raise Error, "can't swap this width"
+			raise audio.Error, "can't swap this width"
 
 	def readframes(self, nframes = -1):
 		import array
@@ -232,7 +232,7 @@ class cvrate(audio_filter):
 			if pos is p:
 				break
 		else:
-			raise Error, 'seeking to position not retrieved with getpos'
+			raise audio.Error, 'seeking to position not retrieved with getpos'
 		self._rdr.setpos(pos)
 		self.__state = s
 
@@ -479,13 +479,13 @@ def _convert(rdr, dstfmts):
 	for dstfmt in dstfmts:
 		try:
 			cv = _find_converter(srcfmt, dstfmt)
-		except Error:
+		except audio.Error:
 			pass
 		else:
 			if cv:
 				converters.append(cv)
 	if not converters:
-		raise Error, 'no conversion possible'
+		raise audio.Error, 'no conversion possible'
 	best = min(converters)
 ## 	for (fmt, func) in best:
 ## 		rdr = func(rdr, fmt)
@@ -538,7 +538,7 @@ def _find_converter(srcfmt, dstfmt):
 		_generated[srcfmt] = _enumerate_converters(srcfmt)
 
 	if not _generated[srcfmt].has_key(dstfmt):
-		raise Error, 'no conversion from %s to %s possible' % \
+		raise audio.Error, 'no conversion from %s to %s possible' % \
 			     (srcfmt.getname(), dstfmt.getname())
 
 	cf = _generated[srcfmt][dstfmt]
