@@ -26,10 +26,10 @@ class Separator:
 		self.width = width
 
 class Pulldown:
-	def __init__(self):
+	def __init__(self, name, width=None):
 		self.type = 'pulldown'
-		self.cmdid = None
-		self.arg = None
+		self.name = name
+		self.width = width
 
 GENERAL_TEMPLATE = (
 	('General', wndusercmd.TOOLBAR_GENERAL, grinsRC.IDR_GRINSED, (
@@ -47,7 +47,9 @@ GENERAL_TEMPLATE = (
 		Button(usercmd.CANVAS_ZOOM_OUT, 13),
 		Separator(12),
 		Button(usercmd.HELP, 9),
-		Pulldown(),
+		Separator(12),
+		Pulldown('Bitrate'),
+		Pulldown('Language'),
 		)
 	)
 )
