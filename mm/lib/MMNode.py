@@ -688,7 +688,11 @@ class MMSyncArc:
 			dst = dst + '.begin'
 		else:
 			dst = dst + '.end'
-		return '<MMSyncArc instance, from %s to %s>' % (src, dst)
+		if self.timestamp is not None:
+			ts = ', timestamp = %g' % self.timestamp
+		else:
+			ts = ''
+		return '<MMSyncArc instance, from %s to %s%s>' % (src, dst, ts)
 
 	def refnode(self):
 		node = self.dstnode
@@ -730,6 +734,8 @@ class MMSyncArc:
 		return 0
 
 	def resolvedtime(self, timefunc):
+		if self.timestamp is not None:
+			return self.timestamp
 		if self.wallclock is not None:
 			import time, calendar
 			t0 = time.time()
@@ -772,8 +778,6 @@ class MMSyncArc:
 		refnode = self.refnode()
 		if self.event == 'begin':
 			return refnode.start_time + self.delay
-##		if self.event == 'end':
-##			return refnode.end_time + self.delay
 		if self.event is not None:
 			return refnode.happenings[('event', self.event)] + self.delay
 		if self.marker is not None:
@@ -783,7 +787,6 @@ class MMSyncArc:
 			# self is previous child in seq, so
 			# event is end
 			event = 'end'
-##			return refnode.end_time + self.delay
 		else:
 			# self is first child of seq, or child
 			# of par/excl, so event is begin
@@ -801,6 +804,7 @@ class MMNode_body:
 		self.parent = parent
 		self.sched_children = []
 		self.arcs = []
+		self.durarcs = []
 		if debug: print 'MMNode_body.__init__', `self`
 
 	def __repr__(self):
@@ -898,6 +902,7 @@ class MMNode:
 		self.sched_children = [] # arcs that depend on us
 		self.scheduled_children = 0
 		self.arcs = []
+		self.durarcs = []
 		self.reset()
 		self.fullduration = None
 
@@ -919,7 +924,7 @@ class MMNode:
 		self.happenings = {}
 		self.playing = MMStates.IDLE
 		self.sctx = None
-		self.start_time = self.end_time = None
+		self.start_time = None
 
 	def resetall(self, sched):
 		self.reset()
@@ -942,6 +947,7 @@ class MMNode:
 		self.events = {}
 		self.scheduled_children = 0
 		self.arcs = []
+		self.durarcs = []
 
 	def startplay(self, sctx):
 		self.playing = MMStates.PLAYING
@@ -979,6 +985,8 @@ class MMNode:
 	def add_arc(self, arc, body = None):
 		if body is None:
 			body = self
+		if arc in body.sched_children:
+			return
 		if debug: print 'add_arc', `body`, `arc`
 		body.sched_children.append(arc)
 		if self.playing != MMStates.IDLE and arc.delay is not None:
@@ -1874,7 +1882,7 @@ class MMNode:
 		# or, for looping nodes, the first or subsequent times through
 		# the loop.
 		#
-		loopcount = self.GetAttrDef('loop', None)
+		loopcount = self.attrdict.get('loop', None)
 		loopdur = MMAttrdefs.getattr(self, 'repeatdur')
 		if loopdur != 0 and loopcount is None:
 			# no loop attr and specified repeatdur attr, so loop indefinitely
@@ -1893,16 +1901,18 @@ class MMNode:
 		# If the node has a duration we add a syncarc from head
 		# to tail. This will terminate the node when needed.
 		#
-		endlist = MMAttrdefs.getattr(self, 'endlist')
-		for arc in endlist:
-			refnode = self.__find_refnode(arc)
-			refnode.add_arc(arc)
-		if loopdur != 0:
-			if loopdur < 0:
-				loopdur = None
-			arc = MMSyncArc(self, 'end', srcnode=self, event='begin', delay=loopdur)
-			self.arcs.append((self, arc))
-			self.add_arc(arc)
+##		endlist = MMAttrdefs.getattr(self, 'endlist')
+##		for arc in endlist:
+##			refnode = self.__find_refnode(arc)
+##			refnode.add_arc(arc)
+##		if self.fullduration is not None:
+##			if self.fullduration < 0:
+##				delay = None
+##			else:
+##				delay = self.fullduration
+##			arc = MMSyncArc(self, 'end', srcnode=self, event='begin', delay=delay)
+##			self.arcs.append((self, arc))
+##			self.add_arc(arc)
 
 		fill = self.attrdict.get('fill')
 		if fill is None:
@@ -2123,6 +2133,13 @@ class MMNode:
 			#print 'deleting', `arc`
 			node.sched_children.remove(arc)
 		body.arcs = []
+		for arc in body.durarcs:
+			refnode = body.__find_refnode(arc)
+			refnode.sched_children.remove(arc)
+			if arc.qid is not None:
+				sched.cancel(arc.qid)
+				arc.qid = None
+		body.durarcs = []
 		for child in self.wtd_children:
 			beginlist = MMAttrdefs.getattr(child, 'beginlist')
 			if beginlist:
@@ -2181,11 +2198,11 @@ class MMNode:
 
 		srcnode = self_body
 		event = 'begin'
-		if self.type in ('excl', 'bag'):
+		if self.type == 'excl':
 			defbegin = None
-		else:
-			defbegin = 0.0
-		if self.type == 'bag':
+		elif self.type == 'bag':
+			# defbegin will be set on each iteration
+			# here we find out to what
 			indexname = MMAttrdefs.getattr(self, 'bag_index')
 			bagindex = None
 			for child in self.GetSchedChildren():
@@ -2193,6 +2210,8 @@ class MMNode:
 				if chname and chname == indexname:
 					bagindex = child
 					break
+		else:
+			defbegin = 0.0
 
 		duration = self.GetAttrDef('duration', None)
 		if duration is not None:
@@ -2201,6 +2220,7 @@ class MMNode:
 			else:
 				delay = duration
 			arc = MMSyncArc(self_body, 'end', srcnode=self_body, event='begin', delay=delay)
+			self_body.durarcs.append(arc)
 			self_body.arcs.append((self_body, arc))
 			self_body.add_arc(arc)
 
@@ -2236,6 +2256,16 @@ class MMNode:
 			for arc in MMAttrdefs.getattr(child, 'endlist'):
 				refnode = child.__find_refnode(arc)
 				refnode.add_arc(arc)
+			child.calcfullduration()
+			if child.fullduration is not None:
+				if child.fullduration < 0:
+					delay = None
+				else:
+					delay = child.fullduration
+				arc = MMSyncArc(child, 'end', srcnode=child, event='begin', delay=delay)
+				child.durarcs.append(arc)
+				self_body.arcs.append((child, arc))
+				child.add_arc(arc)
 			if self.type == 'seq':
 				srcnode = child
 				event = 'end'
@@ -2355,6 +2385,8 @@ class MMNode:
 		return srdict
 
 	def calcfullduration(self):
+		if self.fullduration is not None:
+			return
 		duration = self.attrdict.get('duration')
 		repeatDur = self.attrdict.get('repeatDur')
 		repeatCount = self.attrdict.get('loop')
@@ -2374,13 +2406,13 @@ class MMNode:
 			else:
 				# XXX should find duration of interior node
 				pass
-		if repeatDur is not None and duration is None:
-			duration = -1
 		if repeatDur is not None and \
 		   repeatCount is not None:
-			if duration > 0 and repeatCount > 0 and repeatDur >= 0:
+			if duration is not None and duration > 0 and \
+			   repeatCount > 0 and repeatDur >= 0:
 				duration = min(repeatCount * duration, repeatDur)
-			elif duration > 0 and repeatCount > 0 and repeatDur < 0:
+			elif duration is not None and duration > 0 and \
+			     repeatCount > 0 and repeatDur < 0:
 				duration = repeatCount * duration
 			# else repeatCount=indefinite or to be ignored
 			elif repeatDur >= 0:
@@ -2390,15 +2422,12 @@ class MMNode:
 		elif repeatDur is not None: # repeatCount is None
 			duration = repeatDur
 		elif repeatCount is not None: # repeatDur is None
-			if duration > 0:
+			if duration is not None and duration > 0:
 				if repeatCount > 0:
 					duration = repeatCount * duration
 				else:
 					duration = -1
-		if duration >= 0:
-			self.fullduration = duration
-		else:
-			self.fullduration = None
+		self.fullduration = duration
 
 	def _is_realpix_with_captions(self):
 		if self.type == 'ext' and self.GetChannelType() == 'RealPix':

@@ -296,6 +296,7 @@ class SchedulerContext:
 ##			else:
 ##				node.parent.scheduled_children = node.parent.scheduled_children - 1
 		else:
+			if debugevents: print 'scheduled_children-1',`node`
 			node.scheduled_children = node.scheduled_children - 1
 		if debugevents: print 'trigger', `arc`, timestamp
 		if not arc.isstart:
@@ -317,8 +318,8 @@ class SchedulerContext:
 			if debugevents: print "node won't restart"
 			return
 		endlist = MMAttrdefs.getattr(node, 'endlist')
+		equal = 0
 		if endlist:
-			equal = 0
 			for a in endlist:
 				if not a.isresolved():
 					# any unresolved time is after any resolved time
@@ -327,12 +328,9 @@ class SchedulerContext:
 					break
 				elif a.resolvedtime(self.parent.timefunc) == arc.resolvedtime(self.parent.timefunc):
 					equal = 1
+					break
 			else:
 				if debugevents: print 'not allowed to start'
-				if equal:
-					node.start_time = timestamp
-					self.parent.sched_arcs(self, node, 'begin', timestamp=timestamp)
-					self.parent.sched_arcs(self, node, 'end', timestamp=timestamp)
 				srdict = pnode.gensr_child(node, runchild = 0)
 				self.srdict.update(srdict)
 				self.parent.event(self, (SR.SCHED_DONE, node), timestamp)
@@ -352,7 +350,13 @@ class SchedulerContext:
 					self.parent.do_terminate(self, c, timestamp)
 		# we must start the node, but how?
 		if debugevents: print 'starting node',`node`; self.dump()
-		srdict = pnode.gensr_child(node)
+		if node.fullduration is None:
+			node.calcfullduration()
+		if equal or (node.fullduration == 0 and MMAttrdefs.getattr(node, 'fill') == 'remove'):
+			runchild = 0
+		else:
+			runchild = 1
+		srdict = pnode.gensr_child(node, runchild)
 		self.srdict.update(srdict)
 		if debugevents: self.dump()
 		node.start_time = arc.resolvedtime(self.parent.timefunc)
@@ -362,7 +366,12 @@ class SchedulerContext:
 			node.realpix_body.start_time = node.start_time
 		if node.caption_body:
 			node.caption_body.start_time = node.start_time
-		self.parent.event(self, (SR.SCHED, node), timestamp)
+		if runchild:
+			self.parent.event(self, (SR.SCHED, node), timestamp)
+		else:
+##			self.parent.sched_arcs(self, node, 'begin', timestamp=timestamp)
+##			self.parent.sched_arcs(self, node, 'end', timestamp=timestamp)
+			self.parent.event(self, (SR.SCHED_DONE, node), timestamp)
 
 	def queuesrlist(self, srlist, timestamp = None):
 		for sr in srlist:
@@ -719,43 +728,74 @@ class Scheduler(scheduler):
 		if marker is not None:
 			node.marker(timestamp, marker)
 		for arc in node.sched_children:
-			if (arc.event == event and
-			    arc.marker == marker and
-			    arc.delay is not None) or \
-			   (arc.event is None and
-			    arc.marker is None and
-			    marker is None and
-			    arc.delay is not None and
-			    ((arc.dstnode in node.GetSchedChildren() and event == 'begin') or
-			     (arc.dstnode not in node.GetSchedChildren() and event == 'end'))):
-				if arc.wallclock is not None:
-					timestamp = arc.resolvedtime(self.timefunc)-arc.delay
-				if arc.isstart:
-					dev = 'begin'
-					arc.dstnode.start_time = timestamp+arc.delay
-				else:
-					dev = 'end'
-					arc.dstnode.end_time = timestamp+arc.delay
-				if arc.timestamp is not None and arc.timestamp != timestamp+arc.delay:
-					if arc.qid is not None:
-						if debugevents: print 'sched_arcs: cancel',`arc`
-						self.cancel(arc.qid)
-						arc.qid = None
-##					arc.timestamp = None
-				if arc.timestamp != timestamp+arc.delay and arc.qid is None:
-					if arc.isstart:
-						if arc.dstnode.parent:
-							srdict = arc.dstnode.parent.gensr_child(arc.dstnode, runchild = 0)
+			if (arc.event != event or
+			    arc.marker != marker or
+			    arc.delay is None) and \
+			   (arc.event is not None or
+			    arc.marker is not None or
+			    marker is not None or
+			    arc.delay is None or
+			    ((event != 'begin' or arc.dstnode not in node.GetSchedChildren()) and
+			     (event != 'end' or arc.dstnode in node.GetSchedChildren()))):
+				continue
+			if arc.wallclock is not None:
+				timestamp = arc.resolvedtime(self.timefunc)-arc.delay
+			if arc.isstart:
+				dev = 'begin'
+##				arc.dstnode.start_time = timestamp+arc.delay
+				list = MMAttrdefs.getattr(arc.dstnode, 'beginlist')
+				list = []
+			else:
+				dev = 'end'
+				list = MMAttrdefs.getattr(arc.dstnode, 'endlist')
+				list = list + arc.dstnode.durarcs
+			if arc.timestamp is not None and arc.timestamp != timestamp+arc.delay:
+				if arc.qid is not None:
+					if debugevents: print 'sched_arcs: cancel',`arc`
+					self.cancel(arc.qid)
+					arc.qid = None
+##				arc.timestamp = None
+			skip = 0
+			for a in list:
+				if a.qid is None:
+					continue
+				if a.timestamp > timestamp + arc.delay:
+					if debugevents: print 'sched_arcs: cancel',`a`
+					self.cancel(a.qid)
+					a.qid = None
+					if a.isstart:
+						if a.dstnode.parent:
+							srdict = a.dstnode.parent.gensr_child(a.dstnode, runchild = 0)
 							sctx.srdict.update(srdict)
-##							arc.dstnode.parent.scheduled_children = arc.dstnode.parent.scheduled_children + 1
+	##						a.dstnode.parent.scheduled_children = a.dstnode.parent.scheduled_children - 1
 						else:
 							# root node
-							sctx.scheduled_children = sctx.scheduled_children + 1
+							sctx.scheduled_children = sctx.scheduled_children - 1
 					else:
-						arc.dstnode.scheduled_children = arc.dstnode.scheduled_children + 1
-					arc.timestamp = timestamp+arc.delay
-					arc.qid = self.enterabs(timestamp+arc.delay, 0, sctx.trigger, (arc,))
-				self.sched_arcs(sctx, arc.dstnode, dev, timestamp=timestamp+arc.delay)
+						if debugevents: print 'scheduled_children-1',`a.dstnode`,`node`,event
+						a.dstnode.scheduled_children = a.dstnode.scheduled_children - 1
+				else:
+					# we're too late
+					if debugevents: print 'sched_arcs: don\'t schedule',`arc`,arc.delay+timestamp,`a`,a.timestamp
+					skip = 1
+					break
+			if skip:
+				continue
+			if arc.timestamp != timestamp+arc.delay and arc.qid is None:
+				if arc.isstart:
+					if arc.dstnode.parent:
+						srdict = arc.dstnode.parent.gensr_child(arc.dstnode, runchild = 0)
+						sctx.srdict.update(srdict)
+##						arc.dstnode.parent.scheduled_children = arc.dstnode.parent.scheduled_children + 1
+					else:
+						# root node
+						sctx.scheduled_children = sctx.scheduled_children + 1
+				else:
+					if debugevents: print 'scheduled_children+1',`arc.dstnode`,`node`,event
+					arc.dstnode.scheduled_children = arc.dstnode.scheduled_children + 1
+				arc.timestamp = timestamp+arc.delay
+				arc.qid = self.enterabs(arc.timestamp, 0, sctx.trigger, (arc,))
+			self.sched_arcs(sctx, arc.dstnode, dev, timestamp=timestamp+arc.delay)
 
 	def runone(self, (sctx, todo, dummy), timestamp = None):
 		if not sctx.active:
@@ -802,12 +842,12 @@ class Scheduler(scheduler):
 				arg.freeze_play()
 				for ch in arg.GetSchedChildren():
 					ch.reset()
-				if arg.fullduration is None:
+				if arg.fullduration is None or arg.fullduration < 0:
 					self.sched_arcs(sctx, arg, 'end', timestamp=timestamp)
 			elif action == SR.SCHED_START:
 				arg.startplay(sctx)
 				self.sched_arcs(sctx, arg, 'begin', timestamp=timestamp)
-				if arg.fullduration is not None:
+				if arg.fullduration is not None and arg.fullduration >= 0:
 					self.sched_arcs(sctx, arg, 'end', timestamp=timestamp+arg.fullduration)
 			elif action == SR.SCHED_STOP:
 				if debugevents: print 'cleanup',`arg`
@@ -848,7 +888,7 @@ class Scheduler(scheduler):
 		node.set_armedmode(ARM_PLAYING)
 		node.startplay(sctx)
 		self.sched_arcs(sctx, node, 'begin', timestamp = timestamp)
-		if node.fullduration is not None:
+		if node.fullduration is not None and node.fullduration >= 0:
 			self.sched_arcs(sctx, node, 'end', timestamp = timestamp+node.fullduration)
 		if debugevents: print 'do_play',`node`,node.start_time, timestamp
 		chan.play(node)
