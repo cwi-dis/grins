@@ -470,11 +470,10 @@ class _CmifStructView(_CmifView):
 	# Response to left button down
 	def onLButtonDown(self, params):
 		_CmifView.onLButtonDown(self, params)
-		msg=win32mu.Win32Msg(params)
-		self.onMouseEvent(msg.pos(),Mouse0Press)
 		if self._enableNodeDragDrop:
+			msgpos=win32mu.Win32Msg(params).pos()
 			self._parent.SendMessage(win32con.WM_COMMAND,usercmdui.COPY_UI.id)
-			self.checkDragDrop(msg.pos())
+			self.checkDragDrop(msgpos)
 		self._button_down=1
 	
 	def checkDragDrop(self,pos):
