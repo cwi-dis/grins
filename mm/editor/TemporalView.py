@@ -349,4 +349,12 @@ class TemporalView(TemporalViewDialog):
 
 	def pasteundercall(self):
 		# This needs an index to say which element is going to be pasted here.
-		print "TODO: paste under."
+		# For the meanwhile, paste at the end.
+		if len(self.selected_nodes) is not 1:
+			windowinterface.beep()
+			return
+		elif isinstance(self.selected_nodes[0], TimeWidget) \
+		     and isinstance(self.selected_nodes[0].node, EditableObjects.EditableMMNode):
+			self.selected_nodes[0].node.pasteundercall(-1) # paste at the end ("-1")
+		else:
+			print "DEBUG: selected object is a ", self.selected_nodes[0]

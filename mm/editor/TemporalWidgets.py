@@ -686,6 +686,11 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 			windowinterface.beep()
 
 
+
+######################################################################
+	# The node representations
+######################################################################
+
 class TimeWidget(MMNodeWidget, GeoDisplayWidget):
 	# Abstract base class for any widget that has a start and end time.
 	# Instances of superclasses must be drawn on a time canvas (coords are 
