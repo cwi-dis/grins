@@ -375,6 +375,7 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 			self.middlehide()
 			self.linkfocus = None
 			return
+		hlinks = self.context.hyperlinks
 		lfocus = self.left.anchors[slf]
 		if self.right.hidden:
 			rfocus = None
@@ -385,8 +386,7 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 		else:
 			fvalue = self.links[self.linkfocus]
 		self.linkfocus = None
-		self.links = self.context.hyperlinks.findalllinks(lfocus,
-								  rfocus)
+		self.links = hlinks.findalllinks(lfocus, rfocus)
 		lines = []
 		for i in self.links:
 			line = typestr[i[TYPE]] + ' ' + dirstr[i[DIR]]
@@ -421,12 +421,16 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 		lanchor = self.findanchor(lfocus)
 		ranchor = self.findanchor(rfocus)
 		if lanchor is None or ranchor is None or \
+		   lanchor == ranchor or \
 		   ((lanchor[A_TYPE] not in SourceAnchors or
+		     hlinks.findsrclinks(lfocus) or
 		     ranchor[A_TYPE] not in DestinationAnchors) and \
 		    (lanchor[A_TYPE] not in DestinationAnchors or
-		     ranchor[A_TYPE] not in SourceAnchors)):
+		     ranchor[A_TYPE] not in SourceAnchors or
+		     hlinks.findsrclinks(rfocus))):
 			# can only add links between a source and a
-			# destionation anchor
+			# destionation anchor, and only if the source
+			# anchor is not already used as a link source
 			self.addsetsensitive(0)
 
 	# Reload/redisplay all data
@@ -458,9 +462,10 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 			if a1 is None or a2 is None:
 				print 'LinkEdit: cannot find anchors!'
 				return
-			if a1[A_TYPE] not in SourceAnchors:
+			hlinks = self.context.hyperlinks
+			if a1[A_TYPE] not in SourceAnchors or hlinks.findsrclinks(n1):
 				# left node can only be destination
-				if a2[A_TYPE] not in SourceAnchors:
+				if a2[A_TYPE] not in SourceAnchors or hlinks.findsrclinks(n2):
 					print 'LinkEdit: 2 destination achors!'
 					return
 				dir = DIR_2TO1
@@ -662,20 +667,34 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 class LinkEditEditor(LinkEditorDialog):
 	def __init__(self, parent, title, editlink, isnew):
 		self.parent = parent
-		self.editlink = editlink
+		a1, a2, dir, type = self.editlink = editlink
 		self.changed = isnew
 		self.oksetsensitive(self.changed)
-		ltype = parent.findanchor(editlink[ANCHOR1])[A_TYPE]
-		rtype = parent.findanchor(editlink[ANCHOR2])[A_TYPE]
+		ltype = parent.findanchor(a1)[A_TYPE]
+		rtype = parent.findanchor(a2)[A_TYPE]
+		hlinks = parent.context.hyperlinks
+		llinks = rlinks = []
+		if ltype in SourceAnchors:
+			llinks = hlinks.findsrclinks(a1)
+			if not isnew and dir in (DIR_1TO2, DIR_2WAY) and llinks:
+				del llinks[0]
+		if rtype in SourceAnchors:
+			rlinks = hlinks.findsrclinks(a2)
+			if not isnew and dir in (DIR_2TO1, DIR_2WAY) and rlinks:
+				del rlinks[0]
 		LinkEditorDialog.__init__(self, title, dirstr, typestr,
-					  editlink[DIR], editlink[TYPE],
+					  dir, type,
 					  [ltype in SourceAnchors and
+					   not llinks and
 					   rtype in DestinationAnchors,
 					   ltype in DestinationAnchors and
-					   rtype in SourceAnchors,
+					   rtype in SourceAnchors and
+					   not rlinks,
 					   ltype in SourceAnchors and
+					   not llinks and
 					   ltype in DestinationAnchors and
 					   rtype in SourceAnchors and
+					   not rlinks and
 					   rtype in DestinationAnchors])
 
 	def run(self):
