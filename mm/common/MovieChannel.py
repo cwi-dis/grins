@@ -100,6 +100,7 @@ class MovieWindow(ChannelWindow):
 			#self.erase()
 			self.vfile.initcolormap()
 			self.rgbmode = (self.vfile.format == 'rgb')
+			self.centerimage()
 	#
 	def centerimage(self):
 		w, h = self.vfile.width, self.vfile.height
