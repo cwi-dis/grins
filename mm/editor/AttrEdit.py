@@ -1505,7 +1505,13 @@ class AttrEditor(AttrEditorDialog):
 	def _is_changed(self):
 		# Return true if any property value has been edited.
 		for b in self.attrlist:
+			# Special case for empty values:
+			if not b.getvalue() and not b.getcurrent():
+				continue
 			if b.getvalue() != b.getcurrent():
+				print 'DBG changed', b
+				print 'VALUE', b.getvalue()
+				print 'CURRENT', b.getcurrent()
 				return 1
 		return 0
 				
