@@ -13,6 +13,8 @@ from HierarchyViewDialog import HierarchyViewDialog
 from usercmd import *
 import os
 import urlparse, MMurl
+import Timing
+from math import ceil
 
 
 import settings
@@ -64,6 +66,7 @@ LEAFBOX = 2
 # Fonts used below
 f_title = windowinterface.findfont('Helvetica', 10)
 f_channel = windowinterface.findfont('Helvetica', 8)
+f_timescale = f_channel
 
 ##class oldsizes:
 ##	SIZEUNIT = windowinterface.UNIT_MM # units for the following
@@ -92,6 +95,7 @@ class sizes_time:
 	HEDGSIZE = 0 #3						# size of edges
 	VEDGSIZE = 3 #3						# size of edges
 	FLATBOX = 1
+	TIMEBARHEIGHT = f_timescale.strsizePXL('X')[1]*3
 
 class sizes_notime:
 	SIZEUNIT = windowinterface.UNIT_PXL # units for the following
@@ -106,6 +110,7 @@ class sizes_notime:
 	HEDGSIZE = 3 #3						# size of edges
 	VEDGSIZE = 3 #3						# size of edges
 	FLATBOX = 0
+	TIMEBARHEIGHT = 0
 
 ##class othersizes:
 ##	SIZEUNIT = windowinterface.UNIT_MM # units for the following
@@ -799,19 +804,19 @@ class HierarchyView(HierarchyViewDialog):
 	def makeboxes(self, list, node, box):
 		t = node.GetType()
 		left, top, right, bottom = box
+		if self.timescale:
+			cw, ch = self.canvassize
+			w, h, t0 = node.boxsize
+			if DISPLAY_VERTICAL:
+				top = t0 / ch
+				bottom = top + h / ch
+			else:
+				left = t0 / cw
+				right = left + w / cw
+##		print 'NODE', node, box, node.boxsize
 		if not hasattr(node, 'expanded') or \
 		   not node.GetChildren():
-			if self.timescale:
-				cw, ch = self.canvassize
-				w, h, b = node.boxsize
-				print "makebox", node, self.canvassize, node.boxsize #DBG
-				if DISPLAY_VERTICAL:
-					top = top + b / ch
-					bottom = top + h / ch
-				else:
-					left = left + b / cw
-					right = left + w / cw
-			elif hierarchy_minimum_sizes:
+			if hierarchy_minimum_sizes:
 				right = left + self.horsize
 ##				if node.__class__ is SlideMMNode:
 ##					right = right + self.horsize
@@ -888,9 +893,15 @@ class HierarchyView(HierarchyViewDialog):
 		self.versize = float(self.sizes.MINSIZE + self.sizes.LABSIZE) / rh
 		self.arrsize = float(self.sizes.ARRSIZE) / rw
 		list = []
-		self.makeboxes(list, self.root, (0, 0, 1, 1))
+		if self.timescale:
+			timebarheight = float(self.sizes.TIMEBARHEIGHT)/rh
+			self.timescalebox = (0, 0, 1, 0.666*timebarheight)
+			databox = (0, timebarheight, 1, 1)
+		else:
+			self.timescalebox = None
+			databox = (0, 0, 1, 1)
+		self.makeboxes(list, self.root, databox)
 		for item in list:
-			print 'BOX', item #DBG
 			obj = Object(self, item)
 			self.objects.append(obj)
 			if item[0] is self.focusnode:
@@ -922,7 +933,10 @@ class HierarchyView(HierarchyViewDialog):
 		self.cleanup()
 		if root_expanded:
 			expandnode(self.root) # root always expanded
-		width, height, begin = self.sizeboxes(self.root, self.timescale)
+		if self.timescale:
+			Timing.needtimes(self.root)
+			self.timescalefactor = settings.get('time_scale_factor')
+		width, height, begin = self.sizeboxes(self.root)
 		if DISPLAY_VERTICAL:
 			height = height + begin
 		else:
@@ -946,11 +960,76 @@ class HierarchyView(HierarchyViewDialog):
 		dummy = displist.usefont(f_title)
 		for obj in self.objects:
 			obj.draw()
+		if self.timescale:
+			self.drawtimescale()
 		displist.render()
 		if self.displist:
 			self.displist.close()
 		self.displist = displist
 		self.new_displist = None
+		
+	def drawtimescale(self):
+		displist = self.new_displist
+		t0 = self.root.t0
+		t1 = self.root.t1
+		l, t, r, b = self.timescalebox
+		m = (t+b)/2
+		displist.usefont(f_timescale)
+		linecolor = TEXTCOLOR
+		f_width = displist.strsize('x')[0]
+		# Draw rectangle around boxes
+		hmargin = f_width / 9
+		vmargin = displist.fontheight() / 4
+		displist.drawline(linecolor, [(l, m), (r, m)])
+		# Compute the number of ticks. Don't put them too close
+		# together.
+		dt = t1 - t0
+		tickstep = 1
+		while 1:
+			n = int(ceil(dt/tickstep))
+			if n*f_width < (r-l):
+				break
+			tickstep = tickstep * 10
+		# Compute distance between numeric indicators
+		div = 1
+		i = 0
+		maxlabelsize = len(str(ceil(dt)))
+		while (n/div) * (maxlabelsize+0.5) * f_width >= (r-l):
+			if i%3 == 0:
+				div = div*2
+			elif i%3 == 1:
+				div = div/2*5
+			else:
+				div = div/5*10
+			i = i+1
+		# Draw division boxes and numeric indicators
+		# This gives MemoryError: for i in range(n):
+		# This code should be looked into.
+		i = -1
+		displist.fgcolor(TEXTCOLOR)
+		while i < n:
+			i = i + 1
+			#
+			it0 = t0 + i*tickstep
+			pos = l + (r-l)*float(i)/n
+			if i%div == 0:
+				displist.drawline(linecolor, [(pos, m), (pos, b)])
+			else:
+				displist.drawline(linecolor, [(pos, m), (pos, (m+b)/2)])
+			if i%div <> 0:
+				continue
+			if tickstep < 1:
+				ticklabel = `i*tickstep`
+			else:
+				ts_value = int(i*tickstep)
+				ticklabel = '%3d:%02.2d'%(ts_value/60, ts_value%60)
+			if 0 < i < n-1:
+				width = displist.strsize(ticklabel)[0]
+				displist.centerstring(pos-width/2, t, pos+width/2, m, ticklabel)
+		# And show total duration
+		ticklabel = '%ds '%int(t1)
+		width = displist.strsize(ticklabel)[0]
+		displist.centerstring(r-width, t, r, m, ticklabel)
 
 	# Menu handling functions
 
@@ -1065,30 +1144,30 @@ class HierarchyView(HierarchyViewDialog):
 
 
 	# Recursive procedure to calculate geometry of boxes.
-	def sizeboxes(self, node, structure_duration):
+	def sizeboxes(self, node):
 		# Helper for first step in size recomputation: compute minimum sizes of
 		# all node boxes.
 		ntype = node.GetType()
 		minsize = self.sizes.MINSIZE
-		if structure_duration:
-			begin = MMAttrdefs.getattr(node, 'begin') * settings.get('time_scale_factor')
-		else:
-			begin = 0
-		if structure_duration and ntype in MMNode.leaftypes:
-			import Duration, math
-			dur = Duration.get(node) * settings.get('time_scale_factor')
+		if self.timescale:
+			t0 = node.t0
+			t1 = node.t1
+			begin = t0 * self.timescalefactor
+			dur = (t1 - t0) * self.timescalefactor
 			if dur < 0:
 				dur = 0
-			elif dur > 1000:
-				dur = 1000
 			minsize = dur
+		else:
+			begin = 0
 		if DISPLAY_VERTICAL:
 			minwidth = self.sizes.MINSIZE
 			minheight = minsize
 		else:
 			minwidth = minsize
 			minheight = self.sizes.MINSIZE
-		if structure_name_size:
+		if self.timescale:
+			pass # Don't mess with the size, it is important
+		elif structure_name_size:
 			name = MMAttrdefs.getattr(node, 'name')
 			if self.sizes.SIZEUNIT == windowinterface.UNIT_MM:
 				namewidth = (name and f_title.strsize(name)[0]) or 0
@@ -1108,7 +1187,7 @@ class HierarchyView(HierarchyViewDialog):
 		width = height = 0
 		horizontal = (ntype in ('par', 'alt')) == DISPLAY_VERTICAL
 		for child in children:
-			w, h, b = self.sizeboxes(child, structure_duration)
+			w, h, b = self.sizeboxes(child)
 			if horizontal:
 				# children laid out horizontally
 				if h > height:
@@ -1127,7 +1206,12 @@ class HierarchyView(HierarchyViewDialog):
 			width = width - self.sizes.GAPSIZE
 		else:
 			height = height - self.sizes.GAPSIZE
-		width = max(width + 2 * self.sizes.HEDGSIZE, minwidth)
+		# XXXX This code does not work for a vertical timeline
+		if self.timescale:
+			# Again, for timescale mode we happily ignore all these comptations
+			width = minwidth
+		else:
+			width = max(width + 2 * self.sizes.HEDGSIZE, minwidth)
 		height = height + self.sizes.VEDGSIZE + self.sizes.LABSIZE
 		node.boxsize = width, height, begin
 		return node.boxsize
@@ -1325,32 +1409,34 @@ class Object:
 		    node.GetChannelType() == 'RealPix'):
 			title_left = title_left + awidth
 			aheight = titleheight - 2*vmargin
-			node.abox = l+hmargin, t+vmargin, l+hmargin+awidth, t+vmargin+aheight
-			if hasattr(node, 'expanded'):
-				# expanded node, point down
-				expcolor = EXPCOLOR
-##				if :
-##					expcolor = BGCOLOR
-				d.drawfpolygon(expcolor,
-					[(l+hmargin, t+vmargin),
-					 (l+hmargin+awidth,t+vmargin),
-					 (l+hmargin+awidth/2,t+vmargin+aheight)])
-				d.drawline(ECBORDERCOLOR, [
-					(l+hmargin, t+vmargin),
-					(l+hmargin+awidth/2,t+vmargin+aheight),
-					(l+hmargin+awidth,t+vmargin),
-					])
+			# Check whether it fits
+			if l+hmargin+awidth <= r and t+vmargin+aheight <= b:
+				node.abox = l+hmargin, t+vmargin, l+hmargin+awidth, t+vmargin+aheight
+				if hasattr(node, 'expanded'):
+					# expanded node, point down
+					expcolor = EXPCOLOR
+					d.drawfpolygon(expcolor,
+						[(l+hmargin, t+vmargin),
+						 (l+hmargin+awidth,t+vmargin),
+						 (l+hmargin+awidth/2,t+vmargin+aheight)])
+					d.drawline(ECBORDERCOLOR, [
+						(l+hmargin, t+vmargin),
+						(l+hmargin+awidth/2,t+vmargin+aheight),
+						(l+hmargin+awidth,t+vmargin),
+						])
+				else:
+					# collapsed node, point right
+					d.drawfpolygon(COLCOLOR,
+						[(l+hmargin,t+vmargin),
+						 (l+hmargin,t+vmargin+aheight),
+						 (l+hmargin+awidth,t+vmargin+aheight/2)])
+					d.drawline(ECBORDERCOLOR, [
+						(l+hmargin,t+vmargin),
+						(l+hmargin+awidth,t+vmargin+aheight/2),
+						(l+hmargin,t+vmargin+aheight),
+						])
 			else:
-				# collapsed node, point right
-				d.drawfpolygon(COLCOLOR,
-					[(l+hmargin,t+vmargin),
-					 (l+hmargin,t+vmargin+aheight),
-					 (l+hmargin+awidth,t+vmargin+aheight/2)])
-				d.drawline(ECBORDERCOLOR, [
-					(l+hmargin,t+vmargin),
-					(l+hmargin+awidth,t+vmargin+aheight/2),
-					(l+hmargin,t+vmargin+aheight),
-					])
+				node.abox = (0, 0, -1, -1)
 
 		# draw the name
 		d.fgcolor(TEXTCOLOR)
