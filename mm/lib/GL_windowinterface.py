@@ -1815,7 +1815,7 @@ def showmessage(text):
 
 def showquestion(text):
 	import dialogs
-	dialogs.showquestion(text)
+	return dialogs.showquestion(text)
 
 def multchoice(prompt, list, defindex):
 	import dialogs
