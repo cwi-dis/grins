@@ -1364,11 +1364,8 @@ class SMILWriter(SMIL):
 				self.ids_used[name] = 1
 				self.uid2name[uid] = name
 		ntype = node.GetType()
-		if ntype in interiortypes:
-			for child in node.children:
-				self.calcnames1(child)
-				for c in child.children:
-					self.calcnames1(c)
+		for child in node.children:
+			self.calcnames1(child)
 
 	def calcnames2(self, node):
 		"""Calculate unique names for nodes; second pass"""
@@ -1389,11 +1386,8 @@ class SMILWriter(SMIL):
 			name = nn
 			self.ids_used[name] = isused
 			self.uid2name[uid] = name
-		if node.GetType() in interiortypes:
-			for child in node.children:
-				self.calcnames2(child)
-				for c in child.children:
-					self.calcnames2(c)
+		for child in node.children:
+			self.calcnames2(child)
 
 	def calcchnames1(self, node):
 		"""Calculate unique names for channels; first pass"""
@@ -1473,9 +1467,8 @@ class SMILWriter(SMIL):
 					aname = nn
 				self.aid2name[aid] = aname
 				self.ids_used[aname] = 0
-		if node.GetType() in interiortypes:
-			for child in node.children:
-				self.calcanames(child)
+		for child in node.children:
+			self.calcanames(child)
 
 	def syncidscheck(self, node):
 		# make sure all nodes referred to in sync arcs get their ID written
