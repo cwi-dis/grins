@@ -144,7 +144,10 @@ class HtmlChannel(Channel.ChannelWindow):
 		
 	def do_arm(self, node, same=0):
 	        if not same:
-			self.armed_str = self.getstring(node)
+	        	try:
+				self.armed_str = self.getstring(node, urlopen=urlopen)
+			except Channel.error, arg:
+				self.armed_str = '<H1>Cannot Open</H1>\n'+arg+'\n<P>\n'
 		if self._is_shown and not self.htmlw:
 			self._after_creation()
 		return 1
@@ -216,37 +219,6 @@ class HtmlChannel(Channel.ChannelWindow):
 		if self.htmlw:
 			self.htmlw.UnmapWidget()
 			self.htmlw.SetText('', '', '')
-
-	def getstring(self, node):
-		if node.type == 'imm':
-			self.armed_url = ''
-			return string.joinfields(node.GetValues(), '\n')
-		elif node.type == 'ext':
-			filename = self.getfileurl(node)
-			self.armed_url = filename
-			try:
-				fp = urlopen(filename)
-			except IOError:
-				return '<H1>Cannot Open</H1><P>'+ \
-					  'Cannot open '+filename+':<P>'+ \
-					  `(sys.exc_type, sys.exc_value)`+ \
-					  '<P>\n'
-			self.armed_url = fp.geturl()
-			# use undocumented feature so we can cleanup
-			if _urlopener.tempcache is None:
-				_urlopener.tempcache = {}
-				# cleanup temporary files when we finish
-				windowinterface.addclosecallback(
-					urlcleanup, ())
-			text = fp.read()
-			fp.close()
-			if text[-1:] == '\n':
-				text = text[:-1]
-			return text
-		else:
-			raise CheckError, \
-				'gettext on wrong node type: ' +`node.type`
-
 
 	def defanchor(self, node, anchor, cb):
 		# Anchors don't get edited in the HtmlChannel.  You
@@ -581,7 +553,3 @@ def urlretrieve(url):
 	info = _urlopener.retrieve(url)
 	_urlretrievecache[url] = info
 	return info
-
-def urlcleanup():
-	if _urlopener:
-		_urlopener.cleanup()

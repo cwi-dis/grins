@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 
-from Channel import ChannelWindow
+from Channel import ChannelWindow, error
 from TextChannel import mapfont, extract_taglist, fix_anchorlist
 from AnchorDefs import *
 import string
@@ -14,7 +14,11 @@ class LabelChannel(ChannelWindow):
 		      'textalign', 'bgimg', 'scale', 'noanchors']
 
 	def updatefixedanchors(self, node):
-		str = self.getstring(node)
+		try:
+			str = self.getstring(node)
+		except error, arg:
+			print arg
+			str = ''
 		parlist = extract_paragraphs(str)
 		taglist = extract_taglist(parlist)
 		fix_anchorlist(node, taglist)
@@ -35,10 +39,11 @@ class LabelChannel(ChannelWindow):
 				if type(msg) is type(()):
 					msg = msg[1]
 				self.errormsg(node, img + ':\n' + msg)
-		str = self.getstring(node)
-		if os.name == 'mac':
-			import greekconv
-			str = string.translate(str, greekconv.iso_8859_7_to_mac)
+		try:
+			str = self.getstring(node)
+		except error, arg:
+			print arg
+			str = ''
 		parlist = extract_paragraphs(str)
 		if MMAttrdefs.getattr(node, 'noanchors'):
 			taglist = []
@@ -148,26 +153,6 @@ class LabelChannel(ChannelWindow):
 		else:
 			x = (1.0 - w) / 2.0
 		self.armed_display.setpos(x, y)
-
-	def getstring(self, node):
-		if node.type == 'imm':
-			return string.joinfields(node.GetValues(), '\n')
-		elif node.type == 'ext':
-			filename = self.getfileurl(node)
-			try:
-				fp = urllib.urlopen(filename)
-			except IOError, msg:
-				print 'Cannot open text file', `filename`,
-				print ':', msg
-				return ''
-			text = fp.read()
-			fp.close()
-			if text[-1:] == '\n':
-				text = text[:-1]
-			return text
-		else:
-			raise CheckError, \
-				'gettext on wrong node type: ' +`node.type`
 
 def extract_paragraphs(text):
 	lines = string.splitfields(text, '\n')

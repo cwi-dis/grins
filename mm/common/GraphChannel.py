@@ -28,7 +28,11 @@ class GraphChannel(ChannelWindow):
 		    return 1
 		self.limits = None
 		self.armed_type = MMAttrdefs.getattr(node, 'gtype')
-		str = self.getstring(node)
+		try:
+			str = self.getstring(node)
+		except error, arg:
+			print arg
+			str = ''
 		toks = self.tokenizestring(str)
 		self.parsetokens(toks)
 
@@ -232,26 +236,6 @@ class GraphChannel(ChannelWindow):
 		y = -((y - YOFF)/ystepsize-maxy)
 		return (node, nametypelist, (('x', x), ('y', y)))
 		
-	def getstring(self, node):
-		if node.type == 'imm':
-			return string.joinfields(node.GetValues(), '\n')
-		elif node.type == 'ext':
-			filename = self.getfileurl(node)
-			try:
-				fp = urlopen(filename)
-			except IOError:
-				print 'Cannot open text file', `filename`
-				return ''
-			text = fp.read()
-			fp.close()
-			if text[-1:] == '\n':
-				text = text[:-1]
-			return text
-		else:
-			raise CheckError, \
-				'gettext on wrong node type: ' +`node.type`
-
-
 	def tokenizestring(self, str):
 		items = string.split(str)
 		for i in range(len(items)):

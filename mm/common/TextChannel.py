@@ -14,7 +14,11 @@ class TextChannel(ChannelWindow):
 						 'pointsize', 'noanchors']
 
 	def updatefixedanchors(self, node):
-		str = self.getstring(node)
+		try:
+			str = self.getstring(node)
+		except error, arg:
+			print arg
+			str = ''
 		parlist = extract_paragraphs(str)
 		taglist = extract_taglist(parlist)
 		fix_anchorlist(node, taglist)
@@ -23,10 +27,11 @@ class TextChannel(ChannelWindow):
 	def do_arm(self, node, same=0):
 	        if same and self.armed_display:
 		    return 1
-		str = self.getstring(node)
-		if os.name == 'mac':
-			import greekconv
-			str = string.translate(str, greekconv.iso_8859_7_to_mac)
+		try:
+			str = self.getstring(node)
+		except error, arg:
+			print arg
+			str = ''
 		parlist = extract_paragraphs(str)
 		if MMAttrdefs.getattr(node, 'noanchors'):
 		    taglist = []
@@ -113,29 +118,6 @@ class TextChannel(ChannelWindow):
 			self.armed_display.drawfbox(self.gethicolor(node),
 						    xywh)
 		return 1
-
-	def getstring(self, node):
-		if node.type == 'imm':
-			return string.joinfields(node.GetValues(), '\n')
-		elif node.type == 'ext':
-			filename = self.getfileurl(node)
-			try:
-				fp = urlopen(filename)
-			except IOError, msg:
-				if type(msg) is type(()):
-					msg = msg[1]
-				self.errormsg(node, filename + ':\n' + msg)
-## 				print 'Cannot open text file', `filename`,
-## 				print ':', msg
-				return ''
-			text = fp.read()
-			fp.close()
-			if text[-1:] == '\n':
-				text = text[:-1]
-			return text
-		else:
-			raise CheckError, \
-				'gettext on wrong node type: ' +`node.type`
 
 	def defanchor(self, node, anchor, cb):
 		# Anchors don't get edited in the TextChannel.  You
