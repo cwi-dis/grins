@@ -5,15 +5,21 @@
 # attrdefs	a dictionary containing the raw attribute definitions
 #		(initialized when this module is first imported)
 #
-# usetypedef	a function that maps a type definition to a (function,
+# usetypedef()	a function that maps a type definition to a (function,
 #		argument) pair based upon a mapping of basic types
 #
-# useattrdefs	a function that calls usetypedef for all attributes
+# useattrdefs()	a function that calls usetypedef for all attributes
 #		in attrdefs, for a given mapping, and returns a dictionary
 #		containing all the results
 #
-# In the future there will be an interface to dynamically read attribute
-# definitions as well.
+# getdef()	a function that returns an entry from attrdefs,
+#		or invents something plausible if there is no entry
+#
+# getnames()	a function that returns a sorted list of keys
+#		in attrdefs.
+#
+# In the future there will be an interface to read attribute definitions
+# from other files as well; attribute definitions will be channel-specific.
 
 
 from MMExc import *
@@ -23,10 +29,10 @@ import sys
 
 # The file from which the attribute definitions are read.
 #
-ATTRDEFS = '/ufs/guido/mm/demo/mm2/Attrdefs'
+ATTRDEFS = '/ufs/guido/mm/demo/lib/Attrdefs'
 
 
-# Parse a file containing attribute definitions
+# Parse a file containing attribute definitions.
 #
 def readattrdefs(filename):
 	fp = open(filename, 'r')
@@ -73,7 +79,7 @@ def readattrdefs(filename):
 	return dict
 
 
-# Map a typedef to a (func, arg) pair
+# Map a typedef to a (func, arg) pair.
 #
 def usetypedef(typedef, mapping):
 	type, rest = typedef
@@ -90,7 +96,7 @@ def usetypedef(typedef, mapping):
 	return func, arg
 
 
-# Use the type definitions from the attrdefs table
+# Use the type definitions from the attrdefs table.
 #
 def useattrdefs(mapping):
 	dict = {}
