@@ -165,7 +165,6 @@ class Region(Node):
 				self._curattrdict['transparent'] = self._defattrdict.get('transparent')
 		
 		self._curattrdict['wingeom'] = self._defattrdict.get('base_winoff')
-		print self._curattrdict['wingeom']
 		self._curattrdict['z'] = self._defattrdict.get('z')
 	
 	def show(self):
