@@ -27,12 +27,12 @@ class _Splash:
 	def splash(self, file):
 		self.wininit()
 		if self.visual.depth != 24:
-			return
+			return 0
 		if 1:
 			try:
 				f = open(file + '.raw', 'rb')
 			except IOError:
-				return
+				return 0
 			width = 0
 			for i in range(2):
 				width = width * 256 + ord(f.read(1))
@@ -46,7 +46,7 @@ class _Splash:
 			try:
 				rdr = imgppm.reader(file + '.ppm')
 			except IOError:
-				return
+				return 0
 			import imgformat
 			rdr.format = imgformat.rgb
 			data = rdr.read()
@@ -76,6 +76,7 @@ class _Splash:
 		time.sleep(0.5)
 		while Xt.Pending():
 			Xt.ProcessEvent(Xtdefs.XtIMAll)
+		return 1
 
 	def wininit(self):
 		if self.__initialized:
