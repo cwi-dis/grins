@@ -99,7 +99,8 @@ class Main(MainDialog):
 		
 		templatedir = findfile('Templates')
 		if os.path.exists(templatedir):
-			windowinterface.FileDialog('Select a template', templatedir, '*', '',
+			windowinterface.FileDialog('Select a template',
+				templatedir, '*.smil', '',
 				self._new_ok_callback, None, 1)
 		else:
 			windowinterface.showmessage("No Templates found, creating empty document")
