@@ -567,11 +567,9 @@ class SelectElementDlg(ResDialog):
 		root = self._root
 		ctx = root.GetContext()
 		top_levels = ctx.getviewports()
-		wrapper = self.MMObjWrapper(None, 'layout')
-		layoutid = self.insertMMObjWrapper(wrapper)
 		for top in top_levels:
 			wrapper = self.MMObjWrapper(top, 'topLayout')
-			itemid = self.insertMMObjWrapper(wrapper, layoutid)
+			itemid = self.insertMMObjWrapper(wrapper)
 			self.__appendRegions(top, itemid)
 					
 	def __appendRegions(self, parent, itemid):
