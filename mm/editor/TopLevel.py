@@ -664,13 +664,16 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			return 1
 
 	def saveas_callback(self, prune = 0):
-		cwd = self.dirname
-		if cwd:
-			cwd = MMurl.url2pathname(cwd)
-			if not os.path.isabs(cwd):
-				cwd = os.path.join(os.getcwd(), cwd)
+		if self.new_file:
+			cwd = settings.get('savedir')
 		else:
-			cwd = os.getcwd()
+			cwd = self.dirname
+			if cwd:
+				cwd = MMurl.url2pathname(cwd)
+				if not os.path.isabs(cwd):
+					cwd = os.path.join(os.getcwd(), cwd)
+			else:
+				cwd = os.getcwd()
 		title = 'Save GRiNS project:'
 		if prune:
 			filetypes = ['application/smil']
@@ -1114,6 +1117,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		except os.error:
 			pass
 ##		print 'saving to', filename, '...'
+		settings.set('savedir', os.path.dirname(filename))
 		try:
 ##			if mimetype == 'application/x-grins-cmif':
 ##				import MMWrite

@@ -142,9 +142,13 @@ default_settings = {
 if sys.platform == 'win32':
 	default_settings['system_cpu'] = 'x86'
 	default_settings['system_operating_system'] = 'win32'
+	default_settings['savedir'] = 'Desktop'
 elif sys.platform == 'mac':
 	default_settings['system_cpu'] = 'ppc'
 	default_settings['system_operating_system'] = 'macos'
+	default_settings['savedir'] = '???'
+else:
+	default_settings['savedir'] = os.getenv('HOME')
 # Don't set for other platforms (yet)
 
 user_settings = {}
