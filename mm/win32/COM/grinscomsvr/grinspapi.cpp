@@ -144,16 +144,32 @@ ComModule_SetPyListener(ComModuleObject *self, PyObject *args)
 }
 
 
-static char ComModule_AdviceSetSize__doc__[] =
+static char ComModule_AdviceNewPeerWnd__doc__[] =
 ""
 ;
 static PyObject *
-ComModule_AdviceSetSize(ComModuleObject *self, PyObject *args)
+ComModule_AdviceNewPeerWnd(ComModuleObject *self, PyObject *args)
 {
-	int id, w, h;
-	if(!PyArg_ParseTuple(args, "iii", &id, &w, &h))
+	int docid, wndid, w, h;
+	char *pszTitle;
+	if(!PyArg_ParseTuple(args, "iiiis", &docid, &wndid, &w, &h, &pszTitle))
 		return NULL;
-	self->pModule->adviceSetSize(id, w, h);
+	self->pModule->adviceNewPeerWnd(docid, wndid, w, h, pszTitle);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char ComModule_AdviceClosePeerWnd__doc__[] =
+""
+;
+static PyObject *
+ComModule_AdviceClosePeerWnd(ComModuleObject *self, PyObject *args)
+{
+	int docid, wndid;
+	char *pszTitle;
+	if(!PyArg_ParseTuple(args, "ii", &docid, &wndid))
+		return NULL;
+	self->pModule->adviceClosePeerWnd(docid, wndid);
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -195,7 +211,8 @@ static struct PyMethodDef ComModule_methods[] = {
 	{"Unlock", (PyCFunction)ComModule_Unlock, METH_VARARGS, ComModule_Unlock__doc__},
 	{"SetListener", (PyCFunction)ComModule_SetListener, METH_VARARGS, ComModule_SetListener__doc__},
 	{"SetPyListener", (PyCFunction)ComModule_SetPyListener, METH_VARARGS, ComModule_SetPyListener__doc__},
-	{"AdviceSetSize", (PyCFunction)ComModule_AdviceSetSize, METH_VARARGS, ComModule_AdviceSetSize__doc__},
+	{"AdviceNewPeerWnd", (PyCFunction)ComModule_AdviceNewPeerWnd, METH_VARARGS, ComModule_AdviceNewPeerWnd__doc__},
+	{"AdviceClosePeerWnd", (PyCFunction)ComModule_AdviceClosePeerWnd, METH_VARARGS, ComModule_AdviceClosePeerWnd__doc__},
 	{"AdviceSetCursor", (PyCFunction)ComModule_AdviceSetCursor, METH_VARARGS, ComModule_AdviceSetCursor__doc__},
 	{"AdviceSetDur", (PyCFunction)ComModule_AdviceSetDur, METH_VARARGS, ComModule_AdviceSetDur__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */

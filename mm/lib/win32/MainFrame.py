@@ -197,8 +197,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 
 		# 
 		self._peerdocid = 0
-		self._embeddedHwnd = 0
-		self._embeddedWnd = None
+		self._peerviewports = {}
 
 	# Create the OS window and set the toolbar	
 	def createOsWnd(self,title):
@@ -602,19 +601,15 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 	def newEmbedded(self, x, y, w, h, title, units = UNIT_MM, adornments=None, canvassize=None, commandlist=None, strid='cmifview_', bgcolor=None):
 		import embedding
 		wnd = embedding.EmbeddedWnd(self, w, h, units, bgcolor, title, self._peerdocid)
-		if self._embeddedHwnd:
-			wnd.setPeerWindow(self._embeddedHwnd)
-		self._embeddedWnd = wnd
+		self._peerviewports[id(wnd)] = wnd
 		return wnd
 
-	def setEmbeddedHwnd(self, hwnd):
-		if self._embeddedWnd:
-			self._embeddedWnd.setPeerWindow(hwnd)
-		else:
-			self._embeddedHwnd = hwnd
+	def setEmbeddedHwnd(self, wndid, hwnd):
+		ewnd = self._peerviewports.get(wndid)
+		if ewnd: ewnd.setPeerWindow(hwnd)
 
-	def getEmbeddedWnd(self):
-		return self._embeddedWnd
+	def getEmbeddedWnd(self, wndid):
+		return self._peerviewports.get(wndid)
 
 	# Return the framework document object associated with this frame
 	def getdoc(self):

@@ -134,6 +134,10 @@ SOURCE=.\comobj.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\mtpycall.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\stdafx.h
 # End Source File
 # End Group

@@ -11,7 +11,8 @@ HRESULT CoRegisterGRiNSPlayerAutoClassObject(IClassFactory* pIFactory, LPDWORD  
 HRESULT GetGRiNSPlayerMonikerClassObject(IClassFactory** ppv, GRiNSPlayerComModule *pModule);
 HRESULT CoRegisterGRiNSPlayerMonikerClassObject(IClassFactory* pIFactory, LPDWORD  pdwRegister);
 
-void GRiNSPlayerAutoAdviceSetSize(int id, int w, int h);
+void GRiNSPlayerAutoAdviceNewPeerWnd(int docid, int wndid, int w, int h, const char *title);
+void GRiNSPlayerAutoAdviceClosePeerWnd(int docid, int wndid);
 void GRiNSPlayerAutoAdviceSetCursor(int id, char *cursor);
 void GRiNSPlayerAutoAdviceSetDur(int id, double dur);
 void GRiNSPlayerAutoAdviceSetPos(int id, double pos);
