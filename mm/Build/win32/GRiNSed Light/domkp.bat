@@ -67,6 +67,8 @@ rem This is the Lightweight version...
 echo -x ChannelView >> FreezeOpts
 echo -x LayoutView >> FreezeOpts
 echo -x UsergroupView >> FreezeOpts
+echo -x LinkEdit >> FreezeOpts
+echo -x AnchorEdit >> FreezeOpts
 
 rem The channels...
 echo -x ExternalChannel >> FreezeOpts
