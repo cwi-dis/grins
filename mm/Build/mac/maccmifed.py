@@ -119,8 +119,9 @@ else:
 
 if not STANDALONE:
 	# For now:
-	progdir=os.path.split(sys.argv[0])[0]
-	CMIFDIR=os.path.split(progdir)[0]
+	progdir=os.path.split(sys.argv[0])[0]	# This is cmif:build:mac
+	progdir=os.path.split(progdir)[0]		# this is cmif:build
+	CMIFDIR=os.path.split(progdir)[0]		# and this is cmif
 	
 	CMIFPATH = [
 		CMIFDIR+":mac",
