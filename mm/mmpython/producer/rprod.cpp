@@ -3685,7 +3685,7 @@ SetDllCategoryPaths()
 	CMacStuff::GetApplicationDirectory(szAppDir);
 #endif
 #else
-	strcpy(szAppDir, "d:\\ufs\\mm\\cmif\bin\\win32\\");
+	strcpy(szAppDir, "d:\\ufs\\mm\\cmif\\bin\\win32\\");
 #endif
 
 	// Set the DLL Access paths
