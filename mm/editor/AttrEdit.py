@@ -584,7 +584,7 @@ class ChannelWrapper(Wrapper):
 		if name == '.cname':
 			if self.channel.name != value and \
 			   self.editmgr.context.getchannel(value):
-			    self.showmessage('Duplicate channel name (not changed)')
+			    self.channel.attreditor.showmessage('Duplicate channel name (not changed)')
 			    return
 			self.editmgr.setchannelname(self.channel.name, value)
 		else:
