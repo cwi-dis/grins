@@ -10,6 +10,7 @@ import MMAttrdefs
 import Hlinks
 from AnchorDefs import *
 import features
+import compatibility
 import string
 import os
 import MMurl
@@ -34,12 +35,15 @@ def nameencode(value):
 ##		value = regsub.gsub('"', '&quot;', value)
 	return '"' + value + '"'
 
-NSprefix = 'GRiNS'
+NSGRiNSprefix = 'GRiNS'
+NSQTprefix = 'qt'
+
 # This string is written at the start of a SMIL file.
 SMILdecl = '<?xml version="1.0" encoding="ISO-8859-1"?>\n'
 EVALcomment = '<!-- Created with an evaluation copy of GRiNS -->\n'
 doctype = '<!DOCTYPE smil PUBLIC "%s"\n%s"%s">\n' % (SMILpubid,' '*22,SMILdtd)
-xmlns = 'xmlns:%s' % NSprefix
+xmlnsGRiNS = 'xmlns:%s' % NSGRiNSprefix
+xmlnsQT = 'xmlns:%s' % NSQTprefix
 
 nonascii = re.compile('[\200-\377]')
 
@@ -95,10 +99,10 @@ class IndentedFile:
 
 Error = 'Error'
 
-def WriteFile(root, filename, cleanSMIL = 0, copyFiles = 0, evallicense = 0, progress = None, convertURLs = 0):
+def WriteFile(root, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0, evallicense = 0, progress = None, convertURLs = 0):
 	fp = IndentedFile(open(filename, 'w'))
 	try:
-		writer = SMILWriter(root, fp, filename, cleanSMIL, copyFiles, evallicense, progress = progress, convertURLs = convertURLs)
+		writer = SMILWriter(root, fp, filename, cleanSMIL, grinsExt, copyFiles, evallicense, progress = progress, convertURLs = convertURLs)
 	except Error, msg:
 		from windowinterface import showmessage
 		showmessage(msg, mtype = 'error')
@@ -115,14 +119,14 @@ def WriteFile(root, filename, cleanSMIL = 0, copyFiles = 0, evallicense = 0, pro
 		macostools.touched(fss)
 
 import FtpWriter
-def WriteFTP(root, filename, ftpparams, cleanSMIL = 0, copyFiles = 0, evallicense = 0, progress=None):
+def WriteFTP(root, filename, ftpparams, cleanSMIL = 0, grinsExt = 1, copyFiles = 0, evallicense = 0, progress=None):
 	host, user, passwd, dir = ftpparams
 	try:
 		conn = FtpWriter.FtpConnection(host, user=user, passwd=passwd, dir=dir)
 		ftp = conn.Writer(filename, ascii=1)
 		fp = IndentedFile(ftp)
 		try:
-			writer = SMILWriter(root, fp, filename, cleanSMIL, copyFiles,
+			writer = SMILWriter(root, fp, filename, cleanSMIL, grinsExt, copyFiles,
 						evallicense, tmpcopy=1, progress=progress)
 		except Error, msg:
 			from windowinterface import showmessage
@@ -619,6 +623,11 @@ cmif_chan_attrs_ignore = {
 	'center':0, 'drawbox':0, 'units':0,
 	}
 
+qt_node_attrs = {
+	'immediateinstantiationmedia':0,'bitratenecessary':0,'systemmimetypesupported':0,
+	'attachtimebase':0,'qtchapter':0,'qtcompositemode':0,
+	} 
+
 # Mapping from CMIF channel types to smil media types
 smil_mediatype={
 	'text':'text',
@@ -642,10 +651,10 @@ def mediatype(chtype, error=0):
 		return smil_mediatype[chtype], smil_mediatype[chtype]
 	if error and chtype != 'layout':
 		print '** Unimplemented channel type', chtype
-	return '%s:%s' % (NSprefix, chtype), '%s %s' % (GRiNSns, chtype)
+	return '%s:%s' % (NSGRiNSprefix, chtype), '%s %s' % (GRiNSns, chtype)
 
 class SMILWriter(SMIL):
-	def __init__(self, node, fp, filename, cleanSMIL = 0, copyFiles = 0,
+	def __init__(self, node, fp, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0,
 		     evallicense = 0, tmpcopy = 0, progress = None,
 		     convertURLs = 0):
 		ctx = node.GetContext()
@@ -657,7 +666,7 @@ class SMILWriter(SMIL):
 			self.convertURLs = url
 		else:
 			self.convertURLs = None
-		self.__cleanSMIL = cleanSMIL	# if set, no GRiNS namespace
+			
 		self.evallicense = evallicense
 		self.__generate_number = 0
 		if filename == '<string>':
@@ -696,7 +705,10 @@ class SMILWriter(SMIL):
 		self.__isopen = 0
 		self.__stack = []
 
-		self.uses_cmif_extension = not cleanSMIL
+		self.__cleanSMIL = cleanSMIL
+		self.uses_grins_namespace = not cleanSMIL and grinsExt
+		self.uses_qt_namespace = features.compatibility == features.QT and not cleanSMIL
+
 		self.root = node
 		self.fp = fp
 		self.__title = ctx.gettitle()
@@ -727,7 +739,7 @@ class SMILWriter(SMIL):
 
 		if len(self.top_levels) > 1:
 			print '** Document uses multiple toplevel channels'
-			self.uses_cmif_extension = 1
+			self.uses_grins_extension = 1
 
 		self.syncidscheck(node)
 
@@ -758,6 +770,7 @@ class SMILWriter(SMIL):
 		fp.close()
 
 	def writetag(self, tag, attrs = None):
+		compatibility = features.compatibility
 		if attrs is None:
 			attrs = []
 		write = self.fp.write
@@ -771,30 +784,68 @@ class SMILWriter(SMIL):
 			hasprefix = 0
 		if not hasprefix and not self.__cleanSMIL:
 			for attr, val in attrs:
-				if attr == xmlns:
+				if (attr == xmlnsGRiNS) or (attr == xmlnsQT):
 					hasprefix = 1
 					break
-				if attr[:len(NSprefix)] == NSprefix:
-					attrs.insert(0, (xmlns, GRiNSns))
+				if attr[:len(NSGRiNSprefix)] == NSGRiNSprefix:
+					attrs.insert(0, (xmlnsGRiNS, GRiNSns))
+					hasprefix = 1
+					break
+				if attr[:len(NSQTprefix)] == NSQTprefix:
+					attrs.insert(0, (xmlnsQT, QTns))
 					hasprefix = 1
 					break
 		if not hasprefix:
-			if tag[:len(NSprefix)] == NSprefix:
+			if tag[:len(NSGRiNSprefix)] == NSGRiNSprefix:
 				if self.__cleanSMIL:
 					# ignore this tag
 					# XXX is this correct?
 					return
-				attrs.insert(0, (xmlns, GRiNSns))
+				attrs.insert(0, (xmlnsGRiNS, GRiNSns))
+				hasprefix = 1
+			elif tag[:len(NSQTprefix)] == NSQTprefix:
+				if self.__cleanSMIL:
+					# ignore this tag
+					# XXX is this correct?
+					return
+				attrs.insert(0, (xmlnsQT, QTns))
 				hasprefix = 1
 		write('<' + tag)
 		for attr, val in attrs:
-			if not self.__cleanSMIL or \
-			   (attr[:len(NSprefix)] != NSprefix and
-			    attr != xmlns):
+			hasGRiNSprefix = attr[:len(NSGRiNSprefix)] == NSGRiNSprefix or \
+				        attr == xmlnsGRiNS
+			hasQTprefix = attr[:len(NSQTprefix)] == NSQTprefix or \
+				    attr == xmlnsQT
+			hasanyprefix = hasGRiNSprefix or hasQTprefix
+			if (not hasanyprefix) or \
+			   ((hasGRiNSprefix and self.uses_grins_namespace) or \
+			   (hasQTprefix and self.uses_qt_namespace)):
 				write(' %s=%s' % (attr, nameencode(val)))
 		self.__isopen = 1
 		self.__stack.append((tag, hasprefix))
-
+	
+	def writeQTAttributeOnSmilElement(self, attrlist):
+		attributes = self.root.GetContext().attributes
+		for key, val in attributes.items():
+			if key == 'qttimeslider':
+				defvalue = MMAttrdefs.getdefattr(None, key)
+				if attributes[key] != defvalue:
+					attrlist.append(('%s:time-slider' % NSQTprefix, intToEnumString(attributes[key],{0:'false',1:'true'})))
+			elif key == 'qtchaptermode':
+				defvalue = MMAttrdefs.getdefattr(None, key)
+				if attributes[key] != defvalue:
+					attrlist.append(('%s:chapter-mode' % NSQTprefix, intToEnumString(attributes[key],{0:'all',1:'clip'})))
+			elif key == 'autoplay':
+				defvalue = MMAttrdefs.getdefattr(None, key)
+				if attributes[key] != defvalue:
+					attrlist.append(('%s:autoplay' % NSQTprefix, intToEnumString(attributes[key],{0:'false',1:'true'})))
+			elif key == 'qtnext':
+				attrlist.append(('%s:next' % NSQTprefix, attributes[key]))
+			elif key == 'immediateinstantiation':
+				defvalue = MMAttrdefs.getdefattr(None, key)
+				if attributes[key] != defvalue:
+					attrlist.append(('%s:immediate-instantiation' % NSQTprefix, intToEnumString(attributes[key],{0:'false',1:'true'})))
+	
 	def write(self):
 		import version
 		ctx = self.root.GetContext()
@@ -802,11 +853,14 @@ class SMILWriter(SMIL):
 		fp.write(SMILdecl)
 		if self.evallicense:
 			fp.write(EVALcomment)
-		if not self.uses_cmif_extension:
+		if self.__cleanSMIL:
 			fp.write(doctype)
 		attrlist = []
-		if self.uses_cmif_extension:
-			attrlist.append((xmlns, GRiNSns))
+		if self.uses_grins_namespace:
+			attrlist.append((xmlnsGRiNS, GRiNSns))
+		if self.uses_qt_namespace:
+			attrlist.append((xmlnsQT, QTns))
+			self.writeQTAttributeOnSmilElement(attrlist)
 		self.writetag('smil', attrlist)
 		self.push()
 		self.writetag('head')
@@ -832,6 +886,18 @@ class SMILWriter(SMIL):
 			# for internal information-keeping only
 			if self.__cleanSMIL and key[:8] == 'project_':
 				continue
+			if key == 'qttimeslider':
+				continue
+			if key == 'autoplay':
+				continue
+			if key == 'qtnext':
+				continue
+			if key == 'qtchaptermode':
+				continue
+			if key == 'immediateinstantiation':
+				continue
+			if key == 'qtcompositemode':
+				continue
 			self.writetag('meta', [('name', key),
 					       ('content', val)])
 		if not self.__cleanSMIL and ctx.externalanchors:
@@ -855,7 +921,7 @@ class SMILWriter(SMIL):
 		usergroups = node.GetContext().usergroups
 		if not usergroups:
 			return
-		self.uses_cmif_extension = 1
+		self.uses_grins_namespaces = 1
 		for ugroup in usergroups.keys():
 			name = identify(ugroup)
 			if self.ids_used.has_key(name):
@@ -873,7 +939,7 @@ class SMILWriter(SMIL):
 		layouts = node.GetContext().layouts
 		if not layouts:
 			return
-		self.uses_cmif_extension = 1
+		self.uses_grins_namespaces = 1
 		for layout in layouts.keys():
 			name = identify(layout)
 			if self.ids_used.has_key(name):
@@ -900,7 +966,7 @@ class SMILWriter(SMIL):
 			for child in node.children:
 				self.calcnames1(child)
 		if ntype == 'bag':
-			self.uses_cmif_extension = 1
+			self.uses_grins_namespaces = 1
 
 	def calcnames2(self, node):
 		"""Calculate unique names for nodes; second pass"""
@@ -943,10 +1009,10 @@ class SMILWriter(SMIL):
 				if not self.__title:
 					self.__title = ch.name
 			# also check if we need to use the CMIF extension
-			if not self.uses_cmif_extension and \
+			if not self.uses_grins_namespace and \
 			   not smil_mediatype.has_key(ch['type']) and \
 			   ch['type'] != 'layout':
-				self.uses_cmif_extension = 1
+				self.uses_namespaces = 1
 		if not self.__title and channels:
 			# no channels with windows, so take very first channel
 			self.__title = channels[0].name
@@ -1120,10 +1186,12 @@ class SMILWriter(SMIL):
 						attrlist.append(('background-color',
 								 "#%02x%02x%02x" % (bgcolor or (0,0,0))))
 						bgcolor = None # skip below
-					# non-SMIL extension:
-					# permanently visible region
-					attrlist.append(('%s:transparent' % NSprefix,
-							 '0'))
+						
+						# non-SMIL extension:
+						# permanently visible region
+						# transparent attribute is saved only if G2 extension
+						attrlist.append(('%s:transparent' % NSGRiNSprefix,
+								 '0'))
 				#
 				# We write the background color only if it is not None.
 				# We also refrain from writing it if we're in G2 compatability mode and
@@ -1154,13 +1222,18 @@ class SMILWriter(SMIL):
 ####						attrlist.append(('%s:bgcolor' % NSprefix,
 ####								 "#%02x%02x%02x" % bgcolor))
 				if ch.get('center', 1):
-					attrlist.append(('%s:center' % NSprefix, '1'))
+					if compatibility == features.QT:
+						pass
+						# to do : calculate the center position
+						# and fix corrects attributes
+					else:
+						attrlist.append(('%s:center' % NSGRiNSprefix, '1'))
 				if ch.get('drawbox', 1):
-					attrlist.append(('%s:drawbox' % NSprefix, '1'))
+					attrlist.append(('%s:drawbox' % NSGRiNSprefix, '1'))
 
 			for key, val in ch.items():
 				if not cmif_chan_attrs_ignore.has_key(key):
-					attrlist.append(('%s:%s' % (NSprefix, key), MMAttrdefs.valuerepr(key, val)))
+					attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))
 			self.writetag('region', attrlist)
 		self.pop()
 
@@ -1239,9 +1312,14 @@ class SMILWriter(SMIL):
 			value = func(self, x)
 			# gname is the attribute name as recorded in attributes
 			# name is the attribute name as recorded in SMIL file
-			gname = '%s %s' % (GRiNSns, name)
-			if attributes.has_key(gname):
-				name = '%s:%s' % (NSprefix, name)
+			gname1 = '%s %s' % (GRiNSns, name)
+			gname2 = '%s %s' % (QTns, name)
+			if attributes.has_key(gname1):
+				name = '%s:%s' % (NSGRiNSprefix, name)
+				gname = gname1
+			elif attributes.has_key(gname2):
+				name = '%s:%s' % (NSQTprefix, name)
+				gname = gname2
 			else:
 				gname = name
 			# only write attributes that have a value and are
@@ -1254,10 +1332,11 @@ class SMILWriter(SMIL):
 		for key, val in x.GetAttrDict().items():
 			if key[-7:] != '_winpos' and \
 			   key[-8:] != '_winsize' and \
+			   not qt_node_attrs.has_key(key) and \
 			   not cmif_node_attrs_ignore.has_key(key) and \
 			   (not is_realpix or
 			    not cmif_node_realpix_attrs_ignore.has_key(key)):
-				attrlist.append(('%s:%s' % (NSprefix, key),
+				attrlist.append(('%s:%s' % (NSGRiNSprefix, key),
 						 MMAttrdefs.valuerepr(key, val)))
 		if interior:
 			if type == 'seq' and self.copydir and not x.GetChildren():
@@ -1321,6 +1400,24 @@ class SMILWriter(SMIL):
 		val = MMurl.basejoin(self.copydirurl, MMurl.pathname2url(file))
 		return val, rtchannel
 	
+	def writeQTAttributeOnMediaElement(self, node, attrlist):
+		dict = node.GetAttrDict()
+		for key, val in dict.items():
+			if key == 'immediateinstantiationmedia':
+				attrlist.append(('%s:immediate-instantiation' % NSQTprefix, intToEnumString(val,{0:'false',1:'true'})))
+			if key == 'bitratenecessary':
+				attrlist.append(('%s:bitrate' % NSQTprefix, intToString(val)))
+			if key == 'systemmimetypesupported':
+				attrlist.append(('%s:system-mime-type-supported' % NSQTprefix, val))
+			if key == 'attachtimebase':
+				defvalue = MMAttrdefs.getdefattr(None, 'attachtimebase')
+				if val != defvalue:
+					attrlist.append(('%s:attach-timebase' % NSQTprefix, intToEnumString(val,{0:'false',1:'true'})))
+			if key == 'qtchapter':
+				attrlist.append(('%s:chapter' % NSQTprefix, val))
+			if key == 'qtcompositemode':
+				attrlist.append(('%s:composite-mode' % NSQTprefix, val))
+
 	def writemedianode(self, x, attrlist, mtype):
 		# XXXX Not correct for imm
 		pushed = 0		# 1 if has whole-node source anchor
@@ -1341,6 +1438,10 @@ class SMILWriter(SMIL):
 					pushed = pushed + 1
 			elif type in SourceAnchors:
 				hassrc = 1
+
+		if self.uses_qt_namespace:
+			self.writeQTAttributeOnMediaElement(x,attrlist)
+		
 		self.writetag(mtype, attrlist)
 		if hassrc:
 			self.push()
@@ -1473,11 +1574,12 @@ class SMILWriter(SMIL):
 				convert = MMAttrdefs.getattr(node, 'project_convert')
 		else:
 			convert = 1
+
 		if convert and u.headers.maintype == 'audio' and \
 		   string.find(u.headers.subtype, 'real') < 0:
-			from realconvert import convertaudiofile
+		 	from realconvert import convertaudiofile
 			# XXXX This is a hack. convertaudiofile may change the filename (and
-			# will, currently, to '.ra').
+		  	# will, currently, to '.ra').
 			if self.progress:
 				self.progress("Converting %s"%os.path.split(file)[1], None, None, None, None)
 				progress = (self.progress, ("Converting %s"%os.path.split(file)[1], None, None))
@@ -1553,7 +1655,7 @@ class SMILWriter(SMIL):
 		if self.progress:
 			self.progress("Copying %s"%os.path.split(file)[1], None, None, None, None)
 		dstfile = os.path.join(dstdir, file)
-		print 'DBG verbatim copy', dstfile
+#		print 'DBG verbatim copy', dstfile
 		f = open(dstfile, 'w'+binary)
 		while 1:
 			data = u.read(10240)
@@ -1610,3 +1712,12 @@ def identify(name):
 	if rv and rv[0] in string.digits:
 		rv.insert(0, '_')
 	return string.join(rv, '')
+
+def intToEnumString(intValue, dict):
+	if dict.has_key(intValue):
+		return dict[intValue]
+	else:
+		return dict[0]
+
+def intToString(intValue):
+	return '%d' % intValue

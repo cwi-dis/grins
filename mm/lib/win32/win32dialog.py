@@ -12,6 +12,7 @@ import grinsRC
 import win32mu
 import string
 import features
+import compatibility
 
 from pywin.mfc import window
 from components import *
@@ -123,13 +124,16 @@ class SplashDlg(ResDialog):
 		self._versionc = Static(self,grinsRC.IDC_VERSION_MSG)
 		self._msgc = Static(self,grinsRC.IDC_MESSAGE)
 		self._version=version
-		if string.find(version, 'player') >= 0:
-			self._splashbmp = grinsRC.IDB_SPLASHPLAY
-		elif features.lightweight:
-			self._splashbmp = grinsRC.IDB_SPLASHLITE
+		if compatibility.G2 == features.compatibility:
+			if string.find(version, 'player') >= 0:
+				self._splashbmp = grinsRC.IDB_SPLASHPLAY
+			elif features.lightweight:
+				self._splashbmp = grinsRC.IDB_SPLASHLITE
+			else:
+				self._splashbmp = grinsRC.IDB_SPLASHPRO
 		else:
-			self._splashbmp = grinsRC.IDB_SPLASHPRO
-
+			self._splashbmp = grinsRC.IDB_SPLASHSMIL
+			
 		self.CreateWindow()
 		self.CenterWindow()
 		self.ShowWindow(win32con.SW_SHOW)
@@ -176,12 +180,16 @@ class AboutDlg(ResDialog):
 		self._splash = WndCtrl(self,grinsRC.IDC_SPLASH)
 		self._versionc = Static(self,grinsRC.IDC_VERSION_MSG)
 		self._version=version
-		if string.find(version, 'player') >= 0:
-			self._splashbmp = grinsRC.IDB_SPLASHPLAY
-		elif features.lightweight:
-			self._splashbmp = grinsRC.IDB_SPLASHLITE
+		if compatibility.G2 == features.compatibility:
+			if string.find(version, 'player') >= 0:
+				self._splashbmp = grinsRC.IDB_SPLASHPLAY
+			elif features.lightweight:
+				self._splashbmp = grinsRC.IDB_SPLASHLITE
+			else:
+				self._splashbmp = grinsRC.IDB_SPLASHPRO
 		else:
-			self._splashbmp = grinsRC.IDB_SPLASHPRO
+			self._splashbmp = grinsRC.IDB_SPLASHSMIL
+		
 	def OnInitDialog(self):	
 		self.attach_handles_to_subwindows()	
 		self._splash.create_wnd_from_handle()
