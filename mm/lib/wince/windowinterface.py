@@ -87,6 +87,16 @@ def GetImageSize(filename):
 	image = mediainterface.get_image(filename)
 	return image.GetSize()
 
+def GetVideoSize(url):
+	import MMurl, winmm
+	file = MMurl.urlretrieve(url)[0]
+	try:
+		video_player = winmm.CreateVideoPlayerFromFile(file)
+	except winmm.error, msg:
+		print msg
+		return 100, 100
+	return video_player.GetVideoSize()
+
 def	sleep(t):
 	import winkernel
 	winkernel.Sleep(int(t*1000.0+0.5))
