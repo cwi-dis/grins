@@ -28,9 +28,22 @@ class MMNodeContext:
 		self.armedmode = None
 		self.getchannelbynode = None
 
+	# Act like an XML DOM Core Element node
+	def _get_nodeName(self):
+		return "context"
+	
+	def _get_attributes(self):
+		namedNodeMap = grinsDOM.dom.core.NamedNodeMap()
+		return namedNodeMap
+	def _get_childNodes(self):
+		nodeList =  grinsDOM.dom.core.NodeList(self.channels)
+		return nodeList
+	
 	def __repr__(self):
 		return '<MMNodeContext instance, channelnames=' \
-			+ `self.channelnames` + '>'
+			+ `self.channelnames` \
+			+ `self.channels` \
+			+ '>'
 
 	def setbaseurl(self, baseurl):
 		self.baseurl = baseurl
@@ -322,8 +335,24 @@ class MMChannel:
 		self.name = name
 		self.attrdict = {}
 
+	# Act like an XML DOM Core Element node
+	def _get_nodeName(self):
+		return "channel"
+	def _get_attributes(self):
+		namedNodeMap = grinsDOM.dom.core.NamedNodeMap()
+		for a in self.attrdict.items() :
+			if a[1]: # skip empty attributes
+				newAttribute = grinsDOM.dom.core.Attr(a[0],str(a[1]))
+				namedNodeMap.setNamedItem(newAttribute)
+		return namedNodeMap
+	def _get_childNodes(self):
+		nodeList =  grinsDOM.dom.core.NodeList([])
+		return nodeList
+	
 	def __repr__(self):
-		return '<MMChannel instance, name=' + `self.name` + '>'
+		return '<MMChannel instance, name=' + `self.name` \
+		       + `self.attrdict` \
+		       + '>'
 
 	def _setname(self, name): # Only called from context.setchannelname()
 		self.name = name
@@ -461,7 +490,14 @@ class MMNode:
 		return self.parent
 
 	def _get_childNodes(self):
-		return grinsDOM.dom.core.NodeList(self.children)
+		if self.parent == None:
+			# Root - add context using 1/2 deep copy :-)
+			cl = []
+			cl.append(self.context)
+			for c in self.children: cl.append(c)
+			return grinsDOM.dom.core.NodeList(cl)
+		else:
+			return grinsDOM.dom.core.NodeList(self.children)
 
 	def _get_firstChild(self):
 		if len(self.children) > 0:
