@@ -11,6 +11,14 @@ import MMExc
 import MMAttrdefs
 from MMNode import alltypes, leaftypes, interiortypes
 
+A_ID   = 0
+A_TYPE = 1
+A_ARGS = 2
+
+ATYPE_WHOLE  = 0
+ATYPE_AUTO   = 1
+ATYPE_NORMAL = 2
+ATYPE_PAUSE  = 3
 
 form_template = None
 
@@ -91,6 +99,9 @@ class AnchorEditor(Dialog):
 		self.destroy()
 
 	def open(self):
+		if self.is_showing():
+			self.pop()
+			return
 		self.close()
 		self.settitle(self.maketitle())
 		self.getvalues(TRUE)
@@ -136,7 +147,7 @@ class AnchorEditor(Dialog):
 		self.form.freeze_form()
 		self.anchor_browser.clear_browser()
 		for i in self.anchorlist:
-			name = '#' + self.uid + '.' + `i[0]`
+			name = '#' + self.uid + '.' + `i[A_ID]`
 			self.anchor_browser.add_browser_line(name)
 		self.show_focus()
 		self.form.unfreeze_form()
@@ -145,6 +156,7 @@ class AnchorEditor(Dialog):
 		self.anchor_browser.deselect_browser()
 		if self.focus == None:
 			self.group.hide_object()
+			self.edit_button.hide_object()
 		else:
 			self.group.show_object()
 			self.anchor_browser.select_browser_line(self.focus+1)
@@ -156,26 +168,31 @@ class AnchorEditor(Dialog):
 		if self.focus == None:
 			print 'AnchorEdit: show_location without focus!'
 		a = self.anchorlist[self.focus]
-		loc = a[1]
-		self.begin_button.set_button(0)
-		self.end_button.set_button(0)
-		self.whole_button.set_button(loc == [])
-		self.internal_button.set_button(loc <> [])
+		loc = a[A_ARGS]
+		type = a[A_TYPE]
+		self.begin_button.set_button(type == 0)
+		self.end_button.set_button(type == 1)
+		self.whole_button.set_button(type == 2)
+		self.internal_button.set_button(type == 3)
+		if type in (ATYPE_NORMAL, ATYPE_PAUSE):
+			self.edit_button.show_object()
+		else:
+			self.edit_button.hide_object()
 
 	def set_location(self, loc):
 		if self.focus == None:
 			print 'AnchorEdit: show_location without focus!'
 		a = self.anchorlist[self.focus]
 		self.changed = 1
-		if loc in (0, 1):
-			# Cannot do yet
-			loc = 2
-		if loc == 2:
-			a = (a[0], [])
+		if loc == None:
+			loc = a[A_TYPE]
+		if loc in (ATYPE_AUTO, ATYPE_WHOLE):
+			a = (a[0], loc, [])
 		else:
+			a = (a[0], loc, a[2])
 			na = self.toplevel.player.defanchor(self.node, a)
 			if na == None:
-				loc = 2
+				a = (a[0], ATYPE_WHOLE, [])
 			else:
 				a = na
 		self.anchorlist[self.focus] = a
@@ -218,12 +235,12 @@ class AnchorEditor(Dialog):
 	def add_callback(self, dummy):
 		self.changed = 1
 		if self.anchorlist:
-			id, dummy = max(self.anchorlist)
+			id, dummy, dummy2 = max(self.anchorlist)
 			id = id+1
 		else:
 			id = 1
 		name = '#' + self.uid + '.' + `id`
-		self.anchorlist.append((id, []))
+		self.anchorlist.append((id, ATYPE_WHOLE, []))
 		self.anchor_browser.add_browser_line(name)
 		self.focus = len(self.anchorlist)-1
 		self.show_focus()
@@ -252,6 +269,11 @@ class AnchorEditor(Dialog):
 		if self.focus == None:
 			print 'AnchorEdit: no focus in setloc!'
 		self.set_location(eval(value))
+
+	def edit_callback(self, dummy):
+		if self.focus == None:
+			print 'AnchorEdit: no focus in edit_callback'
+		self.set_location(None)
 
 # Routine to close all attribute editors in a node and its context.
 
