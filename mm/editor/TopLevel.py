@@ -52,7 +52,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			# remote file
 			self.dirname = ''
 		mtype = mimetypes.guess_type(base)[0]
-		if mtype in ('application/smil', 'application/x-grins-cmif'):
+		if mtype in ('application/x-grins-project', 'application/smil', 'application/x-grins-cmif'):
 			self.basename = posixpath.splitext(base)[0]
 		else:
 			self.basename = base
@@ -260,8 +260,16 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				cwd = os.path.join(os.getcwd(), cwd)
 		else:
 			cwd = os.getcwd()
-		windowinterface.FileDialog('Save SMIL file:', cwd, '*.smil',
-					   '', self.saveas_okcallback, None)
+		filetypes = ['application/x-grins-project', 'application/smil']
+		import settings
+		if not settings.get('lightweight'):
+			filetypes.append('application/x-grins-cmif')
+		dftfilename = ''
+		if self.filename:
+			utype, host, path, params, query, fragment = urlparse(self.filename)
+			dftfilename = os.path.split(MMurl.url2pathname(path))[-1]
+		windowinterface.FileDialog('Save SMIL file:', cwd, filetypes,
+					   dftfilename, self.saveas_okcallback, None)
 
 	def export_okcallback(self, filename):
 		if not filename:
@@ -272,7 +280,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
 			return
 		evallicense= (license < 0)
-		if not self.save_to_file(filename, cleanSMIL = 1):
+		if not self.save_to_file(filename, exporting = 1):
 			return		# Error, don't save HTML file
 		#
 		# Invent HTML file name and SMIL file url, and generate webpage
@@ -314,6 +322,23 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		dialog.done(do_export_callback, cancancel=1)
 
 	def export_callback(self):
+		ask = self.new_file
+		if not ask:
+			if mimetypes.guess_type(self.filename)[0] != 'application/x-grins-project':
+				# We don't have a project file name. Ask for filename.
+				ask = 1
+			else:
+				utype, host, path, params, query, fragment = urlparse(self.filename)
+				if (utype and utype != 'file') or (host and host != 'localhost'):
+					# The project file is remote. Ask for filename.
+					ask = 1
+				else:
+					file = MMurl.url2pathname(path)
+					base = os.path.splitext(file)[0]
+					file = base + mimetypes.guess_extension('application/smil')
+					self.setwaiting()
+					self.export_okcallback(file)
+					return 
 		cwd = self.dirname
 		if cwd:
 			cwd = MMurl.url2pathname(cwd)
@@ -321,7 +346,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				cwd = os.path.join(os.getcwd(), cwd)
 		else:
 			cwd = os.getcwd()
-		windowinterface.FileDialog('Save SMIL file:', cwd, '*.smil',
+		windowinterface.FileDialog('Publish SMIL file:', cwd, '*.smil',
 					   '', self.export_okcallback, None)
 	   
 	def upload_callback(self):
@@ -356,7 +381,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			fn = MMurl.url2pathname(string.split(smilurl, '/')[-1])
 		if os.path.split(filename)[1] != os.path.split(fn)[1]:
 			# The SMIL upload filename and URL don't match. Warn.
-			if not windowinterface.showquestion('Warning: Mediaserver SMIL URL looks suspect:\n'+smilurl):
+			if not windowinterface.showquestion('Warning: Mediaserver SMIL URL appears incorrect:\n'+smilurl):
 				return
 		hostname, username, passwd, dirname = self.w_ftpinfo
 		if username and not passwd:
@@ -445,7 +470,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			return
 		self.setwaiting()
 		import SMILTreeWrite, tempfile
-		tmp = tempfile.mktemp(mimetypes.guess_extension('application/smil'))
+		# XXXX This is wrong, probably
+		tmp = tempfile.mktemp(mimetypes.guess_extension('application/x-grins-project'))
 		self.__edittmp = tmp
 		SMILTreeWrite.WriteFile(self.root, tmp)
 		self.do_edit(tmp)
@@ -495,7 +521,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			# remote file
 			self.dirname = ''
 		mtype = mimetypes.guess_type(base)[0]
-		if mtype in ('application/smil', 'application/x-grins-cmif'):
+		if mtype in ('application/x-grins-project', 'application/smil', 'application/x-grins-cmif'):
 			self.basename = posixpath.splitext(base)[0]
 		else:
 			self.basename = base
@@ -548,18 +574,31 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				v.save_geometry()
 		
 
-	def save_to_file(self, filename, cleanSMIL = 0):
-		# cleanSMIL is a misnomer: it means "export" nowadays
+	def save_to_file(self, filename, exporting = 0):
 		license = self.main.wanttosave()
 		if not license:
 			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
 			return 0
 		evallicense= (license < 0)
-		if filename[-4:] == '.cmi' or filename[-5:] == '.cmif':
+		url = MMurl.pathname2url(filename)
+		mimetype = mimetypes.guess_type(url)[0]
+		if exporting and mimetype != 'application/smil':
+			windowinterface.showmessage('Export to SMIL (*.smi or *.smil) files only')
+			return
+		if mimetype == 'application/x-grins-cmif':
 			import settings
 			if settings.get('lightweight'):
 				windowinterface.showmessage('cannot write CMIF files in this version', mtype = 'error')
 				return 0
+		elif mimetype == 'application/smil':
+			if not exporting:
+				answer = windowinterface.multchoice('You will lose information by saving your project as SMIL.\nDo you want to continue?',
+					['OK', 'Cancel'], 1)
+				if answer != 0:
+					return
+		else:
+			# Save a grins project file
+			pass
 		self.pre_save()
 		# Make a back-up of the original file...
 		try:
@@ -568,14 +607,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			pass
 ##		print 'saving to', filename, '...'
 		try:
-			if filename[-4:] == '.cmi' or filename[-5:] == '.cmif':
-				if cleanSMIL:
-					windowinterface.showmessage('Saving to CMIF file instead of SMIL file', mtype = 'warning')
+			if mimetype == 'application/x-grins-cmif':
 				import MMWrite
 				MMWrite.WriteFile(self.root, filename, evallicense=evallicense)
 			else:
+				cleanSMIL = (mimetype == 'application/smil')
 				import SMILTreeWrite
-				if cleanSMIL:
+				if exporting:
 					# XXX enabling this currently crashes the application on Windows during video conversion
 					progress = windowinterface.ProgressDialog("Publishing")
 					progress.set('Publishing document...')
@@ -584,7 +622,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					progress = None
 				SMILTreeWrite.WriteFile(self.root, filename,
 							cleanSMIL = cleanSMIL,
-							copyFiles = cleanSMIL,
+							copyFiles = exporting,
 							evallicense=evallicense,
 							progress = progress)
 		except IOError, msg:
@@ -593,7 +631,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 						    'Error: '+msg[1])
 			return 0
 ##		print 'done saving.'
-		if not cleanSMIL:
+		if not exporting:
 			self.main._update_recent(MMurl.pathname2url(filename))
 			self.changed = 0
 			self.new_file = 0
@@ -725,10 +763,18 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					pass
 				else:
 					if ct == 'GRIN' and tp == 'TEXT':
-						mtype = 'application/smil'
-		if mtype == 'application/smil':
+						mtype = 'application/x-grins-project'
+		if mtype in ('application/smil', 'application/x-grins-project'):
 			import SMILTreeRead
+			# The progress dialog will disappear when we exit this function
+			if mtype == 'application/smil':
+				progress = windowinterface.ProgressDialog("Import")
+				progress.set("Importing SMIL document...")
 			self.root = SMILTreeRead.ReadFile(filename, self.printfunc, self.new_file)
+##			# For the lightweight version we set SMIL files as being "new"
+##			if light and mtype == 'application/smil':
+##				# XXXX Not sure about this, this may mess up code in read_it
+##				self.new_file = 1
 		elif mtype == 'application/x-grins-cmif':
 			import settings
 			if settings.get('lightweight'):
