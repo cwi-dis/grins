@@ -87,9 +87,6 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		#
 		self._registry = {}
 
-		# full screen player
-		self.__fsPlayer = None
-
 		# 
 		self._peerdocid = 0
 		self._peerviewports = {}
@@ -476,26 +473,8 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 				return self.newEmbedded(x, y, w, h, title, units, adornments, canvassize, commandlist, strid, bgcolor)
 			elif exporting:
 				return self.newExport(x, y, w, h, title, units, adornments,canvassize, commandlist,strid, bgcolor)
-			elif adornments.has_key('show') and adornments['show']=='fullscreen':
-				if not self.__fsPlayer:
-					self.__fsPlayer = self.newFSPlayer(self, bgcolor)
-				return self.__fsPlayer.newviewport(x, y, w, h, title, units, adornments,canvassize, commandlist,strid,bgcolor)
 		return self.newview(x, y, w, h, title, units, adornments, canvassize, commandlist, strid, bgcolor)
 
-	def newFSPlayer(self, frame, bgcolor):
-		from _FSPlayerView import _FSPlayerView
-		fsp = _FSPlayerView(frame, bgcolor)
-		desktop = Sdk.GetDesktopWindow()
-		dc = desktop.GetDC();
-		width = dc.GetDeviceCaps(win32con.HORZRES)
-		height = dc.GetDeviceCaps(win32con.VERTRES)
-		fsp.create('GRiNS Player',0,0,width,height)
-		fsp.ShowWindow(win32con.SW_SHOW)
-		fsp.UpdateWindow()
-		return fsp
-
-	def delFSPlayer(self):
-		self.__fsPlayer = None
 
 	def newExport(self, x, y, w, h, title, units = UNIT_MM, adornments=None, canvassize=None, commandlist=None, strid='cmifview_', bgcolor=None):
 		return win32window.ViewportContext(self, w, h, units, bgcolor)
