@@ -70,7 +70,7 @@ ITEMLISTNOT_COLOR=[ITEM_OPTION, ITEM_FILE_BROWSE]
 ITEMLIST_ALL=ITEMrange(ITEM_SELECT, ITEM_BALLOONHELP)
 
 class AttrEditorDialog(windowinterface.MACDialog):
-	def __init__(self, title, attriblist, toplevel=None):
+	def __init__(self, title, attriblist, toplevel=None, initattr=None):
 		"""Create the AttrEditor dialog.
 
 		Create the dialog window (non-modal, so does not grab
