@@ -227,17 +227,32 @@ class IntGroup(DlgBar):
 		DlgBar.create(self,parent,grinsRC.IDD_INT_GROUP,afxres.CBRS_ALIGN_TOP)
 		self._list.attach_to_parent()
 		self._open.attach_to_parent()
-		parent.HookCommand(self.OnOpenChild,self._open._id)
 		parent.HookCommand(self.OnListDblClk,self._list._id)
+
+		self._parent=parent
+		self._isOpenEnabled=0
 		self._cbd=cbd
+		self._cursel=None
+
 	# Response to button open
 	def OnOpenChild(self,id,code):
+		if self._cursel==None: return
 		if self._cbd and 'OpenChild' in self._cbd.keys():
 			apply(apply,self._cbd['OpenChild'])
 	def OnListDblClk(self,id,code):
-		if code==win32con.LBN_DBLCLK:				
-			apply(apply,self._cbd['OpenChild'])
+		if code==win32con.LBN_SELCHANGE:
+			self._cursel=self._list.getcursel()
+			self.EnableOpen()
+		elif code==win32con.LBN_DBLCLK:
+			if self._cbd and 'OpenChild' in self._cbd.keys():
+				apply(apply,self._cbd['OpenChild'])
 
+	def EnableOpen(self):
+		if not self._isOpenEnabled:
+			self._isOpenEnabled=1
+			self._parent.HookCommand(self.OnOpenChild,self._open._id)
+		
+		
 	# Interface to the interior part.  This part consists of a
 	# list of strings and an interface to select one item in the
 	# list.
@@ -252,12 +267,14 @@ class IntGroup(DlgBar):
 		self._list.resetcontent()
 		if children:
 			self._list.addlistitems(children, -1)
-			if initchild:
-				self._list.setcursel(initchild)
+			if initchild==None:initchild=0
+			self._list.setcursel(initchild)
+			self._cursel=initchild
+			self.EnableOpen()
 
 	def getchild(self):
 		"""Return the index of the current selection or None."""
-		return self._list.getcursel()
+		return self._cursel
 
 				
 
