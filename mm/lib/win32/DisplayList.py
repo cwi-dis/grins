@@ -401,7 +401,7 @@ class DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep = \
-		       self._window._prepare_image(file, crop, scale, center, coordinates)
+		       self._window._prepare_image(file, crop, scale, center, coordinates, clip)
 		self._list.append('image', mask, image, src_x, src_y,
 				  dest_x, dest_y, width, height,rcKeep)
 		self._optimize((2,))
