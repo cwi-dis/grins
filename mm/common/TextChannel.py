@@ -25,8 +25,8 @@ def fitstring(s, sizefunc, length):
 	# would prefer a built-in index function to find the first occurrence
 	# of a space character
 	for i in range(l):
-		if s[i:i+1] = ' ':
-			if sizefunc(s[0:i]) <= length:
+		if s[i] = ' ':
+			if sizefunc(s[:i]) <= length:
 				p = i
 			else:
 				l = i
