@@ -32,6 +32,7 @@ NSQTprefix = 'qt'
 SMILdecl = '<?xml version="1.0" encoding="ISO-8859-1"?>\n'
 doctype = '<!DOCTYPE smil PUBLIC "%s"\n%s"%s">\n' % (SMILpubid,' '*22,SMILdtd)
 doctype2 = '<!DOCTYPE smil PUBLIC "%s"\n%s"%s">\n' % (SMILBostonPubid,' '*22,SMILBostonDtd)
+doctypeCR = '<!DOCTYPE smil PUBLIC "%s"\n%s"%s">\n' % (SMILBostonPubid,' '*22,SMILBostonCRDtd)
 xmlnsGRiNS = 'xmlns:%s' % NSGRiNSprefix
 xmlnsQT = 'xmlns:%s' % NSQTprefix
 
@@ -98,10 +99,10 @@ class IndentedFile:
 Error = 'Error'
 cancel = 'cancel'
 
-def WriteFile(root, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0, evallicense = 0, progress = None, convertURLs = 0, convertfiles = 1, prune = 0):
+def WriteFile(root, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0, evallicense = 0, progress = None, convertURLs = 0, convertfiles = 1, prune = 0, compatibility = None):
 	fp = open(filename, 'w')
 	try:
-		writer = SMILWriter(root, fp, filename, cleanSMIL, grinsExt, copyFiles, evallicense, progress = progress, convertURLs = convertURLs, convertfiles = convertfiles, prune = prune)
+		writer = SMILWriter(root, fp, filename, cleanSMIL, grinsExt, copyFiles, evallicense, progress = progress, convertURLs = convertURLs, convertfiles = convertfiles, prune = prune, compatibility = compatibility)
 	except Error, msg:
 		from windowinterface import showmessage
 		showmessage(msg, mtype = 'error')
@@ -1007,7 +1008,8 @@ def mediatype(x, error=0):
 class SMILWriter(SMIL):
 	def __init__(self, node, fp, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0,
 		     evallicense = 0, tmpcopy = 0, progress = None,
-		     convertURLs = 0, convertfiles = 1, set_char_pos = 0, prune = 0):
+		     convertURLs = 0, convertfiles = 1, set_char_pos = 0, prune = 0,
+		     compatibility = None):
 		self.set_char_pos = set_char_pos
 
 		# some abbreviations
@@ -1034,6 +1036,7 @@ class SMILWriter(SMIL):
 		self.bases_used = {}
 		self.progress = progress
 		self.convert = convertfiles # we only convert if we have to copy
+		self.compatibility = compatibility
 		if copyFiles:
 			dir, base = os.path.split(filename)
 			base, ext = os.path.splitext(base)
@@ -1159,7 +1162,6 @@ class SMILWriter(SMIL):
 			x.char_positions = start, end
 
 	def writetag(self, tag, attrs = None, x = None):
-		compatibility = features.compatibility
 		if attrs is None:
 			attrs = []
 		write = self.fp.write
@@ -1257,8 +1259,13 @@ class SMILWriter(SMIL):
 		fp.write(SMILdecl)	# MUST come first
 		if self.evallicense:
 			fp.write('<!--%s-->\n' % EVALcomment)
+		# XXX HACK: if self.cleanSMIL and self.compatibility
+		# == compatibility.Boston we use the CR namespace
+		# (this is for the benefit of RealPlayer 9).
 		if self.cleanSMIL:
-			if self.smilboston:
+			if self.compatibility == compatibility.Boston:
+				fp.write(doctypeCR)
+			elif self.smilboston:
 				fp.write(doctype2)
 			else:
 				fp.write(doctype)
@@ -1266,7 +1273,10 @@ class SMILWriter(SMIL):
 			fp.write('<!--%s-->\n' % ctx.comment)
 		attrlist = []
 		if self.smilboston:
-			attrlist.append(('xmlns', SMIL2ns[0]))
+			if self.cleanSMIL and self.compatibility == compatibility.Boston:
+				attrlist.append(('xmlns', SMIL2ns[6]))
+			else:
+				attrlist.append(('xmlns', SMIL2ns[0]))
 		if self.uses_grins_namespace:
 			attrlist.append((xmlnsGRiNS, GRiNSns))
 		if self.uses_qt_namespace:
@@ -1565,8 +1575,10 @@ class SMILWriter(SMIL):
 		self.writetag('layout', attrlist)
 		self.push()
 		if self.smilboston:
-			self.__writeRegPoint()		
-		for ch in self.context.getviewports():
+			self.__writeRegPoint()
+		viewports = self.context.getviewports()
+		useRootLayout = len(viewports) == 1
+		for ch in viewports:
 			attrlist = []
 			if ch['type'] == 'layout':
 				attrlist.append(('id', self.ch2name[ch]))
@@ -1595,10 +1607,12 @@ class SMILWriter(SMIL):
 					val = ch['open']
 					if val != 'onStart':
 						attrlist.append(('open', val))
+						useRootLayout = 0
 				if ch.has_key('close'):
 					val = ch['close']
 					if val != 'onRequest':
 						attrlist.append(('close', val))
+						useRootLayout = 0
 
 			for name in ['width', 'height']:
 				value = ch.GetAttrDef(name, None)
@@ -1625,10 +1639,14 @@ class SMILWriter(SMIL):
 				for key, val in ch.items():
 					if not cmif_chan_attrs_ignore.has_key(key):
 						attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))
-				self.writetag('topLayout', attrlist, ch)
-				self.push()
-				self.writeregion(ch)
-				self.pop()
+				if useRootLayout:
+					self.writetag('root-layout', attrlist, ch)
+					self.writeregion(ch)
+				else:
+					self.writetag('topLayout', attrlist, ch)
+					self.push()
+					self.writeregion(ch)
+					self.pop()
 			else:
 				# not smilboston implies one top-level
 				self.writetag('root-layout', attrlist, ch)

@@ -582,10 +582,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			import SMILTreeRead		
 			root = SMILTreeRead.ReadString(text, self.filename, self.printfunc, progressCallback = (self.progressCallback, 0.5))
 		except (UserCancel, IOError):				
-			# the progress dialog will desapear
+			# the progress dialog will disappear
 			self.progress = None
 			# re-raise
-			raise sys.exc_type
+			raise
 
 		root.GetContext().setbaseurl(baseurl)
 
@@ -687,7 +687,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		evallicense= (license < 0)
 		if not self.save_to_file(filename, exporting = 1):
 			return		# Error, don't save HTML file
-		if exporttype == compatibility.SMIL10:
+		if exporttype in (compatibility.SMIL10, compatibility.Boston):
 			return		# don't create HTML file for SMIL 1.0 export
 		attrs = self.context.attributes
 		if not attrs.has_key('project_html_page') or not attrs['project_html_page']:
@@ -739,7 +739,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.export(compatibility.QT)
 
 	def export_SMIL_callback(self):
-		self.export(compatibility.SMIL10)
+		self.export(compatibility.Boston)
 
 	def export_WMP_callback(self):
 		import wmpsupport
@@ -1121,8 +1121,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					progress = windowinterface.ProgressDialog("Publishing", self.cancel_upload)
 					progress.set('Publishing document...')
 					progress = progress.set
+					exporttype = self.exporttype
 				else:
 					progress = None
+					exporttype = None
 				try:
 					SMILTreeWrite.WriteFile(self.root, filename,
 								cleanSMIL = cleanSMIL,
@@ -1131,8 +1133,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 								evallicense=evallicense,
 								progress = progress,
 								convertURLs = 1,
-								convertfiles = exporting and self.exporttype != compatibility.SMIL10,
-								prune = self.prune)
+								convertfiles = exporting and exporttype not in (compatibility.SMIL10, compatibility.Boston),
+								prune = self.prune,
+								compatibility = exporttype)
 				finally:
 					self.prune = 0
 		except IOError, msg:
@@ -1385,7 +1388,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				# the progress dialog will disappear
 				self.progress = None
 				# re-raise
-				raise sys.exc_type
+				raise
 			
 			# just update that the loading is finished
 			self.progressCallback(1.0)
