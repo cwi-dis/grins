@@ -53,7 +53,6 @@ class Window:
 		self._transition = None
 		self._passive = None
 		self._drawsurf = None
-		self._frozen = 0
 
 		# scaling support
 		self._device2logical = 1
@@ -870,8 +869,9 @@ class Window:
 	#
 	# Transitions interface
 	#
-	def begintransition(self, inout, runit, dict):
-		pass
+	def begintransition(self, inout, runit, dict, cb):
+		if cb:
+			apply(apply, cb)
 
 	def endtransition(self):
 		pass
@@ -882,8 +882,8 @@ class Window:
 	def settransitionvalue(self, value):
 		pass
 		
-	def freeze_content(self, how):
-		pass
+##	def freeze_content(self, how):
+##		pass
 
 
 	#
@@ -1228,8 +1228,7 @@ class Region(Window):
 			self._transition.endtransition()
 		self._parent._subwindows.remove(self)
 		self.updateMouseCursor()
-		if not self._frozen:
-			self._parent.update()
+		self._parent.update()
 		self._parent = None
 		for win in self._subwindows[:]:
 			win.close()
@@ -1241,7 +1240,6 @@ class Region(Window):
 		del self._video 
 		del self._drawsurf
 		del self._passive
-		del self._frozen
 
 	#
 	# OS windows simulation support
@@ -1770,10 +1768,6 @@ class Region(Window):
 				self._paint_1()
 			return
 
-		if self._frozen and not self._active_displist:
-			self._paint_4()
-			return
-
 		self._paint_0(rc)
 		
 	def createDDS(self, w=0, h=0):
@@ -1846,13 +1840,15 @@ class Region(Window):
 	#
 	# Transitions interface
 	#		
-	def begintransition(self, outtrans, runit, dict):
+	def begintransition(self, outtrans, runit, dict, cb):
 		if not self.__prepare_transition():
+			if cb:
+				apply(apply, cb)
 			return
 		self._multiElement = dict.get('multiElement')
 		self._childrenClip = dict.get('childrenClip')
 		self._outtrans = outtrans
-		self._transition = win32transitions.TransitionEngine(self, outtrans, runit, dict)
+		self._transition = win32transitions.TransitionEngine(self, outtrans, runit, dict, cb)
 		if runit:
 			#print 'begintransition', self, outtrans, runit, dict
 			self._transition.begintransition()
@@ -1865,21 +1861,21 @@ class Region(Window):
 			self._transition.endtransition()
 			self._transition = None
 	
-	def freeze_content(self, how):
-		# Freeze the contents of the window, depending on how:
-		# how='transition' until the next transition,
-		# how='hold' forever,
-		# how=None clears a previous how='hold'. This basically means the next
-		# close() of a display list does not do an erase.
-		#print 'freeze_content', how, self
-		if how:
-			self._topwindow.update()
-			self._passive = self.getBackDDS()
-			self._frozen = how
-		elif self._frozen:
-			self._passive = None
-			self._frozen = None
-			self.update()
+##	def freeze_content(self, how):
+##		# Freeze the contents of the window, depending on how:
+##		# how='transition' until the next transition,
+##		# how='hold' forever,
+##		# how=None clears a previous how='hold'. This basically means the next
+##		# close() of a display list does not do an erase.
+##		#print 'freeze_content', how, self
+##		if how:
+##			self._topwindow.update()
+##			self._passive = self.getBackDDS()
+##			self._frozen = how
+##		elif self._frozen:
+##			self._passive = None
+##			self._frozen = None
+##			self.update()
 
 	def jointransition(self, window):
 		# Join the transition already created on "window".
@@ -1903,11 +1899,8 @@ class Region(Window):
 		if self._transition:
 			print 'Multiple Transitions!'
 			return 0
-		if self._frozen == 'transition':
-			self._frozen = None
-		else:
-			self._topwindow.update()
-			self._passive = self.getBackDDS()
+		self._topwindow.update()
+		self._passive = self.getBackDDS()
 		return 1
 
 	def _windowlevel(self):
