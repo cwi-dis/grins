@@ -1674,6 +1674,8 @@ class ChannelWindow(Channel):
 
 		for a in MMAttrdefs.getattr(node, 'anchorlist'):
 			coordinates = a.aargs
+			if coordinates and coordinates[0] == A_SHAPETYPE_FRAGMENT:
+				continue
 			atype = a.atype
 			sensitive = 1
 			if atype not in SourceAnchors or \
