@@ -3,7 +3,7 @@ product grins
     cutpoint usr/grins
     image sw
         id "GRiNS Player 0.5 Software"
-        version 1
+        version 2
         order 9999
         subsys player default
             id "GRiNS Player 0.5 Base Software"
@@ -22,13 +22,13 @@ product grins
     endimage
     image help
         id "GRiNS Player 0.5 Help Files"
-        version 1
+        version 2
         order 9999
         subsys examples default
             id "GRiNS Player 0.5 SMIL Examples"
             replaces self
             prereq (
-                grins.sw.player 1 1
+                grins.sw.player 2 2
             )
             exp grins.help.examples
         endsubsys
@@ -40,7 +40,7 @@ product grins
     endimage
     image relnotes
         id "GRiNS Player 0.5 Release Notes"
-        version 1
+        version 2
         order 9999
         subsys relnotes default
             id "GRiNS Player 0.5 Release Notes"
