@@ -59,7 +59,9 @@ class TreeHelper:
 		if not node.type in leaftypes:
 			return 0
 		import ChannelMap
-		return ChannelMap.isvisiblechannel(node.GetChannelType())
+		chtype = node.GetChannelType()
+		# XXX svg should be include in visiblechannel list
+		return chtype == 'svg' or ChannelMap.isvisiblechannel(chtype)
 
 	# check the media node references and update the internal structure
 	def __checkMediaNodeList(self, nodeRef):
