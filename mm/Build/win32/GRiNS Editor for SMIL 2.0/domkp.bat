@@ -4,7 +4,7 @@ set GRINS_HOME=..\..\..
 
 set FREEZE_WHAT=editor
 set EXCLUDE_WHAT=grins
-set PRODUCT=snap
+set PRODUCT=smilboston
 
 set INCLUDE_MMEXTENSIONS=no
 
@@ -44,9 +44,9 @@ rem set CL=%CL%;/D FREEZE_WIN32UI
 rem Set up the PYTHONPATH for the freeze - this points to all the cmif directories
 rem we need to perform the freeze.
 set PYTHONPATH=%GRINS_HOME%
-set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%\win32
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%\%PRODUCT%\win32
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%\%PRODUCT%
+set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%\win32
 IF NOT %INCLUDE_MMEXTENSIONS%==yes GOTO restpath
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\mmextensions\real\win32
 :restpath
