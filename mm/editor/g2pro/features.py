@@ -6,5 +6,6 @@ from compatibility import *
 
 #
 compatibility = G2
+compatibility_short = 'G2'
 lightweight = 0
 editor = 1
