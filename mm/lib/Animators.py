@@ -790,8 +790,8 @@ class EffectiveAnimator:
 		name = node.attrdict.get('name')
 		# notify/update display value if we have a channel
 		if self.__chan:
-			if self.__chan._anchor2button.has_key(name):
-				button = self.__chan._anchor2button[name]
+			if self.__chan._played_anchor2button.has_key(name):
+				button = self.__chan._played_anchor2button[name]
 				if attr == 'coords':
 					button.updatecoordinates(value)
 			if debug:

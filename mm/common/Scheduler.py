@@ -288,6 +288,66 @@ class SchedulerContext:
 		srlist = self.getsrlist(ev)
 		self.queuesrlist(srlist, timestamp)
 
+	def sched_arc(self, node, arc, event = None, marker = None, deparc = None, timestamp = None):
+		if debugevents: print 'sched_arc',`node`,`arc`,event,marker,timestamp,self.parent.timefunc()
+		if arc.wallclock is not None:
+			timestamp = arc.resolvedtime(self.parent.timefunc)-arc.delay
+		if arc.ismin:
+			list = []
+		elif arc.isstart:
+			dev = 'begin'
+			list = MMAttrdefs.getattr(arc.dstnode, 'beginlist')
+			list = []
+		else:
+			dev = 'end'
+			list = MMAttrdefs.getattr(arc.dstnode, 'endlist')
+			list = list + arc.dstnode.durarcs
+		if arc.timestamp is not None and arc.timestamp != timestamp+arc.delay:
+			if arc.qid is not None:
+				if debugevents: print 'sched_arcs: cancel',`arc`,self.parent.timefunc()
+				arc.cancel(self.parent)
+		for a in list:
+			if a.qid is None:
+				continue
+			if a.ismin:
+				continue
+			if a.timestamp > timestamp + arc.delay:
+				if debugevents: print 'sched_arcs: cancel',`a`,self.parent.timefunc()
+				a.cancel(self.parent)
+				if a.isstart:
+					if a.dstnode.GetSchedParent():
+						srdict = a.dstnode.GetSchedParent().gensr_child(a.dstnode, runchild = 0, curtime = self.parent.timefunc())
+						self.srdict.update(srdict)
+					else:
+						# root node
+						self.scheduled_children = self.scheduled_children - 1
+				else:
+					if debugevents: print 'scheduled_children-1',`a.dstnode`,`node`,event,self.parent.timefunc()
+					a.dstnode.scheduled_children = a.dstnode.scheduled_children - 1
+		if arc.qid is None:
+			if arc.isstart:
+				if arc.dstnode.GetSchedParent():
+					srdict = arc.dstnode.GetSchedParent().gensr_child(arc.dstnode, runchild = 0, curtime = self.parent.timefunc())
+					self.srdict.update(srdict)
+				else:
+					# root node
+					self.scheduled_children = self.scheduled_children + 1
+			else:
+				if debugevents: print 'scheduled_children+1',`arc`,`node`,event,self.parent.timefunc()
+				arc.dstnode.scheduled_children = arc.dstnode.scheduled_children + 1
+			arc.timestamp = timestamp+arc.delay
+			arc.qid = self.parent.enterabs(arc.timestamp, 0, self.trigger, (arc,))
+			if arc.depends is not None:
+				try:
+					arc.deparcs.remove(arc)
+				except ValueError:
+					pass
+			arc.depends = deparc # can be None
+			if deparc is not None:
+				deparc.deparcs.append(arc)
+		if not arc.ismin and (arc.dstnode is not node or dev != event):
+			self.sched_arcs(arc.dstnode, dev, deparc = arc, timestamp=timestamp+arc.delay)
+
 	def sched_arcs(self, node, event = None, marker = None, deparc = None, timestamp = None):
 		if debugevents: print 'sched_arcs',`node`,event,marker,timestamp,self.parent.timefunc()
 		if timestamp is None:
@@ -307,81 +367,16 @@ class SchedulerContext:
 			    ((event != 'begin' or arc.dstnode not in node.GetSchedChildren()) and
 			     (event != 'end' or arc.dstnode in node.GetSchedChildren()))):
 				continue
-			if arc.wallclock is not None:
-				timestamp = arc.resolvedtime(self.parent.timefunc)-arc.delay
-			if arc.ismin:
-				list = []
-			elif arc.isstart:
-				dev = 'begin'
-##				arc.dstnode.start_time = timestamp+arc.delay
-				list = MMAttrdefs.getattr(arc.dstnode, 'beginlist')
-				list = []
-			else:
-				dev = 'end'
-				list = MMAttrdefs.getattr(arc.dstnode, 'endlist')
-				list = list + arc.dstnode.durarcs
-			if arc.timestamp is not None and arc.timestamp != timestamp+arc.delay:
-				if arc.qid is not None:
-					if debugevents: print 'sched_arcs: cancel',`arc`,self.parent.timefunc()
-					arc.cancel(self.parent)
-##				arc.timestamp = None
-			skip = 0
-			for a in list:
-				if a.qid is None:
-					continue
-				if a.ismin:
-					continue
-				if a.timestamp > timestamp + arc.delay:
-					if debugevents: print 'sched_arcs: cancel',`a`,self.parent.timefunc()
-					a.cancel(self.parent)
-					if a.isstart:
-						if a.dstnode.GetSchedParent():
-							srdict = a.dstnode.GetSchedParent().gensr_child(a.dstnode, runchild = 0, curtime = self.parent.timefunc())
-							self.srdict.update(srdict)
-##							a.dstnode.GetSchedParent().scheduled_children = a.dstnode.GetSchedParent().scheduled_children - 1
+			atime = 0
+			if arc.srcanchor is not None:
+				for id, type, args, times in node.attrdict.get('anchorlist', []):
+					if id == arc.srcanchor:
+						if event == 'end':
+							atime = times[1]
 						else:
-							# root node
-							self.scheduled_children = self.scheduled_children - 1
-					else:
-						if debugevents: print 'scheduled_children-1',`a.dstnode`,`node`,event,self.parent.timefunc()
-						a.dstnode.scheduled_children = a.dstnode.scheduled_children - 1
-##				else:
-##					# we're too late
-##					if debugevents: print 'sched_arcs: don\'t schedule',`arc`,arc.delay+timestamp,`a`,a.timestamp,self.parent.timefunc()
-##					skip = 1
-##					break
-			if skip:
-				continue
-			if arc.qid is None:
-				atimes = (0, 0)
-				if arc.srcanchor is not None:
-					for id, type, args, times in node.attrdict.get('anchorlist', []):
-						if id == self.srcanchor:
-							atimes = times
-							break
-				if arc.isstart:
-					if arc.dstnode.GetSchedParent():
-						srdict = arc.dstnode.GetSchedParent().gensr_child(arc.dstnode, runchild = 0, curtime = self.parent.timefunc())
-						self.srdict.update(srdict)
-##						arc.dstnode.GetSchedParent().scheduled_children = arc.dstnode.GetSchedParent().scheduled_children + 1
-					else:
-						# root node
-						self.scheduled_children = self.scheduled_children + 1
-				else:
-					if debugevents: print 'scheduled_children+1',`arc`,`node`,event,self.parent.timefunc()
-					arc.dstnode.scheduled_children = arc.dstnode.scheduled_children + 1
-				arc.timestamp = timestamp+arc.delay
-				arc.qid = self.parent.enterabs(arc.timestamp, 0, self.trigger, (arc,))
-				if arc.depends is not None:
-					try:
-						arc.deparcs.remove(arc)
-					except ValueError:
-						pass
-				arc.depends = deparc # can be None
-				if deparc is not None:
-					deparc.deparcs.append(arc)
-			if not arc.ismin and (arc.dstnode is not node or dev != event):
-				self.sched_arcs(arc.dstnode, dev, deparc = arc, timestamp=timestamp+arc.delay)
+							atime = times[0]
+						break
+			self.sched_arc(node, arc, event, marker, deparc, timestamp+atime)
 		if debugevents: print 'sched_arcs return',`node`,event,marker,timestamp,self.parent.timefunc()
 
 	def trigger(self, arc, node = None, timestamp = None):
