@@ -601,6 +601,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		xpos,ypos=msg.pos()
 
 		if self._menu:
+			self.onLButtonDown(params)
 			id = self._menu.FloatMenu(self,xpos, ypos)
 			if self._cbld.has_key(id) :
 				callback = self._cbld[id]
