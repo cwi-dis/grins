@@ -889,10 +889,16 @@ class MMNode(MMNodeBase.MMNode):
 		#
 		schedstop_events = [(SCHED_STOP, self)]
 
-		sched_actions, schedstop_actions, terminate_actions, \
+		#
+		# And we also tell generating routines about all terminating
+		# events.
+		terminate_events_arg = in1
+
+		sched_actions, schedstop_actions,  \
 			       srlist = gensr_envelope(gensr_body, loopcount,
 						       sched_actions_arg,
-						       scheddone_actions_arg)
+						       scheddone_actions_arg,
+						       terminate_events_arg)
 		if not looping:
 			#
 			# Tie our start-events to the envelope/body
@@ -907,20 +913,26 @@ class MMNode(MMNodeBase.MMNode):
 			# And, for our incoming tail syncarcs and a
 			# TERMINATE for ourselves we abort everything.
 			#
-			for event in in1+[(TERMINATE, self)]:
-				srlist.append( ([event], terminate_actions) )
+##			for event in in1+[(TERMINATE, self)]:
+##				srlist.append( ([event], terminate_actions) )
 		return srlist
 
 	def gensr_envelope_nonloop(self, gensr_body, loopcount, sched_actions,
-				   scheddone_actions):
+				   scheddone_actions, terminate_events):
 		if loopcount != 1:
 			raise 'Looping nonlooping node!'
 		self.curloopcount = 0
 
-		return gensr_body(sched_actions, scheddone_actions)
+		sched_actions, schedstop_actions, srlist = \
+			       gensr_body(sched_actions, scheddone_actions,
+					  terminate_events)
+##		for event in in1+[(TERMINATE, self)]:
+##			srlist.append( ([event], terminate_actions) )
+		return sched_actions, schedstop_actions, srlist
 
 	def gensr_envelope_firstloop(self, gensr_body, loopcount,
-				     sched_actions, scheddone_actions):
+				     sched_actions, scheddone_actions,
+				     terminate_events):
 		srlist = []
 		terminate_actions = []
 		#
@@ -950,11 +962,12 @@ class MMNode(MMNodeBase.MMNode):
 		sched_actions.append( (LOOPSTART, self) )
 		body_sched_actions = []
 		body_scheddone_actions = [(SCHED_DONE, self.looping_body_self)]
+		body_terminate_events = []
 
-		body_sched_actions, body_schedstop_actions, \
-				    body_terminate_actions, srlist = \
+		body_sched_actions, body_schedstop_actions, srlist = \
 				    gensr_body(body_sched_actions,
 					       body_scheddone_actions,
+					       body_terminate_events,
 					       self.looping_body_self)
 
 		# When the loop has started we start the body
@@ -962,8 +975,8 @@ class MMNode(MMNodeBase.MMNode):
 				
 		# Terminating the body doesn't terminate the loop,
 		# but the other way around it does
-		srlist.append( ([(TERMINATE, self.looping_body_self)],
-				body_terminate_actions) )
+##		srlist.append( ([(TERMINATE, self.looping_body_self)],
+##				body_terminate_actions) )
 		terminate_actions = [(TERMINATE, self.looping_body_self)]
 
 		# When the body is done we stop it, and we end/restart the loop
@@ -986,22 +999,25 @@ class MMNode(MMNodeBase.MMNode):
 		else:
 			srlist.append( ([(LOOPEND_DONE, self)],
 					scheddone_actions) )
-
-		return sched_actions, terminate_actions, terminate_actions, \
-		       srlist
+		for ev in terminate_events + [(TERMINATE, self)]:
+			srlist.append( [ev], terminate_actions )
+		
+		return sched_actions, terminate_actions, srlist
 		
 
 	def gensr_envelope_laterloop(self, gensr_body, loopcount,
-				     sched_actions, scheddone_actions):
+				     sched_actions, scheddone_actions,
+				     terminate_events):
 		srlist = []
 
 		body_sched_actions = []
 		body_scheddone_actions = [(SCHED_DONE, self.looping_body_self)]
+		body_terminate_events = []
 
-		body_sched_actions, body_schedstop_actions, \
-				    body_terminate_actions, srlist = \
+		body_sched_actions, body_schedstop_actions, srlist = \
 				    gensr_body(body_sched_actions,
 					       body_scheddone_actions,
+					       body_terminate_events,
 					       self.looping_body_self)
 
 		# When the loop has started we start the body
@@ -1009,8 +1025,8 @@ class MMNode(MMNodeBase.MMNode):
 				
 		# Terminating the body doesn't terminate the loop,
 		# but the other way around it does
-		srlist.append( ([(TERMINATE, self.looping_body_self)],
-				body_terminate_actions) )
+##		srlist.append( ([(TERMINATE, self.looping_body_self)],
+##				body_terminate_actions) )
 
 		# When the body is done we stop it, and we end/restart the loop
 		srlist.append( ([(SCHED_DONE, self.looping_body_self)],
@@ -1019,10 +1035,10 @@ class MMNode(MMNodeBase.MMNode):
 		srlist.append( ([(SCHED_STOP, self.looping_body_self)],
 				body_schedstop_actions) )
 		
-		return [], [], [], srlist
+		return [], [], srlist
 
 	def gensr_body_par(self, sched_actions, scheddone_actions,
-			   self_body=None):
+			   terminate_events, self_body=None):
 		srlist = []
 		schedstop_actions = []
 		terminate_actions = []
@@ -1055,20 +1071,34 @@ class MMNode(MMNodeBase.MMNode):
 			else:
 				scheddone_events.append( (SCHED_DONE, child) )
 
+		#
+		# Trickery to handle dur and end correctly:
+		#
+		if scheddone_events and terminate_events:
+			# Terminate_events means we have a specified
+			# duration. We obey this, and ignore scheddone
+			# events from our children.
+			srlist.append( (scheddone_events, []) )
+			scheddone_events = []
+			
 		if scheddone_events:
 			srlist.append((scheddone_events,
 				       scheddone_actions))
 		else:
 			terminate_actions = terminate_actions + \
 					    scheddone_actions
-		return sched_actions, schedstop_actions, terminate_actions, \
-		       srlist
+
+		for ev in terminate_events+[(TERMINATE, self_body)]:
+			srlist.append( [ev], terminate_actions )
+		return sched_actions, schedstop_actions, srlist
 		
 	def gensr_body_seq(self, sched_actions, scheddone_actions,
-			   self_body=None):
+			   terminate_events, self_body=None):
 		srlist = []
 		schedstop_actions = []
 		terminate_actions = []
+		if self_body == None:
+			self_body = self
 
 		previous_done_events = []
 		previous_stop_actions = []
@@ -1091,12 +1121,22 @@ class MMNode(MMNodeBase.MMNode):
 			# And child's own events/actions
 			srlist = srlist + ch.gensr()
 
-		# Link the events/actions for the last child to the parent
-		srlist.append( (previous_done_events, scheddone_actions) )
+		# Link the events/actions for the last child to the parent,
+		# iff we don't have a explicit duration or end.
+		if terminate_events:
+			terminate_actions = terminate_actions + \
+					    scheddone_actions
+			srlist.append( (previous_done_events, []) )
+		else:
+			srlist.append( (previous_done_events,
+					scheddone_actions) )
 ##		append SCHED_DONE to terminate_actions??
 		schedstop_actions = previous_stop_actions
-		return sched_actions, schedstop_actions, terminate_actions, \
-		       srlist
+
+		for ev in terminate_events+[(TERMINATE, self_body)]:
+			srlist.append( [ev], terminate_actions )
+		
+		return sched_actions, schedstop_actions, srlist
 		
 			
 	def GenAllSR(self, seeknode, getchannelfunc=None):
