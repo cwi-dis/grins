@@ -68,6 +68,7 @@ class AnchorEditor(Dialog):
 		self.anchorlist = []
 		self.focus = None # None or 0...len(self.anchorlist)-1
 		self.changed = 0
+		self.editable = 1
 		#
 		global form_template
 		if form_template == None:
@@ -80,6 +81,7 @@ class AnchorEditor(Dialog):
 		self = Dialog.init(self, width, height, title, hint)
 		#
 		flp.merge_full_form(self, self.form, form_template)
+		self.id_input.set_input_return(1)
 		#
 		return self
 
@@ -137,7 +139,10 @@ class AnchorEditor(Dialog):
 			return
 		self.uid = self.node.GetUID()
 		self.name = self.node.GetRawAttrDef('name', self.uid)
+		hasfixed = self.toplevel.player.updatefixedanchors(self.node)
+		self.editable = (not hasfixed)
 		anchorlist = MMAttrdefs.getattr(self.node, 'anchorlist')
+		modanchorlist(anchorlist)
 		if anchorlist <> self.anchorlist:
 			self.anchorlist = anchorlist[:]
 			if self.anchorlist:
@@ -177,13 +182,20 @@ class AnchorEditor(Dialog):
 
 	def show_focus(self):
 		self.anchor_browser.deselect_browser()
+		if self.focus and self.editable:
+			self.edit_button.show_object()
+		else:
+			self.edit_button.hide_object()
 		if self.focus == None:
 			self.group.hide_object()
-			self.edit_button.hide_object()
+			self.id_input.hide_object()
 		else:
 			self.anchor_browser.select_browser_line(self.focus+1)
 			self.show_type()
 			self.group.show_object()
+			id = self.anchorlist[self.focus]
+			self.id_input.set_input(id[0])
+			self.id_input.show_object()
 
 	def show_type(self):
 		if self.focus == None:
@@ -196,7 +208,7 @@ class AnchorEditor(Dialog):
 		self.auto_button.set_button(type == ATYPE_AUTO)
 		self.normal_button.set_button(type == ATYPE_NORMAL)
 		self.pause_button.set_button(type == ATYPE_PAUSE)
-		if type in (ATYPE_NORMAL, ATYPE_PAUSE):
+		if type in (ATYPE_NORMAL, ATYPE_PAUSE) and self.editable:
 			self.edit_button.show_object()
 		else:
 			self.edit_button.hide_object()
@@ -210,11 +222,13 @@ class AnchorEditor(Dialog):
 			type = new[A_TYPE]
 		if type in (ATYPE_AUTO, ATYPE_WHOLE):
 			new = (new[0], type, [])
-		else:
+		elif self.editable:
 			new = (new[0], type, new[2])
 			new = self.toplevel.player.defanchor(self.node, new)
 			if new == None:
 				new = old
+		else:
+			new = (new[0], ATYPE_WHOLE, [])
 		if new <> old:
 			self.anchorlist[self.focus] = new
 			self.changed = 1
@@ -258,16 +272,34 @@ class AnchorEditor(Dialog):
 		self.changed = 1
 		maxid = 0
 		for id, atype, args in self.anchorlist:
+			try:
+				id = eval('0+'+id)
+			except:
+				pass
 			if type(id) == type(0) and id > maxid:
 				maxid = id
-		id = maxid + 1
-		name = '#' + self.name + '.' + `id`
+		id = `maxid + 1`
+		name = '#' + self.name + '.' + id
 		self.anchorlist.append((id, ATYPE_WHOLE, []))
 		self.anchor_browser.add_browser_line(name)
 		self.focus = len(self.anchorlist)-1
 		self.show_focus()
 
+	def id_callback(self, *dummy):
+		# XXXX Does not work for non-whole-node anchors if
+		# self.editable is false
+		self.changed = 1
+		if self.focus == None:
+			raise 'id callback without focus!'
+		anchor = self.anchorlist[self.focus]
+		id = self.id_input.get_input()
+		anchor = (id, anchor[1], anchor[2])
+		self.anchorlist[self.focus] = anchor
+		self.show_focus()
+
 	def delete_callback(self, *dummy):
+		# XXXX Does not work for non-whole-node anchors if
+		# self.editable is false
 		if self.focus != self.anchor_browser.get_browser() - 1:
 			print 'AnchorEdit: wrong focus in delete!'
 			self.focus = None

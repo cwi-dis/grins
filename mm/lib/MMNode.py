@@ -167,10 +167,14 @@ class MMNodeContext:
 	#
 	def addhyperlinks(self, list):
 		##_stat('addhyperlinks')
+		modhyperlinklist(list)	# XXXX Backward compat
 		self.hyperlinks.addlinks(list)
 	#
 	def addhyperlink(self, link):
 		##_stat('addhyperlink')
+		list = [link]		# XXXX Backward compat
+		modhyperlinklist(list)
+		link = list[0]
 		self.hyperlinks.addlink(link)
 	#
 	def seteditmgr(self, editmgr):
@@ -1166,3 +1170,18 @@ def _copyoutgoinghyperlinks(hyperlinks, uidremap):
 			newlinks.append(link)
 	if newlinks:
 		hyperlinks.addlinks(newlinks)
+
+#
+def modhyperlinklist(list):
+	for i in range(len(list)):
+		didwork = 0
+		(n1,i1), (n2,i2), dir, tp = list[i]
+		if type(i1) <> type('') or type(i2) <> type(''):
+			if type(i1) <> type(''):
+				i1 = `i1`
+			if type(i2) <> type(''):
+				i2 = `i2`
+			list[i] = (n1,i1), (n2,i2), dir, tp
+			didwork = 1
+		if didwork:
+			print 'modhyperlinklist: modified hyperlinks'

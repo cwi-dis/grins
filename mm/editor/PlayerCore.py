@@ -96,20 +96,33 @@ class PlayerCore(Selecter):
 		self.play()
 		self.toplevel.setready()
 	#
-	def defanchor(self, node, anchor):
+	def anchorinit(self, node):
 		if not self.showing:
 			self.show()
 		if self.playing:
 			self.stop()
 		ch = self.getchannelbynode(node)
 		if ch == None:
-			dialogs.showmessage('Cannot set internal anchor\n' + \
-				  '(node not on a channel)')
 			return None
 		if not ch.is_showing():
 			ch.flip_visible()
 			self.makemenu()
+		return ch
+	#	
+	def defanchor(self, node, anchor):
+		ch = self.anchorinit(node)
+		if ch == None:
+			dialogs.showmessage('Cannot set internal anchor\n' + \
+				  '(node not on a channel)')
+			return None
 		return ch.defanchor(node, anchor)
+	#
+	def updatefixedanchors(self, node):
+		ch = self.anchorinit(node)
+		if ch == None:
+			return 1	# Cannot set on internal nodes
+		return ch.updatefixedanchors(node)
+			
 	#
 	def pause(self, wantpause):
 		if self.pausing == wantpause:
