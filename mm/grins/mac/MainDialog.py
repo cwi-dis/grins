@@ -58,7 +58,11 @@ class MainDialog:
 	def openfile_callback(self):
 		"""Callback for OPENFILE menu command"""
 		import windowinterface
-		windowinterface.FileDialog('', '', '*.smil', '',
+		filetypes = ['application/x-grins-project', 'application/smil']
+		import settings
+		if not settings.get('lightweight'):
+			filetypes.append('application/x-grins-cmif')
+		windowinterface.FileDialog('', '', filetypes, '',
 					   self.__openfile_done, None, 1)
 
 	def __openfile_done(self, filename):
