@@ -27,6 +27,9 @@ class TextChannel(ChannelWindow):
 	def do_arm(self, node, same=0):
 		if same and self.armed_display:
 			return 1
+		fgcolor = self.getfgcolor(node)
+		bucolor = self.getbucolor(node)
+		drawbox = MMAttrdefs.getattr(node, 'drawbox')
 		try:
 			str = self.getstring(node)
 		except error, arg:
@@ -65,6 +68,8 @@ class TextChannel(ChannelWindow):
 			   par1 == len(parlist)-1 and chr1 == len(parlist[-1]):
 				taglist = []
 				buttons.append(name, (0.0,0.0,1.0,1.0), type)
+				if not drawbox:
+					self.armed_display.fgcolor(bucolor)
 		pline, pchar = 0, 0
 		for (par0, chr0, par1, chr1, name, type) in taglist:
 			# first convert paragraph # and character #
@@ -85,6 +90,8 @@ class TextChannel(ChannelWindow):
 			# write the anchor text and remember its
 			# position (note: the anchor may span several
 			# lines)
+			if not drawbox:
+				self.armed_display.fgcolor(bucolor)
 			for line in range(pline, line1):
 				box = self.armed_display.writestr(curlines[line][pchar:])
 				buttons.append((name, box, type))
@@ -94,17 +101,22 @@ class TextChannel(ChannelWindow):
 			buttons.append((name, box, type))
 			# update loop invariants
 			pline, pchar = line1, char1
+			self.armed_display.fgcolor(fgcolor)
 		# write text after last button
 		for line in range(pline, len(curlines)):
 			dummy = self.armed_display.writestr(curlines[line][pchar:] + '\n')
 			pchar = 0
 ##			print 'buttons:',`buttons`
-		self.armed_display.fgcolor(self.getbucolor(node))
 		hicolor = self.gethicolor(node)
+		if drawbox:
+			self.armed_display.fgcolor(bucolor)
+		else:
+			self.armed_display.fgcolor(self.getbgcolor(node))
 		for (name, box, type) in buttons:
 			button = self.armed_display.newbutton(box)
-			button.hicolor(hicolor)
-			button.hiwidth(3)
+			if drawbox:
+				button.hicolor(hicolor)
+				button.hiwidth(3)
 			self.setanchor(name, type, button)
 ##			dummy = self.armed_display.writestr(string.joinfields(curlines, '\n'))
 		# Draw a little square if some text did not fit.
