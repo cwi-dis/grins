@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"
+                      "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
+<smil>
+  <head>
+    <meta name="title" content=" captions  "/>
+    <layout>
+      <root-layout id="captions-" title=" captions  " width="640" height="480"/>
+      <region id="captions" title="captions" top="83%" fit="meet"/>
+      <region id="pictures" title="pictures" height="83%" fit="meet"/>
+    </layout>
+  </head>
+  <body>
+    <seq>
+      <par id="item_1" dur="5s">
+        <text type="text/plain" id="caption_1" region="captions" src="data:,Caption%201"/>
+        <img id="picture_1" region="pictures" src="put-picture-1-here.tiff"/>
+      </par>
+      <par id="item_2" dur="5s">
+        <text type="text/plain" id="caption_2" region="captions" src="data:,Caption%202"/>
+        <img id="picture_2" region="pictures" src="put-picture-2-here.tiff"/>
+      </par>
+      <par id="item_3" dur="5s">
+        <text type="text/plain" id="caption_3" region="captions" src="data:,Caption%203"/>
+        <img id="picture_3" region="pictures" src="put-picture-3-here.tiff"/>
+      </par>
+    </seq>
+  </body>
+</smil>
