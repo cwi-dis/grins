@@ -4270,7 +4270,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if ns:
 				self.elements[ns + ' ' + tagname] = self.elements[tagname]
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
-		self.__saved_attrdict = attrdict
 
 	# update progress bar if needed
 	def __updateProgressHandler(self):
