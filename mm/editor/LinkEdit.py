@@ -726,9 +726,7 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 # General functions
 #
 def getanchors(node, recursive):
-	from AnchorDefs import modanchorlist
 	rawanchors = MMAttrdefs.getattr(node, 'anchorlist')
-	modanchorlist(rawanchors)
 	uid = node.GetUID()
 	anchors = []
 	for i in rawanchors:
