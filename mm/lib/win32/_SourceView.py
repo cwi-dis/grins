@@ -578,4 +578,9 @@ class _SourceView(GenView, docview.RichEditView):
 		# XXX should use the current map table
 		charIndex = charIndex - lineNumber
 
-		return charIndex		
+		return charIndex
+
+	# return the line number	
+	def getLineNumber(self):
+		return self.GetLineCount()
+	

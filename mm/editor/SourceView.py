@@ -13,6 +13,10 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 		SourceViewDialog.SourceViewDialog.__init__(self)
 
 		self.errorsview = None
+
+		# keep the original line number before any modification
+		# it's still useful to determinate if the selection is still valid
+		self.__originalLineNumber = 0
 		
 	def fixtitle(self):
 		pass
@@ -65,7 +69,6 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 		
 		if hasattr(focusobject, 'char_positions') and focusobject.char_positions:
 			# for now, make selection working only when the source is unmodified
-			# for now, make selection working only when the source is unmodified
 			# to avoid some position re-computations adter each modification
 			if not self.is_changed():
 				apply(self.select_chars, focusobject.char_positions)
@@ -94,8 +97,9 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 			msg, line = errorDesc
 			if line != None:
 				# for now, make selection working only when the source is unmodified
-				# to avoid some position re-computations adter each modification
-				if not self.is_changed():
+				# or the line number hasn't changed.
+				# to avoid some position re-computations after each modification
+				if not self.is_changed() or self.__originalLineNumber == self.getLineNumber():
 					self.select_lines(line, line+1)
 				
 	def setRoot(self, root):
@@ -135,6 +139,9 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 			self.set_text(text)
 		else:
 			self.set_text(parseErrors.getSource())
+
+		# keep the line number before any modification
+		self.__originalLineNumber = self.getLineNumber()
 			
 	def write_text(self):
 		# Writes the text back to the MMNode structure.
