@@ -1,9 +1,12 @@
+*** I have been hacking for a while without updating this file. ***
+*** I'll describe the current state of affairs later. ***
+*** --Guido, 8 Oct 1991 ***
+
 This is the integrated version of the MM editor.  I have collected the
 different views (player, block view, style editor and channel view)
 and glued them together with a little menu that allows the user to
 open and close individual views, and to quit.  There are also Save and
-Restore buttons but for the time being these don't function properly
-(Restore appears to but really triggeers a bug!).
+Restore buttons.
 
 
 The files are:
