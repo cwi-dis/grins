@@ -812,15 +812,15 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		id_pause = usercmdui.usercmd2id(usercmd.PAUSE)
 		id_stop = usercmdui.usercmd2id(usercmd.STOP)
 		if state == Player.PLAYING:
-			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_pause)
+			self.HookCommandUpdate(self.OnUpdateCmdEnableAndUncheck,id_pause)
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_play)
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_stop)
 		elif state == Player.PAUSING:
-			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_play)
+			self.HookCommandUpdate(self.OnUpdateCmdEnableAndUncheck,id_play)
 			self.HookCommandUpdate(self.OnUpdateCmdEnableAndCheck,id_pause)
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_stop)
 		elif state == Player.STOPPED:
-			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_play)
+			self.HookCommandUpdate(self.OnUpdateCmdEnableAndUncheck,id_play)
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_stop)
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_pause)
 		else:
@@ -840,6 +840,10 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 
 	def OnUpdateCmdEnableAndCheck(self,cmdui):
 		cmdui.SetCheck(1)
+		cmdui.Enable(1)
+
+	def OnUpdateCmdEnableAndUncheck(self,cmdui):
+		cmdui.SetCheck(0)
 		cmdui.Enable(1)
 
 	def OnUpdateCmdDissable(self,cmdui):
