@@ -7,28 +7,54 @@ import string
 VidRateNum = [30., 24., 24., 25., 30., 30., 50., 60.,
 	      60., 15., 30., 30., 30., 30., 30., 30.]
 
-def getduration(filename):
+def getduration(filename, bufsiz = 10240):
+	# sanity check
+	if bufsiz < 1024:
+		bufsiz = 1024
+
 	filename = urllib.url2pathname(filename)
 	fp = open(filename, 'rb')
 	nframes = 0
         rate = 0
-	for s in string.splitfields(fp.read(), '\000\000\001'):
-		if not s: continue
-		w = s[0]
+
+	# for efficiency, cache attribute lookups
+	find = string.find
+	read = fp.read
+
+	data = read(bufsiz)
+	i = find(data, '\000\000\001')
+	while i >= 0:
+		i = i + 3
+		try:
+			w = data[i]
+		except IndexError:
+			data = read(bufsiz)
+			i = 0
+			w = data[0]
 		if w == '\000':
 			# PICTURE_START_CODE
 			nframes = nframes + 1
-			continue
-		if w == '\263':
+		elif w == '\263':
 			# SEQ_START_CODE
-			rate = ord(s[2]) & 0x0F
-			continue
-		if w == '\267':
+			try:
+				rate = ord(data[i+2]) & 0x0F
+			except IndexError:
+				data = data[i:] + read(bufsiz)
+				i = 0
+				rate = ord(data[i+2]) & 0x0F
+		elif w == '\267':
 			# SEQ_END_CODE
 			break
+		i = find(data, '\000\000\001', i+1)
+		while i < 0:
+			data = data[-2:] + read(bufsiz)
+			if len(data) <= 2:
+				break
+			i = find(data, '\000\000\001')
 	try:
 		return nframes / VidRateNum[rate]
 	except IndexError:
+		# unknown frame rate, assume 30
 		return nframes / 30.0
 	
 duration_cache = FileCache.FileCache(getduration)
