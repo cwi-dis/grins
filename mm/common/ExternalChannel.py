@@ -42,13 +42,15 @@ class ExternalChannel(Channel):
 if os.name == 'posix':
 	
 	def startprog(prog, arg, argisurl):
+		arglist = string.split(prog)
+		arglist.append(arg)
 		try:
 			pid = os.fork()
 		except os.error, msg:
 			print 'fork:', msg
 			return None
 		if pid == 0: # Child
-			os.execvp(prog, [prog, arg])
+			os.execvp(arglist[0], arglist)
 			
 elif os.name == 'mac':
 	
