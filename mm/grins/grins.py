@@ -67,6 +67,8 @@ class Main(MainDialog):
 			top.player.playsubtree(top.root)
 
 	def openURL_callback(self, url):
+		import windowinterface
+		windowinterface.setwaiting()
 		from MMExc import MSyntaxError
 		import TopLevel
 		try:
@@ -79,7 +81,6 @@ class Main(MainDialog):
 			windowinterface.showmessage('parsing URL %s failed' % url)
 		else:
 			self.tops.append(top)
-			top.setwaiting()
 			top.show()
 			top.player.show()
 

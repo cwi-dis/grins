@@ -165,6 +165,7 @@ class _Toplevel:
 		pass
 
 	def mainloop(self):
+		self.setready()
 		Xt.MainLoop()
 
 	# timer interface

@@ -66,6 +66,7 @@ class MainDialog:
 
 	def __openfile_callback(self):
 		import windowinterface
+		windowinterface.setwaiting()
 		windowinterface.FileDialog('Open file', '.', '*.smil', '',
 					   self.__filecvt, None, 1,
 					   parent = self.__owindow)
