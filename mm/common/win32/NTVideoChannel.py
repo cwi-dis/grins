@@ -22,6 +22,9 @@ debug=0
 
 import rma
 
+# ddraw.error
+import ddraw
+
 USE_WINDOWLESS_REAL_RENDERING = 1
 	
 class VideoChannel(Channel.ChannelWindowAsync):
@@ -354,7 +357,11 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	def Blt(self, data):
 		if self.__rmdds and self.__rmrender:
 			blt, w, h = self.__rmrender
-			blt(data, w, h)
+			try:
+				blt(data, w, h)
+			except ddraw.error, arg:
+				print arg
+				return
 			if self.window:
 				self.window.update(self.window.getwindowpos())
 
