@@ -381,6 +381,8 @@ class LayoutView2(LayoutViewDialog2):
 				NEW_REGION(callback = (self.onNewRegion, ())),
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
 				DELETE(callback = (self.onDelNode, ())),
+				COPY(callback = (self.onCopy, ())),
+				CUT(callback = (self.onCut, ())),
 				]
 		else:
 			self.commandViewportList = [
@@ -395,7 +397,6 @@ class LayoutView2(LayoutViewDialog2):
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
 				DELETE(callback = (self.onDelNode, ())),
 				COPY(callback = (self.onCopy, ())),
-				PASTE(callback = (self.onPaste, ())),
 				CUT(callback = (self.onCut, ())),
 				]
 		else:
@@ -595,9 +596,9 @@ class LayoutView2(LayoutViewDialog2):
 
 		# update previous area and command list
 		if nodeType == TYPE_REGION:
-			self.setcommandlist(self.commandRegionList)
+			self.updateCommandList(self.commandRegionList, nodeType)
 		elif nodeType == TYPE_VIEWPORT:
-			self.setcommandlist(self.commandViewportList)
+			self.updateCommandList(self.commandViewportList, nodeType)
 
 		self.currentSelectedNodeList = [focusobject]
 		
@@ -607,7 +608,7 @@ class LayoutView2(LayoutViewDialog2):
 						
 	def focusOnMMNode(self, focusobject, keepShowedNodes=0):
 		# update command list
-		self.setcommandlist(self.commandMediaList)
+		self.updateCommandList(self.commandMediaList, TYPE_MEDIA)
 					
 		self.currentSelectedNodeList = [focusobject]
 		
@@ -632,9 +633,9 @@ class LayoutView2(LayoutViewDialog2):
 			previousObject = object
 
 		if areSibling:
-			self.setcommandlist(self.commandMultiSiblingSItemList)
+			self.updateCommandList(self.commandMultiSiblingSItemList, None)
 		else:
-			self.setcommandlist(self.commandMultiSItemList)
+			self.updateCommandList(self.commandMultiSItemList, None)
 
 		self.currentSelectedNodeList = list
 		
@@ -644,7 +645,7 @@ class LayoutView2(LayoutViewDialog2):
 		
 	def focusOnUnknown(self, focusobject, keepShowedNodes=0):
 		# update command list
-		self.setcommandlist(self.commandNoSItemList)
+		self.updateCommandList(self.commandNoSItemList, None)
 		
 		# update widgets
 		for id, widget in self.widgetList.items():
@@ -692,6 +693,20 @@ class LayoutView2(LayoutViewDialog2):
 #		self.displayViewport(saveCurrentViewport.getNodeRef())
 #		self.updateFocus()
 
+	def updateCommandList(self, basecommandlist, selectedType):
+		commandlist = []+basecommandlist
+
+		# Enable "paste" commands depending on what is in the clipboard.
+		t, n = Clipboard.getclip()
+		if selectedType in (TYPE_VIEWPORT, TYPE_REGION):
+			if t in ('region', 'viewport') and n is not None:
+				commandlist.append(PASTE(callback = (self.onPaste, ())))
+		else:
+			if t == 'viewport' and n is not None:
+				commandlist.append(PASTE(callback = (self.onPaste, ())))
+			
+		self.setcommandlist(commandlist)
+		
 	def updateFocus(self, keepShowedNodes=0):
 		if debug: print 'LayoutView.updateFocus:',self.currentFocusType,' focusobject=',self.currentFocus		
 		# check is the focus is still valid
@@ -1500,8 +1515,8 @@ class LayoutView2(LayoutViewDialog2):
 		
 		# for now, support only single selection
 		if self.currentSelectedNodeList != None:
-			exportedNode = self.currentSelectedNodeList[0].deepExport()
-			Clipboard.setclip('region', exportedNode)
+			selectedNode = self.currentSelectedNodeList[0]
+			self.__copyIntoClipboard(selectedNode)
 
 	def onCut(self):
 		self.__cleanClipboard()
@@ -1513,11 +1528,15 @@ class LayoutView2(LayoutViewDialog2):
 		# for now, support only simple selection
 		if self.currentSelectedNodeList != None:
 			selectedNode = self.currentSelectedNodeList[0]
-			exportedNode = selectedNode.deepExport()
-			Clipboard.setclip('region', exportedNode)
-
-			self.delRegion(selectedNode)			
-		
+			self.__copyIntoClipboard(selectedNode)
+			
+			# call del region without check if there is some medias inside
+			nodeType = self.getNodeType(selectedNode)
+			if nodeType == TYPE_REGION:
+				self.delRegion(selectedNode, 0)
+			elif nodeType == TYPE_VIEWPORT:
+				self.delViewport(selectedNode, 0)
+				
 	def	onPaste(self):
 		# apply some command which are automaticly applied when a control lost the focus
 		# it avoids some recursives transactions and some crashes
@@ -1526,14 +1545,23 @@ class LayoutView2(LayoutViewDialog2):
 		if self.currentSelectedNodeList != None:
 			selectedNode = self.currentSelectedNodeList[0]
 			type, node = Clipboard.getclip()
-			if type =='region':
+			if type in ('region', 'viewport'):
 				if self.editmgr.transaction():
-					cNode = node.CopyIntoContext(self.context, selectedNode)
+					if type == 'region':
+						cNode = node.CopyIntoContext(self.context, selectedNode)
+					else:
+						cNode = node.CopyIntoContext(self.context, None)
 					self.editmgr.commit()
 					self.setglobalfocus([cNode])
 					self.updateFocus()
 
-
+	def __copyIntoClipboard(self, selectedNode):
+		exportedNode = selectedNode.deepExport()
+		if self.getNodeType(selectedNode) == TYPE_REGION:
+			Clipboard.setclip('region', exportedNode)
+		elif self.getNodeType(selectedNode) == TYPE_VIEWPORT:
+			Clipboard.setclip('viewport', exportedNode)
+				
 	def __cleanClipboard(self):
 		# XXX to do something
 		pass
@@ -1587,9 +1615,9 @@ class LayoutView2(LayoutViewDialog2):
 		self.setglobalfocus([self.nameToNodeRef(name)])
 		self.updateFocus()
 
-	def delRegion(self, regionRef):
+	def delRegion(self, regionRef, check=1):
 		# if this region or any sub region contain a media, show a warning message, and ask confirmation
-		if self.doesContainMedias(regionRef):
+		if check and self.doesContainMedias(regionRef):
 			ret = windowinterface.GetOKCancel("The region that you want to remove contains some medias. Do you want to continue ?", self.toplevel.window)
 			if ret != 0:
 				# cancel
@@ -1619,16 +1647,16 @@ class LayoutView2(LayoutViewDialog2):
 
 		return 0
 	
-	def delViewport(self, nodeRef):
+	def delViewport(self, nodeRef, check=1):
 		# for now, we have to keep at least one viewport
 		currentViewportList = self.getViewportRefList()
 		if len(currentViewportList) <= 1:
-			msg = "you can't delete the last viewport"
+			msg = "you can't delete or cut the last viewport"
 			windowinterface.showmessage(msg, mtype = 'error')
 			return
 
 		# if this region or any sub region contain a media, show a warning message, and ask confirmation
-		if self.doesContainMedias(nodeRef):
+		if check and self.doesContainMedias(nodeRef):
 			ret = windowinterface.GetOKCancel("The topLayout element that you want to remove contains some medias. Do you want to continue ?", self.toplevel.window)
 			if ret != 0:
 				# cancel
