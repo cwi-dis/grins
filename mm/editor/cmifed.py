@@ -296,7 +296,7 @@ class Main(MainDialog):
 		import windowinterface
 		import settings
 		import string
-		url = 'http://www.oratrix.com/updatecheck/%s.txt'%version.shortversion
+		url = 'http://www.oratrix.com/indir/%s/updatecheck.txt'%version.shortversion
 		try:
 			fp = MMurl.urlopen(url)
 			data = fp.read()
@@ -446,13 +446,13 @@ def main():
 	#
 	stats = 0
 	#
-	import Help
-	if hasattr(Help, 'sethelpprogram'):
-		import settings
-		if settings.get('lightweight'):
-			Help.sethelpprogram('light')
-		else:
-			Help.sethelpprogram('editor')
+##	import Help
+##	if hasattr(Help, 'sethelpprogram'):
+##		import settings
+##		if settings.get('lightweight'):
+##			Help.sethelpprogram('light')
+##		else:
+##			Help.sethelpprogram('editor')
 	for opt, arg in opts:
 		if opt == '-s':
 			stats = 1
