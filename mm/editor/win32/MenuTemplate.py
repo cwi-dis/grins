@@ -199,6 +199,9 @@ MENUBAR=(
 		)),
 
 	('&Tools', (
+		(FLAG_ALL, ENTRY, 'Check bandwidth &usage', None, COMPUTE_BANDWIDTH),
+#		(FLAG_PRO, TOGGLE, '&Bandwidth usage strip', None, TOGGLE_BWSTRIP),
+		(FLAG_ALL, SEP,),
 		(FLAG_BOSTON, ENTRY, 'RealPix to S&MIL 2.0', None, RPCONVERT),
 		(FLAG_PRO, ENTRY, 'SMIL 2.0 to RealPi&x', None, CONVERTRP),
 		(FLAG_ALL, SEP,),
@@ -220,6 +223,14 @@ MENUBAR=(
 		)),
 
 	('&View', (
+		(FLAG_ALL, CASCADE, 'T&oolbars', (
+			(FLAG_ALL, ENTRY, '&General', None, TOOLBAR_GENERAL),
+			(FLAG_ALL, ENTRY, '&Player Controls', None, TOOLBAR_PLAYER),
+			(FLAG_ALL, ENTRY, '&Containers', None, TOOLBAR_CONTAINERS),
+			(FLAG_ALL, ENTRY, '&Timing and Linking', None, TOOLBAR_LINKING),
+			(FLAG_ALL, ENTRY, '&Region alignment', None, TOOLBAR_ALIGNMENT),
+			)),
+		(FLAG_PRO, SEP,),
 		(FLAG_ALL, ENTRY, '&Expand/Collapse\tCtrl+I', None, EXPAND),
 		(FLAG_ALL, ENTRY, 'E&xpand all', None, EXPANDALL),
 		(FLAG_ALL, ENTRY, '&Collapse all', None, COLLAPSEALL),
@@ -227,11 +238,9 @@ MENUBAR=(
 		(FLAG_PRO, ENTRY, '&Zoom in', None, CANVAS_WIDTH),
 		(FLAG_PRO, ENTRY, '&Fit in Window', None, CANVAS_RESET),
 		(FLAG_ALL, SEP,),
-		(FLAG_PRO, TOGGLE, 'Show/Hide unused c&hannels', None, TOGGLE_UNUSED),
-		(FLAG_PRO, TOGGLE, 'Sync &arcs', None, TOGGLE_ARCS),
+#		(FLAG_PRO, TOGGLE, 'Show/Hide unused c&hannels', None, TOGGLE_UNUSED),
+#		(FLAG_PRO, TOGGLE, 'Sync &arcs', None, TOGGLE_ARCS),
 		(FLAG_PRO, TOGGLE, '&Image thumbnails', None, THUMBNAIL),
-		(FLAG_ALL, ENTRY, 'Check bandwidth &usage', None, COMPUTE_BANDWIDTH),
-		(FLAG_PRO, TOGGLE, '&Bandwidth usage strip', None, TOGGLE_BWSTRIP),
 		(FLAG_PRO, TOGGLE, 'Show &Playable', None, PLAYABLE),
 		(FLAG_ALL, TOGGLE, 'Sho&w Time in Structure', None, CORRECTLOCALTIMESCALE),
 ##		(FLAG_ALL, CASCADE, 'Sho&w Time in Structure', (
@@ -242,14 +251,6 @@ MENUBAR=(
 		(FLAG_CMIF, SEP,),
 ##		(FLAG_ALL, DYNAMICCASCADE, '&Layout navigation', LAYOUTS),
 		(FLAG_ALL, TOGGLE, 'Show A&ll Properties', None, SHOWALLPROPERTIES),
-		(FLAG_ALL, SEP),
-		(FLAG_ALL, CASCADE, 'T&oolbars', (
-			(FLAG_ALL, ENTRY, '&General', None, TOOLBAR_GENERAL),
-			(FLAG_ALL, ENTRY, '&Player Controls', None, TOOLBAR_PLAYER),
-			(FLAG_ALL, ENTRY, '&Containers', None, TOOLBAR_CONTAINERS),
-			(FLAG_ALL, ENTRY, '&Timing and Linking', None, TOOLBAR_LINKING),
-			(FLAG_ALL, ENTRY, '&Region alignment', None, TOOLBAR_ALIGNMENT),
-			)),
 		)
 	 ),
  
