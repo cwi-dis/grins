@@ -211,6 +211,7 @@ CommandUI(TIMESCALE)
 # Channel view commands
 #
 CommandUI(NEW_REGION)
+CommandUI(NEW_TOPLAYOUT)
 CommandUI(TOGGLE_UNUSED)
 CommandUI(TOGGLE_ARCS)
 CommandUI(TOGGLE_BWSTRIP)
