@@ -1009,6 +1009,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.makeviews()
 		for i in showing:
 			self.views[i].show()
+		if self.source and not self.source.is_closed():
+			self.source_callback()
 
 	def read_it(self):
 		self.changed = 0
