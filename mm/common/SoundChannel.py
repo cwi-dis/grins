@@ -3,7 +3,7 @@
 from Channel import ChannelAsync
 import windowinterface
 import time
-import audio, audioconvert, audiodev
+import audio, audiodev
 import urllib
 import os
 
@@ -34,8 +34,8 @@ class SoundChannel(ChannelAsync):
 		if self.__port:
 			return 1
 		try:
-			SoundChannel.__port = audiodev.AudioDev(qsize=400000)
-		except audiodev.error, arg:
+			SoundChannel.__port = audiodev.writer(qsize=400000)
+		except audiodev.Error, arg:
 			print 'Error: No audio available:', arg
 			SoundChannel.__port = 'no-audio'
 			return 0
@@ -53,10 +53,11 @@ class SoundChannel(ChannelAsync):
 			return 1
 		if debug: print 'SoundChannel: arm', node
 		fn = self.getfileurl(node)
-		fn = urllib.urlretrieve(fn)[0]
-
 		try:
-			self.arm_fp = audio.reader(fn)
+			fn = urllib.urlretrieve(fn)[0]
+			self.arm_fp = audio.reader(fn,
+						   self.__port.getformats(),
+						   self.__port.getframerates())
 		except IOError:
 			print 'Cannot open audio file', fn
 			self.arm_fp = None
@@ -64,16 +65,6 @@ class SoundChannel(ChannelAsync):
 			return 1
 		except audio.Error:
 			print 'Unknown audio file type', fn
-			self.arm_fp = None
-			self.armed_duration = 0
-			return 1
-		try:
-			self.arm_fp = audioconvert.convert(
-				self.arm_fp,
-				self.__port.getformats(),
-				self.__port.getframerates())
-		except audio.Error:
-			print "Can't convert to usable format", fn
 			self.arm_fp = None
 			self.armed_duration = 0
 			return 1
