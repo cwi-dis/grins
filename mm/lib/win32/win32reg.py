@@ -62,6 +62,36 @@ def getType(ext):
 	return contenttype, filetype
 
 
+# verb can be: 'open', 'edit', 'print', etc
+def getShellCmd(ext, verb='open'):
+	regKey = RegKey(win32con.HKEY_CLASSES_ROOT,ext)
+	if regKey._key:
+		filetype = regKey.getStrEntry()
+		fileRegKey = RegKey(win32con.HKEY_CLASSES_ROOT,filetype)
+		if fileRegKey._key:
+			strSubKey = 'shell\\%s\\command' % verb
+			cmdkey = RegKey(fileRegKey._key,strSubKey)
+			cmd = cmdkey.getStrEntry()
+		else:
+			cmd = None	
+	else:
+		cmd = None
+	return cmd
+
+
+def getShellApp(ext, verb='open'):
+	cmd = getShellCmd(ext, verb)
+	if cmd:
+		cmdl = cmd.split('"')
+		if len(cmdl)>1:
+			app = cmdl[1]
+		else:
+			app = cmd.split(' ')[0]
+	else:
+		app = None
+	return app
+
+
 if __name__ == '__main__':
 	print getType('.smi')	
 	print getType('.smil')	
@@ -85,5 +115,6 @@ if __name__ == '__main__':
 	print getType('.asf')
 	print getType('.wmv')
 
-
+	print getShellCmd('.smi')
+	print getShellApp('.smi')
 
