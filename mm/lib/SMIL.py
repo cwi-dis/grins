@@ -193,7 +193,7 @@ class SMIL:
 			    },
 		'uGroup': {'id':None,
 			   'uState':'RENDERED',
-##			   'title':None,
+			   'title':None,
 ##			   'override':'allowed',
 			   },
 		}

@@ -117,6 +117,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def show(self):
 		TopLevelDialog.show(self)
+		if self.context.attributes.get('project_boston', 0):
+			self.setcommands(self.commandlist + self.__ugroup)
 		if self.hierarchyview is not None:
 			self.hierarchyview.show()
 
@@ -618,7 +620,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.main._update_recent(MMurl.pathname2url(filename))
 			self.changed = 0
 			self.new_file = 0
-		self.setcommands(self.commandlist)
+		if self.context.attributes.get('project_boston', 0):
+			self.setcommands(self.commandlist + self.__ugroup)
+		else:
+			self.setcommands(self.commandlist)
 		return 1
 		
 	def save_to_ftp(self, filename, smilurl, w_ftpparams, m_ftpparams):
@@ -669,7 +674,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		except KeyboardInterrupt:
 			windowinterface.showmessage('Upload interrupted')
 			return 0
-		self.setcommands(self.commandlist) # Is this needed?? (Jack)
+		# Is this needed?? (Jack)
+		if self.context.attributes.get('project_boston', 0):
+			self.setcommands(self.commandlist + self.__ugroup)
+		else:
+			self.setcommands(self.commandlist)
 		return 1
 		
 	def cancel_upload(self):

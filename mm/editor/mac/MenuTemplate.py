@@ -141,7 +141,7 @@ MENUBAR=(
 		(ALL, ENTRY, 'Play Node', None, PLAYNODE),
 		(ALL, ENTRY, 'Play from Node', None, PLAYFROM),
 		(CMIF, SEP,),
-		(CMIF, DYNAMICCASCADE, 'User Groups', USERGROUPS),
+		(SMIL, DYNAMICCASCADE, 'User Groups', USERGROUPS),
 		(CMIF, DYNAMICCASCADE, 'Channel Visibility', CHANNELS),
 		)),
 
@@ -190,7 +190,7 @@ MENUBAR=(
 		(FULL, ENTRY, 'Timeline View', '7', CHANNELVIEW),
 		(FULL, ENTRY, 'Layout View', '8', LAYOUTVIEW),
 		(FULL, ENTRY, 'Hyperlinks', '9', LINKVIEW),
-		(CMIF, ENTRY, 'User Groups', '0', USERGROUPVIEW),
+		(SMIL, ENTRY, 'User Groups', '0', USERGROUPVIEW),
 		(ALL, SEP,),
 		(ALL, ENTRY, 'Source', None, SOURCE),
 		(ALL, ENTRY, 'View Help Window', None, HELP),
