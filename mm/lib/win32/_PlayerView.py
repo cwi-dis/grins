@@ -1,18 +1,21 @@
 __version__ = "$Id$"
 
-
+# win32 constants
 import win32con
+
+# app constants
 from appcon import *
 
+# win32 structures helpers
 import win32mu
 
+# base class and mixins
+from win32dlview import DisplayListView
 import win32window
 
-from _CmifView import _CmifView
-
-class _PlayerView(_CmifView, win32window.DDWndLayer):
+class _PlayerView(DisplayListView, win32window.DDWndLayer):
 	def __init__(self,doc,bgcolor=None):
-		_CmifView.__init__(self,doc)
+		DisplayListView.__init__(self,doc)
 		self._canclose=1
 		self._tid=None
 		self.__lastMouseMoveParams = None
@@ -24,7 +27,7 @@ class _PlayerView(_CmifView, win32window.DDWndLayer):
 		self._viewport = None
 
 	def init(self, rc, title='View', units= UNIT_MM, adornments=None, canvassize=None, commandlist=None, bgcolor=None):
-		_CmifView.init(self, rc, title=title, units=units, adornments=adornments, canvassize=canvassize,
+		DisplayListView.init(self, rc, title=title, units=units, adornments=adornments, canvassize=canvassize,
 			commandlist=commandlist, bgcolor=bgcolor)
 		x, y, w, h = rc
 		self._viewport = win32window.Viewport(self, 0, 0, w, h, bgcolor)
@@ -33,20 +36,20 @@ class _PlayerView(_CmifView, win32window.DDWndLayer):
 		return self._viewport.newwindow(coordinates, pixmap, transparent, z, type_channel, units, bgcolor)
 
 	def closeViewport(self, viewport):
-		_CmifView.close(self)
+		DisplayListView.close(self)
 
 	def OnCreate(self,params):
-		_CmifView.OnCreate(self, params)
+		DisplayListView.OnCreate(self, params)
 		if self._usesLightSubWindows:
 			self.createDDLayer()
 
 	def OnDestroy(self, msg):		
 		if self._usesLightSubWindows:
 			self.destroyDDLayer()
-		_CmifView.OnDestroy(self, msg)
+		DisplayListView.OnDestroy(self, msg)
 
 	def OnInitialUpdate(self):
-		_CmifView.OnInitialUpdate(self)
+		DisplayListView.OnInitialUpdate(self)
 		self.HookMessage(self.onCreateBoxOK,WM_USER_CREATE_BOX_OK)
 		self.HookMessage(self.onCreateBoxCancel,WM_USER_CREATE_BOX_CANCEL)
 
@@ -55,7 +58,7 @@ class _PlayerView(_CmifView, win32window.DDWndLayer):
 	# Nobody would excpect to destroy a window by resizing it!
 	def close(self):
 		if self._canclose:
-			_CmifView.close(self)
+			DisplayListView.close(self)
 					
 	# The response of the view for the WM_SIZE (Resize) message						
 	def onSize(self,params):
@@ -99,7 +102,7 @@ class _PlayerView(_CmifView, win32window.DDWndLayer):
 			self.notifyListener('OnDraw',dc)
 			return
 		if not self._usesLightSubWindows:
-			_CmifView.OnDraw(self,dc)
+			DisplayListView.OnDraw(self,dc)
 		else:
 			self.update()
 
@@ -107,7 +110,7 @@ class _PlayerView(_CmifView, win32window.DDWndLayer):
 		cont, stop = 0, 1	
 		
 		if not self._usesLightSubWindows:
-			if _CmifView.onMouseEvent(self, point, ev):
+			if DisplayListView.onMouseEvent(self, point, ev):
 				return stop
 
 		return self._viewport.onMouseEvent(point, ev)
@@ -122,7 +125,7 @@ class _PlayerView(_CmifView, win32window.DDWndLayer):
 		else: self.__lastMouseMoveParams = params
 		
 		if not self._usesLightSubWindows or self.in_create_box_mode():
-			_CmifView.onMouseMove(self, params)
+			DisplayListView.onMouseMove(self, params)
 		
 		msg=win32mu.Win32Msg(params)
 		flags = 0
@@ -133,8 +136,8 @@ class _PlayerView(_CmifView, win32window.DDWndLayer):
 
 	def OnEraseBkgnd(self,dc):
 		if not self._usesLightSubWindows or not self._active_displist:
-			return _CmifView.OnEraseBkgnd(self,dc)
-		win32mu.DrawRectangle(GetClientRect(), self._bgcolor or (255, 255, 255))
+			return DisplayListView.OnEraseBkgnd(self,dc)
+		win32mu.DrawRectangle(dc, self.GetClientRect(), self._bgcolor or (255, 255, 255))
 		return 1
 		
 	def update(self):
