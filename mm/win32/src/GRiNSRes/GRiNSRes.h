@@ -202,7 +202,7 @@
 #define IDI_ICON_PRIOCLOSED             405
 #define IDI_ICON_EXCLCLOSED             406
 #define IDD_EDITATTR_EVENTLIST          407
-
+#define IDD_ASSETSBAR                   408
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -496,6 +496,8 @@
 #define IDC_THINGBUTTON                 1345
 #define IDC_EVENTTABNAME                1346
 #define IDC_EVENTLASSOO                 1347
+#define IDC_RADIO_ALL                   1348
+#define IDC_RADIO_UNUSED                1349
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -582,9 +584,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        408
+#define _APS_NEXT_RESOURCE_VALUE        409
 #define _APS_NEXT_COMMAND_VALUE         32877
-#define _APS_NEXT_CONTROL_VALUE         1348
+#define _APS_NEXT_CONTROL_VALUE         1350
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
