@@ -1,6 +1,3 @@
-/*
-	A basic extension of the java.applet.Applet class
- */
 
 import java.awt.*;
 import java.awt.event.*;
@@ -19,9 +16,9 @@ public class GRiNSApplet extends Applet
 		//{{INIT_CONTROLS
 		setLayout(null);
 		setSize(480,400);
-		add(grinsCanvas);
-		grinsCanvas.setBackground(java.awt.Color.pink);
-		grinsCanvas.setBounds(25,25,300,300);
+		add(grinsViewport);
+		grinsViewport.setBackground(java.awt.Color.pink);
+		grinsViewport.setBounds(25,25,300,300);
 		buttonConnect.setLabel("Connect");
 		add(buttonConnect);
 		buttonConnect.setBackground(java.awt.Color.lightGray);
@@ -66,8 +63,8 @@ public class GRiNSApplet extends Applet
 	}
 	
 	//{{DECLARE_CONTROLS
-	GRiNSCanvas grinsCanvas = new GRiNSCanvas();
-	//java.awt.Canvas grinsCanvas = new java.awt.Canvas();
+	GRiNSViewport grinsViewport = new GRiNSViewport();
+	//java.awt.Canvas grinsViewport = new java.awt.Canvas();
 	java.awt.Button buttonConnect = new java.awt.Button();
 	java.awt.Button buttonDisconnect = new java.awt.Button();
 	java.awt.Button buttonOpen = new java.awt.Button();
@@ -85,7 +82,7 @@ public class GRiNSApplet extends Applet
 	public void start() {
 	    }
 	public void stop() {
-	    grinsCanvas.disconnect();
+	    grinsViewport.disconnect();
 	    }
     public void destroy() {
         }
@@ -144,41 +141,41 @@ public class GRiNSApplet extends Applet
 	void buttonConnect_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		// to do: code goes here.
-		grinsCanvas.connect(getGraphics());	 
+		grinsViewport.connect();	 
 	}
 
 	void buttonDisconnect_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		// to do: code goes here.
-		grinsCanvas.disconnect();	 
+		grinsViewport.disconnect();	 
 			 
 	}
 
 	void buttonOpen_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		// to do: code goes here.
-		grinsCanvas.open(textFieldURL.getText());	 
+		grinsViewport.open(textFieldURL.getText());	 
 			 
 	}
 
 	void buttonPlay_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		// to do: code goes here.
-		grinsCanvas.play();	 
+		grinsViewport.play();	 
 			 
 	}
 
 	void buttonPause_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		// to do: code goes here.
-		grinsCanvas.pause();	 
+		grinsViewport.pause();	 
 			 
 	}
 
 	void buttonStop_ActionPerformed(java.awt.event.ActionEvent event)
 	{
 		// to do: code goes here.
-		grinsCanvas.stop();	 
+		grinsViewport.stop();	 
 			 
 	}
 }
