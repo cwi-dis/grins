@@ -188,7 +188,7 @@ class NodeInfoDialog(windowinterface.MACDialog):
 
 	def getchannelname(self):
 		"""Get the string which is the current selection."""
-		return self.__channel_select.getselect()
+		return self.__channel_select.getselectvalue()
 
 	def askchannelname(self, default):
 		windowinterface.InputDialog('Name for new channel',
@@ -213,7 +213,7 @@ class NodeInfoDialog(windowinterface.MACDialog):
 
 	def gettype(self):
 		"""Get the string which is the current selection."""
-		return self.__type_select.getselect()
+		return self.__type_select.getselectvalue()
 
 	def settype(self, inittype):
 		"""Set the current selection.

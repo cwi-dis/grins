@@ -237,8 +237,7 @@ class AnchorEditorDialog(windowinterface.MACDialog):
 			be the selected item (no element is selected
 			if None)
 		"""
-		self.__anchor_browser.set(list)
-		self.__anchor_browser.select(initial)
+		self.__anchor_browser.setitems(list, initial)
 		self._setidfromlist()
 
 	def selection_setselection(self, pos):
