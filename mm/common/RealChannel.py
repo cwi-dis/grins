@@ -166,6 +166,9 @@ class RealChannel:
 		return 1
 
 	def OnPresentationOpened(self):
+		windowinterface.settimer(0.1,(self.playit2,()))
+
+	def playit2(self):
 		node = self._playargs[0]
 		t0 = self.__channel._scheduler.timefunc()
 		if t0 > node.start_time:
