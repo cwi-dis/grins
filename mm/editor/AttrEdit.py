@@ -14,6 +14,7 @@ import string
 import os
 import sys
 import flags
+from fmtfloat import fmtfloat
 
 DEFAULT = 'Default'
 UNDEFINED = 'undefined'
@@ -246,7 +247,7 @@ class Wrapper: # Base class -- common operations
 	def getdef(self, name):
 		return MMAttrdefs.getdef(name)
 	def valuerepr(self, name, value):
-		return MMAttrdefs.valuerepr(name, value)
+		return MMAttrdefs.valuerepr(name, value).strip()
 	def parsevalue(self, name, str):
 		return MMAttrdefs.parsevalue(name, str, self.context)
 	def canhideproperties(self):
@@ -360,202 +361,202 @@ class NodeWrapper(Wrapper):
 	# in an order that makes sense to the user.
 	#
 	def attrnames(self):
-		import settings
-		lightweight = features.lightweight
-		boston = self.context.attributes.get('project_boston', 0)
-		ntype = self.node.GetType()
-		if ntype == 'prio':
-			# special case for prio nodes
-			list = ['name', 'title', 'abstract', 'author',
-				'copyright',
-				'higher', 'peers', 'lower', 'pauseDisplay']
-			if features.EDIT_TYPE in features.feature_set:
-				list.insert(1, '.type')
-			return list
-		elif ntype == 'comment':
-			# special case for comment nodes
-			return ['.values']
-		elif ntype == 'foreign':
-			return self.node.attrdict.keys()
+		return self.node.getallattrnames(1)
+##		import settings
+##		boston = self.context.attributes.get('project_boston', 0)
+##		ntype = self.node.GetType()
+##		if ntype == 'prio':
+##			# special case for prio nodes
+##			list = ['name', 'title', 'abstract', 'author',
+##				'copyright',
+##				'higher', 'peers', 'lower', 'pauseDisplay']
+##			if features.EDIT_TYPE in features.feature_set:
+##				list.insert(1, '.type')
+##			return list
+##		elif ntype == 'comment':
+##			# special case for comment nodes
+##			return ['.values']
+##		elif ntype == 'foreign':
+##			return self.node.attrdict.keys()
 
-		# Tuples are optional names and will be removed if they
-		# aren't set
-		namelist = [
-			'name', ('channel',), ('file',), # From nodeinfo window
-			('.type',),
-			('terminator',),
-			'beginlist', 'endlist',
-			'duration', ('min',), ('max',), 'loop', 'repeatdur', # Time stuff
-			('restart',), ('restartDefault',),
-			('clipbegin',), ('clipend',),	# More time stuff
-			('sensitivity',),
-			('top',), ('height',), ('bottom',),
-			('left',), ('width',), ('right',),
-			('fit',),
-			('fill',), ('fillDefault',), ('erase',),
-			('syncBehavior',), ('syncBehaviorDefault',),
-			'title', ('abstract',), ('alt',), ('longdesc',), ('readIndex',), 'author',
-			'copyright',
-			'layout', 'u_group',
-			('fgcolor',),
-			('mimetype',),	# XXXX Or should this be with file?
-			('system_audiodesc',), 'system_bitrate',
-			('system_captions',), ('system_cpu',),
-			'system_language', ('system_operating_system',),
-			('system_overdub_or_caption',), ('system_required',),
-			('system_screen_size',), ('system_screen_depth',),
-			]
-		ctype = self.node.GetChannelType()
-		if ntype in mediatypes or features.compatibility == features.CMIF:
-			namelist.append('channel')
-		if features.EDIT_TYPE in features.feature_set:
-			namelist.append('.type')
-		namelist.append('abstract')
-		namelist.append('system_captions')
-		namelist.append('system_overdub_or_caption')
-		namelist.append('system_required')
-		namelist.append('system_screen_size')
-		namelist.append('system_screen_depth')
-		if boston:
-			namelist.append('system_audiodesc')
-			namelist.append('system_cpu')
-			namelist.append('system_operating_system')
-			namelist.append('system_component')
-			if ntype != 'switch':
-				namelist.append('restart')
-				namelist.append('restartDefault')
-				namelist.append('fillDefault')
-				namelist.append('syncBehavior')
-				namelist.append('syncBehaviorDefault')
-				namelist.append('min')
-				namelist.append('max')
-			if ntype in mediatypes:
-				namelist.append('readIndex')
-				namelist.append('erase')
-				if features.EXPORT_REAL in features.feature_set:
-					if ctype != 'sound':
-						namelist.append('backgroundOpacity')
-						namelist.append('chromaKey')
-						namelist.append('chromaKeyOpacity')
-						namelist.append('chromaKeyTolerance')
-						namelist.append('mediaOpacity')
-					namelist.append('reliable')
-					if ctype in ('text','image'):
-						namelist.append('strbitrate')
-		if features.EXPORT_REAL in features.feature_set and 'u_group' in namelist:
-			namelist.remove('u_group')
-		if (ntype in playabletypes or boston) and ntype != 'switch':
-			namelist.append('fill')
-		if boston:
-			namelist.append('alt')
-			namelist.append('longdesc')
-		if ntype in ('par', 'excl') or (ntype in termtypes and boston):
-			namelist.append('terminator')
-		if ntype in interiortypes:
-			namelist.append('thumbnail_icon')
-			namelist.append('dropicon')
-			namelist.append('empty_icon')
-			namelist.append('empty_text')
-			namelist.append('empty_color')
-			namelist.append('empty_duration')
-			namelist.append('non_empty_icon')
-			namelist.append('non_empty_text')
-			namelist.append('non_empty_color')
-			namelist.append('thumbnail_scale')
-		if ntype in ('par', 'seq', 'excl'):
-			namelist.append('duration')
-			namelist.append('project_default_region_video')
-			namelist.append('project_default_region_image')
-			namelist.append('project_default_region_sound')
-			namelist.append('project_default_region_text')
-			namelist.append('project_forcechild')
-		if ntype == 'switch':
-			if 'begin' in namelist:
-				namelist.remove('begin')
-			namelist.remove('loop')
-			namelist.remove('duration')
-			namelist.remove('repeatdur')
-			namelist.remove('beginlist')
-			namelist.remove('endlist')
-		if ntype in playabletypes:
-			namelist.append('alt')
-			namelist.append('allowedmimetypes')
-			namelist.append('longdesc')
-			if ctype != 'brush':
-				namelist.append('clipbegin')
-				namelist.append('clipend')
-			if boston:
-				if ChannelMap.isvisiblechannel(ctype):
-					namelist.append('left')
-					namelist.append('width')
-					namelist.append('right')
-					namelist.append('top')
-					namelist.append('height')
-					namelist.append('bottom')
-					namelist.append('fit')
-					namelist.append('regPoint')
-					namelist.append('regAlign')
-					namelist.append('z')
-				namelist.append('sensitivity')
-				if ctype == 'brush':
-					namelist.append('fgcolor')
+##		# Tuples are optional names and will be removed if they
+##		# aren't set
+##		namelist = [
+##			'name', ('channel',), ('file',), # From nodeinfo window
+##			('.type',),
+##			('terminator',),
+##			'beginlist', 'endlist',
+##			'duration', ('min',), ('max',), 'loop', 'repeatdur', # Time stuff
+##			('restart',), ('restartDefault',),
+##			('clipbegin',), ('clipend',),	# More time stuff
+##			('sensitivity',),
+##			('top',), ('height',), ('bottom',),
+##			('left',), ('width',), ('right',),
+##			('fit',),
+##			('fill',), ('fillDefault',), ('erase',),
+##			('syncBehavior',), ('syncBehaviorDefault',),
+##			'title', ('abstract',), ('alt',), ('longdesc',), ('readIndex',), 'author',
+##			'copyright',
+##			'layout', 'u_group',
+##			('fgcolor',),
+##			('mimetype',),	# XXXX Or should this be with file?
+##			('system_audiodesc',), 'system_bitrate',
+##			('system_captions',), ('system_cpu',),
+##			'system_language', ('system_operating_system',),
+##			('system_overdub_or_caption',), ('system_required',),
+##			('system_screen_size',), ('system_screen_depth',),
+##			]
+##		ctype = self.node.GetChannelType()
+##		if ntype in mediatypes or features.compatibility == features.CMIF:
+##			namelist.append('channel')
+##		if features.EDIT_TYPE in features.feature_set:
+##			namelist.append('.type')
+##		namelist.append('abstract')
+##		namelist.append('system_captions')
+##		namelist.append('system_overdub_or_caption')
+##		namelist.append('system_required')
+##		namelist.append('system_screen_size')
+##		namelist.append('system_screen_depth')
+##		if boston:
+##			namelist.append('system_audiodesc')
+##			namelist.append('system_cpu')
+##			namelist.append('system_operating_system')
+##			namelist.append('system_component')
+##			if ntype != 'switch':
+##				namelist.append('restart')
+##				namelist.append('restartDefault')
+##				namelist.append('fillDefault')
+##				namelist.append('syncBehavior')
+##				namelist.append('syncBehaviorDefault')
+##				namelist.append('min')
+##				namelist.append('max')
+##			if ntype in mediatypes:
+##				namelist.append('readIndex')
+##				namelist.append('erase')
+##				if features.EXPORT_REAL in features.feature_set:
+##					if ctype != 'sound':
+##						namelist.append('backgroundOpacity')
+##						namelist.append('chromaKey')
+##						namelist.append('chromaKeyOpacity')
+##						namelist.append('chromaKeyTolerance')
+##						namelist.append('mediaOpacity')
+##					namelist.append('reliable')
+##					if ctype in ('text','image'):
+##						namelist.append('strbitrate')
+##		if features.EXPORT_REAL in features.feature_set and 'u_group' in namelist:
+##			namelist.remove('u_group')
+##		if (ntype in playabletypes or boston) and ntype != 'switch':
+##			namelist.append('fill')
+##		if boston:
+##			namelist.append('alt')
+##			namelist.append('longdesc')
+##		if ntype in ('par', 'excl') or (ntype in termtypes and boston):
+##			namelist.append('terminator')
+##		if ntype in interiortypes:
+##			namelist.append('thumbnail_icon')
+##			namelist.append('dropicon')
+##			namelist.append('empty_icon')
+##			namelist.append('empty_text')
+##			namelist.append('empty_color')
+##			namelist.append('empty_duration')
+##			namelist.append('non_empty_icon')
+##			namelist.append('non_empty_text')
+##			namelist.append('non_empty_color')
+##			namelist.append('thumbnail_scale')
+##		if ntype in ('par', 'seq', 'excl'):
+##			namelist.append('duration')
+##			namelist.append('project_default_region_video')
+##			namelist.append('project_default_region_image')
+##			namelist.append('project_default_region_sound')
+##			namelist.append('project_default_region_text')
+##			namelist.append('project_forcechild')
+##		if ntype == 'switch':
+##			if 'begin' in namelist:
+##				namelist.remove('begin')
+##			namelist.remove('loop')
+##			namelist.remove('duration')
+##			namelist.remove('repeatdur')
+##			namelist.remove('beginlist')
+##			namelist.remove('endlist')
+##		if ntype in playabletypes:
+##			namelist.append('alt')
+##			namelist.append('allowedmimetypes')
+##			namelist.append('longdesc')
+##			if ctype != 'brush':
+##				namelist.append('clipbegin')
+##				namelist.append('clipend')
+##			if boston:
+##				if ChannelMap.isvisiblechannel(ctype):
+##					namelist.append('left')
+##					namelist.append('width')
+##					namelist.append('right')
+##					namelist.append('top')
+##					namelist.append('height')
+##					namelist.append('bottom')
+##					namelist.append('fit')
+##					namelist.append('regPoint')
+##					namelist.append('regAlign')
+##					namelist.append('z')
+##				namelist.append('sensitivity')
+##				if ctype == 'brush':
+##					namelist.append('fgcolor')
 
-			# specific time preference
-			namelist.append('immediateinstantiationmedia')
-			namelist.append('bitratenecessary')
-			namelist.append('systemmimetypesupported')
-			namelist.append('attachtimebase')
-			namelist.append('qtchapter')
-			namelist.append('qtcompositemode')
+##			# specific time preference
+##			namelist.append('immediateinstantiationmedia')
+##			namelist.append('bitratenecessary')
+##			namelist.append('systemmimetypesupported')
+##			namelist.append('attachtimebase')
+##			namelist.append('qtchapter')
+##			namelist.append('qtcompositemode')
 			
-		if ntype == 'imm':
-			namelist.append('.values')
-		if 'layout' in namelist and not self.context.layouts:
-			# no sense bothering the user with an attribute that
-			# doesn't do anything...
-			namelist.remove('layout')
-		# Get the channel class (should be a subroutine!)
-		if ChannelMap.channelmap.has_key(ctype):
-			cclass = ChannelMap.channelmap[ctype]
-			# Add the class's declaration of attributes
-			namelist = namelist + cclass.node_attrs
-			if cmifmode():
-				for name in cclass.chan_attrs:
-					if name in namelist: continue
-					defn = MMAttrdefs.getdef(name)
-					if defn[5] == 'channel':
-						namelist.append(name)
-		# Merge in nonstandard attributes
-		extras = []
-		for name in self.node.GetAttrDict().keys():
-			if name not in namelist and \
-				     MMAttrdefs.getdef(name)[3] <> 'hidden':
-				extras.append(name)
-		extras.sort()
-		namelist = namelist + extras
-		retlist = []
-		for name in namelist:
-			if name in retlist:
-				continue
-			if type(name) == type(()):
-				if name[0] in namelist:
-					# It is in the list, insert it here
-					retlist.append(name[0])
-				else:
-					# Not in the list for this node, skip
-					pass
-			else:
-				retlist.append(name)
+##		if ntype == 'imm':
+##			namelist.append('.values')
+##		if 'layout' in namelist and not self.context.layouts:
+##			# no sense bothering the user with an attribute that
+##			# doesn't do anything...
+##			namelist.remove('layout')
+##		# Get the channel class (should be a subroutine!)
+##		if ChannelMap.channelmap.has_key(ctype):
+##			cclass = ChannelMap.channelmap[ctype]
+##			# Add the class's declaration of attributes
+##			namelist = namelist + cclass.node_attrs
+##			if cmifmode():
+##				for name in cclass.chan_attrs:
+##					if name in namelist: continue
+##					defn = MMAttrdefs.getdef(name)
+##					if defn[5] == 'channel':
+##						namelist.append(name)
+##		# Merge in nonstandard attributes
+##		extras = []
+##		for name in self.node.GetAttrDict().keys():
+##			if name not in namelist and \
+##				     MMAttrdefs.getdef(name)[3] <> 'hidden':
+##				extras.append(name)
+##		extras.sort()
+##		namelist = namelist + extras
+##		retlist = []
+##		for name in namelist:
+##			if name in retlist:
+##				continue
+##			if type(name) == type(()):
+##				if name[0] in namelist:
+##					# It is in the list, insert it here
+##					retlist.append(name[0])
+##				else:
+##					# Not in the list for this node, skip
+##					pass
+##			else:
+##				retlist.append(name)
 			
-		if not cmifmode():
-			# cssbgcolor is used instead
-			if 'bgcolor' in retlist: retlist.remove('bgcolor')
-			if 'transparent' in retlist: retlist.remove('transparent')
-			if ctype == 'brush':
-				if 'file' in retlist:
-					retlist.remove('file')
+##		if not cmifmode():
+##			# cssbgcolor is used instead
+##			if 'bgcolor' in retlist: retlist.remove('bgcolor')
+##			if 'transparent' in retlist: retlist.remove('transparent')
+##			if ctype == 'brush':
+##				if 'file' in retlist:
+##					retlist.remove('file')
 			
-		return retlist
+##		return retlist
 
 	def getdef(self, name):
 		if name == '.type':
@@ -708,13 +709,13 @@ class PrefetchWrapper(NodeWrapper):
 	def __init__(self, toplevel, node):
 		NodeWrapper.__init__(self, toplevel, node)
 
-	def attrnames(self):
-		namelist = ['name','file',
-			'begin', 'duration', 
-			'clipbegin', 'clipend',
-			'mediaSize', 'mediaTime', 'bandwidth',
-			]
-		return namelist
+##	def attrnames(self):
+##		namelist = ['name','file',
+##			'begin', 'duration', 
+##			'clipbegin', 'clipend',
+##			'mediaSize', 'mediaTime', 'bandwidth',
+##			]
+##		return namelist
 
 	def maketitle(self):
 		name = MMAttrdefs.getattr(self.node, 'name')
@@ -900,7 +901,7 @@ class ChannelWrapper(Wrapper):
 	def valuerepr(self, name, value):
 		if name == '.cname': name = 'name'
 		
-		return MMAttrdefs.valuerepr(name, value)
+		return MMAttrdefs.valuerepr(name, value).strip()
 
 	def parsevalue(self, name, str):
 		if name == '.cname': name = 'name'
@@ -1013,7 +1014,7 @@ class DocumentWrapper(Wrapper):
 
 	def valuerepr(self, name, value):
 		if name in ('title', 'base', 'comment'):
-			return MMAttrdefs.valuerepr(name, value)
+			return MMAttrdefs.valuerepr(name, value).strip()
 		else:
 			return value
 
@@ -1367,12 +1368,15 @@ class AttrEditor(AttrEditorDialog):
 		# Return true if any property value has been edited.
 		for b in self.attrlist:
 			# Special case for empty values:
-			if not b.getvalue() and not b.getcurrent():
+			value = b.getvalue()
+			current = b.getcurrent()
+			if not value and not current:
 				continue
-			if b.getvalue() != b.getcurrent():
-##				print 'DBG changed', b
-##				print 'VALUE', b.getvalue()
-##				print 'CURRENT', b.getcurrent()
+			if value != current:
+				if __debug__:
+					print 'DBG changed', b
+					print 'VALUE', value
+					print 'CURRENT', current
 				return 1
 		return 0
 				
@@ -1470,7 +1474,7 @@ class AttrEditor(AttrEditorDialog):
 						n = 'n'
 					else:
 						n = ''
-					if name == 'duration' or name == 'loop':
+					if name in ('duration', 'loop', 'max', 'syncTolerance', 'syncToleranceDefault'):
 						exp = exp + " or `indefinite'"
 					self.showmessage('%s: value should be a%s %s.' % (b.getlabel(), n, exp), mtype = 'error')
 					return 1
@@ -1780,7 +1784,7 @@ class FloatAttrEditorField(AttrEditorField):
 	type = 'float'
 
 	def valuerepr(self, value):
-		if value == -1 and self.getname() in ('duration', 'repeatdur'):
+		if value == -1 and self.getname() in ('duration', 'repeatdur', 'max', 'syncTolerance', 'syncToleranceDefault'):
 			return 'indefinite'
 		if value == 0 and self.getname() == 'loop':
 			return 'indefinite'
@@ -1789,7 +1793,7 @@ class FloatAttrEditorField(AttrEditorField):
 	def parsevalue(self, str):
 		if str == 'indefinite':
 			attrname = self.getname()
-			if attrname in ('duration', 'repeatdur'):
+			if attrname in ('duration', 'repeatdur', 'max', 'syncTolerance', 'syncToleranceDefault'):
 				return -1.0
 			if attrname == 'loop':
 				return 0.0
@@ -1799,13 +1803,14 @@ class PercentAttrEditorField(AttrEditorField):
 	def valuerepr(self, value):
 		if value == None:
 			return ''
-		
-		return AttrEditorField.valuerepr(self, value*100)
+		return fmtfloat(value*100, '%')
 
 	def parsevalue(self, str):
-		if str == '':
+		str = str.strip()
+		if str[-1:] == '%':
+			str = str[:-1]
+		if not str:
 			return None
-		
 		return AttrEditorField.parsevalue(self, str)/100.0
 
 class StringAttrEditorField(AttrEditorField):
@@ -2194,6 +2199,11 @@ class BoolAttrEditorField(PopupAttrEditorField):
 	default = 'Not set'
 	nodefault = 1
 
+	def __init__(self, attreditor, name, label):
+		if self.nodefault:
+			self.type = 'bool'
+		PopupAttrEditorField.__init__(self, attreditor, name, label)
+
 	def parsevalue(self, str):
 		if str == self.default:
 			return None
@@ -2291,14 +2301,14 @@ class LanguageAttrEditorField(PopupAttrEditorField):
 	def parsevalue(self, str):
 		if str == self.default:
 			return None
-		return self.l2a[str]
+		return self.l2a.get(str)
 
 	def valuerepr(self, value):
 		if not value:
 			if self.nodefault:
 				return self.getdefault()
 			return self.default
-		return self.a2l[value]
+		return self.a2l.get(value, self.default)
 
 class LanguageAttrEditorFieldWithDefault(LanguageAttrEditorField):
 	nodefault = 0
@@ -2500,6 +2510,8 @@ class TransitionAttrEditorField(PopupAttrEditorField):
 		return str
 		
 	def valuerepr(self, value):
+		if not value:
+			return self.default
 		if type(value) in (type([]), type(())) and len(value):
 			if len(value) > 1:
 				windowinterface.showmessage("Multiple transitions not supported.")
@@ -3055,7 +3067,6 @@ class NodeTypeAttrEditorField(PopupAttrEditorField):
 	def valuerepr(self, value):
 		return self.__valuesmap.get(value, value)
 
-from fmtfloat import fmtfloat
 class AnchorCoordsAttrEditorField(AttrEditorField):
 	def valuerepr(self, value):
 		if value is None:

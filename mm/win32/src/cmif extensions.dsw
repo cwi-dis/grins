@@ -138,18 +138,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "GRiNS Snap"="..\..\Build\win32\GRiNS Snap!\GRiNS Snap!.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
 Project: "GRiNSRes"=.\GRiNSRes\GRiNSRes.dsp - Package Owner=<4>
 
 Package=<5>
