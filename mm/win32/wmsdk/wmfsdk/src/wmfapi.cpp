@@ -2304,14 +2304,13 @@ static char WMProfileManager_QueryIWMCodecInfo__doc__[] =
 static PyObject *
 WMProfileManager_QueryIWMCodecInfo(WMProfileManagerObject *self, PyObject *args)
 {
-	WMT_VERSION dwVersion = WMT_VER_7_0;
-	if (!PyArg_ParseTuple(args,"|i",&dwVersion))
+	if (!PyArg_ParseTuple(args,""))
 		return NULL;
 	
 	WMCodecInfoObject *obj = newWMCodecInfoObject();
 	if (obj == NULL) return NULL;
 	
-	HRESULT hr=self->pI->QueryInterface(IID_IWMCodecInfo, (void **)obj->pI);
+	HRESULT hr=self->pI->QueryInterface(IID_IWMCodecInfo, (void **)&obj->pI);
 	if (FAILED(hr)){
 		Py_DECREF(obj);
 		seterror("WMProfileManager_QueryIWMCodecInfo", hr);
@@ -2320,11 +2319,39 @@ WMProfileManager_QueryIWMCodecInfo(WMProfileManagerObject *self, PyObject *args)
 	return (PyObject*)obj;
 }
 
+static char WMProfileManager_SetSystemProfileVersion__doc__[] =
+""
+;
+static PyObject *
+WMProfileManager_SetSystemProfileVersion(WMProfileManagerObject *self, PyObject *args)
+{
+	WMT_VERSION dwVersion = WMT_VER_7_0;
+	if (!PyArg_ParseTuple(args,"|i",&dwVersion))
+		return NULL;
+
+	IWMProfileManager2 *pI=NULL;
+	HRESULT hr=self->pI->QueryInterface(IID_IWMProfileManager2, (void **)&pI);
+	if (FAILED(hr)){
+		seterror("WMProfileManager_QueryIWMProfileManager2", hr);
+		return NULL;
+	}
+    hr = pI->SetSystemProfileVersion(dwVersion);
+	if (FAILED(hr)){
+		pI->Release();
+		seterror("WMProfileManager_SetSystemProfileVersion", hr);
+		return NULL;
+	}
+	pI->Release();
+	Py_INCREF(Py_None);
+	return Py_None;	
+}
+
 static struct PyMethodDef WMProfileManager_methods[] = {
 	{"GetSystemProfileCount", (PyCFunction)WMProfileManager_GetSystemProfileCount, METH_VARARGS, WMProfileManager_GetSystemProfileCount__doc__},
 	{"LoadSystemProfile", (PyCFunction)WMProfileManager_LoadSystemProfile, METH_VARARGS, WMProfileManager_LoadSystemProfile__doc__},
 	{"CreateEmptyProfile", (PyCFunction)WMProfileManager_CreateEmptyProfile, METH_VARARGS, WMProfileManager_CreateEmptyProfile__doc__},
 	{"QueryIWMCodecInfo", (PyCFunction)WMProfileManager_QueryIWMCodecInfo, METH_VARARGS, WMProfileManager_QueryIWMCodecInfo__doc__},
+	{"SetSystemProfileVersion", (PyCFunction)WMProfileManager_SetSystemProfileVersion, METH_VARARGS, WMProfileManager_SetSystemProfileVersion__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
