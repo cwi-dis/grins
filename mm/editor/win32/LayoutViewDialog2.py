@@ -22,6 +22,8 @@ class LayoutViewDialog2:
 		self.__regionSelCtrl=w['RegionSel']
 		self.__regionSelCtrl.setcb((self.__regionSelCb, ()))
 
+		w.setContext(self.context)
+
 		self.__window = w
 
 	def destroy(self):
@@ -87,5 +89,14 @@ class LayoutViewDialog2:
 		windowinterface.setready()
 
 	def setcommandlist(self, commandlist):
-		self.__window.set_commandlist(commandlist)
+		if self.__window:
+			self.__window.set_commandlist(commandlist)
+
+	# core required interface
+	def setlayoutlist(self, layouts, cur):
+		pass
+	def setchannellist(self, channels, cur):
+		pass
+	def setotherlist(self, channels, cur):
+		pass
 
