@@ -3065,6 +3065,18 @@ class PreferencesGroup(SystemGroup):
 		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43))
 		return cd
 
+class Preferences1Group(PreferencesGroup):
+	data=attrgrsdict['preferences1']
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_S1R3S6
+
+	def createctrls(self,wnd):
+		cd = PreferencesGroup.createctrls(self,wnd)
+		a = self.getattr('html_control')
+		cd[a] = OptionsCheckNolabelCtrl(wnd, a, (grinsRC.IDC_51,))
+		return cd
+
 class NameGroup(AttrGroup):
 	data=attrgrsdict['name']
 	def __init__(self):
@@ -3369,6 +3381,7 @@ groupsui={
 
 	'system':SystemGroup,
 	'preferences':PreferencesGroup,
+	'preferences1':Preferences1Group,
 	'name':NameGroup,
 	'.cname':CNameGroup,
 	'intname':INameGroup,
