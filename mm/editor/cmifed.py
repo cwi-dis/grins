@@ -139,6 +139,7 @@ class Main(MainDialog):
 			self.new_top(top)
 
 	def close_callback(self):
+		print 'close_callback'
 		import windowinterface
 		windowinterface.setwaiting()
 		self.do_exit()
