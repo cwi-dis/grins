@@ -839,19 +839,6 @@ def getscreensize(writer, node):
 	if value is not None:
 		return '%dX%d' % value
 
-def getbagindex(writer, node):
-	if node.GetType() != 'bag':
-		return
-	bag_index = node.GetRawAttrDef('bag_index', None)
-	if bag_index is None:
-		return
-	for child in node.children:
-		if child.GetRawAttrDef('name', '') == bag_index:
-			return 'id(%s)' % writer.uid2name[child.GetUID()]
-	print '** Bag-index attribute refers to unknown child in', \
-	      node.GetRawAttrDef('name', '<unnamed>'),\
-	      node.GetUID()
-
 def getugroup(writer, node):
 	if not node.GetContext().usergroups:
 		return
@@ -1008,7 +995,6 @@ smil_attrs=[
 	("systemRequired", lambda writer, node:(writer.smilboston and getsysreq(writer, node, "system_required")) or None),
 	("systemScreenSize", lambda writer, node:(writer.smilboston and getscreensize(writer, node)) or None),
 	("systemScreenDepth", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_screen_depth")) or None),
-	("choice-index", getbagindex),
 	("customTest", getugroup),
 	("layout", getlayout),
 	("color", getcolor),		# only for brush element
@@ -1499,8 +1485,6 @@ class SMILWriter(SMIL):
 				self.calcnames1(child)
 				for c in child.children:
 					self.calcnames1(c)
-		if ntype == 'bag':
-			self.uses_grins_namespaces = 1
 
 	def calcnames2(self, node):
 		"""Calculate unique names for nodes; second pass"""
@@ -1984,17 +1968,9 @@ class SMILWriter(SMIL):
 			self.writeprefetchnode(x)
 			return
 
-		if type == 'bag':
-			print '** Choice node', \
-			      x.GetRawAttrDef('name', '<unnamed>'),\
-			      x.GetUID()
-
 		interior = (type in interiortypes)
 		if interior:
-			if type == 'bag':
-				mtype = '%s:choice' % NSGRiNSprefix
-				xtype = '%s choice' % GRiNSns
-			elif type == 'prio':
+			if type == 'prio':
 				xtype = mtype = 'priorityClass'
 			elif type == 'seq' and root and self.smilboston:
 				xtype = mtype = 'body'

@@ -931,8 +931,6 @@ class SMILHtmlTimeWriter(SMIL):
 				self.calcnames1(child)
 				for c in child.children:
 					self.calcnames1(c)
-		if ntype == 'bag':
-			self.uses_grins_namespaces = 1
 
 	def calcnames2(self, node):
 		"""Calculate unique names for nodes; second pass"""

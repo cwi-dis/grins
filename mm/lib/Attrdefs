@@ -40,9 +40,6 @@
 
 (author (string) '' 'Author' default 'Author (informational only)' raw (g2 qt smil10 smil2 cmif snap))
 
-(bag_index (name) undefined 'Choice index' childnodename
-	'Name of child auto-started when choice node plays' normal (cmif))
-
 (base (string) '' 'Base URL' default
 	'Base URL of document, used for resolving relative URLs' raw (g2 qt smil10 smil2 cmif snap))
 
