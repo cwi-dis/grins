@@ -16,8 +16,8 @@ class RenderingReader:
 	def __del__(self):
 		print '~RenderingReader'
 
-	def OnSetMediaType(self):
-		print 'OnSetMediaType'
+	def OnSetMediaType(self, mt):
+		print 'OnSetMediaType', mt
 
 	def OnActive(self):
 		print 'OnActive'
@@ -25,13 +25,13 @@ class RenderingReader:
 	def OnInactive(self):
 		print 'OnInactive'
 
-	def OnRenderSample(self):
+	def OnRenderSample(self, ms):
 		import time
 		if self._start is None:
 			self._start	 = time.time()
-			print 'OnRenderSample', 0
+			print 'OnRenderSample', ms, 0
 		else:
-			print 'OnRenderSample', time.time()-self._start
+			print 'OnRenderSample', ms, time.time()-self._start
 
 
 renderingReader = dshow.CreatePyRenderingListener(RenderingReader())
@@ -85,10 +85,6 @@ def convertvideofile(infile, dstdir, file, node):
 	except:
 		print 'Video windows media converter filter is not installed'
 		return None
-	b.AddFilter(vf,'VWMC')
-	enumpins=vf.EnumPins()
-	pin=enumpins.Next()
-	b.Connect(lastpin,pin)
 	
 	try:
 		vmconv=vf.QueryIWMConverter()
@@ -103,6 +99,11 @@ def convertvideofile(infile, dstdir, file, node):
 		print 'WMWriter QueryIUnknown failed'
 		return None
 	vmconv.SetWMWriter(ukwriter)
+
+	b.AddFilter(vf,'VWMC')
+	enumpins=vf.EnumPins()
+	pin=enumpins.Next()
+	b.Connect(lastpin,pin)
 
 	mc = b.QueryIMediaControl()
 	mc.Run()
