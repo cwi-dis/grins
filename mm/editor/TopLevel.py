@@ -291,7 +291,7 @@ class TopLevel(ViewDialog):
 					   '', self.saveas_okcallback, None)
 
 	def fixtitle(self):
-		utype, url = MMurl.splittype(filename)
+		utype, url = MMurl.splittype(self.filename)
 		host, url = MMurl.splithost(url)
 		dir, base = posixpath.split(url)
 		if not utype and not host:
