@@ -101,7 +101,7 @@ class SoundChannel(Channel.ChannelAsync):
 				windowinterface.showmessage('No playback support for %s on this system\n'
 							    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
 				self.playdone(0, curtime)
-		elif not self.__mc.playit(node, start_time=start_time):
+		elif not self.__mc.playit(node, curtime, start_time=start_time):
 			self.errormsg(node,'Can not play')
 			self.playdone(0, curtime)
 

@@ -284,7 +284,7 @@ class VideoStream:
 
 		return 1
 
-	def playit(self, node, window, start_time = 0):
+	def playit(self, node, curtime, window, start_time = 0):
 		if not window: return 0
 		if not self.__mmstream: return 0
 
@@ -459,7 +459,7 @@ class DSPlayer:
 		self._sound = DSPlayer.directSound.createBufferFromFile(f)
 		return 1
 
-	def playit(self, node, start_time=0):
+	def playit(self, node, curtime, start_time=0):
 		#print 'playit', node, start_time
 		if self._sound:
 			a = self.getAttenuation(self._soundLevel, self._soundLevelMax)

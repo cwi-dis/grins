@@ -126,6 +126,7 @@ class RealChannel:
 		if not self.__createplayer(node):
 			return 0
 		duration = self.__channel.getduration(node)
+		self.__start_time = start_time
 		if url is None:
 			url = self.__channel.getfileurl(node)
 		if not url:
@@ -235,7 +236,7 @@ class RealChannel:
 		print self.__rmaplayer.GetCurrentPlayTime()
 		if self.__qid is None:
 			if not self.__playdone_called:
-				self.__channel.playdone(0, node.get_start_time() + self.__rmaplayer.GetCurrentPlayTime())
+				self.__channel.playdone(0, self.__start_time + self.__rmaplayer.GetCurrentPlayTime())
 				self.__playdone_called = 1
 
 	def ErrorOccurred(self,str):
