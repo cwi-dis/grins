@@ -660,6 +660,13 @@ class LayoutManager(LayoutManagerBase):
 		# point is in logical coordinates
 		# convert it to natural coordinates
 		point = self.LPtoNP(point)
+
+		# if the point belongs already to a selected shape we keep the shape
+		# it's important to have this behavior if you want to edit a node behind another one
+		for shape in self._selectedList:
+			if shape.inside(point):
+				return shape
+			
 		if self._viewport:
 			return self._viewport.getMouseTarget(point)
 
