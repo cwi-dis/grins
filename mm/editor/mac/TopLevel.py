@@ -27,10 +27,6 @@ class TopLevel(ViewDialog):
 		self.new_file = new_file
 		# convert filename to URL
 		utype, url = MMurl.splittype(filename)
-		if not utype or utype not in ('http', 'file', 'ftp', 'rtsp'):
-			# assume filename using local convention
-			url = MMurl.pathname2url(filename)
-			utype, url = MMurl.splittype(url)
 		host, url = MMurl.splithost(url)
 		dir, base = posixpath.split(url)
 		if not utype and not host:
