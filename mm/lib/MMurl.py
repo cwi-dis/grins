@@ -9,7 +9,10 @@ class FancyURLopener(_OriginalFancyURLopener):
 	def __init__(self, *args):
 		apply(_OriginalFancyURLopener.__init__, (self,) + args)
 		self.tempcache = {}
-		self.prefetchcashe = {}
+
+		# prefetch support
+		self.__prefetchcache = {}
+		self.__prefetchtempfiles = {}
 
 	def http_error_default(self, url, fp, errcode, errmsg, headers):
 		void = fp.read()
@@ -100,7 +103,7 @@ class FancyURLopener(_OriginalFancyURLopener):
 		"""retrieve(url) returns (filename, None) for a local object
 		or (tempfilename, headers) for a remote object."""
 		url = unwrap(url)
-		if self.prefetchcashe and self.prefetchcashe.has_key(url):
+		if self.__prefetchcache.has_key(url):
 			# complete prefetch first
 			self.fin_retrieve(url)
 		return _OriginalFancyURLopener.retrieve(self, url, filename, reporthook)
@@ -151,9 +154,9 @@ class FancyURLopener(_OriginalFancyURLopener):
 		return result
 	
 	def do_retrieve(self, url, bs):
-		if not self.prefetchcache.has_key(url):
+		if not self.__prefetchcache.has_key(url):
 			return None
-		fp, tfp = self.prefetchcache[url]
+		fp, tfp = self.__prefetchcache[url]
 		block = fp.read(bs)
 		if block:
 			tfp.write(block)
@@ -170,13 +173,13 @@ class FancyURLopener(_OriginalFancyURLopener):
 	def __fin_retrieve(url):
 		if not self.__prefetchcache.has_key(url):
 			return None
-		fp, tfp = self.prefetchcache[url]
+		fp, tfp = self.__prefetchcache[url]
 		bs = 1024*8
 		block = fp.read(bs)
 		while block:
 			tfp.write(block)
 			block = fp.read(bs)
-		del self.prefetchcache[url]
+		del self.__prefetchcache[url]
 		fp.close()
 		tfp.close()
 
