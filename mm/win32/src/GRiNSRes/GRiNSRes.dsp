@@ -439,6 +439,14 @@ SOURCE=.\RES\danglingev.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\darrow.cur
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\darrowhi.cur
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\icon_bro.ico
 # End Source File
 # Begin Source File
