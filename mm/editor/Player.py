@@ -108,7 +108,9 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		del self.updateuibaglist
 
 	def fixtitle(self):
-		self.settitle('Player (' + self.toplevel.basename + ')')
+		import MMurl
+		basename = MMurl.unquote(self.toplevel.basename)
+		self.settitle('Player (' + basename + ')')
 
 	def __repr__(self):
 		return '<Player instance, root=' + `self.root` + '>'
