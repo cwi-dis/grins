@@ -14,22 +14,19 @@ Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "vid2wm.h"
 
+#include <wtypes.h>
+#include "wmsdk.h"
+#include <mmsystem.h>
+#include <assert.h>
+
+#include "wmwriter.h"
+
+
 #include <stdio.h>
 
 // options
 // #define LOG_ACTIVITY
 
-/*
-namespace RProducer {
-bool HasEngine();
-bool SetEngine(IUnknown *p);
-bool SetInputPin(IUnknown *p);
-bool CreateMediaSample();
-bool SetVideoInfo(int w,int h,float rate);
-bool EncodeSample(BYTE *p,DWORD size,DWORD msec,bool isSync,bool isLast);
-void DoneEncoding();
-void Release();
-}*/
 
 // Setup data
 
@@ -79,25 +76,23 @@ CFactoryTemplate g_Templates[] = {
 int g_cTemplates = 1;
 
 // Debug log
+#include <stdio.h>
 FILE *logFile;
 #ifdef LOG_ACTIVITY
-void Log(const char *psz)
-{
+void Log(LPCTSTR lpszFormat, ...)
+	{
+	char psz[512];
+	va_list argList;
+	va_start(argList,lpszFormat);
+	_vstprintf(s,lpszFormat,argList);
 	if(logFile){
 		fwrite(psz,1,lstrlen(psz),logFile);
 		fflush(logFile);
 	}
-}
-void Log(const char *psz,int i)
-	{
-	Log(psz);
-	char sz[16];
-	sprintf(sz,"%d\n",i);
-	Log(sz);
+	va_end(argList);
 	}
 #else
-void Log(const char *psz){}
-void Log(const char *psz,int i){}
+void Log(LPCTSTR lpszFormat, ...){}
 #endif
 
 
@@ -128,6 +123,7 @@ CVideoRenderer::CVideoRenderer(TCHAR *pName,
 	m_ixframe=0;
 	m_pVideoImage=NULL;
 	m_lastTimestamp=0;
+	m_pWMWriter = new WMWriter();
 #ifdef LOG_ACTIVITY
 	logFile=fopen("log.txt","w");
 #endif
@@ -136,6 +132,7 @@ CVideoRenderer::CVideoRenderer(TCHAR *pName,
 
 CVideoRenderer::~CVideoRenderer()
 {
+	delete m_pWMWriter;
     m_pInputPin = NULL;
 	if(logFile) fclose(logFile);
 } 
@@ -274,6 +271,7 @@ void CVideoRenderer::PrepareRender()
 void CVideoRenderer::OnReceiveFirstSample(IMediaSample *pMediaSample)
 {
 
+	m_pWMWriter->BeginWriting();
     DoRenderSample(pMediaSample);
 
 } 
@@ -318,8 +316,7 @@ void CVideoRenderer::EncodeSample(IMediaSample *pMediaSample)
 		m_lastTimestamp=tStart.Millisecs();
 
 	bool isSync=(pMediaSample->IsSyncPoint()==S_OK);
-	//if(RProducer::HasEngine())
-	//	RProducer::EncodeSample(pImage,pMediaSample->GetActualDataLength(),m_lastTimestamp,isSync,false);
+	m_pWMWriter->WriteVideoSample(pImage,pMediaSample->GetActualDataLength(),m_lastTimestamp);
 	m_ixframe++;
 
 }
@@ -331,8 +328,9 @@ HRESULT CVideoRenderer::Active()
 	VIDEOINFOHEADER *pVideoInfo = (VIDEOINFOHEADER *)m_mtIn.Format();
 	CRefTime rt(pVideoInfo->AvgTimePerFrame);
 	float rate=1000/float(rt.Millisecs());
-	//if(RProducer::HasEngine())
-	//	RProducer::SetVideoInfo(m_VideoSize.cx,m_VideoSize.cy,rate);
+
+	m_pWMWriter->SetVideoFormat((WMVIDEOINFOHEADER*)pVideoInfo);
+
 	char sz[128];
 	sprintf(sz,"Rate=%f fps  AvgTimePerFrame=%ld msec bpp=%d\n",rate,rt.Millisecs(),
 		pVideoInfo->bmiHeader.biBitCount);
@@ -344,20 +342,13 @@ HRESULT CVideoRenderer::Active()
 
 HRESULT CVideoRenderer::Inactive()
 {
-	/*
-	if(RProducer::HasEngine())
-		{
-		BITMAPINFOHEADER *pbih=(BITMAPINFOHEADER*)m_pVideoImage;
-		if(m_pVideoImage)
-			RProducer::EncodeSample((BYTE*)(pbih+1),pbih->biSizeImage,m_lastTimestamp,false,true);
-		}*/
+
 	if(m_pVideoImage){
 		delete[] m_pVideoImage;
 		m_pVideoImage=NULL;
 	}
 	m_ixframe=0;
-	//if(RProducer::HasEngine())
-	//	RProducer::DoneEncoding();
+	m_pWMWriter->EndWriting();
 	Log("Inactive\n");
 	return CBaseVideoRenderer::Inactive();
 }
@@ -459,25 +450,17 @@ HRESULT CVideoRenderer::CopyImage(IMediaSample *pMediaSample,
 }
 
 
-HRESULT CVideoRenderer::SetInterface(IUnknown *p,LPCOLESTR hint)
+HRESULT CVideoRenderer::SetWMWriter(IUnknown *pI)
 	{
-    char szHint[MAX_PATH];
-    if(!WideCharToMultiByte(CP_ACP,0,hint,-1,szHint,MAX_PATH,0,0))
-        return ERROR_INVALID_NAME;
-	/*
-	if(lstrcmpi(szHint,"IRMABuildEngine")==0){
-		if(!RProducer::SetEngine(p)){
-			Log("Failed setting engine\n");
-			RProducer::Release();
-		}
+    return m_pWMWriter->SetWMWriter(pI);	
 	}
-	else if(lstrcmpi(szHint,"IRMAInputPin")==0){
-		if(!RProducer::SetInputPin(p)){
-			Log("Failed setting InputPin\n");
-			RProducer::Release();
-		}
-	}*/
-    return NOERROR;
+HRESULT CVideoRenderer::SetAudioInputProps(DWORD dwInputNum,IUnknown *pI)
+	{
+    return m_pWMWriter->SetAudioInputProps(dwInputNum,pI);	
+	}
+HRESULT CVideoRenderer::SetVideoInputProps(DWORD dwInputNum,IUnknown *pI)
+	{
+    return m_pWMWriter->SetVideoInputProps(dwInputNum,pI);	
 	}
 
 ////////////////////////////////////////////////
