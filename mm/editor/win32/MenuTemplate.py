@@ -88,7 +88,7 @@ MENUBAR=(
 		(SMIL, ENTRY, 'New &channel', None, NEW_CHANNEL),
 
 ## Windows dialogs apparently don't use usercmd commands.
-##		(ENTRY, 'New &layout', None, NEW_LAYOUT),
+##		(SMIL, ENTRY, 'New &layout', None, NEW_LAYOUT),
 		(SMIL, SEP,),
 		(SMIL, ENTRY, '&Move channel', None, MOVE_CHANNEL),
 		(SMIL, ENTRY, 'C&opy channel', None, COPY_CHANNEL),
