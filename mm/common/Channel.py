@@ -996,7 +996,7 @@ class ChannelWindow(Channel):
 	def highlight(self, color = (255,0,0)):
 		if self._is_shown and self.window:
 			self._highlighted = color
-			self.window.pop()
+			self.window.pop(poptop=0)
 			self.window.showwindow(color = color)
 
 	def unhighlight(self):
