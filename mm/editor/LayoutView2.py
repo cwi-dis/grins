@@ -1105,7 +1105,7 @@ class LayoutView2(LayoutViewDialog2):
 	def getCurrentAnimatedNode(self):
 		return self.currentAnimatedNode
 	
-	def insertKeyTime(self, nodeRef, tp):
+	def insertKeyTime(self, nodeRef, tp, duplicateKey=None):
 		animationData = nodeRef.getAnimationData()
 		timeList = animationData.getTimes()
 		data = animationData.getData()
@@ -1117,7 +1117,10 @@ class LayoutView2(LayoutViewDialog2):
 
 		if index > 0 and index < len(timeList):
 			# can only insert a key between the first and the end
-			newData = (animationData.getRectAt(tp), animationData.getColorAt(tp))
+			if duplicateKey is not None and duplicateKey >= 0:
+				newData = (animationData.getRectAt(timeList[duplicateKey]), animationData.getColorAt(timeList[duplicateKey]))
+			else:
+				newData = (animationData.getRectAt(tp), animationData.getColorAt(tp))
 			animationData.insertTimeData(index, tp, newData)
 			self.setKeyTimeIndex(index, nodeRef)
 			self.animateControlWidget.insertKey(tp)
@@ -2692,13 +2695,13 @@ class AnimateControlWidget(LightWidget):
 	# interface implementation of 'dialog controls callback' 
 	#
 	
-	def onInsertKey(self, tp):
+	def onInsertKey(self, tp, duplicateKey=None):
 		if self.isEnabled:
 			nodeType, nodeRef = self._selected
 			editmgr = self._context.editmgr
 			if not editmgr.transaction():
-				return
-			self._context.insertKeyTime(nodeRef, tp)
+				return -1
+			index = self._context.insertKeyTime(nodeRef, tp, duplicateKey)
 			nodeRef.applyAnimationData(editmgr)
 			editmgr.commit()
 			
@@ -2735,25 +2738,37 @@ class AnimateControlWidget(LightWidget):
 		if self.isEnabled:
 			nodeType, nodeRef = self._selected
 			self._context.setCurrentTimeValue(pos, nodeRef)
+			animationData = nodeRef.getAnimationData()
+			timeList = animationData.getTimes()
+			keyTimeIndex = self._context.getKeyForThisTime(timeList, pos)
+			if keyTimeIndex is not None and keyTimeIndex >= 0:
+				self.sliderCtrl.selectKeyTime(keyTimeIndex)
+			else:
+				self.sliderCtrl.selectKeyTime(-1)
 			previewWidget = self._context.previousWidget
 			if previewWidget is not None:
 				previewWidget.fastUpdate()
 			context = self._context
 			context.onFastGeomUpdate(nodeRef, context.getPxGeomWithContextAnimation(nodeRef))
-#			self._context.updateFocus(1)
 
 	def onKeyTimeChanged(self, index, time):
 		if self.isEnabled:
+			nodeType, nodeRef = self._selected
 			editmgr = self._context.editmgr
 			if not editmgr.transaction(editmgr):
 				return
-			nodeType, nodeRef = self._selected
+
 			animationData = nodeRef.getAnimationData()
 			animationData.updateTime(index, time)
 			nodeRef.applyAnimationData(editmgr)
+			self._context.setCurrentTimeValue(time, nodeRef)
 			editmgr.commit()
 
-				
+	def onKeyTimeChanging(self, time):
+		if self.isEnabled:
+			self.sliderCtrl.setCursorPos(time)
+			
+					
 	#
 	# interface implementation of 'dialog controls callback' 
 	#

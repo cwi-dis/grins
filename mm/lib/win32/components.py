@@ -888,7 +888,7 @@ class ControlsDict:
 ##############################
 class KeyTimesSlider(window.Wnd):
 	# how near key times can be
-	DELTA = 0.05
+	DELTA = 0.01
 	
 	# depends on resource template slider
 	TICKS_OFFSET = 12
@@ -912,11 +912,11 @@ class KeyTimesSlider(window.Wnd):
 		self.SetRange(0, 100)
 
 		self._keyTimes = [0.0, 1.0]
+		self._copyKeyTime = None
+		self._copyIndex = None
+		
 		self._markerColor = 0, 0, 0
 		self._selectedMarkerColor = 255, 0, 0
-
-		# 
-		self._keyTimesData = None # [(None, None), (None, None)]
 
 		dlg.HookNotify(self.OnReleaseCapture, commctrl.NM_RELEASEDCAPTURE)
 		
@@ -936,23 +936,19 @@ class KeyTimesSlider(window.Wnd):
 		self._listener = None
 		
 	def insertKeyTime(self, tp):
-		if tp <= self.DELTA or tp>1.0-self.DELTA: return
 		index = 0
 		for p in self._keyTimes:
 			if tp<p: break
 			index = index + 1
-		if tp > self._keyTimes[index-1]+self.DELTA and tp < self._keyTimes[index] - self.DELTA:
-			self._keyTimes.insert(index, tp)
-			if self._keyTimesData is not None:
-				self._keyTimesData.insert((None, None))
-			self._selected = -1
-			self.updateKeyTimes()
+			
+		self._keyTimes.insert(index, tp)
+		self._selected = -1
+		self.updateKeyTimes()
+		return index
 
 	def insertKeyTimeFromPoint(self, index, prop):
 		tp = self._keyTimes[index-1] + prop*(self._keyTimes[index]-self._keyTimes[index-1])
 		self._keyTimes.insert(index, tp)
-		if self._keyTimesData is not None:
-			self._keyTimesData.insert((None, None))
 		self._selected = -1
 		self.updateKeyTimes()
 
@@ -971,8 +967,6 @@ class KeyTimesSlider(window.Wnd):
 
 	def removeKeyTimeAtIndex(self, index):
 		del self._keyTimes[index]
-		if self._keyTimesData is not None:
-			del self._keyTimesData[index]
 		if index == self._selected:
 			self._selected = -1
 		self.updateKeyTimes()
@@ -1006,10 +1000,16 @@ class KeyTimesSlider(window.Wnd):
 		w = r-l-2*self.TICKS_OFFSET-2 # pixels range
 		dw = self.MARKER_WIDTH/2
 		index = 0
-		for p in self._keyTimes:
+		if self._copyKeyTime is not None:
+			keyTimesToDraw = self._keyTimes+[self._copyKeyTime]
+		else:
+			keyTimesToDraw = self._keyTimes
+		for p in keyTimesToDraw:
 			x = int(p*w + 0.5)
 			pts = [(x0+x-dw, b+self.MARKER_HEIGHT), (x0+x, b), (x0+x+dw, b+self.MARKER_HEIGHT)]
-			if index == self._selected: color = self._selectedMarkerColor
+			if self._copyKeyTime is not None and self._copyKeyTime == p:
+				color = self._selectedMarkerColor
+			elif index == self._selected: color = self._selectedMarkerColor
 			else: color = self._markerColor
 			win32mu.FillPolygon(dc, pts, color)
 			index = index + 1
@@ -1022,18 +1022,11 @@ class KeyTimesSlider(window.Wnd):
 	def setCursorPos(self, t):
 		self.SetPos(int(t*100+0.5))
 
-	def setKeyTimes(self, keyTimes, data=None):
+	def setKeyTimes(self, keyTimes):
 		self._keyTimes = keyTimes
 		l, t, r, b = self.GetWindowRect()
 		l, t, r, b = self._parent.ScreenToClient( (l, t, r, b) )
 		self._parent.InvalidateRect( (l, b, r, b+8) )
-		if data is not None:
-			assert len(data)==len(keyTimes), ''
-			self._keyTimesData = data
-		elif self._keyTimesData is not None:
-			self._keyTimesData = []
-			for i in range(len(keyTimes)):
-				self._keyTimesData.append((None, None))
 
 	def getKeyTime(self, point):
 		l, t, r, b = self.GetWindowRect()
@@ -1055,47 +1048,88 @@ class KeyTimesSlider(window.Wnd):
 		return self._selected
 	
 	def isDraggable(self):
+		if self._shiftPressed:
+			return 1
 		return self._selected>0 and self._selected<len(self._keyTimes)-1
+	
 	def isRemovable(self, index):
 		return index>0 and index<len(self._keyTimes)-1
 					
 	def onSelect(self, point, flags):
+		# XXX update the shift pressed status
+		self._shiftPressed = flags & win32con.MK_SHIFT
+		
 		# test hit on a key time
 		index, rect = self.getKeyTime(point)
 		if index >= 0:
-			if self._selected == index and self.isDraggable():
+			self._selected = index
+			self._startDragging = 1
+			if self.isDraggable():
 				self._dragging = point
 				self._dragfrom = self._keyTimes[index]
 				self._parent.SetCapture()
-			self._selected = index
+				
+			# move the current selection
 			self.updateKeyTimes()
-			if self._listener:
-				self._listener.onSelected(index)
-
+			if not self._shiftPressed:
+				if self._listener:
+					self._listener.onSelected(index)
+			
 	def onDeselect(self, point, flags):
 		if self._dragging:
 			self._dragging = None
 			self._parent.ReleaseCapture()
-			if self._listener:
-				self._listener.onKeyTimeChanged(self._selected, self._keyTimes[self._selected])
+			if self._listener and not self._startDragging:
+				if self._shiftPressed:						
+					tp = self.pointToTime(point)
+					self._listener.onInsertKey(tp, self._copyIndex)
+				else:
+					self._listener.onKeyTimeChanged(self._selected, self._keyTimes[self._selected])
+			self._copyKeyTime = None
+			self.updateKeyTimes()						
+		self._startDragging = 0
 
 	def selectKeyTime(self, index):
 		self._selected = index
 		self.updateKeyTimes()
 
+	def __isValidDrag(self, draggedKeyNum, draggedTime):
+		if draggedTime < (self._keyTimes[draggedKeyNum] + self.DELTA) or \
+			draggedTime > (self._keyTimes[draggedKeyNum] - self.DELTA):
+				return 1
+		return 0
+			
 	def onDrag(self, point, flags):
 		if self._dragging:
 			x1, y1 = self._dragging
 			x2, y2 = point
 			range = float(self.getDeviceRange())
 			v = self._dragfrom + (x2-x1)/range
-			n = self._selected
-			if v < self._keyTimes[n-1] + self.DELTA:
-				v = self._keyTimes[n-1] + self.DELTA
-			if v > self._keyTimes[n+1] - self.DELTA:
-				v = self._keyTimes[n+1] - self.DELTA
-			self._keyTimes[self._selected] = v
-			self.updateKeyTimes()
+			if v < 0 or v > 1:
+				return
+			if not self._startDragging:
+				n = self._selected
+				if not self._startDragging or self.__isValidDrag(n, v):
+					if self._shiftPressed:
+						self._copyKeyTime = v
+						self._listener.onKeyTimeChanging(v)
+						self.updateKeyTimes()
+					else:
+						# for now don't allow to jump on another one key
+						if self._selected > 0 and v > self._keyTimes[self._selected-1] and \
+							((self._selected == len(self._keyTimes)-1) or v < self._keyTimes[self._selected+1]):
+							self._keyTimes[self._selected] = v
+							self._listener.onKeyTimeChanging(v)
+							self.updateKeyTimes()
+			else:
+				if self.__isValidDrag(self._selected, v):
+					if self._shiftPressed:
+						self._copyIndex = self._selected
+						self._copyKeyTime = v
+					else:
+						self._keyTimes[self._selected] = v
+					self.updateKeyTimes()						
+					self._startDragging = 0
 			
 	def onActivate(self, point, flags):
 		if not self.insideKeyTimes(point):
@@ -1113,15 +1147,8 @@ class KeyTimesSlider(window.Wnd):
 				tp = self.pointToTime(point)
 				self._listener.onInsertKey(tp)
 
-	def setSelectedKeyTimeData(self, rect, color):
-		if self._selected<0: return
-		self._keyTimesData[self._selected] = rect, color
-
 	def getKeyTimes(self):
 		return self._keyTimes
-
-	def getKeyTimesData(self):
-		return self._keyTimesData
 
 	def enable(self, flag):
 		if self._enabled == flag: 
