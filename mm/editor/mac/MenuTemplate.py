@@ -115,7 +115,7 @@ MENUBAR=(
 		(ALL, ENTRY, 'Zoom In', None, CANVAS_WIDTH),
 		(ALL, ENTRY, 'Fit in Window', None, CANVAS_RESET),
 		(ALL, SEP,),
-		(ALL, ENTRY, 'Synchronise Selection', 'F', PUSHFOCUS),
+		(ALL, ENTRY, 'Synchronize Selection', 'F', PUSHFOCUS),
 		(ALL, SEP,),
 		(ALL, TOGGLE, 'Unused Channels', None, TOGGLE_UNUSED),
 		(ALL, TOGGLE, 'Sync Arcs', None, TOGGLE_ARCS),
