@@ -442,18 +442,22 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.url, tag = MMurl.splittag(href)
 		try:
 			fn, hdrs = MMurl.urlretrieve(self.url, data)
-			if hdrs.has_key('Content-Location'):
-				self.url = hdrs['Content-Location']
-			if hdrs.maintype == 'image':
-				newtext = '<IMG SRC="%s">\n' % self.url
-			else:
-				newtext = open(fn, 'rb').read()
 		except IOError:
 			newtext = '<H1>Cannot Open</H1><P>'+ \
 				  'Cannot open '+self.url+':<P>'+ \
 				  `(sys.exc_type, sys.exc_value)`+ \
 				  '<P>\n'
-		self.htmlw.SetText(newtext, None, self.footer, 0, tag)
+		else:
+			if hdrs.has_key('Content-Location'):
+				self.url = hdrs['Content-Location']
+			if hdrs.type != 'text/html':
+				import Hlinks
+				self._player.toplevel.jumptoexternal(self.url, None, Hlinks.TYPE_JUMP)
+				# don't call setready below
+				return
+			else:
+				newtext = open(fn, 'rb').read()
+				self.htmlw.SetText(newtext, None, self.footer, 0, tag)
 		self._player.toplevel.setready()
 
 image_cache = {}
