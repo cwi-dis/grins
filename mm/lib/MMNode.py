@@ -10,9 +10,7 @@ from SR import SCHED, SCHED_DONE, PLAY, PLAY_DONE, \
 	  SCHED_STOP, PLAY_STOP, SYNC, SYNC_DONE, PLAY_ARM, ARM_DONE
 
 
-leaftypes = ['imm', 'ext']
-interiortypes = ['seq', 'par', 'bag']
-alltypes = leaftypes + interiortypes
+from MMTypes import *
 
 
 # The MMNodeContext class
