@@ -391,7 +391,7 @@
 (units (int) 2 'Units' units
 	'What the size/position numbers are measured in' raw (g2_pro qt_pro smil10 cmif))
 
-(usergroups (list (enclosed (tuple (name) (tuple (string) (bool) (bool)))))
+(usergroups (list (enclosed (tuple (name) (tuple (string) (bool) (name)))))
 	() 'User groups' hidden
 	'Usergroups used in this document (root node only)' normal (smil2 cmif))
 

@@ -395,10 +395,9 @@ class MMNodeContext:
 	#
 	def addusergroups(self, list):
 		for name, value in list:
-			title, rendered, allowed, uid = value
+			title, rendered, override, uid = value
 			rendered = ['NOT RENDERED', 'RENDERED'][rendered]
-			allowed = ['not allowed', 'allowed'][allowed]
-			self.usergroups[name] = title, rendered, allowed, uid
+			self.usergroups[name] = title, rendered, override, uid
 
 	def addusergroup(self, name, value):
 		if self.usergroups.has_key(name):
