@@ -145,7 +145,8 @@ class _Window:
 		self._form = self._shell.CreateManagedWidget('drawingArea',
 			  Xm.DrawingArea,
 			  {'height': h, 'width': w,
-			   'colormap': toplevel._colormap})
+			   'colormap': toplevel._colormap,
+			   'marginHeight': 0, 'marginWidth': 0})
 		self._width = w
 		self._height = h
 		self._shell.Popup(0)
@@ -236,13 +237,13 @@ class _Window:
 	def _input_callback(self, widget, client_data, call_data, *rest):
 		if debug: print `self`+'._input_callback()'
 		import struct
-		event = struct.unpack('i', call_data[4:8])[0]
-		event = Xlib.getevent(event)	# KLUDGE!
-		decoded_event = XEvent.mkevent(event)
+		ev = struct.unpack('i', call_data[4:8])[0]
+		ev = Xlib.getevent(ev)	# KLUDGE!
+		decoded_event = XEvent.mkevent(ev)
 		if decoded_event.type == X.KeyPress:
 			if toplevel._win_lock:
 				toplevel._win_lock.acquire()
-			string = Xlib.LookupString(event)[0]
+			string = Xlib.LookupString(ev)[0]
 			if toplevel._win_lock:
 				toplevel._win_lock.release()
 			for i in range(len(string)):
@@ -350,7 +351,8 @@ class _Window:
 			toplevel._win_lock.acquire()
 		newwin._form = self._form.CreateManagedWidget('drawingArea',
 			  Xm.DrawingArea,
-			  {'width': w, 'height': h, 'x': x, 'y': y})
+			  {'width': w, 'height': h, 'x': x, 'y': y,
+			   'marginHeight': 0, 'marginWidth': 0})
 		if toplevel._win_lock:
 			toplevel._win_lock.release()
 		newwin._init2()
@@ -955,13 +957,15 @@ class _DisplayList:
 
 		if toplevel._win_lock:
 			toplevel._win_lock.acquire()
-		color = self._window._convert_color()
+		color = self._window._convert_color(color)
 		self._gc.foreground = color
 
 		x0, y0 = points[0]
+		x0, y0, h, w = window._convert_coordinates(x0, y0, 0, 0)
 		for x, y in points[1:]:
 			x, y, h, w = window._convert_coordinates(x, y, 0, 0)
 			self._gc.DrawLine(x0, y0, x, y)
+			x0, y0 = x, y
 		self._gc.foreground = self._xfgcolor
 		if toplevel._win_lock:
 			toplevel._win_lock.release()
@@ -1087,6 +1091,7 @@ class _Event:
 		self._timenow = time.time()
 		self._timerid = 0
 		self._modal = 0
+		self._looping = 0
 
 	def _checktime(self):
 		if self._modal:
@@ -1106,9 +1111,17 @@ class _Event:
 			self._queue.append((None, TimerEvent, arg))
 			timediff = -t	# -t is how much too late we were
 		self._timenow = timenow # Fix by Jack
+		if self._looping:
+			self._loop()
+
+	def _looping_timeout_callback(self, client_data, id):
+		self._checktime()
 
 	def settimer(self, sec, arg):
 		self._checktime()
+		if self._looping:
+			id = Xt.AddTimeOut(int(sec * 1000),
+				  self._looping_timeout_callback, None)
 		t = 0
 		self._timerid = self._timerid + 1
 		for i in range(len(self._timers)):
@@ -1135,10 +1148,14 @@ class _Event:
 	def entereventunique(self, win, event, arg):
 		if (win, event, arg) not in self._queue:
 			self._queue.append((win, event, arg))
+			if self._looping:
+				self._loop()
 
 	def enterevent(self, win, event, arg):
 		self._checktime()
 		self._queue.append((win, event, arg))
+		if self._looping:
+			self._loop()
 
 	def _timeout_callback(self, client_data, id):
 		self._timeout_called = 1
@@ -1222,6 +1239,11 @@ class _Event:
 				if w == toplevel:
 					break
 		return 0
+
+	def _loop(self):
+		while self._queue:
+			if not self._trycallback():
+				del self._queue[0]
 
 	def testevent(self):
 		while 1:
@@ -1342,8 +1364,14 @@ class _Event:
 		self._modal = 0
 
 	def mainloop(self):
-		while 1:
-			dummy = self.readevent()
+		self._looping = 1
+		t = 0
+		for (time, arg, tid) in self._timers:
+			time = time + t
+			t = time
+			id = Xt.AddTimeOut(int(time * 1000),
+				  self._looping_timeout_callback, None)
+		Xt.MainLoop()
 
 class _Font:
 	def __init__(self, fontname, size):
