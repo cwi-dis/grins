@@ -92,7 +92,7 @@ def GetYesNoCancel(prompt, parent = None):
 	return multchoice(prompt, ["Yes", "No", "Cancel"], 0)
 	
 def GetOKCancel(prompt, parent = None):
-	return multchoice(prompt, ["OK", "Cancel"], 0)
+	return 1 - showquestion(prompt, parent)
 
 def RegisterDialog():
 	return multchoice("""\
