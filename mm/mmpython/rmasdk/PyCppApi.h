@@ -15,8 +15,6 @@
 
 #include "Python.h"
 
-// class SyncObject and CEnterLeavePython
-#include "mt.h"
 
 #if defined(_USE_STD_STR) && (!defined(_ABIO32) || _ABIO32 == 0)
 #include "string"
