@@ -47,7 +47,17 @@ class _LayoutView2(GenFormView):
 
 		self.__ctrlNames=n=('RegionX','RegionY','RegionW','RegionH','RegionZ','ShowAllMedias')
 		self.__listeners = {}
-			
+		
+		# save the current value.
+		# useful to avoid to send to the listner an update information for each changement
+		# it avoids some recursives pb and some crashed
+		self.__values = {}
+		self.__values['RegionX'] = None
+		self.__values['RegionY'] = None
+		self.__values['RegionW'] = None
+		self.__values['RegionH'] = None
+		self.__values['RegionZ'] = None
+		
 		i = 0
 		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_X); i=i+1
 		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Y); i=i+1
@@ -76,7 +86,6 @@ class _LayoutView2(GenFormView):
 		
 		# allow to valid the field with the return key
 		self.lastModifyCtrlField = None
-			
 			
 	# special initialization because previous control is not managed like any another component
 	# allow to have a handle on previous component from an external module
@@ -154,6 +163,8 @@ class _LayoutView2(GenFormView):
 
 	def setFieldCtrl(self, ctrlName, sValue):
 		self[ctrlName].settext(sValue)
+		value = self[ctrlName].gettext()
+		self.__values[ctrlName] = value
 
 	def enable(self, ctrlName, bValue):
 		self[ctrlName].enable(bValue)
@@ -197,11 +208,13 @@ class _LayoutView2(GenFormView):
 	def flushChangement(self):
 		if self.lastModifyCtrlField != None:
 			value = self[self.lastModifyCtrlField].gettext()
-			listener = self.__listeners.get(self.lastModifyCtrlField)
-			if listener != None:
-				listener.onFieldCtrl(self.lastModifyCtrlField, value)
+			# update the listener only if the value has changed
+			if self.__values[self.lastModifyCtrlField] != value:
+				self.__values[self.lastModifyCtrlField] = value
+				listener = self.__listeners.get(self.lastModifyCtrlField)
+				if listener != None:
+					listener.onFieldCtrl(self.lastModifyCtrlField, value)
 			self.lastModifyCtrlField = None
-			return
 
 	#
 	# User input dispatch method 
