@@ -36,7 +36,7 @@ else:
 engine = None
 audiopin = None
 
-def convertaudiofile(u, dstdir, file, node, progress = None):
+def convertaudiofile(u, srcurl, dstdir, file, node, progress = None):
 	import MMAttrdefs, audio, audio.format
 	global engine, audiopin
 	# ignore suggested extension and make our own
@@ -258,6 +258,116 @@ def converttextfile(u, dstdir, file, node):
 		fss.SetCreatorType('PNst', 'PNRA')
 		macostools.touched(fss)
 	return file
+
+if sys.platform == 'win32':
+	_org_convertaudiofile = convertaudiofile
+def _win_convertaudiofile(u, srcurl, dstdir, file, node, progress = None):
+	if u.headers.subtype in ('basic', 'x-aiff', 'x-wav'):
+		return _org_convertaudiofile(u, srcurl, dstdir, file, node, progress)
+	u.close()
+
+	try:
+		import win32dxm
+		reader = win32dxm.MediaReader(srcurl)
+	except:
+		return
+
+	import MMAttrdefs
+	global engine, audiopin
+
+	try:
+		# ignore suggested extension and make our own
+		file = os.path.splitext(file)[0] + '.ra'
+		fullpath = os.path.join(dstdir, file)
+		if engine is None:
+			engine = producer.CreateRMBuildEngine()
+		if audiopin is None:
+			for pin in engine.GetPins():
+				if pin.GetOutputMimeType() == producer.MIME_REALAUDIO:
+					audiopin = pin
+		engine.SetDoOutputMimeType(producer.MIME_REALAUDIO, 1)
+		engine.SetDoOutputMimeType(producer.MIME_REALVIDEO, 0)
+		engine.SetDoOutputMimeType(producer.MIME_REALEVENT, 0)
+		engine.SetDoOutputMimeType(producer.MIME_REALIMAGEMAP, 0)
+		engine.SetDoOutputMimeType(producer.MIME_REALPIX, 0)
+		engine.SetRealTimeEncoding(0)
+		cp = engine.GetClipProperties()
+		ts = engine.GetTargetSettings()
+		ts.RemoveAllTargetAudiences()
+		if node is not None:
+			cp.SetTitle(MMAttrdefs.getattr(node, 'title'))
+			cp.SetAuthor(MMAttrdefs.getattr(node, 'author'))
+			cp.SetCopyright(MMAttrdefs.getattr(node, 'copyright'))
+			cp.SetPerfectPlay(MMAttrdefs.getattr(node, 'project_perfect'))
+			cp.SetMobilePlay(MMAttrdefs.getattr(node, 'project_mobile'))
+			ts.SetAudioContent(MMAttrdefs.getattr(node, 'project_audiotype'))
+			target = MMAttrdefs.getattr(node, 'project_targets')
+			ntargets = 0
+			for i in range(6):
+				if (1 << i) & target:
+					ts.AddTargetAudience(i)
+					ntargets = ntargets + 1
+			if ntargets == 0:
+				ts.AddTargetAudience(producer.ENC_TARGET_28_MODEM)
+				ntargets = ntargets + 1
+		else:
+			# we don't know nothin' about the node so use some defaults
+			cp.SetTitle('')
+			cp.SetAuthor('')
+			cp.SetCopyright('')
+			cp.SetPerfectPlay(1)
+			cp.SetMobilePlay(0)
+			ts.SetAudioContent(producer.ENC_AUDIO_CONTENT_VOICE)
+			ts.AddTargetAudience(producer.ENC_TARGET_28_MODEM)
+			ts.SetVideoQuality(producer.ENC_VIDEO_QUALITY_NORMAL)
+			ntargets = 1
+		engine.SetDoMultiRateEncoding(ntargets != 1)
+		cp.SetSelectiveRecord(0)
+		cp.SetDoOutputServer(0)
+		cp.SetDoOutputFile(1)
+		cp.SetOutputFilename(fullpath)
+	
+		fmt = reader.GetAudioFormat()
+		pp = audiopin.GetPinProperties()
+		pp.SetNumChannels(fmt.getnchannels())
+		pp.SetSampleRate(fmt.getsamplespersec())
+		pp.SetSampleSize(fmt.getbitspersample())
+
+		engine.PrepareToEncode()
+		ms = engine.CreateMediaSample()
+
+		try:
+			nbytes = audiopin.GetSuggestedInputSize()
+			nbps = fmt.getbitspersample() / 8
+			inputsize_frames = nbytes / nbps
+
+			done = 0
+			flags = 0
+			time, data = reader.ReadAudio(inputsize_frames)
+			if not data:
+				done = 1
+			if progress:
+				dur = reader.GetDuration()
+			while not done:
+				data_list = reader.ReadAudioSamples(inputsize_frames)
+				for i in range(len(data_list)):
+					next_time, next_data = data_list[i]
+					if not next_data:
+						done = 1
+						flags = producer.MEDIA_SAMPLE_END_OF_STREAM
+					ms.SetBuffer(data, time, flags)
+					audiopin.Encode(ms)
+					time = next_time
+					data = next_data
+				if progress:
+					now = reader.GetTime()
+					apply(progress[0], progress[1] + (now, dur))
+		finally:
+			engine.DoneEncoding()
+		return file
+	except producer.error, arg:
+		import windowinterface
+		windowinterface.showmessage("RealEncoder error: %s"%(arg,))
 
 def _win_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	if u.headers.subtype.find('quicktime') >=0:
@@ -617,6 +727,7 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 
 if sys.platform == 'win32':
 	convertvideofile = _win_convertvideofile
+	convertaudiofile = _win_convertaudiofile
 else:
 	convertvideofile = _other_convertvideofile
 
