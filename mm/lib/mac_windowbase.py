@@ -934,9 +934,10 @@ class _Window(_CommonWindow):
 
 		self._clip = Qd.NewRgn()
 		Qd.RectRgn(self._clip, self.qdrect())
-		# subtract all subwindows
+		# subtract all subwindows, insofar they aren't transparent at the moment
 		for w in self._subwindows:
-			if not w._transparent:
+			if w._transparent == 0 or \
+					(w._transparent == -1 and w._active_displist):
 				r = Qd.NewRgn()
 				Qd.RectRgn(r, w.qdrect())
 				Qd.DiffRgn(self._clip, r, self._clip)
@@ -969,7 +970,7 @@ class _SubWindow(_CommonWindow):
 			self._transparent = parent._transparent
 		else:
 			self._transparent = transparent
-			
+		
 		# XXXX pixmap to-be-done
 		
 		# XXXX Should we do redraw of parent or something??
@@ -1031,7 +1032,8 @@ class _SubWindow(_CommonWindow):
 		Qd.RectRgn(self._clip, self.qdrect())
 		# subtract all our subsubwindows
 		for w in self._subwindows:
-			if not w._transparent:
+			if w._transparent == 0 or \
+					(w._transparent == -1 and w._active_displist):
 				r = Qd.NewRgn()
 				Qd.RectRgn(r, w.qdrect())
 				Qd.DiffRgn(self._clip, r, self._clip)
@@ -1042,7 +1044,8 @@ class _SubWindow(_CommonWindow):
 			if w == self:
 				# Stop when we meet ourselves
 				break
-			if not w._transparent:
+			if w._transparent == 0 or \
+					(w._transparent == -1 and w._active_displist):
 				r = Qd.NewRgn()
 				Qd.RectRgn(r, w.qdrect())
 				Qd.DiffRgn(self._clip, r, self._clip)
@@ -1058,7 +1061,7 @@ class _DisplayList:
 		self._buttons = []
 		self._list = []
 		self._rendered = 0
-		if not self._window._transparent:
+		if not self._window._transparent <= 0:
 			self._list.append(('clear',))
 		self._font = None
 		self._old_fontinfo = None
@@ -1066,14 +1069,17 @@ class _DisplayList:
 	def close(self):
 		if self._window is None:
 			return
+		win = self._window
 		for b in self._buttons[:]:
 			b.close()
-		self._window._displists.remove(self)
-		if self._window._active_displist is self:
-			self._window._active_displist = None
-			if self._window._wid:
-				Qd.SetPort(self._window._wid)
-				Win.InvalRect(self._window.qdrect())
+		win._displists.remove(self)
+		if win._active_displist is self:
+			win._active_displist = None
+			if win._transparent == -1 and win._parent:
+				win._parent._clipchanged()
+			if win._wid:
+				Qd.SetPort(win._wid)
+				Win.InvalRect(win.qdrect())
 		self._window = None
 		del self._buttons
 		del self._list
@@ -1277,6 +1283,7 @@ class _Button:
 		self._coordinates = coordinates
 		self._dispobj = dispobj
 		self._z = z
+		buttons = dispobj._buttons
 		for i in range(len(buttons)):
 			if buttons[i]._z <= z:
 				buttons.insert(i, self)
