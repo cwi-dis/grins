@@ -61,7 +61,7 @@ class Selecter:
 		list = [(node, None, None, None)]
 		while node.GetType() == 'bag':
 			newnode = choosebagitem(node, 1)
-			if newnode == None:
+			if newnode is None:
 				return None
 			list.append(newnode, None, node, node)
 			node = newnode
@@ -101,7 +101,7 @@ class Selecter:
 			newlist.append(slot)
 			mini, sctx, bag, parent = slot
 			i = self.findslotindexbybag(bag)
-			if i <> None:
+			if i is not None:
 ##				print 'kcb: found', bag, 'in', i
 				# Ok, this bag is currently active.
 				# Kill whatever is in it (and below)
@@ -117,7 +117,7 @@ class Selecter:
 	#
 	def findslotindexbybag(self, bag):
 		for i in range(len(self.runslots)):
-			if self.runslots[i][RS_BAG] == bag:
+			if self.runslots[i][RS_BAG] is bag:
 				return i
 		return None
 	#
@@ -125,7 +125,7 @@ class Selecter:
 	#
 	def findslotbybag(self, bag):
 		i = self.findslotindexbybag(bag)
-		if i == None:
+		if i is None:
 			return None
 		return self.runslots[i]
 	#
@@ -133,7 +133,7 @@ class Selecter:
 	#
 	def findslotbynode(self, node):
 		for i in range(len(self.runslots)):
-			if self.runslots[i][RS_NODE] == node:
+			if self.runslots[i][RS_NODE] is node:
 				return self.runslots[i]
 		return None
 	#
@@ -141,7 +141,7 @@ class Selecter:
 	#
 	def findslotbysctx(self, sctx):
 		for i in range(len(self.runslots)):
-			if self.runslots[i][RS_SCTX] == sctx:
+			if self.runslots[i][RS_SCTX] is sctx:
 				return self.runslots[i]
 		return None
 	#
@@ -178,7 +178,7 @@ class Selecter:
 ##		print 'RUNSLOTS after kill:', self.runslots
 		tokill = []
 		for slot in self.runslots:
-			if node and slot[RS_PARENT] == node:
+			if node and slot[RS_PARENT] is node:
 				tokill.append(slot)
 ##		print 'dependent kills:'
 		for slot in tokill:
@@ -191,7 +191,6 @@ class Selecter:
 	#
 	def anchorfired(self, old_sctx, node, anchorlist, arg):
 		#self.showpauseanchor(0) # also see Scheduler.py
-		self.toplevel.setwaiting()
 		destlist = []
 		pause_anchor = 0
 		# Firing an anchor continues the player if it was paused.
@@ -204,7 +203,6 @@ class Selecter:
 			rv = self.context.hyperlinks.findsrclinks(aid)
 			destlist = destlist + rv
 		if not destlist:
-			self.toplevel.setready()
 			if not pause_anchor:
 				windowinterface.showmessage( \
 				'No hyperlink source at this anchor')
@@ -227,7 +225,6 @@ class Selecter:
 		try:
 			seek_node = self.context.mapuid(dest_uid)
 		except NoSuchUIDError:
-			self.toplevel.setready()
 			windowinterface.showmessage('Dangling hyperlink selected')
 			return 0
 		return self.gotonode(seek_node, dest_aid, arg)
@@ -235,13 +232,12 @@ class Selecter:
 	def gotonode(self, seek_node, dest_aid, arg):
 		# First check whether this is an indirect anchor
 		list = self.followcompanchors(seek_node, dest_aid)
-		if list <> None:
+		if list is not None:
 			rv = 0
 			for node_id, aid in list:
 				try:
 					node = self.context.mapuid(node_id)
 				except NoSuchUIDError:
-					self.toplevel.setready()
 					windowinterface.showmessage('Dangling: \n'+\
 						  `(node_id, aid)`)
 					continue
@@ -252,8 +248,7 @@ class Selecter:
 		while seek_node.GetType() == 'bag':
 			dest_aid = None
 			seek_node = choosebagitem(seek_node, 1)
-			if seek_node == None:
-				self.toplevel.setready()
+			if seek_node is None:
 				return 0
 		baglist = self.findbaglist(seek_node)
 		baglist = self.killconflictingbags(baglist)
@@ -263,7 +258,6 @@ class Selecter:
 		new_sctx = self.scheduler.play(mini, seek_node, dest_aid, arg)
 		if not new_sctx:
 			dummy = self.killconflictingbags(baglist)
-			self.toplevel.setready()
 			return 0
 		self.runslots.append(mini, new_sctx, bag, parent)
 		self.updateuibaglist()
@@ -281,9 +275,9 @@ class Selecter:
 	# bagevent is called by the scheduler to start/stop a bag.
 	#
 	def bag_event(self, sctx, (event, bag)):
-##		print 'bagevent in', sctx, SR.ev2string((event, bag))
+## 		print 'bagevent in', sctx, SR.ev2string((event, bag))
 		if event == SR.BAG_START:
-			if self.findslotbybag(bag) <> None:
+			if self.findslotbybag(bag) is not None:
 				print 'bag_event: Bag already active:', bag
 				self.dumpbaglist()
 				return
@@ -310,7 +304,7 @@ class Selecter:
 			self.runslots.append(node, new_sctx, bag, parent)
 		elif event == SR.BAG_STOP:
 			slot = self.findslotbybag(bag)
-			if slot == None:
+			if slot is None:
 				print 'bag_event: Bag not active:', bag
 				self.dumpbaglist()
 				return
@@ -368,7 +362,7 @@ class Selecter:
 			print str
 
 def nodename(node):
-	if node == None:
+	if node is None:
 		return '<none>'
 	str = MMAttrdefs.getattr(node, 'name')
 	str = str + '#' + node.GetUID()
