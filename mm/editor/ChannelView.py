@@ -56,12 +56,19 @@ FOCUSRIGHT  = fix(40, 40, 40)
 FOCUSBOTTOM = fix(91, 91, 91)
 
 # Arm colors
+ARMACTIVECOLOR = (255, 255, 0)
+ARMINACTIVECOLOR = (255, 200, 0)
+ARMERRORCOLOR = (255, 0, 0)
+PLAYACTIVECOLOR = (0, 255, 0)
+PLAYINACTIVECOLOR = (0, 127, 0)
+PLAYERRORCOLOR = (127, 0, 0)
+
 armcolors = { \
 	     ARM_SCHEDULED: (200, 200, 0), \
-	     ARM_ARMING: (255, 255, 0), \
-	     ARM_ARMED: (255, 200, 0), \
-	     ARM_PLAYING: (0, 255, 0), \
-	     ARM_WAITSTOP: (0, 127, 0), \
+	     ARM_ARMING: ARMACTIVECOLOR, \
+	     ARM_ARMED: ARMINACTIVECOLOR, \
+	     ARM_PLAYING: PLAYACTIVECOLOR, \
+	     ARM_WAITSTOP: PLAYINACTIVECOLOR, \
 	     }
 
 
@@ -269,7 +276,7 @@ class ChannelView(ChannelViewDialog):
 	def timerange(self):
 		# Return the range of times used in the window
 		v = self.viewroot
-		t0, t1 = v.t0, v.t1
+		t0, t1 = v.t0 - self.prerolltime, v.t1
 		return t0, max(t1, t0 + 10)
 
 	def maptimes(self, t0, t1):
@@ -406,6 +413,7 @@ class ChannelView(ChannelViewDialog):
 			self.bandwidthstripborder = self.timescaleborder
 
 		self.objects = []
+		self.channelnodes = {}
 		self.focus = self.lockednode = None
 		self.baseobject = BaseBox(self, '(base)')
 		self.objects.append(self.baseobject)
@@ -600,6 +608,13 @@ class ChannelView(ChannelViewDialog):
 				if (focus[0] == 'n' and focus[1] is node) or \
 				   (focus[0] == 'a' and focus[1][3] is node):
 					obj.select()
+				if self.showbandwidthstrip:
+					# Remember channel->node mapping
+					# for prearm order
+					if self.channelnodes.has_key(channel):
+						self.channelnodes[channel].append(obj)
+					else:
+						self.channelnodes[channel] = [obj]
 		elif t in bagtypes:
 			self.scandescendants(node)
 		else:
@@ -679,25 +694,59 @@ class ChannelView(ChannelViewDialog):
 				   focus[1] == (xnode, xside, delay, ynode, yside):
 					obj.select()
 
+	# Bandwidth strip stuff
+
 	def initbwstrip(self):
 		# clear all bandwidth box pointers
 		for obj in self.objects:
 			obj.bandwidthboxes = []
+		self.prerolltime = 0
 
 		if not self.bwstripobject:
 			return
-		# loop over nodes and create continuous media boxes
-		for obj in self.objects:
-			if not obj.__class__ is NodeBox:
-				continue
-			prearm, bandwidth, tarm, t0, t1 = \
-				obj.getbandwidthdata()
-			bwbox = self.bwstripobject.bwbox(t0, t1, bandwidth)
-			obj.bandwidthboxes = obj.bandwidthboxes + bwbox
-			
-				
-		# XXXX loop over channels/nodes and create prearm boxes
-		# XXXX compute starttime disregarding t0 prearm
+		# For each channel replace the nodelist by a list
+		# with nodes and timing info. We don't need the channel
+		# identity anymore, so store the result in a list of lists
+		nodematrix = []
+		for nodelist in self.channelnodes.values():
+			newnodelist = []
+			for node in nodelist:
+				prearm, bandwidth, t0, t1 = \
+					node.getbandwidthdata()
+				newnodelist.append(t0, t1, node, prearm, bandwidth)
+			nodematrix.append(newnodelist)
+		# loop over nodes and create continuous media bandwidth boxes
+		for nodelist in nodematrix:
+			for info in nodelist:
+				t0, t1, node, prearm, bandwidth = info
+				bwbox = self.bwstripobject.bwbox(
+					t0, t1, bandwidth)
+				node.bandwidthboxes = node.bandwidthboxes + \
+						      bwbox
+		# Compute initial prearm time (prearms that have t0==0)
+		prerolltime = 0
+		maxbandwidth = self.bwstripobject.getbandwidth()
+		for nodelist in nodematrix:
+			for node in nodelist:
+				t0, t1, node, prearm, bandwidth = node
+				if t0 != 0:
+					break
+				prerolltime = prerolltime + \
+					      (float(prearm)/maxbandwidth)
+		# Adjust timebar
+		self.prerolltime = prerolltime
+		# And the rest of the prearms
+		prearmlist = []
+		for nodelist in nodematrix:
+			t_arm = -self.prerolltime
+			for info in nodelist:
+				t0, t1, node, prearm, bandwidth = info
+				prearmlist.append(t_arm, t0, prearm, node)
+				t_arm = t0
+		prearmlist.sort()
+		for t_arm, t0, prearm, node in prearmlist:
+			pabox = self.bwstripobject.pabox(t_arm, t0, prearm)
+			node.bandwidthboxes = node.bandwidthboxes + pabox
 		
 	# Focus stuff (see also recalc)
 
@@ -1095,6 +1144,8 @@ class TimeScaleBox(GO):
 			   self.mother.new_displist.fontheight()
 		self.bottom = 1.0
 		t0, t1 = self.mother.timerange()
+		if t0 < 0:	# Don't draw over preroll time
+			t0 = 0
 		self.left, self.right = self.mother.maptimes(t0, t1)
 		self.ok = 1
 
@@ -1116,6 +1167,8 @@ class TimeScaleBox(GO):
 		d.drawbox((l, t, r - l, b - t))
 		# Compute number of division boxes
 		t0, t1 = self.mother.timerange()
+		if t0 < 0:
+			t0 = 0
 		dt = t1 - t0
 		n = int(ceil(dt/10.0))
 		# Compute distance between numeric indicators
@@ -1166,8 +1219,8 @@ class BandwidthAccumulator:
 
 	def _findslot(self, t0):
 		"""Find the slot in which t0 falls"""
-		if t0 < 0:
-			raise 'Illegal t0', t0
+##		if t0 < 0:
+##			raise 'Illegal t0', t0
 		#
 		# Search through the slots (ordered backward) until we
 		# find the one in which t0 lies.
@@ -1175,6 +1228,9 @@ class BandwidthAccumulator:
 		for i in range(len(self.used)):
 			if self.used[i][0] <= t0:
 				break
+		else:
+			self.used.append((t0, 0))
+			return len(self.used)-1
 		return i
 
 	def _find(self, t0, t1):
@@ -1198,7 +1254,7 @@ class BandwidthAccumulator:
 		# Now slot i points to the (new) t0,t1 range.
 		return i, t1
 		
-	def _findbw(self, t0):
+	def _findavailbw(self, t0):
 		"""Return the available bandwidth at t0 and the time
 		t1 at which that value may change"""
 		i = self._findslot(t0)
@@ -1211,36 +1267,108 @@ class BandwidthAccumulator:
 			t1 = self.used[i-1][0]
 		return bw, t1
 
-	def reserve(self, t0, t1, bandwidth):
+	def reserve(self, t0, t1, bandwidth, bwtype=1):
 		boxes = []
-		print 'RESERVE', t0, t1, bandwidth
 		while 1:
 			i, cur_t1 = self._find(t0, t1)
 			t0_0, oldbw = self.used[i]
-			print 'FOUND', t0, cur_t1, oldbw, oldbw+bandwidth
-			boxes.append((t0, cur_t1, oldbw, oldbw+bandwidth, 1))
+			if bwtype <= 1 and bandwidth > self.max:
+				curbwtype = bwtype + 2
+			else:
+				curbwtype = bwtype
+			boxes.append((t0, cur_t1, oldbw, oldbw+bandwidth,
+				      curbwtype))
 			self.used[i] = (t0, oldbw+bandwidth)
 			t0 = cur_t1
 			if t0 >= t1:
 				break
 		return boxes
+
+	def prearmreserve(self, t0, t1, size):
+		# First pass: see whether we can do it. For each "slot"
+		# we check the available bandwidth and see whether there
+		# is enough before t1 passes
+		size = float(size)
+		sizetmp = size
+		tcur = tnext = t0
+		while sizetmp > 0 and tnext < t1:
+			availbw, tnext = self._findavailbw(tcur)
+			if tnext > t1:
+				tnext = t1
+			size_in_slot = availbw*(tnext-tcur)
+			if size_in_slot > 0:
+				sizetmp = sizetmp - size_in_slot
+			tcur = tnext
+		if sizetmp > 0:
+			# It didn't fit. We reserve continuous bandwidth
+			# so the picture makes sense.
+			if t1 == t0:
+				t1 = t0 + 0.1
+			return self.reserve(t0, t1, size/(t1-t0), bwtype=2)
+		# It did fit. Do the reservations.
+		boxes = []
+		while size > 0:
+			if t0 >= t1:
+				raise 'Bandwidth algorithm error'
+			i, tnext = self._find(t0, t1)
+			t0_0, bw = self.used[i]
+			bwfree = self.max - bw
+			size_in_slot = bwfree*(tnext-t0)
+			if size_in_slot <= 0:
+				t0 = tnext
+				continue
+			if size_in_slot > size:
+				# Yes, everything fits. Compute end time
+				# and possibly create new slot
+				tnext = t0 + size/bwfree
+				i, tnext = self._find(t0, tnext)
+				size_in_slot = size
+			boxes.append((t0, tnext, bw, self.max, 0))
+			self.used[i] = t0, self.max
+			size = int(size - size_in_slot)
+			t0 = tnext
+		return boxes
 		
 class BandwidthStripBox(GO):
 	BWSCOLORS = [	# Without focus
-			armcolors[ARM_ARMED],
-			armcolors[ARM_WAITSTOP]
+			ARMINACTIVECOLOR,     # Preload
+			PLAYINACTIVECOLOR,      # Playing
+			ARMERRORCOLOR,        # Preload, too much bw used
+			PLAYERRORCOLOR,       # Playing, too much bw used
 		] , [   # with focus
-			armcolors[ARM_ARMING],
-			armcolors[ARM_PLAYING]
+			ARMACTIVECOLOR,
+			PLAYACTIVECOLOR,
+			ARMACTIVECOLOR,
+			PLAYACTIVECOLOR,
 		]
+
+	BWNAMES = {
+		14400: "14k4",
+		28800: "28k8",
+		64000: "ISDN",
+		128000: "2xISDN"
+       }
 
 	def __init__(self, mother):
 		GO.__init__(self, mother, 'bandwidthstrip')
 		self.boxes = []
 		self.focusboxes = []
-		self.bandwidth = 28800
-		self.maxbw = 2*28800
+		import settings
+		self.bandwidth = settings.get('system_bitrate')
+		if self.BWNAMES.has_key(self.bandwidth):
+			self.bwname = self.BWNAMES[self.bandwidth]
+		elif self.bandwidth > 1000000:
+			self.bwname = "%d Mbps" % (self.bandwidth / 1000000)
+		elif self.bandwidth > 1000:
+			self.bwname = "%d Kbps" % (self.bandwidth / 1000)
+		else:
+			self.bwname = "%d bps" % self.bandwidth
+
+		self.maxbw = 2*self.bandwidth
 		self.usedbandwidth = BandwidthAccumulator(self.bandwidth)
+
+	def getbandwidth(self):
+		return self.bandwidth
 
 	def reshape(self):
 		self.top = self.mother.bandwidthstripborder + \
@@ -1267,9 +1395,8 @@ class BandwidthStripBox(GO):
 		f_height = d.strsize('x')[1]
 		d.drawline(BORDERCOLOR, [(l, bwpos), (r, bwpos)])
 		d.fgcolor(TEXTCOLOR)
-		str = "28k8"
-		d.centerstring(0, bwpos-f_height/2,
-			       self.mother.channelright, bwpos+f_height, str)
+		d.centerstring(0, bwpos-f_height/2, self.mother.channelright,
+			       bwpos+f_height, self.bwname)
 		for box in self.boxes:
 			self._drawbox(box, 0)
 		for box in self.focusboxes:
@@ -1296,11 +1423,19 @@ class BandwidthStripBox(GO):
 		b = self.bottom - (min*factor)
 
 		d.drawfbox(color, (l, t, r-l, b-t))
-		print 'DBG', (l, t, r-l, b-t)
 
 	def bwbox(self, t0, t1, bandwidth):
+		"""Reserve bandwidth from t0 until t1. Return list of boxes
+		depicting the bandwidth"""
 ##		box = (t0, t1, 0, bandwidth, 1)
 		boxes = self.usedbandwidth.reserve(t0, t1, bandwidth)
+		self.boxes = self.boxes + boxes
+		return boxes
+
+	def pabox(self, t_arm, t0, prearmsize):
+		"""Reserve bandwidth for prearming prearmsize, starting after
+		t_arm and ending before t0. Return a list of boxes"""
+		boxes = self.usedbandwidth.prearmreserve(t_arm, t0, prearmsize)
 		self.boxes = self.boxes + boxes
 		return boxes
 
@@ -1731,7 +1866,7 @@ class NodeBox(GO, NodeBoxCommand):
 		t0 = self.node.t0
 		t1 = self.node.t1
 		bw = t1*1000
-		return 40000, bw, t0-10, t0, t1  # DBG
+		return 40000, bw, t0, t1  # DBG
 
 	# Menu stuff beyond what GO offers
 
