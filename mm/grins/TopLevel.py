@@ -209,7 +209,6 @@ class TopLevel(TopLevelDialog):
 	def read_it_with_skin(self):
 		if settings.get('askskin'):
 			# default profile is SMIL 2.0 Language Profile
-			import settings
 			settings.switch_profile(settings.SMIL_20_MODULES)
 			windowinterface.FileDialog('Open Components File', '.', ['text/x-grins-skin'], '',
 						   self.__skin_done, self.__skin_done, 1,
@@ -218,7 +217,6 @@ class TopLevel(TopLevelDialog):
 			self.read_it()
 
 	def __skin_done(self, filename = None):
-		import settings
 		if filename:
 			url = MMurl.pathname2url(filename)
 		else:
