@@ -52,6 +52,7 @@ class TopLevelDialog:
 
 	def setplayerstate(self, state):
 		self.window.setplayerstate(state)
+		self.update_undocommandlist()
 
 	def setsettingsdict(self, dict):
 		if self.window:
