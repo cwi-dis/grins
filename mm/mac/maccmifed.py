@@ -137,6 +137,9 @@ if not STANDALONE:
 	
 	os.environ["CMIF"] = CMIFDIR
 	#os.environ["CHANNELDEBUG"] = "1"
+else:
+	progdir=os.path.split(sys.argv[0])[0]
+	os.environ["CMIF"] = progdir
 	
 if len(sys.argv) > 1 and sys.argv[1] == '-p':
 	profile = 1
