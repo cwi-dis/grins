@@ -13,7 +13,7 @@ class TopLevelDialog:
 			(FLAG_PRO, 'Timeline View', CHANNELVIEW),
 			(FLAG_PRO, 'Layout View', LAYOUTVIEW),
 			(FLAG_PRO, 'Hyperlinks', LINKVIEW),
-			(FLAG_SMIL, 'User Groups', USERGROUPVIEW),
+			(FLAG_BOSTON, 'User Groups', USERGROUPVIEW),
 			(FLAG_ALL, 'Properties...', PROPERTIES),
 			(FLAG_ALL, 'Source...', SOURCE),
 			(FLAG_ALL, 'Edit Source...', EDITSOURCE),
