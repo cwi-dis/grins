@@ -464,10 +464,11 @@ class ATTRIBUTES_ANCHORS(_CommandBase):
 class ATTRIBUTES_LAYOUT(_CommandBase):
 	help = 'Edit layout'
 
-# XXX temporare
 class ENABLE_ANIMATION(_CommandBase):
 	help = 'Enable animation'
-	
+class SHOW_ANIMATIONPATH(_CommandBase):
+	help = 'Show animation path'
+
 #
 # Property dialog commands
 class SHOWALLPROPERTIES(_CommandBase):

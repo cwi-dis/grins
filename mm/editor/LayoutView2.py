@@ -850,7 +850,11 @@ class LayoutView2(LayoutViewDialog2):
 			selectedNode = self.currentSelectedNodeList[0]
 			if not (self.getNodeType(selectedNode) == TYPE_REGION and selectedNode.isDefault()):
 				commandlist.append(ATTRIBUTES(callback = (self.onEditProperties, ())))
-
+				if self.getAnimateNode(selectedNode) is not None:
+					commandlist.append(SHOW_ANIMATIONPATH(callback = (self.onShowAnimationPath, ())))
+					checked = self.canShowAnimationPath(selectedNode)
+					self.settoggle(SHOW_ANIMATIONPATH, checked)
+							
 		if len(self.currentSelectedNodeList) >= 1:
 			active = 1
 			for node in self.currentSelectedNodeList:
@@ -945,7 +949,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.previousSelectedNodeList = []
 		for nodeRef in self.currentSelectedNodeList:
 			self.previousSelectedNodeList.append(nodeRef)
-							
+	
 	def globalfocuschanged(self, focusobject):
 		if debug: print 'LayoutView.globalfocuschanged focusobject=',focusobject
 		self.currentFocus = focusobject
@@ -1259,6 +1263,32 @@ class LayoutView2(LayoutViewDialog2):
 		self.__makeAttrListToApplyFromGeom(nodeRef, geom, list)
 		self.applyAttrList(list)		
 
+	def applyAnimatePathList(self, applyList):
+		list = []
+		for nodeRef, path in applyList:
+			animateNode = self.getAnimateNode(nodeRef)
+			if animateNode is not None:
+				editWrapper = animateNode._animateEditWrapper
+				timeList = editWrapper.getKeyTimeList()
+				lenPath = len(timeList)
+				if lenPath != len(path):
+					print 'LayoutView2.applyAnimatePathList: invalid path len'
+					return
+				
+				editmgr = self.editmgr
+				if not editmgr.transaction():
+					return
+				for index in range(lenPath):
+					time = timeList[index]
+					left, top = path[index]
+					for attrName, attrValue in (('left',left), ('top',top)):
+						if editWrapper.isAnimatedAttribute(attrName):
+							if not editWrapper.changeAttributeValue(editmgr, attrName, attrValue, time, self):
+								# we can't edit the attribute at this time: cancel the transaction
+								editmgr.rollback()
+								return
+				self.editmgr.commit()
+			
 	def applyGeomList(self, applyList):
 		list = []		
 		for nodeRef, geom in applyList:
@@ -1782,6 +1812,39 @@ class LayoutView2(LayoutViewDialog2):
 			editmgr.commit()
 			if animateNode is not None:
 				self.updateFocus()
+
+	def onShowAnimationPath(self):
+		selectedNode = self.currentSelectedNodeList[0]
+		nodeType = self.getNodeType(selectedNode)
+		if nodeType not in (TYPE_MEDIA, TYPE_ANIMATE):
+			return
+		
+		editmgr = self.editmgr
+		if not editmgr.transaction():
+			return
+		if self.canShowAnimationPath(selectedNode):
+			editmgr.setnodeattr(selectedNode, 'showAnimationPath', 0)
+		else:
+			editmgr.setnodeattr(selectedNode, 'showAnimationPath', 1)			
+		editmgr.commit()
+
+	# return the node where the preferences attributes are stored for animation nodes
+	# according whether the animate node is include inside its targetnode or not (light animation)
+	def getAnimationAttributesNode(self, nodeRef):
+		# check whether the animate node is include inside the media node
+		animateNode = self.getAnimateNode(nodeRef)
+		if animateNode is None:
+			return nodeRef
+		if animateNode is nodeRef.getAnimateNode():
+			return nodeRef
+		else:
+			return animateNode
+		
+	def canShowAnimationPath(self, nodeRef):
+		# check whether the animate node is include inside the media node
+		nRef = self.getAnimationAttributesNode(nodeRef)
+		import MMAttrdefs
+		return MMAttrdefs.getattr(nRef, 'showAnimationPath')
 
 	def onEditProperties(self):
 		if len(self.currentSelectedNodeList) > 0:
@@ -3357,7 +3420,7 @@ class PreviousWidget(Widget):
 				if parentNodeRef is not None:
 					node = self.getNode(parentNodeRef)
 			if node is not None and node._graphicCtrl != None:
-				shapeList.append(node._graphicCtrl)
+				shapeList.append(node._getSelectedObject())
 		self.previousCtrl.selectNodeList(shapeList)
 	
 		# update popup menu according to the last item selected
@@ -3555,7 +3618,7 @@ class PreviousWidget(Widget):
 				return
 		
 		self.updateAnimationWrapper(nodeRef)
-		targetAnimateNode.setAnimateNode(nodeRef)
+		targetAnimateNode.setSeparatedAnimateNode(nodeRef)
 		self.__mustBeUpdated = 1
 			
 	def __hideRegion(self, regionRef):
@@ -3591,7 +3654,7 @@ class PreviousWidget(Widget):
 		if hasattr(nodeRef,'_animateEditWrapper'):
 			del nodeRef._animateEditWrapper
 		if targetAnimateNode:
-			targetAnimateNode.setAnimateNode(None)
+			targetAnimateNode.setSeparatedAnimateNode(None)
 		self.__mustBeUpdated = 1
 
 	def __hideAnchor(self, nodeRef):
@@ -3637,11 +3700,15 @@ class PreviousWidget(Widget):
 		for nodeRef, nodeTree in self._nodeRefToNodeTree.items():
 			for obj in objectList:
 				if nodeTree._graphicCtrl is obj:
-					animateNode = nodeTree.getAnimateNode()
+					animateNode = nodeTree.getSeparatedAnimateNode()
 					if animateNode is None:
 						list.append(nodeRef)
 					else:
 						list.append(animateNode)
+					nodeRef._selectPath = 0
+				elif nodeTree._path is obj:
+					nodeRef._selectPath = 1
+					list.append(nodeRef)
 
 		return list
 	
@@ -3668,7 +3735,7 @@ class PreviousWidget(Widget):
 		
 		# xxx to optimize
 		for  nodeRef, nodeTree in self._nodeRefToNodeTree.items():
-			animateNode = nodeTree.getAnimateNode()
+			animateNode = nodeTree.getSeparatedAnimateNode()
 			if animateNode is not None:
 				if self._context.isSelected(animateNode):
 					nodeRef = animateNode			
@@ -3679,9 +3746,10 @@ class PreviousWidget(Widget):
 
 	def onGeomChanged(self, objectList):		
 		applyList = []
+		animatePathList = []
 		# xxx to optimize
 		for nodeRef, nodeTree in self._nodeRefToNodeTree.items():
-			animateNode = nodeTree.getAnimateNode()
+			animateNode = nodeTree.getSeparatedAnimateNode()
 			if animateNode is not None:
 				if self._context.isSelected(animateNode):
 					nodeRef = animateNode
@@ -3689,7 +3757,11 @@ class PreviousWidget(Widget):
 				if nodeTree._graphicCtrl is obj:
 					applyList.append((nodeRef, nodeTree.getEditedGeom()))
 					break
+				elif nodeTree._path is obj:
+					animatePathList.append((nodeRef, nodeTree.getEditedPathGeom()))
 
+		if len(animatePathList) > 0:			
+			self._context.applyAnimatePathList(animatePathList)
 		self._context.applyGeomList(applyList)
 
 	def mustBeUpdated(self):
@@ -3757,7 +3829,10 @@ class Node:
 		self._mustUpdateEditBackground = 1
 		self._curattrdict = {}
 		
-		self._animateNode = None
+		self._separatedAnimateNode = None
+
+		# animation path support
+		self._path = None
 		
 	def _cleanup(self):
 		if self.isShowed:
@@ -3975,22 +4050,21 @@ class Node:
 	# note that for anchor this method is overided since there is a conversion to do
 	def getEditedGeom(self):
 		return self._graphicCtrl.getGeom()
-	
-	def setAnimateNode(self, animateNode):
-		self._animateNode = animateNode
 
-	def getAnimateNode(self):
-		return self._animateNode
+	# get the geom that has been edited and not applied yet in the document
+	# note that for anchor this method is overided since there is a conversion to do
+	def getEditedPathGeom(self):
+		if self._path is not None:
+			return self._path.getGeom()
+	
+	def setSeparatedAnimateNode(self, animateNode):
+		self._separatedAnimateNode = animateNode
+
+	def getSeparatedAnimateNode(self):
+		return self._separatedAnimateNode
 
 	def _updateAnimateValues(self):
-		if self._animateNode is not None:
-			# separate animate node
-			animateNode = self._animateNode
-		else:
-			if hasattr(self._nodeRef,'getAnimateNode'):
-				animateNode = self._nodeRef.getAnimateNode()
-			else:
-				animateNode = None
+		animateNode = self._ctx._context.getAnimateNode(self._nodeRef)
 		if animateNode is not None:
 			if hasattr(animateNode, '_animateEditWrapper'):
 				wingeom = animateNode._animateEditWrapper.getRectAt(animateNode._currentTime)
@@ -4002,6 +4076,57 @@ class Node:
 			updatedList = [('left', x), ('top', y), ('width', w), ('height', h), ('right', None), ('bottom', None)]
 			self._cssResolver.setRawAttrs(self._cssNode, updatedList)
 
+	def drawPath(self):
+		context = self._ctx._context
+		animateNode = context.getAnimateNode(self._nodeRef)
+
+		if animateNode is None or self._parent is None:
+			# not animated node
+			return
+
+		if not context.canShowAnimationPath(self._nodeRef):
+			return
+		
+		parentShape = self._parent._graphicCtrl
+		if parentShape is None or 0:
+			return
+		
+		if hasattr(animateNode, '_animateEditWrapper'):
+			animateEditWrapper = animateNode._animateEditWrapper
+			keyTimeList = animateEditWrapper.getKeyTimeList()
+		else:
+			print 'preview: unenable to get animate edit wrapper ',animateNode
+			return		
+
+		pointList = []
+		# get the media/region position
+#		x, y, w, h = self._cssResolver.getPxAbsGeom(self._parent._cssNode)
+		for keyTime in keyTimeList:
+			aX, aY = animateEditWrapper.getPosAt(keyTime)
+			pointList.append((aX, aY))
+		if len(pointList) < 2:
+			print 'preview: invalid path ',animateNode
+			return
+		self._path = parentShape.addPolyline(pointList, self._graphicCtrl)
+
+	def removePath(self):
+		parentShape = self._parent._graphicCtrl
+		if self._path is None or parentShape is None:
+			return
+		
+		parentShape.removePolyline(self._path)
+
+	def _getSelectedObject(self):
+		if self._path:
+			nodeRef = self._nodeRef
+			if hasattr(nodeRef, '_selectPath') and nodeRef._selectPath:
+				selObj = self._path
+			else:
+				selObj = self._graphicCtrl
+		else:
+			selObj = self._graphicCtrl
+		return selObj
+					
 class Region(Node):
 	def __init__(self, nodeRef, ctx):
 		Node.__init__(self, nodeRef, ctx)
@@ -4289,15 +4414,16 @@ class MediaRegion(Region):
 					for indX in range(iconXNumber):
 						self._graphicCtrl.setImage(f, fit, (offsetX+xShift*indX, \
 															offsetY+yShift*indY, iconWidth, iconHeight))
-
+		self.drawPath()
+		
 	def fastUpdateAttrdict(self):
 		# XXX for now, just recreat the media. Should be optimized
 		if self._graphicCtrl is not None:
-			isSelected = self._graphicCtrl.isSelected
+			isSelected = self._graphicCtrl.isSelected or (hasattr(self._nodeRef, '_selectPath') and self._nodeRef._selectPath)
 		self.hide()
 		self.show()
-		if isSelected and self._graphicCtrl:
-			self._ctx.previousCtrl.appendSelection([self._graphicCtrl])
+		if isSelected and self._graphicCtrl:	
+			self._ctx.previousCtrl.appendSelection([self._getSelectedObject()])
 			
 	def hide(self):
 		if self.isShowed():
@@ -4305,6 +4431,7 @@ class MediaRegion(Region):
 			self._cssResolver.unlink(self._mediaCssNode)			
 			self._cssResolver.unlink(self._cssNode)			
 			Node.hide(self)
+			self.removePath()
 
 	def _cleanup(self):
 		# XXX should allow the gc to destroy the media
@@ -4405,11 +4532,11 @@ class AnchorRegion(Region):
 	def fastUpdateAttrdict(self):
 		# XXX for now, just recreat the anchor. Should be optimized
 		if self._graphicCtrl is not None:
-			isSelected = self._graphicCtrl.isSelected
+			isSelected = self._graphicCtrl.isSelected or (hasattr(self._nodeRef, '_selectPath') and self._nodeRef._selectPath)
 		self.hide()
 		self.show()
 		if isSelected and self._graphicCtrl:
-			self._ctx.previousCtrl.appendSelection([self._graphicCtrl])
+			self._ctx.previousCtrl.appendSelection([self._getSelectedObject()])
 			
 	def hide(self):
 		if self.isShowed():

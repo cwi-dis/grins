@@ -258,6 +258,7 @@ MENUBAR=(
 		((features.H_PLAYABLE,), TOGGLE, 'Show &Playable', None, PLAYABLE),
 ##		(FLAG_ALL, TOGGLE, 'Sho&w Time in Structure', None, CORRECTLOCALTIMESCALE),
 		(FLAG_ALL, TOGGLE, 'Show &Bandwidth Usage', None, TOGGLE_BWSTRIP),
+		(FLAG_ALL, TOGGLE, 'Show Animation &Path', None, SHOW_ANIMATIONPATH),
 ##		(FLAG_ALL, CASCADE, 'Sho&w Time in Structure', (
 ##			(FLAG_ALL, TOGGLE, '&Whole Document, Adaptive', None, TIMESCALE),
 ##			(FLAG_ALL, TOGGLE, '&Selection Only, Adaptive', None, LOCALTIMESCALE),
