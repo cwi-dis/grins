@@ -2167,6 +2167,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 							# potential conflict
 							name = None
 							break
+						elif ptype == 'seq' and node.GetFill() == 'hold':
+							# potential conflict
+							name = None
+							break
 						else:
 							# no conflict
 							break
