@@ -2,13 +2,12 @@
 <smil xmlns="http://www.w3.org/2001/SMIL20/Language" xmlns:GRiNS="http://www.oratrix.com/" xmlns:rn="http://features.real.com/2001/SMIL20/Extensions">
   <head>
     <meta name="title" content="Slideshow with Dual Audio and Text Captions"/>
-    <meta name="template_name" content="Advanced SMIL 2.0 Slideshow"/>
+    <meta name="template_name" content="Advanced Slideshow"/>
     <meta name="template_description" content="A slideshow with background music, voice/text captions and a background image."/>
     <meta name="template_snapshot" content="T-icons/slideshow_2AC.bmp"/>
-    <meta name="generator" content="GRiNS Pro for SMIL 2.0, v2.2 win32 build 134"/>
     <meta name="project_html_page" content="external_player.html"/>
     <layout>
-      <root-layout id="GRiNS_SMIL2_Slideshow" backgroundColor="black" width="330" height="270"/>
+      <root-layout id="Advanced_Slideshow" backgroundColor="black" width="330" height="270"/>
       <region id="audio_1" GRiNS:type="sound"/>
       <region id="audio_2" GRiNS:type="sound"/>
       <region id="bkgd_image" width="330" height="270" GRiNS:type="image" GRiNS:editBackground=" 192 0 192" GRiNS:showEditBackground="off"/>
@@ -23,9 +22,9 @@
   </head>
   <body GRiNS:hidden="true">
     <par id="AdvancedSlideshow" GRiNS:project_default_region_image="Images" GRiNS:project_default_region_sound="audio_1" GRiNS:project_default_region_text="Captions" GRiNS:thumbnailIcon="T-icons/slideshow_2AC.bmp" GRiNS:thumbnailScale="false" GRiNS:showtime="bwstrip" GRiNS:timezoom="14">
-      <seq id="ImagesAndAudioSequence" GRiNS:emptyIcon="T-icons/dropITS.tif" GRiNS:emptyText="Drag ImageTextAudio object from Asset View onto Icon" GRiNS:emptyColor="#f7f388" GRiNS:emptyDur="10s" GRiNS:nonEmptyIcon="T-icons/dropITS.tif">
+      <seq id="BkgdClip" GRiNS:project_default_region_sound="audio_2" GRiNS:emptyIcon="T-icons/dropSound.tif" GRiNS:emptyText="First Drop Background Music onto Icon" GRiNS:emptyColor="#f7f388">
       </seq>
-      <seq id="BkgdClip" GRiNS:project_default_region_sound="audio_2" GRiNS:emptyIcon="T-icons/dropSound.tif" GRiNS:emptyText="Drop Background Music onto Icon" GRiNS:emptyColor="#f7f388">
+      <seq id="ImagesAndAudioSequence" GRiNS:emptyIcon="T-icons/dropITS.tif" GRiNS:emptyText="Drag ImageTextAudio object from Asset View onto Icon" GRiNS:emptyColor="#f7f388" GRiNS:emptyDur="10s" GRiNS:nonEmptyIcon="T-icons/dropITS.tif">
       </seq>
       <img id="BkgdImg" region="bkgd_image" fill="freeze" src="media/Back3S.gif"/>
     </par>

@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<smil xmlns="http://www.w3.org/2001/SMIL20/Language" xmlns:GRiNS="http://www.oratrix.com/" xmlns:rn="http://features.real.com/2001/SMIL20/Extensions">
+  <head>
+    <meta name="title" content="Enhanced Slideshow with Dual Audio"/>
+    <meta name="template_name" content="Automated Enhanced Slideshow"/>
+    <meta name="template_description" content="An enhnaced slideshow with automated authoring support."/>
+    <meta name="template_snapshot" content="T-icons/slideshow_2A.bmp"/>
+    <meta name="project_html_page" content="external_player.html"/>
+    <layout>
+      <root-layout id="Enhanced_Slideshow" backgroundColor="black" width="330" height="270" GRiNS:collapsed="false"/>
+      <region id="audio_1" GRiNS:type="sound" GRiNS:collapsed="true"/>
+      <region id="audio_2" GRiNS:type="sound" GRiNS:collapsed="false"/>
+      <region id="bkgd_image" width="330" height="270" GRiNS:type="image" GRiNS:collapsed="false" GRiNS:showEditBackground="false" GRiNS:editBackground="#c000c0"/>
+      <region id="Images" left="7" width="320" top="7" height="240" z-index="1" fit="meet" GRiNS:type="image" GRiNS:collapsed="false" GRiNS:showEditBackground="false" GRiNS:editBackground="#00c0c0"/>
+    </layout>
+    <transition id="slideover" type="slideWipe"/>
+    <transition id="fade" type="fade"/>
+    <transition id="push" type="pushWipe"/>
+    <GRiNS:viewinfo view="structure" top="10" left="10" width="426" height="383"/>
+  </head>
+  <body GRiNS:hidden="true">
+    <par id="EnhancedSlideshow" GRiNS:project_default_region_image="Images" GRiNS:project_default_region_sound="audio_1" GRiNS:project_default_region_text="Images" GRiNS:thumbnailIcon="T-icons/slideshow_2A.bmp" GRiNS:thumbnailScale="false" GRiNS:showtime="bwstrip" GRiNS:timezoom="14">
+      <seq id="BkgdClip" GRiNS:emptyIcon="T-icons/dropSound.tif" GRiNS:emptyText="First Drop Background Music on Icon." GRiNS:emptyColor="#f7f388">
+      </seq>
+      <seq id="ImagesAndAudioSequence" GRiNS:project_forcechild="ImageAudio" GRiNS:emptyIcon="T-icons/dropITS.tif" GRiNS:emptyText="Drop Images or Sounds onto Icon" GRiNS:emptyColor="#f7f388" GRiNS:emptyDur="8s" GRiNS:nonEmptyIcon="T-icons/dropITS.tif">
+      </seq>
+      <img id="BkgdImg" region="bkgd_image" fill="freeze" src="media/Back3S.gif"/>
+    </par>
+    <GRiNS:assets skip-content="true">
+      <par id="ImageAudio" GRiNS:thumbnailScale="false">
+        <ref region="Images" dur="5s" src="#" GRiNS:allowedmimetypes="image"/>
+        <ref region="audio_2" src="#" GRiNS:allowedmimetypes="audio"/>
+      </par>
+    </GRiNS:assets>
+  </body>
+</smil>
