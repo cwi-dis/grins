@@ -60,8 +60,6 @@ class MMNodeWidget(Interactive.Interactive):
 
     def select(self):
         Interactive.Interactive.select(self)
-        print "Selected: ", self
-        print "Coords: ", self.get_pos_abs()
 
     def expandcall(self):
         # 'Expand' the view of this node.
@@ -336,7 +334,7 @@ class SeqWidget(StructureObjWidget):
             free_width = free_width-self.dropbox.get_minsize()[0];
 
         if free_width < 0.0:
-            print "Warning! free_width is less than 0.0!:", free_width
+#            print "Warning! free_width is less than 0.0!:", free_width
             free_width = 0.0
 
         l = float(l) + self.get_relx(sizes_notime.HEDGSIZE) #+ self.get_relx(sizes_notime.HANDLESIZE);
@@ -346,11 +344,12 @@ class SeqWidget(StructureObjWidget):
 
         for medianode in self.children:    # for each MMNode:
             if self.root.pushbackbars and isinstance(medianode, MediaWidget):
-                print "TODO: test downloadtime pushover and sequence lags."
+#                print "TODO: test downloadtime pushover and sequence lags."
                 l = l +  self.get_relx(medianode.downloadtime_lag);
             w,h = medianode.get_minsize()
             if h > (b-t)+0.000001:               # If the node needs to be bigger than the available space...
-                print "Error: Node is too tall! h=",h,"(b-t)=",b-t;
+                pass;
+#                print "Error: Node is too tall! h=",h,"(b-t)=",b-t;
 #                #assert 0               # This shouldn't happen because the minimum size of this node
                                         # has already been determined to be bigger than this in minsize()
             # Take a portion of the free available width, fairly.
@@ -369,13 +368,13 @@ class SeqWidget(StructureObjWidget):
             
 #            print "DEBUG: Repositioning node to ", l, t, r, b
             if r > 1.0:
-                print "ERROR!!! Node extends too far right.. clipping.."
+#                print "ERROR!!! Node extends too far right.. clipping.."
                 r = 1.0
             if b > 1.0:
-                print "ERROR!! Node extends too far down.. clipping.."
+#                print "ERROR!! Node extends too far down.. clipping.."
                 b = 1.0
             if l > 1.0:
-                print "ERROR!! Node starts too far across.. clipping.."
+#                print "ERROR!! Node starts too far across.. clipping.."
                 l = 1.0
                 r = 1.0
 
@@ -507,13 +506,13 @@ class VerticalWidget(StructureObjWidget):
             # r = l + w # Wrap the node to it's minimum size.
 
             if r > 1.0:
-                print "ERROR!!! Node extends too far right.. clipping.."
+#                print "ERROR!!! Node extends too far right.. clipping.."
                 r = 1.0
             if b > 1.0:
-                print "ERROR!! Node extends too far down.. clipping.."
+#                print "ERROR!! Node extends too far down.. clipping.."
                 b = 1.0
             if l > 1.0:
-                print "ERROR!! Node starts too far across.. clipping.."
+#                print "ERROR!! Node starts too far across.. clipping.."
                 l = 1.0
                 r = 1.0
                 
@@ -709,7 +708,7 @@ class MediaWidget(MMNodeWidget):
             try:
                 f = MMurl.urlretrieve(url)[0]
             except IOError, arg:
-                print "DEBUG: Could not load image!"
+#                print "DEBUG: Could not load image!"
                 self.root.set_infoicon('error', 'Cannot load image: %s'%`arg`)
         else:
             f = os.path.join(self.root.datadir, '%s.tiff'%channel_type)
