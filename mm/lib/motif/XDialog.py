@@ -255,7 +255,7 @@ class FileDialog:
 ##		dl.ListAddItems(dirs, 0)
 
 	def __filesearch(self, widget, cbs):
-		import stat, fnmatch
+		import stat, fnmatch, string
 		dir = cbs.dir
 		try:
 			list = os.listdir(dir)
@@ -271,6 +271,7 @@ class FileDialog:
 				# skip non-existing files
 				continue
 			if stat.S_ISREG(statb[stat.ST_MODE]):
+				f = string.lower(f)
 				for p in self.__patterns:
 					if fnmatch.fnmatch(f, p):
 						files.append(full)
