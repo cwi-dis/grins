@@ -373,19 +373,18 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		self.redraw()
 
 	def loadSplash(self):
+		filename = r'\Program Files\GRiNS\cesplash.bmp'
 		import settings
 		skin = settings.get('skin')
 		if skin:
 			import parseskin, MMurl
 			try:
-				dict, buttons = parseskin.parseskin(MMurl.urlopen(skin))
-				filename = MMurl.urlretrieve(MMurl.basejoin(skin, dict['File1x']))[0]
+				dict = parseskin.parsegskin(MMurl.urlopen(skin))
+				filename = MMurl.urlretrieve(MMurl.basejoin(skin, dict['image']))[0]
 			except:
 				settings.set('skin', '')
 			else:
 				self.HideMenu()
-		else:
-			filename = r'\Program Files\GRiNS\cesplash.bmp'
 		dc = wingdi.GetDesktopDC()
 		try:
 			self._splash = wingdi.CreateDIBSurfaceFromFile(dc, filename)
