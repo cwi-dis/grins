@@ -997,28 +997,9 @@ class MediaWidget(MMNodeWidget):
         # First get available bandwidth. Silly algorithm to be replaced sometime: in each par we evenly
         # divide the available bandwidth, for other structure nodes each child has the whole bandwidth
         # available.
-        availbw  = settings.get('system_bitrate')
-        ancestor = self.node.parent
-        bwfraction = MMAttrdefs.getattr(self.node, 'project_bandwidth_fraction')
-        while ancestor:
-            if ancestor.type == 'par':
-                # If the child we are coming from has a bandwidth fraction defined
-                # we use that, otherwise we divide evenly
-                if bwfraction < 0:
-                    bwfraction = 1.0 / len(ancestor.children)
-                availbw = availbw * bwfraction
-            bwfraction = MMAttrdefs.getattr(ancestor, 'project_bandwidth_fraction')
-            ancestor = ancestor.parent
-        
-        # Get amount of data we need to load
-        try:
-            prearm, bw = Bandwidth.get(self.node, target=1)
-        except Bandwidth.Error:
-            prearm = 0
-        if not prearm:
-            prearm = 0
-        prearmtime = prearm / availbw
-        
+
+        prearmtime = self.node.compute_download_time()
+
         # Now subtract the duration of the previous node: this fraction of
         # the downloadtime is no problem.
         prevnode = self.node.GetPrevious()
