@@ -147,13 +147,10 @@ class ChannelView(ViewDialog, GLDialog):
 
 	def unarm_all(self):
 		if self.is_showing():
-			self.unarm_node(self.viewroot)
-		self.drawarcs()
-
-	def unarm_node(self, node):
-		self.setarmedmode(node, ARM_NONE)
-		for child in node.GetChildren():
-			self.unarm_node(child)
+			for obj in self.objects:
+				obj.armedmode = ARM_NONE
+			self.setwin()
+			self.draw()
 
 	# Dialog interface (extends GLDiallog.{setwin,show,hide})
 
