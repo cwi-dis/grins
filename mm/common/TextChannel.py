@@ -91,6 +91,9 @@ class TextChannel() = Channel():
 	def hide(self):
 		self.window.hide()
 	#
+	def is_showing(self):
+		return self.window.is_showing()
+	#
 	def destroy(self):
 		self.window.destroy()
 	#
