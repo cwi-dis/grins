@@ -717,7 +717,8 @@ class Viewport(win32window.Window, UserEventMng):
 		if oldGeom != newGeom:
 			self.updatecoordinates(newGeom, units=UNIT_PXL)			
 		if newBgcolor != oldBgcolor:
-			self.updatebgcolor(newBgcolor)
+			if newBgcolor != None:
+				self.updatebgcolor(newBgcolor)
 
 		self._ctx.update()
 
@@ -907,7 +908,8 @@ class Region(win32window.Window, UserEventMng):
 		if oldGeom != newGeom:
 			self.updatecoordinates(newGeom, units=UNIT_PXL)
 		if newBgcolor != oldBgcolor:
-			self.updatebgcolor(newBgcolor)
+			if newBgcolor != None:
+				self.updatebgcolor(newBgcolor)
 		if newZ != oldZ:
 			self.updatezindex(newZ)
 
