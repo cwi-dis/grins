@@ -14,6 +14,7 @@ import string
 import MMStates
 
 debuggensr = 0
+debug = 0
 
 class MMNodeContext:
 	def __init__(self, nodeclass):
@@ -40,6 +41,7 @@ class MMNodeContext:
 		self._ichannels = []
 		self._ichanneldict = {}
 		self.comment = ''
+		self.metadata = ''
 
 	def __repr__(self):
 		return '<MMNodeContext instance, channelnames=' \
@@ -799,7 +801,7 @@ class MMNode_body:
 		self.parent = parent
 		self.sched_children = []
 		self.arcs = []
-		print 'MMNode_body.__init__', `self`
+		if debug: print 'MMNode_body.__init__', `self`
 
 	def __repr__(self):
 		return "<%s body of %s>"%(self.helpertype, self.parent.__repr__())
@@ -928,7 +930,7 @@ class MMNode:
 	def add_arc(self, arc, body = None):
 		if body is None:
 			body = self
-		print 'add_arc', `body`, `arc`
+		if debug: print 'add_arc', `body`, `arc`
 		body.sched_children.append(arc)
 		if self.playing != MMStates.IDLE and arc.delay is not None:
 			# if arc's event has already occurred, trigger it

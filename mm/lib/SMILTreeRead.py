@@ -114,6 +114,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'smil': (self.start_smil, self.end_smil),
 			'head': (self.start_head, self.end_head),
 			'meta': (self.start_meta, self.end_meta),
+			'metadata': (self.start_metadata, self.end_metadata),
 			'layout': (self.start_layout, self.end_layout),
 			'userAttributes': (self.start_user_attributes, self.end_user_attributes),
 			'uGroup': (self.start_u_group, self.end_u_group),
@@ -127,6 +128,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'seq': (self.start_seq, self.end_seq),
 			'switch': (self.start_switch, self.end_switch),
 			'excl': (self.start_excl, self.end_excl),
+			'priorityClass': (self.start_prio, self.end_prio),
 			GRiNSns+' '+'choice': (self.start_choice, self.end_choice),
 			GRiNSns+' '+'bag': (self.start_choice, self.end_choice),
 			'ref': (self.start_ref, self.end_ref),
@@ -193,6 +195,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__regionno = 0
 		self.__defleft = 0
 		self.__deftop = 0
+		self.__in_metadata = 0
+		self.__metadata = []
 		if new_file and type(new_file) == type(''):
 			self.__base = new_file
 		self.__validchannels = {'undefined':0}
@@ -1964,6 +1968,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		del self.__realpixnodes
 		self.FixAnimateTargets()
 		self.FixRegpoints()
+		metadata = string.join(self.__metadata, '')
+		self.__context.metadata = metadata
 
 	# head/body sections
 
@@ -2053,6 +2059,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def end_meta(self):
 		self.__in_meta = 0
+
+	def start_metadata(self, attributes):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('metadata element not compatible with SMIL 1.0')
+		self.__context.attributes['project_boston'] = 1
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
+		self.setliteral()
+		self.__in_metadata = 1
+
+	def end_metadata(self):
+		self.__in_metadata = 0
 
 	# layout section
 
@@ -2549,6 +2567,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def end_excl(self):
 		self.end_parexcl('excl')
 
+	def start_prio(self, attributes):
+		pass
+
+	def end_prio(self):
+		pass
+
 	def start_choice(self, attributes):
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
@@ -2945,6 +2969,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	__whitespace = re.compile(_opS + '$')
 	def handle_data(self, data):
+		if self.__in_metadata:
+			self.__metadata.append(data)
+			return
 		if self.__node is None or self.__is_ext:
 			if self.__in_layout != LAYOUT_UNKNOWN:
 				res = self.__whitespace.match(data)
