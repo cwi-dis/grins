@@ -50,7 +50,7 @@ class BlockView () :
 	def show(self):
 		h, v = MMAttrdefs.getattr(self.root, 'blockview_winpos')
 		glwindow.setgeometry(h, v, self.width, self.height)
-		self.form.show_form(PLACE_SIZE, TRUE, 'Block View')
+		self.form.show_form(PLACE_SIZE, TRUE, 'Hierarchy')
 	#
 	def hide(self):
 		self.form.hide_form()
@@ -120,16 +120,16 @@ class BlockView () :
 		obj = self.form.add_box (UP_BOX, x, y, w, h, '')
 		obj.boxtype = FRAME_BOX
 
-		node.blockOC = 1		# block open/closed toggle
-		node.blockform 	= self.form
-		node.blockobj	= obj
+		node.bv_OC 	= 1		# block open/closed toggle
+		node.bv_form 	= self.form
+		node.bv_obj	= obj
 	
 		kids = node.GetChildren()
 		if type in ('seq','par','grp') and len(kids) > 0:
 			o=self.form.add_roundbutton(NORMAL_BUTTON,x+B,y+h-3*B,B,B,'')
 			o.set_call_back(self._openclose_callback, node)
 			o.col1, o.col2 = 1, 2
-			node.blockopenclose	= o
+			node.bv_openclose	= o
 
 			if type in ('grp', 'seq') :
 				h = h / len(kids)
@@ -152,10 +152,10 @@ class BlockView () :
 	#
 	def rmBlockview (self, node) :
 		if node.GetType () in ('seq', 'par', 'grp'):
-			node.blockopenclose.hide_object ()	# rm_object()
-			del node.blockopenclose
-		node.blockobj.hide_object ()	# should be rm_object()
-		del node.blockobj
+			node.bv_openclose.hide_object ()	# rm_object()
+			del node.bv_openclose
+		node.bv_obj.hide_object ()	# should be rm_object()
+		del node.bv_obj
 		for child in node.GetChildren () :
 			self.rmBlockview (child)
 	#
@@ -168,7 +168,7 @@ class BlockView () :
 	# _fixlabels : rucrsivley sets the labels
 	#
 	def _fixlabels (self, (node, label)) :
-		node.blocklabel = label
+		node.bv_label = label
 		num = 1
 		for child in node.GetChildren () :
 			if label = '' :
@@ -181,10 +181,10 @@ class BlockView () :
 	# presentlabels : sets the appropiate labels in the FORMS object.
 	#
 	def presentlabels (self, node) :
-		if node.blockOC = 0 or len(node.GetChildren ()) = 0 :
-			node.blockobj.label = node.blocklabel
+		if node.bv_OC = 0 or len(node.GetChildren ()) = 0 :
+			node.bv_obj.label = node.bv_label
 			return
-		node.blockobj.label = ''
+		node.bv_obj.label = ''
 		num = 1
 		for child in node.GetChildren () :
 			self.presentlabels (child)
@@ -195,7 +195,7 @@ class BlockView () :
 	#
 	def _change_focus_callback (self, (obj, args)) :
 		self.form.freeze_form()
-		self.focus.blockobj.boxtype = FRAME_BOX
+		self.focus.bv_obj.boxtype = FRAME_BOX
 
 		import gl
 		gl.winset(self.form.window)
@@ -213,7 +213,7 @@ class BlockView () :
 	# setfocus
 	#
 	def setfocus (self, node) :
-		node.blockobj.boxtype = UP_BOX
+		node.bv_obj.boxtype = UP_BOX
 		self.focus = node
 	#
 	# _init : initialize state
@@ -229,7 +229,7 @@ class BlockView () :
 	# in the (possibly folded) tree
 	#
 	def _find_node (self, (node, (x, y))) :
-		if node.blockOC = 0 : return node
+		if node.bv_OC = 0 : return node
 
 		for child in node.GetChildren () :
 			if self._in_bounds (child, (x, y)) <> None :
@@ -248,33 +248,33 @@ class BlockView () :
 			fl.show_message ('What is :',key,'')
 
 	def _openclose_callback (self, (obj, node)) :
-		node.blockform.freeze_form ()
+		node.bv_form.freeze_form ()
 
-		node.blockOC = (not node.blockOC)	# toggle open/close
+		node.bv_OC = (not node.bv_OC)		# toggle open/close
 		obj.col1, obj.col2 = obj.col2, obj.col1 # swap: red <--> green
-		self._openclose (node, node.blockOC)	# recursive
-		node.blockobj.show_object ()		# show this node
-		node.blockopenclose.show_object ()	# show roundbutton
+		self._openclose (node, node.bv_OC)	# recursive
+		node.bv_obj.show_object ()		# show this node
+		node.bv_openclose.show_object ()	# show roundbutton
 		self.presentlabels (node)
 
-		node.blockform.unfreeze_form ()		
+		node.bv_form.unfreeze_form ()		
 		
 	def _openclose (self, (node, toggle)) :
 		if toggle <> 0 :
-			node.blockobj.show_object ()
+			node.bv_obj.show_object ()
 			if node.GetType () in ('seq', 'par', 'grp') :
-				node.blockopenclose.show_object ()
-				if node.blockOC = 0 : return
+				node.bv_openclose.show_object ()
+				if node.bv_OC = 0 : return
 		else :
-			node.blockobj.hide_object ()
+			node.bv_obj.hide_object ()
 			if node.GetType () in ('seq', 'par', 'grp') :
-				node.blockopenclose.hide_object ()
+				node.bv_openclose.hide_object ()
 		
 		for child in node.GetChildren () :
 			self._openclose (child, toggle)
 		
 	def _in_bounds (self, (node, (x, y))) :
-		o = node.blockobj
+		o = node.bv_obj
 		if  x > o.x and x < o.x+o.w and y > o.y and y < o.y+o.h :
 			return node
 		else :
@@ -302,7 +302,7 @@ def deleteNode (bv) :
 	if parent = None :
 		fl.show_message ('sorry, cannot delete root','','')
 		return
-	pObj = parent.blockobj
+	pObj = parent.bv_obj
 	x, y, w, h = pObj.x, pObj.y, pObj.w, pObj.h
 
 	node.Extract ()
@@ -341,7 +341,7 @@ def rotatefunc (bv) :
 	parent = node.GetParent()
 	if parent = None : return
 	
-	nObj = parent.blockobj
+	nObj = parent.bv_obj
 	x, y, w, h = nObj.x, nObj.y, nObj.w, nObj.h
 	kids = parent.GetChildren()
 	
@@ -374,7 +374,7 @@ def rotatefunc (bv) :
 def addSequential (bv) :
 	node = bv.focus
 
-	nObj = node.blockobj
+	nObj = node.bv_obj
 	x, y, w, h = nObj.x, nObj.y, nObj.w, nObj.h
 	bv.form.freeze_form ()
 	bv.rmBlockview (node)		# get rid of all FORMS objects
@@ -433,7 +433,7 @@ def addSequential (bv) :
 def addParallel (bv) :
 	node = bv.focus
 
-	nObj = node.blockobj
+	nObj = node.bv_obj
 	x, y, w, h = nObj.x, nObj.y, nObj.w, nObj.h
 
 	bv.form.freeze_form ()
@@ -501,7 +501,7 @@ def zoomfunc (bv) :
 		node = node.GetParent()
 		if node = None : return
 
-	nObj = node.GetParent().blockobj
+	nObj = node.GetParent().bv_obj
 	x, y, w, h = nObj.x, nObj.y, nObj.w, nObj.h
 
 	bv.form.freeze_form ()
