@@ -37,6 +37,17 @@ _icon_ids = {
 	'linksrcdst': grinsRC.IDI_ICON_LINKSRCDST,
 	'transin': grinsRC.IDI_ICON_TRANSIN,
 	'transout': grinsRC.IDI_ICON_TRANSOUT,
+	'beginevent' : grinsRC.IDI_EVENTIN,
+	'endevent' : grinsRC.IDI_EVENTOUT,
+	'activateevent' : grinsRC.IDI_ACTIVATEEVENT,
+	'animation' : grinsRC.IDI_ANIMATION,
+	'causeevent' : grinsRC.IDI_CAUSEEVENT,
+	'duration' : grinsRC.IDI_DURATION,
+	'focusin' : grinsRC.IDI_FOCUSIN,
+	'happyface' : grinsRC.IDI_HAPPYFACE,
+	'repeat' : grinsRC.IDI_REPEAT,
+	'spaceman': grinsRC.IDI_SPACEMAN,
+	'wallclock' : grinsRC.IDI_WALLCLOCK,
 }
 
 def _get_icon(which):

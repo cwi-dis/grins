@@ -82,8 +82,32 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.is_timed = 0
 		self.old_pos = None	# used for recalc optimisations.
 
+		# Holds little icons..
+		self.iconbox = IconBox(self, self.mother)
+		self.iconbox.setup()
+		self.cause_event_icon = None
+
 	def __repr__(self):
 		return '<%s instance, name="%s", id=%X>' % (self.__class__.__name__, self.name, id(self))
+
+	def add_event_icons(self):
+		beginevents = MMAttrdefs.getattr(self.node, 'beginlist')
+##		endevents = MMAttrdefs.getattr(self.node, 'endlist')
+
+		# DEBUG - check all icons.
+		#import win32displaylist
+		#for i in win32displaylist._icon_ids.keys():
+		#	self.iconbox.add_icon(i)
+
+		self.iconbox.add_icon('activateevent')
+
+		for b in beginevents:
+			othernode = b.refnode()
+			if othernode:
+				# Known bug: TODO: I'm not worrying if the node is collapsed.
+				otherwidget = othernode.views['struct_view'].get_cause_event_icon()
+				self.iconbox.add_icon('beginevent', arrowto = otherwidget).set_properties(arrowable=1)
+
 
 	def collapse_levels(self, level):
 		# Place holder for a recursive function.
@@ -177,6 +201,12 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.node.infoicon = icon
 		self.node.errormessage = msg
 		self.iconbox.add_icon(icon, callback = self.show_mesg)
+
+	def get_cause_event_icon(self):
+		# Returns the start position of an event arrow.
+		if not self.cause_event_icon:
+			self.cause_event_icon = self.iconbox.add_icon('causeevent')
+		return self.cause_event_icon
 
 	def getlinkicon(self):
 		# Returns the icon to show for incoming and outgiong hyperlinks.
@@ -458,7 +488,9 @@ class StructureObjWidget(MMNodeWidget):
 		if self.collapsebutton and self.collapsebutton.is_hit(pos):
 			return self.collapsebutton
 		if self.is_hit(pos):
-			if self.iscollapsed():
+			if self.iconbox.is_hit(pos):
+				return self.iconbox.get_clicked_obj_at(pos)
+			elif self.iscollapsed():
 				return self
 			for i in self.children:
 				ob = i.get_clicked_obj_at(pos)
@@ -475,6 +507,7 @@ class StructureObjWidget(MMNodeWidget):
 		# If the node sizes don't need to be changed, then don't
 		# change them.
 		# For the meanwhile, this is too difficult. 
+		self.add_event_icons()
 		if self.collapsebutton:
 			l,t,r,b = self.pos_abs
 			#l = l + self.get_relx(1)
@@ -510,6 +543,12 @@ class StructureObjWidget(MMNodeWidget):
 		l,t,r,b = self.pos_abs
 		b = t + sizes_notime.TITLESIZE + sizes_notime.VEDGSIZE
 		l = l + 16	# move it past the icon.
+
+		if self.iconbox:
+			self.iconbox.moveto((l,t+2,r,b))
+			self.iconbox.draw(displist)
+			l = l + self.iconbox.get_minsize()[0]
+		
 		displist.centerstring(l,t,r,b, self.name)
 		if self.collapsebutton:
 			self.collapsebutton.draw(displist)
@@ -533,6 +572,7 @@ class StructureObjWidget(MMNodeWidget):
 		MMNodeWidget.removedependencies(self)
 		for ch in self.children:
 			ch.removedependencies()
+
 
 #
 # The HorizontalWidget is any sideways-drawn StructureObjWidget.
@@ -1251,9 +1291,6 @@ class MediaWidget(MMNodeWidget):
 		#self.infoicon = Icon(None, self, self.node, self.mother)
 		#self.infoicon.set_callback(self.show_mesg)
 
-		self.iconbox = IconBox(self, self.mother)
-		self.iconbox.setup()
-
 		# DEBUG:
 		#i1 = self.iconbox.add_icon('linksrc').set_properties(arrowable = 1,selectable=1)
 		#self.iconbox.add_icon('linksrcdst').add_arrow(i1).set_properties(arrowable = 1,selectable=1)
@@ -1292,7 +1329,7 @@ class MediaWidget(MMNodeWidget):
 	def recalc(self):
 		l,t,r,b = self.pos_abs
 
-		#self.infoicon.moveto((l+1, t+2))
+		self.add_event_icons()
 		self.iconbox.moveto((l+1, t+2,0,0))
 		# First compute pushback bar position
 		if self.pushbackbar:

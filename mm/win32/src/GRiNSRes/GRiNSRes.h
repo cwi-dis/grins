@@ -98,6 +98,17 @@
 #define IDB_TEXT                        299
 #define IDB_HTML                        300
 #define IDB_SOUND                       301
+#define IDI_EVENTIN                     302
+#define IDI_EVENTOUT                    303
+#define IDI_CAUSEEVENT                  304
+#define IDI_HAPPYFACE                   305
+#define IDI_SPACEMAN                    306
+#define IDI_WALLCLOCK                   307
+#define IDI_REPEAT                      308
+#define IDI_FOCUSIN                     309
+#define IDI_ACTIVATEEVENT               310
+#define IDI_DURATION                    311
+#define IDI_ANIMATION                   312
 #define IDD_EDITSTRINGATTR2             327
 #define IDD_EDITATTR_S7                 327
 #define IDD_EDITATTR_S5                 328
@@ -498,7 +509,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        302
+#define _APS_NEXT_RESOURCE_VALUE        313
 #define _APS_NEXT_COMMAND_VALUE         32865
 #define _APS_NEXT_CONTROL_VALUE         1288
 #define _APS_NEXT_SYMED_VALUE           104

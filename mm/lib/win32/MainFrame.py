@@ -114,6 +114,7 @@ if IsPlayer:
 
 # This is a list of classes that are instantiated for each particular view.
 # Not the simplest way of coding it, but it seems to work -mjvdg.
+##### THIS IS ONLY ACCESSED WITHIN THIS FILE #####
 appview={
 	0:{'cmd':usercmd.HIDE_PLAYERVIEW,'title':'Player','id':'pview_','class':_PlayerView,},
 	1:{'cmd':usercmd.HIDE_HIERARCHYVIEW,'title':'Structure view','id':'hview_','class':_HierarchyView,},
@@ -1481,7 +1482,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		dw=2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)+2*sysmetrics.cxframe
 		dh=sysmetrics.cycaption + 2*win32api.GetSystemMetrics(win32con.SM_CYEDGE)+2*sysmetrics.cyframe
 		rcFrame=(x,y,x+w+dw,y+h+dh)
-		f=ChildFrame(view)
+		f=ChildFrame(view)	# This is where most child MDI windows get made.
 		f.Create(title,rcFrame,self,0)
 
 		view.init((0,0,w,h),title,units,adornments,canvassize,commandlist,bgcolor)
@@ -1543,7 +1544,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 
 	# Adds to the view interface some common attributes
 	def add_common_interface(self,viewobj,viewno):
-		viewobj.getframe=viewobj.GetParent
+		#viewobj.getframe=viewobj.GetParent
 		viewobj._strid=appview[viewno]['id']
 		viewobj._commandlist=[]
 		viewobj._title=appview[viewno]['title']
@@ -1594,8 +1595,9 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 # according to the MDIFrameWnd pattern
 class ChildFrame(window.MDIChildWnd):
 	def __init__(self,view,freezesize=0):
+		# This is usually called from MDIFrameWnd.newview
 		window.MDIChildWnd.__init__(self,win32ui.CreateMDIChild())
-		self._view=view
+		self._view=view		# Currently, this is the only place that this Frame's view is assigned.
 		self._freezesize=freezesize
 		self._sizeFreeze=0
 
@@ -1670,11 +1672,11 @@ class ChildFrame(window.MDIChildWnd):
 	def InitialUpdateFrame(self, doc, makeVisible):
 		pass
 	
-	# Returns the parent MDIFrameWnd	
+	# Returns the parent MDIFrameWnd
 	def getMDIFrame(self):
 		return self.GetMDIFrame()
 
-	# Returns the cmd class id	
+	# Returns the cmd class id
 	def GetUserCmdId(self,cmdcl):
 		return self.GetMDIFrame().GetUserCmdId(cmdcl)
 

@@ -73,6 +73,14 @@ SOURCE="$(InputPath)"
 # End Group
 # Begin Source File
 
+SOURCE=.\RES\animatio.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\causeeve.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\Drag.cur
 # End Source File
 # Begin Source File
@@ -86,6 +94,22 @@ SOURCE=.\RES\Draglink.cur
 # Begin Source File
 
 SOURCE=.\RES\DragMove.cur
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\duration.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\eventin.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\eventout.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\focusin.ico
 # End Source File
 # Begin Source File
 
@@ -114,6 +138,10 @@ SOURCE=.\GRiNSRes.rc
 # Begin Source File
 
 SOURCE=.\RES\hand.cur
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\happyfac.ico
 # End Source File
 # Begin Source File
 
@@ -217,7 +245,15 @@ SOURCE=.\Res\region.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\repeat.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\Res\sound.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\spaceman.ico
 # End Source File
 # Begin Source File
 
@@ -286,6 +322,10 @@ SOURCE=.\Res\video.bmp
 # Begin Source File
 
 SOURCE=.\Res\viewport.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\wallcloc.ico
 # End Source File
 # End Target
 # End Project
