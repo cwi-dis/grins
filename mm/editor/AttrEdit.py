@@ -12,11 +12,11 @@ from MMExc import *			# exceptions
 # editor is allowed per node, and extra show calls are also ignored
 # (actually, this pops up the window, to draw the user's attention...).
 
-def showattreditor(node):
+def showattreditor(toplevel, node):
 	try:
 		attreditor = node.attreditor
 	except AttributeError:
-		attreditor = AttrEditor(NodeWrapper(node))
+		attreditor = AttrEditor(NodeWrapper(toplevel, node))
 		node.attreditor = attreditor
 	else:
 		attreditor.pop()
@@ -37,11 +37,11 @@ def hasattreditor(node):
 # The administration is kept in channel.attreditor,
 # which is created here if necessary.
 
-def showchannelattreditor(channel, new = 0):
+def showchannelattreditor(toplevel, channel, new = 0):
 	try:
 		attreditor = channel.attreditor
 	except AttributeError:
-		attreditor = AttrEditor(ChannelWrapper(channel), new)
+		attreditor = AttrEditor(ChannelWrapper(toplevel, channel), new)
 		channel.attreditor = attreditor
 	else:
 		attreditor.pop()
@@ -64,7 +64,8 @@ def haschannelattreditor(channel):
 # a common base class implementing most functions.)
 
 class Wrapper: # Base class -- common operations
-	def __init__(self, context):
+	def __init__(self, toplevel, context):
+		self.toplevel = toplevel
 		self.context = context
 		self.editmgr = context.geteditmgr()
 	def __repr__(self):
@@ -89,14 +90,14 @@ class Wrapper: # Base class -- common operations
 		return MMAttrdefs.getdef(name)
 	def valuerepr(self, name, value):
 		return MMAttrdefs.valuerepr(name, value)
-	def parsevalue(self, name, string):
-		return MMAttrdefs.parsevalue(name, string, self.context)
+	def parsevalue(self, name, str):
+		return MMAttrdefs.parsevalue(name, str, self.context)
 
 class NodeWrapper(Wrapper):
-	def __init__(self, node):
+	def __init__(self, toplevel, node):
 		self.node = node
 		self.root = node.GetRoot()
-		Wrapper.__init__(self, node.GetContext())
+		Wrapper.__init__(self, toplevel, node.GetContext())
 
 	def __repr__(self):
 		return '<NodeWrapper instance, node=' + `self.node` + '>'
@@ -167,9 +168,9 @@ class NodeWrapper(Wrapper):
 
 
 class ChannelWrapper(Wrapper):
-	def __init__(self, channel):
+	def __init__(self, toplevel, channel):
 		self.channel = channel
-		Wrapper.__init__(self, channel.context)
+		Wrapper.__init__(self, toplevel, channel.context)
 
 	def __repr__(self):
 		return '<ChannelWrapper, name=' + `self.channel.name` + '>'
@@ -279,119 +280,85 @@ class ChannelWrapper(Wrapper):
 		if name == '.cname': name = 'name'
 		return MMAttrdefs.valuerepr(name, value)
 
-	def parsevalue(self, name, string):
+	def parsevalue(self, name, str):
 		if name == '.cname': name = 'name'
-		return MMAttrdefs.parsevalue(name, string, self.context)
+		return MMAttrdefs.parsevalue(name, str, self.context)
 
 
 
 # Attribute editor class.
 
-class AttrEditor:
+from AttrEditDialog import AttrEditorDialog, AttrEditorDialogField
+
+class AttrEditor(AttrEditorDialog):
 	def __init__(self, wrapper, new = 0):
-		self.new = new
+		self.__new = new
 		self.wrapper = wrapper
 		wrapper.register(self)
-		self.open_dialog()
+		self.__open_dialog()
 
-	def open_dialog(self):
+	def __open_dialog(self):
 		wrapper = self.wrapper
 		list = []
-		self.namelist = wrapper.attrnames()
-		self.dialog = windowinterface.Window(
-			wrapper.maketitle(),
-			resizable = 1,
-			deleteCallback = (self.cancel_callback, ()))
-		buttons = self.dialog.ButtonRow(
-			[('Cancel', (self.cancel_callback, ())),
-			 ('Restore', (self.restore_callback, ())),
-			 ('Apply', (self.apply_callback, ())),
-			 ('Ok', (self.ok_callback, ()))],
-			left = None, right = None, bottom = None, vertical = 0)
-		sep = self.dialog.Separator(left = None, right = None,
-					    bottom = buttons)
-		form = self.dialog.SubWindow(left = None, right = None,
-					     bottom = sep, top = None)
-		height = 1.0 / len(self.namelist)
-		l = r = w = None
-		self.list = list
-		for i in range(len(self.namelist)):
-			name = self.namelist[i]
+		self.__namelist = namelist = wrapper.attrnames()
+		for i in range(len(namelist)):
+			name = namelist[i]
 			typedef, defaultvalue, labeltext, displayername, \
 				 helptext, inheritance = \
 				 wrapper.getdef(name)
 			type = typedef[0]
 			if displayername == 'file':
-				C = FileButtonRow
+				C = FileAttrEditorField
 			elif displayername == 'font':
-				C = FontButtonRow
+				C = FontAttrEditorField
 			elif displayername == 'color':
-				C = ColorButtonRow
+				C = ColorAttrEditorField
 			elif displayername == 'channelname':
-				C = ChannelnameButtonRow
+				C = ChannelnameAttrEditorField
 			elif displayername == 'basechannelname':
-				C = BaseChannelnameButtonRow
+				C = BaseChannelnameAttrEditorField
 			elif displayername == 'childnodename':
-				C = ChildnodenameButtonRow
+				C = ChildnodenameAttrEditorField
 			elif displayername == 'channeltype':
-				C = ChanneltypeButtonRow
+				C = ChanneltypeAttrEditorField
 			elif displayername == 'units':
-				C = UnitsButtonRow
+				C = UnitsAttrEditorField
 			elif type == 'bool':
-				C = BoolButtonRow
+				C = BoolAttrEditorField
 			elif type == 'name':
-				C = NameButtonRow
+				C = NameAttrEditorField
 			elif type == 'string':
-				C = StringButtonRow
+				C = StringAttrEditorField
 			elif type == 'int':
-				C = IntButtonRow
+				C = IntAttrEditorField
 			elif type == 'float':
-				C = FloatButtonRow
+				C = FloatAttrEditorField
 			elif type == 'tuple':
-				C = TupleButtonRow
+				C = TupleAttrEditorField
 			else:
-				C = ButtonRow
+				C = AttrEditorField
 			b = C(self, name, labeltext)
-			l = form.Button(labeltext,
-					(self.showhelp, (b,)),
-					top = l, left = None, right = 0.5,
-					bottom = (i+1)*height)
-			r = form.Button('Reset', (self.reset, (b,)),
-					top = r, right = None,
-					bottom = (i+1)*height)
-			b.createwidget(form, l, r, w, (i+1)*height)
-			w = b.widget
 			list.append(b)
-		self.dialog.show()
-
-	def pop(self):
-		self.dialog.pop()
-
-	def settitle(self, title):
-		self.dialog.settitle(title)
-
-	def showhelp(self, b):
-		windowinterface.showmessage(b.gethelptext())
-
-	def reset(self, b):
-		b.setvalue(b.getcurrent())
+		self.__list = list
+		AttrEditorDialog.__init__(self, wrapper.maketitle(), list)
 
 	def resetall(self):
-		for b in self.list:
-			b.setvalue(b.getcurrent())
+		for b in self.__list:
+			b.reset_callback()
 
 	def restore_callback(self):
-		for b in self.list:
-			b.setvalue(None)
+		for b in self.__list:
+			b.setvalue('')
 
 	def close(self):
-		self.dialog.close()
+		AttrEditorDialog.close(self)
+		for b in self.__list:
+			b.close()
 		self.wrapper.unregister(self)
-		if self.new:
+		if self.__new:
 			self.wrapper.delete()
 		self.wrapper.close()
-		del self.dialog
-		del self.list
+		del self.__list
 		del self.wrapper
 
 	def cancel_callback(self):
@@ -402,20 +369,22 @@ class AttrEditor:
 			self.close()
 
 	def apply_callback(self):
-		self.new = 0
+		self.__new = 0
 		# first collect all changes
 		dict = {}
-		for b in self.list:
-			try:
-				value = b.getvalue()
-			except:
-				windowinterface.showmessage(
-					'%s: parsing value failed' %
-						b.name)
-				return 1
-			cur = b.getcurrent()
-			if value != cur:
-				dict[b.name] = (value, b)
+		for b in self.__list:
+			name = b.getname()
+			str = b.getvalue()
+			if str != b.getcurrent():
+				try:
+					value = self.wrapper.parsevalue(
+						name, str)
+				except:
+					windowinterface.showmessage(
+						'%s: parsing value failed' % \
+							name)
+					return 1
+				dict[name] = value
 		if not dict:
 			# nothing to change
 			return
@@ -424,7 +393,7 @@ class AttrEditor:
 			return 1
 		# this may take a while...
 		windowinterface.setcursor('watch')
-		for name, (value, b) in dict.items():
+		for name, value in dict.items():
 			self.wrapper.delattr(name)
 			if value is not None:
 				self.wrapper.setattr(name, value)
@@ -442,10 +411,13 @@ class AttrEditor:
 			self.close()
 		else:
 			namelist = self.wrapper.attrnames()
-			if namelist != self.namelist:
+			if namelist != self.__namelist:
 				# re-open with possibly different size
-				self.dialog.close()
-				self.open_dialog()
+				AttrEditorDialog.close(self)
+				for b in self.__list:
+					b.close()
+				del self.__list
+				self.__open_dialog()
 			else:
 ##				self.fixvalues()
 				self.resetall()
@@ -454,251 +426,215 @@ class AttrEditor:
 	def rollback(self):
 		pass
 
-class ButtonRow:
+class AttrEditorField(AttrEditorDialogField):
+	type = 'string'
+
 	def __init__(self, attreditor, name, label):
-		self.attreditor = attreditor
-		self.name = name
+		self.__name = name
 		self.label = label
 		self.wrapper = attreditor.wrapper
-		self.attrdef = self.wrapper.getdef(name)
+		self.__attrdef = self.wrapper.getdef(name)
 
 	def __repr__(self):
 		return '<%s instance, name=%s>' % (self.__class__.__name__,
-						   self.name)
+						   self.__name)
+
+	def getname(self):
+		return self.__name
+
+	def gettype(self):
+		return self.type
+
+	def getlabel(self):
+		return self.label
 
 	def gethelptext(self):
-		return 'attribute: ' + self.name + '\n' + \
-		       'default: '+self.valuerepr(self.getdefault())+'\n'+\
-		       self.attrdef[4]
-
-	def createwidget(self, parent, left, right, top, bottom):
-		cur = self.getcurrent()
-		if cur is None:
-			value = ''
-		else:
-			value = self.valuerepr(cur)
-		self.widget = parent.TextInput(
-			None, value, None, None,
-			top = top, bottom = bottom, left = left, right = right)
+		return 'atribute: %s\n' \
+		       'default: %s\n' \
+		       '%s' % (self.__name, self.getdefault(),
+			       self.__attrdef[4])
 
 	def getcurrent(self):
-		return self.wrapper.getvalue(self.name)
+		return self.valuerepr(self.wrapper.getvalue(self.__name))
 
 	def getdefault(self):
-		return self.wrapper.getdefault(self.name)
+		return self.valuerepr(self.wrapper.getdefault(self.__name))
 
-	def getvalue(self):
-		value = self.widget.gettext()
+	def valuerepr(self, value):
+		"""Return string representation of value."""
+		if value is None:
+			return ''
+		return self.wrapper.valuerepr(self.__name, value)
+
+	def parsevalue(self, str):
+		"""Return internal representation of string."""
 		if value == '':
 			return None
-		else:
-			return self.parsevalue(value)
+		return self.wrapper.parsevalue(self.__name, str)
 
-	def setvalue(self, value):
+	def reset_callback(self):
+		self.setvalue(self.getcurrent())
+
+	def help_callback(self):
+		windowinterface.showmessage(self.gethelptext())
+
+class IntAttrEditorField(AttrEditorField):
+	type = 'int'
+
+class FloatAttrEditorField(AttrEditorField):
+	type = 'float'
+
+class StringAttrEditorField(AttrEditorField):
+	def valuerepr(self, value):
+		"""Return string representation of value."""
 		if value is None:
-			text = ''
-		else:
-			text = self.valuerepr(value)
-		self.widget.settext(text)
-
-	def valuerepr(self, value):
-		return self.wrapper.valuerepr(self.name, value)
-
-	def parsevalue(self, string):
-		return self.wrapper.parsevalue(self.name, string)
-
-class IntButtonRow(ButtonRow):
-	pass
-
-class FloatButtonRow(ButtonRow):
-	pass
-
-class StringButtonRow(ButtonRow):
-	def parsevalue(self, value):
+			return ''
 		return value
 
-	def valuerepr(self, value):
-		return value
+	def parsevalue(self, str):
+		"""Return internal representation of string."""
+		if str == '':
+			return None
+		return str
 
-NameButtonRow = StringButtonRow
+class NameAttrEditorField(StringAttrEditorField):
+	pass
 
-class FileButtonRow(ButtonRow):
-	def createwidget(self, parent, left, right, top, bottom):
-		but = parent.Button('Brwsr', (self.browser, ()),
-				    top = top, bottom = bottom, right = right)
-		cur = self.getcurrent()
-		if cur is None:
-			cur = ''
-		self.widget = parent.TextInput(None, cur,
-					       None, None,
-					       top = top, bottom = bottom,
-					       left = left, right = but)
+class FileAttrEditorField(StringAttrEditorField):
+	type = 'file'
 
-	def browser(self):
-		file = self.widget.gettext()
+	def browser_callback(self):
+		import os
+		file = self.getvalue()
 		if file == '' or file == '/dev/null':
-			dir, file = '.', ''
+			dir, file = os.curdir, ''
 		else:
-			import os
+			import urllib
+			file = urllib.url2pathname(file)
 			if os.path.isdir(file):
 				dir, file = file, ''
 			else:
 				dir, file = os.path.split(file)
 		windowinterface.FileDialog('Choose File for ' + self.label,
-					   dir, '*', file, self.ok_cb, None)
+					   dir, '*', file, self.__ok_cb, None)
 
-	def ok_cb(self, filename):
-		import os
-		cwd = os.getcwd()
-		if filename[:len(cwd)] == cwd:
-			filename = filename[len(cwd):]
-			if filename and filename[0] != '/':
-				filename = cwd + filename
-			elif filename:
-				filename = filename[1:]
+	def __ok_cb(self, pathname):
+		import urllib, os
+		if os.path.isabs(pathname):
+			cwd = self.wrapper.toplevel.dirname
+			if not cwd:
+				cwd = os.getcwd()
+			if os.path.isdir(pathname):
+				dir, file = pathname, os.curdir
 			else:
-				filename = '.'
-		self.widget.settext(filename)
+				dir, file = os.path.split(pathname)
+			# XXXX maybe should check that dir gets shorter!
+			while len(dir) > len(cwd):
+				dir, f = os.path.split(dir)
+				file = os.path.join(f, file)
+			if dir == cwd:
+				pathname = file
+		pathname = urllib.pathname2url(pathname)
+		self.setvalue(pathname)
 
-	def parsevalue(self, value):
-		return value
+class TupleAttrEditorField(AttrEditorField):
+	type = 'tuple'
 
-	def valuerepr(self, value):
-		return value
-
-class TupleButtonRow(ButtonRow):
 	def valuerepr(self, value):
 		if type(value) is type(''):
 			return value
-		return ButtonRow.valuerepr(self, value)
+		return AttrEditorField.valuerepr(self, value)
 
-class ColorButtonRow(TupleButtonRow):
-	def parsevalue(self, value):
+class ColorAttrEditorField(TupleAttrEditorField):
+	def parsevalue(self, str):
 		import string
-		value = string.strip(value)
-		if value[0] == '#':
+		str = string.strip(str)
+		if str[0] == '#':
 			rgb = []
-			if len(value) == 4:
+			if len(str) == 4:
 				for i in range(1, 4):
-					rgb.append(eval('0x' + value[i]) * 16)
-			elif len(value) == 7:
-				for i in range(1, 6, 2):
-					rgb.append(eval('0x' + value[i:i+2]))
-			elif len(value) == 13:
+					rgb.append(string.atoi(str[i], 16) * 16)
+			elif len(str) == 7:
+				for i in range(1, 7, 2):
+					rgb.append(string.atoi(str[i:i+2], 16))
+			elif len(str) == 13:
 				for i in range(1, 13, 4):
-					rgb.append(eval('0x' + value[i:i+4])/256)
+					rgb.append(string.atoi(str[i:i+4], 16)/256)
 			else:
 				raise RuntimeError, 'Bad color specification'
-			value = ''
+			str = ''
 			for c in rgb:
-				value = value + ' ' + `c`
-		return TupleButtonRow.parsevalue(self, value)
+				str = str + ' ' + `c`
+		return TupleAttrEditorField.parsevalue(self, str)
 
-class PopupButtonRow(ButtonRow):
+class PopupAttrEditorField(AttrEditorField):
 	# A choice menu choosing from a list -- base class only
-	def createwidget(self, parent, left, right, top, bottom):
-		choices = ['Default'] + self.choices()
-		current = self.getcurrent()
-		if current is None:
-			current = 'Default'
-			cur = 0
-		else:
-			try:
-				cur = choices.index(self.valuerepr(current))
-			except ValueError:
-				cur = 0
-		if len(choices) > 30:
-			but = parent.Button('Choose', (self. choose, ()),
-					    top = top, bottom = bottom,
-					    right = right)
-			self.widget = parent.TextInput(
-				None, current, None, None, top = top,
-				bottom = bottom, left = left, right = but)
-			self.isoption = 0
-		else:
-			self.widget = parent.OptionMenu(
-				None, choices, cur, None, top = top,
-				bottom = bottom, left = left, right = right)
-			self.isoption = 1
+	type = 'option'
 
-	def choose(self):
-		if self.isoption:
-			func = self.widget.setvalue
-		else:
-			func = self.widget.settext
-		self.choosewin = SelectionDialog(self.widget.gettext(),
-						 ['Default'] + self.choices(),
-						 func)
-
-	def getvalue(self):
-		if self.isoption:
-			value = self.widget.getvalue()
-		else:
-			value = self.widget.gettext()
-			if value not in ['Default'] + self.choices():
-				raise RuntimeError, '%s not a valid option' % value
-		if value == 'Default':
-			return None
-		return self.parsevalue(value)
-
-	def setvalue(self, value):
-		if value is None:
-			value = 'Default'
-		else:
-			value = self.valuerepr(value)
-		if self.isoption:
-			self.widget.setvalue(value)
-		else:
-			self.widget.settext(value)
-
-	def choices(self):
+	def getoptions(self):
 		# derived class overrides this to defince the choices
-		return []
+		return ['Default']
 
-	def parsevalue(self, value):
-		return value
-
-	def valuerepr(self, value):
-		return value
-
-class BoolButtonRow(PopupButtonRow):
-	offon = ['off', 'on']
-
-	def parsevalue(self, value):
-		return self.offon.index(value)
+	def parsevalue(self, str):
+		if str == 'Default':
+			return None
+		return str
 
 	def valuerepr(self, value):
-		return self.offon[value]
+		if value is None:
+			return 'Default'
+		return value
 
-	def choices(self):
-		return self.offon
+class BoolAttrEditorField(PopupAttrEditorField):
+	__offon = ['off', 'on']
 
-class UnitsButtonRow(PopupButtonRow):
-	units = ['mm', 'relative', 'pixels']
+	def parsevalue(self, str):
+		if str == 'Default':
+			return None
+		return self.__offon.index(str)
+
+	def valuerepr(self, value):
+		if value is None:
+			return 'Default'
+		return self.__offon[value]
+
+	def getoptions(self):
+		return ['Default'] + self.__offon
+
+class UnitsAttrEditorField(PopupAttrEditorField):
+	__units = ['mm', 'relative', 'pixels']
+	__unitsmap = [windowinterface.UNIT_MM, windowinterface.UNIT_SCREEN,
+		      windowinterface.UNIT_PXL]
+
 	# Choose from a list of unit types
-	def choices(self):
-		return self.units
+	def getoptions(self):
+		return ['Default'] + self.__units
 
-	def parsevalue(self, value):
-		return self.units.index(value)
+	def parsevalue(self, str):
+		if str == 'Default':
+			return None
+		return self.__unitsmap[self.__units.index(str)]
 
 	def valuerepr(self, value):
-		return self.units[value]
+		if value is None:
+			return 'Default'
+		return self.__units[self.__unitsmap.index(value)]
 
-class ChannelnameButtonRow(PopupButtonRow):
+class ChannelnameAttrEditorField(PopupAttrEditorField):
 	# Choose from the current channel names
-	def choices(self):
-		list = ['undefined']
+	def getoptions(self):
+		list = []
 		ctx = self.wrapper.context
 		for name in ctx.channelnames:
 			if ctx.channeldict[name].attrdict['type'] != 'layout':
 				list.append(name)
-		return list
+		list.sort()
+		return ['Default', 'undefined'] + list
 
-class BaseChannelnameButtonRow(ChannelnameButtonRow):
+class BaseChannelnameAttrEditorField(ChannelnameAttrEditorField):
 	# Choose from the current channel names
-	def choices(self):
-		list = ['undefined']
+	def getoptions(self):
+		list = []
 		ctx = self.wrapper.context
 		chname = self.wrapper.channel.name
 		for name in ctx.channelnames:
@@ -707,37 +643,30 @@ class BaseChannelnameButtonRow(ChannelnameButtonRow):
 			ch = ctx.channeldict[name]
 ##			if ch.attrdict['type'] == 'layout':
 			list.append(name)
-		return list
+		list.sort()
+		return ['Default', 'undefined'] + list
 
-class ChildnodenameButtonRow(PopupButtonRow):
+class ChildnodenameAttrEditorField(PopupAttrEditorField):
 	# Choose from the node's children
-	def choices(self):
-		list = ['undefined']
+	def getoptions(self):
+		list = []
 		for child in self.wrapper.node.GetChildren():
 			try:
 				list.append(child.GetAttr('name'))
 			except NoSuchAttrError:
 				pass
-		return list
+		list.sort()
+		return ['Default', 'undefined'] + list
 
-class ChanneltypeButtonRow(PopupButtonRow):
+class ChanneltypeAttrEditorField(PopupAttrEditorField):
 	# Choose from the standard channel types
-	def choices(self):
+	def getoptions(self):
 		from ChannelMap import channeltypes
-		return channeltypes
+		return ['Default'] + channeltypes
 
-class FontButtonRow(PopupButtonRow):
+class FontAttrEditorField(PopupAttrEditorField):
 	# Choose from all possible font names
-	def choices(self):
+	def getoptions(self):
 		fonts = windowinterface.fonts[:]
 		fonts.sort()
-		return fonts
-
-class SelectionDialog(windowinterface.SelectionDialog):
-	def __init__(self, default, choices, setfunc):
-		self.OkCallback = setfunc
-		windowinterface.SelectionDialog.__init__(
-			self, 'Channels', None, choices, default)
-
-	def NomatchCallback(self, value):
-		return '%s not a valid choice' % value
+		return ['Default'] + fonts
