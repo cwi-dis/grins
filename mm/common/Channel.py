@@ -13,6 +13,7 @@ from windowinterface import SINGLE, TEXT, HTM, MPEG
 from windowinterface import TRUE, FALSE
 import string
 import MMurl
+import urlparse
 error = 'Channel.error'
 from usercmd import *
 
@@ -761,7 +762,8 @@ class Channel:
 		elif node.type == 'ext':
 			url = self.getfileurl(node)
 			self.armed_url = url
-			url, tag = MMurl.splittag(url)
+			utype, host, path, params, query, tag = urlparse.urlparse(url)
+			url = urlparse.urlunparse((utype, host, path, params, query, ''))
 			try:
 				# use urlretrieve so that data gets cached
 				fn, hdr = MMurl.urlretrieve(url)
