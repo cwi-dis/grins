@@ -37,7 +37,8 @@ ITEM_CANCEL=2
 ITEM_APPLY=3
 ITEM_SELECT=4
 ITEM_HELPSTRING=5
-ITEM_LAST_COMMON=5
+ITEM_SHOWALL=6
+ITEM_LAST_COMMON=6
 
 class AttrEditorDialog(windowinterface.MACDialog):
 	def __init__(self, title, attriblist, toplevel=None, initattr=None):
@@ -57,6 +58,8 @@ class AttrEditorDialog(windowinterface.MACDialog):
 ## This doesn't work for (a) tabbing to a field and (b) popup menus
 		self._ok_enabled = 0
 ##		self._setsensitive([ITEM_APPLY, ITEM_OK], 0)
+
+		self._setbutton(ITEM_SHOWALL, self.show_all_attributes)
 
 		#
 		# Create the pages with the attributes, and the datastructures linking
@@ -159,6 +162,8 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			self.ok_callback()
 		elif item == ITEM_APPLY:
 			self.apply_callback()
+		elif item == ITEM_SHOWALL:
+			self.showall_callback()
 		elif self._cur_page and self._cur_page.do_itemhit(item, event):
 			pass
 ##		elif item == ITEM_RESTORE:
@@ -206,6 +211,7 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		"""Update values in the current page (if any)"""
 		if self._cur_page:
 			self._cur_page.update()
+			
 
 	def showmessage(self, *args, **kw):
 		apply(windowinterface.showmessage, args, kw)

@@ -1245,6 +1245,8 @@ from AttrEditDialog import AttrEditorDialog, AttrEditorDialogField
 
 class AttrEditor(AttrEditorDialog):
 	def __init__(self, wrapper, new = 0, initattr = None, chtype = None):
+		import settings
+		self.show_all_attributes = settings.get('show_all_attributes')
 		self.__new = new
 		self.__chtype = chtype
 		self.wrapper = wrapper
@@ -1373,9 +1375,16 @@ class AttrEditor(AttrEditorDialog):
 			else:
 				C = AttrEditorField
 			b = C(self, name, labeltext or name)
-			list.append(b)
 			if initattr and initattr == name:
 				initattrinst = b
+			if not self.show_all_attributes and b != initattrinst:
+				# If we are not showing all atrributes we hide all those
+				# that have a default value, unless they're the initattrinst.
+				if b.isdefault():
+					b.earlyclose()
+					b = None
+			if b != None:
+				list.append(b)
 		self.attrlist = list
 		AttrEditorDialog.__init__(self, wrapper.maketitle(), list, wrapper.toplevel, initattrinst)
 
@@ -1402,6 +1411,13 @@ class AttrEditor(AttrEditorDialog):
 		self.wrapper.close()
 		del self.attrlist
 		del self.wrapper
+		
+	def showall_callback(self):
+		self.show_all_attributes = not self.show_all_attributes
+		import settings
+		settings.set('show_all_attributes', self.show_all_attributes)
+		# settings.save()
+		self.redisplay()
 
 	def cancel_callback(self):
 		self.close()
@@ -1593,23 +1609,26 @@ class AttrEditor(AttrEditorDialog):
 		if not self.wrapper.stillvalid():
 			self.close()
 		else:
-			namelist = self.wrapper.attrnames()
-			if namelist != self.__namelist:
-				# re-open with possibly different size
-				attr = self.getcurattr()
-				if attr:
-					attr = attr.getname()
-				AttrEditorDialog.close(self)
-				for b in self.attrlist:
-					b.close()
-				del self.attrlist
-				self.__open_dialog(attr)
-			else:
-				a = self.getcurattr()
+			self.redisplay()
+		
+	def redisplay(self):	
+		namelist = self.wrapper.attrnames()
+		if namelist != self.__namelist:
+			# re-open with possibly different size
+			attr = self.getcurattr()
+			if attr:
+				attr = attr.getname()
+			AttrEditorDialog.close(self)
+			for b in self.attrlist:
+				b.close()
+			del self.attrlist
+			self.__open_dialog(attr)
+		else:
+			a = self.getcurattr()
 ##				self.fixvalues()
-				self.resetall()
-				self.settitle(self.wrapper.maketitle())
-				self.setcurattr(a)
+			self.resetall()
+			self.settitle(self.wrapper.maketitle())
+			self.setcurattr(a)
 
 	def rollback(self):
 		pass
@@ -1631,6 +1650,13 @@ class AttrEditorField(AttrEditorDialogField):
 	def __repr__(self):
 		return '<%s instance, name=%s>' % (self.__class__.__name__,
 						   self.__name)
+						   
+	def earlyclose(self):
+		# Call this close routine if you want to get rid of the object
+		# before the AttrEditorDialogField has been initialized.
+		del self.attreditor
+		del self.wrapper
+		del self.attrdef
 
 	def close(self):
 		AttrEditorDialogField.close(self)
@@ -1662,6 +1688,12 @@ class AttrEditorField(AttrEditorDialogField):
 
 	def getdefault(self):
 		return self.valuerepr(self.wrapper.getdefault(self.__name))
+		
+	def isdefault(self):
+		v = self.wrapper.getvalue(self.__name)
+		if v is None or v == self.wrapper.getdefault(self.__name):
+			return 1
+		return 0
 
 	def valuerepr(self, value):
 		"""Return string representation of value."""
