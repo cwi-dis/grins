@@ -85,6 +85,7 @@ class TopLevel(ViewDialog):
 			 None,
 			 ('Open...', (self.open_callback, ())),
 			 ('Save', (self.save_callback, ())),
+			 ('Save for Player', (self.save_player_callback, ())),
 			 ('Save as...', (self.saveas_callback, ())),
 			 ('Restore', (self.restore_callback, ())),
 			 ('Close', (self.close_callback, ())),
@@ -213,6 +214,11 @@ class TopLevel(ViewDialog):
 			self.saveas_callback()
 			return
 		ok = self.save_to_file(self.filename)
+
+	def save_player_callback(self):
+		self.save_callback()
+		import MMPlayerTree
+		MMPlayerTree.WriteFile(self.root, self.filename)
 
 	def saveas_okcallback(self, filename):
 		if not filename:

@@ -4,7 +4,7 @@
 #
 
 import MMAttrdefs
-from Scheduler import Scheduler, END_PAUSE, END_STOP, END_KEEP
+from Scheduler import Scheduler
 from AnchorDefs import *
 from MMNode import leaftypes
 import windowinterface
@@ -71,14 +71,23 @@ class Selecter:
 	# findbaglist - Find the list of bags leading up to a node.
 	#
 	def findbaglist(self, node):
-		mini = findminidocument(node)
-		bag = findminibag(mini)
-		parent = findminidocument(bag)
+		parent = None
+		if node:
+			mini = node.FindMiniDocument()
+			bag = mini.FindMiniBag()
+			if bag:
+				parent = bag.FindMiniDocument()
+		else:
+			mini = None
+			bag = None
 		list = [(mini, None, bag, parent)]
 		while parent:
 			mini = parent
-			bag = findminibag(mini)
-			parent = findminidocument(bag)
+			bag = mini.FindMiniBag()
+			if bag:
+				parent = bag.FindMiniDocument()
+			else:
+				parent = None
 			list.append(mini, None, bag, parent)
 		return list
 	#
@@ -148,7 +157,7 @@ class Selecter:
 				else:
 					seeknode = None
 				sctx = self.scheduler.play(mini, seeknode, \
-					  None, None, END_STOP)
+					  None, None)
 				if not sctx:
 					dummy = self.killconflictingbags( \
 						  baglist)
@@ -251,8 +260,7 @@ class Selecter:
 		if not self.startbaglist(baglist[1:]):
 			return 0
 		mini, sctx, bag, parent = baglist[0]
-		new_sctx = self.scheduler.play(mini, seek_node, dest_aid, \
-			  arg, END_STOP)
+		new_sctx = self.scheduler.play(mini, seek_node, dest_aid, arg)
 		if not new_sctx:
 			dummy = self.killconflictingbags(baglist)
 			self.toplevel.setready()
@@ -289,7 +297,7 @@ class Selecter:
 			node = choosebagitem(bag, 0)
 			if node:
 				new_sctx = self.scheduler.play(node, \
-					  None, None, None, END_STOP)
+					  None, None, None)
 			else:
 ##				print 'bag_event: no node to play'
 				new_sctx = None
@@ -392,24 +400,3 @@ def choosebagitem(node, interactive):
 		return children[choice]
 	else:
 		return None
-
-# Find the root of a node's mini-document
-
-def findminidocument(node):
-	if not node:
-		return None
-	path = node.GetPath()
-	if len(path) <= 1:
-		# The root node
-		return node
-	i = len(path)-2  # Index to parent of current node
-	while i >= 0 and path[i].GetType() <> 'bag':
-		i = i-1
-	return path[i+1]
-
-# Find the nearest bag given a minidocument.
-def findminibag(mini):
-	bag = mini.GetParent()
-	if bag and bag.GetType() <> 'bag':
-		raise 'findminibag: minidoc not rooted in a bag!'
-	return bag

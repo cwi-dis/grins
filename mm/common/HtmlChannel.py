@@ -213,6 +213,9 @@ class HtmlChannel(Channel.ChannelWindow):
 			# use undocumented feature so we can cleanup
 			if urllib._urlopener.tempcache is None:
 				urllib._urlopener.tempcache = {}
+				# cleanup temporary files when we finish
+				windowinterface.addclosecallback(
+					urllib.urlcleanup, ())
 			text = fp.read()
 			fp.close()
 			if text[-1:] == '\n':
@@ -419,6 +422,3 @@ def normalize(name):
 		print 'HtmlChannel: "%s" has resource name "%s"'%(
 			name, newname)
 	return newname
-	
-# cleanup temporary files when we finish
-windowinterface.addclosecallback(urllib.urlcleanup, ())

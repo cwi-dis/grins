@@ -35,6 +35,9 @@ class EditMgr:
 	def unregister(self, x):
 		self.registry.remove(x)
 	#
+	def is_registered(self, x):
+		return x in self.registry
+	#
 	# Mutator client interface -- transactions.
 	# This calls the dependent clients' callbacks.
 	#

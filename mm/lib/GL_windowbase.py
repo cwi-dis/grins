@@ -99,8 +99,30 @@ class _DummyLock:
 	def release(self):
 		pass
 
+toplevel = None
 class _Toplevel:
+	# this is a hack to delay initialization of the Toplevel until
+	# we actually need it.
+	def __getattr__(self, attr):
+		if not self._initialized: # had better exist...
+			self._do_init()
+			try:
+				return self.__dict__[attr]
+			except KeyError:
+				pass
+		raise AttributeError, attr
+
 	def __init__(self):
+		self._initialized = 0
+		global toplevel
+		if toplevel:
+			raise error, 'only one Toplevel allowed'
+		toplevel = self
+
+	def _do_init(self):
+		if self._initialized:
+			raise error, 'can only initialize once'
+		self._initialized = 1
 		self._parent_window = None
 		self._subwindows = []
 		self._fgcolor = _DEF_FGCOLOR
@@ -156,8 +178,30 @@ class _Toplevel:
 		else:
 			self._win_lock = _DummyLock()
 
+event = None
 class _Event:
+	# this is a hack to delay initialization of the Event until
+	# we actually need it.
+	def __getattr__(self, attr):
+		if not self._initialized: # had better exist...
+			self._do_init()
+			try:
+				return self.__dict__[attr]
+			except KeyError:
+				pass
+		raise AttributeError, attr
+
 	def __init__(self):
+		self._initialized = 0
+		global event
+		if event:
+			raise error, 'only one Event allowed'
+		event = self
+
+	def _do_init(self):
+		if self._initialized:
+			raise error, 'can only initialize once'
+		self._initialized = 1
 		self._queue = []
 		self._curwin = None
 		self._savemouse = None

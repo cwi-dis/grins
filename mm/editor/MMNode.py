@@ -1,134 +1,33 @@
-# Implementation of Multimedia nodes
-
-
-from MMExc import *		# Exceptions
-from Hlinks import Hlinks
+import MMNodeBase
 import MMAttrdefs
-from MMStat import _stat
-import os
-import urllib
-
-from SR import SCHED, SCHED_DONE, PLAY, PLAY_DONE, \
-	  SCHED_STOP, PLAY_STOP, SYNC, SYNC_DONE, PLAY_ARM, ARM_DONE, \
-	  BAG_START, BAG_STOP, BAG_DONE
-
-
 from MMTypes import *
+from MMExc import *
+from SR import *
 
-
-# The MMNodeContext class
-#
-class MMNodeContext:
-	#
+class MMNodeContext(MMNodeBase.MMNodeContext):
 	def __init__(self, nodeclass):
-		##_stat('init')
-		self.nodeclass = nodeclass
+		MMNodeBase.MMNodeContext.__init__(self, nodeclass)
 		self.nextuid = 1
-		self.uidmap = {}
-##		self.styledict = {}
-		self.channelnames = []
-		self.channels = []
-		self.channeldict = {}
-		self.hyperlinks = Hlinks()
 		self.editmgr = None
-		self.dirname = None
-	#
-	def __repr__(self):
-		##_stat('__repr__')
-		return '<MMNodeContext instance, channelnames=' \
-			+ `self.channelnames` + '>'
-	#
-	def setdirname(self, dirname):
-		##_stat('setdirname')
-		if not self.dirname:
-			self.dirname = urllib.pathname2url(dirname)
-			if not self.dirname:
-				self.dirname = '.'
-			if self.dirname[-1] <> '/':
-				self.dirname = self.dirname + '/'
-	#
-	def findurl(self, filename):
-		"Locate a file given by url-style filename."
-		##_stat('findurl')
-		if os.name == 'posix':
-			# XXXX May also work for msdos, etc. (not for mac)
-			filename = os.path.expandvars(filename)
-			filename = os.path.expanduser(filename)
-		urltype, urlpath = urllib.splittype(filename)
-		if urltype or filename[:1] == '/':
-			return filename
-		if self.dirname:
-			altfilename = urllib.basejoin(self.dirname, filename)
-			altfilename = urllib.url2pathname(altfilename)
-			if os.path.exists(altfilename):
-				return urllib.pathname2url(altfilename)
-		# As a last resort, search along the cmif search path
-		import cmif
-		filename = urllib.url2pathname(filename)
-		filename = cmif.findfile(filename)
-		return urllib.pathname2url(filename)
-	#
+		self.armedmode = None
+
 	def newnode(self, type):
-		##_stat('newnode')
 		return self.newnodeuid(type, self.newuid())
-	#
-	def newnodeuid(self, type, uid):
-		##_stat('newnodeuid')
-		node = self.nodeclass(type, self, uid)
-		self.knownode(uid, node)
-		return node
-	#
+
 	def newuid(self):
-		##_stat('newuid')
 		while 1:
 			uid = `self.nextuid`
 			self.nextuid = self.nextuid + 1
 			if not self.uidmap.has_key(uid):
 				return uid
-	#
-	def mapuid(self, uid):
-		##_stat('mapuid')
-		if not self.uidmap.has_key(uid):
-			raise NoSuchUIDError, 'in mapuid()'
-		return self.uidmap[uid]
-	#
-	def knownode(self, uid, node):
-		##_stat('knownode')
-		if self.uidmap.has_key(uid):
-			raise DuplicateUIDError, 'in knownode()'
-		self.uidmap[uid] = node
-	#
+
 	def forgetnode(self, uid):
-		##_stat('forgetnode')
 		del self.uidmap[uid]
-	#
-##	def addstyles(self, dict):
-##		##_stat('addstyles')
-##		# XXX How to handle duplicates?
-##		for key in dict.keys():
-##			self.styledict[key] = dict[key]
+
 	#
 	# Channel administration
 	#
-	def addchannels(self, list):
-		##_stat('addchannels')
-		for name, dict in list:
-			c = MMChannel(self, name)
-			for key, val in dict.items():
-				c[key] = val
-			self.channeldict[name] = c
-			self.channelnames.append(name)
-			self.channels.append(c)
-	#
-	def getchannel(self, name):
-		##_stat('getchannel')
-		try:
-			return self.channeldict[name]
-		except KeyError:
-			return None
-	#
 	def addchannel(self, name, i, type):
-		##_stat('addchannel')
 		if name in self.channelnames:
 			raise CheckError, 'addchannel: existing name'
 		if not 0 <= i <= len(self.channelnames):
@@ -138,9 +37,8 @@ class MMNodeContext:
 		self.channeldict[name] = c
 		self.channelnames.insert(i, name)
 		self.channels.insert(i, c)
-	#
+
 	def copychannel(self, name, i, orig):
-		##_stat('addchannel')
 		if name in self.channelnames:
 			raise CheckError, 'copychannel: existing name'
 		if not 0 <= i <= len(self.channelnames):
@@ -155,9 +53,8 @@ class MMNodeContext:
 		self.channeldict[name] = c
 		self.channelnames.insert(i, name)
 		self.channels.insert(i, c)
-	#
+
 	def movechannel(self, name, i):
-		##_stat('addchannel')
 		if not name in self.channelnames:
 			raise CheckError, 'movechannel: non-existing name'
 		if not 0 <= i <= len(self.channelnames):
@@ -173,9 +70,8 @@ class MMNodeContext:
 		else:
 		    del self.channelnames[old_i+1]
 		    del self.channels[old_i+1]
-	#
+
 	def delchannel(self, name):
-		##_stat('delchannel')
 		if name not in self.channelnames:
 			raise CheckError, 'delchannel: non-existing name'
 		i = self.channelnames.index(name)
@@ -184,9 +80,8 @@ class MMNodeContext:
 		del self.channelnames[i]
 		del self.channeldict[name]
 		c._destroy()
-	#
+
 	def setchannelname(self, oldname, newname):
-		##_stat('setchannelname')
 		if newname == oldname: return # No change
 		if newname in self.channelnames:
 			raise CheckError, 'setchannelname: duplicate name'
@@ -204,83 +99,34 @@ class MMNodeContext:
 					n.SetAttr('channel', newname)
 			except NoSuchAttrError:
 				pass
-##		# Patch references to this channel in styles
-##		for stylename in self.styledict.keys():
-##			s = self.styledict[stylename]
-##			if s.has_key('channel'):
-##				if s['channel'] == oldname:
-##					s['channel'] = newname
+
 	#
 	# Hyperlink administration
 	#
-	def addhyperlinks(self, list):
-		##_stat('addhyperlinks')
-		modhyperlinklist(list)	# XXXX Backward compat
-		self.hyperlinks.addlinks(list)
-	#
 	def addhyperlink(self, link):
-		##_stat('addhyperlink')
-		list = [link]		# XXXX Backward compat
-		modhyperlinklist(list)
-		link = list[0]
 		self.hyperlinks.addlink(link)
-	#
-	def seteditmgr(self, editmgr):
-		##_stat('seteditmgr')
-		self.editmgr = editmgr
-	#
-	def geteditmgr(self):
-		##_stat('geteditmgr')
-		return self.editmgr
-##	#
-##	# Look for an attribute in the style definitions.
-##	# Raise NoSuchAttrError if the attribute is undefined.
-##	# This will cause a stack overflow if there are recursive style
-##	# definitions, and raise an unexpected exception if there are
-##	# undefined styles.
-##	#
-##	# XXX The recursion may be optimized out by expanding definitions;
-##	# XXX this should also fix the stack overflows...
-##	#
-##	def lookinstyles(self, name, styles):
-##		##_stat('lookinstyles')
-##		for style in styles:
-##			attrdict = self.styledict[style]
-##			if attrdict.has_key(name):
-##				return attrdict[name]
-##			if attrdict.has_key('style'):
-##				try:
-##					##_stat('lookinstyles recursive call')
-##					return self.lookinstyles(name, \
-##						attrdict['style'])
-##				except NoSuchAttrError:
-##					pass
-##		raise NoSuchAttrError, 'in lookinstyles()'
-	#
-	# Remove all hyperlinks that aren't contained in the given trees
-	# (note that the argument is a *list* of root nodes)
-	#
+
 	def sanitize_hyperlinks(self, roots):
+		"""Remove all hyperlinks that aren't contained in the given trees
+		   (note that the argument is a *list* of root nodes)"""
 		self._roots = roots
 		badlinks = self.hyperlinks.selectlinks(self._isbadlink)
 		del self._roots
 		for link in badlinks:
 			self.hyperlinks.dellink(link)
-	#
-	# Return all hyperlinks pertaining to the given tree
-	# (note that the argument is a *single* root node)
-	#
+
 	def get_hyperlinks(self, root):
+		"""Return all hyperlinks pertaining to the given tree
+		   (note that the argument is a *single* root node)"""
 		self._roots = [root]
 		links = self.hyperlinks.selectlinks(self._isgoodlink)
 		del self._roots
 		return links
-	#
+
 	# Internal: predicates to select nodes pertaining to self._roots
-	#
 	def _isbadlink(self, link):
 		return not self._isgoodlink(link)
-	#
+
 	def _isgoodlink(self, link):
 		(uid1, aid1), (uid2, aid2), dir, type = link
 		srcok = (self.uidmap.has_key(uid1) \
@@ -289,130 +135,41 @@ class MMNodeContext:
 		   and self.uidmap[uid2].GetRoot() in self._roots))
 		return (srcok and dstok)
 
+	#
+	# Editmanager
+	#
+	def seteditmgr(self, editmgr):
+		self.editmgr = editmgr
 
-# The Channel class
-#
-# XXX This isn't perfect: the link between node and channel is still
-# XXX through the channel name rather than through the channel object...
-#
-class MMChannel:
-	#
-	def __init__(self, context, name):
-		self.context = context
-		self.name = name
-		self.attrdict = {}
-	#
+	def geteditmgr(self):
+		return self.editmgr
+
+class MMChannel(MMNodeBase.MMChannel):
 	def _setname(self, name): # Only called from context.setchannelname()
 		self.name = name
-	#
+
 	def _destroy(self):
 		self.context = None
-	#
+
 	def stillvalid(self):
 		return self.context is not None
-	#
+
 	def _getdict(self): # Only called from MMWrite.fixroot()
 		return self.attrdict
-	#
-	def __repr__(self):
-		return '<MMChannel instance, name=' + `self.name` + '>'
-	#
-	# Emulate the dictionary interface
-	#
-	def __getitem__(self, key):
-		return self.attrdict[key]
-	#
-	def __setitem__(self, key, value):
-		self.attrdict[key] = value
-	#
+
 	def __delitem__(self, key):
 		del self.attrdict[key]
-	#
-	def has_key(self, key):
-		return self.attrdict.has_key(key)
-	#
-	def keys(self):
-		return self.attrdict.keys()
 
+MMSyncArc = MMNodeBase.MMSyncArc
 
-# The Sync Arc class
-#
-# XXX This isn't used yet
-#
-class MMSyncArc:
-	#
-	def __init__(self, context):
-		self.context = context
-		self.src = None
-		self.dst = None
-		self.delay = 0.0
-	#
-	def __repr__(self):
-		return '<MMSyncArc instance, from ' + \
-			  `self.src` + ' to ' + `self.dst` + \
-			  ', delay ' + `self.delay` + '>'
-	#
-	def setsrc(self, srcnode, srcend):
-		self.src = (srcnode, srcend)
-	#
-	def setdst(self, dstnode, dstend):
-		self.dst = (dstnode, dstend)
-	#
-	def setdelay(self, delay):
-		self.delay = delay
-
-
-# The Node class
-#
-class MMNode:
-	#
-	# Create a new node.
-	#
+class MMNode(MMNodeBase.MMNode):
 	def __init__(self, type, context, uid):
-		# ASSERT type in alltypes
-		self.type = type
-		self.context = context
-		self.uid = uid
-		self.attrdict = {}
+		MMNodeBase.MMNode.__init__(self, type, context, uid)
 		self.parent = None
 		self.children = []
-		self.values = []
 		self.summaries = {}
-		self.armedmode = None
 		self.setgensr()
-	#
-	# Return string representation of self
-	#
-	def __repr__(self):
-		return '<MMNode instance, type=' + `self.type` \
-			+ ', uid=' + `self.uid` + '>'
-	#
-	# Compare two nodes, recursively.
-	# This purposely ignores the value of the context.
-	# (The uid is compared, so a deep copy will compare different.
-	# This is hard to avoid since deep copying may also change
-	# attributes that contain uid references.)
-	# XXX This used to be __cmp__, but that's too slow
-	#
-	def cmp(self, other):
-		##_stat('cmp')
-		c = cmp(self.type, other.type)
-		if c: return c
-		c = cmp(self.uid, other.uid)
-		if c: return c
-		c = cmp(self.attrdict, other.attrdict)
-		if c: return c
-		if self.type in interiortypes:
-			n1 = len(self.children)
-			n2 = len(other.children)
-			for i in range(min(n1,  n2)):
-				c = self.children[i].cmp(other.children[i])
-				if c: return c
-			return cmp(n1, n2)
-		elif self.type == 'imm':
-			return cmp(self.values, other.values)
-		else:
-			return 0
+
 	#
 	# Private methods to build a tree
 	#
@@ -420,44 +177,27 @@ class MMNode:
 		# ASSERT self.type in interiortypes
 		child.parent = self
 		self.children.append(child)
-	#
+
 	def _addvalue(self, value):
 		# ASSERT self.type = 'imm'
 		self.values.append(value)
-	#
+
 	def _setattr(self, name, value):
 		# ASSERT not self.attrdict.has_key(name)
 		self.attrdict[name] = value
-	#
-	# Public methods for read-only access
-	#
-	def GetType(self):
-		return self.type
-	#
-	def GetContext(self):
-		return self.context
-	#
-	def GetUID(self):
-		return self.uid
-	#
-	def MapUID(self, uid):
-		return self.context.mapuid(uid)
-	#
+
 	def GetParent(self):
-		##_stat('GetParent')
 		return self.parent
-	#
+
 	def GetRoot(self):
-		##_stat('GetRoot')
 		root = None
 		x = self
 		while x:
 			root = x
 			x = x.parent
 		return root
-	#
+
 	def GetPath(self):
-		##_stat('GetPath')
 		path = []
 		x = self
 		while x:
@@ -465,16 +205,14 @@ class MMNode:
 			x = x.parent
 		path.reverse()
 		return path
-	#
+
 	def IsAncestorOf(self, x):
-		##_stat('IsAncestorOf')
 		while x <> None:
 			if self == x: return 1
 			x = x.parent
 		return 0
-	#
+
 	def CommonAncestor(self, x):
-		##_stat('CommonAncestor')
 		p1 = self.GetPath()
 		p2 = x.GetPath()
 		n = min(len(p1), len(p2))
@@ -482,69 +220,14 @@ class MMNode:
 		while i < n and p1[i] == p2[i]: i = i+1
 		if i == 0: return None
 		else: return p1[i-1]
-	#
+
 	def GetChildren(self):
-		##_stat('GetChildren')
 		return self.children
-	#
+
 	def GetChild(self, i):
-		##_stat('GetChild')
 		return self.children[i]
-	#
-	def GetValues(self):
-		##_stat('GetValues')
-		return self.values
-	#
-	def GetValue(self, i):
-		##_stat('GetValue')
-		return self.values[i]
-	#
-	def GetAttrDict(self):
-		return self.attrdict
-	#
-	def GetRawAttr(self, name):
-		##_stat('GetRawAttr.' + name)
-		try:
-			return self.attrdict[name]
-		except KeyError:
-			raise NoSuchAttrError, 'in GetRawAttr()'
-	#
-	def GetRawAttrDef(self, name, default):
-		##_stat('GetRawAttrDef.' + name)
-		try:
-			return self.GetRawAttr(name)
-		except NoSuchAttrError:
-			return default
-	#
-##	def GetStyleDict(self):
-##		##_stat('GetStyleDict')
-##		return self.context.styledict
-	#
-	def GetAttr(self, name):
-		##_stat('GetAttr.' + name)
-		try:
-			return self.attrdict[name]
-		except KeyError:
-			raise NoSuchAttrError, 'in GetAttr'
-##			return self.GetDefAttr(name)
-	#
-##	def GetDefAttr(self, name):
-##		##_stat('GetDefAttr.' + name)
-##		try:
-##			styles = self.attrdict['style']
-##		except KeyError:
-##			raise NoSuchAttrError, 'in GetDefAttr()'
-##		return self.context.lookinstyles(name, styles)
-	#
-	def GetAttrDef(self, name, default):
-		##_stat('GetAttrDef.' + name)
-		try:
-			return self.GetAttr(name)
-		except NoSuchAttrError:
-			return default
-	#
+
 	def GetInherAttr(self, name):
-		##_stat('GetInherAttr.' + name)
 		x = self
 		while x:
 			if x.attrdict:
@@ -554,13 +237,8 @@ class MMNode:
 					pass
 			x = x.parent
 		raise NoSuchAttrError, 'in GetInherAttr()'
-	#
+
 	def GetDefInherAttr(self, name):
-		##_stat('GetInherDefAttr.' + name)
-##		try:
-##			return self.GetDefAttr(name)
-##		except NoSuchAttrError:
-##			pass
 		x = self.parent
 		while x:
 			if x.attrdict:
@@ -570,20 +248,12 @@ class MMNode:
 					pass
 			x = x.parent
 		raise NoSuchAttrError, 'in GetInherDefAttr()'
-	#
-	def GetInherAttrDef(self, name, default):
-		##_stat('GetInherAttrDef.' + name)
-		try:
-			return self.GetInherAttr(name)
-		except NoSuchAttrError:
-			return default
-	#
+
 	def GetSummary(self, name):
-		##_stat('GetSummary')
 		if not self.summaries.has_key(name):
 			self.summaries[name] = self._summarize(name)
 		return self.summaries[name]
-	#
+
 	def Dump(self):
 		print '*** Dump of', self.type, 'node', self, '***'
 		attrnames = self.attrdict.keys()
@@ -605,38 +275,8 @@ class MMNode:
 			print 'Children:',
 			for child in self.children: print child.GetType(),
 			print
-	#
-	# Channel management
-	#
-	def GetChannel(self):
-		##_stat('GetChannel')
-		try:
-			cname = self.GetInherAttr('channel')
-		except NoSuchAttrError:
-			return None
-		if cname == '':
-			return None
-		if self.context.channeldict.has_key(cname):
-			return self.context.channeldict[cname]
-		else:
-			return None
-	#
-	def GetChannelName(self):
-		##_stat('GetChannelName')
-		c = self.GetChannel()
-		if c: return c.name
-		else: return 'undefined'
-	#
-	def GetChannelType(self):
-		##_stat('GetChannelType')
-		c = self.GetChannel()
-		if c and c.has_key('type'):
-			return c['type']
-		else:
-			return ''
-	#
+
 	def SetChannel(self, c):
-		##_stat('SetChannel')
 		if c is None:
 			try:
 				self.DelAttr('channel')
@@ -644,11 +284,34 @@ class MMNode:
 				pass
 		else:
 			self.SetAttr('channel', c.name)
+
+	#
+	# GetAllChannels - Get a list of all channels used in a tree.
+	# If there is overlap between parnode children the node in error
+	# is returned.
+	def GetAllChannels(self):
+		if self.type == 'bag':
+			return [], None
+		if self.type in leaftypes:
+			return [MMAttrdefs.getattr(self, 'channel')], None
+		errnode = None
+		overlap = []
+		list = []
+		for ch in self.children:
+			chlist, cherrnode = ch.GetAllChannels()
+			if cherrnode:
+				errnode = cherrnode
+			list, choverlap = MergeLists(list, chlist)
+			if choverlap:
+				overlap = overlap + choverlap
+		if overlap and self.type == 'par':
+			errnode = (self, overlap)
+		return list, errnode
+
 	#
 	# Make a "deep copy" of a subtree
 	#
 	def DeepCopy(self):
-		##_stat('DeepCopy')
 		uidremap = {}
 		copy = self._deepcopy(uidremap, self.context)
 		copy._fixuidrefs(uidremap)
@@ -658,7 +321,6 @@ class MMNode:
 	# Copy a subtree (deeply) into a new context
 	#
 	def CopyIntoContext(self, context):
-		##_stat('CopyIntoContext')
 		uidremap = {}
 		copy = self._deepcopy(uidremap, context)
 		copy._fixuidrefs(uidremap)
@@ -669,7 +331,6 @@ class MMNode:
 	# Private methods for DeepCopy
 	#
 	def _deepcopy(self, uidremap, context):
-		##_stat('_deepcopy')
 		copy = context.newnode(self.type)
 		uidremap[self.uid] = copy.uid
 		copy.attrdict = _valuedeepcopy(self.attrdict)
@@ -677,13 +338,13 @@ class MMNode:
 		for child in self.children:
 			copy._addchild(child._deepcopy(uidremap, context))
 		return copy
-	#
+
 	def _fixuidrefs(self, uidremap):
 		# XXX Are there any other attributes that reference uids?
 		self._fixsyncarcs(uidremap)
 		for child in self.children:
 			child._fixuidrefs(uidremap)
-	#
+
 	def _fixsyncarcs(self, uidremap):
 		# XXX Exception-wise, this function knows about the
 		# semantics and syntax of an attribute...
@@ -717,26 +378,23 @@ class MMNode:
 			raise CheckError, 'SetType() on non-empty node'
 		self.type = type
 		self.setgensr()
-	#
+
 	def SetValues(self, values):
 		if self.type <> 'imm':
 			raise CheckError, 'SetValues() bad node type'
 		self.values = values
-	#
+
 	def SetAttr(self, name, value):
-		##_stat('SetAttr')
 		self.attrdict[name] = value
 		self._updsummaries([name])
-	#
+
 	def DelAttr(self, name):
-		##_stat('DelAttr')
 		if not self.attrdict.has_key(name):
 			raise NoSuchAttrError, 'in DelAttr()'
 		del self.attrdict[name]
 		self._updsummaries([name])
-	#
+
 	def Destroy(self):
-		##_stat('Destroy')
 		if self.parent: raise CheckError, 'Destroy() non-root node'
 		self.context.forgetnode(self.uid)
 		for child in self.children:
@@ -750,17 +408,15 @@ class MMNode:
 		self.children = None
 		self.values = None
 		self.summaries = None
-	#
+
 	def Extract(self):
-		##_stat('Extract')
 		if not self.parent: raise CheckError, 'Extract() root node'
 		parent = self.parent
 		self.parent = None
 		parent.children.remove(self)
 		parent._fixsummaries(self.summaries)
-	#
+
 	def AddToTree(self, parent, i):
-		##_stat('AddToTree')
 		if self.parent: raise CheckError, 'AddToTree() non-root node'
 		if self.context is not parent.context:
 			# XXX Decide how to handle this later
@@ -772,11 +428,11 @@ class MMNode:
 		self.parent = parent
 		parent._fixsummaries(self.summaries)
 		parent._rmsummaries(self.summaries.keys())
+
 	#
 	# Methods for mini-document management
 	#
 	# Check whether a node is the top of a mini-document
-
 	def IsMiniDocument(self):
 		if self.GetType() == 'bag':
 			return 0
@@ -784,7 +440,6 @@ class MMNode:
 		return parent == None or parent.GetType() == 'bag'
 
 	# Find the first mini-document in a tree
-
 	def FirstMiniDocument(self):
 		if self.IsMiniDocument():
 			return self
@@ -795,7 +450,6 @@ class MMNode:
 		return None
 
 	# Find the last mini-document in a tree
-
 	def LastMiniDocument(self):
 		if self.IsMiniDocument():
 			return self
@@ -808,7 +462,6 @@ class MMNode:
 
 	# Find the next mini-document in a tree after the given one
 	# Return None if this is the last one
-
 	def NextMiniDocument(self):
 		node = self
 		while 1:
@@ -827,7 +480,6 @@ class MMNode:
 
 	# Find the previous mini-document in a tree after the given one
 	# Return None if this is the first one
-
 	def PrevMiniDocument(self):
 		node = self
 		while 1:
@@ -843,6 +495,25 @@ class MMNode:
 					return mini
 			node = parent
 		return None
+
+	# Find the root of a node's mini-document
+	def FindMiniDocument(self):
+		path = self.GetPath()
+		if len(path) <= 1:
+			# The root node
+			return self
+		i = len(path)-2  # Index to parent of current node
+		while i >= 0 and path[i].type <> 'bag':
+			i = i-1
+		return path[i+1]
+
+	# Find the nearest bag given a minidocument
+	def FindMiniBag(self):
+		bag = self.parent
+		if bag and bag.type <> 'bag':
+			raise 'FindMiniBag: minidoc not rooted in a bag!'
+		return bag
+
 	#
 	# Private methods for summary management
 	#
@@ -857,16 +528,15 @@ class MMNode:
 			if not changed:
 				break
 			x = x.parent
-	#
+
 	def _fixsummaries(self, summaries):
 		tofix = summaries.keys()
 		for key in tofix[:]:
 			if summaries[key] == []:
 				tofix.remove(key)
 		self._updsummaries(tofix)
-	#
+
 	def _updsummaries(self, tofix):
-		##_stat('_updsummaries')
 		x = self
 		while x and tofix:
 			for key in tofix[:]:
@@ -879,9 +549,8 @@ class MMNode:
 					else:
 						x.summaries[key] = s
 			x = x.parent
-	#
+
 	def _summarize(self, name):
-		##_stat('_summarize')
 		try:
 			summary = [self.GetAttr(name)]
 		except NoSuchAttrError:
@@ -893,12 +562,6 @@ class MMNode:
 					summary.append(item)
 		summary.sort()
 		return summary
-	#
-	# method for maintaining armed status when the ChannelView is
-	# not active
-	#
-	def set_armedmode(self, mode):
-		self.armedmode = mode
 
 	#
 	# Set the correct method for generating scheduler records.
@@ -929,6 +592,8 @@ class MMNode:
 	#   calling sequence of gensr(). I cannot seem to remember it at
 	#   the moment, though).
 	# - Call EndPruneTree() to clear the garbage.
+	# Alternatively, call GenAllSR(), and then call EndPruneTree() to clear
+	# the garbage.
  	def PruneTree(self, seeknode):
 		if not seeknode or seeknode == self:
 			self._FastPruneTree()
@@ -969,7 +634,7 @@ class MMNode:
 		for c in self.children:
 			c._FastPruneTree()
 
-	#
+
 	def EndPruneTree(self):
 		del self.sync_from
 		del self.sync_to
@@ -977,7 +642,7 @@ class MMNode:
 			for c in self.wtd_children:
 				c.EndPruneTree()
 			del self.wtd_children
-	#
+
 #	def gensr(self):
 #		if self.type in ('imm', 'ext'):
 #			return self.gensr_leaf(), []
@@ -1026,7 +691,7 @@ class MMNode:
 			  ([(PLAY_DONE, arg) ]    ,[(SCHED_DONE,arg), \
 			                            (PLAY_STOP, arg)]+out1),\
 			  ([(SCHED_STOP, arg)]    ,[]) ], []
-	#
+
 	def gensr_bag(self):
 		in0, in1 = self.sync_from
 		out0, out1 = self.sync_to
@@ -1098,6 +763,79 @@ class MMNode:
 #			out1.append((SYNC, i))
 #		return in0, out0, in1, out1
 			
+	def GenAllSR(self, seeknode):
+		if not seeknode:
+			seeknode = self
+		if hasattr(seeknode, 'sractions'):
+			sractions = seeknode.sractions[:]
+			srevents = {}
+			for key, val in seeknode.srevents.items():
+				srevents[key] = val
+			return sractions, srevents
+		#
+		# First generate arcs
+		#
+		self.PruneTree(seeknode)
+		arcs = self.GetArcList()
+		arcs = self.FilterArcList(arcs)
+		for i in range(len(arcs)):
+			n1, s1, n2, s2, delay = arcs[i]
+			n1.SetArcSrc(s1, delay, i)
+			n2.SetArcDst(s2, i)
+		#
+		# Now run through the tree
+		#
+		nodelist = [self]
+		srlist = []
+		while nodelist:
+			cur_node = nodelist[0]
+			del nodelist[0]
+			cur_srlist, children = cur_node.gensr()
+			if children:
+				nodelist = nodelist + children
+			srlist = srlist + cur_srlist
+		srlist.append(([(SCHED_DONE, self)], [(SCHED_STOP, self)]))
+		sractions = [None]*len(srlist)
+		srevents = {}
+		for actionpos in range(len(srlist)):
+			events, actions = srlist[actionpos]
+			nevents = len(events)
+			sractions[actionpos] = (nevents, actions)
+			for ev in events:
+				if srevents.has_key(ev):
+					raise 'Scheduler: Duplicate event:', \
+						  SR.ev2string(ev)
+				srevents[ev] = actionpos
+		seeknode.sractions = sractions[:]
+		seeknode.srevents = {}
+		for key, val in srevents.items():
+			seeknode.srevents[key] = val
+		if self.context.editmgr:
+			self.context.editmgr.register(seeknode)
+		return sractions, srevents
+
+	def transaction(self):
+		return 1
+
+	def rollback(self):
+		pass
+
+	def commit(self):
+		print 'MMNode: deleting cached values'
+		try:
+			del self.sractions
+		except AttributeError:
+			pass
+		try:
+			del self.srevents
+		except AttributeError:
+			pass
+		try:
+			del self.prearmlists
+		except AttributeError:
+			pass
+		self.context.editmgr.unregister(self)
+
 	#
 	# Methods to handle sync arcs.
 	#
@@ -1148,7 +886,7 @@ class MMNode:
 				return 0
 			x = xnew
 		return 0
-	#
+
 	def GetWtdChildren(self):
 		return self.wtd_children
 		
@@ -1163,14 +901,17 @@ class MMNode:
 	#
 	def SetArcDst(self, side, aid):
 		self.sync_from[side].append((SYNC_DONE, aid))
-			
-		
 
+	#
+	# method for maintaining armed status when the ChannelView is
+	# not active
+	#
+	def set_armedmode(self, mode):
+		self.armedmode = mode
 
 # Make a "deep copy" of an arbitrary value
 #
 def _valuedeepcopy(value):
-	##_stat('_valuedeepcopy')
 	if type(value) == type({}):
 		copy = {}
 		for key in value.keys():
@@ -1183,8 +924,6 @@ def _valuedeepcopy(value):
 		return copy
 	# XXX Assume everything else is immutable.  Not quite true...
 	return value
-
-
 # When a subtree is copied, certain hyperlinks must be copied as well.
 # - When copying into another context, all hyperlinks within the copied
 #   subtree must be copied.
@@ -1210,7 +949,7 @@ def _copyinternalhyperlinks(src_hyperlinks, dst_hyperlinks, uidremap):
 			newlinks.append(link)
 	if newlinks:
 		dst_hyperlinks.addlinks(newlinks)
-#
+
 def _copyoutgoinghyperlinks(hyperlinks, uidremap):
 	from Hlinks import DIR_1TO2, DIR_2TO1, DIR_2WAY
 	links = hyperlinks.getall()
@@ -1232,16 +971,14 @@ def _copyoutgoinghyperlinks(hyperlinks, uidremap):
 		hyperlinks.addlinks(newlinks)
 
 #
-def modhyperlinklist(list):
-	for i in range(len(list)):
-		didwork = 0
-		(n1,i1), (n2,i2), dir, tp = list[i]
-		if type(i1) <> type('') or type(i2) <> type(''):
-			if type(i1) <> type(''):
-				i1 = `i1`
-			if type(i2) <> type(''):
-				i2 = `i2`
-			list[i] = (n1,i1), (n2,i2), dir, tp
-			didwork = 1
-		if didwork:
-			print 'modhyperlinklist: modified hyperlinks'
+# MergeList merges two lists. It also returns a status value to indicate
+# whether there was an overlap between the lists.
+#
+def MergeLists(l1, l2):
+	overlap = []
+	for i in l2:
+		if i in l1:
+			overlap.append(i)
+		else:
+			l1.append(i)
+	return l1, overlap
