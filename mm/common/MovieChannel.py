@@ -153,7 +153,7 @@ class MovieChannel(Channel):
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
 	#
-	chan_attrs = []
+	chan_attrs = ['base_window', 'base_winoff']
 	node_attrs = ['file', 'scale', 'bgcolor']
 	#
 	def init(self, (name, attrdict, player)):

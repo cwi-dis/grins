@@ -309,7 +309,7 @@ class TextChannel(Channel):
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
 	#
-	chan_attrs = []
+	chan_attrs = ['base_window', 'base_winoff']
 	node_attrs = \
 		['font', 'pointsize', 'file', 'duration', 'fgcolor', \
 		 'hicolor', 'bgcolor']
@@ -355,7 +355,7 @@ class TextChannel(Channel):
 
 		import AdefDialog
 		try:
-			rv = AdefDialog.run('Select reactive area with mouse')
+			rv = AdefDialog.anchor('Select reactive area with mouse')
 			a = self.window.getdefanchor()
 			if rv == 0:
 				a = (a[0], a[1], [])
