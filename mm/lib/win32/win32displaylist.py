@@ -304,7 +304,7 @@ class _DisplayList:
 			if not self._overlap(region, entry[2]):
 				return
 			oldmode = dc.SetBkMode(win32con.TRANSPARENT)
-			oldpen = dc.SelectObjectFromHandle(Sdk.GetStockObject(win32con.NULL_PEN))
+			oldpen = dc.SelectStockObject(win32con.NULL_PEN)
 			oldbrush = dc.SelectObject(entry[1])
 			dc.Rectangle(entry[2])
 			dc.SelectObject(oldbrush)
