@@ -1,6 +1,7 @@
 from Channel import *
 from MMExc import *			# exceptions
 from AnchorDefs import *
+import windowinterface			# for windowinterface.error
 
 class ImageChannel(ChannelWindow):
 	node_attrs = ChannelWindow.node_attrs + ['scale', 'scalefilter']
@@ -11,18 +12,25 @@ class ImageChannel(ChannelWindow):
 	def __repr__(self):
 		return '<ImageChannel instance, name=' + `self._name` + '>'
 
+	def errormsg(self, msg):
+		parms = self.armed_display.fitfont('Times-Roman', msg)
+		w, h = self.armed_display.strsize(msg)
+		self.armed_display.setpos((1.0 - w) / 2, (1.0 - h) / 2)
+		self.armed_display.fgcolor(255, 0, 0)		# red
+		box = self.armed_display.writestr(msg)
+
 	def do_arm(self, node):
+		if node.type != 'ext':
+			self.errormsg('node must be external')
+			return 1
 		f = self.getfilename(node)
 		# remember coordinates for anchor editing (and only for that!)
 		try:
 			self._arm_imbox = self.armed_display.display_image_from_file(f)
-		except IOError, msg:
-			msg = f + ':\n' + msg[1]
-			parms = self.armed_display.fitfont('Times-Roman', msg)
-			w, h = self.armed_display.strsize(msg)
-			self.armed_display.setpos((1.0 - w) / 2, (1.0 - h) / 2)
-			self.armed_display.fgcolor(255, 0, 0)		# red
-			box = self.armed_display.writestr(msg)
+		except (windowinterface.error, IOError), msg:
+			if type(msg) == type(()):
+				msg = msg[1]
+			self.errormsg(f + ':\n' + msg)
 			return 1
 		try:
 			alist = node.GetRawAttr('anchorlist')
