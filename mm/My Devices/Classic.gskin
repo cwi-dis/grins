@@ -1,11 +1,12 @@
 image Classic.gif
 display 0 0 240 268
-play rect 13 272 14 27			# Play Icon
-pause rect 34 272 14 27			# Pause Icon
-stop rect 55 272 14 27			# Stop
-exit rect 141 275 17 14			# Exit Button
-open rect 90 272 14 27			# Open File Button
+play rect 12 272 18 18			# Play Icon
+pause rect 32 272 18 18			# Pause Icon
+stop rect 54 272 18 18			# Stop
+exit rect 143 275 18 18			# Exit Button
+open rect 86 272 18 18			# Open File Button
+skin rect 110 272 18 18
+tab rocker right
+activate rocker center
 # unsupported buttons:
-#    ReOpen button
-#    Select Skin button
-
+#    ReOpen button (used for skin)
