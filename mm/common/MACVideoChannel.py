@@ -24,6 +24,7 @@ class VideoChannel(ChannelWindow):
 		self.play_movie = None
 		self.has_callback = 0
 		self.idleprocactive = 0
+		self._paused = 0
 		Qt.EnterMovies()
 		
 	def __del__(self):
@@ -73,7 +74,7 @@ class VideoChannel(ChannelWindow):
 			self.play_movie = None
 			if self.window:
 				self.window.setredrawfunc(None)
-			windowinterface.cancelidleproc(self._playsome)
+			self.fixidleproc()
 			self.playdone(0)
 			
 	def do_play(self, node):
@@ -101,7 +102,7 @@ class VideoChannel(ChannelWindow):
 		self.play_movie.StartMovie()
 		self.window.setredrawfunc(self.redraw)
 		
-		windowinterface.setidleproc(self._playsome)
+		self.fixidleproc()
 		
 	def _scalerect(self, (sl, st, sr, sb), (ml, mt, mr, mb)):
 		maxwidth, maxheight = sr-sl, sb-st
@@ -152,18 +153,29 @@ class VideoChannel(ChannelWindow):
 		self.arm_movie = None
 		if self.play_movie:
 			self.play_movie.StopMovie()
-			windowinterface.cancelidleproc(self._playsome)
 			self.play_movie = None
+			self.fixidleproc()
 
 	def playstop(self):
 		if debug: print 'VideoChannel: playstop'
 		if self.play_movie:
 			self.play_movie.StopMovie()
-			windowinterface.cancelidleproc(self._playsome)
+			self.play_movie = None
+			self.fixidleproc()
 		self.playdone(1)
-		self.play_movie = None
 		if self.window:
 			self.window.setredrawfunc(None)
 
+	def fixidleproc(self):
+		wantone = not not ((not self._paused) and self.play_movie)
+		if wantone == self.idleprocactive:
+			return
+		if wantone:
+			windowinterface.setidleproc(self._playsome)
+		else:
+			windowinterface.cancelidleproc(self._playsome)
+		self.idleprocactive = wantone
+		
 	def setpaused(self, paused):
-		pass # XXXX pause!
+		self._paused = paused
+		self.fixidleproc()
