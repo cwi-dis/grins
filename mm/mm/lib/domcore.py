@@ -155,21 +155,6 @@ class Element(Node):
 		  s = s + level*tab + '</' + tag + '>' + eol
 		  return s              
 
-	def bak__cmp__(self,other) :
-		# compares using attribute uid
-		print "Element compare", self
-		print "Element compare", len(self.attrdict)
-		print "Element compare", self.getAttribute('uid')
-		uidSelf = int(self.getAttribute('uid'))
-		uidOther = int(self.getAttribute('uid'))
-		if uidSelf < uidOther : 
-			return -1
-		elif uidSelf == uidOther :
-			return 0
-		elif uidSelf > uidOther :
-			return 1
-
-
 class Attr(Node):
 	def __init__(self, name, value=None):
 		Node.__init__(self, ATTRIBUTE_NODE)
