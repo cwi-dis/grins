@@ -656,9 +656,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				cwd = os.path.join(os.getcwd(), cwd)
 		else:
 			cwd = os.getcwd()
-		self.prune = 1
+		title = 'Save GRiNS project:'
 		if prune:
 			filetypes = ['application/smil']
+			title = 'Save SMIL file:'
+			self.prune = 1
 		else:
 			filetypes = ['application/x-grins-project', 'application/smil']
 ##		import settings
@@ -668,7 +670,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if self.filename:
 			utype, host, path, params, query, fragment = urlparse(self.filename)
 			dftfilename = os.path.split(MMurl.url2pathname(path))[-1]
-		windowinterface.FileDialog('Save SMIL file:', cwd, filetypes,
+		windowinterface.FileDialog(title, cwd, filetypes,
 					   dftfilename, self.saveas_okcallback, None)
 
 	def export_okcallback(self, filename):
