@@ -248,13 +248,8 @@ class MMNodeContext:
 			self._movetimestoobj(child, which)
 
 	def changedtimes(self):
-		self._changedtimes(self.getroot())
+		self.getroot().ClearTimesObjects()
 		
-	def _changedtimes(self, node):
-		node.ClearTimesObjects()
-		for c in node.GetChildren():
-			c.ClearTimesObjects()
-
 	# compute the mime type according to the specified user mime type,
 	# and the url if no specified
 	def computeMimeType(self, nodeType, url = None, specifiedMimeType = None):
@@ -2890,6 +2885,9 @@ class MMNode(MMTreeElement):
 
 	def ClearTimesObjects(self):
 		self.timing_info_dict = {}
+		for c in self.GetChildren():
+			c.ClearTimesObjects()
+
 
 	#
 	# set/get animated attribute
