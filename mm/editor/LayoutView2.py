@@ -1125,13 +1125,98 @@ class LayoutView2(LayoutViewDialog2):
 		self.applyAttrList(list)
 
 	def onDistributeHorizontally(self):
-		if len(self.currentSelectedNodeList) <= 1:
+		if debugAlign: print 'distribute horizontally : ',self.currentSelectedNodeList
+		nodeNumber = len(self.currentSelectedNodeList)
+		if nodeNumber <= 1:
 			return
 
+		# to determinate the space between min and the max value: referenceMinValue and referenceMaxValue
+		# to determinate the somme of node sizes: som
+		# sort the elements in the right order (XXX not optimized)
+		referenceMinValue = None		
+		referenceMaxValue = None
+		som = 0
+		sortedList = []
+		for node in self.currentSelectedNodeList:
+			l,t,w,h = node.getPxGeom()
+			if referenceMinValue == None or l < referenceMinValue:
+				referenceMinValue = l
+			if referenceMaxValue == None or l+w > referenceMaxValue:
+				referenceMaxValue = l+w
+			som = som+w
+			sortedList.append(node)
+		self.__sortAttr = 'left'
+		sortedList.sort(self.__cmpNode)
+
+		# determinate the space between the different nodes
+		space = (referenceMaxValue-referenceMinValue-som)/(nodeNumber-1)
+		
+		# make a list of node/attr to change
+		list = []
+		firstNodeRef = sortedList[0]
+		l,t,w,h = firstNodeRef.getPxGeom()
+		posRef = l+w
+		for nodeRef in sortedList[1:]:
+			l,t,w,h = nodeRef.getPxGeom()
+			l = posRef+space
+			posRef = l+w
+			# make the new geom
+			self.__makeAttrListToApplyFromGeom(nodeRef, (l,t,w,h), list)
+		self.applyAttrList(list)
+
 	def onDistributeVertically(self):
-		if len(self.currentSelectedNodeList) <= 1:
+		if debugAlign: print 'distribute vertically : ',self.currentSelectedNodeList
+		nodeNumber = len(self.currentSelectedNodeList)
+		if nodeNumber <= 1:
 			return
-	
+
+		# to determinate the space between min and the max value: referenceMinValue and referenceMaxValue
+		# to determinate the somme of node sizes: som
+		# sort the elements in the right order (XXX not optimized)
+		referenceMinValue = None		
+		referenceMaxValue = None
+		som = 0
+		sortedList = []
+		for node in self.currentSelectedNodeList:
+			l,t,w,h = node.getPxGeom()
+			if referenceMinValue == None or t < referenceMinValue:
+				referenceMinValue = t
+			if referenceMaxValue == None or t+h > referenceMaxValue:
+				referenceMaxValue = t+h
+			som = som+h
+			sortedList.append(node)
+		self.__sortAttr = 'top'
+		sortedList.sort(self.__cmpNode)
+
+		# determinate the space between the different nodes
+		space = (referenceMaxValue-referenceMinValue-som)/(nodeNumber-1)
+		
+		# make a list of node/attr to change
+		list = []
+		firstNodeRef = sortedList[0]
+		l,t,w,h = firstNodeRef.getPxGeom()
+		posRef = t+h
+		for nodeRef in sortedList[1:]:
+			l,t,w,h = nodeRef.getPxGeom()
+			t = posRef+space
+			posRef = t+h
+			# make the new geom
+			self.__makeAttrListToApplyFromGeom(nodeRef, (l,t,w,h), list)
+		self.applyAttrList(list)
+
+	# this method will be used by the sort method
+	def __cmpNode(self, node1, node2):
+		l1,t1,w1,h1 = node1.getPxGeom()
+		l2,t2,w2,h2 = node2.getPxGeom()
+		if self.__sortAttr == 'left':
+			if l1 < l2:
+				return -1
+		elif self.__sortAttr == 'top':
+			if t1 < t2:
+				return -1
+			
+		return 1
+			
 	#
 	#
 	#
