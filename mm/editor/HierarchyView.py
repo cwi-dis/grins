@@ -1509,10 +1509,10 @@ def collapsenode(node):
 		ctx.forgetnode(child.GetUID())
 	node.children = []
 
-def writenodes(node):
+def writenodes(node, evallicense=0):
 	if node.GetType() in MMNode.interiortypes:
 		for child in node.children:
-			writenodes(child)
+			writenodes(child, evallicense)
 	elif hasattr(node, 'tmpfile'):
 		url = MMAttrdefs.getattr(node, 'file')
 		if not url:
