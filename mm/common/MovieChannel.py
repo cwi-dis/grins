@@ -15,7 +15,6 @@ import GL
 
 import VFile
 
-from ArmStates import *
 
 import GLLock
 
@@ -196,8 +195,6 @@ class MovieChannel(Channel):
 		self = Channel.init(self, name, attrdict, player)
 		self.window = MovieWindow().init(name, attrdict, self)
 		self.armed_node = None
-		#DEBUG: to spoof Jack's scheduler
-		self.dummy_event_id = None
 		import mm, moviechannel
 		self.threads = mm.init(moviechannel.init(), \
 			  0, self.deviceno, None)
@@ -268,11 +265,16 @@ class MovieChannel(Channel):
 		self.window.setfile(filename, node, 0)
 		self.do_arm(node)
 	#
+	def did_arm(self):
+		return (self.armed_node <> None)
+	#
 	def play(self, node, callback, arg):
 		self.node = node
 		self.cb = (callback, arg)
 		if not self.is_showing() or not self.window.vfile:
-			dummy = self.player.enter(node.t1-node.t0, 0, \
+			import Duration
+			duration = Duration.get(node)
+			dummy = self.player.enter(duration, 0, \
 				self.done, None)
 			return
 	        if node <> self.armed_node:
@@ -282,7 +284,6 @@ class MovieChannel(Channel):
 		else:
 ##			self.window.setfile_2()
 			self.window.popup()
-		node.setarmedmode(ARM_PLAYING)
 		self.armed_node = None
 ##		self.starttime = self.player.timefunc()
 ##		self.played = self.skipped = 0
@@ -293,26 +294,16 @@ class MovieChannel(Channel):
 			  self.done, None)
 		glwindow.devregister(`self.deviceno`+':'+`mm.stopped`, \
 			  stopped, 0)
-		#DEBUG: enter something in queue to fool scheduler
-		self.dummy_event_id = self.player.enter(1000000, 1, self.done, None)
 		self.threads.play()
-		dummy = \
-		   self.player.enter(0.001, 1, self.player.opt_prearm, node)
+		self.player.arm_ready(self.name)
 	#
 	#DEBUG: remove dummy entry from queue and call proper done method
 	def done(self, arg):
-		if self.dummy_event_id:
-			try:
-				self.player.cancel(self.dummy_event_id)
-			except ValueError:
-				# probably already removed by someone else
-				pass
-			self.dummy_event_id = None
 		if not self.node:
 			# apparently someone has already called stop()
 			return
 		Channel.done(self, arg)
-		self.node = None
+		#self.node = None
 	#
 	def stop(self):
 		if GLLock.gl_lock:
@@ -347,6 +338,10 @@ class MovieChannel(Channel):
 	def reset(self):
 		self.window.clear()
 		self.node = None # Attempt to fix obscure bug --Guido
+	#
+	def clear(self):
+		print 'MOVIECHANNEL CLEAR!'
+		self.reset()
 	#
 	def getduration(self, node):
 		import MovieDuration

@@ -16,7 +16,6 @@ import FontStuff
 from Channel import Channel
 from ChannelWindow import ChannelWindow
 
-from ArmStates import *
 from AnchorDefs import *
 
 
@@ -114,6 +113,7 @@ class TextWindow(ChannelWindow):
 			gl.ringbell()
 			return
 		#
+		self.draw_tag_filled(hits[0])  # XXXX Try by Jack
 		name = hits[0][4]
 		#
 		al2 = []
@@ -127,7 +127,7 @@ class TextWindow(ChannelWindow):
 		#
 		if rv == 0 and len(al2) == 1 and al2[0][A_TYPE] == ATYPE_PAUSE:
 			self.channel.haspauseanchor = 0
-			self.channel.done(0)
+			self.channel.pauseanchor_done(0)
 	#
 	def resetfont(self):
 		# Get the default colors
@@ -330,6 +330,18 @@ class TextWindow(ChannelWindow):
 			gl.v2i(x0, y1)
 			gl.endclosedline()
 	#
+	# Draw the given anchor item
+	# XXXX try  by Jack.
+	def draw_tag_filled(self, item):
+		boxes = self.tag_to_boxes(item)
+		for (x0, y0, x1, y1) in boxes:
+			gl.bgnpolygon()
+			gl.v2i(x0, y0+1)
+			gl.v2i(x1, y0+1)
+			gl.v2i(x1, y1)
+			gl.v2i(x0, y1)
+			gl.endpolygon()
+	#
 	# Convert an anchor to a set of boxes
 	def tag_to_boxes(self, item):
 		f = self.font.getstrwidth
@@ -524,6 +536,9 @@ class TextChannel(Channel):
 	def clear(self):
 		self.window.clear()
 	#
+	def did_prearm(self):
+		return (self.arm_node <> None)
+	#
 	# Play a node (called from Player)
 	#
 	def play(self, node, callback, arg):
@@ -532,8 +547,6 @@ class TextChannel(Channel):
 		self.noteanchors(node)
 		self.window.redraw()
 		Channel.play(self, node, callback, arg)
-		dummy = \
-		    self.player.enter(0.001, 1, self.player.opt_prearm, node)
 	#
 	# Define an anchor (called from AnchorEdit)
 	#
@@ -582,6 +595,7 @@ class TextChannel(Channel):
 	# Reset the channel to a clear status
 	#
 	def reset(self):
+		self.arm_node = None
 		self.window.clear()
 	#
 	# Arm (called from Channel)
@@ -596,7 +610,10 @@ class TextChannel(Channel):
 			self.window.settext_arm(node)
 			self.arm_node = None
 		else:
-			print 'TextChannel: node not armed'
+			self.arm_node = None
+			if self.is_showing():
+				print 'TextChannel '+self.name+\
+					  ': node not armed'
 			self.window.settext(self.getstring(node), node)
 	#
 	def getstring(self, node):

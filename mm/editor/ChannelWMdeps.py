@@ -5,7 +5,6 @@
 from MMExc import *
 import MMAttrdefs
 import time
-from ArmStates import *
 
 
 prearm_disabled = 0
@@ -121,14 +120,16 @@ class Channel:
 	def arm(self, node):
 		pass
 
+	# This function should return true if there is a prearm outstanding.
+	def did_prearm(self):
+		return 0
+
 	# This method calls the (probably overridden) arm method and times it.
 
 	def arm_and_measure(self, node):
 		if prearm_disabled: return
 		now = time.millitimer()
-		node.setarmedmode(ARM_ARMING)
 		self.arm(node)
-		node.setarmedmode(ARM_ARMED)
 		duration = (time.millitimer() - now)/1000.0
 		node.SetAttr('arm_duration', duration)
 		print 'Arm-time now', duration
@@ -138,10 +139,8 @@ class Channel:
 			node.prearm_event = None
 			del node.prearm_event
 			return
-		node.setarmedmode(ARM_ARMING)
 		node.prearm_event = None
 		self.arm(node)
-		node.setarmedmode(ARM_ARMED)
 
 	def clear(self):
 		# Sanity checks:
@@ -157,7 +156,6 @@ class Channel:
 	# Start playing a node.
 
 	def play(self, node, callback, arg):
-		node.setarmedmode(ARM_PLAYING)
 		secs = self.getduration(node)
 		self.cb = (callback, arg)
 		self.node = node
@@ -166,15 +164,23 @@ class Channel:
 	# Function called when an even't time is up.
 
 	def done(self, dummy):
-		self.node.setarmedmode(ARM_NONE)
 		self.qid = None
 		if self.haspauseanchor and not self.player.ignore_pauses:
 			return
 		callback, arg = self.cb
+		if not self.did_prearm():
+			self.player.arm_ready(self.name)
 		apply(callback, arg)
 		if self.autoanchor:
 			rv = self.player.anchorfired(self.node, [self.autoanchor])
 		self.autoanchor = None
+	# Pauseanchor_done is similar to done, but should also cancel the
+	# possible outstanding 'done' event.
+	def pauseanchor_done(self, dummy):
+		if self.qid:
+			self.player.cancel(self.qid)
+			self.qid = 0
+		self.done(dummy)
 
 	# Setting the playback rate to 0.0 freezes the channel.
 	# Ignored by null channels -- the timer queue already
@@ -187,6 +193,7 @@ class Channel:
 
 	def stop(self):
 		if self.qid <> None:
+			print 'cancel', self.name, self.qid
 			self.player.cancel(self.qid)
 			self.qid = None
 

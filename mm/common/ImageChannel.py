@@ -11,7 +11,6 @@ import fl
 from Channel import Channel
 from ChannelWindow import ChannelWindow
 
-from ArmStates import *
 from AnchorDefs import *
 
 import FileCache
@@ -134,12 +133,14 @@ class ImageWindow(ChannelWindow):
 			print 'Mouse: No anchor selected'
 			gl.ringbell()
 			return
+		for a in al2:
+			self.drawanchor(a[A_ARGS], 1)
 		rv = self.player.anchorfired(self.ninfo.node, al2)
 		# If this was a paused anchor and it didn't fire
 		# stop showing the node
 		if rv == 0 and len(al2) == 1 and al2[0][A_TYPE] == ATYPE_PAUSE:
 			self.channel.haspauseanchor = 0
-			self.channel.done(0)
+			self.channel.pauseanchor_done(0)
 	#
 	def armimage(self, filename_arg, node):
 		self.arm_ninfo = ImageNodeInfo().init()
@@ -275,9 +276,8 @@ class ImageWindow(ChannelWindow):
 				gl.charstr(self.ninfo.error)
 		# Draw anchors even if the image can't be drawn
 		if self.anchors:
-			gl.RGBcolor(self.ninfo.hicolor)
 			for dummy, tp, a in self.anchors:
-				self.drawanchor(a)
+				self.drawanchor(a, 0)
 		# And redraw current defining anchor, if needed
 		if self.newanchor:
 			self.sqqredraw()
@@ -285,20 +285,27 @@ class ImageWindow(ChannelWindow):
 	#
 	# Subroutine to draw an anchor
 	#
-	def drawanchor(self, a):
+	def drawanchor(self, a, filled):
 		if len(a) <> 4:
 			return
+		gl.RGBcolor(self.ninfo.hicolor)
 		x0, y0, x1, y1 = a[0], a[1], a[2], a[3]
 		x0 = int(x0 * self.ninfo.mousescale + self.ninfo.xcorner)
 		x1 = int(x1 * self.ninfo.mousescale + self.ninfo.xcorner)
 		y0 = int(y0 * self.ninfo.mousescale + self.ninfo.ycorner)
 		y1 = int(y1 * self.ninfo.mousescale + self.ninfo.ycorner)
-		gl.bgnclosedline()
+		if filled:
+			gl.bgnpolygon()
+		else:
+			gl.bgnclosedline()
 		gl.v2i(x0, y0)
 		gl.v2i(x0, y1)
 		gl.v2i(x1, y1)
 		gl.v2i(x1, y0)
-		gl.endclosedline()
+		if filled:
+			gl.endpolygon()
+		else:
+			gl.endclosedline()
 
 
 # XXX Make the image channel class a derived class from ImageWindow?!

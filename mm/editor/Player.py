@@ -121,6 +121,10 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 			self.ignore_pauses = (not self.ignore_pauses)
 		elif i == 5:
 			self.sync_cv = (not self.sync_cv)
+		elif i == 6:
+			self.pause_minidoc = (not self.pause_minidoc)
+		elif i == 7:
+			raise 'Crash requested by user'
 		else:
 			print 'Player: Option menu: funny choice', i
 		self.makeomenu()
@@ -128,34 +132,6 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 	def dummy_callback(self, *dummy):
 		pass
 	#
-	def timer_callback(self, obj, arg):
-		gap = None
-		while self.queue:
-			when, prio, action, argument = self.queue[0]
-			now = self.timefunc()
-			delay = when - now
-			if delay < -0.1:
-				self.statebutton.lcol = GL.MAGENTA
-			else:
-				self.statebutton.lcol = self.statebutton.col2
-			if delay > 0.0:
-				break
-			del self.queue[0]
-			void = apply(action, argument)
-		if not self.queue:
-			if self.rate:
-				# We were playing, but not anymore.
-				self.setrate(0.0)
-				self.showstate()
-		if not self.queue or self.rate == 0.0:
-			delay = 10000.0		# Infinite
-			now = self.timefunc()
-		rtevent = self.rtpool.bestfit(now, delay)
-		if rtevent:
-			dummy, dummy2, action, argument = rtevent
-			dummy = apply(action, argument)
-		self.updatetimer()
-		self.showtime()
 	#
 	def showstate(self):
 		if not self.playing:
@@ -184,9 +160,9 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 			self.statebutton.lcol = self.statebutton.col2
 		else:
 			self.statebutton.lcol = GL.YELLOW
-		if self.msec_origin == 0:
-			self.statebutton.label = '--:--'
-			return
+		#if self.msec_origin == 0:
+		#	self.statebutton.label = '--:--'
+		#	return
 		now = int(self.timefunc())
 		label = `now/60` + ':' + `now/10%6` + `now % 10`
 		if self.statebutton.label <> label:
@@ -215,6 +191,11 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 			self.omenubutton.addto_menu('\xa4 Keep Timechart in sync')
 		else:
 			self.omenubutton.addto_menu('   Keep Timechart in sync')
+		if self.pause_minidoc:
+			self.omenubutton.addto_menu('\xa4 autopause minidoc')
+		else:
+			self.omenubutton.addto_menu('   autopause minidoc')
+		self.omenubutton.addto_menu('   Crash CMIF')
 
 	def makemenu(self):
 		self.cmenubutton.set_menu('')
