@@ -1136,16 +1136,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if mediaWidth == 0: mediaWidth = 100
 				if mediaHeight == 0: mediaHeight = 100
 		
-			# we take account of subregion positioning
-			width = _minsize(node.attrdict.get('left'),
-					 None,
-					 node.attrdict.get('right'),
-					 mediaWidth)
-			height = _minsize(node.attrdict.get('top'),
-					 None,
-					 node.attrdict.get('bottom'),
-					 mediaHeight)
-					 
+			width = mediaWidth
+			height = mediaHeight
+			
 			# we take account of registrationpoints
 			regPointId = attributes.get('regPoint')
 			regAlignId = attributes.get('regAlign')
@@ -1176,12 +1169,22 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				height = _minsizeRp(regPoint['top'],
 						 regPoint['bottom'],
 					         regAlignH1, regAlignH2, height)
+					         
+			# we take account of subregion positioning
+			width = _minsize(node.attrdict.get('left'),
+					 None,
+ 					 node.attrdict.get('right'),
+					 width)
+			height = _minsize(node.attrdict.get('top'),
+					 None,
+					 node.attrdict.get('bottom'),
+					 height)
 
-				if ch['minwidth'] < width:
-					ch['minwidth'] = width
-				if ch['minheight'] < height:
-					ch['minheight'] = height
-
+			if ch['minwidth'] < width:
+				ch['minwidth'] = width
+			if ch['minheight'] < height:
+				ch['minheight'] = height
+					 
 		# clip-* attributes for video
 		clip_begin = attributes.get('clipBegin')
 		if clip_begin:
