@@ -1,3 +1,8 @@
+2000-02-21    <sjoerd.mullender@oratrix.nl>
+
+	* lib\MMNode.py (MMNode.PruneTree): Fixed a crash when looping
+	interior nodes.
+
 2000-02-17    <sjoerd.mullender@oratrix.nl>
 
 	* win32\src\GRiNSRes\GRiNSRes.rc: Set want_return flag in
