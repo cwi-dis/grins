@@ -622,6 +622,7 @@ class OptionsCtrl(AttrCtrl):
 		self._wnd.HookCommand(self.OnReset,self._resid[2])
 	
 	def setoptions(self,list,val):
+		print 'setoptions',val,list
 		if val not in list:
 			val = list[0]
 		ix=list.index(val)
@@ -631,14 +632,21 @@ class OptionsCtrl(AttrCtrl):
 			self._options.setcursel(ix)
 		
 	def setvalue(self, val):
-		pass
+		if not self._initctrl: return
+		list = self._attr.getoptions()
+		if val not in list:
+			raise error, 'value not in list'
+		ix=list.index(val)
+		self._options.setcursel(ix)
+
 	def getvalue(self):
 		if self._initctrl:
 			return self._options.getvalue() 
 		return self._attr.getcurrent()
 
 	def OnReset(self,id,code):
-		if self._attr:self._attr.reset_callback()
+		if self._attr:
+			self._attr.reset_callback()
 
 	def OnCombo(self,id,code):
 		self.sethelp()
@@ -749,8 +757,8 @@ class StringCtrl(AttrCtrl):
 		self._attrval.attach_to_parent()
 		self._attrname.settext(self._attr.getlabel())
 		self._attrval.settext(self._attr.getcurrent())
-		self._wnd.HookCommand(self.OnReset,self._resid[2])
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
+		self._wnd.HookCommand(self.OnReset,self._resid[2])
 
 	def setvalue(self, val):
 		if self._initctrl:
@@ -762,7 +770,8 @@ class StringCtrl(AttrCtrl):
 		return self._attrval.gettext()
 
 	def OnReset(self,id,code):
-		if self._attr:self._attr.reset_callback()
+		if self._attr:
+			self._attr.reset_callback()
 
 	def OnEdit(self,id,code):
 		if code==win32con.EN_SETFOCUS:
@@ -913,12 +922,15 @@ class ScreenLayoutContext:
 
 	def getboundingbox(self):
 		return (0,0,self._xmax,self._ymax)
+
+	def getunits(self):
+		return self._units
+
 	def getxscale(self):
 		return self._xscale
 	def getyscale(self):
 		return self._yscale
-	def getunits(self):
-		return self._units
+
 
 	def fromlayout(self,box):
 		if not box: return box
@@ -986,7 +998,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		return self._layoutcontext.tolayout(box)
 	
 	def setvalue(self, attr, val):
-		if self._initdialog: return
+		if not self._initdialog: return
 		self._cd[attr].setvalue(val)
 		if self.islayoutattr(attr):
 			self.setvalue2layout(val)
@@ -1009,7 +1021,6 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 
 	def getcurrentbox(self):
 		a=self._al[0]
-		self._cd[a].sethelp()
 		val=a.getcurrent()
 		if not val:
 			box=None
@@ -1028,7 +1039,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 	
 	def islayoutattr(self,attr):
 		if self._group:
-			return attr==self._group.islayoutattr(attr)
+			return self._group.islayoutattr(attr)
 		else:
 			return 0
 
@@ -1039,21 +1050,6 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 			box=self.fromlayout(box)
 			a=self._al[0]
 			self._cd[a].setvalue('%d %d %d %d' % box)
-
-
-class SingleAttrLayoutPageXXXXXX(LayoutPage):
-	def __init__(self,form,attr,layoutcontext=None):
-		LayoutPage.__init__(self,form,layoutcontext)
-		self._al.append(attr)
-
-	# creation overrides
-	def getpageresid(self):
-		return grinsRC.IDD_EDITRECTATTR1
-	def createctrls(self):
-		a=self._al[0]
-		self._title=a.getlabel()
-		self._cd[a]=StringCtrl(self,self._al[0],(grinsRC.IDC_EDIT1,grinsRC.IDC_EDIT2,grinsRC.IDUC_RESET))
-
 
 
 class PosSizeLayoutPage(LayoutPage):
@@ -1198,22 +1194,21 @@ class InfoGroup(AttrGroup):
 		exec 'ids=(grinsRC.IDC_EDIT%d,grinsRC.IDC_EDIT%d,grinsRC.IDUC_RESET%d)' % (ix*2+1,ix*2+2,ix+1)
 		return ids
 	def getpageresid(self):
-		return grinsRC.IDD_EDITSTRINGATTR2
+		n=len(self._al)
+		exec 'id=grinsRC.IDD_EDITATTR_S%d' % n
+		return id
 
 class InfoGroup2(InfoGroup):
 	data=attrgrsdict['infogroup2']
 	def __init__(self):
 		InfoGroup.__init__(self,InfoGroup2.data)
-	def getpageresid(self):
-		return grinsRC.IDD_EDITSTRINGATTR3
 
 class InfoGroup3(InfoGroup):
 	data=attrgrsdict['infogroup3']
 	def __init__(self):
 		InfoGroup.__init__(self,InfoGroup3.data)
-	def getpageresid(self):
-		return grinsRC.IDD_EDITSTRINGATTR4
 
+# base_winoff
 class LayoutGroup(AttrGroup):
 	data=attrgrsdict['base_winoff']
 	def __init__(self,data=None):
@@ -1230,8 +1225,9 @@ class LayoutGroup(AttrGroup):
 	def getpageclass(self):
 		return LayoutPage
 	def islayoutattr(self,attr):
-		return attr.getname()=='base_winoff'
+		return (attr.getname()=='base_winoff')
 
+# base_winoff, units
 class LayoutGroup2(LayoutGroup):
 	data=attrgrsdict['base_winoff_units']
 	def __init__(self):
@@ -1261,7 +1257,7 @@ class SubregionGroup(AttrGroup):
 	def getpageclass(self):
 		return PosSizeLayoutPage
 	def islayoutattr(self,attr):
-		return attr.getname()=='subregionxy' or attr.getname()=='subregionwh'
+		return (attr.getname()=='subregionxy') or (attr.getname()=='subregionwh')
 		
 		
 ############################
@@ -1271,6 +1267,7 @@ groupsui={
 	'infogroup':InfoGroup,
 	'infogroup2':InfoGroup2,
 	'infogroup3':InfoGroup3,
+
 	'base_winoff':LayoutGroup,
 	'base_winoff_units':LayoutGroup2,
 	'subregion':SubregionGroup,
