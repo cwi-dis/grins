@@ -221,12 +221,12 @@ class SVGRenderer:
 ####################################
 # test
 
-import wingdi, winuser, winkernel
+import wingdi
 import win32con
 
 def createDDSurface():
 	# create a ddraw surface with this size
-	import ddraw
+	import ddraw, winuser
 	ddrawobj = ddraw.CreateDirectDraw()
 	ddrawobj.SetCooperativeLevel(winuser.GetDesktopWindow(), ddraw.DDSCL_NORMAL)
 	ddsd = ddraw.CreateDDSURFACEDESC()
@@ -237,7 +237,7 @@ def createDDSurface():
 	return ddrawobj, frontBuffer
 
 def Render(source, msecwait=3000):
-	import svgwin
+	import svgwin, winuser, winkernel
 	svgdoc = svgdom.SvgDocument(source)
 	svggraphics = svgwin.SVGWinGraphics()
 	ddrawobj, dds = createDDSurface()
