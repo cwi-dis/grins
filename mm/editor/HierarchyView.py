@@ -837,6 +837,9 @@ class Object:
 		import AnchorEdit
 		AnchorEdit.showanchoreditor(self.mother.toplevel, self.node)
 
+	def hyperlinkcall(self):
+		self.mother.toplevel.links.finish_link(self.node)
+
 	def focuscall(self):
 		self.mother.toplevel.channelview.globalsetfocus(self.node)
 
@@ -952,7 +955,8 @@ class Object:
 		('i', 'Node info...', infocall), \
 		('a', 'Node attr...', attrcall), \
 		('e', 'Edit contents...', editcall), \
-		('t', 'Edit anchors...%l', anchorcall), \
+		('t', 'Edit anchors...', anchorcall), \
+		('l', 'Finish hyperlink%l', hyperlinkcall), \
 		('f', 'Push focus', focuscall), \
 		('z', 'Zoom out', zoomoutcall), \
 		('.', 'Zoom here', zoomherecall), \
