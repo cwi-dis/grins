@@ -30,40 +30,43 @@ enum { false, true, };
 // our client context interfaces
 #include "rmapyclient.h"
 
-class ClientContext : public IPyClientContext
+class AuthenticationManager : public IPyAuthenticationManager
 	{
 	public:
-	ClientContext();
-	~ClientContext();
+	AuthenticationManager();
+	~AuthenticationManager();
 
 	// IUnknown
     STDMETHOD (QueryInterface ) (THIS_ REFIID ID, void** ppInterfaceObj);
     STDMETHOD_(UINT32, AddRef ) (THIS);
     STDMETHOD_(UINT32, Release) (THIS);
 
+    // IRMAAuthenticationManager
+    STDMETHOD(HandleAuthenticationRequest) (IRMAAuthenticationManagerResponse* pResponse);
+	
 	private:
     LONG m_cRef;
 	};
 
-HRESULT STDMETHODCALLTYPE CreateClientContext(
-			IPyClientContext **ppI)
+HRESULT STDMETHODCALLTYPE CreateAuthenticationManager(
+			IPyAuthenticationManager **ppI)
 	{
-	*ppI = new ClientContext();
+	*ppI = new AuthenticationManager();
 	return S_OK;
 	}
 
 
-ClientContext::ClientContext()
+AuthenticationManager::AuthenticationManager()
 :	m_cRef(1)
 	{
 	}
 
-ClientContext::~ClientContext()
+AuthenticationManager::~AuthenticationManager()
 	{
 	}
 
 STDMETHODIMP
-ClientContext::QueryInterface(
+AuthenticationManager::QueryInterface(
     REFIID riid,
     void **ppvObject)
 	{
@@ -71,13 +74,13 @@ ClientContext::QueryInterface(
 	}
 
 STDMETHODIMP_(UINT32)
-ClientContext::AddRef()
+AuthenticationManager::AddRef()
 	{
     return  InterlockedIncrement(&m_cRef);
 	}
 
 STDMETHODIMP_(UINT32)
-ClientContext::Release()
+AuthenticationManager::Release()
 	{
     ULONG uRet = InterlockedDecrement(&m_cRef);
 	if(uRet==0) 
@@ -86,3 +89,13 @@ ClientContext::Release()
 		}
     return uRet;
 	}
+
+STDMETHODIMP 
+AuthenticationManager::HandleAuthenticationRequest
+	(
+    IRMAAuthenticationManagerResponse* pResponse
+	)
+	{
+	return PNR_OK;
+	}
+

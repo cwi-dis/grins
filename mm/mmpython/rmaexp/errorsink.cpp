@@ -30,40 +30,55 @@ enum { false, true, };
 // our client context interfaces
 #include "rmapyclient.h"
 
-class ClientContext : public IPyClientContext
+class ErrorSink : public IPyErrorSink
 	{
 	public:
-	ClientContext();
-	~ClientContext();
+	ErrorSink();
+	~ErrorSink();
 
 	// IUnknown
     STDMETHOD (QueryInterface ) (THIS_ REFIID ID, void** ppInterfaceObj);
     STDMETHOD_(UINT32, AddRef ) (THIS);
     STDMETHOD_(UINT32, Release) (THIS);
 
+	// IRMAErrorSink
+    STDMETHOD(ErrorOccurred)	(THIS_
+				const UINT8	unSeverity,  
+				const ULONG32	ulRMACode,
+				const ULONG32	ulUserCode,
+				const char*	pUserString,
+				const char*	pMoreInfoURL
+				);
+	
+	// ++ IPyErrorSink
+    STDMETHOD(SetPyErrorSink)(THIS_
+				PyObject *obj);
+	
 	private:
     LONG m_cRef;
+
+	PyObject *m_pyErrorSink;	
 	};
 
-HRESULT STDMETHODCALLTYPE CreateClientContext(
-			IPyClientContext **ppI)
+HRESULT STDMETHODCALLTYPE CreateErrorSink(
+			IPyErrorSink **ppI)
 	{
-	*ppI = new ClientContext();
+	*ppI = new ErrorSink();
 	return S_OK;
 	}
 
 
-ClientContext::ClientContext()
+ErrorSink::ErrorSink()
 :	m_cRef(1)
 	{
 	}
 
-ClientContext::~ClientContext()
+ErrorSink::~ErrorSink()
 	{
 	}
 
 STDMETHODIMP
-ClientContext::QueryInterface(
+ErrorSink::QueryInterface(
     REFIID riid,
     void **ppvObject)
 	{
@@ -71,13 +86,13 @@ ClientContext::QueryInterface(
 	}
 
 STDMETHODIMP_(UINT32)
-ClientContext::AddRef()
+ErrorSink::AddRef()
 	{
     return  InterlockedIncrement(&m_cRef);
 	}
 
 STDMETHODIMP_(UINT32)
-ClientContext::Release()
+ErrorSink::Release()
 	{
     ULONG uRet = InterlockedDecrement(&m_cRef);
 	if(uRet==0) 
@@ -85,4 +100,27 @@ ClientContext::Release()
 		delete this;
 		}
     return uRet;
+	}
+
+STDMETHODIMP 
+ErrorSink::ErrorOccurred
+	(
+	const UINT8	unSeverity,  
+	const ULONG32	ulRMACode,
+	const ULONG32	ulUserCode,
+	const char*	pUserString,
+	const char*	pMoreInfoURL
+	)
+	{
+	return PNR_OK;
+	}
+
+STDMETHODIMP 
+ErrorSink::SetPyErrorSink(PyObject *obj)
+	{
+	Py_XDECREF(m_pyErrorSink);
+	if(obj==Py_None)m_pyErrorSink=NULL;
+	else m_pyErrorSink=obj;
+	Py_XINCREF(m_pyErrorSink);
+	return PNR_OK;
 	}
