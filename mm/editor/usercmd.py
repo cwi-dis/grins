@@ -38,8 +38,6 @@ class PREFERENCES(_CommandBase):
 	help = 'Display application preferences'
 
 # Alignment commands	
-class ALIGN(_CommandBase):
-	help = 'Align'
 class ALIGN_LEFT(_CommandBase):
 	help = 'Align the left borders'
 class ALIGN_CENTER(_CommandBase):
@@ -54,8 +52,6 @@ class ALIGN_BOTTOM(_CommandBase):
 	help = 'Align the bottom borders'
 
 # Distribute commands	
-class DISTRIBUTE(_CommandBase):
-	help = 'Distribute'
 class DISTRIBUTE_HORIZONTALLY(_CommandBase):
 	help = 'Distribute horizontally'
 class DISTRIBUTE_VERTICALLY(_CommandBase):
