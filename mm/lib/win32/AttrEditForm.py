@@ -1728,6 +1728,7 @@ class EventCtrl(AttrCtrl):
 		relative = self._relative.getcheck()
 		if not self._eventstruct.set_relative(relative):
 			self._relative.setcheck(not relative)
+		self.enableApply()
 
 ##################################
 # StringOptionsCtrl can be used as a StringCtrl but the user 
@@ -5076,6 +5077,7 @@ class AttrEditForm(GenFormView):
 	def RecreateWindow(self):
 		self.SetRedraw(0)
 		self.removepages()
+		self._attrchanged={}
 ##		self.createWindow(self._parent)
 ##		return
 		self.buildcontext()
