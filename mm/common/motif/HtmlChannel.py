@@ -209,7 +209,9 @@ class HtmlChannel(Channel.ChannelWindow):
 			fontname = basefontname + '-Oblique'
 			fontobj = windowinterface.findfont(fontname, 9)
 		attrs['italicFont'] = fontobj._font
-		bg = self.played_display._gcattr['background']
+		bg = self.played_display._gcattr.get('background')
+		if bg is None:
+			bg = self.window._convert_color((255,255,255))
 		fg = self.played_display._gcattr['foreground']
 		htmlw.ChangeColor(bg)
 		attrs['background'] = bg
