@@ -940,8 +940,8 @@ class _Window:
 		sw = self._subwindows[:]
 		sw.reverse()
 		for w in sw:
-			if w._transparent == 0 or \
-			   (w._transparent == -1 and w._active_displist):
+			if w._transparent == 1 or \
+			   (w._transparent == -1 and not w._active_displist):
 				w._do_expose(region, 1)
 		if self._showing:
 			self.showwindow()
