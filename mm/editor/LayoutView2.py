@@ -678,6 +678,8 @@ class LayoutView2(LayoutViewDialog2):
 		else:
 			self.rebuildAll()
 
+		# after a commit, the focus may have changed
+		self.currentFocus = self.editmgr.getglobalfocus()
 		self.updateFocus(1)
 				
 	def isValidMMNode(self, node):
