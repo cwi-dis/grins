@@ -8,7 +8,7 @@ The controls are not based on MFC but on win32 Sdk.
 They are at the same level as MFC is to the Sdk 
 (a fact that justifies the name light weight)
 This is in contrast to all the objects exported by the 
-win32ui pyd which exports inherited from MFC objects
+win32ui pyd which exports inherited objects from MFC objects
 """
 
 import win32ui,win32con
@@ -40,6 +40,9 @@ class LightWeightControl:
 	def sendmessage_rs(self,msg,wparam,lparam):
 		if not self._hwnd: raise error, 'os control has not been created'
 		return Sdk.SendMessageRS(self._hwnd,msg,wparam,lparam)
+	def sendmessage_gl(self,msg,wparam,lparam=0):
+		if not self._hwnd: raise error, 'os control has not been created'
+		return Sdk.SendMessageGL(self._hwnd,msg,wparam,lparam)
 	def enable(self,f):
 		if not self._hwnd: raise error, 'os control has not been created'
 		if f==None:f=0
@@ -151,8 +154,7 @@ class Edit(Control):
 	def getlinecount(self):
 		return self.sendmessage(win32con.EM_GETLINECOUNT)
 	def getline(self,ix):
-		n=self.sendmessage(win32con.EM_LINELENGTH)+1
-		return self.sendmessage_rs(win32con.EM_GETLINE,ix,n)
+		return self.sendmessage_gl(win32con.EM_GETLINE,ix)
 	def getmodify(self):
 		return self.sendmessage(win32con.EM_GETMODIFY)
 	
@@ -166,6 +168,14 @@ class Edit(Control):
 			line=self.getline(ix)
 			self._textlines.append(line)
 		return self._textlines
+
+	def _getlines(self):
+		textlines=[]
+		nl=self.getlinecount()
+		for ix in range(nl):
+			line=self.getline(ix)
+			textlines.append(line)
+		return textlines
 
 	# cmif interface
 	# gettext
@@ -545,9 +555,6 @@ class LayoutNameDlg(ResDialog):
 		if self._cbd_cancel:
 			apply(apply,self._cbd_cancel)
 
-		self.__chantype=w._chantype
-		w._cbd_ok=(self.__okchannel, (0,))
-		w._cbd_cancel=(self.__okchannel, (1,))
 
 # Implementation of the new channel dialog
 class NewChannelDlg(ResDialog):
@@ -763,7 +770,7 @@ class SimpleSelectDlg(ResDialog):
 		# nothing
 		return self._obj_.OnCancel()
 	
-	def HookKeyStroke(self,cb,key):
+	def hookKeyStroke(self,cb,key):
 		if hasattr(self,'_obj_') and self._obj_:	
 			self.HookKeyStroke(cb,key)
 
