@@ -1,8 +1,18 @@
 
 #include <string.h>
 #include <math.h>
-#include "cmifex.h"
-#include "Ezfont.h"
+//Win32 Header Files
+#include <process.h>
+
+//Python Header Files
+#include "Python.h"
+
+//PythonWin Header Files
+#include "win32ui.h"
+#include "win32assoc.h"
+#include "win32cmd.h"
+#include "win32win.h"
+
 #include "MultiFileSel.h"
 
 static PyObject *CmifEx2Error;
@@ -13,6 +23,11 @@ PYW_EXPORT CWnd *GetWndPtr(PyObject *);
 static char cmifClass[100]="";
 static WNDPROC		orgProc;
 static BOOL flag=FALSE;
+
+#define EZ_ATTR_BOLD          1
+#define EZ_ATTR_ITALIC        2
+#define EZ_ATTR_UNDERLINE     4
+#define EZ_ATTR_STRIKEOUT     8
 
 static HFONT EzCreateFont (HDC hdc, char * szFaceName, int iDeciPtHeight,
                     int iDeciPtWidth, int iAttributes, BOOL fLogRes)
@@ -91,10 +106,6 @@ static HFONT EzCreateFont (HDC hdc, char * szFaceName, int iDeciPtHeight,
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-void CmifEx2ErrorFunc(char *str);
-
-
 
 static PyObject* py_example_CreateFileOpenDlg(PyObject *self, PyObject *args)
 {
@@ -2738,7 +2749,7 @@ static PyMethodDef CmifEx2Methods[] =
 
 
 
-PyEXPORT 
+__declspec(dllexport) 
 void initcmifex2()
 {
 	PyObject *m, *d;
@@ -2747,12 +2758,6 @@ void initcmifex2()
 	CmifEx2Error = PyString_FromString("cmifex2.error");
 	PyDict_SetItemString(d, "error", CmifEx2Error);
 	CallbackMap = PyDict_New();
-}
-
-void CmifEx2ErrorFunc(char *str)
-{
-	PyErr_SetString (CmifEx2Error, str);
-	PyErr_Print();
 }
 
 #ifdef __cplusplus
