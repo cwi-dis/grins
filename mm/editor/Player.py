@@ -281,13 +281,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 	#
 	def play_callback(self):
 		self.toplevel.setwaiting()
-		# RTIPA start
-		import features
-		if hasattr(features, 'RTIPA') and features.RTIPA:
-			import settings
-			settings.read_RTIPA()
-			settings.commit(auto=1)
-		# RTIPA end
 		self.show()
 		if self.playing and self.pausing:
 			# Case 1: user pressed play to cancel pause
