@@ -11,7 +11,7 @@ __version__ = "$Id$"
 
 
 
-import win32ui, win32con, win32api 
+import win32ui, win32con, win32api
 from win32modules import grinsRC
 Afx=win32ui.GetAfx()
 Sdk=win32ui.GetWin32Sdk()
@@ -41,34 +41,68 @@ import afxexttb # part of generated afxext.py
 
 
 ###########################################################
+class _VoidView(docview.ScrollView):
+	def __init__(self,doc):
+		docview.ScrollView.__init__(self,doc)
+	def OnInitialUpdate(self):
+		l,t,r,b=self.GetClientRect()
+		self.SetScaleToFitSize((r-l,b-t))
+	def close(self):
+		pass
+	def createWindow(self,parent):
+		self.CreateWindow(parent)
+
+class _SourceView(docview.EditView):
+	def __init__(self,doc):
+		docview.EditView.__init__(self,doc)
+		self._text=''
+	def OnInitialUpdate(self):
+		edit=self.GetEditCtrl()
+		edit.SetWindowText(self._text)
+		edit.SetReadOnly(1)
+	def createWindow(self,parent):
+		self.CreateWindow(parent)
+
+	# cmif interface
+	def settext(self,text):
+		self._text=text
+	def close(self):
+		del self._text
+		self._text=None
+		pass
+	def is_closed(self):
+		if self._obj_==None: return 1
+		if self.GetSafeHwnd()==0: return 1
+		return self.IsWindowVisible()
+
 class _CmifScrollView(cmifwnd._CmifWnd,_rbtk,docview.ScrollView):
-	def __init__(self,parent, x, y, w, h, title, visible_channel = TRUE,
-		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
-		      adornments = None, canvassize = None,
-		      commandlist = None, resizable = 1):
-		cmifwnd._CmifWnd.__init__(self,parent)
+	def __init__(self,doc):
+		cmifwnd._CmifWnd.__init__(self)
 		_rbtk.__init__(self)
+		docview.ScrollView.__init__(self,doc)
+
+	def OnInitialUpdate(self):
+		if not self._parent:
+			self._parent=self.GetParent()
+		self._do_init(self._parent)
 		self._is_active = 0
 		self._canscroll = 0
 		# init dims
-		l,t,r,b=self._parent.GetClientRect()
+		l,t,r,b=self.GetClientRect()
 		self._rect=self._canvas=(0,0,r-l,b-t)
 
 		# create view
-		self._doc=docview.Document(docview.DocTemplate())
-		docview.ScrollView.__init__(self,self._doc)
-		self.CreateWindow(parent)
+		#self._doc=docview.Document(docview.DocTemplate())
+		#docview.ScrollView.__init__(self,self._doc)
+		#self.CreateWindow(parent)
 
 		# set std attributes
-		self._title = title		
-		self._window_type = type_channel
+		self._title = ''	
+		self._window_type = SINGLE
 		self._sizes = 0, 0, 1, 1
 
-		# do not allow childs to go beyond me
-		# since they suppose that I am a toplevel
-		# (side effect of previews ui!)
 		self._topwindow = self # from the app's view this is a topwindow
-		parent._subwindows.insert(0, self)
+		self._parent._subwindows.insert(0, self)
 
 		r= {win32con.WM_RBUTTONDOWN:self.onRButtonDown,
 			win32con.WM_LBUTTONDBLCLK:self.onLButtonDblClk,
@@ -84,14 +118,15 @@ class _CmifScrollView(cmifwnd._CmifWnd,_rbtk,docview.ScrollView):
 		if self._active_displist:
 			self._active_displist._render(dc,rc,1)
 
+	def createWindow(self,parent):
+		self.CreateWindow(parent)
+
 	def OnCreate(self,params):
-		print 'OnCreate',params
 		l,t,r,b=self.GetClientRect()
 		self._rect=self._canvas=(0,0,r-l,b-t)
 		self.SetScrollSizes(win32con.MM_TEXT,(r-l,b-t))
 		self.ResizeParentToFit()
-		
-					
+							
 	def onSize(self,params):
 		msg=win32mu.Win32Msg(params)
 		if msg.minimized(): return
@@ -128,7 +163,7 @@ class _CmifScrollView(cmifwnd._CmifWnd,_rbtk,docview.ScrollView):
 	# convert from client (device) coordinates to canvas (logical)
 	def _DPtoLP(self,pt):
 		dc=self.GetDC()
-		# python view.GetDC has called OnPrepareDC(dc)
+		# PyCView.GetDC has called OnPrepareDC(dc)
 		pt=dc.DPtoLP(pt)
 		self.ReleaseDC(dc)
 		return pt
@@ -159,15 +194,10 @@ class _CmifScrollView(cmifwnd._CmifWnd,_rbtk,docview.ScrollView):
 
 
 	# recycling of views
-	def new(self,rc,title='View',units= UNIT_MM,adornments=None,canvassize=None,commandlist=None):
-		if self._is_active==1:
-			print 'Closing active view in order to create new'
-			self.close()
-			# we must notify editor.view or
-			# or use a different policy
-
-		print 'creating view',title,rc
-		print 'canvassize',canvassize
+	def init(self,rc,title='View',units= UNIT_MM,adornments=None,canvassize=None,commandlist=None):
+		#if self._is_active==1:
+		#	self._parent.closeview()
+			#self.close()
 
 		self.settitle(title)
 		self.set_commandlist(commandlist)
@@ -189,28 +219,18 @@ class _CmifScrollView(cmifwnd._CmifWnd,_rbtk,docview.ScrollView):
 			self.ResizeParentToFit()		
 		self._is_active=1
 		return self
-	
 		
 	def close(self):
-		if self._is_active==0:return
-		else: print 'closing active view'
+		#if self._is_active==0:return
+		#else: print 'closing active view'
 
 		# old stuff remaining since we are recycling
 		self.arrowcache = {}
 		for win in self._subwindows[:]:
 			win.close()
-		self._subwindows=[]
 		for dl in self._displists[:]:
 			dl.close()
-		self._displists=[]
 		self.destroy_menu()
-	
-		# assert
-		self._callbacks = {}
-		self._accelerators = {}
-		self.arrowcache = {}
-		self._old_callbacks = {}
-		self._cbld = {}
 
 		# not highligted (misleading name!)
 		self._showing=0
@@ -219,13 +239,15 @@ class _CmifScrollView(cmifwnd._CmifWnd,_rbtk,docview.ScrollView):
 		# disable view-context commands 
 		self.settitle(None)
 		self.set_commandlist(None)
+		#if self._parent.GetActiveView()==self:
+		#	self._parent.setview('eview_')
+		return
 
 		# Fit view in client rect
 		self._canscroll=0
 		l,t,r,b=self.GetClientRect()
 		self._rect=self._canvas=(0,0,r-l,b-t)
 		self.SetScrollSizes(win32con.MM_TEXT,(r-l,b-t))
-		self._parent.RecalcLayout()
 		self.ResizeParentToFit()
 
 		# reset flag, i.e. the view is void
@@ -239,6 +261,23 @@ class _CmifScrollView(cmifwnd._CmifWnd,_rbtk,docview.ScrollView):
 		pass
 
 ##########
+# view classes
+import formvw
+_PlayerView=_CmifScrollView
+_HierarchyView=_CmifScrollView
+_ChannelView=_CmifScrollView
+_LinkEditView=formvw.FormView
+_LayoutView=formvw.LayoutView
+#_SourceView=_SourceView
+viewcmd=[usercmd.PLAYERVIEW,usercmd.HIERARCHYVIEW,
+		usercmd.CHANNELVIEW,usercmd.LINKVIEW,usercmd.LAYOUTVIEW,
+		usercmd.SOURCE,usercmd.CLOSE_WINDOW]
+viewstrid=['pview_','hview_',
+		'cview_','leview_','lview_',
+		'sview_','vview_']
+
+
+##########
 class GRiNSToolbar(window.Wnd):
 	def __init__(self, parent):
 		style = win32con.WS_CHILD |\
@@ -247,7 +286,7 @@ class GRiNSToolbar(window.Wnd):
 			afxres.CBRS_TOOLTIPS|\
 			afxres.CBRS_FLYBY|\
 			afxres.CBRS_SIZE_DYNAMIC
-		wndToolBar = win32ui.CreateToolBar(parent,style,afxres.AFX_IDW_TOOLBAR+1)
+		wndToolBar = win32ui.CreateToolBar(parent,style,afxres.AFX_IDW_TOOLBAR)
 		#wndToolBar.LoadToolBar(grinsRC.IDB_GRINSED1)
 		wndToolBar.LoadBitmap(grinsRC.IDB_GRINSED1)
 		wndToolBar.EnableDocking(afxres.CBRS_ALIGN_ANY)
@@ -255,61 +294,100 @@ class GRiNSToolbar(window.Wnd):
 		wndToolBar.ModifyStyle(0, commctrl.TBSTYLE_FLAT)
 		window.Wnd.__init__(self,wndToolBar)
 
+class GRiNSDlgBar(window.Wnd):
+	def __init__(self, parent):
+		AFX_IDW_DIALOGBAR=0xE805
+		wndDlgBar = win32ui.CreateDialogBar()
+		window.Wnd.__init__(self,wndDlgBar)
+		wndDlgBar.CreateWindow(parent,grinsRC.IDD_GRINSEDBAR,
+			afxres.CBRS_ALIGN_BOTTOM,AFX_IDW_DIALOGBAR)
+		#tabwnd=self.GetDlgItem(grinsRC.IDC_TAB_GRINSVIEWS)
+		#hrab=Sdk.GetDlgItem(self.GetSafeHwnd(),grinsRC.IDC_TAB_GRINSVIEWS)
+		import components
+		self._tab=components.TabCtrl(self,grinsRC.IDC_TAB_GRINSVIEWS)
+		self._tab.attach_to_parent()
 
-class _FrameWnd(cmifwnd._CmifWnd,window.FrameWnd):
-	def __init__(self,parent, x, y, w, h, title, visible_channel = TRUE,
-		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
-		      adornments = None, canvassize = None,
-		      commandlist = None, resizable = 1):
-		if not w or w==0:
-			w=(3*scr_width_mm/4)
-		if not h or h==0:
-			h=(3*scr_height_mm/4)
-		if not x: x=scr_width_mm/8
-		if not y: y=scr_height_mm/8
+		self._tab.insertitem(0,'Player')
+		self._tab.insertitem(1,'Hierarchy view')
+		self._tab.insertitem(2,'Channel view')
+		self._tab.insertitem(3,'Link view')
+		self._tab.insertitem(4,'Layout view')
+		self._tab.insertitem(5,'Source')
+
+		rc=win32mu.Rect(parent.GetClientRect())
+		self.sizeto(rc.width(),rc.height())
+	def getid(self):
+		return grinsRC.IDD_GRINSEDBAR
+	def sizeto(self,w,h):
+		rc=win32mu.Rect(self._tab.getwindowrect())
+		self._tab.setwindowpos(0,(0,0,w,rc.height()),
+			win32con.SWP_NOMOVE|win32con.SWP_NOZORDER)
+	def postcmd(self,wnd,ix):
+		usercmd_ui = usercmdui.class2ui[viewcmd[ix]]
+		wnd.PostMessage(win32con.WM_COMMAND,usercmd_ui.id)
+	def settab(self,id):
+		ix=0
+		for s in viewstrid:
+			if s==id:
+				self._tab.setcursel(ix)
+				return
+			ix=ix+1
 		
-		cmifwnd._CmifWnd.__init__(self,parent)
-		self.newcmwindow=self.newwindow #alias
+class _FrameWnd(window.FrameWnd,cmifwnd._CmifWnd):
+	def __init__(self):
 		window.FrameWnd.__init__(self,win32ui.CreateFrame())
-		self._view=None
-		self._canscroll = 0
-		self._title = title		
-		self._topwindow = self
-		self._window_type = type_channel
-		self._sizes = 0, 0, 1, 1
-		parent._subwindows.insert(0, self)
-		xp,yp,wp,hp = to_pixels(x,y,w,h,units)
-		self._rectb= xp,yp,wp,hp
-		self._sizes = (float(xp)/scr_width_pxl,float(yp)/scr_height_pxl,float(wp)/scr_width_pxl,float(hp)/scr_height_pxl)
-		self._depth = toplevel.getscreendepth()
+		cmifwnd._CmifWnd.__init__(self)
+		self._do_init(toplevel)
 
+	def create(self,title):
+		strclass=self.registerwndclass()		
+		self._obj_.Create(strclass,title)
+
+		# toolbar
+		self.EnableDocking(afxres.CBRS_ALIGN_ANY)
+		self._wndToolBar=GRiNSToolbar(self)
+		self.DockControlBar(self._wndToolBar)
+		if IsEditor:
+			self.setEditorFrameToolbar()
+		else:
+			self.setPlayerToolbar()	
+						
+		self.setviewcl(_VoidView)
+		v=self.GetActiveView()
+		self._VoidViewclass=v.__class__
+
+	def registerwndclass(self):
 		# register top frame class
-		self._clstyle=win32con.CS_DBLCLKS
-		self._exstyle=0
-		self._icon=Afx.GetApp().LoadIcon(grinsRC.IDI_GRINS_ED)
-		self._cursor=Afx.GetApp().LoadStandardCursor(win32con.IDC_ARROW)
-		self._brush=Sdk.CreateBrush(win32con.BS_SOLID,win32mu.RGB(self._bgcolor),0)
-		self._strclass=Afx.RegisterWndClass(self._clstyle,self._cursor,self._brush,self._icon)
+		clstyle=win32con.CS_DBLCLKS
+		exstyle=0
+		icon=Afx.GetApp().LoadIcon(grinsRC.IDI_GRINS_ED)
+		cursor=Afx.GetApp().LoadStandardCursor(win32con.IDC_ARROW)
+		brush=Sdk.CreateBrush(win32con.BS_SOLID,win32mu.RGB(self._bgcolor),0)
+		return Afx.RegisterWndClass(clstyle,cursor,brush,icon)
 
-		# create a toplevel OS FrameWnd
-		self._style=win32con.WS_OVERLAPPEDWINDOW
-		rc=(xp,yp,xp+wp,yp+hp)
-		self._obj_.Create(self._strclass,self._title,self._style,rc)
-		
-		# all, are historic alias but useful to markup externals
-		# the symbol self._obj_ reresents the os-mfc window object
-		self._wnd=self._obj_ 
-		self._hWnd=self.GetSafeHwnd()
+	def PreCreateWindow(self, csd):
+		csd=self._obj_.PreCreateWindow(csd)
+		cs=win32mu.CreateStruct(csd)
 
-		l,t,r,b=self.GetClientRect()
-		self._canvas=self._rect=(l,t,r-l,b-t)
+		# sizes
+		cs.cx,cs.cy=(3*scr_width_pxl/4),(3*scr_height_pxl/4)
+		cs.x,cs.y=x=scr_width_pxl/8,scr_height_pxl/8
 
-		#create menu and toolbar
+		# menu
 		menu=win32ui.CreateMenu()
 		for key in usercmdui.menuconfig:
 			menu.AppendMenu(win32con.MF_POPUP,usercmdui.stdmenu[key].GetHandle(),"&%s"%key)
-		self.SetMenu(menu)
-		self.DrawMenuBar()
+		cs.hMenu=menu.GetHandle()
+
+		return cs.to_csd()
+	
+	# this is called after CWnd::OnCreate 
+	def OnCreate(self, createStruct):
+		self.HookMessage(self.onSize,win32con.WM_SIZE)
+		self.HookMessage(self.onClose,win32con.WM_CLOSE)
+
+		# the view is responsible for user input
+		# so do not hook other messages
 
 		# direct all cmds to self.OnUserCmd but dissable them
 		for cmdcl in usercmdui.class2ui.keys():
@@ -317,46 +395,176 @@ class _FrameWnd(cmifwnd._CmifWnd,window.FrameWnd):
 			self.HookCommand(self.OnUserCmd,id)
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,id)
 
+		# hook tab sel change
+		self.HookNotify(self.OnNotifyTcnSelChange,formvw.TCN_SELCHANGE)
+
+		return 0
+
+	def OnNotifyTcnSelChange(self, nm, nmrest=(0,)):
+		hwndFrom,idFrom,code=nm
+		if idFrom==grinsRC.IDC_TAB_GRINSVIEWS:
+			newview=self._wndDlgBar._tab.getcursel()
+			self._wndDlgBar.postcmd(self,newview)
+			return 1
+		print 'other',nm,nmrest
+		return 0
+
+	def init_cmif(self, x, y, w, h, title,units = UNIT_MM,
+		      adornments = None,commandlist = None):	
+		if not w or w==0:
+			w=(3*scr_width_mm/4)
+		if not h or h==0:
+			h=(3*scr_height_mm/4)
+		if not x: x=scr_width_mm/8
+		if not y: y=scr_height_mm/8
+
+		self.newcmwindow=self.newwindow #alias
+		self._canscroll = 0
+		self._title = title		
+		self._topwindow = self
+		self._window_type = SINGLE # actualy not applicable
+		self._sizes = 0, 0, 1, 1
+		self._parent._subwindows.insert(0, self)
+		xp,yp,wp,hp = to_pixels(x,y,w,h,units)
+		self._rectb= xp,yp,wp,hp
+		self._sizes = (float(xp)/scr_width_pxl,float(yp)/scr_height_pxl,float(wp)/scr_width_pxl,float(hp)/scr_height_pxl)
+		self._depth = toplevel.getscreendepth()
+		
+		# all, are historic alias but useful to markup externals
+		# the symbol self._obj_ reresents the os-mfc window object
+		self._wnd=self._obj_ 
+		self._hWnd=self.GetSafeHwnd()
+
 		# set adorments and cmdlist
-		self._qtitle={'frame':'GRiNSed','document':None,'view':None}
+		self._qtitle={'frame':title,'document':None,'view':None}
 		self._activecmds={'frame':{},'document':{},'view':{}}
 		self._dynamiclists={}
 		self.set_commandlist(commandlist,'frame')
 
 		l,t,r,b=self.GetClientRect()
 		self._canvas=self._rect=(l,t,r-l,b-t)
-
-		# the view is responsible for user input
-		# but do not for Close
-		r= {
-			win32con.WM_CLOSE:self.onClose,
-			win32con.WM_SIZE:self.onSize,
-			}
-		self._enable_response(r)
-
-		if visible_channel:
-			self.RecalcLayout()
-			self.ShowWindow(win32con.SW_SHOW)
-		
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
-		print 'Inproper call to FrameWnd.newwindow '
-		win= _SubWindow(self, coordinates, transparent, type_channel, 0, pixmap, z)
-		return win
-
-	def newview(self,parent, x, y, w, h, title, visible_channel = TRUE,
-		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
-		      adornments = None, canvassize = None,
-		      commandlist = None, resizable = 1):
-		rc=(x, y, w, h)
-		return self._view.new(rc,title,units,adornments,canvassize,commandlist)
+		if hasattr(self,'_wndDlgBar'):
+			self._wndDlgBar.sizeto(r-l,b-t)
 	
+
 	def newdocument(self,title,adornments,commandlist):
-		self._view.close()
+		self.GetActiveView().close()
 		self.settitle(title,'document')
 		self.set_commandlist(commandlist,'document')
-		if IsEditor:self.setEditorDocumentToolbar()
+		if IsEditor:
+			self.setEditorDocumentToolbar()
+			self._wndDlgBar=GRiNSDlgBar(self)
+
+		usercmd_ui = usercmdui.class2ui[viewcmd[0]]
+		self.PostMessage(win32con.WM_COMMAND,usercmd_ui.id)
+
 		self.ActivateFrame()
 		return self
+	
+	def newwindow(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0,
+		     units = UNIT_MM, adornments = None,
+		     canvassize = None, commandlist = None, resizable = 1):
+		return self.GetActiveView()
+		return _Window(parent, x, y, w, h, title, defcmap, pixmap,
+		     units,adornments,canvassize, commandlist, resizable)
+
+	def newview(self, x, y, w, h, title, units = UNIT_MM,
+		      adornments = None, canvassize = None,
+		      commandlist = None, context='vview_'):
+		v=self.GetActiveView()
+		if self.isappview(v):
+			self.closeview()
+		view=self.newviewobj(context)
+		view.createWindow(self)
+		self.SetActiveView(view)
+		self.setviewtab(context)
+		self.RecalcLayout()
+		view.OnInitialUpdate()
+		view.ShowWindow(win32con.SW_SHOW)
+		if v and v._obj_ and v.GetSafeHwnd():
+			v.DestroyWindow()
+		view.init((x,y,w,h),title,units,adornments,canvassize,commandlist)
+		return view
+
+	def showview(self,view,context='vview_'):
+		if not view or not view._obj_:
+			return
+		v=self.GetActiveView()
+		if self.isappview(v):
+			self.closeview()
+		if view.GetSafeHwnd()==0:
+			view.createWindow(self)
+		self.SetActiveView(view)
+		self.setviewtab(context)
+		self.RecalcLayout()
+		view.OnInitialUpdate()
+		view.ShowWindow(win32con.SW_SHOW)
+		if v and v._obj_ and v.GetSafeHwnd():
+			v.DestroyWindow()
+	def createview(self,view):
+		if not view or not view._obj_: 
+			raise error, 'createview called with not a view'
+			return
+		if view.GetSafeHwnd()==0:
+			view.createWindow(self)
+
+	def setview(self,context='vview_'):
+		v=self.GetActiveView()
+		view=self.newviewobj(context)
+		view.createWindow(self)
+		self.SetActiveView(view)
+		self.setviewtab(context)
+		self.RecalcLayout()
+		view.OnInitialUpdate()
+		v.ShowWindow(win32con.SW_SHOW)
+		if v and v._obj_ and v.GetSafeHwnd():
+			v.DestroyWindow()
+
+	def newviewobj(self,context='vview_'):
+		doc=self.GetActiveDocument()
+		if context=='cview_':
+			return _ChannelView(doc)
+		elif context=='hview_':
+			return _HierarchyView(doc)
+		elif context=='pview_':
+			return _PlayerView(doc)
+		elif context=='leview_':
+			return _LinkEditView(doc)
+		elif context=='lview_':
+			return _LayoutView(doc)
+		elif context=='sview_':
+			return _SourceView(doc)
+		elif context=='vview_':
+			return _VoidView(doc)
+		else:
+			return _VoidView(doc)
+
+	def isappview(self,v):
+		return v.__class__!=self._VoidViewclass
+
+	def closeview(self):
+		id=usercmdui.class2ui[usercmd.CLOSE_WINDOW].id
+		self.OnUserCmd(id,0)
+
+	def setviewtab(self,viewid):
+		if hasattr(self,'_wndDlgBar'):
+			self._wndDlgBar.settab(viewid)
+
+	def setviewcl(self,viewclass,id=None,context='vview_'):
+		doc=self.GetActiveDocument()
+		if not doc:doc=docview.Document(docview.DocTemplate())
+		if not id: v = viewclass(doc)
+		else: v = viewclass(doc,id)			
+		v.CreateWindow(self)
+		self.SetActiveView(v)
+		self.setviewtab(context)
+		self.RecalcLayout()
+		v.OnInitialUpdate()
+		v.ShowWindow(win32con.SW_SHOW)
+	def replaceviewcl(self,classobj,id=None,context='vview_'):
+		v=self.GetActiveView()
+		self.setviewcl(classobj,id,context)
+		v.DestroyWindow()
 
 	def setwaiting(self,context='view'):
 		pass
@@ -368,13 +576,19 @@ class _FrameWnd(cmifwnd._CmifWnd,window.FrameWnd):
 	def close(self):
 		self.set_commandlist(None,'document')
 		self.settitle(None,'document')
-		if IsEditor: self.setEditorFrameToolbar()
-		self._view.RedrawWindow()
-			
+		if IsEditor: 
+			self.setEditorFrameToolbar()
+			if hasattr(self,'_wndDlgBar'):
+				self._wndDlgBar.DestroyWindow()
+				self.RecalcLayout()
+						
 	def onSize(self,params):
+		self.RecalcLayout()
 		msg=win32mu.Win32Msg(params)
 		if msg.minimized(): return
 		self._rect=self._canvas=0,0,msg.width(),msg.height()
+		if hasattr(self,'_wndDlgBar'):
+			self._wndDlgBar.sizeto(msg.width(),msg.height())
 
 	def set_commandlist(self,commandlist,context='view'):
 		contextcmds=self._activecmds[context]
@@ -383,11 +597,16 @@ class _FrameWnd(cmifwnd._CmifWnd,window.FrameWnd):
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,id)
 			menu.CheckMenuItem(id,win32con.MF_BYCOMMAND | win32con.MF_UNCHECKED)
 		contextcmds.clear()
+		toolsmenu=AppMenu.ClearSubmenu(menu,5)
 		if not commandlist: return
 		for cmd in commandlist:
-			id=usercmdui.class2ui[cmd.__class__].id
+			usercmd_ui = usercmdui.class2ui[cmd.__class__]
+			id=usercmd_ui.id
 			self.HookCommandUpdate(self.OnUpdateCmdEnable,id)
 			contextcmds[id]=cmd
+			if usercmd_ui.cat=='Tools' and usercmd_ui.dispstr:
+				toolsmenu.AppendMenu(win32con.MF_STRING,id,usercmd_ui.dispstr)
+
 
 	def set_toggle(self, cmdcl, onoff):
 		id=usercmdui.class2ui[cmdcl].id
@@ -444,24 +663,7 @@ class _FrameWnd(cmifwnd._CmifWnd,window.FrameWnd):
 			menu=self.GetMenu()
 			menu.AppendMenu(win32con.MF_POPUP,submenu.GetHandle(),"&File")
 			self.DrawMenuBar()
-
-	# this is called after CWnd::OnCreate 
-	def OnCreate(self, createStruct):
-		self.createToolbar()
-		if IsEditor:self.setEditorFrameToolbar()
-		else:self.setPlayerToolbar()
-		return 0
-
-	# GRiNS Toolbar
-	def createToolbar(self):
-		self.EnableDocking(afxres.CBRS_ALIGN_ANY)
-		self._wndToolBar=GRiNSToolbar(self)
-		self.DockControlBar(self._wndToolBar)
 			
-	# View
-	def OnCreateClient(self,createStruct,createContext):
-		self._view=_CmifScrollView(self,0,0,100,100,'view')
-		return 1
 
 	def onClose(self, params):
 		self.OnUserCmd(usercmdui.EXIT_UI.id,0)
@@ -488,7 +690,7 @@ class _FrameWnd(cmifwnd._CmifWnd,window.FrameWnd):
 	# should be set from from adornments
 	# but for now...
 	def setEditorDocumentToolbar(self):
-		self._wndToolBar.AllocateButtons(12)
+		self._wndToolBar.AllocateButtons(13)
 
 		id=usercmdui.class2ui[usercmd.NEW_DOCUMENT].id
 		self._wndToolBar.SetButtonInfo(0,id,afxexttb.TBBS_BUTTON,0)
@@ -520,10 +722,12 @@ class _FrameWnd(cmifwnd._CmifWnd,window.FrameWnd):
 
 		id=usercmdui.class2ui[usercmd.STOP].id
 		self._wndToolBar.SetButtonInfo(10,id,afxexttb.TBBS_BUTTON, 11)
+
+		self._wndToolBar.SetButtonInfo(11,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12);
 	
 		id=usercmdui.class2ui[usercmd.HELP].id
-		self._wndToolBar.SetButtonInfo(11,id,afxexttb.TBBS_BUTTON, 12)
-	
+		self._wndToolBar.SetButtonInfo(12,id,afxexttb.TBBS_BUTTON, 12)
+
 		self.ShowControlBar(self._wndToolBar,1,0)
 
 
@@ -564,8 +768,9 @@ class _FrameWnd(cmifwnd._CmifWnd,window.FrameWnd):
 ###########################################################
 class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 	def __init__(self, parent, rel_coordinates, transparent, type_channel, defcmap, pixmap, z=0):
-		print 'SubWindow created with parent',parent
-		cmifwnd._CmifWnd.__init__(self,parent)
+		#print 'SubWindow created with parent',parent
+		cmifwnd._CmifWnd.__init__(self)
+		self._do_init(parent)
 		self._window_type = type_channel
 		self._next_create_box = []
 		self._topwindow = parent._topwindow
@@ -744,33 +949,11 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 		dc.SetWindowOrg(ptOldOrg)
 		return 1
 
-	# debuging
-	def getinfo(self):
-		str= "trans=%d z=%d" % (self._transparent, self._z)
-		win32ui.MessageBox(str)
-
-################################
-class WebBrowser(window.Wnd):
-	def __init__(self, wnd):
-		window.Wnd.__init__(self, wnd)
-
-class _BrowserSubWindow(_SubWindow):
-	def __init__(self, parent, rel_coordinates, transparent, type_channel, defcmap, pixmap, z=0):
-		_SubWindow.__init__(self, parent, rel_coordinates, transparent, type_channel, defcmap, pixmap, z)
-		x,y,w,h=self._canvas
-		self._web_callbacks=[]
-		# create WebBrowser 
-		self._browser=WebBrowser(win32ui.CreateWebBrowser())
-		self._browser.CreateBrowserWnd((x,y,x+w,y+h),self._obj_)	
-
-	def CreateCallback(self,cbcmifanchor):
-		self._web_callbacks.append(cbcmifanchor)
-	def SetBkColor(self,bg):
-		pass
-	def SetFgColor(self,fg):
-		pass
-
+	# Browsing support
 	def RetrieveUrl(self,url):
+		if not hasattr(self, '_browser'):
+			self._browser=WebBrowser()
+			self._browser.create(self._canvas,self)	
 		# temp test !!!!!!
 		import os
 		if url[:2] != '//' or url[2:3] == '/' or url[2:3]=='\\':
@@ -780,10 +963,67 @@ class _BrowserSubWindow(_SubWindow):
 				url = os.getcwd()+'\\'+ url
 				pass #url = 'file:///' +  url[:1] + '|' + url[3:]
 		self._browser.Navigate(url)
+		self._browser.show()
 
 	def _resize_controls(self):
-		self._browser.SetWidth(self._canvas[2]);
-		self._browser.SetHeight(self._canvas[3]);
+		if hasattr(self, '_browser'):
+			if self._browser:self._browser.resize(self._canvas)
+	def CreateCallback(self,cbcmifanchor):
+		if not hasattr(self, '_web_callbacks'):
+			self._web_callbacks=[]
+		self._web_callbacks.append(cbcmifanchor)
+	def SetBkColor(self,bg):
+		pass
+	def SetFgColor(self,fg):
+		pass
+
+################################
+class WebBrowser(window.Wnd):
+	def __init__(self):
+		window.Wnd.__init__(self,win32ui.CreateWebBrowser())
+	def create(self,rc,parent):
+		x,y,w,h=rc
+		self.CreateBrowserWnd((x,y,x+w,y+h),parent)	
+	def hide(self):
+		if self.IsWindow():self.ShowWindow(win32con.SW_HIDE)
+	def show(self):
+		if self.IsWindow():self.ShowWindow(win32con.SW_SHOW)
+	def resize(self,rc):
+		self.SetWidth(rc[2])
+		self.SetHeight(rc[3])
+			
+class _BrowserSubWindow(_SubWindow):
+	def __init__(self, parent, rel_coordinates, transparent, type_channel, defcmap, pixmap, z=0):
+		_SubWindow.__init__(self, parent, rel_coordinates, transparent, type_channel, defcmap, pixmap, z)
+		x,y,w,h=self._canvas
+		self._web_callbacks=[]
+		# postpone create WebBrowser 
+		self._browser=None
+
+	def CreateCallback(self,cbcmifanchor):
+		self._web_callbacks.append(cbcmifanchor)
+	def SetBkColor(self,bg):
+		pass
+	def SetFgColor(self,fg):
+		pass
+
+	def RetrieveUrl(self,url):
+		if not self._browser:
+			self._browser=WebBrowser()
+			self._browser.create(self._canvas,self)	
+		# temp test !!!!!!
+		import os
+		if url[:2] != '//' or url[2:3] == '/' or url[2:3]=='\\':
+			if url[2:3] == '/' or url[2:3]=='\\':
+				pass #url = 'file:///' +  url[:1] + '|' + url[3:]
+			else:
+				url = os.getcwd()+'\\'+ url
+				pass #url = 'file:///' +  url[:1] + '|' + url[3:]
+		self._browser.Navigate(url)
+		self._browser.show()
+
+	def _resize_controls(self):
+		if self._browser:self._browser.resize(self._canvas)
 
 	def OnEraseBkgnd(self,dc):
 		pass
@@ -808,7 +1048,7 @@ class _BrowserSubWindow(_SubWindow):
 		for dl in self._displists[:]:
 			dl.close()
 		if self._browser:
-			self._browser.DestroyWindow()
+			self._browser.hide()
 		if self._obj_ and self.IsWindow():
 			self.destroy_menu()
 			self.DestroyWindow()			
@@ -863,19 +1103,20 @@ class MfcOsWnd(window.Wnd):
 ###########################################################
 ###########################################################
 ###########################################################
+
 class _Window(cmifwnd._CmifWnd,_rbtk,window.Wnd):
-	def __init__(self,parent, x, y, w, h, title, visible_channel = TRUE,
-		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
-		      adornments = None, canvassize = None,
-		      commandlist = None, resizable = 0):
-		cmifwnd._CmifWnd.__init__(self,parent)
+	def __init__(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0,
+		     units = UNIT_MM, adornments = None,
+		     canvassize = None, commandlist = None, resizable = 1):
+		cmifwnd._CmifWnd.__init__(self)
 		_rbtk.__init__(self)
 		window.Wnd.__init__(self,win32ui.CreateWnd())
+		self._do_init(parent)
 		parent._subwindows.insert(0, self)
 
 		self._title = title		
 		self._topwindow = self
-		self._window_type = type_channel
+		self._window_type = SINGLE
 		self._depth = toplevel.getscreendepth()
 
 		if not x:x=0
@@ -923,8 +1164,7 @@ class _Window(cmifwnd._CmifWnd,_rbtk,window.Wnd):
 #		if menubar is not None:
 #			self.create_menu(menubar)
 
-		if visible_channel:
-			self.ShowWindow(win32con.SW_SHOW)
+		self.ShowWindow(win32con.SW_SHOW)
 
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
 		if type_channel==HTM:
