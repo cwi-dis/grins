@@ -635,6 +635,8 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		if focusobject.getClassName() != 'MMNode':
 			return
+		if self.selected_widget is not None and self.selected_widget.get_node() is focusobject:
+			return
 		self.select_node(focusobject, 1)
 		self.aftersetfocus()
 ##		self.need_resize = 0
