@@ -1028,7 +1028,7 @@ class HierarchyView(HierarchyViewDialog):
 		else: 
 			self.focusnode = widget.node
 			widget.select()
-		self.window.scrollvisible(widget.get_box())
+			self.window.scrollvisible(widget.get_box())
 
 	# Handle a selection click at (x, y)
 	def select(self, x, y):
