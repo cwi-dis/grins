@@ -58,7 +58,6 @@ syncbase = re.compile(r'id\(' + _opS + '(?P<name>' + xmllib._Name + ')' + _opS +
 		      '$')
 offsetvalue = re.compile('(?P<sign>[-+])?' + clock_val + '$')
 # SMIL 2.0 syncbase without the offset
-tokenizer = re.compile(r'((?<!\\)[-+. ()])')
 mediamarker = re.compile(		# id-ref ".marker(" name ")"
 	_opS +
 	r'(?P<id>' + xmllib._Name + r')\.'			# ID-ref "."
@@ -316,7 +315,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					if val[0] in '+-' and not boston:
 						boston = 'signed clock value'
 					continue
-				tokens = filter(None, map(string.strip, tokenizer.split(val)))
+				tokens = filter(None, map(string.strip, tokenize(val)))
 				for i in range(len(tokens)):
 					# this can't match the first
 					# time round because of part
@@ -4776,3 +4775,31 @@ def parseattrval(name, string, context):
 	if MMAttrdefs.getdef(name)[0][0] == 'string':
 		return string
 	return MMAttrdefs.parsevalue(name, string, context)
+
+try:
+	tokenizer = re.compile(r'((?<!\\)[-+. ()])')
+	def tokenize(str):
+		return tokenizer.split(str)
+except:
+	# do it the hard way
+	def tokenize(str):
+		tokens = []		# collect them here
+		t = []			# collect each token here
+		escape = 0
+		for c in str:
+			if c == '\\':
+				t.append(c)
+				escape = 1
+			elif escape:
+				t.append(c)
+				escape = 0
+			elif c in '-+. ()':
+				if t:
+					tokens.append(string.join(t, ''))
+				tokens.append(c)
+				t = []
+			else:
+				t.append(c)
+		if t:
+			tokens.append(string.join(t, ''))
+		return tokens
