@@ -533,7 +533,7 @@ class _CommonWindow:
 			#
 			# Put it in the cache, possibly emptying other things
 			#
-##			self._put_image_in_cache(key, image, w, h, mask)
+			self._put_image_in_cache(key, image, w, h, mask)
 		if center:
 			x, y = x + (width - (w - left - right)) / 2, \
 			       y + (height - (h - top - bottom)) / 2
@@ -548,8 +548,10 @@ class _CommonWindow:
 		size, xkey = self._image_cache_size()
 		while len(image) + size > IMAGE_CACHE_SIZE:
 			# Too big, delete biggest
+##			print 'Delete imgcache', xkey
 			del _image_cache[xkey]
 			size, xkey = self._image_cache_size()
+##		print 'Store imgcache', key, len(image)
 		_image_cache[key] = (image, w, h, mask)
 		
 	def _image_cache_size(self):
@@ -1458,6 +1460,7 @@ class _CommonWindow:
 		self._transition_setup_after()
 
 	def endtransition(self):
+##		print 'DBG: endtransition', self, self._transition
 		if not self._transition:
 			return
 ##		has_tmp = self._transition.need_tmp_wid()
