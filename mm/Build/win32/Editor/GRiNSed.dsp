@@ -339,6 +339,10 @@ SOURCE=.\M_ftplib.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_FtpWriter.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_GenFormView.c
 # End Source File
 # Begin Source File
