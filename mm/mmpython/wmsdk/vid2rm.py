@@ -1,13 +1,23 @@
 
-import dshow
 import os
+import producer
+
+dir = os.path.split(producer.__file__)[0]
+dir = os.path.join( dir, "Producer-SDK")
+if os.path.exists(dir):
+	producer.SetDllAccessPath(
+		'DT_Plugins=%s\000' % os.path.join(dir, 'Plugins') +
+		'DT_Codecs=%s\000' % os.path.join(dir, 'Codecs') +
+		'DT_EncSDK=%s\000' % os.path.join(dir, 'Tools') +
+		'DT_Common=%s\000' % os.path.join(dir, 'Common'))
+else:
+	raise ImportError('no G2 codecs')
+
 engine=None
 
 def convertvideofile(infile, dstdir, file, node):
 	import producer
 	global engine
-	if os.environ.has_key('REAL_PRODUCER'):
-		producer.SetDllCategoryPaths(os.environ['REAL_PRODUCER'])
 	# ignore suggested extension and make our own
 	file = os.path.splitext(file)[0] + '.rm'
 	fullpath = os.path.join(dstdir, file)
@@ -44,8 +54,11 @@ def convertvideofile(infile, dstdir, file, node):
 		cp.SetTitle('')
 		cp.SetAuthor('')
 		cp.SetCopyright('')
-		ts.AddTargetAudience(producer.ENC_TARGET_28_MODEM)
-		ts.SetVideoQuality(producer.ENC_VIDEO_QUALITY_NORMAL)
+		# XXX: for testing incr caps
+		#ts.AddTargetAudience(producer.ENC_TARGET_28_MODEM)
+		ts.AddTargetAudience(producer.ENC_TARGET_DUAL_ISDN)
+		#ts.SetVideoQuality(producer.ENC_VIDEO_QUALITY_NORMAL)
+		ts.SetVideoQuality(producer.ENC_VIDEO_QUALITY_SMOOTH_MOTION)
 	cp.SetPerfectPlay(1)
 	cp.SetMobilePlay(0)
 	cp.SetSelectiveRecord(0)
@@ -53,6 +66,7 @@ def convertvideofile(infile, dstdir, file, node):
 	cp.SetDoOutputFile(1)
 	cp.SetOutputFilename(fullpath)
 
+	import dshow
 	b = dshow.CreateGraphBuilder()
 	b.RenderFile(infile)
 	renderer=b.FindFilterByName('Video Renderer')
@@ -139,8 +153,7 @@ def convertvideofile(infile, dstdir, file, node):
 
 #inputfile='D:\\ufs\\mm\\cmif\\Build\\common\\testdoc\\testdatampg.mpg'
 inputfile='D:\\ufs\\mm\\cmif\\win32\\DXMedia\\bin\\ms.avi'
-#inputfile='D:\\ufs\\mmback\\mpeg\\7closet.mpg'
+#inputfile='D:\\ufs\\mmback\\mpeg\\bloem.mpg'
 outputdir='d:\\ufs\\mm\\cmif\\win32\\DXMedia\\bin'
-os.environ['REAL_PRODUCER']='c:\\Program Files\\RealSDK\\Producer\\BIN\\'
 
 convertvideofile(inputfile,outputdir,'xxx.rm',None)
