@@ -74,6 +74,12 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name vidpipe
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name grinsp
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name grinsproxy
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -230,6 +236,21 @@ Package=<5>
 
 Package=<4>
 {{{
+}}}
+
+###############################################################################
+
+Project: "grinsp"=..\COM\javaclient\csrc\grinsp\grinsp.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name grinsproxy
+    End Project Dependency
 }}}
 
 ###############################################################################
