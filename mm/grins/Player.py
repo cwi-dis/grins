@@ -37,8 +37,7 @@ class Player(PlayerCore, PlayerDialog):
 	def __init__(self, toplevel):
 		self.playing = self.pausing = self.locked = 0
 		PlayerCore.__init__(self, toplevel)
-		self.load_geometry()
-		PlayerDialog.__init__(self, self.last_geometry,
+		PlayerDialog.__init__(self, self.get_geometry(),
 				      'Player (' + toplevel.basename + ')')
 		self.channelnames = []
 		self.channels = {}
@@ -47,8 +46,6 @@ class Player(PlayerCore, PlayerDialog):
 		self.toplevel = toplevel
 		self.showing = 0
 		self.waiting = 0
-		self.last_geometry = None
-		self.window = None
 		self.source = None
 		self.set_timer = toplevel.set_timer
 		self.timer_callback = self.scheduler.timer_callback
@@ -89,14 +86,10 @@ class Player(PlayerCore, PlayerDialog):
 		PlayerDialog.hide(self)
 		self.destroychannels()
 
-	def load_geometry(self):
+	def get_geometry(self):
 		h, v = self.root.GetRawAttrDef('player_winpos', (None, None))
 		width, height = MMAttrdefs.getattr(self.root, 'player_winsize')
-		self.last_geometry = h, v, width, height
-
-	def get_geometry(self):
-		if self.window:
-			self.last_geometry = self.window.getgeometry()
+		return h, v, width, height
 
 	#
 	# FORMS callbacks.
