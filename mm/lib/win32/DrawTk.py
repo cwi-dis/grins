@@ -753,6 +753,8 @@ class DrawLayer:
 	def onLButtonDown(self, params):
 		msg=win32mu.Win32Msg(params)
 		point=Point(msg.pos());flags=msg._wParam
+		if not drawTk._brect.isPtInRect(point):
+			return
 		drawTool = drawTk.GetCurrentTool()
 		if drawTool:
 			drawTool.onLButtonDown(self,flags,point);
@@ -767,7 +769,6 @@ class DrawLayer:
 	def onLButtonDblClk(self, params):
 		msg=win32mu.Win32Msg(params)
 		point=Point(msg.pos());flags=msg._wParam
-
 		point_dp=self.ClientToCanvas(point)
 		drawObj=self.ObjectAt(point_dp)
 		if drawObj:
