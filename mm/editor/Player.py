@@ -872,6 +872,7 @@ def del_timing(node):
 	for child in children:
 		del_timing(child)
 
+
 # Flush per-node channel cache
 #
 # See comments for getchannel on the usefulness of the routine.
@@ -879,7 +880,7 @@ def del_timing(node):
 def flushchannelcache(node):
 	try:
 		del node.channel
-	except AttributeError:
+	except (AttributeError, KeyError):
 		pass
 	children = node.GetChildren()
 	for child in children:
