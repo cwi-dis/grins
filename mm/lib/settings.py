@@ -19,7 +19,7 @@ default_settings = {
 	'debug': 0,			# Show debug commands
 	'checkext': 1,			# Guess Mime type based on extension
 	'vertical_structure': 1,	# Orientation of Structure View
-	'no_canvas_resize': 0, # Don't resize canvas after window resize (X)
+	'no_canvas_resize': 1, 	 # Don't resize canvas after window resize (X)
 	'hierarchy_minimum_sizes': 0,	# Leaf nodes drawn using min. size
 	'root_expanded': 1,		# Root node always expanded
 	'recent_documents':[],		# Recently used documents
