@@ -112,6 +112,25 @@ ui_window_child_window_from_point(PyObject *self, PyObject *args)
 	return PyCWnd::make( UITypeFromCObject(pChild), pChild )->GetGoodRet();
 }
 
+// @pymethod (x, y)|PyCWnd|WindowFromPoint|Returns the window that contains the point and if not found the window asked for
+static PyObject *
+ui_window_window_from_point(PyObject *self, PyObject *args)
+{
+	CWnd *pWnd = GetWndPtr(self);
+	if (!pWnd) return NULL;
+	CPoint point;
+	// @pyparm (x, y)|point||The point.
+	if (!PyArg_ParseTuple(args,"(ii):WindowFromPoint", &point.x, &point.y))
+		return NULL;
+	// @pyseemfc CWnd|WindowFromPoint
+	GUI_BGN_SAVE;
+	CWnd* pWndAtPoint=CWnd::WindowFromPoint(point);
+	GUI_END_SAVE;
+	if(!pWndAtPoint || !pWndAtPoint->GetSafeHwnd())
+		RETURN_NONE;
+	return PyCWnd::make( UITypeFromCObject(pWndAtPoint), pWndAtPoint)->GetGoodRet();
+}
+
 static PyObject *
 ui_window_validate_rect(PyObject *self, PyObject *args)
 {
@@ -790,7 +809,22 @@ ui_window_do_drag_drop(PyObject *self, PyObject *args)
 	return Py_BuildValue("i", dropEffect);
 }
 
-// SubclassDlgItem
+
+// @pymethod <o PyCWnd>|win32ui|EnableToolTips|Enable tooltips for this window.
+PyObject *
+ui_window_enable_tool_tips(PyObject *self, PyObject *args)
+{
+	BOOL bEnable;
+	if (!PyArg_ParseTuple(args, "i:EnableToolTips", &bEnable)) 
+		return NULL;
+	CWnd *pWnd = GetWndPtr(self);
+	if (!pWnd)
+		return NULL;
+	GUI_BGN_SAVE;
+	pWnd->EnableToolTips(bEnable);
+	GUI_END_SAVE;
+	RETURN_NONE;
+}
 
 ///////////////////////
 // @pymeth GetWindowLong|Gets the style of a window.
@@ -812,6 +846,7 @@ ui_window_do_drag_drop(PyObject *self, PyObject *args)
     {"GetWindowLong",ui_window_get_window_long,1},\
 	{"SetWindowLong",ui_window_set_window_long,1},\
 	{"ChildWindowFromPoint",ui_window_child_window_from_point,1},\
+	{"WindowFromPoint",ui_window_window_from_point,1},\
 	{"SubclassWindow",ui_window_subclass_window,1},\
 	{"ScrollWindow",ui_window_scroll_window,1},\
 	{"PrintClient",ui_window_print_client,1},\
@@ -819,7 +854,8 @@ ui_window_do_drag_drop(PyObject *self, PyObject *args)
 	{"RegisterDropTarget",ui_window_register_drop_target,1},\
 	{"RevokeDropTarget",ui_window_revoke_drop_target,1},\
 	{"DoDragDrop",ui_window_do_drag_drop,1},\
-	{"SubclassDlgItem",ui_window_subclass_dlg_item,1}, 
+	{"SubclassDlgItem",ui_window_subclass_dlg_item,1},\
+	{"EnableToolTips",ui_window_enable_tool_tips,1}, 
 
 
 /*
