@@ -43,6 +43,7 @@ class _DisplayList:
 		self._rendered = FALSE
 		self._font = None
 		self._imagemask = None
+		self._coverarea = Xlib.CreateRegion()
 
 		# associate cmd names with list indices
 		# used by animation experimental methods
@@ -66,7 +67,6 @@ class _DisplayList:
 			r = win._region
 			if win._transparent == -1 and win._parent is not None and \
 			   win._topwindow is not win:
-				win._parent._mkclip()
 				win._parent._do_expose(r)
 			else:
 				win._do_expose(r)
@@ -77,9 +77,10 @@ class _DisplayList:
 						     x, y, w, h, x, y)
 			if win._transparent == 0:
 				w = win._parent
+				region = win._getmyarea()
 				while w is not None and w is not toplevel:
 					w._buttonregion.SubtractRegion(
-						win._clip)
+						region)
 					w = w._parent
 			win._topwindow._setmotionhandler()
 		del self._cloneof
@@ -89,6 +90,7 @@ class _DisplayList:
 		del self._font
 		del self._imagemask
 		del self._buttonregion
+		del self._coverarea
 
 	def is_closed(self):
 		return self._window is None
@@ -100,6 +102,8 @@ class _DisplayList:
 		new._list = self._list[:]
 		new._font = self._font
 		new._fullwindow = self._fullwindow
+		new._coverarea = Xlib.CreateRegion()
+		new._coverarea.UnionRegion(self._coverarea)
 		if self._rendered:
 			new._cloneof = self
 			new._clonestart = len(self._list)
@@ -114,11 +118,11 @@ class _DisplayList:
 		window = self._window
 		if window._transparent == -1 and window._active_displist is None:
 			window._active_displist = self
-			window._parent._mkclip()
 			window._active_displist = None
 		for b in self._buttons:
 			b._highlighted = 0
-		region = window._clip
+		# figure out which part we must write
+		region = window._getmyarea()
 		# draw our bit
 		self._render(region)
 		# now draw transparent subwindows
@@ -140,15 +144,15 @@ class _DisplayList:
 			window.showwindow(window._showing)
 		if window._pixmap is not None:
 			x, y, width, height = window._rect
-			window._gc.SetRegion(window._clip)
+			window._gc.SetRegion(region)
 			window._pixmap.CopyArea(window._form, window._gc,
 						x, y, width, height, x, y)
 		window._buttonregion = bregion = Xlib.CreateRegion()
 		bregion.UnionRegion(self._buttonregion)
-		bregion.IntersectRegion(window._clip)
+		bregion.IntersectRegion(region)
 		w = window._parent
 		while w is not None and w is not toplevel:
-			w._buttonregion.SubtractRegion(window._clip)
+			w._buttonregion.SubtractRegion(region)
 			w._buttonregion.UnionRegion(bregion)
 			w = w._parent
 		window._topwindow._setmotionhandler()
@@ -355,6 +359,15 @@ class _DisplayList:
 			gc.FillPolygon(entry[4], X.Convex,
 				       X.CoordModeOrigin)
 
+	def _getcoverarea(self):
+		# return Region that we guarantee to overwrite on render
+		w = self._window
+		if self._bgcolor is not None or w._bgcolor is not None:
+			r = Xlib.CreateRegion()
+			apply(r.UnionRectWithRegion, w._rect)
+			return r
+		return self._coverarea
+
 	def fgcolor(self, color):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
@@ -403,6 +416,7 @@ class _DisplayList:
 			r = Xlib.CreateRegion()
 			r.UnionRectWithRegion(dest_x, dest_y, width, height)
 			self._imagemask = r
+			self._coverarea.UnionRegion(r)
 			if (dest_x, dest_y, width, height) == w._rect:
 				self._fullwindow = 1
 		self._list.append(('image', mask, clip, image, src_x, src_y,
@@ -449,8 +463,9 @@ class _DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
-		self._list.append(('fbox', w._convert_color(color),
-				   w._convert_coordinates(coordinates, units = units)))
+		box = w._convert_coordinates(coordinates, units = units)
+		self._list.append(('fbox', w._convert_color(color), box))
+		apply(self._coverarea.UnionRectWithRegion, box)
 		if self._list[-1][2] == w._rect:
 			self._fullwindow = 1
 		self._optimize((1,))
@@ -567,6 +582,8 @@ class _DisplayList:
 		for point in points:
 			p.append(w._convert_coordinates(point))
 		self._list.append(('fpolygon', color, p))
+		r = Xlib.PolygonRegion(p, w._gc.fill_rule)
+		self._coverarea.UnionRegion(r)
 		self._optimize((1,))
 
 	def draw3dbox(self, cl, ct, cr, cb, coordinates):
@@ -602,6 +619,13 @@ class _DisplayList:
 		coordinates = window._convert_coordinates((x, y, w, h))
 		color = window._convert_color(color)
 		self._list.append(('fdiamond', color, coordinates))
+		x, y, w, h = coordinates
+		r = Xlib.PolygonRegion([(x, y + h/2),
+					(x + w/2, y),
+					(x + w, y + h/2),
+					(x + w/2, y + h),
+					(x, y + h/2)], w._gc.fill_rule)
+		self._coverarea.UnionRegion(r)
 		self._optimize((1,))
 
 	def draw3ddiamond(self, cl, ct, cr, cb, coordinates):
@@ -637,6 +661,7 @@ class _DisplayList:
 			r = Xlib.CreateRegion()
 			r.UnionRectWithRegion(dest_x, dest_y, width, height)
 			self._imagemask = r
+			self._coverarea.UnionRegion(r)
 		self._list.append(('image', mask, None, image, src_x, src_y,
 				   dest_x, dest_y, width, height))
 		self._optimize((2,))
