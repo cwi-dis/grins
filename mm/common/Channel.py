@@ -1288,6 +1288,7 @@ class ChannelWindow(Channel):
 		self._wingeom = None
 		self.__transparent = 1
 		self.__bgcolor = None
+		self.__viewportChan = None
 
 		self.commandlist = [
 			CLOSE_WINDOW(callback = (ui.channel_callback, (self._name,))),
@@ -1599,6 +1600,18 @@ class ChannelWindow(Channel):
 
 		return 1
 
+	# return the viewport in which this channel is playing
+	def getViewportChannel(self):
+		if self.__viewportChan == None:
+			parent = self._get_parent_channel()
+			if parent != None:
+				self.__viewportChan = parent.getViewportChannel()
+			else:
+				# it the root channel
+				self.__viewportChan = self
+				
+		return self.__viewportChan	
+				
 	# Updates channels to visible if according to the showBackground/open and close attributes.
 	# Also: derterminate the background color before to show the channel
 	# for now, we set the window bg color equal to the displylist bg color in to order
@@ -1636,12 +1649,15 @@ class ChannelWindow(Channel):
 			
 			# force show of channel.
 			self.show(1)			
+#			self.getViewportChannel().addActiveVisibleChannel(self, node)
+#			print self.getViewportChannel().getOverlapChannelList(self,node)
 		else:
 			# force show of channel.
 			self.show(1)
 
 			pchan = self._get_parent_channel()
 			pchan.childToActiveState()
+#			self.getViewportChannel().addActiveVisibleChannel(self, node)
 
 
 	# Updates channels to unvisible if according to the showBackground/open and close attributes
@@ -1658,6 +1674,7 @@ class ChannelWindow(Channel):
 
 		pchan = self._get_parent_channel()
 		pchan.childToInactiveState()
+#		self.getViewportChannel().removeActiveVisibleChannel(self)
 
 ##	def _box_callback(self, *pgeom):
 ##		if not pgeom:
