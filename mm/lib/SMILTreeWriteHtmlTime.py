@@ -57,8 +57,20 @@ class SMILHtmlTimeWriter(SMILWriter):
 		self._viewportClass = ''
 		self.__viewports = {}
 		self.__buildLayoutTree(ctx)
-		
+		self.__root = node
+		self.__ctx = ctx
+							
+	def test(self, node):
+		if node.type in ('seq','par','excl'):
+			for child in node.children:
+				self.test(child)
+		else:
+			print node.attrdict.get('name'), ':', node.getPxAbsGeomMedia()
+				
 	def writeAsHtmlTime(self):
+		import settings
+		if settings.activeFullSmilCss:
+			self.test(self.__root)
 		write = self.fp.write
 		import version
 
