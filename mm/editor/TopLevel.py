@@ -274,12 +274,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
 			return
 		evallicense= (license < 0)
-		changed = self.changed
-		new_file = self.new_file
 		if not self.save_to_file(filename, cleanSMIL = 1):
 			return		# Error, don't save HTML file
-		self.changed = changed
-		self.new_file = new_file
 		#
 		# Invent HTML file name and SMIL file url, and generate webpage
 		#
@@ -287,6 +283,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			htmlfilename = filename[:-4] + '.html'
 		elif filename[-5:] == '.smil':
 			htmlfilename = filename[:-5] + '.html'
+		else:
+			htmlfile = filename + '.html'
 		smilurl = MMurl.pathname2url(filename)
 
 		# Make a back-up of the original file...
@@ -558,6 +556,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		
 
 	def save_to_file(self, filename, cleanSMIL = 0):
+		# cleanSMIL is a misnomer: it means "export" nowadays
 		license = self.main.wanttosave()
 		if not license:
 			windowinterface.showmessage('Cannot obtain a license to save. Operation failed')
@@ -601,9 +600,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 						    'Error: '+msg[1])
 			return 0
 ##		print 'done saving.'
-		self.main._update_recent(MMurl.pathname2url(filename))
-		self.changed = 0
-		self.new_file = 0
+		if not cleanSMIL:
+			self.main._update_recent(MMurl.pathname2url(filename))
+			self.changed = 0
+			self.new_file = 0
 		self.setcommands(self.commandlist)
 		return 1
 		
