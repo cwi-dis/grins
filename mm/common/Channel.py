@@ -157,7 +157,9 @@ class Channel(ChannelWM):
 		if not self._is_shown:
 			return
 		self._is_shown = 0
-		for chan in self._subchannels:
+		subchannels = self._subchannels
+		self._subchannels = []
+		for chan in subchannels:
 			want_shown = chan._want_shown
 			chan.hide()
 			chan._want_shown = want_shown
@@ -165,6 +167,7 @@ class Channel(ChannelWM):
 		for chan in channels:
 			if self in chan._subchannels:
 				chan._subchannels.remove(self)
+		self._subchannels = subchannels
 		if self._armstate == ARMING:
 			self.arm_1()
 		if self._playstate == PLAYING:
