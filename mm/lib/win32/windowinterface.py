@@ -51,6 +51,7 @@ shell_execute=AppToplevel.shell_execute
 createmainwnd=toplevel.createmainwnd
 newdocument=toplevel.newdocument
 getmainwnd=toplevel.getmainwnd
+getactivedocframe=toplevel.getActiveDocFrame
 # /SDI-MDI Model Support
 
 
