@@ -6,6 +6,7 @@ from XTopLevel import toplevel
 from XCommand import _CommandSupport
 from XButtonSupport import _ButtonSupport
 from XHelpers import _create_menu
+from XConstants import error
 
 class _AdornmentSupport(_CommandSupport, _ButtonSupport):
 	def __init__(self):
