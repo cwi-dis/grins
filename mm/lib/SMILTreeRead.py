@@ -1890,7 +1890,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if attrs is not None:
 			bg = attrs.get('backgroundColor')
 			if bg is None:
-				bg = attrs['background-color']
+				bg = attrs.get('background-color','transparent')
 			bg = self.__convert_color(bg)
 			name = attrs.get('id')
 
@@ -2530,7 +2530,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.syntax_error('layout in meta')
 		if self.__seen_layout and not self.__in_head_switch:
 			self.syntax_error('multiple layouts without switch')
-		if attributes['type'] == SMIL_BASIC:
+		if attributes.get('type', SMIL_BASIC) == SMIL_BASIC:
 			if self.__seen_layout > 0:
 				# if we've seen SMIL_BASIC/SMIL_EXTENDED
 				# already, ignore this one
@@ -2583,6 +2583,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		self.__regions[id] = attrdict
 			
+		if not attributes.has_key('background-color'):
+			# provide default
+			attributes['background-color'] = 'transparent'
+
 		for attr, val in attributes.items():
 			if attr[:len(GRiNSns)+1] == GRiNSns + ' ':
 				attr = attr[len(GRiNSns)+1:]
@@ -2934,8 +2938,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__fix_attributes(attributes)
 		self.__rootLayoutId = id = self.__checkid(attributes)
 		self.__root_layout = attributes
-		width = attributes['width']
-		if width[-2:] == 'px':
+		width = attributes.get('width')
+		if width is None:
+			width = 0
+		elif width[-2:] == 'px':
 			width = width[:-2]
 		try:
 			width = string.atoi(width)
@@ -2946,8 +2952,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if width < 0:
 				self.syntax_error('root-layout width not a positive value')
 				width = 0
-		height = attributes['height']
-		if height[-2:] == 'px':
+		height = attributes.get('height')
+		if height is None:
+			height = 0
+		elif height[-2:] == 'px':
 			height = height[:-2]
 		try:
 			height = string.atoi(height)
@@ -3239,7 +3247,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 		title = attributes.get('title', '')
-		u_state = attributes['defaultState']
+		u_state = attributes.get('defaultState','false')
 		if u_state not in ('true', 'false'):
 			self.syntax_error('invalid defaultState attribute value')
 		override = attributes.get('override', 'hidden')
@@ -3659,7 +3667,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		return l
 
 	def __link_attrs(self, attributes):
-		show = attributes['show']
+		show = attributes.get('show', 'replace')
 		if show not in ('replace', 'pause', 'new'):
 			self.syntax_error('unknown show attribute value')
 			show = 'replace'
