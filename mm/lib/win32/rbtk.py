@@ -142,12 +142,16 @@ class _rbtk:
 		if userResponse==win32con.IDOK:
 			apply(self._rb_callback, rb)
 		else:
-			# for modeless boxes do here what we should
-			# have done on every change.
-			if self._rb_modeless and self._rb_dirty(rb):
-				apply(self._rb_callback, rb)
-			else:	
-				apply(self._rb_callback,())	
+## Comment by Jack: I don't fully understand what Kleanthis intended here,
+## but a cancel is a cancel and we always call the callback with empty argument.
+## Hope this doesn't break anything else.
+## 			# for modeless boxes do here what we should
+## 			# have done on every change.
+## 			if self._rb_modeless and self._rb_dirty(rb):
+## 				apply(self._rb_callback, rb)
+## 			else:	
+## 				apply(self._rb_callback,())
+			apply(self._rb_callback, ())
 
 	def cancel_create_box(self):
 		"""Cancel create_box"""
