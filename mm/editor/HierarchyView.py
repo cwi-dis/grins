@@ -220,7 +220,7 @@ class HierarchyView(ViewDialog):
 		em = self.editmgr
 		if not em.transaction():
 			return
-		self.mother.toplevel.setwaiting()
+		self.toplevel.setwaiting()
 		parent = node.GetParent()
 		siblings = parent.GetChildren()
 		nf = siblings.index(node)
@@ -232,7 +232,7 @@ class HierarchyView(ViewDialog):
 			import Clipboard
 			Clipboard.setclip('node', node)
 		em.commit()
-		self.mother.toplevel.setready()
+		self.toplevel.setready()
 
 	def copyfocus(self):
 		node = self.focusnode
@@ -255,7 +255,7 @@ class HierarchyView(ViewDialog):
 				"Can't insert before/after the root",
 				type = 'error')
 			return
-		self.mother.toplevel.setwaiting()
+		self.toplevel.setwaiting()
 		type = node.GetType()
 		if where == 0:
 			children = node.GetChildren()
@@ -265,7 +265,7 @@ class HierarchyView(ViewDialog):
 		if self.insertnode(node, where):
 			import NodeInfo
 			NodeInfo.shownodeinfo(self.toplevel, node, new = 1)
-		self.mother.toplevel.setready()
+		self.toplevel.setready()
 
 	def insertparent(self, type):
 		node = self.focusnode
@@ -283,7 +283,7 @@ class HierarchyView(ViewDialog):
 		em = self.editmgr
 		if not em.transaction():
 			return
-		self.mother.toplevel.setwaiting()
+		self.toplevel.setwaiting()
 		siblings = parent.GetChildren()
 		i = siblings.index(node)
 		em.delnode(node)
@@ -294,7 +294,7 @@ class HierarchyView(ViewDialog):
 		em.commit()
 		import NodeInfo
 		NodeInfo.shownodeinfo(self.toplevel, newnode)
-		self.mother.toplevel.setready()
+		self.toplevel.setready()
 
 	def paste(self, where):
 		import Clipboard
@@ -309,13 +309,13 @@ class HierarchyView(ViewDialog):
 				'There is no focus to paste to',
 				type = 'error')
 			return
-		self.mother.toplevel.setwaiting()
+		self.toplevel.setwaiting()
 		if node.context is not self.root.context:
 			node = node.CopyIntoContext(self.root.context)
 		else:
 			Clipboard.setclip(type, node.DeepCopy())
 		dummy = self.insertnode(node, where)
-		self.mother.toplevel.setready()
+		self.toplevel.setready()
 
 	def insertnode(self, node, where):
 		# 'where' is coded as follows: -1: before; 0: under; 1: after
