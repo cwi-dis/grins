@@ -3,6 +3,7 @@ __version__ = "$Id$"
 import windowinterface, WMEVENTS
 import Timing
 from MMExc import MSyntaxError
+from Hlinks import TYPE_CALL, TYPE_JUMP, TYPE_FORK
 
 class TopLevel:
 	def __init__(self, main, filename):
@@ -142,9 +143,6 @@ class TopLevel:
 	# Global hyperjump interface
 	#
 	def jumptoexternal(self, uid, aid, type):
-		# XXXX Should check that document isn't active already,
-		# XXXX and, if so, should jump that instance of the
-		# XXXX document.
 		main = self.main
 		import MMurl
 		if '/' not in uid:
@@ -153,6 +151,7 @@ class TopLevel:
 			filename = uid[:-2]
 		else:
 			filename = uid
+		filename = MMurl.basejoin(self.filename, filename)
 		try:
 			filename = MMurl.urlretrieve(filename)[0]
 		except IOError, msg:
@@ -190,11 +189,4 @@ class TopLevel:
 		return 1
 	#
 	def is_document(self, filename):
-		import posix
-
-		try:
-			ourdata = posix.stat(self.filename)
-			hisdata = posix.stat(filename)
-		except posix.error:
-			return 0
-		return (ourdata == hisdata)
+		return filename == self.filename
