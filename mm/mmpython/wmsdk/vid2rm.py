@@ -36,7 +36,8 @@ def convertvideofile(u, dstdir, file, node):
 			if (1 << i) & target:
 				ts.AddTargetAudience(i)
 		if not target:
-			ts.AddTargetAudience(producer.ENC_TARGET_28_MODEM)
+			#ts.AddTargetAudience(producer.ENC_TARGET_28_MODEM)
+			ts.AddTargetAudience(producer.ENC_TARGET_56_MODEM)
 	else:
 		# we don't know nothin' about the node so use some defaults
 		cp.SetTitle('')
@@ -64,9 +65,6 @@ def convertvideofile(u, dstdir, file, node):
 		print 'Video real media converter filter is not installed'
 		return
 	b.AddFilter(f,'VRMC')
-	# sink not used yet
-	sink = f.QueryIFileSinkFilter()
-	sink.SetFileName(fullpath)
 	b.Render(lastpin)
 	try:
 		rconv=f.QueryIRealConverter()
@@ -87,6 +85,18 @@ def convertvideofile(u, dstdir, file, node):
 		return
 	rconv.SetInterface(uk,'IRMAInputPin')
 
+	try:
+		aurenderer=b.FindFilterByName('Default DirectSound Device')
+	except:
+		aurenderer=None
+	if not aurenderer:
+		try:
+			aurenderer=b.FindFilterByName('Default WaveOut Device')
+		except:
+			aurenderer=None
+	if aurenderer:
+		b.RemoveFilter(aurenderer)
+
 	# PinProperties,MediaSample,PrepareToEncode,Encode, DoneEncoding
 	# are all managed by our dshow filter
 
@@ -96,6 +106,8 @@ def convertvideofile(u, dstdir, file, node):
 	mc.Stop()
 
 inputfile='D:\\ufs\\mm\\cmif\\Build\\common\\testdoc\\testdatampg.mpg'
+#inputfile='D:\\ufs\\mm\\cmif\\win32\\DXMedia\\bin\\hokey.avi'
+#inputfile='D:\\ufs\\mmback\\mpeg\\7closet.mpg'
 outputdir='d:\\ufs\\mm\\cmif\\win32\\DXMedia\\bin'
 os.environ['REAL_PRODUCER']='c:\\Program Files\\RealSDK\\Producer\\BIN\\'
 
