@@ -695,7 +695,7 @@ class showmessage:
 		if not parent:	
 			self._res = win32ui.MessageBox(text,title,style)
 		else:
-			self_res = parent.MessageBox(text,title,style)
+			self._res = parent.MessageBox(text,title,style)
 		if callback and self._res==win32con.IDOK:
 			apply(apply,callback)
 		elif cancelCallback and self._res==win32con.IDCANCEL:
