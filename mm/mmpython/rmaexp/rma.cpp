@@ -379,91 +379,6 @@ newRMAPlayerObject()
 typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
-	IRMASiteSupplier* pI;
-} RMASiteSupplierObject;
-
-staticforward PyTypeObject RMASiteSupplierType;
-
-static RMASiteSupplierObject *
-newRMASiteSupplierObject()
-{
-	RMASiteSupplierObject *self;
-	self = PyObject_NEW(RMASiteSupplierObject, &RMASiteSupplierType);
-	if (self == NULL)
-		return NULL;
-	self->pI = NULL;
-	/* XXXX Add your own initializers here */
-	return self;
-}
-
-
-//
-typedef struct {
-	PyObject_HEAD
-	/* XXXX Add your own stuff here */
-	IRMAClientAdviseSink* pI;
-} RMAClientAdviseSinkObject;
-
-staticforward PyTypeObject RMAClientAdviseSinkType;
-
-static RMAClientAdviseSinkObject *
-newRMAClientAdviseSinkObject()
-{
-	RMAClientAdviseSinkObject *self;
-	self = PyObject_NEW(RMAClientAdviseSinkObject, &RMAClientAdviseSinkType);
-	if (self == NULL)
-		return NULL;
-	self->pI = NULL;
-	/* XXXX Add your own initializers here */
-	return self;
-}
-
-//
-typedef struct {
-	PyObject_HEAD
-	/* XXXX Add your own stuff here */
-	IRMAErrorSink* pI;
-} RMAErrorSinkObject;
-
-staticforward PyTypeObject RMAErrorSinkType;
-
-static RMAErrorSinkObject *
-newRMAErrorSinkObject()
-{
-	RMAErrorSinkObject *self;
-	self = PyObject_NEW(RMAErrorSinkObject, &RMAErrorSinkType);
-	if (self == NULL)
-		return NULL;
-	self->pI = NULL;
-	/* XXXX Add your own initializers here */
-	return self;
-}
-
-
-//
-typedef struct {
-	PyObject_HEAD
-	/* XXXX Add your own stuff here */
-	IRMAAuthenticationManager* pI;
-} RMAAuthenticationManagerObject;
-
-staticforward PyTypeObject RMAAuthenticationManagerType;
-
-static RMAAuthenticationManagerObject *
-newRMAAuthenticationManagerObject()
-{
-	RMAAuthenticationManagerObject *self;
-	self = PyObject_NEW(RMAAuthenticationManagerObject, &RMAAuthenticationManagerType);
-	if (self == NULL)
-		return NULL;
-	self->pI = NULL;
-	/* XXXX Add your own initializers here */
-	return self;
-}
-
-typedef struct {
-	PyObject_HEAD
-	/* XXXX Add your own stuff here */
     IPyClientContext *pI;	
 } ClientContextObject;
 
@@ -480,6 +395,91 @@ newClientContextObject()
 	/* XXXX Add your own initializers here */
 	return self;
 }
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IPySiteSupplier* pI;
+} SiteSupplierObject;
+
+staticforward PyTypeObject SiteSupplierType;
+
+static SiteSupplierObject *
+newSiteSupplierObject()
+{
+	SiteSupplierObject *self;
+	self = PyObject_NEW(SiteSupplierObject, &SiteSupplierType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IPyClientAdviseSink* pI;
+} ClientAdviseSinkObject;
+
+staticforward PyTypeObject ClientAdviseSinkType;
+
+static ClientAdviseSinkObject *
+newClientAdviseSinkObject()
+{
+	ClientAdviseSinkObject *self;
+	self = PyObject_NEW(ClientAdviseSinkObject, &ClientAdviseSinkType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IPyErrorSink* pI;
+} ErrorSinkObject;
+
+staticforward PyTypeObject ErrorSinkType;
+
+static ErrorSinkObject *
+newErrorSinkObject()
+{
+	ErrorSinkObject *self;
+	self = PyObject_NEW(ErrorSinkObject, &ErrorSinkType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IPyAuthenticationManager* pI;
+} AuthenticationManagerObject;
+
+staticforward PyTypeObject AuthenticationManagerType;
+
+static AuthenticationManagerObject *
+newAuthenticationManagerObject()
+{
+	AuthenticationManagerObject *self;
+	self = PyObject_NEW(AuthenticationManagerObject, &AuthenticationManagerType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
 
 ///////////////////////////////////////////
 ///////////////////////////////////////////
@@ -840,7 +840,6 @@ static PyTypeObject RMAPlayerType = {
 ////////////////////////////////////////////
 // ClientContext object 
 
-
 static struct PyMethodDef ClientContext_methods[] = {
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
@@ -890,6 +889,226 @@ static PyTypeObject ClientContextType = {
 };
 
 // End of code for ClientContext object 
+////////////////////////////////////////////
+
+
+////////////////////////////////////////////
+// ClientAdviseSink object 
+
+static struct PyMethodDef ClientAdviseSink_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+ClientAdviseSink_dealloc(ClientAdviseSinkObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI)
+	PyMem_DEL(self);
+}
+
+static PyObject *
+ClientAdviseSink_getattr(ClientAdviseSinkObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(ClientAdviseSink_methods, (PyObject *)self, name);
+}
+
+static char ClientAdviseSinkType__doc__[] =
+""
+;
+
+static PyTypeObject ClientAdviseSinkType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"ClientAdviseSink",			/*tp_name*/
+	sizeof(ClientAdviseSinkObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)ClientAdviseSink_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)ClientAdviseSink_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	ClientAdviseSinkType__doc__ /* Documentation string */
+};
+
+// End of code for ClientAdviseSink object 
+////////////////////////////////////////////
+
+
+////////////////////////////////////////////
+// ErrorSink object 
+
+static struct PyMethodDef ErrorSink_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+ErrorSink_dealloc(ErrorSinkObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI)
+	PyMem_DEL(self);
+}
+
+static PyObject *
+ErrorSink_getattr(ErrorSinkObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(ErrorSink_methods, (PyObject *)self, name);
+}
+
+static char ErrorSinkType__doc__[] =
+""
+;
+
+static PyTypeObject ErrorSinkType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"ErrorSink",			/*tp_name*/
+	sizeof(ErrorSinkObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)ErrorSink_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)ErrorSink_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	ErrorSinkType__doc__ /* Documentation string */
+};
+
+// End of code for ErrorSink object 
+////////////////////////////////////////////
+
+
+////////////////////////////////////////////
+// SiteSupplier object 
+
+static struct PyMethodDef SiteSupplier_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+SiteSupplier_dealloc(SiteSupplierObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI)
+	PyMem_DEL(self);
+}
+
+static PyObject *
+SiteSupplier_getattr(SiteSupplierObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(SiteSupplier_methods, (PyObject *)self, name);
+}
+
+static char SiteSupplierType__doc__[] =
+""
+;
+
+static PyTypeObject SiteSupplierType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"SiteSupplier",			/*tp_name*/
+	sizeof(SiteSupplierObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)SiteSupplier_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)SiteSupplier_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	SiteSupplierType__doc__ /* Documentation string */
+};
+
+// End of code for SiteSupplier object 
+////////////////////////////////////////////
+
+
+////////////////////////////////////////////
+// AuthenticationManager object 
+
+static struct PyMethodDef AuthenticationManager_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+AuthenticationManager_dealloc(AuthenticationManagerObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI)
+	PyMem_DEL(self);
+}
+
+static PyObject *
+AuthenticationManager_getattr(AuthenticationManagerObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(AuthenticationManager_methods, (PyObject *)self, name);
+}
+
+static char AuthenticationManagerType__doc__[] =
+""
+;
+
+static PyTypeObject AuthenticationManagerType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"AuthenticationManager",			/*tp_name*/
+	sizeof(AuthenticationManagerObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)AuthenticationManager_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)AuthenticationManager_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	AuthenticationManagerType__doc__ /* Documentation string */
+};
+
+// End of code for AuthenticationManager object 
 ////////////////////////////////////////////
 
 
@@ -1058,9 +1277,105 @@ RMA_CreateClientContext(PyObject *self, PyObject *args)
 	return (PyObject *) obj;
 }
 
+static char RMA_CreateClientAdviseSink__doc__[] =
+""
+;
+static PyObject *
+RMA_CreateClientAdviseSink(PyObject *self, PyObject *args)
+{
+	PN_RESULT res;
+	ClientAdviseSinkObject *obj;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+
+	obj = newClientAdviseSinkObject();
+	if (obj == NULL)
+		return NULL;
+	res = CreateClientAdviseSink(&obj->pI);
+	if(FAILED(res)){
+		Py_DECREF(obj);
+		seterror("CreateClientAdviseSink");
+		return NULL;
+	}
+	return (PyObject *) obj;
+}
+
+static char RMA_CreateErrorSink__doc__[] =
+""
+;
+static PyObject *
+RMA_CreateErrorSink(PyObject *self, PyObject *args)
+{
+	PN_RESULT res;
+	ErrorSinkObject *obj;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+
+	obj = newErrorSinkObject();
+	if (obj == NULL)
+		return NULL;
+	res = CreateErrorSink(&obj->pI);
+	if(FAILED(res)){
+		Py_DECREF(obj);
+		seterror("CreateErrorSink");
+		return NULL;
+	}
+	return (PyObject *) obj;
+}
+
+static char RMA_CreateSiteSupplier__doc__[] =
+""
+;
+static PyObject *
+RMA_CreateSiteSupplier(PyObject *self, PyObject *args)
+{
+	PN_RESULT res;
+	SiteSupplierObject *obj;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+
+	obj = newSiteSupplierObject();
+	if (obj == NULL)
+		return NULL;
+	res = CreateSiteSupplier(&obj->pI);
+	if(FAILED(res)){
+		Py_DECREF(obj);
+		seterror("CreateSiteSupplier");
+		return NULL;
+	}
+	return (PyObject *) obj;
+}
+
+static char RMA_CreateAuthenticationManager__doc__[] =
+""
+;
+static PyObject *
+RMA_CreateAuthenticationManager(PyObject *self, PyObject *args)
+{
+	PN_RESULT res;
+	AuthenticationManagerObject *obj;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+
+	obj = newAuthenticationManagerObject();
+	if (obj == NULL)
+		return NULL;
+	res = CreateAuthenticationManager(&obj->pI);
+	if(FAILED(res)){
+		Py_DECREF(obj);
+		seterror("CreateAuthenticationManager");
+		return NULL;
+	}
+	return (PyObject *) obj;
+}
+
 static struct PyMethodDef rma_methods[] = {
 	{"CreateEngine", (PyCFunction)RMA_CreateRMAClientEngine, METH_VARARGS, RMA_CreateRMAClientEngine__doc__},
 	{"CreateClientContext", (PyCFunction)RMA_CreateClientContext, METH_VARARGS, RMA_CreateClientContext__doc__},
+	{"CreateClientAdviseSink", (PyCFunction)RMA_CreateClientAdviseSink, METH_VARARGS, RMA_CreateClientAdviseSink__doc__},
+	{"CreateErrorSink", (PyCFunction)RMA_CreateErrorSink, METH_VARARGS, RMA_CreateErrorSink__doc__},
+	{"CreateSiteSupplier", (PyCFunction)RMA_CreateSiteSupplier, METH_VARARGS, RMA_CreateSiteSupplier__doc__},
+	{"CreateAuthenticationManager", (PyCFunction)RMA_CreateAuthenticationManager, METH_VARARGS, RMA_CreateAuthenticationManager__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
