@@ -30,6 +30,7 @@ import string
 import sys
 import MMurl
 import urlparse
+import version
 
 # url parsing
 import ntpath, urllib
@@ -43,7 +44,7 @@ helpwindow = None
 #
 # This could be done better, by putting the version number in here.
 #
-DEFAULT_BASE_URL="http://www.oratrix.com/GRiNS/help/%s/index.html"%sys.platform
+DEFAULT_BASE_URL="http://www.oratrix.com/indir/%s/help/index.html"%version.shortversion
 
 def sethelpdir(dirname):
 	global helpbase
