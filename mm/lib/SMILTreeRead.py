@@ -2835,7 +2835,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						continue
 
 			mods = ATTRIBUTES.get(attr)
-			if not ans and mods:
+			if not ns and not ans and mods:
 				if type(mods) is type({}):
 					for mod, elems in mods.items():
 						if settings.MODULES.get(mod) and (elems is None or tagname in elems):
@@ -2843,7 +2843,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					else:
 						# silently ignore attribute in unsupported module
 						if __debug__:
-							print 'silently ignore attribute',tagname,key
+							print 'silently ignore attribute',tagname,key,ans,mods
 						del attributes[key]
 						continue
 				else:
@@ -2853,7 +2853,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					else:
 						# silently ignore attribute in unsupported module
 						if __debug__:
-							print 'silently ignore attribute',tagname,key
+							print 'silently ignore attribute',tagname,key,ans,mods
 						del attributes[key]
 						continue
 
