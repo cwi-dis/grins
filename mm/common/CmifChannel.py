@@ -13,10 +13,24 @@ class CmifChannel(Channel):
 		Channel.__init__(self, name, attrdict, scheduler, ui)
 		self.stopped = 0
 	
+	def do_arm(self, node, same = 0):
+		if node.GetType() == 'imm':
+			cmds = node.GetValues()
+		else:
+			filename = self.getfileurl(node)
+			try:
+				fp = urlopen(filename)
+			except IOError, msg:
+				self.errormsg(node, filename + ':\n' + msg)
+				cmds = []
+			else:
+				cmds = fp.readlines()
+				fp.close()
+		self.cmds = cmds
+		return 1
+
 	def do_play(self, node):
-		if node.GetType() <> 'imm':
-			print 'CmifChannel: imm nodes only'
-		cmds = node.GetValues()
+		cmds = self.cmds
 		for cmd in cmds:
 			if not cmd:
 				continue
