@@ -22,7 +22,7 @@ class LinkEditLight:
 	def is_showing(self):
 		return 0
 
-	def fixtitle(self, title):
+	def fixtitle(self):
 		pass
 
 	def get_geometry(self):
