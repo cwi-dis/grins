@@ -17,7 +17,7 @@ PIDLE = 1
 PLAYING = 2
 PLAYED = 3
 
-class Channel():
+class Channel:
 	#
 	# The following methods can be called by higher levels.
 	#
@@ -607,7 +607,7 @@ class ChannelWindow(Channel):
 			self.played_display.close()
 			self.played_display = None
 
-class _ChannelThread():
+class _ChannelThread:
 	def init(self):
 		self.threads = None
 		return self
