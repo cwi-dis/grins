@@ -48,8 +48,7 @@ import marshal
 
 # Parse a file containing attribute definitions.
 #
-def readattrdefs(filename):
-	fp = open(filename, 'r')
+def readattrdefs(fp, filename):
 	filename_com = filename + '.atc'
 	try:
 		fpc = open(filename_com, 'r')
@@ -114,7 +113,7 @@ def readattrdefs(filename):
 		marshal.dump(dict, fpc)
 		fpc.close()
 	except IOError, msg:
-		print 'Can\'t write compiled attrubites to', filename_com
+		print 'Can\'t write compiled attributes to', filename_com
 		print msg
 	print 'Done.'
 	return dict
@@ -200,7 +199,7 @@ def getattr(node, attrname):
 		rv = node.attrcache[attrname]
 		##_stat('cache hit: ' + attrname)
 		return rv
-	except:
+	except (AttributeError, KeyError):
 		##_stat('cache miss: ' + attrname)
 		pass
 	#
@@ -217,11 +216,10 @@ def getattr(node, attrname):
 		try:
 			attrvalue = node.GetInherAttr(attrname)
 		except NoSuchAttrError:
-			try:
-				cname = node.GetInherAttr('channel')
-				attrdict = node.context.channeldict[cname]
-				attrvalue = attrdict[attrname]
-			except:
+			ch = node.GetChannel()
+			if ch and ch.has_key(attrname):
+				attrvalue = ch[attrname]
+			else:
 				attrvalue = defaultvalue
 	else:
 		raise CheckError, 'bad inheritance ' +`inheritance` + \
@@ -266,11 +264,10 @@ def getdefattr(node, attrname):
 		try:
 			return node.GetDefInherAttr(attrname)
 		except NoSuchAttrError:
-			try:
-				cname = node.GetInherAttr('channel')
-				attrdict = node.context.channeldict[cname]
-				return attrdict[attrname]
-			except:
+			ch = node.GetChannel()
+			if ch and ch.has_key(attrname):
+				return ch[attrname]
+			else:
 				return defaultvalue
 	else:
 		raise CheckError, 'bad inheritance ' +`inheritance` + \
@@ -292,12 +289,16 @@ def parsevalue(name, string, context):
 # Initialize the attrdefs table.
 #
 def initattrdefs():
+	filename = 'Attrdefs'
 	try:
-		attrdefs = readattrdefs('Attrdefs')
+		fp = open(filename, 'r')
 		print '(Using local Attrdefs file)'
-	except:
+	except IOError:
 		import cmif
-		attrdefs = readattrdefs(cmif.findfile('lib/Attrdefs'))
+		filename = cmif.findfile('lib/Attrdefs')
+		fp = open(filename, 'r')
+	attrdefs = readattrdefs(fp, filename)
+	fp.close()
 	return attrdefs
 
 
