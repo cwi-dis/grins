@@ -754,22 +754,28 @@ class HierarchyView(HierarchyViewDialog):
 		is_constrained = (modifiers != 'add')
 		if self.__dragside is not None:
 			self.window._dragging = None # XXX win32 specific, should define proper interface
-			obj, side, timemapper, timeline = self.__dragside
+			obj, side, timemapper, timeline, minpix, maxpix = self.__dragside
 			if timeline is not None:
+				if not is_constrained:
+					minpix = maxpix = None
+				if minpix != None and px < minpix:
+					px = minpix
+				if maxpix != None and px > maxpix:
+					px = maxpix
 				x,y,w,h = timeline.get_box()
 				t, is_exact = obj.pixel2time(px, side, timemapper)
-				if t < 0:
-					if side == 'right':
-						# no negative durations
-						px1 = obj.time2pixel(0, side, timemapper, 'left')
-						if px < px1:
-							px = px1
-					else:
-						pnode = obj.node.GetParent()
-						if pnode is None or pnode.GetType() == 'seq':
-							px1 = obj.time2pixel(0, side, timemapper, 'left')
-							if px < px1:
-								px = px1
+##				if t < 0:
+##					if side == 'right':
+##						# no negative durations
+##						px1 = obj.time2pixel(0, side, timemapper, 'left')
+##						if px < px1:
+##							px = px1
+##					else:
+##						pnode = obj.node.GetParent()
+##						if pnode is None or pnode.GetType() == 'seq':
+##							px1 = obj.time2pixel(0, side, timemapper, 'left')
+##							if px < px1:
+##								px = px1
 				apply(self.window.drawxorline, self.__line)
 				if is_exact:
 					color = (255, 0, 0)
@@ -800,7 +806,6 @@ class HierarchyView(HierarchyViewDialog):
 		px = int(x * self.mcanvassize[0] + .5) # This is kind of dumb - it has already been converted from pixels
 		py = int(y * self.mcanvassize[1] + .5) #  to floats in the windowinterface.
 		rv = self.scene_graph.get_obj_near((px, py))
-		self.__dragside = rv
 		if rv is None or rv[2] is None:
 			self.__dragside = None
 			if x >= 1 or y >= 1:
@@ -813,9 +818,13 @@ class HierarchyView(HierarchyViewDialog):
 				self.click(px, py)
 		else:
 			# start dragging
+			obj, side, timemapper, timeline = rv
+			mintime, maxtime = self._gettimeconstraints(obj, side)
+			minpix = obj.time2pixel(mintime, side, timemapper, 'left')
+			maxpix = obj.time2pixel(maxtime, side, timemapper, 'right')
+			self.__dragside = rv + (minpix, maxpix)
 			is_constrained = (modifier != 'add')
 			self.mousedrag(1)
-			obj, side, timemapper, timeline = rv
 			if timeline is not None:
 				x,y,w,h = timeline.get_box()
 				color = (255,0,0)
@@ -828,11 +837,12 @@ class HierarchyView(HierarchyViewDialog):
 
 	def mouse0release(self, dummy, window, event, params):
 		self.toplevel.setwaiting()
-		x,y = params[0:2]
+		x,y, dummy, modifiers = params
+		is_constrained = (modifiers != 'add')
 		px = int(x * self.mcanvassize[0] + .5)
 		py = int(y * self.mcanvassize[1] + .5)
 		if self.__dragside is not None:
-			obj, side, timemapper, timeline = self.__dragside
+			obj, side, timemapper, timeline, minpix, maxpix = self.__dragside
 			self.__dragside = None
 			self.mousedrag(0)
 			if timeline is not None:
@@ -847,29 +857,22 @@ class HierarchyView(HierarchyViewDialog):
 				self.need_resize = 1
 				self.draw()
 				return
+			if not is_constrained:
+				minpix = maxpix = None
+			if minpix != None and px < minpix:
+				px = minpix
+			if maxpix != None and px > maxpix:
+				px = maxpix
 			t, is_exact = obj.pixel2time(px, side, timemapper)
-			if t < 0:
-				if side == 'right':
-					# no negative durations
-					t = 0
-				else:
-					pnode = obj.node.GetParent()
-					if pnode is None or pnode.GetType() == 'seq':
-						t = 0
-			em = self.editmgr
-			if not em.transaction():
-				return
-			if side == 'left':
-				# delete first simple delay syncarc
-				for arc in obj.node.GetAttrDef('beginlist', []):
-					if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
-						em.delsyncarc(obj.node, 'beginlist', arc)
-						break
-				newarc = MMNode.MMSyncArc(obj.node, 'begin', srcnode = 'syncbase', delay = t)
-				em.addsyncarc(obj.node, 'beginlist', newarc, 0)
-			else:
-				em.setnodeattr(obj.node, 'duration', t)
-			em.commit()
+##			if t < 0:
+##				if side == 'right':
+##					# no negative durations
+##					t = 0
+##				else:
+##					pnode = obj.node.GetParent()
+##					if pnode is None or pnode.GetType() == 'seq':
+##						t = 0
+			self._setnewtime(obj, side, t, is_constrained)
 			return
 		if x >= 1 or y >= 1:
 			# out of bounds, ignore
@@ -883,6 +886,117 @@ class HierarchyView(HierarchyViewDialog):
 			self.draw()
 ##			print "Done drawing. ", time.time()
 
+
+	def _gettimeconstraints(self, obj, side):
+		# Return minimum and maximum (in seconds) where "side" of "obj"
+		# can be dragged in constrained mode.
+		# NOTE: the times are relative to "obj"!
+		node = obj.get_node()
+		nt0, nt1, nt2, dummy1, dummy2 = node.GetTimes('virtual')
+		pnode = node.GetParent()
+		pt0, pt1, pt2, dummy1, dummy2 = pnode.GetTimes('virtual')
+		mintime = pt0
+		maxtime = pt2
+		if side == 'right':
+			if nt0 > mintime:
+				mintime = nt0
+		if side == 'left':
+			if max(nt1, nt2) < maxtime:
+				maxtime = max(nt1, nt2)
+		if pnode.GetType() == 'seq':
+			siblings = pnode.GetChildren()
+			idx = siblings.index(node)
+			if idx > 0:
+				pred = siblings[idx-1]
+				predt0, predt1, predt2, dummy1, dummy2 = pred.GetTimes('virtual')
+				if predt1 > mintime:
+					mintime = predt1
+			if idx < len(siblings)-1:
+				succ = siblings[idx+1]
+				succt0, succt1, succt2, dummy1, dummy2 = succ.GetTimes('virtual')
+				if succt0 < maxtime:
+					maxtime = succt0
+		else:
+			# In other containers we have to offset for our own begin
+			# delay, for a reason I don't fully understand
+			if side == 'left':
+				mydelay = self._getnodebegintime(node)
+				mintime = mintime + mydelay
+				maxtime = maxtime + mydelay
+		mintime = mintime - nt0
+		maxtime = maxtime - nt0
+		return mintime, maxtime
+
+	def _setnewtime(self, obj, side, t, is_constrained):
+		em = self.editmgr
+		if not em.transaction():
+			return
+		if not is_constrained:
+			if side == 'left':
+				# delete first simple delay syncarc
+				for arc in obj.node.GetAttrDef('beginlist', []):
+					if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
+						em.delsyncarc(obj.node, 'beginlist', arc)
+						break
+				newarc = MMNode.MMSyncArc(obj.node, 'begin', srcnode = 'syncbase', delay = t)
+				em.addsyncarc(obj.node, 'beginlist', newarc, 0)
+			else:
+				em.setnodeattr(obj.node, 'duration', t)
+		else:
+			old_t0 = self._getnodebegintime(obj.node)
+			old_dur = MMAttrdefs.getattr(obj.node, 'duration')
+			delta_t0 = delta_dur = delta_next = 0
+			if side == 'left':
+				delta_t0 = t - old_t0
+				delta_dur = -delta_t0
+			else:
+				delta_dur = t - old_dur
+				delta_next = -delta_dur
+			if delta_t0:
+				t = delta_t0
+				for arc in obj.node.GetAttrDef('beginlist', []):
+					if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
+						t = arc.delay + delta_t0
+						em.delsyncarc(obj.node, 'beginlist', arc)
+						break
+				newarc = MMNode.MMSyncArc(obj.node, 'begin', srcnode = 'syncbase', delay = t)
+				em.addsyncarc(obj.node, 'beginlist', newarc, 0)
+			if delta_dur:
+				dur = MMAttrdefs.getattr(obj.node, 'duration') + delta_dur
+				if dur < 0:
+					# Can happen: if we drag into the freeze duration
+					dur = 0
+				em.setnodeattr(obj.node, 'duration', dur)
+			if delta_next:
+				next = None
+				pnode = obj.node.GetParent()
+				if pnode and pnode.GetType() == 'seq':
+					siblings = pnode.GetChildren()
+					idx = siblings.index(obj.node)
+					if idx < len(siblings)-1:
+						next = siblings[idx+1]
+			if delta_next and next:
+				t = delta_next
+				for arc in next.GetAttrDef('beginlist', []):
+					if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
+						t = arc.delay + delta_next
+						em.delsyncarc(next, 'beginlist', arc)
+						break
+				if t < 0:
+					# "Cannot" happen
+					print "Constrained move: negative next begin", t
+					t = 0
+				newarc = MMNode.MMSyncArc(next, 'begin', srcnode = 'syncbase', delay = t)
+				em.addsyncarc(next, 'beginlist', newarc, 0)
+
+		em.commit()
+
+	def _getnodebegintime(self, node):
+		# Get begin time of object relative to its syncbase
+		for arc in node.GetAttrDef('beginlist', []):
+			if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
+				return arc.delay
+		return 0
 
 	######################################################################
 	#
