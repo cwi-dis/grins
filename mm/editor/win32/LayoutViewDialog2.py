@@ -12,7 +12,7 @@ class LayoutViewDialog2:
 		f=self.toplevel.window
 
 		# create an new view : return an instance of _LayoutView
-		w=f.newviewobj('lview2_')
+		w=f.newviewobj('lview_')
 
 		# get a handle for each control created from _LayoutView class and associate a callback 
 		# note: if you modify the key names, you also have to modify them in _LayoutView class
@@ -58,7 +58,7 @@ class LayoutViewDialog2:
 		if self.__window.GetSafeHwnd()==0:
 			f=self.toplevel.window
 			if IMPL_AS_FORM: # form
-				f.showview(self.__window,'lview2_')
+				f.showview(self.__window,'lview_')
 				self.__window.show()
 			else:# dlgbar
 				self.__window.create(f)
