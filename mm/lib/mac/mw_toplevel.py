@@ -841,8 +841,8 @@ class _Toplevel(_Event):
 	# Window handling.
 	#
 	
-	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
-		      type_channel = None, pixmap = 0, units=UNIT_MM,
+	def newwindow(self, x, y, w, h, title,
+		      pixmap = 0, units=UNIT_MM,
 		      adornments=None, canvassize=None, commandlist=[],
 		      resizable=1, bgcolor=None):
 		self._initcommands()
@@ -855,8 +855,8 @@ class _Toplevel(_Event):
 		return rv
 	
 	newcmwindow = newwindow
-##	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE,
-##			type_channel = None, pixmap = 0, units=UNIT_MM,
+##	def newcmwindow(self, x, y, w, h, title,
+##			pixmap = 0, units=UNIT_MM,
 ##			adornments=None, canvassize=None, commandlist=[],
 ##			resizable=1):
 ##		self._initcommands()
