@@ -3565,16 +3565,13 @@ class PreviousWidget(Widget):
 		if visible:
 			self.updateVisibility([nodeRef], visible)
 			
-	def removeNode(self, nodeRef, nodeType):
-		if not self._context.isAVisibleNode(nodeRef, nodeType):
-			return
-		
+	def removeNode(self, nodeRef, nodeType):		
 		if nodeType == TYPE_VIEWPORT:
 			self.removeViewport(nodeRef)
 		elif nodeType == TYPE_REGION:
 			self.removeRegion(nodeRef)
 		elif nodeType == TYPE_MEDIA:
-			pass
+			self.__hideMedia(nodeRef)
 				   
 	# ensure that the viewport is in showing state
 	def __showViewport(self, viewportRef):
