@@ -14,7 +14,7 @@ import fl
 from FL import *
 import glwindow
 
-WIDTH, HEIGHT = 120, 250
+WIDTH, HEIGHT = 120, 280
 BHEIGHT = 30
 
 class TopLevel() = (glwindow.glwindow)():
@@ -30,6 +30,7 @@ class TopLevel() = (glwindow.glwindow)():
 		self.editmgr = EditMgr().init(self.root)
 		self.context.seteditmgr(self.editmgr)
 		self.editmgr.register(self)
+		self.help = None
 		Timing.calctimes(self.root)
 		self.makecpanel()
 		self.makeviews()	# Must be called after makecpanel!
@@ -94,7 +95,7 @@ class TopLevel() = (glwindow.glwindow)():
 		self.svbutton = \
 			cp.add_button(PUSH_BUTTON,x,y,w,h, 'Styles')
 		#
-		y = 90
+		y = 120
 		#
 		y = y - h
 		self.savebutton = \
@@ -105,6 +106,11 @@ class TopLevel() = (glwindow.glwindow)():
 		self.restorebutton = \
 			cp.add_button(INOUT_BUTTON,x,y,w,h, 'Restore')
 		self.restorebutton.set_call_back(self.restore_callback, None)
+		#
+		y = y - h
+		self.helpbutton = \
+			cp.add_button(NORMAL_BUTTON,x,y,w,h, 'Help')
+		self.helpbutton.set_call_back(self.help_callback, None)
 		#
 		y = y - h
 		self.quitbutton = \
@@ -213,6 +219,12 @@ class TopLevel() = (glwindow.glwindow)():
 		self.destroy()
 		raise MMExc.ExitException, 0
 	#
+	def help_callback(self, (obj, arg)):
+		if self.help = None:
+			import help
+			self.help = help.HelpWindow().init(HELPFILE)
+		self.help.show()
+	#
 	# GL event callback for WINSHUT (called from glwindow)
 	#
 	def winshut(self):
@@ -220,3 +232,5 @@ class TopLevel() = (glwindow.glwindow)():
 		self.destroy()
 		raise MMExc.ExitException, 0
 	#
+
+HELPFILE = '/ufs/guido/mm/demo/help'
