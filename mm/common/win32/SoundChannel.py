@@ -8,7 +8,7 @@ __version__ = "$Id$"
 import Channel
 
 # common component
-from MediaChannel import MediaChannel
+import MediaChannel
 from RealChannel import RealChannel
 
 # node attributes
@@ -32,7 +32,7 @@ class SoundChannel(Channel.ChannelAsync):
 	def do_show(self, pchan):
 		if not Channel.ChannelAsync.do_show(self, pchan):
 			return 0
-		self.__mc = MediaChannel(self)
+		self.__mc = MediaChannel.MediaChannel(self)
 		try:
 			self.__rc = RealChannel(self)
 		except:
@@ -50,6 +50,7 @@ class SoundChannel(Channel.ChannelAsync):
 		Channel.ChannelAsync.do_hide(self)
 
 	def do_arm(self, node, same=0):
+		self.__ready = 0
 		node.__type = ''
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
@@ -64,14 +65,22 @@ class SoundChannel(Channel.ChannelAsync):
 			node.__type = 'real'
 			if self.__rc is None:
 				self.errormsg(node, 'No playback support for RealAudio in this version')
-			else:
-				self.__rc.prepare_player(node)
-		elif not self.__mc.prepare_player(node):
-			self.errormsg(node,'System missing infrastructure to playback')
+			elif self.__rc.prepare_player(node):
+				self.__ready = 1
+		else:
+			try:
+				self.__mc.prepare_player(node)
+				self.__ready = 1
+			except MediaChannel.error, msg:
+				self.errormsg(node, msg)
 		return 1
 
 	def do_play(self, node):
 		self.__type = node.__type
+		if not self.__ready:
+			# arming failed, so don't even try playing
+			self.playdone(0)
+			return
 		if node.__type == 'real':
 			if self.__rc is None:
 				self.playdone(0)
@@ -106,7 +115,7 @@ class SoundChannel(Channel.ChannelAsync):
 		Channel.ChannelAsync.setpaused(self, paused)
 
 	def play(self, node):
-		self.need_armdone = 0
+		self.need_armdone = 1
 		self.play_0(node)
 		if not self._is_shown or not node.ShouldPlay() \
 		   or self.syncplay:
@@ -114,9 +123,8 @@ class SoundChannel(Channel.ChannelAsync):
 			return
 		if self._is_shown:
 			self.do_play(node)
-		if node.__type == 'real':
-			self.need_armdone = 1
-		else:
+		if node.__type != 'real' and self.need_armdone:
+			self.need_armdone = 0
 			self.armdone()
 
 	def playdone(self, dummy):

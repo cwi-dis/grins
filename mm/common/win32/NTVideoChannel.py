@@ -8,7 +8,7 @@ __version__ = "$Id$"
 import Channel
 
 # common component
-from MediaChannel import MediaChannel
+import MediaChannel
 from RealChannel import RealChannel
 
 # node attributes
@@ -46,7 +46,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.__rc = RealChannel(self)
 		except:
 			pass
-		self.__mc = MediaChannel(self)
+		self.__mc = MediaChannel.MediaChannel(self)
 		self.__mc.showit(self.window)
 		return 1
 
@@ -62,7 +62,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		Channel.ChannelWindowAsync.do_hide(self)
 
 	def do_arm(self, node, same=0):
+		self.__ready = 0
 		if same and self.armed_display:
+			self.__ready = 1
 			return 1
 		node.__type = ''
 		if node.type != 'ext':
@@ -80,21 +82,22 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if node.__type == 'real':
 			if self.__rc is None:
 				self.errormsg(node, 'No playback support for RealVideo in this version')
-			else:
-				self.__rc.prepare_player(node)
+			elif self.__rc.prepare_player(node):
+				self.__ready = 1
 		else:
-			res=self.__mc.prepare_player(node)
-			if res==0:
-				self.showwarning(node,'System missing infrastructure to playback')
-			elif res==-1:
-				import MMurl, urllib
-				url = MMurl.canonURL(url)
-				url=urllib.unquote(url)
-				self.showwarning(node,'Failed to render file %s' % url)
+			try:
+				self.__mc.prepare_player(node)
+				self.__ready = 1
+			except MediaChannel.error, msg:
+				self.errormsg(node, msg)
 		return 1
 
 	def do_play(self, node):
 		self.__type = node.__type
+		if not self.__ready:
+			# arming failed, so don't even try playing
+			self.playdone(0)
+			return
 		if node.__type == 'real':
 			if self.__rc is None or not self.__rc.playit(node, self._getoswindow(), self._getoswinpos()):
 				self.playdone(0)
@@ -147,22 +150,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.armed_display.drawvideo(self.__mc.update)
 
 
-	# showwarning if the infrastucture is missing.
-	# The user should install Windows Media Player
-	# since then this infrastructure is installed
-	def showwarning(self,node,inmsg):
-		name = MMAttrdefs.getattr(node, 'name')
-		if not name:
-			name = '<unnamed node>'
-		chtype = self.__class__.__name__[:-7] # minus "Channel"
-		msg = 'Warning:\n%s\n' \
-		      '%s node %s on channel %s' % (inmsg, chtype, name, self._name)
-		parms = self.armed_display.fitfont('Times-Roman', msg)
-		w, h = self.armed_display.strsize(msg)
-		self.armed_display.setpos((1.0 - w) / 2, (1.0 - h) / 2)
-		self.armed_display.fgcolor((255, 0, 0))		# red
-		box = self.armed_display.writestr(msg)
-
 	def _getoswindow(self):
 		return self.window.GetSafeHwnd()
 			
@@ -170,7 +157,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		return None
 
 	def play(self, node):
-		self.need_armdone = 0
+		self.need_armdone = 1
 		self.play_0(node)
 		if self._is_shown and node.ShouldPlay() \
 		   and self.window and not self.syncplay:
@@ -186,11 +173,11 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.played_display = self.armed_display
 			self.armed_display = None
 			self.do_play(node)
-			if node.__type == 'real':
-				self.need_armdone = 1
-			else:
+			if self.need_armdone and node.__type != 'real':
+				self.need_armdone = 0
 				self.armdone()
 		else:
+			self.need_armdone = 0 # play_1 calls armdone()
 			self.play_1()
 
 	def playdone(self, dummy):
