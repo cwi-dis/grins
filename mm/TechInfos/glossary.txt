@@ -1,10 +1,49 @@
 # Glossary of GRiNS-based tech terms. 
 # 26 Sept 2000, updated often. MJVDG.
+# If you add anything, keep this in alphabetical order.
+
+Anchor - HTML reference target (?)
+
+ASX - Microsoft metadata file for describing a list of media to play.
+
+Attribute - As in OO terminology.
 
 Channel - 
 
 Element - 
 
-Node - 
+Heirachy - Misspelled version of "Hierarchy".
+
+Layout - geographical location of objects
+
+Layout channel - ??
+
+Link - HTML reference to an external HTML file or Anchor within
+     presentation
+
+MMNode - Node instance ( or class ).
+
+Node - Element within the multimedia presentation (holds a URL of
+     data)
+
+Pen - item used for chewing when hacking.
+
+PlayerCore - 
+
+Register - ???
+
+User Group - ?? I don't know what this is used for.
 
 Sequence - Ordered collection of elements
+
+SMiL - Multimedia presentation file format :-).
+
+Style - 
+
+SyncArc - Used for syncronisation of media elements ?
+
+TopLevel - Main window; creates child windows.
+
+Transaction -
+
+Transition - Visual effect when player finishes or starts a node.
