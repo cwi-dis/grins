@@ -26,7 +26,7 @@ def usage(msg):
 
 class Main:
 	def __init__(self, opts, files):
-		import TopLevel, windowinterface, EVENTS
+		import TopLevel, windowinterface
 		self.tops = []
 		self._mm_callbacks = {}
 		try:
@@ -39,8 +39,7 @@ class Main:
 			self._mmfd = pipe_r
 			windowinterface.select_setcallback(pipe_r,
 						self._mmcallback, ())
-		windowinterface.setcallback(EVENTS.TimerEvent, self.timeout,
-					    None)
+		windowinterface.settimerfunc(self.timeout, None)
 		new_file = 0
 		if not files:
 			files = ['NEW DOCUMENT.cmif']
@@ -80,9 +79,7 @@ class Main:
 			top.close()
 
 	def run(self):
-		import windowinterface, EVENTS
-		windowinterface.setcallback(EVENTS.WindowExit, self.do_exit,
-					    None)
+		import windowinterface
 		windowinterface.mainloop()
 
 	def setmmcallback(self, dev, callback):
