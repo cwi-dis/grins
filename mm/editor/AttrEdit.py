@@ -855,7 +855,7 @@ class FileAttrEditorField(StringAttrEditorField):
 				if b.getname() == 'start':
 					str = b.getvalue()
 					try:
-						value = b.parsevalue(str)
+						value = b.parsevalue(str) or 0
 					except:
 						value = 0
 					if minstart - start > value:
