@@ -473,12 +473,7 @@ def getmimetype(writer, node):
 	if writer.copydir:
 		# MIME type may be changed by copying, so better not to return any
 		return
-	val = node.GetRawAttrDef('mimetype', None)
-	if val is not None:
-		return val
-	chtype = node.GetChannelType()
-	if chtype in ('label', 'text'):
-		return 'text/plain'
+	return node.GetRawAttrDef('mimetype', None)
 
 def getdescr(writer, node, attr):
 	if node.GetType() not in leaftypes:
