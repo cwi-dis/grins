@@ -8,7 +8,7 @@
 #	domk cleanpyc -- remove .pyc and .pyo files
 #	domk freeze [cmifed|grins] -- create frozen binary (grins default)
 
-INCLUDEGIF=		# set to "yes" if GIF supported to be included
+INCLUDEGIF=yes		# set to "yes" if GIF supported to be included
 if [ -f /usr/include/cl.h ]
 then
 	INCLUDECL=yes
