@@ -66,6 +66,8 @@ else:
 		main()
 	except:
 		if idebug:
+			msg = sys.exc_type + ': ' + `sys.exc_value`
+			print 'Exception:', msg
 			tb.printtb(sys.exc_traceback)
-			print sys.exc_type + ':', sys.exc_value
+			print 'Exception: ', msg
 			tb.browser(sys.exc_traceback)
