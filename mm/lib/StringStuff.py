@@ -22,7 +22,7 @@ def calclines(parlist, sizefunc, limit):
 			i = fitwords(par, sizefunc, limit)
 			n = len(par)
 			while i < n and par[i] == ' ': i = i+1
-			sublist.append(len(curlines), start, start+i)
+			sublist.append((len(curlines), start, start+i))
 			curlines.append(par[:i])
 			linetopar.append((parno, start, start+i))
 			par = par[i:]
