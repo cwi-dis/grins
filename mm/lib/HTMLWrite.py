@@ -73,6 +73,12 @@ def WriteFile(root, filename, smilurl, oldfilename='', evallicense = 0):
 	except IOError, arg:
 		showmessage('I/O Error writing %s: %s'%(ramfile, arg), mtype = 'error')
 		return
+	if os.name == 'mac':
+		import macfs
+		import macostools
+		fss = macfs.FSSpec(ramfile)
+		fss.SetCreatorType('PNst', 'PNRA')
+		macostools.touched(fss)
 	ramurl = MMurl.pathname2url(ramfile)
 	try:
 		writer = HTMLWriter(root, fp, filename, ramurl, oldfilename, evallicense)
@@ -81,13 +87,8 @@ def WriteFile(root, filename, smilurl, oldfilename='', evallicense = 0):
 		windowinterface.showmessage(msg, mtype = 'error')
 		return
 	if os.name == 'mac':
-		import macfs
-		import macostools
 		fss = macfs.FSSpec(filename)
 		fss.SetCreatorType('MOSS', 'TEXT')
-		macostools.touched(fss)
-		fss = macfs.FSSpec(ramfile)
-		fss.SetCreatorType('PNst', 'PNRA')
 		macostools.touched(fss)
 
 import FtpWriter
@@ -168,7 +169,7 @@ class HTMLWriter:
 		# with %(name)s constructs that will be filled in later
 		#
 		if not ctxa.has_key('project_html_page'):
-			raise Error, 'No HTML template selected'
+			raise Error, 'Webpage generation skipped: No HTML template selected.'
 		template_name = ctxa['project_html_page']
 		templatedir = findfile('Templates')
 		templatefile = os.path.join(templatedir, template_name)
