@@ -74,6 +74,8 @@ class EditMgr(Clipboard.Clipboard):
 		self.playerstate = None, None
 		self.playerstate_busy = 0
 
+		self.clipboard_registry = []
+
 		# if the context is changed there are some special treatment to do during commit		
 		self.__newRoot = None
 
@@ -92,19 +94,23 @@ class EditMgr(Clipboard.Clipboard):
 	#
 	# Dependent client interface.
 	#
-	def register(self, x, want_focus=0, want_playerstate=0):
+	def register(self, x, want_focus=0, want_playerstate=0, want_clipboard=0):
 		self.registry.append(x)
 		if want_focus:
 			self.focus_registry.append(x)
 		if want_playerstate:
 			self.playerstate_registry.append(x)
+		if want_clipboard:
+			self.clipboard_registry.append(x)
 
-	def registerfirst(self, x, want_focus=0, want_playerstate=0):
+	def registerfirst(self, x, want_focus=0, want_playerstate=0, want_clipboard=0):
 		self.registry.insert(0, x)
 		if want_focus:
 			self.focus_registry.insert(0, x)
 		if want_playerstate:
 			self.playerstate_registry.insert(0, x)
+		if want_clipboard:
+			self.clipboard_registry.insert(0, x)
 
 	def unregister(self, x):
 		for i in range(len(self.registry)):
@@ -116,6 +122,8 @@ class EditMgr(Clipboard.Clipboard):
 			self.focus_registry.remove(x)
 		if x in self.playerstate_registry:
 			self.playerstate_registry.remove(x)
+		if x in self.clipboard_registry:
+			self.clipboard_registry.remove(x)
 
 	def is_registered(self, x):
 		return x in self.registry
@@ -233,6 +241,14 @@ class EditMgr(Clipboard.Clipboard):
 
 	def getglobalfocus(self):
 		return self.focus
+
+	#
+	# Clipboard interface
+	#
+	def setclip(self, type, data):
+		Clipboard.Clipboard.setclip(self, type, data)
+		for client in self.clipboard_registry:
+			client.clipboardchanged()
 
 	#
 	# UNDO interface -- this code isn't ready yet.
