@@ -22,8 +22,7 @@ void Error(char *text);
 void Update_Picture_Buffers();
 void picture_data(int framenum);
 
-int win_file_read(int handle, void *buffer, unsigned int count);
-
+extern double frame_rate_Table[16];
 
 } // extern "C"
 
