@@ -1273,6 +1273,18 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 	
 		self.ShowControlBar(self._wndToolBar,1,0)
 
+	def createToolBarCombo(self, index, ctrlid, width, ddheight, responseCb=None):
+		self._wndToolBar.SetButtonInfo(index, ctrlid, afxexttb.TBBS_SEPARATOR, width)
+		l, t, r, b = self._wndToolBar.GetItemRect(index)
+		b = b + ddheight
+		rc = l, t, r-l, b-t
+		import components
+		ctrl = components.ComboBox(self._wndToolBar,ctrlid)
+		ctrl.create(components.COMBOBOX(), rc)
+		if responseCb:
+			self.HookCommand(responseCb,ctrlid)
+		return ctrl
+
 	def isplayer(self,f):
 		if not hasattr(f,'_view'): return 0
 		return f._view._strid=='pview_'
