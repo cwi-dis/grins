@@ -25,6 +25,7 @@ import Qd
 import string
 import windowinterface
 import WMEVENTS
+import AnchorList
 
 def ITEMrange(fr, to): return range(fr, to+1)
 # Dialog info
@@ -186,7 +187,7 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		self._cur_page = None
 
 		if item != None:
-			self._cur_page = self._pages[item] # XXXX?
+			self._cur_page = self._pages[item]
 			self._cur_page.show()
 			self._sethelpstring(self._cur_page.helpstring)
 			self._pagebrowser.select(item)
@@ -1447,6 +1448,7 @@ class FadeoutTabPage(MultiTabPage, ColorTabPage):
 class AreaTabPage(MultiDictTabPage):
 	"""Not useable on its own: subclassed further down"""
 	ITEM_WHOLE = None	# Possibly overriden by subclasses
+	ITEM_PARTIAL = None	# Ditto, but the other way around (sigh...)
 			
 	def init_controls(self, item0):
 		rv = MultiDictTabPage.init_controls(self, item0)
@@ -1464,6 +1466,8 @@ class AreaTabPage(MultiDictTabPage):
 			self._labels_to_preview()
 			if self.ITEM_WHOLE:
 				self.attreditor._setbutton(self.item0+self.ITEM_WHOLE, 0)
+			if self.ITEM_PARTIAL:
+				self.attreditor._setbutton(self.item0+self.ITEM_PARTIAL, 1)
 			return 1
 		elif item-self.item0 in self._otherfields:
 			return 1
@@ -1533,6 +1537,8 @@ class AreaTabPage(MultiDictTabPage):
 		self._setlabelfields(xywh)
 		if self.ITEM_WHOLE:
 			self.attreditor._setbutton(self.item0+self.ITEM_WHOLE, 0)
+		if self.ITEM_PARTIAL:
+			self.attreditor._setbutton(self.item0+self.ITEM_PARTIAL, 1)
 		
 	def _setlabelfields(self, (x, y, w, h)):
 		self.attreditor._setlabel(self.item0+self.ITEM_X, `x`)
@@ -1859,6 +1865,261 @@ class ChannelAreaLiteTabPage(AreaTabPage):
 
 	def getmaxarea(self):
 		return self.getmaxareaforchannel()
+		
+#
+# Anchor editor. This is all pretty ugly.
+#
+class Atab_wrap_dummy:
+		
+	def close(self):
+		pass
+		
+	def enable(self, onoff):
+		pass
+		
+	def do_itemhit(self, item, event):
+		pass
+
+class Atab_wrap_control:
+	def __init__(self, attreditor, item, callback):
+		self.item = item
+		self.attreditor = attreditor
+		self.callback = callback
+		
+	def close(self):
+		del self.attreditor
+		del self.callback
+		
+	def enable(self, onoff):
+		self.attreditor._setsensitive([self.item], onoff)
+		
+	def do_itemhit(self, item, event):
+		if item == self.item:
+			self.callback()
+			return 1
+		return 0
+
+class Atab_wrap_list(Atab_wrap_control):
+	def __init__(self, attreditor, item, callback):
+		Atab_wrap_control.__init__(self, attreditor, item, callback)
+		self.widget = attreditor._window.ListWidget(item, [])
+		
+	def close(self):
+		Atab_wrap_control(self)
+		del self.widget # Close done by DialogWindow code
+		
+	def resetcontent(self):
+		self.widget.delete()
+		
+	def addlistitems(self, items):
+		self.widget.setitems(items)
+		
+	def setcursel(self, item):
+		self.widget.select(item)
+		
+	def getcursel(self):
+		return self.widget.getselect()
+		
+class Atab_wrap_checkbox(Atab_wrap_control):
+	def __init__(self, attreditor, item, callback):
+		Atab_wrap_control.__init__(self, attreditor, item, callback)
+		
+	def close(self):
+		Atab_wrap_control(self)
+		
+	def setcheck(self, onoff):
+		self.attreditor._setbutton(self.item, onoff)
+		
+	def getcheck(self):
+		return self.attreditor._getbutton(self.item)
+		
+class Atab_wrap_xywh:
+	def __init__(self, attreditor, itemlist, callback):
+		self.itemlist = itemlist
+		self.attreditor = attreditor
+		self.callback = callback
+		
+	def close(self):
+		del self.attreditor
+		del self.callback
+		
+	def enable(self, onoff):
+		self.attreditor._setsensitive(self.itemlist, onoff)
+		
+	def do_itemhit(self, item, event):
+		if item in self.itemlist:
+			self.callback()
+			return 1
+		return 0
+		
+	def clear(self):
+		for i in self.itemlist:
+			self.attreditor._setlabel(i, '')
+			
+	def getval(self):
+		rv = []
+		for i in self.itemlist:
+			v = self.attreditor.getlabel(i)
+			try:
+				v = self._conv(v)
+			except ValueError:
+				v = 0
+			rv.append(v)
+		return rv
+		
+	def _conv(self, v):
+		return string.atoi(v)
+		
+	def setval(self, values):
+		for i in range(len(values)):
+			item = self.itemlist[i]
+			v = values[i]
+			self.attreditor.setlabel(item, `v`)
+			
+class Atab_wrap_se(Atab_wrap_xywh):
+	def _conv(self, v):
+		return string.atof(v)
+				
+class AnchorTabPage(TabPage, AnchorList.AnchorList):
+	TAB_LABEL='Anchors'
+	attrs_on_page = ['.anchorlist']
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_ANCHORS
+	ITEM_GROUP=1
+	ITEM_PREVIEW=2
+	ITEM_SCALE=3
+	ITEM_BROWSER=4
+	ITEM_NEW=5
+	ITEM_RENAME=6
+	ITEM_DELETE=7
+	ITEM_PARTIAL=8
+	ITEM_X=10
+	ITEM_Y=12
+	ITEM_W=14
+	ITEM_H=16
+	ITEM_START=18
+	ITEM_END=20
+	ITEM_HYPERLINK=21
+	N_ITEMS=21
+			
+	def init_controls(self, item0):
+		AnchorList.AnchorList.__init__(self)
+		rv = TabPage.init_controls(self, item0)
+		preview_image = self.getareaimage()
+		self._area = self.attreditor._window.AreaWidget(item0+self.ITEM_PREVIEW, 
+				callback=self.__areacb, scaleitem=item0+self.ITEM_SCALE)
+		self._area.setinfo(self.getmaxarea(), preview_image)
+		# These are for AnchorList:
+		self.__allwrappers = []
+		self._list = Atab_wrap_list(self.attreditor, item0+self.ITEM_BROWSER, self.__listcb)
+		self.__allwrappers.append(self._list)
+		self._new = Atab_wrap_control(self.attreditor, item0+self.ITEM_NEW, self.__newcb)
+		self.__allwrappers.append(self._new)
+		self._rename = Atab_wrap_control(self.attreditor, item0+self.ITEM_RENAME, self.__renamecb)
+		self.__allwrappers.append(self._rename)
+		self._delete = Atab_wrap_control(self.attreditor, item0+self.ITEM_NEW, self.deletecb)
+		self.__allwrappers.append(self._delete)
+		self._type = Atab_wrap_checkbox(self.attreditor, item0+self.ITEM_PARTIAL, self.typecb)
+		self.__allwrappers.append(self._type)
+		self._xywh = Atab_wrap_xywh(self.attreditor, (item0+self.ITEM_X, item0+self.ITEM_Y, 
+				item0+self.ITEM_W, item0+self.ITEM_H), self.editcb)
+		self.__allwrappers.append(self._xywh)
+		self._se = Atab_wrap_xywh(self.attreditor, (item0+self.ITEM_START, item0+self.ITEM_END), 
+				self.editcb)
+		self.__allwrappers.append(self._se)
+		self._link = Atab_wrap_control(self.attreditor, item0+self.ITEM_HYPERLINK, self.__linkcb)
+		self.__allwrappers.append(self._link)
+		self._bplay = Atab_wrap_dummy()
+		self.__allwrappers.append(self._bplay)
+		self._bstop = Atab_wrap_dummy()
+		self.__allwrappers.append(self._bstop)
+		self._bpause = Atab_wrap_dummy()
+		self.__allwrappers.append(self._bpause)
+		return rv
+		
+	def __areacb(self):
+		box = self._area.get()
+		self.setbox(box)
+		
+	def __listcb(self):
+		item = self._list.getcursel()
+		self.listcb(item)
+		
+	def __newcb(self):
+		d = windowinterface.InputDialog("Anchor name", "", self.newanchor)
+		d.rungrabbed()
+		
+	def __renamecb(self):
+		d = windowinterface.InputDialog("Anchor name", "", self.renamecb)
+		d.rungrabbed()
+		
+	def __linkcb(self):
+		self.linkcb(self.fieldlist[0])
+		
+	def do_itemhit(self, item, event):
+		if item-self.item0 == self.ITEM_PREVIEW:
+			return 1
+		for wrapper in self.__allwrappers:
+			if wrapper.do_itemhit(item, event):
+				return 1
+		return 0
+		
+	def update(self):
+		self.setvalue(self.fieldlist[0]._getvalueforpage() or {})
+		
+	def save(self):
+		self.fieldlist[0]._savevaluefrompage(self.getvalue())
+		
+	def askanchorname(self):
+		d = windowinterface.InputDialog("Anchor name", "", self.__askanchorcb)
+		d.rungrabbed()
+		
+	def __askanchorcb(self, name):
+		self.newanchor(name, partial=1)
+		
+	def create_box(self, getbox):
+		if getbox:
+			xywh = self._xywh.getval()
+			self._area.set(xywh)
+		else:
+			self._area.set(None)
+		
+	def enableApply(self):
+		pass
+		
+	def showmessage(self, *args, **kwargs):
+		apply(windowinterface.showmessage, args, kwargs)
+		
+		
+	def getareaimage(self):
+		# The third hack: get the background image for the area widget.
+		import MMAttrdefs, MMurl
+		import Sizes
+		filename = None
+		w = 999
+		h = 999
+		wrapper = self.attreditor.wrapper
+		node = wrapper.node
+		url = MMAttrdefs.getattr(node, 'file')
+		if url:
+			url = wrapper.getcontext().findurl(url)
+		if url:
+			try:
+				w, h = Sizes.GetSize(url)
+			except:
+				pass
+			else:
+				try:
+					filename = MMurl.urlretrieve(url)[0]
+				except:
+					pass
+		self.area_image_w = w
+		self.area_image_h = h
+		return filename
+		
+	def getmaxarea(self):
+		return 0, 0, self.area_image_w, self.area_image_h
+			
 #
 # List of classes handling pages with multiple attributes. The order is
 # important: we loop over these classes in order, and if all attributes
@@ -1903,6 +2164,7 @@ MULTI_ATTR_CLASSES = [
 	WipeTabPage,
 	FadeoutTabPage,
 	CaptionTabPage,
+	AnchorTabPage,
 ]
 #
 # List of classes handling a generic page for a single attribute.
@@ -1953,45 +2215,17 @@ class AttrEditorDialogField:
 	def _widgetcreated(self):
 		label = self.getlabel()
 		self.__value = self.getcurrent()
+		print 'widgetcreated', self.getlabel(), self.__value
 		return '%s' % label
 
 	def _savevaluefrompage(self, value):
+		print 'savevaluefrompage', self.getlabel(), value
 		self.__value = value
 		
 	def _getvalueforpage(self):
+		print 'getvalueforpage', self.getlabel(), self.__value
 		return self.__value
 				
-##	def _show(self): # XXXX Should go to tabpage
-##		value = self.__value
-##		attrname, default, help = self.gethelpdata()
-##		if self.type == 'file':
-##			toshow=ITEMLIST_FILE
-##			tohide=ITEMLISTNOT_FILE
-##		elif self.type == 'color':
-##			toshow=ITEMLIST_COLOR
-##			tohide=ITEMLISTNOT_COLOR
-##		elif self.type == 'option':
-##			list = self.getoptions()
-##			toshow=ITEMLIST_OPTION
-##			tohide=ITEMLISTNOT_OPTION
-##		else:
-##			toshow=ITEMLIST_STRING
-##			tohide=ITEMLISTNOT_STRING
-##		if default is None:
-##			tohide = tohide + [ITEM_DEFAULTGROUP]
-##		else:
-##			toshow = toshow + [ITEM_DEFAULTGROUP]
-##		self.attreditor._hideitemlist(tohide)
-##		# It appears input fields have to be shown before
-##		# values are inserted??!?
-####		if ITEM_STRING in toshow:
-####			self.attreditor._showitemlist([ITEM_STRING])
-##		self.attreditor._showitemlist(toshow)
-##		xxxx self._dosetvalue(initialize=1)
-##		if not default is None:
-##			self.attreditor._setlabel(ITEM_DEFAULT, default)
-##		self.attreditor._setlabel(ITEM_HELP, help)
-####		self.attreditor._showitemlist(toshow)
 
 	def close(self):
 		"""Close the instance and free all resources."""
@@ -2014,6 +2248,7 @@ class AttrEditorDialogField:
 		Arguments (no defaults):
 		value -- string giving the new value
 		"""
+		print 'setvalue', self.getlabel(), value
 		self.__value = value
 		if self.attreditor._is_shown(self):
 			self.attreditor._updatepagevalues()
