@@ -1,12 +1,8 @@
-//#define MYDEBUG
-
 #include <windows.h>
 #include <stdio.h>
 #include <digitalv.h>
+
 #include "mcidll.h"
-#ifdef MYDEBUG
-#include <assert.h>
-#endif
 
 
 
