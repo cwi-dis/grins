@@ -421,8 +421,8 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 	# Returns the relative coordinates of the box with 2 decimal digits
 	def get_relative_coords100(self,box, units = UNIT_SCREEN):
 		if units == UNIT_PXL:
-			return self._canvas
-		elif units == UNIX_SCREEN:
+			return box
+		elif units == UNIT_SCREEN:
 			ps=self._inverse_coordinates(box,self._canvas)
 			return float(int(100.0*ps[0]+0.5)/100.0),float(int(100.0*ps[1]+0.5)/100.0),float(int(100.0*ps[2]+0.5)/100.0),float(int(100.0*ps[3]+0.5)/100.0)
 		elif units == UNIT_MM:
