@@ -1216,7 +1216,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	# set the same unit to all positioning attributes : temporarely
 	def __fixSubRegionPos(self, node):
-		if node.GetType() not in leaftypes:
+		if node.GetType() not in leaftypes or not hasattr(node,'__region'):
 			return
 			
 		from windowinterface import UNIT_PXL, UNIT_SCREEN
