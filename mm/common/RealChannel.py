@@ -113,7 +113,7 @@ class RealChannel:
 		if url is None:
 			url = self.__channel.getfileurl(node)
 		if not url:
-			self.errormsg(node, 'No URL set on this node')
+			self.__channel.errormsg(node, 'No URL set on this node')
 			return 1
 		url = MMurl.canonURL(url)
 		self.__url = url
