@@ -19,6 +19,8 @@ class PlayerCommon:
 		self.__region2RendererList = {}
 		self.__pnode2RendererList = {}
 		self.__rendererNoreuse = {}
+		self.__animateNodeList = []
+		self.__iChannelList = []
 		
 	def clearRendererChannels(self):
 		# kill all renderers
@@ -32,14 +34,18 @@ class PlayerCommon:
 		self.__rendererNoreuse = {}
 
 	def makeRendererChannels(self):
-		if MAKE_RENDERERS_FIRST:				
-			nodeList = self.root.GetAllMediaNodes()
+		if MAKE_RENDERERS_FIRST:
+			# update in the same time the animate node list for optimization purpose
+			self.__animateList = []
+			nodeList = self.root.GetAllMediaNodes(animateList = self.__animateList)
 			for node in nodeList:
 				renderer = self.getRenderer(node)
 	
-	def checkRendererChannels(self):
+	def checkRendererAndIChannels(self):
 		self.clearRendererChannels()
+		self.clearInternalChannels()
 		self.makeRendererChannels()
+		self.makeInternalChannels()
 				
 	def getRenderer(self, node):
 		chan = self.nodeToRenderer.get(node)
@@ -180,5 +186,108 @@ class PlayerCommon:
 
 		return name	% i
 
+	#
+	# Internal channels support (animation support)
+	#
 
+	# requierement: makeRendererChannels has to be called before:
+	# this method make __animateList
+	def makeInternalChannels(self):
+		nodeList = self.__animateList
+		context = self.context
+		for node in nodeList:
+			# for animate par node, we have to manage also dynamicly the right animate nodes
+			if node.type == 'animpar':
+				from fmtfloat import fmtfloat
+				animvals = node.attrdict.get('animvals', [])
+				attrs = {}
+				for t, v in animvals:
+					if v.has_key('top') and v.has_key('left'):
+						v['pos'] = v['left'], v['top']
+						del v['top'], v['left']
+					attrs.update(v)
+				if (attrs.has_key('top') or attrs.has_key('left')) and attrs.has_key('pos'):
+					for t, v in animvals:
+						if v.has_key('pos'):
+							v['left'], v['top'] = v['pos']
+							del v['pos']
+					del attrs['pos']
+				attrs = attrs.keys()
+
+				for attr in attrs:
+					n = context.newnode('animate')
+					self.__animateNodeList.append(n)
+					parent = node.GetParent()
+					parent._addchild(n)
+					n.targetnode = parent
+					n.attrdict['internal'] = 1
+					from MMNode import MMSyncArc
+#					n.attrdict['endlist'] = [MMSyncArc(n, 'end', srcnode = parent, event = 'end', delay = 0)]
+					# to avoid any behavior differences, use the same duration as publish
+					duration = n.targetnode.GetDuration()
+					if duration is not None and duration >= 0:
+						n.attrdict['endlist'] = [MMSyncArc(n, 'end', srcnode='syncbase', delay=duration)]					
+					times = []
+					vals = []
+					for t, v in animvals:
+						if v.has_key(attr):
+							times.append(t)
+							vals.append(v[attr])
+					n.attrdict['keyTimes'] = times
+					values = []
+					if attr == 'pos':
+						for v in vals:
+							values.append('%d %d' % v)
+						n.attrdict['atag'] = 'animateMotion'
+					elif attr == 'bgcolor':
+						for v in vals:
+							import colors
+							if colors.rcolors.has_key(v):
+								values.append(colors.rcolors[v])
+							else:
+								values.append('#%02x%02x%02x' % v)
+						n.attrdict['atag'] = 'animateColor'
+						n.attrdict['attributeName'] = 'backgroundColor'
+					else:
+						for v in vals:
+							values.append('%d' % v)
+						n.attrdict['atag'] = 'animate'
+						n.attrdict['attributeName'] = attr
+					n.attrdict['values'] = ';'.join(values)
+
+					# synthesize a name for the channel
+					chname = self.newChannelName('animate%s' % n.GetUID())
+					n.attrdict['channel'] = chname
+					# add to context an internal channel for this node
+					context.addinternalchannels( [(chname, 'animate', n.attrdict), ] )
+					chan = context._ichanneldict[chname]
+					self.__iChannelList.append(chan)					
+					self.newichannel(chname, chan)
+					
+				# cleanup
+				for t, v in animvals:
+					if v.has_key('pos'):
+						v['left'], v['top'] = v['pos']
+						del v['pos']
+			else:
+				# synthesize a name for the channel
+				chname = self.newChannelName('animate%s' % node.GetUID())
+				node.attrdict['channel'] = chname
+				# add to context an internal channel for this node
+				context.addinternalchannels( [(chname, 'animate', node.attrdict), ] )
+				chan = context._ichanneldict[chname]
+				self.__iChannelList.append(chan)
+				self.newichannel(chname, chan)
+					
+	def clearInternalChannels(self):
+		# for animate par node, we have to manage also dynamicly the right animate nodes
+		for node in self.__animateNodeList:
+			node.Extract()
+			node.Destroy()
+		self.__animateNodeList = []
+		for chan in self.__iChannelList:
+			self.killichannel(chan.name)
+			chan.GetContext()._delinternalchannel(chan.name)
+		self.__iChannelList = []
+	
 		
