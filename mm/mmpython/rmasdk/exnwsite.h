@@ -118,7 +118,7 @@ private:
     ~ExampleWindowlessSite();
     PRIVATE_DESTRUCTORS_ARE_NOT_A_CRIME
 
-
+	
 
     /* This private methods are used when CPNSiteWindowed are used
      * as child/parent site combinations.
@@ -332,6 +332,11 @@ public:
     STDMETHOD(SetCursor)		(THIS_
 					PNxCursor cursor,
 					REF(PNxCursor) oldCursor);
+
+	/*
+	*   Python support methods
+	*/
+	ExampleVideoSurface* GetVideoSurface(){return m_pVideoSurface;}
 };
 
 #endif // _EXNWSITE_H_
