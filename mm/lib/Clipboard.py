@@ -31,7 +31,7 @@ class GlobalClipboard:
 		self.data = None
 		return self
 
-	def setclip(self, (type, data)):
+	def setclip(self, type, data):
 		self.type = type
 		self.data = data
 

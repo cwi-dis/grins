@@ -106,6 +106,7 @@ class BasicDialog(glwindow.glwindow):
 	#
 	def destroy(self):
 		self.hide()
+		del self.form
 	#
 	def winshut(self):
 		self.hide()
