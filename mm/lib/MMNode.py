@@ -878,7 +878,7 @@ class MMChannel:
 			self.context.cssResolver.changePxValue(self._cssId, 'left', left)
 			self.context.cssResolver.changePxValue(self._cssId, 'width', width)
 			self.context.cssResolver.changePxValue(self._cssId, 'right', None)
-			self.context.cssResolver.changePxValue(self._cssId, 'top', left)
+			self.context.cssResolver.changePxValue(self._cssId, 'top', top)
 			self.context.cssResolver.changePxValue(self._cssId, 'height', height)
 			self.context.cssResolver.changePxValue(self._cssId, 'bottom', None)
 		else:
