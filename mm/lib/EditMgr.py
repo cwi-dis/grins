@@ -362,6 +362,7 @@ class EditMgr(Clipboard.Clipboard):
 		node.SetValues(values)
 
 	def undo_setnodevalues(node, oldvalues):
+		# XXX Shouldn't this be (self, node, oldvalues)?? 
 		self.setnodevalues(node, oldvalues)
 
 	def clean_setnodevalues(node, oldvalues):
