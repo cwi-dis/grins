@@ -133,7 +133,7 @@ implements SMILListener
 	            }
 	        private Applet applet;
 	        }
-		SFrame frame = new SFrame("Java GRiNS Player");
+		SFrame frame = new SFrame("Java demo with SMIL playback provided by Oratrix GRiNS player");
 		frame.addWindowListener(
 			new WindowAdapter() { 
 				public void windowClosing(WindowEvent event) {
@@ -212,7 +212,8 @@ implements SMILListener
 	    SMILCanvas canvas = new SMILCanvas();
 	    viewport = new Viewport(canvas);
 	    viewport.update(smil.getViewportSize(0));
-	   
+	    viewport.setTitle(smil.getViewportTitle(0));
+	    
 	    // set SMIL canvas
 	    try {smil.getRenderer().setCanvas(0, canvas);}
 	    catch(Exception e){System.out.println(""+e);}
@@ -315,9 +316,8 @@ implements SMILListener
 
 	void buttonGetInfo_ActionPerformed(java.awt.event.ActionEvent event)
 	{
-	    double currTime = player.getTime();
-	    if(player!=null) System.out.println("t="+currTime);
+	    if(player!=null) System.out.println("t="+player.getTime());
 	    if(smil!=null)   System.out.println("dur="+smil.getDuration());
-	    if(smil!=null)   System.out.println("frameRate="+smil.getFrameRate());
+	    if(smil!=null)   System.out.println("frameRate=" + smil.getFrameRate());
 	}
 }
