@@ -987,19 +987,19 @@ IDD_EDITATTR_R24 DIALOG DISCARDABLE  0, 0, 300, 164
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "",IDC_11,5,10,287,35
+    GROUPBOX        "",IDC_11,5,10,287,35,WS_GROUP
     CONTROL         "Radio1",IDC_12,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
                     33,25,100,10
     CONTROL         "Radio2",IDC_13,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
                     151,25,100,10
-    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    GROUPBOX        "",IDC_21,5,49,287,52,WS_GROUP
     CONTROL         "Radio1",IDC_22,"Button",BS_AUTORADIOBUTTON,33,65,100,10
     CONTROL         "Radio2",IDC_23,"Button",BS_AUTORADIOBUTTON,33,82,100,10
     CONTROL         "Radio3",IDC_24,"Button",BS_AUTORADIOBUTTON,151,65,100,
                     10
     CONTROL         "Radio4",IDC_25,"Button",BS_AUTORADIOBUTTON,151,82,100,
                     10
-    GROUPBOX        "",IDC_21,5,49,287,52
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
 END
 
 IDD_EDITATTR_MF1 DIALOG DISCARDABLE  0, 0, 300, 164
@@ -1123,11 +1123,9 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
     EDITTEXT        IDC_22,86,40,199,12,ES_AUTOHSCROLL
     GROUPBOX        "Transition",IDC_GROUP1,6,10,287,53
-    LTEXT           "Begin time:",IDC_GROUP2,12,43,73,8
+    LTEXT           "Begin time:",IDC_21,12,43,73,8
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
-    LTEXT           "Type:",IDC_GROUP1,12,23,73,8
-    LTEXT           "Static",IDC_11,13,115,43,8,NOT WS_VISIBLE
-    LTEXT           "Static",IDC_21,67,114,37,8,NOT WS_VISIBLE
+    LTEXT           "Type:",IDC_11,12,23,73,8
 END
 
 IDD_EDITATTR_LS1O3a DIALOG DISCARDABLE  0, 0, 300, 164
