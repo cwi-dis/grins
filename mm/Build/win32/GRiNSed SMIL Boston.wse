@@ -39,7 +39,7 @@ item: Global
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
   Variable Name2=_WISE_
-  Variable Default2=E:\Program Files\Wise Installation System
+  Variable Default2=C:\PROGRA~1\WISEIN~2
   Variable Flags2=00001000
   Variable Name3=_ALIASNAME_
   Variable Flags3=00001000
@@ -1466,13 +1466,233 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
-  Source=..\..\Templates\media\Back3M.gif
-  Destination=%MAINDIR%\Templates\media\Back3M.gif
+  Source=..\..\Templates\media\Back3S.gif
+  Destination=%MAINDIR%\Templates\media\Back3S.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=..\..\Templates\S2_05_3gpp-slideshow1A.grins
-  Destination=%MAINDIR%\Templates\S2_05_3gpp-slideshow1A.grins
+  Source=..\..\Templates\media\Back3P.gif
+  Destination=%MAINDIR%\Templates\media\Back3P.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\media\Back2S.gif
+  Destination=%MAINDIR%\Templates\media\Back2S.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\media\Back2P.gif
+  Destination=%MAINDIR%\Templates\media\Back2P.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\video_2_1A.bmp
+  Destination=%MAINDIR%\Templates\T-icons\video_2_1A.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\video_1_1A.bmp
+  Destination=%MAINDIR%\Templates\T-icons\video_1_1A.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\slideshow_2Ax.bmp
+  Destination=%MAINDIR%\Templates\T-icons\slideshow_2Ax.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\slideshow_2ACx.bmp
+  Destination=%MAINDIR%\Templates\T-icons\slideshow_2ACx.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\slideshow_2AC.bmp
+  Destination=%MAINDIR%\Templates\T-icons\slideshow_2AC.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\slideshow_2A.bmp
+  Destination=%MAINDIR%\Templates\T-icons\slideshow_2A.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\slideshow_1A.bmp
+  Destination=%MAINDIR%\Templates\T-icons\slideshow_1A.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\empty_S2.bmp
+  Destination=%MAINDIR%\Templates\T-icons\empty_S2.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\dropVT.gif
+  Destination=%MAINDIR%\Templates\T-icons\dropVT.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\dropVITS.gif
+  Destination=%MAINDIR%\Templates\T-icons\dropVITS.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\dropVideo.gif
+  Destination=%MAINDIR%\Templates\T-icons\dropVideo.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\dropText.gif
+  Destination=%MAINDIR%\Templates\T-icons\dropText.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\dropSVG.gif
+  Destination=%MAINDIR%\Templates\T-icons\dropSVG.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\dropSound.gif
+  Destination=%MAINDIR%\Templates\T-icons\dropSound.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\DropRight.gif
+  Destination=%MAINDIR%\Templates\T-icons\DropRight.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\dropRealVideo.gif
+  Destination=%MAINDIR%\Templates\T-icons\dropRealVideo.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\dropRealText.gif
+  Destination=%MAINDIR%\Templates\T-icons\dropRealText.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\dropRealPix.gif
+  Destination=%MAINDIR%\Templates\T-icons\dropRealPix.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\dropNull.gif
+  Destination=%MAINDIR%\Templates\T-icons\dropNull.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\dropITS.gif
+  Destination=%MAINDIR%\Templates\T-icons\dropITS.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\dropIT.gif
+  Destination=%MAINDIR%\Templates\T-icons\dropIT.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\dropIS.gif
+  Destination=%MAINDIR%\Templates\T-icons\dropIS.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\dropImage.gif
+  Destination=%MAINDIR%\Templates\T-icons\dropImage.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\dropHTML.gif
+  Destination=%MAINDIR%\Templates\T-icons\dropHTML.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\dropAudio.gif
+  Destination=%MAINDIR%\Templates\T-icons\dropAudio.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\T-icons\adapt_1_1A.bmp
+  Destination=%MAINDIR%\Templates\T-icons\adapt_1_1A.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\S2_99P_empty.grins
+  Destination=%MAINDIR%\Templates\S2_99P_empty.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\S2_99G_empty.grins
+  Destination=%MAINDIR%\Templates\S2_99G_empty.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\S2_21P_adapt1A.grins
+  Destination=%MAINDIR%\Templates\S2_21P_adapt1A.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\S2_21G_adapt1A.grins
+  Destination=%MAINDIR%\Templates\S2_21G_adapt1A.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\S2_12G_video1A.grins
+  Destination=%MAINDIR%\Templates\S2_12G_video1A.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\S2_11P_video1A.grins
+  Destination=%MAINDIR%\Templates\S2_11P_video1A.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\S2_11G_video1A.grins
+  Destination=%MAINDIR%\Templates\S2_11G_video1A.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\S2_03P_slideshow2AC.grins
+  Destination=%MAINDIR%\Templates\S2_03P_slideshow2AC.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\S2_03G_slideshow2AC.grins
+  Destination=%MAINDIR%\Templates\S2_03G_slideshow2AC.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\S2_02P_slideshow2A.grins
+  Destination=%MAINDIR%\Templates\S2_02P_slideshow2A.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\S2_02G_slideshow2A.grins
+  Destination=%MAINDIR%\Templates\S2_02G_slideshow2A.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\S2_01P_slideshow1A.grins
+  Destination=%MAINDIR%\Templates\S2_01P_slideshow1A.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\S2_01G_slideshow1A.grins
+  Destination=%MAINDIR%\Templates\S2_01G_slideshow1A.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\realONE_logo_88x31_anim.gif
+  Destination=%MAINDIR%\Templates\realONE_logo_88x31_anim.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\GetGRiNS.gif
+  Destination=%MAINDIR%\Templates\GetGRiNS.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=..\..\Templates\external_player.html
+  Destination=%MAINDIR%\Templates\external_player.html
   Flags=0000000010000010
 end
 item: Install File
@@ -1491,244 +1711,9 @@ item: Install File
   Flags=0001000010000010
 end
 item: Install File
-  Source=..\..\Templates\icons\extend.tiff
-  Destination=%MAINDIR%\Templates\icons\extend.tiff
-  Flags=0000000010000010
-end
-item: Install File
   Source=..\..\bin\win32\Qt.pyd
   Destination=%MAINDIR%\Qt.pyd
   Flags=0000000010000011
-end
-item: Install File
-  Source=..\..\Templates\icons\RealPix.tiff
-  Destination=%MAINDIR%\Templates\icons\RealPix.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\RealAudio.tiff
-  Destination=%MAINDIR%\Templates\icons\RealAudio.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\prefetch.tiff
-  Destination=%MAINDIR%\Templates\icons\prefetch.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\null.tiff
-  Destination=%MAINDIR%\Templates\icons\null.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\layout.tiff
-  Destination=%MAINDIR%\Templates\icons\layout.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\image.tiff
-  Destination=%MAINDIR%\Templates\icons\image.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\html.tiff
-  Destination=%MAINDIR%\Templates\icons\html.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\dropbox.tiff
-  Destination=%MAINDIR%\Templates\icons\dropbox.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\comment.tiff
-  Destination=%MAINDIR%\Templates\icons\comment.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\animate.tiff
-  Destination=%MAINDIR%\Templates\icons\animate.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\RealVideo.tiff
-  Destination=%MAINDIR%\Templates\icons\RealVideo.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\S2_21_adapt1A.grins
-  Destination=%MAINDIR%\Templates\S2_21_adapt1A.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\S2_99_empty.grins
-  Destination=%MAINDIR%\Templates\S2_99_empty.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\empty_S2.bmp
-  Destination=%MAINDIR%\Templates\icons\empty_S2.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\adapt_1_1A.bmp
-  Destination=%MAINDIR%\Templates\icons\adapt_1_1A.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\slideshow_1A.bmp
-  Destination=%MAINDIR%\Templates\icons\slideshow_1A.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\video_3_1A.bmp
-  Destination=%MAINDIR%\Templates\icons\video_3_1A.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\video_2_1A.bmp
-  Destination=%MAINDIR%\Templates\icons\video_2_1A.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\video_1_1A.bmp
-  Destination=%MAINDIR%\Templates\icons\video_1_1A.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\slideshow_2AC.bmp
-  Destination=%MAINDIR%\Templates\icons\slideshow_2AC.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\slideshow_2A.bmp
-  Destination=%MAINDIR%\Templates\icons\slideshow_2A.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\video_4_1A.bmp
-  Destination=%MAINDIR%\Templates\icons\video_4_1A.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\slideshow_2Ax.bmp
-  Destination=%MAINDIR%\Templates\icons\slideshow_2Ax.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\slideshow_2ACx.bmp
-  Destination=%MAINDIR%\Templates\icons\slideshow_2ACx.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\adapt_1_1Ax.bmp
-  Destination=%MAINDIR%\Templates\icons\adapt_1_1Ax.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\adapt_3_1Ax.bmp
-  Destination=%MAINDIR%\Templates\icons\adapt_3_1Ax.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\adapt_2_1Ax.bmp
-  Destination=%MAINDIR%\Templates\icons\adapt_2_1Ax.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\adapt_4_1Ax.bmp
-  Destination=%MAINDIR%\Templates\icons\adapt_4_1Ax.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\media\ring.rt
-  Destination=%MAINDIR%\Templates\media\ring.rt
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\text.tiff
-  Destination=%MAINDIR%\Templates\icons\text.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\svg.tiff
-  Destination=%MAINDIR%\Templates\icons\svg.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\media\Back3.gif
-  Destination=%MAINDIR%\Templates\media\Back3.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\media\Back2.gif
-  Destination=%MAINDIR%\Templates\media\Back2.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\external_player.html
-  Destination=%MAINDIR%\Templates\external_player.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\video.tiff
-  Destination=%MAINDIR%\Templates\icons\video.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\embedded_player.html
-  Destination=%MAINDIR%\Templates\embedded_player.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\S2_14_video1A.grins
-  Destination=%MAINDIR%\Templates\S2_14_video1A.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\GetGRiNS.gif
-  Destination=%MAINDIR%\Templates\GetGRiNS.gif
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\S2_01_slideshow1A.grins
-  Destination=%MAINDIR%\Templates\S2_01_slideshow1A.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\S2_03_slideshow2AC.grins
-  Destination=%MAINDIR%\Templates\S2_03_slideshow2AC.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\sound.tiff
-  Destination=%MAINDIR%\Templates\icons\sound.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\S2_11_video1A.grins
-  Destination=%MAINDIR%\Templates\S2_11_video1A.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\S2_12_video1A.grins
-  Destination=%MAINDIR%\Templates\S2_12_video1A.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\S2_13_video1A.grins
-  Destination=%MAINDIR%\Templates\S2_13_video1A.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\S2_02_slideshow2A.grins
-  Destination=%MAINDIR%\Templates\S2_02_slideshow2A.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=..\..\Templates\icons\RealText.tiff
-  Destination=%MAINDIR%\Templates\icons\RealText.tiff
-  Flags=0000000010000010
 end
 item: Set Variable
   Variable=INSTALLDLLS
