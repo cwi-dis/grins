@@ -1068,17 +1068,24 @@ class Object:
 			b1 = b - vmargin*2
 			if l1 < r1 and t1 < b1:
 				if (node.GetType() in ('par', 'alt')) == DISPLAY_VERTICAL:
+					stepsize = (r1-l1)/2
+					while stepsize > hmargin*4:
+						stepsize = stepsize / 2
 					x = l1
-					while x < r1:
+					while x <= r1:
 						d.drawline(TEXTCOLOR,
 							   [(x, t1), (x, b1)])
-						x = x + hmargin
+						x = x + stepsize
 				else:
+					stepsize = (b1-t1)/2
+					while stepsize > vmargin*4:
+						stepsize = stepsize / 2
+					x = l1
 					y = t1
-					while y < b1:
+					while y <= b1:
 						d.drawline(TEXTCOLOR,
 							   [(l1, y), (r1, y)])
-						y = y + vmargin
+						y = y + stepsize
 
 	def drawchannelname(self, l, t, r, b):
 		d = self.mother.new_displist
