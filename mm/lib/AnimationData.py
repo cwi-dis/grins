@@ -1,13 +1,15 @@
 __version__ = "$Id$"
 
+import string
+
 import MMAttrdefs
 
 # AnimationData pattern:
 # <ref ...>
-#   <animateMotion targetElement="xxx" values="x1, y1; x2, y2; x3, y3" keyTimes="0, 0.3, 1.0" dur="use_attr_edit"/>
-#   <animate targetElement="xxx" attributeName="width" values="w1, w2, w3" keyTimes="0, 0.3, 1.0" dur="use_attr_edit"/>
-#   <animate targetElement="xxx"  attributeName="height" values="h1, h2, h3" keyTimes="0, 0.3, 1.0" dur="use_attr_edit"/>
-#   <animateColor targetElement="xxx" attributeName="backgroundColor" values="rgb1, rgb2, rgb3" keyTimes="0, 0.3, 1.0" dur="use_attr_edit"/>
+#   <animateMotion targetElement="xxx" values="x1, y1; x2, y2; x3, y3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
+#   <animate targetElement="xxx" attributeName="width" values="w1;w2;w3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
+#   <animate targetElement="xxx"  attributeName="height" values="h1;h2;h3" keyTimes="0;0.3;1.0" dur="use_attr_edit"/>
+#   <animateColor targetElement="xxx" attributeName="backgroundColor" values="rgb1;rgb2;rgb3" keyTimes="0, 0.3, 1.0" dur="use_attr_edit"/>
 # </ref>
 
 class AnimationData:
@@ -150,16 +152,6 @@ class AnimationData:
 		em.commit()
 		return 1
 
-	
-	def updateNode(self, node, times, values):
-		node.attrdict['keyTimes'] = times
-		node.attrdict['values'] = values
-
-	def newNode(self, index, em, tag, times, values):
-		newnode = self.root.context.newanimatenode(tag)
-		newnode.targetnode = self.node
-		em.addnode(self.node, index, newnode)
-
 	#
 	#  private
 	#
@@ -197,27 +189,119 @@ class AnimationData:
 		return self._floatListToStr(self.times)
 
 	def _intListToStr(self, sl):
-		return ''
+		str = ''
+		for val in sl:
+			str = str + '%d;' % val
+		return str[:-1]
 
 	def _floatListToStr(self, sl):
-		return ''
+		str = ''
+		for val in sl:
+			str = str + '%f;' % val
+		return str[:-1]
 		
 	def _posListToStr(self, sl):
-		return ''
+		str = ''
+		for r, g, b in sl:
+			str = str + '%d %d;' % (x, y)
+		return str[:-1]
 
 	def _colorListToStr(self, sl):
-		return ''
+		str = ''
+		for rgb in sl:
+			if colors.rcolors.has_key(val):
+				s = colors.rcolors[val]
+			else:
+				s = '#%02x%02x%02x' % rgb
+			str = str + s + ';'
+		return str[:-1]
 
 	def _strToIntList(self, str):
-		return []
+		sl = string.split(str,';')
+		vl = []
+		for s in sl:
+			if s: 
+				vl.append(string.atoi(s))
+		return vl	
 
 	def _strToFloatList(self, str):
-		return []
+		sl = string.split(str,';')
+		vl = []
+		for s in sl:
+			if s: 
+				vl.append(string.atof(s))
+		return vl	
 		
 	def _strToPosList(self, str):
-		return []
+		sl = string.split(str,';')
+		vl = []
+		for s in sl:
+			if s: 
+				pair = self._getNumPair(s)
+				if pair:
+					vl.append(string.atof(s))
+		return vl	
+
+	def _getNumPair(self, str):
+		if not str: return None
+		str = string.strip(str)
+		sl = string.split(str)
+		if len(sl)==2:
+			x, y = sl
+			return string.atoi(x), string.atoi(y)
+		return None
 
 	def _strToColorList(self, str):
-		return []
+		vl = []
+		try:
+			vl = map(convert_color, string.split(str,';'))
+		except ValueError:
+			pass
+		return vl
+
+
+############################
+# should go normally to parse utilities
+# copy/paste form SMILTreeRead
+
+import SystemColors
+import colors
+
+def convert_color(val):
+	val = val.lower()
+	if colors.has_key(val):
+		return colors[val]
+	if val in ('transparent', 'inherit'):
+		return val
+	if SystemColors.colors.has_key(val):
+		return SystemColors.colors[val]
+	res = color.match(val)
+	if res is None:
+		self.syntax_error('bad color specification')
+		return None
+	hex = res.group('hex')
+	if hex is not None:
+		if len(hex) == 3:
+			r = string.atoi(hex[0]*2, 16)
+			g = string.atoi(hex[1]*2, 16)
+			b = string.atoi(hex[2]*2, 16)
+		else:
+			r = string.atoi(hex[0:2], 16)
+			g = string.atoi(hex[2:4], 16)
+			b = string.atoi(hex[4:6], 16)
+	else:
+		r = res.group('ri')
+		if r is not None:
+			r = string.atoi(r)
+			g = string.atoi(res.group('gi'))
+			b = string.atoi(res.group('bi'))
+		else:
+			r = int(string.atof(res.group('rp')) * 255 / 100.0 + 0.5)
+			g = int(string.atof(res.group('gp')) * 255 / 100.0 + 0.5)
+			b = int(string.atof(res.group('bp')) * 255 / 100.0 + 0.5)
+	if r > 255: r = 255
+	if g > 255: g = 255
+	if b > 255: b = 255
+	return r, g, b
 
 
