@@ -181,21 +181,10 @@ BYTE * GIFFile::GIFReadFileToRGB(String path,
 
 		long bufsize;
 
-		if ((int)buf[5]>4) {
-			m_GIFErrorText="Too big!\nGiving up";
-			fclose(fd);
-			return NULL;
-			//AfxMessageBox("This GIF file claims to be > 2000 bytes wide!",MB_OK | MB_ICONINFORMATION);
-		}
-		if ((int)buf[7]>4) {
-			m_GIFErrorText="Too big!\nGiving up";
-			fclose(fd);
-			return NULL;
-			//AfxMessageBox("This GIF file claims to be > 2000 bytes high!",MB_OK | MB_ICONINFORMATION);
-		}		                                                       
+
+		w = LM_to_uint((UCHAR)buf[4],(UCHAR)buf[5]);		
+		h = LM_to_uint((UCHAR)buf[6],(UCHAR)buf[7]);
 		
-		w=LM_to_uint((UCHAR)buf[4],(UCHAR)buf[5]);		
-		h=LM_to_uint((UCHAR)buf[6],(UCHAR)buf[7]);
 		
 		if ((w<0) || (h<0)) {
 			m_GIFErrorText="Negative image dimensions!\nGiving up";
@@ -203,6 +192,13 @@ BYTE * GIFFile::GIFReadFileToRGB(String path,
 			return NULL;
 		}
 				
+		if(w*h > 1000000)
+			{
+			m_GIFErrorText="Too big!\nGiving up";
+			fclose(fd);
+			return NULL;
+			}
+
 		bufsize=(long)w*(long)h;
 		bufsize*=3;
 		bigBuf= (BYTE *) new char [bufsize];
