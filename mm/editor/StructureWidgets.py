@@ -206,6 +206,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		assert self.node is not None
 		return self.node
 
+	def get_mmwidget(self):
+		return self
+
 ##	def get_timemapper(self):
 ##		if self.timemapper:
 ##			return self.timemapper
