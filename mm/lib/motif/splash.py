@@ -301,6 +301,6 @@ def init():
 	if shell:
 		_splash.shell = shell
 	return items
-	
+
 splash = _splash.splash
 unsplash = _splash.close
