@@ -18,7 +18,7 @@ class CmifChannel(Channel):
 
 	def do_play(self, node):
 		if node.GetType() <> 'imm':
-			return
+			print 'CmifChannel: imm nodes only'
 		cmds = node.GetValues()
 		for cmd in cmds:
 			if not cmd:
