@@ -39,6 +39,48 @@ class _ControlWidget:
 	def _redraw(self, rgn):
 		pass # Handled by dialog mgr
 				
+class _ImageMixin:
+
+	def _loadimagefromfile(self, image, scale=None):
+		if not image:
+			return
+		format = imgformat.macrgb16
+		try:
+			rdr = img.reader(format, image)
+			bits = rdr.read()
+		except (img.error, IOError):
+			return
+		
+		pixmap = mac_image.mkpixmap(rdr.width, rdr.height, format, bits)
+		return (rdr.width, rdr.height, (pixmap, bits))
+
+	def _redrawimage(self, rect, image_data):
+		w, h, (pixmap, dataref) = image_data
+		dl, dt, dr, db = rect
+		#
+		# If there is enough room center the image
+		#
+		if dr-dl > w:
+			dl = dl + ((dr-dl)-w)/2
+			dr = dl + w
+		if db-dt > h:
+			dt = dt + ((db-dt)-h)/2
+			db = dt + h
+			
+		srcrect = 0, 0, w, h
+		dstrect = dl, dt, dr, db
+		fgcolor = self.wid.GetWindowPort().rgbFgColor
+		bgcolor = self.wid.GetWindowPort().rgbBkColor
+		Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
+		Qd.RGBForeColor((0, 0, 0))
+		Qd.CopyBits(pixmap,
+		      self.wid.GetWindowPort().portBits,
+		      srcrect, dstrect,
+		      QuickDraw.srcCopy+QuickDraw.ditherCopy,
+		      None)
+		Qd.RGBBackColor(bgcolor)
+		Qd.RGBForeColor(fgcolor)
+
 class _ListWidget(_ControlWidget):
 	def __init__(self, wid, item, content=[], multi=0):
 		self.control = wid.GetDialogItemAsControl(item)
@@ -158,7 +200,7 @@ class _ListWidget(_ControlWidget):
 	def setkeyboardfocus(self):
 		Ctl.SetKeyboardFocus(self.wid, self.control, Controls.kControlListBoxPart)
 
-class _AreaWidget(_ControlWidget):
+class _AreaWidget(_ControlWidget, _ImageMixin):
 	def __init__(self, wid, item, callback=None, scaleitem=None):
 		self.wid = wid
 		self.scaleitem = scaleitem
@@ -173,17 +215,22 @@ class _AreaWidget(_ControlWidget):
 		self.ourrect = (0, 0, 1, 1)
 		self.recalc()
 		self.callback = callback
+		self._background_image = None
 		
 	def close(self):
 		del self.wid
 		del self.control
+		del self.callback
+		del self._background_image
 		
 	def redraw(self, ctl, part):
 		try:
 			Qd.SetPort(self.wid)
-##			App.DrawThemeGenericWell(self.rect, 1)
 			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
-			Qd.EraseRect(self.rect)
+			if self._background_image:
+				self._redrawimage(self.rect, self._background_image)
+			else:
+				Qd.EraseRect(self.rect)
 			Qd.RGBForeColor((0x7fff, 0x7fff, 0x7fff))
 			Qd.FrameRect(self.rect)
 			for r in self.otherrects:
@@ -209,7 +256,7 @@ class _AreaWidget(_ControlWidget):
 	def hittest(self, ctl, (x, y)):
 		try:
 ##			print "hittest", ctl, x, y
-			for i in range(len(self.lurven)):
+			for i in range(len(self.lurven)-1, -1, -1):
 				lx0, ly0, lx1, ly1 = self.lurven[i]
 				if lx0 <= x <= lx1 and ly0 <= y <= ly1:
 					# track
@@ -279,6 +326,7 @@ class _AreaWidget(_ControlWidget):
 		for r in otherrects:
 			self.oterrects.append(self.rect2screen(r))
 		self.recalc()
+		self._background_image = self._loadimagefromfile(image, self.scale)
 		
 	def recalc(self):
 		scale = 1
@@ -309,7 +357,6 @@ class _AreaWidget(_ControlWidget):
 			h = self.wid.GetDialogItemAsControl(self.scaleitem)
 			Dlg.SetDialogItemText(h, text)
 
-		
 	def recalclurven(self):
 ##		print 'ourrect', self.ourrect
 		x0, y0, x1, y1 = self.ourrect
@@ -339,7 +386,7 @@ class _AreaWidget(_ControlWidget):
 		h = ry1-ry0
 		return (rx0-x0)*self.scale, (ry0-y0)*self.scale, w*self.scale, h*self.scale
 					
-class _ImageWidget(_Widget):
+class _ImageWidget(_Widget, _ImageMixin):
 	def __init__(self, wid, item, image=None):
 		_Widget.__init__(self, wid, item)
 		tp, h, rect = wid.GetDialogItem(item)
@@ -360,52 +407,16 @@ class _ImageWidget(_Widget):
 	def setfromfile(self, image):
 		Qd.SetPort(self.wid)
 		Win.InvalRect(self.rect)
-		self.image_data = None
-
-		if not image:
-			return
-		format = imgformat.macrgb16
-		try:
-			rdr = img.reader(format, image)
-			bits = rdr.read()
-		except (img.error, IOError):
-			return
-		
-		pixmap = mac_image.mkpixmap(rdr.width, rdr.height, format, bits)
-		self.image_data = (rdr.width, rdr.height, (pixmap, bits))
+		self.image_data = self._loadimagefromfile(image)
 				
 	def _redraw(self, rgn=None):
-		if rgn == None:
-			rgn = self.wid.GetWindowPort().visRgn
+##		if rgn == None:
+##			rgn = self.wid.GetWindowPort().visRgn
 		Qd.SetPort(self.wid)
 		if not self.image_data:
 			Qd.EraseRect(self.rect)
 		else:
-			w, h, (pixmap, dataref) = self.image_data
-			dl, dt, dr, db = self.rect
-			#
-			# If there is enough room center the image
-			#
-			if dr-dl > w:
-				dl = dl + ((dr-dl)-w)/2
-				dr = dl + w
-			if db-dt > h:
-				dt = dt + ((db-dt)-h)/2
-				db = dt + h
-				
-			srcrect = 0, 0, w, h
-			dstrect = dl, dt, dr, db
-			fgcolor = self.wid.GetWindowPort().rgbFgColor
-			bgcolor = self.wid.GetWindowPort().rgbBkColor
-			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
-			Qd.RGBForeColor((0, 0, 0))
-			Qd.CopyBits(pixmap,
-			      self.wid.GetWindowPort().portBits,
-			      srcrect, dstrect,
-			      QuickDraw.srcCopy+QuickDraw.ditherCopy,
-			      None)
-			Qd.RGBBackColor(bgcolor)
-			Qd.RGBForeColor(fgcolor)
+			self._redrawimage(self.rect, self.image_data)
 		Qd.FrameRect(self.rect)
 
 	def _activate(self, onoff):
