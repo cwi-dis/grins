@@ -8,8 +8,7 @@ from MMurl import urlretrieve
 
 
 class ImageChannel(ChannelWindow):
-	_our_attrs = ['scale', 'scalefilter', 'center',
-		      'crop']
+	_our_attrs = ['scale']
 	node_attrs = ChannelWindow.node_attrs + ['project_quality']
 	if CMIF_MODE:
 		node_attrs = node_attrs + _our_attrs
@@ -38,13 +37,10 @@ class ImageChannel(ChannelWindow):
 			return 1
 		# remember coordinates for anchor editing (and only for that!)
 		scale = MMAttrdefs.getattr(node, 'scale')
-		crop = MMAttrdefs.getattr(node, 'crop')
-		center = MMAttrdefs.getattr(node, 'center')
 		
 		try:
 			imbox = self.armed_display.display_image_from_file(
-					f, scale = scale, crop = crop, center = center,
-					coordinates=self.getmediageom(node))
+					f, scale = scale, coordinates=self.getmediageom(node))
 			self.armed_display.knowcmd('image')
 		except (windowinterface.error, IOError), msg:
 			if type(msg) is type(self):
@@ -165,10 +161,8 @@ class ImageChannel(ChannelWindow):
 			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (f, arg))
 			return 1
 		scale = MMAttrdefs.getattr(node, 'scale', animated)
-		crop = MMAttrdefs.getattr(node, 'crop', animated)
-		center = MMAttrdefs.getattr(node, 'center', animated)
 		try:
-			self._update_imbox = self.update_display.display_image_from_file(f, scale = scale, crop = crop, center = center,
+			self._update_imbox = self.update_display.display_image_from_file(f, scale = scale, 
 			coordinates=self.getmediageom(node))
 			self.update_display.knowcmd('image')
 		except (windowinterface.error, IOError), msg:

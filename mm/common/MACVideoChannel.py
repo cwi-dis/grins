@@ -17,7 +17,7 @@ if not QT_AVAILABLE:
 debug = 0 # os.environ.has_key('CHANNELDEBUG')
 
 class VideoChannel(ChannelWindowAsync):
-	_our_attrs = ['scale', 'center']
+	_our_attrs = ['scale']
 	node_attrs = ChannelWindowAsync.node_attrs + \
 		     ['clipbegin', 'clipend', 'project_audiotype', 'project_videotype', 'project_targets',
 		     'project_perfect', 'project_mobile']
@@ -165,11 +165,9 @@ class VideoChannel(ChannelWindowAsync):
 		l, t, r, b = movie.GetMovieBox()
 		if node:
 			scale = MMAttrdefs.getattr(node, 'scale')
-			center = MMAttrdefs.getattr(node, 'center')
 		else:
 			# This happens during a resize: we don't know scale/center anymore.
 			scale = 1
-			center = 0
 		# Compute real scale for scale-to-fit
 		if scale <= 0:
 			sl, st, sr, sb = screenBox
@@ -187,7 +185,7 @@ class VideoChannel(ChannelWindowAsync):
 			if debug: print 'scale=', scale, maxxscale, maxyscale
 				
 		movieBox = l, t, int(l+(r-l)*scale), int(t+(b-t)*scale)
-		nMovieBox = self._scalerect(screenBox, movieBox, center)
+		nMovieBox = self._scalerect(screenBox, movieBox, 0)
 		movie.SetMovieBox(nMovieBox)
 		movie.SetMovieDisplayClipRgn(screenClip)
 		if debug: print 'placed movie'

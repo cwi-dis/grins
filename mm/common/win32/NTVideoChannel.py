@@ -26,7 +26,7 @@ import rma
 import ddraw
 	
 class VideoChannel(Channel.ChannelWindowAsync):
-	_our_attrs = ['scale', 'center']
+	_our_attrs = ['scale']
 	node_attrs = Channel.ChannelWindow.node_attrs + [
 		'clipbegin', 'clipend',
 		'project_audiotype', 'project_videotype', 'project_targets',
