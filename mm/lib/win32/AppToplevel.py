@@ -3,7 +3,7 @@ __version__ = "$Id$"
 """ @win32doc|AppTopLevel
 An instance of the _Toplevel class defined in this module
 represents the platform dependent part of the application.
-(The other part is platform independent and is an instance of Main)
+ (The other part is platform independent and is an instance of Main)
 It contains the main message loop of the application which beyond dispatching messages
 it serves a delta timer (see tcp process) and tasks registered for timeslices.
 This class is also the main interface between the core part of the system
@@ -25,6 +25,8 @@ import string
 import MMmimetypes
 import grins_mimetypes
 import GenWnd
+
+import os
 
 def beep():
 	win32api.MessageBeep()
@@ -565,6 +567,9 @@ class FileDialog:
 					# special case: don't display two
 					# entries that are basically the same
 					del newfilter[1]
+			elif file and dftext:
+				# remove extension
+				file = os.path.splitext(file)[0]
 			newfilter.append('All files (*.*)|*.*')
 			filter = string.join(newfilter, '|') + '||'
 ##		else:
@@ -581,7 +586,6 @@ class FileDialog:
 		# since the rest of GRiNS doesn't expect that we save/restore
 		# it,
 		#
-		import os
 		curdir = os.getcwd()
 		default_dir = directory in ('.', '')
 		if default_dir and FileDialog.last_location:
