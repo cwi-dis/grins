@@ -64,7 +64,7 @@ class MainDialog:
 		windowinterface.register_event(WMEVENTS.DragFile, self.dropeffect, None)		
 		windowinterface.register_event(WMEVENTS.DropFile, self.dropfile, None)
 		windowinterface.register_event(WMEVENTS.PasteFile, self.dropfile, None)
-		import windowinterface
+		windowinterface.register_embedded('OnOpen', self.embeddedopenfile, None)
 		windowinterface.createmainwnd(title,
 			adornments = None,
 			commandlist = self.commandlist)
@@ -122,6 +122,12 @@ class MainDialog:
 		if url:
 			self.openURL_callback(url)
 
+	def embeddedopenfile(self, arg, window, event, value):
+		filename = value
+		url = self.__path2url(filename)
+		if url:
+			self.openURL_callback(url)
+		
 	def set_recent_list(self, list):
 		import windowinterface
 		f=windowinterface.getactivedocframe()
