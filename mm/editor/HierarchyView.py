@@ -902,13 +902,12 @@ class Object:
 			# draw channel name along bottom of box
 			self.drawchannelname(l+hmargin/2, b1,
 					     r-hmargin/2, b-vmargin/2)
-			# draw thumbnail if enough space
-			if self.mother.thumbnails and \
-			   b1-t1 >= 2*titleheight and \
+			# draw thumbnail/icon if enough space
+			if b1-t1 >= 2*titleheight and \
 			   r-l >= hmargin * 4.5:
 				ctype = node.GetChannelType()
 				f = os.path.join(self.mother.datadir, '%s.tiff' % ctype)
-				if ctype == 'image':
+				if ctype == 'image' and self.mother.thumbnails:
 					try:
 						import MMurl
 						f = MMurl.urlretrieve(node.context.findurl(MMAttrdefs.getattr(node, 'file')))[0]
@@ -949,18 +948,10 @@ class Object:
 						y = y + vmargin
 
 	def drawchannelname(self, l, t, r, b):
-		import ChannelMap
-		cname = self.node.GetChannelName()
-		ctype = self.node.GetChannelType()
-		map = ChannelMap.shortcuts
-		if map.has_key(ctype):
-			C = map[ctype]
-		else:
-			C = '?'
 		d = self.mother.new_displist
 		d.fgcolor(CTEXTCOLOR)
 		dummy = d.usefont(f_channel)
-		d.centerstring(l, t, r, b, C + ': ' + cname)
+		d.centerstring(l, t, r, b, self.node.GetChannelName())
 		dummy = d.usefont(f_title)
 
 	def drawfocus(self):
