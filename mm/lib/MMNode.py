@@ -884,6 +884,96 @@ class MMChannel:
 			x = x.getParent()
 		return default
 
+
+# MMChannel tree class
+#
+# this class exposes an easy to use interface 
+# to the document's MMChannels tree 
+# the query methods return always MMChannel objects
+# query methods arguments can be MMChannel objects or their names
+# for nodes queries use node.GetChannel()
+class MMChannelTree:
+	def __init__(self, node):
+		self.top_levels = []
+		self.subchans = {}
+		self.__calc1(node)
+		self.__calc2(node)
+		self.__node = node
+
+	def __del__(self):
+		context = self.__node.GetContext()
+		channels = context.channels
+		for ch in channels:
+			del ch.__parent
+		
+	def getchannel(self, chan):
+		if type(chan) != type(''):
+			return chan
+		context = self.__node.GetContext()
+		return context.channeldict.get(chan)
+
+	def getsubchanels(self, chan):
+		if type(chan) != type(''):
+			chan = chan.name
+		if self.subchans.has_key(chan):
+			return self.subchans[chan]
+		return []
+
+	def getparent(self, chan):
+		if type(chan) != type(''):
+			return chan.__parent
+		context = self.__node.GetContext()
+		chan = context.channeldict.get(chan)
+		if chan: return chan.__parent
+		return None
+
+	def getpath(self, chan):
+		path = []
+		chan = self.getchannel(chan)
+		while chan:
+			path.insert(0, chan)
+			chan = chan.__parent
+		return path
+						
+	def __calc1(self, node):
+		context = node.GetContext()
+		channels = context.channels
+		for ch in channels:
+			if ch.has_key('base_window'):
+				pch = ch['base_window']
+				if not self.subchans.has_key(pch):
+					self.subchans[pch] = []
+				self.subchans[pch].append(ch)
+			if not ch.has_key('base_window') and \
+			   ch['type'] not in ('sound', 'shell', 'python',
+					      'null', 'vcr', 'socket', 'cmif',
+					      'midi', 'external'):
+				# top-level channel with window
+				self.top_levels.append(ch)
+				if not self.subchans.has_key(ch.name):
+					self.subchans[ch.name] = []
+
+	def __calc2(self, node):
+		context = node.GetContext()
+		channels = context.channels
+		if self.top_levels:
+			top0 = self.top_levels[0].name
+		else:
+			top0 = None
+		for ch in channels:
+			if not ch.has_key('base_window') and \
+			   ch['type'] in ('sound', 'shell', 'python',
+					  'null', 'vcr', 'socket', 'cmif',
+					  'midi', 'external') and top0:
+				self.subchans[top0].append(ch)
+		# enable bottom up search
+		for ch in channels:
+			ch.__parent = None
+		for parentName, childs in self.subchans.items():
+			parchan = node.GetContext().getchannel(parentName)
+			for ch in childs:
+				ch.__parent = parchan
+
 # representation of anchors
 class MMAnchor:
 	def __init__(self, aid, atype, aargs, atimes, aaccess):
