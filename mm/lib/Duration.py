@@ -5,6 +5,7 @@ __version__ = "$Id$"
 
 import MMAttrdefs
 import ChannelMap
+from sys import platform
 
 def get(node):
 	# If node has "fduration" attribute, use that.  This attribute
@@ -22,7 +23,7 @@ def get(node):
 		ctype = channel['type']
 		filename = MMAttrdefs.getattr(node, 'file')
 		filename = context.findurl(filename)
-		if ctype == 'video':
+		if ctype in ('video', 'mpeg') or (platform == 'mac' and ctype == 'movie'):
 			import VideoDuration
 			try:
 				return loop * VideoDuration.get(filename)
@@ -32,12 +33,6 @@ def get(node):
 			import MovieDuration
 			try:
 				return loop * MovieDuration.get(filename)
-			except IOError, msg:
-				print filename, msg
-		elif ctype == 'mpeg':
-			import VideoDuration
-			try:
-				return loop * VideoDuration.get(filename)
 			except IOError, msg:
 				print filename, msg
 		elif ctype == 'sound':
