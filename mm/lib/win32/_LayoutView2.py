@@ -590,6 +590,7 @@ class TreeManager(IconMixin.ViewMixin):
 		self.treeCtrl.removeExpandListener(self)
 		self.treeCtrl.removeMultiSelListener(self)
 		self.treeCtrl.removeDragdropListener(self)
+		self.treeCtrl.removeStateListener(self)
 		self.treeCtrl = None
 		self._listener = None
 		self._popup = None
@@ -606,10 +607,11 @@ class TreeManager(IconMixin.ViewMixin):
 		if 1:
 			treeView = parent.GetParent().GetPane(0,0)
 			ctrl = treeView.GetTreeCtrl()
-		self.treeCtrl = TreeCtrl.TreeCtrl(parent, grinsRC.IDC_TREE1, ctrl)
+		self.treeCtrl = TreeCtrl.TreeCtrl(parent, grinsRC.IDC_TREE1, ctrl, stateOption=1)
 		self.treeCtrl.addMultiSelListener(self)
 		self.treeCtrl.addExpandListener(self)
 		self.treeCtrl.setDragdropListener(self)
+		self.treeCtrl.addStateListener(self)
 
 		# init the image list used in the tree
 		self.initicons()
@@ -617,6 +619,10 @@ class TreeManager(IconMixin.ViewMixin):
 
 	def removeNode(self, item):
 		self.treeCtrl.DeleteItem(item)
+
+	def OnStateActivated(self, item, state):
+		if self._listener != None:
+			self._listener.onStateActivated(item, state)
 		
 	def insertNode(self, parent, text, imageName, selectedImageName):
 		iImage = self.geticonid(imageName)
@@ -666,6 +672,9 @@ class TreeManager(IconMixin.ViewMixin):
 
 	def selectNodeList(self, itemList):
 		self.treeCtrl.SelectItemList(itemList)
+
+	def setStateNodeList(self, itemList, state):
+		self.treeCtrl.SetStateItemList(itemList, state)
 		
 #	def _onSelect(self, std, extra):
 #		action, itemOld, itemNew, ptDrag = extra
