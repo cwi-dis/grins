@@ -1746,7 +1746,7 @@ class WallclockDialog(ResDialog):
 		if self.w_cbdate.getcheck():
 			yr = self.__getwidget_asnum(self.w_yr)
 			mt = self.w_mt.getcursel()+1
-			assert mt >= 0 and mt < 12
+			assert mt >= 1 and mt <= 12
 			dy = self.__getwidget_asnum(self.w_dy)
 		else:
 			yr = None
