@@ -9,12 +9,13 @@ static int nullchannel_debug = 0;
 #else
 #define dprintf(args)
 #endif
+#define denter(func)	dprintf(( # func "(%lx)\n", (long) self))
 
 static int
 null_init(self)
 	mmobject *self;
 {
-	dprintf(("null_init\n"));
+	denter(null_init);
 	return 1;
 }
 
@@ -22,7 +23,7 @@ static void
 null_dealloc(self)
 	mmobject *self;
 {
-	dprintf(("null_dealloc\n"));
+	denter(null_dealloc);
 }
 
 static int
@@ -32,7 +33,7 @@ null_arm(self, file, delay, duration, attrlist, anchorlist)
 	int delay, duration;
 	object *attrlist, *anchorlist;
 {
-	dprintf(("null_arm\n"));
+	denter(null_arm);
 	return 1;
 }
 
@@ -40,14 +41,14 @@ static void
 null_armer(self)
 	mmobject *self;
 {
-	dprintf(("null_armer\n"));
+	denter(null_armer);
 }
 
 static int
 null_play(self)
 	mmobject *self;
 {
-	dprintf(("null_play\n"));
+	denter(null_play);
 	return 1;
 }
 
@@ -55,14 +56,14 @@ static void
 null_player(self)
 	mmobject *self;
 {
-	dprintf(("null_player\n"));
+	denter(null_player);
 }
 
 static int
 null_done(self)
 	mmobject *self;
 {
-	dprintf(("null_done\n"));
+	denter(null_done);
 	return 1;
 }
 
@@ -70,7 +71,7 @@ static int
 null_resized(self)
 	mmobject *self;
 {
-	dprintf(("null_resized\n"));
+	denter(null_resized);
 	return 1;
 }
 
@@ -78,7 +79,7 @@ static int
 null_stop(self)
 	mmobject *self;
 {
-	dprintf(("null_stop\n"));
+	denter(null_stop);
 	return 1;
 }
 
@@ -87,7 +88,7 @@ null_setrate(self, rate)
 	mmobject *self;
 	double rate;
 {
-	dprintf(("null_setrate\n"));
+	denter(null_setrate);
 	return 1;
 }
 
@@ -172,5 +173,6 @@ initnullchannel()
 #ifdef MM_DEBUG
 	nullchannel_debug = getenv("NULLDEBUG") != 0;
 #endif
+	dprintf(("initnullchannel\n"));
 	(void) initmodule("nullchannel", nullchannel_methods);
 }
