@@ -149,6 +149,15 @@ static PyObject* Qt_SetDDPrimarySurface(PyObject *self, PyObject *args)
 	return Py_None;
 	}
 
+static PyObject* Qt_BuildOSType(PyObject *self, PyObject *args) 
+	{
+	char *psz;
+	if (!PyArg_ParseTuple(args, "s", &psz))
+		return NULL;
+	DWORD t = MAKEFOURCC(psz[3], psz[2], psz[1], psz[0]);
+	return PyString_FromStringAndSize((char*)&t, 4);
+	}
+
 #define APPEND_WIN_Qt_methods \
 	{"InitializeQTML", (PyCFunction)Qt_InitializeQTML, 1,\
 	"(long flags) -> None"},\
@@ -171,4 +180,6 @@ static PyObject* Qt_SetDDPrimarySurface(PyObject *self, PyObject *args)
 	{"GetDDObject", (PyCFunction)Qt_GetDDObject, 1,\
 	"() -> (IDirectDrawPtr ptr)"},\
 	{"SetDDPrimarySurface", (PyCFunction)Qt_SetDDPrimarySurface, 1,\
-	"(DirectDrawSurfaceObject obj) -> ()"},
+	"(DirectDrawSurfaceObject obj) -> ()"},\
+	{"BuildOSType", (PyCFunction)Qt_BuildOSType, 1,\
+	"(FourCharCode s) -> (OSType)"},
