@@ -146,6 +146,9 @@ class Main(MainDialog):
 	def close_callback(self, exitcallback=None):
 		for top in self.tops[:]:
 			top.destroy()
+		if sys.platform == 'mac':
+			import MacOS
+			MacOS.OutputSeen()
 		if exitcallback:
 			rtn, arg = exitcallback
 			apply(rtn, arg)
