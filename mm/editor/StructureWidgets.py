@@ -357,6 +357,11 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			if w > xsize:
 				xsize = w
 			ysize = ysize + h
+		if timemapper is not None:
+			t0, t1, t2, downloadlag, begindelay = self.GetTimes('virtual')
+			if t0 == t2:
+				# very special case--zero duration element
+				return ICONSIZE+2*HEDGSIZE, MINSIZE
 		return xsize, ysize
 
 	def recalc_minsize(self, timemapper = None):
@@ -376,17 +381,21 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		b = t + TITLESIZE + VEDGSIZE
 		if self.collapsebutton is not None:
 			l = l + ICONSIZE # move it past the icon.
-			self.collapsebutton.draw(displist)
+			if l <= r:
+				self.collapsebutton.draw(displist)
 		if self.playicon is not None:
 			l = l + ICONSIZE # move it past the icon.
-			self.playicon.draw(displist)
+			if l <= r:
+				self.playicon.draw(displist)
 		if self.iconbox is not None:
 			self.iconbox.moveto((l,t+2,r,b))
-			self.iconbox.draw(displist)
 			l = l + self.iconbox.get_minsize()[0]
+			if l <= r:
+				self.iconbox.draw(displist)
 		if CENTER:
-			displist.centerstring(l,t,r,b, self.name)
-		else:
+			if l <= r:
+				displist.centerstring(l,t,r,b, self.name)
+		elif l <= r:
 			displist.setpos(l, t+displist.baselinePXL()+2)
 			for i in range(len(self.name),-1,-1):
 				name = self.name[:i]
