@@ -26,6 +26,7 @@ class _Toplevel:
 		if self._frame is None:
 			self._frame = MainWnd.MainWnd()
 			self._frame.create()
+			self._frame.set_commandlist(commandlist, 'document')
 		return self._frame
 
 	def createmainwnd(self, title = None, adornments = None, commandlist = None):
@@ -124,5 +125,46 @@ class _Toplevel:
 	def unregister_embedded(event):
 		self.__onOpenEvent = None
 
-	def getOpenEvent(self):
-		return self.__onOpenEvent
+
+# url parsing
+import MMurl, urlparse
+
+import winuser
+
+def shell_execute(url,verb='open', showmsg=1):
+	utype, host, path, params, query, fragment = urlparse.urlparse(url)
+	islocal = (not utype or utype == 'file') and (not host or host == 'localhost')
+	if islocal:
+		filename=MMurl.url2pathname(path)
+		if not os.path.isabs(filename):
+			filename=os.path.join(os.getcwd(),filename)
+			filename=os.path.normpath(filename)
+		if not os.path.exists(filename):
+			if os.path.exists(filename+'.lnk'):
+				filename = filename + '.lnk'
+			else:
+				rv = win32con.IDCANCEL
+				if verb == 'edit':
+					rv = winuser.MessageBox(filename+': not found.\nCreate?',
+						 '', win32con.MB_OKCANCEL)
+				if rv == win32con.IDCANCEL:
+					return -1
+				try:
+					open(filename, 'w').close()
+				except:
+					pass
+		url=filename
+	rc,msg = winuser.ShellExecute(0, verb, url, None, "", win32con.SW_SHOW)
+	if rc<=32:
+		if showmsg:
+			winuser.MessageBox('Explorer cannot '+ verb +' '+url+':\n'+msg,'GRiNS')
+		return rc
+	return 0
+
+class htmlwindow:
+	def __init__(self,url):
+		self.goto_url(url)
+	def goto_url(self,url):
+		shell_execute(url,'open')	
+	def close(self):pass
+	def is_closed(self):return 1

@@ -47,11 +47,12 @@ class DocumentFrame:
 #########################				
 import wingeneric
 
-import usercmd
-
 import winstruct
 
 import win32con
+
+import usercmd, wndusercmd, usercmdui
+import win32menu, MenuTemplate
 
 class MainWnd(wingeneric.Wnd, DocumentFrame):
 	def __init__(self):
@@ -80,10 +81,12 @@ class MainWnd(wingeneric.Wnd, DocumentFrame):
 			if cbd.has_key(cmdid):
 				apply(apply, cbd[cmdid])
 				return
-
+	
+	# we want to reuse this
+	def close(self):
+		pass
 
 	def setMenu(self):
-		import win32menu, MenuTemplate, usercmdui
 		mainmenu = win32menu.Menu()
 		template = MenuTemplate.MENUBAR
 		mainmenu.create_from_menubar_spec_list(template,  usercmdui.usercmd2id)
@@ -92,7 +95,6 @@ class MainWnd(wingeneric.Wnd, DocumentFrame):
 		self._mainmenu = mainmenu
 	
 	def set_toggle(self, cmdcl, onoff):
-		import usercmdui
 		id = usercmdui.usercmd2id(cmdcl)
 		flags = win32con.MF_BYCOMMAND
 		if onoff==0:
@@ -108,8 +110,36 @@ class MainWnd(wingeneric.Wnd, DocumentFrame):
 		import __main__
 		return __main__.toplevel
 
+	def set_commandlist(self, commandlist, context):
+		menu = self.GetMenu()
+
+		# disable previous if any
+		prev_commandlist_dict = self._activecmds.get(context)
+		if prev_commandlist_dict:
+			prev_commandlist = prev_commandlist_dict.values()
+			flags = win32con.MF_BYCOMMAND | win32con.MF_GRAYED
+			for cmdinst in prev_commandlist:
+				cmd = cmdinst.__class__
+				id = usercmdui.usercmd2id(cmd)
+				menu.EnableMenuItem(id, flags)
+			
+		# enable new
+		self._activecmds[context] = {}
+		if commandlist:
+			flags = win32con.MF_BYCOMMAND | win32con.MF_ENABLED
+			for cmdinst in commandlist:
+				cmd = cmdinst.__class__
+				self._activecmds[context][cmd] = cmdinst
+				id = usercmdui.usercmd2id(cmd)
+				menu.EnableMenuItem(id, flags)
+		
+		# exception
+		if context == 'app':
+			cmd = wndusercmd.ABOUT_GRINS
+			id = usercmdui.usercmd2id(cmd)
+			menu.EnableMenuItem(id, flags)
+
 	def set_dynamiclist(self, command, list):
-		import win32menu, usercmdui
 		submenu = self._mainmenu.get_cascade_menu(command)
 		if not submenu:
 			return
@@ -125,5 +155,3 @@ class MainWnd(wingeneric.Wnd, DocumentFrame):
 			menuspec.append(entry)
 		self._mainmenu.clear_cascade(command)
 		win32menu._create_menu(submenu, menuspec, idstart, self._dyncmds[command])
-
-	
