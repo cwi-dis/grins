@@ -5,6 +5,13 @@
 
 ------------------------------ BUGS -------------------------------
 
+blockview: "paste before" als de focus de viewing root is (maar niet
+de echte root) crasht
+
+node/channel attrs: when clicking OK, if the window size changes
+(because the list of defined attributes changes), the new window pops
+up for a nanosecond and then disappears again
+
 soundchannel: crashes if openport fails (if there are too many ports open)
 
 player: on commit, all channels pop up
@@ -20,7 +27,9 @@ crashes or generally weird behaviour
 
 Player: crash if playing node with undefined channel
 
-all: When a FORM is iconified, things hang.
+FORMS: When one FORM is iconified, all events are queued but not acted
+upon hang.  Is this a standard FORMS bug or do I do something wrong
+with handling GL events?
 
 all: When a view FORM is closed using 4DWm's close menu item, it takes
 a while before events get handled again.
@@ -76,6 +85,25 @@ general: perhaps use CVS for project management
 
 *    I was unable to use the input text box for Immediate text without
      further (human) help. The interface is very strange.
+
+21/4/92
+
+*    When waiting for next pieces of data to load ('cos done a hyperjump), then
+     leave the current ones in the Channel showing until the new ones are
+     ready.  Show a wait cursor while waiting.
+
+22/4/92
+
+*    Channels need a "Z" position, so that when channels overlap the author
+     can define which should be on top.
+
+*    Background colour for a Channel could be transparent.
+
+*    Show in time chart "pause" anchors/nodes (for example a heavy line at
+     the end of the node).     
+
+*    Give feedback when choosing/activating an anchor (or linked node), so
+     the reader knows that the anchor has, or has not, been selected.
 
 ------------------------------ FEATURES ---------------------------
 
