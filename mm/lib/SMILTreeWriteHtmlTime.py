@@ -401,6 +401,9 @@ class SMILHtmlTimeWriter(SMIL):
 					name = 'onClick'
 					value = 'endElement();'
 
+				elif name == 'src' and value[:8] == 'file:///' and value[9:10] == '|':
+					value = 'file:///' + value[8] + ':' + value[10:]
+						
 				# for the rest
 				else:
 					# convert event refs
