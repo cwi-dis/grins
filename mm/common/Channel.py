@@ -1739,7 +1739,13 @@ class ChannelWindow(Channel):
 
 		# determinate media size
 		media_width, media_height = node.GetDefaultMediaSize(subreg_width, subreg_height)
-
+		
+		# this test allow to avoid a crash. media_width or media_height shouln't be equal to zero
+		# this method have to call only for media with intrinsic size
+		if media_width == 0 or media_height == 0:
+			media_width == 100
+			media_height = 100
+			
 		# print 'media width =',media_width
 		# print 'media height =',media_height
 
