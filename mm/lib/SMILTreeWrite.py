@@ -24,14 +24,6 @@ def nameencode(value):
 	value = string.join(string.split(value,'>'),'&gt;')
 	value = string.join(string.split(value,'<'),'&lt;')
 	value = string.join(string.split(value,'"'),'&quot;')
-##	if '&' in value:
-##		value = regsub.gsub('&', '&amp;', value)
-##	if '>' in value:
-##		value = regsub.gsub('>', '&gt;', value)
-##	if '<' in value:
-##		value = regsub.gsub('<', '&lt;', value)
-##	if '"' in value:
-##		value = regsub.gsub('"', '&quot;', value)
 	return '"' + value + '"'
 
 NSprefix = 'GRiNS'
@@ -403,7 +395,7 @@ def getsyncarc(writer, node, isend):
 			elif arc.srcnode is node:
 				name = ''
 			else:
-				name = writer.uid2name(arc.srcnode.GetUID()) + '.'
+				name = writer.uid2name[arc.srcnode.GetUID()] + '.'
 			if arc.event is not None:
 				name = name + arc.event
 			if arc.delay is not None:
@@ -413,7 +405,7 @@ def getsyncarc(writer, node, isend):
 					name = name + '%g' % arc.delay
 			list.append(name)
 		else:
-			list.append('%s.marker(%s)' % (writer.uid2name(arc.srcnode.GetUID()), arc.marker))
+			list.append('%s.marker(%s)' % (writer.uid2name[arc.srcnode.GetUID()], arc.marker))
 	if not list:
 		return
 	return string.join(list, ';')
@@ -847,25 +839,17 @@ class SMILWriter(SMIL):
 		self.push()
 		self.writetag('head')
 		self.push()
-##		self.writetag('meta', [('name', 'sync'), ('content', 'soft')])
 		if self.__title:
 			self.writetag('meta', [('name', 'title'),
 					       ('content', self.__title)])
 		self.writetag('meta', [('name', 'generator'),
 				       ('content','GRiNS %s'%version.version)])
-##		i = string.rfind(ctx.baseurl or '', '/')
-##		if i >= 0:
-##			# baseurl up to and including last slash
-##			baseurl = ctx.baseurl[:i+1]
-##		else:
-##			# no baseurl
-##			baseurl = None
-##		if baseurl and ctx.baseurlset and not self.copydir:
-##			self.writetag('meta', [('name', 'base'),
-##					       ('content', baseurl)])
 		for key, val in ctx.attributes.items():
 			# for export don't write attributes starting with project_, they are meant
 			# for internal information-keeping only
+			if key == 'project_boston':
+				# never save project_boston
+				continue
 			if self.__cleanSMIL and key[:8] == 'project_':
 				continue
 			self.writetag('meta', [('name', key),
