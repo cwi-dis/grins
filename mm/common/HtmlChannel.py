@@ -75,8 +75,9 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.htmlw.AddCallback('linkCallback', self.cblink, None)
 
 	def cbdestroy(self, widget, userdata, calldata):
-		self.htmlw.FreeImageInfo()
-		self.htmlw = None
+		widget.FreeImageInfo()
+		if widget == self.htmlw:
+			self.htmlw = None
 
 	def cblink(self, widget, userdata, calldata):
 		href = calldata.href
