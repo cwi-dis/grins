@@ -38,9 +38,6 @@
 (arm_duration (float) -1.0 'Arm duration' hidden
 	'Time needed to arm this event before displaying' raw)
 
-(aspect (bool) 1 'Keep aspect ratio' default
-	'Keep aspect ratio of image' inherited)
-
 (author (string) '' 'Author' default 'Author (documentary)' raw)
 
 (axis (tuple (float) (float)) (-1.0 -1.0) 'Axis' CMIFdefault
@@ -64,7 +61,7 @@
 (bgimg (string) '' 'Background image' CMIFfile
 	'Background image for window' channel)
 
-(bitrate (int) 0 'Peak bitrate' default
+(bitrate (int) 14400 'Peak bitrate' default
 	'Peak bitrate of document in bits per second.' raw)
 
 (border (int) 1 'Channel border' CMIFdefault
@@ -89,9 +86,6 @@
 (clipend (string) '' 'Clip end' default
 	'End of range of frames to be played. Simplest form is "npt=3s".' channel)
 
-(color (tuple (int) (int) (int)) (0 0 0) 'Effect color' color
-       'Color for transition effect.' normal)
-
 (comment (string) '' 'Comment' default
 	 'A comment (authoring convenience only)' raw)
 
@@ -106,9 +100,6 @@
 
 (cview_winsize  (tuple (float) (float)) (115.234375 115.234375) 'Time chart winsize' hidden
 	 'Window size for Time chart view' raw)
-
-(direction (string) 'left' 'Wipe Direction' direction
-	'Direction of wipe' normal)
 
 (drawbox (bool) 1 'Draw anchor boxes' CMIFdefault
 	'Draw anchors as boxes' channel)
@@ -131,9 +122,6 @@
 (hicolor (tuple (int) (int) (int)) (255 0 0) 'Highlight color' CMIFcolor
 	'Color used for highlighted anchors in window' channel)
 
-(href (string) '' 'Hyperlink destination' default
-	'Destination URL of hyperlink from image.' inherited)
-
 (hview_winpos (tuple (float) (float)) (-1 -1) 'Hierarchy winpos' hidden
 	 'Window position for hierarchy view' raw)
 
@@ -145,9 +133,6 @@
 				   (int) (int)))) ()
 	'Hyperlink list' hidden
 	'Hyperlinks within this document (root node only)' raw)
-
-(imgcrop (tuple (int) (int) (int) (int)) (0 0 0 0) 'Image crop' default
-	'Crop image.  Values are x,y,w,h of image region to display.' normal)
 
 (layout (name) undefined 'Screen' layoutname
 	'Screen for this node and its descendants. Authoring convenience only, controls channels displayed in menus.' inherited)
@@ -166,8 +151,6 @@
 
 (macprog (string) '' 'Mac program signature' CMIFdefault
 	'4-byte application signature (mac only)' channel)
-
-(maxfps (int) 0 'Max fps' default 'Maximum frames per second.' inherited)
 
 (mcgroup (string) '' 'Multicast group' CMIFdefault
 	'IP Multicast group address to listen to' raw)
@@ -202,10 +185,6 @@
 (popup (bool) 1 'Popup on play' CMIFdefault
 	'Determines whether channel pops up upon playing a node' raw)
 
-(preroll (float) 0.0 'Preroll time' default
-	'Time for which data should be buffered before presentation starts.'
-	raw)
-
 (queuesize (float) 0 'Queue size' CMIFdefault
 	'Audio playback queue size' channel)
 
@@ -214,12 +193,6 @@
 
 (scalefilter (name) '' 'Scaling filter' CMIFdefault
 	'Name of filter used after image scaling' channel)
-
-(size (tuple (int) (int)) (0 0) 'Image size' default
-	'Size of image in pixels (width, height).' normal)
-
-(start (float) 0.0 'Start time' default
-	'Start time of transition effect relative to previous transition start (in seconds).' normal)
 
 (style (list (name)) () 'Style(s)' CMIFdefault
 	'List of style names that apply to this node/subtree' raw)
@@ -233,16 +206,10 @@
 (styledict (namedict (attrdict)) () 'Style Dictionary' hidden
 	'Styles used in this document (root node only)')
 
-(subregion (tuple (int) (int) (int) (int)) (0 0 0 0) 'Destination region' normal
-	'Destination region for transition effect (x,y,w,h).' normal)
-
 # This is the real sync arc data structure, on the destination!!!
 (synctolist (list (enclosed (tuple (uid) (bool) (float) (bool))))
 	() 'SyncTo list' hidden
 	'List of sync arcs ending at this node' raw)
-
-(tag (string) 'fill' 'Transition type' transition
-	'Type of transition effect.' normal)
 
 (terminator (name) 'LAST' 'Endsync child' termnodename
 	'Name of child that terminates parallel node' normal)
@@ -296,9 +263,6 @@
 (winsize (tuple (float) (float)) (0 0) 'Window size' default
 	'Initial window size' raw)
 
-(wipetype (string) 'normal' 'Wipe type' wipetype
-	'Type of wipe' normal)
-
 (z (int) 0 'Z order' default
 	'Z order (higher numbers are on top)' normal)
 
@@ -317,3 +281,40 @@
 	'Play node only if screen bigger than this' raw)
 (system_screen_depth (int) 0 'System screen depth' default
 	'Play node only if screen has more bits than this' raw)
+
+# RealPix attributes
+(aspect (bool) 1 'Keep aspect ratio' default
+	'Keep aspect ratio of image' inherited)
+
+(color (tuple (int) (int) (int)) (0 0 0) 'Effect color' color
+       'Color for transition effect (see RealPix documentation).' normal)
+
+(direction (string) 'left' 'Wipe Direction' direction
+	'Direction of wipe' normal)
+
+(href (string) '' 'Hyperlink destination' default
+	'Destination URL of hyperlink from image (see RealPix documentation).' inherited)
+
+(imgcrop (tuple (int) (int) (int) (int)) (0 0 0 0) 'Image crop' default
+	'Crop image.  Values are x,y,w,h of image area to display.' normal)
+
+(maxfps (int) 0 'Max fps' default 'Maximum frames per second (see RealPix documentation).' inherited)
+
+(preroll (float) 0.0 'Preroll time' default
+	'Time for which data should be buffered before presentation starts (see RealPix documentation).'
+	raw)
+
+(size (tuple (int) (int)) (256 256) 'Image size' default
+	'Size of slideshow in pixels (width, height).' normal)
+
+(start (float) 0.0 'Start time' default
+	'Start time of transition effect relative to previous transition start (in seconds).' normal)
+
+(subregion (tuple (int) (int) (int) (int)) (0 0 0 0) 'Destination region' normal
+	'Destination area within channel (x,y,w,h) (see RealPix documentation).' normal)
+
+(tag (string) 'fill' 'Transition type' transition
+	'Type of transition effect.' normal)
+
+(wipetype (string) 'normal' 'Wipe type' wipetype
+	'Type of wipe' normal)

@@ -299,33 +299,33 @@ class RPParser(xmllib.XMLParser):
 		width = attributes.get('width')
 		if width is None:
 			self.syntax_error('required attribute width missing in head element')
-			width = 100
+			width = 256
 		else:
 			try:
 				width = string.atoi(string.strip(width))
 			except string.atoi_error:
 				self.syntax_error('badly formatted width attribute')
-				width = 100
+				width = 256
 		height = attributes.get('height')
 		if height is None:
 			self.syntax_error('required attribute height missing in head element')
-			height = 100
+			height = 256
 		else:
 			try:
 				height = string.atoi(string.strip(height))
 			except string.atoi_error:
 				self.syntax_error('badly formatted height attribute')
-				height = 100
+				height = 256
 		bitrate = attributes.get('bitrate')
 		if bitrate is None:
 			self.syntax_error('required attribute bitrate missing in head element')
-			bitrate = 64000
+			bitrate = 14400
 		else:
 			try:
 				bitrate = string.atoi(string.strip(bitrate))
 			except string.atoi_error:
 				self.syntax_error('badly formatted bitrate attribute')
-				bitrate = 64000
+				bitrate = 14400
 		self.duration = duration
 		self.width = width
 		self.height = height

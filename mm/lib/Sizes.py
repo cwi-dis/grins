@@ -19,8 +19,8 @@ def GetSize(url, maintype = None, subtype = None):
 		# any RealMedia type
 		import realsupport
 		info = realsupport.getinfo(url, u)
-		width = info.get('width', 200)
-		height = info.get('height', 200)
+		width = info.get('width', 0)
+		height = info.get('height', 0)
 	elif maintype == 'image':
 		u.close()
 		del u
