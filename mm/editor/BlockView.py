@@ -602,9 +602,6 @@ def _doInsertParent(bv, type):
     em.commit()
     bv.changing_node = None
 
-    import NodeInfo
-    NodeInfo.shownodeinfo(bv.toplevel, newnode)
-
 def InsertSeqParent(bv):
     _doInsertParent(bv, 'seq')
 def InsertParParent(bv):
