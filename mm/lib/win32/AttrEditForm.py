@@ -1893,6 +1893,7 @@ class FileGroup(AttrGroup):
 			self._preview=1
 			mtype='realwnd'
 		self._mtypesig=mtype
+		if mtype == 'realwnd': self._preview = 0 # XXXX for now...
 		return self._preview
 
 	def getpageresid(self):
