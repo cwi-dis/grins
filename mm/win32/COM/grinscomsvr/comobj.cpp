@@ -94,8 +94,9 @@ class GRiNSPlayerAuto : public IGRiNSPlayerAuto
 		}
 	
 	// IGRiNSPlayerAuto
+    virtual HRESULT __stdcall getPermission(/* [string][in] */ wchar_t __RPC_FAR *pLicense,/* [out] */ int __RPC_FAR *pPermission);
     virtual HRESULT __stdcall open(/* [string][in] */ wchar_t __RPC_FAR *szFileOrUrl);
-    virtual HRESULT __stdcall close();
+	virtual HRESULT __stdcall close();
     virtual HRESULT __stdcall play();
     virtual HRESULT __stdcall stop();
 	virtual HRESULT __stdcall pause();
@@ -186,7 +187,8 @@ class GRiNSPlayerAuto : public IGRiNSPlayerAuto
 	double m_dur; // in secs
 	char m_cursor[32];
 	int m_focuswndid;
-	int m_framerate; 
+	int m_framerate;
+	int m_permission;
 	};
 
 class GRiNSPlayerMoniker : public IGRiNSPlayerMoniker
@@ -269,7 +271,7 @@ CSimpleMap<int, GRiNSPlayerAuto*> GRiNSPlayerAuto::s_documents;
 
 GRiNSPlayerAuto::GRiNSPlayerAuto(GRiNSPlayerComModule *pModule)
 :	m_cRef(1), m_pModule(pModule), m_hWnd(0), m_nViewports(0),
-	m_dur(0), m_focuswndid(0), m_framerate(20)
+	m_dur(0), m_focuswndid(0), m_framerate(20), m_permission(0)
 	{
 	s_documents.Add(int(this), this);
 	adviceSetCursor("arrow");
@@ -283,8 +285,35 @@ GRiNSPlayerAuto::~GRiNSPlayerAuto()
 	m_pModule->unlock();
 	}
 
+ HRESULT __stdcall GRiNSPlayerAuto::getPermission(/* [string][in] */ wchar_t __RPC_FAR *pLicense,/* [out] */ int __RPC_FAR *pPermission)
+	{
+	if(m_permission != 0) 
+		{
+		*pPermission = m_permission;
+		return S_OK;
+		}
+	*pPermission = 0;
+	char *buf = new char[MAX_PATH];
+	if(!WideCharToMultiByte(CP_ACP, 0, pLicense, -1, buf, MAX_PATH, NULL, NULL))
+		return E_UNEXPECTED;
+	if(getPyListener())
+		{
+		CallbackHelper helper("GetPermission", getPyListener());
+		if(helper.cancall())
+			{
+			PyObject *arg = Py_BuildValue("(s)", buf);
+			int temp = 0;
+			if(helper.call(arg) && helper.retval(temp))
+				m_permission = temp;
+			}
+		}
+	*pPermission = m_permission;
+	return S_OK;
+	}
+
 HRESULT __stdcall GRiNSPlayerAuto::open(wchar_t *wszFileOrUrl)
 	{
+	if(m_permission == 0) return E_UNEXPECTED;
 	char *buf = new char[MAX_PATH];
     if(WideCharToMultiByte(CP_ACP, 0, wszFileOrUrl, -1, buf, MAX_PATH, NULL, NULL))
 		{
