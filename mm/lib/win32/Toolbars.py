@@ -163,8 +163,9 @@ class ToolbarMixin(PanelMixin):
 
 	def DestroyToolbars(self):
 		for bar in self._bars.values():
-			if hasattr(bar,'DestroyWindow'):
-				bar.DestroyWindow()
+##			if hasattr(bar,'DestroyWindow'):
+##				bar.DestroyWindow()
+			bar.destroy()
 		PanelMixin.destroy(self)
 		self._bars = {}
 		self._pulldowndict = {}
@@ -193,10 +194,12 @@ class ToolbarMixin(PanelMixin):
 		bar = self._bars[barid]
 		flag = not bar.IsWindowVisible()
 		if flag:
-			self.ShowControlBar(bar,1,0)
-			bar.RedrawWindow()
+##			self.ShowControlBar(bar,1,0)
+##			bar.RedrawWindow()
+			bar.show()
 		else:
-			self.ShowControlBar(bar,0,0)
+##			self.ShowControlBar(bar,0,0)
+			bar.hide()
 
 	def OnUpdateToolbarCommand(self, cmdui):
 		barid = cmdui.m_nID
@@ -354,6 +357,19 @@ class GRiNSToolbar(window.Wnd):
 		#
 		self._toolbarCombos = {}
 		self.name = name
+		self.parent = parent
+
+	def destroy(self):
+		if hasattr(self, 'DestroyWindow'):
+			self.DestroyWindow()
+		del self.parent
+
+	def show(self):
+		self.parent.ShowControlBar(self, 1, 0)
+		self.RedrawWindow()
+
+	def hide(self):
+		self.parent.ShowControlBar(self, 0, 0)
 
 	def hookMessages(self):
 		self.HookMessage(self.onLButtonDown,win32con.WM_LBUTTONDOWN)

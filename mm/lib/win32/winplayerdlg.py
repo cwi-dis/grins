@@ -71,6 +71,12 @@ class PlayerDlgBar(window.Wnd):
 		self.hookCommands()
 		self.hide()
 
+	def destroy(self):
+		self.DestroyWindow()
+		del self._parent
+		del self._resitems
+		del self._ctrls
+
 	def show(self):
 		self.ShowWindow(win32con.SW_SHOW)
 		self._parent.DockControlBar(self)
