@@ -111,6 +111,15 @@ if 0:
     _CombiningChar = ''
     _Extender = ''
 
+_cleanre = re.compile(r'\(\?P<')
+def cleanre(re):
+    while 1:
+        res = _cleanre.search(re)
+        if res is None:
+            return re
+        i = re.find('>', res.end(0))
+        re = re[:res.start(0)] + '(?:' + re[i+1:]
+
 _Letter = _BaseChar + _Ideographic
 _NameChar = '-' + _Letter + _Digit + '._:' + _CombiningChar + _Extender
 
@@ -182,10 +191,10 @@ mixedre = re.compile(r'\('+_opS+'#PCDATA'+'(('+_opS+r'\|'+_opS+_Name+')*'+_opS+r
 paren = re.compile('[()]')
 attdef = re.compile(_S+'(?P<atname>'+_Name+')'+_S+'(?P<attype>CDATA|ID(?:REFS?)?|ENTIT(?:Y|IES)|NMTOKENS?|NOTATION'+_S+r'\((?P<notation>'+_opS+_Name+'(?:'+_opS+r'\|'+_opS+_Name+')*'+_opS+r')\)|\('+_opS+_Nmtoken+'(?:'+_opS+r'\|'+_opS+_Nmtoken+')*'+_opS+r'\))'+_S+'(?P<atvalue>#REQUIRED|#IMPLIED|(?:#FIXED'+_S+')?(?P<atstring>'+_QStr+'))')
 attlist = re.compile('<!ATTLIST'+_S+'(?P<elname>'+_Name+')(?P<atdef>(?:'+attdef.pattern+')*)'+_opS+'>')
-_EntityVal = '"(?:[^"&%]|'+ref.pattern+'|%'+_Name+';)*"|' \
-             "'(?:[^'&%]|"+ref.pattern+"|%"+_Name+";)*'"
-entity = re.compile('<!ENTITY'+_S+'(?:%'+_S+'(?P<pname>'+_Name+')'+_S+'(?P<pvalue>'+_EntityVal+'|'+_ExternalId+')|(?P<ename>'+_Name+')'+_S+'(?P<value>'+_EntityVal+'|'+_ExternalId+'(?:'+_S+'NDATA'+_S+_Name+')?))'+_opS+'>')
-notation = re.compile('<!NOTATION'+_S+'(?P<name>'+_Name+')'+_S+'(?P<value>SYSTEM'+_S+_SystemLiteral+'|PUBLIC'+_S+_PublicLiteral+'(?:'+_S+_SystemLiteral+')?)'+_opS+'>')
+_EntityVal = '"(?:[^"&%]|'+cleanre(ref.pattern)+'|%'+_Name+';)*"|' \
+             "'(?:[^'&%]|"+cleanre(ref.pattern)+"|%"+_Name+";)*'"
+entity = re.compile('<!ENTITY'+_S+'(?:%'+_S+'(?P<pname>'+_Name+')'+_S+'(?P<pvalue>'+_EntityVal+'|'+cleanre(_ExternalId)+')|(?P<ename>'+_Name+')'+_S+'(?P<value>'+_EntityVal+'|'+cleanre(_ExternalId)+'(?:'+_S+'NDATA'+_S+_Name+')?))'+_opS+'>')
+notation = re.compile('<!NOTATION'+_S+'(?P<name>'+_Name+')'+_S+'(?P<value>SYSTEM'+_S+cleanre(_SystemLiteral)+'|PUBLIC'+_S+cleanre(_PublicLiteral)+'(?:'+_S+cleanre(_SystemLiteral)+')?)'+_opS+'>')
 peref = re.compile('%(?P<name>'+_Name+');')
 ignore = re.compile(r'<!\[|\]\]>')
 bracket = re.compile('[<>\'"%]')
@@ -1101,12 +1110,12 @@ class XMLParser:
     def __dfa(self, data, i):
         res = mixedre.match(data, i)
         if res is not None:
-            mixed = res.group(0)
+            mixed = str = res.group(0)
             if mixed[-1] == '*':
                 mixed = map(string.strip, mixed[1:-2].split('|'))
             else:
                 mixed = '#PCDATA'
-            return res.end(0), mixed, 0, 0
+            return res.end(0), mixed, 0, 0, str
         dfa = []
         i, start, end, str = self.__dfa1(data, i, dfa)
         return i, dfa, start, end, str
