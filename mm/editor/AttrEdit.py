@@ -385,11 +385,11 @@ class NodeWrapper(Wrapper):
 			'copyright', 'comment',
 			'layout', 'u_group',
 			('mimetype',),	# XXXX Or should this be with file?
-			'system_bitrate', 'system_captions',
-			'system_language', 'system_overdub_or_caption',
-			'system_required', 'system_screen_size',
-			'system_screen_depth', 'system_audiodesc',
-			'system_overdub_or_subtitle',
+			'system_audiodesc', 'system_bitrate',
+			'system_captions', 'system_cpu',
+			'system_language', 'system_operating_system',
+			'system_overdub_or_caption', 'system_required',
+			'system_screen_size', 'system_screen_depth',
 			]
 		ntype = self.node.GetType()
 		ctype = self.node.GetChannelType()
