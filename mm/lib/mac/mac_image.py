@@ -10,6 +10,7 @@ import MacOS
 
 _fmt_to_mac = {
 	imgformat.macrgb16 : (16, 16, 3, 5),
+	imgformat.macrgb : (16, 32, 3, 8),
 }
 
 def mkpixmap(w, h, fmt, data):
