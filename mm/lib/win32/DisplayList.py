@@ -39,19 +39,22 @@ class DisplayList:
 		self._linewidth = 1
 		self._list = []
 		self._optimdict = {}
-		self._cloneof = None
-		self._clonestart = 0
 		self._rendered = 0
 		self._font = None
-		self._imagemask = None
 		self._curpos = 0, 0
 		self._xpos = 0
-		self._clonebboxes = []
 		self._win32rgn=None
-		if window._transparent!=1 and not hasattr(window, '_browser'):
-			self.clear(self._canvas)
+		if self._canvas[2]==0 or self._canvas[3]==0:
+			print 'invalid canvas for wnd',window
+			raise error, 'invalid arg'
 		self._hfactor = 1.0/(self._canvas[2]/pixel_per_mm_x)
 		self._vfactor = 1.0/(self._canvas[3]/pixel_per_mm_y)
+
+		#cloning support
+		self._cloneof = None
+		self._clonestart = 0
+		self._clonebboxes = []
+		self._clonergn=None
 
 	def clone(self):
 		w = self._window
@@ -59,11 +62,12 @@ class DisplayList:
 		# copy all instance variables
 		new._list = self._list[:]
 		new._font = self._font
-		new._win32rgn=self._win32rgn
+		if self._win32rgn:
+			new._win32rgn=win32ui.CreateRgn()
+			new._win32rgn.CopyRgn(self._win32rgn)
 		if self._rendered:
 			new._cloneof = self
 			new._clonestart = len(self._list)
-			new._imagemask = self._imagemask
 		for key, val in self._optimdict.items():
 			new._optimdict[key] = val
 		return new
@@ -77,9 +81,12 @@ class DisplayList:
 		for b in self._buttons:
 			b._highlighted = 0	
 		wnd._active_displist = self
-		if wnd._transparent==-1:
-			wnd.setTransparent(0)
 		wnd.RedrawWindow(None,self._win32rgn)
+
+		# or equivalently
+		#dc=wnd.GetDCEx(self._win32rgn,win32con.DCX_CACHE|win32con.DCX_CLIPSIBLINGS)
+		#wnd.PaintOn(dc)
+		#wnd.ReleaseDC(dc)
 
 		# if it is not transparent 
 		# nothing remains to be done
@@ -87,7 +94,15 @@ class DisplayList:
 		if wnd._transparent==0 or wnd._transparent==-1:
 			return
 
+		# else
+		# we must paint overlaps of self._win32rgn
+		# with trasparent wnds
+		if not self._win32rgn: return
+		rgnBox=self._win32rgn.GetRgnBox()
+		wnd.PaintUnderTrasparentSiblings(rgnBox)
+		return
 
+		# obsolete now
 		# the wnd (here) is trasparent but
 		# since wnd's client rect was erased
 		# by the top window background (see OnErase mechanism) 
@@ -106,6 +121,7 @@ class DisplayList:
 		
 
 	def _render(self, dc, region, show):
+		self._rendered = 1
 		w = self._window
 		clonestart = self._clonestart
 		if not self._cloneof or self._cloneof is not w._active_displist:
@@ -124,7 +140,6 @@ class DisplayList:
 		for b in self._buttons:
 			if b._highlighted:
 				b._do_highlight()
-		self._rendered = 1
 
 	def _do_render(self, entry, dc, region):
 		cmd = entry[0]
@@ -137,6 +152,8 @@ class DisplayList:
 			mask, image, src_x, src_y,dest_x, dest_y, width, height,rcKeep=entry[1:]			
 			imageex.render(dc.GetSafeHdc(),self._bgcolor,
 				mask, image, src_x, src_y,dest_x, dest_y, width, height,rcKeep)
+		elif cmd== 'obj':
+			entry[1].draw(dc)
 		elif cmd == 'line':
 			fg = entry[1]
 			points = entry[2]
@@ -279,12 +296,12 @@ class DisplayList:
 				d._cloneof = None
 		if win._active_displist is self:
 			win._active_displist = None
-			if win._transparent == -1 and win._parent:
-				win.setTransparent(1)
-				win._parent.RedrawWindow()
-			else:
-				if win and hasattr(win,'RedrawWindow'):
-					win.RedrawWindow(None,self._win32rgn)
+			win.update()
+			win.RedrawWindow()
+			win.UpdateWindow()
+			if win._transparent!=0:
+				win.PaintUnderTrasparentSiblings(win.GetClientRect())
+
 		self._window = None
 		if self._win32rgn:
 			self._win32rgn.DeleteObject()
@@ -320,33 +337,6 @@ class DisplayList:
 
 	# obsolete
 	def update_boxes(self, wnd):
-		cmifex=win32ui.GetCmifex() # temp
-		if self._window._window_type == TEXT:
-			ydif = cmifex.GetScrollPos(hWnd)# temp
-		else:
-			ydif = 0
-		if ydif == 0:
-			return
-		cmifex.ClearXY(wnd)# temp
-		#dif = oldscrollpos-scrollpos
-		if self._buttons==[]:
-			return
-		button = 0
-		for i in range(0, len(self._list)):
-			l = self._list[i]
-			if l[0] == 'box':				
-				tuple = l[1]
-				x1 = tuple[0]
-				y1 = tuple[1]+ydif
-				x2 = tuple[2]
-				y2 = tuple[3]+ydif
-				temptuple = (x1,y1,x2,y2)
-				l = ('box', temptuple)
-				self._list[i] = l
-				#if len(self._buttons)<=button:
-				#	self._buttons.append('box', (x1,y1,x2,y2))
-				self._buttons[button]._setcoords(x1,y1,x2,y2)
-				button = button+1
 		pass
 
 
@@ -407,6 +397,7 @@ class DisplayList:
 			self._optimize()
 			self._update_bbox(x, y, x+w, y+h)
 		return x, y, x+w, y+h
+
 
 	def drawfbox(self, color, coordinates):
 		if self._rendered:
@@ -476,6 +467,7 @@ class DisplayList:
 		x, y, w, h = coordinates
 		self._update_bbox(x, y, x+w, y+h)
 
+		
 	def draw3ddiamond(self, cl, ct, cr, cb, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
@@ -711,6 +703,35 @@ class DisplayList:
 
 	def _convert_color(self, color):
 		return color 
+
+	# Object support
+	def drawobj(self,obj):
+		self.AddObj(obj)
+
+	def AddObj(self,obj):
+		self._list.append('obj',obj)
+		#l,t,r,b=obj.getbbox()
+		l,t,r,b=self._canvas # since obj can move (invst other)
+		self._update_bbox(l,t,r,b)
+
+	def RemoveObj(self,obj):
+		for i in range(self._clonestart, len(self._list)):
+			e=self._list[i]
+			if e[0]=='obj' and e[1]==obj:
+				self._list.remove(e)
+
+	def ObjectAt(self,point):
+		"""point is in canvas coordinates"""
+		rect=Rect((point.x,point.y,point.x+1,point.y+1))
+		for i in range(self._clonestart, len(self._list)):
+			e=self._list[i]
+			if e[0]=='obj':
+				if e[1].intersects(rect):
+					return e[1]
+		return None	
+	# temp		
+	def UpdateObj(self,hint,hintObj):
+		self._window.self.OnUpdate(None,hint,hintObj)
 
 ####################################################
 class _Button:
