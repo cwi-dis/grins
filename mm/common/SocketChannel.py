@@ -55,7 +55,7 @@ class SocketChannel(Channel):
 	def __repr__(self):
 		return '<SocketChannel instance, name=' + `self._name` + '>'
 
-	def socket_ready(self, *dummy):
+	def socket_ready(self):
 		rv, (shost, sport) = self.socket.recvfrom(10000)
 		if self.nonlocalonly and shost == self.hostaddr:
 			return
