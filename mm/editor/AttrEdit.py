@@ -1396,6 +1396,7 @@ class AttrEditor(AttrEditorDialog):
 		self.follow_selection = 0
 		self.__new = new
 		self.wrapper = wrapper
+		self.__mytransaction = 0
 		wrapper.register(self)
 		self.__open_dialog(initattr)
 		# update the title bar name
@@ -1601,9 +1602,14 @@ class AttrEditor(AttrEditorDialog):
 			if close:
 				self.close()
 			return
+		# if the transaction is called by this module, the 'transaction callback' has to be
+		# a different treatement
+		self.__mytransaction = 1
 		if not self.wrapper.transaction():
+			self.__mytransaction = 0
 			# can't do a transaction
 			return 1
+		self.__mytransaction = 0
 		# this may take a while...
 		self.wrapper.setwaiting()
 		if newchannel:
@@ -1685,6 +1691,8 @@ class AttrEditor(AttrEditorDialog):
 	# EditMgr interface
 	#
 	def transaction(self, type):
+		if not self.__mytransaction:
+			return self.pagechange_allowed()
 		return 1
 	
 	def commit(self, type):
