@@ -936,7 +936,7 @@ _button = None				# the currently highlighted button
 
 class ChannelWindow(Channel):
 	chan_attrs = Channel.chan_attrs + ['base_winoff', 'transparent', 'units', 'popup', 'z']
-	node_attrs = Channel.node_attrs + ['duration', 'bgcolor']
+	node_attrs = Channel.node_attrs + ['duration', 'drawbox', 'bgcolor']
 	_visible = TRUE
 	_window_type = SINGLE
 
@@ -1244,7 +1244,10 @@ class ChannelWindow(Channel):
 					print 'multiple whole-node anchors on node'
 				armed_anchor = a
 		if armed_anchor:
-			self.armed_display.fgcolor(self.getbucolor(node))
+			if MMAttrdefs.getattr(node, 'drawbox'):
+				self.armed_display.fgcolor(self.getbucolor(node))
+			else:
+				self.armed_display.fgcolor(bgcolor)
 			b = self.armed_display.newbutton((0.0, 0.0, 1.0, 1.0))
 			b.hiwidth(3)
 			b.hicolor(self.gethicolor(node))
