@@ -18,7 +18,7 @@ class LayoutChannel(ChannelWindow):
 	# WARNING: if the size of channel is dynamicly modify (for example from animation),
 	# we have to invalidate the current value in self._wingeomInPixel
 	def _getWingeomInPixel(self):
-	        parentChannel = self._get_parent_channel()
+		parentChannel = self._get_parent_channel()
 
 		if parentChannel == None:
 			# top window 
