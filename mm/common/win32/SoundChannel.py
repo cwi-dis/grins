@@ -50,7 +50,7 @@ class SoundChannel(Channel.ChannelAsync):
 			self.errormsg(node, 'No URL set on node')
 			return 1
 		import MMmimetypes, string
-		mtype = MMmimetypes.guess_type(url)[0]
+		mtype = MMmimetypes.guess_type(url)[0]			
 		if mtype and string.find(mtype, 'real') >= 0:
 			node.__type = 'real'
 			if self.__rc is None:
@@ -64,6 +64,15 @@ class SoundChannel(Channel.ChannelAsync):
 				if self.__rc.prepare_player(node):
 					self.__ready = 1
 		else:
+			maxsoundlevel = node.GetContext()._maxsoundlevel
+			minsoundlevel = node.GetContext()._minsoundlevel
+			if maxsoundlevel!=1.0 or minsoundlevel!=1.0:
+				if mtype and string.find(mtype, 'x-wav')>=0:
+					if not self.__mc:
+						self.__mc = MediaChannel.DSPlayer(self)
+					lc = self._attrdict.GetLayoutChannel()
+					soundlevel = lc.get('soundLevel', 1.0)
+					self.__mc.setsoundlevel(soundlevel, maxsoundlevel)
 			if not self.__mc:
 				self.__mc = MediaChannel.MediaChannel(self)
 			try:
