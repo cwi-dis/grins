@@ -81,7 +81,7 @@ class HierarchyView(HierarchyViewDialog):
 			if self._timestripconform():
 				self.usetimestripview = 1
 			else:
-				windowinterface.showmessage("Warning: document structure cannot be displayed as timestrip.  Using structured view.")
+				windowinterface.showmessage("Warning: document structure cannot be displayed as timestrip.  Using structured view.", parent=self.window)
 		self.pushbackbars = features.H_VBANDWIDTH in features.feature_set 	# display download times as pushback bars on MediaWidgets.
 		self.dropbox = features.H_DROPBOX in features.feature_set	# display a drop area at the end of every node.
 		self.transboxes = features.H_TRANSITIONS in features.feature_set # display transitions
@@ -114,6 +114,7 @@ class HierarchyView(HierarchyViewDialog):
 			COMPUTE_BANDWIDTH(callback = (self.bandwidthcall, ())),
 			CREATE_BEGIN_EVENT_SOURCE(callback = (self.create_begin_event_source, ())),
 			CREATE_BEGIN_EVENT_DESTINATION(callback = (self.create_begin_event_dest, ())),
+			FIND_EVENT_SOURCE(callback = (self.find_event_source, ())),
 			]
 		if not lightweight:
 			self.commands.append(TIMESCALE(callback = (self.timescalecall, ('global',))))
@@ -327,7 +328,7 @@ class HierarchyView(HierarchyViewDialog):
 	
 	def aftersetfocus(self):
 		# Called after the focus has been set to a specific node.
-		fnode = self.focusnode
+		fnode = self.selected_widget.get_node()
 
 		if isinstance(self.selected_widget, StructureWidgets.TransitionWidget):
 			which, transitionnames = self.selected_widget.posttransitionmenu()
@@ -1205,7 +1206,10 @@ class HierarchyView(HierarchyViewDialog):
 		if self.selected_widget == widget:
 			# don't do anything if the focus is already set to the requested widget.
 			# this is important because of the setglobalfocus call below.
-			return
+
+			# If we select an icon, then we also select it's widget when we have really selected it's icon.
+			if not (self.selected_icon and isinstance(self.selected_widget, StructureWidgets.MMNodeWidget)):
+				return
 
 		# First, unselect the old widget.
 		if isinstance(self.selected_widget, Widgets.Widget):
@@ -1437,7 +1441,18 @@ class HierarchyView(HierarchyViewDialog):
 	def create_begin_event_dest(self):
 		if self.selected_widget and self.begin_event_source:
 			self.selected_widget.get_node().NewBeginEvent(self.begin_event_source, 'activateEvent')
-			
+
+	def find_event_source(self):
+		# This feels like the wrong place for a function like this.
+		# Never the less..
+		if self.selected_icon and len(self.selected_icon.arrowto) > 0:
+			if len(self.selected_icon.arrowto) > 1:
+				windowinterface.showmessage("This node has more than one associated event!", mtype='error', parent=self.window)
+				return
+			else:
+				other_icon = self.selected_icon.arrowto[0]
+				self.select_widget(other_icon)
+				self.draw()
 def expandnode(node):
 	# Bad hack. I shouldn't refer to private attrs of a node.
 	node.collapsed = 0

@@ -1,16 +1,18 @@
 TODO for Michael :-) 
 ---------------------------------------------
 
-* Finish off the "simple" click-click event creation that Sjoerd doesn't like.
+* end events for arrows.
 
 * Add two buttons "revert" and "close" to the source view.
 * Error management (go to the source view if there is an error)
 * Retain comments in the source view.
 * Multiple selection in the structure view.
-* Structure view - add event management icons.
-* 
+* Asset management.
 
-
+* Known bug - arrows don't get drawn well in the display list.
+* Test if editing the document makes the events stay properly.
+* Hyperlinks have dissapeared.
+* Multiple selection.
 
 Priority top-to-bottom.
 ------------------------
