@@ -991,6 +991,20 @@ class LayoutWnd:
 			# continue normal processing
 			return 1
 		if dx or dy:
+			# ensure that there will be at least one shift in the natural coordinate system
+			# it's important when the zoom value is high
+			minDx, minDy = self.NPtoLP((1,1))
+			if dx and abs(dx) < minDx:
+				if dx < 0:
+					dx = -minDx
+				else:
+					dx = minDx
+			if dy and abs(dy) < minDy:
+				if dy < 0:
+					dy = -minDy
+				else:
+					dy = minDy
+			
 			self._drawContext.moveSelectionBy(dx, dy)
 		# absorb event
 		return 0
