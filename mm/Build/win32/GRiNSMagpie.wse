@@ -1,7 +1,7 @@
 Document Type: WSE
 item: Global
   Version=8.14
-  Title=Oratrix GRiNS Player for Magpie beta Installation
+  Title=Oratrix GRiNS Player for Magpie Installation
   Flags=00010100
   Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
   Copy Default=1
@@ -29,7 +29,7 @@ item: Global
   Per-User Version ID=1
   Dialogs Version=7
   Version File=2.0
-  Version Description=GRiNS/Magpie beta
+  Version Description=GRiNS/Magpie
   Version Copyright=Copyright 2001 Oratrix Holding B.V.
   Version Company=Oratrix Holding B.V.
   Crystal Format=10111100101100000010001001001001
@@ -144,7 +144,7 @@ item: Remark
 end
 item: Set Variable
   Variable=APPTITLE
-  Value=Oratrix GRiNS Player for Magpie beta
+  Value=Oratrix GRiNS Player for Magpie
   Flags=10000000
 end
 item: Remark
