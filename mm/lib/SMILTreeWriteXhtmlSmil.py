@@ -709,12 +709,15 @@ class SMILXhtmlSmilWriter(SMIL):
 		parent = node.GetParent()
 		if pardur is None and timing_spec < 2:
 			parentDur = getduration(self, parent)
+
 			if parent.GetType() == 'par' and parentDur is not None and parentDur>0 and fill is None and mtype!='audio':
 				# force smil default behavior in such cases
 				divlist.append(('fill', 'freeze'))
+
 			elif parent.GetType() == 'par' and has_end:
 				# equivalent to timing_spec == 2
-				pass
+				timing_spec = 2
+
 			elif mtype in ('audio', 'video'):
 				try:
 					dur = Duration.getintrinsicduration(node, 1)
@@ -723,6 +726,14 @@ class SMILXhtmlSmilWriter(SMIL):
 				pardur = fmtfloat(dur, prec = 2)
 				divlist.append(('dur', pardur))
 				timing_spec = timing_spec + 1
+
+			else:
+				# XXX: overspecification
+				dur = self.getDurHint(node)
+		 		pardur = fmtfloat(dur, prec = 2)
+				divlist.append(('dur', pardur))
+				if dur != 0.0:
+					timing_spec = timing_spec + 1
 
 		# when div has timing extent it to a time container
 		if timing_spec > 0 or self.hasTimeChildren(node):
@@ -927,6 +938,14 @@ class SMILXhtmlSmilWriter(SMIL):
 		parent = node.GetParent()
 		if parent.GetType() == 'seq':
 			return parent.GetParent()
+
+ 	def getDurHint(self, node):
+		try:
+ 			t0, t1, t2, downloadlag, begindelay = node.GetTimes()
+ 			val = t1 - t0
+ 		except: 
+ 			val = 2.0
+ 		return val
 
 	def fixBeginList(self, node, attrlist):
 		srcid = self.links_target2src.get(node)
@@ -1249,6 +1268,17 @@ class SMILXhtmlSmilWriter(SMIL):
 				break
 			prev = child
 		return prev
+
+	def getNextSibling(self, node):
+		parent = node.GetParent()
+		next = None
+		children = parent.GetChildren()
+		n = len(children)
+		for i in range(n-1):
+			child = children[i]
+			if child == node:
+				next = children[i+1]
+		return next
 
 	def getNodeId(self, node):
 		id = node.GetRawAttrDef('name', None)
