@@ -3,11 +3,11 @@ import string
 import sys
 from licparser import *
 from LicenseDialog import LicenseDialog, EnterkeyDialog
+import settings
 
 
 class WaitLicense(LicenseDialog):
 	def __init__(self, callback, features):
-		import settings
 		self.can_try = 0
 		self.can_eval = 0
 		
@@ -79,13 +79,13 @@ class WaitLicense(LicenseDialog):
 			self.ok_callback(license)
 		
 	def cb_enterkey(self, license=''):
-		if self._user is None:
+		if not self._user:
 			self._user = settings.get('license_user')
 			if self._user is None:
 				self._user = ''
 			if self._user[-18:] == ' (evaluation copy)':
 				self._user = self._user[:-18]
-		if self._org is None:
+		if not self._org:
 			self._org = settings.get('license_organization')
 			if self._org is None:
 				self._org = ''
