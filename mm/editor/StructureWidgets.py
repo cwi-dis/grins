@@ -690,14 +690,14 @@ class MediaWidget(MMNodeWidget):
     def get_minsize(self):
         xsize = self.get_relx(sizes_notime.MINSIZE)
         ysize = self.get_rely(sizes_notime.MINSIZE)
-        ysize = ysize + self.get_rely(sizes_notime.TITLESIZE)
+#        ysize = ysize + self.get_rely(sizes_notime.TITLESIZE)
         return xsize, ysize
 
     def get_minsize_abs(self):
         # return the minimum size of this node, in pixels.
         # Calld to work out the size of the canvas.
         xsize = sizes_notime.MINSIZE
-        ysize = sizes_notime.MINSIZE + sizes_notime.TITLESIZE
+        ysize = sizes_notime.MINSIZE# + sizes_notime.TITLESIZE
         return (xsize, ysize)
     
     def get_maxsize(self):
@@ -735,6 +735,14 @@ class MediaWidget(MMNodeWidget):
                 )
             displist.fgcolor(TEXTCOLOR)
             displist.drawbox(box)
+
+        # Draw the name
+        displist.fgcolor(CTEXTCOLOR)
+        displist.usefont(f_title)
+        l,t,r,b = self.pos_rel
+        b = t+self.get_rely(sizes_notime.TITLESIZE) + self.get_rely(sizes_notime.VEDGSIZE)
+#        l = l + self.get_relx(16)       # Maybe have an icon there soon.
+        displist.centerstring(l,t,r,b,self.name)
 
         # Draw the silly transitions.
         if self.root.transboxes:
