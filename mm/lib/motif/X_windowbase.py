@@ -827,7 +827,7 @@ class _Window:
 			toplevel._image_size_cache[file] = xsize, ysize
 		return xsize, ysize
 
-	def _prepare_image(self, file, crop, scale, center):
+	def _prepare_image(self, file, crop, scale, center, coordinates):
 		# width, height: width and height of window
 		# xsize, ysize: width and height of unscaled (original) image
 		# w, h: width and height of scaled (final) image
@@ -855,7 +855,10 @@ class _Window:
 		bottom = int(bottom * ysize + 0.5)
 		left = int(left * xsize + 0.5)
 		right = int(right * xsize + 0.5)
-		x, y, width, height = self._rect
+		if coordinates is None:
+			x, y, width, height = self._rect
+		else:
+			x, y, width, height = self._convert_coordinates(coordinates)
 		if scale == 0:
 			scale = min(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
@@ -875,7 +878,7 @@ class _Window:
 			if not reader:
 				# we got the size from the cache, don't believe it
 				del toplevel._image_size_cache[file]
-				return self._prepare_image(file, crop, oscale, center)
+				return self._prepare_image(file, crop, oscale, center, coordinates)
 			if hasattr(reader, 'transparent'):
 				import imageop, imgformat
 				r = img.reader(imgformat.xrgb8, file)
@@ -1558,12 +1561,12 @@ class _DisplayList:
 		return _Button(self, coordinates, z)
 
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
-				    center = 1):
+				    center = 1, coordinates = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
 		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
-		       w._prepare_image(file, crop, scale, center)
+		       w._prepare_image(file, crop, scale, center, coordinates)
 		if mask:
 			self._imagemask = mask, src_x, src_y, dest_x, dest_y, width, height
 		else:

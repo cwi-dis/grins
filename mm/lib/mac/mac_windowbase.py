@@ -1072,7 +1072,7 @@ class _CommonWindow:
 		_size_cache[file] = width, height
 		return width, height
 
-	def _prepare_image(self, file, crop, scale, center):
+	def _prepare_image(self, file, crop, scale, center, coordinates):
 		# width, height: width and height of window
 		# xsize, ysize: width and height of unscaled (original) image
 		# w, h: width and height of scaled (final) image
@@ -1094,7 +1094,10 @@ class _CommonWindow:
 		bottom = int(bottom * ysize + 0.5)
 		left = int(left * xsize + 0.5)
 		right = int(right * xsize + 0.5)
-		x, y, width, height = self._rect
+		if coordinates is None:
+			x, y, width, height = self._rect
+		else:
+			x, y, width, height = self._convert_coordinates(coordinates)
 		
 		if scale == 0:
 			scale = min(float(width)/(xsize - left - right),
@@ -1820,12 +1823,12 @@ class _DisplayList:
 		return _Button(self, coordinates)
 
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
-				    center = 1):
+				    center = 1, coordinates = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
 		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
-		       w._prepare_image(file, crop, scale, center)
+		       w._prepare_image(file, crop, scale, center, coordinates)
 		self._list.append('image', mask, image, src_x, src_y,
 				  dest_x, dest_y, width, height)
 		self._optimize(2)
