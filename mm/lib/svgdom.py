@@ -1538,27 +1538,26 @@ def GetSvgSize(url):
 ####################################
 # test
 
-svgSource = """<?xml version="1.0" standalone="no"?>
-<svg width="600" height="600">
-  <title> Simple shapes </title>
-  <g transform="translate(150,150)" style="fill:red; stroke:navy; stroke-width:2; stroke-dasharray: 5 2;" >
-    <circle cx="300" cy="30" r="20" transform="rotate(0)"/>
-    <circle cx="300" cy="30" r="20" transform="rotate(10)"/>
-    <circle cx="300" cy="30" r="20"  transform="rotate(20)" style="visibility:hidden"/>
-    <circle cx="300" cy="30" r="20" transform="rotate(30)"/>
-    <circle cx="300" cy="30" r="20"  transform="rotate(40)"/>
-    <circle cx="300" cy="30" r="20"  transform="rotate(50)"/>
-    <circle cx="300" cy="30" r="20" transform="rotate(60)" style="visibility:hidden" />
-    <circle cx="300" cy="30" r="20" transform="rotate(70)"/>
-    <circle cx="300" cy="30" r="20" transform="rotate(80)"/>
-    <circle cx="300" cy="30" r="20" transform="rotate(90)"/>
-    <rect x="300" y="30" width="20" height="20" transform="rotate(90)"/>
-  </g>
-</svg>"""
+if __debug__:
+	svgSource = """<?xml version="1.0" standalone="no"?>
+	<svg width="600" height="600">
+	  <title> Simple shapes </title>
+	  <g transform="translate(150,150)" style="fill:red; stroke:navy; stroke-width:2; stroke-dasharray: 5 2;" >
+	    <circle cx="300" cy="30" r="20" transform="rotate(0)"/>
+	    <circle cx="300" cy="30" r="20" transform="rotate(10)"/>
+	    <circle cx="300" cy="30" r="20"  transform="rotate(20)" style="visibility:hidden"/>
+	    <circle cx="300" cy="30" r="20" transform="rotate(30)"/>
+	    <circle cx="300" cy="30" r="20"  transform="rotate(40)"/>
+	    <circle cx="300" cy="30" r="20"  transform="rotate(50)"/>
+	    <circle cx="300" cy="30" r="20" transform="rotate(60)" style="visibility:hidden" />
+	    <circle cx="300" cy="30" r="20" transform="rotate(70)"/>
+	    <circle cx="300" cy="30" r="20" transform="rotate(80)"/>
+	    <circle cx="300" cy="30" r="20" transform="rotate(90)"/>
+	    <rect x="300" y="30" width="20" height="20" transform="rotate(90)"/>
+	  </g>
+	</svg>"""
 
-if __name__ == '__main__':
-    #print GetSvgSizeFromSrc(svgSource)
-	svg = SvgDocument(svgSource)
-	svg.write()
-
-
+	if __name__ == '__main__':
+	    #print GetSvgSizeFromSrc(svgSource)
+		svg = SvgDocument(svgSource)
+		svg.write()
