@@ -1359,4 +1359,4 @@ class Icon(MMNodeWidget):
 
 	def draw(self, displist):
 		if self.icon is not None:
-			¬displist.drawicon(self.get_box(), self.icon)
+			displist.drawicon(self.get_box(), self.icon)
