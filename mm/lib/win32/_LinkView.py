@@ -35,7 +35,7 @@ import afxres,commctrl
 
 
 class LinkPropDlg(components.ResDialog):
-	def __init__(self,cbd,dir,type,parent=None):
+	def __init__(self,cbd,dir,type,dirsens,parent=None):
 		components.ResDialog.__init__(self,grinsRC.IDD_LINK_PROPERTY,parent)
 
 		d0=components.RadioButton(self,grinsRC.IDC_RADIO1)
@@ -51,6 +51,7 @@ class LinkPropDlg(components.ResDialog):
 		self._cbd = cbd
 		self._dir = dir
 		self._type = type
+		self._dirsens = dirsens
 
 	def OnInitDialog(self):
 		self.attach_handles_to_subwindows()
@@ -58,6 +59,8 @@ class LinkPropDlg(components.ResDialog):
 		# ...
 		self.linkdirsetchoice(self._dir)
 		self.linktypesetchoice(self._type)
+		for i in range(len(self._dirsens)):
+			self._dir_buttons[i].enable(self._dirsens[i])
 		return components.ResDialog.OnInitDialog(self)
 
 	def show(self):
