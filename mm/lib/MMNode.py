@@ -3359,6 +3359,8 @@ class MMNode(MMTreeElement):
 			lookat = [self]
 		for ch in lookat:
 			allowed = ch.getAllowedMimeTypes()
+			if allowed is None:
+				return ch
 			if mimetype in allowed:
 				return ch
 		return None
