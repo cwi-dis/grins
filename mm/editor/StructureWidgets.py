@@ -2470,7 +2470,7 @@ class TimelineWidget(MMWidgetDecoration):
 				lw = displist.strsizePXL(label)[0]
 				if tick_x_mid-lw/2 < x + HEDGSIZE:
 					displist.setpos(x + HEDGSIZE, (label_top + label_bot + displist.fontheightPXL()) / 2)
-					displist.centerstring(label)
+					displist.writestr(label)
 				elif tick_x_mid+lw/2 > x + w - HEDGSIZE:
 					displist.setpos(x + w - lw - HEDGSIZE, (label_top + label_bot + displist.fontheightPXL()) / 2)
 					displist.writestr(label)
