@@ -9,6 +9,9 @@ from types import *
 from appcon import *
 from winfont import findfont
 
+import wincon
+import wingdi
+
 class DisplayList:
 	def __init__(self, window, bgcolor, units):
 		self._window = window
@@ -76,6 +79,7 @@ class DisplayList:
 	def _do_render(self, entry, dc, ltrb):
 		cmd = entry[0]
 		wnd = self._window
+		mediadisplayrect = wnd._mediadisplayrect
 
 		rc = x, y, w, h = wnd.getDR()
 		rcc = xc, yc, wc, hc = wnd.xywh(ltrb)
@@ -88,9 +92,7 @@ class DisplayList:
 			wingdi.DeleteObject(brush)
 
 		elif cmd == 'image':
-			mediadisplayrect = wnd._mediadisplayrect
 			fit = wnd._fit
-
 			mask, image, flags, src_x, src_y,dest_x, dest_y, width, height,rcKeep = entry[1:]
 			if mediadisplayrect:
 				dest_x, dest_y, width, height = mediadisplayrect
@@ -119,7 +121,28 @@ class DisplayList:
 			rc_dest = ldc, tdc, rdc - ldc - 1, bdc - tdc - 1
 			rc_src = lsc, tsc, rsc - lsc - 1, bsc - tsc - 1
 
-			# paint image (rc_src) on rc_dest 
+			dcc = dc.CreateCompatibleDC()
+			bmp = dcc.SelectObject(image)
+			try:
+				dc.StretchBlt(rc_dest, dcc, rc_src, wincon.SRCCOPY)
+			except wingdi.error, arg:
+				print arg
+			dcc.SelectObject(bmp)
+			dcc.DeleteDC()
+
+		elif cmd == 'fbox':
+			dest_x, dest_y, width, height = entry[2]
+			width = width - dest_x
+			height = height - dest_y
+			if mediadisplayrect:
+				dest_x, dest_y, width, height = mediadisplayrect
+			rcc = wnd.rectAnd((x+dest_x, y+dest_y, width, height), (xc, yc, wc, hc))
+			if rcc is not None:
+				brush = wingdi.CreateSolidBrush(entry[1])
+				old_brush = dc.SelectObject(brush)
+				dc.Rectangle(wnd.ltrb(rcc))
+				dc.SelectObject(old_brush)
+				wingdi.DeleteObject(brush)
 
 	# Define a new button. Coordinates are in window relatives
 	def newbutton(self, coordinates, z = 0, sensitive = 1):
@@ -139,9 +162,6 @@ class DisplayList:
 			units = self._units
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		self._list.append(('image', file, coordinates, fit))
-		return 0, 0, 100, 100
-		
 		image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep = \
 		       self._window._prepare_image(file, crop, fit, center, coordinates, clip, align, units)
 		
