@@ -5044,9 +5044,10 @@ class AttrEditForm(GenFormView):
 
 	# Called by the core system to bring to front this window
 	def pop(self):
-		childframe=self.GetParent()
+		childframe = self.GetParent()
+		frame = childframe.GetMDIFrame()
+		frame.BringWindowToTop()
 		childframe.ShowWindow(win32con.SW_SHOW)
-		frame=childframe.GetMDIFrame()
 		frame.MDIActivate(childframe)
 
 	# Called by the core system to hide this window
