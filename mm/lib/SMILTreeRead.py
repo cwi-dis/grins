@@ -702,7 +702,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['bgcolor'] = bg
 				else:
 					attrdict['transparent'] = 1
- 					attrdict['bgcolor'] = 0,0,0						
+					attrdict['bgcolor'] = 0,0,0
 			elif compatibility.QT == features.compatibility and \
 				self.addQTAttr(attr, val, node):
 				pass
@@ -717,11 +717,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 ##		if attrdict.has_key('fill') and \
 ##		   attrdict['fill'] == 'freeze' and \
 ##		   not attrdict.has_key('duration'):
-##			del attrdict['fill']			
+##			del attrdict['fill']
 
 	def addQTAttr(self, key, val, node):
 		attrdict = node.attrdict
-		if key == 'immediate-instantiation': 
+		if key == 'immediate-instantiation':
 			internalval = self.parseEnumValue(val, {'false':0,'true':1}, key, 0)
 			attrdict['immediateinstantiationmedia'] = internalval
 			return 1
@@ -733,7 +733,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			internalval = val
 			attrdict['systemmimetypesupported'] = internalval
 			return 1
-		elif key == 'attach-timebase': 
+		elif key == 'attach-timebase':
 			internalval = self.parseEnumValue(val, {'false':0,'true':1}, key, 1)
 			attrdict['attachtimebase'] = internalval
 			return 1
@@ -745,7 +745,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			internalval = val
 			attrdict['qtcompositemode'] = internalval
 			return 1
-		
+
 		return 0
 
 	def parseEnumValue(self, val, dict, smilattributename, default):
@@ -927,7 +927,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if attributes.has_key('regPoint'):
 			if not self.__context.regpoints.has_key(attributes['regPoint']):
 				self.syntax_error('the registration point '+attributes['regPoint']+" doesn't exist")
-				del attributes['regPoint']				
+				del attributes['regPoint']
 		if attributes.has_key('regAlign'):
 			if not self.__alignvals.has_key(attributes['regAlign']):
 				self.syntax_error('invalid regAlign attribute value')
@@ -948,12 +948,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attributes['scale'] = "0"
 				elif val == 'slice':
 					attributes['scale'] = "-1"
-			
+
 		# if no background color defined on the node, or no region, we fix the background color
 		# to transparent
 		if not attributes.has_key('backgroundColor') or not attributes.has_key('region'):
-			attributes['backgroundColor'] = 'transparent'			
-	
+			attributes['backgroundColor'] = 'transparent'
+
 		# create the node
 		if not self.__root:
 			# "can't happen"
@@ -976,11 +976,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		# experimental SMIL Boston layout code
 		node._internalchtype = chtype
-		# end experimental		
+		# end experimental
 
 	def __newTopRegion(self):
 		attrs = {}
-		
+
 		for key, val in self.attributes['root-layout'].items():
 			if val is not None:
 				attrs[key] = val
@@ -1034,7 +1034,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if not self.__regions.has_key(region):
 				self.syntax_error('unknown region')
 			# this two lines allow to avoid a crash if region name = top level window name !!!
-			# I tried to resolve this problem clearly --> but I had too many new problems !. 
+			# I tried to resolve this problem clearly --> but I had too many new problems !.
 			# After I day full time spended, i gived up
 			elif self.__tops.has_key(region):
 				self.error('unknown region')
@@ -1063,7 +1063,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.end_region()
 			self.__in_layout = LAYOUT_NONE
 			ch = self.__regions[region]
-			
+
 		width = height = 0
 		l = ch.get('left')
 		w = ch.get('width')
@@ -1086,20 +1086,20 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if region not in self.__childregions[None]:
 				self.__childregions[None].append(region)
 		import ChannelMap
-		
+
 		# not visible region
-		# if top region weight and height are already specify or 
+		# if top region weight and height are already specify or
 		# top region weight and height are already specify in pixels
 		if (not ChannelMap.isvisiblechannel(mtype)) or \
 			(self.__tops[top]['width'] > 0 and \
 			   self.__tops[top]['height'] > 0) or \
 			(w != None and type(w) is type(0) and \
 				h != None and type(h) is type(0)):
-	
+
 			needMinSize = 0
 		else:
 			needMinSize = 1
-			
+
 		if needMinSize:
 			mediaWidth = 100
 			mediaHeight = 100
@@ -1126,23 +1126,23 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					# want to make them at least visible...
 					mediaWidth = 100
 					mediaHeight = 100
-				
+
 			elif mtype in ('text', 'label', 'html', 'graph', 'brush'):
 				# want to make them at least visible...
 				mediaWidth = 200
 				mediaHeight = 100
-			else:	
+			else:
 				# want to make them at least visible...
 				if mediaWidth == 0: mediaWidth = 100
 				if mediaHeight == 0: mediaHeight = 100
-		
+
 			width = mediaWidth
 			height = mediaHeight
-			
+
 			# we take account of registrationpoints
 			regPointId = attributes.get('regPoint')
 			regAlignId = attributes.get('regAlign')
-			
+
 			if regPointId != None or regAlignId != None:
 				# first get the defined regPoint in context
 				if regPointId == None:
@@ -1150,26 +1150,26 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				regPoint = self.__context.regpoints.get(regPointId)
 				if regPoint == None:
 					# normaly : impossible case, just avoid a crash if bug
-					regPoint = self.__context.regpoints.get('topLeft')				
-										
-				# then get the regAlign specified in regpoint or overide in media node					
+					regPoint = self.__context.regpoints.get('topLeft')
+
+				# then get the regAlign specified in regpoint or overide in media node
 				regAlignX, regAlignY = regPoint.getxyAlign(regAlignId)
-				
+
 				# convert value to pixel relative to the media
 				regAlignW1 = int (regAlignX * mediaWidth + 0.5)
 				regAlignW2 = int ((1-regAlignX) * mediaWidth + 0.5)
-				
+
 				regAlignH1 = int (regAlignY * mediaHeight + 0.5)
 				regAlignH2 = int ((1-regAlignY) * mediaHeight + 0.5)
-				
+
 				width = _minsizeRp(regPoint['left'],
 						 regPoint['right'],
 						 regAlignW1, regAlignW2, width)
-					 
+
 				height = _minsizeRp(regPoint['top'],
 						 regPoint['bottom'],
 					         regAlignH1, regAlignH2, height)
-					         
+
 			# we take account of subregion positioning
 			width = _minsize(node.attrdict.get('left'),
 					 None,
@@ -1184,7 +1184,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				ch['minwidth'] = width
 			if ch['minheight'] < height:
 				ch['minheight'] = height
-					 
+
 		# clip-* attributes for video
 		clip_begin = attributes.get('clipBegin')
 		if clip_begin:
@@ -1224,14 +1224,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.syntax_error('invalid clip-end attribute')
 		if self.__in_a:
 			# deal with hyperlink
-			href, ltype, id = self.__in_a[:3]
+			href, ltype, stype, dtype, id = self.__in_a[:-1]
 			if id is not None and not self.__idmap.has_key(id):
 				self.__idmap[id] = node.GetUID()
 			anchorlist = node.__anchorlist
 			id = _uniqname(map(lambda a: a[2], anchorlist), id)
 			anchorlist.append((0, len(anchorlist), id, ATYPE_WHOLE, [], (0, 0)))
-			self.__links.append((node.GetUID(), id, href, ltype))
-		
+			self.__links.append((node.GetUID(), id, href, ltype, stype, dtype))
+
 	def NewContainer(self, type, attributes):
 		if not self.__in_smil:
 			self.syntax_error('%s not in smil' % type)
@@ -1272,7 +1272,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__in_layout:
 			self.syntax_error('node in layout')
 			return
-		
+
 		# find target node (explicit or implicit)
 		targetnode = None
 		targetid = attributes.get('targetElement')
@@ -1286,7 +1286,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		else:
 			self.syntax_error('the target element of "%s" is unspecified' % tagname)
 			return
-			
+
 		# keep most common attr version
 		aname = attributes.get('attribute')
 		if aname:
@@ -1311,14 +1311,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		node.attrdict['channel'] = chname
 
 
-		# add this node to the tree if it is possible 
+		# add this node to the tree if it is possible
 		# else keep it for later fix
 		if targetnode:
 			node.targetnode = targetnode
 		elif targetid:
 			node.__targetid = targetid
 			self.__animatenodes.append(node)
-		
+
 		# add to context an internal channel for this node
 		self.__context.addinternalchannels( [(chname, node.attrdict), ] )
 
@@ -1345,7 +1345,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def __fixSubRegionPos(self, node):
 		if node.GetType() not in leaftypes or not hasattr(node,'__region'):
 			return
-			
+
 		from windowinterface import UNIT_PXL, UNIT_SCREEN
 
 		# get region
@@ -1353,14 +1353,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		regionname = node.__region
 		if regionname != None:
 			region = self.__regions.get(regionname)
-			
+
 		if region == None:
 			cw = 100
 			ch = 100
-		else:	
+		else:
 			cw = region.get('width')
 			ch = region.get('height')
-		
+
 		l = node.attrdict.get('left')
 		r = node.attrdict.get('right')
 		t = node.attrdict.get('top')
@@ -1441,7 +1441,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		t = attrdict.get('top')
 		h = attrdict.get('height')
 		b = attrdict.get('bottom')
-		
+
 		# if size of root-layout specified, convert to pixels
 		if self.__tops[top]['declwidth']:
 			if type(l) is type(0.0):
@@ -1498,7 +1498,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			else:
 				units = UNIT_PXL
 			attrdict['units'] = units
-			
+
 		# change things around so that l,w and t,h are defined
 		# if fewer than two of l,w,r and t,h,b are defined, fill
 		# in defaults: l==t==0, w and h rest of available space
@@ -1515,7 +1515,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			mw = 100
 		if units == UNIT_SCREEN:
 			mw = float(mw) / width
-		
+
 		if l is None:
 			if w is None:
 				if r is None:
@@ -1561,7 +1561,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			else:
 				if r is not None:
 					r = None
-					
+
 		if t is None:
 			if h is None:
 				if b is None:
@@ -1620,10 +1620,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			w = int(w * width + .5)
 		if type(h) is type(0.0):
 			h = int(h * height + .5)
-		
+
 		for r in self.__childregions[region]:
 			self.__calcsize2(top, r, w, h)
-				
+
 	def FixSyncArcs(self, node):
 		save_lineno = self.lineno
 		for attr, val, lineno in node.__syncarcs:
@@ -1723,7 +1723,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if attrdict.has_key('soundLevel'):
 			ch['soundLevel'] = attrdict['soundLevel']
 			del attrdict['soundLevel']
-		
+
 		if mtype in ('text', 'image', 'movie', 'video', 'mpeg',
 			     'html', 'label', 'graph', 'layout', 'RealPix','RealText', 'RealVideo',
 			     'sound', 'brush'):
@@ -1734,7 +1734,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if title != ch.name:
 					ch['title'] = title
 				del attrdict['title']
-		
+
 			ch['drawbox'] = 0
 			bg = attrdict['backgroundColor']
 			del attrdict['backgroundColor']
@@ -1749,8 +1749,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					ch['bgcolor'] = 0,0,0
 			elif compatibility.QT == features.compatibility:
 				ch['transparent'] = 1
-				ch['fgcolor'] = 255,255,255 
-			
+				ch['fgcolor'] = 255,255,255
+
 			elif bg == 'transparent':
 				ch['transparent'] = 1
 			else:
@@ -1759,7 +1759,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				else:
 					ch['transparent'] = -1
 				ch['bgcolor'] = bg
-				
+
 			ch['z'] = attrdict['z-index']
 			del attrdict['z-index']
 			x = attrdict['left']; del attrdict['left']
@@ -1778,7 +1778,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# other fit options not implemented
 
 			ch['base_winoff'] = x, y, w, h
-			
+
 		# keep all attributes that we didn't use
 		for attr, val in attrdict.items():
 			if attr not in ('minwidth', 'minheight', 'units',
@@ -1794,7 +1794,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	# def MakeChannels(self):
 	# end old
 	# new 03-07-2000
-	def __makeLayoutChannels(self):	
+	def __makeLayoutChannels(self):
 	# end new
 		ctx = self.__context
 		for top in self.__tops.keys():
@@ -1820,14 +1820,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# old 03-07-2000
 #			ch['type'] = chtype
 			# end old
-			# new 03-07-2000			
+			# new 03-07-2000
 			chtype = attrdict.get('type')
 			ch['type'] = 'layout'
 			# end new
-			
+
 			# old 03-07-2000
-#			if not self.__region2channel.has_key(region):  
-#			 	self.__region2channel[region] = []
+#			if not self.__region2channel.has_key(region):
+#				self.__region2channel[region] = []
 #			self.__region2channel[region].append(ch)
 
 			# self.__fillchannel(ch, attrdict, chtype)
@@ -1835,7 +1835,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# new 03-07-2000
 			self.__fillchannel(ch, attrdict, 'layout')
 			# end new
-			
+
 	def FixChannel(self, node):
 		if node.GetType() not in leaftypes:
 			return
@@ -1882,7 +1882,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					par = par.GetParent()
 				if name is not None:
 					break
-			
+
 		# if 'name' <> None, we can re-use the channel named 'name'
 
 		# either we use name or name is None and we have to
@@ -1925,11 +1925,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		##########################################################################
 				# we're going to change this locally...
 				attrdict = self.__regions[region]
-				
+
 				# new 03-07-2000
 				# add the new region in channel tree
 				attrdict['base_window'] = region
-				
+
 				# for instance, we set z-index value to -1 in order to have to folow rule:.
 				# if a LayoutChannel and XXChannel are sibling, LayoutChannel
 				# is always in front of XXChannel
@@ -1938,17 +1938,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if visiblechannel:
 					attrdict['z-index'] = -1
 				self.__fillchannel(ch, attrdict, mtype)
-					
+
 				if not self.__region2channel.has_key(region):
 					self.__region2channel[region] = []
 				self.__region2channel[region].append(ch)
-				
-				# temporarely 
+
+				# temporarely
 				x, y, w, h = ch['base_winoff']
 				ch['base_winoff'] = 0, 0, w, h
 
 				# end new
-				
+
 		node.attrdict['channel'] = name
 
 		# complete chanlist
@@ -1956,7 +1956,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		while par is not None:
 			par.__chanlist[name] = 0
 			par = par.GetParent()
-		
+
 		if compatibility.G2 == features.compatibility:
 			if mtype == 'RealPix':
 				self.__realpixnodes.append(node)
@@ -1992,14 +1992,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			href, tag = MMurl.splittag(url)
 			if not href:
 				# link intra document
-				
+
 				if self.__anchormap.has_key(tag):
 					# link directly to an anchor
 					dst = self.__anchormap[tag]
 				else:
 					# link to a normal node.
-					# If there isn't dest anchor yet on this node, 
-					# create an anchor with type value equal to ATYPE_DEST 
+					# If there isn't dest anchor yet on this node,
+					# create an anchor with type value equal to ATYPE_DEST
 					# and store it in node.__anchorlist.
 					# Otherwise, if the anchor already exists, assume it's the dest anchor
 					if self.__nodemap.has_key(tag):
@@ -2029,7 +2029,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				alist.append(a[2:])
 			node.attrdict['anchorlist'] = alist
 		del node.__anchorlist
-		
+
 	def FixAnimateTargets(self):
 		for node in self.__animatenodes:
 			targetid = node.__targetid
@@ -2038,12 +2038,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				node.targetnode = targetnode
 				del node.__targetid
 		del self.__animatenodes
-			
+
 	def FixRegpoints(self):
 		for name, dict in self.__regpoints.items():
 			self.__context.addRegpoint(name, dict)
 		del self.__regpoints
-	
+
 	def parseQTAttributeOnSmilElement(self, attributes):
 		for key, val in attributes.items():
 			if key == 'time-slider':
@@ -2068,7 +2068,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				internalval = self.parseEnumValue(val, {'false':0,'true':1}, key, 0)
 				self.__context.attributes['immediateinstantiation'] = internalval
 				del attributes[key]
-		
+
 	# methods for start and end tags
 
 	def __fix_attributes(self, attributes):
@@ -2301,7 +2301,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__in_layout = LAYOUT_NONE
 		# add regpoints defined inside the layout tag
 		# notice: the default regpoint are already defined (from start_smil)
-		self.FixRegpoints()		
+		self.FixRegpoints()
 
 	def start_region(self, attributes, checkid = 1):
 		if not self.__in_layout:
@@ -2339,7 +2339,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val == 'auto':
 					# equivalent to no attribute
 					pass
-				else:					
+				else:
 					try:
 						if val[-1] == '%':
 							val = string.atof(val[:-1]) / 100.0
@@ -2411,7 +2411,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				except (string.atoi_error, string.atof_error):
 					self.syntax_error('invalid soundLevel attribute value')
 					val = 1.0
-				attrdict[attr] = val								
+				attrdict[attr] = val
 			elif attr == 'type':
 				# map channel type to something we can deal with
 				# this should loop at most twice (RealPix->RealVideo->video)
@@ -2426,7 +2426,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						val = 'video'
 					elif val == 'html':
 						val = 'text'
-				attrdict[attr] = val				
+				attrdict[attr] = val
 			else:
 				# catch all
 				attrdict[attr] = val
@@ -2559,7 +2559,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if height < 0:
 				self.syntax_error('root-layout height not a positive integer')
 				height = 0
-				
+
 		close = attributes['close']
 		if close not in ('never', 'whenNotActive'):
 			self.syntax_error('illegal close attribute value')
@@ -2569,7 +2569,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if open not in ('always', 'whenActive'):
 			self.syntax_error('illegal open attribute value')
 			open = 'always'
-			
+
 		self.__tops[id] = {'width':width,
 				   'height':height,
 				   'declwidth':width,
@@ -2587,7 +2587,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('regPoint not compatible with SMIL 1.0')
-			
+
 		# default values
 		attrdict = {'regAlign': 'topLeft'}
 
@@ -2597,7 +2597,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			val = string.strip(val)
 			if attr == 'id':
 				attrdict[attr] = id = val
-				
+
 				res = xmllib.tagfind.match(id)
 				if res is None or res.end(0) != len(id):
 					self.syntax_error("illegal ID value `%s'" % id)
@@ -2624,18 +2624,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 								val = val[:-2]
 							val = string.atoi(val)
 						attrdict[attr] = val
- 					except (string.atoi_error, string.atof_error):
+					except (string.atoi_error, string.atof_error):
 						self.syntax_error('invalid region attribute value')
 			elif attr == 'regAlign':
 				if self.__alignvals.has_key(val):
 					attrdict[attr] = val
 				else:
-					self.syntax_error('invalid regAlign attribute value')						
+					self.syntax_error('invalid regAlign attribute value')
 
-		
+
 	def end_regpoint(self):
 		pass
-		
+
 	def start_custom_attributes(self, attributes):
 		if self.__context.attributes.get('project_boston') == 0:
 			self.syntax_error('customAttributes not compatible with SMIL 1.0')
@@ -2718,7 +2718,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def end_Glayout(self):
 		pass
-		
+
 	# container nodes
 
 	def start_parexcl(self, ntype, attributes):
@@ -2730,10 +2730,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 		self.__container.__endsync = attributes.get('endsync')
 		self.__container.__lineno = self.lineno
-## 		if self.__container.__endsync is not None and \
-## 		   self.__container.attrdict.has_key('duration'):
-## 			self.warning('ignoring dur attribute', self.lineno)
-## 			del self.__container.attrdict['duration']
+##		if self.__container.__endsync is not None and \
+##		   self.__container.attrdict.has_key('duration'):
+##			self.warning('ignoring dur attribute', self.lineno)
+##			del self.__container.attrdict['duration']
 
 	def end_parexcl(self, ntype):
 		node = self.__container
@@ -2822,7 +2822,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif attr in ('abstract', 'copyright', 'title'):
 				if val:
 					attrdict[attr] = val
-					
+
 	def end_prio(self):
 		self.__container = self.__container.GetParent()
 
@@ -2959,24 +2959,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			href = MMurl.basejoin(self.__base, attributes['href'])
 			if href not in self.__context.externalanchors:
 				self.__context.externalanchors.append(href)
-		show = attributes['show']
-		if show == 'replace':
-			ltype = TYPE_JUMP
-		elif show == 'pause':
-			ltype = TYPE_CALL
-		elif show == 'new':
-			ltype = TYPE_FORK
-		else:
-			self.syntax_error('unknown show attribute value')
-			ltype = TYPE_JUMP
-		self.__in_a = href, ltype, id, self.__in_a
+
+		ltype, stype, dtype = self.__link_attrs(attributes)
+
+		self.__in_a = href, ltype, stype, dtype, id, self.__in_a
 
 	def end_a(self):
 		if self.__in_a is None:
 			# </a> without <a>
 			# error message will be taken care of by XMLparser.
 			return
-		self.__in_a = self.__in_a[3]
+		self.__in_a = self.__in_a[-1]
 
 	# parse coordonnees of a shape
 	# all string can't be specify in only one regular expression, because we don't know the number of points
@@ -2984,7 +2977,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	# the separateur caractere and the next number
 	# return value: list of numbers (values expressed in pourcent or pixel)
 	# or None if error
-	
+
 	def __parseCoords(self, data):
 		l = []
 		res = coordre.match(data)
@@ -2993,15 +2986,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 		endParse = res.end()
 		x = res.group('x')
-		
+
 		inPourcent = x[-1]=='%'
-		
+
 		if x[-1] == '%':
 			value = string.atoi(x[:-1]) / 100.0
 		else:
 			value = string.atoi(x)
-		l.append(value)	
-	
+		l.append(value)
+
 		while (endParse < len(data)):
 			res = coordrewithsep.match(data[endParse:])
 			if not res:
@@ -3013,9 +3006,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if startParse == endParse:
 				self.syntax_error('internal error !')
 				return
-					
+
 			x = res.group('x')
-			
+
 #			if (x[-1] == '%') != inPourcent:
 #				self.warning('Cannot mix pixels and percentages in anchor',
 #					self.lineno)
@@ -3024,10 +3017,56 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				value = string.atoi(x[:-1]) / 100.0
 			else:
 				value = string.atoi(x)
-			l.append(value)	
+			l.append(value)
 
 		return l
-		
+
+	def __link_attrs(self, attributes):
+		show = attributes['show']
+		if show not in ('replace', 'pause', 'new'):
+			self.syntax_error('unknown show attribute value')
+			show = 'replace'
+
+		sourcePlaystate = attributes.get('sourcePlaystate')
+		if sourcePlaystate not in ('play', 'pause', 'stop', None):
+			self.syntax_error('unknown sourcePlaystate attribute value')
+			sourcePlaystate = None
+
+		# the default sourcePlaystate value depend of show value
+		if sourcePlaystate is None:
+			if show == 'new':
+				sourcePlaystate = 'play'
+			else:
+				sourcePlaystate = 'pause'
+
+		if sourcePlaystate == 'play':
+			stype = A_SRC_PLAY
+		elif sourcePlaystate == 'pause':
+			stype = A_SRC_PAUSE
+		elif sourcePlaystate == 'stop':
+			stype = A_SRC_STOP
+
+		if show == 'replace':
+			ltype = TYPE_JUMP
+		elif show == 'pause':
+			ltype = TYPE_FORK
+			# this value override the sourcePlaystate value (in pause)
+			sourcePlaystate = 'pause'
+		elif show == 'new':
+			ltype = TYPE_FORK
+
+		destinationPlaystate = attributes['destinationPlaystate']
+
+		if destinationPlaystate == 'play':
+			dtype = A_DEST_PLAY
+		elif destinationPlaystate == 'pause':
+			dtype = A_DEST_PAUSE
+		else:
+			self.syntax_error('unknown destinationPlaystate attribute value')
+			dtype = A_DEST_PLAY
+
+		return ltype, stype, dtype
+
 	def start_anchor(self, attributes):
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
@@ -3037,68 +3076,27 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if id is not None:
 			self.__idmap[id] = self.__node.GetUID()
 		href = attributes.get('href') # None is dest only anchor
-## 		if href is None:
-## 			#XXXX is this a document error?
-## 			self.warning('required attribute href missing', self.lineno)
+##		if href is None:
+##			#XXXX is this a document error?
+##			self.warning('required attribute href missing', self.lineno)
 		if href is not None and href[:1] != '#':
 			href = MMurl.basejoin(self.__base, href)
 			href = string.join(string.split(href, ' '), '%20')
 			if href not in self.__context.externalanchors:
 				self.__context.externalanchors.append(href)
 		uid = self.__node.GetUID()
-		
+
 		nname = self.__node.GetRawAttrDef('name', None)
-		
+
 		# show, sourcePlaystate and destinationPlaystate parsing
-				
-		show = attributes['show']
-		if not show in ('replace', 'pause', 'new'):
-			self.syntax_error('unknown show attribute value')
-			show = 'replace'
-		
-		sourcePlaystate = attributes.get('sourcePlaystate')
-		if not sourcePlaystate in ('play', 'pause', 'stop', None):
-			self.syntax_error('unknown sourcePlaystate attribute value')
-			sourcePlaystate = None
-			
-		# the default sourcePlaystate value depend of show value
-		if sourcePlaystate == None:
-			if show == 'new':
-				sourcePlaystate = 'play'
-			else:
-				sourcePlaystate = 'pause'
-		
-		if sourcePlaystate == 'play':
-			stype = A_SRC_PLAY
-		elif sourcePlaystate == 'pause':
-			stype = A_SRC_PAUSE
-		elif sourcePlaystate == 'stop':
-			stype = A_SRC_STOP
-		
-		if show == 'replace':
-			ltype = TYPE_JUMP
-		elif show == 'pause':
-			ltype = TYPE_FORK
-			# this value override the sourcePlaystate value (in pause)
-			sourcePlaystate = 'pause'
-		elif show == 'new':
-			ltype = TYPE_FORK
-				
-		destinationPlaystate = attributes['destinationPlaystate']
-				
-		if destinationPlaystate == 'play':
-			dtype = A_DEST_PLAY
-		elif destinationPlaystate == 'pause':
-			dtype = A_DEST_PAUSE
-		else:
-			self.syntax_error('unknown destinationPlaystate attribute value')
-			dtype = A_DEST_PLAY
-			
+
+		ltype, stype, dtype = self.__link_attrs(attributes)
+
 		atype = ATYPE_WHOLE
 		aargs = [A_SHAPETYPE_ALLREGION]
 
 		# coord and shape parsing
-		
+
 		# shape attribute
 		shape = attributes.get('shape')
 		if shape == None or shape == 'rect':
@@ -3110,13 +3108,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		else:
 			ashapetype = A_SHAPETYPE_ALLREGION
 			self.syntax_error('Unknow shape type '+shape)
-			
+
 		# coords attribute
 		coords = attributes.get('coords')
 		l = None
 		if coords is not None:
 			l = self.__parseCoords(coords)
-		
+
 		if l is not None:
 			atype = ATYPE_NORMAL
 			if ashapetype == A_SHAPETYPE_RECT:
@@ -3125,13 +3123,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('Invalid number of coordinate values in anchor')
 					error = 1
 				if not error:
-					x0, y0, x1, y1 = l[:]	
+					x0, y0, x1, y1 = l[:]
 					# can't test anymore since you can mix poucent and pixel values
 #					if x1 <= x0 or y1 <= y0:
 #						self.warning('Anchor coordinates incorrect. XYWH-style?.',
 #							self.lineno)
 #						error = 1
-				
+
 				if not error:
 #					aargs = [x0, y0, x1-x0, y1-y0]
 					aargs = [ashapetype, x0, y0, x1, y1]
@@ -3139,14 +3137,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				error = 0
 				if (len(l) < 6) or (len(l) & 1):
 					self.syntax_error('Invalid number of coordinate values in anchor')
-					error = 1				
-				if not error:	
-					# if the last coordinate is equal to the first coordinate, we supress the last						
+					error = 1
+				if not error:
+					# if the last coordinate is equal to the first coordinate, we supress the last
 					if l[-2] == l[0] and l[-1] == l[1]:
 						l = l[:-2]
 						if len(l) < 4:
 							self.syntax_error('Invalid number of coordinate values in anchor')
-							error = 1										
+							error = 1
 				if not error:
 					aargs = [ashapetype,]+l
 			elif ashapetype == A_SHAPETYPE_CIRCLE:
@@ -3155,9 +3153,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('Invalid number of coordinate values in anchor')
 					error = 1
 				if not error:
-					cx, cy, rd = l[:]					
+					cx, cy, rd = l[:]
 					aargs = [ashapetype, cx, cy, rd]
-		
+
 		begin = attributes.get('begin')
 		if begin is not None:
 			try:
@@ -3187,17 +3185,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.syntax_error('anchor with negative z-index')
 			z = 0
 		anchorlist = self.__node.__anchorlist
-		
+
 		# compute an unique aid
 		# an aid is either:
 		#	- the fragment id
 		#	- the id specified in tag (string)
 		#	- an arbitrary id (integer)
 		#	- ?? from CMIF encoding
-		
+
 		# a[2] if the aid of anchor
-		aid = _uniqname(map(lambda a: a[2], anchorlist), None)		
-		
+		aid = _uniqname(map(lambda a: a[2], anchorlist), None)
+
 		if attributes.has_key('fragment'):
 			aid = attributes['fragment']
 			atype = ATYPE_NORMAL
@@ -3207,7 +3205,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			aid = id[len(nname)+1:]
 		elif id is not None:
 			aid = id
-			
+
 		if id is not None:
 			self.__anchormap[id] = (uid, aid)
 		anchorlist.append((z, len(anchorlist), aid, atype, aargs, (begin or 0, end or 0)))
@@ -3388,7 +3386,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__printfunc(string.join(data, '\n'))
 			self.__printdata = []
 		raise MSyntaxError # re-raise
-	
+
 	def goahead(self, end):
 		try:
 			xmllib.XMLParser.goahead(self, end)
@@ -3397,7 +3395,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# this last except haven't be catched in this module
 		except (error, RuntimeError, MSyntaxError):
 			self.fatalerror()
-			
+
 	# helper methods
 
 	def __parsecounter(self, value, maybe_relative = 0, withsign = 0):
@@ -3546,10 +3544,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		elif tagname != 'smil':
 			self.error('outermost element must be "smil"', self.lineno)
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
-		
+
 class SMILMetaCollector(xmllib.XMLParser):
 	"""Collect the meta attributes from a smil file"""
-	
+
 	def __init__(self, file=None):
 		self.meta_data = {}
 		self.elements = {
@@ -3563,17 +3561,17 @@ class SMILMetaCollector(xmllib.XMLParser):
 		content = attributes.get('content')
 		if name and content:
 			self.meta_data[name] = content
-			
+
 	def syntax_error(self, msg):
 		print 'warning: syntax error on line %d: %s' % (self.lineno, msg)
-		
+
 def ReadMetaData(file):
 	p = SMILMetaCollector(file)
 	fp = open(file)
 	p.feed(fp.read())
 	p.close()
 	return p.meta_data
-	
+
 def ReadFile(url, printfunc = None, new_file = 0, check_compatibility = 0):
 	if os.name == 'mac':
 		import splash
@@ -3654,7 +3652,7 @@ def _minsize(start, extent, end, minsize):
 			return int((start + minsize) / (1 - end) + 0.5)
 		elif type(end) is type(0):
 			# no extent, end is pixel value
-			# warning end is relative to the parent end egde 
+			# warning end is relative to the parent end egde
 			return start + minsize + end
 		else:
 			# no extent and no end
@@ -3684,7 +3682,7 @@ def _minsize(start, extent, end, minsize):
 			return int(minsize / (1 - start) + 0.5)
 	elif type(end) is type(0):
 		# no start, end is pixel value
-		# warning end is relative to the parent end egde 
+		# warning end is relative to the parent end egde
 		return end + minsize
 	elif type(end) is type(0.0):
 		# no start, end is fraction
@@ -3712,18 +3710,18 @@ def _minsize(start, extent, end, minsize):
 # wM2 is the size from alignpoint to media right edge
 # wM1 and wM2 are pixel only (integer). You have to specify the both in the same time
 def _minsizeRp(wR1, wR2, wM1, wM2, minsize):
-	
+
 	# for now. Avoid to have in some case some to big values
 	MAX_REGION_SIZE = 5000
-	
+
 	if wR1 != None and wR2 != None:
-		# conflict regpoint attribute  
+		# conflict regpoint attribute
 		return minsize
 
 	if wM1 == None or wM2 == None:
 		# bad parameters
 		raise minsize
-			
+
 	# first constraint
 	newsize = minsize
 	if type(wR1) is type (0.0):
@@ -3747,14 +3745,14 @@ def _minsizeRp(wR1, wR2, wM1, wM2, minsize):
 			if wN > MAX_REGION_SIZE:
 				 wN = MAX_REGION_SIZE
 			if wN > newsize:
-				newsize = wN				
+				newsize = wN
 	elif type(wR2) is type (0):
 		# keep the same size
 		pass
 	else:
 		# no constraint
 		pass
-	
+
 	# second constraint
 	if type(wR2) is type (0.0):
 		if wR2 == 1.0:
@@ -3784,9 +3782,9 @@ def _minsizeRp(wR1, wR2, wM1, wM2, minsize):
 	else:
 		# no constraint
 		pass
-		
+
 	return newsize
-	
+
 def _uniqname(namelist, defname):
 	if defname is not None and defname not in namelist:
 		return defname
