@@ -78,6 +78,8 @@ def convertaudiofile(u, dstdir, file, node, progress = None):
 		atype = 'aiff'
 	elif u.headers.subtype == 'x-wav':
 		atype = 'wav'
+	elif u.headers.subtype == 'mpeg':
+		return None
 	else:
 		atype = 'au'		# XXX not correct
 	rdr = audio.reader(u, [audio.format.linear_16_mono, audio.format.linear_16_stereo], [8000, 11025, 16000, 22050, 32000, 44100], filetype = atype)
