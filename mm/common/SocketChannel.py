@@ -119,13 +119,12 @@ class SocketChannel(Channel):
 #
 # Helper routines for multicast support.
 
-import regsub
 import IN
 import struct
 #
 # Convert dotted-form inet address to binary
 def dotted_to_binary(addr):
-	group_bytes = eval(regsub.gsub('\.', ',', addr))
+	group_bytes = eval(string.join(string.split(addr, '.'), ','))
 	group_addr = 0
 	for i in group_bytes: group_addr = (group_addr<<8) | i
 	return group_addr

@@ -16,7 +16,6 @@ import compatibility
 import string
 import os
 import MMurl
-import regsub
 import re
 
 from SMIL import *
