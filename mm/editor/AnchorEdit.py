@@ -139,9 +139,17 @@ class AnchorEditor(AnchorEditorDialog):
 			new_alist = None
 		em.setnodeattr(n, 'anchorlist', new_alist)
 		for a in self.anchorlist:
-			if not a in old_alist:
+			if a not in old_alist:
+				# new anchor
 				aid = (self.uid, a[A_ID])
 				self.toplevel.links.set_interesting(aid)
+		for a in old_alist:
+			if a not in self.anchorlist:
+				# deleted anchor
+				aid = (self.uid, a[A_ID])
+				hlinks = self.context.hyperlinks
+				for link in hlinks.findalllinks(aid, None):
+					hlinks.dellink(link)
 		em.commit()
 		return 1
 
@@ -303,8 +311,6 @@ class AnchorEditor(AnchorEditorDialog):
 		self.show_focus()
 
 	def id_callback(self):
-		# XXXX Does not work for non-whole-node anchors if
-		# self.editable is false
 		if self.focus is None:
 			return
 		self.changed = 1
@@ -316,8 +322,6 @@ class AnchorEditor(AnchorEditorDialog):
 		self.show_focus()
 
 	def delete_callback(self):
-		# XXXX Does not work for non-whole-node anchors if
-		# self.editable is false
 		if self.focus != self.selection_getselection():
 			print 'AnchorEdit: wrong focus in delete!'
 			self.focus = None
