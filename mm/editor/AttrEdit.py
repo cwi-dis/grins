@@ -267,6 +267,9 @@ class ChannelWrapper() = Wrapper():
 	def setattr(self, (name, value)):
 		if name = '.cname':
 			self.editmgr.setchannelname(self.name, value)
+			self.change_channel_name(self.editmgr.root, \
+						self.name, value)
+			# XXX Should also patch styles?
 			self.name = value
 		else:
 			self.editmgr.setchannelattr(self.name, name, value)
@@ -319,6 +322,16 @@ class ChannelWrapper() = Wrapper():
 		if name = '.cname': name = 'name'
 		return MMAttrdefs.parsevalue(name, string, self.context)
 	#
+	def change_channel_name(self, (node, oldname, newname)):
+		try:
+			cname = node.GetRawAttr('channel')
+		except:
+			cname = None
+		if cname = oldname:
+			self.editmgr.setnodeattr(node, 'channel', newname)
+		if node.GetType() in interiortypes:
+			for c in node.GetChildren():
+				self.change_channel_name(c, oldname, newname)
 
 
 class StyleWrapper() = Wrapper():
