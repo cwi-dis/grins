@@ -73,7 +73,7 @@ class PlayerDialog(PlayerDialogBase):
 			self.__has_window = 1
 			PlayerDialogBase.show(self)
 
-	def setstate(self, state):
+	def setstate(self, state = None):
 		commandlist = self.__topcommandlist + \
 			      self.toplevel.main.commandlist
 		savestoplist = self.stoplist
