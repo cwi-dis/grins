@@ -775,12 +775,14 @@ class MMNode(MMNodeBase.MMNode):
 			tlist.append((TERMINATE, arg))
 			if termtype == 'FIRST' and Duration.get(arg) > 0:
 				result.append(([(SCHED_DONE, arg)],
-					       [(TERMINATE, self)]))
+					       [(TERMINATE, self),
+						(SCHED_DONE, self)]))
 			elif termtype != 'FIRST' and \
 			     termtype != 'LAST' and \
 			     MMAttrdefs.getattr(arg, 'name') == termtype:
 				result.append(([(SCHED_DONE, arg)],
-					       [(TERMINATE, self)]))
+					       [(TERMINATE, self),
+						(SCHED_DONE, self)]))
 			else:
 				plist.append((SCHED_DONE, arg))
 		duration = MMAttrdefs.getattr(self, 'duration')
