@@ -137,7 +137,7 @@ class Node:
 		# common attributes for media and region
 		self.regAlign = None
 		self.regPoint = None
-		self.scale = 1
+		self.scale = None
 
 	def copyRawAttrs(self, srcNode):
 		self.regAlign = srcNode.regAlign
@@ -712,8 +712,8 @@ class RegionNode(Node):
 		return minsize
 
 	def guessSize(self):
-		minWidth = 100
-		minHeight = 100
+		minWidth = 500
+		minHeight = 500
 		for child in self.children:
 			widthChild, heightChild = child.guessSize()
 			width = self._minsize(self.left, self.width,
@@ -1084,8 +1084,10 @@ class MediaNode(Node):
 		if self.scale != None:
 			return self.scale
 		else:
-			return self.container.getScale()
-
+			region = self.__getRegion()
+			if region != None:
+				return region.getScale()
+			
 	def __getRegion(self):
 		subreg = self.container
 		if self.container != None:
