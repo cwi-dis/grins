@@ -90,7 +90,8 @@ class Main(MainDialog):
 ##	def open_recent_callback(self, url):
 ##		self.openURL_callback(url)
 		
-##	def _update_recent(self, url):
+	def _update_recent(self, url):
+		pass
 ##		if url:
 ##			self.add_recent_file(url)
 ##		doclist = self.get_recent_files()
