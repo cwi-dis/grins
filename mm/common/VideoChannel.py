@@ -112,7 +112,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		hicolor = self.gethicolor(node)
 		for a in node.GetRawAttrDef('anchorlist', []):
 			atype = a[A_TYPE]
-			if atype not in SourceAnchors or atype == ATYPE_AUTO:
+			if atype not in SourceAnchors or atype in (ATYPE_AUTO, ATYPE_WHOLE):
 				continue
 			b = self.armed_display.newbutton((0,0,1,1))
 			b.hiwidth(3)
