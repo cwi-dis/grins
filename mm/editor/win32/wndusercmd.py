@@ -1,10 +1,8 @@
 __version__ = "$Id$"
 
-""" @win32doc|usercmdui
-Contains extensions to usercmd classes specific to 
-win32 platform. Specifically defines commands for windows 
-arrangement, the about command and the select charset command.
-"""
+# Contains extensions to usercmd classes specific to 
+# win32 platform. Specifically defines commands for windows 
+# arrangement, the about command and the select charset command.
 
 from usercmd import _CommandBase
 
