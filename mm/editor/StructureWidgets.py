@@ -747,7 +747,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if self.infoicon is None:
 			# create a new info icon
 			self.infoicon = self.iconbox.add_icon(icon, callback = self.show_mesg)
-			print 'infoicon redraw', icon, self.node
 			self.mother.need_resize = 1
 			self.mother.draw()
 			return
@@ -756,7 +755,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			self.iconbox.del_icon(self.infoicon)
 			self.infoicon.destroy()
 			self.infoicon = None
-			print 'infoicon clear redraw', self.node
 			self.mother.need_resize = 1
 			self.mother.draw()
 			return
@@ -2619,7 +2617,6 @@ class BandWidthWidget(MMWidgetDecoration):
 	def __init__(self, mmwidget, mother):
 		MMWidgetDecoration.__init__(self, mmwidget, mother)
 		self.minwidth = 0
-		print 'DBG initbw', self
 		self.okboxes = []
 		self.notokboxes = []
 		self.okfocusboxes = []
@@ -2628,10 +2625,15 @@ class BandWidthWidget(MMWidgetDecoration):
 		import settings
 		self.maxbandwidth = settings.get('system_bitrate')
 
+	def destroy(self):
+		self.okboxes = None
+		self.notokboxes = None
+		self.okfocusboxes = None
+		self.notokfocusboxes = None
+		MMWidgetDecoration.destroy(self)
 
 	def recalc_minsize(self, node, timemapper):
 		import settings
-		print 'DBG lengths', len(self.okboxes), len(self.notokboxes)
 		self.maxbandwidth = settings.get('system_bitrate')
 		minheight = 2*TITLESIZE
 		self.boxsize = self.minwidth, minheight
@@ -2652,7 +2654,6 @@ class BandWidthWidget(MMWidgetDecoration):
 	def _addbandwidthinfo(self, node, timemapper):
 		# For now we ignore node
 		boxes = node.get_bandwidthboxes()
-		print 'dbg', node, boxes
 		if not boxes:
 			return
 		my_x, my_y, my_w, my_h = self.get_box()
@@ -2668,9 +2669,9 @@ class BandWidthWidget(MMWidgetDecoration):
 			y1 = my_b - int(bwfactor*bwlo)
 			box = (x0, y0, x1-x0, y1-y0)
 			if status:
-				self.notokboxes.append(box)
+				self.notokboxes.append((node, box))
 			else:
-				self.okboxes.append(box)
+				self.okboxes.append((node, box))
 
 ##	def moveto(self, coords):
 ##		return # XXXX
@@ -2707,6 +2708,7 @@ class BandWidthWidget(MMWidgetDecoration):
 ##		self.params = line_y, tick_top, tick_bot, longtick_top, longtick_bot, midtick_top, midtick_bot, endtick_top, endtick_bot, label_top, label_bot
 
 	def draw(self, displist):
+		print 'DBG: draw'
 		x, y, w, h = self.get_box()
 		y = y + 3
 		h = h - 6
@@ -2715,13 +2717,52 @@ class BandWidthWidget(MMWidgetDecoration):
 		displist.drawfbox(BANDWIDTH_FREE_COLOR, (x, y, w, h))
 		self._drawboxes(displist, BANDWIDTH_OK_COLOR, self.okboxes)
 		self._drawboxes(displist, BANDWIDTH_NOTOK_COLOR, self.notokboxes)
-##		self._drawboxes(displist, BANDWIDTH_OKFOCUS_COLOR, self.okfocusboxes)
-##		self._drawboxes(displist, BANDWIDTH_NOTOKFOCUS_COLOR, self.notokfocusboxes)
+		self._drawboxes(displist, BANDWIDTH_OKFOCUS_COLOR, self.okfocusboxes)
+		self._drawboxes(displist, BANDWIDTH_NOTOKFOCUS_COLOR, self.notokfocusboxes)
 
 	def _drawboxes(self, displist, color, boxes):
-		for box in boxes:
-			print 'DBG', color, box
+		for node, box in boxes:
 			displist.drawfbox(color, box)
+
+	def focuschanged(self, displist, focusnodes):
+		# This is gross. This method is called by HierarchyView
+		# to let us redraw. It should be done distributed.
+		took = []
+		tonotok = []
+		tookfocus = []
+		tonotokfocus = []
+		for n, box in self.okboxes:
+			if n in focusnodes:
+				tookfocus.append((n, box))
+		for nb in tookfocus:
+			self.okboxes.remove(nb)
+		for n, box in self.notokboxes:
+			if n in focusnodes:
+				tonotokfocus.append((n, box))
+		for nb in tonotokfocus:
+			self.notokboxes.remove(nb)
+		for n, box in self.okfocusboxes:
+			if not n in focusnodes:
+				took.append((n, box))
+		for nb in took:
+			self.okfocusboxes.remove(nb)
+		for n, box in self.notokfocusboxes:
+			if not n in focusnodes:
+				tonotok.append((n, box))
+		for nb in tonotok:
+			self.notokfocusboxes.remove(nb)
+		for nb in took:
+			self.okboxes.append(nb)
+		for nb in tonotok:
+			self.notokboxes.append(nb)
+		for nb in tookfocus:
+			self.okfocusboxes.append(nb)
+		for nb in tonotokfocus:
+			self.notokfocusboxes.append(nb)
+		self._drawboxes(displist, BANDWIDTH_OK_COLOR, took)
+		self._drawboxes(displist, BANDWIDTH_NOTOK_COLOR, tonotok)
+		self._drawboxes(displist, BANDWIDTH_OKFOCUS_COLOR, tookfocus)
+		self._drawboxes(displist, BANDWIDTH_NOTOKFOCUS_COLOR, tonotokfocus)
 
 # A box with icons in it.
 # Comes before the node's name.
