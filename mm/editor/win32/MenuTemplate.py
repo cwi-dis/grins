@@ -89,6 +89,10 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'Paste Properties', None, PASTEPROPERTIES),
 		(FLAG_ALL, ENTRY, '&Delete\tDel', None, DELETE),
 		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, 'Find...', None, FIND),
+		(FLAG_ALL, ENTRY, 'Find Next', None, FINDNEXT),
+		(FLAG_ALL, ENTRY, 'Replace...', None, REPLACE),
+		(FLAG_ALL, SEP,),
 		(FLAG_ALL, CASCADE, '&Align', (
 			(FLAG_ALL, ENTRY, '&Left', 'L', ALIGN_LEFT),
 			(FLAG_ALL, ENTRY, '&Center', 'C', ALIGN_CENTER),
