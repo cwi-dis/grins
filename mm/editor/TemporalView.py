@@ -158,19 +158,19 @@ class TemporalView(TemporalViewDialog):
 		else:
 			node = self.selected_nodes[0].node
 			commands = commands + node.GetCommands()
-			popupmenu = node.GetContextMenu()
+			# - /not/ system independent: popupmenu = node.GetContextMenu()
 			##n = self.selected_nodes[0].node
-##			if n.GetType() in MMNode.interiortypes:
-##				popupmenu = self.menu_interior_nodes
-##				commands = commands + self.interiorcommands \
-##					   + self.pasteinteriorcommands \
-##					   + self.structure_commands 
-##				if n.children:
-##					commands = commands + self.navigatecommands
-##				if n is not self.root:
-##					commands = commands + self.notatrootcommands
-##			else:
-##				popupmenu = self.menu_leaf_nodes
+			if node.GetType() in MMNode.interiortypes:
+				popupmenu = self.menu_interior_nodes
+				#commands = commands + self.interiorcommands \
+				#	   + self.pasteinteriorcommands \
+				#	   + self.structure_commands 
+				#if node.children:
+				#	commands = commands + self.navigatecommands
+				#if node is not self.root:
+				#	commands = commands + self.notatrootcommands
+			else:
+				popupmenu = self.menu_leaf_nodes
 		self.setcommands(commands)
 		self.setpopup(popupmenu)
 
