@@ -2490,6 +2490,7 @@ class _ResizeableDisplayList(_DisplayList):
 			raise error, 'displaylist already rendered'
 		self._list.append(('label', str))
 
+
 import grinsRC
 def getcursorhandle(strid):
 	if strid == 'hand':
@@ -2504,8 +2505,8 @@ def getcursorhandle(strid):
 		cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAGLINK)
 	elif strid == 'draghand':
 		cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAG_HAND)
-	elif strid == 'sizewse':
-		cursor = win32ui.GetWin32Sdk().LoadStandardCursor(win32con.IDC_SIZEWSE)
+	elif strid == 'sizenwse':
+		cursor = win32ui.GetWin32Sdk().LoadStandardCursor(win32con.IDC_SIZENWSE)
 	elif strid == 'sizens':
 		cursor = win32ui.GetWin32Sdk().LoadStandardCursor(win32con.IDC_SIZENS)
 	elif strid == 'sizenesw':
