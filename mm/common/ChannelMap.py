@@ -18,6 +18,10 @@ def _freeze_dummy_func():
 	import NullChannel
 	import PseudoHtmlChannel
 	import PythonChannel
+	import RealAudioChannel
+	import RealPixChannel
+	import RealTextChannel
+	import RealVideoChannel
 	import ShellChannel
 	import SocketChannel
 	import SoundChannel
@@ -47,6 +51,10 @@ class ChannelMap:
 		'midi':		[ 'MidiChannel', 'SoundChannel' ],
 		'word':		'WordChannel',
 		'external':	'ExternalChannel',
+		'raudio':	'RealAudioChannel',
+		'rpix':		'RealPixChannel',
+		'rtext':	'RealTextChannel',
+		'rvideo':	'RealVideoChannel',
 		}
 
 	if platform == 'mac':
