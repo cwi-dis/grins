@@ -1544,6 +1544,11 @@ DirectDrawSurface_GetPixelColor(DirectDrawSurfaceObject *self, PyObject *args)
 			return NULL;
 			}
 		}
+
+	POINT pt = {x, y};
+	if(!PtInRect(&self->rc, pt))
+		return Py_BuildValue("i",CLR_INVALID);
+
 	DWORD width = self->rc.right - self->rc.left;
 	DWORD height = self->rc.bottom - self->rc.top;
 
