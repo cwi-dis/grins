@@ -1,10 +1,9 @@
 __version__ = "$Id$"
 
-import MMurl, string, Sizes
-
 error = 'parseskin.error'
 
 def parseskin(file):
+	import MMurl, string
 	dict = {}
 	buttons = {}
 	while 1:
@@ -63,6 +62,7 @@ if __debug__:
 	defbg = (255,255,255)
 
 	def skinsmil(url):
+		import MMurl, Sizes
 		file = MMurl.urlopen(url)
 		url = file.geturl()
 		dict, buttons = parseskin(file)
@@ -91,7 +91,6 @@ if __debug__:
 # "circle" with 3 numbers giving x, y, and radius;
 # "poly" with an even number of numbers, each pair describing the x
 # and y coordinates of a point.
-
 def parsegskin(file):
 	dict = {}
 	while 1:
@@ -116,7 +115,7 @@ def parsegskin(file):
 		if cmd == 'image':
 			dict[cmd] = rest.strip()
 		else:
-			coords = line.split(' ')
+			coords = rest.split(' ')
 			if cmd == 'display':
 				# display area is always rectangular
 				shape = 'rect'
