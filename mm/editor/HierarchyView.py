@@ -664,7 +664,7 @@ class HierarchyView(HierarchyViewDialog):
 				apply(self.window.drawxorline, self.__line)
 		elif self.scene_graph is not None:
 			rv = self.scene_graph.get_obj_near(point)
-			if rv is None:
+			if rv is None or rv[2] is None:
 				self.window.setcursor('')
 				return
 			self.window.setcursor('darrow')
@@ -675,7 +675,8 @@ class HierarchyView(HierarchyViewDialog):
 		py = int(y * self.mcanvassize[1] + .5) #  to floats in the windowinterface.
 		rv = self.scene_graph.get_obj_near((px, py))
 		self.__dragside = rv
-		if rv is None:
+		if rv is None or rv[2] is None:
+			self.__dragside = None
 			if x >= 1 or y >= 1:
 				# out of bounds, beep and ignore
 				windowinterface.beep()
