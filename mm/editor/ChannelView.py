@@ -2065,7 +2065,7 @@ class NodeBox(GO, NodeBoxCommand):
 		try:
 			prearm, bandwidth = Bandwidth.get(self.node)
 		except Bandwidth.Error, msg:
-			node.set_infoicon('error', msg)
+			self.node.set_infoicon('error', msg)
 			prearm = bandwidth = 0
 		return t0, t1, self, prearm, bandwidth
 
