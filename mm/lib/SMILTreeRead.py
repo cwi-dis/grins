@@ -2977,6 +2977,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				root.Destroy()
 				for c in assets:
 					c.AddToTree(self.__root, -1)
+		if hasattr(features, 'trial') and features.trial:
+			# set a cap on the duration
+			if self.__root.attrdict.get('duration', 61) > 60:
+				self.__root.attrdict['duration'] = 60
 
 	def start_meta(self, attributes):
 		if __debug__:
