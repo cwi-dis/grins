@@ -1355,7 +1355,7 @@ class LayoutView2(LayoutViewDialog2):
 		
 		if debugAlign: print 'distribute horizontally : ',self.currentSelectedNodeList
 		nodeNumber = len(self.currentSelectedNodeList)
-		if nodeNumber <= 1:
+		if nodeNumber <= 2:
 			return
 
 		# to determinate the space between min and the max value: referenceMinValue and referenceMaxValue
@@ -1399,7 +1399,7 @@ class LayoutView2(LayoutViewDialog2):
 		
 		if debugAlign: print 'distribute vertically : ',self.currentSelectedNodeList
 		nodeNumber = len(self.currentSelectedNodeList)
-		if nodeNumber <= 1:
+		if nodeNumber <= 2:
 			return
 
 		# to determinate the space between min and the max value: referenceMinValue and referenceMaxValue
