@@ -2,6 +2,8 @@ import Win
 import Qd
 import Res
 import Icn
+import App
+import Appearance
 import string
 import QuickDraw
 from types import *
@@ -121,7 +123,30 @@ class _DisplayList:
 			Qd.UnionRgn(rgn, brgn, rgn)
 			Qd.DisposeRgn(brgn)
 		return rgn
+		
+	def _setfgcolor(self, fgcolor):
+##		if fgcolor == 'theme_background':
+##			depth=16 # XXX
+##			App.SetThemePen(Appearance.kThemeBrushDocumentWindowBackground, depth, 1)
+##			return
+		Qd.RGBForeColor(fgcolor)
+		
+	def _setbgcolor(self, bgcolor):
+##		if bgcolor == 'theme_background':
+##			depth=16 # XXX
+##			App.SetThemeBackground(Appearance.kThemeBrushDocumentWindowBackground, depth, 1)
+##			return
+		Qd.RGBBackColor(bgcolor)
+		
+	def _restorecolors(self):
+		self._setfgcolor(self._fgcolor)
+		self._setbgcolor(self._bgcolor)
 
+	def _setblackwhitecolors(self):
+		# For image draw
+		Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
+		Qd.RGBForeColor((0, 0, 0))
+		
 	def render(self):
 		#
 		# On the mac, we can only render after a full setup.
@@ -181,8 +206,7 @@ class _DisplayList:
 	def _render(self, clonestart=0):
 		self._really_rendered = 1
 		self._window._active_displist = self
-		Qd.RGBBackColor(self._bgcolor)
-		Qd.RGBForeColor(self._fgcolor)
+		self._restorecolors()
 		if clonestart:
 			list = self._list[clonestart:]
 		else:
@@ -213,20 +237,21 @@ class _DisplayList:
 				x, y, w, h = entry[1]
 				x = x+xscrolloffset
 				y = y+yscrolloffset
-				fgcolor = wid.GetWindowPort().rgbFgColor
-				Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
-				Qd.RGBForeColor((0xffff, 0, 0))
+##				fgcolor = wid.GetWindowPort().rgbFgColor
+##				Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
+##				Qd.RGBForeColor((0xffff, 0, 0))
 				Icn.PlotCIcon((x, y, x+w, y+h), entry[2])
-				Qd.RGBBackColor(self._bgcolor)
-				Qd.RGBForeColor(fgcolor)
+##				Qd.RGBBackColor(self._bgcolor)
+##				Qd.RGBForeColor(fgcolor)
 		elif cmd == 'image':
 			mask, image, srcx, srcy, dstx, dsty, w, h = entry[1:]
 			dstx, dsty = dstx+xscrolloffset, dsty+yscrolloffset
 			srcrect = srcx, srcy, srcx+w, srcy+h
 			dstrect = dstx, dsty, dstx+w, dsty+h
-			fgcolor = wid.GetWindowPort().rgbFgColor
-			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
-			Qd.RGBForeColor((0, 0, 0))
+##			fgcolor = wid.GetWindowPort().rgbFgColor
+##			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
+##			Qd.RGBForeColor((0, 0, 0))
+			self._setblackwhitecolors()
 			if mask:
 				Qd.CopyMask(image[0], mask[0],
 					    wid.GetWindowPort().portBits,
@@ -237,29 +262,28 @@ class _DisplayList:
 				      srcrect, dstrect,
 				      QuickDraw.srcCopy+QuickDraw.ditherCopy,
 				      None)
-			Qd.RGBBackColor(self._bgcolor)
-			Qd.RGBForeColor(fgcolor)
+			self._restorecolors()
 		elif cmd == 'line':
 			color = entry[1]
 			points = entry[2]
-			fgcolor = wid.GetWindowPort().rgbFgColor
-			Qd.RGBForeColor(color)
+			self._setfgcolor(color)
 			x, y = points[0]
 			Qd.MoveTo(x+xscrolloffset, y+yscrolloffset)
 			for np in points[1:]:
 				x, y = np
 				Qd.LineTo(x+xscrolloffset, y+yscrolloffset)
-			Qd.RGBForeColor(fgcolor)
+			self._restorecolors()
 		elif cmd == '3dhline':
 			color1, color2, x0, x1, y = entry[1:]
 			fgcolor = wid.GetWindowPort().rgbFgColor
-			Qd.RGBForeColor(color1)
+			self._setfgcolor(color1)
 			Qd.MoveTo(x0+xscrolloffset, y+yscrolloffset)
 			Qd.LineTo(x1+xscrolloffset, y+yscrolloffset)
-			Qd.RGBForeColor(color2)
+			self._setfgcolor(color2)
 			Qd.MoveTo(x0+xscrolloffset, y+yscrolloffset+1)
 			Qd.LineTo(x1+xscrolloffset, y+yscrolloffset+1)
-			Qd.RGBForeColor(fgcolor)
+			self._setfgcolor(fgcolor)
+			self._restorecolors()
 		elif cmd == 'box':
 			x, y, w, h = entry[1]
 			x, y = x+xscrolloffset, y+yscrolloffset
@@ -268,18 +292,16 @@ class _DisplayList:
 			color = entry[1]
 			x, y, w, h = entry[2]
 			x, y = x+xscrolloffset, y+yscrolloffset
-			fgcolor = wid.GetWindowPort().rgbFgColor
-			Qd.RGBForeColor(color)
+			self._setfgcolor(color)
 			Qd.PaintRect((x, y, x+w, y+h))
-			Qd.RGBForeColor(fgcolor)
+			self._restorecolors()
 		elif cmd == 'linewidth':
 			Qd.PenSize(entry[1], entry[1])
 		elif cmd == 'fpolygon':
-			fgcolor = wid.GetWindowPort().rgbFgColor
-			Qd.RGBForeColor(entry[1])
+			self._setfgcolor(entry[1])
 			polyhandle = self._polyhandle(entry[2])
 			Qd.PaintPoly(polyhandle)
-			Qd.RGBForeColor(fgcolor)
+			self._restorecolors()
 		elif cmd == '3dbox':
 			cl, ct, cr, cb = entry[1]
 			clt = _colormix(cl, ct)
@@ -295,35 +317,33 @@ class _DisplayList:
 			t3 = t + SIZE_3DBORDER
 			r3 = r - SIZE_3DBORDER
 			b3 = b - SIZE_3DBORDER
-			# Save old foreground color
-			fgcolor = wid.GetWindowPort().rgbFgColor
 			# draw left side
-			Qd.RGBForeColor(cl)
+			self._setfgcolor(cl)
 			polyhandle = self._polyhandle([(l, t), (l3, t3), (l3, b3), (l, b)])
 			Qd.PaintPoly(polyhandle)
 			# draw top side
-			Qd.RGBForeColor(ct)
+			self._setfgcolor(ct)
 			polyhandle = self._polyhandle([(l, t), (r, t), (r3, t3), (l3, t3)])
 			Qd.PaintPoly(polyhandle)
 			# draw right side
-			Qd.RGBForeColor(cr)
+			self._setfgcolor(cr)
 			polyhandle = self._polyhandle([(r3, t3), (r, t), (r, b), (r3, b3)])
 			Qd.PaintPoly(polyhandle)
 			# draw bottom side
-			Qd.RGBForeColor(cb)
+			self._setfgcolor(cb)
 			polyhandle = self._polyhandle([(l3, b3), (r3, b3), (r, b), (l, b)])
 			Qd.PaintPoly(polyhandle)
 			# draw topleft
-			Qd.RGBForeColor(clt)
+			self._setfgcolor(clt)
 			Qd.PaintRect((l+xscrolloffset, t+yscrolloffset, l3+xscrolloffset, t3+yscrolloffset))
 			# draw topright
-			Qd.RGBForeColor(ctr)
+			self._setfgcolor(ctr)
 			Qd.PaintRect((r3+xscrolloffset, t+yscrolloffset, r+xscrolloffset, t3+yscrolloffset))
 			# draw botright
-			Qd.RGBForeColor(crb)
+			self._setfgcolor(crb)
 			Qd.PaintRect((r3+xscrolloffset, b3+yscrolloffset, r+xscrolloffset, b+yscrolloffset))
 			# draw leftbot
-			Qd.RGBForeColor(cbl)
+			self._setfgcolor(cbl)
 			Qd.PaintRect((l+xscrolloffset, b3+yscrolloffset, l3+xscrolloffset, b+yscrolloffset))
 ##			l = l+1
 ##			t = t+1
@@ -355,7 +375,7 @@ class _DisplayList:
 ##			polyhandle = self._polyhandle([(l1, b1), (ll, bb), (rr, bb), (r1, b1)])
 ##			Qd.PaintPoly(polyhandle)
 			
-			Qd.RGBForeColor(fgcolor)
+			self._restorecolors()
 		elif cmd == 'diamond':
 			x, y, w, h = entry[1]
 			x, y = x+xscrolloffset, y+yscrolloffset
@@ -366,15 +386,14 @@ class _DisplayList:
 			Qd.LineTo(x, y + h/2)
 		elif cmd == 'fdiamond':
 			x, y, w, h = entry[2]
-			fgcolor = wid.GetWindowPort().rgbFgColor
-			Qd.RGBForeColor(entry[1])
+			self._setfgcolor(entry[1])
 			polyhandle = self._polyhandle([(x, y + h/2),
 					(x + w/2, y),
 					(x + w, y + h/2),
 					(x + w/2, y + h),
 					(x, y + h/2)])
 			Qd.PaintPoly(polyhandle)
-			Qd.RGBForeColor(fgcolor)
+			self._restorecolors()
 		elif cmd == '3ddiamond':
 			cl, ct, cr, cb = entry[1]
 			l, t, w, h = entry[2]
@@ -388,30 +407,28 @@ class _DisplayList:
 			rr = r - n
 			bb = b - 3
 
-			fgcolor = wid.GetWindowPort().rgbFgColor
 
-			Qd.RGBForeColor(cl)
+			self._setfgcolor(cl)
 			polyhandle = self._polyhandle([(l, y), (x, t), (x, tt), (ll, y)])
 			Qd.PaintPoly(polyhandle)
 			
-			Qd.RGBForeColor(ct)
+			self._setfgcolor(ct)
 			polyhandle = self._polyhandle([(x, t), (r, y), (rr, y), (x, tt)])
 			Qd.PaintPoly(polyhandle)
 			
-			Qd.RGBForeColor(cr)
+			self._setfgcolor(cr)
 			polyhandle = self._polyhandle([(r, y), (x, b), (x, bb), (rr, y)])
 			Qd.PaintPoly(polyhandle)
 			
-			Qd.RGBForeColor(cb)
+			self._setfgcolor(cb)
 			polyhandle = self._polyhandle([(l, y), (ll, y), (x, bb), (x, b)])
 			Qd.PaintPoly(polyhandle)
 			
-			Qd.RGBForeColor(fgcolor)
+			self._restorecolors()
 		elif cmd == 'arrow':
 			color = entry[1]
 			points = entry[2]
-			fgcolor = wid.GetWindowPort().rgbFgColor
-			Qd.RGBForeColor(color)
+			self._setfgcolor(color)
 			x0, y0, x1, y1 = points
 			x0, y0 = x0+xscrolloffset, y0+yscrolloffset
 			x1, y1 = x1+xscrolloffset, y1+yscrolloffset
@@ -420,7 +437,7 @@ class _DisplayList:
 			Qd.LineTo(x1, y1)
 			polyhandle = self._polyhandle(entry[3])
 			Qd.PaintPoly(polyhandle)
-			Qd.RGBForeColor(fgcolor)
+			self._restorecolors()
 		else:
 			raise 'Unknown displaylist command', cmd
 						
