@@ -69,7 +69,6 @@ class ListCtrl(window.Wnd):
 		flags = msg._wParam
 		self._down = 1
 		self._dragging = 0
-		self.SetCapture()
 		return 1
 
 	def OnLButtonUp(self, params):
@@ -84,6 +83,7 @@ class ListCtrl(window.Wnd):
 			if hasattr(self.parent, 'startDrag'):
 				if self.parent.startDrag():
 					self._dragging = 1
+					self.SetCapture()
 					return 1
 			self.ReleaseCapture()
 ##			sel = self.getSelected()
@@ -107,6 +107,7 @@ class ListCtrl(window.Wnd):
 		key = params[2]
 		if key == win32con.VK_TAB: 
 			self.parent.SetFocus() 
+		return 1
 
 	def OnDestroy(self, params):
 		if self.popup:
