@@ -87,6 +87,26 @@ def hasdocumentattreditor(toplevel):
 		return 0
 	return 1
 
+# A similar interface for program preferences (note different arguments!).
+
+prefseditor = None
+def showpreferenceattreditor(callback):
+	global prefseditor
+	if prefseditor is None:
+		prefseditor = AttrEditor(PreferenceWrapper(callback))
+	else:
+		prefseditor.pop()
+
+def haspreferenceattreditor():
+	return prefseditor is not None
+
+def closepreferenceattreditor():
+	global prefseditor
+	if prefseditor is not None:
+		prefseditor.close()
+		prefseditor = None
+
+
 # This routine checks whether we are in CMIF or SMIL mode, and
 # whether the given attribute should be shown in the editor.
 def cmifmode():
@@ -108,7 +128,7 @@ class Wrapper: # Base class -- common operations
 		self.context = context
 		self.editmgr = context.geteditmgr()
 	def __repr__(self):
-		return '<Wrapper instance>'
+		return '<%s instance>' % self.__class__.__name__
 	def close(self):
 		del self.context
 		del self.editmgr
@@ -125,6 +145,8 @@ class Wrapper: # Base class -- common operations
 		self.editmgr.commit()
 	def rollback(self):
 		self.editmgr.rollback()
+	def setwaiting(self):
+		self.toplevel.setwaiting()
 
 	def getdef(self, name):
 		return MMAttrdefs.getdef(name)
@@ -614,6 +636,130 @@ class DocumentWrapper(Wrapper):
 			return str
 
 
+class PreferenceWrapper(Wrapper):
+	__strprefs = {
+		'system_language': '2-character name for a language',
+		}
+	__intprefs = {
+		'system_bitrate': 'bitrate of connection with outside world',
+		}
+	__boolprefs = {
+		'system_captions': 'whether captions are to be shown',
+		'cmif': 'enable CMIF-specific extensions',
+		'html_control': 'choose between IE4 and WebsterPro HTML controls',
+		}
+	__specprefs = {
+		'system_overdub_or_caption': 'audible or visible "captions"',
+		}
+
+	def __init__(self, callback):
+		self.__callback = callback
+
+	def close(self):
+		global prefseditor
+		del self.__callback
+		prefseditor = None
+
+	def getcontext(self):
+		raise RuntimeError, 'getcontext should not be called'
+
+	def setwaiting(self):
+		pass
+
+	def register(self, object):
+		pass
+
+	def unregister(self, object):
+		pass
+
+	def transaction(self):
+		return 1
+
+	def commit(self):
+		self.__callback()
+
+	def rollback(self):
+		pass
+
+	def getdef(self, name):
+		if self.__strprefs.has_key(name):
+			return (('string', None), self.getdefault(name),
+				name, 'default',
+				self.__strprefs[name], 'raw', 'light')
+		elif self.__intprefs.has_key(name):
+			return (('int', None), self.getdefault(name),
+				name, 'default',
+				self.__intprefs[name], 'raw', 'light')
+		elif self.__boolprefs.has_key(name):
+			return (('bool', None), self.getdefault(name),
+				name, 'default',
+				self.__boolprefs[name], 'raw', 'light')
+		elif self.__specprefs.has_key(name):
+			return (('bool', None), self.getdefault(name),
+				name, 'captionoverdub',
+				self.__specprefs[name], 'raw', 'light')
+
+	def stillvalid(self):
+		return 1
+
+	def maketitle(self):
+		return 'GRiNS Preferences'
+
+	def getattr(self, name):	# Return the attribute or a default
+		import settings
+		return settings.get(name)
+
+	def getvalue(self, name):	# Return the raw attribute or None
+		import settings
+		return settings.get(name)
+
+	def getdefault(self, name):
+		import settings
+		return settings.default_settings[name]
+
+	def setattr(self, name, value):
+		import settings
+		settings.set(name, value)
+
+	def delattr(self, name):
+		import settings
+		settings.set(name, self.getdefault(name))
+
+	def delete(self):
+		# shouldn't be called...
+		pass
+
+	def attrnames(self):
+		import settings
+		attrs = self.__strprefs.keys() + self.__intprefs.keys() + self.__boolprefs.keys() + self.__specprefs.keys()
+		if settings.get('lightweight'):
+			attrs.remove('cmif')
+			attrs.remove('html_control')
+		attrs.sort()
+		return attrs
+
+	def valuerepr(self, name, value):
+		if self.__strprefs.has_key(name):
+			return value
+		elif self.__intprefs.has_key(name):
+			return `value`
+		elif self.__boolprefs.has_key(name):
+			return ['off', 'on'][value]
+		elif self.__specprefs.has_key(name):
+			return value
+
+	def parsevalue(self, name, str):
+		if self.__strprefs.has_key(name):
+			return value
+		elif self.__intprefs.has_key(name):
+			return string.atoi(value)
+		elif self.__boolprefs.has_key(name):
+			if str == 'on': return 1
+			return 0
+		elif self.__specprefs.has_key(name):
+			return str
+
+
 # Attribute editor class.
 
 from AttrEditDialog import AttrEditorDialog, AttrEditorDialogField
@@ -696,6 +842,8 @@ class AttrEditor(AttrEditorDialog):
 				C = TextAttrEditorField
 			elif displayername == 'bool3':
 				C = Bool3AttrEditorField
+			elif displayername == 'captionoverdub':
+				C = CaptionOverdubAttrEditorField
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -776,10 +924,11 @@ class AttrEditor(AttrEditorDialog):
 			# can't do a transaction
 			return 1
 		# this may take a while...
-		self.wrapper.toplevel.setwaiting()
+		self.wrapper.setwaiting()
 		for name, value in dict.items():
-			self.wrapper.delattr(name)
-			if value is not None:
+			if value is None:
+				self.wrapper.delattr(name)
+			else:
 				self.wrapper.setattr(name, value)
 		self.wrapper.commit()
 
@@ -1132,6 +1281,12 @@ class UnitsAttrEditorField(PopupAttrEditorField):
 		if value is None:
 			return 'Default'
 		return self.__values[self.__valuesmap.index(value)]
+
+class CaptionOverdubAttrEditorField(PopupAttrEditorField):
+	__values = ['caption', 'overdub']
+
+	def getoptions(self):
+		return self.__values
 
 class TransitionAttrEditorField(PopupAttrEditorField):
 	__values = ['fill', 'fadein', 'fadeout', 'crossfade', 'wipe', 'viewchange']
