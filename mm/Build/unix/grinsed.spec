@@ -47,14 +47,6 @@ product grinsed
         id "GRiNS for SMIL 1.0 Help Files"
         version 10000
         order 9999
-        subsys data default
-            id "GRiNS Editor for SMIL 1.0 Tutorial Data"
-            replaces self
-            prereq (
-                grinsed.sw.editor 10000 10000
-            )
-            exp grinsed.help.data
-        endsubsys
         subsys examples default
             id "GRiNS for SMIL 1.0 SMIL Examples"
             replaces self
