@@ -3,13 +3,11 @@
 
 #include "Python.h"
 
-#include "macglue.h"
-#include "pymactoolbox.h"
-
 #ifdef _WIN32
 #include "pywintoolbox.h"
-#include <QTML.h>
-#include <TextUtils.h>
+#else
+#include "macglue.h"
+#include "pymactoolbox.h"
 #endif
 
 /* Macro to test whether a weak-loaded CFM function exists */
@@ -95,7 +93,7 @@ static PyObject *Qt_Error;
 
 /* ------------------ Object type MovieController ------------------- */
 
-typeforward PyTypeObject MovieController_Type;
+staticforward PyTypeObject MovieController_Type;
 
 #define MovieCtlObj_Check(x) ((x)->ob_type == &MovieController_Type)
 
@@ -965,7 +963,7 @@ PyTypeObject MovieController_Type = {
 
 /* ---------------------- Object type TimeBase ---------------------- */
 
-typeforward PyTypeObject TimeBase_Type;
+staticforward PyTypeObject TimeBase_Type;
 
 #define TimeBaseObj_Check(x) ((x)->ob_type == &TimeBase_Type)
 
@@ -1359,7 +1357,7 @@ PyTypeObject TimeBase_Type = {
 
 /* ---------------------- Object type UserData ---------------------- */
 
-typeforward PyTypeObject UserData_Type;
+staticforward PyTypeObject UserData_Type;
 
 #define UserDataObj_Check(x) ((x)->ob_type == &UserData_Type)
 
@@ -1636,7 +1634,7 @@ PyTypeObject UserData_Type = {
 
 /* ----------------------- Object type Media ------------------------ */
 
-typeforward PyTypeObject Media_Type;
+staticforward PyTypeObject Media_Type;
 
 #define MediaObj_Check(x) ((x)->ob_type == &Media_Type)
 
@@ -2670,7 +2668,7 @@ PyTypeObject Media_Type = {
 
 /* ----------------------- Object type Track ------------------------ */
 
-typeforward PyTypeObject Track_Type;
+staticforward PyTypeObject Track_Type;
 
 #define TrackObj_Check(x) ((x)->ob_type == &Track_Type)
 
@@ -3757,7 +3755,7 @@ PyTypeObject Track_Type = {
 
 /* ----------------------- Object type Movie ------------------------ */
 
-typeforward PyTypeObject Movie_Type;
+staticforward PyTypeObject Movie_Type;
 
 #define MovieObj_Check(x) ((x)->ob_type == &Movie_Type)
 
