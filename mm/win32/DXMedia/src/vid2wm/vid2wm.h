@@ -5,9 +5,10 @@ DEFINE_GUID(IID_IWMConverter,
 0xbdbc884c, 0xfce, 0x414f, 0x99, 0x41, 0x3, 0x5f, 0x90, 0xe, 0x43, 0xb6);
 struct IWMConverter : public IUnknown
 	{
-	virtual HRESULT __stdcall SetInterface(IUnknown *p,LPCOLESTR hint)=0;
+	virtual HRESULT __stdcall SetWMWriter(IUnknown *pI)=0;
+	virtual HRESULT __stdcall SetAudioInputProps(DWORD dwInputNum,IUnknown *pI)=0;
+	virtual HRESULT __stdcall SetVideoInputProps(DWORD dwInputNum,IUnknown *pI)=0;
 	};
-
 
 class CVideoRenderer;
 
@@ -38,6 +39,8 @@ public:
 DEFINE_GUID(CLSID_Vid2wm,
 0x2e41ae53, 0xe5f4, 0x4209, 0x9d, 0x2a, 0xdd, 0xe1, 0xab, 0x1b, 0xb0, 0x7e);
 
+class WMWriter;
+
 class CVideoRenderer : 
 	public CBaseVideoRenderer, 
 	public IWMConverter
@@ -63,9 +66,6 @@ public:
     DECLARE_IUNKNOWN
     STDMETHODIMP NonDelegatingQueryInterface(REFIID, void **);
 
-	// Implements IWMConverter
-	STDMETHODIMP SetInterface(IUnknown *p,LPCOLESTR hint);
-
     CBasePin *GetPin(int n);
 
     // Override these from the filter and renderer classes
@@ -82,6 +82,11 @@ public:
     HRESULT DoRenderSample(IMediaSample *pMediaSample);
     void OnReceiveFirstSample(IMediaSample *pMediaSample);
 
+	// Implements IWMConverter
+	STDMETHODIMP SetWMWriter(IUnknown *p);
+	STDMETHODIMP SetAudioInputProps(DWORD dwInputNum,IUnknown *pI);
+	STDMETHODIMP SetVideoInputProps(DWORD dwInputNum,IUnknown *pI);
+	
 public:
 
     CImageAllocator m_ImageAllocator;   // Our DIBSECTION allocator
@@ -92,6 +97,8 @@ public:
 	BYTE *m_pVideoImage;
 	int m_ixframe;
 	DWORD m_lastTimestamp;
+	WMWriter *m_pWMWriter;
+
 }; 
 
 #endif
