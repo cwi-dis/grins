@@ -50,6 +50,7 @@ class Main(MainDialog):
 		from usercmd import *
 		self.commandlist = [
 			OPEN(callback = (self.open_callback, ())),
+			OPENFILE(callback = (self.openfile_callback, ())),
 			OPEN_RECENT(callback = self.open_recent_callback),	# Dynamic cascade
 			PREFERENCES(callback = (self.preferences_callback, ())),
 			EXIT(callback = (self.close_callback, ())),

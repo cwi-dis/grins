@@ -40,7 +40,8 @@ DEBUG='debug'
 MENUBAR=(
 	('&File', (
 		(ALL, ENTRY, '&New\tCtrl+N', 'N', NEW_DOCUMENT),
-		(ALL, ENTRY, '&Open...\tCtrl+O', 'O', OPEN),
+		(ALL, ENTRY, '&Open...\tCtrl+O', 'O', OPENFILE),
+		(ALL, ENTRY, '&Open URL...\tCtrl+L', 'O', OPEN),
 		(ALL, DYNAMICCASCADE, 'Open &recent', OPEN_RECENT),
 		(ALL, SEP,),
 		(ALL, ENTRY, '&Save\tCtrl+S', 'S', SAVE),

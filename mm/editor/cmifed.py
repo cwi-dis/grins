@@ -76,6 +76,7 @@ class Main(MainDialog):
 			EXIT(callback = (self.close_callback, ())),
 			NEW_DOCUMENT(callback = (self.new_callback, ())),
 			OPEN(callback = (self.open_callback, ())),
+			OPENFILE(callback = (self.openfile_callback, ())),
 			OPEN_RECENT(callback = self.open_recent_callback),	# Dynamic cascade
 			PREFERENCES(callback=(self.preferences_callback, ())),
 			]
