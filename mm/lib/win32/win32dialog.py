@@ -1466,7 +1466,12 @@ class FindDialog(ResDialog):
 
 		# hook commands
 		self._findNextBtn.hookcommand(self, self._onFindNext)
-			
+		self._isInit = 1
+
+	def OnDestroy(self, id):
+		self._isInit = 0
+		return 1
+
 	def _onFindNext(self, id, value):
 		if self._findNextCallback != None:
 			options = (self._matchWhole.getcheck(),
@@ -1478,5 +1483,55 @@ class FindDialog(ResDialog):
 		self.CreateWindow(self._parent)
 		self.ShowWindow(win32con.SW_SHOW)
 
+	def enableReplace(self, f):
+		pass
+	
 	def hide(self):
-		self.DestroyWindow()
+		if self._isInit:
+			self.DestroyWindow()
+
+class ReplaceDialog(FindDialog):
+	resource=grinsRC.IDD_REPLACE
+	def __init__(self, findNextCallback, replaceCallback, replaceAllCallback, text = None, replaceText = None, options = None, parent=None):
+		FindDialog.__init__(self, findNextCallback, text, options, parent)
+		self._replaceText = replaceText
+		self._replaceCallback = replaceCallback
+		self._replaceAllCallback = replaceAllCallback
+		# The additional widgets.
+		self._replaceBtn = Button(self, grinsRC.IDC_REPLACE)
+		self._replaceAllBtn = Button(self, grinsRC.IDC_REPLACEALL)
+		self._replaceWith = Edit(self, grinsRC.IDC_REPLACEWITH)
+		
+	def OnInitDialog(self):
+		FindDialog.OnInitDialog(self)
+		
+		# attach the additional controls to the parent
+		self._replaceBtn.attach_to_parent()
+		self._replaceAllBtn.attach_to_parent()
+		self._replaceWith.attach_to_parent()
+		
+		# init additional control values		
+		if self._replaceText != None:
+			self._replaceWith.settext(self._replaceText)
+
+		# disable by default the replace button
+		self._replaceBtn.enable(0)
+		
+		# additional hook commands
+		self._replaceBtn.hookcommand(self, self._onReplace)
+		self._replaceAllBtn.hookcommand(self, self._onReplaceAll)
+		
+	def _onReplace(self, id, value):
+		if self._replaceCallback != None:
+			text = self._replaceWith.gettext()
+			self._replaceCallback(text)
+
+	def _onReplaceAll(self, id, value):
+		if self._replaceAllCallback != None:
+			text = self._replaceWith.gettext()
+			self._replaceAllCallback(text)
+
+	def enableReplace(self, f):
+		if self._isInit:
+			self._replaceBtn.enable(f)
+		
