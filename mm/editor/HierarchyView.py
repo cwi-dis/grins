@@ -1332,8 +1332,16 @@ class HierarchyView(HierarchyViewDialog):
 		ntype = node.GetType()
 		minsize = self.sizes.MINSIZE
 		if self.timescale:
-			t0 = node.t0
-			t1 = node.t1
+			if node.__class__ is SlideMMNode:
+				pnode = node.GetParent()
+				pchildren = pnode.GetChildren()
+				i = pchildren.index(node)
+				dur = (pnode.t1 - pnode.t0) / len(pchildren)
+				t0 = pnode.t0 + i * dur
+				t1 = t0 + dur
+			else:
+				t0 = node.t0
+				t1 = node.t1
 			begin = t0 * self.timescalefactor
 			dur = (t1 - t0) * self.timescalefactor
 			if dur < 0:
