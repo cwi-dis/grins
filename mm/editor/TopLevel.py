@@ -425,6 +425,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		evallicense= (license < 0)
 		if not self.save_to_file(filename, exporting = 1):
 			return		# Error, don't save HTML file
+		if exporttype == compatibility.SMIL10:
+			return		# don't create HTML file for SMIL 1.0 export
 		attrs = self.context.attributes
 		if not attrs.has_key('project_html_page') or not attrs['project_html_page']:
 			if features.lightweight:
@@ -850,7 +852,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 							copyFiles = exporting,
 							evallicense=evallicense,
 							progress = progress,
-							convertURLs = 1)
+							convertURLs = 1,
+							convertfiles = exporting and self.exporttype != compatibility.SMIL10)
 		except IOError, msg:
 			if exporting:
 				operation = 'Publish'
