@@ -26,6 +26,13 @@ visually separate.  There are callbacks for all these buttons.
 
 """
 
+""" @win32doc|AnchorEditorDialog
+This class represents the interface between the AnchorEditor platform independent
+class and its implementation AnchorEditorForm in lib/win32/AnchorEditForm.py which 
+implements the actual dialog.
+
+"""
+
 __version__ = "$Id$"
 
 
@@ -222,7 +229,7 @@ class AnchorEditorDialog:
 		The list which was given to selection_setlist or
 		__init__ (whichever was last) is modified.
 		"""
-		return self.__window.selection_replaceitem(pos, item)
+		self.__window.selection_replaceitem(pos, item)
 
 	def selection_deleteitem(self, pos):
 		"""Delete the indicated item from the list.

@@ -19,6 +19,13 @@ For these buttons there are callbacks.
 
 """
 
+""" @win32doc|ArcInfoDialog
+This class represents the interface between the ArcInfo platform independent
+class and its implementation ArcInfoForm in lib/win32/ArcInfoForm.py which 
+implements the actual dialog.
+
+"""
+
 __version__ = "$Id$"
 
 
