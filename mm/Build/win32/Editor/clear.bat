@@ -1,6 +1,15 @@
 del *.c
 del log.txt
-del FreezeOpts
 del GRiNSed.exe
 del GRiNSed.lib
-deltree Build
+cd  Build\Release
+del *.obj
+del *.res
+del *.idb
+cd .. 
+rmdir Release
+cd ..
+
+
+
+
