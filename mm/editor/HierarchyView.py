@@ -61,6 +61,12 @@ class HierarchyView(HierarchyViewDialog):
 		self.thumbnails = 1
 		self.showplayability = 1
 		self.timescale = 0
+		self.usetimestripview = 0
+		if features.H_TIMESTRIP in features.feature_set:
+			if self._timestripconform():
+				self.usetimestripview = 1
+			else:
+				windowinterface.showmessage("Warning: document structure cannot be displayed as timestrip.  Using structured view.")
 		self.pushbackbars = features.H_VBANDWIDTH in features.feature_set 	# display download times as pushback bars on MediaWidgets.
 		self.dropbox = features.H_DROPBOX in features.feature_set	# display a drop area at the end of every node.
 		self.transboxes = features.H_TRANSITIONS in features.feature_set # display transitions
@@ -188,6 +194,18 @@ class HierarchyView(HierarchyViewDialog):
 	def __repr__(self):
 		return '<HierarchyView instance, root=' + `self.root` + '>'
 
+	def _timestripconform(self):
+		# Return true if document conforms to the format needed for timestrip display
+		if self.root.GetType() != 'seq' or len(self.root.children) != 1:
+			return 0
+		child = self.root.children[0]
+		if child.GetType() != 'par':
+			return 0
+		for grandchild in child.children:
+			if grandchild.GetType() != 'seq':
+				return 0
+		return 1
+		
 	def _getmediaundercommands(self, ctx, slide = 0):
 		#import settings
 		heavy = not features.lightweight
