@@ -27,8 +27,7 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 	def init(self, toplevel):
 		self = ViewDialog.init(self, 'player_')
 		self = PlayerCore.init(self, toplevel)
-		self.queue = []
-		self.resettimer()
+		self.scheduler.resettimer()
 		self.playing = self.locked = 0
 		self.channelnames = []
 		self.measure_armtimes = 0
@@ -40,10 +39,13 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		self.ignore_delays = 0
 		self.ignore_pauses = 0
 		self.play_all_bags = 0
+		self.pause_minidoc = 1
 		self.sync_cv = 1
 		self.toplevel = toplevel
 		title = 'Player (' + toplevel.basename + ')'
-		return BasicDialog.init(self, 0, 0, title)
+		self = BasicDialog.init(self, 0, 0, title)
+		self.set_timer = self.timerobject.set_timer
+		return self
 	#
 	def fixtitle(self):
 		self.settitle('Player (' + self.toplevel.basename + ')')
@@ -97,6 +99,9 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 	#
 	def stop_callback(self, obj, arg):
 		self.stop()
+
+	def timer_callback(self, obj, arg):
+		self.scheduler.timer_callback()
 	#
 	def cmenu_callback(self, obj, arg):
 		i = self.cmenubutton.get_menu() - 1
@@ -142,8 +147,9 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 			self.stopbutton.set_button(1)
 		else:
 			self.stopbutton.set_button(0)
-			self.playbutton.set_button(self.rate == 1.0)
-			self.pausebutton.set_button(self.rate == 0.0)
+			rate = self.scheduler.getrate()
+			self.playbutton.set_button(rate == 1.0)
+			self.pausebutton.set_button(rate == 0.0)
 		if self.userplayroot is self.root:
 			self.partbutton.label = ''
 		else:
@@ -158,14 +164,14 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		self.showtime()
 	#
 	def showtime(self):
-		if self.rate:
+		if self.scheduler.getrate():
 			self.statebutton.lcol = self.statebutton.col2
 		else:
 			self.statebutton.lcol = GL.YELLOW
 		#if self.msec_origin == 0:
 		#	self.statebutton.label = '--:--'
 		#	return
-		now = int(self.timefunc())
+		now = int(self.scheduler.timefunc())
 		label = `now/60` + ':' + `now/10%6` + `now % 10`
 		if self.statebutton.label <> label:
 			self.statebutton.label = label
