@@ -12,8 +12,6 @@ import time
 
 debug = 1
 
-USE_IDLE_PROC=hasattr(windowinterface, 'setidleproc')
-
 class PrefetchChannel(Channel.ChannelAsync):
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.ChannelAsync.__init__(self, name, attrdict, scheduler, ui)
@@ -128,8 +126,7 @@ class PrefetchChannel(Channel.ChannelAsync):
 		self.__startFetch(repeat=1)
 
 	def onIdle(self):
-		if not USE_IDLE_PROC:
-			self.__fiber_id = 0
+		self.__fiber_id = 0
 		if self.__fetching:
 			t_sec=self._scheduler.timefunc() - self.__start
 			if self.__duration and t_sec>=self.__duration:
@@ -141,16 +138,9 @@ class PrefetchChannel(Channel.ChannelAsync):
 			
 	def __register_for_timeslices(self):
 		if not self.__fiber_id:
-			if USE_IDLE_PROC:
-				windowinterface.setidleproc(self.onIdle)
-				self.__fiber_id = 1
-			else:
-				self.__fiber_id = windowinterface.settimer(0.05, (self.onIdle,()))
+			self.__fiber_id = windowinterface.settimer(0.1, (self.onIdle,()))
 
 	def __unregister_for_timeslices(self):
 		if self.__fiber_id:
-			if USE_IDLE_PROC:
-				windowinterface.cancelidleproc(self.onIdle)
-			else:
-				windowinterface.canceltimer(self.__fiber_id)
+			windowinterface.canceltimer(self.__fiber_id)
 			self.__fiber_id = 0
