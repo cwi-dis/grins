@@ -54,6 +54,7 @@ class _ListWidget(_Widget):
 		return self.list.LAddRow(count, where)
 		
 	def delete(self, fr=None, count=1):
+		Qd.SetPort(self.wid)
 		self.list.LSetDrawingMode(0)
 		self._delete(fr, count)
 		self.list.LSetDrawingMode(1)
@@ -61,6 +62,7 @@ class _ListWidget(_Widget):
 ##		self._redraw() # DBG
 		
 	def set(self, content):
+		Qd.SetPort(self.wid)
 		self.list.LSetDrawingMode(0)
 		self._delete()
 		self._insert(count=len(content))
@@ -76,6 +78,7 @@ class _ListWidget(_Widget):
 		return self._data[item]
 		
 	def insert(self, where=-1, content):
+		Qd.SetPort(self.wid)
 		self.list.LSetDrawingMode(0)
 		where = self._insert(where, len(content))
 		self._setcontent(where, where+len(content), content)
@@ -84,6 +87,7 @@ class _ListWidget(_Widget):
 ##		self._redraw() # DBG
 		
 	def replace(self, where, what):
+		Qd.SetPort(self.wid)
 		self.list.LSetDrawingMode(0)
 		self._setcontent(where, where+1, [what])
 		self.list.LSetDrawingMode(1)
@@ -125,6 +129,7 @@ class _ListWidget(_Widget):
 	# draw a frame around the list, List Manager doesn't do that
 	def drawframe(self):
 		Qd.SetPort(self.wid)
+		Qd.EraseRect(self.rect)
 		Qd.FrameRect(self.rect)
 		
 	def _redraw(self, rgn=None):
