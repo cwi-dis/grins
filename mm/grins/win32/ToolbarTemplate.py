@@ -44,7 +44,7 @@ class Pulldown:
 		self.width = width
 
 GENERAL_TEMPLATE = (
-	('General', wndusercmd.TOOLBAR_GENERAL, IDW_TOOLBAR_GENERAL, grinsRC.IDR_TB_COMMON, 0, (
+	('General', 'toolbar', 'docked', wndusercmd.TOOLBAR_GENERAL, IDW_TOOLBAR_GENERAL, grinsRC.IDR_TB_COMMON, 0, (
 		Button(usercmd.OPENFILE, TBICON_OPENFILE),
 		Button(usercmd.CLOSE, TBICON_CLOSE),
 		Button(usercmd.RELOAD, TBICON_RESTORE),
@@ -55,7 +55,7 @@ GENERAL_TEMPLATE = (
 )
 
 PLAYER_TEMPLATE = (
-	('Player Controls', wndusercmd.TOOLBAR_PLAYER, IDW_TOOLBAR_PLAYER, grinsRC.IDR_TB_COMMON, 0, (
+	('Player Controls', 'toolbar', 'docked', wndusercmd.TOOLBAR_PLAYER, IDW_TOOLBAR_PLAYER, grinsRC.IDR_TB_COMMON, 0, (
 		Button(usercmd.PLAY, TBICON_PLAY),
 		Button(usercmd.PAUSE, TBICON_PAUSE),
 		Button(usercmd.STOP, TBICON_STOP),
