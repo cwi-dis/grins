@@ -73,9 +73,9 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 		if hasattr(self.window, "GetSafeHwnd"):
 			# Windows
 			return self.window.GetSafeHwnd()
-		elif hasattr(self.window, "_wid"):
+		elif hasattr(self.window, "_mac_getoswindow"):
 			# Macintosh
-			return self.window._wid
+			return self.window._mac_getoswindow()
 		elif hasattr(self.window, '_form'):
 			# Motif
 			wnd = self.window._topwindow._form
