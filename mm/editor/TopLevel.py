@@ -4,29 +4,27 @@
 import posix
 import path
 
+import gl, DEVICE
+import fl
+from FL import *
+
+import glwindow
+from Dialog import BasicDialog
+from ViewDialog import ViewDialog
+
 import MMExc
 import MMAttrdefs
 import MMTree
 
 from EditMgr import EditMgr
 
-import glwindow
-from Dialog import BasicDialog
-from ViewDialog import ViewDialog
-
-import AttrEdit
-import NodeInfo
-
 import Timing
-
-import gl, DEVICE
-import fl
-from FL import *
 
 
 # Parametrizations
 BHEIGHT = 30				# Button height
 HELPDIR = '/ufs/guido/mm/demo/help'	# Where to find the help files
+					# XXX Need to use $CMIF
 
 def sethelpdir(helpdir):
 	global HELPDIR
@@ -74,8 +72,6 @@ class TopLevel(ViewDialog, BasicDialog):
 	def destroy(self):
 		BasicDialog.destroy(self)
 		self.destroyviews()
-		AttrEdit.hideall(self.root)
-		NodeInfo.hideall(self.root)
 	#
 	# Main interface.
 	#
@@ -100,6 +96,9 @@ class TopLevel(ViewDialog, BasicDialog):
 	def rollback(self):
 		# Nothing has happened.
 		pass
+	#
+	def kill(self):
+		print 'TopLevel.kill() should not be called!'
 	#
 	# Make the menu form (called from BasicDialog.init).
 	#
@@ -201,7 +200,6 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.helpbutton.set_button(self.help.is_showing())
 	#
 	def destroyviews(self):
-		self.hideviews()
 		for v in self.views: v.destroy()
 	#
 	# Callbacks.
@@ -235,23 +233,23 @@ class TopLevel(ViewDialog, BasicDialog):
 		obj.set_button(0)
 	#
 	def restore_callback(self, (obj, arg)):
-		if not obj.pushed: return
+		if not obj.pushed:
+			return
 		if not self.editmgr.transaction():
 			obj.set_button(0)
 			return
 		self.editmgr.rollback()
 		if self.changed:
-			l1 = 'Are you sure you want to restore from file?'
-			l2 = '(This will destroy any changes you have made)'
+			l1 = 'Are you sure you want to re-read the file?'
+			l2 = '(This will destroy the changes you have made)'
 			l3 = 'Click Yes to restore, No to keep your changes'
 			reply = fl.show_question(l1, l2, l3)
 			if not reply:
 				obj.set_button(0)
 				return
-		self.destroyviews()
-		AttrEdit.hideall(self.root)
-		NodeInfo.hideall(self.root)
 		self.editmgr.unregister(self)
+		self.editmgr.destroy()
+		self.help.destroy() # XXX Needed because help's a view now...
 		self.context.seteditmgr(None)
 		self.root.Destroy()
 		self.read_it()
