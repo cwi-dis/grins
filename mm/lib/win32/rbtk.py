@@ -24,6 +24,8 @@ class _rbtk:
 
 	# Called by the core system to create or resize a box
 	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN, modeless=0):
+		if modeless:
+			return # To be implemented
 		# if we are in create box mode, queue request
 		if self.in_create_box_mode():
 			self.get_box_modal_wnd()._next_create_box.append((self, msg, callback, box, units))
