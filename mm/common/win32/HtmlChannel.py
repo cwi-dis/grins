@@ -110,7 +110,8 @@ class HtmlChannel(Channel.ChannelWindow):
 			self.window.SetImmHtml(self.armed_str)
 		else:
 			url=self.getfileurl(node)
-			url=urllib.unquote(url)
+			url = MMurl.basejoin('file:'+MMurl.pathname2url(os.getcwd())+'/',url)
+			#url=urllib.unquote(url)
 			self.window.RetrieveUrl(url)	
 		self.window.setredrawfunc(self.redraw)
 
