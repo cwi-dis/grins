@@ -38,6 +38,12 @@ class HtmlChannel(Channel.ChannelWindow):
 		#
 		if not Channel.ChannelWindow.do_show(self):
 			return 0
+
+		if self.window:
+			self._after_creation()
+		return 1
+
+	def _after_creation(self):
 		#
 		# Step 2 - Create a values dictionary with width/height
 		# for use when we create the HTML widget.
@@ -55,7 +61,18 @@ class HtmlChannel(Channel.ChannelWindow):
 		#
 		self.htmlw.AddCallback('anchorCallback', self.cbanchor, None)
 		self.htmlw.AddCallback('submitFormCallback', self.cbform, None)
-		return 1
+		self.htmlw.AddCallback('destroyCallback', self.cbdestroy, None)
+
+	def cbdestroy(self, widget, userdata, calldata):
+		self.htmlw = None
+
+	def _box_callback(self, *pgeom):
+		if pgeom:
+			x, y, w, h = pgeom
+			Channel.ChannelWindow._box_callback(self, x, y, w, h)
+		else:
+			Channel.ChannelWindow._box_callback(self)
+		self._after_creation()
 
 	def resize(self, arg, window, event, value):
 		wh = self.window._form.GetValues(['width', 'height'])
@@ -90,6 +107,8 @@ class HtmlChannel(Channel.ChannelWindow):
 		
 	def do_arm(self, node):
 		self.armed_str = self.getstring(node)
+		if self._is_shown and not self.htmlw:
+			self._after_creation()
 		return 1
 		
 	def do_play(self, node):
