@@ -17,7 +17,7 @@ struct sound_data {
 	FILE *f;		/* file from which to read samples */
 	int nchannels;		/* # of channels (mono or stereo) */
 	int sampwidth;		/* size of samples in bytes */
-	int nsampframes;	/* # of samples to play */
+	int nsamples;	/* # of samples to play */
 	int samprate;		/* sampling frequency */
 	long offset;		/* offset in file of first sample */
 	int bufsize;		/* size of sampbuf in samples */
@@ -134,7 +134,7 @@ sound_arm(self, file, delay, duration, attrlist, anchorlist)
 		PRIV->s_arm.nchannels = getintvalue(v);
 	v = dictlookup(attrlist, "nsampframes");
 	if (v && is_intobject(v))
-		PRIV->s_arm.nsampframes = getintvalue(v);
+		PRIV->s_arm.nsamples = getintvalue(v) * PRIV->s_arm.nchannels;
 	v = dictlookup(attrlist, "sampwidth");
 	if (v && is_intobject(v))
 		PRIV->s_arm.sampwidth = getintvalue(v);
@@ -159,12 +159,13 @@ sound_armer(self)
 		PRIV->s_arm.sampbuf = NULL;
 	}
 	PRIV->s_arm.bufsize = PRIV->s_arm.samprate * PRIV->s_arm.nchannels;
-	if (PRIV->s_arm.bufsize > PRIV->s_arm.nsampframes)
-		PRIV->s_arm.bufsize = PRIV->s_arm.nsampframes;
+	if (PRIV->s_arm.bufsize > PRIV->s_arm.nsamples)
+		PRIV->s_arm.bufsize = PRIV->s_arm.nsamples;
 	PRIV->s_arm.sampbuf = malloc(PRIV->s_arm.bufsize*PRIV->s_arm.sampwidth);
 
-	dprintf(("nchannels: %d, nsampframes: %d, sampwidth: %d, samprate: %d, offset: %d, file: %lx (fd= %d), bufsize = %d\n",
-		 PRIV->s_arm.nchannels, PRIV->s_arm.nsampframes,
+	dprintf(("nchannels: %d, nsamples: %d, nframes: %d, sampwidth: %d, samprate: %d, offset: %d, file: %lx (fd= %d), bufsize = %d\n",
+		 PRIV->s_arm.nchannels, PRIV->s_arm.nsamples,
+		 PRIV->s_arm.nsamples / PRIV->s_arm.nchannels,
 		 PRIV->s_arm.sampwidth, PRIV->s_arm.samprate,
 		 PRIV->s_arm.offset, PRIV->s_arm.f, fileno(PRIV->s_arm.f),
 		 PRIV->s_arm.bufsize));
@@ -192,7 +193,7 @@ sound_player(self)
 {
 	long buf[2];
 	ALconfig config;
-	int nsamps = PRIV->s_play.nsampframes;
+	int nsamps = PRIV->s_play.nsamples;
 	int n;
 	int rate;
 	int portfd;
