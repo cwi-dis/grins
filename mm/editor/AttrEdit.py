@@ -584,7 +584,7 @@ class AnimationWrapper(NodeWrapper):
 
 	def attrnames(self):
 		namelist = ['name',
-			'begin', 'duration', 'loop', 'repeatdur', 'restart', 
+			'begin', 'duration', 'loop', 'repeatdur', 'restart', 'fill',
 			'speed', 'accelerate', 'decelerate', 'autoReverse',
 			]
 		ctype = 'animate'
