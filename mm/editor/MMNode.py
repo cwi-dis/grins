@@ -687,12 +687,9 @@ class MMNode(MMNodeBase.MMNode):
 		arg = self
 		result = [([(SCHED, arg), (ARM_DONE, arg)] + in0,
 			   [(PLAY, arg)] + out0)]
-		if in1:
-			result.append(
-				([(PLAY_DONE, arg)] + in1,
-				 [(SCHED_DONE,arg), (PLAY_STOP, arg)] + out1))
-			result.append(([(SCHED_STOP, arg)], []))
-		elif not MMAttrdefs.getattr(self, 'duration'):
+		for ev in in1:
+			result.append(([ev], [(TERMINATE, self)]))
+		if not MMAttrdefs.getattr(self, 'duration'):
 			result.append(
 				([(PLAY_DONE, arg)],
 				 [(SCHED_DONE,arg)] + out1))
@@ -731,20 +728,25 @@ class MMNode(MMNodeBase.MMNode):
 		last_actions = actions
 		actions = [(SCHED_DONE, self)]
 		srlist.append((prereqs, actions))
-		srlist.append(([(SCHED_STOP, self)] + in1,
+		srlist.append(([(SCHED_STOP, self)],
 			       last_actions + out1))
 		tlist.append((SCHED_DONE, self))
 		srlist.append(([(TERMINATE, self)], tlist))
+		for ev in in1:
+			srlist.append(([ev], [(TERMINATE, self)]))
 		return srlist, self.wtd_children[:1]
 
 	def gensr_bag(self):
 		in0, in1 = self.sync_from
 		out0, out1 = self.sync_to
 		arg = self
-		return [([(SCHED, arg)]+in0,     [(BAG_START, arg)]+out0),
-			([(BAG_DONE, arg) ]     ,[(SCHED_DONE,arg)]+out1),
-			([(SCHED_STOP, arg)]    ,[(BAG_STOP, arg)]),
-			([(TERMINATE, arg)]     ,[])], []
+		result = [([(SCHED, arg)]+in0,     [(BAG_START, arg)]+out0),
+			  ([(BAG_DONE, arg) ]     ,[(SCHED_DONE,arg)]+out1),
+			  ([(SCHED_STOP, arg)]    ,[(BAG_STOP, arg)]),
+			  ([(TERMINATE, arg)]     ,[])], []
+		for ev in in1:
+			result.append(([ev], [(TERMINATE, self)]))
+		return result
 	#
 	# Generate schedrecords for a sequential node
 	def gensr_seq(self):
@@ -778,8 +780,10 @@ class MMNode(MMNodeBase.MMNode):
 			if i < n_sr-1:
 				t_list.append((TERMINATE,
 					       self.wtd_children[i]))
-		sr_list.append( ([(SCHED_STOP, self)]+in1, last_actions+out1) )
-		t_list.append((SCHED_DONE, self))
+		sr_list.append( ([(SCHED_STOP, self)], last_actions+out1) )
+		for ev in in1:
+			sr_list.append(([ev], [(TERMINATE, self)]))
+## 		t_list.append((SCHED_DONE, self))
 		sr_list.append(([(TERMINATE, self)], t_list))
 		return sr_list, self.wtd_children
 
@@ -794,8 +798,10 @@ class MMNode(MMNodeBase.MMNode):
 		slist = out1[:]
 		tlist = []
 		result = [([(SCHED, self)] + in0, alist),
-			  ([(SCHED_STOP, self)]+in1, slist),
+			  ([(SCHED_STOP, self)], slist),
 			  ([(TERMINATE, self)], tlist)]
+		for ev in in1:
+			result.append(([ev], [(TERMINATE, self)]))
 		added_entry = 0
 		for arg in self.wtd_children:
 			alist.append((SCHED, arg))
@@ -805,15 +811,13 @@ class MMNode(MMNodeBase.MMNode):
 			if termtype == 'FIRST' and cdur > 0:
 				added_entry = 1
 				result.append(([(SCHED_DONE, arg)],
-					       [(TERMINATE, self),
-						(SCHED_DONE, self)]))
+					       [(TERMINATE, self)]))
 			elif termtype != 'FIRST' and \
 			     termtype != 'LAST' and \
 			     MMAttrdefs.getattr(arg, 'name') == termtype:
 				added_entry = 1
 				result.append(([(SCHED_DONE, arg)],
-					       [(TERMINATE, self),
-						(SCHED_DONE, self)]))
+					       [(TERMINATE, self)]))
 			elif cdur > 0:
 				ptlist.append((SCHED_DONE, arg))
 			else:
@@ -826,6 +830,8 @@ class MMNode(MMNodeBase.MMNode):
 					       [(SCHED_DONE, self)]))
 			else:
 				result.append((plist+ptlist, []))
+		if (termtype == 'FIRST' or termtype != 'LAST') and added_entry:
+			tlist.append((SCHED_DONE, self))
 		if duration > 0:
 			# if duration set, we must trigger a timeout
 			# and we must catch the timeout to terminate
