@@ -5,6 +5,9 @@
   <head>
     <meta name="title" content=" pictures "/>
     <meta name="generator" content="GRiNS editor 0.4 win32 patchlevel 4"/>
+    <meta name="template_name" content="Slideshow"/>
+    <meta name="template_description" content="A minimal slideshow, without captions or soundtrack"/>
+    <meta name="template_snapshot" content="Basic-Slideshow.bmp"/>
     <layout>
       <root-layout id="pictures-" title=" pictures " width="303" height="276"/>
       <region id="pictures" title="pictures" width="303" height="229" fit="meet"/>
