@@ -95,6 +95,10 @@ PLACING_MOVE = 3
 
 begend = ('begin', 'end')
 
+CHANGAP = 0.5
+CHANHEIGHT = 5.0
+TSHEIGHT = f_title.fontheight() * 4
+STRIPHEIGHT = f_title.fontheight() * 5
 
 # Channel view class
 
@@ -150,13 +154,6 @@ class ChannelView(ChannelViewDialog):
 		if not focus: focus = ('b', None)
 		self.recalc(focus)
 		self.reshape()
-		self.draw()
-		if self.focus:
-			obj = self.focus
-		else:
-			obj = self.baseobject
-		self.setcommands(obj.commandlist, title = obj.menutitle)
-		self.setpopup(obj.popupmenu)
 
 	def hide(self, *rest):
 		if not self.is_showing():
@@ -212,7 +209,6 @@ class ChannelView(ChannelViewDialog):
 			self.fixviewroot()
 			self.recalc(focus)
 			self.reshape()
-			self.draw()
 
 	def kill(self):
 		self.destroy()
@@ -232,8 +228,9 @@ class ChannelView(ChannelViewDialog):
 			focus = 'a', self.focus.arcid
 		else:
 			focus = '', None
-		self.recalc(focus)
-		self.reshape()
+		self.recalcxxx()
+		for obj in self.objects:
+			obj.reshape()
 		self.draw()
 
 	def thumbnailcall(self):
@@ -261,7 +258,6 @@ class ChannelView(ChannelViewDialog):
 		bl, fh, ps = self.new_displist.usefont(f_title)
 		# RESIZE event.
 		self.reshape()
-		self.draw()
 
 	def channels_changed(self):
 		# Called when a channel is switched on or off from the
@@ -327,34 +323,27 @@ class ChannelView(ChannelViewDialog):
 			return x + line*height, y + line*height
 		list = self.visiblechannels()
 		channellines = self.channellines
+		nchannels = len(list)
+		x = 0
 		nlines = 0
 		i = None
 		for ch in list:
 			if channel is ch:
 				i = nlines
-			nlines = nlines + (channellines.get(ch.name, 0) or 1)
+				chx = x
+			n = channellines.get(ch.name, 0) or 1
+			x = x + n * CHANHEIGHT + CHANGAP
+			nlines = nlines + n
 		if i is None:
 			# channel not visible
 			return 0, 0
-# original code: all channels and extra lines at same distance from each other
-##		height = float(self.bandwidthstripborder) / nlines
-##		x, y = (i + 0.1) * height, (i + 0.9) * height
-##		channel.chview_map = x, y, height
-##		return x + line*height, y + line*height
-# new code: extra lines closer together
-		nchannels = len(list)
-		nextras = nlines - nchannels
-		dist = float(self.bandwidthstripborder) / (nchannels + 0.9 * nextras)
-		height = 0.8 * dist
-		ldist = 0.9 * dist
-		x = 0.1 * dist
-		for ch in list:
-			if channel is ch:
-				y = x + height
-				channel.chview_map = x, y, ldist
-				return x + line * ldist, y + line * ldist
-			n = channellines.get(ch.name, 0) or 1
-			x = x + (n - 1) * ldist + dist
+		totheight = nlines * CHANHEIGHT + nchannels * CHANGAP
+		factor = float(self.bandwidthstripborder) / totheight
+		chy = (chx + CHANHEIGHT) * factor
+		chx = chx * factor
+		chh = CHANHEIGHT*factor
+		channel.chview_map = chx, chy, chh
+		return chx + line * chh, chy + line * chh
 
 	def channelgapindex(self, y):
 		list = self.visiblechannels()
@@ -401,7 +390,7 @@ class ChannelView(ChannelViewDialog):
 		self.toplevel.setwaiting()
 		self.showbandwidthstrip = not self.showbandwidthstrip
 		self.settoggle(TOGGLE_BWSTRIP, self.showbandwidthstrip)
-		self.resize()
+		self.commit()
 
 	# Return list of currently visible channels
 
@@ -423,25 +412,6 @@ class ChannelView(ChannelViewDialog):
 	# Recalculate the set of objects we should be drawing
 
 	def recalc(self, focus):
-		displist = self.window.newdisplaylist(BGCOLOR)
-		if self.new_displist:
-			self.new_displist.close()
-		self.new_displist = displist
-		bl, fh, ps = displist.usefont(f_title)
-		self.channelright = displist.strsize('999999')[0]
-		self.nodetop = min(self.channelright * 2, self.channelright + .05)
-		self.timescaleborder = 1.0 - 4 * fh
-		if self.showbandwidthstrip:
-			# Wild guess: make bandwidth strip 5 textlines high, but at most
-			# 15% of the window
-			stripheight = 5 * fh
-##			print 'DBG', stripheight
-			if stripheight > 0.15:
-				stripheight = 0.15
-			self.bandwidthstripborder = self.timescaleborder - stripheight
-		else:
-			self.bandwidthstripborder = self.timescaleborder
-
 		self.objects = []
 		self.channelnodes = {}
 		self.focus = self.lockednode = None
@@ -474,6 +444,22 @@ class ChannelView(ChannelViewDialog):
 		if focus is not None:
 			focus.select()
 
+	def recalcxxx(self):
+		width, height = self.window.getcanvassize(windowinterface.UNIT_MM)
+		displist = self.window.newdisplaylist(BGCOLOR)
+		if self.new_displist:
+			self.new_displist.close()
+		self.new_displist = displist
+		bl, fh, ps = displist.usefont(f_title)
+		self.channelright = displist.strsize('999999')[0]
+		self.nodetop = min(self.channelright * 2, self.channelright + .05)
+		self.timescaleborder = 1.0 - float(TSHEIGHT) / height
+		if self.showbandwidthstrip:
+			stripheight = float(STRIPHEIGHT) / height
+			self.bandwidthstripborder = self.timescaleborder - stripheight
+		else:
+			self.bandwidthstripborder = self.timescaleborder
+
 	# Recompute the locations where the objects should be drawn
 
 	def calculatechannellines(self):
@@ -502,11 +488,21 @@ class ChannelView(ChannelViewDialog):
 		self.channellines = channels
 
 	def reshape(self):
+		from windowinterface import UNIT_MM
 	        self.discontinuities = []
 		Timing.needtimes(self.viewroot)
 		self.calculatechannellines()
-		for obj in self.objects:
-			obj.reshape()
+		channellines = self.channellines
+		visiblechannels = self.visiblechannels()
+		nlines = 0
+		for ch in visiblechannels:
+			nlines = nlines + (channellines.get(ch.name, 0) or 1)
+		width, height = self.window.getcanvassize(UNIT_MM)
+		height = len(visiblechannels) * CHANGAP + nlines * CHANHEIGHT + TSHEIGHT
+		if self.showbandwidthstrip:
+			height = height + STRIPHEIGHT
+		# this causes a ResizeWindow event
+		self.window.setcanvassize((UNIT_MM, width, height))
 
 	# Draw the window
 
@@ -591,7 +587,6 @@ class ChannelView(ChannelViewDialog):
 		self.recalc(('b', None))
 		self.reshape()
 		self.fixtitle()
-		self.draw()
 
 	def focuscall(self):
 		top = self.toplevel
@@ -846,6 +841,9 @@ class ChannelView(ChannelViewDialog):
 			self.deselect()
 			obj.select()
 			self.drawarcs()
+			self.window.scrollvisible((obj.left, obj.top,
+						   obj.right-obj.left,
+						   obj.bottom-obj.top))
 		self.render()
 
 	# Create a new channel
