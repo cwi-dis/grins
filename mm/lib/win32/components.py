@@ -108,11 +108,11 @@ class RadioButton(Control):
 		if i>0:f=win32con.BST_CHECKED
 		elif i==0:f=win32con.BST_UNCHECKED
 		else:f=win32con.BST_INDETERMINATE
-		self.sendmessage(win32con.BM_SETCHECK,i)
+		self.sendmessage(win32con.BM_SETCHECK,f)
 	def getcheck(self):
-		i=self.sendmessage(win32con.BM_GETCHECK)
-		if i==win32con.BST_CHECKED:return 1
-		elif i==win32con.BST_UNCHECKED:return 0
+		f=self.sendmessage(win32con.BM_GETCHECK)
+		if f==win32con.BST_CHECKED:return 1
+		elif f==win32con.BST_UNCHECKED:return 0
 		return -1
 
 # CheckButton control class
