@@ -481,19 +481,20 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		self.drawing = 1
 		
-		while self.dirty:
-			#print "DEBUG: drawing"
-			self.dirty = 0
-			x,y = self.scene_graph.get_minsize_abs()
-			self.mcanvassize = x,y
-			self.window.setcanvassize((self.sizes.SIZEUNIT, x, y))
-			
-			# Known bug: this will actually cause a Hierarchyview.redraw() event.
-			self.displist = self.window.newdisplaylist(BGCOLOR)
-			
-			self.scene_graph.recalc()
-			self.scene_graph.draw(self.displist)
-			
+		# if not self.dirty: return;
+		self.dirty = 0
+		# while(self.dirty)...?
+		#print "DEBUG: drawing"
+		x,y = self.scene_graph.get_minsize_abs()
+		self.mcanvassize = x,y
+		self.window.setcanvassize((self.sizes.SIZEUNIT, x, y))
+		
+		# Known bug: this will actually cause a Hierarchyview.redraw() event.
+		self.displist = self.window.newdisplaylist(BGCOLOR)
+		
+		self.scene_graph.recalc()
+		self.scene_graph.draw(self.displist)
+		
 		self.displist.render()
 		self.drawing = 0
 
