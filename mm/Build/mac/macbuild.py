@@ -53,14 +53,16 @@ GRINS_RN_SRC="macplayer.py"
 GRINS_DIR="build.player"
 GRINS_PROJECT="player.prj"
 GRINS_RN_PROJECT="rnplayer.prj"
-GRINS_TARGET="Player FAT"
+#GRINS_TARGET="Player FAT"
+GRINS_TARGET="Player PPC"
 
 CMIFED_SRC="maceditor.py"
 CMIFED_RN_SRC="maceditor.py"
 CMIFED_DIR="build.editor"
 CMIFED_PROJECT="editor.prj"
 CMIFED_RN_PROJECT="rneditor.prj"
-CMIFED_TARGET="Editor FAT"
+#CMIFED_TARGET="Editor FAT"
+CMIFED_TARGET="Editor PPC"
 
 #
 # Names of the Attrdefs input file and module.
