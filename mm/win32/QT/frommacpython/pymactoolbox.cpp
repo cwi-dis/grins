@@ -20,8 +20,10 @@ int PyMac_GetStr255(PyObject *, Str255) {return 0;}	/* argument parser for Str25
 PyObject *PyMac_BuildStr255(Str255) {return 0;}		/* Convert Str255 to PyObject */
 PyObject *PyMac_BuildOptStr255(Str255) {return 0;}		/* Convert Str255 to PyObject, NULL to None */
 
-int PyMac_GetRect(PyObject *, Rect *) {return 0;}		/* argument parser for Rect */
-PyObject *PyMac_BuildRect(Rect *) {return 0;}			/* Convert Rect to PyObject */
+int PyMac_GetRect(PyObject *_args, Rect *pr) 
+		{return PyArg_ParseTuple(_args, "(iiii)", pr->left, pr->top, pr->right, pr->bottom);}	
+PyObject *PyMac_BuildRect(Rect *pr) 
+	{return Py_BuildValue("iiii", pr->left, pr->top, pr->right, pr->bottom);}			
 
 int PyMac_GetPoint(PyObject *, Point *) {return 0;}	/* argument parser for Point */
 PyObject *PyMac_BuildPoint(Point) {return 0;}			/* Convert Point to PyObject */

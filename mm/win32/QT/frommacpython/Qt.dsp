@@ -42,6 +42,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
+F90=df.exe
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "QT_EXPORTS" /YX /FD /c
 # ADD CPP /nologo /MT /W3 /GX /O2 /I "..\..\..\..\python\Include" /I "..\..\..\..\python\PC" /I "..\SDK\CIncludes" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "QT_EXPORTS" /FR /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
@@ -77,6 +78,7 @@ SOURCE="$(InputPath)"
 # PROP Intermediate_Dir "Debug"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
+F90=df.exe
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "QT_EXPORTS" /YX /FD /GZ /c
 # ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "..\..\..\..\python\Include" /I "..\..\..\..\python\PC" /I "..\SDK\CIncludes" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "QT_EXPORTS" /FR /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
@@ -122,6 +124,19 @@ SOURCE=.\pymactoolbox.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\qt.cpp
+
+!IF  "$(CFG)" == "Qt - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "Qt - Win32 Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\Qt.rc
 # End Source File
 # Begin Source File
@@ -140,6 +155,26 @@ SOURCE=.\Qtmodule.c
 # Begin Source File
 
 SOURCE=.\Qtmodule.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\test.py
+# End Source File
+# End Group
+# Begin Group "Temp"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\MovieCtlObj.inc
+# End Source File
+# Begin Source File
+
+SOURCE=.\MovieObj.inc
+# End Source File
+# Begin Source File
+
+SOURCE=.\qt.inc
 # End Source File
 # End Group
 # End Target
