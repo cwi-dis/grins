@@ -387,7 +387,7 @@ class MMNode:
 		self.uid = uid
 		self.attrdict = {}
 		self.values = []
-		self.playable = 1
+		self.playable = None
 		self.parent = None
 		self.children = []
 ##		self.summaries = {}
@@ -1048,6 +1048,7 @@ class MMNode:
 		if not self.wtd_children:
 			return self.gensr_empty()
 		selected_child = None
+##		import pdb ; pdb.set_trace() # DBG
 		for child in self.wtd_children:
 			if child.IsPlayable():
 				selected_child = child
@@ -1603,6 +1604,15 @@ class MMNode:
 
 	def GetWtdChildren(self):
 		return self.wtd_children
+		
+	def IsWanted(self):
+		# This is not very efficient...
+		if self.parent == None:
+			return 1
+		parent = self.parent
+		if not hasattr(parent, 'wtd_children'):
+			return 1
+		return self in parent.wtd_children and parent.IsWanted()
 
 	#
 	# SetArcSrc sets the source of a sync arc.
@@ -1640,8 +1650,12 @@ class MMNode:
 ## 			child.SetPlayability(playable, getchannelfunc)
 
 	def IsPlayable(self):
-		if not hasattr(self, 'playable'):
-			self.SetPlayability(self.parent.IsPlayable(),
+		if self.playable is None:
+			if self.parent is None:
+				parent_playable = 1
+			else:
+				parent_playable = self.parent.IsPlayable()
+			self.SetPlayability(parent_playable,
 					    self.getchannelfunc)
 		return self.playable
 
