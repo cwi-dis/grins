@@ -606,15 +606,22 @@ class SMILXhtmlSmilWriter(SMIL):
 			self.writetag('div', attrlist)
 			self.push()
 			self.fp.write('<p>')
-			text = string.join(node.GetValues(), '\n')
+			values = node.GetValues()[:]
+			while values:
+				n = len(values)-1
+				if not values[n]:
+					del values[n]
+				else:
+					break
+			text = string.join(values, '<br>')
 			if text:
-				text = nameencode(text)
-				self.fp.write(text[1:-1])
+				self.fp.write(text)
 			self.fp.write('</p>')
 			self.pop()
 
 		elif mtype == 'text':
-			if 1:
+			xtype = mediatype(node)[1]
+			if xtype == 'text':
 				# convert to imm
 				text = self.getstring(node)
 				self.removeAttr(attrlist, 'src')
@@ -623,6 +630,7 @@ class SMILXhtmlSmilWriter(SMIL):
 				self.push()
 				self.fp.write('<p>')
 				if text:
+					text = string.join(string.split(text, '\n'), '<br>\n')
 					self.fp.write(text)
 				self.fp.write('</p>')
 				self.pop()
@@ -1583,6 +1591,11 @@ class SMILXhtmlSmilWriter(SMIL):
 				fp.close()
 			except IOError:
 				return ''
+			#
+			# Convert dos/mac newlines to ours
+			#
+			text = string.join(string.split(text, '\r\n'), '\n')
+			text = string.join(string.split(text, '\r'), '\n')
 			return text
 		else:
 			return ''
