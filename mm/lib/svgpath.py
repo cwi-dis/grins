@@ -649,7 +649,11 @@ class Path:
 		if self.__svgpath:
 			for seg in self.__svgpath._pathSegList:
 				seg.translate(dx, dy)
-
+		coords = self.__ptCoords[:]
+		self.__ptCoords = []
+		for x, y in coords:
+			self.__ptCoords.append((x+dx,y+dy))
+				
 	# main query method
 	# get point at length s
 	def getPointAtLength(self, s):
