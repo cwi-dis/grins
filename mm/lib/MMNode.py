@@ -645,6 +645,12 @@ class MMRegPoint:
 	def __repr__(self):
 		return '<%s instance, name=%s>' % (self.__class__.__name__, `self.name`)
 
+	def clone(self):
+		mmRegPoint = MMRegPoint(self.context, self.name)
+		mmRegPoint.isdef = self.isdef
+		mmRegPoint.attrdict = self.attrdict.copy()
+		return mmRegPoint
+
 	#
 	# Emulate the dictionary interface
 	#
@@ -1119,7 +1125,7 @@ class MMChannelTree:
 				self.__appendCssNodes(resolver, node)
 		for top in self.top_levels:
 			csstop = resolver.getCssObj(top)
-			csstop.updateAll()
+			csstop.updateTree()
 			#csstop.dump()
 		return resolver
 
@@ -2568,10 +2574,15 @@ class MMNode:
 		return begindelay, downloadlag
 
 	#
-	# Presentation values management
+	# set/get animated attribute
 	#
 	def SetPresentationAttr(self, name, value):
 		self.d_attrdict[name] = value
+
+	def GetPresentationAttr(self, name):
+		if self.d_attrdict.has_key(name):
+			return self.d_attrdict[name]
+		return self.attrdict.get(name)
 
 
 	#
