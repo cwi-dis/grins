@@ -107,6 +107,26 @@ class MMNodeContext(domcore.Element):
 		else:
 			raise 'only hyperlinks and channels in context'
 
+	def removeChild(self, oldChild):
+		em = self.editmgr
+
+		if oldChild._get_tagName() == 'channel':
+		# Remove Channel
+                	if not em.transaction():
+                       		raise 'not ready'
+			channelName = oldChild._get_attributes().getNamedItem('name')._get_nodeValue()
+			print 'Removing... ' , channelName
+			em.delchannel(channelName)
+                	em.commit()
+			return oldChild
+		elif oldChild._get_tagName() == 'hyperlinks':
+			# Remove Link
+			print 'Removing... ' , oldChild._get_tagName()
+		else:
+			print oldChild._get_tagName()
+			raise 'not a channel or hyperlink'
+
+
         def _editMgrAddChannel(self, index, newChannel ):
 		channelName = newChild._get_attributes().getNamedItem('name')._get_nodeValue()
 		channelType = newChild._get_attributes().getNamedItem('type')._get_nodeValue()
@@ -589,20 +609,20 @@ class MMNode(domcore.Element):
 		else:
 			return domcore.NodeList(self.children)
 
-	def _get_firstChild(self):
-		if not self.parent:
-			# context is first kid of root element
-			return self.context
-		elif len(self.children) > 0:
-			return self.children[0] 
-		else:
-			return None
+	# def _get_firstChild(self):
+		# if not self.parent:
+			# # context is first kid of root element
+			# return self.context
+		# elif len(self.children) > 0:
+			# return self.children[0] 
+		# else:
+			# return None
 
-	def _get_lastChild(self):
-		if len(self.children) > 0:
-			return self.children[-1]
-		else:
-			return None
+	# def _get_lastChild(self):
+		# if len(self.children) > 0:
+			# return self.children[-1]
+		# else:
+			# return None
 
 	def _get_previousSibling(self):
 		# fixme root has context as first child ...
@@ -676,14 +696,14 @@ class MMNode(domcore.Element):
 		else:
 			return None
 
-	def appendChild(self, newChild):
-		return self.insertBefore(newChild)
+	# def appendChild(self, newChild):
+		# return self.insertBefore(newChild)
 
-	def hasChildNodes(self):
-		if self.children:
-			return 1
-		else:
-			return 0
+	# def hasChildNodes(self):
+		# if self.children:
+			# return 1
+		# else:
+			# return 0
 
 	def setAttribute(self, name, value):
 		value = convertAttribute(name,value)
