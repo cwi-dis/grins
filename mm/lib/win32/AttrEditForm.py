@@ -60,8 +60,6 @@ class AttrCtrl:
 	def enableApply(self,flag=1):
 		if self._wnd._form._prsht:
 			self._wnd._form._prsht.enableApply(flag)
-		else:
-			print '_prsht is None!'
 
 # temp stuff not safe
 def atoft(str):
@@ -132,7 +130,6 @@ class ChannelCtrl(OptionsCtrl):
 		self._wnd.HookCommand(self.OnChannel,self._resid[2])
 
 	def OnChannel(self,id,code):
-		print 'OnChannel'
 		if self._attr:
 			self._attr.channelprops()
 
@@ -828,7 +825,6 @@ import appcon, sysmetrics
 import string
 import DrawTk
 
-
 class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 	def __init__(self,form):
 		AttrPage.__init__(self,form)
@@ -842,7 +838,9 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 			
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
-
+		self.HookMessage(self.onLButtonDown,win32con.WM_LBUTTONDOWN)
+		self.HookMessage(self.onLButtonUp,win32con.WM_LBUTTONUP)
+		self.HookMessage(self.onMouseMove,win32con.WM_MOUSEMOVE)
 		preview=components.Control(self,grinsRC.IDC_PREVIEW)
 		preview.attach_to_parent()
 		l1,t1,r1,b1=self.GetWindowRect()
@@ -860,10 +858,22 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 			t.settext('scale 1 : %.1f' % self._xscale)
 		self.create_box(self.getcurrentbox())
 
+	# hack messages! 
+	def onLButtonDown(self,params):
+		self._layoutctrl._notifyListener('onLButtonDown',params)
+		self._layoutctrl._notifyListener('onLButtonUp',params)
+	def onLButtonUp(self,params):
+		self._layoutctrl._notifyListener('onLButtonUp',params)
+	def onMouseMove(self,params):
+		pass #self._layoutctrl.notifyListener('onLButtonUp',params)
+
 	def OnSetActive(self):
 		if self._layoutctrl and not self._layoutctrl.in_create_box_mode():
 			self.create_box(self.getcurrentbox())
 		return self._obj_.OnSetActive()
+
+	def OnKillActive(self): 
+		return self._obj_.OnKillActive()
 
 	def OnDestroy(self,params):
 		if self._layoutctrl:
@@ -874,9 +884,9 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		v.createWindow(self)
 		x,y,w,h=self.getboundingbox()
 		rc=(self._layoutpos[0],self._layoutpos[1],w,h)
+		v.init(rc,'Untitled',units=UNIT_PXL)
 		v.SetWindowPos(self.GetSafeHwnd(),rc,
 			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER)
-		v.init(rc)
 		v.OnInitialUpdate()
 		v.ShowWindow(win32con.SW_SHOW)
 		v.UpdateWindow()	
@@ -900,6 +910,16 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		rc=self._scale.layoutbox(rc,UNIT_PXL)
 		v.drawTk.SetCRect(rc)
 	
+	def assertBounded(self,rc,wnd):
+		x,y,w,h = rc
+		l,t,r,b=wnd.GetClientRect()
+		if x<l:x=l
+		if y<t:y=t
+		if w>(r-l):w=r-l
+		if h<(b-t):h=b-t
+		rc=(x,y,w,h)
+		return rc
+
 	def createLayoutContext(self,winsize=None,units=appcon.UNIT_PXL):
 		if winsize:
 			sw,sh=winsize
@@ -907,7 +927,8 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 			sw,sh=sysmetrics.scr_width_pxl,sysmetrics.scr_height_pxl
 		
 		# try first an int scale
-		n = max(1, (sw+self._layoutsize[0]-1)/self._layoutsize[0], (sh+self._layoutsize[1]-1)/self._layoutsize[1])
+		n = max(1, (sw+self._layoutsize[0]-1)/self._layoutsize[0], 
+			(sh+self._layoutsize[1]-1)/self._layoutsize[1])
 		scale=float(n)
 		self._xmax=int(sw/scale+0.5)
 		self._ymax=int(sh/scale+0.5)
@@ -946,7 +967,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 				rb=v.inverse_coordinates(drawObj._position.tuple_ps(), units = self._units)
 				apply(self.update, rb)
 				from __main__ import toplevel
-				toplevel.settimer(0.1,(self.OnApply,(0,0)))
+				toplevel.settimer(0.1,(self._form._prsht.onApply,(0,0)))
 
 			
 	def setvalue(self, attr, val):
