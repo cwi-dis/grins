@@ -67,9 +67,6 @@ class MainDialog:
 		if not self.canopennewtop():
 			return
 		filetypes = ['/SMIL presentation', 'application/x-grins-project', 'application/smil']
-##		import settings
-##		if not features.lightweight:
-##			filetypes.append('application/x-grins-cmif')
 		windowinterface.FileDialog('', '', filetypes, '',
 					   self.__openfile_done, None, 1)
 
