@@ -218,8 +218,6 @@ class MMNode:
 		_stat('GetRawAttr' + '.' + name)
 		try:
 			return self.attrdict[name]
-		except RuntimeError:
-			raise NoSuchAttrError, 'in GetRawAttr()'
 		except KeyError:
 			raise NoSuchAttrError, 'in GetRawAttr()'
 	#
@@ -238,8 +236,6 @@ class MMNode:
 		_stat('GetAttr' + '.' + name)
 		try:
 			return self.attrdict[name]
-		except RuntimeError:
-			return self.GetDefAttr(name)
 		except KeyError:
 			return self.GetDefAttr(name)
 	#
@@ -247,8 +243,6 @@ class MMNode:
 		_stat('GetDefAttr' + '.' + name)
 		try:
 			styles = self.attrdict['style']
-		except RuntimeError:
-			raise NoSuchAttrError, 'in GetDefAttr()'
 		except KeyError:
 			raise NoSuchAttrError, 'in GetDefAttr()'
 		return self.context.lookinstyles(name, styles)
@@ -273,6 +267,10 @@ class MMNode:
 	#
 	def GetDefInherAttr(self, name):
 		_stat('GetInherDefAttr' + '.' + name)
+		try:
+			return self.GetDefAttr(name)
+		except NoSuchAttrError:
+			pass
 		x = self.parent
 		while x:
 			if x.attrdict:
