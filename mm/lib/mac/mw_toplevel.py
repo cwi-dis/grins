@@ -105,7 +105,8 @@ class _Event(AEServer):
 		self._timer_id = 0
 		self._timerfunc = None
 		self._time = Evt.TickCount()/TICKS_PER_SECOND
-		self._idles = []
+		self._idles = {}
+		self.__idleid = 0
 		self._grabbed_wids = []
 		self._active_movies = 0
 		self._active_movie_windows = []
@@ -203,7 +204,7 @@ class _Event(AEServer):
 				sys.last_traceback = None
 				
 				if not self._eventloop(timeout):
-					for rtn in self._idles:
+					for rtn in self._idles.values():
 						rtn()
 					if not memory_warned and \
 							Evt.TickCount() > last_memory_check+MEMORY_CHECK_INTERVAL*TICKS_PER_SECOND:
@@ -599,10 +600,14 @@ class _Event(AEServer):
 	def setidleproc(self, cb):
 		"""Adds an idle-loop callback"""
 		self._idles.append(cb)
+		id = self.__idleid
+		self.__idleid = self.__idleid + 1
+		self._idles[id] = cb
+		return id
 		
-	def cancelidleproc(self, cb):
+	def cancelidleproc(self, id):
 		"""Remove an idle-loop callback"""
-		self._idles.remove(cb)
+		del self._idles[id]
 
 	def lopristarting(self):
 		"""Called when the scheduler starts with low-priority

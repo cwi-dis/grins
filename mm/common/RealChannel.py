@@ -34,7 +34,7 @@ class RealEngine:
 	def close(self):
 		self.engine = None
 		if self.usagecount and NEEDTICKER:
-			windowinterface.cancelidleproc(self._tick)
+			windowinterface.cancelidleproc(self.__tid)
 		
 	def __del__(self):
 		self.close()
@@ -61,12 +61,9 @@ class RealEngine:
 		self.__tid = windowinterface.setidleproc(self._tick)
 		
 	def _stopticker(self):
-		if self.__tid is None:
-			windowinterface.cancelidleproc(self._tick)
-		else:
-			windowinterface.cancelidleproc(self.__tid)
+		windowinterface.cancelidleproc(self.__tid)
 		
-	def _tick(self, *dummy):
+	def _tick(self):
 		if os.name == 'mac':
 			# XXXX Mac-specific
 			self.engine.EventOccurred((0, 0, Evt.TickCount(), (0, 0), 0))

@@ -58,7 +58,7 @@ class _Toplevel:
 		self._pixel_per_mm_y = sysmetrics.pixel_per_mm_y
 	
 		self._waiting=0
-		self._idles = []
+		self._idles = {}
 
 		# generic wnd class
 		import GenWnd
@@ -87,7 +87,8 @@ class _Toplevel:
 		# timer handling
 		self._timers = []
 		self._timer_id = 0
-		self._idles = []
+		self._idles = {}
+		self.__idleid = 0
 		self._time = float(Sdk.GetTickCount())/TICKS_PER_SECOND
 
 		# fibers serving
@@ -392,15 +393,18 @@ class _Toplevel:
 
 	# Register for receiving timeslices
 	def setidleproc(self, cb):
-		self._idles.append(cb)
+		id = self.__idleid
+		self.__idleid = self.__idleid + 1
+		self._idles[id] = cb
+		return id
 
 	# Register for receiving timeslices
-	def cancelidleproc(self, cb):
-		self._idles.remove(cb)
+	def cancelidleproc(self, id):
+		del self._idles[id]
 
 	# Dispatch timeslices
 	def serve_timeslices(self):
-		for onIdle in self._idles:
+		for onIdle in self._idles.values():
 			onIdle()
 
 	################################
