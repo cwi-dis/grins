@@ -150,7 +150,7 @@ def getsyncarc(writer, node, isend):
 	ptype = parent.GetType()
 	siblings = parent.GetChildren()
 	index = siblings.index(node)
-	if not srcside and \
+	if srcside == 0 and \
 	   (srcuid == parent.GetUID() and
 	    (ptype == 'par' or (ptype == 'seq' and index == 0))) or \
 	   (srcside and ptype == 'seq' and index > 0 and
@@ -169,8 +169,63 @@ def getsyncarc(writer, node, isend):
 ## 			rv = rv+'+%.3f'%delay
 		else:
 			rv = rv+'(%.3fs)' % delay
+		for s in siblings:
+			if srcuid == s.GetUID():
+				# in scope
+				break
+		else:
+			# out of scope
+			rv = fixsyncarc(writer, node, srcuid, srcside,
+					delay, dstside, rv)
 	return rv
 
+def fixsyncarc(writer, node, srcuid, srcside, delay, dstside, rv):
+	if dstside != 0 or srcside != 0:
+		print '** Out of scope syncarc to',\
+		      node.GetRawAttrDef('name', '<unnamed>'),\
+		      node.GetUID()
+		return rv
+	srcnode = node.GetContext().mapuid(srcuid)
+	a = node.CommonAncestor(srcnode)
+	x = srcnode
+	while x is not a:
+		p = x.GetParent()
+		t = p.GetType()
+		if t != 'par' and (t != 'seq' or x is not p.GetChild(0)):
+			print '** Out of scope syncarc to',\
+			      node.GetRawAttrDef('name', '<unnamed>'),\
+			      node.GetUID()
+			return rv
+		for xuid, xside, xdelay, yside in MMAttrdefs.getattr(x, 'synctolist'):
+			if yside == 0 and xdelay != 0:
+				# too compicated
+				print '** Out of scope syncarc to',\
+				      node.GetRawAttrDef('name', '<unnamed>'),\
+				      node.GetUID()
+				return rv
+		x = p
+	x = node
+	while x is not a:
+		p = x.GetParent()
+		t = p.GetType()
+		if t != 'par' and (t != 'seq' or x is not p.GetChild(0)):
+			print '** Out of scope syncarc to',\
+			      node.GetRawAttrDef('name', '<unnamed>'),\
+			      node.GetUID()
+			return rv
+		for xuid, xside, xdelay, yside in MMAttrdefs.getattr(x, 'synctolist'):
+			if yside == 0 and xdelay != 0 and x is not node:
+				# too compicated
+				print '** Out of scope syncarc to',\
+				      node.GetRawAttrDef('name', '<unnamed>'),\
+				      node.GetUID()
+				return rv
+		x = p
+	print '*  Fixing out of scope syncarc to',\
+	      node.GetRawAttrDef('name', '<unnamed>'),\
+	      node.GetUID()
+	return '%.3fs' % delay
+	
 def getterm(writer, node):
 	terminator = node.GetRawAttrDef('terminator', 'LAST')
 	if terminator == 'LAST':
