@@ -646,21 +646,20 @@ class Scheduler(scheduler):
 		#
 		return []
 
+	def sched_arcs(self, sctx, node):
+		if debugevents: print 'sched_arcs',`node`
+		node.playing = MMStates.PLAYING
+		for arc in node.sched_children:
+			if arc.event == 'begin' and \
+			   arc.marker is None and \
+			   arc.delay is not None:
+				self.enter(self.delay, 0, sctx.Event, (arc,))
+
 	def runone(self, (sctx, todo, dummy)):
 		if not sctx.active:
 			raise error, 'Scheduler: running from finished context'
 		if debugevents: print 'exec: ', SR.ev2string(todo)
 		action, arg = todo
-		if action == SR.SCHED_START or action == SR.LOOPSTART or action == SR.LOOPRESTART:
-			node = arg
-			if action == SR.LOOPSTART or action == SR.LOOPRESTART:
-				node = node.looping_body_self
-			node.playing = MMStates.PLAYING
-			for arc in node.sched_children:
-				if arc.event == 'begin' and \
-				   arc.marker is None and \
-				   arc.delay is not None:
-					self.enter(self.delay, 0, sctx.Event, (arc,))
 		if action == SR.PLAY:
 			self.do_play(sctx, arg)
 		elif action == SR.PLAY_STOP:
@@ -678,10 +677,12 @@ class Scheduler(scheduler):
 			self.do_terminate(sctx, arg)
 		elif action == SR.LOOPSTART:
 			self.do_loopstart(sctx, arg)
+			self.sched_arcs(sctx, arg.looping_body_self)
 		elif action == SR.LOOPEND:
 			self.do_loopend(sctx, arg)
 		elif action == SR.LOOPRESTART:
 			self.do_looprestart(sctx, arg)
+			self.sched_arcs(sctx, arg.looping_body_self)
 		else:
 			if action == SR.SCHED_STOPPING and \
 			   (arg.GetType() in interiortypes or arg.realpix_body or arg.caption_body):
@@ -690,6 +691,11 @@ class Scheduler(scheduler):
 				arg.playing = MMStates.PLAYED
 				for ch in arg.children:
 					ch.playing = MMStates.IDLE
+			elif action == SR.SCHED_START:
+				self.sched_arcs(sctx, arg)
+			elif action == SR.SCHED_STOP:
+				if debugevents: print 'cleanup',`arg`
+				arg.cleanup_sched()
 			sctx.event((action, arg))
 
 	def remove_terminate(self, sctx, node):
