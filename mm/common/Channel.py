@@ -5,7 +5,7 @@ __version__ = "$Id$"
 # one.
 
 import os
-debug = os.environ.has_key('CHANNELDEBUG')
+debug = 0
 import MMAttrdefs
 from MMExc import NoSuchAttrError, CheckError
 import windowinterface, WMEVENTS
@@ -120,7 +120,7 @@ class Channel:
 		del self._anchors
 		del self._playcontext
 		del self._played_anchors
-		del self._played_anchor2button
+		self._played_anchor2button = {}	# I've seen irreproduceable crash due to this being deleted -sjoerd
 		del self._played_node
 		del self._player
 		del self._playstate
@@ -527,8 +527,6 @@ class Channel:
 		# This does the initial part of playing a node.
 		# Superclasses should call this method when they are
 		# starting to play a node.
-		# If callback is `None', make sure we don't do any
-		# callbacks.
 		if debug: print 'Channel.play_0('+`self`+','+`node`+')'
 		if self._played_node is not None:
 ##			print 'stopping playing node first',`self._played_node`
@@ -551,6 +549,10 @@ class Channel:
 		self._played_anchor2button.update(self._armed_anchor2button)
 		for (button, a) in self._played_anchors:
 			self._anchors[button] = self.onclick, (a,)
+			if button._sensitive:
+				tabindex = MMAttrdefs.getattr(a, 'tabindex') or 0x10000
+				if tabindex > 0:
+					self._player.addtabindex(tabindex, a, self)
 		self._qid = None
 
 	def onclick(self, node):
@@ -739,6 +741,9 @@ class Channel:
 		self.seekargs = (node, args)
 
 	def play_anchor(self, anchor, curtime):
+		if debug: print 'Channel.play_anchor',self,anchor,curtime
+		# XXX should this come before or after the actuate="onLoad" check?
+		tabindex = MMAttrdefs.getattr(anchor, 'tabindex') or 0x10000
 		actuate = MMAttrdefs.getattr(anchor, 'actuate')
 		if actuate == 'onLoad':
 			self.onclick(anchor)
@@ -749,10 +754,11 @@ class Channel:
 			return
 
 		# make button sensitive if there is a listener
-		
 		for arc in anchor.sched_children:
 			if arc.event == ACTIVATEEVENT:
 				b.setsensitive(1)
+				if tabindex > 0:
+					self._player.addtabindex(tabindex, anchor, self)
 				return
 
 		ctx = self._player.context
@@ -760,9 +766,12 @@ class Channel:
 		for link in ctx.hyperlinks.findsrclinks(anchor):
 			if ctx.isgoodlink(link, root):
 				b.setsensitive(1)
+				if tabindex > 0:
+					self._player.addtabindex(tabindex, anchor, self)
 				return
 
 	def stop_anchor(self, anchor, curtime):
+		if debug: print 'Channel.stop_anchor',self,anchor,curtime
 		actuate = MMAttrdefs.getattr(anchor, 'actuate')
 		if actuate == 'onLoad':
 			return
@@ -770,6 +779,18 @@ class Channel:
 		b = self._played_anchor2button.get(anchor)
 		if b is not None:
 			b.setsensitive(0)
+			tabindex = MMAttrdefs.getattr(anchor, 'tabindex') or 0x10000
+			if tabindex > 0:
+				self._player.deltabindex(tabindex, anchor, self)
+
+	def anchor_highlight(self, anchor, highlight):
+		b = self._played_anchor2button.get(anchor)
+		if b is None:
+			return
+		if highlight:
+			b.highlight()
+		else:
+			b.unhighlight()
 
 	def play(self, node, curtime):
 		# Play the node that was last armed.  This will change
@@ -811,6 +832,12 @@ class Channel:
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
+		b = self._played_anchor2button.get(node)
+		if b is not None:
+			b.setsensitive(0)
+			tabindex = MMAttrdefs.getattr(node, 'tabindex') or 0x10000
+			if tabindex > 0:
+				self._player.deltabindex(tabindex, node, self)
 		if self._playstate == PLAYING:
 			self.playstop(curtime)
 		if self._playstate != PLAYED:
@@ -1072,7 +1099,7 @@ class Channel:
 ### dictionary with channels that have windows
 ##ChannelWinDict = {}
 
-_button = None				# the currently highlighted button
+_button = None				# the currently pressed button
 
 class ChannelWindow(Channel):
 	chan_attrs = Channel.chan_attrs + ['base_winoff', 'z']
@@ -1180,9 +1207,6 @@ class ChannelWindow(Channel):
 		# it can be a rectangle, circle or a polygon (see displaylist._Button class)
 		global _button
 		# a mouse button was pressed
-		if _button is not None and not _button.is_closed():
-			# probably doesn't occur...
-			_button.unhighlight()
 		_button = None
 		if self.__callback is not None:
 			apply(apply, self.__callback)
@@ -1190,7 +1214,6 @@ class ChannelWindow(Channel):
 		buttons = value[2]
 		if buttons:
 			button = buttons[0]
-			button.highlight()
 			_button = button
 ##		else:
 ##			if self.__transparent:
@@ -1220,8 +1243,6 @@ class ChannelWindow(Channel):
 ##		elif len(buttons) == 0:
 ##			if self.__transparent:
 ##				raise windowinterface.Continue		
-		if _button and not _button.is_closed():
-			_button.unhighlight()
 		_button = None
 
 	# set the display size of media after arming according to the size of media, fit attribute, ...
@@ -1297,7 +1318,11 @@ class ChannelWindow(Channel):
 			self.window.unregister(WMEVENTS.WindowContentChanged)
 				
 	def keyinput(self, arg, window, event, value):
-		if value:
+		if value == '\t':
+			self._player.tab()
+		elif value == '\r':
+			self._player.activate()
+		elif value:
 			self.event((None, 'accesskey', value))
 
 	def resize_window(self, pchan):
@@ -1526,6 +1551,7 @@ class ChannelWindow(Channel):
 	# Activate a sensitive area in display list according to the anchors.
 	# Warning: this method has to be called after do_arm
 	def _prepareAnchors(self, node):
+		tabindex = MMAttrdefs.getattr(node, 'tabindex') or 0x10000
 		if MMAttrdefs.getattr(node, 'transparent'):
 			bgcolor = None
 		else:
@@ -1545,6 +1571,8 @@ class ChannelWindow(Channel):
 		windowCoordinates = self.convertShapeRelImageToRelWindow(['rect', 0.0, 0.0, 1.0, 1.0])
 		b = self.armed_display.newbutton(windowCoordinates, z = -1, sensitive = sensitive)
 		self.setanchor(b, node)
+		if tabindex > 0 and sensitive:
+			self._player.deltabindex(tabindex, node, self)
 
 		# create buttons for all anchors
 		for a in node.GetChildren():
@@ -1558,7 +1586,6 @@ class ChannelWindow(Channel):
 									 MMAttrdefs.getattr(a, 'acoords'))
 
 			b = self.armed_display.newbutton(windowCoordinates, sensitive = 0)
-			b.hiwidth(3)
 			self.setanchor(b, a)
 
 	def add_arc(self, node, arc):
@@ -1567,9 +1594,13 @@ class ChannelWindow(Channel):
 		if node is not self._played_node or \
 		   arc.event != ACTIVATEEVENT:
 			return
-		b = self._played_anchor2button.get(arc.refnode())
+		node = arc.refnode()
+		b = self._played_anchor2button.get(node)
 		if b is not None:
 			b.setsensitive(1)
+			tabindex = MMAttrdefs.getattr(node, 'tabindex') or 0x10000
+			if tabindex > 0:
+				self._player.addtabindex(tabindex, node, self)
 
 	# update internal geometry variables. Get geometry from MMContext structure
 	def updateGeom(self, node):
