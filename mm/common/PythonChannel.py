@@ -1,6 +1,7 @@
 from Channel import Channel, PLAYING
 import string
 from MMExc import *			# exceptions
+import sys
 
 class PythonChannel(Channel):
 	def __repr__(self):
@@ -33,8 +34,15 @@ class PythonChannel(Channel):
 			"toplevel": self._player.toplevel,
 			"anchors": alist,
 			"args":args}
-		
-		exec cmds in namespace, namespace
+		try:
+			exec cmds in namespace, namespace
+		except:
+			# XXXX Should be done in editor only, and after
+			# asking the user whether this is ok.
+			print "EXCEPTION IN PYTHONCHANNEL NODE"
+			import pdb
+			pdb.post_mortem(sys.exc_traceback)
+			
 
 	def play_1(self):
 		# It could be we jumped away so are not playing anymore
