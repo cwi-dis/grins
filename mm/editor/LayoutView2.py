@@ -563,6 +563,49 @@ class LayoutView2(LayoutViewDialog2):
 			if subreg.get('subtype') != 'sound':
 				orderedRegionList.append(subreg)
 			self.__buildOrderedRegionList(orderedRegionList, subreg.name)
+
+	def rebuildAll(self):
+		# keep the node id selected, and viewport
+		if self.currentNodeSelected != None:
+			oldNodeIdSelected = self.currentNodeSelected.getName()
+			oldViewportId = self.currentNodeSelected.getViewport().getName()
+		else:
+			oldNodeIdSelected = ''
+			oldViewportId = ''
+		self.currentNodeSelected = None
+		
+		# incremental datas
+		self._viewportsRegions = {}
+		self._viewports = {}
+		self._nameToRegionNode = {}
+
+		# clear media list		
+		self.currentMediaRegionList = []
+		
+		self.treeMutation()
+		self.initDialogBox()
+		if self.getViewport(oldViewportId) == None:
+			self.displayViewport(self._first)
+		else:
+			self.displayViewport(oldViewportId)
+
+		# update dialog box		
+		self.updateViewportOnDialogBox(self.currentViewport)
+
+		# try to keep the same node selected
+		# get the initial player state		
+		type,node = self.editmgr.getplayerstate()
+		if node != None:
+			self.playerstatechanged(type, node)
+					
+		# try to keep the same node selected
+		# todo : update the focus
+		newNodeSelected = self.getNode(oldNodeIdSelected)
+		if newNodeSelected != None:
+			self.select(newNodeSelected)
+		else:
+			# otherwise, select the viewport
+			self.select(self.currentViewport)
 		
 	# update the region tree
 	def treeMutation(self):
@@ -619,14 +662,14 @@ class LayoutView2(LayoutViewDialog2):
 		for regionRef, parentRef in regionToAppendList:
 			self.addRegion(regionRef, parentRef)
 
-		# update dialog box if needed
+		# update dialog box and selection if needed
 		if len(viewportToAppendList) > 0 or len(viewportToRemoveList) > 0:
 			self.fillViewportListOnDialogBox()
 		# the other properties will be refreshed with a selection
 
-		# update selection
-		self.select(self.currentViewport)
-			
+		if self.currentNodeSelected:
+			self.select(self.currentNodeSelected)
+					
 	def addRegion(self, regionRef, parentRef):
 		# update data structure
 		pNode = self.getNode(parentRef.name)
@@ -667,10 +710,15 @@ class LayoutView2(LayoutViewDialog2):
 		del self._viewportsRegions[viewportId]
 					 
 	def commit(self, type):
-		if type not in ('REGION_GEOM', 'MEDIA_GEOM'):
+		if type in ('REGION_GEOM', 'MEDIA_GEOM'):
+			self.updateRegionTree()
+		elif type == 'REGION_TREE':
 			self.treeMutation()
-		self.updateRegionTree()
-
+			self.updateRegionTree()
+		else:
+			# by default rebuild all
+			self.rebuildAll()
+		
 	def isValidMMNode(self, node):
 		if node == None:
 			return 0
@@ -874,7 +922,7 @@ class LayoutView2(LayoutViewDialog2):
 			channel = node.GetChannel()
 			if channel == None: continue
 			layoutChannel = channel.GetLayoutChannel()
-			if layoutChannel == Node: continue
+			if layoutChannel == None: continue
 			layoutChannelName = layoutChannel.name
 			regionNode = self.getRegion(layoutChannelName)
 			if regionNode == None: continue
