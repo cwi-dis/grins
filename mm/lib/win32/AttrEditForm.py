@@ -1481,7 +1481,7 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 		else:
 			t.settext('scale 1 : %.1f' % self._xscale)
 		self.create_box(self.getcurrentbox())
-		if tag != 'viewchange' and file not settings.get('lightweight'):
+		if tag != 'viewchange' and file and not settings.get('lightweight'):
 			url = a.wrapper.getcontext().findurl(f)
 			self.loadimg(url)
 
