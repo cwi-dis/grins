@@ -211,6 +211,7 @@ class PlayerDialog:
 		pass
 
 	def setstate(self, state):
+		self.toplevel.setplayerstate(state)
 		ostate = self.__state
 		self.__state = state
 		w = self.__window
@@ -231,7 +232,6 @@ class PlayerDialog:
 				w.set_toggle(PLAY, state != STOPPED)
 				w.set_toggle(PAUSE, state == PAUSING)
 				w.set_toggle(STOP, state == STOPPED)
-
 	def getstate(self):
 		return self.__state
 
