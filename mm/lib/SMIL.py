@@ -394,11 +394,11 @@ class SMIL:
 				 }
 	attributes[SMIL2+' '+'animateMotion'] = __animate_attrs_core.copy()
 	attributes[SMIL2+' '+'animateMotion'].update(__animate_attrs_extra)
-	del attributes[SMIL2+' '+'animateMotion']['attributeName']
-	del attributes[SMIL2+' '+'animateMotion']['attributeType']
-	attributes[SMIL2+' '+'animateMotion']['calcMode'] = 'paced'
-	attributes[SMIL2+' '+'animateMotion']['path'] = None
-	attributes[SMIL2+' '+'animateMotion']['origin'] = None
+	del attributes[SMIL2+' '+'animateMotion'][SMIL2+' '+'attributeName']
+	del attributes[SMIL2+' '+'animateMotion'][SMIL2+' '+'attributeType']
+	attributes[SMIL2+' '+'animateMotion'][SMIL2+' '+'calcMode'] = 'paced'
+	attributes[SMIL2+' '+'animateMotion'][SMIL2+' '+'path'] = None
+	attributes[SMIL2+' '+'animateMotion'][SMIL2+' '+'origin'] = None
 
 	attributes[SMIL2+' '+'animate'] = __animate_attrs_core.copy()
 	attributes[SMIL2+' '+'animate'].update(__animate_attrs_extra)
