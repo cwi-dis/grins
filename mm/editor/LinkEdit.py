@@ -556,8 +556,10 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 			return
 		top = self.toplevel
 		top.setwaiting()
-		top.hierarchyview.globalsetfocus(node)
-		top.channelview.globalsetfocus(node)
+		if top.hierarchyview is not None:
+			top.hierarchyview.globalsetfocus(node)
+		if top.channelview is not None:
+			top.channelview.globalsetfocus(node)
 
 	def menu_callback(self, str, ind):
 		str.hidden = 0
@@ -571,7 +573,7 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 			str.node = None
 			str.fillfunc = self.fill_interesting
 		elif ind == M_TCFOCUS:
-			str.node = self.GetChannelViewtFocus()
+			str.node = self.GetChannelViewFocus()
 			if str.node is None:
 				str.fillfunc = self.fill_none
 			else:
@@ -659,10 +661,14 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 		import AnchorEdit
 		AnchorEdit.showanchoreditor(self.toplevel, node)
 
-	def GetChannelViewtFocus(self):
+	def GetChannelViewFocus(self):
+		if self.toplevel.channelview is None:
+			return None
 		return self.toplevel.channelview.getfocus()
 
 	def GetHierarchyViewFocus(self):
+		if self.toplevel.hierarchyview is None:
+			return None
 		return self.toplevel.hierarchyview.getfocus()
 
 	# EditMgr interface

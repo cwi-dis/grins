@@ -108,7 +108,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def show(self):
 		TopLevelDialog.show(self)
-		self.hierarchyview.show()
+		if self.hierarchyview is not None:
+			self.hierarchyview.show()
 
 	def destroy(self):
 		self.set_timer(0)
