@@ -161,10 +161,6 @@ mpeg_player(self)
 			dprintf(("pollin event!\n"));
 			(void) read(PRIV->pipefd[0], &c, 1);
 			dprintf(("mpeg_player(%lx): read %c\n", (long) self, c));
-			if (c == 's') {
-				/* stop */
-				break;
-			}
 			if (c == 'p') {
 				/* pause */
 				struct timeval tm1;
@@ -172,6 +168,10 @@ mpeg_player(self)
 				dprintf(("mpeg_player(%lx): waiting to continue\n", (long) self));
 				(void) read(PRIV->pipefd[0], &c, 1);
 				dprintf(("mpeg_player(%lx): continue playing, read %c\n", (long) self, c));
+			}
+			if (c == 's') {
+				/* stop */
+				break;
 			}
 		}
 	}
