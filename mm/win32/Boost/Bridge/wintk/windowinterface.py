@@ -307,8 +307,8 @@ class showmessage:
 	def getresult(self):
 		return self._res
 
-def newwindow(x, y, w, h, title, visible_channel = TRUE,
-		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
+def newwindow(x, y, w, h, title,
+		      pixmap = 0, units = UNIT_MM,
 		      adornments = None, canvassize = None,
 		      commandlist = None, resizable = 1, bgcolor = None):
 	import wintk_window

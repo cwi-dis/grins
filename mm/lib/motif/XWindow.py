@@ -637,10 +637,10 @@ class _Window(_AdornmentSupport, _RubberBand):
 				# do it for vertical scrollbar
 				vs.ScrollBarSetValues(value, slider_size, increment, page_increment, 1)
 
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor = None):
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, units = None, bgcolor = None):
 		return _SubWindow(self, coordinates, 0, pixmap, transparent, z, units, bgcolor)
 
-	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor = None):
+	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, units = None, bgcolor = None):
 		return _SubWindow(self, coordinates, 1, pixmap, transparent, z, units, bgcolor)
 
 	def fgcolor(self, color):
