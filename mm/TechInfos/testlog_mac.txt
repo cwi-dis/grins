@@ -1,6 +1,6 @@
 BeginEndEvents_case1.smil
 BeginEndEvents_case2.smil
-DefaultFillTimeContainer1.smil
+# DefaultFillTimeContainer1.smil
 DefaultFillTimeContainer2.smil
 DefaultFillTimeContainer3.smil
 DefaultFreeze_Par1.smil
@@ -14,7 +14,10 @@ DefaultFreeze_Seq5.smil
 DefaultFreeze_Seq6.smil
 DefaultFreeze_Seq7.smil
 DefaultFreeze_Seq8.smil
+Default_Fill_on_time_container1.smil
 Endfrozen_element.smil
+Excl_time_container_case1.smil
+Excl_time_container_case2.smil
 FillFreezeSeqDelayedDLoad.smil
 Fill_Freeze_in_Seq_case1.smil
 Fill_Freeze_in_Seq_case2.smil
@@ -57,13 +60,18 @@ Negative_Delay6.smil
 Negative_Delay7.smil
 Negative_Delay8.smil
 Negative_Delay9.smil
+Par_time_container_case1.smil
+Par_time_container_case2.smil
 ParentTimeConstraint1.smil
+RepeatCntIndefiniteRepeatDurIndefinite.smil
 RepeatCountWithBeginCase2.smil
 RepeatCount_case1.smil
 RepeatCount_case2.smil
 RpeatCntFinRpeatDurIndef.smil
 RpeatCntIndefRpeatDurFin.smil
 RpeatCntWithPartialRepeat.smil
+Seq_case1.smil
+Seq_case2.smil
 animate_lin_b.smil
 animate_lin_f.smil
 animate_lin_fb.smil
@@ -84,6 +92,16 @@ begin-prev-end.smil
 begin-sched-event.smil
 begin-syncbase.smil
 begin-wallclock.smil
+begin_accesskey.smil
+begin_begin_syncbase_excl1.smil
+begin_begin_syncbaseexcl2.smil
+begin_long_sync1.smil
+begin_long_sync2.smil
+begin_long_sync3.smil
+begin_offset_Seq_case.smil
+begin_repeat.smil
+begin_syncbase_excl1.smil
+begin_syncbase_excl3.smil
 body_eq_seq_1.smil
 body_eq_seq_2.smil
 body_eq_seq_3.smil
@@ -95,6 +113,10 @@ dur-repeatCount-end.smil
 dur-repeatCount.smil
 dur-repeatDur-end.smil
 dur-repeatDur.smil
+dur_clock_continuous_1.smil
+dur_clock_continuous_2.smil
+dur_clock_continuous_3.smil
+dur_clock_continuous_4.smil
 end-10sync-begin.smil
 end-10sync-clock.smil
 end-10sync-end.smil
@@ -116,6 +138,11 @@ end_eventbase_case1.smil
 end_eventbase_case2.smil
 end_syncbase_case4.smil
 end_syncbase_case5.smil
+endsync_first_Excl_case1.smil
+endsync_first_Excl_case2.smil
+endsync_first_Excl_case3.smil
+endsync_first_Excl_case4.smil
+endsync_first_Excl_case5.smil
 endsync_first_par1.smil
 endsync_first_par2.smil
 endsync_first_par3.smil
@@ -142,6 +169,16 @@ fill-hold-excl-9-38.smil
 fill-remove-excl-9-36.smil
 fill-remove-seq-9-30.smil
 fill_freeze_with_repeat.smil
+higher_pause.smil
+higher_stop.smil
+hyperlink_active1.smil
+hyperlink_active2.smil
+hyperlink_active3.smil
+hyperlink_active4.smil
+hyperlink_inactive1.smil
+hyperlink_inactive2.smil
+hyperlink_inactive3.smil
+hyperlink_inactive4.smil
 implicit-dur-repeatCount.smil
 implicit-dur-repeatDur.smil
 indef-dur-par.smil
@@ -150,15 +187,23 @@ indefinite-repeatDur.smil
 intrdurEndVideoFillRemove.smil
 intrdur_end_audio.smil
 intrdur_end_video.smil
+layout-background-color-fit.smil
 layout-backgroundColor-fit.smil
+layout-backgroundColor-override.smil
 layout-default.smil
 layout-fit-scroll.smil
 layout-hierarchical1.smil
 layout-hierarchical2.smil
+layout-predefined-regPoints.smil
 layout-regPoint1.smil
 layout-regPoint2.smil
 layout-regPointfit1.smil
 layout-regPointfit2.smil
+layout-region-root-layout-auto.smil
+layout-region-root-layout-percentages.smil
+layout-region-root-layout-pixels.smil
+layout-root-background-color.smil
+layout-root-backgroundColor.smil
 layout-showBackground1.smil
 layout-showBackground2.smil
 layout-soundLevel.smil
@@ -171,6 +216,31 @@ layout-z-index.smil
 layout-z-index1.smil
 layout-z-index2.smil
 layout-z-index3.smil
+lower_defer.smil
+lower_never.smil
+max1.smil
+max2.smil
+max3.smil
+meta-id-name-PICS-content.smil
+meta-id-name-base-content.smil
+meta-id-name-pics2-content.smil
+meta-id-name-pics3-content.smil
+meta-id-name-title-content.smil
+metadata-rdf.smil
+min1.smil
+min2.smil
+min3.smil
+min4.smil
+min5.smil
+min6.smil
+min7.smil
+min8.smil
+min9.smil
+min_negbegin1.smil
+min_negbegin2.smil
+min_restart1.smil
+minmax1.smil
+minmax2.smil
 mult-begins.smil
 mult-ends-3-22.smil
 null.smil
@@ -190,7 +260,7 @@ oTR-in-doubleSwWipe.smi
 oTR-in-ellipseWipe.smi
 oTR-in-eyeWipe.smi
 oTR-in-fade-mt1.smi
-oTR-in-fade-test.smi
+# oTR-in-fade-test.smi
 oTR-in-fade.smi
 oTR-in-fanWipe.smi
 oTR-in-fourBoxWipe.smi
@@ -272,9 +342,9 @@ ora-layout-bg-rg.smil	Works (Jack, 7-Sep)
 ora-layout-bg-vp-def.smil	Works (Jack, 7-Sep)
 ora-layout-bg-vp.smil	Works (Jack, 7-Sep)
 ora-layout-close.smil	Works, but closing main window also closes control panel (Jack, 7-Sep)
-ora-layout-fit-fill-regp-.smil	Does not work: aligned topleft, not scaled (Jack, 7-Sep)
+# ora-layout-fit-fill-regp-.smil	Does not work: aligned topleft, not scaled (Jack, 7-Sep)
 ora-layout-fit-fill.smil	Does not work: aligned topleft, unscaled (Jack, 7-Sep)
-ora-layout-fit-hid-regp.smil
+# ora-layout-fit-hid-regp.smil
 ora-layout-fit-hidden.smil	Works (Jack, 7-Sep)
 ora-layout-fit-media.smil	Works (Jack, 7-Sep)
 ora-layout-fit-meet-regp-.smil	Works (Jack, 7-Sep)
@@ -326,17 +396,17 @@ ora-layout-regp-fit-mpeg2.smil	Does not work: regpoint wrong, subregion backgrou
 ora-layout-regp-fit-mpeg3.smil	Does not work: regpoint wrong, subregion background is black (Jack, 12-Sep)
 ora-layout-regp-fit-qt2.smil	Does not work: regpoint wrong, subregion background is black (Jack, 12-Sep)
 ora-layout-regp-fit-qt3.smil	Does not work: regpoint wrong, subregion background is black (Jack, 12-Sep)
-ora-layout-regp-fit-rv.smil	Does not work: regpoint wrong, subregion background is black (Jack, 12-Sep)
-ora-layout-regp-html.smil	Bug in the document (Jack, 12-Sep)
+# ora-layout-regp-fit-rv.smil	Does not work: regpoint wrong, subregion background is black (Jack, 12-Sep)
+# ora-layout-regp-html.smil	Bug in the document (Jack, 12-Sep)
 ora-layout-regp-midLeft.smil	Works (Jack, 12-Sep)
 ora-layout-regp-midRight.smil	Works (Jack, 12-Sep)
 ora-layout-regp-midRight2.smil	Works (Jack, 12-Sep)
 ora-layout-regp-mpeg.smil	Does not work, regpoint doesn't work for video (Jack, 12-Sep)
 ora-layout-regp-ra.smil	Works, but document comment is wrong (Jack, 12-Sep)
-ora-layout-regp-rp.smil	Doesn't work: RealPix appears broken (Jack, 12-Sep)
-ora-layout-regp-rt.smil	Does not work: regpoint wrong (Jack, 12-Sep)
-ora-layout-regp-rv.smil	Does not work: regpoint wrong (Jack, 12-Sep)
-ora-layout-regp-text.smil	Works, sort of: text is topleft, but that is expected (Jack, 12-Sep)
+# ora-layout-regp-rp.smil	Doesn't work: RealPix appears broken (Jack, 12-Sep)
+# ora-layout-regp-rt.smil	Does not work: regpoint wrong (Jack, 12-Sep)
+# ora-layout-regp-rv.smil	Does not work: regpoint wrong (Jack, 12-Sep)
+# ora-layout-regp-text.smil	Works, sort of: text is topleft, but that is expected (Jack, 12-Sep)
 ora-layout-regp-topLeft.smil	Works (Jack, 12-Sep)
 ora-layout-regp-topMid.smil	Works (Jack, 12-Sep)
 ora-layout-regp-topRight.smil	Works (Jack, 12-Sep)
@@ -374,8 +444,15 @@ ora-layout-z-cp1.smil
 ora-layout-z-nsib.smil
 ora-layout-z-same-dto.smil
 ora-layout-z-same-tpo.smil	Works (Jack, 7-Sep)
+ora-layout-z-same-tpo2.smil
 ora-layout-z-sp1.smil
 ora-layout-z-sp2.smil
+ora-link-a-actuate1.smil
+ora-link-a-actuate2.smil
+ora-link-a-actuate3.smil
+ora-link-anc-actuate1.smil
+ora-link-anc-actuate2.smil
+ora-link-anc-actuate3.smil
 ora-link-ext-dps-pause.smil
 ora-link-ext-dps-play.smil
 ora-link-ext-show-def.smil
@@ -411,9 +488,26 @@ ora-link-shape-rect.smil
 ora-link-shape-rect2.smil
 ora-link-shape-rect3.smil
 ora-link-shape-video.smil
+ora-link-zorder-anc-rv0.smil
+ora-link-zorder-anc-rv1.smil
+ora-link-zorder-anc-rv2.smil
+ora-link-zorder-anc-rv3.smil
+ora-link-zorder-anc-v1.smil
+ora-link-zorder-anc-v2.smil
+ora-link-zorder-anc-v3.smil
+ora-link-zorder-anc3.smil
+ora-link-zorder-anc4.smil
+ora-link-zorder-anc5.smil
 ora-link-zorder-sp1.smil
 ora-link-zorder-trans.smil
 ora-link-zorder-trans2.smil
+pause_queue_priority1.smil
+pause_queue_priority2.smil
+pause_queue_priority3.smil
+peers_Pausedisplay_disable.smil
+peers_Pausedisplay_hide.smil
+peers_defer.smil
+peers_never.smil
 prev_begin_in_a_par1.smil
 prev_begin_in_a_par2.smil
 prev_begin_in_a_par3.smil
@@ -421,19 +515,22 @@ prev_begin_in_a_par4.smil
 prev_begin_in_a_par5.smil
 prev_begin_in_a_par6.smil
 prev_begin_in_a_par7.smil
+prev_end_excl.smil
 prev_end_in_a_par1.smil
 prev_end_in_a_par2.smil
 prev_end_in_a_par3.smil
 prev_end_in_a_par4.smil
 prev_end_in_a_par5.smil
+remove_element_pausequeue.smil
 repeat.smil
+repeatCount-indefinite-4-12.smil
 repeatCountDiscreteObject.smil
 repeatDur-indefinite-4-19.smil
 repeat_with_begin.smil
 repeatcount.smil
 repeatcountDurIndefinite.smil
 repeatdur.smil
-repeatdurDurIndefinite1.smil
+# repeatdurDurIndefinite1.smil
 repeatdurIndefinite1.smil
 repeatdurIndefinite2.smil
 repeatdurLowerIntrinsicDur.smil
@@ -445,6 +542,11 @@ restart-fill-3.smil
 restart-propagate-10-3.smil
 restart-reset-10-2.smil
 restart-test-10-1.smil
+restart_time_container1.smil
+restart_time_container2.smil
+restart_time_container3.smil
+restart_time_container4.smil
+restart_toggle.smil
 systemAudioDesc.smil
 systemCaptions.smil
 systemLanguage.smil
