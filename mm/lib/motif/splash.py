@@ -83,7 +83,7 @@ def _colormask(mask):
 			mask = mask >> 1
 	return shift, (1 << width) - 1
 
-def findformat(visual):
+def findformat(dpy, visual):
 	import imgformat
 	cmap = visual.CreateColormap(X.AllocNone)
 	if visual.c_class == X.PseudoColor:
@@ -162,19 +162,25 @@ def findformat(visual):
 				lossy)
 		format = myxrgb8
 	else:
-		# find an imgformat that corresponds with our visual
-		if visual.depth <= 16:
-			depth = 16
-		else:
-			depth = 32
+		# find an imgformat that corresponds with our visual and
+		# with the available pixmap formats
+		formats = []
+		for pmf in dpy.ListPixmapFormats():
+			if pmf[0] == visual.depth:
+				formats.append(pmf)
+		if not formats:
+			raise error, 'no matching Pixmap formats found'
 		for name, format in imgformat.__dict__.items():
 			if type(format) is not type(imgformat.rgb):
 				continue
 			descr = format.descr
-			if descr['type'] != 'rgb' or \
-			   descr['size'] != depth or \
-			   descr['align'] != depth or \
-			   descr['b2t'] != 0:
+			if descr['type'] != 'rgb' or descr['b2t'] != 0:
+				continue
+			for pmf in formats:
+				if descr['size'] == pmf[1] and \
+				   descr['align'] == pmf[2]:
+					break
+			else:
 				continue
 			r, g, b = descr['comp'][:3]
 			if visual.red_mask   == ((1<<r[1])-1) << r[0] and \
@@ -292,7 +298,7 @@ class _Splash:
 				self.red_shift, self.red_mask, \
 				self.green_shift, self.green_mask, \
 				self.blue_shift, self.blue_mask = \
-					findformat(visual)
+					findformat(dpy, visual)
 		main = Xt.CreateApplicationShell('splash', Xt.ApplicationShell,
 						 {'visual': visual,
 						  'depth': visual.depth,
