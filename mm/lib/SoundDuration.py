@@ -9,10 +9,13 @@ def getfullinfo(url):
 	try:
 		filename = urlretrieve(url)[0]
 		a = audio.reader(filename)
+		nframes = a.getnframes()
+		framerate = a.getframerate()
+		markers = a.getmarkers()
 	except (audio.Error, IOError, EOFError), msg:
 		print 'error in sound file', url, ':', msg
 		return 0, 8000, []
-	return a.getnframes(), a.getframerate(), a.getmarkers()
+	return nframes, framerate, markers
 
 import FileCache
 allinfo_cache = FileCache.FileCache(getfullinfo)
