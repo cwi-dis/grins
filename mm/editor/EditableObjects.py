@@ -16,8 +16,8 @@ __version__ = "$Id:"
 # be called from is here.
 
 import MMNode, MMExc
-from MenuTemplate import *
 import windowinterface, Clipboard
+from usercmd import *
 
 ######################################################################
 # Editing MMNodes.
@@ -104,12 +104,13 @@ class EditableMMNode(MMNode.MMNode):
 			NEW_AFTER_ALT(callback = (self.createafterintcall, ('alt',))),
 			]
 
-	def GetContextMenu(self):	# returns a context menu that can be used with the windowinterface.
-		t = self.GetType()
-		if t in MMNode.interiortypes:
-			return POPUP_HVIEW_STRUCTURE
-		else:
-			return POPUP_HVIEW_LEAF
+	# /Not/ system independant.
+#	def GetContextMenu(self):	# returns a context menu that can be used with the windowinterface.
+#		t = self.GetType()
+#		if t in MMNode.interiortypes:
+#			return POPUP_HVIEW_STRUCTURE
+#		else:
+#			return POPUP_HVIEW_LEAF
 
 	# Viewing this node. Helper routines for widgets only.
 	def GetThumbnailFile(self):	# returns a thumbnail.

@@ -1,13 +1,11 @@
 TODO for Michael :-) 
 ---------------------------------------------
 
-currently working on reducing the number of channels in the temporal view.
-
 Priority top-to-bottom.
 ------------------------
 Reload button on the player.
 
-Bars should not collide
+Bars should not collide (think about this more.)
 
 * Indefinite durations in the temporal view.
 * Look into durations more,
