@@ -15,6 +15,20 @@ def create_box(window, msg, *box):
 	window.pop()
 	window._close_subwins()
 	try:
+		oldfuncarg1 = windowinterface.getregister(window,
+							 EVENTS.Mouse0Press)
+	except windowinterface.error:
+		oldfuncarg1 = None
+	else:
+		windowinterface.unregister(window, EVENTS.Mouse0Press)
+	try:
+		oldfuncarg2 = windowinterface.getregister(window,
+							  EVENTS.Mouse0Release)
+	except windowinterface.error:
+		oldfuncarg2 = None
+	else:
+		windowinterface.unregister(window, EVENTS.Mouse0Release)
+	try:
 		if msg:
 			msg = msg + '\n\n' + message
 		else:
@@ -93,3 +107,11 @@ def create_box(window, msg, *box):
 	finally:
 		window._open_subwins()
 		windowinterface.endmonitormode()
+		if oldfuncarg1:
+			windowinterface.register(window, EVENTS.Mouse0Press,
+						 oldfuncarg1[0],
+						 oldfuncarg1[1])
+		if oldfuncarg2:
+			windowinterface.register(window, EVENTS.Mouse0Release,
+						 oldfuncarg2[0],
+						 oldfuncarg2[1])
