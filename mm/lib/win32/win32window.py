@@ -165,7 +165,8 @@ class Window:
 			if wnd.inside(point):
 				wnd._onmousemove(point)
 				return
-		self.setscrollpos(point)
+		if self._canscroll and self._ptdown:	
+			self.setscrollpos(point)
 	#
 	# WMEVENTS section
 	#
@@ -1744,7 +1745,7 @@ class Region(Window):
 				lsc, tsc, rsc, bsc =  self._getsrcclip((ld, td, rd, bd), (ls, ts, rs, bs), (ldc, tdc, rdc, bdc))
 
 				if self._canscroll: 	
-					dx, dy = wnd._scrollpos
+					dx, dy = self._scrollpos
 					lsc, tsc, rsc, bsc = lsc+dx, tsc+dy, rsc+dx, bsc+dy
 
 				# we are ready, blit it
@@ -2869,4 +2870,4 @@ class _ResizeableDisplayList(_DisplayList):
 			raise error, 'displaylist already rendered'
 		self._list.append(('label', str))
  
- 
+  
