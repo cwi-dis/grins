@@ -45,6 +45,11 @@ implements SMILDocument, SMILController, SMILRenderer
         if(title!=null) return title;
         return "";
         }
+        
+    public boolean isViewportOpen(int index)
+        {
+        return ngetTopLayoutState(hgrins, index)!=0;
+        }
     
     public void setCanvas(int index, SMILCanvas c) throws Exception
         {
