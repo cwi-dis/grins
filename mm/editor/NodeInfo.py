@@ -139,7 +139,7 @@ class NodeInfo(NodeInfoDialog):
 			if all:
 				all.append(None)
 			all = all + channelnames3
-		if not self.newchannels:
+		if not self.newchannels and not settings.get('lightweight'):
 			if all:
 				all.append(None)
 			all = all + [NEW_CHANNEL]
