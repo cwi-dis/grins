@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Channel view window.
 # Beware: this module uses X11-like world coordinates:
 # positive Y coordinates point down from the top of the window.
