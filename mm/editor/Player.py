@@ -616,7 +616,8 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			if node == self.seek_node:
 			        self.seek_done()
 		doit = 1
-		if node.GetType() not in interiortypes:
+		type = node.GetType()
+		if type not in interiortypes:
 		    if side == HD:
 			if doit:
 			    chan = self.getchannel(node)
@@ -679,6 +680,15 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			self.setarmedmode(node, ARM_DONE)
 			if not self.seeking:
 				self.opt_prearm(node)
+		elif type == 'par' and side == TL:
+			print 'Parnode finished'
+			# A parallel node has finished. Tell the channels
+			# to clear their windows of the children nodes.
+			children = node.GetChildren()
+			for child in children:
+				chan = self.getchannel(child)
+				if chan <> None:
+					dummy = self.enter(0.0, 1, chan.clearnode, child)
 		for arg in node.deps[side]:
 			self.decrement(arg)
 		if node == self.playroot and side == TL:
