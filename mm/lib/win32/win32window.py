@@ -103,7 +103,7 @@ class Window:
 	def setmediadisplayrect(self, rc):
 		self._mediadisplayrect = rc
 
-	# fit: 'hidden':1, 'meet':0, 'slice':-1, 'scroll':-2, 'fill':-3
+	# fit: 'hidden':1, 'meet':0, 'slice':-1, ('meed_hidden'=-2,) 'fill':-3', 'scroll':-4
 	def setmediafit(self, fit):
 		self._fit = fit
 		
@@ -578,11 +578,13 @@ class Window:
 			# i.e. is greater or equal to region rc
 			return 0, 0, wm, hm
 
-		elif fit == -2: # scroll
-			return 0, 0, min(w, wm), min(h, hm)
-
 		elif fit == -3: # fill
 			return 0, 0, wm, hm
+
+		elif fit == -4: # scroll
+			return 0, 0, min(w, wm), min(h, hm)
+		
+		return 0, 0, min(w, wm), min(h, hm)
 
 	# return blit dst and src rects given that dst is clipped
 	# we want to blit src -> dst but dst is clipped
@@ -612,6 +614,8 @@ class Window:
 	# 3. if center then do the obvious
 	# 4. coordinates specify placement rect
 	# 5. clip specifies the src rect
+	# scale  should be in agreement with fit
+	# fit: 'hidden':1, 'meet':0, 'slice':-1, 'meed_hidden'=-2, 'fill':-3', scroll':-4
 	def _prepare_image(self, file, crop, scale, center, coordinates, clip, units):
 		
 		# get image size. If it can't be found in the cash read it.
@@ -644,6 +648,9 @@ class Window:
 			xscale = yscale = max(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
 		elif scale == -2:
+			# a mix of meet and hidden
+			# like scale = 0 (meet)  if scale <= 1
+			# like scale = 1 (hidden)  if scale > 1
 			xscale = yscale = min(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
 			if xscale > 1:
@@ -651,6 +658,8 @@ class Window:
 		elif scale == -3:
 			xscale = float(width)/(xsize - left - right)
 			yscale = float(height)/(ysize - top - bottom)
+		elif scale == -4:
+			xscale = yscale = 1
 		else:
 			# default rule
 			xscale = yscale = scale
@@ -1262,6 +1271,11 @@ class DDWndLayer:
 
 	def CreateSurface(self, w, h):
 		if not self._ddraw: return None
+		if not w or not h or w<0 or h<0:
+			w = 100; h=100
+		if w>1600: w = 1600
+		if h>1200: h = 1200
+		
 		ddsd = ddraw.CreateDDSURFACEDESC()
 		ddsd.SetFlags(ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT | ddraw.DDSD_CAPS)
 		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
