@@ -39,6 +39,7 @@ class VideoChannel(Channel.ChannelWindowAsync,MediaChannel.MediaChannel):
 
 	def do_hide(self):
 		self.release_res()
+		self.paint()
 		Channel.ChannelWindowAsync.do_hide(self)
 
 	def destroy(self):
@@ -71,9 +72,9 @@ class VideoChannel(Channel.ChannelWindowAsync,MediaChannel.MediaChannel):
 
 	# Part of stop sequence. Stop and remove last frame 
 	def stopplay(self, node):
-		Channel.ChannelWindowAsync.stopplay(self, node)
 		self.stopit()
 		if self.window:self.window.RedrawWindow()
+		Channel.ChannelWindowAsync.stopplay(self, node)
 
 	# interface for anchor creation
 	def defanchor(self, node, anchor, cb):
