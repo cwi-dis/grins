@@ -403,5 +403,25 @@ SOURCE=.\RES\zoomin.ico
 SOURCE=.\RES\zoomout.ico
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE=.\RES\Audio.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Blank.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Image.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Text.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Video.ico
+# End Source File
 # End Target
 # End Project
