@@ -1549,17 +1549,17 @@ class Icon(MMWidgetDecoration):
 		self.icon = icon
 
 	def set_callback(self, callback, args=()):
-		print "DEBUG: callback set."
+##		print "DEBUG: callback set."
 		self.callback = callback, args
 
 	def mouse0release(self, coords):
-		print "DEBUG: doing the callback."
-		print "DEBUG: ", self.callback, self.icon
+##		print "DEBUG: doing the callback."
+##		print "DEBUG: ", self.callback, self.icon
 		if self.callback and self.icon:
 			# Freaky code that Sjoerd showed me: -mjvdg
 			apply(apply, self.callback)
-		else:
-			print "DEBUG: no callback."
+##		else:
+##			print "DEBUG: no callback."
 
 	def moveto(self, pos):
 		x,y = pos
