@@ -70,8 +70,6 @@ findfont = mw_fonts.findfont
 
 DialogWindow = mw_windows.DialogWindow
 
-SelectWidget = mw_widgets.SelectWidget
-
 FullPopupMenu = mw_menucmd.FullPopupMenu
 
 MACDialog = mw_dialogs.MACDialog

@@ -22,6 +22,9 @@ class _Widget:
 		tp, h, rect = wid.GetDialogItem(item) # XXXX To be fixed
 		wid.SetDialogItem(item, tp,
 		      mw_globals.toplevel._dialog_user_item_handler, rect)
+		      
+	def close(self):
+		pass
 		
 class _ListWidget:
 	def __init__(self, wid, item, content=[], multi=0):
@@ -48,6 +51,19 @@ class _ListWidget:
 ##		Win.InvalRect(self.rect)
 ##		self._redraw() # DBG
 	
+	def close(self):
+		print 'DBG: close', self
+		del self.list  # XXXX Or should we DisposeList it?
+		del self.wid
+		del self._data
+		del self.control
+		
+	def _activate(self, onoff):
+		pass # Handled by dialog mgr
+		
+	def _redraw(self, rgn):
+		pass # Handled by dialog mgr
+		
 	def _setcontent(self, fr, to, content):
 		for y in range(fr, to):
 			item = content[y-fr]
@@ -140,6 +156,13 @@ class _ImageWidget(_Widget):
 		self.image = image
 		self.wid = wid
 		Win.InvalRect(self.rect)
+		
+	def close(self):
+		print 'DBG: close', self
+		del self.image
+		del self.wid
+		self.image_data = None
+		del self.image_data
 			
 	def setfromfile(self, image):
 		Qd.SetPort(self.wid)
@@ -195,28 +218,38 @@ class _ImageWidget(_Widget):
 	def _activate(self, onoff):
 		pass
 				
-class SelectWidget:
+class _SelectWidget:
 	def __init__(self, wid, ctlid, items=[], default=None, callback=None):
 		self.wid = wid
 		self.itemnum = ctlid
 		self.menu = None
-		self.choice = None
+##		self.choice = None
 		self.control = self.wid.GetDialogItemAsControl(self.itemnum)
 		self.setitems(items, default)
 		if callback:
 			raise 'Menu-callbacks not supported anymore'
 		
-	def delete(self):
+	def close(self):
+		print 'DBG: close', self
 		self.menu.delete()
 		del self.menu
 		del self.wid
 		del self.control
 		
+	def _activate(self, onoff):
+		pass # Handled by dialog mgr
+		
+	def _redraw(self, rgn):
+		pass # Handled by dialog mgr
+		
+	def delete(self):
+		print 'DBG: delete (obsolete)', self
+		
 	def setitems(self, items=[], default=None):
 		items = items[:]
 		if not items:
 			items.append('')
-		self.choice = None
+##		self.choice = None
 		self.data = items
 		if self.menu:
 			self.menu.delete()

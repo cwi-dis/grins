@@ -469,8 +469,7 @@ class OptionTabPage(SingleTabPage):
 
 	def init_controls(self, item0):
 		rv = SingleTabPage.init_controls(self, item0)
-		self._option = windowinterface.SelectWidget(self.attreditor._dialog, self.item0+self.ITEM_MENU,
-				[], None)
+		self._option = self.attreditor._window.SelectWidget(self.item0+self.ITEM_MENU, [], None)
 		return rv
 
 	def close(self):
@@ -710,8 +709,7 @@ class ImageConversionTabPage(MultiTabPage):
 		
 	def init_controls(self, item0):
 		rv = SingleTabPage.init_controls(self, item0)
-		self._qualitypopup = windowinterface.SelectWidget(self.attreditor._dialog, 
-				self.item0+self.ITEM_QUALITY, [], None)
+		self._qualitypopup = self.attreditor._window.SelectWidget(self.item0+self.ITEM_QUALITY, [], None)
 		return rv
 
 	def do_itemhit(self, item, event):
@@ -788,13 +786,11 @@ class ConversionTabPage(MultiDictTabPage):
 	def init_controls(self, item0):
 		rv = MultiDictTabPage.init_controls(self, item0)
 		if self._attr_to_field.has_key('project_videotype'):
-			self._videopopup = windowinterface.SelectWidget(self.attreditor._dialog, 
-				self.item0+self.ITEM_VIDEOTYPE, [], None)
+			self._videopopup = self.attreditor._window.SelectWidget(self.item0+self.ITEM_VIDEOTYPE, [], None)
 		else:
 			self._videopopup = None
 		if self._attr_to_field.has_key('project_audiotype'):
-			self._audiopopup = windowinterface.SelectWidget(self.attreditor._dialog,
-				self.item0+self.ITEM_AUDIOTYPE, [], None)
+			self._audiopopup = self.attreditor._window.SelectWidget(self.item0+self.ITEM_AUDIOTYPE, [], None)
 		else:
 			self._audiopopup = None
 		return rv
@@ -893,10 +889,8 @@ class GeneralTabPage(MultiTabPage):
 	
 	def init_controls(self, item0):
 		rv = MultiTabPage.init_controls(self, item0)
-		self._channelpopup = windowinterface.SelectWidget(self.attreditor._dialog, 
-				self.item0+self.ITEM_CHANNEL, [], None)
-		self._typepopup = windowinterface.SelectWidget(self.attreditor._dialog,
-				self.item0+self.ITEM_NODETYPE, [], None)
+		self._channelpopup = self.attreditor._window.SelectWidget(self.item0+self.ITEM_CHANNEL, [], None)
+		self._typepopup = self.attreditor._window.SelectWidget(self.item0+self.ITEM_NODETYPE, [], None)
 		return rv
 
 	def close(self):
@@ -961,8 +955,7 @@ class ChGeneralTabPage(MultiTabPage):
 	
 	def init_controls(self, item0):
 		rv = MultiTabPage.init_controls(self, item0)
-		self._typepopup = windowinterface.SelectWidget(self.attreditor._dialog,
-				self.item0+self.ITEM_CHTYPE, [], None)
+		self._typepopup = self.attreditor._window.SelectWidget(self.item0+self.ITEM_CHTYPE, [], None)
 		return rv
 
 	def close(self):
@@ -1030,10 +1023,8 @@ class SystemPropertiesTabPage(MultiTabPage):
 	
 	def init_controls(self, item0):
 		rv = MultiTabPage.init_controls(self, item0)
-		self._bitratepopup = windowinterface.SelectWidget(self.attreditor._dialog, 
-				self.item0+self.ITEM_BITRATE, [], None)
-		self._languagepopup = windowinterface.SelectWidget(self.attreditor._dialog,
-				self.item0+self.ITEM_LANGUAGE, [], None)
+		self._bitratepopup = self.attreditor._window.SelectWidget(self.item0+self.ITEM_BITRATE, [], None)
+		self._languagepopup = self.attreditor._window.SelectWidget(self.item0+self.ITEM_LANGUAGE, [], None)
 		return rv
 
 	def close(self):
@@ -1171,8 +1162,7 @@ class TransitionTabPage(MultiDictTabPage):
 		
 	def init_controls(self, item0):
 		rv = MultiDictTabPage.init_controls(self, item0)
-		self._typepopup = windowinterface.SelectWidget(self.attreditor._dialog, 
-				self.item0+self.ITEM_TYPE, [], None)
+		self._typepopup = self.attreditor._window.SelectWidget(self.item0+self.ITEM_TYPE, [], None)
 		return rv
 
 	def do_itemhit(self, item, event):
@@ -1265,10 +1255,8 @@ class WipeTabPage(MultiTabPage):
 	
 	def init_controls(self, item0):
 		rv = MultiTabPage.init_controls(self, item0)
-		self._typepopup = windowinterface.SelectWidget(self.attreditor._dialog, 
-				self.item0+self.ITEM_TYPE, [], None)
-		self._directionpopup = windowinterface.SelectWidget(self.attreditor._dialog,
-				self.item0+self.ITEM_DIRECTION, [], None)
+		self._typepopup = self.attreditor._window.SelectWidget(self.item0+self.ITEM_TYPE, [], None)
+		self._directionpopup = self.attreditor._window.SelectWidget(self.item0+self.ITEM_DIRECTION, [], None)
 		return rv
 
 	def close(self):
@@ -1422,8 +1410,7 @@ class ChannelAreaTabPage(AreaTabPage):
 
 	def init_controls(self, item0):
 		rv = AreaTabPage.init_controls(self, item0)
-		self._unitspopup = windowinterface.SelectWidget(self.attreditor._dialog, 
-				self.item0+self.ITEM_UNITS, [], None)
+		self._unitspopup = self.attreditor._window.SelectWidget(self.item0+self.ITEM_UNITS, [], None)
 		return rv
 		
 	def update(self):
