@@ -394,7 +394,7 @@ class EventStruct:
 		thing = ""
 		if c == 'node':
 			readonly = 1
-			name = "Node:"
+			name = "Source node:"
 			if self._setnode:
 				node = self._setnode
 			else:
