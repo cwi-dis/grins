@@ -1,0 +1,3 @@
+LIBRARY        wingdi_d.pyd
+EXPORTS
+                initwingdi   @1	PRIVATE
