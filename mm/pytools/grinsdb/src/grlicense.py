@@ -42,7 +42,7 @@ PRODUCT_TO_FEATURE = {
         "G2PT": ["smil2player"],
 	
 	"smil2lite": ["smil2lite"],
-	"smil2pro": ["smil2pro"],
+	"smil2real": ["smil2real"],
 
 	"ALLPRODUCTS": ["ALLPRODUCTS"]
 	}
