@@ -12,6 +12,7 @@ def getduration(filename):
 		filename = MMurl.urlretrieve(filename)[0]
 	except IOError:
 		return 0
+	Qt.EnterMovies()
 	try:
 		movieResRef = Qt.OpenMovieFile(filename, 1)
 	except (ValueError, Qt.Error), arg:
