@@ -208,12 +208,12 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		return rgn
 
 	# It is called by the core system when it wants to create a child window
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
 		if self._usesLightSubWindows:
 			SubWindowClass = _LightSubWindow
 		else:
 			SubWindowClass = _OSSubWindow	
-		return SubWindowClass(self, coordinates, transparent, type_channel, 0, pixmap, z, units)
+		return SubWindowClass(self, coordinates, transparent, type_channel, 0, pixmap, z, units, bgcolor)
 
 	# It is called by the core system when it wants to create a child window
 	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
@@ -789,7 +789,8 @@ class _CmifStructView(_CmifView):
 class _OSSubWindow(cmifwnd._CmifWnd,window.Wnd):
 
 	# Class contructor. Initializes the class and creates the OS window
-	def __init__(self, parent, rel_coordinates, transparent, type_channel, defcmap, pixmap, z=0, units=None):
+	def __init__(self, parent, rel_coordinates, transparent, type_channel, 
+			defcmap, pixmap, z=0, units=None, bgcolor=None):
 		cmifwnd._CmifWnd.__init__(self)
 		self._do_init(parent)
 		
@@ -1238,8 +1239,8 @@ class _OSSubWindow(cmifwnd._CmifWnd,window.Wnd):
 #################################################
 
 def _LightSubWindow(parent, rel_coordinates, transparent, type_channel, 
-	defcmap, pixmap, z=0, units=None):
+	defcmap, pixmap, z=0, units=None, bgcolor=None):
 	import win32window
-	return win32window.SubWindow(parent, rel_coordinates, transparent, z, units)
+	return win32window.SubWindow(parent, rel_coordinates, transparent, z, units, bgcolor)
 
 
