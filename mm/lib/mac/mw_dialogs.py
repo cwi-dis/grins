@@ -669,7 +669,7 @@ class BandwidthComputeDialog:
 		self.msg = "%s\nPreroll time: %d\nStall time: %d\nStalling node count: %d\n" % \
 			(self.title, prerolltime, errorseconds, errorcount)
 
-	def wait(self, cancancel=0):
+	def done(self, callback=None, cancancel=0):
 		if cancancel:
 			rv = showquestion(self.msg+'\nDo you want to continue?')
 		else:
