@@ -29,6 +29,7 @@ CASCADE = settings.get('cascade')	# cascade regions if no <layout>
 layout_name = ' SMIL '			# name of layout channel
 
 _opS = xmllib._opS
+_S = xmllib._S
 
 #coordre = re.compile(_opS + r'(?P<x0>\d+%?)' + _opS + r',' +
 #		     _opS + r'(?P<y0>\d+%?)' + _opS + r',' +
@@ -101,6 +102,10 @@ color = re.compile('(?:'
 			   _opS + '(?P<gp>[0-9]+)' + _opS + '%' + _opS + ',' +
 			   _opS + '(?P<bp>[0-9]+)' + _opS + '%)' + _opS + r'\))$')
 
+_comma_sp = _opS + '(' + _S + '|,)' + _opS
+_fp = r'(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)'
+controlpt = re.compile('^'+_opS+_fp+_comma_sp+_fp+_comma_sp+_fp+_comma_sp+_fp+_opS+'$')
+fpre = re.compile('^' + _opS + _fp + _opS + '$')
 smil_node_attrs = [
 	'region', 'clip-begin', 'clip-end', 'endsync', 'choice-index',
 	'bag-index', 'type',
@@ -770,6 +775,45 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['syncBehaviorDefault'] = val
 				else:
 					self.syntax_error("bad %s attribute" % attr)
+			elif attr == 'calcMode':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val in ('discrete', 'linear', 'paced'):
+					attrdict['calcMode'] = val
+				elif val == 'spline':
+					self.warning('non-standard value for attribute %s' % attr, self.lineno)
+					attrdict['calcMode'] = val
+				else:
+					self.syntax_error("bad %s attribute" % attr)
+			elif attr == 'keySplines':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				vals = string.split(val, ';')
+				if attrdict.has_key('keyTimes') and len(vals) != len(string.split(attrdict['keyTimes'], ';'))-1:
+					self.syntax_error("bad %s attribute (wrong number of control points)" % attr)
+				else:
+					for v in vals:
+						if not controlpt.match(v):
+							self.syntax_error("bad %s attribute" % attr)
+							break
+					else:
+						attrdict['keySplines'] = val
+			elif attr == 'keyTimes':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				vals = string.split(val, ';')
+				if attrdict.has_key('keySplines') and len(vals) != len(string.split(attrdict['keySplines'], ';'))+1:
+					self.syntax_error("bad %s attribute (wrong number of control points)" % attr)
+				else:
+					for v in vals:
+						if not fpre.match(v):
+							self.syntax_error("bad %s attribute" % attr)
+							break
+					else:
+						attrdict['keyTimes'] = val
 			elif compatibility.QT == features.compatibility and \
 				self.addQTAttr(attr, val, node):
 				pass
