@@ -203,6 +203,7 @@ class _CommonWindow:
 		self._bgcolor = parent._bgcolor
 		self._fgcolor = parent._fgcolor
 		self._clip = None
+		self._clipincludingchildren = None
 		self._button_region = None
 		self._active_displist = None
 		self._eventhandlers = {}
@@ -238,7 +239,10 @@ class _CommonWindow:
 
 		if self._clip:
 			Qd.DisposeRgn(self._clip)
+		if self._clipincludingchildren:
+			Qd.DisposeRgn(self._clipincludingchildren)
 		del self._clip
+		del self._clipincludingchildren
 		
 		if self._button_region:
 			Qd.DisposeRgn(self._button_region)
@@ -273,6 +277,9 @@ class _CommonWindow:
 		if self._clip:
 			Qd.DisposeRgn(self._clip)
 		self._clip = None
+		if self._clipincludingchildren:
+			Qd.DisposeRgn(self._clipincludingchildren)
+		self._clipincludingchildren = None
 		# And inform our children...
 		for ch in self._subwindows:
 			ch._clipchanged()
@@ -837,7 +844,7 @@ class _CommonWindow:
 		"""Set clipping and color, redraw, redraw children"""
 		if self._parent is None:
 			return
-		if not self._clip:
+		if not self._clip or not self._clipincludingchildren:
 			self._mkclip()
 			
 		olddrawenviron = self._mac_setwin()
@@ -845,7 +852,8 @@ class _CommonWindow:
 		# First do opaque subwindows, topmost first
 		still_to_do = []
 		for child in self._subwindows:
-			if child._transparent == 0 or \
+			# XXXX Remove for now
+			if 0 and child._transparent == 0 or \
 			   (child._transparent == -1 and
 			    child._active_displist):
 				child._redraw(rgn)
@@ -867,15 +875,18 @@ class _CommonWindow:
 				self._redrawfunc()
 			else:
 				self._do_redraw()
-		if self._transition:
-			self._transition.changed()
-		Qd.SetClip(saveclip)
-		Qd.DisposeRgn(saveclip)
 		
 		# Then do transparent children bottom-to-top
 		still_to_do.reverse()
 		for child in still_to_do:
 					child._redraw(rgn)
+		# Then do the transition on our full clip (including children)
+		# XXX should only be done in topmost window
+		Qd.SetClip(self._clipincludingchildren)
+		if self._transition and self._transition.ismaster(self):
+			self._transition.changed()
+		Qd.SetClip(saveclip)
+		Qd.DisposeRgn(saveclip)
 					
 		self._mac_unsetwin(olddrawenviron)
 		
@@ -953,12 +964,17 @@ class _CommonWindow:
 	def _mkclip(self):
 		if not self._onscreen_wid or not self._parent:
 			return
-		if self._clip:
+		if self._clip or self._clipincludingchildren:
 			raise 'Clip already valid!'
 		# create region for whole window
+		self._clipincludingchildren = Qd.NewRgn()
+		Qd.RectRgn(self._clipincludingchildren, self.qdrect())
+##		self._clipvisible(self._clipincludingchildren)
+		self._clipsubtractsiblings()
+		# create region for the part of the window that _we_ (as opposed
+		# to our children) have to redraw.
 		self._clip = Qd.NewRgn()
-		Qd.RectRgn(self._clip, self.qdrect())
-##		self._clipvisible(self._clip)
+		Qd.CopyRgn(self._clipincludingchildren, self._clip)
 		#
 		# subtract all subwindows, insofar they aren't transparent
 		# at the moment
@@ -968,7 +984,6 @@ class _CommonWindow:
 			if r:
 				Qd.DiffRgn(self._clip, r, self._clip)
 				Qd.DisposeRgn(r)
-		self._clipsubtractsiblings()
 	
 	def _clipsubtractsiblings(self):
 		pass	# Only implemented for subwindows
@@ -1102,9 +1117,9 @@ class _CommonWindow:
 	def _rb_redraw(self):
 		if not self._rb_box:
 			return
-		if not self._clip:
+		if not self._clipincludingchildren:
 			self.mkclip()
-		Qd.SetClip(self._clip)
+		Qd.SetClip(self._clipincludingchildren)
 		if self._onscreen_wid == Win.FrontWindow():
 			Qd.RGBForeColor((0xffff, 0, 0))
 		else:
@@ -1163,9 +1178,9 @@ class _CommonWindow:
 		#
 		# Otherwise first erase old box, then draw the new one.
 		#
-		if not self._clip:
+		if not self._clipincludingchildren:
 			self.mkclip()
-		Qd.SetClip(self._clip)
+		Qd.SetClip(self._clipincludingchildren)
 		port = self._onscreen_wid.GetWindowPort()
 		oldmode = port.pnMode
 		Qd.RGBForeColor((0xffff, 0, 0))
@@ -1325,8 +1340,9 @@ class _CommonWindow:
 			return
 		if not self._transition_setup_before():
 			return
+		ismaster = self._windowlevel() < window._windowlevel()
 		self._transition = window._transition
-		self._transition.join(self)
+		self._transition.join(self, ismaster)
 		self._transition_setup_after()
 
 	def endtransition(self):
@@ -1374,7 +1390,16 @@ class _CommonWindow:
 			self._mac_dispose_gworld(BM_PASSIVE)
 			self._frozen = None
 			self._mac_invalwin()
-			
+	
+	def _windowlevel(self):
+		"""Returns 0 for toplevel windows, 1 for children of toplevel windows, etc"""
+		prev = self
+		count = 0
+		while not prev._istoplevel:
+			count = count + 1
+			prev = prev._parent
+		return count
+		
 	def _transition_setup_before(self):
 		"""Check that begintransition() is allowed, create the offscreen bitmaps 
 		and set the event handler"""
@@ -2391,6 +2416,7 @@ class _SubWindow(_CommonWindow):
 			coordinates = 0, 0, 1, 1
 		self._sizes = coordinates
 		
+		# XXXX (21-Aug-00) I don't think this is correct anymore...
 		if parent._transparent:
 			self._transparent = parent._transparent
 		else:
@@ -2467,7 +2493,7 @@ class _SubWindow(_CommonWindow):
 				break
 			r = w._getredrawguarantee()
 			if r:
-				Qd.DiffRgn(self._clip, r, self._clip)
+				Qd.DiffRgn(self._clipincludingchildren, r, self._clipincludingchildren)
 				Qd.DisposeRgn(r)
 
 	def _do_resize1(self):
