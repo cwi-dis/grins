@@ -10,6 +10,7 @@ import audio, audio.dev, audio.merge, audio.convert
 import MMurl
 import os
 import string
+import settings
 
 debug = os.environ.has_key('CHANNELDEBUG')
 
@@ -176,7 +177,7 @@ class SoundChannel(ChannelAsync):
 			qid = self._scheduler.enter(t, 0, self.__marker, (node, marker))
 			self.__evid.append(qid)
 		t0 = self._scheduler.timefunc()
-		if t0 > start_time:
+		if t0 > start_time and not settings.get('noskip'):
 			late = t0 - start_time
 			mediadur = float(self.play_fp.getnframes()) / rate
 			if late > mediadur:

@@ -32,6 +32,8 @@ import win32dxm
 # we need const WM_USER
 import win32con
 
+import settings
+
 # private graph notification message
 WM_GRPAPHNOTIFY=win32con.WM_USER+101
 
@@ -142,7 +144,7 @@ class MediaChannel:
 			self.__playEnd = self.__playBuilder.GetDuration()
 
 		t0 = self.__channel._scheduler.timefunc()
-		if t0 > start_time and not self.__channel._exporter:
+		if t0 > start_time and not self.__channel._exporter and not settings.get('noskip'):
 			if __debug__:
 				print 'skipping',start_time,t0,t0-start_time
 			mediadur = self.__playEnd - self.__playBegin
@@ -301,7 +303,7 @@ class VideoStream:
 			self.__playEnd = self.__mmstream.getDuration()
 
 		t0 = self.__channel._scheduler.timefunc()
-		if t0 > start_time and not self.__channel._exporter:
+		if t0 > start_time and not self.__channel._exporter and not settings.get('noskip'):
 			if __debug__: print 'skipping',start_time,t0,t0-start_time
 			mediadur = self.__playEnd - self.__playBegin
 			late = t0 - start_time

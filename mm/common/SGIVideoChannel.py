@@ -9,6 +9,7 @@ import MMurl
 import mv
 import Xlib
 import string
+import settings
 
 _mvmap = {}			# map of MVid to channel
 
@@ -185,7 +186,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if self.__begin:
 			movie.SetStartTime(long(self.__begin * 1000L), 1000)
 		t0 = self._scheduler.timefunc()
-		if t0 > start_time:
+		if t0 > start_time and not settings.get('noskip'):
 			if __debug__:
 				print 'skipping',start_time,t0,t0-start_time
 			late = t0 - start_time

@@ -623,6 +623,7 @@ class SchedulerContext:
 			tm, ev = node.endtime
 			if tm == timestamp or ev in ('begin', 'end'):
 				runchild = 0
+				node.set_infoicon('error', 'node not run')
 			del node.endtime
 		ndur = node.calcfullduration(self, ignoremin = 1)
 		mintime, maxtime = node.GetMinMax()
@@ -638,6 +639,7 @@ class SchedulerContext:
 				ndur = maxtime
 		if ndur >= 0 and timestamp + ndur <= parent.timefunc() and MMAttrdefs.getattr(node, 'erase') != 'never' and node.GetFill() == 'remove':
 			runchild = 0
+			node.set_infoicon('error', 'node not run')
 		srdict = pnode.gensr_child(node, runchild, path = path, sctx = self, curtime = parent.timefunc())
 		self.srdict.update(srdict)
 		if debugdump: self.dump()
