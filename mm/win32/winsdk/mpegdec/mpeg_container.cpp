@@ -222,9 +222,6 @@ void mpeg_container::read_audio(std::basic_string<char>& audio_data, int stream,
 		long n = read_audio(output, samples, stream, channel);
 		if(n == 0) break;
 		audio_data.append((char*)output, (char*)(output + n));
-#ifdef _WIN32_WCE
-		if(audio_data.length()>512000) break;
-#endif
 		}
 	delete[] output;
 	}
