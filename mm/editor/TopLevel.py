@@ -340,6 +340,34 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if self.source:
 			self.showsource(None)
 
+	def save_source_callback(self, text):
+		# This is a function that is called from the source view when the user decides to save.
+		# Compare to edit_finished_callback, which is when a temporary file is used for the sourceview.
+		import EditMgr
+		if self.editmgr.busy:
+			print "Warning! Source view trying to save during an editmgr transaction."
+		showing = []
+		for i in range(len(self.views)):
+			if self.views[i] is not None and \
+			   self.views[i].is_showing():
+				showing.append(i)
+		self.editmgr.unregister(self)
+		self.editmgr.destroy() # kills subscribed views
+		self.context.seteditmgr(None)
+		self.root.Destroy()
+
+		# Now we actually read the text.
+		self.do_read_it_from_string(text)
+
+		self.context = self.root.GetContext()
+		self.editmgr = EditMgr.EditMgr(self.root)
+		self.context.seteditmgr(self.editmgr)
+		self.editmgr.register(self)
+		self.makeviews()
+		for i in showing:
+			self.views[i].show()
+		self.changed = 1
+		
 	def view_callback(self, viewno):
 		self.setwaiting()
 		view = self.views[viewno]
@@ -1117,6 +1145,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##		t1 = time.time()
 ##		print 'done in', round(t1-t0, 3), 'sec.'
 
+	def do_read_it_from_string(self, text):
+		import SMILTreeRead
+		progress = windowinterface.ProgressDialog("Reloading")
+		progress.set("Reloading SMIL document from source view...")
+		self.root = SMILTreeRead.ReadString(text, self.filename, self.printfunc)
 
 	def printfunc(self, msg):
 		windowinterface.showmessage('while reading %s\n\n' % self.filename + msg)
