@@ -2526,6 +2526,8 @@ class SMILWriter(SMIL):
 		if self.smilboston:
 			sendTo = anchor.GetAttrDef('sendTo', None)
 			if sendTo is not None:
+				if sendTo in ('rpcontextwin', 'rpbrowser'):
+					sendTo = '_' + sendTo
 				attrlist.append(('%s:sendTo' % NSRP9prefix, sendTo))
 			self.writetag('area', attrlist, anchor)
 		else:

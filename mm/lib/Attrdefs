@@ -558,7 +558,7 @@
 	'Widens range of chromaKey' normal (advanced g2 smil2))
 (mediaOpacity (float) 1.0 'Media opacity' percent
 	'Makes all opaque areas transparent' normal (advanced g2 smil2))
-(sendTo (enum _rpcontextwin _rpbrowser osdefaultbrowser rpengine) _rpbrowser 'Send to' default
+(sendTo (enum rpcontextwin rpbrowser osdefaultbrowser rpengine) rpbrowser 'Send to' default
 	'Specifies window that opens the HTML page' normal (g2 smil2))
 (reliable (bool) 0 'Reliable transmission' default
 	'Ensures reliable transmission' normal (advanced g2 smil2))
