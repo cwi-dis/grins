@@ -11,6 +11,8 @@ Copyright 1991-2002 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "windowinterface.h"
 
+namespace windowinterface {
+
 messagebox::messagebox(const TCHAR *text, 
 	const char *mtype, 
 	v_callback_v ok, 
@@ -38,9 +40,11 @@ messagebox::messagebox(const TCHAR *text,
 	else if(mt == "yesno")
 		style = MB_YESNO | MB_ICONQUESTION;
 
-	m_res = AfxMessageBox(text, style);
+	m_res = ::AfxMessageBox(text, style);
 	if(ok!=0 && m_res == IDOK)
 		(*ok)();
 	else if(cancel && m_res == IDCANCEL)
 		(*cancel)();
 	}
+
+} // namespace windowinterface
