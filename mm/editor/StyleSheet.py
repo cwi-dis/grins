@@ -97,8 +97,12 @@ class StyleSheet() = ViewDialog(), BasicDialog():
 				i = i+1
 				break
 			i = i+1
-		self.browser.select_browser_line(i)
-		self.nameinput.set_input(self.browser.get_browser_line(i))
+		if i > 0:
+			self.browser.select_browser_line(i)
+			line = self.browser.get_browser_line(i)
+			self.nameinput.set_input(line)
+		else:
+			self.nameinput.set_input('')
 		#
 		self.form.unfreeze_form()
 	#
@@ -162,6 +166,7 @@ class StyleSheet() = ViewDialog(), BasicDialog():
 		if i = 0:
 			fl.show_message( \
 				'No style selected to rename', '', '')
+			return
 		# (2) check that the new name isn't empty
 		if not newname:
 			fl.show_message( \
@@ -188,8 +193,11 @@ class StyleSheet() = ViewDialog(), BasicDialog():
 	#
 	def edit_callback(self, (obj, arg)):
 		i, name = self.getselected()
-		if  i <> 0:
-			AttrEdit.showstyleattreditor(self.context, name)
+		if i = 0:
+			fl.show_message( \
+				'No style selected to edit', '', '')
+			return
+		AttrEdit.showstyleattreditor(self.context, name)
 	#
 	def name_callback(self, (obj, arg)):
 		# When the user presses TAB or RETURN,
