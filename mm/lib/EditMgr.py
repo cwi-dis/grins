@@ -471,9 +471,15 @@ class EditMgr:
 				  'unknown channel name in delchannel'
 		i = self.context.channels.index(c)
 		pchan = c.GetParent()
-		attrdict = c.attrdict.copy()
+		# copy the attributes.
+		# note: don't use copy because it doen't copy all items returned by c.items()
+		attrdict = {}
+		for key,value in c.items():
+			attrdict[key] = value
 		if pchan is not None:
 			attrdict['base_window'] = pchan.name
+		# keep the 'collapse' information for the undo
+		attrdict['collapsed'] = c.collapsed
 		self.addstep('delchannel', name, i, attrdict)
 		self.context.delchannel(name)
 
