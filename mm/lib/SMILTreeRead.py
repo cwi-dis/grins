@@ -209,6 +209,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					val = res.group('name')
 				attrdict['name'] = val
 			elif attr == 'src':
+				val = MMurl.unquote(val)
 				attrdict['file'] = MMurl.basejoin(self.__base, val)
 			elif attr == 'begin' or attr == 'end':
 				node.__syncarcs.append(attr, val)
@@ -298,6 +299,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		data = None
 		mtype = None
 		if url is not None:
+			url = MMurl.unquote(url)
 			url = MMurl.basejoin(self.__base, url)
 			url, tag = MMurl.splittag(url)
 			url = self.__context.findurl(url)
@@ -1249,7 +1251,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__in_a:
 			self.syntax_error('nested a elements', self.lineno)
 		if attributes.has_key('href'):
-			href = attributes['href']
+			href = MMurl.unquote(attributes['href'])
 		else:
 			self.syntax_error('anchor without HREF', self.lineno)
 			return
@@ -1360,6 +1362,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__anchormap[id] = (uid, aid)
 		anchorlist.append((z, len(anchorlist), aid, atype, aargs))
 		if href is not None:
+			href = MMurl.unquote(href)
 			self.__links.append((uid, (aid, atype, aargs),
 					     href, ltype))
 
