@@ -303,22 +303,22 @@ def initattrdefs():
 		else:
 			return marshal.loads(atcres.data)
 			
-	filename = 'Attrdefs'
 	import cmif
-	filename = cmif.findfile(os.path.join('lib', filename))
+	filename = cmif.findfile(os.path.join('lib', 'Attrdefs'))
 	try:
 		fp = open(filename, 'r')
 	except IOError:
 		fp = None
 	try:
 		import Attrdefs
+	except ImportError:
+		pass
+	else:
 		if fp is None:
 			return Attrdefs.Attrdefs
 		sf = os.stat(filename)
 		if Attrdefs.mtime == sf[ST_MTIME]:
 			return Attrdefs.Attrdefs
-	except ImportError:
-		pass
 	attrdefs = readattrdefs(fp, filename)
 	fp.close()
 	return attrdefs
