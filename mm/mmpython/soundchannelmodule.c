@@ -43,8 +43,9 @@ struct sound {
 /*
  * module-global variables
  */
-static int port_open;
+static int device_used;
 static long old_rate, sound_rate;
+static type_lock device_lock;
 
 static int
 sound_init(self)
@@ -76,11 +77,6 @@ sound_init(self)
 		self->mm_private = NULL;
 		return 0;
 	}
-	if (port_open++ == 0) {
-		buf[0] = AL_OUTPUT_RATE;
-		ALgetparams(AL_DEFAULT_DEVICE, buf, 2L);
-		sound_rate = old_rate = buf[1];
-	}
 	return 1;
 }
 
@@ -100,12 +96,6 @@ sound_dealloc(self)
 	(void) close(PRIV->s_pipefd[0]);
 	(void) close(PRIV->s_pipefd[1]);
 	free(self->mm_private);
-	/* On last dealloc, set output rate back */
-	if (--port_open == 0) {
-		buf[0] = AL_OUTPUT_RATE;
-		buf[1] = old_rate;
-		ALsetparams(AL_DEFAULT_DEVICE, buf, 2L);
-	}
 }
 
 static int
@@ -201,13 +191,22 @@ sound_player(self)
 
 	dprintf(("sound_player\n"));
 
-	(void) acquire_lock(PRIV->s_lock, WAIT_LOCK);
+	(void) acquire_lock(device_lock, WAIT_LOCK);
+	if (device_used++ == 0) {
+		/* first one to open the device */
+		buf[0] = AL_OUTPUT_RATE;
+		ALgetparams(AL_DEFAULT_DEVICE, buf, 2L);
+		sound_rate = old_rate = buf[1];
+	}
 	if (sound_rate != PRIV->s_play.samprate) {
+		printf("Warning: two channels with different sampling rates active\n");
 		buf[0] = AL_OUTPUT_RATE;
 		buf[1] = PRIV->s_play.samprate;
 		ALsetparams(AL_DEFAULT_DEVICE, buf, 2L);
 		sound_rate = PRIV->s_play.samprate;
 	}
+	release_lock(device_lock);
+	(void) acquire_lock(PRIV->s_lock, WAIT_LOCK);
 	config = ALnewconfig();
 	ALsetwidth(config, PRIV->s_play.sampwidth);
 	ALsetchannels(config, PRIV->s_play.nchannels);
@@ -281,11 +280,8 @@ sound_player(self)
 				release_lock(PRIV->s_lock);
 				continue;
 			} else {
-				PRIV->s_port = NULL;
-				PRIV->s_flag &= ~PORT_OPEN;
-				release_lock(PRIV->s_lock);
 				dprintf(("stopping with playing\n"));
-				return;
+				goto cleanup;
 			}
 		}
 		if (pollfd[0].revents & (POLLERR|POLLHUP|POLLNVAL)) {
@@ -318,9 +314,18 @@ sound_player(self)
 	}
 	(void) acquire_lock(PRIV->s_lock, WAIT_LOCK);
 	ALcloseport(PRIV->s_port);
+ cleanup:
 	PRIV->s_port = NULL;
 	PRIV->s_flag &= ~PORT_OPEN;
 	release_lock(PRIV->s_lock);
+	(void) acquire_lock(device_lock, WAIT_LOCK);
+	if (--device_used == 0) {
+		/* last one to close the audio port */
+		buf[0] = AL_OUTPUT_RATE;
+		buf[1] = old_rate;
+		ALsetparams(AL_DEFAULT_DEVICE, buf, 2L);
+	}
+	release_lock(device_lock);
 }
 
 static int
@@ -464,4 +469,7 @@ initsoundchannel()
 	soundchannel_debug = getenv("SOUNDDEBUG") != 0;
 #endif
 	(void) initmodule("soundchannel", soundchannel_methods);
+	device_lock = allocate_lock();
+	if (device_lock == NULL)
+		fatal("soundchannelmodule: can't allocate lock");
 }
