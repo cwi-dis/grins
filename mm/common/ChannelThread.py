@@ -256,7 +256,8 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		if not thread_play_called:
 			self.playdone(0)
 
-	def do_redraw(self):
+	def do_redraw(self, rgn=None):
+		# rgn (region to be redrawn, None for everything) ignored for now
 		w = self.window
 		w._gc.SetRegion(w._getmyarea())
 		w._gc.foreground = w._convert_color(w._bgcolor or (0,0,0))

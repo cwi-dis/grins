@@ -210,7 +210,8 @@ class VideoChannel(ChannelWindowAsync):
 			self.place_movie(None, self.play_movie)
 			self.window._mac_setredrawguarantee(self.play_movie.GetMovieBox())
 
-	def redraw(self):
+	def redraw(self, rgn=None):
+		# rgn (region to be redrawn, None for everything) ignored for now
 		if debug: print 'redraw'
 		if self.play_movie:
 			self.place_movie(None, self.play_movie)

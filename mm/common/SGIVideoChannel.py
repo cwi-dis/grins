@@ -329,7 +329,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				self.__stopped = 0
 		self._paused = paused
 
-	def redraw(self):
+	def redraw(self, rgn=None):
+		# rgn (region to be redrawn, None for everything) ignored for now
 		if self.played_movie:
 			self.played_movie.ShowCurrentFrame()
 

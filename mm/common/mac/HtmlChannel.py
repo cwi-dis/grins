@@ -77,7 +77,8 @@ class HtmlChannel(Channel.ChannelWindow):
 ##		self.htmlw.AddCallback('destroyCallback', self.cbdestroy, None)
 ##		self.htmlw.AddCallback('linkCallback', self.cblink, None)
 
-	def redraw(self):
+	def redraw(self, rgn=None):
+		# rgn (region to be redrawn, None for everything) ignored for now
 		if self.htmlw:
 			self.htmlw.do_update()
 			
