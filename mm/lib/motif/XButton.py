@@ -105,8 +105,5 @@ class _Button:
 
 	def _inside(self, x, y):
 		# return 1 iff the given coordinates fall within the button
-		if (self._corners[0] <= x <= self._corners[2]) and \
-			  (self._corners[1] <= y <= self._corners[3]):
-			return TRUE
-		else:
-			return FALSE
+		bx0, by0, bx1, by1 = self._corners
+		return (bx0 <= x < bx1) and (by0 <= y < by1)
