@@ -5,6 +5,7 @@
 from MMExc import *
 import MMAttrdefs
 import time
+from ArmStates import *
 
 prearm_disabled = 0
 
@@ -130,10 +131,10 @@ class Channel:
 		if prearm_disabled:
 			del node.prearm_event
 			return
-		self.player.setarmedmode(node, 1)
+		self.player.setarmedmode(node, ARM_ARMING)
 		node.prearm_event = None
 		self.arm(node)
-		self.player.setarmedmode(node, 2)
+		self.player.setarmedmode(node, ARM_ARMED)
 	#
 	# Start playing a node.
 	#
