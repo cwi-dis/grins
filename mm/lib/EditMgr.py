@@ -56,7 +56,7 @@ class EditMgr(Clipboard.Clipboard):
 	def setRoot(self, root):
 		self.root = root
 		self.context = self.root.context
-		
+
 	def __repr__(self):
 		return '<EditMgr instance, context=' + `self.context` + '>'
 
@@ -68,7 +68,6 @@ class EditMgr(Clipboard.Clipboard):
 		self.registry = []
 		self.focus_registry = []
 		self.focus = []		# the focus is always a list of items
-		self.save_focus = []
 		self.focus_busy = 0
 
 		self.playerstate_registry = []
@@ -80,13 +79,13 @@ class EditMgr(Clipboard.Clipboard):
 		# These are cascading variables - the higher variables override the lower variables.
 		self.structure_changed = 0 # Has the structure of the nodes changed?
 		self.attrs_changed = 0	# Or maybe only the structure of the nodes.
-		
+
 		self.clipboard_registry = []
 
-		# if the context is changed there are some special treatment to do during commit		
+		# if the context is changed there are some special treatment to do during commit
 		self.__newRoot = None
 		self.__errorstateChanged = 0
-		
+
 	def destroy(self):
 		for x in self.registry[:]:
 			x.kill()
@@ -154,12 +153,11 @@ class EditMgr(Clipboard.Clipboard):
 		else:
 			self.history.append(self.undostep)
 		self.busy = 1
-		self.save_focus = self.focus
 		return 1
 
 	def transaction(self, type=None):
 		if self.busy: raise MMExc.AssertError, 'recursive transaction'
-		
+
 		if self.context == None:
 			# the document is probably not open
 			return 0
@@ -171,10 +169,10 @@ class EditMgr(Clipboard.Clipboard):
 			windowinterface.showmessage('The source document contains some errors\nYou have to fix them before to be able to edit',
 						    mtype = 'error')
 			return 0
-		
+
 		self.__delete(self.future)
 		self.future = []
-				
+
 		return self.__start_transaction(type)
 
 	def commit(self, type=None):
@@ -182,25 +180,25 @@ class EditMgr(Clipboard.Clipboard):
 		import MMAttrdefs
 		# test if the root node has changed
 
-		if type==None:
+		if type is None:
 			if self.structure_changed:
 				type = 'STRUCTURE_CHANGED'
 			elif self.attrs_changed:
 				type = 'ATTRS_CHANGED'
-		
+
 		if not self.__newRoot:
 			# the root node hasn't changed (the document hasn't been reloaded)
 			# normal treatment
 			MMAttrdefs.flushcache(self.root)
-			
-			self.context.changedtimes()
+
+			self.context.changedtimes(self.root)
 			self.root.clear_infoicon()
 			self.root.ResetPlayability()
 			for x in self.registry[:]:
 				x.commit(type)
 		else:
 			# the root node has changed (the document has been reloaded)
-			# special treatment			
+			# special treatment
 			self.toplevel.changeRoot(self.__newRoot)
 			self.__newRoot = None
 
@@ -209,18 +207,13 @@ class EditMgr(Clipboard.Clipboard):
 			self.toplevel.updateViewsOnErrors()
 			self.toplevel.updateCommandlistOnErrors()
 			self.__errorstateChanged = 0
-		
+
 		self.busy = 0
 		del self.undostep # To frustrate invalid addstep calls
 		self.structure_changed = 0
 		self.attrs_changed = 0
-		if self.save_focus != self.focus:
-			focuslist = self.focus
-			for client in self.focus_registry:
-				client.globalfocuschanged(focuslist)
-		self.save_focus = []
 		self.next_focus = []
-			
+
 	def rollback(self):
 		if not self.busy: raise MMExc.AssertError, 'invalid rollback'
 		# undo changes made in this transaction
@@ -315,7 +308,7 @@ class EditMgr(Clipboard.Clipboard):
 	# Note: we do NOT override clearclip() here, so the clearclip is
 	# not forwarded to the registered listeners. This is intentional:
 	# a clearclip() is an administrative call for using during cleanup
-	# and not for general use.			
+	# and not for general use.
 
 	#
 	# UNDO interface -- this code isn't ready yet.
@@ -328,7 +321,7 @@ class EditMgr(Clipboard.Clipboard):
 			cmd = action[0]
 			func = getattr(self, 'undo_'+cmd)
 			apply(func, action[1:])
-		
+
 	def undo(self):
 		if self.busy: raise MMExc.AssertError, 'undo while busy'
 		if not self.history:
@@ -340,8 +333,8 @@ class EditMgr(Clipboard.Clipboard):
 		self.next_focus = []
 		self.__do_undo(step)
 		nextfocusvalue = self.next_focus
-		self.commit()
 		self.setglobalfocus(nextfocusvalue)
+		self.commit()
 		return 1
 
 	def redo(self):
@@ -448,7 +441,7 @@ class EditMgr(Clipboard.Clipboard):
 		self.next_focus = [node]
 
 	def undo_setnodevalues(self, node, oldvalues):
-		# XXX Shouldn't this be (self, node, oldvalues)?? 
+		# XXX Shouldn't this be (self, node, oldvalues)??
 		self.setnodevalues(node, oldvalues)
 
 	def clean_setnodevalues(self, node, oldvalues):
@@ -639,7 +632,7 @@ class EditMgr(Clipboard.Clipboard):
 		base_window = attrdict.get('base_window')
 		# IMPORTANT: base_window have to be created in first
 		if base_window != None:
-			self.setchannelattr(name, 'base_window', base_window)			
+			self.setchannelattr(name, 'base_window', base_window)
 		for key, val in attrdict.items():
 			if key in ('type', 'base_window'):
 				continue
@@ -806,7 +799,7 @@ class EditMgr(Clipboard.Clipboard):
 
 	def undo_delusergroup(self, name, usergroup):
 		self.addusergroup(name, usergroup)
-		
+
 	def setusergroupname(self, name, newname):
 		if newname == name:
 			return		# no change
@@ -924,7 +917,7 @@ class EditMgr(Clipboard.Clipboard):
 		self.deldocument(root)
 
 	def clean_deldocument(self, root):
-		pass		
+		pass
 
 	def clean_adddocument(self, root):
 		# destroy the root only if it's not the current root
@@ -940,14 +933,14 @@ class EditMgr(Clipboard.Clipboard):
 		if self.context != None:
 			self.context.setParseErrors(None)
 		self.next_focus = []	# This object cannot have focus (yet)
-			
+
 	def addparsestatus(self, parsestatus):
 		self.addstep('addparsestatus', parsestatus)
 		self.__errorstateChanged = 1
 		if self.context != None:
 			self.context.setParseErrors(parsestatus)
 		self.next_focus = []	# This object cannot have focus (yet)
-			
+
 	def undo_delparsestatus(self, parsestatus):
 		self.addparsestatus(parsestatus)
 
@@ -955,11 +948,11 @@ class EditMgr(Clipboard.Clipboard):
 		self.delparsestatus(parsestatus)
 
 	def clean_delparsestatus(self, parsestatus):
-		pass		
+		pass
 
 	def clean_addparsestatus(self, parsestatus):
 		pass
-	
+
 	#
 	# asset operations
 	#

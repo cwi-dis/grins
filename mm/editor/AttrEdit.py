@@ -1697,16 +1697,22 @@ class AttrEditor(AttrEditorDialog):
 	def commit(self, type):
 		if self.wrapper.closing():
 			pass
+		elif self.follow_selection:
+			self.globalfocuschanged(self.wrapper.editmgr.getglobalfocus())
 		elif not self.wrapper.stillvalid():
 			self.close()
 		else:
 			self.redisplay()
 			
-	def globalfocuschanged(self, focusobject):
+	def globalfocuschanged(self, focuslist):
 		if not self.follow_selection:
 			return
+		if len(focuslist) != 1:
+			return
+		if focuslist[0] is self.wrapper.getselection():
+			return
 		if self.pagechange_allowed():
-			self.followselection(focusobject)
+			self.followselection(focuslist)
 		else:
 			# XXX should restore the focus. But can't be done here
 			pass

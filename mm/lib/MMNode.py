@@ -157,12 +157,6 @@ class MMNodeContext:
 		self.addinternalchannels( [(chname, 'animate', node.attrdict), ] )
 		return node
 
-	def getroot(self):
-		if not self.root:
-			uid = self.uidmap.keys()[0]
-			self.root = self.uidmap[uid].GetRoot()
-		return self.root
-
 	#
 	# Timing computation
 	#
@@ -249,8 +243,8 @@ class MMNodeContext:
 		for child in node.GetChildren():
 			self._movetimestoobj(child, which)
 
-	def changedtimes(self):
-		self.getroot().ClearTimesObjects()
+	def changedtimes(self, root):
+		root.ClearTimesObjects()
 		
 	# compute the mime type according to the specified user mime type,
 	# and the url if no specified
@@ -727,7 +721,7 @@ class MMNodeContext:
 
 	# create a new linked SMILCssResolver
 	# it uses the context instance since it absorbed css attrs
-	def newCssResolver(self):
+	def newCssResolver(self, root):
 		blackhole = self.cssResolver
 		from SMILCssResolver import SMILCssResolver
 		resolver =  SMILCssResolver(self)
@@ -736,7 +730,6 @@ class MMNodeContext:
 			csstop = resolver.newRootNode(top)
 			csstop.copyRawAttrs(blackhole.getCssObj(top))
 			self.__appendCssRegions(resolver, top, csstop)
-		root = self.getroot()
 		if root:
 			self.__appendCssNodes(resolver, root)
 		for top in top_levels:
