@@ -1487,8 +1487,14 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##					self.new_file = 1
 
 		elif mtype == 'application/x-grins-binary-project':
+			self.progress = windowinterface.ProgressDialog("Loading")
+			self.progressMessage = "Loading GRiNS document..."
 			import QuickRead
-			self.root = QuickRead.ReadFile(filename)
+			self.root = QuickRead.ReadFile(self.filename, progressCallback = (self.progressCallback, 0.5))
+			self.progressCallback(1.0)
+			if sys.platform == 'wince':
+				self.progress.close()
+			self.progress = None
 		else:
 			if sys.platform == 'win32':
 				# XXX: experimental code
