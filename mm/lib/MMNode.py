@@ -4870,24 +4870,8 @@ class MMNode(MMTreeElement):
 		# we should not play
 		for setting in settings.getsettings():
 			if self.attrdict.has_key(setting):
-				#
-				# RTIPA start
-				#
-				if hasattr(features, 'RTIPA') and features.RTIPA and setting == 'system_bitrate':
-					host = self.attrdict.get('RTIPA_server')
-					if not host:
-						url = self.GetFile()
-						if url:
-							scheme, url = MMurl.splittype(url)
-							if scheme and scheme != 'file':
-								host, url = MMurl.splithost(url)
-					ok = settings.match_bitrate_RTIPA(self.attrdict['system_bitrate'], host)
-				else:
-					#
-					# RTIPA end
-					#
-					ok = settings.match(setting,
-							    self.attrdict[setting])
+				ok = settings.match(setting,
+						    self.attrdict[setting])
 				if not ok:
 					return 0
 		# And if any of our user groups doesn't match we shouldn't
