@@ -346,7 +346,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 
 	def paintSplash(self, dc):
 		if self._splash is None:
-			filename = r'\Program Files\GRiNS\bin\wince\cesplash.bmp'
+			filename = r'\Program Files\GRiNS\cesplash.bmp'
 			import mediainterface
 			self._splash = mediainterface.get_image(filename, dc)
 			ws, hs = self._splash.GetSize()
