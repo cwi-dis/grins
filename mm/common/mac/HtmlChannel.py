@@ -10,6 +10,7 @@ import MMAttrdefs
 import sys
 import windowinterface
 import MMurl
+import urlparse
 import htmlwidget
 from TextChannel import getfont, mapfont
 import WMEVENTS
@@ -143,7 +144,7 @@ class HtmlChannel(Channel.ChannelWindow):
 	def do_play(self, node):
 		htmlw = self.htmlw
 		self.played_url = self.url = self.armed_url
-		url, tag = MMurl.splittag(self.played_url)
+		utype, host, path, params, query, tag = urlparse.urlparse(self.url)
 		self.played_str = self.armed_str
 
 		fontspec = getfont(node)
@@ -258,7 +259,9 @@ class HtmlChannel(Channel.ChannelWindow):
 			href = self.url
 		if list:
 			href = addquery(href, list)
-		self.url, tag = MMurl.splittag(href)
+		utype, host, path, params, query, tag = urlparse.urlparse(href)
+		self.url = urlparse.urlunparse((utype, host, path, params, query, ''))
+		## XXXX do something with the tag
 		try:
 			u = MMurl.urlopen(self.url)
 			if u.headers.maintype == 'image':
