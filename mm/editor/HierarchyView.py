@@ -226,7 +226,10 @@ class HierarchyView(HierarchyViewDialog):
 		is_realpix = fntype == 'ext' and fnode.GetChannelType() == 'RealPix'
 		if fntype in MMNode.interiortypes or is_realpix:
 			popupmenu = self.interior_popupmenu
-			if fnode.children:
+			# if node has children, or if we don't know that the
+			# node has children (collapsed RealPix node), enable
+			# the TOCHILD command
+			if fnode.children or (is_realpix and not hasattr(fnode, 'expanded')):
 				commands = commands + self.navigatecommands[1:2]
 		else:
 			popupmenu = self.leaf_popupmenu
@@ -726,13 +729,17 @@ class HierarchyView(HierarchyViewDialog):
 		self.setfocusnode(parent)
 
 	def tochild(self, i):
-		if not self.focusnode:
+		node = self.focusnode
+		if not node:
 			windowinterface.beep()
 			return
-		if self.focusnode.GetType() not in MMNode.interiortypes:
+		ntype = node.GetType()
+		if ntype not in MMNode.interiortypes and \
+		   (ntype != 'ext' or node.GetChannelType() != 'RealPix'):
 			windowinterface.beep()
 			return
-		children = self.focusnode.GetChildren()
+		expandnode(node)
+		children = node.GetChildren()
 		if i < 0: i = i + len(children)
 		if not 0 <= i < len(children):
 			windowinterface.beep()
