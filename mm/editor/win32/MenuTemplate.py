@@ -90,10 +90,11 @@ MENUBAR=(
 	('&View', (
 		(TOGGLE, 'Player', '1', PLAYERVIEW),
 		(TOGGLE, 'Layout view', '2', LAYOUTVIEW),
-		(TOGGLE, 'Hierarchy view', '3', HIERARCHYVIEW),
-		(TOGGLE, 'Timeline view', '4', CHANNELVIEW),
-		(TOGGLE, 'Hyperlink view', '5', LINKVIEW),
-		(TOGGLE, 'Source', '6', SOURCE),
+		(TOGGLE, 'User groups', '3', USERGROUPVIEW),
+		(TOGGLE, 'Hierarchy view', '4', HIERARCHYVIEW),
+		(TOGGLE, 'Timeline view', '5', CHANNELVIEW),
+		(TOGGLE, 'Hyperlinks', '6', LINKVIEW),
+		(TOGGLE, 'Source', '7', SOURCE),
 		(SEP,),
 		(ENTRY, 'More horizontal detail', None, CANVAS_WIDTH),
 		(ENTRY, 'More vertical detail', None, CANVAS_HEIGHT),
@@ -130,6 +131,7 @@ MENUBAR=(
 		(ENTRY, 'Play node', None, PLAYNODE),
 		(ENTRY, 'Play from node', None, PLAYFROM),
 		(SEP,),
+		(DYNAMICCASCADE, 'User groups', USERGROUPS),
 		(DYNAMICCASCADE, 'Visible channels', CHANNELS),
 		)),
 
