@@ -779,9 +779,6 @@ class Channel:
 		b = self._played_anchor2button.get(anchor)
 		if b is not None:
 			b.setsensitive(0)
-			tabindex = MMAttrdefs.getattr(anchor, 'tabindex') or 0x10000
-			if tabindex > 0:
-				self._player.deltabindex(tabindex, anchor, self)
 
 	def anchor_highlight(self, anchor, highlight):
 		b = self._played_anchor2button.get(anchor)
@@ -826,6 +823,9 @@ class Channel:
 		# PLAYING or PLAYED state to PIDLE.
 		# Node is only passed to do consistency checking.
 		if debug: print 'Channel.stopplay('+`self`+','+`node`+')'
+		tabindex = MMAttrdefs.getattr(node, 'tabindex') or 0x10000
+		if tabindex > 0:
+			self._player.deltabindex(tabindex, node, self)
 		if node.GetType() == 'anchor':
 			self.stop_anchor(node, curtime)
 			return
@@ -835,9 +835,6 @@ class Channel:
 		b = self._played_anchor2button.get(node)
 		if b is not None:
 			b.setsensitive(0)
-			tabindex = MMAttrdefs.getattr(node, 'tabindex') or 0x10000
-			if tabindex > 0:
-				self._player.deltabindex(tabindex, node, self)
 		if self._playstate == PLAYING:
 			self.playstop(curtime)
 		if self._playstate != PLAYED:
@@ -891,6 +888,8 @@ class Channel:
 			raise error, 'stopcontext with unknown context'
 		if self._playcontext is ctx:
 			if self._playstate in (PLAYING, PLAYED):
+				for c in self._played_node.GetSchedChildren():
+					self.stopplay(c, curtime)
 				self.stopplay(self._played_node, curtime)
 			self._playcontext = None
 		if self._armcontext is ctx:
@@ -917,12 +916,20 @@ class Channel:
 		self._paused = paused
 
 	def pause(self, node, action, timestamp):
+		tabindex = MMAttrdefs.getattr(node, 'tabindex') or 0x10000
+		if tabindex > 0:
+			self._player.deltabindex(tabindex, node, self)
 		if node.GetType() == 'anchor':
 			return
 		if node is self._played_node:
 			self.setpaused(action, timestamp)
 
 	def resume(self, node, timestamp):
+		tabindex = MMAttrdefs.getattr(node, 'tabindex') or 0x10000
+		if tabindex > 0:
+			for b, a in self._played_anchor2button.items():
+				if a is node and b._sensitive:
+					self._player.addtabindex(tabindex, node, self)
 		if node.GetType() == 'anchor':
 			return
 		if node is self._played_node:
@@ -1572,7 +1579,7 @@ class ChannelWindow(Channel):
 		b = self.armed_display.newbutton(windowCoordinates, z = -1, sensitive = sensitive)
 		self.setanchor(b, node)
 		if tabindex > 0 and sensitive:
-			self._player.deltabindex(tabindex, node, self)
+			self._player.addtabindex(tabindex, node, self)
 
 		# create buttons for all anchors
 		for a in node.GetChildren():
@@ -1654,7 +1661,7 @@ class ChannelWindow(Channel):
 	def stopplay(self, node, curtime):
 		if debug: print 'ChannelWindow.stopplay('+`self`+','+`node`+')'
 		if node.GetType() == 'anchor':
-			self.stop_anchor(node, curtime)
+			Channel.stopplay(self, node, curtime)
 			return
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
