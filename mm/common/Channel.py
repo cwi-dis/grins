@@ -647,8 +647,12 @@ class ChannelWindow(Channel):
 		pgeom = None
 		pchan = None
 		if self._attrdict.has_key('base_window'):
-			# there is a base window, create a subwindow
 			pname = self._attrdict['base_window']
+		else:
+			pname = 'undefined'
+		if pname <> 'undefined':
+			# there is a base window, create a subwindow
+
 			print 'LOOK FOR', pname, 'IN', ChannelWinDict
 			if ChannelWinDict.has_key(pname):
 				pchan = ChannelWinDict[pname]
