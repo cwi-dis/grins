@@ -20,7 +20,7 @@
 # This module is thread safe - output can originate from any thread.  If any thread 
 # other than the main thread attempts to print, it is always queued until next idle time
 
-import sys, string, regex, regsub
+import sys, string, regex
 from pywinlib.mfc import docview, window
 import app
 import win32ui, win32api, win32con
