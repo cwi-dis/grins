@@ -30,7 +30,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		self._splash = None
 		self._splash_pos = 0, 0
 		self._ready = 0
-		self._status_msg = 'Looading modules ...'
+		self._status_msg = 'Loading modules ...'
 		self._progress = None
 
 		# player state
@@ -385,6 +385,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 				settings.set('skin', '')
 			else:
 				self.HideMenu()
+				self._menu_height = 0
 		dc = wingdi.GetDesktopDC()
 		try:
 			self._splash = wingdi.CreateDIBSurfaceFromFile(dc, filename)
@@ -396,7 +397,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		dc.DeleteDC()
 		l, t, r, b = self.GetClientRect()
 		w, h = r-l, b - t - self._menu_height
-		self._splash_pos = (w-ws)/2, (h-hs)/2 - 24
+		self._splash_pos = max(0, (w-ws)/2), max(0, (h-hs)/2 - 24)
 		
 	def paintSplash(self, dc):
 		if self._splash is not None:
@@ -409,6 +410,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 	def getStatusRect(self):
 		l, t, r, b = self.GetClientRect()
 		y = self._splash_pos[1] + self._splash.GetSize()[1]
+		y = min(y, b-24)
 		return l, y, r, y+24
 		
 	def setStatusMsg(self, msg):
