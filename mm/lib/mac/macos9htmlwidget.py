@@ -5,9 +5,9 @@ __version__ = "$Id$"
 # To be done:
 # - Functionality: find, etc.
 
-import Win
-import Qd
-import QuickDraw
+##import Win
+##import Qd
+##import QuickDraw
 ##import Res
 ##import Fm
 ##import Ctl
@@ -15,7 +15,6 @@ import QuickDraw
 ##import waste
 ##import WASTEconst
 ##import os
-##import regsub
 ##import string
 ##import htmllib
 ##import MMurl
@@ -23,10 +22,14 @@ import QuickDraw
 ##import imgformat
 ##import mac_image
 ##import formatter
-import HtmlRender
-import HtmlRendering
+try:
+	import HtmlRender
+	import HtmlRendering
+except ImportError:
+	HtmlRender = None
+
 if not HtmlRender.HRHTMLRenderingLibAvailable():
-	raise ImportError, 'HTMLRenderingLib not available on this machine'
+	HtmlRender = None
 	
 ##LEFTMARGIN=4
 ##TOPMARGIN=4
@@ -48,19 +51,16 @@ if not HtmlRender.HRHTMLRenderingLibAvailable():
 class HTMLWidget:
 	def __init__(self, window, rect, name, controlhandler=None):
 		self.widget = HtmlRender.HRNewReference(HtmlRendering.kHRRendererHTML32Type, window)
-		Qd.SetPort(window._wid)
 		self.widget.HRSetRenderingRect(rect)
-		Win.InvalRect((0,0,999,9999))
 		self.rect = rect
-		self.window = window
-		self.wid = window._wid
+		self.wid = window
 		self.controlhandler = controlhandler
 
 		self.must_clear = 0
 ##		init_waste()
 ##		self.last_mouse_was_down = 0
 ##		self.url = ''
-		self.current_data_loaded = None
+##		self.current_data_loaded = None
 ##		self.tag_positions = {}
 ##		self.bary = None
 ##		self.anchor_offsets = []
@@ -263,11 +263,11 @@ class HTMLWidget:
 		self.rect = rect
 		Qd.SetPort(self.wid)
 		self.widget.HRSetRenderingRect(rect)
-		Win.InvalRect(self.rect)
+		self.wid.InvalWindowRect(self.rect)
 ##		self._createscrollbars()
 		
 	def do_click(self, down, local, evt):
-		if not HtmlRender.HRIsHREvent(evt):
+		if not self.widget.HRIsHREvent(evt):
 			import MacOS
 			MacOS.SysBeep()
 ##		(what, message, when, where, modifiers) = evt
@@ -317,7 +317,7 @@ class HTMLWidget:
 ##		self.ted.WESetSelection(0, 0x3fffffff)
 ##		self.ted.WEDelete()
 ##		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
-##		Win.InvalRect(self.rect)
+##		self.wid.InvalWindowRect(self.rect)
 ##		self._createscrollbars(reset=1)
 ##		self.anchor_offsets = []
 		self.current_data_loaded = None
@@ -326,8 +326,7 @@ class HTMLWidget:
 	def insert_html(self, data, url, tag=None):		
 		if data == '':
 			self.must_clear = 1
-			Qd.SetPort(self.wid)
-			Win.InvalRect(self.rect)
+			self.wid.InvalWindowRect(self.rect)
 			return
 
 		self.must_clear = 0
@@ -338,8 +337,7 @@ class HTMLWidget:
 			return
 		self.current_data_loaded = data
 		self.widget.HRGoToPtr(data, 0, 0)
-		Qd.SetPort(self.wid)
-		Win.InvalRect(self.rect)
+		self.wid.InvalWindowRect(self.rect)
 ##		f = MyFormatter(self)
 ##		
 ##		# Remember where we are, and don't update
@@ -374,8 +372,7 @@ class HTMLWidget:
 		self.insert_html('<pre>'+data+'</pre>', '')	
 ##		if data == '':
 ##			self.must_clear = 1
-##			Qd.SetPort(self.wid)
-##			Win.InvalRect(self.rect)
+##			self.wid.InvalWindowRect(self.rect)
 ##			return
 ##
 ##		self.must_clear = 0
@@ -399,7 +396,7 @@ class HTMLWidget:
 ##		self.ted.WESetSelection(pos, pos)
 ####		self.ted.WESetSelection(0, 0)
 ##		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
-##		Win.InvalRect(self.rect)
+##		self.wid.InvalWindowRect(self.rect)
 ##
 ##		self._createscrollbars(reset=1)
 		
@@ -424,215 +421,215 @@ class HTMLWidget:
 	# Methods for getting at the anchors
 	#
 	def GetHRefs(self):
-		return [] # Should be: self.anchor_hrefs[:]
+		return self.anchor_hrefs[:]
 		
 	def setanchorcallback(self, cb):
 		self._cbanchor = cb
 								
-##		
-##		
-##class MyFormatter(formatter.AbstractFormatter):
-##
-##	def __init__(self, writer):
-##		formatter.AbstractFormatter.__init__(self, writer)
-##		self.parskip = 1
-##		
-##	def my_add_image(self, image):
-##		self.writer.send_image(image)
-##		
-##	def my_send_name(self, name):
-##		self.writer.send_name(name)
-##		
-##	def my_body_colors(self, bg, fg, an):
-##		self.writer.setcolors(bg, fg, an, recalc=1)
-##			
-##class MyHTMLParser(htmllib.HTMLParser):
-##
-##	from machtmlentitydefs import entitydefs
-##	
-##	def anchor_bgn(self, href, name, type):
-##		self.anchor = href
-##		if self.anchor:
-##			self.anchorlist.append(href)
-##			self.formatter.push_style('anchor')
-##		if name:
-##			self.formatter.my_send_name(name)
-##
-##	def anchor_end(self):
-##		if self.anchor:
-##			self.anchor = None
-##			self.formatter.pop_style()
-##			
-##	def end_p(self):
-##		# It seems most browsers treat </p> as <p>...
-##		self.do_p(())
-##	
-##	def start_p(self, attrs):
-##		# It seems most browsers treat </p> as <p>...
-##		self.do_p(attrs)
-##		for aname, avalue in attrs:
-##			if aname == 'id':
-##				self.formatter.my_send_name(avalue)
-##				
-##	def start_h1(self, attrs):
-##		for aname, avalue in attrs:
-##			if aname == 'id':
-##				self.formatter.my_send_name(avalue)
-##		htmllib.HTMLParser.start_h1(self, attrs)
-##	
-##	def start_h2(self, attrs):
-##		for aname, avalue in attrs:
-##			if aname == 'id':
-##				self.formatter.my_send_name(avalue)
-##		htmllib.HTMLParser.start_h2(self, attrs)
-##	
-##	def start_h3(self, attrs):
-##		for aname, avalue in attrs:
-##			if aname == 'id':
-##				self.formatter.my_send_name(avalue)
-##		htmllib.HTMLParser.start_h3(self, attrs)
-##	
-##	def start_h4(self, attrs):
-##		for aname, avalue in attrs:
-##			if aname == 'id':
-##				self.formatter.my_send_name(avalue)
-##		htmllib.HTMLParser.start_h4(self, attrs)
-##	
-##	def start_h5(self, attrs):
-##		for aname, avalue in attrs:
-##			if aname == 'id':
-##				self.formatter.my_send_name(avalue)
-##		htmllib.HTMLParser.start_h5(self, attrs)
-##	
-##	def start_h6(self, attrs):
-##		for aname, avalue in attrs:
-##			if aname == 'id':
-##				self.formatter.my_send_name(avalue)
-##		htmllib.HTMLParser.start_h6(self, attrs)
-##	
-##	def handle_image(self, src, alt, ismap, align, width, height):
-##		url = MMurl.basejoin(self.url, src)
-##		try:
-##			handle = _gifkeeper.new(url)
-##		except (IOError, img.error), arg: # XXXX Work out which ones should really be catched
-##			print 'Html: failed to get image', url, arg
-##			self.formatter.add_flowing_data(alt)
-##			return
-##		self.formatter.my_add_image(handle)
-##		
-##	def start_body(self, attrs):
-##		bg = None
-##		fg = None
-##		an = None
-##		for aname, avalue in attrs:
-##			if aname == 'bgcolor':
-##				bg = self.parsecolor(avalue)
-##			if aname == 'text':
-##				fg = self.parsecolor(avalue)
-##			if aname == 'link':
-##				an = self.parsecolor(avalue)
-##		self.formatter.my_body_colors(bg, fg, an)
-##		
-##	def parsecolor(self, color):
-##		if color[0] == '#':
-##			try:
-##				value = string.atoi(color[1:], 16)
-##			except ValueError:
-##				return None
-##			r = (value>>16) & 0xff
-##			g = (value>>8) & 0xff
-##			b = value & 0xff
-##			return r*0x101, g*0x101, b*0x101
-##		return None
-##
-##
-##waste_inited = 0
-##
-##def init_waste():
-##	global waste_inited
-##	if waste_inited:
-##		return
-##	waste_inited = 1
-##	# Ruler handlers
-##	waste.WEInstallObjectHandler('rulr', 'new ', newRuler)
-##	waste.WEInstallObjectHandler('rulr', 'draw', drawRuler)
-##	waste.WEInstallObjectHandler('rulr', 'free', freeRuler)
-##	# GIF handlers
-##	waste.WEInstallObjectHandler('GIF ', 'new ', newGIF)
-##	waste.WEInstallObjectHandler('GIF ', 'draw', drawGIF)
-##	waste.WEInstallObjectHandler('GIF ', 'free', freeGIF)
-##	
-##def newRuler(obj):
-##	"""Insert a new ruler. Make it as wide as the window minus 2 pixels"""
-##	ted = obj.WEGetObjectOwner()
-##	l, t, r, b = ted.WEGetDestRect()
-##	return r-l, 4
-##	
-##def drawRuler((l, t, r, b), obj):
-##	y = (t+b)/2
-##	Qd.MoveTo(l+2, y)
-##	Qd.LineTo(r-2, y)
-##	return 0
-##	
-##def freeRuler(*args):
-##	return 0
-##	
-##def newGIF(obj):
-##	handle = obj.WEGetObjectDataHandle()
-##	width, height, pixmap = _gifkeeper.get(handle.data)
-##	return width+2*IMAGEBORDER, height+2*IMAGEBORDER
-##	
-##def drawGIF((l,t,r,b),obj):
-##	handle = obj.WEGetObjectDataHandle()
-##	width, height, pixmap = _gifkeeper.get(handle.data)
-##	srcrect = 0, 0, width, height
-##	dstrect = l+IMAGEBORDER, t+IMAGEBORDER, r-IMAGEBORDER, b-IMAGEBORDER
-##	port = Qd.GetPort()
-##	bg = port.rgbBkColor
-##	fg = port.rgbFgColor
-##	Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
-##	Qd.RGBForeColor((0,0,0))
-####	Qd.CopyBits(pixmap, port.portBits, srcrect, dstrect,
-####		QuickDraw.srcCopy+QuickDraw.ditherCopy, None)
+		
+		
+class MyFormatter(formatter.AbstractFormatter):
+
+	def __init__(self, writer):
+		formatter.AbstractFormatter.__init__(self, writer)
+		self.parskip = 1
+		
+	def my_add_image(self, image):
+		self.writer.send_image(image)
+		
+	def my_send_name(self, name):
+		self.writer.send_name(name)
+		
+	def my_body_colors(self, bg, fg, an):
+		self.writer.setcolors(bg, fg, an, recalc=1)
+			
+class MyHTMLParser(htmllib.HTMLParser):
+
+	from machtmlentitydefs import entitydefs
+	
+	def anchor_bgn(self, href, name, type):
+		self.anchor = href
+		if self.anchor:
+			self.anchorlist.append(href)
+			self.formatter.push_style('anchor')
+		if name:
+			self.formatter.my_send_name(name)
+
+	def anchor_end(self):
+		if self.anchor:
+			self.anchor = None
+			self.formatter.pop_style()
+			
+	def end_p(self):
+		# It seems most browsers treat </p> as <p>...
+		self.do_p(())
+	
+	def start_p(self, attrs):
+		# It seems most browsers treat </p> as <p>...
+		self.do_p(attrs)
+		for aname, avalue in attrs:
+			if aname == 'id':
+				self.formatter.my_send_name(avalue)
+				
+	def start_h1(self, attrs):
+		for aname, avalue in attrs:
+			if aname == 'id':
+				self.formatter.my_send_name(avalue)
+		htmllib.HTMLParser.start_h1(self, attrs)
+	
+	def start_h2(self, attrs):
+		for aname, avalue in attrs:
+			if aname == 'id':
+				self.formatter.my_send_name(avalue)
+		htmllib.HTMLParser.start_h2(self, attrs)
+	
+	def start_h3(self, attrs):
+		for aname, avalue in attrs:
+			if aname == 'id':
+				self.formatter.my_send_name(avalue)
+		htmllib.HTMLParser.start_h3(self, attrs)
+	
+	def start_h4(self, attrs):
+		for aname, avalue in attrs:
+			if aname == 'id':
+				self.formatter.my_send_name(avalue)
+		htmllib.HTMLParser.start_h4(self, attrs)
+	
+	def start_h5(self, attrs):
+		for aname, avalue in attrs:
+			if aname == 'id':
+				self.formatter.my_send_name(avalue)
+		htmllib.HTMLParser.start_h5(self, attrs)
+	
+	def start_h6(self, attrs):
+		for aname, avalue in attrs:
+			if aname == 'id':
+				self.formatter.my_send_name(avalue)
+		htmllib.HTMLParser.start_h6(self, attrs)
+	
+	def handle_image(self, src, alt, ismap, align, width, height):
+		url = MMurl.basejoin(self.url, src)
+		try:
+			handle = _gifkeeper.new(url)
+		except (IOError, img.error), arg: # XXXX Work out which ones should really be catched
+			print 'Html: failed to get image', url, arg
+			self.formatter.add_flowing_data(alt)
+			return
+		self.formatter.my_add_image(handle)
+		
+	def start_body(self, attrs):
+		bg = None
+		fg = None
+		an = None
+		for aname, avalue in attrs:
+			if aname == 'bgcolor':
+				bg = self.parsecolor(avalue)
+			if aname == 'text':
+				fg = self.parsecolor(avalue)
+			if aname == 'link':
+				an = self.parsecolor(avalue)
+		self.formatter.my_body_colors(bg, fg, an)
+		
+	def parsecolor(self, color):
+		if color[0] == '#':
+			try:
+				value = string.atoi(color[1:], 16)
+			except ValueError:
+				return None
+			r = (value>>16) & 0xff
+			g = (value>>8) & 0xff
+			b = value & 0xff
+			return r*0x101, g*0x101, b*0x101
+		return None
+
+
+waste_inited = 0
+
+def init_waste():
+	global waste_inited
+	if waste_inited:
+		return
+	waste_inited = 1
+	# Ruler handlers
+	waste.WEInstallObjectHandler('rulr', 'new ', newRuler)
+	waste.WEInstallObjectHandler('rulr', 'draw', drawRuler)
+	waste.WEInstallObjectHandler('rulr', 'free', freeRuler)
+	# GIF handlers
+	waste.WEInstallObjectHandler('GIF ', 'new ', newGIF)
+	waste.WEInstallObjectHandler('GIF ', 'draw', drawGIF)
+	waste.WEInstallObjectHandler('GIF ', 'free', freeGIF)
+	
+def newRuler(obj):
+	"""Insert a new ruler. Make it as wide as the window minus 2 pixels"""
+	ted = obj.WEGetObjectOwner()
+	l, t, r, b = ted.WEGetDestRect()
+	return r-l, 4
+	
+def drawRuler((l, t, r, b), obj):
+	y = (t+b)/2
+	Qd.MoveTo(l+2, y)
+	Qd.LineTo(r-2, y)
+	return 0
+	
+def freeRuler(*args):
+	return 0
+	
+def newGIF(obj):
+	handle = obj.WEGetObjectDataHandle()
+	width, height, pixmap = _gifkeeper.get(handle.data)
+	return width+2*IMAGEBORDER, height+2*IMAGEBORDER
+	
+def drawGIF((l,t,r,b),obj):
+	handle = obj.WEGetObjectDataHandle()
+	width, height, pixmap = _gifkeeper.get(handle.data)
+	srcrect = 0, 0, width, height
+	dstrect = l+IMAGEBORDER, t+IMAGEBORDER, r-IMAGEBORDER, b-IMAGEBORDER
+	port = Qd.GetPort()
+	bg = port.rgbBkColor
+	fg = port.rgbFgColor
+	Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
+	Qd.RGBForeColor((0,0,0))
 ##	Qd.CopyBits(pixmap, port.portBits, srcrect, dstrect,
-##		QuickDraw.srcCopy, None)
-##	Qd.RGBBackColor(bg)
-##	Qd.RGBForeColor(fg)
-##	# XXXX paste pixmap on screen
-##	return 0
-##	
-##def freeGIF(obj):
-##	handle = obj.WEGetObjectDataHandle()
-##	_gifkeeper.delete(handle.data)
-##	return 0
-##	
-##class _Gifkeeper:
-##	def __init__(self):
-##		self.dict = {}
-##		
-##	def new(self, url):
-##		if self.dict.has_key(url):
-##			self.dict[url][0] = self.dict[url][0] + 1
-##			return self.dict[url][1]
-##		fname = MMurl.urlretrieve(url)[0]
-##		image = img.reader(imgformat.macrgb16, fname)
-##		data = image.read()
-##		pixmap = mac_image.mkpixmap(image.width, image.height, imgformat.macrgb16, data)
-##		handle = Res.Resource(url)
-##		self.dict[url] = [1, handle, pixmap, data, image.width, image.height]
-##		return handle
-##		
-##	def get(self, name):
-##		[cnt, handle, pixmap, data, width, height] = self.dict[name]
-##		return width, height, pixmap
-##		
-##	def delete(self, name):
-##		self.dict[name][0] = self.dict[name][0] - 1
-#### Should do this optionally, i.e. on used memory
-####		if self.dict[name][0] == 0:
-####			del self.dict[name]
-##			
-##_gifkeeper = _Gifkeeper()
-##
-##
-##	
+##		QuickDraw.srcCopy+QuickDraw.ditherCopy, None)
+	Qd.CopyBits(pixmap, port.portBits, srcrect, dstrect,
+		QuickDraw.srcCopy, None)
+	Qd.RGBBackColor(bg)
+	Qd.RGBForeColor(fg)
+	# XXXX paste pixmap on screen
+	return 0
+	
+def freeGIF(obj):
+	handle = obj.WEGetObjectDataHandle()
+	_gifkeeper.delete(handle.data)
+	return 0
+	
+class _Gifkeeper:
+	def __init__(self):
+		self.dict = {}
+		
+	def new(self, url):
+		if self.dict.has_key(url):
+			self.dict[url][0] = self.dict[url][0] + 1
+			return self.dict[url][1]
+		fname = MMurl.urlretrieve(url)[0]
+		image = img.reader(imgformat.macrgb16, fname)
+		data = image.read()
+		pixmap = mac_image.mkpixmap(image.width, image.height, imgformat.macrgb16, data)
+		handle = Res.Resource(url)
+		self.dict[url] = [1, handle, pixmap, data, image.width, image.height]
+		return handle
+		
+	def get(self, name):
+		[cnt, handle, pixmap, data, width, height] = self.dict[name]
+		return width, height, pixmap
+		
+	def delete(self, name):
+		self.dict[name][0] = self.dict[name][0] - 1
+## Should do this optionally, i.e. on used memory
+##		if self.dict[name][0] == 0:
+##			del self.dict[name]
+			
+_gifkeeper = _Gifkeeper()
+
+
+	
