@@ -1257,8 +1257,6 @@ movie_resized(self, x, y, w, h)
 					 (PRIV->m_play.m_bgcolor      ) & 0xff);
 				clear();
 			}
-			movie_do_display(self);
-			(void) down_sema(PRIV->m_dispsema, WAIT_SEMA);
 		}
 		if (gl_lock)
 			release_lock(gl_lock);
@@ -1275,8 +1273,6 @@ movie_resized(self, x, y, w, h)
 				       PRIV->m_rect[X], PRIV->m_rect[Y],
 				       PRIV->m_rect[WIDTH],
 				       PRIV->m_rect[HEIGHT]);
-			movie_do_display(self);
-			(void) down_sema(PRIV->m_dispsema, WAIT_SEMA);
 		}
 		break;
 	}
