@@ -15,8 +15,10 @@ _Accelerator = 1024
 import os
 debug = os.environ.has_key('WINDOWDEBUG')
 import time, select, math
+from types import *
 
 error = 'windowinterface.error'
+ReadMask, WriteMask = 1, 2
 Version = 'GL'
 
 # size of arrow head
@@ -228,7 +230,7 @@ _box_finished = '_finished'
 
 class _Boxes:
 	def __init__(self, window, msg, callback, box):
-		if len(box) == 1 and type(box) == type(()):
+		if len(box) == 1 and type(box) == TupleType:
 			box = box[0]
 		if len(box) not in (0, 4):
 			raise TypeError, 'bad arguments'
@@ -379,13 +381,13 @@ class _Event:
 		self._curwin = None
 		self._savemouse = None
 		self._savex = None
-		self._fdlist = []
+		self._rdfdlist = []
+		self._wrfdlist = []
 		self._winfd = gl.qgetfd()
 		self._nestingdepth = 0
 		self._timers = []
 		self._callbacks = {}
 		self._windows = {}
-		self._select_fdlist = []
 		self._select_dict = {}
 		self._timenow = time.time()
 		self._timerid = 0
@@ -460,47 +462,47 @@ class _Event:
 		self._checktime()
 		self._queue.append((win, event, arg))
 
-	def _readeventtimeout(self, timeout):
+	def _readevent(self, timeout = None):
 		if timeout == 0 or self._queue:
 			if self._nestingdepth > 0:
 				return
 		self._nestingdepth = self._nestingdepth + 1
 		try:
 			if debug:
-				print 'Event._readeventtimeout('+`timeout`+')'
+				print 'Event._readevent('+`timeout`+')'
 			while qtest():
 				dev, val = qread()
 				self._dispatch(dev, val)
 			if self._queue:
 				timeout = 0
-			fdlist = [self._winfd] + self._fdlist
+			ifdlist = [self._winfd] + self._rdfdlist
+			ofdlist = self._wrfdlist
 			try:
 				if timeout is None:
 					ifdlist, ofdlist, efdlist = select.select(
-						  fdlist, [], [])
+						  ifdlist, ofdlist, [])
 				else:
 					ifdlist, ofdlist, efdlist = select.select(
-						  fdlist, [], [], timeout)
+						  ifdlist, ofdlist, [],
+						  timeout)
 			except select.error, msg:
-				if type(msg) == type(()) and msg[0] == 4:
+				if type(msg) == TupleType and msg[0] == 4:
 					# ignode EINTR
 					ifdlist = []
 				else:
 					# re-raise exception
 					raise select.error, msg
 			for fd in ifdlist:
-				if fd in self._fdlist:
+				if fd in self._rdfdlist:
 					self.entereventunique(None, FileEvent,
 						  fd)
+			for fd in ofdlist:
+				self.entereventunique(None, FileEvent, fd)
 			while qtest():
 				dev, val = qread()
 				self._dispatch(dev, val)
 		finally:
 			self._nestingdepth = self._nestingdepth - 1
-
-	def _readevent(self):
-		if debug: print 'Event._readevent()'
-		self._readeventtimeout(None)
 
 	def _getevent(self, timeout):
 		if debug > 1: print 'Event._getevent('+`timeout`+')'
@@ -514,7 +516,7 @@ class _Event:
 				if timeout < 0:
 					timeout = 0
 				t0 = t1
-			self._readeventtimeout(timeout)
+			self._readevent(timeout)
 			for winkey in _window_list.keys():
 				win = _window_list[winkey]
 				if win._must_redraw:
@@ -634,7 +636,7 @@ class _Event:
 			raise error, 'internal error: event expected'
 		window, event, value = self._queue[0]
 		if self._modal and event != ResizeWindow:
-			if type(self._modal[-1]) in (type(()), type([])):
+			if type(self._modal[-1]) in (TupleType, ListType):
 				if window not in self._modal[-1]:
 					return 0
 			else:
@@ -709,21 +711,11 @@ class _Event:
 				t0 = time.time()
 			else:
 				t = None
-			self.waitevent(timeout = t)
+			self.waitevent(t)
 			if self._timers:
 				t1 = time.time()
 				dt = t1 - t0
 				self._timers[0] = (t - dt, arg, tid)
-
-	def setfd(self, fd):
-		if type(fd) <> type(1):
-			fd = fd.fileno()
-		if fd not in self._fdlist:
-			self._fdlist.append(fd)
-
-	def rmfd(self, fd):
-		if fd in self._fdlist:
-			self._fdlist.remove(fd)
 
 	def register(self, win, event, func, arg):
 		key = (win, event)
@@ -757,18 +749,26 @@ class _Event:
 	def setcallback(self, event, func, arg):
 		self.register(None, event, func, arg)
 
-	def select_setcallback(self, fd, cb, arg):
-		if type(fd) <> type(1):
+	def select_setcallback(self, fd, cb, args, mask = ReadMask):
+		if type(fd) <> IntType:
 			fd = fd.fileno()
 		if cb is None:
-			self._select_fdlist.remove(fd)
 			del self._select_dict[fd]
-			self.rmfd(fd)
+			try:
+				self._rdfdlist.remove(fd)
+			except ValueError:
+				pass
+			try:
+				self._wrfdlist.remove(fd)
+			except ValueError:
+				pass
 			return
 		if not self._select_dict.has_key(fd):
-			self._select_fdlist.append(fd)
-		self._select_dict[fd] = (cb, arg)
-		self.setfd(fd)
+			if mask & ReadMask:
+				self._rdfdlist.append(fd)
+			if mask & WriteMask:
+				self._wrfdlist.append(fd)
+		self._select_dict[fd] = (cb, args)
 
 	def startmodal(self, window):
 		self._modal.append(window)
@@ -780,7 +780,7 @@ class _Event:
 		while 1:
 			dummy = self.readevent()
 
-class _Font:
+class findfont:
 	def __init__(self, fontname, size):
 		self._font = _findfont(fontname, size)
 		self._baseline, self._fontheight, = self._fontparams()
@@ -788,10 +788,10 @@ class _Font:
 		self._pointsize = size
 		self._closed = 0
 ##		self._pointsize = float(self.fontheight()) * 72.0 / 25.4
-##		print '_Font() pointsize:',size,self._pointsize
+##		print 'findfont() pointsize:',size,self._pointsize
 
 	def __repr__(self):
-		s = '<_Font instance, font=' + `self._fontname` + \
+		s = '<findfont instance, font=' + `self._fontname` + \
 		    ', ps=' + `self._pointsize`
 		if self.is_closed():
 			s = s + ' (closed)'
@@ -886,7 +886,7 @@ class _Button:
 	def hicolor(self, *color):
 		if self.is_closed():
 			raise error, 'button already closed'
-		if len(color) == 1 and type(color[0]) == type(()):
+		if len(color) == 1 and type(color[0]) == TupleType:
 			color = color[0]
 		if len(color) != 3:
 			raise TypeError, 'arg count mismatch'
@@ -1018,7 +1018,7 @@ class _DisplayList:
 			gl.clear()
 			self._clonestart = 0
 		for funcargs in self._displaylist[self._clonestart:]:
-			if type(funcargs) == type(()):
+			if type(funcargs) == TupleType:
 				func, args = funcargs
 				func(args)
 			else:
@@ -1059,7 +1059,7 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(color) == 1 and type(color[0]) == type(()):
+		if len(color) == 1 and type(color[0]) == TupleType:
 			color = color[0]
 		if len(color) != 3:
 			raise TypeError, 'arg count mismatch'
@@ -1073,7 +1073,7 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == type(()):
+		if len(coordinates) == 1 and type(coordinates) == TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -1170,7 +1170,7 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == type(()):
+		if len(coordinates) == 1 and type(coordinates) == TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -1190,7 +1190,7 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == type(()):
+		if len(coordinates) == 1 and type(coordinates) == TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -1215,7 +1215,7 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == type(()):
+		if len(coordinates) == 1 and type(coordinates) == TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -1278,7 +1278,7 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == type(()):
+		if len(coordinates) == 1 and type(coordinates) == TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -1303,7 +1303,7 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == type(()):
+		if len(coordinates) == 1 and type(coordinates) == TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -1328,7 +1328,7 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == type(()):
+		if len(coordinates) == 1 and type(coordinates) == TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -1679,7 +1679,7 @@ class _Window:
 
 	def newwindow(self, *coordinates, **options):
 		if debug: print `self`+'.newwindow'+`coordinates`
-		if len(coordinates) == 1 and type(coordinates) == type(()):
+		if len(coordinates) == 1 and type(coordinates) == TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
@@ -1812,7 +1812,7 @@ class _Window:
 		if debug: print `self`+'.fgcolor()'
 		if self.is_closed():
 			raise error, 'window already closed'
-		if len(color) == 1 and type(color[0]) == type(()):
+		if len(color) == 1 and type(color[0]) == TupleType:
 			color = color[0]
 		if len(color) != 3:
 			raise TypeError, 'arg count mismatch'
@@ -1822,7 +1822,7 @@ class _Window:
 		if debug: print `self`+'.bgcolor()'
 		if self.is_closed():
 			raise error, 'window already closed'
-		if len(color) == 1 and type(color[0]) == type(()):
+		if len(color) == 1 and type(color[0]) == TupleType:
 			color = color[0]
 		if len(color) != 3:
 			raise TypeError, 'arg count mismatch'
@@ -1849,7 +1849,7 @@ class _Window:
 		if self.is_closed():
 			raise error, 'window already closed'
 		list = _DisplayList(self)
-		if len(bgcolor) == 1 and type(bgcolor[0]) == type(()):
+		if len(bgcolor) == 1 and type(bgcolor[0]) == TupleType:
 			bgcolor = bgcolor[0]
 		if len(bgcolor) == 3:
 			list._bgcolor = list._curcolor = bgcolor
@@ -2302,15 +2302,15 @@ class _Window:
 			text = label
 			if i < len(list) - 1 and list[i + 1] is None:
 				text = text + '%l'
-			if type(callback) is type([]):
+			if type(callback) is ListType:
 				text = '   ' + text
 				submenu = self._create_menu(None, callback)
 				gl.addtopup(menu, text + '%m', submenu)
 			else:
-				if type(callback) is not type(()):
+				if type(callback) is not TupleType:
 					callback = (callback, (label,))
 				if accelerator:
-					if type(accelerator) is not type('') or \
+					if type(accelerator) is not StringType or \
 					   len(accelerator) != 1:
 						raise error, 'menu accelerator must be single character'
 					self._accelerators[accelerator] = callback
@@ -2395,41 +2395,28 @@ newwindow = toplevel.newwindow
 
 newcmwindow = newwindow
 
-def close():
-	toplevel.close()
+close = toplevel.close
 
-def setcursor(cursor):
-	toplevel.setcursor(cursor)
+setcursor = toplevel.setcursor
 
-def getsize():
-	return toplevel.getsize()
+getsize = toplevel.getsize
 
-def findfont(fontname, pointsize):
-	return _Font(fontname, pointsize)
+beep = gl.ringbell
 
-def beep():
-	gl.ringbell()
+usewindowlock = toplevel.usewindowlock
 
-def usewindowlock(lock):
-	toplevel.usewindowlock(lock)
+getmouse = toplevel.getmouse
 
-def getmouse():
-	return toplevel.getmouse()
-
-def settimer(sec, arg):
-	return event.settimer(sec, arg)
+settimer = event.settimer
 
 def settimerfunc(func, arg):
 	event.setcallback(TimerEvent, func, arg)
 
-def select_setcallback(fd, cb, arg):
-	event.select_setcallback(fd, cb, arg)
+select_setcallback = event.select_setcallback
 
-def mainloop():
-	event.mainloop()
+mainloop = event.mainloop
 
-def canceltimer(id):
-	event.canceltimer(id)
+canceltimer = event.canceltimer
 
 #	showdialog(message, buttons...) -> button_text
 #		Show a dialog window with the specified message (may
@@ -2481,6 +2468,20 @@ DEFANSWER = '\r', '\n'			# keys that trigger default answer
 
 _break_loop = '_break_loop'
 
+class _DummyButtons:
+	def __init__(self, nbuttons):
+		self.buttons = [0] * nbuttons
+	def setbutton(self, button, onoff = 1):
+		if 0 <= button < len(self.buttons):
+			self.buttons[button] = onoff
+		else:
+			raise error, 'button number out of range'
+	def getbutton(self, button):
+		if 0 <= button < len(self.buttons):
+			return self.buttons[button]
+		else:
+			raise error, 'button number out of range'
+
 class Dialog:
 	def __init__(self, title, prompt, grab, vertical, list, *coordinates):
 		if len(list) == 0:
@@ -2492,7 +2493,7 @@ class Dialog:
 		self.events = []
 		self.title = title
 		self.message = prompt
-		self.buttons = []
+		self._buttons = []
 		self.buttonlist = list
 		self._callbacks = {}
 		self._accelerators = {}
@@ -2500,7 +2501,7 @@ class Dialog:
 		self._looping = 0
 		self._finish = None
 		mx, my, winwidth, winheight = self._calcsize()
-		if len(coordinates) == 1 and type(coordinates) == type(()):
+		if len(coordinates) == 1 and type(coordinates) == TupleType:
 			coordinates = coordinates[0]
 		if len(coordinates) == 0:
 			coordinates = mx, my, winwidth, winheight
@@ -2534,7 +2535,7 @@ class Dialog:
 		mw = 0			# max width of a button
 		mh = 0			# max height in lines of a button
 		nsep = 0		# number of separators
-		if type(prompt) == type(''):
+		if type(prompt) == StringType:
 			mw = 0
 			for txt in string.splitfields(prompt, '\n'):
 				width, height = font.strsize(txt)
@@ -2552,14 +2553,14 @@ class Dialog:
 			if entry is None:
 				nsep = nsep + 1
 				continue
-			if type(entry) == type(()):
-				label, callback = entry
+			if type(entry) == TupleType:
+				label, callback = entry[:2]
 			else:
 				label, callback = '', entry, None
-			if callback and type(callback) is not type(()):
+			if callback and type(callback) is not TupleType:
 				callback = (callback, (label,))
 			self._callbacks[label] = callback
-			self.buttons.append(label)
+			self._buttons.append(label)
 			butstrs = string.splitfields(label, '\n')
 			for bt in butstrs:	# loops at least once
 				txt = BUTTONFILLER + bt + BUTTONFILLER
@@ -2569,20 +2570,21 @@ class Dialog:
 					self.widest_button = txt
 			if len(butstrs) > mh:
 				mh = len(butstrs)
+		self.buttons = _DummyButtons(len(self._buttons))
 		sw, sh = font.strsize(INTERBUTTONGAP)
 		font.close()
 		self.buttonlines = mh
 		self.nseparators = nsep
 		if vertical:
 			buttonwidth = mw
-			buttonheight = mh * bh * len(self.buttons)
+			buttonheight = mh * bh * len(self._buttons)
 			sw, sh = 0, sh * 0.5
-##			buttonheight = buttonheight + (len(self.buttons) - 1) * sh
+##			buttonheight = buttonheight + (len(self._buttons) - 1) * sh
 			buttonheight = buttonheight + nsep * sh
 		else:
-			buttonwidth = len(self.buttons) * mw
+			buttonwidth = len(self._buttons) * mw
 			buttonheight = mh * bh
-			buttonwidth = buttonwidth + (len(self.buttons) - 1) * sw
+			buttonwidth = buttonwidth + (len(self._buttons) - 1) * sw
 		if buttonwidth > width:
 			width = buttonwidth
 		height = height + buttonheight
@@ -2616,19 +2618,19 @@ class Dialog:
 		if not self.title:
 			d.drawbox(0,0,1,1)
 		if vertical:
-##			bm = self.widest_button + '\n' * (len(self.buttons) * self.buttonlines - 1 + (len(self.buttons) + self.nseparators + 1) * 0.5)
-			bm = self.widest_button + '\n' * (len(self.buttons) * self.buttonlines - 1 + (self.nseparators + 1) / 2)
+##			bm = self.widest_button + '\n' * (len(self._buttons) * self.buttonlines - 1 + (len(self._buttons) + self.nseparators + 1) * 0.5)
+			bm = self.widest_button + '\n' * (len(self._buttons) * self.buttonlines - 1 + (self.nseparators + 1) / 2)
 		else:
 			bm = (self.widest_button + self.INTERBUTTONGAP) * \
-				(len(self.buttons) - 1) + \
+				(len(self._buttons) - 1) + \
 			     self.widest_button + '\n' * (self.buttonlines - 1)
-		if type(self.message) == type(''):
+		if type(self.message) == StringType:
 			m = self.message + '\n' + '\n' + bm
 		else:
 			m = bm
 		bl, fh, ps = d.fitfont(self.FONT, m, 0.10)
 		yorig = 0.05 + bl
-		if type(self.message) == type(''):
+		if type(self.message) == StringType:
 			w, h = d.strsize(self.message)
 			if self.CENTERLINES:
 				for str in string.splitfields(self.message, '\n'):
@@ -2641,23 +2643,23 @@ class Dialog:
 				x, y, dx, dy = d.writestr(self.message)
 				yorig = yorig + dy
 		mw, h = d.strsize(self.widest_button)
-		mh = h * self.buttonlines	# height of the buttons
+		mh = h * self.buttonlines	# height of the _buttons
 		w, h = d.strsize(bm)
 		sw, sh = d.strsize(self.INTERBUTTONGAP)
 		# calculate (xbase, ybase), the top-left corner of the button
 		xbase = (1.0 - w) * 0.5
 		if vertical:
 			sw, sh = 0, sh * 0.5
-			buttonheight = mh * len(self.buttons)
-##			buttonheight = buttonheight + (len(self.buttons) - 1) * sh
+			buttonheight = mh * len(self._buttons)
+##			buttonheight = buttonheight + (len(self._buttons) - 1) * sh
 			buttonheight = buttonheight + self.nseparators * sh
-			if type(self.message) == type(''):
+			if type(self.message) == StringType:
 				ybase = 1.0 - 0.05 - buttonheight
 			else:
 				ybase = (1.0 - buttonheight) * 0.5
 		else:
 			sh = 0
-			if type(self.message) == type(''):
+			if type(self.message) == StringType:
 				ybase = 1.0 - 0.05 - mh
 			else:
 				ybase = (1.0 - mh) * 0.5
@@ -2669,8 +2671,8 @@ class Dialog:
 					    (1, ybase + sh * 0.5)])
 				ybase = ybase + sh
 				continue
-			if type(entry) == type(()):
-				butstr, callback = entry
+			if type(entry) == TupleType:
+				butstr, callback = entry[:2]
 			else:
 				butstr = entry
 			d.linewidth(1)
@@ -2717,7 +2719,7 @@ class Dialog:
 				except:
 					pass
 				else:
-					callback = self._callbacks[self.buttons[i]]
+					callback = self._callbacks[self._buttons[i]]
 					if callback:
 						apply(callback[0], callback[1])
 				if self._finish is None:
@@ -2768,7 +2770,7 @@ class Dialog:
 				newlist.append(entry)
 			else:
 				label, callback = entry
-				if type(callback) == type([]):
+				if type(callback) == ListType:
 					callback = self._convert_menu_list(callback)
 				newlist.append('', label, callback)
 		return newlist
@@ -2872,11 +2874,11 @@ class SelectionDialog:
 		x, y, w, h = 0, 250, buttonwidth, 39
 		buttonlist = ['Ok', 'Cancel']
 		for entry in buttonlist:
-			if type(entry) == type(()):
+			if type(entry) == TupleType:
 				accelerator, label, callback = entry
 			else:
 				accelerator, label, callback = '', entry, None
-			if callback and type(callback) is not type(()):
+			if callback and type(callback) is not TupleType:
 				callback = (callback, (label,))
 			button = form.add_button(FL.NORMAL_BUTTON, x, y, w, h,
 						 label)
@@ -2963,7 +2965,7 @@ class SelectionDialog:
 			else:
 				ret = func(self.nameinput.get_input())
 				if ret:
-					if type(ret) == type(''):
+					if type(ret) == StringType:
 						showmessage(ret, type = 'error')
 					return
 		if arg == 'Cancel':
@@ -2974,7 +2976,7 @@ class SelectionDialog:
 			else:
 				ret = func()
 				if ret:
-					if type(ret) == type(''):
+					if type(ret) == StringType:
 						showmessage(ret, type = 'error')
 					return
 		self.close()
