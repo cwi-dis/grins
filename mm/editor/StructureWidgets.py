@@ -2865,7 +2865,7 @@ class IconBox(MMWidgetDecoration):
 		if self._icondict.has_key(iconname):
 			return self._icondict[iconname]
 		if iconname not in self.iconorder:
-			self.iconorder.append(iconname)
+			self.iconorder = self.iconorder + (iconname,)
 		icon = Icon(self.mmwidget, self.mother)
 		self._icondict[iconname] = icon
 		if callback:
@@ -2881,9 +2881,10 @@ class IconBox(MMWidgetDecoration):
 		return self._icondict.get(iconname)
 
 	def del_icon(self, iconname):
-		icon = self._icondict[iconname]
-		icon.destroy()
-		del self._icondict[iconname]
+		icon = self._icondict.get(iconname)
+		if icon:
+			icon.destroy()
+			del self._icondict[iconname]
 		self.recalc_minsize()
 
 	def recalc_minsize(self):
