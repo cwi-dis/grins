@@ -428,8 +428,11 @@ class Scheduler(scheduler):
 		self.seek_node = seek_node
 		self.playroot = playroot
 		self.seeking = (playroot <> seek_node)
-		dummy = self.resume_1_playing(1.0)
-		self.resume_2_playing()
+		if self.seeking:
+			dummy = self.resume_1_playing(1.0)
+			self.resume_2_playing()
+		else:
+			self.start_2_playing(1.0)   # Which *does* do prearms
 		return 1
 
 
