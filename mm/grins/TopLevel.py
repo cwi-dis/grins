@@ -186,10 +186,17 @@ class TopLevel(TopLevelDialog):
 			else:
 				self.progress = windowinterface.ProgressDialog("Loading")
 				self.progressMessage = "Loading GRiNS document..."				
-			
-			import SMILTreeRead
-			self.root = SMILTreeRead.ReadFile(self.filename, self.printfunc, \
-										progressCallback=(self.progressCallback, 0.5))
+
+			try:			
+				import SMILTreeRead
+				self.root = SMILTreeRead.ReadFile(self.filename, self.printfunc, \
+											progressCallback=(self.progressCallback, 0.5))
+
+			except (UserCancel, IOError):				
+				# the progress dialog will desapear
+				self.progress = None
+				# re-raise
+				raise sys.exc_type
 
 			# just update that the loading is finished
 			self.progressCallback(1.0)

@@ -474,8 +474,14 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.progress.set(self.progressMessage)
 
 		# read the source and update edit manager
-		import SMILTreeRead
-		root = SMILTreeRead.ReadString(text, self.filename, self.printfunc, progressCallback = (self.progressCallback, 0.5))
+		try:
+			import SMILTreeRead		
+			root = SMILTreeRead.ReadString(text, self.filename, self.printfunc, progressCallback = (self.progressCallback, 0.5))
+		except (UserCancel, IOError):				
+			# the progress dialog will desapear
+			self.progress = None
+			# re-raise
+			raise sys.exc_type
 
 		# just update that the loading is finished
 		self.progressCallback(1.0)
@@ -1230,10 +1236,18 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.progress.set(self.progressMessage)
 			
 			check_compatibility = mtype == 'application/x-grins-project'
-			self.root = SMILTreeRead.ReadFile(filename, self.printfunc, self.new_file, check_compatibility, \
-											  progressCallback=(self.progressCallback, 0.5))
+			try:
+				self.root = SMILTreeRead.ReadFile(filename, self.printfunc, self.new_file, check_compatibility, \
+												  progressCallback=(self.progressCallback, 0.5))
+			except (UserCancel, IOError):				
+				# the progress dialog will desapear
+				self.progress = None
+				# re-raise
+				raise sys.exc_type
+			
 			# just update that the loading is finished
 			self.progressCallback(1.0)
+			
 			# the progress dialog will desapear
 			self.progress = None
 			
@@ -1337,8 +1351,14 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.progress = windowinterface.ProgressDialog("Reloading")
 		self.progressMessage = "Reloading SMIL document from source view..."
 		self.progress.set(self.progressMessage)
-		
-		self.root = SMILTreeRead.ReadString(text, self.filename, self.printfunc, progressCallback = (self.progressCallback, 0.5))
+
+		try:		
+			self.root = SMILTreeRead.ReadString(text, self.filename, self.printfunc, progressCallback = (self.progressCallback, 0.5))
+		except (UserCancel, IOError):				
+			# the progress dialog will desapear
+			self.progress = None
+			# re-raise
+			raise sys.exc_type
 
 		# just update that the loading is finished
 		self.progressCallback(1.0)
