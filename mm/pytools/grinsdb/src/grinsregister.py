@@ -11,9 +11,17 @@ import tempfile
 import grinsdb
 import grpasswd
 
-ADDPASSWDCMD="ssh trawler.cwi.nl /ufs/jack/bin/addgrinspasswd '%s' '%s' '%s'"
-DIR="/usr/local/www.cwi.nl/GRiNS/player"
+# Configurable
+HOST="trawler.cwi.nl"
+SSHIDENT=os.path.join(grinsdb.DATABASE, ".sshidentity")
+SSHOPTS="-i %s -l jack"%SSHIDENT
+REMOTECMD="/ufs/jack/bin/addgrinspasswd"
+ADDPASSWDCMD= "ssh " + \
+	      SSHOPTS + " " + \
+	      HOST + " " + \
+	      REMOTECMD + " '%s' '%s' '%s'"
 
+DIR="/usr/local/www.cwi.nl/GRiNS/player"
 PASSWD=os.path.join(DIR, ".htpasswd")
 
 RESPONSE_MESSAGE=os.path.join(grinsdb.DATABASE, ".mailresponse")
@@ -27,6 +35,7 @@ Error="grinsregister.Error"
 def main():
 	status = 0
 	if len(sys.argv) <= 1:
+		os.umask(02)
 		tmpfile = tempfile.mktemp()
 		tfp = open(tmpfile, 'w+')
 		os.unlink(tmpfile)
