@@ -23,9 +23,9 @@ public class Viewport extends Frame {
         return canvas;
         }
     
-    public void update(int width, int height){
+    public void update(Dimension d){
 	    Insets insets = getInsets();
-	    setSize(insets.left+insets.right+width, insets.top+insets.bottom+height);
+	    setSize(insets.left+insets.right+d.width, insets.top+insets.bottom+d.height);
 	    setVisible(true);
         }
 }

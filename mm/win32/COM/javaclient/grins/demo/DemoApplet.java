@@ -16,7 +16,6 @@ implements SMILListener
     
     private SMILDocument smil;
     private SMILController player;
-    private SMILRenderer renderer;
     
     private Viewport viewport;
     private boolean dragging = false;
@@ -57,7 +56,7 @@ implements SMILListener
 		buttonClose.setBackground(java.awt.Color.lightGray);
 		buttonClose.setBounds(368,56,104,28);
 		JSlider1.setPaintTicks(true);
-		JSlider1.setMajorTickSpacing(5);
+		JSlider1.setMajorTickSpacing(4);
 		JSlider1.setToolTipText("Seek");
 		JSlider1.setMinorTickSpacing(1);
 		JSlider1.setValue(0);
@@ -65,8 +64,6 @@ implements SMILListener
 		JSlider1.setBounds(8,100,464,32);
 		//}}
 	
-	    smil = GRiNSToolkit.createGRiNSDocument(this);
-
 		//{{REGISTER_LISTENERS
 		SymAction lSymAction = new SymAction();
 		buttonOpen.addActionListener(lSymAction);
@@ -172,40 +169,30 @@ implements SMILListener
 		    String dir  = dlg.getDirectory();
 		    String absFilename = dir+filename;
 		    textFieldURL.setText(absFilename);
+		    open(absFilename);
 		}
-		if(smil!=null && filename!=null){
-		    smil.open(textFieldURL.getText());
-	    }
-		
 	}
 
-    // implement interface of SMILListener
-    public void opened(){
-        Dimension d=null;
-        try {d=smil.getViewportSize();}
-	    catch(Exception e){System.out.println(""+e);}
-        
-	    PlayerCanvas canvas = new PlayerCanvas();
+    private void open(String filename){
+        // create SMIL doc
+	    smil = GRiNSToolkit.createDocument(filename);
+	    
+	    // update create UI
+	    setSliderDur(smil.getDuration());
+	    SMILCanvas canvas = new SMILCanvas();
 	    viewport = new Viewport(canvas);
-	    
-	    renderer = smil.getRenderer();
-	    try {renderer.setCanvas(canvas);}
+	    viewport.update(smil.getViewportSize());
+	   
+	    // set SMIL canvas
+	    try {smil.getRenderer().setCanvas(canvas);}
 	    catch(Exception e){System.out.println(""+e);}
 	    
-	    if(d!=null)
-            viewport.update(d.width, d.height);
-            
+	    // get controller
         player = smil.getController();
+        player.addListener(this);
     }
-    public void closed(){
-        if(viewport!=null){
-            viewport.setVisible(false);
-            viewport.dispose();
-            viewport = null;
-        }
-    }
-        
-    public void setDur(double dur){
+    
+    void setSliderDur(double dur){
         if(dur<0 || dur==0)
             JSlider1.setVisible(false);
         else
@@ -216,11 +203,14 @@ implements SMILListener
             JSlider1.setMaximum(intdur);
             }
     }
+    
+    // interface SMILListener implementation
     public void setPos(double pos){
         if(!dragging && JSlider1.isVisible())
             JSlider1.setValue((int)(pos+0.5));
     }
-    
+    public void setState(int state){
+    }
     
 	void buttonPlay_ActionPerformed(java.awt.event.ActionEvent event)
 	{
@@ -244,6 +234,11 @@ implements SMILListener
 	{
 		// to do: code goes here.
 		if(smil!=null) smil.close();
+        if(viewport!=null){
+            viewport.setVisible(false);
+            viewport.dispose();
+            viewport = null;
+        }
 	}
 
 	class SymMouseMotion extends java.awt.event.MouseMotionAdapter
