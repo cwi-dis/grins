@@ -54,9 +54,9 @@ _icon_ids = {
 	'bandwidthgood': grinsRC.IDI_ICON_BANDWIDTHGOOD,
 	'bandwidthbad': grinsRC.IDI_ICON_BANDWIDTHBAD,
 	'error': grinsRC.IDI_ICON_ERROR,
-	'linksrc': None, # XXXX
-	'linkdst': None, # XXXX
-	'linksrcdst': None, # XXXX
+	'linksrc': grinsRC.IDI_ICON_LINKSRC,
+	'linkdst': grinsRC.IDI_ICON_LINKDST,
+	'linksrcdst': grinsRC.IDI_ICON_LINKSRCDST,
 }
 
 def _get_icon(which):
