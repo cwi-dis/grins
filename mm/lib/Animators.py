@@ -8,7 +8,8 @@ import string
 # of animate elements taking into account the calc mode.
 # It also implements the semantics of the 'accumulate' attr.
 class Animator:
-	def __init__(self, attr, domval, values, dur, mode='linear', times=None, splines=None, transf=None):
+	def __init__(self, attr, domval, values, dur, mode='linear', 
+			times=None, splines=None, accumulate='none', additive='replace'): 
 		self._attr = attr
 		self._domval = domval
 		self._dur = dur
@@ -16,6 +17,8 @@ class Animator:
 		self._values = values
 		self._times = times
 		self._splines = splines
+		self._accumulate = accumulate
+		self._additive = additive
 
 		# assertions
 		if len(values)==0: raise AssertionError
@@ -32,7 +35,7 @@ class Animator:
 		else: self._inrepol = self._linear
 
 		# return value convertion (for example int())
-		self._transf = transf
+		self._convert = None
 
 		# construct boundaries of time intervals
 		self._efftimes = []
@@ -65,6 +68,9 @@ class Animator:
 		# cashed acc value
 		self.__accValue = 0
 
+		# current value
+		self.__curvalue = None
+
 	def getDOMValue(self):
 		return self._domval
 
@@ -80,9 +86,16 @@ class Animator:
 			v = self.__accValue + self._inrepol(t)
 		else:
 			v = self._inrepol(t)
-		if self._transf:
-			return self._transf(v)
+		if self._convert:
+			v = self._convert(v)
+		self.__curvalue = v
 		return v
+
+	def getCurrValue(self):
+		return self.__curvalue
+
+	def isAdditive(self):
+		return self._additive=='sum'
 
 	# t in [0, dur]
 	def _getinterval(self, t):
@@ -140,6 +153,9 @@ class Animator:
 			last = self._values[n-1]
 			self.__accValue = self._repeatCounter*last
 
+	def setRetunedValuesConvert(self, cvt):
+		self._convert = cvt
+		
 	# temporary parametric form
 	def bezier(self, t, e = (0,0,1,1)):
 		res = 20
@@ -166,6 +182,10 @@ class ConstAnimator(Animator):
 	def __init__(self, attr, domval, val, dur):
 		Animator.__init__(self, attr, domval, (val,), dur, mode='discrete')
 
+# A special animator to manage to-only additive animate elements
+class EffValueAnimator(Animator):
+	pass
+
 # set element animator specialization
 class SetAnimator(Animator):
 	pass
@@ -190,10 +210,16 @@ class MotionAnimator(Animator):
 #  and is an entity at a higher level than animators (and thus channels).
 
 # impl rem: 
-# lower if previously started
-# if sync: lower if sync base source else first in doc
+# *lower priority if previously started
+# if sync: lower priority if sync base source else lower if first in doc
+# 'first in doc' is a common case and easy to implement
 # restart element raises priority but not repeat
-
+# *animators should be kept for all their effective due: ED = AD + frozenDur
+# so, whats the best way to implement 'freeze'?
+# we must have a way to monitor animations for all ED not only AD
+# * we must either assert that onAnimateBegin are called in the proper order
+# or implement within EffectiveAnimator a proper ordering method
+# 
 class EffectiveAnimator:
 	def __init__(self, attr, domval):
 		self.__attr = attr
@@ -261,16 +287,29 @@ class AnimateContext:
 
 ###########################
 # Gen impl. rem:
+# ** The semantics of animation timing for static docs (svg for example) seems clean
+#    since they are the same as smil-boston.  
+#    But, how animation timing interacts with smil timing? The draft says nothing.
+#    Yes, we can interpreat this as meaning: like media elements + ?
+#    For me the ? mark exists and should be filled otherwise we 'll have 
+#    multiple interpretations and thus implementations of animation for smil.
 # * implement specializations for elements: set, animateColor, animatePosition
 # * support additive and accumulate attributes
-# * if 'by' and not 'from': additive='sum'
-# * if 'to' and not 'from': additive= <mixed> (start from base but reach to)
-# * restart doc removes all anim effects even frozen val
-# * big remaining: smil-boston timing
+# * restart doc removes all anim effects including frozen val
+# * big remaining: smil-boston timing for animate elements
 # * on syntax error: we can ignore animation effects but not timing
 # * use f(0) if duration is undefined
 # * ignore keyTimes if dur indefinite
-
+# * attrdefs specs: additive
+# * an animation can effect indirectly more than one attributes (for example anim 'region')
+# * if 'by' and not 'from': additive='sum'
+# * if 'to' and not 'from': additive= <mixed> (start from base but reach to)
+# * there is an exceptional animation case that breaks std composition semantics: 
+#  this is the 'to-only animation for additive attributes'
+#  according to the draft the base value that should be used for the interpolation
+#  is the effecive value (the dynamic composite result of other animations).
+#  are any other exceptions to std composition semantics?
+#  implement specialization: EffValueAnimator
 
 ###########################
 # Animation semantics parser
@@ -295,8 +334,23 @@ class AnimateElementParser:
 		self.__accumulate = MMAttrdefs.getattr(self.__anim, 'accumulate')
 
 	def getAnimator(self):
-		
-		# 1. return None on syntax or logic error
+
+		# 1. Read animation attributes
+		attr = self.__attrname
+		domval = self.__domval
+		dur = self.getDuration()
+		mode = self.__calcMode 
+		times = self.__getInterpolationKeyTimes() 
+		splines = self.__getInterpolationKeySplines()
+		accumulate = self.__accumulate
+		additive = self.__additive
+
+		# 1+: force first value display (fulfil: use f(0) if duration is undefined)
+		# xxx: fix condition
+		if not dur: dur=0
+
+
+		# 2. return None on syntax or logic error
 		if not self.__hasValidTarget:
 			print 'invalid target syntax error'
 			return None
@@ -306,23 +360,23 @@ class AnimateElementParser:
 			print 'values syntax error'
 			return None
 
-		# 2. Read animation attributes
-		attr = self.__attrname
-		domval = self.__domval
-		dur = self.getDuration()
-		mode = self.__calcMode 
-		times = self.__getInterpolationKeyTimes() 
-		splines = self.__getInterpolationKeySplines()
-
-		# 1+: force first value display (fulfil: use f(0) if duration is undefined)
-		if not dur: dur=0
-
 		# 3. Return explicitly animators for special attributes
+
+		# 'by-only animation' implies sum 
+		if self.__isByOnly(): additive = 'sum'
+
+		# 'to-only animation for additive attributes' is very special
+		if self.__isToOnly() and self.__canBeAdditive() and mode!='discrete':
+			pass # manage special case: return EffValueAnimator(...)
+
 		## Begin temp grins extensions
 		# position animation
 		if self.__grinsext:
 			values = self.__getNumInterpolationValues()
-			return Animator(attr, domval, values, dur, mode, times, splines, _round)
+			anim = Animator(attr, domval, values, dur, mode, times, splines, 
+				accumulate, additive)
+			anim.setRetunedValuesConvert(_round)
+			return anim
 		## End temp grins extensions
 
 		
@@ -331,14 +385,18 @@ class AnimateElementParser:
 		anim = None
 		if self.__attrtype == 'int':
 			values = self.__getNumInterpolationValues()
-			anim = Animator(attr, domval, values, dur, mode, times, splines, _round)
+			anim = Animator(attr, domval, values, dur, mode, times, splines, 
+				accumulate, additive)
+			anim.setRetunedValuesConvert(_round)
 		elif self.__attrtype == 'float':
 			values = self.__getNumInterpolationValues()
-			anim = Animator(attr, domval, values, dur, mode, times, splines)
+			anim = Animator(attr, domval, values, dur, mode, times, splines,
+				accumulate, additive)
 		elif self.__attrtype == 'string' or self.__attrtype == 'enum' or self.__attrtype == 'bool':
 			mode = 'discrete' # override calc mode
 			values = self.__getAlphaInterpolationValues()
-			anim = Animator(attr, domval, values, dur, mode, times, splines)
+			anim = Animator(attr, domval, values, dur, mode, times, splines,
+				accumulate, additive)
 		
 		# 5. Return a default if anything else failed
 		if not anim:
@@ -388,6 +446,23 @@ class AnimateElementParser:
 			return 0
 		return 1
 
+	def __isByOnly(self):
+		v1 = self.getFrom()
+		if v1!='': return 0
+		v2 = self.getTo()
+		if v2!='': return 0
+		return 1
+
+	def __isToOnly(self):
+		v1 = self.getFrom()
+		if v1!='': return 0
+		v2 = self.getTo()
+		if v2!='': return 1
+		return 0
+
+	def __canBeAdditive(self):
+		 return self.__attrtype == 'int' or self.__attrtype == 'float'
+	
 	# return list of interpolation values
 	def __getNumInterpolationValues(self):	
 		# if 'values' are given ignore 'from/to/by'
