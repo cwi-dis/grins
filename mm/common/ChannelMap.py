@@ -20,6 +20,7 @@ class ChannelMap:
 		'layout':	'LayoutChannel',
 		'midi':		[ 'MidiChannel', 'SoundChannel' ],
 		'word':		'WordChannel',
+		'external':	'ExternalChannel',
 		}
 
 	has_key = channelmap.has_key
@@ -61,7 +62,8 @@ channelhierarchy = [
     ('image', ['image', 'graph']),
     ('sound', ['sound']),
     ('movie', ['movie', 'mpeg', 'vcr']),
-    ('control', ['layout', 'cmif', 'socket', 'shell', 'python', 'null']),
+    ('control', ['layout', 'cmif', 'socket', 'shell', 'python', 'external',
+		 'null']),
     ('ole', ['word']),
     ]
 
@@ -90,4 +92,5 @@ shortcuts = {
 	'html': 	'H',
 	'graph': 	'G',
 	'word':		'W',
+	'external':	'X',
 	}
