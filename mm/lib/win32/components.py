@@ -827,6 +827,56 @@ class TemplateDialog(ResDialog):
 		self._loadbmp(picture)
 		self.InvalidateRect()
 
+class BandwidthComputeDialog(ResDialog):
+	def __init__(self, caption, parent=None):
+		self._caption = caption
+		ResDialog.__init__(self, grinsRC.IDD_BANDWIDTH_DIALOG, parent)
+		self._parent = parent
+		self._message = Static(self, grinsRC.IDC_MESSAGE)
+		self._preroll = Static(self, grinsRC.IDC_PREROLL)
+		self._stalltime = Static(self, grinsRC.IDC_STALLTIME)
+		self._stallcount = Static(self, grinsRC.IDC_STALLCOUNT)
+		self._ok = Button(self, win32con.IDOK)
+		self._cancel = Button(self, win32con.IDCANCEL)
+		self._help = Button(self, win32con.IDHELP)
+		self.CreateWindow()
+		self.ShowWindow(win32con.SW_SHOW)
+		self.UpdateWindow()
+
+	def OnInitDialog(self):
+		self.attach_handles_to_subwindows()
+		self._message.settext(self._caption)
+		self._help.hookcommand(self,self.OnHelp)
+		self.init_subwindows()
+		return ResDialog.OnInitDialog(self)
+
+	def setinfo(self, prerolltime, errorseconds, errorcount):
+		print 'setinfo called'
+		self._preroll.settext('%d s'%prerolltime)
+		self._stalltime.settext('%d s'%errorseconds)
+		self._stallcount.settext('%d items'%errorcount)
+
+	def done(self, callback=None, cancancel=0):
+		self.callback = callback
+		self._ok.enable(1)
+		if cancancel:
+			self._cancel.enable(1)
+
+	def close(self):
+		self.EndDialog(win32con.IDCANCEL)
+
+	def OnOK(self):
+		self.close()
+		if self.callback:
+			self.callback()
+
+	def OnCancel(self):
+		self.close()
+
+	def OnHelp(self, id, code):
+		import Help
+		Help.givehelp('bandwidth')
+
 class ProgressDialog:
 	# Workaround to make the dialog disappear when deleted
 	def __init__(self, *args):

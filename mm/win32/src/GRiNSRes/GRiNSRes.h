@@ -72,6 +72,7 @@
 #define IDI_ICON_BANDWIDTHBAD           268
 #define IDI_ICON_BANDWIDTHGOOD          269
 #define IDI_ICON_ERROR                  270
+#define IDD_BANDWIDTH_DIALOG            271
 #define IDD_EDITSTRINGATTR2             327
 #define IDD_EDITATTR_S7                 327
 #define IDD_EDITATTR_S5                 328
@@ -248,6 +249,9 @@
 #define IDC_8                           1192
 #define IDC_CHECK5                      1193
 #define IDC_CHECK6                      1194
+#define IDC_PREROLL                     1196
+#define IDC_STALLTIME                   1197
+#define IDC_STALLCOUNT                  1198
 #define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
@@ -303,9 +307,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        271
+#define _APS_NEXT_RESOURCE_VALUE        272
 #define _APS_NEXT_COMMAND_VALUE         32838
-#define _APS_NEXT_CONTROL_VALUE         1196
+#define _APS_NEXT_CONTROL_VALUE         1199
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
