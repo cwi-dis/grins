@@ -1212,10 +1212,7 @@ class HierarchyView(HierarchyViewDialog):
 			return
 
 		if chtype=='animate':
-			animlist = ['animate','set','animateMotion', 'animateColor',]
-			i = windowinterface.multchoice('Choose animate type', animlist, 0, parent = self.window)
-			if i < 0: return # cancel creation
-			newnode = self.root.context.newanimatenode(animlist[i])
+			newnode = self.root.context.newanimatenode('animate')
 			newnode.targetnode = node
 			if self.insertnode(newnode, where, index):
 				if not lightweight:
