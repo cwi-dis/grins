@@ -43,3 +43,6 @@ Creating a standalone CMIF for the mac.
 	macapplet.c. Set output file to CMIF-68K, set creator code to CMIF, build.
 15. Run and test it.
 16.	Repeat step 14 for PPC.
+
+Don't forget to include fonts and such on the cdrom!!
+
