@@ -7,7 +7,7 @@ class PrintRMListener:
 	def __init__(self):
 		pass
 	def __del__(self):
-		print 'PrinterAdviceSink dying'
+		print 'PrintRMListener dying'
 	def OnPresentationOpened(self):
 		print 'OnPresentationOpened'
 	def OnPresentationClosed(self):
@@ -30,12 +30,34 @@ class PrintRMListener:
 	def OnContacting(self,hostname):
 		print hostname
 
-url="file://D|/ufs/mm/cmif/mmpython/rmasdk/testdata/thanks3.ra"
+# This class is responsible to draw the video 
+# (including real pixel and real text streams)
+# The Blt method is called by the RMEngine with the image info
+class VideoSurface:
+	def __init__(self):
+		pass
+	def __del__(self):
+		print 'VideoSurface dying'
+	def Blt(self,w,h,depth,compSheme,imageBitsOsPtr):
+		print 'Blt:',w,h,depth,compSheme
+
+# real audio
+url1="file://D|/ufs/mm/cmif/mmpython/rmasdk/testdata/thanks3.ra"
+
+# real video
+url2="file://D|/ufs/mm/cmif/mmpython/rmasdk/testdata/test.ram"
+
+# real text
+url3="file://D|/ufs/mm/cmif/mmpython/rmasdk/testdata/news.rt"
+
+# real pixel
+url4="file://D|/ufs/mm/cmif/mmpython/rmasdk/testdata/fadein.rp"
 
 import rma
 player=rma.CreatePlayer()
 player.SetStatusListener(PrintRMListener())
-player.OpenURL(url)
+player.SetVideoSurface(VideoSurface())
+player.OpenURL(url3)
 player.Begin()
 
 # for console apps, enter message loop
