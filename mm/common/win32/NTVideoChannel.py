@@ -80,7 +80,8 @@ class VideoChannel(ChannelWindow):
 
 		# active builder from self._builders
 		self._playBuilder=None
-		self._playDuration=0
+		self._playBegin=0
+		self._playEnd=0
 
 		# scheduler notification mechanism
 		self.__qid=None
@@ -142,6 +143,7 @@ class VideoChannel(ChannelWindow):
 		if node in self._builders.keys():		
 			return 1
 		fn = self.getfileurl(node)
+		print 'self.getfileurl(node)',fn
 		fn = MMurl.urlretrieve(fn)[0]
 		fn = self.toabs(fn)
 		builder=DirectShowSdk.CreateGraphBuilder()
@@ -210,8 +212,15 @@ class VideoChannel(ChannelWindow):
 			self.playdone(0)
 			return
 			
-		self._playBuilder.SetPosition(0)
-		self._playDuration=self._playBuilder.GetDuration()
+		clip_begin = self.getclipbegin(node,'sec')
+		clip_end = self.getclipend(node,'sec')
+		self._playBuilder.SetPosition(int(clip_begin*1000))
+		self._playBegin = int(clip_begin*1000)
+		if clip_end:
+			self._playBuilder.SetStopTime(int(clip_end*1000))
+			self._playEnd = int(clip_end)*1000
+		else:
+			self._playEnd=self._playBuilder.GetDuration()
 		if self.window and self.window.IsWindow():
 			self._playBuilder.SetWindow(self.window,WM_GRPAPHNOTIFY)
 			self.window.HookMessage(self.OnGraphNotify,WM_GRPAPHNOTIFY)
@@ -326,7 +335,7 @@ class VideoChannel(ChannelWindow):
 	def OnGraphNotify(self,params):
 		if self._playBuilder and not self.__playdone:
 			t_msec=self._playBuilder.GetPosition()
-			if t_msec>=self._playDuration:self.OnMediaEnd()
+			if t_msec>=self._playEnd:self.OnMediaEnd()
 
 	def OnMediaEnd(self):
 		if debug: print 'VideoChannel: OnMediaEnd',`self`
@@ -335,7 +344,7 @@ class VideoChannel(ChannelWindow):
 		if self.play_loop:
 			self.play_loop = self.play_loop - 1
 			if self.play_loop: # more loops ?
-				self._playBuilder.SetPosition(0)
+				self._playBuilder.SetPosition(self._playBegin)
 				self._playBuilder.Run()
 				return
 			# no more loops
@@ -360,7 +369,7 @@ class VideoChannel(ChannelWindow):
 	def on_idle_callback(self):
 		if self._playBuilder and not self.__playdone:
 			t_msec=self._playBuilder.GetPosition()
-			if t_msec>=self._playDuration:self.OnMediaEnd()
+			if t_msec>=self._playEnd:self.OnMediaEnd()
 
 	def is_callable(self):
 		return self._playBuilder
