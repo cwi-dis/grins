@@ -3,12 +3,17 @@
 # Jack Jansen, jack@oratrix.nl
 #
 # XXXX Does not handle . and .. in pathname
-#
+
+# Check for UNC names (\\server\share\subdirectory\filename)
+# and do not call FindFiles against them.
+
 import os
 import win32api
 
 def short2longpath(pathname):
 	"""Convert DOS pathname to full NT pathname."""
+	if pathIsUNC(pathname):
+		return pathname
 	dir, file = os.path.split(pathname)
 	if not file:
 		return dir
@@ -23,7 +28,18 @@ def _short2longfile(pathname):
 	if len(list) > 1:
 		raise IOError, "Multiple files match %s"%pathname
 	return list[0][8]
-	
+
+
+# There is a win32 function called 'PathIsUNC' but is 
+# available only on machines with IE4/5 or on Win2k.
+# Here just check the first two chars.
+def pathIsUNC(pathname):
+	if pathname[0:2]=='\\\\':
+		return 1
+	else: 
+		return 0
+
+
 if __name__ == '__main__':
 	while 1:
 		x = raw_input()
