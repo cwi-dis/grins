@@ -407,6 +407,11 @@ class _CmifPlayerView(_CmifView):
 		self._canclose=1
 		self._tid=None
 
+		self._ddraw = None
+		self._frontBuffer = None
+		self._backBuffer = None
+		self._clipper = None
+
 	def OnCreate(self,params):
 		if USE_NEWSUBWINDOWSIMPL: 
 			self.__initDD()
@@ -520,32 +525,6 @@ class _CmifPlayerView(_CmifView):
 
 	def paintOn(self, dc):
 		self.update()
-		return
-
-		# first paint opaque subwindows
-		trsubwindows = []
-		for w in self._subwindows:
-			if 0 and (w._transparent == 0 or \
-			   (w._transparent == -1 and
-			    w._active_displist)):
-				w.paintOn(dc)
-				dc.ExcludeClipRect(w.getwindowrect())
-			else:
-				trsubwindows.append(w)
-		
-		# then paint self
-		x, y, w, h = self.getwindowpos()
-		x0, y0 = dc.SetWindowOrg((-x,-y))
-		if self._active_displist:
-			self._active_displist._render(dc,None)
-		if self._redrawfunc:
-			self._redrawfunc()
-		dc.SetWindowOrg((x0,y0))
-
-		# then paint transparent children
-		trsubwindows.reverse()
-		for w in trsubwindows:
-			w.paintOn(dc)
 
 	def	__initDD(self):
 		self._islocked = 0
@@ -565,9 +544,6 @@ class _CmifPlayerView(_CmifView):
 		del self._backBuffer
 		del self._clipper
 		del self._ddraw
-		self._frontBuffer = None
-		self._backBuffer = None
-		self._ddraw = None
 		
 	def CreateSurface(self, w, h):
 		if not self._ddraw: return
@@ -592,26 +568,18 @@ class _CmifPlayerView(_CmifView):
 		else:
 			_CmifView.update(self)
 
-	def paint(self):
-		if not self._backBuffer: return
+	def clear(self):
 		sd = self._backBuffer.GetSurfaceDesc()
 		w, h = sd.GetSize()
 		dc = self.GetDDDC()
 		if not dc: return
-		dc.PatBlt( (0, 0), (w, h), win32con.BLACKNESS)
+		dc.PatBlt((0, 0), (w, h), win32con.BLACKNESS)
 		self.ReleaseDDDC(dc)
 
-		# first paint opaque subwindows
-		trsubwindows = []
-		for w in self._subwindows:
-			if 0 and (w._transparent == 0 or \
-			   (w._transparent == -1 and
-			    w._active_displist)):
-				w.paint()
-			else:
-				trsubwindows.append(w)
+	def paint(self):
+		self.clear()
 		
-		# then paint self
+		# first paint self
 		dc = self.GetDDDC()
 		if not dc: return
 		x, y, w, h = self.getwindowpos()
@@ -623,13 +591,14 @@ class _CmifPlayerView(_CmifView):
 		dc.SetWindowOrg((x0,y0))
 		self.ReleaseDDDC(dc)
 
-		# then paint transparent children
-		trsubwindows.reverse()
-		for w in trsubwindows:
+		# then paint children bottom up
+		L = self._subwindows[:]
+		L.reverse()
+		for w in L:
 			w.paint()
 		
 	def flip(self):
-		if self._islocked or not self._backBuffer: return
+		if self._islocked: return
 		rcBack = self.GetClientRect()
 		rcFront = self.ClientToScreen(rcBack)
 		self._frontBuffer.Blt(rcFront, self._backBuffer, rcBack)
@@ -1213,9 +1182,16 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 	def AllowResize(self,f):
 		self._can_change_size=f
 
+	# temp: support interface of os-windowless subwindows
+	def CreateOSWindow(self):
+		pass
+	def DestroyOSWindow(self):
+		pass
+	def paint(self):
+		self.RedrawWindow()
 
 #################################################
-USE_NEWSUBWINDOWSIMPL = 0
+USE_NEWSUBWINDOWSIMPL = 1
 
 def _NewSubWindow(parent, rel_coordinates, transparent, type_channel, 
 	defcmap, pixmap, z=0, units=None):
