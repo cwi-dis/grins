@@ -227,11 +227,15 @@ class CommandHandler:
 					cbfunc = self.normal_callback
 				else:
 					cbfunc = self.toggle_callback
-				mentry = MenuItem(menu, name, shortcut,
+				if type(name) == type(''):
+					mname = name
+				else:
+					mname = name[0]
+				mentry = MenuItem(menu, mname, shortcut,
 						  (cbfunc, (cmd,)))
 				self.cmd_to_menu[cmd] = mentry
 				self.cmd_enabled[cmd] = 1
-				itemlist.append(entry_type, cmd)
+				itemlist.append(entry_type, cmd, name)
 			elif entry_type == MenuTemplate.SEP:
 				menu.addseparator()
 			elif entry_type == MenuTemplate.CASCADE:
@@ -313,19 +317,22 @@ class CommandHandler:
 				dynamiclist = self.find_command_dynamic_list(cmd)
 				must_be_enabled = dynamicmenu.set(dynamiclist)
 			else:
-				itemtype, cmd = item
+				itemtype, cmd, names = item
 				must_be_enabled = (not not self.find_command(cmd))
 				if must_be_enabled != self.cmd_enabled[cmd]:
 					mentry = self.cmd_to_menu[cmd]
 					mentry.enable(must_be_enabled)
 					self.cmd_enabled[cmd] = must_be_enabled
 				if must_be_enabled and \
-				   itemtype == MenuTemplate.TOGGLE:
+				   		itemtype == MenuTemplate.TOGGLE:
 					mentry = self.cmd_to_menu[cmd]
 					group = self.find_toggle_group(cmd)
 					if group:
-						mentry.check(group.get_toggle(
-							cmd))
+						togglestate = group.get_toggle(cmd)
+						if type(names) == type(''):
+							mentry.check(togglestate)
+						else:
+							mentry.settext(names[togglestate])
 			if must_be_enabled:
 				any_active = 1
 		return any_active
