@@ -1061,9 +1061,9 @@ class MediaNode(Node):
 			media_ratio = float(self.intrinsicWidth)/float(self.intrinsicHeight)
 			# print 'ratio=',media_ratio
 			if area_height*media_ratio > area_width:
-				area_height = int(area_width/media_ratio+0.5)
+				area_height = int(area_width/media_ratio)
 			else:
-				area_width = int(area_height*media_ratio+0.5)
+				area_width = int(area_height*media_ratio)
 
 		elif scale == -1: # slice
 			if regalign in ('topLeft', 'topMid', 'topRight'):
