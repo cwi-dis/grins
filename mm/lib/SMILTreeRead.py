@@ -1448,7 +1448,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if self.__in_a:
 			self.syntax_error('nested a elements')
 		if attributes.has_key('href'):
-			href = attributes['href']
+			href = MMurl.basejoin(self.__base, attributes['href'])
 		else:
 			self.syntax_error('anchor without HREF')
 			return
@@ -1484,6 +1484,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 ## 		if href is None:
 ## 			#XXXX is this a document error?
 ## 			self.warning('required attribute href missing', self.lineno)
+		if href is not None:
+			href = MMurl.basejoin(self.__base, href)
 		uid = self.__node.GetUID()
 		nname = self.__node.GetRawAttrDef('name', None)
 		show = attributes['show']
