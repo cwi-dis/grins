@@ -160,7 +160,7 @@ class SchedulerContext:
 		srlist = self.getsrlist(ev)
 		self.queuesrlist(srlist, timestamp)
 
-	def sched_arc(self, node, arc, event = None, marker = None, timestamp = None, depth = 0, external = 0, propagate = 1):
+	def sched_arc(self, node, arc, event = None, marker = None, timestamp = None, depth = 0, external = 0, propagate = 1, force = 0):
 		# Schedules a single SyncArc for a node.
 		
 		# node is the node for the start of the arc.
@@ -182,7 +182,7 @@ class SchedulerContext:
 			dev = 'begin'
 ##			list = arc.dstnode.GetBeginList()
 			list = []
-			if arc.dstnode.isresolved(self) is None:
+			if not force and arc.dstnode.isresolved(self) is None:
 ##			if not node.checkendlist(self, timestamp):
 				# we didn't find a time interval
 				if debugevents: print 'sched_arc: not allowed to start',arc,self.parent.timefunc()
@@ -272,7 +272,7 @@ class SchedulerContext:
 			if node.deparcs.has_key(event) and arc not in node.deparcs[event]:
 				node.deparcs[event].append(arc)
 				arc.depends.append((node, event))
-		if propagate and not arc.ismin and (arc.dstnode is not node or dev != event) and depth < SCHEDULE_DEPTH:
+		if propagate and not arc.ismin and (force or arc.dstnode is not node or dev != event) and depth < SCHEDULE_DEPTH:
 			ts = timestamp+arc.delay
 			if arc.dstnode.has_min and dev == 'end':
 				# maybe delay dependent sync arcs
@@ -974,17 +974,26 @@ class SchedulerContext:
 					srlist = srdict[e][1]
 					if ev in srlist:
 						srlist.remove(ev)
-		if not cancelarcs:
-			if debugevents: print 'do_terminate: return: not cancelarcs',node
-			return
-		for qid in parent.queue[:]:
-			time, priority, action, argument = qid
-			if action != self.trigger:
-				continue
-			arc = argument[0]
-			if arc.srcnode is node and arc.getevent() == 'end':
-				if debugevents: print 'do_terminate: cancel',`arc`,parent.timefunc()
-				self.cancelarc(arc, timestamp)
+		if cancelarcs:
+			for qid in parent.queue[:]:
+				time, priority, action, argument = qid
+				if action != self.trigger:
+					continue
+				arc = argument[0]
+				if arc.srcnode is node and arc.getevent() == 'end':
+					if debugevents: print 'do_terminate: cancel',`arc`,parent.timefunc()
+					self.cancelarc(arc, timestamp)
+		# now that this node is done, schedule its next interval (if any)
+		mint = None
+		for arc in node.FilterArcList(node.GetBeginList()):
+			if arc.isresolved(self):
+				t = arc.resolvedtime(self)
+				if t > timestamp:
+					if mint is None or mint[0] < t:
+						mint = t, arc
+		if mint is not None:
+			t, arc = mint
+			self.sched_arc(node, arc, 'begin', timestamp = t - arc.delay, force = 1)
 		if debugevents: print 'do_terminate: return',node
 
 	# callback from channel to indicate that a transition finished
