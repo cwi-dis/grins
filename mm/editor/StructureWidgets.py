@@ -10,6 +10,7 @@ import features
 import os, windowinterface
 import settings
 import TimeMapper
+import BandwidthCompute
 from AppDefaults import *
 from fmtfloat import fmtfloat
 import Duration
@@ -100,6 +101,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 
 		self.timemapper = None
 		self.timeline = None
+		self.bwstrip = None
 		self.need_draghandles = None
 
 		# Holds little icons..
@@ -149,6 +151,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if self.timeline is not None:
 			self.timeline.destroy()
 			self.timeline = None
+		if self.bwstrip is not None:
+			self.bwstrip.destroy()
+			self.bwstrip = None
 		if self.timemapper is not None:
 			self.timemapper = None
 		if node is not None:
@@ -352,6 +357,18 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				self.timeline = None
 			if self.timemapper is not None:
 				self.timemapper = None
+		if self.node.showtime == 'bwstrip' and not ignore_time:
+			if self.bwstrip is None:
+				self.bwstrip = BandWidthWidget(self, self.mother)
+				maxbandwidth, prerolltime, delaycount, errorseconds, errorcount, stalls = \
+					BandwidthCompute.compute_bandwidth(self.node)
+				if timemapper:
+					for stalltime, stallduration in stalls:
+						timemapper.addstalltime(stalltime, stallduration)
+		else:
+			if self.bwstrip:
+				self.bwstrip.destroy()
+				self.bwstrip = None
 		return timemapper
 
 	def fix_timemapper(self, timemapper):
@@ -368,7 +385,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 						min_pxl_per_sec = self.node.__min_pxl_per_sec
 					except AttributeError:
 						pass
-				self.node.__min_pxl_per_sec = timemapper.calculate(self.node.showtime == 'cfocus', min_pixels_per_second = min_pxl_per_sec)
+				self.node.__min_pxl_per_sec = timemapper.calculate(self.node.showtime in ('cfocus', 'bwstrip'), min_pixels_per_second = min_pxl_per_sec)
 				t0, t1, t2, dummy, dummy = self.GetTimes('virtual')
 				w = timemapper.time2pixel(t2, align='right') - timemapper.time2pixel(t0)
 				if w > self.boxsize[0]:
@@ -574,6 +591,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 						break
 		if self.timeline is not None:
 			self.timeline.draw(displist)
+		if self.bwstrip is not None:
+			self.bwstrip.draw(displist)
 		# Draw the silly transitions.
 		if self.transition_in is not None:
 			self.transition_in.draw(displist)
@@ -1114,6 +1133,8 @@ class StructureObjWidget(MMNodeWidget):
 			return self.channelbox
 
 		if self.is_hit(pos):
+			if self.bwstrip and self.bwstrip.is_hit(pos):
+				return self.bwstrip
 			if self.iscollapsed():
 				return self
 			for i in self.children:
@@ -1145,7 +1166,7 @@ class StructureObjWidget(MMNodeWidget):
 	def get_collapse_icon(self):
 		return self.collapsebutton
 
-	def recalc(self, timemapper = None):
+	def recalc(self, timemapper = None, bwstrip = None):
 		# Recalculate the position of all the contained boxes.
 		# Algorithm: Iterate through each of the MMNodes children's views and find their minsizes.
 		# Apportion free space equally, based on the size of self.
@@ -1178,6 +1199,9 @@ class StructureObjWidget(MMNodeWidget):
 		if self.timemapper is not None:
 			timemapper = self.timemapper
 			timemapper.setoffset(my_l, my_r - my_l)
+			
+		if self.bwstrip:
+			bwstrip = self.bwstrip
 
 		# Add the timeline
 		if self.timeline is not None:
@@ -1192,6 +1216,15 @@ class StructureObjWidget(MMNodeWidget):
 			self.need_draghandles = my_l,my_r,y-DRAGHANDLESIZE/2
 			min_height = min_height - tl_h
 
+		if self.bwstrip is not None:
+			bw_w, bw_h = self.bwstrip.get_minsize()
+			if TIMELINE_AT_TOP:
+				self.bwstrip.moveto((my_l, my_t, my_r, my_t + bw_h))
+				my_t = my_t + bw_h
+			else:
+				self.bwstrip.moveto((my_l, my_b - bw_h, my_r, my_b))
+				my_b = my_b - bw_h
+				
 		if timemapper is None:
 			self.need_draghandles = None
 		else:
@@ -1293,7 +1326,7 @@ class StructureObjWidget(MMNodeWidget):
 			if this_l > this_r:
 				this_l = this_r
 			medianode.moveto((this_l,this_t,this_r,this_b))
-			medianode.recalc(tm)
+			medianode.recalc(tm, bwstrip)
 			if self.HORIZONTAL:
 				this_l = this_r + GAPSIZE
 			else:
@@ -1352,6 +1385,11 @@ class StructureObjWidget(MMNodeWidget):
 				t = t + self.timeline.get_minsize()[1]
 			else:
 				b = b - self.timeline.get_minsize()[1]
+		if self.bwstrip is not None:
+			if TIMELINE_AT_TOP:
+				t = t + self.bwstrip.get_minsize()[1]
+			else:
+				b = b - self.bwstrip.get_minsize()[1]
 		if self.iscollapsed():
 			children = self.node.GetChildren()
 			icon = self.node.GetAttrDef('thumbnail_icon', None)
@@ -1495,6 +1533,11 @@ class HorizontalWidget(StructureObjWidget):
 			if w > mw:
 				mw = w
 			mh = mh + h
+		if self.bwstrip is not None:
+			w, h = self.bwstrip.recalc_minsize()
+			if w > mw:
+				mw = w
+			mh = mh + h
 		if self.iconbox is not None and self.iconbox.vertical:
 			mw = mw + self.iconbox.get_minsize()[0]
 		else:
@@ -1602,6 +1645,11 @@ class VerticalWidget(StructureObjWidget):
 
 		if self.timeline is not None:
 			w, h = self.timeline.recalc_minsize()
+			if w > mw:
+				mw = w
+			mh = mh + h
+		if self.bwstrip is not None:
+			w, h = self.bwstrip.recalc_minsize()
 			if w > mw:
 				mw = w
 			mh = mh + h
@@ -1766,6 +1814,11 @@ class UnseenVerticalWidget(StructureObjWidget):
 			if w > mw:
 				mw = w
 			mh = mh + h
+		if self.bwstrip is not None:
+			w, h = self.bwstrip.recalc_minsize()
+			if w > mw:
+				mw = w
+			mh = mh + h
 		if mw < minwidth:
 			mw = minwidth
 		if mh < minheight:
@@ -1791,7 +1844,7 @@ class UnseenVerticalWidget(StructureObjWidget):
 				return i
 		return -1
 
-	def recalc(self, timemapper = None):
+	def recalc(self, timemapper = None, bwstrip = None):
 		# Recalculate the position of all the contained boxes.
 		# Algorithm: Iterate through each of the MMNodes children's views and find their minsizes.
 		# Apportion free space equally, based on the size of self.
@@ -1799,11 +1852,15 @@ class UnseenVerticalWidget(StructureObjWidget):
 		if self.timemapper is not None:
 			timemapper = self.timemapper
 			timemapper.setoffset(self.pos_abs[0], self.pos_abs[2] - self.pos_abs[0])
+			
+		if self.bwstrip:
+			bwstrip = self.bwstrip
+			
 		if not self.node.WillPlay():
 			timemapper = None
 
 		if self.iscollapsed():
-			StructureObjWidget.recalc(self, timemapper)
+			StructureObjWidget.recalc(self, timemapper, bwstrip)
 			return
 
 		l, t, r, b = self.pos_abs
@@ -1818,6 +1875,11 @@ class UnseenVerticalWidget(StructureObjWidget):
 			tl_w, tl_h = self.timeline.get_minsize()
 			t = t + tl_h
 			free_height = free_height - tl_h
+
+		if self.bwstrip and not TIMELINE_AT_TOP:
+			bw_w, bw_h = self.bwstrip.get_minsize()
+			t = t + bw_h
+			free_height = free_height - bw_h
 
 		if free_height < 0:
 			free_height = 0.0
@@ -1852,9 +1914,9 @@ class UnseenVerticalWidget(StructureObjWidget):
 				if this_l > this_r:
 					this_l = this_r
 			medianode.moveto((this_l,t,this_r,b))
-			medianode.recalc(timemapper)
+			medianode.recalc(timemapper, bwstrip)
 			t = b #  + self.get_rely(GAPSIZE)
-		StructureObjWidget.recalc(self, timemapper)
+		StructureObjWidget.recalc(self, timemapper, bwstrip)
 
 	def draw(self, displist):
 		# We want to draw this even if pushback bars are disabled.
@@ -1967,11 +2029,17 @@ class MediaWidget(MMNodeWidget):
 		return hit
 
 
-	def recalc(self, timemapper = None):
+	def recalc(self, timemapper = None, bwstrip = None):
 		self.need_draghandles = None
 		if self.timemapper is not None:
 			timemapper = self.timemapper
 			timemapper.setoffset(self.pos_abs[0], self.pos_abs[2] - self.pos_abs[0])
+		if self.bwstrip:
+			bwstrip = self.bwstrip
+			
+		if bwstrip:
+			bwstrip.addbandwidthinfo(self.node, self.node.get_bandwidthboxes(), self.selected, timemapper)
+			
 		if not self.node.WillPlay():
 			timemapper = None
 		self.__timemapper = timemapper
@@ -1997,7 +2065,7 @@ class MediaWidget(MMNodeWidget):
 		else:
 			t = t + TITLESIZE
 
-		# Add the timeline
+		# Add the timeline and the bandwidth strip
 		if self.timeline is not None:
 			tl_w, tl_h = self.timeline.get_minsize()
 			if TIMELINE_AT_TOP:
@@ -2006,6 +2074,14 @@ class MediaWidget(MMNodeWidget):
 			else:
 				self.timeline.moveto((l, b-tl_h, r, b), timemapper)
 				b = b - tl_h
+		if self.bwstrip is not None:
+			bw_w, bw_h = self.timeline.get_minsize()
+			if TIMELINE_AT_TOP:
+				self.bwstrip.moveto((l, t, r, t+bw_h), timemapper)
+				t = t + bw_h
+			else:
+				self.bwstrip.moveto((l, b-bw_h, r, b), timemapper)
+				b = b - bw_h
 
 		pix16x = 16
 		pix16y = 16
@@ -2105,6 +2181,7 @@ class MediaWidget(MMNodeWidget):
 				t = self.timeline.pos_abs[3]
 			else:
 				b = self.timeline.pos_abs[1]
+		# XXXX Should we cater for a bandwidth strip here too?
 		# Draw the image.
 		self.drawnodecontent(displist, (l,t,r-l,b-t), self.node)
 		MMNodeWidget.draw(self, displist)
@@ -2152,7 +2229,7 @@ class MediaWidget(MMNodeWidget):
 class CommentWidget(MMNodeWidget):
 	# A view of an object which is a comment type.
 
-	def recalc(self, timemapper = None):
+	def recalc(self, timemapper = None, bwstrip = None):
 		l,t,r,b = self.pos_abs
 ##		if self.iconbox is not None:
 ##			self.iconbox.moveto((l+HEDGSIZE, t+VEDGSIZE, 0, 0))
@@ -2531,6 +2608,108 @@ class TimelineWidget(MMWidgetDecoration):
 # to also draw a horizontal line between the tips of the two ticks, use the following instead
 ##				displist.drawline(COLCOLOR, [(tick_x, cur_tick_top), (tick_x2, cur_tick_top), (tick_x2, cur_tick_bot), (tick_x, cur_tick_bot)])
 	draw_selected = draw
+
+class BandWidthWidget(MMWidgetDecoration):
+	# A widget showing the timeline
+	def __init__(self, mmwidget, mother):
+		MMWidgetDecoration.__init__(self, mmwidget, mother)
+		self.minwidth = 0
+		self.okboxes = []
+		self.notokboxes = []
+		self.okfocusboxes = []
+		self.notokfocusboxes = []
+		import settings
+		self.maxbandwidth = settings.get('system_bitrate')
+
+
+	def recalc_minsize(self):
+		import settings
+		self.maxbandwidth = settings.get('system_bitrate')
+		minheight = 2*TITLESIZE
+		self.boxsize = self.minwidth, minheight
+		return self.boxsize
+
+	def setminwidth(self, width):
+		self.minwidth = width
+		
+	def addbandwidthinfo(self, node, boxes, hasfocus, timemapper):
+		# For now we ignore node
+		if not boxes:
+			return
+		my_x, my_y, my_w, my_h = self.get_box()
+		my_y = my_y + 3
+		my_h = my_h - 6
+		my_b = my_y + my_h
+		bwfactor = float(my_h)/float(self.maxbandwidth)
+		for box in boxes:
+			t0, t1, bwlo, bwhi, status = box
+			x0 = timemapper.interptime2pixel(t0)
+			x1 = timemapper.interptime2pixel(t1, align='right')
+			y0 = my_b - int(bwfactor*bwhi)
+			y1 = my_b - int(bwfactor*bwlo)
+			box = (x0, y0, x1-x0, y1-y0)
+			if status:
+				if hasfocus:
+					self.notokfocusboxes.append(box)
+				else:
+					self.notokboxes.append(box)
+			else:
+				if hasfocus:
+					self.okfocusboxes.append(box)
+				else:
+					self.okboxes.append(box)
+
+##	def moveto(self, coords):
+##		return # XXXX
+##		MMWidgetDecoration.moveto(self, coords)
+##		self.__timemapper = timemapper
+##		x, y, w, h = self.get_box()
+##		if self.minwidth:
+##			# remember updated minimum width
+##			self.minwidth = w
+##		if TIMELINE_AT_TOP:
+##			line_y = y + (h/2)
+##			tick_top = line_y
+##			tick_bot = y+h-(h/3)
+##			longtick_top = line_y
+##			longtick_bot = y + h - (h/6)
+##			midtick_top = line_y
+##			midtick_bot = (tick_bot+longtick_bot)/2
+##			endtick_top = line_y - (h/3)
+##			endtick_bot = longtick_bot
+##			label_top = y
+##			label_bot = y + (h/2)
+##		else:
+##			line_y = y + (h/2)
+##			tick_top = y + (h/3)
+##			tick_bot = line_y
+##			longtick_top = y + (h/6)
+##			longtick_bot = line_y
+##			midtick_top = (tick_top+longtick_top)/2
+##			midtick_bot = line_y
+##			endtick_top = longtick_top
+##			endtick_bot = line_y + (h/6)
+##			label_top = y + (h/2)
+##			label_bot = y + h
+##		self.params = line_y, tick_top, tick_bot, longtick_top, longtick_bot, midtick_top, midtick_bot, endtick_top, endtick_bot, label_top, label_bot
+
+	def draw(self, displist):
+		# this method is way too complex.
+		x, y, w, h = self.get_box()
+		y = y + 3
+		h = h - 6
+		displist.fgcolor(TEXTCOLOR)
+		displist.drawbox((x-1, y-1, w+2, h+2))
+		displist.drawfbox(BANDWIDTH_FREE_COLOR, (x, y, w, h))
+		self._drawboxes(displist, BANDWIDTH_OK_COLOR, self.okboxes)
+		self._drawboxes(displist, BANDWIDTH_NOTOK_COLOR, self.notokboxes)
+		self._drawboxes(displist, BANDWIDTH_OKFOCUS_COLOR, self.okfocusboxes)
+		self._drawboxes(displist, BANDWIDTH_NOTOKFOCUS_COLOR, self.notokfocusboxes)
+
+	def _drawboxes(self, displist, color, boxes):
+		for box in boxes:
+			print 'DBG', color, box
+			displist.drawfbox(color, box)
 
 # A box with icons in it.
 # Comes before the node's name.
