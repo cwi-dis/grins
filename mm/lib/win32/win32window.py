@@ -1295,7 +1295,7 @@ class Region(Window):
 				convbgcolor = dds.GetColorMatch((r,g,b))
 				dds.BltFill((xc, yc, xc+wc, yc+hc), convbgcolor)
 
-			if self._video and not self._video[0].IsLost():
+			if self._video:
 				# get video info
 				vdds, vrcDst, vrcSrc = self._video
 				xd, yd, wd, hd = vrcDst
@@ -1318,7 +1318,10 @@ class Region(Window):
 				bsc = int(a*bdc + b + 0.5)
 			
 				# we are ready, blit it
-				dds.Blt((ldc, tdc, rdc, bdc), vdds, (lsc,tsc,rsc,bsc), ddraw.DDBLT_WAIT)
+				if not vdds.IsLost():
+					dds.Blt((ldc, tdc, rdc, bdc), vdds, (lsc,tsc,rsc,bsc), ddraw.DDBLT_WAIT)
+				else:
+					vdds.Restore()
 
 			# draw now the display list but after clear
 			hdc = dds.GetDC()
@@ -1368,7 +1371,9 @@ class Region(Window):
 	def getBackDDS(self):
 		self._topwindow.update()
 		bf = self._topwindow.getDrawBuffer()
-		if not bf: return
+		if bf.IsLost():
+			self.clearSurface(dds)
+			return
 		x, y, w, h = self.getwindowpos()
 		dds = self.createDDS()
 		dds.Blt((0,0,w,h), bf, (x, y, x+w, y+h), ddraw.DDBLT_WAIT)
@@ -1399,6 +1404,8 @@ class Region(Window):
 		dst = self.getwindowpos(self._topwindow)
 		rgn = self.getClipRgn(self._topwindow)
 		buf = self._topwindow.getDrawBuffer()
+		if buf.IsLost() and not buf.Restore():
+			return
 		self._paintOnDDS(buf, dst, rgn)
 		rgn.DeleteObject()
 
@@ -1468,7 +1475,8 @@ class Region(Window):
 	
 	# paint while frozen
 	def _paint_4(self):
-		self.bltDDS(self._passive)
+		if not self._passive.IsLost():
+			self.bltDDS(self._passive)
 
 	# painting while resizing for fit=='meet' (scale==0)
 	def _paint_5(self):
