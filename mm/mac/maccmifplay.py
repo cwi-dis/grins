@@ -2,6 +2,9 @@
 # Mac CMIF Player wrapper
 #
 # This new comment line tests MacCVS in remote mode
+print
+import MacOS
+MacOS.splash(512)
 import os
 import sys
 import string
@@ -22,9 +25,8 @@ sys.path[0:0] = CMIFPATH
 os.environ["CMIF"] = CMIFDIR
 #os.environ["CHANNELDEBUG"] = "1"
 
-print
-
 if len(sys.argv) < 2:
+	MacOS.splash()
 	fss, ok = macfs.StandardGetFile('TEXT')
 	if not ok: sys.exit(0)
 	
