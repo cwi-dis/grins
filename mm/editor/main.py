@@ -60,8 +60,6 @@ def main():
 				top.player.playsubtree(top.root)
 			top.run()
 			top.destroy()
-		except MMExc.ExitException, status:
-			if status <> 0: print 'Exit status', status
 		except KeyboardInterrupt:
 			print 'Interrupt.'
 	finally:
@@ -69,9 +67,9 @@ def main():
 			SoundChannel.restore()
 		finally:
 			pass
-	#
-	if stats:
-		import MMNode
-		MMNode._prstats()
+		#
+		if stats:
+			import MMNode
+			MMNode._prstats()
 
 main()
