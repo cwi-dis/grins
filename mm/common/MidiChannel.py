@@ -32,6 +32,7 @@ class MidiChannel(Channel):
 		self.port = None
 		self.arm_data = []
 		self.play_data = []
+		self.has_callback = 0
 
 	def __repr__(self):
 		return '<MidiChannel instance, name=' + `self._name` + '>'
@@ -61,7 +62,13 @@ class MidiChannel(Channel):
 		#
 		# Read the midifile, mixing all tracks
 		#
-		fp = open(fn)
+		try:
+		    fp = open(fn)
+		except IOError:
+		    print 'Cannot open midi file', fn
+		    self.armed_data = []
+		    self.armed_duration = 0
+		    return
 		mf = midifile.MidiInputFile(fp)
 		reader = midi.MixerSource(mf.tracks)
 
@@ -91,6 +98,17 @@ class MidiChannel(Channel):
 		self.armed_duration = total_time
 		return 1
 
+	def install_callback(self):
+	    if self.has_callback or not self.port: return
+	    windowinterface.select_setcallback(self.port, self._playsome,
+					       (), 2)
+	    self.has_callback = 1
+	    
+	def unstall_callback(self):
+	    if not self.has_callback or not self.port: return
+	    windowinterface.select_setcallback(self.port, None, (), 2)
+	    self.has_callback = 0
+	    
 	def _playsome(self):
 	        i = 0
 		if debug:
@@ -106,22 +124,28 @@ class MidiChannel(Channel):
 		    print 'Midichannel: did', i, 'of', len(self.play_data)
 		del self.play_data[:i]
 		if not self.play_data:
-		    windowinterface.select_setcallback(self.port, None, (), 2)
+		    self.unstall_callback()
 		    
 	def do_play(self, node):
 	        if not self.port:
 		    return
 	        self.play_data = self.arm_data
 		self.arm_data = []
-	        windowinterface.select_setcallback(self.port,
-						   self._playsome, (), 2)
+		self.install_callback()
 		self._playsome()
 
 	def playstop(self):
 	        if not self.port:
 		    return
 		if debug: print 'MidiChannel: playstop'
-	        windowinterface.select_setcallback(self.port, None, (), 2)
+		self.unstall_callback()
 		self.data = []
 		Channel.playstop(self)
 
+	def setpaused(self, paused):
+	    if paused:
+		self.unstall_callback()
+	    else:
+		self.install_callback()
+	    Channel.setpaused(self, paused)
+	    
