@@ -405,6 +405,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.toplevel.checkviews()
 		
 		self.refresh_scene_graph()
+		self.scene_graph.dont_draw_children = 0
 		self.draw()
 
 	def refresh_scene_graph(self):
@@ -419,17 +420,22 @@ class HierarchyView(HierarchyViewDialog):
 	# If you want a redraw, set flags and just call this function!!
 	#
 	def draw(self):
+		import time;
 		# Recalculate the size of all boxes and draw on screen.
 		if self.drawing == 1:
 			return
 		self.drawing = 1
 
 		if self.need_resize:
+			#print "DEBUG: resizing scene..", time.time()
 			self.resize_scene()	# will cause a redraw() event anyway.
+			#print "DEBUG: done resizing scene..", time.time()
 			# When you resize the canvas, a callback will make it redraw itself.
 		else:
 			# This doesn't make a callback.
+			#print "DEBUG: only drawing the scene", time.time()
 			self.draw_scene()
+			#print "DEBUG: finished drawing the scene", time.time()
 		self.drawing = 0
 
 	def resize_scene(self):
@@ -494,32 +500,48 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		self.redrawing = 1
 
+		import time;
+
 		if self.need_redraw:
+			#print "DEBUG: Making a new display list."
 			d = self.window.newdisplaylist(BGCOLOR, windowinterface.UNIT_PXL)
 			self.old_display_list = d
+			#print "DEBUG: scene_graph.draw()" , time.time()
 			self.scene_graph.draw(d)
+			#print "DEBUG: done drawing. Rendering..", time.time()
 			d.render()
+			#print "DEBUG: Done rendering. ", time.time()
 			self.need_redraw = 0
 		elif self.only_redraw_selection and self.old_display_list:
+			#print "DEBUG: using old display list."
 			d = self.old_display_list.clone()
-			if self.selected_widget and not self.old_selected_widget:
+
+## Damn, and this was really cool code:
+##			if self.selected_widget and not self.old_selected_widget:
+##				self.selected_widget.draw(d)
+##			elif not self.selected_widget and self.old_selected_widget:
+##				self.old_selected_widget.draw(d)
+##			elif not (self.selected_widget and self.old_selected_widget):
+##				pass
+##			# else, draw the parent node:
+##			# We now know that both are widgets, and either one or the other needs redrawing.
+##			else:
+##				n1 = self.old_selected_widget.node
+##				n2 = self.selected_widget.node
+##				if n1.IsAncestorOf(n2):
+##					self.old_selected_widget.draw(d)
+##				elif n2.IsAncestorOf(n1):
+##					self.selected_widget.draw(d)
+##				else:
+##					self.selected_widget.draw(d)
+##					self.old_selected_widget.draw(d)
+
+			if self.selected_widget:
+				self.selected_widget.dont_draw_children = 1
 				self.selected_widget.draw(d)
-			elif not self.selected_widget and self.old_selected_widget:
+			if self.old_selected_widget:
+				self.old_selected_widget.dont_draw_children = 1
 				self.old_selected_widget.draw(d)
-			elif not (self.selected_widget and self.old_selected_widget):
-				pass
-			# else, draw the parent node:
-			# We now know that both are widgets, and either one or the other needs redrawing.
-			else:
-				n1 = self.old_selected_widget.node
-				n2 = self.selected_widget.node
-				if n1.IsAncestorOf(n2):
-					self.old_selected_widget.draw(d)
-				elif n2.IsAncestorOf(n1):
-					self.selected_widget.draw(d)
-				else:
-					self.selected_widget.draw(d)
-					self.old_selected_widget.draw(d)
 			
 			self.only_redraw_selection = 0
 			self.old_display_list = d
@@ -624,8 +646,12 @@ class HierarchyView(HierarchyViewDialog):
 		obj = self.scene_graph.get_clicked_obj_at((x,y))
 ##		print "DEBUG: mouse0release, object is: ", obj
 		if obj:
+			import time;
+			#print "DEBUG: releasing mouse.." , time.time()
 			obj.mouse0release((x,y))
+			#print "DEBUG: drawing...", time.time()
 			self.draw()
+			#print "Done drawing. ", time.time()
 
 	def cvdrop(self, node, window, event, params):
 		em = self.editmgr

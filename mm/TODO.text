@@ -3,6 +3,21 @@ TODO for Michael :-)
 
 Priority top-to-bottom.
 ------------------------
+
+(discuss all later)
+--> Assets window
+	- File-based assets? Explorer window?
+	- Play media on the clipboard.
+	- 
+--> Event editing
+	- Add little icons to show events.
+	- Add little arrows to those icons.
+
+--> Source editor view.
+	- 
+
+
+
 * Optimise the structure view (last optimisation: recalc() calls - cache them.)
 * Reload button on the player.
 * Create templates for Snap! (slideshow)
