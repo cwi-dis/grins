@@ -28,7 +28,7 @@ import mw_windows
 
 CMDSET_WINDOW, CMDSET_GROUP, CMDSET_GLOBAL = 0, 1, 2
 
-def _beep():
+def beep():
 	MacOS.SysBeep()
 
 #
@@ -78,7 +78,7 @@ class _Event:
 		if dialog:
 			if self._grabbed:
 				print 'Another window is already grabbed!'
-				_beep()
+				beep()
 				self._grabbed = None
 				return
 			self._grabbed = dialog._wid
@@ -317,14 +317,14 @@ class _Event:
 			if wid == frontwin:
 				# Check that we don't have a grabbed window that has been pushed behind
 				if self._grabbed and self._grabbed != wid:
-					_beep()
+					beep()
 					self._grabbed.SelectWindow()
 					return
 				# Frontmost. Handle click.
 				self._handle_contentclick(wid, 1, where, event, (modifiers & Events.shiftKey))
 			else:
 				if self._grabbed and self._grabbed != wid:
-					_beep()
+					beep()
 					wid = self._grabbed
 				# Not frontmost. Activate.
 				wid.SelectWindow()
@@ -367,7 +367,7 @@ class _Event:
 			w = Win.FrontWindow()
 			handled = self._handle_keyboardinput(w, c, where, event)
 			if not handled:
-				_beep()
+				beep()
 			return
 		MacOS.HandleEvent(event)
 		
