@@ -2341,7 +2341,6 @@ item: Create Shortcut
   Source=%MAINDIR%\GRiNS_MS2.exe
   Destination=%CDESKTOPDIR%\GRiNS Editor for SMIL 2.0 Mobile Version.lnk
   Icon Number=0
-  Flags=01000000
 end
 item: End Block
 end
