@@ -192,8 +192,9 @@ MENUBAR=(
 
 	('&Linking', (
 		(FLAG_ALL, ENTRY, 'Create whole object &anchor', None, CREATEANCHOR),
-		(FLAG_ALL, ENTRY, 'Create anchor and edit...', None, CREATEANCHOREXTENDED),
 		(FLAG_ALL, ENTRY, '&Finish hyperlink to selection', None, FINISH_LINK),
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, 'Create anchor and edit...', None, CREATEANCHOREXTENDED),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Use as event &source', None, CREATE_EVENT_SOURCE),
 		(FLAG_ALL, ENTRY, 'Create &begin event', None, CREATE_BEGIN_EVENT),
@@ -383,8 +384,9 @@ POPUP_HVIEW_LEAF = (
 		(FLAG_ALL, ENTRY, 'Create &end event', None, CREATE_END_EVENT),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Create &whole object anchor', None, CREATEANCHOR),
-		(FLAG_ALL, ENTRY, 'Create anchor and edit...', None, CREATEANCHOREXTENDED),
 		(FLAG_ALL, ENTRY, 'Finish &hyperlink to selection', None, FINISH_LINK),
+		(FLAG_PRO, SEP,),
+		(FLAG_ALL, ENTRY, 'Create anchor and edit...', None, CREATEANCHOREXTENDED),
 		(FLAG_PRO, SEP,),
 		(FLAG_BOSTON, ENTRY, 'RealPix to S&MIL 2.0', None, RPCONVERT),
 		(FLAG_ALL, SEP,),
