@@ -19,11 +19,6 @@ import string
 import win32api, win32con
 from win32con import *
 
-print 'Running CMIF Multimedia presentation'
-
-if len(sys.argv)>1:
-	print sys.argv[1]
-
 # For now:
 #progdir=os.path.split(sys.argv[0])[0]
 #CMIFDIR=os.path.split(progdir)[0]
@@ -61,11 +56,7 @@ fp.write(' ')
 fp.close()
 
 
-print sys.path
-
 sys.path[0:0] = CMIFPATH
-
-print sys.path
 
 os.environ["CMIF"] = CMIFDIR
 #os.environ["CHANNELDEBUG"] = "ON"
@@ -73,12 +64,10 @@ os.environ["CMIF_USE_WIN32"] = "ON"
 
 # run the given cmif file
 #import main
-print "sys.argv-->", sys.argv
 
 import cmifex
 for i in range(1,len(sys.argv)):
 	sys.argv[i]=cmifex.ToLongName(sys.argv[i])
-print "long sys.argv-->", sys.argv
 
 import cmifed
 
