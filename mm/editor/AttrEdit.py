@@ -98,7 +98,23 @@ def hasdocumentattreditor(toplevel):
 	except AttributeError:
 		return 0
 	return 1
-
+	
+# And an attribute editor for transitions
+def showtransitionattreditor(toplevel, trname, initattr = None):
+	try:
+		attreditor = toplevel.context.transitions[trname]['__attreditor']
+	except KeyError:
+		attreditor = AttrEditor(TransitionWrapper(toplevel, trname), initattr = initattr)
+	else:
+		attreditor.pop()
+		
+def hastransitionattreditor(toplevel, trname):
+	try:
+		attreditor = toplevel.context.transitions[trname]['__attreditor']
+	except KeyError:
+		return 0
+	return 1
+	
 # A similar interface for program preferences (note different arguments!).
 
 prefseditor = None
@@ -828,6 +844,72 @@ class DocumentWrapper(Wrapper):
 			return MMAttrdefs.parsevalue(name, str, self.context)
 		else:
 			return str
+
+class TransitionWrapper(Wrapper):
+	# XXXX Should we have the name in here too?
+	__stdnames = ['trtype', 'subtype', 'dur', 'startPercent', 'endPercent', 'direction',
+		'horzRepeat', 'vertRepeat', 'borderWidth', 'color', 'multiElement', 'childrenClip']
+
+	def __init__(self, toplevel, trname):
+ 		Wrapper.__init__(self, toplevel, toplevel.context)
+ 		self.__trname = trname
+		self.context.transitions[self.__trname]['__attreditor'] = self
+		
+	def __repr__(self):
+		return '<TransitionWrapper instance for %s, file=%s>' % (self.__trname, self.toplevel.filename)
+
+	def close(self):
+		del self.context.transitions[self.__trname]['__attreditor']
+		Wrapper.close(self)
+
+	def stillvalid(self):
+		if not self.toplevel in self.toplevel.main.tops:
+			return 0
+		return self.context.transitions.has_key(self.__trname)
+
+	def maketitle(self):
+		return 'Transition %s properties' % self.__trname
+
+	def getattr(self, name):	# Return the attribute or a default
+		return self.getvalue() or ''
+
+	def getvalue(self, name):	# Return the raw attribute or None
+		if self.context.transitions[self.__trname].has_key(name):
+			return self.context.transitions[self.__trname][name]
+		return None		# unrecognized
+
+	def getdefault(self, name):
+		attrdef = MMAttrdefs.getdef(name)
+		return attrdef[1]
+		
+	def setattr(self, name, value):
+		self.context.transitions[self.__trname][name] = value
+
+	def delattr(self, name): # XXXX Is this allowed?
+		if self.context.attributes.has_key(name):
+			del self.context.transitions[self.__trname][name]
+
+	def delete(self):
+		# shouldn't be called...
+		pass
+
+	def attrnames(self):
+		attrs = self.context.transitions[self.__trname]
+		names = attrs.keys()
+		for name in self.__stdnames:
+			if attrs.has_key(name):
+				names.remove(name)
+		if '__attreditor' in names:
+			names.remove('__attreditor')
+		return self.__stdnames + names
+		
+##	def valuerepr(self, name, value):
+##		# XXXX Anywhere we have to use valuerepr?
+##		return value
+##
+##	def parsevalue(self, name, str):
+##		# XXXX Anywhere we have to use parsevalue
+##		return str
 
 
 class PreferenceWrapper(Wrapper):
