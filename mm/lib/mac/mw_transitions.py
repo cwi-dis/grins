@@ -18,7 +18,7 @@ class TransitionEngine:
 		self.duration = dur
 		self.running = runit
 		self.value = 0
-		trtype = dict['trtype']
+		trtype = dict.get('trtype', 'fade')
 		subtype = dict.get('subtype')
 		self.__callback = cb
 		klass = Transitions.TransitionFactory(trtype, subtype)
@@ -31,11 +31,11 @@ class TransitionEngine:
 ##		self.reverse = (dict['direction'] == 'reverse')
 		self.reverse = 0
 		if not self.reverse:
-			self.startprogress = dict['startProgress']
-			self.endprogress = dict['endProgress']
+			self.startprogress = dict.get('startProgress', 0)
+			self.endprogress = dict.get('endProgress', 1)
 		else:
-			self.startprogress = 1.0 - dict['endProgress']
-			self.endprogress = 1.0 - dict['startProgress']
+			self.startprogress = 1.0 - dict.get('endProgress', 1)
+			self.endprogress = 1.0 - dict.get('startProgress', 0)
 		# Now recompute starttime and "duration" based on these values
 		if self.endprogress != self.startprogress:
 			self.duration = self.duration / (self.endprogress-self.startprogress)
