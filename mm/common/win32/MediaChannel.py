@@ -104,9 +104,8 @@ class MediaChannel:
 	# For local files we don't have to do anything. 
 	# Do not use  MMurl.urlretrieve since as it
 	# is now implemented blocks the application.
-	def prepare_player(self, node = None):
+	def prepare_player(self, node = None):	
 		self.release_armed_player()
-
 		try:
 			self._armBuilder = DirectShowSdk.CreateGraphBuilder()
 		except:
@@ -155,12 +154,10 @@ class MediaChannel:
 			self._notifyWindow.create()
 			self._notifyWindow.HookMessage(self.OnGraphNotify,WM_GRPAPHNOTIFY)
 			self._playBuilder.SetNotifyWindow(self._notifyWindow,WM_GRPAPHNOTIFY)
-
-		self._playBuilder.Run()
-
-		self.register_for_timeslices()
 		self.__playdone=0
 		self.__paused=0
+		self._playBuilder.Run()
+		self.register_for_timeslices()
 		return 1
 
 					
@@ -176,8 +173,12 @@ class MediaChannel:
 		self.release_player()
 		
 	def showit(self,window):
-		if self._playBuilder: self._playBuilder.SetVisible(1)
-		if window: window.RedrawWindow()
+		if self._playBuilder: 
+			self._playBuilder.SetVisible(1)
+
+	def paint(self):
+		if self.window:
+			self.window.UpdateWindow()
 
 	# Set Window Media window size from scale and center attributes
 	def adjustMediaWnd(self,node,window,builder):
@@ -247,6 +248,8 @@ class MediaChannel:
 		if self._playBuilder and not self.__playdone:
 			t_sec=self._playBuilder.GetPosition()
 			if t_sec>=self._playEnd:self.OnMediaEnd()
+			self.paint()
+
 	def is_callable(self):
 		return self._playBuilder
 	def register_for_timeslices(self):
