@@ -44,7 +44,6 @@ def mustfitstring(s, sizefunc, length):
 		return l
 	raise nofit_error, (s, length)
 
-MASK = 20
 
 class TextWindow(ChannelWindow):
 	#
@@ -142,9 +141,11 @@ class TextWindow(ChannelWindow):
 		gl.reshapeviewport()
 		x0, x1, y0, y1 = gl.getviewport()
 		width, height = x1-x0, y1-y0
+		MASK = 20
 		gl.viewport(x0-MASK, x1+MASK, y0-MASK, y1+MASK)
 		gl.scrmask(x0, x1, y0, y1)
-		gl.ortho2(-MASK, width+MASK, height+MASK, -MASK)
+		gl.ortho2(-MASK-0.5, width+MASK-0.5, \
+			  height+MASK-0.5, -MASK-0.5)
 		#
 		gl.RGBcolor(self.bgcolor)
 		gl.clear()
