@@ -1,22 +1,44 @@
+__version__ = "$Id$"
 
 from types import *
 import win32ui, win32con
 
+""" @win32doc|win32menu
+This module contains the definition of the Menu class
+that extends the PyCMenu. The PyCMenu class exports to
+Python the MFC class CMenu which is a wrapper class for
+win32 nenus.
+The purpose of this class is to facilitate the creation
+and manipulation of menus by offering functionality at
+a higher level.
+
+This class creates menus given a list of items 
+in one of the following formats:
 
 # 1.a menu specification grammar:
-# entry: <simple_entry> | <sep_entry> | <CASCADE_ENTRY>
+Contains the specification for player menu in the
+following Grammar:
+# entry: <simple_entry> | <sep_entry> | <dyn_cascade_entry> | <CASCADE_ENTRY>
 # simple_entry: (ENTRY | TOGGLE, LABEL, SHORTCUT, ID)
 # sep_enty: (SEP,)
+# dyn_cascade_entry: (DYNAMICCASCADE, LABEL, ID)
 # cascade_entry: (CASCADE,LABEL,menu_spec_list)
 # menubar_entry: (LABEL,menu_spec_list)
 # menu_spec_list: list of entry
 # menubar_spec_list: list of menubar_entry
 # menu_exec_list: (MENU,menu_spec_list)
+where ENTRY, TOGGLE, SEP, CASCADE, DYNAMICCASCADE are type constants.
+LABEL and and SHORTCUT are strings
+ID is either an integer or an object that can be maped to an integer 
+"""
 
 # OR:
 # cb_entry: (accelerator,LABEL,callback_tuple[,Type,Init]) | None
 # callback_tuple: (callback,(arg,))
 # callback_menu_spec_list: list of cb_entry
+
+# The Menu class becomes indirectly an extension to PyCMenu
+# by defining apropriately the __getattr__ method.
 
 # 2. Menu functions available through the underline win32 object
 #	AppendMenu|Appends a new item to the end of a menu. Python can specify the state of the menu item by setting values in nFlags.
@@ -39,8 +61,10 @@ class Menu:
 		self._dynamic_cascade_dict={}	# dict holding dynamic menus, valid until next call
 		self._toggles={}
 
+	# Delete the underlying win32 object
 	def __del__(self):
 		del self._obj_
+	# make this object as an extension of the underline win32 object 
 	def __getattr__(self, attr):	
 		try:	
 			if attr != '__dict__':
@@ -138,6 +162,24 @@ class Menu:
 		else:
 			self.AppendMenu(win32con.MF_POPUP,submenu.GetHandle(),str)
 
+	# Appends a menu item and checks for a breaks
+	def AppendMenuEx(self,str,pos):
+		if len(str)==0: 
+			self.AppendMenu(win32con.MF_SEPARATOR,0)
+			return
+		nextpos=self.GetMenuItemCount()+1
+		breakpos = (nextpos-1) % 25
+		if breakpos==0 and nextpos!=1:
+			if pos!=-1:
+				self.AppendMenu(win32con.MF_STRING|win32con.MF_MENUBARBREAK,pos,str)
+			else:
+				self.AppendMenu(win32con.MF_STRING|win32con.MF_MENUBARBREAK,nextpos,str)
+		else:
+			if pos!=-1:
+				self.AppendMenu(win32con.MF_STRING,pos,str);
+			else:
+				self.AppendMenu(win32con.MF_STRING,nextpos,str)
+	# Dispaly popup menu
 	def FloatMenu(self,wnd,x,y):
 		menu = self.GetSubMenu(0)
 		pt=(x,y)
@@ -162,9 +204,9 @@ menu for: <_SubWindow instance at 165ac80>
 """
 
 # create menu from a callback_menu_spec_list
-
-def _create_menu(menu, list, menuid, cbdict, acc = None):
-	menu._toggles={}
+# Member of menu but for convenience (and history) defined outside the class
+def _create_menu(self, list, menuid, cbdict, acc = None):
+	self._toggles={}
 	accelerator = None
 	length = 0
 	i = 0
@@ -175,11 +217,11 @@ def _create_menu(menu, list, menuid, cbdict, acc = None):
 		entry = list[i]
 		i = i + 1
 		if entry is None:
-			AppendMenu(menu, '', 0)
+			self.AppendMenuEx('', 0)
 			continue
 		length = length + 1
 		if type(entry) is StringType:
-			AppendMenu(menu, entry, id)
+			self.AppendMenuEx(entry, id)
 			id = id + 1
 			buts.append((entry,None))
 			continue
@@ -203,7 +245,7 @@ def _create_menu(menu, list, menuid, cbdict, acc = None):
 					initial = entry[4]
 
 		if type(callback) is ListType:
-			submenu = win32ui.CreateMenu()
+			submenu = Menu() #win32ui.CreateMenu()
 			temp = _create_menu(submenu, callback, id, dict, acc)			
 			if temp:
 				id = temp[0]
@@ -213,7 +255,7 @@ def _create_menu(menu, list, menuid, cbdict, acc = None):
 					if not dict.has_key(k):
 						dict[k] = dict2[k]
 			buts.append((labelString, temp[2]))
-			PopupAppendMenu(menu, submenu, labelString)
+			self.AppendPopup(submenu, labelString)
 
 		else:
 			if type(callback) is not TupleType:
@@ -226,182 +268,17 @@ def _create_menu(menu, list, menuid, cbdict, acc = None):
 				acc[accelerator] = callback
 				attrs['acceleratorText'] = accelerator
 				labelString = labelString + '\t' + accelerator
-			AppendMenu(menu, labelString, id)
+			self.AppendMenuEx(labelString, id)
 			dict[id] = callback
 			if btype == 't':
-				menu._toggles[id]=1
+				self._toggles[id]=1
 				if initial:
-					menu.CheckMenuItem(id,win32con.MF_BYCOMMAND | win32con.MF_CHECKED)	
+					self.CheckMenuItem(id,win32con.MF_BYCOMMAND | win32con.MF_CHECKED)	
 				else:
-					menu.CheckMenuItem(id,win32con.MF_BYCOMMAND | win32con.MF_UNCHECKED)			
+					self.CheckMenuItem(id,win32con.MF_BYCOMMAND | win32con.MF_UNCHECKED)			
 			id = id + 1
 	t = (id, dict, buts)
 	return t
-
-def _create_menu_X(menu, list, visual, colormap, acc = None, widgets = None):
-	if widgets is None:
-		widgets = {}
-	if len(list) > 30:
-		menu.numColumns = (len(list) + 29) / 30
-		menu.packing = Xmd.PACK_COLUMN
-	if _def_useGadget:
-		separator = Xm.SeparatorGadget
-		label = Xm.LabelGadget
-		cascade = Xm.CascadeButtonGadget
-		toggle = Xm.ToggleButtonGadget
-		pushbutton = Xm.PushButtonGadget
-	else:
-		separator = Xm.Separator
-		label = Xm.Label
-		cascade = Xm.CascadeButton
-		toggle = Xm.ToggleButton
-		pushbutton = Xm.PushButton
-	accelerator = None
-	for entry in list:
-		if entry is None:
-			dummy = menu.CreateManagedWidget('separator',
-							 separator, {})
-			continue
-		if type(entry) is StringType:
-			dummy = menu.CreateManagedWidget(
-				'menuLabel', label,
-				{'labelString': entry})
-			widgets[entry] = dummy, None
-			continue
-		btype = 'p'		# default is pushbutton
-		initial = 0
-		if acc is None:
-			labelString, callback = entry[:2]
-			if len(entry) > 2:
-				btype = entry[2]
-				if len(entry) > 3:
-					initial = entry[3]
-		else:
-			accelerator, labelString, callback = entry[:3]
-			if len(entry) > 3:
-				btype = entry[3]
-				if len(entry) > 4:
-					initial = entry[4]
-		if type(callback) is ListType:
-			submenu = menu.CreatePulldownMenu('submenu',
-				{'colormap': colormap,
-				 'visual': visual,
-				 'depth': visual.depth,
-				 'orientation': Xmd.VERTICAL,
-				 'tearOffModel': Xmd.TEAR_OFF_ENABLED})
-			button = menu.CreateManagedWidget(
-				'submenuLabel', cascade,
-				{'labelString': labelString, 'subMenuId': submenu})
-			subwidgets = {}
-			widgets[labelString] = button, subwidgets
-			_create_menu(submenu, callback, visual, colormap, acc,
-				     subwidgets)
-		else:
-			if type(callback) is not TupleType:
-				callback = (callback, (labelString,))
-			attrs = {'labelString': labelString}
-			if accelerator:
-				if type(accelerator) is not StringType or \
-				   len(accelerator) != 1:
-					raise error, 'menu accelerator must be single character'
-				acc[accelerator] = callback
-				attrs['acceleratorText'] = accelerator
-			if btype == 't':
-				attrs['set'] = initial
-				button = menu.CreateManagedWidget('menuToggle',
-						toggle, attrs)
-				cbfunc = 'valueChangedCallback'
-			else:
-				button = menu.CreateManagedWidget('menuLabel',
-						pushbutton, attrs)
-				cbfunc = 'activateCallback'
-			button.AddCallback(cbfunc, _generic_callback, callback)
-			widgets[labelString] = button, None
-
-def ClearSubmenu(sm):
-	n=sm.GetMenuItemCount()
-	for i in range(n):
-		sm.DeleteMenu(0,win32con.MF_BYPOSITION) 
-	return sm
-
-
-
-##############################################
-# JUST REMINDERS FUNCTIONS
-
-def CreateMenu():
-	return win32ui.CreateMenu()
-
-def GetMenu(wnd):
-	menu = wnd.GetMenu()
-	if menu: count=GetMenuItemCount()
-	else: count = 0
-	wnd.SetMenu(menu)
-	wnd.DrawMenuBar()
-	return menu,count
-
-def SetMenu(wnd,menu):
-	wnd.SetMenu(menu)
-	wnd.DrawMenuBar()
-
-
-def CheckMenuItem(menu,pos,check):
-	flags = win32con.MF_BYPOSITION
-	if check==0:
-		flags = flags | win32con.MF_UNCHECKED
-	else:
-		flags = flags | win32con.MF_CHECKED
-	menu.CheckMenuItem(pos,flags)
-
-def CheckMenuItemByCmd(menu,id,check):
-	flags = win32con.MF_BYCOMMAND
-	if check==0:
-		flags = flags | win32con.MF_UNCHECKED
-	else:
-		flags = flags | win32con.MF_CHECKED
-	menu.CheckMenuItem(id,flags)
-
-def ClearSubmenu(sm):
-	n=sm.GetMenuItemCount()
-	for i in range(n):
-		sm.DeleteMenu(0,win32con.MF_BYPOSITION) 
-	return sm
-
-# positions are used as the cmd ids
-def AppendMenu(menu,str,pos):
-	if len(str)==0: 
-		menu.AppendMenu(win32con.MF_SEPARATOR,0)
-		return
-	nextpos=menu.GetMenuItemCount()+1
-	breakpos = (nextpos-1) % 25
-	if breakpos==0 and nextpos!=1:
-		if pos!=-1:
-			menu.AppendMenu(win32con.MF_STRING|win32con.MF_MENUBARBREAK,pos,str)
-		else:
-			menu.AppendMenu(win32con.MF_STRING|win32con.MF_MENUBARBREAK,nextpos,str)
-	else:
-		if pos!=-1:
-			menu.AppendMenu(win32con.MF_STRING,pos,str);
-		else:
-			menu.AppendMenu(win32con.MF_STRING,nextpos,str)
-
-
-
-def InsertMenu(menu,pos,str):
-	if len(str)==0: 
-		menu.InsertMenu(pos,win32con.MF_SEPARATOR|win32con.MF_BYPOSITION)
-	else:
-		nextpos=menu.GetMenuItemCount()+1
-		menu.InsertMenu(pos,win32con.MF_STRING|win32con.MF_BYPOSITION,nextpos,str)
-
-def PopupInsertMenu(menu,submenu,pos,str):
-	menu.InsertMenu(pos,win32con.MF_POPUP|win32con.MF_BYPOSITION,submenu,str)
-
-def DestroyMenu(menu):
-	del menu
-
-def DeleteMenu(menu,pos):
-	menu.DeleteMenu(pos,win32con.MF_BYPOSITION)
 
 
 
