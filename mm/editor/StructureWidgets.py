@@ -1681,6 +1681,7 @@ class HorizontalWidget(StructureObjWidget):
 			# no playable children
 			nextt0 = t0
 		thist0 = myt0
+		neededpixelnext = 0
 		for i in range(len(self.children)):
 			if not self.children[i].node.WillPlay():
 				thist0 = thist1 = thist2 = nextt0
@@ -1697,6 +1698,7 @@ class HorizontalWidget(StructureObjWidget):
 			thistend = min(thist2, nextt0)
 			neededpixel0, neededpixel1 = self.children[i].addcollisions(t0, nextt0, timemapper, (thist0, thist1, thist2, thisdownload, thisbegindelay))
 			self.childrentimes.append((thist0, thist1, thist2, thisdownload, thisbegindelay, neededpixel0, neededpixel1))
+			neededpixel0 = neededpixel0 + neededpixelnext
 			if thist0 == mastert0:
 				maxneededpixel0 = neededpixel0 = neededpixel0 + maxneededpixel0
 			elif i > 0:
@@ -1705,6 +1707,10 @@ class HorizontalWidget(StructureObjWidget):
 				maxneededpixel1 = neededpixel1 = neededpixel1 + maxneededpixel1
 			timemapper.addcollision(thist0, neededpixel0)
 			timemapper.addcollision(thistend, neededpixel1)
+			if thistend == nextt0:
+				neededpixelnext = neededpixel1
+			else:
+				neededpixelnext = 0
 			t0 = nextt0
 		if myt0 != mastert0:
 			timemapper.addcollision(myt0, maxneededpixel0)
