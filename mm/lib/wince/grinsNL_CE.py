@@ -83,6 +83,7 @@ class Main(MainDialog):
 			top.show()
 			top.player.show()
 			self._update_recent(url)
+			top.player.play_callback()
 
 	def open_recent_callback(self, url):
 		self.openURL_callback(url)
