@@ -274,10 +274,13 @@ class TopLevel(ViewDialog, BasicDialog):
 		obj.set_button(0)
 	#
 	def read_it(self):
+		import time
 		self.changed = 0
 		print 'parsing', self.filename, '...'
+		t0 = time.millitimer()
 		self.root = MMTree.ReadFile(self.filename)
-		print 'done.'
+		t1 = time.millitimer()
+		print 'done in', (t1-t0) * 0.001, 'sec.'
 		self.context = self.root.GetContext()
 		self.editmgr = EditMgr().init(self.root)
 		self.context.seteditmgr(self.editmgr)
