@@ -352,8 +352,6 @@ class CREATEANCHOR(_CommandBase):
 	help = 'Create a simple fullnode anchor on the selection'
 class FINISH_LINK(_CommandBase):
 	help = 'Create hyperlink from recent anchor to selection'
-class FINISH_ARC(_CommandBase):
-	help = 'Lock selection, create sync arc to next selected node'
 class CREATE_BEGIN_EVENT_SOURCE(_CommandBase):
 	help = 'Set the source of any created events to this node.'
 class CREATE_BEGIN_EVENT_DESTINATION(_CommandBase):
@@ -391,7 +389,6 @@ class COPY_REGION(_CommandBase): pass
 class TOGGLE_ONOFF(_CommandBase): pass
 class HIGHLIGHT(_CommandBase): pass
 class UNHIGHLIGHT(_CommandBase): pass
-class SYNCARCS(_DynamicCascade): pass
 class LAYOUTS(_DynamicCascade): pass
 
 class BANDWIDTH_14K4(_CommandBase): pass
