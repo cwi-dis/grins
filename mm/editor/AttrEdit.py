@@ -19,12 +19,8 @@ from Dialog import Dialog
 # and hideattreditor(node) hides it again.  Since the editor may also
 # hide itself, spurious hide calls are ignored; also, only one attribute
 # editor is allowed per node, and extra show calls are also ignored
-# (actually, these close and re-open the window to draw attention...).
-# Hiding the editor when the user has changed part of it may ask the
-# user what should be done about this -- this part of the interface
-# hasn't been completely thought out yet.
-# Likewise, what should be done when the node has changed somehow
-# while the attribute editor was active?
+# (actually, this closes and re-opens the window, to draw the user's
+# attention...).
 
 def showattreditor(node):
 	try:
@@ -56,9 +52,9 @@ def hasattreditor(node):
 
 
 # A similar interface for channels (note different arguments!).
-# Note that the administration is in context.channelattreditors,
+# The administration is kept in context.channelattreditors,
 # which is created here if necessary.
-#
+
 def showchannelattreditor(context, name):
 	try:
 		dict = context.channelattreditors
@@ -88,10 +84,10 @@ def haschannelattreditor(context, name):
 	return dict[name].showing
 
 
-# A similar interface for styles (note different arguments!).
-# Note that the administration is in context.styleattreditors,
+# And again a similar interface for styles.
+# The administration is kept in context.styleattreditors,
 # which is created here if necessary.
-#
+
 def showstyleattreditor(context, name):
 	try:
 		dict = context.styleattreditors
