@@ -32,27 +32,11 @@ class TopLevelDialog:
 	def show(self):
 		if self.window is not None:
 			return
-		import settings, bitrates, languages
-		bitrate = settings.get('system_bitrate')
-		rates = []
-		initbitrate = bitrates.bitrates[0][1]
-		for val, str in bitrates.bitrates:
-			rates.append(str)
-			if val <= bitrate:
-				initbitrate = str
-		language = settings.get('system_language')
-		langs = []
-		initlang = 'English'	# we know this occurs
-		for val, str in languages.languages:
-			langs.append(str)
-			if language == val:
-				initlang = str
+		
+		dict = self.getsettingsdict()
 
 		adornments = {
-			'pulldown': {
-				'Bitrate': (rates, self.bitratecb, initbitrate),
-				'Language': (langs, self.languagecb, initlang),
-			},
+			'pulldown': dict
 		}
 
 		self.window = windowinterface.newdocument(self, 
@@ -71,6 +55,10 @@ class TopLevelDialog:
 
 	def setplayerstate(self, state):
 		self.window.setplayerstate(state)
+
+	def setsettingsdict(self, dict):
+		if self.window:
+			self.window.settoolbarpulldowns(dict)
 
 	def showsource(self, source = None, optional=0, readonly = 0):
 		if source is None:
