@@ -6,28 +6,29 @@ See the file COPYING for copying permission.
 static char RCSId[]
   = "$Header$";
 
-#ifdef COMPILED_FROM_DSP
+//#ifdef COMPILED_FROM_DSP
 #  include "winconfig.h"
 #  define XMLPARSEAPI __declspec(dllexport)
 #  include "expat.h"
 #  undef XMLPARSEAPI
-#else
-#include <config.h>
+//#else
+//#include <config.h>
 
-#ifdef __declspec
-#  define XMLPARSEAPI __declspec(dllexport)
-#endif
+//#ifdef __declspec
+//#  define XMLPARSEAPI __declspec(dllexport)
+//#endif
 
-#include "expat.h"
+//#include "expat.h"
 
-#ifdef __declspec
-#  undef XMLPARSEAPI
-#endif
-#endif /* ndef COMPILED_FROM_DSP */
+//#ifdef __declspec
+//#  undef XMLPARSEAPI
+//#endif
+//#endif /* ndef COMPILED_FROM_DSP */
 
 #include <stddef.h>
 
 #ifdef XML_UNICODE
+#error XML_UNICODE
 #define XML_ENCODE_MAX XML_UTF16_ENCODE_MAX
 #define XmlConvert XmlUtf16Convert
 #define XmlGetInternalEncoding XmlGetUtf16InternalEncoding

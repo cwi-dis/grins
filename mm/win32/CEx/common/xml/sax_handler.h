@@ -18,7 +18,7 @@ class sax_handler
 	virtual void end_element() = 0;
 	virtual void handle_data(const char *s, int len) = 0;
 	// ...
-	virtual void show_error(std::string& report) = 0;
+	virtual void show_error(const std::string& report) = 0;
 	};
 
 
