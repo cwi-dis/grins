@@ -1637,7 +1637,6 @@ class Region(Window):
 		# first paint self
 		rgn = self.getrelativeClipRgn(rel)
 		dst = self.getrelativepos(rel)
-		print dst
 		try:
 			self._paintOnDDS(dds, dst, rgn)
 		except ddraw.error, arg:
