@@ -75,6 +75,10 @@ SOURCE=.\common\win32\HtmlChannel.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\common\win32\LicenseDialog.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\common\win32\MediaChannel.py
 # End Source File
 # Begin Source File
@@ -103,6 +107,10 @@ SOURCE=.\common\mac\HtmlChannel.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\common\mac\LicenseDialog.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\common\mac\PreferencesDialog.py
 # End Source File
 # Begin Source File
@@ -116,6 +124,10 @@ SOURCE=.\common\mac\SocketChannel.py
 # Begin Source File
 
 SOURCE=.\common\motif\HtmlChannel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\common\motif\LicenseDialog.py
 # End Source File
 # Begin Source File
 
@@ -363,10 +375,6 @@ SOURCE=.\editor\win32\LayoutViewDialog2.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\editor\win32\LicenseDialog.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\editor\win32\LinkEditDialog.py
 # End Source File
 # Begin Source File
@@ -444,10 +452,6 @@ SOURCE=.\editor\mac\HierarchyViewDialog.py
 # Begin Source File
 
 SOURCE=.\editor\mac\LayoutViewDialog.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\editor\mac\LicenseDialog.py
 # End Source File
 # Begin Source File
 
@@ -536,10 +540,6 @@ SOURCE=.\editor\motif\HierarchyViewDialog.py
 # Begin Source File
 
 SOURCE=.\editor\motif\LayoutViewDialog.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\editor\motif\LicenseDialog.py
 # End Source File
 # Begin Source File
 
