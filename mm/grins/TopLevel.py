@@ -209,15 +209,15 @@ class TopLevel(TopLevelDialog):
 ##		t0 = time.time()
 		import urlcache
 		mtype = urlcache.mimetype(self.filename)
-		if mtype not in ('application/x-grins-project', 'application/smil', 'application/x-grins-binary-project') and (not hasattr(windowinterface, 'is_embedded') or not windowinterface.is_embedded()):
+		if mtype not in ('application/x-grins-project', 'application/smil', 'application/smil+xml', 'application/x-grins-binary-project') and (not hasattr(windowinterface, 'is_embedded') or not windowinterface.is_embedded()):
 			ans = windowinterface.GetYesNoCancel('MIME type not application/smil or application/x-grins-project.\nOpen as SMIL document anyway?')
 			if ans == 0:	# yes
 				mtype = 'application/smil'
 			elif ans == 2:	# cancel
 				raise IOError('user request')
-		if mtype in ('application/x-grins-project', 'application/smil'):
+		if mtype in ('application/x-grins-project', 'application/smil', 'application/smil+xml'):
 			# init progress dialog
-			if mtype == 'application/smil':
+			if mtype in ('application/smil', 'application/smil+xml'):
 				self.progress = windowinterface.ProgressDialog("Loading")
 				self.progressMessage = "Loading SMIL document..."
 			else:
@@ -391,6 +391,7 @@ class TopLevel(TopLevelDialog):
 				mtype = urlcache.mimetype(url)
 				utype, url2 = MMurl.splittype(url)
 				if mtype in ('application/smil',
+					     'application/smil+xml',
 					     'application/x-grins-project',
 ##					     'application/x-grins-cmif',
 					     ):

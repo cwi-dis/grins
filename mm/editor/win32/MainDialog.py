@@ -133,7 +133,7 @@ class MainDialog:
 		url=self.__path2url(filename)
 		import urlcache
 		mimetype = urlcache.mimetype(url)
-		if mimetype in ('application/x-grins-project', 'application/smil'):
+		if mimetype in ('application/x-grins-project', 'application/smil', 'application/smil+xml'):
 			self.openURL_callback(url)
 		else:
 			import windowinterface
@@ -151,7 +151,7 @@ class MainDialog:
 		x,y,filename=params
 		url=self.__path2url(filename)
 		mimetype = urlcache.mimetype(url)
-		if mimetype in ('application/x-grins-project', 'application/smil', 'application/x-grins-cmif'):
+		if mimetype in ('application/x-grins-project', 'application/smil', 'application/smil+xml', 'application/x-grins-cmif'):
 			return windowinterface.DROPEFFECT_COPY
 		else:
 			return windowinterface.DROPEFFECT_NONE
