@@ -1058,7 +1058,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		l1,t1,r1,b1=self.GetWindowRect()
 		l2,t2,r2,b2=preview.getwindowrect()
 		self._layoutpos =(l2-l1,t2-t1)
-		self._layoutsize = (r2-l1,b2-t1)
+		self._layoutsize = (r2-l2,b2-t2)
 		self.createLayoutContext(self._form._winsize)
 		self._layoutctrl=self.createLayoutCtrl()
 
@@ -2364,8 +2364,9 @@ class TabShortcut:
 		grinsRC.ID_R:'Ta&rget audience',
 		grinsRC.ID_A:'&Audio type',
 		grinsRC.ID_Q:'Image &quality',
-		grinsRC.ID_N:'Co&ntent',
+		grinsRC.ID_N:'&Content',
 		grinsRC.ID_V:'&Video type',
+		grinsRC.ID_N:'z-i&ndex',
 		}
 	rpdata1={	
 		grinsRC.ID_G:'&General',
@@ -2416,7 +2417,8 @@ class TabShortcut:
 		for i in range(n):
 			text = tabctrl.GetItemText(i)
 			self._tabnames[text]=i
-		
+		if len(self._tabnames)==1:
+			return
 		if data:
 			self._data=data	
 		else:
