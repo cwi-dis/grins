@@ -858,7 +858,7 @@ class _Button:
 	# Returns true if the point is inside the box	
 	def _inside(self, x, y):
 		bx, by, bw, bh = self._coordinates
-		if (bx <= x < bx+bw and by <= y < by+bh):
+		if bx <= x < bx+bw and by <= y < by+bh:
 			if self._times:
 				import time
 				curtime = time.time() - self._dispobj.starttime

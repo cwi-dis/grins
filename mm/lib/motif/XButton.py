@@ -107,7 +107,7 @@ class _Button:
 	def _inside(self, x, y):
 		# return 1 iff the given coordinates fall within the button
 		bx0, by0, bx1, by1 = self._corners
-		if (bx0 <= x < bx1) and (by0 <= y < by1):
+		if bx0 <= x < bx1 and by0 <= y < by1:
 			if self._times:
 				import time
 				curtime = time.time() - self._dispobj.starttime
