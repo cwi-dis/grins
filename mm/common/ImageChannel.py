@@ -56,7 +56,7 @@ class ImageChannel(ChannelWindow):
 			y = y * self._arm_imbox[3] + self._arm_imbox[1]
 			w = w * self._arm_imbox[2]
 			h = h * self._arm_imbox[3]
-			b = self.armed_display.newbutton(x, y, w, h)
+			b = self.armed_display.newbutton((x, y, w, h))
 			b.hiwidth(3)
 ##			b.hicolor(self.getfgcolor(node))
 			self.setanchor(a[A_ID], a[A_TYPE], b)

@@ -154,12 +154,6 @@ class _Toplevel:
 		else:
 			self._win_lock = _DummyLock()
 
-	def getmouse(self):
-		mx = gl.getvaluator(DEVICE.MOUSEX)
-		my = _screenheight - gl.getvaluator(DEVICE.MOUSEY) - 1
-		return float(mx) * _mscreenwidth / _screenwidth, \
-			  float(my) * _mscreenheight / _screenheight
-
 class _Event:
 	def __init__(self):
 		self._queue = []
@@ -1203,12 +1197,8 @@ class _Window:
 		else:
 			self._toplevel = self
 
-	def newwindow(self, *coordinates, **options):
+	def newwindow(self, coordinates, **options):
 		if debug: print `self`+'.newwindow'+`coordinates`
-		if len(coordinates) == 1 and type(coordinates) == TupleType:
-			coordinates = coordinates[0]
-		if len(coordinates) != 4:
-			raise TypeError, 'arg count mismatch'
 		x, y, w, h = coordinates
 		x0, y0, x1, y1 = self._convert_coordinates(x, y, w, h)
 		toplevel._win_lock.acquire()
@@ -1569,7 +1559,7 @@ class _Window:
 			func, arg = self._accelerators[val]
 			apply(func, arg)
 
-	def create_menu(self, title, list):
+	def create_menu(self, list, title = None):
 		self.destroy_menu()
 		self._menu = self._create_menu(title, list)
 		self.register(Mouse2Press, self._popup_menu, None)
@@ -1711,7 +1701,7 @@ class _DummyButtons:
 			raise error, 'button number out of range'
 
 class Dialog(_DummyButtons):
-	def __init__(self, title, prompt, grab, vertical, list, *coordinates):
+	def __init__(self, list, title = '', prompt = None, grab = 1, vertical = 1, *coordinates):
 		if len(list) == 0:
 			raise TypeError, 'arg count mismatch'
 		# self.events is used to remember events that we are
@@ -1822,7 +1812,10 @@ class Dialog(_DummyButtons):
 		buttonheight = float(buttonheight) / height
 		mw = float(mw) / width
 		sw = float(sw) / width
-		mx, my = toplevel.getmouse()
+		mx = gl.getvaluator(DEVICE.MOUSEX)
+		my = _screenheight - gl.getvaluator(DEVICE.MOUSEY) - 1
+		mx, my = float(mx) * _mscreenwidth / _screenwidth, \
+			 float(my) * _mscreenheight / _screenheight
 		mx = mx - winwidth * 0.5
 		if mx < 0:
 			mx = 0
@@ -1843,7 +1836,7 @@ class Dialog(_DummyButtons):
 		d = self.window.newdisplaylist()
 		d.fgcolor(self.FGCOLOR)
 		if not self.title:
-			d.drawbox(0,0,1,1)
+			d.drawbox((0,0,1,1))
 		if vertical:
 ##			bm = self.widest_button + '\n' * (len(self._buttons) * self.buttonlines - 1 + (len(self._buttons) + self.nseparators + 1) * 0.5)
 			bm = self.widest_button + '\n' * (len(self._buttons) * self.buttonlines - 1 + (self.nseparators + 1) / 2)
@@ -1913,7 +1906,7 @@ class Dialog(_DummyButtons):
 			else:
 				d.setpos(xbase + (mw - w) * 0.5, ypos)
 				box = d.writestr(butstr)
-			buttonbox = d.newbutton(xbase, ybase, mw, mh)
+			buttonbox = d.newbutton((xbase, ybase, mw, mh))
 			buttonbox.hicolor(self.HICOLOR)
 			self.buttonboxes.append(buttonbox)
 			if vertical:
@@ -2001,8 +1994,9 @@ class Dialog(_DummyButtons):
 				newlist.append('', label, callback)
 		return newlist
 
-	def create_menu(self, title, list):
-		self.window.create_menu(title, self._convert_menu_list(list))
+	def create_menu(self, list, title = None):
+		self.window.create_menu(self._convert_menu_list(list),
+					title = title)
 
 	def close(self):
 		self.window.close()
@@ -2012,7 +2006,8 @@ def showmessage(text, type = 'message', grab = 1, callback = None,
 	list = [('\r', 'Done', callback)]
 	if cancelCallback or type == 'question':
 		list.append('', 'Cancel', cancelCallback)
-	d = Dialog(None, text, grab, 0, list)
+	d = Dialog(list, title = None, prompt = text, grab = grab,
+		   vertical = 0)
 	d._loop()
 	return d
 
@@ -2028,7 +2023,8 @@ class _MultChoice(Dialog):
 			else:
 				acc = ''
 			list.append(acc, msg, (self._callback, (msg,)))
-		Dialog.__init__(self, None, prompt, 1, 0, list)
+		Dialog.__init__(self, list, title = None, prompt = prompt,
+				grab = 1, vertical = 0)
 
 	def run(self):
 		self._loop()

@@ -1,11 +1,14 @@
-import sys, os
+import os
 
-if os.environ.has_key('CMIF_USE_X'):
+if os.environ.has_key('CMIF_USE_DUMMY'):
+	from dummy_window import *
+elif os.environ.has_key('CMIF_USE_X'):
 	from X_window import *
 else:
 	try:
 		import gl, fm
 	except ImportError:
+		import sys
 		sys.last_traceback = None
 		sys.exc_traceback = None
 		try:

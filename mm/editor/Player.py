@@ -121,8 +121,8 @@ class Player(ViewDialog, PlayerCore):
 		self.subwin = []
 		n = len(titles)
 		for i in range(n):
-			self.subwin.append(window.newcmwindow(1.0 - mw,
-					i / float(n), mw, 1.0 / float(n)))
+			self.subwin.append(window.newcmwindow(
+				(1.0 - mw, i / float(n), mw, 1.0 / float(n))))
 		self.redraw()
 
 	def drawplaybutton(self, active, d):
@@ -146,8 +146,8 @@ class Player(ViewDialog, PlayerCore):
 		else:
 			color = GREY
 			cl, ct, cr, cb = FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM
-		d.drawfbox(color, .7 * self.width, .1, .03 * self.width, .3)
-		d.drawfbox(color, .77 * self.width, .1, .03 * self.width, .3)
+		d.drawfbox(color, (.7 * self.width, .1, .03 * self.width, .3))
+		d.drawfbox(color, (.77 * self.width, .1, .03 * self.width, .3))
 		d.draw3dbox(cl, ct, cr, cb,
 			    (.51 * self.width, .01, .48 * self.width, .48))
 
@@ -158,7 +158,7 @@ class Player(ViewDialog, PlayerCore):
 		else:
 			color = GREY
 			cl, ct, cr, cb = FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM
-		d.drawfbox(color, .2 * self.width, .6, .6 * self.width, .3)
+		d.drawfbox(color, (.2 * self.width, .6, .6 * self.width, .3))
 		d.draw3dbox(cl, ct, cr, cb,
 			    (.01 * self.width, .51, .98 * self.width, .48))
 
@@ -344,7 +344,7 @@ class Player(ViewDialog, PlayerCore):
 		for i in range(len(list)):
 			l = list[i]
 			menu.append('', l, (self.slotmenu_callback, (i,)))
-		self.subwin[2].create_menu('Run slots', menu)
+		self.subwin[2].create_menu(menu, title = 'Run slots')
 
 	def makeomenu(self):
 		if not self.is_showing():
@@ -389,7 +389,7 @@ class Player(ViewDialog, PlayerCore):
 		menu.append('', '   Crash CMIF', (self.omenu_callback, (7,)))
 		menu.append('', '   Dump scheduler data',
 			    (self.omenu_callback, (8,)))
-		self.subwin[1].create_menu('Options', menu)
+		self.subwin[1].create_menu(menu, title = 'Options')
 			
 	def makemenu(self):
 		if not self.is_showing():
@@ -407,7 +407,7 @@ class Player(ViewDialog, PlayerCore):
 				m = n
 			m.append('', name + onoff,
 				 (self.cmenu_callback, (name,)))
-		self.subwin[0].create_menu('Channels', menu)
+		self.subwin[0].create_menu(menu, title = 'Channels')
 	#
 	def setwaiting(self):
 		self.waiting = 1
