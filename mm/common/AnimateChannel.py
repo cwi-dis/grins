@@ -67,10 +67,7 @@ class AnimateChannel(Channel.ChannelAsync):
 				self.__curloop = 0
 		
 		# do we have more loops?
-		self.__moreloops = 0
-		if node.curloopcount>0:
-			self.__moreloops = 1
-		# what about repeatDur?
+		self.__moreloops = node.curloopcount != 0
 			
 		self.__animating = node
 
