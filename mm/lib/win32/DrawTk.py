@@ -21,6 +21,7 @@ Afx=win32ui.GetAfx()
 
 import win32mu
 from win32mu import Point,Size,Rect # shorcuts
+from appcon import UNIT_MM, UNIT_SCREEN, UNIT_PXL
 
 
 # Global Context 
@@ -31,6 +32,9 @@ drawTk = None
 class DrawTool:
 	def __init__(self,toolType):
 		self._toolType=toolType
+
+	def setunits(self, units):
+		self._units = units
 
 	def onLButtonDown(self,view,flags,point):
 		drawTk.SetCapture(view)
@@ -192,7 +196,7 @@ class RectTool(DrawTool):
 		DrawTool.onLButtonDown(self,view,flags,point)
 
 		local=view.ClientToCanvas(point)
-		drawObj = DrawRect(Rect((local.x,local.y,local.x,local.y)))
+		drawObj = DrawRect(Rect((local.x,local.y,local.x,local.y)), units = self._units)
 		view.Add(drawObj)
 		view.Select(drawObj)
 
@@ -210,7 +214,7 @@ class RectTool(DrawTool):
 				drawObj = view._selection[len(view._selection)-1]
 				view.Remove(drawObj);
 				del drawObj
-			drawTk.selectTool.onLButtonDown(view,flags,point); # try a select!
+			drawTk.selectTool.onLButtonDown(view,flags,point) # try a select!
 		drawTk.selectTool.onLButtonUp(view,flags,point)
 		drawTk.OnNewRect(view)		
 
@@ -404,7 +408,8 @@ class DrawObj:
 # A rectangle drawing tool
 
 class DrawRect(DrawObj):
-	def __init__(self,pos):
+	def __init__(self,pos,units=None):
+		self.__units = units
 		DrawObj.__init__(self,pos)
 	def getHandleCount(self):
 		return DrawObj.getHandleCount(self)
@@ -428,13 +433,16 @@ class DrawRect(DrawObj):
 		win32mu.FrameRect(dc,self._position.tuple(),(255,0,0))
 		# write dimensions
 		#s='(%d,%d,%d,%d)' % self._position.tuple() #pixels
-#		if drawTk._rel_coord_ref:
-#			s='(%.2f,%.2f,%.2f,%.2f)' % drawTk._rel_coord_ref.get_relative_coords100(self._position.tuple_ps())
-#		else:
-#			s='(%d,%d,%d,%d)' % self._position.tuple_ps()
-#		drawTk.SetSmallFont(dc)
-#		dc.SetBkMode(win32con.TRANSPARENT)
-#		dc.DrawText(s,self._position.tuple(),win32con.DT_SINGLELINE|win32con.DT_CENTER|win32con.DT_VCENTER)
+		if self.__units == UNIT_PXL:
+			s='(%d,%d,%d,%d)' % self._position.tuple_ps()
+		elif self.__units == UNIT_SCREEN and drawTk._rel_coord_ref:
+			s='(%.2f,%.2f,%.2f,%.2f)' % drawTk._rel_coord_ref.get_relative_coords100(self._position.tuple_ps())
+		else:
+			s=''
+		if s:
+			drawTk.SetSmallFont(dc)
+			dc.SetBkMode(win32con.TRANSPARENT)
+			dc.DrawText(s,self._position.tuple(),win32con.DT_SINGLELINE|win32con.DT_CENTER|win32con.DT_VCENTER)
 		
 		# if it is selected draw tracker
 		#if self._is_selected:
@@ -509,17 +517,16 @@ class DrawTk:
 		return (self._capture==wnd)
 
 	def GetCurrentTool(self):
-		if self.currentToolType in self.tool.keys():
-			return self.tool[self.currentToolType]
-		return None
+		return self.tool.get(self.currentToolType)
 
-	def SelectTool(self,tool='select'):
-			if tool=='select':
-				self.currentToolType=DrawTk.TOOL_SELECT
-			elif tool=='rect':
-				self.currentToolType=DrawTk.TOOL_RECT
-			else:
-				self.currentToolType=DrawTk.TOOL_SELECT
+	def SelectTool(self,tool='select', units = None):
+		if tool=='select':
+			self.currentToolType=DrawTk.TOOL_SELECT
+		elif tool=='rect':
+			self.currentToolType=DrawTk.TOOL_RECT
+		else:
+			self.currentToolType=DrawTk.TOOL_SELECT
+		self.tool[self.currentToolType].setunits(units)
 	def LimitRects(self,num):
 		self._limit_rect=num
 	def OnNewRect(self,view):
@@ -781,8 +788,8 @@ class DrawLayer:
 		self.DrawObjectsOn(dcc)
 
 		# show draw area
-		l,t,w,h=self._canvas
-		win32mu.FrameRect(dcc,(l,t,l+w,t+h),(255,0,0))
+		#l,t,w,h=self._canvas
+		#win32mu.FrameRect(dcc,(l,t,l+w,t+h),(255,0,0))
 
 		# copy bitmap
 		dc.SetViewportOrg((0, 0))
@@ -831,5 +838,4 @@ class DrawLayer:
 				break
 
 	def DeleteContents(self):
-		del self._objects
 		self._objects=[]

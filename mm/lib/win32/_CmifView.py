@@ -4,7 +4,7 @@ __version__ = "$Id$"
 """ @win32doc|_CmifView
 This module exports three important classes.
 The _CmifView or (_Window), _SubWindow.
-and _CmifStructView a specialization of _CmifView for smooth drawing		
+and _CmifStructView a specialization of _CmifView for smooth drawing
 
 The _CmifView is used for toplevel childs of
 the MainFrame that have a display list.
