@@ -2,25 +2,18 @@
 package grins;
 
 class GRiNSPlayerMonitor extends Thread {
-    GRiNSPlayerMonitor(int cookie, int interval){
-        this.cookie = cookie;
+    GRiNSPlayerMonitor(GRiNSPlayer player, int interval){
+        this.player = player;
+        this.cookie = player.getCookie();
         this.interval = interval;
-    }
-    
-    public void addListener(SMILListener listener){
-        this.listener = listener;
     }
     
     public void run(){
         initializeThreadContext();
         hgrins = nconnect(cookie);
         while(hgrins!=0 && !interrupted()){
-            int state = ngetState(hgrins);
-            double t = ngetTime(hgrins);
-            if(listener!=null){
-                listener.setPos(t);
-            }
-            // update listener
+            player.updatePosition(ngetTime(hgrins));
+            player.updateState(ngetState(hgrins));
             try {
                 Thread.sleep(interval);
             }
@@ -40,7 +33,7 @@ class GRiNSPlayerMonitor extends Thread {
          System.loadLibrary("grinsp");
      }    
     private int hgrins; 
-    private int cookie;
+    private int cookie; 
+    private GRiNSPlayer player;
     private int interval = 100;
-    private SMILListener listener;
 }

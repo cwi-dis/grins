@@ -2,7 +2,7 @@
 package grins;
 
 public class GRiNSToolkit {
-    static public SMILDocument createGRiNSDocument(SMILListener listener){
-        return new GRiNSPlayer(listener);
+    static public SMILDocument createDocument(String filename){
+        return new GRiNSPlayer(filename);
     }
 }

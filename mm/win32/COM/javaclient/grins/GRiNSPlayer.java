@@ -7,12 +7,12 @@ import java.util.Vector;
 class GRiNSPlayer 
 implements SMILDocument, SMILController, SMILRenderer
     {
-    GRiNSPlayer(SMILListener listener)
+    GRiNSPlayer(String filename)
         {
-        this.listener = listener;
+        open(filename);
         }
     
-    public SMILController getController() 
+    public SMILController getController()
         {
         return this;
         }
@@ -22,14 +22,20 @@ implements SMILDocument, SMILController, SMILRenderer
         return this;
         }
     
-    public Dimension getViewportSize() throws Exception
+    public void addListener(SMILListener listener){
+        this.listener = listener;
+    }
+    
+    public void removeListener(SMILListener listener){
+        this.listener = null;
+    }
+    
+    public Dimension getViewportSize()
         {
-        if(viewportSize==null || viewportSize.width==0)
-            throw new Exception("Not ready"); 
         return viewportSize;
         }
     
-    public void setCanvas(PlayerCanvas c) throws Exception
+    public void setCanvas(SMILCanvas c) throws Exception
         {
         if(c==null || !c.isDisplayable()) 
             throw new Exception("PlayerCanvas not displayable"); 
@@ -46,7 +52,6 @@ implements SMILDocument, SMILController, SMILRenderer
         {
         if(hgrins!=0) return;
         
-        listener.setWaiting();
         initializeThreadContext();
         hgrins = nconnect();
         if(hgrins!=0) 
@@ -58,12 +63,8 @@ implements SMILDocument, SMILController, SMILRenderer
                 nupdate(hgrins);
                 }
             viewportSize = ngetPreferredSize(hgrins);
-            listener.setReady();
-            listener.opened();
             dur = ngetDuration(hgrins);
-            listener.setDur(dur);
-            monitor = new GRiNSPlayerMonitor(ngetCookie(hgrins), 100);
-            monitor.addListener(listener);
+            monitor = new GRiNSPlayerMonitor(this, 100);
             monitor.start();
             }
         else
@@ -85,7 +86,6 @@ implements SMILDocument, SMILController, SMILRenderer
             }
          if(canvas!=null && canvas.isDisplayable())
             canvas.repaint();
-        if(listener!=null) listener.closed();
         }
         
     public void update()
@@ -142,8 +142,24 @@ implements SMILDocument, SMILController, SMILRenderer
     
     public double getSpeed() {return 1.0;}
        
-    
-    
+       
+    // Friend methods
+    int getCookie()
+        {
+        if(hgrins!=0) return ngetCookie(hgrins);
+        return 0;
+        }
+        
+    void updatePosition(double pos)
+        {
+        if(listener!=null) listener.setPos(pos);
+        }
+        
+    void updateState(int state)
+        {
+        if(listener!=null) listener.setState(state);
+        }
+        
     private Dimension viewportSize;
     private double dur;
     private SMILListener listener;

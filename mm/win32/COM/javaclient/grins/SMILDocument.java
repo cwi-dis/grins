@@ -7,9 +7,7 @@ import java.awt.Dimension;
 public interface SMILDocument {
     SMILController getController();
     SMILRenderer getRenderer();
-    
-    Dimension getViewportSize() throws Exception;
-    
-    void open(String fn);
+    Dimension getViewportSize();
+    double getDuration();
     void close();
 }
