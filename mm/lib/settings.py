@@ -196,6 +196,9 @@ restore()
 
 def factory_defaults():
 	global user_settings
+	if not user_settings:
+		# no change
+		return
 	if not transaction(auto=1):
 		return
 	user_settings = {}
@@ -283,6 +286,9 @@ _warned_already = 0
 def set(setting, value):
 	global _warned_already
 	import windowinterface
+	if user_settings.get(settings) == value:
+		# no change
+		return
 	if not transaction(auto=1):
 		return
 	if setting in NEEDS_RESTART and value != get(setting) and not _warned_already:
@@ -292,11 +298,11 @@ def set(setting, value):
 	commit(auto=1)
 
 def delete(setting):
-	if not transaction(auto=1):
-		return
 	if user_settings.has_key(setting):
+		if not transaction(auto=1):
+			return
 		del user_settings[setting]
-	commit(auto=1)
+		commit(auto=1)
 
 def save():
 	try:
