@@ -468,7 +468,6 @@ DEP_CPP_GRINS=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
-	".\freeze\frozen.c"\
 	".\GRiNS Player.h"\
 	".\pfc\app_pyinterface.h"\
 	".\pfc\app_wndproc.h"\
@@ -476,6 +475,7 @@ DEP_CPP_GRINS=\
 	".\StdAfx.h"\
 	
 NODEP_CPP_GRINS=\
+	".\freeze\frozen.c"\
 	".\ipapi.h"\
 	".\ygshell.h"\
 	
@@ -574,7 +574,6 @@ DEP_CPP_GRINS=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
-	".\freeze\frozen.c"\
 	".\GRiNS Player.h"\
 	".\pfc\app_pyinterface.h"\
 	".\pfc\app_wndproc.h"\
@@ -582,6 +581,7 @@ DEP_CPP_GRINS=\
 	".\StdAfx.h"\
 	
 NODEP_CPP_GRINS=\
+	".\freeze\frozen.c"\
 	".\ipapi.h"\
 	".\ygshell.h"\
 	
