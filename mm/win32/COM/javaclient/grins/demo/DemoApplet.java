@@ -19,6 +19,7 @@ implements SMILListener
     
     private Viewport viewport;
     private boolean dragging = false;
+    private int currstate = 0;
     
 	public void init()
 	{
@@ -29,7 +30,7 @@ implements SMILListener
 		// parse your Java file into its visual environment.
 		//{{INIT_CONTROLS
 		setLayout(null);
-		setSize(480,164);
+		setSize(480,168);
 		buttonOpen.setLabel("Open");
 		add(buttonOpen);
 		buttonOpen.setBackground(java.awt.Color.lightGray);
@@ -66,6 +67,11 @@ implements SMILListener
 		add(buttonGetInfo);
 		buttonGetInfo.setBackground(java.awt.Color.lightGray);
 		buttonGetInfo.setBounds(8,138,102,20);
+		labelLicense.setText("License");
+		add(labelLicense);
+		labelLicense.setBounds(130,138,54,20);
+		add(textFieldLicense);
+		textFieldLicense.setBounds(184,138,286,20);
 		//}}
 	
 		//{{REGISTER_LISTENERS
@@ -93,6 +99,8 @@ implements SMILListener
 	java.awt.Button buttonClose = new java.awt.Button();
 	javax.swing.JSlider JSlider1 = new javax.swing.JSlider();
 	java.awt.Button buttonGetInfo = new java.awt.Button();
+	java.awt.Label labelLicense = new java.awt.Label();
+	java.awt.TextField textFieldLicense = new java.awt.TextField();
 	//}}
 	
 	private void message(String str) {
@@ -183,8 +191,20 @@ implements SMILListener
 	}
 
     private void open(String filename){
+        
+        // destroy previous
+        if(player!=null) player.stop();
+        if(smil!=null) smil.close();
+        if(viewport!=null){
+            viewport.setVisible(false);
+            viewport.dispose();
+            viewport = null;
+            }
+	    JSlider1.setValue(0);
+	    
         // create SMIL doc
-	    smil = GRiNSToolkit.createDocument(filename);
+        String license = textFieldLicense.getText();
+	    smil = GRiNSToolkit.createDocument(filename, license);
 	    	    
 	    // update create UI
 	    setSliderDur(smil.getDuration());
@@ -215,10 +235,11 @@ implements SMILListener
     
     // interface SMILListener implementation
     public void setPos(double pos){
-        if(!dragging && JSlider1.isVisible())
+        if(!dragging && JSlider1.isVisible() && currstate == SMILListener.PLAYING)
             JSlider1.setValue((int)(pos+0.5));
     }
     public void setState(int state){
+        currstate = state;
     }
 	public void updateViewports(){
 	}
@@ -239,6 +260,7 @@ implements SMILListener
 	{
 		// to do: code goes here.
 		if(player!=null) player.stop();
+		JSlider1.setValue(0);
 	}
 
 	void buttonClose_ActionPerformed(java.awt.event.ActionEvent event)
@@ -249,6 +271,7 @@ implements SMILListener
             viewport.setVisible(false);
             viewport.dispose();
             viewport = null;
+            JSlider1.setValue(0);
         }
 	}
 
@@ -295,14 +318,5 @@ implements SMILListener
 	    if(player!=null) System.out.println("t="+currTime);
 	    if(smil!=null)   System.out.println("dur="+smil.getDuration());
 	    if(smil!=null)   System.out.println("frameRate="+smil.getFrameRate());
-	    if(player!=null) 
-	        {
-	        player.setTime(currTime+1.0);
-	        System.out.println("Current time incremented by 1 sec");
-	        }
-	    
-	    //try {if(smil!=null)System.out.println("mediaFrameRate="+smil.getMediaFrameRate("../videos/nasa.qt"));} 
-	    //catch(Exception e){System.out.println(""+e);}
-			 
 	}
 }

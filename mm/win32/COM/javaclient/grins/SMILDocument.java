@@ -47,11 +47,9 @@ public interface SMILDocument {
     boolean isViewportOpen(int index);
     
     /**
-    *  Returns the number of frames per second of the first video of this document.
-    *  If there is no video then of the first audio.  
-    *  If there's neither one, an estimated value is returned.
+    *  Returns the duration of the document (indefinite: -1, unresolved: 0, else: >0)
     */
-   double getDuration();
+    double getDuration();
     
     
     /**
