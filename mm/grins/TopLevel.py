@@ -192,6 +192,15 @@ class TopLevel(TopLevelDialog):
 	def printfunc(self, msg):
 		windowinterface.showmessage('while reading %s\n\n' % self.filename + msg)
 
+	def reload_callback(self):
+		print "DEBUG: reload_callback called."
+		self.setwaiting()
+		self.reload()
+
+	def reload(self):
+		self.open_okcallback(self.filename);
+		self.close()
+		
 	def close_callback(self):
 		self.setwaiting()
 		if self.source and not self.source.is_closed():

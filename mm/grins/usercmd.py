@@ -47,6 +47,8 @@ class OPENFILE(_CommandBase):
 	help = 'Open existing local file'
 class OPEN_RECENT(_DynamicCascade):
 	help = 'Open a recently used document'
+class RELOAD(_CommandBase):
+	help = 'Reloads the current document'
 class TRACE(_CommandBase):
 	help = 'DEBUG: toggle trace flag'
 class DEBUG(_CommandBase):
