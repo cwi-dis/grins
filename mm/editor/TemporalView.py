@@ -85,10 +85,10 @@ class TemporalView(TemporalViewDialog):
 	def toparent(self):
 		print "Not implemented: TemporalView.toparent()"
 
-	def tochild(self):
+	def tochild(self, i):
 		print "Not implemented: TemporalView.tochild()"
 
-	def tosibling(self):
+	def tosibling(self, direction):
 		print "Not implemented: TemporalView.tosibling()"
 
 	def helpcall(self):
