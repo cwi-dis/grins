@@ -185,6 +185,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 	def OnCreate(self, createStruct):
 		self.HookMessage(self.onSize,win32con.WM_SIZE)
 		self.HookMessage(self.onMove,win32con.WM_MOVE)
+		self.HookMessage(self.onKey,win32con.WM_KEYDOWN)
+
 		# the view is responsible for user input
 		# so do not hook other messages
 
@@ -216,7 +218,9 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 		return 0
 
-	
+	def onKey(self,key):
+		print key
+
 	# Mirrors mdi window-menu to tab bar (not impl)
 	# do ... on new activate	
 	def OnMdiRefreshMenu(self,params):
@@ -709,6 +713,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		self._wndToolBar.SetButtonInfo(3,id,afxexttb.TBBS_BUTTON, 2)
 				
 		self.ShowControlBar(self._wndToolBar,1,0)
+		self._wndToolBar.RedrawWindow()
+
 
 	# Set the editor toolbar to the state with a document
 	def setEditorDocumentToolbar(self):
