@@ -1570,7 +1570,7 @@ class Region(Window):
 			# draw now the display list but after clear
 			try:
 				hdc = dds.GetDC()
-			except ddarw.error, arg:
+			except ddraw.error, arg:
 				print arg
 				return
 
