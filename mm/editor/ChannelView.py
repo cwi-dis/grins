@@ -1968,6 +1968,7 @@ class NodeBox(GO, NodeBoxCommand):
 		# Compute ideal box coordinates
 		channel = self.node.GetChannel()
 		node_t0, node_t1, node_t2, dummy, dummy = self.node.GetTimes()
+		self.t0, self.t1, self.t2 = node_t0, node_t1, node_t2
 		if channel:
 			channel = channel.GetLayoutChannel()
 		if self.pausenode:
@@ -2033,8 +2034,9 @@ class NodeBox(GO, NodeBoxCommand):
 
 		# If the end time was inherited, make the bottom-right
 		# triangle of the box a lighter color
-		if self.node.GetFill() != 'remove':
-			d.drawfpolygon(altnodecolor, [(r, t), (r, b), (l, b)])
+		if self.node.GetFill() != 'remove' and self.t1 != self.t2:
+			left, right = self.mother.maptimes(self.t1, self.t2)
+			d.drawfpolygon(altnodecolor, [(r, t), (r, b), (left, b)])
 
 		# If there are anchors on this node,
 		# draw a small orange box in the top right corner
