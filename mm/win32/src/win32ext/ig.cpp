@@ -31,6 +31,7 @@ static PyObject* ig_load_file(PyObject *self, PyObject *args)
 	return Py_BuildValue("l",img);
 	}
 
+#ifdef INCLUDE_GIF
 static PyObject* ig_load_gif(PyObject *self, PyObject *args)
 	{
 	char *filename;
@@ -50,6 +51,7 @@ static PyObject* ig_load_gif(PyObject *self, PyObject *args)
 	GUI_END_SAVE;
 	return Py_BuildValue("li(iii)",img,transp,rgb[0],rgb[1],rgb[2]);
 	}
+#endif
 
 static PyObject* ig_load_mem(PyObject *self, PyObject *args)
 	{
@@ -216,7 +218,9 @@ static PyObject* ig_image_delete(PyObject *self, PyObject *args)
 
 BEGIN_PYMETHODDEF(ig)
 	{ "load_file", ig_load_file, 1},
+#ifdef INCLUDE_GIF
 	{ "load_gif", ig_load_gif, 1},
+#endif
 	{ "load_mem", ig_load_mem, 1},
     { "image_dimensions_get",ig_image_dimensions_get, 1},
 	{ "display_transparent_set",ig_display_transparent_set,1},
