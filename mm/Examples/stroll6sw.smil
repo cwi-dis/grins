@@ -50,7 +50,7 @@
             <text type="text/plain" id="herengracht_168-style" region="style" src="data:,AN%20EXAMPLE%20OF%20DUTCH%20CLASSICISM" dur="2.816s" begin="id(herengracht_168-sound)(2.800s)"/>
           </par>
 
-          <par id="herengracht_168-low" system-bitrate="28800">
+          <par id="herengracht_168-low">
             <img id="herengracht_168-image-l" region="image2" src="h168.gif"/>
             <text type="text/plain" id="herengracht_168-adress-l" region="adress" src="data:,HERENGRACHT%20168" dur="5.521s"/>
             <text type="text/plain" id="herengracht_168-year-l" region="year" src="data:,ANNO%201638" dur="5.521s"/>
@@ -67,7 +67,7 @@
             <audio id="herengracht_218-sound" region="sound" src="218.au"/>
             <text type="text/plain" id="herengracht_218-style" region="style1" src="data:,THE%20BAROQUE%20AND%20THE%20SOBER%20AMSTERDAM%20RENAISSANCE" dur="5.113s" begin="id(herengracht_218-sound)(3.500s)"/>
           </par>
-          <par id="herengracht_218-low" system-bitrate="14400">
+          <par id="herengracht_218-low">
             <img id="herengracht_218-image-l" region="image5" src="h218.gif"/>
             <text type="text/plain" id="herengracht_218-adress-l" region="adress" src="data:,HERENGRACHT%20218" dur="8.613s"/>
             <text type="text/plain" id="herengracht_218-year-l" region="year" src="data:,ANNO%201616" dur="8.613s"/>
@@ -85,7 +85,7 @@
             <text type="text/plain" id="herengracht_284-style" region="style" src="data:,AN%20EXAMPLE%20OF%20THE%20REGENCE%20STYLE" dur="2.804s" begin="id(herengracht_284-sound)(2.800s)"/>
         </par>
   
-          <par id="herengracht_284-low" system-bitrate="14400">
+          <par id="herengracht_284-low">
             <img id="herengracht_284-image-l" region="image2" src="h284.gif"/>
             <text type="text/plain" id="herengracht_284-adress-l" region="adress" src="data:,HERENGRACHT%20284" dur="5.604s"/>
             <text type="text/plain" id="herengracht_284-year-l" region="year" src="data:,ANNO%201728" dur="5.604s"/>

@@ -57,7 +57,7 @@
          </par>
         </seq>
 
-        <seq id="HERENGRACHT_stroll-low" system-bitrate="14400">
+        <seq id="HERENGRACHT_stroll-low">
 
         <img id="map-l" region="image1" src="map.gif" dur="5s"/>
 

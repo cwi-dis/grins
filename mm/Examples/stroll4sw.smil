@@ -42,7 +42,7 @@
          </par>
         </seq>
 
-        <seq id="HERENGRACHT_stroll-low" system-bitrate="14400">
+        <seq id="HERENGRACHT_stroll-low">
           <img id="map-l" region="image1" src="map.gif" dur="5s"/>      
           <img id="herengracht_168-image-l" region="image2" src="h168.gif" dur="5s"/>
           <img id="herengracht_218-image-l" region="image3" src="h218.gif" dur="5s"/>
