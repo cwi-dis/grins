@@ -184,7 +184,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if xnode is None:
 				self.warning('ignoring sync arc from %s to unknown node' % node.attrdict.get('name','<unnamed>'))
 				return
-			for n in node.GetParent().GetChildren():
+			for n in GetTemporalSiblings(node):
 				if n is xnode:
 					break
 			else:
@@ -1680,3 +1680,18 @@ def _uniqname(namelist, defname):
 	while ('%s_%d' % (defname, id)) in namelist:
 		id = id + 1
 	return '%s_%d' % (defname, id)
+
+def GetTemporalSiblings(node):
+	"""Get siblings of a node, ignoring <switch> nodes"""
+	parent = node.GetParent()
+	while parent and parent.GetType() == 'alt':
+		parent = parent.parent
+	siblings = []
+	possible = parent.GetChildren()[:]
+	while possible:
+		this = possible[0]
+		del possible[0]
+		if this.GetType() == 'alt':
+			possible = possible + this.GetChildren()
+		siblings.append(this)
+	return siblings
