@@ -211,12 +211,10 @@ class _DisplayList:
 				# find src clip ltrb given the destination clip
 				lsc, tsc, rsc, bsc =  wnd._getsrcclip((ld, td, rd, bd), (ls, ts, rs, bs), (ldc, tdc, rdc, bdc))
 				
-				if fit == -4:
-					wk, hk = rcKeep[2:]
-					if wk>w: 
-						wnd.setdefaultcursor('draghand')
-					if hk>h: 
-						wnd.setdefaultcursor('draghand')
+				if wnd._canscroll: 	
+					dx, dy = wnd._scrollpos
+					lsc, tsc, rsc, bsc = lsc+dx, tsc+dy, rsc+dx, bsc+dy
+
 				try:
 					dds.Blt((ldc, tdc, rdc, bdc), image, (lsc, tsc, rsc, bsc), flags)
  				except:
