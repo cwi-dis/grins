@@ -141,12 +141,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		parseErrors = context.getParseErrors()
 		if parseErrors is not None:
 			if parseErrors.getType() == 'fatal':
+				if features.SOURCE_VIEW_EDIT not in features.feature_set:
+					# not allowed to edit, so signal syntax error
+					raise MSyntaxError, '\n\n'+parseErrors.getFormatedErrorsMessage(1)
 				message = 'The source document contains an unrecoverable error:\n\n' + \
 					  parseErrors.getFormatedErrorsMessage(5) + \
 					  '\nDo you want to edit the source file?'
-				if features.SOURCE_VIEW_EDIT not in features.feature_set:
-					# not allowed to edit, so signal syntax error
-					raise MSyntaxError
 				allowCancel = 0
 				ret = windowinterface.GetYesNo(message, self.window)
 				if ret != 0:
