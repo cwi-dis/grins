@@ -225,7 +225,7 @@ class _Event:
 				
 	def _handle_event(self, event):
 		"""Handle a single MacOS event"""
-		what, message, when, where, modifiers = event
+		what = event[0]
 		if what == Events.mouseDown:
 			self._handle_mousedown(event)
 		elif what == Events.mouseUp:
@@ -233,30 +233,40 @@ class _Event:
 		elif what == Events.keyDown:
 			self._handle_keydown(event)
 		elif what == Events.updateEvt:
-			wid = Win.WhichWindow(message)
-			if not wid:
-				MacOS.HandleEvent(event)
-			else:
-				ourwin = self._find_wid(wid)
-				if not ourwin:
-					MacOS.HandleEvent(event)
-				else:
-					Qd.SetPort(wid)
-					wid.BeginUpdate()
-					ourwin._redraw(wid.GetWindowPort().visRgn)
-					wid.EndUpdate()
+			self._handle_update_event(event)
 		elif what == Events.activateEvt:
-			wid = Win.WhichWindow(message)
-			if not wid:
-				MacOS.HandleEvent(event)
-			else:
-				ourwin = self._find_wid(wid)
-				if not ourwin:
-					MacOS.HandleEvent(event)
-				else:
-					ourwin._activate(modifiers & 1)
+			self._handle_activate_event(event)
 		else:
 			MacOS.HandleEvent(event)
+			
+	def _handle_update_event(self, event, beginupdate=1):
+		what, message, when, where, modifiers = event
+		wid = Win.WhichWindow(message)
+		if not wid:
+			MacOS.HandleEvent(event)
+		else:
+			ourwin = self._find_wid(wid)
+			if not ourwin:
+				MacOS.HandleEvent(event)
+			else:
+				Qd.SetPort(wid)
+				if beginupdate:
+					wid.BeginUpdate()
+				ourwin._redraw(wid.GetWindowPort().visRgn)
+				if beginupdate:
+					wid.EndUpdate()
+	
+	def _handle_activate_event(self, event):
+		what, message, when, where, modifiers = event
+		wid = Win.WhichWindow(message)
+		if not wid:
+			MacOS.HandleEvent(event)
+		else:
+			ourwin = self._find_wid(wid)
+			if not ourwin:
+				MacOS.HandleEvent(event)
+			else:
+				ourwin._activate(modifiers & 1)
 
 	def _handle_mousedown(self, event):
 		"""Handle a MacOS mouseDown event"""
@@ -321,20 +331,8 @@ class _Event:
 		(what, message, when, where, modifiers) = event
 		c = chr(message & Events.charCodeMask)
 		if modifiers & Events.cmdKey:
-				result = MenuMODULE.MenuKey(ord(c))
-				id = (result>>16) & 0xffff	# Hi word
-				item = result & 0xffff		# Lo word
-				if id:
-					self._menubar.dispatch(id, item, None, event)
-					return
-#				elif c == 'w':
-#					w = Win.FrontWindow()
-#					if w:
-#						self.do_close(w)
-#					else:
-#						if DEBUG: print 'Command-W without front window'
-#				else:
-#					if DEBUG: print "Command-" +`c`
+				self._handle_menu_key(c, event)
+				return
 		else:
 			w = Win.FrontWindow()
 			handled = self._handle_keyboardinput(w, c, where, event)
@@ -342,6 +340,15 @@ class _Event:
 				beep()
 			return
 		MacOS.HandleEvent(event)
+		
+	def _handle_menu_key(self, c, event):
+		result = MenuMODULE.MenuKey(ord(c))
+		id = (result>>16) & 0xffff	# Hi word
+		item = result & 0xffff		# Lo word
+		if id:
+			self._menubar.dispatch(id, item, None, event)
+			return 1
+		return 0
 
 	# timer interface
 	def settimer(self, sec, cb):
@@ -609,7 +616,7 @@ class _CommonWindow:
 				parent._subwindows.insert(i, self)
 				break
 		else:
-			parent._subwindows.insert(0, self)
+			parent._subwindows.append(self)
 		self._parent = parent
 		self._wid = wid
 		self._subwindows = []
@@ -786,6 +793,7 @@ class _CommonWindow:
 
 		
 		if ENABLE_TRANSPARENT_IMAGES and hasattr(reader, 'transparent'):
+			#import pdb ; pdb.set_trace() # DBG
 			r = img.reader(imgformat.xrgb8, file)
 			for i in range(len(r.colormap)):
 				r.colormap[i] = 255, 255, 255
@@ -1161,7 +1169,7 @@ class _SubWindow(_CommonWindow):
 				parent._subwindows.insert(i, self)
 				break
 		else:
-			parent._subwindows.insert(0, self)
+			parent._subwindows.append(self)
 		parent._clipchanged()
 		Qd.SetPort(self._wid)
 		Win.InvalRect(self.qdrect())
@@ -1180,7 +1188,7 @@ class _SubWindow(_CommonWindow):
 				parent._subwindows.insert(i+1, self)
 				break
 		else:
-			parent._subwindows.append(self)
+			parent._subwindows.insert(0, self)
 		parent._clipchanged()
 		Qd.SetPort(self._wid)
 		Win.InvalRect(self.qdrect())
@@ -1303,7 +1311,8 @@ class _DisplayList:
 		self._window._active_displist = self
 		Qd.RGBBackColor(self._bgcolor)
 		Qd.RGBForeColor(self._fgcolor)
-		Qd.EraseRect(self._window.qdrect())
+		if self._window._transparent <= 0:
+			Qd.EraseRect(self._window.qdrect())
 		for i in self._list:
 			self._render_one(i)
 			
@@ -1330,6 +1339,7 @@ class _DisplayList:
 ##			print 'IMAGE', image[0], srcrect, dstrect
 			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
 			if mask:
+				# import pdb ; pdb.set_trace() #DBG
 				Qd.CopyMask(image[0], mask[0], wid.GetWindowPort().portBits,
 					srcrect, srcrect, dstrect)
 			else:
@@ -1380,14 +1390,14 @@ class _DisplayList:
 		w = self._window
 		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
 		       w._prepare_image(file, crop, scale, center)
-		if mask:
-			self._imagemask = mask, src_x, src_y, dest_x, dest_y, width, height
-		else:
+##		if mask:
+##			self._imagemask = mask, src_x, src_y, dest_x, dest_y, width, height
+##		else:
 ##			raise 'kaboo kaboo'
 ##			r = Xlib.CreateRegion()
 ##			r.UnionRectWithRegion(dest_x, dest_y, width, height)
 ##			self._imagemask = r
-			pass
+##			pass
 		self._list.append('image', mask, image, src_x, src_y,
 				  dest_x, dest_y, width, height)
 		self._optimize(2)
