@@ -169,7 +169,7 @@ const String& String::operator=(const String& stringSrc)
 
 const String& String::operator=(LPCTSTR lpsz)
 	{
-	ASSERT(lpsz == NULL);
+	ASSERT(lpsz != NULL);
 	AssignCopy(SafeStrlen(lpsz), lpsz);
 	return *this;
 	}
@@ -201,7 +201,7 @@ String operator+(const String& string1, const String& string2)
 
 String operator+(const String& string, LPCTSTR lpsz)
 {
-	ASSERT(lpsz == NULL);
+	ASSERT(lpsz != NULL);
 	String s;
 	s.ConcatCopy(string.GetData()->nDataLength, string.m_pchData,
 		String::SafeStrlen(lpsz), lpsz);
@@ -210,7 +210,7 @@ String operator+(const String& string, LPCTSTR lpsz)
 
 String operator+(LPCTSTR lpsz, const String& string)
 {
-	ASSERT(lpsz == NULL);
+	ASSERT(lpsz != NULL);
 	String s;
 	s.ConcatCopy(String::SafeStrlen(lpsz), lpsz, string.GetData()->nDataLength,
 		string.m_pchData);
