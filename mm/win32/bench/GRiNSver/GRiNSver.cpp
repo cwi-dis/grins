@@ -2,6 +2,7 @@
 
 #include "Module.h"
 #include "Registry.h"
+#include "Installer.h"
 
 // set to true to open GRiNSver.log imm
 static bool showResultsInNotepad=true;
@@ -49,6 +50,9 @@ int main(int argc, char* argv[])
 		cmd+=strLogFile;
 		::WinExec(cmd.c_str(),SW_SHOW);
 		}
+
+	//Installer installer("D:\ufs\mm\cmif\win32\bench\GRiNSver\from","D:\ufs\mm\cmif\win32\bench\GRiNSver\to"");
+	//installer.installFile("file.xxx","file.xxx",false);
 
 	return 0;
 	}
