@@ -1420,6 +1420,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val not in ('meet', 'slice', 'fill',
 					       'hidden', 'scroll'):
 					self.syntax_error('illegal fit attribute')
+				elif val in ('fill', 'scroll'):
+					self.warning('fit="%s" value not implemented' % val, self.lineno)
 				attrdict['fit'] = val
 			elif attr == 'background-color':
 				val = self.__convert_color(val)
