@@ -5,6 +5,7 @@ import time
 import gl
 import fl
 from FL import *
+import flp
 from sched import scheduler
 import glwindow
 from MMExc import *
@@ -12,6 +13,7 @@ import MMAttrdefs
 from Dialog import BasicDialog
 from ViewDialog import ViewDialog
 import Timing
+import rtpool
 from MMNode import alltypes, leaftypes, interiortypes
 
 
@@ -50,6 +52,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.root = self.toplevel.root
 		self.playroot = self.root
 		self.queue = []
+		self.rtpool = rtpool.rtpool().init()
 		self.resettimer()
 		self.context = self.root.GetContext()
 		self.editmgr = self.context.geteditmgr()
@@ -59,6 +62,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.channelnames = []
 		self.channels = {}
 		self.channeltypes = {}
+		self.timing_changed = 0
 		return BasicDialog.init(self, (0, 0, 'Player'))
 	#
 	# EditMgr interface (as dependent client).
@@ -124,6 +128,8 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.resetchannels()
 		if self.setcurrenttime_callback:
 			self.setcurrenttime_callback(0.0)
+		self.oldrate = 1.0
+		self.timing_changed = 0
 	#
 	# Queue interface, based upon sched.scheduler.
 	# This queue has variable time, to implement pause and slow/fast,
@@ -143,6 +149,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		return id
 	#
 	def timefunc(self):
+	        if self.frozen: return self.frozen_value
 		t = (time.millitimer() - self.msec_origin) / 1000.0
 		now = self.origin + t * self.rate
 		return now
@@ -150,7 +157,20 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	def resettimer(self):
 		self.origin = 0.0	# Current time
 		self.rate = 0.0		# Initially the clock is frozen
+		self.oldrate = 0.0
 		self.msec_origin = 0	# Arbitrary since rate is 0.0
+		self.frozen = 0
+		self.frozen_value = 0
+		self.latecount = 0.0
+	def freeze(self):
+	        if not self.frozen:
+		    self.frozen_value = self.timefunc()
+		self.frozen = self.frozen + 1
+	def unfreeze(self):
+	        self.frozen = self.frozen - 1
+		if self.frozen <= 0:
+		    if self.frozen < 0:
+			print 'Player: self.frozen < 0!'
 	#
 	def setrate(self, rate):
 		if rate < 0.0:
@@ -180,164 +200,88 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			delay = 0.0 # Infinite
 		else:
 			delay = delay / self.rate
+		if not self.rtpool.empty():
+			# See if we should react immedeately because of
+			# realtime event
+			rtime = self.rtpool.shortest()
+			if delay == 0.0 or rtime < delay:
+				delay = 0.001
 		self.timerobject.set_timer(delay)
 	#
 	# User interface.
 	#
 	def make_form(self):
-		#
-		self.form = form = fl.make_form(FLAT_BOX, CPWIDTH, CPHEIGHT)
-		#
-		# The play, pause and stop buttons are inactive buttons
-		# (used for display) covered by invisible buttons
-		# (used for reactivity).  This seems to be the only way
-		# to avoid the default interaction between mouse clicks
-		# the button's appearance...
-		#
-		x, y, w, h = 0, 50, 98, 48
-		self.playbutton = \
-			form.add_button(INOUT_BUTTON, x,y,w,h, 'Play')
-		self.playbutton.set_call_back(self.play_callback, None)
-		#
-		x, y, w, h = 100, 50, 48, 48
-		self.pausebutton = \
-			form.add_button(INOUT_BUTTON,x,y,w,h, 'Pause')
-		self.pausebutton.set_call_back(self.pause_callback, None)
-		#
-		x, y, w, h = 150, 50, 48, 48
-		self.stopbutton = \
-			form.add_button(INOUT_BUTTON,x,y,w,h, 'Stop')
-		self.stopbutton.set_call_back(self.stop_callback, None)
-		#
-		x, y, w, h = 200, 50, 48, 48
-		self.fastbutton = \
-			form.add_button(INOUT_BUTTON,x,y,w,h, 'Faster')
-		self.fastbutton.set_call_back(self.fast_callback, None)
-		#
-		x, y, w, h = 200, 0, 48, 48
-		self.abbutton = \
-			form.add_button(NORMAL_BUTTON,x,y,w,h, 'A-B\nplay')
-		self.abbutton.set_call_back(self.ab_callback, None)
-		#
-		x, y, w, h = 250, 0, 48, 48
-		self.menubutton = \
-			form.add_menu(PUSH_MENU,x,y,w,h, 'Menu')
-		self.menubutton.set_call_back(self.menu_callback, None)
-		#
-		x, y, w, h = 100, 0, 98, 48
-		self.statebutton = \
-			form.add_button(NORMAL_BUTTON,x,y,w,h, 'T = 0')
-		self.statebutton.boxtype = FLAT_BOX
-		self.statebutton.set_call_back(self.state_callback, None)
-		#
-		x, y, w, h = 0, 0, 98, 48
-		self.partbutton = \
-			form.add_button(NORMAL_BUTTON,x,y,w,h, '')
-		self.partbutton.boxtype = FLAT_BOX
-		self.partbutton.set_call_back(self.part_callback, None)
-		#
-		x, y, w, h = 250, 50, 48, 48
-		self.speedbutton = \
-			form.add_button(NORMAL_BUTTON,x,y,w,h, '0')
-		self.speedbutton.boxtype = FLAT_BOX
-		self.speedbutton.set_call_back(self.speed_callback, None)
-		#
-		self.timerobject = form.add_timer(HIDDEN_TIMER,0,0,0,0, '')
-		self.timerobject.set_call_back(self.timer_callback, None)
+		ftemplate = flp.parse_form('PlayerForm', 'form')
+		flp.create_full_form(self, ftemplate)
+		self.speedbutton.set_counter_value(1)
+		self.speedbutton.set_counter_bounds(1,128)
+		self.speedbutton.set_counter_step(1,1)
+		
 	#
 	# FORMS callbacks.
 	#
 	def play_callback(self, (obj, arg)):
-		if obj.pushed:
-			self.play()
-		else:
-			self.showstate() # Undo unwanted change by FORMS
+		self.play()
+
 	#
 	def pause_callback(self, (obj, arg)):
-		if obj.pushed:
-			if self.playing and self.rate == 0.0:
-				self.play()
-			else:
-				self.pause()
-		else:
-			self.showstate() # Undo unwanted change by FORMS
+		self.pause()
+
 	#
 	def stop_callback(self, (obj, arg)):
-		if obj.pushed:
-			if not self.playing:
-				self.fullreset()
-				self.showstate()
-			else:
-				self.stop()
-		else:
-			self.showstate() # Undo unwanted change by FORMS
+		self.stop()
+
 	#
-	def fast_callback(self, (obj, arg)):
-		if obj.pushed:
-			self.faster()
-		else:
-			self.showstate() # Undo unwanted change by FORMS
-	#
-	def ab_callback(self, (obj, arg)):
-		if self.abcontrol:
-			text = `self.abcontrol`
-			if text[:1] == '(' and text[-1:] == ')':
-				text = text[1:-1]
-		else:
-			text = ''
-		text = fl.show_input('New (A,B) times:', text)
-		if not text:
-			self.abcontrol = ()
-		else:
-			try:
-				ab = eval(text)
-				if ab == ():
-					self.abcontrol = ()
-				else:
-					# Do a little type checking...
-					a, b = ab
-					a = a + 0.0
-					b = b + 0.0
-					self.abcontrol = a, b
-			except:
-				import gl
-				gl.ringbell()
+	def speed_callback(self, (obj, arg)):
+		self.oldrate = obj.get_counter_value()
+		if self.playing:
+			self.setrate(self.oldrate)
+		self.showstate()
 	#
 	def menu_callback(self, (obj, arg)):
 		i = self.menubutton.get_menu() - 1
 		if 0 <= i < len(self.channelnames):
 			name = self.channelnames[i]
-			if self.channels[name].is_showing():
-				self.channels[name].hide()
-			else:
-				self.channels[name].show()
+			#if self.channels[name].is_showing():
+			#	self.channels[name].hide()
+			#else:
+			#	self.channels[name].show()
+			self.channels[name].flip_visible()
 			self.makemenu()
 	#
-	def state_callback(self, (obj, arg)):
-		# This is a button disguised as a button.
-		# The callback needn't do anything, but since it
-		# has to exist anyway, why not let it update the state...
-		self.showstate()
+	def deltiming_callback(self, (obj, arg)):
+		del_timing(self.playroot)
+		Timing.calctimes(self.playroot)
+		obj.set_button(0)
 	#
-	def part_callback(self, (obj, arg)):
-		# This is a button disguised as a button.
-		# The callback needn't do anything, but since it
-		# has to exist anyway, why not let it update the state...
-		self.showstate()
-	#
-	def speed_callback(self, (obj, arg)):
-		# Same comments as for state_callback() above
-		self.showstate()
+	def dummy_callback(self, dummy):
+		pass
 	#
 	def timer_callback(self, (obj, arg)):
+	        gap = None
 		while self.queue:
 			when, prio, action, argument = self.queue[0]
 			now = self.timefunc()
 			delay = when - now
+			if delay < -0.1:
+			    self.late_ind.lcol, self.late_ind.col2 = \
+				      self.late_ind.col2, self.late_ind.lcol
+			    self.latecount = self.latecount - delay
+			    self.late_ind.label = `int(self.latecount)`
+			else:
+			    self.late_ind.lcol, self.late_ind.col2 = \
+				      self.late_ind.col2, self.late_ind.lcol
 			if delay > 0.0:
 				break
 			del self.queue[0]
 			void = action(argument)
+		if not self.queue or self.rate == 0.0:
+			delay = 10000.0		# Infinite
+			now = self.timefunc()
+		rtevent = self.rtpool.bestfit(now, delay)
+		if rtevent:
+			dummy, dummy2, action, argument = rtevent
+			dummy = action(argument)
 		self.updatetimer()
 		self.showtime()
 	#
@@ -362,28 +306,23 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.play()
 	#
 	def pause(self):
-		if not self.playing:
-			if not self.start_playing(0.0):
-				return
+		if self.playing:
+			if self.rate == 0.0:	# Paused, continue
+				self.setrate(self.oldrate)
+			else:
+				self.oldrate = self.rate
+				self.setrate(0.0)
 		else:
-			self.setrate(0.0)
-			self.showstate()
+			self.start_playing(0.0)
+		self.showstate()
 	#
 	def stop(self):
 		if self.playing:
 			self.stop_playing()
-			self.showstate()
-	#
-	def faster(self):
-		if not self.playing:
-			if not self.start_playing(2.0):
-				return
 		else:
-			if self.rate == 0.0:
-				self.setrate(2.0)
-			else:
-				self.setrate(self.rate * 2.0)
-			self.showstate()
+			self.fullreset()
+		self.showstate()
+	#
 	#
 	def maystart(self):
 		return not self.locked
@@ -392,11 +331,13 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		if not self.playing:
 			self.playbutton.set_button(0)
 			self.pausebutton.set_button(0)
-			self.fastbutton.set_button(0)
+			self.stopbutton.set_button(1)
+			self.speedbutton.set_counter_value(self.oldrate)
 		else:
-			self.playbutton.set_button(0.0 < self.rate <= 1.0)
+			self.stopbutton.set_button(0)
+			self.playbutton.set_button(self.rate >= 1.0)
 			self.pausebutton.set_button(0.0 == self.rate)
-			self.fastbutton.set_button(1.0 < self.rate)
+			self.speedbutton.set_counter_value(self.oldrate)
 		if self.playroot is self.root:
 			self.partbutton.label = ''
 		else:
@@ -404,21 +345,23 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			if name == 'none':
 				label = 'part play'
 			else:
-				label = 'part play:\n' + name
+				label = 'part play: ' + name
 			self.partbutton.label = label
+		if self.timing_changed:
+			self.savelabel.lcol = self.savelabel.col2
+		else:
+			self.savelabel.lcol = self.savelabel.col1
 		self.showtime()
 	#
 	def showtime(self):
+		if self.msec_origin == 0:
+			self.statebutton.label = '--:--'
+			return
 		now = int(self.timefunc())
-		label = 'T = ' + `now`
+		label = `now/60` + ':' + `now/10%6` + `now % 10`
 		if self.statebutton.label <> label:
 			self.statebutton.label = label
 		#
-		rate = self.rate
-		if int(rate) == rate: rate = int(rate)
-		label = `rate`
-		if self.speedbutton.label <> label:
-			self.speedbutton.label = label
 	#
 	# Channels.
 	#
@@ -450,6 +393,10 @@ class Player(ViewDialog, scheduler, BasicDialog):
 				i = self.context.channelnames.index(name)
 				self.channelnames.insert(i, name)
 				self.channels[name].show()
+		# (3) Update visibility of all channels
+		for name in self.channelnames:
+			self.channels[name].check_visible()
+		# (4) Update menu
 		self.makemenu()
 	#
 	def makemenu(self):
@@ -514,7 +461,17 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		if self.playroot.GetRoot() <> self.root:
 			self.playroot = self.root # In case it's been deleted
 		self.showstate() # Give the anxious user a clue...
+		Timing.optcalctimes(self.playroot)
+		arm_events = Timing.getinitial(self.playroot)
+		for pn in arm_events:
+			d = pn.GetRawAttr('arm_duration')
+			c = self.getchannel(pn)
+			pn.prearm_event = self.rtpool.enter(pn.t0, d, \
+				  c.arm_only, pn)
 		Timing.prepare(self.playroot)
+		d = int(self.playroot.t1 - self.playroot.t0)
+		label = `d/60` + ':' + `d/10%6` + `d % 10`
+		self.duration_ind.label = label
 		self.playroot.counter[HD] = 1
 		self.decrement(0, self.playroot, HD)
 		return 1
@@ -525,8 +482,12 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.queue[:] = [] # Erase all events with brute force!
 		self.setrate(0.0) # Stop the clock
 		self.showstate()
+		if self.timing_changed:
+			Timing.calctimes(self.playroot)
+			Timing.optcalctimes(self.playroot)
 	#
 	def decrement(self, (delay, node, side)):
+	        self.freeze()
 		if self.abcontrol:
 			a, b = self.abcontrol
 			doit = (a <= node.t0 <= b)
@@ -539,25 +500,51 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		x = node.counter[side] - 1
 		node.counter[side] = x
 		if x > 0:
+		        self.unfreeze()
 			return # Wait for other sync arcs
 		if x < 0:
 			raise CheckError, 'counter below zero!?!?'
 		if node.GetType() not in interiortypes:
-			if side == HD:
-				if doit:
-					chan = self.getchannel(node)
-					if chan == None:
-						print 'Play node w/o channel'
-						doit = 0
-				if doit:
-					chan.play(node, self.decrement, \
-						  (0, node, TL))
-					if self.setcurrenttime_callback:
-						self.setcurrenttime_callback \
-								(node.t0)
-				else:
-					dummy = self.enter(0.0, 0, \
+		    if side == HD:
+			if doit:
+			    chan = self.getchannel(node)
+			    if chan == None:
+				print 'Play node w/o channel'
+				doit = 0
+			if doit:
+			    #
+			    # Begin tricky code section. First we have to find
+			    # out wether the event has already been armed or
+			    # not. if prearm_event doesn't exist we do it self,
+			    # if it exists and is None it is all done, otherwise
+			    # it hasn't fired yet, so (again) we do it ourselves.
+			    # If we do the arm ourselves we use prio -1, so
+			    # we do the arm before the play.
+			    #
+			    must_arm = 1
+			    try:
+				    if node.prearm_event == None:
+					    must_arm = 0
+				    else:
+					    # The pre-arm event didn't happen
+					    self.rtpool.cancel(node.prearm_event)
+				    del node.prearm_event
+			    except AttributeError:
+				    pass
+			    if must_arm:
+				    print 'Node not pre-armed on', \
+					    MMAttrdefs.getattr(node, 'channel')
+				    dummy = self.enter(0.0, -1, \
+					      chan.arm_and_measure, node)
+			    dummy = self.enter(0.0, 0, chan.play, \
+				      (node, self.decrement, (0, node, TL)))
+			    if self.setcurrenttime_callback:
+				self.setcurrenttime_callback(node.t0)
+			else:
+			    dummy = self.enter(0.0, 0, \
 						self.decrement, (0, node, TL))
+		    else:	# Side is Tail, so...
+			self.opt_prearm(node)
 		for arg in node.deps[side]:
 			self.decrement(arg)
 		if node == self.playroot and side == TL:
@@ -565,6 +552,27 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			if self.setcurrenttime_callback:
 				self.setcurrenttime_callback(node.t1)
 			self.stop()
+		self.unfreeze()
+	#
+	# opt_prearm allows channels to schedule a pre-arm of the next node on
+	# the channel *before* the current one is finished playing. It is
+	# currently used by the sound channel only (but could conceivably
+	# be used by the Image channel as well).
+	def opt_prearm(self, node):
+		if node.node_to_arm:
+			pn = node.node_to_arm
+			try:
+				# If prearm_event exists it has already
+				# been taken care of.
+				dummy = pn.prearm_event
+				return
+			except:
+				pass
+			d = pn.GetRawAttr('arm_duration')
+			c = self.getchannel(pn)
+			pn.prearm_event = self.rtpool.enter(pn.t0, d, \
+				  c.arm_only, pn)
+			
 	#
 	# Channel access utilities.
 	#
@@ -575,3 +583,14 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		else:
 			return None
 	#
+
+#
+# del_timing removes all arm_duration attributes (so they will be recalculated)
+#
+def del_timing(node):
+	if node.GetAttrDict().has_key('arm_duration'):
+		node.DelAttr('arm_duration')
+	if node.GetType() in ('par', 'seq'):
+		children = node.GetChildren()
+		for child in children:
+			del_timing(child)
