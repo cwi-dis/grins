@@ -1,3 +1,3 @@
 __version__ = "$Id$"
 
-patchlevel = 'Mac (PL 0)'
+patchlevel = 'Mac' # ' patchlevel 0'
