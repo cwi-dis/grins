@@ -4,12 +4,7 @@ A CMIF channel is an abstraction for a multimedia data stream.  A
 channel is used to play data nodes of a particular type.  A channel
 can play one node at the time, but while a node is being played, the
 following node may be prepared for playing.  This process is called
-"arming" a node.  In this document, method calls are specified by
-using dummy instance variables.  The variables used are "chan" for a
-channel instance, "sched" for the scheduler instance that was passed
-to the channel's init() method, and "sctx" for a scheduler context.
-Scheduler context are the contexts passed to chan.startcontext() and
-chan.stopcontext().
+"arming" a node.
 
 In this document two interfaces are described.  The first interface is
 the interface between the CMIF player module and the channel.  The
@@ -18,6 +13,12 @@ scheduler which, in turn, calls channel methods.  The other interface
 is the interface between the channel base classes and the classes that
 may be derived from these base classes.  This interface is used by
 programmers of new media-specific channels.
+
+In this document, method calls are specified by using dummy instance
+variables.  The variables used are "chan" for a channel instance,
+"sched" for the scheduler instance that was passed to the channel's
+init() method, and "sctx" for a scheduler context.  Scheduler context
+are the contexts passed to chan.startcontext() and chan.stopcontext().
 
 Creation and Destruction
 ------------------------
@@ -186,7 +187,7 @@ overridden or extended.  A method that can be extended is shown with
 an asterisk (*), a method that can be overridden is shown with a
 percent (%).  Method without either indication should not be
 overridden or extended.  None of the methods need be overridden or
-extended, except when as described below.
+extended, except as described below.
 	chan.init(name, attrdict, scheduler, ui) *
 	chan.destroy() *
 	success = chan.do_show() %
