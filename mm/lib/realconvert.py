@@ -166,7 +166,7 @@ def convertimagefile(u, srcurl, dstdir, file, node):
 	return file
 
 def converttextfile(u, dstdir, file, node):
-	import MMAttrdefs
+	import MMAttrdefs, windowinterface
 	from colors import colors
 	# ignore suggested extension and make our own
 	file = os.path.splitext(file)[0] + '.rt'
@@ -188,6 +188,10 @@ def converttextfile(u, dstdir, file, node):
 			else:
 				color = '#%02x%02x%02x' % color
 			f.write(' bgcolor="%s"' % color)
+		geom = ch.get('base_winoff')
+		units = ch.get('units', windowinterface.UNIT_SCREEN)
+		if geom and units == windowinterface.UNIT_PXL:
+			f.write(' width="%d" height="%d"' % (geom[2], geom[3]))
 	f.write('>\n')
 	f.write(data)
 	f.write('</window>\n')
