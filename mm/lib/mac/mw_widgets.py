@@ -22,23 +22,27 @@ class _Widget:
 		wid.SetDialogItem(item, tp,
 		      mw_globals.toplevel._dialog_user_item_handler, rect)
 		
-class _ListWidget(_Widget):
+class _ListWidget:
 	def __init__(self, wid, item, content=[], multi=0):
 		_Widget.__init__(self, wid, item)
-		tp, h, rect = wid.GetDialogItem(item)
-		# wid is the window (dialog) where our list is going to be in
-		# rect is it's item rectangle (as in dialog item)
-		self.rect = rect
-		rect2 = rect[0]+1, rect[1]+1, rect[2]-16, rect[3]-1
-		self.list = List.LNew(rect2, (0, 0, 1, len(content)),
-					 (0,0), 0, wid,	0, 0, 0, 1)
+		self.control = wid.GetDialogItemAsControl(item)
+		h = self.control.GetControlDataHandle(Control.kControlListBoxListHandleTag)
+		self.list = h.as_List()
+		self.list.LAddRow(len(content))
+##?		self.list.LSetDrawingMode(0)
+##		# wid is the window (dialog) where our list is going to be in
+##		# rect is it's item rectangle (as in dialog item)
+##		self.rect = rect
+##		rect2 = rect[0]+1, rect[1]+1, rect[2]-16, rect[3]-1
+##		self.list = List.LNew(rect2, (0, 0, 1, len(content)),
+##					 (0,0), 0, wid,	0, 0, 0, 1)
 		if not multi:
 			self.list.selFlags = Lists.lOnlyOne
 		self._data = []
 		self._setcontent(0, len(content), content)
 		self.wid = wid
-		self.list.LSetDrawingMode(1)
-		Win.InvalRect(self.rect)
+##?		self.list.LSetDrawingMode(1)
+##		Win.InvalRect(self.rect)
 ##		self._redraw() # DBG
 	
 	def _setcontent(self, fr, to, content):
@@ -64,21 +68,21 @@ class _ListWidget(_Widget):
 		return self.list.LAddRow(count, where)
 		
 	def delete(self, fr=None, count=1):
-		Qd.SetPort(self.wid)
-		self.list.LSetDrawingMode(0)
+##?		Qd.SetPort(self.wid)
+##?		self.list.LSetDrawingMode(0)
 		self._delete(fr, count)
-		self.list.LSetDrawingMode(1)
-		Win.InvalRect(self.rect)
+##?		self.list.LSetDrawingMode(1)
+##?		Win.InvalRect(self.rect)
 ##		self._redraw() # DBG
 		
 	def set(self, content):
-		Qd.SetPort(self.wid)
-		self.list.LSetDrawingMode(0)
+##?		Qd.SetPort(self.wid)
+##?		self.list.LSetDrawingMode(0)
 		self._delete()
 		self._insert(count=len(content))
 		self._setcontent(0, len(content), content)
-		self.list.LSetDrawingMode(1)
-		Win.InvalRect(self.rect)
+##?		self.list.LSetDrawingMode(1)
+##?		Win.InvalRect(self.rect)
 ##		self._redraw() # DBG
 		
 	def get(self):
@@ -88,20 +92,20 @@ class _ListWidget(_Widget):
 		return self._data[item]
 		
 	def insert(self, where=-1, content=[]):
-		Qd.SetPort(self.wid)
-		self.list.LSetDrawingMode(0)
+##?		Qd.SetPort(self.wid)
+##?		self.list.LSetDrawingMode(0)
 		where = self._insert(where, len(content))
 		self._setcontent(where, where+len(content), content)
-		self.list.LSetDrawingMode(1)
-		Win.InvalRect(self.rect)
+##?		self.list.LSetDrawingMode(1)
+##?		Win.InvalRect(self.rect)
 ##		self._redraw() # DBG
 		
 	def replace(self, where, what):
-		Qd.SetPort(self.wid)
-		self.list.LSetDrawingMode(0)
+##?		Qd.SetPort(self.wid)
+##?		self.list.LSetDrawingMode(0)
 		self._setcontent(where, where+1, [what])
-		self.list.LSetDrawingMode(1)
-		Win.InvalRect(self.rect)
+##?		self.list.LSetDrawingMode(1)
+##?		Win.InvalRect(self.rect)
 ##		self._redraw() # DBG
 		
 	def deselectall(self):
@@ -128,29 +132,29 @@ class _ListWidget(_Widget):
 ##			return None
 ##		return self._data[num]
 			
-	def click(self, where, modifiers):
-		is_double = self.list.LClick(where, modifiers)
-		ok, (x, y) = self.list.LGetSelect(1, (0, 0))
-		if ok:
-			return y, is_double
-		else:
-			return None, is_double
-			
-	# draw a frame around the list, List Manager doesn't do that
-	def drawframe(self):
-		Qd.SetPort(self.wid)
-		Qd.EraseRect(self.rect)
-		Qd.FrameRect(self.rect)
-		
-	def _redraw(self, rgn=None):
-		if rgn == None:
-			rgn = self.wid.GetWindowPort().visRgn
-		self.drawframe()
-		self.list.LUpdate(rgn)
-		
-	def _activate(self, onoff):
-##		print 'ACTIVATE', self, onoff
-		self.list.LActivate(onoff)
+## 	def click(self, where, modifiers):
+## 		is_double = self.list.LClick(where, modifiers)
+## 		ok, (x, y) = self.list.LGetSelect(1, (0, 0))
+## 		if ok:
+## 			return y, is_double
+## 		else:
+## 			return None, is_double
+## 			
+## 	# draw a frame around the list, List Manager doesn't do that
+## 	def drawframe(self):
+## 		Qd.SetPort(self.wid)
+## 		Qd.EraseRect(self.rect)
+## 		Qd.FrameRect(self.rect)
+## 		
+## 	def _redraw(self, rgn=None):
+## 		if rgn == None:
+## 			rgn = self.wid.GetWindowPort().visRgn
+## 		self.drawframe()
+## 		self.list.LUpdate(rgn)
+## 		
+## 	def _activate(self, onoff):
+## ##		print 'ACTIVATE', self, onoff
+## 		self.list.LActivate(onoff)
 		
 class _ImageWidget(_Widget):
 	def __init__(self, wid, item, image=None):

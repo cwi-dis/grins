@@ -2240,7 +2240,7 @@ class DialogWindow(_Window):
 			
 	def ListWidget(self, item, content=[]):
 		widget = mw_widgets._ListWidget(self._wid, item, content)
-		self.addwidget(item, widget)
+##		self.addwidget(item, widget)
 		return widget
 
 	def ImageWidget(self, item, image=None):
