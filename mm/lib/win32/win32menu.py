@@ -139,31 +139,27 @@ class Menu:
 		flags=win32con.MF_STRING|win32con.MF_ENABLED
 		id=-1
 		for item in list:
-			if type(item[0]) == type(''):
-				# Optional entry
-				optional = item[0]
-				item = item[1:]
-				if not self._optional_dict[optional]:
-					continue
-			if item[0]==ENTRY:
-				if self._cb_obj2id:id=self._cb_obj2id(item[3])
-				else: id=item[3]
-				menu.AppendMenu(flags, id, item[1])
-			elif item[0]==TOGGLE:
-				if self._cb_obj2id:id=self._cb_obj2id(item[3])
-				else: id=item[3]
-				menu.AppendMenu(flags|win32con.MF_UNCHECKED, id, item[1])
+			if not self._optional_dict[item[0]]:
+				continue
+			if item[1]==ENTRY:
+				if self._cb_obj2id:id=self._cb_obj2id(item[4])
+				else: id=item[4]
+				menu.AppendMenu(flags, id, item[2])
+			elif item[1]==TOGGLE:
+				if self._cb_obj2id:id=self._cb_obj2id(item[4])
+				else: id=item[4]
+				menu.AppendMenu(flags|win32con.MF_UNCHECKED, id, item[2])
 				self._toggles[id]=1
-			elif item[0]==SEP:
+			elif item[1]==SEP:
 				menu.AppendMenu(win32con.MF_SEPARATOR)
-			elif item[0]==CASCADE:
+			elif item[1]==CASCADE:
 				submenu=win32ui.CreatePopupMenu()
-				menu.AppendMenu(flags|win32con.MF_POPUP,submenu.GetHandle(),item[1])
-				self._exec_list.append((submenu,item[2]))
-			elif item[0]==DYNAMICCASCADE:
+				menu.AppendMenu(flags|win32con.MF_POPUP,submenu.GetHandle(),item[2])
+				self._exec_list.append((submenu,item[3]))
+			elif item[1]==DYNAMICCASCADE:
 				submenu=Menu('popup') #win32ui.CreatePopupMenu()
-				menu.AppendMenu(flags|win32con.MF_POPUP,submenu.GetHandle(),item[1])
-				self._dynamic_cascade_dict[item[2]]=submenu
+				menu.AppendMenu(flags|win32con.MF_POPUP,submenu.GetHandle(),item[2])
+				self._dynamic_cascade_dict[item[3]]=submenu
 
 	# cascade menus management
 	def get_cascade_menu(self,clid):
