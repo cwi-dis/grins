@@ -1705,12 +1705,12 @@ FONT 8, "MS Sans Serif"
 BEGIN
     COMBOBOX        IDC_12,91,24,192,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    COMBOBOX        IDC_22,92,47,192,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
+    COMBOBOX        IDC_22,91,47,192,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
     GROUPBOX        "Transition",IDC_GROUP1,5,10,287,60
     LTEXT           "In transition:",IDC_11,11,26,73,8
-    LTEXT           "Out transition:",IDC_21,12,48,73,8
+    LTEXT           "Out transition:",IDC_21,11,48,73,8
 END
 
 IDD_EDITATTR_SUBREGION DIALOG DISCARDABLE  0, 0, 300, 164
