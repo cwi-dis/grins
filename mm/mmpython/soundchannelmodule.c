@@ -28,13 +28,13 @@ struct sound_data {
 	FILE *f;		/* file from which to read samples */
 	PyObject *file;		/* file object from which f is gotten */
 	int nchannels;		/* # of channels (mono or stereo) */
-	int sampwidth;		/* size of samples in bytes */
-	int nsamples;		/* # of samples to play */
+	int framesize;		/* size of frame in bytes */
+	int nframes;		/* # of frames to play */
 	int framerate;		/* sampling frequency */
 	long offset;		/* offset in file of first sample */
-	int bufsize;		/* size of sampbuf in samples */
+	int bufsize;		/* size of sampbuf in frames */
 	char *sampbuf;		/* buffer used for read/writing samples */
-	int sampsread;		/* # of samples in sampbuf */
+	int framesread;		/* # of frames in sampbuf */
 #ifdef sun
 	int ulaw;		/* convert to u-law */
 #endif
@@ -162,7 +162,7 @@ sound_arm(self, file, delay, duration, attrlist, anchorlist)
 	}
 	PRIV->s_arm.nchannels = 1;
 	PRIV->s_arm.framerate = 8000;
-	PRIV->s_arm.sampwidth = 1;
+	PRIV->s_arm.framesize = 1;
 	PRIV->s_arm.offset = 0;
 	PRIV->s_playrate = 1.0;
 #ifdef sun
@@ -173,10 +173,10 @@ sound_arm(self, file, delay, duration, attrlist, anchorlist)
 		PRIV->s_arm.nchannels = PyInt_AsLong(v);
 	v = PyDict_GetItemString(attrlist, "nsampframes");
 	if (v && PyInt_Check(v))
-		PRIV->s_arm.nsamples = PyInt_AsLong(v) * PRIV->s_arm.nchannels;
+		PRIV->s_arm.nframes = PyInt_AsLong(v) * PRIV->s_arm.nchannels;
 	v = PyDict_GetItemString(attrlist, "sampwidth");
 	if (v && PyInt_Check(v))
-		PRIV->s_arm.sampwidth = PyInt_AsLong(v);
+		PRIV->s_arm.framesize = PyInt_AsLong(v) * PRIV->s_arm.nchannels;
 	v = PyDict_GetItemString(attrlist, "samprate");
 	if (v && PyInt_Check(v))
 		PRIV->s_arm.framerate = PyInt_AsLong(v);
@@ -203,27 +203,27 @@ sound_armer(self)
 		free(PRIV->s_arm.sampbuf);
 		PRIV->s_arm.sampbuf = NULL;
 	}
-	PRIV->s_arm.bufsize = PRIV->s_arm.framerate * PRIV->s_arm.nchannels;
+	PRIV->s_arm.bufsize = PRIV->s_arm.framerate;
 	if (PRIV->s_queuesize > 0)
 		PRIV->s_arm.bufsize *= PRIV->s_queuesize;
 #ifdef __sgi
 	if (PRIV->s_arm.bufsize > maxbufsize)
 		PRIV->s_arm.bufsize = maxbufsize;
 #endif
-	if (PRIV->s_arm.bufsize > PRIV->s_arm.nsamples)
-		PRIV->s_arm.bufsize = PRIV->s_arm.nsamples;
-	PRIV->s_arm.sampbuf = malloc(PRIV->s_arm.bufsize*PRIV->s_arm.sampwidth);
+	if (PRIV->s_arm.bufsize > PRIV->s_arm.nframes)
+		PRIV->s_arm.bufsize = PRIV->s_arm.nframes;
+	PRIV->s_arm.sampbuf = malloc(PRIV->s_arm.bufsize*PRIV->s_arm.framesize);
 
-	dprintf(("sound_armer(%lx): nchannels: %d, nsamples: %d, nframes: %d, sampwidth: %d, framerate: %d, offset: %d, file: %lx (fd= %d), bufsize = %d\n",
+	dprintf(("sound_armer(%lx): nchannels: %d, nframes: %d, nframes: %d, framesize: %d, framerate: %d, offset: %d, file: %lx (fd= %d), bufsize = %d\n",
 		 (long) self,
-		 PRIV->s_arm.nchannels, PRIV->s_arm.nsamples,
-		 PRIV->s_arm.nsamples / PRIV->s_arm.nchannels,
-		 PRIV->s_arm.sampwidth, PRIV->s_arm.framerate,
+		 PRIV->s_arm.nchannels, PRIV->s_arm.nframes,
+		 PRIV->s_arm.nframes / PRIV->s_arm.nchannels,
+		 PRIV->s_arm.framesize, PRIV->s_arm.framerate,
 		 PRIV->s_arm.offset, PRIV->s_arm.f, fileno(PRIV->s_arm.f),
 		 PRIV->s_arm.bufsize));
 
 	fseek(PRIV->s_arm.f, PRIV->s_arm.offset, 0);
-	PRIV->s_arm.sampsread = fread(PRIV->s_arm.sampbuf, PRIV->s_arm.sampwidth, PRIV->s_arm.bufsize, PRIV->s_arm.f);
+	PRIV->s_arm.framesread = fread(PRIV->s_arm.sampbuf, PRIV->s_arm.framesize, PRIV->s_arm.bufsize, PRIV->s_arm.f);
 }
 
 static int
@@ -283,7 +283,7 @@ sound_player(self)
 	Audio_hdr hdr;
 	Audio_info audio_info;
 #endif
-	int nsamps = PRIV->s_play.nsamples;
+	int nframes = PRIV->s_play.nframes;
 	int n;
 	int rate;
 	struct pollfd pollfd[2];
@@ -324,7 +324,7 @@ sound_player(self)
 	(void) down_sema(PRIV->s_sema, WAIT_SEMA);
 #ifdef __sgi
 	config = ALnewconfig();
-	ALsetwidth(config, PRIV->s_play.sampwidth);
+	ALsetwidth(config, PRIV->s_play.framesize / PRIV->s_play.nchannels);
 	ALsetchannels(config, PRIV->s_play.nchannels);
 	ALsetqueuesize(config, PRIV->s_play.bufsize);
 	
@@ -343,42 +343,26 @@ sound_player(self)
 	}
 	hdr.sample_rate = PRIV->s_play.framerate;
 	hdr.samples_per_unit = 1;
-	hdr.bytes_per_unit = PRIV->s_play.sampwidth;
+	hdr.bytes_per_unit = PRIV->s_play.framesize / PRIV->s_play.nchannels;
 	hdr.channels = PRIV->s_play.nchannels;
 	hdr.encoding = AUDIO_ENCODING_LINEAR;
-	hdr.data_size = PRIV->s_play.nsamples * PRIV->s_play.sampwidth;
+	hdr.data_size = PRIV->s_play.nframes * PRIV->s_play.framesize;
 	switch (audio_set_play_config(PRIV->s_port, &hdr)) {
 	case AUDIO_SUCCESS:
 		dprintf(("sound_player(%lx): audio_set_play_config successful\n", (long) self));
 		break;
 	case AUDIO_ERR_ENCODING:
 	case AUDIO_ERR_NOEFFECT:
-		/* linear didn't work, try u-law */
+	default: {
+		/* linear didn't work, assume default is u-law */
+		int i;
+		short *ps = (short *) PRIV->s_play.sampbuf;
+		char *pc = PRIV->s_play.sampbuf;
 		dprintf(("sound_player(%lx): audio_set_play_config unsuccessful\n", (long) self));
-		hdr.sample_rate = PRIV->s_play.framerate;
-		hdr.samples_per_unit = 1;
-		hdr.bytes_per_unit = 1;
-		hdr.channels = PRIV->s_play.nchannels;
-		hdr.encoding = AUDIO_ENCODING_ULAW;
-		hdr.data_size = PRIV->s_play.nsamples * PRIV->s_play.sampwidth;
-		if (audio_set_play_config(PRIV->s_port, &hdr)==AUDIO_SUCCESS) {
-			int i;
-			short *ps = (short *) PRIV->s_play.sampbuf;
-			char *pc = PRIV->s_play.sampbuf;
-			dprintf(("sound_player(%lx): using u-law\n", (long) self));
-			PRIV->s_play.ulaw = 1;
-			for (i = 0; i < PRIV->s_play.sampsread; i++, ps++)
-				*pc++ = audio_s2u(*ps);
-			break;
+		dprintf(("sound_player(%lx): using u-law\n", (long) self));
+		PRIV->s_play.ulaw = 1;
+		break;
 		}
-		/* else fall through */
-	default:		/* all other errors */
-		printf("Warning: error setting audio configuration\n");
-		up_sema(PRIV->s_sema);
-		(void) down_sema(device_sema, WAIT_SEMA);
-		device_used--;
-		up_sema(device_sema);
-		return;
 	}
 	audio_set_eof(PRIV->s_port, 0);
 	audio_getinfo(PRIV->s_port, &audio_info);
@@ -389,7 +373,7 @@ sound_player(self)
 	up_sema(PRIV->s_sema);
 
 	rate = 0;
-	while (nsamps > 0
+	while (nframes > 0
 #ifdef __sgi
 	       || ALgetfilled(PRIV->s_port) > 0
 #endif
@@ -397,31 +381,22 @@ sound_player(self)
 	       || audio_get_eof(PRIV->s_port) == 0
 #endif
 	       ) {
-		if (PRIV->s_play.sampsread > 0) {
-			n = PRIV->s_play.sampsread;
-			PRIV->s_play.sampsread = 0;
-		} else if (nsamps > 0) {
-			n = nsamps;
+		if (PRIV->s_play.framesread > 0) {
+			n = PRIV->s_play.framesread;
+			PRIV->s_play.framesread = 0;
+		} else if (nframes > 0) {
+			n = nframes;
 			if (n > PRIV->s_play.bufsize)
 				n = PRIV->s_play.bufsize;
-			n = fread(PRIV->s_play.sampbuf, PRIV->s_play.sampwidth,
+			n = fread(PRIV->s_play.sampbuf, PRIV->s_play.framesize,
 				  n, PRIV->s_play.f);
 			if (n <= 0) {
-				dprintf(("sound_player(%lx): fread returned %d at %ld (nsamps = %d)\n", (long) self, n, ftell(PRIV->s_play.f), nsamps));
+				dprintf(("sound_player(%lx): fread returned %d at %ld (nframes = %d)\n", (long) self, n, ftell(PRIV->s_play.f), nframes));
 				n = 0;
-				nsamps = 0;
+				nframes = 0;
 			} else {
-				dprintf(("sound_player(%lx): fread %d samples\n", (long) self, n));
+				dprintf(("sound_player(%lx): fread %d frames\n", (long) self, n));
 			}
-#ifdef sun
-			if (PRIV->s_play.ulaw) {
-				int i;
-				short *ps = (short *) PRIV->s_play.sampbuf;
-				char *pc = PRIV->s_play.sampbuf;
-				for (i = 0; i < n; i++, ps++)
-					*pc++ = audio_s2u(*ps);
-			}
-#endif
 		} else
 			n = 0;
 
@@ -479,9 +454,9 @@ sound_player(self)
 			ALcloseport(PRIV->s_port);
 #endif
 			if (c == 'p' || c == 'r') {
-				fseek(PRIV->s_play.f, -(filled + n) * PRIV->s_play.sampwidth, 1);
-				dprintf(("sound_player(%lx): filled = %ld, nsamps before = %ld\n", (long) self, filled, nsamps));
-				nsamps += filled;
+				fseek(PRIV->s_play.f, -(filled + n) * PRIV->s_play.framesize, 1);
+				dprintf(("sound_player(%lx): filled = %ld, nframes before = %ld\n", (long) self, filled, nframes));
+				nframes += filled;
 			}
 			if (c == 'p') {
 				dprintf(("sound_player(%lx): waiting to continue\n", (long) self));
@@ -515,7 +490,24 @@ sound_player(self)
 		}
 		if (n == 0)
 			continue;
-		nsamps -= n;
+		nframes -= n;
+#ifdef sun
+		if (PRIV->s_play.ulaw) {
+			int i;
+			short *ps = (short *) PRIV->s_play.sampbuf;
+			char *pc = PRIV->s_play.sampbuf;
+			int factor = PRIV->s_play.framerate / 8000;
+			if (factor == 0)
+				factor = 1;
+			if (PRIV->s_play.nchannels == 1)
+				for (i = 0; i < n; i += factor, ps += factor)
+					*pc++ = audio_s2u(*ps);
+			else
+				for (i = 0; i < n; i += factor, ps += PRIV->s_play.nchannels * factor)
+					*pc++ = audio_s2u((ps[0] + ps[1]) / 2);
+			n = pc - PRIV->s_play.sampbuf;
+		}
+#endif
 		if (PRIV->s_playrate > 1) {
 			int s = PRIV->s_play.bufsize / 30;
 			char *p = PRIV->s_play.sampbuf;
@@ -523,29 +515,32 @@ sound_player(self)
 				if (s > n)
 					s = n;
 				if (rate == 0) {
-					dprintf(("sound_player(%lx): write %d samples\n", (long) self, s));
+					dprintf(("sound_player(%lx): write %d frames\n", (long) self, s));
 #ifdef __sgi
 					ALwritesamps(PRIV->s_port, p, s);
 #endif
 #ifdef sun
-					write(PRIV->s_port, p, s * PRIV->s_play.sampwidth);
+					write(PRIV->s_port, p,
+					      PRIV->s_play.ulaw ?
+						s :
+						s * PRIV->s_play.framesize);
 #endif
 				}
 				rate++;
 				if (rate >= PRIV->s_playrate)
 					rate = 0;
 				n -= s;
-				p += s * PRIV->s_play.sampwidth * PRIV->s_play.nchannels;
+				p += s * PRIV->s_play.framesize;
 			}
 		} else {
-			dprintf(("sound_player(%lx): write %d samples\n", (long) self, n));
+			dprintf(("sound_player(%lx): write %d frames\n", (long) self, n));
 #ifdef __sgi
-			ALwritesamps(PRIV->s_port, PRIV->s_play.sampbuf, n);
+			ALwritesamps(PRIV->s_port, PRIV->s_play.sampbuf, n * PRIV->s_play.nchannels);
 #endif
 #ifdef sun
 			write(PRIV->s_port, PRIV->s_play.sampbuf,
-			      PRIV->s_play.ulaw ? n : n * PRIV->s_play.sampwidth);
-			if (nsamps == 0)
+			      PRIV->s_play.ulaw ? n : n * PRIV->s_play.framesize);
+			if (nframes == 0)
 				audio_play_eof(PRIV->s_port);
 #endif
 		}
