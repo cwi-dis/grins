@@ -629,6 +629,8 @@ class SchedulerContext:
 							node.realpix_body.start_time = node.start_time
 						if node.caption_body:
 							node.caption_body.start_time = node.start_time
+						for a in deparcs:
+							self.cancelarc(a, timestamp)
 						self.do_pause(pnode, node, 'hide', timestamp)
 						parent.updatetimer()
 						return
@@ -948,12 +950,6 @@ class SchedulerContext:
 
 	def do_resume(self, node, timestamp):
 		if debugevents: print 'resume',node,timestamp,self.parent.timefunc()
-		if node.playing != MMStates.FROZEN:
-			for arc in node.durarcs:
-				if arc.qid is None:
-					arc.qid = self.parent.enterabs(timestamp + arc.paused, 0, self.trigger, (arc,))
-					arc.timestamp = timestamp + arc.paused
-					del arc.paused
 		ev = (SR.SCHED, node)
 		if self.srdict.has_key(ev):
 			node.start_time = timestamp
@@ -961,8 +957,15 @@ class SchedulerContext:
 			while p and p.type == 'alt':
 				p.start_time = timestamp
 				p = p.parent
+			self.sched_arcs(node, 'begin', timestamp=timestamp)
 			self.parent.event(self, ev, timestamp)
 		else:
+			if node.playing != MMStates.FROZEN:
+				for arc in node.durarcs:
+					if arc.qid is None:
+						arc.qid = self.parent.enterabs(timestamp + arc.paused, 0, self.trigger, (arc,))
+						arc.timestamp = timestamp + arc.paused
+						del arc.paused
 			self.resume_play(node, timestamp)
 
 	def resume_play(self, node, timestamp):
