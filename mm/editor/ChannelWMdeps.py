@@ -7,6 +7,18 @@ import MMAttrdefs
 
 class Channel():
 	#
+	# Declaration of attributes that are relevant to this channel,
+	# respectively to nodes belonging to this channel.
+	# This is used by AttrEdit.  (Node attributes that have type
+	# 'channel' in the Attrdefs file are implied for the channel.)
+	# Because of the rules for inheritance of class attributes,
+	# channels that don't add any personal attributes needn't
+	# define these variables.
+	#
+	chan_attrs = ['type']
+	node_attrs = ['name', 'channel', 'duration']
+	#
+	#
 	# Initialization method (returns self!).
 	# Should be extended, not overridden.
 	# NB: this *shares* the attribute dictionary with the context.
@@ -17,10 +29,10 @@ class Channel():
 	# parameters out of the attribute dictionary each time it
 	# is reset, so changes made while it was dormant are noted.
 	#
-	def init(self, (name, attrdict, queue)):
+	def init(self, (name, attrdict, player)):
 		self.name = name
 		self.attrdict = attrdict
-		self.queue = queue
+		self.player = player
 		self.qid = None
 		return self
 	#
@@ -43,7 +55,7 @@ class Channel():
 	#
 	def play(self, (node, callback, arg)):
 		secs = self.getduration(node)
-		self.qid = self.queue.enter(secs, 0, self.done, \
+		self.qid = self.player.enter(secs, 0, self.done, \
 							(callback, arg))
 	#
 	# Function called when an even't time is up.
@@ -63,7 +75,7 @@ class Channel():
 	#
 	def stop(self):
 		if self.qid <> None:
-			self.queue.cancel(self.qid)
+			self.player.cancel(self.qid)
 			self.qid = None
 	#
 	# Reset the channel's state.
