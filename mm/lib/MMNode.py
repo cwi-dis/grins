@@ -811,25 +811,19 @@ class MMChannel:
 		return name in _CssAttrs
 
 	#
-	# Set animated attribute
+	# set/get animated attribute
 	#
 	def SetPresentationAttr(self, name, value):
-		if self.attrdict.has_key(name):
-			self.d_attrdict[name] = value
-		elif name == 'base_winoff':
-			self.d_attrdict['base_winoff'] = value
+		self.d_attrdict[name] = value
 
-	def GetPresentationAttr(self, name, node=None):
+	def GetPresentationAttr(self, name):
 		if self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
-		elif name == 'base_winoff':
-			if node:
-				return node.getPxGeomMedia()[1]
-			else:
-				return self.getPxGeom()
-		else:
-			return self.__getitem__(name)
-				
+		return self.attrdict.get(name)
+		
+	#
+	#
+	#		
 	def setvisiblechannelattrs(self, type):
 		from windowinterface import UNIT_PXL
 		if not settings.get('cmif'):
@@ -2594,34 +2588,12 @@ class MMNode:
 			dummy, dummy, dummy, downloadlag = self.timing_info_dict[which].GetTimes()
 ##		print 'GetDelays', which, begindelay, downloadlag, self
 		return begindelay, downloadlag
+
 	#
 	# Presentation values management
 	#
 	def SetPresentationAttr(self, name, value):
-		if self.attrdict.has_key(name):
-			self.d_attrdict[name] = value
-		elif self.attrdict.has_key('base_winoff'):
-			# virtual node representing a region
-			d = self.d_attrdict
-			n = 'base_winoff'
-			x, y, w, h = self.attrdict['base_winoff']
-			if name == 'left':    d[n] = value, y, w, h
-			elif name == 'top':	  d[n] = x, value, w, h
-			elif name == 'width': d[n] = x, y, value, h
-			elif name == 'height':d[n] = x, y, w, value
-			elif name == 'right':
-				x = value - w
-				d[n] = x, y, w, h
-			elif name == 'bottom':
-				y = value - h
-				d[n] = x, y, w, h
-			elif name == 'position':
-				x, y = value
-				d[n] = x, y, w, h
-			elif name == 'size':
-				w, h = value
-				d[n] = x, y, w, h
-
+		self.d_attrdict[name] = value
 
 	#
 	# Channel management
