@@ -215,6 +215,8 @@ class PlayerCommon:
 				attrs = attrs.keys()
 
 				for attr in attrs:
+					if attr == 'selected': # XXX internal value for selected index
+						continue
 					n = context.newnode('animate')
 					self.__animateNodeList.append(n)
 					parent = node.GetParent()
