@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 
-import xmllib, string, re
+import xmllib, string, re, os
 import MMurl
 
 from colors import colors
@@ -805,6 +805,12 @@ def writeRP(file, rp, node, savecaptions=0):
 		_writeFadeout(f, start, a, bgcolor)
 	f.write('</imfl>\n')
 	f.close()
+	if os.name == 'mac':
+		import macfs
+		import macostools
+		fss = macfs.FSSpec(file)
+		fss.SetCreatorType('PNst', 'PNRM')
+		macostools.touched(fss)
 
 def writeRT(file, rp, node):
 	from SMILTreeWrite import nameencode
@@ -819,7 +825,7 @@ def writeRT(file, rp, node):
 		f.write(' duration="%g"' % dur)
 	ch = node.GetChannel(attrname='captionchannel')
 	color = ch.get('bgcolor', (0,0,0))
-	if color != (255,255,255):
+	if 1:  # Always write color (was:) color != (255,255,255):
 		for name, val in colors.items():
 			if color == val:
 				color = name
@@ -838,6 +844,14 @@ def writeRT(file, rp, node):
 			if caption[-1] != '\n':
 				f.write('\n')
 	f.write('</window>\n')
+	f.close()
+	if os.name == 'mac':
+		import macfs
+		import macostools
+		fss = macfs.FSSpec(file)
+		fss.SetCreatorType('PNst', 'PNRM')
+		macostools.touched(fss)
+
 
 import re
 durre = re.compile(r'\s*(?:(?P<days>\d+):(?:(?P<hours>\d+):(?:(?P<minutes>\d+):)?)?)?(?P<seconds>\d+(\.\d+)?)\s*')
