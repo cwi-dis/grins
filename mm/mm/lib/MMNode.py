@@ -12,6 +12,23 @@ import settings
 
 import domcore
 
+def convertAttribute(name, value) :
+	"converts certain attributevalues to other-than string values"
+	print 'converting attribute'
+	if name=="duration" :		# convert to float
+		print 'duration'
+		nwValue = float(value)
+	elif name=="winsize" or name=="base_winoff" :		# covert to tuple
+		print 'winsize base_winoff'
+		import string
+		nwValue = tuple(map(int,string.split(filter(lambda x: x not in ['(',')'], value),',')))
+	else:
+		print 'other ', name, value
+		nwValue = value
+
+	return nwValue
+
+
 class MMNodeContext(domcore.Element):
 	def __init__(self, nodeclass):
 		domcore.Element.__init__(self, "context")
@@ -57,14 +74,35 @@ class MMNodeContext(domcore.Element):
 				index = len(self.channels)
 				print 'adding channel...', newChild 
 				em.addchannel(channelName, index ,channelType)
+				l = newChild._get_attributes()._get_length()
+				i = 0
+				# add channel attributes
+				while i < l :
+					attr = newChild._get_attributes().item(i)
+					name = attr._get_name()
+					value = convertAttribute(name,attr._get_value())
+					print 'set channel attribute ', name, value
+					em.setchannelattr(channelName, name, value) 
+					i = i + 1
                 		em.commit()
 				return newChild
 			else:
 				raise 'Channel has no Type or Name'
 
 		# add hyperlink
-		elif newChild._get_tagName() == 'hyperlink' :
-			print 'add hyperlink'
+		elif newChild._get_tagName() == 'link' :
+			print 'add hyperlink.... under construction '
+			linkTo = newChild._get_attributes().getNamedItem('to')._get_nodeValue()
+			linkFrom = newChild._get_attributes().getNamedItem('from')._get_nodeValue()
+			print 'linkTo ', linkTo
+			print 'linkFrom', linkFrom
+			if linkTo and linkFrom != None :
+                		if not em.transaction():
+                        		raise 'not ready'
+				print 'adding hyperlink...', newChild 
+				em.addlink((linkTo,linkFrom,0,1)) # default direction en type
+                		em.commit()
+				return newChild
 
 		else:
 			raise 'only hyperlinks and channels in context'
@@ -394,10 +432,11 @@ class MMChannel(domcore.Element):
                 if not em.transaction():
                         return None
 
-                if attrname=='name' :
+                if attrname=='name' :		# change channelname
 			em.setchannelname(self.name, value)
-			self.name = attrname
+			# self.name = value	#???
 		else:
+			value = convertAttribute(attrname, value)
                 	em.setchannelattr(self, self.name, attrname, value)
                 em.commit()
                 return None
@@ -647,8 +686,7 @@ class MMNode(domcore.Element):
 			return 0
 
 	def setAttribute(self, name, value):
-		if name=="duration" :
-			value = float(value)
+		value = convertAttribute(name,value)
 		em = self.context.editmgr			
 		if not em.transaction():
                 	return None
