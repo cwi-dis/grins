@@ -475,6 +475,31 @@ class ReaderFilter:
 			self._dataqueue = []
 			return data
 		return [(self._time, None),]
+
+class AudioReaderFilter(ReaderFilter):
+	def OnRenderSample(self, ms):
+		if self._active and self._driver.isActive():
+			data = ms.GetData()
+			btime, etime = ms.GetTime()
+			if len(data) > 9216:
+				# split heuristics
+				n = len(data)/4608
+				n = 2*(n/2)
+				dd = len(data)/n
+				dt = (etime-btime)/n
+				begin = 0
+				begin_time = btime
+				for i in range(n):
+					if i<n-1: end = begin + dd
+					else: end = len(data)
+					packet = begin_time, data[begin:end]
+					self._dataqueue.append(packet)
+					begin = begin + dd
+					begin_time = begin_time + dt
+			else:
+				packet = btime, data
+				self._dataqueue.append(packet)
+			self._time = btime
 		
 class MediaReader:
 	def __init__(self, url):		
@@ -653,7 +678,7 @@ class MediaReader:
 			except:
 				print 'Filter does not support IPipe'
 				raise dshow.error, 'Filter does not support IPipe'
-			self._audiofilter = ReaderFilter(self, 'audio filter')
+			self._audiofilter = AudioReaderFilter(self, 'audio filter')
 			self._audiopeer = dshow.CreatePyRenderingListener(self._audiofilter)
 			pipe.SetAdviceSink(self._audiopeer)
 			fg.AddFilter(apf,'APF')
