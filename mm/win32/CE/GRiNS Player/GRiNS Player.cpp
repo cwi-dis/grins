@@ -26,9 +26,7 @@ HWND				CreateRpCommandBar(HWND);
 // begin_pfc
 #include "pfc/ttl.h"
 #include "pfc/app_wndproc.h"
-
-bool InitializePythonInterface(HWND hWnd);
-void FinalizePythonInterface();
+#include "pfc/app_pyinterface.h"
 
 Application<TCHAR> g_application(TEXT("GRiNS Player"));
 
@@ -217,7 +215,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			break; 
 		case WM_DESTROY:
 			CommandBar_Destroy(hwndCB);
-			PostQuitMessage(0);
+			//PostQuitMessage(0);
+			return PyWnd_WndProc(hWnd, message, wParam, lParam);
 			break;
 		case WM_SETTINGCHANGE:
 			SHHandleWMSettingChange(hWnd, wParam, lParam, &s_sai);
