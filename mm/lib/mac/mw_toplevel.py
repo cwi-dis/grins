@@ -11,12 +11,21 @@ from MiniAEFrame import AEServer
 import MacOS
 import sys
 import MenuTemplate
+import gestalt
 import Qt
-if not Qt.available():
-	Qt = None
 import Scrap
 import TE
 import AE
+
+def _qtavailable():
+	try:
+		avail = gestalt.gestalt('qtim')
+	except MacOS.Error:
+		return 0
+	return (avail != 0)
+	
+if not _qtavailable():
+	Qt = None
 
 #
 # Stuff we need from other mw_ modules
@@ -34,7 +43,7 @@ CMDSET_WINDOW, CMDSET_GROUP, CMDSET_GLOBAL = 0, 1, 2
 
 def beep():
 	MacOS.SysBeep()
-
+	
 #
 # Conversion factors for mm->pixels
 #
