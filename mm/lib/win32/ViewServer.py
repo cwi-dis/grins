@@ -165,7 +165,7 @@ class ViewServer:
 	# Create and initialize a new view object 
 	# Keep instance of player
 	def newview(self,x, y, w, h, title, units = appcon.UNIT_MM, adornments=None,canvassize=None, commandlist=None, strid='cmifview_'):
-		if strid=='pview_' and self._player:
+		if strid=='pview_' and self._player and (not self._player._canclose):
 			return self._player
 		viewno=self.getviewno(strid)
 		viewclass=appview[viewno]['class'] 
