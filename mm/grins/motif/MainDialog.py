@@ -85,16 +85,3 @@ class MainDialog:
 			if dir == cwd:
 				filename = file
 		self.__text.settext(MMurl.pathname2url(filename))
-
-	def setbutton(self, button, value):
-		pass			# for now...
-
-	def menubar(self):
-		return [('File', [
-			('', 'Open Location...', (self.__openURL_callback, ())),
-			('', 'Open File...', (self.__openfile_callback, ())),
-			('', 'Trace', (self.trace_callback, ()), 't'),
-			('', 'Debug', (self.debug_callback, ())),
-			None,
-			('', 'Exit', (self.close_callback, ())),
-			])]
