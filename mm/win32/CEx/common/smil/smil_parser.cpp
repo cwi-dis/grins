@@ -16,6 +16,8 @@ Copyright 1991-2002 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "windowinterface.h"
 
+//#include "smil_elements.h"
+
 namespace smil {
 
 parser::parser()
@@ -59,11 +61,15 @@ parser::parser()
 	set_handler("transition", &parser::start_transition, &parser::end_transition);
 	set_handler("regPoint", &parser::start_regPoint, &parser::end_regPoint);
 	set_handler("prefetch", &parser::start_prefetch, &parser::end_prefetch);
+
+	m_rootnode = new tree_node("#document");
+	m_curnode = m_rootnode;
 	}
 
 parser::~parser()
 	{
-	delete m_rootnode;
+	if(m_rootnode != 0) 
+		delete m_rootnode;
 	}
 
 // prepare for reuse
@@ -71,7 +77,7 @@ void parser::reset()
 	{
 	if(m_rootnode != 0)
 		delete m_rootnode;
-	m_rootnode = new tree_node();
+	m_rootnode = new tree_node("#document");
 	m_curnode = m_rootnode;
 	}
 
@@ -87,9 +93,9 @@ tree_node* parser::detach()
 /////////////////
 // element handlers
 
-void parser::start_smil(raw_attr_list_t *pattrs)
+void parser::start_smil(handler_arg_type attrs)
 	{
-	new_node("smil", pattrs);
+	new_node("smil", attrs);
 	}
 
 void parser::end_smil()
@@ -97,9 +103,9 @@ void parser::end_smil()
 	end_node();
 	}
 
-void parser::start_head(raw_attr_list_t *pattrs)
+void parser::start_head(handler_arg_type attrs)
 	{
-	new_node("head", pattrs);
+	new_node("head", attrs);
 	}
 
 void parser::end_head()
@@ -107,9 +113,9 @@ void parser::end_head()
 	end_node();
 	}
 
-void parser::start_meta(raw_attr_list_t *pattrs)
+void parser::start_meta(handler_arg_type attrs)
 	{
-	new_node("meta", pattrs);
+	new_node("meta", attrs);
 	}
 
 void parser::end_meta()
@@ -117,9 +123,9 @@ void parser::end_meta()
 	end_node();
 	}
 
-void parser::start_metadata(raw_attr_list_t *pattrs)
+void parser::start_metadata(handler_arg_type attrs)
 	{
-	new_node("metadata", pattrs);
+	new_node("metadata", attrs);
 	}
 
 void parser::end_metadata()
@@ -127,9 +133,9 @@ void parser::end_metadata()
 	end_node();
 	}
 
-void parser::start_layout(raw_attr_list_t *pattrs)
+void parser::start_layout(handler_arg_type attrs)
 	{
-	new_node("layout", pattrs);
+	new_node("layout", attrs);
 	}
 
 void parser::end_layout()
@@ -137,9 +143,9 @@ void parser::end_layout()
 	end_node();
 	}
 
-void parser::start_customAttributes(raw_attr_list_t *pattrs)
+void parser::start_customAttributes(handler_arg_type attrs)
 	{
-	new_node("customAttributes", pattrs);
+	new_node("customAttributes", attrs);
 	}
 
 void parser::end_customAttributes()
@@ -147,9 +153,9 @@ void parser::end_customAttributes()
 	end_node();
 	}
 
-void parser::start_customTest(raw_attr_list_t *pattrs)
+void parser::start_customTest(handler_arg_type attrs)
 	{
-	new_node("customTest", pattrs);
+	new_node("customTest", attrs);
 	}
 
 void parser::end_customTest()
@@ -157,9 +163,9 @@ void parser::end_customTest()
 	end_node();
 	}
 
-void parser::start_region(raw_attr_list_t *pattrs)
+void parser::start_region(handler_arg_type attrs)
 	{
-	new_node("region", pattrs);
+	new_node("region", attrs);
 	}
 
 void parser::end_region()
@@ -167,9 +173,9 @@ void parser::end_region()
 	end_node();
 	}
 
-void parser::start_root_layout(raw_attr_list_t *pattrs)
+void parser::start_root_layout(handler_arg_type attrs)
 	{
-	new_node("root-layout", pattrs);
+	new_node("root-layout", attrs);
 	}
 
 void parser::end_root_layout()
@@ -177,9 +183,9 @@ void parser::end_root_layout()
 	end_node();
 	}
 
-void parser::start_viewport(raw_attr_list_t *pattrs)
+void parser::start_viewport(handler_arg_type attrs)
 	{
-	new_node("topLayout", pattrs);
+	new_node("topLayout", attrs);
 	}
 
 void parser::end_viewport()
@@ -187,9 +193,9 @@ void parser::end_viewport()
 	end_node();
 	}
 
-void parser::start_body(raw_attr_list_t *pattrs)
+void parser::start_body(handler_arg_type attrs)
 	{
-	new_node("body", pattrs);
+	new_node("body", attrs);
 	}
 
 void parser::end_body()
@@ -197,9 +203,9 @@ void parser::end_body()
 	end_node();
 	}
 
-void parser::start_par(raw_attr_list_t *pattrs)
+void parser::start_par(handler_arg_type attrs)
 	{
-	new_node("par", pattrs);
+	new_node("par", attrs);
 	}
 
 void parser::end_par()
@@ -207,9 +213,9 @@ void parser::end_par()
 	end_node();
 	}
 
-void parser::start_seq(raw_attr_list_t *pattrs)
+void parser::start_seq(handler_arg_type attrs)
 	{
-	new_node("seq", pattrs);
+	new_node("seq", attrs);
 	}
 
 void parser::end_seq()
@@ -217,9 +223,9 @@ void parser::end_seq()
 	end_node();
 	}
 
-void parser::start_switch(raw_attr_list_t *pattrs)
+void parser::start_switch(handler_arg_type attrs)
 	{
-	new_node("switch", pattrs);
+	new_node("switch", attrs);
 	}
 
 void parser::end_switch()
@@ -227,9 +233,9 @@ void parser::end_switch()
 	end_node();
 	}
 
-void parser::start_excl(raw_attr_list_t *pattrs)
+void parser::start_excl(handler_arg_type attrs)
 	{
-	new_node("excl", pattrs);
+	new_node("excl", attrs);
 	}
 
 void parser::end_excl()
@@ -237,9 +243,9 @@ void parser::end_excl()
 	end_node();
 	}
 
-void parser::start_priorityClass(raw_attr_list_t *pattrs)
+void parser::start_priorityClass(handler_arg_type attrs)
 	{
-	new_node("priorityClass", pattrs);
+	new_node("priorityClass", attrs);
 	}
 
 void parser::end_priorityClass()
@@ -247,89 +253,89 @@ void parser::end_priorityClass()
 	end_node();
 	}
 
-void parser::start_ref(raw_attr_list_t *pattrs)
+void parser::start_ref(handler_arg_type attrs)
 	{
-	new_node("ref", pattrs);
+	new_media_node("ref", attrs);
 	}
 
 void parser::end_ref()
 	{
-	end_node();
+	end_media_node();
 	}
 
-void parser::start_text(raw_attr_list_t *pattrs)
+void parser::start_text(handler_arg_type attrs)
 	{
-	new_node("text", pattrs);
+	new_media_node("text", attrs);
 	}
 
 void parser::end_text()
 	{
-	end_node();
+	end_media_node();
 	}
 
-void parser::start_audio(raw_attr_list_t *pattrs)
+void parser::start_audio(handler_arg_type attrs)
 	{
-	new_node("audio", pattrs);
+	new_media_node("audio", attrs);
 	}
 
 void parser::end_audio()
 	{
-	end_node();
+	end_media_node();
 	}
 
-void parser::start_img(raw_attr_list_t *pattrs)
+void parser::start_img(handler_arg_type attrs)
 	{
-	new_node("img", pattrs);
+	new_media_node("img", attrs);
 	}
 
 void parser::end_img()
 	{
-	end_node();
+	end_media_node();
 	}
 
-void parser::start_video(raw_attr_list_t *pattrs)
+void parser::start_video(handler_arg_type attrs)
 	{
-	new_node("video", pattrs);
+	new_media_node("video", attrs);
 	}
 
 void parser::end_video()
 	{
-	end_node();
+	end_media_node();
 	}
 
-void parser::start_animation(raw_attr_list_t *pattrs)
+void parser::start_animation(handler_arg_type attrs)
 	{
-	new_node("animation", pattrs);
+	new_media_node("animation", attrs);
 	}
 
 void parser::end_animation()
 	{
-	end_node();
+	end_media_node();
 	}
 
-void parser::start_textstream(raw_attr_list_t *pattrs)
+void parser::start_textstream(handler_arg_type attrs)
 	{
-	new_node("textstream", pattrs);
+	new_media_node("textstream", attrs);
 	}
 
 void parser::end_textstream()
 	{
-	end_node();
+	end_media_node();
 	}
 
-void parser::start_brush(raw_attr_list_t *pattrs)
+void parser::start_brush(handler_arg_type attrs)
 	{
-	new_node("brush", pattrs);
+	new_media_node("brush", attrs);
 	}
 
 void parser::end_brush()
 	{
-	end_node();
+	end_media_node();
 	}
 
-void parser::start_a(raw_attr_list_t *pattrs)
+void parser::start_a(handler_arg_type attrs)
 	{
-	new_node("a", pattrs);
+	new_node("a", attrs);
 	}
 
 void parser::end_a()
@@ -337,9 +343,9 @@ void parser::end_a()
 	end_node();
 	}
 
-void parser::start_anchor(raw_attr_list_t *pattrs)
+void parser::start_anchor(handler_arg_type attrs)
 	{
-	new_node("anchor", pattrs);
+	new_node("anchor", attrs);
 	}
 
 void parser::end_anchor()
@@ -347,9 +353,9 @@ void parser::end_anchor()
 	end_node();
 	}
 
-void parser::start_area(raw_attr_list_t *pattrs)
+void parser::start_area(handler_arg_type attrs)
 	{
-	new_node("area", pattrs);
+	new_node("area", attrs);
 	}
 
 void parser::end_area()
@@ -357,9 +363,9 @@ void parser::end_area()
 	end_node();
 	}
 
-void parser::start_animate(raw_attr_list_t *pattrs)
+void parser::start_animate(handler_arg_type attrs)
 	{
-	new_node("animate", pattrs);
+	new_node("animate", attrs);
 	}
 
 void parser::end_animate()
@@ -367,9 +373,9 @@ void parser::end_animate()
 	end_node();
 	}
 
-void parser::start_set(raw_attr_list_t *pattrs)
+void parser::start_set(handler_arg_type attrs)
 	{
-	new_node("set", pattrs);
+	new_node("set", attrs);
 	}
 
 void parser::end_set()
@@ -377,9 +383,9 @@ void parser::end_set()
 	end_node();
 	}
 
-void parser::start_animateMotion(raw_attr_list_t *pattrs)
+void parser::start_animateMotion(handler_arg_type attrs)
 	{
-	new_node("animateMotion", pattrs);
+	new_node("animateMotion", attrs);
 	}
 
 void parser::end_animateMotion()
@@ -387,9 +393,9 @@ void parser::end_animateMotion()
 	end_node();
 	}
 
-void parser::start_animateColor(raw_attr_list_t *pattrs)
+void parser::start_animateColor(handler_arg_type attrs)
 	{
-	new_node("animateColor", pattrs);
+	new_node("animateColor", attrs);
 	}
 
 void parser::end_animateColor()
@@ -397,9 +403,9 @@ void parser::end_animateColor()
 	end_node();
 	}
 
-void parser::start_transitionFilter(raw_attr_list_t *pattrs)
+void parser::start_transitionFilter(handler_arg_type attrs)
 	{
-	new_node("transitionFilter", pattrs);
+	new_node("transitionFilter", attrs);
 	}
 
 void parser::end_transitionFilter()
@@ -407,9 +413,9 @@ void parser::end_transitionFilter()
 	end_node();
 	}
 
-void parser::start_param(raw_attr_list_t *pattrs)
+void parser::start_param(handler_arg_type attrs)
 	{
-	new_node("param", pattrs);
+	new_node("param", attrs);
 	}
 
 void parser::end_param()
@@ -417,9 +423,9 @@ void parser::end_param()
 	end_node();
 	}
 
-void parser::start_transition(raw_attr_list_t *pattrs)
+void parser::start_transition(handler_arg_type attrs)
 	{
-	new_node("transition", pattrs);
+	new_node("transition", attrs);
 	}
 
 void parser::end_transition()
@@ -427,9 +433,9 @@ void parser::end_transition()
 	end_node();
 	}
 
-void parser::start_regPoint(raw_attr_list_t *pattrs)
+void parser::start_regPoint(handler_arg_type attrs)
 	{
-	new_node("regPoint", pattrs);
+	new_node("regPoint", attrs);
 	}
 
 void parser::end_regPoint()
@@ -437,9 +443,9 @@ void parser::end_regPoint()
 	end_node();
 	}
 
-void parser::start_prefetch(raw_attr_list_t *pattrs)
+void parser::start_prefetch(handler_arg_type attrs)
 	{
-	new_node("prefetch", pattrs);
+	new_node("prefetch", attrs);
 	}
 
 void parser::end_prefetch()
@@ -449,13 +455,13 @@ void parser::end_prefetch()
 
 
 //
-void parser::unknown_starttag(const char *tag, raw_attr_list_t *pattrs)
+void parser::unknown_starttag(const std::string& tag, handler_arg_type attrs)
 	{
-	std::basic_string<TCHAR> msg(TEXT("unknown start tag "));
-	msg += TextPtr(tag);
-	windowinterface::showmessage(msg.c_str());
+	std::string msg("unknown start tag ");
+	msg += tag;
+	windowinterface::showmessage(TextPtr(msg.c_str()));
 
-	new_node(tag, pattrs);
+	new_node(tag, attrs);
 	}
 
 void parser::unknown_endtag()
@@ -464,14 +470,12 @@ void parser::unknown_endtag()
 	}
 
 //
-void parser::new_node(const char *name, raw_attr_list_t *pattrs)
+void parser::new_node(const std::string& tag, handler_arg_type attrs)
 	{
-	if(m_curnode != NULL)
-		{
-		tree_node *p = new tree_node(name, pattrs);
-		m_curnode->appendChild(p);
-		m_curnode = p;
-		}
+	assert(m_curnode != NULL);
+	tree_node *p = new tree_node(tag, attrs);
+	m_curnode->appendChild(p);
+	m_curnode = p;
 	}
 
 void parser::end_node()
@@ -485,7 +489,26 @@ void parser::end_node()
 	m_curnode = m_curnode->up();
 	}
 
-void parser::show_error(std::string& msg)
+void  parser::new_media_node(const std::string& tag, handler_arg_type attrs)
+	{
+	assert(m_curnode != NULL);
+	tree_node *p = new tree_node(tag, attrs);
+	m_curnode->appendChild(p);
+	m_curnode = p;
+	}
+
+void  parser::end_media_node()
+	{
+	if(m_curnode == m_rootnode)
+		{
+		// end of document
+		m_curnode = NULL;
+		return;
+		}
+	m_curnode = m_curnode->up();
+	}
+
+void parser::show_error(const std::string& msg)
 	{
 	windowinterface::showmessage(TextPtr(msg.c_str()));
 	}
