@@ -4,10 +4,7 @@ channel view: node focus not redrawn on commit
 
 text channel: after a while the font manager fails with
 "ValidateFont: fmfntread failed."
-(suspect a file isn't closed...)
-Not much we can do about this -- seems to be a font mgr bug...
-
-text channel: join lines, but use blank lines to separate paragraphs...
+(Not much we can do about this -- "fixed in IRIX 4.0.1")
     
 block view: open/close must be done different; opening something that
 had a red button before zooming should open all of it, not keep it
@@ -31,8 +28,6 @@ block view: resize behavior is weird
 channel view: resize behavior is weird
 
 ------------------------------ FEATURES ---------------------------
-
-need quit dialog if there are unsaved changes
 
 player: "keep" attribute (default 1)
 
@@ -79,3 +74,10 @@ need global clipboard module
 block view: needs Copy command as well
 
 text channel: font spec should be a node attribute (as well as colors)
+
+text channel: join lines, but use blank lines to separate paragraphs...
+
+need quit dialog if there are unsaved changes (also for restore)
+
+channel info: if you change the channel name, all nodes are disinherited!
+(NB: can fix the tree, but not the clipboard...)
