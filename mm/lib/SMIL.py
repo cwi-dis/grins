@@ -549,13 +549,13 @@ class SMIL:
 
 	# fix up SMIL 2.0 namespace
 	for __el, __atd in attributes.items():
-		if ' ' not in __el:
+		if ' ' not in __el and ':' not in __el:
 			# SMIL 1.0 element, make a SMIL 2.0 copy
 			__atd = __atd.copy()
 			for __ns in SMIL2ns:
 				attributes[__ns+' '+__el] = __atd
 			for __at, __vl in __atd.items():
-				if ' ' not in __at:
+				if ' ' not in __at and ':' not in __at:
 					for __ns in SMIL2ns:
 						__atd[__ns+' '+__at] = __vl
 					del __atd[__at]
