@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Holding B.V.
   Distribute Type=2
   Step View=All
-  File Checksum=3317485624
+  File Checksum=559201333
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1411,6 +1411,26 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\sample_doc.html
+  Destination=%MAINDIR%\Templates\media\sample_doc.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\bin\win32\GRiNS.exe
+  Destination=%MAINDIR%\GRiNS.exe
+  Flags=0000000010000011
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\A2-SMIL-talking-book.grins
+  Destination=%MAINDIR%\Templates\A2-SMIL-talking-book.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\talkingbook.bmp
+  Destination=%MAINDIR%\Templates\talkingbook.bmp
+  Flags=0000000010000010
+end
+item: Install File
   Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
   Destination=%MAINDIR%\WebPro32.ocx
   Flags=0001001010000011
@@ -1578,16 +1598,6 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\Templates\media\realpix-template.rp
   Destination=%MAINDIR%\Templates\media\realpix-template.rp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\embedded_player.html
-  Destination=%MAINDIR%\Templates\embedded_player.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\external_player.html
-  Destination=%MAINDIR%\Templates\external_player.html
   Flags=0000000010000010
 end
 item: Install File
@@ -1830,7 +1840,67 @@ item: Create Shortcut
 end
 item: End Block
 end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Create Shortcut
+  Source=%MAINDIR%\GRiNS.exe
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Player for SMIL 1.0, v1.5.lnk
+  Icon Number=0
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Create Shortcut
+  Source=%MAINDIR%\GRiNS.exe
+  Destination=%CDESKTOPDIR%\GRiNS Player for SMIL 1.0, v1.5.lnk
+  Icon Number=0
+end
+item: End Block
+end
 item: Else Statement
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS for SMIL 1.0 v1.5
+  Command Line=%MAINDIR%\GRiNS_SV1.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL 1.0, v1.5
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL 1.0, v1.5
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
 end
 item: If/While Statement
   Variable=COMPONENTS
