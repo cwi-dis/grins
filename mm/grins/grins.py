@@ -66,10 +66,10 @@ class Main(MainDialog):
 			import windowinterface
 			windowinterface.showmessage('parsing URL %s failed' % url)
 		else:
+			self.tops.append(top)
 			top.setwaiting()
 			top.show()
 			top.player.show()
-			self.tops.append(top)
 			top.setready()
 
 	def close_callback(self):

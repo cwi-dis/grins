@@ -12,6 +12,8 @@ EMPTY = "(seq '1' ((channellist) (hyperlinks)))"
 
 class TopLevel:
 	def __init__(self, main, url):
+		self.__immediate = 0
+		self.__intimer = 0
 		self.waiting = 0
 		self.select_fdlist = []
 		self.select_dict = {}
@@ -55,16 +57,27 @@ class TopLevel:
 			self.main.tops.remove(self)
 
 	def timer_callback(self):
+		self.__intimer = 1
+		self.setwaiting()
 		self._last_timer_id = None
 		self.player.timer_callback()
+		while self.__immediate:
+			self.__immediate = 0
+			self.player.timer_callback()
+		self.setready()
+		self.__intimer = 0
 
 	def set_timer(self, delay):
 		if self._last_timer_id is not None:
 			windowinterface.canceltimer(self._last_timer_id)
 			self._last_timer_id = None
+		self.__immediate = 0
 		if delay:
-			self._last_timer_id = windowinterface.settimer(delay,
-				  (self.timer_callback, ()))
+			if delay <= 0.01 and self.__intimer:
+				self.__immediate = 1
+			else:
+				self._last_timer_id = windowinterface.settimer(
+					delay, (self.timer_callback, ()))
 
 	#
 	# View manipulation.
@@ -131,19 +144,19 @@ class TopLevel:
 ##		t0 = time.time()
 		mtype = mimetypes.guess_type(self.filename)[0]
 		if mtype == 'application/smil':
-			import SMILTree
-			self.root = SMILTree.ReadFile(self.filename, self.printfunc)
+			import SMILTreeRead
+			self.root = SMILTreeRead.ReadFile(self.filename, self.printfunc)
 		elif mtype == 'application/x-cmif':
-			import MMTree
-			self.root = MMTree.ReadFile(self.filename)
+			import MMRead
+			self.root = MMRead.ReadFile(self.filename)
 		else:
-			import SMILTree
+			import SMILTreeRead
 			if mtype[:6] != 'audio/' and \
 			   mtype[:6] != 'video/':
 				dur = ' dur="indefinite"'
 			else:
 				dur = ''
-			self.root = SMILTree.ReadString('''\
+			self.root = SMILTreeRead.ReadString('''\
 <smil>
   <body>
     <ref%s src="%s"/>
@@ -152,7 +165,6 @@ class TopLevel:
 ''' % (dur, self.filename), self.filename, self.printfunc)
 ##		t1 = time.time()
 ##		print 'done in', round(t1-t0, 3), 'sec.'
-		Timing.changedtimes(self.root)
 		self.context = self.root.GetContext()
 
 	def printfunc(self, msg):
@@ -228,17 +240,6 @@ class TopLevel:
 
 	def is_document(self, url):
 		return self.filename == url
-## 		import posix
-
-## 		try:
-## 			fn = self.filename
-## 			if self.dirname:
-## 				fn = os.path.join(self.dirname, self.filename)
-## 			ourdata = posix.stat(fn)
-## 			hisdata = posix.stat(filename)
-## 		except posix.error:
-## 			return 0
-## 		return (ourdata == hisdata)
 
 	def _getlocalexternalanchors(self):
 		fn = self.filename

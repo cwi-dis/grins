@@ -40,7 +40,6 @@ class PlayerCore(Selecter):
 		if self.pausing:
 			self.pause(0)
 		self.stopped()
-		self.showstate()
 	#
 	def playsubtree(self, node):
 		if not self.showing:
@@ -161,18 +160,19 @@ class PlayerCore(Selecter):
 		del self.channeltypes[name]
 
 	def newchannel(self, name, attrdict):
-		if not attrdict.has_key('type'):
+		type = attrdict.get('type')
+		if type is None:
 			raise TypeError, \
 				'channel ' +`name`+ ' has no type attribute'
-		type = attrdict['type']
 		from ChannelMap import channelmap
-		if not channelmap.has_key(type):
+		chclass = channelmap.get(type)
+		if chclass is None:
 			raise TypeError, \
 				'channel ' +`name`+ ' has bad type ' +`type`
-		chclass = channelmap[type]
 		ch = chclass(name, attrdict, self.scheduler, self)
-		ch.setpaused(self.pausing)
-		if self.waiting:
-			ch.setwaiting()
+		if self.pausing:
+			ch.setpaused(self.pausing)
+		if not self.waiting:
+			ch.setready()
 		self.channels[name] = ch
 		self.channeltypes[name] = type
