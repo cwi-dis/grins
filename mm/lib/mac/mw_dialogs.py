@@ -122,7 +122,7 @@ class MACDialog:
 	def _setlabel(self, item, text):
 		"""Set the text of a static text or edit text"""
 		text = _string2dialog(text)
-		print 'DBG: setlabel', item, text
+##		print 'DBG: setlabel', item, text
 		h = self._dialog.GetDialogItemAsControl(item)
 		Dlg.SetDialogItemText(h, text)
 

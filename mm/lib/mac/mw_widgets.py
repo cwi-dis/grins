@@ -57,6 +57,10 @@ class _ListWidget:
 		del self.wid
 		del self._data
 		del self.control
+		pass
+
+##	def __del__(self):
+##		print 'del', self
 		
 	def _activate(self, onoff):
 		pass # Handled by dialog mgr
@@ -233,10 +237,16 @@ class _SelectWidget:
 		
 	def close(self):
 ##		print 'DBG: close', self
-		self.menu.delete()
-		del self.menu
 		del self.wid
+##		self.control.SetControlDataHandle(Controls.kControlMenuPart,
+##				Controls.kControlPopupButtonMenuHandleTag, self.orig_menu)
 		del self.control
+##		self.menu.delete()
+		del self.menu
+		pass
+		
+##	def __del__(self):
+##		print 'del', self
 		
 	def _activate(self, onoff):
 		pass # Handled by dialog mgr
@@ -257,6 +267,8 @@ class _SelectWidget:
 		oldmenu = self.menu
 		self.menu = mw_menucmd.SelectPopupMenu(items)
 		mhandle, mid = self.menu.getpopupinfo()
+##		self.orig_menu = self.control.GetControlDataHandle(Controls.kControlMenuPart,
+##				Controls.kControlPopupButtonMenuHandleTag)
 		self.control.SetControlDataHandle(Controls.kControlMenuPart,
 				Controls.kControlPopupButtonMenuHandleTag, mhandle)
 ##		ControlAccessor.SetControlData(self.control, Controls.kControlMenuPart,

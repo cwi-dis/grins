@@ -160,7 +160,7 @@ class _Reader:
 				self.videocurtime, 1.0)
 		if tv < 0:
 			return self.videocurtime, None
-		print 'DBG: old', self.videocurtime, 'tv, dur', tv, dur
+##		print 'DBG: old', self.videocurtime, 'tv, dur', tv, dur
 		self.videocurtime = tv+dur
 		self.movie.SetMovieTimeValue(self.videocurtime)
 		self.movie.MoviesTask(0)
