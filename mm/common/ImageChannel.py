@@ -49,7 +49,7 @@ class ImageWindow() = ChannelWindow():
 			self.moveimage()
 	#
 	def render(self):
-		gl.RGBcolor(127, 127, 255) # Light blue?
+		gl.RGBcolor(255, 255, 255)
 		gl.clear()
 	#
 	def setimage(self, filename):
