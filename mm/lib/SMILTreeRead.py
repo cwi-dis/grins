@@ -26,16 +26,16 @@ SMIL_BASIC = 'text/smil-basic'
 coordre = re.compile(r'^(?P<x>\d+%?),(?P<y>\d+%?),'
 		     r'(?P<w>\d+%?),(?P<h>\d+%?)$')
 idref = re.compile(r'id\((?P<id>' + xmllib._Name + r')\)')
-counter_val = re.compile(r'(?:(?P<use_clock>' # hours:mins:secs[.fraction]
-			 r'(?:(?P<hours>\d{2}):)?'
-			 r'(?P<minutes>\d{2}):'
-			 r'(?P<seconds>\d{2})'
-			 r'(?P<fraction>\.\d+)?'
-			 r')|(?P<use_timecount>' # timecount[.fraction]unit
-			 r'(?P<timecount>\d+)'
-			 r'(?P<units>\.\d+)?'
-			 r'(?P<scale>h|min|s|ms)?)'
-			 r')$')
+clock_val = re.compile(r'(?:(?P<use_clock>' # hours:mins:secs[.fraction]
+		       r'(?:(?P<hours>\d{2}):)?'
+		       r'(?P<minutes>\d{2}):'
+		       r'(?P<seconds>\d{2})'
+		       r'(?P<fraction>\.\d+)?'
+		       r')|(?P<use_timecount>' # timecount[.fraction]unit
+		       r'(?P<timecount>\d+)'
+		       r'(?P<units>\.\d+)?'
+		       r'(?P<scale>h|min|s|ms)?)'
+		       r')$')
 id = re.compile(r'id\((?P<name>' + xmllib._Name + r')\)' # id(name)
 		r'\((?P<event>[^)]+)\)'			# (event)
 		r'(?:\+(?P<delay>.*))?$')		# +delay (optional)
@@ -46,6 +46,11 @@ clock = re.compile(r'(?P<name>local|remote):'
 		   r'(?P<fraction>\.\d+)?'
 		   r'(?:Z(?P<sign>[-+])(?P<ohours>\d{2}):(?P<omin>\d{2}))?$')
 screen_size = re.compile(r'\d+X\d+$')
+range = re.compile('^(?:'
+		   '(?:(?P<npt>npt)=(?P<nptstart>[^-]*)-(?P<nptend>[^-]*))|'
+		   '(?:(?P<smpte>smpte(?:-30-drop|-25)?)=(?P<smptestart>[^-]*)-(?P<smpteend>[^-]*))'
+		   ')$')
+smpte_time = re.compile(r'(?:(?:\d{2}:)?\d{2}:)?\d{2}(?P<f>\.\d{2})?$')
 
 class SMILParser(xmllib.XMLParser):
 	def __init__(self, context, verbose = 0):
@@ -197,6 +202,9 @@ class SMILParser(xmllib.XMLParser):
 		if self.__in_layout:
 			self.syntax_error('node in layout')
 			return
+		if self.__node:
+			# the warning comes later from xmllib
+			self.EndNode()
 		subtype = None
 		mtype = attributes.get('type')
 		if mtype is not None:
@@ -235,51 +243,91 @@ class SMILParser(xmllib.XMLParser):
 		if not attributes.has_key('src'):
 			self.syntax_error('node without src attribute')
 		elif mediatype in ('image', 'video'):
-			file = attributes['src']
-			try:
-				if mediatype == 'image':
-					import img
-					file = MMurl.urlretrieve(file)[0]
-					rdr = img.reader(None, file)
-					width = rdr.width
-					height = rdr.height
-					del rdr
-				else:
-					import mv
-					file = MMurl.urlretrieve(file)[0]
-					movie = mv.OpenFile(file,
-							    mv.MV_MPEG1_PRESCAN_OFF)
-					track = movie.FindTrackByMedium(mv.DM_IMAGE)
-					width = track.GetImageWidth()
-					height = track.GetImageHeight()
-					del movie, track
-			except:
+			ch = self.__channels.get(channel)
+			if ch is None:
+				self.__channels[channel] = ch = \
+					{'minwidth': 0, 'minheight': 0,
+					 'left': 0, 'top': 0,
+					 'width': 0, 'height': 0,
+					 'z-index': 0, 'scale': 'meet'}
+			x, y, w, h = ch['left'], ch['top'], ch['width'], ch['height']
+			# if we don't know the channel size and
+			# position in pixels, we need to look at the
+			# media objects to figure out the size to use.
+			if w > 0 and h > 0 and \
+			   type(w) == type(h) == type(0) and \
+			   (x == y == 0 or type(x) == type(y) == type(0)):
+				# size and position is given in pixels
 				pass
 			else:
-				ch = self.__channels.get(channel)
-				if ch is None:
-					self.__channels[channel] = ch = \
-						{'minwidth': 0, 'minheight': 0,
-						 'left': 0, 'top': 0,
-						 'width': 0, 'height': 0,
-						 'z-index': 0, 'scale': 'meet'}
-				node.__size = width, height
-				if ch['minwidth'] < width:
-					ch['minwidth'] = width
-				if ch['minheight'] < height:
-					ch['minheight'] = height
+				file = attributes['src']
+				try:
+					if mediatype == 'image':
+						import img
+						file = MMurl.urlretrieve(file)[0]
+						rdr = img.reader(None, file)
+						width = rdr.width
+						height = rdr.height
+						del rdr
+					else:
+						import mv
+						file = MMurl.urlretrieve(file)[0]
+						movie = mv.OpenFile(file,
+								    mv.MV_MPEG1_PRESCAN_OFF)
+						track = movie.FindTrackByMedium(mv.DM_IMAGE)
+						width = track.GetImageWidth()
+						height = track.GetImageHeight()
+						del movie, track
+				except:
+					pass
+				else:
+					node.__size = width, height
+					if ch['minwidth'] < width:
+						ch['minwidth'] = width
+					if ch['minheight'] < height:
+						ch['minheight'] = height
 		elif not self.__channels.has_key(channel):
 			self.__channels[channel] = {'left':0, 'top':0,
 						    'z-index':0, 'width':0,
 						    'height':0,
 						    'scale':'meet'}
-		range = attributes.get('range')
-		if range is not None:
-			try:
-				range = _parserange(range)
-			except error, msg:
-				self.syntax_error(msg)
-			# XXXX range is currently ignored
+		if mediatype == 'video':
+			range = attributes.get('range')
+			if range is not None:
+				try:
+					start, end = self.__parserange(range)
+				except error, msg:
+					self.syntax_error(msg)
+				else:
+					import mv
+					file = attributes['src']
+					try:
+						file = MMurl.urlretrieve(file)[0]
+						movie = mv.OpenFile(file, mv.MV_MPEG1_PRESCAN_OFF)
+						track = movie.FindTrackByMedium(mv.DM_IMAGE)
+						rate = track.GetImageRate()
+						del movie, track
+					except:
+						pass
+					else:
+						import smpte
+						if rate == 30:
+							cl = smpte.Smpte30
+						elif rate == 25:
+							cl = smpte.Smpte25
+						elif rate == 24:
+							cl = smpte.Smpte24
+						else:
+							cl = smpte.Smpte30Drop
+						if start:
+							start = cl(start).GetFrame()
+						else:
+							start = 0
+						if end:
+							end = cl(end).GetFrame()
+						else:
+							end = 0
+						node.attrdict['range'] = start, end
 		if self.__in_a:
 			# deal with hyperlink
 			href, ltype, id = self.__in_a[:3]
@@ -977,7 +1025,7 @@ class SMILParser(xmllib.XMLParser):
 	# helper methods
 
 	def __parsecounter(self, value, maybe_relative):
-		res = counter_val.match(value)
+		res = clock_val.match(value)
 		if res:
 			if res.group('use_clock'):
 				h, m, s, f = res.group('hours', 'minutes',
@@ -1012,7 +1060,7 @@ class SMILParser(xmllib.XMLParser):
 		if maybe_relative:
 			if value in ('begin', 'end'):
 				return value
-		raise MSyntaxError, 'bogus presentation counter'
+		raise error, 'bogus presentation counter'
 
 	def __parsetime(self, xpointer):
 		offset = 0
@@ -1033,7 +1081,7 @@ class SMILParser(xmllib.XMLParser):
 			elif counter == 'end':
 				counter = -1	# special event
 			else:
-				raise MSyntaxError, 'bogus presentation counter'
+				raise error, 'bogus presentation counter'
 		else:
 			counter = 0
 		if delay is not None:
@@ -1041,6 +1089,55 @@ class SMILParser(xmllib.XMLParser):
 		else:
 			delay = 0
 		return name, counter, delay
+
+	def __parserange(self, val):
+		res = range.match(val)
+		if res is None:
+			raise error, 'bogus range parameter'
+		if res.group('npt'):
+			start, end = res.group('nptstart', 'nptend')
+			if start:
+				start = float(self.__parsecounter(start, 0))
+			else:
+				start = None
+			if end:
+				end = float(self.__parsecounter(end, 0))
+			else:
+				end = None
+		else:
+			import smpte
+			smpteval = res.group('smpte')
+			if smpteval == 'smpte':
+				cl = smpte.Smpte30
+			elif smpteval == 'smpte-25':
+				cl = smpte.Smpte25
+			elif smpteval == 'smpte-30-drop':
+				cl = smpte.Smpte30Drop
+			else:
+				raise error, 'bogus range parameter'
+			start, end = res.group('smptestart', 'smpteend')
+			if start:
+				res1 = smpte_time.match(start)
+				if res1 is None:
+					raise error, 'bogus range parameter'
+				if not res1.group('f'):
+					# smpte and we have different
+					# ideas of which parts are
+					# optional
+					start = start + '.00'
+				start = cl(start)
+			else:
+				start = None
+			if end:
+				res2 = smpte_time.match(end)
+				if res2 is None:
+					raise error, 'bogus range parameter'
+				if not res1.group('f'):
+					end = end + '.00'
+				end = cl(end)
+			else:
+				end = None
+		return start, end
 
 	def __wholenodeanchor(self, node):
 		try:
@@ -1135,17 +1232,3 @@ def _uniqname(namelist, defname):
 	while ('%s_%d' % (defname, id)) in namelist:
 		id = id + 1
 	return '%s_%d' % (defname, id)
-
-npt_time = r'(?:now|\d+(?:\.\d*)?|\d+:\d{2}:\d{2}(?:\.\d*)?)?'
-utc_time = r'(?:\d{8}T\d{6}(?:\.\d*)?Z)?'
-smpte_time = r'(?:\d{1,2}:\d{1,2}:\d{1,2}(?::\d{1,2})?(?:\.\d*)?)?'
-range = re.compile('^(?:'
-		   '(?:npt='+npt_time+'-'+npt_time+')|'
-		   '(?:clock='+utc_time+'-'+utc_time+')|'
-		   '(?:smpte(?:-30-drop|-25)?='+smpte_time+'-'+smpte_time+')'
-		   ')$')
-
-def _parserange(val):
-	res = range.match(val)
-	if res is None:
-		raise error, 'bogus range parameter'
