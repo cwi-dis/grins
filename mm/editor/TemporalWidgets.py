@@ -748,7 +748,7 @@ class MultiMMWidget(TimeWidget):
 	def add(self, bob):
 		self.subwidgets.append(bob)
 	def destroy(self):
-		TimeWidget.destroy()
+		TimeWidget.destroy(self)
 		for i in self.subwidgets:
 			i.destroy()
 	def is_hit(self, coords):

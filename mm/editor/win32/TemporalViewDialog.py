@@ -47,9 +47,9 @@ class TemporalViewDialog(ViewDialog):
 
 	def _reg_events(self):
 		self.window.register(WMEVENTS.Mouse0Press, self.ev_mouse0press, None)
-		self.window.register(WMEVENTS.Mouse0Release, self.ev_mouse0release, None)
+#		self.window.register(WMEVENTS.Mouse0Release, self.ev_mouse0release, None)
 		self.window.register(WMEVENTS.Mouse2Press, self.ev_mouse2press, None)
-		self.window.register(WMEVENTS.Mouse2Release, self.ev_mouse2release, None)
+#		self.window.register(WMEVENTS.Mouse2Release, self.ev_mouse2release, None)
 
 ##		self.window.register(WMEVENTS.WindowExit, self.ev_exit, None)
 		
