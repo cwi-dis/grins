@@ -33,7 +33,7 @@ item: Global
   Distribute Path=\\UNIXSERVER\auginet\GRiNS
   Distribute Type=1
   Step View=All
-  File Checksum=2242030477
+  File Checksum=1430659704
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1130,8 +1130,8 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\lllicense.txt
-  Destination=%MAINDIR%\lllicense.txt
+  Source=C:\ufs\mm\cmif\Build\products\smil-20\player\license.txt
+  Destination=%MAINDIR%\license.txt
   Flags=0000000010000010
 end
 item: Install File
@@ -1350,7 +1350,7 @@ item: Create Shortcut
 end
 item: Create Shortcut
   Source=%MAINDIR%\license.txt
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Player for SMIL 2.0 Licence.lnk
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Player for SMIL 2.0 License.lnk
   Icon Number=0
 end
 item: If/While Statement
@@ -1386,9 +1386,8 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL 2.0 v2.0
+  Icon Name=GRiNS Player for SMIL 2.0
   Command Line=%MAINDIR%\GRiNSP_SV2.exe
-  Flags=01000000
 end
 item: End Block
 end
@@ -1399,9 +1398,8 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL 2.0 v2.0
+  Icon Name=GRiNS Player for SMIL 2.0
   Command Line=%MAINDIR%\GRiNSP_SV2.exe
-  Flags=01000000
 end
 item: End Block
 end
@@ -1412,9 +1410,8 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL 2.0 v2.0
+  Icon Name=GRiNS Player for SMIL 2.0
   Command Line=%MAINDIR%\GRiNSP_SV2.exe
-  Flags=01000000
 end
 item: End Block
 end
@@ -1425,9 +1422,8 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL 2.0 v2.0
+  Icon Name=GRiNS Player for SMIL 2.0
   Command Line=%MAINDIR%\GRiNSP_SV2.exe
-  Flags=01000000
 end
 item: End Block
 end
@@ -1438,7 +1434,43 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL 2.0 v2.0
+  Icon Name=GRiNS Player for SMIL 2.0
+  Command Line=%MAINDIR%\GRiNSP_SV2.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL 2.0
+  Command Line=%MAINDIR%\GRiNSP_SV2.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL 2.0
+  Command Line=%MAINDIR%\GRiNSP_SV2.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL 2.0
   Command Line=%MAINDIR%\GRiNSP_SV2.exe
   Flags=01000000
 end
@@ -1458,7 +1490,7 @@ item: End Block
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL 2.0 Licence
+  Icon Name=GRiNS Player for SMIL 2.0 License
   Command Line=%MAINDIR%\license.txt
 end
 item: Add ProgMan Icon
@@ -1557,7 +1589,7 @@ end
 item: Edit Registry
   Total Keys=1
   Key=SMILfile\shell\open\command
-  New Value=C:\PROGRA~1\ORATRIX\GRINSP~1\GRiNSP_SV2.exe "%1"
+  New Value=%MAINDIR%\GRiNSP_SV2.exe "%%1"
 end
 item: Edit Registry
   Total Keys=1
@@ -1568,6 +1600,14 @@ item: Edit Registry
   Total Keys=1
   Key=GRiNSProject\shell\play\command
   New Value=C:\PROGRA~1\ORATRIX\GRINSP~1\GRiNSP_SV2.exe "%%1"
+end
+item: Edit Registry
+  Total Keys=1
+  Key=SMILfile\shell\open\command
+end
+item: Edit Registry
+  Total Keys=1
+  Key=SMILfile\shell\open\command
 end
 item: Self-Register OCXs/DLLs
   Description=Updating System Configuration, Please Wait...
