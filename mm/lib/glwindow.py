@@ -4,8 +4,8 @@
 # to use an actual window object class.
 
 # The main reason for existance is that we need to dispatch GL events
-# to the correct code.  The abstract has callbacks for each type of
-# event that GL can send; your concrete class must enable the events
+# to the correct code.  The abstract class has callbacks for each type
+# of event that GL can send; your concrete class must enable the events
 # that it is interested in.  The code for the main loop that dispatches
 # events is also here; it uses the FORMS event interface so you can
 # also use forms.  *** This means that your window must use the FORMS
@@ -19,27 +19,29 @@ import fl, FL
 
 
 # List of windows, indexed by window id converted to string.
+
 windowmap = {}
 
 
+# Registration procedure.
+# Events will be handled automatically whenever you call
+# fl.do_forms() or fl.check_forms().
+
+def register(object, wid):
+	fl.set_event_call_back(dispatch)
+	windowmap[`wid`] = object
+	object.glwindow_wid = wid
+
+
+# Unregistration procedure.
+
+def unregister(object):
+	del windowmap[`object.glwindow_wid`]
+
+
 # The base class for GL windows
+
 class glwindow():
-	#
-	# Registration method.  Call this from your init method,
-	# with the window ID of the window you've created.
-	# Events will be handled automatically whenever you call
-	# fl.do_forms() or fl.check_forms().
-	#
-	def register(self, wid):
-		fl.set_event_call_back(dispatch)
-		self.glwindow_wid = wid
-		windowmap[`wid`] = self
-	#
-	# Unregistration method.
-	# Call this ***without argument*** when you close the window.
-	#
-	def unregister(self):
-		del windowmap[`self.glwindow_wid`]
 	#
 	# Event dispatchers, named after the events.
 	# Note: the window is *not* made current; you must call winset()!
@@ -88,20 +90,28 @@ class glwindow():
 		self.winshut()
 
 
+# Install backward compatibility (un)registration methods.
+
+glwindow.register = register
+glwindow.unregister = unregister
+
+
 # Global state
+
 class Struct(): pass
 state = Struct()
 state.focuswindow = None
 state.focuswid = None
 
 
-# Some utility functions
-
 # Old functions that used to be more complicated:
+
 mainloop = fl.do_forms
 check = fl.check_forms
 
+
 # Event dispatcher, installed as FORMS' event callback
+
 def dispatch(dev, val):
 	if dev = REDRAW:
 		# Ignore events for unregistered windows
@@ -158,6 +168,7 @@ def dispatch(dev, val):
 
 
 # Debug/warning output function for dispatch()
+
 def report(s):
 	print 'glwindow.dispatch:', s
 
@@ -186,4 +197,38 @@ def setgeometry(h, v, width, height):
 		scrwidth = gl.getgdesc(GD_XPMAX)
 		scrheight = gl.getgdesc(GD_YPMAX)
 		x, y = h, scrheight-v-height
+		# Correction for window manager frame size
+		x = x - WMCORR_X
+		y = y + WMCORR_Y
 		gl.prefposition(x, x+width-1, y, y+height-1)
+
+
+# Return the geometry parameters of current GL window, in a format
+# that can be passed to setgeometry to reconstruct the window's geometry.
+
+def getgeometry():
+	x, y = gl.getorigin()
+	width, height = gl.getsize()
+	scrwidth = gl.getgdesc(GD_XPMAX)
+	scrheight = gl.getgdesc(GD_YPMAX)
+	return x, scrheight - y - height, width, height
+
+
+# Hack, hack: some X window managers interpret the prefered position
+# and size as including the window frame.  Different window managers
+# have different deviations of the window position.  This wouldn't
+# be a big problem, except that if you repeatedly close a window and
+# reopen it at its last position, it tends to drift away.
+# To compensate for this, the user can set the environment variable
+# WMCORR to the (x,y) correction constants.  For TWM, for instance,
+# WMCORR=1,21 appears to be valid.  For 4Dwm, use WMCORR=0,0 (default).
+# The correction is applied by setgeometry().
+
+import posix
+if posix.environ.has_key('WMCORR'):
+	WMCORR_X, WMCORR_Y = eval(posix.environ['WMCORR'])
+	# Make sure they are integers:
+	WMCORR_X = int(WMCORR_X)
+	WMCORR_Y = int(WMCORR_Y)
+else:
+	WMCORR_X, WMCORR_Y = 0, 0
