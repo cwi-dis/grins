@@ -1242,6 +1242,24 @@ class HierarchyView(HierarchyViewDialog):
 			type = 'ext'
 
 		dftchannel = None
+		# try to find out the default channel following two rules (evaluated in the right order):
+		# 1) according to the GRiNS project_default_region_xxx attributes
+		# 2) if at this stage, no default channel found, XXX (to do)
+
+		# find the project_default_region_xxx attribute to look at according to the channel type
+		if chtype in ('video', 'RealPix'):
+			attributeName = 'project_default_region_video'
+		elif chtype in ('text', 'RealText'):
+			attributeName = 'project_default_region_text'
+		elif chtype == 'sound':
+			attributeName = 'project_default_region_sound'
+		else:
+			# default
+			attributeName = 'project_default_region_image'
+		# the default channel is stored in the container nodes
+		if pnode != None:
+			dftchannel = pnode.GetInherAttrDef(attributeName, None)
+					
 		self.toplevel.setwaiting()
 		if where <> 0:
 			layout = MMAttrdefs.getattr(parent, 'layout')
