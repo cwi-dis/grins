@@ -88,6 +88,9 @@ class AnimationTarget:
 # animparent can be target
 
 class AnimationData:
+	KEY_TIMES_WRITE_PREC = 3
+	KEY_TIMES_EPSILON = 0.0001
+
 	def __init__(self, root, target, animparent):
 		self._target = AnimationTarget(root, target, animparent) # animation target
 		self._data = []   # a list of key frames (rect, color)
@@ -336,7 +339,7 @@ class AnimationData:
 		if keyTime<0.0:
 			keyTime = 0.0
 		elif keyTime>=1.0:
-			keyTime = 0.9999
+			keyTime = 1.0 - AnimationData.KEY_TIMES_EPSILON
 		return keyTime
 
 	def _setWriteFlagsOn(self):
@@ -397,7 +400,7 @@ class AnimationData:
 		return animateMotionValues, animateWidthValues, animateHeightValues, animateColorValues
 
 	def _timesToKeyTimesAttr(self):
-		return self._floatListToStr(self._times)
+		return self._floatListToStr(self._times, prec = AnimationData.KEY_TIMES_WRITE_PREC)
 
 	def _intListToStr(self, sl):
 		str = ''
@@ -405,10 +408,10 @@ class AnimationData:
 			str = str + '%d;' % val
 		return str[:-1]
 
-	def _floatListToStr(self, sl):
+	def _floatListToStr(self, sl, prec = -1):
 		str = ''
 		for val in sl:
-			str = str + '%s;' % fmtfloat(val)
+			str = str + '%s;' % fmtfloat(val, prec = prec)
 		return str[:-1]
 		
 	def _posListToStr(self, sl):
