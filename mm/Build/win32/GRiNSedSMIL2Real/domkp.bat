@@ -68,6 +68,8 @@ if exist FreezeOpts del FreezeOpts
 echo -x NodeInfo >> FreezeOpts
 echo -x AnchorEdit >> FreezeOpts
 
+echo -x SMILTreeWriteXhtmlSmil >> FreezeOpts
+
 rem The channels...
 echo -x ExternalChannel >> FreezeOpts
 echo -x MACVideoChannel >> FreezeOpts
