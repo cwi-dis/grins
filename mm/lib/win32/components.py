@@ -1,15 +1,28 @@
 __version__ = "$Id$"
 
+""" @win32doc|components
+The components defined in this module are:
+	1. a sufficient family of light-weight controls (Button,Edit,etc)
+	2. various helper independent dialogs 
+The controls are not based on MFC but on win32 Sdk.
+They are at the same level as MFC is to the Sdk 
+(a fact that justifies the name light weight)
+This is in contrast to all the objects exported by the 
+win32ui pyd which exports inherited from MFC objects
+"""
+
 import win32ui,win32con
 from pywin.mfc import dialog
 import commctrl
 Sdk=win32ui.GetWin32Sdk()
 import grinsRC
 from usercmd import *
+import win32mu
 
 [FALSE, TRUE] = range(2)
 error = 'lib.win32.components.error'
 
+# Base class for SDK based controls
 class LightWeightControl:
 	def __init__(self,parent=None,id=-1,hwnd=None):
 		self._id=id
@@ -82,10 +95,12 @@ class LightWeightControl:
 # shortcut
 Control = LightWeightControl
 
+# Button control class
 class Button(Control):
 	def __init__(self,owner=None,id=-1):
 		Control.__init__(self,owner,id)
 
+# RadioButton control class
 class RadioButton(Control):
 	def __init__(self,owner=None,id=-1):
 		Control.__init__(self,owner,id)
@@ -100,6 +115,7 @@ class RadioButton(Control):
 		elif i==win32con.BST_UNCHECKED:return 0
 		return -1
 
+# CheckButton control class
 class CheckButton(Control):
 	def __init__(self,owner=None,id=-1):
 		Control.__init__(self,owner,id)
@@ -114,12 +130,14 @@ class CheckButton(Control):
 		elif i==win32con.BST_UNCHECKED:return 0
 		return -1
 
+# Static control class
 class Static(Control):
 	def __init__(self,owner=None,id=-1):
 		Control.__init__(self,owner,id)
 	def settext(self,str):
 		self.sendmessage_ls(win32con.WM_SETTEXT,0,str)
-				
+
+# Edit control class 				
 class Edit(Control):
 	def __init__(self,owner=None,id=-1):
 		Control.__init__(self,owner,id)
@@ -153,7 +171,7 @@ class Edit(Control):
 	# gettext
 	# settext
 
-
+# Listbox control class
 class ListBox(Control):
 	def __init__(self,owner=None,id=-1):
 		Control.__init__(self,owner,id)
@@ -180,26 +198,31 @@ class ListBox(Control):
 		self.sendmessage(win32con.LB_RESETCONTENT)
 
 	# cmif interface
+	# initialize cmif related part
 	def __icmif(self):
 		self.getlistitem=self.gettext
 		self.selectitem=self.setcursel
 		self.getselection=self.getcursel
 		self.delalllistitems=self.resetcontent
+	# Add a list item
 	def addlistitem(self, item, pos):
 		if pos < 0:
 			pos = self.getcount()
 		self.insertstring(pos,item)
 	
+	# Replace the item at position
 	def replace(self, pos, newitem):
 		self.deletestring(pos)
 		self.insertstring(pos,newitem)
-
+	
+	# Return the list
 	def getlist(self):
 		l=[]
 		for ix in range(self.getcount()):
 			l.append(self.gettext(ix))
 		return l
 
+	# Add the list of entries
 	def addlistitems(self,list,ix=0):
 		if type(list)==type(''): 
 			self.insertstring(ix,list)
@@ -210,17 +233,19 @@ class ListBox(Control):
 		elif ix>=0:
 			for pos in range(ix,len(list)):
 				self.insertstring(pos,list[pos])
-					
+
+	# Return  the selection index				
 	def getselected(self):
 		pos = self.getselection()
 		if pos<0:return None
 		return pos
 
+	# Return the item at the index
 	def getlistitem(self,ix):
 		return self.gettext(ix)
 
 
-
+# CompoBox control class
 class ComboBox(Control):
 	def __init__(self,owner=None,id=-1):
 		Control.__init__(self,owner,id)
@@ -245,6 +270,8 @@ class ComboBox(Control):
 		return self.sendmessage_rs(win32con.CB_GETLBTEXT,ix,n)
 	def resetcontent(self):
 		self.sendmessage(win32con.CB_RESETCONTENT)
+	def deletestring(self,index):
+		self.sendmessage(win32con.CB_DELETESTRING,index)
 
 	# cmif interface
 	def __icmif(self):
@@ -272,6 +299,7 @@ class ComboBox(Control):
 		if not optionlist: return
 		for pos in range(startpos,len(optionlist)):
 			self.insertstring(pos,optionlist[pos])
+			self._optionlist.append(optionlist[pos])
 	def initoptions(self, optionlist,seloption=None):
 		if not optionlist: return
 		self.setoptions(optionlist)
@@ -280,11 +308,24 @@ class ComboBox(Control):
 		for item in optionlist:
 			if type(item)==type(()):
 				self.addstring(item[0])
+				self._optionlist.append(item[0])
 		self.setcursel(0)
+	def setsensitive(self,pos,f):
+		seloption=self.getcursel()
+		str=self._optionlist[pos]
+		if f:
+			self.deletestring(pos)
+			self.insertstring(pos,str) # add it
+		else: 
+			self.deletestring(pos) # remove it
+			str='['+str+']'
+			self.insertstring(pos,str)
+		self.setcursel(seloption)
 
 ####################################################
 # TAB CONTROL STUFF
 
+# Tab control class
 class TabCtrl(Control):
 	TCM_FIRST  =            0x1300      # Tab control messages
 	TCN_FIRST =-550       
@@ -306,6 +347,7 @@ class TabCtrl(Control):
 
 ##############################
 
+# Any class derved from this class behaves as a dictionary
 class ControlsDict:
 	def __init__(self):
 		self._subwnddict={}	
@@ -319,6 +361,7 @@ class ControlsDict:
 	def has_key(self, key): return self._subwnddict.has_key(key)
 	
 ##############################
+# Base class for dialogs created using a resource template 
 class ResDialog(dialog.Dialog):
 	def __init__(self,id,parent=None,resdll=None):
 		if not resdll:
@@ -327,13 +370,17 @@ class ResDialog(dialog.Dialog):
 		dialog.Dialog.__init__(self,id,resdll,parent)
 		self._subwndlist = [] # controls add thrmselves to this list
 
+	# Get from the OS and set the window handles to the controls
 	def attach_handles_to_subwindows(self):
 		hdlg = self.GetSafeHwnd()
 		for ctrl in self._subwndlist:
 			ctrl.attach(Sdk.GetDlgItem(hdlg,ctrl._id))
+	# Call init method for each window
 	def init_subwindows(self):
 		for w in self._subwndlist:
 			w.init()
+
+	# Helper method that calls the callback given the event
 	def onevent(self,event):
 		try:
 			func, arg = self._callbacks[event]			
@@ -342,11 +389,13 @@ class ResDialog(dialog.Dialog):
 		else:
 			apply(func,arg)
 
+# A special class that it is both an MFC window and A LightWeightControl
 from pywin.mfc import window
 class WndCtrl(LightWeightControl,window.Wnd):
 	def create_wnd_from_handle(self):
 		window.Wnd.__init__(self,win32ui.CreateWindowFromHandle(self._hwnd))
 
+# Implementation of the splash screen
 class SplashDlg(ResDialog):
 	def __init__(self,arg,version):
 		ResDialog.__init__(self,grinsRC.IDD_SPLASH)
@@ -368,20 +417,21 @@ class SplashDlg(ResDialog):
 		self.loadbmp()
 		return ResDialog.OnInitDialog(self)
 
+	def close(self):
+		if hasattr(self,'DestroyWindow'):
+			self.DestroyWindow()
+			
 	# draw splash
 	def OnDrawItem(self,params):
 		lParam=params[3]
 		hdc=Sdk.ParseDrawItemStruct(lParam)
 		dc=win32ui.CreateDCFromHandle(hdc)
-		dcmem=win32ui.CreateDC()
-		dcmem.CreateCompatibleDC(dc)
-		old=dcmem.SelectObject(self._bmp)
-		l,t,r,b=self._splash.GetClientRect()
-		dc.BitBlt((l,t),(r-l,b-t),dcmem,(0,0),win32con.SRCCOPY)
-		dcmem.SelectObject(old)
+		rct=self._splash.GetClientRect()
+		win32mu.BitBltBmp(dc,self._bmp,rct)
 		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
-		dc.FrameRectFromHandle((l,t,r,b),br)
+		dc.FrameRectFromHandle(rct,br)
 		Sdk.DeleteObject(br)
+		dc.DeleteDC()
 
 	# load splash
 	def loadbmp(self):
@@ -390,6 +440,7 @@ class SplashDlg(ResDialog):
 		self._bmp=win32ui.CreateBitmap()
 		self._bmp.LoadBitmap(grinsRC.IDB_SPLASH,resdll)
 
+# Implementation of the about dialog
 class AboutDlg(ResDialog):
 	def __init__(self,arg,version,parent=None):
 		ResDialog.__init__(self,grinsRC.IDD_ABOUT,parent)
@@ -405,28 +456,27 @@ class AboutDlg(ResDialog):
 		self.loadbmp()
 		return ResDialog.OnInitDialog(self)
 
+	# Response to the WM_DRAWITEM
 	# draw splash
 	def OnDrawItem(self,params):
 		lParam=params[3]
 		hdc=Sdk.ParseDrawItemStruct(lParam)
 		dc=win32ui.CreateDCFromHandle(hdc)
-		dcmem=win32ui.CreateDC()
-		dcmem.CreateCompatibleDC(dc)
-		old=dcmem.SelectObject(self._bmp)
-		l,t,r,b=self._splash.GetClientRect()
-		dc.BitBlt((l,t),(r-l,b-t),dcmem,(0,0),win32con.SRCCOPY)
-		dcmem.SelectObject(old)
+		rct=self._splash.GetClientRect()
+		win32mu.BitBltBmp(dc,self._bmp,rct)
 		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
-		dc.FrameRectFromHandle((l,t,r,b),br)
+		dc.FrameRectFromHandle(rct,br)
 		Sdk.DeleteObject(br)
+		dc.DeleteDC()
 
-	# load splash
+	# load splash bmp
 	def loadbmp(self):
 		import __main__
 		resdll=__main__.resdll
 		self._bmp=win32ui.CreateBitmap()
 		self._bmp.LoadBitmap(grinsRC.IDB_SPLASH,resdll)
 
+# Implementation of the open loaction dialog
 class OpenLocationDlg(ResDialog):
 	def __init__(self,callbacks=None,parent=None):
 		ResDialog.__init__(self,grinsRC.IDD_DIALOG_OPENLOCATION,parent)
@@ -466,6 +516,8 @@ class OpenLocationDlg(ResDialog):
 
 ##############################
 
+# Implementation of the Layout name dialog
+
 class LayoutNameDlg(ResDialog):
 	def __init__(self,promp,default_text,cb_ok,cancelCallback=None,parent=None):
 		ResDialog.__init__(self,grinsRC.IDD_LAYOUT_NAME,parent)
@@ -497,6 +549,7 @@ class LayoutNameDlg(ResDialog):
 		w._cbd_ok=(self.__okchannel, (0,))
 		w._cbd_cancel=(self.__okchannel, (1,))
 
+# Implementation of the new channel dialog
 class NewChannelDlg(ResDialog):
 	def __init__(self,title,default,grab=1,parent=None):
 		ResDialog.__init__(self,grinsRC.IDD_NEW_CHANNEL,parent)
@@ -526,6 +579,7 @@ class NewChannelDlg(ResDialog):
 		if self._cbd_cancel:
 			apply(apply,self._cbd_cancel)
 
+# Implementation of a modeless message box
 class ModelessMessageBox(ResDialog):
 	def __init__(self,text,title,parent=None):
 		ResDialog.__init__(self,grinsRC.IDD_MESSAGE_BOX,parent)
@@ -535,6 +589,7 @@ class ModelessMessageBox(ResDialog):
 		self.SetWindowText(title)
 		self._text.settext(text)
 
+# Implementation of the showmessage dialog needed by the core
 class showmessage:
 	def __init__(self, text, mtype = 'message', grab = 1, callback = None,
 		     cancelCallback = None, name = 'message',
@@ -567,10 +622,11 @@ class showmessage:
 		elif cancelCallback and self._res==win32con.IDCANCEL:
 			apply(apply,cancelCallback)
 
+	# Returns user response
 	def getresult(self):
 		return self._res
 
-
+# Implementation of a question message box
 class _Question:
 	def __init__(self, text, parent = None):
 		self.answer = None
@@ -584,11 +640,12 @@ class _Question:
 #			return
 		self.answer = answer
 
+# Shows a question to the user and returns the response
 def showquestion(text, parent = None):
 	q=_Question(text, parent = parent)
 	return q.answer
 
-			
+# A Multiple choice dialog implementation		
 class _MultChoice:
 	def __init__(self, prompt, msg_list, defindex, parent = None):
 		#self.looping = FALSE
@@ -600,10 +657,12 @@ class _MultChoice:
 		str='_MultChoice request'+prompt
 		win32ui.MessageBox(str)
 
+# Displays multiple choice dialog
 def multchoice(prompt, list, defindex, parent = None):
 	m=_MultChoice(prompt, list, defindex, parent = parent)
 	return None
 
+# A general one line modal input dialog implementation
 # use DoModal
 class InputDialog(dialog.Dialog):
 	def __init__(self, prompt, defValue, title ):
@@ -617,7 +676,8 @@ class InputDialog(dialog.Dialog):
 		self.SetWindowText(self.title)
 		return dialog.Dialog.OnInitDialog(self)
 
-# use CreateWindow
+#
+# A general one line modeless input dialog implementation
 # if not closed by def OK,Cancel call DestroyWindow()
 # design decision: Dlg closes itself or the callback? 
 class ModelessInputDialog(InputDialog):
@@ -635,6 +695,7 @@ class ModelessInputDialog(InputDialog):
 			self._cancel_callback(self)
 		return self._obj_.OnCancel()
 
+# Displays a message and requests from the user to select Yes or No or Cancel
 def GetYesNoCancel(promp,parent=None):
 	if parent:m=parent
 	else: m=win32ui
@@ -643,7 +704,7 @@ def GetYesNoCancel(promp,parent=None):
 	elif res==win32con.IDNO:return 1
 	else: return 2
 	
-
+# The create box dialog implementation
 class CreateBoxDlg(ResDialog):
 	def __init__(self,text,callback,cancelCallback,parent=None):
 		ResDialog.__init__(self,grinsRC.IDD_CREATE_BOX1,parent)
@@ -664,7 +725,7 @@ class CreateBoxDlg(ResDialog):
 		if self._cancelCallback:
 			apply(apply,self._cancelCallback)
 
-
+# A general dialog that displays a combo with options for the user to select.
 class SimpleSelectDlg(ResDialog):
 	def __init__(self,list, title = '', prompt = None,parent = None):
 		ResDialog.__init__(self,grinsRC.IDD_SELECT_ONE,parent)
@@ -706,6 +767,7 @@ class SimpleSelectDlg(ResDialog):
 		if hasattr(self,'_obj_') and self._obj_:	
 			self.HookKeyStroke(cb,key)
 
+# Displays a dialog with options for the user to select
 def Dialog(list, title = '', prompt = None, grab = 1, vertical = 1,
 	   parent = None):
 	dlg=SimpleSelectDlg(list,title,prompt,parent)
@@ -727,6 +789,7 @@ import afxres,commctrl
 # GRiNS resource ids
 import grinsRC
 
+# Base class for dialog bars
 class DlgBar(window.Wnd,ControlsDict):
 	AFX_IDW_DIALOGBAR=0xE805
 	def __init__(self):
@@ -740,7 +803,7 @@ class DlgBar(window.Wnd,ControlsDict):
 	def hide(self):
 		self.ShowWindow(win32con.SW_HIDE)
 
-
+# A dialog bar with a message to be displayed while in the create box mode
 class CreateBoxBar(DlgBar):
 	def __init__(self,frame,text,callback=None,cancelCallback=None):
 		DlgBar.__init__(self)

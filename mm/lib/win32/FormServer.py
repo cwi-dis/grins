@@ -1,3 +1,16 @@
+__version__ = "$Id$"
+
+""" @win32doc|FormServer
+This module implements a form server apropriate to 
+the architecture chosen.
+The other modules request from this server a form 
+using a standard interface.
+
+The purpose of this module is to simplify the 
+application's MainFrame
+and to isolate dependencies between 
+forms implementation and modules that use them.
+"""
 
 # forms served
 from AttrEditForm import AttrEditForm
@@ -28,11 +41,13 @@ class IFormServerContext:
 import win32ui,win32con,win32mu
 from pywin.mfc import window,object,docview,dialog
 
+# The ChildFrame purpose is to host the forms in its client area
 class ChildFrame(window.MDIChildWnd):
 	def __init__(self,form=None):
 		window.MDIChildWnd.__init__(self,win32ui.CreateMDIChild())
 		self._form=form
 
+	# Create the OS window
 	def Create(self, title, rect = None, parent = None, maximize=0):
 		self._title=title
 		style = win32con.WS_CHILD | win32con.WS_OVERLAPPEDWINDOW
@@ -41,6 +56,7 @@ class ChildFrame(window.MDIChildWnd):
 		self.HookMessage(self.onMdiActivate,win32con.WM_MDIACTIVATE)
 		self.ShowWindow(win32con.SW_SHOW)
 
+	# Change window style before creation
 	def PreCreateWindow(self, csd):
 		csd=self._obj_.PreCreateWindow(csd)
 		cs=win32mu.CreateStruct(csd)
@@ -53,7 +69,8 @@ class ChildFrame(window.MDIChildWnd):
 		#cs.style =cs.style & (~(win32con.WS_MINIMIZEBOX|win32con.WS_MAXIMIZEBOX))
 
 		return cs.to_csd()
-
+	
+	# Called by the framework when this is activated or deactivated
 	def onMdiActivate(self,params):
 		msg=win32mu.Win32Msg(params)
 		if msg._lParam==self._hwnd:
@@ -62,7 +79,8 @@ class ChildFrame(window.MDIChildWnd):
 		elif msg._wParam==self._hwnd:
 			if self._form:
 				self._form.onActivate(0)
-		
+	
+	# Creates and sets the view 	
 	# create view (will be created by default if)
 	def OnCreateClient(self, cp, context):
 		if context is not None and context.template is not None:
@@ -74,6 +92,8 @@ class ChildFrame(window.MDIChildWnd):
 			self.RecalcLayout()
 			v.OnInitialUpdate()
 		self._hwnd=self.GetSafeHwnd()
+
+	# Set the view from the argument view class
 	def setview(self,viewclass,id=None):
 		doc=docview.Document(docview.DocTemplate())
 		v = viewclass(doc)
@@ -82,6 +102,7 @@ class ChildFrame(window.MDIChildWnd):
 		self.RecalcLayout()
 		v.OnInitialUpdate()
 
+	# Response to user close command
 	# the user is closing the wnd directly
 	def OnClose(self):
 		# we must let the view to decide:
@@ -90,19 +111,33 @@ class ChildFrame(window.MDIChildWnd):
 		else:
 			self._obj_.OnClose()
 
+	# Called by the framework before destroying the window
 	def OnDestroy(self, msg):
 		window.MDIChildWnd.OnDestroy(self, msg)
 
+	# Called by the framework after the window has been created
 	def InitialUpdateFrame(self, doc, makeVisible):
 		pass
-	
+
+	# Returns the parent MDIFrameWnd	
 	def getMDIFrame(self):
 		return self.GetMDIFrame()
 
+	# Target for commands that are enabled
+	def OnUpdateCmdEnable(self,cmdui):
+		cmdui.Enable(1)
+
+	# Target for commands that are dissabled
+	def OnUpdateCmdDissable(self,cmdui):
+		cmdui.Enable(0)
+
+# This class implements a Form Server. Any client can request
+# a form by passing its string id
 class FormServer:
 	def __init__(self,context):
 		self._context=context
 
+	# Returns a new form object
 	def newformobj(self,strid):
 		formno=self.getformno(strid)
 		if not self.hosted(formno):
@@ -111,28 +146,33 @@ class FormServer:
 			formclass=appform[formno]['class']
 			return formclass()
 
+	# Show the form passed as argument
 	def showform(self,form,strid):
 		if not form or not form._obj_:
 			return
 		formno=self.getformno(strid)
 		self.frameform(form,formno)
 
+	# Create the form with string id
 	def createform(self,strid):
 		formno=self.getformno(strid)
 		form=self._newformobj(formno)
 		self.frameform(form,formno)
 		return form
 
+	# Create a new form with formno
 	def _newformobj(self,formno):
 		formclass=appform[formno]['class'] 
 		return formclass(self._context.getdoc())
 
+	# Returns the form number from the string id
 	def getformno(self,strid):
 		for formno in appform.keys():
 			if appform[formno]['id']==strid:
 				return formno
 		raise error,'undefined requested form'
 	
+	# Create a ChildFrame to host this view
 	def frameform(self,form,formno):
 		f=ChildFrame(form)
 		rc=self._context.getPrefRect()
@@ -142,6 +182,7 @@ class FormServer:
 		f.Create(form._title,rc,self._context,0)
 		self._context.Activate(f)
 
+	# Returns the hosted attribute of this form (dialog bar or view)
 	def hosted(self,formno):
 		return appform[formno]['hosted']
 
