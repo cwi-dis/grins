@@ -1133,7 +1133,7 @@ class AnimateElementParser:
 			return None
 		
 		if self.__animtype == 'invalid':
-			return self.nullAnimator()
+			return None
 
 		################
 		# set element
@@ -1190,7 +1190,7 @@ class AnimateElementParser:
 				anim = EffIntTupleAnimator(attr, domval, coords, dur)
 				self.__setTimeManipulators(anim)
 				return anim
-			return self.nullAnimator()
+			return None
 
 		################
 		# by-only animation for additive attributes
@@ -1220,7 +1220,7 @@ class AnimateElementParser:
 				anim = MotionAnimator(attr, domval, path, dur, mode, times, splines, accumulate, additive='sum')
 				self.__setTimeManipulators(anim)
 				return anim			
-			return self.nullAnimator()
+			return None
 
 		################
 		# animateColor or attrtype=='color'
@@ -1248,7 +1248,7 @@ class AnimateElementParser:
 					accumulate, additive)
 				self.__setTimeManipulators(anim)
 				return anim
-			return self.nullAnimator()
+			return None
 
 		################
 		# animate
