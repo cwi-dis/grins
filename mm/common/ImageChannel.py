@@ -32,9 +32,10 @@ class ImageWindow() = ChannelWindow():
 	def clear(self):
 		self.parray = None
 		self.xsize = self.ysize = 0
-		gl.winset(self.wid)
-		gl.RGBcolor(255, 255, 255)
-		gl.clear()
+		if self.wid <> 0:
+			gl.winset(self.wid)
+			gl.RGBcolor(255, 255, 255)
+			gl.clear()
 	#
 	def setimage(self, (filename, scale)):
 		self.parray = None
