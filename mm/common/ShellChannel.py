@@ -1,47 +1,31 @@
-# Shell channel
-
-# This lets you run a shell command.
-
-import time
-import os
-import string
 from Channel import Channel
-import MMAttrdefs
-
+import string
+import os
 
 class ShellChannel(Channel):
-
-	# Declaration of attributes that are relevant to this channel,
-	# respectively to nodes belonging to this channel.
-
-	chan_attrs = []
-	node_attrs = ['duration', 'file']
-
 	def init(self, name, attrdict, scheduler, ui):
 		self.pid = None
 		return Channel.init(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
-		return '<ShellChannel instance, name=' + `self.name` + '>'
+		return '<ShellChannel instance, name=' + `self._name` + '>'
 
-	def play(self, node, callback, arg):
+	def do_play(self, node):
 		self.pid = None
-		if self.is_showing():
-			type = node.GetType()
-			if type == 'imm':
-				list = node.GetValues()
-				cmd = string.joinfields(list, '\n') + '\n'
-				prog = '/bin/sh'
-				argv = ['sh', '-c', cmd]
-			else:
-				prog = \
-				    self.scheduler.toplevel.getattr(node, \
-				    'file')
-				argv = [prog]
-			self.pid = startprog(prog, argv)
-		Channel.play(self, node, callback, arg)
+		type = node.GetType()
+		if type == 'imm':
+			list = node.GetValues()
+			cmd = string.joinfields(list, '\n') + '\n'
+			prog = '/bin/sh'
+			argv = ['sh', '-c', cmd]
+		else:
+			prog = self.getfilename(node)
+			argv = [prog]
+		self.pid = startprog(prog, argv)
 
-	def done(self, dummy):
+	def playdone(self, dummy):
+		if debug:
+			print 'ShellChannel.playdone('+`self`+')'
 		if self.pid:
 			try:
 				pid, sts = os.waitpid(self.pid, 1)
@@ -50,16 +34,19 @@ class ShellChannel(Channel):
 				pid, sts = 0, 0
 			if pid == 0:
 				# Try again in a second
-				self.qid = self.scheduler.enter(1, 0, \
-					self.done, 0)
+				self._qid = self._scheduler.enter(1, 0, \
+					self.playdone, 0)
 				return
 			if sts <> 0:
 				print 'Exit status:', hex(sts)
 		self.pid = None
-		Channel.done(self, dummy)
+		Channel.playdone(self, dummy)
 
-	def stop(self):
+	def playstop(self):
+		if debug:
+			print 'ShellChannel.playstop('+`self`+')'
 		if self.pid:
+			import time
 			try:
 				os.kill(self.pid, 15)
 				time.millisleep(300)
@@ -73,8 +60,7 @@ class ShellChannel(Channel):
 			except os.error, msg:
 				print 'kill:', msg
 		self.pid = None
-		Channel.stop(self)
-
+		Channel.playstop(self)
 
 def startprog(prog, argv):
 	try:
