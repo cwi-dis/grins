@@ -56,11 +56,44 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name gear32sd
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name ddraw
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name wmfapi
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name vaud2wm
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name vid2wm
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name grinspapi
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name dsound
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name wingdi
+    End Project Dependency
 }}}
 
 ###############################################################################
 
 Project: "GRiNS"=..\..\Build\win32\GRiNS\GRiNS.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "GRiNS Player SMIL2"="..\..\Build\win32\GRiNS Player for SMIL 2.0\GRiNS Player for SMIL 2.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -85,6 +118,30 @@ Package=<4>
 ###############################################################################
 
 Project: "GRiNS SMIL"="..\..\Build\win32\GRiNS Editor for SMIL 1.0\GRiNS Editor for SMIL 1.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "GRiNS SMIL Boston"="..\..\Build\win32\GRiNS Editor for SMIL 2.0\GRiNS Editor for SMIL 2.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "GRiNS Snap"="..\..\Build\win32\GRiNS Snap!\GRiNS Snap!.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -180,6 +237,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "ddraw"=..\DXMedia\ddraw\ddraw.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "dshow"=..\..\mmpython\wmsdk\dshow.dsp - Package Owner=<4>
 
 Package=<5>
@@ -192,7 +261,46 @@ Package=<4>
 
 ###############################################################################
 
+Project: "dsound"=..\DXMedia\dsound\dsound.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "gear32sd"=..\ACCUSOFT\src\gear32sd.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "grinspapi"=..\COM\grinscomsvr\grinspapi.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name grinsproxy
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "grinsproxy"=..\COM\grinscomsvr\idl\grinsproxy.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -342,7 +450,31 @@ Package=<4>
 
 ###############################################################################
 
+Project: "vaud2wm"=..\DXMedia\src\aud2wm\aud2wm.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "vid2rm"=..\DXMedia\src\vid2rm\vid2rm.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "vid2wm"=..\DXMedia\src\vid2wm\vid2wm.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -395,6 +527,30 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name win32trace
     End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "wingdi"=..\winsdk\wingdi\wingdi.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "wmfapi"=..\wmsdk\wmfsdk\src\wmfapi.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
 }}}
 
 ###############################################################################
