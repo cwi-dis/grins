@@ -53,6 +53,9 @@ mpeg_video::~mpeg_video()
 		}
 	}
 
+size_t mpeg_video::get_stream_pos() 
+	{ return m_bitstream->m_curpos;}
+
 void mpeg_video::error(const char *text)
 	{
 	fprintf(stderr,text);
