@@ -9,7 +9,6 @@ class DropTarget:
 		if not self._isregistered:
 			if hasattr(self,'RegisterDropTarget'):
 				self.RegisterDropTarget()
-				print 'RegisterDropTarget',self
 			else:
 				pass
 				#self.DragAcceptFiles(1)
