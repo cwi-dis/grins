@@ -1457,7 +1457,7 @@ class SelectionMenuDialog:
 
 
 class InputDialog:
-	def __init__(self, prompt, default, cb):
+	def __init__(self, prompt, default, cb, cancelCallback = None):
 	#	attrs = {'dialogStyle': Xmd.DIALOG_FULL_APPLICATION_MODAL,
 	#		 'colormap': toplevel._default_colormap,
 	#		 'visual': toplevel._default_visual,
@@ -1476,7 +1476,8 @@ class InputDialog:
 	#	text.value = default
 	#	self._form.ManageChild()
 
-		self.CancelCallback = cb
+		self.OkCallback = cb
+		self.CancelCallback = cancelCallback
 		self._controls = []
 
 		self._nexty = 0
@@ -1531,29 +1532,19 @@ class InputDialog:
 			return
 		value = cmifex2.GetText(self._edit)
 		self.close()
-		if self.CancelCallback:
-			func = self.CancelCallback
-			func(value)
-
-	def old_ok(self, w, client_data, call_data):
-		if self.is_closed():
-			return
-		value = call_data.value
-		self.close()
-		if client_data:
-			client_data(value)
+		if self.OkCallback:
+			self.OkCallback(value)
+			self.OkCallback = None
 
 	def _cancel(self, params):
 #		print "Cancel pressed"
 		if self.is_closed():
 			return
+		if self.CancelCallback:
+			apply(apply, self.CancelCallback)
+			self.CancelCallback = None
 		self.close()
 
-
-	def old_cancel(self, w, client_data, call_data):
-		if self.is_closed():
-			return
-		self.close()
 
 	def setcursor(self, cursor):
 		WIN32_windowbase._win_setcursor(self._form, cursor)
