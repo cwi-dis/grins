@@ -323,7 +323,10 @@ class HierarchyView(HierarchyViewDialog):
 		fnode = self.focusnode
 		fntype = fnode.GetType()	
 
-		commands = commands + self.noslidecommands
+		if fnode.WillPlay():
+			commands = commands + self.noslidecommands
+		else:
+			commands = commands + self.noslidecommands[2:]
 		if self.toplevel.links and self.toplevel.links.has_interesting(): # ??!! -mjvdg
 			commands = commands + self.finishlinkcommands
 		if len(self.event_sources) > 0:
