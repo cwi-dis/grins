@@ -2952,6 +2952,12 @@ class MMNode:
 				arc = MMSyncArc(self_body, 'end', srcnode=child, event='end', delay=0)
 				self_body.arcs.append((child, arc))
 				child.add_arc(arc)
+				# we need this in case all children
+				# (or the relevant child) has an
+				# unresolved end and we have a min
+				# duration
+				srlist.append(([(SCHED_DONE, child)],
+					       scheddone_actions))
 			elif schedule or termtype == 'ALL':
 				scheddone_events.append((SCHED_DONE, child))
 			for arc in self.FilterArcList(MMAttrdefs.getattr(child, 'endlist')):
