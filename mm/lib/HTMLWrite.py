@@ -32,6 +32,20 @@ def nameencode(value):
 ##		value = regsub.gsub('"', '&quot;', value)
 	return '"' + value + '"'
 
+# CMIF channel types that have a visible representation
+visible_channel_types={
+	'text':1,
+	'image':1,
+	'video': 1,
+	'movie':1,
+	'mpeg':1,
+	'html':1,
+	'label':1,
+	'RealPix':1,
+	'RealText':1,
+	'RealVideo':1,
+}
+
 # This string is written at the start of a SMIL file.
 EVALcomment = '<!-- Created with an evaluation copy of GRiNS -->\n'
 
@@ -89,10 +103,10 @@ class IndentedFile:
 
 Error = 'Error'
 
-def WriteFile(root, filename, embed=0, embedlayout=0, evallicense = 0):
+def WriteFile(root, filename, smilurl, embed=0, embedlayout=0, evallicense = 0):
 	fp = IndentedFile(open(filename, 'w'))
 	try:
-		writer = HTMLWriter(root, fp, filename, embed, embedlayout, evallicense)
+		writer = HTMLWriter(root, fp, filename, smilurl, embed, embedlayout, evallicense)
 	except Error, msg:
 		from windowinterface import showmessage
 		showmessage(msg, mtype = 'error')
@@ -106,14 +120,14 @@ def WriteFile(root, filename, embed=0, embedlayout=0, evallicense = 0):
 		macostools.touched(fss)
 
 import FtpWriter
-def WriteFTP(root, filename, ftpparams, embed=0, embedlayout=0, evallicense = 0):
+def WriteFTP(root, filename, smilurl, ftpparams, embed=0, embedlayout=0, evallicense = 0):
 	# XXXX For the moment (to be fixed):
 	host, user, passwd, dir = ftpparams
 	try:
 		ftp = FtpWriter.FtpWriter(host, filename, user=user, passwd=passwd, dir=dir, ascii=1)
 		fp = IndentedFile(ftp)
 		try:
-			writer = HTMLWriter(root, fp, filename, embed, embedlayout, evallicense)
+			writer = HTMLWriter(root, fp, filename, smilurl, embed, embedlayout, evallicense)
 		except Error, msg:
 			from windowinterface import showmessage
 			showmessage(msg, mtype = 'error')
@@ -129,18 +143,19 @@ class MyStringIO(StringIO.StringIO):
 	def close(self):
 		pass
 
-def WriteString(root, embed=0, embedlayout=0):
+def WriteString(root, smilurl, embed=0, embedlayout=0):
 	fp = IndentedFile(MyStringIO())
-	writer = HTMLWriter(root, fp, '<string>', embed, embedlayout)
+	writer = HTMLWriter(root, fp, '<string>', smilurl, embed, embedlayout)
 	writer.write()
 	return fp.fp.getvalue()
 
 
 class HTMLWriter:
-	def __init__(self, node, fp, filename, embed = 0, embedlayout = 0, evallicense = 0):
+	def __init__(self, node, fp, filename, smilurl, embed = 0, embedlayout = 0, evallicense = 0):
 		self.__embed = embed
 		self.__embedlayout = embedlayout
 		self.evallicense = evallicense
+		self.smilurl = smilurl
 
 		self.__isopen = 0
 		self.__stack = []
@@ -219,8 +234,17 @@ class HTMLWriter:
 		self.__stack.append(tag)
 		
 	def writedata(self, data):
+		if self.__isopen:
+			self.fp.write('>\n')
+			self.__isopen = 0
 		self.fp.write(data)
 
+	def writecomment(self, comment):
+		if self.__isopen:
+			self.fp.write('>\n')
+			self.__isopen = 0
+		self.fp.write('<!-- %s -->\n'%comment)
+		
 	def write(self):
 		import version
 		ctx = self.root.GetContext()
@@ -255,17 +279,60 @@ class HTMLWriter:
 		self.writedata("This presentation uses G2. You don't have it? You're hosed....\n")
 		self.pop()
 		
+		playername = "clip_1"
+		
 		if self.__embed:
 			if self.__embedlayout:
+				channels = self.get_visible_channels()
+				for region, x, y, w, h in channels:
+					if not w or not h:
+						self.writecomment('Region %s used for non-visible media only, skipped'%region)
+						continue
+					self.writecomment('Object for region %s, position %d, %d'%(region, x, y))
+					self.writetag('p')
+					self.push()
+					self.writeobject(w, h, [
+						('controls', 'ImageWindow'),
+						('console', playername),
+						('autostart', 'false'),
+						('region', region),
+						('src', self.smilurl)])
+					self.pop()
+				self.writecomment('Object for control panel')
 				self.writetag('p')
 				self.push()
-				self.writedata('Imagine lots of EMBED tags here with layout.\n')
+				self.writeobject(275, 125, [
+					('controls', 'All'),
+					('console', playername)])
 				self.pop()
 			else:
+				# First create an output area. Optional: don't do this if there are
+				# only non-visible media (and, hence, no toplevel layout channel)
+				if self.top_levels:
+					if len(self.top_levels) > 1:
+						raise Error, "Multiple toplevel windows"
+					w, h = self.top_channel_size(self.top_levels[0])
+					if not w or not h:
+						raise Error, "Zero-sized presentation window"
+					self.writecomment('Object for output window')
+					self.writetag('p')
+					self.push()
+					self.writeobject(w, h, [
+						('controls', 'ImageWindow'),
+						('console', playername),
+						('autostart', 'false'),
+						('src', self.smilurl)])
+					self.pop()
+				else:
+					self.writecomment('No visible media, hence no output window')
+				self.writecomment('Object for control panel')
 				self.writetag('p')
 				self.push()
-				self.writedata('Imagine an EMBED tag here.\n')
+				self.writeobject(275, 125, [
+					('controls', 'All'),
+					('console', playername)])
 				self.pop()
+					
 		else:
 			self.writetag('p')
 			self.push()
@@ -277,7 +344,42 @@ class HTMLWriter:
 ##		self.writegrinslayout()
 		self.pop() # End of body
 		self.close()
-
+		
+	def get_visible_channels(self):
+		if not self.top_levels:
+			return []
+		if len(self.top_levels) > 1:
+			raise Error, "Multiple toplevel windows"
+		top_w, top_h = self.top_channel_size(self.top_levels[0])
+		if not top_w or not top_h:
+			raise Error, "Zero-sized presentation window"
+		rv = []
+		for ch in self.root.GetContext().channels:
+			if not visible_channel_types.has_key(ch['type']):
+				continue
+			name = self.ch2name[ch]
+			x, y, w, h = self.channel_pos(ch, top_w, top_h)
+			rv.append(name, x, y, w, h)
+		return rv
+		
+	def writeobject(self, width, height, arglist):
+		self.writetag('object', [
+			('classid', 'clsid:CFCDAA03-8BE4-11cf-B84B-0020AFBBCCFA'),
+			('width', `width`),
+			('height', `height`)])
+		self.push()
+		for arg, val in arglist:
+			self.writetag('param', [(arg, val)])
+		# Trick: if the browser understands the object tag but not the embed
+		# tag (inside it) it will quietly skip it.
+		arglist = arglist[:]
+		arglist.append(('width', `width`))
+		arglist.append(('height', `height`))
+		arglist.append(('type', 'audio/x-pn-realaudio-plugin'))
+		arglist.append(('nojava', 'true'))
+		self.writetag('embed', arglist)
+		self.pop()
+		
 	def calcchnames1(self, node):
 		"""Calculate unique names for channels; first pass"""
 		context = node.GetContext()
@@ -300,8 +402,43 @@ class HTMLWriter:
 		if not self.__title and channels:
 			# no channels with windows, so take very first channel
 			self.__title = channels[0].name
+			
+	def channel_pos(self, ch, basewidth, baseheight):
+		if not ch.has_key('base_winoff'):
+			return None, None, None, None
+		units = ch.get('units', 2)
+		x, y, w, h = ch['base_winoff']
+		if units == 0:
+			# convert mm to pixels
+			# (assuming 100 dpi)
+			x = int(x / 25.4 * 100.0 + .5)
+			y = int(y / 25.4 * 100.0 + .5)
+			w = int(w / 25.4 * 100.0 + .5)
+			h = int(h / 25.4 * 100.0 + .5)
+		if units == 1:
+			x = x * basewidth + .5
+			y = y * baseheight + .5
+			w = w * basewidth + .5
+			h = h * baseheight + .5
+		# else: units are already in pixels
+		return int(x), int(y), int(w), int(h)
 
-	def writelayout(self):
+	def top_channel_size(self, ch):
+		if not ch.has_key('winsize'):
+			return None, None
+		units = ch.get('units', 0)
+		w, h = ch['winsize']
+		if units == 0:
+			# convert mm to pixels
+			# (assuming 100 dpi)
+			w = int(w / 25.4 * 100.0 + .5)
+			h = int(h / 25.4 * 100.0 + .5)
+		if units == 1:
+			raise Error, "Cannot use relative coordinates for toplevel window"
+		# else: units are already in pixels
+		return int(w), int(h)
+
+	def XXXXwritelayout(self):
 		"""Write the layout section"""
 		self.writetag('layout') # default: type="text/smil-basic-layout"
 		self.push()
