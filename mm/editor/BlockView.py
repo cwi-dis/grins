@@ -52,7 +52,7 @@ TMARG = 5 # top margin width (half as wide)
 BMARG = 5 # bottom margin width (half as wide)
 MMARG = 5 # margin between title button and real buttons
 BH=20	# the height of the open/close button and title
-BW=20   # width of open/close button
+BW=10   # width of open/close button
 
 class BlockView () = ViewDialog(), BasicDialog () :
 	#
@@ -66,14 +66,6 @@ class BlockView () = ViewDialog(), BasicDialog () :
 			MMAttrdefs.getattr(self.root, 'blockview_winsize')
 		self = BasicDialog.init(self, (width, height, 'Hierarchy'))
 		return self.new(width, height, self.root)
-	#
-	def show(self):
-		BasicDialog.show(self)
-		self.toplevel.checkviews()
-	#
-	def hide(self):
-		BasicDialog.hide(self)
-		self.toplevel.checkviews()
 	#
 	# new makes an object of type 'blockview'
 	#
@@ -145,9 +137,10 @@ class BlockView () = ViewDialog(), BasicDialog () :
 			bx = x + LMARG
 			by = y + h - TMARG - BH
 			o=self.form.add_button(NORMAL_BUTTON,bx,by,BW,BH,'')
-			o.boxtype = DOWN_BOX
+			o.boxtype = BORDER_BOX
 			o.set_call_back(self._openclose_callback, node)
-			o.col2 = GL.RED
+			o.col2 = GL.YELLOW
+			node.bv_toosmall = 0
 			o.set_button(0)
 			node.bv_openclose	= o
 			# Create the title text:
@@ -162,11 +155,20 @@ class BlockView () = ViewDialog(), BasicDialog () :
 			if type in ('grp', 'seq') :
 				h = h / len(kids)
 				dx, dy = 0, h
+				toosmall = (h < TMARG+BMARG+BH)
 			else: 				 # parallel node
 				w = w / len(kids)
 				dx, dy = w, 0
-			x,y = x+LMARG,y+BMARG
-			w,h = w-LMARG-RMARG,h-TMARG-BMARG
+				toosmall = (w < LMARG+RMARG+BW)
+			if toosmall:
+			    node.bv_OC = 0
+			    node.bv_openclose.col1 = GL.RED
+			    node.bv_toosmall = 1
+			    x, y = 0, 0
+			    w, h = 1, 1
+			else:
+			    x,y = x+LMARG,y+BMARG
+			    w,h = w-LMARG-RMARG,h-TMARG-BMARG
 			num = 1
 			if node.GetType() = 'seq':
 				kids = kids[:]
@@ -187,7 +189,8 @@ class BlockView () = ViewDialog(), BasicDialog () :
 			del node.bv_labeltext
 		node.bv_obj.hide_object ()	# should be rm_object()
 		del node.bv_obj
-		for child in node.GetChildren () :
+		if node.bv_OC:
+		    for child in node.GetChildren () :
 			self.rmBlockview (child)
 	#
 	# presentlabels : sets the appropiate labels in the FORMS object.
@@ -199,7 +202,8 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		node.bv_labeltext.label = MMAttrdefs.getattr(node, 'name')
 		node.bv_obj.label = ''
 		num = 1
-		for child in node.GetChildren () :
+		if node.bv_OC:
+		    for child in node.GetChildren () :
 			self.presentlabels (child)
 	#
 	# change_focus_callback
@@ -254,9 +258,13 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		if self.commanddict.has_key (key) :
 			self.commanddict[key][0](self)
 		else :
-			fl.show_message ('What is :',key,'')
+			if fl.show_question ('Unknown command',key, \
+						'Do you want help?'):
+			    self.toplevel.help.givehelp('Hierarchy', \
+					'Keyboard commands')
 
 	def _openclose_callback (self, (obj, node)) :
+		if node.bv_toosmall: return
 		node.bv_form.freeze_form ()
 
 		node.bv_OC = (not node.bv_OC)		# toggle open/close
@@ -293,10 +301,8 @@ class BlockView () = ViewDialog(), BasicDialog () :
 			return None
 
 def helpfunc (bv) :
-	dict = bv.commanddict
-	print 'known commands :'
-	for c in dict.keys () :
-		print '      ' + c + ': ' + dict[c][1]
+	bv.toplevel.help.givehelp('Hierarchy')
+
 
 import AttrEdit
 
