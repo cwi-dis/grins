@@ -18,7 +18,10 @@ Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "mtpycall.h"
 
+#include <ddraw.h>
+
 #pragma comment (lib,"winmm.lib")
+#pragma comment (lib,"ddraw.lib")
 
 static PyObject *ErrorObject;
 
@@ -735,6 +738,7 @@ newLargeIntObject(LONGLONG val)
 	self->ob_ival=val;
 	return self;
 }
+
 
 ///////////////////////////////////////////
 ///////////////////////////////////////////
@@ -1695,52 +1699,9 @@ DDWMWriter_WriteSample(DDWMWriterObject *self, PyObject *args)
 		return NULL;	
 	HRESULT hr;
 	QWORD cnsSampleTime = linsSampleTime->ob_ival; // 100-ns units
-	Py_BEGIN_ALLOW_THREADS
-	hr = self->pIWMWriter->WriteSample(dwInputNum,cnsSampleTime,dwFlags,obj->pI);
-	Py_END_ALLOW_THREADS
+	hr = self->pIWMWriter->WriteSample(dwInputNum, cnsSampleTime, dwFlags, obj->pI);
 	if (FAILED(hr)){
 		seterror("DDWMWriter_WriteSample", hr);
-		return NULL;
-	}
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-
-static char DDWMWriter_WriteBuffer__doc__[] =
-""
-;
-static PyObject *
-DDWMWriter_WriteBuffer(DDWMWriterObject *self, PyObject *args)
-{
-	BYTE *pBuffer;
-	DWORD dwInputNum;
-	DWORD dwSampleSize;
-	DWORD msec;
-	DWORD dwFlags=0; // WM_SF_CLEANPOINT
-	if (!PyArg_ParseTuple(args, "iiii|i", &dwInputNum, &msec, &pBuffer, &dwSampleSize, &dwFlags))
-		return NULL;
-	
-	INSSBuffer *pSample=NULL;
-	HRESULT hr = self->pIWMWriter->AllocateSample(dwSampleSize,&pSample);
-	if (FAILED(hr)){
-		seterror("DDWMWriter_WriteBuffer:AllocateSample", hr);
-		return NULL;
-	}
-	BYTE *pbsBuffer;
-	DWORD cbBuffer;
-	hr = pSample->GetBufferAndLength(&pbsBuffer,&cbBuffer);
-	if (FAILED(hr)){
-		pSample->Release();
-		seterror("DDWMWriter_WriteBuffer:GetBufferAndLength", hr);
-		return NULL;
-	}
-	CopyMemory(pbsBuffer,pBuffer,cbBuffer<dwSampleSize?cbBuffer:dwSampleSize);
-
-	QWORD cnsec = QWORD(msec)*QWORD(10000);
-	hr = self->pIWMWriter->WriteSample(dwInputNum, cnsec, dwFlags, pSample);
-	pSample->Release();
-	if (FAILED(hr)){
-		seterror("DDWMWriter_WriteBuffer:WriteSample", hr);
 		return NULL;
 	}
 	Py_INCREF(Py_None);
@@ -1819,45 +1780,73 @@ DDWMWriter_SetVideoFormat(DDWMWriterObject *self, PyObject *args)
 	return Py_None;
 	}
 
-static char DDWMWriter_WriteDDSurface__doc__[] =
+static char DDWMWriter_AllocateDDSample__doc__[] =
 ""
 ;
 static PyObject *
-DDWMWriter_WriteDDSurface(DDWMWriterObject *self, PyObject *args)
+DDWMWriter_AllocateDDSample(DDWMWriterObject *self, PyObject *args)
 {
-	BYTE *pBuffer;
-	int pitch, nrows;
-	DWORD msec;
-	DWORD dwFlags=0; // WM_SF_CLEANPOINT
-	if (!PyArg_ParseTuple(args, "(iii)i|i", &pBuffer, &pitch, &nrows, &msec, &dwFlags))
+	PyObject *obj;
+	if (!PyArg_ParseTuple(args, "O", &obj))
 		return NULL;
 
-	DWORD dwSampleSize = nrows*pitch;
+	typedef struct {
+		PyObject_HEAD
+		IDirectDrawSurface* pI;
+	} DirectDrawSurfaceObject;
 	
-	INSSBuffer *pSample=NULL;
-	HRESULT hr = self->pIWMWriter->AllocateSample(dwSampleSize,&pSample);
+	DirectDrawSurfaceObject *ddsobj = (DirectDrawSurfaceObject *)obj;
+	DDSURFACEDESC desc;
+	ZeroMemory(&desc, sizeof(desc));
+	desc.dwSize=sizeof(desc);
+	HRESULT hr;
+	hr = ddsobj->pI->Lock(0,&desc,DDLOCK_WAIT | DDLOCK_READONLY, 0);
 	if (FAILED(hr)){
-		seterror("DDWMWriter_WriteDDSurface:AllocateSample", hr);
+		seterror("DDWMWriter_AllocateDDSample:Lock", hr);
+		return NULL;
+	}	
+
+	BYTE *pBuffer=(BYTE*)desc.lpSurface;
+	int nrows = int(desc.dwHeight);
+	int pitch = int(desc.lPitch);
+
+	NSSBufferObject *bufobj = newNSSBufferObject();
+	hr = self->pIWMWriter->AllocateSample(nrows*pitch,&bufobj->pI);
+	if (FAILED(hr)){
+		ddsobj->pI->Unlock(0);
+		Py_DECREF(bufobj);
+		seterror("DDWMWriter_AllocateDDSample:AllocateSample", hr);
 		return NULL;
 	}
+
 	BYTE *pbsBuffer;
-	DWORD cbBuffer;
-	hr = pSample->GetBufferAndLength(&pbsBuffer,&cbBuffer);
-	if (FAILED(hr)){
-		pSample->Release();
-		seterror("DDWMWriter_WriteDDSurface:GetBufferAndLength", hr);
-		return NULL;
-	}
+	bufobj->pI->GetBuffer(&pbsBuffer);
 	for(int row=nrows-1;row>=0;row--){
 		CopyMemory(pbsBuffer, pBuffer + row*pitch, pitch);
 		pbsBuffer += pitch;
 	}
-		
+	ddsobj->pI->Unlock(0);
+	
+	return (PyObject*)bufobj;
+}
+
+static char DDWMWriter_WriteVideoSample__doc__[] =
+""
+;
+static PyObject *
+DDWMWriter_WriteVideoSample(DDWMWriterObject *self, PyObject *args)
+{
+	DWORD msec;
+	NSSBufferObject *obj;
+	DWORD dwFlags=0; // WM_SF_CLEANPOINT
+	if (!PyArg_ParseTuple(args, "iO!|i", &msec, &NSSBufferType, &obj, &dwFlags))
+		return NULL;
+
+	HRESULT hr;
 	QWORD cnsec = QWORD(msec)*QWORD(10000);
-	hr = self->pIWMWriter->WriteSample(self->dwVideoInputNum, cnsec, dwFlags, pSample);
-	pSample->Release();
+	hr = self->pIWMWriter->WriteSample(self->dwVideoInputNum, cnsec, dwFlags, obj->pI);
 	if (FAILED(hr)){
-		seterror("DDWMWriter_WriteDDSurface:WriteSample", hr);
+		seterror("DDWMWriter_WriteVideoSample", hr);
 		return NULL;
 	}
 	Py_INCREF(Py_None);
@@ -1876,11 +1865,11 @@ static struct PyMethodDef DDWMWriter_methods[] = {
 	{"Flush", (PyCFunction)DDWMWriter_Flush, METH_VARARGS, DDWMWriter_Flush__doc__},
 	{"AllocateSample", (PyCFunction)DDWMWriter_AllocateSample, METH_VARARGS, DDWMWriter_AllocateSample__doc__},
 	{"WriteSample", (PyCFunction)DDWMWriter_WriteSample, METH_VARARGS, DDWMWriter_WriteSample__doc__},
-	{"WriteBuffer", (PyCFunction)DDWMWriter_WriteBuffer, METH_VARARGS, DDWMWriter_WriteBuffer__doc__},
 	{"QueryIWMWriterAdvanced", (PyCFunction)DDWMWriter_QueryIWMWriterAdvanced, METH_VARARGS, DDWMWriter_QueryIWMWriterAdvanced__doc__},
 	{"QueryIUnknown", (PyCFunction)DDWMWriter_QueryIUnknown, METH_VARARGS, DDWMWriter_QueryIUnknown__doc__},
 	{"SetVideoFormat", (PyCFunction)DDWMWriter_SetVideoFormat, METH_VARARGS, DDWMWriter_SetVideoFormat__doc__},
-	{"WriteDDSurface", (PyCFunction)DDWMWriter_WriteDDSurface, METH_VARARGS, DDWMWriter_WriteDDSurface__doc__},
+	{"AllocateDDSample", (PyCFunction)DDWMWriter_AllocateDDSample, METH_VARARGS, DDWMWriter_AllocateDDSample__doc__},
+	{"WriteVideoSample", (PyCFunction)DDWMWriter_WriteVideoSample, METH_VARARGS, DDWMWriter_WriteVideoSample__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -3253,19 +3242,14 @@ NSSBuffer_GetBuffer(NSSBufferObject *self, PyObject *args)
 		return NULL;
 	HRESULT hr;
     BYTE *pdwBuffer = NULL;
-    DWORD dwLength;		
 	Py_BEGIN_ALLOW_THREADS
-	hr = self->pI->GetBufferAndLength(&pdwBuffer,&dwLength);
+	hr = self->pI->GetBuffer(&pdwBuffer);
 	Py_END_ALLOW_THREADS
 	if (FAILED(hr)) {
 		seterror("NSSBuffer_GetBuffer", hr);
 		return NULL;
 	}
-	PyObject *obj1 = PyString_FromStringAndSize((char*)pdwBuffer,(int)dwLength);
-	if (obj1 == NULL) return NULL;
-	PyObject *obj2 = Py_BuildValue("O", obj1);
-	Py_DECREF(obj1);
-	return obj2;
+	return Py_BuildValue("i",int(pdwBuffer));
 }     
 
 static char NSSBuffer_GetBufferAndLength__doc__[] =
@@ -3305,16 +3289,13 @@ NSSBuffer_SetBuffer(NSSBufferObject *self, PyObject *args)
 		return NULL;
 	HRESULT hr;
     BYTE *pdwBuffer=NULL;
-    DWORD dwLength;	
-	hr = self->pI->GetBufferAndLength(&pdwBuffer,&dwLength);
+	hr = self->pI->GetBuffer(&pdwBuffer);
 	if (FAILED(hr)) {
 		seterror("NSSBuffer_SetBuffer", hr);
 		return NULL;
 	}
 	DWORD dw = PyString_GET_SIZE(obj);
-	if(dw>dwLength) dw = dwLength;
 	memcpy(pdwBuffer,PyString_AS_STRING(obj),dw);
-	hr = self->pI->SetLength(dw);
 	if (FAILED(hr)) {
 		seterror("NSSBuffer_SetBuffer", hr);
 		return NULL;
@@ -3322,6 +3303,7 @@ NSSBuffer_SetBuffer(NSSBufferObject *self, PyObject *args)
 	Py_INCREF(Py_None);
 	return Py_None;
 }
+
 
 static struct PyMethodDef NSSBuffer_methods[] = {
 	{"GetLength", (PyCFunction)NSSBuffer_GetLength, METH_VARARGS, NSSBuffer_GetLength__doc__},
@@ -5384,7 +5366,7 @@ CreateDDWriter(PyObject *self, PyObject *args)
 			obj->pIAudioInputProps = pInputProps;
 			obj->dwAudioInputNum = i;
 			}
-		else if( guidInputType == WMMEDIATYPE_Video )
+		else if(guidInputType == WMMEDIATYPE_Video)
 			{
 			obj->pIVideoInputProps = pInputProps;
 			obj->dwVideoInputNum = i;
@@ -5483,7 +5465,7 @@ CreateVideoWMType(PyObject *self, PyObject *args)
 	mt.majortype = WMMEDIATYPE_Video;
 	mt.subtype = subtype;
 	mt.bFixedSizeSamples = TRUE;
-	mt.bTemporalCompression = TRUE;
+	mt.bTemporalCompression = FALSE;
 	mt.lSampleSize = width*height*(depth/8);
 	mt.formattype = WMFORMAT_VideoInfo;
 	mt.pUnk = NULL;
