@@ -331,8 +331,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def saveviewgeometries(self):
 		import settings
-		viewinfo = self.getviewgeometries()
-		settings.set('openviews', viewinfo)
+		if settings.get('saveopenviews'):
+			viewinfo = self.getviewgeometries()
+			settings.set('openviews', viewinfo)
+		else:
+			settings.delete('openviews')
 		settings.save()
 
 	def getviewgeometries(self):
