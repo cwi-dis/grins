@@ -844,7 +844,7 @@ class Window:
 		else:
 			self._sizes = 0, 0, 1, 1
 
-		self._topwindow.update()
+		self.update()
 
 
 	def updatezindex(self, z):
