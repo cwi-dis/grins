@@ -182,7 +182,7 @@ HRESULT Aud2rmRenderer::DoRenderSample(IMediaSample *pMediaSample)
 		WAVEFORMATEX *pwfx = (WAVEFORMATEX *) m_mtIn.Format();
 		int msec=1000*m_ixsample/pwfx->nSamplesPerSec;
 		CRefTime tStart,tStop;
-		if(SUCCEEDED(pMediaSample->GetMediaTime((REFERENCE_TIME*)&tStart, (REFERENCE_TIME*)&tStop)))
+		if(SUCCEEDED(pMediaSample->GetTime((REFERENCE_TIME*)&tStart, (REFERENCE_TIME*)&tStop)))
 			msec=tStart.Millisecs();
 		char sz[256];
 		sprintf(sz,"sample %d size=%d\n time=%d",m_ixsample,pMediaSample->GetActualDataLength(),msec);
