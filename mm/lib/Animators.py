@@ -793,6 +793,7 @@ class EffectiveAnimator:
 class AnimateContext:
 	def __init__(self):
 		self._effAnimators = {}
+		self._id2key = {}
 
 	def getEffectiveAnimator(self, targnode, targattr, domval):
 		key = "n%d-%s" % (id(targnode), targattr)
@@ -801,8 +802,16 @@ class AnimateContext:
 		else:
 			ea = EffectiveAnimator(targnode, targattr, domval)
 			self._effAnimators[key] = ea
+			self._id2key[id(ea)] = key
 			return ea
-
+	
+	def removeEffectiveAnimator(self, ea):
+		eaid = id(ea)
+		if self._id2key.has_key(eaid):
+			key = self._id2key[eaid]
+			print 'removing eff animator', key
+			del self._effAnimators[key]
+			del self._id2key[eaid]
 
 ###########################
 # Gen impl. rem:
@@ -862,8 +871,10 @@ def getregionattr(node, attr):
 def getareaattr(node, attr):
 	d = node.attrdict
 	if attr=='coords':
-		if d.has_key('coords'):	
+		if d.has_key('coords'):
 			coords = d['coords']
+			# use grins convention
+			shape, coords = coords[0], coords[1:]
 			return coords, attr, 'inttuple'
 		else:
 			return (0,0,1,1), attr, 'inttuple' 
