@@ -7,7 +7,7 @@ RegionType = type(Xlib.CreateRegion())
 from XTopLevel import toplevel
 from XConstants import TRUE, FALSE, error, ARR_HALFWIDTH, ARR_LENGTH, _WIDTH, UNIT_SCREEN
 from XFont import findfont
-from XButton import _Button
+from XButton import _Button, _ButtonRect, _ButtonPoly, _ButtonCircle
 from splash import roundi
 
 # mapping from icon name to module
