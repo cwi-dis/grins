@@ -30,6 +30,9 @@ class Rect:
 		self.right=r[2];self.bottom=r[3]
 	def tuple(self):
 		return (self.left,self.top,self.right,self.bottom)
+	def tuple_ps(self):
+		return (self.left,self.top,self.right-self.left,self.bottom-self.top)
+
 	def pos(self):
 		return (self.left,self.top)
 	def rb_pos(self):
@@ -225,6 +228,11 @@ def DrawRectanglePath(dc,rc):
 	dc.LineTo((rc[0],rc[3]))
 	dc.LineTo((rc[0],rc[1]))
 
+def FrameRect(dc,rc,rgb):
+	br=Sdk.CreateBrush(win32con.BS_SOLID,RGB(rgb),0)	
+	dc.FrameRectFromHandle(rc,br)
+	Sdk.DeleteObject(br)
+	
 def DrawRectangle(dc,rc,rgb,st):
 	if st == "d":
 		pen=Sdk.CreatePen(win32con.PS_SOLID,0,win32api.RGB(0,0,0))
@@ -259,55 +267,4 @@ def DrawLines(dc,ll,rgb):
 
 
 
-############## CURSORS
 
-import grinsRC
-
-[ARROW, WAIT, HAND, START, G_HAND, U_STRECH,
-D_STRECH, L_STRECH, R_STRECH, UL_STRECH, 
-UR_STRECH, DR_STRECH, DL_STRECH, PUT] = range(14)
-
-_win32Cursors = { 'hand':HAND, 'watch':WAIT, '':ARROW, 'start':START,
-				'g_hand':G_HAND, 'ustrech':U_STRECH, 'dstrech':D_STRECH,
-				'lstrech':L_STRECH, 'rstrech':R_STRECH, 'ulstrech':UL_STRECH,
-				'urstrech':UR_STRECH, 'drstrech':DR_STRECH,
-				'dlstrech':DL_STRECH, 'channel':PUT , ' ':ARROW}
-
-_win32CursorsKeys = _win32Cursors.keys()
-
-def SetCursor(strid):
-	id=ARROW		
-	if strid in _win32CursorsKeys:
-		id=_win32Cursors[strid]
-	App=(win32ui.GetAfx()).GetApp()
-	if id==ARROW:
-		cursor = App.LoadStandardCursor(win32con.IDC_ARROW)
-	elif id==HAND:
-		cursor = App.LoadCursor(grinsRC.IDC_POINT_HAND2)
-	elif id==G_HAND:
-		cursor = App.LoadCursor(grinsRC.IDC_GRAB_HAND2)
-	elif id==U_STRECH:
-		cursor = App.LoadCursor(grinsRC.IDC_U_STRECH)
-	elif id==D_STRECH:
-		cursor = App.LoadCursor(grinsRC.IDC_D_STRECH)
-	elif id==L_STRECH:
-		cursor = App.LoadCursor(grinsRC.IDC_L_STRECH)
-	elif id==R_STRECH:
-		cursor = App.LoaddCursor(grinsRC.IDC_R_STRECH)
-	elif id==UL_STRECH:
-		cursor = App.LoadCursor(grinsRC.IDC_UL_STRECH)
-	elif id==UR_STRECH:
-		cursor = App.LoadCursor(grinsRC.IDC_UR_STRECH)
-	elif id==DR_STRECH:
-		cursor = App.LoadCursor(grinsRC.IDC_RD_STRECH)
-	elif id==DL_STRECH:
-		cursor = App.LoadCursor(grinsRC.IDC_LD_STRECH)
-	elif id==PUT:
-		cursor = App.LoadCursor(grinsRC.IDC_PUT)
-	elif id==WAIT:
-		cursor = App.LoadCursor(grinsRC.IDC_WATCH2)
-	elif id==START:
-		cursor = App.LoadCursor(grinsRC.IDC_APPSTARTING)
-	else: cursor = App.LoadStandardCursor(win32con.IDC_ARROW)
-	(win32ui.GetWin32Sdk()).SetCursor(cursor);
-	return cursor

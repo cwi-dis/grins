@@ -197,8 +197,9 @@ class AnchorEditForm(docview.ListView):
 		itemlist=self._itemlist
 		for i in range(len(itemlist)):
 			l = itemlist[i]
-			self.InsertItem(i,l)
-			self.SetItemText(i,1,'')
+			if type(l)==type(''):
+				self.InsertItem(i,l)
+				self.SetItemText(i,1,' ')
 				
 	def SelectItem(self,nItem=None):
 		if not nItem:nItem=-1

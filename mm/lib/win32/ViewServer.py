@@ -21,28 +21,31 @@ import appcon
 
 from usercmd import *
 import usercmdui
+import sysmetrics
 
-if not appcon.IsEditor:
+if appcon.IsPlayer:
 	PLAYERVIEW=CLOSE
 	HIERARCHYVIEW=None
 	CHANNELVIEW=None
 	LINKVIEW=None
 	LAYOUTVIEW=None
-	SOURCE=None
 appview={
-	0:{'cmd':PLAYERVIEW,'hosted':0,'title':'Player','id':'pview_','obj':None,'class':_PlayerView,'maximize':1},
-	1:{'cmd':HIERARCHYVIEW,'hosted':0,'title':'Hierarchy view','id':'hview_','obj':None,'class':_HierarchyView,'maximize':1},
-	2:{'cmd':CHANNELVIEW,'hosted':0,'title':'Channel view','id':'cview_','obj':None,'class':_ChannelView,'maximize':1},
-	3:{'cmd':LINKVIEW,'hosted':0,'title':'Link view','id':'leview_','obj':None,'class':_LinkView,'maximize':1},
-	4:{'cmd':LAYOUTVIEW,'hosted':1,'title':'Layout view','id':'lview_','obj':None,'class':_LayoutView},
-	5:{'cmd':SOURCE,'hosted':0,'title':'Source','id':'sview_','obj':None,'class':_SourceView,'maximize':1},
+	0:{'cmd':PLAYERVIEW,'hosted':0,'title':'Player','id':'pview_','class':_PlayerView,'maximize':1},
+	1:{'cmd':HIERARCHYVIEW,'hosted':0,'title':'Hierarchy view','id':'hview_','class':_HierarchyView,'maximize':1},
+	2:{'cmd':CHANNELVIEW,'hosted':0,'title':'Channel view','id':'cview_','class':_ChannelView,'maximize':1},
+	3:{'cmd':LINKVIEW,'hosted':0,'title':'Link view','id':'leview_','class':_LinkView,'maximize':1},
+	4:{'cmd':LAYOUTVIEW,'hosted':1,'title':'Layout view','id':'lview_','class':_LayoutView},
+	5:{'cmd':SOURCE,'hosted':0,'title':'Source','id':'sview_','class':_SourceView,'maximize':1},
+	6:{'cmd':-1,'hosted':0,'title':'','id':'cmifview_','class':_CmifView},
 }
+
 
 class ChildFrame(window.MDIChildWnd):
 	def __init__(self,view=None,decor=None):
 		window.MDIChildWnd.__init__(self,win32ui.CreateMDIChild())
 		self._view=view
 		self._decor=decor
+		self._context=None
 
 	def Create(self, title, rect = None, parent = None, maximize=0):
 		self._title=title
@@ -58,21 +61,12 @@ class ChildFrame(window.MDIChildWnd):
 		return cs.to_csd()
 
 	def onMdiActivate(self,params):
+		return
 		msg=win32mu.Win32Msg(params)
 		if msg._lParam==self._hwnd:
-			for viewno in appview.keys():
-				if appview[viewno]['obj']==self:
-					self.GetMDIFrame().setviewtab(viewno)
-					v=self.GetActiveView()
-					if v: 
-						v.onActivate(1)
-					break
+			self._view.onActivate(1)
 		elif msg._wParam==self._hwnd:
-			for viewno in appview.keys():
-				if appview[viewno]['obj']==self:
-					self.GetMDIFrame().setviewtab(0)
-					v=self.GetActiveView()
-					if v:v.onActivate(0)
+			self._view.onActivate(0)
 
 	# create view (will be created by default if)
 	def OnCreateClient(self, cp, context):
@@ -96,25 +90,11 @@ class ChildFrame(window.MDIChildWnd):
 
 	# the user is closing the wnd directly
 	def OnClose(self):
-		# create an artificial close cmd
-		# the cmif-core should delete the window
-		# i.e. should result in view.close() call
-		for viewno in appview.keys():
-			if appview[viewno]['obj']==self:
-				if 'close' in appview[viewno].keys():
-					cmdcl=appview[viewno]['close']
-				else: cmdcl=appview[viewno]['cmd']
-				if not cmdcl:
-					self.DestroyWindow()
-				else:
-					id=usercmdui.class2ui[cmdcl].id
-					self.GetMDIFrame().PostMessage(win32con.WM_COMMAND,id)
-
-	def OnDestroy(self, msg):
-		for viewno in appview.keys():
-			if appview[viewno]['obj']==self:
-				appview[viewno]['obj']=None
-		window.MDIChildWnd.OnDestroy(self, msg)
+		# we must let the view to decide:
+		if hasattr(self._view,'OnClose'):
+			self._view.OnClose()
+		else:
+			self._obj_.OnClose()
 
 	def InitialUpdateFrame(self, doc, makeVisible):
 		pass
@@ -129,13 +109,23 @@ class ViewServer:
 	def __init__(self,context):
 		self._context=context
 
-	def newview(self, x, y, w, h, title, units = appcon.UNIT_MM,
-		      adornments = None, canvassize = None,
-		      commandlist = None, strid='xview_'):
+	def newview(self,x, y, w, h, title, units = appcon.UNIT_MM, adornments=None,canvassize=None, commandlist=None, strid='cmifview_'):
 		viewno=self.getviewno(strid)
-		view=self._newviewobj(viewno)
-		self.frameview(view,viewno)
+		viewclass=appview[viewno]['class'] 
+		view=viewclass(self.getdoc())
+		self.add_common_interface(view,viewno)
+		x=0#if not x or x<0: x=0
+		y=0#if not y or y<0: y=0
+		if not w or not h:rc=None
+		else:
+			x,y,w,h=sysmetrics.to_pixels(x,y,w,h,units)
+			rc=(x,y,x+w+2*sysmetrics.cxframe,y+h+sysmetrics.cycaption+2*sysmetrics.cyframe)
+		f=ChildFrame(view)
+		f.Create(title,rc,self._context,0)
 		view.init((x,y,w,h),title,units,adornments,canvassize,commandlist)
+		self._context.MDIActivate(f)
+		if appcon.IsPlayer:
+			self._context.setcoords((x, y, w, h),units)
 		return view
 
 	def newviewobj(self,strid):
@@ -144,14 +134,16 @@ class ViewServer:
 			return self._newviewobj(viewno)
 		else:
 			viewclass=appview[viewno]['class']
-			return viewclass()
+			viewobj=viewclass()
+			self.add_common_interface(viewobj,viewno)
+			return viewobj
+
 
 	def showview(self,view,strid):
 		if not view or not view._obj_:
 			return
 		viewno=self.getviewno(strid)
-		if not appview[viewno]['obj']:
-			self.frameview(view,viewno)
+		self.frameview(view,viewno)
 
 	def createview(self,strid):
 		viewno=self.getviewno(strid)
@@ -160,10 +152,11 @@ class ViewServer:
 		return view
 
 	def _newviewobj(self,viewno):
-		if appview[viewno]['obj']:
-			return appview[viewno]['obj'].GetActiveView()
 		viewclass=appview[viewno]['class'] 
-		return viewclass(self.getdoc())
+		viewobj=viewclass(self.getdoc())
+		self.add_common_interface(viewobj,viewno)
+		return viewobj
+
 
 	def getviewno(self,strid):
 		for viewno in appview.keys():
@@ -173,17 +166,11 @@ class ViewServer:
 	
 	def frameview(self,view,viewno):
 		decor=''
-		if not appview[viewno]['obj']:
-			if viewno==self.getviewno('pview_'): decor='lview_'
-			f=ChildFrame(view,decor)
-			rc=self._context.getPrefRect()
-			if 'maximize' in appview[viewno].keys():
-				maximize=1
-				rc=self._context.GetClientRect()
-			else: maximize=0
-			f.Create(appview[viewno]['title'],rc,self._context,maximize)
-			appview[viewno]['obj']=f
-		self._context.MDIActivate(appview[viewno]['obj'])
+		if viewno==self.getviewno('pview_'): decor='lview_'
+		f=ChildFrame(view,decor)
+		rc=self._context.getPrefRect()
+		f.Create(appview[viewno]['title'],None,self._context,0)
+		self._context.MDIActivate(f)
 	
 	# returns None if not exists
 	def getviewframe(self,strid):
@@ -192,3 +179,12 @@ class ViewServer:
 
 	def hosted(self,viewno):
 		return appview[viewno]['hosted']
+
+
+	def add_common_interface(self,viewobj,viewno):
+		viewobj.getformserver=self._context.getformserver
+		viewobj.getframe=viewobj.GetParent
+		viewobj._strid=appview[viewno]['id']
+		viewobj._commandlist=[]
+		viewobj._title=appview[viewno]['title']
+		viewobj._closecmdid=usercmdui.class2ui[appview[viewno]['cmd']].id

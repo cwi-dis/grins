@@ -42,6 +42,11 @@ class FormViewBase(docview.FormView,ControlsDict):
 	def is_oswindow(self):
 		return (hasattr(self,'GetSafeHwnd') and self.GetSafeHwnd())
 
+	def OnClose(self):
+		if self._closecmdid>0:
+			self.GetParent().GetMDIFrame().PostMessage(win32con.WM_COMMAND,self._closecmdid)
+		else:
+			self.GetParent().DestroyWindow()
 
 	# called directly from cmif-core
 	# to close window
@@ -54,7 +59,9 @@ class FormViewBase(docview.FormView,ControlsDict):
 			self.GetParent().DestroyWindow()
 
 	def GetUserCmdId(self,cmdcl):
-		return self.GetParent().GetUserCmdId(cmdcl)
+		if hasattr(self,'GetParent'):
+			return self.GetParent().GetUserCmdId(cmdcl)
+		return -1
 
 	# the close sequence must be delegated to parent
 	def set_commandlist(self,commandlist):
@@ -101,9 +108,9 @@ class FormViewBase(docview.FormView,ControlsDict):
 		self._parent.set_toggle(command,onoff)
 		
 	def set_commandlist(self, list):
-		self._parent.set_commandlist(list,'view')
+		self._parent.set_commandlist(list,self._strid)
 	def settitle(self,title):
-		self._parent.settitle(title,'view')
+		self._parent.settitle(title,self._strid)
 
 
 class DlgBar(window.Wnd,ControlsDict):

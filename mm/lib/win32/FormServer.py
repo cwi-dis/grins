@@ -16,11 +16,11 @@ appform={
 class IFormServerContext:
 	def getdoc(self):
 		return None
-	def createChildFrame(self,view):
+	def createChildFrame(self,form):
 		return None
 	def GetClientRect(self):
 		return (0,0,1,1)
-	def Activate(self,view):
+	def Activate(self,form):
 		pass
 	def getPrefRect(self):
 		return (0,0,1,1)
@@ -29,15 +29,15 @@ import win32ui,win32con,win32mu
 from pywin.mfc import window,object,docview,dialog
 
 class ChildFrame(window.MDIChildWnd):
-	def __init__(self,view=None):
+	def __init__(self,form=None):
 		window.MDIChildWnd.__init__(self,win32ui.CreateMDIChild())
-		self._view=view
+		self._form=form
 
 	def Create(self, title, rect = None, parent = None, maximize=0):
 		self._title=title
 		style = win32con.WS_CHILD | win32con.WS_OVERLAPPEDWINDOW
-		self.CreateWindow(None, title, style, rect, parent)
-		if maximize and parent:parent.maximize(self)
+		self.CreateWindow(None, title, style, rect, parent,None)
+		#if maximize and parent:parent.maximize(self)
 		self.HookMessage(self.onMdiActivate,win32con.WM_MDIACTIVATE)
 		self.ShowWindow(win32con.SW_SHOW)
 
@@ -57,24 +57,18 @@ class ChildFrame(window.MDIChildWnd):
 	def onMdiActivate(self,params):
 		msg=win32mu.Win32Msg(params)
 		if msg._lParam==self._hwnd:
-			for formno in appform.keys():
-				if appform[formno]['obj']==self:
-					v=self.GetActiveView()
-					if v: v.onActivate(1)
-					break
+			if self._form: 
+				self._form.onActivate(1)
 		elif msg._wParam==self._hwnd:
-			for formno in appform.keys():
-				if appform[formno]['obj']==self:
-					v=self.GetActiveView()
-					if v:v.onActivate(0)
-					break
-
+			if self._form:
+				self._form.onActivate(0)
+		
 	# create view (will be created by default if)
 	def OnCreateClient(self, cp, context):
 		if context is not None and context.template is not None:
 			context.template.CreateView(self, context)
-		elif self._view:
-			v=self._view
+		elif self._form:
+			v=self._form
 			v.CreateWindow(self)
 			self.SetActiveView(v)
 			self.RecalcLayout()
@@ -91,15 +85,12 @@ class ChildFrame(window.MDIChildWnd):
 	# the user is closing the wnd directly
 	def OnClose(self):
 		# we must let the view to decide:
-		if hasattr(self._view,'OnClose'):
-			self._view.OnClose()
+		if hasattr(self._form,'OnClose'):
+			self._form.OnClose()
 		else:
 			self._obj_.OnClose()
 
 	def OnDestroy(self, msg):
-		for formno in appform.keys():
-			if appform[formno]['obj']==self:
-				appform[formno]['obj']=None
 		window.MDIChildWnd.OnDestroy(self, msg)
 
 	def InitialUpdateFrame(self, doc, makeVisible):
@@ -124,8 +115,7 @@ class FormServer:
 		if not form or not form._obj_:
 			return
 		formno=self.getformno(strid)
-		if not appform[formno]['obj']:
-			self.frameform(form,formno)
+		self.frameform(form,formno)
 
 	def createform(self,strid):
 		formno=self.getformno(strid)
@@ -134,8 +124,6 @@ class FormServer:
 		return form
 
 	def _newformobj(self,formno):
-		if appform[formno]['obj']:
-			return appform[formno]['obj'].GetActiveView()
 		formclass=appform[formno]['class'] 
 		return formclass(self._context.getdoc())
 
@@ -146,15 +134,14 @@ class FormServer:
 		raise error,'undefined requested form'
 	
 	def frameform(self,form,formno):
-		if not appform[formno]['obj']:
-			f=ChildFrame(form)
-			rc=self._context.getPrefRect()
-			if 'maximize' in appform[formno].keys():
-				maximize=1
-			else: maximize=0
-			f.Create(form._title,rc,self._context,maximize)
-			appform[formno]['obj']=f
-		self._context.Activate(appform[formno]['obj'])
+		f=ChildFrame(form)
+		rc=self._context.getPrefRect()
+		if 'maximize' in appform[formno].keys():
+			maximize=1
+		else: maximize=0
+		f.Create(form._title,rc,self._context,0)
+		self._context.Activate(f)
 
 	def hosted(self,formno):
 		return appform[formno]['hosted']
+

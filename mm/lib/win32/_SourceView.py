@@ -23,23 +23,34 @@ class _SourceView(docview.EditView):
 		edit.SetWindowText(self._text)
 		edit.SetReadOnly(1)
 		self._mdiframe=(self.GetParent()).GetMDIFrame()
-#		self._close_cmd_list=[
-#			usercmd.CLOSE_WINDOW(callback = (self.close, ())),]
+
+	def OnClose(self):
+		if self._closecmdid>0:
+			self.GetParent().GetMDIFrame().PostMessage(win32con.WM_COMMAND,self._closecmdid)
+		else:
+			self.GetParent().DestroyWindow()
 
 	def onActivate(self,f):
-		return
-		import appcon
-		if appcon.IsEditor:
-			if f: self._mdiframe.set_commandlist(self._close_cmd_list)
-			else: self._mdiframe.set_commandlist(None,'view')
+		pass
+		#if f: self._mdiframe.set_commandlist(self._close_cmd_list)
+		#else: self._mdiframe.set_commandlist(None,self._strid)
 
-	def set_close_commandlist(self):
-		self._mdiframe.set_commandlist(self._close_cmd_list,'view')
 
 	# cmif interface
 	def settext(self,text):
-		self._text=text
+		self._text=self.convert2ws(text)
 
+	def convert2ws(self,text):
+		import string
+		nl=string.split(text,'\n')
+		rl=string.split(text,'\r')
+		if len(nl)==len(rl):# line_separator='\r\n'
+			return text
+		if len(nl)>len(rl):	# line_separator='\n'
+			return string.join(nl, '\r\n')
+		if len(nl)<len(rl):	# line_separator='\r'
+			return string.join(rl, '\r\n')
+			
 	def close(self):
 		# 1. clean self contends
 		del self._text
@@ -53,4 +64,4 @@ class _SourceView(docview.EditView):
 	def is_closed(self):
 		if self._obj_==None: return 1
 		if self.GetSafeHwnd()==0: return 1
-		return self.IsWindowVisible()
+		return (not self.IsWindowVisible())
