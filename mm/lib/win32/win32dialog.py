@@ -751,8 +751,7 @@ class EnterKeyDlg(ResDialog):
 	def OnEditChange(self, id, code):
 		if code != win32con.EN_CHANGE:
 			return
-		ok = (self._tuser.gettext() or self._torg.gettext()) and \
-				self._tkey.gettext()
+		ok = self._tkey.gettext()
 		self._bok.enable(not not ok)
 
 	def OnOK(self):

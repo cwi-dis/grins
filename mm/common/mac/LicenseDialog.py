@@ -67,6 +67,8 @@ class EnterkeyDialog(windowinterface.MACDialog):
 		windowinterface.MACDialog.__init__(self, "License", ID_DIALOG_ENTERKEY,
 				ITEMLIST_ENTERKEY_ALL, cancel=ITEM_CANCEL, default=ITEM_OK)
 		self.ok_callback = ok_callback
+		self._setlabel(ITEM_NAME, user)
+		self._setlabel(ITEM_ORGANIZATION, org)
 		self.setdialoginfo()
 		self.show()
 				
@@ -75,9 +77,9 @@ class EnterkeyDialog(windowinterface.MACDialog):
 		windowinterface.MACDialog.close(self)
 			
 	def setdialoginfo(self):
-		nameok = self._getlabel(ITEM_NAME) or self._getlabel(ITEM_ORGANIZATION)
+##		nameok = self._getlabel(ITEM_NAME) or self._getlabel(ITEM_ORGANIZATION)
 		keyok = self._getlabel(ITEM_KEY)
-		self._setsensitive([ITEM_OK], (nameok and keyok))
+		self._setsensitive([ITEM_OK], keyok)
 		
 	def do_itemhit(self, n, event):
 		if n == ITEM_OK:
