@@ -230,6 +230,7 @@ class HierarchyView(HierarchyViewDialog):
 	def redraw(self, *rest):
 		# RESIZE event.
 		self.toplevel.setwaiting()
+		self.cleanup()
 		self.new_displist = self.window.newdisplaylist(BGCOLOR)
 		self.displist = None
 		self.recalcboxes()
