@@ -1,11 +1,10 @@
 __version__ = "$Id$"
 
-""" @win32doc|Font
-It is a utility module with a standard interface
-offering fonts support to other modules
-The class _Font is a wrapper class for the platform
-font along with a standard query interface
-"""
+# @win32doc|Font
+# It is a utility module with a standard interface
+# offering fonts support to other modules
+# The class _Font is a wrapper class for the platform
+# font along with a standard query interface
 
 import string
 import win32ui
@@ -282,27 +281,24 @@ def get_win32_charset(strid):
 	global user_charset
 	return user_charset
 		
-"""	
-TextMetrics dict entries:
-tmHeight
-tmAscent
-tmDescent
-tmInternalLeading
-tmExternalLeading
-tmAveCharWidth
-tmMaxCharWidth
-tmWeight
-tmItalic
-tmUnderlined
-tmStruckOut
-tmFirstChar
-tmLastChar
-tmDefaultChar
-tmBreakChar
-tmPitchAndFamily
-tmCharSet
-tmOverhang
-tmDigitizedAspectX
-tmDigitizedAspectY
-"""
-
+# TextMetrics dict entries:
+# tmHeight
+# tmAscent
+# tmDescent
+# tmInternalLeading
+# tmExternalLeading
+# tmAveCharWidth
+# tmMaxCharWidth
+# tmWeight
+# tmItalic
+# tmUnderlined
+# tmStruckOut
+# tmFirstChar
+# tmLastChar
+# tmDefaultChar
+# tmBreakChar
+# tmPitchAndFamily
+# tmCharSet
+# tmOverhang
+# tmDigitizedAspectX
+# tmDigitizedAspectY

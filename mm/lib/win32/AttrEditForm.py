@@ -1,8 +1,6 @@
 __version__ = "$Id$"
 
-""" @win32doc|AttrEditForm
-
-"""
+# @win32doc|AttrEditForm
 
 import string
 # std win32 modules

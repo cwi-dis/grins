@@ -2,10 +2,9 @@ __version__ = "$Id$"
 
 # Cache durations of video files
 
-""" @win32doc|getduration
-For win32 please call windowinterface.GetMediaDuration(filename)
-when you want the duration of a media file (audio and video).
-"""
+# @win32doc|getduration
+# For win32 please call windowinterface.GetMediaDuration(filename)
+# when you want the duration of a media file (audio and video).
 
 import MMurl
 import MMmimetypes
