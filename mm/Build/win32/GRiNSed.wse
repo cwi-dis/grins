@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=563007662
+  File Checksum=3635029417
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1456,46 +1456,6 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\slideshow.smil
-  Destination=%MAINDIR%\Templates\slideshow.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\empty.smil
-  Destination=%MAINDIR%\Templates\empty.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\captions.smil
-  Destination=%MAINDIR%\Templates\captions.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\captions.bmp
-  Destination=%MAINDIR%\Templates\captions.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\Extended-Slideshow.smil
-  Destination=%MAINDIR%\Templates\Extended-Slideshow.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\Extended-Slideshow.bmp
-  Destination=%MAINDIR%\Templates\Extended-Slideshow.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\Basic-Slideshow.smil
-  Destination=%MAINDIR%\Templates\Basic-Slideshow.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\Basic-Slideshow.bmp
-  Destination=%MAINDIR%\Templates\Basic-Slideshow.bmp
-  Flags=0000000010000010
-end
-item: Install File
   Source=d:\ufs\mm\cmif\Templates\A4_adaptive_content.smil
   Destination=%MAINDIR%\Templates\A4_adaptive_content.smil
   Flags=0000000010000010
@@ -1971,7 +1931,129 @@ item: Create Shortcut
   Destination=%CGROUPDIR%\%CGROUP_SAVE%\readme.lnk
   Icon Number=0
 end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Create Shortcut
+  Source=%MAINDIR%\GRiNSed Light.exe
+  Destination=%GROUP%\GRiNSed Lite for G2.lnk
+  Icon Number=0
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Create Shortcut
+  Source=%MAINDIR%\GRiNSed Light.exe
+  Destination=%DESKTOPDIR%\GRiNSed Lite for G2.lnk
+  Icon Number=0
+end
+item: End Block
+end
 item: Else Statement
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Editor for SMIL
+  Command Line=%MAINDIR%\GRiNSed.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Editor for SMIL
+  Command Line=%MAINDIR%\GRiNSed.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Editor for SMIL
+  Command Line=%MAINDIR%\GRiNSed.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNSed Lite for G2
+  Command Line="%MAINDIR%\GRiNSed Light.exe"
+  Flags=01000000
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Editor for SMIL
+  Command Line=%MAINDIR%\GRiNSed.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNSed Lite for G2
+  Command Line="%MAINDIR%\GRiNSed Light.exe"
+  Flags=01000000
+end
+item: End Block
 end
 item: If/While Statement
   Variable=COMPONENTS
