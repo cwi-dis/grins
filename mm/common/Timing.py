@@ -164,6 +164,7 @@ def getduration(node):
 	global is_warned
 	import Duration
 	d = Duration.get(node)
+	node.timing_discont = 0
 	if d > 0:
 		return d
 	# Check for pausing anchor
@@ -177,8 +178,9 @@ def getduration(node):
 				if not is_warned:
 					print 'Warning: document contains (obsolete) pausing anchors'
 					is_warned = 1
-				return 10
+				break
 	if d < 0:
+	        node.timing_discont = 9.9
 		return 10
 	return 0
 	
