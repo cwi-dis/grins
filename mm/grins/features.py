@@ -10,5 +10,5 @@ cmif = 0
 lightweight = 0
 editor = 0
 # RTIPA start
-RTIPA = 1
+RTIPA = 0
 # RTIPA end
