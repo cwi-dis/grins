@@ -9,7 +9,7 @@ class TemporalViewDialog(ViewDialog):
 	adornments = {}
 
 	def __init__(self):
-		ViewDialog.__init__(self, 'cview_')
+		ViewDialog.__init__(self, 'tview_')
 
 	def show(self):
 		title = 'Temporal View (' + self.toplevel.basename + ')'
@@ -19,7 +19,8 @@ class TemporalViewDialog(ViewDialog):
 		self.window = toplevel_window.newview(x,y,w,h,title,
 						      adornments = self.adornments,
 						      canvassize = (w,h),
-						      strid='cview_' # I don't understand this one -mjvdg
+						      commandlist = self.commands,
+						      strid='tview_' # I don't understand this one -mjvdg
 						      )
 		self._reg_events()
 
