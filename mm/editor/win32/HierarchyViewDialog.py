@@ -53,6 +53,8 @@ class HierarchyViewDialog(ViewDialog):
 		self.window.register(WMEVENTS.PasteFile, self.pastefile, None)
 		self.window.register(WMEVENTS.DragFile, self.dropeffect, None)
 		self.window.register(WMEVENTS.DropFile, self.__dropfile, None)
+		self.window.register(WMEVENTS.DragURL, self.dropeffect, None)
+		self.window.register(WMEVENTS.DropURL, self.__dropfile, None)
 
 		self.window.register(WMEVENTS.DragNode, self.dragnode, None)
 		self.window.register(WMEVENTS.DropNode, self.dropnode, None)
