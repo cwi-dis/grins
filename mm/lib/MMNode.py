@@ -1231,7 +1231,6 @@ class MMChannel(MMTreeElement):
 		self.d_attrdict = {}
 		self.views = {}
 		self._cssId = None
-		self._animationData = None
 
 		if type == 'layout':
 			# by default it's a viewport
@@ -1626,35 +1625,6 @@ class MMChannel(MMTreeElement):
 		
 	def isDefault(self):
 		return self.attrdict.get('isDefault')
-
-	#
-	# animation editor support
-	#
-
-	# animparent: the parent node (MMNode) of the animations targeting self
-	def computeAnimationData(self, animparent):
-		if animparent is None or not isinstance(animparent, MMNode):
-			print 'not a MMNode argument'
-			return
-		if self._animationData is None:
-			root = animparent.GetRoot()
-			self._animationData = AnimationData.AnimationData(root, self, animparent)
-		self._animationData.readData()
-		# XXX this test seems to avoid a crash
-		if not self._animationData.isEmpty():
-			self._animationData.createAnimators()
-		return self._animationData
-
-	def getAnimationData(self):
-		return self._animationData
-	
-	def applyAnimationData(self, editmgr):
-		if self._animationData:
-			# XXX this test seems to avoid a crash
-			if not self._animationData.isEmpty():
-				self._animationData.createAnimators()
-			self._animationData.applyData(editmgr, replace=1)
-
 		
 class MMViewport(MMChannel):
 	# allow to know the class name without use 'import xxx; isinstance'
@@ -2350,7 +2320,6 @@ class MMNode(MMTreeElement):
 		self.channelType = None
 		self.reinit(recurse = 0)
 		self.reset()
-		self._animationData = None
 
 	def reinit(self, recurse = 1):
 		self.looping_body_self = None
@@ -5113,47 +5082,6 @@ class MMNode(MMTreeElement):
 				return rv # Fat chance:-)
 			rv = rv + ch.GetAllSystemTests(list)
 		return rv
-
-	#
-	# animation editor support
-	#
-
-	# animparent: the parent node of the animations targeting self
-	# if none is given then self is assumed
-	def computeAnimationData(self, animparent=None):
-		if animparent is not None and not isinstance(animparent, MMNode):
-			print 'not a MMNode argument'
-			return
-		if self._animationData is None:
-			if animparent is None:
-				animparent = self
-			root = animparent.GetRoot()
-			self._animationData = AnimationData.AnimationData(root, self, animparent)
-		self._animationData.readData()
-		# XXX this test seems to avoid a crash
-		if not self._animationData.isEmpty():
-			self._animationData.createAnimators()
-		return self._animationData
-
-	def getAnimationData(self):
-		return self._animationData
-	
-	def applyAnimationData(self, editmgr):
-		if self._animationData:
-			self._animationData.applyData(editmgr, replace=1)
-			# XXX this test seems to avoid a crash
-			if not self._animationData.isEmpty():
-				self._animationData.createAnimators()
-
-			# temporary test
-			if 0:
-				print '-----------------------------'
-				print 'DOM rect=', self._animationData.getDomRect()
-				self._animationData.createAnimators()
-				t = 0.0
-				for i in range(11):
-					print 't=',t, ' rect=', self._animationData.getRectAt(t)
-					t = t + 0.1
 
 class FakeRootNode(MMNode):
 	def __init__(self, root):
