@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Channels should either use Channel, ChannelWindow, or ChannelThread
 # as a superclass, but never more than one.
 

@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Table mapping channel types to channel classes.
 # Edit this module to add new classes.
 
