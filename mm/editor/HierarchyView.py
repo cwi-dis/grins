@@ -812,6 +812,9 @@ class HierarchyView(HierarchyViewDialog):
 				self.focusnode = obj.node
 				obj.expandcall()
 				return
+		if obj.node is not self.focusnode:
+			self.setfocusobj(obj)
+			self.render()
 		if obj.iconbox:
 			l, t, w, h = obj.iconbox
 			if l <= x <= l+w and t <= y <= t+h and obj.node.infoicon:
@@ -822,10 +825,6 @@ class HierarchyView(HierarchyViewDialog):
 					msg = 'No message for this item'
 				windowinterface.showmessage(msg, parent = self.window)
 			# Don't return but fall through
-		if obj.node is self.focusnode:
-			return
-		self.setfocusobj(obj)
-		self.render()
 
 	# Find the smallest object containing (x, y)
 	def whichhit(self, x, y):
