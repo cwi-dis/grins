@@ -126,7 +126,7 @@ alignment: 4
 style: 0
 size: 11.000000
 lcol: 0
-label: Whole node
+label: Dest only
 name: begin_button
 callback: setloc_callback
 argument: 0
@@ -156,7 +156,7 @@ alignment: 4
 style: 0
 size: 11.000000
 lcol: 0
-label: Internal...
+label: Normal...
 name: whole_button
 callback: setloc_callback
 argument: 2
