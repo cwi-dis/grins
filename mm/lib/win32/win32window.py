@@ -1936,16 +1936,17 @@ class Region(Window):
 		x1, y1, w1, h1 = self.getwindowpos()
 
 		# sense a size change/restore
-		if not self._resizing:
-			if w!=w0 or h!=h0:
-				self._scalesurf = self.getBackDDS()
-				self._resizing = 1
-				self._scale = scale
-				self._orgrect = self._rect
-		elif w==w0 and h==h0:	
-			self._resizing = 0
-			del self._scalesurf
-			self._scalesurf = None
+		if scale == -3:
+			if not self._resizing:
+				if w!=w0 or h!=h0:
+					self._scalesurf = self.getBackDDS()
+					self._resizing = 1
+					self._scale = scale
+					self._orgrect = self._rect
+			elif w==w0 and h==h0:	
+				self._resizing = 0
+				del self._scalesurf
+				self._scalesurf = None
 		
 							
 		# resize/move
