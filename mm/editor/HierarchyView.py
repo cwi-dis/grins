@@ -125,8 +125,6 @@ class HierarchyView(HierarchyViewDialog):
 			
 			COMPUTE_BANDWIDTH(callback = (self.bandwidthcall, ())),
 			CREATE_EVENT_SOURCE(callback = (self.create_begin_event_source, ())),
-			CREATE_BEGIN_EVENT(callback = (self.create_begin_event_dest, ())),
-			CREATE_END_EVENT(callback = (self.create_end_event_dest, ())),
 			FIND_EVENT_SOURCE(callback = (self.find_event_source, ())),
 			DRAG_PAR(),
 			DRAG_SEQ(),
@@ -212,6 +210,10 @@ class HierarchyView(HierarchyViewDialog):
 
 		self.finishlinkcommands = [
 			FINISH_LINK(callback = (self.hyperlinkcall, ())),
+			]
+		self.finisheventcommands = [
+			CREATE_BEGIN_EVENT(callback = (self.create_begin_event_dest, ())),
+			CREATE_END_EVENT(callback = (self.create_end_event_dest, ())),
 			]
 		self.navigatecommands = [
 			TOPARENT(callback = (self.toparent, ())),
@@ -317,6 +319,8 @@ class HierarchyView(HierarchyViewDialog):
 		commands = commands + self.noslidecommands
 		if self.toplevel.links and self.toplevel.links.has_interesting(): # ??!! -mjvdg
 			commands = commands + self.finishlinkcommands
+		if self.begin_event_source:
+			commands = commands + self.finisheventcommands
 		if fntype in MMNode.interiortypes:
 			commands = commands + self.interiorcommands # Add interior structure modifying commands.
 		if fntype not in MMNode.interiortypes and \
