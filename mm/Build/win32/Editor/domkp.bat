@@ -4,14 +4,16 @@ set GRINS_HOME=d:\ufs\mm\cmif
 
 set FREEZE_WHAT=editor
 set EXCLUDE_WHAT=grins
+
+set INCLUDE_MMEXTENSIONS=yes
+
 set main_script=%GRINS_HOME%\fGRiNSed.py
 
-del *.c
-del log.txt
-del FreezeOpts
-
+rem set PYTHON_EXE=d:\ufs\mm\python\python.exe
 set PYTHON_EXE=d:\ufs\mm\cmif\bin\win32\python.exe
+
 set PYTHONHOME=d:\ufs\mm\python
+
 call c:\Program Files\Microsoft Visual Studio\VC98\Bin\vcvars32.bat
 
 rem END_CUSTOMIZATION
@@ -42,11 +44,17 @@ set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%\win32
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\lib\win32
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\common\win32
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\win32\src\Build
+
+IF NOT %INCLUDE_MMEXTENSIONS%==yes GOTO restpath
+set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\mmextensions\real\win32
+
+:restpath
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\lib
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\common
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\pylib
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\pylib\audio
+
 
 rem And the standard Python extensions.
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\win32\lib
@@ -138,6 +146,9 @@ echo -x pwd >> FreezeOpts
 rem Windows specific stuff we just dont want!!
 echo -x win32ui  >> FreezeOpts
 echo -x win32dbg >> FreezeOpts
+
+rem exclude RMASDK
+echo -x rma >> FreezeOpts
 
 rem EXCLUDE_WHAT
 echo -x %EXCLUDE_WHAT% >> FreezeOpts
