@@ -1217,6 +1217,13 @@ class SMILXhtmlSmilWriter(SMIL):
 			toxy = aparser.toDOMOriginPosAttr('to')
 			values = aparser.toDOMOriginPosValues()
 			path = aparser.toDOMOriginPath()
+		elif tag == 'animateColor':
+			from Animators import AnimateElementParser
+			aparser = AnimateElementParser(node, self.__animateContext)
+			fromcr = aparser.convertColorValue(node.attrdict.get('from'))
+			tocr = aparser.convertColorValue(node.attrdict.get('to'))
+			bycr = aparser.convertColorValue(node.attrdict.get('by'))
+			valuescr = aparser.convertColorValues(node.attrdict.get('values'))
 		hasid = 0
 		attributes = self.attributes.get(tag, {})
 		for name, func, gname in smil_attrs:
@@ -1238,10 +1245,15 @@ class SMILXhtmlSmilWriter(SMIL):
 					else:
 						targetElement = value
 				if tag == 'animateMotion' and not isAdditive:
-					if name == 'from':value = fromxy
-					elif name == 'to':value = toxy
-					elif name == 'values':value = values
+					if name == 'from': value = fromxy
+					elif name == 'to': value = toxy
+					elif name == 'values': value = values
 					elif name == 'path': value = path
+				elif tag == 'animateColor':
+					if name == 'from': value = fromcr
+					elif name == 'to': value = tocr
+					elif name == 'by': value = bycr
+					elif name == 'values': value = valuescr
 				if value and value != attributes[name]:
 					if name in ('begin', 'end'):
 						value = event2xhtml(value)

@@ -1730,6 +1730,19 @@ class AnimateElementParser:
 		return repr(path)
 
 
+	# Translate methods for SMILTreeWriteHtmlTime
+	def convertColorValue(self, value):
+		if value is None or value.find('rgb') < 0:
+			return value
+		return self.__convert_color_rs(value)	
+	def convertColorValues(self, values):
+		if not values or values.find('rgb') < 0:
+			return values
+		try:
+			return ';'.join(map(self.__convert_color_rs, string.split(values,';')))
+		except ValueError:
+			return values
+
 	# set time manipulators to the animator
 	def __setTimeManipulators(self, anim):
 		if self.__autoReverse:
@@ -2116,6 +2129,14 @@ class AnimateElementParser:
 		if b > 255: b = 255
 		return r, g, b
 
+	def __convert_color_rs(self, val):
+		import colors
+		val = self.__convert_color(val)
+		if colors.rcolors.has_key(val):
+			return colors.rcolors[val]
+		else:
+			return '#%02x%02x%02x' % val
+
 	def __getColorValues(self):
 		values =  self.getValues()
 		if values:
@@ -2136,7 +2157,7 @@ class AnimateElementParser:
 			dv = self.__convert_color(self.getBy())
 			return (0, 0, 0), dv
 		return ()	
-
+	
 	# len of interpolation list values
 	# len == 0 is a syntax error
 	# len == 1 and mode != 'discrete' is a syntax error
