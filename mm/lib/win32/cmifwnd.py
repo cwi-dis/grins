@@ -282,11 +282,11 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 
 	# Bring window in front of sibling with equal z
 	def pop(self):
-		print 'overwrite pop for',self
+		print 'override pop for',self
 
 	# Bring window back of siblings with equal z
 	def push(self):
-		print 'overwrite push for',self
+		print 'override push for',self
 
 	# Set the function that takes the painting responsiblities 
 	def setredrawfunc(self, func):
@@ -720,7 +720,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 	# Set scroll range
 	def _scroll(self,how):
 		if self._canscroll:
-			print 'You must overwrite _scroll for ',self
+			print 'You must override _scroll for ',self
 		else:
 			print 'Scroll called for the unscrollable ',self
 	# Enable or disable scrolling
@@ -885,7 +885,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 	# convert from client (device) coordinates to canvas (logical)
 	def _DPtoLP(self,pt):
 		if self._canscroll:
-			print 'You must overwrite _DPtoLP function for',self
+			print 'You must override _DPtoLP function for',self
 		return pt
 
 	def _convert_color(self, color):

@@ -235,7 +235,6 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		
 	def onKey(self,key):
 		self.PostMessage(WM_KICKIDLE)
-		print key
 
 	def onActivate(self,params):
 		msg=win32mu.Win32Msg(params)
