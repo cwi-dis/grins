@@ -34,11 +34,12 @@ class TopLevelDialog:
 
 	def showsource(self, source):
 		if self.source:
-			self.source.close()
-			self.source=None
-			self.window.set_toggle(SOURCE,0)
+			self.source.settext(source)
+##			self.source.close()
+##			self.source=None
+##			self.window.set_toggle(SOURCE,0)
 		else:
-			self.source = self.window.textwindow(self.root.source)
+			self.source = self.window.textwindow(source)
 			self.window.set_toggle(SOURCE,1)
 
 	def mayclose(self):

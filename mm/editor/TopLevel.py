@@ -61,6 +61,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			CLOSE(callback = (self.close_callback, ())),
 			PROPERTIES(callback = (self.prop_callback, ())),
 			]
+		if hasattr(self, 'do_edit'):
+			self.commandlist.append(EDITSOURCE(callback = (self.edit_callback, ())))
 		#self.__save = None
 		if self.main.cansave():
 			self.commandlist = self.commandlist + [
@@ -86,18 +88,18 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def show(self):
 		TopLevelDialog.show(self)
-		self.views[1].show()
+		self.hierarchyview.show()
 
 	def showstate(self, view, showing):
 		self.setbuttonstate(view.__command, showing)
 		if showing:
-			if view is self.views[4]:
+			if view is self.layoutview:
 				# if opening layout, also open player
-				self.views[0].show()
+				self.player.show()
 		else:
-			if view is self.views[0]:
+			if view is self.player:
 				# if closing player, also close layout
-				self.views[4].hide()
+				self.layoutview.hide()
 
 	def destroy(self):
 		self.editmgr.unregister(self)
@@ -180,7 +182,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.player.show((self.player.playsubtree, (self.root,)))
 
 	def source_callback(self):
-		self.showsource(self.root.source)
+		import SMILTreeWrite
+		self.showsource(SMILTreeWrite.WriteString(self.root))
 
 	def view_callback(self, viewno):
 		self.setwaiting()
@@ -248,6 +251,49 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def prop_callback(self):
 		import AttrEdit
 		AttrEdit.showdocumentattreditor(self)
+
+	def edit_callback(self):
+		if not self.editmgr.transaction():
+			return
+		self.setwaiting()
+		import SMILTreeWrite, tempfile
+		tmp = tempfile.mktemp('.smil')
+		self.__edittmp = tmp
+		SMILTreeWrite.WriteFile(self.root, tmp)
+		self.do_edit(tmp)
+
+	def edit_finished_callback(self, tmp = None):
+		import EditMgr, os
+		self.editmgr.rollback()
+		if tmp is None:
+			try:
+				os.unlink(self.__edittmp)
+			except os.error:
+				pass
+			del self.__edittmp
+			return
+		showing = []
+		for i in range(len(self.views)):
+			if self.views[i].is_showing():
+				showing.append(i)
+		self.editmgr.unregister(self)
+		self.editmgr.destroy() # kills subscribed views
+		self.context.seteditmgr(None)
+		self.root.Destroy()
+		self.do_read_it(tmp)
+		try:
+			os.unlink(self.__edittmp)
+		except os.error:
+			pass
+		del self.__edittmp
+		self.context = self.root.GetContext()
+		self.editmgr = EditMgr.EditMgr(self.root)
+		self.context.seteditmgr(self.editmgr)
+		self.editmgr.register(self)
+		self.makeviews()
+		for i in showing:
+			self.views[i].show()
+		self.changed = 1
 
 	def fixtitle(self):
 		utype, host, path, params, query, fragment = urlparse(self.filename)
@@ -332,6 +378,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if not self.editmgr.transaction():
 			return
 		self.setwaiting()
+		showing = []
+		for i in range(len(self.views)):
+			if self.views[i].is_showing():
+				showing.append(i)
 		self.editmgr.rollback()
 		self.editmgr.unregister(self)
 		self.editmgr.destroy() # kills subscribed views
@@ -339,6 +389,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.root.Destroy()
 		self.read_it()
 		self.makeviews()
+		for i in showing:
+			self.views[i].show()
 
 	def read_it(self):
 		self.changed = 0
@@ -451,6 +503,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.changed = 1
 		MMAttrdefs.flushcache(self.root)
 		Timing.changedtimes(self.root)
+		if self.source:
+			# reshow source
+			self.source_callback()
 		#if self.__save is not None:
 		#	self.setcommands(self.commandlist + [self.__save])
 

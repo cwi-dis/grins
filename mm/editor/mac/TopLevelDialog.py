@@ -27,9 +27,10 @@ class TopLevelDialog:
 
 	def showsource(self, source):
 		if self.source is not None and not self.source.is_closed():
+			self.source.settext(source)
 			self.source.show()
 			return
-		self.source = windowinterface.textwindow(self.root.source)
+		self.source = windowinterface.textwindow(source)
 
 	def mayclose(self):
 		prompt = 'You haven\'t saved your changes yet;\n' + \
