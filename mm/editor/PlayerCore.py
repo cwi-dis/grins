@@ -63,15 +63,9 @@ class PlayerCore(Selecter):
 	# Internal reset.
 	#
 	def fullreset(self):
-##		self.resetchannels()
 		self.reset()
 		self.playroot = self.userplayroot = self.root
 		self.measure_armtimes = 0
-	#
-	# XXXX Should go to Selecter, once softreset is gone.
-	def reset(self):
-		self.scheduler.resettimer()
-##		self.softresetchannels()
 	#
 	# play_done - Upcall by scheduler to indicate that all is done.
 	#
