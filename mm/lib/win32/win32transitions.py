@@ -13,7 +13,7 @@ import win32api
 
 class TransitionEngine:
 	def __init__(self, window, outtrans, runit, dict, cb):
-		self.__windows = [window,]
+		self.windows = [window,]
 		self.__outtrans = outtrans
 		
 		self.__duration = dict.get('dur', 1)
@@ -28,6 +28,7 @@ class TransitionEngine:
 		self.__transitiontype = klass(self, dict)
 
 		self.__fiber_id = None
+		self.__running = 0		
 
 		self.__startprogress = dict.get('startProgress', 0)
 		self.__endprogress = dict.get('endProgress', 1)
@@ -44,8 +45,9 @@ class TransitionEngine:
 		if self.__transitiontype:
 			self.endtransition()
 	
-	def begintransition(self):		
+	def begintransition(self):
 		self.__createSurfaces()
+		self.__running = 1	
 		self.__start = time.time() - self.__begin
 		self.settransitionvalue(self.__startprogress)
 		if self.__duration<=0.0:
@@ -61,11 +63,12 @@ class TransitionEngine:
 			apply(apply, self.__callback)
 			self.__callback = None
 		self.__transitiontype = None
-		wnd = self.__windows[0]
+		self.__running = 0		
+		wnd = self.windows[0]
 		if wnd.is_closed():
 			return
 		topwindow = wnd._topwindow
-		for win in self.__windows:
+		for win in self.windows:
 			win._transition = None
 			win._drawsurf = None
 
@@ -76,7 +79,7 @@ class TransitionEngine:
 		
 		# transition window
 		# or parent window in multiElement transitions
-		wnd = self.__windows[0]
+		wnd = self.windows[0]
 		if wnd.is_closed():
 			return
 		
@@ -89,27 +92,25 @@ class TransitionEngine:
 			if self.__childrenClip:
 				# since children clipping will be done in wnd's paint method
 				# do a normal painting on active surface
-				# (currently we don't support overall clipping in blitter classes
-				# this has prose: use the more efficient surface blitting
-				# and conse: we paint something we will throw away)
-				wnd.paintOnDDS(self._active, wnd)
+				wnd.paintOnDDS(self._tosurf, wnd)
 			else:
 				# do a normal painting on active surface
-				wnd.paintOnDDS(self._active, wnd)
+				wnd.paintOnDDS(self._tosurf, wnd)
 		else:
 			# just paint what wnd is responsible for
 			# i.e. do not paint children
-			wnd._paintOnDDS(self._active, wnd._rect)
-				
-
-		# do not reverse, already done indirectly
-		vfrom = wnd._passive
-		vto = self._active
-
-		tmp  = self._tmp
-		dst  = wnd._drawsurf
+			if self.__outtrans:
+				wnd.updateBackDDS(self._tosurf, exclwnd=wnd) 
+			else:
+				wnd._paintOnDDS(self._tosurf, wnd._rect)
+		
+		fromsurf = 	wnd._fromsurf
+		tosurf = self._tosurf	
+		tmpsurf  = self._tmp
+		dstsurf  = wnd._drawsurf
 		dstrgn = None
-		self.__transitiontype.updatebitmap(parameters, vto, vfrom, tmp, dst, dstrgn)
+
+		self.__transitiontype.updatebitmap(parameters, tosurf, fromsurf, tmpsurf, dstsurf, dstrgn)
 		wnd.update(wnd.getwindowpos())
 
 	def join(self, window, ismaster, cb):
@@ -117,32 +118,31 @@ class TransitionEngine:
 		if ismaster:
 			self.__callback = cb
 			if self.isrunning():
-				self.__windows.insert(0, window)
+				self.windows.insert(0, window)
 				self.__createSurfaces()
 			else:
-				self.__windows.insert(0, window)
+				self.windows.insert(0, window)
 		else:
-			self.__windows.append(window)
+			self.windows.append(window)
 
-		x, y, w, h = self.__windows[0]._rect
+		x, y, w, h = self.windows[0]._rect
 		self.__transitiontype.move_resize((0, 0, w, h))
 
 	def _ismaster(self, wnd):
-		return self.__windows[0]==wnd
+		return self.windows[0]==wnd
 
 	def _isrunning(self):
-		return self.__windows[0]._drawsurf!=None
+		return self.__running
 
 	def __createSurfaces(self):
 		# transition window
 		# or parent window in multiElement transitions
-		wnd = self.__windows[0]
-
+		wnd = self.windows[0]
 		while 1:
 			try:
-				self._passive = wnd._passive
-				wnd._drawsurf = wnd.getBackDDS()
-				self._active = wnd.getBackDDS()
+				wnd._fromsurf = wnd.getBackDDS()
+				wnd._drawsurf = wnd.createDDS()
+				self._tosurf = wnd.createDDS()
 				self._tmp = wnd.createDDS()
 			except ddraw.error, arg:
 				print arg
@@ -155,7 +155,7 @@ class TransitionEngine:
 		self.__transitiontype.move_resize((0, 0, w, h))
 
 	def __onIdle(self):
-		if self.__windows[0].is_closed():
+		if self.windows[0].is_closed():
 			self.endtransition()
 			return
 		t_sec = time.time() - self.__start
@@ -180,3 +180,4 @@ class TransitionEngine:
 		if self.__fiber_id is not None:
 			windowinterface.cancelidleproc(self.__fiber_id)
 			self.__fiber_id = None
+ 

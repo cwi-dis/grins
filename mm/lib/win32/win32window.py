@@ -51,9 +51,10 @@ class Window:
 
 		# transition params
 		self._transition = None
-		self._passive = None
+		self._fromsurf = None
 		self._drawsurf = None
 		self._outtrans = 0
+		self._stdpaint = 1
 
 		# scaling support
 		self._device2logical = 1
@@ -1240,7 +1241,7 @@ class Region(Window):
 		del self._transition
 		del self._video 
 		del self._drawsurf
-		del self._passive
+		del self._fromsurf
 
 	#
 	# OS windows simulation support
@@ -1477,14 +1478,11 @@ class Region(Window):
 			return self.xywh(rc)
 		return (0, 0, 0, 0)
 
-				
+	
 	# paint on surface dds only what this window is responsible for
 	# i.e. self._active_displist and/or bgcolor
 	# clip painting to argument rgn when given
 	def _paintOnDDS(self, dds, dst, rgn=None):
-		if self._transition and self._outtrans:
-			return
-
 		x, y, w, h = dst
 		if w==0 or h==0:
 			return
@@ -1563,10 +1561,11 @@ class Region(Window):
 				r, g, b = self._bgcolor
 				self._convbgcolor = dds.GetColorMatch((r,g,b))
 			dds.BltFill((xc, yc, xc+wc, yc+hc), self._convbgcolor)
-		
-	
+
+					
 	# paint on surface dds relative to ancestor rel			
-	def paintOnDDS(self, dds, rel=None):
+	def paintOnDDS(self, dds, rel=None, exclwnd=None):
+		#print 'paintOnDDS', self, 'subwindows', len(self._subwindows), self._rect
 		# first paint self
 		rgn = self.getClipRgn(rel)
 		dst = self.getwindowpos(rel)
@@ -1580,17 +1579,37 @@ class Region(Window):
 		L = self._subwindows[:]
 		L.reverse()
 		for w in L:
-			w.paintOnDDS(dds, rel)
+			w.paintOnDDS(dds, rel, exclwnd)
+
+		# then paint transition children bottom up
+		if self._transition and self._transition._isrunning() and self._transition._ismaster(self):
+			L = self._transition.windows[1:]
+			L.reverse()
+			for wnd in L:
+				wnd.paintOnDDS(dds, rel, exclwnd)
 
 	# get a copy of the screen area of this window
-	def getBackDDS(self):
+	def getBackDDS(self, exclwnd=None):
 		dds = self.createDDS()
 		bf = self._topwindow.getDrawBuffer()
 		while bf.IsLost():
 			win32api.Sleep(50)
 			bf.Restore()
 		x, y, w, h = self.getwindowpos()
-		self._topwindow.paint()
+		self._topwindow.paint(exclwnd=exclwnd)
+		try:
+			dds.Blt((0,0,w,h), bf, (x, y, x+w, y+h), ddraw.DDBLT_WAIT)
+		except ddraw.error, arg:
+			print arg
+		return dds
+
+	def updateBackDDS(self, dds, exclwnd=None):
+		bf = self._topwindow.getDrawBuffer()
+		while bf.IsLost():
+			win32api.Sleep(50)
+			bf.Restore()
+		x, y, w, h = self.getwindowpos()
+		self._topwindow.paint(exclwnd=exclwnd)
 		try:
 			dds.Blt((0,0,w,h), bf, (x, y, x+w, y+h), ddraw.DDBLT_WAIT)
 		except ddraw.error, arg:
@@ -1602,7 +1621,6 @@ class Region(Window):
 		src_w, src_h = srfc.GetSurfaceDesc().GetSize()
 		rc_src = (0, 0, src_w, src_h)
 		buf = self._topwindow.getDrawBuffer()
-		if not buf: return
 		if rc_dst[2]!=0 and rc_dst[3]!=0:
 			try:
 				buf.Blt(self.ltrb(rc_dst), srfc, rc_src, ddraw.DDBLT_WAIT)
@@ -1624,7 +1642,12 @@ class Region(Window):
 			print arg			
 
 	# normal painting
-	def _paint_0(self, rc=None):
+	def _paint_0(self, rc=None, exclwnd=None):
+#		if self._transition and self._transition._isrunning():
+#			print 'normal paint while in transition', self 
+
+		if exclwnd==self: return
+
 		# first paint self
 		dst = self.getwindowpos(self._topwindow)
 		rgn = self.getClipRgn(self._topwindow)
@@ -1648,25 +1671,33 @@ class Region(Window):
 		L = self._subwindows[:]
 		L.reverse()
 		for w in L:
-			w.paint(rc)
+			if w!=exclwnd:
+				w.paint(rc, exclwnd)
 
 	# transition, multiElement==false
 	# trans engine: calls self._paintOnDDS(self._drawsurf)
 	# i.e. trans engine is responsible to paint only this 
-	def _paint_1(self):
+	def _paint_1(self, rc=None, exclwnd=None):
+		# print 'transition, multiElement==false', self
+		if exclwnd==self: return
+
 		# first paint self transition surface
 		self.bltDDS(self._drawsurf)
-			
+		
 		# then paint children bottom up normally
 		L = self._subwindows[:]
 		L.reverse()
 		for w in L:
-			w.paint()
+			if w!=exclwnd:
+				w.paint(rc, exclwnd)
 
 	# transition, multiElement==true, childrenClip==false
 	# trans engine: calls self.paintOnDDS(self._drawsurf, self)
 	# i.e. trans engine responsible to paint correctly everything below 
-	def _paint_2(self):
+	def _paint_2(self, rc=None, exclwnd=None):
+		#print 'transition, multiElement==true, childrenClip==false', self
+		if exclwnd==self: return
+		
 		# paint transition surface
 		self.bltDDS(self._drawsurf)
 	
@@ -1681,11 +1712,10 @@ class Region(Window):
 	# transition, multiElement==true, childrenClip==true
 	# trans engine: calls self.paintOnDDS(self._drawsurf, self)
 	# i.e. trans engine is responsible to paint correctly everything below
-	def _paint_3(self):
-		# 1. first do a normal painting to paint children
-		self._paint_0()
+	def _paint_3(self, rc=None, exclwnd=None):
+		# print 'transition, multiElement==true, childrenClip==true',self
 
-		# 2. and then a _paint_2 but on ChildrenRgnComplement
+		# 1. and then a _paint_2 but on ChildrenRgnComplement
 		# use GDI to paint transition surface 
 		# (gdi supports clipping but surface bliting not)
 		src = self._drawsurf
@@ -1702,15 +1732,25 @@ class Region(Window):
 			print arg			
 		self.__releaseDC(dst,dstDC)
 		self.__releaseDC(src,srcDC)
-		rgn.DeleteObject()			
+		rgn.DeleteObject()
+				
+		# 2. do a normal painting to paint children
+		if self._transition:
+			L = self._transition.windows[1:]
+			L.reverse()
+			for wnd in L:
+				wnd._paint_0(rc, exclwnd)
 	
 	# paint while frozen
-	def _paint_4(self):
-		if not self._passive.IsLost():
-			self.bltDDS(self._passive)
+	def _paint_4(self, rc=None, exclwnd=None):
+		#print 'paint while frozen'
+		if exclwnd==self: return
+		if not self._fromsurf.IsLost():
+			self.bltDDS(self._fromsurf)
 
 	# painting while resizing for fit=='meet' (scale==0)
-	def _paint_5(self):
+	def _paint_5(self, rc=None, exclwnd=None):
+		if exclwnd==self: return
 		# lie for a moment 
 		# we 'll restore truth before anybody notice it
 		temp = self._rect
@@ -1740,26 +1780,26 @@ class Region(Window):
 		# and scale to current rect
 		self.bltDDS(dds)
 		
-	def paint(self, rc=None):
-		if not self._isvisible:
+	def paint(self, rc=None, exclwnd=None):
+		if not self._isvisible or exclwnd==self:
 			return
 
 		if self._resizing and self._scale==0:
-			self._paint_5()
+			self._paint_5(rc, exclwnd)
 			return
 
-		if self._transition and self._transition._isrunning() and \
-				self._transition._ismaster(self):
-			if self._multiElement:
-				if self._childrenClip:
-					self._paint_3()
+		if self._transition and self._transition._isrunning():
+			if self._transition._ismaster(self):
+				if self._multiElement:
+					if self._childrenClip:
+						self._paint_3(rc, exclwnd)
+					else:
+						self._paint_2(rc, exclwnd)
 				else:
-					self._paint_2()
-			else:
-				self._paint_1()
+					self._paint_1(rc, exclwnd)
 			return
 
-		self._paint_0(rc)
+		self._paint_0(rc, exclwnd)
 		
 	def createDDS(self, w=0, h=0):
 		if w==0 or h==0:
@@ -1832,7 +1872,8 @@ class Region(Window):
 	# Transitions interface
 	#		
 	def begintransition(self, outtrans, runit, dict, cb):
-		if not self.__prepare_transition():
+		if self._transition:
+			print 'Multiple Transitions!'
 			if cb:
 				apply(apply, cb)
 			return
@@ -1841,7 +1882,9 @@ class Region(Window):
 		self._outtrans = outtrans
 		self._transition = win32transitions.TransitionEngine(self, outtrans, runit, dict, cb)
 		if runit:
-			#print 'begintransition', self, outtrans, runit, dict
+			# uncommend the next line to freeze things
+			# at the moment begintransition is called
+			# win32ui.MessageBox('begintransition')
 			self._transition.begintransition()
 		else:
 			print 'begintransition runit=',runit
@@ -1851,29 +1894,14 @@ class Region(Window):
 			#print 'endtransition', self
 			self._transition.endtransition()
 			self._transition = None
-	
-##	def freeze_content(self, how):
-##		# Freeze the contents of the window, depending on how:
-##		# how='transition' until the next transition,
-##		# how='hold' forever,
-##		# how=None clears a previous how='hold'. This basically means the next
-##		# close() of a display list does not do an erase.
-##		#print 'freeze_content', how, self
-##		if how:
-##			self._topwindow.update()
-##			self._passive = self.getBackDDS()
-##			self._frozen = how
-##		elif self._frozen:
-##			self._passive = None
-##			self._frozen = None
-##			self.update()
 
 	def jointransition(self, window, cb):
 		# Join the transition already created on "window".
 		if not window._transition:
 			print 'Joining without a transition', self, window, window._transition
 			return
-		if not self.__prepare_transition():
+		if self._transition:
+			print 'Multiple Transitions!'
 			return
 		ismaster = self._windowlevel() < window._windowlevel()
 		self._transition = window._transition
@@ -1884,14 +1912,6 @@ class Region(Window):
 			self._transition.settransitionvalue(value)
 		else:
 			print 'settransitionvalue without a transition'
-
-	def __prepare_transition(self):
-		"""Check that begintransition() is allowed, create the offscreen bitmap"""
-		if self._transition:
-			print 'Multiple Transitions!'
-			return 0
-		self._passive = self.getBackDDS()
-		return 1
 
 	def _windowlevel(self):
 		"""Returns 0 for toplevel windows, 1 for children of toplevel windows, etc"""
@@ -1989,13 +2009,13 @@ class Viewport(Region):
 	# 
 	# Painting section
 	# 
-	def update(self, rc=None):
-		self._ctx.update(rc)
+	def update(self, rc=None, exclwnd=None):
+		self._ctx.update(rc, exclwnd)
 		if self._callbacks.has_key(WindowContentChanged):
 			func, arg = self._callbacks[WindowContentChanged]
 			func(arg, self, WindowContentChanged, __main__.toplevel.getcurtime())
 
-	def paint(self, rc=None):
+	def paint(self, rc=None, exclwnd=None):
 		drawBuffer = self._ctx.getDrawBuffer()
 
 		if rc is None:
@@ -2018,7 +2038,8 @@ class Viewport(Region):
 		L = self._subwindows[:]
 		L.reverse()
 		for w in L:
-			w.paint(rc)
+			if w!=exclwnd:
+				w.paint(rc, exclwnd)
 
 	# 
 	# Mouse section
@@ -2600,3 +2621,4 @@ class _ResizeableDisplayList(_DisplayList):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		self._list.append(('label', str))
+ 
