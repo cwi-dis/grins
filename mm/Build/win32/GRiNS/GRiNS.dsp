@@ -170,6 +170,10 @@ SOURCE=.\M_ArmStates.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_ASXParser.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_Attrdefs.c
 # End Source File
 # Begin Source File
@@ -227,6 +231,10 @@ SOURCE=.\M_Channel.c
 # Begin Source File
 
 SOURCE=.\M_ChannelMap.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_chunk.c
 # End Source File
 # Begin Source File
 
@@ -362,6 +370,10 @@ SOURCE=.\M_ImageChannel.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_keyword.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_LabelChannel.c
 # End Source File
 # Begin Source File
@@ -387,6 +399,10 @@ SOURCE=.\M_MainDialog.c
 # Begin Source File
 
 SOURCE=.\M_MainFrame.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_MediaChannel.c
 # End Source File
 # Begin Source File
 
@@ -522,7 +538,31 @@ SOURCE=.\M_pywin.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_pywin__debugger.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywin__debugger__dbgcon.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywin__debugger__dbgpyapp.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywin__debugger__debugger.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywin__debugger__DebuggerResourcesCon.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_pywin__dialogs.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywin__dialogs__ideoptions.c
 # End Source File
 # Begin Source File
 
@@ -542,6 +582,34 @@ SOURCE=.\M_pywin__framework__cmdline.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_pywin__framework__editor.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywin__framework__editor__color.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywin__framework__editor__color__coloreditor.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywin__framework__editor__color__scintillacon.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywin__framework__editor__configui.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywin__framework__editor__document.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywin__framework__editor__template.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_pywin__framework__help.c
 # End Source File
 # Begin Source File
@@ -551,6 +619,10 @@ SOURCE=.\M_pywin__framework__interact.c
 # Begin Source File
 
 SOURCE=.\M_pywin__framework__intpyapp.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywin__framework__intpydde.c
 # End Source File
 # Begin Source File
 
@@ -630,7 +702,15 @@ SOURCE=.\M_RealAudioChannel.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_RealChannel.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_RealPixChannel.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_realsupport.c
 # End Source File
 # Begin Source File
 
@@ -639,6 +719,10 @@ SOURCE=.\M_RealTextChannel.c
 # Begin Source File
 
 SOURCE=.\M_RealVideoChannel.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_RealWindowChannel.c
 # End Source File
 # Begin Source File
 
