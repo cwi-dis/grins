@@ -1,6 +1,12 @@
-Welcome to Oratrix GRiNS for RealSystem G2, version 1.5. GRiNS for RealSystem G2
-lets you create, edit and preview SMIL presentations and is tailored towards
-presentations that will be viewed with RealPlayer G2.
+Welcome to Oratrix GRiNS for RealSystem G2, version 1.5. GRiNS for
+RealSystem G2 lets you create, edit and preview SMIL presentations and
+is tailored towards presentations that will be viewed with RealPlayer
+G2.
+
+The minimum system requirements for this distribution are a 200Mhz PPC 
+Macintosh with 32 Mb of real memory, 65 Mb of virtual memory and MacOS 
+8.1. 64Mb of real memory and MacOS 8.5 are recommended, and a faster
+processor will result in better preview playback.
 
 This is a time-limited beta test distribution. You are strongly
 advised to check the release notes to see what works and what doesn't
@@ -8,11 +14,14 @@ work. Feedback on this beta release is eagerly awaited, send to
 grins-support@oratrix.com please.
 
 GRiNS for RealSystem G2 is available in a Pro version and a Lite version,
-and for various platforms. See the Oratrix website, www.oratrix.com, for details.
+and for various platforms. See the Oratrix website, www.oratrix.com,
+for details.
 
 In order to preview your presentations you need RealPlayer G2 or later, either
 in the Basic or Plus version. See the RealNetworks website www.real.com
-for details.
+for details. Operation of GRiNS for RealSystem G2 on a machine without 
+RealPlayer installed may be possible with some restrictions, but this
+is not a supported configuration.
 
 In order to be able to run GRiNS you need a license key. You have been provided
 with such a key when you bought your copy of GRiNS or downloaded your evaluation
