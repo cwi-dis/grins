@@ -1,5 +1,7 @@
 __version__ = "$Id$"
 
+print "DEBUG: using the temporal view."
+
 import windowinterface, WMEVENTS
 import MMNode
 from TemporalViewDialog import TemporalViewDialog

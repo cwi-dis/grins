@@ -4,47 +4,20 @@ TODO for Michael :-)
 What am I doing:
 ----------------
 
-* Make the new UI stuff look like the old ui stuff (*sigh*).
-
-* Push-back bars on pars.
-
-* Pasting.
-
-* Expand an collapse nodes.
-
 Priority top-to-bottom.
 ------------------------
-
-* Transition boxes
-
-* Convert all the drawing code to pixels. Floating point numbers are silly and difficult.
-
-* Disable drag + drop of structure nodes.
-
-* Fix bug: paste image node.
-
-* Display the player and the structure view at startup.
 
 * Toolbar or asset box - D&D transitions
 
 * Create templates for Snap! (slideshow)
 
-* Enable Quicktime support
-
-* Traverse through the files and use the options
-	in features.py.
-
-* Add nice handles to the par and seq nodes.
-
-* Bug - the play button is stuck.
-
 Incoming
 --------
 
-* Add drop-downs in the toolbar for bitrate. Ask Kleanthis.
 * Add a asset box for transitions.
-* Windows media support.
-* Configure Eudora to do mail locally rather than to the server.
+
 * Clean up the resource files
+
 * Pop up a list of transitions.
+
 * Show whether a node is empty or not.
