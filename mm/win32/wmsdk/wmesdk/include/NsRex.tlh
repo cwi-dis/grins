@@ -1,0 +1,191 @@
+// Created by Microsoft (R) C/C++ Compiler Version 12.00.8472.0 (63d53fae).
+//
+//
+// C++ source equivalent of Win32 type library C:\Program Files\Windows Media Components\Tools\NsRex.exe
+// compiler-generated file created 03/20/00 at 14:25:05 - DO NOT EDIT!
+
+#pragma once
+#pragma pack(push, 8)
+
+#include <comdef.h>
+
+namespace ASFRte {
+
+//
+// Forward references and typedefs
+//
+
+struct __declspec(uuid("7deba672-68ab-11d0-98eb-00aa00bbb52c"))
+/* dispinterface */ IAsfRTEncoder;
+struct /* coclass */ NSASFRte;
+
+//
+// Smart pointer typedef declarations
+//
+
+_COM_SMARTPTR_TYPEDEF(IAsfRTEncoder, __uuidof(IDispatch));
+
+//
+// Type library items
+//
+
+struct __declspec(uuid("7deba672-68ab-11d0-98eb-00aa00bbb52c"))
+IAsfRTEncoder : IDispatch
+{
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetAllowScripts,put=PutAllowScripts))
+    VARIANT_BOOL AllowScripts;
+    __declspec(property(get=GetAllowVideo,put=PutAllowVideo))
+    VARIANT_BOOL AllowVideo;
+    __declspec(property(get=GetAllowAudio,put=PutAllowAudio))
+    VARIANT_BOOL AllowAudio;
+    __declspec(property(get=GetImageWidth,put=PutImageWidth))
+    short ImageWidth;
+    __declspec(property(get=GetImageHeight,put=PutImageHeight))
+    short ImageHeight;
+    __declspec(property(get=GetFramesPerSecond,put=PutFramesPerSecond))
+    short FramesPerSecond;
+    __declspec(property(get=GetSecondsPerIFrame,put=PutSecondsPerIFrame))
+    short SecondsPerIFrame;
+    __declspec(property(get=GetBitsPerPixel,put=PutBitsPerPixel))
+    short BitsPerPixel;
+    __declspec(property(get=GetVideoInputFOURCC,put=PutVideoInputFOURCC))
+    long VideoInputFOURCC;
+    __declspec(property(get=GetDelayBuffer,put=PutDelayBuffer))
+    short DelayBuffer;
+    __declspec(property(get=GetDescription,put=PutDescription))
+    _bstr_t Description;
+    __declspec(property(get=GetAudioFormatTag,put=PutAudioFormatTag))
+    long AudioFormatTag;
+    __declspec(property(get=GetAudioSource,put=PutAudioSource))
+    _bstr_t AudioSource;
+    __declspec(property(get=GetVideoCodecFOURCC,put=PutVideoCodecFOURCC))
+    long VideoCodecFOURCC;
+    __declspec(property(get=GetIPPort,put=PutIPPort))
+    short IPPort;
+    __declspec(property(get=GetBandwidth,put=PutBandwidth))
+    long Bandwidth;
+    __declspec(property(get=GetIsStarted,put=PutIsStarted))
+    VARIANT_BOOL IsStarted;
+    __declspec(property(get=GetInputSourceFile,put=PutInputSourceFile))
+    _bstr_t InputSourceFile;
+    __declspec(property(get=GetIsNetEnabled,put=PutIsNetEnabled))
+    VARIANT_BOOL IsNetEnabled;
+    __declspec(property(get=GetNetShowServer,put=PutNetShowServer))
+    _bstr_t NetShowServer;
+    __declspec(property(get=GetStreamAlias,put=PutStreamAlias))
+    _bstr_t StreamAlias;
+    __declspec(property(get=GetNumClients,put=PutNumClients))
+    short NumClients;
+    __declspec(property(get=GetRecordFileName,put=PutRecordFileName))
+    _bstr_t RecordFileName;
+    __declspec(property(get=GetRecordDuration,put=PutRecordDuration))
+    long RecordDuration;
+    __declspec(property(get=GetRecordSize,put=PutRecordSize))
+    long RecordSize;
+    __declspec(property(get=GetIsRecording,put=PutIsRecording))
+    VARIANT_BOOL IsRecording;
+    __declspec(property(get=GetRecordMaxSize,put=PutRecordMaxSize))
+    long RecordMaxSize;
+    __declspec(property(get=GetRecordAutoStart,put=PutRecordAutoStart))
+    VARIANT_BOOL RecordAutoStart;
+    __declspec(property(get=GetRecordAutoOverride,put=PutRecordAutoOverride))
+    VARIANT_BOOL RecordAutoOverride;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    // Methods:
+    long SendScript (
+        _bstr_t pszType,
+        _bstr_t pszText );
+    long LoadASD (
+        _bstr_t fileName );
+    long Start ( );
+    long Stop ( );
+    long RecordStart ( );
+    long RecordStop ( );
+    long Advise (
+        const _variant_t & cbDispatch,
+        long * pdwCookie );
+    long Unadvise (
+        long dwCookie );
+
+    // Properties:
+    VARIANT_BOOL GetAllowScripts ( );
+    void PutAllowScripts ( VARIANT_BOOL _val );
+    VARIANT_BOOL GetAllowVideo ( );
+    void PutAllowVideo ( VARIANT_BOOL _val );
+    VARIANT_BOOL GetAllowAudio ( );
+    void PutAllowAudio ( VARIANT_BOOL _val );
+    short GetImageWidth ( );
+    void PutImageWidth ( short _val );
+    short GetImageHeight ( );
+    void PutImageHeight ( short _val );
+    short GetFramesPerSecond ( );
+    void PutFramesPerSecond ( short _val );
+    short GetSecondsPerIFrame ( );
+    void PutSecondsPerIFrame ( short _val );
+    short GetBitsPerPixel ( );
+    void PutBitsPerPixel ( short _val );
+    long GetVideoInputFOURCC ( );
+    void PutVideoInputFOURCC ( long _val );
+    short GetDelayBuffer ( );
+    void PutDelayBuffer ( short _val );
+    _bstr_t GetDescription ( );
+    void PutDescription ( _bstr_t _val );
+    long GetAudioFormatTag ( );
+    void PutAudioFormatTag ( long _val );
+    _bstr_t GetAudioSource ( );
+    void PutAudioSource ( _bstr_t _val );
+    long GetVideoCodecFOURCC ( );
+    void PutVideoCodecFOURCC ( long _val );
+    short GetIPPort ( );
+    void PutIPPort ( short _val );
+    long GetBandwidth ( );
+    void PutBandwidth ( long _val );
+    VARIANT_BOOL GetIsStarted ( );
+    void PutIsStarted ( VARIANT_BOOL _val );
+    _bstr_t GetInputSourceFile ( );
+    void PutInputSourceFile ( _bstr_t _val );
+    VARIANT_BOOL GetIsNetEnabled ( );
+    void PutIsNetEnabled ( VARIANT_BOOL _val );
+    _bstr_t GetNetShowServer ( );
+    void PutNetShowServer ( _bstr_t _val );
+    _bstr_t GetStreamAlias ( );
+    void PutStreamAlias ( _bstr_t _val );
+    short GetNumClients ( );
+    void PutNumClients ( short _val );
+    _bstr_t GetRecordFileName ( );
+    void PutRecordFileName ( _bstr_t _val );
+    long GetRecordDuration ( );
+    void PutRecordDuration ( long _val );
+    long GetRecordSize ( );
+    void PutRecordSize ( long _val );
+    VARIANT_BOOL GetIsRecording ( );
+    void PutIsRecording ( VARIANT_BOOL _val );
+    long GetRecordMaxSize ( );
+    void PutRecordMaxSize ( long _val );
+    VARIANT_BOOL GetRecordAutoStart ( );
+    void PutRecordAutoStart ( VARIANT_BOOL _val );
+    VARIANT_BOOL GetRecordAutoOverride ( );
+    void PutRecordAutoOverride ( VARIANT_BOOL _val );
+};
+
+struct __declspec(uuid("7deba670-68ab-11d0-98eb-00aa00bbb52c"))
+NSASFRte;
+    // [ default ] dispinterface IAsfRTEncoder
+
+//
+// Wrapper method implementations
+//
+
+#include "NsRex.tli"
+
+} // namespace ASFRte
+
+#pragma pack(pop)

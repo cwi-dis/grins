@@ -1,0 +1,353 @@
+// Created by Microsoft (R) C/C++ Compiler Version 12.00.8472.0 (63d53fae).
+//
+//
+// Wrapper implementations for Win32 type library C:\Program Files\Windows Media Components\Tools\NsRex.exe
+// compiler-generated file created 03/20/00 at 14:25:05 - DO NOT EDIT!
+
+#pragma once
+
+//
+// dispinterface IAsfRTEncoder wrapper method implementations
+//
+
+inline long IAsfRTEncoder::SendScript ( _bstr_t pszType, _bstr_t pszText ) {
+    long _result;
+    _com_dispatch_method(this, 0x1e, DISPATCH_METHOD, VT_I4, (void*)&_result, 
+        L"\x0008\x0008", (BSTR)pszType, (BSTR)pszText);
+    return _result;
+}
+
+inline long IAsfRTEncoder::LoadASD ( _bstr_t fileName ) {
+    long _result;
+    _com_dispatch_method(this, 0x1f, DISPATCH_METHOD, VT_I4, (void*)&_result, 
+        L"\x0008", (BSTR)fileName);
+    return _result;
+}
+
+inline long IAsfRTEncoder::Start ( ) {
+    long _result;
+    _com_dispatch_method(this, 0x20, DISPATCH_METHOD, VT_I4, (void*)&_result, NULL);
+    return _result;
+}
+
+inline long IAsfRTEncoder::Stop ( ) {
+    long _result;
+    _com_dispatch_method(this, 0x21, DISPATCH_METHOD, VT_I4, (void*)&_result, NULL);
+    return _result;
+}
+
+inline long IAsfRTEncoder::RecordStart ( ) {
+    long _result;
+    _com_dispatch_method(this, 0x22, DISPATCH_METHOD, VT_I4, (void*)&_result, NULL);
+    return _result;
+}
+
+inline long IAsfRTEncoder::RecordStop ( ) {
+    long _result;
+    _com_dispatch_method(this, 0x23, DISPATCH_METHOD, VT_I4, (void*)&_result, NULL);
+    return _result;
+}
+
+inline long IAsfRTEncoder::Advise ( const _variant_t & cbDispatch, long * pdwCookie ) {
+    long _result;
+    _com_dispatch_method(this, 0x24, DISPATCH_METHOD, VT_I4, (void*)&_result, 
+        L"\x000c\x4003", &cbDispatch, pdwCookie);
+    return _result;
+}
+
+inline long IAsfRTEncoder::Unadvise ( long dwCookie ) {
+    long _result;
+    _com_dispatch_method(this, 0x25, DISPATCH_METHOD, VT_I4, (void*)&_result, 
+        L"\x0003", dwCookie);
+    return _result;
+}
+
+inline VARIANT_BOOL IAsfRTEncoder::GetAllowScripts ( ) {
+    VARIANT_BOOL _result;
+    _com_dispatch_propget(this, 0x1, VT_BOOL, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutAllowScripts ( VARIANT_BOOL _val ) {
+    _com_dispatch_propput(this, 0x1, VT_BOOL, _val);
+}
+
+inline VARIANT_BOOL IAsfRTEncoder::GetAllowVideo ( ) {
+    VARIANT_BOOL _result;
+    _com_dispatch_propget(this, 0x2, VT_BOOL, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutAllowVideo ( VARIANT_BOOL _val ) {
+    _com_dispatch_propput(this, 0x2, VT_BOOL, _val);
+}
+
+inline VARIANT_BOOL IAsfRTEncoder::GetAllowAudio ( ) {
+    VARIANT_BOOL _result;
+    _com_dispatch_propget(this, 0x3, VT_BOOL, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutAllowAudio ( VARIANT_BOOL _val ) {
+    _com_dispatch_propput(this, 0x3, VT_BOOL, _val);
+}
+
+inline short IAsfRTEncoder::GetImageWidth ( ) {
+    short _result;
+    _com_dispatch_propget(this, 0x4, VT_I2, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutImageWidth ( short _val ) {
+    _com_dispatch_propput(this, 0x4, VT_I2, _val);
+}
+
+inline short IAsfRTEncoder::GetImageHeight ( ) {
+    short _result;
+    _com_dispatch_propget(this, 0x5, VT_I2, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutImageHeight ( short _val ) {
+    _com_dispatch_propput(this, 0x5, VT_I2, _val);
+}
+
+inline short IAsfRTEncoder::GetFramesPerSecond ( ) {
+    short _result;
+    _com_dispatch_propget(this, 0x6, VT_I2, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutFramesPerSecond ( short _val ) {
+    _com_dispatch_propput(this, 0x6, VT_I2, _val);
+}
+
+inline short IAsfRTEncoder::GetSecondsPerIFrame ( ) {
+    short _result;
+    _com_dispatch_propget(this, 0x7, VT_I2, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutSecondsPerIFrame ( short _val ) {
+    _com_dispatch_propput(this, 0x7, VT_I2, _val);
+}
+
+inline short IAsfRTEncoder::GetBitsPerPixel ( ) {
+    short _result;
+    _com_dispatch_propget(this, 0x8, VT_I2, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutBitsPerPixel ( short _val ) {
+    _com_dispatch_propput(this, 0x8, VT_I2, _val);
+}
+
+inline long IAsfRTEncoder::GetVideoInputFOURCC ( ) {
+    long _result;
+    _com_dispatch_propget(this, 0x9, VT_I4, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutVideoInputFOURCC ( long _val ) {
+    _com_dispatch_propput(this, 0x9, VT_I4, _val);
+}
+
+inline short IAsfRTEncoder::GetDelayBuffer ( ) {
+    short _result;
+    _com_dispatch_propget(this, 0xa, VT_I2, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutDelayBuffer ( short _val ) {
+    _com_dispatch_propput(this, 0xa, VT_I2, _val);
+}
+
+inline _bstr_t IAsfRTEncoder::GetDescription ( ) {
+    BSTR _result;
+    _com_dispatch_propget(this, 0xb, VT_BSTR, (void*)&_result);
+    return _bstr_t(_result, false);
+}
+
+inline void IAsfRTEncoder::PutDescription ( _bstr_t _val ) {
+    _com_dispatch_propput(this, 0xb, VT_BSTR, (BSTR)_val);
+}
+
+inline long IAsfRTEncoder::GetAudioFormatTag ( ) {
+    long _result;
+    _com_dispatch_propget(this, 0xc, VT_I4, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutAudioFormatTag ( long _val ) {
+    _com_dispatch_propput(this, 0xc, VT_I4, _val);
+}
+
+inline _bstr_t IAsfRTEncoder::GetAudioSource ( ) {
+    BSTR _result;
+    _com_dispatch_propget(this, 0xd, VT_BSTR, (void*)&_result);
+    return _bstr_t(_result, false);
+}
+
+inline void IAsfRTEncoder::PutAudioSource ( _bstr_t _val ) {
+    _com_dispatch_propput(this, 0xd, VT_BSTR, (BSTR)_val);
+}
+
+inline long IAsfRTEncoder::GetVideoCodecFOURCC ( ) {
+    long _result;
+    _com_dispatch_propget(this, 0xe, VT_I4, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutVideoCodecFOURCC ( long _val ) {
+    _com_dispatch_propput(this, 0xe, VT_I4, _val);
+}
+
+inline short IAsfRTEncoder::GetIPPort ( ) {
+    short _result;
+    _com_dispatch_propget(this, 0xf, VT_I2, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutIPPort ( short _val ) {
+    _com_dispatch_propput(this, 0xf, VT_I2, _val);
+}
+
+inline long IAsfRTEncoder::GetBandwidth ( ) {
+    long _result;
+    _com_dispatch_propget(this, 0x10, VT_I4, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutBandwidth ( long _val ) {
+    _com_dispatch_propput(this, 0x10, VT_I4, _val);
+}
+
+inline VARIANT_BOOL IAsfRTEncoder::GetIsStarted ( ) {
+    VARIANT_BOOL _result;
+    _com_dispatch_propget(this, 0x11, VT_BOOL, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutIsStarted ( VARIANT_BOOL _val ) {
+    _com_dispatch_propput(this, 0x11, VT_BOOL, _val);
+}
+
+inline _bstr_t IAsfRTEncoder::GetInputSourceFile ( ) {
+    BSTR _result;
+    _com_dispatch_propget(this, 0x12, VT_BSTR, (void*)&_result);
+    return _bstr_t(_result, false);
+}
+
+inline void IAsfRTEncoder::PutInputSourceFile ( _bstr_t _val ) {
+    _com_dispatch_propput(this, 0x12, VT_BSTR, (BSTR)_val);
+}
+
+inline VARIANT_BOOL IAsfRTEncoder::GetIsNetEnabled ( ) {
+    VARIANT_BOOL _result;
+    _com_dispatch_propget(this, 0x13, VT_BOOL, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutIsNetEnabled ( VARIANT_BOOL _val ) {
+    _com_dispatch_propput(this, 0x13, VT_BOOL, _val);
+}
+
+inline _bstr_t IAsfRTEncoder::GetNetShowServer ( ) {
+    BSTR _result;
+    _com_dispatch_propget(this, 0x14, VT_BSTR, (void*)&_result);
+    return _bstr_t(_result, false);
+}
+
+inline void IAsfRTEncoder::PutNetShowServer ( _bstr_t _val ) {
+    _com_dispatch_propput(this, 0x14, VT_BSTR, (BSTR)_val);
+}
+
+inline _bstr_t IAsfRTEncoder::GetStreamAlias ( ) {
+    BSTR _result;
+    _com_dispatch_propget(this, 0x15, VT_BSTR, (void*)&_result);
+    return _bstr_t(_result, false);
+}
+
+inline void IAsfRTEncoder::PutStreamAlias ( _bstr_t _val ) {
+    _com_dispatch_propput(this, 0x15, VT_BSTR, (BSTR)_val);
+}
+
+inline short IAsfRTEncoder::GetNumClients ( ) {
+    short _result;
+    _com_dispatch_propget(this, 0x16, VT_I2, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutNumClients ( short _val ) {
+    _com_dispatch_propput(this, 0x16, VT_I2, _val);
+}
+
+inline _bstr_t IAsfRTEncoder::GetRecordFileName ( ) {
+    BSTR _result;
+    _com_dispatch_propget(this, 0x17, VT_BSTR, (void*)&_result);
+    return _bstr_t(_result, false);
+}
+
+inline void IAsfRTEncoder::PutRecordFileName ( _bstr_t _val ) {
+    _com_dispatch_propput(this, 0x17, VT_BSTR, (BSTR)_val);
+}
+
+inline long IAsfRTEncoder::GetRecordDuration ( ) {
+    long _result;
+    _com_dispatch_propget(this, 0x18, VT_I4, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutRecordDuration ( long _val ) {
+    _com_dispatch_propput(this, 0x18, VT_I4, _val);
+}
+
+inline long IAsfRTEncoder::GetRecordSize ( ) {
+    long _result;
+    _com_dispatch_propget(this, 0x19, VT_I4, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutRecordSize ( long _val ) {
+    _com_dispatch_propput(this, 0x19, VT_I4, _val);
+}
+
+inline VARIANT_BOOL IAsfRTEncoder::GetIsRecording ( ) {
+    VARIANT_BOOL _result;
+    _com_dispatch_propget(this, 0x1a, VT_BOOL, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutIsRecording ( VARIANT_BOOL _val ) {
+    _com_dispatch_propput(this, 0x1a, VT_BOOL, _val);
+}
+
+inline long IAsfRTEncoder::GetRecordMaxSize ( ) {
+    long _result;
+    _com_dispatch_propget(this, 0x1b, VT_I4, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutRecordMaxSize ( long _val ) {
+    _com_dispatch_propput(this, 0x1b, VT_I4, _val);
+}
+
+inline VARIANT_BOOL IAsfRTEncoder::GetRecordAutoStart ( ) {
+    VARIANT_BOOL _result;
+    _com_dispatch_propget(this, 0x1c, VT_BOOL, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutRecordAutoStart ( VARIANT_BOOL _val ) {
+    _com_dispatch_propput(this, 0x1c, VT_BOOL, _val);
+}
+
+inline VARIANT_BOOL IAsfRTEncoder::GetRecordAutoOverride ( ) {
+    VARIANT_BOOL _result;
+    _com_dispatch_propget(this, 0x1d, VT_BOOL, (void*)&_result);
+    return _result;
+}
+
+inline void IAsfRTEncoder::PutRecordAutoOverride ( VARIANT_BOOL _val ) {
+    _com_dispatch_propput(this, 0x1d, VT_BOOL, _val);
+}
