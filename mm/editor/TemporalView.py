@@ -8,6 +8,7 @@ from TemporalViewDialog import TemporalViewDialog
 from usercmd import *
 from TemporalWidgets import *
 from GeometricPrimitives import *
+import Clipboard
 
 class TemporalView(TemporalViewDialog):
 	def __init__(self, toplevel):
@@ -33,10 +34,12 @@ class TemporalView(TemporalViewDialog):
 
 		self.zoomfactorx = 1.0	# Scale everything to this! Done in the Widgets for this
 					# node rather than the geometric primitives!
+		self.destroynode = None	# This is the node to destroy (has been cut or deleleted.)
 
 
 	def destroy(self):
-		pass;
+		self.scene.destroy()
+		self.geodl.destroy()
 
 	def __add_commands(self):
 		self.commands = [
@@ -174,7 +177,8 @@ class TemporalView(TemporalViewDialog):
 
 	def update_popupmenu_node(self):
 		# Sets the popup menu to channel mode.
-		commands = self.commands
+		# TODO: what about the root node and so forth?
+		commands = self.commands + self.pastenotatrootcommands + self.notatrootcommands
 		popupmenu = [self.menu_no_nodes]	# there needs to be a default.
 		if len(self.selected_nodes) != 1:
 			print "Warning: Selection is: ", self.selected_nodes
@@ -185,7 +189,7 @@ class TemporalView(TemporalViewDialog):
 				popupmenu = self.menu_interior_nodes
 				commands = commands + self.interiorcommands \
 					   + self.pasteinteriorcommands \
-					   + self.structure_commands
+					   + self.structure_commands 
 				if n.children:
 					commands = commands + self.navigatecommands
 				if n is not self.root:
@@ -212,6 +216,7 @@ class TemporalView(TemporalViewDialog):
 		# Selection management.
 
 	def select_channel(self, channel):
+		print "Channel is: ", channel
 		self.selected_regions.append(channel)
 		self.just_selected = channel
 		self.focusobj = channel.channel
@@ -225,6 +230,8 @@ class TemporalView(TemporalViewDialog):
 
 	def select_node(self, node):
 		# Called back from the scene
+		print "DEBUG: selected node is: " , node
+		assert isinstance(node, MMNodeWidget)
 		self.just_selected = node
 		self.selected_nodes.append(node)
 		self.focusobj = node
@@ -247,6 +254,11 @@ class TemporalView(TemporalViewDialog):
 		print "TODO: rollback."
 
 	def commit(self, type):
+		if self.destroynode is not None:
+			self.destroynode.destroy()
+			self.destroynode = None
+		self.unselect_nodes()
+		self.unselect_channels()
 		self.redraw()
 
 	def kill(self):
@@ -426,9 +438,26 @@ class TemporalView(TemporalViewDialog):
 	def copycall(self):
 		if self.focusobj: self.focusobj.copycall()
 
+	def deletefocus(self, cut):
+		# Deletes the node with focus.
+		node = self.focusobj.node
+		if not node or node is self.root:
+			windowinterface.beep()
+			return
+		em = self.editmgr
+		if not em.transaction():
+			return
+		self.toplevel.setwaiting()
+		parent = node.GetParent()
+		siblings = parent.GetChildren()
+		nf = siblings.index(node)
+		em.delnode(node)
+		self.destroynode = node
+		em.commit()
+
 	def copyfocus(self):
-		import Clipboard
 		# Copies the node with focus to the clipboard.
+		print "DEBUG: copyfocus called."
 		if len(self.selected_nodes) == 1 and isinstance(self.selected_nodes[0], MMWidget):
 			node = self.selected_nodes[0].node
 			print "DEBUG: Node: ", node
@@ -492,3 +521,90 @@ class TemporalView(TemporalViewDialog):
 	def zoomoutcall(self):
 		self.zoomfactorx = self.zoomfactorx / 2
 		self.redraw()
+
+######################################################################
+# Upcalls from the widgets. Yes, this /is/ a bad hack.
+
+	def paste(self, where):
+		type, node = Clipboard.getclip()
+		if type <> 'node' or node is None:
+			windowinterface.showmessage(
+			    'The clipboard does not contain a node to paste',
+			    mtype = 'error', parent = self.window)
+			return
+		if isinstance(self.focusobj, TimeWidget):
+			print "DEBUG: trying to paste.."
+			n = self.focusobj.node
+			self.toplevel.setwaiting()
+			if node.context is not self.root.context:
+				node = node.CopyIntoContext(self.root.context)
+			else:
+				Clipboard.setclip(type, node.DeepCopy())
+			self.insertnode(node, where)
+		else:
+			windowinterface.showmessage(
+				'There is no selection to paste into',
+				mtype = 'error', parent = self.window)
+
+	def insertnode(self, node, where, index = -1, start_transaction = 1, end_transaction = 1):
+		# Inserts a node into the MMNode tree.
+		# This /is/ a bad, bad hack. This code has been cut and pasted from
+		# HeirarchyView.py, a better situation would be to rethink how nodes
+		# and channels are stored within GRiNS.
+
+		# This code really should be in MMNode or similar.
+		
+		# 'where' is coded as follows: -1: before 0: under 1: after
+		assert where in [-1,0,1] # asserts by MJVDG.. delete them if they
+		assert node is not None # catch too many bugs :-).
+		assert isinstance(node, MMNode.MMNode)
+		if not isinstance(self.focusobj, TimeWidget):
+			print "Warning: focus is not a MMWidget."
+			return -1
+		else:
+			thenode = self.focusobj.node
+
+		if where <> 0:
+			# Get the parent
+			parent = thenode.GetParent()
+			if parent is None:
+				windowinterface.showmessage(
+					"Can't insert before/after the root",
+					mtype = 'error', parent = self.window)
+				node.Destroy()
+				return 0
+		elif where == 0 and node.GetChannelType()!='animate':
+			# Special condition for animation
+			ntype = thenode.GetType()
+			if ntype not in MMNode.interiortypes and \
+			   (ntype != 'ext' or
+			    node.GetChannelType() != 'animate'): 
+				windowinterface.showmessage('Selection is a leaf node!',
+							    mtype = 'error', parent = self.window)
+				node.Destroy()
+				return 0
+		em = self.editmgr
+		if start_transaction and not em.transaction():
+			node.Destroy()
+			return 0
+
+		if where == 0:		# insert under (within? -mjvdg)
+			# Add (using editmgr) a child to the node with focus
+			# Index is the index in the list of children
+			# Node is the new node
+			em.addnode(thenode, index, node)
+		else:
+			children = parent.GetChildren()
+			i = children.index(thenode)
+			if where > 0:	# Insert after
+				i = i+1
+				em.addnode(parent, i, node)
+				# This code is actually unreachable - I suspect this function is
+				# only ever called when the node being added has no URL. -mjvdg
+				
+			else:		# Insert before
+				em.addnode(parent, i, node)
+		if end_transaction:
+			em.commit()
+		self.unselect_nodes()
+		return 1

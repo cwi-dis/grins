@@ -53,6 +53,11 @@ class MMNodeContext:
 			from SMILCssResolver import SMILCssResolver
 			self.cssResolver = SMILCssResolver(self)
 
+	def destroy(self):
+		# Well, I can cheat..
+		self.__init__(None)
+		self.cssResolver = None
+
 	def __repr__(self):
 		return '<MMNodeContext instance, channelnames=' \
 			+ `self.channelnames` + '>'
@@ -1568,6 +1573,43 @@ class MMNode:
 			self._subRegCssId = self.newSubRegCssId()
 			self._mediaCssId = self.newMediaCssId()
 
+	def destroy(self):
+		self.type = None	# see MMTypes.py
+		self.context = None	# From MMContext
+		self.uid = None		# Unique identifier for each node (starts at 1)
+		self.attrdict = None	# Attributes of this MMNode
+		self.d_attrdict = None	# Dynamic (changing) attrs of this MMNode
+		self.values = None
+		self.willplay = None	# Used for colours in the editor
+		self.shouldplay = None
+		self.canplay = None
+		self.parent = None	# The parent of this MMNode
+		self.children = None	# The sub-nodes of this MMNode
+		self.looping_body_self = None
+		self.realpix_body = None
+		self.caption_body = None
+		self.curloopcount = None
+		self.infoicon = None	# An alert icon
+		self.errormessage = None # An error message to accompany the alert icon
+		self.force_switch_choice = None
+		self.srdict = None
+		self.events = None	# events others are interested in
+		self.sched_children = None # arcs that depend on us
+		self.scheduled_children = None
+		self.arcs = None
+		self.durarcs = None
+		self.time_list = None
+		self.fullduration = None
+		self.pausestack = None	# used only by excl nodes
+		# stuff to do with the min attribute
+		self.has_min = None
+		self.delayed_arcs = None
+		self.__calcendtimecalled = None
+		self.views = None;	# Map {string -> Interactive} - that is, a list of views
+					# looking at this object.
+		self.collapsed = None;	# Whether this node is collapsed in the structure view.
+		self.timing_info_dict = None
+		
 	#
 	# Return string representation of self
 	#

@@ -587,7 +587,8 @@ class TimeWidget(MMNodeWidget, GeoDisplayWidget):
 		self.node.views['tempview'] = self
 
 	def destroy(self):
-		del self.node.views['tempview']
+		if self.node.views:
+			del self.node.views['tempview']
 
 	def set_x(self, l,r):
 		x,y,w,h = self.get_box()

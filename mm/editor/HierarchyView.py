@@ -642,6 +642,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.destroynode = None
 		self.selected_widget = None
 		self.focusobj = None
+		self.focusnode = None
 
 		self.refresh_scene_graph()
 		self.need_resize = 1

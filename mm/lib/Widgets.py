@@ -213,17 +213,13 @@ class Widget:
 
 	def select(self):
 		self.selected = 1
-		if not self.mother:
-			print "Error! Node has no mother - should I be selected?"
-		self.mother.dirty = 1
-		# DEBUG:
-		#print "Selected: ", self
-		#print "          coords: ", self.pos_abs
-		#print self.name
+		if self.mother:
+			self.mother.dirty = 1
 
 	def unselect(self):
 		self.selected = 0
-		self.mother.dirty = 1
+		if self.mother:
+			self.mother.dirty = 1
 
 	def get_minsize(self):
 		# Return the least size that this widget is likely to be.
@@ -236,7 +232,11 @@ class Widget:
 	# TODO: def deepcopy?? And other methods here.
 
 	def get_box(self):
-		l,t,r,b = self.pos_abs
+		try:
+			l,t,r,b = self.pos_abs
+		except:
+			print "DEBUG: self.pos_abs is: ", self.pos_abs
+			assert 0
 		return l,t,r-l,b-t
 	
 	def get_relx(self, xvalue):
