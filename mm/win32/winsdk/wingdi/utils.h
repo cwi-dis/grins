@@ -171,5 +171,43 @@ class PyDictParser
 	PyObject *m_pydict;
 	};
 
+// For use from a single thread
+
+#ifdef UNICODE
+inline WCHAR* toTEXT(char *p)
+	{
+	static WCHAR wsz[512];
+	MultiByteToWideChar(CP_ACP, 0, p, -1, wsz, 512);
+	return wsz;
+	}
+inline WCHAR* toTEXT(WCHAR *p)
+	{
+	return p;
+	}
+#define textchr wcschr
+
+inline char* toMB(WCHAR *p)
+	{
+	static char buf[512];
+	WideCharToMultiByte(CP_ACP, 0, p, -1, buf, 512, NULL, NULL);		
+	return buf;
+	}
+
+#else
+
+inline char* toTEXT(char *p)
+	{
+	return p;
+	}
+inline char* toTEXT(WCHAR *p)
+	{
+	static char buf[512];
+	WideCharToMultiByte(CP_ACP, 0, p, -1, buf, 512, NULL, NULL);		
+	return buf;
+	}
+#define textchr strchr
+
+#endif
+
 #endif
 

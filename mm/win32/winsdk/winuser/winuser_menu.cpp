@@ -6,10 +6,6 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 /*************************************************************************/
 
-#include "Python.h"
-
-#include <windows.h>
-
 #include "winuser_menu.h"
 
 #include "utils.h"
@@ -90,7 +86,7 @@ static PyObject* PyMenu_InsertMenu(PyMenu *self, PyObject *args)
 	char *pNewItem = NULL;
 	if (!PyArg_ParseTuple(args, "ii|iz", &uPosition, &uFlags, &uIDNewItem, &pNewItem))
 		return NULL;
-	BOOL res = InsertMenu(self->m_hMenu, uPosition, uFlags, uIDNewItem, pNewItem);
+	BOOL res = InsertMenu(self->m_hMenu, uPosition, uFlags, uIDNewItem, toTEXT(pNewItem));
 	if(!res){
 		seterror("InsertMenu", GetLastError());
 		return NULL;
@@ -105,7 +101,7 @@ static PyObject* PyMenu_AppendMenu(PyMenu *self, PyObject *args)
 	char *pNewItem = NULL;
 	if (!PyArg_ParseTuple(args, "i|iz", &uFlags, &uIDNewItem, &pNewItem))
 		return NULL;
-	BOOL res = AppendMenu(self->m_hMenu, uFlags, uIDNewItem, pNewItem);
+	BOOL res = AppendMenu(self->m_hMenu, uFlags, uIDNewItem, toTEXT(pNewItem));
 	if(!res){
 		seterror("AppendMenu", GetLastError());
 		return NULL;
@@ -175,6 +171,10 @@ static PyObject* PyMenu_GetMenuItemCount(PyMenu *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args,""))
 		return NULL;
+#ifdef _WIN32_WCE
+	seterror("GetMenuItemCount", "Unsupported");
+	return NULL;
+#else
 	int count = GetMenuItemCount(self->m_hMenu);
 	if(count < 0)
 		{
@@ -182,6 +182,7 @@ static PyObject* PyMenu_GetMenuItemCount(PyMenu *self, PyObject *args)
 		return NULL;
 		}
 	return Py_BuildValue("i", count);
+#endif
 }
 
 static PyObject* PyMenu_Detach(PyMenu *self, PyObject *args)

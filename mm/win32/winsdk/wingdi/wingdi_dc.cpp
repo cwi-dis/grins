@@ -392,7 +392,7 @@ static PyObject* PyDC_GetTextExtent(PyDC *self, PyObject *args)
 	if (!PyArg_ParseTuple (args, "s#", &pString, &cbString))
 	  return NULL;
 	SIZE sz;
-	BOOL res = GetTextExtentPoint32(self->m_hDC, pString, cbString, &sz);
+	BOOL res = GetTextExtentPoint32(self->m_hDC, toTEXT(pString), cbString, &sz);
 	if(!res)
 		{
 		seterror("GetTextExtentPoint32", GetLastError());
@@ -770,8 +770,8 @@ PyDC_TextOut(PyDC *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "(ii)O", &x, &y, &pystr))
 		return NULL;
 	int cbstr = PyString_GET_SIZE(pystr);
-	const char *pstr = PyString_AS_STRING(pystr);
-	BOOL res = TextOut(self->m_hDC, x, y, pstr, cbstr);
+	char *pstr = PyString_AS_STRING(pystr);
+	BOOL res = TextOut(self->m_hDC, x, y, toTEXT(pstr), cbstr);
 	if(!res){
 		seterror("TextOut", GetLastError());
 		return NULL;
@@ -789,8 +789,8 @@ PyDC_DrawText(PyDC *self, PyObject *args)
 		&rc.left, &rc.top, &rc.right, &rc.bottom, &uFormat))
 		return NULL;
 	int cbstr = PyString_GET_SIZE(pystr);
-	const char *pstr = PyString_AS_STRING(pystr);
-	BOOL res = DrawText(self->m_hDC, pstr, cbstr, &rc, uFormat);
+	char *pstr = PyString_AS_STRING(pystr);
+	BOOL res = DrawText(self->m_hDC, toTEXT(pstr), cbstr, &rc, uFormat);
 	if(!res){
 		seterror("DrawText", GetLastError());
 		return NULL;

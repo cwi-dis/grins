@@ -1,8 +1,12 @@
-#ifndef INC_UTIL
-#define INC_UTIL
+#ifndef INC_UTILS
+#define INC_UTILS
 
 #ifndef Py_PYTHON_H
 #include "Python.h"
+#endif
+
+#ifndef __WINDOWS__
+#include <windows.h>
 #endif
 
 extern PyObject *ErrorObject;
@@ -167,5 +171,36 @@ class PyDictParser
 	PyObject *m_pydict;
 	};
 
+
+// For use from a single thread
+
+#ifdef UNICODE
+inline WCHAR* toTEXT(char *p)
+	{
+	static WCHAR wsz[512];
+	MultiByteToWideChar(CP_ACP, 0, p, -1, wsz, 512);
+	return wsz;
+	}
+inline WCHAR* toTEXT(WCHAR *p)
+	{
+	return p;
+	}
+#define textchr wcschr
+
+#else
+
+inline char* toTEXT(char *p)
+	{
+	return p;
+	}
+inline char* toTEXT(WCHAR *p)
+	{
+	static char buf[512];
+	WideCharToMultiByte(CP_ACP, 0, p, -1, buf, 512, NULL, NULL);		
+	return buf;
+	}
+#define textchr strchr
+
 #endif
 
+#endif  // INC_UTILS
