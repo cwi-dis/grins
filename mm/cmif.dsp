@@ -1356,6 +1356,10 @@ SOURCE=.\lib\realsupport.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\rpconvert.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\settings.py
 # End Source File
 # Begin Source File
