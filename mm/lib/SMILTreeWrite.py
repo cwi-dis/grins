@@ -111,23 +111,62 @@ def WriteFile(root, filename, cleanSMIL = 0, copyFiles = 0, evallicense = 0):
 		macostools.touched(fss)
 
 import FtpWriter
-def WriteFTP(root, filename, ftpparams, cleanSMIL = 0, copyFiles = 0, evallicense = 0):
-	# XXXX For the moment (to be fixed):
-	copyFiles = 0
+def WriteFTP(root, filename, ftpparams, cleanSMIL = 0, copyFiles = 0, evallicense = 0, progress=None):
 	host, user, passwd, dir = ftpparams
 	try:
-		ftp = FtpWriter.FtpWriter(host, filename, user=user, passwd=passwd, dir=dir, ascii=1)
+		conn = FtpWriter.FtpConnection(host, user=user, passwd=passwd, dir=dir)
+		ftp = conn.Writer(filename, ascii=1)
 		fp = IndentedFile(ftp)
 		try:
-			writer = SMILWriter(root, fp, filename, cleanSMIL, copyFiles, evallicense)
+			writer = SMILWriter(root, fp, filename, cleanSMIL, copyFiles,
+						evallicense, tmpcopy=1, progress=progress)
 		except Error, msg:
 			from windowinterface import showmessage
 			showmessage(msg, mtype = 'error')
 			return
 		writer.write()
+		#
+		# Upload generated media items
+		#
+		srcdir, dstdir, filedict = writer.getcopyinfo()
+		del writer
+		del fp
+		del ftp
+		if filedict and copyFiles:
+			conn.chmkdir(dstdir)
+			totfiles = len(filedict.keys())
+			num = 0
+			for filename in filedict.keys():
+				num = num + 1
+				binary = filedict[filename] # Either 'b' or '', or None for dummies
+				if binary is None:
+					continue
+				ascii = not binary
+				localfilename = os.path.join(srcdir, filename)
+				remotefilename = os.path.split(filename)[1] # Remove the : for mac filenames
+				ifp = open(localfilename, 'r'+binary)
+				if progress:
+					ifp.seek(0, 2)
+					totsize = ifp.tell()
+					ifp.seek(0, 0)
+					progress("Uploading %s"%remotefilename, num, totfiles, 0, totsize)
+				ofp = conn.Writer(remotefilename, ascii=ascii)
+				while 1:
+					data = ifp.read(16*1024)
+					if not data:
+						break
+					ofp.write(data)
+					if progress:
+						progress("Uploading %s"%remotefilename, num, totfiles, ifp.tell(), totsize)
+				ifp.close()
+				ofp.close()
 	except FtpWriter.all_errors, msg:
 		from windowinterface import showmessage
-		showmessage('FTP upload failed:\n' + msg, mtype = 'error')
+		showmessage('Mediaserver upload failed:\n' + msg, mtype = 'error')
+		return
+	except IOError, arg:
+		from windowinterface import showmessage
+		showmessage('Mediaserver upload failed:\n' + msg, mtype = 'error')
 		return
 
 import StringIO
@@ -140,43 +179,6 @@ def WriteString(root, cleanSMIL = 0):
 	writer = SMILWriter(root, fp, '<string>', cleanSMIL)
 	writer.write()
 	return fp.fp.getvalue()
-
-def newfile(srcurl, dstdir):
-	import posixpath, urlparse
-	utype, host, path, params, query, fragment = urlparse.urlparse(srcurl)
-	if utype == 'data':
-		import mimetypes
-		mtype = mimetypes.guess_type(srcurl)[0]
-		if mtype is None:
-			mtype = 'text/plain'
-		ext = mimetypes.guess_extension(mtype)
-		base = 'data'
-		file = base + ext
-	else:
-		file = MMurl.url2pathname(posixpath.basename(path))
-		base, ext = os.path.splitext(file)
-	i = 0
-	while os.path.exists(os.path.join(dstdir, file)):
-		file = base + `i` + ext
-		i = i + 1
-	return file
-
-def copyfile(srcurl, dstdir, node = None):
-	file = newfile(srcurl, dstdir)
-	u = MMurl.urlopen(srcurl)
-	if u.headers.maintype == 'audio':
-		from realconvert import convertaudiofile
-		return convertaudiofile(u, dstdir, file, node)
-	binary = u.headers.maintype != 'text'
-	f = open(os.path.join(dstdir, file), 'wb'[:binary+1])
-	while 1:
-		data = u.read(10240)
-		if not data:
-			break
-		f.write(data)
-	f.close()
-	u.close()
-	return file
 
 #
 # Functions to encode data items
@@ -206,18 +208,12 @@ def getsrc(writer, node):
 	else:
 		return None
 	if not val or not writer.copydir:
-##		if ':' in val: #DBG
-##			import pdb #DBG
-##			pdb.set_trace() #DBG
 		return val
 	ctx = node.GetContext()
 	url = ctx.findurl(val)
 	if writer.copycache.has_key(url):
 		# already seen and copied
 		val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(writer.copycache[url]))
-##		if ':' in val: #DBG
-##			import pdb #DBG
-##			pdb.set_trace() #DBG
 		return val
 	if node.GetChannelType() == 'RealPix':
 		# special case code for RealPix file
@@ -240,12 +236,13 @@ def getsrc(writer, node):
 			if writer.copycache.has_key(nurl):
 				file = writer.copycache[nurl]
 			else:
-				file = copyfile(nurl, writer.copydir)
+				file = writer.copyfile(nurl)
 				writer.copycache[nurl] = file
 			attrs['file'] = MMurl.pathname2url(file)
 		rp.tags = ntags
-		file = newfile(url, writer.copydir)
+		file = writer.newfile(url)
 		realsupport.writeRP(os.path.join(writer.copydir, file), rp, node)
+		writer.files_generated[file] = ''
 		rp.tags = otags
 		writer.copycache[url] = file
 		val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
@@ -254,7 +251,7 @@ def getsrc(writer, node):
 ##			pdb.set_trace() #DBG
 		return val
 	else:
-		file = copyfile(url, writer.copydir, node)
+		file = writer.copyfile(url, node)
 		writer.copycache[url] = file
 		val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
 ##		if ':' in val: #DBG
@@ -568,25 +565,37 @@ def mediatype(chtype, error=0):
 	return '%s:%s' % (NSprefix, chtype), '%s %s' % (GRiNSns, chtype)
 
 class SMILWriter(SMIL):
-	def __init__(self, node, fp, filename, cleanSMIL = 0, copyFiles = 0, evallicense = 0):
+	def __init__(self, node, fp, filename, cleanSMIL = 0, 
+				copyFiles = 0, evallicense = 0, tmpcopy = 0, progress=None):
 		self.__cleanSMIL = cleanSMIL	# if set, no GRiNS namespace
 		self.evallicense = evallicense
+		self.files_generated = {}
+		self.progress = progress
 		if copyFiles:
 			dir, base = os.path.split(filename)
 			base, ext = os.path.splitext(base)
 			base = MMurl.pathname2url(base)
-			if not ext:
-				base = base + '.dir'
-			newdir = newfile(base, dir)
-			self.copydir = os.path.join(dir, newdir)
-			self.copydirurl = MMurl.pathname2url(newdir) + '/'
+##			if not ext:
+##				base = base + '.dir'
+##			newdir = self.newfile(base, dir)
+			if tmpcopy:
+				newdir = base + '.tmpdata'
+				self.copydir = os.path.join(dir, newdir)
+				self.copydirurl = MMurl.pathname2url(base+'.data') + '/'
+				self.copydirname = base + '.data'
+			else:
+				newdir = base + '.data'
+				self.copydir = os.path.join(dir, newdir)
+				self.copydirurl = MMurl.pathname2url(newdir) + '/'
+				self.copydirname = newdir
 			self.copycache = {}
 			try:
 				os.mkdir(self.copydir)
 			except:
-				raise Error, 'Cannot create subdirectory for assets; document not saved'
+				# raise Error, 'Cannot create subdirectory for assets; document not saved'
+				pass # Incorrect: may be because of failed permissions
 		else:
-			self.copydir = self.copydirurl = None
+			self.copydir = self.copydirurl = self.copydirname = None
 
 		self.__isopen = 0
 		self.__stack = []
@@ -1227,6 +1236,59 @@ class SMILWriter(SMIL):
 						 id))
 		self.writetag('anchor', attrlist)
 
+	def newfile(self, srcurl):
+		import posixpath, urlparse
+		utype, host, path, params, query, fragment = urlparse.urlparse(srcurl)
+		if utype == 'data':
+			import mimetypes
+			mtype = mimetypes.guess_type(srcurl)[0]
+			if mtype is None:
+				mtype = 'text/plain'
+			ext = mimetypes.guess_extension(mtype)
+			base = 'data'
+			file = base + ext
+		else:
+			file = MMurl.url2pathname(posixpath.basename(path))
+			base, ext = os.path.splitext(file)
+		i = 0
+		while self.files_generated.has_key(file):
+			file = base + `i` + ext
+			i = i + 1
+		self.files_generated[file] = None
+		return file
+	
+	def copyfile(self, srcurl, node = None):
+		dstdir = self.copydir
+		file = self.newfile(srcurl)
+		u = MMurl.urlopen(srcurl)
+		if u.headers.maintype == 'audio':
+			from realconvert import convertaudiofile
+			# XXXX This is a hack. convertaudiofile may change the filename (and
+			# will, currently, to '.ra').
+			if self.progress:
+				self.progress("Converting %s"%os.path.split(file)[1], None, None, None, None)
+			file = convertaudiofile(u, dstdir, file, node)
+			self.files_generated[file] = 'b'
+			return file
+		if u.headers.maintype == 'text':
+			binary = ''
+		else:
+			binary = 'b'
+		self.files_generated[file] = binary
+		if self.progress:
+			self.progress("Copying %s"%os.path.split(file)[1], None, None, None, None)
+		f = open(os.path.join(dstdir, file), 'w'+binary)
+		while 1:
+			data = u.read(10240)
+			if not data:
+				break
+			f.write(data)
+		f.close()
+		u.close()
+		return file
+		
+	def getcopyinfo(self):
+		return self.copydir, self.copydirname, self.files_generated
 
 namechars = string.letters + string.digits + '_-.'
 
