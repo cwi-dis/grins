@@ -79,7 +79,7 @@ def get_cascade(id):
 		if casc2ui[c]==ind:
 			return c
 	
-idend=idc + len(casc2ui)*m
+idend=idc + (len(casc2ui)+1)*m
 
 class CommandUI:
 	def __init__(self, cmdcl, iduc=None):
