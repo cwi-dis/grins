@@ -137,6 +137,12 @@ class MMNodeContext:
 		self.addinternalchannels( [(chname, 'animate', node.attrdict), ] )
 		return node
 
+	def getroot(self):
+		if not self.root:
+			uid = self.uidmap.keys()[0]
+			self.root = self.uidmap[uid].GetRoot()
+		return self.root
+
 	#
 	# Timing computation
 	#
@@ -1130,9 +1136,9 @@ class MMChannelTree:
 			pChan = self.getparent(pChan)
 		return iChan
 
-	# convert this to a SMILCssResolver and return it
+	# create a new SMILCssResolver
 	# it uses the context instance since it absorbed css attrs
-	def toCssResolver(self):
+	def newCssResolver(self):
 		blackhole = self.__ctx.cssResolver
 		from SMILCssResolver import SMILCssResolver
 		resolver =  SMILCssResolver(self.__ctx)
@@ -1140,6 +1146,10 @@ class MMChannelTree:
 			csstop = resolver.newRootNode(top)
 			csstop.copyRawAttrs(blackhole.getCssObj(top))
 			self.__appendCssRegions(resolver, top, csstop)
+		root = self.__ctx.getroot()
+		if root:
+			for node in root.children:
+				self.__appendCssNodes(resolver, node)
 		return resolver
 
 	def __appendCssRegions(self, resolver, regarg, cssregarg):
@@ -1150,6 +1160,16 @@ class MMChannelTree:
 			cssreg.copyRawAttrs(blackhole.getCssObj(reg))
 			cssreg.link(cssregarg)
 			self.__appendCssRegions(resolver, reg, cssreg)
+
+	def __appendCssNodes(self, resolver, nodearg):
+		blackhole = self.__ctx.cssResolver
+		for node in nodearg.children:
+			ntype = node.GetType()
+			if ntype in mediatypes:
+				csssubreg = resolver.newRegion(node)
+				csssubreg.copyRawAttrs(blackhole.getCssObj(node))
+				csssubreg.media = resolver.newMedia(node.GetDefaultMediaSize, node)
+				csssubreg.media.copyRawAttrs(blackhole.getCssObj(node).media)
 
 	def __calc1(self):
 		import ChannelMap
@@ -1700,6 +1720,7 @@ class MMNode:
 		if settings.activeFullSmilCss:
 			self._subRegCssId = self.newSubRegCssId()
 			self._mediaCssId = self.newMediaCssId()
+			self._subRegCssId.media = self._mediaCssId
 
 		self.computedMimeType = None
 		self.channelType = None
