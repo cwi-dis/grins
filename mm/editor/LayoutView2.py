@@ -1240,10 +1240,10 @@ class LayoutView2(LayoutViewDialog2):
 		nodeType = self.getNodeType(nodeRef)
 		if nodeType in (TYPE_REGION, TYPE_VIEWPORT):
 			# allow to choice attributes
-			AttrEdit.showchannelattreditor(self.toplevel, nodeRef, 'cssbgcolor')
+			AttrEdit.showchannelattreditor(self.toplevel, nodeRef, initattr = 'cssbgcolor')
 		elif nodeType == TYPE_MEDIA:
 			# allow to choice attributes
-			AttrEdit.showattreditor(self.toplevel, nodeRef, 'cssbgcolor')
+			AttrEdit.showattreditor(self.toplevel, nodeRef, initattr = 'cssbgcolor')
 		
 	def sendBack(self, regionRef):
 		currentZ = regionRef.GetAttrDef('z',0)
