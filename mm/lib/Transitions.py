@@ -55,10 +55,28 @@ class BarWipeTransition(TransitionClass, R1R2BlitterClass):
 
 	def computeparameters(self, value):
 		x0, y0, x1, y1 = self.ltrb
-		# Assume left-to-right
-		xpixels = int(value*(x1-x0)+0.5)
-		xcur = x0+xpixels
-		return ((x0, y0, xcur, y1), (xcur, y0, x1, y1))
+		if self.dict.get('subtype','leftToRight') == 'leftToRight':
+			if self.dict.get('direction','forward') == 'forward':
+				# left-to-right
+				xpixels = int(value*(x1-x0)+0.5)
+				xcur = x0+xpixels
+				return ((x0, y0, xcur, y1), (xcur, y0, x1, y1))
+			else:
+				# right-to-left
+				xpixels = int(value*(x1-x0)+0.5)
+				xcur = x1-xpixels
+				return ((xcur, y0, x1, y1), (x0, y0, xcur, y1))
+		else:
+			if self.dict.get('direction','forward') == 'forward':
+				# top-to-bottom
+				ypixels = int(value*(y1-y0)+0.5)
+				ycur = y0+ypixels
+				return ((x0, y0, x1, ycur), (x0, ycur, x1, y1))
+			else:
+				# bottom-to-top
+				ypixels = int(value*(y1-y0)+0.5)
+				ycur = y1-ypixels
+				return ((x0, ycur, x1, y1), (x0, y0, x1, ycur))
 			
 class BoxWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
 	# Reveal the new image by an expanding box
@@ -1024,6 +1042,7 @@ class FadeTransition(TransitionClass, FadeBlitterClass):
 		
 TRANSITIONDICT = {
 	("barWipe", "leftToRight") : BarWipeTransition,
+	("barWipe", "topToBottom") : BarWipeTransition,
 	("barWipe", None) : BarWipeTransition,
 	("boxWipe", "topLeft") : BoxWipeTransition,
 	("boxWipe", None) : BoxWipeTransition,
