@@ -2116,7 +2116,7 @@ class ChannelWindow(Channel):
 	# according to the image size 
 	def convertShapeToRelImage(self, node, args):
 		# in this case we assume it's a rectangle area
-		if args[0] == A_SHAPETYPE_ALLREGION:
+		if not args or args[0] == A_SHAPETYPE_ALLREGION:
 			args =  [A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0]
 
 		shapeType = args[0]
