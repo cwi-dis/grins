@@ -108,6 +108,7 @@ class _Toplevel:
 	def usewindowlock(self, lock):
 		if debug: print `self`+'.usewindowlock()'
 		self._win_lock = lock
+		uselock(lock)
 
 	def getmouse(self):
 		mx = gl.getvaluator(DEVICE.MOUSEX)
@@ -906,6 +907,7 @@ class _Window:
 		self._active_display_list = None
 		self._closecallbacks = []
 		_window_list[self._window_id] = self
+		self._redraw_func = None
 		self._redraw()
 		self._setcursor(self._parent_window._cursor)
 		self._parent_window._subwindows.append(self)
@@ -1201,6 +1203,12 @@ class _Window:
 		return float(x) * w, (_screenheight - y - self._height) * h, \
 			  self._width * w, self._height * h
 
+	def setredrawfunc(self, func):
+		if func:
+			self._redraw_func = func
+		else:
+			self._redraw_func = None
+
 	def _resize(self):
 		if _toplevel._win_lock:
 			_toplevel._win_lock.acquire()
@@ -1226,7 +1234,9 @@ class _Window:
 
 	def _redraw(self):
 		if debug: print `self`+'._redraw()'
-		if self._active_display_list:
+		if self._redraw_func:
+			self._redraw_func()
+		elif self._active_display_list:
 			buttons = []
 			for but in self._active_display_list._buttonlist:
 				if but._highlighted:
