@@ -173,7 +173,7 @@ class PlayerCore(Selecter, PlayerCommon):
 
 	def updateFocus(self, focusNode):
 		if focusNode != None:
-			self.editmgr.setglobalfocus('MMNode', focusNode)
+			self.editmgr.setglobalfocus([focusNode])
 
 	def updatePlayerStateOnStop(self):
 		# send the player state event					

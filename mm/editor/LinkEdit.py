@@ -496,8 +496,7 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 			return
 		top = self.toplevel
 		top.setwaiting()
-		if top.hierarchyview is not None:
-			top.hierarchyview.globalsetfocus(node)
+		self.editmgr.setglobalfocus([node])
 
 	def menu_callback(self, str, ind):
 		self.addexternalsetsensitive(0)

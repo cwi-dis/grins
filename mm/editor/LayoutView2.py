@@ -409,9 +409,8 @@ class LayoutView2(LayoutViewDialog2):
 		# current state
 		self.currentSelectedNodeList = []
 		self.currentFocus = None
-		self.currentFocusType = None
 		# allow to identify if the focus has been fixed by this view
-		self.myfocus = 'unselected'
+		self.myfocus = None	# used to break recursion in setglobalfocus -> globalfocuschanged
 		self.commitAlreadyUpdated = 0
 
 		# when you swap to the pause state, the current region showed list is saved
@@ -576,7 +575,7 @@ class LayoutView2(LayoutViewDialog2):
 #			self.playerstatechanged(type, node)
 			
 		# get the initial focus		
-		self.currentFocusType,self.currentFocus = self.editmgr.getglobalfocus()
+		self.currentFocus = self.editmgr.getglobalfocus()
 		self.updateFocus()
 		
 	def hide(self):
@@ -599,7 +598,6 @@ class LayoutView2(LayoutViewDialog2):
 		# clear all variables state
 		self.currentSelectedNodeList = []
 		self.currentFocus = None
-		self.currentFocusType = None
 		self.myfocus = None
 		self.commitAlreadyUpdated = 0
 		
@@ -682,68 +680,40 @@ class LayoutView2(LayoutViewDialog2):
 	def isValidMMNode(self, node):
 		return self.treeHelper._isValidMMNode(node)
 
-	def focusOnMMChannel(self, focusobject, keepShowedNodes=0):		
-		nodeType = self.getNodeType(focusobject)
-		if nodeType == None:
-			return
-
-		self.currentSelectedNodeList = [focusobject]
-		
-		# update widgets
-		for id, widget in self.widgetList.items():
-			widget.selectNodeList([focusobject], keepShowedNodes)
-
-		if nodeType == TYPE_REGION:
-			self.updateCommandList(self.commandRegionList)
-		elif nodeType == TYPE_VIEWPORT:
-			self.updateCommandList(self.commandViewportList)
-						
-	def focusOnMMNode(self, focusobject, keepShowedNodes=0):
-		self.currentSelectedNodeList = [focusobject]
-		
-		# update widgets
-		for id, widget in self.widgetList.items():
-			widget.selectNodeList([focusobject], keepShowedNodes)
-
-		self.updateCommandList(self.commandMediaList)
-
 	def focusOnList(self, focusobject, keepShowedNodes=0):
 		# update command list
 
+		# determine if all the objects are siblings
 		areSibling = 1
-
-		# build a list of valid objects which are the focus
-		# and determinates if all the object list are sibling
-		list = []
 		previousObject = None
-		for type, object in focusobject:
-			list.append(object)
-			if areSibling:
-				if previousObject != None and not self.areSibling(previousObject, object):
-					areSibling = 0
+		nodeType = None
+		for object in focusobject:
+			if nodeType is None:
+				nodeType = self.getNodeType(object)
+			if areSibling and previousObject is not None and not self.areSibling(previousObject, object):
+				areSibling = 0
 			previousObject = object
 
-		self.currentSelectedNodeList = list
-		
+		self.currentSelectedNodeList = focusobject
+
 		# update widgets
 		for id, widget in self.widgetList.items():
-			widget.selectNodeList(list, keepShowedNodes)
+			widget.selectNodeList(focusobject, keepShowedNodes)
 
-		if areSibling:
+		if len(focusobject) == 0:
+			self.updateCommandList(self.commandNoSItemList)
+		elif len(focusobject) == 1:
+			if nodeType == TYPE_REGION:
+				self.updateCommandList(self.commandRegionList)
+			elif nodeType == TYPE_VIEWPORT:
+				self.updateCommandList(self.commandViewportList)
+			else:
+				self.updateCommandList(self.commandMediaList)
+		elif areSibling:
 			self.updateCommandList(self.commandMultiSiblingSItemList)
 		else:
 			self.updateCommandList(self.commandMultiSItemList)
-		
-	def focusOnUnknown(self, focusobject, keepShowedNodes=0):
-		self.currentSelectedNodeList = []
-		
-		# update widgets
-		for id, widget in self.widgetList.items():
-			widget.selectNodeList([], keepShowedNodes)
 
-		# update command list
-		self.updateCommandList(self.commandNoSItemList)
-							
 		# XXX to implement
 #	def toStopState(self):
 #		# save current state
@@ -787,7 +757,7 @@ class LayoutView2(LayoutViewDialog2):
 #		self.updateFocus()
 
 	def updateCommandList(self, basecommandlist):
-		commandlist = []+basecommandlist
+		commandlist = basecommandlist[:]
 
 		# determinate is paste is valid		
 		activePaste = 0
@@ -808,84 +778,29 @@ class LayoutView2(LayoutViewDialog2):
 
 		if activePaste:
 			commandlist.append(PASTE(callback = (self.onPaste, ())))
-			
+
 		self.setcommandlist(commandlist)
 		
 	def updateFocus(self, keepShowedNodes=0):
-		if debug: print 'LayoutView.updateFocus:',self.currentFocusType,' focusobject=',self.currentFocus		
+		if debug: print 'LayoutView.updateFocus: focusobject=',self.currentFocus		
 		# check is the focus is still valid
 		# XXX this call should be exist. Normaly all view which are responsibled of delete a node
 		# should change the global focus as well if it points on the deleted node
-		if not self.isValidFocus():
-			if debug: print 'LayoutView.updateFocus: no valid focus'
-			self.focusOnUnknown(self.currentFocus, keepShowedNodes)
-			return
-		
-		if self.currentFocusType == 'MMNode':
-			if debug: print 'LayoutView.updateFocus: focus on MMNode'
-			self.focusOnMMNode(self.currentFocus, keepShowedNodes)
-		elif self.currentFocusType == 'MMChannel':
-			if debug: print 'LayoutView.updateFocus: focus on MMChannel'
-			self.focusOnMMChannel(self.currentFocus, keepShowedNodes)
-		elif self.currentFocusType == 'List':
-			if debug: print 'LayoutView.updateFocus: focus on List'
-			self.focusOnList(self.currentFocus, keepShowedNodes)
-		else:
-			if debug: print 'LayoutView.updateFocus: unknow focus type'
-			self.focusOnUnknown(self.currentFocus, keepShowedNodes)
+		if debug: print 'LayoutView.updateFocus: focus on List'
+		self.focusOnList(self.currentFocus, keepShowedNodes)
 
-	def isValidFocus(self):
-		if self.currentFocusType == 'MMNode':
-			return self.existRef(self.currentFocus)
-		elif self.currentFocusType == 'MMChannel':
-			name = self.currentFocus.name
-			return self.context.getchannel(name) is not None
-		else:
-			# no focus, or unknown focus, doesn't change anything
-			return 1
-		
-	def globalfocuschanged(self, focustype, focusobject):
-		if debug: print 'LayoutView.globalfocuschanged focustype=',focustype,' focusobject=',focusobject
+	def globalfocuschanged(self, focusobject):
+		if debug: print 'LayoutView.globalfocuschanged focusobject=',focusobject
 		self.currentFocus = focusobject
-		self.currentFocusType = focustype
-		if self.myfocus != 'unselected' and focusobject is self.myfocus:
-			self.myfocus = None
-			return
+		if self.myfocus is None:
+			self.updateFocus()
 		self.myfocus = None
 
-		self.updateFocus()
-		
 	def setglobalfocus(self, list):
 		if debug: print 'LayoutView.setglobalfocus list=',list
-		
-		focusobject = None
-		if len(list) == 0:
-			# no item selected
-			self.myfocus = None
-			self.editmgr.setglobalfocus(None, None)
-		elif len(list) == 1:
-			# simple selection
-			focusobject = nodeRef = list[0]
-			nodeType = self.getNodeType(nodeRef)
-			if nodeType in (TYPE_VIEWPORT, TYPE_REGION):
-				self.myfocus = nodeRef
-				self.editmgr.setglobalfocus('MMChannel', nodeRef)
-			elif nodeType  == TYPE_MEDIA:
-				self.myfocus = nodeRef
-				self.editmgr.setglobalfocus('MMNode', nodeRef)
-		else:
-			# multi-selection, make a list compatible with the global focus
-			focusobject = []
-			for nodeRef in list:
-				nodeType = self.getNodeType(nodeRef)
-				if nodeType in (TYPE_VIEWPORT, TYPE_REGION):
-					focusobject.append(('MMChannel', nodeRef))
-				elif nodeType  == TYPE_MEDIA:
-					focusobject.append(('MMNode', nodeRef))
-			self.myfocus = focusobject
-			self.editmgr.setglobalfocus('List', focusobject)
-			
-		self.currentSelectedNodeList = focusobject
+		self.myfocus = list
+		self.editmgr.setglobalfocus(list)
+		self.currentSelectedNodeList = list
 		
 	def playerstatechanged(self, type, parameters):
 		pass
@@ -923,7 +838,7 @@ class LayoutView2(LayoutViewDialog2):
 		parent1 = self.getParentNodeRef(nodeRef1)
 		parent2 = self.getParentNodeRef(nodeRef2)
 		# note exclude viewport
-		return parent1 != None and parent2 != None and \
+		return parent1 is not None and parent2 is not None and \
 			   parent1 is parent2
 		
 	# XXX to optimize, get info from tree helper
