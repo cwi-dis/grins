@@ -84,7 +84,8 @@ class Main(MainDialog):
 		if hasattr(Help, 'hashelp') and Help.hashelp():
 			self.commandlist.append(
 				HELP(callback = (self.help_callback, ())))
-		if __debug__:
+		import settings
+		if settings.get('debug'):
 			self.commandlist = self.commandlist + [
 				TRACE(callback = (self.trace_callback, ())),
 				DEBUG(callback = (self.debug_callback, ())),
@@ -281,7 +282,7 @@ class Main(MainDialog):
 
 def main():
 	try:
-		opts, files = getopt.getopt(sys.argv[1:], 'qpj:snh:CHPSL')
+		opts, files = getopt.getopt(sys.argv[1:], 'qsnh:')
 	except getopt.error, msg:
 		usage(msg)
 
@@ -297,9 +298,11 @@ def main():
 	else:
 		splash.splash(version = 'GRiNS ' + version)
 
+	import settings
+	kbd_int = KeyboardInterrupt
 	if ('-q', '') in opts:
 		sys.stdout = open('/dev/null', 'w')
-	elif __debug__:
+	elif settings.get('debug'):
 		try:
 			import signal, pdb
 		except ImportError:
@@ -307,6 +310,7 @@ def main():
 		else:
 			signal.signal(signal.SIGINT,
 				      lambda s, f, pdb=pdb: pdb.set_trace())
+			kbd_int = 'dummy value to prevent interrupts to be caught'
 
 ## 	for fn in files:
 ## 		try:
@@ -360,8 +364,9 @@ def main():
 	try:
 		try:
 			m.run()
-##		except KeyboardInterrupt:
-##			print 'Interrupt.'
+		except kbd_int:
+			print 'Interrupt.'
+			m.close_callback()
 		except SystemExit, sts:
 			if type(sts) is type(m):
 				if sts.code:
