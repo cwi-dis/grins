@@ -183,7 +183,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def destroyviews(self):
 		for v in self.views:
-			v.destroy()
+			if v is not None:
+				v.destroy()
 
 	def checkviews(self):
 		pass
