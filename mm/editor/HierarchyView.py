@@ -790,11 +790,13 @@ class HierarchyView(HierarchyViewDialog):
 		beginlist = []
 		changed = 0
 		for arc in MMAttrdefs.getattr(root, 'beginlist'):
-			em.delsyncarc(root, 'beginlist', arc)
+			if arc.refnode() is node:
+				em.delsyncarc(root, 'beginlist', arc)
 		endlist = []
 		changed = 0
 		for arc in MMAttrdefs.getattr(root, 'endlist'):
-			em.delsyncarc(root, 'endlist', arc)
+			if arc.refnode() is node:
+				em.delsyncarc(root, 'endlist', arc)
 		for c in root.GetChildren():
 			self.fixsyncarcs(c, node)
 
