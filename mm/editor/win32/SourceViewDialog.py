@@ -11,7 +11,7 @@ class SourceViewDialog:
 	def show(self):
 		if not self.__textwindow:
 			self.__textwindow = self.toplevel.window.textwindow("", readonly=0)
-			self.__textwindow.setmother(self)
+			self.__textwindow.set_mother(self)
 		else:
 			# Pop it up
 			pass
@@ -29,7 +29,7 @@ class SourceViewDialog:
 
 	def get_text(self):
 		if self.__textwindow:
-			return self.__textwindow.get_text()
+			return self.__textwindow.gettext()
 		else:
 			print "ERROR (get_text): No text window."
 

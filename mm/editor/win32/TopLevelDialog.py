@@ -81,7 +81,7 @@ class TopLevelDialog:
 				self.source.settext(source)
 			else:
 				self.source = self.window.textwindow(source, readonly=1)
-				self.source.setmother(self)
+				self.source.set_mother(self)
 
 	def mayclose(self):
 		prompt = 'You haven\'t saved your changes yet;\n' + \
