@@ -247,7 +247,7 @@ class _Window:
 	# _form: the Xm.DrawingArea widget used for the window
 	# _colormap: the colormap used by the window (top-level
 	#	windows only)
-	# _visuel: the visual used by the window (top-level windows
+	# _visual: the visual used by the window (top-level windows
 	#	only)
 	# _depth: the depth of the window in pixels (top-level windows
 	#	only)
@@ -682,8 +682,25 @@ class _Window:
 		if tw._depth == 8:
 			format = toplevel._myxrgb8
 		else:
-			format = imgformat.rgb
-		depth = format.descr['size'] / 8
+			v = self._visual
+			for name, format in imgformat.__dict__.items():
+				if type(format) is not type(imgformat.rgb):
+					continue
+				descr = format.descr
+				if descr['type'] != 'rgb' or \
+				   descr['size'] != 32 or \
+				   descr['align'] != 32 or \
+				   descr['b2t'] != 0:
+					continue
+				comp = descr['comp']
+				r, g, b = comp[:3]
+				if v.red_mask   == ((1<<r[1])-1) << r[0] and \
+				   v.green_mask == ((1<<g[1])-1) << g[0] and \
+				   v.blue_mask  == ((1<<b[1])-1) << b[0]:
+					break
+			else:
+				format = imgformat.rgb
+		depth = format.descr['align'] / 8
 		reader = None
 		try:
 			xsize, ysize = toplevel._image_size_cache[file]
