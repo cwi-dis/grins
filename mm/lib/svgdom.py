@@ -216,13 +216,10 @@ class SvgElement(SvgNode):
 		val = self.attrdict.get('style')
 		style = SVGStyle(self, val)
 
-		cssclass = self.attrdict.get('class')
-		if cssclass is not None:
-			stylenode = self.document.getStyleElement()
-			if stylenode is not None:
-				textcssstyle = stylenode.textcssdefs.getValue().get(cssclass)
-				if textcssstyle is not None:
-					style.update(textcssstyle)
+		classname = self.get('class')
+		if classname is not None:
+			styleobj = self.document.getClassStyle(classname)
+			style.update(styleobj)
 
 		self.attrdict['style'] = style
 								
@@ -307,7 +304,7 @@ class SvgSvg(SvgElement):
 
 class SvgStyle(SvgElement):
 	def parseAttributes(self):
-		self.document.styles.appendCSS(self)
+		self.document.appendCSS(self)
 
 	def setready(self):
 		if self.cdata:
@@ -337,7 +334,7 @@ class SvgDefs(SvgElement):
 		self.defs = {}
 		node = self.firstchild
 		while node:
-			defid = node.getAttribute('id')
+			defid = node.get('id')
 			if defid is not None:
 				self.defs[defid] = node	
 			node = node.nextsibling
@@ -345,8 +342,8 @@ class SvgDefs(SvgElement):
 class SvgUse(SvgElement):
 	def parseAttributes(self):
 		what = None
-		href = self.getAttribute('xlink:href')
-		if href is not None:
+		href = self.get('xlink:href')
+		if href:
 			if href[0] == '#':
 				what = self.document.getElementDef(href[1:])
 		self.what = what
@@ -996,10 +993,16 @@ class SvgDocument(SvgNode):
 	def getEntityDefs(self):
 		return self.entitydefs
 
-	def getStyleElement(self):
-		if self.styles:
-			return self.styles[0]
-		return None
+	def getClassStyle(self, classname):
+		L = self.styles[:]
+		L.reverse()
+		cs = SVGStyle(None, None)
+		for el in L:
+			textcssdefs = el.textcssdefs.getValue()
+			cst = textcssdefs.get(classname)
+			if cst is not None:
+				cs.update(cst)
+		return cs
 
 	def getElementDef(self, id):
 		for el in self.defs:
