@@ -1,25 +1,34 @@
 # Read attribute definitions from a file.
 #
-# Exported interface:
+# Exported interface (in reverse order of importance :-( ):
 #
 # attrdefs	A dictionary containing the raw attribute definitions
 #		(initialized when this module is first imported).
 #		The tuples are only 6 items, the name is not in there!
 #
-# usetypedef()	A function that maps a type definition to a (function,
+# valuerepr(name, value)
+#		Return a string representation of an attribute.
+#
+# parsevalue(name, string, context)
+#		Parse a string into an attribute value.
+#
+# usetypedef(typedef, mapping)
+#		A function that maps a type definition to a (function,
 #		argument) pair based upon a mapping of basic types.
 #
-# useattrdefs()	A function that calls usetypedef for all attributes
+# useattrdefs(mapping)
+#		A function that calls usetypedef for all attributes
 #		in attrdefs, for a given mapping, and returns a dictionary
 #		containing all the results.
 #
-# getdef()	A function that returns an entry from attrdefs,
+# getdef(name)	A function that returns an entry from attrdefs,
 #		or invents something plausible if there is no entry.
 #
 # getnames()	A function that returns a sorted list of keys
 #		in attrdefs.
 #
-# getattr()	A function that gets a node's attribute value, from
+# getattr(node, name)
+#		A function that gets a node's attribute value, from
 #		the node or from several defaults, guided by the
 #		attribute definition.  If this fails your tree is broken!
 
@@ -156,3 +165,14 @@ def getattr(node, attrname):
 		raise RuntimeError, 'bad inheritance ' +`inheritance` + \
 				' for attr ' + `attrname`
 	return value
+
+
+def valuerepr(name, value):
+	import MMWrite
+	return MMWrite.valuerepr(value, getdef(name)[0])
+
+
+def parsevalue(name, string, context):
+	import MMParser
+	typedef = ('enclosed', getdef(name)[0])
+	return MMParser.parsevalue('('+string+')', typedef, context)
