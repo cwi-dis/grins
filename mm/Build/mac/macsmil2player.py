@@ -127,12 +127,13 @@ else:
 # macfreeze: exclude CORBA.services
 # macfreeze: exclude win32ig
 # macfreeze: exclude win32ui
-# macfreeze: optional rma
 # macfreeze: exclude HierarchyView
 # macfreeze: exclude dshow
 # macfreeze: exclude producer
 # macfreeze: exclude SMILTreeWrite
 # macfreeze: exclude linuxaudiodev
+# macfreeze: exclude rourl2path
+
 #
 # And here's the code for non-standalone version of the editor:
 
