@@ -263,11 +263,15 @@ class FileDialog:
 		files = []
 		for f in list:
 			full = os.path.join(dir, f)
-			statb = os.stat(full)
-			if not stat.S_ISDIR(statb[stat.ST_MODE]):
+			try:
+				statb = os.stat(full)
+			except os.error:
+				# skip non-existing files
+				continue
+			if stat.S_ISREG(statb[stat.ST_MODE]):
 				for p in self.__patterns:
 					if fnmatch.fnmatch(f, p):
-						files.append(f)
+						files.append(full)
 						break
 		files.sort()
 		widget.SetValues({'listUpdated': 1, 'fileListItems': files})
