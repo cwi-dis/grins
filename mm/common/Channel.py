@@ -1733,17 +1733,17 @@ class ChannelWindow(Channel):
 			outtransdur = out_trans.get('dur', 1.0)
 			outtranstime = node.calcendfreezetime(self._playcontext)
 			# don't schedule out transition if time unresolved
-			if outtranstime is not None and outtranstime >= 0:
+			if outtranstime is not None and outtranstime > 0:
 				outtranstime = outtranstime-outtransdur
 				self.__out_trans_qid = self._scheduler.enterabs(outtranstime, 0,
 					self.schedule_out_trans, (out_trans, outtranstime, outtransdur, node))
-		if in_trans <> None and self.window:
+		if in_trans is not None and in_trans.get('dur', 1.0) > 0 and self.window:
 			start_time = node.get_start_time()
 			otherwindow = self._find_multiregion_transition(in_trans, start_time)
 			if otherwindow:
-				self.window.jointransition(otherwindow, (self.endtransition, (node, max(curtime,start_time+in_trans.get('dur',1)))))
+				self.window.jointransition(otherwindow, (self.endtransition, (node, max(curtime,start_time+in_trans.get('dur',1.0)))))
 			else:
-				self.window.begintransition(0, 1, in_trans, (self.endtransition, (node, max(curtime,start_time+in_trans.get('dur',1)))))
+				self.window.begintransition(0, 1, in_trans, (self.endtransition, (node, max(curtime,start_time+in_trans.get('dur',1.0)))))
 
 	def schedule_out_trans(self, out_trans, outtranstime, outtransdur, node):
 		self.__out_trans_qid = None
