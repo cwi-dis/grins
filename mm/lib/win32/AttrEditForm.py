@@ -1116,8 +1116,7 @@ class EventCtrl(AttrCtrl):
 	def __init__(self, wnd, attr, resid):
 		#'wnd': <AttrEditForm.SingleAttrPage instance at 1cabbe8>,
 		#'attr': <TimelistAttrEditorField instance, name=beginlist>, 
-		#'resid': Tuple of ints (4)/resource ids - list, 'add', 'delete', 'edit' (3 buttons)
-		#'self': <AttrEditForm.ListCtrl instance at 1cbd9d0>} -> me :-).
+		#'resid': a list of win32 resources; not used.
 		AttrCtrl.__init__(self, wnd, attr, resid)
 		#self._attrname=components.Control(wnd,grinsRC.IDC_EVENTLASSOO)
 		#self._nedit=len(resid)-1 - how can an int have a length?
@@ -1151,7 +1150,8 @@ class EventCtrl(AttrCtrl):
 			}
 		self._radiobuttonwidgets = {}
 		
-		self._node = None	# MMNode. Needed for creating new nodes.
+		self._node = self._wnd._form._node	# MMNode. Needed for creating new nodes.
+					# now that also feels like a hack. Oh well.
 
 	def OnInitCtrl(self):
 		self._initctrl=self
@@ -1319,12 +1319,12 @@ class EventCtrl(AttrCtrl):
 			self._offsetwidget.setreadonly(1)
 			return
 		r = self._eventstruct.get_offset()
-		if r:
-			self._offsetwidget.setreadonly(0)
-			self._offsetwidget.settext(r)
-		else:
-			self._offsetwidget.settext("")
-			self._offsetwidget.setreadonly(1)
+		#if r:
+		self._offsetwidget.setreadonly(0)
+		self._offsetwidget.settext(`r`)
+		#else:
+		#	self._offsetwidget.settext("")
+		#	self._offsetwidget.setreadonly(1)
 	def set_repeatwidget(self):
 		if not self._eventstruct:
 			self._repeatwidget.settext("")
@@ -1372,9 +1372,11 @@ class EventCtrl(AttrCtrl):
 		print "DEBUG: Offset widget got focus changed."
 		if not self._eventstruct:
 			return
-		if not self._eventstruct.set_offset(self._offsetwidget.gettext()):
-			# In theory this will never happen - the widget is numeric only.
-			print "ERROR:", error
+		try:
+			self._eventstruct.set_offset(float(self._offsetwidget.gettext()))
+		except ValueError:
+			win32dialog.showmessage("Must be a number!", parent=self._wnd._form)
+			return
 		self.update()
 	def _radiobuttoncallback(self, id, code):
 		if code == win32con.BN_CLICKED and self._eventstruct:
