@@ -239,9 +239,6 @@ def convertvideofile(u, srcurl, dstdir, file, node):
 		print 'Video real media converter filter is not installed'
 		return
 	b.AddFilter(f,'VRMC')
-	# sink not used now
-	sink = f.QueryIFileSinkFilter()
-	sink.SetFileName(fullpath)
 	b.Render(lastpin)
 	try:
 		rconv=f.QueryIRealConverter()
