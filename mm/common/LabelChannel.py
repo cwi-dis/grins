@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 from Channel import ChannelWindow
 from TextChannel import mapfont, extract_taglist, fix_anchorlist
 from AnchorDefs import *
