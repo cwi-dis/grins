@@ -4055,8 +4055,8 @@ class Convert5Group(Convert4Group):
 
 #
 
-class ActiveDuration1Group(AttrGroup):
-	data=attrgrsdict['activeduration1']
+class ActiveDuration2Group(AttrGroup):
+	data=attrgrsdict['activeduration2']
 
 	def __init__(self):
 		AttrGroup.__init__(self, self.data)
@@ -4080,18 +4080,22 @@ class ActiveDuration1Group(AttrGroup):
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_LOOPL,grinsRC.IDC_LOOPV))
 		a = self.getattr('repeatdur')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_REPDURL,grinsRC.IDC_REPDURV))
-		a = self.getattr('terminator')
-		self._endSync = cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_ENDSYNCL,grinsRC.IDC_ENDSYNCV))
 		return cd
 
-class ActiveDuration2Group(ActiveDuration1Group):
-	data=attrgrsdict['activeduration2']
+class ActiveDuration1Group(ActiveDuration2Group):
+	data=attrgrsdict['activeduration1']
 
 	def __init__(self):
 		AttrGroup.__init__(self, self.data)
 
-	def oninitdialog(self, wnd):
-		self._endSync.enable(0)
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_ACTIVEDUR1
+
+	def createctrls(self, wnd):
+		cd = ActiveDuration2Group.createctrls(self, wnd)
+		a = self.getattr('terminator')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_ENDSYNCL,grinsRC.IDC_ENDSYNCV))
+		return cd
 
 #
 class AnimateAttributeGroup(AttrGroup):
