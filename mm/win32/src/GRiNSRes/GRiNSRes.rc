@@ -130,6 +130,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 IDR_GRINSED             BITMAP  MOVEABLE PURE   "res\\grinsbar.bmp"
+IDR_TB_PLAYER           BITMAP  DISCARDABLE     "res\\tb_player.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2386,14 +2387,21 @@ BEGIN
     BUTTON      IDUC_RESTORE
     BUTTON      IDUC_CLOSE
     BUTTON      ID_BUTTON32790
-    BUTTON      IDUC_PLAY
-    BUTTON      IDUC_PAUSE
-    BUTTON      IDUC_STOP
     BUTTON      IDUC_HELP
     BUTTON      ID_PRINTDOC
     BUTTON      IDUC_CLOSE_WINDOW
     BUTTON      IDUC_CANVAS_ZOOM_IN
     BUTTON      IDUC_CANVAS_ZOOM_OUT
+    BUTTON      IDUC_PLAY
+    BUTTON      IDUC_PAUSE
+    BUTTON      IDUC_STOP
+END
+
+IDR_TB_PLAYER TOOLBAR DISCARDABLE  16, 15
+BEGIN
+    BUTTON      IDUC_PLAY
+    BUTTON      IDUC_PAUSE
+    BUTTON      IDUC_STOP
 END
 
 
