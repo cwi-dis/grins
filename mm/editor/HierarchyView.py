@@ -79,6 +79,9 @@ class HierarchyView(HierarchyViewDialog):
 					(windowinterface.DOUBLE_WIDTH,))),
 			CANVAS_RESET(callback = (self.canvascall,
 					(windowinterface.RESET_CANVAS,))),
+			CANVAS_FIT(callback = (self.canvascall,
+					(windowinterface.FIT_WINDOW,))),
+
 			THUMBNAIL(callback = (self.thumbnailcall, ())),
 			]
 		self.zoomincommands = [
@@ -678,6 +681,12 @@ class HierarchyView(HierarchyViewDialog):
 	def editcall(self):
 		if self.focusobj: self.focusobj.editcall()
 
+	# win32++
+	def _editcall(self):
+		if self.focusobj: self.focusobj._editcall()
+	def _opencall(self):
+		if self.focusobj: self.focusobj._opencall()
+
 	def anchorcall(self):
 		if self.focusobj: self.focusobj.anchorcall()
 
@@ -983,6 +992,14 @@ class Object:
 		self.mother.toplevel.setwaiting()
 		import NodeEdit
 		NodeEdit.showeditor(self.node)
+	def _editcall(self):
+		self.mother.toplevel.setwaiting()
+		import NodeEdit
+		NodeEdit._showeditor(self.node)
+	def _opencall(self):
+		self.mother.toplevel.setwaiting()
+		import NodeEdit
+		NodeEdit._showviewer(self.node)
 
 	def anchorcall(self):
 		self.mother.toplevel.setwaiting()
