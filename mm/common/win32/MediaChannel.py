@@ -407,27 +407,28 @@ HasQtSupport = winqt.HasQtSupport
 class QtChannel:
 	def __init__(self, channel):
 		self.__channel = channel
-		self.__window = None
-		self.__playBegin=0
-		self.__playEnd=0
-		self.__playdone=1
-		self.__fiber_id=None
-		self.__rcMediaWnd = None
-		self.__qid = self.__dqid = None
 		self.__qtplayer = None
+
+		self.__playBegin = 0
+		self.__playEnd = 0
+		self.__playdone = 1
+
+		self.__fiber_id = None
+		self.__qid = self.__dqid = None
+	
+		# video sig
+		self.__window = None
+		self.__rcMediaWnd = None
 
 	def destroy(self):
 		if self.__window:
 			self.__window.removevideo()
 		del self.__qtplayer
 
-	def prepare_player(self, node, window):
-		if not window:
-			raise error, 'not a window'
-		ddobj = window._topwindow.getDirectDraw()
+	def prepare_player(self, node, window = None):
 		self.__qtplayer = winqt.QtPlayer()
 
-		url=self.__channel.getfileurl(node)
+		url = self.__channel.getfileurl(node)
 		if not url:
 			raise error, 'No URL on node'
 		
@@ -438,14 +439,16 @@ class QtChannel:
 				arg = arg[-1]
 			raise error, 'Failed to retrieve %s'% url
 
-		if not self.__qtplayer.open(fn, self.__channel._exporter):
+		if not self.__qtplayer.open(fn, exporter = self.__channel._exporter, asaudio = window is None):
 			raise error, 'Failed to render %s'% url
-		self.__qtplayer.createVideoDDS(ddobj)
+		if window:
+			ddobj = window._topwindow.getDirectDraw()
+			self.__qtplayer.createVideoDDS(ddobj)
 		return 1
 
-	def playit(self, node, curtime, window, start_time = 0):
-		if not window: return 0
-		if not self.__qtplayer: return 0
+	def playit(self, node, curtime, window = None, start_time = 0):
+		if not self.__qtplayer: 
+			return 0
 
 		self.__pausedelay = 0
 		self.__pausetime = 0
@@ -478,11 +481,13 @@ class QtChannel:
 		
 		self.__playdone=0
 
-		window.setvideo(self.__qtplayer._dds, self.__channel.getMediaWndRect(), self.__qtplayer._rect)
-		self.__window = window
+		if window:
+			self.__window = window
+			window.setvideo(self.__qtplayer._dds, self.__channel.getMediaWndRect(), self.__qtplayer._rect)
 		self.__qtplayer.run()
 		self.__qtplayer.update()
-		self.__window.update()
+		if window:
+			window.update()
 		self.__register_for_timeslices()
 
 		return 1
