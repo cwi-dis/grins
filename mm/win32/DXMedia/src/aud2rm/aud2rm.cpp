@@ -15,6 +15,19 @@ Copyright 1991-1999 by Oratrix Development BV, Amsterdam, The Netherlands.
 #define LOG_ACTIVITY
 
 
+namespace RProducer {
+bool HasEngine();
+bool SetEngine(IUnknown *p);
+bool SetInputPin(IUnknown *p);
+bool CreateMediaSample();
+bool SetVideoInfo(int w,int h,float rate);
+bool SetAudioInfo(int nchan,DWORD srate,int ssize);
+bool EncodeSample(BYTE *p,DWORD size,DWORD msec,bool isSync,bool isLast);
+void DoneEncoding();
+void Release();
+}
+
+
 const AMOVIESETUP_MEDIATYPE sudAudPinTypes =
 {
     &MEDIATYPE_Audio,             // MajorType
@@ -104,6 +117,8 @@ CUnknown * WINAPI Aud2rmRenderer::CreateInstance(LPUNKNOWN pUnk, HRESULT *phr)
 STDMETHODIMP
 Aud2rmRenderer::NonDelegatingQueryInterface(REFIID riid,void **ppv)
 {
+	if(riid == IID_IRealConverter)
+        return GetInterface((IRealConverter *) this, ppv);	
     return CBaseRenderer::NonDelegatingQueryInterface(riid,ppv);
 } 
 
@@ -116,11 +131,40 @@ HRESULT Aud2rmRenderer::BreakConnect()
 HRESULT Aud2rmRenderer::CheckMediaType(const CMediaType *pmt)
 {
 	Log("CheckMediaType\n");
+
     if (pmt->majortype != MEDIATYPE_Audio) {
-	return E_INVALIDARG;
+		return E_INVALIDARG;
     }
+
+    // Reject invalid format blocks
+    if (pmt->formattype != FORMAT_WaveFormatEx) {
+        return VFW_E_TYPE_NOT_ACCEPTED;
+	}
+
+    WAVEFORMATEX *pwfx = (WAVEFORMATEX *) pmt->pbFormat;
+
+    // Reject compressed audio
+    if (pwfx->wFormatTag != WAVE_FORMAT_PCM) {
+        return VFW_E_TYPE_NOT_ACCEPTED;
+    }
+
+    // Accept only 8 or 16 bit
+    if (pwfx->wBitsPerSample!=8 && pwfx->wBitsPerSample!=16) {
+        return VFW_E_TYPE_NOT_ACCEPTED;
+    }
+
     return NOERROR;
 } 
+
+HRESULT Aud2rmRenderer::SetMediaType(const CMediaType *pmt)
+{
+    CAutoLock cInterfaceLock(&m_InterfaceLock);
+    m_mtIn = *pmt;
+	WAVEFORMATEX *pwfx = (WAVEFORMATEX *)m_mtIn.Format();
+	// set audio info cash
+	Log("SetMediaType\n");
+    return NOERROR;
+}
 
 void Aud2rmRenderer::OnReceiveFirstSample(IMediaSample *pMediaSample)
 {
@@ -146,20 +190,64 @@ HRESULT Aud2rmRenderer::DoRenderSample(IMediaSample *pMediaSample)
 
 void Aud2rmRenderer::EncodeSample(IMediaSample *pMediaSample)
 {
+    BYTE *pBuffer;
+    HRESULT hr = pMediaSample->GetPointer(&pBuffer);
+    if (FAILED(hr)) {
+        return;
+    }
+    int size = pMediaSample->GetActualDataLength();
+	bool isSync=(pMediaSample->IsSyncPoint()==S_OK);
+	WAVEFORMATEX *pwfx = (WAVEFORMATEX *)m_mtIn.Format();
+	int msec=1000*m_ixsample/pwfx->nSamplesPerSec;
+	if(RProducer::HasEngine())
+		RProducer::EncodeSample(pBuffer,size,msec,isSync,false);
 	m_ixsample++;
 }
 
 HRESULT Aud2rmRenderer::Active()
 {
 	Log("Active\n");
+	WAVEFORMATEX *pwfx = (WAVEFORMATEX *)m_mtIn.Format();
+	if(RProducer::HasEngine())
+		RProducer::SetAudioInfo(pwfx->nChannels,
+			pwfx->nSamplesPerSec,
+			pwfx->wBitsPerSample);
+	char sz[128];
+	sprintf(sz,"Channels=%d fps  SamplesPerSec=%d  BitsPerSample=%d\n",
+		pwfx->nChannels,
+		pwfx->nSamplesPerSec,
+		pwfx->wBitsPerSample);
+	Log(sz);
    return CBaseRenderer::Active();
 } 
 
 HRESULT Aud2rmRenderer::Inactive()
 {
+	if(RProducer::HasEngine())
+		RProducer::DoneEncoding();
 	Log("Inactive\n");
 	return CBaseRenderer::Inactive();
 }
+
+HRESULT Aud2rmRenderer::SetInterface(IUnknown *p,LPCOLESTR hint)
+	{
+    char szHint[MAX_PATH];
+    if(!WideCharToMultiByte(CP_ACP,0,hint,-1,szHint,MAX_PATH,0,0))
+        return ERROR_INVALID_NAME;
+	if(lstrcmpi(szHint,"IRMABuildEngine")==0){
+		if(!RProducer::SetEngine(p)){
+			Log("Failed setting engine\n");
+			RProducer::Release();
+		}
+	}
+	else if(lstrcmpi(szHint,"IRMAInputPin")==0){
+		if(!RProducer::SetInputPin(p)){
+			Log("Failed setting InputPin\n");
+			RProducer::Release();
+		}
+	}
+    return NOERROR;
+	}
 
 ////////////////////////////////////////////////
 // Filter registration
