@@ -771,7 +771,7 @@ class Channel:
 ##ChannelWinDict = {}
 
 class ChannelWindow(Channel):
-	chan_attrs = Channel.chan_attrs + ['base_winoff', 'transparent', 'units', 'popup']
+	chan_attrs = Channel.chan_attrs + ['base_winoff', 'transparent', 'units', 'popup', 'z']
 	node_attrs = Channel.node_attrs + ['duration', 'bgcolor']
 	_visible = TRUE
 	_window_type = SINGLE
@@ -917,13 +917,19 @@ class ChannelWindow(Channel):
 				transparent = self._attrdict['transparent']
 			except KeyError:
 				transparent = 0
+			try:
+				z = self._attrdict['z']
+			except KeyError:
+				z = 0
 			if self.want_default_colormap:
 				self.window = pchan.window.newcmwindow(pgeom,
 						transparent = transparent,
+						z = z,
 						type_channel = self._window_type)
 			else:
 				self.window = pchan.window.newwindow(pgeom,
 						transparent = transparent,
+						z = z,
 						type_channel = self._window_type)
 			if hasattr(self._player, 'editmgr'):
 				menu.append(None)

@@ -164,11 +164,11 @@ class _Window(X_windowbase._Window):
 			return FALSE
 		return TRUE
 
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0, type_channel = SINGLE):
-		return _SubWindow(self, coordinates, 0, pixmap, transparent)
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
+		return _SubWindow(self, coordinates, 0, pixmap, transparent, z)
 
-	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, type_channel = SINGLE):
-		return _SubWindow(self, coordinates, 1, pixmap, transparent)
+	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
+		return _SubWindow(self, coordinates, 1, pixmap, transparent, z)
 
 	# have to override these for create_box
 	def _input_callback(self, form, client_data, call_data):
@@ -390,10 +390,10 @@ class _Window(X_windowbase._Window):
 		del self._rb_cy
 
 class _SubWindow(X_windowbase._BareSubWindow, _Window):
-	def __init__(self, parent, coordinates, defcmap, pixmap, transparent):
+	def __init__(self, parent, coordinates, defcmap, pixmap, transparent, z):
 		X_windowbase._BareSubWindow.__init__(self, parent, coordinates,
 						     defcmap, pixmap,
-						     transparent)
+						     transparent, z)
 		self.arrowcache = {}
 		self._next_create_box = []
 
