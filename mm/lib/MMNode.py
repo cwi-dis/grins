@@ -3176,6 +3176,13 @@ class MMNode(MMTreeElement):
 		#
 		repeatCount = self.attrdict.get('loop', None)
 		repeatDur = MMAttrdefs.getattr(self, 'repeatdur')
+		duration = self.calcfullduration(sctx, ignoremin = 1)
+		if duration is not None:
+			if duration == 0:
+				repeatDur = 0
+				repeatCount = None
+			elif duration == -1:
+				repeatCount = None
 		if repeatDur != 0 and repeatCount is None:
 			# no loop attr and specified repeatdur attr, so loop indefinitely
 			# until time's up
@@ -3875,9 +3882,9 @@ class MMNode(MMTreeElement):
 			if pnode is not None and pnode.type == 'excl':
 				maybecached = 0
 			duration = self.attrdict.get('duration')
-			if duration == -2:
+			if duration == -2: # dur="media"
 				if self.type in interiortypes:
-					duration = -1
+					duration = None	# shouldn't happen
 				else:
 					duration = Duration.get(self, ignoreloop=1)
 			repeatDur = self.attrdict.get('repeatdur')
@@ -3895,12 +3902,19 @@ class MMNode(MMTreeElement):
 				# specified, the simple duration is defined to
 				# be indefinite"
 				duration = -1
+			if duration is None:
+				duration, mb = self.__calcduration(sctx)
+				if not mb:
+					maybecached = 0
+			if duration is not None:
+				if duration == 0:
+					# for zero-duration elements, ignore all duration attrs
+					repeatDur = repeatCount = None
+				elif duration == -1:
+					# for indefinite elements, ignore repeatCount
+					repeatCount = None
 			if repeatDur is not None and \
 			   repeatCount is not None:
-				if duration is None:
-					duration, mb = self.__calcduration(sctx)
-					if not mb:
-						maybecached = 0
 				if duration is not None and duration > 0 and \
 				   repeatCount > 0 and repeatDur >= 0:
 					duration = min(repeatCount * duration, repeatDur)
@@ -3915,19 +3929,11 @@ class MMNode(MMTreeElement):
 			elif repeatDur is not None: # repeatCount is None
 				duration = repeatDur
 			elif repeatCount is not None: # repeatDur is None
-				if duration is None:
-					duration, mb = self.__calcduration(sctx)
-					if not mb:
-						maybecached = 0
 				if duration is not None and duration > 0:
 					if repeatCount > 0:
 						duration = repeatCount * duration
 					else:
 						duration = -1
-			elif duration is None:
-				duration, mb = self.__calcduration(sctx)
-				if not mb:
-					maybecached = 0
 
 			if maybecached:
 				self.fullduration = duration
