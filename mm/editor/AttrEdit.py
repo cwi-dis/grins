@@ -1,5 +1,4 @@
 # Attribute editor using the FORMS library (fl, FL), based upon Dialog.
-print 'import AttrEdit'
 
 
 import gl
@@ -425,7 +424,7 @@ class AttrEditor(Dialog):
 		title = self.wrapper.maketitle()
 		hint = '[Click on labels for help]'
 		#
-		return Dialog.init(self, (formwidth, formheight, title, hint))
+		return Dialog.init(self, formwidth, formheight, title, hint)
 	#
 	def make_form(self):
 		#
