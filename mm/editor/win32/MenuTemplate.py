@@ -290,3 +290,16 @@ POPUP_CVIEW_SYNCARC = (
 		(ENTRY, '&Delete', None, DELETE),
 )
 
+MAIN_FRAME_POPUP = (
+		(ENTRY, '&Paste file\tCtrl+Shift+V', None, PASTE_FILE),
+		(SEP,),
+		(ENTRY, '&New\tCtrl+N', 'N', NEW_DOCUMENT),
+		(ENTRY, '&Open...\tCtrl+O', 'O', OPEN),
+		(ENTRY, '&Close document', None, CLOSE),
+                (ENTRY, 'Document &Properties...', None, PROPERTIES),
+		(SEP,),
+		(ENTRY, '&Save\tCtrl+S', 'S', SAVE),
+		(ENTRY, 'Save &as...', None, SAVE_AS),
+		(ENTRY, '&Export SMIL...', None, EXPORT_SMIL),
+		(ENTRY, '&Restore', None, RESTORE),
+)
