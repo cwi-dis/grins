@@ -78,6 +78,12 @@ def WriteFile(root, filename):
 	writer = SMILWriter(root, fp, filename)
 	writer.write()
 	fp.close()
+	if os.name == 'mac':
+		import macfs
+		import macostools
+		fss = macfs.FSSpec(filename)
+		fss.SetCreatorType('GRIN', 'TEXT')
+		macostools.touched(fss)
 
 #
 # Functions to encode data items

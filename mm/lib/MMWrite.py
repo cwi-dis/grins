@@ -16,6 +16,12 @@ def WriteFile(root, filename):
 	writenode(root, fp)
 	fp.write('\n')
 	fp.close() # Make sure the CMIF file is at least as old as the cache
+	if os.name == 'mac':
+		import macfs
+		import macostools
+		fss = macfs.FSSpec(filename)
+		fss.SetCreatorType('GRIN', 'TEXT')
+		macostools.touched(fss)
 	MMCache.dumpcache(root, filename)
 	unfixroot(root)
 
