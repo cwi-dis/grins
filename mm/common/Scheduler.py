@@ -182,8 +182,8 @@ class SchedulerContext:
 			dev = 'begin'
 ##			list = arc.dstnode.GetBeginList()
 			list = []
-			if arc.dstnode.isresolved(self) is None:
-##			if not node.checkendlist(self, timestamp):
+##			if arc.dstnode.isresolved(self) is None:
+			if not node.checkendlist(self, timestamp):
 				# we didn't find a time interval
 				if debugevents: print 'sched_arc: not allowed to start',arc,self.parent.timefunc()
 				if external:
