@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 
-#include "..\..\GRiNSCanvas.h"
+#include "..\..\GRiNSViewport.h"
 
 #include "jni.h"
 #include "jvmdi.h"
@@ -15,7 +15,7 @@
 
 #include "..\..\..\grinscomsvr\idl\IGRiNSPlayerAuto.h"
 
-IGRiNSPlayerAuto* pIGRiNSPlayer=NULL;
+inline IGRiNSPlayerAuto* GetIGRiNSPlayer(jint h) {return h?(IGRiNSPlayerAuto*)h:NULL;}
 
 extern "C" {
 
@@ -25,7 +25,7 @@ extern "C" {
  * Method:    connect
  * Signature: (Ljava/awt/Graphics;)V
  */
-JNIEXPORT void JNICALL Java_GRiNSCanvas_connect(JNIEnv *env, jobject canvas, jobject graphics)
+JNIEXPORT jint JNICALL Java_GRiNSViewport_connect(JNIEnv *env, jobject canvas, jobject graphics)
 	{
 	CoInitialize(NULL);
 	
@@ -50,16 +50,14 @@ JNIEXPORT void JNICALL Java_GRiNSCanvas_connect(JNIEnv *env, jobject canvas, job
  	JAWT_Win32DrawingSurfaceInfo *dsi_win = (JAWT_Win32DrawingSurfaceInfo*)dsi->platformInfo;
 
  	//////////////////////////////
-	if(pIGRiNSPlayer) return;	
 	DWORD dwClsContext = CLSCTX_LOCAL_SERVER;
+	IGRiNSPlayerAuto *pIGRiNSPlayer = NULL;
 	HRESULT hr = CoCreateInstance(CLSID_GRiNSPlayerAuto, NULL, dwClsContext, IID_IGRiNSPlayerAuto,(void**)&pIGRiNSPlayer);
- 	if(FAILED(hr))
-		{
-		pIGRiNSPlayer=NULL;
-		}
-	else
+ 	jint hgrins = 0;
+	if(SUCCEEDED(hr))
 		{
 		pIGRiNSPlayer->setWindow(dsi_win->hwnd);
+		hgrins = jint(pIGRiNSPlayer);
 		}
  	//////////////////////////////
 	
@@ -71,6 +69,8 @@ JNIEXPORT void JNICALL Java_GRiNSCanvas_connect(JNIEnv *env, jobject canvas, job
  
  	// Free the drawing surface
  	awt.FreeDrawingSurface(ds);
+
+	return hgrins;
 	}
 
 /*
@@ -78,10 +78,13 @@ JNIEXPORT void JNICALL Java_GRiNSCanvas_connect(JNIEnv *env, jobject canvas, job
  * Method:    disconnect
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_GRiNSCanvas_disconnect(JNIEnv *env, jobject canvas)
+JNIEXPORT void JNICALL Java_GRiNSViewport_disconnect(JNIEnv *env, jobject canvas, jint hgrins)
 	{
-	if(pIGRiNSPlayer)pIGRiNSPlayer->Release();
-	pIGRiNSPlayer=NULL;	
+	if(hgrins) 
+		{
+		IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+		if(pIGRiNSPlayer) pIGRiNSPlayer->Release();
+		}
 	CoUninitialize();	
 	}
 
@@ -90,8 +93,9 @@ JNIEXPORT void JNICALL Java_GRiNSCanvas_disconnect(JNIEnv *env, jobject canvas)
  * Method:    open
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_GRiNSCanvas_open(JNIEnv *env, jobject canvas, jstring url)
+JNIEXPORT void JNICALL Java_GRiNSViewport_open(JNIEnv *env, jobject canvas, jint hgrins, jstring url)
 	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	if(pIGRiNSPlayer)
 		{
 		const char *psz = env->GetStringUTFChars(url, NULL);
@@ -107,8 +111,9 @@ JNIEXPORT void JNICALL Java_GRiNSCanvas_open(JNIEnv *env, jobject canvas, jstrin
  * Method:    close
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_GRiNSCanvas_close(JNIEnv *env, jobject canvas)
+JNIEXPORT void JNICALL Java_GRiNSViewport_close(JNIEnv *env, jobject canvas, jint hgrins)
 	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	if(pIGRiNSPlayer)pIGRiNSPlayer->close();	
 	}
 
@@ -117,8 +122,9 @@ JNIEXPORT void JNICALL Java_GRiNSCanvas_close(JNIEnv *env, jobject canvas)
  * Method:    play
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_GRiNSCanvas_play(JNIEnv *env, jobject canvas)
+JNIEXPORT void JNICALL Java_GRiNSViewport_play(JNIEnv *env, jobject canvas, jint hgrins)
 	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	if(pIGRiNSPlayer)pIGRiNSPlayer->play();	
 	}
 
@@ -127,8 +133,9 @@ JNIEXPORT void JNICALL Java_GRiNSCanvas_play(JNIEnv *env, jobject canvas)
  * Method:    paint
  * Signature: (Ljava/awt/Graphics;)V
  */
-JNIEXPORT void JNICALL Java_GRiNSCanvas_paint(JNIEnv *env, jobject canvas, jobject graphics)
+JNIEXPORT void JNICALL Java_GRiNSViewport_update(JNIEnv *env, jobject canvas, jint hgrins)
 	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	if(pIGRiNSPlayer)pIGRiNSPlayer->update();		
 	}
 
@@ -137,8 +144,9 @@ JNIEXPORT void JNICALL Java_GRiNSCanvas_paint(JNIEnv *env, jobject canvas, jobje
  * Method:    pause
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_GRiNSCanvas_pause(JNIEnv *env, jobject canvas)
+JNIEXPORT void JNICALL Java_GRiNSViewport_pause(JNIEnv *env, jobject canvas, jint hgrins)
 	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	if(pIGRiNSPlayer)pIGRiNSPlayer->pause();		
 	}
 
@@ -148,9 +156,10 @@ JNIEXPORT void JNICALL Java_GRiNSCanvas_pause(JNIEnv *env, jobject canvas)
  * Method:    stop
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_GRiNSCanvas_stop(JNIEnv *, jobject)
+JNIEXPORT void JNICALL Java_GRiNSViewport_stop(JNIEnv *, jobject, jint hgrins)
 	 {
-	if(pIGRiNSPlayer)pIGRiNSPlayer->stop();		
+	 IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	 if(pIGRiNSPlayer)pIGRiNSPlayer->stop();		
 	 }
 
 } //extern "C"
