@@ -599,7 +599,10 @@ class SMILWriter(SMIL):
 		self.__cleanSMIL = cleanSMIL	# if set, no GRiNS namespace
 		self.evallicense = evallicense
 		self.__generate_number = 0
-		self.__generate_basename = os.path.splitext(os.path.basename(filename))[0]
+		if filename == '<string>':
+			self.__generate_basename = 'grinstmp'
+		else:
+			self.__generate_basename = os.path.splitext(os.path.basename(filename))[0]
 		self.files_generated = {}
 		self.progress = progress
 		if copyFiles:
