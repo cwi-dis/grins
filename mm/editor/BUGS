@@ -15,6 +15,11 @@ pertaining to an object depends on the object only, not on the view...
 
 ------------------------------ CRASHES ----------------------------
 
+printout "MovieChannel: node not armed", followed by hang *as well as*
+core dump, when you play the traffic movies from the Amsterdam demo
+
+MemoryError in imgfile called from ImageChannel
+
 When opening a second document, we usually crash soon, in FORMS (in
 fl_qread).
 
@@ -39,6 +44,9 @@ Kaboo!: None
 > /ufs/guido/mm/demo/mm4/Scheduler.py(72)unfreeze: raise 'Kaboo!'
 
 ------------------------------ BUGS -------------------------------
+
+"Keep time chart in sync" doesn't work if the time chart is brought up
+after the player has started (or similar vague sort of circumstances)
 
 ImageChannel: anchors are drawn at the wrong place when the file isn't
 found (also the window isn't popped in this case -- it probably should).

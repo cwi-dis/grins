@@ -83,13 +83,13 @@ class _convert_dialog:
 	self.form.hide_form()
 	fl.activate_all_forms()
 	return self.doconvert
-    def callback_input(self,dummy):
+    def callback_input(self,*dummy):
 	if self.err_groupshown:
 	    self.err_groupshown = 0
 	    self.err_group.hide_object()
-    def callback_cancel(self,dummy):
+    def callback_cancel(self,*dummy):
 	raise formdone
-    def callback_browser(self,dummy):
+    def callback_browser(self,*dummy):
 	fn = self.input_filename.get_input()
 	dir, file = os.path.split(fn)
 	result = fl.file_selector('Select file', dir, '*', file)
