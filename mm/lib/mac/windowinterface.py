@@ -36,6 +36,7 @@ from mw_globals import ReadMask, WriteMask
 from mw_globals import RESET_CANVAS, DOUBLE_HEIGHT, DOUBLE_WIDTH
 from mw_globals import SINGLE, HTM, TEXT, MPEG
 from mw_globals import TRUE, FALSE
+from mw_globals import ICONSIZE_PXL
 #
 # Make various methods from toplevel available externally
 #
