@@ -836,6 +836,9 @@ class MMNode(MMNodeBase.MMNode):
 			pass
 		self.context.editmgr.unregister(self)
 
+	def kill(self):
+		pass
+
 	#
 	# Methods to handle sync arcs.
 	#
