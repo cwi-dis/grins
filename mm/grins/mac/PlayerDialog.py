@@ -137,6 +137,11 @@ class PlayerDialog:
 		# XXX This is rather inefficient.
 		self.showstate()
 		
+	def setusergroupsmenu(self, menu):
+		w = self.__window
+		if w is not None:
+			w.set_dynamiclist(USERGROUPS, menu)
+
 	def setoptions(self, options):
 		"""Set the list of options.
 
