@@ -53,7 +53,7 @@
 	'Base URL of document, used for resolving relative URLs' raw light)
 
 (base_window (name) 'undefined' 'Channel base window' basechannelname
-	'Name of window in which channelwin is created' raw cmif)
+	'Name of window in which channelwin is created' raw smil2)
 
 (base_winoff (tuple (float) (float) (float) (float)) (0.0 0.0 1.0 1.0)
 	'Position and size' default 'Position and size, usually in pixels' channel light)
@@ -203,6 +203,9 @@
 	'Audio type, determines quality of audio when converting to RealAudio'
 	raw light)
 
+(project_boston (bool) 0 'SMIL-Boston' default
+	'Document conforms to SMIL-Boston' raw smil)
+
 (project_convert (bool) 1 'Convert data' default
 	'Convert data to RealMedia format' raw smil)
 
@@ -248,6 +251,9 @@
 
 (queuesize (float) 0 'Queue size' default
 	'Audio playback queue size' channel cmif)
+
+(restart (enum always whenNotActive never) always 'Restart node' restart
+	'When can the node be restart' raw smil2)
 
 (scale (float) 0.0 'Scale factor' default
 	'Image magnification, 0 gives biggest possible size within channel' channel light)
@@ -295,7 +301,7 @@
 	'Type of media this channel will be used for' raw light)
 
 (u_group (name) undefined 'User group' usergroup
-	'User group that controls rendering of this node' inherited cmif)
+	'User group that controls rendering of this node' inherited smil2)
 
 (unixprog (string) '' 'Unix program name' default
 	'Application name (unix only)' channel cmif)
@@ -305,7 +311,7 @@
 
 (usergroups (list (enclosed (tuple (name) (tuple (string) (bool) (bool)))))
 	() 'User groups' hidden
-	'Usergroups used in this document (root node only)' normal cmif)
+	'Usergroups used in this document (root node only)' normal smil2)
 
 (video (bool) 0 'Video output' default
 	'Do image smoothing for video output' channel cmif)
@@ -351,7 +357,7 @@
 (color (tuple (int) (int) (int)) (0 0 0) 'Effect color' color
        'Color for transition effect, see RealPix documentation' normal light)
 
-(direction (string) 'left' 'Wipe Direction' direction
+(direction (enum left right up down) left 'Wipe Direction' direction
 	'Direction of wipe' normal light)
 
 (href (string) '' 'Hyperlink destination' default
@@ -369,7 +375,7 @@
 (fullimage (bool) 1 'Use whole image' default
 	'Use whole image' normal light)
 
-(maxfps (int) 0 'Max fps' default 'Transition framerate, 0 for as high as possible' inherited smil)
+(maxfps (int) 0 'Max fps' default 'Framerate for playback, 0 for as high as possible' inherited smil)
 
 (preroll (float) 0.0 'Preroll time' default
 	'Time for which data should be buffered before presentation starts, see RealPix documentation'
@@ -393,7 +399,7 @@
 (displayfull (bool) 1 'Fill whole region' default
 	'Use whole region for transition effect' normal light)
 
-(tag (string) 'fill' 'Transition type' transition
+(tag (enum fill fadein fadeout crossfade wipe viewchange) fill 'Transition type' transition
 	'Type of transition effect' normal light)
 	
 (caption (string) '' 'Text caption' default
@@ -402,7 +408,7 @@
 (captionchannel (name) '' 'Caption channel' captionchannelname
 	'Name of channel used to render captions on this node' inherited light)
 
-(wipetype (string) 'normal' 'Wipe type' wipetype
+(wipetype (enum normal push) normal 'Wipe type' wipetype
 	'Type of wipe' normal light)
 
 (fadeout (bool) 0 'Fadeout' default
