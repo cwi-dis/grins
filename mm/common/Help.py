@@ -50,7 +50,7 @@ def fixhelpdir():
 		else:
 			import settings
 			helpdir = settings.get('helpdir_url')
-			helpbase = '%s/%s/index.html'%(helpdir, platform)
+			helpbase = '%s/%s/%s/index.html'%(helpdir, helpprogram, platform)
 		
 
 def givehelp(topic):
