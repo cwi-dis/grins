@@ -3,6 +3,7 @@
 #
 
 from usercmd import *
+from Menus import *
 
 # Types of menu entries
 [ENTRY, TOGGLE, SEP, CASCADE, DYNAMICCASCADE, SPECIAL] = range(6)
@@ -27,17 +28,17 @@ MENUBAR=(
 		(ALL, ENTRY, 'Open...', 'O', OPENFILE),
 		(ALL, ENTRY, 'Open URL...', 'L', OPEN),
 		(ALL, DYNAMICCASCADE, 'Open Recent', OPEN_RECENT),
-		(ALL, ENTRY, 'Close Document', None, CLOSE),
+		(ALL, ENTRY, 'Close Document', (kMenuOptionModifier, 'W'), CLOSE),
 		(ALL, SEP,),
 		(ALL, ENTRY, 'Save', 'S', SAVE),
-		(ALL, ENTRY, 'Save As...', None, SAVE_AS),
+		(ALL, ENTRY, 'Save As...', (kMenuOptionModifier, 'S'), SAVE_AS),
 		(ALL, CASCADE, 'Generate', (
 			(ALL, ENTRY, 'RealSystem G2...', None, EXPORT_SMIL),
 			(ALL, ENTRY, 'Upload RealSystem G2...', None, UPLOAD_SMIL),
 			)),
-		(ALL, ENTRY, 'Restore', None, RESTORE),
+		(ALL, ENTRY, 'Revert to saved', None, RESTORE),
 		(ALL, SEP,),
-		(ALL, ENTRY, 'Document Properties...', None, PROPERTIES),
+		(ALL, ENTRY, 'Document Properties...', (kMenuOptionModifier, 'A'), PROPERTIES),
 		(ALL, SEP,),
 		(DBG, CASCADE, 'Debug', (
 			(ALL, ENTRY, 'Dump scheduler data', None, SCHEDDUMP),
@@ -57,10 +58,10 @@ MENUBAR=(
 		(ALL, ENTRY, 'Copy', 'C', COPY),
 		(ALL, ENTRY, 'Paste', 'V', PASTE),
 		(ALL, CASCADE, 'Paste Special', (
-			(ALL, ENTRY, 'Before', None, PASTE_BEFORE),
+			(ALL, ENTRY, 'Before', (kMenuOptionModifier, 'V'), PASTE_BEFORE),
 			(ALL, ENTRY, 'Within', None, PASTE_UNDER),
 			)),
-		(ALL, ENTRY, 'Delete', None, DELETE),
+		(ALL, ENTRY, 'Delete', (kMenuNoCommandModifier, '\177', 0x0a), DELETE),
 		(ALL, SEP,),
 		(ALL, ENTRY, 'New node...', 'K', NEW_AFTER),
 		(ALL, CASCADE, 'New node special', (
