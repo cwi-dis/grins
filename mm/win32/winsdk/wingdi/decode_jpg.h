@@ -90,6 +90,7 @@ class JpgDecoder : public ImgDecoder
 	JSAMPARRAY m_dbuffer;
 	JDIMENSION m_dbuffer_height;
 	JDIMENSION m_cur_output_row;
+	static HMODULE s_hDLL;
 	};
 
 inline JpgDecoder::JpgDecoder(memfile& mf, HDC hDC, ERROR_FUNCT ef)
@@ -120,21 +121,18 @@ inline bool JpgDecoder::can_decode()
 	}
 inline DIBSurf* JpgDecoder::decode()
 	{
-	HMODULE hDLL = LoadLibrary(TEXT("libjpeg.dll"));
-	if(hDLL == NULL) 
+	if(s_hDLL == NULL) 
 		{
 		(*m_ef)("JpgDecoder::decode", "failed to locate decode library libjpeg.dll");
 		return NULL;
 		}
-	if(!jpeg::init(hDLL))
+	if(!jpeg::init(s_hDLL))
 		{
-		FreeLibrary(hDLL);
 		(*m_ef)("JpgDecoder::decode", "failed to initialize libjpeg.dll");
 		return NULL;
 		}
 	if(m_mf.get_handle() == INVALID_HANDLE_VALUE)
 		{
-		FreeLibrary(hDLL);
 		(*m_ef)("JpgDecoder::decode", "invalid file handle");
 		return NULL;
 		}
@@ -201,7 +199,6 @@ inline DIBSurf* JpgDecoder::decode()
 	// cleanup
 	jpeg::finish_decompress(&cinfo);
 	jpeg::destroy_decompress(&cinfo);
-	FreeLibrary(hDLL);
 	return new DIBSurf(hBmp, psurf);
 	}
 
