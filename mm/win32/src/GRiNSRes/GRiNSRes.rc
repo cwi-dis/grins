@@ -3613,22 +3613,22 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDUC_PAR                "Create par container\nCreate par container"
-    IDUC_SEQ                "Create seq container\nCreate seq container"
-    IDUC_SWITCH             "Create switch container\nCreate switch container"
-    IDUC_EXCL               "Create excl container\nCreate excl container"
-    IDUC_PRIO               "Create priority class\nCreate priority class"
+    IDUC_PAR                "Create par group\nCreate par group"
+    IDUC_SEQ                "Create seq group\nCreate seq group"
+    IDUC_SWITCH             "Create switch group\nCreate switch group"
+    IDUC_EXCL               "Create excl group\nCreate excl group"
+    IDUC_PRIO               "Create priority group\nCreate priority group"
     IDUC_CREATE_EVENT       "Event source\\Event source"
     IDUC_BEGIN_EVENT        "Create begin event\nCreate begin event"
     IDUC_END_EVENT          "Create end event\nCreate end event"
     IDUC_EVENT_SOURCE       "Event source\nEvent source"
-    IDUC_MEDIA              "Create media item\nCreate media item"
+    IDUC_MEDIA              "Create media object\nCreate media object"
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDUC_ANIMATE            "Create animate node\nCreate animate node"
-    IDUC_BRUSH              "Create brush node\nCreate brush node"
+    IDUC_ANIMATE            "Create animate object\nCreate animate object"
+    IDUC_BRUSH              "Create brush object\nCreate brush object"
     IDUC_REGION             "Create region\nCreate region"
     IDUC_TOPLAYOUT          "Create TopLayout\nCreate TopLayout"
     IDUC_ZOOMIN             "Zoom in\nZoom in"

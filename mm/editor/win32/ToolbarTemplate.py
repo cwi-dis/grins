@@ -26,6 +26,7 @@ import grinsRC
 import usercmd
 import wndusercmd
 from ToolbarIcons import *
+import features
 
 #
 # This is a hack by Jack. We need fixed ID values
@@ -124,23 +125,28 @@ ALIGN_TEMPLATE = (
 	)
 )
 
+buttonlist = [
+	Button(usercmd.DRAG_PAR, TBICON_PAR),
+	Button(usercmd.DRAG_SEQ, TBICON_SEQ),
+	Button(usercmd.DRAG_SWITCH, TBICON_SWITCH),
+	Button(usercmd.DRAG_EXCL, TBICON_EXCL),
+	Button(usercmd.DRAG_PRIO, TBICON_PRIO),
+	Separator(6),
+	Button(usercmd.DRAG_MEDIA, TBICON_MEDIA),
+	Button(usercmd.DRAG_BRUSH, TBICON_BRUSH),
+	Separator(6),
+	Button(usercmd.DRAG_TOPLAYOUT, TBICON_TOPLAYOUT),
+	Button(usercmd.DRAG_REGION, TBICON_REGION),
+	]
+if features.ANIMATE in features.feature_set:
+	# add animate button between media and brush
+	buttonlist.insert(7, Button(usercmd.DRAG_ANIMATE, TBICON_ANIMATE))
+
 CONTAINERS_TEMPLATE = (
-	('Containers', 'toolbar', 'docked', wndusercmd.TOOLBAR_CONTAINERS, IDW_TOOLBAR_CONTAINERS, grinsRC.IDR_TB_EDITOR, 1, (
-		Button(usercmd.DRAG_PAR, TBICON_PAR),
-		Button(usercmd.DRAG_SEQ, TBICON_SEQ),
-		Button(usercmd.DRAG_SWITCH, TBICON_SWITCH),
-		Button(usercmd.DRAG_EXCL, TBICON_EXCL),
-		Button(usercmd.DRAG_PRIO, TBICON_PRIO),
-		Separator(6),
-		Button(usercmd.DRAG_MEDIA, TBICON_MEDIA),
-		Button(usercmd.DRAG_ANIMATE, TBICON_ANIMATE),
-		Button(usercmd.DRAG_BRUSH, TBICON_BRUSH),
-		Separator(6),
-		Button(usercmd.DRAG_TOPLAYOUT, TBICON_TOPLAYOUT),
-		Button(usercmd.DRAG_REGION, TBICON_REGION),
-		)
+	('Containers', 'toolbar', 'docked', wndusercmd.TOOLBAR_CONTAINERS, IDW_TOOLBAR_CONTAINERS, grinsRC.IDR_TB_EDITOR, 1, tuple(buttonlist)
 	)
 )
+del buttonlist
 
 TOOLBARS=[
 	GENERAL_TEMPLATE,

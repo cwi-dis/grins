@@ -107,7 +107,7 @@ class UPLOAD_QT(_CommandBase):
 class EXPORT_SMIL(_CommandBase):
 	help = 'Save document in new file as pure SMIL'
 class EXPORT_XMT(_CommandBase):
-	help = 'Save document in new file as XMT'
+	help = 'Save document in new file for Wireless'
 class EXPORT_PRUNE(_CommandBase):
 	help = 'Save document in new file as pure SMIL, pruning unused parts'
 class UPLOAD_SMIL(_CommandBase):

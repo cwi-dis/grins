@@ -23,6 +23,7 @@ __version__ = "$Id$";
 	EXPORT_HTML_TIME,		# export to Internet Explorer HTML+TIME
 
 	# If these do not appear in feature_set, they don't apper in GRiNS.
+	PREFERENCES,			# enable editing of GRiNS Preferences
 	STRUCTURE_VIEW,
 	PLAYER_VIEW,
 	TRANSITION_VIEW,
@@ -42,7 +43,10 @@ __version__ = "$Id$";
 
 	CREATE_TEMPLATES,		# Enable template creation features
 	ADVANCED_PROPERTIES,		# Enable advanced property editing
-	NEVER_AGAIN_CHECK,		# enable never again check mark in initial dialog
+
+	ANIMATE,			# enable insertion of animate object
+	EDIT_REALPIX,			# enable editing of RealPix media (XXX probably non-functional)
+	CONVERT2REALPIX,		# conversion to RealPix
 
 	# Different capabilities within the hierarchy view
 	H_TRANSITIONS,
@@ -50,4 +54,6 @@ __version__ = "$Id$";
 	H_DROPBOX,			# Show an empty drop box at the end of a sequence.
 	H_COLLAPSE,			# Enable internal node collapsing.
 	H_TIMESTRIP,			# Show snap!-like documents with correct toplevel par/seq
-] = range(30)				# don't forget to update this range!
+	H_PLAYABLE,			# Toggle showing of playability of nodes
+	H_THUMBNAILS,			# Toggle showing of image thumbnails
+] = range(35)				# don't forget to update this range!

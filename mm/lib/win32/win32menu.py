@@ -54,6 +54,7 @@ ID is either an integer or an object that can be maped to an integer
 #	TrackPopupMenu|Creates a popup menu anywhere on the screen.
 
 import flags
+import features
 
 class Menu:
 	def __init__(self,type='menu'):
@@ -138,8 +139,20 @@ class Menu:
 		flags=win32con.MF_STRING|win32con.MF_ENABLED
 		id=-1
 		for item in list:
-#			if (item[0] & self._optional_flags) != item[0]:
-			if (item[0] & self._optional_flags) == 0:
+			if type(item[0]) is type(()) or type(item[0]) is type([]):
+				for flag in item[0]:
+					if flag in features.feature_set:
+						# ok
+						break
+				else:
+					# no matching feature
+					# special case for empty list
+					# in that case, accept entry
+					if item[0]:
+						# list not empty, reject entry
+						continue
+			elif (item[0] & self._optional_flags) == 0:
+				# old product-based flag
 				continue
 			if item[1]==ENTRY:
 				if self._cb_obj2id:id=self._cb_obj2id(item[4])
