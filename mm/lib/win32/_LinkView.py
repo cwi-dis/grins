@@ -245,6 +245,8 @@ class _LinkView(docview.FormView,components.ControlsDict):
 	# Called directly from cmif-core to close window
 	def close(self):
 		# 1. clean self contends
+		if self._leftmenu:self._leftmenu.DestroyMenu()
+		if self._rightmenu:self._rightmenu.DestroyMenu()
 		del self._leftmenu
 		del self._rightmenu
 
