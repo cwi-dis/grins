@@ -2,7 +2,7 @@
 
 
 /* File created by MIDL compiler version 5.01.0164 */
-/* at Thu May 04 14:27:18 2000
+/* at Mon Jun 26 06:49:05 2000
  */
 /* Compiler settings for .\wmsdkidl.idl:
     Oicf (OptLev=i2), W1, Zp8, env=Win32, ms_ext, c_ext
@@ -295,6 +295,12 @@ typedef interface IWMCodecInfo IWMCodecInfo;
 #endif 	/* __IWMCodecInfo_FWD_DEFINED__ */
 
 
+#ifndef __IWMCodecInfo2_FWD_DEFINED__
+#define __IWMCodecInfo2_FWD_DEFINED__
+typedef interface IWMCodecInfo2 IWMCodecInfo2;
+#endif 	/* __IWMCodecInfo2_FWD_DEFINED__ */
+
+
 /* header files for imported files */
 #include "oaidl.h"
 #include "wmsbuffer.h"
@@ -312,6 +318,7 @@ void __RPC_USER MIDL_user_free( void __RPC_FAR * );
 //
 //=========================================================================
 typedef unsigned __int64 QWORD;
+
 
 
 
@@ -443,7 +450,13 @@ static const WCHAR *g_wszDeinterlaceMode = L"DeinterlaceMode";
 
 enum __MIDL___MIDL_itf_wmsdkidl_0000_0001
     {	WM_SF_CLEANPOINT	= 0x1,
-	WM_SF_DISCONTINUITY	= 0x2
+	WM_SF_DISCONTINUITY	= 0x2,
+	WM_SF_DATALOSS	= 0x4
+    };
+
+enum __MIDL___MIDL_itf_wmsdkidl_0000_0002
+    {	WM_SFEX_NOTASYNCPOINT	= 0x2,
+	WM_SFEX_DATALOSS	= 0x4
     };
 typedef 
 enum WMT_STATUS
@@ -523,7 +536,7 @@ enum WMT_ATTR_IMAGETYPE
 typedef 
 enum WMT_VERSION
     {	WMT_VER_4_0	= 0x40000,
-	WMT_VER_4_5	= 0x40005
+	WMT_VER_7_0	= 0x70000
     }	WMT_VERSION;
 
 typedef 
@@ -575,12 +588,13 @@ enum DRM_INDIVIDUALIZATION_STATUS
     }	DRM_INDIVIDUALIZATION_STATUS;
 
 
-enum __MIDL___MIDL_itf_wmsdkidl_0000_0002
+enum __MIDL___MIDL_itf_wmsdkidl_0000_0003
     {	WM_DM_NOTINTERLACED	= 0,
 	WM_DM_DEINTERLACE_NORMAL	= 1,
 	WM_DM_DEINTERLACE_HALFSIZE	= 2,
 	WM_DM_DEINTERLACE_HALFSIZEDOUBLERATE	= 3,
-	WM_DM_DEINTERLACE_INVERSETELECINE	= 4
+	WM_DM_DEINTERLACE_INVERSETELECINE	= 4,
+	WM_DM_DEINTERLACE_VERTICALHALFSIZEDOUBLERATE	= 5
     };
 typedef struct  _WMWriterStatistics
     {
@@ -766,6 +780,9 @@ EXTERN_GUID(WMMEDIASUBTYPE_PCM,
 // 00000009-0000-0010-8000-00AA00389B71            WMMEDIASUBTYPE_DRM 
 EXTERN_GUID(WMMEDIASUBTYPE_DRM, 
 0x00000009, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71); 
+// 00000161-0000-0010-8000-00AA00389B71            WMMEDIASUBTYPE_WMAudioV7 
+EXTERN_GUID(WMMEDIASUBTYPE_WMAudioV7, 
+0x00000161, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71); 
 // 00000161-0000-0010-8000-00AA00389B71            WMMEDIASUBTYPE_WMAudioV2 
 EXTERN_GUID(WMMEDIASUBTYPE_WMAudioV2, 
 0x00000161, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71); 
@@ -833,7 +850,9 @@ EXTERN_GUID( IID_IWMRegisterCallback,   0xcf4b1f99,0x4de2,0x4e49,0xa3,0x63,0x25,
 EXTERN_GUID( IID_IWMWriterPostView,     0x81e20ce4,0x75ef,0x491a,0x80,0x04,0xfc,0x53,0xc4,0x5b,0xdc,0x3e);
 EXTERN_GUID( IID_IWMWriterPostViewCallback, 0xd9d6549d,0xa193,0x4f24,0xb3,0x08,0x03,0x12,0x3d,0x9b,0x7f,0x8d);
 EXTERN_GUID( IID_IWMCodecInfo,          0xa970f41e,0x34de,0x4a98,0xb3,0xba,0xe4,0xb3,0xca,0x75,0x28,0xf0);
+EXTERN_GUID( IID_IWMCodecInfo2,         0xaa65e273,0xb686,0x4056,0x91,0xec,0xdd,0x76,0x8d,0x4d,0xf7,0x10);
 EXTERN_GUID( CLSID_WMMUTEX_Bitrate, 0xD6E22A01,0x35DA,0x11D1,0x90,0x34,0x00,0xA0,0xC9,0x03,0x49,0xBE );
+#define WM_MAX_VIDEO_STREAMS            0x00c
 HRESULT STDMETHODCALLTYPE WMCreateCertificate( IUnknown** pUnkCert );
 HRESULT STDMETHODCALLTYPE WMCreateWriter( IUnknown* pUnkCert, IWMWriter **ppWriter );
 HRESULT STDMETHODCALLTYPE WMCreateReader( IUnknown* pUnkCert, DWORD dwRights, IWMReader **ppReader );
@@ -7729,6 +7748,11 @@ EXTERN_C const IID IID_IWMReaderAdvanced2;
         
         virtual HRESULT STDMETHODCALLTYPE StopBuffering( void) = 0;
         
+        virtual HRESULT STDMETHODCALLTYPE OpenStream( 
+            /* [in] */ IStream __RPC_FAR *pStream,
+            /* [in] */ IWMReaderCallback __RPC_FAR *pCallback,
+            /* [in] */ void __RPC_FAR *pvContext) = 0;
+        
     };
     
 #else 	/* C style interface */
@@ -7911,6 +7935,12 @@ EXTERN_C const IID IID_IWMReaderAdvanced2;
         HRESULT ( STDMETHODCALLTYPE __RPC_FAR *StopBuffering )( 
             IWMReaderAdvanced2 __RPC_FAR * This);
         
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *OpenStream )( 
+            IWMReaderAdvanced2 __RPC_FAR * This,
+            /* [in] */ IStream __RPC_FAR *pStream,
+            /* [in] */ IWMReaderCallback __RPC_FAR *pCallback,
+            /* [in] */ void __RPC_FAR *pvContext);
+        
         END_INTERFACE
     } IWMReaderAdvanced2Vtbl;
 
@@ -8036,6 +8066,9 @@ EXTERN_C const IID IID_IWMReaderAdvanced2;
 
 #define IWMReaderAdvanced2_StopBuffering(This)	\
     (This)->lpVtbl -> StopBuffering(This)
+
+#define IWMReaderAdvanced2_OpenStream(This,pStream,pCallback,pvContext)	\
+    (This)->lpVtbl -> OpenStream(This,pStream,pCallback,pvContext)
 
 #endif /* COBJMACROS */
 
@@ -8222,6 +8255,20 @@ HRESULT STDMETHODCALLTYPE IWMReaderAdvanced2_StopBuffering_Proxy(
 
 
 void __RPC_STUB IWMReaderAdvanced2_StopBuffering_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IWMReaderAdvanced2_OpenStream_Proxy( 
+    IWMReaderAdvanced2 __RPC_FAR * This,
+    /* [in] */ IStream __RPC_FAR *pStream,
+    /* [in] */ IWMReaderCallback __RPC_FAR *pCallback,
+    /* [in] */ void __RPC_FAR *pvContext);
+
+
+void __RPC_STUB IWMReaderAdvanced2_OpenStream_Stub(
     IRpcStubBuffer *This,
     IRpcChannelBuffer *_pRpcChannelBuffer,
     PRPC_MESSAGE _pRpcMessage,
@@ -10675,6 +10722,170 @@ void __RPC_STUB IWMCodecInfo_GetCodecFormat_Stub(
 
 
 #endif 	/* __IWMCodecInfo_INTERFACE_DEFINED__ */
+
+
+#ifndef __IWMCodecInfo2_INTERFACE_DEFINED__
+#define __IWMCodecInfo2_INTERFACE_DEFINED__
+
+/* interface IWMCodecInfo2 */
+/* [local][unique][helpstring][uuid][object] */ 
+
+
+EXTERN_C const IID IID_IWMCodecInfo2;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("AA65E273-B686-4056-91EC-DD768D4DF710")
+    IWMCodecInfo2 : public IWMCodecInfo
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE GetCodecName( 
+            /* [in] */ REFGUID guidType,
+            /* [in] */ DWORD dwCodecIndex,
+            /* [out] */ WCHAR __RPC_FAR *wszName,
+            /* [out] */ DWORD __RPC_FAR *pcchName) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetCodecFormatDesc( 
+            /* [in] */ REFGUID guidType,
+            /* [in] */ DWORD dwCodecIndex,
+            /* [in] */ DWORD dwFormatIndex,
+            /* [out] */ IWMStreamConfig __RPC_FAR *__RPC_FAR *ppIStreamConfig,
+            /* [out] */ WCHAR __RPC_FAR *wszDesc,
+            /* [out][in] */ DWORD __RPC_FAR *pcchDesc) = 0;
+        
+    };
+    
+#else 	/* C style interface */
+
+    typedef struct IWMCodecInfo2Vtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *QueryInterface )( 
+            IWMCodecInfo2 __RPC_FAR * This,
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE __RPC_FAR *AddRef )( 
+            IWMCodecInfo2 __RPC_FAR * This);
+        
+        ULONG ( STDMETHODCALLTYPE __RPC_FAR *Release )( 
+            IWMCodecInfo2 __RPC_FAR * This);
+        
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *GetCodecInfoCount )( 
+            IWMCodecInfo2 __RPC_FAR * This,
+            /* [in] */ REFGUID guidType,
+            /* [out] */ DWORD __RPC_FAR *pcCodecs);
+        
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *GetCodecFormatCount )( 
+            IWMCodecInfo2 __RPC_FAR * This,
+            /* [in] */ REFGUID guidType,
+            /* [in] */ DWORD dwCodecIndex,
+            /* [out] */ DWORD __RPC_FAR *pcFormat);
+        
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *GetCodecFormat )( 
+            IWMCodecInfo2 __RPC_FAR * This,
+            /* [in] */ REFGUID guidType,
+            /* [in] */ DWORD dwCodecIndex,
+            /* [in] */ DWORD dwFormatIndex,
+            /* [out] */ IWMStreamConfig __RPC_FAR *__RPC_FAR *ppIStreamConfig);
+        
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *GetCodecName )( 
+            IWMCodecInfo2 __RPC_FAR * This,
+            /* [in] */ REFGUID guidType,
+            /* [in] */ DWORD dwCodecIndex,
+            /* [out] */ WCHAR __RPC_FAR *wszName,
+            /* [out] */ DWORD __RPC_FAR *pcchName);
+        
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *GetCodecFormatDesc )( 
+            IWMCodecInfo2 __RPC_FAR * This,
+            /* [in] */ REFGUID guidType,
+            /* [in] */ DWORD dwCodecIndex,
+            /* [in] */ DWORD dwFormatIndex,
+            /* [out] */ IWMStreamConfig __RPC_FAR *__RPC_FAR *ppIStreamConfig,
+            /* [out] */ WCHAR __RPC_FAR *wszDesc,
+            /* [out][in] */ DWORD __RPC_FAR *pcchDesc);
+        
+        END_INTERFACE
+    } IWMCodecInfo2Vtbl;
+
+    interface IWMCodecInfo2
+    {
+        CONST_VTBL struct IWMCodecInfo2Vtbl __RPC_FAR *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IWMCodecInfo2_QueryInterface(This,riid,ppvObject)	\
+    (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
+
+#define IWMCodecInfo2_AddRef(This)	\
+    (This)->lpVtbl -> AddRef(This)
+
+#define IWMCodecInfo2_Release(This)	\
+    (This)->lpVtbl -> Release(This)
+
+
+#define IWMCodecInfo2_GetCodecInfoCount(This,guidType,pcCodecs)	\
+    (This)->lpVtbl -> GetCodecInfoCount(This,guidType,pcCodecs)
+
+#define IWMCodecInfo2_GetCodecFormatCount(This,guidType,dwCodecIndex,pcFormat)	\
+    (This)->lpVtbl -> GetCodecFormatCount(This,guidType,dwCodecIndex,pcFormat)
+
+#define IWMCodecInfo2_GetCodecFormat(This,guidType,dwCodecIndex,dwFormatIndex,ppIStreamConfig)	\
+    (This)->lpVtbl -> GetCodecFormat(This,guidType,dwCodecIndex,dwFormatIndex,ppIStreamConfig)
+
+
+#define IWMCodecInfo2_GetCodecName(This,guidType,dwCodecIndex,wszName,pcchName)	\
+    (This)->lpVtbl -> GetCodecName(This,guidType,dwCodecIndex,wszName,pcchName)
+
+#define IWMCodecInfo2_GetCodecFormatDesc(This,guidType,dwCodecIndex,dwFormatIndex,ppIStreamConfig,wszDesc,pcchDesc)	\
+    (This)->lpVtbl -> GetCodecFormatDesc(This,guidType,dwCodecIndex,dwFormatIndex,ppIStreamConfig,wszDesc,pcchDesc)
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+HRESULT STDMETHODCALLTYPE IWMCodecInfo2_GetCodecName_Proxy( 
+    IWMCodecInfo2 __RPC_FAR * This,
+    /* [in] */ REFGUID guidType,
+    /* [in] */ DWORD dwCodecIndex,
+    /* [out] */ WCHAR __RPC_FAR *wszName,
+    /* [out] */ DWORD __RPC_FAR *pcchName);
+
+
+void __RPC_STUB IWMCodecInfo2_GetCodecName_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+HRESULT STDMETHODCALLTYPE IWMCodecInfo2_GetCodecFormatDesc_Proxy( 
+    IWMCodecInfo2 __RPC_FAR * This,
+    /* [in] */ REFGUID guidType,
+    /* [in] */ DWORD dwCodecIndex,
+    /* [in] */ DWORD dwFormatIndex,
+    /* [out] */ IWMStreamConfig __RPC_FAR *__RPC_FAR *ppIStreamConfig,
+    /* [out] */ WCHAR __RPC_FAR *wszDesc,
+    /* [out][in] */ DWORD __RPC_FAR *pcchDesc);
+
+
+void __RPC_STUB IWMCodecInfo2_GetCodecFormatDesc_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
+
+
+#endif 	/* __IWMCodecInfo2_INTERFACE_DEFINED__ */
 
 
 /* Additional Prototypes for ALL interfaces */
