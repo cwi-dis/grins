@@ -329,7 +329,8 @@ class Channel:
 			self._player.del_anchor(button)
 		self._played_anchors = self._armed_anchors
 		self._armed_anchors = []
-		self._has_pause = 0
+		durationattr = MMAttrdefs.getattr(node, 'duration')
+		self._has_pause = (durationattr < 0)
 		for (name, type, button) in self._played_anchors:
 			if type == ATYPE_PAUSE:
 ##				print 'found pause anchor'

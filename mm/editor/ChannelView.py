@@ -1021,6 +1021,7 @@ class NodeBox(GO):
 
 	def init(self, mother, node):
 		self.node = node
+		self.pausenode = (MMAttrdefs.getattr(node, 'duration') < 0)
 		self.hasanchors = self.haspause = 0
 		try:
 			alist = self.node.GetRawAttr('anchorlist')
@@ -1154,6 +1155,17 @@ class NodeBox(GO):
 			gl.v2f(r, b)
 			gl.v2f(r, b-ABOXSIZE)
 			gl.v2f(l, b-ABOXSIZE)
+			gl.endpolygon()
+
+		# If this is a pausing node
+		# draw a small orange box in the bottom right corner
+		if self.pausenode:
+			gl.RGBcolor(ANCHORCOLOR)
+			gl.bgnpolygon()
+			gl.v2f(r-ABOXSIZE, b)
+			gl.v2f(r, b)
+			gl.v2f(r, b-ABOXSIZE)
+			gl.v2f(r-ABOXSIZE, b-ABOXSIZE)
 			gl.endpolygon()
 
 		# Draw a "3D" border if selected, else an "engraved" outline
