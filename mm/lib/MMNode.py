@@ -934,7 +934,7 @@ class MMNode:
 			x = x.parent
 		raise NoSuchAttrError, 'in GetInherAttr()'
 
-	def GetDefInherAttr(self, name, d=0):
+	def GetDefInherAttr(self, name, animated=0):
 		if animated:
 			x = self
 			while x is not None:
