@@ -42,6 +42,10 @@ class TransitionEngine:
 		else:
 			self.__transperiod = float(self.__endprogress - self.__startprogress) / self.__duration
 
+		# rect for use with wnd._paintOnDDS
+		# offset windowpos with respect to VisibleWindowPos
+		self._paint_rect = None
+
 	def __del__(self):
 		if self.__transitiontype:
 			self.endtransition()
@@ -104,11 +108,11 @@ class TransitionEngine:
 				wnd.paintOnDDS(self._tosurf, wnd)
 		else:
 			if self.outtrans:
-				wnd._paintOnDDS(wnd._fromsurf, wnd._rect)
+				wnd._paintOnDDS(wnd._fromsurf, self._paint_rect)
 				wnd.updateBackDDS(self._tosurf, exclwnd=wnd) 
 			else:
 				wnd.updateBackDDS(wnd._fromsurf, exclwnd=wnd)
-				wnd._paintOnDDS(self._tosurf, wnd._rect)
+				wnd._paintOnDDS(self._tosurf, self._paint_rect)
 	
 		fromsurf = 	wnd._fromsurf
 		tosurf = self._tosurf	
@@ -117,7 +121,7 @@ class TransitionEngine:
 		dstrgn = None
 
 		self.__transitiontype.updatebitmap(parameters, tosurf, fromsurf, tmpsurf, dstsurf, dstrgn)
-		wnd.update(wnd.getwindowpos())
+		wnd.update(wnd.getVisibleWindowPos())
 
 	def join(self, window, ismaster, cb):
 		# Join this (sub or super) window to an existing transition
@@ -158,8 +162,18 @@ class TransitionEngine:
 			else:
 				break
 
-		# resize to this window
-		x, y, w, h = wnd._rect
+		# paint rect
+		w, h = wnd._drawsurf.GetSurfaceDesc().GetSize()
+
+		# new origin
+		x1, y1, w1, h1 = wnd.getVisibleWindowPos()
+
+		x2, y2, w2, h2 = wnd.getwindowpos()
+		
+		# offset windowpos with respect to VisibleWindowPos
+		self._paint_rect = x2-x1, y2-y1, w2, h2
+
+		# resize to this surface
 		self.__transitiontype.move_resize((0, 0, w, h))
 
 	def __onIdle(self):
