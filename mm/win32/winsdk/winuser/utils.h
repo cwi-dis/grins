@@ -11,6 +11,14 @@ inline PyObject* none() { Py_INCREF(Py_None); return Py_None;}
 
 extern PyObject *ErrorObject;
 
+inline char* toMB(char *p) {return p;}
+inline char* toMB(WCHAR *p)
+	{
+	static char buf[512];
+	WideCharToMultiByte(CP_ACP, 0, p, -1, buf, 512, NULL, NULL);		
+	return buf;
+	}
+
 inline void seterror(const char *msg){ PyErr_SetString(ErrorObject, msg);}
 
 inline void seterror(const char *funcname, const char *msg)
@@ -21,17 +29,17 @@ inline void seterror(const char *funcname, const char *msg)
 
 inline void seterror(const char *funcname, DWORD err)
 	{
-	char* pszmsg;
+	TCHAR* pszmsg;
 	FormatMessage( 
 		 FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
 		 NULL,
 		 err,
 		 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-		 (LPTSTR) &pszmsg,
+		 (TCHAR*) &pszmsg,
 		 0,
 		 NULL 
 		);
-	PyErr_Format(ErrorObject, "%s failed, error = %x, %s", funcname, err, pszmsg);
+	PyErr_Format(ErrorObject, "%s failed, error = %x, %s", funcname, err, toMB(pszmsg));
 	LocalFree(pszmsg);
 	}
 
@@ -39,7 +47,7 @@ class PyPtListConverter
 	{
 	public:
 	PyPtListConverter() 
-	:	m_numpoints(0), m_ppt(NULL) {sz[0]='\0';}
+	:	m_numpoints(0), m_ppt(NULL) { sz[0]='\0';}
 
 	bool convert(PyObject *pyptlist)
 		{
@@ -167,6 +175,13 @@ class PyDictParser
 	PyObject *m_pydict;
 	};
 
+inline int GetObjHandle(PyObject *obj)
+	{
+	if(PyInt_Check(obj))
+		return PyInt_AsLong(obj);
+	struct WrapperObj { PyObject_HEAD; int m_h;};
+	return ((WrapperObj*)obj)->m_h;
+	}
 
 // For use from a single thread
 
@@ -206,13 +221,6 @@ inline char* toTEXT(WCHAR *p)
 
 #endif
 
-inline char* toMB(char *p) {return p;}
-inline char* toMB(WCHAR *p)
-	{
-	static char buf[512];
-	WideCharToMultiByte(CP_ACP, 0, p, -1, buf, 512, NULL, NULL);		
-	return buf;
-	}
 
 #ifdef _WIN32_WCE
 	#define CAST_IF_WCE(fctn) wce_##fctn
