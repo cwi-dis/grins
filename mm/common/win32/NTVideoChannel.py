@@ -396,7 +396,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.__rmrender = None
 
 	def OnFormatBitFields(self, rmask, gmask, bmask):
-		self.__bitFieldsMask = rmask. gmask, bmask
+		self.__bitFieldsMask = rmask, gmask, bmask
 
 	def OnFormatChange(self, w, h, bpp, fmt):
 		if not self.window: return
