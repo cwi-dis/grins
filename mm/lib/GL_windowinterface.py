@@ -1146,7 +1146,6 @@ class _Window:
 ##		return s
 
 	def __del__(self):
-		print 'delete',`self`
 		if not _window_list.has_key(self._window_id):
 			self.close()
 
@@ -1257,6 +1256,8 @@ class _Window:
 
 	def _open_win(self):
 		# re-open a GL window for this instance
+		if self.is_closed():
+			raise error, 'window already closed'
 		if self._window_id != -1:
 			raise error, 'window not closed'
 		x, y, w, h = self._sizes
@@ -1349,8 +1350,11 @@ class _Window:
 		self._subwindows_closed = 1
 
 	def _open_subwins(self):
+		if self.is_closed():
+			raise error, 'window already closed'
 		for win in self._subwindows:
-			win._open_win()
+			if not win.is_closed():
+				win._open_win()
 		self._subwindows_closed = 0
 
 	def sizebox(self, (x, y, w, h), constrainx, constrainy):
@@ -1370,6 +1374,7 @@ class _Window:
 			gl.mapcolor(GL.RED, 255, 0, 0)
 		else:
 			gl.drawmode(GL.OVERDRAW)
+		gl.qreset()
 		gl.color(0)
 		gl.clear()
 		gl.color(GL.RED)
@@ -1840,7 +1845,7 @@ class _Window:
 		self._menuids = []
 		self._menuprocs = [None]
 		if self._active_display_list:
-			self.unregister(KeybourdInput)
+			self.unregister(KeyboardInput)
 		self._accelerators = {}
 		self.unregister(Mouse2Press)
 		self.unregister(_Accelerator)

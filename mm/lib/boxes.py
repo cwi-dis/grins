@@ -58,9 +58,12 @@ def create_box(window, msg, *box):
 			d = window.newdisplaylist()
 		for win in window._subwindows:
 			d.drawbox(win._sizes)
+		display = d.clone()
 		d.fgcolor(255, 0, 0)
 		d.drawbox(box)
 		d.render()
+		display.fgcolor(0, 0, 255)
+		display.drawbox(box)
 		while 1:
 			win, ev, val = windowinterface.readevent()
 			if win == window and ev == EVENTS.Mouse0Press:
@@ -73,8 +76,7 @@ def create_box(window, msg, *box):
 					constrainy = 1
 				else:
 					constrainy = 0
-				if display and not display.is_closed():
-					display.render()
+				display.render()
 				d.close()
 				if constrainx and constrainy:
 					box = window.movebox(box, 0, 0)
@@ -93,12 +95,7 @@ def create_box(window, msg, *box):
 						h = box[3]
 					box = window.sizebox((x0, y0, w, h), \
 						  constrainx, constrainy)
-				if display and not display.is_closed():
-					d = display.clone()
-				else:
-					d = window.newdisplaylist()
-				for win in window._subwindows:
-					d.drawbox(win._sizes)
+				d = display.clone()
 				d.fgcolor(255, 0, 0)
 				d.drawbox(box)
 				d.render()
@@ -106,6 +103,7 @@ def create_box(window, msg, *box):
 				r = dialog.checkevent(win, ev, val)
 				if r:
 					dialog.close()
+					display = window._active_display_list
 					if display and not display.is_closed():
 						display.render()
 					d.close()
@@ -113,19 +111,20 @@ def create_box(window, msg, *box):
 						return box
 					return None
 	finally:
-		window._open_subwins()
+		if not window.is_closed():
+			window._open_subwins()
 		windowinterface.endmonitormode()
 		win = window
 		while win:
 			fa = fa1[0]
 			del fa1[0]
-			if fa:
+			if fa and not win.is_closed():
 				windowinterface.register(win,
 							 EVENTS.Mouse0Press,
 							 fa[0], fa[1])
 			fa = fa2[0]
 			del fa2[0]
-			if fa:
+			if fa and not win.is_closed():
 				windowinterface.register(win,
 							 EVENTS.Mouse0Release,
 							 fa[0], fa[1])
