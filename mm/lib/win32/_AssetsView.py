@@ -142,3 +142,8 @@ class _AssetsView(GenView.GenView, docview.ListView):
 
 	def setItems(self, items):
 		self.items = items
+
+	def getSelected(self):
+		if not self.listCtrl:
+			return -1
+		return self.listCtrl.getSelected()
