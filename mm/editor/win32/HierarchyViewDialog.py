@@ -74,7 +74,6 @@ class HierarchyViewDialog(ViewDialog):
 		self.window.set_toggle(command, onoff)
 
 	def setcommands(self, commandlist):
-		print 'setcommands',self.translist
 		self.window.set_dynamiclist(TRANSITION, self.translist or [])
 		self.window.set_commandlist(commandlist)
 
