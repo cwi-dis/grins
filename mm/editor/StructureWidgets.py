@@ -923,7 +923,9 @@ class VerticalWidget(StructureObjWidget):
 		
 
 		for medianode in self.children: # for each MMNode:
-			w,h = medianode.get_minsize()
+			w,h = medianode.get_minsize(		import traceback; traceback.print_stack()
+
+)
 			if self.root.pushbackbars and isinstance(medianode, MediaWidget):
 				pushover = self.get_relx(medianode.downloadtime_lag)
 			else:
@@ -1049,7 +1051,6 @@ class MediaWidget(MMNodeWidget):
 		self.downloadtime = 0.0		# Distance to draw - MEASURED IN PIXELS
 		self.downloadtime_lag = 0.0	# Distance to push this node to the right - MEASURED IN PIXELS.
 		self.downloadtime_lag_errorfraction = 1.0
-		self.compute_download_time()
 		self.infoicon = Icon(None, self, self.node, self.root)
 		self.infoicon.set_callback(self.show_mesg)
 		self.node.views['struct_view'] = self		
@@ -1068,8 +1069,8 @@ class MediaWidget(MMNodeWidget):
 		# First get available bandwidth. Silly algorithm to be replaced sometime: in each par we evenly
 		# divide the available bandwidth, for other structure nodes each child has the whole bandwidth
 		# available.
-
 		prearmtime = self.node.compute_download_time()
+		print "MediaWidget prearmtime is: ", prearmtime
 
 		# Now subtract the duration of the previous node: this fraction of
 		# the downloadtime is no problem.
@@ -1079,6 +1080,9 @@ class MediaWidget(MMNodeWidget):
 		else:
 			prevnode_duration = 0
 		lagtime = prearmtime - prevnode_duration
+
+		print "            lagtime is: ", lagtime
+		
 		if lagtime < 0:
 			lagtime = 0
 		# Obtaining the begin delay is a bit troublesome:
@@ -1093,16 +1097,31 @@ class MediaWidget(MMNodeWidget):
 			self.downloadtime_lag_errorfraction = 0
 		else:
 			self.downloadtime_lag_errorfraction = (lagtime-begindelay)/lagtime
+
+		print "            begindelay is: ", begindelay
 		
 		# Now convert this from time to distance. 
 		node_duration = (self.node.t1-self.node.t0)
 		if node_duration <= 0: node_duration = 1
+		print "            node_duration is: ", node_duration
 		l,t,r,b = self.pos_rel
-		node_width = r-l
-		lagwidth = lagtime * node_width / node_duration
- 
+		node_width = self.get_minsize()[0]
+		print "            node width is: ", node_width
+		# Lagwidth is a percentage of this node's width.
+		#lagwidth = lagtime * node_width / node_duration
+		if node_duration == 0:
+			lagwidth = 0
+#		elif lagtime/node_duration > 1.0:
+#			lagwidth = 1.0 * node_width
+		else:
+			lagwidth = (lagtime/node_duration) * node_width
 		self.downloadtime = 0
-		self.downloadtime_lag = lagwidth
+		if lagwidth > 0:
+			self.downloadtime_lag = lagwidth
+		else:
+			print "Error: lagwidth is < 0"
+			self.downloadtime_lag = 0
+		print "            set downloadtime_lag to: ", self.downloadtime_lag
 
 	def show_mesg(self):
 		if self.node.errormessage:
@@ -1110,10 +1129,11 @@ class MediaWidget(MMNodeWidget):
 
 	def recalc(self):
 		l,t,r,b = self.pos_rel
+		self.compute_download_time()
 
 		self.infoicon.moveto((l+self.get_relx(1), t+self.get_rely(2)))
 
-		lag = self.get_relx(self.downloadtime_lag)
+		lag = self.downloadtime_lag
 		if lag < 0:
 			print "ERROR! Lag is below 0 - node can play before it is loaded. Cool!"
 			lag = 0
@@ -1130,6 +1150,7 @@ class MediaWidget(MMNodeWidget):
 #	   dt = self.get_relx(self.downloadtime)
 
 		MMNodeWidget.recalc(self) # This is probably not necessary.
+
 
 	def get_minsize(self):
 		xsize = self.get_relx(sizes_notime.MINSIZE)
