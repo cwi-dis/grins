@@ -1134,9 +1134,6 @@ class AttrEditor(AttrEditorDialog):
 		allnamelist = wrapper.attrnames()
 		namelist = []
 		lightweight = features.lightweight
-		smil2 = 0
-		if hasattr(wrapper, 'context'):
-			smil2 = wrapper.context.attributes.get('projectb_oston', 0)
 		if not lightweight:
 			cmif = settings.get('cmif')
 		else:
