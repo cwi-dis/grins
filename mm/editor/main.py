@@ -78,6 +78,13 @@ class Main:
 		for top in self.tops:
 			top.setready()
 
+		try:
+			import splash
+		except ImportError:
+			pass
+		else:
+			splash.unsplash()
+
 	def do_exit(self, *args):
 		for top in self.tops:
 			top.close()
@@ -129,6 +136,12 @@ def main():
 	except getopt.error, msg:
 		usage(msg)
 	try:
+		import splash
+	except ImportError:
+		pass
+	else:
+		splash.splash(findfile(os.path.join('lib','cmifed.rgb')))
+	try:
 		import signal, pdb
 	except ImportError:
 		pass
@@ -155,10 +168,10 @@ def main():
 			sys.stderr.write('%s: cannot open: %s\n' % (fn, msg))
 			sys.exit(2)
 
-	# patch the module search path
-	# so we are less dependent on where we are called
-	sys.path.append(findfile('lib'))
-	sys.path.append(findfile('video'))
+## 	# patch the module search path
+## 	# so we are less dependent on where we are called
+## 	sys.path.append(findfile('lib'))
+## 	sys.path.append(findfile('video'))
 
 	import Channel
 	import GLLock

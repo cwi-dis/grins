@@ -2,7 +2,7 @@ __version__ = "$Id$"
 
 import Xt, Xm, Xmd, Xlib, X, Xcursorfont
 import string, sys
-import imgformat, img
+import img
 
 error = 'windowinterface.error'
 
@@ -679,27 +679,7 @@ class _Window:
 		# depth: depth of window (and image) in bytes
 		oscale = scale
 		tw = self._topwindow
-		if tw._depth == 8:
-			format = toplevel._myxrgb8
-		else:
-			v = self._visual
-			for name, format in imgformat.__dict__.items():
-				if type(format) is not type(imgformat.rgb):
-					continue
-				descr = format.descr
-				if descr['type'] != 'rgb' or \
-				   descr['size'] != 32 or \
-				   descr['align'] != 32 or \
-				   descr['b2t'] != 0:
-					continue
-				comp = descr['comp']
-				r, g, b = comp[:3]
-				if v.red_mask   == ((1<<r[1])-1) << r[0] and \
-				   v.green_mask == ((1<<g[1])-1) << g[0] and \
-				   v.blue_mask  == ((1<<b[1])-1) << b[0]:
-					break
-			else:
-				format = imgformat.rgb
+		format = self._format
 		depth = format.descr['align'] / 8
 		reader = None
 		try:
@@ -736,7 +716,7 @@ class _Window:
 				del toplevel._image_size_cache[file]
 				return self._prepare_image(file, crop, oscale)
 			if hasattr(reader, 'transparent'):
-				import imageop
+				import imageop, imgformat
 				r = img.reader(imgformat.xrgb8, file)
 				for i in range(len(r.colormap)):
 					r.colormap[i] = 255, 255, 255
