@@ -704,6 +704,7 @@ class SMIL:
 			GRiNSns+' ' 'project_targets':None,
 			GRiNSns+' ' 'project_videotype':None,
 			GRiNSns+' ' 'showtime':None,
+			GRiNSns+' ' 'allowedmimetypes':None,
 			QTns+' ' 'immediate-instantiation':None,
 			QTns+' ' 'bitrate':None,
 			QTns+' ' 'system-mime-type-supported':None,

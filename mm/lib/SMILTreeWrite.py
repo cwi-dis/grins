@@ -808,6 +808,11 @@ def getinlinetrmode(writer, node):
 		return None
 	return mode
 
+def getallowedmimetypes(writer, node):
+	mimetypes = node.GetRawAttrDef('allowedmimetypes', None)
+	if not mimetypes:
+		return None
+	return MMAttrdefs.valuerepr('allowedmimetypes', mimetypes)
 #
 # Mapping from SMIL attrs to functions to get them. Strings can be
 # used as a shortcut for node.GetAttr
@@ -919,6 +924,7 @@ smil_attrs=[
 	("thumbnail-scale", lambda writer, node: getboolean(writer, node, 'thumbnail_scale', 1), "thumbnail_scale"),
 	("collapsed", getcollapsed, None),
 	("showtime", getshowtime, None),
+	("allowedmimetypes", getallowedmimetypes, None),
 ]
 prio_attrs = [
 	("id", getid, None),

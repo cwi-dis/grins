@@ -147,6 +147,9 @@
 (mimetype (string) '' 'MIME type' default
 	'MIME type of media object' raw (g2_pro qt_pro smil10 cmif))
 
+(allowedmimetypes (list (name)) () 'Allowed MIME types' reqlist
+	'Allowed MIMEtypes for media object' raw (g2_pro qt_pro smil10 cmif smil2))
+
 (min (float) 0.0 'Minimum duration' default
 	'Minimum duration of a node or subtree' normal (smil2 snap))
 
