@@ -1538,6 +1538,10 @@ class Renderer:
 		b=b+db
 		return (l,t,r,b)
 
+	def drawcroprect(self, dc, rc):
+		if not rc: return
+		win32mu.RectanglePath(dc, rc, rop=win32con.R2_NOTXORPEN,\
+			pens=win32con.PS_DOT, penw=2, penc=win32api.RGB(0,0,0))		
 
 	# overrides
 	def load(self,f):
@@ -1563,6 +1567,7 @@ class ImageRenderer(Renderer):
 	def __init__(self,wnd,rc,baseURL=''):
 		Renderer.__init__(self,wnd,rc,baseURL)
 		self._ig=-1
+		self._adjrc=None
 			
 	def __del__(self):
 		if self._ig>=0:
@@ -1599,6 +1604,8 @@ class ImageRenderer(Renderer):
 		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
 		dc.FrameRectFromHandle((dest_x, dest_y, dest_x + width, dest_y+height),br)
 		Sdk.DeleteObject(br)
+		self._adjrc=(dest_x, dest_y,dest_x + width, dest_y + height)
+
 
 #################################
 DirectShowSdk=win32ui.GetDS()
@@ -1688,7 +1695,7 @@ class PreviewPage(AttrPage):
 
 	def drawOn(self,dc):
 		self._renderer.render(dc)
-
+			
 	def setvalue(self, attr, val):
 		if not self._initdialog: return
 		if self._cd.has_key(attr): 
@@ -1705,6 +1712,21 @@ class PreviewPage(AttrPage):
 class ImagePreviewPage(PreviewPage):
 	def __init__(self,form):
 		PreviewPage.__init__(self,form,'image')
+	def drawOn(self,dc):
+		self._renderer.render(dc)
+		rc=self._renderer._adjrc
+		a=self._form.getattrbyname('crop')
+		if not a: return
+		val=a.getvalue()
+		# parse a tuple for one more time!
+		st = string.split(val)
+		if len(st) != 4: return
+		l,t,r,b=rc
+		l=l+string.atoi(st[0])
+		t=t+string.atoi(st[1])
+		r=r-string.atoi(st[2])
+		b=b-string.atoi(st[3])
+		self._renderer.drawcroprect(dc,(l,t,r,b))
 
 class VideoPreviewPage(PreviewPage):
 	def __init__(self,form):
@@ -2243,6 +2265,12 @@ class AttrEditFormNew(GenFormView):
 		d=self._cbdict
 		if d and d.has_key(k) and d[k]:
 			apply(apply,d[k])				
+
+	def getattrbyname(self,name):
+		for a in self._attriblist:
+			if a.getname()==name:
+				return a
+		return None
 
 	# cmif specific interface
 	# Called by the core system to get a value from the list
