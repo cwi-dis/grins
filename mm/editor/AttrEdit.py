@@ -4,10 +4,10 @@
 import fl
 from FL import *
 
+import MMExc
 import MMAttrdefs
 import MMParser
 import MMWrite
-from MMExc import *
 
 from ChannelMap import channelmap
 
@@ -120,7 +120,7 @@ class NodeWrapper() = Wrapper():
 		return self
 	#
 	def stillvalid(self):
-		return node.GetRoot() is self.root
+		return self.node.GetRoot() is self.root
 	#
 	def maketitle(self):
 		name = MMAttrdefs.getattr(self.node, 'name')
@@ -133,18 +133,7 @@ class NodeWrapper() = Wrapper():
 		return self.node.GetRawAttrDef(name, None)
 	#
 	def getdefault(self, name):
-		try:
-			return self.node.GetDefAttr(name)
-		except NoSuchAttrError:
-			pass
-		p = self.node.GetParent()
-		if p = None:
-			default = None
-		else:
-			default = p.GetInherAttrDef(name, None)
-		if default = None:
-			default = MMAttrdefs.getdef(name)[1]
-		return default
+		return MMAttrdefs.getdefattr(self.node, name)
 	#
 	def setattr(self, (name, value)):
 		self.node.SetAttr(name, value)
@@ -152,14 +141,14 @@ class NodeWrapper() = Wrapper():
 	def delattr(self, name):
 		try:
 			self.node.DelAttr(name)
-		except NoSuchAttrError:
+		except MMExc.NoSuchAttrError:
 			pass
 	#
 	# Return a list of attribute names that make sense for this node,
 	# in an order that makes sense to the user.
 	#
 	def attrnames(self):
-		namelist = []
+		namelist = ['name', 'channel', 'duration']
 		try:
 			# Get the channel class (should be a subroutine!)
 			cname = MMAttrdefs.getattr(self.node, 'channel')
@@ -171,10 +160,12 @@ class NodeWrapper() = Wrapper():
 		except:
 			pass # Ignore errors in the above
 		# Merge in nonstandard attributes
+		extras = []
 		for name in self.node.GetAttrDict().keys():
 			if name not in namelist:
-				namelist.append(name)
-		return namelist
+				extras.append(name)
+		extras.sort()
+		return namelist + extras
 	#
 
 
@@ -188,7 +179,7 @@ class ChannelWrapper() = Wrapper():
 	#
 	def stillvalid(self):
 		return self.context.channeldict.has_key(self.name) and \
-			self.context.channeldict[name] = self.attrdict
+			self.context.channeldict[self.name] = self.attrdict
 	#
 	def maketitle(self):
 		return 'Channel attributes for ' + self.name
@@ -219,7 +210,7 @@ class ChannelWrapper() = Wrapper():
 	# in an order that makes sense to the user.
 	#
 	def attrnames(self):
-		namelist = []
+		namelist = ['type', 'duration']
 		try:
 			ctype = self.attrdict['type']
 			cclass = channelmap[ctype]
@@ -233,10 +224,12 @@ class ChannelWrapper() = Wrapper():
 		except:
 			pass # Ignore errors in the above
 		# Merge in nonstandard attributes
+		extras = []
 		for name in self.attrdict.keys():
 			if name not in namelist:
-				namelist.append(name)
-		return namelist
+				extras.append(name)
+		extras.sort()
+		return namelist + extras
 	#
 
 
@@ -287,8 +280,10 @@ class AttrEditor() = Dialog():
 		return 1
 	#
 	def commit(self):
-		if not wrapper.stillvalid():
+		if not self.wrapper.stillvalid():
 			self.close()
+		else:
+			self.fixvalues()
 	#
 	def rollback(self):
 		pass
@@ -306,10 +301,22 @@ class AttrEditor() = Dialog():
 		self.changed = 0
 	#
 	def setvalues(self):
+		if not self.wrapper.transaction(): return
 		self.form.freeze_form()
 		for b in self.blist: b.setvalue()
 		self.form.unfreeze_form()
 		self.changed = 0
+		self.wrapper.commit()
+	#
+	def fixvalues(self):
+		# Get the values that have changed
+		changed = 0
+		self.form.freeze_form()
+		for b in self.blist:
+			b.fixvalue()
+			if b.changed: changed = 1
+		self.form.unfreeze_form()
+		self.changed = changed
 	#
 	def close(self):
 		if self.showing:
@@ -385,6 +392,15 @@ class ButtonRow():
 				b.wrapper.setattr(b.name, b.currentvalue)
 		b.getvalue()
 	#
+	def fixvalue(b):
+		if b.value.focus:
+			b.valuecallback(b.value, None)
+		if b.isdefault and b.changed:
+			b.currentvalue = b.wrapper.getdefault(b.name)
+			b.update()
+		elif not b.changed:
+			b.getvalue()
+	#
 	def helpcallback(b, dummy):
 		attrdef = MMAttrdefs.getdef(b.name)
 		fl.show_message('attribute: ' + b.name, \
@@ -398,12 +414,15 @@ class ButtonRow():
 			return # No change
 		try:
 			value = b.parsevalue(newtext)
-		except (EOFError, SyntaxError, TypeError), msg:
+		except (EOFError, MMExc.SyntaxError, MMExc.TypeError), msg:
 			if type(msg) <> type(''):
 				found, expected = msg
+				if expected = ')':
+					expected = ') or EOF'
 				msg = 'found ' + `found` + \
 					', expected ' + expected
-			fl.show_message('Type/Syntax error', msg, '')
+			msg2 = 'for attribute ' + b.name
+			fl.show_message('Syntax error', msg2, msg)
 			b.update()
 			return
 		b.changed = b.attreditor.changed = 1
@@ -425,6 +444,10 @@ class ButtonRow():
 		b.currenttext = b.valuerepr(b.currentvalue)
 		b.value.set_input(b.currenttext[:INPUT_MAX-1])
 		b.reset.set_button(b.isdefault)
+		if b.isdefault and not b.changed:
+			b.reset.hide_object()
+		else:
+			b.reset.show_object()
 	#
 	def valuerepr(b, value):
 		return MMAttrdefs.valuerepr(b.name, value)
