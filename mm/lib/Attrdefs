@@ -656,4 +656,7 @@
 # region
 
 (showBackground (enum always whenActive) always 'Show background' default
-	'show when node is active the background color or always' raw (smil2))
+	'Show when node is active the background color or always' raw (smil2))
+
+(soundLevel (float) 1 'Sound level' percent
+	'Specifies the relative volume in percent' raw (smil2))
