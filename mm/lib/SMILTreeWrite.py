@@ -730,12 +730,14 @@ class SMILWriter(SMIL):
 			if fit is not None and fit != 'hidden':
 				attrlist.append(('fit', fit))
 
-			if ch.has_key('transparent') and \
-			   ch['transparent'] == 1:
-				# background-color="transparent" is default
-				pass
-			elif ch.has_key('bgcolor'):
-				attrlist.append(('background-color', "#%02x%02x%02x" % ch['bgcolor']))
+			# SMIL says: either background-color or transparent
+			# if different, set GRiNS attributes
+			bgcolor = ch.get('bgcolor')
+			if bgcolor is not None:
+				attrlist.append(('background-color', "#%02x%02x%02x" % bgcolor))
+			transparent = ch.get('transparent', 0)
+			if transparent == (bgcolor is not None):
+				attrlist.append(('%s:transparent' % NSprefix, `transparent`))
 			if ch.get('center', 1):
 				attrlist.append(('%s:center' % NSprefix, '1'))
 			if ch.get('drawbox', 1):

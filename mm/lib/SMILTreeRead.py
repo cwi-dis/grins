@@ -144,6 +144,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__region2channel = {} # mapping from region to channels
 		self.__ids = {}		# collect all id's here
 		self.__width = self.__height = 0
+		self.__root_width = self.__root_height = 0 # w,h in root-layout
 		self.__layout = None
 		self.__nodemap = {}
 		self.__anchormap = {}
@@ -313,7 +314,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error("unknown layout `%s'" % val)
 			elif attr not in smil_node_attrs:
 				# catch all
-				attrdict[attr] = val
+				attrdict[attr] = parseattrval(attr, val, self.__context)
 
 	def NewNode(self, mediatype, attributes):
 		for key, val in attributes.items():
@@ -655,6 +656,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def FixChannel(self, node):
 		if node.GetType() not in leaftypes:
 			return
+		from windowinterface import UNIT_PXL, UNIT_SCREEN
 		mediatype, subtype = node.__mediatype
 		del node.__mediatype
 		try:
@@ -751,38 +753,79 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					ch['scale'] = -1
 				ch['center'] = 0
 				# other fit options not implemented
-				if type(x) is type(0):
-					x = float(x) / self.__width
-				if type(w) is type(0):
-					if w == 0:
-						try:
-							width = node.__size[0]
-						except AttributeError:
-							# rest of window
-							w = 1.0 - x
+
+				# check types of x,y,w,h: if all the
+				# same, set units appropriately, else
+				# convert all to relative (float).  if
+				# there was a root-layout, and it
+				# contained sizes, convert relative
+				# sizes to absolute sizes first.
+				if type(x) is type(0.0) and self.__root_width:
+					x = int(x * self.__root_width + .5)
+				if type(w) is type(0.0) and self.__root_width:
+					w = int(w * self.__root_width + .5)
+				if type(y) is type(0.0) and self.__root_height:
+					y = int(y * self.__root_height + .5)
+				if type(h) is type(0.0) and self.__root_height:
+					h = int(h * self.__root_height + .5)
+				thetype = None # type of 1st elem != 0
+				for val in x, y, w, h:
+					if val == 0:
+						continue
+					if thetype is None:
+						thetype = type(val)
+						continue
+					elif type(val) is thetype:
+						continue
+					# we only get here if there
+					# are multiple values != 0 of
+					# different types
+					# not all the same units, convert
+					# everything to relative sizes
+					if type(x) is type(0):
+						x = float(x) / self.__width
+					if type(w) is type(0):
+						if w == 0:
+							try:
+								width = node.__size[0]
+							except AttributeError:
+								# rest of window
+								w = 1.0 - x
+							else:
+								w = float(width) / self.__width
 						else:
-							w = float(width) / self.__width
-					else:
-						w = float(w) / self.__width
-				if type(y) is type(0):
-					y = float(y) / self.__height
-				if type(h) is type(0):
-					if h == 0:
-						try:
-							height = node.__size[1]
-						except AttributeError:
-							# rest of window
-							h = 1.0 - y
+							w = float(w) / self.__width
+					if type(y) is type(0):
+						y = float(y) / self.__height
+					if type(h) is type(0):
+						if h == 0:
+							try:
+								height = node.__size[1]
+							except AttributeError:
+								# rest of window
+								h = 1.0 - y
+							else:
+								h = float(height) / self.__height
 						else:
-							h = float(height) / self.__height
+							h = float(h) / self.__height
+					ch['units'] = UNIT_SCREEN
+					break
+				else:
+					# all the same type or 0
+					if thetype is type(0):
+						ch['units'] = UNIT_PXL
 					else:
-						h = float(h) / self.__height
+						ch['units'] = UNIT_SCREEN
+					if w == 0 and self.__width != 0:
+						w = self.__width - x
+					if h == 0 and self.__height != 0:
+						h = self.__height - y
 				ch['base_winoff'] = x, y, w, h
 			# keep all attributes that we didn't use
 			for attr, val in attrdict.items():
 				if attr not in ('minwidth', 'minheight',
 						'skip-content'):
-					ch[attr] = val
+					ch[attr] = parseattrval(attr, val, self.__context)
 		node.attrdict['channel'] = name
 
 	def FixLayouts(self):
@@ -1080,7 +1123,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if width < 0:
 				self.syntax_error('root-layout width not a positive integer')
 			elif width > 0:
-				self.__width = width
+				self.__root_width = self.__width = width
 		height = attributes['height']
 		if height[-2:] == 'px':
 			height = height[:-2]
@@ -1092,7 +1135,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if height < 0:
 				self.syntax_error('root-layout height not a positive integer')
 			elif height > 0:
-				self.__height = height
+				self.__root_height = self.__height = height
 
 	def end_root_layout(self):
 		pass
@@ -1835,3 +1878,8 @@ def GetTemporalSiblings(node):
 			possible = possible + this.GetChildren()
 		siblings.append(this)
 	return siblings
+
+def parseattrval(name, string, context):
+	if MMAttrdefs.getdef(name)[0][0] == 'string':
+		return string
+	return MMAttrdefs.parsevalue(name, string, context)

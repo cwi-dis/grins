@@ -548,18 +548,19 @@ class _DisplayList:
 		return self.usefont(mw_fonts.findfont(fontname, 10))
 
 	def baseline(self):
-		return self._font.baseline() * self._window._vfactor
+		baseline = self._font.baseline()
+		return self._window._pxl2rel((0,0,0,baseline))[3]
 
 	def fontheight(self):
-		return self._font.fontheight() * self._window._vfactor
+		fontheight = self._font.fontheight()
+		return self._window._pxl2rel((0,0,0,fontheight))[3]
 
 	def pointsize(self):
 		return self._font.pointsize()
 
 	def strsize(self, str):
 		width, height = self._font.strsize(self._window._wid, str)
-		return float(width) * self._window._hfactor, \
-		       float(height) * self._window._vfactor
+		return self._window._pxl2rel((0,0,width,height))[2:4]
 
 	def setpos(self, x, y):
 		self._curpos = x, y
