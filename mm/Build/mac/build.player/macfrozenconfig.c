@@ -143,6 +143,9 @@ extern void initimgjpeg();
 #ifndef inittime
 extern void inittime();
 #endif
+#ifndef initApp
+extern void initApp();
+#endif
 #ifndef initsocket
 extern void initsocket();
 #endif
@@ -217,6 +220,7 @@ struct _inittab _PyImport_Inittab[] = {
 	{"imgpbm", initimgpbm},
 	{"imgjpeg", initimgjpeg},
 	{"time", inittime},
+	{"App", initApp},
 	{"socket", initsocket},
 	{"math", initmath},
 	{"imgppm", initimgppm},
