@@ -147,7 +147,6 @@ class ToolbarMixin(PanelMixin):
 		self.RecalcLayout()
 
 	def OnClose(self):
-		PanelMixin.destroy(self)
 		self.SaveBarState("GRiNSToolBars")
 
 	def CreateToolbars(self):
@@ -155,18 +154,17 @@ class ToolbarMixin(PanelMixin):
 		self._lastbar = None
 		for template in ToolbarTemplate.TOOLBARS:
 			self._setToolbarFromTemplate(template)
+		PanelMixin.createPanel(self)
 		self._lastbar = None
 		self._recalcPulldownEnable()
 		self._restoreToolbarState()
 		self.RecalcLayout()
-		PanelMixin.createPanel(self)
 
 	def DestroyToolbars(self):
 		for bar in self._bars.values():
 ##			if hasattr(bar,'DestroyWindow'):
 ##				bar.DestroyWindow()
 			bar.destroy()
-		PanelMixin.destroy(self)
 		self._bars = {}
 		self._pulldowndict = {}
 		self._pulldowncallbackdict = {}
