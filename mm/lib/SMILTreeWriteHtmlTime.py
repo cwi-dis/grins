@@ -53,8 +53,10 @@ class SMILHtmlTimeWriter(SMIL):
 
 		self.__isopen = 0
 		self.__stack = []
+
+		self.__currViewport = None
 		self.ch2style = {}
-		self.__layoutstack = []
+		
 
 	def writeAsHtmlTime(self):
 		write = self.fp.write
@@ -95,17 +97,17 @@ class SMILHtmlTimeWriter(SMIL):
 		self.push()
 		
 		# body contents
-
-		# document
-			
 		# viewports
-		ch = self.top_levels[0]
-		name = self.ch2name[ch]
-		self.writetag('div', [('id',name), ('style', self.ch2style[ch]),])
-		self.push()
-		self.writenode(self.root, root = 1)
-		self.pop()
-
+		if len(self.top_levels)==1:
+			self.__currViewport = ch = self.top_levels[0]
+			name = self.ch2name[ch]
+			self.writetag('div', [('id',name), ('style', self.ch2style[ch]),])
+			self.push()
+			self.writenode(self.root, root = 1)
+			self.pop()
+		else:
+			self.writenode(self.root, root = 1)
+			
 		self.close()
 
 	def writefd(self):
@@ -236,29 +238,59 @@ class SMILHtmlTimeWriter(SMIL):
 
 
 	def writemedianode(self, x, attrlist, mtype, regionName, src):
-		lch = self.root.GetContext().getchannel(regionName)
-		
-		pushed = 0
-		dlist = []
-		if self.ch2style.has_key(lch):
-			dlist.append(('style', self.ch2style[lch]))
-		if dlist:
-			self.writetag('div', dlist)
-			self.push()
-			pushed = 1
-
-		mattrlist = attrlist[:]
-		if src:
-			mattrlist.append(('src', src))
 		if mtype=='video':
 			mtype = 'media'
+		if src: 
+			attrlist.append(('src', src))
+					
+		if mtype == 'audio':
+			self.writetag('t:'+mtype, attrlist)
+			return	
+
+		parents = []
+		viewport = None
+		lch = self.root.GetContext().getchannel(regionName)
+		while lch:
+			if lch.get('type') != 'layout':
+				continue
+			if lch in self.top_levels:
+				viewport = lch
+				break
+			parents.insert(0, lch)
+			lch = lch.__parent
+		
+		pushed = 0
+		if viewport and self.__currViewport!=viewport:
+			if self.__currViewport:
+				self.pop()
+			name = self.ch2name[viewport]
+			self.writetag('div', [('id',name), ('style', self.ch2style[viewport]),])
+			self.push()
+			self.__currViewport = viewport
+
+		for lch in parents:
+			divlist = []
+			if self.ch2style.has_key(lch):
+				divlist.append(('style', self.ch2style[lch]))
+				self.writetag('div', divlist)
+				self.push()
+				pushed = pushed + 1
+
 		geoms = x.getPxGeomMedia()
 		if geoms:
 			subRegGeom, mediaGeom = geoms
-			style = 'position=absolute;left=%d;top=%d;width=%d;height=%d;' % subRegGeom
-			mattrlist.append( ('style',style) )
-		self.writetag('t:'+mtype, mattrlist)
-		if pushed: 
+			if subRegGeom != mediaGeom:
+				divlist = []
+				divlist.append(('style', self.rc2style(subRegGeom)))
+				self.writetag('div', divlist)
+				self.push()
+				pushed = pushed + 1
+			style = 'position=absolute;left=%d;top=%d;width=%d;height=%d;' % mediaGeom
+			attrlist.append( ('style',style) )
+
+		self.writetag('t:'+mtype, attrlist)
+
+		for i in range(pushed):
 			self.pop()
 
 	def writelayout(self):
@@ -313,6 +345,10 @@ class SMILHtmlTimeWriter(SMIL):
 			for sch in self.__subchans[ch.name]:
 				self.writeregion(sch)
 		
+	def rc2style(self, rc):
+		x, y, w, h = rc
+		return 'position:absolute;overflow:hidden;left=%d;top=%d;width=%d;height=%d;' % (x, y, w, h)
+
 
 	#
 	#
@@ -479,6 +515,14 @@ class SMILHtmlTimeWriter(SMIL):
 					if sch['type'] == 'layout':
 						self.smilboston = 1
 						break
+
+		# enable bottom up search
+		for ch in channels:
+			ch.__parent = None
+		for parentName, childs in self.__subchans.items():
+			parchan = self.root.GetContext().getchannel(parentName)
+			for ch in childs:
+				ch.__parent = parchan
 
 #
 #########################
