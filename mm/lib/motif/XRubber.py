@@ -162,8 +162,8 @@ class _RubberBand:
 	def __cvbox(self, units = UNIT_SCREEN):
 		x0 = self.__start_x
 		y0 = self.__start_y
-		x1 = x0 + self.__width
-		y1 = y0 + self.__height
+		x1 = x0 + self.__width - 1
+		y1 = y0 + self.__height - 1
 		if x1 < x0:
 			x0, x1 = x1, x0
 		if y1 < y0:
@@ -180,15 +180,15 @@ class _RubberBand:
 		if units == UNIT_SCREEN:
 			return float(x0 - x) / width, \
 			       float(y0 - y) / height, \
-			       float(x1 - x0) / width, \
-			       float(y1 - y0) / height
+			       float(x1 - x0 + 1) / width, \
+			       float(y1 - y0 + 1) / height
 		elif units == UNIT_PXL:
-			return x0 - x, y0 - y, x1 - x0, y1 - y0
+			return x0 - x, y0 - y, x1 - x0 + 1, y1 - y0 + 1
 		elif units == UNIT_MM:
 			return float(x0 - x) / toplevel._hmm2pxl, \
 			       float(y0 - y) / toplevel._vmm2pxl, \
-			       float(x1 - x0) / toplevel._hmm2pxl, \
-			       float(y1 - y0) / topevel._vmm2pxl
+			       float(x1 - x0 + 1) / toplevel._hmm2pxl, \
+			       float(y1 - y0 + 1) / topevel._vmm2pxl
 		else:
 			raise error, 'bad units specified'
 
@@ -209,7 +209,7 @@ class _RubberBand:
 			x, w = x + w, -w
 		if h < 0:
 			y, h = y + h, -h
-		self.__gc.DrawRectangle(x, y, w, h)
+		self.__gc.DrawRectangle(x, y, w-1, h-1)
 
 	def __constrain(self, event):
 		x, y, w, h = self._rect
