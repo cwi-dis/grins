@@ -287,6 +287,7 @@
 #define IDC_TARGET_EMBEDDED             1184
 #define IDC_BUTTON1                     1186
 #define IDC_PREVIEW                     1186
+#define IDC_ADD_EXTERNAL                1186
 #define IDC_PROGRESS1                   1187
 #define IDC_INIT_NEW                    1188
 #define IDC_INIT_OPEN                   1189
