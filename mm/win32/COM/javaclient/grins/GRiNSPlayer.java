@@ -68,11 +68,11 @@ implements SMILDocument, SMILController, SMILRenderer, Runnable
         return -1;
     }
              
-    public double getDuration() {return -1.0;}
+    public double getDuration() {return dur;}
     
-    public void setTime(double t) {}
+    public void setTime(double t) {push(new Cmd("setTime", t));}
     
-    public double getTime() {return -1;}
+    public double getTime() {return pos;}
     
     public void setSpeed(double v) {}
     
@@ -92,10 +92,15 @@ implements SMILDocument, SMILController, SMILRenderer, Runnable
             this.xarg = xarg;
             this.yarg = yarg;
         }
+        Cmd(String fname, double darg){
+            this.fname = fname;
+            this.darg = darg;
+        }
     
         String fname;
         int xarg, yarg;
         String strarg;
+        double darg;
     }
     
     public void run(){
@@ -105,6 +110,11 @@ implements SMILDocument, SMILController, SMILRenderer, Runnable
             while(!Thread.currentThread().interrupted()){
                 Cmd cmd = peek();
                 if(cmd==null){
+                    if(updatepos)
+                        {
+                        pos = ngetTime(hgrins);
+                        listener.setPos(pos);
+                        }
                     Thread.sleep(interval);
                     continue;
                 }
@@ -115,15 +125,26 @@ implements SMILDocument, SMILController, SMILRenderer, Runnable
                     push(new Cmd("getPreferredSize"));
                     }
                 else if(cmd.fname.equals("close"))
-                    {hclose();listener.closed(); break;}
+                    {hclose();listener.closed(); updatepos = false;break;}
                 else if(cmd.fname.equals("play"))
+                    {
                     nplay(hgrins);
+                    updatepos = true;
+                    }
                 else if(cmd.fname.equals("stop"))
+                    {
                     nstop(hgrins);
+                    updatepos = false;
+                    }
                 else if(cmd.fname.equals("pause"))
+                    {
                     npause(hgrins);
+                    updatepos = false;
+                    }
                 else if(cmd.fname.equals("update"))
                     nupdate(hgrins);
+                else if(cmd.fname.equals("setTime"))
+                    nsetTime(hgrins, cmd.darg);
                 else if(cmd.fname.equals("mouseClicked"))
                     nmouseClicked(hgrins, cmd.xarg, cmd.yarg);
                 else if(cmd.fname.equals("mouseMoved"))
@@ -132,6 +153,8 @@ implements SMILDocument, SMILController, SMILRenderer, Runnable
                      viewportSize = ngetPreferredSize(hgrins);
                      if(viewportSize.width!=0){
                         listener.opened();
+                        dur = ngetDuration(hgrins);
+                        listener.setDur(dur);
                         listener.setReady();
                         }
                      else 
@@ -179,6 +202,7 @@ implements SMILDocument, SMILController, SMILRenderer, Runnable
     private void hclose() throws GRiNSInterfaceException
         {
         if(hgrins!=0) {
+            nstop(hgrins);
             nclose(hgrins);
             ndisconnect(hgrins);
             hgrins = 0;
@@ -196,6 +220,9 @@ implements SMILDocument, SMILController, SMILRenderer, Runnable
     private Vector cmds = new Vector(10);
     private int interval = 50;
     private Dimension viewportSize;
+    private double dur;
+    private double pos;
+    private boolean updatepos = false;
     private SMILListener listener;
     
 	private Canvas canvas; 
