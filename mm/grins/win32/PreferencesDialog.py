@@ -53,8 +53,8 @@ class _PreferencesDialog(win32dialog.ResDialog,ControlsDict):
 
 		self['system_bitrate']= ComboBox(self,grinsRC.IDC_COMBO1)
 		self['system_language']= ComboBox(self,grinsRC.IDC_COMBO2)
-		self['system_captions']=CheckButton(self,grinsRC.IDC_CHECK1)
-		self['system_overdub_or_caption']=CheckButton(self,grinsRC.IDC_CHECK2)
+		self['system_overdub_or_caption']=CheckButton(self,grinsRC.IDC_CHECK1)
+		self['system_captions']=CheckButton(self,grinsRC.IDC_CHECK2)
 		if features.compatibility == features.Boston:
 			self['system_audiodesc']=CheckButton(self,grinsRC.IDC_CHECK3)
 		self['html_control']=CheckButton(self, grinsRC.IDC_CHECK4)
