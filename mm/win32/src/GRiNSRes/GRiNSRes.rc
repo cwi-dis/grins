@@ -1879,6 +1879,15 @@ BEGIN
     PUSHBUTTON      "Revert",IDC_BUTTON3,121,215,50,14
 END
 
+IDD_SOURCEEDIT1 DIALOG DISCARDABLE  0, 0, 188, 22
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDC_BUTTON1,8,5,50,14,WS_GROUP
+    PUSHBUTTON      "Apply",IDC_BUTTON2,69,5,50,14
+    PUSHBUTTON      "Revert",IDC_BUTTON3,130,5,50,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2219,6 +2228,14 @@ BEGIN
         RIGHTMARGIN, 395
         TOPMARGIN, 7
         BOTTOMMARGIN, 229
+    END
+
+    IDD_SOURCEEDIT1, DIALOG
+    BEGIN
+        LEFTMARGIN, 8
+        RIGHTMARGIN, 180
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 19
     END
 END
 #endif    // APSTUDIO_INVOKED
