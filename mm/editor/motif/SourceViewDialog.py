@@ -28,9 +28,9 @@ class SourceViewDialog:
 		if self.__textwindow:
 			return self.__textwindow.gettext()
 
-	def set_text(self, text):
+	def set_text(self, text, colors=[]):
 		if self.__textwindow:
-			return self.__textwindow.settext(text)
+			return self.__textwindow.settext(text, colors)
 
 	def is_changed(self):
 		if self.__textwindow:

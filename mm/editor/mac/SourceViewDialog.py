@@ -37,9 +37,9 @@ class SourceViewDialog:
 		else:
 			print "ERROR (get_text): No text window."
 
-	def set_text(self, text):
+	def set_text(self, text, colors=[]):
 		if self.__textwindow:
-			return self.__textwindow.settext(text)
+			return self.__textwindow.settext(text, colors)
 		else:
 			print "ERROR (set text): No text window"
 
