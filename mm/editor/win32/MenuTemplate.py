@@ -3,8 +3,6 @@ __version__ = "$Id$"
 #
 # Command/menu mapping for the win32 GRiNS Editor
 #
-# (adapted from mac original)
-#
 
 """ @win32doc|MenuTemplate
 Contains the specification for player menu in the
@@ -49,11 +47,11 @@ MENUBAR=(
 		(FLAG_ALL, SEP,),
 		(FLAG_QT, ENTRY, 'Publish for &QuickTime...', None, EXPORT_QT),
 		(FLAG_QT, ENTRY, 'Pu&blish for QuickTime and upload...', None, UPLOAD_QT),
-		(FLAG_G2|FLAG_PRO, ENTRY, 'Publish for &G2...', None, EXPORT_G2),
-		(FLAG_G2, ENTRY, 'Pu&blish for G2 and upload...', None, UPLOAD_G2),
+		(FLAG_G2|FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for &G2...', None, EXPORT_G2),
+		(FLAG_G2|FLAG_PRO|FLAG_SNAP, ENTRY, 'Pu&blish for G2 and upload...', None, UPLOAD_G2),
                 # TODO: These should not appear on all versions of GRiNS!
-                (FLAG_PRO, ENTRY, 'Publish for &Windows Media...', None, EXPORT_WMP), # mjvdg 11-oct-2000
-                (FLAG_PRO, ENTRY, 'Publish for Windows Media and upload...', None, UPLOAD_WMP),
+                (FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for &Windows Media...', None, EXPORT_WMP), # mjvdg 11-oct-2000
+                (FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for Windows Media and upload...', None, UPLOAD_WMP),
                 
 		(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, '&Publish for SMIL 2.0...', None, EXPORT_SMIL),
 		(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, 'Pu&blish for SMIL 2.0 and upload...', None, UPLOAD_SMIL),
@@ -79,17 +77,17 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'Cu&t\tCtrl+X', 'X', CUT),
 		(FLAG_ALL, ENTRY, '&Copy\tCtrl+C', 'C', COPY),
 		(FLAG_ALL, ENTRY, '&Paste\tCtrl+V', 'V', PASTE),
-		(FLAG_ALL, CASCADE, 'P&aste special', (
-			(FLAG_ALL, ENTRY, '&Before', None, PASTE_BEFORE),
-##			(FLAG_ALL, ENTRY, '&After', None, PASTE_AFTER),
-			(FLAG_ALL, ENTRY, '&Within', None, PASTE_UNDER),
+		(FLAG_G2|FLAG_QT|FLAG_CMIF|FLAG_SMIL_1_0|FLAG_BOSTON, CASCADE, 'P&aste special', (
+			(FLAG_G2|FLAG_QT|FLAG_CMIF|FLAG_SMIL_1_0|FLAG_BOSTON, ENTRY, '&Before', None, PASTE_BEFORE),
+##			(FLAG_G2|FLAG_QT|FLAG_CMIF|FLAG_SMIL_1_0|FLAG_BOSTON, ENTRY, '&After', None, PASTE_AFTER),
+			(FLAG_G2|FLAG_QT|FLAG_CMIF|FLAG_SMIL_1_0|FLAG_BOSTON, ENTRY, '&Within', None, PASTE_UNDER),
 			)),
 		(FLAG_ALL, ENTRY, '&Delete\tCtrl+Del', None, DELETE),
 		(FLAG_ALL, SEP,),
 		(FLAG_PRO, ENTRY, '&New node...', None, NEW_AFTER),
 		(FLAG_PRO, ENTRY, 'New c&hannel', None, NEW_CHANNEL),
 
-## Windows dialogs apparently don't use usercmd commands.
+## Windows dialogs apparently do not use usercmd commands.
 ##		(FLAG_PRO, ENTRY, 'New &layout', None, NEW_LAYOUT),
 		(FLAG_PRO, SEP,),
 		(FLAG_PRO, ENTRY, '&Move channel', None, MOVE_CHANNEL),
@@ -104,6 +102,7 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'Pre&ferences...', None, PREFERENCES),
 		)),
 
+	# this whole section removed in Snap! below
 	('&Insert', (
 		(FLAG_ALL, CASCADE, '&Image node', (
 			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_IMAGE),
@@ -216,12 +215,10 @@ MENUBAR=(
 			(FLAG_CMIF, DYNAMICCASCADE, '&Siblings', SIBLINGS),
 			)),
 ##		(FLAG_ALL, DYNAMICCASCADE, '&Layout navigation', LAYOUTS),
-		)),
-
-##	('&View', (
-##		)),
-
-	('&Window', (
+                )
+         ),
+ 
+        ('&Window', (
 		(FLAG_ALL, ENTRY, 'Cl&ose\tCtrl+W', 'W', CLOSE_ACTIVE_WINDOW),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Cascade', 'C', CASCADE_WNDS),
@@ -230,16 +227,16 @@ MENUBAR=(
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Player\tF5', '1', PLAYERVIEW),
 ##		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, '&Structure view\tF6', '3', HIERARCHYVIEW),
-		(FLAG_PRO, ENTRY, '&Timeline view\tF7', '4', CHANNELVIEW),
-#		(FLAG_PRO, ENTRY, '&Layout view\tF8', '2', LAYOUTVIEW),
-		(FLAG_BOSTON|FLAG_SNAP, ENTRY, 'Layout view', '2', LAYOUTVIEW2),
+		(FLAG_ALL, ENTRY, 'P&resentation view\tF6', '3', HIERARCHYVIEW),
+##		(FLAG_PRO, ENTRY, '&Timeline view\tF7', '4', CHANNELVIEW),
+		(FLAG_PRO|FLAG_SNAP, ENTRY, '&Layout view\tF8', '2', LAYOUTVIEW2),
+##		(FLAG_PRO, ENTRY, '&Layout view\tF8', '2', LAYOUTVIEW),
 ##		(FLAG_ALL, SEP,),
 		(FLAG_PRO, ENTRY, 'H&yperlinks', '5', LINKVIEW),
 		(FLAG_BOSTON, ENTRY, 'User &groups', '6', USERGROUPVIEW),
 		(FLAG_BOSTON, ENTRY, 'Transitions', None, TRANSITIONVIEW),
 ##		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, 'Sourc&e', '7', SOURCE),
+		(FLAG_ALL, ENTRY, 'SMIL Sourc&e...', '7', SOURCE),
 		)),
 
 	('&Help', (
@@ -254,6 +251,9 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
 
 NODOC_MENUBAR=(MENUBAR[0],MENUBAR[7])
+if curflags() & FLAG_SNAP:
+	# remove Insert menu in Snap! version
+	MENUBAR = MENUBAR[:2] + MENUBAR[3:]
 
 #
 # Popup menus for various states
