@@ -316,17 +316,13 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,afxres.ID_WINDOW_CASCADE)
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,afxres.ID_WINDOW_TILE_VERT)
 			self.HookCommandUpdate(self.OnUpdateCmdDissable,afxres.ID_WINDOW_TILE_HORZ)
-			self.enable_viewcmdlist(None)
 			return
 
 		if not self._active_child or self._active_child!=f:	
 			if hasattr(f,'_view'):
 				self._active_child=f
-				v=f._view
-				self.enable_viewcmdlist(v._strid)
 			else:
 				self._active_child=None 
-				self.enable_viewcmdlist(None)
 
 		self.HookCommandUpdate(self.OnUpdateCmdEnable,id)
 		self.HookCommandUpdate(self.OnUpdateCmdEnable,afxres.ID_WINDOW_CASCADE)
@@ -590,92 +586,51 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		client=self.GetMDIClient()
 		client.SendMessage(win32con.WM_MDIMAXIMIZE,child.GetSafeHwnd())
 
-	# Set, save and enable the commandlist for the context
-	# More complex than it should be due to lack in sync between
-	# two independent mechanisms: 'set_commandlist call' and 'OS activate'
-	def set_commandlist(self,commandlist,context='view'):
+
+
+	###############################################
+	# BEGIN CMD LIST SECTION
+
+	# Set/reset commandlist for context
+	def set_commandlist(self,commandlist,context):
+		# we have a new commandlist for this context 
+		# so, dissable previous
+		self.dissable_context(context)
+
+		# enable cmds in commandlist
+		# cash ids to cmd map for OnUserCmd
+		if commandlist:
+			for cmd in commandlist:
+				usercmd_ui = usercmdui.class2ui[cmd.__class__]
+				id=usercmd_ui.id
+				self.enable_cmd(id)
+				self._activecmds[context][id]=cmd
+
+	# Dissable context commands
+	def dissable_context(self,context):
+		# assert there is an entry for this context
 		if not self._activecmds.has_key(context):
 			self._activecmds[context]={}
-
-		# dissable all commands in context set previously
-		self.dissable_viewscmdlist(context)
-		if context=='document':
-			self.dissable_cmdlist('document')
-		if context=='frame':
-			self.dissable_cmdlist('document')
-			self.dissable_cmdlist('frame')
-
-		contextcmds=self._activecmds[context]
-		contextcmds.clear()
-		if not commandlist:
-			# check here due to bad sync between Activate and set_commandlist
-			if self._active_child: 
-				v=self._active_child._view
-				self.enable_viewcmdlist(v._strid)
 			return
-
-		# enable the commands set by the caller view
+		contextcmds=self._activecmds[context]
+		# we must clean here so that dissable_cmd does its job
+		self._activecmds[context]={}
+		commandlist=contextcmds.values()
 		for cmd in commandlist:
 			usercmd_ui = usercmdui.class2ui[cmd.__class__]
-			id=usercmd_ui.id
-			self.HookCommandUpdate(self.OnUpdateCmdEnable,id)
-			contextcmds[id]=cmd			
-		self.PostMessage(WM_KICKIDLE)
-
-	def dissable_viewscmdlist(self,context):
-		viewsids=self.viewscmdids(context)
-		for id in viewsids:
-			self.HookCommandUpdate(self.OnUpdateCmdDissable,id)
-
-	def dissable_cmdlist(self,context):
-		if self._activecmds.has_key(context):
-			l=self._activecmds[context].keys()
-			for id in l:self.HookCommandUpdate(self.OnUpdateCmdDissable,id)
-
-	def enable_viewcmdlist(self,context):
-		# dissable all commands set by views previously
-		self.dissable_viewscmdlist(context)
-		if context is None or not self._activecmds.has_key(context):
-			return
-		contextcmds=self._activecmds[context]
-		for id in contextcmds.keys():
-			self.HookCommandUpdate(self.OnUpdateCmdEnable,id)
+			self.dissable_cmd(usercmd_ui.id)
 		
-		
-	# Return the command ids of all the views
-	# but only those not included in a higher context (e.g PLAY,?)
-	def viewscmdids(self,vcontext):
-		l=[];frameids=[];documentids=[]
-		if self._activecmds.has_key('frame'):
-			frameids=self._activecmds['frame'].keys()
-		if self._activecmds.has_key('document'):
-			documentids=self._activecmds['document'].keys()
+	def enable_cmd(self,id):
+		self.HookCommandUpdate(self.OnUpdateCmdEnable,id)
+
+	# dissable a cmd only if not in self._activecmds
+	def dissable_cmd(self,id):
 		for context in self._activecmds.keys():
-			if context=='frame' or context=='document':continue
-			if context=='pview_' and vcontext!='pview_':continue
-			contextcmds=self._activecmds[context]
-			for id in contextcmds.keys():
-				if (id not in frameids) and (id not in documentids):
-					l.append(id)
-		return l
-		
-	# Return the commandlist for the context
-	def get_commandlist(self,context='view'):
-		return self._activecmds[context].values()
-	# Enable/dissable commands for context
-	def enable_commandlist(self,context,enable):
-		contextcmds=self._activecmds[context]
-		commandlist=contextcmds.values()
-		if enable:
-			for cmd in commandlist:
-				usercmd_ui = usercmdui.class2ui[cmd.__class__]
-				self.HookCommandUpdate(self.OnUpdateCmdEnable,usercmd_ui.id)
-		else:
-			menu=self.GetMenu()
-			for cmd in commandlist:
-				usercmd_ui = usercmdui.class2ui[cmd.__class__]
-				self.HookCommandUpdate(self.OnUpdateCmdDissable,usercmd_ui.id)
-				menu.CheckMenuItem(usercmd_ui.id,win32con.MF_BYCOMMAND | win32con.MF_UNCHECKED)
+			if self._activecmds[context].has_key(id):
+				return
+		# not in other command lists
+		self.HookCommandUpdate(self.OnUpdateCmdDissable,id)
+
 	# Toggle commands (check/uncheck menu entries)		
 	def set_toggle(self, cmdcl, onoff):
 		id=usercmdui.class2ui[cmdcl].id
@@ -685,8 +640,70 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		(self.GetMenu()).CheckMenuItem(id,flags)
 		self.PostMessage(WM_KICKIDLE)
 
+	# Return the commandlist for the context
+	def get_commandlist(self,context):
+		if self._activecmds.has_key(context):
+			return self._activecmds[context].values()
+		return None
 
-	####=========dynamic menu
+	# Target for commands that are enabled
+	def OnUpdateCmdEnable(self,cmdui):
+		cmdui.Enable(1)
+
+	# Target for commands that are dissabled
+	def OnUpdateCmdDissable(self,cmdui):
+		cmdui.SetCheck(0)
+		cmdui.Enable(0)
+
+	# Response to a user command (menu selection)
+	def OnUserCmd(self,id,code):
+		if self.in_modal_create_box_mode(): return
+		self.assert_not_in_create_box()
+		cmd=None
+			
+		# look first self._active_child cmds
+		if self._active_child and self._activecmds.has_key(self._active_child._view._strid):
+			contextcmds=self._activecmds[self._active_child._view._strid]
+			if contextcmds.has_key(id):
+				cmd=contextcmds[id]
+				if cmd is not None and cmd.callback is not None:
+					apply(apply,cmd.callback)
+				return
+
+		# the command does not belong to self._active_child
+		# look to others (including dynamic menus)
+		for context in self._activecmds.keys():
+			contextcmds=self._activecmds[context]
+			if contextcmds.has_key(id):
+				cmd=contextcmds[id]
+				if cmd is not None and cmd.callback is not None:
+					apply(apply,cmd.callback)
+				return
+		self.PostMessage(WM_KICKIDLE)
+
+	# Get the command class id
+	def GetUserCmdId(self,cmdcl):
+		return usercmdui.class2ui[cmdcl].id
+
+	# Get the command class instance
+	def GetUserCmd(self,cmdcl):
+		id=usercmdui.class2ui[cmdcl].id
+		cmd=None
+		for context in self._activecmds.keys():
+			contextcmds=self._activecmds[context]
+			if contextcmds.has_key(id):
+				cmd=contextcmds[id]
+				break
+		return cmd
+
+	# END CMD LIST SECTION
+	###############################################
+
+
+
+	###############################################
+	# BEGIN DYNAMIC CMD LIST SECTION
+
 	# Set the dynamic commands associated with the command class
 	def set_dynamiclist(self, command, list):
 		self._dynamiclists[command]=list
@@ -767,73 +784,9 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 				if cbd[id]:apply(apply,cbd[id])
 				return
 
-	# Target for commands that are enabled
-	def OnUpdateCmdEnable(self,cmdui):
-		cmdui.Enable(1)
+	# END DYNAMIC CMD LIST SECTION
+	###############################################
 
-	# Target for commands that are dissabled
-	def OnUpdateCmdDissable(self,cmdui):
-		cmdui.Enable(0)
-
-	# Response to a user command (menu selection)
-	def OnUserCmd(self,id,code):
-		if self.in_modal_create_box_mode(): return
-		self.assert_not_in_create_box()
-		cmd=None
-
-		# special manipulation of exit to close first and release resources
-		if id==usercmdui.EXIT_UI.id:
-			cmd=self.GetUserCmd(usercmd.CLOSE)
-			if cmd:apply(apply,cmd.callback)
-			cmd=self.GetUserCmd(usercmd.EXIT)
-			if cmd:apply(apply,cmd.callback)
-			return
-			
-		# look first self._active_child cmds
-		if self._active_child and self._activecmds.has_key(self._active_child._view._strid):
-			contextcmds=self._activecmds[self._active_child._view._strid]
-			if contextcmds.has_key(id):
-				cmd=contextcmds[id]
-				if cmd is not None and cmd.callback is not None:
-					self.check_menu_item(id)
-					apply(apply,cmd.callback)
-				return
-
-		# the command does not belong to self._active_child
-		# look to others (including dynamic menus)
-		for context in self._activecmds.keys():
-			contextcmds=self._activecmds[context]
-			if contextcmds.has_key(id):
-				cmd=contextcmds[id]
-				if cmd is not None and cmd.callback is not None:
-					self.check_menu_item(id)
-					apply(apply,cmd.callback)
-				return
-		self.PostMessage(WM_KICKIDLE)
-
-	# Check the menu item with id
-	def check_menu_item(self,id):
-		if not self._mainmenu._toggles.has_key(id): return
-		state=self._mainmenu.GetMenuState(id,win32con.MF_BYCOMMAND)
-		if state & win32con.MF_CHECKED:
-			self._mainmenu.CheckMenuItem(id,win32con.MF_BYCOMMAND | win32con.MF_UNCHECKED)
-		else:
-			self._mainmenu.CheckMenuItem(id,win32con.MF_BYCOMMAND | win32con.MF_CHECKED)
-
-	# Get the command class id
-	def GetUserCmdId(self,cmdcl):
-		return usercmdui.class2ui[cmdcl].id
-
-	# Get the command class instance
-	def GetUserCmd(self,cmdcl):
-		id=usercmdui.class2ui[cmdcl].id
-		cmd=None
-		for context in self._activecmds.keys():
-			contextcmds=self._activecmds[context]
-			if contextcmds.has_key(id):
-				cmd=contextcmds[id]
-				break
-		return cmd
 
 
 	# Fire a command class instance
@@ -881,6 +834,9 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			self.SetMenu(None) 
 			self._mainmenu.DestroyMenu()
 			del self._mainmenu
+		if self._popupmenu:
+			self._popupmenu.DestroyMenu()
+			del self._popupmenu
 		if self in __main__.toplevel._subwindows:
 			__main__.toplevel._subwindows.remove(self)
 		window.MDIFrameWnd.OnDestroy(self, msg)
