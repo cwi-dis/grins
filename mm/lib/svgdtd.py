@@ -34,6 +34,7 @@ class SVG:
 	attrset['%presentAttrsContainers'] = {'enable-background': None,}
 	attrset['%presentAttrsFeFlood'] = {'flood-color': None,
 		'flood-opacity': None,}
+
 	attrset['%presentAttrsFillStroke'] = {'fill': None,
 		'fill-opacity': None,
 		'fill-rule': None,
@@ -44,6 +45,7 @@ class SVG:
 		'stroke-linejoin': None,
 		'stroke-miterlimit': None,
 		'stroke-opacity': None,
+		'stroke-antialiasing': None,
 		'stroke-width': None,}
 	attrset['%presentAttrsFontSpecification'] = {'font-family': None,
 		'font-size': None,
@@ -147,6 +149,7 @@ class SVG:
   
 	# animation
 	attrset['%animTimingAttrs'] = {'dur': None,
+		'begin': None,
 		'end': None,
 		'min': None,
 		'max': None,
@@ -573,7 +576,7 @@ class SVG:
 			'path': None, 
 			'keyPoints': None, 
 			'rotate': None, 
-			'origin': None, },
+			'origin': 'default', },
 		'animateColor': {'%animationCore': None,
 			'attributeName': None, 
 			'attributeType': None,
@@ -723,8 +726,8 @@ class SVG:
 
 	##############
 	# cleanup
+	presentationAttrs = attrset['%presentAttrsAllEx'].copy()
 	del attrset
-
 
 
 ##############
@@ -743,18 +746,35 @@ def GetDOMClassName(tag):
 		i = i + 1
 	return csname
 
-
 def PrintDOMClasses():
 	svgelements = SVG.attributes.keys()
 	exltags = ()
-	print ''
 	for tag in svgelements:
 		if tag not in exltags:
 			csname = GetDOMClassName(tag)
 			print 'class '+ csname + '(SvgElement):'
 			print '\tdef parseAttributes(self):'		
 			print '\t\tSvgElement.parseAttributes(self)'		
-			print ''		
+			print ''	
+
+def PrintDOMAttrs():
+	svgelements = SVG.attributes.keys()
+	exltags = ['animate','set','animateMotion','animateColor','animateTransform',]
+	attrdict = {}
+	for tag in svgelements:
+		if tag not in exltags:
+			attrs = SVG.attributes[tag]
+			for name, defval in attrs.items():
+				attrdict[name] = defval
+	print '# svg attribute defs'
+	print 'SVGAttrdefs = {',
+	keys = attrdict.keys()
+	keys.sort()
+	for name in keys:
+		defval = attrdict[name]
+		entry = '\t%s: (stringtype, %s),' % (`name`, `defval`)
+		print entry
+	print '\t}',
 
 if __name__ == '__main__':
-	PrintDOMClasses()
+	PrintDOMAttrs()

@@ -121,17 +121,20 @@ class PathSeg:
 			return ''
 
 	def topxl(self):
-		self._x = int(self._x+0.5)
-		self._y = int(self._y+0.5)
-		self._x1 = int(self._x1+0.5)
-		self._y1 = int(self._y1+0.5)
-		self._x2 = int(self._x2+0.5)
-		self._y2 = int(self._y2+0.5)
-		self._r1 = int(self._r1+0.5)
-		self._r2 = int(self._r2+0.5)
-		#self._angle 
-		#self._largeArcFlag 
-		#self._sweepFlag 
+		seg = PathSeg()
+		seg._type = self._type
+		seg._x = int(self._x+0.5)
+		seg._y = int(self._y+0.5)
+		seg._x1 = int(self._x1+0.5)
+		seg._y1 = int(self._y1+0.5)
+		seg._x2 = int(self._x2+0.5)
+		seg._y2 = int(self._y2+0.5)
+		seg._r1 = int(self._r1+0.5)
+		seg._r2 = int(self._r2+0.5)
+		seg._angle = self._angle
+		seg._largeArcFlag  = self._largeArcFlag
+		seg._sweepFlag  = self._sweepFlag
+		return seg
 
 	def translate(self, dx, dy):
 		t = self._type
@@ -149,7 +152,8 @@ class PathSeg:
 			self._y = self._y+dy
 
 class SVGPath:
-	def __init__(self,  pathstr=None):
+	def __init__(self,  node, pathstr, defval=None):
+		self.node = node
 		self._pathSegList = []
 		self.__constructors = {'z':self.__addClosePath,
 			'm':self.__addMoveTo,
@@ -182,7 +186,7 @@ class SVGPath:
 		return s
 
 	def clone(self):
-		new = SVGPath()
+		new = SVGPath(self.node, None)
 		new._pathSegList = self._pathSegList[:]
 		return new
 
@@ -673,12 +677,12 @@ class Path:
 		self.__lenValues = [0,] # curve in parametric form
 
 		if pathstr:
-			self.__svgpath = SVGPath(pathstr)
+			self.__svgpath = SVGPath(None, pathstr)
 			self.__svgpath.createPath(self)
 			self.__length = self.__getLength()
 
 	def constructFromSVGPathString(self, pathstr):
-		self.__svgpath = SVGPath(pathstr)
+		self.__svgpath = SVGPath(None, pathstr)
 		self._points = self.__svgpath.createPath(self)
 		#self.__length = self.__getLength()
 

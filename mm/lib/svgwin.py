@@ -125,6 +125,23 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 			wingdi.SetWorldTransform(self.hdc, tm.getElements())
 
 	#
+	#
+	#
+	def getStyleObjVal(self, obj):
+		if obj is None:
+			return None
+		if type(obj) == type(''):
+			if obj == 'none':
+				return None
+			else:
+				return obj
+		else:
+			if isinstance(obj, svgtypes.Animateable):
+				return obj.getPresentValue()
+			else:
+				return obj.getValue()
+
+	#
 	#  platform line art interface
 	#
 	def beginDraw(self, style, tflist):
@@ -143,7 +160,6 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		stroke = self.getStyleAttr('stroke', style)
 
 		# fill attrs
-		needsfill = 0
 		brush = None
 		rop = None
 		if fill is not None and fill != 'none':
@@ -165,7 +181,6 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 				wingdi.DeleteObject(wingdi.SelectObject(self.hdc, brush))
 			
 		# stroke attrs
-		needsstroke = 0
 		pen = None
 		strokeWidth = self.getStyleAttr('stroke-width', style)
 		if stroke is not None and stroke!='none':
@@ -229,6 +244,11 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		self.endDraw(style, tflist)
 
 	def drawText(self, text, pos, style, tflist):
+		if tflist:
+			tm = self.ctm.copy()
+			tm.applyTfList(tflist)
+			wingdi.SetWorldTransform(self.hdc, tm.getElements())
+
 		font = None
 		fontFamily = self.getStyleAttr('font-family', style)
 		fontSize = self.getStyleAttr('font-size', style)
@@ -240,16 +260,14 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 				font = wingdi.CreateFontIndirect({'name': fontFamily, 'height':dsize, 'outprecision':win32con.OUT_OUTLINE_PRECIS})
 				wingdi.SelectObject(self.hdc, font)
 
-		if tflist:
-			tm = self.ctm.copy()
-			tm.applyTfList(tflist)
-			wingdi.SetWorldTransform(self.hdc, tm.getElements())
-
 		fill = self.getStyleAttr('fill', style)
 		stroke = self.getStyleAttr('stroke', style)
 
+		fillval = self.getStyleObjVal(fill)
+		strokeval = self.getStyleObjVal(stroke)
+
 		# whats the default?
-		if (fill is None or fill == 'none') and (stroke is None or stroke == 'none'):
+		if fillval is None and strokeval is None:
 			# text will be invisible
 			# make it visible as black
 			fill = 0, 0, 0
@@ -257,14 +275,14 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 			wingdi.TextOut(self.hdc, pos, text)
 			wingdi.SetTextColor(self.hdc, oldcolor)
 
-		elif fill is not None and fill != 'none':
-			oldcolor = wingdi.SetTextColor(self.hdc, fill.getValue())
+		elif fillval is not None:
+			oldcolor = wingdi.SetTextColor(self.hdc, fillval)
 			wingdi.TextOut(self.hdc, pos, text)
 			wingdi.SetTextColor(self.hdc, oldcolor)
 
 		pen = None
 		strokeWidth = self.getStyleAttr('stroke-width', style)
-		if stroke is not None and stroke!='none':
+		if strokeval:
 			# create path
 			wingdi.BeginPath(self.hdc)
 			wingdi.TextOut(self.hdc, pos, text)
@@ -274,7 +292,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 			contextStroke = self.getStyleAttr('stroke')
 			contextStrokeWidth = self.getStyleAttr('stroke-width')
 			if contextStroke != stroke or contextStrokeWidth != strokeWidth:
-				pen = wingdi.ExtCreatePen(strokeWidth.getValue(), stroke.getValue())
+				pen = wingdi.ExtCreatePen(strokeWidth.getValue(), strokeval)
 				pen = wingdi.SelectObject(self.hdc, pen)
 			wingdi.StrokePath(self.hdc)
 			if pen:
@@ -319,10 +337,9 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		lastX = 0
 		lastY = 0
 		lastC = None
-		startP = None
 		isstart = 1
 		for seg in pathSegList:
-			seg.topxl()
+			seg = seg.topxl()
 			if isstart:
 				badCmds = 'HhVvZz'
 				if badCmds.find(seg.getTypeAsLetter())>=0:
@@ -334,19 +351,16 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 						print 'assuming abs moveto'
 					if seg._type == PathSeg.SVG_PATHSEG_MOVETO_REL:
 						lastX, lastY = lastX + seg._x, lastY + seg._y
-						startP = lastX, lastY
-						wingdi.MoveToEx(self.hdc, startP)
+						wingdi.MoveToEx(self.hdc, (lastX, lastY))
 					else:
 						lastX, lastY = seg._x, seg._y
-						startP = (lastX, lastY)
-						wingdi.MoveToEx(self.hdc, startP)
+						wingdi.MoveToEx(self.hdc, (lastX, lastY))
 				isstart = 0
 			else:
 				if seg._type == PathSeg.SVG_PATHSEG_CLOSEPATH:
-					if startP:
-						lastX, lastY = startP
-						wingdi.CloseFigure(self.hdc)
-						startP = None
+					wingdi.CloseFigure(self.hdc)
+					lastX = 0
+					lastY = 0
 					lastC = None
 					isstart = 1
 
