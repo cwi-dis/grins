@@ -2532,6 +2532,10 @@ class MMNode:
 				# allow to fix the pixel geometry in the same way as for the regions
 				self.setPxGeom(value)
 				return
+			elif self.isCssAttr(name):
+				self.setCssAttr(name, value)
+				return
+			
 		self.attrdict[name] = value
 		MMAttrdefs.flushcache(self)
 ##		self._updsummaries([name])
