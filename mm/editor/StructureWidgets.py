@@ -1995,7 +1995,7 @@ class IconBox(MMWidgetDecoration):
 			icon.set_contextmenu(contextmenu)
 		if arrowto:
 			icon.add_arrow(arrowto)
-		self._iconlist.append(i)
+			self._iconlist.append(icon)
 		self.recalc_minsize()
 		return icon
 
@@ -2018,8 +2018,8 @@ class IconBox(MMWidgetDecoration):
 
 	def draw(self, displist):
 		l,t,r,b = self.pos_abs
-		for iconname in self._iconlist:
-			i = self._iconlist[iconname]
+		for i in self._iconlist:
+			#i = self._iconlist[iconname]
 			i.moveto((l,t,r,b))
 			i.draw(displist)
 			l = l + ICONSIZE
