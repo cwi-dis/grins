@@ -6,6 +6,7 @@ from AnchorDefs import *
 import string
 import urllib
 import MMAttrdefs
+import os
 
 class LabelChannel(ChannelWindow):
 	node_attrs = ChannelWindow.node_attrs + \
@@ -35,6 +36,9 @@ class LabelChannel(ChannelWindow):
 					msg = msg[1]
 				self.errormsg(node, img + ':\n' + msg)
 		str = self.getstring(node)
+		if os.name == 'mac':
+			import greekconv
+			str = string.translate(str, greekconv.iso_8859_7_to_mac)
 		parlist = extract_paragraphs(str)
 		if MMAttrdefs.getattr(node, 'noanchors'):
 			taglist = []
