@@ -76,6 +76,8 @@ class Channel:
 		if debug:
 			print 'Channel() -> '+`self`
 		channels.append(self)
+		if hasattr(ui, 'editmgr'):
+			ui.editmgr.register(self)
 
 	def __repr__(self):
 		return '<%s instance, name=%s>' % (self.__class__.__name__, self._name)
@@ -89,6 +91,8 @@ class Channel:
 			print 'Channel.destroy('+`self`+')'
 		if self._is_shown:
 			self.hide()
+		if hasattr(self._player, 'editmgr'):
+			self._player.editmgr.unregister(self)
 		del self._armcontext
 		del self._armed_anchors
 		del self._armed_node
@@ -105,6 +109,15 @@ class Channel:
 		del self._qid
 		del self._scheduler
 		channels.remove(self)
+
+	def commit(self):
+		self._armed_node = None
+
+	def transaction(self):
+		return 1
+
+	def rollback(self):
+		pass
 
 	def may_show(self):
 		# Indicate to the higher level whether this channel is
