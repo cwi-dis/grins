@@ -941,7 +941,7 @@ class _Window:
 				y = (float)((py-rect[_Y]-0.5)/(rect[_HEIGHT]-1))
 		return x, y
 
-	def _prepare_image(self, file, crop, scale, center, transp = -1):
+	def _prepare_image(self, file, crop, scale, center, coordinates, transp = -1):
 		imageHandle, l, t, r, b = imageex.PrepareImage(self._hWnd, file, scale, center,transp)
 		return imageHandle, l, t, r, b
 
@@ -1871,11 +1871,11 @@ class _DisplayList:
 		print "--------- ", a, b, c, d
 		return a, b, c, d
 
-	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0, center = 1, tras = -1):
+	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0, center = 1, coordinates = None, tras = -1):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
-		image, l, t, r, b = w._prepare_image(file, crop, scale, center, transp = tras)
+		image, l, t, r, b = w._prepare_image(file, crop, scale, center, coordinates, transp = tras)
 		dest_x = l
 		dest_y = t
 		width = r-l
