@@ -45,40 +45,35 @@ class DlgBar(window.Wnd):
 		wndDlgBar.CreateWindow(parent,resid,
 			afxres.CBRS_ALIGN_BOTTOM,AFX_IDW_DIALOGBAR)
 
-# This is called by toplevel's DeltaTimer component. 
-# It is global, since instances may have been deleted
-# when this is called.
-def setFocus():
-	if AttrEditForm.instance:
-		AttrEditForm.instance.SetFocus()
-
 # Base class for attribute edit bars
 class AttrDlgBar(DlgBar):
 	# Class constructor. Calls base constructor and associates controlst with ids
 	def __init__(self,parent,resid,change_cb,reset_cb):
 		DlgBar.__init__(self,parent,resid)
 		self._reset=components.Button(self,grinsRC.IDUC_RESET)
+		self._reset.attach_to_parent()
 		self._attrname=components.Edit(self,grinsRC.IDC_EDIT1)
 		self._attrname.attach_to_parent()
 		parent.HookCommand(self.OnReset,grinsRC.IDUC_RESET)
+
+		# mechanism to tab to different wnds
+		self._null=components.Button(self,grinsRC.IDC_NULL)
+		self._null.attach_to_parent()
+		self._null.setstyleflag(win32con.BS_NOTIFY)
+		parent.HookCommand(self.OnNull,grinsRC.IDC_NULL)
+
 		self._change_cb=change_cb
 		self._reset_cb=reset_cb
-		self._focus_cb=None
 
 	# Response to reset button
 	def OnReset(self,id,code):
 		apply(self._reset_cb,())
 
-
-	# Pass indirectly focus to the list
-	def PassFocus(self):
-		# Do not call directly SetFocus.
-		# A direct call has site effects when the editor has the focus 
-		# and we press a button. The first button press transfers the focus to the list 
-		# and a second press is needed to activate the associated action.
-		from __main__ import toplevel
-		toplevel.settimer(0.25,(setFocus,()))
-
+	# Response to internal-null button
+	def OnNull(self,id,code):
+		if code==win32con.BN_SETFOCUS:
+			AttrEditForm.instance.SetFocus()
+			
 	def resize(self,cx):
 		rc=win32mu.Rect(self.GetWindowRect())
 		wnd=self.GetDlgItem(grinsRC.IDUC_RESET)
@@ -87,7 +82,6 @@ class AttrDlgBar(DlgBar):
 		wnd.SetWindowPos(self.GetSafeHwnd(),(x,y,0,0),
 			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | win32con.SWP_NOSIZE)
 		
-
 # Dialog bar to edit string attributes
 class StringAttrDlgBar(AttrDlgBar):
 	# Class constructor. Calls base constructor and associates controlst with ids
@@ -100,8 +94,6 @@ class StringAttrDlgBar(AttrDlgBar):
 	def OnEdit(self,id,code):
 		if code==win32con.EN_CHANGE:
 			apply(self._change_cb,(self._attrval.gettext(),))
-		elif code==win32con.EN_KILLFOCUS:
-			self.PassFocus()
 
 	def resize(self,cx):
 		AttrDlgBar.resize(self,cx)
@@ -125,8 +117,6 @@ class OptionsAttrDlgBar(AttrDlgBar):
 	def OnChangeOption(self,id,code):
 		if code==win32con.CBN_SELCHANGE:
 			apply(self._change_cb,(self._options.getvalue(),))
-		elif code==win32con.CBN_KILLFOCUS:
-			self.PassFocus()
 
 	def resize(self,cx):
 		AttrDlgBar.resize(self,cx)
@@ -151,8 +141,7 @@ class FileAttrDlgBar(AttrDlgBar):
 	def OnEdit(self,id,code):
 		if code==win32con.EN_CHANGE:
 			apply(self._change_cb,(self._attrval.gettext(),))
-		elif code==win32con.EN_KILLFOCUS:
-			self.PassFocus()
+
 	# Response to button browse
 	def OnBrowse(self,id,code):
 		if self._browsecb:
@@ -191,8 +180,7 @@ class ColorAttrDlgBar(AttrDlgBar):
 	def OnEdit(self,id,code):
 		if code==win32con.EN_CHANGE:
 			apply(self._change_cb,(self._attrval.gettext(),))
-		elif code==win32con.EN_KILLFOCUS:
-			self.PassFocus()
+
 	# Response to button browse
 	def OnBrowse(self,id,code):
 		oldcolorstring = self._attrval.gettext()
@@ -354,7 +342,7 @@ class AttrEditForm(docview.ListView):
 	# Response to keyboard input
 	# set focus to dlg on Tab
 	def onTabKey(self,key):
-		if self._dlgBar:self._dlgBar.SetFocus();
+		if self._dlgBar:self._dlgBar.SetFocus()
 	def onEnter(self,key):
 		self.call('OK')
 	def onEsc(self,key):
