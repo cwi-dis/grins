@@ -152,7 +152,7 @@ NO_MINIMIZEBOX = 0
 # temporary:
 SHOW_TOOLBAR_COMBO = 1
 ID_TOOLBAR_COMBO = grinsRC._APS_NEXT_COMMAND_VALUE + 1000
-TOOLBAR_COMBO_WIDTH = 96
+TOOLBAR_COMBO_WIDTH = 144
 TOOLBAR_COMBO_HEIGHT = 10*18 # drop down height
 
 ###########################################################
@@ -224,6 +224,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		window.MDIFrameWnd.__init__(self)
 		win32window.Window.__init__(self)
 		DropTarget.DropTarget.__init__(self)
+		self._toolbarCombo = []
 
 		# menu support
 		self._menu = None		# Dynamically created rightmousemenu
@@ -571,7 +572,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		self.settitle(basename,'document')
 		self.set_commandlist(commandlist,'document')
 		if not IsPlayer:
-			self.setEditorDocumentToolbar()
+			self.setEditorDocumentToolbar(adornments)
 			self.setEditorDocumentMenu(1)
 			self.RecalcLayout()	
 		self.ActivateFrame()
@@ -1201,7 +1202,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 
 
 	# Set the editor toolbar to the state with a document
-	def setEditorDocumentToolbar(self):
+	def setEditorDocumentToolbar(self, adornments):
 		self._wndToolBar.SetButtons(15)
 
 		id=usercmdui.class2ui[usercmd.NEW_DOCUMENT].id
@@ -1245,20 +1246,19 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		id=usercmdui.class2ui[usercmd.HELP].id
 		self._wndToolBar.SetButtonInfo(14,id,afxexttb.TBBS_BUTTON, 12)
 
-		if SHOW_TOOLBAR_COMBO:
-			self._wndToolBar.SetButtonInfo(15,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
-			# the return object is a components.ComboBox
-			self._toolbarCombo = cb = self.createToolBarCombo(16, ID_TOOLBAR_COMBO, TOOLBAR_COMBO_WIDTH, TOOLBAR_COMBO_HEIGHT, self.onToolbarCombo)
-			cb.addstring('28 kbps')
-			cb.addstring('32 kbps')
-			cb.addstring('56 kbps')
-			cb.addstring('64 kbps')
-			cb.addstring('96 kbps')
-			cb.addstring('100 kbps')
-			cb.addstring('128 kbps')
-			cb.addstring('250 kbps')
-			cb.addstring('512 kbps')
-			cb.setcursel(0)
+		if adornments.has_key('pulldown'):
+			index = 16
+			for list, cb, init in adornments['pulldown']:
+				self._wndToolBar.SetButtonInfo(15,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
+				# the return object is a components.ComboBox
+				global ID_TOOLBAR_COMBO
+				tbcb = self.createToolBarCombo(index, ID_TOOLBAR_COMBO, TOOLBAR_COMBO_WIDTH, TOOLBAR_COMBO_HEIGHT, self.onToolbarCombo)
+				ID_TOOLBAR_COMBO = ID_TOOLBAR_COMBO + 1
+				index = index + 1
+				self._toolbarCombo.append((tbcb, cb))
+				for str in list:
+					tbcb.addstring(str)
+				tbcb.setcursel(list.index(init))
 
 		self.ShowControlBar(self._wndToolBar,1,0)
 
@@ -1309,7 +1309,10 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 
 	def onToolbarCombo(self, id, code):
 		if code==win32con.CBN_SELCHANGE:
-			print self._toolbarCombo.getvalue()
+			for tbcb, cb in self._toolbarCombo:
+				if tbcb._id == id:
+					cb(tbcb.getvalue())
+					return
 
 	def isplayer(self,f):
 		if not hasattr(f,'_view'): return 0
