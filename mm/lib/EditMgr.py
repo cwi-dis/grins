@@ -94,6 +94,8 @@ class EditMgr:
 		self.registry.remove(x)
 		if x in self.focus_registry:
 			self.focus_registry.remove(x)
+		if x in self.playerstate_registry:
+			self.playerstate_registry.remove(x)
 	#
 	def is_registered(self, x):
 		return x in self.registry
