@@ -89,6 +89,7 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 
 		self.pointer_object_of_interest = None # Which object looks appealing to the selection.
 
+
 	def setup(self):
 #		self.nodes_l = CHANNELWIDTH + 6
 #		x,y,w,h = self.get_box()
@@ -293,18 +294,21 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		self.mainnode.recalc()
 
 	def click(self, coords):
-		print "DEBUG: Clicking still needs to be implemented."
+		# What was clicked: a channel or a node?
+		x,y = coords
+		if x < CHANNELWIDTH:	# A channel was selected.
+			self.select_channel(self.channeltree.get_obj_at(coords))
+		else:
+			print "Selecting node.."
 
-
-	def select_channel(self, channel):
-		#print "DEBUG: these are the syncbars:"
-		#for i in self.syncbars:
-		#	print " * ",i.tostring()
+	def select_channel(self, w_channel):
+		# Note that the channel given in the parameters is a widget, not a MMChannel.
+		# You get the MMChannel by calling the "get_channel" method.
 		self.mother.unselect_channels()
-		if isinstance(channel, ChannelWidget):
-			self.mother.select_channel(channel)
-			channel.select()
-			self.editmgr.setglobalfocus('MMChannel', channel.channel)
+		if isinstance(w_channel, ChannelWidget):
+			self.mother.select_channel(w_channel)
+			w_channel.select()
+			self.editmgr.setglobalfocus('MMChannel', w_channel.get_channel())
 
 	def select_node(self, mmwidget):
 		# TODO: also structure nodes.
@@ -340,6 +344,7 @@ class TemporalWidgetFactory:
 		graph = self.mother.get_geodl()
 		bob.set_channel(c)
 		bob.set_display(graph)
+		bob.editmgr = self.editmgr
 		bob.setup()
 		return bob
 
@@ -397,6 +402,8 @@ class TemporalWidgetFactory:
 
 	def set_mother(self, mother):
 		self.mother = mother
+		print "DEBUG: mother is a ", mother
+		self.editmgr = mother.editmgr
 
 	def setup(self):
 		return
@@ -498,6 +505,13 @@ class ChannelTree(Widgets.Widget, GeoDisplayWidget):
 		for i in self.channelhelper.getsubregions(channel):
 			self.add_channel_to_bottom(i, treedepth+1)
 
+	def get_obj_at(self, coords):
+		x,y = coords
+		for chan in self.channeltree:
+			cx,cy,cw,ch = chan.get_box()
+			if cy < y <= cy+ch:
+				return chan
+
 
 class LRChannelTreeIter:
 	# Left -> Right Iterater for the ChannelTree class.
@@ -560,6 +574,8 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 
 	def set_channel(self, c):
 		self.channel = c
+	def get_channel(self):
+		return self.channel
 
 	def set_canvas(self, c):
 		# The canvas is used to find the time position of elements.
@@ -567,18 +583,18 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 
 	def select(self):
 		Widgets.Widget.select(self)
-		self.w_outerbox.set_color((255,255,255))
+		self.w_fbox.set_color((200,200,200))
 
 	def unselect(self):
 		Widgets.Widget.unselect(self)
-		self.w_outerbox.set_color((0,0,0))
+		self.w_fbox.set_color((232,193,152))
 
 	def moveto(self, coords):
 		# Take my widgets with me.
 		l,t,r,b = coords
 		Widgets.Widget.moveto(self, coords)
 #		self.w_outerbox.moveto(coords)
-		self.w_name.moveto((l+2+CHANNELTREEINDENT*self.depth, t, r, b))
+		self.w_name.moveto((l+2+CHANNELTREEINDENT*self.depth, t, r, b-2))
 		self.w_fbox.moveto(coords)
 
 		mx, my, mw, mh = self.get_box()
