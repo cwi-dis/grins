@@ -625,7 +625,7 @@ class SlideWrapper(NodeWrapper):
 		else:
 			return NodeWrapper.getdefault(self, name)
 
-	def commit(self, type):
+	def commit(self):
 		node = self.node
 		attrdict = node.GetAttrDict()
 		if (attrdict.get('displayfull', 1) or
@@ -717,7 +717,6 @@ class PrefetchWrapper(NodeWrapper):
 	def maketitle(self):
 		name = MMAttrdefs.getattr(self.node, 'name')
 		return 'Properties of prefetch node %s' % name
-
 
 class ChannelWrapper(Wrapper):
 	def __init__(self, toplevel, channel):
@@ -1070,7 +1069,7 @@ class PreferenceWrapper(Wrapper):
 	def transaction(self):
 		return 1
 
-	def commit(self, type):
+	def commit(self):
 		attr = None
 		if prefseditor:
 			attr = prefseditor.getcurattr()
