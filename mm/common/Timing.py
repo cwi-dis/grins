@@ -49,6 +49,9 @@ def optcalctimes(root):
 # as exceptions.
 #
 def docalctimes(root):
+	import time
+	print 'docalctime...'
+	t0 = time.millitimer()
 	global lastnode
 	global initial_arms
 	global ia_root
@@ -62,6 +65,8 @@ def docalctimes(root):
 	root.counter[HD] = 1
 	decrement(q, (0, root, HD))
 	q.run()
+	t1 = time.millitimer()
+	print 'done in', (t1-t0) * 0.001, 'sec.'
 
 def getinitial(root):
         if initial_arms == None or root <> ia_root:
