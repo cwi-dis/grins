@@ -36,3 +36,5 @@ DONE	Hierarchy: zoomin on stacked node gives crash (->Sjoerd)
 19-10	rubberbox: Wat doet hij op unix met directe OK?
 20-10	List selection with keyboard, list focus
 20-10	Default folder for StandardGetFile
+DONE	Play of .ra is attempted within a switch
+04-11	Syncarcs should ignore switch/a elements in sibling-check
