@@ -12,13 +12,11 @@ from StringStuff import calclines
 
 class HtmlChannel(ChannelWindow):
 	if CMIF_MODE:
-		node_attrs = ChannelWindow.node_attrs + ['bucolor', 'hicolor',
-						 'fgcolor', 'font',
-						 'pointsize']
+		node_attrs = ChannelWindow.node_attrs + [
+						 'fgcolor']
 	else:
-		chan_attrs = ChannelWindow.chan_attrs + ['bucolor', 'hicolor',
-						 'fgcolor', 'font',
-						 'pointsize']
+		chan_attrs = ChannelWindow.chan_attrs + [
+						 'fgcolor']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
@@ -35,8 +33,8 @@ class HtmlChannel(ChannelWindow):
 		return 1
 
 	def do_arm(self, node, same=0):
-	        if same and self.armed_display:
-		        return 1
+		if same and self.armed_display:
+			return 1
 		try:
 			str = self.getstring(node)
 		except error, arg:
@@ -48,9 +46,6 @@ class HtmlChannel(ChannelWindow):
 ##			if taglist: print `taglist`
 		fontspec = getfont(node)
 		fontname, pointsize = mapfont(fontspec)
-		ps = getpointsize(node)
-		if ps != 0:
-			pointsize = ps
 		baseline, fontheight, pointsize = \
 			  self.armed_display.setfont(\
 			  fontname, pointsize)
@@ -102,7 +97,6 @@ class HtmlChannel(ChannelWindow):
 		for (name, box, type, times) in buttons:
 			button = self.armed_display.newbutton(box, times = times)
 			button.hiwidth(3)
-##			button.hicolor(self.getfgcolor(node))
 			self.setanchor(name, type, button, times)
 ##			dummy = self.armed_display.writestr(string.joinfields(curlines, '\n'))
 		# Draw a little square if some text did not fit.
@@ -143,9 +137,4 @@ def map_parpos_to_linepos(parno, charno, last, curlines, partoline):
 			charno = char1
 
 def getfont(node):
-	import MMAttrdefs
-	return MMAttrdefs.getattr(node, 'font')
-
-def getpointsize(node):
-	import MMAttrdefs
-	return MMAttrdefs.getattr(node, 'pointsize')
+	return 'Times-Roman'

@@ -9,29 +9,21 @@ from sys import platform
 
 # This code is here for freeze only:
 def _freeze_dummy_func():
-	import CmifChannel
-	import ExternalChannel
-	import GraphChannel
 	import HtmlChannel
 	import ImageChannel
-	import LabelChannel
 	import LayoutChannel
 	import MidiChannel
-	import MovieChannel
 	import NullChannel
 	import PseudoHtmlChannel
-	import PythonChannel
-##	import RealAudioChannel
 	import RealPixChannel
 	import RealTextChannel
-##	import RealVideoChannel
-	import ShellChannel
-	import SocketChannel
 	import SoundChannel
 	import TextChannel
-	import VcrChannel
 	import VideoChannel
-	import WordChannel
+	import AnimateChannel
+	import BrushChannel
+	import PrefetchChannel
+	import SVGChannel
 
 class ChannelMap:
 	channelmap = {
@@ -39,29 +31,16 @@ class ChannelMap:
 		'text': 	'TextChannel',
 		'sound':	'SoundChannel',
 		'image': 	'ImageChannel',
-		'movie': 	'MovieChannel',
-		'python': 	'PythonChannel',
-		'shell': 	'ShellChannel',
-		'vcr':		'VcrChannel',
-		'socket':	'SocketChannel',
 		'video':	'VideoChannel',
-		'mpeg':		'VideoChannel',
-		'cmif':		'CmifChannel',
 		'html':		['HtmlChannel', 'PseudoHtmlChannel'],
-		'label':	'LabelChannel',
-		'graph':	'GraphChannel',
 		'layout':	'LayoutChannel',
-		'midi':		[ 'MidiChannel', 'SoundChannel' ],
-		'word':		'WordChannel',
-		'external':	'ExternalChannel',
-##		'RealAudio':	'RealAudioChannel',
 		'RealPix':	'RealPixChannel',
 		'RealText':	'RealTextChannel',
-##		'RealVideo':	'RealVideoChannel',
+		'animate':	'AnimateChannel',
+		'brush':	'BrushChannel',
+		'prefetch':	'PrefetchChannel',
+		'svg':		'SVGChannel',
 		}
-
-	if platform == 'mac':
-		channelmap['movie'] = 'VideoChannel'
 
 	has_key = channelmap.has_key
 	keys = channelmap.keys
@@ -99,22 +78,35 @@ class ChannelMap:
 
 channelmap = ChannelMap()
 
+
+class InternalChannelMap(ChannelMap):
+	channelmap = {
+		'null': 	'NullChannel',
+		'animate':	'AnimateChannel',
+		}
+	has_key = channelmap.has_key
+	keys = channelmap.keys
+
+internalchannelmap = InternalChannelMap()
+
+	
 channeltypes = ['null', 'text', 'image']
 commonchanneltypes = ['text', 'image', 'sound', 'video', 'layout']
 otherchanneltypes = []
 channelhierarchy = {
-    'text': ['label', 'text', 'html'],
-    'image': ['image', 'graph'],
+    'text': ['text', 'html'],
+    'image': ['image'],
     'sound': ['sound'],
-    'movie': ['video', 'movie', 'mpeg', 'vcr'],
-    'control': ['layout', 'cmif', 'socket', 'shell', 'python', 'external',
-		'null'],
-    'ole': ['word'],
+    'movie': ['video'],
+    'control': ['layout', 'null', 'animate', 'prefetch'],
     }
 SMILchanneltypes = ['image', 'sound', 'video', 'text']
 if features.compatibility == compatibility.G2:
-        SMILchanneltypes = SMILchanneltypes+['RealPix', 'RealText']
-SMILextendedchanneltypes = ['html']
+	SMILchanneltypes = SMILchanneltypes+['RealPix', 'RealText']
+	if platform == 'linux2':
+		SMILchanneltypes = SMILchanneltypes+['RealAudio', 'RealVideo']
+SMILextendedchanneltypes = ['html', 'svg']
+SMILBostonChanneltypes = ['brush', 'prefetch']
 
 ct = channelmap.keys()
 ct.sort()
@@ -129,24 +121,14 @@ del ct, t
 shortcuts = {
 	'null': 	'0',
 	'text': 	'T',
-	'label':	'L',
 	'sound':	'S',
 	'image': 	'I',
 	'video':	'v',
-	'movie': 	'M',
-	'python': 	'P',
-	'shell': 	'!',
-	'vcr': 		'V',
-	'socket': 	's',
-	'mpeg': 	'm',
-	'cmif': 	'C',
 	'html': 	'H',
-	'graph': 	'G',
-	'word':		'W',
-	'external':	'X',
+	'svg': 		'G',
 	}
 
-def getvalidchanneltypes():
+def getvalidchanneltypes(context):
 	"""Return the list of channels to be shown in menus and such.
 	Either the full list or the SMIL-supported list is returned."""
 	import settings
@@ -154,13 +136,14 @@ def getvalidchanneltypes():
 		return commonchanneltypes + otherchanneltypes
 	rv = SMILchanneltypes
 	import features
-	if features.compatibility == features.SMIL10:
+	if features.compatibility in (features.SMIL10, features.Boston):
 		rv = rv + SMILextendedchanneltypes
+	if context.attributes.get('project_boston'):
+		rv = rv + SMILBostonChanneltypes
 	if not features.lightweight:
 		rv = rv + ['null']
 	return rv
 
 def isvisiblechannel(type):
-	return type in ('text', 'image', 'movie', 'video', 'mpeg', 'html',
-			'label', 'graph', 'layout',
+	return type in ('text', 'image', 'video', 'html', 'layout', 'brush',
 			'RealPix', 'RealText', 'RealVideo')

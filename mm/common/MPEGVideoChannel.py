@@ -7,7 +7,7 @@ from AnchorDefs import *
 
 
 class VideoChannel(ChannelWindowThread):
-	attrs = ['bucolor', 'hicolor', 'scale', 'project_videotype', 'project_targets']
+	attrs = ['fit', 'project_videotype', 'project_targets']
 	node_attrs = ChannelWindowThread.node_attrs + [
 		'clipbegin', 'clipend',
 		'project_audiotype', 'project_videotype', 'project_targets',
@@ -39,9 +39,13 @@ class VideoChannel(ChannelWindowThread):
 			return 1
 		try:
 			import MMAttrdefs, GLLock
-			arminfo = {'scale': float(MMAttrdefs.getattr(node, 'scale')),
+			fit = MMAttrdefs.getattr(node, 'fit')
+			if fit == 'hidden':
+				scale = 1.0
+			else:
+				scale = 0.0
+			arminfo = {'scale': scale,
 				   'bgcolor': self.getbgcolor(node),
-				   'center': MMAttrdefs.getattr(node, 'center'),
 				   }
 			self.threads.arm(fp, 0, 0, arminfo, None,
 				  self.syncarm)
@@ -51,21 +55,7 @@ class VideoChannel(ChannelWindowThread):
 			print 'Bad mpeg file', `url`, msg
 			return 1
 
-		drawbox = MMAttrdefs.getattr(node, 'drawbox')
-		if drawbox:
-			self.armed_display.fgcolor(self.getbucolor(node))
-		else:
-			self.armed_display.fgcolor(self.getbgcolor(node))
-		hicolor = self.gethicolor(node)
-		for a in node.GetRawAttrDef('anchorlist', []):
-			atype = a[A_TYPE]
-			if atype not in SourceAnchors or atype == ATYPE_AUTO:
-				continue
-			b = self.armed_display.newbutton((0,0,1,1), times = a[A_TIMES])
-			b.hiwidth(3)
-			if drawbox:
-				b.hicolor(hicolor)
-			self.setanchor(a[A_ID], a[A_TYPE], b, a[A_TIMES])
+		self.armed_display.fgcolor(self.getbgcolor(node))
 		return self.syncarm
 
 	#
@@ -107,6 +97,7 @@ class VideoChannel(ChannelWindowThread):
 				w._gc.foreground = w._convert_color(self.getbgcolor(node))
 			except AttributeError:
 				pass
+			print 'should skip',self._scheduler.timefunc()-node.get_start_time()
 			self.threads.play()
 			thread_play_called = 1
 		if self._is_shown:
@@ -124,8 +115,30 @@ class VideoChannel(ChannelWindowThread):
 	def defanchor(self, node, anchor, cb):
 		import windowinterface
 		windowinterface.showmessage('The whole window will be hot.')
-		cb((anchor[0], anchor[1], [0,0,1,1], anchor[3]))
+		cb(anchor)
 
 	def stoparm(self):
 		self.need_armdone = 0
 		ChannelWindowThread.stoparm(self)
+
+	# Convert pixel offsets into relative offsets.
+	# If the offsets are in the range [0..1], we don't need to do
+	# the conversion since the offsets are already fractions of
+	# the image.
+	def convert_args(self, file, args):
+		need_conversion = 1
+		for a in args:
+			if a != int(a):	# any floating point number
+				need_conversion = 0
+				break
+		if not need_conversion:
+			return args
+		if args == (0, 0, 1, 1) or args == [0, 0, 1, 1]:
+			# special case: full image
+			return args
+		import Sizes
+		xsize, ysize = Sizes.GetSize(file)
+		return float(args[0]) / float(xsize), \
+		       float(args[1]) / float(ysize), \
+		       float(args[2]) / float(xsize), \
+		       float(args[3]) / float(ysize)

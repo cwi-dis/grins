@@ -15,16 +15,13 @@ elif os.name == 'posix':
 	NEEDTICKER = 1
 else:
 	NEEDTICKER = 0
-
-# check implicitly rma version
-if rma and hasattr(rma,'CreateClientContext'):
-	HAS_PRECONFIGURED_PLAYER = 0
-else:
-	HAS_PRECONFIGURED_PLAYER = 1
 		
 error = 'RealChannel.error'
 
 realenginedebug=0
+
+import settings
+import MMAttrdefs
 
 class RealEngine:
 	# This class holds the RMA engine and a useage counter. This counter is
@@ -40,19 +37,18 @@ class RealEngine:
 	def close(self):
 		self.engine = None
 		if self.usagecount and NEEDTICKER:
-			windowinterface.cancelidleproc(self._tick)
+			windowinterface.cancelidleproc(self.__tid)
 		
 	def __del__(self):
 		self.close()
 		
-	def CreatePlayer(self, window, winpossize):
-		if HAS_PRECONFIGURED_PLAYER:
-			if window is None:
-				return self.engine.CreatePlayer()
-			else:
-				return self.engine.CreatePlayer(window, winpossize)
+	def CreatePlayer(self, window, winpossize, windowless):
+		if windowless:
+			return self.engine.CreatePlayer(0, ((-1,-1),(-1, -1)), 1)
+		if window is None:
+			return self.engine.CreatePlayer()
 		else:
-			return RealPlayer(self.engine, window, winpossize)
+			return self.engine.CreatePlayer(window, winpossize)
 				
 	def startusing(self):
 		if NEEDTICKER and self.usagecount == 0:
@@ -70,12 +66,9 @@ class RealEngine:
 		self.__tid = windowinterface.setidleproc(self._tick)
 		
 	def _stopticker(self):
-		if self.__tid is None:
-			windowinterface.cancelidleproc(self._tick)
-		else:
-			windowinterface.cancelidleproc(self.__tid)
+		windowinterface.cancelidleproc(self.__tid)
 		
-	def _tick(self, *dummy):
+	def _tick(self):
 		if os.name == 'mac':
 			# XXXX Mac-specific
 			self.engine.EventOccurred((0, 0, Evt.TickCount(), (0, 0), 0))
@@ -83,82 +76,6 @@ class RealEngine:
 			self.engine.EventOccurred((0, 0, 0, (0, 0), 0))
 		else:
 			raise error, 'Unknown environment (_tick)'
-
-class RealPlayer:
-	# This class is for use with the new rma pyd. 
-	# The new rma pyd has not a preconfigured player. 
-	# An object of this class exposes to clients
-	# the same interface as the previous rma buildin player
-	def __init__(self, rmengine, window=None, winpossize=None):
-		p=rmengine.CreatePlayer()
-		self.__dict__['_obj_'] = p
-
-		# create client context objects
-		# player is an optional arg
-		# passing a player as arg we implicitly request 
-		# part of the config to happen automatically (see source)
-		adviseSink = rma.CreateClientAdviseSink(p)
-		errorSink = rma.CreateErrorSink(p)
-		authManager = rma.CreateAuthenticationManager(p)
-		siteSupplier = rma.CreateSiteSupplier(p)
-
-		# create player's client context with what interfaces
-		# we would like to support
-		clientContext = rma.CreateClientContext()
-		clientContext.AddInterface(adviseSink.QueryIUnknown())
-		clientContext.AddInterface(errorSink.QueryIUnknown())
-		clientContext.AddInterface(authManager.QueryIUnknown())
-		clientContext.AddInterface(siteSupplier.QueryIUnknown())
-	
-		# and give it to player
-		# the player will use this context to request
-		# available client interfaces (through QueryInterface)
-		p.SetClientContext(clientContext)
-		del clientContext # now belongs to player
-
-
-		if window:
-			siteSupplier.SetOsWindow(window)
-		if winpossize:
-			pos, size = winpossize
-			siteSupplier.SetPositionAndSize(pos, size)
-
-		# keep refs to our client context objects
-		# so that we can configure them later
-		self._adviseSink = adviseSink
-		self._errorSink = errorSink
-		self._authManager = authManager
-		self._siteSupplier = siteSupplier
-		
-	def __del__(self):
-		self._obj_.Stop()
-		del self._obj_
-
-	def __getattr__(self, attr):	
-		try:	
-			if attr != '__dict__':
-				o = self.__dict__['_obj_']
-				if o:
-					return getattr(o, attr)
-		except KeyError:
-			pass
-		raise AttributeError, attr
-			
-	def SetStatusListener(self, listener):
-		self._adviseSink.SetPyListener(listener)
-		self._errorSink.SetPyListener(listener)
-
-	def SetPyAdviceSink(self, listener):
-		self._adviseSink.SetPyListener(listener)
-
-	def SetPyErrorSink(self, listener):
-		self._errorSink.SetPyListener(listener)
-
-	def SetOsWindow(self, window):
-		self._siteSupplier.SetOsWindow(window)
-
-	def SetPositionAndSize(self, pos, size):
-		self._siteSupplier.SetPositionAndSize(pos, size)
 
 
 class RealChannel:
@@ -178,13 +95,11 @@ class RealChannel:
 			except:
 				RealChannel.__has_rma_support = 0
 				raise error, "Cannot initialize RealPlayer G2 playback. G2 installation problem?"
-##		# release any resources on exit
-##		windowinterface.addclosecallback(self.release_player,())
 		
 	def destroy(self):
 		if self.__qid:
 			self.__channel._scheduler.cancel(self.__qid)
-			self.__qid = None
+		self.__qid = None
 		del self.__channel
 
 	def release_player(self):
@@ -195,14 +110,10 @@ class RealChannel:
 			return 0
 		return 1
 
-	def __createplayer(self):
+	def __createplayer(self, node):
 		if not self.__has_rma_support:
 			return 0
-		# This is a hack. We re-create the player for every item played. This seems to be the
-		# only way we can make sure that no new windows are created.
-		if os.name == 'mac':
-			self.__rmaplayer = None
-		if not self.__rmaplayer:
+		if self.__rmaplayer is None:
 			try:
 				self.__rmaplayer = apply(self.__engine.CreatePlayer, self.__winpos)
 			except:
@@ -210,11 +121,10 @@ class RealChannel:
 				return 0
 		return 1
 
-	def playit(self, node, window = None, winpossize=None, url=None):
-		self.__winpos = window, winpossize
-		if not self.__createplayer():
+	def playit(self, node, window = None, winpossize=None, url=None, windowless=0, start_time=0):
+		self.__winpos = window, winpossize, windowless
+		if not self.__createplayer(node):
 			return 0
-		self.__loop = self.__channel.getloop(node)
 		duration = self.__channel.getduration(node)
 		if url is None:
 			url = self.__channel.getfileurl(node)
@@ -222,61 +132,110 @@ class RealChannel:
 			self.__channel.errormsg(node, 'No URL set on this node')
 			return 0
 		url = MMurl.canonURL(url)
+		mediarepeat = MMAttrdefs.getattr(node, 'mediaRepeat')
+		if '?' in url:
+			url = url + '&mediaRepeat=%s' % mediarepeat
+		else:
+			url = url + '?mediaRepeat=%s' % mediarepeat
+##		try:
+##			u = MMurl.urlopen(url)
+##		except:
+##			self.errormsg(node, 'Cannot open '+url)
+##			return 0
+##		else:
+##			u.close()
+##			del u
 		self.__url = url
 		self.__rmaplayer.SetStatusListener(self)
+		if windowless:
+			self.__rmaplayer.SetPyVideoRenderer(self.__channel.getRealVideoRenderer())
 		if duration > 0:
-			self.__qid = self.__channel._scheduler.enter(duration, 0,
-							   self.__stop, ())
+			self.__qid = self.__channel._scheduler.enterabs(start_time + duration, 0,
+							   self.__stop, (start_time + duration,))
 		self.__playdone_called = 0
 		# WARNING: RealMedia player doesn't unquote, so we must do it
 		url = MMurl.unquote(url)
 		if realenginedebug:
 			print 'RealChannel.playit', self, `url`
-		self.__rmaplayer.OpenURL(url)
-		self.__rmaplayer.Begin()
+		self._playargs = (node, window, winpossize, url, windowless, start_time)
+		try:
+			self.__rmaplayer.OpenURL(url)
+		except rma.error:
+			raise error, "Cannot open file: `%s'" % url
+		
+		t0 = self.__channel._scheduler.timefunc()
+		if t0 > start_time:
+			self.__spark = 1
+		else:
+			self.__spark = 0
+			try:
+				self.__rmaplayer.Begin()
+			except rma.error:
+				raise error, "Cannot open file: `%s'" % url
 		self.__engine.startusing()
 		self.__using_engine = 1
-		self._playargs = (node, window, winpossize, url)
 		return 1
 
+	def OnPresentationOpened(self):
+		if not self.__spark: return
+		node = self._playargs[0]
+		t0 = self.__channel._scheduler.timefunc()
+		if t0 > self._playargs[5] and not settings.get('noskip'):
+			if not __debug__:
+				print 'RealChannel: skipping',node.get_start_time(),t0,t0-node.start_time
+			try:
+				self.__rmaplayer.Seek(int((t0-node.get_start_time())*1000))
+			except rma.error, arg:
+				print arg
+		else:
+			windowinterface.settimer(0.1,(self.__rmaplayer.Begin,()))
+			self.__spark = 0
+
+	def OnPostSeek(self, oldTime, newTime):
+		if self.__spark:
+			windowinterface.settimer(0.1,(self.__rmaplayer.Begin,()))
+			self.__spark = 0
 
 	def replay(self):
 		if not self._playargs:
 			return
-		node, window, winpossize, url = self._playargs
+		node, window, winpossize, url, windowless, start_time = self._playargs
+		temp = self.__rmaplayer
 		self.__rmaplayer = None
-		self.__createplayer()
+		self.__createplayer(node)
 		self.__rmaplayer.SetStatusListener(self)
+		if windowless:
+			self.__rmaplayer.SetPyVideoRenderer(self.__channel.getRealVideoRenderer())
+		else:
+			if window is not None:
+				self.__rmaplayer.SetOsWindow(window)
+			if winpossize is not None:
+				pos, size = winpossize
+				self.__rmaplayer.SetPositionAndSize(pos, size)
 		self.__rmaplayer.OpenURL(url)
 		self.__rmaplayer.Begin()
 
 
-	def __stop(self):
+	def __stop(self, endtime):
 		self.__qid = None
 		if self.__rmaplayer:
 			if realenginedebug:
 				print 'RealChannel.__stop', self
-			self.__loop = 1
 			self.__rmaplayer.Stop()
 			# This may cause OnStop to be called, and it may not....
 			if not self.__playdone_called:
-				self.__channel.playdone(0)
+				self.__channel.playdone(0, endtime)
 				self.__playdone_called = 1
 		else:
-			self.__channel.playdone(0)
+			self.__channel.playdone(0, endtime)
 
 	def OnStop(self):
-		if self.__loop:
-			self.__loop = self.__loop - 1
-			if self.__loop == 0:
-				if realenginedebug:
-					print 'RealChannel.OnStop', self
-				if self.__qid is None:
-					if not self.__playdone_called:
-						self.__channel.playdone(0)
-						self.__playdone_called = 1
-				return
-		windowinterface.settimer(0.1,(self.replay,()))
+		if realenginedebug:
+			print 'RealChannel.OnStop', self
+		if self.__qid is None:
+			if not self.__playdone_called:
+				self.__channel.playdone(0)
+				self.__playdone_called = 1
 
 	def ErrorOccurred(self,str):
 		if realenginedebug:
@@ -296,8 +255,23 @@ class RealChannel:
 		if self.__rmaplayer:
 			if realenginedebug:
 				print 'RealChannel.stopit', self
+			if self.__qid:
+				self.__channel._scheduler.cancel(self.__qid)
+			self.__qid = 0
 			self.__rmaplayer.Stop()
 			if self.__using_engine:
 				self.__engine.stopusing()
 			self.__using_engine = 0
 			self.__rmaplayer = None
+	
+	def freezeit(self):
+		if self.__rmaplayer:
+			if realenginedebug:
+				print 'RealChannel.pauseit', self, paused
+			if self.__qid:
+				self.__channel._scheduler.cancel(self.__qid)
+			self.__qid = 0
+			try:
+				self.__rmaplayer.Pause()
+			except rma.error, arg:
+				windowinterface.settimer(0.1,(self.__channel.errormsg,(None,arg)))

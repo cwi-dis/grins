@@ -8,8 +8,7 @@ from MMurl import urlretrieve
 
 
 class ImageChannel(ChannelWindow):
-	_our_attrs = ['bucolor', 'hicolor', 'scale', 'scalefilter', 'center',
-		      'crop']
+	_our_attrs = ['fit']
 	node_attrs = ChannelWindow.node_attrs + ['project_quality']
 	if CMIF_MODE:
 		node_attrs = node_attrs + _our_attrs
@@ -37,12 +36,12 @@ class ImageChannel(ChannelWindow):
 			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (f, arg))
 			return 1
 		# remember coordinates for anchor editing (and only for that!)
-		scale = MMAttrdefs.getattr(node, 'scale')
-		crop = MMAttrdefs.getattr(node, 'crop')
-		center = MMAttrdefs.getattr(node, 'center')
+		fit = MMAttrdefs.getattr(node, 'fit')
+		
 		try:
-			self._arm_imbox = self.armed_display.display_image_from_file(
-				f, scale = scale, crop = crop, center = center)
+			imbox = self.armed_display.display_image_from_file(
+					f, fit = fit, coordinates=self.getmediageom(node), center = 0)
+			self.armed_display.knowcmd('image')
 		except (windowinterface.error, IOError), msg:
 			if type(msg) is type(self):
 				msg = msg.strerror
@@ -50,39 +49,9 @@ class ImageChannel(ChannelWindow):
 				msg = msg[1]
 			self.errormsg(node, f + ':\n' + msg)
 			return 1
-		if MMAttrdefs.getattr(node, 'drawbox'):
-			self.armed_display.fgcolor(self.getbucolor(node))
-		else:
-			self.armed_display.fgcolor(self.getbgcolor(node))
-		hicolor = self.gethicolor(node)
-		for a in node.GetRawAttrDef('anchorlist', []):
-			args = a[A_ARGS]
-			atype = a[A_TYPE]
-			if atype not in SourceAnchors or atype == ATYPE_AUTO:
-				continue
-			if atype == ATYPE_WHOLE:
-				# whole node already done
-				continue
-			anchor = node.GetUID(), a[A_ID]
-			if not self._player.context.hyperlinks.findsrclinks(anchor):
-				continue
-			if len(args) == 0:
-				args = [0,0,1,1]
-			elif len(args) == 4:
-				args = self.convert_args(f, args)
-			if len(args) != 4:
-				print 'ImageChannel: funny-sized anchor'
-				continue
-			x, y, w, h = args[0], args[1], args[2], args[3]
-			# convert coordinates from image to window size
-			x = x * self._arm_imbox[2] + self._arm_imbox[0]
-			y = y * self._arm_imbox[3] + self._arm_imbox[1]
-			w = w * self._arm_imbox[2]
-			h = h * self._arm_imbox[3]
-			b = self.armed_display.newbutton((x, y, w, h), times = a[A_TIMES])
-			b.hiwidth(3)
-			b.hicolor(hicolor)
-			self.setanchor(a[A_ID], atype, b, a[A_TIMES])
+			
+		self.setArmBox(imbox)
+		
 		return 1
 
 	def defanchor(self, node, anchor, cb):
@@ -112,7 +81,7 @@ class ImageChannel(ChannelWindow):
 		self.syncarm = save_syncarm
 		self.syncplay = save_syncplay
 		self._anchor = anchor
-		box = anchor[A_ARGS]
+		box = anchor.aargs
 		self._anchor_cb = cb
 		msg = 'Draw anchor in ' + self._name + '.'
 		if box == []:
@@ -123,23 +92,36 @@ class ImageChannel(ChannelWindow):
 				f = urlretrieve(f)[0]
 			except IOError:
 				pass
-			box = self.convert_args(f, box)
-			# convert coordinates from image size to window size.
-			x = box[0] * self._arm_imbox[2] + self._arm_imbox[0]
-			y = box[1] * self._arm_imbox[3] + self._arm_imbox[1]
-			w = box[2] * self._arm_imbox[2]
-			h = box[3] * self._arm_imbox[3]
-			self.window.create_box(msg, self._box_cb, (x, y, w, h))
+
+			# convert coordinates to relative image size
+			box = self.convertCoordinatesToRelatives(f, box)
+			# convert coordinates from relative image to relative window size
+			windowCoordinates = self.convertCoordinatesToWindow(box)
+
+			shapeType = box[0]
+			# for instance we manage only the rect shape
+			if shapeType == A_SHAPETYPE_RECT:
+				x = windowCoordinates[1]
+				y = windowCoordinates[2]
+				w = windowCoordinates[3] - x
+				h = windowCoordinates[4] - y
+				self.window.create_box(msg, self._box_cb, (x, y, w, h))
+			elif shapeType == A_SHAPETYPE_ALLREGION:
+				pass
+			else:
+				print 'Shape type doesn''t supported yet for edition'
 
 	def _box_cb(self, *box):
 		self.stopcontext(self._anchor_context)
+		# for now, keep the compatibility with old structure
 		if len(box) == 4:
+			x, y, w, h = box
+			winCoordinates = [A_SHAPETYPE_RECT, x ,y ,x+w, y+h]
+			
 			# convert coordinates from window size to image size.
-			x = (box[0] - self._arm_imbox[0]) / self._arm_imbox[2]
-			y = (box[1] - self._arm_imbox[1]) / self._arm_imbox[3]
-			w = box[2] / self._arm_imbox[2]
-			h = box[3] / self._arm_imbox[3]
-			arg = (self._anchor[0], self._anchor[1], [x, y, w, h], self._anchor[3])
+			relativeCoordinates = self.convertShapeRelWindowToRelImage(winCoordinates)
+			from MMNode import MMAnchor
+			arg = MMAnchor(self._anchor.aid, self._anchor.atype, relativeCoordinates, self._anchor.atimes, self._achor.aaccess)
 		else:
 			arg = self._anchor
 		apply(self._anchor_cb, (arg,))
@@ -147,23 +129,48 @@ class ImageChannel(ChannelWindow):
 		del self._anchor_context
 		del self._anchor
 
-	# Convert pixel offsets into relative offsets.
-	# If the offsets are in the range [0..1], we don't need to do
-	# the conversion since the offsets are already fractions of
-	# the image.
-	def convert_args(self, file, args):
-		need_conversion = 1
-		for a in args:
-			if a != int(a):	# any floating point number
-				need_conversion = 0
-				break
-		if not need_conversion:
-			return args
-		if args == (0, 0, 1, 1) or args == [0, 0, 1, 1]:
-			# special case: full image
-			return args
-		xsize, ysize = self.window._image_size(file)
-		return float(args[0]) / float(xsize), \
-		       float(args[1]) / float(ysize), \
-		       float(args[2]) / float(xsize), \
-		       float(args[3]) / float(ysize)
+	def do_updateattr(self, node, name, value):
+		self.do_update(node, animated=1)
+		if name == 'file':
+			cmd = self.update_display.getcmd('image')
+			if cmd and self.played_display:
+				self.played_display.updatecmd('image',cmd)
+				self.played_display.render()
+
+	# this method is a variation of do_arm method
+	# most part of the do_arm can be reproduced by setting: animated=0
+	# as such can be factored out if it survives the evolution
+	def do_update(self, node, animated=1):
+		if not self.window: return
+		if self.update_display:
+			self.update_display.close()
+		bgcolor = self.getbgcolor(node, animated)
+		self.update_display = self.window.newdisplaylist(bgcolor)
+
+		f = self.getfileurl(node, animated)
+		if not f: return
+
+		if not f:
+			self.errormsg(node, 'No URL set on node')
+			return 1
+		try:
+			f = urlretrieve(f)[0]
+		except IOError, arg:
+			if type(arg) is type(self):
+				arg = arg.strerror
+			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (f, arg))
+			return 1
+		fit = MMAttrdefs.getattr(node, 'fit', animated)
+		try:
+			self._update_imbox = self.update_display.display_image_from_file(f, fit = fit, 
+			coordinates=self.getmediageom(node))
+			self.update_display.knowcmd('image')
+		except (windowinterface.error, IOError), msg:
+			if type(msg) is type(self):
+				msg = msg.strerror
+			elif type(msg) is type(()):
+				msg = msg[1]
+			self.errormsg(node, f + ':\n' + msg)
+			return 1
+		self.update_display.fgcolor(self.getbgcolor(node, animated))
+
