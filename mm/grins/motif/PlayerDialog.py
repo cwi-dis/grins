@@ -25,6 +25,7 @@ class PlayerDialog(PlayerDialogBase):
 				('Pause', PAUSE, 't'),
 				('Stop', STOP, 't'),
 				]),
+			('User groups', USERGROUPS),
 			('Channels', CHANNELS),
 			('Options', [
 				('Preferences...', PREFERENCES),
@@ -74,6 +75,7 @@ class PlayerDialog(PlayerDialogBase):
 			PlayerDialogBase.show(self)
 		else:
 			self.setchannels()
+			self.setusergroups()
 
 	def setstate(self, state = None):
 		commandlist = self.__topcommandlist + \
