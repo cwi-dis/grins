@@ -21,6 +21,7 @@ class MMNodeContext:
 		self.uidmap = {}
 		self.styledict = {}
 		self.channelnames = []
+		self.channels = []
 		self.channeldict = {}
 		self.hyperlinks = Hlinks().init()
 		self.editmgr = None
@@ -33,10 +34,12 @@ class MMNodeContext:
 			+ `self.channelnames` + '>'
 	#
 	def setdirname(self, dirname):
+		##_stat('setdirname')
 		if not self.dirname:
 			self.dirname = dirname
 	#
 	def findfile(self, filename):
+		##_stat('findfile')
 		import os
 		if os.path.isabs(filename):
 			return filename
@@ -88,11 +91,73 @@ class MMNodeContext:
 		for key in dict.keys():
 			self.styledict[key] = dict[key]
 	#
+	# Channel administration
+	#
 	def addchannels(self, list):
 		##_stat('addchannels')
 		for name, dict in list:
+			c = MMChannel().init(self, name)
+			for key in dict.keys():
+				c[key] = dict[key]
+			self.channeldict[name] = c
 			self.channelnames.append(name)
-			self.channeldict[name] = dict
+			self.channels.append(c)
+	#
+	def getchannel(self, name):
+		##_stat('getchannel')
+		if name in self.channelnames:
+			return self.channeldict[name]
+		else:
+			return None
+	#
+	def addchannel(self, name, i, type):
+		##_stat('addchannel')
+		if name in self.channelnames:
+			raise CheckError, 'addchannel: existing name'
+		if not 0 <= i <= len(self.channelnames):
+			raise CheckError, 'addchannel: invalid position'
+		c = MMChannel().init(self, name)
+		c['type'] = type
+		self.channeldict[name] = c
+		self.channelnames.insert(i, name)
+		self.channels.insert(i, c)
+	#
+	def delchannel(self, name):
+		##_stat('delchannel')
+		if name not in self.channelnames:
+			raise CheckError, 'delchannel: non-existing name'
+		i = self.channelnames.index(name)
+		del self.channels[i]
+		del self.channelnames[i]
+		del self.channeldict[name]
+	#
+	def setchannelname(self, oldname, newname):
+		##_stat('setchannelname')
+		if newname == oldname: return # No change
+		if newname in self.channelnames:
+			raise CheckError, 'setchannelname: duplicate name'
+		i = self.channelnames.index(oldname)
+		c = self.channeldict[oldname]
+		self.channeldict[newname] = c
+		c._setname(newname)
+		self.channelnames[i] = newname
+		del self.channeldict[oldname]
+		# Patch references to this channel in nodes
+		for uid in self.uidmap.keys():
+			n = self.uidmap[uid]
+			try:
+				if n.GetRawAttr('channel') == oldname:
+					n.SetAttr('channel', newname)
+			except NoSuchAttrError:
+				pass
+		# Patch references to this channel in styles
+		for stylename in self.styledict.keys():
+			s = self.styledict[stylename]
+			if s.has_key('channel'):
+				if s['channel'] == oldname:
+					s['channel'] = newname
+	#
+	# Hyperlink administration
 	#
 	def addhyperlinks(self, list):
 		##_stat('addhyperlinks')
@@ -103,9 +168,11 @@ class MMNodeContext:
 		self.hyperlinks.addlink(link)
 	#
 	def seteditmgr(self, editmgr):
+		##_stat('seteditmgr')
 		self.editmgr = editmgr
 	#
 	def geteditmgr(self):
+		##_stat('geteditmgr')
 		return self.editmgr
 	#
 	# Look for an attribute in the style definitions.
@@ -162,6 +229,67 @@ class MMNodeContext:
 		   and self.uidmap.has_key(uid2) \
 		   and self.uidmap[uid1].GetRoot() in self._roots \
 		   and self.uidmap[uid2].GetRoot() in self._roots
+
+
+# The Channel class
+#
+class MMChannel:
+	#
+	def init(self, context, name):
+		self.name = name
+		self.attrdict = {}
+		return self
+	#
+	def _setname(self, name): # Only called from context.setchannelname()
+		self.name = name
+	#
+	def _getdict(self): # Only called from MMWrite.fixroot()
+		return self.attrdict
+	#
+	def __repr__(self):
+		return '<MMChannel instance, name=' + `self.name` + '>'
+	#
+	# Emulate the dictionary interface
+	#
+	def __getitem__(self, key):
+		return self.attrdict[key]
+	#
+	def __setitem__(self, key, value):
+		self.attrdict[key] = value
+	#
+	def __delitem__(self, key):
+		del self.attrdict[key]
+	#
+	def has_key(self, key):
+		return self.attrdict.has_key(key)
+	#
+	def keys(self):
+		return self.attrdict.keys()
+
+
+# The Sync Arc class
+#
+class MMSyncArc:
+	#
+	def init(self, context):
+		self.context = context
+		self.src = None
+		self.dst = None
+		self.delay = 0.0
+		return self
+	#
+	def __repr__(self):
+		return '<MMSyncArc instance, from ' + \
+			  `self.src` + ' to ' + `self.dst` + '>'
+	#
+	def setsrc(self, srcnode, srcend):
+		self.src = (srcnode, srcend)
+	#
+	def setdst(self, dstnode, dstend):
+		self.dst = (dstnode, dstend)
+	#
+	def setdelay(self, delay):
+		self.delay = delay
 
 
 # The Node class
@@ -299,14 +427,14 @@ class MMNode:
 		return self.attrdict
 	#
 	def GetRawAttr(self, name):
-		##_stat('GetRawAttr' + '.' + name)
+		##_stat('GetRawAttr.' + name)
 		try:
 			return self.attrdict[name]
 		except KeyError:
 			raise NoSuchAttrError, 'in GetRawAttr()'
 	#
 	def GetRawAttrDef(self, name, default):
-		##_stat('GetRawAttrDef' + '.' + name)
+		##_stat('GetRawAttrDef.' + name)
 		try:
 			return self.GetRawAttr(name)
 		except NoSuchAttrError:
@@ -317,14 +445,14 @@ class MMNode:
 		return self.context.styledict
 	#
 	def GetAttr(self, name):
-		##_stat('GetAttr' + '.' + name)
+		##_stat('GetAttr.' + name)
 		try:
 			return self.attrdict[name]
 		except KeyError:
 			return self.GetDefAttr(name)
 	#
 	def GetDefAttr(self, name):
-		##_stat('GetDefAttr' + '.' + name)
+		##_stat('GetDefAttr.' + name)
 		try:
 			styles = self.attrdict['style']
 		except KeyError:
@@ -332,14 +460,14 @@ class MMNode:
 		return self.context.lookinstyles(name, styles)
 	#
 	def GetAttrDef(self, name, default):
-		##_stat('GetAttrDef' + '.' + name)
+		##_stat('GetAttrDef.' + name)
 		try:
 			return self.GetAttr(name)
 		except NoSuchAttrError:
 			return default
 	#
 	def GetInherAttr(x, name):
-		##_stat('GetInherAttr' + '.' + name)
+		##_stat('GetInherAttr.' + name)
 		while x:
 			if x.attrdict:
 				try:
@@ -350,7 +478,7 @@ class MMNode:
 		raise NoSuchAttrError, 'in GetInherAttr()'
 	#
 	def GetDefInherAttr(self, name):
-		##_stat('GetInherDefAttr' + '.' + name)
+		##_stat('GetInherDefAttr.' + name)
 		try:
 			return self.GetDefAttr(name)
 		except NoSuchAttrError:
@@ -366,7 +494,7 @@ class MMNode:
 		raise NoSuchAttrError, 'in GetInherDefAttr()'
 	#
 	def GetInherAttrDef(self, name, default):
-		##_stat('GetInherAttrDef' + '.' + name)
+		##_stat('GetInherAttrDef.' + name)
 		try:
 			return self.GetInherAttr(name)
 		except NoSuchAttrError:
@@ -399,6 +527,42 @@ class MMNode:
 			print 'Children:',
 			for child in self.children: print child.GetType(),
 			print
+	#
+	# Channel management
+	#
+	def GetChannel(self):
+		##_stat('GetChannel')
+		try:
+			cname = self.GetInherAttr('channel')
+		except NoSuchAttrError:
+			return None
+		if cname == '':
+			return None
+		return self.context.channeldict[cname]
+	#
+	def GetChannelName(self):
+		##_stat('GetChannelName')
+		c = self.GetChannel()
+		if c: return c.name
+		else: return 'undefined'
+	#
+	def GetChannelType(self):
+		##_stat('GetChannelType')
+		c = self.GetChannel()
+		if c and c.has_key('type'):
+			return c['type']
+		else:
+			return ''
+	#
+	def SetChannel(self, c):
+		##_stat('SetChannel')
+		if c is None:
+			try:
+				self.DelAttr('channel')
+			except NoSuchAttrError:
+				pass
+		else:
+			self.SetAttr('channel', c.name)
 	#
 	# Make a "deep copy" of a subtree
 	#
