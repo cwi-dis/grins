@@ -232,7 +232,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				if self.linksrc_icon is None:
 					self.linksrc_icon = self.iconbox.add_icon('linksrc', arrowto = otherwidget, arrowcolor = LINKARROWCOLOR)
 					icon = 'linksrc'
-					if x.GetType() == 'anchor':
+					if x.GetType() == 'anchor' and type(l[ANCHOR2]) is type(''):
 						sendto = MMAttrdefs.getattr(x, 'sendTo')
 						if sendto == 'rpcontextwin':
 							icon = 'contextanchor'
