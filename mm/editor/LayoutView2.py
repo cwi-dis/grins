@@ -7,6 +7,7 @@ import MMAttrdefs
 import settings
 import features
 import windowinterface
+import Clipboard
 
 ALL_LAYOUTS = '(All Channels)'
 
@@ -561,6 +562,7 @@ class LayoutView2(LayoutViewDialog2):
 			widget.endMutation()
 
 	def commit(self, type):
+		self.root = self.toplevel.root
 		if self.commitAlreadyUpdated:
 			self.commitAlreadyUpdated = 0
 			return
@@ -1495,17 +1497,25 @@ class LayoutView2(LayoutViewDialog2):
 		channeldict = self.context.channeldict
 		baseName = 'region'
 		i = 1
+		# XXX to change
 		name = baseName + `i`
 		while channeldict.has_key(name):
 			i = i+1
 			name = baseName + `i`
 			
 		self.__parentRef = parentRef
-		self.__id = name
 		self.askname(name, 'Name for region', self.__regionNamedCallback)
 
 	def __regionNamedCallback(self, name):
-		self.applyNewRegion(self.__parentRef, self.__id, name)
+		id = name
+		channeldict = self.context.channeldict
+		i = 0
+		while channeldict.has_key(id):
+			i = i+1
+			id = name + `i`
+		if name == id:
+			name = None
+		self.applyNewRegion(self.__parentRef, id, name)
 		self.setglobalfocus([self.nameToNodeRef(name)])
 		self.updateFocus()
 
@@ -2520,7 +2530,7 @@ class MediaRegion(Region):
 		wingeom = self._nodeRef.getPxGeom()
 
 		# determinate the real fit attribute		
-		scale = MMAttrdefs.getattr(self._nodeRef,'scale')
+		scale = self._nodeRef.GetInherAttrDef(self._nodeRef,'scale')
 		if scale == 1:
 			fit = 'hidden'
 		elif scale == 0:
