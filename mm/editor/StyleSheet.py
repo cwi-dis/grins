@@ -22,7 +22,11 @@ class StyleSheet(ViewDialog, BasicDialog):
 		self.context = self.root.GetContext()
 		self.editmgr = self.context.geteditmgr()
 		width, height = MMAttrdefs.getattr(self.root, 'style_winsize')
-		return BasicDialog.init(self, width, height, 'Style sheet')
+		title = 'Style sheet (' + toplevel.basename + ')'
+		return BasicDialog.init(self, width, height, title)
+	#
+	def fixtitle(self):
+		self.settitle('Style sheet (' + self.toplevel.basename + ')')
 	#
 	def __repr__(self):
 		return '<StyleSheet instance, root=' + `self.root` + '>'
