@@ -426,7 +426,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					# this can't match the first
 					# time round because of part
 					# above
-					if tokens[i] in '-+':
+					if tokens[i] in ('-', '+'):
 						try:
 							offset = parseutil.parsecounter(''.join(tokens[i:]), withsign = 1, syntax_error = self.syntax_error, context = self.__context)
 						except parseutil.error:
