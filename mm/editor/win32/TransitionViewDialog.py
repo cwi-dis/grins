@@ -47,7 +47,7 @@ class TransitionViewDialog(ViewDialog.ViewDialog):
 
 	def get_geometry(self):
 		if self.__window:
-			self.last_geometry = self.__window.getgeometry()
+			self.last_geometry = self.__window.getgeometry(windowinterface.UNIT_PXL)
 			return self.last_geometry
 			 
 #### support win32 model
