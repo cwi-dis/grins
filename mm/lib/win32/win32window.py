@@ -836,7 +836,7 @@ class Window:
 	#
 	# Animations interface
 	#
-	def updatecoordinates(self, coordinates, units=UNIT_PXL, scale=None):
+	def updatecoordinates(self, coordinates, units=UNIT_PXL, scale=None, mediacoords=None):
 		# first convert any coordinates to pixel
 		if units != UNIT_PXL:
 			coordinates = self._convert_coordinates(coordinates,units=units)
@@ -1921,7 +1921,7 @@ class Region(Window):
 	#
 	# Animations interface
 	#
-	def updatecoordinates(self, coordinates, units=UNIT_PXL, scale=None):
+	def updatecoordinates(self, coordinates, units=UNIT_PXL, scale=None, mediacoords=None):
 		# first convert any coordinates to pixel
 		if units != UNIT_PXL:
 			coordinates = self._convert_coordinates(coordinates, units=units)
