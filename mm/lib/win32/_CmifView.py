@@ -151,6 +151,48 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 			self.ResizeParentToFit()
 		self.InvalidateRect()
 			
+	def scrollvisible(self, coordinates, units = UNIT_SCREEN):
+		if not self._canscroll:
+			return
+		box = self._convert_coordinates(coordinates, self._canvas, units = units)
+		x, y = box[:2]
+		if len(box) == 2:
+			w = h = 0
+		else:
+			w, h = box[2:4]
+		fwidth, fheight = self._canvas[2:]
+		cwidth, cheight = self._rect[2:]
+		xpos, ypos = self.GetScrollPosition()
+		changed = 0
+		if fwidth > cwidth:
+			if w < cwidth:
+				if xpos <= x:
+					if x + w > xpos + cwidth:
+						xpos = x + w - cwidth
+						changed = 1
+				else:
+					xpos = x
+					changed = 1
+			else:
+				if xpos != x:
+					xpos = x
+					changed = 1
+		if fheight > cheight:
+			if h < cheight:
+				if ypos <= y:
+					if y + h > ypos + cheight:
+						ypos = y + h - cheight
+						changed = 1
+				else:
+					ypos = y
+					changed = 1
+			else:
+				if ypos != y:
+					ypos = y
+					changed = 1
+		if changed:
+			self.ScrollToPosition((xpos, ypos))
+
 	# convert from client (device) coordinates to canvas (logical). Meanifull for scrollin views
 	def _DPtoLP(self,pt):
 		dc=self.GetDC()
