@@ -5462,7 +5462,10 @@ class AttrEditForm(GenFormView):
 		self.SetRedraw(1)
 		self.RedrawWindow()
 		if old_focus:
-			old_focus.SetFocus()
+			try:
+				old_focus.SetFocus()
+			except:
+				print 'AttrEditForm.RecreateWindow: unexpected error on set focus'
 
 	def getcurattr(self):
 		page = self._prsht.GetActivePage()
