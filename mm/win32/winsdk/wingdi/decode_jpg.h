@@ -144,7 +144,7 @@ DIBSurf* JpgDecoder::decode()
 	jpeg::create_decompress(&cinfo);
 
 	// Specify data source for decompression
-	jpeg::stdio_src(&cinfo, m_mf.get_handle());
+	jpeg::stdio_src(&cinfo, (FILE *) m_mf.get_handle());
 
 	// Read file header, set default decompression parameters
 	int res = jpeg::read_header(&cinfo, TRUE);
