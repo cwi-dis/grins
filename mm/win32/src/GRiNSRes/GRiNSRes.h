@@ -210,6 +210,9 @@
 #define IDD_EDITATTR_S1R3S6             413
 #define IDD_EDITATTR_SYNCHRONIZATION    414
 #define IDD_EDITATTR_ACTIVEDUR2         415
+#define IDD_EDITATTR_MF2                416
+#define IDD_EDITATTR_PF2                417
+#define IDD_EDITATTR_F2                 418
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -342,11 +345,16 @@
 #define IDC_5                           1149
 #define IDC_6                           1150
 #define IDC_21                          1151
+#define IDC_CLIPBEGINL                  1151
 #define IDC_22                          1152
+#define IDC_CLIPENDL                    1152
 #define IDC_23                          1153
+#define IDC_READINDEXL                  1153
 #define IDC_11                          1154
+#define IDC_EVENTSENSITIVITYL           1154
 #define IDC_12                          1155
 #define IDC_13                          1156
+#define IDC_ERASEL                      1156
 #define IDC_31                          1157
 #define IDC_32                          1158
 #define IDC_34                          1159
@@ -404,6 +412,7 @@
 #define IDC_GROUP2                      1205
 #define IDC_GROUP3                      1206
 #define IDC_GROUP6                      1207
+#define IDC_GROUP7                      1208
 #define IDC_NEW                         1211
 #define IDC_RENAME                      1212
 #define IDC_DELETE                      1213
@@ -573,6 +582,12 @@
 #define IDC_REGPOINTL                   1393
 #define IDC_FITL                        1394
 #define IDC_ZL                          1395
+#define IDC_CLIPBEGINV                  1415
+#define IDC_CLIPENDV                    1416
+#define IDC_READINDEXV                  1417
+#define IDC_EVENTSENSITIVITYV           1418
+#define IDC_ERASEV1                     1419
+#define IDC_ERASEV2                     1420
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -661,7 +676,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        411
 #define _APS_NEXT_COMMAND_VALUE         32877
-#define _APS_NEXT_CONTROL_VALUE         1415
+#define _APS_NEXT_CONTROL_VALUE         1421
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
