@@ -8,9 +8,9 @@ class SourceViewDialog:
 		self.__textwindow = None
 		self.__setCommonCommandList()
 
-		self._findDlg = None
-		self._replaceDlg = None
+		self._findReplaceDlg = None
 		self._findText = None
+		self._replaceText = None
 		self._findOptions = None
 		
 	def __setCommonCommandList(self):
@@ -73,9 +73,9 @@ class SourceViewDialog:
 			self.__textwindow.close()
 			self.__textwindow = None
 
-		if self.findDlg:
-			self.findDlg.hide()
-			self.findDlg = None
+		if self._findReplaceDlg:
+			self._findReplaceDlg.hide()
+			self._findReplaceDlg = None
 			
 	def setcommandlist(self, commandlist):
 		if self.__textwindow:
@@ -152,28 +152,64 @@ class SourceViewDialog:
 	#
 
 	def onFind(self):
+		# if another dlg was showed, we hide it
+		if self._findReplaceDlg != None:
+			self._findReplaceDlg.hide()
+			self._findReplaceDlg = None
+
 		import win32dialog
-		self.findDlg = win32dialog.FindDialog(self.doFindNext, self._findText, self._findOptions, self.window)
-		self.findDlg.show()
+		self._findReplaceDlg = win32dialog.FindDialog(self.doFindNext, self._findText, self._findOptions, self.window)
+		self._findReplaceDlg.show()
 	
 	def onFindNext(self):
 		if self._findText != None:
 			self.doFindNext(self._findText, self._findOptions)
 
 	def onReplace(self):
-		pass
+		# if another dlg was showed, we hide it
+		if self._findReplaceDlg != None:
+			self._findReplaceDlg.hide()
+			self._findReplaceDlg = None
+
+		import win32dialog
+		self._findReplaceDlg = win32dialog.ReplaceDialog(self.doFindNext, self.doReplace, self.doReplaceAll, \
+														self._findText, self._replaceText, self._findOptions, self.window)
+		self._findReplaceDlg.show()
 
 	def doFindNext(self, text, options):
+		if not self.__textwindow:
+			return
+		
 		# save the text and options for the next time
 		self._findText = text
 		self._findOptions = options
 
-		if self.__textwindow:
-			# first seach from the current position
-			begin = self.getCurrentCharIndex()
-			if self.__textwindow.findNext(begin, text, options) == None:
-				# not found, search from the begining
-				if self.__textwindow.findNext(0, text, options) == None:
-					windowinterface.showmessage("Text not found", mtype = 'error')
+		found = 0
+		# first search from the current position
+		begin = self.getCurrentCharIndex()
+		if self.__textwindow.findNext(begin, text, options) == None:
+			# not found, search from the begining
+			ret = self.__textwindow.findNext(0, text, options)
+			if ret == None:
+				windowinterface.showmessage("Text not found", mtype = 'error')
+			else:
+				found = 1
+		else:
+			found = 1
 
+		if self._findReplaceDlg != None:
+			self._findReplaceDlg.enableReplace(found)		
+					
+	def doReplace(self, replaceText):
+		# save the text for the next time
+		self._replaceText = replaceText
+		if self.__textwindow:
+			self.__textwindow.replaceSel(replaceText)
+			# seek on the next occurrence found			
+			self.onFindNext()
+
+	def doReplaceAll(self, replaceText):
+		pass
 			
+
+	

@@ -267,6 +267,8 @@ class _SourceView(GenView, docview.RichEditView):
 		# otherwise, it returns the caret pos of another view (see win32 api doc).
 		# it's why we don't call this method just before to use it (the view may not have the focus)
 		self.__caretPos = (0, 0)
+
+		self.__lastItemFound = None
 		
 	def OnCreate(self, cs):
 		# create dialog bar and attach controls (though attachement effects are not used for buttons)
@@ -618,10 +620,27 @@ class _SourceView(GenView, docview.RichEditView):
 		res, (min, max) = self.FindText(flags, (begin, -1), text)
 		if res != -1:
 			self.SetSel(min, max)
+			# save the last item find for replace operation
+			self.__lastItemFound = (min, max)
 			# update the caret pos. Not done automaticly
 			self.__caretPos = self.GetCharPos(max)
 			return (min, max)
 		# not found
 		return None
 
+	def replaceSel(self, replaceText):
+		# ensure that the text replaced is also the last found.
+		# (the user may change the selected area before to press the replace button)
+		if self.__lastItemFound == None:
+			return 
+		min, max = self.__lastItemFound 
+		self.SetSel(min, max)
+
+		# do the replace operation		
+		self.ReplaceSel(replaceText)
 		
+		# update the caret pos. Not done automaticly
+		self.__caretPos = self.GetCharPos(min+len(replaceText))
+
+
+	
