@@ -100,6 +100,10 @@ class LightWeightControl:
 		else:
 			hwnd=self._parent
 		self._hwnd = Sdk.CreateWindowEx(wc.exstyle,wc.classid,name,wc.style,rc,hwnd,self._id)
+	def destroy(self):
+		if self._hwnd:
+			return Sdk.DestroyWindow(self._hwnd)
+		return 1
 	def setwindowpos(self,hInsertAfter,rc,flags):
 		if not self._hwnd: raise error, 'os control has not been created'
 		Sdk.SetWindowPos(self._hwnd,hInsertAfter,rc,flags)
@@ -527,15 +531,23 @@ class Tooltip(Control):
 	def __init__(self, parent=None, id=-1):
 		Control.__init__(self, parent, id)
 		self._toolscounter = 0
+		self._cptextlist = []
+		self._lbuttondown = 0
 
 	def createWindow(self, rc=(0,0,0,0), title=''):
 		#Sdk.InitCommonControlsEx()
 		hwnd = self._parent.GetSafeHwnd()
 		rcd = win32con.CW_USEDEFAULT, win32con.CW_USEDEFAULT, win32con.CW_USEDEFAULT, win32con.CW_USEDEFAULT
-		self._hwnd = Sdk.CreateWindowEx(win32con.WS_EX_TOPMOST, 'tooltips_class32', title, 
-			win32con.WS_POPUP | commctrl.TTS_ALWAYSTIP, rcd, hwnd, self._id)
+		self._hwnd = Sdk.CreateWindowEx(win32con.WS_EX_TOPMOST, 'tooltips_class32', title, win32con.WS_POPUP 
+			# | commctrl.TTS_ALWAYSTIP
+			,rcd, hwnd, self._id)
 		Sdk.SetWindowPos(self._hwnd, win32con.HWND_TOPMOST, (0,0,0,0),
 			win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_NOACTIVATE)
+	
+	def destroy(self):
+		Control.destroy(self)
+		for cp in self._cptextlist:
+			print 'deleting c-string:', Sdk.GetWMString(cp)
 
 	def addTool(self, rc):
 		hwnd = self._parent.GetSafeHwnd()
@@ -544,7 +556,8 @@ class Tooltip(Control):
 
 	def addToolText(self, rc, text):
 		hwnd = self._parent.GetSafeHwnd()
-		Sdk.AddToolInfo(self._hwnd, hwnd, self._id, rc, text)
+		cp = Sdk.AddToolInfo(self._hwnd, hwnd, self._id, rc, text)
+		self._cptextlist.append(cp)
 		self._toolscounter = self._toolscounter + 1
 
 	def relayEvent(self, params):
@@ -556,12 +569,19 @@ class Tooltip(Control):
 		self.sendmessage_ms(commctrl.TTM_RELAYEVENT, 0, params)
 
 	def onLButtonDown(self, params):
+		self.sendmessage(commctrl.TTM_ACTIVATE, 0, 0)
+		self._lbuttondown = 1
 		self.relayEvent(params)
 
 	def onLButtonUp(self, params):
+		self._lbuttondown = 0
 		self.relayEvent(params)
 
 	def onMouseMove(self, params):
+		if self._lbuttondown:
+			hwnd, message, wParam, lParam, time, pt = params
+			newparams = hwnd, win32con.WM_LBUTTONUP, wParam, lParam, time, lParam
+			self.onLButtonUp(params)
 		msg = win32mu.Win32Msg(params)
 		x, y = msg.pos()
 		rc = x, y, x+1, y+1
