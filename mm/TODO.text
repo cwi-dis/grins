@@ -4,6 +4,8 @@ TODO for Michael :-)
 Priority top-to-bottom.
 ------------------------
 
+* Do a design.
+
 (discuss all later)
 --> Assets window
 	- File-based assets? Explorer window?
@@ -16,16 +18,6 @@ Priority top-to-bottom.
 --> Source editor view.
 	- 
 
-
-
-* Optimise the structure view (last optimisation: recalc() calls - cache them.)
 * Reload button on the player.
 * Create templates for Snap! (slideshow)
-* Add facilities to create asset boxes!
-* Clean up the resource files
 * Show whether a node is empty or not (in the Hierarchy View?).
-
-
-Incoming
---------
-

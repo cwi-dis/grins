@@ -1,4 +1,7 @@
-# These are the standard views for a structure.
+# $Id:
+# This file contains a list of standard widgets used in the
+# HierarchyView. I tried to keep them view-independant, but
+# I can't promise anything!!
 
 import Widgets
 import MMurl, MMAttrdefs, MMmimetypes, MMNode
@@ -9,6 +12,10 @@ from AppDefaults import *
 
 TIMELINE_AT_TOP = 1
 TIMELINE_IN_FOCUS = 1
+
+
+######################################################################
+# Create new widgets
 
 def create_MMNode_widget(node, mother):
 	assert mother != None
@@ -49,8 +56,16 @@ def create_MMNode_widget(node, mother):
 		raise "Unknown node type", ntype
 		return None
 
+
+
+##############################################################################
+# Abstract Base classes
 ##############################################################################
 
+#
+# The MMNodeWidget represents any widget which is representing an MMNode
+# It also handles callbacks from the window interface.
+#
 class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and the base class for a MMNode view.
 	# View of every MMNode within the Hierarchy view
 	def __init__(self, node, mother):
@@ -293,6 +308,10 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def pasteundercall(self):
 		self.mother.paste(0)
 
+#
+# An MMWidgetDecoration is a decoration on a widget - and has no particular
+# binding to an MMNode, but rather to a parent MMWidget.
+#
 class MMWidgetDecoration(Widgets.Widget):
 	# This is a base class for anything that an MMNodeWidget has on it, but which isn't
 	# actually the MMWidget.
@@ -306,6 +325,10 @@ class MMWidgetDecoration(Widgets.Widget):
 	def get_mmwidget(self):
 		return self.mmwidget
 
+#
+# The StructureObjWidget represents any node which has children,
+# and is thus collapsable.
+#
 class StructureObjWidget(MMNodeWidget):
 	# A view of a seq, par, excl or any internal structure node.
 	HAS_COLLAPSE_BUTTON = 1
@@ -454,14 +477,20 @@ class StructureObjWidget(MMNodeWidget):
 			p.need_resize = 1
 			p = p.parent_widget
 
+	def draw_border(self, display_list):
+		# Called from self.draw or from the mother when selection is changed.
+		if self.selected:
+			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
+		else:
+			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())			
+
 	def draw(self, displist):
 		# This is a base class for other classes.. this code only gets
 		# called once the aggregating node has been called.
 		# Draw only the children.
-		if not self.iscollapsed() and not self.dont_draw_children:
+		if not self.iscollapsed():
 			for i in self.children:
 				i.draw(displist)
-		self.dont_draw_children = 0
 
 		# Draw the title.
 		displist.fgcolor(CTEXTCOLOR)
@@ -474,6 +503,9 @@ class StructureObjWidget(MMNodeWidget):
 			self.collapsebutton.draw(displist)
 		if self.timeline:
 			self.timeline.draw(displist)
+			
+		# And finally..
+		self.draw_border(displist)
 
 	def adddependencies(self):
 		MMNodeWidget.adddependencies(self)
@@ -490,65 +522,12 @@ class StructureObjWidget(MMNodeWidget):
 		for ch in self.children:
 			ch.removedependencies()
 
-
-class SeqWidget(StructureObjWidget):
-	# Any sequence node.
-	HAS_CHANNEL_BOX = 0
-	def __init__(self, node, mother):
-		StructureObjWidget.__init__(self, node, mother)
-		has_drop_box = not MMAttrdefs.getattr(node, 'project_readonly')
-		if mother.usetimestripview and has_drop_box:
-			self.dropbox = DropBoxWidget(node, mother)
-		else:
-			self.dropbox = None
-		if self.HAS_CHANNEL_BOX:
-			self.channelbox = ChannelBoxWidget(self, node, mother)
-		else:
-			self.channelbox = None
-
-#	def __repr__(self):
-#		return "Seq, name = " + self.name
-
-	def get_obj_at(self, pos):
-		if self.channelbox is not None and self.channelbox.is_hit(pos):
-			return self.channelbox
-		return StructureObjWidget.get_obj_at(self, pos)
-
+#
+# The HorizontalWidget is any sideways-drawn StructureObjWidget.
+#
+class HorizontalWidget(StructureObjWidget):
+	# All widgets drawn horizontally; e.g. sequences.
 	def draw(self, display_list):
-		# print "DEBUG: seq drawing ", self.get_box()
-
-		if self.dont_draw_children:
-			# Do this only if the node has just been selected.
-			if self.selected:
-				display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
-			else:
-				display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
-			self.dont_draw_children = 0
-			return
-
-		willplay = not self.mother.showplayability or self.node.WillPlay()
-		if willplay:
-			color = SEQCOLOR
-		else:
-			color = SEQCOLOR_NOPLAY
-
-		display_list.drawfbox(color, self.get_box())
-
-		if self.selected: 
-			#display_list.drawfbox(self.highlight(color), self.get_box())
-			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
-		else:
-			#display_list.drawfbox(color, self.get_box())
-			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
-
-		if self.channelbox and not self.iscollapsed():
-			self.channelbox.draw(display_list)
-
-		# Uncomment to redraw pushback bars.
-		#for i in self.children:
-		#	if isinstance(i, MediaWidget) and i.pushbackbar:
-		#		i.pushbackbar.draw(display_list)
-
 		# Draw those funny vertical lines.
 		if self.iscollapsed():
 			l,t,r,b = self.pos_abs
@@ -560,11 +539,7 @@ class SeqWidget(StructureObjWidget):
 				while i < r:
 					display_list.drawline(TEXTCOLOR, [(i, t),(i, b)])
 					i = i + step
-
-
 		StructureObjWidget.draw(self, display_list)
-		if self.dropbox and not self.iscollapsed():
-			self.dropbox.draw(display_list)
 
 	def get_nearest_node_index(self, pos):
 		# Return the index of the node at the specific drop position.
@@ -751,6 +726,233 @@ class SeqWidget(StructureObjWidget):
 
 		StructureObjWidget.recalc(self)
 
+#
+# The Verticalwidget is any vertically-drawn StructureObjWidget.
+#
+class VerticalWidget(StructureObjWidget):
+	# Any node which is drawn vertically
+
+##	def __repr__(self):
+##		return "VerticalWidget, name is: " + self.name
+
+	def get_minsize(self):
+		mw=0
+		mh=0
+		
+		if len(self.children) == 0 or self.iscollapsed():
+			boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
+			return boxsize, boxsize
+
+		for i in self.children:
+			w,h = i.get_minsize()
+			if w > mw: mw=w
+			mh=mh+h
+		mh = mh + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.VEDGSIZE
+		# Add the titleheight
+
+		mh = mh + sizes_notime.TITLESIZE
+		mw = mw + 2*sizes_notime.HEDGSIZE
+		if self.timeline:
+			w, h = self.timeline.get_minsize()
+			if w > mw:
+				mw = w
+			mh = mh + h
+		return mw, mh
+
+	def get_child_relminpos(self, child):
+		return sizes_notime.HEDGSIZE
+		
+	def get_nearest_node_index(self, pos):
+		# Return the index of the node at the specific drop position.
+		if self.iscollapsed():
+			return -1
+		
+		assert self.is_hit(pos)
+		x,y = pos
+		# Working from left to right:
+		for i in range(len(self.children)):
+			l,t,w,h = self.children[i].get_box()
+			if y <= t+(h/2.0):
+				return i
+		return -1
+
+	def recalc(self):
+		# Untested.
+		# Recalculate the position of all the contained boxes.
+		# Algorithm: Iterate through each of the MMNodes children's views and find their minsizes.
+		# Apportion free space equally, based on the size of self.
+		# TODO: This does not test for maxheight()
+		
+		if self.iscollapsed():
+			StructureObjWidget.recalc(self)
+			return
+		
+		l, t, r, b = self.pos_abs
+		# Add the titlesize
+		t = t + sizes_notime.TITLESIZE
+
+		# Add the timeline, if it is at the top
+		if self.timeline and TIMELINE_AT_TOP:
+			tl_w, tl_h = self.timeline.get_minsize()
+			self.timeline.moveto((l, t, r, t+tl_h))
+			t = t + tl_h
+
+		min_width, min_height = self.get_minsize()
+		min_height = min_height - sizes_notime.TITLESIZE
+		
+		overhead_height = 2*sizes_notime.VEDGSIZE + len(self.children)-1*sizes_notime.GAPSIZE
+		free_height = (b-t) - min_height
+		
+		if free_height < 0: #or free_height > 1.0:
+#		   print "Warning! free_height is wrong: ", free_height, self
+			free_height = 0
+		
+		l_par = float(l) + sizes_notime.HEDGSIZE
+		r = float(r) - sizes_notime.HEDGSIZE
+		t = float(t) + sizes_notime.VEDGSIZE
+		
+		
+		for medianode in self.children: # for each MMNode:
+			w,h = medianode.get_minsize()
+			l = l_par
+			if h > (b-t):			  # If the node needs to be bigger than the available space...
+				pass				   # TODO!!!!!
+			# Take a portion of the free available width, fairly.
+			if free_height == 0:
+				thisnode_free_height = 0
+			else:
+				thisnode_free_height = h/(min_height-overhead_height) * free_height
+			# Give the node the free width.
+			b = t + h + thisnode_free_height
+			this_l = l
+			this_r = r
+			if medianode.is_timed:
+				t0, t1, t2, download, begindelay = medianode.node.GetTimes('bandwidth')
+				tend = t2
+				lmin = self.mother.timemapper.time2pixel(t0)
+				if this_l < lmin:
+					this_l = lmin
+##				rmin = self.mother.timemapper.time2pixel(tend)
+##				if this_r < rmin:
+##					this_r = rmin
+##				else:
+				rmax = self.mother.timemapper.time2pixel(tend, align='right')
+				if this_r > rmax:
+					this_r = rmax
+				if this_l > this_r:
+					this_l = this_r
+			
+			medianode.moveto((this_l,t,this_r,b))
+			medianode.recalc()
+			t = b + sizes_notime.GAPSIZE
+		if self.timeline and not TIMELINE_AT_TOP:
+			l, t, r, b = self.pos_abs
+			tl_w, tl_h = self.timeline.get_minsize()
+			self.timeline.moveto((l, b-tl_h, r, b))
+
+		StructureObjWidget.recalc(self)
+
+	def draw(self, display_list):
+		# print "Draw: Verticle widget ", self.get_box()
+		# Draw those stupid horizontal lines.
+		if self.iscollapsed():
+			l,t,r,b = self.pos_abs
+			i = t + sizes_notime.VEDGSIZE + sizes_notime.TITLESIZE
+			l = l + sizes_notime.HEDGSIZE
+			r = r - sizes_notime.HEDGSIZE
+			step = 8
+			if r > l:
+				while i < b:
+					display_list.drawline(TEXTCOLOR, [(l, i),(r, i)])
+					i = i + step
+		StructureObjWidget.draw(self, display_list)
+
+	def addcollisions(self, mastert0, mastertend):
+		self.is_timed = 1
+		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
+		tend = t1
+		maxneededpixel0 = 0
+		maxneededpixel1 = 0
+		for ch in self.children:
+			neededpixel0, neededpixel1 = ch.addcollisions(t0, tend)
+			if neededpixel0 > maxneededpixel0:
+				maxneededpixel0 = neededpixel0
+			if neededpixel1 > maxneededpixel1:
+				maxneededpixel1 = neededpixel1
+		maxneededpixel0 = maxneededpixel0 + sizes_notime.HEDGSIZE
+		maxneededpixel1 = maxneededpixel1 + sizes_notime.HEDGSIZE
+		if t0 != mastert0:
+			self.mother.timemapper.addcollision(t0, maxneededpixel0)
+			maxneededpixel0 = 0
+		if tend != mastertend:
+			self.mother.timemapper.addcollision(tend, maxneededpixel1)
+			maxneededpixel1 = 0
+		return maxneededpixel0, maxneededpixel1
+
+
+######################################################################
+# Concrete widget classes.
+######################################################################
+
+
+######################################################################
+# Structure widgets
+
+#
+# The SeqWidget represents a sequence node.
+#
+class SeqWidget(HorizontalWidget):
+	# Any sequence node.
+	HAS_CHANNEL_BOX = 0
+	def __init__(self, node, mother):
+		HorizontalWidget.__init__(self, node, mother)
+		has_drop_box = not MMAttrdefs.getattr(node, 'project_readonly')
+		if mother.usetimestripview and has_drop_box:
+			self.dropbox = DropBoxWidget(node, mother)
+		else:
+			self.dropbox = None
+		if self.HAS_CHANNEL_BOX:
+			self.channelbox = ChannelBoxWidget(self, node, mother)
+		else:
+			self.channelbox = None
+
+#	def __repr__(self):
+#		return "Seq, name = " + self.name
+
+	def get_obj_at(self, pos):
+		if self.channelbox is not None and self.channelbox.is_hit(pos):
+			return self.channelbox
+		return HorizontalWidget.get_obj_at(self, pos)
+
+	def draw(self, display_list):
+		# print "DEBUG: seq drawing ", self.get_box()
+		willplay = not self.mother.showplayability or self.node.WillPlay()
+		if willplay:
+			color = SEQCOLOR
+		else:
+			color = SEQCOLOR_NOPLAY
+
+		display_list.drawfbox(color, self.get_box())
+
+##		if self.selected: 
+##			#display_list.drawfbox(self.highlight(color), self.get_box())
+##			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
+##		else:
+##			#display_list.drawfbox(color, self.get_box())
+##			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
+
+		if self.channelbox and not self.iscollapsed():
+			self.channelbox.draw(display_list)
+
+		# Uncomment to redraw pushback bars.
+		#for i in self.children:
+		#	if isinstance(i, MediaWidget) and i.pushbackbar:
+		#		i.pushbackbar.draw(display_list)
+
+		if self.dropbox and not self.iscollapsed():
+			self.dropbox.draw(display_list)
+		HorizontalWidget.draw(self, display_list)
+
 	def adddependencies(self):
 		# Sequence widgets need a special adddependencies, because we want to calculate the
 		# time->pixel mapping without the channelbox and dropbox
@@ -803,137 +1005,9 @@ class SeqWidget(StructureObjWidget):
 			maxneededpixel1 = 0
 		return maxneededpixel0, maxneededpixel1
 
-class BrushWidget(MMNodeWidget):
-	def __init__(self):
-		print "TODO: BrushWidget"
-
-class TimeStripSeqWidget(SeqWidget):
-	# A sequence that has a channel widget at the start of it.
-	# This only exists at the second level from the root, assuming the root is a
-	# par.
-	# Wow. I like this sort of code. If only the rest of the classes were this easy. -mjvdg
-	HAS_COLLAPSE_BUTTON = 0
-	HAS_CHANNEL_BOX = 1
-##	def __repr__(self):
-##		return "TimeStripSeqWidget"
-
-
-class ImageBoxWidget(MMWidgetDecoration):
-	# Common baseclass for dropbox and channelbox
-	# This is only for images shown as part of the sequence views; This
-	# is not used for any image on screen.
-##	def __repr__(self):
-##		return "ImageBoxWidget"
-	
-	def get_minsize(self):
-		return sizes_notime.MINSIZE, sizes_notime.MINSIZE
-
-	def draw(self, displist):
-		x,y,w,h = self.get_box()	 
-		# print "DEBUG: ImageBoxWidget drawing at: ", x,y,w,h
-		
-		# Draw the image.
-		image_filename = self._get_image_filename()
-		if image_filename != None:
-			try:
-				sx = sizes_notime.DROPAREASIZE
-				sy = sx
-				cx = x + w/2 # center 
-				cy = y + h/2
-				box = displist.display_image_from_file(
-					image_filename,
-					center = 1,
-					# The coordinates should all be floating point numbers.
-					# Wrong - now they are pixels -mjvdg.
-					#coordinates = (float(x+w)/12, float(y+h)/6, 5*(float(w)/6), 4*(float(h)/6)),
-					coordinates = (cx - sx/2, cy - sy/2, sx, sy),
-					scale = -2
-					)
-#				print "TODO: fix those 32x32 hard-coded sizes."
-			except windowinterface.error:
-				pass
-			else:
-				displist.fgcolor(TEXTCOLOR)
-				displist.drawbox(box)
-
-class DropBoxWidget(ImageBoxWidget):
-	# This is the stupid drop-box at the end of a sequence. Looks like a
-	# MediaWidget, acts like a MediaWidget, but isn't a MediaWidget.
-
-##	def __repr__(self):
-##		return "DropBoxWidget"
-
-	def _get_image_filename(self):
-		f = os.path.join(self.mother.datadir, 'dropbox.tiff')
-		return f
-
-
-class ChannelBoxWidget(ImageBoxWidget):
-	# This is the box at the start of a Sequence which represents which channel it 'owns'
-	def __init__(self, parent, node, mother):
-		Widgets.Widget.__init__(self, mother) 
-		self.node = node
-		self.parent = parent
-
-##	def __repr__(self):
-##		return "ChannelBoxWidget"
-
-	def draw(self, displist):
-		ImageBoxWidget.draw(self, displist)
-		x, y, w, h = self.get_box()
-		texth = sizes_notime.TITLESIZE
-		texty = y + h - texth
-		availbw  = settings.get('system_bitrate')
-		bwfraction = MMAttrdefs.getattr(self.node, 'project_bandwidth_fraction')
-		if bwfraction <= 0:
-			return
-		bandwidth = availbw * bwfraction
-		if bandwidth < 1000:
-			label = '%d bps'%int(bandwidth)
-		elif bandwidth < 10000:
-			label = '%3.1f Kbps'%(bandwidth / 1000.0)
-		elif bandwidth < 1000000:
-			label = '%3d Kbps' % int(bandwidth / 1000)
-		elif bandwidth < 10000000:
-			label = '%3.1f Mbps'%(bandwidth / 1000000.0)
-		else:
-			label = '%d Mbps'%int(bandwidth / 1000000)
-		displist.fgcolor(CTEXTCOLOR)
-		displist.usefont(f_title)
-		displist.centerstring(x, texty, x+w, texty+texth, label)
-	
-	def get_minsize(self):
-		return sizes_notime.MINSIZE, sizes_notime.MINSIZE + sizes_notime.TITLESIZE
-
-	def _get_image_filename(self):
-		channel_type = MMAttrdefs.getattr(self.node, 'project_default_type')
-		if not channel_type:
-			channel_type = 'null'
-		f = os.path.join(self.mother.datadir, '%s.tiff'%channel_type)
-		if not os.path.exists(f):
-			f = os.path.join(self.mother.datadir, 'null.tiff')
-		return f
-
-	def select(self):
-		self.parent.select()
-
-	def unselect(self):
-		self.parent.unselect()
-
-	def ishit(self, pos):
-		return self.is_hit(pos)
-
-	def attrcall(self):
-		self.mother.toplevel.setwaiting()
-		chname = MMAttrdefs.getattr(self.node, 'project_default_region')
-		if not chname:
-			self.parent.attrcall()
-		channel = self.mother.toplevel.context.getchannel(chname)
-		if not channel:
-			self.parent.attrcall()
-		import AttrEdit
-		AttrEdit.showchannelattreditor(self.mother.toplevel, channel)
-
+#
+# The UnseenVerticalWidget is only ever a single top-level widget
+#
 class UnseenVerticalWidget(StructureObjWidget):
 	# The top level par that doesn't get drawn.
 	HAS_COLLAPSE_BUTTON = 0
@@ -1061,269 +1135,66 @@ class UnseenVerticalWidget(StructureObjWidget):
 		for ch in self.children:
 			ch.addcollisions(None, None)
 
-
-class VerticalWidget(StructureObjWidget):
-	# Any node which is drawn vertically
-
-##	def __repr__(self):
-##		return "VerticalWidget, name is: " + self.name
-
-	def get_minsize(self):
-		mw=0
-		mh=0
-		
-		if len(self.children) == 0 or self.iscollapsed():
-			boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
-			return boxsize, boxsize
-
-		for i in self.children:
-			w,h = i.get_minsize()
-			if w > mw: mw=w
-			mh=mh+h
-		mh = mh + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.VEDGSIZE
-		# Add the titleheight
-
-		mh = mh + sizes_notime.TITLESIZE
-		mw = mw + 2*sizes_notime.HEDGSIZE
-		if self.timeline:
-			w, h = self.timeline.get_minsize()
-			if w > mw:
-				mw = w
-			mh = mh + h
-		return mw, mh
-
-	def get_child_relminpos(self, child):
-		return sizes_notime.HEDGSIZE
-		
-	def get_nearest_node_index(self, pos):
-		# Return the index of the node at the specific drop position.
-		if self.iscollapsed():
-			return -1
-		
-		assert self.is_hit(pos)
-		x,y = pos
-		# Working from left to right:
-		for i in range(len(self.children)):
-			l,t,w,h = self.children[i].get_box()
-			if y <= t+(h/2.0):
-				return i
-		return -1
-
-	def recalc(self):
-		# Untested.
-		# Recalculate the position of all the contained boxes.
-		# Algorithm: Iterate through each of the MMNodes children's views and find their minsizes.
-		# Apportion free space equally, based on the size of self.
-		# TODO: This does not test for maxheight()
-		
-		if self.iscollapsed():
-			StructureObjWidget.recalc(self)
-			return
-		
-		l, t, r, b = self.pos_abs
-		# Add the titlesize
-		t = t + sizes_notime.TITLESIZE
-
-		# Add the timeline, if it is at the top
-		if self.timeline and TIMELINE_AT_TOP:
-			tl_w, tl_h = self.timeline.get_minsize()
-			self.timeline.moveto((l, t, r, t+tl_h))
-			t = t + tl_h
-
-		min_width, min_height = self.get_minsize()
-		min_height = min_height - sizes_notime.TITLESIZE
-		
-		overhead_height = 2*sizes_notime.VEDGSIZE + len(self.children)-1*sizes_notime.GAPSIZE
-		free_height = (b-t) - min_height
-		
-		if free_height < 0: #or free_height > 1.0:
-#		   print "Warning! free_height is wrong: ", free_height, self
-			free_height = 0
-		
-		l_par = float(l) + sizes_notime.HEDGSIZE
-		r = float(r) - sizes_notime.HEDGSIZE
-		t = float(t) + sizes_notime.VEDGSIZE
-		
-		
-		for medianode in self.children: # for each MMNode:
-			w,h = medianode.get_minsize()
-			l = l_par
-			if h > (b-t):			  # If the node needs to be bigger than the available space...
-				pass				   # TODO!!!!!
-			# Take a portion of the free available width, fairly.
-			if free_height == 0:
-				thisnode_free_height = 0
-			else:
-				thisnode_free_height = h/(min_height-overhead_height) * free_height
-			# Give the node the free width.
-			b = t + h + thisnode_free_height
-			this_l = l
-			this_r = r
-			if medianode.is_timed:
-				t0, t1, t2, download, begindelay = medianode.node.GetTimes('bandwidth')
-				tend = t2
-				lmin = self.mother.timemapper.time2pixel(t0)
-				if this_l < lmin:
-					this_l = lmin
-##				rmin = self.mother.timemapper.time2pixel(tend)
-##				if this_r < rmin:
-##					this_r = rmin
-##				else:
-				rmax = self.mother.timemapper.time2pixel(tend, align='right')
-				if this_r > rmax:
-					this_r = rmax
-				if this_l > this_r:
-					this_l = this_r
-			
-			medianode.moveto((this_l,t,this_r,b))
-			medianode.recalc()
-			t = b + sizes_notime.GAPSIZE
-		if self.timeline and not TIMELINE_AT_TOP:
-			l, t, r, b = self.pos_abs
-			tl_w, tl_h = self.timeline.get_minsize()
-			self.timeline.moveto((l, b-tl_h, r, b))
-
-		StructureObjWidget.recalc(self)
-
-	def draw(self, display_list):
-		# print "Draw: Verticle widget ", self.get_box()
-		StructureObjWidget.draw(self, display_list)
-		
-		# Draw those stupid horizontal lines.
-		if self.iscollapsed():
-			l,t,r,b = self.pos_abs
-			i = t + sizes_notime.VEDGSIZE + sizes_notime.TITLESIZE
-			l = l + sizes_notime.HEDGSIZE
-			r = r - sizes_notime.HEDGSIZE
-			step = 8
-			if r > l:
-				while i < b:
-					display_list.drawline(TEXTCOLOR, [(l, i),(r, i)])
-					i = i + step
-					
-	def addcollisions(self, mastert0, mastertend):
-		self.is_timed = 1
-		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
-		tend = t1
-		maxneededpixel0 = 0
-		maxneededpixel1 = 0
-		for ch in self.children:
-			neededpixel0, neededpixel1 = ch.addcollisions(t0, tend)
-			if neededpixel0 > maxneededpixel0:
-				maxneededpixel0 = neededpixel0
-			if neededpixel1 > maxneededpixel1:
-				maxneededpixel1 = neededpixel1
-		maxneededpixel0 = maxneededpixel0 + sizes_notime.HEDGSIZE
-		maxneededpixel1 = maxneededpixel1 + sizes_notime.HEDGSIZE
-		if t0 != mastert0:
-			self.mother.timemapper.addcollision(t0, maxneededpixel0)
-			maxneededpixel0 = 0
-		if tend != mastertend:
-			self.mother.timemapper.addcollision(tend, maxneededpixel1)
-			maxneededpixel1 = 0
-		return maxneededpixel0, maxneededpixel1
-
+#
+# A ParWidget represents a Par node.
+#
 class ParWidget(VerticalWidget):
 	# Parallel node
 	def draw(self, display_list):
-		if self.dont_draw_children:
-			# Do this if I've just been selected.
-			if self.selected:
-				display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
-			else:
-				display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())			
-			self.dont_draw_children = 0
-			return
 		willplay = not self.mother.showplayability or self.node.WillPlay()
 		if willplay:
 			color = PARCOLOR
 		else:
 			color = PARCOLOR_NOPLAY
 		display_list.drawfbox(color, self.get_box())
-		if self.selected:
-			#display_list.drawfbox(self.highlight(color), self.get_box())
-			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
-		else:
-			#display_list.drawfbox(color, self.get_box())
-			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
 		VerticalWidget.draw(self, display_list)
 
-
+# and so forth..
 class ExclWidget(SeqWidget):
 	# Exclusive node.
 	def draw(self, display_list):
-		if self.dont_draw_children:
-			# Do this if I've just been selected.
-			if self.selected:
-				display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
-			else:
-				display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())			
-			self.dont_draw_children = 0
-			return
 		willplay = not self.mother.showplayability or self.node.WillPlay()
 		if willplay:
 			color = EXCLCOLOR
 		else:
 			color = EXCLCOLOR_NOPLAY
 		display_list.drawfbox(color, self.get_box())
-		if self.selected:
-			#display_list.drawfbox(self.highlight(color), self.get_box())
-			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
-		else:
-			#display_list.drawfbox(color, self.get_box())
-			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
 		StructureObjWidget.draw(self, display_list)
 
 
 class PrioWidget(SeqWidget):
 	# Prio node (?!) - I don't know what they are, but here is the code I wrote! :-)
 	def draw(self, display_list):
-		if self.dont_draw_children:
-			# Do this if I've just been selected.
-			if self.selected:
-				display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
-			else:
-				display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())			
-			self.dont_draw_children = 0
-			return
 		willplay = not self.mother.showplayability or self.node.WillPlay()
 		if willplay:
 			color = PRIOCOLOR
 		else:
 			color = PRIOCOLOR_NOPLAY
 		display_list.drawfbox(color, self.get_box())
-		if self.selected:
-			#display_list.drawfbox(self.highlight(color), self.get_box())
-			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
-		else:
-			#display_list.drawfbox(color, self.get_box())
-			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
+##		if self.selected:
+##			#display_list.drawfbox(self.highlight(color), self.get_box())
+##			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
+##		else:
+##			#display_list.drawfbox(color, self.get_box())
+##			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
 		StructureObjWidget.draw(self, display_list)
 
 
 class SwitchWidget(VerticalWidget):
 	# Switch Node
 	def draw(self, display_list):
-		if self.dont_draw_children:
-			# Do this if I've just been selected.
-			if self.selected:
-				display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
-			else:
-				display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())			
-			self.dont_draw_children = 0
-			return
 		willplay = not self.mother.showplayability or self.node.WillPlay()
 		if willplay:
 			color = ALTCOLOR
 		else:
 			color = ALTCOLOR_NOPLAY
 		display_list.drawfbox(color, self.get_box())
-		if self.selected:
-			#display_list.drawfbox(self.highlight(color), self.get_box())
-			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
-		else:
-			#display_list.drawfbox(color, self.get_box())
-			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
+##		if self.selected:
+##			#display_list.drawfbox(self.highlight(color), self.get_box())
+##			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
+##		else:
+##			#display_list.drawfbox(color, self.get_box())
+##			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
 		VerticalWidget.draw(self, display_list)
 
 
@@ -1331,7 +1202,11 @@ class SwitchWidget(VerticalWidget):
 # The Media objects (images, videos etc) in the Structure view.
 ##############################################################################
 
-
+#
+# A MediaWidget represents most leaf nodes.
+# This should really be an abstract base class, but that isn't necessary until
+# the implementation changes.
+#
 class MediaWidget(MMNodeWidget):
 	# A view of an object which is a playable media type.
 	# NOT the structure nodes.
@@ -1473,7 +1348,7 @@ class MediaWidget(MMNodeWidget):
 		if self.mother.transboxes:
 			self.transition_in.draw(displist)
 			self.transition_out.draw(displist)
-		
+	draw_border = draw
 
 	def __get_image_filename(self):
 		# I just copied this.. I don't know what it does. -mjvdg.
@@ -1579,6 +1454,10 @@ class TransitionWidget(MMWidgetDecoration):
 		editmgr.setnodeattr(self.node, which, new)
 		editmgr.commit()
 
+
+######################################################################
+# Widget decorations.
+######################################################################
 
 class PushBackBarWidget(MMWidgetDecoration):
 	# This is a push-back bar between nodes.
@@ -1716,4 +1595,136 @@ class TimelineWidget(MMWidgetDecoration):
 				cur_tick_top = tick_top
 				cur_tick_bot = tick_bot
 			display_list.drawline(TEXTCOLOR, [(tick_x, cur_tick_top), (tick_x, cur_tick_bot)])			
+
+class BrushWidget(MMNodeWidget):
+	def __init__(self):
+		print "TODO: BrushWidget"
+
+#class TimeStripSeqWidget(SeqWidget):
+#	# A sequence that has a channel widget at the start of it.
+#	# This only exists at the second level from the root, assuming the root is a
+#	# par.
+#	# Wow. I like this sort of code. If only the rest of the classes were this easy. -mjvdg
+#	HAS_COLLAPSE_BUTTON = 0
+#	HAS_CHANNEL_BOX = 1
+##	def __repr__(self):
+##		return "TimeStripSeqWidget"
+
+
+class ImageBoxWidget(MMWidgetDecoration):
+	# Common baseclass for dropbox and channelbox
+	# This is only for images shown as part of the sequence views; This
+	# is not used for any image on screen.
+##	def __repr__(self):
+##		return "ImageBoxWidget"
+	
+	def get_minsize(self):
+		return sizes_notime.MINSIZE, sizes_notime.MINSIZE
+
+	def draw(self, displist):
+		x,y,w,h = self.get_box()	 
+		# print "DEBUG: ImageBoxWidget drawing at: ", x,y,w,h
+		
+		# Draw the image.
+		image_filename = self._get_image_filename()
+		if image_filename != None:
+			try:
+				sx = sizes_notime.DROPAREASIZE
+				sy = sx
+				cx = x + w/2 # center 
+				cy = y + h/2
+				box = displist.display_image_from_file(
+					image_filename,
+					center = 1,
+					# The coordinates should all be floating point numbers.
+					# Wrong - now they are pixels -mjvdg.
+					#coordinates = (float(x+w)/12, float(y+h)/6, 5*(float(w)/6), 4*(float(h)/6)),
+					coordinates = (cx - sx/2, cy - sy/2, sx, sy),
+					scale = -2
+					)
+#				print "TODO: fix those 32x32 hard-coded sizes."
+			except windowinterface.error:
+				pass
+			else:
+				displist.fgcolor(TEXTCOLOR)
+				displist.drawbox(box)
+
+
+class DropBoxWidget(ImageBoxWidget):
+	# This is the stupid drop-box at the end of a sequence. Looks like a
+	# MediaWidget, acts like a MediaWidget, but isn't a MediaWidget.
+
+##	def __repr__(self):
+##		return "DropBoxWidget"
+
+	def _get_image_filename(self):
+		f = os.path.join(self.mother.datadir, 'dropbox.tiff')
+		return f
+
+
+class ChannelBoxWidget(ImageBoxWidget):
+	# This is the box at the start of a Sequence which represents which channel it 'owns'
+	def __init__(self, parent, node, mother):
+		Widgets.Widget.__init__(self, mother) 
+		self.node = node
+		self.parent = parent
+
+##	def __repr__(self):
+##		return "ChannelBoxWidget"
+
+	def draw(self, displist):
+		ImageBoxWidget.draw(self, displist)
+		x, y, w, h = self.get_box()
+		texth = sizes_notime.TITLESIZE
+		texty = y + h - texth
+		availbw  = settings.get('system_bitrate')
+		bwfraction = MMAttrdefs.getattr(self.node, 'project_bandwidth_fraction')
+		if bwfraction <= 0:
+			return
+		bandwidth = availbw * bwfraction
+		if bandwidth < 1000:
+			label = '%d bps'%int(bandwidth)
+		elif bandwidth < 10000:
+			label = '%3.1f Kbps'%(bandwidth / 1000.0)
+		elif bandwidth < 1000000:
+			label = '%3d Kbps' % int(bandwidth / 1000)
+		elif bandwidth < 10000000:
+			label = '%3.1f Mbps'%(bandwidth / 1000000.0)
+		else:
+			label = '%d Mbps'%int(bandwidth / 1000000)
+		displist.fgcolor(CTEXTCOLOR)
+		displist.usefont(f_title)
+		displist.centerstring(x, texty, x+w, texty+texth, label)
+	
+	def get_minsize(self):
+		return sizes_notime.MINSIZE, sizes_notime.MINSIZE + sizes_notime.TITLESIZE
+
+	def _get_image_filename(self):
+		channel_type = MMAttrdefs.getattr(self.node, 'project_default_type')
+		if not channel_type:
+			channel_type = 'null'
+		f = os.path.join(self.mother.datadir, '%s.tiff'%channel_type)
+		if not os.path.exists(f):
+			f = os.path.join(self.mother.datadir, 'null.tiff')
+		return f
+
+	def select(self):
+		self.parent.select()
+
+	def unselect(self):
+		self.parent.unselect()
+
+	def ishit(self, pos):
+		return self.is_hit(pos)
+
+	def attrcall(self):
+		self.mother.toplevel.setwaiting()
+		chname = MMAttrdefs.getattr(self.node, 'project_default_region')
+		if not chname:
+			self.parent.attrcall()
+		channel = self.mother.toplevel.context.getchannel(chname)
+		if not channel:
+			self.parent.attrcall()
+		import AttrEdit
+		AttrEdit.showchannelattreditor(self.mother.toplevel, channel)
 

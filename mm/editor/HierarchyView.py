@@ -148,7 +148,7 @@ class HierarchyView(HierarchyViewDialog):
 				NEW_AFTER_SEQ(callback = (self.createafterintcall, ('seq',))),
 				NEW_AFTER_PAR(callback = (self.createafterintcall, ('par',))),
 				NEW_AFTER_SWITCH(callback = (self.createafterintcall, ('switch',))),
-				EDIT_TVIEW(callback = (self.edit_in_tview, ())),
+				#EDIT_TVIEW(callback = (self.edit_in_tview, ())),
 				]
 		self.rpconvertcommands = [
 			RPCONVERT(callback = (self.rpconvertcall, ())),
@@ -420,7 +420,7 @@ class HierarchyView(HierarchyViewDialog):
 	# If you want a redraw, set flags and just call this function!!
 	#
 	def draw(self):
-		import time;
+		#import time;
 		# Recalculate the size of all boxes and draw on screen.
 		if self.drawing == 1:
 			return
@@ -507,7 +507,6 @@ class HierarchyView(HierarchyViewDialog):
 		import time;
 
 		if self.need_redraw:
-			#print "DEBUG: Making a new display list."
 			d = self.window.newdisplaylist(BGCOLOR, windowinterface.UNIT_PXL)
 			self.old_display_list = d
 			#print "DEBUG: scene_graph.draw()" , time.time()
@@ -521,6 +520,9 @@ class HierarchyView(HierarchyViewDialog):
 			d = self.old_display_list.clone()
 
 ## Damn, and this was really cool code:
+## So cool, that maybe I'd better document this.
+## This redraws the unselected and selected node; if one is a child of another then
+## it only redraws the parent.
 ##			if self.selected_widget and not self.old_selected_widget:
 ##				self.selected_widget.draw(d)
 ##			elif not self.selected_widget and self.old_selected_widget:
@@ -541,11 +543,9 @@ class HierarchyView(HierarchyViewDialog):
 ##					self.old_selected_widget.draw(d)
 
 			if self.selected_widget:
-				self.selected_widget.dont_draw_children = 1
-				self.selected_widget.draw(d)
+				self.selected_widget.draw_border(d)
 			if self.old_selected_widget:
-				self.old_selected_widget.dont_draw_children = 1
-				self.old_selected_widget.draw(d)
+				self.old_selected_widget.draw_border(d)
 			
 			self.only_redraw_selection = 0
 			self.old_display_list = d
@@ -600,16 +600,18 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		if not self.root.IsAncestorOf(node):
 			raise RuntimeError, 'bad node passed to globalsetfocus'
-		self.setfocusnode(node)
+		self.select_node(node, 1)
 
 	def globalfocuschanged(self, focustype, focusobject):
 		# for now, catch only MMNode focus
+		#print "DEBUG: HierarchyView received globalfocuschanged with ", focustype
 		if focustype == 'MMNode':
 			if isinstance(focusobject, MMNode.MMNode) and focusobject is not self.focusnode:
 				self.select_node(focusobject, 1)
 				self.aftersetfocus()
-				self.need_resize = 1
-				self.need_redraw = 1
+				self.need_resize = 0
+				self.need_redraw = 0
+				self.only_redraw_selection = 1
 				self.draw()
 ##		else:
 ##			print "DEBUG: globalfocuschanged called but not used: ", focustype, focusobject
@@ -1194,12 +1196,13 @@ class HierarchyView(HierarchyViewDialog):
 		if not 0 <= i < len(children):
 			windowinterface.beep()
 			return
-		self.setfocusnode(children[i])
+		self.select_node(children[i])
 		self.draw()
 
 	def select_widget(self, widget, external = 0, scroll = 1):
 		# Set the focus to a specific widget on the user interface.
 		# Make the widget the current selection.
+		# If external is enabled, don't call the editmanager.
 		if self.selected_widget == widget:
 			# don't do anything if the focus is already set to the requested widget.
 			# this is important because of the setglobalfocus call below.
@@ -1225,15 +1228,18 @@ class HierarchyView(HierarchyViewDialog):
 
 	def select_node(self, node, external = 0):
 		# Set the focus to a specfic MMNode (obviously the focus did not come from the UI)
-		self.setfocusnode(node, external)
+		if not node:
+			self.select_widget(None, external)
+		elif node.views.has_key('struct_view'):
+			widget = node.views['struct_view']
+			self.select_widget(widget, external)
 		
 	def setfocusnode(self, node, external = 0):
 		# Try not to call this function
-		if not node:
-			self.select_widget(None, external)
-		else:
-			widget = node.views['struct_view']
-			self.select_widget(widget, external)
+		print "DEBUG: Please don't call HierarchyView.setfocusnode!"
+		import traceback; traceback.print_stack()
+		print "and don't complain about the traceback. It's your fault."
+		self.select_node(node, external)
 
 	def click(self, x, y):
 		clicked_widget = self.scene_graph.get_clicked_obj_at((x,y))
@@ -1333,6 +1339,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.settoggle(TIMESCALE, 0)
 			self.settoggle(LOCALTIMESCALE, 0)
 			self.settoggle(CORRECTLOCALTIMESCALE, 1)
+		print "DEBUG: redrawing everything.."
 		self.refresh_scene_graph()
 		self.need_resize = 1
 		self.need_redraw = 1
@@ -1438,9 +1445,9 @@ class HierarchyView(HierarchyViewDialog):
 	def pasteundercall(self):
 		if self.focusobj: self.focusobj.pasteundercall()
 
-	def edit_in_tview(self):
-		if self.focusobj:
-			self.toplevel.open_node_in_tview(self.focusobj.node)
+#	def edit_in_tview(self):
+#		if self.focusobj:
+#			self.toplevel.open_node_in_tview(self.focusobj.node)
 
 def expandnode(node):
 	# Bad hack. I shouldn't refer to private attrs of a node.
