@@ -187,10 +187,7 @@ class Channel:
 				pass
 		# First, check that there is a base_window attribute
 		# and that it isn't "undefined".
-		try:
-			pname = self._attrdict['base_window']
-		except KeyError:
-			pname = 'undefined'
+		pname = self._attrdict.get('base_window', 'undefined')
 		if pname == self._name:
 			pname = 'undefined'
 		pchan = None
@@ -858,13 +855,8 @@ class ChannelWindow(Channel):
 
 	def save_geometry(self):
 		if self._is_shown and self.window:
-			try:
-				units = self._attrdict['units']
-			except KeyError:
-				units = windowinterface.UNIT_MM
-			else:
-				# convert to windowinterface value
-				units = units
+			units = self._attrdict('units',
+					       windowinterface.UNIT_MM)
 			x, y, w, h = self.window.getgeometry(units = units)
 			self._attrdict['winpos'] = x, y
 			self._attrdict['winsize'] = w, h
@@ -888,11 +880,7 @@ class ChannelWindow(Channel):
 		_button = None
 		buttons = value[2]
 		if len(buttons) == 0:
-			try:
-				transparent = self._attrdict['transparent']
-			except KeyError:
-				transparent = 0
-			if transparent:
+			if self._attrdict.get('transparent', 0):
 				raise windowinterface.Continue
 ## 			if hasattr(self._player, 'editmgr'):
 ## 				self.highlight()
@@ -907,11 +895,7 @@ class ChannelWindow(Channel):
 ## 			self.unhighlight()
 		buttons = value[2]
 		if len(buttons) == 0:
-			try:
-				transparent = self._attrdict['transparent']
-			except KeyError:
-				transparent = 0
-			if transparent:
+			if self._attrdict.get('transparent', 0):
 				raise windowinterface.Continue
 		else:
 			button = buttons[0]
@@ -950,14 +934,8 @@ class ChannelWindow(Channel):
 					    (self.highlight, ()))
 				menu.append('', 'unhighlight',
 					    (self.unhighlight, ()))
-			try:
-				transparent = self._attrdict['transparent']
-			except KeyError:
-				transparent = 0
-			try:
-				z = self._attrdict['z']
-			except KeyError:
-				z = 0
+			transparent = self._attrdict.get('transparent', 0)
+			z = self._attrdict.get('z', 0)
 			if self.want_default_colormap:
 				self.window = pchan.window.newcmwindow(pgeom,
 						transparent = transparent,
@@ -974,25 +952,10 @@ class ChannelWindow(Channel):
 					    (self.resize_window, (pchan,)))
 		else:
 			# no basewindow, create a top-level window
-			try:
-				units = self._attrdict['units']
-			except KeyError:
-				units = windowinterface.UNIT_MM
-			else:
-				# convert to windowinterface value
-				units = units
-			if self._attrdict.has_key('winsize'):
-				width, height = self._attrdict['winsize']
-			else:
-				# provide defaults
-				width, height = 50, 50
-				units = windowinterface.UNIT_MM
-			if self._attrdict.has_key('winpos'):
-				x, y = self._attrdict['winpos']
-			else:
-				# provide defaults
-				x, y = 20, 20
-				units = windowinterface.UNIT_MM
+			units = self._attrdict.get('units',
+						   windowinterface.UNIT_MM)
+			width, height = self._attrdict.get('winsize', (50, 50))
+			x, y = self._attrdict.get('winpos', (None, None))
 			if self.want_default_colormap:
 				self.window = windowinterface.newcmwindow(x, y,
 					width, height, self._name,
@@ -1268,10 +1231,8 @@ class _ChannelThread:
 			else:
 				print 'can\' work with this windowinterface'
 				return 0
-		try:
+		if self._attrdict.has_key('queuesize'):
 			attrdict['queuesize'] = self._attrdict['queuesize']
-		except KeyError:
-			pass
 		try:
 			import mm
 			self.threads = mm.init(self.threadstart(),
