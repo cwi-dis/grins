@@ -520,7 +520,8 @@ class _Toplevel(_Event):
 		self._bgcolor = 0xffff, 0xffff, 0xffff # white
 		self._fgcolor =      0,      0,      0 # black
 		self._hfactor = self._vfactor = 1.0
-		self.defaultwinpos = 10	# 1 cm from topleft we open the first window
+		self._next_xpos = 16
+		self._next_ypos = 44
 		self._command_handler = None
 		self._cursor_is_default = 1
 		self._cur_cursor = None		# The currently active cursor
@@ -680,6 +681,7 @@ class _Toplevel(_Event):
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
 		      type_channel = None, pixmap = 0, units=UNIT_MM,
 		      adornments=None, canvassize=None, commandlist=[]):
+		print 'NEWWINDOW', x, y
 		extraw, extrah = mw_windows.calc_extra_size(adornments, canvassize)
 		wid, w, h = self._openwindow(x, y, w, h, title, units, extraw, extrah)
 		rv = mw_windows._Window(self, wid, 0, 0, w, h, 0, pixmap,
@@ -691,6 +693,7 @@ class _Toplevel(_Event):
 	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE,
 			type_channel = None, pixmap = 0, units=UNIT_MM,
 			adornments=None, canvassize=None, commandlist=[]):
+		print 'NEWCMWINDOW', x, y
 		extraw, extrah = mw_windows.calc_extra_size(adornments, canvassize)
 		wid, w, h = self._openwindow(x, y, w, h, title, units, extraw, extrah)
 		rv = mw_windows._Window(self, wid, 0, 0, w, h, 1, pixmap,
@@ -707,9 +710,8 @@ class _Toplevel(_Event):
 		#
 		# First determine x, y position
 		#
-		if x is None or y is None:
-			x = y = self.defaultwinpos
-			self.defaultwinpos = self.defaultwinpos + 5
+		if x<0 or y<0 or x is None or y is None:
+			x, y = self._next_window_pos()
 		elif units == UNIT_MM:
 			x = int(x*_x_pixel_per_mm)
 			y = int(y*_y_pixel_per_mm)
@@ -776,6 +778,19 @@ class _Toplevel(_Event):
 		wid = Win.NewCWindow((x, y, x1, y1), title, 1, 0, -1, 1, 0 )
 		
 		return wid, w, h
+		
+	def _next_window_pos(self):
+		x = self._next_xpos
+		y = self._next_ypos
+		if x < 200:
+			self._next_xpos = self._next_xpos + 8
+		else:
+			self._next_xpos = 16
+		if y < 100:
+			self._next_ypos = self._next_ypos + 20
+		else:
+			self._next_ypos = 44
+		return x, y
 
 	def _get_window_names(self):
 		names = []
