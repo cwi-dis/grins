@@ -115,6 +115,22 @@ class MACDialog:
 			text = string.split(text, '\r')
 			text = string.join(text, '\n')
 		return text
+		
+	def _setbutton(self, item, value):
+		tp, h, rect = self._dialog.GetDialogItem(item)
+		ctl = h.as_Control()
+		ctl.SetControlValue(value)
+	
+	def _getbutton(self, item):
+		tp, h, rect = self._dialog.GetDialogItem(item)
+		ctl = h.as_Control()
+		return ctl.GetControlValue()
+	
+	def _togglebutton(self, item):
+		tp, h, rect = self._dialog.GetDialogItem(item)
+		ctl = h.as_Control()
+		value = ctl.GetControlValue()
+		ctl.SetControlValue(not value)
 
 	def close(self):
 		"""Close the dialog and free resources."""
