@@ -37,7 +37,7 @@ class TopLevel():
 	#
 	#
 	def run(self):
-		self.presview.run()
+		glwindow.mainloop()
 	#
 	#
 	#
@@ -176,3 +176,4 @@ class TopLevel():
 		self.destroy()
 		raise ExitException, 0
 	#
+
