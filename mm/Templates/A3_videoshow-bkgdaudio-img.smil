@@ -16,12 +16,12 @@
   </head>
   <body>
     <par>
-      <video id="Video" region="videoRegion" src=""/>
+      <video id="Video" region="videoRegion" src="media/video.mpg"/>
 	  <seq>
-        <audio id="Background-Audio" region="audioRegion_1" src="background-sound.aiff"/>
+        <audio id="Background-Audio" region="audioRegion_1" src="media/background-sound.aiff"/>
 	  </seq>
 	  <seq>
-        <audio id="Additional-Audio" region="audioRegion_2" src="background-sound.aiff"/>
+        <audio id="Additional-Audio" region="audioRegion_2" src="media/background-sound.aiff"/>
 	  </seq>
 	  <seq>
         <img id="Background-Image" region="bkgd_imageRegion" src="media/hd_bkgd-image.jpg"/>

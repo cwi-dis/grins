@@ -7,25 +7,25 @@
     <meta name="template_description" content="Realpix slideshow with two soundtracks and a background image"/>
     <meta name="template_snapshot" content="rp_2x_audio.bmp"/>
     <layout>
-      <root-layout id="Player-Window" width="415" height="245"/>
+      <root-layout id="Player-Window" width="420" height="260"/>
       <region id="audioRegion_1" GRiNS:type="sound"/>
       <region id="audioRegion_2" GRiNS:type="sound"/>
-      <region id="bkgd_imageRegion" width="415" height="245" GRiNS:type="image"/>
-      <region id="realpixRegion" left="5" top="5" width="400" height="180" z-index="1" GRiNS:type="RealPix"/>
-      <region id="captionRegion" left="5" top="190" width="400" height="40" z-index="1" GRiNS:type="RealText"/>
+      <region id="bkgd_imageRegion" width="420" height="250" GRiNS:type="image"/>
+      <region id="realpixRegion" left="10" top="10" width="400" height="225" z-index="1" GRiNS:type="RealPix"/>
+      <region id="captionRegion" left="10" top="230" width="400" height="20" z-index="1" GRiNS:type="RealText"/>
     </layout>
   </head>
   <body>
     <par>
       <img id="RealPix-Slideshow" region="realpixRegion" src="media/realpix-template.rp" dur="10s"/>
 	  <seq>
-        <audio id="Background-Audio" region="audioRegion_1" src="background-sound.aiff"/>
+        <audio id="Background-Audio" region="audioRegion_1" src="media/background-sound.aiff"/>
 	  </seq>
 	  <seq>
-        <audio id="Additional-Audio" region="audioRegion_2" src="background-sound.aiff"/>
+        <audio id="Additional-Audio" region="audioRegion_2" src="media/background-sound.aiff"/>
 	  </seq>
 	  <seq>
-        <img id="Background-Image" region="bkgd_imageRegion" src="media/bkgd-image.jpg"/>
+        <img id="Background-Image" region="bkgd_imageRegion" src="media/hd_bkgd-image.jpg"/>
 	  </seq>
     </par>
   </body>

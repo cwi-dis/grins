@@ -20,7 +20,7 @@
     <par>
     <switch id="Adaptive_Content">
 	  <seq>
-      <video id="Choice-1_Video" region="videoRegion" src="" system-bitrate="56000"/>
+      <video id="Choice-1_Video" region="videoRegion" src="media/video.mpg" system-bitrate="56000"/>
 	  </seq>
 	  <seq>
       <img id="Choice-2_RealPix-Slideshow" region="realpixRegion" src="media/realpix-template.rp" dur="10s" system-bitrate="28800"/>
@@ -30,10 +30,10 @@
 	  </seq>
     </switch>
 	  <seq>
-        <audio id="Background-Audio" region="audioRegion_1" src="background-sound.aiff"/>
+        <audio id="Background-Audio" region="audioRegion_1" src="media/background-sound.aiff"/>
 	  </seq>
 	  <seq>
-        <audio id="Additional-Audio" region="audioRegion_2" src="background-sound.aiff"/>
+        <audio id="Additional-Audio" region="audioRegion_2" src="media/background-sound.aiff"/>
 	  </seq>
 	  <seq>
         <img id="Background-Image" region="bkgd_imageRegion" src="media/hd_bkgd-image.jpg"/>
