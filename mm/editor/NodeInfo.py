@@ -537,30 +537,15 @@ class NodeInfo(NodeInfoDialog):
 
 	def browserfile_callback(self, pathname):
 		import MMurl
-		# XXXX Should use self.toplevel.relative_url()
-		if os.path.isabs(pathname):
-			cwd = self.toplevel.dirname
-			if cwd:
-				cwd = MMurl.url2pathname(cwd)
-				if not os.path.isabs(cwd):
-					cwd = os.path.join(os.getcwd(), cwd)
-			else:
-				cwd = os.getcwd()
-			if os.path.isdir(pathname):
-				dir, file = pathname, os.curdir
-			else:
-				dir, file = os.path.split(pathname)
-			# XXXX maybe should check that dir gets shorter!
-			while len(dir) > len(cwd):
-				dir, f = os.path.split(dir)
-				file = os.path.join(f, file)
-			if dir == cwd:
-				pathname = file
-		pathname = MMurl.pathname2url(pathname)
+		if not pathname:
+			url = ''
+		else:
+			url = MMurl.pathname2url(pathname)
+			url = self.context.relativeurl(url)
 		self.ch_url = 1
 		self.changed = 1
-		self.url = pathname
-		self.setfilename(pathname)
+		self.url = url
+		self.setfilename(url)
 
 	def conteditor_callback(self):
 		import NodeEdit
