@@ -75,7 +75,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			return 1
 		import mimetypes, string
 		mtype = mimetypes.guess_type(url)[0]
-		if string.find(mtype, 'real') >= 0 or string.find(mtype, 'flash') >= 0:
+		if mtype and (string.find(mtype, 'real') >= 0 or string.find(mtype, 'flash') >= 0):
 			node.__type = 'real'
 		self.prepare_armed_display(node)
 		if node.__type == 'real':
@@ -146,7 +146,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			atype = a[A_TYPE]
 			if atype not in Channel.SourceAnchors or atype == ATYPE_AUTO:
 				continue
-			b = self.armed_display.newbutton((0,0,1,1), times = a[A_TIMES])
+			b = self.armed_display.newbutton((0,0,1,1))
 			b.hiwidth(3)
 			if drawbox:
 				b.hicolor(hicolor)

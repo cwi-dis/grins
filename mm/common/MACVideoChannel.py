@@ -62,7 +62,7 @@ class VideoChannel(ChannelWindow):
 			return 1
 		import mimetypes, string
 		mtype = mimetypes.guess_type(fn)[0]
-		if string.find(mtype, 'real') >= 0 or string.find(mtype, 'flash') >= 0:
+		if mtype and (string.find(mtype, 'real') >= 0 or string.find(mtype, 'flash') >= 0):
 			node.__type = 'real'
 			if self.__rc is None:
 				import RealChannel
