@@ -168,6 +168,8 @@ class NEW_BEFORE_CHOICE(_CommandBase):
 	help = 'Create new choice node before selected node'
 class NEW_BEFORE_ALT(_CommandBase):
 	help = 'Create new alt node before selected node'
+class NEW_BEFORE_ANIMATION(_CommandBase):
+	help = 'Create new animation node before selected node'
 class NEW_AFTER(_CommandBase):
 	help = 'Create new node after selected node'
 class NEW_AFTER_IMAGE(_CommandBase):
@@ -192,6 +194,8 @@ class NEW_AFTER_CHOICE(_CommandBase):
 	help = 'Create new choice node after selected node'
 class NEW_AFTER_ALT(_CommandBase):
 	help = 'Create new alt node after selected node'
+class NEW_AFTER_ANIMATION(_CommandBase):
+	help = 'Create new animation node after selected node'
 class NEW_UNDER(_CommandBase):
 	help = 'Create new node under selected node'
 class NEW_UNDER_IMAGE(_CommandBase):
@@ -216,6 +220,8 @@ class NEW_UNDER_CHOICE(_CommandBase):
 	help = 'Create new choice node under selected node'
 class NEW_UNDER_ALT(_CommandBase):
 	help = 'Create new alt node under selected node'
+class NEW_UNDER_ANIMATION(_CommandBase):
+	help = 'Create new animation node under selected node'
 class NEW_SEQ(_CommandBase):
 	help = 'Create new sequential node above selected node'
 class NEW_PAR(_CommandBase):
@@ -226,6 +232,8 @@ class NEW_CHOICE(_CommandBase):
 	help = 'Create new choice node above selected node'
 class NEW_ALT(_CommandBase):
 	help = 'Create new alt node above selected node'
+class NEW_ANIMATION(_CommandBase):
+	help = 'Create new animation node above selected node'
 class EXPAND(_CommandBase):
 	help = 'Expand or collapse selected node'
 class EXPANDALL(_CommandBase):
