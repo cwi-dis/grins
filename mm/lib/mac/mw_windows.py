@@ -198,9 +198,12 @@ class _CommonWindow:
 		self._drawing_wid = wid
 		self._drawing_gworld = None
 		self._drawing_bitmap = None
-		self._extra_wid = None
-		self._extra_gworld = None
-		self._extra_bitmap = None
+		self._passive_wid = None
+		self._passive_gworld = None
+		self._passive_bitmap = None
+		self._tmp_wid = None
+		self._tmp_gworld = None
+		self._tmp_bitmap = None
 		self._transition = None
 		self._frozen = None
 		self._subwindows = []
@@ -259,9 +262,12 @@ class _CommonWindow:
 		del self._drawing_wid
 		del self._drawing_gworld
 		del self._drawing_bitmap
-		del self._extra_wid
-		del self._extra_gworld
-		del self._extra_bitmap
+		del self._passive_wid
+		del self._passive_gworld
+		del self._passive_bitmap
+		del self._tmp_wid
+		del self._tmp_gworld
+		del self._tmp_bitmap
 		del self._accelerators
 		del self._menu
 		del self._popupmenu
@@ -965,7 +971,9 @@ class _CommonWindow:
 		elif which == 1:
 			return self._drawing_bitmap
 		elif which == 2:
-			return self._extra_bitmap
+			return self._passive_bitmap
+		elif which == 3:
+			return self._tmp_bitmap
 		else:
 			raise 'unexpected pixmap indicator'
 					
@@ -1291,11 +1299,13 @@ class _CommonWindow:
 			self._redraw_now(updrgn)
 			del updrgn
 			print 'transition creating passive source', self
-			self._extra_gworld, self._extra_wid, self._extra_bitmap = self._create_offscreen_wid(1)
+			self._passive_gworld, self._passive_wid, self._passive_bitmap = self._create_offscreen_wid(1)
 		print 'transition creating active source', self
 		self._drawing_gworld, self._drawing_wid, self._drawing_bitmap = self._create_offscreen_wid(0)
 		# XXXX should probably skip this if the window is transparent and empty
 		self._transition = mw_transitions.TransitionEngine(self, inout, runit, dict)
+		if self._transition.need_tmp_wid():
+			self._tmp_gworld, self._tmp_wid, self._tmp_bitmap = self._create_offscreen_wid(0)
 		
 	def endtransition(self):
 ##		print 'EndTransition', self._transition
@@ -1303,8 +1313,12 @@ class _CommonWindow:
 			return
 		self._transition.endtransition()
 		self._transition = None
-		self._extra_wid = None
-		self._extra_gworld = None
+		self._passive_wid = None
+		self._passive_gworld = None
+		self._passive_bitmap = None
+		self._tmp_wid = None
+		self._tmp_gworld = None
+		self._tmp_bitmap = None
 		# XXXX Should we copy the bits? I guess not, the invalwin takes care of it...
 		self._drawing_wid = self._onscreen_wid
 		self._drawing_gworld = None
@@ -1329,12 +1343,12 @@ class _CommonWindow:
 		self._frozen = how
 		if self._frozen:
 			print 'freeze_content creating passive source'
-			self._extra_gworld, self._extra_wid, self._extra_bitmap = self._create_offscreen_wid(1)
+			self._passive_gworld, self._passive_wid, self._passive_bitmap = self._create_offscreen_wid(1)
 		else:
 			print 'freeze_content clearing passive source'
-			self._extra_gworld = None
-			self._extra_wid = None
-			self._extra_bitmap = None
+			self._passive_gworld = None
+			self._passive_wid = None
+			self._passive_bitmap = None
 			self._mac_invalwin()
 		
 	def _create_offscreen_wid(self, copybits=1):
