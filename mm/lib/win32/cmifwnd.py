@@ -863,6 +863,21 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 			self.RedrawWindow(None,rgn)			
 			rgn1.DeleteObject()
 			rgn.DeleteObject()
+
+#=========================================================
+#	transition section
+
+	def begintransition(self, inout, runit, dict):
+		pass
+		
+	def endtransition(self):
+		pass
+		
+	def changed(self):
+		pass
+		
+	def settransitionvalue(self, value):
+		pass
 		
 #=========================================================
 #	geometry and coordinates convert section

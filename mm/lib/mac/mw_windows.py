@@ -1193,6 +1193,18 @@ class _CommonWindow:
 		# ...
 		print 'window.updatebgcolor',color
 
+	# Experimental transition interface
+	def begintransition(self, inout, runit, dict):
+		print 'Transition', dict['trtype']
+		
+	def endtransition(self):
+		pass
+		
+	def changed(self):
+		pass
+		
+	def settransitionvalue(self, value):
+		pass
 
 def calc_extra_size(adornments, canvassize):
 	"""Return the number of pixels needed for toolbar and scrollbars"""
