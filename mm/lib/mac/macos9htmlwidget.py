@@ -48,11 +48,12 @@ if not HtmlRender.HRHTMLRenderingLibAvailable():
 class HTMLWidget:
 	def __init__(self, window, rect, name, controlhandler=None):
 		self.widget = HtmlRender.HRNewReference(HtmlRendering.kHRRendererHTML32Type, window)
-		Qd.SetPort(window)
+		Qd.SetPort(window._wid)
 		self.widget.HRSetRenderingRect(rect)
 		Win.InvalRect((0,0,999,9999))
 		self.rect = rect
-		self.wid = window
+		self.window = window
+		self.wid = window._wid
 		self.controlhandler = controlhandler
 
 		self.must_clear = 0
