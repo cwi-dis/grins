@@ -16,11 +16,24 @@ import __main__
 # defines the interface of subwindows
 # implements the platform independent part of subwindows 
 class Window:
-	def __init__(self, parent, coordinates, units, z=0, transparent=0):
-		self.__setparent(parent)
-		self.__setcoordinates(coordinates, units)
-		self.__set_z_order(z)
-		self.__settransparent(transparent)
+	def __init__(self):
+		self._parent = None
+		self._bgcolor = (0, 0, 0)
+		self._fgcolor = (255, 255, 255)
+		self._cursor = ''
+		self._topwindow = None
+		self._convert_color = None
+
+		self._rect = 0, 0, 0, 0 # client area in pixels
+		self._canvas = 0, 0, 0, 0 # client canvas in pixels
+		self._rectb = 0, 0, 0, 0  # rect with respect to parent in pixels
+		self._sizes = 0, 0, 0, 0 # rect relative to parent
+		self._units = None
+
+		self._z = 0
+
+		self._transparent = 0
+
 		self._subwindows = []
 		self._displists = []
 		self._active_displist = None
@@ -28,8 +41,15 @@ class Window:
 		self._callbacks = {}
 		self._showing = None
 		self._curcursor = ''
+
 		self._isvisible = 1
 		self._convcolor = None
+
+	def create(self, parent, coordinates, units, z=0, transparent=0):
+		self.__setparent(parent)
+		self.__setcoordinates(coordinates, units)
+		self.__set_z_order(z)
+		self.__settransparent(transparent)
 
 	def __repr__(self):
 		return '<Window instance at %x>' % id(self)
@@ -694,7 +714,12 @@ import win32transitions
 
 class SubWindow(Window):
 	def __init__(self, parent, coordinates, transparent, z, units):
-		Window.__init__(self, parent, coordinates, units, z, transparent)
+		Window.__init__(self)
+		
+		# create the window
+		self.create(parent, coordinates, units, z, transparent)
+
+		# implementation specific
 		self._oswnd = None
 		self._video = None
 		self.__init_transitions()
