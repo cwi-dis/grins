@@ -43,7 +43,7 @@ class AudioDevSGI:
 			self.setformat(fmt)
 		if qsize:
 			c = self.__config
-			c.setqueuesize(qsize / c.getwidth() / c.getchannels())
+			c.setqueuesize(qsize)
 
 	def __del__(self):
 		self.stop()
