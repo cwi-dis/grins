@@ -168,3 +168,14 @@ def _fixcontext(root):
 		root.DelAttr('usergroups')
 	except NoSuchAttrError:
 		pass
+
+	_fixanchors(root)
+
+def _fixanchors(node):
+	alist = node.GetRawAttrDef('anchorlist', [])
+	for i in range(len(alist)):
+		a = alist[i]
+		if len(a) == 3:
+			alist[i] = a + ((0,0),)
+	for c in node.children:
+		_fixanchors(c)
