@@ -763,7 +763,7 @@ void CreateBlendTable(float prop)
 			}
 		}
 	}
-HRESULT ScanSurface8(IDirectDrawSurface *surf, 
+HRESULT BltBlend8(IDirectDrawSurface *surf, 
 					 IDirectDrawSurface *from, IDirectDrawSurface *to, 
 					 float prop, DWORD w, DWORD h)
 	{
@@ -823,7 +823,7 @@ HRESULT ScanSurface8(IDirectDrawSurface *surf,
 	return hr;
 	}
 
-HRESULT ScanSurface16(IDirectDrawSurface *surf, 
+HRESULT BltBlend16(IDirectDrawSurface *surf, 
 					 IDirectDrawSurface *from, IDirectDrawSurface *to, 
 					 float prop, DWORD w, DWORD h)
 	{
@@ -878,7 +878,7 @@ HRESULT ScanSurface16(IDirectDrawSurface *surf,
 	return hr;
 	}
 
-HRESULT ScanSurface24(IDirectDrawSurface *surf, 
+HRESULT BltBlend24(IDirectDrawSurface *surf, 
 					 IDirectDrawSurface *from, IDirectDrawSurface *to, 
 					 float prop, DWORD w, DWORD h)
 	{
@@ -934,7 +934,7 @@ HRESULT ScanSurface24(IDirectDrawSurface *surf,
 	return hr;
 	}
 
-HRESULT ScanSurface32(IDirectDrawSurface *surf, 
+HRESULT BltBlend32(IDirectDrawSurface *surf, 
 					 IDirectDrawSurface *from, IDirectDrawSurface *to, 
 					 float prop, DWORD w, DWORD h)
 	{
@@ -1012,17 +1012,37 @@ DirectDrawSurface_BltBlend(DirectDrawSurfaceObject *self, PyObject *args)
 
 	HRESULT hr;
 	if (depth==8)
-		hr=ScanSurface8(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
+		hr=BltBlend8(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
 	else if (depth==16)
-		hr=ScanSurface16(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
+		hr=BltBlend16(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
 	else if (depth==24)
-		hr=ScanSurface24(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
+		hr=BltBlend24(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
 	else if (depth==32)
-		hr=ScanSurface32(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
+		hr=BltBlend32(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
 	if (FAILED(hr)){
 		seterror("DirectDrawSurface_ApplyTransform", hr);
 		return NULL;
 	}		
+	Py_INCREF(Py_None);
+	return Py_None;
+	}
+
+static char DirectDrawSurface_BltFill__doc__[] =
+""
+;
+static PyObject *
+DirectDrawSurface_BltFill(DirectDrawSurfaceObject *self, PyObject *args)
+	{
+	RECT rect;
+	DWORD ddcolor=0;
+	if (!PyArg_ParseTuple(args, "(iiii)|i",&rect.left,&rect.top,
+			&rect.right,&rect.bottom,&ddcolor))
+		return NULL;
+	DDBLTFX bltfx;
+	ZeroMemory(&bltfx,sizeof(bltfx));
+	bltfx.dwSize = sizeof(bltfx);
+	bltfx.dwFillColor = ddcolor;
+	HRESULT hr=self->pI->Blt(&rect,0,0,DDBLT_COLORFILL | DDBLT_WAIT,&bltfx);
 	Py_INCREF(Py_None);
 	return Py_None;
 	}
@@ -1041,6 +1061,7 @@ static struct PyMethodDef DirectDrawSurface_methods[] = {
 	{"GetColorMatch", (PyCFunction)DirectDrawSurface_GetColorMatch, METH_VARARGS, DirectDrawSurface_GetColorMatch__doc__},
 	{"GetPixelFormat", (PyCFunction)DirectDrawSurface_GetPixelFormat, METH_VARARGS, DirectDrawSurface_GetPixelFormat__doc__},
 	{"BltBlend", (PyCFunction)DirectDrawSurface_BltBlend, METH_VARARGS, DirectDrawSurface_BltBlend__doc__},
+	{"BltFill", (PyCFunction)DirectDrawSurface_BltFill, METH_VARARGS, DirectDrawSurface_BltFill__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
