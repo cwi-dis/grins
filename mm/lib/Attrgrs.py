@@ -259,6 +259,13 @@ attrgrs=(
 		'start',
 		]},
 
+	{'name':'synchronization',
+	'title':'Synchronization',
+	'attrs':[
+		'syncBehavior',
+		'syncBehaviorDefault',
+		]},
+
  	{'name':'webserver',
 	'title':'Webserver',
 	'attrs':[
