@@ -34,12 +34,7 @@ layout_name = ' SMIL '			# name of layout channel
 _opS = xmllib._opS
 _S = xmllib._S
 
-#coordre = re.compile(_opS + r'(?P<x0>\d+%?)' + _opS + r',' +
-#		     _opS + r'(?P<y0>\d+%?)' + _opS + r',' +
-#		     _opS + r'(?P<x1>\d+%?)' + _opS + r',' +
-#		     _opS + r'(?P<y1>\d+%?)' + _opS + r'$')
-coordre = re.compile(_opS + r'(((?P<pixel>\d+)(?!\.|%|\d))|((?P<percent>\d+(\.\d+)?)%))' + _opS )
-coordrewithsep = re.compile(_opS + r',' + _opS + r'(((?P<pixel>\d+)(?!\.|%|\d))|((?P<percent>\d+(\.\d+)?)%))' + _opS )
+coordre = re.compile(r'(((?P<pixel>\d+)(?!\.|%|\d))|((?P<percent>\d+(\.\d+)?)%))$')
 
 idref = re.compile(r'id\(' + _opS + r'(?P<id>' + xmllib._Name + r')' + _opS + r'\)')
 clock_val = (_opS +
@@ -3527,40 +3522,20 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	# or None if error
 
 	def __parseCoords(self, data):
-		l = []
-		res = coordre.match(data)
-		if not res:
-			self.syntax_error('syntax error in coords attribute')
+		if data is None:
 			return
-		endParse = res.end()
-		pixelvalue = res.group('pixel')
-		if pixelvalue is not None:
-			value = string.atoi(pixelvalue)
-		else:
-			percentvalue= res.group('percent')
-			value = string.atof(percentvalue) / 100.0
-		l.append(value)
-
-		while (endParse < len(data)):
-			res = coordrewithsep.match(data[endParse:])
-			if not res:
+		l = []
+		for val in map(string.strip, data.split(',')):
+			res = coordre.match(val)
+			if res is None:
 				self.syntax_error('syntax error in coords attribute')
 				return
-			startParse = endParse+res.start()
-			endParse = endParse+res.end()
-			# test in order to avoid an infinite loop
-			if startParse == endParse:
-				self.syntax_error('internal error !')
-				return
-
-			pixelvalue = res.group('pixel')
+			pixelvalue, percentvalue = res.group('pixel', 'percent')
 			if pixelvalue is not None:
-				value = string.atoi(pixelvalue)
+				value = int(pixelvalue)
 			else:
-				percentvalue= res.group('percent')
-				value = string.atof(percentvalue) / 100.0
+				value = float(percentvalue) / 100.0
 			l.append(value)
-
 		return l
 
 	def __link_attrs(self, attributes):
@@ -3686,10 +3661,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.syntax_error('Unknown shape type '+shape)
 
 		# coords attribute
-		coords = attributes.get('coords')
-		l = None
-		if coords is not None:
-			l = self.__parseCoords(coords)
+		l = self.__parseCoords(attributes.get('coords'))
 
 		if l is not None:
 			atype = ATYPE_NORMAL
