@@ -269,44 +269,48 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				SAVE_AS(callback = (self.saveas_callback, ())),
 				]
 			if features.EXPORT_REAL in features.feature_set:
-				self.publishcommandlist = self.publishcommandlist + [
+				self.publishcommandlist.extend([
 					EXPORT_G2(callback = (self.bandwidth_callback, ('real', self.export_REAL_callback))),
 					UPLOAD_G2(callback = (self.bandwidth_callback, ('real', self.upload_REAL_callback))),
-					]
+					])
 			if features.EXPORT_QT in features.feature_set:
-				self.publishcommandlist = self.publishcommandlist + [
+				self.publishcommandlist.extend([
 					EXPORT_QT(callback = (self.bandwidth_callback, ('qt', self.export_QT_callback))),
 					UPLOAD_QT(callback = (self.bandwidth_callback, ('qt', self.upload_QT_callback))),
-					]
+					])
 
 			if features.EXPORT_WMP in features.feature_set:
-				self.publishcommandlist = self.publishcommandlist + [
+				self.publishcommandlist.extend([
 					EXPORT_WMP(callback = (self.bandwidth_callback, ('wmp', self.export_WMP_callback))),
 ##					UPLOAD_WMP(callback = (self.bandwidth_callback, ('wmp', self.upload_WMP_callback))),
-					]
+					])
 			if features.EXPORT_HTML_TIME in features.feature_set:
-				self.publishcommandlist = self.publishcommandlist + [
+				self.publishcommandlist.extend([
 					EXPORT_HTML_TIME(callback = (self.export_HTML_TIME_callback,())),
-					]
+					])
 			if features.EXPORT_SMIL2 in features.feature_set:
-				self.publishcommandlist = self.publishcommandlist + [
+				self.publishcommandlist.extend([
 					EXPORT_SMIL(callback = (self.bandwidth_callback, ('smil', self.export_SMIL2_callback,))),
 					UPLOAD_SMIL(callback = (self.bandwidth_callback, ('smil', self.upload_SMIL2_callback,))),
 					EXPORT_PRUNE(callback = (self.saveas_callback, (1,))),
-					]
+					])
 			if features.EXPORT_SMIL1 in features.feature_set:
-				self.publishcommandlist = self.publishcommandlist + [
+				self.publishcommandlist.extend([
 					EXPORT_SMIL1(callback = (self.export_SMIL1_callback, ())),
-					]
+					])
 ##			if features.EXPORT_3GPP in features.feature_set:
-##				self.publishcommandlist = self.publishcommandlist + [
+##				self.publishcommandlist.extend([
 ##					EXPORT_3GPP(callback = (self.bandwidth_callback, ('xmt', self.export_3GPP_callback,))),
 ##					UPLOAD_3GPP(callback = (self.bandwidth_callback, ('xmt', self.upload_3GPP_callback,))),
-##					]
+##					])
 			if features.EXPORT_WINCE in features.feature_set:
-				self.publishcommandlist = self.publishcommandlist + [
+				self.publishcommandlist.extend([
 					EXPORT_WINCE(callback = (self.export_wince_callback, ())),
-					]
+					])
+			if features.CREATE_TEMPLATES in features.feature_set:
+				self.publishcommandlist.extend([
+					EXPORT_TEMPLATE(callback = (self.export_template_callback, ())),
+					])
 		else:
 			self.savecommandlist = self.publishcommandlist = []
 		import Help
@@ -841,6 +845,16 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				pass
 
 
+	def export_template_callback(self):
+		from cmif import findfile
+		self.exporttype = 'SMIL2'
+		dir = findfile(settings.get('templatedirs')[0])
+		dftfilename = ''
+		if self.filename:
+			utype, host, path, params, query, fragment = urlparse(self.filename)
+			dftfilename = os.path.split(MMurl.url2pathname(path))[-1]
+		windowinterface.FileDialog('Publish GRiNS template:', dir, 'application/x-grins-project', dftfilename, self.export_okcallback, None)
+
 	def export(self, exporttype):
 		self.exporttype = exporttype
 		self.askAndSave('Publish SMIL file:', 'application/smil', self.export_okcallback)
@@ -1130,8 +1144,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		url = MMurl.pathname2url(filename)
 		mimetype = MMmimetypes.guess_type(url)[0]
 		if exporting and mimetype != 'application/smil':
-			windowinterface.showmessage('Publish to SMIL (*.smi or *.smil) files only.')
-			return
+			if features.CREATE_TEMPLATES not in features.feature_set or mimetype != 'application/x-grins-project':
+				windowinterface.showmessage('Publish to SMIL (*.smi or *.smil) files only.')
+				return
 		if mimetype == 'application/smil':
 			if not exporting:
 				answer = windowinterface.GetOKCancel('GRiNS-specific information will be lost if you save your project as SMIL.')
@@ -1150,7 +1165,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 		if exporting:
 			exporttype = self.exporttype
-			grinsExt = 0
+			grinsExt = mimetype == 'application/x-grins-project'
 			copyfiles = 1
 			qtExt = 0
 			rpExt = 0
