@@ -38,6 +38,7 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		DisplayListView.init(self, rc, title=title, units=units, adornments=adornments, canvassize=canvassize,
 			commandlist=commandlist, bgcolor=bgcolor)
 		w, h = rc[2:]
+		self.setClientRect(w, h)
 		self.createDDLayer(w, h)
 		self._viewport = win32window.Viewport(self, 0, 0, w, h, bgcolor)
 
@@ -50,7 +51,7 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 
 	def OnCreate(self,params):
 		DisplayListView.OnCreate(self, params)
-#		self.createDDLayer()
+		#self.testReBar()
 
 	def OnDestroy(self, msg):		
 		if self._usesLightSubWindows:
@@ -217,5 +218,81 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		if self._viewport:
 			self._viewport.paint(rc, exclwnd)
 		
+	def setClientRect(self, w, h):
+		w1, h1 = self.GetClientRect()[2:]
+		dw = w - w1
+		dh = h - h1
+		if dw!=0 or dh!=0:
+			frame = self.GetParent()
+			l, t, r, b = frame.GetWindowRect()
+			flags=win32con.SWP_NOMOVE | win32con.SWP_NOZORDER 		
+			frame.SetWindowPos(0, (0,0,r-l+dw,b-t+dh), flags)
+
+	# XXX: UI Test Code
+	def testReBar(self):
+		# toolbar frame and default cmd target
+		frame = self.GetParent()
+
+		# cmd target preference
+		cmdtarget = frame.GetMDIFrame()
+		
+		rebar = win32ui.CreateReBar()
+		rebar.CreateWindow(frame)
+
+		# std toolbar imports
+		import ToolbarTemplate, Toolbars, usercmd, usercmdui, afxexttb
+
+		# create toolbar from template
+		name, command, barid, resid, candrag, buttonlist = ToolbarTemplate.PLAYER_TEMPLATE
+		self._toolbar = bar = Toolbars.GRiNSToolbar(frame, name, barid, resid, candrag)
+		
+		# populate toolbar
+		nbuttons = len(buttonlist)
+		bar.SetButtons(nbuttons)
+		buttonindex = 0
+		for button in buttonlist:
+			if button.type == 'button':
+				id = usercmdui.usercmd2id(button.cmdid)
+				bar.SetButtonInfo(buttonindex, id, afxexttb.TBBS_BUTTON, button.arg)
+			elif button.type == 'separator':
+				bar.SetButtonInfo(buttonindex, afxexttb.ID_SEPARATOR, afxexttb.TBBS_SEPARATOR, button.width)
+			elif button.type == 'pulldown':
+				pass #self._createPulldown(bar, buttonindex, button.name)
+			else:
+				raise 'Unknown toolbar item type', button.type
+			buttonindex = buttonindex+1
+
+		rebar.AddBar(bar)
+
+		# show toolbar and redirect commands
+		for button in buttonlist:
+			if button.type == 'button':
+				id = usercmdui.usercmd2id(button.cmdid)
+				frame.HookCommand(cmdtarget.OnUserCmd, id)
+				frame.HookCommandUpdate(cmdtarget.OnUpdateCmdEnable,id)
+
+		import grinsRC, afxres, commctrl
+		AFX_IDW_DIALOGBAR = 0xE805
+		rbbs = commctrl.RBBS_GRIPPERALWAYS | commctrl.RBBS_FIXEDBMP
+
+		for i in range(1,6):
+			dlgBar = win32ui.CreateDialogBar()
+			dlgBar.CreateWindow(frame, grinsRC.IDD_TEST1, afxres.CBRS_ALIGN_BOTTOM, AFX_IDW_DIALOGBAR+1+i)
+			if i == 1:
+				rebar.AddBar(dlgBar, '', rbbs | commctrl.RBBS_BREAK)
+			else:
+				rebar.AddBar(dlgBar, '', rbbs)
+
+		for i in range(1,6):
+			dlgBar = win32ui.CreateDialogBar()
+			dlgBar.CreateWindow(frame, grinsRC.IDD_TEST2, afxres.CBRS_ALIGN_BOTTOM, AFX_IDW_DIALOGBAR+6+i)
+			if i == 1:
+				rebar.AddBar(dlgBar, 'Test %d' % i, rbbs | commctrl.RBBS_BREAK)
+			else:
+				rebar.AddBar(dlgBar, 'Test %d' % i, rbbs)
+
+		n = rebar.GetBandCount()
+		for i in range(n):
+			rebar.MinimizeBand(i)
 
 
