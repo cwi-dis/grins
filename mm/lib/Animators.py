@@ -534,7 +534,7 @@ class IntTupleAnimator(FloatTupleAnimator):
 # 'animateMotion' element animator
 class MotionAnimator(Animator):
 	def __init__(self, attr, domval, path, dur, mode='paced', 
-			times=None, splines=None, accumulate='none', additive='replace'):
+			times=None, splines=None, accumulate='none', additive='sum'):
 		self._path = path
 
 		# get values from path to support modes other than paced
@@ -703,11 +703,13 @@ class EffectiveAnimator:
 					base_window = chan._attrdict.get('base_window')
 					if base_window == regionname:
 						self.__regionContents.append(chan)
-
-		coordinates = ch.attrdict.get('base_winoff')
+		
+		mmregion = self.__region._attrdict
+		coordinates = mmregion.GetPresentationAttr('base_winoff')
+		print 'coordinates',coordinates
 		if coordinates and attr in ('position','left','top','width','height','right','bottom'):
 			x, y, w, h = coordinates
-			units = ch.attrdict.get('units')
+			units = ch.get('units')
 			if attr=='position':
 				x, y = value
 				newcoordinates = x, y, w, h
@@ -731,7 +733,7 @@ class EffectiveAnimator:
 		else:
 			print 'update',attr,'of region',regionname,'to',value,'(unsupported)'
 
-		ch.SetPresentationAttr(attr, value)
+		mmregion.SetPresentationAttr(attr, value)
 		if debug: 
 			print 'update',attr,'of region',regionname,'to',value
 
@@ -1519,10 +1521,14 @@ class AnimateElementParser:
 		if ctx.channeldict.has_key(te):
 			# region
 			targchan = ctx.getchannel(te)
-			newnode = MMNode('imm',ctx,ctx.newuid())
-			newnode.attrdict = targchan.attrdict.copy()
-			newnode.attrdict['channel'] = te
-			newnode.attrdict['tag'] = 'region'
+			if hasattr(targchan,'_vnode'):
+				newnode = targchan._vnode
+			else:
+				newnode = MMNode('imm',ctx,ctx.newuid())
+				newnode.attrdict = targchan.attrdict.copy()
+				newnode.attrdict['channel'] = te
+				newnode.attrdict['tag'] = 'region'
+				targchan._vnode = newnode
 			anim.targetnode = newnode
 		elif ctx.transitions.has_key(te):
 			# transition
@@ -1538,14 +1544,19 @@ class AnimateElementParser:
 			area = root.GetChildWithArea(te)
 			if area:
 				parent, id, type, args, times = area
-				newnode = MMNode('imm', ctx, ctx.newuid())
-				newnode.attrdict = parent.attrdict.copy()
-				newnode.attrdict['tag'] = 'area'
-				newnode.attrdict['coords'] = args
-				newnode.attrdict['name'] = id
-				newnode.attrdict['parent'] = parent
-				newnode.attrdict['type'] = type
-				newnode.attrdict['times'] = times
+				vnodename = '_vnode%s' % te
+				if hasattr(parent,vnodename):
+					newnode = getattr(parent, vnodename)
+				else:
+					newnode = MMNode('imm', ctx, ctx.newuid())
+					newnode.attrdict = parent.attrdict.copy()
+					newnode.attrdict['tag'] = 'area'
+					newnode.attrdict['coords'] = args
+					newnode.attrdict['name'] = id
+					newnode.attrdict['parent'] = parent
+					newnode.attrdict['type'] = type
+					newnode.attrdict['times'] = times
+					parent.__dict__[vnodename] = newnode
 				anim.targetnode = newnode
 	
 	def __splitf(self, arg, f=string.atof):
