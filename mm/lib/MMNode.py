@@ -529,6 +529,7 @@ class MMNode:
 		self.looping_body_self = None
 		self.curloopcount = 0
 		self.infoicon = ''
+		self.errormessage = None
 
 	#
 	# Return string representation of self
@@ -1821,11 +1822,13 @@ class MMNode:
 	# method for maintaining node's info-icon state when the HierarchyView is
 	# not active
 	#
-	def set_infoicon(self, icon):
+	def set_infoicon(self, icon, msg=None):
 		self.infoicon = icon
+		self.errormessage = msg
 		
 	def clear_infoicon(self):
 		self.infoicon = ''
+		self.errormessage = None
 		for ch in self.children:
 			ch.clear_infoicon()
 
