@@ -344,6 +344,7 @@ sound_player(self)
 
 #ifdef __sgi
 		if (n == 0) {
+#if 0
 #ifdef _SYSTYPE_SVR4		/* IRIX 5.2 */
 			/* there's a bug in the IRIX 5.2 implementation */
 			/* of ALsetfillpoint, hence the division by 2 */
@@ -351,6 +352,7 @@ sound_player(self)
 				ALsetfillpoint(PRIV->s_port,
 					       ALgetqueuesize(config) / 2);
 			else
+#endif
 #endif
 			ALsetfillpoint(PRIV->s_port, ALgetqueuesize(config));
 		} else

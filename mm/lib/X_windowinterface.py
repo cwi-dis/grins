@@ -91,7 +91,6 @@ class _Toplevel:
 				  X.DoRed|X.DoGreen|X.DoBlue))
 		self._colormap.StoreColors(xcolors)
 		self._main.RealizeWidget()
-##		self._main.SetWindowColormap(self._colormap)
 
 	def close(self):
 		if debug: print 'Toplevel.close()'
@@ -167,6 +166,17 @@ class _Window:
 		if toplevel._win_lock:
 			toplevel._win_lock.release()
 		self._init2()
+ 
+	def __repr__(self):
+		if self._parent_window == toplevel:
+			top = 'toplevel '
+			val = self._shell.GetValues(['title'])
+			title = ' (title='+val['title']+')'
+		else:
+			top = ''
+			title = ''
+		return '<%s_Window instance at %x%s>' % \
+		       (top, id(self), title)
 
 	def _init2(self):
 		if debug: print `self`+'.init2()'
@@ -176,18 +186,8 @@ class _Window:
 		self._xfgcolor = self._convert_color(self._fgcolor)
 		if toplevel._win_lock:
 			toplevel._win_lock.acquire()
-		self._form.SetValues({'background': self._xbgcolor,
-			  'foreground': self._xfgcolor,
-			  'borderWidth': 0,
-			  'marginWidth': 0,
-			  'marginHeight': 0,
-			  'marginTop': 0,
-			  'marginBottom': 0,
-			  'shadowThickness': 0})
-		val = self._form.GetValues(['width', 'height'])
-		self._width = val['width']
-		self._height = val['height']
 		self._subwindows = []
+		self._subwindows_closed = 0
 		self._displaylists = []
 		self._active_display_list = None
 		self._redraw_func = None
@@ -195,14 +195,7 @@ class _Window:
 		self._toplevel = self._parent_window._toplevel
 		self._menu = None
 		self._accelerators = {}
-		self._gc = self._form.CreateGC({
-			  'background': self._xbgcolor,
-			  'foreground': self._xbgcolor})
-		self._form.RealizeWidget()
-##		self._form.SetWindowColormap(self._colormap)
-		self._form.AddCallback('exposeCallback', self._expose_callback, None)
-		self._form.AddCallback('resizeCallback', self._resize_callback, None)
-		self._form.AddCallback('inputCallback', self._input_callback, None)
+		self._do_open_win()
 		if toplevel._win_lock:
 			toplevel._win_lock.release()
 		self._closecallbacks = []
@@ -221,7 +214,8 @@ class _Window:
 		del self._displaylists
 		if toplevel._win_lock:
 			toplevel._win_lock.acquire()
-		self._form.DestroyWidget()
+		if self._form:
+			self._form.DestroyWidget()
 		del self._form
 		parent = self._parent_window
 		if parent == toplevel:
@@ -233,20 +227,63 @@ class _Window:
 		del self._gc
 		if toplevel._win_lock:
 			toplevel._win_lock.release()
-		# let our parent window inherit events meant for us
-##		dummy = testevent()	# read all pending events
-##		q = []
-##		for win, ev, val in event._queue:
-##			if win == self:
-##				if parent in (None, toplevel):
-##					# delete event if we have no parent:
-##					continue
-##				win = parent
-##			q.append((win, ev, val))
-##		event._queue = q
 
 	def is_closed(self):
 		return not hasattr(self, '_form')
+
+	def _close_win(self):
+		# close the X window connected to this instance
+		if self._parent_window == toplevel:
+			raise error, 'can\'t close top-level window'
+		form = self._form
+		form.RemoveCallback('exposeCallback', self._expose_callback,
+				    None)
+		form.RemoveCallback('resizeCallback', self._resize_callback,
+				    None)
+		form.RemoveCallback('inputCallback', self._input_callback,
+				    None)
+		form.UnmanageChild()
+		form.DestroyWidget()
+		self._form = None
+		self._gc = None
+
+	def _open_win(self):
+		# re-open an X window for this instance
+		if self.is_closed():
+			raise error, 'window already closed'
+		if self._form is not None:
+			raise error, 'window not closed'
+		pwin = self._parent_window
+		x, y, w, h = self._sizes
+		x, y, w, h = pwin._convert_coordinates(x, y, w, h)
+		self._xbgcolor = self._convert_color(self._bgcolor)
+		self._xfgcolor = self._convert_color(self._fgcolor)
+		self._form = pwin._form.CreateManagedWidget('drawingArea',
+			Xm.DrawingArea,
+			{'width': w, 'height': h, 'x': x, 'y': y,
+			 'colormap': self._colormap,
+			 'marginHeight': 0, 'marginWidth': 0})
+		self._do_open_win()
+
+	def _do_open_win(self):
+		form = self._form
+		form.SetValues({'background': self._xbgcolor,
+				'foreground': self._xfgcolor,
+				'borderWidth': 0,
+				'marginWidth': 0,
+				'marginHeight': 0,
+				'marginTop': 0,
+				'marginBottom': 0,
+				'shadowThickness': 0})
+		val = form.GetValues(['width', 'height'])
+		self._width = val['width']
+		self._height = val['height']
+		self._gc = form.CreateGC({'background': self._xbgcolor,
+						'foreground': self._xbgcolor})
+		form.RealizeWidget()
+		form.AddCallback('exposeCallback', self._expose_callback, None)
+		form.AddCallback('resizeCallback', self._resize_callback, None)
+		form.AddCallback('inputCallback', self._input_callback, None)
 
 	def showwindow(self):
 		# dummy for now
@@ -255,6 +292,19 @@ class _Window:
 	def dontshowwindow(self):
 		# dummy for now
 		pass
+
+	def _close_subwins(self):
+		for win in self._subwindows:
+			win._close_win()
+		self._subwindows_closed = 1
+
+	def _open_subwins(self):
+		if self.is_closed():
+			raise error, 'window already closed'
+		for win in self._subwindows:
+			if not win.is_closed():
+				win._open_win()
+		self._subwindows_closed = 0
 
 	def _call_on_close(self, func):
 		if not func in self._closecallbacks:
@@ -320,6 +370,8 @@ class _Window:
 
 	def _expose_callback(self, widget, client_data, call_data, *rest):
 		if debug: print `self`+'._expose_callback()'
+		if not self._form:
+			return		# why were we called anyway?
 		if call_data:
 			import struct
 			event = struct.unpack('i', call_data[4:8])[0]
@@ -328,6 +380,12 @@ class _Window:
 			if decoded_event.count > 0:
 				if debug: print `self`+'._expose_callback() -- count > 0'
 				return
+		if self._subwindows_closed:
+			if debug: print 'draw subwindows'
+			self._gc.FillRectangle(0, 0, self._width, self._height)
+			for win in self._subwindows:
+				x, y, w, h = win._sizes
+				self._gc.DrawRectangle(x, y, w, h)
 		if self._redraw_func:
 			self._redraw_func()
 		elif self._active_display_list:
@@ -450,7 +508,7 @@ class _Window:
 			raise error, 'can only settitle at top-level'
 		if toplevel._win_lock:
 			toplevel._win_lock.acquire()
-		self._main.SetValues({'title': title})
+		self._shell.SetValues({'title': title})
 		if toplevel._win_lock:
 			toplevel._win_lock.release()
 
@@ -660,6 +718,14 @@ class _Window:
 	def unregister(self, ev):
 		event.unregister(self, ev)
 
+	def sizebox(self, coordinates, constrainx, constrainy):
+		showmessage('windowinterface.sizebox not implmented')
+		return coordinates
+
+	def movebox(self, coordinates, constrainx, constrainy):
+		showmessage('windowinterface.movebox not implmented')
+		return coordinates
+
 	def create_menu(self, title, list):
 		menu = Xm.CreatePopupMenu(self._form, 'menu',
 				{'colormap': toplevel._default_colormap})
@@ -683,7 +749,11 @@ def _create_menu(widget, acc, list):
 			continue
 		accelerator, label, callback = entry
 		if type(callback) is type([]):
-			button = _create_submenu(widget, acc, label, callback)
+			button = menu.CreateManagedWidget(label,
+							  Xm.CascadeButton, {})
+			submenu = Xm.CreatePulldownMenu(menu, 'submenu', {})
+			button.subMenuId = submenu
+			_create_menu(submenu, acc, callback)
 		else:
 			if type(callback) is not type(()):
 				callback = (callback, (label,))
@@ -789,12 +859,16 @@ class _DisplayList:
 			raise error, 'displaylist already closed'
 		w = self._window
 		new = _DisplayList(w, self._bgcolor)
+		ngc = new._gc
+		ogc = self._gc
 		if toplevel._win_lock:
 			toplevel._win_lock.acquire()
 		self._pixmap.CopyArea(new._pixmap, None, 0, 0, w._width, w._height, 0, 0)
 		# somehow copy GC too
-		for name in self._gc.__members__:
-			eval('new._gc.' + name + ' = self._gc.' + name)
+		ngc.foreground = ogc.foreground
+		ngc.line_width = ogc.line_width
+		if self._font:
+			ngc.SetFont(self._font)
 		if toplevel._win_lock:
 			toplevel._win_lock.release()
 		# copy all instance variables
@@ -1286,7 +1360,6 @@ class _Event:
 	def _timeout_callback(self, client_data, id):
 		if debug: print 'event._timeout_callback'
 		self._timeout_called = 1
-##		Xlib.PutBackEvent(toplevel._main.Display(), '\0'*96)
 
 	def _input_callback(self, client_data, fd, id):
 		if debug: print 'event._input_callback'
@@ -1500,7 +1573,7 @@ class _Event:
 		self._select_dict[fd] = (cb, arg)
 		self.setfd(fd)
 
-	def startmodal(self):
+	def startmodal(self, window):
 		self._modal = 1
 
 	def endmodal(self):
@@ -1638,7 +1711,6 @@ def newwindow(x, y, w, h, title):
 	return toplevel.newwindow(x, y, w, h, title)
 
 def newcmwindow(x, y, w, h, title):
-	print 'DBG: new top cmwindow'
 	return toplevel.newcmwindow(x, y, w, h, title)
 
 def close():
@@ -1722,8 +1794,8 @@ def clean_callbacks():
 def select_setcallback(fd, cb, arg):
 	event.select_setcallback(fd, cb, arg)
 
-def startmodal():
-	event.startmodal()
+def startmodal(window):
+	event.startmodal(window)
 
 def endmodal():
 	event.endmodal()
@@ -1734,107 +1806,136 @@ def mainloop():
 def canceltimer(id):
 	event.canceltimer(id)
 
-class _Dialogs:
-	def __init__(self):
+class Dialog:
+	def __init__(self, prompt, grab, list):
+		self._callbacks = {}
+		self._menu = None
+		self._grab = grab
+		if grab:
+			dialogStyle = Xmd.DIALOG_PRIMARY_APPLICATION_MODAL
+		else:
+			dialogStyle = Xmd.DIALOG_MODELESS
+		self._form = Xm.CreateFormDialog(toplevel._main, 'popup',
+						 {'allowOverlap': 0,
+						  'dialogStyle': dialogStyle})
+		self._form.AddEventHandler(X.ButtonPressMask, X.FALSE,
+					   self._post_menu, None)
+		label = self._form.CreateManagedWidget('prompt', Xm.Label,
+				{'leftAttachment': Xmd.ATTACH_FORM,
+				 'rightAttachment': Xmd.ATTACH_FORM,
+				 'topAttachment': Xmd.ATTACH_FORM})
+		label.labelString = prompt
+		label.alignment = Xmd.ALIGNMENT_CENTER
+		rowcolumn = self._form.CreateManagedWidget(
+			'rowcolumn', Xm.RowColumn,
+			{'leftAttachment': Xmd.ATTACH_FORM,
+			 'rightAttachment': Xmd.ATTACH_FORM,
+			 'topAttachment': Xmd.ATTACH_WIDGET,
+			 'topWidget': label,
+			 'orientation': Xmd.HORIZONTAL,
+			 'packing': Xmd.PACK_COLUMN,
+			 'entryAlignment': Xmd.ALIGNMENT_CENTER})
+		for entry in list:
+			if type(entry) == type(()):
+				accelerator, label, callback = entry
+			else:
+				accelerator, label, callback = '', entry, None
+			if callback and type(callback) is not type(()):
+				callback = (callback, (label,))
+			button = rowcolumn.CreateManagedWidget('button',
+					Xm.PushButton,
+					{'labelString': label})
+			button.AddCallback('activateCallback',
+					   self._callback, label)
+			self._callbacks[label] = callback
+		self._form.ManageChild()
+
+	def __del__(self):
+		self.close()
+
+	def _post_menu(self, w, client_data, call_data):
+		if not self._menu:
+			return
+		decoded_event = XEvent.mkevent(call_data)
+		if decoded_event.button == X.Button3:
+			Xm.MenuPosition(self._menu, call_data)
+			self._menu.ManageChild()
+
+	def _callback(self, w, client_data, call_data):
+		callback = self._callbacks[client_data]
+		if callback:
+			apply(callback)
+		if self._grab:
+			self._form.UnmanageChild()
+
+	def create_menu(self, title, list):
+		menu = Xm.CreatePopupMenu(self._form, 'menu',
+				{'colormap': toplevel._default_colormap})
+		if title:
+			dummy = menu.CreateManagedWidget(title, Xm.Label, {})
+			dummy = menu.CreateManagedWidget('separator',
+							 Xm.Separator, {})
+		self._accelerators = {}
+		_create_menu(menu, self._accelerators, list)
+		self._menu = menu
+
+	def close(self):
+		self._form.UnmanageChild()
+		self._form.DestroyWidget()
+		del self._form
+		del self._menu
+		del self._callbacks
+
+	def is_closed(self):
+		return not hasattr(self, '_form')
+
+def showmessage(text):
+	dummy = Dialog(text, 1, ['Done'])
+
+class _Question(Dialog):
+	def __init__(self, text):
 		self.answer = None
+		Dialog.__init__(self, text, 1,
+				[('', 'Done', (self._ok_callback, ())),
+				 ('', 'Cancel', (self._cancel_callback, ()))])
 
-	def _callback(self):
-		event.endmodal()
-		event._checktime()
-		event._queue.append((None, 0, None))
-		dummy = Xt.AddTimeOut(0, event._timeout_callback, None)
-
-	def _ok_callback(self, *args):
-		self.answer = 1
-		self._callback()
-
-	def _cancel_callback(self, *args):
-		self.answer = 0
-		self._callback()
-
-	def _after_create(self, text):
-		self.dialog.SetValues({'messageString': text})
-		Xm.MessageBoxGetChild(self.dialog, Xmd.DIALOG_HELP_BUTTON).UnmanageChild()
-		self.dialog.AddCallback('okCallback', self._ok_callback, None)
-		self.dialog.AddCallback('cancelCallback', self._cancel_callback, None)
-
-	def _run(self):
-		event.startmodal()
-		self.dialog.ManageChild()
+	def run(self):
+		event.startmodal(None)
 		while self.answer is None:
 			dummy = event.readevent()
+		event.endmodal()
 		return self.answer
 
-	def showmessage(self, text):
-		self.dialog = Xm.CreateErrorDialog(toplevel._main, 'popup', {})
-		self._after_create(text)
-		Xm.MessageBoxGetChild(self.dialog, Xmd.DIALOG_CANCEL_BUTTON).UnmanageChild()
-		if event._looping:
-			# display window but don't wait for it to disappear
-			# while it's up we don't do anything but redraws
-			event.startmodal()
-			self.dialog.ManageChild()
-		else:
-			answer = self._run()
+	def _ok_callback(self):
+		self.answer = 1
 
-	def showquestion(self, text):
-		self.dialog = Xm.CreateQuestionDialog(toplevel._main, 'popup', {})
-		self._after_create(text)
-		return self._run()
-			
-def showmessage(text):
-	_Dialogs().showmessage(text)
+	def _cancel_callback(self):
+		self.answer = 0
 
 def showquestion(text):
-	return _Dialogs().showquestion(text)
+	return _Question(text).run()
 
-class _MultChoice:
+class _MultChoice(Dialog):
 	def __init__(self, prompt, msg_list, defindex):
 		self.answer = None
-		self.form = Xm.CreateFormDialog(toplevel._main, 'popup',
-			  {'allowOverlap': 0,
-			   'dialogStyle': Xmd.DIALOG_PRIMARY_APPLICATION_MODAL})
-		label = self.form.CreateManagedWidget('prompt', Xm.Label,
-			  {'leftAttachment': Xmd.ATTACH_FORM,
-			   'rightAttachment': Xmd.ATTACH_FORM,
-			   'topAttachment': Xmd.ATTACH_FORM})
-		label.labelString = prompt
-		list = self.form.CreateManagedWidget('list', Xm.List,
-			  {'leftAttachment': Xmd.ATTACH_FORM,
-			   'rightAttachment': Xmd.ATTACH_FORM,
-			   'topAttachment': Xmd.ATTACH_WIDGET,
-			   'topWidget': label})
-		list.SetValues({'selectionPolicy': Xmd.SINGLE_SELECT,
-			  'visibleItemCount': len(msg_list)})
-		for i in range(len(msg_list)):
-			answer = msg_list[i]
-			if type(answer) == type(()):
-				answer = answer[0]
-			Xm.ListAddItem(list, answer, i+1)
-		list.AddCallback('singleSelectionCallback',
-			  self._sel_callback, msg_list)
+		self.msg_list = msg_list
+		list = []
+		for msg in msg_list:
+			list.append('', msg, (self._callback, (msg,)))
+		Dialog.__init__(self, prompt, 1, list)
 
-	def multchoice(self):
-		event.startmodal()
-		self.form.ManageChild()
+	def run(self):
+		event.startmodal(None)
 		while self.answer is None:
 			dummy = event.readevent()
+		event.endmodal()
 		return self.answer
 
-	def _sel_callback(self, widget, msg_list, call_data):
-		import struct
-		fmt = 'illiiliii'
-		size = struct.calcsize(fmt)
-		reason, ev, xmitem, item_length, item_position, \
-			  selected_items, selected_item_count, \
-			  selected_item_positions, selection_type = \
-			  struct.unpack(fmt, call_data[:size])
-		self.answer = item_position - 1
-		self.form.UnmanageChild()
-		event.endmodal()
-		event._checktime()
-		event._queue.append((None, 0, None))
-		dummy = Xt.AddTimeOut(0, event._timeout_callback, None)
+	def _callback(self, msg):
+		for i in range(len(self.msg_list)):
+			if msg is self.msg_list[i]:
+				self.answer = i
+				return
 
 def multchoice(prompt, list, defindex):
-	return _MultChoice(prompt, list, defindex).multchoice()
+	return _MultChoice(prompt, list, defindex).run()
