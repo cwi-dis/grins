@@ -93,7 +93,7 @@ class _Toplevel:
 
 	def newwindow(self, x, y, w, h, title):
 		if debug: print 'Toplevel.newwindow'+`x, y, w, h, title`
-		window = _Window().init(self, x, y, w, h, title)
+		window = _Window(1, self, x, y, w, h, title)
 		_event._qdevice()
 		dummy = testevent()
 		return window
@@ -844,7 +844,10 @@ class _DisplayList:
 			  newy - oldy + self._fontheight - self._baseline
 
 class _Window:
-	def init(self, parent, x, y, w, h, title):
+	def __init__(self, is_toplevel, parent, x, y, w, h, title):
+		self._parent_window = parent
+		if not is_toplevel:
+			return
 		if _toplevel._win_lock:
 			_toplevel._win_lock.acquire()
 		try:
@@ -872,8 +875,7 @@ class _Window:
 		if noborder:
 			gl.noborder()
 		gl.winconstraints()
-		self._parent_window = parent
-		return self._init2()
+		self._init2()
 
 ##	def __repr__(self):
 ##		s = '<_Window instance, window-id=' + `self._window_id`
@@ -915,7 +917,6 @@ class _Window:
 			self._toplevel = self._parent_window._toplevel
 		else:
 			self._toplevel = self
-		return self
 
 	def newwindow(self, *coordinates):
 		if debug: print `self`+'.newwindow'+`coordinates`
@@ -934,13 +935,13 @@ class _Window:
 		wx, wy = wx - tx, wy - ty
 		x0, y0 = x0 + wx, y0 + wy
 		x1, y1 = x1 + wx, y1 + wy
-		new_window = _Window()
+		new_window = _Window(0, self, 0, 0, 0, 0, 0)
 		new_window._window_id = gl.swinopen(self._window_id)
 		gl.winposition(x0, x1, y0, y1)
 		new_window._parent_window = self
 		new_window._sizes = x, y, w, h
 		new_window._toplevel = self._toplevel
-		new_window = new_window._init2()
+		new_window._init2()
 		dummy = testevent()
 		return new_window
 
