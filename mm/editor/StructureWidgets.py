@@ -683,7 +683,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if self.mother.thumbnails and channel_type == 'image':
 			if not image:
 				return None
-			url = node.context.findurl(url)
+			url = node.GetFile()
 			try:
 				return MMurl.urlretrieve(url)[0]
 			except IOError, arg:
