@@ -1507,7 +1507,7 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\GRiNSP_SV2.exe
   Destination=%MAINDIR%\GRiNSP_SV2.exe
-  Flags=0001000010000011
+  Flags=0000000010000011
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\grinspapi.pyd
