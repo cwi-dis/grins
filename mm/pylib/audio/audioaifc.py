@@ -168,6 +168,7 @@ class reader:
 		self.__version = None
 		self.__markers = []
 		self.__soundpos = 0
+		self.__framesread = 0
 		# start parsing
 		form = file.read(4)
 		if form != 'FORM':
@@ -303,7 +304,7 @@ class reader:
 		return self.__format
 
 	def getnframes(self):
-		return self.__nframes
+		return self.__nframes - self.__framesread
 
 	def getframerate(self):
 		return self.__framerate
@@ -314,18 +315,23 @@ class reader:
 			nbytes = (nframes / fmt.getfpb()) * fmt.getblocksize()
 		else:
 			nbytes = -1
-		return self.__ssnd_chunk.read(nbytes)
+		data = self.__ssnd_chunk.read(nbytes)
+		nframes = len(data) * fmt.getfpb() / fmt.getblocksize()
+		self.__framesread = self.__framesread + nframes
+		return data
 
 	def rewind(self):
 		chunk = self.__ssnd_chunk
 		chunk.rewind()
 		dummy = chunk.read(8 + self.__ssnd_offset)
+		self.__framesread = 0
 
 	def getpos(self):
-		return self.__ssnd_chunk.getpos()
+		return self.__ssnd_chunk.getpos(), self.__framesread
 
-	def setpos(self, pos):
+	def setpos(self, (pos, framesread)):
 		self.__ssnd_chunk.setpos(pos)
+		self.__framesread = framesread
 
 	def getmarkers(self):
 		return self.__markers
