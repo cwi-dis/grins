@@ -490,7 +490,7 @@ class MMSyncArc:
 				src = src + '+%g' % self.delay
 			else:
 				src = src + '%g' % self.delay
-		dst = `self.delay`
+		dst = `self.dstnode`
 		if self.isstart:
 			dst = dst + '.begin'
 		else:
@@ -524,6 +524,9 @@ class MMNode_body:
 	def stoplooping(self):
 		pass
 	
+	def cleanup_sched(self):
+		self.parent.cleanup_sched(self)
+
 class MMNode_pseudopar_body(MMNode_body):
 	"""Helper for RealPix nodes with captions, common part"""
 
@@ -596,6 +599,7 @@ class MMNode:
 		self.srdict = {}
 		self.playing = MMStates.IDLE
 		self.events = {}	# events others are interested in
+		self.sched_children = []
 
 	#
 	# Return string representation of self
@@ -1164,16 +1168,14 @@ class MMNode:
 		if seeknode is not None and not self.IsAncestorOf(seeknode):
 			raise CheckError, 'Seeknode not in tree!'
 		self.events = {}
-		self.eventdst = {}
 		self.sync_from = ([],[])
 		self.sync_to = ([],[])
-		self.sched_children = []
 		self.realpix_body = None
 		self.caption_body = None
 		self.force_switch_choice = 0
+		self.wtd_children = []
 		if self.type in playabletypes:
 			return
-		self.wtd_children = []
 		if self.type == 'seq':
 			for c in self.children:
 				if seeknode is not None and \
@@ -1206,9 +1208,7 @@ class MMNode:
 	def _FastPruneTree(self):
 		self.sync_from = ([],[])
 		self.sync_to = ([],[])
-		self.sched_children = []
 		self.events = {}
-		self.eventdst = {}
 		self.realpix_body = None
 		self.caption_body = None
 		self.force_switch_choice = 0
@@ -1674,8 +1674,7 @@ class MMNode:
 					       body_scheddone_actions,
 					       body_terminate_events,
 					       wtd_children,
-					       self.looping_body_self,
-					       1)
+					       self.looping_body_self)
 
 		# When the loop has started we start the body
 		srlist.append( ([(LOOPSTART_DONE, self)], body_sched_actions) )
@@ -1701,9 +1700,35 @@ class MMNode:
 				srdict[event] = self.srdict # or just self?
 		return [], [], srdict
 
+	def cleanup_sched(self, body = None):
+		if self.type != 'par':
+			return
+		if body is None:
+			if self.looping_body_self:
+				return
+		for child in self.wtd_children:
+			beginlist = MMAttrdefs.getattr(child, 'beginlist')
+			if not beginlist:
+				for i in range(len(body.sched_children)):
+					arc = body.sched_children[i]
+					if arc.dstnode is child and \
+					   arc.isstart and \
+					   arc.event == 'begin' and \
+					   arc.delay == 0 and \
+					   arc.marker is None:
+						del body.sched_children[i]
+						break
+			else:
+				for arc in beginlist:
+					if arc.srcnode is None or \
+					   arc.srcnode is self:
+						refnode = body
+					else:
+						refnode = arc.srcnode
+					refnode.sched_children.remove(arc)
+
 	def gensr_body_par(self, sched_actions, scheddone_actions,
-			   terminate_events, wtd_children, self_body=None,
-			   laterloop=0):
+			   terminate_events, wtd_children, self_body=None):
 		srdict = {}
 		srlist = []
 		schedstop_actions = []
@@ -1719,8 +1744,7 @@ class MMNode:
 			chname = MMAttrdefs.getattr(child, 'name')
 			beginlist = MMAttrdefs.getattr(child, 'beginlist')
 			if not beginlist:
-				if not laterloop:
-					self_body.sched_children.append(MMSyncArc(child, 'begin', event = 'begin', delay = 0.0))
+				self_body.sched_children.append(MMSyncArc(child, 'begin', event = 'begin', delay = 0.0))
 				schedule = 1
 			else:
 				schedule = 0
@@ -1730,8 +1754,7 @@ class MMNode:
 						refnode = self_body
 					else:
 						refnode = arc.srcnode
-					if not laterloop:
-						refnode.sched_children.append(arc)
+					refnode.sched_children.append(arc)
 					if arc.event == 'begin' and \
 					   refnode is self_body and \
 					   arc.marker is None and \
@@ -1776,8 +1799,7 @@ class MMNode:
 		return sched_actions, schedstop_actions, srdict
 
 	def gensr_body_seq(self, sched_actions, scheddone_actions,
-			   terminate_events, wtd_children, self_body=None,
-			   laterloop=0):
+			   terminate_events, wtd_children, self_body=None):
 		srdict = {}
 		srlist = []
 		schedstop_actions = []
@@ -1830,8 +1852,7 @@ class MMNode:
 		return sched_actions, schedstop_actions, srdict
 
 	def gensr_body_realpix(self, sched_actions, scheddone_actions,
-			       terminate_events, wtd_children, self_body=None,
-			       laterloop=0):
+			       terminate_events, wtd_children, self_body=None):
 		srdict = {}
 		srlist = []
 		schedstop_actions = []
@@ -2084,9 +2105,6 @@ class MMNode:
 	#
 	def SetArcDst(self, side, aid):
 		self.sync_from[side].append((SYNC_DONE, aid))
-
-	def SetEventDst(self, side, aid):
-		self.eventdst[aid] = side
 
 	#
 	# method for maintaining armed status when the ChannelView is
