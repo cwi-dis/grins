@@ -101,7 +101,13 @@ def getallexternal(attrname):
 	if not _mappings.has_key(attrname):
 		raise 'Unknown system test attribute', attrname
 	a2l = _mappings[attrname][0]
-	# Return them in ascending internal value order
+	# Languages we sort in order of externally visible
+	# name
+	if attrname == 'system_language':
+		rv = a2l.values()
+		rv.sort()
+		return rv
+	# Return the rest in ascending internal value order
 	values = a2l.keys()
 	values.sort()
 	rv = []
