@@ -248,6 +248,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		left,top,w_width,w_height = window.GetClientRect()
 
 		left,top,width,height = window._convert_coordinates(coordinates)
+		
+		if width == 0 or height == 0: return 
+		
 		x,y,w,h = left,top,width,height
 		
 		# node attributes
