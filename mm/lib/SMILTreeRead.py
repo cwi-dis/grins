@@ -402,6 +402,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						self.syntax_error('bad sync-to-prev value')
 						continue
 					list.append(MMNode.MMSyncArc(node, attr, srcnode = 'prev', event = tokens[2], delay = offset or 0))
+					if not boston:
+						boston = 'prev value'
 					continue
 
 				res = accesskey.match(val)
@@ -430,6 +432,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					# XXX this includes things like
 					# repeat(3)
 					list.append(MMNode.MMSyncArc(node, attr, srcnode = node, event = ''.join(''.join(tokens).split('\\')), delay = offset or 0))
+					if not boston:
+						boston = 'event value'
 					continue
 
 				if tokens[0] == '.' or tokens[1] != '.':
