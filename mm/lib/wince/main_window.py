@@ -104,9 +104,9 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 				self.set_commandlist(None, 'pview_')
 			elif cmd == usercmd.CHOOSESKIN:
 				self.execute_cmd(cmd)
-				self.loadSplash()
 			else:
 				self.execute_cmd(cmd)
+			self.loadSplash()
 			return 
 		for cbd in self._dyncmds.values():
 			if cbd.has_key(cmdid):
@@ -149,6 +149,16 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 			# no menu
 			pass
 		self.__have_menu = 0
+
+	def ShowMenu(self):
+		if self.__have_menu:
+			return
+		try:
+			hmenu = self.ShowMenuBar()
+		except:
+			# no menu
+			pass
+		self.__have_menu = 1
 
 	def EnableMenuItem(self, submenu_index, id, enabled):
 		if not self.__have_menu:
@@ -433,7 +443,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		l, t, r, b = self.GetClientRect()
 		w, h = r-l, b - t - self._menu_height
 		self._splash_pos = max(0, (w-ws)/2), max(0, (h-hs)/2 - 24)
-		
+
 	def paintSplash(self, dc):
 		if self._splash is not None:
 			dcc = dc.CreateCompatibleDC()

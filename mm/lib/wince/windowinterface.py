@@ -69,6 +69,7 @@ def cancelidleproc(id):
 from appdialogs import showmessage, showquestion
 from appdialogs import ProgressDialog
 from appdialogs import FileDialog
+from appdialogs import ShowMenuBar, HideMenuBar
 
 #htmlwindow = AppToplevel.htmlwindow
 #shell_execute = AppToplevel.shell_execute
