@@ -97,19 +97,6 @@ class MainDialog:
 		else:
 			windowinterface.showmessage('Only GRiNS or SMIL files can be dropped.')
 
-	def __skin_done(self, filename):
-		if filename:
-			import settings
-			url = self.__path2url(filename)
-			settings.set('skin', url)
-			settings.save()
-
-	def skin_callback(self):
-		import windowinterface
-		windowinterface.FileDialog('Open skin file', '.', ['text/x-grins-skin'], '',
-					   self.__skin_done, None, 1,
-					   parent = windowinterface.getmainwnd())
-
 	def openfile_callback(self):
 		# Callback for OPENFILE menu command
 		import windowinterface

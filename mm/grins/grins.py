@@ -111,6 +111,19 @@ class Main(MainDialog):
 		for top in self.tops:
 			top.player.playsubtree(top.root)
 
+	def __skin_done(self, filename):
+		if filename:
+			import settings
+			url = self.__path2url(filename)
+			settings.set('skin', url)
+			settings.save()
+
+	def skin_callback(self):
+		import windowinterface
+		windowinterface.FileDialog('Open skin file', '.', ['text/x-grins-skin'], '',
+					   self.__skin_done, None, 1,
+					   parent = windowinterface.getmainwnd())
+
 	def openURL_callback(self, url, startplay = 1, update_recent = 1):
 		import windowinterface
 		windowinterface.setwaiting()
