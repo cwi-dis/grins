@@ -199,7 +199,8 @@ sound_player(self)
 		sound_rate = old_rate = buf[1];
 	}
 	if (sound_rate != PRIV->s_play.samprate) {
-		printf("Warning: two channels with different sampling rates active\n");
+		if (device_used > 1)
+			printf("Warning: two channels with different sampling rates active\n");
 		buf[0] = AL_OUTPUT_RATE;
 		buf[1] = PRIV->s_play.samprate;
 		ALsetparams(AL_DEFAULT_DEVICE, buf, 2L);
