@@ -32,6 +32,15 @@ attrgrs=(
 		'project_quality',
 		]},
 
+	{'name':'subregion4',
+	'title':'Destination rendering',
+	'attrs':[
+		'subregionxy',
+		'subregionwh',
+		'displayfull',
+		'subregionanchor',
+		]},
+
 	{'name':'subregion2',
 	'title':'Destination rendering',
 	'attrs':[

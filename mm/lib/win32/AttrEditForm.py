@@ -1480,9 +1480,9 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 		else:
 			t.settext('scale 1 : %.1f' % self._xscale)
 		self.create_box(self.getcurrentbox())
-##		if tag != 'viewchange' and file:
-##			url = a.wrapper.getcontext().findurl(f)
-##			self.loadimg(url)
+		if tag != 'viewchange' and file:
+			url = a.wrapper.getcontext().findurl(f)
+			self.loadimg(url)
 
 	def init_tk(self, v):
 		v.drawTk.SetLayoutMode(0)
@@ -2447,6 +2447,17 @@ class Subregion2Group(ImgregionGroup):
 	def getpageclass(self):
 		return PosSizeLayoutPage
 
+class Subregion4Group(Subregion2Group):
+	data=attrgrsdict['subregion4']
+	_attrnames = {'xy':'subregionxy',
+		      'wh':'subregionwh',
+		      'full':'displayfull',
+			  'anchor':'subregionanchor',
+		      }
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_DR3
+
 class Subregion1Group(Subregion2Group):
 	data=attrgrsdict['subregion1']
 
@@ -2691,6 +2702,7 @@ groupsui={
 	'subregion1':Subregion1Group,
 	'imgregion1':Imgregion1Group,
 	'subregion2':Subregion2Group,
+	'subregion4':Subregion4Group,
 
 	'system':SystemGroup,
 	'preferences':PreferencesGroup,
