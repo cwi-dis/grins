@@ -112,8 +112,9 @@ from SMILTreeWrite import *
 
 # imported by SMILTreeWrite:
 # import string 
-# from fmtfloat import fmtfloat (imported by SMILTreeWrite)
+# from fmtfloat import fmtfloat 
 # from nameencode import nameencode
+from fmtfloat import round
 import math
 import Animators
 
@@ -174,13 +175,15 @@ class SMILXhtmlSmilWriter(SMIL):
 		self.sensitivityList = []
 		self.buildSensitivityList(self.root, self.sensitivityList)
 
+		self.links_target2src = {}
+		self.buildAnchorTargets(node)
+
 		self.freezeSyncDict = {}
+
+		self.currLayout = []
 
 		self.__isopen = 0
 		self.__stack = []
-
-		self.__currViewport = None
-		self.__currRegion = None
 
 		self.ids_written = {}
 	
@@ -238,25 +241,23 @@ class SMILXhtmlSmilWriter(SMIL):
 		self.push()
 		
 		# body contents
-		# viewports
-		self.__currViewport = None
-		if len(self.top_levels)==1:
-			self.__currViewport = ch = self.top_levels[0]
-			name = self.ch2name[ch]
-			style = self.getViewportStyle(ch)
+		if len(self.top_levels) > 1:
+			for viewport in self.top_levels:
+				style = self.getViewportStyle(viewport)
+				name = self.ch2name[viewport]
+				self.writetag('div', [('id',name), ('style', style),])
+				self.push()
+				self.pop()			
+			self.writenode(self.root, root = 1)
+		else:
+			viewport = self.top_levels[0]
+			style = self.getViewportStyle(viewport)
+			name = self.ch2name[viewport]
 			self.writetag('div', [('id',name), ('style', style),])
 			self.push()
+			self.currLayout = [viewport]			
 			self.writenode(self.root, root = 1)
-			self.pop()
-		else:
-			for viewport in self.top_levels:
-				name = self.ch2name[viewport]
-				style = self.getViewportStyle(viewport)
-				self.writetag('div', [('id',name), ('class', style),])
-				self.push()
-				self.pop()
-			self.writenode(self.root, root = 1)
-			
+			self.pop()			
 		self.close()
 
 	def push(self):
@@ -323,14 +324,15 @@ class SMILXhtmlSmilWriter(SMIL):
 	def writenode(self, x, root = 0):
 		type = x.GetType()
 
-		if type == 'animate':
-			self.writeanimatenode(x, root)
-			return
-
 		if type == 'comment':
 			self.writecomment(x)
 			return
 
+		if type == 'animate':
+			self.writeanimatenode(x, root)
+			return
+
+		####
 		attrlist = []
 		interior = (type in interiortypes)
 		if interior:
@@ -353,18 +355,13 @@ class SMILXhtmlSmilWriter(SMIL):
 				chtype = 'unknown'
 			mtype, xtype = mediatype(x)
 		
-		regionName = None
-		nodeid = None
-		transIn = None
-		transOut = None
-		fill = None
-
 		# if node used as destination, make sure it's id is written
 		uid = x.GetUID()
 		name = self.uid2name[uid]
 		if not self.ids_used[name] and self.hyperlinks.finddstlinks(x):
 			self.ids_used[name] = 1
 
+		####
 		attributes = self.attributes.get(xtype, {})
 		if type == 'prio':
 			attrs = prio_attrs
@@ -388,6 +385,12 @@ class SMILXhtmlSmilWriter(SMIL):
 			for i in range(len(sysreq)):
 				attrlist.append(('ext%d' % i, sysreq[i]))
 
+		####
+		regionName = None
+		nodeid = None
+		transIn = None
+		transOut = None
+		fill = None
 		hasfill = 0
 		for name, func, keyToCheck in attrs:
 			if keyToCheck is not None and not x.attrdict.has_key(keyToCheck):
@@ -418,7 +421,7 @@ class SMILXhtmlSmilWriter(SMIL):
 					if value: 
 						value = event2xhtml(value)
 						value = replacePrevShortcut(value, x)
-
+					 
 				if interior:
 					if name == 'fillDefault':
 						pass
@@ -453,6 +456,7 @@ class SMILXhtmlSmilWriter(SMIL):
 			# no fill attr, be explicit about fillDefault value
 			fillDefault = MMAttrdefs.getattr(x, 'fillDefault')
 			if fillDefault != 'inherit':
+				hasfill = 1
 				if interior:
 					attrlist.append(('fill', fillDefault))
 				else:
@@ -463,6 +467,10 @@ class SMILXhtmlSmilWriter(SMIL):
 			if interior:
 				attrlist.append(('id', nodeid))
 
+		if self.links_target2src.has_key(x):
+			self.fixBeginList(x, attrlist)
+
+		####
 		if interior:
 			if mtype in not_xhtml_smil_elements:
 				pass # self.showunsupported(mtype)
@@ -475,7 +483,7 @@ class SMILXhtmlSmilWriter(SMIL):
 				if mtype == 'seq' and not hasfill:
 					self.applyFillHint(x, attrlist)
 				# normal
-				self.writetag('t:'+mtype, attrlist)
+				self.writetag('t:' + mtype, attrlist)
 			self.push()
 			for child in x.GetChildren():
 				self.writenode(child)
@@ -488,22 +496,24 @@ class SMILXhtmlSmilWriter(SMIL):
 			if mtype in not_xhtml_smil_elements:
 				self.showunsupported(mtype)
 			self.writemedianode(x, nodeid, attrlist, mtype, regionName, transIn, transOut, fill)
+
 		elif type != 'animpar':
 			raise CheckError, 'bad node type in writenode'
 
 	def writemedianode(self, node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill):
 		pushed, inpar, pardur, regionid = 0, 0, None, ''
 		
-		# write media node region
-		if regionName and mtype != 'audio':
+		# write media node layout
+		if mtype != 'audio':
 			pushed, inpar, pardur, regionid  = \
-				self.writeMediaNodeRegion(node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill)
+				self.writeMediaNodeLayout(node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill)
 
 		# apply subregion's style
 		self.applySubregionStyle(node, nodeid, attrlist, mtype)
 
 		# write anchors
-		if self.writeAnchors(node, nodeid):
+		hasAnchors = self.writeAnchors(node, nodeid)
+		if hasAnchors:
 			attrlist.append(('usemap', '#'+nodeid+'map'))
 
 		# extent conditionally the node to a time container
@@ -519,6 +529,9 @@ class SMILXhtmlSmilWriter(SMIL):
 				self.writetag('div', attrlist)
 				self.closehtmltag()
 				self.pop()
+			elif hasAnchors:
+				self.writetag('div', attrlist)
+				self.closehtmltag()
 			else:
 				attrlist.append( ('class','time') )
 				self.writetag('div', attrlist)
@@ -530,6 +543,8 @@ class SMILXhtmlSmilWriter(SMIL):
 				self.push()
 				self.writetag(mtype, attrlist)
 				self.pop()
+			elif hasAnchors:
+				self.writetag(mtype, attrlist)
 			else:
 				self.writetag('t:'+mtype, attrlist)
 
@@ -574,7 +589,7 @@ class SMILXhtmlSmilWriter(SMIL):
 			self.pop()
 			pushed = pushed - 1
 
-	def writeMediaNodeRegion(self, node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill):
+	def writeMediaNodeLayout(self, node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill):
 		pushed, inpar, pardur, regionid = 0, 0, None, ''
 		
 		lch = node.GetChannel().GetLayoutChannel()
@@ -585,9 +600,9 @@ class SMILXhtmlSmilWriter(SMIL):
 
 		# region (div) attr list
 		divlist = []
+		lch = path[len(path)-1]
 
 		# find/compose/set region id
-		lch = path[len(path)-1]
 		name = self.ch2name[lch]
 		if self.ids_written.get(name):
 			self.ids_written[name] = self.ids_written[name] + 1
@@ -598,12 +613,16 @@ class SMILXhtmlSmilWriter(SMIL):
 		divlist.append(('id', regionid))
 
 		# apply region style and fill attribute
-		regstyle = self.getRegionStyle(lch, node, self.__currRegion == lch)
+		currRegion = None
+		if self.currLayout:
+			n = len(self.currLayout)
+			currRegion = self.currLayout[n-1]
+		regstyle = self.getRegionStyle(lch, node, currRegion == lch)
 		if regstyle is not None:
 			divlist.append(('style', regstyle))
+		divlist.append(('class', 'time'))
 		if fill:
 			divlist.append(('fill', fill))
-		divlist.append(('class', 'time'))
 				
 		# transfer timing from media to div
 		# the composite is the item for xhtml+smil
@@ -639,7 +658,7 @@ class SMILXhtmlSmilWriter(SMIL):
 		self.writetag('div', divlist)
 		self.push()
 		pushed = 1
-		self.__currRegion = lch
+		self.currLayout = path
 		return pushed, inpar, pardur, regionid
 
 
@@ -666,9 +685,22 @@ class SMILXhtmlSmilWriter(SMIL):
 					style = style + 'background-color:%s;' % color
 			attrlist.append( ('style', style) )
 
+
 	def rc2style(self, rc):
 		x, y, w, h = rc
 		return 'position:absolute;overflow:hidden;left:%d;top:%d;width:%d;height:%d;' % (x, y, w, h)
+
+	def getNodeMediaRect(self, node):
+		subRegGeom, mediaGeom = None, None
+		try:
+			geoms = node.getPxGeomMedia()
+		except:
+			return 0, 0, 100, 100
+		else:
+			subRegGeom, mediaGeom = geoms
+			x, y, w, h = subRegGeom
+			xm, ym, wm, hm = mediaGeom
+			return 0, 0, wm, hm
 
 	def writeTransition(self, transIn, transOut, nodeid, regionid):
 		transitions = self.root.GetContext().transitions
@@ -738,6 +770,20 @@ class SMILXhtmlSmilWriter(SMIL):
 			i = i + 1
 		return val
 
+	def replaceAttrVal(self, attrlist, attrname, attrval):
+		val = None
+		i = 0
+		while i < len(attrlist):
+			a, v = attrlist[i]
+			if a == attrname:
+				attrlist[i] = a, attrval
+				val = v
+				break
+			i = i + 1
+		if val is None:
+			attrlist.append((attrname, attrval))	
+		return val
+
 	# set fill = 'freeze' if last visible child has it
 	def applyFillHint(self, x, attrlist):
 		if x.GetChildren():
@@ -770,9 +816,70 @@ class SMILXhtmlSmilWriter(SMIL):
 			val = 2.0
 		return val
 
-	def writeAnchors(self, x, name):
+	def fixBeginList(self, node, attrlist):
+		srcid = self.links_target2src.get(node)
+		if srcid is None:
+			return
+		bl = self.removeAttr(attrlist, 'begin')
+		if bl is None:
+			parent = node.GetParent()
+			if parent.GetType() == 'par':
+				bl = '0;%s.click' % srcid
+				attrlist.append(('begin', bl))
+			elif parent.GetType() == 'seq':
+				prev = self.getPreviousSibling(node)
+				if prev is not None:
+					previd = identify(self.getNodeId(prev))
+					bl = '%s.end;%s.click' % (previd, srcid)
+				else:
+					bl = '0;%s.click' % srcid
+				attrlist.append(('begin', bl))
+		else:
+			if bl[-1] != ';':
+				bl = bl + ';'
+			bl = bl = '%s.click' % srcid
+			attrlist.append(('begin', bl))
+
+
+	def toPxStr(self, c, d):
+		if type(c) is type(0):
+			# pixel coordinates
+			return '%d' % c
+		else:
+			# relative coordinates
+			return '%d' % round(c*d)
+
+	def toPixelCoordsStrs(self, ashape, acoords, width, height):
+		relative = 0
+		coords = []
+		for c in acoords:
+			if type(c) is type(0):
+				coords.append('%d' % c)
+			else:
+				relative = 1
+				break
+		if not relative:
+			return coords
+		toPxStr = self.toPxStr
+		if ashape == 'rect' or ashape == 'rectangle':
+			l, t, r, b = acoords
+			coords = [toPxStr(l, width), toPxStr(t, height), toPxStr(r, width), toPxStr(b, height)]
+		elif ashape == 'circ' or ashape == 'circle':
+			xc, yc, r = acoords
+			coords = [toPxStr(xc, width), toPxStr(yc, height), toPxStr(r, (width+height)/2)]
+		else: # elif ashape == 'poly':
+			i = 0
+			while i < len(acoords)-1:
+				x, y = toPxStr(acoords[i], width), toPxStr(acoords[i+1], height)
+				coords.append(x)
+				coords.append(y)
+				i = i + 2
+		return coords
+
+	def writeAnchors(self, node, name):
 		hassrc = 0
-		for anchor in x.GetChildren():
+		x, y, w, h = 0, 0, 1, 1
+		for anchor in node.GetChildren():
 			if anchor.GetType() != 'anchor':
 				continue
 			links = self.hyperlinks.findsrclinks(anchor)
@@ -784,29 +891,27 @@ class SMILXhtmlSmilWriter(SMIL):
 				      anchor.GetUID()
 			if not hassrc:
 				hassrc = 1
+				x, y, w, h = self.getNodeMediaRect(node)
 				self.writetag('map', [('id', name+'map')])
 				self.push()
 			a1, a2, dir, ltype, stype, dtype = links[0]
 			attrlist = []
 			id = getid(self, anchor)
-			if id is not None:
-				attrlist.append(('id', id))
+			if id is None:
+				id = 'a' + node.GetUID()
+			attrlist.append(('id', id))
 			attrlist.extend(self.linkattrs(a2, ltype, stype, dtype))
 			fragment = MMAttrdefs.getattr(anchor, 'fragment')
 			if fragment:
 				attrlist.append(('fragment', fragment))
 
 			shape = MMAttrdefs.getattr(anchor, 'ashape')
-			if shape != 'rect':
-				attrlist.append(('shape', shape))
-			coords = []
-			for c in MMAttrdefs.getattr(anchor, 'acoords'):
-				if type(c) is type(0):
-					# pixel coordinates
-					coords.append('%d' % c)
-				else:
-					# relative coordinates
-					coords.append(fmtfloat(c*100, '%', prec = 2))
+			attrlist.append(('shape', shape))
+
+			acoords =  MMAttrdefs.getattr(anchor, 'acoords')
+			if not acoords:
+				acoords = [x, y, x+w, y+h]
+			coords = self.toPixelCoordsStrs(shape, acoords, w, h)
 			if coords:
 				attrlist.append(('coords', ','.join(coords)))
 
@@ -832,11 +937,12 @@ class SMILXhtmlSmilWriter(SMIL):
 			self.pop()
 		return hassrc
 				
-	def writeEmptyRegion(self, regionName):
-		region = self.getRegionFromName(regionName)
+	def writeEmptyRegion(self, region):
+		if region is None:
+			return
 		path = self.getRegionPath(region)
 		if not path:
-			print 'failed to get region path for', regionName
+			print 'failed to get region path for', region
 			return
 
 		# region (div) attr list
@@ -905,13 +1011,9 @@ class SMILXhtmlSmilWriter(SMIL):
 			id = 'm' + node.GetUID()
 			attrlist.append( ('id', id))
 		if not self.ids_written.has_key(targetElement):
-			self.writeTargetElement(targetElement)
+			region = self.getRegionFromName(targetElement)
+			self.writeEmptyRegion(region)
 		self.writetag('t:'+tag, attrlist)
-
-	def writeTargetElement(self, uid):
-		lch = self.root.GetContext().getchannel(uid)
-		if lch:
-			self.writeEmptyRegion(uid)
 	
 	def getViewportOffset(self, viewport):
 		x = xmargin = 20
@@ -927,28 +1029,32 @@ class SMILXhtmlSmilWriter(SMIL):
 			x = x + w + xmargin
 		return x, y
 
-	def getViewportStyle(self, ch):
-		x, y = self.getViewportOffset(ch)
-		w, h = ch.getPxGeom()
-		if ch.has_key('bgcolor'):
-			bgcolor = ch['bgcolor']
-		else:
-			bgcolor = 255,255,255
-		if colors.rcolors.has_key(bgcolor):
-			bgcolor = colors.rcolors[bgcolor]
-		else:
-			bgcolor = '#%02x%02x%02x' % bgcolor
-		style = 'position:absolute;overflow:hidden;left:%d;top:%d;width:%d;height:%d;background-color:%s;' % (x, y, w, h, bgcolor)
+	def getViewportStyle(self, viewport, forcetransparent = 0):
+		x, y = self.getViewportOffset(viewport)
+		w, h = viewport.getPxGeom()
+		style = 'position:absolute;overflow:hidden;left:%d;top:%d;width:%d;height:%d;' % (x, y, w, h)
+		if not forcetransparent:
+			if viewport.has_key('bgcolor'):
+				bgcolor = viewport['bgcolor']
+			else:
+				bgcolor = 255,255,255
+			if colors.rcolors.has_key(bgcolor):
+				bgcolor = colors.rcolors[bgcolor]
+			else:
+				bgcolor = '#%02x%02x%02x' % bgcolor
+			style = style + 'background-color:%s;' % bgcolor
 		return style
 
-	def getRegionStyle(self, region, node = None, forcetransparent=0):
+	def getRegionStyle(self, region, node = None, forcetransparent = 0):
+		if region in self.top_levels:
+			return self.getViewportStyle(region, forcetransparent)
 		path = self.getRegionPath(region)
 		if not path: 
 			return None
 		ch = path[len(path)-1]
 		x, y, w, h = ch.getPxGeom()
 		dx, dy = 0, 0
-		if not self.__currViewport:
+		if len(self.top_levels) > 1:
 			dx, dy = self.getViewportOffset(path[0])
 		if node:
 			fit = MMAttrdefs.getattr(node, 'fit')
@@ -1002,6 +1108,21 @@ class SMILXhtmlSmilWriter(SMIL):
 			lch = self.context.getchannel(regionName)
 		return lch
 
+	def getPreviousSibling(self, node):
+		parent = node.GetParent()
+		prev = None
+		for child in parent.GetChildren():
+			if child == node:
+				break
+			prev = child
+		return prev
+
+	def getNodeId(self, node):
+		id = node.GetRawAttrDef('name', None)
+		if not id:
+			id = 'm' + node.GetUID()
+		return id
+
 	def linkattrs(self, a2, ltype, stype, dtype):
 		attrs = []
 		if ltype == Hlinks.TYPE_JUMP:
@@ -1027,8 +1148,9 @@ class SMILXhtmlSmilWriter(SMIL):
 		if type(a2) is type(''):
 			attrs.append(('href', a2))
 		else:
-			attrs.append(('href', 'javascript:%s.beginElement()' % self.uid2name[a2.GetUID()]))
-
+			target =  self.uid2name[a2.GetUID()]
+			attrs.append(('href', '#%s' % target))
+			# attrs.append(('onclick', '%s.beginElement();' % target))
 		return attrs
 
 	#
@@ -1043,6 +1165,26 @@ class SMILXhtmlSmilWriter(SMIL):
 					sensitivityList.append(arc.srcnode)
 			self.buildSensitivityList(node, sensitivityList)
 
+	def buildAnchorTargets(self, node):
+		ntype = node.GetType()
+		interior = (ntype in interiortypes)
+		if interior:
+			for child in node.GetChildren():
+				self.buildAnchorTargets(child)
+		elif ntype in ('imm', 'ext', 'brush'):
+			for anchor in node.GetChildren():
+				if anchor.GetType() != 'anchor':
+					continue
+				links = self.hyperlinks.findsrclinks(anchor)
+				if not links:
+					continue
+				a1, a2, dir, ltype, stype, dtype = links[0]
+				id = getid(self, anchor)
+				if id is None:
+					id = 'a' + node.GetUID()
+				if type(a2) is not type(''):
+					self.links_target2src[a2] = id
+					 
 	def calcugrnames(self, node):
 		# Calculate unique names for usergroups
 		usergroups = node.GetContext().usergroups
