@@ -39,7 +39,7 @@ class _LayoutView2(GenFormView):
 	def __init__(self,doc,bgcolor=None):
 		GenFormView.__init__(self,doc,grinsRC.IDD_LAYOUT2)
 		self._layout = None
-		self._context = None
+		self._mmcontext = None
 
 		# Initialize control objects
 		# save them in directory: accessible directly from LayoutViewDialog class
@@ -70,7 +70,7 @@ class _LayoutView2(GenFormView):
 		self._mouse_update = 0
 
 	def setContext(self, ctx):
-		self._context = ctx
+		self._mmcontext = ctx
 
 	def OnInitialUpdate(self):
 		GenFormView.OnInitialUpdate(self)
@@ -86,7 +86,7 @@ class _LayoutView2(GenFormView):
 		rc = l2-l1, t2-t1, r2-l2, b2-t2
 		bgcolor = (255, 255, 255)
 		self._layout = LayoutManager(self, rc, bgcolor)
-		self._layout.setMMNodeContext(self._context)
+		self._layout.setMMNodeContext(self._mmcontext)
 
 		# fill combos
 		vpList = self._layout.getViewports()
@@ -95,6 +95,7 @@ class _LayoutView2(GenFormView):
 		if vpList:
 			self['ViewportSel'].setcursel(0)
 			self.selectViewport(vpList[0])
+			self['ViewportSel'].callcb()
 
 		# update show names check box 
 		self['ShowNames'].setcheck(self._showRegionNames)
@@ -140,10 +141,8 @@ class _LayoutView2(GenFormView):
 		# delegate combo box notifications
 		if nmsg==win32con.LBN_SELCHANGE:
 			if id == self['ViewportSel']._id:
-				self['ViewportSel'].callcb()
 				self.onViewportSelChange()	
 			elif id == self['RegionSel']._id:
-				self['RegionSel'].callcb()
 				self.onRegionSelChange()
 			return
 		
@@ -184,10 +183,12 @@ class _LayoutView2(GenFormView):
 	# User input response from dialog controls
 	# 
 	def onViewportSelChange(self):
+		self['ViewportSel'].callcb()
 		vpname = self['ViewportSel'].getvalue()
 		self.selectViewport(vpname)
 			
 	def onRegionSelChange(self):
+		self['RegionSel'].callcb()
 		rgnname = self['RegionSel'].getvalue()
 		self.selectRegion(rgnname)
 
@@ -260,6 +261,7 @@ class _LayoutView2(GenFormView):
 		if rgnList:
 			self['RegionSel'].setcursel(0)
 			self.selectRegion(rgnList[0])
+			self['RegionSel'].callcb()
 				
 	def selectRegion(self, name):
 		region = self._layout.getRegion(name)
@@ -305,7 +307,19 @@ class _LayoutView2(GenFormView):
 			self._layout.update()
 
 ###########################
+# helper class to build tree from list
+class Node:
+	def __init__(self, name, dict):
+		self._name = name
+		self._attrdict = dict
+		self._parent = None
+		self._children = []
 
+	def _do_init(self, parent):
+		self._parent = parent
+		parent._children.append(self)
+
+###########################
 class LayoutManager(window.Wnd, win32window.DrawContext):
 	def __init__(self, parent, rc, bgcolor):
 		window.Wnd.__init__(self, win32ui.CreateWnd())
@@ -317,8 +331,6 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		self._parent = parent
 		self._bgcolor = bgcolor
 
-		self._context = None
-		self.__viewports = {}
 		self._viewport = None
 		
 		self._device2logical = 1
@@ -393,15 +405,37 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 
 		self.EndPaint(paintStruct)
 	
-	def setMMNodeContext(self, ctx):
-		self._context = ctx
-		self.__buildRegions()
+	def setMMNodeContext(self, mmctx):
+		self._channeldict = mmctx.channeldict
+		self._viewportsRegions = {}
+		self._viewports = {}		
+		id2parentid = {}
+		for chan in mmctx.channels:
+			if chan.attrdict.get('type')=='layout':
+				if chan.attrdict.has_key('base_window'):
+					id2parentid[chan.name] = chan.attrdict['base_window']
+				else:
+					self._viewportsRegions[chan.name] = []
+					self._viewports[chan.name] = Node(chan.name,chan.attrdict)
+
+		nodes = self._viewports.copy()
+		for id in id2parentid.keys():
+			chan = mmctx.channeldict[id]
+			nodes[id] = Node(id, chan.attrdict)
+
+		for id, parentid in id2parentid.items():
+			idit = id
+			while id2parentid.has_key(idit):
+				idit = id2parentid[idit]
+			viewportid = idit
+			self._viewportsRegions[viewportid].append(id)
+			nodes[id]._do_init(nodes[parentid])
 	
 	def getViewports(self):
-		return self.__viewports.keys()
+		return self._viewportsRegions.keys()
 
 	def getRegions(self, vpname):
-		return self.__viewports[vpname]
+		return self._viewportsRegions[vpname]
 
 	def getRegion(self, name):
 		if self._viewport:
@@ -416,7 +450,7 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		self.InvalidateRect(self.GetClientRect())
 					
 	def getChannel(self, name):
-		return self._context.channeldict[name]
+		return self._channeldict[name]
 
 	def findDeviceToLogicalScale(self, wl, hl):
 		wd, hd = self.GetClientRect()[2:]
@@ -503,32 +537,6 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 			x, y, w, h = wnd.getDragHandleRect(ix)
 			dc.PatBlt((x, y), (w, h), win32con.DSTINVERT);
 
-	# brude force, will be improved
-	def __buildRegions(self):
-		d = {}
-		for chan in self._context.channels:
-			if chan.attrdict.get('type')=='layout':
-				if chan.attrdict.has_key('base_window'):
-					d[chan.name] = chan.attrdict['base_window']
-				else:
-					d[chan.name] = None
-					self.__viewports[chan.name] = []
-		for child, parent in d.items():
-			if parent:
-				while parent:
-					p = d[parent]
-					if p is None:
-						self.__viewports[parent].append(child)
-					parent = p
-
-	def __setSmallFont(self, dc):
-		self.__hfont_org = dc.SelectObjectFromHandle(self.__hsmallfont)
-
-	def __restoreFont(self, dc):
-		if self.__hfont_org:
-			dc.SelectObjectFromHandle(self._hfont_org)
-
-
 	#
 	# Scaling support
 	#
@@ -556,9 +564,9 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 ###########################
 
 class Viewport(win32window.Window):
-	def __init__(self, name, ctx, dict, scale):
+	def __init__(self, name, context, dict, scale):
 		self._name = name
-		self._ctx = ctx
+		self._ctx = context
 		win32window.Window.__init__(self)
 		self.setDeviceToLogicalScale(scale)
 
@@ -575,8 +583,10 @@ class Viewport(win32window.Window):
 
 		self._showname = 1
 
+		# create the regions of this viewport
 		self._regions = {}
-		self.__createRegions(name, ctx._context, scale)
+		parentNode = context._viewports[name]
+		self.__createRegions(self, parentNode, scale)
 
 	def getRegion(self, name):
 		return self._regions.get(name)
@@ -633,65 +643,31 @@ class Viewport(win32window.Window):
 			c1, c2 = c1-15, c2-15
 			l, t, r, b = l+1, t+1, r-1, b-1
 
-	# return true for regions rgnName belonging to viewport vpName
-	def __isViewportRegion(self, rgnName, vpName, pardict):
-		while 1:
-			rgnName = pardict[rgnName]
-			if rgnName is None: return 0
-			elif rgnName==vpName: return 1
-	
-	# brude force, will be improved
-	def __createRegions(self, name, mmctx, scale=1):
-		d = {}
-		for chan in mmctx.channels:
-			if chan.attrdict.get('type')=='layout':
-				if chan.attrdict.has_key('base_window'):
-					d[chan.name] = chan.attrdict['base_window']
-				else:
-					d[chan.name] = None
+	def __createRegions(self, parentRgn, parentNode, scale):
+		for node in parentNode._children:
+			rgn = Region(parentRgn, node._name, node._attrdict, scale)
+			self._regions[node._name] =  rgn
+			self.__createRegions(rgn, node, scale)
 		
-		dr = self._regions
-		for chan in mmctx.channels:
-			if chan.attrdict.get('type')=='layout' and self.__isViewportRegion(chan.name, name, d):
-				dr[chan.name] =  Region(chan.name, mmctx, chan.attrdict, scale)
-		
-		# do init with parents
-		for rgnName, region in dr.items():
-			parRgnName = d[rgnName]
-			if parRgnName == name:
-				parRegion = self
-			else:
-				parRegion = dr[parRgnName]
-			region._do_init(parRegion)
-		
-		# prepare and render display lists
-		for region in dr.values():
-			region._prepare_display()
-
+				
 ###########################
 
 class Region(win32window.Window):
-	def __init__(self, name, ctx, dict, scale):
+	def __init__(self, parent, name, dict, scale):
 		self._name = name
-		self._ctx = ctx
 		self._dict = dict
 		self._showname = 1
 		win32window.Window.__init__(self)
 		self.setDeviceToLogicalScale(scale)
 
-	def _do_init(self, parent):
-		dict = self._dict
 		rc = x, y, w, h = dict.get('base_winoff')
 		units = dict.get('units')
 		z = dict.get('z')
 		transparent = dict.get('transparent')
 		bgcolor = dict.get('bgcolor')
 		self.create(parent, rc, units, z, transparent, bgcolor)
-		
-	def _prepare_display(self):
-		dl = self.newdisplaylist(self._bgcolor)
-		dl.render()
-	
+
+
 	def paintOn(self, dc, rc=None):
 		ltrb = self.ltrb(self.LRtoDR(self.getwindowpos()))
 
@@ -699,8 +675,8 @@ class Region(win32window.Window):
 
 		dc.SelectClipRgn(rgn)
 
-		if	self._active_displist:
-			self._active_displist._render(dc)
+		if self._bgcolor:
+			dc.FillSolidRect(ltrb,win32mu.RGB(self._bgcolor))
 
 		L = self._subwindows[:]
 		L.reverse()
