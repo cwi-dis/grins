@@ -8,7 +8,7 @@ from MMExc import *			# exceptions
 import MMNode
 from MMTypes import *
 from AnchorDefs import *		# ATYPE_*
-from Hlinks import DIR_1TO2, TYPE_JUMP
+from Hlinks import DIR_1TO2, TYPE_JUMP, A_SRC_STOP, A_DEST_PLAY
 import features
 import string
 import os
@@ -17,7 +17,7 @@ import flags
 
 DEFAULT = 'Default'
 UNDEFINED = 'undefined'
-NEW_CHANNEL = 'New channel...'
+NEW_REGION = 'New region...'
 
 # There are two basic calls into this module (but see below for more):
 # showattreditor(node) creates an attribute editor form for a node
@@ -26,12 +26,19 @@ NEW_CHANNEL = 'New channel...'
 # editor is allowed per node, and extra show calls are also ignored
 # (actually, this pops up the window, to draw the user's attention...).
 
-def showattreditor(toplevel, node, initattr = None, chtype = None):
+def showattreditor(toplevel, node, initattr = None):
 	try:
 		attreditor = node.attreditor
 	except AttributeError:
-		if node.__class__ is MMNode.MMNode:
-			wrapperclass = NodeWrapper
+		# don't use __class__ - it doesn't support inheritance. -mjvdg.
+		#if node.__class__ is MMNode.MMNode:
+		if isinstance(node, MMNode.MMNode): # supports also EditableObjects.EditableMMNode
+			if node.GetChannelType() == 'animate' :
+				wrapperclass = AnimationWrapper
+			elif node.GetChannelType() == 'prefetch' :
+				wrapperclass = PrefetchWrapper
+			else:	
+				wrapperclass = NodeWrapper
 			if node.GetType() == 'ext' and \
 			   node.GetChannelType() == 'RealPix' and \
 			   not hasattr(node, 'slideshow'):
@@ -39,7 +46,7 @@ def showattreditor(toplevel, node, initattr = None, chtype = None):
 				node.slideshow = realnode.SlideShow(node)
 		else:
 			wrapperclass = SlideWrapper
-		attreditor = AttrEditor(wrapperclass(toplevel, node), initattr=initattr, chtype=chtype)
+		attreditor = AttrEditor(wrapperclass(toplevel, node), initattr=initattr)
 		node.attreditor = attreditor
 	else:
 		attreditor.pop()
@@ -95,7 +102,24 @@ def hasdocumentattreditor(toplevel):
 	except AttributeError:
 		return 0
 	return 1
-
+	
+# And an attribute editor for transitions
+def showtransitionattreditor(toplevel, trname, initattr = None):
+	try:
+		attreditor = toplevel.context.transitions[trname]['__attreditor']
+	except KeyError:
+		attreditor = AttrEditor(TransitionWrapper(toplevel, trname), initattr = initattr)
+		toplevel.context.transitions[trname]['__attreditor'] = attreditor
+	else:
+		attreditor.pop()
+		
+def hastransitionattreditor(toplevel, trname):
+	try:
+		attreditor = toplevel.context.transitions[trname]['__attreditor']
+	except KeyError:
+		return 0
+	return 1
+	
 # A similar interface for program preferences (note different arguments!).
 
 prefseditor = None
@@ -115,6 +139,30 @@ def closepreferenceattreditor():
 		prefseditor.close()
 		prefseditor = None
 
+# those two method allow to merge the two 'bgcolor' and 'transparent' attributes into on attribute
+# it's useful for properties editor which request one attribute by 'unsplitable' graphic control
+# those method are used in ChannelWrapper and NodeWrapper
+def cmifToCssBgColor(transparent, bgcolor):
+	if transparent == 0 and bgcolor != None:
+		return 'color', bgcolor
+	if transparent == 1:
+		return 'transparent', (0, 0, 0)
+	
+	return 'inherit', (0, 0, 0)
+
+def cssToCmifBgColor(cssbgcolor):
+	ctype, color = cssbgcolor
+	if ctype == 'transparent':
+		transparent = 1
+		bgcolor = None
+	elif ctype == 'inherit':
+		transparent = None
+		bgcolor = None
+	else:		
+		transparent = 0
+		bgcolor = color
+
+	return transparent, bgcolor
 
 # This routine checks whether we are in CMIF or SMIL mode, and
 # whether the given attribute should be shown in the editor.
@@ -145,7 +193,7 @@ class Wrapper: # Base class -- common operations
 	def getcontext(self):
 		return self.context
 	def register(self, object):
-		self.editmgr.register(object)
+		self.editmgr.register(object, want_focus=1)
 	def unregister(self, object):
 		self.editmgr.unregister(object)
 	def transaction(self):
@@ -163,6 +211,14 @@ class Wrapper: # Base class -- common operations
 		return MMAttrdefs.valuerepr(name, value)
 	def parsevalue(self, name, str):
 		return MMAttrdefs.parsevalue(name, str, self.context)
+	def canhideproperties(self):
+		return 1
+	def canfollowselection(self):
+		return 0
+	def link_to_selection(self, onoff, attreditor):
+		raise 'link_to_selection() called for attreditor not supporting it'
+	def selection_changed(self, seltype, selvalue, doit=1):
+		raise 'selection_changed() called for attreditor not supporting it'
 
 class NodeWrapper(Wrapper):
 	def __init__(self, toplevel, node):
@@ -174,17 +230,46 @@ class NodeWrapper(Wrapper):
 		return '<NodeWrapper instance, node=' + `self.node` + '>'
 
 	def close(self):
+		self.node.attreditor = None
 		del self.node.attreditor
 		del self.node
 		del self.root
 		Wrapper.close(self)
 
-	def commit(self):
-		self.root.ResetPlayability()
-		Wrapper.commit(self)
-
 	def stillvalid(self):
 		return self.node.GetRoot() is self.root
+		
+	def canfollowselection(self):
+		return 1
+		
+	def link_to_selection(self, onoff, attreditor):
+		if onoff:
+			if self.node.attreditor != attreditor:
+				print 'attreditor confusion'
+				print 'I am', attreditor
+				print 'node has', self.node.attreditor
+				raise 'attreditor confusion'
+			del self.node.attreditor
+		else:
+			if hasattr(self.node, 'attreditor'):
+				raise 'Node already has attreditor!'
+			self.node.attreditor = attreditor
+			
+	def selection_changed(self, seltype, selvalue, doit=1):
+		if not selvalue:
+			return
+		if type(selvalue) in (type(()), type([])):
+			print 'Multinode not yet supported'
+			return 0
+		if not hasattr(selvalue, 'getClassName'):
+			print 'Focus items should have getClassName() method'
+			return 0
+		if selvalue.getClassName() != 'MMNode':
+			return 0
+		if doit:
+			self.node = selvalue
+##		self.root = self.node.GetRoot()   # XXXX Is this needed?
+		return 1
 
 	def maketitle(self):
 		name = MMAttrdefs.getattr(self.node, 'name')
@@ -210,12 +295,12 @@ class NodeWrapper(Wrapper):
 				# remove the anchor since it isn't used
 				alist = MMAttrdefs.getattr(self.node, 'anchorlist')[:]
 				for i in range(len(alist)):
-					if alist[i][A_TYPE] == ATYPE_WHOLE:
+					if alist[i].atype == ATYPE_WHOLE:
 						del alist[i]
 						break
 				self.editmgr.setnodeattr(self.node, 'anchorlist', alist)
 				return None
-			link = srcanchor, new, DIR_1TO2, TYPE_JUMP
+			link = srcanchor, new, DIR_1TO2, TYPE_JUMP, A_SRC_STOP, A_DEST_PLAY
 			self.editmgr.addlink(link)
 		else:
 			link = links[0]
@@ -230,16 +315,16 @@ class NodeWrapper(Wrapper):
 		anchors = {}
 		uid = self.node.GetUID()
 		hlinks = self.context.hyperlinks
-		for aid, atype, aargs, times in alist:
+		for a in alist:
 			links = []
-			if atype == ATYPE_DEST:
+			if a.atype == ATYPE_DEST:
 				# don't show destination-only anchors
 				continue
-			for a1, a2, ldir, ltype in hlinks.findsrclinks((uid, aid)):
-				links.append((a2, ldir, ltype))
+			for link in hlinks.findsrclinks((uid, a.aid)):
+				links.append(link[1:])
 			links.sort()
-			times = times[0], times[1] - times[0]
-			anchors[aid] = atype, aargs, times, links
+			times = a.atimes[0], a.atimes[1] - a.atimes[0]
+			anchors[a.aid] = a.atype, a.aargs, times, a.aaccess, links
 		return anchors
 
 	def __setanchors(self, newanchors):
@@ -256,7 +341,7 @@ class NodeWrapper(Wrapper):
 		for aid in oldanchors.keys():
 			anchor = uid, aid
 			for i in range(len(anchorlist)):
-				if anchorlist[i][A_ID] == aid:
+				if anchorlist[i].aid == aid:
 					del anchorlist[i]
 					break
 			for link in hlinks.findsrclinks(anchor):
@@ -268,16 +353,16 @@ class NodeWrapper(Wrapper):
 				linkview.interesting.remove(anchor)
 		rename = {}
 		for aid, a in newanchors.items():
-			if len(a) > 4 and a[4]:
-				rename[a[4]] = aid
+			if len(a) > 5 and a[5]:
+				rename[a[5]] = aid
 		for aid, a in newanchors.items():
 			anchor = uid, aid
 			oldname = aid
-			atype, aargs, times, links = a[:4]
+			atype, aargs, times, access, links = a[:5]
 			times = times[0], times[0] + times[1]
-			if len(a) > 4:
-				oldname = a[4]
-			anchorlist.append((aid, atype, aargs, times))
+			if len(a) > 5:
+				oldname = a[5]
+			anchorlist.append(MMNode.MMAnchor(aid, atype, aargs, times, access))
 			if links:
 				if anchor in linkview.interesting:
 					linkview.interesting.remove(anchor)
@@ -285,14 +370,15 @@ class NodeWrapper(Wrapper):
 					editmgr.addlink((anchor,) + link)
 			else:
 				linkview.set_interesting(anchor)
-			for a1, a2, dir, type in dstlinks.get(oldname, []):
+			for link in dstlinks.get(oldname, []):
 				# check whether src anchor renamed
+				a1 = link[0]
 				if a1[0] == uid:
 					a1 = uid, rename.get(a1[1], a1[1])
 					# check whether src anchor deleted
 					if not newanchors.has_key(a1[1]):
 						continue
-				editmgr.addlink((a1, anchor, dir, type))
+				editmgr.addlink((a1,) + link[1:])
 		editmgr.setnodeattr(node, 'anchorlist', anchorlist or None)
 
 	def getattr(self, name): # Return the attribute or a default
@@ -300,10 +386,20 @@ class NodeWrapper(Wrapper):
 			return self.__findlink() or ''
 		if name == '.type':
 			return self.node.GetType()
+		if name == '.begin1':
+			beginlist = MMAttrdefs.getattr(self.node, 'beginlist')
+			if not beginlist:
+				return 0
+			return beginlist[0].delay
 		if name == '.values':
 			return self.node.GetValues()
 		if name == '.anchorlist':
 			return self.__findanchors()
+		if name == 'cssbgcolor':
+			transparent = self.node.GetRawAttrDef('transparent', None)
+			bgcolor = self.node.GetRawAttrDef('bgcolor',None)
+			return cmifToCssBgColor(transparent, bgcolor)
+			
 		return MMAttrdefs.getattr(self.node, name)
 
 	def getvalue(self, name): # Return the raw attribute or None
@@ -311,10 +407,19 @@ class NodeWrapper(Wrapper):
 			return self.__findlink()
 		if name == '.type':
 			return self.node.GetType()
+		if name == '.begin1':
+			beginlist = MMAttrdefs.getattr(self.node, 'beginlist')
+			if not beginlist:
+				return None
+			return beginlist[0].delay
 		if name == '.values':
 			return self.node.GetValues() or None
 		if name == '.anchorlist':
 			return self.__findanchors() or None
+		if name == 'cssbgcolor':
+			transparent = self.node.GetRawAttrDef('transparent', None)
+			bgcolor = self.node.GetRawAttrDef('bgcolor',None)
+			return cmifToCssBgColor(transparent, bgcolor)
 		return self.node.GetRawAttrDef(name, None)
 
 	def getdefault(self, name): # Return the default or None
@@ -322,6 +427,8 @@ class NodeWrapper(Wrapper):
 			return None
 		if name == '.type':
 			return None
+		if name == '.begin1':
+			return 0
 		if name == '.values':
 			return None
 		if name == '.anchorlist':
@@ -337,17 +444,31 @@ class NodeWrapper(Wrapper):
 				self.editmgr.setnodevalues(self.node, [])
 			self.editmgr.setnodetype(self.node, value)
 			return
+		if name == '.begin1':
+			arc = MMNode.MMSyncArc(self.node, 'begin', srcnode='syncbase',delay=value)
+			beginlist = [arc]
+			self.editmgr.setnodeattr(self.node, 'beginlist', beginlist)
+			return
 		if name == '.values':
-			# ignore value if not immediate node
-			if self.node.GetType() == 'imm':
+			# ignore value if not immediate or comment node
+			if self.node.GetType() in ('imm', 'comment'):
 				self.editmgr.setnodevalues(self.node, value)
 			return
 		if name == '.anchorlist':
 			self.__setanchors(value)
 			return
+		if name == 'cssbgcolor':
+			transparent, bgcolor = cssToCmifBgColor(value)
+			self.editmgr.setnodeattr(self.node, 'transparent', transparent)
+			self.editmgr.setnodeattr(self.node, 'bgcolor', bgcolor)
+			return
+			
 		self.editmgr.setnodeattr(self.node, name, value)
 
 	def delattr(self, name):
+		if name == '.begin1':
+			self.editmgr.setnodeattr(self.node, 'beginlist', None)
+			return
 		if name == '.hyperlink':
 			self.__findlink('')
 			return
@@ -356,6 +477,8 @@ class NodeWrapper(Wrapper):
 			return
 		if name == '.anchorlist':
 			self.__setanchors({})
+			return
+		if name == 'cssbgcolor':
 			return
 		self.editmgr.setnodeattr(self.node, name, None)
 
@@ -372,43 +495,111 @@ class NodeWrapper(Wrapper):
 	#
 	def attrnames(self):
 		import settings
+		snap = hasattr(features, 'grins_snap') and features.grins_snap
 		lightweight = features.lightweight
+		boston = self.context.attributes.get('project_boston', 0)
+		ntype = self.node.GetType()
+		if ntype == 'prio':
+			# special case for prio nodes
+			return ['name', '.type', 'title', 'abstract', 'author',
+				'copyright', 'comment',
+				'higher', 'peers', 'lower', 'pauseDisplay']
+		elif ntype == 'comment':
+			# special case for comment nodes
+			return ['.values']
+		elif ntype == 'foreign':
+			return self.node.attrdict.keys()
+
 		# Tuples are optional names and will be removed if they
 		# aren't set
 		namelist = [
-			'name', ('file',),	# From nodeinfo window
-			'.type',
+			'name', ('channel',), ('file',), # From nodeinfo window
+			('.type',),
 			('terminator',),
-			'begin', ('duration',), 'loop',	# Time stuff
+			'beginlist', 'endlist',
+			'duration', ('min',), ('max',), 'loop', 'repeatdur', # Time stuff
+			('restart',), ('restartDefault',),
 			('clipbegin',), ('clipend',),	# More time stuff
-			'title', 'abstract', ('alt',), ('longdesc',), 'author',
+			('sensitivity',),
+			('top',), ('height',), ('bottom',),
+			('left',), ('width',), ('right',),
+			('fit',),
+			('fill',), ('fillDefault',), ('erase',),
+			('syncBehavior',), ('syncBehaviorDefault',),
+			'title', ('abstract',), ('alt',), ('longdesc',), ('readIndex',), 'author',
 			'copyright', 'comment',
-			'layout', ('u_group',),
+			'layout', 'u_group',
+			('fgcolor',),
 			('mimetype',),	# XXXX Or should this be with file?
-			'system_bitrate', 'system_captions',
-			'system_language', 'system_overdub_or_caption',
-			'system_required', 'system_screen_size',
-			'system_screen_depth',
+			('system_audiodesc',), 'system_bitrate',
+			('system_captions',), ('system_cpu',),
+			'system_language', ('system_operating_system',),
+			('system_overdub_or_caption',), ('system_required',),
+			('system_screen_size',), ('system_screen_depth',),
 			]
-		ntype = self.node.GetType()
 		ctype = self.node.GetChannelType()
 		if ntype in leaftypes or features.compatibility == features.CMIF:
-			namelist[1:1] = ['channel']
-		if ntype == 'bag':
-			namelist.append('bag_index')
-		if ntype == 'par':
+			namelist.append('channel')
+		if not snap:
+			namelist.append('.type')
+			namelist.append('abstract')
+			namelist.append('system_captions')
+			namelist.append('system_overdub_or_caption')
+			namelist.append('system_required')
+			namelist.append('system_screen_size')
+			namelist.append('system_screen_depth')
+			if boston:
+				namelist.append('system_audiodesc')
+				namelist.append('system_cpu')
+				namelist.append('restart')
+				namelist.append('restartDefault')
+				namelist.append('fillDefault')
+				namelist.append('syncBehavior')
+				namelist.append('syncBehaviorDefault')
+				namelist.append('min')
+				namelist.append('max')
+				namelist.append('readIndex')
+				if ntype in leaftypes:
+					namelist.append('erase')
+		else:
+			# Snap!
+			if ntype != 'switch':
+				namelist.append('.begin1')
+		if not snap and (ntype in leaftypes or boston):
+			namelist.append('fill')
+		if boston:
+			namelist.append('alt')
+			if not snap:
+				namelist.append('longdesc')
+		if ntype in ('par', 'excl') or (ntype in leaftypes and boston):
 			namelist.append('terminator')
-		if ntype in ('par', 'seq'):
+		if ntype in ('par', 'seq', 'excl'):
 			namelist.append('duration')
-		if ntype == 'alt':
-			namelist.remove('begin')
+		if ntype == 'switch':
+			if 'begin' in namelist:
+				namelist.remove('begin')
 			namelist.remove('loop')
 		if ntype in leaftypes:
 			namelist.append('alt')
-			namelist.append('longdesc')
+			if not snap:
+				namelist.append('longdesc')
+				namelist.append('clipbegin')
+				namelist.append('clipend')
 			if lightweight and ChannelMap.isvisiblechannel(ctype):
 				namelist.append('.hyperlink')
-				
+			if boston:
+				if not snap:
+					namelist.append('left')
+					namelist.append('width')
+					namelist.append('right')
+					namelist.append('top')
+					namelist.append('height')
+					namelist.append('bottom')
+					namelist.append('fit')
+					namelist.append('sensitivity')
+					namelist.append('regPoint')
+					namelist.append('regAlign')
+					
 			# specific time preference
 			namelist.append('immediateinstantiationmedia')
 			namelist.append('bitratenecessary')
@@ -434,7 +625,7 @@ class NodeWrapper(Wrapper):
 					defn = MMAttrdefs.getdef(name)
 					if defn[5] == 'channel':
 						namelist.append(name)
-		# Merge in nonstandard attributes (except synctolist!)
+		# Merge in nonstandard attributes
 		extras = []
 		for name in self.node.GetAttrDict().keys():
 			if name not in namelist and \
@@ -458,6 +649,11 @@ class NodeWrapper(Wrapper):
 		if not lightweight and ntype in leaftypes \
 		   and sys.platform in ('win32', 'mac'): # XXX until implemented on other platforms
 			retlist.append('.anchorlist')
+			
+		if not cmifmode():
+			# cssbgcolor is used instead
+			if 'bgcolor' in retlist: retlist.remove('bgcolor')
+			if 'transparent' in retlist: retlist.remove('transparent')
 		return retlist
 
 	def getdef(self, name):
@@ -467,21 +663,25 @@ class NodeWrapper(Wrapper):
 				'Links within the presentation or to another SMIL document',
 				'raw', flags.FLAG_ALL)
 		if name == '.type':
-			return (('string', None), '',
+			return (('enum', alltypes), '',
 				'Node type', 'nodetype',
 				'Node type', 'raw', flags.FLAG_ALL)
+		if name == '.begin1':
+			return (('float', None), 0.0,
+				'Begin delay', 'default',
+				'Start delay of node', 'normal', flags.FLAG_SNAP)
 		if name == '.values':
 			return (('string', None), '',
 				'Content', 'text',
 				'Data for node', 'raw', flags.FLAG_ALL)
 		if name == '.anchorlist':
 			# our own version of the anchorlist:
-			# [(AnchorID, AnchorType, AnchorArgs, AnchorTimes, LinkList) ... ]
+			# [(AnchorID, AnchorType, AnchorArgs, AnchorTimes, AccessKey, LinkList) ... ]
 			# the LinkList is a list of hyperlinks, each a tuple:
 			# (Anchor, Dir, Type)
 			# where Anchor is either a (NodeID,AnchorID) tuple or
 			# a string giving the external destination
-			return (('list', ('enclosed', ('tuple', [('any', None), ('int', None), ('enclosed', ('list', ('any', None))), ('enclosed', ('tuple', [('float', 0), ('float', 0)])), ('enclosed', ('list', ('any', None)))]))), [],
+			return (('list', ('enclosed', ('tuple', [('any', None), ('int', None), ('enclosed', ('list', ('any', None))), ('enclosed', ('tuple', [('float', 0), ('float', 0)])), 'any', ('enclosed', ('list', ('any', None)))]))), [],
 				'Anchors', '.anchorlist',
 				'List of anchors on this node', 'raw', flags.FLAG_ALL)
 		return MMAttrdefs.getdef(name)
@@ -489,7 +689,7 @@ class NodeWrapper(Wrapper):
 class SlideWrapper(NodeWrapper):
 	def attrnames(self):
 		import realsupport
-		tag = self.node.GetAttrDict()['tag']
+		tag = self.node.GetAttr('tag')
 		if tag == 'fill':
 			namelist = ['color', 'displayfull', 'subregionxy',
 				    'subregionwh', 'start']
@@ -546,6 +746,96 @@ class SlideWrapper(NodeWrapper):
 					attrdict['imgcropwh'] = w, h
 		NodeWrapper.commit(self)
 
+class AnimationWrapper(NodeWrapper):
+	animateElements = ['animate', 'set', 'animateMotion', 'animateColor']
+	def __init__(self, toplevel, node):
+		NodeWrapper.__init__(self, toplevel, node)
+
+	def attrnames(self):
+		self._durattrs  = ['duration', 'loop',
+##				   'beginlist', 'endlist', 
+				   'repeatdur', 'speed', 'autoReverse']
+
+		namelist = ['name', 'duration', 'loop', 'repeatdur',
+##			    'beginlist', 'endlist',
+			    'restart', 'restartDefault', 'fill', 'fillDefault',
+			    'speed', 'accelerate', 'decelerate', 'autoReverse',
+			    ]
+		ctype = 'animate'
+		if ChannelMap.internalchannelmap.has_key(ctype):
+			cclass = ChannelMap.internalchannelmap[ctype]
+			# Add the class's declaration of attributes
+			namelist = namelist + cclass.node_attrs
+		tag = self.node.GetAttr('atag')
+		rmlist = []
+		if tag == 'animateMotion':
+			rmlist.append('attributeName')
+			rmlist.append('attributeType')
+		elif tag == 'animate':
+			rmlist.append('path')
+			rmlist.append('origin')
+		elif tag == 'animateColor':
+			rmlist.append('path')
+			rmlist.append('origin')
+		elif tag == 'set':
+			rmlist.append('path')
+			rmlist.append('origin')
+			rmlist.append('calcMode')
+			rmlist.append('values')
+			rmlist.append('keyTimes')
+			rmlist.append('keySplines')
+			rmlist.append('from')
+			rmlist.append('by')
+			rmlist.append('additive')
+			rmlist.append('accumulate')
+		elif tag == 'transitionFilter':
+			rmlist.append('attributeName')
+			rmlist.append('attributeType')
+			rmlist.append('path')
+			rmlist.append('origin')
+		parent = self.node.GetParent()
+		if parent.GetType() in leaftypes:
+			rmlist.append('targetElement')
+		for attr in rmlist:
+			if attr in namelist:
+				namelist.remove(attr)
+		if tag == 'transitionFilter':
+			namelist.append('trtype')
+			namelist.append('subtype')
+			namelist.append('mode')
+			namelist.append('fadeColor')
+		return namelist
+
+	def maketitle(self):
+		name = MMAttrdefs.getattr(self.node, 'name')
+		tag = MMAttrdefs.getattr(self.node, 'atag')
+		return 'Properties of %s node ' % tag + name
+
+	def getdef(self, name):
+		return NodeWrapper.getdef(self, name)
+
+	def setattr(self, name, value):
+		if name == 'targetElement':
+			root = self.node.GetRoot()
+			targnode = root.GetChildByName(value)
+			self.node.targetnode = targnode
+		NodeWrapper.setattr(self, name, value)
+		
+class PrefetchWrapper(NodeWrapper):
+	def __init__(self, toplevel, node):
+		NodeWrapper.__init__(self, toplevel, node)
+
+	def attrnames(self):
+		namelist = ['name','file',
+			'begin', 'duration', 
+			'clipbegin', 'clipend',
+			'mediaSize', 'mediaTime', 'bandwidth',
+			]
+		return namelist
+
+	def maketitle(self):
+		name = MMAttrdefs.getattr(self.node, 'name')
+		return 'Properties of prefetch node %s' % name
 
 class ChannelWrapper(Wrapper):
 	def __init__(self, toplevel, channel):
@@ -556,18 +846,51 @@ class ChannelWrapper(Wrapper):
 		return '<ChannelWrapper, name=' + `self.channel.name` + '>'
 
 	def close(self):
-		del self.channel.attreditor
+		if haschannelattreditor(self.channel):
+			del self.channel.attreditor
 		del self.channel
 		Wrapper.close(self)
 
 	def stillvalid(self):
 		return self.channel.stillvalid()
 
+	def canfollowselection(self):
+		return 1
+		
+	def link_to_selection(self, onoff, attreditor):
+		if onoff:
+			if self.channel.attreditor != attreditor:
+				print 'attreditor confusion'
+				print 'I am', attreditor
+				print 'node has', self.channel.attreditor
+				raise 'attreditor confusion'
+			del self.channel.attreditor
+		else:
+			if hasattr(self.channel, 'attreditor'):
+				raise 'Channel already has attreditor!'
+			self.channel.attreditor = attreditor
+			
+	def selection_changed(self, seltype, selvalue, doit=1):
+		if not selvalue:
+			return
+		if type(selvalue) in (type(()), type([])):
+			print 'Multinode not yet supported'
+			return 0
+		if not hasattr(selvalue, 'getClassName'):
+			print 'Focus items should have getClassName() method'
+			return 0
+		if selvalue.getClassName() != 'MMChannel':
+			return 0
+		if doit:
+			self.channel = selvalue
+		return 1
+
 	def maketitle(self):
-		return 'Properties of channel ' + self.channel.name
+		return 'Properties of region ' + self.channel.name
 
 	def getattr(self, name):
 		if name == '.cname': return self.channel.name
+		if name == 'cssbgcolor': return self.getvalue(name)
 		if self.channel.has_key(name):
 			return self.channel[name]
 		else:
@@ -575,6 +898,10 @@ class ChannelWrapper(Wrapper):
 
 	def getvalue(self, name): # Return the raw attribute or None
 		if name == '.cname': return self.channel.name
+		if name == 'cssbgcolor':
+			transparent = self.channel.get('transparent')
+			bgcolor = self.channel.get('bgcolor')
+			return cmifToCssBgColor(transparent, bgcolor)
 		if self.channel.has_key(name):
 			return self.channel[name]
 		else:
@@ -594,6 +921,11 @@ class ChannelWrapper(Wrapper):
 		return MMAttrdefs.getdef(name)[1]
 
 	def setattr(self, name, value):
+		if name == 'cssbgcolor':
+			transparent, bgcolor = cssToCmifBgColor(value)
+			self.editmgr.setchannelattr(self.channel.name, 'transparent', transparent)
+			self.editmgr.setchannelattr(self.channel.name, 'bgcolor', bgcolor)
+			return
 		if name == '.cname':
 			if self.channel.name != value and \
 			   self.editmgr.context.getchannel(value):
@@ -605,7 +937,7 @@ class ChannelWrapper(Wrapper):
 				self.channel.name, name, value)
 
 	def delattr(self, name):
-		if name == '.cname':
+		if name == '.cname' or name == 'cssbgcolor':
 			pass
 			# Don't do this:
 			# self.editmgr.setchannelname(self.channel.name, '')
@@ -653,15 +985,24 @@ class ChannelWrapper(Wrapper):
 		# we're in SMIL mode.
 		base = self.channel.get('base_window')
 		if base is None:
+			# top layout
 			if 'z' in rv: rv.remove('z')
 			if 'base_winoff' in rv: rv.remove('base_winoff')
 			if 'units' in rv: rv.remove('units')
 			if 'transparent' in rv: rv.remove('transparent')
+			if 'traceImage' not in rv: rv.append('traceImage')			
+		else:
+			# region
+			if 'traceImage' in rv: rv.remove('traceImage')
+			if 'fit' not in rv: rv.append('fit')
+			if 'showBackground' not in rv: rv.append('showBackground')
 ##		if not cmifmode():
 ##			if 'file' in rv: rv.remove('file')
-##			if 'scale' in rv: rv.remove('scale')
+##			if 'fit' in rv: rv.remove('fit')
 		if ctype == 'layout' and not cmifmode():
 			rv.remove('type')
+			if 'bgcolor' in rv: rv.remove('bgcolor')
+			if 'transparent' in rv: rv.remove('transparent')
 		return rv
 	#
 	# Override three methods from Wrapper to fake channel name attribute
@@ -670,30 +1011,29 @@ class ChannelWrapper(Wrapper):
 		if name == '.cname':
 			# Channelname -- special case
 			return (('name', ''), 'none',
-				'Channel name', 'default',
-				'Channel name', 'raw', flags.FLAG_ALL)
+				'Region ID', 'default',
+				'Region ID', 'raw', flags.FLAG_ALL)
 		return MMAttrdefs.getdef(name)
 
 	def valuerepr(self, name, value):
 		if name == '.cname': name = 'name'
+		
 		return MMAttrdefs.valuerepr(name, value)
 
 	def parsevalue(self, name, str):
 		if name == '.cname': name = 'name'
 		return MMAttrdefs.parsevalue(name, str, self.context)
 
-
-
 class DocumentWrapper(Wrapper):
-	__stdnames = ['title', 'author', 'copyright']
-	__publishnamesext = [
-			'project_ftp_host', 'project_ftp_user', 'project_ftp_dir', 'project_smil_url']
+	__stdnames = ['title', 'author', 'comment', 'copyright', 'base', 'project_boston']
 	__publishnames = [
-			'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media']
+			'project_ftp_host', 'project_ftp_user', 'project_ftp_dir',
+			'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media',
+			'project_smil_url']
 	__qtnames = ['autoplay', 'qttimeslider', 'qtnext', 'qtchaptermode', 'immediateinstantiation']
 
 	def __init__(self, toplevel):
- 		Wrapper.__init__(self, toplevel, toplevel.context)
+		Wrapper.__init__(self, toplevel, toplevel.context)
 
 	def __repr__(self):
 		return '<DocumentWrapper instance, file=%s>' % self.toplevel.filename
@@ -701,6 +1041,9 @@ class DocumentWrapper(Wrapper):
 	def close(self):
 		del self.toplevel.attreditor
 		Wrapper.close(self)
+
+	def canhideproperties(self):
+		return 0
 
 	def stillvalid(self):
 		return self.toplevel in self.toplevel.main.tops
@@ -718,6 +1061,8 @@ class DocumentWrapper(Wrapper):
 			return self.context.title or None
 		if name == 'base':
 			return self.context.baseurl or None
+		if name == 'comment':
+			return self.context.comment or None
 		if self.context.attributes.has_key(name):
 			return self.context.attributes[name]
 		return None		# unrecognized
@@ -731,6 +1076,8 @@ class DocumentWrapper(Wrapper):
 			self.context.title = value
 		elif name == 'base':
 			self.context.setbaseurl(value)
+		elif name == 'comment':
+			self.context.comment = value
 		else:
 			self.context.attributes[name] = value
 
@@ -739,6 +1086,8 @@ class DocumentWrapper(Wrapper):
 			self.context.title = None
 		elif name == 'base':
 			self.context.setbaseurl(None)
+		elif name == 'comment':
+			self.context.comment = ''
 		elif self.context.attributes.has_key(name):
 			del self.context.attributes[name]
 
@@ -747,13 +1096,9 @@ class DocumentWrapper(Wrapper):
 		pass
 
 	def attrnames(self):
-		#################################### WARNING #####################################
-		# It should be clear to used Attrdefs for exclure properties since attr management
-		# has been extended
-		##################################################################################
 		attrs = self.context.attributes
 		names = attrs.keys()
-		for name in self.__stdnames + self.__publishnames + self.__publishnamesext + self.__qtnames:
+		for name in self.__stdnames + self.__publishnames + self.__qtnames:
 			if attrs.has_key(name):
 				names.remove(name)
 		if not features.lightweight and \
@@ -768,24 +1113,98 @@ class DocumentWrapper(Wrapper):
 		if features.compatibility in (features.G2, features.QT):
 			if features.compatibility == features.QT:
 				names = self.__qtnames + names
-			names = self.__publishnames + self.__publishnamesext + names
-		elif features.compatibility in (features.SMIL10, ):
 			names = self.__publishnames + names
 		return self.__stdnames + names
-		################################################################################
-
+		
 	def valuerepr(self, name, value):
-		if name in ('title', 'base'):
+		if name in ('title', 'base', 'comment'):
 			return MMAttrdefs.valuerepr(name, value)
 		else:
 			return value
 
 	def parsevalue(self, name, str):
-		if name in ('title', 'base'):
+		if name in ('title', 'base', 'comment'):
 			return MMAttrdefs.parsevalue(name, str, self.context)
 		else:
 			return str
 
+class TransitionWrapper(Wrapper):
+	# XXXX Should we have the name in here too?
+	__stdnames = ['trname', 'trtype', 'subtype', 'dur', 'startProgress', 'endProgress', 'direction',
+		      'horzRepeat', 'vertRepeat', 'borderWidth', 'color',
+##		      'coordinated', 'clipBoundary',
+		      ]
+
+	def __init__(self, toplevel, trname):
+		Wrapper.__init__(self, toplevel, toplevel.context)
+ 		self.__trname = trname
+		
+	def __repr__(self):
+		return '<TransitionWrapper instance for %s, file=%s>' % (self.__trname, self.toplevel.filename)
+
+	def close(self):
+		try:
+			del self.context.transitions[self.__trname]['__attreditor']
+		except KeyError:
+			pass
+		Wrapper.close(self)
+
+	def canhideproperties(self):
+		return 0
+
+	def stillvalid(self):
+		if not self.toplevel in self.toplevel.main.tops:
+			return 0
+		return self.context.transitions.has_key(self.__trname)
+
+	def maketitle(self):
+		return 'Transition %s properties' % self.__trname
+
+	def getattr(self, name):	# Return the attribute or a default
+		return self.getvalue() or ''
+
+	def getvalue(self, name):	# Return the raw attribute or None
+		if name == 'trname':
+			return self.__trname
+		if self.context.transitions[self.__trname].has_key(name):
+			return self.context.transitions[self.__trname][name]
+		return None		# unrecognized
+
+	def getdefault(self, name):
+		attrdef = MMAttrdefs.getdef(name)
+		return attrdef[1]
+		
+	def setattr(self, name, value):
+		if name == 'trname':
+			if value == self.__trname:
+				return
+			if self.context.transitions.has_key(value):
+				import windowinterface
+				windowinterface.showmessage('Duplicate transition name: %s (not changed)'%value)
+				return
+			self.editmgr.settransitionname(self.__trname, value)
+			self.__trname = value
+		else:
+			self.editmgr.settransitionvalue(self.__trname, name, value)
+
+	def delattr(self, name):
+		if name == 'trname':
+			return	# Don't do this
+		self.editmgr.settransitionvalue(self.__trname, name, None)
+
+	def delete(self):
+		# shouldn't be called...
+		pass
+
+	def attrnames(self):
+		attrs = self.context.transitions[self.__trname]
+		names = attrs.keys()
+		for name in self.__stdnames:
+			if attrs.has_key(name):
+				names.remove(name)
+		if '__attreditor' in names:
+			names.remove('__attreditor')
+		return self.__stdnames + names
 
 class PreferenceWrapper(Wrapper):
 	__strprefs = {
@@ -796,11 +1215,14 @@ class PreferenceWrapper(Wrapper):
 		}
 	__boolprefs = {
 		'system_captions': 'Whether captions are to be shown',
+		'system_audiodesc': 'Whether to "show" audio descriptions',
 		'cmif': 'Enable CMIF-specific extensions',
 		'html_control': 'Choose between IE4 and WebsterPro HTML controls',
+		'showhidden': 'Show hidden custom tests',
 		}
 	__specprefs = {
-		'system_overdub_or_caption': 'Audible or visible "captions"',
+		'system_overdub_or_caption': 'Text captions (subtitles) or overdub',
+##		'system_overdub_or_subtitle': 'Overdub or subtitles',
 		}
 
 	def __init__(self, callback):
@@ -811,6 +1233,9 @@ class PreferenceWrapper(Wrapper):
 		global prefseditor
 		del self.__callback
 		prefseditor = None
+
+	def canhideproperties(self):
+		return 0
 
 	def getcontext(self):
 		raise RuntimeError, 'getcontext should not be called'
@@ -852,10 +1277,14 @@ class PreferenceWrapper(Wrapper):
 			return (('bool', None), self.getdefault(name),
 				defs[2] or name, 'default',
 				self.__boolprefs[name], 'raw', flags.FLAG_ALL)
-		elif self.__specprefs.has_key(name):
+		elif name == 'system_overdub_or_caption':
 			return (('bool', None), self.getdefault(name),
 				defs[2] or name, 'captionoverdub',
 				self.__specprefs[name], 'raw', flags.FLAG_ALL)
+##		elif name == 'system_overdub_or_subtitle':
+##			return (('bool', None), self.getdefault(name),
+##				defs[2] or name, 'subtitleoverdub',
+##				self.__specprefs[name], 'raw', flags.FLAG_ALL)
 
 	def stillvalid(self):
 		return 1
@@ -925,12 +1354,19 @@ class PreferenceWrapper(Wrapper):
 from AttrEditDialog import AttrEditorDialog, AttrEditorDialogField
 
 class AttrEditor(AttrEditorDialog):
-	def __init__(self, wrapper, new = 0, initattr = None, chtype = None):
+	def __init__(self, wrapper, new = 0, initattr = None):
+		if wrapper.canhideproperties():
+			import settings
+			self.show_all_attributes = settings.get('show_all_attributes')
+		else:
+			self.show_all_attributes = 1
+		self.follow_selection = 0
 		self.__new = new
-		self.__chtype = chtype
 		self.wrapper = wrapper
 		wrapper.register(self)
 		self.__open_dialog(initattr)
+		# update the title bar name
+		self.settitle(wrapper.maketitle())
 
 	def __open_dialog(self, initattr):
 		import settings
@@ -963,8 +1399,12 @@ class AttrEditor(AttrEditorDialog):
 				C = FileAttrEditorField
 			elif displayername == 'font':
 				C = FontAttrEditorField
+			elif displayername == 'timelist':
+				C = TimelistAttrEditorField
 			elif displayername == 'color':
 				C = ColorAttrEditorField
+			elif displayername == 'csscolor':
+				C = CssColorAttrEditorField
 			elif displayername == 'layoutname':
 				C = LayoutnameAttrEditorField
 			elif displayername == 'channelname':
@@ -985,12 +1425,14 @@ class AttrEditor(AttrEditorDialog):
 				C = TransparencyAttrEditorField
 			elif displayername == 'usergroup':
 				C = UsergroupAttrEditorField
+			elif displayername == 'reqlist':
+				C = ReqListAttrEditorField
 			elif displayername == 'transition':
 				C = TransitionAttrEditorField
-			elif displayername == 'direction':
-				C = WipeDirectionAttrEditorField
-			elif displayername == 'wipetype':
-				C = WipeTypeAttrEditorField
+##			elif displayername == 'direction':
+##				C = WipeDirectionAttrEditorField
+##			elif displayername == 'wipetype':
+##				C = WipeTypeAttrEditorField
 			elif displayername == 'subregionanchor':
 				C = AnchorTypeAttrEditorField
 			elif displayername == 'targets':
@@ -1011,6 +1453,10 @@ class AttrEditor(AttrEditorDialog):
 				C = CaptionOverdubAttrEditorField
 			elif displayername == 'captionoverdub3':
 				C = CaptionOverdubAttrEditorFieldWithDefault
+##			elif displayername == 'subtitleoverdub':
+##				C = SubtitleOverdubAttrEditorField
+##			elif displayername == 'subtitleoverdub3':
+##				C = SubtitleOverdubAttrEditorFieldWithDefault
 			elif displayername == 'language':
 				C = LanguageAttrEditorField
 			elif displayername == 'language3':
@@ -1025,8 +1471,6 @@ class AttrEditor(AttrEditorDialog):
 				C = ChanPosAttrEditorField
 			elif displayername == '.anchorlist':
 				C = AnchorlistAttrEditorField
-			elif displayername == 'scale':
-				C = ScaleAttrEditorField
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -1039,12 +1483,23 @@ class AttrEditor(AttrEditorDialog):
 				C = FloatAttrEditorField
 			elif type == 'tuple':
 				C = TupleAttrEditorField
+			elif type == 'enum':
+				C = EnumAttrEditorField
 			else:
 				C = AttrEditorField
-			b = C(self, name, labeltext or name)
-			list.append(b)
+
+			b = C(self, name, labeltext or name) # Instantiate the class.
+
 			if initattr and initattr == name:
 				initattrinst = b
+			if not self.show_all_attributes and b != initattrinst:
+				# If we are not showing all atrributes we hide all those
+				# that have a default value, unless they're the initattrinst.
+				if b.isdefault():
+					b.earlyclose()
+					b = None
+			if b != None:
+				list.append(b)
 		self.attrlist = list
 		AttrEditorDialog.__init__(self, wrapper.maketitle(), list, wrapper.toplevel, initattrinst)
 
@@ -1071,7 +1526,55 @@ class AttrEditor(AttrEditorDialog):
 		self.wrapper.close()
 		del self.attrlist
 		del self.wrapper
+		
+	def pagechange_allowed(self):
+		# Optionally save/revert changes made to properties and return 1 if
+		# it is OK to change tabs or change the node the dialog points to.
+		if not self.is_changed():
+			return 1
+		
+		self.pop()
+		answer = windowinterface.GetYesNoCancel("Save modified properties?")
+		if answer == 0:
+			self.apply_callback()
+			return 1
+		if answer == 1:
+			self.resetall()
+			return 1
+		return 0
 
+	def is_changed(self):
+		# Return true if any property value has been edited.
+		for b in self.attrlist:
+			# Special case for empty values:
+			if not b.getvalue() and not b.getcurrent():
+				continue
+			if b.getvalue() != b.getcurrent():
+				print 'DBG changed', b
+				print 'VALUE', b.getvalue()
+				print 'CURRENT', b.getcurrent()
+				return 1
+		return 0
+				
+	def showall_callback(self):
+		if not self.pagechange_allowed():
+			self.fixbuttonstate()
+			return
+		self.show_all_attributes = not self.show_all_attributes
+		import settings
+		settings.set('show_all_attributes', self.show_all_attributes)
+		# settings.save()
+		print 'showall', self.show_all_attributes
+		self.redisplay()
+
+	def followselection_callback(self):
+		if not self.pagechange_allowed():
+			self.fixbuttonstate()
+			return
+		self.follow_selection = not self.follow_selection
+		self.wrapper.link_to_selection(self.follow_selection, self)
+		self.redisplay()
+		
 	def cancel_callback(self):
 		self.close()
 
@@ -1080,27 +1583,30 @@ class AttrEditor(AttrEditorDialog):
 			self.close()
 
 	def apply_callback(self):
+		# For those of us who can't tell verbs from nouns, apply here means "The Apply button"
+		# and this is a callback for when the "Apply button" is pressed - although it gets called
+		# from the "Ok" button also.
 		self.__new = 0
 		# first collect all changes
 		dict = {}
 		newchannel = None
+		checkType = 0
 		for b in self.attrlist:
 			name = b.getname()
 			str = b.getvalue()
 			if str != b.getcurrent():
 				if hasattr(b, 'newchannels') and \
-				   str not in self.wrapper.getcontext().channelnames:
-					newchannel = str
+					str not in self.wrapper.getcontext().channelnames:
+					newchannel = b.parsevalue(str)
 					try:
 						b.newchannels.remove(str)
 					except ValueError:
 						# probably shouldn't happen...
 						pass
-					dict[name] = str
-					continue
 				try:
 					value = b.parsevalue(str)
-				except:
+				except ValueError, eparam:
+					print "DEBUG: ValueError exception: ", eparam
 					typedef = self.wrapper.getdef(name)[0]
 					exp = typedef[0]
 					if exp == 'int':
@@ -1117,9 +1623,16 @@ class AttrEditor(AttrEditorDialog):
 						exp = exp + " or `indefinite'"
 					self.showmessage('%s: value should be a%s %s' % (b.getlabel(), n, exp), mtype = 'error')
 					return 1
-				if name == 'file' and not self.checkurl(value):
-					self.showmessage('URL not compatible with channel', mtype = 'error')
-					return 1
+				# if we change any of this attribute, we have to check the consistence,
+				# and re, compute the computedMimeType, channel type, ...
+				if name in ('file', 'mimetype', '.type', 'channel'):
+					checkType = 1
+				# for now, assume that url is all the time value
+				# Anyway, to filter the valid url according the GRiNS version, you'll have
+				# to modify this code
+#				if name == 'file' and not self.checkurl(value):
+#					self.showmessage('URL not compatible with channel', mtype = 'error')
+#					return 1
 				if name == 'href' and value not in self.wrapper.getcontext().externalanchors:
 					self.wrapper.getcontext().externalanchors.append(value)
 				dict[name] = value
@@ -1143,13 +1656,22 @@ class AttrEditor(AttrEditorDialog):
 				self.wrapper.delattr(name)
 			else:
 				self.wrapper.setattr(name, value)
+		if checkType:
+			self.checkType(self.wrapper.node)
+			
 		self.wrapper.commit()
 
+	# but need to check if mimetype compatible, with region type, url, ...
+	# for now, do nothing
+	def checkType(self, node):
+		pass
+					
 	def checkurl(self, url):
 		import settings
 		if not features.lightweight:
 			return 1
-		if self.wrapper.__class__ is SlideWrapper:
+		#if self.wrapper.__class__ is SlideWrapper:
+		if isinstance(self.wrapper, SlideWrapper):
 			# node is a slide
 			import MMmimetypes
 			mtype = MMmimetypes.guess_type(url)[0]
@@ -1184,106 +1706,60 @@ class AttrEditor(AttrEditorDialog):
 				if root is None:
 					# first one
 					root = key
+					break
 				else:
 					# multiple root windows
 					root = ''
 		index = len(context.channelnames)
-		em.addchannel(channelname, index, self.guesstype(url))
-		ch = context.channeldict[channelname]
+		em.addchannel(channelname, index, 'layout')
 		if root:
-			ch['base_window'] = root
-		if ChannelMap.isvisiblechannel(ch['type']):
-			units = ch.get('units', windowinterface.UNIT_SCREEN)
-			if units == windowinterface.UNIT_PXL:
-				if url:
-					import Sizes
-					w, h = Sizes.GetSize(context.findurl(url))
-				else:
-					w = h = 0
-				if w == 0:
-					w = 100 # default size
-				if h == 0:
-					h = 100 # default size
-				ch['base_winoff'] = 0,0,w,h
-			elif units == windowinterface.UNIT_SCREEN:
-				ch['base_winoff'] = 0,0,.2,.2
-		# if the node belongs to a layout, add the new channel
-		# to that layouf
-		layout = MMAttrdefs.getattr(self.wrapper.node, 'layout')
-		if layout != 'undefined' and context.layouts.has_key(layout):
-			em.addlayoutchannel(layout, ch)
-
-	def guesstype(self, url):
-		# guess channel type from URL
-		b = self._findattr('.type')
-		if b:
-			ntype = b.getvalue()
-		else:
-			# can't determine node type
-			return 'null'
-		if ntype == 'imm':
-			# assume all immediate nodes are text nodes
-			return 'text'
-		if ntype != 'ext':
-			# interior node, doesn't make much sense
-			return 'null'
-		if not url:
-			return self.__chtype or 'null'
-		import MMmimetypes
-		mtype = MMmimetypes.guess_type(url)[0]
-		if mtype is None:
-			# just guessing now...
-			# Most often, this is because there was no file name.
-			# Webservers will then generally return an HTML page.
-			import settings
-			if features.compatibility == features.G2 or features.compatibility == features.QT:
-				# G2 and QuickTime players don't do HTML
-				return 'text'
-			return 'html'
-		chtypes = ChannelMime.MimeChannel.get(mtype)
-		if not chtypes:
-			# fallback
-			return 'text'
-		if len(chtypes) == 1:
-			return chtypes[0]
-		# Currently the only reason why there might be more than one
-		# channel type is because we have a RealMedia file.  We will
-		# therefore now check whether the file has video in it or not.
-		import realsupport
-		info = realsupport.getinfo(url)
-		if not info:
-			return 'video'
-		if info.has_key('width'):
-			return 'video'
-		return 'sound'
+			em.setchannelattr(channelname, 'base_window', key)
 
 	#
 	# EditMgr interface
 	#
-	def transaction(self):
+	def transaction(self, type):
 		return 1
 
-	def commit(self):
+	def commit(self, type):
 		if not self.wrapper.stillvalid():
 			self.close()
 		else:
-			namelist = self.wrapper.attrnames()
-			if namelist != self.__namelist:
-				# re-open with possibly different size
-				attr = self.getcurattr()
-				if attr:
-					attr = attr.getname()
-				AttrEditorDialog.close(self)
-				for b in self.attrlist:
-					b.close()
-				del self.attrlist
-				self.__open_dialog(attr)
+			self.redisplay()
+			
+	def globalfocuschanged(self, focustype, focusobject):
+		if not self.follow_selection:
+			return
+##		print 'Focus changed', (focustype, focusobject)
+		if self.wrapper.selection_changed(focustype, focusobject, doit=0):
+			if self.pagechange_allowed():
+				self.wrapper.selection_changed(focustype, focusobject, doit=1)
 			else:
-				a = self.getcurattr()
+				# The user said "cancel". Our only reasonable option is to
+				# decouple the dialog from focus
+				self.follow_selection = 0
+				self.wrapper.link_to_selection(self.follow_selection, self)
+			self.redisplay()
+		
+	def redisplay(self):	
+		namelist = self.wrapper.attrnames()
+		if namelist != self.__namelist:
+			# re-open with possibly different size
+			attr = self.getcurattr()
+			if attr:
+				attr = attr.getname()
+			AttrEditorDialog.close(self, willreopen=1)
+			for b in self.attrlist:
+				b.close()
+			del self.attrlist
+			self.__open_dialog(attr)
+		else:
+			a = self.getcurattr()
 ##				self.fixvalues()
-				self.resetall()
-				self.settitle(self.wrapper.maketitle())
-				self.setcurattr(a)
+			self.resetall()
+			self.setcurattr(a)
+		# update the title bar name
+		self.settitle(self.wrapper.maketitle())
 
 	def rollback(self):
 		pass
@@ -1300,17 +1776,24 @@ class AttrEditorField(AttrEditorDialogField):
 		self.label = label
 		self.attreditor = attreditor
 		self.wrapper = attreditor.wrapper
-		self.__attrdef = self.wrapper.getdef(name)
+		self.attrdef = self.wrapper.getdef(name)
 
 	def __repr__(self):
 		return '<%s instance, name=%s>' % (self.__class__.__name__,
 						   self.__name)
+						   
+	def earlyclose(self):
+		# Call this close routine if you want to get rid of the object
+		# before the AttrEditorDialogField has been initialized.
+		del self.attreditor
+		del self.wrapper
+		del self.attrdef
 
 	def close(self):
 		AttrEditorDialogField.close(self)
 		del self.attreditor
 		del self.wrapper
-		del self.__attrdef
+		del self.attrdef
 
 	def getname(self):
 		return self.__name
@@ -1322,24 +1805,27 @@ class AttrEditorField(AttrEditorDialogField):
 		return self.label
 
 	def gethelptext(self):
-		return '%s\ndefault: %s' % (self.__attrdef[4], self.getdefault())
+		return '%s\ndefault: %s' % (self.attrdef[4], self.getdefault())
 ##		return 'atribute: %s\n' \
 ##		       'default: %s\n' \
 ##		       '%s' % (self.__name, self.getdefault(),
-##			       self.__attrdef[4])
+##			       self.attrdef[4])
 
 	def gethelpdata(self):
-		helptext = self.__attrdef[4]
-		if features.compatibility == features.SMIL10 and self.__name == 'project_ftp_host_media':
-			# WARNING: GROSS HACK
-			helptext = 'FTP hostname to use for media file upload'
-		return self.__name, self.getdefault(), helptext
+		return self.__name, self.getdefault(), self.attrdef[4]
 
 	def getcurrent(self):
+		# self.wrapper is a NodeWrapper instance. -mjvdg.
 		return self.valuerepr(self.wrapper.getvalue(self.__name))
 
 	def getdefault(self):
 		return self.valuerepr(self.wrapper.getdefault(self.__name))
+		
+	def isdefault(self):
+		v = self.wrapper.getvalue(self.__name)
+		if v is None or v == self.wrapper.getdefault(self.__name):
+			return 1
+		return 0
 
 	def valuerepr(self, value):
 		"""Return string representation of value."""
@@ -1364,27 +1850,23 @@ class AttrEditorField(AttrEditorDialogField):
 class IntAttrEditorField(AttrEditorField):
 	type = 'int'
 
+class FloatAttrEditorField(AttrEditorField):
+	type = 'float'
+
 	def valuerepr(self, value):
+		if value == -1 and self.getname() in ('duration', 'repeatdur'):
+			return 'indefinite'
 		if value == 0 and self.getname() == 'loop':
 			return 'indefinite'
 		return AttrEditorField.valuerepr(self, value)
 
 	def parsevalue(self, str):
-		if str == 'indefinite' and self.getname() == 'loop':
-			return 0
-		return AttrEditorField.parsevalue(self, str)
-
-class FloatAttrEditorField(AttrEditorField):
-	type = 'float'
-
-	def valuerepr(self, value):
-		if value == -1 and self.getname() == 'duration':
-			return 'indefinite'
-		return AttrEditorField.valuerepr(self, value)
-
-	def parsevalue(self, str):
-		if str == 'indefinite' and self.getname() == 'duration':
-			return -1.0
+		if str == 'indefinite':
+			attrname = self.getname()
+			if attrname in ('duration', 'repeatdur'):
+				return -1.0
+			if attrname == 'loop':
+				return 0.0
 		return AttrEditorField.parsevalue(self, str)
 
 class StringAttrEditorField(AttrEditorField):
@@ -1502,13 +1984,48 @@ class TupleAttrEditorField(AttrEditorField):
 			return value
 		return AttrEditorField.valuerepr(self, value)
 
-from colors import colors
+import EventEditor
+
+class TimelistAttrEditorField(AttrEditorField):
+	type = 'timelist'
+
+	# Jack: I worked out the reason why I decided to do it this way.
+	# valuerepr and parsevalue should be sending and receiving copies or
+	# representations of the syncarcs, not the syncarcs themselves.
+	# It's a form of encapsulation, and to me it "feels" right.
+
+	def valuerepr(self, listofsyncarcs):
+		if listofsyncarcs is None: listofsyncarcs = []
+		# converts listofsyncarcs into a list of eventstructs
+		#return ['hello', 'world']
+		return_me = []
+		n = self.wrapper.node
+		for i in listofsyncarcs:
+			return_me.append(EventEditor.EventStruct(i, n))
+		return return_me
+#		return (n, return_me)	# The editor (see AttrEditForm.py) needs the node, this is the
+					# only way I know to get it there. Possible TODO.
+
+	def parsevalue(self, editorstruct):
+		# editorstruct is a tuple of (node, EventStructs[])
+		# The node is there for consistancy.
+		# Converts editorstruct back into a list of syncarcs.
+		return_me = []
+		if isinstance(editorstruct, type(())):
+			node, value = editorstruct # ignore the node.
+		else:
+			value = editorstruct
+		for i in value:
+			if i: return_me.append(i.get_value()) # i could be None.
+		return return_me
+
+import colors
 class ColorAttrEditorField(TupleAttrEditorField):
 	type = 'color'
 	def parsevalue(self, str):
 		str = string.lower(string.strip(str))
-		if colors.has_key(str):
-			return colors[str]
+		if colors.colors.has_key(str):
+			return colors.colors[str]
 		if str[:1] == '#':
 			rgb = []
 			if len(str) == 4:
@@ -1528,21 +2045,65 @@ class ColorAttrEditorField(TupleAttrEditorField):
 		return TupleAttrEditorField.parsevalue(self, str)
 
 	def valuerepr(self, value):
-		for name, rgb in colors.items():
-			if value == rgb:
-				return name
+		if colors.rcolors.has_key(value):
+			return colors.rcolors[value]
 		return TupleAttrEditorField.valuerepr(self, value)
+
+class CssColorAttrEditorField(AttrEditorField):
+# a parsed value is a tuple of:
+# colortype, colorspec
+# colortype = either transparent inherit or color
+# colorspec is a tuple of three integers (rgb values)
+#
+# a string represented value is either:
+#
+# - 'transparent'
+# - 'inherit'
+# - any known string color (red, green, ...)
+# - a tuple of three integer values (r,g,b)
+
+	type = 'csscolor'
+	def parsevalue(self, str):
+		str = string.lower(string.strip(str))
+		if str == 'transparent' or str == '':
+			nstr = 'transparent 0 0 0'
+		elif str == 'inherit':
+			nstr = 'inherit 0 0 0'
+		else:
+			if colors.colors.has_key(str):
+				rgb = colors.colors[str]
+				nstr = ''
+				for c in rgb:
+					nstr = nstr + ' ' + `c`
+				nstr = 'color'+' '+nstr
+			else:
+				nstr = 'color'+' '+str
+		return AttrEditorField.parsevalue(self, nstr)
+
+	def valuerepr(self, value):
+		str = AttrEditorField.valuerepr(self, value)
+		import string
+		svalue = string.split(str)
+		type = svalue[0]
+		if type == 'transparent' or type == 'inherit':
+			return type
+
+		color = string.atoi(svalue[1]), string.atoi(svalue[2]), string.atoi(svalue[3])
+		if colors.rcolors.has_key(color):
+			return colors.rcolors[color]
+		return svalue[1]+' '+svalue[2]+' '+svalue[3]		
 
 class PopupAttrEditorField(AttrEditorField):
 	# A choice menu choosing from a list -- base class only
 	type = 'option'
+	default = DEFAULT
 
 	def getoptions(self):
 		# derived class overrides this to defince the choices
-		return [DEFAULT]
+		return [self.default]
 
 	def parsevalue(self, str):
-		if str == DEFAULT:
+		if str == self.default:
 			return None
 		return str
 
@@ -1550,7 +2111,7 @@ class PopupAttrEditorField(AttrEditorField):
 		if value is None:
 			if self.nodefault:
 				return self.getdefault()
-			return DEFAULT
+			return self.default
 		return value
 
 class PopupAttrEditorFieldWithUndefined(PopupAttrEditorField):
@@ -1624,20 +2185,6 @@ class UnitsAttrEditorField(PopupAttrEditorFieldNoDefault):
 	def valuerepr(self, value):
 		return self.__values[self.__valuesmap.index(value)]
 
-class ScaleAttrEditorField(PopupAttrEditorFieldNoDefault):
-	__values = ['actual size', 'show whole image', 'fill whole region']
-	__valuesmap = [1, 0, -1]
-
-	# Choose from a list of unit types
-	def getoptions(self):
-		return self.__values
-
-	def parsevalue(self, str):
-		return self.__valuesmap[self.__values.index(str)]
-
-	def valuerepr(self, value):
-		return self.__values[self.__valuesmap.index(value)]
-
 class QTChapterModeEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['all', 'clip']
 	__valuesmap = [0, 1]
@@ -1659,14 +2206,14 @@ class QTChapterModeEditorField(PopupAttrEditorFieldNoDefault):
 		return self.valuerepr(val)
 
 class CaptionOverdubAttrEditorField(PopupAttrEditorFieldNoDefault):
-	__values = ['caption', 'overdub']
+	__values = ['subtitle', 'overdub']
 	nodefault = 1
 
 	def getoptions(self):
 		return self.__values
 
 class CaptionOverdubAttrEditorFieldWithDefault(PopupAttrEditorField):
-	__values = ['caption', 'overdub']
+	__values = ['subtitle', 'overdub']
 	default = 'Not set'
 	nodefault = 0
 
@@ -1686,7 +2233,7 @@ class CaptionOverdubAttrEditorFieldWithDefault(PopupAttrEditorField):
 		return [self.default] + self.__values
 
 class LanguageAttrEditorField(PopupAttrEditorField):
-	from languages import l2a, a2l
+	from languages import a2l, l2a
 	default = 'Not set'
 	nodefault = 1
 
@@ -1713,29 +2260,30 @@ class LanguageAttrEditorFieldWithDefault(LanguageAttrEditorField):
 		options = LanguageAttrEditorField.getoptions(self)
 		return [self.default] + options
 
-import bitrates
 class BitrateAttrEditorField(PopupAttrEditorField):
+	__values = [14400, 19200, 28800, 33600, 34400, 57600, 115200, 262200, 307200, 524300, 1544000, 10485800]
+	__strings = ['14.4K Modem', '19.2K Connection', '28.8K Modem', '33.6K Modem', '56K Modem', '56K Single ISDN', '112K Dual ISDN', '256Kbps DSL/Cable', '300Kbps DSL/Cable', '512Kbps DSL/Cable', 'T1 / LAN', '10Mbps LAN']
 	default = 'Not set'
 	nodefault = 1
 
 	def parsevalue(self, str):
 		if str == self.default:
 			return None
-		return bitrates.l2a[str]
+		return self.__values[self.__strings.index(str)]
 
 	def valuerepr(self, value):
 		if value is None:
 			if self.nodefault:
 				return self.getdefault()
 			return self.default
-		str = bitrates.names[0]
-		for i in range(len(bitrates.rates)):
-			if bitrates.rates[i] <= value:
-				str = bitrates.names[i]
+		str = self.__strings[0]
+		for i in range(len(self.__values)):
+			if self.__values[i] <= value:
+				str = self.__strings[i]
 		return str
 
 	def getoptions(self):
-		return bitrates.names
+		return self.__strings
 
 	def getcurrent(self):
 		val = self.wrapper.getvalue(self.getname())
@@ -1755,6 +2303,14 @@ class BitrateAttrEditorFieldWithDefault(BitrateAttrEditorField):
 			return self.default
 		return self.valuerepr(val)
 
+class EnumAttrEditorField(PopupAttrEditorFieldNoDefault):
+	def __init__(self, attreditor, name, label):
+		PopupAttrEditorFieldNoDefault.__init__(self, attreditor, name, label)
+		self.__values = self.attrdef[0][1]
+
+	def getoptions(self):
+		return self.__values
+
 class QualityAttrEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['low', 'normal', 'high', 'highest']
 	__valuesmap = [20, 50, 75, 90]
@@ -1769,11 +2325,27 @@ class QualityAttrEditorField(PopupAttrEditorFieldNoDefault):
 	def valuerepr(self, value):
 		return self.__values[self.__valuesmap.index(value)]
 
-class TransitionAttrEditorField(PopupAttrEditorFieldNoDefault):
-	__values = ['fill', 'fadein', 'fadeout', 'crossfade', 'wipe', 'viewchange']
+class TransitionAttrEditorField(PopupAttrEditorField):
+	default = 'No transition'
 
 	def getoptions(self):
-		return self.__values
+		list = self.wrapper.context.transitions.keys()
+		list.sort()
+		return [self.default] + list
+		
+	def parsevalue(self, str):
+		if str == self.default:
+			return None
+		if type(str) is type(''):
+			return (str,)
+		return str
+		
+	def valuerepr(self, value):
+		if type(value) in (type([]), type(())) and len(value):
+			if len(value) > 1:
+				windowinterface.showmessage("Warning: multiple transitions not supported yet")
+			return value[0]
+		return value
 
 class WipeDirectionAttrEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['left', 'right', 'up', 'down']
@@ -1878,13 +2450,39 @@ class LayoutnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 
 class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	# Choose from the current channel names
-	def __init__(self, attreditor, name, label):
-		self.newchannels = []
+	def __init__(self, attreditor, name, label, wantnewchannels = 1):
+		if wantnewchannels:
+			self.newchannels = []
 		self.__current = None
 		PopupAttrEditorFieldWithUndefined.__init__(self, attreditor, name, label)
 
 	def getoptions(self):
 		import settings
+
+		# experimental code:
+		# for the full version, any region may be selected: for now, it's the only case supported
+		# (for other version, we have to test the new 'subtype' channel attribute)
+		ctx = self.wrapper.context
+		node = self.wrapper.node
+		
+		regionList = []
+		if self.getcurrent() == UNDEFINED:
+			regionList.append(UNDEFINED)
+			
+		for ch in ctx.channels:
+			if ch.get('type') == 'layout':
+				if ch.get('base_window') != None:
+					regionList.append(ch.name)
+
+		if hasattr(self, 'newchannels'):
+			regionList = regionList + self.newchannels
+
+			# add the special key which allow to add a new regions
+			regionList.append(NEW_REGION)
+					
+		return regionList
+		# end experimental code
+		
 		# channelnames1 -- compatible channels in node's layout
 		# channelnames2 -- new channel
 		# channelnames3 -- incompatible channels in node's layout
@@ -1909,11 +2507,18 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 				for ch in ctx.layouts.get(layout, []):
 					layoutchannels[ch.name] = 1
 		channelnames1 = []
-		channelnames2 = self.newchannels[:]
+		if hasattr(self, 'newchannels'):
+			channelnames2 = self.newchannels[:]
+		else:
+			channelnames2 = []
 		channelnames3 = []
 		channelnames4 = []
 		channelnames5 = []
 		for ch in ctx.channels:
+			# experimental SMIL Boston layout code
+			if ch.get('type') != 'layout':
+				continue
+			# end experimental
 			if lightweight or layoutchannels.has_key(ch.name):
 				if ch.get('type','') != 'layout' and ch.name in chlist:
 					channelnames1.append(ch.name)
@@ -1963,14 +2568,18 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			if all:
 				all.append(None)
 			all = all + channelnames5
-		if not self.newchannels:
+		if hasattr(self, 'newchannels') and not self.newchannels:
 			if all:
 				all.append(None)
-			all = all + [NEW_CHANNEL]
+			all = all + [NEW_REGION]
 		return all
 
 	def parsevalue(self, str):
-		if str == UNDEFINED:
+		if str == UNDEFINED: 
+			return None
+		# XXXX: Hack: on windows plateform, this value correspond to the separator
+		# in this case, if the user select this value, we assume it's a undefined value
+		elif str == '---':
 			return None
 		return str
 
@@ -1979,6 +2588,24 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			if self.nodefault:
 				return self.getdefault()
 			return UNDEFINED
+
+		# XXXX: HACK:
+		# value is either a channel name or a region name (if new)
+#		if hasattr(self, 'newchannels'):
+#			if len(self.newchannels) > 0:
+#				if value == self.newchannels[0]:
+#					return value
+			
+		# experimental SMIL Boston layout code
+#		ch = self.wrapper.context.getchannel(value)
+#		if ch == None:
+#			return UNDEFINED
+#		ch = ch.GetLayoutChannel()
+#		try:
+#			value = ch.name
+#		except:
+#			pass
+		# end experimental	
 		return value
 
 	def channelprops(self):
@@ -2009,14 +2636,16 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			self.setvalue(self.getcurrent())
 			return
 		if name != UNDEFINED and name not in self.wrapper.context.channelnames:
-			self.newchannels.append(name)
+			if name not in self.newchannels:
+#				self.newchannels.append(name)
+				self.newchannels = [name]
 		self.__current = name
 		self.recalcoptions()
 		self.setvalue(name)
 		self.__current = None
 			
 	def optioncb(self):
-		if self.getvalue() == NEW_CHANNEL:
+		if self.getvalue() == NEW_REGION:
 			windowinterface.settimer(0.01, (self.askchannelname, (self.newchannelname(),)))
 
 class CaptionChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
@@ -2052,6 +2681,9 @@ class CaptionChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			showchannelattreditor(self.wrapper.toplevel, ch)
 
 class BaseChannelnameAttrEditorField(ChannelnameAttrEditorField):
+	def __init__(self, attreditor, name, label):
+		ChannelnameAttrEditorField.__init__(self, attreditor, name, label, wantnewchannels = 0)
+
 	# Choose from the current channel names
 	def getoptions(self):
 		list = []
@@ -2061,8 +2693,10 @@ class BaseChannelnameAttrEditorField(ChannelnameAttrEditorField):
 			if name == chname:
 				continue
 			ch = ctx.channeldict[name]
-##			if ch.attrdict['type'] == 'layout':
-			list.append(name)
+			# experimental SMIL Boston layout code
+			if ch.attrdict['type'] == 'layout':
+			# end experimental
+				list.append(name)
 		list.sort()
 		return [DEFAULT, UNDEFINED] + list
 
@@ -2071,11 +2705,22 @@ class BaseChannelnameAttrEditorField(ChannelnameAttrEditorField):
 		if ch is not None:
 			showchannelattreditor(self.wrapper.toplevel, ch)
 
-class UsergroupAttrEditorField(PopupAttrEditorFieldWithUndefined):
-	def getoptions(self):
-		list = self.wrapper.context.usergroups.keys()
-		list.sort()
-		return [DEFAULT, UNDEFINED] + list
+class ListAttrEditorField(AttrEditorField):
+	def valuerepr(self, value):
+		if value is None:
+			return ''
+		return string.join(value)
+
+	def parsevalue(self, str):
+		if not str:
+			return None
+		return string.split(str)
+
+class UsergroupAttrEditorField(ListAttrEditorField):
+	pass
+
+class ReqListAttrEditorField(ListAttrEditorField):
+	pass
 
 class ChildnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	# Choose from the node's children
@@ -2099,12 +2744,19 @@ class TermnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			except NoSuchAttrError:
 				pass
 		list.sort()
-		return ['LAST', 'FIRST'] + list
+		extras = ['LAST', 'FIRST']
+		if self.wrapper.context.attributes.get('project_boston', 0):
+			extras.append('ALL')
+			if self.wrapper.node.GetType() in leaftypes:
+				extras.append('MEDIA')
+		return extras + list
 
 	def getcurrent(self):
 		val = self.wrapper.getvalue(self.getname())
 		if val is None:
-			return self.getdefault()
+			if self.wrapper.node.GetType() in leaftypes:
+				return 'MEDIA'
+			return 'LAST'
 		return self.valuerepr(val)
 
 class ChanneltypeAttrEditorField(PopupAttrEditorFieldNoDefault):
@@ -2113,7 +2765,7 @@ class ChanneltypeAttrEditorField(PopupAttrEditorFieldNoDefault):
 		current = self.getcurrent()
 		if features.lightweight:
 			return [current]
-		all = ChannelMap.getvalidchanneltypes()
+		all = ChannelMap.getvalidchanneltypes(self.wrapper.context)
 		if not current in all:
 			# Can happen if we open, say, a full-smil document
 			# in the G2 editor
@@ -2127,37 +2779,26 @@ class FontAttrEditorField(PopupAttrEditorField):
 		fonts.sort()
 		return [DEFAULT] + fonts
 
-Alltypes = alltypes[:]
-Alltypes[Alltypes.index('bag')] = 'choice'
-Alltypes[Alltypes.index('alt')] = 'switch'
+Alltypes = interiortypes+leaftypes
 class NodeTypeAttrEditorField(PopupAttrEditorField):
 	def getoptions(self):
-		if cmifmode():
-			options = Alltypes[:]
-		else:
-			options = Alltypes[:]
-			options.remove('choice')
+		# XXX this needs work: we need to take animate
+		# children into account and prio can only be a child
+		# of an excl
+		options = Alltypes[:]
 		ntype = self.wrapper.node.GetType()
 		if ntype in interiortypes:
 			if self.wrapper.node.GetChildren():
-				options.remove('imm')
-				options.remove('ext')
+				for tp in leaftypes:
+					options.remove(tp)
 		elif ntype == 'imm' and self.wrapper.node.GetValues():
 			options = ['imm']
 		return options
 
 	def parsevalue(self, str):
-		if str == 'choice':
-			return 'bag'
-		if str == 'switch':
-			return 'alt'
 		return str
 
 	def valuerepr(self, value):
-		if value == 'bag':
-			return 'choice'
-		if value == 'alt':
-			return 'switch'
 		return value
 
 class AnchorlistAttrEditorField(AttrEditorField):

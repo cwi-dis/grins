@@ -124,20 +124,26 @@ class AnchorList:
 			a = self.__anchorlinks[self.__curanchor]
 			i = self.__anchors.index(self.__curanchor)
 			self._list.setcursel(i)
-			atype, aargs, times = a[:3]
+			atype, aargs, times, access = a[:4]
 			self._rename.enable(1)
 			self._delete.enable(1)
-			self._link.enable(len(a) == 4)
+			self._link.enable(len(a) == 5)
 			self._type.enable(1)
-			if atype not in AnchorDefs.WholeAnchors:
+			if (atype not in AnchorDefs.WholeAnchors) and aargs and aargs[0] == AnchorDefs.A_SHAPETYPE_RECT:
+				# Warning: this statement work for now only for rect shape.
+				# it shouldn't be called for any other shape type
+				
+				# for now, keep the compatibility with old structure
+				aargs = [aargs[1], aargs[2], aargs[3] - aargs[1], aargs[4] - aargs[2]]
+				
 				self._type.setcheck(1)
 				self._xywh.enable(1)
 				self._se.enable(1)
 				self._se.setval(times)
 				if aargs:
 					# maybe convert to pixel values
-					self.__convert(aargs)
-				self.setbox(aargs or None)
+					naargs = self.__convert(aargs)
+				self.setbox(naargs or None)
 				if not nocreatebox:
 					self.create_box(1)
 			else:
@@ -158,12 +164,21 @@ class AnchorList:
 		if self.__curanchor is None:
 			return None
 		atype, aargs = self.__anchorlinks[self.__curanchor][:2]
+		
+		# for now keep the compatibility with old structure
+		if aargs[0] ==  AnchorDefs.A_SHAPETYPE_RECT:
+			aargs = [aargs[1], aargs[2], aargs[3] - aargs[1], aargs[4] - aargs[2]]
+		else:
+			aargs = [0, 0, 0, 0]
+
 		if atype not in AnchorDefs.WholeAnchors:
 			if saved:
 				return aargs or None
 			return self._xywh.getval()
 		return None
 
+	# Warning: this method work for now only for rect shape.
+	# it shouldn't be called for any other shape type
 	def setbox(self, box = None):
 		if self.__curanchor is None:
 			if box is not None:
@@ -172,6 +187,13 @@ class AnchorList:
 				self.askanchorname()
 			return None
 		atype, aargs = self.__anchorlinks[self.__curanchor][:2]
+		
+		# for now keep the compatibility with old structure
+		if aargs[0] ==  AnchorDefs.A_SHAPETYPE_RECT:
+			aargs = [aargs[1], aargs[2], aargs[3] - aargs[1], aargs[4] - aargs[2]]
+		else:
+			aargs = [0, 0, 0, 0]
+
 		if atype not in AnchorDefs.WholeAnchors:
 			if box:
 				while len(aargs) < len(box):
@@ -200,7 +222,7 @@ class AnchorList:
 			atype = AnchorDefs.ATYPE_NORMAL
 		else:
 			atype = AnchorDefs.ATYPE_WHOLE
-		self.__anchorlinks[name] = atype, [], (0,0), [], ''
+		self.__anchorlinks[name] = atype, [], (0,0), None, [], ''
 		self.__curanchor = name
 		self.fill()
 		if partial:
@@ -220,7 +242,7 @@ class AnchorList:
 			self.showmessage('Name should be unique', mtype = 'error')
 			return
 		a = self.__anchorlinks[self.__curanchor]
-		if len(a) == 4:
+		if len(a) == 5:
 			# remember original name
 			a = a + (self.__curanchor,)
 		self.__anchorlinks[name] = a
@@ -264,12 +286,20 @@ class AnchorList:
 			return
 		a = self.__anchorlinks[self.__curanchor]
 		aargs = self._xywh.getval()
+		
+		# for now keep the compatibility with old structure
 		if aargs == [0,0,0,0]:
-			aargs = []
+			aargs = [AnchorDefs.A_SHAPETYPE_ALLREGION]
+		else:
+			aargs = [AnchorDefs.A_SHAPETYPE_RECT,aargs[0],aargs[1],aargs[0]+aargs[2],
+					aargs[1]+aargs[3]]
+			
 		times = self._se.getval()
 		self.__anchorlinks[self.__curanchor] = (a[0], aargs, tuple(times)) + a[3:]
 		self.enableApply()
 
+	# Warning: this method work for now only for rect shape.
+	# it shouldn't be called for any other shape type
 	def __convert(self, aargs):
 		need_conversion = 0
 		for a in aargs:
@@ -277,9 +307,11 @@ class AnchorList:
 				need_conversion = 1
 				break
 		if not need_conversion and tuple(aargs) != (0,0,1,1):
-			return
+			return aargs
 		xsize, ysize = self._wnd._imagesize
-		aargs[:] = [int(float(aargs[0]) * xsize + .5),
+		return [int(float(aargs[0]) * xsize + .5),
 			    int(float(aargs[1]) * ysize + .5),
 			    int(float(aargs[2]) * xsize + .5),
 			    int(float(aargs[3]) * ysize + .5)]
+
+
