@@ -183,6 +183,9 @@ class Channel:
 			self.save_geometry()
 			self.hide()
 
+	def register_exporter(self, exporter):
+		pass
+
 	def replaynode(self):
 		self.wait_for_arm()
 		# Now we should replay the node that was played when
@@ -1252,6 +1255,7 @@ class ChannelWindow(Channel):
 		self._wingeom = None
 		self.__transparent = 1
 		self.__bgcolor = None
+		self._exporter = None
 
 		self.commandlist = [
 			CLOSE_WINDOW(callback = (ui.channel_callback, (self._name,))),
@@ -1271,6 +1275,7 @@ class ChannelWindow(Channel):
 		del self.armed_display
 		del self.played_display
 		del self.update_display
+		self._exporter = None
 
 	def highlight(self, color = (255,0,0)):
 		if self._is_shown and self.window:
@@ -1456,9 +1461,17 @@ class ChannelWindow(Channel):
 		self.window.register(WMEVENTS.Mouse0Press, self.mousepress, None)
 		self.window.register(WMEVENTS.Mouse0Release, self.mouserelease,
 				     None)
+		if self._exporter:
+			self.register_exporter(self._exporter)
 ##		if menu:
 ##			self.window.create_menu(menu, title = self._name)
 
+	def register_exporter(self, exporter):
+		self._exporter = exporter
+		if self.window:
+			self.window.register(WMEVENTS.WindowContentChanged, exporter.changed, 
+				self.find_layout_channel())
+				
 	def resize_window(self, pchan):
 		if not self._player.editmgr.transaction():
 			return
