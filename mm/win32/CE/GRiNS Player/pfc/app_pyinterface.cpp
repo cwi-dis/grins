@@ -46,6 +46,9 @@ LRESULT CALLBACK ProfileSelectionDialogFunc(HWND hDlg, UINT message, WPARAM wPar
 		case IDC_BASIC:
 			name = "SMIL_BASIC_MODULES";
 			break;
+		case IDC_MMS:
+			name = "SMIL_MMS_MODULES";
+			break;
 		case IDC_PSS4:
 			name = "SMIL_PSS4_MODULES";
 			break;
