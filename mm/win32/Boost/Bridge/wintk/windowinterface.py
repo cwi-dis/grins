@@ -89,9 +89,6 @@ class DocumentFrame:
 		if cmd is not None and cmd.callback:
 			apply(apply, cmd.callback)
 			return
-
-# FileDialog(prompt, directory, filter, file, cb_ok, cb_cancel, existing = 0, parent = None):
-from FileDialog import FileDialog
 				
 import wingeneric
 import usercmd
@@ -128,17 +125,6 @@ class MainWnd(wingeneric.Wnd, DocumentFrame):
 
 def mainloop():
 	pass
-
-def showquestion(text, parent = None):
-	print text
-	return 1
-
-class ProgressDialog:
-	def __init__(self, *args):
-		print 'ProgressDialog', args
-
-	def set(self, *args):
-		print 'ProgressDialog', args
 
 def settimer(sec, cb):
 	return get_toplevel().settimer(sec, cb)
@@ -274,48 +260,11 @@ class Application:
 import __main__
 __main__.toplevel = Application()
 
-class showmessage:
-	def __init__(self, text, mtype = 'message', grab = 1, callback = None,
-		     cancelCallback = None, name = 'message',
-		     title = 'GRiNS', parent = None, identity = None):
-		# XXXX If identity != None the user should have the option of not
-		# showing this message again
-		self._wnd = None
-		if grab == 0:
-			#self._wnd = ModelessMessageBox(text,title,parent)
-			return
-		if cancelCallback:
-			style = win32con.MB_OKCANCEL
-		else:
-			style = win32con.MB_OK
 
-		if mtype == 'error':
-			style = style |win32con.MB_ICONERROR
-				
-		elif mtype == 'warning':
-			style = style |win32con.MB_ICONWARNING
-			
-		elif mtype == 'information':
-			style = style |win32con.MB_ICONINFORMATION
-	
-		elif mtype == 'message':
-			style = style | win32con.MB_ICONINFORMATION
-			
-		elif mtype == 'question':
-			style = win32con.MB_OKCANCEL|win32con.MB_ICONQUESTION
-		
-		if not parent or not hasattr(parent,'MessageBox'):	
-			self._res = winuser.MessageBox(text, title, style)
-		else:
-			self._res = parent.MessageBox(text, title, style)
-		if callback and self._res == win32con.IDOK:
-			apply(apply,callback)
-		elif cancelCallback and self._res == win32con.IDCANCEL:
-			apply(apply,cancelCallback)
+from wintk_dialog import showmessage, showquestion
+from wintk_dialog import ProgressDialog
+from FileDialog import FileDialog
 
-	# Returns user response
-	def getresult(self):
-		return self._res
 
 def newwindow(x, y, w, h, title,
 		      pixmap = 0, units = UNIT_MM,
