@@ -388,6 +388,7 @@ class HierarchyView(HierarchyViewDialog):
 	def create_scene_graph(self):
 		# Iterate through the MMNode structure (starting from self.root)
 		# and create a scene graph from it.
+		Timing.needtimes(self.root)  # For bandwidth bars
 		self.scene_graph = create_MMNode_widget(self.root, self)
 
 	def refresh_scene_graph(self):
