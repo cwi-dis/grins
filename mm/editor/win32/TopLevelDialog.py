@@ -48,6 +48,7 @@ class TopLevelDialog:
 			 'do you want to save them before closing?'
 		return windowinterface.GetYesNoCancel(prompt,self.window)
 
-# doesn't seem to work
-#	def setcommands(self, commandlist):
-#		self.window.set_commandlist(commandlist)
+	# doesn't seem to work
+	# kk: you must pass a context string as a second arg
+	def setcommands(self, commandlist):
+		self.window.set_commandlist(commandlist,'document')
