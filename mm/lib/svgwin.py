@@ -41,19 +41,13 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 	# we start rendering
 	def tkOnBeginRendering(self, size, viewbox):
 		cx, cy = size
-		if viewbox:
-			x, y, w, h = viewbox
-		else:
-			x, y, w, h = 0, 0, cx, cy
-
-		# XXX: test implementation
 		wingdi.SetMapMode(self.hdc, win32con.MM_ISOTROPIC)
 		vcx, vcy = wingdi.GetViewportExtEx(self.hdc)
 		if vcy<0: vcy = -vcy
 		wingdi.SetWindowExtEx(self.hdc, (vcx, vcy))
 		wingdi.SetViewportExtEx(self.hdc, (vcx, vcy))
-		wingdi.SetViewportOrgEx(self.hdc, (x, y))
-		wingdi.Rectangle(self.hdc, (x, y, x+w, y+h))
+		wingdi.SetViewportOrgEx(self.hdc, (0, 0))
+		wingdi.Rectangle(self.hdc, (0, 0, cx, cy))
 
 	# we finished rendering
 	def tkOnEndRendering(self):
