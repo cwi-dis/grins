@@ -56,12 +56,12 @@ _fontmap = {
 	  'Palatino-Italic': ('Palatino', _qd_italic),
 	  'Palatino-Bold': ('Palatino', _qd_bold),
 
-	  'Helvetica': ('Helvetica', 0),
-	  'Helvetica-Bold': ('Helvetica', _qd_bold),
-	  'Helvetica-Oblique': ('Helvetica', _qd_italic),
-##	  'Helvetica': ('Geneva', 0),
-##	  'Helvetica-Bold': ('Geneva', _qd_bold),
-##	  'Helvetica-Oblique': ('Geneva', _qd_italic),
+##	  'Helvetica': ('Helvetica', 0),
+##	  'Helvetica-Bold': ('Helvetica', _qd_bold),
+##	  'Helvetica-Oblique': ('Helvetica', _qd_italic),
+	  'Helvetica': ('Geneva', 0),
+	  'Helvetica-Bold': ('Geneva', _qd_bold),
+	  'Helvetica-Oblique': ('Geneva', _qd_italic),
 
 	  'Courier': ('Courier', 0),
 	  'Courier-Bold': ('Courier', _qd_bold),
