@@ -35,9 +35,13 @@ class GRINS_QSG(_CommandBase):
 class GRINS_TUTORIAL(_CommandBase):
 	help = 'GRiNS Tutorial'
 
+class TOOLBAR_GENERAL(_CommandBase):
+	help = 'Show/Hide the general toolbar'
+
 class TB_PLAY(_CommandBase):
 	help = 'Play document'
 class TB_PAUSE(_CommandBase):
 	help = 'Pause playing document'
 class TB_STOP(_CommandBase):
 	help = 'Stop playing document'
+

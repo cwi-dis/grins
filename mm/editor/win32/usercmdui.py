@@ -92,6 +92,8 @@ CommandUI(ABOUT_GRINS)
 CommandUI(CLOSE_ACTIVE_WINDOW,IDUC_CLOSE_WINDOW)
 CommandUI(SELECT_CHARSET)
 
+CommandUI(TOOLBAR_GENERAL)
+
 #
 # MainDialog commands
 #
@@ -243,6 +245,8 @@ CommandUI(CANVAS_ZOOM_OUT, IDUC_CANVAS_ZOOM_OUT)
 
 #
 CommandUI(SHOWALLPROPERTIES)
+
+#
 #
 # Add the rest without a predefined id
 # 

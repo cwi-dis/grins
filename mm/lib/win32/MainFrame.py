@@ -376,6 +376,10 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		id=usercmdui.class2ui[wndusercmd.PASTE_DOCUMENT].id
 		self.HookCommand(self.OnPasteFile,id)
 		self.HookCommandUpdate(self.OnUpdateEditPaste,id)
+		# Try by Jack
+		id = usercmdui.class2ui[wndusercmd.TOOLBAR_GENERAL].id
+		self.HookCommand(self.OnShowToolbarGeneral, id)
+		self.HookCommandUpdate(self.OnUpdateToolbarGeneral, id)
 		return 0
 
 	# override DropTarget.OnDragOver to protect childs
@@ -443,6 +447,19 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 
 	def OnUpdateEditPaste(self,cmdui):
 		cmdui.Enable(Sdk.IsClipboardFileDataAvailable())
+
+	# Try by Jack
+	def OnShowToolbarGeneral(self, id, code):
+		flag = not self._wndToolBar.IsWindowVisible()
+		if flag:
+			self.ShowControlBar(self._wndToolBar,1,0)
+			self._wndToolBar.RedrawWindow()
+		else:
+			self.ShowControlBar(self._wndToolBar,0,0)
+
+	def OnUpdateToolbarGeneral(self, cmdui):
+		cmdui.Enable(1)
+		cmdui.SetCheck(self._wndToolBar.IsWindowVisible())
 
 	def onInitMenu(self,params):
 		if Sdk.IsClipboardFormatAvailable(win32con.CF_TEXT):
