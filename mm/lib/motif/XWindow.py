@@ -94,8 +94,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 	#	the parent window (subwindows only)
 	# _rect: the position and size of the window in pixels
 	# _region: _rect as an X Region
-	# _clip: an X Region representing the visible area of the
-	#	window
 	# _cursor: the desired cursor shape (only has effect for
 	#	top-level windows)
 	# _callbacks: a dictionary with callback functions and
@@ -325,7 +323,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 			# no canvas (DrawingArea) needed
 			self._form = None
 			shell.Popup(0)
-			self._rect = self._region = self._clip = \
+			self._rect = self._region = \
 				     self._pixmap = self._gc = None
 			return
 		form = form.CreateManagedWidget('toplevel',
@@ -350,8 +348,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 		self._gc = gc
 		w = float(w) / toplevel._hmm2pxl
 		h = float(h) / toplevel._vmm2pxl
-		self._clip = Xlib.CreateRegion()
-		apply(self._clip.UnionRectWithRegion, self._rect)
 		form.AddCallback('exposeCallback', self._expose_callback, None)
 		form.AddCallback('resizeCallback', self._resize_callback, None)
 		form.AddCallback('inputCallback', self._input_callback, None)
@@ -421,7 +417,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 			self._shell.DestroyWidget()
 		del self._shell
 		del self._form
-		del self._clip
 		del self._topwindow
 		del self._gc
 		del self._pixmap
@@ -653,14 +648,12 @@ class _Window(_AdornmentSupport, _RubberBand):
 			return
 		bgcolor = self._bgcolor
 		self._bgcolor = color
-		if (bgcolor is None) != (color is None):
-			self._parent._mkclip()
 		# set window background if nothing displayed on it
 		if self._topwindow is self and not self._active_displist and \
 		   not self._subwindows:
 			self._form.background = self._convert_color(color)
 		if not self._active_displist and self._transparent == 0:
-			self._gc.SetRegion(self._clip)
+			self._gc.SetRegion(self._getmyarea())
 			self._gc.foreground = self._convert_color(color)
 			x, y, w, h = self._rect
 			self._gc.FillRectangle(x, y, w, h)
@@ -909,6 +902,34 @@ class _Window(_AdornmentSupport, _RubberBand):
 		h = float(ph) / rh
 		return x, y, w, h
 
+	def _getmyarea(self):
+		# return Region that we must overwrite on expose
+		region = Xlib.CreateRegion()
+		apply(region.UnionRectWithRegion, self._rect)
+		# subtract area children will overwrite
+		for w in self._subwindows:
+			region.SubtractRegion(w._getcoverarea())
+		# subtract area siblings will overwrite
+		while self is not self._topwindow:
+			i = self._parent._subwindows.index(self)
+			for w in self._parent._subwindows[:i]:
+				region.SubtractRegion(w._getcoverarea())
+			self = self._parent
+		return region
+
+	def _getcoverarea(self):
+		# return Region that we guarantee to overwrite on expose
+		r = Xlib.CreateRegion()
+		if self._transparent == 0 or \
+		   (self._transparent == -1 and self._active_displist):
+			apply(r.UnionRectWithRegion, self._rect)
+			return r
+		for w in self._subwindows:
+			r.UnionRegion(w._getcoverarea())
+		if self._active_displist:
+			r.UnionRegion(self._active_displist._getcoverarea())
+		return r
+
 	def _opaque_children(self):
 		r = Xlib.CreateRegion()
 		for w in self._subwindows:
@@ -918,38 +939,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 			else:
 				r.UnionRegion(w._opaque_children())
 		return r
-
-	def _mkclip(self):
-		if self._parent is None:
-			return
-		# create region for whole window
-		self._clip = region = Xlib.CreateRegion()
-		apply(region.UnionRectWithRegion, self._rect)
-		self._buttonregion = bregion = Xlib.CreateRegion()
-		# subtract all subwindows
-		region.SubtractRegion(self._opaque_children())
-		for w in self._subwindows:
-			w._mkclip()
-			bregion.UnionRegion(w._buttonregion)
-		# create region for all visible buttons
-		if self._active_displist is not None:
-			r = Xlib.CreateRegion()
-			r.UnionRegion(self._clip)
-			r.IntersectRegion(self._active_displist._buttonregion)
-			bregion.UnionRegion(r)
-		if self._topwindow is self:
-			self._setmotionhandler()
-
-	def _delclip(self, child, region):
-		# delete child's overlapping siblings
-		for w in self._subwindows:
-			if w is child:
-				break
-			if w._transparent == 0 or \
-			   (w._transparent == -1 and w._active_displist):
-				r = Xlib.CreateRegion()
-				apply(r.UnionRectWithRegion, w._rect)
-				region.SubtractRegion(r)
 
 	def _image_size(self, file):
 		try:
@@ -1275,8 +1264,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 		    (self._transparent == -1 and not self._active_displist)):
 			return
 		# then draw background window
-		r = Xlib.CreateRegion()
-		r.UnionRegion(self._clip)
+		r = self._getmyarea()
 		r.IntersectRegion(region)
 		if not r.EmptyRegion():
 			if not recursive and \
@@ -1342,7 +1330,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 			d.close()
 		for w in self._subwindows:
 			w._do_resize1()
-		self._mkclip()
 		self._do_expose(self._region)
 		if pixmap is not None:
 			gc.SetRegion(self._region)
@@ -1373,7 +1360,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 	def updatebgcolor(self, color):
 		self.bgcolor(color)
 		if self._active_displist:
-			self._do_expose(self._clip)
+			self._do_expose(self._getmyarea())
 
 	# transition interface, placeholder
 	
@@ -1431,7 +1418,6 @@ class _SubWindow(_Window):
 
 		self._region = Xlib.CreateRegion()
 		apply(self._region.UnionRectWithRegion, self._rect)
-		parent._mkclip()
 		if self._transparent == 0:
 			self._do_expose(self._region)
 			if self._pixmap is not None:
@@ -1453,7 +1439,6 @@ class _SubWindow(_Window):
 			win.close()
 		for dl in self._displists[:]:
 			dl.close()
-		parent._mkclip()
 		parent._do_expose(self._region)
 		if self._pixmap is not None:
 			x, y, w, h = self._rect
@@ -1462,7 +1447,6 @@ class _SubWindow(_Window):
 					      x, y, w, h, x, y)
 		del self._pixmap
 		del self._form
-		del self._clip
 		del self._topwindow
 		del self._region
 		del self._gc
@@ -1500,8 +1484,6 @@ class _SubWindow(_Window):
 					break
 			else:
 				parent._subwindows.append(self)
-			# recalculate clipping regions
-			parent._mkclip()
 			# draw the window's contents
 			if self._transparent == 0 or self._active_displist:
 				self._do_expose(self._region)
@@ -1526,8 +1508,6 @@ class _SubWindow(_Window):
 				break
 		else:
 			parent._subwindows.insert(0, self)
-		# recalculate clipping regions
-		parent._mkclip()
 		# draw exposed windows
 		for w in self._parent._subwindows:
 			if w is not self:
@@ -1537,18 +1517,6 @@ class _SubWindow(_Window):
 			self._gc.SetRegion(self._region)
 			self._pixmap.CopyArea(self._form, self._gc,
 					      x, y, w, h, x, y)
-
-	def _mkclip(self):
-		if self._parent is None:
-			return
-		_Window._mkclip(self)
-		region = self._clip
-		# subtract overlapping siblings
-		self._parent._delclip(self, self._clip)
-
-	def _delclip(self, child, region):
-		_Window._delclip(self, child, region)
-		self._parent._delclip(self, region)
 
 	def _do_resize1(self):
 		# calculate new size of subwindow after resize
@@ -1597,11 +1565,21 @@ class _SubWindow(_Window):
 		r = Xlib.CreateRegion()
 		r.UnionRegion(self._region)
 
-		resize = (w,h) != self._rect[2:]
+		if (w,h) != self._rect[2:]:
+			# resize
+			resize = 1
+			self._rect = x, y, w, h
+			self._sizes = self._parent._pxl2rel(self._rect)
+			self._region = Xlib.CreateRegion()
+			apply(self._region.UnionRectWithRegion, self._rect)
+			for d in self._displists[:]:
+				d.close()
+			for win in self._subwindows:
+				win._do_resize1()
+		else:
+			resize = 0
+			self._updcoords(coordinates)
 
-		self._updcoords(coordinates)
-
-		parent._mkclip()
 		r.UnionRegion(self._region)
 		parent._do_expose(r)
 		if resize:
@@ -1610,21 +1588,15 @@ class _SubWindow(_Window):
 
 	def _updcoords(self, coordinates):
 		x, y, w, h = coordinates
-		# do move/resize
-		if (w,h) != self._rect[2:]:
-			# change size
-			for d in self._displists[:]:
-				d.close()
-			for win in self._subwindows:
-				win._do_resize1()
+		# do move
 		ox, oy, ow, oh = self._rect
 		self._rect = x, y, w, h
 		self._sizes = self._parent._pxl2rel(self._rect)
 		self._region = Xlib.CreateRegion()
 		apply(self._region.UnionRectWithRegion, self._rect)
 		for win in self._subwindows:
-			sx, sy, sw, sh = win._rect
-			win._updcoords((sx + x - ox, sy + y - oy, min(w,sx+sw-ox), min(h,sy+sh-oy)))
+			sx, sy = win._rect[:2]
+			win._updcoords((sx + x - ox, sy + y - oy, w, h))
 
 	def updatezindex(self, z):
 		self._z = z
@@ -1639,5 +1611,4 @@ class _SubWindow(_Window):
 				break
 		else:
 			parent._subwindows.append(self)
-		parent._mkclip()
 		parent._do_expose(self._region)
