@@ -50,7 +50,7 @@
 	'Name of window in which channelwin is created' raw)
 
 (base_winoff (tuple (float) (float) (float) (float)) (0.0 0.0 1.0 1.0)
-	'Border offset' default 'Position/size in percent of base window' channel)
+	'Position and size' default 'Position and size. See also "units"' channel)
 
 (transparent (int) 0 'Transparent' transparency
 	'Determines transparency of window' raw)
