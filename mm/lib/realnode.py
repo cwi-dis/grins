@@ -205,12 +205,15 @@ class SlideShow:
 				# new file exists, use it
 				import realsupport
 				fp = open(fn)
-				rp = realsupport.RPParser(url, baseurl = ourl)
+				self.filename = url
+				rp = realsupport.RPParser(url, baseurl = ourl, printfunc = self.printfunc)
 				try:
 					rp.feed(fp.read())
 					rp.close()
 				except:
-					msg = 'Error reading RealPix file %s' % url
+					import sys
+					tp, vl, tb = sys.exc_info()
+					msg = 'Error reading RealPix file %s:\n%s' % (url, vl)
 					windowinterface.showmessage(msg, mtype = 'warning')
 					self.node.set_infoicon('error', msg)
 					rp = DummyRP()
@@ -376,6 +379,9 @@ class SlideShow:
 ##			realsupport.writeRP(node.tmpfile, rp, node)
 			MMAttrdefs.flushcache(node)
 
+	def printfunc(self, msg):
+		windowinterface.showmessage('while reading %s\n\n' % self.filename + msg)
+
 	def kill(self):
 		pass
 		
@@ -385,7 +391,7 @@ class SlideShow:
 						['Yes', 'No', 'Cancel'], 2)
 		# User wants to save, but we have no url.
 		answer = windowinterface.multchoice('Discard old contents of RealPix node?',
-			['Yes', 'No', 'Cancel'], 2)
+			['OK', 'Cancel'], 1)
 		if answer == 0:
 			# Discard, return as "don't save"
 			return 1
