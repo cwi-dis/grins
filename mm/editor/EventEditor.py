@@ -25,23 +25,29 @@ CAUSES = [				# What causes the event
 	'accessKey',			# extrainfo is the key pressed.
 	'marker',			# er.. I admit that I don't understand this.
 	'wallclock',			# extrainfo is the time.
+	# What else??
 	]
 
+# Reference: pg 401 of the SMIL printout on my desk; or chapter 13.3.12 (events)
 EVENTS_NODE = [				# What the event actually is.
-	# This list is incomplete
-	'.begin',
-	'.end',
-	'.repeat',			# what about it's integer argument??
-	'.click',
-	'.activateEvent',
-	'.This list has not yet been completed yet.',
+	'begin',
+	'end',
+	'repeat',			# what about it's integer argument??
+	'click',
+	'focusInEvent',
+	'focusOutEvent',		# NO OFFSET!
+	'activateEvent',
+	'beginEvent',
+	'endEvent',			
+	'repeatEvent',			# NO OFFSET!
 	]
 
-EVENTS_REGION = [
-	# This list is incomplete
-	'.mouseIn',
-	'.mouseOut',
-	'This list has not been written yet.'
+EVENTS_REGION = [			# no offsets at all!
+	'activateEvent',
+	'focusInEvent',		# I'm not sure about these.
+	'focusOutEvent',
+	'inBoundsEvent',
+	'outOfBoundsEvent',
 	]
 
 def syncarc2string(a):
@@ -185,6 +191,8 @@ class EventStruct:
 		# The event.
 		if self.cause == 'node' or self.cause == 'region':
 			self.event = x.event
+
+		print "DEBUG: I got: ", self.cause, self.event
 
 	def as_string(self):
 		return repr(self._syncarc)
