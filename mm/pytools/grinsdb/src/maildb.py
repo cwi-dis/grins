@@ -212,6 +212,13 @@ class MdbDatabase:
 		msg = rfc822.Message(fp)
 		return self._objfactory(id, msg, rw)
 
+	def openfp(self, id, rw='r'):
+		filename = self.id2filename(id)
+		return open(filename, rw)
+
+	def filename(self, id):
+		return self.id2filename(id)
+
 	def new(self, msg=None):
 		if msg == None:
 			msg = rfc822.Message(EmptyFile())
