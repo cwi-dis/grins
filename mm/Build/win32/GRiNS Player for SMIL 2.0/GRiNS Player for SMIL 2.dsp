@@ -521,6 +521,10 @@ SOURCE=.\M_httplib.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_IconMixin.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_ImageChannel.c
 # End Source File
 # Begin Source File
@@ -674,6 +678,10 @@ SOURCE=.\M_opsys.c
 # Begin Source File
 
 SOURCE=.\M_os.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_Owner.c
 # End Source File
 # Begin Source File
 
