@@ -112,3 +112,14 @@ class LinkEditLight:
 		em.addlink(link)
 		if not notransaction:
 			em.commit()
+
+	def makename(self, anchor):
+		if type(anchor) is not type(()):
+			return anchor
+		uid, aid = anchor
+		if '/' in uid:
+			return aid + ' in ' + uid
+		node = self.context.mapuid(uid)
+		nodename = node.GetRawAttrDef('name', '#' + uid)
+		if type(aid) is not type(''): aid = `aid`
+		return nodename + '.' + aid
