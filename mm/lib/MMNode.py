@@ -1214,9 +1214,6 @@ class MMChannel(MMTreeElement):
 			if key == 'base_winoff':
 				# keep the compatibility with old version
 				return self.getPxGeom()
-			elif self.isCssAttr(key):
-				# keep the compatibility with old version
-				return self.getCssRawAttr(key)
 
 			raise KeyError, key
 
@@ -1281,7 +1278,6 @@ class MMChannel(MMTreeElement):
 			return
 		elif self.isCssAttr(key):
 			self.setCssAttr(key, value)
-			return
 			
 		self.attrdict[key] = value
 
@@ -1292,41 +1288,26 @@ class MMChannel(MMTreeElement):
 			self.Extract()
 			if self.attrdict.get('type') == 'layout':
 					self.context.cssResolver.unlink(self._cssId)
-		else:
-			del self.attrdict[key]
+			return
+		del self.attrdict[key]
 		
 	def has_key(self, key):
-		# XXX css attributes: to clean and optimize
-		if key in _CssAttrs:
-			value = self.getCssRawAttr(key, None)
-			return value != None
 		if key == 'base_window':
 			return self.GetParent() is not None
 		return self.attrdict.has_key(key)
 
 	def keys(self):
 		keys = self.attrdict.keys()
-		# XXX css attributes: to clean and optimize
-		for attr in _CssAttrs:
-			value = self.getCssRawAttr(attr, None)
-			if value != None:
-				keys.append(attr)
 		if self.GetParent() is not None:
 			keys.append('base_window')
 		return keys
 
 	def items(self):
 		items = self.attrdict.items()
-		# XXX css attributes: to clean and optimize
-		cssItems = []
-		for attr in _CssAttrs:
-			value = self.getCssRawAttr(attr, None)
-			if value != None:
-				cssItems.append((attr,value))
 		parent = self.GetParent()
 		if parent is not None:
 			items.append(('base_window', parent.name))
-		return items+cssItems
+		return items
 
 	def get(self, key, default = None):
 		if key == 'base_window':
@@ -1338,9 +1319,6 @@ class MMChannel(MMTreeElement):
 			return self.getPxGeom()
 		if self.attrdict.has_key(key):
 			return self.attrdict[key]
-		if self.isCssAttr(key):
-			# keep the compatibility with old version
-			return self.getCssRawAttr(key)
 #		if key == 'bgcolor' and \
 #		   self.attrdict.has_key('base_window') and \
 #		   self.attrdict.get('transparent', 0) <= 0:
@@ -1392,9 +1370,6 @@ class MMChannel(MMTreeElement):
 	def GetAttr(self, name, animated=0):
 		if animated and self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
-		# only for css positioning attributes
-		if self.isCssAttr(name):
-			return self.getCssAttr(name)
 		if self.attrdict.has_key(name):
 			return self.attrdict[name]
 		raise NoSuchAttrError, 'in GetAttr'
@@ -1402,9 +1377,6 @@ class MMChannel(MMTreeElement):
 	def GetAttrDef(self, name, default, animated=0):
 		if animated and self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
-		# only for css postioning attributes
-		if self.isCssAttr(name):
-			return self.getCssAttr(name)
 		return self.attrdict.get(name, default)
 
 # MMChannel tree class
@@ -2670,10 +2642,6 @@ class MMNode(MMTreeElement):
 	def GetRawAttr(self, name, animated=0):
 		if animated and self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
-		# only for css positioning attributes
-		if name in _CssAttrs:
-#		don't use : if self.isCssAttr(name)->equivalent. just the fact to call the method takes a lot of times
-			return self.getCssRawAttr(name)
 		if self.attrdict.has_key(name):
 			return self.attrdict[name]
 		raise NoSuchAttrError, 'in GetRawAttr()'
@@ -2683,18 +2651,11 @@ class MMNode(MMTreeElement):
 	def GetRawAttrDef(self, name, default, animated=0):
 		if animated and self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
-		# only for css positioning attributes
-		if name in _CssAttrs:
-#		don't use : if self.isCssAttr(name)->equivalent. just the fact to call the method takes a lot of times
-			return self.getCssRawAttr(name)
 		return self.attrdict.get(name, default)
 
 	def GetAttr(self, name, animated=0):
 		if animated and self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
-		# only for css positioning attributes
-		if self.isCssAttr(name):
-			return self.getCssAttr(name)
 		if self.attrdict.has_key(name):
 			return self.attrdict[name]
 		raise NoSuchAttrError, 'in GetAttr'
@@ -2702,9 +2663,6 @@ class MMNode(MMTreeElement):
 	def GetAttrDef(self, name, default, animated=0):
 		if animated and self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
-		# only for css postioning attributes
-		if self.isCssAttr(name):
-			return self.getCssAttr(name)
 		return self.attrdict.get(name, default)
 
 	def GetInherAttr(self, name, animated=0):
@@ -3147,7 +3105,7 @@ class MMNode(MMTreeElement):
 			return
 		elif self.isCssAttr(name):
 			self.setCssAttr(name, value)
-			return
+#			return
 			
 		self.attrdict[name] = value
 		MMAttrdefs.flushcache(self)
@@ -3165,7 +3123,7 @@ class MMNode(MMTreeElement):
 	def DelAttr(self, name):
 		if self.isCssAttr(name):
 			self.setCssAttr(name, None)
-			return
+#			return
 		if not self.attrdict.has_key(name):
 			return		# nothing to do
 		del self.attrdict[name]

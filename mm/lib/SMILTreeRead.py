@@ -1628,31 +1628,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			cssResolver = self.__context.cssResolver				
 			subRegCssId = node.getSubRegCssId()
 			mediaCssId = node.getMediaCssId()
-			attrList = [('left',node.attrdict.get('left')),
-						('width',node.attrdict.get('width')),
-						('right',node.attrdict.get('right')),
-						('top',node.attrdict.get('top')),
-						('height',node.attrdict.get('height')),
-						('bottom',node.attrdict.get('bottom'))]
-			cssResolver.setRawAttrs(subRegCssId, attrList)
-			# don't keep the originals
-			if node.attrdict.has_key('left'): del node.attrdict['left']
-			if node.attrdict.has_key('top'): del node.attrdict['top']
-			if node.attrdict.has_key('width'): del node.attrdict['width']
-			if node.attrdict.has_key('height'): del node.attrdict['height']
-			if node.attrdict.has_key('right'): del node.attrdict['right']
-			if node.attrdict.has_key('bottom'): del node.attrdict['bottom']
 
-			if node.attrdict.has_key('regPoint'):
-				cssResolver.setRawAttrs(mediaCssId, [('regPoint', node.attrdict.get('regPoint'))])
-				del node.attrdict['regPoint']
-			if node.attrdict.has_key('regAlign'):
-				cssResolver.setRawAttrs(mediaCssId, [('regAlign', node.attrdict.get('regAlign'))])
-				del node.attrdict['regAlign']
-			if node.attrdict.has_key('fit'):
-				cssResolver.setRawAttrs(mediaCssId, [('fit', node.attrdict.get('fit'))])
-				del node.attrdict['fit']
-				
+			attrList = []
+			for attr in ['left', 'width', 'right', 'top', 'height', 'bottom']:
+				if node.attrdict.has_key(attr):
+					attrList.append((attr, node.attrdict[attr]))
+			cssResolver.setRawAttrs(subRegCssId, attrList)
+
+			attrList = []
+			for attr in ['regAlign', 'regPoint', 'fit']:
+				if node.attrdict.has_key(attr):
+					attrList.append((attr, node.attrdict[attr]))
+			cssResolver.setRawAttrs(mediaCssId, attrList)
+												
 		clip_begin = attributes.get('clipBegin')
 		if clip_begin:
 			attr = 'clipBegin'
@@ -2004,6 +1992,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				# fix all the time a pixel geom value for viewport.
 				self.__context.cssResolver.setRawAttrs(cssId, [('width', width),
 																		   ('height', height)])
+				ch['width'] = width
+				ch['height'] = height
 				continue
 
 			if not ch.has_key('base_window'):
@@ -2101,37 +2091,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if mtype == 'layout':
 			cssId = ch.getCssId()
 			cssResolver = self.__context.cssResolver
-			attrList = [('left',attrdict.get('left')),
-						('width',attrdict.get('width')),
-						('right',attrdict.get('right')),
-						('top',attrdict.get('top')),
-						('height',attrdict.get('height')),
-						('bottom',attrdict.get('bottom'))]
+			attrList = []
+			for attr in ['left', 'width', 'right', 'top', 'height', 'bottom', 'fit']:
+				if attrdict.has_key(attr):
+					val = attrdict[attr]
+					attrList.append((attr, val))
+					# store as weel the value into ch
+					ch[attr] = val
+					# last, del the value from the original object
+					del attrdict[attr]
 			cssResolver.setRawAttrs(cssId,attrList)
-			# remove original attributes
-			if attrdict.has_key('left'): del attrdict['left']
-			if attrdict.has_key('width'): del attrdict['width']
-			if attrdict.has_key('right'): del attrdict['right']
-			if attrdict.has_key('top'): del attrdict['top']
-			if attrdict.has_key('height'): del attrdict['height']
-			if attrdict.has_key('bottom'): del attrdict['bottom']
-
-			if attrdict.has_key('fit'):
-				fit = attrdict['fit']; del attrdict['fit']
-				cssResolver.setRawAttrs(cssId, [('fit', fit)])
-
-			# don't take into account the regAlign and regPoint on region since it's not allow anymore
-			# it allows to have an unexpected behavior if user specified a value
-			# currently, the parser show a warning but don't filter the value if specified
-			if attrdict.has_key('regAlign'):
-#				cssResolver.setRawAttrs(cssId,[('regAlign', attrdict['regAlign'])])
-				del attrdict['regAlign']
-			if attrdict.has_key('regPoint'):
-#				cssResolver.setRawAttrs(cssId, [('regPoint', attrdict['regPoint'])])
-				del attrdict['regPoint']
-														
-		# other fit options not implemented
-
+						
 		# keep all attributes that we didn't use
 		for attr, val in attrdict.items():
 			# experimental code for switch layout: 'elementindex'
