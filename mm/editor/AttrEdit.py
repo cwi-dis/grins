@@ -105,6 +105,7 @@ def showtransitionattreditor(toplevel, trname, initattr = None):
 		attreditor = toplevel.context.transitions[trname]['__attreditor']
 	except KeyError:
 		attreditor = AttrEditor(TransitionWrapper(toplevel, trname), initattr = initattr)
+		toplevel.context.transitions[trname]['__attreditor'] = attreditor
 	else:
 		attreditor.pop()
 		
@@ -755,8 +756,6 @@ class ChannelWrapper(Wrapper):
 		if name == '.cname': name = 'name'
 		return MMAttrdefs.parsevalue(name, str, self.context)
 
-
-
 class DocumentWrapper(Wrapper):
 	__stdnames = ['title', 'author', 'comment', 'copyright', 'base', 'project_boston']
 	__publishnames = [
@@ -860,19 +859,21 @@ class DocumentWrapper(Wrapper):
 
 class TransitionWrapper(Wrapper):
 	# XXXX Should we have the name in here too?
-	__stdnames = ['trtype', 'subtype', 'dur', 'startPercent', 'endPercent', 'direction',
+	__stdnames = ['trname', 'trtype', 'subtype', 'dur', 'startPercent', 'endPercent', 'direction',
 		'horzRepeat', 'vertRepeat', 'borderWidth', 'color', 'multiElement', 'childrenClip']
 
 	def __init__(self, toplevel, trname):
  		Wrapper.__init__(self, toplevel, toplevel.context)
  		self.__trname = trname
-		self.context.transitions[self.__trname]['__attreditor'] = self
 		
 	def __repr__(self):
 		return '<TransitionWrapper instance for %s, file=%s>' % (self.__trname, self.toplevel.filename)
 
 	def close(self):
-		del self.context.transitions[self.__trname]['__attreditor']
+		try:
+			del self.context.transitions[self.__trname]['__attreditor']
+		except KeyError:
+			pass
 		Wrapper.close(self)
 
 	def stillvalid(self):
@@ -887,6 +888,8 @@ class TransitionWrapper(Wrapper):
 		return self.getvalue() or ''
 
 	def getvalue(self, name):	# Return the raw attribute or None
+		if name == 'trname':
+			return self.__trname
 		if self.context.transitions[self.__trname].has_key(name):
 			return self.context.transitions[self.__trname][name]
 		return None		# unrecognized
@@ -896,11 +899,22 @@ class TransitionWrapper(Wrapper):
 		return attrdef[1]
 		
 	def setattr(self, name, value):
-		self.context.transitions[self.__trname][name] = value
+		if name == 'trname':
+			if value == self.__trname:
+				return
+			if self.context.transitions.has_key(value):
+				import windowinterface
+				windowinterface.showmessage('Duplicate transition name: %s (not changed)'%value)
+				return
+			self.editmgr.settransitionname(self.__trname, value)
+			self.__trname = value
+		else:
+			self.editmgr.settransitionvalue(self.__trname, name, value)
 
-	def delattr(self, name): # XXXX Is this allowed?
-		if self.context.attributes.has_key(name):
-			del self.context.transitions[self.__trname][name]
+	def delattr(self, name):
+		if name == 'trname':
+			return	# Don't do this
+		self.editmgr.settransitionvalue(self.__trname, name, None)
 
 	def delete(self):
 		# shouldn't be called...
@@ -915,15 +929,6 @@ class TransitionWrapper(Wrapper):
 		if '__attreditor' in names:
 			names.remove('__attreditor')
 		return self.__stdnames + names
-		
-##	def valuerepr(self, name, value):
-##		# XXXX Anywhere we have to use valuerepr?
-##		return value
-##
-##	def parsevalue(self, name, str):
-##		# XXXX Anywhere we have to use parsevalue
-##		return str
-
 
 class PreferenceWrapper(Wrapper):
 	__strprefs = {
