@@ -253,6 +253,7 @@ class _SourceView(GenView, docview.RichEditView):
 		self.__ok = components.Button(self._dlgBar,grinsRC.IDC_BUTTON1)
 		self.__apply = components.Button(self._dlgBar,grinsRC.IDC_BUTTON2)
 		self.__revert = components.Button(self._dlgBar,grinsRC.IDC_BUTTON3)
+		self.__autoWrapCtrl = components.CheckButton(self._dlgBar,grinsRC.IDC_AUTOWRAP)
 
 		self.__text=''
 		self.__mother = None
@@ -282,6 +283,7 @@ class _SourceView(GenView, docview.RichEditView):
 		self.__ok.attach_to_parent()
 		self.__apply.attach_to_parent()
 		self.__revert.attach_to_parent()
+		self.__autoWrapCtrl.attach_to_parent()
 
 	# Called by the framework after the OS window has been created
 	def OnInitialUpdate(self):
@@ -305,7 +307,9 @@ class _SourceView(GenView, docview.RichEditView):
 		self.enableDlgBarComponent(self.__ok, 1)
 		self.enableDlgBarComponent(self.__apply, 0)
 		self.enableDlgBarComponent(self.__revert, 0)
-
+		# init the autowrap ctrl
+		self.__autoWrapCtrl.setcheck(0)
+		
 		# disable the default wrap behavior
 		self.SetWordWrap(win32ui.CRichEditView_WrapNone)
 		self.WrapChanged()
@@ -374,6 +378,8 @@ class _SourceView(GenView, docview.RichEditView):
 			self.__apply_callback()
 		elif id == self.__revert._id:
 			self.__revert_callback()
+		elif id == self.__autoWrapCtrl._id:
+			self.__autowrap_callback()
 
 	def __ok_callback(self):
 		if self.__closecallback is not None:
@@ -391,6 +397,18 @@ class _SourceView(GenView, docview.RichEditView):
 		self.enableDlgBarComponent(self.__revert, 0)
 		self.SetModify(0)
 
+	def __autowrap_callback(self):
+		# init the autowrap ctrl
+		val = self.__autoWrapCtrl.getcheck()
+		if val:
+			# disable the default wrap behavior
+			self.SetWordWrap(win32ui.CRichEditView_WrapToWindow)
+			self.WrapChanged()
+		else:
+			# disable the default wrap behavior
+			self.SetWordWrap(win32ui.CRichEditView_WrapNone)
+			self.WrapChanged()
+			
 	def setclosecmd(self, cmdid):
 		self._closecmdid = cmdid
 
