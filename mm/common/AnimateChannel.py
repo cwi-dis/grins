@@ -56,24 +56,15 @@ class AnimateChannel(Channel.ChannelAsync):
 		if not self.__ready():
 			self.playdone(0)
 			return
-		
+
 		# take into account accumulation effect
 		# self.__curloop  is the zero based loop counter
-		self.__curloop = 0
-		value = node.GetAttrDef('loop', None)
-		if value:
-			self.__curloop = value - node.curloopcount - 1
-
-		repeatDur = MMAttrdefs.getattr(node, 'repeatdur')
-		if repeatDur and repeatDur!=0:
-			actx = self._player._animateContext
-			if actx._loopcount.has_key(node):
-				self.__curloop = actx._loopcount[node]
-				self.__curloop = self.__curloop + 1
+		if node.looping_body_self:
+			if hasattr(node.looping_body_self, 'loopcount'):
+				self.__curloop = 1 + node.looping_body_self.loopcount
 			else:
-				actx._loopcount[node]=0 
 				self.__curloop = 0
-
+		
 		self.__animating = node
 
 		# get duration in secs (float)
@@ -149,8 +140,9 @@ class AnimateChannel(Channel.ChannelAsync):
 		if self.__start is None:
 			print 'Warning: None start_time for node',self.__animating
 			self.__start = 0
-		self.__effAnimator.onAnimateBegin(self.__getTargetChannel(), self.__animator)
 		
+		self.__effAnimator.onAnimateBegin(self.__getTargetChannel(), self.__animator)
+
 		# take into account accumulation effect
 		for i in range(self.__curloop):
 			self.__animator.setToEnd()
@@ -167,7 +159,8 @@ class AnimateChannel(Channel.ChannelAsync):
 	def __removeAnimate(self):
 		if self.__effAnimator:
 			if debug: print 'removeAnimate'
-			self.__effAnimator.onAnimateEnd(self.__getTargetChannel(), self.__animator)
+			update = not self.__animator.isAccumulating()
+			self.__effAnimator.onAnimateEnd(self.__getTargetChannel(), self.__animator, update=update)
 			self.__effAnimator = None
 
 	def __pauseAnimate(self, paused):
