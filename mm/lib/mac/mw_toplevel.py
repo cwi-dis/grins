@@ -599,7 +599,6 @@ class _Event(AEServer):
 				
 	def setidleproc(self, cb):
 		"""Adds an idle-loop callback"""
-		self._idles.append(cb)
 		id = self.__idleid
 		self.__idleid = self.__idleid + 1
 		self._idles[id] = cb
