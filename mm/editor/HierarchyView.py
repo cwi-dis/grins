@@ -19,7 +19,6 @@ import BandwidthCompute
 from usercmd import *
 import os
 import urlparse, MMurl
-import Timing
 from math import ceil
 import string
 import MMmimetypes
@@ -434,7 +433,6 @@ class HierarchyView(HierarchyViewDialog):
 		# Iterate through the MMNode structure (starting from self.root)
 		# and create a scene graph from it.
 		# As such, any old references into the old scene graph need to be reinitialised.
-		Timing.needtimes(self.root)  # For bandwidth bars
 		self.selected_widget = None
 		self.focusobj = None
 		self.scene_graph = create_MMNode_widget(self.root, self)

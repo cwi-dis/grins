@@ -9,7 +9,6 @@ from urlparse import urlparse, urlunparse
 from MMExc import *
 from AnchorDefs import *
 from EditMgr import EditMgr
-import Timing
 from ViewDialog import ViewDialog
 from Hlinks import *
 from usercmd import *

@@ -6,7 +6,6 @@ import time
 from sched import scheduler
 from MMExc import *
 import MMAttrdefs
-import Timing
 from MMTypes import *
 from ArmStates import *
 from HDTL import HD, TL
@@ -133,7 +132,6 @@ class SchedulerContext:
 							 self.channels)
 		self.playroot.EndPruneTree()
 		mini = self.playroot.FindMiniDocument()
-		Timing.needtimes(mini)
 		return 1
 
 	def cancelprearms(self, node):

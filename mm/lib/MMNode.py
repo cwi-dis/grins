@@ -128,7 +128,7 @@ class MMNodeContext:
 			self.root = self.uidmap[uid].GetRoot()
 		import Timing
 		if self.root:
-			Timing.needtimes(self.root)
+			Timing.computetimes(self.root)
 		# XXX Temp
 		for node in self.uidmap.values():
 			timeobj = node.GetTimesObject(which)
