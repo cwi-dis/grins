@@ -8,6 +8,7 @@ from AnchorDefs import *
 import os
 debug = os.environ.has_key('CHANNELDEBUG')
 import MMAttrdefs
+from MMExc import NoSuchAttrError
 import windowinterface, WMEVENTS
 from windowinterface import SINGLE, TEXT, HTM, MPEG
 from windowinterface import TRUE, FALSE
@@ -32,6 +33,8 @@ PLAYED = 3
 import settings
 CMIF_MODE = settings.get('cmif')
 
+ACTIVATEEVENT = 'activateEvent'
+
 def isin(elem, list):
 	# faster than "elem in list"
 	for x in list:
@@ -39,15 +42,13 @@ def isin(elem, list):
 			return 1
 	return 0
 
-clipre = None
-clock_val = None
-
 class Channel:
 	#
 	# The following methods can be called by higher levels.
 	#
 	chan_attrs = ['visible', 'base_window']
-	node_attrs = ['file', 'mimetype', 'project_convert']
+	node_attrs = ['file', 'mimetype', 'project_convert', 'duration',
+		      'repeatdur', 'loop']
 	_visible = FALSE
 
 	def __init__(self, name, attrdict, scheduler, ui):
@@ -73,16 +74,23 @@ class Channel:
 		self._playstate = PIDLE
 		self._qid = None
 		self._scheduler = scheduler
-		self._paused = 0
+		self._paused = None
 		self._subchannels = []
 		self._want_shown = 0
 		self._highlighted = None
 		self._in_modeless_resize = 0
+		self.armBox = (0.0, 0.0, 1.0, 1.0) # by default all window area
+		self.playBox = (0.0, 0.0, 1.0, 1.0) # by default all window area
 		self.nopop = 0
-		self.syncarm = 0
+		self.syncarm = settings.noprearm
 		self.syncplay = 0
 		self.is_layout_channel = 0
 		self.seekargs = None
+		self._armed_anchor2button = {}
+		self._played_anchor2button = {}
+		self._hide_pending = 0
+		self._exporter = None
+		self.cssResolver = self._player.cssResolver
 		if debug:
 			print 'Channel() -> '+`self`
 		channels.append(self)
@@ -107,6 +115,7 @@ class Channel:
 			self._player.editmgr.unregister(self)
 		del self._armcontext
 		del self._armed_anchors
+		del self._armed_anchor2button
 		del self._armed_node
 		del self._armstate
 		del self._attrdict
@@ -114,30 +123,50 @@ class Channel:
 		del self._anchors
 		del self._playcontext
 		del self._played_anchors
+		del self._played_anchor2button
 		del self._played_node
 		del self._player
 		del self._playstate
 		del self._qid
 		del self._scheduler
-		channels.remove(self)
-
-	def commit(self):
-		self._armed_node = None
-		if self._is_shown:
-			reshow = 0
-			for key, (val, default) in self._curvals.items():
-				if self._attrdict.get(key, default) != val:
-					reshow = 1
+		del self._exporter
+		for i in range(len(channels)):
+			if channels[i] is self:
+				del channels[i]
+				break
+		for chan in channels:
+			for i in range(len(chan._subchannels)):
+				if chan._subchannels[i] is self:
+					del chan._subchannels[i]
 					break
-			if self.mustreshow() or reshow:
-				highlighted = self._highlighted
-				self.cancel_modeless_resize()
-				self.hide()
-				self.show()
-				if highlighted:
-					self.highlight(highlighted)
 
-	def transaction(self):
+	def commit(self, type):
+		try:
+			if debug: print 'Channel.commit'+`self,type`
+			if type in ('REGION_GEOM', 'MEDIA_GEOM'):
+				# for now we can't change the geom during pausing
+				if self._player.playing or self._player.pausing:
+					return
+				
+			self._armed_node = None
+			if self._is_shown:
+				reshow = 0
+				for key, (val, default) in self._curvals.items():
+					if self._attrdict.get(key, default) != val:
+						reshow = 1
+						break
+				if self.mustreshow() or reshow:
+					highlighted = self._highlighted
+					self.cancel_modeless_resize()
+					self.hide()
+					self.show()
+					if highlighted:
+						self.highlight(highlighted)
+		except:
+			# may be already destroyed
+			pass
+
+	def transaction(self, type):
 		return 1
 
 	def rollback(self):
@@ -148,6 +177,17 @@ class Channel:
 		a commit"""
 		return 0
 
+	# return true is the channel is showing
+	def isShown(self):
+		return self._is_shown
+
+	# return the playing node
+	# None is not in playing state
+	def getPlayingNode(self):
+		if self._playstate == PLAYING:
+			return self._played_node
+		return None
+	
 	def kill(self):
 		if hasattr(self, '_player'):
 			self.destroy()
@@ -174,6 +214,13 @@ class Channel:
 			self.save_geometry()
 			self.hide()
 
+	def register_exporter(self, exporter):
+		self._exporter = exporter
+
+	def unregister_exporter(self, exporter):
+		if self._exporter==exporter:
+			self._exporter = None
+
 	def replaynode(self):
 		self.wait_for_arm()
 		# Now we should replay the node that was played when
@@ -197,6 +244,7 @@ class Channel:
 				self.syncplay = 1
 				save_nopop = self.nopop
 				self.nopop = 1
+				self._played_node = None
 				self.play(node)
 				self.syncplay = save_syncplay
 				self.nopop = save_nopop
@@ -213,9 +261,31 @@ class Channel:
 			# maybe we should do something, but what?
 			raise error, 'don\'t know if this can happen'
 
-	def show(self):
-		if debug:
-			print 'Channel.show('+`self`+')'
+	def show(self, force = 0):
+		if debug: print 'Channel.show'+`self,force`
+			
+		# If we were still waiting for a hide we cancel that
+		self._hide_pending = 0
+
+		# force equal 1 is used only in internal. By default the channel is shown
+		# only when showBackground attribute equal to always
+		if self._visible and not force:
+			if self._get_parent_channel() != None:
+				# for now, we have to create a media channel only when it's active
+				# it's important for sub-region positioning as long as that
+				# the dynamic resizing won't be possible on all plateform
+				if not self.is_layout_channel:
+					return
+
+				elif self._attrdict.has_key('showBackground'):
+					if self._attrdict['showBackground'] == 'whenActive':
+						return
+			else:
+				# case for the top window
+				if self._attrdict.has_key('open'):
+					if self._attrdict['open'] == 'whenActive':
+						return
+
 		# Indicate that the channel must enter the SHOWN state.
 		self._want_shown = 1
 		if self._is_shown:
@@ -243,7 +313,8 @@ class Channel:
 			if self._is_shown == 0:
 				self._player.after_chan_show(self)
 			return
-		self.after_show()
+
+		self.after_show(force)
 
 	def _get_parent_channel(self, creating=0):
 		"""Return the parent (basewindow) channel, if it exists"""
@@ -277,7 +348,7 @@ class Channel:
 ##					raise 'Parent window does not contain child', (self, pchan)
 		return pchan
 
-	def after_show(self):
+	def after_show(self, force=0):
 		# Since the calls to arm() and play() lied to the
 		# scheduler when the channel was hidden, we must do a
 		# few things so that the real state of things is once
@@ -289,13 +360,27 @@ class Channel:
 		# can become visible
 		for chan in self._subchannels[:]:
 			if chan._want_shown:
-				chan.show()
+				chan.show(force)
 		self._player.after_chan_show(self)
 
-	def hide(self):
+	def hide(self, force=1):
 		# Indicate that the channel must enter the HIDDEN state.
 		if debug:
 			print 'Channel.hide('+`self`+')'
+
+		# force equal 0 is used only in internal. By default the channel is hide
+		# only when showBackground attribute equal whenActive
+		if not force:
+			if self._get_parent_channel() != None:
+				if self._attrdict.has_key('showBackground'):
+					if self._attrdict['showBackground'] == 'always':
+						return
+			else:
+				# case for the top window
+				if self._attrdict.has_key('close'):
+					if self._attrdict['close'] == 'onRequest':
+						return
+
 		self._want_shown = 0
 		self._highlighted = None
 		self.cancel_modeless_resize()
@@ -312,7 +397,6 @@ class Channel:
 		self.do_hide()
 		del self.pchan
 		self._curvals = {}
-		self.hideimg()
 		for chan in channels:
 			if self in chan._subchannels:
 				chan._subchannels.remove(self)
@@ -339,12 +423,6 @@ class Channel:
 		pass
 
 	def sensitive(self, callback = None):
-		pass
-
-	def showimg(self):
-		pass
-
-	def hideimg(self):
 		pass
 
 	def popup(self, poptop = 0):
@@ -404,8 +482,14 @@ class Channel:
 			return 1
 		self._armed_node = node
 		self._armed_anchors = []
-		self.armed_duration = self.getduration(node)
+		self._armed_anchor2button = {}
+		duration = node.GetAttrDef('duration', None)
+		self.armed_duration = duration
+			
 		return 0
+
+	def add_arc(self, node, arc):
+		pass
 
 	def arm_1(self):
 		# This does the final part of arming a node.  This
@@ -453,7 +537,7 @@ class Channel:
 		if self._playstate == PLAYED:
 			# someone pushed the button again, I guess
 			return
-		if not self._playcontext.anchorfired(node, anchorlist, arg):
+		if not self.anchor_triggered(node, anchorlist, arg):
 			if self._qid:
 				try:
 					self._scheduler.cancel(self._qid)
@@ -467,10 +551,10 @@ class Channel:
 					# something about that.
 					pass
 				self._qid = None
-			self._has_pause = 0
 			self.playdone(0)
 
 	def play_0(self, node):
+	
 		# This does the initial part of playing a node.
 		# Superclasses should call this method when they are
 		# starting to play a node.
@@ -478,28 +562,72 @@ class Channel:
 		# callbacks.
 		if debug:
 			print 'Channel.play_0('+`self`+','+`node`+')'
+		if self._played_node is not None:
+##			print 'stopping playing node first',`self._played_node`
+			self.stopplay(self._played_node)
 		if self._armed_node is not node:
-			raise error, 'node was not the armed node '+`self,node`
+			if settings.noprearm:
+				self.arm(node)
+				if not self._armcontext:
+					# aborted
+					return
+			else:
+				raise error, 'node was not the armed node '+`self,node`
 		if self._playstate != PIDLE:
 			raise error, 'play not idle on '+self._name
 		if self._armstate != ARMED:
-			raise error, 'arm not ready'
+			if settings.noprearm:
+				self.arm(node)
+			else:
+				raise error, 'arm not ready'
 		self._playcontext = self._armcontext
 		self._playstate = PLAYING
 		self._played_node = node
+		self.playBox = self.armBox
 		self._anchors = {}
 		self._played_anchors = self._armed_anchors[:]
-		durationattr = MMAttrdefs.getattr(node, 'duration')
-		self._has_pause = (durationattr < 0)
+		self._played_anchor2button.update(self._armed_anchor2button)
+		durationattr = node.GetAttrDef('duration', None)
 		for (name, type, button, times) in self._played_anchors:
-			if type == ATYPE_PAUSE:
-##				print 'found pause anchor'
-				f = self.pause_triggered
-				self._has_pause = 1
-			else:
-				f = self._playcontext.anchorfired
-			self._anchors[button] = f, (node, [(name, type)], None)
+			self._anchors[button] = self.onclick, (node, [(name, type)], None)
 		self._qid = None
+
+	def onclick(self, node, anchorlist, arg):
+		if debug: print 'Channel.onclick'+`self,node,anchorlist,arg`
+		for (anchorname, type) in anchorlist:
+			if anchorname is not None:
+				anchor = node.GetUID(), anchorname
+				if self._player.context.hyperlinks.findsrclinks(anchor):
+					if type == ATYPE_PAUSE:
+						f = self.pause_triggered
+					else:
+						f = self.anchor_triggered
+					return f(node, anchorlist, arg)
+
+			# check if anchor is source of event
+			for arc in node.sched_children:
+				if arc.srcanchor == anchorname and \
+				   arc.event == ACTIVATEEVENT:
+					if anchorname is None:
+						self.event(ACTIVATEEVENT)
+					else:
+						self.event(ACTIVATEEVENT, arc)
+
+	def event(self, event, arc = None):
+		if debug: print 'Channel.event'+`self,event,arc`
+		if not self._scheduler.playing:
+			# not currently interested in events
+			return
+		if arc is None:
+			if type(event) is type(()):
+				node = self._player.root.GetSchedRoot()
+				sctx = self._scheduler.sctx_list[0] # XXX HACK!
+			else:
+				node = self._played_node
+				sctx = self._playcontext
+			sctx.sched_arcs(node, event, external = 1)
+		else:
+			self._playcontext.sched_arc(self._played_node, arc, event, external = 1)
 
 	def play_1(self):
 		# This does the final part of playing a node.  This
@@ -515,58 +643,76 @@ class Channel:
 		# this node
 		self.armdone()
 		if not self.syncplay:
-			if self.armed_duration > 0:
-				self._qid = self._scheduler.enter(
-					  self.armed_duration, 0,
-					  self.playdone, (0,))
-			else:
-				self.playdone(0)
+			node = self._played_node
+			start_time = node.get_start_time()
+			if not self.armed_duration:
+				self.playdone(0, end_time = start_time)
+##			elif self.armed_duration > 0:
+##				self._qid = self._scheduler.enterabs(
+##					start_time+self.armed_duration, 0,
+##					self.playdone, (0, start_time+self.armed_duration))
 		else:
 			self.playdone(0)
+			
+		# in cmif mode, an auto anchor is triggered at the end of active duration
+		# in smil mode, an auto anchor is triggered at the begin of active duration
+		if not CMIF_MODE:
+			self._try_auto_anchors()
 
-	def playdone(self, outside_induced):
+	def playdone(self, outside_induced, end_time = None):
 		# This method should be called by a superclass
 		# (possibly through play_1) to indicate that the node
 		# has finished playing.
 		if debug:
-			if self._has_pause:
-				s = ' (pause)'
-			else:
-				s = ''
-			print 'Channel.playdone('+`self`+')' + s
+			print 'Channel.playdone('+`self`+')'
 		if self._playstate != PLAYING:
 			if not outside_induced and not self._qid:
 				# timer callback couldn't be cancelled
 				return
 			raise error, 'not playing'
 		self._qid = None
+		if not self.syncplay and \
+		   self._played_node.happenings.has_key(('event','beginEvent')):
+			# can only end when we've actually started
+			self.event('endEvent')
 		# If this node has a pausing anchor, don't call the
 		# callback just yet but wait till the anchor is hit.
-		if self._has_pause:
-			return
 		if not self.syncplay:
-			if not outside_induced:
-				if self._try_auto_anchors():
-					return
-			self._playcontext.play_done(self._played_node)
+			# in cmif mode, an auto anchor is triggered at the end of active duration
+			# in smil mode, an auto anchor is triggered at the begin of active duration
+			if CMIF_MODE:
+				if not outside_induced:
+					if self._try_auto_anchors():
+						return
+			self._playcontext.play_done(self._played_node, end_time)
 		self._playstate = PLAYED
 
 	def _try_auto_anchors(self):
 		node = self._played_node
 		list = []
 		for a in MMAttrdefs.getattr(node, 'anchorlist'):
-			if a[A_TYPE] == ATYPE_AUTO:
+			if a.atype == ATYPE_AUTO:
 ##				print 'found auto anchor'
-				list.append((a[A_ID], a[A_TYPE]))
+				list.append((a.aid, a.atype))
 		if not list:
 			return 0
-		didfire = self._playcontext.anchorfired(node, list, None)
-		if didfire and self._playstate == PLAYING and \
-		   self._played_node is node:
-			if not self.syncplay:
-				self._playcontext.play_done(node)
-			self._playstate = PLAYED
+		didfire = self.anchor_triggered(node, list, None)
+		if CMIF_MODE:
+			if didfire and self._playstate == PLAYING and \
+			   self._played_node is node:
+				if not self.syncplay:
+					self._playcontext.play_done(node)
+				self._playstate = PLAYED
 		return didfire
+
+	def freeze(self, node):
+		# Called by the Scheduler to stop playing and start freezing.
+		# The node is passed for consistency checking.
+		if debug:
+			print 'Channel.freeze'+`self,node`
+		if self._played_node is not node or self._playstate != PLAYING:
+			return
+		self.playstop()
 
 	def playstop(self):
 		# Internal method to stop playing.
@@ -589,7 +735,6 @@ class Channel:
 				# something about that.
 				pass
 			self._qid = None
-		self._has_pause = 0
 		self.playdone(1)
 
 	def do_arm(self, node, same=0):
@@ -610,7 +755,27 @@ class Channel:
 
 	def do_play(self, node):
 		# Actually play the node.
+		if not self.syncplay:
+			self.event('beginEvent')
 		pass
+
+	#
+	# The following methods can be called by the animation module.
+	#
+	def updateattr(self, node, name, value):
+		# Updates the display value of the attribute
+		if self._playstate != PIDLE:
+			self.do_updateattr(node, name, value)
+
+	def do_updateattr(self, node, name, value):
+		# Override this method to enable animations.
+		pass
+
+	def canupdateattr(self, node, name):
+		# This is for efficiency
+		# Override this method to enable animations.
+		# Return true for supported attributes
+		return 0
 
 	#
 	# The following methods can be called by the scheduler.
@@ -625,13 +790,21 @@ class Channel:
 		# returns 0, we should not call arm_1() because that
 		# will happen later.
 		same = self.arm_0(node)
-		if self._is_shown and node.ShouldPlay() and \
-		   not self.do_arm(node, same):
-			return
+		if self._is_shown and node.ShouldPlay():
+			if not self.do_arm(node, same):
+				return
+			self._prepareAnchors(node)
+
 		if not self._armcontext:
 			# The player has aborted
 			return
+
 		self.arm_1()
+
+	# this method have to be override by visible channels
+	# Warning: it can't be called by the arm_1 because arm_1 may called from others locations
+	def _prepareAnchors(self, node):
+		pass
 
 	# Called by the scheduler when it is not sure whether this
 	# node is armed or not.
@@ -670,6 +843,8 @@ class Channel:
 		if debug:
 			print 'Channel.play('+`self`+','+`node`+')'
 		self.play_0(node)
+		if not self._armcontext:
+			return
 		if self._is_shown and node.ShouldPlay():
 			# XXXX This depends on node playability not changing,
 			# otherwise we may have to re-arm.
@@ -683,9 +858,9 @@ class Channel:
 		if debug:
 			print 'Channel.stopplay('+`self`+','+`node`+')'
 		if node and self._played_node is not node:
-			raise error, 'node was not the playing node '+`self,node,self._played_node`
+##			print 'node was not the playing node '+`self,node,self._played_node`
+			return
 		if self._playstate == PLAYING:
-			self._has_pause = 0
 			self.playstop()
 		if self._playstate != PLAYED:
 			raise error, 'not played'
@@ -708,22 +883,6 @@ class Channel:
 		self._armstate = AIDLE
 		# self._armed_node = None # XXXX Removed for arm-caching
 		# self._armed_anchors = []
-
-	def terminate(self, node):
-		if debug:
-			print 'Channel.terminate('+`self`+','+`node`+')'
-		if self._armstate != AIDLE and self._armed_node is node:
-			save_syncarm = self.syncarm
-			self.syncarm = 1
-			self.stoparm()
-			self.syncarm = save_syncarm
-			self._armcontext.arm_ready(self)
-		if self._playstate != PIDLE and self._played_node is node:
-			# hack to not generate play_done event
-			save_syncplay = self.syncplay
-			self.syncplay = 1
-			self.stopplay(node)
-			self.syncplay = save_syncplay
 
 	def startcontext(self, ctx):
 		# Called by the scheduler to start a new context.  The
@@ -767,27 +926,62 @@ class Channel:
 	def setpaused(self, paused):
 		if debug:
 			print 'Channel.setpaused('+`self`+','+`paused`+')'
+		if paused and self._qid:
+			try:
+				self._scheduler.cancel(self._qid)
+			except RuntimeError:
+				# XXX
+				# It may be that the done
+				# event was removed from the
+				# queue and is now somewhere
+				# in the internals of the
+				# scheduler where we can't
+				# remove it.  We ought to do
+				# something about that.
+				pass
+			self._qid = None
 		self._paused = paused
+
+	def pause(self, node, action):
+		if node is self._played_node:
+			self.setpaused(action)
+
+	def resume(self, node):
+		if node is self._played_node:
+			self.setpaused(None)
+
+	def uipaused(self, wantpause):
+		if wantpause:
+			if not self._paused:
+				self.setpaused('uipause')
+		else:
+			if self._paused == 'uipause':
+				self.setpaused(None)
 
 	#
 	# Methods used by derived classes.
 	#
-	def setanchor(self, name, type, button, times):
+	def setanchor(self, name, type, button, times, arming = 1):
 		# Define an anchor.  This method should be called by
 		# superclasses to define an anchor while arming.  Name
 		# is the name of the anchor, type is its type, button
 		# is a button object which, when pressed, triggers the
 		# anchor.
-		self._armed_anchors.append((name, type, button, times))
+		if arming:
+			self._armed_anchors.append((name, type, button, times))
+			self._armed_anchor2button[name] = button
+		else:
+			self._played_anchors.append((name, type, button, times))
+			self._played_anchor2button[name] = button
 
-	def getfileurl(self, node):
+	def getfileurl(self, node, animated=0):
 		name = node.GetAttrDef('name', None)
 		if name and self.seekargs and self.seekargs[0] is node and self.seekargs[2]:
 			name = name + '_file'
 			for arg, val in self.seekargs[2]:
 				if arg == name:
 					return node.context.findurl(val)
-		url = MMAttrdefs.getattr(node, 'file')
+		url = MMAttrdefs.getattr(node, 'file', animated)
 		if not url:
 			return ''
 		return node.context.findurl(url)
@@ -840,126 +1034,50 @@ class Channel:
 	def getduration(self, node):
 		return MMAttrdefs.getattr(node, 'duration')
 
-	def getbgcolor(self, node):
-		return MMAttrdefs.getattr(node, 'bgcolor')
+	def getbgcolor(self, node, animated=0):
+		return MMAttrdefs.getattr(node, 'bgcolor', animated)
 
-	def getfgcolor(self, node):
-		return MMAttrdefs.getattr(node, 'fgcolor')
+	def getfgcolor(self, node, animated=0):
+##		return MMAttrdefs.getattr(node, 'fgcolor', animated)
+		fgcolor = node.GetAttrDef('fgcolor', None)
+		if fgcolor is not None:
+			return fgcolor
+		r,g,b = self.getbgcolor(node, animated)
+		if MMAttrdefs.getattr(node, 'transparent', animated) or r*r + g*g + b*b >= 3*128*128:
+			return 0,0,0
+		else:
+			return 255,255,255
 
-	def getbucolor(self, node):
-		return MMAttrdefs.getattr(node, 'bucolor')
-
-	def gethicolor(self, node):
-		return MMAttrdefs.getattr(node, 'hicolor')
+	def gethicolor(self, node, animated=0):
+		# The hicolor property doesn't exist anymore, but the HTML channels still use
+		# it to set hyperlink color. For that reason this method still exists, and returns
+		# red.
+		return (255, 0, 0)
 
 	def getloop(self, node):
 		return MMAttrdefs.getattr(node, 'loop')
 
-	def parsecount(self, val, node, attr):
-		global clock_val
-		if clock_val is None:
-			import re
-			clock_val = re.compile(
-				r'(?:(?P<use_clock>' # hours:mins:secs[.fraction]
-				r'(?:(?P<hours>\d{2}):)?'
-				r'(?P<minutes>\d{2}):'
-				r'(?P<seconds>\d{2})'
-				r'(?P<fraction>\.\d+)?'
-				r')|(?P<use_timecount>' # timecount[.fraction]unit
-				r'(?P<timecount>\d+)'
-				r'(?P<units>\.\d+)?'
-				r'(?P<scale>h|min|s|ms)?)'
-				r')$')
-		res = clock_val.match(val)
-		if res is None:
-			self.errormsg(node, 'bad clock value in %s' % attr)
-			return 0
-		if res.group('use_clock'):
-			h, m, s, f = res.group('hours', 'minutes',
-					       'seconds', 'fraction')
-			offset = 0
-			if h is not None:
-				offset = offset + string.atoi(h) * 3600
-			m = string.atoi(m)
-			if m >= 60:
-				self.syntax_error('minutes out of range')
-			s = string.atoi(s)
-			if s >= 60:
-				self.syntax_error('seconds out of range')
-			offset = offset + m * 60 + s
-			if f is not None:
-				offset = offset + string.atof(f + '0')
-		elif res.group('use_timecount'):
-			tc, f, sc = res.group('timecount', 'units', 'scale')
-			offset = string.atoi(tc)
-			if f is not None:
-				offset = offset + string.atof(f)
-			if sc == 'h':
-				offset = offset * 3600
-			elif sc == 'min':
-				offset = offset * 60
-			elif sc == 'ms':
-				offset = offset / 1000.0
-			# else already in seconds
-		else:
-			raise error, 'internal error'
-		return offset
+	def gettransition(self, node, which, animated=0):
+		import Transitions
+		trclasses = MMAttrdefs.getattr(node, which, animated)
+		if not trclasses:
+			return None
+		transitions = node.context.transitions
+		for trclass in trclasses:
+			if transitions.has_key(trclass):
+				if Transitions.IsImplemented(transitions[trclass]):
+					return transitions[trclass]
+##			else:
+##				# Shouldn't happen, I think.
+##				self.errormsg(node, 'Unknown transition name: %s\n'%trclass)
+		return None
 
 	def getclipval(self, node, attr, units):
-		import smpte
-		global clipre
-		val = MMAttrdefs.getattr(node, attr)
-		if not val:
+		try:
+			return node.GetClip(attr, units)
+		except ValueError, msg:
+			self.errormsg(node, str(msg))
 			return 0
-		if clipre is None:
-			import re
-			clipre = re.compile(
-				'^(?:'
-				'(?:(?P<npt>npt)=(?P<nptclip>.+))|'
-				'(?:(?P<smpte>smpte(?:-30-drop|-25)?)=(?P<smpteclip>.+))|'
-				'(?P<clock>[0-9].*)'
-				')$')
-		res = clipre.match(val)
-		if res is None:
-			self.errormsg(node, 'invalid %s attribute' % attr)
-			return 0
-		if res.group('npt'):
-			val = res.group('nptclip')
-			val = float(self.parsecount(val, node, attr))
-		elif res.group('clock'):
-			self.errormsg(node, 'invalid %s attribute; should be "npt=<time>"' % attr)
-			val = res.group('clock')
-			val = float(self.parsecount(val, node, attr))
-		else:
-			smpteval = res.group('smpte')
-			if smpteval == 'smpte':
-				cl = smpte.Smpte30
-			elif smpteval == 'smpte-25':
-				cl = smpte.Smpte25
-			elif smpteval == 'smpte-30-drop':
-				cl = smpte.Smpte30Drop
-			else:
-				raise error, 'internal error'
-			val = res.group('smpteclip')
-			try:
-				val = cl(val)
-			except ValueError:
-				self.errormsg(node, 'invalid %s attribute' % attr)
-				return 0
-		if units == 'smpte-25':
-			return smpte.Smpte25(val).GetFrame()
-		elif units == 'smpte-30':
-			return smpte.Smpte30(val).GetFrame()
-		elif units == 'smpte-24':
-			return smpte.Smpte24(val).GetFrame()
-		elif units == 'smpte-30-drop':
-			return smpte.Smpte30Drop(val).GetFrame()
-		elif units == 'sec':
-			if type(val) is not type(0.0):
-				val = val.GetTime()
-			return val
-		else:
-			raise error, 'internal error'
 
 	def getclipbegin(self, node, units):
 		return self.getclipval(node, 'clipbegin', units)
@@ -984,7 +1102,12 @@ class Channel:
 		# to edit an anchor.
 		return 0
 
+	__stopping = 0
 	def errormsg(self, node, msg):
+		if self.__stopping:
+			# don't put up second error message dialog if we're
+			# already stopping
+			return
 		if node:
 			node.set_infoicon('error', msg)
 			name = MMAttrdefs.getattr(node, 'name')
@@ -997,7 +1120,16 @@ class Channel:
 			'While arming%s on channel %s:\n%s' %
 				(nmsg, self._name, msg),
 			mtype = 'question',
-			cancelCallback = (self._player.cc_stop, ()))
+			cancelCallback = (self.__delaystop, ()))
+
+	def __delaystop(self):
+		Channel.__stopping = 1
+		self._player.pause(1)
+		windowinterface.settimer(0.001, (self.__stop, ()))
+
+	def __stop(self):
+		self._player.cc_stop()
+		Channel.__stopping = 0
 
 ### dictionary with channels that have windows
 ##ChannelWinDict = {}
@@ -1005,12 +1137,18 @@ class Channel:
 _button = None				# the currently highlighted button
 
 class ChannelWindow(Channel):
-	chan_attrs = Channel.chan_attrs + ['base_winoff', 'transparent', 'units', 'popup', 'z', 'bgimg']
-	node_attrs = Channel.node_attrs + ['duration', 'drawbox']
+	chan_attrs = Channel.chan_attrs + ['base_winoff', 'units', 'popup', 'z']
+	node_attrs = Channel.node_attrs[:]
 	if CMIF_MODE:
-		node_attrs.append('bgcolor')
-	else:
+		node_attrs.append('transparent')
 		chan_attrs.append('bgcolor')
+		chan_attrs.append('transparent')
+	else:
+		node_attrs.append('cssbgcolor')
+		chan_attrs.append('cssbgcolor')
+	if 1: # XXX Should depend on SMIL-Boston. Can I test for that here??
+		node_attrs.append('transIn')
+		node_attrs.append('transOut')
 	_visible = TRUE
 	_window_type = SINGLE
 
@@ -1021,15 +1159,29 @@ class ChannelWindow(Channel):
 		self._player.ChannelWinDict[self._name] = self
 		self.window = None
 		self.armed_display = self.played_display = None
+		self.update_display = None
 		self.want_default_colormap = 0
-		self._bgimg = None
 		self.__callback = None
+		self.__out_trans_qid = None
+		self._active_multiregion_transition = None
+		self._wingeom = None
+		self._winabsgeom = None
+		self._mediaabsgeom = None
+		self._mediageom = None
+		self.__transparent = 1
+		self.__z = -1
+		self.__bgcolor = None
+		self.__viewportChan = None
+
 		self.commandlist = [
 			CLOSE_WINDOW(callback = (ui.channel_callback, (self._name,))),
 			PLAY(callback = (ui.play_callback, ())),
 			PAUSE(callback = (ui.pause_callback, ())),
 			STOP(callback = (ui.stop_callback, ())),
 			MAGIC_PLAY(callback = (ui.magic_play, ())),
+			USERGROUPS(callback = ui.usergroup_callback),
+			CHANNELS(callback = ui.channel_callback),
+			SCHEDDUMP(callback = (ui.scheduler.dump, ())),
 			]
 
 	def destroy(self):
@@ -1038,6 +1190,7 @@ class ChannelWindow(Channel):
 		self.window = None
 		del self.armed_display
 		del self.played_display
+		del self.update_display
 
 	def highlight(self, color = (255,0,0)):
 		if self._is_shown and self.window:
@@ -1055,30 +1208,6 @@ class ChannelWindow(Channel):
 		self.__callback = None
 		if self._is_shown and self.window:
 			self.__callback = callback
-
-	def showimg(self):
-		self._showimg = 1
-		img = self._attrdict.get('bgimg')
-		self._curvals['bgimg'] = (img, None)
-		if img:
-			img = self._player.context.findurl(img)
-			try:
-				img = MMurl.urlretrieve(img)[0]
-			except IOError:
-				pass
-			try:
-				d = self.window.newdisplaylist()
-				box = d.display_image_from_file(img, center=0)
-				d.render()
-				self._bgimg = d
-			except (windowinterface.error, IOError), msg:
-				pass
-
-	def hideimg(self):
-		self._showimg = 0
-		if self._bgimg:
-			self._bgimg.close()
-			self._bgimg = None
 
 	def popup(self, poptop = 0):
 		if self._is_shown and self.window:
@@ -1115,6 +1244,10 @@ class ChannelWindow(Channel):
 ##			self._attrdict['winsize'] = w, h
 
 	def mousepress(self, arg, window, event, value):
+		# arg is a tuple of (x, y, buttons, params)
+		# x and y are expressed in pourcent values (relative to the channel geometry)
+		# buttons is a list of button. A button is a sensitive area associated to each anchor
+		# it can be a rectangle, circle or a polygon (see displaylist._Button class)
 		global _button
 		# a mouse button was pressed
 		if _button is not None and not _button.is_closed():
@@ -1125,25 +1258,26 @@ class ChannelWindow(Channel):
 			apply(apply, self.__callback)
 			return
 		buttons = value[2]
-		if len(buttons) == 0:
-			if self._attrdict.get('transparent', 0):
-				raise windowinterface.Continue
-##			if hasattr(self._player, 'editmgr'):
-##				self.highlight()
-		else:
+		if buttons:
 			button = buttons[0]
 			button.highlight()
 			_button = button
+##		else:
+##			if self.__transparent:
+##				raise windowinterface.Continue		
+##			if hasattr(self._player, 'editmgr'):
+##				self.highlight()
 
 	def mouserelease(self, arg, window, event, value):
+		# arg is a tuple of (x, y, buttons, params)
+		# x and y are expressed in pourcent values (relative to the channel geometry)
+		# buttons is a list of button. A button is a sensitive area associated to each anchor
+		# it can be a rectangle, circle or a polygon (see displaylist._Button class)
 		global _button
 ##		if hasattr(self._player, 'editmgr'):
 ##			self.unhighlight()
 		buttons = value[2]
-		if len(buttons) == 0:
-			if self._attrdict.get('transparent', 0):
-				raise windowinterface.Continue
-		else:
+		if buttons and self._paused not in ('hide', 'disable'):
 			button = buttons[0]
 			if _button is button:
 				try:
@@ -1154,6 +1288,9 @@ class ChannelWindow(Channel):
 					a = self.setanchorargs(a, button, value)
 					self._player.toplevel.setwaiting()
 					dummy = apply(f, a) # may close channel
+##		elif len(buttons) == 0:
+##			if self.__transparent:
+##				raise windowinterface.Continue		
 		if _button and not _button.is_closed():
 			_button.unhighlight()
 		_button = None
@@ -1163,6 +1300,18 @@ class ChannelWindow(Channel):
 		# Channels can override this to modify the args passed
 		# through the hyperjump (default: None)
 		return (node, nametypelist, args)
+
+	# set the display size of media after arming according to the size of media, fit attribute, ...
+	# this method is called by descendant
+	def setArmBox(self, armBox):
+		self.armBox = armBox
+
+	# return the display size of media after arming according to the size of media, fit attribute, ...
+	def getArmBox(self):
+		return self.armBox
+
+	def getPlayBox(self):
+		return self.playBox
 
 	def create_window(self, pchan, pgeom, units = None):
 ##		menu = []
@@ -1178,63 +1327,57 @@ class ChannelWindow(Channel):
 ##					     (self.highlight, ())))
 ##				menu.append(('', 'unhighlight',
 ##					     (self.unhighlight, ())))
-			transparent = self._attrdict.get('transparent', 0)
-			self._curvals['transparent'] = (transparent, 0)
-			z = self._attrdict.get('z', 0)
-			self._curvals['z'] = (z, 0)
+
+			self._curvals['transparent'] = (self.__transparent, 0)
+
+#			print self.__transparent
+#			print self.__bgcolor
+			# determinate the z-index
 			if self.want_default_colormap:
 				self.window = pchan.window.newcmwindow(pgeom,
-						transparent = transparent,
-						z = z,
+						transparent = self.__transparent,
+						z = self.__z,
 						type_channel = self._window_type,
 						units = units)
 			else:
 				self.window = pchan.window.newwindow(pgeom,
-						transparent = transparent,
-						z = z,
+						transparent = self.__transparent,
+						z = self.__z,
 						type_channel = self._window_type,
 						units = units)
-##			if hasattr(self._player, 'editmgr'):
-##				menu.append(None)
-##				menu.append(('', 'resize',
-##					     (self.resize_window, (pchan,))))
+
+			# fix the background color
+			if self.__transparent == 0 and self.__bgcolor != None:
+				self.window.bgcolor(self.__bgcolor)
 		else:
-			# no basewindow, create a top-level window
-			adornments = self._player.get_adornments(self)
-			units = self._attrdict.get('units',
-						   windowinterface.UNIT_MM)
-			width, height = self._attrdict.get('winsize', (50, 50))
-			self._curvals['winsize'] = ((width, height), (50,50))
-			x, y = self._attrdict.get('winpos', (None, None))
-			if self.want_default_colormap:
-				self.window = windowinterface.newcmwindow(x, y,
-					width, height, self._name,
-					visible_channel = self._visible,
-					type_channel = self._window_type,
-					units = units, adornments = adornments,
-					commandlist = self.commandlist)
-			else:
-				self.window = windowinterface.newwindow(x, y,
-					width, height, self._name,
-					visible_channel = self._visible,
-					type_channel = self._window_type,
-					units = units, adornments = adornments,
-					commandlist = self.commandlist)
-##			if hasattr(self._player, 'editmgr'):
-##				menu.append(('', 'select in timeline view',
-##					     (self.focuscall, ())))
-		if self._attrdict.has_key('bgcolor'):
-			self.window.bgcolor(self._attrdict['bgcolor'])
-		if self._attrdict.has_key('fgcolor'):
-			self.window.fgcolor(self._attrdict['fgcolor'])
-		self._curvals['bgcolor'] = self._attrdict.get('bgcolor'), None
-		self._curvals['fgcolor'] = self._attrdict.get('fgcolor'), None
+			# case not possible in internal channel
+			# only possible in LayoutChannel (look at LayoutChannel.py)
+			pass
+
 		self.window.register(WMEVENTS.ResizeWindow, self.resize, None)
 		self.window.register(WMEVENTS.Mouse0Press, self.mousepress, None)
 		self.window.register(WMEVENTS.Mouse0Release, self.mouserelease,
 				     None)
+		self.window.register(WMEVENTS.KeyboardInput, self.keyinput, None)
+		if self._exporter:
+			self.register_exporter(self._exporter)
 ##		if menu:
 ##			self.window.create_menu(menu, title = self._name)
+
+	def register_exporter(self, exporter):
+		self._exporter = exporter
+		if self.window:
+			self.window.register(WMEVENTS.WindowContentChanged, exporter.changed, 
+				self.find_layout_channel())
+
+	def unregister_exporter(self, exporter):
+		self._exporter = None
+		if self.window:
+			self.window.unregister(WMEVENTS.WindowContentChanged)
+				
+	def keyinput(self, arg, window, event, value):
+		if value:
+			self.event((self._attrdict, 'accesskey', value))
 
 	def resize_window(self, pchan):
 		if not self._player.editmgr.transaction():
@@ -1295,53 +1438,76 @@ class ChannelWindow(Channel):
 	def do_show(self, pchan):
 		if debug:
 			print 'ChannelWindow.do_show('+`self`+')'
-		try:
-			del self.winoff
-		except AttributeError:
-			pass
-		# create a window for this channel
-		pgeom = None
-		units = self._attrdict.get('units',
-					   windowinterface.UNIT_SCREEN)
-		if pchan:
-			#
-			# Find the base window offsets, or ask for them.
-			#
-			if self._played_node:
-				try:
-					pgeom = MMAttrdefs.getattr(self._played_node, 'base_winoff')
-				except KeyError:
-					pass
-			if pgeom:
-				self.winoff = pgeom
-			elif self._attrdict.has_key('base_winoff'):
-				self.winoff = pgeom = self._attrdict['base_winoff']
-			elif self._player.playing:
-				windowinterface.showmessage(
-					'No geometry for subchannel %s known' % self._name,
-					mtype = 'error', grab = 1)
-				pchan._subchannels.remove(self)
-				pchan = None
-			else:
-##				pchan.window.create_box(
-##					'Draw a subwindow for %s in %s' %
-##						(self._name, pchan._name),
-##					self._box_callback,
-##					units = units)
-##				return None
-				#
-				# Window without position/size. Set to whole parent, and remember
-				# in the attributes. (Note: technically wrong, changing the attrdict
-				# without using the edit mgr).
-				# Or should I skip the curvals stuff below, to do this correctly?
-				#
-				self.winoff = pgeom = (0.0, 0.0, 1.0, 1.0)
-				units = windowinterface.UNIT_SCREEN
-				self._attrdict['base_winoff'] = pgeom
-				self._attrdict['units'] = units
-			self._curvals['base_winoff'] = pgeom, None
-		self.create_window(pchan, pgeom, units)
+			
+		if self._wingeom == None:
+			# shouldn't happen
+			return 0
+		
+		self._curvals['base_winoff'] = self._wingeom, None
+
+		# the window size is determinate from arm method. self._wingeom is all the time 
+		# expressed in pixel value.
+		units = windowinterface.UNIT_PXL
+		self.create_window(pchan, self._wingeom, units)
+
 		return 1
+
+	# return the viewport in which this channel is playing
+	def getViewportChannel(self):
+		if self.__viewportChan == None:
+			parent = self._get_parent_channel()
+			if parent != None:
+				self.__viewportChan = parent.getViewportChannel()
+			else:
+				# it the root channel
+				self.__viewportChan = self
+				
+		return self.__viewportChan	
+				
+	# Updates channels to visible if according to the showBackground/open and close attributes.
+	# Also: derterminate the background color before to show the channel
+	# for now, we set the window bg color equal to the displylist bg color in to order
+	# to avoid "flashing" if window is not transparent
+	def updateToActiveState(self, node):
+
+		# determine the transparent and background color attributes
+		transparent = MMAttrdefs.getattr(node, 'transparent')
+		if transparent:
+			bgcolor = None
+		else:
+			bgcolor = self.getbgcolor(node)
+
+		self.__transparent = transparent
+		self.__bgcolor = bgcolor
+
+		# get the local z-index value from the node
+		self.__z = node.GetAttrDef('z', -1)
+		
+		pchan = self._get_parent_channel()
+		pchan.childToActiveState()
+
+		pchan = self._get_parent_channel()
+
+		self.updateGeom(node)
+		
+		# force show of channel.
+		self.show(1)			
+			
+		self.getViewportChannel().addActiveVisibleChannel(self, node)
+
+
+	# Updates channels to unvisible if according to the showBackground/open and close attributes
+	def updateToInactiveState(self):
+
+		# force hide the channel.
+		self.hide(1)
+
+		self.__transparent = 1
+		self.__bgcolor = None
+
+		pchan = self._get_parent_channel()
+		pchan.childToInactiveState()
+		self.getViewportChannel().removeActiveVisibleChannel(self)
 
 ##	def _box_callback(self, *pgeom):
 ##		if not pgeom:
@@ -1366,12 +1532,15 @@ class ChannelWindow(Channel):
 			self.window.close()
 			self.window = None
 			self.armed_display = self.played_display = None
+			self.update_display = None
+			if self._attrdict.get('base_window', 'undefined') == 'undefined':
+				self.event((self._attrdict, 'topLayoutCloseEvent'))
 
 	def resize(self, arg, window, event, value):
 		if debug:
 			print 'ChannelWindow.resize'+`self,arg,window,event,value`
-##		self._player.toplevel.setwaiting()
-##		self.replaynode()
+		self._player.toplevel.setwaiting()
+		self.replaynode()
 ##		if not self._player.playing and \
 ##		   self._attrdict.get('base_window','undefined') == 'undefined' and \
 ##		   hasattr(self, 'editmgr'):
@@ -1384,6 +1553,7 @@ class ChannelWindow(Channel):
 ##				self.editmgr.commit()
 
 	def arm_0(self, node):
+		self.updateToActiveState(node)
 		same = Channel.arm_0(self, node)
 		if same and self.armed_display and \
 		   not self.armed_display.is_closed():
@@ -1392,56 +1562,134 @@ class ChannelWindow(Channel):
 		if not self._is_shown or not node.ShouldPlay() \
 		   or not self.window:
 			return 0
+
 		if self.armed_display:
 			self.armed_display.close()
-		bgcolor = self.getbgcolor(node)
+
+		# experimental subregion and regpoint code
+		# we have to resize the window before the do_arm() method call, because
+		# do_arm use the real window size to determinate the real scale of an image
+		# when the scale computation will be clean, we'll be able to resize the
+		# window from play method just before display the media.
+#		if wingeom != self._wingeom:
+#			self._wingeom = wingeom
+			# print 'old geom : ',self._wingeom
+			# print 'new geom : ',wingeom
+#			units = self._attrdict.get('units',
+#				   windowinterface.UNIT_SCREEN)
+#			self.window.updatecoordinates(wingeom, units)
+		# experimental subregion and regpoint code
+
+		self.__transparent = transparent = MMAttrdefs.getattr(node, 'transparent')
+		if transparent:
+			bgcolor = None
+		else:
+			bgcolor = self.getbgcolor(node)
 		self.armed_display = self.window.newdisplaylist(bgcolor)
+
+		# by default all window area
+		self.armBox = (0.0, 0.0, 1.0, 1.0)
+
+		# set foreground color
 		fgcolor = self.getfgcolor(node)
 		self.armed_display.fgcolor(fgcolor)
-		alist = node.GetRawAttrDef('anchorlist', [])
-		armed_anchor = None
-		for i in range(len(alist)-1,-1,-1):
-			a = alist[i]
-			atype = a[A_TYPE]
-			if atype == ATYPE_WHOLE:
-				anchor = node.GetUID(), a[A_ID]
-				if not self._player.context.hyperlinks.findsrclinks(anchor):
-					continue
-				if armed_anchor:
-					print 'multiple whole-node anchors on node'
-				armed_anchor = a
-		if armed_anchor:
-			if MMAttrdefs.getattr(node, 'drawbox'):
-				self.armed_display.fgcolor(self.getbucolor(node))
-			else:
-				self.armed_display.fgcolor(bgcolor)
-			b = self.armed_display.newbutton((0.0, 0.0, 1.0, 1.0), times = armed_anchor[A_TIMES])
-			b.hiwidth(3)
-			b.hicolor(self.gethicolor(node))
-			self.armed_display.fgcolor(fgcolor)
-			self.setanchor(armed_anchor[A_ID],
-				       armed_anchor[A_TYPE], b,
-				       armed_anchor[A_TIMES])
+
+		# set alpha sentitivity
+		alphaSensitivity = MMAttrdefs.getattr(node, 'sensitivity')
+		self.armed_display.setAlphaSensitivity(alphaSensitivity)
+		
 		return 0
 
+	# Activate a sensitive area in display list according to the anchors.
+	# Warning: this method has to be called after do_arm
+	def _prepareAnchors(self, node):
+		if MMAttrdefs.getattr(node, 'transparent'):
+			bgcolor = None
+		else:
+			bgcolor = self.getbgcolor(node)
+		self.armed_display.fgcolor(bgcolor)
+
+		# create a button that covers the whole region, just
+		# in case we need one later on
+		windowCoordinates = self.convertShapeRelImageToRelWindow([A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0])
+		b = self.armed_display.newbutton(windowCoordinates, z = -1, sensitive = 0)
+		self.setanchor(None, None, b, None)
+
+		# create buttons for all anchors
+		for a in MMAttrdefs.getattr(node, 'anchorlist'):
+			coordinates = a.aargs
+			if coordinates and coordinates[0] == A_SHAPETYPE_FRAGMENT:
+				continue
+			atype = a.atype
+			sensitive = 1
+			if atype not in SourceAnchors or \
+			   atype in (ATYPE_AUTO, ):
+				sensitive = 0
+			anchor = node.GetUID(), a.aid
+			if not self._player.context.hyperlinks.findsrclinks(anchor):
+				sensitive = 0
+
+			# convert coordinates relative to the window size
+			windowCoordinates = self.convertShapeToRelWindow(coordinates)
+
+			b = self.armed_display.newbutton(windowCoordinates, times = a.atimes, sensitive = sensitive)
+			b.hiwidth(3)
+			self.setanchor(a.aid, atype, b, a.atimes)
+
+		# make buttons sensitive for which there is already a
+		# sync arc active
+		for arc in node.sched_children:
+			if arc.event == ACTIVATEEVENT:
+				b = self._armed_anchor2button.get(arc.srcanchor)
+				if b is None:
+					continue
+				b.setsensitive(1)
+
+	def add_arc(self, node, arc):
+		if node is not self._played_node or \
+		   arc.event != ACTIVATEEVENT:
+			return
+		b = self._played_anchor2button.get(arc.srcanchor)
+		if b is not None:
+			b.setsensitive(1)
+
+	# update internal geometry variables. Get geometry from MMContext structure
+	def updateGeom(self, node):
+		self._wingeom, self._mediageom = node.getPxGeomMedia()
+		self._winabsgeom, self._winabsmedia = node.getPxAbsGeomMedia()
+
+	# get the space display area of media
+	# return pourcent values relative to the subregion or region:
+	# tuple of (left/top/width/height)
+	def getmediageom(self, node):
+		subreg_left, subreg_top, subreg_width, subreg_height = self._wingeom
+		area_left, area_top, area_width, area_height = self._mediageom
+		return float(area_left)/subreg_width, float(area_top)/subreg_height, \
+				 float(area_width)/subreg_width, float(area_height)/subreg_height
+
+	# get the channel geometry
+	# return pixel values relative to the parent region: tuple of (left/top/width/height)
+	def getwingeom(self):
+		return self._wingeom
+
+	# get the channel geometry
+	# return pixel values relative to the viewport
+	def getabswingeom(self):
+		return self._winabsgeom
+	
 	def play(self, node):
 		if debug:
 			print 'ChannelWindow.play('+`self`+','+`node`+')'
 		self.play_0(node)
-		if self._is_shown and node.ShouldPlay() and self.window:
-			try:
-				winoff = self.winoff
-				winoff = MMAttrdefs.getattr(node, 'base_winoff')
-			except (AttributeError, KeyError):
-				pass
-			else:
-				if winoff != self.winoff:
-					self.hide()
-					self.show()
+		if not self._armcontext:
+			return
+		if self._is_shown and node.ShouldPlay() \
+			and self.window:
 			self.check_popup()
+			self.schedule_transitions(node)
 			if self.armed_display.is_closed():
-				# assume that we are going to get a
-				# resize event
+			# assume that we are going to get a
+			# resize event
 				pass
 			else:
 				self.armed_display.render()
@@ -1455,10 +1703,116 @@ class ChannelWindow(Channel):
 	def stopplay(self, node):
 		if debug:
 			print 'ChannelWindow.stopplay('+`self`+','+`node`+')'
+		if node and self._played_node is not node:
+##			print 'node was not the playing node '+`self,node,self._played_node`
+			return
 		Channel.stopplay(self, node)
+		self.cleanup_transitions()
+		self.updateToInactiveState()
 		if self.played_display:
-			self.played_display.close()
+##			self.played_display.close()
 			self.played_display = None
+
+
+	def setpaused(self, paused):
+		if debug:
+			print 'ChannelWindow.setpaused('+`self`+','+`paused`+')'
+		if paused == 'hide' and self.played_display:
+			# we need an unrender() method here...
+			d = self.played_display.clone()
+			self.played_display.close()
+			self.played_display = d
+		elif not paused and self._paused == 'hide' and self.played_display:
+			self.played_display.render()
+		Channel.setpaused(self, paused)
+
+	def playstop(self):
+		return Channel.playstop(self)
+
+	def schedule_transitions(self, node):
+		in_trans = self.gettransition(node, 'transIn')
+		out_trans = self.gettransition(node, 'transOut')
+		if out_trans <> None:
+			outtransdur = out_trans.get('dur', 1.0)
+			outtranstime = node.calcendfreezetime(self._playcontext)
+			# don't schedule out transition if time unresolved
+			if outtranstime is not None and outtranstime >= 0:
+				outtranstime = outtranstime-outtransdur
+				self.__out_trans_qid = self._scheduler.enterabs(outtranstime, 0,
+					self.schedule_out_trans, (out_trans, outtranstime, node))
+		if in_trans <> None and self.window:
+			start_time = node.get_start_time()
+			otherwindow = self._find_multiregion_transition(in_trans, start_time)
+			if otherwindow:
+				self.window.jointransition(otherwindow, (self.endtransition, (node,)))
+			else:
+				self.window.begintransition(0, 1, in_trans, (self.endtransition, (node,)))
+
+	def schedule_out_trans(self, out_trans, outtranstime, node):
+		self.__out_trans_qid = None
+		if not self.window:
+			return
+		otherwindow = self._find_multiregion_transition(out_trans, outtranstime)
+##		print 'OTHERWINDOW', otherwindow
+		if otherwindow:
+			self.window.jointransition(otherwindow)
+		else:
+			self.window.begintransition(1, 1, out_trans, (self.endtransition, (node,)))
+
+	def endtransition(self, node):
+		# callback, called at end of transition
+		chlist = self.getViewportChannel().getOverlapRendererList(self, node)
+		for ch, nd in chlist:
+			self._playcontext.transitiondone(nd)
+
+	def cleanup_transitions(self):
+		if self.__out_trans_qid:
+			self._scheduler.cancel(self.__out_trans_qid)
+			self.__out_trans_qid = None
+		if self.window:
+			self.window.endtransition()
+		lchan = self.find_layout_channel()
+		lchan._active_multiregion_transition = None
+
+	def _find_multiregion_transition(self, trans, transtime):
+		if not trans.get('coordinated', 0):
+			return None
+		# Unfortunately the transition name isn't in the dictionary.
+		# We use the id of the dictionary as its unique value
+		trid = id(trans)
+		#
+		# Tricky code ahead. For transitions we want to look at the channel hierarchy ignoring
+		# all non-layout channels (since layout channels correspond to regions, and multielement
+		# transitions are region-based).
+		# XXXX The code may be incorrect too: it looks up one level to find a matching transition,
+		# but downwards all the way through the tree. This means that if the regions have
+		# a grandparent/grandchild relation it will depend on scheduling order whether they match
+		# up. I think the standard doesn't allow this, but we should check.
+		#
+		our_lchan = self.find_layout_channel()
+		if our_lchan.pchan:
+			top_lchan = our_lchan.pchan.find_layout_channel()
+		else:
+			top_lchan = our_lchan
+		rv = top_lchan._has_multiregion_transition(trid, transtime, recursive=1)
+		our_lchan._active_multiregion_transition = (trid, transtime, self.window)
+		return rv
+
+	def _has_multiregion_transition(self, trid, transtime, recursive=0):
+		if self._active_multiregion_transition and \
+				(trid, transtime) == self._active_multiregion_transition[:2]:
+			return self._active_multiregion_transition[2]
+		if recursive:
+			for child in self._subchannels:
+				rv = child._has_multiregion_transition(trid, transtime, recursive=1)
+				if rv:
+					return rv
+		return None
+
+	def find_layout_channel(self):
+		if self.is_layout_channel or not hasattr(self, 'pchan') or not self.pchan:
+			return self
+		return self.pchan.find_layout_channel()
 
 	# use this code to get the error message in the window instead
 	# of in a popup window
@@ -1505,12 +1859,145 @@ class ChannelWindow(Channel):
 					    parent = self.window)
 		apply(cb, (anchor,))
 
+
+	# convert relative image offsets to relative window offsets
+	# For this, we need to know the real size of media which fit inside the region
+	# --> method getArmBox (channel dependent)
+	# This box is known only after the call of do_arm method
+	def convertShapeRelImageToRelWindow(self, args, arming = 1):
+		shapeType = args[0]
+
+		if arming:
+			box = self.getArmBox()
+		else:
+			box = self.getPlayBox()
+		rArgs = [shapeType]
+		n=0
+		for a in args[1:]:
+			# test if xCoordinates or yCoordinates
+			if n%2 == 0:
+				# convert coordinates from image to window size
+				rArgs.append(a*box[2] + box[0])
+			else:
+				rArgs.append(a*box[3] + box[1])
+			n = n+1
+
+		return rArgs
+
+	# Convert relative window offsets to relative image offsets
+	def convertShapeRelWindowToRelImage(self, args):
+		shapeType = arg[0]
+
+		if shapeType == A_SHAPETYPE_ALLREGION:
+			return args
+
+		rArgs = [shapeType,]
+		n=0
+		for a in args[1:]:
+			# test if xCoordinates or yCoordinates
+			if n%2 == 0:
+				# convert coordinates from image to window size
+				rArgs = rArgs + [(a - self._arm_imbox[0]) / self._arm_imbox[2]]
+			else:
+				rArgs = rArgs + [(a - self._arm_imbox[1]) / self._arm_imbox[3]]
+			n = n+1
+
+		return rArgs
+
+	# convert shape coordinates (as defined in SMIL specification) relative to the window. The result is float values
+	# For this, we need to know the real size of media which fit inside the region
+	# --> method getArmBox (channel dependent)
+	# This box is defined only after the call of do_arm method
+	def convertShapeToRelWindow(self, args, arming = 1):
+		# in this case we assume it's a rectangle area
+		if not args or args[0] == A_SHAPETYPE_ALLREGION:
+			args =  [A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0]
+
+		# note: mLeft, mTop, ... is the geometry of the media after centering, scaling, ...
+		if arming:
+			mLeftInPourcent, mTopInPourcent, mWidthInPourcent, mHeightInPourcent = self.getArmBox()
+		else:
+			mLeftInPourcent, mTopInPourcent, mWidthInPourcent, mHeightInPourcent = self.getPlayBox()
+			
+		wLeftInPixel, wTopInPixel, wWidthInPixel, wHeightInPixel = self.getwingeom()
+		
+		shapeType = args[0]
+
+		if shapeType != A_SHAPETYPE_CIRCLE:
+			rArgs = [shapeType]
+			n=0
+			for a in args[1:]:
+				if type(a) == type(0):	# any integer number
+					# integer values: the coordinates aren't related to the arm/play box
+						
+					# test if xCoordinates or yCoordinates
+					if n%2 == 0:
+						rArgs.append(float(a)/wWidthInPixel)
+					else:
+						rArgs.append(float(a)/wHeightInPixel)
+				else:
+					# pourcent values: the coordinates are related to the arm/play box
+					
+					# test if xCoordinates or yCoordinates
+					if n%2 == 0:
+						# convert coordinates from image to window size
+						rArgs.append(a*mWidthInPourcent + mLeftInPourcent)
+					else:
+						rArgs.append(a*mHeightInPourcent + mTopInPourcent)
+						
+				n = n+1
+				
+		else:
+			# In internal, we manage only elipses
+			# note: for an elipse, the meaning of rArg is a tuple of (xcenter, ycenter, xradius, yradius) 
+			rArgs = [A_SHAPETYPE_ELIPSE]
+			xCenter, yCenter, radius = args[1:]
+#			xsize, ysize = node.GetDefaultMediaSize(100, 100)
+#			# after a arming default, xsize or ysize value are equal to 0 !
+#			if xsize == 0: xsize=1
+#			if ysize == 0: ysize=1
+			
+			if type(xCenter) == type(0): # any integer number
+				# integer values: the coordinates aren't related to the arm/play box
+				rArgs.append(float(xCenter)/wWidthInPixel)
+			else:
+				# pourcent values: the coordinates are related to the arm/play box
+				rArgs.append(xCenter*mWidthInPourcent + mLeftInPourcent)
+				
+			if type(yCenter) == type(0): # any integer number
+				# integer values: the coordinates aren't related to the arm/play box
+				rArgs.append(float(yCenter)/wHeightInPixel)
+			else:
+				# pourcent values: the coordinates are related to the arm/play box
+				rArgs.append(yCenter*mHeightInPourcent + mTopInPourcent)
+	
+			if type(radius) == type(0): 
+				# integer values: the coordinates aren't related to the arm/play box
+				rArgs.append(float(radius)/wWidthInPixel)
+				rArgs.append(float(radius)/wHeightInPixel)
+			else:
+				mWidthInPixel = mWidthInPourcent*wWidthInPixel
+				mHeightInPixel = mHeightInPourcent*wHeightInPixel
+#				if xsize > ysize:
+				if mWidthInPixel > mHeightInPixel:
+					# radius is relative to the height
+					radiusInPixel = radius*mHeightInPixel
+				else:
+					# radius is relative to the width
+					radiusInPixel = radius*mWidthInPixel
+				rArgs.append(radiusInPixel/wWidthInPixel)
+				rArgs.append(radiusInPixel/wHeightInPixel)												
+
+		return rArgs
+	
 class ChannelAsync(Channel):
 
 	def play(self, node):
 		if debug:
 			print 'ChannelAsync.play('+`self`+','+`node`+')'
 		self.play_0(node)
+		if not self._armcontext:
+			return
 		if not self._is_shown or not node.ShouldPlay() \
 		   or self.syncplay:
 			self.play_1()
@@ -1524,6 +2011,8 @@ class ChannelWindowAsync(ChannelWindow):
 		if debug:
 			print 'ChannelWindowAsync.play('+`self`+','+`node`+')'
 		self.play_0(node)
+		if not self._armcontext:
+			return
 		if self._is_shown and node.ShouldPlay() \
 		   and self.window and not self.syncplay:
 ##			try:
@@ -1536,6 +2025,7 @@ class ChannelWindowAsync(ChannelWindow):
 ##					self.hide()
 ##					self.show()
 			self.check_popup()
+			self.schedule_transitions(node)
 			if self.armed_display.is_closed():
 				# assume that we are going to get a
 				# resize event

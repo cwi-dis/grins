@@ -50,9 +50,11 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 	def do_play(self, node):
 		if realwindowchanneldebug:
 			print 'do_play', self, node
-		if self.__rc is None or \
-		   not self.__rc.playit(node, self._getoswindow(), self._getoswinpos()):
-			self.playdone(0)
+		if self.__rc is not None:
+			self.event('beginEvent')
+			if self.__rc.playit(node, self._getoswindow(), self._getoswinpos()):
+				return
+		self.playdone(0)
 
 	# toggles between pause and run
 	def setpaused(self, paused):
@@ -60,20 +62,18 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 		if self.__rc is not None:
 			self.__rc.pauseit(paused)
 
-	def stopplay(self, node):
-		if realwindowchanneldebug:
-			print 'stopplay', self, node
+	def playstop(self):
 		if self.__rc is not None:
 			self.__rc.stopit()
-		Channel.ChannelWindowAsync.stopplay(self, node)
+		Channel.ChannelWindowAsync.playstop(self)
 
 	def _getoswindow(self):
 		if hasattr(self.window, "GetSafeHwnd"):
 			# Windows
 			return self.window.GetSafeHwnd()
-		elif hasattr(self.window, "_wid"):
+		elif hasattr(self.window, "_mac_getoswindow"):
 			# Macintosh
-			return self.window._wid
+			return self.window._mac_getoswindow()
 		elif hasattr(self.window, '_form'):
 			# Motif
 			wnd = self.window._topwindow._form

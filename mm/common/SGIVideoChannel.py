@@ -9,6 +9,7 @@ import MMurl
 import mv
 import Xlib
 import string
+import settings
 
 _mvmap = {}			# map of MVid to channel
 
@@ -23,7 +24,7 @@ windowinterface.select_setcallback(mv.GetEventFD(), _selcb, ())
 mv.SetSelectEvents(mv.MV_EVENT_MASK_STOP)
 
 class VideoChannel(Channel.ChannelWindowAsync):
-	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center']
+	_our_attrs = ['fit']
 	node_attrs = Channel.ChannelWindowAsync.node_attrs + [
 		'clipbegin', 'clipend',
 		'project_audiotype', 'project_videotype', 'project_targets',
@@ -72,9 +73,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				d = movie.GetEstMovieDuration(1000)
 			else:
 				d = movie.GetMovieDuration(1000)
-			d = float(d) / 1000
+			d = d / 1000.0
 			if hasattr(movie, 'GetCurrentTime'):
-				t = float(movie.GetCurrentTime(1000)) / 1000
+				t = movie.GetCurrentTime(1000) / 1000.0
 			else:
 				# if no GetCurrentTime, act as if at end
 				t = d
@@ -131,26 +132,20 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			return 1
 		_mvmap[movie] = self
 		movie.SetPlaySpeed(1)
-		scale = MMAttrdefs.getattr(node, 'scale')
-		self.armed_scale = scale
-		center = MMAttrdefs.getattr(node, 'center')
+		fit = MMAttrdefs.getattr(node, 'fit')
+		self.armed_fit = fit
 		x, y, w, h = self.window._rect
 		track = movie.FindTrackByMedium(mv.DM_IMAGE)
-		if scale > 0:
+		if fit is None or fit == 'hidden':
 			width = track.GetImageWidth()
 			height = track.GetImageHeight()
 			self.armed_size = width, height
-			width = min(width * scale, w)
-			height = min(height * scale, h)
+			width = min(width, w)
+			height = min(height, h)
 			movie.SetViewSize(width, height)
 			width, height = movie.QueryViewSize(width, height)
-			if center:
-				imbox = float((w - width) / 2)/w, float((h - height) / 2)/h, float(width)/w, float(height)/h
-				x = x + (w - width) / 2
-				y = self.window._form.height - y - (h + height) / 2
-			else:
-				imbox = 0, 0, float(width)/w, float(height)/h
-				y = self.window._form.height - y - height
+			imbox = 0, 0, float(width)/w, float(height)/h
+			y = self.window._form.height - y - height
 			movie.SetViewOffset(x, y, mv.DM_TRUE)
 		else:
 			imbox = 0, 0, 1, 1
@@ -160,62 +155,48 @@ class VideoChannel(Channel.ChannelWindowAsync):
 					    self.window._form.height - y - h,
 					    mv.DM_TRUE)
 			self.armed_size = None
-		rate = track.GetImageRate()
-		if rate == 30:
-			units = 'smpte-30'
-		elif rate == 25:
-			units = 'smpte-25'
-		elif rate == 24:
-			units = 'smpte-24'
-		else:
-			units = 'smpte-30-drop'
-		self.__begin = self.getclipbegin(node, units)
-		self.__end = self.getclipend(node, units)
+		self.__begin = self.getclipbegin(node, 'sec')
+		self.__end = self.getclipend(node, 'sec')
+		if not self.__end:
+			self.__end = movie.GetMovieDuration(1000) / 1000.0
+		self.__mediadur = self.__end - self.__begin
 		bg = self.getbgcolor(node)
 		movie.SetViewBackground(bg)
 		self.armed_bg = self.window._convert_color(bg)
-		drawbox = MMAttrdefs.getattr(node, 'drawbox')
-		if drawbox:
-			self.armed_display.fgcolor(self.getbucolor(node))
-		else:
-			self.armed_display.fgcolor(self.getbgcolor(node))
-		hicolor = self.gethicolor(node)
-		for a in node.GetRawAttrDef('anchorlist', []):
-			atype = a[A_TYPE]
-			if atype not in SourceAnchors or atype in (ATYPE_AUTO, ATYPE_WHOLE):
-				continue
-			args = a[A_ARGS]
-			if len(args) == 0:
-				args = [0,0,1,1]
-			elif len(args) == 4:
-				args = self.convert_args(f, args)
-			if len(args) != 4:
-				print 'VideoChannel: funny-sized anchor'
-				continue
-			x, y, w, h = args[0], args[1], args[2], args[3]
-			# convert coordinates from image to window size
-			x = x * imbox[2] + imbox[0]
-			y = y * imbox[3] + imbox[1]
-			w = w * imbox[2]
-			h = h * imbox[3]
-			b = self.armed_display.newbutton((x,y,w,h), times = a[A_TIMES])
-			b.hiwidth(3)
-			if drawbox:
-				b.hicolor(hicolor)
-			self.setanchor(a[A_ID], a[A_TYPE], b, a[A_TIMES])
+
+		self.armed_display.fgcolor(self.getbgcolor(node))
+
+		self.setArmBox(imbox)
 		return 1
 
 	def do_play(self, node):
 		window = self.window
 		self.played_movie = movie = self.armed_movie
 		self.armed_movie = None
+		start_time = node.get_start_time()
 		if movie is None:
-			self.playdone(0)
+			self.playdone(0, start_time)
 			return
-		self.played_scale = self.armed_scale
+		self.played_fit = self.armed_fit
 		self.played_size = self.armed_size
 		self.played_bg = self.armed_bg
 		self.played_flag = self.armed_flag
+		duration = node.GetAttrDef('duration', None)
+		begin = 0
+		if self.__begin:
+			movie.SetStartTime(long(self.__begin * 1000L), 1000)
+		t0 = self._scheduler.timefunc()
+		if t0 > start_time and not settings.get('noskip'):
+			if __debug__:
+				print 'skipping',start_time,t0,t0-start_time
+			late = t0 - start_time
+			if late > self.__mediadur:
+				self.playdone(0, start_time + self.__mediadur)
+				return
+			movie.SetCurrentTime(long((self.__begin + late) * 1000L), 1000)
+		begin = movie.GetStartTime(1000) / 1000.0
+		if self.__end:
+			movie.SetEndTime(long(self.__end * 1000L), 1000)
 		window.setredrawfunc(self.redraw)
 		try:
 			movie.BindOpenGLWindow(self.window._form, self.__context)
@@ -227,61 +208,15 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				'Cannot play movie node %s on channel %s:\n%s'%
 					(name, self._name, msg),
 				mtype = 'warning')
-			self.playdone(0)
+			self.playdone(0, start_time)
 			return
-		duration = node.GetAttrDef('duration', None)
-		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
-		loop = node.GetAttrDef('loop', None)
-		self.played_loop = loop
-		if loop is None:
-			if repeatdur:
-				loop = 0
-			else:
-				loop = 1
-		if loop == 0:
-			movie.SetPlayLoopLimit(mv.MV_LIMIT_FOREVER)
-		else:
-			movie.SetPlayLoopLimit(loop)
-		if loop != 1:
-			movie.SetPlayLoopMode(mv.MV_LOOP_CONTINUOUSLY)
-		if self.__begin:
-			movie.SetStartFrame(self.__begin)
-			movie.SetCurrentFrame(self.__begin)
-			begin = movie.GetStartTime()
-		else:
-			begin = 0
-		if self.__end:
-			movie.SetEndFrame(self.__end)
-			end = movie.GetEndTime()
-		else:
-			end = 0
-		if duration is not None and duration > 0 and \
-		   (not end or (end > begin and duration < end - begin)):
-			movie.SetEndTime(1000L * (begin + duration), 1000)
-		elif duration is not None:
-			# XXX need special code to freeze temporarily at
-			# the end of each loop
-			pass
-		if repeatdur > 0:
-			self.__qid = self._scheduler.enter(
-				repeatdur, 0, self.__stopplay, ())
+		self.event('beginEvent')
 		movie.Play()
 		self.__stopped = 0
 		r = Xlib.CreateRegion()
 		r.UnionRectWithRegion(0, 0, window._form.width, window._form.height)
 		r.SubtractRegion(window._region)
 		window._topwindow._do_expose(r)
-		if loop == 0 and not repeatdur:
-			self.playdone(0)
-
-	def __stopplay(self):
-		if self.played_movie:
-			self.played_movie.Stop()
-			self.played_movie.UnbindOpenGLWindow()
-			del _mvmap[self.played_movie]
-			self.played_movie = None
-			self.__qid = None
-		self.playdone(0)
 
 	def playstop(self):
 		if self.__qid:
@@ -292,6 +227,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.playdone(1)
 
 	def stopplay(self, node):
+		if node and self._played_node is not node:
+##			print 'node was not the playing node '+`self,node,self._played_node`
+			return
 		Channel.ChannelWindowAsync.stopplay(self, node)
 		if self.played_movie:
 			self.played_movie.UnbindOpenGLWindow()
@@ -306,12 +244,18 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if self.played_movie:
 			if paused:
 				self.played_movie.Stop()
+				if paused == 'hide':
+					self.played_movie.UnbindOpenGLWindow()
 				self.__stopped = 1
 			else:
+				if self._paused == 'hide':
+					self.played_movie.BindOpenGLWindow(self.window._form, self.__context)
 				self.played_movie.Play()
 				self.__stopped = 0
+		self._paused = paused
 
-	def redraw(self):
+	def redraw(self, rgn=None):
+		# rgn (region to be redrawn, None for everything) ignored for now
 		if self.played_movie:
 			self.played_movie.ShowCurrentFrame()
 
@@ -320,11 +264,11 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		movie = self.played_movie
 		if not movie:
 			return
-		scale = self.played_scale
-		if scale > 0:
+		fit = self.played_fit
+		if fit is None or fit == 'hidden':
 			width, height = self.played_size
-			width = min(width * scale, w)
-			height = min(height * scale, h)
+			width = min(width, w)
+			height = min(height, h)
 			movie.SetViewSize(width, height)
 			width, height = movie.QueryViewSize(width, height)
 			movie.SetViewOffset(x + (w - width) / 2,
@@ -342,26 +286,28 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if not self.__stopped:
 			if self.__qid:
 				return
-			self.playdone(0)
+			node = self._played_node
+			start_time = node.get_start_time()
+			self.playdone(0, start_time + self.__mediadur)
 
 	# Convert pixel offsets into relative offsets.
 	# If the offsets are in the range [0..1], we don't need to do
 	# the conversion since the offsets are already fractions of
 	# the image.
-	def convert_args(self, file, args):
-		need_conversion = 1
-		for a in args:
-			if a != int(a):	# any floating point number
-				need_conversion = 0
-				break
-		if not need_conversion:
-			return args
-		if args == (0, 0, 1, 1) or args == [0, 0, 1, 1]:
+#	def convert_args(self, file, args):
+#		need_conversion = 1
+#		for a in args:
+#			if a != int(a):	# any floating point number
+#				need_conversion = 0
+#				break
+#		if not need_conversion:
+#			return args
+#		if args == (0, 0, 1, 1) or args == [0, 0, 1, 1]:
 			# special case: full image
-			return args
-		import Sizes
-		xsize, ysize = Sizes.GetSize(file)
-		return float(args[0]) / float(xsize), \
-		       float(args[1]) / float(ysize), \
-		       float(args[2]) / float(xsize), \
-		       float(args[3]) / float(ysize)
+#			return args
+#		import Sizes
+#		xsize, ysize = Sizes.GetSize(file)
+#		return float(args[0]) / float(xsize), \
+#		       float(args[1]) / float(ysize), \
+#		       float(args[2]) / float(xsize), \
+#		       float(args[3]) / float(ysize)
