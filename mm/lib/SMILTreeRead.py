@@ -2551,8 +2551,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if self.__nodemap.has_key(targetid):
 				targetnode = self.__nodemap[targetid]
 				node.targetnode = targetnode
-			elif node.attrdict['tag'] != 'animateMotion':
-				self.warning("unknown targetElement `%s'" % targetid, lineno)
+			else:
+				# check for not grins nodes
+				# regions, area, transitions etc
+				if not self.__regions.has_key(targetid) and not self.__anchormap.has_key(targetid):
+					self.warning("unknown targetElement `%s'" % targetid, lineno)
 		del self.__animatenodes
 
 	def FixRegpoints(self):
@@ -4836,3 +4839,4 @@ def parseattrval(name, string, context):
 	return MMAttrdefs.parsevalue(name, string, context)
 
 
+ 
