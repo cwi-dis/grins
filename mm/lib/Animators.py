@@ -466,13 +466,13 @@ class MotionAnimator(Animator):
 # or implement within EffectiveAnimator a proper ordering method
 # 
 class EffectiveAnimator:
-	def __init__(self, attr, domval):
+	def __init__(self, targnode, attr, domval):
+		self.__node = targnode
 		self.__attr = attr
 		self.__domval = domval
 
 		self.__animators = []
 
-		self.__node = None
 		self.__chan = None
 		self.__currvalue = None
 
@@ -485,19 +485,18 @@ class EffectiveAnimator:
 	def getCurrValue(self):
 		return self.__currvalue
 
-	def onAnimateBegin(self, targChan, targNode, animator):
+	def getTargetNode(self):
+		return self.__node
+
+	def onAnimateBegin(self, targChan, animator):
 		for a in self.__animators:
 			if id(a) == id(animator):
 				self.__animators.remove(animator)			
 		self.__animators.append(animator)
 		animator.setEffectiveAnimator(self)
 
-		if not self.__node:
-			self.__node = targNode
 		if not self.__chan:
 			self.__chan = targChan
-		if self.__node != targNode:
-			raise AssertionError
 		if self.__chan != targChan:
 			raise AssertionError
 
@@ -556,7 +555,7 @@ class AnimateContext:
 		if self._effAnimators.has_key(key):
 			return self._effAnimators[key]
 		else:
-			ea = EffectiveAnimator(targattr, domval)
+			ea = EffectiveAnimator(targnode, targattr, domval)
 			self._effAnimators[key] = ea
 			return ea
 
@@ -570,52 +569,69 @@ class AnimateContext:
 # * implement specialization: EffValueAnimator
 
 ###########################
-smil2grins = {'src':'file', 'backgroundColor':'bgcolor',}
+smil2grins = {'src':'file', 
+	'backgroundColor':'bgcolor',}
 
 # Animation semantics parser
 class AnimateElementParser:
-	# args anim and target are MMNode objects
-	# anim  represents the animate element node
-	def __init__(self, anim, target):
+	def __init__(self, anim):
 		self.__anim = anim
-		self.__target = target
-
+		self.__elementTag = anim.attrdict['tag']
 		self.__attrname = ''
 		self.__grinsattrname = ''
+		self.__attrtype = ''
 		self.__domval = None
 		self.__enable = 0
 		self.__grinsext = 0
 
-		# get animate element type ('animate', 'set', 'animateMotion', 'animateColor')
-		# use current convention for this
-		self.__elementTag = anim.attrdict['tag']
+		# locate target
+		if not anim.targetnode:
+			te = MMAttrdefs.getattr(anim, 'targetElement')
+			if te:
+				root = self.node.GetRoot()
+				anim.targetnode = root.GetChildByName(te)
+			else:
+				anim.targetnode = anim.GetParent()
+		self.__target = anim.targetnode
 
+
+		# do we have a valid target?
 		self.__hasValidTarget = self.__checkTarget()
-		if self.__hasValidTarget and not self.__grinsext:
+
+		# if we have a valid target get its type
+		if not self.__attrtype and self.__hasValidTarget:
 			self.__attrtype = MMAttrdefs.getattrtype(self.__grinsattrname)
 
-		self.__additive = MMAttrdefs.getattr(self.__anim, 'additive')
-		self.__calcMode = MMAttrdefs.getattr(self.__anim, 'calcMode')
-		self.__accumulate = MMAttrdefs.getattr(self.__anim, 'accumulate')
+		# Read enumeration attributes
+		self.__additive = MMAttrdefs.getattr(anim, 'additive')
+		self.__calcMode = MMAttrdefs.getattr(anim, 'calcMode')
+		self.__accumulate = MMAttrdefs.getattr(anim, 'accumulate')
+
+		# Read time manipulation attributes
 
 		# speed="1" is a no-op, and speed="-1" means play backwards
-		# We have to get the absolute speed. This is relative to parent 
-		self.__speed = MMAttrdefs.getattr(self.__anim, 'speed')
+		# we have to get the absolute speed. This is relative to parent 
+		self.__speed = MMAttrdefs.getattr(anim, 'speed')
 		if self.__speed==0.0: # not allowed
 			self.__speed=1.0
-
-		self.__accelerate = MMAttrdefs.getattr(self.__anim, 'accelerate')
-		self.__decelerate = MMAttrdefs.getattr(self.__anim, 'decelerate')
+		self.__accelerate = MMAttrdefs.getattr(anim, 'accelerate')
+		self.__decelerate = MMAttrdefs.getattr(anim, 'decelerate')
 		dt =  self.__accelerate + self.__decelerate
 		if dt>1.0:
 			# *the timing module draft says accelerate is clamped to 1 and decelerate=1-accelerate
 			self.__accelerate = self.__accelerate/dt
 			self.__decelerate = self.__decelerate/dt
+		self.__autoReverse = MMAttrdefs.getattr(anim, 'autoReverse')
 
-		self.__autoReverse = MMAttrdefs.getattr(self.__anim, 'autoReverse')
 
+	def __repr__(self):
+		import SMILTreeWrite
+		return SMILTreeWrite.WriteBareString(self.__anim)
 
 	def getAnimator(self):
+		if not self.__hasValidTarget:
+			return None
+
 		attr = self.__grinsattrname
 		domval = self.__domval
 
@@ -646,9 +662,6 @@ class AnimateElementParser:
 
 
 		# 2. return None on syntax or logic error
-		if not self.__hasValidTarget:
-			print 'invalid target syntax error'
-			return None
 
 		if self.__elementTag!='animateMotion':
 			nvalues = self.__countInterpolationValues()
@@ -674,8 +687,11 @@ class AnimateElementParser:
 			else:
 				coords = self.__getNumPairInterpolationValues()
 				path.constructFromPoints(coords)
-			return MotionAnimator(attr, domval, path, dur, mode, times, splines,
+			if path.getLength():
+				return MotionAnimator(attr, domval, path, dur, mode, times, splines,
 					accumulate, additive)
+			else:
+				return None
 
 		## Begin temp grins extensions
 		# position animation
@@ -717,7 +733,6 @@ class AnimateElementParser:
 	# return an animator for the 'set' animate element
 	def __getSetAnimator(self):
 		if not self.__hasValidTarget:
-			print 'invalid target syntax error'
 			return None
 		attr = self.__attrname
 		domval = self.__domval
@@ -744,6 +759,9 @@ class AnimateElementParser:
 
 	def getAttrName(self):
 		return self.__attrname
+
+	def getDOMValue(self):
+		return self.__domval
 							
 	def getDuration(self):
 		return MMAttrdefs.getattr(self.__anim, 'duration')
@@ -766,6 +784,9 @@ class AnimateElementParser:
 	def getKeySplines(self):
 		return MMAttrdefs.getattr(self.__anim, 'keySplines')
 
+	def getTargetNode(self):
+		return self.__target
+			
 	# set time manipulators to the animator
 	def __setTimeManipulators(self, anim):
 		if self.__autoReverse=='true':
@@ -789,7 +810,8 @@ class AnimateElementParser:
 
 		self.__attrname = MMAttrdefs.getattr(self.__anim, 'attributeName')
 		if not self.__attrname:
-			print 'failed to get attributeName', self.__anim
+			print 'failed to get attributeName'
+			print '>>', self
 			return 0
 
 		if smil2grins.has_key(self.__attrname):
@@ -808,6 +830,7 @@ class AnimateElementParser:
 			
 		if not self.__domval:
 			print 'Failed to get original DOM value for attr',self.__attrname,'from node',self.__target
+			print '>>',self
 			return 0
 		return 1
 
@@ -1126,10 +1149,5 @@ class AnimateElementParser:
 		for name, value in self.__target.GetChannel().attrdict.items():
 			print name, '=', `value`
 		print '----------------------'
-
-
-
-
-
 
 
