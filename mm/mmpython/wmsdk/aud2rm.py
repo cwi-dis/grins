@@ -1,13 +1,23 @@
 
-import dshow
 import os
+
+import producer
+
+dir = os.path.split(producer.__file__)[0]
+dir = os.path.join( dir, "Producer-SDK")
+if os.path.exists(dir):
+	producer.SetDllAccessPath(
+		'DT_Plugins=%s\000' % os.path.join(dir, 'Plugins') +
+		'DT_Codecs=%s\000' % os.path.join(dir, 'Codecs') +
+		'DT_EncSDK=%s\000' % os.path.join(dir, 'Tools') +
+		'DT_Common=%s\000' % os.path.join(dir, 'Common'))
+else:
+	raise ImportError('no G2 codecs')
+
 engine=None
 
 def convertaudiofilex(u, dstdir, file, node):
-	import producer
 	global engine
-	if os.environ.has_key('REAL_PRODUCER'):
-		producer.SetDllCategoryPaths(os.environ['REAL_PRODUCER'])
 	# ignore suggested extension and make our own
 	file = os.path.splitext(file)[0] + '.ra'
 	fullpath = os.path.join(dstdir, file)
@@ -26,6 +36,7 @@ def convertaudiofilex(u, dstdir, file, node):
 	cp = engine.GetClipProperties()
 	ts = engine.GetTargetSettings()
 	if node is not None:
+		import MMAttrdefs
 		cp.SetTitle(MMAttrdefs.getattr(node, 'title'))
 		cp.SetAuthor(MMAttrdefs.getattr(node, 'author'))
 		cp.SetCopyright(MMAttrdefs.getattr(node, 'copyright'))
@@ -42,7 +53,9 @@ def convertaudiofilex(u, dstdir, file, node):
 		cp.SetTitle('')
 		cp.SetAuthor('')
 		cp.SetCopyright('')
-		ts.AddTargetAudience(producer.ENC_TARGET_28_MODEM)
+		# XXX: for testing incr caps
+		#ts.AddTargetAudience(producer.ENC_TARGET_28_MODEM)
+		ts.AddTargetAudience(producer.ENC_TARGET_DUAL_ISDN)
 		ts.SetAudioContent(producer.ENC_AUDIO_CONTENT_VOICE)
 	cp.SetPerfectPlay(1)
 	cp.SetMobilePlay(0)
@@ -51,6 +64,7 @@ def convertaudiofilex(u, dstdir, file, node):
 	cp.SetDoOutputFile(1)
 	cp.SetOutputFilename(fullpath)
 
+	import dshow
 	b = dshow.CreateGraphBuilder()
 	b.RenderFile(u)
 	# find renderer
@@ -105,6 +119,5 @@ def convertaudiofilex(u, dstdir, file, node):
 
 inputfile='D:\\ufs\\mm\\cmif\\Build\\common\\testdoc\\testdata.aiff'
 outputdir='d:\\ufs\\mm\\cmif\\win32\\DXMedia\\bin'
-os.environ['REAL_PRODUCER']='c:\\Program Files\\RealSDK\\Producer\\BIN\\'
 
 convertaudiofilex(inputfile,outputdir,'xxx.ra',None)
