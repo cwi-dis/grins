@@ -1075,7 +1075,6 @@ class Viewport(win32window.Window, UserEventMng):
 			else:
 				transparent = 1
 
-
 		self.create(None, (self._uidx, self._uidy, w, h), units, z, transparent, bgcolor)
 		self.setDeviceToLogicalScale(d2lscale)
 
@@ -1088,9 +1087,10 @@ class Viewport(win32window.Window, UserEventMng):
 
 		self._showname = 1
 
+		self.center()
+
 		points = [ (0,0), (100, 200), (300,100)]
 		self._polyline = winlayout.Polyline(self, points)
-		self.center()
 
 	def center(self):
 		x, y, w, h = self._rectb
@@ -1103,12 +1103,6 @@ class Viewport(win32window.Window, UserEventMng):
 		if y<8: y=8
 		self._rectb = x, y, w, h
 		
-	def getDeviceOrg(self):
-		return self.LPtoDP(self._rectb[:2], round = 1)
-
-	def getOrg(self):
-		return self._rectb[:2]
-
 	# overide the default newdisplaylist method defined in win32window
 	def newdisplaylist(self, bgcolor = None):
 		if bgcolor is None:

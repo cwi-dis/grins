@@ -679,23 +679,22 @@ class ShapeTool(DrawTool):
 
 
 class Polyline:
-	def __init__(self, viewport, points):
-		self._viewport = viewport
+	def __init__(self, wnd, points):
+		self._wnd = wnd
 		self._points = points
 		self._device2logical = 1.0
 
 	def getDevicePoints(self):
-		x0, y0 = self._viewport.getOrg()
+		x0, y0 = self._wnd.getwindowpos()[:2]
 		points = []
 		for pt in self._points:
 			points.append(self.LPtoDP((x0 + pt[0], y0+pt[1]), round=1))
 		return points
 
-	
 	# insert point nearest to pt (pt in device coordinates)
 	def insertPoint(self, pt):
 		projpt, index = self.projection(pt)
-		x0, y0 = self._viewport.getDeviceOrg()
+		x0, y0 = self._wnd.getwindowpos()[:2]
 		if projpt is not None:
 			x, y = projpt
 			projpt = self.DPtoLP((x - x0, y - y0))
@@ -758,13 +757,13 @@ class Polyline:
 	#
 	# return drag handle position in device coordinates
 	def getDragHandle(self, ix):
-		x0, y0 = self._viewport.getOrg()
+		x0, y0 = self._wnd.getwindowpos()[:2]
 		x, y = self._points[ix-1]
 		return self.LPtoDP((x0+x,y0+y))
 
 	# return drag handle rectangle in device coordinates
 	def getDragHandleRect(self, ix):
-		x0, y0 = self._viewport.getOrg()
+		x0, y0 = self._wnd.getwindowpos()[:2]
 		x, y = self._points[ix-1]
 		x, y = self.LPtoDP((x0+x,y0+y))
 		return x-3, y-3, 7, 7
@@ -787,7 +786,7 @@ class Polyline:
 
 	# move drag handle in device coordinates to point in device coordinates
 	def moveDragHandleTo(self, ixHandle, point):
-		x0, y0 = self._viewport.getOrg()
+		x0, y0 = self._wnd.getwindowpos()[:2]
 		xp, yp = self.DPtoLP(point)
 		self._points[ixHandle-1] = xp - x0, yp - y0
 		self.update()
@@ -807,7 +806,7 @@ class Polyline:
 		return 1
 	
 	def update(self):
-		self._viewport.update()
+		self._wnd.update()
 
 	def getAncestors(self):
 		return []
