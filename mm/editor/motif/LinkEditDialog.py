@@ -97,7 +97,8 @@ class LinkBrowserDialog:
 		menu = win3.PulldownMenu([('Set anchorlist', menu2)],
 					 top = None, left = None, right = None)
 		self.__right_buttons = win3.ButtonRow(
-			[('Sync selection', (self.show_callback, (cbarg2,))),
+			[('Add external...', (self.add_external_callback, ())),
+			 ('Sync selection', (self.show_callback, (cbarg2,))),
 			 ('Anchor editor...', (self.anchoredit_callback, (cbarg2,))),
 			 ],
 			vertical = 1, bottom = None, left = None, right = None)
@@ -133,6 +134,7 @@ class LinkBrowserDialog:
 		self.middleaddlistitems = self.__middle_browser.addlistitems
 		self.middleselectitem = self.__middle_browser.selectitem
 		self.middlegetselected = self.__middle_browser.getselected
+		self.addexternalsetsensitive(0)
 
 	def close(self):
 		"""Close the dialog and free resources."""
@@ -360,8 +362,17 @@ class LinkBrowserDialog:
 		sensitive -- boolean indicating whether to make
 			sensitive or insensitive
 		"""
-		self.__right_buttons.setsensitive(0, sensitive)
 		self.__right_buttons.setsensitive(1, sensitive)
+		self.__right_buttons.setsensitive(2, sensitive)
+
+	def addexternalsetsensitive(self, sensitive):
+		"""Make the Add external button (in)sensitive.
+
+		Arguments (no defaults):
+		sensitive -- boolean indicating whether to make
+			sensitive or insensitive
+		"""
+		self.__right_buttons.setsensitive(0, sensitive)
 
 	# Interface to the middle list and associated buttons.
 	def middlehide(self):
