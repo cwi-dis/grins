@@ -48,15 +48,16 @@ class EditableMMNode(MMNode.MMNode):
 		em.commit()
 
 	def GetCollapsedParent(self):
+		# return the top-most collapsed ancestor, or None if all ancestors are uncollapsed
 		# I'm used by the event editor.
 		#print "DEBUG: GetCollapsedParent"
 		i = self.parent		# Don't return self if I'm collapsed.
+		rv = None		# default return value
 		while i is not None:
 			if i.collapsed == 1:
-				return i
-			else:
-				i = i.parent
-		return None
+				rv = i
+			i = i.parent
+		return rv
 
 
 ######################################################################
