@@ -1509,10 +1509,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				else:
 					mtype = mimetype
 	# not allowed to look at extension...
-			if mtype is None and url is not None and settings.get('checkext'):
-				import MMmimetypes
-				# guess the type from the file extension
-				mtype = MMmimetypes.guess_type(url)[0]
 			if url is not None and mtype is None:
 				import urlcache
 				mtype = urlcache.mimetype(url)

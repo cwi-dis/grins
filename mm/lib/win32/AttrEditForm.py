@@ -2955,13 +2955,8 @@ class SvgRenderer(Renderer):
 			self._svgplayer = None
 		if rurl:
 			url = self.urlqual(rurl)
-			mtype = None
-			if settings.get('checkext'):
-				import MMmimetypes
-				mtype = MMmimetypes.guess_type(url)[0]
-			if not mtype:
-				import urlcache
-				mtype = urlcache.mimetype(url)
+			import urlcache
+			mtype = urlcache.mimetype(url)
 			if mtype is not None: 
 				mtype, subtype = string.split(mtype, '/')
 				if mtype == 'image' and subtype == 'svg-xml':
@@ -4507,13 +4502,8 @@ class FileGroup(AttrGroup):
 		a=self.getattr('file')
 		f=a.getcurrent()
 		from winversion import osversion
-		mtype = None
-		if settings.get('checkext'):
-			import MMmimetypes
-			mtype = MMmimetypes.guess_type(f)[0]
-		if not mtype:
-			import urlcache
-			mtype = urlcache.mimetype(f)
+		import urlcache
+		mtype = urlcache.mimetype(f)
 		if mtype is None: 
 			return 0
 		mtype, subtype = string.split(mtype, '/')
