@@ -155,21 +155,8 @@ def cleanup(node):
 # Should only be applied to leaf nodes.
 #
 def getduration(node):
-	if node.GetType() in interiortypes:
-		raise CheckError, 'Timing.getduration() on non-leaf'
-	from ChannelMap import channelmap
-	try:
-		cname = MMAttrdefs.getattr(node, 'channel')
-		cattrs = node.context.channeldict[cname]
-		ctype = cattrs['type']
-		cclass = channelmap[ctype]
-	except: # XXX be more specific!
-		# Fallback if the channel doesn't exists, etc.
-		return MMAttrdefs.getattr(node, 'duration')
-	# Get here only if the 'try' succeeded
-	instance = cclass()		# XXX Not initialized!
-					# Walking on thin ice here...
-	return instance.getduration(node)
+	import Duration
+	return Duration.get(node)
 
 
 ###########################################################
