@@ -256,7 +256,7 @@ class _DisplayList:
 			self._curfg = entry[1]
 		elif cmd == 'image':
 			mask, image, flags, src_x, src_y,dest_x, dest_y, width, height,rcKeep=entry[1:]
-			if region and not self._overlap(region, (dest_x, dest_y, width, height)):
+			if region and not self._overlap_xywh(region, (dest_x, dest_y, width, height)):
 				return
 			if self._directdraw:
 				imghdc = image.GetDC()
@@ -282,27 +282,26 @@ class _DisplayList:
 				x0, y0 = x, y
 		elif cmd == '3dhline':
 			color1, color2, x0, x1, y = entry[1:]
-			if not self._overlap(region, (x0, y, x1-x0, 1)):
+			if not self._overlap_xywh(region, (x0, y, x1-x0, 1)):
 				return
 			DrawLine(dc, (x0, y, x1, y), color1)
 			DrawLine(dc, (x0, y+1, x1, y+1), color2)
 		elif cmd == 'box':
 			# XXXX should we subtract 1 from right and bottom edges
-			if not self._overlap(region, entry[1]):
+			if not self._overlap_ltrb(region, entry[1]):
 				return
 			DrawRectangle(dc,entry[1],self._curfg)
 		elif cmd == 'anchor':
-			if not self._overlap(region, entry[1]):
+			if not self._overlap_ltrb(region, entry[1]):
 				return
 			DrawRectangle(dc,entry[1],self._curfg)
 			# debug: DrawRectangle(dc,entry[1],(255,0,0))
 		elif cmd == 'fbox':
-			if not self._overlap(region, entry[2]):
+			if not self._overlap_ltrb(region, entry[2]):
 				return
 			dc.FillSolidRect(entry[2],RGB(entry[1]))
 		elif cmd == 'stipplebox':
-			l, t, r, b = entry[2]
-			if not self._overlap(region, (l,t, r-l, b-t)):
+			if not self._overlap_ltrb(region, entry[2]):
 				return
 			brush = entry[1]
 			rect = entry[2]
@@ -338,7 +337,7 @@ class _DisplayList:
 		elif cmd == '3dbox':
 			cl, ct, cr, cb = entry[1]
 			l, t, w, h = entry[2]
-			if not self._overlap(region, (l, t, w, h)):
+			if not self._overlap_xywh(region, (l, t, w, h)):
 				return
 			r, b = l + w , t + h 
 			# l, r, t, b are the corners
@@ -381,7 +380,7 @@ class _DisplayList:
 		elif cmd == 'diamond':
 			fg = self._fgcolor
 			x, y, w, h = entry[1]
-			if not self._overlap(region, (x, y, w, h)):
+			if not self._overlap_xywh(region, (x, y, w, h)):
 				return
 			
 			d, m = divmod(w,2)
@@ -398,7 +397,7 @@ class _DisplayList:
 			fg = entry[1] #gc.foreground
 			#gc.foreground = entry[1]
 			x, y, w, h = entry[2]
-			if not self._overlap(region, (x, y, w, h)):
+			if not self._overlap_xywh(region, (x, y, w, h)):
 				return
 
 			d, m = divmod(w,2)
@@ -415,7 +414,7 @@ class _DisplayList:
 		elif cmd == '3ddiamond':
 			cl, ct, cr, cb = entry[1]
 			l, t, w, h = entry[2]
-			if not self._overlap(region, (x, y, w, h)):
+			if not self._overlap_xywh(region, (x, y, w, h)):
 				return
 			
 			d, m = divmod(w,2)
@@ -450,7 +449,7 @@ class _DisplayList:
 			FillPolygon(dc,ls, fg)
 		elif cmd == 'arrow':
 			fg = entry[1] 
-			if not self._overlap(region, entry[2]):
+			if not self._overlap_xywh(region, entry[2]):
 				return
 			DrawLine(dc,entry[2],fg)
 			FillPolygon(dc,entry[3], fg)
@@ -467,12 +466,12 @@ class _DisplayList:
 		elif cmd == 'icon':
 			if entry[2] != None:
 				x, y, w, h = entry[1]
-				if not self._overlap(region, (x, y, w, h)):
+				if not self._overlap_xywh(region, (x, y, w, h)):
 					return
 				dc.DrawIcon((x, y), entry[2])
 
 	# Return true if the ltrb and xywh rectangles have overlap
-	def _overlap(self, region, (x, y, w, h)):
+	def _overlap_xywh(self, region, (x, y, w, h)):
 		if not region:
 			return 1	# default is overlap
 		l, t, r, b = region
@@ -481,6 +480,9 @@ class _DisplayList:
 		if y>b or y+h < t:
 			return 0
 		return 1
+
+	def _overlap_ltrb(self, region, (l, t, r, b)):
+		return self._overlap_xywh(region, (l, t, r-l, b-t))
 		
 	# Returns true if this is closed
 	def is_closed(self):
