@@ -17,6 +17,12 @@
 #		buttons was pressed and 0 if the No button was
 #		pressed.
 #
+#	multchoice(message, buttonlist, defindex)
+#		Show a dialog box with the given message and list of
+#		buttons.  Defindex is the index in the list of the
+#		default button.  The value returned is the index of
+#		the button which was pressed.
+#
 # The presentation can be changed by setting any of the variables in
 # the configuration section.  See the comments near the variables.
 
@@ -46,6 +52,10 @@ class Dialog:
 	def init(self, text):
 		if len(text) <= 1:
 			raise TypeError, 'arg count mismatch'
+		# self.events is used to remember events that we are
+		# not interested in but that may be important for
+		# whoever calls us.
+		self.events = []
 		self.message = text[0]
 		self.buttons = text[1:]
 		font = windowinterface.findfont(FONT, POINTSIZE)
@@ -186,13 +196,20 @@ class Dialog:
 			windowinterface.beep()
 		elif event == EVENTS.ResizeWindow:
 			self.draw_window()
+		else:
+			self.events.append(window, event, value)
 		return None
 
 	def eventloop(self):
+		self.events = []
 		while 1:
 			window, event, value = windowinterface.readevent()
 			retval = self.checkevent(window, event, value)
 			if retval:
+				for (window, event, value) in self.events:
+					windowinterface.enterevent(window, \
+						  event, value)
+				self.events = []
 				return retval
 
 	def close(self):
