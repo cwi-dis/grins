@@ -2252,8 +2252,14 @@ class HtmlRenderer(Renderer):
 		self._htmlwnd.CreateWindow(self._strclass,'untitled',self._style,
 			self._rc,self._wnd,0)
 		import settings
-		self._htmlwnd.UseHtmlCtrl(not settings.get('html_control'))
-		self._htmlwnd.CreateHtmlCtrl()
+		which =  settings.get('html_control')
+		if not which: which = 0
+		self._htmlwnd.UseHtmlCtrl(which)
+		try:
+			self._htmlwnd.CreateHtmlCtrl()
+		except:
+			msg = "Failed to create Browser control.\nCheck that the browser control you have selected is installed"
+			win32dialog.showmessage(msg, parent=self._wnd._form)
 		self._htmlwnd.SetWindowPos(0,self._rc,
 			win32con.SWP_NOACTIVATE | win32con.SWP_NOSIZE)
 
@@ -4177,3 +4183,4 @@ class AttrEditForm(GenFormView):
 		if self._tid:
 			import __main__
 			__main__.toplevel.canceltimer(self._tid)
+ 
