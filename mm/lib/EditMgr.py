@@ -781,5 +781,6 @@ class EditMgr:
 		pass		
 
 	def clean_addparsestatus(self, parsestatus):
-		if self.context != None:
-			self.context.setParseErrors(None)
+		if parsestatus != None:
+			# just get rid of the source. 
+			parsestatus.setSource(None)
