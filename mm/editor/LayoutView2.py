@@ -2006,15 +2006,22 @@ class PreviousWidget(Widget):
 			for nodeRef in mediaToRemove:
 				self.removeMedia(nodeRef)
 		self.localSelect = 0
-			
+
 		for nodeRef in nodeRefList:			
 			nodeType = self._context.getNodeType(nodeRef)
 			if nodeType == TYPE_VIEWPORT:
-				self.__showViewport(nodeRef)
+				viewport = nodeRef
 			elif nodeType == TYPE_REGION:
 				self.__showRegion(nodeRef)
 			elif nodeType == TYPE_MEDIA:
 				self.__showMedia(nodeRef)
+		# determinate the right viewport to show
+		viewport = None
+		if len(nodeRefList) > 0:
+			lastNodeRef = nodeRefList[-1]
+			viewport = self._context.getViewportRef(lastNodeRef)
+		if viewport != None:
+			self.__showViewport(nodeRef)
 
 		# select the list of shapes
 		shapeList = []
@@ -2085,9 +2092,9 @@ class PreviousWidget(Widget):
 	def __showRegion(self, regionRef):		
 		if regionRef not in self.currentRegionRefListM: 
 			self.currentRegionRefListM.append(regionRef)
-			regionNode = self.getNode(regionRef)
-			if regionNode != None:
-				regionNode.toShowedState()									
+		regionNode = self.getNode(regionRef)
+		if regionNode != None:
+			regionNode.toShowedState()									
 
 	# ensure that the media is in showing state
 	def __showMedia(self, mediaRef):
