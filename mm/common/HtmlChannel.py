@@ -206,8 +206,6 @@ class HtmlChannel(Channel.ChannelWindow):
 				if self.armed_anchor:
 					print 'multiple whole-node anchors on node'
 				self.armed_anchor = a
-			elif atype in DestOnlyAnchors or atype == ATYPE_AUTO:
-				continue
 		return 1
 
 	_boldfonts = [('boldFont', 9.0),
