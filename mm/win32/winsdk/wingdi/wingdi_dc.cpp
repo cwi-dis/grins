@@ -1020,7 +1020,7 @@ static PyObject* PyDC_BitBlt(PyDC *self, PyObject *args)
 	PyObject *obj;
 	int nXSrc = 0, nYSrc = 0;
 	DWORD dwRop = SRCCOPY;
-	if(!PyArg_ParseTuple(args, "(ii)(ii)O|(ii)i", 
+	if(!PyArg_ParseTuple(args, "(ii)(ii)O|(ii)l", 
 		&nXDest,&nYDest,&nWidth,&nHeight,&obj,&nXSrc,&nYSrc,&dwRop))
 		return NULL;
 	HDC hdcSrc = (HDC)GetGdiObjHandle(obj);
@@ -1040,7 +1040,7 @@ static PyObject* PyDC_StretchBlt(PyDC *self, PyObject *args)
 	int nXSrc = 0, nYSrc = 0;
 	int nWidthSrc, nHeightSrc;
 	DWORD dwRop = SRCCOPY;
-	if(!PyArg_ParseTuple(args, "(iiii)O(iiii)|i",
+	if(!PyArg_ParseTuple(args, "(iiii)O(iiii)|l",
 		&nXDest,&nYDest,&nWidthDest,&nHeightDest,&obj,
 		&nXSrc,&nYSrc,&nWidthSrc,&nHeightSrc,dwRop))
 		return NULL;
