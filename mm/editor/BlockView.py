@@ -86,6 +86,7 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		print 'self.hide'
 		self.editmgr.unregister(self)
 		BasicDialog.hide(self)
+		self.toplevel.checkviews()
 	def transaction(self):
 		print 'self.transaction'
 		return 1
