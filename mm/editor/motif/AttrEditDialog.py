@@ -60,7 +60,7 @@ class AttrEditorDialog:
 			bottom = (i + 1) *  height
 			helpb = form.Label(a.getlabel(),
 					   left = None, top = helpb,
-					   right = 0.5, bottom = bottom,
+					   right = 0.3, bottom = bottom,
 					   tooltip = (a.gethelptext, ()))
 			rstb = form.Button('Reset',
 					   (a.reset_callback, ()),
