@@ -503,11 +503,8 @@ class _CommonWindow:
 	def _convert_qdcoords(self, coordinates, units = UNIT_SCREEN):
 		"""Convert QD coordinates to fractional xy or xywh coordinates"""
 		x0, y0 = coordinates[:2]
-		wx, wy, ww, wh = self._convert_coordinates((0,0,1,1))
 		xscrolloff, yscrolloff = self._scrolloffset()
-		# XXXXSCROLL scrollsizefactors!
-		wx, wy = wx+xscrolloff, wy+yscrolloff
-		x, y = x0-wx, y0-wy
+		x, y = x0-xscrolloff, y0-yscrolloff
 		if len(coordinates) == 2:
 			coordinates = x, y
 		else:
@@ -647,12 +644,15 @@ class _CommonWindow:
 			return # Not wanted
 			
 		x, y = self._convert_qdcoords(where)
+		print 'self, rect, where, x/y', self, self._rect, where, x, y
 		
 		buttons = []
 		if self._active_displist:
 			for b in self._active_displist._buttons:
 				if b._inside(x, y):
 					buttons.append(b)
+			print 'active buttons', len(self._active_displist._buttons)
+		print 'buttons', buttons
 				
 		func(arg, self, evttype, (x, y, buttons))
 		
