@@ -88,7 +88,8 @@ class MpegChannel(ChannelWindowThread):
 				pass
 			self.threads.play()
 			thread_play_called = 1
-		self.do_play(node)
+		if self._is_shown:
+			self.do_play(node)
 		self.need_armdone = 1
 		if not thread_play_called:
 			self.playdone(0)
