@@ -14,6 +14,7 @@ default_settings = {
 	'system_screen_size': windowinterface.getscreensize(), # Size of screen
 	'system_screen_depth': windowinterface.getscreendepth(), # Depth of screen
 	'system_required': (),		# Needs special handling in match...
+	'license': 'A-BAAA-O4BLB-HA-TPL0',
 }
 
 user_settings = {}
@@ -84,5 +85,6 @@ def save():
 	for name, value in user_settings.items():
 		fp.write('%s = %s\n'%(name, `value`))
 	fp.close()
+	return 1
 	
 	
