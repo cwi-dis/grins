@@ -1764,6 +1764,11 @@ class SMILWriter(SMIL, BaseSMILWriter):
 			if not self.ids_used.has_key(name):
 				self.ids_used[name] = 1
 				self.uid2name[uid] = name
+				if self.prune:
+					# if pruning, inherit id from switch down to child
+					pnode = node.GetParent()
+					if pnode is not None and pnode.GetType() == 'switch':
+						self.uid2name[pnode.GetUID()] = name
 		if self.qtExt and not self.uses_qt_namespace:
 			for attr in qt_node_attrs.keys():
 				if node.attrdict.has_key(attr):
@@ -1780,20 +1785,30 @@ class SMILWriter(SMIL, BaseSMILWriter):
 		uid = node.GetUID()
 		name = node.GetRawAttrDef('name', '')
 		if not self.uid2name.has_key(uid):
-			isused = name != ''
-			if isused:
-				name = identify(name)
+			pnode = node.GetParent()
+			if not name and self.prune and pnode is not None and pnode.GetType() == 'switch':
+				# if pruning, inherit id from switch down to child
+				self.uid2name[uid] = self.uid2name[pnode.GetUID()]
 			else:
-				name = 'node'
-			# find a unique name by adding a number to the name
-			i = 0
-			nn = '%s-%d' % (name, i)
-			while self.ids_used.has_key(nn):
-				i = i+1
+				isused = name != ''
+				if isused:
+					name = identify(name)
+				else:
+					name = 'node'
+				# find a unique name by adding a number to the name
+				i = 0
 				nn = '%s-%d' % (name, i)
-			name = nn
-			self.ids_used[name] = isused
-			self.uid2name[uid] = name
+				while self.ids_used.has_key(nn):
+					i = i+1
+					nn = '%s-%d' % (name, i)
+				name = nn
+				self.ids_used[name] = isused
+				self.uid2name[uid] = name
+				if self.prune:
+					# if pruning, inherit id from switch down to child
+					pnode = node.GetParent()
+					if pnode is not None and pnode.GetType() == 'switch':
+						self.uid2name[pnode.GetUID()] = name
 		for child in node.children:
 			self.calcnames2(child)
 
