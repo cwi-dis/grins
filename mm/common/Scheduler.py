@@ -1331,6 +1331,8 @@ class Scheduler(scheduler):
 		# algorithm. For now, we're eager, on both queues.
 		#
 		if debugtimer: print 'timer_callback',self.timefunc()
+		if not self.playing:
+			return
 		now = self.timefunc()
 		while self.queue and self.queue[0][0] <= now:
 			self.toplevel.setwaiting()
