@@ -413,10 +413,8 @@ DEP_CPP_GRINS=\
 	".\pfc\app_wndproc.h"\
 	".\pfc\ttl.h"\
 	".\StdAfx.h"\
-	
-NODEP_CPP_GRINS=\
-	".\ipapi.h"\
-	".\ygshell.h"\
+	{$(INCLUDE)}"Aygshell.h"\
+	{$(INCLUDE)}"sipapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
@@ -573,10 +571,8 @@ DEP_CPP_GRINS=\
 	".\pfc\app_wndproc.h"\
 	".\pfc\ttl.h"\
 	".\StdAfx.h"\
-	
-NODEP_CPP_GRINS=\
-	".\ipapi.h"\
-	".\ygshell.h"\
+	{$(INCLUDE)}"Aygshell.h"\
+	{$(INCLUDE)}"sipapi.h"\
 	
 
 !ENDIF 
@@ -1136,10 +1132,8 @@ DEP_CPP_APP_W=\
 	"..\..\winsdk\common\charconv.h"\
 	".\pfc\app_wnd.h"\
 	".\pfc\pyinterface.h"\
-	
-NODEP_CPP_APP_W=\
-	".\ipapi.h"\
-	".\ygshell.h"\
+	{$(INCLUDE)}"Aygshell.h"\
+	{$(INCLUDE)}"sipapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
@@ -1287,10 +1281,8 @@ DEP_CPP_APP_W=\
 	"..\..\winsdk\common\charconv.h"\
 	".\pfc\app_wnd.h"\
 	".\pfc\pyinterface.h"\
-	
-NODEP_CPP_APP_W=\
-	".\ipapi.h"\
-	".\ygshell.h"\
+	{$(INCLUDE)}"Aygshell.h"\
+	{$(INCLUDE)}"sipapi.h"\
 	
 
 !ENDIF 
@@ -2429,21 +2421,6 @@ SOURCE=.\freeze\M_gdi_layout.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\freeze\M_getopt.c
-
-!IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\freeze\M_getpass.c
 
 !IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
@@ -2624,36 +2601,6 @@ SOURCE=.\freeze\M_LayoutChannel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\freeze\M_longpath.c
-
-!IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\freeze\M_macurl2path.c
-
-!IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\freeze\M_main_toplevel.c
 
 !IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
@@ -2685,6 +2632,21 @@ SOURCE=.\freeze\M_main_window.c
 # Begin Source File
 
 SOURCE=.\freeze\M_MainDialog.c
+
+!IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
+
+!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
+
+!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Release"
+
+!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\freeze\M_mainloop.c
 
 !IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
 
@@ -3164,21 +3126,6 @@ SOURCE=.\freeze\M_quopri.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\freeze\M_random.c
-
-!IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\freeze\M_re.c
 
 !IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
@@ -3404,21 +3351,6 @@ SOURCE=.\freeze\M_SMILCssResolver.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\freeze\M_smiltime.c
-
-!IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\freeze\M_SMILTreeRead.c
 
 !IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
@@ -3599,82 +3531,7 @@ SOURCE=.\freeze\M_StringStuff.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\freeze\M_svganimators.c
-
-!IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\freeze\M_svgcolors.c
-
-!IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\freeze\M_svgdom.c
-
-!IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\freeze\M_svgdtd.c
-
-!IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\freeze\M_svgpath.c
-
-!IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\freeze\M_svgtypes.c
 
 !IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
 
@@ -4035,21 +3892,6 @@ SOURCE=.\freeze\M_version.c
 # Begin Source File
 
 SOURCE=.\freeze\M_VideoDuration.c
-
-!IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Debug"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Release"
-
-!ELSEIF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE x86em) Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\freeze\M_whrandom.c
 
 !IF  "$(CFG)" == "Frozen Static GRiNS Player - Win32 (WCE ARM) Release"
 

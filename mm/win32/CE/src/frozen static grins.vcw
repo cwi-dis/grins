@@ -12,9 +12,6 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name spython16
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name swingdi
     End Project Dependency
     Begin Project Dependency
@@ -28,6 +25,9 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libjpeg
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name spython16
     End Project Dependency
 }}}
 
