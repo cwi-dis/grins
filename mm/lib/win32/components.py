@@ -1137,6 +1137,9 @@ class KeyTimesSlider(window.Wnd):
 	#	preview support
 	#
 	def play(self, dur=5.0):
+		if not self._enabled:
+			self._parent.EnablePreview(0)
+			return			
 		self.previewdur = dur
 		currentpos = 0.01*self.GetPos()*self.previewdur
 		import windowinterface, time
@@ -1149,6 +1152,9 @@ class KeyTimesSlider(window.Wnd):
 		if self.fiber is not None:
 			windowinterface.cancelidleproc(self.fiber)
 			self.fiber = None
+		if not self._enabled:
+			self._parent.EnablePreview(0)
+			return			
 		
 	def onIdle(self):
 		import time
