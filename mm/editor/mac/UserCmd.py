@@ -145,7 +145,7 @@ MENUBAR=(
 		(ENTRY, 'Zoom out', None, ZOOMOUT),
 		(ENTRY, 'Zoom to focus', 'Z', ZOOMHERE),
 		(SEP,),
-		(ENTRY, 'Toggle unused channels', None, TOGGLE_UNUSED),
+		(ENTRY, 'Toggle unused channels', 'T', TOGGLE_UNUSED),
 		(SEP,),
 		(CASCADE, 'Mini-document', (
 			(ENTRY, 'Next', None, NEXT_MINIDOC),
