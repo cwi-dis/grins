@@ -19,8 +19,11 @@ import fl	# For fl.showmessage only
 N_PRIO = 3
 [PRIO_PREARM_NOW, PRIO_RUN, PRIO_LO] = range(N_PRIO)
 
+# Actions on end-of-play:
+[END_STOP, END_PAUSE, END_KEEP] = range(3)
+
 class SchedulerContext():
-	def init(self, parent, node, stop_on_end):
+	def init(self, parent, node, seeknode, end_action):
 		self.active = 1
 		self.parent = parent
 		self.sractions = []
@@ -28,7 +31,7 @@ class SchedulerContext():
 		self.playroot = node
 		self.parent.duration_ind.label = '??:??'
 
-		self.prepare_minidoc(stop_on_end)
+		self.prepare_minidoc(seeknode, end_action)
 		return self
 
 	
@@ -65,6 +68,7 @@ class SchedulerContext():
 		for ch in self.channelnames:
 			self.prearmlists[ch] = []
 		GenAllPrearms(self.playroot, self.prearmlists)
+		self.playroot.EndPruneTree()
 		return 1
 	#
 	def stopchannels(self):
@@ -99,6 +103,8 @@ class SchedulerContext():
 		now = self.playroot.t0
 		for ch in self.channelnames:
 			ev = self.getnextprearm(ch)
+			if not ev:
+				continue
 			if ev[1].t0 <= now:
 				prearmnowlist.append(ev)
 			else:
@@ -111,18 +117,6 @@ class SchedulerContext():
 		d = int(self.playroot.t1 - self.playroot.t0)
 		self.parent.duration_ind.label = `d/60`+':'+`d/10%6`+`d%10`
 	#
-	# Zap first prearm event on each channel and return list of
-	# arm-done events.
-	#
-	def zap_initial_prearms(self):
-		list = []
-		for chname in self.channelnames:
-			aev = self.getnextprearm(chname)
-			if aev:
-				list.append(SR.ARM_DONE, aev[1])
-		return list
-
-	#
 	# FutureWork returns true if we may have something to do at some
 	# time in the future (i.e. if we're not done yet)
 	#
@@ -131,22 +125,21 @@ class SchedulerContext():
 	#
 	# XXXX
 	#
-	def prepare_minidoc(self, stop_on_end):
-		#if self.play_all_bags:
-		#	mini = self.playroot
-		#else:
-		#	mini = findminidocument(self.playroot)
-		srlist = GenAllSR(self.playroot)
+	def prepare_minidoc(self, seeknode, end_action):
+		srlist = GenAllSR(self.playroot, seeknode)
 		#
 		# If this is not the root document and if the 'pause minidoc'
 		# flag is on we should not schedule the done for the root.
 		#
-		if stop_on_end:
+		if end_action == END_STOP:
 			srlist.append(([(SR.SCHED_DONE, self.playroot)], \
 				  [(SR.SCHED_STOP, self.playroot)]))
-		else:
+		elif end_action == END_PAUSE:
 			srlist.append(([(SR.SCHED_DONE, self.playroot)], []))
 			srlist.append(([(SR.NO_EVENT, self.playroot)], []))
+		else: # end_action == END_KEEP
+			srlist.append(([(SR.SCHED_DONE, self.playroot)], \
+				  [(SR.SCHED_FINISH, self.playroot)]))
 		self.sractions = []
 		self.srevents = {}
 		for events, actions in srlist:
@@ -158,12 +151,6 @@ class SchedulerContext():
 					raise 'Scheduler: Duplicate event:', \
 						  SR.ev2string(ev)
 				self.srevents[`ev`] = actionpos
-		#if mini == self.playroot:
-		#	arm_events = Timing.getinitial(mini)
-		#else:
-		#	arm_events = []
-		#Timing.prepare(self.playroot)
-		#return arm_events
 	#
 	# Start minidoc starts playing what we've prepared
 	#
@@ -173,64 +160,12 @@ class SchedulerContext():
 		self.run_initial_prearms()
 		self.parent.event((self, (SR.SCHED, self.playroot)))
 		return 1
-	#
-	# Seek minidoc to given node and start playing from there
-	#
-	def seek_minidoc(self, node):
-		if self.playroot == node:
-			return self.start_minidoc()
-		if not self.gen_prearms():
-			return None
-		events = self.zap_initial_prearms()
-		events.append(SR.SCHED, self.playroot)
-		event_wanted = (SR.SCHED, node)
-		found = None
-		while events:
-			ev = events[0]
-			del events[0]
-			srlist = self.getsrlist(ev)
-			if event_wanted in srlist:
-				# This is what we're looking for.
-				# Give to parent and continue searching.
-				found = srlist
-			else:
-				for nev, narg in srlist:
-					if nev == SR.PLAY:
-						events.append(\
-							  SR.PLAY_DONE, narg)
-						#
-						# When a node is finished
-						# pretend the next arm
-						#
-						ch = MMAttrdefs.getattr(narg,\
-							  'channel')
-						aev = self.getnextprearm(ch)
-						if aev:
-							aev = (SR.ARM_DONE,\
-								  aev[1])
-							events.append(aev)
-					elif nev == SR.PLAY_STOP:
-						pass
-					elif nev == SR.SYNC:
-						events.append(SR.SYNC_DONE, \
-							  narg[1])
-					else:
-						events.append(nev, narg)
-		if not found:
-			raise 'scheduler: seek: node not found', node
-		self.parent.add_runqueue(self, PRIO_RUN, found)
-		return 1
 
 	#
 	# Incoming events from channels, or the start event.
 	#
 	def event(self, ev):
 		srlist = self.getsrlist(ev)
-		#if ev[0] == SR.ARM_DONE:
-		#	cname = MMAttrdefs.getattr(ev[1], 'channel')
-		#	pev = self.getnextprearm(cname)
-		#	if pev:
-		#		srlist.append(pev)
 		if srlist:
 			self.parent.add_runqueue(self, PRIO_RUN, srlist)
 
@@ -294,10 +229,15 @@ class Scheduler(scheduler):
 		self.toplevel.setwaiting()
 		if self.sync_cv:
 			self.toplevel.channelview.globalsetfocus(self.playroot)
-		stop_on_end = ((self.playroot == self.root) or \
-			  not self.pause_minidoc)
+		if self.userplayroot != self.root:
+			# Partial play
+			end_action = END_KEEP
+		elif self.pause_minidoc:
+			end_action = END_PAUSE
+		else:
+			end_action = END_STOP
 		sctx = SchedulerContext().init(self, self.playroot, \
-			  stop_on_end)
+			  None, end_action)
 		self.sctx_list.append(sctx)
 		if not sctx.start_minidoc():
 			self.suspend_sctx(sctx)
@@ -340,6 +280,9 @@ class Scheduler(scheduler):
 	# Return 1 if the anchor fired, 0 if nothing happened.
 	#
 	def anchorfired(self, node, anchorlist):
+		if not self.playing:
+			fl.show_message('The document is not playing!','','')
+			return 0
 		self.toplevel.setwaiting()
 		destlist = []
 		pause_anchor = 0
@@ -383,26 +326,18 @@ class Scheduler(scheduler):
 				if seek_node == None:
 					self.toplevel.setready()
 					return 0
-##		playroot = findminidocument(seek_node)
-##		self.suspend_playing()
-##		self.playroot = playroot
-##		if self.sync_cv:
-##			self.toplevel.channelview.globalsetfocus(self.playroot)
-##		self.reset()
-##		self.sctx = SchedulerContext().init(self, self.playroot, 0)
-##		if not self.sctx.seek_minidoc(seek_node):
-##			self.stop_playing()
-##			return 1    # Cannot continue old document at this pt.
-##		self.setrate(1.0)
 		if len(self.sctx_list) <> 1:
 			raise 'Uh-oh, not yet implemented (multi-sctx)'
 		old_sctx = self.sctx_list[0]
 		playroot = findminidocument(seek_node)
-		stop_on_end = ((playroot == self.root) or \
-			  not self.pause_minidoc)
-		newsctx = SchedulerContext().init(self, playroot, stop_on_end)
+		if playroot == self.root or not self.pause_minidoc:
+			end_action = END_STOP
+		else:
+			end_action = END_PAUSE
+		newsctx = SchedulerContext().init(self, playroot, \
+			  seek_node, end_action)
 		self.sctx_list.append(newsctx)
-		if not newsctx.seek_minidoc(seek_node):
+		if not newsctx.start_minidoc():
 			self.suspend_sctx(newsctx)
 			self.toplevel.set_ready()
 			return 0
@@ -430,13 +365,6 @@ class Scheduler(scheduler):
 		now = self.timefunc()
 		while self.queue and self.queue[0][0] <= now:
 			when, prio, action, argument = self.queue[0]
-			#delay = when - now
-			#if delay < -0.1:
-			#	self.statebutton.lcol = GL.MAGENTA
-			#else:
-			#	self.statebutton.lcol = self.statebutton.col2
-			#if delay > 0.0:
-			#	break
 			del self.queue[0]
 			void = apply(action, argument)
 			now = self.timefunc()
@@ -500,9 +428,10 @@ class Scheduler(scheduler):
 			return
 		else:
 			#
-			# Nothing to do for the moment. Stop the clock.
+			# Nothing to do for the moment.
+			# Tick every second, so we see the timer run.
 			#
-			delay = 0
+			delay = 1
 			self.showtime()
 			#print 'updatetimer: idle' #DBG
 		#print 'updatetimer: delay=', delay
@@ -520,7 +449,6 @@ class Scheduler(scheduler):
 		
 		if ev[0] == SR.PLAY_DONE:
 			ev[1].set_armedmode(ARM_WAITSTOP)
-
 		if sctx.active:
 			sctx.event(ev)
 		self.updatetimer()
@@ -587,6 +515,8 @@ class Scheduler(scheduler):
 			self.do_sync(sctx, arg)
 		elif action == SR.PLAY_ARM:
 			self.do_play_arm(sctx, arg)
+		elif action == SR.SCHED_FINISH:
+			self.stop_playing()
 		else:
 			sctx.event((action, arg))
 	#
@@ -626,15 +556,6 @@ class Scheduler(scheduler):
 		node.set_armedmode(ARM_ARMED)
 		self.event(sctx, (SR.ARM_DONE, node))
 	#
-	# Stop all playing nodes.
-	# XXXX This needs to be done on selected channels only.
-	#
-	#def do_play_stop_all(self):
-	#	for node in self.playing_nodes:
-	#		chan = self.getchannel(node)
-	#		chan.clearnode(node)
-	#	self.playing_nodes = []
-	#
 	# Queue interface, based upon sched.scheduler.
 	# This queue has variable time, to implement pause,
 	# but the interface to its callers is the same, except init()
@@ -668,18 +589,6 @@ class Scheduler(scheduler):
 	def skiptimer(self, amount):
 		self.time_origin = self.time_origin - amount
 	#
-##	def freeze(self):
-##	        if not self.frozen:
-##			self.frozen_value = self.timefunc()
-##		self.frozen = self.frozen + 1
-##	#
-##	def unfreeze(self):
-##	        self.frozen = self.frozen - 1
-##		if self.frozen < 0:
-##			print 'Player: self.frozen < 0!'
-##			raise 'Kaboo!'
-	#
-	# XXXX Can be a lot simpler, because rate can only be 1 or 0
 	def setrate(self, rate):
 		if rate < 0.0:
 			raise CheckError, 'setrate with negative rate'
@@ -719,10 +628,11 @@ class Scheduler(scheduler):
 #
 # GenAllSR - Return all (evlist, actionlist) pairs.
 #
-def GenAllSR(node):
+def GenAllSR(node, seeknode):
 	#
 	# First generate arcs
 	#
+	node.PruneTree(seeknode)
 	arcs = node.GetArcList()
 	arcs = node.FilterArcList(arcs)
 	for i in range(len(arcs)):
@@ -781,7 +691,7 @@ def GenAllPrearms(node, prearmlists):
 		chan = MMAttrdefs.getattr(node, 'channel')
 		prearmlists[chan].append((SR.PLAY_ARM, node))
 		return
-	for child in node.GetChildren():
+	for child in node.GetWtdChildren():
 		GenAllPrearms(child, prearmlists)
 		
 # Choose an item from a bag, or None if the bag is empty
