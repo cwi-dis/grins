@@ -60,6 +60,7 @@ class MMNodeContext:
 		self.assetlist = []
 		
 		self.__parseErrors = None # keep the parse errors (fatal, normal and warning)
+		self.disableviews = 0 # for the comments look at Editor/TopLevel.__init__ method
 
 	def isValidDocument(self):
 		return self.getParseErrors() == None
