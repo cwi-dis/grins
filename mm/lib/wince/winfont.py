@@ -7,26 +7,17 @@ from sysmetrics import *
 
 _POINTSIZEOFFSET=+1
 
+pocket_pc_fonts = ['Tahoma', 'Bookdings', 'Courier New', 'Frutiger Linotype']
+default_pocket_pc_font = 'Tahoma'
+
+# we should enumarate installed fonts on the device and select one from the list
+# there is an api for this
 _fontmap = {
-	'Arial': 'Arial',
-	'Courier':'Courier',
-	'Courier-Bold':'Courier Bold',
-	'Courier-Bold-Oblique':'Courier Bold', 
-	'Courier-Oblique':'Courier', 
-	'Greek':'Arial',
-	'Greek-Italic':'Arial Italic', 
-	'Helvetica':'Helvetica',
-	'Helvetica-Bold':'Helvetica Bold',
-	'Helvetica-Oblique':'Helvetica Italic', 
-	'Palatino':'Arial',
-	'Palatino-Bold':'Arial Bold',
-	'Palatino-Italic':'Arial Italic', 
-	'Times-Bold':'Times New Roman Bold',
-	'Times-Italic':'Times New Roman Italic',
-	'Times-Roman':'Times New Roman', 
-	'Utopia':'Arial',
-	'Utopia-Bold':'Arial Bold',
-	'Utopia-Italic':'Arial Italic',
+	'Times-Roman': default_pocket_pc_font,
+	'Times-Italic': default_pocket_pc_font,
+	'Times-Bold': default_pocket_pc_font,
+	'Courier': default_pocket_pc_font,
+	'Greek': default_pocket_pc_font,
 	 }
 
 fonts = _fontmap.keys()
@@ -47,12 +38,14 @@ _fontcache = {}
 # Find a font with font name at point size
 def findfont(fontname, pointsize):
 	if type(pointsize)==type(''):
-		pointsize=string.atoi(pointsize)
-	pointsize=int(pointsize) # in case of float
+		pointsize = string.atoi(pointsize)
+	pointsize = int(pointsize) # in case of float
 	if fontname in fonts:
-		fontname=_fontmap[fontname]
+		fontname = _fontmap[fontname]
+	else:
+		fontname = default_pocket_pc_font
 
-	key = '%s%d' % (fontname,pointsize)
+	key = '%s%d' % (fontname, pointsize)
 	try:
 		return _fontcache[key]
 	except KeyError:
@@ -92,7 +85,7 @@ class _Font:
 		pointsize = int(pointsize+_POINTSIZEOFFSET)	# correction because of tiny fonts on Windows
 		#pointsize = (pointsize*dpi_y+36)/72 # screen correction
 		global user_charset
-		self._fd = {'name':fontname,'height':-pointsize, 'weight':540, 'charset':user_charset}
+		self._fd = {'name':fontname, 'height':-pointsize, 'weight':540}
 		self._hfont = wingdi.CreateFontIndirect(self._fd)		
 		self._tm = self.gettextmetrics()
 
@@ -188,51 +181,3 @@ class _Font:
 	def TextSize(self, str):
 		return self.gettextextent(str)
 
-# from WINGDI.H
-ANSI_CHARSET            =0
-DEFAULT_CHARSET         =1
-SYMBOL_CHARSET          =2
-SHIFTJIS_CHARSET        =128
-HANGEUL_CHARSET         =129
-HANGUL_CHARSET          =129
-GB2312_CHARSET          =134
-CHINESEBIG5_CHARSET     =136
-OEM_CHARSET             =255
-JOHAB_CHARSET           =130
-HEBREW_CHARSET          =177
-ARABIC_CHARSET          =178
-GREEK_CHARSET           =161
-TURKISH_CHARSET         =162
-VIETNAMESE_CHARSET      =163
-THAI_CHARSET            =222
-EASTEUROPE_CHARSET      =238
-RUSSIAN_CHARSET         =204
-MAC_CHARSET             =77
-BALTIC_CHARSET          =186
-
-
-
-user_charset = DEFAULT_CHARSET
-
-		
-# TextMetrics dict entries:
-# tmHeight
-# tmAscent
-# tmDescent
-# tmInternalLeading
-# tmExternalLeading
-# tmAveCharWidth
-# tmMaxCharWidth
-# tmWeight
-# tmItalic
-# tmUnderlined
-# tmStruckOut
-# tmFirstChar
-# tmLastChar
-# tmDefaultChar
-# tmBreakChar
-# tmPitchAndFamily
-# tmCharSet
-# tmOverhang
-# tmDigitizedAspectX
-# tmDigitizedAspectY
