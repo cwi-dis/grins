@@ -42,6 +42,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "..\Build\Temp\CmifEx2\Release"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
+F90=df.exe
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /c
 # ADD CPP /nologo /MD /W3 /GX /O2 /I "." /D LEAVE=__LEAVE /D FINALLY=__FINALLY /D EXCEPT=__EXCEPT /D CRTAPI1=_cdecl /D CRTAPI2=_cdecl /D _X86=1 /D WINVER=0x0400 /D "_WINDLL" /D "_AFXDLL" /D "_MBCS" /FR /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /win32
@@ -69,6 +70,7 @@ LINK32=link.exe
 # PROP Intermediate_Dir "..\Build\Temp\cmifex2\Debug"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
+F90=df.exe
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /c
 # ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "_WINDLL" /D "_AFXDLL" /D "_MBCS" /FR /FD /c
 # SUBTRACT CPP /Gy /YX
@@ -109,14 +111,6 @@ SOURCE=.\MultiFileSel.h
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl;fi;fd"
-# Begin Source File
-
-SOURCE=.\cmifex.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Ezfont.h
-# End Source File
 # End Group
 # Begin Group "Resource Files"
 
