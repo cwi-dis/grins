@@ -1,5 +1,11 @@
 from audiodev import Error
 from audioformat import *
+import Snd
+from Sound import *
+import time
+import struct
+import sys
+import MacOS
 
 class AudioDevMAC:
 	__formats = (linear_8_mono_excess,
@@ -49,11 +55,7 @@ class AudioDevMAC:
 	def writeframes(self, data):
 		if not self.__format or not self.__outrate:
 			raise Error, 'params not specified'
-		import time
-		from Sound import *
-		import struct
 		if not self.__chan:
-			import Snd
 			self.__chan = Snd.SndNewChannel(5, 0, self.__callback)
 		nframes = len(data) / self.__nchannels / self.__sampwidth
 		if len(data) != nframes * self.__nchannels * self.__sampwidth:
@@ -63,7 +65,7 @@ class AudioDevMAC:
 				self.__qsize / self.__nchannels / self.__sampwidth:
 			time.sleep(0.1)
 		h1 = struct.pack('llhhllbbl',
-			id(data)+16,	# ARGH!!!  HACK, HACK!
+			id(data)+MacOS.string_id_to_buffer,	# ARGH!!!  HACK, HACK!
 			self.__nchannels,
 			self.__outrate, 0,
 			0,
@@ -94,7 +96,6 @@ class AudioDevMAC:
 	def wait(self):
 		if not self.__chan:
 			return
-		import time
 		while self.getfilled():
 			time.sleep(0.1)
 		self.__chan = None
