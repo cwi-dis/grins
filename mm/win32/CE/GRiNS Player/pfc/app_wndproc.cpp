@@ -32,7 +32,8 @@ LONG APIENTRY PyWnd_WndProc(HWND hWnd, UINT uMsg, UINT wParam, LONG lParam)
 			PyWnd *pywnd = (*wit).second;
 			PyWnd::wnds.erase(wit);
 			pywnd->m_hWnd = NULL;
-			PyCallbackBlock cbblock;
+			//PyCallbackBlock cbblock;
+			AcquireThread at(PyInterface::getPyThreadState());
 			Py_DECREF(pywnd);
 			}
 		PostQuitMessage(0);
@@ -76,6 +77,5 @@ LONG APIENTRY PyWnd_WndProc(HWND hWnd, UINT uMsg, UINT wParam, LONG lParam)
 				}
 			}
 		}
-
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
