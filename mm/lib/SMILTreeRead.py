@@ -1891,7 +1891,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# create the anchor node
 			anchor = self.__context.newnode('anchor')
 			node._addchild(anchor)
-			anchor.attrdict.extend(attrdict)
+			anchor.attrdict.update(attrdict)
 			anchor.__syncarcs = []
 			self.__links.append((anchor, href))
 
