@@ -12,20 +12,23 @@ import re
 error = 'MMLTreeRead.error'
 
 LAYOUT_NONE = 0				# must be 0
-LAYOUT_MML = 1
+LAYOUT_SMILE = 1
 LAYOUT_UNKNOWN = -1
 
 coordre = re.compile('^ *(?P<x>[0-9.]+%?)[ ,]+(?P<y>[0-9.]+%?)[ ,]+'
 			'(?P<w>[0-9.]+%?)[ ,]+(?P<h>[0-9.]+%?) *$')
+idref = re.compile('id\((?P<id>' + xmllib._Name + ')\)')
 
-class MMLParser(xmllib.XMLParser):
+class SMILEParser(xmllib.XMLParser):
 	def __init__(self, context, verbose = 0):
 		xmllib.XMLParser.__init__(self, verbose)
-		self.__seen_mml = 0
-		self.__in_mml = 0
+		self.__seen_smile = 0
+		self.__in_smile = 0
 		self.__in_head = 0
+		self.__in_head_switch = 0
 		self.__seen_body = 0
 		self.__in_layout = LAYOUT_NONE
+		self.__seen_layout = 0
 		self.__in_a = None
 		self.__context = context
 		self.__root = None
@@ -101,7 +104,7 @@ class MMLParser(xmllib.XMLParser):
 				xside = HD
 			synctolist.append((xnode.GetUID(), xside, delay + counter, yside))
 
-	def AddAttrs(self, node, attributes):
+	def AddAttrs(self, node, attributes, ntype):
 		node.__syncarcs = []
 		for attr, val in attributes.items():
 			if attr == 'id':
@@ -117,16 +120,40 @@ class MMLParser(xmllib.XMLParser):
 			elif attr == 'begin' or attr == 'end':
 				node.__syncarcs.append(attr, val)
 			elif attr == 'dur':
-				node.attrdict['duration'] = _parsecounter(val, 0)
+				if attributes.has_key('begin') and \
+				   attributes.has_key('end'):
+					self.warning('ignoring dur attribute')
+				else:
+					node.attrdict['duration'] = _parsecounter(val, 0)
+			elif attr == 'repeat':
+				try:
+					repeat = string.atoi(val)
+				except string.atoi_error:
+					self.syntax_error(self.lineno,
+							  'bad repeat attribute')
+				else:
+					if repeat < 0:
+						self.warning('bad repeat value')
+					else:
+						node.attrdict['loop'] = repeat
 
 	def NewNode(self, mediatype, attributes):
 		if not self.__container:
 			self.error('node not in container')
+		if attributes.has_key('type'):
+			mtype = string.split(attributes['type'], '/')[0]
+			if mediatype is not None and mtype != mediatype:
+				self.warning("type attribute doesn't match element")
+			mediatype = mtype
+		if mediatype is None:
+			self.error('node of unknown type')
 		node = self.__context.newnode('ext')
 		node.attrdict['transparent'] = -1
-		self.AddAttrs(node, attributes)
+		self.AddAttrs(node, attributes, mediatype)
 		self.__container._addchild(node)
 		node.__mediatype = mediatype
+		if not attributes.has_key('href'):
+			self.syntax_error(self.lineno, 'node without href attribute')
 		try:
 			channel = attributes['loc']
 		except KeyError:
@@ -146,8 +173,8 @@ class MMLParser(xmllib.XMLParser):
 			self.__links.append((node.GetUID(), id, href, ltype))
 
 	def NewContainer(self, type, attributes):
-		if not self.__in_mml:
-			self.error('%s not in mml' % type)
+		if not self.__in_smile:
+			self.warning('%s not in smile' % type)
 		if self.__in_layout:
 			self.error('%s in layout' % type)
 		if not self.__root:
@@ -158,7 +185,7 @@ class MMLParser(xmllib.XMLParser):
 			node = self.__context.newnode(type)
 			self.__container._addchild(node)
 		self.__container = node
-		self.AddAttrs(node, attributes)
+		self.AddAttrs(node, attributes, type)
 
 	def EndContainer(self):
 		self.__container = self.__container.GetParent()
@@ -223,7 +250,7 @@ class MMLParser(xmllib.XMLParser):
 				if not self.__channels.has_key(channel):
 					self.warning('no tuner %s in layout' %
 						     channel)
-					self.__in_layout = LAYOUT_MML
+					self.__in_layout = LAYOUT_SMILE
 					self.start_tuner({'id': channel})
 					self.__in_layout = LAYOUT_NONE
 				attrdict = self.__channels[channel]
@@ -245,8 +272,8 @@ class MMLParser(xmllib.XMLParser):
 						self.__width, self.__height
 					layout['units'] = UNIT_PXL
 				ch['base_window'] = 'layout'
-				x = attrdict['x']
-				y = attrdict['y']
+				x = attrdict['left']
+				y = attrdict['top']
 				w = attrdict['width']
 				h = attrdict['height']
 				if type(x) is type(0):
@@ -307,16 +334,16 @@ class MMLParser(xmllib.XMLParser):
 
 	# methods for start and end tags
 
-	# mml contains everything
-	mml_attributes = ['lipsync', 'id']
-	def start_mml(self, attributes):
-		if self.__seen_mml:
-			self.error('more than 1 mml tag')
-		self.__seen_mml = 1
-		self.__in_mml = 1
+	# smile contains everything
+	smile_attributes = ['id', 'lipsync']
+	def start_smile(self, attributes):
+		if self.__seen_smile:
+			self.error('more than 1 smile tag')
+		self.__seen_smile = 1
+		self.__in_smile = 1
 
-	def end_mml(self):
-		self.__in_mml = 0
+	def end_smile(self):
+		self.__in_smile = 0
 		if not self.__root:
 			self.error('empty document')
 		self.Recurse(self.__root, self.FixChannel, self.FixSyncArcs)
@@ -326,6 +353,8 @@ class MMLParser(xmllib.XMLParser):
 
 	head_attributes = ['id']
 	def start_head(self, attributes):
+		if not self.__in_smile:
+			self.warning('head not in smile')
 		self.__in_head = 1
 
 	def end_head(self):
@@ -333,45 +362,48 @@ class MMLParser(xmllib.XMLParser):
 
 	body_attributes = ['id']
 	def start_body(self, attributes):
-		if not self.__in_mml:
-			self.error('body not in mml')
+		if not self.__in_smile:
+			self.warning('body not in smile')
 		if self.__seen_body:
 			self.error('multiple body tags')
 		self.__seen_body = 1
+		self.__in_body = 1
 
 	def end_body(self):
-		pass
+		self.__in_body = 0
 
 	# layout section
 
-	layout_attributes = ['type']
+	layout_attributes = ['id', 'type']
 	def start_layout(self, attributes):
-		if not self.__in_mml:
-			self.error('layout not in mml')
 		if not self.__in_head:
 			self.warning('layout not in head')
+		if self.__seen_layout and not self.__in_head_switch:
+			self.warning('multiple layouts without switch')
+		self.__seen_layout = 1
 		self.__in_layout = LAYOUT_UNKNOWN
 		if attributes.has_key('type') and \
-		   attributes['type'] == 'text/mml-basic':
-			self.__in_layout = LAYOUT_MML
+		   attributes['type'] == 'text/smile-basic':
+			self.__in_layout = LAYOUT_SMILE
 
 	def end_layout(self):
 		self.__in_layout = LAYOUT_NONE
 
-	tuner_attributes = ['id', 'x', 'y', 'z', 'width', 'height']
+	tuner_attributes = ['id', 'left', 'top', 'z', 'width', 'height']
 	def start_tuner(self, attributes):
 		if not self.__in_layout:
 			self.error('tuner not in layout')
-		if self.__in_layout != LAYOUT_MML:
-			# ignore outside of mml-basic-layout
+		if self.__in_layout != LAYOUT_SMILE:
+			# ignore outside of smile-basic-layout
 			return
-		attrdict = {'x': 0,
-			    'y': 0,
+		attrdict = {'left': 0,
+			    'top': 0,
 			    'z': 0,
 			    'width': 0,
 			    'height': 0}
+		seen_id = 0
 		for attr, val in attributes.items():
-			if attr in ('x', 'y', 'width', 'height'):
+			if attr in ('left', 'top', 'width', 'height'):
 				try:
 					if val[-1] == '%':
 						val = string.atof(val[:-1]) / 100.0
@@ -392,23 +424,21 @@ class MMLParser(xmllib.XMLParser):
 					val = 1
 				if val <= 0:
 					self.error('tuner with negative z')
-				val = val - 1 # MML def is 1, CMIF def is 0
+				val = val - 1 # SMILE def is 1, CMIF def is 0
 			elif attr == 'id':
-				pass
+				seen_id = 1
+				if self.__channels.has_key(val):
+					self.warning('multiple tuner tags for id=%s' % val)
+				self.__channels[val] = attrdict
 			else:
 				self.warning('unknown attribute in tuner tag')
 			attrdict[attr] = val
-		if attrdict.has_key('id'):
-			id = attrdict['id']
-			if self.__channels.has_key(id):
-				self.warning('multiple tuner tags for id=%s' % id)
-			self.__channels[attrdict['id']] = attrdict
-		else:
+		if not seen_id:
 			self.error('tuner without id attribute')
 
 		# calculate minimum required size of top-level window
-		x = attrdict['x']
-		y = attrdict['y']
+		x = attrdict['left']
+		y = attrdict['top']
 		w = attrdict['width']
 		h = attrdict['height']
 		width = _minsize(x, w)
@@ -423,12 +453,40 @@ class MMLParser(xmllib.XMLParser):
 
 	# container nodes
 
-	par_attributes = ['id', 'endsync', 'lipsync', 'pace',
+	par_attributes = ['id', 'endsync', 'lipsync',
 			  'dur', 'begin', 'end', 'repeat']
 	def start_par(self, attributes):
+		# XXXX we ignore lipsync for now
 		self.NewContainer('par', attributes)
+		if attributes.has_key('endsync'):
+			self.__container.__endsync = attributes['endsync']
 
-	end_par = EndContainer
+	def end_par(self):
+		node = self.__container
+		self.EndContainer()
+		try:
+			endsync = node.__endsync
+		except AttributeError:
+			return
+		del node.__endsync
+		if endsync == 'first':
+			node.attrdict['terminator'] = 'FIRST'
+		elif endsync == 'last':
+			node.attrdict['terminator'] = 'LAST'
+		else:
+			res = idref.match(endsync)
+			if res is None:
+				self.warning('bad endsync attribute')
+				return
+			id = res.group('id')
+			for c in node.GetChildren():
+				if c.attrdict.has_key('name') and \
+				   c.attrdict['name'] == id:
+					node.attrdict['terminator'] = id
+					return
+			else:
+				# id not found among the children
+				self.warning('unknown idref in endsync attribute')
 
 	seq_attributes = ['id', 'dur', 'begin', 'end', 'repeat']
 	def start_seq(self, attributes):
@@ -443,51 +501,63 @@ class MMLParser(xmllib.XMLParser):
 
 	switch_attributes = ['id']
 	def start_switch(self, attributes):
-		if not self.__in_head:
+		if self.__in_head:
+			if self.__in_head_switch:
+				self.error('switch within switch in head')
+			self.__in_head_switch = 1
+		else:
 			self.NewContainer('alt', attributes)
 
 	def end_switch(self):
+		self.__in_head_switch = 0
 		if not self.__in_head:
 			self.EndContainer(self)
 
 	# media items
 
-	text_attributes = ['id', 'href', 'type', 'loc', 'dur', 'begin', 'end', 'repeat']
+	ref_attributes = ['id', 'href', 'type', 'loc', 'dur', 'begin', 'end', 'repeat']
+	def start_ref(self, attributes):
+		self.NewNode(None, attributes)
+
+	def end_ref(self):
+		pass
+
+	text_attributes = ref_attributes
 	def start_text(self, attributes):
 		self.NewNode('text', attributes)
 
 	def end_text(self):
 		pass
 
-	audio_attributes = text_attributes
+	audio_attributes = ref_attributes
 	def start_audio(self, attributes):
 		self.NewNode('audio', attributes)
 
 	def end_audio(self):
 		pass
 
-	img_attributes = text_attributes
+	img_attributes = ref_attributes
 	def start_img(self, attributes):
 		self.NewNode('image', attributes)
 
 	def end_img(self):
 		pass
 
-	video_attributes = text_attributes
+	video_attributes = ref_attributes
 	def start_video(self, attributes):
 		self.NewNode('video', attributes)
 
 	def end_video(self):
 		pass
 
-	cmif_cmif_attributes = text_attributes
+	cmif_cmif_attributes = ref_attributes
 	def start_cmif_cmif(self, attributes):
 		self.NewNode('cmif_cmif', attributes)
 
 	def end_cmif_cmif(self):
 		pass
 
-	cmif_shell_attributes = text_attributes
+	cmif_shell_attributes = ref_attributes
 	def start_cmif_shell(self, attributes):
 		self.NewNode('cmif_shell', attributes)
 
@@ -496,7 +566,7 @@ class MMLParser(xmllib.XMLParser):
 
 	# linking
 
-	a_attributes = ['href', 'show']
+	a_attributes = ['id', 'href', 'show']
 	def start_a(self, attributes):
 		try:
 			href = attributes['href']
@@ -526,7 +596,7 @@ class MMLParser(xmllib.XMLParser):
 	def end_a(self):
 		self.__in_a = None
 
-	hlink_attributes = ['show']
+	hlink_attributes = ['id', 'show']
 	def start_hlink(self, attributes):
 		if self.__in_hlink:
 			self.syntax_error(self.lineno, 'recursive hlink')
@@ -600,7 +670,7 @@ class MMLParser(xmllib.XMLParser):
 		self.__links.append((snode, (sid, stype, sargs), dattr['href'],
 				     self.__hlink_type))
 
-	anchor_attributes = ['href', 'role']
+	anchor_attributes = ['id', 'href', 'role']
 	def start_anchor(self, attributes):
 		if not self.__in_hlink:
 			self.error('anchor not in hlink')
@@ -664,7 +734,7 @@ def ReadFile(filename):
 def ReadFileContext(filename, context):
 	import os
 	context.setdirname(os.path.dirname(filename))
-	p = MMLParser(context)
+	p = SMILEParser(context)
 	p.feed(open(filename).read())
 	p.close()
 	return p.GetRoot()
@@ -781,7 +851,7 @@ def _parsecounter(value, maybe_relative):
 
 id = re.compile('id\((?P<name>' + xmllib._Name + ')\)'
 		'(\((?P<value>[^)]*)\))?'
-		'(\+(?P<delay>.*))?')
+		'(\+(?P<delay>.*))?$')
 
 def _parsetime(xpointer):
 	offset = 0
