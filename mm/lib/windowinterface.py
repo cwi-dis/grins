@@ -152,9 +152,11 @@ class _Event:
 		self._readeventtimeout(None)
 
 	def _readeventtimeout(self, timeout):
-		if timeout == 0:
+		if timeout == 0 or self._queue:
 			if self._nestingdepth > 0:
 				return
+		if self._queue:
+			timeout = 0
 		self._nestingdepth = self._nestingdepth + 1
 		try:
 			import select
@@ -340,8 +342,10 @@ class _Event:
 	def pollevent(self):
 		if debug > 1: print 'Event.pollevent()'
 		# Return the first event in the queue if there is one.
-		if self.testevent():
-			return self.readevent()
+		if self._queue:
+			event = self._queue[0]
+			del self._queue[0]
+			return event
 		else:
 			return None
 
@@ -349,7 +353,7 @@ class _Event:
 		if debug > 1: print 'Event.peekevent()'
 		# Return the first event in the queue if there is one,
 		# but don't remove it.
-		if self.testevent():
+		if self._queue:
 			return self._queue[0]
 		else:
 			return None
