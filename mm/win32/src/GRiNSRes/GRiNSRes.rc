@@ -1102,6 +1102,22 @@ BEGIN
                     WS_TABSTOP,157,73,109,10
 END
 
+IDD_EDITATTR_E1 DIALOG DISCARDABLE  0, 0, 300, 200
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,244,170,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,187,170,50,14
+    PUSHBUTTON      "&Restore",IDUC_RESTORE,63,170,50,14
+    PUSHBUTTON      "&Apply",IDUC_APPLY,7,170,50,14
+    LTEXT           "",IDC_ATTR_INFO,7,147,287,18,SS_SUNKEN
+    GROUPBOX        "",IDC_GROUP1,6,10,287,128
+    LTEXT           "Untitled",IDC_11,252,41,38,8,NOT WS_VISIBLE
+    EDITTEXT        IDC_12,12,24,238,103,ES_MULTILINE | ES_AUTOHSCROLL | 
+                    WS_VSCROLL | WS_HSCROLL
+    PUSHBUTTON      "Reset",IDC_13,254,24,33,12,NOT WS_TABSTOP
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
