@@ -347,6 +347,10 @@ SOURCE=.\editor\win32\LayoutViewDialog.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\editor\win32\LicenseDialog.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\editor\win32\LinkEditDialog.py
 # End Source File
 # Begin Source File
