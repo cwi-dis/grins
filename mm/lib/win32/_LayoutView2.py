@@ -44,7 +44,9 @@ class _LayoutView2(GenFormView):
 		# Initialize control objects
 		# save them in directory: accessible directly from LayoutViewDialog class
 		# note: if you modify the key names, you also have to modify them in LayoutViewDialog
-		self.__ctrlNames=n=('ViewportSel','RegionSel','RegionX','RegionY','RegionW','RegionH','RegionZ', 'BgColor', 'ShowNames')
+		self.__ctrlNames=n=('ViewportSel','RegionSel','RegionX','RegionY',
+							'RegionW','RegionH','RegionZ', 'BgColor', 'ShowNames',
+							'AsOutLine', 'RegionList', 'ShowRbg', 'SendBack', 'BringFront')
 		self[n[0]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_VIEWPORT_SEL)
 		self[n[1]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_REGION_SEL)
 		self[n[2]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_X)
@@ -54,7 +56,12 @@ class _LayoutView2(GenFormView):
 		self[n[6]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Z)
 		self[n[7]]=components.Button(self,grinsRC.IDC_LAYOUT_BACKGROUND)
 		self[n[8]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_NAMES)
-
+		self[n[9]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_AS_OUTLINE)
+		self[n[10]]=components.ListBox(self,grinsRC.IDC_LAYOUT_REGIONLIST)
+		self[n[11]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_RBG)
+		self[n[12]]=components.Button(self,grinsRC.IDC_LAYOUT_SENDBACK)
+		self[n[13]]=components.Button(self,grinsRC.IDC_LAYOUT_BRINGFRONT)
+		
 		# Initialize control objects whose command are activable as well from menu bar
 		self[ATTRIBUTES]=components.Button(self,grinsRC.IDCMD_ATTRIBUTES)
 		
@@ -69,6 +76,9 @@ class _LayoutView2(GenFormView):
 		# layout component
 		self._previousHandler = None
 		self._layout = LayoutManager()
+
+		# allow to valid the field with the return key
+		self.lastModifyCtrlField = None
 		
 	# special initialization because previous control is not managed like any another component
 	# allow to have a handle on previous component from an external module
@@ -107,21 +117,34 @@ class _LayoutView2(GenFormView):
 	# setup the dialog control values
 	#
 	
-	def fillViewportSelCtrl(self, vpList):
-		# fill combos
-		if vpList:
-			for vpname in vpList:
-				self['ViewportSel'].addstring(vpname)
-			self['ViewportSel'].setcursel(0)
+	def fillSelecterCtrl(self, ctrlName, vList):
+		# fill combos selecter
+		if vList:
+			self[ctrlName].resetcontent()
+			for vname in vList:
+				self[ctrlName].addstring(vname)
+			self[ctrlName].setcursel(0)
 
-	def setViewportSelCtrl(self, iSel):
-		# update show names check box 
-		self['ViewportSel'].setcursel(iSel)
+	def fillMultiSelCtrl(self, ctrlName, vList):
+		# fill combos selecter
+		if vList:
+			self[ctrlName].resetcontent()
+			for vname in vList:
+				self[ctrlName].addstring(0, vname)
+			self[ctrlName].setcursel(0)
 
-	def setShowNamesCtrl(self, bValue):
-		# update show names check box 
-		self['ShowNames'].setcheck(bValue)
+	def setSelecterCtrl(self, ctrlName, value):
+		self[ctrlName].setcursel(value)
+		
+	def setCheckCtrl(self, ctrlName, bValue):
+		self[ctrlName].setcheck(bValue)
 
+	def setFieldCtrl(self, ctrlName, sValue):
+		self[ctrlName].settext(sValue)
+
+	def enable(self, ctrlName, bValue):
+		self[ctrlName].enable(bValue)
+		
 	#
 	# end setup the dialog control values
 	#
@@ -158,30 +181,69 @@ class _LayoutView2(GenFormView):
 		msg=win32mu.Win32Msg(params)
 		id=msg.cmdid()
 		nmsg=msg.getnmsg()
-		
-		# delegate combo box notifications
+
+		if id==win32con.IDOK:
+			if self.lastModifyCtrlField != None:
+				value = self[self.lastModifyCtrlField].gettext()
+				self._dialogHandler.onFieldCtrl(self.lastModifyCtrlField, value)
+				self.lastModifyCtrlField = None
+				return
+			
+		# delegate combo box notifications to handler
 		if nmsg==win32con.LBN_SELCHANGE:
-			if id == self['ViewportSel']._id:
-				self.onViewportSelChange()	
-			elif id == self['RegionSel']._id:
-				self.onRegionSelChange()
-			return
+			ctrlName = None
 		
-		if id == self['ShowNames']._id:
-			if nmsg==win32con.BN_CLICKED:
-				self.onShowRegionNames()
+			if id == self['ViewportSel']._id:
+				ctrlName = 'ViewportSel'
+			elif id == self['RegionSel']._id:
+				ctrlName = 'RegionSel'
+			if ctrlName != None:
+				self[ctrlName].callcb()
+				value = self[ctrlName].getvalue()
+				self._dialogHandler.onSelecterCtrl(ctrlName, value)				
+				return
+
+			# multi selection ctrl			
+			if id == self['RegionList']._id:
+				ctrlName = 'RegionList'
+			if ctrlName != None:
+				self[ctrlName].callcb()
+				itemNumber = self[ctrlName].getselcount()
+				items = self[ctrlName].getselitems(itemNumber)
+				self._dialogHandler.onMultiSelCtrl(ctrlName, items)				
+				return
+		
+		if nmsg==win32con.BN_CLICKED:
+			ctrlName = None
+			
+			if id == self['ShowNames']._id:
+				ctrlName = 'ShowNames'
+			elif id == self['AsOutLine']._id:
+				ctrlName = 'AsOutLine'
+			if ctrlName != None:
+				value = self[ctrlName].getcheck()
+				self._dialogHandler.onCheckCtrl(ctrlName, value)
 			return 
 
-		for name in ('RegionX','RegionY','RegionW','RegionH'):
-			if id==self[name]._id:
-				if nmsg==win32con.EN_CHANGE:
-					self.onEditCoordinates()
-				return
-		if id==self['RegionZ']._id:
-			if nmsg==win32con.EN_CHANGE:
-				self.onEditZorder()
+		if nmsg==win32con.EN_CHANGE:
+			ctrlName = None
+			
+			if id == self['RegionX']._id:
+				ctrlName = 'RegionX'
+			elif id == self['RegionY']._id:
+				ctrlName = 'RegionY'
+			elif id == self['RegionW']._id:
+				ctrlName = 'RegionW'
+			elif id == self['RegionH']._id:
+				ctrlName = 'RegionH'
+			elif id == self['RegionZ']._id:
+				ctrlName = 'RegionZ'
+				
+			if ctrlName != None:
+				self.lastModifyCtrlField = ctrlName
+				
 			return
-
+		
 		if id==self['BgColor']._id:
 			self.onBgColor()
 			return
@@ -203,19 +265,6 @@ class _LayoutView2(GenFormView):
 	#
 	# User input response from dialog controls
 	# 
-	def onViewportSelChange(self):
-		self['ViewportSel'].callcb()
-		vpname = self['ViewportSel'].getvalue()
-		self._dialogHandler.onViewportSelCtrl(vpname)
-			
-	def onRegionSelChange(self):
-		self['RegionSel'].callcb()
-		rgnname = self['RegionSel'].getvalue()
-		self._dialogHandler.onRegionSelCtrl(rgnname)
-
-	def onShowRegionNames(self):
-		showRegionNames = self['ShowNames'].getcheck()
-		self._dialogHandler.onRegionNamesChCtrl(showRegionNames)
 
 	def onEditCoordinates(self):
 		name = self['RegionSel'].getvalue()
@@ -345,7 +394,7 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		self.HookMessage(self.onLButtonUp,win32con.WM_LBUTTONUP)
 		self.HookMessage(self.onMouseMove,win32con.WM_MOUSEMOVE)
 		self.HookMessage(self.onLButtonDblClk,win32con.WM_LBUTTONDBLCLK)
-
+		
 	def OnDestroy(self, params):
 		if self.__hsmallfont:
 			Sdk.DeleteObject(self.__hsmallfont)
@@ -413,7 +462,7 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 			
 	# create a new viewport
 	def newViewport(self, attrdict, name):
-		w, h = attrdict.get('winsize')
+		x,y,w, h = attrdict.get('wingeom')
 				
 		self._device2logical = self.findDeviceToLogicalScale(w,h)
 		self._parent.showScale(self._device2logical)
@@ -619,8 +668,8 @@ class Viewport(win32window.Window, UserEventMng):
 		UserEventMng.__init__(self)
 		self.setDeviceToLogicalScale(scale)
 
-		w, h = attrdict.get('winsize')
-		self._rc = (8, 8, w, h)
+		x, y, w, h = attrdict.get('wingeom')
+		self._rc = (x, y, w, h)
 		units = attrdict.get('units')
 		z = 0
 		transparent = attrdict.get('transparent')
@@ -655,20 +704,16 @@ class Viewport(win32window.Window, UserEventMng):
 	def setAttrdict(self, attrdict):
 		newBgcolor = attrdict.get('bgcolor')
 		oldBgcolor = self._attrdict.get('bgcolor')
-		newGeom = attrdict.get('winsize')
-		oldGeom = self._attrdict.get('winsize')
-		newZ = attrdict.get('z')
-		oldZ = self._attrdict.get('z')
+		newGeom = attrdict.get('wingeom')
+		oldGeom = self._attrdict.get('wingeom')
 		self._attrdict = attrdict
 
 		if oldGeom != newGeom:
 			self.updatecoordinates(newGeom, units=UNIT_PXL)			
 		if newBgcolor != oldBgcolor:
 			self.updatebgcolor(newBgcolor)
-		if newZ != oldZ:
-			self.updatezindex(newZ)
 
-		self.ctx.update()
+		self._ctx.update()
 
 	# shape content. may be replaced by displaylist ???
 	def showName(self, bv):
@@ -676,7 +721,7 @@ class Viewport(win32window.Window, UserEventMng):
 		self._ctx.update()
 		
 	def setImage(self, handle, image, fit):
-		print 'setImage: not implemented yet'
+		print 'setImage on viewport: not implemented yet'
 
 	#
 	#  end interface implementation
@@ -749,7 +794,7 @@ class Region(win32window.Window, UserEventMng):
 		UserEventMng.__init__(self)
 		self.setDeviceToLogicalScale(scale)
 
-		self._rc = x, y, w, h = attrdict.get('base_winoff')
+		self._rc = x, y, w, h = attrdict.get('wingeom')
 		units = attrdict.get('units')
 		z = attrdict.get('z')
 		transparent = attrdict.get('transparent')
@@ -758,7 +803,7 @@ class Region(win32window.Window, UserEventMng):
 		
 		# disp list of this window
 		# use shortcut instead of render 
-		self._active_displist = self.newdisplaylist(bgcolor)
+		self._active_displist = self.newdisplaylist()
 
 		# allow to determinate if the region is moving
 		self._isMoving = 0
@@ -818,16 +863,16 @@ class Region(win32window.Window, UserEventMng):
 		print 'removeRegion: not implemented yet'
 
 	def select(self):
-		self._ctx.selectRequest()
+		self._ctx.selectRequest(self)
 
 	def unselect(self):
-		self._ctx.unselectRequest()
+		self._ctx.unselectRequest(self)
 
 	def setAttrdict(self, attrdict):
 		newBgcolor = attrdict.get('bgcolor')
 		oldBgcolor = self._attrdict.get('bgcolor')
-		newGeom = attrdict.get('winsize')
-		oldGeom = self._attrdict.get('winsize')
+		newGeom = attrdict.get('wingeom')
+		oldGeom = self._attrdict.get('wingeom')
 		newZ = attrdict.get('z')
 		oldZ = self._attrdict.get('z')
 		self._attrdict = attrdict
@@ -839,15 +884,16 @@ class Region(win32window.Window, UserEventMng):
 		if newZ != oldZ:
 			self.updatezindex(newZ)
 
-		self.ctx.update()
+		self._ctx.update()
 
 	# shape content. may be replaced by displaylist ???
 	def showName(self, bv):
 		self._showname = bv
 		self._ctx.update()
 
-	def setImage(self, handle, image, fit):
-		print 'setImage: not implemented yet'
+	def setImage(self, handle, filename, fit):
+		if self._active_displist != None:
+			self._active_displist.newimage(filename, fit)
 
 	# 
 	# end interface implementation
