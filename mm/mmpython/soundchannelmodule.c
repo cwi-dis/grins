@@ -12,6 +12,7 @@ static soundchannel_debug = 0;
 #else
 #define dprintf(args)
 #endif
+#define denter(func)	dprintf(( # func "(%lx)\n", (long) self))
 
 struct sound_data {
 	FILE *f;		/* file from which to read samples */
@@ -53,7 +54,7 @@ sound_init(self)
 {
 	long buf[2];
 
-	dprintf(("sound_init\n"));
+	denter(sound_init);
 	self->mm_private = malloc(sizeof(struct sound));
 	if (self->mm_private == NULL) {
 		(void) err_nomem();
@@ -86,7 +87,7 @@ sound_dealloc(self)
 {
 	long buf[2];
 
-	dprintf(("sound_dealloc\n"));
+	denter(sound_dealloc);
 	if (self->mm_private == NULL)
 		return;
 	if (PRIV->s_play.sampbuf)
@@ -109,7 +110,7 @@ sound_arm(self, file, delay, duration, attrlist, anchorlist)
 	char *name;
 	object *n, *v;
 
-	dprintf(("sound_arm\n"));
+	denter(sound_arm);
 	if (!is_dictobject(attrlist)) {
 		err_setstr(RuntimeError, "attributes not a dictionary");
 		return 0;
@@ -142,7 +143,7 @@ static void
 sound_armer(self)
 	mmobject *self;
 {
-	dprintf(("sound_armer\n"));
+	denter(sound_armer);
 
 	if (PRIV->s_arm.sampbuf) {
 		free(PRIV->s_arm.sampbuf);
@@ -153,7 +154,8 @@ sound_armer(self)
 		PRIV->s_arm.bufsize = PRIV->s_arm.nsamples;
 	PRIV->s_arm.sampbuf = malloc(PRIV->s_arm.bufsize*PRIV->s_arm.sampwidth);
 
-	dprintf(("nchannels: %d, nsamples: %d, nframes: %d, sampwidth: %d, samprate: %d, offset: %d, file: %lx (fd= %d), bufsize = %d\n",
+	dprintf(("sound_armer(%lx): nchannels: %d, nsamples: %d, nframes: %d, sampwidth: %d, samprate: %d, offset: %d, file: %lx (fd= %d), bufsize = %d\n",
+		 (long) self,
 		 PRIV->s_arm.nchannels, PRIV->s_arm.nsamples,
 		 PRIV->s_arm.nsamples / PRIV->s_arm.nchannels,
 		 PRIV->s_arm.sampwidth, PRIV->s_arm.samprate,
@@ -168,7 +170,7 @@ static int
 sound_play(self)
 	mmobject *self;
 {
-	dprintf(("sound_play\n"));
+	denter(sound_play);
 	PRIV->s_flag = 0;
 	if (PRIV->s_play.sampbuf)
 		free(PRIV->s_play.sampbuf);
@@ -189,7 +191,7 @@ sound_player(self)
 	int portfd;
 	struct pollfd pollfd[2];
 
-	dprintf(("sound_player\n"));
+	denter(sound_player);
 
 	(void) acquire_lock(device_lock, WAIT_LOCK);
 	if (device_used++ == 0) {
@@ -229,10 +231,10 @@ sound_player(self)
 			n = fread(PRIV->s_play.sampbuf, PRIV->s_play.sampwidth,
 				  n, PRIV->s_play.f);
 			if (n <= 0) {
-				dprintf(("fread returned %d at %ld (nsamps = %d)\n", n, ftell(PRIV->s_play.f), nsamps));
+				dprintf(("sound_player(%lx): fread returned %d at %ld (nsamps = %d)\n", (long) self, n, ftell(PRIV->s_play.f), nsamps));
 				n = 0;
 			} else {
-				dprintf(("fread %d samples\n", n));
+				dprintf(("sound_player(%lx): fread %d samples\n", (long) self, n));
 			}
 		} else
 			n = 0;
@@ -247,32 +249,32 @@ sound_player(self)
 		pollfd[1].fd = PRIV->s_pipefd[0];
 		pollfd[1].events = POLLIN;
 		pollfd[1].revents = 0;
-		dprintf(("polling\n"));
+		dprintf(("sound_player(%lx): polling\n", (long) self));
 		if (poll(&pollfd, sizeof(pollfd)/sizeof(pollfd[0]), -1) < 0) {
 			perror("poll");
 			break;
 		}
-		dprintf(("poll returned\n"));
+		dprintf(("sound_player(%lx): poll returned\n", (long) self));
 		if (pollfd[1].revents & POLLIN) {
 			char c;
 			long filled;
-			dprintf(("reading from pipe\n"));
+			dprintf(("sound_player(%lx): reading from pipe\n", (long) self));
 			(void) read(PRIV->s_pipefd[0], &c, 1);
-			dprintf(("player: read %c\n", c));
+			dprintf(("sound_player(%lx): read %c\n", (long) self, c));
 			(void) acquire_lock(PRIV->s_lock, WAIT_LOCK);
 			if (c == 'p' || c == 'r')
 				filled = ALgetfilled(PRIV->s_port);
 			ALcloseport(PRIV->s_port);
 			if (c == 'p' || c == 'r') {
 				fseek(PRIV->s_play.f, -(filled + n) * PRIV->s_play.sampwidth, 1);
-				dprintf(("filled = %ld, nsamps before = %ld\n", filled, nsamps));
+				dprintf(("sound_player(%lx): filled = %ld, nsamps before = %ld\n", (long) self, filled, nsamps));
 				nsamps += filled;
 			}
 			if (c == 'p') {
-				dprintf(("waiting to continue\n"));
+				dprintf(("sound_player(%lx): waiting to continue\n", (long) self));
 				release_lock(PRIV->s_lock);
 				(void) read(PRIV->s_pipefd[0], &c, 1);
-				dprintf(("continue playing, read %c\n", c));
+				dprintf(("sound_player(%lx): continue playing, read %c\n", (long) self, c));
 				(void) acquire_lock(PRIV->s_lock, WAIT_LOCK);
 			}
 			if (c == 'r') {
@@ -281,12 +283,12 @@ sound_player(self)
 				release_lock(PRIV->s_lock);
 				continue;
 			} else {
-				dprintf(("stopping with playing\n"));
+				dprintf(("sound_player(%lx): stopping with playing\n", (long) self));
 				goto cleanup;
 			}
 		}
 		if (pollfd[0].revents & (POLLERR|POLLHUP|POLLNVAL)) {
-			dprintf(("pollfd[0].revents=%x\n",pollfd[0].revents));
+			dprintf(("sound_player(%lx): pollfd[0].revents=%x\n", (long) self, pollfd[0].revents));
 			break;
 		}
 		if (n == 0)
@@ -299,7 +301,7 @@ sound_player(self)
 				if (s > n)
 					s = n;
 				if (rate == 0) {
-					dprintf(("write %d samples\n", s));
+					dprintf(("sound_player(%lx): write %d samples\n", (long) self, s));
 					ALwritesamps(PRIV->s_port, p, s);
 				}
 				rate++;
@@ -309,7 +311,7 @@ sound_player(self)
 				p += s * PRIV->s_play.sampwidth * PRIV->s_play.nchannels;
 			}
 		} else {
-			dprintf(("write %d samples\n", n));
+			dprintf(("sound_player(%lx): write %d samples\n", (long) self, n));
 			ALwritesamps(PRIV->s_port, PRIV->s_play.sampbuf, n);
 		}
 	}
@@ -333,7 +335,7 @@ static int
 sound_done(self)
 	mmobject *self;
 {
-	dprintf(("sound_done\n"));
+	denter(sound_done);
 	return 1;
 }
 
@@ -341,7 +343,7 @@ static int
 sound_resized(self)
 	mmobject *self;
 {
-	dprintf(("sound_resized\n"));
+	denter(sound_resized);
 	return 1;
 }
 
@@ -349,7 +351,7 @@ static int
 sound_stop(self)
 	mmobject *self;
 {
-	dprintf(("sound_stop\n"));
+	denter(sound_stop);
 	(void) acquire_lock(PRIV->s_lock, WAIT_LOCK);
 	if (PRIV->s_flag & PORT_OPEN) {
 		PRIV->s_flag |= STOP;
@@ -366,7 +368,7 @@ sound_setrate(self, rate)
 {
 	char msg;
 
-	dprintf(("sound_setrate(%g)\n", rate));
+	dprintf(("sound_setrate(%lx,%g)\n", (long) self, rate));
 	(void) acquire_lock(PRIV->s_lock, WAIT_LOCK);
 	if (rate == 0) {
 		PRIV->s_flag |= PAUSE;
@@ -379,7 +381,7 @@ sound_setrate(self, rate)
 	/* it can happen that the channel has already been stopped but the */
 	/* player thread hasn't reacted yet.  Hence the check on STOPPING. */
 	if ((self->mm_flags & (PLAYING | STOPPING)) == PLAYING) {
-		dprintf(("setrate: writing %c\n", msg));
+		dprintf(("sound_setrate(%lx): writing %c\n", (long) self, msg));
 		(void) write(PRIV->s_pipefd[1], &msg, 1);
 	}
 	release_lock(PRIV->s_lock);
@@ -471,6 +473,7 @@ initsoundchannel()
 #ifdef MM_DEBUG
 	soundchannel_debug = getenv("SOUNDDEBUG") != 0;
 #endif
+	dprintf(("initsoundchannel\n"));
 	(void) initmodule("soundchannel", soundchannel_methods);
 	device_lock = allocate_lock();
 	if (device_lock == NULL)
