@@ -107,9 +107,10 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__targetChannel = self._player.getchannelbyname(chname)
 		return self.__targetChannel
 		
-	def __startAnimate(self):
-		self.__start = time.time()		
-		self.__effAnimator.onAnimateBegin(self.__getTargetChannel(), self.__animator)
+	def __startAnimate(self, repeat=0):
+		self.__start = time.time()
+		if not repeat:		
+			self.__effAnimator.onAnimateBegin(self.__getTargetChannel(), self.__animator)
 		self.__animate()
 		self.__register_for_timeslices()
 
@@ -136,22 +137,24 @@ class AnimateChannel(Channel.ChannelAsync):
 
 	def __onAnimateDur(self):
 		if not self.__animating:
-			return	
+			return
+		# set to the end for the benefit of freeze and repeat
+		self.__animator.setToEnd()
 		if self.play_loop:
 			self.play_loop = self.play_loop - 1
 			if self.play_loop: # more loops ?
-				self.__animator.repeat()
-				self.__startAnimate()
+				self.__startAnimate(repeat=1)
 				return
 			self.__playdone = 1
 			self.playdone(0)
 			return
 		# self.play_loop is 0 so repeat
-		self.__startAnimate()
+		self.__startAnimate(repeat=1)
 
 	def on_idle_callback(self):
 		if self.__animating and not self.__playdone:
 			t_sec=time.time() - self.__start
+			# end-point exclusive model
 			if t_sec>=self.__duration:
 				self.__onAnimateDur()
 			else:
