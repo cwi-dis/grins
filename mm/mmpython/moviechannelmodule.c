@@ -17,30 +17,40 @@ static int moviechannel_debug = 0;
 #endif
 #define denter(func)	dprintf(( # func "(%lx)\n", (long) self))
 
+#define MAXMAP		(4096 - 256) /* max nr. of colormap entries to use */
+
 #define FORMAT_RGB8	1
 
 static type_lock gl_lock;
 extern type_lock getlocklock PROTO((object *));
 
 struct movie_data {
-	int m_width;
-	int m_height;
-	int m_format;
-	int m_wid;
-	object *m_index;
-	object *m_f;
-	long m_offset;
-	void *m_frame;
-	int m_size;
+	int m_width;		/* width of movie */
+	int m_height;		/* height of movie */
+	int m_format;		/* format of movie */
+	int m_wid;		/* window ID */
+	int m_c0bits, m_c1bits, m_c2bits; /* # of bits for rgb colors */
+	int m_moffset;		/* offset in colormap */
+	double m_scale;		/* movie scale (magnification) factor */
+	object *m_index;	/* cached movie index */
+	object *m_f;		/* file where movie comes from */
+	long m_offset;		/* offset in file before we go seeking */
+	void *m_frame;		/* one frame */
+	int m_size;		/* size of frame */
+	long m_bgcolor;		/* background color for window */
+	int m_bgindex;		/* colormap index for background color */
 };
 struct movie {
-	long m_width, m_height;
-	struct movie_data m_play;
-	struct movie_data m_arm;
-	int m_pipefd[2];
+	long m_width, m_height;	/* width and height of window */
+	struct movie_data m_play; /* movie being played */
+	struct movie_data m_arm; /* movie being armed */
+	int m_pipefd[2];	/* pipe for synchronization with player */
 };
 
 #define PRIV	((struct movie *) self->mm_private)
+
+static char graphics_version[12]; /* gversion() output */
+static int is_entry_indigo;	/* true iff we run on an Entry Indigo */
 
 static int
 movie_init(self)
@@ -141,6 +151,65 @@ movie_arm(self, file, delay, duration, attrdict, anchorlist)
 		err_setstr(RuntimeError, "no index specified");
 		return 0;
 	}
+	v = dictlookup(attrdict, "c0bits");
+	if (v && is_intobject(v))
+		PRIV->m_arm.m_c0bits = getintvalue(v);
+	else {
+		err_setstr(RuntimeError, "c0bits not specified");
+		return 0;
+	}
+	v = dictlookup(attrdict, "c1bits");
+	if (v && is_intobject(v))
+		PRIV->m_arm.m_c1bits = getintvalue(v);
+	else {
+		err_setstr(RuntimeError, "c1bits not specified");
+		return 0;
+	}
+	v = dictlookup(attrdict, "c2bits");
+	if (v && is_intobject(v))
+		PRIV->m_arm.m_c2bits = getintvalue(v);
+	else {
+		err_setstr(RuntimeError, "c2bits not specified");
+		return 0;
+	}
+	v = dictlookup(attrdict, "offset");
+	if (v && is_intobject(v))
+		PRIV->m_arm.m_moffset = getintvalue(v);
+	else {
+		err_setstr(RuntimeError, "offset not specified");
+		return 0;
+	}
+	v = dictlookup(attrdict, "scale");
+	if (v && is_floatobject(v))
+		PRIV->m_arm.m_scale = getfloatvalue(v);
+	else {
+		err_setstr(RuntimeError, "scale not specified");
+		return 0;
+	}
+	v = dictlookup(attrdict, "bgcolor");
+	if (v && is_tupleobject(v) && gettuplesize(v) == 3) {
+		int i, c;
+		object *t;
+
+		PRIV->m_arm.m_bgcolor = 0;
+		for (i = 0; i < 3; i++) {
+			t = gettupleitem(v, i);
+			if (!is_intobject(t)) {
+				err_setstr(RuntimeError, "bad color specification");
+				return 0;
+			}
+			c = getintvalue(t);
+			if (c < 0 || c > 255) {
+				err_setstr(RuntimeError, "bad color specification");
+				return 0;
+			}
+			PRIV->m_arm.m_bgcolor = (PRIV->m_arm.m_bgcolor << 8) | c;
+		}
+	} else {
+		err_setstr(RuntimeError, "no background color specified");
+		return 0;
+	}
+	PRIV->m_arm.m_bgindex = -1;
 	v = dictlookup(attrdict, "gl_lock");
 	if (v == NULL || (gl_lock = getlocklock(v)) == NULL) {
 		err_setstr(RuntimeError, "no graphics lock specified");
@@ -184,6 +253,75 @@ movie_armer(self)
 		dprintf(("movie_armer: read incorrect amount\n"));
 }
 
+static void
+conv_rgb8(double rgb, double d1, double d2, int *rp, int *gp, int *bp)
+{
+	int rgb_i = rgb * 255.0;
+
+	*rp = ((rgb_i >> 5) & 0x07) / 7.0 * 255.0;
+	*gp = ((rgb_i     ) & 0x07) / 7.0 * 255.0;
+	*bp = ((rgb_i >> 3) & 0x03) / 3.0 * 255.0;
+}
+
+static void
+init_colormap(self)
+	mmobject *self;
+{
+	int c0, c1, c2;
+	int c0bits = PRIV->m_play.m_c0bits;
+	int c1bits = PRIV->m_play.m_c1bits;
+	int maxc0, maxc1, maxc2;
+	int r, g, b;
+	int bgr, bgg, bgb;
+	int d, dist = 3 * 256;	/* bigger than it can be */
+	int index;
+	int offset = PRIV->m_play.m_moffset;
+	double c0v, c1v, c2v;
+	void (*convcolor)(double, double, double, int *, int *, int *);
+
+	switch (PRIV->m_play.m_format) {
+	case FORMAT_RGB8:
+		convcolor = conv_rgb8;
+		break;
+	}
+	bgr = (PRIV->m_play.m_bgcolor >> 16) & 0xff;
+	bgg = (PRIV->m_play.m_bgcolor >>  8) & 0xff;
+	bgb = (PRIV->m_play.m_bgcolor      ) & 0xff;
+	maxc0 = 1 << c0bits;
+	maxc1 = 1 << c1bits;
+	maxc2 = 1 << PRIV->m_play.m_c2bits;
+	for (c0 = 0; c0 < maxc0; c0++) {
+		c0v = c0 / (double) (maxc0 - 1);
+		for (c1 = 0; c1 < maxc1; c1++) {
+			if (maxc1 == 1)
+				c1v = 0;
+			else
+				c1v = c1 / (double) (maxc1 - 1);
+			for (c2 = 0; c2 < maxc2; c2++) {
+				if (maxc2 == 1)
+					c2v = 0;
+				else
+					c2v = c2 / (double) (maxc2 - 1);
+				index = offset + c0 + (c1<<c0bits) +
+					(c2 << (c0bits+c1bits));
+				if (index < MAXMAP) {
+					(*convcolor)(c0v, c1v, c2v, &r, &g, &b);
+					dprintf(("mapcolor(%d,%d,%d,%d)\n", index, r, g, b));
+					mapcolor(index, r, g, b);
+					if (index == offset)
+						color(index);
+					d = abs(r - bgr) + abs(g - bgg) + abs(b - bgb);
+					if (d < dist) {
+						PRIV->m_play.m_bgindex = index;
+						dist = d;
+					}
+				}
+			}
+		}
+	}
+	gflush();
+}
+
 static int
 movie_play(self)
 	mmobject *self;
@@ -199,14 +337,33 @@ movie_play(self)
 	PRIV->m_arm.m_index = NULL;
 	PRIV->m_arm.m_frame = NULL;
 	PRIV->m_arm.m_f = NULL;
-	/* get the window size */
-	winset(PRIV->m_play.m_wid);
-	getsize(&PRIV->m_width, &PRIV->m_height);
 	/* empty the pipe */
 	(void) fcntl(PRIV->m_pipefd[0], F_SETFL, FNDELAY);
 	while (read(PRIV->m_pipefd[0], &c, 1) == 1)
 		;
 	(void) fcntl(PRIV->m_pipefd[0], F_SETFL, 0);
+	/* get the window size */
+	winset(PRIV->m_play.m_wid);
+	getsize(&PRIV->m_width, &PRIV->m_height);
+	/* initialize color map */
+	if (PRIV->m_arm.m_format == FORMAT_RGB8 && is_entry_indigo &&
+	    strcmp(graphics_version, "GL4DLG-4.0.") == 0) {
+		/* only on entry-level Indigo running IRIX 4.0.5 */
+		RGBmode();
+		gconfig();
+		RGBcolor((PRIV->m_play.m_bgcolor >> 16) & 0xff,
+			 (PRIV->m_play.m_bgcolor >>  8) & 0xff,
+			 (PRIV->m_play.m_bgcolor      ) & 0xff);
+		/* RGBcolor(200, 200, 200); /* XXX rather light grey */
+		clear();
+		pixmode(PM_SIZE, 8);
+	} else {
+		cmode();
+		gconfig();
+		init_colormap(self);
+		color(PRIV->m_play.m_bgindex);
+		clear();
+	}
 	return 1;
 }
 
@@ -238,8 +395,9 @@ movie_player(self)
 		acquire_lock(gl_lock, 1);
 		winset(PRIV->m_play.m_wid);
 		pixmode(PM_SIZE, 8);
-		xorig = (PRIV->m_width - PRIV->m_play.m_width) / 2;
-		yorig = (PRIV->m_height - PRIV->m_play.m_height) / 2;
+		xorig = (PRIV->m_width - PRIV->m_play.m_width * PRIV->m_play.m_scale) / 2;
+		yorig = (PRIV->m_height - PRIV->m_play.m_height * PRIV->m_play.m_scale) / 2;
+		rectzoom(PRIV->m_play.m_scale, PRIV->m_play.m_scale);
 		lrectwrite(xorig, yorig, xorig + PRIV->m_play.m_width - 1,
 			   yorig + PRIV->m_play.m_height - 1,
 			   PRIV->m_play.m_frame);
@@ -278,7 +436,7 @@ movie_player(self)
 		if (pollfd.revents & POLLIN) {
 			char c;
 
-			printf("pollin event!\n");
+			dprintf(("pollin event!\n"));
 			(void) read(PRIV->m_pipefd[0], &c, 1);
 			dprintf(("movie_player(%lx): read %c\n", (long) self, c));
 			if (c == 's')
@@ -319,8 +477,16 @@ movie_resized(self)
 	if (PRIV->m_play.m_frame) {
 		winset(PRIV->m_play.m_wid);
 		pixmode(PM_SIZE, 8);
-		xorig = (PRIV->m_width - PRIV->m_play.m_width) / 2;
-		yorig = (PRIV->m_height - PRIV->m_play.m_height) / 2;
+		if (PRIV->m_play.m_bgindex >= 0)
+			color(PRIV->m_play.m_bgindex);
+		else
+			RGBcolor((PRIV->m_play.m_bgcolor >> 16) & 0xff,
+				 (PRIV->m_play.m_bgcolor >>  8) & 0xff,
+				 (PRIV->m_play.m_bgcolor      ) & 0xff);
+		clear();
+		xorig = (PRIV->m_width - PRIV->m_play.m_width * PRIV->m_play.m_scale) / 2;
+		yorig = (PRIV->m_height - PRIV->m_play.m_height * PRIV->m_play.m_scale) / 2;
+		rectzoom(PRIV->m_play.m_scale, PRIV->m_play.m_scale);
 		lrectwrite(xorig, yorig, xorig + PRIV->m_play.m_width - 1,
 			   yorig + PRIV->m_play.m_height - 1,
 			   PRIV->m_play.m_frame);
@@ -445,4 +611,10 @@ initmoviechannel()
 #endif
 	dprintf(("initmoviechannel\n"));
 	(void) initmodule("moviechannel", moviechannel_methods);
+	(void) gversion(graphics_version);
+	is_entry_indigo = (getgdesc(GD_XPMAX) == 1024 &&
+			   getgdesc(GD_YPMAX) == 768 &&
+			   getgdesc(GD_BITS_NORM_SNG_RED) == 3 &&
+			   getgdesc(GD_BITS_NORM_SNG_GREEN) == 3 &&
+			   getgdesc(GD_BITS_NORM_SNG_BLUE) == 2);
 }
