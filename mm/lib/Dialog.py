@@ -94,8 +94,8 @@ class BasicDialog((glwindow.glwindow)):
 			x, y, w, h = self.last_geometry
 		else:
 			x, y, w, h = -1, -1, 0, 0
-		if w = 0: w = self.width
-		if h = 0: h = self.height
+		if w == 0: w = self.width
+		if h == 0: h = self.height
 		self.last_geometry = x, y, w, h
 	#
 	# Clients can override these methods to copy self.last_geometry
@@ -205,7 +205,7 @@ class GLDialog((glwindow.glwindow)):
 		fl.qdevice(DEVICE.WINSHUT)
 	#
 	def hide(self):
-		if self.wid = 0: return
+		if self.wid == 0: return
 		self.save_geometry()
 		glwindow.unregister(self)
 		gl.winclose(self.wid)
@@ -215,7 +215,7 @@ class GLDialog((glwindow.glwindow)):
 		return self.wid <> 0
 	#
 	def get_geometry(self):
-		if self.wid = 0: return
+		if self.wid == 0: return
 		gl.winset(self.wid)
 		self.last_geometry = glwindow.getgeometry()
 	#
