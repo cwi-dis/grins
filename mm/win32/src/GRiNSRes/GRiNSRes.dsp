@@ -427,6 +427,14 @@ SOURCE=.\RES\brush.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\cdarrow.cur
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\cdarrowh.cur
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\closedeye.ico
 # End Source File
 # Begin Source File
