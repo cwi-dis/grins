@@ -289,7 +289,7 @@ def propdown2(root, node, stoptime, dftstarttime=0):
 			if not c.ShouldPlay():
 				continue
 			fill = c.GetFill()
-			if fill in ('freeze', 'transition'):
+			if fill in ('freeze', 'transition', 'hold'):
 				# not correct for transition
 				if i == len(children)-1:
 					endtime = node.t2
