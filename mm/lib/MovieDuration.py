@@ -1,8 +1,10 @@
 # Cache durations of movie files
 
 import FileCache
+import urllib
 
 def getduration(filename):
+	filename = urllib.url2pathname(filename)
 	fp = open(filename, 'rb')
 	import VFile
 	import os
