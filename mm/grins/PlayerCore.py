@@ -118,11 +118,11 @@ class PlayerCore(Selecter):
 	#
 	def getchannelbyname(self, name):
 		if self.channels.has_key(name):
-		    return self.channels[name]
+			return self.channels[name]
 		elif self.__ichannels.has_key(name):
 			return self.__ichannels[name]
 		else:
-		    return None
+			return None
 	#
 	def getchannelbynode(self, node):
 		cname = MMAttrdefs.getattr(node, 'channel')
