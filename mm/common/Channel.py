@@ -8,7 +8,7 @@ from AnchorDefs import *
 import os
 debug = os.environ.has_key('CHANNELDEBUG')
 import MMAttrdefs
-from MMExc import NoSuchAttrError
+from MMExc import NoSuchAttrError, CheckError
 import windowinterface, WMEVENTS
 from windowinterface import SINGLE, TEXT, HTM, MPEG
 from windowinterface import TRUE, FALSE
@@ -585,7 +585,6 @@ class Channel:
 		self._anchors = {}
 		self._played_anchors = self._armed_anchors[:]
 		self._played_anchor2button.update(self._armed_anchor2button)
-		durationattr = node.GetAttrDef('duration', None)
 		for (name, type, button, times) in self._played_anchors:
 			self._anchors[button] = self.onclick, (node, [(name, type)], None)
 		self._qid = None
@@ -642,8 +641,8 @@ class Channel:
 		# this node
 		self.armdone()
 		if not self.syncplay:
-			node = self._played_node
-			start_time = node.get_start_time()
+##			node = self._played_node
+##			start_time = node.get_start_time()
 			if not self.armed_duration:
 				self.playdone(0, curtime)
 ##			elif self.armed_duration > 0:
@@ -1282,7 +1281,7 @@ class ChannelWindow(Channel):
 				else:
 					a = self.setanchorargs(a, button, value)
 					self._player.toplevel.setwaiting()
-					dummy = apply(f, a) # may close channel
+					apply(f, a) # may close channel
 ##		elif len(buttons) == 0:
 ##			if self.__transparent:
 ##				raise windowinterface.Continue		
@@ -1860,25 +1859,26 @@ class ChannelWindow(Channel):
 
 		return rArgs
 
-	# Convert relative window offsets to relative image offsets
-	def convertShapeRelWindowToRelImage(self, args):
-		shapeType = arg[0]
+# not currently used
+##	# Convert relative window offsets to relative image offsets
+##	def convertShapeRelWindowToRelImage(self, args):
+##		shapeType = args[0]
 
-		if shapeType == A_SHAPETYPE_ALLREGION:
-			return args
+##		if shapeType == A_SHAPETYPE_ALLREGION:
+##			return args
 
-		rArgs = [shapeType,]
-		n=0
-		for a in args[1:]:
-			# test if xCoordinates or yCoordinates
-			if n%2 == 0:
-				# convert coordinates from image to window size
-				rArgs = rArgs + [(a - self._arm_imbox[0]) / self._arm_imbox[2]]
-			else:
-				rArgs = rArgs + [(a - self._arm_imbox[1]) / self._arm_imbox[3]]
-			n = n+1
+##		rArgs = [shapeType,]
+##		n=0
+##		for a in args[1:]:
+##			# test if xCoordinates or yCoordinates
+##			if n%2 == 0:
+##				# convert coordinates from image to window size
+##				rArgs = rArgs + [(a - self._arm_imbox[0]) / self._arm_imbox[2]]
+##			else:
+##				rArgs = rArgs + [(a - self._arm_imbox[1]) / self._arm_imbox[3]]
+##			n = n+1
 
-		return rArgs
+##		return rArgs
 
 	# convert shape coordinates (as defined in SMIL specification) relative to the window. The result is float values
 	# For this, we need to know the real size of media which fit inside the region
