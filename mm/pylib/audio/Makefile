@@ -26,28 +26,22 @@ DOCDESTDIR=	$LIBDEST/doc
 lib:	lib.dvi
 
 # Dependencies
-lib.dvi: myformat.sty fix_hack boilerplate.tex copyright.tex
-
-myformat.sty:
-	ln -s $(DOCDIR)/myformat.sty .
-
-fix_hack:
-	ln -s $(DOCDIR)/fix_hack .
+lib.dvi: boilerplate.tex copyright.tex
 
 boilerplate.tex:
-	ln -s $(DOCDIR)/boilerplate.tex .
+	ln -s $(DOCDIR)/texinputs/boilerplate.tex .
 
 copyright.tex:
-	ln -s $(DOCDIR)/copyright.tex .
+	ln -s $(DOCDIR)/texinputs/copyright.tex .
 
 LIBFILES=libaudio.tex
 
 lib.dvi: $(LIBFILES)
-	touch lib.ind
-	$(LATEX) lib
-	./fix_hack lib.idx
+	$(DOCDIR)/tools/newind.py > lib.ind
+	TEXINPUTS=:$(DOCDIR)/texinputs $(LATEX) lib
+	$(DOCDIR)/tools/fix_hack lib.idx
 	$(MAKEINDEX) lib
-	$(LATEX) lib
+	TEXINPUTS=:$(DOCDIR)/texinputs $(LATEX) lib
 	$(DVIPS) lib >lib.ps
 
 # Housekeeping targets
@@ -62,3 +56,9 @@ clean:
 # Remove temporaries as well as final products
 clobber: clean
 	 rm -f *.dvi *.ps *.texi *.info *.info-[0-9]*
+
+PYFILES = __init__.py aifc.py au.py dev.py devmac.py devsgi.py devsun.py \
+	devwin.py file.py format.py merge.py select.py wav.py what.py
+DOCFILES = boilerplate.tex lib.tex libaudio.tex
+dist:	$(PYFILES) $(DOCFILES) Makefile
+	tar cf - $(PYFILES) $(DOCFILES) Makefile | gzip > audio.tar.gz
