@@ -553,3 +553,10 @@ def urlretrieve(url):
 	info = _urlopener.retrieve(url)
 	_urlretrievecache[url] = info
 	return info
+
+def urlcleanup():
+	if _urlopener:
+		_urlopener.cleanup()
+
+# cleanup temporary files when we finish
+windowinterface.addclosecallback(urlcleanup, ())
