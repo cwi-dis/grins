@@ -237,8 +237,9 @@ class _Toplevel:
 		elif strid=='' or strid=='arrow':
 			cursor = App.LoadStandardCursor(win32con.IDC_ARROW)
 			strid='arrow'
+		elif strid=='draghand':
+			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAG_HAND)
 		else:
-			print 'AppTopLevel:: missing cursor ',strid
 			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
 			strid='arrow'
 
