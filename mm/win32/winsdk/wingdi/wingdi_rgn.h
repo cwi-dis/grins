@@ -5,6 +5,10 @@
 #include "Python.h"
 #endif
 
+#ifndef _WINDOWS_
+#include <windows.h>
+#endif
+
 PyObject* Wingdi_CreateRectRgn(PyObject *self, PyObject *args);
 PyObject* Wingdi_CreatePolygonRgn(PyObject *self, PyObject *args);
 PyObject* Wingdi_PathToRegion(PyObject *self, PyObject *args);
@@ -19,5 +23,7 @@ inline HRGN GetHandleFromPyRgn(PyObject *self)
 		};
 	return ((PyRgn*)self)->m_hRgn;
 	}
+
+PyObject* CreatePyRgnFromHandle(HRGN hRgn);
 
 #endif
