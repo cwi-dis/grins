@@ -31,10 +31,10 @@
         </par>
       </seq>
 	  <seq id="Background_Audio">
-        <audio id="Bkgd-Clip_1" region="audioRegion_1" src="media/background-sound.aiff"/>
+        <audio id="Bkgd-Clip_1" region="audioRegion_1" src="media/bkgd_audio_example.aiff"/>
 	  </seq>
 	  <seq id="Background_Images">
-        <img id="Background_1" region="bkgd_imageRegion" src="media/hd_bkgd-image.jpg"/>
+        <img id="Background_1" region="bkgd_imageRegion" src="media/hd_bkgd-image.jpg" fill="freeze"/>
 	  </seq>
     </par>
   </body>
