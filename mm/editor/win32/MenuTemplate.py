@@ -207,6 +207,7 @@ MENUBAR=(
 		(FLAG_PRO, TOGGLE, '&Bandwidth usage strip', None, TOGGLE_BWSTRIP),
 		(FLAG_PRO, TOGGLE, 'Show &Playable', None, PLAYABLE),
 		(FLAG_ALL, TOGGLE, 'Sho&w Time', None, TIMESCALE),
+		(FLAG_ALL, TOGGLE, 'Show Time in Selection Onl&y', None, LOCALTIMESCALE),
 		(FLAG_CMIF, SEP,),
 		(FLAG_CMIF, TOGGLE, '&Timeline view follows player', None, SYNCCV),
 		(FLAG_CMIF, CASCADE, '&Minidoc navigation', (

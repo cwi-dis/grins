@@ -181,6 +181,7 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'Check Bandwidth', None, COMPUTE_BANDWIDTH),
 		(FLAG_PRO, TOGGLE, 'Show Playable', None, PLAYABLE),
 		(FLAG_ALL, TOGGLE, 'Show Time', None, TIMESCALE),
+		(FLAG_ALL, TOGGLE, 'Show Time in Selection Only', None, LOCALTIMESCALE),
 		(FLAG_CMIF, SEP,),
 		(FLAG_CMIF, TOGGLE, 'Timeline view follows player', None, SYNCCV),
 		(FLAG_CMIF, CASCADE, 'Minidoc navigation', (

@@ -64,7 +64,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.expand_on_show = 1
 		self.thumbnails = 1
 		self.showplayability = 1
-		self.timescale = 0
+		self.timescale = None
 		self.usetimestripview = 0
 		if features.H_TIMESTRIP in features.feature_set:
 			if self._timestripconform():
@@ -103,7 +103,8 @@ class HierarchyView(HierarchyViewDialog):
 			]
 		if not lightweight:
 			self.commands.append(PUSHFOCUS(callback = (self.focuscall, ())))
-			self.commands.append(TIMESCALE(callback = (self.timescalecall, ())))
+			self.commands.append(TIMESCALE(callback = (self.timescalecall, ('global',))))
+			self.commands.append(LOCALTIMESCALE(callback = (self.timescalecall, ('focus',))))
 			self.commands.append(PLAYABLE(callback = (self.playablecall, ())))
 
 		self.interiorcommands = self._getmediaundercommands(self.toplevel.root.context) + [
@@ -351,6 +352,15 @@ class HierarchyView(HierarchyViewDialog):
 		if self.focusnode.GetParent():
 			self.focusnode.GetParent().ExpandParents()
 
+		t0, t1, t2, download, begindelay = self.focusnode.GetTimes('bandwidth')
+		print 't0,t1,t2=', t0, t1, t2 #DBG
+		# XXX Very expensive...
+		if self.timescale == 'focus':
+			self.need_resize = 1
+			self.dirty = 1
+##			self.draw()
+		
+
 	##############################################################################
 	#
 	# Drawing code
@@ -368,6 +378,9 @@ class HierarchyView(HierarchyViewDialog):
 		self.need_resize = 1
 		if self.window and self.focusnode:
 			self.select_node(self.focusnode)
+			widget = self.focusnode.views['struct_view']
+			self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
+
 
 	# Callbacks for the Widget classes.
 	def get_window_size_abs(self):
@@ -408,20 +421,44 @@ class HierarchyView(HierarchyViewDialog):
 		if self.need_resize:
 			self.need_resize = 0
 			# Easiest to create the timemapper always
-			x,y = self.scene_graph.get_minsize_abs()
+			x,y = self.scene_graph.get_minsize()
 			self.mcanvassize = x,y
 
 			if x < 1.0 or y < 1.0:
 				print "Error: unconverted relative coordinates found. HierarchyView:497"
 			if self.timescale:
 				self.timemapper = TimeMapper.TimeMapper()
-				self.scene_graph.adddependencies()
-				self.scene_graph.addcollisions(None, None)
+				if self.timescale == 'global':
+					timeroot = self.scene_graph
+				else:
+					timeroot = self.focusnode.views['struct_view']
+				# Remove old timing info
+				self.scene_graph.removedependencies()
+				# Collect the minimal pixel distance for pairs of time values,
+				# and the minimum number of pixels needed to represent single time
+				# values
+				timeroot.adddependencies()
+				timeroot.addcollisions(None, None)
+				# Now put in an extra dependency so the node for which we are going to
+				# display time has enough room to the left of it to cater for the non-timed
+				# nodes to be displayed there
+				timeroot_minpos = timeroot.get_minpos()
+				t0, t1, t2, dummy, dummy = timeroot.node.GetTimes('bandwidth')
+				if t0 == 0:
+					self.timemapper.addcollision(0, timeroot_minpos)
+				else:
+					self.timemapper.adddependency(0, t0, timeroot_minpos)
+				print 'Minpos', t0, timeroot_minpos
+				# Work out the equations
 				self.timemapper.calculate()
-				t0, t1, t2, dummy, dummy = self.root.GetTimes('bandwidth')
-				maxx = self.timemapper.time2pixel(t1, align='right')
-				if maxx > x:
-					x = maxx
+				# Calculate how many extra pixels this has cost us
+				tr_width = self.timemapper.time2pixel(t2, align='right') - \
+						self.timemapper.time2pixel(t0)
+				tr_extrawidth = tr_width - timeroot.get_minsize()[0]
+				print 'Normal', timeroot.get_minsize()[0], 'Timed', tr_width, "Extra", tr_extrawidth
+				if tr_extrawidth > 0:
+					x = x + tr_extrawidth
+				#x = tr_width #DBG
 			else:
 				self.timemapper = None
 
@@ -522,9 +559,10 @@ class HierarchyView(HierarchyViewDialog):
 		self.mousehity = y
 		self.select(x, y)
 
-		# The mouse is only ever used for selecting, so this will not change the
-		# size of the scene.
-		self.draw_scene()
+		if self.need_resize:
+			self.draw()
+		else:
+			self.draw_scene()
 
 	def mouse0release(self, dummy, window, event, params):
 		self.toplevel.setwaiting()
@@ -1163,10 +1201,20 @@ class HierarchyView(HierarchyViewDialog):
 		self.settoggle(PLAYABLE, self.showplayability)
 		self.draw()
 
-	def timescalecall(self):
+	def timescalecall(self, which):
 		self.toplevel.setwaiting()
-		self.timescale = not self.timescale
-		self.settoggle(TIMESCALE, self.timescale)
+		if self.timescale == which:
+			self.timescale = None
+			self.settoggle(TIMESCALE, 0)
+			self.settoggle(LOCALTIMESCALE, 0)
+		elif which == 'global':
+			self.timescale = 'global'
+			self.settoggle(TIMESCALE, 1)
+			self.settoggle(LOCALTIMESCALE, 0)
+		else:
+			self.timescale = 'focus'
+			self.settoggle(TIMESCALE, 0)
+			self.settoggle(LOCALTIMESCALE, 1)
 		self.refresh_scene_graph()
 		self.need_resize = 1
 		self.dirty = 1

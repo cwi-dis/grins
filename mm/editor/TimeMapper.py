@@ -4,6 +4,7 @@ Error = 'TimeMapper.Error'
 import features
 
 CONSISTENT_TIME_MAPPING=0
+DEBUG=1
 
 class TimeMapper:
 	def __init__(self):
@@ -32,12 +33,13 @@ class TimeMapper:
 		self.collecting = 0
 		self.dependencies.sort()
 		self.collisions.sort()
-		print 'DEPENDENCIES'
-		for item in self.dependencies:
-			print '\t%f\t%f\t%d'%item
-		print 'COLLISIONS'
-		for item in self.collisions:
-			print '\t%f\t%d'%item
+		if DEBUG:
+			print 'DEPENDENCIES'
+			for item in self.dependencies:
+				print '\t%f\t%f\t%d'%item
+			print 'COLLISIONS'
+			for item in self.collisions:
+				print '\t%f\t%d'%item
 		for time, pixels in self.collisions:
 			oldpixels = self.collisiondict[time]
 			if pixels > oldpixels:
@@ -56,16 +58,21 @@ class TimeMapper:
 		prev_t = self.times[0]
 		for t in self.times:
 			if t != prev_t: # for times[0] don't add the dependency
-				self.dependencies.append((t, prev_t, (t-prev_t)*min_pixels_per_second))
+##				self.dependencies.append((t, prev_t, (t-prev_t)*min_pixels_per_second))
+				self.dependencies.append((t, prev_t, min_pixels_per_second))
 ##			minpos = minpos + (t-prev_t) * min_pixels_per_second
 			self.minpos[t] = minpos
 			minpos = minpos + self.collisiondict[t] + 1
 			prev_t = t
 		self.dependencies.sort()
-		print 'DEPENDENCIES NOW'
-		for item in self.dependencies:
-			print '\t%f\t%f\t%d'%item
-##		pushover = {}
+		if DEBUG:
+			print 'MINPOS'
+			for t in self.times:
+				print '\t%f\t%f'%(t, self.minpos[t])
+			print 'DEPENDENCIES NOW'
+			for item in self.dependencies:
+				print '\t%f\t%f\t%d'%item
+		pushover = {}
 		for t1, t0, pixels in self.dependencies:
 			t0maxpos = self.minpos[t0] + self.collisiondict[t0]
 			t1minpos = t0maxpos + pixels
@@ -77,10 +84,10 @@ class TimeMapper:
 ##		for time in self.times:
 ##			curpush = curpush + pushover.get(time, 0)
 ##			self.minpos[time] = self.minpos[time] + curpush
-		
-		print 'RANGES'
-		for t in self.times:
-			print t, self.minpos[t], self.minpos[t] + self.collisiondict[t]
+		if DEBUG:
+			print 'RANGES'
+			for t in self.times:
+				print t, self.minpos[t], self.minpos[t] + self.collisiondict[t]
 		
 	def pixel2time(self):
 		if self.collecting:
@@ -122,9 +129,11 @@ class TimeMapper:
 		width = afterpos - beforepos
 		return int(beforepos + factor*width + 0.5)
 		
-	def gettimesegments(self):
+	def gettimesegments(self, range=None):
 		# Return a list of (time, leftpixel, rightpixel) tuples
 		rv = []
 		for t in self.times:
+			if range and (t < range[0] or t > range[1]):
+				continue
 			rv.append((t, self.minpos[t], self.minpos[t] + self.collisiondict[t]))
 		return rv
