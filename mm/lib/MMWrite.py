@@ -151,7 +151,8 @@ def writeattrdict(value, dummy, fp):
 	keys = value.keys()
 	keys.sort()
 	for key in keys:
-		writeattr(key, value[key], fp)
+		if key[0] <> '_':
+			writeattr(key, value[key], fp)
 #
 def writeattr(name, value, fp): # Subroutine to write an attribute-value pair
 	fp.write('(')

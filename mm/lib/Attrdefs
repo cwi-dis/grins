@@ -5,6 +5,9 @@
 # (attrname, typedef, defaultvalue, labeltext, displayername, helptext,
 #  inheritance)
 #
+# Attributes with names starting with _ are for caching only, these
+# are only written to the .cmc file, not to the .cmif file.
+#
 # The typedef is used to determine how to parse the default value,
 # with the provision that tuples, lists and dictionaries must
 # be surrounded by an extra pair of parentheses.
@@ -22,6 +25,8 @@
 # A definition need not be wholly contained in a single input line;
 # blank lines and comments may be inserted freely.
 
+('_schedcache' (any) (1 2) 'Scheduler record list cache' default
+	'Scheduler record list cache' raw)
 
 (anchorid (int) 1 'Next anchor UID' hidden
 	'Next anchor UID to use' raw)
