@@ -204,6 +204,7 @@ class XMLParser:
         self.baseurl = '.'              # base URL for external DTD
         self.ids = {}                   # IDs encountered in document
         self.notation = {}              # NOTATIONs
+        self.doctype = None
 
     def feed(self, data):
         """feed(data)
@@ -301,6 +302,8 @@ class XMLParser:
         """parse(data)
 
            Parse the data as an XML document."""
+        from time import time
+        t0 = time()
         data = self.__parse_textdecl(data, 1)
         data = self.__normalize_linefeed(data)
         # (Comment | PI | S)*
@@ -315,6 +318,10 @@ class XMLParser:
             if syslit: syslit = syslit[1:-1]
             self.handle_doctype(docname, publit, syslit, docdata)
             i = res.end(0)
+        elif self.doctype:
+            # do as if there was a <!DOCTYPE> declaration
+            self.handle_doctype(None, '', self.doctype, '')
+        t1 = time()
         # (Comment | PI | S)*
         i = self.__parse_misc(data, i)
         # the document itself
@@ -347,6 +354,8 @@ class XMLParser:
         i = self.__parse_misc(data, i)
         if i != len(data):
             self.__error('garbage at end of document', data, i, fatal = 0)
+        t2 = time()
+        return t0, t1, t2
 
     def __parse_misc(self, data, i):
         # match any number of whitespace, processing instructions and comments
@@ -1190,6 +1199,8 @@ class XMLParser:
 
     # Overridable -- handle DOCTYPE
     def handle_doctype(self, tag, publit, syslit, data):
+        if self.doctype is not None:
+            syslit = self.doctype
         self.parse_doctype(tag, publit, syslit, data)
 
     # Example -- read external file referenced from DTD with a SystemLiteral
@@ -1273,7 +1284,7 @@ class TestXMLParser(XMLParser):
     def handle_doctype(self, tag, publit, syslit, data):
         self.flush()
         print 'DOCTYPE: %s %s' % (tag, `data`)
-        self.parse_doctype(tag, publit, syslit, data)
+        XMLParser.handle_doctype(self, tag, publit, syslit, data)
 
     def handle_comment(self, data):
         self.flush()
@@ -1395,16 +1406,16 @@ class CheckXMLParser(XMLParser):
 
 def test(args = None):
     import sys, getopt
-    from time import time
 
     if not args:
         args = sys.argv[1:]
 
-    opts, args = getopt.getopt(args, 'cstnvC')
+    opts, args = getopt.getopt(args, 'cstnvCd:')
     klass = TestXMLParser
     do_time = 0
     namespace = 1
     verbose = 0
+    doctype = None
     for o, a in opts:
         if o == '-c':
             klass = CanonXMLParser
@@ -1418,6 +1429,8 @@ def test(args = None):
             namespace = 0
         elif o == '-v':
             verbose = 1
+        elif o == '-d':
+            doctype = a
 
     if not args:
         args = ['test.xml']
@@ -1441,12 +1454,13 @@ def test(args = None):
 
         x = klass(xmlns = namespace)
         x.baseurl = url
+        x.doctype = doctype
         if verbose:
             print '==============',file
-        t0 = time()
         try:
-            x.parse(data)
+            t0, t1, t2 = x.parse(data)
         except Error, info:
+            do_time = 0                 # can't print times now
             print str(info)
             if info.text is not None and info.offset is not None:
                 i = string.rfind(info.text, '\n', 0, info.offset) + 1
@@ -1460,9 +1474,10 @@ def test(args = None):
                     print ' '*(info.offset-i)+'^'
         if klass is CanonXMLParser and (verbose or len(args) > 1):
             sys.stdout.write('\n')
-        t1 = time()
         if do_time:
-            print 'total time: %g' % (t1-t0)
+            print 'total time: %g' % (t2-t0)
+            print 'parse DTD: %g' % (t1-t0)
+            print 'parse body: %g' %(t2-t1)
 
 if __name__ == '__main__':
     test()
