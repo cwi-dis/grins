@@ -515,7 +515,7 @@ class NodeWrapper(Wrapper):
 					namelist.append('erase')
 		else:
 			# Snap!
-			if ntype != 'alt':
+			if ntype != 'switch':
 				namelist.append('.begin1')
 		if not snap and (ntype in leaftypes or boston):
 			namelist.append('fill')
@@ -523,13 +523,11 @@ class NodeWrapper(Wrapper):
 			namelist.append('alt')
 			if not snap:
 				namelist.append('longdesc')
-		if ntype == 'bag':
-			namelist.append('bag_index')
 		if ntype in ('par', 'excl') or (ntype in leaftypes and boston):
 			namelist.append('terminator')
 		if ntype in ('par', 'seq', 'excl'):
 			namelist.append('duration')
-		if ntype == 'alt':
+		if ntype == 'switch':
 			if 'begin' in namelist:
 				namelist.remove('begin')
 			namelist.remove('loop')
@@ -2664,7 +2662,6 @@ class FontAttrEditorField(PopupAttrEditorField):
 
 Alltypes = interiortypes+mediatypes
 Alltypes[Alltypes.index('bag')] = 'choice'
-Alltypes[Alltypes.index('alt')] = 'switch'
 class NodeTypeAttrEditorField(PopupAttrEditorField):
 	def getoptions(self):
 		if cmifmode():
@@ -2684,15 +2681,11 @@ class NodeTypeAttrEditorField(PopupAttrEditorField):
 	def parsevalue(self, str):
 		if str == 'choice':
 			return 'bag'
-		if str == 'switch':
-			return 'alt'
 		return str
 
 	def valuerepr(self, value):
 		if value == 'bag':
 			return 'choice'
-		if value == 'alt':
-			return 'switch'
 		return value
 
 class AnchorlistAttrEditorField(AttrEditorField):

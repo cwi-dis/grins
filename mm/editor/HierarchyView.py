@@ -136,7 +136,7 @@ class HierarchyView(HierarchyViewDialog):
 				NEW_SEQ(callback = (self.createseqcall, ())),
 				NEW_PAR(callback = (self.createparcall, ())),
 				NEW_CHOICE(callback = (self.createbagcall, ())),
-				NEW_ALT(callback = (self.createaltcall, ())),
+				NEW_SWITCH(callback = (self.createaltcall, ())),
 				DELETE(callback = (self.deletecall, ())),
 				CUT(callback = (self.cutcall, ())),
 				]			
@@ -145,12 +145,12 @@ class HierarchyView(HierarchyViewDialog):
 				NEW_BEFORE_SEQ(callback = (self.createbeforeintcall, ('seq',))),
 				NEW_BEFORE_PAR(callback = (self.createbeforeintcall, ('par',))),
 				NEW_BEFORE_CHOICE(callback = (self.createbeforeintcall, ('bag',))),
-				NEW_BEFORE_ALT(callback = (self.createbeforeintcall, ('alt',))),
+				NEW_BEFORE_SWITCH(callback = (self.createbeforeintcall, ('switch',))),
 				NEW_AFTER(callback = (self.createaftercall, ())),
 				NEW_AFTER_SEQ(callback = (self.createafterintcall, ('seq',))),
 				NEW_AFTER_PAR(callback = (self.createafterintcall, ('par',))),
 				NEW_AFTER_CHOICE(callback = (self.createafterintcall, ('bag',))),
-				NEW_AFTER_ALT(callback = (self.createafterintcall, ('alt',))),
+				NEW_AFTER_SWITCH(callback = (self.createafterintcall, ('switch',))),
 				EDIT_TVIEW(callback = (self.edit_in_tview, ())),
 				]
 		self.rpconvertcommands = [
@@ -223,7 +223,7 @@ class HierarchyView(HierarchyViewDialog):
 			]
 		rv.append(NEW_UNDER_SEQ(callback = (self.createunderintcall, ('seq',))))
 		rv.append(NEW_UNDER_PAR(callback = (self.createunderintcall, ('par',))))
-		rv.append(NEW_UNDER_ALT(callback = (self.createunderintcall, ('alt',))))
+		rv.append(NEW_UNDER_SWITCH(callback = (self.createunderintcall, ('switch',))))
 		if ctx.attributes.get('project_boston', 0):
 			rv.append(NEW_UNDER_EXCL(callback = (self.createunderintcall, ('excl',))))
 		if heavy or ctx.compatchannels(chtype='image'):
@@ -686,7 +686,7 @@ class HierarchyView(HierarchyViewDialog):
 		# in other words, interior is false if this is a leaf node (TODO: confirm -mjvdg)
 		if interior:
 			# If the node is in ('par'...) then it is vertical
-			horizontal = (t not in ('par', 'alt', 'excl', 'prio'))
+			horizontal = (t not in ('par', 'switch', 'excl', 'prio'))
 			i = -1
 			# if node is expanded, determine where in the node
 			# the file is dropped, else create at end

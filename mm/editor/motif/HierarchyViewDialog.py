@@ -46,7 +46,7 @@ class HierarchyViewDialog(ViewDialog):
 					(FLAG_ALL, None),
 					(FLAG_ALL, 'Seq Parent', NEW_SEQ),
 					(FLAG_ALL, 'Par Parent', NEW_PAR),
-					(FLAG_ALL, 'Switch Parent', NEW_ALT),
+					(FLAG_ALL, 'Switch Parent', NEW_SWITCH),
 					(FLAG_CMIF, 'Choice Parent', NEW_CHOICE),
 					]),
 				(FLAG_ALL, None),
