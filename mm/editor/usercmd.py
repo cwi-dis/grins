@@ -311,6 +311,8 @@ class PLAYABLE(_CommandBase):
 	help = 'Toggle between showing and not showing whether nodes\nwill be played using current system attributes'
 class TIMESCALE(_CommandBase):
 	help = 'Toggle duration-dependent structure view'
+class LOCALTIMESCALE(_CommandBase):
+	help = 'Toggle duration-dependent structure view on focus node'
 
 #
 # Channel view commands
