@@ -33,7 +33,7 @@ from FL import *
 import glwindow
 
 
-class BasicDialog() = (glwindow.glwindow)():
+class BasicDialog((glwindow.glwindow)):
 	#
 	# Initialization.
 	# Derived classes must extend this method.
@@ -108,7 +108,7 @@ class BasicDialog() = (glwindow.glwindow)():
 		self.get_geometry() # This is needed for hide()
 
 
-class Dialog() = BasicDialog():
+class Dialog(BasicDialog):
 	#
 	# Initialization routine.
 	#
@@ -187,7 +187,7 @@ class Dialog() = BasicDialog():
 	#
 
 
-class GLDialog() = (glwindow.glwindow)():
+class GLDialog((glwindow.glwindow)):
 	#
 	def init(self, title):
 		self.title = title

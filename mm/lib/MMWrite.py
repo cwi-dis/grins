@@ -214,7 +214,7 @@ def valuerepr(value, typedef):
 	writegeneric(value, writerdef, fp)
 	return fp.get()
 
-class StringOutputNoNL():
+class StringOutputNoNL:
 	def init(self):
 		self.buf = ''
 		return self

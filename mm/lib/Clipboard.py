@@ -24,7 +24,7 @@
 #		then *copy* it back to the clipboard:
 #		type, x = getclip(); setclip(type, x.DeepCopy())
 
-class GlobalClipboard():
+class GlobalClipboard:
 
 	def init(self):
 		self.type = ''

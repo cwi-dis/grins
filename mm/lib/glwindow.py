@@ -39,7 +39,7 @@ def unregister(object):
 
 # The base class for GL windows
 
-class glwindow():
+class glwindow:
 	#
 	# Event dispatchers, named after the events.
 	# Note: the window is *not* made current; you must call winset()!
@@ -91,7 +91,7 @@ class glwindow():
 
 # Global state
 
-class Struct(): pass
+class Struct: pass
 state = Struct()
 state.focuswindow = None
 state.focuswid = None
