@@ -1,7 +1,6 @@
 from Channel import *
 from MMExc import *			# exceptions
 from AnchorDefs import *
-import windowinterface			# for windowinterface.error
 import string
 from urllib import urlopen
 

@@ -64,7 +64,6 @@ class ImageChannel(ChannelWindow):
 		return 1
 
 	def defanchor(self, node, anchor, cb):
-		import windowinterface
 		if not self.window:
 			windowinterface.showmessage('The window is not visible.\nPlease make it visible and try again.')
 			return

@@ -9,15 +9,6 @@ from HDTL import HD, TL
 real_interiortypes = ('par', 'seq')
 
 
-# Subroutine to check whether a node is a mini-document.
-# This is true if either it is the root or its parent is a bag node.
-# XXX Shouldn't this be defined as a node method?
-
-def isminidoc(node):
-	parent = node.GetParent()
-	return parent == None or parent.GetType() == 'bag'
-
-
 # The routine 'changedtimes' signifies that the timing might have changed
 # (but is not needed at the moment), and the routine 'needtimes' signifies
 # that somebody needs correct timing (possibly resulting in a recalc).

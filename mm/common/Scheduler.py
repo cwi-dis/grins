@@ -17,11 +17,8 @@ debugtimer = 0
 N_PRIO = 5
 [PRIO_PREARM_NOW, PRIO_INTERN, PRIO_STOP, PRIO_START, PRIO_LO] = range(N_PRIO)
 
-# Actions on end-of-play:
-[END_STOP, END_PAUSE, END_KEEP] = range(3)
-
 class SchedulerContext:
-	def __init__(self, parent, node, seeknode, end_action):
+	def __init__(self, parent, node, seeknode):
 		self.active = 1
 		self.parent = parent
 		self.sractions = []
@@ -29,7 +26,7 @@ class SchedulerContext:
 		self.playroot = node
 		#self.parent.ui.duration_ind.label = '??:??'
 
-		self.prepare_minidoc(seeknode, end_action)
+		self.prepare_minidoc(seeknode)
 
 	
 	#
@@ -68,11 +65,24 @@ class SchedulerContext:
 	#
 	# genprearms generates the list of channels and a list of
 	# nodes to be prearmed, in the right order.
-	def gen_prearms(self):
+	def gen_prearms(self, s_node):
+		if not s_node:
+			s_node = self.playroot
+		if hasattr(s_node, 'prearmlists'):
+			self.prearmlists = {}
+			for cn, val in s_node.prearmlists.items():
+				ch = self.parent.ui.getchannelbyname(cn)
+				self.prearmlists[ch] = val[:]
+			self.channels = self.prearmlists.keys()
+			self.channelnames = s_node.prearmlists.keys()
+			self.parent.channels_in_use = \
+					self.parent.channels_in_use + \
+					self.channels
+			return 1
 		#
 		# Create channel lists
 		#
-		self.channelnames, err = GetAllChannels(self.playroot)
+		self.channelnames, err = self.playroot.GetAllChannels()
 		self.channels = []
 		if err:
 			import windowinterface
@@ -107,11 +117,13 @@ class SchedulerContext:
 		self.prearmlists = {}
 		for ch in self.channels:
 			self.prearmlists[ch] = []
-		self.parent.GenAllPrearms(self.playroot, self.prearmlists)
+		GenAllPrearms(self.parent.ui, self.playroot, self.prearmlists)
 		self.playroot.EndPruneTree()
-		from Selecter import findminidocument
-		mini = findminidocument(self.playroot)
+		mini = self.playroot.FindMiniDocument()
 		Timing.needtimes(mini)
+		s_node.prearmlists = {}
+		for ch, val in self.prearmlists.items():
+			s_node.prearmlists[ch._name] = val[:]
 		return 1
 	#
 	def startcontextchannels(self):
@@ -175,57 +187,14 @@ class SchedulerContext:
 	#
 	# XXXX
 	#
-	def prepare_minidoc(self, seeknode, end_action):
-		if end_action is None:
-			try:
-				sractions = seeknode.save_sractions[:]
-				srevents = {}
-				for key, val in seeknode.save_srevents.items():
-					srevents[key] = val
-			except AttributeError:
-				pass
-			else:
-				self.sractions = sractions
-				self.srevents = srevents
-				return
-		srlist = GenAllSR(self.playroot, seeknode)
-		#
-		# If this is not the root document and if the 'pause minidoc'
-		# flag is on we should not schedule the done for the root.
-		#
-		if end_action == END_STOP:
-			srlist.append(([(SR.SCHED_DONE, self.playroot)], \
-				  [(SR.SCHED_STOP, self.playroot)]))
-		elif end_action == END_PAUSE:
-			srlist.append(([(SR.SCHED_DONE, self.playroot)], []))
-			srlist.append(([(SR.NO_EVENT, self.playroot)], []))
-		else: # end_action == END_KEEP
-			srlist.append(([(SR.SCHED_DONE, self.playroot)], \
-				  [(SR.SCHED_FINISH, self.playroot)]))
-		sractions = [None]*len(srlist)
-		srevents = {}
-		for actionpos in range(len(srlist)):
-			events, actions = srlist[actionpos]
-			nevents = len(events)
-			sractions[actionpos] = (nevents, actions)
-			for ev in events:
-				if srevents.has_key(ev):
-					raise 'Scheduler: Duplicate event:', \
-						  SR.ev2string(ev)
-				srevents[ev] = actionpos
-		self.sractions = sractions
-		self.srevents = srevents
-		if end_action is None:
-			seeknode.save_sractions = sractions[:]
-			seeknode.save_srevents = {}
-			for key, val in srevents.items():
-				seeknode.save_srevents[key] = val
+	def prepare_minidoc(self, seeknode):
+		self.sractions, self.srevents = self.playroot.GenAllSR(seeknode)
 
 	#
 	# Start minidoc starts playing what we've prepared
 	#
 	def start(self, s_node, s_aid, s_args):
-		if not self.gen_prearms():
+		if not self.gen_prearms(s_node):
 			return 0
 		self.run_initial_prearms()
 		self.startcontextchannels()
@@ -318,14 +287,14 @@ class Scheduler(scheduler):
 	#
 	# Playing algorithm.
 	#
-	def play(self, node, seek_node, anchor_id, anchor_arg, end_action):
+	def play(self, node, seek_node, anchor_id, anchor_arg):
 		if node.GetType() == 'bag':
 			raise 'Cannot play bag node'
 		self.toplevel.setwaiting()
 		# XXXX This statement should move to an intermedeate level.
 		if self.ui.sync_cv:
 			self.toplevel.channelview.globalsetfocus(node)
-		sctx = SchedulerContext(self, node, seek_node, end_action)
+		sctx = SchedulerContext(self, node, seek_node)
 		self.sctx_list.append(sctx)
 		self.playing = self.playing + 1
 		if not sctx.start(seek_node, anchor_id, anchor_arg):
@@ -492,13 +461,6 @@ class Scheduler(scheduler):
 	# Incoming events from channels, or the start event.
 	#
 	def event(self, sctx, ev):
-##		# Hack: we can be called with either sctx, (action,node) or
-##		# ((sctx, (action,node),) arg, due to the way apply works.
-##		# sigh...
-##		if len(ev) == 1:
-##			ev = ev[0]
-##		sctx, ev = ev
-
 		if sctx.active:
 			if ev[0] == SR.PLAY_DONE:
 				ev[1].set_armedmode(ARM_WAITSTOP)
@@ -660,81 +622,20 @@ class Scheduler(scheduler):
 		for sctx in self.sctx_list:
 			sctx.setpaused(paused)
 		self.updatetimer()
-	#
-	# GenAllPrearms fills the prearmlists dictionary with all arms needed.
-	#
-	def GenAllPrearms(self, node, prearmlists):
-		nodetype = node.GetType()
-		if nodetype == 'bag':
-			return
-		if nodetype in leaftypes:
-			chan = self.ui.getchannelbynode(node)
-			prearmlists[chan].append((SR.PLAY_ARM, node))
-			return
-		for child in node.GetWtdChildren():
-			self.GenAllPrearms(child, prearmlists)
-		
+
 #
-# GenAllSR - Return all (evlist, actionlist) pairs.
+# GenAllPrearms fills the prearmlists dictionary with all arms needed.
 #
-def GenAllSR(node, seeknode):
-	#
-	# First generate arcs
-	#
-	node.PruneTree(seeknode)
-	arcs = node.GetArcList()
-	arcs = node.FilterArcList(arcs)
-	for i in range(len(arcs)):
-		n1, s1, n2, s2, delay = arcs[i]
-		n1.SetArcSrc(s1, delay, i)
-		n2.SetArcDst(s2, i)
-	#
-	# Now run through the tree
-	#
-	nodelist = [node]
-	srlist = []
-	while nodelist:
-		cur_nodelist = nodelist[:]
-		nodelist = []
-		for cur_node in cur_nodelist:
-			cur_srlist, children = cur_node.gensr()
-			if children:
-				nodelist = nodelist + children
-			srlist = srlist + cur_srlist
-	return srlist
-#
-# MergeList merges two lists. It also returns a status value to indicate
-# whether there was an overlap between the lists.
-#
-def MergeLists(l1, l2):
-	overlap = []
-	for i in l2:
-		if i in l1:
-			overlap.append(i)
-		else:
-			l1.append(i)
-	return l1, overlap
-#
-# GetAllChannels - Get a list of all channels used in a tree.
-# If there is overlap between parnode children the node in error is returned.
-def GetAllChannels(node):
-	if node.GetType() == 'bag':
-		return [], None
-	if node.GetType() in leaftypes:
-		return [MMAttrdefs.getattr(node, 'channel')], None
-	errnode = None
-	overlap = []
-	list = []
-	for ch in node.GetChildren():
-		chlist, cherrnode = GetAllChannels(ch)
-		if cherrnode:
-			errnode = cherrnode
-		list, choverlap = MergeLists(list, chlist)
-		if choverlap:
-			overlap = overlap + choverlap
-	if overlap and node.GetType() == 'par':
-		errnode = (node, overlap)
-	return list, errnode
+def GenAllPrearms(ui, node, prearmlists):
+	nodetype = node.GetType()
+	if nodetype == 'bag':
+		return
+	if nodetype in leaftypes:
+		chan = ui.getchannelbynode(node)
+		prearmlists[chan].append((SR.PLAY_ARM, node))
+		return
+	for child in node.GetWtdChildren():
+		GenAllPrearms(ui, child, prearmlists)
 
 #  Remove all arm_duration attributes (so they will be recalculated)
 
@@ -749,6 +650,10 @@ def del_timing(node):
 #
 def unarmallnodes(node):
 	#print 'UNARM', MMAttrdefs.getattr(node, 'name')
+	if not hasattr(node, 'armedmode'):
+		# if node does not have an 'armedmode' attribute, it
+		# also does not have a GetChildren method
+		return
 	node.set_armedmode(ARM_NONE)
 	children = node.GetChildren()
 	for child in children:

@@ -23,11 +23,27 @@ del r
 # The _Toplevel class represents the root of all windows.  It is never
 # accessed directly by any user code.
 class _Toplevel:
+	# this is a hack to delay initialization of the Toplevel until
+	# we actually need it.
+	def __getattr__(self, attr):
+		if not self._initialized: # had better exist...
+			self._do_init()
+			try:
+				return self.__dict__[attr]
+			except KeyError:
+				pass
+		raise AttributeError, attr
 	def __init__(self):
+		self._initialized = 0
 		global toplevel
 		if toplevel:
 			raise error, 'only one Toplevel allowed'
 		toplevel = self
+
+	def _do_init(self):
+		if self._initialized:
+			raise error, 'can only initialize once'
+		self._initialized = 1
 		self._closecallbacks = []
 		self._subwindows = []
 		self._bgcolor = 255, 255, 255 # white
@@ -37,6 +53,7 @@ class _Toplevel:
 		self._image_size_cache = {}
 		self._image_cache = {}
 		self._cm_cache = {}
+		self._immediate = []
 		# file descriptor handling
 		self._fdiddict = {}
 		# window system initialization
@@ -120,7 +137,10 @@ class _Toplevel:
 		func, args = cb
 		if not callable(func):
 			raise error, 'callback function not callable'
-		return Xt.AddTimeOut(int(sec * 1000), self._timer_callback, cb)
+		id = Xt.AddTimeOut(int(sec * 1000), self._timer_callback, cb)
+		if sec <= 0.001:
+			self._immediate.append(id, cb)
+		return id
 
 	def canceltimer(self, id):
 		if id is not None:
@@ -129,7 +149,14 @@ class _Toplevel:
 	def _timer_callback(self, client_data, id):
 		self._setcursor('watch')
 		func, args = client_data
+		if (id, client_data) in self._immediate:
+			self._immediate.remove(id, client_data)
 		apply(func, args)
+		while self._immediate:
+			id, (func, args) = self._immediate[0]
+			del self._immediate[0]
+			Xt.RemoveTimeOut(id)
+			apply(func, args)
 		self._setcursor()
 
 	# file descriptor interface
@@ -1959,7 +1986,9 @@ def multchoice(prompt, list, defindex):
 	return _MultChoice(prompt, list, defindex).run()
 
 def beep():
-	sys.stderr.write('\7')
+	dpy = toplevel._main.Display()
+	dpy.Bell(100)
+	dpy.Flush()
 
 def _colormask(mask):
 	shift = 0
