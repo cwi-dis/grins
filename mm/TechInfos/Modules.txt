@@ -1,8 +1,8 @@
 1.Timing
      1.AccessKeyTiming
-	Not implemented.
+	Fully implemented
      2.BasicInlineTiming
-	 Fully implemented
+	Fully implemented
      3.BasicTimeContainers
 	Fully implemented
      4.EventTiming
