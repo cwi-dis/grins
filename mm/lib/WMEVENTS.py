@@ -25,4 +25,4 @@ TimerEvent = 20
 # Drag and drop, copy and paste file events
 DropFile  = 30
 PasteFile = 31
-
+DropURL = 32

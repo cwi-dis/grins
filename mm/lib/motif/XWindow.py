@@ -609,10 +609,11 @@ class _Window(_AdornmentSupport):
 				raise error, 'only WindowExit event for top-level windows'
 			widget.deleteResponse = Xmd.DO_NOTHING
 			self._callbacks[event] = func, arg
-		elif event == DropFile:
+		elif event in (DropFile, DropURL):
 			self._callbacks[event] = func, arg
 			self._form.DropSiteRegister({
-				'importTargets': [toplevel._compound_text],
+				'importTargets': [toplevel._compound_text,
+						  toplevel._netscape_url],
 				'dropSiteOperations': Xmd.DROP_COPY,
 				'dropProc': self.__handle_drop})
 		else:
@@ -635,7 +636,11 @@ class _Window(_AdornmentSupport):
 			x = drop_data.x
 			y = drop_data.y
 			x, y = self._pxl2rel((x, y))
-			transferList = [((x,y), toplevel._compound_text)]
+			if toplevel._netscape_url in drop_data.dragContext.exportTargets:
+				t = toplevel._netscape_url
+			else:
+				t = toplevel._compound_text
+			transferList = [((x,y), t)]
 			args = {'dropTransfers': transferList,
 				'transferProc': self.__handle_transfer}
 		drop_data.dragContext.DropTransferStart(args)
@@ -645,6 +650,10 @@ class _Window(_AdornmentSupport):
 		   self._callbacks.has_key(DropFile):
 			func, arg = self._callbacks[DropFile]
 			func(arg, self, DropFile, (x, y, value))
+		elif type == toplevel._netscape_url and \
+		     self._callbacks.has_key(DropURL):
+			func, arg = self._callbacks[DropURL]
+			func(arg, self, DropURL, (x, y, value))
 
 	def destroy_menu(self):
 		if self._menu:
