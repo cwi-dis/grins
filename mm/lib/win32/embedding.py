@@ -151,17 +151,20 @@ class SliderPeer:
 		self.__smildoc = smildoc
 		self.__peerid = peerid
 		player = smildoc.player
-		ctx = player.userplayroot.GetContext()
+		root = player.userplayroot
+		ctx = root.GetContext()
 		self.ctx = ctx
 
 		# indefinite: -1, unresolved: 0, else: >0
-		fulldur = player.userplayroot.calcfullduration(None)
-		if not fulldur: fulldur = 0
+		#fulldur = root.calcfullduration(None)
+
+		t0, t1, t2, downloadlag, begindelay = root.GetTimes('virtual')
+		fulldur = t1-t0
 
 		# find doc media
 		self.media = []
 		self.url2mtype = {}
-		self.findMedia(player.userplayroot, self.media, self.url2mtype)
+		self.findMedia(root, self.media, self.url2mtype)
 		framerate = self.findFrameRate()
 
 		# update peer for dur and first video/audio frameRate
