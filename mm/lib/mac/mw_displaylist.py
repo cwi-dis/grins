@@ -60,7 +60,7 @@ _icon_ids = {
 	'beginevent' : mw_resources.ID_ICON_EVENTIN,
 	'endevent' : mw_resources.ID_ICON_EVENTOUT,
 	'causeevent' : mw_resources.ID_ICON_CAUSEEVENT,
-	'danglingev' : mw_resources.ID_ICON_DANGLINGEVENT,
+	'danglingevent' : mw_resources.ID_ICON_DANGLINGEVENT,
 	'repeat' : mw_resources.ID_ICON_REPEAT,
 	'playing': mw_resources.ID_ICON_PLAYING,	# 
 	'waitstop': mw_resources.ID_ICON_WAITSTOP, # 
