@@ -59,6 +59,7 @@ else:
 # macfreeze: path :::pylib
 #
 # and some modules we don't want:
+# macfreeze: exclude BandwidthCompute
 # macfreeze: exclude X_window
 # macfreeze: exclude X_windowbase
 # macfreeze: exclude GL_window
