@@ -730,7 +730,6 @@ class AttrSheet(dialog.PropertySheet):
 		if self._apply:
 			self._apply.enable(flag)
 		
-		
 class AttrPage(dialog.PropertyPage):
 	def __init__(self,form):
 		self._form=form
@@ -2325,8 +2324,66 @@ groupsui={
 	'fadeout':FadeoutGroup,
 	'wipe':WipeGroup,
 	}
+###########################
+# already bound: &P, &C, &B, &X, &Y, &W, &H
+class TabShortcut:
+	data={
+		grinsRC.ID_G:'&General',
+		grinsRC.ID_U:'&URL',
+		grinsRC.ID_T:'&Timing',
+		grinsRC.ID_I:'&Info',
+		grinsRC.ID_L:'Hyper&link',
+		grinsRC.ID_O:'P&osition and size',
+		grinsRC.ID_S:'&System properties',
+		grinsRC.ID_B:'&Background color',
+		grinsRC.ID_Z:'&Z order',
+		grinsRC.ID_F:'Scale &factor',
+		grinsRC.ID_R:'Ta&rget audience',
+		grinsRC.ID_A:'&Audio type',
+		grinsRC.ID_Q:'Image &quality',
+		grinsRC.ID_N:'Co&ntent',
+		grinsRC.ID_V:'&Video type',
+		}
 
+	def __init__(self,wnd):
+		self._wnd=wnd	
+		self._prsht=wnd._prsht
+		self._pages = wnd._pages
+		tabctrl=self._prsht.GetTabCtrl()
+		n = tabctrl.GetItemCount()
+		self._tabnames={}
+		for i in range(n):
+			self._tabnames[tabctrl.GetItemText(i)]=i
+		self._data=TabShortcutEnabler.data
+		self._tabctrl=tabctrl
+		self.hookcommands()
 
+	def hookcommands(self):
+		for id in self._data.keys():
+			name=self.barename(self._data[id])
+			if self._tabnames.has_key(name): 
+				self._wnd.HookCommand(self.oncmd,id)
+				ix = self._tabnames[name]
+				self._tabctrl.SetItemText(ix,self._data[id])
+
+	def oncmd(self,id,code):
+		if self._data.has_key(id):
+			name=self.barename(self._data[id])
+			self.setactivepage(name)
+
+	def barename(self,name):
+		l=string.split(name,'&')
+		if len(l)==2:
+			return l[0]+l[1]
+		return name
+
+	def setactivepage(self,name):
+		if self._tabnames.has_key(name):
+			i = self._tabnames[name]
+			page = self._pages[i]
+			self._prsht.SetActivePage(page)
+		
+	
 ###########################
 from  GenFormView import GenFormView
 
@@ -2407,6 +2464,9 @@ class AttrEditForm(GenFormView):
 		prsht.SetActivePage(self._pages[initindex])
 		prsht.RedrawWindow()
 
+		# remove the next line to dissable tabs shortcuts
+		self._tabshortcut = TabShortcut(self)
+
 	def getcurattr(self):
 		page = self._prsht.GetActivePage()
 		if page:
@@ -2424,6 +2484,10 @@ class AttrEditForm(GenFormView):
 		if not p:
 			return
 		self._prsht.SetActivePage(p)
+
+	def setcurattrbyname(self,name):
+		a = self.getattrbyname(name)
+		if a: self.setcurattr(a)
 
 	def creategrouppages(self):
 		grattrl=[]	 # all attr in groups
@@ -2511,7 +2575,8 @@ class AttrEditForm(GenFormView):
 					
 	def OnInitialUpdate(self):
 		GenFormView.OnInitialUpdate(self)
-		
+		self._is_active = 0
+
 	def onSize(self,params):
 		msg=win32mu.Win32Msg(params)
 		if msg.minimized(): return
@@ -2531,11 +2596,18 @@ class AttrEditForm(GenFormView):
 
 	# Called when the view is activated 
 	def activate(self):
-		pass
+		self._is_active=1
+		childframe=self.GetParent()
+		frame=childframe.GetMDIFrame()
+		frame.LoadAccelTable(grinsRC.IDR_ATTR_EDIT)
 
+		
 	# Called when the view is deactivated 
 	def deactivate(self):
-		pass
+		self._is_active=0
+		childframe=self.GetParent()
+		frame=childframe.GetMDIFrame()
+		frame.LoadAccelTable(grinsRC.IDR_GRINSED)
 
 	# cmif general interface
 	# Called by the core system to close this window
