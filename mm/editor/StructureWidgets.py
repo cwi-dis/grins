@@ -98,6 +98,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.old_pos = None	# used for recalc optimisations.
 		self.dont_draw_children = 0
 		self.__image_size = None
+		self.__has_cause_event = 0
 
 		self.timemapper = None
 		self.timeline = None
@@ -839,6 +840,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			self.cause_event_icon.set_icon('causeevent')
 			icon.set_properties(issrc=1)
 			icon.set_contextmenu(self.mother.event_popupmenu_source)
+		self.__has_cause_event = 1
 		return self.cause_event_icon
 
 	def get_linksrc_icon(self):
@@ -856,17 +858,19 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		return self.linkdst_icon
 
 	def set_dangling_event(self):
-		if self.cause_event_icon:
-			self.iconbox.del_icon('causeevent')
-		self.cause_event_icon = self.iconbox.add_icon('causeevent')
+		if self.cause_event_icon is None:
+			self.cause_event_icon = self.iconbox.add_icon('causeevent')
 		self.cause_event_icon.set_icon('danglingevent')
 
 	def clear_dangling_event(self):
 		# XXXX Note that this is not really correct: if there was a causeevent icon before
 		# we installed the dangling icon we now lose it.
-		if self.cause_event_icon:
-			self.iconbox.del_icon('causeevent')
-		self.cause_event_icon = None
+		if self.cause_event_icon is not None:
+			if self.__has_cause_event:
+				self.cause_event_icon.set_icon('causeevent')
+			else:
+				self.iconbox.del_icon('causeevent')
+				self.cause_event_icon = None
 
 	def get_obj_near(self, (x, y), timemapper = None, timeline = None):
 		return None
@@ -2952,7 +2956,7 @@ class BandWidthWidget(MMWidgetDecoration):
 # A box with icons in it.
 # Comes before the node's name.
 class IconBox(MMWidgetDecoration):
-	iconorder = ('collapse', 'playicon', 'infoicon', 'danglingevent', 'danglinganchor', 'linkdst', 'beginevent', 'linksrc', 'causeevent', 'endevent',)
+	iconorder = ('collapse', 'playicon', 'infoicon', 'linkdst', 'beginevent', 'danglinganchor', 'linksrc', 'causeevent', 'endevent',)
 
 	def __init__(self, mmwidget, mother, vertical = 1):
 		MMWidgetDecoration.__init__(self, mmwidget, mother)
