@@ -63,48 +63,30 @@ def hasattreditor(node):
 
 
 # A similar interface for channels (note different arguments!).
-# The administration is kept in context.channelattreditors,
+# The administration is kept in channel.attreditor,
 # which is created here if necessary.
 
-def showchannelattreditor(context, name):
+def showchannelattreditor(channel):
 	try:
-		dict = context.channelattreditors
-	except NameError:
-		dict = context.channelattreditors = {}
-	except AttributeError: # new style exceptions
-		dict = context.channelattreditors = {}
-	if dict.has_key(name):
-		editor = dict[name]
-		wrapper = editor.wrapper
-		if wrapper.name <> name:
-			editor.hide()
-			del dict[name]
-	if not dict.has_key(name):
-		dict[name] = \
-			AttrEditor().init(ChannelWrapper().init(context, name))
-	dict[name].open()
+		attreditor = channel.attreditor
+	except AttributeError:
+		channel.attreditor = attreditor = \
+		    AttrEditor().init(ChannelWrapper().init(channel))
+	attreditor.open()
 
-def hidechannelattreditor(context, name):
+def hidechannelattreditor(channel):
 	try:
-		dict = context.channelattreditors
-	except NameError:
+		attreditor = channel.attreditor
+	except AttributeError:
 		return
-	except AttributeError: # new style exceptions
-		return
-	if not dict.has_key(name):
-		return
-	dict[name].hide()
+	attreditor.hide()
 
-def haschannelattreditor(context, name):
+def haschannelattreditor(channel):
 	try:
-		dict = context.channelattreditors
-	except NameError:
+		attreditor = channel.attreditor
+	except AttributeError:
 		return 0
-	except AttributeError: # new style exceptions
-		return 0
-	if not dict.has_key(name):
-		return 0
-	return dict[name].is_showing()
+	return attreditor.is_showing()
 
 
 # And again a similar interface for styles.
@@ -156,7 +138,9 @@ def hasstyleattreditor(context, name):
 # a common base class implementing most functions.)
 
 class Wrapper: # Base class -- common operations
-	def init(self):
+	def init(self, context):
+		self.context = context
+		self.editmgr = context.geteditmgr()
 		return self
 	def __repr__(self):
 		return '<Wrapper instance>'
@@ -184,10 +168,8 @@ class NodeWrapper(Wrapper):
 	#
 	def init(self, node):
 		self.node = node
-		self.context = node.GetContext()
-		self.editmgr = self.context.geteditmgr()
 		self.root = node.GetRoot()
-		return Wrapper.init(self)
+		return Wrapper.init(self, node.GetContext())
 	#
 	def __repr__(self):
 		return '<NodeWrapper instance, node=' + `self.node` + '>'
@@ -247,34 +229,30 @@ class NodeWrapper(Wrapper):
 
 class ChannelWrapper(Wrapper):
 	#
-	def init(self, context, name):
-		self.context = context
-		self.editmgr = context.geteditmgr()
-		self.name = name
-		self.attrdict = self.context.channeldict[name]
-		return Wrapper.init(self)
+	def init(self, channel):
+		self.channel = channel
+		return Wrapper.init(self, channel.context)
 	#
 	def __repr__(self):
-		return '<ChannelWrapper, name=' + `self.name` + '>'
+		return '<ChannelWrapper, name=' + `self.channel.name` + '>'
 	#
 	def stillvalid(self):
-		return self.context.channeldict.has_key(self.name) and \
-			self.context.channeldict[self.name] == self.attrdict
+		return self.channel.stillvalid()
 	#
 	def maketitle(self):
-		return 'Attributes for channel: ' + self.name
+		return 'Attributes for channel: ' + self.channel.name
 	#
 	def getattr(self, name):
-		if name == '.cname': return self.name
-		if self.attrdict.has_key(name):
-			return self.attrdict[name]
+		if name == '.cname': return self.channel.name
+		if self.channel.has_key(name):
+			return self.channel[name]
 		else:
 			return MMAttrdefs.getdef(name)[1]
 	#
 	def getvalue(self, name): # Return the raw attribute or None
-		if name == '.cname': return self.name
-		if self.attrdict.has_key(name):
-			return self.attrdict[name]
+		if name == '.cname': return self.channel.name
+		if self.channel.has_key(name):
+			return self.channel[name]
 		else:
 			return None
 	#
@@ -284,24 +262,25 @@ class ChannelWrapper(Wrapper):
 	#
 	def setattr(self, name, value):
 		if name == '.cname':
-			self.editmgr.setchannelname(self.name, value)
-			self.name = value
+			self.editmgr.setchannelname(self.channel.name, value)
 		else:
-			self.editmgr.setchannelattr(self.name, name, value)
+			self.editmgr.setchannelattr( \
+				  self.channel.name, name, value)
 	#
 	def delattr(self, name):
 		if name == '.cname':
-			self.editmgr.setchannelname(self.name, 'none')
+			self.editmgr.setchannelname(self.channel.name, '')
 		else:
-			self.editmgr.setchannelattr(self.name, name, None)
+			self.editmgr.setchannelattr( \
+				  self.channel.name, name, None)
 	#
 	# Return a list of attribute names that make sense for this channel,
 	# in an order that makes sense to the user.
 	#
 	def attrnames(self):
 		namelist = ['.cname', 'type', 'comment']
-		if self.attrdict.has_key('type'):
-			ctype = self.attrdict['type']
+		if self.channel.has_key('type'):
+			ctype = self.channel['type']
 		else:
 			ctype = 'unknown'
 		if channelmap.has_key(ctype):
@@ -314,7 +293,7 @@ class ChannelWrapper(Wrapper):
 					namelist.append(name)
 		# Merge in nonstandard attributes
 		extras = []
-		for name in self.attrdict.keys():
+		for name in self.channel.keys():
 			if name not in namelist and \
 					MMAttrdefs.getdef(name)[3] <> 'hidden':
 				extras.append(name)
@@ -343,11 +322,9 @@ class ChannelWrapper(Wrapper):
 class StyleWrapper(Wrapper):
 	#
 	def init(self, context, name):
-		self.context = context
-		self.editmgr = context.geteditmgr()
 		self.name = name
-		self.attrdict = self.context.styledict[name]
-		return Wrapper.init(self)
+		self.attrdict = context.styledict[name]
+		return Wrapper.init(self, context)
 	#
 	def __repr__(self):
 		return '<StyleWrapper, name=' + `self.name` + '>'
@@ -1033,10 +1010,10 @@ def initfontmenu():
 def hideall(root):
 	hidenode(root)
 	context = root.GetContext()
-	for cname in root.GetContext().channeldict.keys():
-		hidechannelattreditor(context, cname)
-	for cname in root.GetContext().styledict.keys():
-		hidestyleattreditor(context, cname)
+	for c in context.channels:
+		hidechannelattreditor(c)
+	for sname in context.styledict.keys():
+		hidestyleattreditor(context, sname)
 
 
 # Recursively hide the attribute editors for this node and its subtree.

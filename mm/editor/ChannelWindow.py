@@ -12,7 +12,7 @@ class ChannelWindow(GLDialog):
 	def init(self, name, attrdict, channel):
 		global ChannelWinDict
 		self.name = name
-		self.attrdict = attrdict
+		self.attrdict = attrdict # Really an MMChannel instance
 		self.channel = channel
 		self.node = None
 		self.cmenu = None
@@ -245,7 +245,7 @@ def make_nmenu(name):
 
 def do_channel_attr(cwin):
 	import AttrEdit
-	AttrEdit.showchannelattreditor(cwin.channel.player.context, cwin.name)
+	AttrEdit.showchannelattreditor(cwin.attrdict)
 
 def do_node_play(cwin):
 	cwin.channel.player.playsubtree(cwin.node)

@@ -66,7 +66,7 @@ class _convert_dialog:
 	flp.create_full_form(self, formdef)
 	self.err_groupshown = 0
 	self.err_group.hide_object()
-	chname = MMAttrdefs.getattr(node, 'channel')
+	chname = node.GetChannelName()
 	self.input_filename.set_input(_inventname(chname))
 	self.input_filename.set_input_return(1)
 	return self
@@ -127,14 +127,6 @@ def _merge(f, filename):	# Merge editors file into data structures
 	elif not channeleditors[fields[0]].has_key(fields[1]):
 	    channeleditors[fields[0]][fields[1]] = fields[2]
 
-def _getchtype(node):	# Get channel type for given node
-    chname = MMAttrdefs.getattr(node, 'channel')
-    context = node.GetContext()
-    try:
-	return context.channeldict[chname]['type']
-    except KeyError:
-	raise _LocalError
-
 def _showmenu(menu):	# Show (modal) editor choice dialog
     keys = menu.keys()
     keys.sort()
@@ -173,8 +165,9 @@ def showeditor(node):
 	gl.ringbell()
 	return
     filename = MMAttrdefs.getattr(node,'file')
+    chtype = node.GetChannelType()
     try:
-	chtype = _getchtype(node)
+	if not channeleditors.has_type(chtype): raise _LocalError
 	editor = channeleditors[chtype]
 	if type(editor) == type(''):
 	    cmd = editor

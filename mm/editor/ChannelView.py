@@ -96,6 +96,7 @@ class ChannelView(ViewDialog, GLDialog):
 		self.editmgr = self.context.editmgr
 		self.focus = None
 		self.future_focus = None
+		self.showall = 0
 		title = 'Channel View (' + self.toplevel.basename + ')'
 		self = ViewDialog.init(self, 'cview_')
 		return GLDialog.init(self, title)
@@ -175,7 +176,7 @@ class ChannelView(ViewDialog, GLDialog):
 		elif self.focus is None:
 			focus = '', None
 		elif self.focus.__class__ == ChannelBox:
-			focus = 'c', self.focus.name
+			focus = 'c', self.focus.channel
 		elif self.focus.__class__ == NodeBox:
 			focus = 'n', self.focus.node
 		elif self.focus.__class__ == ArcBox:
@@ -260,6 +261,21 @@ class ChannelView(ViewDialog, GLDialog):
 		self.arcs = []
 		self.baseobject = None
 
+	# Toggle 'showall' setting
+
+	def toggleshow(self):
+		self.showall = (not self.showall)
+		self.reshape()
+		self.draw()
+
+	# Return list of currently visible channels
+
+	def visiblechannels(self):
+		if self.showall:
+			return self.context.channels
+		else:
+			return self.usedchannels
+
 	# Recalculate the set of objects we should be drawing
 
 	def recalc(self, focus):
@@ -311,10 +327,10 @@ class ChannelView(ViewDialog, GLDialog):
 	# Channel stuff
 
 	def initchannels(self, focus):
-		for name in self.context.channelnames:
-			obj = ChannelBox().init(self, name)
+		for c in self.context.channels:
+			obj = ChannelBox().init(self, c)
 			self.objects.append(obj)
-			if focus[0] == 'c' and focus[1] == name:
+			if focus[0] == 'c' and focus[1] is c:
 				obj.select()
 
 	# View root stuff
@@ -369,14 +385,19 @@ class ChannelView(ViewDialog, GLDialog):
 	def initnodes(self, focus):
 		Timing.needtimes(self.viewroot)
 		arcs = []
+		for c in self.context.channels: c.used = 0
 		self.scantree(self.viewroot, focus, arcs)
 		self.objects[len(self.objects):] = self.arcs = arcs
+		self.usedchannels = []
+		for c in self.context.channels:
+			if c.used: self.usedchannels.append(c)
 
 	def scantree(self, node, focus, arcs):
 		if node.GetType() in leaftypes:
 			channel = node.GetChannel()
 			if channel:
-				obj = NodeBox().init(self, node, channel.name)
+				channel.used = 1
+				obj = NodeBox().init(self, node)
 				self.objects.append(obj)
 				if focus[0] == 'n' and focus[1] is node:
 					obj.select()
@@ -508,8 +529,9 @@ class GO:
 	def nodebox(self, node):
 		# Compute the left/right sides from the channel position
 		channel = node.GetChannel()
-		nchannels = len(self.mother.context.channels)
-		i = self.mother.context.channels.index(channel)
+		list = self.mother.visiblechannels()
+		nchannels = len(list)
+		i = list.index(channel)
 		width = self.mother.width / nchannels
 		left = (i + 0.1) * width
 		right = (i + 0.9) * width
@@ -560,6 +582,13 @@ class GO:
 		Help.givehelp('Channel_view')
 
 	def newchannelcall(self):
+		# This ought to be done by the mother
+		if self.mother.visiblechannels() <> \
+			  self.mother.context.channels:
+			fl.show_message( \
+				  'You can\'t create a new channel', \
+				  'unless you are showing unused channels', '')
+			return
 		editmgr = self.mother.editmgr
 		context = self.mother.context
 		if not editmgr.transaction():
@@ -578,16 +607,19 @@ class GO:
 		i = 1
 		base = 'NEW'
 		name = base + `i`
-		while name in self.mother.context.channelnames:
+		while self.mother.context.channeldict.has_key(name):
 			i = i+1
 			name = base + `i`
-		editmgr.addchannel(name, self.newchannelindex(), type)
-		self.mother.future_focus = 'c', name
+		j = self.newchannelindex()
+		editmgr.addchannel(name, j, type)
+		channel = self.mother.context.channels[j]
+		self.mother.future_focus = 'c', channel
+		self.mother.showall = 1 # Force showing the new channel
 		self.mother.cleanup()
 		editmgr.commit()
 		# NB: when we get here, this object is nearly dead already!
 		import AttrEdit
-		AttrEdit.showchannelattreditor(context, name)
+		AttrEdit.showchannelattreditor(channel)
 
 	def nextminicall(self):
 		self.mother.nextviewroot()
@@ -595,7 +627,11 @@ class GO:
 	def prevminicall(self):
 		self.mother.prevviewroot()
 
+	def toggleshowcall(self):
+		self.mother.toggleshow()
+	
 	def newchannelindex(self):
+		# NB Overridden by ChannelBox to insert before current!
 		return len(self.mother.context.channelnames)
 
 	# Menu and shortcut definitions are stored as data in the class,
@@ -606,6 +642,7 @@ class GO:
 	c.append('c', 'New channel...',  newchannelcall)
 	c.append('N', 'Next mini-document', nextminicall)
 	c.append('P', 'Previous mini-document', prevminicall)
+	c.append('', 'Toggle showing unused channels', toggleshowcall)
 	menu = MenuMaker.MenuObject().init('Base ops', commandlist)
 
 
@@ -613,22 +650,25 @@ class GO:
 
 class ChannelBox(GO):
 
-	def init(self, mother, name):
-		self = GO.init(self, mother, name)
-		self.ctype = '???'
-		cdict = self.mother.context.channeldict
-		if cdict.has_key(name):
-			cattrs = cdict[name]
-			if cattrs.has_key('type'):
-				self.ctype = cattrs['type']
+	def init(self, mother, channel):
+		self = GO.init(self, mother, channel.name)
+		self.channel = channel
+		if channel.has_key('type'):
+			self.ctype = channel['type']
+		else:
+			self.ctype = '???'
 		return self
 
 	def __repr__(self):
 		return '<ChannelBox instance, name=' + `self.name` + '>'
 
 	def reshape(self):
-		nchannels = len(self.mother.context.channelnames)
-		i = self.mother.context.channelnames.index(self.name)
+		list = self.mother.visiblechannels()
+		nchannels = len(list)
+		if self.channel not in list:
+			self.ok = 0
+			return
+		i = list.index(self.channel)
 		height = self.mother.channelbottom
 		width = self.mother.width / nchannels
 		space = gl.strwidth(' ')
@@ -642,10 +682,12 @@ class ChannelBox(GO):
 		self.ok = 1
 
 	def ishit(self, x, y):
+		if not self.ok: return 0
 		return self.left <= x <= self.right and \
 		       self.top <= y <= self.bottom
 
 	def draw(self):
+		if not self.ok: return
 		self.drawline()
 		self.drawfocus()
 
@@ -770,9 +812,14 @@ class ChannelBox(GO):
 
 	def attrcall(self):
 		import AttrEdit
-		AttrEdit.showchannelattreditor(self.mother.context, self.name)
+		AttrEdit.showchannelattreditor(self.channel)
 
 	def delcall(self):
+		if self.channel in self.mother.usedchannels:
+			fl.show_message( \
+				  'You can\'t delete a channel', \
+				  'that is still in use', '')
+			return
 		editmgr = self.mother.editmgr
 		if not editmgr.transaction():
 			return # Not possible at this time
@@ -798,7 +845,7 @@ class NodeBox(GO):
 	def __repr__(self):
 		return '<NodeBox instance, name=' + `self.name` + '>'
 
-	def init(self, mother, node, cname):
+	def init(self, mother, node):
 		self.node = node
 		self.hasanchors = self.haspause = 0
 		try:
@@ -815,7 +862,6 @@ class NodeBox(GO):
 		node.setarmedmode = self.setarmedmode
 		if node.armedmode == None:
 			node.armedmode = ARM_NONE
-		self.cname = cname # Channel name
 		name = MMAttrdefs.getattr(node, 'name')
 		self.locked = 0
 		return GO.init(self, mother, name)
