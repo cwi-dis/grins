@@ -286,6 +286,12 @@ class SlideWrapper(NodeWrapper):
 		namelist.insert(0, 'tag')
 		return namelist
 
+	def getdefault(self, name): # Return the default or None
+		if name == 'color':
+			return MMAttrdefs.getattr(self.node.GetParent(), 'bgcolor')
+		else:
+			return NodeWrapper.getdefault(self, name)
+
 	def commit(self):
 		node = self.node
 		attrdict = node.GetAttrDict()
