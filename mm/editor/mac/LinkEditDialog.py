@@ -137,8 +137,9 @@ class LinkBrowserDialog(windowinterface.MACDialog):
 		if item == ITEM_LEFT_NODESELECT:
 			self._showmenu(event, ITEM_LEFT_NODESELECT, self._leftmenu)
 		elif item == ITEM_LEFT_ALIST:
-			self._listclick(event, self._leftlist, self.anchor_browser_callback,
-					(self._left_client_data,))
+##			self._listclick(event, self._leftlist, self.anchor_browser_callback,
+##					(self._left_client_data,))
+			self.anchor_browser_callback(self._left_client_data)
 		elif item == ITEM_LEFT_PUSH:
 			self.show_callback(self._left_client_data)
 		elif item == ITEM_LEFT_AEDIT:
@@ -147,15 +148,17 @@ class LinkBrowserDialog(windowinterface.MACDialog):
 		elif item == ITEM_RIGHT_NODESELECT:
 			self._showmenu(event, ITEM_RIGHT_NODESELECT, self._rightmenu)
 		elif item == ITEM_RIGHT_ALIST:
-			self._listclick(event, self._rightlist, self.anchor_browser_callback,
-					(self._right_client_data,))
+##			self._listclick(event, self._rightlist, self.anchor_browser_callback,
+##					(self._right_client_data,))
+			self.anchor_browser_callback(self._right_client_data)
 		elif item == ITEM_RIGHT_PUSH:
 			self.show_callback(self._right_client_data)
 		elif item == ITEM_RIGHT_AEDIT:
 			self.anchoredit_callback(self._right_client_data)
 		
 		elif item == ITEM_LINKS_LLIST:
-			self._listclick(event, self._linklist, self.link_browser_callback, ())
+##			self._listclick(event, self._linklist, self.link_browser_callback, ())
+			self.link_browser_callback()
 		elif item == ITEM_LINKS_ADD:
 			self.link_new_callback()
 		elif item == ITEM_LINKS_EDIT:
@@ -166,13 +169,13 @@ class LinkBrowserDialog(windowinterface.MACDialog):
 			print 'Unexpected dialog browser event, item', item, 'event', event
 		return 1
 		
-	def _listclick(self, event, list, cbfunc, cbarg):
-		(what, message, when, where, modifiers) = event
-		Qd.SetPort(self._dialog)
-		where = Qd.GlobalToLocal(where)
-		item, is_double = list.click(where, modifiers)
-		apply(cbfunc, cbarg)
-		
+## 	def _listclick(self, event, list, cbfunc, cbarg):
+## 		(what, message, when, where, modifiers) = event
+## 		Qd.SetPort(self._dialog)
+## 		where = Qd.GlobalToLocal(where)
+## 		item, is_double = list.click(where, modifiers)
+## 		apply(cbfunc, cbarg)
+## 		
 	def _showmenu(self, event, baseitem, menu):
 		tp, h, (x0, y0, x1, y1) = self._dialog.GetDialogItem(baseitem)
 		Qd.SetPort(self._dialog)
