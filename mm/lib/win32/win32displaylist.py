@@ -299,6 +299,10 @@ class _DisplayList:
 			if not self._overlap(region, entry[2]):
 				return
 			dc.FillSolidRect(entry[2],RGB(entry[1]))
+		elif cmd == 'stipplebox':
+			if not self._overlap(region, entry[2]):
+				return
+			dc.FillRect(entry[2],entry[1])
 		elif cmd == 'font':
 			#dc.SetFont(entry[1])
 			pass
@@ -659,6 +663,21 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		x, y, w, h = self._convert_coordinates(coordinates, units=units)
 		self._list.append(('fbox', self._convert_color(color),
+				   (x, y, x+w, y+h)))
+		self._optimize((1,))
+		self._update_bbox(x, y, x+w, y+h)
+##		return x, y, x+w, y+h
+
+	# Insert a command to draw a filled box
+	def drawstipplebox(self, color, coordinates, units=None):
+		if units is None:
+			units = self.__units
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		x, y, w, h = self._convert_coordinates(coordinates, units=units)
+		brush = win32ui.CreateBrush(win32con.BS_HATCHED, 
+			RGB(self._convert_color(color)), win32con.HS_DIAGCROSS)
+		self._list.append(('stipplebox', brush,
 				   (x, y, x+w, y+h)))
 		self._optimize((1,))
 		self._update_bbox(x, y, x+w, y+h)

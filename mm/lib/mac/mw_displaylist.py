@@ -651,6 +651,10 @@ class _DisplayList:
 		self._list.append(('fbox', self._window._convert_color(color), coordinates, units))
 		self._optimize(1)
 
+	def drawstipplebox(self, color, coordinates, units=None):
+		# This should draw a stippled or hatched box
+		pass
+
 	def drawmarker(self, color, coordinates):
 		pass # XXXX To be implemented
 

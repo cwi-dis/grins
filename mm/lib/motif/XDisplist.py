@@ -521,6 +521,9 @@ class _DisplayList:
 						    box[1]-w._rect[1],
 						    box[2], box[3])
 		self._optimize((1,))
+	def drawstipplebox(self, color, coordinates, units = None):
+		# This should draw a hatched or stippled box.
+		pass
 
 	def drawmarker(self, color, coordinates, units = None):
 		if self._rendered:
