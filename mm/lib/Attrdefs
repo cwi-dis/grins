@@ -217,6 +217,9 @@
 (type (name) null 'Channel type' channeltype
 	'Channel type (channel dictionary only)' raw)
 
+(u_group (name) undefined 'User group' usergroup
+	'Name of user group' normal)
+
 (unixprog (string) '' 'Unix program name' default
 	'Application name (unix only)' channel)
 
