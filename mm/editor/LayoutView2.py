@@ -457,6 +457,10 @@ class LayoutView2(LayoutViewDialog2):
 		self.previousFocus = None
 
 		self.currentSelectedRegionList = None		
+
+		self.currentNodeListShowed = []
+
+		self.myfocus = None
 		
 		# init state of different dialog controls
 		self.showName = 1
@@ -486,12 +490,18 @@ class LayoutView2(LayoutViewDialog2):
 		self.buildRegionTree(self.context)
 		self.initDialogBox()		
 		self.displayViewport(self._first)
-		self.editmgr.registerfirst(self, 1)
+		self.editmgr.registerfirst(self, 1, 1)
 
+		# get the initial player state		
+		type,node = self.editmgr.getplayerstate()
+		if node != None:
+			self.playerstatechanged(type, node)
+			
 		# get the initial focus		
 		type,focus = self.editmgr.getglobalfocus()
 		if focus != None:
 			self.globalfocuschanged(type, focus)
+
 		#		
 		# simulate the focus for test
 		#
@@ -510,13 +520,13 @@ class LayoutView2(LayoutViewDialog2):
 		self.editmgr.unregister(self)
 		LayoutViewDialog2.hide(self)
 
-	def transaction(self):
+	def transaction(self, type):
 		return 1		# It's always OK to start a transaction
 
 	def rollback(self):
 		pass
 
-	def commit(self):
+	def commit(self, type):
 		# for now, we assume here that no region has been added or supressed
 		self.updateRegionTree()
 
@@ -527,19 +537,21 @@ class LayoutView2(LayoutViewDialog2):
 		if node.GetChannelType() == 'sound':
 			return 0
 
-		return 1		
+		return 1
 
 	def focusOnMMNode(self, focusobject):
 		# remove media node from previous selection		
 		if not SHOW_MEDIA_ON_PREVIOUS_FOCUS or not self.isValidMMNode(focusobject):
-			self.removeAllMediaNodeList()
+			self.removeAllFocusMediaNodeList()
+#			self.removeAllMediaNodeList()
 		else:
 			self.removeMediaFromPreviousFocus()
 
 		# make a append node list according to focusobject and the preferences
 		appendList = []
 		if self.isValidMMNode(focusobject):
-			appendList.append(focusobject)
+			if not focusobject.attrdict.get('name') in self.currentNodeListShowed:
+				appendList.append(focusobject)
 		# allow to show sibling medias
 		if SHOW_SIBLING_MEDIA_IN_PAR:
 			parentNode = focusobject.parent
@@ -559,16 +571,18 @@ class LayoutView2(LayoutViewDialog2):
 		else:
 			self.updateMediaNodeList()
 
-	def focusOnNodeList(self, focusobject):
+	def showNodeList(self, nodeobject):
 		# remove all selected nodes
 		self.removeAllMediaNodeList()
 
 		appendList = []
 		selectedRegionList = []
-		for type, node in focusobject:
+		self.currentNodeListShowed = []
+		for type, node in nodeobject:
 			if type == 'MMChannel':
 				selectedRegionList.append(node.name)
 			elif type == 'MMNode':
+				self.currentNodeListShowed.append(node.attrdict.get("name"))
 				appendList.append(node)
 		
 		if len(selectedRegionList) > 0:
@@ -602,7 +616,7 @@ class LayoutView2(LayoutViewDialog2):
 					region = self.currentNodeSelected.getParent()
 					if region != None:
 						self.select(region)
-
+		
 	def isSelectedRegion(self, regionName):
 		# by default all region selected
 		if self.currentSelectedRegionList == None:
@@ -610,17 +624,23 @@ class LayoutView2(LayoutViewDialog2):
 		return regionName in self.currentSelectedRegionList
 		
 	def globalfocuschanged(self, focustype, focusobject):
-		# skip the focus if already had
+		# skip the focus if already exist
 		if self.previousFocus == focusobject:
-			return		
+			return
+		if focusobject == self.myfocus:
+			return
+		self.myfocus = None
 		self.previousFocus = focusobject
 		
 		if focustype == 'MMNode':
 			self.focusOnMMNode(focusobject)
-		elif focustype == 'NodeList':
-			self.focusOnNodeList(focusobject)
+		elif focustype == 'MMChannel':
+			self.focusOnMMChannel(focusobject)
 
-	
+	def playerstatechanged(self, nodetype, nodeobject):
+		if nodetype == 'NodeList':
+			self.showNodeList(nodeobject)
+		
 	def kill(self):
 		self.destroy()
 
@@ -689,7 +709,25 @@ class LayoutView2(LayoutViewDialog2):
 				parentRegion.removeNode(mediaRegion)
 		self.currentMediaRegionList = []
 		self.lastMediaNameSelected = None
-					
+
+	def removeAllFocusMediaNodeList(self):
+		removeList = []
+		if len(self.currentMediaRegionList) > 0:
+			i = 0
+			for mediaRegion, parentRegion in self.currentMediaRegionList:
+				if not mediaRegion.getName() in self.currentNodeListShowed:
+					removeList.append(i)
+					# remove from region tree
+					parentRegion.removeNode(mediaRegion)
+				i = i+1
+
+		removeList.reverse()				
+		for num in removeList:
+			del self.currentMediaRegionList[num]
+
+		# for now			
+		self.lastMediaNameSelected = None
+									
 	def appendMediaNodeList(self, nodeList):
 		# create the media region nodes according to nodeList
 		appendMediaRegionList = []
@@ -878,24 +916,24 @@ class LayoutView2(LayoutViewDialog2):
 		# pass by edit manager
 		
 		# test if possible at this time
-		if self.editmgr.transaction():
+		if self.editmgr.transaction('REGION_GEOM'):
 			self.editmgr.setchannelattr(viewport.getName(), 'winsize', geom)
 			self.editmgr.setchannelattr(viewport.getName(), 'units', UNIT_PXL)						
-			self.editmgr.commit()
+			self.editmgr.commit('REGION_GEOM')
 
 	def applyGeomOnRegion(self, region, geom):
 		# apply new size
 		# pass by edit manager
 		
 		# test if possible 
-		if self.editmgr.transaction():
+		if self.editmgr.transaction('REGION_GEOM'):
 			self.editmgr.setchannelattr(region.getName(), 'base_winoff', geom)
 			self.editmgr.setchannelattr(region.getName(), 'units', UNIT_PXL)			
-			self.editmgr.commit()
+			self.editmgr.commit('REGION_GEOM')
 
 	def applyGeomOnMedia(self, media, value):
 		attrdict = media.mmnode.attrdict
-		if self.editmgr.transaction():
+		if self.editmgr.transaction('MEDIA_GEOM'):
 			fit = media.fit
 			if fit =='hidden':
 				scale = 1
@@ -922,7 +960,7 @@ class LayoutView2(LayoutViewDialog2):
 			self.editmgr.setnodeattr(media.mmnode, 'bottom' , bottom)
 			
 			# todo: some ajustements for take into account all fit values
-			self.editmgr.commit()
+			self.editmgr.commit('MEDIA_GEOM')
 		
 	def applyBgColor(self, node, bgcolor, transparent):
 		# test if possible 
@@ -1346,6 +1384,8 @@ class LayoutView2(LayoutViewDialog2):
 	def onPreviousSelectMedia(self, media):
 		self.currentNodeSelected = media				
 		self.updateMediaOnDialogBox(media)
+		self.myfocus = media.mmnode
+		self.editmgr.setglobalfocus('MMNode',media.mmnode)
 
 	#
 	# interface implementation of 'dialog controls callback' 

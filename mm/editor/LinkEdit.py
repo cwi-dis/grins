@@ -650,13 +650,13 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 		return self.toplevel.hierarchyview.getfocus()
 
 	# EditMgr interface
-	def transaction(self):
+	def transaction(self, type):
 		return 1
 
 	def rollback(self):
 		pass
 
-	def commit(self):
+	def commit(self, type):
 		self.updateform()
 
 	def kill(self):

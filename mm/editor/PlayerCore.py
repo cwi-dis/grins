@@ -33,7 +33,12 @@ class PlayerCore(Selecter):
 	#
 	# EditMgr interface (as dependent client).
 	#
-	def transaction(self):
+	def transaction(self, type):
+		# in this particular case, it's possible to edit the document when pausing
+		if type in ('REGION_GEOM','MEDIA_GEOM'):
+			if self.pausing:
+				return 1
+		
 		# Disallow changes while we are playing.
 		if self.playing:
 			m1 = 'You cannot change the document\n'
@@ -45,7 +50,11 @@ class PlayerCore(Selecter):
 		self.locked = 1
 		return 1
 	#
-	def commit(self):
+	def commit(self, type):
+		if type in ('REGION_GEOM', 'MEDIA_GEOM'):
+			if self.playing:
+				return
+		
 		self.checkchannels()
 		if self.showing:
 			# Check if any of the playroots has vanished
@@ -135,9 +144,12 @@ class PlayerCore(Selecter):
 			return 1	# Cannot set on internal nodes
 		return ch.updatefixedanchors(node)
 
+	def updateFocus(self):
+		self.editmgr.setglobalfocus('MMNode', self.__focusNode)
+		
 	# update the global focus in order to update all views according to this focus
 	# for now, the focus node list is: playing nodes and showing channels
-	def updateFocus(self):
+	def updatePlayerState(self):
 		# node list is a tuple of (nodetype/node)
 		# here nodetype is either: 'MMChannel' or 'MMNode'
 		nodeList = []
@@ -160,10 +172,11 @@ class PlayerCore(Selecter):
 			playingNode = ch.getPlayingNode()
 			if playingNode != None:
 				nodeList.append(('MMNode',playingNode))
+				self.__focusNode = playingNode
 
 		# send the global focus event					
-		self.editmgr.setglobalfocus('NodeList', nodeList)
-					
+		self.editmgr.setplayerstate('NodeList', nodeList)
+
 	#
 	def pause(self, wantpause):
 		if self.pausing == wantpause:
@@ -172,6 +185,7 @@ class PlayerCore(Selecter):
 		self.pausing = wantpause
 		if self.pausing:
 			self.scheduler.setpaused(1)
+			self.updatePlayerState()
 			self.updateFocus()
 		else:
 			self.scheduler.setpaused(0)
