@@ -91,7 +91,7 @@ class TopLevel():
 		# Use the winpos attribute of the root to place the panel
 		#
 		h, v = MMAttrdefs.getattr(self.root, 'toplevel_winpos')
-		width, height = 100, 200
+		width, height = WIDTH, HEIGHT
 		glwindow.setgeometry(h, v, width, height)
 		#
 		self.cpanel.show_form(PLACE_SIZE, TRUE, 'MM ed')
