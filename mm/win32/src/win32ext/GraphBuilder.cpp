@@ -178,7 +178,7 @@ static PyObject* py_get_duration(PyObject *self, PyObject *args)
 		if (SUCCEEDED(hr))
 			return Py_BuildValue("d",tLength); // in sec
         }
-	return Py_BuildValue("d",60.0);
+	return Py_BuildValue("d",-1.0);
 	}
 
 // Get the current sample position (in msec) within the stream
@@ -257,7 +257,7 @@ static PyObject* py_get_stoptime(PyObject *self, PyObject *args)
 			return Py_BuildValue("d",tStop); // in sec
         }
 	//RETURN_ERR("GetStopTime failed");
-	return Py_BuildValue("d", 60.0);
+	return Py_BuildValue("d", -1.0);
 	}
 
 // Set end position (in msec) within the stream
