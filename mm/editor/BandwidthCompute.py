@@ -268,7 +268,7 @@ def compute_bandwidth(root, seticons=1, storetiming=None):
 					msg = 'Uses %s more bandwidth than available'%overflow
 				else:
 					from fmtfloat import fmtfloat
-					msg = 'Needs %s seconds longer to load'%fmtfloat(overflow/maxbps)
+					msg = 'Needs %s seconds longer to load'%fmtfloat(overflow/maxbps, prec = 1)
 				node.set_infoicon('bandwidthbad', msg)
 				errornodes[node] = 1
 				delaycount = delaycount + 1
