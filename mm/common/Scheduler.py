@@ -352,12 +352,16 @@ class SchedulerContext:
 		if debugevents: print 'sched_arcs',`node`,event,marker,timestamp,self.parent.timefunc()
 		if timestamp is None:
 			timestamp = self.parent.timefunc()
+		channel = None
 		if event is not None:
 			node.event(timestamp, event)
+			if type(event) is type(()):
+				channel, event = event
 		if marker is not None:
 			node.marker(timestamp, marker)
 		for arc in node.sched_children:
-			if (arc.event != event or
+			if (arc.channel != channel or
+			    arc.event != event or
 			    arc.marker != marker or
 			    arc.delay is None) and \
 			   (arc.event is not None or
@@ -369,7 +373,7 @@ class SchedulerContext:
 				continue
 			atime = 0
 			if arc.srcanchor is not None:
-				for id, type, args, times in node.attrdict.get('anchorlist', []):
+				for id, atype, args, times in node.attrdict.get('anchorlist', []):
 					if id == arc.srcanchor:
 						if event == 'end':
 							atime = times[1]

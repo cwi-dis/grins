@@ -607,11 +607,20 @@ class Channel:
 						self.event(ACTIVATEEVENT, timestamp, arc)
 
 	def event(self, event, timestamp = None, arc = None):
+		if not self._scheduler.playing:
+			# not currently interested in events
+			return
 		if timestamp is None:
 			timestamp = self._scheduler.timefunc()
 		if arc is None:
-			self._played_node.event(timestamp, event)
-			self._playcontext.sched_arcs(self._played_node, event, timestamp=timestamp)
+			if type(event) is type(()):
+				node = self._player.root
+				sctx = self._scheduler.sctx_list[0] # XXX HACK!
+			else:
+				node = self._played_node
+				sctx = self._playcontext
+			node.event(timestamp, event)
+			sctx.sched_arcs(node, event, timestamp=timestamp)
 		else:
 			self._played_node.event(timestamp, event, arc.srcanchor)
 			self._playcontext.sched_arc(self._played_node, arc, event, timestamp=timestamp)
@@ -1616,6 +1625,8 @@ class ChannelWindow(Channel):
 			self.window = None
 			self.armed_display = self.played_display = None
 			self.update_display = None
+			if not self._get_parent_channel():
+				self.event((self._attrdict, 'viewportCloseEvent'))
 
 	def resize(self, arg, window, event, value):
 		if debug:
@@ -1997,10 +2008,14 @@ class ChannelWindow(Channel):
 		if not self.window:
 			return
 		fill = MMAttrdefs.getattr(node, 'fill')
+		erase = MMAttrdefs.getattr(node, 'erase')
 		if fill == 'transition':
 			self.window.freeze_content('transition')
 			return 1
 ## Scheduler doesn't support this yet
+##		elif erase == 'never':
+##			self.window.freeze_content('erase')
+##			return 1
 ##		elif fill == 'hold':
 ##			self.window.freeze_content('hold')
 ##			return 1

@@ -303,7 +303,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						self.syntax_error('%s value starting with sign must be offset value' % attr)
 						continue
 				else:
-					list.append(MMNode.MMSyncArc(node, attr, delay=offset))
+					list.append(MMNode.MMSyncArc(node, attr, srcnode='syncbase', delay=offset))
 					if val[0] in '+-' and not boston:
 						boston = 'signed clock value'
 					continue
@@ -382,7 +382,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						for i in range(len(tokens)-1):
 							name = string.join(tokens[:i], '.')
 							event = string.join(tokens[i:], '.')
-							if self.__nodemap.has_key(name):
+							if self.__ids.has_key(name):
 								nlist.append((name, event))
 						if len(nlist) == 1:
 							name, event = nlist[0]
@@ -399,15 +399,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						if not name:
 							self.syntax_error('invalid name')
 							continue
+					xanchor = xchan = None
 					xnode = self.__nodemap.get(name)
-					xanchor = None
 					if xnode is None:
 						xanchor = self.__anchormap.get(name)
 						if xanchor is None:
-							self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
-							continue
-						xnode, xanchor = xanchor
-				list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode,srcanchor=xanchor,event=event,delay=offset or 0))
+							xchan = self.__context.channeldict.get(name)
+							if xchan is None:
+								self.warning('ignoring sync arc from unknown node %s to %s' % (name, node.attrdict.get('name','<unnamed>')))
+								continue
+						else:
+							xnode, xanchor = xanchor
+				list.append(MMNode.MMSyncArc(node, attr, srcnode=xnode,srcanchor=xanchor,channel=xchan,event=event,delay=offset or 0))
 				continue
 		if boston:
 			if self.__context.attributes.get('project_boston') == 0:
@@ -1562,7 +1565,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			node.targetnode = targetnode
 		elif targetid:
 			node.__targetid = targetid
-			self.__animatenodes.append(node)
+			self.__animatenodes.append((node, self.lineno))
 
 		# add to context an internal channel for this node
 		self.__context.addinternalchannels( [(chname, node.attrdict), ] )
@@ -1918,15 +1921,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__tops[top]['height'] = 480
 		layout['winsize'] = self.__tops[top]['width'], self.__tops[top]['height']
 		layout['units'] = UNIT_PXL
-		close = self.__tops[top].get('close')
-		# for the root-layout element, this attribute may be None.
-		if close == None:
-			close = 'never'
+		# for the root-layout element, this attribute may be undefined
+		close = self.__tops[top].get('close', 'never')
 		layout['close'] = close
-		open = self.__tops[top].get('open')
-		# for the root-layout element, this attribute may be None.
-		if open == None:
-			open = 'always'
+		# for the root-layout element, this attribute may be undefined
+		open = self.__tops[top].get('open', 'always')
 		layout['open'] = open
 
 	def FixBaseWindow(self):
@@ -2305,12 +2304,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		del node.__anchorlist
 
 	def FixAnimateTargets(self):
-		for node in self.__animatenodes:
+		for node, lineno in self.__animatenodes:
 			targetid = node.__targetid
+			del node.__targetid
 			if self.__nodemap.has_key(targetid):
 				targetnode = self.__nodemap[targetid]
 				node.targetnode = targetnode
-				del node.__targetid
+			else:
+				self.warning("unknown targetElement `%s'" % targetid, lineno)
 		del self.__animatenodes
 
 	def FixRegpoints(self):
