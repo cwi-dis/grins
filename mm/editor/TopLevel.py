@@ -147,6 +147,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			if ret == 0: # yes
 				# accept the errors automatically fixed by GRiNS
 				context.setParseErrors(None)
+				self.changed = 1
 			elif ret == 1: # no
 				# default treatment: accept errors and don't allow to edit another view
 				pass
