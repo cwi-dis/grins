@@ -842,26 +842,26 @@ class EffectiveAnimator:
 
 		chan = self.__chan
 		mmchan = self.__node.GetChannel()
-		mmlchan = mmchan.GetLayoutChannel()
-		scale = mmlchan.getCssRawAttr('scale',1)
+		region = mmchan.GetLayoutChannel()
+		cssregion = self.getCssObj(region)
+
+		scale = cssregion.getScale()
 
 		if self.__attr == 'position':
-			resolver = self.__context.getPrimaryCssResolver() # XXX temp
-			region = self.__node.getSubRegCssId()
-			resolver.link(region, mmlchan.getCssId())
-			region.move(value)
-			coords = region.getPxGeom()
-			resolver.unlink(region)
+			csssubregion = self.getCssObj(self.__node)
+			csssubregion.link(cssregion)
+			csssubregion.move(value)
+			coords = csssubregion.getPxGeom()
+			csssubregion.unlink()
 			if chan.window:
 				chan.window.updatecoordinates(coords, UNIT_PXL, scale)
 
 		elif self.__attr in ('left','top','width','height','right','bottom'):
-			resolver = self.__context.getPrimaryCssResolver() # XXX temp
-			region = self.__node.getSubRegCssId()
-			resolver.link(region, mmlchan.getCssId())
-			region.changeRawAttr(self.__attr, value)
-			coords = region.getPxGeom()
-			resolver.unlink(region)
+			csssubregion = self.getCssObj(self.__node)
+			csssubregion.link(cssregion)
+			csssubregion.changeRawAttr(self.__attr, value)
+			coords = csssubregion.getPxGeom()
+			csssubregion.unlink()
 			if chan.window:
 				chan.window.updatecoordinates(coords, UNIT_PXL, scale)
 		
@@ -901,7 +901,7 @@ class AnimateContext:
 		self._effAnimators = {}
 		self._id2key = {}
 		self._mmtree = MMNode.MMChannelTree(player.context)
-		self._cssResolver = self._mmtree.toCssResolver()
+		self._cssResolver = self._mmtree.newCssResolver()
 
 	def getEffectiveAnimator(self, targnode, targattr, domval):
 		key = "n%d-%s" % (id(targnode), targattr)
@@ -923,11 +923,6 @@ class AnimateContext:
 	
 	def getCssResolver(self):
 		return self._cssResolver
-
-	# temporary
-	# until we complete work with animation instance
-	def getPrimaryCssResolver(self):
-		return self._player.cssResolver
 
 ###########################
 # Gen impl. rem:
