@@ -169,7 +169,6 @@ class MediaChannel:
 			self.__channel.playdone(0)
 		return 1
 
-					
 	def pauseit(self, paused):
 		if self.__playBuilder:
 			if paused:
@@ -198,45 +197,9 @@ class MediaChannel:
 		print 'setsoundlevel', lev
 		pass
 
-		
 	# Set Window Media window size from scale and center, and coordinates attributes
 	def adjustMediaWnd(self,node,window,builder):
 		if not window: return
-#		left,top,width,height=builder.GetWindowPosition()
-#		left,top,right,bottom = window.GetClientRect()
-#		x,y,w,h=left,top,right-left,bottom-top
-#		if coordinates is not None:
-#			left,top,width,height = window._convert_coordinates(coordinates)
-#			x,y,w,h = left,top,width,height
-		# node attributes
-#		import MMAttrdefs
-#		scale = MMAttrdefs.getattr(node, 'scale')
-#		center = MMAttrdefs.getattr(node, 'center')
-
-#		if scale > 0:
-#			width = int(width * scale)
-#			height = int(height * scale)
-#			if width>w or height>h:
-#				wscale=float(w)/width
-#				hscale=float(h)/height
-#				scale=min(wscale,hscale)
-#				width = min(int(width * scale), w)
-#				height = min(int(height * scale), h)
-#				center=1	
-#			if center:
-#				x = x + (w - width) / 2
-#				y = y + (h - height) / 2
-#		else:
-			# fit in window
-#			wscale=float(w)/width
-#			hscale=float(h)/height
-#			scale=min(wscale,hscale)
-#			width = min(int(width * scale), w)
-#			height = min(int(height * scale), h)
-#			x = x + (w - width) / 2
-#			y = y + (h - height) / 2
-
-#		rcMediaWnd=(x, y, width,height)
 		builder.SetWindowPosition(self.__channel.getMediaWndRect())
 
 	def paint(self):
@@ -267,18 +230,7 @@ class MediaChannel:
 		# self.play_loop is 0 so repeat
 		self.__playBuilder.SetPosition(0)
 		self.__playBuilder.Run()
-
 		
-	############################################################## 
-	# ui delays management:
-	# What the following methods implement is a safe
-	# way to dedect media end (by polling). 
-	# The notification mechanism through OnGraphNotify should 
-	# be enough but it is not since when the app enters a modal loop 
-	# (which happens for example when we manipulate menus etc)
-	# the notification for some unknown reason does not reach the window.
-	# Needed until we have a simpler safe way to dedect media end.
-	# A static way is not sufficient since we don't know the delays.
 	def onIdle(self):
 		if self.__playBuilder and not self.__playdone:
 			t_sec=self.__playBuilder.GetPosition()
