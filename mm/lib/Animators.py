@@ -196,6 +196,9 @@ class Animator:
 	def isAdditive(self):
 		return self._additive=='sum'
 
+	def isAccumulating(self):
+		return self._accumulate=='sum'
+
 	def addCurrValue(self, v):
 		return self.addValues(v, self._curvalue)
 
@@ -699,12 +702,12 @@ class EffectiveAnimator:
 		if not self.__chan:
 			self.__chan = targChan
 
-	def onAnimateEnd(self, targChan, animator):
+	def onAnimateEnd(self, targChan, animator, update=1):
 		self.__animators.remove(animator)
 		if debug: print 'removing animator',animator
 		if not self.__animators:		
 			self.__lastanimator = animator
-		self.update(targChan)
+		if update: self.update(targChan)
 		self.__lastanimator = None
 
 	# compute and apply animations composite effect
@@ -950,10 +953,12 @@ class AnimateContext:
 		self._id2key = {}
 		self._mmtree = MMNode.MMChannelTree(player.context)
 		self._cssResolver = self._mmtree.newCssResolver()
-		self._loopcount = {}
 	
-	def __del__(self):
-		print '~AnimateContext'
+	def reset(self):
+		del self._id2key
+		del self._effAnimators
+		self._effAnimators = {}
+		self._id2key = {}
 
 	def getEffectiveAnimator(self, targnode, targattr, domval):
 		key = "n%d-%s" % (id(targnode), targattr)
