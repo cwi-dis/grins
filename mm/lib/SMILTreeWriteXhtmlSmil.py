@@ -241,23 +241,8 @@ class SMILXhtmlSmilWriter(SMIL):
 		self.push()
 		
 		# body contents
-		if len(self.top_levels) > 1:
-			for viewport in self.top_levels:
-				style = self.getViewportStyle(viewport)
-				name = self.ch2name[viewport]
-				self.writetag('div', [('id',name), ('style', style),])
-				self.push()
-				self.pop()			
-			self.writenode(self.root, root = 1)
-		else:
-			viewport = self.top_levels[0]
-			style = self.getViewportStyle(viewport)
-			name = self.ch2name[viewport]
-			self.writetag('div', [('id',name), ('style', style),])
-			self.push()
-			self.currLayout = [viewport]			
-			self.writenode(self.root, root = 1)
-			self.pop()			
+		self.writeToplayout()
+		self.writenode(self.root, root = 1)
 		self.close()
 
 	def push(self):
@@ -317,6 +302,29 @@ class SMILXhtmlSmilWriter(SMIL):
 				write('>\n')
 			self.__isopen = 0
 			del self.__stack[-1]
+
+	def pushviewport(self, viewport):
+		style = self.getViewportStyle(viewport)
+		name = self.ch2name[viewport]
+		self.writetag('div', [('id',name), ('style', style),])
+		self.push()
+		self.currLayout = [viewport]
+				
+	def popviewport(self):
+		self.pop()
+		self.currLayout = []
+
+	def writeToplayout(self):
+		hasSingleTopLayout  = (len(self.top_levels) == 1)
+		style = self.getLayoutStyle()
+		self.writetag('div', [('id','xhtml_smil_export'), ('style', style),])
+		self.push()
+		if hasSingleTopLayout:
+			self.pushviewport(self.top_levels[0])
+		else:
+			for v in self.top_levels:
+				self.pushviewport(v)
+				self.popviewport()
 
 	def issensitive(self, node):
 		return node in self.sensitivityList
@@ -504,9 +512,8 @@ class SMILXhtmlSmilWriter(SMIL):
 		pushed, inpar, pardur, regionid = 0, 0, None, ''
 		
 		# write media node layout
-		if mtype != 'audio':
-			pushed, inpar, pardur, regionid  = \
-				self.writeMediaNodeLayout(node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill)
+		pushed, inpar, pardur, regionid  = \
+			self.writeMediaNodeLayout(node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill)
 
 		# apply subregion's style
 		self.applySubregionStyle(node, nodeid, attrlist, mtype)
@@ -592,18 +599,28 @@ class SMILXhtmlSmilWriter(SMIL):
 	def writeMediaNodeLayout(self, node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill):
 		pushed, inpar, pardur, regionid = 0, 0, None, ''
 		
+		# optional: ignore smil layout for audio
+		if mtype == 'audio':
+			return pushed, inpar, pardur, regionid
+
 		lch = node.GetChannel().GetLayoutChannel()
 		path = self.getRegionPath(lch)
 		if not path:
-			print 'failed to get region path for', regionName
+			print 'error: failed to get region path for', regionName
 			return pushed, inpar, pardur, regionid
 
 		# region (div) attr list
 		divlist = []
-		lch = path[len(path)-1]
+
+		currViewport, currRegion = path[0], path[len(path)-1]
+		prevViewport, prevRegion = None, None
+		if self.currLayout:
+			n = len(self.currLayout)
+			prevViewport = self.currLayout[0]
+			prevRegion = self.currLayout[n-1]
 
 		# find/compose/set region id
-		name = self.ch2name[lch]
+		name = self.ch2name[currRegion]
 		if self.ids_written.get(name):
 			self.ids_written[name] = self.ids_written[name] + 1
 			regionid = name + '%d' % self.ids_written[name]
@@ -613,11 +630,12 @@ class SMILXhtmlSmilWriter(SMIL):
 		divlist.append(('id', regionid))
 
 		# apply region style and fill attribute
-		currRegion = None
+		prevRegion = None
 		if self.currLayout:
 			n = len(self.currLayout)
-			currRegion = self.currLayout[n-1]
-		regstyle = self.getRegionStyle(lch, node, currRegion == lch)
+			prevRegion = self.currLayout[n-1]
+		forceTransparent = (prevRegion == currRegion or mtype == 'audio')
+		regstyle = self.getRegionStyle(lch, node, forceTransparent)
 		if regstyle is not None:
 			divlist.append(('style', regstyle))
 		divlist.append(('class', 'time'))
@@ -650,7 +668,7 @@ class SMILXhtmlSmilWriter(SMIL):
 				timing_spec = timing_spec + 1
 		
 		# when div has timing extent it to a time container
-		if timing_spec > 0:
+		if timing_spec > 0 or self.hasTimeChildren(node):
 			divlist.append( ('timeContainer', 'par'))
 			inpar = 1
 			
@@ -1015,10 +1033,22 @@ class SMILXhtmlSmilWriter(SMIL):
 			self.writeEmptyRegion(region)
 		self.writetag('t:'+tag, attrlist)
 	
+	def getLayoutStyle(self):
+		x, y = 20, 20
+		xmargin, ymargin = 20, 20
+		v = self.top_levels[0]
+		tw, th = v.getPxGeom()
+		for v in self.top_levels[1:]:
+			tw = tw + xmargin
+			w, h = v.getPxGeom()
+			tw = tw + w
+		style = 'position:absolute;overflow:hidden;left:%d;top:%d;width:%d;height:%d;' % (x, y, tw, th)
+		return style
+			
 	def getViewportOffset(self, viewport):
-		x = xmargin = 20
-		y = ymargin = 20
-		viewports = self.root.GetContext().getviewports()
+		x, y = 0, 0
+		xmargin, ymargin = 20, 20
+		viewports = self.top_levels
 		try:
 			index = viewports.index(viewport)
 		except:
