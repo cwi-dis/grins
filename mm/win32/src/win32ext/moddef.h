@@ -135,9 +135,6 @@ void init##module()\
   Py_XDECREF(copyright);\
 }
 
-#include <fstream.h>
-#define AfxMessageLog(str){ofstream ofs("log.txt",ios::app);if(ofs) ofs << str << endl;ofs.close();}
-
 inline bool IsFile(LPCTSTR pstrName,CString& strNewName)
 	{
 	CFileFind finder;
