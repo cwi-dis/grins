@@ -331,21 +331,25 @@ class reader:
 		return self.__markers
 
 class writer:
-	__formats = (linear_8_mono_signed,
-		     linear_16_mono_big,
-		     linear_8_stereo_signed,
-		     linear_16_stereo_big,
-		     ulaw_mono,
-		     ulaw_stereo)
+	__aiff_formats = (linear_8_mono_signed,
+			  linear_16_mono_big,
+			  linear_8_stereo_signed,
+			  linear_16_stereo_big)
+	__aifc_formats = (ulaw_mono,
+			  ulaw_stereo)
+	__formats = __aiff_formats + __aifc_formats
 
 	__rates = None
 
-	def __init__(self, filename, fmt = None, rate = None):
+	def __init__(self, filename, fmt = None, rate = None, aifc = 1):
 		self.__format = None
 		self.__framerate = None
 		self.__initialized = 0
 		self.__filename = filename # only needed for __repr__
 		self.__file = open(filename, 'wb')
+		self.__aifc = aifc
+		if not aifc:
+			self.__formats = self.__aiff_formats
 		if fmt:
 			self.setformat(fmt)
 		if rate:
@@ -395,7 +399,7 @@ class writer:
 		file = self.__file
 		fmt = self.__format
 		datalength = self.__length
-		if self.__length & 1:
+		if datalength & 1:
 			file.write('\000')
 			datalength = datalength + 1
 		file.seek(self.__form_length_pos)
@@ -405,42 +409,60 @@ class writer:
 		file.seek(self.__ssnd_length_pos)
 		_write_long(file, datalength + 8)
 		file.close()
+		del self.__file
+		self.__initialized = 0
 
 	def __init(self):
 		if not self.__format or not self.__framerate:
 			raise Error, 'no format or frame rate specified'
+		import StringIO
 		file = self.__file
 		fmt = self.__format
 		file.write('FORM')
 		self.__form_length_pos = file.tell()
-		_write_long(file, 0)
-		file.write('AIFC')				# 4
-		file.write('FVER')				# 4
-		_write_long(file, 4)				# 4
-		_write_long(file, _AIFC_VERSION)		# 4
-		file.write('COMM')				# 4
-		_write_long(file, 38)				# 4
-		_write_short(file, fmt.getnchannels())# 2
-		self.__nframes_pos = file.tell()
-		_write_long(file, 0)				# 4
-		_write_short(file, fmt.getbps())	# 2
-		_write_float(file, self.__framerate)		# 10
-		encoding = fmt.getencoding()
-		if encoding == 'linear':
-			file.write('NONE')			# 4
-			_write_string(file, 'Not compressed')	# 16
-			self.__headersize = 62
-		elif encoding == 'u-law':
-			file.write('ULAW')			# 4
-			_write_string(file, 'u-law compressed')	# 18
-			self.__headersize = 64
+		_write_long(file, 0)	# to be filled in later
+		self.__headersize = 0
+		if self.__aifc:
+			file.write('AIFC')
+			file.write('FVER')
+			_write_long(file, 4)
+			_write_long(file, _AIFC_VERSION)
+			self.__headersize = self.__headersize + 16
 		else:
-			raise Error, 'internal error'
+			file.write('AIFF')
+			self.__headersize = self.__headersize + 4
+		file.write('COMM')
+		# measure size of COMM chunk
+		comm = StringIO.StringIO()
+		encoding = fmt.getencoding()
+		if encoding[:6] == 'linear':
+			bps = fmt.getbps()
+		else:
+			bps = 8
+		_write_short(comm, bps)
+		_write_float(comm, self.__framerate)
+		if self.__aifc:
+			if encoding[:6] == 'linear':
+				comm.write('NONE')
+				_write_string(comm, 'Not compressed')
+			elif encoding == 'u-law':
+				comm.write('ULAW')
+				_write_string(comm, 'u-law compressed')
+			else:
+				raise Error, 'internal error'
+		data = comm.getvalue()
+		comm.close()
+		_write_long(file, len(data) + 6)
+		_write_short(file, fmt.getnchannels())
+		self.__nframes_pos = file.tell()
+		_write_long(file, 0)
+		file.write(data)	# write measured COMM chunk
+		self.__headersize = self.__headersize + 14 + len(data)
 		# the rest doesn't count as "headersize"
-		file.write('SSND')				# 4
+		file.write('SSND')
 		self.__ssnd_length_pos = file.tell()
-		_write_long(file, 8)				# 4
-		_write_long(file, 0)				# 4
-		_write_long(file, 0)				# 4
+		_write_long(file, 8)
+		_write_long(file, 0)
+		_write_long(file, 0)
 		self.__length = 0
 		self.__initialized = 1
