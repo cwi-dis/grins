@@ -297,6 +297,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.mkviewportcommandlist()
 		self.mknositemcommandlist()
 		self.mkmultisitemcommandlist()
+		self.mkmultisiblingsitemcommandlist()
 		
 		# dictionary of widgets used in this view
 		# basicly, this view is composed of 
@@ -369,6 +370,25 @@ class LayoutView2(LayoutViewDialog2):
 				]
 		else:
 			self.commandMultiSItemList = []		
+
+	def mkmultisiblingsitemcommandlist(self):
+		if features.CUSTOM_REGIONS in features.feature_set:
+			self.commandMultiSiblingSItemList = [
+				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
+				]
+		else:
+			self.commandMultiSiblingSItemList = []
+		self.__appendAlignCommands()
+
+	def __appendAlignCommands(self):
+		self.commandMultiSiblingSItemList.append(ALIGN_LEFT(callback = (self.onAlignLeft, ())))
+		self.commandMultiSiblingSItemList.append(ALIGN_CENTER(callback = (self.onAlignCenter, ())))
+		self.commandMultiSiblingSItemList.append(ALIGN_RIGHT(callback = (self.onAlignRight, ())))
+		self.commandMultiSiblingSItemList.append(ALIGN_TOP(callback = (self.onAlignTop, ())))
+		self.commandMultiSiblingSItemList.append(ALIGN_MIDDLE(callback = (self.onAlignMiddle, ())))
+		self.commandMultiSiblingSItemList.append(ALIGN_BOTTOM(callback = (self.onAlignBottom, ())))
+		self.commandMultiSiblingSItemList.append(DISTRIBUTE_HORIZONTALLY(callback = (self.onDistributeHorizontally, ())))
+		self.commandMultiSiblingSItemList.append(DISTRIBUTE_VERTICALLY(callback = (self.onDistributeVertically, ())))
 		
 	def show(self):
 		if self.is_showing():
@@ -512,12 +532,23 @@ class LayoutView2(LayoutViewDialog2):
 
 	def focusOnList(self, focusobject):
 		# update command list
-		self.setcommandlist(self.commandMultiSItemList)
 
+		areSibling = 1
+		
 		list = []
+		previousObject = None
 		for type, object in focusobject:
 			list.append(object)
-			
+			if areSibling:
+				if previousObject != None and not self.areSibling(previousObject, object):
+					areSibling = 0
+			previousObject = object
+
+		if areSibling:
+			self.setcommandlist(self.commandMultiSiblingSItemList)
+		else:
+			self.setcommandlist(self.commandMultiSItemList)
+		
 		# update widgets
 		for id, widget in self.widgetList.items():
 			widget.selectNodeList(list)
@@ -680,6 +711,13 @@ class LayoutView2(LayoutViewDialog2):
 	def getNodeType(self, nodeRef):
 		return self.treeHelper.getNodeType(nodeRef)
 
+	def areSibling(self, nodeRef1, nodeRef2):
+		parent1 = self.getParentNodeRef(nodeRef1)
+		parent2 = self.getParentNodeRef(nodeRef2)
+		# note exclude viewport
+		return parent1 != None and parent2 != None and \
+			   parent1 is parent2
+		
 	# XXX to optimize, get info from tree helper
 	def getViewportRef(self, nodeRef, nodeType = None):
 		if nodeType == None:
@@ -917,9 +955,37 @@ class LayoutView2(LayoutViewDialog2):
 			self.editmgr.commit('REGION_TREE')
 		
 	#
-	# 
+	# Alignment/Distribute commands
 	#
+	
+	def onAlignLeft(self):
+		pass		
 
+	def onAlignCenter(self):
+		pass		
+
+	def onAlignRight(self):
+		pass		
+
+	def onAlignTop(self):
+		pass		
+
+	def onAlignMiddle(self):
+		pass		
+
+	def onAlignBottom(self):
+		pass		
+
+	def onDistributeHorizontally(self):
+		pass
+
+	def onDistributeVertically(self):
+		pass
+	
+	#
+	#
+	#
+	
 	def onEditProperties(self):
 		if self.currentNodeRefSelected != None:
 			self.editProperties(self.currentNodeRefSelected)
