@@ -84,7 +84,11 @@ class HierarchyView(ViewDialog, GLDialog):
 
 	def show(self):
 		if self.is_showing():
+			if GLLock.gl_lock:
+				GLLock.gl_lock.acquire()
 			self.setwin()
+			if GLLock.gl_lock:
+				GLLock.gl_lock.release()
 			return
 		GLDialog.show(self)
 		self.initwindow()
@@ -189,10 +193,14 @@ class HierarchyView(ViewDialog, GLDialog):
 	def commit(self):
 		self.cleanup()
 		if self.is_showing():
+			if GLLock.gl_lock:
+				GLLock.gl_lock.acquire()
 			self.setwin()
 			self.fixviewroot()
 			self.recalc()
 			self.draw()
+			if GLLock.gl_lock:
+				GLLock.gl_lock.release()
 
 	def kill(self):
 		self.destroy()
@@ -469,6 +477,8 @@ class HierarchyView(ViewDialog, GLDialog):
 
 	# Select the given object, deselecting the previous focus
 	def setfocusobj(self, obj):
+		if GLLock.gl_lock:
+			GLLock.gl_lock.acquire()
 		self.setwin()
 		gl.frontbuffer(1)
 		if self.focusobj:
@@ -481,6 +491,8 @@ class HierarchyView(ViewDialog, GLDialog):
 			self.focusnode = None
 			self.focusobj = None
 		gl.frontbuffer(0)
+		if GLLock.gl_lock:
+			GLLock.gl_lock.release()
 
 	# Select the given node as focus, possibly zooming around
 	def setfocusnode(self, node):
@@ -500,8 +512,12 @@ class HierarchyView(ViewDialog, GLDialog):
 			self.recalc()
 			if self.focusnode is node:
 				break
+		if GLLock.gl_lock:
+			GLLock.gl_lock.acquire()
 		self.setwin()
 		self.draw()
+		if GLLock.gl_lock:
+			GLLock.gl_lock.release()
 
 	# Recalculate the set of objects
 	def recalc(self):
