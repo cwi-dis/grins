@@ -17,6 +17,7 @@ default_settings = {
 	'license': '',
 	'cmif': 0,			# Show cmif-only attributes
 	'checkext': 1,			# Guess Mime type based on extension
+	'vertical_structure': 1,	# Orientation of Structure View
 }
 
 user_settings = {}
