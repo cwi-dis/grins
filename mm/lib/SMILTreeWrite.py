@@ -363,7 +363,7 @@ cmif_node_attrs_ignore = [
 cmif_chan_attrs_ignore = [
 	'type', 'id', 'title', 'base_window', 'base_winoff', 'z', 'scale',
 	'transparent', 'bgcolor', 'winpos', 'winsize', 'rect', 'center',
-	'drawbox',
+	'drawbox', 'units',
 	]
 
 # Mapping from CMIF channel types to smil media types
@@ -687,7 +687,8 @@ class SMILWriter(SMIL):
 					attrlist.append(('height', '%d' % int(h + .5)))
 			self.writetag('root-layout', attrlist)
 		for ch in channels:
-			dummy = mediatype(ch['type'], error=1)
+			mtype = mediatype(ch['type'], error=1)
+			isvisual = mtype in ('image', 'video', 'text')
 			if len(self.top_levels) == 1 and \
 			   ch['type'] == 'layout' and \
 			   not ch.has_key('base_window'):
@@ -736,11 +737,11 @@ class SMILWriter(SMIL):
 			if bgcolor is not None:
 				attrlist.append(('background-color', "#%02x%02x%02x" % bgcolor))
 			transparent = ch.get('transparent', 0)
-			if transparent == (bgcolor is not None):
+			if isvisual and transparent == (bgcolor is not None):
 				attrlist.append(('%s:transparent' % NSprefix, `transparent`))
-			if ch.get('center', 1):
+			if isvisual and ch.get('center', 1):
 				attrlist.append(('%s:center' % NSprefix, '1'))
-			if ch.get('drawbox', 1):
+			if isvisual and ch.get('drawbox', 1):
 				attrlist.append(('%s:drawbox' % NSprefix, '1'))
 
 			self.regions_defined[ch] = 1
