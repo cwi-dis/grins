@@ -53,9 +53,8 @@ class MMNodeContext:
 		self.root = None
 		self.toplevel = None	# This is set in TopLevel.read_it()
 		self.__channeltree = None
-		if settings.activeFullSmilCss:
-			from SMILCssResolver import SMILCssResolver
-			self.cssResolver = SMILCssResolver(self)
+		from SMILCssResolver import SMILCssResolver
+		self.cssResolver = SMILCssResolver(self)
 
 	def destroy(self):
 		# Well, I can cheat..
@@ -331,14 +330,9 @@ class MMNodeContext:
 			raise CheckError, 'copychannel: invalid position'
 		if not orig in self.channelnames:
 			raise CheckError, 'copychannel: non-existing original'
-		if settings.activeFullSmilCss:
-			orig_i = self.channelnames.index(orig)
-			orig_ch = self.channels[orig_i]
-			c = MMChannel(self, name, orig_ch.get('type'))
-		else:
-			c = MMChannel(self, name)
-			orig_i = self.channelnames.index(orig)
-			orig_ch = self.channels[orig_i]
+		orig_i = self.channelnames.index(orig)
+		orig_ch = self.channels[orig_i]
+		c = MMChannel(self, name, orig_ch.get('type'))
 		for attr in orig_ch.keys():
 			c[attr] = eval(repr(orig_ch[attr]))
 		self.channeldict[name] = c
@@ -739,14 +733,13 @@ class MMChannel:
 		self.attrdict = {'type':type}
 		self.d_attrdict = {}
 		self.views = {}
-		if settings.activeFullSmilCss:
-			self._cssId = None
-			if type == 'layout':
-				# by default it's a viewport
-				self._cssId = self.newCssId(1)
-				# allow to maintains the compatibility with old version
-				# this flag shouldn't be accessible in the future
-				self.attrdict['base_winoff'] = (0, 0, 100, 100)
+		self._cssId = None
+		if type == 'layout':
+			# by default it's a viewport
+			self._cssId = self.newCssId(1)
+			# allow to maintains the compatibility with old version
+			# this flag shouldn't be accessible in the future
+			self.attrdict['base_winoff'] = (0, 0, 100, 100)
 
 	def __repr__(self):
 		return '<%s instance, name=%s>' % (self.__class__.__name__, `self.name`)
@@ -771,9 +764,8 @@ class MMChannel:
 		self.name = name
 
 	def _destroy(self):
-		if settings.activeFullSmilCss:
-			if self.attrdict.get('type') == 'layout':
-				self.context.cssResolver.unlink(self._cssId)
+		if self.attrdict.get('type') == 'layout':
+			self.context.cssResolver.unlink(self._cssId)
 		self.context = None
 
 	def stillvalid(self):
@@ -828,21 +820,15 @@ class MMChannel:
 			self.d_attrdict['base_winoff'] = value
 
 	def GetPresentationAttr(self, name, node=None):
-		if settings.activeFullSmilCss:
-			if self.d_attrdict.has_key(name):
-				return self.d_attrdict[name]
-			elif name == 'base_winoff':
-				if node:
-					return node.getPxGeomMedia()[1]
-				else:
-					return self.getPxGeom()
+		if self.d_attrdict.has_key(name):
+			return self.d_attrdict[name]
+		elif name == 'base_winoff':
+			if node:
+				return node.getPxGeomMedia()[1]
 			else:
-				return self.__getitem__(name)
+				return self.getPxGeom()
 		else:
-			if self.d_attrdict.has_key(name):
-				return self.d_attrdict[name]
-			else:
-				return self.attrdict[name]
+			return self.__getitem__(name)
 				
 	def setvisiblechannelattrs(self, type):
 		from windowinterface import UNIT_PXL
@@ -872,20 +858,12 @@ class MMChannel:
 		if self.attrdict.has_key(key):
 			return self.attrdict[key]
 		else:
-			# special case for background color
-#			if key == 'bgcolor' and \
-#			   self.attrdict.has_key('base_window') and \
-#			   self.attrdict.get('transparent', 0) <= 0:
-#				pname = self.attrdict['base_window']
-#				pchan = self.context.channeldict[pname]
-#				return pchan['bgcolor']
-			if settings.activeFullSmilCss:
-				if key == 'base_winoff':
-					# keep the compatibility with old version
-					return self.getPxGeom()
-				elif self.isCssAttr(key):
-					# keep the compatibility with old version
-					return self.getCssAttr(key)
+			if key == 'base_winoff':
+				# keep the compatibility with old version
+				return self.getPxGeom()
+			elif self.isCssAttr(key):
+				# keep the compatibility with old version
+				return self.getCssAttr(key)
 
 			raise KeyError, key
 
@@ -895,55 +873,53 @@ class MMChannel:
 			if ChannelMap.isvisiblechannel(value) and (not self.attrdict.has_key(key) or not ChannelMap.isvisiblechannel(self.attrdict[key])):
 				self.setvisiblechannelattrs(value)
 		elif key == 'base_window':
-			if settings.activeFullSmilCss:
-				if self.attrdict.get('type') == 'layout':
-					if self.attrdict.has_key('base_window'):
-						del self['base_window']
-						wantNewEditBg = 0
-					else:
-						# if it's the first parent which is set, we assume it's the new region
-						# the default edit background is determinated according to its parent
-						wantNewEditBg = 1
+			if self.attrdict.get('type') == 'layout':
+				if self.attrdict.has_key('base_window'):
+					del self['base_window']
+					wantNewEditBg = 0
+				else:
+					# if it's the first parent which is set, we assume it's the new region
+					# the default edit background is determinated according to its parent
+					wantNewEditBg = 1
 						
-					# Base_window is set. So, it's not a viewport
-					# reset css node with the right type
-					self.newCssId(0)
+				# Base_window is set. So, it's not a viewport
+				# reset css node with the right type
+				self.newCssId(0)
 					
-					pchan = self.context.channeldict.get(value)
-					if pchan is None:
-						print 'Error: The parent channel '+self.name+' have to be created before to set base_window'
+				pchan = self.context.channeldict.get(value)
+				if pchan is None:
+					print 'Error: The parent channel '+self.name+' have to be created before to set base_window'
+				else:
+					self.context.cssResolver.link(self._cssId, pchan._cssId)
+
+				# experimental algorithm to define a default edit bg color
+				if wantNewEditBg:
+					if pchan.get('showEditBackground') == 1:
+						self.attrdict['showEditBackground'] = 1
+
+					parentBg = pchan.attrdict.get('editBackground')
+					if parentBg is None:
+						parentBg = 20, 20, 20
+					parentR, parentG, parentB = parentBg
+					# make the new color a little lighter
+					if parentR < 230:
+						r = parentR+20
 					else:
-						self.context.cssResolver.link(self._cssId, pchan._cssId)
-
-					# experimental algorithm to define a default edit bg color
-					if wantNewEditBg:
-						if pchan.get('showEditBackground') == 1:
-							self.attrdict['showEditBackground'] = 1
-
-						parentBg = pchan.attrdict.get('editBackground')
-						if parentBg is None:
-							parentBg = 20, 20, 20
-						parentR, parentG, parentB = parentBg
-						# make the new color a little lighter
-						if parentR < 230:
-							r = parentR+20
-						else:
-							r = 20
-						if parentG < 230:
-							g = parentG+20
-						else:
-							g = 20
-						if parentB < 230:
-							b = parentB+20
-						else:
-							b = 20
-						self.attrdict['editBackground'] = r,g,b
+						r = 20
+					if parentG < 230:
+						g = parentG+20
+					else:
+						g = 20
+					if parentB < 230:
+						b = parentB+20
+					else:
+						b = 20
+					self.attrdict['editBackground'] = r,g,b
 						
 		elif key == 'base_winoff':
-			if settings.activeFullSmilCss:
-				# keep the compatibility with old version
-				self.setPxGeom(value)
-				return
+			# keep the compatibility with old version
+			self.setPxGeom(value)
+			return
 		elif self.isCssAttr(key):
 			self.setCssAttr(key, value)
 			
@@ -951,10 +927,9 @@ class MMChannel:
 
 	def __delitem__(self, key):
 		del self.attrdict[key]
-		if settings.activeFullSmilCss:
-			if key == 'base_window':
-				if self.attrdict.get('type') == 'layout':
-						self.context.cssResolver.unlink(self._cssId)
+		if key == 'base_window':
+			if self.attrdict.get('type') == 'layout':
+					self.context.cssResolver.unlink(self._cssId)
 
 	def has_key(self, key):
 		return self.attrdict.has_key(key)
@@ -967,8 +942,7 @@ class MMChannel:
 
 	def get(self, key, default = None):
 		if key == 'base_winoff':
-			if settings.activeFullSmilCss:
-				return self.getPxGeom()
+			return self.getPxGeom()
 		if self.attrdict.has_key(key):
 			return self.attrdict[key]
 #		if key == 'bgcolor' and \
@@ -1022,10 +996,9 @@ class MMChannel:
 	def GetAttr(self, name, animated=0):
 		if animated and self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
-		if settings.activeFullSmilCss:
-			# only for css positioning attributes
-			if self.isCssAttr(name):
-				return self.getCssAttr(name)
+		# only for css positioning attributes
+		if self.isCssAttr(name):
+			return self.getCssAttr(name)
 		if self.attrdict.has_key(name):
 			return self.attrdict[name]
 		raise NoSuchAttrError, 'in GetAttr'
@@ -1033,10 +1006,9 @@ class MMChannel:
 	def GetAttrDef(self, name, default, animated=0):
 		if animated and self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
-		if settings.activeFullSmilCss:
-			# only for css postioning attributes
-			if self.isCssAttr(name):
-				return self.getCssAttr(name)
+		# only for css postioning attributes
+		if self.isCssAttr(name):
+			return self.getCssAttr(name)
 		return self.attrdict.get(name, default)
 
 # MMChannel tree class
@@ -1727,10 +1699,9 @@ class MMNode:
 		self.collapsed = 0	# Whether this node is collapsed in the structure view.
 		self.timing_info_dict = {}
 
-		if settings.activeFullSmilCss:
-			self._subRegCssId = self.newSubRegCssId()
-			self._mediaCssId = self.newMediaCssId()
-			self._subRegCssId.media = self._mediaCssId
+		self._subRegCssId = self.newSubRegCssId()
+		self._mediaCssId = self.newMediaCssId()
+		self._subRegCssId.media = self._mediaCssId
 
 		self.computedMimeType = None
 		self.channelType = None
@@ -2434,10 +2405,9 @@ class MMNode:
 	def GetRawAttr(self, name, animated=0):
 		if animated and self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
-		if settings.activeFullSmilCss:
-			# only for css positioning attributes
-			if self.isCssAttr(name):
-				return self.getCssRawAttr(name)
+		# only for css positioning attributes
+		if self.isCssAttr(name):
+			return self.getCssRawAttr(name)
 		if self.attrdict.has_key(name):
 			return self.attrdict[name]
 		raise NoSuchAttrError, 'in GetRawAttr()'
@@ -2445,19 +2415,17 @@ class MMNode:
 	def GetRawAttrDef(self, name, default, animated=0):
 		if animated and self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
-		if settings.activeFullSmilCss:
-			# only for css positioning attributes
-			if self.isCssAttr(name):
-				return self.getCssRawAttr(name)
+		# only for css positioning attributes
+		if self.isCssAttr(name):
+			return self.getCssRawAttr(name)
 		return self.attrdict.get(name, default)
 
 	def GetAttr(self, name, animated=0):
 		if animated and self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
-		if settings.activeFullSmilCss:
-			# only for css positioning attributes
-			if self.isCssAttr(name):
-				return self.getCssAttr(name)
+		# only for css positioning attributes
+		if self.isCssAttr(name):
+			return self.getCssAttr(name)
 		if self.attrdict.has_key(name):
 			return self.attrdict[name]
 		raise NoSuchAttrError, 'in GetAttr'
@@ -2465,10 +2433,9 @@ class MMNode:
 	def GetAttrDef(self, name, default, animated=0):
 		if animated and self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
-		if settings.activeFullSmilCss:
-			# only for css postioning attributes
-			if self.isCssAttr(name):
-				return self.getCssAttr(name)
+		# only for css postioning attributes
+		if self.isCssAttr(name):
+			return self.getCssAttr(name)
 		return self.attrdict.get(name, default)
 
 	def GetInherAttr(self, name, animated=0):
@@ -2908,14 +2875,13 @@ class MMNode:
 		self.values = values
 
 	def SetAttr(self, name, value):
-		if settings.activeFullSmilCss:
-			if name == 'base_winoff':
-				# allow to fix the pixel geometry in the same way as for the regions
-				self.setPxGeom(value)
-				return
-			elif self.isCssAttr(name):
-				self.setCssAttr(name, value)
-				return
+		if name == 'base_winoff':
+			# allow to fix the pixel geometry in the same way as for the regions
+			self.setPxGeom(value)
+			return
+		elif self.isCssAttr(name):
+			self.setCssAttr(name, value)
+			return
 			
 		self.attrdict[name] = value
 		MMAttrdefs.flushcache(self)
