@@ -33,6 +33,7 @@ class SchedulerContext:
 		#self.parent.ui.duration_ind.label = '??:??'
 
 		self.prepare_minidoc(seeknode, end_action)
+		print 'START', self
 		return self
 
 	
@@ -40,9 +41,9 @@ class SchedulerContext:
 	# stop - cleanup SchedulerContext.
 	#
 	def stop(self):
+		self.active = 0
 		unarmallnodes(self.playroot)
 		self.stopcontextchannels()
-		self.active = 0
 		self.srevents = {}
 		self.parent._remove_sctx(self)
 		del self.sractions
@@ -124,7 +125,6 @@ class SchedulerContext:
 			return None
 		ev = chlist[0]
 		del chlist[0]
-		# Not too useful: ev[1].set_armedmode(ARM_SCHEDULED)
 		return ev
 	#
 	# run_initial_prearms schedules the first prearms.
@@ -470,12 +470,12 @@ class Scheduler(scheduler):
 		if len(ev) == 1:
 			ev = ev[0]
 		sctx, ev = ev
-		
-		if ev[0] == SR.PLAY_DONE:
-			ev[1].set_armedmode(ARM_WAITSTOP)
-		elif ev[0] == SR.ARM_DONE:
-			ev[1].set_armedmode(ARM_ARMED)
+
 		if sctx.active:
+			if ev[0] == SR.PLAY_DONE:
+				ev[1].set_armedmode(ARM_WAITSTOP)
+			elif ev[0] == SR.ARM_DONE:
+				ev[1].set_armedmode(ARM_ARMED)
 			sctx.event(ev)
 		self.updatetimer()
 ##	#
@@ -718,6 +718,7 @@ def del_timing(node):
 # Unarm all nodes
 #
 def unarmallnodes(node):
+	#print 'UNARM', MMAttrdefs.getattr(node, 'name')
 	node.set_armedmode(ARM_NONE)
 	children = node.GetChildren()
 	for child in children:
