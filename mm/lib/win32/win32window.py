@@ -972,11 +972,25 @@ class SubWindow(Window):
 		ltrb = newrgn.GetRgnBox()[1]
 		newrgn.DeleteObject()
 		return self.xywh(ltrb)
-
 	
+	def rectAnd(self, rc1, rc2):
+		# until we make calcs
+		rc,ans= win32ui.GetWin32Sdk().IntersectRect(self.ltrb(rc1),self.ltrb(rc2))
+		if ans:
+			return self.xywh(rc)
+		return (0, 0, 0, 0)
+
 	def __paintOnDDS(self, dds, dst, rgn=None):
 		x, y, w, h = dst
 		if w==0 or h==0:
+			return
+		
+		if rgn:
+			xc, yc, wc, hc = self.xywh(rgn.GetRgnBox()[1])
+		else:
+			xc, yc, wc, hc = dst
+
+		if wc==0 or hc==0:
 			return
 
 		hdc = dds.GetDC()
@@ -988,21 +1002,22 @@ class SubWindow(Window):
 		if self._active_displist:
 			if self._video:
 				vdds, vrcDst, vrcSrc = self._video
-				ld, td = vrcDst[:2]
-				wd, hd = vrcDst[2:]
-				if wd!=w or hd!=h: 
-					# need scaling
-					zvdds = self._topwindow.CreateSurface(w,h)
-					zvdds.Blt((0,0,w,h), vdds, vrcSrc, ddraw.DDBLT_WAIT)
+				ld, td, wd, hd = vrcDst
+				ls, ts, ws, hs = vrcSrc
+				if wd!=ws or hd!=hs: 
+					# needs scaling
+					zvdds = self.createDDS(wd, hd)
+					zvdds.Blt((0,0,wd,hd), vdds, vrcSrc, ddraw.DDBLT_WAIT)
 				else: zvdds = vdds
 				zvhdc = zvdds.GetDC()
 				zvdc = win32ui.CreateDCFromHandle(zvhdc)
-				dc.BitBlt((ld,td),(wd,hd),zvdc,(0, 0), win32con.SRCCOPY)
+				dc.BitBlt((ld,td),(wd,hd),zvdc,(ls, ts), win32con.SRCCOPY)
 				zvdc.Detach()
 				zvdds.ReleaseDC(zvhdc)
 			self._active_displist._render(dc,None)
 			if self._showing:
 				win32mu.FrameRect(dc,self._rect,self._showing)
+			# win32mu.FrameRect(dc,self._rect,(255, 0, 0)) # debug
 		elif self._transparent == 0:
 			dc.FillSolidRect(self.ltrb(dst),RGB(self._bgcolor))
 
@@ -1032,20 +1047,36 @@ class SubWindow(Window):
 		if rc_dst[2]!=0 and rc_dst[3]!=0:
 			buf.Blt(self.ltrb(rc_dst), srfc, rc_src, ddraw.DDBLT_WAIT)
 
+	def clearSurface(self, dds):
+		w, h = dds.GetSurfaceDesc().GetSize()
+		if self._convbgcolor == None:
+			if self._bgcolor:
+				r, g, b = self._bgcolor
+			else:
+				r, g, b = 0, 0, 0
+			self._convbgcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
+		dds.BltFill((0, 0, w, h), self._convbgcolor)
+
 	# painting while resizing for fit=='meet'
 	def resizeFitMeet(self):
+		# lie for a moment 
+		# we 'll restore truth before anybody notice it
+		temp = self._rect
+		self._rect = self._orgrect
+
 		# first paint self but on org rect
 		dst = self._orgrect
 		dds = self.createDDS(dst[2],dst[3])
+		self.clearSurface(dds)
 		self.__paintOnDDS(dds, dst)
 
 		# then paint children bottom up relative to us
 		L = self._subwindows[:]
 		L.reverse()
-		temp = self._rect
-		self._rect = self._orgrect
 		for w in L:
 			w.paintOnDDS(dds, self)
+		
+		# restore truth
 		self._rect = temp
 
 		# and scale to current rect
