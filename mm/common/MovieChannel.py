@@ -13,9 +13,9 @@ class MovieChannel(ChannelWindowThread):
 			self.errormsg(node, 'Node must be external')
 			return 1
 		import MMAttrdefs, GLLock, VFile
-		filename = self.getfileurl(node)
-		filename = MMurl.urlretrieve(filename)[0]
+		url = self.getfileurl(node)
 		try:
+			filename = MMurl.urlretrieve(url)[0]
 			vfile = VFile.RandomVinFile(filename)
 		except (EOFError, IOError, VFile.Error), msg:
 			if type(msg) is type(self):
@@ -25,12 +25,12 @@ class MovieChannel(ChannelWindowThread):
 					msg = msg.args[0]
 			elif type(msg) is type(()):
 				msg = msg[1]
-			self.errormsg(node, filename + ':\n' + msg)
+			self.errormsg(node, url + ':\n' + msg)
 			return 1
 		try:
 			vfile.readcache()
 		except VFile.Error:
-			print `filename` + ': no cached index'
+			print `url` + ': no cached index'
 		arminfo = {'width': vfile.width,
 			   'height': vfile.height,
 			   'format': vfile.format,
@@ -49,6 +49,6 @@ class MovieChannel(ChannelWindowThread):
 		except RuntimeError, msg:
 			if type(msg) is type(self):
 				msg = msg.args[0]
-			print 'Bad movie file', `vfile.filename`, msg
+			print 'Bad movie file', `url`, msg
 			return 1
 		return self.syncarm

@@ -20,12 +20,12 @@ class MpegChannel(ChannelWindowThread):
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
-		filename = self.getfileurl(node)
+		url = self.getfileurl(node)
 		try:
-			filename = MMurl.urlretrieve(filename)[0]
+			filename = MMurl.urlretrieve(url)[0]
 			fp = open(filename, 'rb')
 		except IOError, msg:
-			self.errormsg(node, filename + ':\n' + msg[1])
+			self.errormsg(node, url + ':\n' + msg[1])
 			return 1
 		try:
 			import MMAttrdefs, GLLock
@@ -36,7 +36,7 @@ class MpegChannel(ChannelWindowThread):
 		except RuntimeError, msg:
 			if type(msg) is type(self):
 				msg = msg.args[0]
-			print 'Bad mpeg file', `filename`, msg
+			print 'Bad mpeg file', `url`, msg
 			return 1
 
 		self.armed_display.fgcolor(self.getbucolor(node))
