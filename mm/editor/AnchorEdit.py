@@ -192,7 +192,10 @@ class AnchorEditor:
 		self.changed = 0
 		n = self.node
 		old_alist = MMAttrdefs.getattr(self.node, 'anchorlist')
-		em.setnodeattr(n, 'anchorlist', self.anchorlist[:])
+		new_alist = self.anchorlist[:]
+		if not new_alist:
+			new_alist = None
+		em.setnodeattr(n, 'anchorlist', new_alist)
 		for a in self.anchorlist:
 			if not a in old_alist:
 				aid = (self.uid, a[A_ID])
