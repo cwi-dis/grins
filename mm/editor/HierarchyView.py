@@ -189,11 +189,13 @@ class HierarchyView(HierarchyViewDialog):
 			]
 		self.noslidecommands = [
 			INFO(callback = (self.infocall, ())),
-			FINISH_LINK(callback = (self.hyperlinkcall, ())),
 			ANCHORS(callback = (self.anchorcall, ())),
 			CREATEANCHOR(callback = (self.createanchorcall, ())),
 			PLAYNODE(callback = (self.playcall, ())),
 			PLAYFROM(callback = (self.playfromcall, ())),
+			]
+		self.finishlinkcommands = [
+			FINISH_LINK(callback = (self.hyperlinkcall, ())),
 			]
 		self.navigatecommands = [
 			TOPARENT(callback = (self.toparent, ())),
@@ -242,6 +244,8 @@ class HierarchyView(HierarchyViewDialog):
 			popupmenu = self.leaf_popupmenu
 		if fnode.__class__ is not SlideMMNode:
 			commands = commands + self.noslidecommands
+			if self.toplevel.links.has_interesting():
+				commands = commands + self.finishlinkcommands
 			if fntype in MMNode.interiortypes or \
 			   (is_realpix and MMAttrdefs.getattr(fnode, 'file')):
 				commands = commands + self.interiorcommands
