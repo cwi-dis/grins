@@ -256,7 +256,10 @@ class SchedulerContext:
 ##			else:
 ##				prio = 0
 			prio = 0
-			arc.qid = self.parent.enterabs(arc.timestamp, prio, self.trigger, (arc,None,None,arc.timestamp))
+			if arc.isstart and arc.dstnode.playing in (MMStates.PLAYING, MMStates.FROZEN) and arc.dstnode.start_time == arc.timestamp:
+				pass
+			else:
+				arc.qid = self.parent.enterabs(arc.timestamp, prio, self.trigger, (arc,None,None,arc.timestamp))
 			if arc.isstart:
 				arc.dstnode.set_start_time(arc.timestamp, 0)
 				arc.dstnode.depends['begin'].append(arc)
