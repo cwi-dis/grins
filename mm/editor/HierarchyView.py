@@ -27,6 +27,7 @@ import features
 import compatibility
 import Widgets
 from StructureWidgets import *
+import TimeMapper
 
 import settings
 
@@ -487,14 +488,26 @@ class HierarchyView(HierarchyViewDialog):
 		# Set the size of the first widget.
 		if self.need_resize:
 			self.need_resize = 0
+			# Easiest to create the timemapper always
+			self.timemapper = TimeMapper.TimeMapper()
 			x,y = self.scene_graph.get_minsize_abs()
 			self.mcanvassize = x,y
 			if x < 1.0 or y < 1.0:
 				print "Error: unconverted relative coordinates found. HierarchyView:497"
+			self.scene_graph.adddependencies()
+			self.scene_graph.addcollisions(None, None)
+			if self.timescale:
+				self.timemapper.calculate()
+				maxx = self.timemapper.time2pixel(self.root.t1, align='right')
+				if maxx > x:
+					x = maxx
+			else:
+				self.timemapper = None
 			self.scene_graph.moveto((0,0,x,y))
 			self.scene_graph.recalc()
 			x,y = self.mcanvassize
 			self.window.setcanvassize((self.sizes.SIZEUNIT, x, y)) # Causes a redraw() event.
+			self.timemapper = None
 
 	def draw_scene(self):
 		# Only draw the scene, nothing else.
@@ -1673,18 +1686,13 @@ class HierarchyView(HierarchyViewDialog):
 		self.draw()
 
 	def timescalecall(self):
-		assert 0
-##		self.toplevel.setwaiting()
-##		self.timescale = not self.timescale
-##		if self.timescale:
-##			self.sizes = sizes_time
-##		else:
-##			self.sizes = sizes_notime
-##		self.settoggle(TIMESCALE, self.timescale)
-##		if self.new_displist:
-##			self.new_displist.close()
-##		self.new_displist = self.window.newdisplaylist(BGCOLOR)
-##		self.recalc()
+		self.toplevel.setwaiting()
+		self.timescale = not self.timescale
+		self.settoggle(TIMESCALE, self.timescale)
+		self.refresh_scene_graph()
+		self.need_resize = 1
+		self.dirty = 1
+		self.draw()
 		
 	def bandwidthcall(self):
 		self.toplevel.setwaiting()

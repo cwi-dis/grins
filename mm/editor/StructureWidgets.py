@@ -77,12 +77,28 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			del self.node.set_infoicon
 			self.node = None
 
+	def adddependencies(self):
+		if self.node.t0 != self.node.t1:
+			w, h = self.get_minsize_abs()
+			self.root.timemapper.adddependency(self.node.t0, self.node.t1, w)
+		
+	def addcollisions(self, mastert0, mastert1):
+		if self.node.t0 == self.node.t1:
+			w, h = self.get_minsize_abs()
+			if self.node.t0 == mastert0:
+				return w, 0
+			if self.node.t0 == mastert1:
+				return 0, w
+			self.root.timemapper.addcollision(self.node.t0, w)
+		return 0, 0
+		
 	#   
 	# These a fillers to make this behave like the old 'Object' class.
 	#
 	def select(self):
 		Widgets.Widget.select(self)
 		self.root.dirty = 1
+		print 'DBG: selected node t0=%d, t1=%d'%(self.node.t0, self.node.t1)
 		
 	def deselect(self):
 		self.unselect()
@@ -352,6 +368,15 @@ class StructureObjWidget(MMNodeWidget):
 		if self.collapsebutton:
 			self.collapsebutton.draw(displist)
 
+	def adddependencies(self):
+		MMNodeWidget.adddependencies(self)
+		for ch in self.children:
+			ch.adddependencies()
+
+	def addcollisions(self, mastert0, mastert1):
+		for ch in self.children:
+			ch.addcollisions(None, None)
+		return 0, 0
 
 class SeqWidget(StructureObjWidget):
 	# Any sequence node.
@@ -511,7 +536,7 @@ class SeqWidget(StructureObjWidget):
 		mw = mw + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.HEDGSIZE
 		
 		if self.dropbox:
-			mw = mw + self.dropbox.get_minsize_abs()[0] + sizes_notime.GAPSIZE;
+			mw = mw + self.dropbox.get_minsize_abs()[0] + sizes_notime.GAPSIZE
 			
 		mh = mh + 2*sizes_notime.VEDGSIZE
 		# Add the title box.
@@ -539,8 +564,9 @@ class SeqWidget(StructureObjWidget):
 		
 		t = t + self.get_rely(sizes_notime.TITLESIZE)
 		min_height = min_height - self.get_rely(sizes_notime.TITLESIZE)
-		
-		if free_width < 0:
+		if self.root.timescale:
+			free_width = 0
+		elif free_width < 0:
 
 			print "Warning! free_width is less than 0.0!:", free_width
 			free_width = 0
@@ -564,7 +590,15 @@ class SeqWidget(StructureObjWidget):
 			w,h = medianode.get_minsize()
 			thisnode_free_width = freewidth_per_child
 			# Give the node the free width.
+			if self.root.timescale:
+				lmin = self.root.timemapper.time2pixel(medianode.node.t0)
+				if l < lmin:
+					l = lmin
 			r = l + w + thisnode_free_width
+			if self.root.timescale:
+				rmin = self.root.timemapper.time2pixel(medianode.node.t1)
+				if r < rmin:
+					r = rmin
 			medianode.moveto((l,t,r,b))
 			medianode.recalc()
 			l = r + self.get_relx(sizes_notime.GAPSIZE)
@@ -578,6 +612,44 @@ class SeqWidget(StructureObjWidget):
 		
 		StructureObjWidget.recalc(self)
 
+	def addcollisions(self, mastert0, mastert1):
+		myt0 = self.node.t0
+		myt1 = self.node.t1
+		maxneededpixel0 = sizes_notime.HEDGSIZE
+		maxneededpixel1 = sizes_notime.HEDGSIZE
+		if self.channelbox:
+			mw, mh = self.channelbox.get_minsize_abs()
+			maxneededpixel0 = maxneededpixel0 + mw + sizes_notime.GAPSIZE
+		if self.dropbox:
+			mw, mw =self.dropbox.get_minsize_abs()
+			maxneededpixel1 = maxneededpixel1 + mw + sizes_notime.GAPSIZE
+		time_to_collision = {myt0: maxneededpixel0, myt1: maxneededpixel1}
+		prevneededpixel = 0
+		for ch in self.children:
+			thist0 = ch.node.t0
+			thist1 = ch.node.t1
+			neededpixel0, neededpixel1 = ch.addcollisions(thist0, thist1)
+			time_to_collision[thist0] = time_to_collision.get(thist0, 0) + neededpixel0
+			time_to_collision[thist1] = time_to_collision.get(thist1, 0) + neededpixel1
+		if time_to_collision.has_key(myt0):
+			maxneededpixel0 = maxneededpixel0 + time_to_collision[myt0]
+			del time_to_collision[myt0]
+		if time_to_collision.has_key(myt1):
+			maxneededpixel1 = maxneededpixel1 + time_to_collision[myt1]
+			del time_to_collision[myt1]
+		for time, pixel in time_to_collision.items():
+			if pixel:
+				self.root.timemapper.addcollision(time, pixel)
+		if myt0 == myt1:
+			maxneededpixel0 = maxneededpixel0 + maxneededpixel1
+			maxneededpixel1 = 0
+		if myt0 != mastert0:
+			self.root.timemapper.addcollision(myt0, maxneededpixel0)
+			maxneededpixel0 = 0
+		if myt1 != mastert1:
+			self.root.timemapper.addcollision(myt1, maxneededpixel1)
+			maxneededpixel1 = 0
+		return maxneededpixel0, maxneededpixel1
 
 class TimeStripSeqWidget(SeqWidget):
 	# A sequence that has a channel widget at the start of it.
@@ -785,7 +857,21 @@ class UnseenVerticalWidget(StructureObjWidget):
 			# Give the node the free width.
 			b = t + h + thisnode_free_height 
 			# r = l + w # Wrap the node to it's minimum size.
-			medianode.moveto((l,t,r,b))
+			this_l = l
+			this_r = r
+			if self.root.timescale:
+				lmin = self.root.timemapper.time2pixel(medianode.node.t0)
+				if this_l < lmin:
+					this_l = lmin
+			if self.root.timescale:
+				rmin = self.root.timemapper.time2pixel(medianode.node.t1)
+				if this_r < rmin:
+					this_r = rmin
+				else:
+					rmax = self.root.timemapper.time2pixel(medianode.node.t1, align='right')
+					if this_r > rmax:
+						this_r = rmax
+			medianode.moveto((this_l,t,this_r,b))
 			medianode.recalc()
 			t = b #  + self.get_rely(sizes_notime.GAPSIZE)
 		StructureObjWidget.recalc(self)
@@ -931,10 +1017,23 @@ class VerticalWidget(StructureObjWidget):
 			else:
 				thisnode_free_height = h/(min_height-overhead_height) * free_height
 			# Give the node the free width.
-			b = t + h + thisnode_free_height 
-			# r = l + w # Wrap the node to it's minimum size.
+			b = t + h + thisnode_free_height
+			this_l = l
+			this_r = r
+			if self.root.timescale:
+				lmin = self.root.timemapper.time2pixel(medianode.node.t0)
+				if this_l < lmin:
+					this_l = lmin
+			if self.root.timescale:
+				rmin = self.root.timemapper.time2pixel(medianode.node.t1)
+				if this_r < rmin:
+					this_r = rmin
+				else:
+					rmax = self.root.timemapper.time2pixel(medianode.node.t1, align='right')
+					if this_r > rmax:
+						this_r = rmax
 			
-			medianode.moveto((l,t,r,b))
+			medianode.moveto((this_l,t,this_r,b))
 			medianode.recalc()
 			t = b + self.get_rely(sizes_notime.GAPSIZE)
 		StructureObjWidget.recalc(self);
@@ -958,7 +1057,27 @@ class VerticalWidget(StructureObjWidget):
 				while i < b:
 					display_list.drawline(TEXTCOLOR, [(l, i),(r, i)])
 					i = i + step
-
+					
+	def addcollisions(self, mastert0, mastert1):
+		myt0 = self.node.t0
+		myt1 = self.node.t1
+		maxneededpixel0 = 0
+		maxneededpixel1 = 0
+		for ch in self.children:
+			neededpixel0, neededpixel1 = ch.addcollisions(myt0, myt1)
+			if neededpixel0 > maxneededpixel0:
+				maxneededpixel0 = neededpixel0
+			if neededpixel1 > maxneededpixel1:
+				maxneededpixel1 = neededpixel1
+		maxneededpixel0 = maxneededpixel0 + sizes_notime.HEDGSIZE
+		maxneededpixel1 = maxneededpixel1 + sizes_notime.HEDGSIZE
+		if myt0 != mastert0:
+			self.root.timemapper.addcollision(myt0, maxneededpixel0)
+			maxneededpixel0 = 0
+		if myt1 != mastert1:
+			self.root.timemapper.addcollision(myt1, maxneededpixel1)
+			maxneededpixel1 = 0
+		return maxneededpixel0, maxneededpixel1
 
 class ParWidget(VerticalWidget):
 	# Parallel node
