@@ -451,7 +451,7 @@ unsigned int pack_pcm(unsigned char *data, unsigned int nsamples,
 }
 
 // This is an example of an exported function.
-MP3LIB_API void Init(int Equalizer,char* eq)
+MP3LIB_API void mp3_lib_init(int Equalizer,char* eq)
 {
 	//MessageBox(GetActiveWindow(),_T("In"),_T(""),MB_OK);
 	if (begin)
@@ -474,7 +474,7 @@ MP3LIB_API void Init(int Equalizer,char* eq)
 
 }
 // This is an example of an exported function.
-MP3LIB_API void Exit(void)
+MP3LIB_API void mp3_lib_finalize(void)
 {
   mad_frame_finish(&frame);
   mad_stream_finish(&stream);
@@ -483,7 +483,7 @@ MP3LIB_API void Exit(void)
 }
 
 //static char buffer[40000];
-MP3LIB_API int GetHeaderInfo(unsigned char * inbuff, int insize, int* Freq, int* ch, int* BitRate)
+MP3LIB_API int mp3_lib_decode_header(unsigned char * inbuff, int insize, int* Freq, int* ch, int* BitRate)
 {
 	  resample=0;
    	  mad_stream_buffer(&stream, (const unsigned char *)inbuff, insize);
@@ -499,12 +499,12 @@ MP3LIB_API int GetHeaderInfo(unsigned char * inbuff, int insize, int* Freq, int*
 	  }
 	  *BitRate=frame.header.bitrate;
 	  *ch=(frame.header.mode > 0) ? 2 : 1;
-		Exit();
-		Init(equalizer,0);
+	  mp3_lib_finalize();
+	  mp3_lib_init(equalizer,0);
 	  return 1;
 }
 
-MP3LIB_API int DecompressMp3(unsigned char * inbuff, int insize, char *outmemory, int outmemsize, int *done, int* inputpos)
+MP3LIB_API int mp3_lib_decode_buffer(unsigned char * inbuff, int insize, char *outmemory, int outmemsize, int *done, int* inputpos)
 {
 
 	int retval=0;
