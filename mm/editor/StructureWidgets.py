@@ -346,6 +346,11 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def pasteundercall(self):
 		self.mother.paste(0)
 
+	def show_mesg(self):
+		if self.node.errormessage:
+			windowinterface.showmessage(self.node.errormessage, parent=self.mother.window)
+
+
 #
 # An MMWidgetDecoration is a decoration on a widget - and has no particular
 # binding to an MMNode, but rather to a parent MMWidget.
@@ -1307,10 +1312,6 @@ class MediaWidget(MMNodeWidget):
 				MMNodeWidget.is_hit(self, pos)
 		return hit
 		
-
-	def show_mesg(self):
-		if self.node.errormessage:
-			windowinterface.showmessage(self.node.errormessage, parent=self.mother.window)
 
 	def recalc(self):
 		l,t,r,b = self.pos_abs
