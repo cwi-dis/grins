@@ -902,6 +902,10 @@ class _CommonWindow:
 		elif self._rb_dragpoint == 3: # bottom right
 			x1, y1 = x, y
 		elif self._rb_dragpoint == 4: # center (move)
+			# Constrain box size
+			xmargin = (x1-x0)/2
+			ymargin = (y1-y0)/2
+			x, y = self._rb_constrain((x, y), xmargin, ymargin)
 			oldx = (x0+x1)/2
 			oldy = (y0+y1)/2
 			diffx = x-oldx
@@ -969,11 +973,15 @@ class _CommonWindow:
 			smallboxes.append(x-2, y-2, x+2, y+2)
 		return smallboxes
 
-	def _rb_constrain(self, where):
+	def _rb_constrain(self, where, xmargin=0, ymargin=0):
 		x0, y0, x1, y1 = self.qdrect()
 		xscrolloff, yscrolloff = self._scrolloffset()
 		x0, y0 = x0 - xscrolloff, y0 - yscrolloff
 		x1, y1 = x1 - xscrolloff, y1 - yscrolloff
+		x0 = x0 + xmargin
+		x1 = x1 - xmargin
+		y0 = y0 + ymargin
+		y1 = y1 - ymargin
 		x, y = where
 		if x < x0: x = x0
 		if x > x1: x = x1
