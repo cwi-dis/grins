@@ -57,7 +57,9 @@ class BasicDialog((glwindow.glwindow)):
 	# Standard show/hide/destroy interface.
 	#
 	def show(self):
-		if self.showing: return
+		if self.showing:
+			gl.winset(self.form.window)
+			return
 		self.load_geometry()
 		self.fix_geometry()
 		glwindow.setgeometry(self.last_geometry)
@@ -196,7 +198,9 @@ class GLDialog((glwindow.glwindow)):
 		return self
 	#
 	def show(self):
-		if self.wid <> 0: return
+		if self.wid <> 0:
+			gl.winset(self.wid)
+			return
 		self.load_geometry()
 		glwindow.setgeometry(self.last_geometry)
 		self.wid = gl.winopen(self.title)
