@@ -1293,11 +1293,12 @@ class SubWindow(Window):
 				self._paint_1()
 			return
 
-		if self._frozen:
+		if self._frozen and not self._active_displist:
 			self._paint_4()
 			return
+
+		self._paint_0()
 		
-		self._paint_0()	
 
 
 	def createDDS(self, w=0, h=0, erase=0):
@@ -1382,18 +1383,20 @@ class SubWindow(Window):
 	# Transitions interface
 	#		
 	def begintransition(self, outtrans, runit, dict):
-		#print 'begintransition', self, outtrans, runit, dict
 		if not self.__prepare_transition():
 			return
 		self._multiElement = dict.get('multiElement')
 		self._childrenClip = dict.get('childrenClip')
 		self._transition = win32transitions.TransitionEngine(self, outtrans, runit, dict)
 		if runit:
+			#print 'begintransition', self, outtrans, runit, dict
 			self._transition.begintransition()
+		else:
+			print 'begintransition runit=',runit
 
 	def endtransition(self):
-		#print 'endtransition'
 		if self._transition:
+			#print 'endtransition', self
 			self._transition.endtransition()
 			self._transition = None
 			self.update()
