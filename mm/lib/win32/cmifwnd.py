@@ -819,28 +819,28 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			rx, ry, rw, rh = ref_rect
 		else: 
 			rx, ry, rw, rh = self._rect
-
+##		if not (0 <= x <= 1 and 0 <= y <= 1):
+##			raise error, 'coordinates out of bounds'
 		if units == UNIT_PXL or (units is None and type(x) is type(0)):
 			px = int(x)
 		else:
-			px = int((rw - 1) * x + 0.5) + rx
+			px = int((rw - 1) * x + 0.5)
 		if units == UNIT_PXL or (units is None and type(y) is type(0)):
 			py = int(y)
 		else:
-			py = int((rh - 1) * y + 0.5) + ry
+			py = int((rh - 1) * y + 0.5)
 		pw = ph = 0
 		if crop:
 			if px < 0:
 				px, pw = 0, px
-			if px >= rx + rw:
-				px, pw = rx + rw - 1, px - rx - rw + 1
+			if px >= rw:
+				px, pw = rw - 1, px - rw + 1
 			if py < 0:
 				py, ph = 0, py
-			if py >= ry + rh:
-				py, ph = ry + rh - 1, py - ry - rh + 1
+			if py >= rh:
+				py, ph = rh - 1, py - rh + 1
 		if len(coordinates) == 2:
-			return px, py
-
+			return px+rx, py+ry
 		if units == UNIT_PXL or (units is None and type(w) is type(0)):
 			pw = int(w + pw)
 		else:
@@ -852,13 +852,13 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		if crop:
 			if pw <= 0:
 				pw = 1
-			if px + pw > rx + rw:
-				pw = rx + rw - px
+			if px + pw > rw:
+				pw = rw - px
 			if ph <= 0:
 				ph = 1
-			if py + ph > ry + rh:
-				ph = ry + rh - py
-		return px, py, pw, ph
+			if py + ph > rh:
+				ph = rh - py
+		return px+rx, py+ry, pw, ph
 
 	# convert pixel coordinates to relative coordinates
 	# using as rect of reference for relative coord
