@@ -6,7 +6,8 @@ from urllib import urlretrieve
 
 
 class ImageChannel(ChannelWindow):
-	node_attrs = ChannelWindow.node_attrs + ['scale', 'scalefilter', 'crop']
+	node_attrs = ChannelWindow.node_attrs + ['bucolor', 'hicolor', 'scale',
+						 'scalefilter', 'crop']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)

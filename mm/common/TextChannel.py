@@ -6,8 +6,9 @@ import StringStuff
 import MMAttrdefs
 
 class TextChannel(ChannelWindow):
-	node_attrs = ChannelWindow.node_attrs + ['fgcolor', 'font', \
-		  'pointsize', 'noanchors']
+	node_attrs = ChannelWindow.node_attrs + ['bucolor', 'hicolor',
+						 'fgcolor', 'font',
+						 'pointsize', 'noanchors']
 
 	def __repr__(self):
 		return '<TextChannel instance, name=' + `self._name` + '>'
