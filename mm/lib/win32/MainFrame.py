@@ -585,11 +585,13 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		if not __main__.toplevel.is_embedded():		
 			self.ActivateFrame(win32con.SW_SHOW)
 		if IsPlayer and SHOW_PLAYER_SEEK:
-			ctx = self._cmifdoc.player.userplayroot.GetContext()
+			player = self._cmifdoc.player
+			ctx = player.userplayroot.GetContext()
 			fulldur = self._cmifdoc.player.userplayroot.calcfullduration(ctx)
 			if fulldur>0:
 				self.__slider = win32dialog.SeekDialog('Seek', self)
 				self.__slider.setRange(0, fulldur)
+				self.__slider.updateposcallback = player.setstarttime
 
 	def setEditorDocumentMenu(self,flag):
 		if USE_NODOC_MENUBAR:
