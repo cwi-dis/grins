@@ -1603,6 +1603,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		     id[:len(nname)+1] == nname + '-':
 			# undo CMIF encoding of anchor ID
 			aid = id[len(nname)+1:]
+		elif id is not None:
+			aid = id
 		if id is not None:
 			self.__anchormap[id] = (uid, aid)
 		anchorlist.append((z, len(anchorlist), aid, atype, aargs))
