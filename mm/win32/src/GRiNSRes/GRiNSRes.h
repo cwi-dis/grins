@@ -588,6 +588,7 @@
 #define IDC_H                           1324
 #define IDC_Z                           1325
 #define IDC_ZOOMIN                      1326
+#define IDC_Z2                          1326
 #define IDC_ZOOMOUT                     1327
 #define IDC_THINGNAME                   1328
 #define IDC_LAYOUT_REGION_FITL          1328
