@@ -22,7 +22,12 @@ cvs -d :pserver:pythoncvs@cvs.python.org:/projects/cvsroot checkout -d python py
 cvs -d CVSROOT checkout lib-src/jpeg
 cvs -d CVSROOT checkout python/Extensions/img python/Extensions/Pythonwin python/Extensions/win32
 
+The anonymous CVS password for the Python repository is "snakeoil".
+You will have to login to the repository (once only).
+
 Compiling
+
+[patching getpathp.c and import_nt.c plus adding IGNORE_REGISTRY define]
 
 Open the Visual C++ workspace
 	cmif\win32\src\cmif extensions.dsw
