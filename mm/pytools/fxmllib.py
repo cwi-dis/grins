@@ -27,6 +27,7 @@ _S = '[ \t\r\n]+'			# white space
 _opS = '[ \t\r\n]*'			# optional white space
 _Name = '[a-zA-Z_:][-a-zA-Z0-9._:]*'    # valid XML name
 _QStr = "(?:'[^']*'|\"[^\"]*\")"        # quoted XML string
+_Char = u'[]\\\\\x09\x0A\x0D -[^-\uD7FF\uE000-\uFFFD\u10000-\u10FFFF]' # legal characters
 
 comment = re.compile('<!--(?P<comment>(?:[^-]|-[^-])*)-->')
 space = re.compile(_S)
@@ -41,6 +42,9 @@ _attrre = _S+'(?P<attrname>'+_Name+')'+_opS+'='+_opS+'(?P<attrvalue>'+_QStr+')'
 attrfind = re.compile(_attrre)
 starttag = re.compile('<(?P<tagname>'+_Name+')(?P<attrs>(?:'+_attrre+')*)'+_opS+'(?P<slash>/?)>')
 endtag = re.compile('</(?P<tagname>'+_Name+')'+_opS+'>')
+
+illegal = re.compile(r'(?:\]\]>|'+u'[^]\\\\\x09\x0A\x0D -[^-\uD7FF\uE000-\uFFFD\u10000-\u10FFFF])')
+illegal1 = re.compile(u'[^]\\\\\x09\x0A\x0D -[^-\uD7FF\uE000-\uFFFD\u10000-\u10FFFF]')
 
 cdata = re.compile('<!\\[CDATA\\[(?P<cdata>(?:[^]]|\\](?!\\]>)|\\]\\](?!>))*)\\]\\]>')
 
@@ -73,7 +77,9 @@ _Nmtoken = '[-a-zA-Z0-9._:]+'
 nmtoken = re.compile('^'+_Nmtoken+'$')
 nmtokens = re.compile('^'+_Nmtoken+'(?:'+_S+_Nmtoken+')*$')
 element = re.compile('<!ELEMENT'+_S+'(?P<name>'+_Name+')'+_S+r'(?P<content>EMPTY|ANY|\()')
-dfaelem = re.compile(_opS+r'(?P<token>[()|,+*?]|'+_Name+')')
+dfaelem0 = re.compile(_opS+r'(?P<token>\(|'+_Name+')')
+dfaelem1 = re.compile(_opS+r'(?P<token>[)|,])')
+dfaelem2 = re.compile(r'(?P<token>[+*?])')
 mixedre = re.compile(r'\('+_opS+'#PCDATA'+'(('+_opS+r'\|'+_opS+_Name+')*'+_opS+r'\)\*|'+_opS+r'\))')
 paren = re.compile('[()]')
 attdef = re.compile(_S+'(?P<atname>'+_Name+')'+_S+'(?P<attype>CDATA|ID(?:REFS?)?|ENTIT(?:Y|IES)|NMTOKENS?|NOTATION'+_S+r'\('+_opS+_Name+'(?:'+_opS+r'\|'+_opS+_Name+')*'+_opS+r'\)|\('+_opS+_Nmtoken+'(?:'+_opS+r'\|'+_opS+_Nmtoken+')*'+_opS+r'\))'+_S+'(?P<atvalue>#REQUIRED|#IMPLIED|(?:#FIXED'+_S+')?(?P<atstring>'+_QStr+'))')
@@ -139,7 +145,10 @@ class XMLParser:
         else:
             enc = None             # unknowns as yet
         if enc:
-            data = unicode(data[i:], enc)
+            try:
+                data = unicode(data[i:], enc)
+            except UnicodeError:
+                self.__error("data cannot be converted to Unicode", data, i, fatal = 1)
             i = 0
         self.__encoding = 'utf-8'
 	# optional XMLDecl
@@ -164,7 +173,10 @@ class XMLParser:
                 standalone = standalone[1:-1]
             self.handle_xml(encoding, standalone)
 	    i = res.end(0)
-        data = unicode(data[i:], self.__encoding)
+        try:
+            data = unicode(data[i:], self.__encoding)
+        except UnicodeError:
+            self.__error("data cannot be converted to Unicode", data, i, fatal = 1)
         return data
         
     def parse(self, data):
@@ -223,11 +235,19 @@ class XMLParser:
 	    res = comment.match(data, i)
 	    if res is not None:
 		matched = 1
-		self.handle_comment(res.group('comment'))
+                c0, c1 = res.span('comment')
+                ires = illegal1.search(data, c0, c1)
+                if ires is not None:
+                    self.__error('illegal characters in comment', data, ires.start(0), fatal = 0)
+		self.handle_comment(data[c0:c1])
 		i = res.end(0)
 	    res = pidecl.match(data, i)
 	    if res is not None:
 		matched = 1
+                c0, c1 = res.span('data')
+                ires = illegal1.search(data, c0, c1)
+                if ires is not None:
+                    self.__error('illegal characters in Processing Instruction', data, ires.start(0), fatal = 0)
 		self.handle_proc(res.group('name'), res.group('data') or '')
 		i = res.end(0)
 	    res = space.match(data, i)
@@ -274,7 +294,9 @@ class XMLParser:
 	    else:
 		j = res.start(0)
 	    if j > i:
-                d = data[i:j]
+                res = illegal.search(data, i, j)
+                if res is not None:
+                    self.__error("illegal data content in element `%s'" % ptagname, data, i, fatal = 0)
                 res = space.match(data, i, j)
                 isspace = res is not None and res.span(0) == (i,j)
                 if content is not None and content != '#PCDATA' and type(content) is not type([]):
@@ -288,7 +310,7 @@ class XMLParser:
                     isspace = 0
 		matched = 1
                 if not isspace:
-                    self.handle_data(d)
+                    self.handle_data(data[i:j])
 		i = j
 	    res = starttag.match(data, i)
 	    if res is not None:
@@ -336,7 +358,11 @@ class XMLParser:
 		return res
 	    res = comment.match(data, i)
 	    if res is not None:
-		self.handle_comment(res.group('comment'))
+                c0, c1 = res.span('comment')
+                ires = illegal1.search(data, c0, c1)
+                if ires is not None:
+                    self.__error('illegal characters in comment', data, ires.start(0), fatal = 0)
+		self.handle_comment(data[c0:c1])
 		i = res.end(0)
                 continue
 	    res = ref.match(data, i)
@@ -345,7 +371,9 @@ class XMLParser:
 		if name:
 		    if self.entitydefs.has_key(name):
 			val = self.entitydefs[name]
+                        del self.entitydefs[name] # to break recursion
 			n = self.__parse_content(val, 0, ptagname, namespaces, states)
+                        self.entitydefs[name] = val
 			if n is None:
 			    return
 			if type(n) is type(res) or n != len(val):
@@ -353,6 +381,8 @@ class XMLParser:
                                 n = res.start(0)
 			    self.__error('misformed entity value', data, n)
 		    else:
+                        if self.docname:
+                            self.__error("unknown entity reference `&%s;' in element `%s'" % (name, ptagname), data, i)
                         self.data = data
                         self.offset = res.start('name')
                         self.lineno = string.count(data, '\n', 0, self.offset)
@@ -375,7 +405,7 @@ class XMLParser:
 		self.handle_cdata(res.group('cdata'))
 		i = res.end(0)
 	    if not matched:
-		self.__error('no valid content', data, i)
+		self.__error("no valid content in element `%s'" % ptagname, data, i)
 		return
 	return i
 
@@ -559,11 +589,13 @@ class XMLParser:
             i, dataend = span
 	newval = []
 	while i < dataend:
-	    res = amp.search(data, i, dataend)
+	    res = interesting.search(data, i, dataend)
 	    if res is None:
 		newval.append(data[i:dataend])
 		break
             j = res.start(0)
+            if data[j] == '<':
+                self.__error("no `<' allowed in attribute value", data, j, fatal = 0)
             if j > i:
                 newval.append(data[i:j])
 	    res = ref.match(data, j, dataend)
@@ -578,10 +610,12 @@ class XMLParser:
                 # entity referenvce (e.g. "&lt;")
 		if self.entitydefs.has_key(name):
 		    val = self.entitydefs[name]
-		    val = self.__parse_attrval(val)
-		    if val is None:
+                    del self.entitydefs[name]
+		    nval = self.__parse_attrval(val)
+                    self.entitydefs[name] = val
+		    if nval is None:
 			return
-		    newval.append(val)
+		    newval.append(nval)
 		else:
 		    self.__error("reference to unknown entity `%s'" % name, data, res.start(0), fatal = 0)
                     newval.append('&%s;' % name)
@@ -617,6 +651,8 @@ class XMLParser:
         except UnicodeError:
             self.__error('bad character reference', data, i, fatal = 0)
             return
+        if illegal1.search(c):
+            self.__error('bad character reference', data, i, fatal = 0)
         return c
 
     def parse_dtd(self, data, internal = 1):
@@ -654,6 +690,8 @@ class XMLParser:
                     if encoding is not None:
                         self.__encoding = encoding
                         self.baseurl = baseurl
+                else:
+                    self.__error("unknown entity `%%%s;'" % name, data, i, fatal = 0)
                 i = res.end(0)
             res = element.match(data, i)
             if res is not None:
@@ -759,6 +797,8 @@ class XMLParser:
                     j = i+1
                     while hlevel > 0:
                         res = bracket.search(data, j)
+                        if res is None:
+                            self.__error("unexpected EOF", data, i, fatal = 1)
                         if data[res.start(0)] == '<':
                             hlevel = hlevel + 1
                         else:
@@ -816,24 +856,24 @@ class XMLParser:
         return i, dfa, start, end
 
     def __dfa1(self, data, i, dfa):
-        res = dfaelem.match(data, i)
+        res = dfaelem0.match(data, i)
         if res is None:
-            self.__error('syntax error in element content', data, i, fatal = 1)
+            self.__error("syntax error in element content: `(' or Name expecter", data, i, fatal = 1)
         token = res.group('token')
         if token == '(':
             i, start, end = self.__dfa1(data, res.end(0), dfa)
-            res = dfaelem.match(data, i)
+            res = dfaelem1.match(data, i)
             if res is None:
-                self.__error('syntax error in element content', data, i, fatal = 1)
+                self.__error("syntax error in element content: `)', `|', or `,' expected", data, i, fatal = 1)
             token = res.group('token')
             sep = token
             while token in (',','|'):
                 if sep != token:
                     self.__error("syntax error in element content: `%s' or `)' expected" % sep, data, i, fatal = 1)
                 i, nstart, nend = self.__dfa1(data, res.end(0), dfa)
-                res = dfaelem.match(data, i)
+                res = dfaelem1.match(data, i)
                 if res is None:
-                    self.__error('syntax error in element content', data, i, fatal = 1)
+                    self.__error("syntax error in element content: `%s' or `)' expected" % sep, data, i, fatal = 1)
                 token = res.group('token')
                 if sep == ',':
                     # concatenate DFAs
@@ -854,11 +894,8 @@ class XMLParser:
                     start = s
                     end = len(dfa)
                     dfa.append({})
-            if token != ')':
-                self.__error("syntax error in element content: `)' expected", data, i, fatal = 1)
+            # token == ')'
             i = res.end(0)
-        elif token in (')','|','+','*','?'):
-            self.__error("syntax error in element content: Name or `(' expected", data, i, fatal = 1)
         else:
             # it's a Name
             start = len(dfa)
@@ -866,25 +903,24 @@ class XMLParser:
             end = len(dfa)
             dfa.append({})
             i = res.end(0)
-        res = dfaelem.match(data, i)
+        res = dfaelem2.match(data, i)
         if res is not None:
             token = res.group('token')
-            if token in ('*','+','?'):
-                s = len(dfa)
-                e = s+1
-                if token == '+':
-                    dfa.append({'': [start]})
-                else:
-                    dfa.append({'': [start, e]})
-                dfa.append({})
-                l = dfa[end].get('', [])
-                dfa[end][''] = l
-                if token != '?':
-                    l.append(start)
-                l.append(e)
-                start = s
-                end = e
-                i = res.end(0)
+            s = len(dfa)
+            e = s+1
+            if token == '+':
+                dfa.append({'': [start]})
+            else:
+                dfa.append({'': [start, e]})
+            dfa.append({})
+            l = dfa[end].get('', [])
+            dfa[end][''] = l
+            if token != '?':
+                l.append(start)
+            l.append(e)
+            start = s
+            end = e
+            i = res.end(0)
         return i, start, end
 
     def parse_doctype(self, tag, publit, syslit, data):
@@ -993,7 +1029,7 @@ class TestXMLParser(XMLParser):
         print 'reading %s' % name
         try:
             import urllib
-            if type(name) is type(unicode('a')):
+            if type(name) is type(u'a'):
                 name = name.encode('latin-1')
             u = urllib.urlopen(name)
             data = u.read()
@@ -1107,9 +1143,13 @@ def test(args = None):
         if info.text is not None and info.offset is not None:
             i = string.rfind(info.text, '\n', 0, info.offset) + 1
             j = string.find(info.text, '\n', info.offset)
-            if j == -1: j = len(info.offset)
-            print info.text[i:j]
-            print ' '*(info.offset-i)+'^'
+            if j == -1: j = len(info.text)
+            try:
+                print info.text[i:j]
+            except UnicodeError:
+                print `info.text[i:j]`
+            else:
+                print ' '*(info.offset-i)+'^'
     t1 = time()
     if do_time:
         print 'total time: %g' % (t1-t0)
