@@ -30,6 +30,7 @@ implements the actual dialog.
 
 """
 import windowinterface
+import usercmd
 
 class AttrEditorDialog:
 	def __init__(self, title, attriblist, toplevel=None, initattr = None):
@@ -63,6 +64,11 @@ class AttrEditorDialog:
 		for a in attriblist:
 			a.attach_ui(w)
 		self.__window=w
+		commandlist = [
+			usercmd.SHOWALLPROPERTIES(callback = (self.showall_callback, ()))
+		]
+		w.set_commandlist(commandlist)
+		w.set_toggle(usercmd.SHOWALLPROPERTIES, self.show_all_attributes)
 		toplevel_window.showform(w,formid)
 
 
