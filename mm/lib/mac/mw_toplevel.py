@@ -719,19 +719,20 @@ class _Toplevel(_Event):
 					commandlist, resizable)
 		self._register_wid(wid, rv)
 		return rv
-
-	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE,
-			type_channel = None, pixmap = 0, units=UNIT_MM,
-			adornments=None, canvassize=None, commandlist=[],
-			resizable=1):
-		self._initcommands()
-		extras = mw_windows.calc_extra_size(adornments, canvassize)
-		wid, w, h = self._openwindow(x, y, w, h, title, units, resizable, extras)
-		rv = mw_windows._Window(self, wid, 0, 0, w, h, 1, pixmap,
-					title, adornments, canvassize,
-					commandlist, resizable)
-		self._register_wid(wid, rv)
-		return rv
+	
+	newcmwindow = newwindow
+##	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE,
+##			type_channel = None, pixmap = 0, units=UNIT_MM,
+##			adornments=None, canvassize=None, commandlist=[],
+##			resizable=1):
+##		self._initcommands()
+##		extras = mw_windows.calc_extra_size(adornments, canvassize)
+##		wid, w, h = self._openwindow(x, y, w, h, title, units, resizable, extras)
+##		rv = mw_windows._Window(self, wid, 0, 0, w, h, 1, pixmap,
+##					title, adornments, canvassize,
+##					commandlist, resizable)
+##		self._register_wid(wid, rv)
+##		return rv
 		
 	def _openwindow(self, x, y, w, h, title, units, resizable=1, extras=(0,0,0,0)):
 		"""Internal - Open window given xywh, title.
