@@ -317,6 +317,10 @@ SOURCE=.\Res\text.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\toolbar1.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Res\video.bmp
 # End Source File
 # Begin Source File
