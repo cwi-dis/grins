@@ -1028,10 +1028,18 @@ class ChannelWrapper(Wrapper):
 	#
 	def getdef(self, name):
 		if name == '.cname':
-			# Channelname -- special case
-			return (('name', ''), 'none',
-				'Region ID', 'default',
-				'Region ID', 'raw', flags.FLAG_ALL)
+			base = self.channel.get('base_window')
+			if base is not None:
+				# region Id -- special case
+				return (('name', ''), 'none',
+					'Region ID', 'default',
+					'Region ID', 'raw', flags.FLAG_ALL)
+			else:
+				# viewport Id -- special case
+				return (('name', ''), 'none',
+					'TopLayout ID', 'default',
+					'TopLayout ID', 'raw', flags.FLAG_ALL)
+			
 		return MMAttrdefs.getdef(name)
 
 	def valuerepr(self, name, value):
