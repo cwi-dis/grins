@@ -12,7 +12,7 @@ def getduration(filename):
 		return 0
 	try:
 		movieResRef = Qt.OpenMovieFile(filename, 1)
-	except Qt.Error, arg:
+	except (ValueError, Qt.Error), arg:
 		print 'Cannot open QT movie:',filename, arg
 		return 0
 	movie, dummy = Qt.NewMovieFromFile(movieResRef,
