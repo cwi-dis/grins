@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 
-from audio import Error
+import audio
 from format import *
 
 _WAVE_FORMAT_PCM = 0x0001
@@ -78,14 +78,14 @@ class reader:
 		# start parsing
 		form = file.read(4)
 		if form != 'RIFF':
-			raise Error, 'file does not start with RIFF id'
+			raise audio.Error, 'file does not start with RIFF id'
 		formlength = _read_long(file)
 		if formlength <= 4:
-			raise Error, 'invalid RIFF chunk data size'
+			raise audio.Error, 'invalid RIFF chunk data size'
 		formdata = file.read(4)
 		formlength = formlength - 4
 		if formdata != 'WAVE':
-			raise Error, 'not a WAVE file'
+			raise audio.Error, 'not a WAVE file'
 		fmt_chunk_read = 0
 		while formlength > 1:
 			data_seek_needed = 1
@@ -95,7 +95,7 @@ class reader:
 				fmt_chunk_read = 1
 			elif chunk.chunkname == 'data':
 				if not fmt_chunk_read:
-					raise Error, 'data chunk before fmt chunk'
+					raise audio.Error, 'data chunk before fmt chunk'
 				self.__data_chunk = chunk
 				fmt = self.__format
 				self.__nframes = chunk.chunksize * \
@@ -106,7 +106,7 @@ class reader:
 			if formlength > 1:
 				chunk.skip()
 		if not fmt_chunk_read or not self.__data_chunk:
-			raise Error, 'fmt chunk and/or data chunk missing'
+			raise audio.Error, 'fmt chunk and/or data chunk missing'
 		if data_seek_needed:
 			self.__data_chunk.rewind()
 
@@ -117,14 +117,14 @@ class reader:
 		wFormatTag = _read_short(chunk)
 		nchannels = _read_short(chunk)
 		if nchannels < 1 or nchannels > 2:
-			raise Error, 'Unsupported format'
+			raise audio.Error, 'Unsupported format'
 		self.__framerate = _read_long(chunk)
 		dwAvgBytesPerSec = _read_long(chunk)
 		wBlockAlign = _read_short(chunk)
 		if wFormatTag == _WAVE_FORMAT_PCM:
 			bps = _read_short(chunk)
 			if bps > 16:
-				raise Error, 'Unsupported format'
+				raise audio.Error, 'Unsupported format'
 			if bps <= 8:
 				if nchannels == 1:
 					self.__format = linear_8_mono_excess
@@ -137,7 +137,7 @@ class reader:
 				elif nchannels == 2:
 					self.__format = linear_16_stereo_little
 		else:
-			raise Error, 'unknown WAVE format'
+			raise audio.Error, 'unknown WAVE format'
 
 	def getformat(self):
 		return self.__format
