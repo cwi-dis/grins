@@ -88,6 +88,12 @@ void MpegDisplay::update_surface(unsigned char *src[], int frame, int offset,int
   
 	m_cs.enter();
 
+// XXX: when scaling is needed
+// 1. Use GDI to StretchBlt 
+// 2. Copy bits to GX screen
+// OR for faster results implement a stretch algorithm
+
+	// XXX: NO SCALING/CLIPPING WITH GAPI YET
 #ifdef USE_GAPI
 	unsigned short *pDest = (unsigned short*)GXBeginDraw();
     int cxPitch = GXDP.cbxPitch / 2; 
