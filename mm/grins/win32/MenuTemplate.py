@@ -40,7 +40,7 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, '&Close Document', None, CLOSE),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Preferences...', None, PREFERENCES),
-		(FLAG_ALL|FLAG_DBG, SEP,),
+		(FLAG_DBG, SEP,),
 		(FLAG_DBG, CASCADE, '&Debug', (
 			(FLAG_DBG, ENTRY, 'Dump &scheduler data', None, SCHEDDUMP),
 			(FLAG_DBG, TOGGLE, 'Enable call &tracing', None, TRACE),
