@@ -19,5 +19,5 @@ license_features_needed = ('smil2player', sys.platform)
 #expiry_date = (2001, 1, 15)
 
 # RTIPA start
-RTIPA = 1
+RTIPA = 0
 # RTIPA end
