@@ -3,4 +3,4 @@ __version__ = "$Id$"
 # Contains the subversion of the application in the
 # format <platform> patchlevel <number>
 
-patchlevel = 'Mobile win32 build 141'
+patchlevel = 'Mobile win32 build 142'
