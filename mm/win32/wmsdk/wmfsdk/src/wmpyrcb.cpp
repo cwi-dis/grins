@@ -15,8 +15,7 @@ Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "wmpyrcb.h"
 
-#define RELEASE(x) if(x) x->Release();x=NULL;
-extern void seterror(const char *msg);
+#include "pycbapi.h"
 
 class WMPyReaderCallback : public IWMPyReaderCallback
 {
@@ -68,6 +67,7 @@ private:
 
     BOOL    m_isEOF;
     HANDLE  m_hCompletionEvent;
+
 };
 
 HRESULT STDMETHODCALLTYPE WMCreatePyReaderCallback(
@@ -92,6 +92,7 @@ WMPyReaderCallback::WMPyReaderCallback(PyObject *pyobj)
 
 WMPyReaderCallback::~WMPyReaderCallback()
 {
+//	Py_XDECREF(m_pyobj);
     CloseHandle(m_hOpenEvent);
 	CloseHandle(m_hCompletionEvent);
 }
@@ -106,25 +107,30 @@ HRESULT STDMETHODCALLTYPE WMPyReaderCallback::QueryInterface(
 
 ULONG STDMETHODCALLTYPE WMPyReaderCallback::AddRef()
 {
-	Py_XINCREF(m_pyobj);	
     return  InterlockedIncrement(&m_cRef);
 }
 
 ULONG STDMETHODCALLTYPE WMPyReaderCallback::Release()
 {
-	Py_XDECREF(m_pyobj);	
     ULONG uRet = InterlockedDecrement(&m_cRef);
-	if(uRet==0) delete this;
+	if(uRet==0) 
+		{
+		delete this;
+		}
     return uRet;
 }
+
 
 HRESULT STDMETHODCALLTYPE WMPyReaderCallback::SetListener(
 			/* [in] */ 	PyObject *pyobj)
 {
 	Py_XDECREF(m_pyobj);
-	if(pyobj==Py_None) m_pyobj=NULL;
-	else m_pyobj=pyobj;
-	Py_XINCREF(m_pyobj);	
+	m_pyobj = NULL;
+	if(pyobj && pyobj!=Py_None)
+		{
+		Py_INCREF(pyobj);
+		m_pyobj=pyobj;
+		}
 	return S_OK;
 }
 
@@ -140,9 +146,12 @@ HRESULT STDMETHODCALLTYPE WMPyReaderCallback::WaitForCompletion(
             /* [in] */		DWORD dwMilliseconds,
 			/* [out] */		DWORD *pdwWaitRes)
 {
-	*pdwWaitRes = WaitForSingleObject(m_hCompletionEvent,dwMilliseconds);
+	*pdwWaitRes = 0;
+	if(WaitForSingleObject(m_hCompletionEvent,dwMilliseconds)==WAIT_OBJECT_0)
+		*pdwWaitRes = 1;
 	return S_OK;
 }
+
 
 HRESULT STDMETHODCALLTYPE WMPyReaderCallback::OnStatus( 
         /* [in] */ WMT_STATUS Status, 
@@ -151,6 +160,21 @@ HRESULT STDMETHODCALLTYPE WMPyReaderCallback::OnStatus(
         /* [in] */ BYTE __RPC_FAR *pValue,
         /* [in] */ VOID *pvContext )
 {
+	if(m_isEOF)
+		{
+		//PyCallbackBlock cb;
+		//Py_XDECREF(m_pyobj);
+		m_pyobj=NULL;
+		}
+	if(m_pyobj)
+		{
+		CallbackHelper helper("OnStatus",m_pyobj);
+		if(helper.cancall())
+			{
+			PyObject *arg = Py_BuildValue("(i)",Status);
+			helper.call(arg);
+			}
+		}
     switch( Status )
     {
     case WMT_OPENED:
@@ -180,7 +204,7 @@ HRESULT STDMETHODCALLTYPE WMPyReaderCallback::OnStatus(
 
     case WMT_EOF:
         printf( "OnStatus( WMT_EOF )\n" );
-        m_isEOF = TRUE;
+        m_isEOF = TRUE;		
         SetEvent(m_hCompletionEvent);
         break;
 
@@ -216,6 +240,17 @@ HRESULT STDMETHODCALLTYPE WMPyReaderCallback::OnSample(
 
     hr = pSample->GetBufferAndLength(&pData,&cbData);
     if (FAILED(hr)) return E_UNEXPECTED;
+
+	if(m_pyobj)
+		{
+		CallbackHelper helper("OnSample",m_pyobj);
+		if(helper.cancall())
+			{
+			DWORD ms = (DWORD)cnsSampleTime/10000; // for small files
+			PyObject *arg = Py_BuildValue("(i)",ms);
+			helper.call(arg);
+			}
+		}
     return S_OK;
 }
 
