@@ -218,7 +218,7 @@ class Channel:
 
 	def show(self, force = 0):
 		if debug:
-			print 'Channel.show('+`self`+')'
+			print 'Channel.show('+`self`+') force=',force
 
 		# force equal 1 is used only in internal. By default the channel is shown 
 		# only when showBackground attribute equal to always
@@ -261,7 +261,7 @@ class Channel:
 				self._player.after_chan_show(self)
 			return
 			
-		self.after_show()
+		self.after_show(force)
 
 	def _get_parent_channel(self, creating=0):
 		"""Return the parent (basewindow) channel, if it exists"""
@@ -295,7 +295,7 @@ class Channel:
 ##					raise 'Parent window does not contain child', (self, pchan)
 		return pchan
 
-	def after_show(self):
+	def after_show(self, force=0):
 		# Since the calls to arm() and play() lied to the
 		# scheduler when the channel was hidden, we must do a
 		# few things so that the real state of things is once
@@ -307,7 +307,7 @@ class Channel:
 		# can become visible
 		for chan in self._subchannels[:]:
 			if chan._want_shown:
-				chan.show(1)
+				chan.show(force)
 		self._player.after_chan_show(self)
 
 	def hide(self, force=1):
@@ -1608,7 +1608,7 @@ class ChannelWindow(Channel):
 			# print 'new geom : ',wingeom
 #			units = self._attrdict.get('units',
 #				   windowinterface.UNIT_SCREEN)
-# 			self.window.updatecoordinates(wingeom, units)
+#			self.window.updatecoordinates(wingeom, units)
  		# experimental subregion and regpoint code
 
 		bgcolor = self.getbgcolor(node)
@@ -1861,7 +1861,7 @@ class ChannelWindow(Channel):
 		
 	def play(self, node):
 		if debug:
-			print 'ChannelWindow.play('+`self`+','+`node`+')'
+	 		print 'ChannelWindow.play('+`self`+','+`node`+')'
 		self.play_0(node)
 		if not self._armcontext:
 			return
