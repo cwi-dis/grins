@@ -125,8 +125,6 @@ class _Toplevel:
 		import DrawTk
 		del DrawTk.drawTk
 
-		import __main__
-		del __main__.resdll
 
 	# Registration function for close callbacks
 	def addclosecallback(self, func, args):
