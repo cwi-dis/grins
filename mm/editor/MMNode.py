@@ -759,6 +759,7 @@ class MMNode(MMNodeBase.MMNode):
 		termtype = MMAttrdefs.getattr(self, 'terminator')
 		alist = out0[:]
 		plist = []
+		ptlist = []
 		slist = out1[:]
 		tlist = []
 		result = [([(SCHED, self)] + in0, alist),
@@ -769,7 +770,8 @@ class MMNode(MMNodeBase.MMNode):
 			alist.append((SCHED, arg))
 			slist.append((SCHED_STOP, arg))
 			tlist.append((TERMINATE, arg))
-			if termtype == 'FIRST' and Duration.get(arg) > 0:
+			cdur = Duration.get(arg)
+			if termtype == 'FIRST' and cdur > 0:
 				added_entry = 1
 				result.append(([(SCHED_DONE, arg)],
 					       [(TERMINATE, self),
@@ -781,14 +783,18 @@ class MMNode(MMNodeBase.MMNode):
 				result.append(([(SCHED_DONE, arg)],
 					       [(TERMINATE, self),
 						(SCHED_DONE, self)]))
+			elif cdur > 0:
+				ptlist.append((SCHED_DONE, arg))
 			else:
 				plist.append((SCHED_DONE, arg))
-		if plist:
-			if not added_entry or termtype == 'LAST':
+		if plist or ptlist:
+			if (ptlist or duration == 0 or added_entry) and \
+			   (not added_entry or termtype == 'LAST'):
 				added_entry = 1
-				result.append((plist, [(SCHED_DONE, self)]))
+				result.append((plist+ptlist,
+					       [(SCHED_DONE, self)]))
 			else:
-				result.append((plist, []))
+				result.append((plist+ptlist, []))
 		if duration > 0:
 			# if duration set, we must trigger a timeout
 			# and we must catch the timeout to terminate
