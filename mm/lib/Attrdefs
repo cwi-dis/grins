@@ -99,8 +99,17 @@
 (links_winsize  (tuple (float) (float)) (146.923828125 132.51953125) 'Link edit window size' hidden
 	 'Size of link edit window' raw)
 
+(mcgroup (string) '' 'Multicast group' default
+	'IP Multicast group address to listen to' raw)
+
+(mcttl (int) 3 'Multicast TTL' default
+	'TTL for outgoing multicast messages' raw)
+
 (name (name) '' 'Node name' default
 	'Name given to a node' raw)
+
+(nonlocal (bool) 0 'Remote only' default
+	'Ignore incoming messages from local machine' raw)
 
 (scale (float) 0.0 'Scale factor' default
 	'Image magnification (0.0 means fit in window)' channel)
@@ -113,6 +122,9 @@
 
 (player_winsize (tuple (float) (float)) (83.544921875 46.09375) 'Player winsize' hidden
 	 'Window size for player control panel' raw)
+
+(port (int) 7000 'UDP port' default
+	'UDP port for external hyperjumps' raw)
 
 (pointsize (float) 0 'Point size' default
 	'Point size of text displayed in window' channel)
