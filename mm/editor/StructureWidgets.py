@@ -1090,6 +1090,9 @@ class StructureObjWidget(MMNodeWidget):
 ##				self.need_draghandles = l,r,(t+b)/2
 				self.need_draghandles = l,r,b-8
 
+		if self.iscollapsed():
+			return
+
 		if self.channelbox is not None:
 			this_w, this_h = self.channelbox.get_minsize()
 			self.channelbox.moveto((my_l, my_t, my_l+this_w, my_b))
