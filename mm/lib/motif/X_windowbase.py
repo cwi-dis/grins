@@ -542,7 +542,7 @@ class _MenubarSupport(_ToolTip):
 			self.__accelmap[c].append(key)
 
 	def _create_menu(self, menu, list):
-		if len(list) > 40:
+		if len(list) > 30:
 			menu.numColumns = (len(list) + 29) / 30
 			menu.packing = Xmd.PACK_COLUMN
 		widgetmap = self.__widgetmap
@@ -2715,7 +2715,7 @@ def _generic_callback(widget, (func, args), call_data):
 	apply(func, args)
 
 def _create_menu(menu, list, visual, colormap, acc = None, widgets = {}):
-	if len(list) > 40:
+	if len(list) > 30:
 		menu.numColumns = (len(list) + 29) / 30
 		menu.packing = Xmd.PACK_COLUMN
 	if _def_useGadget:
