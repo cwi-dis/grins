@@ -64,6 +64,7 @@ MENUBAR=(
 			(FLAG_ALL, SEP,),
 			(FLAG_ALL, ENTRY, 'P&rune and publish for 3GPP (PSS4)...', None, EXPORT_3GPP),
 			(FLAG_ALL, ENTRY, 'P&rune and publish for generic SMIL 2.0...', None, EXPORT_PRUNE),
+			(FLAG_ALL, ENTRY, 'Publish as GRiNS Template...', None, EXPORT_TEMPLATE),
 		)),
 		(FLAG_SMIL_1_0 | FLAG_QT | FLAG_G2 | FLAG_PRO, SEP,),
 		(FLAG_ALL, ENTRY, '&Document Properties...', None, PROPERTIES),
