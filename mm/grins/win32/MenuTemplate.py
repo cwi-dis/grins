@@ -71,3 +71,9 @@ MENUBAR=(
 		(SEP,),
 		(ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
 		
+MAIN_FRAME_POPUP = (
+		(ENTRY, '&Paste document\tCtrl+Shift+V', None, PASTE_FILE),
+		(SEP,),
+		(ENTRY, '&Open...\tCtrl+O', 'O', OPEN),
+		(ENTRY, '&Close document', None, CLOSE),
+)
