@@ -34,50 +34,50 @@ from flags import *
 
 MENUBAR=(
 	('&File', (
-		(ALL, ENTRY, '&Open...\tCtrl+O', 'O', OPENFILE),
-		(ALL, ENTRY, '&Open URL...\tCtrl+L', 'O', OPEN),
-		(ALL, DYNAMICCASCADE, 'Open recent', OPEN_RECENT),
-		(ALL, ENTRY, '&Close Document', None, CLOSE),
-		(ALL, SEP,),
-		(ALL, ENTRY, '&Preferences...', None, PREFERENCES),
-		(DBG, SEP,),
-		(DBG, CASCADE, '&Debug', (
-			(ALL, ENTRY, 'Dump &scheduler data', None, SCHEDDUMP),
-			(ALL, TOGGLE, 'Enable call &tracing', None, TRACE),
-			(ALL, ENTRY, 'Enter &debugger', None, DEBUG),
-			(ALL, ENTRY, '&Abort', None, CRASH),
-			(ALL, TOGGLE, 'Show &log/debug window', None, CONSOLE),
+		(LIGHT, ENTRY, '&Open...\tCtrl+O', 'O', OPENFILE),
+		(LIGHT, ENTRY, '&Open URL...\tCtrl+L', 'O', OPEN),
+		(LIGHT, DYNAMICCASCADE, 'Open recent', OPEN_RECENT),
+		(LIGHT, ENTRY, '&Close Document', None, CLOSE),
+		(LIGHT, SEP,),
+		(LIGHT, ENTRY, '&Preferences...', None, PREFERENCES),
+		(LIGHT|DBG, SEP,),
+		(LIGHT|DBG, CASCADE, '&Debug', (
+			(LIGHT|DBG, ENTRY, 'Dump &scheduler data', None, SCHEDDUMP),
+			(LIGHT|DBG, TOGGLE, 'Enable call &tracing', None, TRACE),
+			(LIGHT|DBG, ENTRY, 'Enter &debugger', None, DEBUG),
+			(LIGHT|DBG, ENTRY, '&Abort', None, CRASH),
+			(LIGHT|DBG, TOGGLE, 'Show &log/debug window', None, CONSOLE),
 			)),
-		(ALL, SEP,),
-		(ALL, ENTRY, 'E&xit', None, EXIT))),
+		(LIGHT, SEP,),
+		(LIGHT, ENTRY, 'E&xit', None, EXIT))),
 
 
 	('&View', (
-		(ALL, TOGGLE, '&Source', None, SOURCE),)),
+		(LIGHT, TOGGLE, '&Source', None, SOURCE),)),
 
 	('&Play', (
-		(ALL, ENTRY, '&Play\tCtrl+P', 'P', PLAY),
-		(ALL, ENTRY, 'Pa&use\tCtrl+U', 'U', PAUSE),
-		(ALL, ENTRY, '&Stop\tCtrl+H', 'H', STOP),
+		(LIGHT, ENTRY, '&Play\tCtrl+P', 'P', PLAY),
+		(LIGHT, ENTRY, 'Pa&use\tCtrl+U', 'U', PAUSE),
+		(LIGHT, ENTRY, '&Stop\tCtrl+H', 'H', STOP),
 		(CMIF, SEP,),
 		(CMIF, DYNAMICCASCADE, 'User &groups', USERGROUPS),
 		(CMIF, DYNAMICCASCADE, 'Visible &channels', CHANNELS),
 		)),
 
 	('&Window', (
-		(ALL, ENTRY, 'Cl&ose', None, CLOSE_ACTIVE_WINDOW),)),
+		(LIGHT, ENTRY, 'Cl&ose', None, CLOSE_ACTIVE_WINDOW),)),
 
 	('&Help', (
-		(ALL, ENTRY, '&Contents', None, HELP_CONTENTS),
-		(ALL, ENTRY, 'Context &Help', None, HELP),
-		(ALL, SEP,),
-		(ALL, ENTRY, 'GRiNS on the &Web', None,GRINS_WEB),
-		(ALL, SEP,),
-		(ALL, ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
+		(LIGHT, ENTRY, '&Contents', None, HELP_CONTENTS),
+		(LIGHT, ENTRY, 'Context &Help', None, HELP),
+		(LIGHT, SEP,),
+		(LIGHT, ENTRY, 'GRiNS on the &Web', None,GRINS_WEB),
+		(LIGHT, SEP,),
+		(LIGHT, ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
 
 MAIN_FRAME_POPUP = (
-		(ALL, ENTRY, '&Paste document', None, PASTE_DOCUMENT),
-		(ALL, SEP,),
-		(ALL, ENTRY, '&Open...\tCtrl+O', 'O', OPEN),
-		(ALL, ENTRY, '&Close document', None, CLOSE),
+		(LIGHT, ENTRY, '&Paste document', None, PASTE_DOCUMENT),
+		(LIGHT, SEP,),
+		(LIGHT, ENTRY, '&Open...\tCtrl+O', 'O', OPEN),
+		(LIGHT, ENTRY, '&Close document', None, CLOSE),
 )
