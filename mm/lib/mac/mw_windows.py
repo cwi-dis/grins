@@ -230,10 +230,9 @@ class _CommonWindow:
 		self._set_movie_active(0)
 		if self._transition:
 			self.endtransition()
-		Qd.SetPort(self._onscreen_wid)
 		if self in self._parent._subwindows:
 			self._parent._subwindows.remove(self)
-		Win.InvalRect(self.qdrect())
+		self._onscreen_wid.InvalWindowRect(self.qdrect())
 		self._parent._close_wid(self._onscreen_wid)
 		self._parent = None
 
@@ -366,10 +365,10 @@ class _CommonWindow:
 			self._invalrectandborder()
 			
 	def _invalrectandborder(self):
-		Qd.SetPort(self._onscreen_wid)
+##		Qd.SetPort(self._onscreen_wid)
 		rect = self.qdrect()
 		rect = Qd.InsetRect(rect, -2, -2)
-		Win.InvalRect(rect)
+		self.wid.InvalWindowRect(rect)
 
 	def setcursor(self, cursor):
 		if cursor == 'watch':
@@ -1020,8 +1019,7 @@ class _CommonWindow:
 		"""Schedule a full redraw for the area occupied by this window. This may cause
 		siblings and parents and such to redraw too."""
 		if self._onscreen_wid:
-			Qd.SetPort(self._onscreen_wid)
-			Win.InvalRect(self.qdrect())
+			self._onscreen_wid.InvalWindowRect(self.qdrect())
 		
 	def _mac_getoswindow(self, which=None):
 		"""Return the WindowPtr or GrafPort of the current drawing window."""
@@ -1150,8 +1148,7 @@ class _CommonWindow:
 		else:
 			self._rb_box = None
 		self._rb_dragpoint = None
-		Qd.SetPort(self._onscreen_wid)
-		Win.InvalRect(self.qdrect())
+		self._onscreen_wid.InvalWindowRect(self.qdrect())
 		self._rb_callback = callback
 		self._rb_units = units
 
@@ -1349,8 +1346,7 @@ class _CommonWindow:
 		# called on mouse press
 		# XXXX I'm not sure that both the render and the invalrect are needed...
 		self._rb_display.render()
-		Qd.SetPort(self._onscreen_wid)
-		Win.InvalRect(self.qdrect())
+		self._onscreen_wid.InvalWindowRect(self.qdrect())
 		x, y = where
 		xscrolloff, yscrolloff = self._scrolloffset()
 		x, y = x - xscrolloff, y - yscrolloff
@@ -1382,7 +1378,7 @@ class _CommonWindow:
 			self._rb_movebox(where, 1)
 			self._rb_dragpoint = None
 			mw_globals.toplevel.setmousetracker(None)
-			Win.InvalRect(self.qdrect())
+			self._onscreen_wid.InvalWindowRect(self.qdrect())
 			if not self._rb_dialog:
 				# Modeless create_box: do the callback
 				self._rb_done()
@@ -1409,7 +1405,7 @@ class _CommonWindow:
 			return
 			
 		Qd.SetPort(self._onscreen_wid)
-		Win.InvalRect(self.qdrect())
+		self._onscreen_wid.InvalWindowRect(self.qdrect())
 		
 		old_x, old_y, old_w, old_h = self._rect
 		if units == self._units and w == old_w and h == old_h:
@@ -1421,7 +1417,7 @@ class _CommonWindow:
 			self._units = units
 			self._do_resize()
 ##			print 'NEW RECT', self._rect, self.qdrect()
-		Win.InvalRect(self.qdrect())
+		self._onscreen_wid.InvalWindowRect(self.qdrect())
 
 	def updatezindex(self, z):
 		self._z = z
@@ -1434,8 +1430,7 @@ class _CommonWindow:
 		for dl in self._displists:
 			dl.updatebgcolor(color)
 ##		print 'window.updatebgcolor',color, self
-		Qd.SetPort(self._onscreen_wid)
-		Win.InvalRect(self.qdrect())
+		self._onscreen_wid.InvalWindowRect(self.qdrect())
 
 	# Experimental transition interface
 	def begintransition(self, isouttransition, runit, dict, cb):
@@ -1462,11 +1457,18 @@ class _CommonWindow:
 	def endtransition(self):
 ##		print 'DBG: endtransition', self, self._transition
 		if not self._transition:
+			print 'endtransition() called for window not in a transition!'
+			return
+		if not self._parent:
+			print 'endtransition() called for a window that is not visible anymore!'
 			return
 ##		has_tmp = self._transition.need_tmp_wid()
 		has_tmp = 1
 		self._transition.endtransition()
 		self._transition = None
+		if not self._parent:
+			print 'endtransition() called for a window that is not visible anymore!'
+			return
 		self._mac_dispose_gworld(BM_DRAWING)
 		self._mac_dispose_gworld(BM_PASSIVE)
 		if has_tmp:
@@ -1574,7 +1576,10 @@ class _CommonWindow:
 		self._parent._mac_create_gworld(which, copybits, area)
 		
 	def _mac_dispose_gworld(self, which):
-		self._parent._mac_dispose_gworld(which)
+		if self._parent:
+			self._parent._mac_dispose_gworld(which)
+		else:
+			print "Cannot dispose GWorld when parent window no longer exists!"
 		
 	def dumpwindow(self, indent=0):
 		if not self._subwindows and not self._active_displist and not self._redrawfunc:
@@ -1818,7 +1823,7 @@ class _ScrollMixin:
 		else:
 			# ok, update the whole window
 			Qd.RectRgn(updrgn, self.qdrect())
-		Win.InvalRgn(updrgn)
+		self._onscreen_wid.InvalWindowRgn(updrgn)
 		Qd.DisposeRgn(updrgn)
 		self._canvaspos = new_x, new_y
 		
@@ -2391,7 +2396,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 		self._redraw(rgn)
 		if not rgn:
 			rgn = self._onscreen_wid.GetWindowPort().visRgn
-		Win.ValidRgn(rgn)
+		self._onscreen_wid.ValidWindowRgn(rgn)
 
 	def _activate(self, onoff):
 		_CommonWindow._activate(self, onoff)
@@ -2406,7 +2411,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 		self._onscreen_wid.SizeWindow(width, height, 1)
 		# XXXX Should also update size of offscreen maps?
 		Qd.SetPort(self._onscreen_wid)
-		Win.InvalRect(self.qdrect())
+		self._onscreen_wid.InvalWindowRect(self.qdrect())
 
 		old_x, old_y, old_w, old_h = self._rect
 		if x is None:
@@ -2634,8 +2639,7 @@ class _SubWindow(_CommonWindow):
 				parent._subwindows.insert(0, self)		
 		if redraw:
 			parent._clipchanged()
-			Qd.SetPort(self._onscreen_wid)
-			Win.InvalRect(self.qdrect())
+			self._onscreen_wid.InvalWindowRect(self.qdrect())
 
 	def pop(self, poptop=1):
 		"""Pop to top of subwindow stack"""
