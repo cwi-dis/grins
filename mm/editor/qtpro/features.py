@@ -7,6 +7,6 @@ from compatibility import *
 #
 compatibility = QT
 compatibility_short = 'QT'
-cmif = 0
 lightweight = 0
 editor = 1
+level = 'pro'
