@@ -10,7 +10,7 @@ elif os.name == 'nt':
 elif os.environ.has_key('CMIF_USE_GL'):
 	raise ImportError('No module named splash')
 
-import Xt, Xm, sys, X, Xcursorfont
+import Xt, Xm, Xmd, sys, X, Xcursorfont
 
 error = 'windowinterface.error'
 
@@ -49,7 +49,7 @@ class _Splash:
 		self.main = None
 		self.__initialized = 0
 
-	def splash(self):
+	def splash(self, version = None):
 		self.wininit()
 		if self.visual.depth < 24:
 			return 0
@@ -76,9 +76,22 @@ class _Splash:
 					       'x': (swidth-width)/2,
 					       'y': (sheight-height)/2})
 		self.shell = shell
-		w = shell.CreateManagedWidget('image', Xm.DrawingArea,
-					      {'width': width,
-					       'height': height})
+		form = shell.CreateManagedWidget('form', Xm.Form,
+						 {'allowOverlap': 0})
+		w = form.CreateManagedWidget('image', Xm.DrawingArea,
+					     {'width': width,
+					      'height': height,
+					      'leftAttachment': Xmd.ATTACH_FORM,
+					      'rightAttachment': Xmd.ATTACH_FORM,
+					      'topAttachment': Xmd.ATTACH_FORM})
+		if version is not None:
+			l = form.CreateManagedWidget(
+				'version', Xm.Label,
+				{'labelString': version,
+				 'leftAttachment': Xmd.ATTACH_FORM,
+				 'rightAttachment': Xmd.ATTACH_FORM,
+				 'topAttachment': Xmd.ATTACH_WIDGET,
+				 'topWidget': w})
 		main.RealizeWidget()
 		shell.Popup(0)
 		gc = w.CreateGC({})
