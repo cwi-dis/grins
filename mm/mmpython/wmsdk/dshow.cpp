@@ -751,7 +751,28 @@ GraphBuilder_WaitForCompletion(GraphBuilderObject *self, PyObject *args)
 static void ConvToWindowsMediaUrl(char *pszUrl)
 	{
 	int l = strlen(pszUrl);
-	if(strstr(pszUrl,"file:///")==pszUrl && l>10 && pszUrl[9]=='|')
+	if(strncmp(pszUrl,"file:////",9)==0 && l>11 && pszUrl[10]==':')
+		{
+		char *ps = pszUrl+9;
+		char *pd = pszUrl;
+		while(*ps){
+			if(*ps=='/'){*pd++='\\';ps++;}
+			else {*pd++ = *ps++;}
+			}
+		*pd='\0';
+		}
+	else if(strncmp(pszUrl,"file:////",9)==0 && l>9 && strstr(pszUrl,"|")==NULL) // UNC
+		{
+		pszUrl[0]='\\';pszUrl[1]='\\';
+		char *ps = pszUrl+9;
+		char *pd = pszUrl+2;
+		while(*ps){
+			if(*ps=='/'){*pd++='\\';ps++;}
+			else {*pd++ = *ps++;}
+			}
+		*pd='\0';
+		}
+	else if(strncmp(pszUrl,"file:///",8)==0 && l>10 && pszUrl[9]=='|')
 		{
 		pszUrl[0]=pszUrl[8];
 		pszUrl[1]=':';
@@ -763,33 +784,12 @@ static void ConvToWindowsMediaUrl(char *pszUrl)
 			}
 		*pd='\0';
 		}
-	else if(strstr(pszUrl,"file:/")==pszUrl && l>8 && pszUrl[7]=='|')
+	else if(strncmp(pszUrl,"file:/",6)==0 && l>8 && pszUrl[7]=='|')
 		{
 		pszUrl[0]=pszUrl[6];
 		pszUrl[1]=':';
 		char *ps = pszUrl+8;
 		char *pd = pszUrl+2;
-		while(*ps){
-			if(*ps=='/'){*pd++='\\';ps++;}
-			else {*pd++ = *ps++;}
-			}
-		*pd='\0';
-		}
-	else if(strstr(pszUrl,"file:////")==pszUrl && l>11 && pszUrl[10]==':')
-		{
-		char *ps = pszUrl+9;
-		char *pd = pszUrl;
-		while(*ps){
-			if(*ps=='/'){*pd++='\\';ps++;}
-			else {*pd++ = *ps++;}
-			}
-		*pd='\0';
-		}
-	else if(strstr(pszUrl,"file:////")==pszUrl && l>9 && strstr(pszUrl,"|")==NULL) // UNC
-		{
-		pszUrl[0]='\\';pszUrl[1]='\\';pszUrl[2]='\\';pszUrl[3]='\\';
-		char *ps = pszUrl+9;
-		char *pd = pszUrl+4;
 		while(*ps){
 			if(*ps=='/'){*pd++='\\';ps++;}
 			else {*pd++ = *ps++;}
@@ -821,7 +821,7 @@ GraphBuilder_RenderFile(GraphBuilderObject *self, PyObject *args)
 	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
 		char sz[MAX_PATH+80]="GraphBuilder_RenderFile ";
-		strcat(sz,psz);
+		strcat(sz,buf);
 		seterror(sz, res);
 		return NULL;
 	}
