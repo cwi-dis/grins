@@ -25,14 +25,14 @@ from flags import *
 class MainDialog:
 	adornments = {
 		'toolbar' : [
-			(ALL, 'New', NEW_DOCUMENT),
-			(ALL, 'Open...', OPEN),
-			(ALL, 'Preferences...', PREFERENCES),
-			(DBG, 'Trace', TRACE, 't'),
-			(DBG, 'Debug', DEBUG),
-			(DBG, 'Crash', CRASH),
-			(ALL, 'Help...', HELP),
-			(ALL, 'Exit', EXIT),
+			(LIGHT, 'New', NEW_DOCUMENT),
+			(LIGHT, 'Open...', OPEN),
+			(LIGHT, 'Preferences...', PREFERENCES),
+			(LIGHT|DBG, 'Trace', TRACE, 't'),
+			(LIGHT|DBG, 'Debug', DEBUG),
+			(LIGHT|DBG, 'Crash', CRASH),
+			(LIGHT, 'Help...', HELP),
+			(LIGHT, 'Exit', EXIT),
 			],
 		'close': [ EXIT, ],
 		}
