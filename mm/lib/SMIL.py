@@ -15,8 +15,6 @@ class SMIL:
 	__cmif = GRiNSns + ' ' 'cmif'
 	__shell = GRiNSns + ' ' 'shell'
 	__socket = GRiNSns + ' ' 'socket'
-	__user_attributes = GRiNSns + ' ' 'user-attributes'
-	__u_group = GRiNSns + ' ' 'u-group'
 
 	# all allowed entities with all their attributes
 	attributes = {
@@ -82,7 +80,7 @@ class SMIL:
 			'system-screen-depth':None,
 			'system-screen-size':None,
 			'title':None,
-			__u_group:None,
+			'uGroup':None,
 			__layout:None,
 			GRiNSns+' ' 'comment':None,
 			},
@@ -102,7 +100,7 @@ class SMIL:
 			'system-screen-depth':None,
 			'system-screen-size':None,
 			'title':None,
-			__u_group:None,
+			'uGroup':None,
 			__layout:None,
 			GRiNSns+' ' 'comment':None,
 			},
@@ -115,7 +113,7 @@ class SMIL:
 			   'system-required':None,
 			   'system-screen-depth':None,
 			   'system-screen-size':None,
-			   __u_group:None,
+			   'uGroup':None,
 			   __layout:None},
 		__choice: {GRiNSns+' ' 'abstract':'',
 			   GRiNSns+' ' 'author':'',
@@ -130,7 +128,7 @@ class SMIL:
 			   GRiNSns+' ' 'system-screen-depth':None,
 			   GRiNSns+' ' 'system-screen-size':None,
 			   GRiNSns+' ' 'title':None,
-			   __u_group:None,
+			   'uGroup':None,
 			   __layout:None,
 			   GRiNSns+' ' 'comment':None,
 			   },
@@ -158,7 +156,7 @@ class SMIL:
 			'system-screen-size':None,
 			'title':None,
 			'type':None,
-			__u_group:None,
+			'uGroup':None,
 			__layout:None,
 			GRiNSns+' ' 'bgcolor':None,
 			GRiNSns+' ' 'comment':None,
@@ -187,13 +185,17 @@ class SMIL:
 			   'skip-content':'true',
 			   'title':None,
 			   GRiNSns+' ' 'fragment-id':None},
-		__user_attributes: {GRiNSns+' ' 'id':None,
-				    },
-		__u_group: {GRiNSns+' ' 'id':None,
+		'userAttributes': {'id':None,},
+		'uGroup': {GRiNSns+' ' 'id':None,
 			    GRiNSns+' ' 'u-state':'RENDERED',
 			    GRiNSns+' ' 'title':None,
 			    GRiNSns+' ' 'override':'allowed',
 			    },
+		'uGroup': {'id':None,
+			   'uState':'RENDERED',
+##			   'title':None,
+##			   'override':'allowed',
+			   },
 		}
 	attributes[__bag] = attributes[__choice]
 
@@ -222,11 +224,11 @@ class SMIL:
 	# all entities with their allowed content
 	entities = {
 		'smil': ['head', 'body'],
-		'head': ['layout', 'switch', 'meta', __user_attributes, __layouts],
-		__user_attributes: [__u_group,],
-		__u_group: __empty,
+		'head': ['layout', 'switch', 'meta', 'userAttributes', __layouts],
+		'userAttributes': ['uGroup'],
+		'uGroup': __empty,
 		'layout': ['region', 'root-layout'],
-		'region': __empty,
+		'region': ['region'],
 		'meta': __empty,
 		__layouts: [__layout],
 		'body': __container_content,
@@ -251,7 +253,7 @@ class SMIL:
 		}
 
 	# cleanup
-	del __choice, __bag, __cmif, __shell, __socket, __user_attributes
-	del __u_group, __media_object, __schedule, __container_content,
+	del __choice, __bag, __cmif, __shell, __socket
+	del __media_object, __schedule, __container_content,
 	del __assoc_link, __empty
 	del __layouts, __layout

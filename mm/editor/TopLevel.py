@@ -79,12 +79,14 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				CHANNELVIEW(callback = (self.view_callback, (2,))),
 				LINKVIEW(callback = (self.view_callback, (3,))),
 				LAYOUTVIEW(callback = (self.view_callback, (4,))),
-				USERGROUPVIEW(callback = (self.view_callback, (5,))),
 				HIDE_CHANNELVIEW(callback = (self.hide_view_callback, (2,))),
 				HIDE_LINKVIEW(callback = (self.hide_view_callback, (3,))),
 				HIDE_LAYOUTVIEW(callback = (self.hide_view_callback, (4,))),
 				HIDE_USERGROUPVIEW(callback = (self.hide_view_callback, (5,))),
 				]
+			self.__ugroup = [USERGROUPVIEW(callback = (self.view_callback, (5,)))]
+		else:
+			self.__ugroup = []
 		if hasattr(self, 'do_edit'):
 			self.commandlist.append(EDITSOURCE(callback = (self.edit_callback, ())))
 		#self.__save = None
@@ -851,6 +853,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			# reshow source
 			import SMILTreeWrite
 			self.showsource(SMILTreeWrite.WriteString(self.root), optional=1)
+		if self.context.attributes.get('project_boston', 0):
+			self.setcommands(self.commandlist + self.__ugroup)
+		else:
+			self.setcommands(self.commandlist)
 		#if self.__save is not None:
 		#	self.setcommands(self.commandlist + [self.__save])
 

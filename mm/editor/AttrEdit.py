@@ -379,7 +379,7 @@ class NodeWrapper(Wrapper):
 			('clipbegin',), ('clipend',),	# More time stuff
 			'title', 'abstract', ('alt',), ('longdesc',), 'author',
 			'copyright', 'comment',
-			'layout', ('u_group',),
+			'layout', 'u_group',
 			('mimetype',),	# XXXX Or should this be with file?
 			'system_bitrate', 'system_captions',
 			'system_language', 'system_overdub_or_caption',
