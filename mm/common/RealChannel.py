@@ -39,7 +39,9 @@ class RealEngine:
 	def __del__(self):
 		self.close()
 		
-	def CreatePlayer(self, window, winpossize):
+	def CreatePlayer(self, window, winpossize, windowless):
+		if windowless:
+			return self.engine.CreatePlayer(0, ((-1,-1),(-1, -1)), 1)
 		if window is None:
 			return self.engine.CreatePlayer()
 		else:
@@ -118,10 +120,12 @@ class RealChannel:
 				return 0
 		return 1
 
-	def playit(self, node, window = None, winpossize=None, url=None):
-		self.__winpos = window, winpossize
+	def playit(self, node, window = None, winpossize=None, url=None, windowless=0):
+		self.__winpos = window, winpossize, windowless
 		if not self.__createplayer(node):
 			return 0
+		if windowless:
+			self.__rmaplayer.SetPyVideoRenderer(self.__channel.getRealVideoRenderer())
 		self.__loop = self.__channel.getloop(node)
 		duration = self.__channel.getduration(node)
 		if url is None:
@@ -156,23 +160,26 @@ class RealChannel:
 		self.__rmaplayer.Begin()
 		self.__engine.startusing()
 		self.__using_engine = 1
-		self._playargs = (node, window, winpossize, url)
+		self._playargs = (node, window, winpossize, url, windowless)
 		return 1
 
 
 	def replay(self):
 		if not self._playargs:
 			return
-		node, window, winpossize, url = self._playargs
+		node, window, winpossize, url, windowless = self._playargs
 		temp = self.__rmaplayer
 		self.__rmaplayer = None
 		self.__createplayer(node)
 		self.__rmaplayer.SetStatusListener(self)
-		if window is not None:
-			self.__rmaplayer.SetOsWindow(window)
-		if winpossize is not None:
-			pos, size = winpossize
-			self.__rmaplayer.SetPositionAndSize(pos, size)
+		if windowless:
+			self.__rmaplayer.SetPyVideoRenderer(self.__channel.getRealVideoRenderer())
+		else:
+			if window is not None:
+				self.__rmaplayer.SetOsWindow(window)
+			if winpossize is not None:
+				pos, size = winpossize
+				self.__rmaplayer.SetPositionAndSize(pos, size)
 		self.__rmaplayer.OpenURL(url)
 		self.__rmaplayer.Begin()
 
@@ -235,3 +242,4 @@ class RealChannel:
 				self.__engine.stopusing()
 			self.__using_engine = 0
 			self.__rmaplayer = None
+	
