@@ -49,7 +49,7 @@ def curflags():
 	if _curflags is None:
 		import settings
 		import features
-		flags = 0
+		flags = FLAG_BOSTON
 		if hasattr(features, 'feature_set'):
 			if features.EXPORT_REAL in features.feature_set:
 				flags = flags | FLAG_G2
