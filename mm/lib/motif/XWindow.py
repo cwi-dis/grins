@@ -1344,6 +1344,38 @@ class _Window(_AdornmentSupport, _RubberBand):
 		if self._curcursor != cursor:
 			self.setcursor(cursor)
 
+	# Experimental animation interface
+	def updatecoordinates(self, coordinates, units=UNIT_SCREEN):
+		# first convert any coordinates to pixel
+		coordinates = self._convert_coordinates(coordinates,units=units)
+		print 'window.updatecoordinates',coordinates, units
+		
+		x, y = coordinates[:2]
+
+		# move or/and resize window
+		if len(coordinates)==2:
+			w, h = 0, 0
+		elif len(coordinates)==4:
+			w, h = coordinates[2:]
+		else:
+			raise AssertionError
+
+		# do move/resize
+		# ...
+
+	def updatezindex(self, z):
+		self._z = z
+		# do reorder subwindows
+		print 'window.updatezindex',z
+
+	def updatebgcolor(self, color):
+		r, g, b = color
+		self._bgcolor = r, g, b
+		# do update bgcolor if active display list
+		# ...
+		print 'window.updatebgcolor',color
+
+
 class _SubWindow(_Window):
 	def __init__(self, parent, coordinates, defcmap, pixmap, transparent, z, units):
 ##		if z < 0:
