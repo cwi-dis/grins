@@ -348,6 +348,27 @@ BOOL CallerHelper::call(int val1, int val2, int val3)
 	return do_call(arglst);
 	}
 
+BOOL CallerHelper::call(int val1, int val2, int val3, int val4)
+	{
+	if (!handler) return FALSE;
+	PyObject *arglst = Py_BuildValue("(iiii)",val1, val2, val3, val4);
+	return do_call(arglst);
+	}
+
+BOOL CallerHelper::call(int val1, int val2, int val3, const char *val4)
+	{
+	if (!handler) return FALSE;
+	PyObject *arglst = Py_BuildValue("(iiiz)",val1, val2, val3, val4);
+	return do_call(arglst);
+	}
+
+BOOL CallerHelper::call(int val1, int val2, int val3, const char *val4, void* data)
+	{
+	if (!handler) return FALSE;
+	PyObject *arglst = Py_BuildValue("(iiizl)",val1, val2, val3, val4, data);
+	return do_call(arglst);
+	}
+
 BOOL CallerHelper::call(long val)
 	{
 	if (!handler) return FALSE;
