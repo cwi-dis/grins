@@ -5,7 +5,7 @@ to only use the functions defined in the module.
 The following functions are defined in the module.  In all cases, the
 function returns after a button was clicked (or RETURN was typed when
 there is a default button).  The dialog window is removed before the
-window returns.
+function returns.
 
 	showdialog(message, buttons...) -> button_text
 		Show a dialog window with the specified message (may
