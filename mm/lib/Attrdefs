@@ -32,6 +32,9 @@
 (align (string) 'left' 'Alignment' CMIFdefault
 	'Alignment of short datasets' channel)
 
+(alt (string) '' 'Alternate text' default
+	'Alternate text for media object' raw)
+
 (anchorlist (list (enclosed (tuple (any) (int) (enclosed (list (any))))))
 	() 'Anchors' hidden 'List of anchors on this node' raw)
 
@@ -86,7 +89,7 @@
 (clipend (string) '' 'Clip end' default
 	'End of range of frames to be played. Simplest form is "npt=3s".' channel)
 
-(comment (string) '' 'Comment' default
+(comment (string) '' 'Comment' CMIFdefault
 	 'A comment (authoring convenience only)' raw)
 
 (copyright (string) '' 'Copyright' default 'Copyright of the item (documentary)' raw)
@@ -145,6 +148,9 @@
 
 (links_winsize  (tuple (float) (float)) (146.923828125 132.51953125) 'Link edit window size' hidden
 	 'Size of link edit window' raw)
+
+(longdesc (string) '' 'Long description URI' default
+	'Link (URI) to a long description of the media object' raw)
 
 (loop (int) 1 'Loop' default
 	'Number of times the node should loop (0 is indefinite)' raw)
