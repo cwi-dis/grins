@@ -3,10 +3,9 @@
                       "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
 <smil>
   <head>
-    <meta name="title" content=" basewindow "/>
-    <meta name="generator" content="GRiNS editor 0.4 Unix/motif patchlevel 0"/>
+    <meta name="title" content="root-layout"/>
     <layout>
-      <root-layout id="basewindow-" title=" basewindow " width="640" height="480"/>
+      <root-layout id="root-layout" title="root-layout" width="640" height="480"/>
     </layout>
   </head>
   <body>

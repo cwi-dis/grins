@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"
+                      "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
+<smil>
+  <head>
+    <meta name="title" content=" pictures "/>
+    <meta name="generator" content="GRiNS editor 0.4 win32 patchlevel 4"/>
+    <layout>
+      <root-layout id="pictures-" title=" pictures " width="303" height="276"/>
+      <region id="pictures" title="pictures" width="303" height="229" fit="meet"/>
+    </layout>
+  </head>
+  <body>
+    <seq id="Title">
+      <img id="picture_1" region="pictures" src="put-picture-1-here" dur="5s"/>
+      <img id="picture_2" region="pictures" src="put-picture-2-here" dur="5s"/>
+      <img id="picture_3" region="pictures" src="put-picture-3-here" dur="5s"/>
+    </seq>
+  </body>
+</smil>
