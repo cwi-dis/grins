@@ -531,7 +531,6 @@ class _Toplevel(_Event):
 		self._wid_to_window = {}
 		self._bgcolor = 0xffff, 0xffff, 0xffff # white
 		self._fgcolor =      0,      0,      0 # black
-		self._hfactor = self._vfactor = 1.0
 		self.defaultwinpos = 10	# 1 cm from topleft we open the first window
 		self._command_handler = None
 		self._cursor_is_default = 1
@@ -1041,15 +1040,15 @@ class _CommonWindow:
 		"""Return true if window is closed"""
 		return self._parent is None
 
-	def newwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, z=0, type_channel = SINGLE):
+	def newwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, z=0, type_channel = SINGLE, units = None):
 		"""Create a new subwindow"""
-		rv = _SubWindow(self, self._wid, (x, y, w, h), 0, pixmap, transparent, z)
+		rv = _SubWindow(self, self._wid, (x, y, w, h), 0, pixmap, transparent, z, units)
 		self._clipchanged()
 		return rv
 
-	def newcmwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, z=0, type_channel = SINGLE):
+	def newcmwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, z=0, type_channel = SINGLE, units = None):
 		"""Create a new subwindow"""
-		rv = _SubWindow(self, self._wid, (x, y, w, h), 1, pixmap, transparent, z)
+		rv = _SubWindow(self, self._wid, (x, y, w, h), 1, pixmap, transparent, z, units)
 		self._clipchanged()
 		return rv
 
@@ -1199,28 +1198,68 @@ class _CommonWindow:
 		xim = mac_image.mkpixmap(w, h, format, image)
 		return (xim, image), mask, left, top, x, y, w - left - right, h - top - bottom
 
-	def _convert_coordinates(self, coordinates):
+	def _convert_coordinates(self, coordinates, crop = 0, units = UNIT_SCREEN):
 		"""Convert fractional xywh in our space to pixel-xywh
 		in toplevel-window relative pixels"""
 		
 		x, y = coordinates[:2]
+		if len(coordinates) > 2:
+			w, h = coordinates[2:]
+		else:
+			w, h = 0, 0
+		rx, ry, rw, rh = self._rect
 ##		if not (0 <= x <= 1 and 0 <= y <= 1):
 ##			raise error, 'coordinates out of bounds'
-##		px = int((self._rect[_WIDTH] - 1) * x + 0.5) + self._rect[_X]
-##		py = int((self._rect[_HEIGHT] - 1) * y + 0.5) + self._rect[_Y]
-		px = int(self._rect[_WIDTH] * x) + self._rect[_X]
-		py = int(self._rect[_HEIGHT] * y) + self._rect[_Y]
+		if units == UNIT_PXL or (units is None and type(x) is type(0)):
+			px = int(x)
+		else:
+			px = int((rw - 1) * x + 0.5) + rx
+		if units == UNIT_PXL or (units is None and type(y) is type(0)):
+			py = int(y)
+		else:
+			py = int((rh - 1) * y + 0.5) + ry
+		pw = ph = 0
+		if crop:
+			if px < 0:
+				px, pw = 0, px
+			if px >= rx + rw:
+				px, pw = rx + rw - 1, px - rx - rw + 1
+			if py < 0:
+				py, ph = 0, py
+			if py >= ry + rh:
+				py, ph = ry + rh - 1, py - ry - rh + 1
 		if len(coordinates) == 2:
 			return px, py
-		w, h = coordinates[2:]
-##		if not (0 <= w <= 1 and 0 <= h <= 1 and
-##			0 <= x + w <= 1 and 0 <= y + h <= 1):
-##			raise error, 'coordinates out of bounds'
-##		pw = int((self._rect[_WIDTH] - 1) * w + 0.5)
-##		ph = int((self._rect[_HEIGHT] - 1) * h + 0.5)
-		pw = int(self._rect[_WIDTH] * w)
-		ph = int(self._rect[_HEIGHT] * h)
+		if units == UNIT_PXL or (units is None and type(w) is type(0)):
+			pw = int(w + pw)
+		else:
+			pw = int((rw - 1) * w + 0.5) + pw
+		if units == UNIT_PXL or (units is None and type(h) is type(0)):
+			ph = int(h + ph)
+		else:
+			ph = int((rh - 1) * h + 0.5) + ph
+		if crop:
+			if pw <= 0:
+				pw = 1
+			if px + pw > rx + rw:
+				pw = rx + rw - px
+			if ph <= 0:
+				ph = 1
+			if py + ph > ry + rh:
+				ph = ry + rh - py
 		return px, py, pw, ph
+
+	def _pxl2rel(self, coordinates):
+		px, py = coordinates[:2]
+		rx, ry, rw, rh = self._rect
+		x = float(px - rx) / (rw - 1)
+		y = float(py - ry) / (rh - 1)
+		if len(coordinates) == 2:
+			return x, y
+		pw, ph = coordinates[2:]
+		w = float(pw) / (rw - 1)
+		h = float(ph) / (rh - 1)
+		return x, y, w, h
 		
 	def _convert_color(self, (r, g, b)):
 		"""Convert 8-bit r,g,b tuple to 16-bit r,g,b tuple"""
@@ -1445,8 +1484,6 @@ class _Window(_CommonWindow, _WindowGroup, _ScrollMixin):
 		w, h = _ScrollMixin.__init__(self, w, h, canvassize)
 		self._rect = 0, 0, w, h
 		
-		self._hfactor = parent._hfactor / (float(w) / _x_pixel_per_mm)
-		self._vfactor = parent._vfactor / (float(h) / _y_pixel_per_mm)
 	
 	def close(self):
 		_ScrollMixin.close(self)
@@ -1550,8 +1587,6 @@ class _Window(_CommonWindow, _WindowGroup, _ScrollMixin):
 		self._rect = x, y, width, height
 		# convert pixels to mm
 		parent = self._parent
-		self._hfactor = parent._hfactor / (float(width) / _x_pixel_per_mm)
-		self._vfactor = parent._vfactor / (float(height) / _y_pixel_per_mm)
 		for d in self._displists[:]:
 			d.close()
 		self._wid.SizeWindow(width, height, 1)
@@ -1566,19 +1601,16 @@ class _SubWindow(_CommonWindow):
 	"""Window "living in" with a toplevel window"""
 
 	def __init__(self, parent, wid, coordinates, defcmap = 0, pixmap = 0, 
-			transparent = 0, z = 0):
+			transparent = 0, z = 0, units = None):
 		
 		self._istoplevel = 0
 		_CommonWindow.__init__(self, parent, wid, z)
 		
-		x, y, w, h = parent._convert_coordinates(coordinates)
+		x, y, w, h = parent._convert_coordinates(coordinates, crop = 1, units = units)
 		self._rect = x, y, w, h
 		if w <= 0 or h <= 0:
 			raise 'Empty subwindow', coordinates
-		self._sizes = coordinates
-		
-		self._hfactor = parent._hfactor / self._sizes[_WIDTH]
-		self._vfactor = parent._vfactor / self._sizes[_HEIGHT]
+		self._sizes = parent._pxl2rel(self._rect)
 		
 		if parent._transparent:
 			self._transparent = parent._transparent
@@ -1593,8 +1625,19 @@ class _SubWindow(_CommonWindow):
 		"""Set window title"""
 		raise error, 'can only settitle at top-level'
 		
-	def getgeometry(self, units=UNIT_MM):
-		return self._sizes
+	def getgeometry(self, units=UNIT_SCREEN):
+		if units == UNIT_PXL:
+			return self._rect
+		elif units == UNIT_SCREEN:
+			return self._sizes
+		elif units == UNIT_MM:
+			x, y, w, h = self._rect
+			return float(x) / _x_pixel_per_mm, \
+			       float(y) / _y_pixel_per_mm, \
+			       float(w) / _x_pixel_per_mm, \
+			       float(h) / _y_pixel_per_mm
+		else:
+			raise error, 'bad units specified'
 
 	def pop(self):
 		"""Pop to top of subwindow stack"""
@@ -1679,13 +1722,6 @@ class _SubWindow(_CommonWindow):
 		##x, y, w, h = parent._convert_coordinates(self._sizes, crop = 1)
 		x, y, w, h = parent._convert_coordinates(self._sizes)
 		self._rect = x, y, w, h
-		w, h = self._sizes[2:]
-		if w == 0:
-			w = float(self._rect[_WIDTH]) / parent._rect[_WIDTH]
-		if h == 0:
-			h = float(self._rect[_HEIGHT]) / parent._rect[_HEIGHT]
-		self._hfactor = parent._hfactor / w
-		self._vfactor = parent._vfactor / h
 		# We don't have to clear _clip, our parent did that.
 		self._active_displist = None
 		for d in self._displists[:]:
@@ -1948,18 +1984,19 @@ class _DisplayList:
 		return self.usefont(findfont(fontname, 10))
 
 	def baseline(self):
-		return self._font.baseline() * self._window._vfactor
+		baseline = self._font.baseline()
+		return self._window._pxl2rel((0,0,0,baseline))[3]
 
 	def fontheight(self):
-		return self._font.fontheight() * self._window._vfactor
+		fontheight = self._font.fontheight()
+		return self._window._pxl2rel((0,0,0,fontheight))[3]
 
 	def pointsize(self):
 		return self._font.pointsize()
 
 	def strsize(self, str):
 		width, height = self._font.strsize(self._window._wid, str)
-		return float(width) * self._window._hfactor, \
-		       float(height) * self._window._vfactor
+		return self._window._pxl2rel((0,0,width,height))[2:4]
 
 	def setpos(self, x, y):
 		self._curpos = x, y
@@ -1976,6 +2013,7 @@ class _DisplayList:
 		self._font._setfont(w._wid)
 		base = self.baseline()
 		height = self.fontheight()
+		pheight = self._font.fontheigt()
 		strlist = string.splitfields(str, '\n')
 		oldx, oldy = x, y = self._curpos
 		if len(strlist) > 1 and oldx > self._xpos:
@@ -1987,7 +2025,7 @@ class _DisplayList:
 			list.append('text', x0, y0, str)
 			twidth = Qd.TextWidth(str, 0, len(str))
 			self._curpos = x + float(twidth) / w._rect[_WIDTH], y
-			self._update_bbox(x0, y0, x0+twidth, y0+int(height/self._window._vfactor))
+			self._update_bbox(x0, y0, x0+twidth, y0+pheight)
 			x = self._xpos
 			y = y + height
 			if self._curpos[0] > maxx:
