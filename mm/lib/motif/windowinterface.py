@@ -627,7 +627,7 @@ from X_windowbase import *
 
 class FileDialog:
 	def __init__(self, prompt, directory, filter, file, cb_ok, cb_cancel,
-		     existing=0):
+		     existing = 0):
 		import os
 		self.cb_ok = cb_ok
 		self.cb_cancel = cb_cancel
@@ -658,7 +658,7 @@ class FileDialog:
 							  'fileSelect', attrs)
 			self._form = dialog
 		self._dialog = dialog
-		dialog.AddCallback('okCallback', self._ok_callback, None)
+		dialog.AddCallback('okCallback', self._ok_callback, existing)
 		dialog.AddCallback('cancelCallback', self._cancel_callback,
 				       None)
 		helpb = dialog.FileSelectionBoxGetChild(
@@ -711,7 +711,7 @@ class FileDialog:
 			if must_close:
 				self.close()
 
-	def _ok_callback(self, widget, client_data, call_data):
+	def _ok_callback(self, widget, existing, call_data):
 		if _in_create_box or self.is_closed():
 			return
 		import os
@@ -719,11 +719,31 @@ class FileDialog:
 		dir = call_data.dir
 		filter = call_data.pattern
 		filename = os.path.join(dir, filename)
-		if not os.path.isfile(filename):
-			if os.path.isdir(filename):
-				filter = os.path.join(filename, filter)
-				self._dialog.FileSelectionDoSearch(filter)
+		if os.path.isdir(filename):
+			filter = os.path.join(filename, filter)
+			self._dialog.FileSelectionDoSearch(filter)
+			return
+		dir, file = os.path.split(filename)
+		if not os.path.isdir(dir):
+			showmessage("path to file `%s' does not exist or is not a directory" % filename)
+			return
+		if existing:
+			if not os.path.exists(filename):
+				showmessage("file `%s' does not exist" % filename)
 				return
+		else:
+			if os.path.exists(filename):
+				showmessage("file `%s' exists, use anyway?" % filename, mtype = 'question', callback = (self._confirm_callback, (filename,)))
+				return
+		if self.cb_ok:
+			ret = self.cb_ok(filename)
+			if ret:
+				if type(ret) is StringType:
+					showmessage(ret)
+				return
+		self.close()
+
+	def _confirm_callback(self, filename):
 		if self.cb_ok:
 			ret = self.cb_ok(filename)
 			if ret:
