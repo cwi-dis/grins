@@ -769,119 +769,119 @@ def getinlinetrmode(writer, node):
 # used as a shortcut for node.GetAttr
 #
 smil_attrs=[
-	("id", getid),
-	("title", lambda writer, node:getcmifattr(writer, node, "title")),
-	("region", getregionname),
-	("project_default_region", getdefaultregion),
-	("project_default_type", lambda writer, node:getcmifattr(writer, node, 'project_default_type')),
-	("project_bandwidth_fraction", lambda writer, node:getpercentage(writer, node, 'project_bandwidth_fraction')),
-	("type", getmimetype),
-	("author", lambda writer, node:getcmifattr(writer, node, "author")),
-	("copyright", lambda writer, node:getcmifattr(writer, node, "copyright")),
-	("abstract", lambda writer, node:getcmifattr(writer, node, "abstract")),
-	("alt", lambda writer, node: getdescr(writer, node, 'alt')),
-	("longdesc", lambda writer, node: getdescr(writer, node, 'longdesc')),
-	("readIndex", lambda writer, node:getcmifattr(writer, node, "readIndex", 0)),
-	("begin", lambda writer, node: getsyncarc(writer, node, 0)),
-	("dur", getduration),
-	("min", getmin),
-	("max", getmax),
-	("end", lambda writer, node: getsyncarc(writer, node, 1)),
-	("fill", lambda writer, node: getcmifattr(writer, node, 'fill', 'default')),
-	("fillDefault", lambda writer, node: getcmifattr(writer, node, 'fillDefault', 'inherit')),
-	("erase", lambda writer, node:getcmifattr(writer, node, 'erase', 'whenDone')),
-	("syncBehavior", lambda writer, node: getcmifattr(writer, node, 'syncBehavior', 'default')),
-	("syncBehaviorDefault", lambda writer, node: getcmifattr(writer, node, 'syncBehaviorDefault', 'inherit')),
-	("endsync", getterm),
-	("repeat", lambda writer, node:(not writer.smilboston and getrepeat(writer, node)) or None),
-	("repeatCount", lambda writer, node:(writer.smilboston and getrepeat(writer, node)) or None),
-	("repeatDur", lambda writer, node:getduration(writer, node, "repeatdur")),
-	("restart", lambda writer, node: getcmifattr(writer, node, 'restart', 'default')),
-	("restartDefault", lambda writer, node: getcmifattr(writer, node, 'restartDefault', 'inherit')),
-	("src", lambda writer, node:getsrc(writer, node)),
-	("clip-begin", lambda writer, node: (not writer.smilboston and getcmifattr(writer, node, 'clipbegin')) or None),
-	("clip-end", lambda writer, node: (not writer.smilboston and getcmifattr(writer, node, 'clipend')) or None),
-	("clipBegin", lambda writer, node: (writer.smilboston and getcmifattr(writer, node, 'clipbegin')) or None),
-	("clipEnd", lambda writer, node: (writer.smilboston and getcmifattr(writer, node, 'clipend')) or None),
-	("sensitivity", getsensitivity),
-	("mediaRepeat", lambda writer, node: (writer.smilboston and getcmifattr(writer, node, 'mediaRepeat')) or None),
-	("targetElement", lambda writer, node: node.GetRawAttrDef("targetElement", None)),
-	("attributeName", lambda writer, node: node.GetRawAttrDef("attributeName", None)),
-	("attributeType", getattributetype),
-	("speed", lambda writer, node:getspeed(writer, node, "speed")),
-	("accelerate", lambda writer, node:getproportion(writer, node, "accelerate")),
-	("decelerate", lambda writer, node:getproportion(writer, node, "decelerate")),
-	("autoReverse", getautoreverse),
-	("system-bitrate", lambda writer, node:(not writer.smilboston and getcmifattr(writer, node, "system_bitrate")) or None),
-	("system-captions", lambda writer, node:(not writer.smilboston and getboolean(writer, node, 'system_captions')) or None),
-	("system-language", lambda writer, node:(not writer.smilboston and getcmifattr(writer, node, "system_language")) or None),
-	("system-overdub-or-caption", lambda writer, node:(not writer.smilboston and {'overdub':'overdub','subtitle':'caption'}.get(getcmifattr(writer, node, "system_overdub_or_caption"))) or None),
-	("system-required", lambda writer, node:(not writer.smilboston and getcmifattr(writer, node, "system_required")) or None),
-	("system-screen-size", lambda writer, node:(not writer.smilboston and getscreensize(writer, node)) or None),
-	("system-screen-depth", lambda writer, node:(not writer.smilboston and getcmifattr(writer, node, "system_screen_depth")) or None),
-	("systemAudioDesc", lambda writer, node:(writer.smilboston and getboolean(writer, node, 'system_audiodesc')) or None),
-	("systemBitrate", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_bitrate")) or None),
-	("systemCaptions", lambda writer, node:(writer.smilboston and getboolean(writer, node, 'system_captions')) or None),
-	("systemComponent", lambda writer, node:(writer.smilboston and getsyscomp(writer, node, 'system_component')) or None),
-	("systemCPU", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_cpu")) or None),
-	("systemLanguage", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_language")) or None),
-	("systemOperatingSystem", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_operating_system")) or None),
-	("systemOverdubOrSubtitle", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_overdub_or_caption")) or None),
-	("systemRequired", lambda writer, node:(writer.smilboston and getsysreq(writer, node, "system_required")) or None),
-	("systemScreenSize", lambda writer, node:(writer.smilboston and getscreensize(writer, node)) or None),
-	("systemScreenDepth", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_screen_depth")) or None),
-	("customTest", getugroup),
-	("layout", getlayout),
-	("color", getcolor),		# only for brush element
+	("id", getid, None),
+	("title", lambda writer, node:getcmifattr(writer, node, "title"), "title"),
+	("region", getregionname, None),
+	("project_default_region", getdefaultregion, "project_default_region"),
+	("project_default_type", lambda writer, node:getcmifattr(writer, node, 'project_default_type'), "project_default_type"),
+	("project_bandwidth_fraction", lambda writer, node:getpercentage(writer, node, 'project_bandwidth_fraction'), "project_bandwidth_fraction"),
+	("type", getmimetype, "mimetype"),
+	("author", lambda writer, node:getcmifattr(writer, node, "author"), "author"),
+	("copyright", lambda writer, node:getcmifattr(writer, node, "copyright"), "copyright"),
+	("abstract", lambda writer, node:getcmifattr(writer, node, "abstract"), "abstract"),
+	("alt", lambda writer, node: getdescr(writer, node, 'alt'), "alt"),
+	("longdesc", lambda writer, node: getdescr(writer, node, 'longdesc'), "longdesc"),
+	("readIndex", lambda writer, node:getcmifattr(writer, node, "readIndex", 0), "readIndex"),
+	("begin", lambda writer, node: getsyncarc(writer, node, 0), None),
+	("dur", getduration, "duration"),
+	("min", getmin, "min"),
+	("max", getmax, "max"),
+	("end", lambda writer, node: getsyncarc(writer, node, 1), None),
+	("fill", lambda writer, node: getcmifattr(writer, node, 'fill', 'default'), "fill"),
+	("fillDefault", lambda writer, node: getcmifattr(writer, node, 'fillDefault', 'inherit'), "fillDefault"),
+	("erase", lambda writer, node:getcmifattr(writer, node, 'erase', 'whenDone'), "erase"),
+	("syncBehavior", lambda writer, node: getcmifattr(writer, node, 'syncBehavior', 'default'), "syncBehavior"),
+	("syncBehaviorDefault", lambda writer, node: getcmifattr(writer, node, 'syncBehaviorDefault', 'inherit'), "syncBehaviorDefault"),
+	("endsync", getterm, None),
+	("repeat", lambda writer, node:(not writer.smilboston and getrepeat(writer, node)) or None, "loop"),
+	("repeatCount", lambda writer, node:(writer.smilboston and getrepeat(writer, node)) or None, "loop"),
+	("repeatDur", lambda writer, node:getduration(writer, node, "repeatdur"), "repeatdur"),
+	("restart", lambda writer, node: getcmifattr(writer, node, 'restart', 'default'), "restart"),
+	("restartDefault", lambda writer, node: getcmifattr(writer, node, 'restartDefault', 'inherit'), "restartDefault"),
+	("src", lambda writer, node:getsrc(writer, node), None),
+	("clip-begin", lambda writer, node: (not writer.smilboston and getcmifattr(writer, node, 'clipbegin')) or None, "clipbegin"),
+	("clip-end", lambda writer, node: (not writer.smilboston and getcmifattr(writer, node, 'clipend')) or None, "clipend"),
+	("clipBegin", lambda writer, node: (writer.smilboston and getcmifattr(writer, node, 'clipbegin')) or None, "clipbegin"),
+	("clipEnd", lambda writer, node: (writer.smilboston and getcmifattr(writer, node, 'clipend')) or None, "clipend"),
+	("sensitivity", getsensitivity, "sensitivity"),
+	("mediaRepeat", lambda writer, node: (writer.smilboston and getcmifattr(writer, node, 'mediaRepeat')) or None, "mediaRepeat"),
+	("targetElement", lambda writer, node: node.GetRawAttrDef("targetElement", None), "targetElement"),
+	("attributeName", lambda writer, node: node.GetRawAttrDef("attributeName", None), "attributeName"),
+	("attributeType", getattributetype, "attributeType"),
+	("speed", lambda writer, node:getspeed(writer, node, "speed"), "speed"),
+	("accelerate", lambda writer, node:getproportion(writer, node, "accelerate"), "accelerate"),
+	("decelerate", lambda writer, node:getproportion(writer, node, "decelerate"), "decelerate"),
+	("autoReverse", getautoreverse, "autoReverse"),
+	("system-bitrate", lambda writer, node:(not writer.smilboston and getcmifattr(writer, node, "system_bitrate")) or None, "system_bitrate"),
+	("system-captions", lambda writer, node:(not writer.smilboston and getboolean(writer, node, 'system_captions')) or None, "system_captions"),
+	("system-language", lambda writer, node:(not writer.smilboston and getcmifattr(writer, node, "system_language")) or None, "system_language"),
+	("system-overdub-or-caption", lambda writer, node:(not writer.smilboston and {'overdub':'overdub','subtitle':'caption'}.get(getcmifattr(writer, node, "system_overdub_or_caption"))) or None, None),
+	("system-required", lambda writer, node:(not writer.smilboston and getcmifattr(writer, node, "system_required")) or None, "system_required"),
+	("system-screen-size", lambda writer, node:(not writer.smilboston and getscreensize(writer, node)) or None, "system_screen_size"),
+	("system-screen-depth", lambda writer, node:(not writer.smilboston and getcmifattr(writer, node, "system_screen_depth")) or None, "system_screen_depth"),
+	("systemAudioDesc", lambda writer, node:(writer.smilboston and getboolean(writer, node, 'system_audiodesc')) or None, "system_audiodesc"),
+	("systemBitrate", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_bitrate")) or None, "system_bitrate"),
+	("systemCaptions", lambda writer, node:(writer.smilboston and getboolean(writer, node, 'system_captions')) or None, "system_captions"),
+	("systemComponent", lambda writer, node:(writer.smilboston and getsyscomp(writer, node, 'system_component')) or None, "system_component"),
+	("systemCPU", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_cpu")) or None, "system_cpu"),
+	("systemLanguage", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_language")) or None, "system_language"),
+	("systemOperatingSystem", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_operating_system")) or None, "system_operating_system"),
+	("systemOverdubOrSubtitle", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_overdub_or_caption")) or None, "system_overdub_or_caption"),
+	("systemRequired", lambda writer, node:(writer.smilboston and getsysreq(writer, node, "system_required")) or None, "system_required"),
+	("systemScreenSize", lambda writer, node:(writer.smilboston and getscreensize(writer, node)) or None, "system_screen_size"),
+	("systemScreenDepth", lambda writer, node:(writer.smilboston and getcmifattr(writer, node, "system_screen_depth")) or None, "system_screen_depth"),
+	("customTest", getugroup, "u_group"),
+	("layout", getlayout, "layout"),
+	("color", getcolor, "fgcolor"),		# only for brush element
 	# subregion positioning
-	("left", lambda writer, node:getsubregionatt(writer, node, 'left')),
-	("right", lambda writer, node:getsubregionatt(writer, node, 'right')),
-	("width", lambda writer, node:getsubregionatt(writer, node, 'width')),
-	("top", lambda writer, node:getsubregionatt(writer, node, 'top')),
-	("bottom", lambda writer, node:getsubregionatt(writer, node, 'bottom')),
-	("height", lambda writer, node:getsubregionatt(writer, node, 'height')),
-	("fit", lambda writer, node:getcmifattr(writer, node, 'fit', 'hidden')),
+	("left", lambda writer, node:getsubregionatt(writer, node, 'left'), None),
+	("right", lambda writer, node:getsubregionatt(writer, node, 'right'), None),
+	("width", lambda writer, node:getsubregionatt(writer, node, 'width'), None),
+	("top", lambda writer, node:getsubregionatt(writer, node, 'top'), None),
+	("bottom", lambda writer, node:getsubregionatt(writer, node, 'bottom'), None),
+	("height", lambda writer, node:getsubregionatt(writer, node, 'height'), None),
+	("fit", lambda writer, node:getcmifattr(writer, node, 'fit', 'hidden'), None),
 	# registration points
-	("regPoint", lambda writer, node:getcmifattr(writer, node, "regPoint", 'topLeft')),
-	("regAlign", lambda writer, node:getcmifattr(writer, node, "regAlign", 'topLeft')),
+	("regPoint", lambda writer, node:getcmifattr(writer, node, "regPoint", 'topLeft'), None),
+	("regAlign", lambda writer, node:getcmifattr(writer, node, "regAlign", 'topLeft'), None),
 	
-	("backgroundColor", lambda writer, node:getbgcoloratt(writer, node, "bgcolor")),	
-	("z-index", lambda writer, node:getcmifattr(writer, node, "z")),	
-	("from", lambda writer, node: node.GetRawAttrDef("from", None)),
-	("to", lambda writer, node: node.GetRawAttrDef("to", None)),
-	("by", lambda writer, node: node.GetRawAttrDef("by", None)),
-	("values", lambda writer, node: node.GetRawAttrDef("values", None)),
-	("path", getpath),
-	("origin", lambda writer, node: node.GetRawAttrDef("origin", None)),
-	("accumulate", getaccumulate),
-	("additive", getadditive),
-	("calcMode", getcalcmode),
-	("keyTimes", lambda writer, node: node.GetRawAttrDef("keyTimes", None)),
-	("keySplines", lambda writer, node: node.GetRawAttrDef("keySplines", None)),
-	("transIn", lambda writer, node:gettransition(writer, node, "transIn")),
-	("transOut", lambda writer, node:gettransition(writer, node, "transOut")),
-	("mode", getinlinetrmode),
-	("subtype", lambda writer, node: node.GetRawAttrDef("subtype", None)),
+	("backgroundColor", lambda writer, node:getbgcoloratt(writer, node, "bgcolor"), "bgcolor"),	
+	("z-index", lambda writer, node:getcmifattr(writer, node, "z"), "z"),	
+	("from", lambda writer, node: node.GetRawAttrDef("from", None), "from"),
+	("to", lambda writer, node: node.GetRawAttrDef("to", None), "to"),
+	("by", lambda writer, node: node.GetRawAttrDef("by", None), "by"),
+	("values", lambda writer, node: node.GetRawAttrDef("values", None), "values"),
+	("path", getpath, "path"),
+	("origin", lambda writer, node: node.GetRawAttrDef("origin", None), "origin"),
+	("accumulate", getaccumulate, "accumulate"),
+	("additive", getadditive, "additive"),
+	("calcMode", getcalcmode, None),
+	("keyTimes", lambda writer, node: node.GetRawAttrDef("keyTimes", None), "keyTimes"),
+	("keySplines", lambda writer, node: node.GetRawAttrDef("keySplines", None), "keySplines"),
+	("transIn", lambda writer, node:gettransition(writer, node, "transIn"), "transIn"),
+	("transOut", lambda writer, node:gettransition(writer, node, "transOut"), "transOut"),
+	("mode", getinlinetrmode, "mode"),
+	("subtype", lambda writer, node: node.GetRawAttrDef("subtype", None), "subtype"),
 
-	("mediaSize", lambda writer, node: node.GetRawAttrDef("mediaSize", None)),
-	("mediaTime", lambda writer, node: node.GetRawAttrDef("mediaTime", None)),
-	("bandwidth", lambda writer, node: node.GetRawAttrDef("bandwidth", None)),
+	("mediaSize", lambda writer, node: node.GetRawAttrDef("mediaSize", None), "mediaSize"),
+	("mediaTime", lambda writer, node: node.GetRawAttrDef("mediaTime", None), "mediaTime"),
+	("bandwidth", lambda writer, node: node.GetRawAttrDef("bandwidth", None), "bandwidth"),
 
-	("collapsed", getcollapsed),
-	("showtime", getshowtime),
+	("collapsed", getcollapsed, None),
+	("showtime", getshowtime, None),
 ]
 prio_attrs = [
-	("id", getid),
-	("title", lambda writer, node:getcmifattr(writer, node, "title")),
-	("author", lambda writer, node:getcmifattr(writer, node, "author")),
-	("copyright", lambda writer, node:getcmifattr(writer, node, "copyright")),
-	("abstract", lambda writer, node:getcmifattr(writer, node, "abstract")),
-	('lower', lambda writer, node: getcmifattr(writer, node, 'lower', 'defer')),
-	('peers', lambda writer, node: getcmifattr(writer, node, 'peers', 'stop')),
-	('higher', lambda writer, node: getcmifattr(writer, node, 'higher', 'pause')),
-	('pauseDisplay', lambda writer, node: getcmifattr(writer, node, 'pauseDisplay', 'inherit')),
-	("collapsed", getcollapsed),
-	("showtime", getshowtime),
+	("id", getid, None),
+	("title", lambda writer, node:getcmifattr(writer, node, "title"), "title"),
+	("author", lambda writer, node:getcmifattr(writer, node, "author"), "author"),
+	("copyright", lambda writer, node:getcmifattr(writer, node, "copyright"), "copyright"),
+	("abstract", lambda writer, node:getcmifattr(writer, node, "abstract"), "abstract"),
+	('lower', lambda writer, node: getcmifattr(writer, node, 'lower', 'defer'), "lower"),
+	('peers', lambda writer, node: getcmifattr(writer, node, 'peers', 'stop'), "peers"),
+	('higher', lambda writer, node: getcmifattr(writer, node, 'higher', 'pause'), "higher"),
+	('pauseDisplay', lambda writer, node: getcmifattr(writer, node, 'pauseDisplay', 'inherit'), "pauseDisplay"),
+	("collapsed", getcollapsed, None),
+	("showtime", getshowtime, None),
 	]
 
 # attributes that we know about and so don't write into the SMIL file using
@@ -1237,13 +1237,14 @@ class SMILWriter(SMIL):
 		if sysreq:
 			for i in range(len(sysreq)):
 				attrlist.append(('xmlns:ext%d' % i, sysreq[i]))
-		for name, func in smil_attrs:
-			if name[:6] != 'system':
-				continue
-			value = func(self, self.root)
-			if value is None:
-				continue
-			attrlist.append((name, value))
+		for name, func, keyToCheck in smil_attrs:
+			if keyToCheck is None or self.root.attrdict.has_key(keyToCheck):
+				if name[:6] != 'system':
+					continue
+				value = func(self, self.root)
+				if value is None:
+					continue
+				attrlist.append((name, value))
 		self.writetag('smil', attrlist)
 		self.push()
 		self.writetag('head')
@@ -1301,7 +1302,9 @@ class SMILWriter(SMIL):
 		self.writetransitions()
 		self.writegrinslayout()
 		self.pop()
+
 		self.writenode(self.root, root = 1)
+
 		self.close()
 
 	def writebare(self):
@@ -1919,27 +1922,30 @@ class SMILWriter(SMIL):
 				for i in range(len(sysreq)):
 					attrlist.append(('xmlns:ext%d' % i, sysreq[i]))
 				
-		for name, func in attrs:
-			value = func(self, x)
-			# gname is the attribute name as recorded in attributes
-			# name is the attribute name as recorded in SMIL file
-			gname1 = '%s %s' % (GRiNSns, name)
-			gname2 = '%s %s' % (QTns, name)
-			if attributes.has_key(gname1):
-				name = '%s:%s' % (NSGRiNSprefix, name)
-				gname = gname1
-			elif attributes.has_key(gname2):
-				name = '%s:%s' % (NSQTprefix, name)
-				gname = gname2
-			else:
-				gname = name
-			# only write attributes that have a value and are
-			# legal for the type of node
-			# other attributes are caught below
-			if value and ((attributes.has_key(gname) and
-				       value != attributes[gname]) or
-				      name[:6] == 'xmlns:'):
-				attrlist.append((name, value))
+		for name, func, keyToCheck in attrs:
+			if keyToCheck is None or x.attrdict.has_key(keyToCheck):
+				value = func(self, x)
+				# gname is the attribute name as recorded in attributes
+				# name is the attribute name as recorded in SMIL file
+				if value:
+					gname1 = '%s %s' % (GRiNSns, name)
+					gname2 = '%s %s' % (QTns, name)
+					if attributes.has_key(gname1):
+						name = '%s:%s' % (NSGRiNSprefix, name)
+						gname = gname1
+					elif attributes.has_key(gname2):
+						name = '%s:%s' % (NSQTprefix, name)
+						gname = gname2
+					else:
+						gname = name
+					
+					# only write attributes that have a value and are
+					# legal for the type of node
+					# other attributes are caught below
+					if ((attributes.has_key(gname) and
+						       value != attributes[gname]) or
+						      name[:6] == 'xmlns:'):
+						attrlist.append((name, value))
 		is_realpix = type == 'ext' and x.GetChannelType() == 'RealPix'
 		if not interior and root:
 			self.writetag('body')
@@ -2078,7 +2084,7 @@ class SMILWriter(SMIL):
 		attrlist = []
 		tag = node.GetAttrDict().get('atag')
 		attributes = self.attributes.get(tag, {})
-		for name, func in smil_attrs:
+		for name, func, keyToCheck in smil_attrs:
 			if attributes.has_key(name):
 				if name == 'type':
 					value = node.GetRawAttrDef('trtype', None)
@@ -2091,7 +2097,7 @@ class SMILWriter(SMIL):
 	def writeprefetchnode(self, node):
 		attrlist = []
 		attributes = self.attributes.get('prefetch', {})
-		for name, func in smil_attrs:
+		for name, func, keyToCheck in smil_attrs:
 			if attributes.has_key(name):
 				value = func(self, node)
 				if value and value != attributes[name]:
