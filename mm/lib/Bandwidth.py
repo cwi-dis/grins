@@ -30,11 +30,11 @@ def get(node):
 	# We skip bandwidth retrieval for nonlocal urls (too expensive)
 	type, rest = urllib.splittype(url)
 	if type and type != 'file':
-		print "DBG: Bandwidth.get: skip nonlocal", url
+##		print "DBG: Bandwidth.get: skip nonlocal", url
 		return 0, 0
 	host, rest = urllib.splithost(rest)
 	if host and host != 'localhost':
-		print "DBG: Bandwidth.get: skip nonlocal", url
+##		print "DBG: Bandwidth.get: skip nonlocal", url
 		return 0, 0
 
 	# Okay, get the filesize
@@ -43,17 +43,17 @@ def get(node):
 		# XXXX Incorrect for mac (resource fork size)
 		statb = os.stat(filename)
 	except os.error:
-		print "DBG: Bandwidth.get: nonexisting", filename
+##		print "DBG: Bandwidth.get: nonexisting", filename
 		return 0, 0
 	filesize = statb[ST_SIZE]
 
 	if ctype in CONTINUOUS_CHANNELS:
 		duration = Duration.get(node, ignoreloop=1)
 		if duration == 0:
-			print "DBG: Bandwidth.get: zero-time node"
+##			print "DBG: Bandwidth.get: zero-time node"
 			return 0, 0
-		print 'CONT', filesize, float(filesize)*8/duration
+##		print 'CONT', filesize, float(filesize)*8/duration
 		return 0, float(filesize)*8/duration
 	else:
-		print 'STATIC', filesize, float(filesize)*8
+##		print 'STATIC', filesize, float(filesize)*8
 		return float(filesize)*8, 0
