@@ -894,7 +894,7 @@ class KeyTimesSlider(window.Wnd):
 		self.SetPageSize(20)
 		self.SetRange(0, 100)
 
-		self._keyTimes = [0.0, 0.25, 0.5, 1.0]
+		self._keyTimes = [0.0, 0.5, 1.0]
 		self._markerColor = 0, 0, 0
 		self._selectedMarkerColor = 255, 0, 0
 
@@ -903,6 +903,12 @@ class KeyTimesSlider(window.Wnd):
 		self._selected = -1
 		self._prevSelectedRect = None
 		self._dragging = None
+
+	def insertKeyTimeFromPoint(self, index, prop):
+		tp = self._keyTimes[index-1] + prop*(self._keyTimes[index]-self._keyTimes[index-1])
+		self._keyTimes.insert(index, tp)
+		self._selected = -1
+		self.updateKeyTimes()
 
 	def updateKeyTimes(self):
 		l, t, r, b = self.GetWindowRect()

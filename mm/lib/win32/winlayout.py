@@ -691,6 +691,7 @@ class Polyline:
 			points.append(self.LPtoDP((x0 + pt[0], y0+pt[1]), round=1))
 		return points
 
+	
 	# insert point nearest to pt (pt in device coordinates)
 	def insertPoint(self, pt):
 		projpt, index = self.projection(pt)
@@ -699,8 +700,19 @@ class Polyline:
 			x, y = projpt
 			projpt = self.DPtoLP((x - x0, y - y0))
 			self._points.insert(index, projpt)
-		self.update()
+			self.update()
+			d1 = self.__dist(index-1, index)
+			d2 = self.__dist(index-1, index+1)
+			prop = d1/d2
+			return index, prop
+		return -1, 0
 
+	def __dist(self, ix1, ix2):
+		x1, y1 = self._points[ix1]
+		x2, y2 = self._points[ix2]
+		dx = x2-x1
+		dy = y2-y1
+		return math.sqrt(dx*dx+dy*dy)
 	#
 	# Scaling support
 	#
