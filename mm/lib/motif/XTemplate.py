@@ -3,8 +3,8 @@ __version__ = "$Id$"
 import Xt, Xm, Xmd, X
 from XTopLevel import toplevel
 
-WIDTH = 226
-HEIGHT = 150
+WIDTH = 226+2*15
+HEIGHT = 150+2*15
 
 class TemplateDialog:
 	def __init__(self, names, descriptions, cb, parent = None):
@@ -74,7 +74,23 @@ class TemplateDialog:
 		ok.AddCallback('activateCallback', self.__callback, cb)
 		ok.ManageChild()
 		w.defaultButton = ok
-					 
+		t = w.CreateText('text',
+				 {'wordWrap': 1,
+				  'editable': 0,
+				  'value': '',
+				  'editMode': Xmd.MULTI_LINE_EDIT,
+				  'columns': 25,
+				  'background': w.background,
+				  'leftAttachment': Xmd.ATTACH_FORM,
+				  'topAttachment': Xmd.ATTACH_WIDGET,
+				  'topWidget': o,
+				  'bottomAttachment': Xmd.ATTACH_WIDGET,
+				  'bottomWidget': ok,
+				  'rightAttachment': Xmd.ATTACH_WIDGET,
+				  'rightWidget': d})
+		t.ManageChild()
+		self.__text = t
+
 		buttons = []
 		for i in range(len(names)):
 			button = menu.CreatePushButton('templateOptionButton',
@@ -94,10 +110,12 @@ class TemplateDialog:
 		import img
 		self.__index = index
 		if self.__gc is None:
-			self.__gc = self.__draw.CreateGC({})
+			self.__gc = self.__draw.CreateGC({'foreground': self.__window.background})
 		self.__gc.FillRectangle(0, 0, WIDTH, HEIGHT)
 		filename = self.__descriptions[index][1]
+		self.__text.value = self.__descriptions[index][0] or ''
 		if filename:
+			
 			try:
 				rdr = img.reader(toplevel._imgformat, filename)
 			except:
