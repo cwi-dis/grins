@@ -152,15 +152,15 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Open"
 FONT 8, "MS Sans Serif"
 BEGIN
-    COMBOBOX        IDC_EDIT_LOCATION,7,46,226,95,CBS_DROPDOWN | WS_VSCROLL | 
-                    WS_TABSTOP
+    COMBOBOX        IDC_EDIT_LOCATION,7,46,226,95,CBS_DROPDOWN | 
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "&Open",IDOK,59,69,50,14
     PUSHBUTTON      "&Cancel",IDCANCEL,119,69,50,14
     PUSHBUTTON      "&Browse...",IDC_BUTTON_BROWSE,179,69,50,14
     LTEXT           "Enter the Internet location (URL) or browse to the local file you would like to open",
                     IDC_STATIC,43,7,190,20
     LTEXT           "Open:",IDC_STATIC,17,33,23,8
-    ICON            IDI_GRINS_INFO,IDC_STATIC,7,7,21,20
+    ICON            IDI_GRINS_INFO,IDC_STATIC,7,7,20,20
 END
 
 IDD_NEW_CHANNEL DIALOG DISCARDABLE  0, 0, 186, 76
