@@ -201,6 +201,7 @@ class Channel:
 				self.syncplay = 1
 				save_nopop = self.nopop
 				self.nopop = 1
+				self._played_node = None
 				self.play(node)
 				self.syncplay = save_syncplay
 				self.nopop = save_nopop
@@ -1580,7 +1581,7 @@ class ChannelWindow(Channel):
 		if debug:
 			print 'ChannelWindow.resize'+`self,arg,window,event,value`
 ##		self._player.toplevel.setwaiting()
-##		self.replaynode()
+		self.replaynode()
 ##		if not self._player.playing and \
 ##		   self._attrdict.get('base_window','undefined') == 'undefined' and \
 ##		   hasattr(self, 'editmgr'):
