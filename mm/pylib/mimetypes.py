@@ -107,6 +107,12 @@ def guess_extension(type):
             return ext
     return None
     
+def _longestfirst(s1, s2):
+    ret = len(s2) - len(s1)
+    if ret == 0:
+        return cmp(s1, s2)
+    return ret
+
 def get_extensions(type):
     """Get all extensions mapping to this mimetype"""
     global inited
@@ -123,6 +129,7 @@ def get_extensions(type):
             extlist.append(ext)
         elif majortype and string.split(stype, '/')[0] == majortype:
             extlist.append(ext)
+    extlist.sort(_longestfirst)
     return extlist
 
 def init(files=None):

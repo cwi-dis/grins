@@ -186,7 +186,7 @@ class FileDialog:
 				if not extlist:
 					extlist = ['*']
 				else:
-					extlist = map(lambda x:"*"+x, extlist)
+					extlist = map(lambda x:"[!.]*"+x, extlist)
 					allext = allext + extlist
 				description = grins_mimetypes.descriptions.get(f, f)
 				b = menu.CreatePushButtonGadget('button', {'labelString': description})
