@@ -7,11 +7,13 @@ from MMTypes import *
 from MMExc import *
 import MMAttrdefs
 import Timing
+import Duration
 import SR
 
 error = 'MMTree.error'
 
-Version = 'PlayerCache 2.1'		# version of player file
+Version = 'PlayerCache 3.0'		# version of player file
+OldVersion = 'PlayerCache 2.1'
 
 _progressbar = None
 
@@ -34,14 +36,19 @@ def ReadFile(filename):
 		import EasyDialogs
 		_progressbar = EasyDialogs.ProgressBar("Loading %s..."%os.path.split(cache)[1], fsize)
 	header = marshal.load(f)
-	if header != (Version, base, stf[ST_MTIME], stf[ST_SIZE]):
+	if header != (Version, base, stf[ST_MTIME], stf[ST_SIZE]) and \
+	   header != (OldVersion, base, stf[ST_MTIME], stf[ST_SIZE]):
 		if header[0] != Version:
-			raise error, 'version mismatch'
+			if header[0] == OldVersion:
+				print 'Warning: old version of player file'
+			else:
+				raise error, 'version mismatch'
 		if header[1] != base:
 			print 'Warning: player file does not belong to CMIF file'
 		elif header[2:] != (stf[ST_MTIME], stf[ST_SIZE]):
 			print 'Warning: player file out of date'
-	root = load(f, context)
+	list = marshal.load(f)
+	root = load(list, context)
 	context.root = root
 	if _progressbar:
 		_progressbar.set(fsize) # Not true, but who cares...
@@ -76,7 +83,15 @@ def WriteFile(root, filename):
 	marshal.dump(header, f)
 	targets = map(lambda x: ((x[2] == 1 and x[0]) or x[1])[0],
 		      root.context.hyperlinks.links)
-	dump(root, root, f, targets)
+	list = []
+	dellist = []
+	dump(root, root, targets, list, dellist)
+	marshal.dump(list, f)
+	# remove added attributes
+	for dict, names in dellist:
+		for name in names:
+			del dict[name]
+	list = dellist = None
 	sroffs = [0] * len(srrecs)
 	sroff = f.tell()
 	marshal.dump(sroffs, f)		# placeholder for now
@@ -124,8 +139,10 @@ def attrnames(node):
 
 # Internals to dump and restore nodes
 
-def dump(node, mini, f, targets):
+def dump(node, mini, targets, list, dellist):
 	newattrs = []
+	# schedule removal of added attributes
+	dellist.append((node.attrdict, newattrs))
 	if node.type in interiortypes:
 		children = node.children
 		extra = len(children)
@@ -138,6 +155,11 @@ def dump(node, mini, f, targets):
 	else:
 		extra = node.values
 		children = []
+		# Find out duration of node and record it.  This is
+		# especially useful for nodes with intrinsic durations
+		# (sound/video).  See Duration.get() for how this is
+		# used.
+		node.attrdict['fduration'] = Duration.get(node)
 	for name in attrnames(node):
 		if not node.attrdict.has_key(name):
 			node.attrdict[name] = MMAttrdefs.getattr(node, name)
@@ -185,15 +207,16 @@ def dump(node, mini, f, targets):
 	except AttributeError:
 		pass
 	# dump the node and it's children
-	marshal.dump((node.type, node.uid, node.attrdict, extra), f)
+	list.append((node.type, node.uid, node.attrdict, extra))
 	for c in children:
-		dump(c, mini, f, targets)
-	# remove added attributes
-	for name in newattrs:
-		del node.attrdict[name]
+		dump(c, mini, targets, list, dellist)
 
-def load(f, context):
-	type, uid, attrdict, extra = marshal.load(f)
+def load(list, context):
+	try:
+		type, uid, attrdict, extra = list[0]
+		del list[0]
+	except TypeError:
+		type, uid, attrdict, extra = marshal.load(list)
 	if type in ('seq', 'par', 'bag') and _progressbar:
 		_progressbar.set(f.tell())
 	node = newnodeuid(context, type, uid)
@@ -201,7 +224,7 @@ def load(f, context):
 	if node.type in interiortypes:
 		children = []
 		for i in range(extra):
-			children.append(load(f, context))
+			children.append(load(list, context))
 		if node.type == 'bag':
 			node.children = children
 		else:
