@@ -41,6 +41,9 @@ PERFORMANCE OF THIS SOFTWARE.
 
 
 /* -- ADDMODULE MARKER 1 -- */
+#ifndef initQdoffs
+extern void initQdoffs();
+#endif
 #ifndef initimgsgi
 extern void initimgsgi();
 #endif
@@ -176,6 +179,9 @@ extern void initimgtiff();
 #ifndef initimgpgm
 extern void initimgpgm();
 #endif
+#ifndef initimgpng
+extern void initimgpng();
+#endif
 #ifndef initstruct
 extern void initstruct();
 #endif
@@ -195,6 +201,7 @@ extern void initimp();
 struct _inittab _PyImport_Inittab[] = {
 
 /* -- ADDMODULE MARKER 2 -- */
+	{"Qdoffs", initQdoffs},
 	{"imgsgi", initimgsgi},
 	{"imgcolormap", initimgcolormap},
 	{"imageop", initimageop},
@@ -240,6 +247,7 @@ struct _inittab _PyImport_Inittab[] = {
 	{"cStringIO", initcStringIO},
 	{"imgtiff", initimgtiff},
 	{"imgpgm", initimgpgm},
+	{"imgpng", initimgpng},
 	{"struct", initstruct},
 	{"audioop", initaudioop},
 	{"producer", initproducer},
