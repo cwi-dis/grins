@@ -103,9 +103,10 @@ class _WindowGroup:
 		dict = {}
 		for item in list:
 			cmd = item.__class__
-			if __debug__:
-				if not mw_globals._all_commands.has_key(cmd):
-					print 'Warning: user has no way to issue command', cmd
+### This code does not work anymore with per-window button commands.
+##			if __debug__:
+##				if not mw_globals._all_commands.has_key(cmd):
+##					print 'Warning: user has no way to issue command', cmd
 			dict[cmd] = item
 		self._set_cmd_dict(dict)
 		
@@ -152,6 +153,7 @@ class _CommonWindow:
 		self._accelerators = {}
 		self._active_movie = 0
 		self._popupmenu = None
+		self._outline_color = None
 		
 	def close(self):
 		"""Close window and all subwindows"""
@@ -245,12 +247,16 @@ class _CommonWindow:
 		"""Set backgroundcolor to 3-tuple 0..255"""
 		self._bgcolor = self._convert_color(color)
 		
-	def showwindow(self):
+	def showwindow(self, color=(255, 0, 0)):
 		"""Highlight the window"""
-		pass
+		self._outline_color = self._convert_color(color)
+		Win.InvalRect(self.qdrect())
 		
 	def dontshowwindow(self):
 		"""Don't highlight the window"""
+		if not self._outline_color is None:
+			self._outline_color = None
+			Win.InvalRect(self.qdrect())
 		pass
 
 	def setcursor(self, cursor):
@@ -621,6 +627,10 @@ class _CommonWindow:
 		saveclip = Qd.NewRgn()
 		Qd.GetClip(saveclip)
 		Qd.SetClip(self._clip)
+		if not self._outline_color is None:
+			Qd.RGBForeColor(self._outline_color)
+			rect = self.qdrect()
+			Qd.FrameRect(rect)
 		Qd.RGBBackColor(self._bgcolor)
 		Qd.RGBForeColor(self._fgcolor)
 		if self._redrawfunc:
@@ -846,7 +856,6 @@ class _AdornmentsMixin:
 			cntl = self._cmd_to_cntl[cmd]
 			value = cntl.GetControlMinimum() + onoff
 			cntl.SetControlValue(value)
-			print 'TOGGLE', cmd, value #DBG
 		
 class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 	"""Toplevel window"""
@@ -880,6 +889,9 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 
 		self.arrowcache = {}
 		self._next_create_box = []
+	
+	def __repr__(self):
+		return '<Window %s>'%self._title
 	
 	def close(self):
 		_ScrollMixin.close(self)
@@ -1505,8 +1517,14 @@ class _SubWindow(_CommonWindow):
 		self._parent._del_control(ctl)
 
 class DialogWindow(_Window):
-	def __init__(self, resid, title='Dialog', default=None, cancel=None):
+	def __init__(self, resid, title='Dialog', default=None, cancel=None,
+				cmdbuttons=None):
 		wid = Dlg.GetNewDialog(resid, -1)
+		if cmdbuttons:
+			self._item_to_cmd = cmdbuttons
+		else:
+			self._item_to_cmd = {}
+		self._itemhandler = None
 		x0, y0, x1, y1 = wid.GetWindowPort().portRect
 		w, h = x1-x0, y1-y0
 		cmdlist = [
@@ -1528,6 +1546,9 @@ class DialogWindow(_Window):
 		if not cancel is None:
 			self._wid.SetDialogCancelItem(cancel)
 		
+	def __repr__(self):
+		return '<DialogWindow %s>'%self.title
+	
 	def show(self):
 		self.settitle(self.title)
 		self._wid.ShowWindow()
@@ -1543,15 +1564,27 @@ class DialogWindow(_Window):
 		
 	def close(self):
 		self.hide()
-		self._widgetdict = {}
+		del self._widgetdict
+		del self._item_to_cmd
+		del self._itemhandler
 		_Window.close(self)
 		
 	def addwidget(self, num, widget):
 		self._widgetdict[num] = widget
 		
-	def do_itemhit(self, item, event):
-		print 'Dialog %s item %d event %s'%(self, item, event)
+	def set_itemhandler(self, handler):
+		self._itemhandler = handler
 		
+	def do_itemhit(self, item, event):
+		if self._item_to_cmd.has_key(item):
+			self.call_command(self._item_to_cmd[item])
+			return 1
+		if self._itemhandler:
+			if self._itemhandler(item, event):
+				return 1
+		print 'Dialog %s item %d event %s'%(self, item, event)
+		return 0
+
 	#
 	# If the dialog has a default item the next method is copied to _do_defaulthit.
 	# The event handling will then call this when return is pressed.
@@ -1581,4 +1614,24 @@ class DialogWindow(_Window):
 		self.addwidget(item, widget)
 		return widget
 
-		
+	def set_commandlist(self, cmdlist):
+		# First build the cmd->item mapping from the item->cmd mapping
+		cmd_to_item = {}
+		for item, cmd in self._item_to_cmd.items():
+			cmd_to_item[cmd] = item
+		# First pass: enable all commands featuring in cmdlist
+		for item in cmdlist:
+			cmd = item.__class__
+			if cmd_to_item.has_key(cmd):
+				item = cmd_to_item[cmd]
+				tp, h, rect = self._wid.GetDialogItem(item)
+				cntl = h.as_Control()
+				cntl.HiliteControl(0)
+				del cmd_to_item[cmd]
+		# Second pass: disable the others
+		for item in cmd_to_item.values():
+			tp, h, rect = self._wid.GetDialogItem(item)
+			cntl = h.as_Control()
+			cntl.HiliteControl(255)
+		# And pass the command list on to the Window/Menu stuff
+		_Window.set_commandlist(self, cmdlist)

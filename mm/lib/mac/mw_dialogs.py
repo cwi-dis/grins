@@ -32,19 +32,16 @@ def _string2dialog(text):
 # give too many stuff in one object (window, dialogwindow, per-dialog info, editor
 # info)?
 class MACDialog:
-	item_to_command = {}
-	
-	def __init__(self, title, resid, allitems=[], default=None, cancel=None):
+	def __init__(self, title, resid, allitems=[], default=None, cancel=None,
+				cmdbuttons=None):
 		self._itemlist_shown = allitems[:]
-		self._window = DialogWindow(resid, title=title, default=default, cancel=cancel)
+		self._window = DialogWindow(resid, title=title, default=default, 
+			cancel=cancel, cmdbuttons=cmdbuttons)
 		self._dialog = self._window._wid
 		# Override event handler:
-		self._window.do_itemhit = self.do_itemhit
+		self._window.set_itemhandler(self.do_itemhit)
 		
 	def do_itemhit(self, item, event):
-		if self.item_to_command.has_key(item):
-			self._window.call_command(self.item_to_command[item])
-			return 1
 		return 0
 
 	def _showitemlist(self, itemlist):
@@ -121,7 +118,6 @@ class MACDialog:
 	def close(self):
 		"""Close the dialog and free resources."""
 		self._window.close()
-		del self._window.do_itemhit
 		del self._dialog
 
 	def show(self):
@@ -183,6 +179,7 @@ class _ModelessDialog(MACDialog):
 				apply(func, arglist)
 		else:
 			print 'Unknown modeless dialog event', item, event
+		return 1
 			
 def _ModalDialog(title, dialogid, text, okcallback, cancelcallback=None):
 	d = Dlg.GetNewDialog(dialogid, -1)
@@ -318,7 +315,7 @@ class SelectionDialog(DialogWindow):
 			where = Qd.GlobalToLocal(where)
 			item, isdouble = self._listwidget.click(where, modifiers)
 			if item is None:
-				return
+				return 1
 			tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_ITEM)
 			Dlg.SetDialogItemText(h, _string2dialog(self._itemlist[item]))
 			is_ok = isdouble
@@ -332,6 +329,7 @@ class SelectionDialog(DialogWindow):
 			rv = Dlg.GetDialogItemText(h)
 			self.OkCallback(rv)
 			self.close()
+		return 1
 			
 class SingleSelectionDialog(SelectionDialog):
 	def __init__(self, list, title, prompt):
@@ -397,6 +395,7 @@ class InputDialog(DialogWindow):
 			pass
 		else:
 			print 'Unknown item', self, item, event
+		return 1
 			
 	def done(self):
 		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
@@ -422,8 +421,8 @@ class InputURLDialog(InputDialog):
 				tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
 				Dlg.SetDialogItemText(h, _string2dialog(url))
 				self._wid.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
-		else:
-			InputDialog.do_itemhit(self, item, event)
+			return 1
+		return InputDialog.do_itemhit(self, item, event)
 
 [TOP, CENTER, BOTTOM] = range(3)
 
