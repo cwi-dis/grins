@@ -23,19 +23,19 @@ class VcrChannel(Channel):
 		return '<VcrChannel instance, name=' + `self._name` + '>'
 
 	def vcr_ready(self, dummy):
-		print 'ready', self.vcrstate #DBG
 		if self.vcrstate == V_SPR:
 			d = self.vcr.edit_pb_standby()
 			self.vcrstate = V_SB
 		elif self.vcrstate == V_SB:
 			self.vcrstate = V_READY
 			self.arm_1()
-			self.vcr.mute('audio', 0)
+			dummy = self.vcr.mute('audio', 0)
+			dummy = self.vcr.mute('video', 0)
 			# XXXX Send ARM_DONE event.
 		elif self.vcrstate == V_PLAYING:
 			self.armdone()
 			self.playdone(None)
-			self.vcr.stop()
+			dummy = self.vcr.stop()
 			self.vcrstate = V_NONE
 		else:
 			raise 'vcr_ready callback with state==', self.vcrstate
@@ -54,14 +54,14 @@ class VcrChannel(Channel):
 			if i == 0:
 				self.hide()
 				return 0
-		self.vcr.fmmode('dnr')
-		self.vcr.mute('audio', 1)
+		dummy = self.vcr.fmmode('dnr')
+		summy = self.vcr.mute('audio', 1)
+		dummy = self.vcr.mute('video', 1)
 		ntype = node.GetType()
 		start = None
 		stop = None
 		if ntype == 'imm':
 			list = node.GetValues()
-			print list #DBG
 			#
 			# This code is not very elegant. It expects python-
 			# format tupels (h,m,s,f) for start/stop time.
@@ -87,11 +87,14 @@ class VcrChannel(Channel):
 
 		if not start:
 			start = (0,0,5,0)    # Pretty arbitrary
-		self.vcr.inentry(start)
+		start = self.vcr.tc2addr(start)
+		start = start + 3*25 - 5     # Preroll point
+		start = self.vcr.addr2tc(start)
+		d = self.vcr.inentry(start)
 		if stop:
-			self.vcr.outentry(stop)
+			d = self.vcr.outentry(stop)
 		else:
-			self.vcr.outentry('reset')
+			d = self.vcr.outentry('reset')
 		if not self.vcr.search_preroll():
 			print 'Video error'
 			self.vcrstate = V_ERROR
@@ -100,7 +103,6 @@ class VcrChannel(Channel):
 		return 0
 
 	def play(self, node):	# XXX Override Channel method.
-		print 'play' #DBG
 		self.play_0(node)
 		if self.vcrstate == V_ERROR or not self.is_showing():
 			self.play_1()
@@ -128,9 +130,17 @@ class VcrChannel(Channel):
 
 	def getstartstopindex(self, node):
 		name = MMAttrdefs.getattr(node, 'file')
+		endscene = None
 		try:
 			nms = string.splitfields(name, ':')
-			[name, movie, scene] = nms
+			if len(nms) == 2:
+				[name, movie] = nms
+				scene = '-ALL-'
+				endscene = '-END-'
+			elif len(nms) == 3:
+				[name, movie, scene] = nms
+			else:
+				[name, movie, scene, endscene] = nms
 		except:
 			print 'vcrchannel: ill-formatted filename:', nms
 			return None, None
@@ -146,10 +156,13 @@ class VcrChannel(Channel):
 			print 'vcrchannel: no such scene', scene
 			return None, None
 		start = index.pos_get()
-		names = index.get_scenenames()
-		i = names.index(scene) + 1
-		if i < len(names):
-			index.scene_select(names[i])
+		if not endscene:
+			names = index.get_scenenames()
+			i = names.index(scene) + 1
+			if i < len(names):
+				endscene = names[i]
+		if endscene:
+			index.scene_select(endscene)
 			stop = index.pos_get()
 		else:
 			stop = None
