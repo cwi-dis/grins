@@ -407,13 +407,13 @@ class LayoutView2(LayoutViewDialog2):
 		#		
 		# simulate the focus for test
 		#
-		focustype = 1
-		self.nodelist = []
-		for key,node in self.context.uidmap.items():
-			if node.type in ('imm','ext'):
-				self.nodelist.append(node)
-		self.globalfocuschanged(focustype, self.nodelist[0])
-		self.globalfocuschanged(focustype, self.nodelist[1])
+#		focustype = 1
+#		self.nodelist = []
+#		for key,node in self.context.uidmap.items():
+#			if node.type in ('imm','ext'):
+#				self.nodelist.append(node)
+#		self.globalfocuschanged(focustype, self.nodelist[0])
+#		self.globalfocuschanged(focustype, self.nodelist[1])
 		# ###
 		
 	def hide(self):
@@ -433,12 +433,15 @@ class LayoutView2(LayoutViewDialog2):
 		self.updateRegionTree()
 
 	def globalfocuschanged(self, focustype, focusobject):
-#		print "LayoutView 2: focus received : ",focustype, focusobject
 		from MMNode import MMNode
-#		if focusobject is MMNode:
 
 		# insure that last media node selected will be removed
 		self.unSetMediaNode()
+		
+		from MMTypes import leaftypes
+		if focusobject.type not in leaftypes or focusobject.GetChannelType() == 'sound':
+			return
+				
 		self.setMediaNode(focusobject)
 		self.fillMediaListOnDialogBox()
 		if len(self.currentMediaRegionList) > 0:
