@@ -187,7 +187,8 @@ class _LinkView(docview.FormView,components.ControlsDict):
 #		if self._closecmdid>0:
 #			self.GetParent().GetMDIFrame().PostMessage(win32con.WM_COMMAND,self._closecmdid)
 #		else:
-		self.GetParent().DestroyWindow()
+		self.call('close')
+##		self.GetParent().DestroyWindow()
 
 	# Returns true if the OS window exists
 	def is_oswindow(self):
