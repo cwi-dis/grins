@@ -17,3 +17,5 @@ else:
 	macpreffilename = 'GRiNS-pro-%s-2.0 Prefs' % features.compatibility_short
 
 title = 'GRiNS Editor'
+registrykey = 'Oratrix GRiNS'
+registryname = 'Editor 2.0'
