@@ -12,23 +12,65 @@
 # blank lines and comments may be inserted freely.
 
 
-(styledict (namedict (attrdict)) () 'Style Dictionary' default '')
+(bbox (tuple (int) (int) (int) (int)) (0 0 0 0) 'Bounding box' default '')
 
-(channeldict (namedict (attrdict)) () 'Channel Dictionary' default '')
-
-(style (list (name)) () 'Style(s) used' default '')
+(center (bool) 0 'Center text' default '')
 
 (channel (name) undefined 'Channel name' default '')
 
-(type (name) undefined 'Channel type' default '')
+(channeldict (namedict (attrdict)) () 'Channel Dictionary' default '')
 
-(scrollbars (tuple (bool) (bool)) (0 0) 'Scrollbars (hor, ver)' default '')
+(duration (float) 0 'Duration (secs.)' default '')
 
-(winsize (tuple (int) (int)) (0 0) 'Window size (width, height)' default '')
+(extraspaceafter (float) 0 'Extra space after word (chars)' default '')
 
-(winpos (tuple (int) (int)) (0 0) 'Window position (x, y)' default '')
+(file (string) '' 'File name' default '')
 
 (font (string) 'default' 'Font' default '')
 
+(format (enum ASCII PostScript) ASCII 'Text file format' default '')
+
+(indent (float) 0 'Left margin indentation (chars)' default '')
+
+(justify (bool) 0 'Justify right margins' default '')
+
+(keep (bool) 1 'Keep text when done' default '')
+
+(name (string) '' 'Node name' default '')
+
+(needGS (bool) 0 'Need Ghostscript' default '')
+
+(nospaceafter (bool) 0 'Suppress space after word' default '')
+
+(scrollbars (tuple (bool) (bool)) (0 0) 'Scrollbars (hor, ver)' default '')
+
+(style (list (name)) () 'Style(s) used' default '')
+
+(styledict (namedict (attrdict)) () 'Style Dictionary' default '')
+
+(synclist (list (enclosed (tuple 
+				(enum begin end)
+				(enclosed (list (name)))
+				(float)
+				(enclosed (list (name)))
+				(float)
+				(float)
+	)))
+	() 'Sync arcs (old style)' default '')
+
 (synctolist (list (enclosed (tuple (uid) (bool) (float) (bool))))
 	() 'Sync arcs ending here' default '')
+
+(type (name) undefined 'Channel type' default '')
+
+(volume (float) 1.0 'Audio volume' default '')
+
+(vspace (tuple (float) (float)) (-1 -1)
+	'Vertical space before/after (lines)' default '')
+
+(wait_for_close (bool) 0
+	'Ask user to close window before proceeding' default '')
+
+(winpos (tuple (int) (int)) (0 0) 'Window position (x, y)' default '')
+
+(winsize (tuple (int) (int)) (0 0) 'Window size (width, height)' default '')
