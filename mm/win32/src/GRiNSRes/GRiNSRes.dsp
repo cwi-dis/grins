@@ -241,6 +241,10 @@ SOURCE=.\RES\player8bit.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\playing.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\Res\region.bmp
 # End Source File
 # Begin Source File
@@ -334,6 +338,10 @@ SOURCE=.\Res\video.bmp
 # Begin Source File
 
 SOURCE=.\Res\viewport.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\waitstop.ico
 # End Source File
 # Begin Source File
 
