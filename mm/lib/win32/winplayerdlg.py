@@ -11,7 +11,14 @@ import usercmd, usercmdui
 
 from pywinlib.mfc import window
 
-IDW_TOOLBAR_PLAYER_PANEL = 0xe805
+
+class Preferences:
+	DEFAULT_TITLE = 'Previewer Control Panel'
+	IDW_TOOLBAR_PLAYER_PANEL = 0xe805
+	MIN_CTRL_WIDTH = 80
+	CTRL_WIDTH = max(MIN_CTRL_WIDTH, 4*len(DEFAULT_TITLE))
+	FRAME_WIDTH = (3*(CTRL_WIDTH+16))/2 + 2*win32api.GetSystemMetrics(win32con.SM_CXFRAME)
+	ERASE_CLOSE = 1
 
 class ResItem:
 	classid = 0x0082
@@ -27,7 +34,7 @@ class ResItem:
 class Option(ResItem):
 	classid = 0x0085
 	style = win32con.WS_CHILD | win32con.WS_VISIBLE | win32con.CBS_DROPDOWNLIST | win32con.CBS_SORT | win32con.WS_VSCROLL | win32con.WS_BORDER
-	def __init__(self, name, width=80, height=12):
+	def __init__(self, name, width=Preferences.CTRL_WIDTH, height=12):
 		ResItem.__init__(self, name, width, height)
 	def getResourceList(self, x, y):
 		return [self.classid, self.name, self.id, (x, y, self.width, 128), self.style]
@@ -35,7 +42,7 @@ class Option(ResItem):
 class Boolean(ResItem):
 	classid = 0x0080
 	style = win32con.WS_CHILD | win32con.WS_VISIBLE | win32con.BS_AUTOCHECKBOX
-	def __init__(self, name, width=80, height=12):
+	def __init__(self, name, width=Preferences.CTRL_WIDTH, height=12):
 		ResItem.__init__(self, name, width, height)
 
 class PlayerDlgBar(window.Wnd):
@@ -54,23 +61,37 @@ class PlayerDlgBar(window.Wnd):
 		self._parent = None
 		self._resitems = []
 		self._ctrls = {}
+		self._miniframetype = None
 
 	def createWindow(self, parent, attributes):
 		self._parent = parent
+		WM_FLOATSTATUS  = 0x036D
+		self._parent.HookMessage(self.OnFloatStatus, WM_FLOATSTATUS)
 		self.createResourceItems(attributes)
 		CBRS_GRIPPER = 0x00400000
 		self.CreateWindowIndirect(parent, self.makeTemplate(), 
-			afxres.CBRS_SIZE_DYNAMIC | CBRS_GRIPPER | afxres.CBRS_FLOAT_MULTI, IDW_TOOLBAR_PLAYER_PANEL)
+			afxres.CBRS_SIZE_DYNAMIC | CBRS_GRIPPER | afxres.CBRS_FLOAT_MULTI, Preferences.IDW_TOOLBAR_PLAYER_PANEL)
 		self.EnableDocking(afxres.CBRS_ALIGN_ANY);
 		parent.EnableDocking(afxres.CBRS_ALIGN_ANY);
 		self.ShowWindow(win32con.SW_HIDE)
 		l, t, r, b = parent.GetMDIClient().GetWindowRect()
-		parent.FloatControlBar(self, (r-150, t+2) )
+		parent.FloatControlBar(self, (r-Preferences.FRAME_WIDTH+1, t+2) )
+		self._miniframetype = type(self.GetParent().GetParent())
+		self.eraseClose()
 		self.setButtonIcons()
 		self.createComponents()
 		self.hookCommands()
 		self.hide()
-
+	
+	def OnFloatStatus(self, params):
+		try:
+			miniframe = self.GetParent().GetParent()
+		except:
+			pass
+		else:
+			if type(miniframe) == self._miniframetype:
+				self.eraseClose()
+			
 	def destroy(self):
 		self.DestroyWindow()
 		del self._parent
@@ -81,11 +102,23 @@ class PlayerDlgBar(window.Wnd):
 		self.ShowWindow(win32con.SW_SHOW)
 		self._parent.DockControlBar(self)
 		l, t, r, b = self._parent.GetMDIClient().GetWindowRect()
-		self._parent.FloatControlBar(self, (r-150, t+2) )
+		self._parent.FloatControlBar(self, (r-Preferences.FRAME_WIDTH+1, t+2) )
+		self.eraseClose()
 
 	def hide(self):
 		self.ShowWindow(win32con.SW_HIDE)
 		self._parent.DockControlBar(self)
+
+	def eraseClose(self):
+		if not Preferences.ERASE_CLOSE: return
+		miniframe = self.GetParent().GetParent()
+		menu = miniframe.GetSystemMenu()
+		if menu:
+			try:
+				menu.DeleteMenu(win32con.SC_CLOSE, win32con.MF_BYCOMMAND)
+			except:
+				pass
+		miniframe.DrawMenuBar()
 
 	def createResourceItems(self, attributes):
 		id = 1
@@ -123,7 +156,7 @@ class PlayerDlgBar(window.Wnd):
 			if item.width > maxWidth: maxWidth = item.width
 					
 		dlgStyle = win32con.DS_CONTROL | win32con.WS_CHILD | win32con.DS_SETFONT
-		template. insert(0, ["Player control panel", (0, 0, maxWidth+16, y), dlgStyle, None, (8, "MS Sans Serif")])
+		template. insert(0, [Preferences.DEFAULT_TITLE, (0, 0, maxWidth+16, y), dlgStyle, None, (8, "MS Sans Serif")])
 		return template		
 
 	def setButtonIcons(self):
