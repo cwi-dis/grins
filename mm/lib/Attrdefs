@@ -370,11 +370,11 @@
 
 # XXXX Transitions need a displayer
 # XXXX This allows for a single transition only (should be a list)
-(transIn (name) '' 'In-transition' transition
-	'Name of transition at start of item' raw (smil2 snap))
+(transIn (list (name)) () 'In-transition' transition
+	'Names of transition at start of item' raw (smil2 snap))
 	
-(transOut (name) '' 'Out-transition' transition
-	'Name of transition at end of item' raw (smil2 snap))
+(transOut (list (name)) () 'Out-transition' transition
+	'Names of transition at end of item' raw (smil2 snap))
 	
 (transparent (int) 0 'Transparent' transparency
 	'Determines transparency of window, overrides background color' channel (g2_pro smil10 cmif snap))

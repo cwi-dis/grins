@@ -860,11 +860,15 @@ def gettransition(writer, node, which):
 	transition = MMAttrdefs.getattr(node, which)
 	if not transition:
 		return
-	try:
-		return writer.transition2name[transition]
-	except KeyError:
-		print '** Attempt to write unknown transition', transition
-		return
+	list = []
+	for tr in transition:
+		try:
+			list.append(writer.transition2name[transition])
+		except KeyError:
+			print '** Attempt to write unknown transition', transition
+			list.append(transition)
+	return string.join(list, ';')
+		
 	
 def getautoreverse(writer, node):
 	autoReverse = MMAttrdefs.getattr(node, 'autoReverse')
