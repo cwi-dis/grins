@@ -166,7 +166,7 @@ class _WindowGroup:
 			
 	def close_window_command(self):
 		# If this is the last window promote to close document
-		if self._parent and self._parent._is_last_in_group(self._wid):
+		if self._parent and self._parent._is_last_in_group(self._onscreen_wid):
 			if self._parent._call_optional_command(MenuTemplate.CLOSE):
 				return 1
 		# First see whether there's a WindowExit handler
@@ -191,7 +191,9 @@ class _CommonWindow:
 		else:
 			parent._subwindows.append(self)
 		self._parent = parent
-		self._wid = wid
+		self._onscreen_wid = wid
+		self._drawing_wid = wid
+		self._extra_wid = None
 		self._subwindows = []
 		self._displists = []
 		self._bgcolor = parent._bgcolor
@@ -217,10 +219,10 @@ class _CommonWindow:
 		if _in_create_box is self:
 			self.cancel_create_box()
 		self._set_movie_active(0)
-		Qd.SetPort(self._wid)
+		Qd.SetPort(self._onscreen_wid)
 		self._parent._subwindows.remove(self)
 		Win.InvalRect(self.qdrect())
-		self._parent._close_wid(self._wid)
+		self._parent._close_wid(self._onscreen_wid)
 		self._parent = None
 
 		for win in self._subwindows[:]:
@@ -242,7 +244,9 @@ class _CommonWindow:
 		del self._eventhandlers
 		del self._redrawfunc
 		del self._clickfunc
-		del self._wid
+		del self._onscreen_wid
+		del self._drawing_wid
+		del self._extra_wid
 		del self._accelerators
 		del self._menu
 		del self._popupmenu
@@ -251,7 +255,7 @@ class _CommonWindow:
 		if isactive == self._active_movie:
 			return
 		self._active_movie = isactive
-		mw_globals.toplevel._set_movie_active(isactive)
+		mw_globals.toplevel._set_movie_active(isactive, self)
 			
 	def _close_wid(self, wid):
 		"""Called by children to close wid. Only implements real close
@@ -260,7 +264,7 @@ class _CommonWindow:
 
 	def _clipchanged(self):
 		"""Called when the clipping region is possibly changed"""
-		if not self._parent or not self._wid:
+		if not self._parent or not self._onscreen_wid:
 			return
 		if self._clip:
 			Qd.DisposeRgn(self._clip)
@@ -271,7 +275,7 @@ class _CommonWindow:
 			
 	def _buttonschanged(self):
 		"""Buttons have changed, zap the mouse region cache. This escalates upwards"""
-		if not self._parent or not self._wid:
+		if not self._parent or not self._onscreen_wid:
 			return
 		if self._button_region:
 			Qd.DisposeRgn(self._button_region)
@@ -297,19 +301,12 @@ class _CommonWindow:
 	def newwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, z=0,
 		      type_channel = None, units = None):
 		"""Create a new subwindow"""
-		rv = _SubWindow(self, self._wid, (x, y, w, h), 0, pixmap,
+		rv = _SubWindow(self, self._onscreen_wid, (x, y, w, h), 0, pixmap,
 				transparent, z, units)
 		self._clipchanged()
 		return rv
 		
 	newcmwindow = newwindow
-##	def newcmwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, z=0,
-##			type_channel = None, units = None):
-##		"""Create a new subwindow"""
-##		rv = _SubWindow(self, self._wid, (x, y, w, h), 1, pixmap,
-##				transparent, z, units)
-##		self._clipchanged()
-##		return rv
 
 	def fgcolor(self, color):
 		"""Set foregroundcolor to 3-tuple 0..255"""
@@ -331,7 +328,7 @@ class _CommonWindow:
 			self._invalrectandborder()
 			
 	def _invalrectandborder(self):
-		Qd.SetPort(self._wid)
+		Qd.SetPort(self._onscreen_wid)
 		rect = self.qdrect()
 		rect = Qd.InsetRect(rect, -2, -2)
 		Win.InvalRect(rect)
@@ -777,7 +774,7 @@ class _CommonWindow:
 		else:
 			return
 		# Convert coordinates back to global
-		Qd.SetPort(self._wid)
+		Qd.SetPort(self._onscreen_wid)
 		y, x = Qd.LocalToGlobal(where)
 		menu.popup(x+2, y+2, event, window=self)
 		
@@ -856,6 +853,8 @@ class _CommonWindow:
 			self._redrawfunc()
 		else:
 			self._do_redraw()
+		if self._drawing_wid != self._onscreen_wid:
+			raise "TransitionsNotImplementedYet" # XXXX call changed()?
 		Qd.SetClip(saveclip)
 		Qd.DisposeRgn(saveclip)
 		
@@ -875,9 +874,18 @@ class _CommonWindow:
 		elif self._transparent == 0 or self._istoplevel:
 			Qd.EraseRect(self.qdrect())
 			
-	def _macsetwin(self):
+	def _mac_setwin(self):
 		"""Start drawing (by upper layer) in this window"""
-		Qd.SetPort(self._wid)
+		Qd.SetPort(self._drawing_wid)
+		
+	def _mac_invalwin(self):
+		"""Schedule a full redraw for this window"""
+		if self._onscreen_wid:
+			Qd.SetPort(self._onscreen_wid)
+			Win.InvalRect(self.qdrect())
+		
+	def _mac_getoswindow(self):
+		return self._drawing_wid
 		
 	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN, modeless=0):
 		global _in_create_box
@@ -901,6 +909,7 @@ class _CommonWindow:
 		sw.reverse()
 		for win in sw:
 			b = win._sizes
+			b = self._pxl2rel(self._convert_coordinates(box, units = win._units))
 			if b != (0, 0, 1, 1):
 				d.drawbox(b)
 		d.render()
@@ -911,7 +920,7 @@ class _CommonWindow:
 		else:
 			self._rb_box = None
 		self._rb_dragpoint = None
-		Qd.SetPort(self._wid)
+		Qd.SetPort(self._onscreen_wid)
 		Win.InvalRect(self.qdrect())
 		self._rb_callback = callback
 		self._rb_units = units
@@ -929,7 +938,7 @@ class _CommonWindow:
 				callback = (self._rb_done, ()),
 				cancelCallback = (self.cancel_create_box, ()))
 				
-			mw_globals.toplevel.grabwids([self._rb_dialog._dialog, self._wid])
+			mw_globals.toplevel.grabwids([self._rb_dialog._dialog, self._onscreen_wid])
 			while _in_create_box is self:
 				mw_globals.toplevel._eventloop(100)
 			mw_globals.toplevel.grab(None)
@@ -979,12 +988,12 @@ class _CommonWindow:
 		if not self._clip:
 			self.mkclip()
 		Qd.SetClip(self._clip)
-		if self._wid == Win.FrontWindow():
+		if self._onscreen_wid == Win.FrontWindow():
 			Qd.RGBForeColor((0xffff, 0, 0))
 		else:
 			Qd.RGBForeColor((0xc000, 0, 0))
 		if not self._rb_dragpoint is None:
-			port = self._wid.GetWindowPort()
+			port = self._onscreen_wid.GetWindowPort()
 			oldmode = port.pnMode
 			Qd.PenMode(QuickDraw.patXor)
 		self._rb_doredraw()
@@ -1040,7 +1049,7 @@ class _CommonWindow:
 		if not self._clip:
 			self.mkclip()
 		Qd.SetClip(self._clip)
-		port = self._wid.GetWindowPort()
+		port = self._onscreen_wid.GetWindowPort()
 		oldmode = port.pnMode
 		Qd.RGBForeColor((0xffff, 0, 0))
 		Qd.PenMode(QuickDraw.patXor)
@@ -1112,7 +1121,7 @@ class _CommonWindow:
 		# called on mouse press
 		# XXXX I'm not sure that both the render and the invalrect are needed...
 		self._rb_display.render()
-		Qd.SetPort(self._wid)
+		Qd.SetPort(self._onscreen_wid)
 		Win.InvalRect(self.qdrect())
 		x, y = where
 		xscrolloff, yscrolloff = self._scrolloffset()
@@ -1133,23 +1142,13 @@ class _CommonWindow:
 			self._rb_box = (x, y, x, y)
 			dragpoint = LURF_BOTRIGHT
 		self._rb_dragpoint = dragpoint
-#### Not needed: the render() above has scheduled a redraw anyway
-##		if not self._clip:
-##			self.mkclip()
-##		Qd.SetClip(self._clip)
-##		port = self._wid.GetWindowPort()
-##		oldmode = port.pnMode
-##		Qd.RGBForeColor((0xffff, 0, 0))
-##		Qd.PenMode(QuickDraw.patXor)
-##		self._do_redraw()
-##		Qd.PenMode(oldmode)
 		mw_globals.toplevel.setmousetracker(self._rb_mousemove)
 		return 1
 
 	def _rb_mousemove(self, event):
 		"""Called on mouse moved with button down and final mouseup"""
 		what, message, when, where, modifiers = event
-		Qd.SetPort(self._wid)
+		Qd.SetPort(self._onscreen_wid)
 		where = Qd.GlobalToLocal(where)
 		if what == Events.mouseUp:
 			self._rb_movebox(where, 1)
@@ -1201,6 +1200,7 @@ class _CommonWindow:
 		pass
 		
 	def changed(self):
+		"""Called if upper layers have modified _drawing_wid"""
 		pass
 		
 	def settransitionvalue(self, value):
@@ -1241,13 +1241,13 @@ class _ScrollMixin:
 		# Create vertical scrollbar
 		#
 		rect = vertleft, verttop, vertright, hortop+1
-		self._bary = Ctl.NewControl(self._wid, rect, "", 1, 0, 0, 0, 16, 0)
+		self._bary = Ctl.NewControl(self._onscreen_wid, rect, "", 1, 0, 0, 0, 16, 0)
 ##		self._bary.HiliteControl(255)
 		#
 		# Create horizontal scrollbar
 		#
 		rect = horleft, hortop, vertleft+1, horbot
-		self._barx = Ctl.NewControl(self._wid, rect, "", 1, 0, 0, 0, 16, 0)
+		self._barx = Ctl.NewControl(self._onscreen_wid, rect, "", 1, 0, 0, 0, 16, 0)
 ##		self._barx.HiliteControl(255)
 		#
 		# And install callbacks
@@ -1292,10 +1292,10 @@ class _ScrollMixin:
 		"""Update after a scroll from old_x, old_y"""
 		new_x = self._barx.GetControlValue()
 		new_y = self._bary.GetControlValue()
-		Qd.SetPort(self._wid)
+		Qd.SetPort(self._onscreen_wid)
 		# See whether we can use scrollrect. Only possible if no updates pending.
 		updrgn = Qd.NewRgn()
-		self._wid.GetWindowUpdateRgn(updrgn)
+		self._onscreen_wid.GetWindowUpdateRgn(updrgn)
 		if Qd.EmptyRgn(updrgn):
 			# Scroll, and get the new vacated region back
 			Qd.ScrollRect(self.qdrect(), old_x-new_x, old_y-new_y, updrgn)
@@ -1328,7 +1328,7 @@ class _ScrollMixin:
 		
 	def _redraw(self):
 		if self._barx:
-			self._wid.DrawGrowIcon()
+			self._onscreen_wid.DrawGrowIcon()
 		
 	def _initscrollbarposition(self):
 		l, t, w, h = self._rect
@@ -1370,7 +1370,7 @@ class _ScrollMixin:
 		else:
 			self._barx.DeactivateControl()
 			self._bary.DeactivateControl()
-		self._wid.DrawGrowIcon()
+		self._onscreen_wid.DrawGrowIcon()
 		
 	def _scrollsizefactors(self):
 		if self._canvassize is None:
@@ -1573,7 +1573,7 @@ class _AdornmentsMixin:
 			#
 			for type, resid, cmd in adornments['toolbar']:
 				try:
-					cntl = Ctl.GetNewControl(resid, self._wid)
+					cntl = Ctl.GetNewControl(resid, self._onscreen_wid)
 				except Ctl.Error, arg:
 					print 'CNTL resource %d not found: %s'%(resid, arg)
 				else:
@@ -1585,7 +1585,7 @@ class _AdornmentsMixin:
 			#
 			resid, width, height = MenuTemplate.TOOLBAR
 			try:
-				cntl = Ctl.GetNewControl(resid, self._wid)
+				cntl = Ctl.GetNewControl(resid, self._onscreen_wid)
 			except Ctl.Error, arg:
 				print 'CNTL resource %d not found: %s'%(resid, arg)
 			cntl.HiliteControl(255) # XXXX HOW TO HANDLE THIS ONE?
@@ -1626,7 +1626,7 @@ class _AdornmentsMixin:
 	def _iscontrolclick(self, down, local, event, double):
 		if down:
 			# Check for control
-			ptype, ctl = Ctl.FindControl(local, self._wid)
+			ptype, ctl = Ctl.FindControl(local, self._onscreen_wid)
 			if ptype and ctl and self._cntl_handlers.has_key(ctl):
 				control_callback, track_callback = self._cntl_handlers[ctl]
 				if ptype in TRACKED_PARTS and track_callback:
@@ -1752,12 +1752,12 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 				
 	def settitle(self, title):
 		"""Set window title"""
-		if not self._wid:
+		if not self._onscreen_wid:
 			return  # Or raise error?
 		_WindowGroup.settitle(self, title)
 		if title == None:
 			title = ''
-		self._wid.SetWTitle(title)
+		self._onscreen_wid.SetWTitle(title)
 		
 	def set_toggle(self, cmd, onoff):
 		_AdornmentsMixin.set_toggle(self, cmd, onoff)
@@ -1770,8 +1770,8 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 			self._popupmenu.update_menu_enabled(self.has_command)
 
 	def getgeometry(self, units=UNIT_MM):
-		rect = self._wid.GetWindowPort().portRect
-		Qd.SetPort(self._wid)
+		rect = self._onscreen_wid.GetWindowPort().portRect
+		Qd.SetPort(self._onscreen_wid)
 		x, y = Qd.LocalToGlobal((0,0))
 		w, h = rect[2]-rect[0], rect[3]-rect[1]
 		_x_pixel_per_mm, _y_pixel_per_mm = \
@@ -1796,16 +1796,16 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 
 	def pop(self, poptop=1):
 		"""Pop window to top of window stack"""
-		if not self._wid or not self._parent or not poptop:
+		if not self._onscreen_wid or not self._parent or not poptop:
 			return
-		self._wid.SelectWindow()
+		self._onscreen_wid.SelectWindow()
 		mw_globals.toplevel._mouseregionschanged()
 
 	def push(self):
 		"""Push window to bottom of window stack"""
-		if not self._wid or not self._parent:
+		if not self._onscreen_wid or not self._parent:
 			return
-		self._wid.SendBehind(0)
+		self._onscreen_wid.SendBehind(0)
 		
 	def _is_on_top(self):
 		return 1
@@ -1818,24 +1818,24 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		
 	def _contentclick(self, down, where, event, shifted, double):
 		"""A mouse click in our data-region"""
-		if not self._wid or not self._parent:
+		if not self._onscreen_wid or not self._parent:
 			return
-		Qd.SetPort(self._wid)
+		Qd.SetPort(self._onscreen_wid)
 		where = Qd.GlobalToLocal(where)
 		_CommonWindow._contentclick(self, down, where, event, shifted, double)
 
 	def _keyboardinput(self, char, where, event):
 		"""A character typed in our data-region"""
-		if not self._wid or not self._parent:
+		if not self._onscreen_wid or not self._parent:
 			return
 		if self._check_for_shortcut(char):
 			return 1
-		Qd.SetPort(self._wid)
+		Qd.SetPort(self._onscreen_wid)
 		where = Qd.GlobalToLocal(where)
 		return _CommonWindow._keyboardinput(self, char, where, event)
 
 	def _mkclip(self):
-		if not self._wid or not self._parent:
+		if not self._onscreen_wid or not self._parent:
 			return
 		if self._clip:
 			raise 'Clip already valid!'
@@ -1859,8 +1859,8 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 	def _redraw(self, rgn=None):
 		_CommonWindow._redraw(self, rgn)
 		if rgn is None:
-			rgn = self._wid.GetWindowPort().visRgn
-		Ctl.UpdateControls(self._wid, rgn)
+			rgn = self._onscreen_wid.GetWindowPort().visRgn
+		Ctl.UpdateControls(self._onscreen_wid, rgn)
 		_ScrollMixin._redraw(self)
 		
 	def _activate(self, onoff):
@@ -1873,8 +1873,9 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		if _in_create_box:
 			_in_create_box.cancel_create_box()
 			
-		self._wid.SizeWindow(width, height, 1)
-		Qd.SetPort(self._wid)
+		self._onscreen_wid.SizeWindow(width, height, 1)
+		# XXXX Should also update size of offscreen maps?
+		Qd.SetPort(self._onscreen_wid)
 		Win.InvalRect(self.qdrect())
 		self._clipchanged()
 
@@ -1926,11 +1927,11 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		if onoff == self._drop_enabled:
 			return
 		if onoff:
-			Drag.InstallTrackingHandler(self._trackhandler, self._wid)
-			Drag.InstallReceiveHandler(self._receivehandler, self._wid)
+			Drag.InstallTrackingHandler(self._trackhandler, self._onscreen_wid)
+			Drag.InstallReceiveHandler(self._receivehandler, self._onscreen_wid)
 		else:
-			Drag.RemoveTrackingHandler(self._wid)
-			Drag.RemoveReceiveHandler(self._wid)
+			Drag.RemoveTrackingHandler(self._onscreen_wid)
+			Drag.RemoveReceiveHandler(self._onscreen_wid)
 		self._drop_enabled = onoff
 		
 	def _trackhandler(self, message, dragref, wid):
@@ -1943,7 +1944,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 ##		print 'DOIT', message, dragref, wid
 		rect = None
 		oldport = Qd.GetPort()
-		Qd.SetPort(self._wid)
+		Qd.SetPort(self._onscreen_wid)
 		dummy, where = dragref.GetDragMouse()
 		where = Qd.GlobalToLocal(where)
  		x, y = self._convert_qdcoords(where)
@@ -1959,7 +1960,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 			except KeyError:
 				return
 			dummy, where = dragref.GetDragMouse()
-			Qd.SetPort(self._wid)
+			Qd.SetPort(self._onscreen_wid)
 			where = Qd.GlobalToLocal(where)
 			x, y = self._convert_qdcoords(where)
 			func(arg, self, DragFile, (x, y))
@@ -1983,7 +1984,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		
 	def _receivehandler(self, dragref, wid):
 		dummy, where = dragref.GetDragMouse()
-		Qd.SetPort(self._wid)
+		Qd.SetPort(self._onscreen_wid)
 		where = Qd.GlobalToLocal(where)
 		x, y = self._convert_qdcoords(where)
 ##		print 'MOUSE', x, y
@@ -2056,6 +2057,7 @@ class _SubWindow(_CommonWindow):
 			transparent = 0, z = 0, units = None):
 		
 		self._istoplevel = 0
+		self._units = units
 		_CommonWindow.__init__(self, parent, wid, z)
 		
 		x, y, w, h = parent._convert_coordinates(coordinates, units = units)
@@ -2104,7 +2106,7 @@ class _SubWindow(_CommonWindow):
 		else:
 			parent._subwindows.append(self)
 		parent._clipchanged()
-		Qd.SetPort(self._wid)
+		Qd.SetPort(self._onscreen_wid)
 		if self._transparent <= 0:
 			Win.InvalRect(self.qdrect())
 		parent.pop(poptop)
@@ -2124,7 +2126,7 @@ class _SubWindow(_CommonWindow):
 		else:
 			parent._subwindows.insert(0, self)
 		parent._clipchanged()
-		Qd.SetPort(self._wid)
+		Qd.SetPort(self._onscreen_wid)
 		Win.InvalRect(self.qdrect())
 		parent.push()
 		
@@ -2169,7 +2171,7 @@ class _SubWindow(_CommonWindow):
 		# close all display lists
 		parent = self._parent
 		## XXXX Should have crop=1?
-		x, y, w, h = parent._convert_coordinates(self._sizes)
+		x, y, w, h = parent._convert_coordinates(self._sizes, units = self._units)
 		xscrolloff, yscrolloff = parent._scrolloffset()
 		x, y = x+xscrolloff, y+yscrolloff
 		self._rect = x, y, w, h
@@ -2248,13 +2250,13 @@ class DialogWindow(_Window):
 	def show(self):
 		if self.title:
 			self.settitle(self.title)
-		self._wid.AutoSizeDialog()	# Not sure whether this is a good idea for all dialogs...
-		self._wid.ShowWindow()
-		self._wid.SelectWindow() # test
+		self._onscreen_wid.AutoSizeDialog()	# Not sure whether this is a good idea for all dialogs...
+		self._onscreen_wid.ShowWindow()
+		self._onscreen_wid.SelectWindow() # test
 		self._is_shown = 1
 		
 	def hide(self):
-		self._wid.HideWindow()
+		self._onscreen_wid.HideWindow()
 		self.grabdone()
 		self.settitle(None)
 		self._is_shown = 0
@@ -2320,14 +2322,14 @@ class DialogWindow(_Window):
 	# The event handling will then call this when return is pressed.
 	#
 	def _optional_defaulthit(self):
-		ctl = self._wid.GetDialogItemAsControl(self.__default)
+		ctl = self._onscreen_wid.GetDialogItemAsControl(self.__default)
 		ctl.HiliteControl(Controls.inButton)
 		self.do_itemhit(self.__default, None)
 	#
 	# Similarly for cancel, which is bound to close window (not to cmd-dot yet)
 	#
 	def _optional_cancelhit(self):
-		ctl = self._wid.GetDialogItemAsControl(self.__cancel)
+		ctl = self._onscreen_wid.GetDialogItemAsControl(self.__cancel)
 		ctl.HiliteControl(Controls.inButton)
 		self.do_itemhit(self.__cancel, None)
 		
@@ -2347,22 +2349,22 @@ class DialogWindow(_Window):
 			w._activate(onoff)
 			
 	def ListWidget(self, item, content=[]):
-		widget = mw_widgets._ListWidget(self._wid, item, content)
+		widget = mw_widgets._ListWidget(self._onscreen_wid, item, content)
 ##		self.addwidget(item, widget)
 		return widget
 
 	def ImageWidget(self, item, image=None):
-		widget = mw_widgets._ImageWidget(self._wid, item, image)
+		widget = mw_widgets._ImageWidget(self._onscreen_wid, item, image)
 		self.addwidget(item, widget)
 		return widget
 		
 	def SelectWidget(self, item, items=[], default=None, callback=None):
-		widget = mw_widgets._SelectWidget(self._wid, item, items, default, callback)
+		widget = mw_widgets._SelectWidget(self._onscreen_wid, item, items, default, callback)
 		self.addwidget(item, widget)
 		return widget
 		
 	def AreaWidget(self, item, callback=None, scaleitem=None):
-		widget = mw_widgets._AreaWidget(self._wid, item, callback, scaleitem)
+		widget = mw_widgets._AreaWidget(self._onscreen_wid, item, callback, scaleitem)
 		self.addwidget(item, widget)
 		return widget
 	
@@ -2376,12 +2378,12 @@ class DialogWindow(_Window):
 			cmd = item.__class__
 			if cmd_to_item.has_key(cmd):
 				item = cmd_to_item[cmd]
-				cntl = self._wid.GetDialogItemAsControl(item)
+				cntl = self._onscreen_wid.GetDialogItemAsControl(item)
 				cntl.ActivateControl()
 				del cmd_to_item[cmd]
 		# Second pass: disable the others
 		for item in cmd_to_item.values():
-			cntl = self._wid.GetDialogItemAsControl(item)
+			cntl = self._onscreen_wid.GetDialogItemAsControl(item)
 			cntl.DeactivateControl()
 		# And pass the command list on to the Window/Menu stuff
 		_Window.set_commandlist(self, cmdlist)
