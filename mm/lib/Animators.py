@@ -752,12 +752,11 @@ class EffectiveAnimator:
 				self.__animators.remove(animator)			
 		self.__animators.append(animator)
 		animator.setEffectiveAnimator(self)
+		if not self.__chan:
+			self.__chan = targChan
 		if self.__attr == 'transition':
 			self.__begintransition(animator)
 		if debug: print 'adding animator', animator
-
-		if not self.__chan:
-			self.__chan = targChan
 
 	def onAnimateEnd(self, targChan, animator, update=1):
 		self.__animators.remove(animator)
@@ -1003,18 +1002,19 @@ class EffectiveAnimator:
 			print 'update',self.__attr,'of channel',self.__chan._name,'to',value
 	
 	def __begintransition(self, animator):
-		print 'begintransition', animator._trtype, animator._trsubtype
+		if self.__chan and self.__chan.window:
+			self.__chan.window.begininlinetransition(animator._trtype, animator._trsubtype)
+		if debug: print 'begintransition', animator._trtype, animator._trsubtype
 
 	def __endtransition(self):
-		print 'endtransition'
+		if self.__chan and self.__chan.window:
+			self.__chan.window.endtransition()
+		if debug: print 'endtransition'
 			
 	def __settransitionvalue(self, value):
-		if not self.__chan:
-			return
-		chan = self.__chan
-		print 'settransitionvalue', value
-		if chan.window and 0:
-			chan.window.settransitionvalue(value)
+		if debug: print 'settransitionvalue', value
+		if self.__chan and self.__chan.window:
+			self.__chan.window.settransitionvalue(value)
 	
 	def getcurrentbasevalue(self, animator=None):
 		cv = self.__domval
