@@ -113,7 +113,7 @@ class TextWindow(ChannelWindow):
 			gl.ringbell()
 			return
 		#
-		self.draw_tag_filled(hits[0])  # XXXX Try by Jack
+		self.draw_tag(hits[0], 1)  # Highlight the anchor
 		name = hits[0][4]
 		#
 		al2 = []
@@ -300,7 +300,7 @@ class TextWindow(ChannelWindow):
 		# Draw the tags (almost the same as the anchors but not quite)
 		taglist = self.taglist
 		for item in taglist:
-			self.draw_tag(item)
+			self.draw_tag(item, 0)
 	#
 	# Find which anchor items are hit by a given point (mx, my)
 	def which_tags(self, mx, my):
@@ -320,8 +320,10 @@ class TextWindow(ChannelWindow):
 		return 0
 	#
 	# Draw the given anchor item
-	def draw_tag(self, item):
+	def draw_tag(self, item, filled):
 		boxes = self.tag_to_boxes(item)
+		if filled:
+			gl.linewidth(3)
 		for (x0, y0, x1, y1) in boxes:
 			gl.bgnclosedline()
 			gl.v2i(x0, y0+1)
@@ -329,18 +331,8 @@ class TextWindow(ChannelWindow):
 			gl.v2i(x1, y1)
 			gl.v2i(x0, y1)
 			gl.endclosedline()
-	#
-	# Draw the given anchor item
-	# XXXX try  by Jack.
-	def draw_tag_filled(self, item):
-		boxes = self.tag_to_boxes(item)
-		for (x0, y0, x1, y1) in boxes:
-			gl.bgnpolygon()
-			gl.v2i(x0, y0+1)
-			gl.v2i(x1, y0+1)
-			gl.v2i(x1, y1)
-			gl.v2i(x0, y1)
-			gl.endpolygon()
+		if filled:
+			gl.linewidth(1)
 	#
 	# Convert an anchor to a set of boxes
 	def tag_to_boxes(self, item):

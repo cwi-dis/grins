@@ -295,17 +295,15 @@ class ImageWindow(ChannelWindow):
 		y0 = int(y0 * self.ninfo.mousescale + self.ninfo.ycorner)
 		y1 = int(y1 * self.ninfo.mousescale + self.ninfo.ycorner)
 		if filled:
-			gl.bgnpolygon()
-		else:
-			gl.bgnclosedline()
+			gl.linewidth(3)
+		gl.bgnclosedline()
 		gl.v2i(x0, y0)
 		gl.v2i(x0, y1)
 		gl.v2i(x1, y1)
 		gl.v2i(x1, y0)
+		gl.endclosedline()
 		if filled:
-			gl.endpolygon()
-		else:
-			gl.endclosedline()
+			gl.linewidth(1)
 
 
 # XXX Make the image channel class a derived class from ImageWindow?!
