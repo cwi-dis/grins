@@ -700,15 +700,23 @@ class SMILWriter(SMIL):
 			# don't define coordinates (i.e., use defaults)
 			if ch.has_key('base_window') and \
 			   ch.has_key('base_winoff'):
-				if hasattr(ch, '_rect'):
-					rect = ch._rect
-					x, y, w, h = rect
-				else:
-					x, y, w, h = ch['base_winoff']
+				x, y, w, h = ch['base_winoff']
+				units = ch['units']
+				if units == 0:		# UNIT_MM
+					# convert mm to pixels (assuming 100 dpi)
+					x = int(x / 25.4 * 100 + .5)
+					y = int(y / 25.4 * 100 + .5)
+					w = int(w / 25.4 * 100 + .5)
+					h = int(h / 25.4 * 100 + .5)
+				elif units == 1:	# UNIT_SCREEN
 					if x+w >= 1.0: w = 0
 					if y+h >= 1.0: h = 0
-				data = ('left', x), ('top', y), ('width', w), ('height', h)
-				for name, value in data:
+				elif units == 2:	# UNIT_PXL
+					x = int(x)
+					y = int(y)
+					w = int(w)
+					h = int(h)
+				for name, value in [('left', x), ('top', y), ('width', w), ('height', h)]:
 					if not value:
 						continue
 					if type(value) is type(0.0):
