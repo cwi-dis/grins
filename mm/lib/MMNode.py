@@ -1298,7 +1298,8 @@ class MMNode:
 		if fill is None or fill == 'default':
 			fill = self.GetInherAttrDef('fillDefault', None)
 		# XXX should endlist be filtered here?
-		if fill is None or fill == 'inherit' or fill == 'auto':
+		if fill is None or fill == 'inherit' or fill == 'auto' or \
+		   (fill == 'transition' and self.type in interiortypes):
 			if not self.attrdict.has_key('duration') and \
 			   not self.FilterArcList(self.attrdict.get('endlist',[])) and \
 			   not self.attrdict.has_key('repeatdur') and \
