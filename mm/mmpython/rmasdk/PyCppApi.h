@@ -18,7 +18,7 @@
 // class SyncObject and CEnterLeavePython
 #include "mt.h"
 
-#if !defined(_ABIO32) || _ABIO32 == 0
+#if defined(_USE_STD_STR) && (!defined(_ABIO32) || _ABIO32 == 0)
 #include "string"
 #endif
 
@@ -101,7 +101,7 @@ class DLL_API RMAObject : public PyObject
 	static RMAObject* make(TypeObject &type);
 
 	// virtuals for Python support
-#if !defined(_ABIO32) || _ABIO32 == 0
+#if defined(_USE_STD_STR) && (!defined(_ABIO32) || _ABIO32 == 0)
 	virtual string repr();
 #else
 	virtual char *repr();
@@ -164,7 +164,7 @@ class DLL_API CallerHelper
 	BOOL retval( long &ret );
 	BOOL retval( PyObject* &ret );
 	BOOL retval( char * &ret );
-#if !defined(_ABIO32) || _ABIO32 == 0
+#if defined(_USE_STD_STR) && (!defined(_ABIO32) || _ABIO32 == 0)
 	BOOL retval( string &ret );
 #endif
 	BOOL retnone();
@@ -175,7 +175,7 @@ class DLL_API CallerHelper
 	PyObject *handler;
 	PyObject *retVal;
 	PyObject *py_ob;
-#if !defined(_ABIO32) || _ABIO32 == 0
+#if defined(_USE_STD_STR) && (!defined(_ABIO32) || _ABIO32 == 0)
 	string csHandlerName;
 #endif
 	};
