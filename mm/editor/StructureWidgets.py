@@ -2319,7 +2319,15 @@ class IconBox(MMWidgetDecoration):
 			icon.set_contextmenu(contextmenu)
 		if arrowto:
 			icon.add_arrow(arrowto)
-		self._iconlist.append(icon)
+		i = 0
+		for n in ('linksrc','linksrcdst','linkdst','beginevent','causeevent','endevent','error'):
+			if iconname == n:
+				self._iconlist.insert(i, icon)
+				break
+			if i < len(self._iconlist) and self._iconlist[i].icon == n:
+				i = i + 1
+		else:
+			self._iconlist.append(icon)
 		self.recalc_minsize()
 		return icon
 
