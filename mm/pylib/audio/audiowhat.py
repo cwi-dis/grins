@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 def what(filename):
 	f = open(filename, 'rb')
 	h = f.read(512)
