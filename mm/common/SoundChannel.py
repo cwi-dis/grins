@@ -65,8 +65,8 @@ class SoundChannel(Channel):
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
 	#
-	chan_attrs = ['visible']
-	node_attrs = ['file', 'arm_duration']
+	chan_attrs = []
+	node_attrs = ['file']
 	#
 	def init(self, (name, attrdict, player)):
 		self = Channel.init(self, name, attrdict, player)

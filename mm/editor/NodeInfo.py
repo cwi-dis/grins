@@ -474,19 +474,13 @@ class NodeInfo(Dialog):
     # dir from the resulting pathname.
     #
     def browser_callback(self, (obj, dummy)):
-	dir, file = os.path.split(self.filename)
-	if file == '' or self.filename == '/dev/null': # YUCK!
-	    dir = file = ''
-	    # This triggers fl.show_file_selector to use its defaults
-	    # (Which it carries over from the last call)
-	result = fl.show_file_selector('Select file', dir, '*', file)
-	if result == None:
-	    return
-	dir, file = os.path.split(result)
-	self.ch_filename = 1
-	self.changed = 1
-	self.filename = result
-	self.file_input.set_input(result)
+	import selector
+	pathname = selector.selector(self.filename)
+	if pathname <> None:
+	    self.ch_filename = 1
+	    self.changed = 1
+	    self.filename = pathname
+	    self.file_input.set_input(pathname)
 
     def conteditor_callback(self, (obj, dummy)):
 	import NodeEdit

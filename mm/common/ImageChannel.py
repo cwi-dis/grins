@@ -313,8 +313,8 @@ class ImageChannel(Channel):
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
 	#
-	chan_attrs = ['winsize', 'winpos', 'visible']
-	node_attrs = ['file', 'duration', 'scale', 'arm_duration', \
+	chan_attrs = []
+	node_attrs = ['file', 'duration', 'scale', \
 		 'bgcolor', 'fgcolor', 'hicolor']
 	#
 	def init(self, (name, attrdict, player)):
