@@ -25,9 +25,15 @@ class TopLevelDialog:
 	def setbuttonstate(self, command, showing):
 		self.window.set_toggle(command, showing)
 
-	def showsource(self, source):
-		if self.source is not None and not self.source.is_closed():
-			self.source.settext(source)
+	def showsource(self, source = None):
+		if source is None:
+			if self.source is not None:
+				if not self.source.is_closed():
+					self.source.close()
+				self.source = None
+			return
+		if self.source is not None:
+			self.source._children[1].settext(source)
 			self.source.show()
 			return
 		self.source = windowinterface.textwindow(source)

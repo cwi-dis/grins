@@ -182,8 +182,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.player.show((self.player.playsubtree, (self.root,)))
 
 	def source_callback(self):
-		import SMILTreeWrite
-		self.showsource(SMILTreeWrite.WriteString(self.root))
+		if self.source:
+			self.showsource(None)
+		else:
+			import SMILTreeWrite
+			self.showsource(SMILTreeWrite.WriteString(self.root))
 
 	def view_callback(self, viewno):
 		self.setwaiting()
@@ -505,7 +508,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		Timing.changedtimes(self.root)
 		if self.source:
 			# reshow source
-			self.source_callback()
+			import SMILTreeWrite
+			self.showsource(SMILTreeWrite.WriteString(self.root))
 		#if self.__save is not None:
 		#	self.setcommands(self.commandlist + [self.__save])
 

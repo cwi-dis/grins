@@ -32,15 +32,19 @@ class TopLevelDialog:
 	def setbuttonstate(self, command, showing):
 		self.window.set_toggle(command, showing)
 
-	def showsource(self, source):
-		if self.source:
+	def showsource(self, source = None):
+		if source is None:
+			if self.source is not None:
+				self.source.close()
+				self.source = None
+			self.window.set_toggle(SOURCE,0)
+			return
+		if self.source is not None:
+			self.showsource(); return
 			self.source.settext(source)
-##			self.source.close()
-##			self.source=None
-##			self.window.set_toggle(SOURCE,0)
 		else:
 			self.source = self.window.textwindow(source)
-			self.window.set_toggle(SOURCE,1)
+		self.window.set_toggle(SOURCE,1)
 
 	def mayclose(self):
 		prompt = 'You haven\'t saved your changes yet;\n' + \
