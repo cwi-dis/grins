@@ -206,13 +206,15 @@ class HierarchyView(HierarchyViewDialog):
 			EXPAND(callback = (self.expandcall, ())),
 			]
 		self.noslidecommands = [
-			INFO(callback = (self.infocall, ())),
 			CREATEANCHOR(callback = (self.createanchorcall, ())),
 			PLAYNODE(callback = (self.playcall, ())),
 			PLAYFROM(callback = (self.playfromcall, ())),
 			]
 		if not lightweight:
-			self.noslidecommands.append(ANCHORS(callback = (self.anchorcall, ())))
+			self.noslidecommands = self.noslidecommands + [
+				INFO(callback = (self.infocall, ())),
+				ANCHORS(callback = (self.anchorcall, ())),
+				]
 		self.finishlinkcommands = [
 			FINISH_LINK(callback = (self.hyperlinkcall, ())),
 			]
@@ -556,6 +558,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.aftersetfocus()
 
 	def create(self, where, url = None, index = -1, chtype = None):
+		lightweight = settings.get('lightweight')
 		node = self.focusnode
 		if node is None:
 			self.opt_render()
@@ -587,7 +590,6 @@ class HierarchyView(HierarchyViewDialog):
 		chname = None
 		if type == 'ext' or type == 'imm':
 			chlist = ctx.compatchannels(url, chtype)
-			lightweight = settings.get('lightweight')
 			if chlist:
 				if len(chlist) > 1:
 					i = windowinterface.multchoice('Choose a channel for this file', ['Cancel']+chlist, 0, parent = self.window)
@@ -644,12 +646,9 @@ class HierarchyView(HierarchyViewDialog):
 		   self.toplevel.layoutview.curlayout is not None:
 			node.SetAttr('layout', self.toplevel.layoutview.curlayout)
 		if self.insertnode(node, where, index):
-			if type == 'slide':
+			if not lightweight:
 				import AttrEdit
 				AttrEdit.showattreditor(self.toplevel, node)
-			else:
-				import NodeInfo
-				NodeInfo.shownodeinfo(self.toplevel, node, new = 1)
 
 	def insertparent(self, type):
 		node = self.focusnode
@@ -679,8 +678,9 @@ class HierarchyView(HierarchyViewDialog):
 		expandnode(newnode)
 		self.aftersetfocus()
 		em.commit()
-		import NodeInfo
-		NodeInfo.shownodeinfo(self.toplevel, newnode)
+		if not settings.get('lightweight'):
+			import NodeInfo
+			NodeInfo.shownodeinfo(self.toplevel, newnode)
 
 	def paste(self, where):
 		import Clipboard
