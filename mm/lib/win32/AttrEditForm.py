@@ -1462,6 +1462,21 @@ class EventCtrl(AttrCtrl):
 			self._value = val
 		else:
 			print "ERROR: ListCtrl.setvalue received an invalid value."
+			return
+			
+		if self._initctrl:
+			# we have to update _eventstruct according to the selected item
+			# otherwise, the wrong structure will be updated after a first apply
+			selNumber = self._list.getcursel()
+			if 0 <= selNumber < len(self._value):
+				self._eventstruct = self._value[selNumber]
+			else:
+				self._eventstruct = None
+			# reset UI
+			self.dont_update = 1
+			self.resetlist()
+			self.initevent()
+			self.dont_update = 0
 
 	def getvalue(self):
 		return self._value
