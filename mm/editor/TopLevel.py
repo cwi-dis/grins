@@ -41,6 +41,7 @@ def dispatch(frame, event, arg):
 		if frame is not _curframe:
 			_trace_depth = _trace_depth - 1
 	print '%s %s:%d %s%s' % (e, filename,lineno,funcname,plineno)
+	if _trace_depth < 0: _trace_depth = 0
 	_curframe = frame
 
 class TopLevel(ViewDialog):
