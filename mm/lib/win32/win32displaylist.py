@@ -47,7 +47,10 @@ _icon_ids = {
 	'happyface' : grinsRC.IDI_HAPPYFACE,
 	'repeat' : grinsRC.IDI_REPEAT,
 	'spaceman': grinsRC.IDI_SPACEMAN,
-	'wallclock' : grinsRC.IDI_WALLCLOCK,
+	'wallclock': grinsRC.IDI_WALLCLOCK,
+	'playing': grinsRC.IDI_PLAYING,	# 
+	'waitstop': grinsRC.IDI_WAITSTOP, # 
+	'idle': grinsRC.IDI_IDLE,	# 
 }
 
 def _get_icon(which):

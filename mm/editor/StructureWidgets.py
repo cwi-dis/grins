@@ -91,9 +91,23 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.iconbox.setup()
 		self.has_event_icons = 0
 		self.cause_event_icon = None
+# disabled for now, but it does actually work.
+##		node.set_armedmode = self.set_armedmode
+##		self.set_armedmode('idle', redraw = 0)
 
 	def __repr__(self):
 		return '<%s instance, name="%s", id=%X>' % (self.__class__.__name__, self.name, id(self))
+
+	def set_armedmode(self, mode, redraw = 1):
+		if mode != self.node.armedmode:
+			iconbox = self.iconbox
+			if iconbox.get_icon(self.node.armedmode or 'idle'):
+				iconbox.del_icon(self.node.armedmode or 'idle')
+			self.node.armedmode = mode
+			iconbox.add_icon(mode or 'idle')
+			if redraw:
+				self.mother.need_redraw = 1
+				self.mother.draw()
 
 	def get_node(self):
 		return self.node
@@ -141,6 +155,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if self.node:
 			del self.node.views['struct_view']
 			del self.node.set_infoicon
+			del self.set_armedmode
 			self.node = None
 		self.set_infoicon = None
 
@@ -1858,7 +1873,7 @@ class IconBox(MMWidgetDecoration):
 
 	def del_icon(self, iconname):
 		del self._icons[iconname]
-		del self.iconlist[iconname]
+		self.iconlist.remove(iconname)
 
 	def get_minsize(self):
 		# Always the number of icons.

@@ -110,7 +110,10 @@
 #define IDI_DURATION                    311
 #define IDI_ANIMATION                   312
 #define IDR_TB_PLAYER                   313
+#define IDI_PLAYING                     313
+#define IDI_WAITSTOP                    314
 #define IDD_SOURCEEDIT                  315
+#define IDI_IDLE                        315
 #define IDR_TB_ALIGNMENT                319
 #define IDD_EDITSTRINGATTR2             327
 #define IDD_EDITATTR_S7                 327

@@ -2243,6 +2243,27 @@ IDI_PAUSE               ICON    DISCARDABLE     "RES\\pause.ico"
 IDI_ICON_LINKSRC        ICON    DISCARDABLE     "res\\icon_lin.ico"
 IDI_ICON_LINKDST        ICON    DISCARDABLE     "res\\ico00008.ico"
 IDI_ICON_LINKSRCDST     ICON    DISCARDABLE     "res\\ico00009.ico"
+IDI_ICON_OPEN           ICON    DISCARDABLE     "res\\icon_ope.ico"
+IDI_ICON_CLOSED         ICON    DISCARDABLE     "res\\ico00004.ico"
+IDI_ICON_BANDWIDTHBAD   ICON    DISCARDABLE     "res\\ico00005.ico"
+IDI_ICON_BANDWIDTHGOOD  ICON    DISCARDABLE     "res\\ico00006.ico"
+IDI_ICON_ERROR          ICON    DISCARDABLE     "res\\ico00007.ico"
+IDI_ICON_TRANSOUT       ICON    DISCARDABLE     "res\\intransition.ico"
+IDI_ICON_TRANSIN        ICON    DISCARDABLE     "res\\outtransition.ico"
+IDI_EVENTIN             ICON    DISCARDABLE     "res\\eventin.ico"
+IDI_EVENTOUT            ICON    DISCARDABLE     "res\\eventout.ico"
+IDI_CAUSEEVENT          ICON    DISCARDABLE     "res\\causeeve.ico"
+IDI_HAPPYFACE           ICON    DISCARDABLE     "res\\happyfac.ico"
+IDI_SPACEMAN            ICON    DISCARDABLE     "res\\spaceman.ico"
+IDI_WALLCLOCK           ICON    DISCARDABLE     "res\\wallcloc.ico"
+IDI_REPEAT              ICON    DISCARDABLE     "res\\repeat.ico"
+IDI_FOCUSIN             ICON    DISCARDABLE     "res\\focusin.ico"
+IDI_ACTIVATEEVENT       ICON    DISCARDABLE     "res\\ico00010.ico"
+IDI_DURATION            ICON    DISCARDABLE     "res\\duration.ico"
+IDI_ANIMATION           ICON    DISCARDABLE     "res\\animatio.ico"
+IDI_PLAYING             ICON    DISCARDABLE     "res\\playing.ico"
+IDI_WAITSTOP            ICON    DISCARDABLE     "res\\ico00011.ico"
+IDI_IDLE                ICON    DISCARDABLE     "res\\waitstop.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2506,64 +2527,6 @@ BEGIN
 END
 
 #endif    // English (U.S.) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// Dutch (Netherlands) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NLD)
-#ifdef _WIN32
-LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDI_ICON_OPEN           ICON    DISCARDABLE     "res\\icon_ope.ico"
-IDI_ICON_CLOSED         ICON    DISCARDABLE     "res\\ico00004.ico"
-IDI_ICON_BANDWIDTHBAD   ICON    DISCARDABLE     "res\\ico00005.ico"
-IDI_ICON_BANDWIDTHGOOD  ICON    DISCARDABLE     "res\\ico00006.ico"
-IDI_ICON_ERROR          ICON    DISCARDABLE     "res\\ico00007.ico"
-#endif    // Dutch (Netherlands) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// English (U.K.) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
-#ifdef _WIN32
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDI_ICON_TRANSOUT       ICON    DISCARDABLE     "res\\intransition.ico"
-IDI_ICON_TRANSIN        ICON    DISCARDABLE     "res\\outtransition.ico"
-IDI_EVENTIN             ICON    DISCARDABLE     "res\\eventin.ico"
-IDI_EVENTOUT            ICON    DISCARDABLE     "res\\eventout.ico"
-IDI_CAUSEEVENT          ICON    DISCARDABLE     "res\\causeeve.ico"
-IDI_HAPPYFACE           ICON    DISCARDABLE     "res\\happyfac.ico"
-IDI_SPACEMAN            ICON    DISCARDABLE     "res\\spaceman.ico"
-IDI_WALLCLOCK           ICON    DISCARDABLE     "res\\wallcloc.ico"
-IDI_REPEAT              ICON    DISCARDABLE     "res\\repeat.ico"
-IDI_FOCUSIN             ICON    DISCARDABLE     "res\\focusin.ico"
-IDI_ACTIVATEEVENT       ICON    DISCARDABLE     "res\\ico00010.ico"
-IDI_DURATION            ICON    DISCARDABLE     "res\\duration.ico"
-IDI_ANIMATION           ICON    DISCARDABLE     "res\\animatio.ico"
-#endif    // English (U.K.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
