@@ -55,7 +55,7 @@ def get_cascade(id):
 	for c in casc2ui.keys():
 		if casc2ui[c]==ind:return c
 	
-idend=idbegin + len(casc2ui)*m
+idend=idc + len(casc2ui)*m
 
 class CommandUI:
 	def __init__(self,cmdcl,iduc=None):
