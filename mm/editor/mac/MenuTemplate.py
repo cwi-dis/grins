@@ -57,6 +57,7 @@ MENUBAR=(
 			)),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Check for GRiNS update...', None, CHECKVERSION),
+		(FLAG_ALL, ENTRY, 'Register GRiNS...', None, REGISTER),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Quit', 'Q', EXIT),
 		)),

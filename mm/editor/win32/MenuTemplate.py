@@ -297,6 +297,8 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, '&Tutorial', None, GRINS_TUTORIAL),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'C&heck for GRiNS update...', None, CHECKVERSION),
+		(FLAG_ALL, ENTRY, '&Register GRiNS...', None, REGISTER),
+		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
 
 NODOC_MENUBAR=(MENUBAR[0],MENUBAR[7])
