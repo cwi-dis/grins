@@ -612,6 +612,16 @@ class _Window:
 				region.SubtractRegion(r)
 			w._mkclip()
 
+	def _delclip(self, child, region):
+		# delete child's overlapping siblings
+		for w in self._subwindows:
+			if w is child:
+				break
+			if not w._transparent:
+				r = Xlib.CreateRegion()
+				apply(r.UnionRectWithRegion, w._rect)
+				region.SubtractRegion(r)
+
 	def _image_size(self, file):
 		try:
 			xsize, ysize = toplevel._image_size_cache[file]
@@ -1048,13 +1058,11 @@ class _BareSubWindow:
 		_Window._mkclip(self)
 		region = self._clip
 		# subtract overlapping siblings
-		for w in self._parent._subwindows:
-			if w is self:
-				break
-			if not w._transparent:
-				r = Xlib.CreateRegion()
-				apply(r.UnionRectWithRegion, w._rect)
-				region.SubtractRegion(r)
+		self._parent._delclip(self, self._clip)
+
+	def _delclip(self, child, region):
+		_Window._delclip(self, child, region)
+		self._parent._delclip(self, region)
 
 	def _do_resize1(self):
 		# calculate new size of subwindow after resize
