@@ -60,7 +60,7 @@ OutDir=.\.
 InputPath=.\GRiNSed.exe
 SOURCE="$(InputPath)"
 
-"..\..\..\bin\win32 \GRiNSed.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"..\..\..\bin\win32\GRiNSed.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	del ..\..\..\bin\win32\GRiNSed.exe 
 	copy $(OutDir)\GRiNSed.exe ..\..\..\bin\win32 
 	
