@@ -1567,31 +1567,38 @@ class Region(Window):
 				else:
 					vdds.Restore()
 
-			# draw now the display list but after clear
-			try:
-				hdc = dds.GetDC()
-			except ddraw.error, arg:
-				print arg
-				return
+			if self._active_displist._issimple:
+				try:
+					self._active_displist._ddsrender(dds, dst, clear=0)
+				except:
+					pass
 
-			dc = win32ui.CreateDCFromHandle(hdc)
-			if rgn:
-				dc.SelectClipRgn(rgn)
-			x0, y0 = dc.SetWindowOrg((-x,-y))
+			else:
+				# draw display list but after clear
+				try:
+					hdc = dds.GetDC()
+				except ddraw.error, arg:
+					print arg
+					return
 
-			try:
-				self._active_displist._render(dc, None, clear=0)
-			except:
+				dc = win32ui.CreateDCFromHandle(hdc)
+				if rgn:
+					dc.SelectClipRgn(rgn)
+				x0, y0 = dc.SetWindowOrg((-x,-y))
+
+				try:
+					self._active_displist._render(dc, None, clear=0)
+				except:
+					dc.Detach()
+					dds.ReleaseDC(hdc)
+					return
+
+				if self._showing:
+					win32mu.FrameRect(dc,self._rect,self._showing)
+			
+				dc.SetWindowOrg((x0,y0))
 				dc.Detach()
 				dds.ReleaseDC(hdc)
-				return
-
-			if self._showing:
-				win32mu.FrameRect(dc,self._rect,self._showing)
-			
-			dc.SetWindowOrg((x0,y0))
-			dc.Detach()
-			dds.ReleaseDC(hdc)
 
 			# if we have an os-subwindow invalidate its area
 			# but do not update it since we want this to happen
