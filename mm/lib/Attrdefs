@@ -355,7 +355,7 @@
 	'Direction of wipe' normal light)
 
 (href (string) '' 'Hyperlink destination' default
-	'Destination URL of hyperlink from image' inherited light)
+	'The destination URL of Web page from the image' inherited light)
 
 (imgcropwh (tuple (int) (int)) (0 0) 'Image crop size' default
 	'Crop image.  Values are width and height of image area to display' normal light)
