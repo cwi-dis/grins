@@ -2349,63 +2349,63 @@ groupsui={
 	}
 ###########################
 # already bound: &P, &B, &X, &Y, &W, &H
+
 class TabShortcut:
 	data={
-		grinsRC.ID_G:'&General',
-		grinsRC.ID_U:'&URL',
-		grinsRC.ID_T:'&Timing',
-		grinsRC.ID_I:'&Info',
-		grinsRC.ID_L:'Hyper&link',
-		grinsRC.ID_O:'P&osition and size',
-		grinsRC.ID_S:'&System properties',
-		grinsRC.ID_K:'Bac&kground color',
-		grinsRC.ID_Z:'&Z order',
-		grinsRC.ID_F:'Scale &factor',
-		grinsRC.ID_R:'Ta&rget audience',
-		grinsRC.ID_A:'&Audio type',
-		grinsRC.ID_Q:'Image &quality',
-		grinsRC.ID_N:'&Content',
-		grinsRC.ID_V:'&Video type',
-		grinsRC.ID_N:'z-i&ndex',
+		'&Audio type':grinsRC.ID_A,
+		'Pe&ak bitrate':grinsRC.ID_A,
+
+		'&Caption channel':grinsRC.ID_C,
+		'Text &caption':grinsRC.ID_C,
+		'&Content':grinsRC.ID_C,
+
+		'&Destination region':grinsRC.ID_D,
+
+		'K&eep aspect ratio':grinsRC.ID_E,
+		'&Effect color':grinsRC.ID_E,
+
+		'&Fadeout':grinsRC.ID_F,
+		'Scale &factor':grinsRC.ID_F,
+
+		'&General':grinsRC.ID_G,
+		'Be&gin time':grinsRC.ID_G,
+
+		'&Info':grinsRC.ID_I,
+
+		'Bac&kground color':grinsRC.ID_K,
+		'&Keep aspect ratio':grinsRC.ID_K,
+
+		'Hyper&link':grinsRC.ID_L,
+
+		'&Mediaserver':grinsRC.ID_M,
+		'Preroll ti&me':grinsRC.ID_M,
+
+		'z-i&ndex':grinsRC.ID_N,
+		'Hyperli&nk destination':grinsRC.ID_N,
+
+		'P&osition and size':grinsRC.ID_O,
+
+		'Image &quality':grinsRC.ID_Q,
+
+		'Ta&rget audience':grinsRC.ID_R,
+		'Image &region':grinsRC.ID_R,
+
+		'&System properties':grinsRC.ID_S,
+		 'Tran&sition type':grinsRC.ID_S,
+		'Web&server':grinsRC.ID_S,
+
+		'&Timing':grinsRC.ID_T,
+		'HTML &template':grinsRC.ID_T,
+
+		'&URL':grinsRC.ID_U,
+		'Base &URL':grinsRC.ID_U,
+
+		'&Video type':grinsRC.ID_V,
+
+		'&Z order':grinsRC.ID_Z,
+		'Image si&ze':grinsRC.ID_Z,
 		}
-	rpdata1={	
-		grinsRC.ID_G:'&General',
-		grinsRC.ID_U:'&URL',
-		grinsRC.ID_T:'&Timing',
-		grinsRC.ID_I:'&Info',
-		grinsRC.ID_S:'&System properties',
-		grinsRC.ID_L:'Hyper&link',
-		grinsRC.ID_K:'Bac&kground color',
-		grinsRC.ID_Z:'Image si&ze',
-		grinsRC.ID_E:'K&eep aspect ratio',
-		grinsRC.ID_A:'Pe&ak bitrate',
-		grinsRC.ID_M:'Preroll ti&me',
-		grinsRC.ID_D:'Hyperlink &destination',
-		grinsRC.ID_C:'&Caption channel',
-		grinsRC.ID_O:'P&osition and size',
-		grinsRC.ID_N:'z-i&ndex',
-		}
-	rpdata2={	
-		grinsRC.ID_S:'Tran&sition type',
-		grinsRC.ID_U:'&URL',
-		grinsRC.ID_C:'Text &caption',
-		grinsRC.ID_R:'Image &region',
-		grinsRC.ID_K:'&Keep aspect ratio',
-		grinsRC.ID_D:'&Destination region',
-		grinsRC.ID_T:'&Timing',
-		grinsRC.ID_L:'Hyper&link destination',
-		grinsRC.ID_I:'&Image quality',
-		grinsRC.ID_F:'&Fadeout',
-		grinsRC.ID_E: '&Effect color',
-		grinsRC.ID_G: 'Be&gin time',
-		}
-	docdata={
-		grinsRC.ID_I:'&Info',
-		grinsRC.ID_U:'Base &URL',
-		grinsRC.ID_S:'Web&server',
-		grinsRC.ID_M:'&Mediaserver',
-		grinsRC.ID_T:'HTML &template',
-		}
+
 	def __init__(self,wnd,data=None):
 		self._wnd=wnd	
 		self._prsht=wnd._prsht
@@ -2422,46 +2422,42 @@ class TabShortcut:
 		if data:
 			self._data=data	
 		else:
-			# guess page and use appropriate shortcuts
-			if self._tabnames.has_key('Preroll time'):
-				self._data=TabShortcut.rpdata1
-			elif self._tabnames.has_key('Transition type'):
-				self._data=TabShortcut.rpdata2
-			elif self._tabnames.has_key('Base URL'):
-				self._data=TabShortcut.docdata
-			else:
-				self._data=TabShortcut.data
-
+			self._data=TabShortcut.data
 		self._tabctrl=tabctrl
+		self._id2name={}
 		self.hookcommands()
 
 	def hookcommands(self):
-		for id in self._data.keys():
-			name=self.barename(self._data[id])
-			if self._tabnames.has_key(name): 
+		sbuf=''
+		for s,id in self._data.items():
+			shortcut,name=self.splitshortcutname(s)
+			if shortcut and string.find(sbuf,shortcut)<0 \
+				and self._tabnames.has_key(name):
 				self._wnd.HookCommand(self.oncmd,id)
+				self._id2name[id]=name
+				sbuf=sbuf+shortcut
 				ix = self._tabnames[name]
-				self._tabctrl.SetItemText(ix,self._data[id])
+				self._tabctrl.SetItemText(ix,s)
 
 	def oncmd(self,id,code):
-		if self._data.has_key(id):
-			name=self.barename(self._data[id])
-			self.setactivepage(name)
+		if self._id2name.has_key(id):
+			self.setactivepage(self._id2name[id])
 
-	def barename(self,name):
+	def splitshortcutname(self,name):
 		if name[0]=='&':
-			return name[1:]
+			return name[1],name[1:]
 		l=string.split(name,'&')
 		if len(l)==2:
-			return l[0]+l[1]
-		return name
+			return l[1][0],l[0]+l[1]
+		return None,name
 
 	def setactivepage(self,name):
 		if self._tabnames.has_key(name):
 			i = self._tabnames[name]
 			page = self._pages[i]
 			self._prsht.SetActivePage(page)
-		
+
+
 
 ###########################
 from  GenFormView import GenFormView
