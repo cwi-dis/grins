@@ -28,6 +28,9 @@ TICKS_PER_SECOND=1000
 ARR_LENGTH = 18
 ARR_HALFWIDTH = 5
 ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
+#
+# The size (in pixels) of an icon
+ICONSIZE_PXL=16
 
 Continue = 'Continue'
 
