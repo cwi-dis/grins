@@ -878,6 +878,16 @@ class SubWindow(Window):
 			self._oswnd.ShowWindow(win32con.SW_HIDE)
 		self.update()
 
+	def updateoswndpos(self):
+		for w in self._subwindows:
+			w.updateoswndpos()
+		
+		if self._oswnd:
+			x, y, w, h = self.getwindowpos()
+			self._oswnd.SetWindowPos(self.GetSafeHwnd(),(x,y,w,h),
+				win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER | 
+				win32con.SWP_NOREDRAW | win32con.SWP_NOSENDCHANGING)
+		
 	#
 	# Inage management
 	#
@@ -1009,7 +1019,7 @@ class SubWindow(Window):
 
 		if wc==0 or hc==0:
 			return
-
+		
 		hdc = dds.GetDC()
 		dc = win32ui.CreateDCFromHandle(hdc)
 		if rgn:
@@ -1109,10 +1119,6 @@ class SubWindow(Window):
 			self.resizeFitMeet()
 			return
 
-		if self._oswnd:
-			self._oswnd.RedrawWindow()
-			return
-
 		# avoid painting while frozen
 		if self._drawsurf:
 			self.bltDDS(self._drawsurf)
@@ -1179,10 +1185,11 @@ class SubWindow(Window):
 		self._rectb = x, y, w, h  # rect with respect to parent in pixels
 		self._sizes = self._parent._pxl2rel(self._rectb) # rect relative to parent
 		
-		# XXX: if any subwindow in the tree
-		# has an oswnd should be moved also
-		
+		# update the pos of any subwindows
+		self.updateoswndpos()
+
 		self._topwindow.update()
+				
 
 	def updatezindex(self, z):
 		self._z = z
