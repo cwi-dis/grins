@@ -42,9 +42,6 @@ Kaboo!: None
 
 Nodes with unknown channel name still cause problems.
 
-renaming a channel when the player is also open (possibly only when it
-is opened after the channel view?) causes a crash.
-
 (Lynda:) One thing I forgot to mention, which would be nice to
 understand at least, is that sometimes when I start up the traffic
 sequence the video channel doesn't play on top of the black
@@ -125,6 +122,8 @@ player: need "keep" attribute (default 0?) to keep a node on the
 screen after its time is up (currently this is always done)
 
 ------------------------------ NITS -------------------------------
+
+The help database is wildly outdated.
 
 sync arcs whose source is lost are kept around (although invisible)
 for no good reason
@@ -604,3 +603,8 @@ has decided to play my voice (now recorded at 16K) at 22.05 K.  (I was
 at the "shops" part of Leisure activities.)  [This is caused by
 Terminator, and by Sjoerd not checking and setting the rate often
 enough.]  [Fixed by Sjoerd -- soundchannel.c is much more careful now.]
+
+--- 19 Oct 1992 ---
+
+renaming a channel when the player is also open (possibly only when it
+is opened after the channel view) causes a crash.

@@ -470,7 +470,8 @@ class BlockView(ViewDialog, BasicDialog):
 
 
 def helpfunc(bv):
-    bv.toplevel.help.givehelp('Hierarchy')
+    import Help
+    Help.givehelp('Hierarchy')
 
 def attreditfunc(bv):
     import AttrEdit
