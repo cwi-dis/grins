@@ -313,7 +313,6 @@ class HierarchyView(HierarchyViewDialog):
 		self.setfocusobj(obj)
 		if event == WMEVENTS.DropFile:
 			url = MMurl.pathname2url(filename)
-			url = self.toplevel.relative_url(url)
 		else:
 			url = filename
 		t = obj.node.GetType()
@@ -346,6 +345,9 @@ class HierarchyView(HierarchyViewDialog):
 				# the error message has already been shown
 				self.render()
 				return
+		else:
+			# make URL relative to document
+			url = self.toplevel.relative_url(url)
 		if interior:
 			horizontal = (t in ('par', 'alt')) == DISPLAY_VERTICAL
 			i = -1
