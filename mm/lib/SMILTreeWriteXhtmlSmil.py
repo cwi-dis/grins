@@ -598,7 +598,7 @@ class SMILXhtmlSmilWriter(SMIL):
 		divlist.append(('id', regionid))
 
 		# apply region style and fill attribute
-		regstyle = self.getRegionStyle(lch, node)
+		regstyle = self.getRegionStyle(lch, node, self.__currRegion == lch)
 		if regstyle is not None:
 			divlist.append(('style', regstyle))
 		if fill:
@@ -639,6 +639,7 @@ class SMILXhtmlSmilWriter(SMIL):
 		self.writetag('div', divlist)
 		self.push()
 		pushed = 1
+		self.__currRegion = lch
 		return pushed, inpar, pardur, regionid
 
 
@@ -707,15 +708,15 @@ class SMILXhtmlSmilWriter(SMIL):
 		self.writetag('t:transitionFilter', trattrlist)
 
 	def writeChildren(self, node):
-		kids = 0
+		pushed = 0
 		for child in node.GetChildren():
 			type = child.GetType()
 			if type != 'anchor':
-				if not kids:
+				if not pushed:
 					self.push()
-					kids = 1
+					pushed = 1
 				self.writenode(child)
-		if kids:
+		if pushed:
 			self.pop()
 
 	def hasTimeChildren(self, node):
@@ -940,7 +941,7 @@ class SMILXhtmlSmilWriter(SMIL):
 		style = 'position:absolute;overflow:hidden;left:%d;top:%d;width:%d;height:%d;background-color:%s;' % (x, y, w, h, bgcolor)
 		return style
 
-	def getRegionStyle(self, region, node = None):
+	def getRegionStyle(self, region, node = None, forcetransparent=0):
 		path = self.getRegionPath(region)
 		if not path: 
 			return None
@@ -957,7 +958,7 @@ class SMILXhtmlSmilWriter(SMIL):
 		style = 'position:absolute;overflow:%s;left:%d;top:%d;width:%d;height:%d;' % (overflow, dx+x, dy+y, w, h)
 		transparent = ch.get('transparent', None)
 		bgcolor = ch.get('bgcolor', None)
-		if bgcolor and transparent==0:
+		if bgcolor and transparent==0 and not forcetransparent:
 			if colors.rcolors.has_key(bgcolor):
 				bgcolor = colors.rcolors[bgcolor]
 			else:
