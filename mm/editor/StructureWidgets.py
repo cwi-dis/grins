@@ -676,6 +676,7 @@ class MediaWidget(MMNodeWidget):
 #        l = l + self.get_relx(1);
 #        b = b - self.get_rely(1);
 #        r = r - self.get_relx(1);
+        t = t + self.get_rely(sizes_notime.TITLESIZE)
         pix16x = self.get_relx(16);
         pix16y = self.get_rely(16);
         self.transition_in.moveto((l,b-pix16y,l+pix16x, b))
@@ -688,19 +689,24 @@ class MediaWidget(MMNodeWidget):
 
     def get_minsize(self):
         xsize = self.get_relx(sizes_notime.MINSIZE)
-        return xsize, self.get_rely(sizes_notime.MINSIZE)
+        ysize = self.get_rely(sizes_notime.MINSIZE)
+        ysize = ysize + self.get_rely(sizes_notime.TITLESIZE)
+        return xsize, ysize
 
     def get_minsize_abs(self):
         # return the minimum size of this node, in pixels.
         # Calld to work out the size of the canvas.
         xsize = sizes_notime.MINSIZE
-        return (xsize, sizes_notime.MINSIZE)
+        ysize = sizes_notime.MINSIZE + sizes_notime.TITLESIZE
+        return (xsize, ysize)
     
     def get_maxsize(self):
         return self.get_relx(sizes_notime.MAXSIZE), self.get_rely(sizes_notime.MAXSIZE)
 
     def draw(self, displist):
         x,y,w,h = self.get_box()     
+        y = y + self.get_rely(sizes_notime.TITLESIZE)
+        h = h - self.get_rely(sizes_notime.TITLESIZE)
         
         willplay = self.root.showplayability or self.node.WillPlay()
         ntype = self.node.GetType()

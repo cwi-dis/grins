@@ -34,6 +34,8 @@ _icon_ids = {
 	'linksrc': grinsRC.IDI_ICON_LINKSRC,
 	'linkdst': grinsRC.IDI_ICON_LINKDST,
 	'linksrcdst': grinsRC.IDI_ICON_LINKSRCDST,
+	'transin': grinsRC.IDI_ICON_TRANSIN,
+	'transout': grinsRC.IDI_ICON_TRANSOUT,
 }
 
 def _get_icon(which):
