@@ -43,6 +43,7 @@ class GRiNSPlayerComModule
 	HWND getListenerHwnd() const {return m_hListenerWnd;}
 
 	void adviceSetSize(int id, int w, int h){GRiNSPlayerAutoAdviceSetSize(id, w, h);}
+	void checkPeer(int id){GRiNSPlayerAutoCheckPeer(id);}
 
 	private:
 	IClassFactory *m_pIFactory;

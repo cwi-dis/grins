@@ -72,7 +72,14 @@ class GRiNSPlayerAuto : public IGRiNSPlayerAuto
     virtual HRESULT __stdcall stop();
 	virtual HRESULT __stdcall pause();
 	virtual HRESULT __stdcall update();
+    virtual HRESULT __stdcall getState(/* [out] */ int __RPC_FAR *pstate);
     virtual HRESULT __stdcall getSize(/* [out] */ int __RPC_FAR *pw, /* [out] */ int __RPC_FAR *ph);
+    virtual HRESULT __stdcall getDuration(/* [out] */ double __RPC_FAR *pdur);
+	virtual HRESULT __stdcall getTime(/* [out] */ double __RPC_FAR *pt);
+    virtual HRESULT __stdcall setTime(/* [in] */ double t);
+    virtual HRESULT __stdcall getSpeed(/* [out] */ double __RPC_FAR *ps);
+	virtual HRESULT __stdcall setSpeed(/* [in] */ double s);
+	
 
 	// Implemenation
 	GRiNSPlayerAuto(GRiNSPlayerComModule *pModule);
@@ -97,8 +104,12 @@ void GRiNSPlayerAutoAdviceSetSize(int id, int w, int h)
 	if(id!=0)
 		{
 		GRiNSPlayerAuto *p = (GRiNSPlayerAuto*)id;
-		try {p->adviceSetSize(w, h);} catch(...){}
+		p->adviceSetSize(w, h);
 		}
+	}
+
+void GRiNSPlayerAutoCheckPeer(int id)
+	{
 	}
 
 GRiNSPlayerAuto::GRiNSPlayerAuto(GRiNSPlayerComModule *pModule)
@@ -158,10 +169,45 @@ HRESULT __stdcall GRiNSPlayerAuto::update()
 	return S_OK;
 	}
 
+HRESULT __stdcall GRiNSPlayerAuto::getState(/* [out] */ int __RPC_FAR *pstate)
+	{
+	*pstate = 0;
+	return S_OK;
+	}
+
 HRESULT __stdcall GRiNSPlayerAuto::getSize(/* [out] */ int __RPC_FAR *pw, /* [out] */ int __RPC_FAR *ph)
 	{
 	*pw = m_width;
 	*ph = m_height;
 	return S_OK;
 	}
+
+HRESULT __stdcall GRiNSPlayerAuto::getDuration(/* [out] */ double __RPC_FAR *pdur)
+	{
+	*pdur = -1;
+	return S_OK;
+	}
+
+HRESULT __stdcall GRiNSPlayerAuto::getTime(/* [out] */ double __RPC_FAR *pt)
+	{
+	*pt = 0;
+	return S_OK;
+	}
+
+HRESULT __stdcall GRiNSPlayerAuto::setTime(/* [in] */ double t)
+	{
+	return S_OK;
+	}
+
+HRESULT __stdcall GRiNSPlayerAuto::getSpeed(/* [out] */ double __RPC_FAR *ps)
+	{
+	*ps = 1;
+	return S_OK;
+	}
+
+HRESULT __stdcall GRiNSPlayerAuto::setSpeed(/* [in] */ double s)
+	{
+	return S_OK;
+	}
+
             
