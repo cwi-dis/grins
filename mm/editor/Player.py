@@ -378,7 +378,9 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 		if self.playroot is self.root:
 			self.partbutton.label = ''
 		else:
-			self.partbutton.label = '[part]'
+			name = MMAttrdefs.getattr(self.playroot, 'name')
+			if name = 'none': name = 'subtree'
+			self.partbutton.label = '(' + name + ')'
 		self.showtime()
 	#
 	def showtime(self):
