@@ -623,8 +623,14 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			values = systemtestnames.getallexternal(testname)
 			init = systemtestnames.int2extvalue(testname, val)
 			dict[exttestname] = (values, (self.systemtestcb, testname), init)
-		# The rest can probably be used verbatim
+		# Add the "synchronous playback" button
+		offon = ['off', 'on']
+		cur = offon[settings.get('default_sync_behavior_locked')]
+		dict['Synchronous playback'] = (offon, self.syncmodecb, cur)
 		return dict
+
+	def syncmodecb(self, arg):
+		settings.set('default_sync_behavior_locked', arg == 'on')
 
 	def update_toolbarpulldowns(self):
 		self.setsettingsdict(self.getsettingsdict())
