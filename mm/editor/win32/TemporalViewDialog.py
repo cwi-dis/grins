@@ -32,7 +32,6 @@ class TemporalViewDialog(ViewDialog):
 		self.load_geometry()
 		x,y,w,h = self.last_geometry
 		toplevel_window = self.toplevel.window
-		print "DEBUG: commandlist is ", self.commands
 		self.window = toplevel_window.newview(x,y,w,h,title,
 						      adornments = self.adornments,
 						      canvassize = (w,h),
@@ -61,9 +60,7 @@ class TemporalViewDialog(ViewDialog):
 #		self.window.register(WMEVENTS.DropNode, self.ev_dropnode, None)
 
 	def setcommands(self, commandlist):
-		print 'DEBUG: setcommands',commandlist
 		self.window.set_commandlist(commandlist)
 
 	def setpopup(self, template):
-		print "DEBUG: Setting popup menu: ", template
 		self.window.setpopupmenu(template)

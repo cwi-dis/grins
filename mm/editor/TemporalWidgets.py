@@ -235,15 +235,18 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 	def select_channel(self, w_channel):
 		# Note that the channel given in the parameters is a widget, not a MMChannel.
 		# You get the MMChannel by calling the "get_channel" method.
-		print "DEBUG: selecting channel: ", w_channel
 		self.mother.unselect_channels()
 		if isinstance(w_channel, ChannelWidget):
 			w_channel.select()
 			self.mother.select_channel(w_channel)
 
+	def select_mmchannel(self, mmchannel):
+		if isinstance(mmchannel, MMNode.MMChannel):
+			channelw = mmchannel.views['TemporalView']
+			self.select_channel(channelw)
+
 	def select_node(self, mmwidget):
 		# TODO: also structure nodes.
-		print "DEBUG: selecting node: ", mmwidget
 		self.mother.unselect_nodes()
 		if isinstance(mmwidget, MMWidget) or isinstance(mmwidget, MultiMMWidget):
 			self.mother.select_node(mmwidget)
@@ -475,6 +478,7 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 		# widgets.
 		if self.channel:
 			self.name = self.channel.name
+			self.channel.views['TemporalView'] = self
 		else:
 			print "ERROR: I have no channel"
 			self.name = 'undefined'
