@@ -2623,22 +2623,22 @@ IDD_EDITATTR_ITRANSITION DIALOG DISCARDABLE  0, 0, 300, 164
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "",IDC_GROUP1,6,10,287,99
+    GROUPBOX        "",IDC_GROUP1,6,10,287,105
     LTEXT           "Transition type",IDC_11,12,26,73,8
-    COMBOBOX        IDC_12,86,23,199,53,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | 
-                    WS_TABSTOP
-    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
-    LTEXT           "Transition subtype",IDC_21,12,43,73,8
-    EDITTEXT        IDC_22,86,41,199,12,ES_AUTOHSCROLL
-    CONTROL         "in",IDC_32,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,107,
-                    65,21,10
+    COMBOBOX        IDC_12,86,23,199,110,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Transition subtype",IDC_21,12,46,73,8
+    EDITTEXT        IDC_22,86,44,199,12,ES_AUTOHSCROLL
+    LTEXT           "Transition mode",IDC_31,12,66,73,8
+    CONTROL         "in",IDC_32,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
+                    WS_TABSTOP,107,65,21,10
     CONTROL         "out",IDC_33,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,238,
                     65,26,10
     GROUPBOX        "",IDC_STATIC,86,59,199,17
-    LTEXT           "Transition mode",IDC_31,12,64,73,8
     LTEXT           "Effect color:",IDC_41,12,88,73,8
     EDITTEXT        IDC_42,86,86,148,12,ES_AUTOHSCROLL
     PUSHBUTTON      "Pick color...",IDC_43,239,86,46,12
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
 END
 
 
