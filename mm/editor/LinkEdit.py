@@ -283,9 +283,9 @@ class LinkEdit(ViewDialog, LinkEditDialog):
 		if '/' in uid:
 			return aid + ' in ' + uid
 		node = self.context.mapuid(uid)
-		nodename = node.GetRawAttrDef('name', uid)
+		nodename = node.GetRawAttrDef('name', '#' + uid)
 		if type(aid) is not type(''): aid = `aid`
-		return '#' + nodename + '.' + aid
+		return nodename + '.' + aid
 
 	# This functions re-loads one of the anchor browsers.
 
