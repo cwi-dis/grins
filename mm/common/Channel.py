@@ -1085,7 +1085,6 @@ class ChannelWindow(Channel):
 		node_attrs.append('transIn')
 		node_attrs.append('transOut')
 	_visible = TRUE
-	_window_type = SINGLE
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.__init__(self, name, attrdict, scheduler, ui)
@@ -1264,13 +1263,11 @@ class ChannelWindow(Channel):
 				self.window = pchan.window.newcmwindow(pgeom,
 						transparent = self.__transparent,
 						z = self.__z,
-						type_channel = self._window_type,
 						units = units)
 			else:
 				self.window = pchan.window.newwindow(pgeom,
 						transparent = self.__transparent,
 						z = self.__z,
-						type_channel = self._window_type,
 						units = units)
 
 			# fix the background color

@@ -31,7 +31,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		'project_audiotype', 'project_videotype', 'project_targets',
 		'project_perfect', 'project_mobile']
 	chan_attrs = Channel.ChannelWindow.chan_attrs + _our_attrs
-	_window_type = windowinterface.MPEG
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		self.__mc = None
