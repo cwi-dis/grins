@@ -368,7 +368,25 @@ class AttrEditor:
 		self.wrapper.register(self)
 		list = []
 		self.namelist = self.wrapper.attrnames()
-		for name in self.namelist:
+		self.dialog = windowinterface.Window(self.wrapper.maketitle(),
+				     {'resizable': 1,
+				      'deleteCallback': (self.hide, ())})
+		buttons = self.dialog.ButtonRow(
+			[('Cancel', (self.hide, ())),
+			 ('Restore', (self.restore, ())),
+			 ('Apply', (self.apply, ())),
+			 ('Ok', (self.ok, ()))],
+			{'left': None, 'right': None, 'bottom': None,
+			 'vertical': 0})
+		sep = self.dialog.Separator({'left': None, 'right': None,
+					     'bottom': buttons})
+		form = self.dialog.SubWindow({'left': None, 'right': None,
+					      'bottom': sep, 'top': None})
+		height = 1.0 / len(self.namelist)
+		l = r = w = None
+		self.list = list
+		for i in range(len(self.namelist)):
+			name = self.namelist[i]
 			typedef, defaultvalue, labeltext, displayername, \
 				 helptext, inheritance = \
 				 self.wrapper.getdef(name)
@@ -401,39 +419,72 @@ class AttrEditor:
 				C = TupleButtonRow
 			else:
 				C = ButtonRow
-			b = C(self, name)
-			list.append(b.getlistentry())
-		self.dialog = windowinterface.AttrDialog(
-			self.wrapper.maketitle(), None, list, self.apply,
-			self.finish)
+			b = C(self, name, labeltext)
+			l = form.Button(labeltext,
+					(windowinterface.showmessage,
+					 (b.gethelptext(),)),
+					{'top': l, 'left': None, 'right': 0.5,
+					 'bottom': (i+1)*height})
+			r = form.Button('Reset', (self.reset, (b,)),
+					{'top': r, 'right': None,
+					 'bottom': (i+1)*height})
+			b.createwidget(form, l, r, w, (i+1)*height)
+			w = b.widget
+			list.append(b)
+		self.dialog.show()
 
 	def settitle(self, title):
 		self.dialog.settitle(title)
 
-	def finish(self):
-		self.wrapper.unregister(self)
-		self.dialog = None
+	def reset(self, b):
+		b.setvalue(b.getcurrent())
+
+	def restore(self):
+		for b in self.list:
+			b.setvalue(b.getdefault())
 
 	def hide(self):
 		if self.dialog:
 			self.dialog.close()
 		self.dialog = None
+		self.list = []
 
-	def is_showing(self):
-		return self.dialog is not None
-
-	def apply(self, dict):
+	def apply(self):
+		# first collect all changes
+		dict = {}
+		for b in self.list:
+			try:
+				value = b.getvalue()
+			except:
+				windowinterface.showmessage(
+					'%s: parsing value failed' %
+						b.name)
+				return 0
+			cur = b.getcurrent()
+			if value != cur:
+				dict[b.name] = value
 		if not dict:
-			return
+			# nothing to change
+			return 1
 		if not self.wrapper.transaction():
-			return
+			# can't do a transaction
+			return 0
+		# this may take a while...
 		windowinterface.setcursor('watch')
-		for name in dict.keys():
-			value = dict[name]
+		for name, value in dict.items():
 			self.wrapper.delattr(name)
-			self.wrapper.setattr(name, value)
+			if value != b.getdefault():
+				self.wrapper.setattr(name, value)
 		self.wrapper.commit()
 		windowinterface.setcursor('')
+		return 1
+
+	def ok(self):
+		if self.apply():
+			self.hide()
+		
+	def is_showing(self):
+		return self.dialog is not None
 
 	#
 	# EditMgr interface
@@ -453,31 +504,33 @@ class AttrEditor:
 					self.open()
 			else:
 ##				self.fixvalues()
-				self.dialog.restore()
+				self.restore()
 				self.settitle(self.wrapper.maketitle())
 
 	def rollback(self):
 		pass
 
 class ButtonRow:
-	def __init__(self, attreditor, name):
+	def __init__(self, attreditor, name, label):
 		self.attreditor = attreditor
 		self.name = name
+		self.label = label
 		self.wrapper = attreditor.wrapper
+		self.attrdef = self.wrapper.getdef(name)
 
 	def __repr__(self):
 		return '<ButtonRow instance, name='+`self.name`+'>'
 
-	def getlistentry(self):
-		attrdef = self.wrapper.getdef(self.name)
-		labeltext = attrdef[2]
-		if labeltext == '':
-			labeltext = self.name
-		helptext = 'attribute: ' + self.name + '\n' + \
-			   'default: '+self.valuerepr(self.getdefault())+'\n'+\
-			   attrdef[4]
-		bclass = windowinterface.AttrString
-		return self.name, labeltext, helptext, bclass, self
+	def gethelptext(self):
+		return 'attribute: ' + self.name + '\n' + \
+		       'default: '+self.valuerepr(self.getdefault())+'\n'+\
+		       self.attrdef[4]
+
+	def createwidget(self, parent, left, right, top, bottom):
+		self.widget = parent.TextInput(
+			None, self.valuerepr(self.getcurrent()), None, None,
+			{'top': top, 'bottom': bottom,
+			 'left': left, 'right': right})
 
 	def getcurrent(self):
 		value = self.wrapper.getvalue(self.name)
@@ -488,82 +541,35 @@ class ButtonRow:
 	def getdefault(self):
 		return self.wrapper.getdefault(self.name)
 
+	def getvalue(self):
+		return self.parsevalue(self.widget.gettext())
+
+	def setvalue(self, value):
+		self.widget.settext(self.valuerepr(value))
+
 	def valuerepr(self, value):
 		return self.wrapper.valuerepr(self.name, value)
 
 	def parsevalue(self, string):
 		return self.wrapper.parsevalue(self.name, string)
 
-class BoolButtonRow(ButtonRow):
-	def __repr__(self):
-		return '<BoolButtonRow instance, name='+`self.name`+'>'
-
-	def getlistentry(self):
-		name, label, help, bclass, s = ButtonRow.getlistentry(self)
-		bclass = windowinterface.AttrOption
-		return name, label, help, bclass, self, self.choices()
-
-	def valuerepr(self, value):
-		if type(value) == type(''):
-			return value
-		if value:
-			return 'on'
-		else:
-			return 'off'
-
-	def getcurrent(self):
-		return self.valuerepr(ButtonRow.getcurrent(self))
-
-	def getdefault(self):
-		return self.valuerepr(ButtonRow.getdefault(self))
-
-	def choices(self):
-		return ['off', 'on']
-
 class IntButtonRow(ButtonRow):
 	def __repr__(self):
 		return '<IntButtonRow instance, name='+`self.name`+'>'
-
-	def getlistentry(self):
-		name, label, help, bclass, s = ButtonRow.getlistentry(self)
-		return name, label, help, windowinterface.AttrInt, self
-
-	def valuerepr(self, value):
-		return `value`
-
-	def getcurrent(self):
-		return self.valuerepr(ButtonRow.getcurrent(self))
-
-	def getdefault(self):
-		return self.valuerepr(ButtonRow.getdefault(self))
 
 class FloatButtonRow(ButtonRow):
 	def __repr__(self):
 		return '<FloatButtonRow instance, name='+`self.name`+'>'
 
-	def getlistentry(self):
-		name, label, help, bclass, s = ButtonRow.getlistentry(self)
-		return name, label, help, windowinterface.AttrFloat, self
-
-	def valuerepr(self, value):
-		return `value`
-
-	def getcurrent(self):
-		return self.valuerepr(ButtonRow.getcurrent(self))
-
-	def getdefault(self):
-		return self.valuerepr(ButtonRow.getdefault(self))
-
 class StringButtonRow(ButtonRow):
 	def __repr__(self):
 		return '<StringButtonRow instance, name='+`self.name`+'>'
 
-	def getlistentry(self):
-		name, label, help, bclass, s = ButtonRow.getlistentry(self)
-		return name, label, help, windowinterface.AttrString, self
+	def parsevalue(self, value):
+		return value
 
-	def parsevalue(self, string):
-		return string
+	def valuerepr(self, value):
+		return value
 
 NameButtonRow = StringButtonRow
 
@@ -571,31 +577,55 @@ class FileButtonRow(ButtonRow):
 	def __repr__(self):
 		return '<FileButtonRow instance, name='+`self.name`+'>'
 
-	def getlistentry(self):
-		name, label, help, bclass, s = ButtonRow.getlistentry(self)
-		return name, label, help, windowinterface.AttrFile, self
+	def createwidget(self, parent, left, right, top, bottom):
+		but = parent.Button('Brwsr', (self.browser, ()),
+				    {'top': top, 'bottom': bottom,'right':
+				     right})
+		self.widget = parent.TextInput(None, self.getcurrent(),
+					       None, None,
+					       {'top': top, 'bottom': bottom,
+						'left': left, 'right': but})
 
-	def parsevalue(self, string):
-		return string
+	def browser(self):
+		file = self.widget.gettext()
+		if file == '' or file == '/dev/null':
+			dir, file = '.', ''
+		else:
+			import os
+			if os.path.isdir(file):
+				dir, file = file, ''
+			else:
+				dir, file = os.path.split(file)
+		windowinterface.FileDialog('Choose File for ' + self.label,
+					   dir, '*', file, self.ok_cb, None)
+
+	def ok_cb(self, filename):
+		import os
+		cwd = os.getcwd()
+		if filename[:len(cwd)] == cwd:
+			filename = filename[len(cwd):]
+			if filename and filename[0] != '/':
+				filename = cwd + filename
+			elif filename:
+				filename = filename[1:]
+			else:
+				filename = '.'
+		self.widget.settext(filename)
+
+	def parsevalue(self, value):
+		return value
+
+	def valuerepr(self, value):
+		return value
 
 class TupleButtonRow(ButtonRow):
 	def __repr__(self):
 		return '<TupleButtonRow instance, name=' + `self.name` + '>'
 
-	def getlistentry(self):
-		name, label, help, bclass, s = ButtonRow.getlistentry(self)
-		return name, label, help, windowinterface.AttrString, self
-
 	def valuerepr(self, value):
 		if type(value) == type(''):
 			return value
 		return ButtonRow.valuerepr(self, value)
-
-	def getcurrent(self):
-		return self.valuerepr(ButtonRow.getcurrent(self))
-
-	def getdefault(self):
-		return self.valuerepr(ButtonRow.getdefault(self))
 
 class ColorButtonRow(TupleButtonRow):
 	def __repr__(self):
@@ -622,22 +652,90 @@ class ColorButtonRow(TupleButtonRow):
 				value = value + ' ' + `c`
 		return TupleButtonRow.parsevalue(self, value)
 
-##ColorButtonRow = TupleButtonRow		# Happens to have the same semantics
-
 class PopupButtonRow(ButtonRow):
 	# A choice menu choosing from a list -- base class only
 	def __repr__(self):
 		return '<PopupButtonRow instance, name=' + `self.name` + '>'
 
-	def getlistentry(self):
-		name, label, help, bclass, s = ButtonRow.getlistentry(self)
-		bclass = windowinterface.AttrOption
-		list = self.choices()
-		return name, label, help, bclass, self, list
+	def createwidget(self, parent, left, right, top, bottom):
+		choices = self.choices()
+		current = self.getcurrent()
+		try:
+			cur = choices.index(self.valuerepr(current))
+		except ValueError:
+			cur = 0
+		if len(choices) > 30:
+			but = parent.Button('Choose', (self. choose, ()),
+					    {'top': top, 'bottom': bottom,
+					     'right': right})
+			self.widget = parent.TextInput(
+				None, current, None, None,
+				{'top': top, 'bottom': bottom,
+				 'left': left, 'right': but})
+			self.isoption = 0
+		else:
+			self.widget = parent.OptionMenu(
+				None, choices, cur, None,
+				{'top': top, 'bottom': bottom,
+				 'left': left, 'right': right})
+			self.isoption = 1
+
+	def choose(self):
+		if self.isoption:
+			func = self.widget.setvalue
+		else:
+			func = self.widget.settext
+		self.choosewin = SelectionDialog(self.widget.gettext(),
+						 self.choices(), func)
+
+	def getvalue(self):
+		if self.isoption:
+			value = self.widget.getvalue()
+		else:
+			value = self.widget.gettext()
+			if value not in self.choices():
+				raise RuntimeError, '%s not a valid option' % value
+		return self.parsevalue(value)
+
+	def setvalue(self, value):
+		value = self.valuerepr(value)
+		if self.isoption:
+			self.widget.setvalue(value)
+		else:
+			self.widget.settext(value)
 
 	def choices(self):
 		# derived class overrides this to defince the choices
 		return []
+
+	def parsevalue(self, value):
+		return value
+
+	def valuerepr(self, value):
+		return value
+
+class BoolButtonRow(PopupButtonRow):
+	def __repr__(self):
+		return '<BoolButtonRow instance, name='+`self.name`+'>'
+
+	def parsevalue(self, value):
+		if value == 'on':
+			return 1
+		elif value == 'off':
+			return 0
+		else:
+			return value
+
+	def valuerepr(self, value):
+		if type(value) == type(''):
+			return value
+		if value:
+			return 'on'
+		else:
+			return 'off'
+
+	def choices(self):
+		return ['off', 'on']
 
 class ChannelnameButtonRow(PopupButtonRow):
 	# Choose from the current channel names
@@ -653,10 +751,7 @@ class ChannelnameButtonRow(PopupButtonRow):
 				list.append(name)
 		return list
 
-	def parsevalue(self, value):
-		return value
-
-class BaseChannelnameButtonRow(PopupButtonRow):
+class BaseChannelnameButtonRow(ChannelnameButtonRow):
 	# Choose from the current channel names
 	def __repr__(self):
 		return '<BaseChannelnameButtonRow instance, name=' \
@@ -674,9 +769,6 @@ class BaseChannelnameButtonRow(PopupButtonRow):
 				list.append(name)
 		return list
 
-	def parsevalue(self, value):
-		return value
-
 class ChildnodenameButtonRow(PopupButtonRow):
 	# Choose from the node's children
 	def __repr__(self):
@@ -691,9 +783,6 @@ class ChildnodenameButtonRow(PopupButtonRow):
 			except NoSuchAttrError:
 				pass
 		return list
-
-	def parsevalue(self, value):
-		return value
 
 class ChanneltypeButtonRow(PopupButtonRow):
 	# Choose from the standard channel types
@@ -715,5 +804,11 @@ class FontButtonRow(PopupButtonRow):
 		fonts.sort()
 		return fonts
 
-	def parsevalue(self, string):
-		return string
+class SelectionDialog(windowinterface.SelectionDialog):
+	def __init__(self, default, choices, setfunc):
+		self.OkCallback = setfunc
+		windowinterface.SelectionDialog.__init__(
+			self, 'Channels', None, choices, default)
+
+	def NomatchCallback(self, value):
+		return '%s not a valid choice' % value
