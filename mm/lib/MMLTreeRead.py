@@ -7,7 +7,7 @@ from HDTL import HD, TL
 import string
 from AnchorDefs import *
 from Hlinks import DIR_1TO2, TYPE_JUMP, TYPE_CALL, TYPE_FORK
-import regex
+import re
 
 error = 'MMLTreeRead.error'
 
@@ -15,8 +15,8 @@ LAYOUT_NONE = 0				# must be 0
 LAYOUT_MML = 1
 LAYOUT_UNKNOWN = -1
 
-coordre = regex.compile('^ *\([0-9.]+%?\)[ ,]+\([0-9.]+%?\)[ ,]+'
-			'\([0-9.]+%?\)[ ,]+\([0-9.]+%?\) *$')
+coordre = re.compile('^ *(?P<x>[0-9.]+%?)[ ,]+(?P<y>[0-9.]+%?)[ ,]+'
+			'(?P<w>[0-9.]+%?)[ ,]+(?P<h>[0-9.]+%?) *$')
 
 class MMLParser(xmllib.XMLParser):
 	def __init__(self, context, verbose = 0):
@@ -224,7 +224,7 @@ class MMLParser(xmllib.XMLParser):
 					self.warning('no tuner %s in layout' %
 						     channel)
 					self.__in_layout = LAYOUT_MML
-					self.start_tuner({'loc': channel})
+					self.start_tuner({'id': channel})
 					self.__in_layout = LAYOUT_NONE
 				attrdict = self.__channels[channel]
 				if self.__layout is None:
@@ -358,7 +358,7 @@ class MMLParser(xmllib.XMLParser):
 	def end_layout(self):
 		self.__in_layout = LAYOUT_NONE
 
-	tuner_attributes = ['loc', 'x', 'y', 'z', 'width', 'height']
+	tuner_attributes = ['id', 'x', 'y', 'z', 'width', 'height']
 	def start_tuner(self, attributes):
 		if not self.__in_layout:
 			self.error('tuner not in layout')
@@ -393,18 +393,18 @@ class MMLParser(xmllib.XMLParser):
 				if val <= 0:
 					self.error('tuner with negative z')
 				val = val - 1 # MML def is 1, CMIF def is 0
-			elif attr == 'loc':
+			elif attr == 'id':
 				pass
 			else:
 				self.warning('unknown attribute in tuner tag')
 			attrdict[attr] = val
-		if attrdict.has_key('loc'):
-			loc = attrdict['loc']
-			if self.__channels.has_key(loc):
-				self.warning('multiple tuner tags for loc=%s' % loc)
-			self.__channels[attrdict['loc']] = attrdict
+		if attrdict.has_key('id'):
+			id = attrdict['id']
+			if self.__channels.has_key(id):
+				self.warning('multiple tuner tags for id=%s' % id)
+			self.__channels[attrdict['id']] = attrdict
 		else:
-			self.error('tuner without loc attribute')
+			self.error('tuner without id attribute')
 
 		# calculate minimum required size of top-level window
 		x = attrdict['x']
@@ -423,13 +423,14 @@ class MMLParser(xmllib.XMLParser):
 
 	# container nodes
 
-	par_attributes = ['id', 'endsync', 'lipsync', 'pace', 'dur', 'begin', 'end']
+	par_attributes = ['id', 'endsync', 'lipsync', 'pace',
+			  'dur', 'begin', 'end', 'repeat']
 	def start_par(self, attributes):
 		self.NewContainer('par', attributes)
 
 	end_par = EndContainer
 
-	seq_attributes = ['id', 'dur', 'begin', 'end']
+	seq_attributes = ['id', 'dur', 'begin', 'end', 'repeat']
 	def start_seq(self, attributes):
 		self.NewContainer('seq', attributes)
 
@@ -451,7 +452,7 @@ class MMLParser(xmllib.XMLParser):
 
 	# media items
 
-	text_attributes = ['id', 'href', 'type', 'loc', 'dur', 'begin', 'end']
+	text_attributes = ['id', 'href', 'type', 'loc', 'dur', 'begin', 'end', 'repeat']
 	def start_text(self, attributes):
 		self.NewNode('text', attributes)
 
@@ -560,16 +561,17 @@ class MMLParser(xmllib.XMLParser):
 		snode = sattr['href'][1:] # remove leading '#'
 		stype = ATYPE_WHOLE
 		sargs = []
-		if sattr.has_key('shape') and sattr.has_key('coords'):
-			stype = ATYPE_NORMAL
-			if string.lower(sattr['shape']) != 'rect':
-				self.warning('unknown shape attribute')
+		if sattr.has_key('coords'):
+			if sattr.has_key('shape') and sattr['shape'] != 'rect':
+				self.warning('unrecognized shape attribute')
 				return
+			stype = ATYPE_NORMAL
 			coords = sattr['coords']
-			if coordre.match(coords) < 0:
+			res = coordre.match(coords)
+			if not res:
 				self.warning('syntax error in coords attribute')
 				return
-			x, y, w, h = coordre.group(1, 2, 3, 4)
+			x, y, w, h = res.group('x', 'y', 'w', 'h')
 			try:
 				if x[-1] == '%':
 					x = string.atof(x[:-1]) / 100.0
@@ -598,7 +600,7 @@ class MMLParser(xmllib.XMLParser):
 		self.__links.append((snode, (sid, stype, sargs), dattr['href'],
 				     self.__hlink_type))
 
-	anchor_attributes = ['href', 'role', 'time', 'shape', 'coords']
+	anchor_attributes = ['href', 'role']
 	def start_anchor(self, attributes):
 		if not self.__in_hlink:
 			self.error('anchor not in hlink')
@@ -684,9 +686,9 @@ def _minsize(start, extent):
 			return int(start / (1 - extent) + 0.5)
 		else:
 			# extent is pixel value
-			if extent == 0:
-				# extent == 0 means rest of window
-				extent = 1 # make sure there is a rest
+## 			if extent == 0:
+## 				# extent == 0 means rest of window
+## 				extent = 1 # make sure there is a rest
 			return start + extent
 	else:
 		# start is fraction
@@ -730,28 +732,45 @@ def _wholenodeanchor(node):
 		anchorlist.append(a)
 	return node.GetUID(), a[A_ID]
 
-import regex
-counter_val = regex.symcomp('\(\(\(<hours>[0-9][0-9]\):\)?'
-			    '\(<minutes>[0-9][0-9]\):\)?'
-			    '\(<seconds>[0-9][0-9]\)'
-			    '\(<fraction>\.[0-9]*\)?')
-id = regex.symcomp('id(\(<name>' + xmllib._Name + '\))'
-		   '\((\(<value>[^)]*\))\)?'
-		   '\(+\(<delay>.*\)\)?')
+counter_val = re.compile('((?P<use_clock>'
+				'((?P<hours>[0-9][0-9]):)?'
+				'(?P<minutes>[0-9][0-9]):'
+				'(?P<seconds>[0-9][0-9])'
+				'(?P<fraction>\.[0-9]+)?'
+			 ')|(?P<use_timecount>'
+				'(?P<timecount>[0-9]+)'
+				'(?P<units>\.[0-9]+)?'
+				'(?P<scale>h|min|s|ms)?)'
+			 ')$')
 
 def _parsecounter(value, maybe_relative):
-	j = counter_val.match(value)
-	if j > 0 and j == len(value):
-		h, m, s, f = counter_val.group('hours', 'minutes',
+	res = counter_val.match(value)
+	if res:
+		if res.group('use_clock'):
+			h, m, s, f = res.group('hours', 'minutes',
 					       'seconds', 'fraction')
-		offset = 0
-		if h is not None:
-			offset = offset + string.atoi(h) * 3600
-		if m is not None:
-			offset = offset + string.atoi(m) * 60
-		offset = offset + string.atoi(s)
-		if f is not None:
-			offset = offset + string.atof(f + '0')
+			offset = 0
+			if h is not None:
+				offset = offset + string.atoi(h) * 3600
+			if m is not None:
+				offset = offset + string.atoi(m) * 60
+			offset = offset + string.atoi(s)
+			if f is not None:
+				offset = offset + string.atof(f + '0')
+		elif res.group('use_timecount'):
+			tc, f, sc = res.group('timecount', 'units', 'scale')
+			offset = string.atoi(tc)
+			if f is not None:
+				offset = offset + string.atof(f)
+			if sc == 'h':
+				offset = offset * 3600
+			elif sc == 'min':
+				offset = offset * 60
+			elif sc == 'ms':
+				offset = float(offset) / 1000
+			# else already in seconds
+		else:
+			raise error, 'internal error'
 		return offset
 	if maybe_relative:
 		if value == 'start':
@@ -760,14 +779,17 @@ def _parsecounter(value, maybe_relative):
 			return 'end'
 	raise error, 'bogus presentation counter'
 
+id = re.compile('id\((?P<name>' + xmllib._Name + ')\)'
+		'(\((?P<value>[^)]*)\))?'
+		'(\+(?P<delay>.*))?')
+
 def _parsetime(xpointer):
-	name = value = delay = None
 	offset = 0
-	i = id.match(xpointer)
-	if i > 0:
-		name, value, delay = id.group('name', 'value', 'delay')
+	res = id.match(xpointer)
+	if res:
+		name, value, delay = res.group('name', 'value', 'delay')
 	else:
-		delay = xpointer
+		name, value, delay = None, None, xpointer
 	if value is not None:
 		counter = _parsecounter(value, 1)
 		if counter == 'start':
