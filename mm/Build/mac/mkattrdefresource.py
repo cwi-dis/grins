@@ -7,7 +7,7 @@ import os
 import sys
 import string
 import macfs
-import Res
+from Carbon import Res
 import py_resource
 
 # For now:
