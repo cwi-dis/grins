@@ -51,6 +51,9 @@ class AssetsViewDialog:
 	def setviewbutton(self, which):
 		self.__window.setView(which)
 
+	def setcommandlist(self, commandlist):
+		self.__window.set_commandlist(commandlist)
+
 #### support win32 model
 	def createviewobj(self):
 		if self.__window: return
