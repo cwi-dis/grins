@@ -275,13 +275,13 @@ def compute_bandwidth(root, seticons=1, storetiming=None):
 				errornodes[node] = 1
 				delaycount = delaycount + 1
 
-	#
-	# Finally show "bandwidth fine" icon on all nodes that deserve it
-	#
-	if seticons:
-		for tp, t0, t1, node, bits, minbps, maxbps in allbandwidthdata:
-			if not errornodes.has_key(node):
-				node.set_infoicon('bandwidthgood')
+##	#
+##	# Finally show "bandwidth fine" icon on all nodes that deserve it
+##	#
+##	if seticons:
+##		for tp, t0, t1, node, bits, minbps, maxbps in allbandwidthdata:
+##			if not errornodes.has_key(node):
+##				node.set_infoicon('bandwidthgood')
 	errorseconds, stalls = accum.getstallinfo()
 	return maxbandwidth, prerolltime, delaycount, errorseconds, errorcount, stalls
 	
