@@ -22,9 +22,14 @@ import time
 		
 Error = license.Error
 
-def gencommerciallicense():
+def gencommerciallicense(version=None):
+	if version in (None, 'GSE', 'editor'):
+		features = getdefaultfeatures()
+	elif version in ('light', 'lite', 'GRL'):
+		features = getdefaultlightfeatures()
+	else:
+		raise Error, ('Unknown license type', version)
 	dbase = grinsdb.Database()
-	features = getdefaultfeatures()
 	newid = grinsdb.uniqueid()
 	date = None
 	name = None
@@ -157,6 +162,9 @@ def usage():
 
 def getdefaultfeatures():
 	return license.FEATURES["editor"]
+
+def getdefaultlightfeatures():
+	return license.FEATURES["light"]
 
 def getfeatures(str):
 	strlist = string.split(str, ',')
