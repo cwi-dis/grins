@@ -1298,8 +1298,6 @@ class AttrEditor(AttrEditorDialog):
 	def commit(self, type):
 		if self.wrapper.closing():
 			pass
-		elif self.follow_selection:
-			self.globalfocuschanged(self.wrapper.editmgr.getglobalfocus())
 		elif not self.wrapper.stillvalid():
 			self.close()
 		else:
