@@ -33,10 +33,10 @@ __version__ = "$Id$";
     UNIFIED_FOCUS,						# All views share their focus
 
     # Different capabilities within the hierarchy view
-    H_NIPPLES,
+    H_TRANSITIONS,
     H_BANDWIDTH,                       # Shows whether a node will complete downloading in time.
     H_VBANDWIDTH,                      # Shows the download time, variable.
     H_MODIFY_STRUCTURE,                # This is the biggy - decides between templates or not.
+    H_DROPBOX,                          # Show an empty drop box at the end of a sequence.
 
-
-] = range(18)
+] = range(19)                           # don't forget to update the range!

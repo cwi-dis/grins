@@ -8,8 +8,9 @@ import sys
 
 feature_set = [EXPORT_CMIF, EXPORT_SMIL2, EXPORT_QT, EXPORT_WMP,
                PLAYER_VIEW, STRUCTURE_VIEW,
-               H_NIPPLES, H_VBANDWIDTH,
-               UNIFIED_FOCUS,
+               UNIFIED_FOCUS, 
+               #H_TRANSITIONS, H_VBANDWIDTH,
+               #H_DROPBOX
                ]
 
 # These can be deprecated when I've multilated most of the source code.

@@ -236,24 +236,31 @@ class SeqWidget(StructureObjWidget):
         if self.root.pushbackbars:
             for i in self.children:
                 if isinstance(i, MediaWidget):
-                    i.pushbackbar.draw(display_list);
+                    i.pushbackbar.draw(display_list)
 
         StructureObjWidget.draw(self, display_list)
-        self.dropbox.draw(display_list);
+        if self.root.dropbox:
+            self.dropbox.draw(display_list);
 
     def get_minsize(self):
         # Return the minimum size that I can be.
-        min_width = 0.0; min_height = 0.0
 
+        if len(self.children) == 0:
+            boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE;
+            return self.get_relx(boxsize), self.get_rely(boxsize);
+
+        min_width = 0.0; min_height = 0.0
+        
         for i in self.children:
             w, h = i.get_minsize()
             if self.root.pushbackbars and isinstance(i, MediaWidget):
                 pushover = self.get_relx(i.downloadtime_lag);
+                min_width = min_width + pushover;
             else:
                 pushover = 0.0;
             #assert w < 1.0 and w > 0.0
             #assert h < 1.0 and h > 0.0
-            min_width = min_width + w + pushover;
+            min_width = min_width + w;
             if h > min_height:
                 min_height = h
         xgap = self.get_relx(sizes_notime.GAPSIZE)
@@ -263,12 +270,21 @@ class SeqWidget(StructureObjWidget):
         #assert min_height < 1.0
 
         #             current +   gaps between nodes  +  gaps at either end      
-        min_width = min_width + xgap*( len(self.children)) + 2*self.get_relx(sizes_notime.HEDGSIZE) + self.dropbox.get_minsize()[0];
+        min_width = min_width + xgap*( len(self.children)-1) + 2*self.get_relx(sizes_notime.HEDGSIZE)
+
+        if self.root.dropbox:
+            min_width = min_width + self.dropbox.get_minsize()[0] + xgap;
+
         min_height = min_height + 2*self.get_rely(sizes_notime.VEDGSIZE)
         return min_width, min_height
 
     def get_minsize_abs(self):
         # Everything here calculated in pixels.
+
+        if len(self.children) == 0:
+            boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE;
+            return boxsize, boxsize
+
         mw=0; mh=0
         for i in self.children:
             if self.root.pushbackbars and isinstance(i, MediaWidget):
@@ -278,10 +294,14 @@ class SeqWidget(StructureObjWidget):
             w,h = i.get_minsize_abs()
             if h > mh: mh=h
             mw = mw + w + pushover;
-        mw = mw + sizes_notime.GAPSIZE*(len(self.children)) + 2*sizes_notime.HEDGSIZE + self.dropbox.get_minsize_abs()[0];
-        # Without the dropbox: 
-        #mw = mw + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.HEDGSIZE
+
+        mw = mw + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.HEDGSIZE
+
+        if self.root.dropbox:
+            mw = mw + self.dropbox.get_minsize_abs()[0] + sizes_notime.GAPSIZE;
+            
         mh = mh + 2*sizes_notime.VEDGSIZE
+        
         return mw, mh
         
     def recalc(self):
@@ -294,7 +314,15 @@ class SeqWidget(StructureObjWidget):
         l, t, r, b = self.pos_rel
         min_width, min_height = self.get_minsize()
 
-        free_width = ((r-l) - min_width) - self.dropbox.get_minsize()[0]
+        free_width = ((r-l) - min_width)
+        if len(self.children) > 0:
+            overhead_width = 2.0*self.get_relx(sizes_notime.HEDGSIZE) + float(len(self.children)-1)*self.get_relx(sizes_notime.GAPSIZE);
+        else:
+            overhead_width = 0;
+
+        if self.root.dropbox:
+            free_width = free_width-self.dropbox.get_minsize()[0];
+
         if free_width < 0.0:
             print "Warning! free_width is less than 0.0!:", free_width
             free_width = 0.0
@@ -309,15 +337,21 @@ class SeqWidget(StructureObjWidget):
                 print "TODO: test downloadtime pushover and sequence lags."
                 l = l +  self.get_relx(medianode.downloadtime_lag);
             w,h = medianode.get_minsize()
-            if h > (b-t):               # If the node needs to be bigger than the available space...
-                print "Error: Node is too tall!"
+            if h > (b-t)+0.000001:               # If the node needs to be bigger than the available space...
+                print "Error: Node is too tall! h=",h,"(b-t)=",b-t;
 #                #assert 0               # This shouldn't happen because the minimum size of this node
                                         # has already been determined to be bigger than this in minsize()
             # Take a portion of the free available width, fairly.
-            if free_width == 0.0:
+            if free_width < 0.001:
                 thisnode_free_width = 0.0
             else:
-                thisnode_free_width = (float(w) / min_width) * free_width
+                thisnode_free_width = (float(w) / (min_width-overhead_width)) * free_width
+
+
+##            print "       Seq thisnode free width = ", thisnode_free_width;
+##            print "       w = ", w, " min_width=", min_width, "free_width=", free_width;
+##            print "       node:", medianode, medianode.node;
+
             # Give the node the free width.
             r = l + w + thisnode_free_width
             
@@ -365,6 +399,10 @@ class VerticalWidget(StructureObjWidget):
         # Return the minimum size that I can be.
         min_width = 0; min_height = 0
 
+        if len(self.children) == 0:
+            boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE;
+            return self.get_relx(boxsize), self.get_rely(boxsize);
+
         for i in self.children:
             w, h = i.get_minsize()
 #            print "VerticalWidget: w and h are: ", w, h
@@ -391,6 +429,10 @@ class VerticalWidget(StructureObjWidget):
     def get_minsize_abs(self):
         mw=0; mh=0
 
+        if len(self.children) == 0:
+            boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE;
+            return boxsize, boxsize
+
         for i in self.children:
             w,h = i.get_minsize_abs()
             if w > mw: mw=w
@@ -408,9 +450,15 @@ class VerticalWidget(StructureObjWidget):
         
         l, t, r, b = self.pos_rel
         min_width, min_height = self.get_minsize()
-        free_height = (t-b) - min_height
-        if free_height < 0.0 or free_height > 1.0:
-            print "Warning! free_height is wrong: ", free_height, self;
+        overhead_height = 2.0*self.get_relx(sizes_notime.VEDGSIZE) + float(len(self.children)-1)*self.get_relx(sizes_notime.GAPSIZE)
+        free_height = (b-t) - min_height
+##        print "***"
+##        print "DEBUG: Vertical: calculating free height";
+##        print "min_width: ", min_width, "min_height: ", min_height
+##        print "actual height: ", (b-t);
+##        print "---";
+        if free_height < 0.001 or free_height > 1.0:
+#            print "Warning! free_height is wrong: ", free_height, self;
             free_height = 0.0
 
         l = float(l) + self.get_relx(sizes_notime.HEDGSIZE)
@@ -429,7 +477,7 @@ class VerticalWidget(StructureObjWidget):
             if free_height == 0.0:
                 thisnode_free_height = 0.0
             else:
-                thisnode_free_height = (float(h)/min_height) * free_height
+                thisnode_free_height = (float(h)/(min_height-overhead_height)) * free_height
             # Give the node the free width.
             b = t + h + thisnode_free_height 
             # r = l + w # Wrap the node to it's minimum size.
@@ -598,8 +646,9 @@ class MediaWidget(MMNodeWidget):
             displist.drawbox(box)
 
         # Draw the silly transitions.
-        self.transition_in.draw(displist)
-        self.transition_out.draw(displist)
+        if self.root.transboxes:
+            self.transition_in.draw(displist)
+            self.transition_out.draw(displist)
         
 
     def __get_image_filename(self):
@@ -650,6 +699,7 @@ class TransitionWidget(Interactive.Interactive):
 class PushBackBarWidget(Interactive.Interactive):
     def draw(self, displist):
         # TODO: draw color based on something??
+        displist.fgcolor(TEXTCOLOR)
         displist.drawfbox(COLCOLOR, self.get_box());
         displist.drawbox(self.get_box());
 
