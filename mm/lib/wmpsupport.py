@@ -26,6 +26,7 @@ class Exporter:
 		self.profile = profile
 		self.topwindow = None
 		self.completed = 0
+		self.avgTimePerFrame = 500 # msec
 
 		self.parent = windowinterface.getmainwnd()
 		self.progress = windowinterface.ProgressDialog("Exporting", self.cancel_callback, self.parent, 0, 1)
@@ -47,7 +48,7 @@ class Exporter:
 		self.fulldur = self.player.userplayroot.calcfullduration()
 		if self.fulldur is None or self.fulldur<0:
 			windowinterface.showmessage(msgUnresolvedDur, mtype = 'warning', parent=self.parent)
-		self.writer = wmwriter.WMWriter(self, window.getDrawBuffer(), self.profile)
+		self.writer = wmwriter.WMWriter(self, window.getDrawBuffer(), self.profile, self.avgTimePerFrame)
 		self._setAudioFormat()
 		self.writer.setOutputFilename(self.filename)
 		self.writer.beginWriting()

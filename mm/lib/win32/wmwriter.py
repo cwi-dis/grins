@@ -36,21 +36,21 @@ else:
 	wmfapi.CoInitialize()
 		
 class WMWriter:
-	def __init__(self, exporter, dds, profile=19):
+	def __init__(self, exporter, dds, profile, avgTimePerFrame):
 		self._exporter = exporter
 		self._dds = dds
 		self._writer = None
 		self._filename = None
 		self._sample = None
 		self._lasttm = 0
-		self._tmstep = 100
+		self._tmstep = avgTimePerFrame
 		self._writing = 0
 		if not wmfapi:
 			return
 		profman = wmfapi.CreateProfileManager()
 		prof = profman.LoadSystemProfile(profile) 
 		writer = wmfapi.CreateDDWriter(prof)
-		wmtype = wmfapi.CreateDDVideoWMType(self._dds)
+		wmtype = wmfapi.CreateDDVideoWMType(self._dds, avgTimePerFrame)
 		writer.SetVideoFormat(wmtype)
 		self._writer = writer
 		self._audiopeer = dshow.CreatePyRenderingListener(self)
@@ -355,7 +355,6 @@ class WMVideoConverter:
 		return self._active
 
 	def OnSetMediaType(self, mt):
-		print 'OnSetMediaType video'
 		self._videopinprops.SetDSMediaType(mt)
 		self._writer.SetInputProps(self._videopinix, self._videopinprops)
 
