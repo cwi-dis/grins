@@ -1046,20 +1046,11 @@ class SubWindow(Window):
 			return
 		
 		if self._active_displist:
-			hdc = dds.GetDC()
-			dc = win32ui.CreateDCFromHandle(hdc)
-			if rgn:
-				dc.SelectClipRgn(rgn)
-			x0, y0 = dc.SetWindowOrg((-x,-y))
-
-			if self._active_displist:
-				self._active_displist._render(dc,None)
-				if self._showing:
-					win32mu.FrameRect(dc,self._rect,self._showing)
-						
-			dc.SetWindowOrg((x0,y0))
-			dc.Detach()
-			dds.ReleaseDC(hdc)
+			entry = self._active_displist._list[0]
+			if entry[0] == 'clear' and entry[1]:
+				r, g, b = entry[1]
+				convbgcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
+				dds.BltFill((xc, yc, xc+wc, yc+hc), convbgcolor)
 
 			if self._video:
 				# get video info
@@ -1085,18 +1076,27 @@ class SubWindow(Window):
 				# we are ready, blit it
 				dds.Blt((ld, td, rd, bd), vdds, (ls,ts,rs,bs), ddraw.DDBLT_WAIT)
 
-		elif self._transparent == 0:
+			# draw now the display list but after clear
 			hdc = dds.GetDC()
 			dc = win32ui.CreateDCFromHandle(hdc)
 			if rgn:
 				dc.SelectClipRgn(rgn)
 			x0, y0 = dc.SetWindowOrg((-x,-y))
 
-			dc.FillSolidRect(self._rect,win32mu.RGB(self._bgcolor))
+			self._active_displist._render(dc, None, clear=0)
 
+			if self._showing:
+				win32mu.FrameRect(dc,self._rect,self._showing)
+						
 			dc.SetWindowOrg((x0,y0))
 			dc.Detach()
 			dds.ReleaseDC(hdc)
+
+		elif self._transparent == 0:
+			if self._convbgcolor == None:
+				r, g, b = self._bgcolor
+				self._convbgcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
+			dds.BltFill((xc, yc, xc+wc, yc+hc), self._convbgcolor)
 		
 	
 	# paint on surface dds relative to ancestor rel			
