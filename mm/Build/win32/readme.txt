@@ -1,4 +1,4 @@
-Welcome to Oratrix GRiNS for RealSystem G2, version 1.5. GRiNS for RealSystem G2
+Welcome to Oratrix GRiNS for RealSystem G2, version 1.5.1. GRiNS for RealSystem G2
 lets you create, edit and preview SMIL presentations and is tailored towards
 presentations that will be viewed with RealPlayer G2.
 
