@@ -60,6 +60,9 @@ class SMILCssResolver:
 		return node
 
 	def link(self, node, container):
+		if container == None:
+			# nothing to do
+			return 
 		node.link(container)
 
 	def unlink(self, node):
