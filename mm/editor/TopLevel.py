@@ -75,6 +75,7 @@ class TopLevel() = ViewDialog(), BasicDialog():
 	#
 	def commit(self):
 		# Fix the timing -- views may depend on this.
+		self.changed = 1
 		Timing.calctimes(self.root)
 	#
 	def rollback(self):
@@ -213,6 +214,7 @@ class TopLevel() = ViewDialog(), BasicDialog():
 		print 'saving to', self.filename, '...'
 		MMTree.WriteFile(self.root, self.filename)
 		print 'done saving.'
+		self.changed = 0
 		obj.set_button(0)
 	#
 	def restore_callback(self, (obj, arg)):
@@ -221,6 +223,14 @@ class TopLevel() = ViewDialog(), BasicDialog():
 			obj.set_button(0)
 			return
 		self.editmgr.rollback()
+		if self.changed:
+			l1 = 'Are you sure you want to restore from file?'
+			l2 = '(This will destroy any changes you have made)'
+			l3 = 'Click Yes to restore, No to keep your changes'
+			reply = fl.show_question(l1, l2, l3)
+			if not reply:
+				obj.set_button(0)
+				return
 		self.destroyviews()
 		AttrEdit.hideall(self.root)
 		NodeInfo.hideall(self.root)
@@ -247,6 +257,7 @@ class TopLevel() = ViewDialog(), BasicDialog():
 		obj.set_button(0)
 	#
 	def read_it(self):
+		self.changed = 0
 		print 'parsing', self.filename, '...'
 		self.root = MMTree.ReadFile(self.filename)
 		print 'done.'
@@ -256,6 +267,14 @@ class TopLevel() = ViewDialog(), BasicDialog():
 		self.editmgr.register(self)
 	#
 	def quit_callback(self, (obj, arg)):
+		if self.changed:
+			l1 = 'Are you sure you want to quit without saving?'
+			l2 = '(This will destroy any changes you have made)'
+			l3 = 'Click Yes to quit without saving, No to continue'
+			reply = fl.show_question(l1, l2, l3)
+			if not reply:
+				obj.set_button(0)
+				return
 		self.destroy()
 		raise MMExc.ExitException, 0
 	#
