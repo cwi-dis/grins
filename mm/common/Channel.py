@@ -1716,7 +1716,7 @@ class ChannelWindow(Channel):
 					continue
 				relativeCoordinates = self.convertShapeToRelImage(node, a.aargs)
 				windowCoordinates = self.convertShapeRelImageToRelWindow(relativeCoordinates)
-				b = self.armed_display.newbutton(windowCoordinates, times = a.atimes)
+				b = d.newbutton(windowCoordinates, times = a.atimes)
 				break
 			else:
 				# no matching anchor found
