@@ -1038,6 +1038,23 @@ CreateRectRgn(PyObject *self, PyObject *args)
 	return Py_BuildValue("i", hrgn);
 }
 
+static char PathToRegion__doc__[] =
+"creates a region from the path that is selected into the specified device context"
+;
+static PyObject*
+PathToRegion(PyObject *self, PyObject *args)
+{
+	HDC hdc;
+	if (!PyArg_ParseTuple(args, "i", &hdc))
+		return NULL;
+	HRGN hrgn = PathToRegion(hdc);
+	if(hrgn==0){
+		seterror("PathToRegion", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue("i", hrgn);
+}
+
 static char SelectClipRgn__doc__[] =
 "selects a region as the current clipping region"
 ;
@@ -1050,6 +1067,25 @@ SelectClipRgn(PyObject *self, PyObject *args)
 		return NULL;
 	int res = SelectClipRgn(hdc, hrgn);
 	return Py_BuildValue("i", res);
+}
+
+static char PaintRgn__doc__[] =
+"paints the specified region by using the brush currently selected"
+;
+static PyObject*
+PaintRgn(PyObject *self, PyObject *args)
+{
+	HDC hdc;
+	HRGN hrgn;
+	if (!PyArg_ParseTuple(args, "ii", &hdc, &hrgn))
+		return NULL;
+	BOOL res = PaintRgn(hdc, hrgn);
+	if(!res){
+		seterror("PaintRgn", GetLastError());
+		return NULL;
+		}
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 
 
@@ -1109,7 +1145,9 @@ static struct PyMethodDef wingdi_methods[] = {
 	{"CreateFontIndirect", (PyCFunction)CreateFontIndirect, METH_VARARGS, CreateFontIndirect__doc__},
 
 	{"CreateRectRgn", (PyCFunction)CreateRectRgn, METH_VARARGS, CreateRectRgn__doc__},
+	{"PathToRegion", (PyCFunction)PathToRegion, METH_VARARGS, PathToRegion__doc__},
 	{"SelectClipRgn", (PyCFunction)SelectClipRgn, METH_VARARGS, SelectClipRgn__doc__},
+	{"PaintRgn", (PyCFunction)PaintRgn, METH_VARARGS, PaintRgn__doc__},
 
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
