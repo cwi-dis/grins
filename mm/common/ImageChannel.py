@@ -62,6 +62,9 @@ class ImageChannel(ChannelWindow):
 
 	def defanchor(self, node, anchor, cb):
 		import windowinterface
+		if not self.window:
+			windowinterface.showmessage('The window is not visible.\nPlease make it visible and try again.')
+			return
 		if self._armstate != AIDLE:
 			raise error, 'Arm state must be idle when defining an anchor'
 		if self._playstate != PIDLE:
