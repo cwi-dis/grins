@@ -2012,7 +2012,7 @@ class AnchorTabPage(TabPage, AnchorList.AnchorList):
 		self.__allwrappers.append(self._rename)
 		self._delete = Atab_wrap_control(self.attreditor, item0+self.ITEM_DELETE, self.deletecb)
 		self.__allwrappers.append(self._delete)
-		self._type = Atab_wrap_checkbox(self.attreditor, item0+self.ITEM_PARTIAL, self.typecb)
+		self._type = Atab_wrap_checkbox(self.attreditor, item0+self.ITEM_PARTIAL, self.__typecb)
 		self.__allwrappers.append(self._type)
 		self._xywh = Atab_wrap_xywh(self.attreditor, (item0+self.ITEM_X, item0+self.ITEM_Y, 
 				item0+self.ITEM_W, item0+self.ITEM_H), self.__xywhcb)
@@ -2035,6 +2035,10 @@ class AnchorTabPage(TabPage, AnchorList.AnchorList):
 		self.setbox(box)
 		self.fill()
 		
+	def __typecb(self):
+		self.editcb()
+		self.typecb()
+		
 	def __xywhcb(self):
 		self.editcb()
 		self.fill()
@@ -2048,7 +2052,10 @@ class AnchorTabPage(TabPage, AnchorList.AnchorList):
 		d.rungrabbed()
 		
 	def __renamecb(self):
-		d = windowinterface.InputDialog("Anchor name", "", self.renamecb)
+		name = self.getcurrent()
+		if name is None:
+			return
+		d = windowinterface.InputDialog("Anchor name", name, self.renamecb)
 		d.rungrabbed()
 		
 	def __linkcb(self):
