@@ -145,9 +145,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if self.timemapper is not None:
 			self.timemapper = None
 		if self.node is not None:
-			self.node.views['struct_view'] = None
 			del self.node.views['struct_view']
-			self.node.set_infoicon = None
 			del self.node.set_infoicon
 			self.node = None
 		Widgets.Widget.destroy(self)
@@ -664,6 +662,7 @@ class StructureObjWidget(MMNodeWidget):
 		self.set_need_resize()
 
 	def remove_set_armedmode(self):
+		self.node.set_armedmode = None
 		del self.node.set_armedmode
 		if not self.iscollapsed():
 			for c in self.children:
@@ -1589,6 +1588,7 @@ class MediaWidget(MMNodeWidget):
 		return timemapper
 
 	def remove_set_armedmode(self):
+		self.node.set_armedmode = None
 		del self.node.set_armedmode
 
 	def add_set_armedmode(self):
