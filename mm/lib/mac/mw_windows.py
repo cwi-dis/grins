@@ -435,21 +435,55 @@ class _CommonWindow:
 		return (xim, image), mask, left, top, \
 		       x, y, w - left - right, h - top - bottom
 
-	def _convert_coordinates(self, coordinates, units = None):
+	def _convert_coordinates(self, coordinates, crop = 0, units = UNIT_SCREEN):
 		"""Convert fractional xywh in our space to pixel-xywh
 		in toplevel-window relative pixels"""
-
-		xf, yf = self._scrollsizefactors()		
+		
 		x, y = coordinates[:2]
-		x, y = x*xf, y*yf
-		px = int(self._rect[_WIDTH] * x)  + self._rect[_X]
-		py = int(self._rect[_HEIGHT] * y)  + self._rect[_Y]
+		if len(coordinates) > 2:
+			w, h = coordinates[2:]
+		else:
+			w, h = 0, 0
+		rx, ry, rw, rh = self._rect
+##		if not (0 <= x <= 1 and 0 <= y <= 1):
+##			raise error, 'coordinates out of bounds'
+		if units == UNIT_PXL or (units is None and type(x) is type(0)):
+			px = int(x)
+		else:
+			px = int((rw - 1) * x + 0.5) + rx
+		if units == UNIT_PXL or (units is None and type(y) is type(0)):
+			py = int(y)
+		else:
+			py = int((rh - 1) * y + 0.5) + ry
+		pw = ph = 0
+		if crop:
+			if px < 0:
+				px, pw = 0, px
+			if px >= rx + rw:
+				px, pw = rx + rw - 1, px - rx - rw + 1
+			if py < 0:
+				py, ph = 0, py
+			if py >= ry + rh:
+				py, ph = ry + rh - 1, py - ry - rh + 1
 		if len(coordinates) == 2:
 			return px, py
-		w, h = coordinates[2:]
-		w, h = w*xf, h*yf
-		pw = int(self._rect[_WIDTH] * w)
-		ph = int(self._rect[_HEIGHT] * h)
+		if units == UNIT_PXL or (units is None and type(w) is type(0)):
+			pw = int(w + pw)
+		else:
+			pw = int((rw - 1) * w + 0.5) + pw
+		if units == UNIT_PXL or (units is None and type(h) is type(0)):
+			ph = int(h + ph)
+		else:
+			ph = int((rh - 1) * h + 0.5) + ph
+		if crop:
+			if pw <= 0:
+				pw = 1
+			if px + pw > rx + rw:
+				pw = rx + rw - px
+			if ph <= 0:
+				ph = 1
+			if py + ph > ry + rh:
+				ph = ry + rh - py
 		return px, py, pw, ph
 		
 	def _scrolloffset(self):
@@ -485,10 +519,21 @@ class _CommonWindow:
 		else:
 			raise error, 'bad units specified'
 		
+	def _pxl2rel(self, coordinates):
+		px, py = coordinates[:2]
+		rx, ry, rw, rh = self._rect
+		x = float(px - rx) / (rw - 1)
+		y = float(py - ry) / (rh - 1)
+		if len(coordinates) == 2:
+			return x, y
+		pw, ph = coordinates[2:]
+		w = float(pw) / (rw - 1)
+		h = float(ph) / (rh - 1)
+		return x, y, w, h
+		
 	def _convert_color(self, (r, g, b)):
 		"""Convert 8-bit r,g,b tuple to 16-bit r,g,b tuple"""
 		return r*0x101, g*0x101, b*0x101
-
 
 	def qdrect(self):
 		"""return our xywh rect (in pixels) as quickdraw ltrb style.

@@ -109,7 +109,7 @@ class findfont:
 	def is_closed(self):
 		return 0
 
-	def strsize(self, wid, str):
+	def strsizePXL(self, wid, str):
 		strlist = string.splitfields(str, '\n')
 		maxwidth = 0
 		maxheight = len(strlist) * (self.ascent + self.descent + self.leading)
@@ -123,21 +123,31 @@ class findfont:
 				maxwidth = width
 		if old_fontinfo:
 			_restorefontinfo(wid, old_fontinfo)
+		return maxwidth, maxheight
+		       
+	def strsize(self, wid, str):
 		_x_pixel_per_mm, _y_pixel_per_mm = \
 				 mw_globals.toplevel._getmmfactors()
-		return float(maxwidth) / _x_pixel_per_mm, \
-		       float(maxheight) / _y_pixel_per_mm
+		maxw, maxh = self.strsizePXL(wid, str)
+		return float(maxw) / _x_pixel_per_mm, \
+		       float(maxh) / _y_pixel_per_mm
+		
 
+	def baselinePXL(self):
+		return self.ascent+self.leading
+		
 	def baseline(self):
 		_x_pixel_per_mm, _y_pixel_per_mm = \
 				 mw_globals.toplevel._getmmfactors()
-		return float(self.ascent+self.leading) / _y_pixel_per_mm
+		return float(self.baselinePXL()) / _y_pixel_per_mm
+
+	def fontheightPXL(self):
+		return self.ascent + self.descent + self.leading
 
 	def fontheight(self):
 		_x_pixel_per_mm, _y_pixel_per_mm = \
 				 mw_globals.toplevel._getmmfactors()
-		return float(self.ascent + self.descent + self.leading) \
-			/ _y_pixel_per_mm
+		return float(self.fontheightPXL()) / _y_pixel_per_mm
 
 	def pointsize(self):
 		return self._pointsize
