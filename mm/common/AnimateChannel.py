@@ -64,6 +64,16 @@ class AnimateChannel(Channel.ChannelAsync):
 		if value:
 			self.__curloop = value - node.curloopcount - 1
 
+		repeatDur = MMAttrdefs.getattr(node, 'repeatdur')
+		if repeatDur and repeatDur!=0:
+			actx = self._player._animateContext
+			if actx._loopcount.has_key(node):
+				self.__curloop = actx._loopcount[node]
+				self.__curloop = self.__curloop + 1
+			else:
+				actx._loopcount[node]=0 
+				self.__curloop = 0
+
 		self.__animating = node
 
 		# get duration in secs (float)
@@ -76,10 +86,12 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__pauseAnimate(paused)
 
 	def playstop(self):
+		if debug: print 'playstop'
 		self.__stopAnimate()
 		Channel.ChannelAsync.playstop(self)
 
 	def stopplay(self, node):
+		if debug: print 'stopplay'
 		self.__stopAnimate()
 		self.__removeAnimate()
 		Channel.ChannelAsync.stopplay(self, node)
@@ -154,6 +166,7 @@ class AnimateChannel(Channel.ChannelAsync):
 
 	def __removeAnimate(self):
 		if self.__effAnimator:
+			if debug: print 'removeAnimate'
 			self.__effAnimator.onAnimateEnd(self.__getTargetChannel(), self.__animator)
 			self.__effAnimator = None
 
