@@ -3442,6 +3442,8 @@ class MMNode:
 				delay = None
 			else:
 				delay = duration
+			if delay is not None and delay > 0 and MMAttrdefs.getattr(self, 'autoReverse'):
+				delay = delay * 2
 			arc = MMSyncArc(self_body, 'dur', srcnode=self_body, event='begin', delay=delay)
 			self_body.durarcs.append(arc)
 ##			self_body.arcs.append((self_body, arc))
