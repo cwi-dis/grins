@@ -383,7 +383,7 @@ inline int GifDecoder::next_lzwbyte(bool flag, int input_code_size)
 	}   
 
 
-bool GifDecoder::parse_image_pixels(int width, int height, int interlace)
+inline bool GifDecoder::parse_image_pixels(int width, int height, int interlace)
 	{
 	surface<le::trible> *psurf = m_pdibsurf->get_pixmap();
 	UCHAR c = m_mf.get_byte();
