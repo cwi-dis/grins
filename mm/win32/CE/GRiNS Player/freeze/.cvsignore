@@ -1,0 +1,6 @@
+Makefile
+M_*.c
+frozen.c
+frozen_extensions.c
+log.txt
+FreezeOpts
