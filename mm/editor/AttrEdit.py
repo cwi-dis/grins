@@ -2,9 +2,10 @@ __version__ = "$Id$"
 
 import windowinterface
 import MMAttrdefs
-from ChannelMap import channelmap
+import ChannelMap
 from MMExc import *			# exceptions
 import MMNode
+from MMTypes import alltypes
 from AnchorDefs import *		# ATYPE_*
 from Hlinks import DIR_1TO2, TYPE_JUMP
 
@@ -154,59 +155,67 @@ class NodeWrapper(Wrapper):
 		return 'Properties of node ' + name
 
 	def __findlink(self, new = None):
-		alist = MMAttrdefs.getattr(self.node, 'anchorlist')
-		maxid = 0
-		for id, atype, args in alist:
-			if atype == ATYPE_WHOLE:
-				break
-			try:
-				id = eval('0+'+id)
-			except:
-				pass
-			else:
-				if id > maxid:
-					maxid = id
-		else:
-			# no whole-node anchors, hence no hyperlinks
-			if not new:
-				return None
-			id = `maxid + 1`
-			alist = alist + [(id, ATYPE_WHOLE, [])]
-			self.editmgr.setnodeattr(self.node, 'anchorlist', alist)
-		links = self.node.GetContext().hyperlinks.findsrclinks((self.node.GetUID(), id))
+		# if new == None, just return a link, if any
+		# if new == '', remove any existing link
+		# otherwise, remove old and set new link
+		srcanchor = self.toplevel.links.wholenodeanchor(self.node, notransaction = 1, create = new)
+		if not srcanchor:
+			# no whole node anchor, and we didn't have to create one
+			return None
+		links = self.context.hyperlinks.findsrclinks(srcanchor)
 		if links and new is not None:
+			# there is a link, and we want to replace or delete it
 			self.editmgr.dellink(links[0])
 			links = []
 		if not links:
 			if not new:
+				# remove the anchor since it isn't used
+				alist = MMAttrdefs.getattr(self.node, 'anchorlist')[:]
+				for i in range(len(alist)):
+					if alist[i][A_TYPE] == ATYPE_WHOLE:
+						del alist[i]
+						break
+				self.editmgr.setnodeattr(self.node, 'anchorlist', alist)
 				return None
-			link = (self.node.GetUID(), id), new, DIR_1TO2, TYPE_JUMP
+			link = srcanchor, new, DIR_1TO2, TYPE_JUMP
 			self.editmgr.addlink(link)
-			links = [link]
-		anchor = links[0][1]
-		if type(anchor) == type(''):
+		else:
+			link = links[0]
+		dstanchor = link[1]
+		if type(dstanchor) == type(''):
 			# external link
-			return anchor
+			return dstanchor
 		return '<Hyperlink within document>'	# place holder for internal link
 
 	def getattr(self, name): # Return the attribute or a default
 		if name == '.hyperlink':
 			return self.__findlink() or ''
+		if name == '.type':
+			return self.node.GetType()
 		return MMAttrdefs.getattr(self.node, name)
 
 	def getvalue(self, name): # Return the raw attribute or None
 		if name == '.hyperlink':
 			return self.__findlink()
+		if name == '.type':
+			return self.node.GetType()
 		return self.node.GetRawAttrDef(name, None)
 
 	def getdefault(self, name): # Return the default or None
 		if name == '.hyperlink':
+			return None
+		if name == '.type':
 			return None
 		return MMAttrdefs.getdefattr(self.node, name)
 
 	def setattr(self, name, value):
 		if name == '.hyperlink':
 			self.__findlink(value)
+			return
+		if name == '.type':
+			if self.node.GetType() == 'imm' and value != 'imm':
+				self.editmgr.setnodevalues(self.node, [])
+			self.editmgr.setnodetype(self.node, value)
 			return
 		self.editmgr.setnodeattr(self.node, name, value)
 
@@ -233,6 +242,7 @@ class NodeWrapper(Wrapper):
 		# aren't set
 		namelist = [
 			'name', ('file',),	# From nodeinfo window
+			'.type',
 			('terminator',),
 			'begin', ('duration',), 'loop',	# Time stuff
 			('clipbegin',), ('clipend',),	# More time stuff
@@ -246,6 +256,7 @@ class NodeWrapper(Wrapper):
 			'system_screen_depth',
 			]
 		ntype = self.node.GetType()
+		ctype = self.node.GetChannelType()
 		if ntype in ('ext', 'imm') or not settings.get('lightweight'):
 			namelist[1:1] = ['channel']
 		if ntype == 'bag':
@@ -257,11 +268,11 @@ class NodeWrapper(Wrapper):
 		if ntype in ('ext', 'imm'):
 			namelist.append('alt')
 			namelist.append('longdesc')
-			namelist.append('.hyperlink')
+			if ChannelMap.isvisiblechannel(ctype):
+				namelist.append('.hyperlink')
 		# Get the channel class (should be a subroutine!)
-		ctype = self.node.GetChannelType()
-		if channelmap.has_key(ctype):
-			cclass = channelmap[ctype]
+		if ChannelMap.channelmap.has_key(ctype):
+			cclass = ChannelMap.channelmap[ctype]
 			# Add the class's declaration of attributes
 			namelist = namelist + cclass.node_attrs
 			if cmifmode():
@@ -299,6 +310,10 @@ class NodeWrapper(Wrapper):
 			return (('string', None), '',
 				'Hyperlink', 'default',
 				'Hyperlink', 'raw', 'light')
+		if name == '.type':
+			return (('string', None), '',
+				'Node type', 'nodetype',
+				'Node type', 'raw', 'light')
 		return MMAttrdefs.getdef(name)
 
 class SlideWrapper(NodeWrapper):
@@ -441,8 +456,8 @@ class ChannelWrapper(Wrapper):
 	def attrnames(self):
 		namelist = ['.cname', 'type', 'title', 'comment']
 		ctype = self.channel.get('type', 'unknown')
-		if channelmap.has_key(ctype):
-			cclass = channelmap[ctype]
+		if ChannelMap.channelmap.has_key(ctype):
+			cclass = ChannelMap.channelmap[ctype]
 			# Add the class's declaration of attributes
 			namelist = namelist + cclass.chan_attrs
 			# And, for CMIF, add attributes that nodes inherit
@@ -656,6 +671,8 @@ class AttrEditor(AttrEditorDialog):
 				C = RMAudioAttrEditorField
 			elif displayername == 'videotype':
 				C = RMVideoAttrEditorField
+			elif displayername == 'nodetype':
+				C = NodeTypeAttrEditorField
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -1264,7 +1281,6 @@ class TermnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 class ChanneltypeAttrEditorField(PopupAttrEditorField):
 	# Choose from the standard channel types
 	def getoptions(self):
-		import ChannelMap
 		return ['Default'] + ChannelMap.getvalidchanneltypes()
 
 class FontAttrEditorField(PopupAttrEditorField):
@@ -1273,3 +1289,29 @@ class FontAttrEditorField(PopupAttrEditorField):
 		fonts = windowinterface.fonts[:]
 		fonts.sort()
 		return ['Default'] + fonts
+
+Alltypes = alltypes[:]
+Alltypes[Alltypes.index('bag')] = 'choice'
+Alltypes[Alltypes.index('alt')] = 'switch'
+class NodeTypeAttrEditorField(PopupAttrEditorField):
+	def getoptions(self):
+		if cmifmode():
+			return Alltypes
+		else:
+			options = Alltypes[:]
+			options.remove('choice')
+			return options
+
+	def parsevalue(self, str):
+		if str == 'choice':
+			return 'bag'
+		if str == 'switch':
+			return 'alt'
+		return str
+
+	def valuerepr(self, value):
+		if value is 'bag':
+			return 'choice'
+		if value is 'alt':
+			return 'switch'
+		return value
