@@ -29,7 +29,7 @@
 (blockview_winpos (tuple (int) (int)) (-1 -1) 'Block view winpos' default
 	 'Window position for block view' raw)
 
-(blockview_winsize (tuple (int) (int)) (450 900) 'Block view winsize' default
+(blockview_winsize (tuple (int) (int)) (400 800) 'Block view winsize' default
 	 'Window size for block view' raw)
 
 ##(center (bool) 0 'Center' default
