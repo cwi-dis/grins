@@ -5,45 +5,134 @@
 
 CheckError = 'MMNode.CheckError'		# Invalid call
 NoSuchAttrError = 'MMNode.NoSuchAttrError'	# Attribute not found
+NoSuchUIDError = 'MMNode.NoSuchUIDError'	# UID not in UID map
+DuplicateUIDError = 'MMNode.DuplicateUIDError'	# UID already in UID map
+
+
+# The MMNodeContext class
+#
+class MMNodeContext():
+	#
+	def init(self, nodeclass):
+		self.nextuid = 1
+		self.uidmap = {}
+		self.styledict = {}
+		self.nodeclass = nodeclass
+		return self
+	#
+	def newnode(self, type):
+		_stat('newnode')
+		return self.newnodeuid(type, self.newuid())
+	#
+	def newnodeuid(self, (type, uid)):
+		_stat('newnodeuid')
+		node = self.nodeclass().Init(type, self, uid)
+		self.knownode(uid, node)
+		return node
+	#
+	def newuid(self):
+		_stat('newuid')
+		while 1:
+			uid = `self.nextuid`
+			self.nextuid = self.nextuid + 1
+			if not self.uidmap.has_key(uid):
+				return uid
+	#
+	def mapuid(self, uid):
+		_stat('mapuid')
+		if not self.uidmap.has_key(uid):
+			raise NoSuchUIDError
+		return self.uidmap[uid]
+	#
+	def knownode(self, (uid, node)):
+		_stat('knownode')
+		if self.uidmap.has_key(uid):
+			raise DuplicateUIDError
+		self.uidmap[uid] = node
+	#
+	def forgetnode(self, uid):
+		_stat('forgetnode')
+		del self.uidmap[uid]
+	#
+	def addstyles(self, dict):
+		_stat('addstyles')
+		# XXX How to handle duplicates?
+		for key in dict.keys():
+			self.styledict[key] = dict[key]
+	#
+	# Look for an attribute in the style definitions.
+	# Raise NoSuchAttrError if the attribute is undefined.
+	# This will cause a stack overflow if there are recursive style
+	# definitions, and raise an unexpected exception if there are
+	# undefined styles.
+	#
+	# XXX The recursion may be optimized out by expanding definitions;
+	# XXX this should also fix the stack overflows...
+	#
+	def lookinstyles(self, (name, styles)):
+		_stat('lookinstyles')
+		for style in styles:
+			attrdict = self.styledict[style]
+			if attrdict.has_key(name):
+				return attrdict[name]
+			if attrdict.has_key('style'):
+				try:
+					_stat('lookinstyles recursive call')
+					return self.lookinstyles(name, \
+						attrdict['style'])
+				except NoSuchAttrError:
+					pass
+		raise NoSuchAttrError, 'in lookinstyles'
+	#
 
 
 # The Node class
 #
 class MMNode():
 	#
-	# Private methods to build a tree
+	# Create a new node.
 	#
-	# XXX Could place the style dictionary in an instance variable
-	# XXX instead of in the root's attribute dictionary;
-	# XXX could even place (a pointer to) it on each node
-	#
-	def _init(self, type):
+	def Init(self, (type, context, uid)):
+		# ASSERT type in ('seq', 'par', 'ext', 'imm', 'grp')
 		self.type = type
-		self.styledict = None
+		self.context = context
+		self.uid = uid
 		self.attrdict = {}
 		self.parent = None
 		self.children = []
 		self.values = []
 		self.summaries = {}
-		self.widget = None # Used to display traversal
+		self.widget = None # Used to display traversal XXX temporary!
 		return self
 	#
+	# Private methods to build a tree
+	#
 	def _addchild(self, child):
+		# ASSERT self.type in ('seq', 'par', 'grp')
 		child.parent = self
 		self.children.append(child)
 	#
 	def _addvalue(self, value):
-		# XXX Only for immediate nodes
+		# ASSERT self.type = 'imm'
 		self.values.append(value)
 	#
 	def _setattr(self, (name, value)):
-		# XXX Ought to check for duplicate attribute name?
+		# ASSERT not self.attrdict.has_key(name)
 		self.attrdict[name] = value
 	#
 	# Public methods for read-only access
 	#
 	def GetType(self):
 		return self.type
+	#
+	def GetContext(self):
+		return self.context
+	#
+	def GetUID(self):
+		return self.uid
+	#
+	def MapUID(self, uid):
+		return self.context.mapuid(uid)
 	#
 	def GetParent(self):
 		_stat('GetParent')
@@ -56,6 +145,14 @@ class MMNode():
 			root = x
 			x = x.parent
 		return root
+	#
+	def GetPath(x):
+		_stat('GetPath')
+		path = []
+		while x:
+			path.insert(0, x)
+			x = x.parent
+		return path
 	#
 	def GetChildren(self):
 		_stat('GetChildren')
@@ -84,6 +181,7 @@ class MMNode():
 			raise NoSuchAttrError, 'in GetRawAttr'
 	#
 	def GetRawAttrDef(self, (name, default)):
+		_stat('GetRawAttrDef')
 		try:
 			return self.GetRawAttr(name)
 		except NoSuchAttrError:
@@ -91,12 +189,7 @@ class MMNode():
 	#
 	def GetStyleDict(self):
 		_stat('GetStyleDict')
-		if self.styledict = None:
-			if self.attrdict.has_key('styledict'):
-				self.styledict = self.attrdict['styledict']
-			elif self.parent:
-				self.styledict = self.parent.GetStyleDict()
-		return self.styledict
+		return self.context.styledict
 	#
 	def GetAttr(self, name):
 		_stat('GetAttr')
@@ -111,10 +204,10 @@ class MMNode():
 				styles = self.attrdict['style']
 			except RuntimeError:
 				raise NoSuchAttrError, 'in GetAttr'
-			styledict = self.GetStyleDict()
-			return _lookinstyles(name, styles, styledict)
+			return self.context.lookinstyles(name, styles)
 	#
 	def GetAttrDef(self, (name, default)):
+		_stat('GetAttrDef')
 		try:
 			return self.GetAttr(name)
 		except NoSuchAttrError:
@@ -132,6 +225,7 @@ class MMNode():
 		raise NoSuchAttrError, 'in GetInherAttr'
 	#
 	def GetInherAttrDef(self, (name, default)):
+		_stat('GetInherAttrDef')
 		try:
 			return self.GetInherAttr(name)
 		except NoSuchAttrError:
@@ -145,17 +239,10 @@ class MMNode():
 	#
 	def Dump(self):
 		print '*** Dump of', self.type, 'node', self, '***'
-		if self.attrdict.has_key('styledict'):
-			styledict = self.attrdict['styledict']
-			stylenames = styledict.keys()
-			stylenames.sort()
-			for name in stylenames:
-				print 'Style', name + ':', `styledict[name]`
 		attrnames = self.attrdict.keys()
 		attrnames.sort()
 		for name in attrnames:
-			if name <> 'styledict':
-			    print 'Attr', name + ':', `self.attrdict[name]`
+			print 'Attr', name + ':', `self.attrdict[name]`
 		summnames = self.summaries.keys()
 		if summnames:
 			summnames.sort()
@@ -172,6 +259,33 @@ class MMNode():
 			for child in self.children: print child.GetType(),
 			print
 	#
+	# Make a "deep copy" of a subtree
+	#
+	def DeepCopy(self):
+		_stat('DeepCopy')
+		uidremap = {}
+		copy = self._deepcopy(uidremap)
+		copy._fixuidrefs(uidremap)
+		return copy
+	#
+	# Private methods for DeepCopy
+	#
+	def _deepcopy(self, uidremap):
+		_stat('_deepcopy')
+		copy = self.context.newnode(self.type)
+		uidremap[self.uid] = copy.uid
+		copy.attrdict = _valuedeepcopy(self.attrdict)
+		copy.values = _valuedeepcopy(self.values)
+		for child in self.children:
+			copy._addchild(child._deepcopy(uidremap))
+		return copy
+	#
+	def _fixuidrefs(self, uidremap):
+		# XXX Should run through attributes and replace UIDs
+		# XXX by remapped UIDs
+		for child in self.children:
+			child._fixuidrefs(uidremap)
+	#
 	# Public methods for modifying a tree
 	#
 	def SetAttr(self, (name, value)):
@@ -179,7 +293,7 @@ class MMNode():
 		self.attrdict[name] = value
 		self._updsummaries([name])
 	#
-	def DelAttr(self, (name, value)):
+	def DelAttr(self, name):
 		_stat('DelAttr')
 		if not self.attrdict.has_key(name):
 			return NoSuchAttrError, 'in DelAttr()'
@@ -189,6 +303,7 @@ class MMNode():
 	def Destroy(self):
 		_stat('Destroy')
 		if self.parent: raise CheckError, 'Destroy() non-root node'
+		self.context.forgetnode(self.uid)
 		for child in self.children:
 			child.parent = None
 			child.Destroy()
@@ -196,7 +311,6 @@ class MMNode():
 	def Extract(self):
 		_stat('Extract')
 		if not self.parent: raise CheckError, 'Extract() root node'
-		dummy = self.GetStyleDict() # Copy style dict if possible
 		parent = self.parent
 		self.parent = None
 		parent.children.remove(self)
@@ -205,31 +319,13 @@ class MMNode():
 	def AddToTree(self, (parent, i)):
 		_stat('AddToTree')
 		if self.parent: raise CheckError, 'AddToTree() non-root node'
+		if self.context is not parent.context:
+			# XXX Decide how to handle this later
+			raise CheckError, 'AddToTree() requires same context'
 		parent.children.insert(i, self)
 		self.parent = parent
-		if self.styledict is not parent.styledict:
-			self._flushstyledict()
 		parent._fixsummaries(self.summaries)
 		parent._rmsummaries(self.summaries.keys())
-	#
-	# Private method to flush the style dictionary for a subtree
-	#
-	def _flushstyledict(self):
-		_stat('_flushstyledict')
-		self.styledict = None
-		for child in self.children:
-			child._flushstyledict()
-	#
-	# Make a "deep copy" of a subtree
-	#
-	def DeepCopy(self):
-		_stat('DeepCopy')
-		copy = MMNode()._init(self.type)
-		copy.attrdict = _deepcopy(self.attrdict)
-		copy.values = _deepcopy(self.values)
-		for child in self.children:
-			copy._addchild(child.DeepCopy())
-		return copy
 	#
 	# Private methods for summary management
 	#
@@ -285,42 +381,20 @@ class MMNode():
 
 # Make a "deep copy" of an arbitrary value
 #
-def _deepcopy(value):
-	_stat('_deepcopy')
+def _valuedeepcopy(value):
+	_stat('_valuedeepcopy')
 	if type(value) = type({}):
 		copy = {}
 		for key in value.keys():
-			copy[key] = _deepcopy(value[key])
+			copy[key] = _valuedeepcopy(value[key])
 		return copy
 	if type(value) = type([]):
 		copy = value[:]
 		for i in range(len(copy)):
-			copy[i] = _deepcopy(copy[i])
+			copy[i] = _valuedeepcopy(copy[i])
 		return copy
 	# XXX Assume everything else is immutable.  Not quite true...
 	return value
-
-
-# Look for an attribute in the style definitions.
-# Raise NoSuchAttrError if the attribute is undefined.
-# This will cause a stack overflow if there are recursive style definitions,
-# and raise an unexpected exception if there are undefined styles
-#
-# XXX The recursion may be optimized out by expanding style definitions
-#
-def _lookinstyles(name, styles, styledict):
-	_stat('_lookinstyle')
-	for style in styles:
-		attrdict = styledict[style]
-		if attrdict.has_key(name):
-			return attrdict[name]
-		if attrdict.has_key('style'):
-			try:
-				_stat('_lookinstyle recursive call')
-				return _lookinstyles(name, attrdict['style'], styledict)
-			except NoSuchAttrError:
-				pass
-	raise NoSuchAttrError, 'in _lookinstyles (from GetAttr)'
 
 
 # Keep statistics -- a counter per key.
