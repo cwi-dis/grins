@@ -180,13 +180,13 @@ class ChannelView(ChannelViewDialog):
 
 	# Edit manager interface (as dependent client)
 
-	def transaction(self):
+	def transaction(self, type):
 		return 1 # It's always OK to start a transaction
 
 	def rollback(self):
 		pass
 
-	def commit(self):
+	def commit(self, type):
 		self.redrawafterchange()
 
 	def redrawafterchange(self):

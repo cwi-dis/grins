@@ -734,13 +734,13 @@ class HierarchyView(HierarchyViewDialog):
 	# Edit manager interface (as dependent client)  #
 	#################################################
 
-	def transaction(self):
+	def transaction(self, type):
 		return 1 # It's always OK to start a transaction
 
 	def rollback(self):
 		self.destroynode = None
 
-	def commit(self):
+	def commit(self, type):
 		if self.destroynode:
 			self.destroynode.Destroy()
 		self.destroynode = None
