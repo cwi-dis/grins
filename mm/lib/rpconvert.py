@@ -59,6 +59,7 @@ def rpconvert(node):
 		pass
 	em.setnodeattr(node, 'bgcolor', None)
 	em.setnodeattr(node, 'transparent', None)
+	em.setnodeattr(node, 'duration', rp.duration)
 
 	# First deal with fadein transitions that specify an
 	# associated fadeout.  We just create an explicit fadeout for
