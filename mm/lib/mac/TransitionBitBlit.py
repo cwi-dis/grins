@@ -1,8 +1,8 @@
 # BitBlitter base classes for machine-independent transition classes.
 # See comment at the beginning of Transitions for an explanation of the overall
 # architecture.
-import Qd
-import QuickDraw
+from Carbon import Qd
+from Carbon import QuickDraw
 
 class BlitterClass:
 	SHOW_UNIMPLEMENTED_TRANSITION_NAME=1
