@@ -608,10 +608,6 @@ class Window:
 		x, y, w, h = self._rectb
 		return X+x, Y+y, w, h
 
-	def getwindowrect(self):
-		x,y,w,h=self.getwindowpos()
-		return x, y, x+w, y+h
-
 	def inside(self, point):
 		x, y, w, h = self.getwindowpos()
 		l, t, r, b = x, y, x+w, y+h
@@ -751,6 +747,10 @@ class SubWindow(Window):
 		self._oswnd = None
 		self._video = None
 
+		# resizing
+		self._resizing = 0
+		self._scale = 1
+			
 	def __repr__(self):
 		return '<_SubWindow instance at %x>' % id(self)
 		
@@ -961,6 +961,7 @@ class SubWindow(Window):
 		x, y, w, h = self.getwindowpos(rel);
 		rgn = win32ui.CreateRgn()
 		rgn.CreateRectRgn((x,y,x+w,y+h))
+		if rel==self: return rgn
 		rgn.CombineRgn(rgn,self._parent.getClipRgn(rel),win32con.RGN_AND)
 		return rgn
 
@@ -1016,14 +1017,27 @@ class SubWindow(Window):
 			w.paintOnDDS(dds, rel)
 
 	def bltDDS(self, srfc):
-		x, y, w, h = self.getwindowpos()
-		rc_dst = x, y, x+w, y+h
-		rc_src = (0, 0, w, h)
+		rc_dst = self.ltrb(self.getwindowpos())
+		src_w, src_h = srfc.GetSurfaceDesc().GetSize()
+		rc_src = (0, 0, src_w, src_h)
 		buf = self._topwindow._backBuffer
 		buf.Blt(rc_dst, srfc, rc_src, ddraw.DDBLT_WAIT)
 
+	# painting while resizing for fit=='meet'
+	def resizeFitMeet(self):
+		temp = self._rect
+		self._rect = self._orgrect
+		dds = self.createDDS()
+		self.paintOnDDS(dds, self)
+		self._rect = temp
+		self.bltDDS(dds)
+	
 	def paint(self):
 		if not self._isvisible:
+			return
+
+		if self._resizing and self._scale==0:
+			self.resizeFitMeet()
 			return
 
 		if self._oswnd:
@@ -1062,30 +1076,34 @@ class SubWindow(Window):
 	# Animations interface
 	#
 
-	def updatecoordinates(self, coordinates, units=UNIT_SCREEN):
+	def updatecoordinates(self, coordinates, units=UNIT_SCREEN, scale=1):
 		# first convert any coordinates to pixel
 		if units != UNIT_PXL:
 			coordinates = self._convert_coordinates(coordinates,units=units)
 		
+		if coordinates==self._rectb:
+			return
+		
+		x, y, w, h = coordinates
+
 		# keep old pos
 		x0, y0, w0, h0 = self._rectb
 		x1, y1, w1, h1 = self.getwindowpos()
 		
-		# move or/and resize window
-		if len(coordinates)==2:
-			x, y = coordinates[:2]
-			w, h = w0, h0
-		elif len(coordinates)==4:
-			x, y, w, h = coordinates
-		else:
-			raise AssertionError
-
-		# create new
+		# keep track of the original rect
+		if not self._resizing:
+			if w!=w0 or h!=h0:
+				self._resizing = 1
+				self._scale = scale
+				self._orgrect = self._rect
+		elif self._orgrect == self._rect:
+			self._resizing = 0
+			
+		# resize/move
 		self._rect = 0, 0, w, h # client area in pixels
 		self._canvas = 0, 0, w, h # client canvas in pixels
 		self._rectb = x, y, w, h  # rect with respect to parent in pixels
 		self._sizes = self._parent._pxl2rel(self._rectb) # rect relative to parent
-		x2, y2, w2, h2 = self.getwindowpos()
 		
 		# XXX: if any subwindow in the tree
 		# has an oswnd should be moved also
