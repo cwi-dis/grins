@@ -1,11 +1,11 @@
 *.c
 Player.aps
 FreezeOpts
-GRiNSP_SV2.exe
-GRiNSP_SV2.exp
-GRiNSP_SV2.lib
-GRiNSP_SV2.ncb
-GRiNSP_SV2.opt
+Ambulant_G.exe
+Ambulant_G.exp
+Ambulant_G.lib
+Ambulant_G.ncb
+Ambulant_G.opt
 log.txt
 Makefile
 Release
