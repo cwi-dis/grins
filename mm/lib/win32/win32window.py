@@ -1224,6 +1224,8 @@ class Region(Window):
 	def close(self):
 		if self._parent is None:
 			return
+		if self._transition:
+			self._transition.endtransition()
 		self._parent._subwindows.remove(self)
 		self.updateMouseCursor()
 		if not self._frozen:
