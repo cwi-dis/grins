@@ -545,6 +545,10 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 			if side = HD:
 				if doit:
 					chan = self.getchannel(node)
+					if chan = None:
+						print 'Play node w/o channel'
+						doit = 0
+				if doit:
 					chan.play(node, self.decrement, \
 						  (0, node, TL))
 					if self.setcurrenttime_callback:
@@ -565,5 +569,8 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 	#
 	def getchannel(self, node):
 		cname = MMAttrdefs.getattr(node, 'channel')
-		return self.channels[cname] # What? no channel on this node?
+		if self.channels.has_key(cname):
+			return self.channels[cname]
+		else:
+			return None
 	#
