@@ -190,6 +190,8 @@ def propdown(node, stoptime):
 			propdown(c, stoptime)
 	elif tp == 'seq':
 		children = node.GetChildren()
+		if not children:
+			return
 		lastchild = children[-1]
 		children = children[:-1]
 		for c in children:
