@@ -35,10 +35,11 @@ from MainDialog import MainDialog
 from usercmd import *
 
 class Main(MainDialog):
-	def __init__(self, opts, files):
+	def __init__(self, opts, files, splash):
 		import windowinterface
 		import license
 		import features
+		self.splash = splash
 		if hasattr(features, 'expiry_date') and features.expiry_date:
 			import time
 			import version
@@ -54,6 +55,7 @@ class Main(MainDialog):
 				sys.exit(0)
 		self.tmpopts = opts
 		self.tmpfiles = files
+
 		self.tmplicensedialog = license.WaitLicense(self.do_init,
 					   features.license_features_needed)
 		self.recent_file_list = [] # This is the list of recently opened files.
@@ -111,6 +113,11 @@ class Main(MainDialog):
 				DEBUG(callback = (self.debug_callback, ())),
 				CRASH(callback = (self.crash_callback, ())),
 				]
+
+		if self.splash is not None:
+			self.splash.unsplash()
+			self.splash = None
+
 		MainDialog.__init__(self, 'CMIFed', (not not files))
 
 		for file in files:
@@ -496,11 +503,7 @@ def main():
 			Help.sethelpdir(arg)
 	#
 
-	m = Main(opts, files)
-
-	if splash is not None:
-		splash.unsplash()
-
+	m = Main(opts, files, splash)
 
 	try:
 		try:
