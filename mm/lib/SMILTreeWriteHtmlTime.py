@@ -344,10 +344,13 @@ class SMILHtmlTimeWriter(SMIL):
 				self.ids_written[name] = 1
 				pushed = pushed + 1
 
-		if transIn:
+		if transIn or transOut:
 			if not nodeid:
 				nodeid = 'm' + x.GetUID()
 			subregid = nodeid + 'd1'
+			times = x.GetTimes()
+			end = '%ds' % times[1]
+
 
 		subRegGeom, mediaGeom = None, None
 		geoms = x.getPxGeomMedia()
@@ -357,13 +360,20 @@ class SMILHtmlTimeWriter(SMIL):
 		if subRegGeom:
 			divlist = []
 			style = self.rc2style(subRegGeom)
-			if transIn:
+
+			if transIn or transOut:
 				divlist.append(('id', subregid))
-				style = style + 'visibility=hidden;'
-				style = style + transIris(dur=1, style='circle', motion='out')
-				self.writetag('t:par', [('dur', '8s')])
+				self.writetag('t:par', [('dur', end)])
 				self.push()
 				pushed = pushed + 1
+
+			if transIn:
+				style = style + 'visibility=hidden;'
+				style = style + transIris(dur=1, style='circle', motion='out')
+
+			if transOut:
+				style = style + transFade(dur=1)
+				
 			divlist.append(('style', style))
 			self.writetag('div', divlist)
 			self.push()
@@ -377,10 +387,13 @@ class SMILHtmlTimeWriter(SMIL):
 
 		self.writetag('t:'+mtype, attrlist)
 
-		if transIn:
+		if transIn or transOut:
 			self.pop()
 			pushed = pushed - 1
-			self.writetag('t:ref', [ ('begin','%s.begin' % nodeid), ('dur', '1'), ('onbegin', 'transIn(%s)' % subregid), ])
+			if transIn:
+				self.writetag('t:ref', [ ('begin','%s.begin' % nodeid), ('dur', '1'), ('onbegin', 'transIn(%s)' % subregid), ])
+			if transOut:	
+				self.writetag('t:ref', [ ('begin','%s.end-1' % nodeid), ('dur', '1'), ('onbegin', 'transOut(%s)' % subregid), ])
 			self.pop()
 			pushed = pushed - 1
 		
