@@ -202,9 +202,9 @@ class Selecter:
 		if self.scheduler.getpaused():
 			self.pause(0)
 		for i in anchorlist:
-			if i.atype == ATYPE_PAUSE:
+			if i[1] == ATYPE_PAUSE:
 				pause_anchor = 1
-			aid = (node.GetUID(), i.aid)
+			aid = (node.GetUID(), i[0])
 			rv = self.context.hyperlinks.findsrclinks(aid)
 			destlist = destlist + rv
 		if not destlist:
