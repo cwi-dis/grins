@@ -1253,6 +1253,10 @@ SOURCE=.\M_Toolbars.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_ToolbarState.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_ToolbarTemplate.c
 # End Source File
 # Begin Source File
@@ -1386,6 +1390,10 @@ SOURCE=.\M_win32menu.c
 # Begin Source File
 
 SOURCE=.\M_win32mu.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_win32reg.c
 # End Source File
 # Begin Source File
 
