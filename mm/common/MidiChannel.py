@@ -35,9 +35,6 @@ class MidiChannel(Channel):
 		self.play_data = []
 		self.has_callback = 0
 
-	def __repr__(self):
-		return '<MidiChannel instance, name=' + `self._name` + '>'
-
 	def _openport(self):
 	        if self.port:
 		    return 1
