@@ -331,7 +331,7 @@ class SMILHtmlTimeWriter(SMIL):
 			if type == 'prio':
 				xtype = mtype = 'priorityClass'
 			elif type == 'foreign':
-				tag = MMAttrdefs.getattr(x, 'tag')
+				tag = x.GetRawAttrDef('tag', None)
 				if ' ' in tag:
 					ns, tag = string.split(tag, ' ', 1)
 					xtype = mtype = 'foreign:%s' % tag
@@ -632,7 +632,7 @@ class SMILHtmlTimeWriter(SMIL):
 			self.pop()
 
 	def writeAnchors(self, x, name):
-		alist = MMAttrdefs.getattr(x, 'anchorlist')
+		alist = x.GetRawAttrDef('anchorlist', [])
 		hassrc = 0		# 1 if has source anchors
 		for a in alist:
 			if a.atype in SourceAnchors:
@@ -1044,8 +1044,7 @@ class SMILHtmlTimeWriter(SMIL):
 	def calcanames(self, node):
 		"""Calculate unique names for anchors"""
 		uid = node.GetUID()
-		alist = MMAttrdefs.getattr(node, 'anchorlist')
-		for a in alist:
+		for a in node.GetRawAttrDef('anchorlist', []):
 			aid = (uid, a.aid)
 			self.anchortype[aid] = a.atype
 			if a.atype in SourceAnchors:
