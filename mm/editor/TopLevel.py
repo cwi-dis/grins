@@ -534,7 +534,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if self.source:
 			# reshow source
 			import SMILTreeWrite
-			self.showsource(SMILTreeWrite.WriteString(self.root))
+			self.showsource(SMILTreeWrite.WriteString(self.root), optional=1)
 		#if self.__save is not None:
 		#	self.setcommands(self.commandlist + [self.__save])
 
