@@ -10,6 +10,16 @@ from XFont import findfont
 from XButton import _Button
 from splash import roundi
 
+# mapping from icon name to module
+_iconmap = {
+	'': 'emptyicon',
+	'error': 'stopicon',
+	'bandwidthgood': 'bandwidthgood',
+	'bandwidthbad': 'bandwidthbad',
+	'open': 'folderopen',
+	'closed': 'folderclosed',
+	}
+
 class _DisplayList:
 	def __init__(self, window, bgcolor):
 		self._window = window
@@ -554,7 +564,20 @@ class _DisplayList:
 		# 'bandwidthgood' used to show bandwidth usage is fine
 		# 'bandwidthbad' too much banwidth used
 		# 'error' Some error has occurred on the node
-		pass # To be implemented
+		w = self._window
+		module = _iconmap.get(icon) or _iconmap['']
+		reader = __import__(module).reader
+		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
+		       w._prepare_image(reader, (0,0,0,0), -2, 1, coordinates)
+		if mask:
+			self._imagemask = mask, src_x, src_y, dest_x, dest_y, width, height
+		else:
+			r = Xlib.CreateRegion()
+			r.UnionRectWithRegion(dest_x, dest_y, width, height)
+			self._imagemask = r
+		self._list.append(('image', mask, image, src_x, src_y,
+				   dest_x, dest_y, width, height))
+		self._optimize((2,))
 		
 	def drawarrow(self, color, src, dst):
 		if self._rendered:
