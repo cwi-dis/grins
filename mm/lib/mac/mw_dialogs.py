@@ -1,6 +1,7 @@
 import Qd
 import Dlg
 import Ctl
+import Evt
 import Controls
 import ControlAccessor
 import MacOS
@@ -40,7 +41,7 @@ class MACDialog:
 		self._itemlist_shown = allitems[:]
 		self._window = DialogWindow(resid, title=title, default=default, 
 			cancel=cancel, cmdbuttons=cmdbuttons)
-		self._dialog = self._window._wid
+		self._dialog = self._window.getdialogwindowdialog()
 		# Override event handler:
 		self._window.set_itemhandler(self.do_itemhit)
 
@@ -387,8 +388,8 @@ class _SelectionDialog(DialogWindow):
 		else:
 			DialogWindow.__init__(self, self.DIALOG_ID, default=ITEM_SELECT_OK)
 		if not hascancel:
-			self._wid.HideDialogItem(ITEM_SELECT_CANCEL)
-		h = self._wid.GetDialogItemAsControl(ITEM_SELECT_LISTPROMPT)
+			self._dlg.HideDialogItem(ITEM_SELECT_CANCEL)
+		h = self._dlg.GetDialogItemAsControl(ITEM_SELECT_LISTPROMPT)
 		Dlg.SetDialogItemText(h, _string2dialog(listprompt))
 		
 		# Now setup the scrolled list
@@ -397,7 +398,7 @@ class _SelectionDialog(DialogWindow):
 		self._listwidget.setkeyboardfocus()
 		
 		# And the default value and ok button
-		ctl = self._wid.GetDialogItemAsControl(ITEM_SELECT_OK)
+		ctl = self._dlg.GetDialogItemAsControl(ITEM_SELECT_OK)
 		if default is None:
 			ctl.DeactivateControl()
 		else:
@@ -422,7 +423,7 @@ class _SelectionDialog(DialogWindow):
 			print 'Unknown item', self, item, event
 		# Done a bit funny, because of double-clicking
 		item = self._listwidget.getselect()
-		ctl = self._wid.GetDialogItemAsControl(ITEM_SELECT_OK)
+		ctl = self._dlg.GetDialogItemAsControl(ITEM_SELECT_OK)
 		if item is None:
 			ctl.DeactivateControl()
 		else:
@@ -436,8 +437,9 @@ class TraceDialog(_SelectionDialog):
 	DIALOG_ID = ID_TRACE_DIALOG
 	def __init__(self):
 		_SelectionDialog.__init__(self, "Stack", [], None, 0)
-		self._wid.HideDialogItem(ITEM_SELECT_OK)
+		self._dlg.HideDialogItem(ITEM_SELECT_OK)
 		self.itemcount = 0
+		self.lasttime = Evt.TickCount()/5
 		
 	def setitem(self, item, value, clear=0):
 		oldport = Qd.GetPort()
@@ -449,7 +451,9 @@ class TraceDialog(_SelectionDialog):
 			for i in range(item+1, self.itemcount):
 				self._listwidget.replace(i, '')
 		self._listwidget.select(item, autoscroll=1)
-		self._wid.DrawDialog()
+		if Evt.TickCount()/5 != self.lasttime:
+			self.lasttime = Evt.TickCount()/5
+			self._dlg.DrawDialog()
 		Qd.SetPort(oldport)
 		
 class _CallbackSelectionDialog(_SelectionDialog):
@@ -514,17 +518,17 @@ class InputDialog(DialogWindow):
 
 	def _settext(self, text):
 		text = _string2dialog(text)
-		h = self._wid.GetDialogItemAsControl(ITEM_INPUT_TEXT)
+		h = self._dlg.GetDialogItemAsControl(ITEM_INPUT_TEXT)
 		if self._is_passwd_dialog:
 			ControlAccessor.SetControlData(h, Controls.kControlEditTextPart, 
 				Controls.kControlEditTextPasswordTag, text)
-			Ctl.SetKeyboardFocus(self._wid, h, Controls.kControlEditTextPart)
+			Ctl.SetKeyboardFocus(self._onscreen_wid, h, Controls.kControlEditTextPart)
 		else:
 			Dlg.SetDialogItemText(h, text)
-			self._wid.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
+			self._dlg.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
 		
 	def _gettext(self):
-		h = self._wid.GetDialogItemAsControl(ITEM_INPUT_TEXT)
+		h = self._dlg.GetDialogItemAsControl(ITEM_INPUT_TEXT)
 		if self._is_passwd_dialog:
 			rv = ControlAccessor.GetControlData(h, Controls.kControlEditTextPart, 
 					Controls.kControlEditTextPasswordTag)
@@ -546,7 +550,7 @@ class InputDialog(DialogWindow):
 		return 1
 			
 	def done(self):
-		ctl = self._wid.GetDialogItemAsControl(ITEM_INPUT_TEXT)
+		ctl = self._dlg.GetDialogItemAsControl(ITEM_INPUT_TEXT)
 		rv = self._gettext()
 		if self._is_passwd_dialog:
 			# For password dialogs make it disappear quickly
@@ -571,9 +575,9 @@ class InputURLDialog(InputDialog):
 			if ok:
 				pathname = fss.as_pathname()
 				url = MMurl.pathname2url(pathname)
-				h = self._wid.GetDialogItemAsControl(ITEM_INPUT_TEXT)
+				h = self._dlg.GetDialogItemAsControl(ITEM_INPUT_TEXT)
 				Dlg.SetDialogItemText(h, _string2dialog(url))
-				self._wid.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
+				self._dlg.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
 			return 1
 		return InputDialog.do_itemhit(self, item, event)
 
@@ -584,9 +588,9 @@ class NewChannelDialog(DialogWindow):
 		# First create dialogwindow and set static items
 		DialogWindow.__init__(self, self.DIALOG_ID, title=prompt,
 				default=ITEM_INPUT_OK, cancel=ITEM_INPUT_CANCEL)
-		h = self._wid.GetDialogItemAsControl(ITEM_INPUT_TEXT)
+		h = self._dlg.GetDialogItemAsControl(ITEM_INPUT_TEXT)
 		Dlg.SetDialogItemText(h, _string2dialog(default))
-		self._wid.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
+		self._dlg.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
 		self.type_select=self.SelectWidget(ITEM_NEWCHANNEL_TYPE, types)
 		self._cb = cb
 		self._cancel = cancelCallback
@@ -613,10 +617,10 @@ class NewChannelDialog(DialogWindow):
 		return 1
 			
 	def done(self):
-		h = self._wid.GetDialogItemAsControl(ITEM_INPUT_TEXT)
+		h = self._dlg.GetDialogItemAsControl(ITEM_INPUT_TEXT)
 		name = Dlg.GetDialogItemText(h)
 		type = self.type_select.getselectvalue()
-		ctl = self._wid.GetDialogItemAsControl(ITEM_INPUT_OK)
+		ctl = self._dlg.GetDialogItemAsControl(ITEM_INPUT_OK)
 		ctl.HiliteControl(10)
 		self._cb(name, type)
 		ctl.HiliteControl(0)
@@ -673,25 +677,25 @@ class TemplateDialog(DialogWindow):
 		
 	def _setbutton(self, item, value):
 		# Silly: this duplicates a method in MACDialog
-		ctl = self._wid.GetDialogItemAsControl(item)
+		ctl = self._dlg.GetDialogItemAsControl(item)
 		ctl.SetControlValue(value)
 	
 	def _getbutton(self, item):
-		ctl = self._wid.GetDialogItemAsControl(item)
+		ctl = self._dlg.GetDialogItemAsControl(item)
 		return ctl.GetControlValue()
 		
 	def done(self):
 		which = self.type_select.getselect()
 		if 0 <= which < len(self.descriptions):
 			cbarg = self.descriptions[which]
-			ctl = self._wid.GetDialogItemAsControl(ITEM_INPUT_OK)
+			ctl = self._dlg.GetDialogItemAsControl(ITEM_INPUT_OK)
 			ctl.HiliteControl(10)
 			self._cb(cbarg)
 			ctl.HiliteControl(0)
 		self.close()
 		
 	def _setdialoginfo(self, idx):
-		htext = self._wid.GetDialogItemAsControl(ITEM_TEMPLATE_DESCRIPTION)
+		htext = self._dlg.GetDialogItemAsControl(ITEM_TEMPLATE_DESCRIPTION)
 		if 0 <= idx < len(self.descriptions):
 			text = self.descriptions[idx][0]
 			image = self.descriptions[idx][1]
@@ -713,15 +717,15 @@ class BandwidthComputeDialog(DialogWindow):
 		self._settext(ITEM_BANDWIDTH_MESSAGE2, '')
 		self.mustwait = 0
 		self.calback = None
-		ctl = self._wid.GetDialogItemAsControl(ITEM_BANDWIDTH_OK)
+		ctl = self._dlg.GetDialogItemAsControl(ITEM_BANDWIDTH_OK)
 		ctl.DeactivateControl()
-		ctl = self._wid.GetDialogItemAsControl(ITEM_BANDWIDTH_CANCEL)
+		ctl = self._dlg.GetDialogItemAsControl(ITEM_BANDWIDTH_CANCEL)
 		ctl.DeactivateControl()
 		self.show()
-		self._wid.DrawDialog()
+		self._dlg.DrawDialog()
 		
 	def _settext(self, item, str):
-		h = self._wid.GetDialogItemAsControl(item)
+		h = self._dlg.GetDialogItemAsControl(item)
 		Dlg.SetDialogItemText(h, str)
 
 	def setinfo(self, prerolltime, errorseconds, delaycount, errorcount):
@@ -766,11 +770,11 @@ class BandwidthComputeDialog(DialogWindow):
 				callback()
 			return
 		self.callback = callback
-		ctl = self._wid.GetDialogItemAsControl(ITEM_BANDWIDTH_OK)
+		ctl = self._dlg.GetDialogItemAsControl(ITEM_BANDWIDTH_OK)
 		ctl.ActivateControl()
 		if cancancel:
 			ctl.SetControlTitle('Continue')
-			ctl = self._wid.GetDialogItemAsControl(ITEM_BANDWIDTH_CANCEL)
+			ctl = self._dlg.GetDialogItemAsControl(ITEM_BANDWIDTH_CANCEL)
 			ctl.ActivateControl()
 
 	def do_itemhit(self, item, event):

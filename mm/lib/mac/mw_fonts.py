@@ -15,27 +15,25 @@ _qd_italic = 2
 
 
 # Routines to save/restore complete textfont info
-def _checkfontinfo(wid, finfo):
+def _checkfontinfo(port, finfo):
 	"""Return true if font info different from args"""
-	if not wid:
+	if not port:
 		return 1
-	port = wid.GetWindowPort()
 	curfinfo = (port.txFont, port.txFace, port.txSize)
 	return finfo <> curfinfo
 	
-def _savefontinfo(wid):
+def _savefontinfo(port):
 	"""Return all font-pertaining info for a macos window"""
-	if not wid:
+	if not port:
 		return ()
-	port = wid.GetWindowPort()
 	return port.txFont, port.txFace, port.txMode, port.txSize, port.spExtra
 	
-def _restorefontinfo(wid, (font, face, mode, size, spextra)):
+def _restorefontinfo(port, (font, face, mode, size, spextra)):
 	"""Set all font-pertaining info for a macos window"""
-	if not wid:
+	if not port:
 		return
 	old = Qd.GetPort()
-	Qd.SetPort(wid)
+	Qd.SetPort(port)
 	Qd.TextFont(font)
 	Qd.TextFace(face)
 	Qd.TextMode(mode)
@@ -94,31 +92,31 @@ class findfont:
 		"""Get details of font (mac-only)"""
 		return self._fontnum, self._fontface, self._pointsize
 		
-	def _setfont(self, wid):
+	def _setfont(self, port):
 		"""Set our font, saving the old one for later"""
-		if wid:
-			Qd.SetPort(wid)
+		if port:
+			Qd.SetPort(port)
 		Qd.TextFont(self._fontnum)
 		Qd.TextFace(self._fontface)
 		Qd.TextSize(self._pointsize)
 		
-	def _checkfont(self, wid):
-		"""Check whether our font needs to be installed in this wid"""
-		return _checkfontinfo(wid, (self._fontnum, self._fontface, self._pointsize))
+	def _checkfont(self, port):
+		"""Check whether our font needs to be installed in this grafport"""
+		return _checkfontinfo(port, (self._fontnum, self._fontface, self._pointsize))
 		
-	def _initparams(self, wid=None):
+	def _initparams(self, port=None):
 		"""Obtain font params like ascent/descent, if needed"""
 		if self._inited:
 			return
 		self._inited = 1
-		if wid:
-			old_fontinfo = _savefontinfo(wid)
-		self._setfont(wid)
+		if port:
+			old_fontinfo = _savefontinfo(port)
+		self._setfont(port)
 		self.ascent, self.descent, widMax, self.leading = Qd.GetFontInfo()
 		# XXXX leading gives too much space. An experiment: zap it.
 		self.leading = 0
-		if wid:
-			_restorefontinfo(wid, old_fontinfo)
+		if port:
+			_restorefontinfo(port, old_fontinfo)
 
 	def close(self):
 		pass
@@ -126,21 +124,21 @@ class findfont:
 	def is_closed(self):
 		return 0
 
-	def strsizePXL(self, str, wid=None):
-		self._initparams(wid)
+	def strsizePXL(self, str, port=None):
+		self._initparams(port)
 		strlist = string.splitfields(str, '\n')
 		maxwidth = 0
 		maxheight = len(strlist) * (self.ascent + self.descent + self.leading)
 		old_fontinfo = None
-		if self._checkfont(wid):
-			old_fontinfo = _savefontinfo(wid)
-		self._setfont(wid)
+		if self._checkfont(port):
+			old_fontinfo = _savefontinfo(port)
+		self._setfont(port)
 		for str in strlist:
 			width = Qd.TextWidth(str, 0, len(str))
 			if width > maxwidth:
 				maxwidth = width
 		if old_fontinfo:
-			_restorefontinfo(wid, old_fontinfo)
+			_restorefontinfo(port, old_fontinfo)
 		return maxwidth, maxheight
 		       
 	def strsize(self, str):

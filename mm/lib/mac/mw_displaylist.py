@@ -10,14 +10,15 @@ from types import *
 import struct
 import math
 import time
-
+from AnchorDefs import *
+import CheckInsideArea
 #
 # Stuff needed from other mw_ modules:
 #
 from mw_globals import error
 from mw_globals import TRUE, FALSE
 from mw_globals import _X, _Y, _WIDTH, _HEIGHT, ICONSIZE_PXL
-from mw_globals import ARR_LENGTH, ARR_SLANT, ARR_HALFWIDTH, SIZE_3DBORDER
+from mw_globals import ARR_LENGTH, ARR_SLANT, ARR_HALFWIDTH, SIZE_3DBORDER, UNIT_PXL
 import mw_globals
 import mw_fonts
 import mw_resources
@@ -37,12 +38,38 @@ _icon_ids = {
 	# '' is special: don't draw any icon (needed for removing icons in optimize)
 	'closed': mw_resources.ID_ICON_TRIANGLE_RIGHT,
 	'open': mw_resources.ID_ICON_TRIANGLE_DOWN,
+	'parclosed': mw_resources.ID_ICON_TRIANGLE_RIGHT,
+	'paropen': mw_resources.ID_ICON_TRIANGLE_DOWN,
+	'seqclosed': mw_resources.ID_ICON_TRIANGLE_RIGHT,
+	'seqopen': mw_resources.ID_ICON_TRIANGLE_DOWN,
+	'exclclosed': mw_resources.ID_ICON_TRIANGLE_RIGHT,
+	'exclopen': mw_resources.ID_ICON_TRIANGLE_DOWN,
+	'prioclosed': mw_resources.ID_ICON_TRIANGLE_RIGHT,
+	'prioopen': mw_resources.ID_ICON_TRIANGLE_DOWN,
+	'switchclosed': mw_resources.ID_ICON_TRIANGLE_RIGHT,
+	'switchopen': mw_resources.ID_ICON_TRIANGLE_DOWN,
 	'bandwidthgood': mw_resources.ID_ICON_BANDWIDTH_OK,
 	'bandwidthbad': mw_resources.ID_ICON_BANDWIDTH_ERROR,
 	'error': mw_resources.ID_ICON_ERROR,
 	'linksrc': mw_resources.ID_ICON_LINKSRC,
 	'linkdst': mw_resources.ID_ICON_LINKDST,
 	'linksrcdst': mw_resources.ID_ICON_LINKSRCDST,
+	'transin': mw_resources.ID_ICON_TRANSIN,
+	'transout': mw_resources.ID_ICON_TRANSOUT,
+	'beginevent' : mw_resources.ID_ICON_EVENTIN,
+	'endevent' : mw_resources.ID_ICON_EVENTOUT,
+	'causeevent' : mw_resources.ID_ICON_CAUSEEVENT,
+	'repeat' : mw_resources.ID_ICON_REPEAT,
+	'playing': mw_resources.ID_ICON_PLAYING,	# 
+	'waitstop': mw_resources.ID_ICON_WAITSTOP, # 
+	'idle': mw_resources.ID_ICON_IDLE,	# 
+##	'activateevent' : mw_resources.ID_ICON_ACTIVATEVENT,
+##	'animation' : mw_resources.ID_ICON_ANIMATION,
+##	'duration' : mw_resources.ID_ICON_DURATION,
+##	'focusin' : mw_resources.ID_ICON_FOCUSIN,
+##	'happyface' : mw_resources.ID_ICON_HAPPYFACE,
+##	'spaceman': mw_resources.ID_ICON_SPACEMAN,
+##	'wallclock': mw_resources.ID_ICON_WALLCLOCK,
 }
 
 def _get_icon(which):
@@ -50,11 +77,15 @@ def _get_icon(which):
 		for name, resid in _icon_ids.items():
 			_icons[name] = Icn.GetCIcon(resid)
 		_icons[''] = None
-	return _icons[which]
-	
+	try:
+		return _icons[which]
+	except KeyError:
+		print 'Unknown icon:', which
+		return None
 
 class _DisplayList:
-	def __init__(self, window, bgcolor):
+	def __init__(self, window, bgcolor, units):
+		self.__units = units
 		self.starttime = 0
 		self._window = window
 		window._displists.append(self)
@@ -64,8 +95,9 @@ class _DisplayList:
 		self._buttons = []
 		self._list = []
 		self._rendered = 0
-		if self._window._transparent <= 0:
-			self._list.append(('clear',))
+##		if self._window._transparent <= 0:
+##			self._list.append(('clear',))
+		self._list.append(('clear',))
 		self._optimdict = {}
 		self._cloneof = None
 		self._clonestart = 0
@@ -74,7 +106,14 @@ class _DisplayList:
 		self._old_fontinfo = None
 ##		self._clonebboxes = []
 		self._really_rendered = FALSE	# Set to true after the first real redraw
+		self._tmprgn = Qd.NewRgn()
+		self._need_convert_coordinates = 1
 		
+		# associate cmd names with list indices
+		# used by animation experimental methods
+		self.__cmddict = {}
+		self.__butdict = {}
+
 	def close(self):
 		if self._window is None:
 			return
@@ -93,9 +132,7 @@ class _DisplayList:
 				win._buttonschanged()
 			if win._transparent == -1 and win._parent:
 				win._parent._clipchanged()
-			if win._wid:
-				Qd.SetPort(win._wid)
-				Win.InvalRect(win.qdrect())
+			win._mac_invalwin()
 		self._window = None
 		del self._cloneof
 		try:
@@ -112,7 +149,7 @@ class _DisplayList:
 
 	def clone(self):
 		w = self._window
-		new = _DisplayList(w, self._bgcolor)
+		new = _DisplayList(w, self._bgcolor, self.__units)
 		# copy all instance variables
 		new._list = self._list[:]
 		new.usefont(self._font)
@@ -138,18 +175,19 @@ class _DisplayList:
 ##			depth=16 # XXX
 ##			App.SetThemePen(Appearance.kThemeBrushDocumentWindowBackground, depth, 1)
 ##			return
+		# XXX Not sure about this:
+		if fgcolor == None:
+			fgcolor = self._bgcolor
+		if fgcolor == None:
+			fgcolor = (0,0,0)
 		Qd.RGBForeColor(fgcolor)
-		
-	def _setbgcolor(self, bgcolor):
-##		if bgcolor == 'theme_background':
-##			depth=16 # XXX
-##			App.SetThemeBackground(Appearance.kThemeBrushDocumentWindowBackground, depth, 1)
-##			return
-		Qd.RGBBackColor(bgcolor)
 		
 	def _restorecolors(self):
 		self._setfgcolor(self._fgcolor)
-		self._setbgcolor(self._bgcolor)
+		bgcolor = self._bgcolor
+		if bgcolor is None:
+			bgcolor = (0, 0, 0)
+		Qd.RGBBackColor(bgcolor)
 
 	def _setblackwhitecolors(self):
 		# For image draw
@@ -165,7 +203,7 @@ class _DisplayList:
 		self._rendered = 1
 		self.starttime = time.time()
 		# XXXX buttons?
-		Qd.SetPort(window._wid)
+		oldenv = window._mac_setwin()
 		if window._transparent == -1:
 			window._parent._clipchanged()
 		#
@@ -178,21 +216,20 @@ class _DisplayList:
 		clonestart = self._clonestart
 		if self._cloneof and self._cloneof == window._active_displist and \
 				self._cloneof._really_rendered:
-		   render_now = 1
+			render_now = 1
 		else:
 			render_now = self._can_render_now()
-		Qd.SetPort(window._wid)
 		if render_now:
-			if not window._clip:
-				window._mkclip()
+			clip = window._mac_getclip()
 			saveclip = Qd.NewRgn()
 			Qd.GetClip(saveclip)
-			Qd.SetClip(window._clip)
+			Qd.SetClip(clip)
 			self._render(clonestart)
 			Qd.SetClip(saveclip)
 			Qd.DisposeRgn(saveclip)
 		else:
-			Win.InvalRect(window.qdrect())
+			window._mac_invalwin()
+		window._mac_unsetwin(oldenv)
 		
 		window._active_displist = self
 		if self._buttons:
@@ -214,126 +251,186 @@ class _DisplayList:
 	def _can_render_now(self):
 		"""Return true if we can do the render now, in stead of
 		scheduling the update event"""
-		##return 0
 		# First check that no update events are pending.
 		window = self._window
+		if window._transition:
+			return 0
 		rgn = Qd.NewRgn()
-		window._wid.GetWindowUpdateRgn(rgn)
+		window._onscreen_wid.GetWindowUpdateRgn(rgn)
 		ok = Qd.EmptyRgn(rgn)
+		# Next check that we're topmost
 		if ok:
 			ok = window._is_on_top()
 		Qd.DisposeRgn(rgn)
 		return ok
 		
-	def _render(self, clonestart=0):
+	def _getredrawguarantee(self, skipclear=0):
+		"""Return a region that we promise we will redraw. Simple implementation,
+		only return the initial clear or the first image (good enough for now)"""
+		window = self._window
+		for entry in self._list:
+			cmd = entry[0]
+			if cmd == 'clear' and self._bgcolor != None and not skipclear:
+				r = Qd.NewRgn()
+				Qd.RectRgn(r, window.qdrect())
+				return r
+			if cmd == 'image':
+				xscrolloffset, yscrolloffset = window._scrolloffset()
+				mask, image, srcx, srcy, dstx, dsty, w, h = entry[1:]
+				dstrect = self._convert_coordinates((dstx, dsty, w, h))
+				r = Qd.NewRgn()
+				Qd.RectRgn(r, dstrect)
+				return r
+		return None
+		
+	def _render(self, clonestart=0, rgn=None):
+		# rgn (region to be redrawn, None for everything) ignored for now
+##		import Evt
+##		t0 = Evt.TickCount()
 		self._really_rendered = 1
-		self._window._active_displist = self
+		window = self._window
+		self._render_grafport = window._mac_getoswindowport()
+		self._render_cliprgn = rgn
+		window._active_displist = self
 		self._restorecolors()
 		if clonestart:
 			list = self._list[clonestart:]
 		else:
-			if self._window._transparent <= 0:
-				Qd.EraseRect(self._window.qdrect())
 			list = self._list
-		for i in list:
-			self._render_one(i)
+		self._dbg_did = 0
+		if self._window._convert_coordinates((0,0,1,1), units = self.__units) == (0,0,1,1):
+			self._need_convert_coordinates = 0
+		for entry in list:
+			self._render_one(entry)
+##		print "Redraw time:", (Evt.TickCount()-t0)/60.0, self._dbg_did, 'of', len(list)
+		self._need_convert_coordinates = 1
+		self._render_grafport = None
+		self._render_cliprgn = None
 			
 	def _render_one(self, entry):
 		cmd = entry[0]
-		window = self._window
-		wid = window._wid
-		xscrolloffset, yscrolloffset = window._scrolloffset()
 		
 		if cmd == 'clear':
-			Qd.EraseRect(window.qdrect())
+			if self._bgcolor != None:
+				r = self._getredrawguarantee(skipclear=1)
+				if r:
+					r2 = Qd.NewRgn()
+					Qd.RectRgn(r2, self._window.qdrect())
+					Qd.DiffRgn(r2, r, r2)
+					Qd.EraseRgn(r2)
+					Qd.DisposeRgn(r)
+					Qd.DisposeRgn(r2)
+				else:
+					Qd.EraseRect(self._window.qdrect())
 		elif cmd == 'fg':
-			Qd.RGBForeColor(entry[1])
+			self._setfgcolor(entry[1])
 		elif cmd == 'font':
-			entry[1]._setfont(wid)
+			entry[1]._setfont(self._render_grafport)
 		elif cmd == 'text':
-			Qd.MoveTo(entry[1]+xscrolloffset, entry[2]+yscrolloffset)
+			x, y, w, h = self._convert_coordinates(entry[1:5])
+			if not self._render_overlaprgn((x, y-h, x+w, y)):
+				return
+			Qd.MoveTo(x, y)
 			 # XXXX Incorrect for long strings:
-			Qd.DrawText(entry[3], 0, len(entry[3]))
+			Qd.DrawText(entry[5], 0, len(entry[5]))
 		elif cmd == 'icon':
-			if entry[2] != None:
-				x, y, w, h = entry[1]
-				x = x+xscrolloffset
-				y = y+yscrolloffset
-##				fgcolor = wid.GetWindowPort().rgbFgColor
-##				Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
-##				Qd.RGBForeColor((0xffff, 0, 0))
-				Icn.PlotCIcon((x, y, x+w, y+h), entry[2])
-##				Qd.RGBBackColor(self._bgcolor)
-##				Qd.RGBForeColor(fgcolor)
+			icon = entry[2]
+			if icon == None:
+				return
+			rect = self._convert_coordinates(entry[1])
+			if not self._render_overlaprgn(rect):
+				return
+			x0, y0, x1, y1 = rect
+			if x1-x0 < ICONSIZE_PXL:
+				leftextra = (ICONSIZE_PXL - (x1-x0))/2
+				x0 = x0 + leftextra
+				x1 = x0 + ICONSIZE_PXL
+			if y1-y0 < ICONSIZE_PXL:
+				topextra = (ICONSIZE_PXL - (y1-y0))/2
+				y0 = y0 + topextra
+				y1 = y0 + ICONSIZE_PXL
+			Icn.PlotCIcon((x0, y0, x1, y1), icon)
 		elif cmd == 'image':
 			mask, image, srcx, srcy, dstx, dsty, w, h = entry[1:]
-			dstx, dsty = dstx+xscrolloffset, dsty+yscrolloffset
+			dstrect = self._convert_coordinates((dstx, dsty, w, h))
+			if not self._render_overlaprgn(dstrect):
+				return
+			w = dstrect[2]-dstrect[0]
+			h = dstrect[3]-dstrect[1]
 			srcrect = srcx, srcy, srcx+w, srcy+h
-			dstrect = dstx, dsty, dstx+w, dsty+h
-##			fgcolor = wid.GetWindowPort().rgbFgColor
-##			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
-##			Qd.RGBForeColor((0, 0, 0))
 			self._setblackwhitecolors()
+			clip = self._window._mac_getclip()
 			if mask:
+				# XXXX We should also take note of the clip here.
 				Qd.CopyMask(image[0], mask[0],
-					    wid.GetWindowPort().portBits,
+					    self._render_grafport.portBits,
 					    srcrect, srcrect, dstrect)
 			else:
 				Qd.CopyBits(image[0],
-				      wid.GetWindowPort().portBits,
+				      self._render_grafport.portBits,
 				      srcrect, dstrect,
 				      QuickDraw.srcCopy+QuickDraw.ditherCopy,
-				      None)
+				      clip)
 			self._restorecolors()
 		elif cmd == 'line':
 			color = entry[1]
 			points = entry[2]
 			self._setfgcolor(color)
-			x, y = points[0]
-			Qd.MoveTo(x+xscrolloffset, y+yscrolloffset)
+			x, y = self._convert_coordinates(points[0])
+			Qd.MoveTo(x, y)
 			for np in points[1:]:
-				x, y = np
-				Qd.LineTo(x+xscrolloffset, y+yscrolloffset)
+				x, y = self._convert_coordinates(np)
+				Qd.LineTo(x, y)
 			self._restorecolors()
 		elif cmd == '3dhline':
 			color1, color2, x0, x1, y = entry[1:]
-			fgcolor = wid.GetWindowPort().rgbFgColor
+			fgcolor = self._render_grafport.rgbFgColor
 			self._setfgcolor(color1)
-			Qd.MoveTo(x0+xscrolloffset, y+yscrolloffset)
-			Qd.LineTo(x1+xscrolloffset, y+yscrolloffset)
+			x0, y0 = self._convert_coordinates((x0, y))
+			x1, y1 = self._convert_coordinates((x1, y))
+			if not self._render_overlaprgn((x0, y0, x1, y1+1)):
+				return
+			Qd.MoveTo(x0, y0)
+			Qd.LineTo(x1, y1)
 			self._setfgcolor(color2)
-			Qd.MoveTo(x0+xscrolloffset, y+yscrolloffset+1)
-			Qd.LineTo(x1+xscrolloffset, y+yscrolloffset+1)
+			Qd.MoveTo(x0, y0+1)
+			Qd.LineTo(x1, y1+1)
 			self._setfgcolor(fgcolor)
 			self._restorecolors()
 		elif cmd == 'box':
-			x, y, w, h = entry[1]
-			x, y = x+xscrolloffset, y+yscrolloffset
-			Qd.FrameRect((x, y, x+w, y+h))
+			rect = self._convert_coordinates(entry[1])
+			if not self._render_overlaprgn(rect):
+				return
+			Qd.FrameRect(rect)
 		elif cmd == 'fbox':
 			color = entry[1]
-			x, y, w, h = entry[2]
-			x, y = x+xscrolloffset, y+yscrolloffset
+			rect = self._convert_coordinates(entry[2])
+			if not self._render_overlaprgn(rect):
+				return
 			self._setfgcolor(color)
-			Qd.PaintRect((x, y, x+w, y+h))
+			Qd.PaintRect(rect)
 			self._restorecolors()
 		elif cmd == 'linewidth':
 			Qd.PenSize(entry[1], entry[1])
 		elif cmd == 'fpolygon':
+			polyhandle = self._polyhandle(entry[2], cliprgn=self._render_cliprgn)
+			if not polyhandle:
+				return
 			self._setfgcolor(entry[1])
-			polyhandle = self._polyhandle(entry[2])
 			Qd.PaintPoly(polyhandle)
 			self._restorecolors()
 		elif cmd == '3dbox':
+			rect = self._convert_coordinates(entry[2])
+			if not self._render_overlaprgn(rect):
+				return
+			l, t, r, b = rect
 			cl, ct, cr, cb = entry[1]
 			clt = _colormix(cl, ct)
 			ctr = _colormix(ct, cr)
 			crb = _colormix(cr, cb)
 			cbl = _colormix(cb, cl)
-			l, t, w, h = entry[2]
-			r, b = l + w, t + h
 ##			print '3Dbox', (l, t, r, b) # DBG
-##			print 'window', window.qdrect() # DBG
+##			print 'window', self._window.qdrect() # DBG
 			# l, r, t, b are the corners
 			l3 = l + SIZE_3DBORDER
 			t3 = t + SIZE_3DBORDER
@@ -341,84 +438,69 @@ class _DisplayList:
 			b3 = b - SIZE_3DBORDER
 			# draw left side
 			self._setfgcolor(cl)
-			polyhandle = self._polyhandle([(l, t), (l3, t3), (l3, b3), (l, b)])
-			Qd.PaintPoly(polyhandle)
+			polyhandle = self._polyhandle([(l, t), (l3, t3), (l3, b3), (l, b)], conv=0)
+			if polyhandle: Qd.PaintPoly(polyhandle)
 			# draw top side
 			self._setfgcolor(ct)
-			polyhandle = self._polyhandle([(l, t), (r, t), (r3, t3), (l3, t3)])
-			Qd.PaintPoly(polyhandle)
+			polyhandle = self._polyhandle([(l, t), (r, t), (r3, t3), (l3, t3)], conv=0)
+			if polyhandle: Qd.PaintPoly(polyhandle)
 			# draw right side
 			self._setfgcolor(cr)
-			polyhandle = self._polyhandle([(r3, t3), (r, t), (r, b), (r3, b3)])
-			Qd.PaintPoly(polyhandle)
+			polyhandle = self._polyhandle([(r3, t3), (r, t), (r, b), (r3, b3)], conv=0)
+			if polyhandle: Qd.PaintPoly(polyhandle)
 			# draw bottom side
 			self._setfgcolor(cb)
-			polyhandle = self._polyhandle([(l3, b3), (r3, b3), (r, b), (l, b)])
-			Qd.PaintPoly(polyhandle)
+			polyhandle = self._polyhandle([(l3, b3), (r3, b3), (r, b), (l, b)], conv=0)
+			if polyhandle: Qd.PaintPoly(polyhandle)
 			# draw topleft
 			self._setfgcolor(clt)
-			Qd.PaintRect((l+xscrolloffset, t+yscrolloffset, l3+xscrolloffset, t3+yscrolloffset))
+			Qd.PaintRect((l, t, l3, t3))
 			# draw topright
 			self._setfgcolor(ctr)
-			Qd.PaintRect((r3+xscrolloffset, t+yscrolloffset, r+xscrolloffset, t3+yscrolloffset))
+			Qd.PaintRect((r3, t, r, t3))
 			# draw botright
 			self._setfgcolor(crb)
-			Qd.PaintRect((r3+xscrolloffset, b3+yscrolloffset, r+xscrolloffset, b+yscrolloffset))
+			Qd.PaintRect((r3, b3, r, b))
 			# draw leftbot
 			self._setfgcolor(cbl)
-			Qd.PaintRect((l+xscrolloffset, b3+yscrolloffset, l3+xscrolloffset, b+yscrolloffset))
-##			l = l+1
-##			t = t+1
-##			r = r-1
-##			b = b-1
-##			l1 = l - 1
-##			t1 = t - 1
-##			r1 = r
-##			b1 = b
-##			ll = l + 2
-##			tt = t + 2
-##			rr = r - 2
-##			bb = b - 3
-
-
-##			Qd.RGBForeColor(cl)
-##			polyhandle = self._polyhandle([(l1, t1), (ll, tt), (ll, bb), (l1, b1)])
-##			Qd.PaintPoly(polyhandle)
-			
-##			Qd.RGBForeColor(ct)
-##			polyhandle = self._polyhandle([(l1, t1), (r1, t1), (rr, tt), (ll, tt)])
-##			Qd.PaintPoly(polyhandle)
-			
-##			Qd.RGBForeColor(cr)
-##			polyhandle = self._polyhandle([(r1, t1), (r1, b1), (rr, bb), (rr, tt)])
-##			Qd.PaintPoly(polyhandle)
-			
-##			Qd.RGBForeColor(cb)
-##			polyhandle = self._polyhandle([(l1, b1), (ll, bb), (rr, bb), (r1, b1)])
-##			Qd.PaintPoly(polyhandle)
+			Qd.PaintRect((l, b3, l3, b))
 			
 			self._restorecolors()
 		elif cmd == 'diamond':
-			x, y, w, h = entry[1]
-			x, y = x+xscrolloffset, y+yscrolloffset
+			rect = self._convert_coordinates(entry[1])
+			if not self._render_overlaprgn(rect):
+				return
+			x, y, x1, y1 = rect
+			w = x1-x
+			h = y1-y
 			Qd.MoveTo(x, y + h/2)
 			Qd.LineTo(x + w/2, y)
 			Qd.LineTo(x + w, y + h/2)
 			Qd.LineTo(x + w/2, y + h)
 			Qd.LineTo(x, y + h/2)
 		elif cmd == 'fdiamond':
-			x, y, w, h = entry[2]
+			rect = self._convert_coordinates(entry[2])
+			if not self._render_overlaprgn(rect):
+				return
+			x, y, x1, y1 = rect
+			w = x1-x
+			h = y1-y
 			self._setfgcolor(entry[1])
 			polyhandle = self._polyhandle([(x, y + h/2),
 					(x + w/2, y),
 					(x + w, y + h/2),
 					(x + w/2, y + h),
 					(x, y + h/2)])
-			Qd.PaintPoly(polyhandle)
+			if polyhandle: Qd.PaintPoly(polyhandle)
 			self._restorecolors()
 		elif cmd == '3ddiamond':
+			rect = self._convert_coordinates(entry[2])
+			if not self._render_overlaprgn(rect):
+				return
+			l, t, r, b = rect
 			cl, ct, cr, cb = entry[1]
-			l, t, w, h = entry[2]
+			w = r-l
+			h = b-t
 			r = l + w
 			b = t + h
 			x = l + w/2
@@ -431,110 +513,138 @@ class _DisplayList:
 
 
 			self._setfgcolor(cl)
-			polyhandle = self._polyhandle([(l, y), (x, t), (x, tt), (ll, y)])
-			Qd.PaintPoly(polyhandle)
+			polyhandle = self._polyhandle([(l, y), (x, t), (x, tt), (ll, y)], conv=0)
+			if polyhandle: Qd.PaintPoly(polyhandle)
 			
 			self._setfgcolor(ct)
-			polyhandle = self._polyhandle([(x, t), (r, y), (rr, y), (x, tt)])
-			Qd.PaintPoly(polyhandle)
+			polyhandle = self._polyhandle([(x, t), (r, y), (rr, y), (x, tt)], conv=0)
+			if polyhandle: Qd.PaintPoly(polyhandle)
 			
 			self._setfgcolor(cr)
-			polyhandle = self._polyhandle([(r, y), (x, b), (x, bb), (rr, y)])
-			Qd.PaintPoly(polyhandle)
+			polyhandle = self._polyhandle([(r, y), (x, b), (x, bb), (rr, y)], conv=0)
+			if polyhandle: Qd.PaintPoly(polyhandle)
 			
 			self._setfgcolor(cb)
-			polyhandle = self._polyhandle([(l, y), (ll, y), (x, bb), (x, b)])
-			Qd.PaintPoly(polyhandle)
+			polyhandle = self._polyhandle([(l, y), (ll, y), (x, bb), (x, b)], conv=0)
+			if polyhandle: Qd.PaintPoly(polyhandle)
 			
 			self._restorecolors()
 		elif cmd == 'arrow':
 			color = entry[1]
-			points = entry[2]
+			src = entry[2]
+			dst = entry[3]
+			x0, y0, x1, y1, points = self._arrowdata(src,dst)
+			if not self._render_overlaprgn((x0, y0, x1, y1)):
+				return
+
 			self._setfgcolor(color)
-			x0, y0, x1, y1 = points
-			x0, y0 = x0+xscrolloffset, y0+yscrolloffset
-			x1, y1 = x1+xscrolloffset, y1+yscrolloffset
 
 			Qd.MoveTo(x0, y0)
 			Qd.LineTo(x1, y1)
 			polyhandle = self._polyhandle(entry[3])
-			Qd.PaintPoly(polyhandle)
+			if polyhandle: Qd.PaintPoly(polyhandle)
 			self._restorecolors()
 		else:
 			raise 'Unknown displaylist command', cmd
-						
+		self._dbg_did = self._dbg_did + 1
+
+	def _convert_coordinates(self, coords):
+		"""Convert coordinates from window xywh style to quickdraw style"""
+		xscrolloffset, yscrolloffset = self._window._scrolloffset()
+		if self._need_convert_coordinates:
+			coords = self._window._convert_coordinates(coords, units = self.__units)
+		x = coords[0] + xscrolloffset
+		y = coords[1] + yscrolloffset
+		if len(coords) == 2:
+			return x, y
+		else:
+			w, h = coords[2:]
+			return (x, y, x+w, y+h)
+	
+	def _render_overlaprgn(self, rect):
+		"""Return true if there is an overlap between the current rendering region and the rect"""
+		if not self._render_cliprgn:
+			# Always draw if we have no clipping region (probably just-cloned displaylist)
+			return 1
+		r2 = self._tmprgn
+		Qd.RectRgn(r2, rect)
+		Qd.SectRgn(self._render_cliprgn, r2, r2)
+		empty = Qd.EmptyRgn(r2)
+		return not empty
+		
+	def _pixel2units(self, coords):
+		if self.__units == UNIT_PXL:
+			return coords
+		return self._window._pxl2rel(coords)
+		
 	def fgcolor(self, color):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		color = self._window._convert_color(color)
-		self._list.append(('fg', color))
-		self._fgcolor = color
+		if color == None:
+			color = self._bgcolor
+		else:
+			color = self._window._convert_color(color)
+		if color != self._fgcolor:
+			self._list.append(('fg', color))
+			self._fgcolor = color
 
+	# set the media sensitivity
+	# value is percentage value (range 0-100); opaque=0, transparent=100
+	def setAlphaSensitivity(self, value):
+		self._alphaSensitivity = value
 
-	def newbutton(self, coordinates, z = 0, times = None):
+	# Define a new button. Coordinates are in window relatives
+	def newbutton(self, coordinates, z = 0, times = None, sensitive = 1):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		return _Button(self, coordinates, z, times)
+		
+		# factor out shape type
+		shape = coordinates[0]
+		coordinates = coordinates[1:]
+		return _Button(self, shape, coordinates, z, times, sensitive)
 
-	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
+	def display_image_from_file(self, file, crop = (0,0,0,0), fit = 'meet',
 				    center = 1, coordinates = None,
 				    clip = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		win = self._window
 		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
-		       win._prepare_image(file, crop, scale, center, coordinates)
+		       win._prepare_image(file, crop, fit, center, coordinates, self.__units)
 		self._list.append(('image', mask, image, src_x, src_y,
 				   dest_x, dest_y, width, height))
 		self._optimize(2)
-##		self._update_bbox(dest_x, dest_y, dest_x+width, dest_y+height)
-		x, y, w, h = win._rect
-		wf, hf = win._scrollsizefactors()
-		w, h = w*wf, h*hf
-		return float(dest_x - x) / w, float(dest_y - y) / h, \
-		       float(width) / w, float(height) / h
+##		x, y, w, h = win._rect
+##		wf, hf = win._scrollsizefactors()
+##		w, h = w*wf, h*hf
+##		return float(dest_x - x) / w, float(dest_y - y) / h, \
+##		       float(width) / w, float(height) / h
+		return dest_x, dest_y, width, height
 
 	def drawline(self, color, points):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
 		color = w._convert_color(color)
-		p = []
-		xvalues = []
-		yvalues = []
-		for point in points:
-			x, y = w._convert_coordinates(point)
-			p.append((x,y))
-			xvalues.append(x)
-			yvalues.append(y)
-		self._list.append(('line', color, p))
-##		self._update_bbox(min(xvalues), min(yvalues),
-##				  max(xvalues), max(yvalues))
+		self._list.append(('line', color, points[:]))
 
 	def draw3dhline(self, color1, color2, x1, x2, y):
 		w = self._window
 		color1 = w._convert_color(color1)
 		color2 = w._convert_color(color2)
-		x1, y = w._convert_coordinates((x1, y))
-		x2, dummy = w._convert_coordinates((x2, y))
 		self._list.append(('3dhline', color1, color2, x1, x2, y))
 
 	def drawbox(self, coordinates, clip = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		x, y, w, h = self._window._convert_coordinates(coordinates)
-		self._list.append(('box', (x, y, w, h)))
+		self._list.append(('box', coordinates))
 		self._optimize()
-##		self._update_bbox(x, y, x+w, y+h)
 
 	def drawfbox(self, color, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		x, y, w, h = self._window._convert_coordinates(coordinates)
-		self._list.append(('fbox', self._window._convert_color(color),
-				   (x, y, w, h)))
+		self._list.append(('fbox', self._window._convert_color(color), coordinates))
 		self._optimize(1)
-##		self._update_bbox(x, y, x+w, y+h)
 
 	def drawmarker(self, color, coordinates):
 		pass # XXXX To be implemented
@@ -544,42 +654,25 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		w = self._window
 		color = w._convert_color(color)
-		p = []
-		xvalues = []
-		yvalues = []
-		for point in points:
-			x, y = w._convert_coordinates(point)
-			p.append((x, y))
-			xvalues.append(x)
-			yvalues.append(y)
-		self._list.append(('fpolygon', color, p))
+		self._list.append(('fpolygon', color, points[:]))
 		self._optimize(1)
-##		self._update_bbox(min(xvalues), min(yvalues), max(xvalues), max(yvalues))
 
 	def draw3dbox(self, cl, ct, cr, cb, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
-##		print '3DBOX orig', coordinates
-		coordinates = window._convert_coordinates(coordinates)
-##		print 'conv', coordinates
 		cl = window._convert_color(cl)
 		ct = window._convert_color(ct)
 		cr = window._convert_color(cr)
 		cb = window._convert_color(cb)
 		self._list.append(('3dbox', (cl, ct, cr, cb), coordinates))
 		self._optimize(1)
-		x, y, w, h = coordinates
-##		self._update_bbox(x, y, x+w, y+h)
 
 	def drawdiamond(self, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		coordinates = self._window._convert_coordinates(coordinates)
 		self._list.append(('diamond', coordinates))
 		self._optimize()
-		x, y, w, h = coordinates
-##		self._update_bbox(x, y, x+w, y+h)
 
 	def drawfdiamond(self, color, coordinates):
 		if self._rendered:
@@ -590,13 +683,10 @@ class _DisplayList:
 			x, w = x + w, -w
 		if h < 0:
 			y, h = y + h, -h
-		coordinates = window._convert_coordinates((x, y, w, h))
+		coordinates = (x, y, w, h)
 		color = window._convert_color(color)
 		self._list.append(('fdiamond', color, coordinates))
 		self._optimize(1)
-		x, y, w, h = coordinates
-##		self._update_bbox(x, y, x+w, y+h)
-
 
 	def draw3ddiamond(self, cl, ct, cr, cb, coordinates):
 		if self._rendered:
@@ -606,42 +696,35 @@ class _DisplayList:
 		ct = window._convert_color(ct)
 		cr = window._convert_color(cr)
 		cb = window._convert_color(cb)
-		coordinates = window._convert_coordinates(coordinates)
 		self._list.append(('3ddiamond', (cl, ct, cr, cb), coordinates))
 		self._optimize(1)
-		x, y, w, h = coordinates
-##		self._update_bbox(x, y, x+w, y+h)
 
 	def drawicon(self, coordinates, icon):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
-		x, y, w, h = window._convert_coordinates(coordinates)
-		# Keep it square, top it off, center it
-		size = min(w, h, ICONSIZE_PXL)
-		xextra = w-size
-		yextra = h-size
-		if xextra > 0:
-			x = x + xextra/2
-		if yextra > 0:
-			y = y + yextra/2
 		data = _get_icon(icon)
-		self._list.append(('icon', (x, y, size, size), data))
-		self._optimize(2)
-
+		if data:
+			self._list.append(('icon', coordinates, data))
+			self._optimize(2)
 		
 	def drawarrow(self, color, src, dst):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
 		color = self._window._convert_color(color)
+		self._list.append(('arrow', color, src, dst))
+		self._optimize(1)
+##		self._update_bbox(nsx, nsy, ndx, ndy)
+		
+	def _arrowdata(self, src, dst):
 		try:
 			nsx, nsy, ndx, ndy, points = window.arrowcache[(src,dst)]
 		except KeyError:
 			sx, sy = src
 			dx, dy = dst
-			nsx, nsy = window._convert_coordinates((sx, sy))
-			ndx, ndy = window._convert_coordinates((dx, dy))
+			nsx, nsy = self._convert_coordinates((sx, sy))
+			ndx, ndy = self._convert_coordinates((dx, dy))
 			if nsx == ndx and sx != dx:
 				if sx < dx:
 					nsx = nsx - 1
@@ -667,11 +750,9 @@ class _DisplayList:
 			points.append((_roundi(ndx + ARR_LENGTH*cos - ARR_HALFWIDTH*sin),
 				       _roundi(ndy + ARR_LENGTH*sin + ARR_HALFWIDTH*cos)))
 			window.arrowcache[(src,dst)] = nsx, nsy, ndx, ndy, points
-		self._list.append(('arrow', color, (nsx, nsy, ndx, ndy), points))
-		self._optimize(1)
-##		self._update_bbox(nsx, nsy, ndx, ndy)
-		
-	def _polyhandle(self, pointlist):
+		return nsx, nsy, ndx, ndy, points
+	
+	def _polyhandle(self, pointlist, conv=1, cliprgn=None):
 		"""Return polygon structure"""
 		xscrolloffset, yscrolloffset = self._window._scrolloffset()
 
@@ -683,17 +764,25 @@ class _DisplayList:
 			if y < miny: miny = y
 			if x > maxx: maxx = x
 			if y > maxy: maxy = y
+		if conv:
+			minx, miny = self._convert_coordinates((minx, miny))
+			maxx, maxy = self._convert_coordinates((maxx, maxy))
+		if not self._render_overlaprgn((minx, miny, maxx, maxy)):
+			return
 		# Create structure head
 		size = len(pointlist)*4 + 10
-		data = struct.pack("hhhhh", size, miny+yscrolloffset, minx+xscrolloffset, 
-				maxy+yscrolloffset, maxx+xscrolloffset)
+		data = struct.pack("hhhhh", size, miny, minx, maxy, maxx)
 ##		self._update_bbox(minx, miny, maxx, maxy)
-		for x, y in pointlist:
-			data = data + struct.pack("hh", y+yscrolloffset, x+xscrolloffset)
+		for pt in pointlist:
+			if conv:
+				x, y = self._convert_coordinates(pt)
+			else:
+				x, y = pt
+			data = data + struct.pack("hh", y, x)
 		return Res.Handle(data)
 
 	def get3dbordersize(self):
-		return self._window._pxl2rel((0,0,SIZE_3DBORDER,SIZE_3DBORDER))[2:4]
+		return self._pixel2units((0,0,SIZE_3DBORDER,SIZE_3DBORDER))[2:4]
 		
 	def usefont(self, fontobj):
 		if fontobj is None:
@@ -702,7 +791,8 @@ class _DisplayList:
 			return None
 		if fontobj != self._font:
 			self._font = fontobj
-			self._font._initparams(self._window._wid)
+			# XXXX Or should this be done on the onscreen window?
+			self._font._initparams(self._window._mac_getoswindowport())
 			self._list.append(('font', fontobj))
 			self.__font_size_cache = self.__baseline(), self.__fontheight(), self.__pointsize()
 		return self.__font_size_cache
@@ -715,17 +805,23 @@ class _DisplayList:
 
 	def __baseline(self):
 		baseline = self._font.baselinePXL()
-		return self._window._pxl2rel((0,0,0,baseline))[3]
+		return self._pixel2units((0,0,0,baseline))[3]
 
 	def __fontheight(self):
 		fontheight = self._font.fontheightPXL()
-		return self._window._pxl2rel((0,0,0,fontheight))[3]
+		return self._pixel2units((0,0,0,fontheight))[3]
 
 	def __pointsize(self):
 		return self._font.pointsize()
 		
+	def baselinePXL(self):
+		return self._font.baselinePXL()
+
 	def baseline(self):
 		return self.__font_size_cache[0]
+
+	def fontheightPXL(self):
+		return self._font.fontheightPXL()
 
 	def fontheight(self):
 		return self.__font_size_cache[1]
@@ -733,9 +829,13 @@ class _DisplayList:
 	def pointsize(self):
 		return self.__font_size_cache[2]
 
+	def strsizePXL(self, str):
+		return self._font.strsizePXL(str)
+
 	def strsize(self, str):
-		width, height = self._font.strsizePXL(str, wid=self._window._wid)
-		return self._window._pxl2rel((0,0,width,height))[2:4]
+		# XXXX Or on the _onscreen_wid??
+		width, height = self._font.strsizePXL(str, port=self._window._mac_getoswindowport())
+		return self._pixel2units((0,0,width,height))[2:4]
 
 	def setpos(self, x, y):
 		self._curpos = x, y
@@ -747,9 +847,11 @@ class _DisplayList:
 		w = self._window
 		list = self._list
 		old_fontinfo = None
-		if self._font._checkfont(w._wid):
-			old_fontinfo = mw_fonts._savefontinfo(w._wid)
-		self._font._setfont(w._wid)
+		# XXXX Or on the _onscreen_wid??
+		port = w._mac_getoswindowport()
+		if self._font._checkfont(port):
+			old_fontinfo = mw_fonts._savefontinfo(port)
+		self._font._setfont(port)
 		base = self.baseline()
 		height = self.fontheight()
 		strlist = string.splitfields(str, '\n')
@@ -759,19 +861,16 @@ class _DisplayList:
 		oldy = oldy - base
 		maxx = oldx
 		for str in strlist:
-			x0, y0 = w._convert_coordinates((x, y))
-			list.append(('text', x0, y0, str))
 			twidth = Qd.TextWidth(str, 0, len(str))
-			self._curpos = x + float(twidth) / w._rect[_WIDTH], y
-##			self._update_bbox(x0, y0, x0+twidth,
-##					  y0+int(height/self._window._vfactor))
+			if self.__units != UNIT_PXL:
+				twidth = float(twidth) / w._rect[_WIDTH]
+			list.append(('text', x, y, twidth, height, str))
+			self._curpos = x + twidth, y
 			x = self._xpos
 			y = y + height
 			if self._curpos[0] > maxx:
 				maxx = self._curpos[0]
 		newx, newy = self._curpos
-##		if old_fontinfo:
-##			mw_fonts._restorefontinfo(w._wid, old_fontinfo)
 		return oldx, oldy, maxx - oldx, newy - oldy + height - base
 		
 	# Draw a string centered in a box, breaking lines if necessary
@@ -806,15 +905,6 @@ class _DisplayList:
 			self.setpos(x, y)
 			self.writestr(str)
 
-##	def _update_bbox(self, minx, miny, maxx, maxy):
-##		assert type(minx) == type(maxx) == \
-##		       type(miny) == type(maxy) == type(1)
-##		if minx > maxx:
-##			minx, maxx = maxx, minx
-##		if miny > maxy:
-##			miny, maxy = maxy, miny
-##		self._clonebboxes.append((minx, miny, maxx, maxy))
-		
 	def _optimize(self, ignore = []):
 		if type(ignore) is IntType:
 			ignore = [ignore]
@@ -827,11 +917,6 @@ class _DisplayList:
 					z = tuple(z)
 				x.append(z)
 		x = tuple(x)
-##		try:
-##			i = self._optimdict[x]
-##		except KeyError:
-##			pass
-##		else:
 		if self._optimdict.has_key(x):
 			i = self._optimdict[x]
 			del self._list[i]
@@ -843,12 +928,52 @@ class _DisplayList:
 					self._optimdict[key] = val - 1
 		self._optimdict[x] = len(self._list) - 1
 
+
+	######################################
+	# Animation experimental methods
+	#
+
+	# Update cmd with name from diff display list
+	# we can get also update region from diff dl
+	def update(self, name, diffdl):
+		newcmd = diffdl.getcmd(name)
+		if newcmd and self.__cmddict.has_key(name):
+			ix = self.__cmddict[name]
+			self._list[ix] = newcmd
+
+	# Update cmd with name
+	def updatecmd(self, name, newcmd):
+		if self.__cmddict.has_key(name):
+			ix = self.__cmddict[name]
+			self._list[ix] = newcmd
+	
+	def getcmd(self, name):
+		if self.__cmddict.has_key(name):
+			ix = self.__cmddict[name]
+			return self._list[ix]
+		return None
+
+	def knowcmd(self, name):
+		self.__cmddict[name] = len(self._list)-1
+				
+
+	# Update background color
+	def updatebgcolor(self, color):
+		self._bgcolor = self._window._convert_color(color)
+
+	#
+	# End of animation experimental methods
+	##########################################
+
 class _Button:
-	def __init__(self, dispobj, coordinates, z=0, times=None):
-		self._coordinates = coordinates
+	def __init__(self, dispobj, shape, coordinates, z, times, sensitive):
 		self._dispobj = dispobj
+		self._shape = shape
+		self._coordinates = coordinates
 		self._z = z
 		self._times = times
+		self._sensitive = sensitive
+
 		buttons = dispobj._buttons
 		for i in range(len(buttons)):
 			if buttons[i]._z <= z:
@@ -856,62 +981,144 @@ class _Button:
 				break
 		else:
 			buttons.append(self)
-		self._hicolor = self._color = dispobj._fgcolor
-		self._width = self._hiwidth = dispobj._linewidth
-		if self._color == dispobj._bgcolor:
-			return
-		self._dispobj.drawbox(coordinates)
+##		self._hicolor = self._color = dispobj._fgcolor
+##		self._width = self._hiwidth = dispobj._linewidth
+##		if self._color != dispobj._bgcolor:
+##			self._dispobj.drawbox(coordinates)
 
+	# Destroy button
 	def close(self):
 		if self._dispobj is None:
 			return
 		self._dispobj._buttons.remove(self)
 		self._dispobj = None
 
+	# Returns true if it is closed
 	def is_closed(self):
 		return self._dispobj is None
 
+	def setsensitive(self, sensitive):
+		self._sensitive = sensitive
+
+	# Increment height
 	def hiwidth(self, width):
 		pass
 
+	# Set highlight color
 	def hicolor(self, color):
 		self._hicolor = color
 
+	# Highlight box
 	def highlight(self):
 		pass
 
+	# Unhighlight box
 	def unhighlight(self):
 		pass
 		
-	def _inside(self, x, y):
-		bx, by, bw, bh = self._coordinates
-		if bx <= x < bx+bw and by <= y < by+bh:
-			if self._times:
-				curtime = time.time() - self._dispobj.starttime
-				t0, t1 = self._times
-				if (not t0 or t0 <= curtime) and \
-				   (not t1 or curtime < t1):
-					return 1
-				return 0
-			return 1
-		return 0
+	def _do_highlight(self):
+		pass
 		
+	def _convert_point(self, point):
+		return self._dispobj._window._convert_coordinates(point)
+
 	def _get_button_region(self):
 		"""Return our region, in global coordinates, if we are active"""
-##		print 'getbuttonregion', self._dispobj._window._convert_coordinates(self._coordinates), self._times, time.time()-self._dispobj.starttime #DBG
-		if self._times:
-			curtime = time.time() - self._dispobj.starttime
-			# Workaround for the fact that timers seem to fire early, some times:
-			curtime = curtime + 0.05
-			t0, t1 = self._times
-			if curtime < t0 or (t1 and curtime >= t1):
-				return None
-		x0, y0, w, h = self._dispobj._window._convert_coordinates(self._coordinates)
-		x1, y1 = x0+w, y0+h
-		x0, y0 = Qd.LocalToGlobal((x0, y0))
-		x1, y1 = Qd.LocalToGlobal((x1, y1))
-		box = x0, y0, x1, y1
+		# XXXX Only rectangulars for now
+		if not self._sensitive:
+			return None
+		if not self._insidetemporal():
+			return None
 		rgn = Qd.NewRgn()
-		Qd.RectRgn(rgn, box)
+		if self._shape == A_SHAPETYPE_RECT:
+			x0, y0 = self._convert_point(self._coordinates[0:2])
+			x1, y1 = self._convert_point(self._coordinates[2:4])
+			box = x0, y0, x1, y1
+			Qd.RectRgn(rgn, box)
+		elif self._shape == A_SHAPETYPE_POLY:
+			Qd.OpenRgn()
+			xl, yl = self._convert_point(self._coordinates[-2:])
+			Qd.MoveTo(xl, yl)
+			for i in range(0, len(self._coordinates), 2):
+				x, y = self._convert_point(self._coordinates[i:i+2])
+				Qd.LineTo(x, y)
+			Qd.CloseRgn(rgn)
+		elif self._shape == A_SHAPETYPE_CIRCLE:
+			print 'Circle not supported yet'
+		elif self._shape == A_SHAPETYPE_ELIPSE:
+			# Note: rx/ry are width/height, not points
+			x, y, rx, ry = self._dispobj._window._convert_coordinates(self._coordinates)
+			Qd.OpenRgn()
+			Qd.FrameOval((x-rx, y-ry, x+rx, y+ry))
+			Qd.CloseRgn(rgn)
+		else:
+			print 'Invalid shape type', self._shape
 		return rgn
+
+	def _inside(self, x, y):
+		if not self._sensitive:
+			return 0
+		if not self._insidetemporal():
+			return 0		
+		if self._shape == A_SHAPETYPE_RECT:
+			return self._insideRect(x, y)
+		elif self._shape == A_SHAPETYPE_POLY:
+			return self._insidePoly(x, y)
+		elif self._shape == A_SHAPETYPE_CIRCLE:
+			return self._insideCircle(x, y)
+		elif self._shape == A_SHAPETYPE_ELIPSE:
+			return self._insideElipse(x, y)
+
+		print 'Internal error: invalid shape type'			
+		return 0
 		
+	# Returns true if the time is inside the temporal space
+	def _insidetemporal(self):
+		if self._times:
+			import time
+			curtime = time.time() - self._dispobj.starttime
+			t0, t1 = self._times
+			if (not t0 or t0 <= curtime) and \
+			   (not t1 or curtime < t1):
+				return 1
+			return 0
+		return 1
+	
+	# Returns true if the point is inside the box	
+	def _insideRect(self, x, y):
+		# for now
+		bx1, by1, bx2, by2 = self._coordinates
+		return CheckInsideArea.insideRect(x, y, bx1, by1, bx2, by2)
+
+	# Warning: this method is called by the window core management every time that you move the mouse
+	# in order to change to graphic cursor mouse when the cursor is inside the area. And for each
+	# area that you have defined in window.
+	# For now, a not very efficient algo is implemented, but it should be better to use a system
+	# call later if possible
+	# Returns true if the point is inside the polygon	
+	def _insidePoly(self, x, y):
+		return CheckInsideArea.insidePoly(x, y, self._coordinates)
+		
+
+	# Returns true if the point is inside the box	
+	def _insideCircle(self, x, y):
+		# for now
+		cx, cy, rd = self._coordinates
+		wx, wy, ww, wh = self._dispobj._window.getgeometry(UNIT_PXL)
+		return CheckInsideArea.insideCircle(x*ww, y*wh, cx*ww, cy*wh, rd*ww)
+
+	# Returns true if the point is inside the elipse	
+	def _insideElipse(self, x, y):
+		# for now
+		cx, cy, rdx, rdy = self._coordinates
+		wx, wy, ww, wh = self._dispobj._window.getgeometry(UNIT_PXL)
+		return CheckInsideArea.insideElipse(x*ww, y*wh, cx*ww, cy*wh, rdx*ww, rdy*wh)
+
+	def updatecoordinates(self, coords):
+		if self.is_closed(): return
+		# XXXX This is wrong. But it sort-of works if image and region are the
+		# same size, and if the user has specified the anchor in pixels, and if the
+		# anchor is a square.
+		self._coordinates = self._dispobj._window._pxl2rel(coords)
+		self._dispobj._window._buttonschanged()
+

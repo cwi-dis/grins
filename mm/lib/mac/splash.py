@@ -27,7 +27,7 @@ def splash(arg=0, version=None):
 	else:
 		if not _dialog:
 			d = Dlg.GetNewDialog(RESOURCE_ID, -1)
-			d.ShowWindow()
+			d.GetDialogWindow().ShowWindow()
 			d.DrawDialog()
 			_dialog = d
 		setitem(ITEM_MSG, MESSAGE[arg])

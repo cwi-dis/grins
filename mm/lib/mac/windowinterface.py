@@ -63,6 +63,9 @@ lopristarting = toplevel.lopristarting
 setidleproc = toplevel.setidleproc
 cancelidleproc = toplevel.cancelidleproc
 installaehandler = toplevel.installaehandler
+getcurtime = toplevel.getcurtime
+settimevirtual = toplevel.settimevirtual
+dumpwindows = toplevel.dumpwindows
 
 #
 # Make various other items from other modules available
@@ -96,6 +99,9 @@ _qtavailable = mw_toplevel._qtavailable
 textwindow = mw_textwindow.textwindow
 # htmlwindow = mw_textwindow.htmlwindow
 def htmlwindow(url):
+	# Workaround (hack) for Explorer bug, which doesn't recognize file:/disk/...
+	if url[:6] == 'file:/' and url[6] != '/':
+		url = 'file:///' + url[6:]
 	try:
 		import ic
 		ic_instance = ic.IC()
@@ -103,6 +109,11 @@ def htmlwindow(url):
 	except:
 		showmessage('Cannot start webbrowser.\nInternet configuration error?')
 	return None
+
+# open an external application in order to manage the media specified in url
+# verb is the action executed by the external application. may be print, ... (for now ignore)
+def shell_execute(url,verb='open'):
+	htmlwindow(url)
 
 from imgimagesize import GetImageSize
 from mw_toplevel import GetVideoSize

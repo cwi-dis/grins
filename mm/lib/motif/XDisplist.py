@@ -5,10 +5,11 @@ import string, math
 from types import ListType
 RegionType = type(Xlib.CreateRegion())
 from XTopLevel import toplevel
-from XConstants import TRUE, FALSE, error, ARR_HALFWIDTH, ARR_LENGTH, _WIDTH, UNIT_SCREEN
+from XConstants import TRUE, FALSE, error, ARR_HALFWIDTH, ARR_LENGTH, _WIDTH, UNIT_SCREEN, UNIT_PXL
 from XFont import findfont
-from XButton import _Button
+from XButton import _Button, _ButtonRect, _ButtonPoly, _ButtonCircle
 from splash import roundi
+from AnchorDefs import *
 
 # mapping from icon name to module
 _iconmap = {
@@ -18,13 +19,26 @@ _iconmap = {
 	'bandwidthbad': 'bandwidthbad',
 	'open': 'folderopen',
 	'closed': 'folderclosed',
+	'paropen': 'folderopen',
+	'parclosed': 'folderclosed',
+	'seqopen': 'folderopen',
+	'seqclosed': 'folderclosed',
+	'switchopen': 'folderopen',
+	'switchclosed': 'folderclosed',
+	'prioopen': 'folderopen',
+	'prioclosed': 'folderclosed',
+	'exclopen': 'folderopen',
+	'exclclosed': 'folderclosed',
 	'linksrc': 'emptyicon', # XXXX
 	'linkdst': 'emptyicon', # XXXX
 	'linksrcdst': 'emptyicon', # XXXX
+	'transin': 'intransition',
+	'transout': 'outtransition',
 	}
 
 class _DisplayList:
-	def __init__(self, window, bgcolor):
+	def __init__(self, window, bgcolor, units):
+		self.__units = units
 		self.starttime = 0
 		self._window = window
 		window._displists.append(self)
@@ -34,18 +48,21 @@ class _DisplayList:
 		self._bgcolor = bgcolor
 		self._linewidth = 1
 		self._gcattr = {'foreground': window._convert_color(self._fgcolor),
-				'background': window._convert_color(bgcolor),
 				'line_width': 1}
 		self._list = []
-		if window._transparent <= 0:
-			self._list.append(('clear',
-					self._window._convert_color(bgcolor)))
+		self._list.append(('clear',))
 		self._optimdict = {}
 		self._cloneof = None
 		self._clonestart = 0
 		self._rendered = FALSE
 		self._font = None
 		self._imagemask = None
+		self._coverarea = Xlib.CreateRegion()
+
+		# associate cmd names with list indices
+		# used by animation experimental methods
+		self.__cmddict = {}
+		self.__butdict = {}
 
 	def close(self):
 		win = self._window
@@ -64,7 +81,6 @@ class _DisplayList:
 			r = win._region
 			if win._transparent == -1 and win._parent is not None and \
 			   win._topwindow is not win:
-				win._parent._mkclip()
 				win._parent._do_expose(r)
 			else:
 				win._do_expose(r)
@@ -73,11 +89,12 @@ class _DisplayList:
 				win._gc.SetRegion(win._region)
 				win._pixmap.CopyArea(win._form, win._gc,
 						     x, y, w, h, x, y)
-			if win._transparent == 0:
-				w = win._parent
+			w = win._parent
+			if win._transparent == 0 and w is not None:
+				region = win._getmyarea()
 				while w is not None and w is not toplevel:
 					w._buttonregion.SubtractRegion(
-						win._clip)
+						region)
 					w = w._parent
 			win._topwindow._setmotionhandler()
 		del self._cloneof
@@ -87,16 +104,19 @@ class _DisplayList:
 		del self._font
 		del self._imagemask
 		del self._buttonregion
+		del self._coverarea
 
 	def is_closed(self):
 		return self._window is None
 
 	def clone(self):
 		w = self._window
-		new = _DisplayList(w, self._bgcolor)
+		new = _DisplayList(w, self._bgcolor, self.__units)
 		# copy all instance variables
 		new._list = self._list[:]
 		new._font = self._font
+		new._coverarea = Xlib.CreateRegion()
+		new._coverarea.UnionRegion(self._coverarea)
 		if self._rendered:
 			new._cloneof = self
 			new._clonestart = len(self._list)
@@ -111,11 +131,11 @@ class _DisplayList:
 		window = self._window
 		if window._transparent == -1 and window._active_displist is None:
 			window._active_displist = self
-			window._parent._mkclip()
 			window._active_displist = None
 		for b in self._buttons:
 			b._highlighted = 0
-		region = window._clip
+		# figure out which part we must write
+		region = window._getmyarea()
 		# draw our bit
 		self._render(region)
 		# now draw transparent subwindows
@@ -137,15 +157,15 @@ class _DisplayList:
 			window.showwindow(window._showing)
 		if window._pixmap is not None:
 			x, y, width, height = window._rect
-			window._gc.SetRegion(window._clip)
+			window._gc.SetRegion(region)
 			window._pixmap.CopyArea(window._form, window._gc,
 						x, y, width, height, x, y)
 		window._buttonregion = bregion = Xlib.CreateRegion()
 		bregion.UnionRegion(self._buttonregion)
-		bregion.IntersectRegion(window._clip)
+		bregion.IntersectRegion(region)
 		w = window._parent
 		while w is not None and w is not toplevel:
-			w._buttonregion.SubtractRegion(window._clip)
+			w._buttonregion.SubtractRegion(region)
 			w._buttonregion.UnionRegion(bregion)
 			w = w._parent
 		window._topwindow._setmotionhandler()
@@ -163,14 +183,24 @@ class _DisplayList:
 			w._active_displist = None
 			w._do_expose(region)
 		gc = w._gc
+		gcattr = self._gcattr.copy()
+		bgcolor = self._bgcolor
+		if bgcolor is None and w._transparent != 1:
+			bgcolor = w._bgcolor
+		if bgcolor is None:
+			bgcolor = 255,255,255
+		gcattr['background'] = w._convert_color(bgcolor)
 		gc.ChangeGC(self._gcattr)
 		gc.SetRegion(region)
 		if clonestart == 0 and self._imagemask:
 			# restrict to drawing outside the image
 			if type(self._imagemask) is RegionType:
+				imagemask = Xlib.CreateRegion()
+				imagemask.UnionRegion(self._imagemask)
+				imagemask.OffsetRegion(w._rect[0], w._rect[1])
 				r = Xlib.CreateRegion()
 				r.UnionRegion(region)
-				r.SubtractRegion(self._imagemask)
+				r.SubtractRegion(imagemask)
 				gc.SetRegion(r)
 			else:
 				width, height = w._topwindow._rect[2:]
@@ -181,7 +211,8 @@ class _DisplayList:
 				g.foreground = 1
 				g.FillRectangle(0, 0, width, height)
 				g.function = X.GXcopyInverted
-				apply(g.PutImage, self._imagemask)
+				mask, src_x, src_y, dest_x, dest_y, width, height = self._imagemask
+				g.PutImage(mask, src_x, src_y, dest_x+w._rect[0], dest_y+w._rect[1], width, height)
 				gc.SetClipMask(r)
 		for i in range(clonestart, len(self._list)):
 			self._do_render(self._list[i], region)
@@ -192,83 +223,104 @@ class _DisplayList:
 
 	def _do_render(self, entry, region):
 		cmd = entry[0]
-		w = self._window
-		gc = w._gc
+		window = self._window
+		gc = window._gc
 		if cmd == 'clear':
-			gc.foreground = entry[1]
-			apply(gc.FillRectangle, w._rect)
+			color = self._bgcolor
+			if color is None:
+				color = window._bgcolor
+			if color is not None:
+				gc.foreground = window._convert_color(color)
+				apply(gc.FillRectangle, window._rect)
 		elif cmd == 'image':
 			clip = entry[2]
 			r = region
 			if clip is not None:
 				r = Xlib.CreateRegion()
+				clip = window._convert_coordinates(clip)
 				apply(r.UnionRectWithRegion, clip)
 				r.IntersectRegion(region)
 				
 			mask = entry[1]
+			src_x, src_y, dest_x, dest_y, width, height = entry[4:]
+			dest_x = dest_x + window._rect[0]
+			dest_y = dest_y + window._rect[1]
 			if mask:
 				# mask is clip mask for image
-				width, height = w._topwindow._rect[2:]
-				p = w._form.CreatePixmap(width, height, 1)
+				width, height = window._topwindow._rect[2:]
+				p = window._form.CreatePixmap(width, height, 1)
 				g = p.CreateGC({'foreground': 0})
 				g.FillRectangle(0, 0, width, height)
 				g.SetRegion(r)
 				g.foreground = 1
 				g.FillRectangle(0, 0, width, height)
-				apply(g.PutImage, (mask,) + entry[4:])
+				g.PutImage(mask, src_x, src_y, dest_x, dest_y, width, height)
 				gc.SetClipMask(p)
 			else:
 				gc.SetRegion(r)
-			apply(gc.PutImage, entry[3:])
+			gc.PutImage(entry[3], src_x, src_y, dest_x, dest_y, width, height)
 			if mask or clip:
 				gc.SetRegion(region)
 		elif cmd == 'line':
-			gc.foreground = entry[1]
+			gc.foreground = window._convert_color(entry[1])
 			gc.line_width = entry[2]
-			points = entry[3]
-			x0, y0 = points[0]
-			for x, y in points[1:]:
+			units = entry[3]
+			points = entry[4]
+			x0, y0 = window._convert_coordinates(points[0], units=units)
+			for p in points[1:]:
+				x, y = window._convert_coordinates(p, units=units)
 				gc.DrawLine(x0, y0, x, y)
 				x0, y0 = x, y
 		elif cmd == '3dhline':
-			color1, color2, x0, x1, y = entry[1:]
-			gc.foreground = color1
+			color1, color2, x0, x1, y, units = entry[1:]
+			x0, y = window._convert_coordinates((x0, y), units=units)
+			x1, dummy = window._convert_coordinates((x1, y), units=units)
+			gc.foreground = window._convert_color(color1)
 			gc.DrawLine(x0, y, x1, y)
-			gc.foreground = color2
+			gc.foreground = window._convert_color(color2)
 			gc.DrawLine(x0, y+1, x1, y+1)
 		elif cmd == 'box':
-			gc.foreground = entry[1]
+			gc.foreground = window._convert_color(entry[1])
 			gc.line_width = entry[2]
-			x,y,w,h = entry[3]
-			clip = entry[4]
-			if clip:
+			units = entry[5]
+			x,y,w,h = window._convert_coordinates(entry[3], units=units)
+			if entry[4]:
+				clip = window._convert_coordinates(entry[4], units=units)
 				r = Xlib.CreateRegion()
 				apply(r.UnionRectWithRegion, clip)
 				r.IntersectRegion(region)
 				gc.SetRegion(r)
 			gc.DrawRectangle(x,y,w-1,h-1)
-			if clip:
+			if entry[4]:
 				gc.SetRegion(region)
 		elif cmd == 'fbox':
-			gc.foreground = entry[1]
-			apply(gc.FillRectangle, entry[2])
+			gc.foreground = window._convert_color(entry[1])
+			box = window._convert_coordinates(entry[2], units=entry[3])
+			apply(gc.FillRectangle, box)
 		elif cmd == 'marker':
-			gc.foreground = entry[1]
-			x, y = entry[2]
+			gc.foreground =  window._convert_color(entry[1])
+			x, y = window._convert_coordinates(entry[2], units=entry[3])
 			radius = 5 # XXXX
 			gc.FillArc(x-radius, y-radius, 2*radius, 2*radius,
 				   0, 360*64)
 		elif cmd == 'text':
-			gc.foreground = entry[1]
+			gc.foreground = window._convert_color(entry[1])
 			gc.SetFont(entry[2])
-			apply(gc.DrawString, entry[3:])
+			x, y = entry[3]
+			gc.DrawString(x, y, entry[4])
 		elif cmd == 'fpolygon':
-			gc.foreground = entry[1]
-			gc.FillPolygon(entry[2], X.Convex,
-				       X.CoordModeOrigin)
+			gc.foreground = window._convert_color(entry[1])
+			p = []
+			for point in entry[2]:
+				p.append(window._convert_coordinates(point, units = entry[3]))
+			gc.FillPolygon(p, X.Convex, X.CoordModeOrigin)
 		elif cmd == '3dbox':
 			cl, ct, cr, cb = entry[1]
-			l, t, w, h = entry[2]
+			cl = window._convert_color(cl)
+			ct = window._convert_color(ct)
+			cr = window._convert_color(cr)
+			cb = window._convert_color(cb)
+			l, t, w, h = window._convert_coordinates(entry[2], units=entry[3])
 			r, b = l + w, t + h
 			# l, r, t, b are the corners
 			l3 = l + 3
@@ -292,9 +344,9 @@ class _DisplayList:
 			gc.FillPolygon([(l3, b3), (r3, b3), (r, b), (l, b)],
 				       X.Convex, X.CoordModeOrigin)
 		elif cmd == 'diamond':
-			gc.foreground = entry[1]
+			gc.foreground = window._convert_color(entry[1])
 			gc.line_width = entry[2]
-			x, y, w, h = entry[3]
+			x, y, w, h = window._convert_coordinates(entry[3], units = entry[4])
 			gc.DrawLines([(x, y + h/2),
 				      (x + w/2, y),
 				      (x + w, y + h/2),
@@ -302,8 +354,8 @@ class _DisplayList:
 				      (x, y + h/2)],
 				     X.CoordModeOrigin)
 		elif cmd == 'fdiamond':
-			gc.foreground = entry[1]
-			x, y, w, h = entry[2]
+			gc.foreground = window._convert_color(entry[1])
+			x, y, w, h = window._convert_coordinates(entry[2], units = entry[3])
 			gc.FillPolygon([(x, y + h/2),
 					(x + w/2, y),
 					(x + w, y + h/2),
@@ -312,7 +364,11 @@ class _DisplayList:
 				       X.Convex, X.CoordModeOrigin)
 		elif cmd == '3ddiamond':
 			cl, ct, cr, cb = entry[1]
-			l, t, w, h = entry[2]
+			cl = window._convert_color(cl)
+			ct = window._convert_color(ct)
+			cr = window._convert_color(cr)
+			cb = window._convert_color(cb)
+			l, t, w, h = window._convert_coordinates(entry[2], units = entry[3])
 			r = l + w
 			b = t + h
 			x = l + w/2
@@ -335,11 +391,23 @@ class _DisplayList:
 			gc.FillPolygon([(l, y), (ll, y), (x, bb), (x, b)],
 				       X.Convex, X.CoordModeOrigin)
 		elif cmd == 'arrow':
-			gc.foreground = entry[1]
+			gc.foreground = window._convert_color(entry[1])
 			gc.line_width = entry[2]
-			apply(gc.DrawLine, entry[3])
-			gc.FillPolygon(entry[4], X.Convex,
-				       X.CoordModeOrigin)
+			nsx, nsy, ndx, ndy, points = self._convert_arrow(entry[3], entry[4], entry[5])
+			gc.DrawLine(nsx, nsy, ndx, ndy)
+			gc.FillPolygon(points, X.Convex, X.CoordModeOrigin)
+
+	def _getcoverarea(self):
+		# return Region that we guarantee to overwrite on render
+		w = self._window
+		if self._bgcolor is not None or w._bgcolor is not None:
+			r = Xlib.CreateRegion()
+			apply(r.UnionRectWithRegion, w._rect)
+			return r
+		r = Xlib.CreateRegion()
+		r.UnionRegion(self._coverarea)
+		r.OffsetRegion(w._rect[0], w._rect[1])
+		return r
 
 	def fgcolor(self, color):
 		if self._rendered:
@@ -351,79 +419,110 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		self._linewidth = width
 
-	def newbutton(self, coordinates, z = 0, times = None):
-		if self._rendered:
-			raise error, 'displaylist already rendered'
-		return _Button(self, coordinates, z, times)
+#	def newbutton(self, coordinates, z = 0, times = None, sensitive = 1):
+#		if self._rendered:
+#			raise error, 'displaylist already rendered'
+#		return _Button(self, coordinates, z, times, sensitive)
 
-	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
-				    center = 1, coordinates = None,
-				    clip = None):
+	# set the media sensitivity
+	# value is percentage value (range 0-100); opaque=0, transparent=100
+	def setAlphaSensitivity(self, value):
+		self._alphaSensitivity = value
+
+	# Define a new button. Coordinates are in window relatives
+	def newbutton(self, coordinates, z = 0, times = None, sensitive = 1):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		
+		# test of shape type
+		if coordinates[0] == A_SHAPETYPE_RECT:
+			return _ButtonRect(self, coordinates, z, times, sensitive)
+		elif coordinates[0] == A_SHAPETYPE_POLY:
+			return _ButtonPoly(self, coordinates, z, times, sensitive)
+		elif coordinates[0] == A_SHAPETYPE_CIRCLE:
+			return _ButtonCircle(self, coordinates, z, times, sensitive)
+		elif coordinates[0] == A_SHAPETYPE_ELIPSE:
+			return _ButtonElipse(self, coordinates, z, times, sensitive)
+		else:
+			print 'Internal error: invalid shape type'			
+			return _ButtonRect(self, [A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0], z, times, sensitive)
+
+	def display_image_from_file(self, file, crop = (0,0,0,0), fit = 'meet',
+				    center = 1, coordinates = None,
+				    clip = None, units = None):
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		if units is None:
+			units = self.__units
 		w = self._window
-		image, mask, src_x, src_y, dest_x, dest_y, width, height, clip = \
-		       w._prepare_image(file, crop, scale, center, coordinates, clip)
+		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
+		       w._prepare_image(file, crop, fit, center, coordinates, units)
 		if mask:
 			self._imagemask = mask, src_x, src_y, dest_x, dest_y, width, height
 		else:
 			r = Xlib.CreateRegion()
 			r.UnionRectWithRegion(dest_x, dest_y, width, height)
 			self._imagemask = r
+			self._coverarea.UnionRegion(r)
 		self._list.append(('image', mask, clip, image, src_x, src_y,
 				   dest_x, dest_y, width, height))
 		self._optimize((2,))
 		x, y, w, h = w._rect
-		return float(dest_x - x) / w, float(dest_y - y) / h, \
-		       float(width) / w, float(height) / h
+		if units == UNIT_PXL:
+			return dest_x, dest_y, width, height
+		else:
+			return float(dest_x) / w, float(dest_y) / h, \
+			       float(width) / w, float(height) / h
 
-	def drawline(self, color, points, units = UNIT_SCREEN):
+	def drawline(self, color, points, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if units is None:
+			units = self.__units
 		w = self._window
-		p = []
-		for point in points:
-			p.append(w._convert_coordinates(point, units = units))
-		self._list.append(('line', w._convert_color(color),
-				   self._linewidth, p))
+		self._list.append(('line', color, self._linewidth, units,
+				   points[:]))
 		self._optimize((1,))
 
-	def draw3dhline(self, color1, color2, x0, x1, y, units = UNIT_SCREEN):
+	def draw3dhline(self, color1, color2, x0, x1, y, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		w = self._window
-		x0, y = w._convert_coordinates((x0, y), units=units)
-		x1, dummy = w._convert_coordinates((x1, y), units=units)
-		self._list.append(('3dhline', w._convert_color(color1), w._convert_color(color2),
-				   x0, x1, y))
+		if units is None:
+			units = self.__units
+		self._list.append(('3dhline', color1, color2, x0, x1, y, units))
 		self._optimize((1,))
 
-	def drawbox(self, coordinates, clip = None, units = UNIT_SCREEN):
+	def drawbox(self, coordinates, clip = None, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		w = self._window
-		if clip is not None:
-			clip = w._convert_coordinates(clip, units = units)
-		self._list.append(('box', w._convert_color(self._fgcolor),
-				   self._linewidth,
-				   w._convert_coordinates(coordinates, units = units),
-				   clip))
+		if self._fgcolor is None:
+			raise error, 'no fgcolor'
+		if units is None:
+			units = self.__units
+		self._list.append(('box', self._fgcolor, self._linewidth,
+				   coordinates, clip, units))
 		self._optimize((1,))
 
-	def drawfbox(self, color, coordinates, units = UNIT_SCREEN):
+	def drawfbox(self, color, coordinates, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if units is None:
+			units = self.__units
 		w = self._window
-		self._list.append(('fbox', w._convert_color(color),
-				   w._convert_coordinates(coordinates, units = units)))
+		self._list.append(('fbox', color, coordinates, units))
+		box = w._convert_coordinates(coordinates, units = units)
+		self._coverarea.UnionRectWithRegion(box[0]-w._rect[0],
+						    box[1]-w._rect[1],
+						    box[2], box[3])
 		self._optimize((1,))
 
-	def drawmarker(self, color, coordinates):
+	def drawmarker(self, color, coordinates, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if units is None:
+			units = self.__units
 		w = self._window
-		self._list.append(('marker', w._convert_color(color),
-				   w._convert_coordinates(coordinates)))
+		self._list.append(('marker', color, coordinates, units))
 
 	def get3dbordersize(self):
 		# This is the same "3" as in 3dbox bordersize
@@ -445,33 +544,52 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		return self.usefont(findfont(fontname, 10))
 
-	def baseline(self):
+	def baseline(self, units = None):
+		if units is None:
+			units = self.__units
 		baseline = self._font.baselinePXL()
+		if units == UNIT_PXL:
+			return baseline
 		return self._window._pxl2rel((0,0,0,baseline))[3]
 
-	def fontheight(self):
+	def fontheight(self, units = None):
+		if units is None:
+			units = self.__units
 		fontheight = self._font.fontheightPXL()
+		if units == UNIT_PXL:
+			return fontheight
 		return self._window._pxl2rel((0,0,0,fontheight))[3]
 
 	def pointsize(self):
 		return self._font.pointsize()
 
-	def strsize(self, str):
+	def strsize(self, str, units = None):
+		if units is None:
+			units = self.__units
 		width, height = self._font.strsizePXL(str)
+		if units == UNIT_PXL:
+			return width, height
 		return self._window._pxl2rel((0,0,width,height))[2:4]
 
-	def setpos(self, x, y):
+	def setpos(self, x, y, units = None):
+		if units is None:
+			units = self.__units
+		x, y = self._window._convert_coordinates((x, y), units=units)
 		self._curpos = x, y
 		self._xpos = x
 
-	def writestr(self, str):
+	def writestr(self, str, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if self._fgcolor is None:
+			raise error, 'no fgcolor'
+		if units is None:
+			units = self.__units
 		w = self._window
 		list = self._list
 		f = self._font._font
-		base = self.baseline()
-		height = self.fontheight()
+		base = self.baseline(UNIT_PXL)
+		height = self.fontheight(UNIT_PXL)
 		strlist = string.splitfields(str, '\n')
 		oldx, oldy = x, y = self._curpos
 		if len(strlist) > 1 and oldx > self._xpos:
@@ -479,109 +597,127 @@ class _DisplayList:
 		oldy = oldy - base
 		maxx = oldx
 		for str in strlist:
-			x0, y0 = w._convert_coordinates((x, y))
-			list.append(('text', self._window._convert_color(self._fgcolor), self._font._font, x0, y0, str))
+			list.append(('text', self._fgcolor, self._font._font, (x, y), str))
 			self._optimize((1,))
-			self._curpos = x + float(f.TextWidth(str)) / w._rect[_WIDTH], y
+			self._curpos = x + f.TextWidth(str), y
 			x = self._xpos
 			y = y + height
 			if self._curpos[0] > maxx:
 				maxx = self._curpos[0]
 		newx, newy = self._curpos
-		return oldx, oldy, maxx - oldx, newy - oldy + height - base
+		if units == UNIT_PXL:
+			return oldx, oldy, maxx - oldx, newy - oldy + height - base
+		else:
+			return self._window._pxl2rel((oldx, oldy, maxx - oldx, newy - oldy + height - base))
 
 	# Draw a string centered in a box, breaking lines if necessary
-	def centerstring(self, left, top, right, bottom, str):
-		fontheight = self.fontheight()
-		baseline = self.baseline()
+	def centerstring(self, left, top, right, bottom, str, units = None):
+		if units is None:
+			units = self.__units
+		fontheight = self.fontheight(UNIT_PXL)
+		baseline = self.baseline(UNIT_PXL)
 		width = right - left
 		height = bottom - top
+		left, top, width, height = self._window._convert_coordinates((left, top, width, height), units=units)
 		curlines = [str]
 		if height >= 2*fontheight:
 			import StringStuff
-			curlines = StringStuff.calclines([str], self.strsize, width)[0]
+			curlines = StringStuff.calclines([str], self._font.strsizePXL, width)[0]
 		nlines = len(curlines)
 		needed = nlines * fontheight
 		if nlines > 1 and needed > height:
 			nlines = max(1, int(height / fontheight))
 			curlines = curlines[:nlines]
 			curlines[-1] = curlines[-1] + '...'
-		x0 = (left + right) * 0.5	# x center of box
-		y0 = (top + bottom) * 0.5	# y center of box
+		x0 = left + width / 2	# x center of box
+		y0 = top + height / 2	# y center of box
 		y = y0 - nlines * fontheight * 0.5
 		for i in range(nlines):
 			str = string.strip(curlines[i])
 			# Get font parameters:
-			w = self.strsize(str)[0]	# Width of string
+			w = self._font.strsizePXL(str)[0] # Width of string
 			while str and w > width:
 				str = str[:-1]
-				w = self.strsize(str)[0]
+				w = self._font.strsizePXL(str)[0]
 			x = x0 - 0.5*w
 			y = y + baseline
-			self.setpos(x, y)
-			self.writestr(str)
+			self.setpos(x, y, UNIT_PXL)
+			self.writestr(str, UNIT_PXL)
 
-	def drawfpolygon(self, color, points):
+	def drawfpolygon(self, color, points, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if units is None:
+			units = self.__units
 		w = self._window
-		color = w._convert_color(color)
+		self._list.append(('fpolygon', color, points, units))
+		x0, y0 = w._rect[:2]
 		p = []
 		for point in points:
-			p.append(w._convert_coordinates(point))
-		self._list.append(('fpolygon', color, p))
+			x, y = w._convert_coordinates(point, units = units)
+			p.append((x-x0, y-y0))
+		r = Xlib.PolygonRegion(p, w._gc.fill_rule)
+		self._coverarea.UnionRegion(r)
 		self._optimize((1,))
 
-	def draw3dbox(self, cl, ct, cr, cb, coordinates):
+	def draw3dbox(self, cl, ct, cr, cb, coordinates, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if units is None:
+			units = self.__units
 		window = self._window
-		coordinates = window._convert_coordinates(coordinates)
-		cl = window._convert_color(cl)
-		ct = window._convert_color(ct)
-		cr = window._convert_color(cr)
-		cb = window._convert_color(cb)
-		self._list.append(('3dbox', (cl, ct, cr, cb), coordinates))
+		self._list.append(('3dbox', (cl, ct, cr, cb), coordinates, units))
 		self._optimize((1,))
 
-	def drawdiamond(self, coordinates):
+	def drawdiamond(self, coordinates, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		coordinates = self._window._convert_coordinates(coordinates)
+		if self._fgcolor is None:
+			raise error, 'no fgcolor'
+		if units is None:
+			units = self.__units
 		self._list.append(('diamond',
-				   self._window._convert_color(self._fgcolor),
-				   self._linewidth, coordinates))
+				   self._fgcolor,
+				   self._linewidth, coordinates, units))
 		self._optimize((1,))
 
-	def drawfdiamond(self, color, coordinates):
+	def drawfdiamond(self, color, coordinates, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if units is None:
+			units = self.__units
 		window = self._window
 		x, y, w, h = coordinates
 		if w < 0:
 			x, w = x + w, -w
 		if h < 0:
 			y, h = y + h, -h
-		coordinates = window._convert_coordinates((x, y, w, h))
-		color = window._convert_color(color)
-		self._list.append(('fdiamond', color, coordinates))
+		coordinates = window._convert_coordinates((x, y, w, h), units = units)
+		self._list.append(('fdiamond', color, (x, y, w, h), units))
+		x, y, w, h = coordinates
+		x0, y0 = w._rect[:2]
+		r = Xlib.PolygonRegion([(x-x0, y + h/2 - y0),
+					(x + w/2 - x0, y - y0),
+					(x + w - x0, y + h/2 - y0),
+					(x + w/2 - x0, y + h - y0),
+					(x - x0, y + h/2 - y0)],
+				       w._gc.fill_rule)
+		self._coverarea.UnionRegion(r)
 		self._optimize((1,))
 
-	def draw3ddiamond(self, cl, ct, cr, cb, coordinates):
+	def draw3ddiamond(self, cl, ct, cr, cb, coordinates, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		window = self._window
-		cl = window._convert_color(cl)
-		ct = window._convert_color(ct)
-		cr = window._convert_color(cr)
-		cb = window._convert_color(cb)
-		coordinates = window._convert_coordinates(coordinates)
-		self._list.append(('3ddiamond', (cl, ct, cr, cb), coordinates))
+		if units is None:
+			units = self.__units
+		self._list.append(('3ddiamond', (cl, ct, cr, cb), coordinates, units))
 		self._optimize((1,))
 
-	def drawicon(self, coordinates, icon):
+	def drawicon(self, coordinates, icon, units = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if units is None:
+			units = self.__units
 		# Icon names needed:
 		# '' is special: don't draw any icon (needed for removing icons in optimize)
 		# 'closed' used for closed structure nodes
@@ -592,28 +728,28 @@ class _DisplayList:
 		w = self._window
 		module = _iconmap.get(icon) or _iconmap['']
 		reader = __import__(module)
-		image, mask, src_x, src_y, dest_x, dest_y, width, height, clip = \
-		       w._prepare_image(reader, (0,0,0,0), -2, 1, coordinates, None)
+		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
+		       w._prepare_image(reader, (0,0,0,0), -2, 1, coordinates, units)
 		if mask:
 			self._imagemask = mask, src_x, src_y, dest_x, dest_y, width, height
 		else:
 			r = Xlib.CreateRegion()
 			r.UnionRectWithRegion(dest_x, dest_y, width, height)
 			self._imagemask = r
+			self._coverarea.UnionRegion(r)
 		self._list.append(('image', mask, None, image, src_x, src_y,
 				   dest_x, dest_y, width, height))
 		self._optimize((2,))
 		
-	def drawarrow(self, color, src, dst):
-		if self._rendered:
-			raise error, 'displaylist already rendered'
+	def _convert_arrow(self, src, dst, units):
+		if units is None:
+			units = self.__units
 		window = self._window
-		color = self._window._convert_color(color)
 		if not window._arrowcache.has_key((src,dst)):
 			sx, sy = src
 			dx, dy = dst
-			nsx, nsy = window._convert_coordinates((sx, sy))
-			ndx, ndy = window._convert_coordinates((dx, dy))
+			nsx, nsy = window._convert_coordinates((sx, sy), units = units)
+			ndx, ndy = window._convert_coordinates((dx, dy), units = units)
 			if nsx == ndx and sx != dx:
 				if sx < dx:
 					nsx = nsx - 1
@@ -639,9 +775,15 @@ class _DisplayList:
 			points.append((roundi(ndx + ARR_LENGTH*cos - ARR_HALFWIDTH*sin),
 				       roundi(ndy + ARR_LENGTH*sin + ARR_HALFWIDTH*cos)))
 			window._arrowcache[(src,dst)] = nsx, nsy, ndx, ndy, points
-		nsx, nsy, ndx, ndy, points = window._arrowcache[(src,dst)]
-		self._list.append(('arrow', color, self._linewidth,
-				   (nsx, nsy, ndx, ndy), points))
+		return window._arrowcache[(src,dst)]
+
+	def drawarrow(self, color, src, dst, units = None):
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		if units is None:
+			units = self.__units
+		window = self._window
+		self._list.append(('arrow', color, self._linewidth, src, dst, units))
 		self._optimize((1,))
 
 	def _optimize(self, ignore = ()):
@@ -667,3 +809,39 @@ class _DisplayList:
 				if val > i:
 					self._optimdict[key] = val - 1
 		self._optimdict[x] = len(self._list) - 1
+
+
+	######################################
+	# Animation experimental methods
+	#
+
+	# Update cmd with name from diff display list
+	# we can get also update region from diff dl
+	def update(self, name, diffdl):
+		newcmd = diffdl.getcmd(name)
+		if newcmd and self.__cmddict.has_key(name):
+			ix = self.__cmddict[name]
+			self._list[ix] = newcmd
+
+	# Update cmd with name
+	def updatecmd(self, name, newcmd):
+		if self.__cmddict.has_key(name):
+			ix = self.__cmddict[name]
+			self._list[ix] = newcmd
+	
+	def getcmd(self, name):
+		if self.__cmddict.has_key(name):
+			ix = self.__cmddict[name]
+			return self._list[ix]
+		return None
+
+	def knowcmd(self, name):
+		self.__cmddict[name] = len(self._list)-1
+				
+	# Update background color
+	def updatebgcolor(self, color):
+		self._bgcolor = color
+
+	#
+	# End of animation experimental methods
+	##########################################

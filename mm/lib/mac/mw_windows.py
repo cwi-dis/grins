@@ -1,6 +1,9 @@
 import Win
+import Windows
 import Qd
 import QuickDraw
+import Qdoffs
+import QDOffscreen
 import Dlg
 import Ctl
 import Controls
@@ -31,9 +34,11 @@ from mw_globals import RESET_CANVAS, DOUBLE_HEIGHT, DOUBLE_WIDTH
 from mw_globals import FALSE, TRUE
 from mw_globals import _X, _Y, _WIDTH, _HEIGHT
 from mw_globals import ARR_LENGTH, ARR_SLANT, ARR_HALFWIDTH
+from mw_globals import BM_ONSCREEN, BM_DRAWING, BM_PASSIVE, BM_TEMP
 import mw_displaylist
 import mw_menucmd
 import mw_widgets
+import mw_transitions
 
 #
 # Scrollbar constants
@@ -42,6 +47,11 @@ SCROLLBARSIZE=16		# Full size, overlapping 1 pixel with window border
 # Parts of the scrollbar we track:
 TRACKED_PARTS=(Controls.inUpButton, Controls.inDownButton,
 		Controls.inPageUp, Controls.inPageDown)
+
+
+##PIXELFORMAT=imgformat.macrgb16
+PIXELFORMAT=imgformat.macrgb
+
 		
 #
 # The dragpoints of a box (lurven, in dutch:-)
@@ -166,7 +176,7 @@ class _WindowGroup:
 			
 	def close_window_command(self):
 		# If this is the last window promote to close document
-		if self._parent and self._parent._is_last_in_group(self._wid):
+		if self._parent and self._parent._is_last_in_group(self._onscreen_wid):
 			if self._parent._call_optional_command(MenuTemplate.CLOSE):
 				return 1
 		# First see whether there's a WindowExit handler
@@ -182,21 +192,21 @@ class _WindowGroup:
 class _CommonWindow:
 	"""Code common to toplevel window and subwindow"""
 		
-	def __init__(self, parent, wid, z=0):
-		self._z = z
-		for i in range(len(parent._subwindows)):
-			if self._z >= parent._subwindows[i]._z:
-				parent._subwindows.insert(i, self)
-				break
-		else:
-			parent._subwindows.append(self)
+	def __init__(self, parent, wid, z=0, bgcolor=None):
 		self._parent = parent
-		self._wid = wid
+		self._onscreen_wid = wid
+		self._transition = None
+		self._frozen = None
 		self._subwindows = []
 		self._displists = []
-		self._bgcolor = parent._bgcolor
+		if bgcolor is None:
+			self._bgcolor = parent._bgcolor
+		else:
+			self._bgcolor = self._convert_color(bgcolor)
 		self._fgcolor = parent._fgcolor
 		self._clip = None
+		self._clipincludingchildren = None
+		self._redrawguarantee = None
 		self._button_region = None
 		self._active_displist = None
 		self._eventhandlers = {}
@@ -209,18 +219,26 @@ class _CommonWindow:
 		self._outline_color = None
 		self._rb_dialog = None
 		self._wtd_cursor = ''
+		self._z = z
+		self._updatezorder()
+##		print 'Window opened', hex(id(self))
 		
 	def close(self):
 		"""Close window and all subwindows"""
+##		print 'Closing window', hex(id(self)), self.qdrect()
 		if self._parent is None:
 			return		# already closed
+		if not self._istoplevel:
+			self._parent._clipchanged()
 		if _in_create_box is self:
 			self.cancel_create_box()
 		self._set_movie_active(0)
-		Qd.SetPort(self._wid)
-		self._parent._subwindows.remove(self)
-		Win.InvalRect(self.qdrect())
-		self._parent._close_wid(self._wid)
+		if self._transition:
+			self.endtransition()
+		if self in self._parent._subwindows:
+			self._parent._subwindows.remove(self)
+		self._onscreen_wid.InvalWindowRect(self.qdrect())
+		self._parent._close_wid(self._onscreen_wid)
 		self._parent = None
 
 		for win in self._subwindows[:]:
@@ -230,7 +248,10 @@ class _CommonWindow:
 
 		if self._clip:
 			Qd.DisposeRgn(self._clip)
+		if self._clipincludingchildren:
+			Qd.DisposeRgn(self._clipincludingchildren)
 		del self._clip
+		del self._clipincludingchildren
 		
 		if self._button_region:
 			Qd.DisposeRgn(self._button_region)
@@ -242,7 +263,7 @@ class _CommonWindow:
 		del self._eventhandlers
 		del self._redrawfunc
 		del self._clickfunc
-		del self._wid
+		del self._onscreen_wid
 		del self._accelerators
 		del self._menu
 		del self._popupmenu
@@ -251,27 +272,40 @@ class _CommonWindow:
 		if isactive == self._active_movie:
 			return
 		self._active_movie = isactive
-		mw_globals.toplevel._set_movie_active(isactive)
+		mw_globals.toplevel._set_movie_active(isactive, self)
 			
 	def _close_wid(self, wid):
 		"""Called by children to close wid. Only implements real close
 		at TopLevel"""
 		pass
 
-	def _clipchanged(self):
-		"""Called when the clipping region is possibly changed"""
-		if not self._parent or not self._wid:
+	# _clipchanged is different for subwindows and toplevel windows
+	
+	def _zapclip(self):
+		if not self._parent or not self._onscreen_wid:
 			return
 		if self._clip:
 			Qd.DisposeRgn(self._clip)
 		self._clip = None
+		if self._clipincludingchildren:
+			Qd.DisposeRgn(self._clipincludingchildren)
+		self._clipincludingchildren = None
 		# And inform our children...
 		for ch in self._subwindows:
-			ch._clipchanged()
+			ch._zapclip()
+			
+	def _mac_getclip(self, includechildren=0):
+		"""Get the clip region for ourselves, or for ourselves plus our children"""
+		if not self._clip:
+			self._mkclip()
+		if includechildren:
+			return self._clipincludingchildren
+		else:
+			return self._clip
 			
 	def _buttonschanged(self):
 		"""Buttons have changed, zap the mouse region cache. This escalates upwards"""
-		if not self._parent or not self._wid:
+		if not self._parent or not self._onscreen_wid or not self._button_region:
 			return
 		if self._button_region:
 			Qd.DisposeRgn(self._button_region)
@@ -279,7 +313,7 @@ class _CommonWindow:
 		# And inform our parent...
 		self._parent._buttonschanged()
 		
-	def _zapregions(self):
+	def _zapregions(self, recursive=1):
 		"""Invalidate button regions because of mousemove. Escalates downwards"""
 		if self._button_region:
 			Qd.DisposeRgn(self._button_region)
@@ -295,21 +329,14 @@ class _CommonWindow:
 		return not self.is_closed()
 
 	def newwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, z=0,
-		      type_channel = None, units = None):
+		      type_channel = None, units = None, bgcolor=None):
 		"""Create a new subwindow"""
-		rv = _SubWindow(self, self._wid, (x, y, w, h), 0, pixmap,
-				transparent, z, units)
+		rv = _SubWindow(self, self._onscreen_wid, (x, y, w, h), 0, pixmap,
+				transparent, z, units, bgcolor)
 		self._clipchanged()
 		return rv
 		
 	newcmwindow = newwindow
-##	def newcmwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, z=0,
-##			type_channel = None, units = None):
-##		"""Create a new subwindow"""
-##		rv = _SubWindow(self, self._wid, (x, y, w, h), 1, pixmap,
-##				transparent, z, units)
-##		self._clipchanged()
-##		return rv
 
 	def fgcolor(self, color):
 		"""Set foregroundcolor to 3-tuple 0..255"""
@@ -317,6 +344,18 @@ class _CommonWindow:
 
 	def bgcolor(self, color):
 		"""Set backgroundcolor to 3-tuple 0..255"""
+## XXXX Think about this a bit more
+##		if color is None:
+##			# Inherit
+##			if self._parent._transparent:
+##				color = 'transparent'
+##			else:
+##				color = self._parent._bgcolor  # XXXX Should do this lazy
+##		if color == 'transparent':
+##			self._transparent = 1
+##			color = (0, 0, 0)
+##		else:
+##			self._transparent = 0
 		self._bgcolor = self._convert_color(color)
 		
 	def showwindow(self, color=(255, 0, 0)):
@@ -331,10 +370,14 @@ class _CommonWindow:
 			self._invalrectandborder()
 			
 	def _invalrectandborder(self):
-		Qd.SetPort(self._wid)
+##		Qd.SetPort(self._onscreen_wid)
 		rect = self.qdrect()
 		rect = Qd.InsetRect(rect, -2, -2)
-		Win.InvalRect(rect)
+		self.wid.InvalWindowRect(rect)
+
+	# draw an XOR line from pt0 to pt1 (in pixels)
+	def drawxorline(self, pt0, pt1):
+		pass
 
 	def setcursor(self, cursor):
 		if cursor == 'watch':
@@ -342,19 +385,21 @@ class _CommonWindow:
 		self._wtd_cursor = cursor
 		## Warn parent? self._parent.setcursor(cursor)
 
-	def newdisplaylist(self, *bgcolor):
+	def newdisplaylist(self, bgcolor=None, units=UNIT_SCREEN):
 		"""Return new, empty display list"""
-		if bgcolor != ():
-			bgcolor = self._convert_color(bgcolor[0])
+		if bgcolor is None:
+			if not self._transparent:
+				bgcolor = self._bgcolor
 		else:
-			bgcolor = self._bgcolor
-		return mw_displaylist._DisplayList(self, bgcolor)
+			bgcolor = self._convert_color(bgcolor)
+		return mw_displaylist._DisplayList(self, bgcolor, units)
 
 	def setredrawfunc(self, func):
 		if func is None or callable(func):
 			self._redrawfunc = func
 		else:
 			raise error, 'invalid function'
+		self._mac_setredrawguarantee(None)
 
 	def setclickfunc(self, func):
 		"""Intercept low-level mouse clicks (mac-specific)"""
@@ -394,13 +439,12 @@ class _CommonWindow:
 		_size_cache[file] = width, height
 		return width, height
 
-	def _prepare_image(self, file, crop, scale, center, coordinates):
+	def _prepare_image(self, file, crop, fit, center, coordinates, units):
 		# width, height: width and height of window
 		# xsize, ysize: width and height of unscaled (original) image
 		# w, h: width and height of scaled (final) image
 		# depth: depth of window (and image) in bytes
-		oscale = scale
-		format = imgformat.macrgb16
+		format = PIXELFORMAT
 		depth = format.descr['size'] / 8
 		reader = None
 		if _size_cache.has_key(file):
@@ -424,19 +468,22 @@ class _CommonWindow:
 		if coordinates is None:
 			x, y, width, height = self._convert_coordinates((0,0,1,1))
 		else:
-			x, y, width, height = self._convert_coordinates(coordinates)
+			x, y, width, height = self._convert_coordinates(coordinates, units=units)
 		
-		if scale == 0:
+		if fit == 'meet':
 			scale = min(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
-		elif scale == -1:
+		elif fit == 'slice':
 			scale = max(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
-		elif scale == -2:
+		elif fit == 'icon':
 			scale = min(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
 			if scale > 1:
 				scale = 1
+		else:
+			# value not reconized. set scale to 1
+			scale = 1
 				    
 		top = int(top * scale + .5)
 		bottom = int(bottom * scale + .5)
@@ -467,7 +514,7 @@ class _CommonWindow:
 					try:
 						image = imageop.scale(image, 1,
 							xsize, ysize, w, h)
-					except imageop.error:
+					except (imageop.error, MemoryError):
 						raise error, 'Error scaling image'
 				bitmap = ''
 				for i in range(h):
@@ -493,13 +540,14 @@ class _CommonWindow:
 			#
 			# Put it in the cache, possibly emptying other things
 			#
-##			self._put_image_in_cache(key, image, w, h, mask)
+			self._put_image_in_cache(key, image, w, h, mask)
 		if center:
 			x, y = x + (width - (w - left - right)) / 2, \
 			       y + (height - (h - top - bottom)) / 2
 		xim = mac_image.mkpixmap(w, h, format, image)
-		return (xim, image), mask, left, top, \
-		       x, y, w - left - right, h - top - bottom
+		rvx0, rvy0, rvw, rvh = self._convert_qdcoords(
+				(x, y, x + w - left - right, y + h - top - bottom), ignorescroll=1, units=units)
+		return (xim, image), mask, left, top, rvx0, rvy0, rvw, rvh
 
 	def _put_image_in_cache(self, key, image, w, h, mask):
 		if len(image) > IMAGE_CACHE_SIZE/2:
@@ -507,8 +555,10 @@ class _CommonWindow:
 		size, xkey = self._image_cache_size()
 		while len(image) + size > IMAGE_CACHE_SIZE:
 			# Too big, delete biggest
+##			print 'Delete imgcache', xkey
 			del _image_cache[xkey]
 			size, xkey = self._image_cache_size()
+##		print 'Store imgcache', key, len(image)
 		_image_cache[key] = (image, w, h, mask)
 		
 	def _image_cache_size(self):
@@ -593,11 +643,16 @@ class _CommonWindow:
 		them to upper layers, i.e. 1 divided by the amount of the window visible"""
 		return 1, 1
 		
-	def _convert_qdcoords(self, coordinates, units = UNIT_SCREEN):
+	def _convert_qdcoords(self, coordinates, units = UNIT_SCREEN, ignorescroll=0):
 		"""Convert QD coordinates to fractional xy or xywh coordinates"""
 		x0, y0 = coordinates[:2]
 		xscrolloff, yscrolloff = self._scrolloffset()
-		x, y = x0-xscrolloff, y0-yscrolloff
+		if ignorescroll:
+			x = x0
+			y = y0
+		else:
+			x = x0-xscrolloff
+			y = y0-yscrolloff
 		if len(coordinates) == 2:
 			coordinates = x, y
 		else:
@@ -635,6 +690,7 @@ class _CommonWindow:
 			r, g, b = color
 			return r*0x101, g*0x101, b*0x101
 		else:
+			print '_convert_color: funny color', color
 			return color
 
 	def qdrect(self):
@@ -664,12 +720,15 @@ class _CommonWindow:
 		"""Return the region that contains all buttons, in global coordinates"""
 		if not self._button_region:
 			self._button_region = Qd.NewRgn()
+			# Get all the children regions
 			for ch in self._subwindows:
 				rgn = ch._get_button_region()
 				Qd.UnionRgn(self._button_region, rgn, self._button_region)
 			if self._active_displist:
+				# Get our own button region, and clip it to our clip region
 				rgn = self._active_displist._get_button_region()
-				# XXXX Should we AND with clip?
+				clip = self._mac_getclip()
+				Qd.SectRgn(rgn, clip, rgn)
 				Qd.UnionRgn(self._button_region, rgn, self._button_region)
 				Qd.DisposeRgn(rgn)
 		return self._button_region
@@ -678,7 +737,7 @@ class _CommonWindow:
 		# Overriden for toplevel window
 		return 0
 				
-	def _contentclick(self, down, where, event, shifted, double):
+	def _contentclick(self, down, where, event, modifiers, double):
 		"""A click in our content-region. Note: this method is extended
 		for top-level windows (to do global-to-local coordinate
 		transforms)"""
@@ -686,7 +745,7 @@ class _CommonWindow:
 		# If we are rubberbanding handle that first.
 		#
 		if (self is _in_create_box) and down:
-				if self._rb_mousedown(where, shifted):
+				if self._rb_mousedown(where, modifiers):
 					return
 				# We are in create_box mode, but the mouse was way off.
 				# If we are in modal create we beep, in modeless create we
@@ -702,7 +761,7 @@ class _CommonWindow:
 			if Qd.PtInRect(where, ch.qdrect()):
 				try:
 					ch._contentclick(down, where, event,
-							 shifted, double)
+							 modifiers, double)
 				except Continue:
 					pass
 				else:
@@ -715,13 +774,14 @@ class _CommonWindow:
 		#
 		# Next, check for popup menu, if we have one
 		#
-		if down and shifted:
+		if down and modifiers=='contextual':
 			if self._menu or self._popupmenu:
+				self._doclickcallback(Mouse0Press, where)
 				self._contentpopupmenu(where, event)
 				return
 		else:
 			if down and (self._menu or self._popupmenu):
-				# Not shifted, but we have a popup menu. Ask toplevel
+				# Not rightclick, but we have a popup menu. Ask toplevel
 				# to re-send the event in a short while
 				mw_globals.toplevel.setmousetimer(self._contentpopupmenu, (where, event))
 		
@@ -736,17 +796,20 @@ class _CommonWindow:
 		# Convert to our type of event and call the
 		# appropriate handler.
 		#
-		if not shifted:
-			if down:
-				evttype = Mouse0Press
-			else:
-				evttype = Mouse0Release
-		else:
+		if modifiers == 'contextual':
 			if down:
 				evttype = Mouse2Press
 			else:
 				evttype = Mouse2Release
-
+		else:
+			if down:
+				evttype = Mouse0Press
+			else:
+				evttype = Mouse0Release
+				
+		self._doclickcallback(evttype, where, modifiers)
+		
+	def _doclickcallback(self, evttype, where, modifiers=None):
 		try:
 			func, arg = self._eventhandlers[evttype]
 		except KeyError:
@@ -754,19 +817,21 @@ class _CommonWindow:
 			return # Not wanted
 			
 		x, y = self._convert_qdcoords(where)
-##		print 'self, rect, where, x/y', self, self._rect, where, x, y
 		
 		buttons = []
 		if self._active_displist:
 			for b in self._active_displist._buttons:
 				if b._inside(x, y):
 					buttons.append(b)
-##			print 'active buttons', len(self._active_displist._buttons)
-##		print 'buttons', buttons
 		try:
-			func(arg, self, evttype, (x, y, buttons))
+			func(arg, self, evttype, (x, y, buttons, modifiers))
 		except Continue:
 			pass
+		else:
+			return
+		# XXX Not correct. We should check our redrawguarantee, I think...
+		if self._transparent:
+			raise Continue
 		
 	def _contentpopupmenu(self, where, event):
 		mw_globals.toplevel.clearmousetimer()
@@ -777,7 +842,7 @@ class _CommonWindow:
 		else:
 			return
 		# Convert coordinates back to global
-		Qd.SetPort(self._wid)
+		Qd.SetPort(self._onscreen_wid)
 		y, x = Qd.LocalToGlobal(where)
 		menu.popup(x+2, y+2, event, window=self)
 		
@@ -815,7 +880,39 @@ class _CommonWindow:
 			func(arg, self, KeyboardInput, char)
 			return 1
 		
+	def _do_move(self, deltax, deltay):
+		# Move a window and it's subwindows. Note that this function does
+		# not schedule redraws or invalidate clipping regions.
+		x, y, w, h = self._rect
+		self._rect = x+deltax, y+deltay, w, h
+		if not self._istoplevel:
+			self._sizes = self._parent._pxl2rel(self._rect)
+		for w in self._subwindows:
+			w._do_move(deltax, deltay)
+		
+	def _do_resize(self):
+		"""The (sub)window has changed size through external means. Recompute
+		everything for ourselves and our children"""
+##		print 'resizing', self
+		self._clipchanged()
+		if not self._istoplevel:
+			self._sizes = self._parent._pxl2rel(self._rect)
+##			print 'sizes', self._sizes
+		for d in self._displists[:]:
+			d.close()
+		self._do_resize0()
+		
+	def _do_resize0(self):
+		"""Common code for resize and double width/height"""
+
+		for w in self._subwindows:
+			w._do_resize1()
+		# call resize callbacks
+		self._do_resize2()
+
 	def _do_resize2(self):
+		if self._transition:
+			self._transition.move_resize()
 		for w in self._subwindows:
 			w._do_resize2()
 		try:
@@ -823,21 +920,28 @@ class _CommonWindow:
 		except KeyError:
 			pass
 		else:
+##			print 'ResizeWindow for', self
 			func(arg, self, ResizeWindow, None)
+		
+	def _redraw_now(self, rgn):
+		"""Do a redraw of the specified region now. Escalated to our toplevel
+		window, because we really need this region (so there may be bits from
+		siblings or ancestors there)"""
+		if self._parent is None:
+			return
+		self._parent._redraw_now(rgn)
 		
 	def _redraw(self, rgn=None):
 		"""Set clipping and color, redraw, redraw children"""
 		if self._parent is None:
 			return
-		if not self._clip:
-			self._mkclip()
 			
+		olddrawenviron = self._mac_setwin()
+		
 		# First do opaque subwindows, topmost first
 		still_to_do = []
 		for child in self._subwindows:
-			if child._transparent == 0 or \
-			   (child._transparent == -1 and
-			    child._active_displist):
+			if not child._transparent:
 				child._redraw(rgn)
 			else:
 				still_to_do.append(child)
@@ -845,40 +949,184 @@ class _CommonWindow:
 		# Next do ourselves
 		saveclip = Qd.NewRgn()
 		Qd.GetClip(saveclip)
-		Qd.SetClip(self._clip)
-		if not self._outline_color is None:
-			Qd.RGBForeColor(self._outline_color)
-			rect = self.qdrect()
-			Qd.FrameRect(rect)
-		Qd.RGBBackColor(self._bgcolor)
-		Qd.RGBForeColor(self._fgcolor)
-		if self._redrawfunc:
-			self._redrawfunc()
-		else:
-			self._do_redraw()
-		Qd.SetClip(saveclip)
-		Qd.DisposeRgn(saveclip)
+		clip = self._mac_getclip()
+		if not Qd.EmptyRgn(clip):
+			Qd.SetClip(clip)
+			if not self._outline_color is None:
+				Qd.RGBForeColor(self._outline_color)
+				rect = self.qdrect()
+				Qd.FrameRect(rect)
+			Qd.RGBBackColor(self._bgcolor)
+			Qd.RGBForeColor(self._fgcolor)
+			if self._redrawfunc:
+				if not self._transparent:
+					# XXX This causes flashing in movie windows and such.
+					Qd.EraseRect(self.qdrect())
+				self._redrawfunc(rgn)
+			else:
+				self._do_redraw(rgn)
 		
 		# Then do transparent children bottom-to-top
 		still_to_do.reverse()
 		for child in still_to_do:
 					child._redraw(rgn)
+		# Then do the transition on our full clip (including children)
+		# XXX should only be done in topmost window
+		clipincludingchildren = self._mac_getclip(includechildren=1)
+		Qd.SetClip(clipincludingchildren)
+		if self._transition and self._transition.ismaster(self):
+			self._transition.changed()
+		Qd.SetClip(saveclip)
+		Qd.DisposeRgn(saveclip)
 					
+		self._mac_unsetwin(olddrawenviron)
+		
 		# Last, do the rubber box, if rubberboxing
 		if self is _in_create_box:
 			self._rb_redraw()
 					
-	def _do_redraw(self):
+	def _do_redraw(self, rgn=None):
 		"""Do actual redraw"""
 		if self._active_displist:
-			self._active_displist._render()
-		elif self._transparent == 0 or self._istoplevel:
+			self._active_displist._render(rgn=rgn)
+		elif self._frozen and not self._transition:
+##			self._mac_setwin(mw_globals.BM_ONSCREEN)
+			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
+			Qd.RGBForeColor((0, 0, 0))
+##			dst = self._mac_getoswindowpixmap(mw_globals.BM_ONSCREEN)
+			dst = self._mac_getoswindowpixmap(mw_globals.BM_DRAWING)
+			src = self._mac_getoswindowpixmap(mw_globals.BM_PASSIVE)
+			rect = self.qdrect()
+			Qd.CopyBits(src, dst, rect, rect, QuickDraw.srcCopy, None)
+			self._mac_setwin() # Don't think this is needed...
+		elif not self._transparent or self._istoplevel:
 			Qd.EraseRect(self.qdrect())
 			
-	def _macsetwin(self):
-		"""Start drawing (by upper layer) in this window"""
-		Qd.SetPort(self._wid)
+	def _mac_getdrawingbitmapindex(self):
+		"""Return either BM_DRAWING or BM_ONSCREEN depending on whether we're in a transition"""
+		if self._transition:
+			return BM_DRAWING
+		else:
+			return BM_ONSCREEN
+			
+	def _mac_setwin(self, which=None):
+		"""Start drawing (by upper layer) in this window. This window decides whether
+		to activate the onscreen or offscreen window and then recursively calls the
+		parent to actually set the window."""
+		if not self._parent:
+			return
+		if which == None:
+			which = self._mac_getdrawingbitmapindex()
+		return self._parent._mac_setwin(which)
+			
+	def _mac_unsetwin(self, arg):
+		"""Revert a previous _mac_setwin. The argument is the return value of _mac_setwin,
+		which can be either a WindowPtr or a GrafPort, GDevice tuple."""
+		if type(arg) == type(()):
+			apply(Qdoffs.SetGWorld, arg)
+		else:
+			Qd.SetPort(arg)
 		
+	def _mac_invalwin(self):
+		"""Schedule a full redraw for the area occupied by this window. This may cause
+		siblings and parents and such to redraw too."""
+		if self._onscreen_wid:
+			self._onscreen_wid.InvalWindowRect(self.qdrect())
+		
+	def _mac_getoswindow(self, which=None):
+		"""Return the WindowPtr or GrafPort of the current drawing window."""
+		# XXXX I think this should be obsoleted by _mac_getoswindowport
+		if which == None:
+			which = self._mac_getdrawingbitmapindex()
+		return self._parent._mac_getoswindow(which)
+		
+	def _mac_getoswindowport(self, which=None):
+		"""Return the GrafPort for the current drawing window."""
+		if which == None:
+			which = self._mac_getdrawingbitmapindex()
+		return self._parent._mac_getoswindowport(which)
+			
+	def _mac_getoswindowpixmap(self, which=None):
+		if which == None:
+			which = self._mac_getdrawingbitmapindex()
+		return self._parent._mac_getoswindowpixmap(which)
+					
+	def _mkclip(self):
+		if not self._onscreen_wid or not self._parent:
+			return
+		if self._clip or self._clipincludingchildren:
+			raise 'Clip already valid!'
+		# create region for whole window
+		self._clipincludingchildren = Qd.NewRgn()
+		Qd.RectRgn(self._clipincludingchildren, self.qdrect())
+##		print '_mkclip', self, self.qdrect()
+##		self._clipvisible(self._clipincludingchildren)
+		self._clipsubtractsiblings()
+		# create region for the part of the window that _we_ (as opposed
+		# to our children) have to redraw.
+		self._clip = Qd.NewRgn()
+		Qd.CopyRgn(self._clipincludingchildren, self._clip)
+		#
+		# subtract all subwindows, insofar they aren't transparent
+		# at the moment
+		#
+		for w in self._subwindows:
+			r = w._getredrawguarantee()
+			if r:
+				Qd.DiffRgn(self._clip, r, self._clip)
+				Qd.DisposeRgn(r)
+	
+	def _clipsubtractsiblings(self):
+		pass	# Only implemented for subwindows
+
+	def _getredrawguarantee(self):
+		"""Return the region that we will paint on (i.e. what our parent does not
+		need to paint on)"""
+		if not self._onscreen_wid or not self._parent:
+			return
+		# If we're transparent we give no guarantees whatsoever
+		r = Qd.NewRgn()
+		# If we're not transparent, or transparent-when-empty and non-empty
+		# we redraw everything
+		if not self._transparent:
+##			print '_getredrawguarantee', self, self.qdrect()
+			Qd.RectRgn(r, self.qdrect())
+			return r
+		didsome = 0
+		if self._active_displist:
+			r2 = self._active_displist._getredrawguarantee()
+			if r2:
+				Qd.UnionRgn(r, r2, r)
+				Qd.DisposeRgn(r2)
+				didsome = 1
+		elif self._redrawguarantee != None:
+##			print 'Pickup redraw guarantee', self._redrawguarantee, 'out of', self.qdrect() #DBG
+			r2 = Qd.NewRgn()
+			Qd.RectRgn(r2, self._redrawguarantee)
+			Qd.UnionRgn(r, r2, r)
+			Qd.DisposeRgn(r2)
+			didsome = 1
+		# The difficult case: we're not active, but our children may be.
+		for w in self._subwindows:
+			r2 = w._getredrawguarantee()
+			if r2:
+				Qd.UnionRgn(r, r2, r)
+				Qd.DisposeRgn(r2)
+				didsome = 1
+		if not didsome:
+			Qd.DisposeRgn(r)
+			return
+		r2 = Qd.NewRgn()
+		Qd.RectRgn(r2, self.qdrect())
+		Qd.SectRgn(r, r2, r)
+		Qd.DisposeRgn(r2)
+		return r
+		
+	def _mac_setredrawguarantee(self, box):
+##		print 'set redrawguarantee', self, box #DBG
+		self._redrawguarantee = box
+		self._clipchanged()
+					
 	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN, modeless=0):
 		global _in_create_box
 		if _in_create_box:
@@ -901,6 +1149,7 @@ class _CommonWindow:
 		sw.reverse()
 		for win in sw:
 			b = win._sizes
+			b = self._pxl2rel(self._convert_coordinates(box, units = win._units))
 			if b != (0, 0, 1, 1):
 				d.drawbox(b)
 		d.render()
@@ -911,8 +1160,7 @@ class _CommonWindow:
 		else:
 			self._rb_box = None
 		self._rb_dragpoint = None
-		Qd.SetPort(self._wid)
-		Win.InvalRect(self.qdrect())
+		self._onscreen_wid.InvalWindowRect(self.qdrect())
 		self._rb_callback = callback
 		self._rb_units = units
 
@@ -929,7 +1177,7 @@ class _CommonWindow:
 				callback = (self._rb_done, ()),
 				cancelCallback = (self.cancel_create_box, ()))
 				
-			mw_globals.toplevel.grabwids([self._rb_dialog._dialog, self._wid])
+			mw_globals.toplevel.grabwids([self._rb_dialog._dialog, self._onscreen_wid])
 			while _in_create_box is self:
 				mw_globals.toplevel._eventloop(100)
 			mw_globals.toplevel.grab(None)
@@ -976,15 +1224,14 @@ class _CommonWindow:
 	def _rb_redraw(self):
 		if not self._rb_box:
 			return
-		if not self._clip:
-			self.mkclip()
-		Qd.SetClip(self._clip)
-		if self._wid == Win.FrontWindow():
+		clipincludingchildren = self._mac_getclip(includechildren=1)
+		Qd.SetClip(clipincludingchildren)
+		if self._onscreen_wid == Win.FrontWindow():
 			Qd.RGBForeColor((0xffff, 0, 0))
 		else:
 			Qd.RGBForeColor((0xc000, 0, 0))
 		if not self._rb_dragpoint is None:
-			port = self._wid.GetWindowPort()
+			port = self._onscreen_wid.GetWindowPort()
 			oldmode = port.pnMode
 			Qd.PenMode(QuickDraw.patXor)
 		self._rb_doredraw()
@@ -1037,10 +1284,9 @@ class _CommonWindow:
 		#
 		# Otherwise first erase old box, then draw the new one.
 		#
-		if not self._clip:
-			self.mkclip()
-		Qd.SetClip(self._clip)
-		port = self._wid.GetWindowPort()
+		clipincludingchildren = self._mac_getclip(includechildren=1)
+		Qd.SetClip(clipincludingchildren)
+		port = self._onscreen_wid.GetWindowPort()
 		oldmode = port.pnMode
 		Qd.RGBForeColor((0xffff, 0, 0))
 		Qd.PenMode(QuickDraw.patXor)
@@ -1108,12 +1354,11 @@ class _CommonWindow:
 		if y > y1: y = y1
 		return x, y
 
-	def _rb_mousedown(self, where, shifted): # XXXXSCROLL
+	def _rb_mousedown(self, where, modifiers): # XXXXSCROLL
 		# called on mouse press
 		# XXXX I'm not sure that both the render and the invalrect are needed...
 		self._rb_display.render()
-		Qd.SetPort(self._wid)
-		Win.InvalRect(self.qdrect())
+		self._onscreen_wid.InvalWindowRect(self.qdrect())
 		x, y = where
 		xscrolloff, yscrolloff = self._scrolloffset()
 		x, y = x - xscrolloff, y - yscrolloff
@@ -1133,34 +1378,235 @@ class _CommonWindow:
 			self._rb_box = (x, y, x, y)
 			dragpoint = LURF_BOTRIGHT
 		self._rb_dragpoint = dragpoint
-#### Not needed: the render() above has scheduled a redraw anyway
-##		if not self._clip:
-##			self.mkclip()
-##		Qd.SetClip(self._clip)
-##		port = self._wid.GetWindowPort()
-##		oldmode = port.pnMode
-##		Qd.RGBForeColor((0xffff, 0, 0))
-##		Qd.PenMode(QuickDraw.patXor)
-##		self._do_redraw()
-##		Qd.PenMode(oldmode)
 		mw_globals.toplevel.setmousetracker(self._rb_mousemove)
 		return 1
 
 	def _rb_mousemove(self, event):
 		"""Called on mouse moved with button down and final mouseup"""
 		what, message, when, where, modifiers = event
-		Qd.SetPort(self._wid)
+		Qd.SetPort(self._onscreen_wid)
 		where = Qd.GlobalToLocal(where)
 		if what == Events.mouseUp:
 			self._rb_movebox(where, 1)
 			self._rb_dragpoint = None
 			mw_globals.toplevel.setmousetracker(None)
-			Win.InvalRect(self.qdrect())
+			self._onscreen_wid.InvalWindowRect(self.qdrect())
 			if not self._rb_dialog:
 				# Modeless create_box: do the callback
 				self._rb_done()
 		else:
 			self._rb_movebox(where, 0)
+
+	# Experimental animation interface
+	def updatecoordinates(self, coordinates, units=UNIT_SCREEN, fit=None, mediacoords=None):
+		# first convert any coordinates to pixel
+		coordinates = self._parent._convert_coordinates(coordinates,units=units)
+##		print 'window.updatecoordinates',coordinates, units
+		
+		x, y = coordinates[:2]
+
+		# move or/and resize window
+		if len(coordinates)==2:
+			w, h = 0, 0
+		elif len(coordinates)==4:
+			w, h = coordinates[2:]
+		else:
+			raise AssertionError
+		
+		if units == self._units and (x, y, w, h) == self._rect:
+			return
+			
+		Qd.SetPort(self._onscreen_wid)
+		self._onscreen_wid.InvalWindowRect(self.qdrect())
+		
+		old_x, old_y, old_w, old_h = self._rect
+		if units == self._units and w == old_w and h == old_h:
+			self._clipchanged()
+			self._do_move(x-old_x, y-old_y)
+		else:
+##			print 'OLD RECT', self._rect, self.qdrect()
+			self._rect = x, y, w, h
+			self._units = units
+			self._do_resize()
+##			print 'NEW RECT', self._rect, self.qdrect()
+		self._onscreen_wid.InvalWindowRect(self.qdrect())
+
+	def updatezindex(self, z):
+		self._z = z
+		self._updatezorder(redraw=1)
+##		print 'window.updatezindex',z
+
+	def updatebgcolor(self, color):
+		self._bgcolor = self._convert_color(color)
+		self._transparent = 0 # XXXX Correct?
+		for dl in self._displists:
+			dl.updatebgcolor(color)
+##		print 'window.updatebgcolor',color, self
+		self._onscreen_wid.InvalWindowRect(self.qdrect())
+
+	# Experimental transition interface
+	def begintransition(self, isouttransition, runit, dict, cb):
+		if not self._transition_setup_before(isouttransition):
+			if cb:
+				apply(apply, cb)
+			return
+		self._transition = mw_transitions.TransitionEngine(self, isouttransition, runit, dict, cb)
+		self._transition_setup_after()
+		
+	def jointransition(self, window, cb):
+		# Join the transition already created on "window".
+		if not window._transition:
+			print 'Joining without a transition', self, window, window._transition
+			return
+		isouttransition = window._transition.isouttransition()
+		if not self._transition_setup_before(isouttransition):
+			return
+		ismaster = self._windowlevel() < window._windowlevel()
+		self._transition = window._transition
+		self._transition.join(self, ismaster, cb)
+		self._transition_setup_after()
+
+	def endtransition(self):
+		if not self._transition:
+			return
+		if not self._parent:
+			print 'endtransition() called for a window that is not visible anymore!'
+			return
+##		has_tmp = self._transition.need_tmp_wid()
+		has_tmp = 1
+		self._transition.endtransition()
+		self._transition = None
+		if not self._parent:
+			print 'endtransition() called for a window that is not visible anymore!'
+			return
+		self._mac_dispose_gworld(BM_DRAWING)
+		self._mac_dispose_gworld(BM_PASSIVE)
+		if has_tmp:
+			self._mac_dispose_gworld(BM_TEMP)
+##		self._mac_invalwin()
+		# Tell upper layers, if they are interested
+		if self._eventhandlers.has_key(OSWindowChanged):
+			func, arg = self._eventhandlers[OSWindowChanged]
+			func(arg, self, OSWindowChanged, (0, 0, 0))
+		
+	def changed(self):
+		"""Called if upper layers have modified the drawing surface"""
+		if self._transition:
+			self._transition.changed()
+		if self._eventhandlers.has_key(WindowContentChanged):
+			func, arg = self._eventhandlers[WindowContentChanged]
+			func(arg, self, WindowContentChanged, mw_globals.toplevel.getcurtime())
+		
+	def settransitionvalue(self, value):
+		if self._transition:
+			self._transition.settransitionvalue(value)
+		else:
+			print 'settransitionvalue without a transition'
+			
+	def freeze_content(self, how):
+		"""Freeze the contents of the window, depending on how:
+		how='transition' until the next transition,
+		how='hold' forever,
+		how=None clears a previous how='hold'. This basically means the next
+		close() of a display list does not do an erase."""
+		if how:
+			if self._frozen:
+				# Dispose possible old frozen bitmap
+				self._mac_dispose_gworld(BM_PASSIVE)
+			self._mac_create_gworld(BM_PASSIVE, 1, self.qdrect())
+			self._frozen = how
+		elif self._frozen:
+##			print 'freeze_content(None)' # DBG
+			self._mac_dispose_gworld(BM_PASSIVE)
+			self._frozen = None
+			self._mac_invalwin()
+	
+	def _windowlevel(self):
+		"""Returns 0 for toplevel windows, 1 for children of toplevel windows, etc"""
+		prev = self
+		count = 0
+		while not prev._istoplevel:
+			count = count + 1
+			prev = prev._parent
+		return count
+		
+	def _transition_setup_before(self, isouttransition):
+		"""Check that begintransition() is allowed, create the offscreen bitmaps 
+		and set the event handler"""
+		rect = self.qdrect()
+		if self._transition:
+			print 'Multiple Transitions!'
+			return 0
+		if self._frozen == 'transition':
+			# We are frozen, so we have already saved the contents
+			self._frozen = None
+		elif isouttransition:
+			self._mac_create_gworld(BM_PASSIVE, 0, rect)
+		else:
+			# Make sure our screen pixels reflect the actual current
+			# situation, so we can grab them
+			Qd.SetPort(self._onscreen_wid)
+			updrgn = Qd.NewRgn()
+			Qd.RectRgn(updrgn, rect)
+			winupdrgn = Qd.NewRgn()
+			self._onscreen_wid.GetWindowUpdateRgn(winupdrgn)
+##			self._onscreen_wid.GetWindowRegion(Windows.kWindowUpdateRgn, winupdrgn)
+			Qd.SectRgn(updrgn, winupdrgn, updrgn)
+			if not Qd.EmptyRgn(updrgn):
+				self._redraw_now(updrgn)
+			Qd.DisposeRgn(updrgn)
+			Qd.DisposeRgn(winupdrgn)
+			del updrgn
+			
+			self._mac_create_gworld(BM_PASSIVE, 1, rect)
+		self._mac_create_gworld(BM_DRAWING, isouttransition, rect)
+		return 1
+	
+	def _transition_setup_after(self):
+##		if self._transition.need_tmp_wid():
+		if 1:
+			self._mac_create_gworld(BM_TEMP, 0, self.qdrect())
+		#
+		# Tell upper layers, if they are interested (VideoChannels and such may have to
+		# tell their underlying libraries)
+		#
+		if self._eventhandlers.has_key(OSWindowChanged):
+			func, arg = self._eventhandlers[OSWindowChanged]
+			func(arg, self, OSWindowChanged, (0, 0, 0))
+	
+	def _dump_bits(self, which):
+		srcbits = self._mac_getoswindowpixmap(which)
+		currect = srcbits
+		old = Qd.GetPort()
+		Qd.SetPort(self._onscreen_wid)
+		Qd.CopyBits(srcbits, self._onscreen_wid.GetWindowPort().portBits, currect, currect, QuickDraw.srcCopy, None)
+		Qd.SetPort(old)
+
+	def _mac_create_gworld(self, which, copybits, area):
+		self._parent._mac_create_gworld(which, copybits, area)
+		
+	def _mac_dispose_gworld(self, which):
+		if self._parent:
+			self._parent._mac_dispose_gworld(which)
+		else:
+			print "Cannot dispose GWorld when parent window no longer exists!"
+		
+	def dumpwindow(self, indent=0):
+		if not self._subwindows and not self._active_displist and not self._redrawfunc:
+			return
+		print ' '*indent, self._onscreen_wid, self
+		if self._redrawfunc or self._active_displist:
+			print ' '*(indent+8), self.qdrect(), 'z=%d'%self._z
+			print ' '*(indent+8), self._bgcolor, ["", "transparent"][self._transparent]
+		if self._redrawfunc:
+			print ' '*(indent+8), 'redrawfunc', self._redrawfunc
+		if self._active_displist:
+			print ' '*(indent+8), 'active displist length', len(self._active_displist._list)
+		indent = indent + 2
+		if self._subwindows:
+			print ' '*(indent+8), len(self._subwindows), 'subwindows'
+		for w in self._subwindows:
+			w.dumpwindow(indent)
 
 def calc_extra_size(adornments, canvassize):
 	"""Return the number of pixels needed for toolbar and scrollbars"""
@@ -1178,6 +1624,135 @@ def calc_extra_size(adornments, canvassize):
 		extrah = extrah + SCROLLBARSIZE - 1
 	return extraw, extrah, minw, minh
 		
+class _OffscreenMixin:
+	def __init__(self):
+		self.__wids = [None, None, None]
+		self.__gworlds = [None, None, None]
+		self.__bitmaps = [None, None, None]
+		self.__refcounts = [0, 0, 0]
+
+	def close(self):
+		del self.__wids
+		del self.__gworlds
+		del self.__bitmaps
+
+	def _mac_create_gworld(self, which, copybits, area):
+##		print 'DBG: create_gworld', which, copybits, area
+		if which < 0:
+			raise 'Incorrect gworld indicator'
+		cur_port, cur_dev = Qdoffs.GetGWorld()
+		if self.__refcounts[which] == 0:
+			#
+			# No such offscreen bitmap yet. Create it.
+			#
+			cur_depth = 32
+			cur_rect = self.qdrect()
+			gworld = Qdoffs.NewGWorld(cur_depth,  cur_rect, None, None, QDOffscreen.keepLocal)
+			grafptr = gworld.as_GrafPtr()
+			Qdoffs.SetGWorld(grafptr, None)
+			pixmap = gworld.GetGWorldPixMap()
+			Qdoffs.LockPixels(pixmap)
+			bitmap = Qd.RawBitMap(pixmap.data)
+			Qd.RGBBackColor(self._bgcolor)
+			Qd.EraseRect(cur_rect)
+			created = 1
+		else:
+			#
+			# We have this bitmap already.
+			#
+			self.__refcounts[which] = self.__refcounts[which] + 1
+			grafptr = self.__wids[which]
+			gworld = self.__gworlds[which]
+			bitmap = self.__bitmaps[which]
+			Qdoffs.SetGWorld(grafptr, None)
+			created = 0
+		#
+		# Finally copy or erase the portion of the bitmap to be used.
+		#
+		if copybits:
+			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
+			Qd.RGBForeColor((0,0,0))
+			port = self._onscreen_wid.GetWindowPort()
+			Qd.QDFlushPortBuffer(port, None)
+			Qd.CopyBits(port.portBits, bitmap, area, area, QuickDraw.srcCopy, None)
+## XXX Not sure whether this is correct: the whole offscreen bitmap has been cleared during
+## creation (above), but should I re-clear here if I reuse it?
+##		else:
+##			Qd.RGBBackColor(self._bgcolor)
+##			Qd.EraseRect(area)
+		Qdoffs.SetGWorld(cur_port, cur_dev)
+		if created:
+			#
+			# And store it.
+			#
+			self.__refcounts[which] = 1
+			self.__wids[which] = grafptr
+			self.__gworlds[which] = gworld
+			self.__bitmaps[which] = bitmap
+		
+	def _mac_dispose_gworld(self, which):
+		if which < 0:
+			raise 'Incorrect gworld indicator'
+		self.__refcounts[which] = self.__refcounts[which] - 1
+		if self.__refcounts[which] < 0:
+			raise 'gworld refcount < 0'
+		if self.__refcounts[which]:
+			return
+		self.__wids[which] = None
+		self.__bitmaps[which] = None
+		self.__gworlds[which] = None
+
+	def _mac_setwin(self, which=None):
+		"""Start drawing (by upper layer) in this window. This window decides whether
+		to activate the onscreen or offscreen window and then recursively calls the
+		parent to actually set the window."""
+		if not self._parent:
+			return
+		if which == None:
+			which = self._mac_getdrawingbitmapindex()
+		if which == BM_DRAWING and self.__wids[BM_DRAWING] == None:
+			which = BM_ONSCREEN
+		if which == BM_ONSCREEN:
+			rv = Qd.GetPort()
+			Qd.SetPort(self._onscreen_wid)
+		else:
+			rv = Qdoffs.GetGWorld()
+			Qdoffs.SetGWorld(self.__wids[which], None)
+		return rv
+			
+	def _mac_getoswindow(self, which=None):
+		"""Return the WindowPtr or GrafPort of the current drawing window."""
+		# XXXX I think this should be obsoleted by _mac_getoswindowport
+		if which == None:
+			which = self._mac_getdrawingbitmapindex()
+		if which == BM_DRAWING and self.__wids[BM_DRAWING] == None:
+			which = BM_ONSCREEN
+		if which == BM_ONSCREEN:
+			return self._onscreen_wid
+		else:
+			return self.__wids[which]
+		
+	def _mac_getoswindowport(self, which=None):
+		"""Return the GrafPort for the current drawing window."""
+		if which == None:
+			which = self._mac_getdrawingbitmapindex()
+		if which == BM_DRAWING and self.__wids[BM_DRAWING] == None:
+			which = BM_ONSCREEN
+		if which == BM_ONSCREEN:
+			return self._onscreen_wid.GetWindowPort()
+		else:
+			return self.__wids[which]
+			
+	def _mac_getoswindowpixmap(self, which=None):
+		if which == None:
+			which = self._mac_getdrawingbitmapindex()
+		if which == BM_DRAWING and self.__wids[BM_DRAWING] == None:
+			which = BM_ONSCREEN
+		if which == BM_ONSCREEN:
+			return self._onscreen_wid.GetWindowPort().portBits
+		else:
+			return self.__bitmaps[which]
+			
 class _ScrollMixin:
 	"""Mixin class for scrollable/resizable toplevel windows"""
 	
@@ -1197,13 +1772,13 @@ class _ScrollMixin:
 		# Create vertical scrollbar
 		#
 		rect = vertleft, verttop, vertright, hortop+1
-		self._bary = Ctl.NewControl(self._wid, rect, "", 1, 0, 0, 0, 16, 0)
+		self._bary = Ctl.NewControl(self._onscreen_wid, rect, "", 1, 0, 0, 0, 16, 0)
 ##		self._bary.HiliteControl(255)
 		#
 		# Create horizontal scrollbar
 		#
 		rect = horleft, hortop, vertleft+1, horbot
-		self._barx = Ctl.NewControl(self._wid, rect, "", 1, 0, 0, 0, 16, 0)
+		self._barx = Ctl.NewControl(self._onscreen_wid, rect, "", 1, 0, 0, 0, 16, 0)
 ##		self._barx.HiliteControl(255)
 		#
 		# And install callbacks
@@ -1248,17 +1823,18 @@ class _ScrollMixin:
 		"""Update after a scroll from old_x, old_y"""
 		new_x = self._barx.GetControlValue()
 		new_y = self._bary.GetControlValue()
-		Qd.SetPort(self._wid)
+		Qd.SetPort(self._onscreen_wid)
 		# See whether we can use scrollrect. Only possible if no updates pending.
 		updrgn = Qd.NewRgn()
-		self._wid.GetWindowUpdateRgn(updrgn)
+		self._onscreen_wid.GetWindowUpdateRgn(updrgn)
+##		self._onscreen_wid.GetWindowRegion(Windows.kWindowUpdateRgn, updrgn)
 		if Qd.EmptyRgn(updrgn):
 			# Scroll, and get the new vacated region back
 			Qd.ScrollRect(self.qdrect(), old_x-new_x, old_y-new_y, updrgn)
 		else:
 			# ok, update the whole window
 			Qd.RectRgn(updrgn, self.qdrect())
-		Win.InvalRgn(updrgn)
+		self._onscreen_wid.InvalWindowRgn(updrgn)
 		Qd.DisposeRgn(updrgn)
 		self._canvaspos = new_x, new_y
 		
@@ -1284,7 +1860,7 @@ class _ScrollMixin:
 		
 	def _redraw(self):
 		if self._barx:
-			self._wid.DrawGrowIcon()
+			self._onscreen_wid.DrawGrowIcon()
 		
 	def _initscrollbarposition(self):
 		l, t, w, h = self._rect
@@ -1326,7 +1902,7 @@ class _ScrollMixin:
 		else:
 			self._barx.DeactivateControl()
 			self._bary.DeactivateControl()
-		self._wid.DrawGrowIcon()
+		self._onscreen_wid.DrawGrowIcon()
 		
 	def _scrollsizefactors(self):
 		if self._canvassize is None:
@@ -1338,7 +1914,7 @@ class _ScrollMixin:
 		at least the topleft corner visible"""
 		if not self._barx:
 			return
-		box = self._convert_coordinates(coordinates, units)
+		box = self._convert_coordinates(coordinates, units=units)
 		old_x, old_y = self._canvaspos
 		w, h = self._rect[2:]
 		x, y = box[:2]
@@ -1447,9 +2023,6 @@ class _ScrollMixin:
 		if not self.no_canvas_resize:
 			if new_wf < 1: new_wf = 1
 			if new_hf < 1: new_hf = 1
-##		print 'OLD WINDOW SIZE', old_w, old_h
-##		print 'OLD FACTORS', old_wf, old_hf
-##		print 'OLD VIRTUAL SIZE', old_virtual_w, old_virtual_h
 		self.arrowcache = {}
 		self._canvassize = new_wf, new_hf
 		#
@@ -1459,9 +2032,6 @@ class _ScrollMixin:
 		self._adjust_scrollbar_max()
 		new_wf, new_hf = self._canvassize
 		new_virtual_w , new_virtual_h = int(new_w*new_wf+0.5), int(new_h*new_hf+0.5)
-##		print 'NEW WIDTH HEIGHT', new_w, new_h
-##		print 'NEW VIRTUAL SIZE', new_virtual_w, new_virtual_h
-##		print 'NEW FACTORS', new_wf, new_hf
 		if (old_virtual_w, old_virtual_h) != (new_virtual_w, new_virtual_h):
 			return 1
 		return 0
@@ -1513,6 +2083,8 @@ class _ScrollMixin:
 class _AdornmentsMixin:
 	"""Class to handle toolbars and other adornments on toplevel windows"""
 	def __init__(self, adornments):
+		self.__rootctl = None
+		self.__toolbarctl = None
 		self._cmd_to_cntl = {}
 		self._cntl_to_cmd = {}
 		self._cntl_handlers = {}
@@ -1524,28 +2096,36 @@ class _AdornmentsMixin:
 		if not adornments:
 			return
 		if adornments.has_key('toolbar'):
+			root = Ctl.CreateRootControl(self._onscreen_wid)
+			self.__rootctl = root
+			#
+			# Create the toolbar
+			#
+			resid, width, height = MenuTemplate.TOOLBAR
+			try:
+				x, y, w, h = self._rect
+				if width > w:
+					w = width
+				rect = (0, 0, w, height)
+				toolbar = Ctl.NewControl(self._onscreen_wid, rect, '', 1, 0, 0, 0,
+					Controls.kControlWindowHeaderProc, 0)
+			except Ctl.Error, arg:
+				print 'CNTL resource %d not found: %s'%(resid, arg)
+			toolbar.EmbedControl(self.__rootctl)
+			self.__toolbarctl = toolbar
 			#
 			# Create the buttons
 			#
 			for type, resid, cmd in adornments['toolbar']:
 				try:
-					cntl = Ctl.GetNewControl(resid, self._wid)
+					cntl = Ctl.GetNewControl(resid, self._onscreen_wid)
 				except Ctl.Error, arg:
 					print 'CNTL resource %d not found: %s'%(resid, arg)
 				else:
 					self._add_control(cntl, self._toolbar_callback)
 					self._cmd_to_cntl[cmd] = cntl
 					self._cntl_to_cmd[cntl] = cmd
-			#
-			# Create the toolbar
-			#
-			resid, width, height = MenuTemplate.TOOLBAR
-			try:
-				cntl = Ctl.GetNewControl(resid, self._wid)
-			except Ctl.Error, arg:
-				print 'CNTL resource %d not found: %s'%(resid, arg)
-			cntl.HiliteControl(255) # XXXX HOW TO HANDLE THIS ONE?
-			self._cmd_to_cntl[None] = cntl
+					cntl.EmbedControl(toolbar)
 			#
 			# Adjust window bounds
 			#
@@ -1582,7 +2162,7 @@ class _AdornmentsMixin:
 	def _iscontrolclick(self, down, local, event, double):
 		if down:
 			# Check for control
-			ptype, ctl = Ctl.FindControl(local, self._wid)
+			ptype, ctl = Ctl.FindControl(local, self._onscreen_wid)
 			if ptype and ctl and self._cntl_handlers.has_key(ctl):
 				control_callback, track_callback = self._cntl_handlers[ctl]
 				if ptype in TRACKED_PARTS and track_callback:
@@ -1603,7 +2183,6 @@ class _AdornmentsMixin:
 		return 0
 		
 	def _toolbar_callback(self, ctl, part):
-##		print 'DBG controlhit', ctl, part, self._cntl_to_cmd[ctl]
 		cmd = self._cntl_to_cmd[ctl]
 		self.call_command(cmd)
 		
@@ -1654,17 +2233,19 @@ class _AdornmentsMixin:
 			self._popupmenu.delete()
 		self._popupmenu = None
 		
-class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
+class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _CommonWindow):
 	"""Toplevel window"""
 	
 	def __init__(self, parent, wid, x, y, w, h, defcmap = 0, pixmap = 0, 
 			title="", adornments=None, canvassize = None, commandlist=None,
-			resizable=1):
-		
+			resizable=1, bgcolor=None):
+##		print 'DBG: mainwindow, coords=', (x, y, w, h)
+		self._title = title
 		self._istoplevel = 1
 		self._resizable = resizable
 		self._drop_enabled = 0
-		_CommonWindow.__init__(self, parent, wid)
+		_OffscreenMixin.__init__(self)
+		_CommonWindow.__init__(self, parent, wid, 0, bgcolor)
 		
 		self._transparent = 0
 		
@@ -1703,17 +2284,18 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		_ScrollMixin.close(self)
 		_AdornmentsMixin.close(self)
 		_CommonWindow.close(self)
+		_OffscreenMixin.close(self)
 		_WindowGroup.close(self, closegroup=0)
 		self.arrowcache = {}
 				
 	def settitle(self, title):
 		"""Set window title"""
-		if not self._wid:
+		if not self._onscreen_wid:
 			return  # Or raise error?
 		_WindowGroup.settitle(self, title)
 		if title == None:
 			title = ''
-		self._wid.SetWTitle(title)
+		self._onscreen_wid.SetWTitle(title)
 		
 	def set_toggle(self, cmd, onoff):
 		_AdornmentsMixin.set_toggle(self, cmd, onoff)
@@ -1726,10 +2308,19 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 			self._popupmenu.update_menu_enabled(self.has_command)
 
 	def getgeometry(self, units=UNIT_MM):
-		rect = self._wid.GetWindowPort().portRect
-		Qd.SetPort(self._wid)
+		rect = self._onscreen_wid.GetWindowPort().portRect
+		Qd.SetPort(self._onscreen_wid)
 		x, y = Qd.LocalToGlobal((0,0))
 		w, h = rect[2]-rect[0], rect[3]-rect[1]
+		# Adjust for scrollbars
+		if self._barx:
+			w = w - (SCROLLBARSIZE - 1)
+		if self._bary:
+			h = h - (SCROLLBARSIZE - 1)
+		# And for buttons along the top
+		if self._cntl_to_cmd:
+			dummy, dummy, extraheight = MenuTemplate.TOOLBAR
+			h = h - extraheight
 		_x_pixel_per_mm, _y_pixel_per_mm = \
 				 mw_globals.toplevel._getmmfactors()
 		_screen_top_offset = mw_globals.toplevel._getmbarheight()
@@ -1752,19 +2343,30 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 
 	def pop(self, poptop=1):
 		"""Pop window to top of window stack"""
-		if not self._wid or not self._parent or not poptop:
+		if not self._onscreen_wid or not self._parent or not poptop:
 			return
-		self._wid.SelectWindow()
+		self._onscreen_wid.SelectWindow()
 		mw_globals.toplevel._mouseregionschanged()
 
 	def push(self):
 		"""Push window to bottom of window stack"""
-		if not self._wid or not self._parent:
+		if not self._onscreen_wid or not self._parent:
 			return
-		self._wid.SendBehind(0)
+		self._onscreen_wid.SendBehind(0)
 		
 	def _is_on_top(self):
 		return 1
+		
+	def _clipchanged(self):
+		"""Called when the clipping region is possibly changed"""
+		if not self._parent or not self._onscreen_wid:
+			return
+		self._zapclip()
+		self._buttonschanged()
+		self._zapregions()
+		
+	def _updatezorder(self, redraw=0, tobottom=0):
+		pass
 		
 	def _goaway(self):
 		"""User asked us to go away. Tell upper layers
@@ -1772,87 +2374,70 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		if not self.close_window_command():
 			print 'No way to close this window!', self
 		
-	def _contentclick(self, down, where, event, shifted, double):
+	def _contentclick(self, down, where, event, modifiers, double):
 		"""A mouse click in our data-region"""
-		if not self._wid or not self._parent:
+		if not self._onscreen_wid or not self._parent:
 			return
-		Qd.SetPort(self._wid)
+		Qd.SetPort(self._onscreen_wid)
 		where = Qd.GlobalToLocal(where)
-		_CommonWindow._contentclick(self, down, where, event, shifted, double)
+		_CommonWindow._contentclick(self, down, where, event, modifiers, double)
 
 	def _keyboardinput(self, char, where, event):
 		"""A character typed in our data-region"""
-		if not self._wid or not self._parent:
+		if not self._onscreen_wid or not self._parent:
 			return
 		if self._check_for_shortcut(char):
 			return 1
-		Qd.SetPort(self._wid)
+		Qd.SetPort(self._onscreen_wid)
 		where = Qd.GlobalToLocal(where)
 		return _CommonWindow._keyboardinput(self, char, where, event)
 
-	def _mkclip(self):
-		if not self._wid or not self._parent:
-			return
-		if self._clip:
-			raise 'Clip already valid!'
-		# create region for whole window
-
-		self._clip = Qd.NewRgn()
-		Qd.RectRgn(self._clip, self.qdrect())
-		self._clipvisible(self._clip)
-		#
-		# subtract all subwindows, insofar they aren't transparent
-		# at the moment
-		#
-		for w in self._subwindows:
-			if w._transparent == 0 or \
-			   (w._transparent == -1 and w._active_displist):
-				r = Qd.NewRgn()
-				Qd.RectRgn(r, w.qdrect())
-				Qd.DiffRgn(self._clip, r, self._clip)
-				Qd.DisposeRgn(r)
-				
 	def _redraw(self, rgn=None):
 		_CommonWindow._redraw(self, rgn)
 		if rgn is None:
-			rgn = self._wid.GetWindowPort().visRgn
-		Ctl.UpdateControls(self._wid, rgn)
+			rgn = self._onscreen_wid.GetWindowPort().visRgn
+		Ctl.UpdateControls(self._onscreen_wid, rgn)
 		_ScrollMixin._redraw(self)
-		
+		if self._eventhandlers.has_key(WindowContentChanged):
+			func, arg = self._eventhandlers[WindowContentChanged]
+			func(arg, self, WindowContentChanged, mw_globals.toplevel.getcurtime())
+					
+	def _redraw_now(self, rgn):
+		"""Do a redraw of the specified region now"""
+		self._redraw(rgn)
+		if not rgn:
+			rgn = self._onscreen_wid.GetWindowPort().visRgn
+		self._onscreen_wid.ValidWindowRgn(rgn)
+
 	def _activate(self, onoff):
 		_CommonWindow._activate(self, onoff)
 ##		_WindowGroup._activate(self, onoff)
 		_ScrollMixin._activate(self, onoff)
 
-	def _resize_callback(self, width, height):
+	def _resize_callback(self, width, height, x=None, y=None):
 		self.arrowcache = {}
 		if _in_create_box:
 			_in_create_box.cancel_create_box()
 			
-		self._wid.SizeWindow(width, height, 1)
-		Qd.SetPort(self._wid)
-		Win.InvalRect(self.qdrect())
-		self._clipchanged()
+		self._onscreen_wid.SizeWindow(width, height, 1)
+		# XXXX Should also update size of offscreen maps?
+		Qd.SetPort(self._onscreen_wid)
+		self._onscreen_wid.InvalWindowRect(self.qdrect())
 
-		x, y, old_w, old_h = self._rect
+		old_x, old_y, old_w, old_h = self._rect
+		if x is None:
+			x = old_x
+		if y is None:
+			y = old_y
 		self._rect = x, y, width, height
 		_AdornmentsMixin._resized(self)
 		_ScrollMixin._resized(self)
 		mustresize = _ScrollMixin.mustadjustcanvasforresize(self, old_w, old_h)
 		if mustresize:
-			for d in self._displists[:]:
-				d.close()
-			self._do_resize0()
+			self._do_resize()
+		else:
+			self._clipchanged()
 		
-	def _do_resize0(self):
-		"""Common code for resize and double width/height"""
-		x, y, width, height = self._rect
-
-		for w in self._subwindows:
-			w._do_resize1()
-		# call resize callbacks
-		self._do_resize2()
-
 	def hitarrow(self, point, src, dst):
 		# return 1 iff (x,y) is within the arrow head
 		sx, sy = self._convert_coordinates(src)
@@ -1882,121 +2467,137 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		if onoff == self._drop_enabled:
 			return
 		if onoff:
-			Drag.InstallTrackingHandler(self._trackhandler, self._wid)
-			Drag.InstallReceiveHandler(self._receivehandler, self._wid)
+			Drag.InstallTrackingHandler(self._trackhandler, self._onscreen_wid)
+			Drag.InstallReceiveHandler(self._receivehandler, self._onscreen_wid)
 		else:
-			Drag.RemoveTrackingHandler(self._wid)
-			Drag.RemoveReceiveHandler(self._wid)
+			Drag.RemoveTrackingHandler(self._onscreen_wid)
+			Drag.RemoveReceiveHandler(self._onscreen_wid)
 		self._drop_enabled = onoff
 		
 	def _trackhandler(self, message, dragref, wid):
-##		print 'TRACK', message, dragref, wid
-		if not message in (Dragconst.kDragTrackingEnterWindow, 
-				Dragconst.kDragTrackingLeaveWindow,
-				Dragconst.kDragTrackingInWindow):
-##			print 'skip message', message
-			return
-##		print 'DOIT', message, dragref, wid
-		rect = None
-		oldport = Qd.GetPort()
-		Qd.SetPort(self._wid)
-		dummy, where = dragref.GetDragMouse()
-		where = Qd.GlobalToLocal(where)
- 		x, y = self._convert_qdcoords(where)
- 		if message == Dragconst.kDragTrackingInWindow:
- 			# We're dragging through the window. Give the track
- 			# handler a chance to update the mouse, if wanted
-			try:
-				#
-				# XXXX This is wrong: we should get the correct (DragFile or DragURL)
-				# handler here.
-				#
-				func, arg = self._eventhandlers[DragFile]
-			except KeyError:
+		try:
+			if not message in (Dragconst.kDragTrackingEnterWindow, 
+					Dragconst.kDragTrackingLeaveWindow,
+					Dragconst.kDragTrackingInWindow):
 				return
+			rect = None
+			oldport = Qd.GetPort()
+			Qd.SetPort(self._onscreen_wid)
 			dummy, where = dragref.GetDragMouse()
-			Qd.SetPort(self._wid)
 			where = Qd.GlobalToLocal(where)
 			x, y = self._convert_qdcoords(where)
-			func(arg, self, DragFile, (x, y))
-			return
- 			
- 		# We're entering or leaving the window. Draw or remove
- 		# the highlight.
-## 		if 0 < x < 1 and 0 < y < 1:
-		if 1:
-			rect = self.qdrect()
-			rgn = Qd.NewRgn()
-			Qd.RectRgn(rgn, rect)
-			if message == Dragconst.kDragTrackingEnterWindow:
-				dragref.ShowDragHilite(rgn, 1)
+	 		if message == Dragconst.kDragTrackingInWindow:
+	 			# We're dragging through the window. Give the track
+	 			# handler a chance to update the mouse, if wanted
+				try:
+					#
+					# XXXX This is wrong: we should get the correct (DragFile or DragURL)
+					# handler here.
+					#
+					func, arg = self._eventhandlers[DragFile]
+				except KeyError:
+					return
+				dummy, where = dragref.GetDragMouse()
+				Qd.SetPort(self._onscreen_wid)
+				where = Qd.GlobalToLocal(where)
+				x, y = self._convert_qdcoords(where)
+				func(arg, self, DragFile, (x, y))
+				return
+	 			
+	 		# We're entering or leaving the window. Draw or remove
+	 		# the highlight.
+	## 		if 0 < x < 1 and 0 < y < 1:
+			if 1:
+				rect = self.qdrect()
+				rgn = Qd.NewRgn()
+				Qd.RectRgn(rgn, rect)
+				if message == Dragconst.kDragTrackingEnterWindow:
+					dragref.ShowDragHilite(rgn, 1)
+				else:
+					dragref.HideDragHilite()
+				Qd.DisposeRgn(rgn)
+			Qd.SetPort(oldport)
+		except:
+			if hasattr(sys, 'exc_info'):
+				exc_type, exc_value, exc_traceback = sys.exc_info()
 			else:
-				dragref.HideDragHilite()
-			Qd.DisposeRgn(rgn)
-		Qd.SetPort(oldport)
-##		print x, y, 'rect', rect, (message==Dragconst.kDragTrackingEnterWindow)
+				exc_type, exc_value, exc_traceback = sys.exc_type, sys.exc_value, sys.exc_traceback
+			import traceback
+			print 'Error in Drag Handler:'
+			print
+			traceback.print_exception(exc_type, exc_value, None)
+			traceback.print_tb(exc_traceback)
 					
 		
 	def _receivehandler(self, dragref, wid):
-		dummy, where = dragref.GetDragMouse()
-		Qd.SetPort(self._wid)
-		where = Qd.GlobalToLocal(where)
-		x, y = self._convert_qdcoords(where)
-##		print 'MOUSE', x, y
-		n = dragref.CountDragItems()
-		for i in range(1, n+1):
-			#
-			# See which flavors are available for this drag
-			#
-			refnum = dragref.GetDragItemReferenceNumber(i)
-			nflavor = dragref.CountDragItemFlavors(refnum)
-			flavors = []
-			for ii in range(1, nflavor+1):
-				flavors.append(dragref.GetFlavorType(refnum, ii))
-			#
-			# And check whether we support any of them.
-			#
-			if 'hfs ' in flavors:
-				try:
-					fflags = dragref.GetFlavorFlags(refnum, 'hfs ')
-				except Drag.Error:
-					print 'Wrong type...', i, dragref.GetFlavorType(refnum, 1)
+		try:
+			dummy, where = dragref.GetDragMouse()
+			Qd.SetPort(self._onscreen_wid)
+			where = Qd.GlobalToLocal(where)
+			x, y = self._convert_qdcoords(where)
+			n = dragref.CountDragItems()
+			for i in range(1, n+1):
+				#
+				# See which flavors are available for this drag
+				#
+				refnum = dragref.GetDragItemReferenceNumber(i)
+				nflavor = dragref.CountDragItemFlavors(refnum)
+				flavors = []
+				for ii in range(1, nflavor+1):
+					flavors.append(dragref.GetFlavorType(refnum, ii))
+				#
+				# And check whether we support any of them.
+				#
+				if 'hfs ' in flavors:
+					try:
+						fflags = dragref.GetFlavorFlags(refnum, 'hfs ')
+					except Drag.Error:
+						print 'Wrong type...', i, dragref.GetFlavorType(refnum, 1)
+						MacOS.SysBeep()
+						return
+					datasize = dragref.GetFlavorDataSize(refnum, 'hfs ')
+					data = dragref.GetFlavorData(refnum, 'hfs ', datasize, 0)
+					tp, cr, flags, fss = self._decode_hfs_dropdata(data)
+					fname = fss.as_pathname()
+					try:
+						func, arg = self._eventhandlers[DropFile]
+					except KeyError:
+						print 'No DropFile handler!'
+						MacOS.SysBeep()
+						return
+					mw_globals.toplevel.settimer(0.1, (func, (arg, self, DropFile, (x, y, fname))))
+				elif 'URLD' in flavors:
+					try:
+						fflags = dragref.GetFlavorFlags(refnum, 'URLD')
+					except Drag.Error:
+						print 'Wrong type...', i, dragref.GetFlavorType(refnum, 1)
+						MacOS.SysBeep()
+						return
+					datasize = dragref.GetFlavorDataSize(refnum, 'URLD')
+					data = dragref.GetFlavorData(refnum, 'URLD', datasize, 0)
+					# Data is "url\rdescription"
+					url = string.split(data, '\r')[0]
+					try:
+						func, arg = self._eventhandlers[DropURL]
+					except KeyError:
+						print 'No DropURL handler!'
+						MacOS.SysBeep()
+						return
+					mw_globals.toplevel.settimer(0.1, (func, (arg, self, DropURL, (x, y, url))))
+				else:
+					print 'No supported flavors in drag item:', flavors
 					MacOS.SysBeep()
 					return
-				datasize = dragref.GetFlavorDataSize(refnum, 'hfs ')
-				data = dragref.GetFlavorData(refnum, 'hfs ', datasize, 0)
-				tp, cr, flags, fss = self._decode_hfs_dropdata(data)
-				fname = fss.as_pathname()
-				try:
-					func, arg = self._eventhandlers[DropFile]
-				except KeyError:
-					print 'No DropFile handler!'
-					MacOS.SysBeep()
-					return
-				mw_globals.toplevel.settimer(0.1, (func, (arg, self, DropFile, (x, y, fname))))
-			elif 'URLD' in flavors:
-				try:
-					fflags = dragref.GetFlavorFlags(refnum, 'URLD')
-				except Drag.Error:
-					print 'Wrong type...', i, dragref.GetFlavorType(refnum, 1)
-					MacOS.SysBeep()
-					return
-				datasize = dragref.GetFlavorDataSize(refnum, 'URLD')
-				data = dragref.GetFlavorData(refnum, 'URLD', datasize, 0)
-				# Data is "url\rdescription"
-				url = string.split(data, '\r')[0]
-##				print 'url', url
-				try:
-					func, arg = self._eventhandlers[DropURL]
-				except KeyError:
-					print 'No DropURL handler!'
-					MacOS.SysBeep()
-					return
-				mw_globals.toplevel.settimer(0.1, (func, (arg, self, DropURL, (x, y, url))))
+		except:
+			if hasattr(sys, 'exc_info'):
+				exc_type, exc_value, exc_traceback = sys.exc_info()
 			else:
-				print 'No supported flavors in drag item:', flavors
-				MacOS.SysBeep()
-				return
+				exc_type, exc_value, exc_traceback = sys.exc_type, sys.exc_value, sys.exc_traceback
+			import traceback
+			print 'Error in Receive Handler:'
+			print
+			traceback.print_exception(exc_type, exc_value, None)
+			traceback.print_tb(exc_traceback)
 
 	def _decode_hfs_dropdata(self, data):
 		tp = data[0:4]
@@ -2009,10 +2610,12 @@ class _SubWindow(_CommonWindow):
 	"""Window "living in" with a toplevel window"""
 
 	def __init__(self, parent, wid, coordinates, defcmap = 0, pixmap = 0, 
-			transparent = 0, z = 0, units = None):
+			transparent = 0, z = 0, units = None, bgcolor=None):
 		
 		self._istoplevel = 0
-		_CommonWindow.__init__(self, parent, wid, z)
+		self._units = units
+##		print 'DBG: subwindow, units=', units, 'coords=', coordinates
+		_CommonWindow.__init__(self, parent, wid, z, bgcolor)
 		
 		x, y, w, h = parent._convert_coordinates(coordinates, units = units)
 		xscrolloff, yscrolloff = parent._scrolloffset()
@@ -2025,10 +2628,7 @@ class _SubWindow(_CommonWindow):
 			coordinates = 0, 0, 1, 1
 		self._sizes = coordinates
 		
-		if parent._transparent:
-			self._transparent = parent._transparent
-		else:
-			self._transparent = transparent
+		self._transparent = transparent
 		
 		self.arrowcache = {}
 
@@ -2043,26 +2643,44 @@ class _SubWindow(_CommonWindow):
 	def getgeometry(self, units=UNIT_MM):
 		return self._sizes
 
+	def _clipchanged(self):
+		"""Called when the clipping region is possibly changed"""
+		if not self._parent or not self._onscreen_wid:
+			return
+		self._parent._clipchanged()
+		
+	def _updatezorder(self, redraw=0, tobottom=0):
+		"""Our Z-order has changed. Change the stacking order in our parent"""
+		parent = self._parent
+		if self in parent._subwindows:
+			parent._subwindows.remove(self)
+		if not tobottom:
+			# Put at the top of our Z range
+			for i in range(len(parent._subwindows)):
+				if self._z >= parent._subwindows[i]._z:
+					parent._subwindows.insert(i, self)
+					break
+			else:
+				parent._subwindows.append(self)
+		else:
+			# Put at the bottom of our Z range
+			for i in range(len(parent._subwindows)-1,-1,-1):
+				if self._z <= parent._subwindows[i]._z:
+					parent._subwindows.insert(i+1, self)
+					break
+			else:
+				parent._subwindows.insert(0, self)		
+		if redraw:
+			parent._clipchanged()
+			self._onscreen_wid.InvalWindowRect(self.qdrect())
+
 	def pop(self, poptop=1):
 		"""Pop to top of subwindow stack"""
 		if not self._parent:
 			return
 		parent = self._parent
-		if parent._subwindows[0] is self:
-			parent.pop(poptop)
-			return
-		parent._subwindows.remove(self)
-		
-		for i in range(len(parent._subwindows)):
-			if self._z >= parent._subwindows[i]._z:
-				parent._subwindows.insert(i, self)
-				break
-		else:
-			parent._subwindows.append(self)
-		parent._clipchanged()
-		Qd.SetPort(self._wid)
-		if self._transparent <= 0:
-			Win.InvalRect(self.qdrect())
+		if not parent._subwindows[0] is self:
+			self._updatezorder(redraw=1)
 		parent.pop(poptop)
 
 	def push(self):
@@ -2070,18 +2688,8 @@ class _SubWindow(_CommonWindow):
 		if not self._parent:
 			return
 		parent = self._parent
-		if parent._subwindows[-1] is self:
-			return
-		parent._subwindows.remove(self)
-		for i in range(len(parent._subwindows)-1,-1,-1):
-			if self._z <= parent._subwindows[i]._z:
-				parent._subwindows.insert(i+1, self)
-				break
-		else:
-			parent._subwindows.insert(0, self)
-		parent._clipchanged()
-		Qd.SetPort(self._wid)
-		Win.InvalRect(self.qdrect())
+		if not parent._subwindows[-1] is self:
+			self._updatezorderreverse(tobottom=1, redraw=1)
 		parent.push()
 		
 	def _is_on_top(self):
@@ -2091,41 +2699,32 @@ class _SubWindow(_CommonWindow):
 		# XXXX This is not good enough, really...
 		return (self._parent._subwindows[0] is self)
 
-	def _mkclip(self):
+	def _clipsubtractsiblings(self):
+		# subtract our higher-stacked siblings and clip to our parent too
 		if not self._parent:
 			return
-		if self._clip:
-			raise 'Clipregion already valid!'
-			
-		# create region for our subwindow
-		self._clip = Qd.NewRgn()
-		Qd.RectRgn(self._clip, self.qdrect())
-		# subtract all our subsubwindows
-		for w in self._subwindows:
-			if w._transparent == 0 or \
-			   (w._transparent == -1 and w._active_displist):
-				r = Qd.NewRgn()
-				Qd.RectRgn(r, w.qdrect())
-				Qd.DiffRgn(self._clip, r, self._clip)
-				Qd.DisposeRgn(r)
-		# subtract our higher-stacked siblings
-		for w in self._parent._subwindows:
-			if w == self:
-				# Stop when we meet ourselves
-				break
-			if w._transparent == 0 or \
-			   (w._transparent == -1 and w._active_displist):
-				r = Qd.NewRgn()
-				Qd.RectRgn(r, w.qdrect())
-				Qd.DiffRgn(self._clip, r, self._clip)
-				Qd.DisposeRgn(r)
+		# First clip ourselves to our parent.
+		pclip = self._parent._mac_getclip(includechildren=1)
+		Qd.SectRgn(self._clipincludingchildren, pclip, self._clipincludingchildren)
+		# Next subtract our higher-stacked siblings recursively up
+		ancestor = self
+		while not ancestor._istoplevel:
+			for w in ancestor._parent._subwindows:
+				if w == ancestor:
+					# Stop when we meet ourselves
+					break
+				r = w._getredrawguarantee()
+				if r:
+					Qd.DiffRgn(self._clipincludingchildren, r, self._clipincludingchildren)
+					Qd.DisposeRgn(r)
+			ancestor = ancestor._parent
 
 	def _do_resize1(self):
 		# calculate new size of subwindow after resize
 		# close all display lists
 		parent = self._parent
 		## XXXX Should have crop=1?
-		x, y, w, h = parent._convert_coordinates(self._sizes)
+		x, y, w, h = parent._convert_coordinates(self._sizes, units = self._units)
 		xscrolloff, yscrolloff = parent._scrolloffset()
 		x, y = x+xscrolloff, y+yscrolloff
 		self._rect = x, y, w, h
@@ -2160,7 +2759,10 @@ class _SubWindow(_CommonWindow):
 class DialogWindow(_Window):
 	def __init__(self, resid, title='', default=None, cancel=None,
 				cmdbuttons=None):
-		wid = Dlg.GetNewDialog(resid, -1)
+		dlg = Dlg.GetNewDialog(resid, -1)
+		wid = dlg.GetDialogWindow()
+		wid2 = dlg.GetDialogWindow() #DBG
+		self._dlg = dlg
 		if cmdbuttons:
 			self._item_to_cmd = cmdbuttons
 		else:
@@ -2169,15 +2771,15 @@ class DialogWindow(_Window):
 		x0, y0, x1, y1 = wid.GetWindowPort().portRect
 		w, h = x1-x0, y1-y0
 		cmdlist = [
-			usercmd.COPY(callback=(wid.DialogCopy, ())),
-			usercmd.PASTE(callback=(wid.DialogPaste, ())),
-			usercmd.CUT(callback=(wid.DialogCut, ())),
-			usercmd.DELETE(callback=(wid.DialogDelete, ())),
+			usercmd.COPY(callback=(dlg.DialogCopy, ())),
+			usercmd.PASTE(callback=(dlg.DialogPaste, ())),
+			usercmd.CUT(callback=(dlg.DialogCut, ())),
+			usercmd.DELETE(callback=(dlg.DialogDelete, ())),
 		]
 		if not default is None:
 			self._do_defaulthit = self._optional_defaulthit
 			self.__default = default
-			wid.SetDialogDefaultItem(default)
+			dlg.SetDialogDefaultItem(default)
 		if callable(cancel):
 			cmdlist.append(
 				usercmd.CLOSE_WINDOW(callback=(cancel, ())))
@@ -2186,7 +2788,7 @@ class DialogWindow(_Window):
 			self.__cancel = cancel
 			cmdlist.append(
 				usercmd.CLOSE_WINDOW(callback=(self._do_cancelhit, ())))
-			wid.SetDialogCancelItem(cancel)
+			dlg.SetDialogCancelItem(cancel)
 		_Window.__init__(self, mw_globals.toplevel, wid, 0, 0, w, h, 
 				commandlist=cmdlist, resizable=0)
 		mw_globals.toplevel._register_wid(wid, self)
@@ -2198,19 +2800,16 @@ class DialogWindow(_Window):
 	def __repr__(self):
 		return '<DialogWindow %s>'%self.title
 	
-##	def __del__(self):
-##		print 'del dialogwindow', self
-
 	def show(self):
 		if self.title:
 			self.settitle(self.title)
-		self._wid.AutoSizeDialog()	# Not sure whether this is a good idea for all dialogs...
-		self._wid.ShowWindow()
-		self._wid.SelectWindow() # test
+		self._dlg.AutoSizeDialog()	# Not sure whether this is a good idea for all dialogs...
+		self._onscreen_wid.ShowWindow()
+		self._onscreen_wid.SelectWindow() # test
 		self._is_shown = 1
 		
 	def hide(self):
-		self._wid.HideWindow()
+		self._onscreen_wid.HideWindow()
 		self.grabdone()
 		self.settitle(None)
 		self._is_shown = 0
@@ -2228,7 +2827,6 @@ class DialogWindow(_Window):
 		# So, the code here appears to work, but there may be a problem lurking here
 		# somewhere.
 		# XXXX Note: apparently the above isn't true, so the code is back to original.
-##		print 'close dialogwin', self, self._parent
 		if not self._parent:
 			return
 		self.hide()
@@ -2245,6 +2843,9 @@ class DialogWindow(_Window):
 		self.__cancel = None
 		_Window.close(self)
 
+	def getdialogwindowdialog(self):
+		return self._dlg
+		
 	def grabdone(self):
 		self.__grab_done = 1
 
@@ -2276,14 +2877,14 @@ class DialogWindow(_Window):
 	# The event handling will then call this when return is pressed.
 	#
 	def _optional_defaulthit(self):
-		ctl = self._wid.GetDialogItemAsControl(self.__default)
+		ctl = self._dlg.GetDialogItemAsControl(self.__default)
 		ctl.HiliteControl(Controls.inButton)
 		self.do_itemhit(self.__default, None)
 	#
 	# Similarly for cancel, which is bound to close window (not to cmd-dot yet)
 	#
 	def _optional_cancelhit(self):
-		ctl = self._wid.GetDialogItemAsControl(self.__cancel)
+		ctl = self._dlg.GetDialogItemAsControl(self.__cancel)
 		ctl.HiliteControl(Controls.inButton)
 		self.do_itemhit(self.__cancel, None)
 		
@@ -2303,22 +2904,22 @@ class DialogWindow(_Window):
 			w._activate(onoff)
 			
 	def ListWidget(self, item, content=[]):
-		widget = mw_widgets._ListWidget(self._wid, item, content)
+		widget = mw_widgets._ListWidget(self._dlg, item, content)
 ##		self.addwidget(item, widget)
 		return widget
 
 	def ImageWidget(self, item, image=None):
-		widget = mw_widgets._ImageWidget(self._wid, item, image)
+		widget = mw_widgets._ImageWidget(self._dlg, item, image)
 		self.addwidget(item, widget)
 		return widget
 		
 	def SelectWidget(self, item, items=[], default=None, callback=None):
-		widget = mw_widgets._SelectWidget(self._wid, item, items, default, callback)
+		widget = mw_widgets._SelectWidget(self._dlg, item, items, default, callback)
 		self.addwidget(item, widget)
 		return widget
 		
 	def AreaWidget(self, item, callback=None, scaleitem=None):
-		widget = mw_widgets._AreaWidget(self._wid, item, callback, scaleitem)
+		widget = mw_widgets._AreaWidget(self._dlg, item, callback, scaleitem)
 		self.addwidget(item, widget)
 		return widget
 	
@@ -2332,12 +2933,12 @@ class DialogWindow(_Window):
 			cmd = item.__class__
 			if cmd_to_item.has_key(cmd):
 				item = cmd_to_item[cmd]
-				cntl = self._wid.GetDialogItemAsControl(item)
+				cntl = self._dlg.GetDialogItemAsControl(item)
 				cntl.ActivateControl()
 				del cmd_to_item[cmd]
 		# Second pass: disable the others
 		for item in cmd_to_item.values():
-			cntl = self._wid.GetDialogItemAsControl(item)
+			cntl = self._dlg.GetDialogItemAsControl(item)
 			cntl.DeactivateControl()
 		# And pass the command list on to the Window/Menu stuff
 		_Window.set_commandlist(self, cmdlist)

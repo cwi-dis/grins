@@ -277,6 +277,7 @@ class FileDialog:
 						files.append(full)
 						break
 		files.sort()
+##		if not files: files = ['empty']
 		widget.SetValues({'listUpdated': 1, 'fileListItems': files})
 		fl = widget.FileSelectionBoxGetChild(Xmd.DIALOG_FILE_LIST)
 		fl.ListDeleteAllItems()
