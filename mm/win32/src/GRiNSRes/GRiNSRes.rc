@@ -2262,8 +2262,8 @@ IDI_ACTIVATEEVENT       ICON    DISCARDABLE     "res\\ico00010.ico"
 IDI_DURATION            ICON    DISCARDABLE     "res\\duration.ico"
 IDI_ANIMATION           ICON    DISCARDABLE     "res\\animatio.ico"
 IDI_PLAYING             ICON    DISCARDABLE     "res\\playing.ico"
-IDI_WAITSTOP            ICON    DISCARDABLE     "res\\ico00011.ico"
-IDI_IDLE                ICON    DISCARDABLE     "res\\waitstop.ico"
+IDI_WAITSTOP            ICON    DISCARDABLE     "res\\waitstop.ico"
+IDI_IDLE                ICON    DISCARDABLE     "res\\idle.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
