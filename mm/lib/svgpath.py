@@ -531,13 +531,29 @@ class Path:
 	SEG_CUBICTO = 3
 	SEG_CLOSE = 4
 
-	def __init__(self,  pathstr):
+	def __init__(self, pathstr=''):
 		self.__ptTypes = []
 		self.__ptCoords = []
+		self._svgpath = None
+		self._points = []
+		self.__length = 0
+		if pathstr:
+			self._svgpath = SVGPath(pathstr)
+			self._points = self._svgpath.createPath(self)
+			self.__length = self.__getLength()
+
+	def constructFromSVGPathString(self, pathstr):
 		self._svgpath = SVGPath(pathstr)
 		self._points = self._svgpath.createPath(self)
 		self.__length = self.__getLength()
 
+	def constructFromPoints(self, coords):
+		n = len(coords)
+		if n==0: return
+		self.moveTo(coords[0])
+		for i in range(1,n)::
+			self.lineTo(coords[i])
+		
 	# main query method
 	# get point at length t
 	def getPointAt(self, t):
