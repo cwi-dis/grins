@@ -39,10 +39,10 @@
 	'Name of channel used to render this node/subtree' inherited)
 
 (cview_winpos  (tuple (int) (int)) (-1 -1) 'Channel view winpos' default
-	 'Window position for channel view ' raw)
+	 'Window position for channel view' raw)
 
 (cview_winsize  (tuple (int) (int)) (400 800) 'Channel view winsize' default
-	 'Window size for channel view ' raw)
+	 'Window size for channel view' raw)
 
 (channellist (list (enclosed (tuple (name) (attrdict)))) ()
 	'Channel List' default
@@ -62,6 +62,12 @@
 
 ##(format (enum ASCII PostScript) ASCII 'Format' default
 ##	'Format used by external text file (ASCII or PostScript)' channel)
+
+(help_winpos  (tuple (int) (int)) (-1 -1) 'Help window position' default
+	 'Position of help window' raw)
+
+(help_winsize  (tuple (int) (int)) (400 600) 'Help window size' default
+	 'Size of help window' raw)
 
 ##(indent (float) 0 'Indent' default
 ##	'Extra indentation of left margin (in characters)')
