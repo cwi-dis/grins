@@ -1321,7 +1321,7 @@ class HierarchyView(HierarchyViewDialog):
 		if maybenode is not None:
 			# but how did dropfile() get a node?? Nevertheless..
 			obj = maybenode.views['struct_view']
-			self.select_widget(obj)
+			self.select_widget(obj, scroll=0)
 		else:
 			obj = self.whichhit(x, y)
 			if not obj:
@@ -1330,7 +1330,7 @@ class HierarchyView(HierarchyViewDialog):
 				return
 			if isinstance(obj, StructureWidgets.MMWidgetDecoration):
 				obj = obj.get_mmwidget()
-			self.select_widget(obj)
+			self.select_widget(obj, scroll=0)
 			#self.setfocusobj(obj) # give the focus to the object which was dropped on.
 
 		if event == WMEVENTS.DropFile:
@@ -1431,6 +1431,7 @@ class HierarchyView(HierarchyViewDialog):
 	def commit(self, type):
 		self.toplevel.setwaiting() # in case this hadn't been done yet
 		oldscrollpos = self.window.getscrollposition(units=windowinterface.UNIT_PXL)
+		##print 'DBG: oldscrollpos', oldscrollpos
 		self.refresh_scene_graph()
 
 		focusobject = self.editmgr.getglobalfocus()
@@ -1900,7 +1901,7 @@ class HierarchyView(HierarchyViewDialog):
 		xd, yd = pos
 		# Problem: dstobj will be an internal node.
 		dstobj = self.whichhit(xd, yd)
-		self.select_widget(dstobj)
+		self.select_widget(dstobj, scroll=0)
 		if isinstance(dstobj, StructureWidgets.MMWidgetDecoration):
 			dstobj = dstobj.mmwidget
 		ntype = None
@@ -2115,6 +2116,7 @@ class HierarchyView(HierarchyViewDialog):
 
 		widget.select()
 		if scroll:
+			print 'DBG select widget scroll', widget.get_box(), widget
 			self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
 
 		self.multi_selected_widgets = [widget]
@@ -2135,7 +2137,7 @@ class HierarchyView(HierarchyViewDialog):
 			return 0
 
 		if len(self.multi_selected_widgets) == 0:
-			self.select_widget(widget)
+			self.select_widget(widget, external=external, scroll=scroll)
 			return
 
 		# we can't currently muti-select icons, so unselect them all
@@ -2215,7 +2217,7 @@ class HierarchyView(HierarchyViewDialog):
 	def addclick(self, x, y):
 		clicked_widget = self.scene_graph.get_clicked_obj_at((x,y))
 		clicked_widget.mouse0press((x,y))
-		self.also_select_widget(clicked_widget)
+		self.also_select_widget(clicked_widget, scroll=0)
 		self.draw()
 
 	# Find the smallest object containing (x, y)
