@@ -196,6 +196,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		import Xm
 		htmlw = self.htmlw
 		self.played_url = self.url = self.armed_url
+		url, tag = MMurl.splittag(self.played_url)
 		self.played_str = self.armed_str
 		self.played_anchor = self.armed_anchor
 		self.backlist = []
@@ -241,7 +242,7 @@ class HtmlChannel(Channel.ChannelWindow):
 			db.PutStringResource(
 				'*%s*foreground' % self.widget_name,
 				'#%02x%02x%02x' % self.getfgcolor(node))
-		htmlw.SetText(self.played_str, '', '')
+		htmlw.SetText(self.played_str, '', '', 0, tag)
 		htmlw.MapWidget()
 		htmlw.UpdateDisplay()
 		self.fixanchorlist(node)
@@ -416,7 +417,8 @@ class HtmlChannel(Channel.ChannelWindow):
 			if href == 'XXXX:play/node':
 				self.backlist = []
 				self.url = self.played_url
-				self.htmlw.SetText(self.played_str, '', '')
+				url, tag = MMurl.splittag(self.played_url)
+				self.htmlw.SetText(self.played_str, '', '', 0, tag)
 				return
 			href = MMurl.basejoin(self.url, href)
 		else:
