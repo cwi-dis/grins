@@ -1389,7 +1389,7 @@ class ChannelWindow(Channel):
 				
 	def keyinput(self, arg, window, event, value):
 		if value:
-			self.event((self._attrdict, 'accessKey', value))
+			self.event((self._attrdict, 'accesskey', value))
 
 	def resize_window(self, pchan):
 		if not self._player.editmgr.transaction():
