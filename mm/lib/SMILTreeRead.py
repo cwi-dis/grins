@@ -23,7 +23,7 @@ error = 'SMILTreeRead.error'
 LAYOUT_NONE = 0				# must be 0
 LAYOUT_SMIL = 1
 LAYOUT_UNKNOWN = -1			# must be < 0
-
+ 
 CASCADE = 1	# cascade regions for nodes without region attr
 
 layout_name = ' SMIL '			# name of layout channel
@@ -34,8 +34,8 @@ _opS = xmllib._opS
 #		     _opS + r'(?P<y0>\d+%?)' + _opS + r',' +
 #		     _opS + r'(?P<x1>\d+%?)' + _opS + r',' +
 #		     _opS + r'(?P<y1>\d+%?)' + _opS + r'$')
-coordre = re.compile(_opS + r'(?P<x>\d+%?)' + _opS )
-coordrewithsep = re.compile(_opS + r',' + _opS + r'(?P<x>\d+%?)' + _opS )
+coordre = re.compile(_opS + r'(((?P<pixel>\d+)(?!\.|%|\d))|((?P<pourcent>\d+(\.\d+)?)%))' + _opS )
+coordrewithsep = re.compile(_opS + r',' + _opS + r'(((?P<pixel>\d+)(?!\.|%|\d))|((?P<pourcent>\d+(\.\d+)?)%))' + _opS )
 
 idref = re.compile(r'id\(' + _opS + r'(?P<id>' + xmllib._Name + r')' + _opS + r'\)')
 clock_val = (_opS +
@@ -3022,14 +3022,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.syntax_error('syntax error in coords attribute')
 			return
 		endParse = res.end()
-		x = res.group('x')
-
-		inPourcent = x[-1]=='%'
-
-		if x[-1] == '%':
-			value = string.atoi(x[:-1]) / 100.0
+		pixelvalue = res.group('pixel')
+		if pixelvalue != None:
+			value = string.atoi(pixelvalue)
 		else:
-			value = string.atoi(x)
+			pourcentvalue= res.group('pourcent')
+			value = string.atof(pourcentvalue) / 100.0
 		l.append(value)
 
 		while (endParse < len(data)):
@@ -3044,16 +3042,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.syntax_error('internal error !')
 				return
 
-			x = res.group('x')
-
-#			if (x[-1] == '%') != inPourcent:
-#				self.warning('Cannot mix pixels and percentages in anchor',
-#					self.lineno)
-
-			if x[-1] == '%':
-				value = string.atoi(x[:-1]) / 100.0
+			pixelvalue = res.group('pixel')
+			if pixelvalue != None:
+				value = string.atoi(pixelvalue)
 			else:
-				value = string.atoi(x)
+				pourcentvalue= res.group('pourcent')
+				value = string.atof(pourcentvalue) / 100.0
 			l.append(value)
 
 		return l
