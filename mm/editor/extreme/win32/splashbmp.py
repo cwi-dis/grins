@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Bitmap splash management
 
 def getResId():
