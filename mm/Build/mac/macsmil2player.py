@@ -25,10 +25,10 @@ import Res
 try:
 	Res.GetResource('DLOG', ID_SPLASH_DIALOG)
 except:
-	Res.OpenResFile(':player.rsrc')
-	Res.OpenResFile(':playercontrols.rsrc')
-	Res.OpenResFile(':common.rsrc')
-	Res.OpenResFile(':playerballoons.rsrc')
+	Res.FSpOpenResFile(':player.rsrc', 0)
+	Res.FSpOpenResFile(':playercontrols.rsrc', 0)
+	Res.FSpOpenResFile(':common.rsrc', 0)
+	Res.FSpOpenResFile(':playerballoons.rsrc', 0)
 Res.GetResource('DLOG', ID_SPLASH_DIALOG)
 	
 # Now time for real work.
