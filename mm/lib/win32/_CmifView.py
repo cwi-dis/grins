@@ -184,7 +184,7 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 	def set_commandlist(self, list):
 		self._commandlist=list
 		if self._is_active:
-			self._parent.set_commandlist(list,self._strid)
+			self.activate()
 		# else wait until activate is called
 
 	# Called when the view is activated 
@@ -192,11 +192,13 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		self._is_active=1
 		self._parent.set_commandlist(self._commandlist,self._strid)
 		self.set_menu_state()
+		self._parent.LoadAccelTable(grinsRC.IDR_STRUCT_EDIT)
 
 	# Called when the view is deactivated 
 	def deactivate(self):
 		self._is_active=0
 		self._parent.set_commandlist(None,self._strid)
+		self._parent.LoadAccelTable(grinsRC.IDR_GRINSED)
 
 	# Toggles menu entries by delegating to its parent
 	def set_toggle(self, command, onoff):
@@ -265,7 +267,8 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 
 		# remove view title and 
 		# disable view-context commands 
-		self.set_commandlist(None)
+		self.deactivate()
+		#self.set_commandlist(None)
 
 		self._parent._subwindows.remove(self)
 		self._parent = None
