@@ -26,6 +26,8 @@ class SoundChannel(ChannelAsync):
 		self._timer_id = None
 
 	def do_arm(self, node, same=0):
+		if same and self.arm_fp:
+		        return 1
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
@@ -48,6 +50,7 @@ class SoundChannel(ChannelAsync):
 		
 	def do_play(self, node):
 		if not self.arm_fp:
+			print 'not playing'
 			self.play_fp = None
 			self.arm_fp = None
 			self.playdone(0)
@@ -107,8 +110,8 @@ class Player:
 		self.__oldpos = None	# start position of current __data
 		self.__prevpos = None	# previous value of __oldpos
 
-	def __callback(self, arg):
-		self.__callbacks.append(arg)
+	def __callback(self, rdr, arg):
+		self.__callbacks.append((rdr, arg))
 
 	def play(self, rdr, cb):
 		first = 0
@@ -117,7 +120,7 @@ class Player:
 			self.__merger = audiomerge.merge()
 		else:
 			self.__converter.setpos(self.__oldpos)
-		self.__merger.add(rdr, (self.__callback, (cb,)))
+		self.__merger.add(rdr, (self.__callback, (rdr, cb,)))
 		if first:
 			self.__converter = audioconvert.convert(self.__merger,
 						 self.__port.getformats(),
@@ -136,6 +139,10 @@ class Player:
 			self.__playsome(1)
 
 	def stop(self, rdr):
+		for i in range(len(self.__callbacks)):
+			if self.__callbacks[i][0] is rdr:
+				del self.__callbacks[i]
+				break
 		if self.__merger:
 			self.__converter.setpos(self.__oldpos)
 			self.__merger.delete(rdr)
@@ -174,7 +181,6 @@ class Player:
 			self.__playsome(1)
 
 	def __playsome(self, first = 0):
-## 		print 'playsome called'
 		self.__tid = None
 		port = self.__port
 		converter = self.__converter
@@ -183,7 +189,7 @@ class Player:
 				port.wait()
 				self.__merger = None
 				self.__converter = None
-				for cb in self.__callbacks:
+				for rdr, cb in self.__callbacks:
 					if cb:
 						apply(cb[0], cb[1])
 				self.__callbacks = []
@@ -193,7 +199,7 @@ class Player:
 ## 						     fmt.getblocksize()*
 ## 						     fmt.getfpb())
 			port.writeframes(self.__data)
-			for cb in self.__callbacks:
+			for rdr, cb in self.__callbacks:
 				if cb:
 					apply(cb[0], cb[1])
 			self.__callbacks = []
