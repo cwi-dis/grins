@@ -34,7 +34,7 @@ PRODUCT_TO_FEATURE = {
 	"pro": ["pro"],
 	"GRP": ["pro"],
 
-	"ALLPRODUCTS": ["editor", "lite", "pro"]
+	"ALLPRODUCTS": ["editor", "light", "pro"]
 	}
 
 PLATFORM_TO_PLATFORM = {
