@@ -89,7 +89,6 @@ typedef struct {
 	IDirectDrawSurface* pI;
 	bool releaseI;
 	RECT rc;
-	bool hasrc;
 } DirectDrawSurfaceObject;
 
 staticforward PyTypeObject DirectDrawSurfaceType;
@@ -104,8 +103,7 @@ newDirectDrawSurfaceObject()
 		return NULL;
 	self->pI = NULL;
 	self->releaseI = true;
-	memset(&self->rc,'\0',sizeof(RECT));
-	self->hasrc=false;
+	memset(&self->rc,0,sizeof(RECT));
 	/* XXXX Add your own initializers here */
 	return self;
 }
@@ -203,6 +201,24 @@ newDDBLTFXObject()
 }
 
 ///////////////////////////////////////////
+// helpers
+
+static HRESULT GetSurfaceRect(IDirectDrawSurface* pI, RECT *prc)
+	{
+	if(!pI) return false;
+	DDSURFACEDESC desc;
+	ZeroMemory( &desc, sizeof(desc) );
+	desc.dwSize=sizeof(desc);
+	desc.dwFlags=DDSD_WIDTH | DDSD_HEIGHT;
+	HRESULT hr = pI->GetSurfaceDesc(&desc);
+	if(FAILED(hr)) return hr;
+	prc->left = prc->top = 0;
+	prc->right = desc.dwWidth;
+	prc->bottom = desc.dwHeight;
+	return hr;
+	}
+
+///////////////////////////////////////////
 ///////////////////////////////////////////
 // Objects definitions
 
@@ -279,15 +295,22 @@ DirectDraw_CreateSurface(DirectDrawObject *self, PyObject *args)
 		return NULL;
 	
 	DirectDrawSurfaceObject *obj = newDirectDrawSurfaceObject();
-	obj->rc.right = ddsdObj->sd.dwWidth;
-	obj->rc.bottom = ddsdObj->sd.dwHeight;
-	obj->hasrc = true;
+	if( (ddsdObj->sd.dwFlags & DDSD_WIDTH)  && (ddsdObj->sd.dwFlags & DDSD_HEIGHT) ){
+		obj->rc.right = ddsdObj->sd.dwWidth;
+		obj->rc.bottom = ddsdObj->sd.dwHeight;
+		}
 	HRESULT hr = self->pI->CreateSurface(&ddsdObj->sd, &obj->pI, NULL);
 	if (FAILED(hr)){
 		Py_DECREF(obj);
 		seterror("DirectDraw_CreateSurface", hr);
 		return NULL;
 	}
+	hr = GetSurfaceRect(obj->pI, &obj->rc);
+	if (FAILED(hr)){
+		Py_DECREF(obj);
+		seterror("DirectDraw_CreateSurface:GetSurfaceRect", hr);
+		return NULL;
+		}
 	return (PyObject*) obj;
 }
 
@@ -402,21 +425,6 @@ static PyTypeObject DirectDrawType = {
 
 ////////////////////////////////////////////
 // DirectDrawSurface object 
-
-static HRESULT GetSurfaceRect(IDirectDrawSurface* pI, RECT *prc)
-	{
-	if(!pI) return false;
-	DDSURFACEDESC desc;
-	ZeroMemory( &desc, sizeof(desc) );
-	desc.dwSize=sizeof(desc);
-	desc.dwFlags=DDSD_WIDTH | DDSD_HEIGHT;
-	HRESULT hr = pI->GetSurfaceDesc(&desc);
-	if(FAILED(hr)) return hr;
-	prc->left = prc->top = 0;
-	prc->right = desc.dwWidth;
-	prc->bottom = desc.dwHeight;
-	return hr;
-	}
 
 static char DirectDrawSurface_GetSurfaceDesc__doc__[] =
 ""
@@ -537,6 +545,12 @@ DirectDrawSurface_Blt(DirectDrawSurfaceObject *self, PyObject *args)
 			))
 		return NULL;
 
+	if(IsRectEmpty(&rcTo) || IsRectEmpty(&rcFrom)){
+		// nothing to blit
+		Py_INCREF(Py_None);
+		return Py_None;	
+		}
+
 	HRESULT hr;
 
 	// check first destination surface
@@ -551,7 +565,6 @@ DirectDrawSurface_Blt(DirectDrawSurfaceObject *self, PyObject *args)
 		return Py_None;
 	}
 
-
 	// abd then the source
 	hr = ddsFrom->pI->IsLost();
 	if(FAILED(hr)){
@@ -562,6 +575,41 @@ DirectDrawSurface_Blt(DirectDrawSurfaceObject *self, PyObject *args)
 		return Py_None;
 	}
 
+	// cache source surface dimensions
+	if(IsRectEmpty(&ddsFrom->rc)){
+		hr = GetSurfaceRect(ddsFrom->pI, &ddsFrom->rc);
+		if (FAILED(hr)){
+			seterror("DirectDrawSurface_BltFill:GetSurfaceRect", hr);
+			return NULL;
+			}
+		}
+	
+	// check validity of rcFrom
+	RECT rcFromInSurf;
+	if(!IntersectRect(&rcFromInSurf, &rcFrom, &ddsFrom->rc)){
+		seterror("DirectDrawSurface_Blt: Invalid source rectangle");
+		return NULL;
+		}
+	if(!EqualRect(&rcFromInSurf,&rcFrom)){
+		seterror("DirectDrawSurface_Blt: Invalid source rectangle");
+		return NULL;
+		}
+	
+	// cache destination surface dimensions
+	if(IsRectEmpty(&self->rc)){
+		hr = GetSurfaceRect(self->pI, &self->rc);
+		if (FAILED(hr)){
+			seterror("DirectDrawSurface_BltFill:GetSurfaceRect", hr);
+			return NULL;
+			}
+		}
+	RECT rcToInSurf;
+	if(!IntersectRect(&rcToInSurf, &rcTo, &self->rc)){
+		// nothing to draw
+		Py_INCREF(Py_None);
+		return Py_None;
+		}
+	
 	Py_BEGIN_ALLOW_THREADS
 	hr = self->pI->Blt(&rcTo,ddsFrom->pI,&rcFrom,dwFlags,NULL);
 	Py_END_ALLOW_THREADS
@@ -1147,13 +1195,12 @@ DirectDrawSurface_BltFill(DirectDrawSurfaceObject *self, PyObject *args)
 	}
 
 	// cache surface dimensions
-	if(!self->hasrc){
+	if(IsRectEmpty(&self->rc)){
 		hr = GetSurfaceRect(self->pI, &self->rc);
 		if (FAILED(hr)){
 			seterror("DirectDrawSurface_BltFill:GetSurfaceRect", hr);
 			return NULL;
 			}
-		self->hasrc=true;
 		}
 	
 	// find part of rect inside surface
