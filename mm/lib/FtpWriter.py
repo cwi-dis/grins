@@ -12,6 +12,8 @@ class FtpWriter:
 		     dir='',
 		     ascii=0,
 		     debuglevel=0):
+		self.ftp = None
+		self.ftpdata = None
 		self.ftp = ftplib.FTP()
 		if debuglevel:
 			self.ftp.set_debuglevel(debuglevel)
