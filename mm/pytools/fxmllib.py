@@ -10,7 +10,7 @@ class Error(Exception):
        offset: offset into data where error was found;
        text: data in which error was found.
        If these values are unknown, they are set to None."""
-    lineno = offset = text = None
+    lineno = offset = text = filename = None
     def __init__(self, *args):
         self.args = args
         if len(args) > 1:
@@ -19,12 +19,20 @@ class Error(Exception):
                 self.text = args[2]
                 if len(args) > 3:
                     self.offset = args[3]
+                    if len(args) > 4:
+                        self.filename = args[4]
 
     def __str__(self):
-        msg = 'Syntax error'
-        if self.lineno is not None:
-            msg = '%s at line %d' % (msg, self.lineno)
-        return '%s: %s' % (msg, self.args[0])
+        if self.filename:
+            if self.lineno:
+                msg = '"%s", line %d: ' % (self.filename, self.lineno)
+            else:
+                msg = '"%s": ' % self.filename
+        elif self.lineno:
+            msg = 'line %d: ' % self.lineno
+        else:
+            msg = ''
+        return '%sSyntax error: %s' % (msg, self.args[0])
 
 # The character sets below are taken directly from the XML spec.
 _BaseChar = u'\u0041-\u005A\u0061-\u007A\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF' \
@@ -248,7 +256,7 @@ class XMLParser:
             try:
                 data = unicode(data[i:], enc)
             except UnicodeError:
-                self.__error("data cannot be converted to Unicode", data, i, fatal = 1)
+                self.__error("data cannot be converted to Unicode", data, i, self.baseurl, fatal = 1)
             i = 0
         # optional XMLDecl
         if document:
@@ -264,12 +272,12 @@ class XMLParser:
                 version, encoding = res.group('version', 'encoding')
                 standalone = None
             if version is not None and version[1:-1] != '1.0':
-                self.__error('only XML version 1.0 supported', data, res.start('version'), fatal = 1)
+                self.__error('only XML version 1.0 supported', data, res.start('version'), self.baseurl, fatal = 1)
             if encoding:
                 encoding = encoding[1:-1]
                 if enc and enc != encoding.lower() and \
                    enc[:6] != encoding.lower():
-                    self.__error("declared encoding doesn't match actual encoding", data, res.start('encoding'), fatal = 1)
+                    self.__error("declared encoding doesn't match actual encoding", data, res.start('encoding'), self.baseurl, fatal = 1)
                 enc = encoding.lower()
             if standalone:
                 standalone = standalone[1:-1]
@@ -282,7 +290,7 @@ class XMLParser:
             try:
                 data = unicode(data[i:], enc)
             except UnicodeError:
-                self.__error("data cannot be converted to Unicode", data, i, fatal = 1)
+                self.__error("data cannot be converted to Unicode", data, i, self.baseurl, fatal = 1)
         else:
             data = data[i:]
         return data
@@ -327,11 +335,11 @@ class XMLParser:
         # the document itself
         res = starttag.match(data, i)
         if res is None:
-            self.__error('no elements in document', data, i, fatal = 1)
+            self.__error('no elements in document', data, i, self.baseurl, fatal = 1)
         i = res.end(0)
         tagname, slash = res.group('tagname', 'slash')
         if self.docname and tagname != self.docname:
-            self.__error('starttag does not match DOCTYPE', data, res.start('tagname'), fatal = 0)
+            self.__error('starttag does not match DOCTYPE', data, res.start('tagname'), self.baseurl, fatal = 0)
         val = self.__parse_attrs(tagname, data, res.start('tagname'), res.span('attrs'), None)
         if val is None:
             return
@@ -346,14 +354,14 @@ class XMLParser:
             else:
                 res = endtag.match(data, i)
             if res is None:
-                self.__error('end tag missing', data, i, fatal = 0)
+                self.__error('end tag missing', data, i, self.baseurl, fatal = 0)
             elif res.group('tagname') != tagname:
-                self.__error("end tag doesn't match start tag", data, res.start('tagname'), fatal = 0)
+                self.__error("end tag doesn't match start tag", data, res.start('tagname'), self.baseurl, fatal = 0)
             i = res.end(0)
         self.finish_endtag(nstag)
         i = self.__parse_misc(data, i)
         if i != len(data):
-            self.__error('garbage at end of document', data, i, fatal = 0)
+            self.__error('garbage at end of document', data, i, self.baseurl, fatal = 0)
         t2 = time()
         return t0, t1, t2
 
@@ -368,7 +376,7 @@ class XMLParser:
                 c0, c1 = res.span('comment')
                 ires = illegal1.search(data, c0, c1)
                 if ires is not None:
-                    self.__error('illegal characters in comment', data, ires.start(0), fatal = 0)
+                    self.__error('illegal characters in comment', data, ires.start(0), self.baseurl, fatal = 0)
                 self.handle_comment(data[c0:c1])
                 i = res.end(0)
             res = pidecl.match(data, i)
@@ -377,7 +385,7 @@ class XMLParser:
                 c0, c1 = res.span('data')
                 ires = illegal1.search(data, c0, c1)
                 if ires is not None:
-                    self.__error('illegal characters in Processing Instruction', data, ires.start(0), fatal = 0)
+                    self.__error('illegal characters in Processing Instruction', data, ires.start(0), self.baseurl, fatal = 0)
                 self.handle_proc(res.group('name'), res.group('data') or '')
                 i = res.end(0)
             res = space.match(data, i)
@@ -416,7 +424,7 @@ class XMLParser:
             del states[0]
             for tag in dfa[s].keys():
                 if tag and possibles.has_key(tag):
-                    self.__error("non-deterministic content model for `%s'" % tagname, data, i, fatal = 0)
+                    self.__error("non-deterministic content model for `%s'" % tagname, data, i, self.baseurl, fatal = 0)
                 possibles[tag] = 1
             for s in dfa[s].get('', []):
                 if not seenstates.has_key(s):
@@ -442,7 +450,7 @@ class XMLParser:
             if j > i:
                 res = illegal.search(data, i, j)
                 if res is not None:
-                    self.__error("illegal data content in element `%s'" % ptagname, data, i, fatal = 0)
+                    self.__error("illegal data content in element `%s'" % ptagname, data, i, self.baseurl, fatal = 0)
                 skip = 0
                 complain = 0
                 if content is not None:
@@ -454,7 +462,7 @@ class XMLParser:
                     elif not isspace and  type(content) is type([]) and content and type(content[0]) is type({}):
                         complain = 1
                     if complain:
-                        self.__error("no character data allowed in element `%s'" % ptagname, data, i, fatal = 0)
+                        self.__error("no character data allowed in element `%s'" % ptagname, data, i, self.baseurl, fatal = 0)
                 matched = 1
                 if not skip:
                     self.handle_data(data[i:j])
@@ -463,18 +471,18 @@ class XMLParser:
             if res is not None:
                 tagname, slash = res.group('tagname', 'slash')
                 if content == 'EMPTY' or content == '#PCDATA':
-                    self.__error("empty element `%s' has content" % ptagname, data, res.start(0), fatal = 0)
+                    self.__error("empty element `%s' has content" % ptagname, data, res.start(0), self.baseurl, fatal = 0)
                 elif content == 'ANY':
                     # always OK
                     pass
                 elif type(content) is type([]) and content and type(content[0]) is not type({}):
                     # mixed
                     if tagname not in content:
-                        self.__error("illegal content in element `%s'" % ptagname, data, res.start(0), fatal = 0)
+                        self.__error("illegal content in element `%s'" % ptagname, data, res.start(0), self.baseurl, fatal = 0)
                 elif content is not None:
                     self.__update_state(content, states, tagname)
                     if not states:
-                        self.__error("illegal content for element `%s'" % ptagname, data, i)
+                        self.__error("illegal content for element `%s'" % ptagname, data, i, self.baseurl)
                 val = self.__parse_attrs(tagname, data, res.start('tagname'), res.span('attrs'), namespaces)
                 if val is None:
                     return
@@ -490,9 +498,9 @@ class XMLParser:
                     else:
                         res = endtag.match(data, i)
                     if res is None:
-                        self.__error('end tag missing', data, i, fatal = 0)
+                        self.__error('end tag missing', data, i, self.baseurl, fatal = 0)
                     elif res.group('tagname') != tagname:
-                        self.__error("end tag doesn't match start tag", data, res.start('tagname'), fatal = 0)
+                        self.__error("end tag doesn't match start tag", data, res.start('tagname'), self.baseurl, fatal = 0)
                     i = res.end(0)
                 self.finish_endtag(nstag)
                 matched = 1
@@ -501,14 +509,14 @@ class XMLParser:
                 if type(content) is type([]) and content and type(content[0]) is type({}):
                     self.__update_state(content, states, None)
                     if end not in states:
-                        self.__error("content of element `%s' doesn't match content model" % ptagname, data, i, fatal = 0)
+                        self.__error("content of element `%s' doesn't match content model" % ptagname, data, i, self.baseurl, fatal = 0)
                 return res
             res = comment.match(data, i)
             if res is not None:
                 c0, c1 = res.span('comment')
                 ires = illegal1.search(data, c0, c1)
                 if ires is not None:
-                    self.__error('illegal characters in comment', data, ires.start(0), fatal = 0)
+                    self.__error('illegal characters in comment', data, ires.start(0), self.baseurl, fatal = 0)
                 self.handle_comment(data[c0:c1])
                 i = res.end(0)
                 matched = 1
@@ -518,6 +526,7 @@ class XMLParser:
                 if name:
                     if self.entitydefs.has_key(name):
                         sval = val = self.entitydefs[name]
+                        baseurl = self.baseurl
                         if type(val) is type(()):
                             if val[2] is not None:
                                 apply(self.handle_ndata, val)
@@ -530,14 +539,16 @@ class XMLParser:
                             self.entitydefs[name] = sval # restore value
                         if val is not None:
                             if n is None:
+                                self.baseurl = baseurl
                                 return
                             if type(n) is type(res) or n != len(val):
                                 if type(n) is type(res):
                                     n = res.start(0)
-                                self.__error('misformed entity value', data, n, fatal = 0)
+                                self.__error('misformed entity value', data, n, self.baseurl, fatal = 0)
+                        self.baseurl = baseurl
                     else:
                         if self.docname:
-                            self.__error("unknown entity reference `&%s;' in element `%s'" % (name, ptagname), data, i, fatal = 0)
+                            self.__error("unknown entity reference `&%s;' in element `%s'" % (name, ptagname), data, i, self.baseurl, fatal = 0)
                         self.data = data
                         self.offset = res.start('name')
                         self.lineno = string.count(data, '\n', 0, self.offset)
@@ -555,7 +566,7 @@ class XMLParser:
                 c0, c1 = res.span('data')
                 ires = illegal1.search(data, c0, c1)
                 if ires is not None:
-                    self.__error('illegal characters in Processing Instruction', data, ires.start(0), fatal = 0)
+                    self.__error('illegal characters in Processing Instruction', data, ires.start(0), self.baseurl, fatal = 0)
                 self.handle_proc(res.group('name'), res.group('data') or '')
                 i = res.end(0)
             res = cdata.match(data, i)
@@ -564,11 +575,11 @@ class XMLParser:
                 c0, c1 = res.span('cdata')
                 ires = illegal1.search(data, c0, c1)
                 if ires is not None:
-                    self.__error('illegal characters in CDATA section', data, ires.start(0), fatal = 0)
+                    self.__error('illegal characters in CDATA section', data, ires.start(0), self.baseurl, fatal = 0)
                 self.handle_cdata(res.group('cdata'))
                 i = res.end(0)
             if not matched:
-                self.__error("no valid content in element `%s'" % ptagname, data, i)
+                self.__error("no valid content in element `%s'" % ptagname, data, i, self.baseurl)
                 return
         return i
 
@@ -581,50 +592,50 @@ class XMLParser:
         attype, atvalue, atstring = attributes[attrname]
         if atvalue[:6] == '#FIXED':
             if value != atstring:
-                self.__error("attribute `%s' in element `%s' does not have correct value" % (attrname, tagname), data, attrstart, fatal = 0)
+                self.__error("attribute `%s' in element `%s' does not have correct value" % (attrname, tagname), data, attrstart, self.baseurl, fatal = 0)
         if attype == 'CDATA':
             return value                # always OK and don't change value
         if type(attype) is type([]):    # enumeration
             if value not in attype:
-                self.__error("attribute `%s' in element `%s' not valid" % (attrname, tagname), data, attrstart, fatal = 0)
+                self.__error("attribute `%s' in element `%s' not valid" % (attrname, tagname), data, attrstart, self.baseurl, fatal = 0)
             return value
         if type(attype) is type(()):
             if value not in attype[1]:
-                self.__error("attribute `%s' in element `%s' not valid" % (attrname, tagname), data, attrstart, fatal = 0)
+                self.__error("attribute `%s' in element `%s' not valid" % (attrname, tagname), data, attrstart, self.baseurl, fatal = 0)
             return value
         if attype == 'ID':
             if name.match(value) is None:
-                self.__error("attribute `%s' in element `%s' is not an ID" % (attrname, tagname), data, attrstart, fatal = 0)
+                self.__error("attribute `%s' in element `%s' is not an ID" % (attrname, tagname), data, attrstart, self.baseurl, fatal = 0)
             if self.ids.has_key(value):
-                self.__error("attrbute `%s' in element `%s' is not unique" %  (attrname, tagname), data, attrstart, fatal = 0)
+                self.__error("attrbute `%s' in element `%s' is not unique" %  (attrname, tagname), data, attrstart, self.baseurl, fatal = 0)
             self.ids[value] = 1
             return value
         if attype == 'IDREF':
             if name.match(value) is None:
-                self.__error("attrbute `%s' in element `%s' is not an IDREF" % (attrname, tagname), data, attrstart, fatal = 0)
+                self.__error("attrbute `%s' in element `%s' is not an IDREF" % (attrname, tagname), data, attrstart, self.baseurl, fatal = 0)
             # XXX should check ID exists
             return value
         if attype == 'IDREFS':
             if names.match(value) is None:
-                self.__error("attrbute `%s' in element `%s' is not an IDREFS" % (attrname, tagname), data, attrstart, fatal = 0)
+                self.__error("attrbute `%s' in element `%s' is not an IDREFS" % (attrname, tagname), data, attrstart, self.baseurl, fatal = 0)
             # XXX should check IDs exist
             return value
         if attype == 'NMTOKEN':
             if nmtoken.match(value) is None:
-                self.__error("attrbute `%s' in element `%s' is not a NMTOKEN" % (attrname, tagname), data, attrstart, fatal = 0)
+                self.__error("attrbute `%s' in element `%s' is not a NMTOKEN" % (attrname, tagname), data, attrstart, self.baseurl, fatal = 0)
             return value
         if attype == 'NMTOKENS':
             if nmtokens.match(value) is None:
-                self.__error("attrbute `%s' in element `%s' is not a NMTOKENS" % (attrname, tagname), data, attrstart, fatal = 0)
+                self.__error("attrbute `%s' in element `%s' is not a NMTOKENS" % (attrname, tagname), data, attrstart, self.baseurl, fatal = 0)
             return value
         if attype == 'ENTITY':
             if name.match(value) is None:
-                self.__error("attrbute `%s' in element `%s' is not an ENTITY" % (attrname, tagname), data, attrstart, fatal = 0)
+                self.__error("attrbute `%s' in element `%s' is not an ENTITY" % (attrname, tagname), data, attrstart, self.baseurl, fatal = 0)
             # XXX should check ENTITY exists
             return value
         if attype == 'ENTITIES':
             if names.match(value) is None:
-                self.__error("attrbute `%s' in element `%s' is not an ENTITIES" % (attrname, tagname), data, attrstart, fatal = 0)
+                self.__error("attrbute `%s' in element `%s' is not an ENTITIES" % (attrname, tagname), data, attrstart, self.baseurl, fatal = 0)
             # XXX should check ENTITIES exist
             return value
         # XXX other types?
@@ -650,7 +661,7 @@ class XMLParser:
             if res is None:
                 # couldn't match any attributes, but there is more
                 # string to parse: complain and ignore rest of string
-                self.__error('bad attributes', data, i, fatal = 0)
+                self.__error('bad attributes', data, i, self.baseurl, fatal = 0)
                 return
             name = res.group('attrname')
             if reqattrs.has_key(name):
@@ -671,7 +682,7 @@ class XMLParser:
                     attrseen[name] = 1
                     value = self.__check_attr(tagname, name, value, attributes, data, attrstart)
                 else:
-                    self.__error("unknown attribute `%s' on element `%s'" % (name, tagname), data, attrstart, fatal = 0)
+                    self.__error("unknown attribute `%s' on element `%s'" % (name, tagname), data, attrstart, self.baseurl, fatal = 0)
             i = res.end(0)
             if self.__xmlns:
                 res = xmlns.match(name)
@@ -692,7 +703,7 @@ class XMLParser:
             else:
                 s = ''
             reqattrs = string.join(reqattrs, "', `")
-            self.__error("required attribute%s `%s' of element `%s' missing" % (s, reqattrs, tagname), data, dataend, fatal =  0)
+            self.__error("required attribute%s `%s' of element `%s' missing" % (s, reqattrs, tagname), data, dataend, self.baseurl, fatal =  0)
         if attributes is not None:
             # fill in missing attributes that have a default value
             for key, (attype, atvalue, atstring) in attributes.items():
@@ -718,9 +729,9 @@ class XMLParser:
                 if ns is not None:
                     tagname = ns + ' ' + nstag
                 elif prefix != '':
-                    self.__error("unknown namespace prefix `%s'" % prefix, data, tagstart, fatal = 0)
+                    self.__error("unknown namespace prefix `%s'" % prefix, data, tagstart, self.baseurl, fatal = 0)
             else:
-                self.__error("badly formed tag name `%s'" % tagname, data, tagstart, fatal = 0)
+                self.__error("badly formed tag name `%s'" % tagname, data, tagstart, self.baseurl, fatal = 0)
         attrdict = {}                   # collect attributes/values
         for attr, value, attrstart in attrlist:
             if namespaces is not None:
@@ -741,11 +752,11 @@ class XMLParser:
                         if ans is not None:
                             attr = ans + ' ' + nsattr
                         elif prefix != '':
-                            self.__error("unknown namespace prefix `%s'" % prefix, data, attrstart, fatal = 0)
+                            self.__error("unknown namespace prefix `%s'" % prefix, data, attrstart, self.baseurl, fatal = 0)
                 else:
-                    self.__error("badly formed attribute name `%s'" % attr, data, attrstart, fatal = 0)
+                    self.__error("badly formed attribute name `%s'" % attr, data, attrstart, self.baseurl, fatal = 0)
             if attrdict.has_key(attr):
-                self.__error("duplicate attribute name `%s'" % attr, data, attrstart, fatal = 0)
+                self.__error("duplicate attribute name `%s'" % attr, data, attrstart, self.baseurl, fatal = 0)
             attrdict[attr] = value
         return tagname, attrdict, namespaces
 
@@ -759,7 +770,7 @@ class XMLParser:
             i, dataend = span
         res = illegal1.search(data, i, dataend)
         if res is not None:
-            self.__error("illegal characters in attribute value", data, res.start(0), fatal = 0)
+            self.__error("illegal characters in attribute value", data, res.start(0), self.baseurl, fatal = 0)
         newval = []
         while i < dataend:
             res = interesting.search(data, i, dataend)
@@ -771,7 +782,7 @@ class XMLParser:
                 break
             j = res.start(0)
             if data[j] == '<':
-                self.__error("no `<' allowed in attribute value", data, j, fatal = 0)
+                self.__error("no `<' allowed in attribute value", data, j, self.baseurl, fatal = 0)
             if j > i:
                 str = data[i:j]
                 if attype is None or attype == 'CDATA':
@@ -779,7 +790,7 @@ class XMLParser:
                 newval.append(str)
             res = ref.match(data, j, dataend)
             if res is None:
-                self.__error('illegal attribute value', data, j, fatal = 0)
+                self.__error('illegal attribute value', data, j, self.baseurl, fatal = 0)
                 newval.append(data[j])  # the &
                 i = j + 1               # continue searching after the &
                 continue
@@ -790,7 +801,7 @@ class XMLParser:
                 if self.entitydefs.has_key(name):
                     val = self.entitydefs[name]
                     if type(val) is type(()):
-                        self.__error("no external parsed entity allowed in attribute value", data, res.start(0), fatal = 1)
+                        self.__error("no external parsed entity allowed in attribute value", data, res.start(0), self.baseurl, fatal = 1)
                     del self.entitydefs[name]
                     nval = self.__parse_attrval(val, attype)
                     self.entitydefs[name] = val
@@ -798,7 +809,7 @@ class XMLParser:
                         return
                     newval.append(nval)
                 else:
-                    self.__error("reference to unknown entity `%s'" % name, data, res.start(0), fatal = 0)
+                    self.__error("reference to unknown entity `%s'" % name, data, res.start(0), self.baseurl, fatal = 0)
                     newval.append('&%s;' % name)
             else:
                 val = self.__parse_charref(res.group('char'), data, res.start(0))
@@ -823,10 +834,10 @@ class XMLParser:
         try:
             c = unichr(n)
         except ValueError:
-            self.__error('bad character reference', data, i, fatal = 0)
+            self.__error('bad character reference', data, i, self.baseurl, fatal = 0)
             return
         if illegal1.search(c):
-            self.__error('bad character reference', data, i, fatal = 0)
+            self.__error('bad character reference', data, i, self.baseurl, fatal = 0)
         return c
 
     def __read_pentity(self, publit, syslit):
@@ -858,11 +869,13 @@ class XMLParser:
                 name = res.group('name')
                 if self.pentitydefs.has_key(name):
                     val = self.pentitydefs[name]
+                    baseurl = self.baseurl
                     if type(val) is type(()):
                         val = self.__read_pentity(val[0], val[1])
                     self.parse_dtd(val, internal)
+                    self.baseurl = baseurl
                 else:
-                    self.__error("unknown entity `%%%s;'" % name, data, i, fatal = 0)
+                    self.__error("unknown entity `%%%s;'" % name, data, i, self.baseurl, fatal = 0)
                 i = res.end(0)
             res = element.match(data, i)
             if res is not None:
@@ -874,12 +887,12 @@ class XMLParser:
                     elemval = self.elems[name]
                     if elemval[0] is not None:
                         # XXX is this an error?
-                        self.__error('non-unique element name declaration', data, i, fatal = 0)
+                        self.__error('non-unique element name declaration', data, i, self.baseurl, fatal = 0)
                     elif content == 'EMPTY':
                         # check for NOTATION on EMPTY element
                         for atname, (attype, atvalue, atstring) in elemval[1].items():
                             if type(attype) is type(()) and attype[0] == 'NOTATION':
-                                self.__error("NOTATION not allowed on EMPTY element", data, i)
+                                self.__error("NOTATION not allowed on EMPTY element", data, i, self.baseurl)
                 if content[0] == '(':
                     i = res.start('content')
                     j, content, start, end = self.__dfa(data, i)
@@ -895,7 +908,7 @@ class XMLParser:
                 if res is not None:
                     i = res.end(0)
                 if data[i:i+1] != '>':
-                    self.__error('bad DOCTYPE', data, i)
+                    self.__error('bad DOCTYPE', data, i, self.baseurl)
                     return
                 i = i+1
             res = attlist.match(data, i)
@@ -911,7 +924,7 @@ class XMLParser:
                         attype = map(string.strip, string.split(attype[1:-1], '|'))
                     elif attype[:8] == 'NOTATION':
                         if self.elems[elname][0] == 'EMPTY':
-                            self.__error("NOTATION not allowed on EMPTY element", data, ares.start('attype'))
+                            self.__error("NOTATION not allowed on EMPTY element", data, ares.start('attype'), self.baseurl)
                         atnot = map(string.strip, string.split(ares.group('notation'), '|'))
                         attype = ('NOTATION', atnot)
                     if atstring:
@@ -923,10 +936,10 @@ class XMLParser:
                             atstring = string.join(string.split(atstring, '\t'), ' ')
                     if type(attype) is type([]):
                         if atstring is not None and atstring not in attype:
-                            self.__error("default value for attribute `%s' on element `%s' not listed as possible value" % (atname, elname), data, i)
+                            self.__error("default value for attribute `%s' on element `%s' not listed as possible value" % (atname, elname), data, i, self.baseurl)
                     elif type(attype) is type(()):
                         if atstring is not None and atstring not in attype[1]:
-                            self.__error("default value for attribute `%s' on element `%s' not listed as possible value" % (atname, elname), data, i)
+                            self.__error("default value for attribute `%s' on element `%s' not listed as possible value" % (atname, elname), data, i, self.baseurl)
                     if not self.elems[elname][1].has_key(atname):
                         # first definition counts
                         self.elems[elname][1][atname] = attype, atvalue, atstring
@@ -942,7 +955,7 @@ class XMLParser:
                         c0, c1 = res.span('pvalue')
                         ires = illegal1.search(data, c0+1, c1-1)
                         if ires is not None:
-                            self.__error("illegal characters in entity value", data, ires.start(0), fatal = 0)
+                            self.__error("illegal characters in entity value", data, ires.start(0), self.baseurl, fatal = 0)
                     if self.pentitydefs.has_key(pname):
                         # first definition counts
                         pass
@@ -957,10 +970,12 @@ class XMLParser:
                             elif self.pentitydefs.has_key(nm):
                                 repl = self.pentitydefs[nm]
                             else:
-                                self.__error("unknown entity `%s' referenced" % nm, data, i)
+                                self.__error("unknown entity `%s' referenced" % nm, data, i, self.baseurl)
                                 repl = '%%%s;' % nm
                             if type(repl) is type(()):
+                                baseurl = self.baseurl
                                 repl = self.__read_pentity(repl[0], repl[1])
+                                self.baseurl = baseurl
                             pvalue = pvalue[:cres.start(0)] + repl + pvalue[cres.end(0):]
                             cres = entref.search(pvalue, cres.start(0)+len(repl))
                         self.pentitydefs[pname] = pvalue
@@ -976,7 +991,7 @@ class XMLParser:
                         c0, c1 = res.span('value')
                         ires = illegal1.search(data, c0+1, c1-1)
                         if ires is not None:
-                            self.__error("illegal characters in entity value", data, ires.start(0), fatal = 0)
+                            self.__error("illegal characters in entity value", data, ires.start(0), self.baseurl, fatal = 0)
                     if self.entitydefs.has_key(name):
                         # use first definition
                         pass
@@ -991,9 +1006,11 @@ class XMLParser:
                             elif self.pentitydefs.has_key(nm):
                                 repl = self.pentitydefs[nm]
                                 if type(repl) is type(()):
+                                    baseurl = self.baseurl
                                     repl = self.__read_pentity(repl[0], repl[1])
+                                    self.baseurl = baseurl
                             else:
-                                self.__error("unknown entity `%s' referenced" % nm, data, i)
+                                self.__error("unknown entity `%s' referenced" % nm, data, i, self.baseurl)
                                 repl = '%%%s;' % nm
                             value = value[:cres.start(0)] + repl + value[cres.end(0):]
                             cres = entref.search(value, cres.start(0)+len(repl))
@@ -1028,7 +1045,7 @@ class XMLParser:
                     while hlevel > 0:
                         res = bracket.search(data, j)
                         if res is None:
-                            self.__error("unexpected EOF", data, i, fatal = 1)
+                            self.__error("unexpected EOF", data, i, self.baseurl, fatal = 1)
                         j = res.end(0)
                         c = data[res.start(0)]
                         if c == '<':
@@ -1047,7 +1064,9 @@ class XMLParser:
                                 if self.pentitydefs.has_key(pname):
                                     repl = self.pentitydefs[pname]
                                     if type(repl) is type(()):
+                                        baseurl = self.baseurl
                                         repl = self.__read_pentity(repl[0], repl[1])
+                                        self.baseurl = baseurl
                                     data = data[:res.start(0)] + ' ' + repl + ' ' + data[res.end(0):]
                                     j = res.start(0) + len(repl) + 2
                                 else:
@@ -1071,7 +1090,7 @@ class XMLParser:
                     i = i+3
                     ilevel = ilevel - 1
         if i < len(data):
-            self.__error('error while parsing DOCTYPE', data, i)
+            self.__error('error while parsing DOCTYPE', data, i, self.baseurl)
 
     def __dfa(self, data, i):
         res = mixedre.match(data, i)
@@ -1089,22 +1108,22 @@ class XMLParser:
     def __dfa1(self, data, i, dfa):
         res = dfaelem0.match(data, i)
         if res is None:
-            self.__error("syntax error in element content: `(' or Name expecter", data, i, fatal = 1)
+            self.__error("syntax error in element content: `(' or Name expecter", data, i, self.baseurl, fatal = 1)
         token = res.group('token')
         if token == '(':
             i, start, end = self.__dfa1(data, res.end(0), dfa)
             res = dfaelem1.match(data, i)
             if res is None:
-                self.__error("syntax error in element content: `)', `|', or `,' expected", data, i, fatal = 1)
+                self.__error("syntax error in element content: `)', `|', or `,' expected", data, i, self.baseurl, fatal = 1)
             token = res.group('token')
             sep = token
             while token in (',','|'):
                 if sep != token:
-                    self.__error("syntax error in element content: `%s' or `)' expected" % sep, data, i, fatal = 1)
+                    self.__error("syntax error in element content: `%s' or `)' expected" % sep, data, i, self.baseurl, fatal = 1)
                 i, nstart, nend = self.__dfa1(data, res.end(0), dfa)
                 res = dfaelem1.match(data, i)
                 if res is None:
-                    self.__error("syntax error in element content: `%s' or `)' expected" % sep, data, i, fatal = 1)
+                    self.__error("syntax error in element content: `%s' or `)' expected" % sep, data, i, self.baseurl, fatal = 1)
                 token = res.group('token')
                 if sep == ',':
                     # concatenate DFAs
@@ -1179,7 +1198,7 @@ class XMLParser:
             self.parse_dtd(external, 0)
             self.baseurl = baseurl
 
-    def __error(self, message, data = None, i = None, fatal = 1):
+    def __error(self, message, data = None, i = None, filename = None, fatal = 1):
         # called for all syntax errors
         # this either raises an exception (Error) or calls
         # self.syntax_error which may be overridden
@@ -1189,8 +1208,9 @@ class XMLParser:
             self.lineno = None
         self.data = data
         self.offset = i
+        self.filename = filename
         if fatal:
-            raise Error(message, lineno, data, i)
+            raise Error(message, lineno, data, i, filename)
         self.syntax_error(message)
 
     # Overridable -- handle xml processing instruction
@@ -1254,11 +1274,11 @@ class XMLParser:
         pass
 
     def unknown_entityref(self, name):
-        self.__error('reference to unknown entity', self.data, self.offset)
+        self.__error('reference to unknown entity', self.data, self.offset, self.baseurl)
 
     # Example -- handle relatively harmless syntax errors, could be overridden
     def syntax_error(self, message):
-        raise Error(message, self.lineno, self.data, self.offset)
+        raise Error(message, self.lineno, self.data, self.offset, self.filename)
 
 class TestXMLParser(XMLParser):
 
