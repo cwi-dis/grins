@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Names that start with `_' are for internal use only.
 
 import gl, GL, DEVICE
