@@ -1,2 +1,2 @@
-from SMILTreeRead import ReadFile, ReadFileContext
+from SMILTreeRead import ReadFile, ReadString
 from SMILTreeWrite import WriteFile
