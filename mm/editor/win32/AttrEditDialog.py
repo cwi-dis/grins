@@ -51,7 +51,7 @@ class AttrEditorDialog:
 			toplevel_window=self.wrapper.toplevel.window
 		else:
 			toplevel_window = windowinterface.getmainwnd()
-		w=toplevel_window.newformobj(formid)
+		w=toplevel_window.newviewobj(formid)
 		w._title=title
 		w._attriblist=attriblist
 		w._cbdict={
@@ -83,7 +83,7 @@ class AttrEditorDialog:
 			w.set_toggle(usercmd.SHOWALLPROPERTIES, self.show_all_attributes)
 		w._has_followSelection = self.wrapper.canfollowselection()
 		w._followSelection_initial = self.follow_selection
-		toplevel_window.showform(w,formid)
+		toplevel_window.showview(w,formid)
 
 
 	def close(self, willreopen=0):
@@ -220,3 +220,5 @@ class AttrEditorDialogField:
 	def help_callback(self):
 #		"""Callback called when help is requested."""
 		pass
+
+
