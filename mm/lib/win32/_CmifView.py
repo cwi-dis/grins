@@ -254,7 +254,7 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 	# Bring window in front of peers
 	def pop(self):
 		self._parent.ActivateFrame()
-		self._parent.BringWindowToTop()
+		self._parent.MDIActivate(self.GetParent())
 		#self.InvalidateRect()
 
 	# Send window back of the peers
@@ -549,6 +549,7 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 	
 	# Bring the subwindow infront of windows with the same z	
 	def pop(self):
+		self._topwindow.pop()
 		parent = self._parent
 		# put self in front of all siblings with equal or lower z
 		if self is not parent._subwindows[0]:
