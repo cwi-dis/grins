@@ -22,7 +22,7 @@ SunOS\ 5.*)	ARCH=sunos5;;
 esac
 
 case "$prog" in
-*/*)	dir=`dirname "$prog"`;;
+*/*)	dir=`dirname "$prog"`; prog=`basename "$prog"`;;
 *)	IFS=:
 	for dir in $PATH
 	do
@@ -38,6 +38,17 @@ case "$dir" in
 *)	dir=`pwd`/$dir;;
 esac
 
+while [ -h "$dir/$prog" ]
+do
+	ls=`ls -ld "$dir/$prog"`
+	link=`expr "$ls" : '.* -> \(.*\)'`
+	case "$link" in
+	/*)	dir=`dirname "$link"`;;
+	*)	dir=`dirname "$dir/$link"`;;
+	esac
+	prog=`basename "$link"`
+done
+	
 while :
 do
 	case "$dir" in
