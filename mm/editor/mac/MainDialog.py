@@ -20,6 +20,7 @@ import usercmd
 import os
 import macfs
 import MMurl
+import windowinterface
 
 class MainDialog:
 	def __init__(self, title):
@@ -91,9 +92,12 @@ class MainDialog:
 		quietconsole.revert()
 
 	def _ae_openapp(self, *args, **kwargs):
-		pass
+		import settings
+		if not settings.get('no_initial_dialog'):
+			OpenAppDialog(self.new_callback, self.open_callback)
 		
 	def _ae_opendoc(self, aliases, **kwargs):
+		print 'opendoc'
 		if not type(aliases) in (type(()), type([])):
 			aliases=[aliases]
 		for alias in aliases:
@@ -108,3 +112,60 @@ class MainDialog:
 		
 	def _ae_quit(self, *args, **kwargs):
 		self.close_callback()
+
+# The dialog shown when you open the application
+
+def ITEMrange(fr, to): return range(fr, to+1)
+
+ID_DIALOG_OPENAPP=632
+
+ITEM_OK=1
+ITEM_PICTURE=2
+ITEM_NEW=3
+ITEM_OPEN=4
+ITEM_NOTHING=5
+ITEM_NEVER_AGAIN=6
+ITEMLIST_OPENAPP_ALL=ITEMrange(ITEM_OK, ITEM_NEVER_AGAIN)
+
+class OpenAppDialog(windowinterface.MACDialog):
+	def __init__(self, cb_new, cb_open):
+		windowinterface.MACDialog.__init__(self, "Oratrix GRiNS", ID_DIALOG_OPENAPP,
+				ITEMLIST_OPENAPP_ALL, default=ITEM_OK)
+		self.cb_new = cb_new
+		self.cb_open = cb_open
+		self.cb = None
+		self.setradio(ITEM_NOTHING)
+		self.never_again = 0
+		self.show()
+		
+	def close(self):
+		windowinterface.MACDialog.close(self)
+		
+	def setradio(self, which):
+		self._setbutton(ITEM_NEW, (which==ITEM_NEW))
+		self._setbutton(ITEM_OPEN, (which==ITEM_OPEN))
+		self._setbutton(ITEM_NOTHING, (which==ITEM_NOTHING))
+		if which == ITEM_NEW:
+			self.cb = self.cb_new
+		elif which == ITEM_OPEN:
+			self.cb = self.cb_open
+		else:
+			self.cb = None
+					
+	def do_itemhit(self, n, event):
+		if n == ITEM_OK:
+			self.close()
+			if self.never_again:
+				import settings
+				settings.set('no_initial_dialog', 1)
+				settings.save()
+			if self.cb:
+				self.cb()
+		elif n in (ITEM_NEW, ITEM_OPEN, ITEM_NOTHING):
+			self.setradio(n)
+		elif n == ITEM_NEVER_AGAIN:
+			self.never_again = not self.never_again
+			self._setbutton(ITEM_NEVER_AGAIN, self.never_again)
+		else:
+			print 'Unknown LicenseDialog item', n
+		return 1
