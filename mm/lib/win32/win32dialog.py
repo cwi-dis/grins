@@ -14,7 +14,7 @@ import string
 import features
 import compatibility
 
-from pywin.mfc import window
+from pywinlib.mfc import window
 from components import *
 
 ##############################
@@ -117,7 +117,6 @@ class ResDialog(DialogBase):
 			apply(func,arg)
 
 # A special class that it is both an MFC window and A LightWeightControl
-# from pywin.mfc import window
 class WndCtrl(LightWeightControl,window.Wnd):
 	def create_wnd_from_handle(self):
 		window.Wnd.__init__(self,win32ui.CreateWindowFromHandle(self._hwnd))
