@@ -9,7 +9,13 @@ def getfullinfo(url):
 	url = MMurl.canonURL(url)
 	import windowinterface
 	#return nframes, framerate, markers
-	return windowinterface.GetMediaDuration(url),1,[]
+	duration = windowinterface.GetMediaDuration(url)
+##	print 'SOUNDDURATION', url, duration
+	if duration < 0:
+		duration = 0
+	bandwidth = 1
+	markers = []
+	return duration, bandwidth, markers
 
 import FileCache
 allinfo_cache = FileCache.FileCache(getfullinfo)
