@@ -147,7 +147,7 @@ class ProgressControl(Control):
 	def set(self,i):
 		self.sendmessage(commctrl.PBM_SETPOS,i)
 	def setrange(self, min, max):
-		i=self.sendmessage(commctrl.PBM_SETRANGE, min, max)
+		i=self.sendmessage(commctrl.PBM_SETRANGE32, min, max)
 	# The others like step and setstep and getrange, aren't needed at the moment
 
 # Static control class
