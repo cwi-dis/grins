@@ -21,7 +21,7 @@ class RealWindowChannel(Channel.ChannelWindowAsync, RealChannel.RealChannel):
 			if not name:
 				name = '<unnamed node>'
 			chtype = self.__class__.__name__[:-7] # minus "Channel"
-			msg = 'Warning:\nNo playback support for %s in this version\n' \
+			msg = 'Warning:\nNo playback support for %s on this system\n' \
 			      'node %s on channel %s' % (chtype, name, self._name)
 			parms = self.armed_display.fitfont('Times-Roman', msg)
 			w, h = self.armed_display.strsize(msg)

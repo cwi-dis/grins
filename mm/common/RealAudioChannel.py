@@ -25,7 +25,7 @@ class RealAudioChannel(Channel.ChannelAsync, RealChannel.RealChannel):
 			if not name:
 				name = '<unnamed node>'
 			chtype = self.__class__.__name__[:-7] # minus "Channel"
-			windowinterface.showmessage('No playback support for %s in this version\n'
+			windowinterface.showmessage('No playback support for %s on this system\n'
 						    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
 			self.playdone(0)
 
