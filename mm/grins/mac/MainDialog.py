@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 """Dialog for the Main window.
 
 This is a very simple dialog, it consists of four choices and three
