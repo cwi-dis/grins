@@ -252,11 +252,17 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				self.publishcommandlist = self.publishcommandlist + [
 					EXPORT_HTML_TIME(callback = (self.export_HTML_TIME_callback,())),
 					]
-			self.publishcommandlist = self.publishcommandlist + [
-				EXPORT_SMIL(callback = (self.bandwidth_callback, ('smil', self.export_SMIL_callback,))),
-				UPLOAD_SMIL(callback = (self.bandwidth_callback, ('smil', self.upload_SMIL_callback,))),
-				EXPORT_PRUNE(callback = (self.saveas_callback, (1,))),
-				]
+			if features.EXPORT_SMIL2 in features.feature_set:
+				self.publishcommandlist = self.publishcommandlist + [
+					EXPORT_SMIL(callback = (self.bandwidth_callback, ('smil', self.export_SMIL_callback,))),
+					UPLOAD_SMIL(callback = (self.bandwidth_callback, ('smil', self.upload_SMIL_callback,))),
+					EXPORT_PRUNE(callback = (self.saveas_callback, (1,))),
+					]
+			if features.EXPORT_XMT in features.feature_set:
+				self.publishcommandlist = self.publishcommandlist + [
+					EXPORT_XMT(callback = (self.bandwidth_callback, ('xmt', self.export_XMT_callback,))),
+					UPLOAD_XMT(callback = (self.bandwidth_callback, ('xmt', self.upload_XMT_callback,))),
+					]
 		else:
 			self.savecommandlist = self.publishcommandlist = self.publishg2commandlist = []
 		import Help
@@ -708,6 +714,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def export_SMIL_callback(self):
 		self.export(compatibility.Boston)
 
+	def export_XMT_callback(self):
+		self.export(compatibility.XMT)
+
 	def export_WMP_callback(self):
 		import wmpsupport
 		if wmpsupport.haswmpruntimecomponents():
@@ -793,6 +802,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def upload_SMIL_callback(self):
 		self.upload(compatibility.Boston)
+
+	def upload_XMT_callback(self):
+		self.upload(compatibility.XMT)
 
 	def upload_WMP_callback(self):
 		windowinterface.showmessage("Please purchase the full version of GRiNS today!")
