@@ -134,11 +134,11 @@ class NodeInfo:
 		return self.context
 
 	def register(self, object):
-		if self.editmgr <> None:   # DEBUG
+		if self.editmgr is not None:   # DEBUG
 			self.editmgr.register(object)
 
 	def unregister(self, object):
-		if self.editmgr <> None:   # DEBUG
+		if self.editmgr is not None:   # DEBUG
 			self.editmgr.unregister(object)
 
 	def stillvalid(self):
@@ -157,11 +157,11 @@ class NodeInfo:
 		return MMAttrdefs.getdefattr(self.node, name)
 
 	def setattr(self, name, value):
-		if self.editmgr <> None:   # DEBUG
+		if self.editmgr is not None:   # DEBUG
 			self.editmgr.setnodeattr(self.node, name, value)
 
 	def delattr(self, name):
-		if self.editmgr <> None:   # DEBUG
+		if self.editmgr is not None:   # DEBUG
 			self.editmgr.setnodeattr(self.node, name, None)
 
 	def commit(self):
@@ -348,12 +348,12 @@ class NodeInfo:
 			group = self.ext_group
 		else:
 			group = self.int_group
-		if group == self.cur_group:
+		if group is self.cur_group:
 			return
-		if self.cur_group <> None:
+		if self.cur_group is not None:
 			self.cur_group.hide()
 		self.cur_group = group
-		if group <> None:
+		if group is not None:
 			group.show()
 
 	def close(self):
