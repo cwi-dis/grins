@@ -763,8 +763,10 @@ class _CommonWindow:
 					buttons.append(b)
 ##			print 'active buttons', len(self._active_displist._buttons)
 ##		print 'buttons', buttons
-				
-		func(arg, self, evttype, (x, y, buttons))
+		try:
+			func(arg, self, evttype, (x, y, buttons))
+		except Continue:
+			pass
 		
 	def _contentpopupmenu(self, where, event):
 		mw_globals.toplevel.clearmousetimer()
