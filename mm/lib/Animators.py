@@ -2156,59 +2156,56 @@ class AnimateElementParser:
 	# return keyTimes or an empty list on failure
 	def __getInterpolationKeyTimes(self):
 		keyTimes = self.getKeyTimes()
-		if not keyTimes: return ()
-		tl = string.split(keyTimes,';')
+		if not keyTimes: return []
 
 		# len of values must be equal to len of keyTimes
 		lvl = self.__countInterpolationValues()
-		if  lvl != len(tl):
+		if  lvl != len(keyTimes):
 			print 'values vs times mismatch'		 
-			return ()
-			
-		tt = tuple(map(string.atof, tl))
+			return []
 
-		last = tt[len(tt)-1]
+		last = keyTimes[-1]
 		if self.__calcMode !='discrete':
 			# normalize keyTimes		
 			if last<=0.0:
 				print 'invalid keyTimes'
-				return ()
+				return []
 			if last!=1.0:
 				tl = []
-				for i in range(len(tt)):
-					tl.append(tt[i]/last)
-				tt = tuple(tl)
-		
-		# hieuristics to cover proportions in 'discrete' mode
+				for t in keyTimes:
+					tl.append(t/last)
+				keyTimes = tl
+
+		# heuristics to cover proportions in 'discrete' mode
 		dur = self.getDuration()
 		if self.__calcMode =='discrete' and last<=1.0 and dur>0:
 			# unnormalize
 			tl = []
-			for i in range(len(tt)):
-				tl.append(tt[i]*dur)
-			tt = tuple(tl)
+			for t in keyTimes:
+				tl.append(t*dur)
+			keyTimes = tl
 
 		# check boundary constraints
-		first = tt[0]
-		last = tt[len(tt)-1]
+		first = keyTimes[0]
+		last = keyTimes[-1]
 		if self.__calcMode == 'linear' or self.__calcMode == 'spline':
 			if first!=0.0 or last!=1.0: 
 				print 'keyTimes range error'
-				return ()
+				return []
 		elif self.__calcMode == 'discrete':
 			if first!=0.0: 
 				print 'not zero start keyTime'
-				return ()
+				return []
 		elif self.__calcMode == 'paced':
 			print 'ignoring keyTimes for paced mode'
-			return ()
-		
+			return []
+
 		# values should be increasing
-		for i in  range(1,len(tt)):
-			if tt[i] < tt[i-1]:
+		for i in  range(1,len(keyTimes)):
+			if keyTimes[i] < keyTimes[i-1]:
 				print 'keyTimes order mismatch'
-				return ()
-		return tt
+				return []
+		return keyTimes
 
 	# return keySplines or an empty list on failure
 	def __getInterpolationKeySplines(self):
@@ -2225,8 +2222,7 @@ class AnimateElementParser:
 		# applies as well when the keySplines attribute is specified, but keyTimes is not 
 		keyTimes = self.getKeyTimes()
 		if keyTimes:
-			tl = string.split(keyTimes,';')
-			if len(sl) != len(tl)-1:
+			if len(sl) != len(keyTimes)-1:
 				print 'intervals vs splines mismatch'
 				return []
 

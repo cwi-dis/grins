@@ -114,7 +114,7 @@ color = re.compile('(?:'
 _comma_sp = _opS + '(' + _S + '|,)' + _opS
 _fp = r'(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)'
 controlpt = re.compile('^'+_opS+_fp+_comma_sp+_fp+_comma_sp+_fp+_comma_sp+_fp+_opS+'$')
-fpre = re.compile('^' + _opS + _fp + _opS + '$')
+fpre = re.compile('^' + _fp + '$')
 smil_node_attrs = [
 	'region', 'clip-begin', 'clip-end', 'endsync', 
 	'type', 'clipBegin', 'clipEnd',
@@ -819,12 +819,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if attrdict.has_key('keySplines') and len(vals) != len(attrdict['keySplines'].split(';'))+1:
 					self.syntax_error("bad keyTimes attribute (wrong number of control points)")
 				else:
+					keyTimes = []
 					for v in vals:
+						v = v.strip()
 						if not fpre.match(v):
 							self.syntax_error("bad keyTimes attribute")
 							break
+						keyTimes.append(float(v))
 					else:
-						attrdict['keyTimes'] = val
+						attrdict['keyTimes'] = keyTimes
 				del attributes['keyTimes']
 			if attributes.has_key('accumulate'):
 				val = self.parseEnumValue('accumulate', attributes['accumulate'])
