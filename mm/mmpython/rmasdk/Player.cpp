@@ -279,11 +279,11 @@ PlayerObject::ShowInNewWindow(PyObject *self, PyObject *args)
 PyObject *
 PlayerObject::SetPositionAndSize(PyObject *self, PyObject *args)
 {
-	int x, y, h, w;
+	int x, y, w, h;
 	PNxPoint pos;
 	PNxSize size;
 	
-	if (!PyArg_ParseTuple(args, "(ii)(ii)", &x, &y, &h, &w))
+	if (!PyArg_ParseTuple(args, "(ii)(ii)", &x, &y, &w, &h))
 		return NULL;
 	pos.x = x;
 	pos.y = y;
