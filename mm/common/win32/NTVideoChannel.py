@@ -18,14 +18,12 @@ from AnchorDefs import *
 # channel types and message
 import windowinterface
 
-debug=0
+debug = 0
 
 import rma
 
 # ddraw.error
 import ddraw
-
-USE_WINDOWLESS_REAL_RENDERING = 1
 	
 class VideoChannel(Channel.ChannelWindowAsync):
 	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center']
@@ -47,7 +45,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.need_armdone = 0
 		self.__playing = None
 		self.__rcMediaWnd = None
-		self.__use_windowless_real_rendering = USE_WINDOWLESS_REAL_RENDERING
+		self.__windowless_real_rendering = 1
+		self.__windowless_wm_rendering = 1
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
@@ -92,6 +91,11 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			node.__type = 'real'
 			if string.find(mtype, 'flash') >= 0:
 				node.__subtype = 'flash'
+		else:
+			node.__type = 'wm'
+			if string.find(mtype, 'x-ms-asf')>=0:
+				node.__subtype = 'asf'
+				self.__windowless_wm_rendering = 0
 
 		if node.__type == 'real':
 			if self.__rc is None:
@@ -106,7 +110,10 @@ class VideoChannel(Channel.ChannelWindowAsync):
 					self.__ready = 1
 		else:
 			if self.__mc is None:
-				self.__mc = MediaChannel.VideoStream(self)
+				if node.__subtype == 'asf':
+					self.__mc = MediaChannel.MediaChannel(self)
+				else:	
+					self.__mc = MediaChannel.VideoStream(self)
 			try:
 				self.__mc.prepare_player(node, self.window)
 				self.__ready = 1
@@ -128,18 +135,17 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			return
 		if node.__type == 'real':
 			bpp = self.window._topwindow.getRGBBitCount()
-			if bpp not in (8, 16, 24, 32) and self.__use_windowless_real_rendering:
-				self.__use_windowless_real_rendering = 0
+			if bpp not in (8, 16, 24, 32) and self.__windowless_real_rendering:
+				self.__windowless_real_rendering = 0
 			if self.__subtype=='flash':
-				self.__use_windowless_real_rendering = 0
+				self.__windowless_real_rendering = 0
 				
-			# real needs an os window yet
-			if not self.__use_windowless_real_rendering:
+			if not self.__windowless_real_rendering:
 				self.window.CreateOSWindow(rect=self.getMediaWndRect())
 			if not self.__rc:
 				self.playdone(0)
 				return
-			if self.__use_windowless_real_rendering:
+			if self.__windowless_real_rendering:
 				res =self.__rc.playit(node,windowless=1)
 			else:
 				res = self.__rc.playit(node, self._getoswindow(), self._getoswinpos())
@@ -154,10 +160,13 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				self.playdone(0)
 		else:
 			if not self.__mc:
-				self.playdone(0)	
-			elif not self.__mc.playit(node, self.window):
-				windowinterface.showmessage('Failed to play media file', mtype = 'warning')
 				self.playdone(0)
+			else:
+				if not self.__windowless_wm_rendering:
+					self.window.CreateOSWindow(rect=self.getMediaWndRect())
+				if not self.__mc.playit(node, self.window):
+					windowinterface.showmessage('Failed to play media file', mtype = 'warning')
+					self.playdone(0)
 
 	# toggles between pause and run
 	def setpaused(self, paused):
@@ -207,28 +216,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.armed_display.fgcolor(self.getbucolor(node))
 		else:
 			self.armed_display.fgcolor(self.getbgcolor(node))
-
 		armbox = self.prepare_anchors(node, self.window, self.getmediageom(node))
 		self.setArmBox(armbox)
-		
 		self.armed_display.setMediaBox(armbox)
-
-#		hicolor = self.gethicolor(node)
-		
-#		for a in node.GetRawAttrDef('anchorlist', []):
-#			atype = a[A_TYPE]
-#			if atype not in Channel.SourceAnchors or atype == ATYPE_AUTO:
-#				continue
-#			anchor = node.GetUID(), a[A_ID]
-#			if not self._player.context.hyperlinks.findsrclinks(anchor):
-#				continue
-#			b = self.armed_display.newbutton((0,0,1,1), times = a[A_TIMES])
-#			b.hiwidth(3)
-#			if drawbox:
-#				b.hicolor(hicolor)
-#			self.setanchor(a[A_ID], a[A_TYPE], b, a[A_TIMES])
-#		if node.__type != 'real':
-#			self.armed_display.drawvideo(self.__mc.update)
 
 	def _getoswindow(self):
 		return self.window.GetSafeHwnd()
