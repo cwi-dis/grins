@@ -2837,6 +2837,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				lcd['width'] = coords[2]
 				lcd['height'] = coords[3]
 				lcd['showBackground'] = 'whenActive'
+				lcd['bgcolor'] = vp.attrdict.get('bgcolor') or (0,0,0)
+				lcd['transparent'] = 0
 				settings.setScreenSize(coords[2], coords[3])
 				ctx.cssResolver.setRawAttrs(lcd.getCssId(), [('left', coords[0]), ('top', coords[1]), ('width', coords[2]), ('height', coords[3])])
 				continue
