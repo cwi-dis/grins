@@ -3,7 +3,6 @@ __version__ = "$Id$"
 # Player module -- mostly defines the Player class.
 
 
-from Scheduler import del_timing
 from PlayerCore import PlayerCore
 from MMExc import *
 import MMAttrdefs
@@ -27,11 +26,14 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 	# Initialization.
 	#
 	def __init__(self, toplevel):
-		self.updateuibaglist = self.dummy_updateuibaglist
 		ViewDialog.__init__(self, 'player_')
 		self.playing = self.pausing = self.locked = 0
 		PlayerCore.__init__(self, toplevel)
 		self.load_geometry()
+		
+		from SMILCssResolver import SMILCssResolver
+		self.cssResolver = self.context.cssResolver
+			
 		PlayerDialog.__init__(self, self.last_geometry,
 				      'Player (' + toplevel.basename + ')')
 		self.channelnames = []
@@ -42,7 +44,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.seek_nodelist = []
 		self.ignore_delays = 0
 		self.ignore_pauses = 0
-		self.play_all_bags = 0
 		self.pause_minidoc = 1
 		self.sync_cv = 1
 		self.toplevel = toplevel
@@ -55,32 +56,30 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.set_timer = toplevel.set_timer
 		self.timer_callback = self.scheduler.timer_callback
 		self.makechannels()
+		self._exporter = None
 		self.commandlist = [
 			CLOSE_WINDOW(callback = (self.close_callback, ()),
 				     help = 'Close the Player View'),
 			USERGROUPS(callback = self.usergroup_callback),
 			CHANNELS(callback = self.channel_callback),
 			SCHEDDUMP(callback = (self.scheduler.dump, ())),
-			SYNCCV(callbac = (self.synccv_callback, ())),
+			SYNCCV(callback = (self.synccv_callback, ())),
 			MAGIC_PLAY(callback = (self.magic_play, ())),
 			]
 		play = PLAY(callback = (self.play_callback, ()))
 		pause = PAUSE(callback = (self.pause_callback, ()))
 		stop = STOP(callback = (self.stop_callback, ()))
-		self.stoplist = self.commandlist
 		self.stoplist = self.commandlist + [
 			# when stopped, we can play and pause
 			play,
 			pause,
 			stop,
 			]
-		self.playlist = self.commandlist
 		self.playlist = self.commandlist + [
 			# when playing, we can pause and stop
 			pause,
 			stop,
 			]
-		self.pauselist = self.commandlist
 		self.pauselist = self.commandlist + [
 			# when pausing, we can continue (play or
 			# pause) and stop
@@ -89,14 +88,16 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			stop,
 			]
 		self.alllist = self.pauselist
-
+		
 	def destroy(self):
+		PlayerCore.destroy(self)
 		if not hasattr(self, 'toplevel'):
 			# already destroyed
 			return
 		self.hide()
 		self.destroychannels()
 		self.close()
+		del self._exporter
 		del self.channelnames
 		del self.channels
 		del self.channeltypes
@@ -109,7 +110,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		del self.stoplist
 		del self.playlist
 		del self.pauselist
-		del self.updateuibaglist
 
 	def fixtitle(self):
 		import MMurl
@@ -125,7 +125,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 	def is_showing(self):
 		return self.showing
 
-	def show(self, afterfunc = None):
+	def show(self, afterfunc = None, offscreen = 0):
 		if self.is_showing():
 			PlayerDialog.show(self)
 			for ch in self.channels.values():
@@ -204,11 +204,9 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 				if layout is None:
 					ch.check_visible()
 					ch.unhighlight()
-					ch.hideimg()
 					ch.sensitive()
 				else:
 					ch.show()
-					ch.showimg()
 					if channel is not None and \
 					   channel == chname:
 						##ch.highlight(RED)
@@ -218,16 +216,15 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 						# get a color that is different
 						# than the background
 						bgcolor = ch._attrdict.get('bgcolor')
-						pch = ch
-						while bgcolor is None:
-							pch = pch.pchan
-							bgcolor = pch._attrdict.get('bgcolor')
-						color = bgcolor[0],(bgcolor[1]+128)%256,bgcolor[2]
-						ch.highlight(color)
+						if bgcolor:
+							import colorsys
+							hsv = colorsys.rgb_to_hsv(bgcolor[0]/255.,bgcolor[1]/255.,bgcolor[2]/255.)
+							color = colorsys.hsv_to_rgb((hsv[0]+0.25)%1.0,hsv[1],(hsv[2]+0.5)%1.0)
+							color = int(color[0]*255+.5),int(color[2]*255+.5),int(color[2]*255+.5)
+							ch.highlight(color)
 					ch.sensitive((selectchannelcb, (chname,)))
 			elif not ch._attrdict.has_key('base_window'):
 				ch.show()
-				ch.showimg()
 				ch.sensitive((selectchannelcb, (chname,)))
 			else:
 				ch.hide()
@@ -242,21 +239,29 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 
 	def stopped(self):
 		PlayerCore.stopped(self)
+		self.updatePlayerStateOnStop()
+		if self._exporter:
+			self._exporter.finished()
+			for ch in self.channels.values():
+				ch.unregister_exporter(self._exporter) 
+			self._exporter = None
+			self.hide()
 		if self.curlayout is None:
 			self.setlayout(self.savecurlayout, self.savecurchannel, self.savecallback)
 		else:
 			self.setlayout(self.curlayout, self.curchannel, self.savecallback)
+			
+	def exportplay(self, exporter):
+		self.hide()
+		self._exporter = exporter
+		self.show(offscreen=1)
+		for ch in self.channels.values():
+			ch.register_exporter(exporter) 
+		self.play()
 	#
 	# FORMS callbacks.
 	#
 	def play_callback(self):
-		self.play_entry()
-	def pause_callback(self):
-		self.pause_entry()
-	def stop_callback(self):
-		self.stop_entry()
-		
-	def play_entry(self):
 		self.toplevel.setwaiting()
 		self.show()
 		if self.playing and self.pausing:
@@ -270,7 +275,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			# nothing, restore state.
 			self.showstate()
 
-	def pause_entry(self):
+	def pause_callback(self):
 		if self.showing:			
 			self.toplevel.setwaiting()
 			if self.playing and self.pausing:
@@ -284,7 +289,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 				self.pause(1)
 				self.play()
 
-	def stop_entry(self):
+	def stop_callback(self):
 		if self.showing:			
 			self.toplevel.setwaiting()
 			self.cc_stop()
@@ -292,25 +297,28 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 	def magic_play(self):
 		if self.playing:
 			# toggle pause if playing
-			self.pause()
+			self.pause_callback()
 		else:
 			# start playing if stopped
-			self.play()
+			self.play_callback()
 
 	def close_callback(self):
 		self.hide()
 
 	def usergroup_callback(self, name):
 		self.toplevel.setwaiting()
-		title, u_state, override = self.context.usergroups[name]
-		if override == 'allowed':
-			if u_state == 'RENDERED':
-				u_state = 'NOT_RENDERED'
-			else:
-				u_state = 'RENDERED'
-			self.context.usergroups[name] = title, u_state, override
+		title, u_state, override, uid = self.context.usergroups[name]
+		em = self.context.editmgr
+		if not em.transaction():
+			return
+		if u_state == 'RENDERED':
+			u_state = 'NOT_RENDERED'
+		else:
+			u_state = 'RENDERED'
+		em.delusergroup(name)
+		em.addusergroup(name, (title, u_state, override, uid))
+		em.commit()
 		self.setusergroup(name, u_state == 'RENDERED')
-		self.root.ResetPlayability()
 
 	def channel_callback(self, name):
 		import settings
@@ -361,9 +369,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			state = PLAYING
 		self.setstate(state)
 
-	def dummy_updateuibaglist(self):
-		pass
-
 	def makemenu(self):
 		channels = []
 		for name in self.channelnames:
@@ -372,9 +377,11 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.setchannels(channels)
 
 	def makeugroups(self):
+		import settings
 		ugroups = []
-		for name, (title, u_state, override) in self.context.usergroups.items():
-			if override != 'allowed':
+		showhidden = settings.get('showhidden')
+		for name, (title, u_state, override, uid) in self.context.usergroups.items():
+			if not showhidden and override != 'visible':
 				continue
 			if not title:
 				title = name

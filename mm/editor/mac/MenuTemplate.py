@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 #
 # Command/menu mapping for the mac, editor version
 #
@@ -33,19 +35,23 @@ MENUBAR=(
 		(FLAG_ALL, SEP,),
 		(FLAG_QT, ENTRY, 'Publish for QuickTime...', None, EXPORT_QT),
 		(FLAG_QT, ENTRY, 'Publish for QuickTime and upload...', None, UPLOAD_QT),
-		(FLAG_G2, ENTRY, 'Publish for G2...', None, EXPORT_G2),
-		(FLAG_G2, ENTRY, 'Publish for G2 and Upload...', None, UPLOAD_G2),
-		(FLAG_SMIL_1_0, ENTRY, 'Publish...', None, EXPORT_SMIL),
-		(FLAG_SMIL_1_0, ENTRY, 'Publish and Upload...', None, UPLOAD_SMIL),
-		(FLAG_SMIL_1_0|FLAG_QT|FLAG_G2, SEP,),
+		(FLAG_G2|FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for G2...', None, EXPORT_G2),
+		(FLAG_G2|FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for G2 and Upload...', None, UPLOAD_G2),
+		(FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for WMP', None, EXPORT_WMP),
+		(FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for WMP and Upload', None, UPLOAD_WMP),
+		(FLAG_PRO|FLAG_SNAP, ENTRY, 'Publish for HTML+Time', None, EXPORT_HTML_TIME),
+		(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, 'Publish SMIL...', None, EXPORT_SMIL),
+		(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, 'Publish SMIL and Upload...', None, UPLOAD_SMIL),
+		(FLAG_SMIL_1_0|FLAG_QT|FLAG_G2|FLAG_PRO, SEP,),
 		(FLAG_ALL, ENTRY, 'Document Properties...', (kMenuOptionModifier, 'A'), PROPERTIES),
 		(FLAG_DBG, SEP,),
 		(FLAG_DBG, CASCADE, 'Debug', (
-			(FLAG_ALL, ENTRY, 'Dump scheduler data', None, SCHEDDUMP),
-			(FLAG_ALL, TOGGLE, ('Enable call tracing','Disable call tracing'), None, TRACE),
-			(FLAG_ALL, ENTRY, 'Enter debugger', None, DEBUG),
-			(FLAG_ALL, ENTRY, 'Abort', None, CRASH),
-			(FLAG_ALL, ENTRY, 'Show log/debug window', None, CONSOLE),
+			(FLAG_DBG, ENTRY, 'Dump scheduler data', None, SCHEDDUMP),
+			(FLAG_DBG, TOGGLE, ('Enable call tracing','Disable call tracing'), None, TRACE),
+			(FLAG_DBG, ENTRY, 'Enter debugger', None, DEBUG),
+			(FLAG_DBG, ENTRY, 'Abort', None, CRASH),
+			(FLAG_DBG, ENTRY, 'Show log/debug window', None, CONSOLE),
+			(FLAG_DBG, ENTRY, 'Dump Window Hierarchy', None, DUMPWINDOWS),
 			)),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Check for GRiNS update...', None, CHECKVERSION),
@@ -64,17 +70,35 @@ MENUBAR=(
 			(FLAG_ALL, ENTRY, 'Within', None, PASTE_UNDER),
 			)),
 		(FLAG_ALL, ENTRY, 'Delete', (kMenuNoCommandModifier, '\177', 0x0a), DELETE),
+		
+		(FLAG_ALL, SEP,),
+		(FLAG_ALL, CASCADE, 'Align', (
+			(FLAG_ALL, ENTRY, 'Left', 'L', ALIGN_LEFT),
+			(FLAG_ALL, ENTRY, 'Center', 'C', ALIGN_CENTER),
+			(FLAG_ALL, ENTRY, 'Right', 'R', ALIGN_RIGHT),
+			(FLAG_ALL, SEP,),
+			(FLAG_ALL, ENTRY, 'Top', 'T', ALIGN_TOP),
+			(FLAG_ALL, ENTRY, 'Middle', 'M', ALIGN_MIDDLE),
+			(FLAG_ALL, ENTRY, 'Bottom', 'B', ALIGN_BOTTOM),
+			)),
+		(FLAG_ALL, CASCADE, 'Distribute', (
+			(FLAG_ALL, ENTRY, 'Horizontally', 'H', DISTRIBUTE_HORIZONTALLY),
+			(FLAG_ALL, ENTRY, 'Vertically', 'V', DISTRIBUTE_VERTICALLY),
+			)),
+		
 		(FLAG_ALL, SEP,),
 		(FLAG_PRO, ENTRY, 'New node...', 'K', NEW_AFTER),
-		(FLAG_PRO, ENTRY, 'New Channel', 'M', NEW_CHANNEL),
-		(FLAG_PRO, ENTRY, 'New Screen', None, NEW_LAYOUT),
+		(FLAG_PRO, ENTRY, 'New Region', 'M', NEW_REGION),
+		(FLAG_BOSTON, ENTRY, 'New TopLayout', 'T', NEW_TOPLAYOUT),
+#		(FLAG_PRO, ENTRY, 'New Screen', None, NEW_LAYOUT),
 		(FLAG_PRO, SEP,),
-		(FLAG_PRO, ENTRY, 'Move Channel', None, MOVE_CHANNEL),
-		(FLAG_PRO, ENTRY, 'Copy Channel', None, COPY_CHANNEL),
+		(FLAG_PRO, ENTRY, 'Move Region', None, MOVE_REGION),
+		(FLAG_PRO, ENTRY, 'Copy Region', None, COPY_REGION),
 		(FLAG_CMIF, ENTRY, 'Toggle Channel State', None, TOGGLE_ONOFF),
 		(FLAG_PRO, SEP, ),
 		(FLAG_ALL, ENTRY, 'Properties...', 'A', ATTRIBUTES),
 		(FLAG_ALL, ENTRY, 'Edit Content', 'E', CONTENT),
+		(FLAG_PRO, ENTRY, 'Convert to SMIL 2.0', None, RPCONVERT),
 		(FLAG_ALL, SEP, ),
 		(FLAG_ALL, ENTRY, 'Preferences...', None, PREFERENCES),
 		)),
@@ -123,16 +147,10 @@ MENUBAR=(
 			(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_SEQ),
 		)),
 		(FLAG_ALL, CASCADE, 'Switch node', (
-			(FLAG_ALL, ENTRY, 'Parent', None, NEW_ALT),
-			(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_ALT),
-			(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_ALT),
-			(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_ALT),
-		)),
-		(FLAG_CMIF, CASCADE, 'Choice node', (
-			(FLAG_ALL, ENTRY, 'Parent', None, NEW_CHOICE),
-			(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_CHOICE),
-			(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_CHOICE),
-			(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_CHOICE),
+			(FLAG_ALL, ENTRY, 'Parent', None, NEW_SWITCH),
+			(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_SWITCH),
+			(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_SWITCH),
+			(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_SWITCH),
 		)),
 		(FLAG_PRO, ENTRY, 'Before...', None, NEW_BEFORE),
 		(FLAG_PRO, ENTRY, 'Within...', 'D', NEW_UNDER),
@@ -146,8 +164,8 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'Play Node', None, PLAYNODE),
 		(FLAG_ALL, ENTRY, 'Play from Node', None, PLAYFROM),
 		(FLAG_CMIF, SEP,),
-		(FLAG_CMIF, DYNAMICCASCADE, 'User Groups', USERGROUPS),
-		(FLAG_CMIF, DYNAMICCASCADE, 'Channel Visibility', CHANNELS),
+		(FLAG_BOSTON|FLAG_SNAP, DYNAMICCASCADE, 'Custom Tests', USERGROUPS),
+		(FLAG_CMIF, DYNAMICCASCADE, 'Visible Channels', CHANNELS),
 		)),
 
 	(FLAG_ALL, CASCADE, 'Linking', (
@@ -167,24 +185,19 @@ MENUBAR=(
 		(FLAG_PRO, ENTRY, 'Zoom In', None, CANVAS_WIDTH),
 		(FLAG_PRO, ENTRY, 'Fit in Window', None, CANVAS_RESET),
 		(FLAG_PRO, SEP,),
-		(FLAG_PRO, ENTRY, 'Synchronize Selection', 'F', PUSHFOCUS),
-		(FLAG_PRO, SEP,),
 		(FLAG_PRO, TOGGLE, 'Unused Channels', None, TOGGLE_UNUSED),
 		(FLAG_PRO, TOGGLE, 'Sync Arcs', None, TOGGLE_ARCS),
 		(FLAG_PRO, TOGGLE, 'Image Thumbnails', None, THUMBNAIL),
 		(FLAG_PRO, TOGGLE, 'Bandwidth Usage Strip', None, TOGGLE_BWSTRIP),
 		(FLAG_ALL, ENTRY, 'Check Bandwidth', None, COMPUTE_BANDWIDTH),
 		(FLAG_PRO, TOGGLE, 'Show Playable', None, PLAYABLE),
-##		(FLAG_CMIF, TOGGLE, 'Show Durations', None, TIMESCALE),
+		(FLAG_ALL, CASCADE, 'Show Time in Structure', (
+			(FLAG_ALL, TOGGLE, 'Whole Document, Adaptive', None, TIMESCALE),
+			(FLAG_ALL, TOGGLE, 'Selection Only, Adaptive', None, LOCALTIMESCALE),
+			(FLAG_ALL, TOGGLE, 'Selection Only, Fixed', None, CORRECTLOCALTIMESCALE),
+			)),
 		(FLAG_CMIF, SEP,),
 		(FLAG_CMIF, TOGGLE, 'Timeline view follows player', None, SYNCCV),
-		(FLAG_CMIF, CASCADE, 'Minidoc navigation', (
-			(FLAG_CMIF, ENTRY, 'Next', None, NEXT_MINIDOC),
-			(FLAG_CMIF, ENTRY, 'Previous', None, PREV_MINIDOC),
-			(FLAG_CMIF, DYNAMICCASCADE, 'Ancestors', ANCESTORS),
-			(FLAG_CMIF, DYNAMICCASCADE, 'Descendants', DESCENDANTS),
-			(FLAG_CMIF, DYNAMICCASCADE, 'Siblings', SIBLINGS),
-			)),
 		)),
 
 	(FLAG_ALL, CASCADE, 'Windows', (
@@ -195,9 +208,10 @@ MENUBAR=(
 		(FLAG_PRO, ENTRY, 'Timeline View', '7', CHANNELVIEW),
 		(FLAG_PRO, ENTRY, 'Layout View', '8', LAYOUTVIEW),
 		(FLAG_PRO, ENTRY, 'Hyperlinks', '9', LINKVIEW),
-		(FLAG_CMIF, ENTRY, 'User Groups', '0', USERGROUPVIEW),
+		(FLAG_BOSTON, ENTRY, 'Custom Tests', '0', USERGROUPVIEW),
+		(FLAG_BOSTON, ENTRY, 'Transitions', None, TRANSITIONVIEW),
+		(FLAG_ALL, ENTRY, 'Source View', None, SOURCEVIEW),
 		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, 'Source', None, SOURCE),
 		(FLAG_ALL, ENTRY, 'View Help Window', None, HELP),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, SPECIAL, 'Open Windows', 'windows'),
@@ -211,6 +225,7 @@ MENUBAR=(
 POPUP_HVIEW_LEAF = (
 		(FLAG_PRO, ENTRY, 'New Node Before', None, NEW_BEFORE),
 		(FLAG_PRO, ENTRY, 'New Node After', 'K', NEW_AFTER),
+		(FLAG_PRO, ENTRY, 'Convert to SMIL 2.0', None, RPCONVERT),
 		(FLAG_PRO, SEP,),
 		(FLAG_ALL, ENTRY, 'Cut', 'X', CUT),
 		(FLAG_ALL, ENTRY, 'Copy', 'C', COPY),
@@ -254,14 +269,9 @@ POPUP_HVIEW_LEAF = (
 				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_SEQ),
 			)),
 			(FLAG_ALL, CASCADE, 'Switch node', (
-				(FLAG_ALL, ENTRY, 'Parent', None, NEW_ALT),
-				(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_ALT),
-				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_ALT),
-			)),
-			(FLAG_CMIF, CASCADE, 'Choice node', (
-				(FLAG_ALL, ENTRY, 'Parent', None, NEW_CHOICE),
-				(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_CHOICE),
-				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_CHOICE),
+				(FLAG_ALL, ENTRY, 'Parent', None, NEW_SWITCH),
+				(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_SWITCH),
+				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_SWITCH),
 			)),
 		)),
 		(FLAG_ALL, SEP,),
@@ -348,16 +358,10 @@ POPUP_HVIEW_STRUCTURE = (
 				(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_SEQ),
 			)),
 			(FLAG_ALL, CASCADE, 'Switch node', (
-				(FLAG_ALL, ENTRY, 'Parent', None, NEW_ALT),
-				(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_ALT),
-				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_ALT),
-				(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_ALT),
-			)),
-			(FLAG_CMIF, CASCADE, 'Choice node', (
-				(FLAG_ALL, ENTRY, 'Parent', None, NEW_CHOICE),
-				(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_CHOICE),
-				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_CHOICE),
-				(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_CHOICE),
+				(FLAG_ALL, ENTRY, 'Parent', None, NEW_SWITCH),
+				(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_SWITCH),
+				(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_SWITCH),
+				(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_SWITCH),
 			)),
 		)),
 		(FLAG_ALL, SEP,),
@@ -377,7 +381,7 @@ POPUP_HVIEW_STRUCTURE = (
 )
 
 POPUP_CVIEW_NONE = (
-		(FLAG_ALL, ENTRY, 'New Channel...', 'M', NEW_CHANNEL),
+		(FLAG_ALL, ENTRY, 'New Region...', 'M', NEW_REGION),
 )
 
 POPUP_CVIEW_BWSTRIP = (
@@ -395,8 +399,8 @@ POPUP_CVIEW_CHANNEL = (
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Delete', None, DELETE),
 		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, 'Move Channel', None, MOVE_CHANNEL),
-		(FLAG_ALL, ENTRY, 'Copy Channel', None, COPY_CHANNEL),
+		(FLAG_ALL, ENTRY, 'Move Region', None, MOVE_REGION),
+		(FLAG_ALL, ENTRY, 'Copy Region', None, COPY_REGION),
 
 )
 
@@ -425,9 +429,9 @@ POPUP_CVIEW_SYNCARC = (
 #
 PLAYER_ADORNMENTS = {
 	'toolbar': (
-		(TOGGLE, 1000, STOP),
-		(TOGGLE, 1500, PLAY),
-		(TOGGLE, 2000, PAUSE),
+		(TOGGLE, 1001, STOP),
+		(TOGGLE, 1501, PLAY),
+		(TOGGLE, 2001, PAUSE),
 		),
 	'shortcuts': {
 		' ': MAGIC_PLAY
@@ -441,4 +445,4 @@ CHANNEL_ADORNMENTS = {
 
 #
 # CNTL resource for the toolbar and its height
-TOOLBAR=(2500, 62, 22)
+TOOLBAR=(None, 66, 24)

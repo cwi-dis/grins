@@ -60,6 +60,8 @@ class UsergroupViewDialog(windowinterface.MACDialog):
 	def __list_callback(self):
 		pos = self.__list.getselect()
 		self._setsensitive([ITEM_B_EDIT, ITEM_B_DELETE], pos is not None)
+		if pos is not None and self.__list.lastclickwasdouble():
+			self.edit_callback()
 
 	def getgroup(self):
 		"""Return name of currently selected user group."""
@@ -109,7 +111,7 @@ class UsergroupViewDialog(windowinterface.MACDialog):
 class UsergroupEditDialog(windowinterface.MACDialog):
 	__rangelist = ['0-1 sec', '0-10 sec', '0-100 sec']
 
-	def __init__(self, ugroup, title, ustate, override):
+	def __init__(self, ugroup, title, ustate, override, uid):
 		"""Create the UsergroupEdit dialog.
 
 		Create the dialog window (non-modal, so does not grab
@@ -117,7 +119,7 @@ class UsergroupEditDialog(windowinterface.MACDialog):
 		"""
 		windowinterface.MACDialog.__init__(self, title, ID_DIALOG_UGROUP_EDITOR,
 				ITEMLIST_E_ALL, default=ITEM_E_OK, cancel=ITEM_E_CANCEL)
-		self.setstate(ugroup, title, ustate, override)
+		self.setstate(ugroup, title, ustate, override, uid)
 ##		w = windowinterface.Window('Edit user group', resizable = 1)
 ##		self.__window = w
 ##		self.__ugroup = w.TextInput('User group name', ugroup, None,
@@ -132,8 +134,8 @@ class UsergroupEditDialog(windowinterface.MACDialog):
 ##					    top = self.__title, left = None,
 ##					    right = None)
 ##		self.__override = w.OptionMenu('User override',
-##					       ['not allowed', 'allowed'],
-##					       override == 'allowed', None,
+##					       ['hidden', 'visible'],
+##					       override == 'visible', None,
 ##					       top = self.__state,
 ##					       left = None, right = None)
 ##		sep = w.Separator(top = self.__override, left = None,
@@ -149,7 +151,7 @@ class UsergroupEditDialog(windowinterface.MACDialog):
 	def showmessage(self, text):
 		windowinterface.showmessage(text)
 
-	def setstate(self, ugroup, title, ustate, override):
+	def setstate(self, ugroup, title, ustate, override, uid):
 		"""Set the values in the dialog.
 
 		Arguments (no defaults):
@@ -161,7 +163,7 @@ class UsergroupEditDialog(windowinterface.MACDialog):
 		self._setlabel(ITEM_E_NAME, ugroup)
 		self._setlabel(ITEM_E_TITLE, title)
 		self._setbutton(ITEM_E_RENDERED, (ustate == 'RENDERED'))
-		self._setbutton(ITEM_E_OVERRIDE, (override == 'allowed'))
+		self._setbutton(ITEM_E_OVERRIDE, (override == 'visible'))
 
 	def getstate(self):
 		if self._getbutton(ITEM_E_RENDERED):
@@ -169,14 +171,16 @@ class UsergroupEditDialog(windowinterface.MACDialog):
 		else:
 			ustate = 'NOT RENDERED'
 		if self._getbutton(ITEM_E_OVERRIDE):
-			override = 'allowed'
+			override = 'visible'
 		else:
-			override = 'not allowed'
+			override = 'hidden'
+		uid = ''		# XXX to be supplied
 		return (
 			self._getlabel(ITEM_E_NAME),
 			self._getlabel(ITEM_E_TITLE),
 			ustate,
-			override)
+			override,
+			uid)
 					
 	def do_itemhit(self, item, event):
 		if item == ITEM_E_NAME:

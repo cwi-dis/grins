@@ -37,6 +37,8 @@ class MainDialog:
 		if __debug__:
 			self.commandlist.append(
 				usercmd.CONSOLE(callback=(self.console_callback, ())))
+			self.commandlist.append(
+				usercmd.DUMPWINDOWS(callback = (self.dumpwindows_callback, ())))
 		self.__window = w = windowinterface.windowgroup(title, self.commandlist, globalgroup=1)
 		windowinterface.installaehandler('aevt', 'oapp', self._ae_openapp)
 		windowinterface.installaehandler('aevt', 'quit', self._ae_quit)
@@ -53,6 +55,9 @@ class MainDialog:
 			return
 		windowinterface.InputURLDialog('Open location', self.last_location,
 					    self.openURL_callback)
+
+	def dumpwindows_callback(self):
+		windowinterface.dumpwindows()
 
 	def openfile_callback(self):
 		"""Callback for OPENFILE menu command"""

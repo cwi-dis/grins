@@ -3,9 +3,13 @@ __version__ = "$Id$"
 # Features for GRiNS for G2, lite version
 
 from compatibility import *
+from FeatureSet import *
 import sys
 
+feature_set = [];
+
 #
+version = 'lite'
 compatibility = G2
 compatibility_short = 'G2'
 cmif = 0

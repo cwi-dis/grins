@@ -20,7 +20,10 @@ class _DynamicCascade(_CommandBase):
 #
 class CLOSE_WINDOW(_CommandBase):
 	help = 'Close this window'
-class UNDO(_CommandBase): pass
+class UNDO(_CommandBase):
+	help = 'Undo'
+class REDO(_CommandBase):
+	help = 'Redo'
 class CUT(_CommandBase):
 	help = 'Cut selected object'
 class COPY(_CommandBase):
@@ -33,6 +36,26 @@ class HELP(_CommandBase):
 	help = 'Display help'
 class PREFERENCES(_CommandBase):
 	help = 'Display application preferences'
+
+# Alignment commands	
+class ALIGN_LEFT(_CommandBase):
+	help = 'Align the left borders'
+class ALIGN_CENTER(_CommandBase):
+	help = 'Align the horizontal center axes'
+class ALIGN_RIGHT(_CommandBase):
+	help = 'Align the right borders'
+class ALIGN_TOP(_CommandBase):
+	help = 'Align the top borders'
+class ALIGN_MIDDLE(_CommandBase):
+	help = 'Align the vertical center axes'
+class ALIGN_BOTTOM(_CommandBase):
+	help = 'Align the bottom borders'
+
+# Distribute commands	
+class DISTRIBUTE_HORIZONTALLY(_CommandBase):
+	help = 'Distribute horizontally'
+class DISTRIBUTE_VERTICALLY(_CommandBase):
+	help = 'Distribute vertically'
 
 #
 # MainDialog commands
@@ -49,7 +72,12 @@ class TRACE(_CommandBase):
 	help = 'DEBUG: toggle trace flag'
 class DEBUG(_CommandBase):
 	help = 'DEBUG: enter Python debugger'
-class CONSOLE(_CommandBase): pass
+class DUMPWINDOWS(_CommandBase):
+	help = 'DEBUG: dump window hierarchy'
+class CONSOLE(_CommandBase):
+	help = 'DEBUG: toggle debug window'
+class SCHEDDEBUG(_CommandBase):
+	help = 'DEBUG: toggle scheduler debug flag'
 class EXIT(_CommandBase):
 	help = 'Exit GRiNS'
 class SAVE(_CommandBase):
@@ -68,6 +96,12 @@ class EXPORT_SMIL(_CommandBase):
 	help = 'Save document in new file as pure SMIL'
 class UPLOAD_SMIL(_CommandBase):
 	help = 'Upload pure SMIL document and media items to FTP server'
+class EXPORT_WMP(_CommandBase):		# mjvdg 11-oct-2000
+	help = 'Save document in a new file as a Windows Media document.'
+class UPLOAD_WMP(_CommandBase):		# mjvdg 11-oct-2000
+	help = 'Upload document as Windows Media document to FTP server';
+class EXPORT_HTML_TIME(_CommandBase):	
+	help = 'Save document in a new file as an Internet Explorer HTML+TIME document.'
 class EXPORT_HTML(_CommandBase):
 	help = 'Create a template webpage linking to your presentation'
 class RESTORE(_CommandBase):
@@ -95,9 +129,19 @@ class CHANNELVIEW(_CommandBase):
 class LINKVIEW(_CommandBase):
 	help = 'Show Hyperlink Editor'
 class LAYOUTVIEW(_CommandBase):
-	help = 'Show Layout View'
+	help = 'Show Layout View 2'
 class USERGROUPVIEW(_CommandBase):
-	help = 'Show User Group Editor'
+	help = 'Show Custom Test Editor'
+class TRANSITIONVIEW(_CommandBase):
+	help = 'Show Transition view'
+class LAYOUTVIEW2(_CommandBase):
+	help = 'Show new layout view'
+#class TEMPORALVIEW(_CommandBase):
+#	help = 'Show time-based view'
+class SOURCEVIEW(_CommandBase):
+	help = 'Show the SMiL source'
+class ASSETSVIEW(_CommandBase):
+	help = 'Show Assets View'
 
 # These are to hide the various views. They are basically
 # a workaround for Windows, where the "close" command is
@@ -110,8 +154,11 @@ class HIDE_LINKVIEW(_CommandBase): pass
 class HIDE_LAYOUTVIEW(_CommandBase): pass
 class HIDE_USERGROUPVIEW(_CommandBase): pass
 class HIDE_SOURCE(_CommandBase): pass
-
-
+class HIDE_TRANSITIONVIEW(_CommandBase): pass
+class HIDE_LAYOUTVIEW2(_CommandBase): pass
+#class HIDE_TEMPORALVIEW(_CommandBase):pass
+class HIDE_SOURCEVIEW(_CommandBase): pass
+class HIDE_ASSETSVIEW(_CommandBase): pass
 #
 # Player view commands
 #
@@ -124,7 +171,7 @@ class STOP(_CommandBase):
 class MAGIC_PLAY(_CommandBase):
 	help = 'Continue when paused, pause when playing, play when stopped'
 class USERGROUPS(_DynamicCascade):
-	help = 'User groups'
+	help = 'Custom tests'
 class CHANNELS(_DynamicCascade):
 	help = 'Toggle channels on/off'
 class SYNCCV(_CommandBase):
@@ -139,15 +186,19 @@ class SCHEDDUMP(_CommandBase):
 #
 class PASTE_BEFORE(_CommandBase):
 	help = 'Paste copied/cut node before selected node'
-##class PASTE_AFTER(_CommandBase):
-##	help = 'Paste copied/cut node after selected node'
-PASTE_AFTER=PASTE
+class PASTE_AFTER(_CommandBase):
+	help = 'Paste copied/cut node after selected node'
+PASTE=PASTE_AFTER
 class PASTE_UNDER(_CommandBase):
 	help = 'Paste copied/cut node under selected node'
+##class EDIT_TVIEW(_CommandBase):
+##	help = 'Edit this node in the temporal view.'
 class NEW_BEFORE(_CommandBase):
 	help = 'Create new node before selected node'
 class NEW_BEFORE_IMAGE(_CommandBase):
 	help = 'Create new image node before selected node'
+class NEW_BEFORE_SVG(_CommandBase):
+	help = 'Create new SVG node before selected node'
 class NEW_BEFORE_TEXT(_CommandBase):
 	help = 'Create new text node before selected node'
 class NEW_BEFORE_HTML(_CommandBase):
@@ -162,14 +213,18 @@ class NEW_BEFORE_SEQ(_CommandBase):
 	help = 'Create new sequential node before selected node'
 class NEW_BEFORE_PAR(_CommandBase):
 	help = 'Create new parallel node before selected node'
-class NEW_BEFORE_CHOICE(_CommandBase):
-	help = 'Create new choice node before selected node'
-class NEW_BEFORE_ALT(_CommandBase):
+class NEW_BEFORE_EXCL(_CommandBase):
+	help = 'Create new exclusive node before selected node'
+class NEW_BEFORE_SWITCH(_CommandBase):
 	help = 'Create new alt node before selected node'
+class NEW_BEFORE_ANIMATION(_CommandBase):
+	help = 'Create new animation node before selected node'
 class NEW_AFTER(_CommandBase):
 	help = 'Create new node after selected node'
 class NEW_AFTER_IMAGE(_CommandBase):
 	help = 'Create new image node after selected node'
+class NEW_AFTER_SVG(_CommandBase):
+	help = 'Create new SVG node after selected node'
 class NEW_AFTER_TEXT(_CommandBase):
 	help = 'Create new text node after selected node'
 class NEW_AFTER_HTML(_CommandBase):
@@ -184,14 +239,18 @@ class NEW_AFTER_SEQ(_CommandBase):
 	help = 'Create new sequential node after selected node'
 class NEW_AFTER_PAR(_CommandBase):
 	help = 'Create new parallel node after selected node'
-class NEW_AFTER_CHOICE(_CommandBase):
-	help = 'Create new choice node after selected node'
-class NEW_AFTER_ALT(_CommandBase):
+class NEW_AFTER_EXCL(_CommandBase):
+	help = 'Create new exclusive node after selected node'
+class NEW_AFTER_SWITCH(_CommandBase):
 	help = 'Create new alt node after selected node'
+class NEW_AFTER_ANIMATION(_CommandBase):
+	help = 'Create new animation node after selected node'
 class NEW_UNDER(_CommandBase):
 	help = 'Create new node under selected node'
 class NEW_UNDER_IMAGE(_CommandBase):
 	help = 'Create new image under selected node'
+class NEW_UNDER_SVG(_CommandBase):
+	help = 'Create new SVG under selected node'
 class NEW_UNDER_TEXT(_CommandBase):
 	help = 'Create new text node under selected node'
 class NEW_UNDER_HTML(_CommandBase):
@@ -206,18 +265,22 @@ class NEW_UNDER_SEQ(_CommandBase):
 	help = 'Create new sequential node under selected node'
 class NEW_UNDER_PAR(_CommandBase):
 	help = 'Create new parallel node under selected node'
-class NEW_UNDER_CHOICE(_CommandBase):
-	help = 'Create new choice node under selected node'
-class NEW_UNDER_ALT(_CommandBase):
+class NEW_UNDER_EXCL(_CommandBase):
+	help = 'Create new exclusive node under selected node'
+class NEW_UNDER_SWITCH(_CommandBase):
 	help = 'Create new alt node under selected node'
+class NEW_UNDER_ANIMATION(_CommandBase):
+	help = 'Create new animation node under selected node'
 class NEW_SEQ(_CommandBase):
 	help = 'Create new sequential node above selected node'
 class NEW_PAR(_CommandBase):
 	help = 'Create new parallel node above selected node'
-class NEW_CHOICE(_CommandBase):
-	help = 'Create new choice node above selected node'
-class NEW_ALT(_CommandBase):
+class NEW_EXCL(_CommandBase):
+	help = 'Create new exclusive node above selected node'
+class NEW_SWITCH(_CommandBase):
 	help = 'Create new alt node above selected node'
+class NEW_ANIMATION(_CommandBase):
+	help = 'Create new animation node above selected node'
 class EXPAND(_CommandBase):
 	help = 'Expand or collapse selected node'
 class EXPANDALL(_CommandBase):
@@ -234,6 +297,12 @@ class PREVSIBLING(_CommandBase):
 	help = 'Go to previous sibling'
 class COMPUTE_BANDWIDTH(_CommandBase):
 	help = 'Check bandwidth usage of presentation'
+class TRANSITION(_DynamicCascade):
+	help = 'Selection of available transitions'
+class RPCONVERT(_CommandBase):
+	help = 'Convert RealPix node to SMIL 2.0'
+class FIND_EVENT_SOURCE(_CommandBase):
+	help = 'Find the source of this event'
 
 #
 # Command to hierarchy/channel view
@@ -244,6 +313,10 @@ class CANVAS_HEIGHT(_CommandBase):
 	help = 'Double the height of the canvas, adding scrollbars if necessary'
 class CANVAS_RESET(_CommandBase):
 	help = 'Reset the canvas size to fit in the window'
+class CANVAS_ZOOM_IN(_CommandBase):
+	help = 'Zoom in'
+class CANVAS_ZOOM_OUT(_CommandBase):
+	help = 'Zoom out'
 class INFO(_CommandBase):
 	help = 'Display the Info editor for the selected object'
 class ATTRIBUTES(_CommandBase):
@@ -264,36 +337,40 @@ class FINISH_LINK(_CommandBase):
 	help = 'Create hyperlink from recent anchor to selection'
 class FINISH_ARC(_CommandBase):
 	help = 'Lock selection, create sync arc to next selected node'
+class CREATE_BEGIN_EVENT_SOURCE(_CommandBase):
+	help = 'Set the source of any created events to this node.'
+class CREATE_BEGIN_EVENT_DESTINATION(_CommandBase):
+	help = 'Create a begin event for this node.'
 class THUMBNAIL(_CommandBase):
 	help = 'Toggle between showing and not showing thumbnails'
 class PLAYABLE(_CommandBase):
 	help = 'Toggle between showing and not showing whether nodes\nwill be played using current system attributes'
 class TIMESCALE(_CommandBase):
 	help = 'Toggle duration-dependent structure view'
+class LOCALTIMESCALE(_CommandBase):
+	help = 'Show durations on focus node in structure view'
+class CORRECTLOCALTIMESCALE(_CommandBase):
+	help = 'Show consistent durations on focus node in structure view'
 
 #
 # Channel view commands
 #
-class NEW_CHANNEL(_CommandBase):
-	help = 'Create a new channel'
+class NEW_REGION(_CommandBase):
+	help = 'Create a new region'
+class NEW_TOPLAYOUT(_CommandBase):
+	help = 'Create a new top layout'
 class TOGGLE_UNUSED(_CommandBase):
 	help = 'Toggle showing unused channels'
 class TOGGLE_ARCS(_CommandBase):
 	help = 'Toggle showing synchronization arcs'
 class TOGGLE_BWSTRIP(_CommandBase):
 	help = 'Toggle showing bandwidth usage strip'
-class NEXT_MINIDOC(_CommandBase):
-	help = 'Display next mini document'
-class PREV_MINIDOC(_CommandBase): pass
-class MOVE_CHANNEL(_CommandBase): pass
-class COPY_CHANNEL(_CommandBase): pass
+class MOVE_REGION(_CommandBase): pass
+class COPY_REGION(_CommandBase): pass
 class TOGGLE_ONOFF(_CommandBase): pass
 class HIGHLIGHT(_CommandBase): pass
 class UNHIGHLIGHT(_CommandBase): pass
 class SYNCARCS(_DynamicCascade): pass
-class ANCESTORS(_DynamicCascade): pass
-class SIBLINGS(_DynamicCascade): pass
-class DESCENDANTS(_DynamicCascade): pass
 class LAYOUTS(_DynamicCascade): pass
 
 class BANDWIDTH_14K4(_CommandBase): pass
@@ -308,9 +385,13 @@ class BANDWIDTH_OTHER(_CommandBase): pass
 #
 class NEW_LAYOUT(_CommandBase):
 	help = 'Create a new layout'
-class REMOVE_CHANNEL(_CommandBase):
-	help = 'Remove channel from layout'
-class ADD_CHANNEL(_CommandBase):
-	help = 'Add channel to layout'
+class REMOVE_REGION(_CommandBase):
+	help = 'Remove region from layout'
+class ADD_REGION(_CommandBase):
+	help = 'Add region to layout'
 class RENAME(_CommandBase):
 	help = 'Rename the current layout'
+#
+# Property dialog commands
+class SHOWALLPROPERTIES(_CommandBase):
+	help = 'Toggle between showing all properties and used ones only'

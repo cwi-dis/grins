@@ -37,13 +37,13 @@ class UsergroupView(UsergroupViewDialog):
 		self.editmgr.unregister(self)
 		UsergroupViewDialog.hide(self)
 
-	def transaction(self):
+	def transaction(self, type):
 		return 1		# It's always OK to start a transaction
 
 	def rollback(self):
 		pass
 
-	def commit(self):
+	def commit(self, type=None):
 		usergroups = self.context.usergroups
 		for key in self.editors.keys():
 			if not usergroups.has_key(key):
@@ -78,8 +78,8 @@ class UsergroupView(UsergroupViewDialog):
 			editor.restore_callback()
 			editor.show()
 		else:
-			title, state, override = val
-			editor = UsergroupEdit(self, ugroup, title, state, override)
+			title, state, override, uid = val
+			editor = UsergroupEdit(self, ugroup, title, state, override, uid or '')
 			self.editors[ugroup] = editor
 
 	def delete_callback(self):
@@ -93,21 +93,21 @@ class UsergroupView(UsergroupViewDialog):
 		self.editmgr.commit()
 
 class UsergroupEdit(UsergroupEditDialog):
-	def __init__(self, parent, ugroup = '', title = '', ustate = 'RENDERED', override = 'allowed'):
+	def __init__(self, parent, ugroup = '', title = '', ustate = 'RENDERED', override = 'visible', uid = ''):
 		self.__parent = parent
 		self.__usergroups = parent.context.usergroups
 		self.__ugroup = ugroup
 		self.__editmgr = parent.editmgr
 		self.__editmgr.register(self)
-		UsergroupEditDialog.__init__(self, ugroup, title, ustate, override)
+		UsergroupEditDialog.__init__(self, ugroup, title, ustate, override, uid)
 
-	def transaction(self):
+	def transaction(self, type):
 		return 1		# It's always OK to start a transaction
 
 	def rollback(self):
 		pass
 
-	def commit(self):
+	def commit(self, type):
 		if self.__parent is not None:
 			self.restore_callback()
 
@@ -133,18 +133,18 @@ class UsergroupEdit(UsergroupEditDialog):
 		else:
 			val = self.__usergroups.get(self.__ugroup)
 		if val is None:
-			title, ustate, override = '', 'RENDERED', 'allowed'
+			title, ustate, override, uid = '', 'RENDERED', 'visible', ''
 		else:
-			title, ustate, override = val
-		self.setstate(self.__ugroup, title, ustate, override)
+			title, ustate, override, uid = val
+		self.setstate(self.__ugroup, title, ustate, override, uid)
 
 	def apply_callback(self):
 		self.do_apply()
 
 	def do_apply(self):
-		ugroup, title, ustate, override = self.getstate()
+		ugroup, title, ustate, override, uid = self.getstate()
 		if not ugroup:
-			self.showmessage('User group name is required')
+			self.showmessage('Custom test name is required')
 			return 0
 		if not self.__editmgr.transaction():
 			return 0
@@ -168,7 +168,7 @@ class UsergroupEdit(UsergroupEditDialog):
 			self.showmessage('Non-unique user group name')
 			self.__editmgr.rollback()
 			return 0
-		self.__editmgr.addusergroup(ugroup, (title, ustate, override))
+		self.__editmgr.addusergroup(ugroup, (title, ustate, override, uid))
 		self.__ugroup = ugroup
 		self.__parent.editors[self.__ugroup] = self
 		self.__editmgr.commit()
