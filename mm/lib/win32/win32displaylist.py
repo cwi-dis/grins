@@ -15,6 +15,7 @@ import math,string
 import win32ui, win32con, win32api
 from win32ig import win32ig
 import grinsRC
+import ddraw
 
 from types import *		
 from appcon import *	# draw contants
@@ -90,9 +91,10 @@ class _DisplayList:
 		self.__butdict = {}
 
 		# sense direct draw
-		self._directDraw = 0
+		self._directdraw = 0
+		self._issimple = 0
 		if hasattr(window._topwindow,'CreateSurface'):
-			self._directDraw = 1
+			self._directdraw = 1
 			 
 	# Clones this display list
 	def clone(self):
@@ -130,6 +132,7 @@ class _DisplayList:
 	def render(self):
 		import time
 		self.starttime = time.time()
+		self._issimple = self.isSimple()
 		wnd = self._window
 		for b in self._buttons:
 			b._highlighted = 0 
@@ -146,13 +149,41 @@ class _DisplayList:
 		
 		if not clear and clonestart==0:
 			clonestart = 1
-			
+
 		for i in range(clonestart, len(self._list)):
 			self._do_render(self._list[i],dc, region)
 
 		for b in self._buttons:
 			if b._highlighted:b._do_highlight()
 	
+	# Optimized rendering for simple display lists on a direct draw surface	
+	def _ddsrender(self, dds, dst, clear=1):
+		self._rendered = 1
+		clonestart = self._clonestart
+		if not self._cloneof or self._cloneof is not self._window._active_displist:
+			clonestart = 0
+		
+		if not clear and clonestart==0:
+			clonestart = 1
+
+		x, y, w, h = dst
+		for i in range(clonestart, len(self._list)):
+			entry = self._list[i]
+			cmd = entry[0]
+			w = self._window
+			if cmd == 'clear' and entry[1]:
+				r, g, b = entry[1]
+				convbgcolor = dds.GetColorMatch((r,g,b))
+				dds.BltFill((x, y, x+w, y+h), convbgcolor)
+			elif cmd == 'image':
+				mask, image, src_x, src_y,dest_x, dest_y, width, height,rcKeep=entry[1:]
+				rcsrc = 0, 0, width, height
+				rcdst = x+dest_x, y+dest_y, x+dest_x + width, y+dest_y+height
+				try:	
+					dds.Blt(rcdst, image, rcsrc, ddraw.DDBLT_WAIT)
+				except:
+					pass
+
 	def close(self):
 		wnd = self._window
 		if wnd is None:
@@ -189,7 +220,7 @@ class _DisplayList:
 			mask, image, src_x, src_y,dest_x, dest_y, width, height,rcKeep=entry[1:]
 			if not self._overlap(region, (dest_x, dest_y, width, height)):
 				return
-			if self._directDraw:
+			if self._directdraw:
 				imghdc = image.GetDC()
 				if imghdc:
 					imgdc = win32ui.CreateDCFromHandle(imghdc)
@@ -419,7 +450,7 @@ class _DisplayList:
 		image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep = \
 		       self._window._prepare_image(file, crop, scale, center, coordinates, clip, units)
 
-		if self._directDraw:
+		if self._directdraw:
 			image = self.createDDSImage(image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep)
 		self._list.append(('image', mask, image, src_x, src_y,
 				   dest_x, dest_y, width, height,rcKeep))
@@ -457,7 +488,7 @@ class _DisplayList:
 		return 0
 	
 	def createDDSImage(self, image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep):
-		if not self._directDraw: return image
+		if not self._directdraw: return image
 		tw = self._window._topwindow
 		dds = tw.CreateSurface(width, height)
 		try:
@@ -469,6 +500,12 @@ class _DisplayList:
 		dds.ReleaseDC(imghdc)
 		return dds
 						
+	def isSimple(self):
+		count = 0
+		for i in range(0, len(self._list)):
+			if self._list[i][0] in ('image', 'clear', 'fg'):
+				count = count + 1
+		return count == len(self._list)
 
 	#############################################
 	# draw primitives
