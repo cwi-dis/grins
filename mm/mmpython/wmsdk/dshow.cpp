@@ -667,9 +667,8 @@ GraphBuilder_Release(GraphBuilderObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
 	Py_BEGIN_ALLOW_THREADS
-	self->pGraphBuilder->Release();
+	RELEASE(self->pGraphBuilder);
 	Py_END_ALLOW_THREADS
-	self->pGraphBuilder=NULL;
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -696,7 +695,9 @@ static void
 GraphBuilder_dealloc(GraphBuilderObject *self)
 {
 	/* XXXX Add your own cleanup code here */
+	Py_BEGIN_ALLOW_THREADS
 	RELEASE(self->pGraphBuilder);
+	Py_END_ALLOW_THREADS
 	PyMem_DEL(self);
 }
 
