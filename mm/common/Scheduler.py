@@ -302,7 +302,7 @@ class SchedulerContext:
 			else:
 				if do_continue:
 					continue
-			arc.__in_sched_arcs = 1
+			arc.__in_sched_arcs = 1	# to break recursion
 			atime = 0
 			if arc.srcanchor is not None:
 				for a in node.attrdict.get('anchorlist', []):
@@ -340,6 +340,11 @@ class SchedulerContext:
 				# the queue: reinsert this one so that the
 				# other one can be handled first
 				arc.qid = parent.enterabs(arc.qid[0], arc.qid[1], self.trigger, (arc,))
+				parent.updatetimer()
+				return
+			if arc.getevent() == 'end' and arc.refnode().playing == MMStates.IDLE:
+				if debugevents: print 'ignoring',arc
+				self.cancelarc(arc, timestamp, propagate = 1)
 				parent.updatetimer()
 				return
 			for nd, ev in arc.depends:
@@ -615,7 +620,7 @@ class SchedulerContext:
 			parent.event(self, ev, timestamp)
 		parent.updatetimer()
 
-	def cancelarc(self, arc, timestamp, cancel_gensr = 1):
+	def cancelarc(self, arc, timestamp, cancel_gensr = 1, propagate = 0):
 		if debugevents: print 'cancelarc',`arc`,timestamp
 # the commented-out lines fix a problem with
 # Default_Fill_on_time_container1.smil but cause worse problems with
@@ -651,7 +656,7 @@ class SchedulerContext:
 			# cancel any dependant arcs
 			deparcs = arc.dstnode.deparcs[ev]
 			arc.dstnode.deparcs[ev] = []
-			if arc.timestamp == timestamp:
+			if not propagate and arc.timestamp == timestamp:
 				return
 			if arc.isstart and cancel_gensr:
 				self.cancel_gensr(arc.dstnode)
