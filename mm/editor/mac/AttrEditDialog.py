@@ -147,7 +147,7 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			pass
 		elif item == ITEM_FILE_BROWSE:
 			if self._cur_attrfield:
-				self._cur_attrfield._file_browse_click()
+				self._cur_attrfield.browser_callback()
 		elif item == ITEM_OPTION:
 			if self._cur_attrfield:
 				self._cur_attrfield._option_click()
@@ -297,9 +297,6 @@ class AttrEditorDialogField:
 		del self.__value
 
 	def _option_click(self):
-		pass
-		
-	def _file_browse_click(self):
 		pass
 		
 ##	def __option_callback(self):
