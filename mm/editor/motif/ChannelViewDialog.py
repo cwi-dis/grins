@@ -49,7 +49,7 @@ class ChannelViewDialog(ViewDialog):
 				('Edit content...', CONTENT),
 				None,
 				('Finish hyperlink to focus...', FINISH_LINK),
-				('Finish syncarc from focus...', FINISH_ARC),
+				('Finish sync arc from focus...', FINISH_ARC),
 				None,
 				('Select sync arc', SYNCARCS),
 				]),
