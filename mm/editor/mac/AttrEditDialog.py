@@ -1389,7 +1389,7 @@ class AreaTabPage(MultiDictTabPage):
 	def init_controls(self, item0):
 		rv = MultiDictTabPage.init_controls(self, item0)
 		self._area = self.attreditor._window.AreaWidget(item0+self.ITEM_PREVIEW, 
-				callback=self._preview_to_labels)
+				callback=self._preview_to_labels, scaleitem=item0+self.ITEM_SCALE)
 		self._area.setinfo((0, 0, 640, 480)) # XXX
 		return rv
 
@@ -1493,7 +1493,8 @@ class SourceAreaTabPage(AreaTabPage):
 	ITEM_W=9
 	ITEM_H=11
 	ITEM_PREVIEW=12
-	N_ITEMS=12
+	ITEM_SCALE=13
+	N_ITEMS=13
 	_attr_to_checkbox = {
 		'fullimage': ITEM_WHOLE,
 	}
@@ -1517,7 +1518,8 @@ class DestinationAreaTabPage(AreaTabPage):
 	ITEM_H=11
 	ITEM_ASPECT=12
 	ITEM_PREVIEW=13
-	N_ITEMS=13
+	ITEM_SCALE=14
+	N_ITEMS=14
 	_attr_to_checkbox = {
 		'displayfull': ITEM_WHOLE,
 		'aspect': ITEM_ASPECT,
@@ -1551,7 +1553,8 @@ class ChannelAreaTabPage(AreaTabPage):
 	ITEM_UNITS=11
 	ITEM_Z=13
 	ITEM_PREVIEW=14
-	N_ITEMS=14
+	ITEM_SCALE=15
+	N_ITEMS=15
 	_attr_to_checkbox = {
 	}
 	_attr_to_string = {
@@ -1613,7 +1616,8 @@ class ChannelAreaLiteTabPage(AreaTabPage):
 	ITEM_H=9
 	ITEM_Z=11
 	ITEM_PREVIEW=12
-	N_ITEMS=12
+	ITEM_SCALE=13
+	N_ITEMS=13
 	_attr_to_checkbox = {
 	}
 	_attr_to_string = {
