@@ -157,7 +157,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.__rc.pauseit(paused)
 
 	def playstop(self):
-		self.__stopplayer()
+		# freeze video
+		self.__freezeplayer()
 		self.playdone(1)		
 				
 	def __stopplayer(self):
@@ -170,6 +171,14 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			else:
 				self.__mc.stopit()
 		self.__playing = None
+
+	def __freezeplayer(self):
+		if self.__playing:
+			if self.__type == 'real':
+				if self.__rc:
+					self.__rc.freezeit()
+			else:
+				self.__mc.freezeit()
 
 	def endoftime(self):
 		self.__stopplayer()
@@ -254,10 +263,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
-		if self.__mc:
-			self.__mc.stopit()
-		if self.__rc:
-			self.__rc.stopit()
+		self.__stopplayer()
 		Channel.ChannelWindowAsync.stopplay(self, node)
 
 	# Define the anchor area for visible medias
