@@ -56,7 +56,7 @@ class Hlinks:
 		self.links.append(link)
 
 	# Delete a link.
-	# If the list does not exists, delete the reverse link
+	# If the link does not exists, delete the reverse link
 	def dellink(self, link):
 		try:
 			self.links.remove(link)
