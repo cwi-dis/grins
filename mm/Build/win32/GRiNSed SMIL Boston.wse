@@ -19,7 +19,7 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_200R-93.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_2.0-94.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -1832,8 +1832,8 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\GRiNS_RV2.exe
-  Destination=%MAINDIR%\GRiNS_RV2.exe
+  Source=d:\ufs\mm\cmif\bin\win32\GRiNS_SV2.exe
+  Destination=%MAINDIR%\GRiNS_SV2.exe
   Flags=0000000010000010
 end
 item: Install File

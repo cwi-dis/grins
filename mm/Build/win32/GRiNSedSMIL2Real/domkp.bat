@@ -5,7 +5,7 @@ set PYTHONHOME=%GRINS_HOME%\..\python
 
 set FREEZE_WHAT=editor
 set EXCLUDE_WHAT=grins
-set PRODUCT=smilboston
+set PRODUCT=smil2real
 
 set main_script=%GRINS_HOME%\fGRiNSed.py
 

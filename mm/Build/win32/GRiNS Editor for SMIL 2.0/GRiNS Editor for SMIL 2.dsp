@@ -51,18 +51,18 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo /o"./GRiNS_G2P.bsc"
+# ADD BSC32 /nologo /o"./GRiNS_SV2.bsc"
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 python16.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386 /out:"./GRiNS_RV2.exe" /libpath:"..\..\..\..\python\PCbuild" /libpath:"..\..\..\..\python\Extensions\win32\Build"
+# ADD LINK32 python16.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386 /out:"./GRiNS_SV2.exe" /libpath:"..\..\..\..\python\PCbuild" /libpath:"..\..\..\..\python\Extensions\win32\Build"
 # Begin Custom Build
 OutDir=.\.
-InputPath=.\GRiNS_RV2.exe
+InputPath=.\GRiNS_SV2.exe
 SOURCE="$(InputPath)"
 
-"..\..\..\bin\win32\GRiNS_RV2.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	del ..\..\..\bin\win32\GRiNS_RV2.exe 
-	copy $(OutDir)\GRiNS_RV2.exe ..\..\..\bin\win32 
+"..\..\..\bin\win32\GRiNS_SV2.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	del ..\..\..\bin\win32\GRiNS_SV2.exe 
+	copy $(OutDir)\GRiNS_SV2.exe ..\..\..\bin\win32 
 	
 # End Custom Build
 
@@ -87,18 +87,18 @@ SOURCE="$(InputPath)"
 # ADD RSC /l 0x408 /d "_DEBUG" /d "_AFXDLL"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo /o"Debug/GRiNS_G2P.bsc"
+# ADD BSC32 /nologo /o"Debug/GRiNS_SV2.bsc"
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 python16_d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /out:"Debug/GRiNS_RV2_d.exe" /pdbtype:sept /libpath:"..\..\..\..\python\PCbuild" /libpath:"..\..\..\..\python\Extensions\win32\Build"
+# ADD LINK32 python16_d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /out:"Debug/GRiNS_SV2_d.exe" /pdbtype:sept /libpath:"..\..\..\..\python\PCbuild" /libpath:"..\..\..\..\python\Extensions\win32\Build"
 # Begin Custom Build
 OutDir=.\Debug
-InputPath=.\Debug\GRiNS_RV2_d.exe
+InputPath=.\Debug\GRiNS_SV2_d.exe
 SOURCE="$(InputPath)"
 
-"..\..\..\bin\win32\GRiNS_RV2_d.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	del ..\..\..\bin\win32\GRiNS_RV2_d.exe 
-	copy $(OutDir)\GRiNS_RV2_d.exe ..\..\..\bin\win32 
+"..\..\..\bin\win32\GRiNS_SV2_d.exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	del ..\..\..\bin\win32\GRiNS_SV2_d.exe 
+	copy $(OutDir)\GRiNS_SV2_d.exe ..\..\..\bin\win32 
 	
 # End Custom Build
 
@@ -637,6 +637,10 @@ SOURCE=.\M_MainFrame.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_MainFrameSpecific.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_MediaChannel.c
 # End Source File
 # Begin Source File
@@ -1097,7 +1101,7 @@ SOURCE=.\M_SMILTreeWrite.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_SMILTreeWriteHtmlTime.c
+SOURCE=.\M_SMILTreeWriteXhtmlSmil.c
 # End Source File
 # Begin Source File
 
