@@ -315,9 +315,9 @@ def decrement(q, delay, node, side, term = None):
 		id = q.enter(delay, 0, decrement, (q, 0, node, side, term))
 		return
 	x = node.counter[side] - 1
-	node.counter[side] = x
 	if x < 0:
-		raise CheckError, 'counter below zero!?!?'
+		return
+##		raise CheckError, 'counter below zero!?!?'
 	if x == 0 and side == HD:
 		node.t0 = q.timefunc()
 	elif side == TL:
@@ -334,6 +334,7 @@ def decrement(q, delay, node, side, term = None):
 				x = 0
 		elif node.hasterm:
 			x = 1
+	node.counter[side] = x
 	if x > 0:
 		return
 	if node.GetType() not in interiortypes and side == HD and not node.GetSchedChildren(1):
