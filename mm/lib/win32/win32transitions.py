@@ -180,3 +180,83 @@ class TransitionEngine:
 		if self.__fiber_id is not None:
 			windowinterface.cancelidleproc(self.__fiber_id)
 			self.__fiber_id = None
+
+
+class InlineTransitionEngine:
+	def __init__(self, window, trtype, subtype, trmode='in'):
+		self.window = window
+		self.dict = {'trtype':trtype, 'subtype':subtype, 'mode':trmode}
+
+		klass = Transitions.TransitionFactory(trtype, subtype)
+		self.__transitiontype = klass(self, self.dict)
+
+		self.__running = 0		
+
+	def __del__(self):
+		if self.__transitiontype:
+			self.endtransition()
+	
+	def begintransition(self):
+		self.__createSurfaces()
+		self.__running = 1	
+
+	def endtransition(self):
+		if not self.__transitiontype: return
+		self.__transitiontype = None
+		self.__running = 0		
+		wnd = self.window
+		if wnd.is_closed():
+			return
+		wnd._transition = None
+		wnd._drawsurf = None
+		wnd.update(wnd.getwindowpos())
+
+	def settransitionvalue(self, value):
+		if value<0.0 or value>1.0:
+			raise AssertionError
+		parameters = self.__transitiontype.computeparameters(value)
+		
+		# transition window
+		wnd = self.window
+		if wnd.is_closed():
+			return
+		
+		wnd.updateBackDDS(self._tosurf, exclwnd=wnd)
+		
+		fromsurf = 	wnd._fromsurf
+		tosurf = self._tosurf	
+		tmpsurf  = self._tmp
+		dstsurf  = wnd._drawsurf
+		dstrgn = None
+
+		self.__transitiontype.updatebitmap(parameters, tosurf, fromsurf, tmpsurf, dstsurf, dstrgn)
+		wnd.update(wnd.getwindowpos())
+
+
+	def _ismaster(self, wnd):
+		return self.window==wnd
+
+	def _isrunning(self):
+		return self.__running
+
+	def __createSurfaces(self):
+		# transition window
+		# or parent window in multiElement transitions
+		wnd = self.window
+		while 1:
+			try:
+				wnd._fromsurf = wnd.getBackDDS()
+				wnd._drawsurf = wnd.createDDS()
+				self._tosurf = wnd.createDDS()
+				self._tmp = wnd.createDDS()
+			except ddraw.error, arg:
+				print arg
+				win32api.Sleep(50)
+			else:
+				break
+
+		# resize to this window
+		x, y, w, h = wnd._rect
+		self.__transitiontype.move_resize((0, 0, w, h))
+
+ 
