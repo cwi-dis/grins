@@ -704,12 +704,6 @@ class Channel:
 			except IOError:
 				raise error, 'Cannot open %s: %s, %s'%(filename, sys.exc_type, sys.exc_value)
 			self.armed_url = fp.geturl()
-			# use undocumented feature so we can cleanup
-			if urllib._urlopener.tempcache is None:
-				urllib._urlopener.tempcache = {}
-				# cleanup temporary files when we finish
-				windowinterface.addclosecallback(
-					urlcleanup, ())
 			text = fp.read()
 			fp.close()
 			#
@@ -1459,7 +1453,5 @@ class AnchorContext:
 	def play_done(self, node):
 		raise error, 'AnchorContext.play_done() called'
 
-# Cleanup routine for retrieved documents
-def urlcleanup():
-	if urllib._urlopener:
-		urllib._urlopener.cleanup()
+# cleanup temporary files when we finish
+windowinterface.addclosecallback(urllib.urlcleanup, ())

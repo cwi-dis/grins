@@ -82,7 +82,7 @@ def urlcleanup():
 ftpcache = {}
 class URLopener:
 
-	tempcache = None		# So close() in __del__() won't fail
+	__tempfiles = []
 
 	# Constructor
 	def __init__(self, proxies=None):
@@ -110,14 +110,14 @@ class URLopener:
 		self.cleanup()
 
 	def cleanup(self):
-		if self.tempcache:
+		if self.__tempfiles:
 			import os
-			for url in self.tempcache.keys():
+			for file in self.__tempfiles:
 				try:
-					os.unlink(self.tempcache[url][0])
+					os.unlink(file)
 				except os.error:
 					pass
-				del self.tempcache[url]
+		URLopener.__tempfiles = []
 
 	# Add a header to be used by the HTTP interface only
 	# e.g. u.addheader('Accept', 'sound/basic')
@@ -182,6 +182,7 @@ class URLopener:
 		if not filename:
 		    import tempfile
 		    filename = tempfile.mktemp()
+		    self.__tempfiles.append(filename)
 		result = filename, headers
 		if self.tempcache is not None:
 			self.tempcache[url] = result
