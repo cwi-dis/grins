@@ -420,7 +420,7 @@ class HierarchyView(HierarchyViewDialog):
 	# If you want a redraw, set flags and just call this function!!
 	#
 	def draw(self):
-		#import time;
+		#import time
 		# Recalculate the size of all boxes and draw on screen.
 		if self.drawing == 1:
 			return
@@ -504,19 +504,19 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		self.redrawing = 1
 
-		import time;
+##		import time
 
 		if self.need_redraw:
 			d = self.window.newdisplaylist(BGCOLOR, windowinterface.UNIT_PXL)
 			self.old_display_list = d
-			#print "DEBUG: scene_graph.draw()" , time.time()
+##			print "DEBUG: scene_graph.draw()" , time.time()
 			self.scene_graph.draw(d)
-			#print "DEBUG: done drawing. Rendering..", time.time()
+##			print "DEBUG: done drawing. Rendering..", time.time()
 			d.render()
-			#print "DEBUG: Done rendering. ", time.time()
+##			print "DEBUG: Done rendering. ", time.time()
 			self.need_redraw = 0
 		elif self.only_redraw_selection and self.old_display_list:
-			#print "DEBUG: using old display list."
+##			print "DEBUG: using old display list."
 			d = self.old_display_list.clone()
 
 ## Damn, and this was really cool code:
@@ -646,18 +646,19 @@ class HierarchyView(HierarchyViewDialog):
 	def mouse0release(self, dummy, window, event, params):
 		self.toplevel.setwaiting()
 		x,y = params[0:2]
-		if x < 1.0 and y < 1.0:
-			x = x * self.mcanvassize[0]
-			y = y * self.mcanvassize[1]
+		if x >= 1 or y >= 1:
+			return
+		x = x * self.mcanvassize[0]
+		y = y * self.mcanvassize[1]
 		obj = self.scene_graph.get_clicked_obj_at((x,y))
 ##		print "DEBUG: mouse0release, object is: ", obj
 		if obj:
-			import time;
-			#print "DEBUG: releasing mouse.." , time.time()
+##			import time
+##			print "DEBUG: releasing mouse.." , time.time()
 			obj.mouse0release((x,y))
-			#print "DEBUG: drawing...", time.time()
+##			print "DEBUG: drawing...", time.time()
 			self.draw()
-			#print "Done drawing. ", time.time()
+##			print "Done drawing. ", time.time()
 
 	def cvdrop(self, node, window, event, params):
 		em = self.editmgr
