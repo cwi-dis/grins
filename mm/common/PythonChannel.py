@@ -1,4 +1,4 @@
-from Channel import Channel
+from Channel import Channel, PLAYING
 import string
 from MMExc import *			# exceptions
 
@@ -35,3 +35,8 @@ class PythonChannel(Channel):
 			"args":args}
 		
 		exec cmds in namespace, namespace
+
+	def play_1(self):
+		# It could be we jumped away so are not playing anymore
+		if self._playstate == PLAYING:
+			Channel.play_1(self)
