@@ -108,6 +108,78 @@ SOURCE="$(InputPath)"
 
 # Name "GRiNS Player SMIL2 - Win32 Release"
 # Name "GRiNS Player SMIL2 - Win32 Debug"
+# Begin Group "Resource Files"
+
+# PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
+# Begin Source File
+
+SOURCE=.\cmifdocp.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\Player.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\Player.rc
+# End Source File
+# Begin Source File
+
+SOURCE=.\smildocp.ico
+# End Source File
+# End Group
+# Begin Group "Python Source files"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\..\..\python\PC\frozen_dllmain.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\pylib\frozenmain.c
+# End Source File
+# End Group
+# Begin Group "Extensions"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\..\..\python\Extensions\win32\src\win32apimodule.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\python\Extensions\win32\src\win32trace.cpp
+# End Source File
+# End Group
+# Begin Group "Freeze cmd files"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\domkp.bat
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\exec_cmif.py
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\fGRiNSed.py
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\grins_app_core.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\log.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\Readme.txt
+# End Source File
+# End Group
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
@@ -733,6 +805,62 @@ SOURCE=.\M_pywin__tools__hierlist.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_pywinlib.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__framework.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__framework__app.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__framework__cmdline.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__framework__interact.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__framework__scriptutils.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__framework__winout.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__mfc.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__mfc__afxres.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__mfc__dialog.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__mfc__docview.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__mfc__object.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__mfc__thread.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_pywinlib__mfc__window.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_Queue.c
 # End Source File
 # Begin Source File
@@ -1013,10 +1141,6 @@ SOURCE=.\M_win32mu.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_win32traceutil.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_win32transitions.c
 # End Source File
 # Begin Source File
@@ -1042,78 +1166,6 @@ SOURCE=.\M_wndusercmd.c
 # Begin Source File
 
 SOURCE=.\M_xmllib.c
-# End Source File
-# End Group
-# Begin Group "Resource Files"
-
-# PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
-# Begin Source File
-
-SOURCE=.\cmifdocp.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\Player.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\Player.rc
-# End Source File
-# Begin Source File
-
-SOURCE=.\smildocp.ico
-# End Source File
-# End Group
-# Begin Group "Python Source files"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\..\..\..\python\PC\frozen_dllmain.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\pylib\frozenmain.c
-# End Source File
-# End Group
-# Begin Group "Extensions"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\..\..\..\python\Extensions\win32\src\win32apimodule.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\python\Extensions\win32\src\win32trace.cpp
-# End Source File
-# End Group
-# Begin Group "Freeze cmd files"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\domkp.bat
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\exec_cmif.py
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\fGRiNSed.py
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\grins_app_core.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\log.txt
-# End Source File
-# Begin Source File
-
-SOURCE=.\Readme.txt
 # End Source File
 # End Group
 # End Target
