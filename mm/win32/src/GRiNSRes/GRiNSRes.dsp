@@ -153,6 +153,10 @@ SOURCE=.\RES\Nodrop.cur
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\pause.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\play.ico
 # End Source File
 # Begin Source File
