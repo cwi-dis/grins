@@ -186,6 +186,9 @@
 (mcttl (int) 3 'Multicast TTL' default
 	'TTL for outgoing multicast messages' raw (cmif))
 
+(mediaRepeat (enum strip preserve) preserve 'Media repeat' default
+	'Whether to obey or ignore intrinsic repeat in media' raw (cmif smil2))
+
 (mimetype (string) '' 'MIME type' default
 	'MIME type of media object' raw (g2_pro qt_pro smil10 cmif))
 
