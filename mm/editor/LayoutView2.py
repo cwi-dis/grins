@@ -6,6 +6,7 @@ from windowinterface import UNIT_PXL
 from usercmd import *
 
 import MMAttrdefs
+import settings
 
 ALL_LAYOUTS = '(All Channels)'
 	
@@ -164,6 +165,7 @@ class Region(Node):
 				self._curattrdict['transparent'] = self._defattrdict.get('transparent')
 		
 		self._curattrdict['wingeom'] = self._defattrdict.get('base_winoff')
+		print self._curattrdict['wingeom']
 		self._curattrdict['z'] = self._defattrdict.get('z')
 	
 	def show(self):
@@ -1472,6 +1474,9 @@ class LayoutView2(LayoutViewDialog2):
 	# get the sub channel geom according to sub-regions
 	# return in pixel value
 	def _getwingeom(self, channel, node):
+		if settings.activeFullSmilCss:
+			regGeom, mediaGeom = node.getPxGeomMedia()
+			return regGeom
 		subreg_left = node.GetAttrDef('left', 0)
 		subreg_right = node.GetAttrDef('right', 0)
 		subreg_top = node.GetAttrDef('top', 0)

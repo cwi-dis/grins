@@ -221,10 +221,15 @@ def showstats(a):
 # Get an attribute of a node according to the rules.
 #
 def getattr(node, attrname, animated=0):
-
 	if animated:
 		return getdirattr(node, attrname, animated)
 
+	import settings
+	if settings.activeFullSmilCss:
+		if node != None:
+			if node.isCssAttr(attrname):
+				return node.getCssAttr(attrname)
+				
 	if attrstats is not None:
 		if attrstats.has_key(attrname):
 			attrstats[attrname] = attrstats[attrname] + 1

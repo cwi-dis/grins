@@ -30,18 +30,24 @@ class SMILCssResolver:
 	def getDocumentContext(self):
 		return self.documentContext
 	
-	def setRootSize(self, node, width, height):
-		node.setSize(width, height)
+	def setRawAttrs(self, region, attrList):
+		region.setRawAttrs(attrList)
 
-	def setRawAttrPos(self, region, left, width, right, top, height, bottom):
-		region.setRawValues(left, width, right, top, height, bottom)
-
-	def changeRawValue(self, node, name, value):
+	def copyRawAttrs(self, srcNode, destNode):
+		destNode.copyRawAttrs(srcNode)
+			
+	def changeRawAttr(self, node, name, value):
 		self.nodeGeomChangedList = []
 		self.rawAttributesChangedList = []
 		node.changeRawValue(name, value)
 		self._updateListeners()
 
+	def getRawAttr(self, node, name):
+		return node.getRawAttr(name)
+
+	def getAttr(self, node, name):
+		return node.getAttr(name)
+		
 	def changePxValue(self, node, name, value):
 		self.nodeGeomChangedList = []
 		self.rawAttributesChangedList = []
@@ -76,18 +82,6 @@ class SMILCssResolver:
 	def removeRegion(self, region, container):
 		container.removeRegion(region)
 
-	def setIntrinsicSize(self, media, width, height):
-		media.setIntrinsicSize(width, height)
-
-	def setAlignAttr(self, node, name, value):
-		node.setAlignAttr(name, value)
-		
-	def changeAlignAttr(self, node, name, value):
-		self.nodeGeomChangedList = []
-		self.rawAttributesChangedList = []		
-		node.changeAlignAttr(name, value)
-		self._updateListeners()
-				
 	def setGeomListener(self, node, listener):
 		node.setGeomListener(listener)
 
@@ -102,7 +96,7 @@ class SMILCssResolver:
 
 	def getPxAbsGeom(self, node):
 		return node.getPxAbsGeom()
-	
+
 	def _onPxValuesChanged(self, node, geom):
 		if node.pxValuesListener != None:
 			self.nodeGeomChangedList.append((node.pxValuesListener, geom))
@@ -139,7 +133,23 @@ class Node:
 		
 		self.isInit = 0
 		self.isRoot = 0
-		
+
+		# common attributes for media and region
+		self.regAlign = None
+		self.regPoint = None
+		self.scale = 1
+
+	def copyRawAttrs(self, srcNode):
+		self.regAlign = srcNode.regAlign
+		self.regPoint = srcNode.regPoint
+		self.scale = srcNode.scale
+
+	def changeRawAttr(self, name, value):
+		if name in ['left', 'width', 'right', 'top', 'height', 'bottom']:
+			self.changeRawValues(name, value)
+		elif name in ['regAlign', 'regPoint', 'scale']:
+			self.changeAlignAttr(name, value)
+			
 	def link(self, container):
 		self.container = container
 		self.context = container.context		
@@ -147,12 +157,12 @@ class Node:
 
 	def unlink(self):
 		self.isInit = 0
-		self.container = None
 		try:
-			index = self.container.index(self)
-			del self.container[index]
+			index = self.container.children.index(self)
+			del self.container.children[index]
 		except:
 			pass
+		self.container = None
 		
 	def setRawPosAttrListener(self, listener):
 		self.rawValuesListener = listener
@@ -163,7 +173,7 @@ class Node:
 	def _toUnInitState(self):
 		self.isInit = 0
 		for child in self.children:
-			if child.isInitState():
+			if child.isInit:
 				child._toUnInitState()
 		
 	def _toInitState(self):
@@ -191,30 +201,97 @@ class Node:
 		pleft, ptop, pwidth, pheight = self.container.getPxAbsGeom()
 		return pleft+left, ptop+top, width, height
 
+	def _setRawAttr(self, name, value):
+		if name == 'regPoint':
+			self.regPoint = value
+		elif name == 'regAlign':
+			self.regAlign = value
+		elif name == 'scale':
+			self.scale = value
+
+	def _getRawAttr(self, name):
+		if name == 'regPoint':
+			return self.regPoint
+		elif name == 'regAlign':
+			return self.regAlign
+		elif name == 'scale':
+			return self.scale
+
+		return None
+
+	def getAttr(self, name):
+		if name == 'regPoint':
+			return self.getRegPoint()
+		elif name == 'regAlign':
+			return self.getRegAlign()
+		elif name == 'scale':
+			return self.getScale()
+
+		return None
+	
+	def changeAlignAttr(self, name, value):
+		self._toInitState()
+		self.setAlignAttr(name, value)
+
+		self.pxleft, self.pxwidth, self.pxtop, self.pxheight = self._getMediaSpaceArea()
+		self._onGeomChanged()
+
 class RegionNode(Node):
 	def __init__(self):
 		Node.__init__(self)
-		self.regAlign = None
-		self.regPoint = None
-		self.scale = None
 
 	def _initialUpdate(self):
 		self.pxleft, self.pxwidth = self._resolveCSS2Rule(self.left, self.width, self.right, self.container.pxwidth)
 		self.pxtop, self.pxheight = self._resolveCSS2Rule(self.top, self.height, self.bottom, self.container.pxheight)
 		self._onGeomChanged()
 
-	def setRawValues(self, left, width, right, top, height, bottom):
-		if width != None and width <= 0: width = 1
-		if height != None and height <= 0: height = 1
-		
-		self.left = left
-		self.width = width
-		self.right = right
-		self.top = top
-		self.height = height
-		self.bottom = bottom
+	def setRawAttrs(self, attrList):
+		for name, value in attrList:
+			if name == 'left':
+				self.left = value
+			elif name == 'top':
+				self.top = value
+			elif name == 'width':
+				if value != None and value <= 0: value = 1
+				self.width = value
+			elif name == 'height':
+				if value != None and value <= 0: value = 1
+				self.height = value
+			elif name == 'right':
+				self.right = value
+			elif name =='bottom':
+				self.bottom = value
+			else:
+				Node._setRawAttr(self, name, value)
 		
 		self._toUnInitState()
+
+	def getRawAttr(self, name):
+		if name == 'left':
+			return self.left 
+		elif name == 'top':
+			return self.top
+		elif name == 'width':
+			return self.width 
+		elif name == 'height':
+			return self.height
+		elif name == 'right':
+			return self.right
+		elif name =='bottom':
+			return self.bottom
+		else:
+			return Node._getRawAttr(self, name)
+
+	def copyRawAttrs(self, srcNode):
+		Node.copyRawAttrs(self,srcNode)
+		self.left = srcNode.left
+		self.width = srcNode.width
+		self.right = srcNode.right
+		self.top = srcNode.top
+		self.height = srcNode.height
+		self.bottom = srcNode.bottom
+
+		self._toUnInitState()		
 
 	def _resolveCSS2Rule(self, beginValue, sizeValue, endValue, containersize):
 		pxbegin = None
@@ -302,7 +379,7 @@ class RegionNode(Node):
 	# determinate new pixel values (left/width/top and height)
 	# determinate recursively all changement needed in children as well
 	# for each pixel value changed, the callback onChangePxValue is called
-	def changeRawValue(self, name, value):
+	def changeRawValues(self, name, value):
 		self._toInitState()
 		self.pxValuesHasChanged = 0
 
@@ -654,15 +731,28 @@ class RootNode(RegionNode):
 		Node.__init__(self)
 		self.context = context
 
-	def setSize(self, width, height):
-		if type(width) is not type(0):
-			return 
-		if type(height) is not type(0):
-			return 
+	def copyRawAttrs(self, srcNode):
+		self.pxwidth = srcNode.pxwidth
+		self.pxheight = srcNode.pxheight
+		
+		self._toUnInitState()		
 
-		self.pxwidth = width
-		self.pxheight = height
+	def setRawAttrs(self, attrList):
+		for name, value in attrList:
+			if name == 'width':
+				self.pxwidth = value
+			elif name == 'height':
+				self.pxheight = value
+
 		self._toUnInitState()
+
+	def getRawAttr(self, name):
+		if name == 'width':
+			return self.pxwidth
+		elif name == 'height':
+			return self.pxheight
+
+		return None		
 
 	def updateAll(self):
 		self._onGeomChanged()
@@ -688,11 +778,15 @@ class MediaNode(Node):
 	def __init__(self):
 		Node.__init__(self)
 		self.alignHandler = None
-		self.regAlign = None
-		self.regPoint = None
-		self.scale = None
 		self.intrinsicWidth = None
 		self.intrinsicHeight = None
+
+	def copyRawAttrs(self, srcNode):
+		Node.copyRawAttrs(self,srcNode)
+		self.intrinsicWidth = srcNode.intrinsicWidth
+		self.intrinsicHeight = srcNode.intrinsicHeight
+
+		self._toUnInitState()		
 
 	def _initialUpdate(self):
 		self.pxleft, self.pxtop, self.pxwidth, self.pxheight = self._getMediaSpaceArea()
@@ -721,7 +815,7 @@ class MediaNode(Node):
 		
 		regPoint = self.getRegPoint()		
 		regPointObject = self.context.getDocumentContext().GetRegPoint(regPoint)
-		regAlign = self.getRegAlign(regPointObject)
+		regAlign = self._getRegAlign(regPointObject)
 		
 		# convert regalignid to pourcent value
 		regAlignX, regAlignY = self._getxyAlign(regAlign)
@@ -826,29 +920,24 @@ class MediaNode(Node):
 
 		return newsize
 
-	def setIntrinsicSize(self, width, height):
-		# avoid crashes
-		if width <= 0: width = 1
-		if height <= 0: height = 1
-		self.intrinsicWidth = width
-		self.intrinsicHeight = height
+	def setRawAttrs(self, attrList):
+		for name, value in attrList:
+			if name == 'width':
+				self.intrinsicWidth = value
+			elif name == 'height':
+				self.intrinsicHeight = value
+			else:
+				Node._setRawAttr(self, name, value)
+
 		self._toUnInitState()
 
-	def setAlignAttr(self, name, value):
-		if name == 'regPoint':
-			self.regPoint = value
-		elif name == 'regAlign':
-			self.regAlign = value
-		elif name == 'scale':
-			self.scale = value
-		self._toUnInitState()
-		
-	def changeAlignAttr(self, name, value):
-		self._toInitState()
-		self.setAlignAttr(name, value)
-
-		self.pxleft, self.pxwidth, self.pxtop, self.pxheight = self._getMediaSpaceArea()
-		self._onGeomChanged()
+	def getRawAttr(self, name):
+		if name == 'width':
+			return self.intrinsicWidth
+		elif name == 'height':
+			return self.intrinsicHeight
+		else:
+			return Node._getRawAttr(self, name)
 
 	def _updateOnContainerHeightChanged(self):
 		self._toInitState()
@@ -893,7 +982,7 @@ class MediaNode(Node):
 		regpoint_y = regPointObject.gety(self.container.pxheight)
 
 		# get regalign
-		regalign = self.getRegAlign(regPointObject)
+		regalign = self._getRegAlign(regPointObject)
 
 		# this algorithm depends of fit attribute
 		if scale == 1:  #hidden
@@ -996,21 +1085,42 @@ class MediaNode(Node):
 		else:
 			return self.container.getScale()
 
+	def __getRegion(self):
+		subreg = self.container
+		if self.container != None:
+			return subreg.container
+
+		return None
+	
 	def getRegPoint(self):
 		if self.regPoint != None:
 			return self.regPoint
 		else:
-			return self.container.getRegPoint()
+			region = self.__getRegion()
+			if region != None:
+				return self.container.getRegPoint()
+
+		# we shouldn't pass here
+		return 'topLeft'			
+
+	def getRegAlign(self):
+		regPoint = self.getRegPoint()
+		regPointObject = self.context.getDocumentContext().GetRegPoint(regPoint)
+		return self._getRegAlign(regPointObject)
 		
-	def getRegAlign(self, regPointObject):
+	def _getRegAlign(self, regPointObject):
 		if self.regAlign != None:
 			return self.regAlign
 		else:
-			regAlign = self.container.getRegAlign()
-			if regAlign == None:
-				regAlign = regPointObject.getregalign()
+			# default value
+			regAlign = 'topLeft'
+			region = self.__getRegion()
+			if region != None:
+				regAlign = region.getRegAlign()
+				if regAlign == None:
+					regAlign = regPointObject.getregalign()
 				
-			return regAlign
+		return regAlign
 
 	def _onChangePxValue(self, name, value):
 		self.pxValuesHasChanged = 1

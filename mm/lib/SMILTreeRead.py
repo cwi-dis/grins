@@ -1353,6 +1353,40 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if region not in self.__childregions[None]:
 				self.__childregions[None].append(region)
 
+		if settings.activeFullSmilCss:
+			import ChannelMap
+			if ChannelMap.isvisiblechannel(mtype):
+				# create here all positioning nodes and initialize them
+				cssResolver = self.__context.cssResolver				
+				subRegCssId = node.newSubRegCssId()
+				mediaCssId = node.newMediaCssId()
+				attrList = [('left',node.attrdict.get('left')),
+							('width',node.attrdict.get('width')),
+							('right',node.attrdict.get('right')),
+							('top',node.attrdict.get('top')),
+							('height',node.attrdict.get('height')),
+							('bottom',node.attrdict.get('bottom'))]
+				cssResolver.setRawAttrs(subRegCssId, attrList)
+				# don't keep the originals
+				if node.attrdict.has_key('left'): del node.attrdict['left']
+				if node.attrdict.has_key('top'): del node.attrdict['top']
+				if node.attrdict.has_key('width'): del node.attrdict['width']
+				if node.attrdict.has_key('height'): del node.attrdict['height']
+				if node.attrdict.has_key('right'): del node.attrdict['right']
+				if node.attrdict.has_key('bottom'): del node.attrdict['bottom']
+
+				mwidth, mheight = node.GetDefaultMediaSize(None, None)
+				cssResolver.setRawAttrs(mediaCssId, [('width', mwidth), ('height', mheight)])		
+				if node.attrdict.has_key('regPoint'):
+					cssResolver.setRawAttrs(mediaCssId, [('regPoint', node.attrdict.get('regPoint'))])
+					del node.attrdict['regPoint']
+				if node.attrdict.has_key('regAlign'):
+					cssResolver.setRawAttrs(mediaCssId, [('regAlign', node.attrdict.get('regAlign'))])
+					del node.attrdict['regAlign']
+				if node.attrdict.has_key('scale'):
+					cssResolver.setRawAttrs(mediaCssId, [('scale', node.attrdict.get('scale'))])
+					del node.attrdict['scale']
+				
 		# this part is useful to determinate the initial viewport size if not specified
 		# we have to keep it (it's not a smil-css rule), but will be transfered to the right module
 		if not settings.activeFullSmilCss:
@@ -1630,28 +1664,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 
 		region = channel.GetLayoutChannel()
-		if region == None: return 		
-		# keep all original constraints
-		# if a value is not specified,  it's a CSS auto value
-		
-		# sub region			
+		if region == None: return
+		regCssId = region.getCssId()
+		if regCssId == None:
+			return
 		cssResolver = self.__context.cssResolver
-		cssId = cssResolver.newRegion()
-		self.__cssIdTmpList.append(cssId)
-		cssResolver.setRawAttrPos(cssId,
-			node.attrdict.get('left'), node.attrdict.get('width'), node.attrdict.get('right'),
-			node.attrdict.get('top'), node.attrdict.get('height'), node.attrdict.get('bottom'))
-		cssResolver.link(cssId, region.cssId)					
-			
-		# media
-		cssMediaId = cssResolver.newMedia()
-		self.__cssIdTmpList.append(cssMediaId)
-		width, height = node.GetDefaultMediaSize(None, None)
-		cssResolver.setIntrinsicSize(cssMediaId, width, height)
-		cssResolver.setAlignAttr(cssMediaId, 'regPoint', node.attrdict.get('regPoint',None))
-		cssResolver.setAlignAttr(cssMediaId, 'regAlign', node.attrdict.get('regAlign',None))
-		cssResolver.setAlignAttr(cssMediaId, 'scale', node.attrdict.get('scale',None))			
-		cssResolver.link(cssMediaId, cssId)			
+		subRegCssId = node.getSubRegCssId()
+		mediaCssId = node.getMediaCssId()
+		if subRegCssId == None or mediaCssId == None:
+			return
+		self.__cssIdTmpList.append(subRegCssId)
+		self.__cssIdTmpList.append(mediaCssId)
+		cssResolver.link(subRegCssId, regCssId)	
+		cssResolver.link(mediaCssId, subRegCssId)			
 
 	# set the same unit to all positioning attributes : temporarely
 	def __fixSubRegionPos(self, node):
@@ -1958,12 +1983,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if not name:
 			name = layout_name # only for anonymous root-layout
 		ctx = self.__context
-		layout = MMNode.MMChannel(ctx, name, 'layout')
+		layout = MMNode.MMChannel(ctx, name, 'layout', 1)
 
-		if settings.activeFullSmilCss:
-			# to do: use a newRegion instead newRootNode which shoud be removed
-			layout.cssId = self.__context.cssResolver.newRootNode()
-		
 		if not self.__region2channel.has_key(top):
 			self.__region2channel[top] = []
 		self.__region2channel[top].append(layout)
@@ -2040,9 +2061,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				yCurrent = yCurrent+20
 
 				if settings.activeFullSmilCss:
-					self.__context.cssResolver.setRootSize(ch.cssId, ch.get('width'), ch.get('height'))
-					width, height = ch['winsize'] = self.__context.cssResolver.getPxGeom(ch.cssId)
-					self.__context.cssResolver.setRootSize(ch.cssId, width, height)
+					cssId = ch.getCssId()
+					self.__context.cssResolver.setRawAttrs(cssId, [('width', ch.get('width')),
+																		   ('height',ch.get('height'))])
+					# if not width or height specified, guess it
+					width, height = ch['winsize'] = self.__context.cssResolver.getPxGeom(ch.getCssId())
+					# fix all the time a pixel geom value for viewport.
+					self.__context.cssResolver.setRawAttrs(cssId, [('width', width),
+																		   ('height', height)])
 				continue
 			# old 03-07-2000
 			#if ch.has_key('base_window'):
@@ -2087,17 +2113,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ch['soundLevel'] = attrdict['soundLevel']
 			del attrdict['soundLevel']
 			
-		if attrdict.has_key('regAlign'):
-			ch['regAlign'] = attrdict['regAlign']
-			del attrdict['regAlign']
+		if not settings.activeFullSmilCss:
+			if attrdict.has_key('regAlign'):
+				ch['regAlign'] = attrdict['regAlign']
+				del attrdict['regAlign']
 
-		if attrdict.has_key('regPoint'):
-			regName = attrdict['regPoint']
-			if not self.__context.regpoints.has_key(regName):
-				self.syntax_error('the registration point '+regName+" doesn't exist")
-			else:
-				ch['regPoint'] = regName
-			del attrdict['regPoint']
+			if attrdict.has_key('regPoint'):
+				regName = attrdict['regPoint']
+				if not self.__context.regpoints.has_key(regName):
+					self.syntax_error('the registration point '+regName+" doesn't exist")
+				else:
+					ch['regPoint'] = regName
+				del attrdict['regPoint']
 
 		if attrdict.has_key('regionName'):
 			ch['regionName'] = attrdict['regionName']
@@ -2147,30 +2174,57 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			h = attrdict['height']; del attrdict['height']
 			
 			ch['units'] = attrdict['units']; del attrdict['units']
+
+			fit = attrdict['fit']; del attrdict['fit']
+			if fit == 'hidden':
+				ch['scale'] = 1
+			elif fit == 'meet':
+				ch['scale'] = 0
+			elif fit == 'slice':
+				ch['scale'] = -1
+			elif fit == 'fill':
+				ch['scale'] = -3			
 		else:
 			# keep all original constraints
 			# if a value is not specified,  it's a CSS auto value
 			if mtype == 'layout':
-				if attrdict.has_key('left'): ch['left'] = attrdict['left']; del attrdict['left']
-				if attrdict.has_key('width'): ch['width'] = attrdict['width']; del attrdict['width']
-				if attrdict.has_key('right'): ch['right'] = attrdict['right']; del attrdict['right']
-				if attrdict.has_key('top'): ch['top'] = attrdict['top']; del attrdict['top']
-				if attrdict.has_key('height'): ch['height'] = attrdict['height']; del attrdict['height']
-				if attrdict.has_key('bottom'): ch['bottom'] = attrdict['bottom']; del attrdict['bottom']
+				cssId = ch.getCssId()
+				cssResolver = self.__context.cssResolver
+				attrList = [('left',attrdict.get('left')),
+							('width',attrdict.get('width')),
+							('right',attrdict.get('right')),
+							('top',attrdict.get('top')),
+							('height',attrdict.get('height')),
+							('bottom',attrdict.get('bottom'))]
+				cssResolver.setRawAttrs(cssId,attrList)
+				# remove original attributes
+				if attrdict.has_key('left'): del attrdict['left']
+				if attrdict.has_key('width'): del attrdict['width']
+				if attrdict.has_key('right'): del attrdict['right']
+				if attrdict.has_key('top'): del attrdict['top']
+				if attrdict.has_key('height'): del attrdict['height']
+				if attrdict.has_key('bottom'): del attrdict['bottom']
 
-				self.__context.cssResolver.setRawAttrPos(ch.getCssId(),
-							ch.get('left'), ch.get('width'), ch.get('right'),
-							ch.get('top'), ch.get('height'), ch.get('bottom'))
+				if attrdict.has_key('fit'):
+					fit = attrdict['fit']; del attrdict['fit']
+					if fit == 'hidden':
+						scale = 1
+					elif fit == 'meet':
+						scale = 0
+					elif fit == 'slice':
+						scale = -1
+					elif fit == 'fill':
+						scale = -3					
+					cssResolver.setRawAttrs(cssId, [('scale', scale)])
+					
+				if attrdict.has_key('regAlign'):
+					cssResolver.setRawAttrs(cssId,[('regAlign', attrdict['regAlign'])])
+					del attrdict['regAlign']
+				if attrdict.has_key('regPoint'):
+					cssResolver.setRawAttrs(cssId, [('regPoint', attrdict['regPoint'])])
+					del attrdict['regPoint']
+					
 										
-		fit = attrdict['fit']; del attrdict['fit']
-		if fit == 'hidden':
-			ch['scale'] = 1
-		elif fit == 'meet':
-			ch['scale'] = 0
-		elif fit == 'slice':
-			ch['scale'] = -1
-		elif fit == 'fill':
-			ch['scale'] = -3
 		ch['center'] = 0
 		# other fit options not implemented
 

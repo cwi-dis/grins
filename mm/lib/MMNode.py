@@ -642,20 +642,29 @@ class MMRegPoint:
 		return self.attrdict.items()
 		
 class MMChannel:
-	def __init__(self, context, name, type='undefined'):
+	def __init__(self, context, name, type='undefined', isRoot=0):
 		self.context = context
 		self.name = name
 		self.attrdict = {'type':type}
 		self.d_attrdict = {}
 		if settings.activeFullSmilCss:
+			self._cssId = None
 			if type == 'layout':
-				self.cssId = context.cssResolver.newRegion()
+				self.newCssId(isRoot)
 				# allow to maintains the compatibility with old version
 				# this flag shouldn't be accessible in the future
 				self.attrdict['base_winoff'] = (0, 0, 100, 100)
 				
 	def __repr__(self):
 		return '<MMChannel instance, name=' + `self.name` + '>'
+
+	def newCssId(self, isRoot = 0):
+		if not isRoot:
+			self._cssId = self.context.cssResolver.newRegion()
+		else:
+			self._cssId = self.context.cssResolver.newRootNode()
+		self.attrdict['cssId'] = self._cssId
+		return self._cssId
 
 	def _setname(self, name): # Only called from context.setchannelname()
 		self.name = name
@@ -664,7 +673,7 @@ class MMChannel:
 		self.context = None
 		if settings.activeFullSmilCss:
 			if self.attrdict.get('type') == 'layout':
-				self.context.cssResolver.unlink(self.cssId)
+				self.context.cssResolver.unlink(self._cssId)
 
 	def stillvalid(self):
 		return self.context is not None
@@ -684,8 +693,30 @@ class MMChannel:
 	# end new	
 
 	def getCssId(self):
-		return self.cssId
-	
+		return self._cssId
+
+	def setCssAttr(self, name, value):
+		self.context.cssResolver.setRawAttr(self._cssId, name, value)
+											
+	def getCssAttr(self, name, defaultValue=None):
+		value = self.context.cssResolver.getAttr(self._cssId, name)
+		if value == None:
+			return defaultValue
+
+	def getCssRawAttr(self, name, defaultValue=None):
+		if self._cssId == None:
+			return defaultValue
+		value = self.context.cssResolver.getRawAttr(self._cssId, name)
+		if value == None:
+			return defaultValue
+		return value
+
+	def isCssAttr(self, name):
+		if name in ['top', 'left', 'right', 'top', 'height', 'bottom', 'regPoint', 'regAlign', 'scale']:
+			return 1
+
+		return 0		
+		
 	#
 	# Set animated attribute
 	#
@@ -751,11 +782,6 @@ class MMChannel:
 		if self.attrdict.has_key(key):
 			return self.attrdict[key]
 		else:
-			if settings.activeFullSmilCss:
-				if key == 'base_winoff':
-					# keep the compatibility with old version
-					print 'Warning: base_winoff deprecated attribute. Instead, use getPxGeom'
-					return self.getPxGeom()
 			# special case for background color
 			if key == 'bgcolor' and \
 			   self.attrdict.has_key('base_window') and \
@@ -763,6 +789,15 @@ class MMChannel:
 				pname = self.attrdict['base_window']
 				pchan = self.context.channeldict[pname]
 				return pchan['bgcolor']
+			if settings.activeFullSmilCss:
+				if key == 'base_winoff':
+					# keep the compatibility with old version
+					print 'Warning: base_winoff deprecated attribute. Instead, use getPxGeom'
+					return self.getPxGeom()
+				elif self.isCssAttr(key):
+					# keep the compatibility with old version
+					return self.getCssAttr(key)
+			
 			raise KeyError, key
 
 	def __setitem__(self, key, value):
@@ -776,7 +811,7 @@ class MMChannel:
 					if self.attrdict.has_key('base_window'):
 						del self['base_window']
 					pchan = self.context.channeldict.get(value)
-					self.context.cssResolver.link(self.cssId, pchan.cssId)
+					self.context.cssResolver.link(self._cssId, pchan._cssId)
 		elif key == 'base_winoff':
 			if settings.activeFullSmilCss:
 				# keep the compatibility with old version
@@ -791,7 +826,7 @@ class MMChannel:
 		if settings.activeFullSmilCss:
 			if key == 'base_window':
 				if self.attrdict.get('type') == 'layout':
-						self.context.cssResolver.unlink(self.cssId)
+						self.context.cssResolver.unlink(self._cssId)
 
 	def has_key(self, key):
 		return self.attrdict.has_key(key)
@@ -827,7 +862,7 @@ class MMChannel:
 
 	def getPxGeom(self):
 		if self.attrdict.get('type') == 'layout':
-			return self.context.cssResolver.getPxGeom(self.cssId)
+			return self.context.cssResolver.getPxGeom(self._cssId)
 		else:
 			print 'getPxGeom unsupported on no layout channel'
 			return (0, 0, 100, 100)
@@ -838,20 +873,17 @@ class MMChannel:
 	def setPxGeom(self, geom):
 		if self.attrdict.get('type') == 'layout':
 			left, top, width, height = geom
-			self.context.cssResolver.changeRawValue(self.cssId, 'left', left)
-			self.context.cssResolver.changeRawValue(self.cssId, 'top', top)
-			self.context.cssResolver.changeRawValue(self.cssId, 'width', width)
-			self.context.cssResolver.changeRawValue(self.cssId, 'height', height)
-			self.attrdict['left'] = left
-			self.attrdict['top'] = top
-			self.attrdict['width'] = width
-			self.attrdict['height'] = height
-			if self.attrdict.has_key('right'):
-				del self.attrdict['right']
-			elif self.attrdict.has_key('bottom'):
-				del self.attrdict['bottom']
+			self.context.cssResolver.changeRawValue(self._cssId, 'left', left)
+			self.context.cssResolver.changeRawValue(self._cssId, 'top', top)
+			self.context.cssResolver.changeRawValue(self._cssId, 'width', width)
+			self.context.cssResolver.changeRawValue(self._cssId, 'height', height)
+			self.context.cssResolver.changeRawValue(self._cssId, 'right', None)
+			self.context.cssResolver.changeRawValue(self._cssId, 'bottom', None)
 		else:
 			print 'setPxGeom unsupported on no layout channel'
+
+	def getCssId(self):
+		return self._cssId
 	
 # The Sync Arc class
 #
@@ -1324,6 +1356,10 @@ class MMNode:
 		self.collapsed = 0;	# Whether this node is collapsed in the structure view.
 		self.timing_info_dict = {}
 
+		if settings.activeFullSmilCss:	
+			self._subRegCssId = None
+			self._mediaCssId = None
+
 	#
 	# Return string representation of self
 	#
@@ -1378,51 +1414,99 @@ class MMNode:
 
 	# dynamic link to the smil css resolver
 	# allow to get different positioning values
-	def __linkToCssResolver(self):
+	def __linkCssId(self):
 		cssResolver = self.context.cssResolver
-		cssRegId = cssResolver.newRegion()
-		cssResolver.setRawAttrPos(cssRegId,
-			self.GetAttrDef('left',None), self.GetAttrDef('width',None),
-			self.GetAttrDef('right',None), self.GetAttrDef('top',None),
-			self.GetAttrDef('height',None), self.GetAttrDef('bottom',None))
 
+		if self._subRegCssId == None or self._mediaCssId == None:
+			return
+		
+		# for sub region
 		channel = self.GetChannel()
 		if channel == None:
-			return None,None
+			return
 		region = channel.GetLayoutChannel()
 		if region == None:
-			return None, None
-		cssResolver.link(cssRegId, region.cssId)
+			return
+		cssResolver.link(self._subRegCssId, region._cssId)
 		
 		# for media
-		cssMediaId = cssResolver.newMedia()
-		mwidth, mheight = self.GetDefaultMediaSize(None, None)
-		cssResolver.setIntrinsicSize(cssMediaId, mwidth, mheight)
-		cssResolver.setAlignAttr(cssMediaId, 'regPoint', self.GetAttrDef('regPoint',None))
-		cssResolver.setAlignAttr(cssMediaId, 'regAlign', self.GetAttrDef('regAlign',None))
-		cssResolver.setAlignAttr(cssMediaId, 'scale', self.GetAttrDef('scale',None))
-		cssResolver.link(cssMediaId, cssRegId)	
+		cssResolver.link(self._mediaCssId, self._subRegCssId)	
 
-		return cssRegId, cssMediaId
+	def __unlinkCssId(self):
+		if self._subRegCssId == None or self._mediaCssId == None:
+			return
 		
+		cssResolver = self.context.cssResolver
+		cssResolver.unlink(self._mediaCssId)
+		cssResolver.unlink(self._subRegCssId)
+
+	def newSubRegCssId(self):
+		self._subRegCssId = self.context.cssResolver.newRegion()
+		return self._subRegCssId
+
+	def getSubRegCssId(self):
+		return self._subRegCssId
+	
+	def newMediaCssId(self):
+		self._mediaCssId = self.context.cssResolver.newMedia()
+		return self._mediaCssId
+
+	def getMediaCssId(self):
+		return self._mediaCssId
+
+	def setCssAttr(self, name, value):
+		if name in ['regPoint', 'regAlign', 'scale']:
+			self.context.cssResolver.setRawAttr(self._mediaCssId, name, value)
+		else:
+			self.context.cssResolver.setRawAttr(self._subRegCssId, name, value)
+											
+	def getCssRawAttr(self, name, defaultValue = None):
+		if name in ['regPoint', 'regAlign', 'scale']:
+			if self._mediaCssId == None:
+				return defaultValue
+			value = self.context.cssResolver.getRawAttr(self._mediaCssId, name)
+		else:
+			if self._subRegCssId == None:
+				return defaultValue
+			value = self.context.cssResolver.getRawAttr(self._subRegCssId, name)
+		if value == None:
+			return defaultValue
+		return value
+	
+	def getCssAttr(self, name, defaultValue = None):
+		if name in ['regPoint', 'regAlign', 'scale']:
+			if self._mediaCssId == None:
+				return defaultValue
+			value = self.context.cssResolver.getAttr(self._mediaCssId, name)
+		else:
+			if self._subRegCssId == None:
+				return defaultValue
+			value = self.context.cssResolver.getAttr(self._subRegCssId, name)
+		if value == None:
+			return defaultValue
+		return value
+	
+	def isCssAttr(self, name):
+		if name in ['top', 'left', 'right', 'top', 'height', 'bottom', 'regPoint', 'regAlign', 'scale']:
+			return 1
+
+		return 0
+	
 	# this method return the media positioning (subregiongeom+mediageom) in pixel values.
 	# All values are relative to the parent region/subregion
 	# it should be use only in some rare cases 
 	# if we need to use often this method, we should optimize it
 	def getPxGeomMedia(self):
+		if self._subRegCssId == None or self._mediaCssId == None:
+			return None
 		
 		# a dynamic link should be enough for this method
 		# it avoid to keep a synchonization with the css resolver
-		cssRegId, cssMediaId = self.__linkToCssResolver()
-		if cssRegId == None:
-			return None
+		self.__linkCssId()
 		cssResolver = self.context.cssResolver
-		subRegGeom = cssResolver.getPxGeom(cssRegId)
-		mediaGeom = cssResolver.getPxGeom(cssMediaId)
-
-		# no need anymore of this link		
-		cssResolver.unlink(cssMediaId)
-		cssResolver.unlink(cssRegId)
+		subRegGeom = cssResolver.getPxGeom(self._subRegCssId)
+		mediaGeom = cssResolver.getPxGeom(self._mediaCssId)
+		self.__unlinkCssId()
 		
 		return subRegGeom, mediaGeom
 
@@ -1431,19 +1515,16 @@ class MMNode:
 	# it should be use only in some rare cases (HTML+TIME export), ...
 	# if we need to use often this method, we should optimize it
 	def getPxAbsGeomMedia(self):
+		if self._subRegCssId == None or self._mediaCssId == None:
+			return None
+		
 		# a dynamic link should be enough for this method
 		# it avoid to keep a synchonization with the css resolver
-		cssRegId, cssMediaId = self.__linkToCssResolver()
-		if cssRegId == None:
-			return None
-
+		self.__linkCssId()
 		cssResolver = self.context.cssResolver
-		subRegGeom = cssResolver.getPxAbsGeom(cssRegId)
-		mediaGeom = cssResolver.getPxAbsGeom(cssMediaId)
-
-		# no need anymore of this link		
-		cssResolver.unlink(cssMediaId)
-		cssResolver.unlink(cssRegId)
+		subRegGeom = cssResolver.getPxAbsGeom(self._subRegCssId)
+		mediaGeom = cssResolver.getPxAbsGeom(self._mediaCssId)
+		self.__unlinkCssId()
 		
 		return subRegGeom, mediaGeom
 
