@@ -42,6 +42,8 @@ xmlns = 'xmlns:%s' % NSprefix
 
 nonascii = re.compile('[\200-\377]')
 
+isidre = re.compile('^[a-zA-Z_][-A-Za-z0-9._]*$')
+
 # A fileish object with indenting
 class IndentedFile:
 	def __init__(self, fp):
@@ -136,10 +138,6 @@ def getchname(writer, node):
 	ch = node.GetChannel()
 	if not ch:
 		return None
-# XXXX Removed: Sjoerd wants region names on all nodes
-##	if not writer.regions_defined.has_key(ch):
-##		# Audio regions and such need not be named
-##		return None
 	return writer.ch2name[ch]
 
 def getduration(writer, node, attr):
@@ -643,7 +641,11 @@ class SMILWriter(SMIL):
 		for id, type, args in alist:
 			aid = (uid, id)
 			if type in SourceAnchors:
-				aname = '%s-%s' % (self.uid2name[uid], id)
+				if isidre.match(id) is None or \
+				   self.ids_used.has_key(id):
+					aname = '%s-%s' % (self.uid2name[uid], id)
+				else:
+					aname = id
 				if self.ids_used.has_key(aname):
 					i = 0
 					nn = '%s-%d' % (aname, i)
@@ -662,7 +664,6 @@ class SMILWriter(SMIL):
 		self.writetag('layout') # default: type="text/smil-basic-layout"
 		self.push()
 		channels = self.root.GetContext().channels
-		self.regions_defined = {}
 		if len(self.top_levels) == 1:
 			attrlist = []
 			ch = self.top_levels[0]
@@ -728,35 +729,37 @@ class SMILWriter(SMIL):
 					else:
 						value = '%d' % value
 					attrlist.append((name, value))
-			if ch.has_key('z') and ch['z'] > 0:
-				attrlist.append(('z-index', "%d" % ch['z']))
-			scale = ch.get('scale', 0)
-			if scale == 0:
-				fit = 'meet'
-			elif scale == -1:
-				fit = 'slice'
-			elif scale == 1:
-				fit = 'hidden'
-			else:
-				fit = None
-				print '** Channel uses unsupported scale value', name
-			if fit is not None and fit != 'hidden':
-				attrlist.append(('fit', fit))
+			if isvisual:
+				z = ch.get('z', 0)
+				if z > 0:
+					attrlist.append(('z-index', "%d" % z))
+				scale = ch.get('scale', 0)
+				if scale == 0:
+					fit = 'meet'
+				elif scale == -1:
+					fit = 'slice'
+				elif scale == 1:
+					fit = 'hidden'
+				else:
+					fit = None
+					print '** Channel uses unsupported scale value', name
+				if fit is not None and fit != 'hidden':
+					attrlist.append(('fit', fit))
 
-			# SMIL says: either background-color or transparent
-			# if different, set GRiNS attributes
-			bgcolor = ch.get('bgcolor')
-			if bgcolor is not None:
-				attrlist.append(('background-color', "#%02x%02x%02x" % bgcolor))
-			transparent = ch.get('transparent', 0)
-			if isvisual and transparent == (bgcolor is not None):
-				attrlist.append(('%s:transparent' % NSprefix, `transparent`))
-			if isvisual and ch.get('center', 1):
-				attrlist.append(('%s:center' % NSprefix, '1'))
-			if isvisual and ch.get('drawbox', 1):
-				attrlist.append(('%s:drawbox' % NSprefix, '1'))
+				# SMIL says: either background-color
+				# or transparent; if different, set
+				# GRiNS attributes
+				transparent = ch.get('transparent', 0)
+				bgcolor = ch.get('bgcolor')
+				if transparent == (bgcolor is not None):
+					attrlist.append(('%s:transparent' % NSprefix, `transparent`))
+				if bgcolor is not None and not transparent:
+					attrlist.append(('background-color', "#%02x%02x%02x" % bgcolor))
+				if ch.get('center', 1):
+					attrlist.append(('%s:center' % NSprefix, '1'))
+				if ch.get('drawbox', 1):
+					attrlist.append(('%s:drawbox' % NSprefix, '1'))
 
-			self.regions_defined[ch] = 1
 			for key, val in ch.items():
 				if key not in cmif_chan_attrs_ignore:
 					attrlist.append(('%s:%s' % (NSprefix, key), MMAttrdefs.valuerepr(key, val)))
