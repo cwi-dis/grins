@@ -192,3 +192,6 @@ class SelectWidget:
 		if 0 <= item < len(self.data):
 			return self.data[item]
 		return None
+		
+	def getselectindex(self):
+		return self.control.GetControlValue()-1
