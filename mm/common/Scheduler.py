@@ -307,7 +307,9 @@ class SchedulerContext:
 				continue
 			if arc.wallclock is not None:
 				timestamp = arc.resolvedtime(self.parent.timefunc)-arc.delay
-			if arc.isstart:
+			if arc.ismin:
+				list = []
+			elif arc.isstart:
 				dev = 'begin'
 ##				arc.dstnode.start_time = timestamp+arc.delay
 				list = MMAttrdefs.getattr(arc.dstnode, 'beginlist')
@@ -364,7 +366,7 @@ class SchedulerContext:
 					arc.dstnode.scheduled_children = arc.dstnode.scheduled_children + 1
 				arc.timestamp = timestamp+arc.delay
 				arc.qid = self.parent.enterabs(arc.timestamp, 0, self.trigger, (arc,))
-			if arc.dstnode is not node or dev != event:
+			if not arc.ismin and (arc.dstnode is not node or dev != event):
 				self.sched_arcs(arc.dstnode, dev, timestamp=timestamp+arc.delay)
 
 	def trigger(self, arc):
@@ -396,8 +398,13 @@ class SchedulerContext:
 			if node.has_min:
 				# must delay this arc
 				node.delayed_arcs.append(arc)
-				for c in node.children:
-					c.freeze_play()
+				fill = node.GetFill()
+				if fill == 'remove':
+					for c in node.children:
+						self.do_terminate(c, timestamp)
+				else:
+					for c in node.children:
+						self.freeze_play(c)
 				return
 			if debugevents: print 'scheduled_children-1',`node`
 			if node.scheduled_children > 0:
@@ -407,12 +414,12 @@ class SchedulerContext:
 				if debugevents: print 'node not playing'
 				return
 			if debugevents: print 'terminating node'
-			self.parent.do_terminate(self, node, timestamp)
+			self.do_terminate(node, timestamp)
 			pnode = node.GetSchedParent()
 			if pnode.type == 'excl' and pnode.pausestack:
 				node = pnode.pausestack[0]
 				del pnode.pausestack[0]
-				self.parent.do_resume(self, node, timestamp)
+				self.do_resume(node, timestamp)
 			return
 		if not node.parent:
 			self.scheduled_children = self.scheduled_children - 1
@@ -449,7 +456,7 @@ class SchedulerContext:
 		# if node is playing (or not stopped), must terminate it first
 		if node.playing not in (MMStates.IDLE, MMStates.PLAYED):
 			if debugevents: print 'terminating node'
-			self.parent.do_terminate(self, node, timestamp)
+			self.do_terminate(node, timestamp)
 		if pnode.type == 'excl':
 			action = 'nothing'
 			for sib in pnode.GetSchedChildren():
@@ -472,7 +479,7 @@ class SchedulerContext:
 						action = MMAttrdefs.getattr(p1[1], 'higher')
 					if debugevents: print 'action',action
 					if action == 'stop':
-						self.parent.do_terminate(self, sib, timestamp)
+						self.do_terminate(sib, timestamp)
 					elif action == 'never':
 						return
 					elif action == 'defer':
@@ -485,7 +492,7 @@ class SchedulerContext:
 							node.realpix_body.start_time = node.start_time
 						if node.caption_body:
 							node.caption_body.start_time = node.start_time
-						self.parent.do_pause(self, pnode, node, 'hide', timestamp)
+						self.do_pause(pnode, node, 'hide', timestamp)
 						return
 					elif action == 'pause':
 						if pcmp == 0:
@@ -498,10 +505,10 @@ class SchedulerContext:
 							x = x.parent
 						if pd is None:
 							pd = 'show'
-						self.parent.do_pause(self, pnode, sib, pd, timestamp)
+						self.do_pause(pnode, sib, pd, timestamp)
 					break
 				elif sib.playing == MMStates.FROZEN:
-					self.parent.do_terminate(self, sib, timestamp)
+					self.do_terminate(sib, timestamp)
 					break
 		elif pnode.type == 'seq':
 			# parent is seq, must terminate running child first
@@ -509,7 +516,7 @@ class SchedulerContext:
 			for c in pnode.GetSchedChildren():
 				# don't have to terminate it again
 				if c is not node and c.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
-					self.parent.do_terminate(self, c, timestamp)
+					self.do_terminate(c, timestamp)
 					# there can be only one active child
 					break
 		# we must start the node, but how?
@@ -538,6 +545,132 @@ class SchedulerContext:
 ##			self.sched_arcs(node, 'begin', timestamp=timestamp)
 ##			self.sched_arcs(node, 'end', timestamp=timestamp)
 			self.parent.event(self, (SR.SCHED_DONE, node), timestamp)
+
+	def do_terminate(self, node, timestamp):
+		if debugevents: print 'do_terminate',node,timestamp
+##		if debugevents: self.parent.dump()
+		if node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
+			for arc in node.durarcs + MMAttrdefs.getattr(node, 'endlist'):
+				if arc.qid is not None:
+					if debugevents: print 'cancel',`arc`
+					self.parent.cancel(arc.qid)
+					arc.qid = None
+					arc.dstnode.scheduled_children = arc.dstnode.scheduled_children - 1
+			for arc in node.delayed_arcs:
+				arc.dstnode.scheduled_children = arc.dstnode.scheduled_children - 1
+			node.delayed_arcs = []
+			getchannelfunc = node.context.getchannelbynode
+			if node.type in leaftypes and getchannelfunc:
+				chan = getchannelfunc(node)
+				if chan:
+					if debugevents: print 'stopplay',`node`
+					chan.stopplay(node)
+			for c in node.GetSchedChildren():
+				self.do_terminate(c, timestamp)
+			node.playing = MMStates.PLAYED
+		ev = (SR.SCHED_STOPPING, node)
+		if self.srdict.has_key(ev):
+			for q in self.parent.runqueues[PRIO_INTERN]:
+				if q[:3] == (self, ev, 0):
+					# already queued
+					break
+			else:
+				# not yet queued
+				self.parent.event(self, ev, timestamp)
+		ev = (SR.SCHED_STOP, node)
+		if self.srdict.has_key(ev):
+			self.parent.event(self, ev, timestamp)
+			for e, srdict in self.srdict.items():
+				srlist = srdict[e][1]
+				if ev in srlist:
+					srlist.remove(ev)
+
+	def freeze_play(self, node):
+		if debugevents: print 'freeze_play',`node`
+		if node.playing in (MMStates.PLAYING, MMStates.PAUSED):
+			getchannelfunc = node.context.getchannelbynode
+			if node.type in leaftypes and getchannelfunc:
+				chan = getchannelfunc(node)
+				if chan:
+					if debugevents: print 'freeze',`node`
+					chan.freeze(node)
+			for c in node.GetSchedChildren():
+				self.freeze_play(c)
+			node.playing = MMStates.FROZEN
+
+	def do_pause(self, pnode, node, action, timestamp):
+		if debugevents: print 'pause',node,timestamp
+		if node in pnode.pausestack:
+			pnode.pausestack.remove(node)
+		for arc in node.durarcs:
+			if arc.qid is not None:
+				self.parent.cancel(arc.qid)
+				arc.paused = arc.qid[0] - timestamp
+				arc.qid = None
+				if debugevents: print 'pause_play',`arc`,arc.paused
+		if node.playing in (MMStates.IDLE, MMStates.PLAYED):
+			for i in range(len(pnode.pausestack)):
+				pcmp, p1, p2 = pnode.pausestack[i].PrioCompare(node)
+				if pcmp > 0:
+					pnode.pausestack.insert(i, node)
+					break
+			else:
+				pnode.pausestack.append(node)
+		else:
+			self.pause_play(node, action, timestamp)
+			for i in range(len(pnode.pausestack)):
+				pcmp, p1, p2 = pnode.pausestack[i].PrioCompare(node)
+				if pcmp >= 0:
+					pnode.pausestack.insert(i, node)
+					break
+			else:
+				pnode.pausestack.append(node)
+
+	def pause_play(self, node, action, timestamp):
+		if node.playing not in (MMStates.PLAYING, MMStates.FROZEN):
+			return
+		getchannelfunc = node.context.getchannelbynode
+		if node.type in leaftypes and getchannelfunc:
+			chan = getchannelfunc(node)
+			if chan:
+				if debugevents: print 'freeze',`node`
+				chan.pause(node, action)
+		for c in node.GetSchedChildren():
+			self.pause_play(c, action, timestamp)
+		node.playing = MMStates.PAUSED
+
+	def do_resume(self, node, timestamp):
+		if debugevents: print 'resume',node,timestamp
+		for arc in node.durarcs:
+			if arc.qid is None:
+				arc.qid = self.parent.enterabs(timestamp + arc.paused, 0, self.trigger, (arc,))
+				arc.timestamp = timestamp + arc.paused
+				del arc.paused
+		ev = (SR.SCHED, node)
+		if self.srdict.has_key(ev):
+			node.start_time = timestamp
+			self.parent.event(self, ev, timestamp)
+		else:
+			self.resume_play(node, timestamp)
+
+	def resume_play(self, node, timestamp):
+		if node.playing != MMStates.PAUSED:
+			return
+		getchannelfunc = node.context.getchannelbynode
+		if node.type in leaftypes and getchannelfunc:
+			chan = getchannelfunc(node)
+			if chan:
+				if debugevents: print 'freeze',`node`
+				chan.resume(node)
+		if node.type == 'excl':
+			for c in node.GetSchedChildren():
+				if c.playing == MMStates.PAUSED and \
+				   c not in node.pausestack:
+					self.resume_play(c, timestamp)
+		else:
+			for c in node.GetSchedChildren():
+				self.resume_play(c, timestamp)
+		node.playing = MMStates.PLAYING
 
 	def queuesrlist(self, srlist, timestamp = None):
 		for sr in srlist:
@@ -906,7 +1039,7 @@ class Scheduler(scheduler):
 		elif action in (SR.BAG_START, SR.BAG_STOP):
 			self.ui.bag_event(sctx, todo)
 		elif action == SR.TERMINATE:
-			self.do_terminate(sctx, arg, timestamp)
+			sctx.do_terminate(arg, timestamp)
 		elif action == SR.LOOPSTART:
 			self.do_loopstart(sctx, arg, timestamp)
 			arg.startplay(sctx)
@@ -932,7 +1065,7 @@ class Scheduler(scheduler):
 ##				if arg.GetType() in interiortypes or \
 ##				   arg.realpix_body or arg.caption_body:
 ##					self.remove_terminate(sctx, arg)
-				arg.freeze_play()
+				sctx.freeze_play(arg)
 				for ch in arg.GetSchedChildren():
 					ch.reset()
 				if arg.fullduration is None or arg.fullduration < 0:
@@ -994,126 +1127,6 @@ class Scheduler(scheduler):
 		node.set_armedmode(ARM_DONE)
 		chan.stopplay(node)
 		node.stopplay()
-
-	#
-	# Execute a TERMINATE SR.
-	#
-	def terminate_play(self, node):
-		if debugevents: print 'terminate_play',`node`
-		if node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
-			for arc in node.durarcs + MMAttrdefs.getattr(node, 'endlist'):
-				if arc.qid is not None:
-					if debugevents: print 'cancel',`arc`
-					self.cancel(arc.qid)
-					arc.qid = None
-					arc.dstnode.scheduled_children = arc.dstnode.scheduled_children - 1
-			for arc in node.delayed_arcs:
-				arc.dstnode.scheduled_children = arc.dstnode.scheduled_children - 1
-			node.delayed_arcs = []
-			getchannelfunc = node.context.getchannelbynode
-			if node.type in leaftypes and getchannelfunc:
-				chan = getchannelfunc(node)
-				if chan:
-					if debugevents: print 'stopplay',`node`
-					chan.stopplay(node)
-			for c in node.GetSchedChildren():
-				self.terminate_play(c)
-			node.playing = MMStates.PLAYED
-
-	def do_terminate(self, sctx, node, timestamp):
-		if debugevents: print 'terminate',node,timestamp
-##		if debugevents: self.dump()
-		self.terminate_play(node)
-		ev = (SR.SCHED_STOPPING, node)
-		if sctx.srdict.has_key(ev):
-			for q in self.runqueues[PRIO_INTERN]:
-				if q[:3] == (sctx, ev, 0):
-					# already queued
-					break
-			else:
-				# not yet queued
-				self.event(sctx, ev, timestamp)
-		ev = (SR.SCHED_STOP, node)
-		if sctx.srdict.has_key(ev):
-			self.event(sctx, ev, timestamp)
-			for e, srdict in sctx.srdict.items():
-				srlist = srdict[e][1]
-				if ev in srlist:
-					srlist.remove(ev)
-
-	def do_pause(self, sctx, pnode, node, action, timestamp):
-		if debugevents: print 'pause',node,timestamp
-		if node in pnode.pausestack:
-			pnode.pausestack.remove(node)
-		for arc in node.durarcs:
-			if arc.qid is not None:
-				self.cancel(arc.qid)
-				arc.paused = arc.qid[0] - timestamp
-				arc.qid = None
-				if debugevents: print 'pause_play',`arc`,arc.paused
-		if node.playing in (MMStates.IDLE, MMStates.PLAYED):
-			for i in range(len(pnode.pausestack)):
-				pcmp, p1, p2 = pnode.pausestack[i].PrioCompare(node)
-				if pcmp > 0:
-					pnode.pausestack.insert(i, node)
-					break
-			else:
-				pnode.pausestack.append(node)
-		else:
-			self.pause_play(node, action, timestamp)
-			for i in range(len(pnode.pausestack)):
-				pcmp, p1, p2 = pnode.pausestack[i].PrioCompare(node)
-				if pcmp >= 0:
-					pnode.pausestack.insert(i, node)
-					break
-			else:
-				pnode.pausestack.append(node)
-
-	def pause_play(self, node, action, timestamp):
-		if node.playing not in (MMStates.PLAYING, MMStates.FROZEN):
-			return
-		getchannelfunc = node.context.getchannelbynode
-		if node.type in leaftypes and getchannelfunc:
-			chan = getchannelfunc(node)
-			if chan:
-				if debugevents: print 'freeze',`node`
-				chan.pause(node, action)
-		for c in node.GetSchedChildren():
-			self.pause_play(c, action, timestamp)
-		node.playing = MMStates.PAUSED
-
-	def do_resume(self, sctx, node, timestamp):
-		if debugevents: print 'resume',node,timestamp
-		for arc in node.durarcs:
-			if arc.qid is None:
-				arc.qid = self.enterabs(timestamp + arc.paused, 0, sctx.trigger, (arc,))
-				arc.timestamp = timestamp + arc.paused
-				del arc.paused
-		ev = (SR.SCHED, node)
-		if sctx.srdict.has_key(ev):
-			node.start_time = timestamp
-			self.event(sctx, ev, timestamp)
-		else:
-			self.resume_play(sctx, node, timestamp)
-
-	def resume_play(self, sctx, node, timestamp):
-		if node.playing != MMStates.PAUSED:
-			return
-		getchannelfunc = node.context.getchannelbynode
-		if node.type in leaftypes and getchannelfunc:
-			chan = getchannelfunc(node)
-			if chan:
-				if debugevents: print 'freeze',`node`
-				chan.resume(node)
-		if node.type == 'excl':
-			for c in node.GetSchedChildren():
-				if c.playing == MMStates.PAUSED and \
-				   c not in node.pausestack:
-					self.resume_play(sctx, c, timestamp)
-		else:
-			for c in node.GetSchedChildren():
-				self.resume_play(sctx, c, timestamp)
-		node.playing = MMStates.PLAYING
 
 	#
 	# LOOPSTART SR - Enter a loop at the top.

@@ -1011,19 +1011,6 @@ class MMNode:
 	def stopplay(self):
 		self.playing = MMStates.PLAYED
 
-	def freeze_play(self):
-		if debug: print 'freeze_play',`self`
-		if self.playing in (MMStates.PLAYING, MMStates.PAUSED):
-			getchannelfunc = self.context.getchannelbynode
-			if self.type in leaftypes and getchannelfunc:
-				chan = getchannelfunc(self)
-				if chan:
-					if debug: print 'freeze',`self`
-					chan.freeze(self)
-			for c in self.GetSchedChildren():
-				c.freeze_play()
-			self.playing = MMStates.FROZEN
-
 	def add_arc(self, arc, body = None):
 		if body is None:
 			body = self
@@ -1096,6 +1083,22 @@ class MMNode:
 	#
 	# Public methods for read-only access
 	#
+	def GetFill(self):
+		fill = self.attrdict.get('fill')
+		if fill is None or fill == 'default':
+			fill = self.GetInherAttrDef('fillDefault', None)
+		if fill is None or fill == 'default':
+			if self.type in interiortypes:
+				fill = 'remove'
+			elif self.attrdict.get('duration') is None and \
+			     not self.attrdict.get('endlist') and \
+			     self.attrdict.get('repeatdur') is None and \
+			     self.attrdict.get('loop') is None:
+				fill = 'freeze'
+			else:
+				fill = 'remove'
+		return fill
+
 	def GetType(self):
 		return self.type
 
@@ -1825,17 +1828,7 @@ class MMNode:
 		else:
 			srlist = [([(SCHED, self), (ARM_DONE, self)],
 				   [(PLAY, self)])]
-		fill = self.attrdict.get('fill')
-		if fill is None or fill == 'default':
-			fill = self.GetInherAttrDef('fillDefault', None)
-		if fill is None or fill == 'default':
-			if self.attrdict.get('duration') is None and \
-			   not self.attrdict.get('endlist') and \
-			   self.attrdict.get('repeatdur') is None and \
-			   self.attrdict.get('loop') is None:
-				fill = 'freeze'
-			else:
-				fill = 'remove'
+		fill = self.GetFill()
 
 		sched_done = [(SCHED_DONE,self)]
 		sched_stop = []
@@ -2021,11 +2014,7 @@ class MMNode:
 ##			self.arcs.append((self, arc))
 ##			self.add_arc(arc)
 
-		fill = self.attrdict.get('fill')
-		if fill is None or fill == 'default':
-			fill = self.GetInherAttrDef('fillDefault', 'remove')
-			if fill == 'default':
-				fill = 'remove'
+		fill = self.GetFill()
 
 		#
 		# We are started when we get our SCHED and all our
