@@ -806,6 +806,16 @@ class HierarchyView(HierarchyViewDialog):
 				self.focusnode = obj.node
 				obj.expandcall()
 				return
+		if obj.iconbox:
+			l, t, w, h = obj.iconbox
+			if l <= x <= l+w and t <= y <= t+h and obj.node.infoicon:
+				# If we hit the iconbox and there is something in it
+				# print the message
+				msg = obj.node.errormessage
+				if not msg:
+					msg = 'No message for this item'
+				windowinterface.showmessage(msg)
+			# Don't return but fall through
 		if obj.node is self.focusnode:
 			return
 		self.setfocusobj(obj)
@@ -1470,8 +1480,8 @@ class Object:
 				url = node.context.findurl(url)
 				try:
 					f = MMurl.urlretrieve(url)[0]
-				except IOError:
-					self.set_infoicon('error')
+				except IOError, arg:
+					self.set_infoicon('error', 'Cannot load image: %s'%arg)
 			##ih = min(b1-t1, titleheight+chnameheight)
 			ih = b1-t1
 			iw = r-l-2*hmargin
@@ -1574,9 +1584,10 @@ class Object:
 		else:
 			d.draw3dbox(cl, ct, cr, cb, (l, t, r - l, b - t))
 			
-	def set_infoicon(self, icon):
+	def set_infoicon(self, icon, msg=None):
 		"""Redraw the informational icon for this node"""
-		self.node.icon = icon
+		self.node.infoicon = icon
+		self.node.errormessage = msg
 		if not self.iconbox:
 			return
 		d = self.mother.opt_init_display()
@@ -1774,8 +1785,17 @@ def slidestart(pnode, url, index):
 			if not curl:
 				continue
 			if not urls.has_key(curl):
-				filesize = filesize + Bandwidth.GetSize(ctx.findurl(curl))
+				try:
+					thissize = Bandwidth.GetSize(ctx.findurl(curl))
+					if thissize:
+						filesize = filesize + thissize
+				except Bandwidth.Error, arg:
+					child.set_infoicon('error', arg)
 			urls[curl] = 0
-	filesize = filesize + Bandwidth.GetSize(url)
+	try:
+		thissize = Bandwidth.GetSize(url)
+		filesize = filesize + thissize
+	except Bandwidth.Error, arg:
+		child.set_infoicon('error', arg)
 	minstart = float(filesize) * 8 / MMAttrdefs.getattr(pnode, 'bitrate')
 	return start, minstart
