@@ -123,7 +123,13 @@ class SoundChannel(Channel):
 			self.errormsg(node, 'Node must be external')
 			return 1
 		fn = self.getfileurl(node)
-		fn = MMurl.urlretrieve(fn)[0]
+		try:
+			fn = MMurl.urlretrieve(fn)[0]
+		except IOError, arg:
+			if type(arg) is type(self):
+				arg = arg.strerror
+			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (fn, arg))
+			return 1
 		fn = self.toabs(fn)
 		builder=DirectShowSdk.CreateGraphBuilder()
 		if builder:
