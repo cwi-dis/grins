@@ -367,6 +367,10 @@ class ImageChannel(Channel):
 		Channel.play(self, node, callback, arg)
 	#
 	def defanchor(self, node, anchor):
+		fl.show_message('Defining image anchors is broken :-(', \
+			  '(Sorry for this -- will try to fix soon!)', \
+			  '--Guido')
+		return None
 		self.arm(node)
 		self.showanchors(node)
 		self.window.setdefanchor(anchor)
