@@ -176,6 +176,30 @@ class RadioButton(Control):
 		elif f==win32con.BST_UNCHECKED:return 0
 		return -1
 
+# RadioButtons aren't very useful on their own..
+# This makes them look like a ComboBox, except this looks like a dictionary.
+# Hmm.. this could take some time to write and get working. I'll just do a quick
+# hack for the meanwhile -mjvdg.
+##class RadioButtonGroup:
+##	def __init__(self, buttons = None):
+##		self.set(buttons)
+##	def setcursel(self, key):	# sets the current selection
+##		print "TODO: RadioButtonGroup.setcursel"
+##	def getcursel(self, key):	# returns the currently selected key
+		
+##	def resetcontent(self):		# sets the first radio button
+##		return
+##	def set(self, buttons):		# sets the buttons in this control (hard-wired)
+##		# Buttons is a dicitonary of {grinsRC.xx : 'Name'}
+##		self.buttons = buttons
+##		self.selected = None
+##		for k, v in buttons.items():
+##			if not self.selected:
+##				self.selected = k
+##			working here.
+##	def getselected(self):		# returns the selected key
+##		return self.getcursel()
+
 # CheckButton control class
 class CheckButton(Control):
 	def __init__(self,owner=None,id=-1):

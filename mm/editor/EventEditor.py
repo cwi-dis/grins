@@ -12,8 +12,8 @@ CAUSES = [				# What causes the event
 	'indefinite',		       
 	'node',				# extrainfo is a pointer to an MMNode or string??
 	'region',			# extrainfo is a pointer or string repr a region.
-	'prev',
-	'accessKey',			# extrainfo is the key pressed.
+	'prev', #TODO: no longer pertinant.
+	'accesskey',			# extrainfo is the key pressed.
 	'marker',			# er.. I admit that I don't understand this.
 	'wallclock',			# extrainfo is the time.
 	# What else??
@@ -111,7 +111,7 @@ class EventStruct:
 			print "TODO: don't know how to set node."
 		elif c == 'region' and self._setregion:
 			print "TODO: don't know how to set region."
-		elif c == 'accessKey' and self._setkey:
+		elif c == 'accesskey' and self._setkey:
 			s.accesskey = self._setkey
 		elif c == 'marker' and self._setmarker:
 			s.marker = self._setmarker
@@ -129,7 +129,7 @@ class EventStruct:
 			self.delay = None
 			self.thing = x.wallclock
 		elif x.accesskey is not None:
-			self.cause = 'accessKey'
+			self.cause = 'accesskey'
 			self.thing = x.accesskey
 		elif x.srcnode == 'prev':
 			self.cause = 'prev'
@@ -228,13 +228,13 @@ class EventStruct:
 				r = 'prev' + "." + s.event
 			else:
 				r = 'prev'
-		elif c == 'accessKey':
+		elif c == 'accesskey':
 			if self._setkey:
-				r = 'accessKey(' + self._setkey + ')'
+				r = 'accesskey(' + self._setkey + ')'
 			elif isinstance(self._syncarc, MMNode.MMSyncArc) and self._syncarc.accesskey:
-				r = 'accessKey(' + self._syncarc.accesskey + ')'
+				r = 'accesskey(' + self._syncarc.accesskey + ')'
 			else:
-				r = 'accessKey(?)'
+				r = 'accesskey(?)'
 		elif c == 'delay':
 			d = self.get_offset()
 			if d:
@@ -322,7 +322,7 @@ class EventStruct:
 			else:
 				thing = "SomeRegion"
 			#return ("Region:", repr(self._syncarc.channel), 0, 0)
-		elif c == 'accessKey':
+		elif c == 'accesskey':
 			name = "Key:"
 			if self._setkey:
 				thing = self._setkey
@@ -356,7 +356,7 @@ class EventStruct:
 			self._setregion = newthing
 		elif c == 'wallclock':
 			self._setwallclock = newthing
-		elif c == 'accessKey':
+		elif c == 'accesskey':
 			self._setkey = newthing
 		elif c in CAUSES:
 			pass
@@ -366,7 +366,7 @@ class EventStruct:
 	def get_offset(self):
 		if self._setoffset:
 			return self._setoffset
-		if self._syncarc and self.get_cause() in ['node', 'prev', 'accessKey', 'delay']: # TODO: check these.
+		if self._syncarc and self.get_cause() in ['node', 'prev', 'accesskey', 'delay']: # TODO: check these.
 			return `self._syncarc.delay`
 		else:
 			return None

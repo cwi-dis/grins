@@ -421,9 +421,14 @@ attrgrs=(
 		'cssbgcolor',
 		]},
 
-	{'name':'timelist',
-	 'title':'Events',
-	 'attrs':['beginlist', 'endlist',],
+	{'name':'beginlist',
+	 'title':'Begin',
+	 'attrs':['beginlist',],
+	 },
+
+	{'name':'endlist',
+	 'title':'End',
+	 'attrs':['endlist',],
 	 },
 
 	)
