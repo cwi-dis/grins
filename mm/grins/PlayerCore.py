@@ -120,7 +120,7 @@ class PlayerCore(Selecter, PlayerCommon):
 		self.makeRendererChannels()
 		
 		# make internal channels
-		self.__makeichannels()
+		self.makeInternalChannels()
 		
 		self.makemenu()
 
@@ -168,20 +168,20 @@ class PlayerCore(Selecter, PlayerCommon):
 			if ch.may_show():
 				ch.show()
 		self.after_chan_show()
-		self.__showichannels()
+		self.showichannels()
 		self.makemenu()
 
 	#
 	def hidechannels(self):
 		for name in self.channelnames:
 			self.channels[name].hide()
-		self.__hideichannels()
+		self.hideichannels()
 		self.makemenu()
 	#
 	def destroychannels(self):
 		for name in self.channelnames[:]:
 			self.killchannel(name)
-		self.__destroyichannels()
+		self.destroyichannels()
 		self.makemenu()
 	#
 	def killchannel(self, name):
@@ -211,36 +211,30 @@ class PlayerCore(Selecter, PlayerCommon):
 	# Internal channels support.
 	# 
 
-	def __makeichannels(self):
-		for name in self.context._ichannelnames:
-			if not self.__ichannels.has_key(name):
-				attrdict = self.context._ichanneldict[name]
-				self.__newichannel(name, attrdict)
-
-	def __showichannels(self):
+	def showichannels(self):
 		for name in self.__ichannels.keys():
 			ch = self.__ichannels[name]
 			if ch.may_show():
 				ch.show()
 
 	#
-	def __hideichannels(self):
+	def hideichannels(self):
 		for name in self.__ichannels.keys():
 			self.__ichannels[name].hide()
 
-	def __killchannel(self, name):
+	def killchannel(self, name):
 		if self.__ichannels.has_key(name):
 			self.__ichannels[name].destroy()
 			del self.__ichannels[name]
 
 	#
-	def __destroyichannels(self):
+	def destroyichannels(self):
 		ichnames = self.__ichannels.keys()
 		for name in ichnames:
 			self.__ichannels[name].destroy()
 			del self.__ichannels[name]
 	#
-	def __newichannel(self, name, attrdict):
+	def newichannel(self, name, attrdict):
 		if not attrdict.has_key('type'):
 			raise TypeError, \
 				'channel ' +`name`+ ' has no type attribute'
