@@ -18,8 +18,8 @@ import features
 import compatibility
 import ChannelMap
 import EditableObjects
-import SystemColors
 import parseutil
+import colors
 
 error = 'SMILTreeRead.error'
 
@@ -98,18 +98,6 @@ dataurl = re.compile('data:(?P<type>'+_token+'/'+_token+')?'
 percent = re.compile('^([0-9]?[0-9]|100)%$')
 
 del _token
-
-from colors import colors
-color = re.compile('(?:'
-		   '#(?P<hex>[0-9a-fA-F]{3}|'		# #f00
-			    '[0-9a-fA-F]{6})|'		# #ff0000
-		   'rgb' + _opS + r'\(' +		# rgb(R,G,B)
-			   _opS + '(?:(?P<ri>[0-9]+)' + _opS + ',' + # rgb(255,0,0)
-			   _opS + '(?P<gi>[0-9]+)' + _opS + ',' +
-			   _opS + '(?P<bi>[0-9]+)|' +
-			   _opS + '(?P<rp>[0-9]+)' + _opS + '%' + _opS + ',' + # rgb(100%,0%,0%)
-			   _opS + '(?P<gp>[0-9]+)' + _opS + '%' + _opS + ',' +
-			   _opS + '(?P<bp>[0-9]+)' + _opS + '%)' + _opS + r'\))$')
 
 _comma_sp = _opS + '(' + _S + '|,)' + _opS
 _fp = r'(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)'
@@ -4364,41 +4352,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	# helper methods
 
 	def __convert_color(self, val):
-		val = val.lower()
-		if colors.has_key(val):
-			return colors[val]
-		if val in ('transparent', 'inherit'):
-			return val
-		if SystemColors.colors.has_key(val):
-			return SystemColors.colors[val]
-		res = color.match(val)
-		if res is None:
-			self.syntax_error('bad color specification')
+		try:
+			return colors.convert_color(val)
+		except colors.error, msg:
+			self.syntax_error(msg)
 			return None
-		hex = res.group('hex')
-		if hex is not None:
-			if len(hex) == 3:
-				r = string.atoi(hex[0]*2, 16)
-				g = string.atoi(hex[1]*2, 16)
-				b = string.atoi(hex[2]*2, 16)
-			else:
-				r = string.atoi(hex[0:2], 16)
-				g = string.atoi(hex[2:4], 16)
-				b = string.atoi(hex[4:6], 16)
-		else:
-			r = res.group('ri')
-			if r is not None:
-				r = string.atoi(r)
-				g = string.atoi(res.group('gi'))
-				b = string.atoi(res.group('bi'))
-			else:
-				r = int(string.atof(res.group('rp')) * 255 / 100.0 + 0.5)
-				g = int(string.atof(res.group('gp')) * 255 / 100.0 + 0.5)
-				b = int(string.atof(res.group('bp')) * 255 / 100.0 + 0.5)
-		if r > 255: r = 255
-		if g > 255: g = 255
-		if b > 255: b = 255
-		return r, g, b
 
 	def __strToIntList(self, str):
 		sl = string.split(str,';')
