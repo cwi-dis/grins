@@ -3,6 +3,8 @@ from EVENTS import *
 from types import *
 import time
 
+_EndLoopEvent = 30			# event to end internal loops
+
 error = 'windowinterface.error'
 FALSE, TRUE = X.FALSE, X.TRUE
 
@@ -1993,6 +1995,9 @@ class _Event:
 	def _loop(self):
 		while self._queue:
 			if not self._trycallback():
+				window, event, value = self._queue[0]
+				if event == _EndLoopEvent:
+					return
 				del self._queue[0]
 
 	def testevent(self):
@@ -2357,8 +2362,6 @@ def canceltimer(id):
 def showmessage(text):
 	dummy = Dialog(None, text, TRUE, FALSE, ['Done'])
 
-_dialog_end = '_dialog_end'		# used for breaking out of a loop
-
 class _Question:
 	def __init__(self, text):
 		self.looping = FALSE
@@ -2370,13 +2373,9 @@ class _Question:
 	def run(self):
 		try:
 			event.startmodal(None)
-			try:
-				self.looping = TRUE
-				while self.answer is None:
-					dummy = event.readevent()
-			except _dialog_end:
-				import sys
-				sys.last_traceback = sys.exc_traceback = None
+			self.looping = TRUE
+			while self.answer is None:
+				dummy = event.readevent()
 		finally:
 			event.endmodal()
 		return self.answer
@@ -2384,7 +2383,7 @@ class _Question:
 	def callback(self, answer):
 		self.answer = answer
 		if self.looping:
-			raise _dialog_end
+			event.enterevent(self, _EndLoopEvent, 0)
 
 def showquestion(text):
 	return _Question(text).run()
@@ -2402,13 +2401,9 @@ class _MultChoice:
 	def run(self):
 		try:
 			event.startmodal(None)
-			try:
-				self.looping = TRUE
-				while self.answer is None:
-					dummy = event.readevent()
-			except _dialog_end:
-				import sys
-				sys.last_traceback = sys.exc_traceback = None
+			self.looping = TRUE
+			while self.answer is None:
+				dummy = event.readevent()
 		finally:
 			event.endmodal()
 		return self.answer
@@ -2418,7 +2413,7 @@ class _MultChoice:
 			if msg == self.msg_list[i]:
 				self.answer = i
 				if self.looping:
-					raise _dialog_end
+					event.enterevent(self,_EndLoopEvent,0)
 				return
 
 def multchoice(prompt, list, defindex):
@@ -3830,10 +3825,15 @@ class Window(_WindowHelpers, _MenuSupport):
 			self.hide()
 			del self._form
 			form.DestroyWidget()
-		if hasattr(self, '_shell'):
-			self._shell.UnmanageChild()
-			self._shell.DestroyWidget()
+		try:
+			shell = self._shell
+		except AttributeError:
+			pass
+		else:
 			del self._shell
+			shell.UnmanageChild()
+			shell.DestroyWidget()
+			del shell
 		_WindowHelpers.close(self)
 		_MenuSupport.close(self)
 
