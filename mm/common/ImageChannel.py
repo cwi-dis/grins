@@ -35,7 +35,6 @@ class ImageChannel(ChannelWindow):
 			return 1
 		try:
 			alist = node.GetRawAttr('anchorlist')
-			modanchorlist(alist)
 		except NoSuchAttrError:
 			alist = []
 		self.armed_display.fgcolor(self.getbucolor(node))
