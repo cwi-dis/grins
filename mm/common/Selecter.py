@@ -95,7 +95,7 @@ class Selecter:
 		sctx = self.scheduler.sctx_list[0]
 		if seek_node.playing != MMStates.IDLE:
 			# case 1, the target element is or has been active
-			if seek_node.playing == MMStates.PLAYED: # XXX or FROZEN?
+			if seek_node.playing in (MMStates.PLAYED, MMStates.FROZEN):
 				gototime = seek_node.time_list[0][0]
 			else:
 				gototime = seek_node.start_time
@@ -111,9 +111,9 @@ class Selecter:
 				x = x.GetSchedParent()
 			path.reverse()
 			for x, resolved in path:
-				if x.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
+				if x.playing in (MMStates.PLAYING, MMStates.PAUSED):
 					gototime = x.start_time
-				elif x.playing == MMStates.PLAYED:
+				elif x.playing in (MMStates.PLAYED, MMStates.FROZEN):
 					gototime = x.time_list[0][0]
 				elif resolved is not None:
 					gototime = resolved

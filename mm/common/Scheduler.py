@@ -182,8 +182,9 @@ class SchedulerContext:
 			dev = 'begin'
 ##			list = arc.dstnode.GetBeginList()
 			list = []
-##			if arc.dstnode.isresolved(self) is None:
-			if not node.checkendlist(self, timestamp):
+			if arc.dstnode.isresolved(self) is None:
+##			if not node.checkendlist(self, timestamp):
+				print arc
 				# we didn't find a time interval
 				if debugevents: print 'sched_arc: not allowed to start',arc,self.parent.timefunc()
 				if external:
@@ -781,13 +782,13 @@ class SchedulerContext:
 			path0 = path[0]
 			if path0.type == 'switch':
 				path0 = path0.ChosenSwitchChild()
-		for start, end in node.time_list:
+		for start, end1, end2 in node.time_list:
 			if start > gototime:
 				# no more valid intervals
 				break
-			if end is None or end > gototime:
+			if end2 is None or end2 > gototime:
 				# found a valid interval, start node
-				if node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
+				if node.playing in (MMStates.PLAYING, MMStates.PAUSED):
 					if node.GetSyncBehavior() == 'independent':
 						# leave this guy alone
 						return
@@ -808,10 +809,10 @@ class SchedulerContext:
 								return
 ##							raise error, 'internal error'
 						for c in node.GetSchedChildren():
-							for s, e in c.time_list:
+							for s, e1, e2 in c.time_list:
 								if s > gototime:
 									break
-								if e is None or e > gototime:
+								if e2 is None or e2 > gototime:
 									self.gototime(c, gototime, timestamp)
 									return
 						# XXX no children that want to start?
@@ -1006,6 +1007,7 @@ class SchedulerContext:
 				self.do_terminate(c, timestamp, fill = 'freeze')
 				if not parent.playing:
 					return
+			node.time_list[-1] = node.time_list[-1][0], timestamp, node.time_list[-1][2]
 			node.playing = MMStates.FROZEN
 			node.set_armedmode(ARM_WAITSTOP)
 
