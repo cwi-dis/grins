@@ -896,6 +896,8 @@ class SMILWriter(SMIL):
 
 	def writelayout(self):
 		"""Write the layout section"""
+		import settings
+		compatibility = settings.get('compatibility')
 		self.writetag('layout') # default: type="text/smil-basic-layout"
 		self.push()
 		channels = self.root.GetContext().channels
@@ -913,7 +915,10 @@ class SMILWriter(SMIL):
 				# background-color="transparent" is default
 				pass
 			elif ch.has_key('bgcolor'):
-				attrlist.append(('background-color', '#%02x%02x%02x' % ch['bgcolor']))
+				bgcolor = ch['bgcolor']
+				if compatibility != settings.G2 or \
+				   bgcolor != (0,0,0):
+					attrlist.append(('background-color', '#%02x%02x%02x' % bgcolor))
 			if ch.has_key('winsize'):
 				units = ch.get('units', 0)
 				w, h = ch['winsize']
@@ -1000,11 +1005,24 @@ class SMILWriter(SMIL):
 				transparent = ch.get('transparent', 0)
 				bgcolor = ch.get('bgcolor')
 				if transparent == 0:
+					if compatibility == settings.G2:
+						# in G2, setting a
+						# background-color implies
+						# transparent==never, so set
+						# background-color if not
+						# transparent
+						attrlist.append(('background-color',
+								 "#%02x%02x%02x" % (bgcolor or (0,0,0))))
+						bgcolor = None # skip below
 					# non-SMIL extension:
 					# permanently visible region
 					attrlist.append(('%s:transparent' % NSprefix,
 							 '0'))
-				if bgcolor is not None:
+				if bgcolor is not None and \
+				   (compatibility != settings.G2 or
+				    ((ch['type'] != 'text' or
+				      bgcolor != (255,255,255)) and
+				     bgcolor != (0,0,0))):
 					attrlist.append(('background-color',
 							 "#%02x%02x%02x" % bgcolor))
 				# Since background-color="transparent" is the

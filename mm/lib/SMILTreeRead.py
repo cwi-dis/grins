@@ -741,13 +741,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				del attrdict['title']
 			bg = attrdict['background-color']
 			del attrdict['background-color']
-			if settings.get('lightweight'):
+			if settings.get('compatibility') == settings.G2:
 				ch['transparent'] = -1
 				if mtype == 'text':
 					# stupid G2 player...
 					ch['bgcolor'] = 255,255,255
 				elif bg != 'transparent':
 					ch['bgcolor'] = bg
+					ch['transparent'] = 0
 				else:
 					ch['bgcolor'] = 0,0,0
 			elif bg == 'transparent':
