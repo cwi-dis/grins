@@ -48,6 +48,25 @@ seterror(const char *funcname, HRESULT hr)
 	LocalFree(pszmsg);
 }
 
+static PyObject *
+PyObjectFromWideChar(WCHAR *wsz,int cch)
+	{
+	char *psz = new char[cch+1];
+	WideCharToMultiByte(CP_ACP,0,wsz,cch+1,psz,cch+1,NULL,NULL);
+	psz[cch]='\0';
+	PyObject *obj = Py_BuildValue("s",psz);
+	delete []psz;
+	return obj;
+	}
+
+static PyObject *
+PyObjectFromLargeInt(LONGLONG l)
+	{
+	LARGE_INTEGER li;
+	li.QuadPart = l;
+	PyObject *obj = Py_BuildValue("(ii)",li.HighPart,li.LowPart);
+	return obj;
+	}
 
 ///////////////////////////////////////////
 ///////////////////////////////////////////
@@ -58,7 +77,6 @@ typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
 	IWMReader* pI;
-	HANDLE hEvent;
 } WMReaderObject;
 
 staticforward PyTypeObject WMReaderType;
@@ -72,7 +90,6 @@ newWMReaderObject()
 	if (self == NULL)
 		return NULL;
 	self->pI = NULL;
-		
 	/* XXXX Add your own initializers here */
 	return self;
 }
@@ -127,6 +144,120 @@ newWMProfileManagerObject()
 typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
+	IWMMetadataEditor* pI;
+} WMMetadataEditorObject;
+
+staticforward PyTypeObject WMMetadataEditorType;
+
+static WMMetadataEditorObject *
+newWMMetadataEditorObject()
+{
+	WMMetadataEditorObject *self;
+
+	self = PyObject_NEW(WMMetadataEditorObject, &WMMetadataEditorType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IWMIndexer* pI;
+} WMIndexerObject;
+
+staticforward PyTypeObject WMIndexerType;
+
+static WMIndexerObject *
+newWMIndexerObject()
+{
+	WMIndexerObject *self;
+
+	self = PyObject_NEW(WMIndexerObject, &WMIndexerType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IWMWriterSink* pI;
+} WMWriterSinkObject;
+
+staticforward PyTypeObject WMWriterSinkType;
+
+static WMWriterSinkObject *
+newWMWriterSinkObject()
+{
+	WMWriterSinkObject *self;
+
+	self = PyObject_NEW(WMWriterSinkObject, &WMWriterSinkType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IWMWriterFileSink* pI;
+} WMWriterFileSinkObject;
+
+staticforward PyTypeObject WMWriterFileSinkType;
+
+static WMWriterFileSinkObject *
+newWMWriterFileSinkObject()
+{
+	WMWriterFileSinkObject *self;
+
+	self = PyObject_NEW(WMWriterFileSinkObject, &WMWriterFileSinkType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IWMWriterNetworkSink* pI;
+} WMWriterNetworkSinkObject;
+
+staticforward PyTypeObject WMWriterNetworkSinkType;
+
+static WMWriterNetworkSinkObject *
+newWMWriterNetworkSinkObject()
+{
+	WMWriterNetworkSinkObject *self;
+
+	self = PyObject_NEW(WMWriterNetworkSinkObject, &WMWriterNetworkSinkType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
 	IWMProfile* pI;
 } WMProfileObject;
 
@@ -145,6 +276,27 @@ newWMProfileObject()
 	return self;
 }
 
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IWMMediaProps* pI;
+} WMMediaPropsObject;
+
+staticforward PyTypeObject WMMediaPropsType;
+
+static WMMediaPropsObject *
+newWMMediaPropsObject()
+{
+	WMMediaPropsObject *self;
+	self = PyObject_NEW(WMMediaPropsObject, &WMMediaPropsType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
 
 //
 typedef struct {
@@ -191,6 +343,29 @@ newWMOutputMediaPropsObject()
 	return self;
 }
 
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IWMVideoMediaProps* pI;
+} WMVideoMediaPropsObject;
+
+staticforward PyTypeObject WMVideoMediaPropsType;
+
+static WMVideoMediaPropsObject *
+newWMVideoMediaPropsObject()
+{
+	WMVideoMediaPropsObject *self;
+
+	self = PyObject_NEW(WMVideoMediaPropsObject, &WMVideoMediaPropsType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
 //
 typedef struct {
 	PyObject_HEAD
@@ -217,17 +392,17 @@ typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
     BYTE pbBuffer[1024];
-    DWORD cbBuffer;
     WM_MEDIA_TYPE *pMediaType;		
-} MediaTypeObject;
+    DWORD cbBuffer;
+} WMMediaTypeObject;
 
-staticforward PyTypeObject MediaTypeType;
+staticforward PyTypeObject WMMediaTypeType;
 
-static MediaTypeObject *
-newMediaTypeObject()
+static WMMediaTypeObject *
+newWMMediaTypeObject()
 {
-	MediaTypeObject *self;
-	self = PyObject_NEW(MediaTypeObject, &MediaTypeType);
+	WMMediaTypeObject *self;
+	self = PyObject_NEW(WMMediaTypeObject, &WMMediaTypeType);
 	if (self == NULL)
 		return NULL;
 	self->pMediaType=(WM_MEDIA_TYPE*)self->pbBuffer;
@@ -235,6 +410,7 @@ newMediaTypeObject()
 	/* XXXX Add your own initializers here */
 	return self;
 }
+
 
 //
 typedef struct {
@@ -278,6 +454,75 @@ newWMPyReaderCallbackObject()
 	return self;
 }
 
+
+// 
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+    BYTE pbBuffer[512];	
+	WAVEFORMATEX *pWF;
+	int cbSize;
+} WaveFormatExObject;
+
+staticforward PyTypeObject WaveFormatExType;
+
+static WaveFormatExObject *
+newWaveFormatExObject()
+{
+	WaveFormatExObject *self;
+
+	self = PyObject_NEW(WaveFormatExObject, &WaveFormatExType);
+	if (self == NULL)
+		return NULL;
+	self->pWF=(WAVEFORMATEX*)self->pbBuffer;
+	self->cbSize=0;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+    WMVIDEOINFOHEADER vih;		
+} WMVideoInfoHeaderObject;
+
+staticforward PyTypeObject WMVideoInfoHeaderType;
+
+static WMVideoInfoHeaderObject *
+newWMVideoInfoHeaderObject()
+{
+	WMVideoInfoHeaderObject *self;
+	self = PyObject_NEW(WMVideoInfoHeaderObject, &WMVideoInfoHeaderType);
+	if (self == NULL)
+		return NULL;
+	memset(&self->vih,0,sizeof(WMVIDEOINFOHEADER));
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+//(general but defined here for indepentance)
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IUnknown* pI;
+} UnknownObject;
+
+staticforward PyTypeObject UnknownType;
+
+static UnknownObject *
+newUnknownObject()
+{
+	UnknownObject *self;
+
+	self = PyObject_NEW(UnknownObject, &UnknownType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
 //(general but defined here for indepentance)
 typedef struct {
 	PyObject_HEAD
@@ -299,6 +544,168 @@ newGUIDObject(const GUID *p=NULL)
 	return self;
 }
 
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IWMReaderAdvanced* pI;
+} WMReaderAdvancedObject;
+
+staticforward PyTypeObject WMReaderAdvancedType;
+
+static WMReaderAdvancedObject *
+newWMReaderAdvancedObject()
+{
+	WMReaderAdvancedObject *self;
+
+	self = PyObject_NEW(WMReaderAdvancedObject, &WMReaderAdvancedType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;		
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IWMWriterAdvanced* pI;
+} WMWriterAdvancedObject;
+
+staticforward PyTypeObject WMWriterAdvancedType;
+
+static WMWriterAdvancedObject *
+newWMWriterAdvancedObject()
+{
+	WMWriterAdvancedObject *self;
+
+	self = PyObject_NEW(WMWriterAdvancedObject, &WMWriterAdvancedType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;		
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IWMStreamConfig* pI;
+} WMStreamConfigObject;
+
+staticforward PyTypeObject WMStreamConfigType;
+
+static WMStreamConfigObject *
+newWMStreamConfigObject()
+{
+	WMStreamConfigObject *self;
+
+	self = PyObject_NEW(WMStreamConfigObject, &WMStreamConfigType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;		
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IWMStreamList* pI;
+} WMStreamListObject;
+
+staticforward PyTypeObject WMStreamListType;
+
+static WMStreamListObject *
+newWMStreamListObject()
+{
+	WMStreamListObject *self;
+
+	self = PyObject_NEW(WMStreamListObject, &WMStreamListType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;		
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IWMReaderStreamClock* pI;
+} WMReaderStreamClockObject;
+
+staticforward PyTypeObject WMReaderStreamClockType;
+
+static WMReaderStreamClockObject *
+newWMReaderStreamClockObject()
+{
+	WMReaderStreamClockObject *self;
+
+	self = PyObject_NEW(WMReaderStreamClockObject, &WMReaderStreamClockType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;		
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IWMMutualExclusion* pI;
+} WMMutualExclusionObject;
+
+staticforward PyTypeObject WMMutualExclusionType;
+
+static WMMutualExclusionObject *
+newWMMutualExclusionObject()
+{
+	WMMutualExclusionObject *self;
+
+	self = PyObject_NEW(WMMutualExclusionObject, &WMMutualExclusionType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;		
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+//
+typedef struct {
+	PyObject_HEAD
+	LONGLONG ob_ival;
+} LargeIntObject;
+
+staticforward PyTypeObject LargeIntType;
+
+static LargeIntObject *
+newLargeIntObject(LONG HighPart,DWORD LowPart)
+{
+	LargeIntObject *self = PyObject_NEW(LargeIntObject, &LargeIntType);
+	if (self == NULL)return NULL;
+	LARGE_INTEGER li;
+	li.HighPart = HighPart;		
+	li.LowPart = LowPart;
+	self->ob_ival=li.QuadPart;
+	return self;
+}
+static LargeIntObject *
+newLargeIntObject(LONGLONG val)
+{
+	LargeIntObject *self = PyObject_NEW(LargeIntObject, &LargeIntType);
+	if (self == NULL)return NULL;
+	self->ob_ival=val;
+	return self;
+}
 
 ///////////////////////////////////////////
 ///////////////////////////////////////////
@@ -317,17 +724,23 @@ WMReader_Open(WMReaderObject *self, PyObject *args)
 	WMPyReaderCallbackObject *obj;
 	if (!PyArg_ParseTuple(args, "sO!",&pszURL,&WMPyReaderCallbackType,&obj))
 		return NULL;
-	
 	HRESULT hr;
 	WCHAR pwszURL[MAX_PATH];
 	MultiByteToWideChar(CP_ACP,0,pszURL,-1,pwszURL,MAX_PATH);
+	IWMReaderCallback *pI=NULL;
+	hr = obj->pI->QueryInterface(IID_IWMReaderCallback,(void**)&pI);
+	if (FAILED(hr)){
+		seterror("WMReader_Open-QueryInterface-IWMReaderCallback", hr);
+		return NULL;
+	}
 	Py_BEGIN_ALLOW_THREADS
-	hr = self->pI->Open(pwszURL,obj->pI,NULL);
+	hr = self->pI->Open(pwszURL,pI,NULL);
 	Py_END_ALLOW_THREADS
 	if (FAILED(hr)){
 		seterror("WMReader_Open", hr);
 		return NULL;
 	}
+	RELEASE(pI);
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -379,10 +792,10 @@ static char WMReader_GetOutputProps__doc__[] =
 static PyObject *
 WMReader_GetOutputProps(WMReaderObject *self, PyObject *args)
 {
-	if (!PyArg_ParseTuple(args, ""))
+	DWORD dwOutputNum=0;
+	if (!PyArg_ParseTuple(args, "|i",&dwOutputNum))
 		return NULL;	
 	HRESULT hr;
-	DWORD dwOutputNum=0;
 	WMOutputMediaPropsObject *obj = newWMOutputMediaPropsObject();
 	Py_BEGIN_ALLOW_THREADS
 	hr = self->pI->GetOutputProps(dwOutputNum,&obj->pI);
@@ -467,16 +880,17 @@ static char WMReader_Start__doc__[] =
 static PyObject *
 WMReader_Start(WMReaderObject *self, PyObject *args)
 {
-	DWORD msStart,msDuration;
+	LargeIntObject *linsStart,*linsDuration;
 	float fRate;
-	if (!PyArg_ParseTuple(args, "iif",&msStart,&msDuration,&fRate))
+	int context=0;
+	if (!PyArg_ParseTuple(args, "O!O!f|i",&LargeIntType,&linsStart,
+		&LargeIntType,&linsDuration,&fRate,&context))
 		return NULL;	
 	HRESULT hr;
-	QWORD cnsStart=10000*msStart;
-	QWORD cnsDuration=10000*msDuration;
-	void *pvContext=NULL;
+	QWORD cnsStart=(QWORD)linsStart->ob_ival;
+	QWORD cnsDuration=(QWORD)linsDuration->ob_ival;
 	Py_BEGIN_ALLOW_THREADS
-	hr = self->pI->Start(cnsStart,cnsDuration,fRate,pvContext);
+	hr = self->pI->Start(cnsStart,cnsDuration,fRate,(void*)context);
 	Py_END_ALLOW_THREADS
 	if (FAILED(hr)){
 		seterror("WMReader_Start", hr);
@@ -567,6 +981,48 @@ WMReader_QueryIWMHeaderInfo(WMReaderObject *self, PyObject *args)
 	return (PyObject*) obj;
 }
 
+static char WMReader_QueryIWMReaderAdvanced__doc__[] =
+""
+;
+static PyObject *
+WMReader_QueryIWMReaderAdvanced(WMReaderObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	HRESULT hr;
+	WMReaderAdvancedObject *obj = newWMReaderAdvancedObject();	
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->QueryInterface(IID_IWMReaderAdvanced,(void**)&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)){
+		Py_DECREF(obj);
+		seterror("WMReader_QueryIWMReaderAdvanced", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
+static char WMReader_QueryIWMProfile__doc__[] =
+""
+;
+static PyObject *
+WMReader_QueryIWMProfile(WMReaderObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	HRESULT hr;
+	WMProfileObject *obj = newWMProfileObject();	
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->QueryInterface(IID_IWMProfile,(void**)&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)){
+		Py_DECREF(obj);
+		seterror("WMReader_QueryIWMProfile", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
 static struct PyMethodDef WMReader_methods[] = {
 	{"Open", (PyCFunction)WMReader_Open, METH_VARARGS, WMReader_Open__doc__},
 	{"Close", (PyCFunction)WMReader_Close, METH_VARARGS, WMReader_Close__doc__},
@@ -580,6 +1036,8 @@ static struct PyMethodDef WMReader_methods[] = {
 	{"Pause", (PyCFunction)WMReader_Pause, METH_VARARGS, WMReader_Pause__doc__},
 	{"Resume", (PyCFunction)WMReader_Resume, METH_VARARGS, WMReader_Resume__doc__},
 	{"QueryIWMHeaderInfo", (PyCFunction)WMReader_QueryIWMHeaderInfo, METH_VARARGS, WMReader_QueryIWMHeaderInfo__doc__},
+	{"QueryIWMReaderAdvanced", (PyCFunction)WMReader_QueryIWMReaderAdvanced, METH_VARARGS, WMReader_QueryIWMReaderAdvanced__doc__},
+	{"QueryIWMProfile", (PyCFunction)WMReader_QueryIWMProfile, METH_VARARGS, WMReader_QueryIWMProfile__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -705,12 +1163,12 @@ static PyObject *
 WMWriter_SetInputProps(WMWriterObject *self, PyObject *args)
 {
 	DWORD dwInputNum;
-	WMInputMediaPropsObject *obj;
-	if (!PyArg_ParseTuple(args, "iO!",&dwInputNum,&WMInputMediaPropsType,&obj))
+	WMInputMediaPropsObject *obj=NULL;
+	if (!PyArg_ParseTuple(args, "i|O!",&dwInputNum,&WMInputMediaPropsType,&obj))
 		return NULL;	
 	HRESULT hr;
 	Py_BEGIN_ALLOW_THREADS
-	hr = self->pI->SetInputProps(dwInputNum,obj->pI);
+	hr = self->pI->SetInputProps(dwInputNum,(obj?obj->pI:NULL));
 	Py_END_ALLOW_THREADS
 	if (FAILED(hr)){
 		seterror("WMWriter_SetInputProps", hr);
@@ -834,12 +1292,13 @@ WMWriter_WriteSample(WMWriterObject *self, PyObject *args)
 {
 	DWORD dwInputNum;
 	NSSBufferObject *obj;
-	DWORD msSampleTime, dwFlags;
-	if (!PyArg_ParseTuple(args, "iiiO!",&dwInputNum,&msSampleTime,
+	LargeIntObject *linsSampleTime;
+	DWORD dwFlags;
+	if (!PyArg_ParseTuple(args, "iOiO!",&dwInputNum,&linsSampleTime,
 		&dwFlags,&NSSBufferType,&obj))
 		return NULL;	
 	HRESULT hr;
-	QWORD cnsSampleTime = 10000 * msSampleTime; // 100-ns units
+	QWORD cnsSampleTime = linsSampleTime->ob_ival; // 100-ns units
 	Py_BEGIN_ALLOW_THREADS
 	hr = self->pI->WriteSample(dwInputNum,cnsSampleTime,dwFlags,obj->pI);
 	Py_END_ALLOW_THREADS
@@ -849,6 +1308,27 @@ WMWriter_WriteSample(WMWriterObject *self, PyObject *args)
 	}
 	Py_INCREF(Py_None);
 	return Py_None;
+}
+
+static char WMWriter_QueryIWMWriterAdvanced__doc__[] =
+""
+;
+static PyObject *
+WMWriter_QueryIWMWriterAdvanced(WMWriterObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	HRESULT hr;
+	WMWriterAdvancedObject *obj = newWMWriterAdvancedObject();	
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->QueryInterface(IID_IWMWriterAdvanced,(void**)&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)){
+		Py_DECREF(obj);
+		seterror("WMWriter_QueryIWMWriterAdvanced", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
 }
 
 
@@ -863,6 +1343,7 @@ static struct PyMethodDef WMWriter_methods[] = {
 	{"Flush", (PyCFunction)WMWriter_Flush, METH_VARARGS, WMWriter_Flush__doc__},
 	{"AllocateSample", (PyCFunction)WMWriter_AllocateSample, METH_VARARGS, WMWriter_AllocateSample__doc__},
 	{"WriteSample", (PyCFunction)WMWriter_WriteSample, METH_VARARGS, WMWriter_WriteSample__doc__},
+	{"QueryIWMWriterAdvanced", (PyCFunction)WMWriter_QueryIWMWriterAdvanced, METH_VARARGS, WMWriter_QueryIWMWriterAdvanced__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -962,9 +1443,34 @@ WMProfileManager_LoadSystemProfile(WMProfileManagerObject *self, PyObject *args)
 	return (PyObject*)obj;
 }
 
+static char WMProfileManager_CreateEmptyProfile__doc__[] =
+""
+;
+static PyObject *
+WMProfileManager_CreateEmptyProfile(WMProfileManagerObject *self, PyObject *args)
+{
+	WMT_VERSION dwVersion = WMT_VER_4_0;
+	if (!PyArg_ParseTuple(args,"|i",&dwVersion))
+		return NULL;
+	
+	WMProfileObject *obj = newWMProfileObject();
+	if (obj == NULL) return NULL;
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->CreateEmptyProfile(dwVersion,&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)){
+		Py_DECREF(obj);
+		seterror("WMProfileManager_CreateEmptyProfile", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
 static struct PyMethodDef WMProfileManager_methods[] = {
 	{"GetSystemProfileCount", (PyCFunction)WMProfileManager_GetSystemProfileCount, METH_VARARGS, WMProfileManager_GetSystemProfileCount__doc__},
 	{"LoadSystemProfile", (PyCFunction)WMProfileManager_LoadSystemProfile, METH_VARARGS, WMProfileManager_LoadSystemProfile__doc__},
+	{"CreateEmptyProfile", (PyCFunction)WMProfileManager_CreateEmptyProfile, METH_VARARGS, WMProfileManager_CreateEmptyProfile__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -1017,6 +1523,27 @@ static PyTypeObject WMProfileManagerType = {
 
 ////////////////////////////////////////////
 // WMProfile object 
+
+static char WMProfile_GetVersion__doc__[] =
+""
+;
+static PyObject *
+WMProfile_GetVersion(WMProfileObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+    WMT_VERSION dwVersion;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->GetVersion(&dwVersion);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)) {
+		seterror("WMProfile_GetVersion", hr);
+		return NULL;
+	}
+	return Py_BuildValue("i",dwVersion);	
+}
+       
 static char WMProfile_GetName__doc__[] =
 ""
 ;
@@ -1040,18 +1567,361 @@ WMProfile_GetName(WMProfileObject *self, PyObject *args)
 		seterror("WMProfile_GetName", hr);
 		return NULL;
 	}
-	char *pszName = new char[cchName+1];
-	WideCharToMultiByte(CP_ACP,0,pwszName,cchName,pszName,cchName,NULL,NULL);
-	pszName[cchName]='\0';
-	PyObject *obj = Py_BuildValue("s",pszName);
+	PyObject *obj = PyObjectFromWideChar(pwszName,cchName);
 	delete []pwszName;
-	delete []pszName;
 	return obj;
 }
-
+        
+static char WMProfile_SetName__doc__[] =
+""
+;
+static PyObject *
+WMProfile_SetName(WMProfileObject *self, PyObject *args)
+{
+	char *pszName;
+	if (!PyArg_ParseTuple(args,"s",&pszName)) 
+		return NULL;
+	HRESULT hr;
+	int l=strlen(pszName);
+	WCHAR *pwszName = new WCHAR[l+1];
+	MultiByteToWideChar(CP_ACP,0,pszName,-1,pwszName,l+1);	
+	hr = self->pI->SetName(pwszName);
+	if (FAILED(hr)) {
+		if(pwszName) delete [] pwszName;
+		seterror("WMProfile_SetName", hr);
+		return NULL;
+	}
+	if(pwszName) delete [] pwszName;
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+        
+static char WMProfile_GetDescription__doc__[] =
+""
+;
+static PyObject *
+WMProfile_GetDescription(WMProfileObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+    WCHAR wszName[512];
+    DWORD cchName = 512;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->GetDescription(wszName, &cchName);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)) {
+		seterror("WMProfile_GetDescription", hr);
+		return NULL;
+	}
+	return PyObjectFromWideChar(wszName,cchName);
+}
+       
+static char WMProfile_SetDescription__doc__[] =
+""
+;
+static PyObject *
+WMProfile_SetDescription(WMProfileObject *self, PyObject *args)
+{
+	char *psz;
+	if (!PyArg_ParseTuple(args,"s",&psz)) 
+		return NULL;
+	HRESULT hr;
+	int l=strlen(psz);
+	WCHAR *pwsz = new WCHAR[l+1];
+	MultiByteToWideChar(CP_ACP,0,psz,-1,pwsz,l+1);	
+	hr = self->pI->SetDescription(pwsz);
+	if (FAILED(hr)) {
+		if(pwsz) delete [] pwsz;
+		seterror("WMProfile_SetDescription", hr);
+		return NULL;
+	}
+	if(pwsz) delete [] pwsz;
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+        
+static char WMProfile_GetStreamCount__doc__[] =
+""
+;
+static PyObject *
+WMProfile_GetStreamCount(WMProfileObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+    DWORD cStreams;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->GetStreamCount(&cStreams);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)) {
+		seterror("WMProfile_GetStreamCount", hr);
+		return NULL;
+	}
+	return Py_BuildValue("i",cStreams);	
+}
+        
+static char WMProfile_GetStream__doc__[] =
+""
+;
+static PyObject *
+WMProfile_GetStream(WMProfileObject *self, PyObject *args)
+{
+	DWORD dwStreamIndex;
+	if (!PyArg_ParseTuple(args,"i",&dwStreamIndex)) 
+		return NULL;
+	HRESULT hr;
+	WMStreamConfigObject *obj = newWMStreamConfigObject();
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->GetStream(dwStreamIndex,&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)) {
+		Py_DECREF(obj);
+		seterror("WMProfile_GetStream", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;	
+}
+        
+static char WMProfile_GetStreamByNumber__doc__[] =
+""
+;
+static PyObject *
+WMProfile_GetStreamByNumber(WMProfileObject *self, PyObject *args)
+{
+	DWORD dwStreamNum;
+	if (!PyArg_ParseTuple(args,"i",&dwStreamNum)) 
+		return NULL;
+	HRESULT hr;
+	WMStreamConfigObject *obj = newWMStreamConfigObject();
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->GetStreamByNumber(WORD(dwStreamNum),&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)) {
+		Py_DECREF(obj);
+		seterror("WMProfile_GetStreamByNumber", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;	
+}
+        
+static char WMProfile_RemoveStream__doc__[] =
+""
+;
+static PyObject *
+WMProfile_RemoveStream(WMProfileObject *self, PyObject *args)
+{
+	WMStreamConfigObject *obj;
+	if (!PyArg_ParseTuple(args,"O!",&WMStreamConfigType,&obj)) 
+		return NULL;
+	HRESULT hr;
+	hr = self->pI->RemoveStream(obj->pI);
+	if (FAILED(hr)) {
+		seterror("WMProfile_RemoveStream", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+       
+static char WMProfile_RemoveStreamByNumber__doc__[] =
+""
+;
+static PyObject *
+WMProfile_RemoveStreamByNumber(WMProfileObject *self, PyObject *args)
+{
+	DWORD dwStreamNum;
+	if (!PyArg_ParseTuple(args,"i",&dwStreamNum)) 
+		return NULL;
+	HRESULT hr;
+	hr = self->pI->RemoveStreamByNumber(WORD(dwStreamNum));
+	if (FAILED(hr)) {
+		seterror("WMProfile_RemoveStreamByNumber", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+        
+static char WMProfile_AddStream__doc__[] =
+""
+;
+static PyObject *
+WMProfile_AddStream(WMProfileObject *self, PyObject *args)
+{
+	WMStreamConfigObject *obj;
+	if (!PyArg_ParseTuple(args,"O!",&WMStreamConfigType,&obj)) 
+		return NULL;
+	HRESULT hr;
+	hr = self->pI->AddStream(obj->pI);
+	if (FAILED(hr)) {
+		seterror("WMProfile_AddStream", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+        
+static char WMProfile_ReconfigStream__doc__[] =
+""
+;
+static PyObject *
+WMProfile_ReconfigStream(WMProfileObject *self, PyObject *args)
+{
+	WMStreamConfigObject *obj;
+	if (!PyArg_ParseTuple(args,"O!",&WMStreamConfigType,&obj)) 
+		return NULL;
+	HRESULT hr;
+	hr = self->pI->ReconfigStream(obj->pI);
+	if (FAILED(hr)) {
+		seterror("WMProfile_ReconfigStream", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+        
+static char WMProfile_CreateNewStream__doc__[] =
+""
+;
+static PyObject *
+WMProfile_CreateNewStream(WMProfileObject *self, PyObject *args)
+{
+	GUIDObject *guidobj;
+	if (!PyArg_ParseTuple(args,"O!",&GUIDType,&guidobj)) 
+		return NULL;
+	HRESULT hr;
+	WMStreamConfigObject *obj = newWMStreamConfigObject();
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->CreateNewStream(guidobj->guid,&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)) {
+		Py_DECREF(obj);
+		seterror("WMProfile_CreateNewStream", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;	
+}
+			
+static char WMProfile_GetMutualExclusionCount__doc__[] =
+""
+;
+static PyObject *
+WMProfile_GetMutualExclusionCount(WMProfileObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+    DWORD cME;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->GetMutualExclusionCount(&cME);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)) {
+		seterror("WMProfile_GetMutualExclusionCount", hr);
+		return NULL;
+	}
+	return Py_BuildValue("i",cME);	
+}
+        
+static char WMProfile_GetMutualExclusion__doc__[] =
+""
+;
+static PyObject *
+WMProfile_GetMutualExclusion(WMProfileObject *self, PyObject *args)
+{
+	DWORD dwMEIndex;
+	if (!PyArg_ParseTuple(args,"i",&dwMEIndex)) 
+		return NULL;
+	HRESULT hr;
+    WMMutualExclusionObject *obj = newWMMutualExclusionObject();
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->GetMutualExclusion(dwMEIndex,&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)) {
+		Py_DECREF(obj);
+		seterror("WMProfile_GetMutualExclusion", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;	
+}
+        
+static char WMProfile_RemoveMutualExclusion__doc__[] =
+""
+;
+static PyObject *
+WMProfile_RemoveMutualExclusion(WMProfileObject *self, PyObject *args)
+{
+	WMMutualExclusionObject *obj;
+	if (!PyArg_ParseTuple(args,"O!",&WMMutualExclusionType,&obj)) 
+		return NULL;
+	HRESULT hr;
+	hr = self->pI->RemoveMutualExclusion(obj->pI);
+	if (FAILED(hr)) {
+		seterror("WMProfile_RemoveMutualExclusion", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+        
+static char WMProfile_AddMutualExclusion__doc__[] =
+""
+;
+static PyObject *
+WMProfile_AddMutualExclusion(WMProfileObject *self, PyObject *args)
+{
+	WMMutualExclusionObject *obj;
+	if (!PyArg_ParseTuple(args,"O!",&WMMutualExclusionType,&obj)) 
+		return NULL;
+	HRESULT hr;
+	hr = self->pI->AddMutualExclusion(obj->pI);
+	if (FAILED(hr)) {
+		seterror("WMProfile_AddMutualExclusion", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+        
+static char WMProfile_CreateNewMutualExclusion__doc__[] =
+""
+;
+static PyObject *
+WMProfile_CreateNewMutualExclusion(WMProfileObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,""))
+		return NULL;
+	HRESULT hr;
+	WMMutualExclusionObject *obj = newWMMutualExclusionObject();
+	hr = self->pI->CreateNewMutualExclusion(&obj->pI);
+	if (FAILED(hr)) {
+		Py_DECREF(obj);
+		seterror("WMProfile_AddMutualExclusion", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+       
 
 static struct PyMethodDef WMProfile_methods[] = {
+	{"GetVersion", (PyCFunction)WMProfile_GetVersion, METH_VARARGS, WMProfile_GetVersion__doc__},
 	{"GetName", (PyCFunction)WMProfile_GetName, METH_VARARGS, WMProfile_GetName__doc__},
+	{"SetName", (PyCFunction)WMProfile_SetName, METH_VARARGS, WMProfile_SetName__doc__},
+	{"GetDescription", (PyCFunction)WMProfile_GetDescription, METH_VARARGS, WMProfile_GetDescription__doc__},
+	{"SetDescription", (PyCFunction)WMProfile_SetDescription, METH_VARARGS, WMProfile_SetDescription__doc__},
+	{"GetStreamCount", (PyCFunction)WMProfile_GetStreamCount, METH_VARARGS, WMProfile_GetStreamCount__doc__},
+	{"GetStream", (PyCFunction)WMProfile_GetStream, METH_VARARGS, WMProfile_GetStream__doc__},
+	{"GetStreamByNumber", (PyCFunction)WMProfile_GetStreamByNumber, METH_VARARGS, WMProfile_GetStreamByNumber__doc__},
+	{"RemoveStream", (PyCFunction)WMProfile_RemoveStream, METH_VARARGS, WMProfile_RemoveStream__doc__},
+	{"RemoveStreamByNumber", (PyCFunction)WMProfile_RemoveStreamByNumber, METH_VARARGS, WMProfile_RemoveStreamByNumber__doc__},
+	{"AddStream", (PyCFunction)WMProfile_AddStream, METH_VARARGS, WMProfile_AddStream__doc__},
+	{"ReconfigStream", (PyCFunction)WMProfile_ReconfigStream, METH_VARARGS, WMProfile_ReconfigStream__doc__},
+	{"CreateNewStream", (PyCFunction)WMProfile_CreateNewStream, METH_VARARGS, WMProfile_CreateNewStream__doc__},
+	{"GetMutualExclusionCount", (PyCFunction)WMProfile_GetMutualExclusionCount, METH_VARARGS, WMProfile_GetMutualExclusionCount__doc__},
+	{"GetMutualExclusion", (PyCFunction)WMProfile_GetMutualExclusion, METH_VARARGS, WMProfile_GetMutualExclusion__doc__},
+	{"RemoveMutualExclusion", (PyCFunction)WMProfile_RemoveMutualExclusion, METH_VARARGS, WMProfile_RemoveMutualExclusion__doc__},
+	{"AddMutualExclusion", (PyCFunction)WMProfile_AddMutualExclusion, METH_VARARGS, WMProfile_AddMutualExclusion__doc__},
+	{"CreateNewMutualExclusion", (PyCFunction)WMProfile_CreateNewMutualExclusion, METH_VARARGS, WMProfile_CreateNewMutualExclusion__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -1102,6 +1972,126 @@ static PyTypeObject WMProfileType = {
 // End of code for WMProfile object 
 ////////////////////////////////////////////
 
+////////////////////////////////////////////
+// WMMediaProps object 
+
+static char WMMediaProps_GetType__doc__[] =
+""
+;
+static PyObject *
+WMMediaProps_GetType(WMMediaPropsObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+	GUIDObject *obj = newGUIDObject();
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->GetType(&obj->guid);
+	Py_END_ALLOW_THREADS	
+	if (FAILED(hr)) {
+		Py_DECREF(obj);		
+		seterror("WMMediaProps_GetType", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
+
+static char WMMediaProps_GetMediaType__doc__[] =
+""
+;
+static PyObject *
+WMMediaProps_GetMediaType(WMMediaPropsObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+	WMMediaTypeObject *obj = newWMMediaTypeObject();
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->GetMediaType(obj->pMediaType,&obj->cbBuffer);
+	Py_END_ALLOW_THREADS	
+	if (FAILED(hr)) {
+		Py_DECREF(obj);		
+		seterror("WMMediaProps_GetMediaType", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+	
+static char WMMediaProps_SetMediaType__doc__[] =
+""
+;
+static PyObject *
+WMMediaProps_SetMediaType(WMMediaPropsObject *self, PyObject *args)
+{
+	WMMediaTypeObject *obj;
+	if (!PyArg_ParseTuple(args,"O!",&WMMediaTypeType,&obj)) 
+		return NULL;
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->SetMediaType(obj->pMediaType);
+	Py_END_ALLOW_THREADS	
+	if (FAILED(hr)) {
+		seterror("WMMediaProps_SetMediaType", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;	
+}
+
+static struct PyMethodDef WMMediaProps_methods[] = {
+	{"GetType", (PyCFunction)WMMediaProps_GetType, METH_VARARGS, WMMediaProps_GetType__doc__},
+	{"GetMediaType", (PyCFunction)WMMediaProps_GetMediaType, METH_VARARGS, WMMediaProps_GetMediaType__doc__},
+	{"SetMediaType", (PyCFunction)WMMediaProps_SetMediaType, METH_VARARGS, WMMediaProps_SetMediaType__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WMMediaProps_dealloc(WMMediaPropsObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WMMediaProps_getattr(WMMediaPropsObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WMMediaProps_methods, (PyObject *)self, name);
+}
+
+static char WMMediaPropsType__doc__[] =
+""
+;
+
+static PyTypeObject WMMediaPropsType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WMMediaProps",			/*tp_name*/
+	sizeof(WMMediaPropsObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WMMediaProps_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WMMediaProps_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WMMediaPropsType__doc__ /* Documentation string */
+};
+
+// End of code for WMMediaProps object 
+////////////////////////////////////////////
 
 ////////////////////////////////////////////
 // WMInputMediaProps object 
@@ -1137,7 +2127,7 @@ WMInputMediaProps_GetMediaType(WMInputMediaPropsObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args,"")) 
 		return NULL;
 	HRESULT hr;
-	MediaTypeObject *obj = newMediaTypeObject();
+	WMMediaTypeObject *obj = newWMMediaTypeObject();
 	Py_BEGIN_ALLOW_THREADS
 	hr = self->pI->GetMediaType(obj->pMediaType,&obj->cbBuffer);
 	Py_END_ALLOW_THREADS	
@@ -1155,8 +2145,8 @@ static char WMInputMediaProps_SetMediaType__doc__[] =
 static PyObject *
 WMInputMediaProps_SetMediaType(WMInputMediaPropsObject *self, PyObject *args)
 {
-	MediaTypeObject *obj;
-	if (!PyArg_ParseTuple(args,"O!",&MediaTypeType,&obj)) 
+	WMMediaTypeObject *obj;
+	if (!PyArg_ParseTuple(args,"O!",&WMMediaTypeType,&obj)) 
 		return NULL;
 	HRESULT hr;
 	Py_BEGIN_ALLOW_THREADS
@@ -1170,10 +2160,53 @@ WMInputMediaProps_SetMediaType(WMInputMediaPropsObject *self, PyObject *args)
 	return Py_None;	
 }
 
+static char WMInputMediaProps_GetConnectionName__doc__[] =
+""
+;
+static PyObject *
+WMInputMediaProps_GetConnectionName(WMInputMediaPropsObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+    WCHAR wszName[512];
+    WORD cchName = 512;
+	hr = self->pI->GetConnectionName(wszName, &cchName);
+	if (FAILED(hr)) {
+		seterror("WMInputMediaProps_GetConnectionName", hr);
+		return NULL;
+	}
+	return PyObjectFromWideChar(wszName,cchName);
+}
+
+
+static char WMInputMediaProps_GetGroupName__doc__[] =
+""
+;
+static PyObject *
+WMInputMediaProps_GetGroupName(WMInputMediaPropsObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+    WCHAR wszName[512];
+    WORD cchName = 512;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->GetGroupName(wszName, &cchName);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)) {
+		seterror("WMInputMediaProps_GetGroupName", hr);
+		return NULL;
+	}
+	return PyObjectFromWideChar(wszName,cchName);
+}
+
 static struct PyMethodDef WMInputMediaProps_methods[] = {
 	{"GetType", (PyCFunction)WMInputMediaProps_GetType, METH_VARARGS, WMInputMediaProps_GetType__doc__},
 	{"GetMediaType", (PyCFunction)WMInputMediaProps_GetMediaType, METH_VARARGS, WMInputMediaProps_GetMediaType__doc__},
 	{"SetMediaType", (PyCFunction)WMInputMediaProps_SetMediaType, METH_VARARGS, WMInputMediaProps_SetMediaType__doc__},
+	{"GetConnectionName", (PyCFunction)WMInputMediaProps_GetConnectionName, METH_VARARGS, WMInputMediaProps_GetConnectionName__doc__},
+	{"GetGroupName", (PyCFunction)WMInputMediaProps_GetGroupName, METH_VARARGS, WMInputMediaProps_GetGroupName__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -1227,8 +2260,114 @@ static PyTypeObject WMInputMediaPropsType = {
 ////////////////////////////////////////////
 // WMOutputMediaProps object 
 
+static char WMOutputMediaProps_GetType__doc__[] =
+""
+;
+static PyObject *
+WMOutputMediaProps_GetType(WMOutputMediaPropsObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+	GUIDObject *obj = newGUIDObject();
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->GetType(&obj->guid);
+	Py_END_ALLOW_THREADS	
+	if (FAILED(hr)) {
+		Py_DECREF(obj);		
+		seterror("WMOutputMediaProps_GetType", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
+
+static char WMOutputMediaProps_GetMediaType__doc__[] =
+""
+;
+static PyObject *
+WMOutputMediaProps_GetMediaType(WMOutputMediaPropsObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+	WMMediaTypeObject *obj = newWMMediaTypeObject();
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->GetMediaType(obj->pMediaType,&obj->cbBuffer);
+	Py_END_ALLOW_THREADS	
+	if (FAILED(hr)) {
+		Py_DECREF(obj);		
+		seterror("WWMOutputMediaProps_GetMediaType", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+	
+static char WMOutputMediaProps_SetMediaType__doc__[] =
+""
+;
+static PyObject *
+WMOutputMediaProps_SetMediaType(WMOutputMediaPropsObject *self, PyObject *args)
+{
+	WMMediaTypeObject *obj;
+	if (!PyArg_ParseTuple(args,"O!",&WMMediaTypeType,&obj)) 
+		return NULL;
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->SetMediaType(obj->pMediaType);
+	Py_END_ALLOW_THREADS	
+	if (FAILED(hr)) {
+		seterror("WMOutputMediaProps_SetMediaType", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;	
+}
+
+static char WMOutputMediaProps_GetStreamGroupName__doc__[] =
+""
+;
+static PyObject *
+WMOutputMediaProps_GetStreamGroupName(WMOutputMediaPropsObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+    WCHAR wszName[512];
+    WORD cchName = 512;
+	hr = self->pI->GetStreamGroupName(wszName, &cchName);
+	if (FAILED(hr)) {
+		seterror("WMOutputMediaProps_GetStreamGroupName", hr);
+		return NULL;
+	}
+	return PyObjectFromWideChar(wszName,cchName);
+}
+        
+static char WMOutputMediaProps_GetConnectionName__doc__[] =
+""
+;
+static PyObject *
+WMOutputMediaProps_GetConnectionName(WMOutputMediaPropsObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+    WCHAR wszName[512];
+    WORD cchName = 512;
+	hr = self->pI->GetConnectionName(wszName, &cchName);
+	if (FAILED(hr)) {
+		seterror("WMOutputMediaProps_GetConnectionName", hr);
+		return NULL;
+	}
+	return PyObjectFromWideChar(wszName,cchName);
+}
 
 static struct PyMethodDef WMOutputMediaProps_methods[] = {
+	{"GetType", (PyCFunction)WMOutputMediaProps_GetType, METH_VARARGS, WMOutputMediaProps_GetType__doc__},
+	{"GetMediaType", (PyCFunction)WMOutputMediaProps_GetMediaType, METH_VARARGS, WMOutputMediaProps_GetMediaType__doc__},
+	{"SetMediaType", (PyCFunction)WMOutputMediaProps_SetMediaType, METH_VARARGS, WMOutputMediaProps_SetMediaType__doc__},
+	{"GetStreamGroupName", (PyCFunction)WMOutputMediaProps_GetStreamGroupName, METH_VARARGS, WMOutputMediaProps_GetStreamGroupName__doc__},
+	{"GetConnectionName", (PyCFunction)WMOutputMediaProps_GetConnectionName, METH_VARARGS, WMOutputMediaProps_GetConnectionName__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -1277,6 +2416,207 @@ static PyTypeObject WMOutputMediaPropsType = {
 };
 
 // End of code for WMOutputMediaProps object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// WMVideoMediaProps object 
+
+static char WMVideoMediaProps_GetType__doc__[] =
+""
+;
+static PyObject *
+WMVideoMediaProps_GetType(WMVideoMediaPropsObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+	GUIDObject *obj = newGUIDObject();
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->GetType(&obj->guid);
+	Py_END_ALLOW_THREADS	
+	if (FAILED(hr)) {
+		Py_DECREF(obj);		
+		seterror("WMVideoMediaProps_GetType", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
+
+static char WMVideoMediaProps_GetMediaType__doc__[] =
+""
+;
+static PyObject *
+WMVideoMediaProps_GetMediaType(WMVideoMediaPropsObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+	WMMediaTypeObject *obj = newWMMediaTypeObject();
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->GetMediaType(obj->pMediaType,&obj->cbBuffer);
+	Py_END_ALLOW_THREADS	
+	if (FAILED(hr)) {
+		Py_DECREF(obj);		
+		seterror("WMVideoMediaProps_GetMediaType", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+	
+static char WMVideoMediaProps_SetMediaType__doc__[] =
+""
+;
+static PyObject *
+WMVideoMediaProps_SetMediaType(WMVideoMediaPropsObject *self, PyObject *args)
+{
+	WMMediaTypeObject *obj;
+	if (!PyArg_ParseTuple(args,"O!",&WMMediaTypeType,&obj)) 
+		return NULL;
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->SetMediaType(obj->pMediaType);
+	Py_END_ALLOW_THREADS	
+	if (FAILED(hr)) {
+		seterror("WMVideoMediaProps_SetMediaType", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;	
+}
+
+static char WMVideoMediaProps_GetMaxKeyFrameSpacing__doc__[] =
+""
+;
+static PyObject *
+WMVideoMediaProps_GetMaxKeyFrameSpacing(WMVideoMediaPropsObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+	LONGLONG llTime;
+	hr = self->pI->GetMaxKeyFrameSpacing(&llTime);
+	if (FAILED(hr)) {
+		seterror("WMVideoMediaProps_GetMaxKeyFrameSpacing", hr);
+		return NULL;
+	}
+	return (PyObject*)newLargeIntObject(llTime);	
+}
+       
+static char WMVideoMediaProps_SetMaxKeyFrameSpacing__doc__[] =
+""
+;
+static PyObject *
+WMVideoMediaProps_SetMaxKeyFrameSpacing(WMVideoMediaPropsObject *self, PyObject *args)
+{
+	LargeIntObject *liobj;
+	if (!PyArg_ParseTuple(args,"O",&liobj))
+		return NULL;
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->SetMaxKeyFrameSpacing(liobj->ob_ival);
+	Py_END_ALLOW_THREADS	
+	if (FAILED(hr)) {
+		seterror("WMVideoMediaProps_SetMaxKeyFrameSpacing", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;	
+}
+        
+static char WMVideoMediaProps_GetQuality__doc__[] =
+""
+;
+static PyObject *
+WMVideoMediaProps_GetQuality(WMVideoMediaPropsObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+	DWORD  dwQuality;
+	hr = self->pI->GetQuality(&dwQuality);
+	if (FAILED(hr)) {
+		seterror("WMVideoMediaProps_GetQuality", hr);
+		return NULL;
+	}
+	return Py_BuildValue("i",dwQuality);	
+}
+        
+static char WMVideoMediaProps_SetQuality__doc__[] =
+""
+;
+static PyObject *
+WMVideoMediaProps_SetQuality(WMVideoMediaPropsObject *self, PyObject *args)
+{
+	DWORD dwQuality;
+	if (!PyArg_ParseTuple(args,"i",&dwQuality)) 
+		return NULL;
+	HRESULT hr;
+	hr = self->pI->SetQuality(dwQuality);
+	if (FAILED(hr)) {
+		seterror("WMVideoMediaProps_SetQuality", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;	
+}
+
+static struct PyMethodDef WMVideoMediaProps_methods[] = {
+	{"GetType", (PyCFunction)WMVideoMediaProps_GetType, METH_VARARGS, WMVideoMediaProps_GetType__doc__},
+	{"GetMediaType", (PyCFunction)WMVideoMediaProps_GetMediaType, METH_VARARGS, WMVideoMediaProps_GetMediaType__doc__},
+	{"SetMediaType", (PyCFunction)WMVideoMediaProps_SetMediaType, METH_VARARGS, WMVideoMediaProps_SetMediaType__doc__},
+	{"GetMaxKeyFrameSpacing", (PyCFunction)WMVideoMediaProps_GetMaxKeyFrameSpacing, METH_VARARGS, WMVideoMediaProps_GetMaxKeyFrameSpacing__doc__},
+	{"SetMaxKeyFrameSpacing", (PyCFunction)WMVideoMediaProps_SetMaxKeyFrameSpacing, METH_VARARGS, WMVideoMediaProps_SetMaxKeyFrameSpacing__doc__},
+	{"GetQuality", (PyCFunction)WMVideoMediaProps_GetQuality, METH_VARARGS, WMVideoMediaProps_GetQuality__doc__},
+	{"SetQuality", (PyCFunction)WMVideoMediaProps_SetQuality, METH_VARARGS, WMVideoMediaProps_SetQuality__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WMVideoMediaProps_dealloc(WMVideoMediaPropsObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WMVideoMediaProps_getattr(WMVideoMediaPropsObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WMVideoMediaProps_methods, (PyObject *)self, name);
+}
+
+static char WMVideoMediaPropsType__doc__[] =
+""
+;
+
+static PyTypeObject WMVideoMediaPropsType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WMVideoMediaProps",			/*tp_name*/
+	sizeof(WMVideoMediaPropsObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WMVideoMediaProps_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WMVideoMediaProps_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WMVideoMediaPropsType__doc__ /* Documentation string */
+};
+
+// End of code for WMVideoMediaProps object 
 ////////////////////////////////////////////
 
 ////////////////////////////////////////////
@@ -1423,10 +2763,9 @@ NSSBuffer_SetBuffer(NSSBufferObject *self, PyObject *args)
 	return Py_None;
 }
 
-
 static struct PyMethodDef NSSBuffer_methods[] = {
 	{"GetLength", (PyCFunction)NSSBuffer_GetLength, METH_VARARGS, NSSBuffer_GetLength__doc__},
-	{"SetLength", (PyCFunction)NSSBuffer_GetLength, METH_VARARGS, NSSBuffer_SetLength__doc__},
+	{"SetLength", (PyCFunction)NSSBuffer_SetLength, METH_VARARGS, NSSBuffer_SetLength__doc__},
 	{"GetMaxLength", (PyCFunction)NSSBuffer_GetMaxLength, METH_VARARGS, NSSBuffer_GetMaxLength__doc__},
 	{"GetBuffer", (PyCFunction)NSSBuffer_GetBuffer, METH_VARARGS, NSSBuffer_GetBuffer__doc__},
 	{"GetBufferAndLength", (PyCFunction)NSSBuffer_GetBufferAndLength, METH_VARARGS, NSSBuffer_GetBufferAndLength__doc__},
@@ -1482,14 +2821,14 @@ static PyTypeObject NSSBufferType = {
 ////////////////////////////////////////////
 
 ////////////////////////////////////////////
-// MediaType object 
+// WMMediaType object (WM_MEDIA_TYPE)
 
 
-static char MediaType_SetType__doc__[] =
+static char WMMediaType_SetType__doc__[] =
 ""
 ;
 static PyObject*
-MediaType_SetType(MediaTypeObject *self, PyObject *args)
+WMMediaType_SetType(WMMediaTypeObject *self, PyObject *args)
 {
 	GUIDObject *obj1,*obj2;
 	if (!PyArg_ParseTuple(args,"O!O!",&GUIDType,&obj1,&GUIDType,&obj2)) 
@@ -1500,11 +2839,29 @@ MediaType_SetType(MediaTypeObject *self, PyObject *args)
 	return Py_None;	
 }
 
-static char MediaType_SetMajorType__doc__[] =
+static char WMMediaType_GetType__doc__[] =
 ""
 ;
 static PyObject*
-MediaType_SetMajorType(MediaTypeObject *self, PyObject *args)
+WMMediaType_GetType(WMMediaTypeObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	GUIDObject *major = newGUIDObject();
+	major->guid = self->pMediaType->majortype;
+	
+	GUIDObject *subtype = newGUIDObject();
+	subtype->guid = self->pMediaType->subtype;
+
+	return Py_BuildValue("(OO)",major,subtype);
+}
+
+
+static char WMMediaType_SetMajorType__doc__[] =
+""
+;
+static PyObject*
+WMMediaType_SetMajorType(WMMediaTypeObject *self, PyObject *args)
 {
 	GUIDObject *obj;
 	if (!PyArg_ParseTuple(args,"O!",&GUIDType,&obj)) 
@@ -1513,11 +2870,11 @@ MediaType_SetMajorType(MediaTypeObject *self, PyObject *args)
 	Py_INCREF(Py_None);
 	return Py_None;	
 }
-static char MediaType_SetSubType__doc__[] =
+static char WMMediaType_SetSubType__doc__[] =
 ""
 ;
 static PyObject*
-MediaType_SetSubType(MediaTypeObject *self, PyObject *args)
+WMMediaType_SetSubType(WMMediaTypeObject *self, PyObject *args)
 {
 	GUIDObject *obj;
 	if (!PyArg_ParseTuple(args,"O!",&GUIDType,&obj)) 
@@ -1527,11 +2884,11 @@ MediaType_SetSubType(MediaTypeObject *self, PyObject *args)
 	return Py_None;	
 }
 
-static char MediaType_SetSampleSize__doc__[] =
+static char WMMediaType_SetSampleSize__doc__[] =
 ""
 ;
 static PyObject*
-MediaType_SetSampleSize(MediaTypeObject *self, PyObject *args)
+WMMediaType_SetSampleSize(WMMediaTypeObject *self, PyObject *args)
 {
     int fixedSizeSamples=1;
     int temporalCompression=0;
@@ -1545,11 +2902,11 @@ MediaType_SetSampleSize(MediaTypeObject *self, PyObject *args)
 	return Py_None;	
 }
 
-static char MediaType_SetFormat__doc__[] =
+static char WMMediaType_SetFormat__doc__[] =
 ""
 ;
 static PyObject*
-MediaType_SetFormat(MediaTypeObject *self, PyObject *args)
+WMMediaType_SetFormat(WMMediaTypeObject *self, PyObject *args)
 {
 	GUIDObject *obj;
 	PyObject *pystr;
@@ -1563,42 +2920,58 @@ MediaType_SetFormat(MediaTypeObject *self, PyObject *args)
 	return Py_None;	
 }
 
-static struct PyMethodDef MediaType_methods[] = {
-	{"SetType", (PyCFunction)MediaType_SetType, METH_VARARGS, MediaType_SetType__doc__},
-	{"SetMajorType", (PyCFunction)MediaType_SetMajorType, METH_VARARGS, MediaType_SetMajorType__doc__},
-	{"SetSubType", (PyCFunction)MediaType_SetSubType, METH_VARARGS, MediaType_SetSubType__doc__},
-	{"SetSampleSize", (PyCFunction)MediaType_SetSampleSize, METH_VARARGS, MediaType_SetSampleSize__doc__},
-	{"SetFormat", (PyCFunction)MediaType_SetFormat, METH_VARARGS, MediaType_SetFormat__doc__},
+static char WMMediaType_GetAsWaveFormatEx__doc__[] =
+""
+;
+static PyObject*
+WMMediaType_GetAsWaveFormatEx(WMMediaTypeObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	WaveFormatExObject *obj = newWaveFormatExObject();
+    WAVEFORMATEX *pwfx = (WAVEFORMATEX*)self->pMediaType->pbFormat;
+    memcpy(obj->pWF,pwfx,sizeof(WAVEFORMATEX)+pwfx->cbSize);
+	return (PyObject*)obj;
+}
+
+static struct PyMethodDef WMMediaType_methods[] = {
+	{"SetType", (PyCFunction)WMMediaType_SetType, METH_VARARGS, WMMediaType_SetType__doc__},
+	{"GetType", (PyCFunction)WMMediaType_GetType, METH_VARARGS, WMMediaType_GetType__doc__},
+	{"SetMajorType", (PyCFunction)WMMediaType_SetMajorType, METH_VARARGS, WMMediaType_SetMajorType__doc__},
+	{"SetSubType", (PyCFunction)WMMediaType_SetSubType, METH_VARARGS, WMMediaType_SetSubType__doc__},
+	{"SetSampleSize", (PyCFunction)WMMediaType_SetSampleSize, METH_VARARGS, WMMediaType_SetSampleSize__doc__},
+	{"SetFormat", (PyCFunction)WMMediaType_SetFormat, METH_VARARGS, WMMediaType_SetFormat__doc__},
+	{"GetAsWaveFormatEx", (PyCFunction)WMMediaType_GetAsWaveFormatEx, METH_VARARGS, WMMediaType_GetAsWaveFormatEx__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
 static void
-MediaType_dealloc(MediaTypeObject *self)
+WMMediaType_dealloc(WMMediaTypeObject *self)
 {
 	/* XXXX Add your own cleanup code here */
 	PyMem_DEL(self);
 }
 
 static PyObject *
-MediaType_getattr(MediaTypeObject *self, char *name)
+WMMediaType_getattr(WMMediaTypeObject *self, char *name)
 {
 	/* XXXX Add your own getattr code here */
-	return Py_FindMethod(MediaType_methods, (PyObject *)self, name);
+	return Py_FindMethod(WMMediaType_methods, (PyObject *)self, name);
 }
 
-static char MediaTypeType__doc__[] =
+static char WMMediaTypeType__doc__[] =
 ""
 ;
-static PyTypeObject MediaTypeType = {
+static PyTypeObject WMMediaTypeType = {
 	PyObject_HEAD_INIT(&PyType_Type)
 	0,				/*ob_size*/
-	"MediaType",			/*tp_name*/
-	sizeof(MediaTypeObject),		/*tp_basicsize*/
+	"WMMediaType",			/*tp_name*/
+	sizeof(WMMediaTypeObject),		/*tp_basicsize*/
 	0,				/*tp_itemsize*/
 	/* methods */
-	(destructor)MediaType_dealloc,	/*tp_dealloc*/
+	(destructor)WMMediaType_dealloc,	/*tp_dealloc*/
 	(printfunc)0,		/*tp_print*/
-	(getattrfunc)MediaType_getattr,	/*tp_getattr*/
+	(getattrfunc)WMMediaType_getattr,	/*tp_getattr*/
 	(setattrfunc)0,	/*tp_setattr*/
 	(cmpfunc)0, /*tp_compare*/
 	(reprfunc)0,		/*tp_repr*/
@@ -1611,10 +2984,10 @@ static PyTypeObject MediaTypeType = {
 
 	/* Space for future expansion */
 	0L,0L,0L,0L,
-	MediaTypeType__doc__ /* Documentation string */
+	WMMediaTypeType__doc__ /* Documentation string */
 };
 
-// End of code for MediaType object 
+// End of code for WMMediaType object 
 ////////////////////////////////////////////
 
 ////////////////////////////////////////////
@@ -1641,18 +3014,18 @@ WMHeaderInfo_GetAttributeCount(WMHeaderInfoObject *self, PyObject *args)
 	return Py_BuildValue("i",cAttributes);
 }
 
-// XXX: placeholder
 static char WMHeaderInfo_GetAttributeByIndex__doc__[] =
 ""
 ;
 static PyObject *
 WMHeaderInfo_GetAttributeByIndex(WMHeaderInfoObject *self, PyObject *args)
 {
-	if (!PyArg_ParseTuple(args, ""))
+	int ix,ixstream;
+	if (!PyArg_ParseTuple(args, "ii",&ix,&ixstream))
 		return NULL;
 	HRESULT hr;
-	WORD wIndex=0;
-	WORD wStreamNum=0;
+	WORD wIndex=WORD(ix);
+	WORD wStreamNum=WORD(ixstream);
 	WCHAR wszName[512];
 	WORD cchNamelen = 512;
 	WMT_ATTR_DATATYPE type;
@@ -1665,8 +3038,44 @@ WMHeaderInfo_GetAttributeByIndex(WMHeaderInfoObject *self, PyObject *args)
 		seterror("WMHeaderInfo_GetAttributeByIndex", hr);
 		return NULL;
 	}
-	Py_INCREF(Py_None);
-	return Py_None;	
+	char szname[512],szbuf[512];
+	sprintf(szname,"%S",wszName);
+	PyObject *obj,*x;
+	switch (type)
+        {
+        case WMT_TYPE_DWORD:
+			obj = Py_BuildValue("(isi)",type,szname,*((DWORD*)pValue));
+            break;
+        case WMT_TYPE_STRING:
+			sprintf(szbuf,"%S",(WCHAR *)pValue);
+			obj = Py_BuildValue("(iss)",type,szname,szbuf);
+            break;
+        case WMT_TYPE_BINARY:
+			x = PyString_FromStringAndSize((char*)pValue,(int)cbLength);			
+			obj = Py_BuildValue("(isO)",type,szname,x);
+			Py_DECREF(x);
+            break;
+        case WMT_TYPE_BOOL:
+			obj = Py_BuildValue("(isi)",type,szname,*((BOOL*)pValue));
+            break;
+        case WMT_TYPE_QWORD:
+			x = (PyObject*)newLargeIntObject(*(LONGLONG*)pValue);
+			obj = Py_BuildValue("(isO)",type,szname,x);
+			Py_DECREF(x);
+            break;
+        case WMT_TYPE_WORD:
+			obj = Py_BuildValue("(isi)",type,szname,*((WORD*)pValue));
+            break;
+        case WMT_TYPE_GUID:
+			x = (PyObject*)newGUIDObject((GUID*)pValue);
+			obj = Py_BuildValue("(isi)",type,szname,x);
+			Py_DECREF(x);
+            break;
+		default:
+			obj = Py_BuildValue("(is)",type,szname);
+			break;
+        }	
+	return obj;	
 }
 
 
@@ -1842,6 +3251,200 @@ static PyTypeObject WMPyReaderCallbackType = {
 
 
 ////////////////////////////////////////////
+// WaveFormatEx object  (WAVEFORMATEX)
+
+static char WaveFormatEx_GetMembers__doc__[] =
+"";
+static PyObject *
+WaveFormatEx_GetMembers(WaveFormatExObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))return NULL;
+	return Py_BuildValue("(iiiiiii)",
+		self->pWF->wFormatTag,
+		self->pWF->nChannels,
+		self->pWF->nSamplesPerSec,
+		self->pWF->nAvgBytesPerSec,
+		self->pWF->nBlockAlign,
+		self->pWF->wBitsPerSample,
+		self->pWF->cbSize
+		);
+}       
+static char WaveFormatEx_GetBuffer__doc__[] =
+"";
+
+static PyObject *
+WaveFormatEx_GetBuffer(WaveFormatExObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))return NULL;
+	PyObject *obj1 = PyString_FromStringAndSize((char*)self->pbBuffer,(int)self->cbSize);
+	if (obj1 == NULL) return NULL;
+	PyObject *obj2 = Py_BuildValue("O", obj1);
+	Py_DECREF(obj1);
+	return obj2;
+	
+}
+
+static struct PyMethodDef WaveFormatEx_methods[] = {
+	{"GetMembers", (PyCFunction)WaveFormatEx_GetMembers, METH_VARARGS, WaveFormatEx_GetMembers__doc__},
+	{"GetBuffer", (PyCFunction)WaveFormatEx_GetBuffer, METH_VARARGS, WaveFormatEx_GetBuffer__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WaveFormatEx_dealloc(WaveFormatExObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WaveFormatEx_getattr(WaveFormatExObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WaveFormatEx_methods, (PyObject *)self, name);
+}
+
+static char WaveFormatExType__doc__[] =
+""
+;
+
+static PyTypeObject WaveFormatExType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WaveFormatEx",			/*tp_name*/
+	sizeof(WaveFormatExObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WaveFormatEx_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WaveFormatEx_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WaveFormatExType__doc__ /* Documentation string */
+};
+
+// End of code for WaveFormatEx object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// WMVideoInfoHeader object  (WMVIDEOINFOHEADER)
+   
+static struct PyMethodDef WMVideoInfoHeader_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WMVideoInfoHeader_dealloc(WMVideoInfoHeaderObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WMVideoInfoHeader_getattr(WMVideoInfoHeaderObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WMVideoInfoHeader_methods, (PyObject *)self, name);
+}
+
+static char WMVideoInfoHeaderType__doc__[] =
+""
+;
+
+static PyTypeObject WMVideoInfoHeaderType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WMVideoInfoHeader",			/*tp_name*/
+	sizeof(WMVideoInfoHeaderObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WMVideoInfoHeader_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WMVideoInfoHeader_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WMVideoInfoHeaderType__doc__ /* Documentation string */
+};
+
+// End of code for WMVideoInfoHeader object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// Unknown object (general but defined here for indepentance) 
+
+static struct PyMethodDef Unknown_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+Unknown_dealloc(UnknownObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+Unknown_getattr(UnknownObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(Unknown_methods, (PyObject *)self, name);
+}
+
+static char UnknownType__doc__[] =
+""
+;
+
+static PyTypeObject UnknownType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"Unknown",			/*tp_name*/
+	sizeof(UnknownObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)Unknown_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)Unknown_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	UnknownType__doc__ /* Documentation string */
+};
+
+// End of code for Unknown object 
+////////////////////////////////////////////
+
+
+////////////////////////////////////////////
 // GUID object (general but defined here for indepentance) 
 			
 static struct PyMethodDef GUID_methods[] = {
@@ -1900,11 +3503,1277 @@ static PyTypeObject GUIDType = {
 // End of code for GUID object 
 ////////////////////////////////////////////
 
+////////////////////////////////////////////
+// WMReaderAdvanced object 
+
+
+static char WMReaderAdvanced_SetUserProvidedClock__doc__[] =
+""
+;
+static PyObject*
+WMReaderAdvanced_SetUserProvidedClock(WMReaderAdvancedObject *self, PyObject *args)
+{
+	BOOL fUserClock=TRUE;
+	if (!PyArg_ParseTuple(args,"|i",&fUserClock)) 
+		return NULL;
+	HRESULT hr;
+	hr = self->pI->SetUserProvidedClock(fUserClock);
+	if (FAILED(hr)) {
+		seterror("WMReaderAdvanced_SetUserProvidedClock", hr);
+		return NULL;
+	}			
+	Py_INCREF(Py_None);
+	return Py_None;	
+}
+
+static char WMReaderAdvanced_SetManualStreamSelection__doc__[] =
+""
+;
+static PyObject*
+WMReaderAdvanced_SetManualStreamSelection(WMReaderAdvancedObject *self, PyObject *args)
+{
+	BOOL manual=TRUE;
+	if (!PyArg_ParseTuple(args,"|i",&manual)) 
+		return NULL;
+	HRESULT hr;
+	hr = self->pI->SetManualStreamSelection(manual);
+	if (FAILED(hr)) {
+		seterror("WMReaderAdvanced_SetManualStreamSelection", hr);
+		return NULL;
+	}			
+	Py_INCREF(Py_None);
+	return Py_None;	
+}
+
+static char WMReaderAdvanced_SetReceiveStreamSamples__doc__[] =
+""
+;
+static PyObject*
+WMReaderAdvanced_SetReceiveStreamSamples(WMReaderAdvancedObject *self, PyObject *args)
+{
+	int iStreamNum;
+	BOOL fReceiveStreamSamples=TRUE;
+	if (!PyArg_ParseTuple(args,"i|i",&iStreamNum,&fReceiveStreamSamples)) 
+		return NULL;
+	HRESULT hr;
+	hr = self->pI->SetReceiveStreamSamples(WORD(iStreamNum),fReceiveStreamSamples);
+	if (FAILED(hr)) {
+		seterror("WMReaderAdvanced_SetReceiveStreamSamples", hr);
+		return NULL;
+	}			
+	Py_INCREF(Py_None);
+	return Py_None;	
+}
+			
+static char WMReaderAdvanced_GetReceiveStreamSamples__doc__[] =
+""
+;
+static PyObject*
+WMReaderAdvanced_GetReceiveStreamSamples(WMReaderAdvancedObject *self, PyObject *args)
+{
+	int iStreamNum;
+	if (!PyArg_ParseTuple(args,"i",&iStreamNum)) 
+		return NULL;
+	HRESULT hr;
+	BOOL fReceiveStreamSamples;
+	hr = self->pI->GetReceiveStreamSamples(WORD(iStreamNum),&fReceiveStreamSamples);
+	if (FAILED(hr)) {
+		seterror("WMReaderAdvanced_GetReceiveStreamSamples", hr);
+		return NULL;
+	}
+	return Py_BuildValue("i",fReceiveStreamSamples);
+}
+
+static struct PyMethodDef WMReaderAdvanced_methods[] = {
+	{"SetUserProvidedClock", (PyCFunction)WMReaderAdvanced_SetUserProvidedClock, METH_VARARGS, WMReaderAdvanced_SetUserProvidedClock__doc__},
+	{"SetManualStreamSelection", (PyCFunction)WMReaderAdvanced_SetManualStreamSelection, METH_VARARGS, WMReaderAdvanced_SetManualStreamSelection__doc__},
+	{"SetReceiveStreamSamples", (PyCFunction)WMReaderAdvanced_SetReceiveStreamSamples, METH_VARARGS, WMReaderAdvanced_SetReceiveStreamSamples__doc__},
+	{"GetReceiveStreamSamples", (PyCFunction)WMReaderAdvanced_GetReceiveStreamSamples, METH_VARARGS, WMReaderAdvanced_GetReceiveStreamSamples__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WMReaderAdvanced_dealloc(WMReaderAdvancedObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WMReaderAdvanced_getattr(WMReaderAdvancedObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WMReaderAdvanced_methods, (PyObject *)self, name);
+}
+
+static char WMReaderAdvancedType__doc__[] =
+""
+;
+
+static PyTypeObject WMReaderAdvancedType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WMReaderAdvanced",			/*tp_name*/
+	sizeof(WMReaderAdvancedObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WMReaderAdvanced_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WMReaderAdvanced_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WMReaderAdvancedType__doc__ /* Documentation string */
+};
+
+// End of code for WMReaderAdvanced object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// WMWriterAdvanced object 
+
+static struct PyMethodDef WMWriterAdvanced_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WMWriterAdvanced_dealloc(WMWriterAdvancedObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WMWriterAdvanced_getattr(WMWriterAdvancedObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WMWriterAdvanced_methods, (PyObject *)self, name);
+}
+
+static char WMWriterAdvancedType__doc__[] =
+""
+;
+
+static PyTypeObject WMWriterAdvancedType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WMWriterAdvanced",			/*tp_name*/
+	sizeof(WMWriterAdvancedObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WMWriterAdvanced_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WMWriterAdvanced_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WMWriterAdvancedType__doc__ /* Documentation string */
+};
+
+// End of code for WMWriterAdvanced object 
+////////////////////////////////////////////
+
+
+////////////////////////////////////////////
+// WMStreamConfig object 
+
+static char WMStreamConfig_GetStreamType__doc__[] =
+""
+;
+static PyObject *
+WMStreamConfig_GetStreamType(WMStreamConfigObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+	GUIDObject *obj = newGUIDObject();
+	hr = self->pI->GetStreamType(&obj->guid);
+	if (FAILED(hr)) {
+		seterror("WMStreamConfig_GetStreamType", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+      
+static char WMStreamConfig_GetStreamNumber__doc__[] =
+""
+;
+static PyObject *
+WMStreamConfig_GetStreamNumber(WMStreamConfigObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+	WORD wStreamNumber;
+	hr = self->pI->GetStreamNumber(&wStreamNumber);
+	if (FAILED(hr)) {
+		seterror("WMStreamConfig_GetStreamNumber", hr);
+		return NULL;
+	}
+	return Py_BuildValue("i",int(wStreamNumber));
+}
+        
+static char WMStreamConfig_SetStreamNumber__doc__[] =
+""
+;
+static PyObject *
+WMStreamConfig_SetStreamNumber(WMStreamConfigObject *self, PyObject *args)
+{
+	DWORD dwStreamNum;
+	if (!PyArg_ParseTuple(args,"i",&dwStreamNum)) 
+		return NULL;
+	HRESULT hr;
+	hr = self->pI->SetStreamNumber(WORD(dwStreamNum));
+	if (FAILED(hr)) {
+		seterror("WMStreamConfig_SetStreamNumber", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+       
+static char WMStreamConfig_GetStreamName__doc__[] =
+""
+;
+static PyObject *
+WMStreamConfig_GetStreamName(WMStreamConfigObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+	WCHAR wszStreamName[512];
+	WORD cchStreamName=512;
+	hr = self->pI->GetStreamName(wszStreamName,&cchStreamName);
+	if (FAILED(hr)) {
+		seterror("WMStreamConfig_GetStreamName", hr);
+		return NULL;
+	}
+	char *szStreamName = new char[cchStreamName+1];
+	WideCharToMultiByte(CP_ACP,0,wszStreamName,cchStreamName+1,szStreamName,cchStreamName+1,NULL,NULL);
+	PyObject *obj = Py_BuildValue("s",szStreamName);
+	delete [] szStreamName;
+	return obj;
+}
+
+
+static char WMStreamConfig_SetStreamName__doc__[] =
+""
+;
+static PyObject *
+WMStreamConfig_SetStreamName(WMStreamConfigObject *self, PyObject *args)
+{
+	char *psz;
+	if (!PyArg_ParseTuple(args,"i",&psz))
+		return NULL;
+	HRESULT hr;
+	int len = strlen(psz);
+	WCHAR *pwsz = new WCHAR[len+1];
+	MultiByteToWideChar(CP_ACP,0,psz,-1,pwsz,len+1);
+	hr = self->pI->SetStreamName(pwsz);
+	if (FAILED(hr)) {
+		delete [] pwsz;
+		seterror("WMStreamConfig_SetStreamName", hr);
+		return NULL;
+	}
+	delete [] pwsz;
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+       
+static char WMStreamConfig_GetConnectionName__doc__[] =
+""
+;
+static PyObject *
+WMStreamConfig_GetConnectionName(WMStreamConfigObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+	WCHAR wsz[512];
+	WORD cch=512;
+	hr = self->pI->GetConnectionName(wsz,&cch);
+	if (FAILED(hr)) {
+		seterror("WMStreamConfig_GetConnectionName", hr);
+		return NULL;
+	}
+	char *psz = new char[cch+1];
+	WideCharToMultiByte(CP_ACP,0,wsz,cch+1,psz,cch+1,NULL,NULL);
+	PyObject *obj = Py_BuildValue("s",psz);
+	delete [] psz;
+	return obj;
+}
+
+static char WMStreamConfig_SetConnectionName__doc__[] =
+""
+;
+static PyObject *
+WMStreamConfig_SetConnectionName(WMStreamConfigObject *self, PyObject *args)
+{
+	char *psz;
+	if (!PyArg_ParseTuple(args,"i",&psz))
+		return NULL;
+	HRESULT hr;
+	int len = strlen(psz);
+	WCHAR *pwsz = new WCHAR[len+1];
+	MultiByteToWideChar(CP_ACP,0,psz,-1,pwsz,len+1);
+	hr = self->pI->SetConnectionName(pwsz);
+	if (FAILED(hr)) {
+		delete [] pwsz;
+		seterror("WMStreamConfig_SetConnectionName", hr);
+		return NULL;
+	}
+	delete [] pwsz;
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char WMStreamConfig_GetBitrate__doc__[] =
+""
+;
+static PyObject *
+WMStreamConfig_GetBitrate(WMStreamConfigObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+	DWORD dwBitrate;
+	hr = self->pI->GetBitrate(&dwBitrate);
+	if (FAILED(hr)) {
+		seterror("WMStreamConfig_GetBitrate", hr);
+		return NULL;
+	}
+	return Py_BuildValue("i",dwBitrate);
+}
+
+static char WMStreamConfig_SetBitrate__doc__[] =
+""
+;
+static PyObject *
+WMStreamConfig_SetBitrate(WMStreamConfigObject *self, PyObject *args)
+{
+	DWORD dwBitrate;
+	if (!PyArg_ParseTuple(args,"i",&dwBitrate))
+		return NULL;
+	HRESULT hr;
+	hr = self->pI->SetBitrate(dwBitrate);
+	if (FAILED(hr)) {
+		seterror("WMStreamConfig_SetBitrate", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+static char WMStreamConfig_GetBufferWindow__doc__[] =
+""
+;
+static PyObject *
+WMStreamConfig_GetBufferWindow(WMStreamConfigObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,"")) 
+		return NULL;
+	HRESULT hr;
+	DWORD msBufferWindow;
+	hr = self->pI->GetBufferWindow(&msBufferWindow);
+	if (FAILED(hr)) {
+		seterror("WMStreamConfig_GetBufferWindow", hr);
+		return NULL;
+	}
+	return Py_BuildValue("i",msBufferWindow);
+}
+
+static char WMStreamConfig_SetBufferWindow__doc__[] =
+""
+;
+static PyObject *
+WMStreamConfig_SetBufferWindow(WMStreamConfigObject *self, PyObject *args)
+{
+	DWORD msBufferWindow;
+	if (!PyArg_ParseTuple(args,"i",&msBufferWindow))
+		return NULL;
+	HRESULT hr;
+	hr = self->pI->SetBufferWindow(msBufferWindow);
+	if (FAILED(hr)) {
+		seterror("WMStreamConfig_SetBufferWindow", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char WMStreamConfig_QueryIWMVideoMediaProps__doc__[] =
+""
+;
+static PyObject *
+WMStreamConfig_QueryIWMVideoMediaProps(WMStreamConfigObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,""))
+		return NULL;
+	HRESULT hr;
+	WMVideoMediaPropsObject *obj = newWMVideoMediaPropsObject();
+	hr = self->pI->QueryInterface(IID_IWMVideoMediaProps,(void**)obj->pI);
+	if (FAILED(hr)) {
+		Py_DECREF(obj);
+		seterror("WMStreamConfig_QueryIWMVideoMediaProps", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
+static struct PyMethodDef WMStreamConfig_methods[] = {
+	{"GetStreamType", (PyCFunction)WMStreamConfig_GetStreamType, METH_VARARGS, WMStreamConfig_GetStreamType__doc__},
+	{"GetStreamNumber", (PyCFunction)WMStreamConfig_GetStreamNumber, METH_VARARGS, WMStreamConfig_GetStreamNumber__doc__},
+	{"SetStreamNumber", (PyCFunction)WMStreamConfig_SetStreamNumber, METH_VARARGS, WMStreamConfig_SetStreamNumber__doc__},
+	{"GetStreamName", (PyCFunction)WMStreamConfig_GetStreamName, METH_VARARGS, WMStreamConfig_GetStreamName__doc__},
+	{"SetStreamName", (PyCFunction)WMStreamConfig_SetStreamName, METH_VARARGS, WMStreamConfig_SetStreamName__doc__},
+	{"GetConnectionName", (PyCFunction)WMStreamConfig_GetConnectionName, METH_VARARGS, WMStreamConfig_GetConnectionName__doc__},
+	{"SetConnectionName", (PyCFunction)WMStreamConfig_SetConnectionName, METH_VARARGS, WMStreamConfig_SetConnectionName__doc__},
+	{"GetBitrate", (PyCFunction)WMStreamConfig_GetBitrate, METH_VARARGS, WMStreamConfig_GetBitrate__doc__},
+	{"SetBitrate", (PyCFunction)WMStreamConfig_SetBitrate, METH_VARARGS, WMStreamConfig_SetBitrate__doc__},
+	{"GetBufferWindow", (PyCFunction)WMStreamConfig_GetBufferWindow, METH_VARARGS, WMStreamConfig_GetBufferWindow__doc__},
+	{"SetBufferWindow", (PyCFunction)WMStreamConfig_SetBufferWindow, METH_VARARGS, WMStreamConfig_SetBufferWindow__doc__},
+	{"QueryIWMVideoMediaProps", (PyCFunction)WMStreamConfig_QueryIWMVideoMediaProps, METH_VARARGS, WMStreamConfig_QueryIWMVideoMediaProps__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WMStreamConfig_dealloc(WMStreamConfigObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WMStreamConfig_getattr(WMStreamConfigObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WMStreamConfig_methods, (PyObject *)self, name);
+}
+
+static char WMStreamConfigType__doc__[] =
+""
+;
+
+static PyTypeObject WMStreamConfigType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WMStreamConfig",			/*tp_name*/
+	sizeof(WMStreamConfigObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WMStreamConfig_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WMStreamConfig_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WMStreamConfigType__doc__ /* Documentation string */
+};
+
+// End of code for WMStreamConfig object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// WMStreamList object 
+   
+static struct PyMethodDef WMStreamList_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WMStreamList_dealloc(WMStreamListObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WMStreamList_getattr(WMStreamListObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WMStreamList_methods, (PyObject *)self, name);
+}
+
+static char WMStreamListType__doc__[] =
+""
+;
+
+static PyTypeObject WMStreamListType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WMStreamList",			/*tp_name*/
+	sizeof(WMStreamListObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WMStreamList_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WMStreamList_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WMStreamListType__doc__ /* Documentation string */
+};
+
+// End of code for WMStreamList object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// WMReaderStreamClock object 
+   
+static struct PyMethodDef WMReaderStreamClock_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WMReaderStreamClock_dealloc(WMReaderStreamClockObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WMReaderStreamClock_getattr(WMReaderStreamClockObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WMReaderStreamClock_methods, (PyObject *)self, name);
+}
+
+static char WMReaderStreamClockType__doc__[] =
+""
+;
+
+static PyTypeObject WMReaderStreamClockType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WMReaderStreamClock",			/*tp_name*/
+	sizeof(WMReaderStreamClockObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WMReaderStreamClock_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WMReaderStreamClock_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WMReaderStreamClockType__doc__ /* Documentation string */
+};
+
+// End of code for WMReaderStreamClock object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// WMMutualExclusion object 
+   
+static struct PyMethodDef WMMutualExclusion_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WMMutualExclusion_dealloc(WMMutualExclusionObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WMMutualExclusion_getattr(WMMutualExclusionObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WMMutualExclusion_methods, (PyObject *)self, name);
+}
+
+static char WMMutualExclusionType__doc__[] =
+""
+;
+
+static PyTypeObject WMMutualExclusionType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WMMutualExclusion",			/*tp_name*/
+	sizeof(WMMutualExclusionObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WMMutualExclusion_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WMMutualExclusion_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WMMutualExclusionType__doc__ /* Documentation string */
+};
+
+// End of code for WMMutualExclusion object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// WMMetadataEditor object 
+   
+static struct PyMethodDef WMMetadataEditor_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WMMetadataEditor_dealloc(WMMetadataEditorObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WMMetadataEditor_getattr(WMMetadataEditorObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WMMetadataEditor_methods, (PyObject *)self, name);
+}
+
+static char WMMetadataEditorType__doc__[] =
+""
+;
+
+static PyTypeObject WMMetadataEditorType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WMMetadataEditor",			/*tp_name*/
+	sizeof(WMMetadataEditorObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WMMetadataEditor_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WMMetadataEditor_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WMMetadataEditorType__doc__ /* Documentation string */
+};
+
+// End of code for WMMetadataEditor object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// WMIndexer object 
+   
+static struct PyMethodDef WMIndexer_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WMIndexer_dealloc(WMIndexerObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WMIndexer_getattr(WMIndexerObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WMIndexer_methods, (PyObject *)self, name);
+}
+
+static char WMIndexerType__doc__[] =
+""
+;
+
+static PyTypeObject WMIndexerType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WMIndexer",			/*tp_name*/
+	sizeof(WMIndexerObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WMIndexer_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WMIndexer_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WMIndexerType__doc__ /* Documentation string */
+};
+
+// End of code for WMIndexer object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// WMWriterSink object 
+   
+static struct PyMethodDef WMWriterSink_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WMWriterSink_dealloc(WMWriterSinkObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WMWriterSink_getattr(WMWriterSinkObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WMWriterSink_methods, (PyObject *)self, name);
+}
+
+static char WMWriterSinkType__doc__[] =
+""
+;
+
+static PyTypeObject WMWriterSinkType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WMWriterSink",			/*tp_name*/
+	sizeof(WMWriterSinkObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WMWriterSink_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WMWriterSink_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WMWriterSinkType__doc__ /* Documentation string */
+};
+
+// End of code for WMWriterSink object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// WMWriterFileSink object 
+   
+static struct PyMethodDef WMWriterFileSink_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WMWriterFileSink_dealloc(WMWriterFileSinkObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WMWriterFileSink_getattr(WMWriterFileSinkObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WMWriterFileSink_methods, (PyObject *)self, name);
+}
+
+static char WMWriterFileSinkType__doc__[] =
+""
+;
+
+static PyTypeObject WMWriterFileSinkType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WMWriterFileSink",			/*tp_name*/
+	sizeof(WMWriterFileSinkObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WMWriterFileSink_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WMWriterFileSink_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WMWriterFileSinkType__doc__ /* Documentation string */
+};
+
+// End of code for WMWriterFileSink object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// WMWriterNetworkSink object 
+   
+static struct PyMethodDef WMWriterNetworkSink_methods[] = {
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WMWriterNetworkSink_dealloc(WMWriterNetworkSinkObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WMWriterNetworkSink_getattr(WMWriterNetworkSinkObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WMWriterNetworkSink_methods, (PyObject *)self, name);
+}
+
+static char WMWriterNetworkSinkType__doc__[] =
+""
+;
+
+static PyTypeObject WMWriterNetworkSinkType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WMWriterNetworkSink",			/*tp_name*/
+	sizeof(WMWriterNetworkSinkObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WMWriterNetworkSink_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WMWriterNetworkSink_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WMWriterNetworkSinkType__doc__ /* Documentation string */
+};
+
+// End of code for WMWriterNetworkSink object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// LargeInt object 
+static char LargeInt_low__doc__[] =
+""
+;
+static PyObject *
+LargeInt_low(LargeIntObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,""))return NULL;
+	LARGE_INTEGER li;li.QuadPart = self->ob_ival;
+	return Py_BuildValue("l",li.LowPart);
+}
+
+static char LargeInt_high__doc__[] =
+""
+;
+static PyObject *
+LargeInt_high(LargeIntObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,""))return NULL;
+	LARGE_INTEGER li;li.QuadPart = self->ob_ival;
+	return Py_BuildValue("l",li.HighPart);
+}
+
+static struct PyMethodDef LargeInt_methods[] = {
+	{"low", (PyCFunction)LargeInt_low, METH_VARARGS, LargeInt_low__doc__},
+	{"high", (PyCFunction)LargeInt_high, METH_VARARGS, LargeInt_high__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+LargeInt_dealloc(LargeIntObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	PyMem_DEL(self);
+}
+
+static PyObject *
+LargeInt_getattr(LargeIntObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(LargeInt_methods, (PyObject *)self, name);
+}
+
+static int
+LargeInt_compare(LargeIntObject *v, LargeIntObject *w)
+{
+	LONGLONG i = v->ob_ival;
+	LONGLONG j = w->ob_ival;
+	return (i < j) ? -1 : (i > j) ? 1 : 0;
+}
+
+static int
+LargeInt_print(LargeIntObject *v, FILE *fp, int flags)
+{
+	fprintf(fp, "%I64d", v->ob_ival);
+	return 0;
+}
+
+static PyObject *
+LargeInt_repr(LargeIntObject *v)
+{
+	char buf[40];
+	sprintf(buf, "%I64d", v->ob_ival);
+	return PyString_FromString(buf);
+}
+
+static long
+LargeInt_hash(LargeIntObject *v)
+{
+	LARGE_INTEGER li;li.QuadPart = v -> ob_ival;
+	long x = li.LowPart;
+	if (x == -1)
+		x = -2;
+	return x;
+}
+
+static PyObject *
+LargeInt_add(LargeIntObject *v, LargeIntObject *w)
+{
+	LONGLONG a, b, x;
+	a = v->ob_ival;
+	b = w->ob_ival;
+	x = a + b;
+	return (PyObject*)newLargeIntObject(x);
+}
+
+static PyObject *
+LargeInt_sub(LargeIntObject *v, LargeIntObject *w)
+{
+	LONGLONG a, b, x;
+	a = v->ob_ival;
+	b = w->ob_ival;
+	x = a - b;
+	return (PyObject*)newLargeIntObject(x);
+}
+
+static PyObject *
+LargeInt_mul(LargeIntObject *v, LargeIntObject *w)
+{
+	LONGLONG a, b, x;
+	a = v->ob_ival;
+	b = w->ob_ival;
+	x = a * b;
+	return (PyObject*)newLargeIntObject(x);
+}
+
+static PyObject *
+LargeInt_div(LargeIntObject *v, LargeIntObject *w)
+{
+	LONGLONG a, b, x;
+	a = v->ob_ival;
+	b = w->ob_ival;
+	x = a / b;
+	return (PyObject*)newLargeIntObject(x);
+}
+
+static PyObject *
+LargeInt_mod(LargeIntObject *v, LargeIntObject *w)
+{
+	LONGLONG a, b, x;
+	a = v->ob_ival;
+	b = w->ob_ival;
+	x = a % b;
+	return (PyObject*)newLargeIntObject(x);
+}
+
+static PyObject *
+LargeInt_divmod(LargeIntObject *v, LargeIntObject *w)
+{
+	LONGLONG a, b, x, y;
+	a = v->ob_ival;
+	b = w->ob_ival;
+	x = a / b;
+	y = a % b;
+	LargeIntObject *d = newLargeIntObject(x);
+	LargeIntObject *m = newLargeIntObject(y);
+	PyObject *r = Py_BuildValue("(OO)", d, m);
+	Py_DECREF(d);Py_DECREF(m);
+	return r;
+}
+
+static PyObject *
+LargeInt_neg(LargeIntObject *v)
+{
+	return (PyObject*)newLargeIntObject(-v->ob_ival);
+}
+
+static PyObject *
+LargeInt_pos(LargeIntObject *v)
+{
+	Py_INCREF(v);
+	return (PyObject *)v;
+}
+
+static PyObject *
+LargeInt_abs(LargeIntObject *v)
+{
+	if (v->ob_ival >= 0)
+		return LargeInt_pos(v);
+	else
+		return LargeInt_neg(v);
+}
+
+static int
+LargeInt_nonzero(LargeIntObject *v)
+{
+	return v->ob_ival != 0;
+}
+
+static PyObject *
+LargeInt_invert(LargeIntObject *v)
+{
+	return (PyObject*)newLargeIntObject(~v->ob_ival);
+}
+
+static PyObject *
+LargeInt_lshift(LargeIntObject *v,PyIntObject *w)
+{
+	return (PyObject*)newLargeIntObject(v->ob_ival << w->ob_ival);
+}
+
+static PyObject *
+LargeInt_rshift(LargeIntObject *v,PyIntObject *w)
+{
+	return (PyObject*)newLargeIntObject(v->ob_ival >> w->ob_ival);
+}
+
+static PyObject *
+LargeInt_and(LargeIntObject *v, LargeIntObject *w)
+{
+	LONGLONG a, b;
+	a = v->ob_ival;
+	b = w->ob_ival;
+	return (PyObject*)newLargeIntObject(a & b);
+}
+
+static PyObject *
+LargeInt_xor(LargeIntObject *v, LargeIntObject *w)
+{
+	LONGLONG a, b;
+	a = v->ob_ival;
+	b = w->ob_ival;
+	return (PyObject*)newLargeIntObject(a ^ b);
+}
+
+static PyObject *
+LargeInt_or(LargeIntObject *v, LargeIntObject *w)
+{
+	LONGLONG a, b;
+	a = v->ob_ival;
+	b = w->ob_ival;
+	return (PyObject*)newLargeIntObject(a | b);
+}
+
+static PyObject *
+LargeInt_int(LargeIntObject *v)
+{	
+	return Py_BuildValue("i",int(v->ob_ival));
+}
+
+static PyObject *
+LargeInt_long(LargeIntObject *v)
+{
+	return PyLong_FromLong(long(v->ob_ival));
+}
+
+static PyObject *
+LargeInt_float(LargeIntObject *v)
+{
+	return PyFloat_FromDouble(double(v -> ob_ival));
+}
+
+static PyObject *
+LargeInt_oct(LargeIntObject *v)
+{
+	char buf[100];
+	LONGLONG x = v -> ob_ival;
+	sprintf(buf, "O%I64o", x);
+	return PyString_FromString(buf);
+}
+
+static PyObject *
+LargeInt_hex(LargeIntObject *v)
+{
+	char buf[100];
+	LONGLONG x = v -> ob_ival;
+	sprintf(buf, "0x%I64x", x);
+	return PyString_FromString(buf);
+}
+
+static PyNumberMethods LargeInt_as_number = {
+	(binaryfunc)LargeInt_add, /*nb_add*/
+	(binaryfunc)LargeInt_sub, /*nb_subtract*/
+	(binaryfunc)LargeInt_mul, /*nb_multiply*/
+	(binaryfunc)LargeInt_div, /*nb_divide*/
+	(binaryfunc)LargeInt_mod, /*nb_remainder*/
+	(binaryfunc)LargeInt_divmod, /*nb_divmod*/
+	(ternaryfunc)0,//LargeInt_pow, /*nb_power*/
+	(unaryfunc)LargeInt_neg, /*nb_negative*/
+	(unaryfunc)LargeInt_pos, /*nb_positive*/
+	(unaryfunc)LargeInt_abs, /*nb_absolute*/
+	(inquiry)LargeInt_nonzero, /*nb_nonzero*/
+	(unaryfunc)LargeInt_invert, /*nb_invert*/
+	(binaryfunc)LargeInt_lshift, /*nb_lshift*/
+	(binaryfunc)LargeInt_rshift, /*nb_rshift*/
+	(binaryfunc)LargeInt_and, /*nb_and*/
+	(binaryfunc)LargeInt_xor, /*nb_xor*/
+	(binaryfunc)LargeInt_or, /*nb_or*/
+	0,		/*nb_coerce*/
+	(unaryfunc)LargeInt_int, /*nb_int*/
+	(unaryfunc)LargeInt_long, /*nb_long*/
+	(unaryfunc)LargeInt_float, /*nb_float*/
+	(unaryfunc)LargeInt_oct, /*nb_oct*/
+	(unaryfunc)LargeInt_hex, /*nb_hex*/
+};
+
+static char LargeIntType__doc__[] =
+""
+;
+
+static PyTypeObject LargeIntType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"LargeInt",			/*tp_name*/
+	sizeof(LargeIntObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)LargeInt_dealloc,	/*tp_dealloc*/
+	(printfunc)LargeInt_print,		/*tp_print*/
+	(getattrfunc)LargeInt_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)LargeInt_compare, /*tp_compare*/
+	(reprfunc)LargeInt_repr,		/*tp_repr*/
+	&LargeInt_as_number,/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)LargeInt_hash,/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	LargeIntType__doc__ /* Documentation string */
+};
+
+// End of code for LargeInt object 
+////////////////////////////////////////////
+
 
 ///////////////////////////////////////////
 ///////////////////////////////////////////
 // MODULE
 //
+
+//
+static char CreateWriter__doc__[] =
+""
+;
+static PyObject *
+CreateWriter(PyObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	
+	WMWriterObject *obj = newWMWriterObject();
+	if (obj == NULL)
+		return NULL;
+	
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr = WMCreateWriter(NULL,&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)){
+		Py_DECREF(obj);
+		seterror("WMCreateWriter", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
 
 static char CreateReader__doc__[] =
 ""
@@ -1933,31 +4802,54 @@ CreateReader(PyObject *self, PyObject *args)
 }
 
 //
-static char CreateWriter__doc__[] =
+static char CreateEditor__doc__[] =
 ""
 ;
 static PyObject *
-CreateWriter(PyObject *self, PyObject *args)
+CreateEditor(PyObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
 	
-	WMWriterObject *obj = newWMWriterObject();
-	if (obj == NULL)
-		return NULL;
+	WMMetadataEditorObject *obj = newWMMetadataEditorObject();
+	if (obj == NULL) return NULL;
 	
 	HRESULT hr;
 	Py_BEGIN_ALLOW_THREADS
-	hr = WMCreateWriter(NULL,&obj->pI);
+	hr = WMCreateEditor(&obj->pI);
 	Py_END_ALLOW_THREADS
 	if (FAILED(hr)){
 		Py_DECREF(obj);
-		seterror("WMCreateWriter", hr);
+		seterror("WMCreateEditor", hr);
 		return NULL;
 	}
 	return (PyObject*)obj;
 }
 
+//
+static char CreateIndexer__doc__[] =
+""
+;
+static PyObject *
+CreateIndexer(PyObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	
+	WMIndexerObject *obj = newWMIndexerObject();
+	if (obj == NULL) return NULL;
+	
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr = WMCreateIndexer(&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)){
+		Py_DECREF(obj);
+		seterror("WMCreateIndexer", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
 
 //
 static char CreateProfileManager__doc__[] =
@@ -1985,6 +4877,59 @@ CreateProfileManager(PyObject *self, PyObject *args)
 	return (PyObject*)obj;
 }
 
+//
+static char CreateWriterFileSink__doc__[] =
+""
+;
+static PyObject *
+CreateWriterFileSink(PyObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	
+	WMWriterFileSinkObject *obj = newWMWriterFileSinkObject();
+	if (obj == NULL)
+		return NULL;
+	
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr = WMCreateWriterFileSink(&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)){
+		Py_DECREF(obj);
+		seterror("WMCreateWriterFileSink", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
+//
+static char CreateWriterNetworkSink__doc__[] =
+""
+;
+static PyObject *
+CreateWriterNetworkSink(PyObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	
+	WMWriterNetworkSinkObject *obj = newWMWriterNetworkSinkObject();
+	if (obj == NULL)
+		return NULL;
+	
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr = WMCreateWriterNetworkSink(&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)){
+		Py_DECREF(obj);
+		seterror("WMCreateWriterNetworkSink", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
+
 static char CreatePyReaderCallback__doc__[] =
 ""
 ;
@@ -2005,6 +4950,66 @@ CreatePyReaderCallback(PyObject *self, PyObject *args)
 		seterror("CreatePyReaderCallback", hr);
 		return NULL;
 	}
+	return (PyObject*)obj;
+}
+
+static char CreatePyReaderCallbackAdvanced__doc__[] =
+""
+;
+static PyObject *
+CreatePyReaderCallbackAdvanced(PyObject *self, PyObject *args)
+{
+	PyObject *pycbobj;
+	if (!PyArg_ParseTuple(args,"O",&pycbobj))
+		return NULL;
+	
+	WMPyReaderCallbackObject *obj = newWMPyReaderCallbackObject();
+	if (obj == NULL)
+		return NULL;
+	HRESULT hr;
+	hr = WMCreatePyReaderCallbackAdvanced(pycbobj,&obj->pI);
+	if (FAILED(hr)){
+		Py_DECREF(obj);
+		seterror("CreatePyReaderCallbackAdvanced", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
+
+static char large_int__doc__[] =
+""
+;
+static PyObject *
+large_int(PyObject *self, PyObject *args)
+{
+	char *psz;
+	LONGLONG ll;
+	if (!PyArg_ParseTuple(args,"s",&psz))
+		{
+		PyErr_Clear();
+		long hi,low;
+		if (!PyArg_ParseTuple(args,"ll",&hi,&low))
+			{
+			PyErr_Clear();
+			long lv=0;
+			if (!PyArg_ParseTuple(args,"l",&lv))
+				return NULL;
+			ll = (LONGLONG)lv;
+			}
+		else
+			{
+			LARGE_INTEGER li;li.HighPart=hi;li.LowPart=low;
+			ll = li.QuadPart;
+			}
+		}
+	else if(sscanf(psz,"%I64d",&ll)==EOF)
+		{
+		seterror("large_int_from_string failed");
+		return NULL;
+		}
+	LargeIntObject *obj = newLargeIntObject(ll);
+	if (obj == NULL)return NULL;
 	return (PyObject*)obj;
 }
 
@@ -2040,10 +5045,16 @@ CoUninitialize(PyObject *self, PyObject *args)
 	}
 
 static struct PyMethodDef wmfapi_methods[] = {
-	{"CreateReader", (PyCFunction)CreateReader, METH_VARARGS, CreateReader__doc__},
 	{"CreateWriter", (PyCFunction)CreateWriter, METH_VARARGS, CreateWriter__doc__},
+	{"CreateReader", (PyCFunction)CreateReader, METH_VARARGS, CreateReader__doc__},
+	{"CreateEditor", (PyCFunction)CreateEditor, METH_VARARGS, CreateEditor__doc__},
+	{"CreateIndexer", (PyCFunction)CreateIndexer, METH_VARARGS, CreateIndexer__doc__},
 	{"CreateProfileManager", (PyCFunction)CreateProfileManager, METH_VARARGS, CreateProfileManager__doc__},
+	{"CreateWriterFileSink", (PyCFunction)CreateWriterFileSink, METH_VARARGS, CreateWriterFileSink__doc__},
+	{"CreateWriterNetworkSink", (PyCFunction)CreateWriterNetworkSink, METH_VARARGS, CreateWriterNetworkSink__doc__},
 	{"CreatePyReaderCallback", (PyCFunction)CreatePyReaderCallback, METH_VARARGS, CreatePyReaderCallback__doc__},
+	{"CreatePyReaderCallbackAdvanced", (PyCFunction)CreatePyReaderCallbackAdvanced, METH_VARARGS, CreatePyReaderCallbackAdvanced__doc__},
+	{"large_int", (PyCFunction)large_int, METH_VARARGS, large_int__doc__},
 	{"CoInitialize", (PyCFunction)CoInitialize, METH_VARARGS, CoInitialize__doc__},
 	{"CoUninitialize", (PyCFunction)CoUninitialize, METH_VARARGS, CoUninitialize__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
@@ -2076,36 +5087,104 @@ static struct {const GUID *p;char* s;} wmguids[] ={
 	{NULL,NULL}
 };
 
-static struct {int n;char* s;} wmcon[] ={
-//enum WMT_ATTR_DATATYPE
-	{0, "WMT_TYPE_DWORD"},
-	{1, "WMT_TYPE_STRING"},
-	{2, "WMT_TYPE_BINARY"},
-	{3, "WMT_TYPE_BOOL"},
-	{4, "WMT_TYPE_QWORD"},
-	{5, "WMT_TYPE_WORD"},
-	{6, "WMT_TYPE_GUID"},
-//enum WMT_STATUS
-    {0,"WMT_ERROR"},
-    {1,"WMT_OPENED"},
-    {2,	"WMT_BUFFERING_START"},
-    {3,	"WMT_BUFFERING_STOP"},
-    {4,	"WMT_EOF"},
-    {4,	"WMT_END_OF_FILE"},
-	{5,	"WMT_END_OF_SEGMENT"},
-    {6,	"WMT_END_OF_STREAMING"},
-    {7,	"WMT_LOCATING"},
-    {8,	"WMT_CONNECTING"},
-	{9,	"WMT_NO_RIGHTS"},
-    {10,"WMT_MISSING_CODEC"},
-    {11,"WMT_STARTED"},
-    {12,"WMT_STOPPED"},
-    {13,"WMT_CLOSED"},
-    {14,"WMT_STRIDING"},
-    {15,"WMT_TIMER"},
-    {16,"WMT_INDEX_PROGRESS"},
-	{0,NULL}
+struct enumentry {char* s;int n;};
+
+static struct enumentry _wmt_attr_datatype[] ={
+	{"WMT_TYPE_DWORD",WMT_TYPE_DWORD},
+	{"WMT_TYPE_STRING",WMT_TYPE_STRING},
+	{"WMT_TYPE_BINARY",WMT_TYPE_BINARY},
+	{"WMT_TYPE_BOOL",WMT_TYPE_BOOL},
+	{"WMT_TYPE_QWORD",WMT_TYPE_QWORD},
+	{"WMT_TYPE_WORD",WMT_TYPE_WORD},
+	{"WMT_TYPE_GUID",WMT_TYPE_GUID},
+	{NULL,0}
 	};
+
+static struct enumentry _wmt_status[] ={
+    {"WMT_ERROR",WMT_ERROR},
+    {"WMT_OPENED",WMT_OPENED},
+    {"WMT_BUFFERING_START",WMT_BUFFERING_START},
+    {"WMT_BUFFERING_STOP",WMT_BUFFERING_STOP},
+    {"WMT_EOF",WMT_EOF},
+    {"WMT_END_OF_FILE",WMT_END_OF_FILE},
+	{"WMT_END_OF_SEGMENT",WMT_END_OF_SEGMENT},
+    {"WMT_END_OF_STREAMING",WMT_END_OF_STREAMING},
+    {"WMT_LOCATING",WMT_LOCATING},
+    {"WMT_CONNECTING",WMT_CONNECTING},
+	{"WMT_NO_RIGHTS",WMT_NO_RIGHTS},
+    {"WMT_MISSING_CODEC",WMT_MISSING_CODEC},
+    {"WMT_STARTED",WMT_STARTED},
+    {"WMT_STOPPED",WMT_STOPPED},
+    {"WMT_CLOSED",WMT_CLOSED},
+    {"WMT_STRIDING",WMT_STRIDING},
+    {"WMT_TIMER",WMT_TIMER},
+    {"WMT_INDEX_PROGRESS",WMT_INDEX_PROGRESS},
+	{NULL,0}
+	};
+
+static struct enumentry _wmt_rights[] ={
+    {"WMT_RIGHT_PLAYBACK", WMT_RIGHT_PLAYBACK},
+	{"WMT_RIGHT_COPY_TO_NON_SDMI_DEVICE", WMT_RIGHT_COPY_TO_NON_SDMI_DEVICE},
+	{"WMT_RIGHT_COPY_TO_CD",WMT_RIGHT_COPY_TO_CD},
+	{"WMT_RIGHT_COPY_TO_SDMI_DEVICE", WMT_RIGHT_COPY_TO_SDMI_DEVICE},
+	{"WMT_RIGHT_ONE_TIME", WMT_RIGHT_ONE_TIME},
+	{NULL,0}
+	};
+
+static struct enumentry _wmt_stream_selection[] ={
+    {"WMT_OFF", WMT_OFF},
+	{"WMT_CLEANPOINT_ONLY", WMT_CLEANPOINT_ONLY},
+	{"WMT_ON", WMT_ON},
+	{NULL,0}
+	};
+
+static struct enumentry _wmt_version[] ={
+    {"WMT_VER_4_0", WMT_VER_4_0},
+	{NULL,0}
+	};
+
+static struct enumentry _wmt_net_protocol[] ={
+    {"WMT_PROTOCOL_HTTP", WMT_PROTOCOL_HTTP},
+	{NULL,0x0}
+	};
+
+// add symbolic constants of enum
+static int 
+SetItemEnum(PyObject *d,enumentry e[])
+	{
+	PyObject *x;
+	for(int i=0;e[i].s;i++)
+		{
+		x = PyInt_FromLong((long) e[i].n);
+		if (x == NULL || PyDict_SetItemString(d, e[i].s, x) < 0)
+			return -1;
+		Py_DECREF(x);
+		}
+	return 0;
+	}
+
+// add enum as a dictionary <number> -> <string>
+static int 
+SetItemEnumStrings(PyObject *dict,const char *szname, enumentry e[])
+	{
+	PyObject *x, *y;
+	PyObject *d = PyDict_New();
+	if(d == NULL) return -1;
+	for(int i=0;e[i].s;i++)
+		{
+		x = PyInt_FromLong((long)e[i].n);
+		y = PyString_FromString((char*)e[i].s);
+		if (x == NULL || PyDict_SetItem(d, x, y) < 0)
+			return -1;
+		Py_DECREF(x);
+		Py_DECREF(y);
+		}
+	int ix = PyDict_SetItemString(dict, (char*)szname, d);
+	Py_DECREF(d);
+	return ix;
+	}
+
+#define FATAL_ERROR_IF(exp) if(exp){Py_FatalError("can't initialize module wmfapi");return;}	
 
 static char wmfapi_module_documentation[] =
 "Windows Media Format API"
@@ -2115,38 +5194,38 @@ extern "C" __declspec(dllexport)
 void initwmfapi()
 {
 	PyObject *m, *d, *x;
-
-	/* Create the module and add the functions */
+	bool bPyErrOccurred = false;
+	
+	// Create the module and add the functions
 	m = Py_InitModule4("wmfapi", wmfapi_methods,
 		wmfapi_module_documentation,
 		(PyObject*)NULL,PYTHON_API_VERSION);
 
-	/* Add some symbolic constants to the module */
+	/// add 'error'
 	d = PyModule_GetDict(m);
 	ErrorObject = PyString_FromString("wmfapi.error");
 	PyDict_SetItemString(d, "error", ErrorObject);
 
-	for(int i=0;wmguids[i].p && wmguids[i].s;i++)
+	// add symbolic WM GUIDs
+	for(int i=0;wmguids[i].p && wmguids[i].s && !bPyErrOccurred;i++)
 		{
 		x = (PyObject*)newGUIDObject(wmguids[i].p);
-		if (x == NULL || PyDict_SetItemString(d, wmguids[i].s, x) < 0)
-			{
-			Py_FatalError("can't initialize module wmfapi");
-			return;
-			}
+		FATAL_ERROR_IF(x == NULL || PyDict_SetItemString(d, wmguids[i].s, x) < 0)
 		Py_DECREF(x);
 		}
+		
+	// add symbolic constants of enum
+	FATAL_ERROR_IF(SetItemEnum(d,_wmt_attr_datatype)<0)
+	FATAL_ERROR_IF(SetItemEnum(d,_wmt_status)<0)
+	FATAL_ERROR_IF(SetItemEnum(d,_wmt_rights)<0)
+	FATAL_ERROR_IF(SetItemEnum(d,_wmt_stream_selection)<0)
+	FATAL_ERROR_IF(SetItemEnum(d,_wmt_version)<0)
+	FATAL_ERROR_IF(SetItemEnum(d,_wmt_net_protocol)<0)
 
-	for(i=0;wmcon[i].s;i++)
-		{
-		x = PyInt_FromLong((long) wmcon[i].n);
-		if (x == NULL || PyDict_SetItemString(d, wmcon[i].s, x) < 0)
-			{
-			Py_FatalError("can't initialize module wmfapi");
-			return;
-			}
-		Py_DECREF(x);
-		}
+	// add enum as a dictionary <number> -> <string>
+	FATAL_ERROR_IF(SetItemEnumStrings(d,"wmt_attr_datatype_str",_wmt_attr_datatype)<0)
+	FATAL_ERROR_IF(SetItemEnumStrings(d,"wmt_status_str",_wmt_status)<0)
+	FATAL_ERROR_IF(SetItemEnumStrings(d,"wmt_rights_str",_wmt_rights)<0)
 	
 	/* Check for errors */
 	if (PyErr_Occurred())
