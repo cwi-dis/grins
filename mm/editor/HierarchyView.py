@@ -124,15 +124,16 @@ class HierarchyView(HierarchyViewDialog):
 			CREATE_BEGIN_EVENT_DESTINATION(callback = (self.create_begin_event_dest, ())),
 			FIND_EVENT_SOURCE(callback = (self.find_event_source, ())),
 			]
-		if not lightweight:
-			self.commands.append(TIMESCALE(callback = (self.timescalecall, ('global',))))
-			self.commands.append(LOCALTIMESCALE(callback = (self.timescalecall, ('focus',))))
-			self.commands.append(CORRECTLOCALTIMESCALE(callback = (self.timescalecall, ('cfocus',))))
-			self.commands.append(PLAYABLE(callback = (self.playablecall, ())))
 
 		self.interiorcommands = self._getmediaundercommands(self.toplevel.root.context) + [
 			EXPAND(callback = (self.expandcall, ())),
 		]
+
+		if not lightweight:
+			self.interiorcommands.append(TIMESCALE(callback = (self.timescalecall, ('global',))))
+			self.interiorcommands.append(LOCALTIMESCALE(callback = (self.timescalecall, ('focus',))))
+			self.interiorcommands.append(CORRECTLOCALTIMESCALE(callback = (self.timescalecall, ('cfocus',))))
+			self.commands.append(PLAYABLE(callback = (self.playablecall, ())))
 
 		self.mediacommands = self._getmediacommands(self.toplevel.root.context)
 
