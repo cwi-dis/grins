@@ -85,6 +85,8 @@ rem echo -x MPEGVideoDuration >> FreezeOpts
 rem ****************************
 
 echo -x HierarchyView >> FreezeOpts
+echo -x AttrEditForm >> FreezeOpts
+echo -x Bandwidth >> FreezeOpts
 
 rem Audio stuff not supported on this platform
 echo -x audio >> FreezeOpts
