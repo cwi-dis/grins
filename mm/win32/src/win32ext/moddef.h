@@ -139,5 +139,7 @@ void init##module()\
 #include <fstream.h>
 #define AfxMessageLog(str){ofstream ofs("log.txt",ios::app);if(ofs) ofs << str << endl;ofs.close();}
 
+typedef ui_base_class CPyObject;
+typedef	ui_type CPyTypeObject;
 
 #endif
