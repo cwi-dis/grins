@@ -9,7 +9,7 @@ class SourceViewDialog:
 		self.__setCommonCommandList()
 
 	def __setCommonCommandList(self):
-		self._commonCommandList = []
+		self._commonCommandList = [SELECTNODE_FROM_SOURCE(callback = (self.onRetrieveNode, ()))]
 		
 	def destroy(self):
 		self.__textwindow = None
@@ -87,6 +87,12 @@ class SourceViewDialog:
 	def select_lines(self, sLine, eLine):
 		if self.__textwindow:
 			self.__textwindow.select_line(sLine)
+
+	# return the current line pointed by the carret
+	def getCurrentCharIndex(self):
+		if self.__textwindow:
+			return self.__textwindow.getCurrentCharIndex()
+		return -1
 
 	#
 	# text window listener interface
