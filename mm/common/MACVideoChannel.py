@@ -11,6 +11,10 @@ import QuickTime
 debug = 0 # os.environ.has_key('CHANNELDEBUG')
 
 class VideoChannel(ChannelWindow):
+	node_attrs = ChannelWindow.node_attrs + \
+		     ['bucolor', 'hicolor', 'scale', 'center',
+		      'clipbegin', 'clipend']
+
 	def __init__(self, name, attrdict, scheduler, ui):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 		if debug: print 'VideoChannel: init', name
@@ -69,17 +73,32 @@ class VideoChannel(ChannelWindow):
 				arg = arg[-1]
 			self.errormsg(node, 'QuickTime cannot parse %s: %s'%(fn, arg))
 			return 1
-##		self.__begin = self.getclipbegin(node, units)
-##		self.__end = self.getclipend(node, units)
+		self.__begin = self.getclipbegin(node, 'sec')
+		self.__end = self.getclipend(node, 'sec')
 		self.arm_loop = self.getloop(node)
 		self.place_movie(self.arm_movie)
 		self.make_ready(self.arm_movie)
 		return 1
 		
 	def make_ready(self, movie):
-		movie.GoToBeginningOfMovie()
+		# First convert begin/end to movie times
+		dummy, (value, tbrate, base) = movie.GetMovieTime()
+		if self.__begin:
+			begin = self.__begin*tbrate
+		else:
+			begin = 0
+		if self.__end:
+			end = self.__end*tbrate
+			dur = end - begin
+		else:
+			dur = movie.GetMovieDuration()
+		# Next preroll
 		rate = movie.GetMoviePreferredRate()
-		movie.PrerollMovie(0, rate)
+		movie.PrerollMovie(begin, rate)
+		# Now set active area
+		movie.SetMovieActiveSegment(begin, dur)
+		# And go to the beginning of it.
+		movie.GoToBeginningOfMovie()
 ##		movie.MoviesTask(0)  
 	
 	def place_movie(self, movie):
