@@ -180,6 +180,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "GRiNSedSMIL2Real"=..\..\Build\win32\GRiNSedSMIL2Real\GRiNSedSMIL2Real.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "PyWinTypes"=..\..\..\python\Extensions\win32\PyWinTypes.dsp - Package Owner=<4>
 
 Package=<5>

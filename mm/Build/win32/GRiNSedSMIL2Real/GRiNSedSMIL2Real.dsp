@@ -4,7 +4,7 @@
 
 # TARGTYPE "Win32 (x86) Application" 0x0101
 
-CFG=GRiNS SMIL Boston - Win32 Debug
+CFG=GRiNSedSMIL2Real - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -13,12 +13,12 @@ CFG=GRiNS SMIL Boston - Win32 Debug
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "GRiNSedSMIL2Real.mak" CFG="GRiNS SMIL Boston - Win32 Debug"
+!MESSAGE NMAKE /f "GRiNSedSMIL2Real.mak" CFG="GRiNSedSMIL2Real - Win32 Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
-!MESSAGE "GRiNS SMIL Boston - Win32 Release" (based on "Win32 (x86) Application")
-!MESSAGE "GRiNS SMIL Boston - Win32 Debug" (based on "Win32 (x86) Application")
+!MESSAGE "GRiNSedSMIL2Real - Win32 Release" (based on "Win32 (x86) Application")
+!MESSAGE "GRiNSedSMIL2Real - Win32 Debug" (based on "Win32 (x86) Application")
 !MESSAGE 
 
 # Begin Project
@@ -29,7 +29,7 @@ CPP=cl.exe
 MTL=midl.exe
 RSC=rc.exe
 
-!IF  "$(CFG)" == "GRiNS SMIL Boston - Win32 Release"
+!IF  "$(CFG)" == "GRiNSedSMIL2Real - Win32 Release"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
@@ -51,7 +51,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo /o"./GRiNS_G2P.bsc"
+# ADD BSC32 /nologo /o"./GRiNS_RV2.bsc"
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
 # ADD LINK32 python16.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386 /out:"./GRiNS_RV2.exe" /libpath:"..\..\..\..\python\PCbuild" /libpath:"..\..\..\..\python\Extensions\win32\Build"
@@ -66,7 +66,7 @@ SOURCE="$(InputPath)"
 	
 # End Custom Build
 
-!ELSEIF  "$(CFG)" == "GRiNS SMIL Boston - Win32 Debug"
+!ELSEIF  "$(CFG)" == "GRiNSedSMIL2Real - Win32 Debug"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
@@ -106,8 +106,8 @@ SOURCE="$(InputPath)"
 
 # Begin Target
 
-# Name "GRiNS SMIL Boston - Win32 Release"
-# Name "GRiNS SMIL Boston - Win32 Debug"
+# Name "GRiNSedSMIL2Real - Win32 Release"
+# Name "GRiNSedSMIL2Real - Win32 Debug"
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
@@ -637,6 +637,10 @@ SOURCE=.\M_MainFrame.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_MainFrameSpecific.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_MediaChannel.c
 # End Source File
 # Begin Source File
@@ -1097,7 +1101,7 @@ SOURCE=.\M_SMILTreeWrite.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_SMILTreeWriteHtmlTime.c
+SOURCE=.\M_SMILTreeWriteXhtmlSmil.c
 # End Source File
 # Begin Source File
 

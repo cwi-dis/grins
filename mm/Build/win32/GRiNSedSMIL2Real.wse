@@ -2314,7 +2314,8 @@ item: Edit Registry
   end
   item: Key
     Key=SMILfile\DefaultIcon
-    New Value=%MAINDIR%\GRiNS_SV2.exe,2
+    New Value=%MAINDIR%\GRiNS_RV2.exe,2
+    New Value=
     Root=32
   end
 end
@@ -2329,17 +2330,20 @@ item: Edit Registry
   Total Keys=3
   item: Key
     Key=SMILfile\shell\edit
-    New Value=Edit with GRiNS Editor for SMIL 2.0
+    New Value=Edit with GRiNS Editor for Real 2.0
+    New Value=
     Root=32
   end
   item: Key
     Key=SMILfile\shell\edit\command
-    New Value=%MAINDIR%\GRiNS_SV2.exe "%%1"
+    New Value=%MAINDIR%\GRiNS_RV2.exe "%%1"
+    New Value=
     Root=32
   end
   item: Key
     Key=SMILfile\shell\open
-    New Value=Edit with GRiNS Editor for SMIL 2.0
+    New Value=Edit with GRiNS Editor for Real 2.0
+    New Value=
     Root=32
   end
 end
@@ -2360,7 +2364,8 @@ item: Edit Registry
   end
   item: Key
     Key=GRiNSProject\DefaultIcon
-    New Value=%MAINDIR%\GRiNS_SV2.exe,2
+    New Value=%MAINDIR%\GRiNS_RV2.exe,2
+    New Value=
   end
   item: Key
     Key=MIME\Database\Content Type\application/x-grins-project
@@ -2372,12 +2377,14 @@ item: Edit Registry
   Total Keys=2
   item: Key
     Key=GRiNSProject\shell\edit
-    New Value=Edit with GRiNS Editor for SMIL 2.0
+    New Value=Edit with GRiNS Editor for Real 2.0
+    New Value=
     Root=32
   end
   item: Key
     Key=GRiNSProject\shell\edit\command
-    New Value=%MAINDIR%\GRiNS_SV2.exe "%%1"
+    New Value=%MAINDIR%\GRiNS_RV2.exe "%%1"
+    New Value=
     Root=32
   end
 end
@@ -2385,17 +2392,20 @@ item: Edit Registry
   Total Keys=3
   item: Key
     Key=SMILfile\shell\open\command
-    New Value=%MAINDIR%\GRiNS_SV2.exe "%%1"
+    New Value=%MAINDIR%\GRiNS_RV2.exe "%%1"
+    New Value=
     Root=32
   end
   item: Key
     Key=GRiNSProject\shell\open
-    New Value=Edit with GRiNS Editor for SMIL 2.0
+    New Value=Edit with GRiNS Editor for Real 2.0
+    New Value=
     Root=32
   end
   item: Key
     Key=GRiNSProject\shell\open\command
-    New Value=%MAINDIR%\GRiNS_SV2.exe "%%1"
+    New Value=%MAINDIR%\GRiNS_RV2.exe "%%1"
+    New Value=
     Root=32
   end
 end
