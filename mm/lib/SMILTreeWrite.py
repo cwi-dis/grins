@@ -272,14 +272,21 @@ def getsrc(writer, node):
 		rp = node.slideshow.rp
 		otags = rp.tags
 		ntags = []
-		for attrs in otags:
-			attrs = attrs.copy()
+		for i in range(len(otags)):
+			attrs = otags[i].copy()
 			ntags.append(attrs)
 			if attrs.get('tag','fill') not in ('fadein', 'crossfade', 'wipe'):
 				continue
 			nurl = attrs.get('file')
 			if not nurl:
 				# XXX URL missing for transition
+				import windowinterface
+				msg = 'No URL specified in transition'
+				windowinterface.showmessage(msg)
+				if node.children:
+					node.children[i].set_infoicon('error', msg)
+				else:
+					node.set_infoicon('error', msg)
 				continue
 			nurl = ctx.findurl(nurl)
 			if writer.copycache.has_key(nurl):
