@@ -1,0 +1,22 @@
+Creating a standalone CMIF for the mac.
+---------------------------------------
+
+1.  Run macfreeze (PythonPPC should be 32Mb big at least) and create build.maccmif
+    folder.
+2.  Move to the Python folder as (build.maccmif), and leave an alias build.maccmif
+    in the cmif:mac folder.
+3.  Merge maccmifed.rsrc into frozenbundle.rsrc (take everything from maccmifed but the
+    STR# from frozenbundle). 
+11. Run mkattrdefresource.py (from cmif:mac). Put the result in attrdefs.rsrc
+	in the build folder.
+13.	Copy maccmifplay.rsrc to cmifbundle.rsrc.
+14.	Drop cmifbundle.rsrc on EditPythonPrefs and set the search path to be only
+	$(APPLICATION). Also set the "Don't show console window until needed" bit.
+	Open with Resedit and remove the 'alis' resource, if present.
+14. Open the project, set target names to "CMIF ...", set application signature to
+    "GRIN", set output filenames to "CMIF ....".
+14. Add attrdefs.rsrc.
+15. Run and test it.
+16.	Repeat step 14 for PPC.
+
+Don't forget to include fonts and such on the cdrom!!
