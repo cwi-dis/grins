@@ -599,6 +599,8 @@ class HierarchyView(HierarchyViewDialog):
 			if isinstance(focusobject, MMNode.MMNode) and focusobject is not self.focusnode:
 				self.select_node(focusobject);
 				self.aftersetfocus();
+				self.need_resize = 1
+				self.dirty = 1
 				self.draw();
 		else:
 			print "DEBUG: globalfocuschanged called but not used: ", focustype, focusobject
