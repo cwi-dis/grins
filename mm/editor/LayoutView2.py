@@ -1120,7 +1120,7 @@ class LayoutView2(LayoutViewDialog2):
 			newData = (animationData.getRectAt(tp), animationData.getColorAt(tp))
 			animationData.insertTimeData(index, tp, newData)
 			self.setKeyTimeIndex(index, nodeRef)
-			self.keyTimeSliderWidget.insertKey(tp)
+			self.animateControlWidget.insertKey(tp)
 			self.timeValueChanged = 1 # force layout to refresh
 		
 	def getKeyForThisTime(self, timeList, time):
@@ -1285,7 +1285,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.treeWidget = widgetList['TreeWidget'] = TreeWidget(self)
 		self.geomFieldWidget = widgetList['GeomFieldWidget'] = GeomFieldWidget(self)
 		widgetList['ZFieldWidget'] = ZFieldWidget(self)
-		self.keyTimeSliderWidget = widgetList['KeyTimeSliderWidget'] = KeyTimeSliderWidget(self)
+		self.animateControlWidget = widgetList['AnimateControlWidget'] = AnimateControlWidget(self)
 
 	def applyGeom(self, nodeRef, geom):
 		# make a list of attr top apply according the geometry
@@ -1397,8 +1397,8 @@ class LayoutView2(LayoutViewDialog2):
 			return
 
 		# not good enough
-		animationEnabled = self.keyTimeSliderWidget.isEnabled
-		animatedType, animatedNode = self.keyTimeSliderWidget._selected
+		animationEnabled = self.animateControlWidget.isEnabled
+		animatedType, animatedNode = self.animateControlWidget._selected
 		
 		if animationEnabled:
 			animationData = animatedNode.getAnimationData()
@@ -2393,6 +2393,9 @@ class LightWidget(Widget):
 			return 0, None
 			
 		return nodeType, nodeRef
+
+	def onCheckCtrl(self, ctrlName, value):
+		pass
 		
 #
 # z field widget management
@@ -2608,7 +2611,7 @@ class GeomFieldWidget(LightWidget):
 				h = value
 			self._context.applyGeom(nodeRef, (x,y,w,h))
 
-class KeyTimeSliderWidget(LightWidget):		
+class AnimateControlWidget(LightWidget):		
 	#
 	# inherited methods
 	#
@@ -2617,22 +2620,29 @@ class KeyTimeSliderWidget(LightWidget):
 		self._selected = (0, None)
 		self.isEnabled = 0
 		self.__selecting = 0
+		self.__enabling = 0
 		self.sliderCtrl = self._context.keyTimeSliderCtrl
 		self.sliderCtrl.enable(self.isEnabled)
 		self.sliderCtrl.setListener(self)
 
+		self.dialogCtrl.setListener('AnimateEnable', self)
+
 	def destroy(self):
 		self.sliderCtrl.removeListener()
+		self.dialogCtrl.removeListener('AnimateEnable')
 	
 	def selectNodeList(self, nodeRefList, keepShowedNodes=0):
 		nodeType, nodeRef = self.getSingleSelection(nodeRefList)
 		self._selected = (nodeType, nodeRef)
 		
 		if nodeType == TYPE_VIEWPORT:
+			self.dialogCtrl.enable('AnimateEnable',0)
 			self.__updateUnselected()
 		elif nodeType in (TYPE_MEDIA, TYPE_REGION):
+			self.dialogCtrl.enable('AnimateEnable',1)
 			self.__updateNode(nodeRef)
 		else:
+			self.dialogCtrl.enable('AnimateEnable',0)
 			self.__updateUnselected()
 		
 	#
@@ -2644,6 +2654,7 @@ class KeyTimeSliderWidget(LightWidget):
 		self.sliderCtrl.setKeyTimes([0.0, 1.0])		
 		self.sliderCtrl.setCursorPos(0)
 		self.sliderCtrl.enable(0)
+		self.dialogCtrl.setCheckCtrl('AnimateEnable',0)
 	
 	def __updateViewport(self, nodeRef):
 		self.__updateUnselected()
@@ -2672,6 +2683,7 @@ class KeyTimeSliderWidget(LightWidget):
 	
 		self.isEnabled = 1
 		self.sliderCtrl.enable(1)
+		self.dialogCtrl.setCheckCtrl('AnimateEnable',1)
 		
 	def insertKey(self, time):
 		if self.isEnabled:
@@ -2741,7 +2753,17 @@ class KeyTimeSliderWidget(LightWidget):
 			animationData.updateTime(index, time)
 			nodeRef.applyAnimationData(editmgr)
 			editmgr.commit()
+
 				
+	#
+	# interface implementation of 'dialog controls callback' 
+	#
+	
+	def onCheckCtrl(self, ctrlName, value):
+		if self.__enabling or ctrlName != 'AnimateEnable': return
+		self.__enabling = 1
+		self._context.onEnableAnimation()
+		self.__enabling = 0
 #
 # tree widget management
 #
