@@ -622,6 +622,7 @@ class TupleAttrEditorField(AttrEditorField):
 		return AttrEditorField.valuerepr(self, value)
 
 class ColorAttrEditorField(TupleAttrEditorField):
+	type = 'color'
 	def parsevalue(self, str):
 		import string
 		str = string.strip(str)
