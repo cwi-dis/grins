@@ -73,6 +73,7 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		# that fit on such a page
 		#
 		attribnames = map(lambda a: a.getname(), attriblist)
+		print 'DBG NAMES:', attribnames
 		for cl in MULTI_ATTR_CLASSES:
 			if tabpage_multi_match(cl, attribnames):
 				# Instantiate the class and filter out the attributes taken care of
@@ -513,9 +514,71 @@ class InfoTabPage(MultiTabPage):
 			value = self.attreditor._getlabel(self.item0+item)
 			field._savevaluefrompage(value)
 			print 'save', attr, item, value
+
+class GeneralTabPage(MultiTabPage):
+	TAB_LABEL='General'
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_GENERAL
+	ITEM_GROUP=1
+	ITEM_NODENAME=3
+	ITEM_CHANNEL=5
+	ITEM_CHANNELPROPS=6
+	ITEM_NODETYPE=8
+	N_ITEMS=8
+	_attr_to_item = {
+		'name': ITEM_NODENAME,
+		'channel': ITEM_CHANNEL,
+		'.type': ITEM_NODETYPE,
+	}
+	attrs_on_page = _attr_to_item.keys()
+	
+	def init_controls(self, item0):
+		rv = MultiTabPage.init_controls(self, item0)
+		self._channelpopup = windowinterface.SelectWidget(self.attreditor._dialog, 
+				self.item0+self.ITEM_CHANNEL, [], None)
+		self._typepopup = windowinterface.SelectWidget(self.attreditor._dialog,
+				self.item0+self.ITEM_NODETYPE, [], None)
+		return rv
+
+	def close(self):
+		self._channelpopup.delete()
+		self._typepopup.delete()
+		TabPage.close(self)
+		
+	def do_itemhit(self, item, event):
+		if item == self.item0+self.ITEM_NODENAME:
+			return 1
+		elif item == self.item0+self.ITEM_CHANNEL:
+			# popup
+			return 1
+		elif item == self.item0+self.ITEM_CHANNELPROPS:
+			self.fieldlist[1].channelprops()
+			return 1
+		elif item == self.item0+self.ITEM_NODETYPE:
+			# popup
+			return 1
+		return 0
+		
+	def update(self):
+		value = self.fieldlist[0]._getvalueforpage()
+		self.attreditor._setlabel(self.item0+self.ITEM_NODENAME, value)
+		value = self.fieldlist[1]._getvalueforpage()
+		list = self.fieldlist[1].getoptions()
+		self._channelpopup.setitems(list, value)
+		value = self.fieldlist[2]._getvalueforpage()
+		list = self.fieldlist[2].getoptions()
+		self._typepopup.setitems(list, value)
+
+	def save(self):
+		value = self.attreditor._getlabel(self.item0+self.ITEM_NODENAME)
+		self.fieldlist[0]._savevaluefrompage(value)
+		value = self._channelpopup.getselectvalue()
+		self.fieldlist[1]._savevaluefrompage(value)
+		value = self._typepopup.getselectvalue()
+		self.fieldlist[2]._savevaluefrompage(value)
 	
 SINGLE_ATTR_CLASSES = [ FileTabPage, ColorTabPage, OptionTabPage, StringTabPage ]
-MULTI_ATTR_CLASSES = [ InfoTabPage, ChannelTabPage, CaptionChannelTabPage ]
+MULTI_ATTR_CLASSES = [ GeneralTabPage, InfoTabPage, ChannelTabPage, CaptionChannelTabPage ]
 
 def tabpage_single_find(attrfield):
 	"""Find the best single-attribute page class that can handle this attribute field"""
