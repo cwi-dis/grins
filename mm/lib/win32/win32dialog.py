@@ -595,6 +595,10 @@ class SelectElementDlg(ResDialog):
 				smiltype = self.smil_mediatype.get(node.GetChannelType(), 'ref')
 				wrapper = self.MMObjWrapper(node, smiltype)
 				citemid = self.insertMMObjWrapper(wrapper, itemid)
+			elif ntype in ('animpar', 'animate'):
+				# XXX for now, do not include animate nodes.
+				# need to handle a special case for that.
+				continue
 			else:
 				smiltype = node.GetType()
 				wrapper = self.MMObjWrapper(node, smiltype)
