@@ -31,7 +31,7 @@ class RealWindowChannel(Channel.ChannelWindowAsync, RealChannel.RealChannel):
 		return 1
 
 	def do_play(self, node):
-		if not self.playit(node, self._getoswindow()):
+		if not self.playit(node, self._getoswindow(), self._getoswinpos() ):
 			self.playdone(0)
 
 	# toggles between pause and run
@@ -52,3 +52,9 @@ class RealWindowChannel(Channel.ChannelWindowAsync, RealChannel.RealChannel):
 			return self.window._wid
 		else:
 			return None
+			
+	def _getoswinpos(self):
+		if hasattr(self.window, "qdrect"):
+			x0, y0, x1, y1 = self.window.qdrect()
+			return ((x0, y0), (x1-x0, y1-y0))
+		return None

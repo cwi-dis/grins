@@ -83,7 +83,7 @@ class RealChannel:
 				return 0
 		return 1
 
-	def playit(self, node, window = None):
+	def playit(self, node, window = None, winpossize=None):
 		if not self.__rmaplayer:
 			return 0
 		self.__loop = self.getloop(node)
@@ -93,6 +93,9 @@ class RealChannel:
 		self.__rmaplayer.SetStatusListener(self)
 		if window is not None:
 			self.__rmaplayer.SetOsWindow(window)
+		if winpossize is not None:
+			pos, size = winpossize
+			self.__rmaplayer.SetPositionAndSize(pos, size)
 		self.__rmaplayer.OpenURL(url)
 		self.__rmaplayer.Begin()
 		self.__engine.startusing()
