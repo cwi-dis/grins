@@ -725,6 +725,7 @@
 #define IDC_ANIMATE_P0L                 1456
 #define IDC_ANIMATE_P100L               1457
 #define IDC_ANIMATE_ENABLE              1458
+#define IDC_ANIMATE_P50L                1459
 #define IDC_PANEFOCUS                   1460
 #define IDC_TREEFOCUS                   1461
 #define IDC_IMMINSTLABEL                1461
