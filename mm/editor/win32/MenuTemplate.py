@@ -432,7 +432,7 @@ POPUP_HVIEW_STRUCTURE = (
 #		(FLAG_PRO, ENTRY, 'Edit in Temporal view', None, EDIT_TVIEW),
 		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
 		#(FLAG_ALL, CASCADE, '&Merge', (
-		(FLAG_ALL, ENTRY, 'Merge with parent', None, MERGE_PARENT),
+		(FLAG_ALL, ENTRY, '&Merge with parent', None, MERGE_PARENT),
 		#	(FLAG_ALL, ENTRY, 'with child', None, MERGE_CHILD),
 		#	)),
 		(FLAG_ALL, CASCADE, '&Insert', (
@@ -504,9 +504,10 @@ POPUP_HVIEW_STRUCTURE = (
 		(FLAG_ALL, ENTRY, '&Expand/Collapse', None, EXPAND),
 		(FLAG_ALL, ENTRY, 'E&xpand all', None, EXPANDALL),
 		(FLAG_ALL, ENTRY, 'C&ollapse all', None, COLLAPSEALL),
+		(FLAG_ALL, TOGGLE, 'S&how Time in Structure', None, CORRECTLOCALTIMESCALE),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Event &source', None, CREATE_BEGIN_EVENT_SOURCE),
-		(FLAG_ALL, ENTRY, 'Event destination', None, CREATE_BEGIN_EVENT_DESTINATION),
+		(FLAG_ALL, ENTRY, 'E&vent destination', None, CREATE_BEGIN_EVENT_DESTINATION),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Finish hyperlin&k to selection', None, FINISH_LINK),
 		(FLAG_ALL, SEP,),
