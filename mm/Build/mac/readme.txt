@@ -1,34 +1,29 @@
-Welcome to the GRiNS Editor and Player for SMIL Release 1.0 for
-Macintosh.  The GRiNS Editor for SMIL lets you create, edit and preview
-SMIL presentations; the GRiNS Player for SMIL lets you preview SMIL
-presentations.  The GRiNS Editor and Player for SMIL are products of
-ORATRiX Development BV.  For more information on GRiNS and SMIL and
-about the company, see our Web site http://www.oratrix.com/.
+Welcome to Oratrix GRiNS for RealSystem G2, version 1.5. GRiNS for RealSystem G2
+lets you create, edit and preview SMIL presentations and is tailored towards
+presentations that will be viewed with RealPlayer G2.
 
-In order to be able to run the GRiNS Editor for SMIL you need a
-license key.  See the web site for information on how to obtain a key.
-You do not need a license key to use the GRiNS Player for SMIL.
+GRiNS for RealSystem G2 is available in a Pro version and a Lite version,
+and for various platforms. See the Oratrix website, www.oratrix.com, for details.
+
+In order to preview your presentations you need RealPlayer G2 or later, either
+in the Basic or Plus version. See the RealNetworks website www.real.com
+for details.
+
+In order to be able to run GRiNS you need a license key. You have been provided
+with such a key when you bought your copy of GRiNS or downloaded your evaluation
+version. You have to enter this key when you first start GRiNS.
 
 The document QuickStart.pdf contains information on how to use the
 editor.  You need Adobe Acrobat Reader (http://www.adobe.com/) to read 
 the Quick Start Guide.  There are also tutorials on the ORATRiX web
-site.
+site. Release notes are available in the file relnotes.html in the same folder
+as the application.
 
-If the Real Networks RealPlayer G2 is installed (see
-http://www.real.com/) you can also view SMIL documents that contain
-Real Media assets.
+RealNetworks suggest having at least 32Mb of real memory and 64Mb of
+virtual memory. We strongly suggest you follow these guidelines, as
+low-memory conditions may otherwise result in rather spectacular crashes.
 
-The folder Examples contains some example SMIL documents that you can
-view (and edit) using the GRiNS Editor and Player.
-
-See the Release Notes (relnotes.html or
-http://www.oratrix.com/GRiNS/Support/Relnotes/macintosh-1.0/) for more
-information.
-
-To uninstall GRiNS simply remove this whole folder: everything is installed
-here (with the sole exception of a small preferences file in the System
-Folder).
-
+See the Release notes, relnotes.html, 
 For more information see:
     http://www.oratrix.com/
 or send e-mail to
