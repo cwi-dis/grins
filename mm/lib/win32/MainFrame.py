@@ -107,9 +107,10 @@ if IsPlayer:
 	usercmd.HIDE_LAYOUTVIEW=None
 	usercmd.HIDE_USERGROUPVIEW=None
 	usercmd.HIDE_TRANSITIONVIEW=None
-	usercmd.HIDE_SOURCE=usercmd.SOURCE
+#	usercmd.HIDE_SOURCE=usercmd.SOURCE
 	usercmd.HIDE_LAYOUTVIEW2=None
-	usercmd.HIDE_TEMPORALVIEW=None
+#	usercmd.HIDE_TEMPORALVIEW=None
+	usercmd.HIDE_SOURCEVIEW=usercmd.SOURCEVIEW
 
 # This is a list of classes that are instantiated for each particular view.
 # Not the simplest way of coding it, but it seems to work -mjvdg.
@@ -121,9 +122,9 @@ appview={
 	4:{'cmd':usercmd.HIDE_LAYOUTVIEW,'title':'Layout view','id':'lview_','class':_LayoutView,'freezesize':1},
 	5:{'cmd':usercmd.HIDE_USERGROUPVIEW,'title':'User groups','id':'ugview_','class':_UsergroupView,'freezesize':1},
 	6:{'cmd':usercmd.HIDE_TRANSITIONVIEW,'title':'Transitions','id':'trview_','class':_TransitionView,'freezesize':1},
-	7:{'cmd':usercmd.HIDE_SOURCE,'title':'Source','id':'sview_','class':_SourceView,'hosted':0},
+	7:{'cmd':usercmd.HIDE_SOURCEVIEW,'title':'Source','id':'sview_','class':_SourceView,'hosted':0},
 	8:{'cmd':usercmd.HIDE_LAYOUTVIEW2,'title':'Source','id':'lview2_','class':_LayoutView2,'hosted':0},
-	9:{'cmd':usercmd.HIDE_TEMPORALVIEW,'title':'Temporal view','id':'tview_','class':_ChannelView,},
+#	9:{'cmd':usercmd.HIDE_TEMPORALVIEW,'title':'Temporal view','id':'tview_','class':_ChannelView,},
 }
 
 
@@ -677,9 +678,10 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		return self._doc
 
 	# Create a text viewer
-	def textwindow(self,text):
+	def textwindow(self,text, readonly = 0):
 		sv=self.newviewobj('sview_')
 		sv.settext(text)
+		sv.set_readonly(readonly)
 		self.showview(sv,'sview_')
 		if self._cmifdoc:
 			sv.GetParent().SetWindowText('Source (%s)'%self._cmifdoc.basename)

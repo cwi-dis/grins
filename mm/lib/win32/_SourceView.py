@@ -25,27 +25,35 @@ class _SourceView(docview.EditView):
 		self._text=''
 		self._close_cmd_list=[]
 		self.mother = None
+		self.readonly = 0
 
 	# Create the OS window
 	def createWindow(self,parent):
 		self.CreateWindow(parent)
+
+	def set_readonly(self, readonly):
+		self.readonly = readonly
 	
 	# Called by the framework after the OS window has been created
 	def OnInitialUpdate(self):
 		edit=self.GetEditCtrl()	# Is it just me, or does this only return self?
 		edit.SetWindowText(self._text)
-		#edit.SetReadOnly(1)
+		if self.readonly:
+			edit.SetReadOnly(1)
 		self._mdiframe=(self.GetParent()).GetMDIFrame()
 
 	# Called by the framework before this window is closed
 	def OnClose(self):
-		saveme = windowinterface.GetYesNoCancel("Do you want to keep your changes?", self.GetParent())
-		if saveme==0:		# Which means the user clicked "yes"
-			edit = self.GetEditCtrl()
-			# Bugger. The TopLevel is miles away, through several rather bizarre API calls.
-			# For later, anyway:
-			text = edit.GetWindowText()
-			self.mother.save_source_callback(text)
+		if self.mother:
+			self.mother.close_source_callback()
+##		saveme = windowinterface.GetYesNoCancel("Do you want to keep your changes?", self.GetParent())
+##		if saveme==0:		# Which means the user clicked "yes"
+##			edit = self.GetEditCtrl()
+##			# Bugger. The TopLevel is miles away, through several rather bizarre API calls.
+##			# For later, anyway:
+##			text = edit.GetWindowText()
+##			if self.mother:
+##				self.mother.save_source_callback(text)
 		if self._closecmdid>0:
 			self.GetParent().GetMDIFrame().PostMessage(win32con.WM_COMMAND,self._closecmdid)
 		else:
@@ -66,6 +74,9 @@ class _SourceView(docview.EditView):
 		# if already visible, update text in window
 		if self._mdiframe is not None:
 			self.GetEditCtrl().SetWindowText(self._text)
+
+	def get_text(self):
+		return self.GetEditCtrl().GetWindowText()
 
 	def setmother(self, mother):
 		self.mother = mother

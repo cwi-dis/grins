@@ -71,7 +71,7 @@ class TopLevelDialog:
 	def setplayerstate(self, state):
 		self.window.setplayerstate(state)
 
-	def showsource(self, source = None, optional=0):
+	def showsource(self, source = None, optional=0, readonly = 0):
 		if source is None:
 			if self.source is not None:
 				self.source.close()
@@ -80,7 +80,7 @@ class TopLevelDialog:
 			if self.source is not None:
 				self.source.settext(source)
 			else:
-				self.source = self.window.textwindow(source)
+				self.source = self.window.textwindow(source, readonly=1)
 				self.source.setmother(self)
 
 	def mayclose(self):

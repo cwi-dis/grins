@@ -17,7 +17,7 @@ __version__ = "$Id$"
 ##	* The view does it's stuff to the data structures through calls
 ##	to methods of em.
 ##	* the view calls em.commit(). commit will record the changes
-##	and let all other views know that the document has changed.
+##	and let all views know that the document has changed.
 
 ##A better scheme would be as follows:
 ##        - The edit manager solely records changes to models.

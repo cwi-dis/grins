@@ -116,8 +116,10 @@ class TRANSITIONVIEW(_CommandBase):
 	help = 'Show Transition view'
 class LAYOUTVIEW2(_CommandBase):
 	help = 'Show new layout view'
-class TEMPORALVIEW(_CommandBase):
-	help = 'Show time-based view'
+#class TEMPORALVIEW(_CommandBase):
+#	help = 'Show time-based view'
+class SOURCEVIEW(_CommandBase):
+	help = 'Show the SMiL source'
 
 
 # These are to hide the various views. They are basically
@@ -133,8 +135,8 @@ class HIDE_USERGROUPVIEW(_CommandBase): pass
 class HIDE_SOURCE(_CommandBase): pass
 class HIDE_TRANSITIONVIEW(_CommandBase): pass
 class HIDE_LAYOUTVIEW2(_CommandBase): pass
-class HIDE_TEMPORALVIEW(_CommandBase):pass
-
+#class HIDE_TEMPORALVIEW(_CommandBase):pass
+class HIDE_SOURCEVIEW(_CommandBase): pass
 #
 # Player view commands
 #
@@ -167,8 +169,8 @@ class PASTE_AFTER(_CommandBase):
 PASTE=PASTE_AFTER
 class PASTE_UNDER(_CommandBase):
 	help = 'Paste copied/cut node under selected node'
-class EDIT_TVIEW(_CommandBase):
-	help = 'Edit this node in the temporal view.'
+##class EDIT_TVIEW(_CommandBase):
+##	help = 'Edit this node in the temporal view.'
 class NEW_BEFORE(_CommandBase):
 	help = 'Create new node before selected node'
 class NEW_BEFORE_IMAGE(_CommandBase):
