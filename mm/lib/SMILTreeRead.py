@@ -72,8 +72,8 @@ wallclock = re.compile(			# "wallclock(" wallclock-value ")"
 	r'wallclock\((?P<wallclock>[^()]+)\)$'
 	)
 wallclockval = re.compile(
-	r'(?:(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})T)?'	# date (optional)
-	r'(?P<hour>\d{2}):(?P<min>\d{2})(?::(?P<sec>\d{2}(?:\.\d+)?))?'	# time (required)
+	r'(?P<date>(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})T?)?'	# date (optional)
+	r'(?P<time>(?P<hour>\d{2}):(?P<min>\d{2})(?::(?P<sec>\d{2}(?:\.\d+)?))?)?'	# time (optional)
 	r'(?:(?P<Z>Z)|(?P<tzsign>[-+])(?P<tzhour>\d{2}):(?P<tzmin>\d{2}))?$'	# timezone (optional)
 	)
 screen_size = re.compile(_opS + r'(?P<x>\d+)' + _opS + r'[xX]' +
@@ -323,13 +323,32 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					if res is None:
 						self.syntax_error('bad wallclock value')
 						continue
-					# can't fail because of matching regexp
-					yr,mt,dy,hr,mn,tzhr,tzmn = map(lambda v: v and string.atoi(v), res.group('year','month','day','hour','min','tzhour','tzmin'))
-					sc, tzsg = res.group('sec', 'tzsign')
-					if sc is not None:
-						sc = string.atof(sc)
+					date = res.group('date')
+					time = res.group('time')
+					if date is None and time is None:
+						self.syntax_error('bad wallclock value')
+						continue
+					if date is not None:
+						yr,mt,dy = map(lambda v: v and string.atoi(v), res.group('year','month','day'))
 					else:
-						sc = 0
+						yr = mt = dy = None
+					if time is None:
+						hr = mn = sc = 0
+						if date[-1] == 'T':
+							self.syntax_error('bad wallclock value')
+							continue
+					else:
+						if date is not None and date[-1] != 'T':
+							self.syntax_error('bad wallclock value')
+							continue
+						hr,mn = map(lambda v: v and string.atoi(v), res.group('hour','min'))
+						sc = res.group('sec')
+						if sc is not None:
+							sc = string.atof(sc)
+						else:
+							sc = 0
+					tzsg = res.group('tzsign')
+					tzhr,tzmn = map(lambda v: v and string.atoi(v), res.group('tzhour','tzmin'))
 					if res.group('Z') is not None:
 						tzhr = tzmn = 0
 						tzsg = '+'
