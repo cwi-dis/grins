@@ -27,6 +27,7 @@ except:
 	Res.OpenResFile(':maccmifed.rsrc')
 	Res.OpenResFile(':playercontrols.rsrc')
 	Res.OpenResFile(':common.rsrc')
+	Res.OpenResFile(':cmifedballoons.rsrc')
 Res.GetResource('DLOG', ID_SPLASH_DIALOG)
 
 # Now time for real work.
