@@ -7,11 +7,11 @@ import sys
 
 from FeatureSet import *
 
-feature_set = [EXPORT_CMIF, EXPORT_SMIL2, EXPORT_QT, EXPORT_WMP,
+feature_set = [EXPORT_SMIL1, EXPORT_SMIL2, EXPORT_REAL,
                PLAYER_VIEW, STRUCTURE_VIEW, TIMELINE_VIEW, LAYOUT_VIEW, HYPERLINKS_VIEW, CHANNEL_VIEW,
                USER_GROUPS, TRANSITION_VIEW,
                H_MODIFY_STRUCTURE
-               ];
+               ]
 
 #
 version = 'pro'
