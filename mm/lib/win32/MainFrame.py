@@ -43,49 +43,9 @@ else:
 # when doc duration is resolved
 SHOW_PLAYER_SEEK = 0
 
-import features
-
 ###########################################################
 
-from _PlayerView import _PlayerView  
-from _SourceView import _SourceView
-
-if features.editor:
-	from _LayoutView import _LayoutView
-	from _LayoutView2 import _LayoutView2
-	from _UsergroupView import _UsergroupView
-	from _TransitionView import _TransitionView
-	from _LinkView import _LinkView
-	from _StructView import _StructView
-	from AttrEditForm import AttrEditForm
-	from _AssetsView import _AssetsView
-	from _ErrorsView import _ErrorsView
-	
-	# editor document views
-	_HierarchyView =_StructView
-	# This is a list of classes that are instantiated for each particular view.
-	# Not the simplest way of coding it, but it seems to work -mjvdg.
-	##### THIS IS ONLY ACCESSED WITHIN THIS FILE #####
-	appview={
-		'pview_':{'cmd':usercmd.HIDE_PLAYERVIEW,'title':'Previewer','class':_PlayerView,},
-		'hview_':{'cmd':usercmd.HIDE_HIERARCHYVIEW,'title':'Structured Timeline','class':_HierarchyView,},
-		'leview_':{'cmd':usercmd.HIDE_LINKVIEW,'title':'Hyperlinks', 'class':_LinkView},
-		'lview_':{'cmd':usercmd.HIDE_LAYOUTVIEW,'title':'Layout', 'class':_LayoutView},
-		'ugview_':{'cmd':usercmd.HIDE_USERGROUPVIEW,'title':'Custom Tests','class':_UsergroupView},
-		'trview_':{'cmd':usercmd.HIDE_TRANSITIONVIEW,'title':'Transitions','class':_TransitionView},
-		'sview_':{'cmd':usercmd.HIDE_SOURCEVIEW,'title':'Source','class':_SourceView},
-		'lview2_':{'cmd':usercmd.HIDE_LAYOUTVIEW2,'title':'Layout','class':_LayoutView2},
-		'attr_edit':{'cmd':-1,'title':'Properties','class':AttrEditForm},
-		'aview_':{'cmd':usercmd.HIDE_ASSETSVIEW,'title':'Assets','class':_AssetsView,},
-		'erview_':{'cmd':usercmd.HIDE_ERRORSVIEW,'title':'Error messages','class':_ErrorsView},
-	}
-else:
-	usercmd.HIDE_PLAYERVIEW = usercmd.CLOSE
-	usercmd.HIDE_SOURCEVIEW = usercmd.SOURCEVIEW
-	appview={
-		'pview_':{'cmd':usercmd.HIDE_PLAYERVIEW,'title':'Player','class':_PlayerView,},
-		'sview_':{'cmd':usercmd.HIDE_SOURCEVIEW,'title':'Source','class':_SourceView},
-		}
+from MainFrameSpecific import appview
 
 
 #########################################################
