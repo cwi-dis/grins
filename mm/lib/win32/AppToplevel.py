@@ -120,6 +120,8 @@ class _Toplevel:
 		
 	# Call by the core to close the application
 	def close(self):
+		if self._subwindows:
+			self._subwindows[0].onApplicationExit()
 		for func, args in self._closecallbacks:
 			apply(func, args)
 		for win in self._subwindows[:]:
@@ -336,11 +338,11 @@ class _Toplevel:
 
 		# enter application loop
 		win32ui.GetApp().RunLoop()
-		
+
 		# cleanup
 		wnd.KillTimer(id)
 		wnd.DestroyWindow()
-		
+
 	def OnTimer(self, params):
 		self.serve_events()
 		
