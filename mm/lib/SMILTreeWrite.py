@@ -90,8 +90,8 @@ def getchname(writer, node):
 
 def getduration(writer, node, attr):
 	duration = node.GetRawAttrDef(attr, -1)
-	if duration == -1:
-		return None
+	if duration == -1:		# infinite duration...
+		duration = 60*60*24	# ...1 day long enough?
 	sign, value = encodeduration(duration)
 	if sign != '+':
 		print '** Illegal duration', \
