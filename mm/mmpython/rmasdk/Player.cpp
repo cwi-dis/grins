@@ -73,7 +73,10 @@ PlayerObject::PlayerObject() :
 PlayerObject::~PlayerObject()
 {
 	if (pContext)
+		{
 		pContext->m_pClientSink->SetPyAdviceSink(NULL);
+		pContext->m_pErrorSink->SetPyErrorSink(NULL);
+		}
 	if (pPlayer)
 		pPlayer->Stop();
 	ReleaseObjects();
