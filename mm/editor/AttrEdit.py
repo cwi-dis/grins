@@ -2055,11 +2055,18 @@ class ScreenSizeAttrEditorField(TupleAttrEditorField):
 		"""Return internal representation of string."""
 		if str == '':
 			return None
-		tuplevalue = TupleAttrEditorField.parsevalue(self, str)
-		if tuplevalue[0] <= 0 or tuplevalue[1] <= 0:
-			return None
-		return tuplevalue
+		try:
+			tuplevalue = TupleAttrEditorField.parsevalue(self, str)
+		except (ValueError, MTypeError, MSyntaxError), eparam:
+			self.__error()
 			
+		if tuplevalue[0] <= 0 or tuplevalue[1] <= 0:
+			self.__error()
+		return tuplevalue
+
+	def __error(self):
+		raise MParsingError, 'The screen height and width values have to be pixel values and both greater than 0,\n or leave the field empty if not set'
+		
 import EventEditor
 
 class TimelistAttrEditorField(AttrEditorField):
