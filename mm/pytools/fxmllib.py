@@ -128,7 +128,7 @@ _ExternalId = '(?:SYSTEM|PUBLIC'+_S+_PublicLiteral+')'+_S+_SystemLiteral
 externalid = re.compile(_ExternalId)
 ndata = re.compile(_S+'NDATA'+_S+'(?P<name>'+_Name+')')
 doctype = re.compile('<!DOCTYPE'+_S+'(?P<docname>'+_Name+')(?:'+_S+_ExternalId+')?'+_opS+'(?:\\[(?P<data>(?:'+_S+'|%'+_Name+';|'+comment.pattern+'|<(?:![^-]|[^!])(?:[^\'">]|\'[^\']*\'|"[^"]*")*>)*)\\]'+_opS+')?>')
-              
+
 xmldecl = re.compile('<\?xml'+
                      _S+'version'+_opS+'='+_opS+'(?P<version>'+_QStr+')'+
                      '(?:'+_S+'encoding'+_opS+'='+_opS+
@@ -174,16 +174,23 @@ bracket = re.compile('[<>\'"%]')
 conditional = re.compile(r'<!\['+_opS+'(?:(?P<inc>INCLUDE)|(?P<ign>IGNORE))'+_opS+r'\[')
 
 class XMLParser:
-    """XML document parser."""
+    """XMLParser([ xmlns ]) -> instance
+
+       XML document parser.
+       There is one optional argument:
+       xmlns: understand XML Namespaces (default is 1)."""
+
     def __init__(self, xmlns = 1):
         self.__xmlns = xmlns            # whether or not to parse namespaces
         self.reset()
 
     def reset(self):
-        """Reset parser to pristine state."""
-        self.docname = None
+        """reset()
+
+           Reset parser to pristine state."""
+        self.docname = None             # The outermost element in the document (according to the DTD)
         self.rawdata = []
-        self.entitydefs = {             # & entities defined in DTD
+        self.entitydefs = {             # & entities defined in DTD (plus the default ones)
             'lt': '&#60;',              # <
             'gt': '&#62;',              # >
             'amp': '&#38;',             # &
@@ -194,14 +201,19 @@ class XMLParser:
         self.elems = {}                 # elements and their content/attrs
         self.baseurl = '.'              # base URL for external DTD
         self.ids = {}                   # IDs encountered in document
-        self.notation = {}
+        self.notation = {}              # NOTATIONs
 
     def feed(self, data):
-        """Feed data to parser."""
+        """feed(data)
+
+           Feed data to parser."""
         self.rawdata.append(data)
 
     def close(self):
-        """End of data, finish up parsing."""
+        """close()
+
+           End of data, finish up parsing."""
+        # Actually, this is where we start parsing.
         data = string.join(self.rawdata, '')
         self.rawdata = []
         self.parse(data)
@@ -214,14 +226,18 @@ class XMLParser:
         # it was originally.
         i = 0
         if data[:2] == '\376\377':
+            # UTF-16, big-endian
             enc = 'utf-16-be'
             i = 2
         elif data[:2] == '\377\376':
+            # UTF-16, little-endian
             enc = 'utf-16-le'
             i = 2
         elif data[:4] == '\x00\x3C\x00\x3F':
+            # UTF-16, big-endian
             enc = 'utf-16-be'
         elif data[:4] == '\x3C\x00\x3F\x00':
+            # UTF-16, little-endian
             enc = 'utf-16-le'
         else:
             enc = None                  # unknowns as yet
@@ -257,6 +273,7 @@ class XMLParser:
 ##            self.handle_xml(encoding, standalone)
             i = res.end(0)
         if enc is None:
+            # default is UTF 8
             enc = 'utf-8'
         if type(data) is not type(u'a'):
             try:
@@ -266,7 +283,7 @@ class XMLParser:
         else:
             data = data[i:]
         return data
-        
+
     def __normalize_linefeed(self, data):
         # normalize line endings: first \r\n -> \n, then \r -> \n
         return u'\n'.join(u'\n'.join(data.split(u'\r\n')).split(u'\r'))
@@ -279,7 +296,9 @@ class XMLParser:
         return data
 
     def parse(self, data):
-        """Parse the data as an XML document."""
+        """parse(data)
+
+           Parse the data as an XML document."""
         data = self.__parse_textdecl(data, 1)
         data = self.__normalize_linefeed(data)
         # (Comment | PI | S)*
@@ -783,10 +802,10 @@ class XMLParser:
         # the "name" arg is just part between # and ;
         if name[0] == 'x':
             # e.g. &#x26;
-            n = string.atoi(name[1:], 16)
+            n = int(name[1:], 16)
         else:
             # e.g. &#38;
-            n = string.atoi(name)
+            n = int(name)
         try:
             c = unichr(n)
         except ValueError:
@@ -806,7 +825,11 @@ class XMLParser:
         return self.__normalize_linefeed(val)
 
     def parse_dtd(self, data, internal = 1):
-        """Parse the DTD.
+        """parse_dtd(data[, internal ])
+
+           Parse the DTD.
+           This method is called by the parse_doctype method and is
+           provided so that parse_doctype can be overridden.
            Argument is a string containing the full DTD.
            Optional argument internal is true (default) if the DTD is
            internal."""
@@ -1034,9 +1057,6 @@ class XMLParser:
             return res.end(0), mixed, 0, 0
         dfa = []
         i, start, end = self.__dfa1(data, i, dfa)
-##        import pprint
-##        pprint.pprint(dfa)
-##        print start, end
         return i, dfa, start, end
 
     def __dfa1(self, data, i, dfa):
@@ -1108,7 +1128,17 @@ class XMLParser:
         return i, start, end
 
     def parse_doctype(self, tag, publit, syslit, data):
-        """Parse the DOCTYPE."""
+        """parse_doctype(tag, publit, syslit, data)
+
+           Parse the DOCTYPE.
+
+           This method is called by the handle_doctype callback method
+           and is provided so that handle_doctype can be overridden.
+           The arguments are:
+           tag: the name of the outermost element of the document;
+           publit: the Public Identifier of the DTD (or None);
+           syslit: the System Literal of the DTD (or None);
+           data: the internal subset of the DTD (or None)."""
         if data:
             self.parse_dtd(data)
         if syslit:
@@ -1123,6 +1153,9 @@ class XMLParser:
             self.baseurl = baseurl
 
     def __error(self, message, data = None, i = None, fatal = 1):
+        # called for all syntax errors
+        # this either raises an exception (Error) or calls
+        # self.syntax_error which may be overridden
         if data is not None and i is not None:
             self.lineno = lineno = string.count(data, '\n', 0, i) + 1
         else:
@@ -1187,7 +1220,7 @@ class XMLParser:
     # To be overridden -- handlers for unknown objects
     def unknown_starttag(self, tagname, attrs):
         pass
-        
+
     def unknown_endtag(self, tagname):
         pass
 
