@@ -41,6 +41,7 @@ class Channel:
 		self._attrdict = attrdict
 		self._is_shown = 0
 		self._name = name
+		self._anchors = {}
 		self._playcontext = None
 		self._played_anchors = []
 		self._played_node = None
@@ -77,6 +78,7 @@ class Channel:
 		del self._attrdict
 		del self._deviceno
 		del self._name
+		del self._anchors
 		del self._playcontext
 		del self._played_anchors
 		del self._played_node
@@ -194,6 +196,15 @@ class Channel:
 		if self._playstate == PLAYING:
 			self.playstop()
 
+	def highlight(self):
+		# highlight the channel instance (dummy for channels
+		# without windows)
+		pass
+
+	def unhighlight(self):
+		# stop highlighting the channel instance
+		pass
+
 	def pause(self):
 		# Pause playing the current node.
 		# Not yet implemented.
@@ -280,6 +291,10 @@ class Channel:
 			if not self._player.toplevel.waitevent():
 				return
 
+	def add_anchor(self, button, func, arg):
+		if button:
+			self._anchors[button] = (func, arg)
+
 	def anchor_triggered(self, node, anchorlist, arg):
 		return self._playcontext.anchorfired(node, anchorlist, arg)
 
@@ -325,8 +340,7 @@ class Channel:
 		self._playcontext = self._armcontext
 		self._playstate = PLAYING
 		self._played_node = node
-		for (name, type, button) in self._played_anchors:
-			self._player.del_anchor(button)
+		self._anchors = {}
 		self._played_anchors = self._armed_anchors
 		self._armed_anchors = []
 		durationattr = MMAttrdefs.getattr(node, 'duration')
@@ -338,8 +352,8 @@ class Channel:
 				self._has_pause = 1
 			else:
 				f = self._playcontext.anchorfired
-			self._player.add_anchor(button, f, \
-				  (node, [(name, type)], None))
+			self.add_anchor(button, f,
+					(node, [(name, type)], None))
 		self._qid = None
 
 	def play_1(self):
@@ -492,8 +506,7 @@ class Channel:
 			raise error, 'not played'
 		self._playstate = PIDLE
 		# delete any anchors that may still exist
-		for (name, type, button) in self._played_anchors:
-			self._player.del_anchor(button)
+		self._anchors = {}
 		self._played_anchors = []
 		self._played_node = None
 
@@ -583,7 +596,7 @@ class Channel:
 	def defanchor(self, node, anchor):
 		# This method is called when the user defines a new anchor. It
 		# may be overridden by derived classes.
-		windowinterface.showmessage('Channel '+self._name+\
+		windowinterface.showmessage('Channel '+self._name+
 			  ' does not support\nediting of anchors (yet)')
 		return anchor
 
@@ -623,6 +636,15 @@ class ChannelWindow(Channel):
 		del self.armed_display
 		del self.played_display
 
+	def highlight(self):
+		if self._is_shown:
+			self.window.pop()
+			self.window.showwindow()
+
+	def unhighlight(self):
+		if self._is_shown:
+			self.window.dontshowwindow()
+
 	def save_geometry(self):
 		if self._is_shown:
 			x, y, w, h = self.window.getgeometry()
@@ -638,6 +660,28 @@ class ChannelWindow(Channel):
 		self._is_waiting = 0
 		if self._is_shown:
 			self.window.setcursor('')
+
+	def mousepress(self, arg, window, event, value):
+		# a mouse button was pressed
+		buttons = value[2]
+		if len(buttons) == 0:
+			self.highlight()
+		elif len(buttons) == 1:
+			button = buttons[0]
+			button.highlight()
+			try:
+				f, a = self._anchors[button]
+			except KeyError:
+				pass
+			else:
+				windowinterface.setcursor('watch')
+				dummy = apply(f, a)
+				windowinterface.setcursor('')
+			if not button.is_closed():
+				button.unhighlight()
+
+	def mouserelease(self, arg, window, event, value):
+		self.unhighlight()
 
 	def do_show(self):
 		if debug:
@@ -665,7 +709,7 @@ class ChannelWindow(Channel):
 			else:
 				pchan = None
 				windowinterface.showmessage(
-					'Base window '+`pname`+' for '+\
+					'Base window '+`pname`+' for '+
 					`self._name`+' not found')
 				
 			if pchan and self in pchan._subchannels:
@@ -731,18 +775,17 @@ class ChannelWindow(Channel):
 			self.window.bgcolor(self._attrdict['bgcolor'])
 		if self._attrdict.has_key('fgcolor'):
 			self.window.fgcolor(self._attrdict['fgcolor'])
-		windowinterface.register(self.window, EVENTS.ResizeWindow, \
-			  self.resize, None)
-		if debug:
-			print 'registered Resize for', self
+		self.window.register(EVENTS.ResizeWindow, self.resize, None)
+		self.window.register(EVENTS.Mouse0Press, self.mousepress, None)
+		self.window.register(EVENTS.Mouse0Release, self.mouserelease,
+				     None)
 		return 1
 
 	def do_hide(self):
 		if debug:
 			print 'ChannelWindow.do_hide('+`self`+')'
 		if self.window:
-			windowinterface.unregister(self.window,
-						   EVENTS.ResizeWindow)
+			self.window.unregister(EVENTS.ResizeWindow)
 			self.window.close()
 			self.window = None
 			self.armed_display = self.played_display = None
@@ -859,7 +902,7 @@ class _ChannelThread:
 				return 0
 		try:
 			import mm
-			self.threads = mm.init(self.threadstart(), 0, \
+			self.threads = mm.init(self.threadstart(), 0,
 				  self._deviceno, attrdict)
 		except ImportError:
 			print 'Warning: cannot import mm, so channel ' + \

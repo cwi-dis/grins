@@ -479,12 +479,6 @@ class TopLevel(ViewDialog, BasicDialog):
 		BasicDialog.setready(self)
 		for v in self.views:
 			v.setready()
-
-	def add_anchor(self, button, func, arg):
-		glwindow.add_anchor(button, func, arg)
-
-	def del_anchor(self, button):
-		glwindow.del_anchor(button)
 	#
 	# Select interface:
 	#

@@ -66,13 +66,15 @@ class Main:
 				GLLock.gl_lock.acquire()
 				locked = 1
 			result = fl.check_forms()
+##			if result: print 'check_forms:',`result`
 			if locked:
 				GLLock.gl_lock.release()
 			wtd = [glfd, self._mmfd]
 			for top in self.tops:
 				wtd = wtd + top.select_fdlist
-			ifdlist, ofdlist, efdlist = select.select(
-				  wtd, [], [], 0.1)
+			ifdlist, ofdlist, efdlist = \
+				 select.select(wtd, [], [], 0.1)
+##			if ifdlist: print 'select:',`wtd`,`ifdlist`
 			if self._mmfd in ifdlist:
 				self._mmcallback()
 			for top in self.tops:
