@@ -132,7 +132,7 @@ class FancyURLopener(_OriginalFancyURLopener):
 		self.__prefetchtempfiles = {}
 
 		# call original cleanup
-		_OriginalFancyURLopener.cleanup()
+		_OriginalFancyURLopener.cleanup(self)
 	
 	# open stream to url and read headers but not data yet
 	# see retrieve for signature
