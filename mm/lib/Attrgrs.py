@@ -432,14 +432,17 @@ attrgrs=(
 	'attrs':[
 		'name',
 		'atag',
-		]},
-
-	{'name':'animateTarget',
-	'title':'Target',
-	'attrs':[
 		'targetElement',
 		'attributeName',
 		'attributeType',
+		]},
+
+	{'name':'animateMotionGeneral',
+	'title':'General',
+	'attrs':[
+		'name',
+		'atag',
+		'targetElement',
 		]},
 
 	{'name':'animateValues',

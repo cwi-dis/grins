@@ -2641,6 +2641,48 @@ BEGIN
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
 END
 
+IDD_EDITATTR_ANIMATEGENERAL DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "",IDC_11,12,24,73,8
+    EDITTEXT        IDC_12,86,22,199,12,ES_AUTOHSCROLL
+    LTEXT           "",IDC_21,12,44,73,8
+    COMBOBOX        IDC_22,86,42,199,121,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Target element:",IDC_31,12,65,73,8
+    EDITTEXT        IDC_32,86,62,159,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Browse...",IDC_33,246,63,41,12
+    LTEXT           "Target attribute:",IDC_41,12,84,73,8
+    EDITTEXT        IDC_42,86,82,201,12,ES_AUTOHSCROLL
+    LTEXT           "Attribute type:",IDC_51,12,104,73,8
+    CONTROL         "XML",IDC_52,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
+                    WS_TABSTOP,93,104,45,10
+    CONTROL         "CSS",IDC_53,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,165,
+                    104,45,10
+    CONTROL         "auto",IDC_54,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
+                    237,104,45,10
+    GROUPBOX        "",IDC_STATIC,86,97,201,19
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    GROUPBOX        "",IDC_GROUP1,6,10,287,117
+END
+
+IDD_EDITATTR_ANIMATEGENERALM DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "",IDC_GROUP1,6,10,287,75
+    LTEXT           "",IDC_11,12,24,73,8
+    EDITTEXT        IDC_12,86,22,199,12,ES_AUTOHSCROLL
+    LTEXT           "",IDC_21,12,44,73,8
+    COMBOBOX        IDC_22,86,42,199,121,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    LTEXT           "Target element:",IDC_31,12,65,73,8
+    EDITTEXT        IDC_32,86,62,159,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Browse...",IDC_33,246,63,41,12
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
