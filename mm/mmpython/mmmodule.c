@@ -462,6 +462,8 @@ mm_getattr(self, name)
 	mmobject *self;
 	char *name;
 {
+	if (strcmp(name, "armed") == 0)
+		return newintobject((self->mm_flags & ARMED) != 0);
 	return findmethod(channel_methods, (object *)self, name);
 }
 
