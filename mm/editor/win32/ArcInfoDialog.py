@@ -79,6 +79,9 @@ class ArcInfoDialog:
 	def is_closed(self):
 		return self._window==None
 
+	def pop(self):
+		self._window.show()
+
 	def settitle(self, title):
 		"""Set (change) the title of the window.
 
