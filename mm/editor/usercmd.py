@@ -188,6 +188,13 @@ class SIBLINGS(_DynamicCascade): pass
 class DESCENDANTS(_DynamicCascade): pass
 class LAYOUTS(_DynamicCascade): pass
 
+class BANDWIDTH_14K4(_CommandBase): pass
+class BANDWIDTH_28K8(_CommandBase): pass
+class BANDWIDTH_ISDN(_CommandBase): pass
+class BANDWIDTH_T1(_CommandBase): pass
+class BANDWIDTH_LAN(_CommandBase): pass
+class BANDWIDTH_OTHER(_CommandBase): pass
+
 #
 # Layout view commands
 #

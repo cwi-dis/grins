@@ -135,6 +135,19 @@ class GOCommand:
 	def helpcall(self):
 		pass
 
+class BandwidthStripBoxCommand:
+	POPUP_BWSTRIP = (
+		("14k4", BANDWIDTH_14K4),
+		("28k8", BANDWIDTH_28K8),
+		("ISDN", BANDWIDTH_ISDN),
+		("T1 (1 Mbps)", BANDWIDTH_T1),
+		("LAN (10 Mbps)", BANDWIDTH_LAN),
+		None,
+		("Other...", BANDWIDTH_OTHER),
+		)
+
+	def __init__(self):
+		self.popupmenu = self.POPUP_BWSTRIP
 
 class ChannelBoxCommand:
 	POPUP_CHANNEL = (

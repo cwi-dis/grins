@@ -15,9 +15,11 @@ __version__ = "$Id$"
 
 
 from math import sin, cos, atan2, pi, ceil, floor
+import string
 import windowinterface, WMEVENTS
 from ChannelViewDialog import ChannelViewDialog, GOCommand, \
-	ChannelBoxCommand, NodeBoxCommand, ArcBoxCommand
+     BandwidthStripBoxCommand, ChannelBoxCommand, NodeBoxCommand, \
+     ArcBoxCommand
 from usercmd import *
 
 import MMAttrdefs
@@ -1353,7 +1355,7 @@ class BandwidthAccumulator:
 			t0 = tnext
 		return overall_t0, overall_t1, boxes
 		
-class BandwidthStripBox(GO):
+class BandwidthStripBox(GO, BandwidthStripBoxCommand):
 	BWSCOLORS = [	# Without focus
 			ARMINACTIVECOLOR,     # Preload
 			PLAYINACTIVECOLOR,      # Playing
@@ -1370,7 +1372,8 @@ class BandwidthStripBox(GO):
 		14400: "14k4",
 		28800: "28k8",
 		64000: "ISDN",
-		128000: "2xISDN"
+		1000000: "T1",
+		10000000: "LAN",
        }
 
 	def __init__(self, mother):
@@ -1395,6 +1398,15 @@ class BandwidthStripBox(GO):
 		self.time_to_panodes = []
 		self.focussed_bwnodes = []
 		self.focussed_panodes = []
+		self.commandlist = self.commandlist + [
+			BANDWIDTH_14K4(callback = (self.bwcall, (14400,))),
+			BANDWIDTH_28K8(callback = (self.bwcall, (28800,))),
+			BANDWIDTH_ISDN(callback = (self.bwcall, (64000,))),
+			BANDWIDTH_T1(callback = (self.bwcall, (1000000,))),
+			BANDWIDTH_LAN(callback = (self.bwcall, (10000000,))),
+			BANDWIDTH_OTHER(callback = (self.otherbwcall, ())),
+			]
+		BandwidthStripBoxCommand.__init__(self)
 
 	def getbandwidth(self):
 		return self.bandwidth
@@ -1517,6 +1529,23 @@ class BandwidthStripBox(GO):
 			self.time_to_panodes.append(xt0, xt1, node)
 		return boxes
 
+	def bwcall(self, bandwidth):
+		if type(bandwidth) == type(""):
+			try:
+				bandwidth = string.atoi(bandwidth)
+			except ValueError:
+				bandwidth = -1
+		if bandwidth <= 0:
+			windowinterface.showmessage("Incorrect bandwidth")
+			return
+		import settings
+		settings.set('system_bitrate', bandwidth)
+		self.mother.toplevel.prefschanged()
+
+	def otherbwcall(self):
+		windowinterface.InputDialog("Bandwidth (bps)",
+					    `self.bandwidth`, self.bwcall)
+		
 # Class for Channel Objects
 
 class ChannelBox(GO, ChannelBoxCommand):

@@ -63,6 +63,9 @@ class GOCommand:
 		import Help
 		Help.givehelp('Timeline')
 
+class BandwidthStripBoxCommand:
+	def __init__(self):
+		self.popupmenu = POPUP_CVIEW_BWSTRIP
 
 class ChannelBoxCommand:
 	def __init__(self):
