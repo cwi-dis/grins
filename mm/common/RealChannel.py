@@ -254,10 +254,13 @@ class RealChannel:
 		if self.__rmaplayer:
 			if realenginedebug:
 				print 'RealChannel.pauseit', self, paused
-			if paused:
-				self.__rmaplayer.Pause()
-			else:
-				self.__rmaplayer.Begin()
+			try:
+				if paused:
+					self.__rmaplayer.Pause()
+				else:
+					self.__rmaplayer.Begin()
+			except rma.error, arg:
+				windowinterface.settimer(0.1,(self.__channel.errormsg,(None,'RealPlayer error: %s.'%arg)))
 
 	def stopit(self):
 		if self.__rmaplayer:
