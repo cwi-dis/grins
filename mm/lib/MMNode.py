@@ -2,6 +2,7 @@
 
 
 from MMExc import *		# Exceptions
+from Hlinks import Hlinks
 
 
 leaftypes = ['imm', 'ext']
@@ -20,6 +21,7 @@ class MMNodeContext:
 		self.styledict = {}
 		self.channelnames = []
 		self.channeldict = {}
+		self.hyperlinks = Hlinks().init()
 		self.editmgr = None
 		return self
 	#
@@ -68,6 +70,13 @@ class MMNodeContext:
 		for name, dict in list:
 			self.channelnames.append(name)
 			self.channeldict[name] = dict
+	def addhyperlinks(self, list):
+		_stat('addhyperlinks')
+		self.hyperlinks.addlinks(list)
+	#
+	def addhyperlink(self, link):
+		_stat('addhyperlink')
+		self.hyperlinks.addlink(link)
 	#
 	def seteditmgr(self, editmgr):
 		self.editmgr = editmgr
