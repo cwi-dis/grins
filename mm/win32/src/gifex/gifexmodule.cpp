@@ -66,10 +66,21 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ** CompuServe Incorporated.
 */
 
-
 #include <windowsx.h>
 #include <afxwin.h>
-#include "cmifex.h"
+
+//Win32 Header Files
+#include <process.h>
+
+//Python Header Files
+#include "Python.h"
+
+//PythonWin Header Files
+#include "win32ui.h"
+#include "win32assoc.h"
+#include "win32cmd.h"
+#include "win32win.h"
+
 
 #define BFT_BITMAP 0x4d42   /* 'BM' */
 
@@ -733,7 +744,7 @@ static PyMethodDef gifexMethods[] =
 	{ NULL, NULL }
 };
 
-PyEXPORT 
+__declspec(dllexport) 
 void initgifex()
 {
 	PyObject *m, *d;
