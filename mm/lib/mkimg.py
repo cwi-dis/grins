@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 
-import sys, os, img, imgformat, getopt, struct, string
+import sys, os, img, imgformat, getopt, struct, string, pprint
 
 bigendian = struct.pack('i', 1)[0] == '\0'
 
@@ -54,10 +54,8 @@ def mkimg(file, format):
 	f = open(os.path.splitext(os.path.basename(file))[0] + '.py', 'w')
 	f.write('''\
 __version__ = "$''' 'Id' '''$"
-
-import imgformat
 ''')
-	if byteorder or hasattr(rdr, 'colormap'):
+	if byteorder:
 		f.write('''\
 import struct
 
@@ -68,6 +66,7 @@ class reader:
 	def __init__(self):
 		self.width = %(width)d
 		self.height = %(height)d
+		import imgformat
 ''' % {'width': rdr.width, 'height': rdr.height})
 	if byteorder:
 		f.write('''\
@@ -87,19 +86,10 @@ class reader:
 	if hasattr(rdr, 'colormap'):
 		colormaple = []
 		colormapbe = []
-		colormap = rdr.colormap._map_as_string
-		for i in range(len(rdr.colormap)):
-			pixel = struct.unpack('i', colormap[i*4:i*4+4])[0]
-			colormaple.append(struct.pack('<i', pixel))
-			colormapbe.append(struct.pack('>i', pixel))
-		colormaple = string.join(colormaple, '')
-		colormapbe = string.join(colormapbe, '')
+		colormap = rdr.colormap.getmapdata()
 		f.write('\t\timport imgcolormap\n')
-		f.write('\t\tif _bigendian:\n')
-		f.write('\t\t\tself.colormap = imgcolormap.new(')
-		writedata(f.write, colormapbe)
-		f.write(')\n\t\telse:\n\t\t\tself.colormap = imgcolormap.new(')
-		writedata(f.write, colormaple)
+		f.write('\t\tself.colormap = imgcolormap.colormap(')
+		pprint.pprint(colormap, f)
 		f.write(')\n')
 	if hasattr(rdr, 'transparent'):
 		f.write('\t\tself.transparent = %d\n' % rdr.transparent)
