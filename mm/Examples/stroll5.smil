@@ -3,10 +3,9 @@
                       "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
 <smil>
   <head>
-    <meta name="title" content="  A'DAM FACADES - HERENGRACHT "/>
-    <meta name="base" content="http://www.cwi.nl/GRiNS/examples/"/>
+    <meta name="title" content="A'DAM FACADES - HERENGRACHT"/>
     <layout>
-      <root-layout id="A-DAM-FACADES--HERENGRACHT-" title="  A'DAM FACADES - HERENGRACHT " width="600" height="400"/>
+      <root-layout id="A-DAM-FACADES--HERENGRACHT" title="A'DAM FACADES - HERENGRACHT" width="600" height="400"/>
       <region id="Acknowledgements1" title="Acknowledgements1" left="5%" top="95%" z-index="3"/>
       <region id="image1" title="image1" left="24%" top="13%" width="65%" height="80%"/>
       <region id="image2" title="image2" left="44%" top="10%" width="46%" height="80%"/>
