@@ -217,7 +217,7 @@ class MMNode(MMNodeBase.MMNode):
 	def GetRoot(self):
 		root = None
 		x = self
-		while x:
+		while x is not None:
 			root = x
 			x = x.parent
 		return root
@@ -225,7 +225,7 @@ class MMNode(MMNodeBase.MMNode):
 	def GetPath(self):
 		path = []
 		x = self
-		while x:
+		while x is not None:
 			path.append(x)
 			x = x.parent
 		path.reverse()
@@ -233,7 +233,7 @@ class MMNode(MMNodeBase.MMNode):
 
 	def IsAncestorOf(self, x):
 		while x is not None:
-			if self == x: return 1
+			if self is x: return 1
 			x = x.parent
 		return 0
 
@@ -254,7 +254,7 @@ class MMNode(MMNodeBase.MMNode):
 
 	def GetInherAttr(self, name):
 		x = self
-		while x:
+		while x is not None:
 			if x.attrdict:
 				try:
 					return x.GetAttr(name)
@@ -265,7 +265,7 @@ class MMNode(MMNodeBase.MMNode):
 
 	def GetDefInherAttr(self, name):
 		x = self.parent
-		while x:
+		while x is not None:
 			if x.attrdict:
 				try:
 					return x.GetAttr(name)
@@ -420,7 +420,8 @@ class MMNode(MMNodeBase.MMNode):
 ##		self._updsummaries([name])
 
 	def Destroy(self):
-		if self.parent: raise CheckError, 'Destroy() non-root node'
+		if self.parent is not None:
+			raise CheckError, 'Destroy() non-root node'
 
 		# delete hyperlinks referring to anchors here
 		alist = MMAttrdefs.getattr(self, 'anchorlist')
@@ -448,7 +449,7 @@ class MMNode(MMNodeBase.MMNode):
 		self.looping_body_self = None
 
 	def Extract(self):
-		if not self.parent: raise CheckError, 'Extract() root node'
+		if self.parent is None: raise CheckError, 'Extract() root node'
 		parent = self.parent
 		self.parent = None
 		parent.children.remove(self)
@@ -458,7 +459,8 @@ class MMNode(MMNodeBase.MMNode):
 ##		parent._fixsummaries(self.summaries)
 
 	def AddToTree(self, parent, i):
-		if self.parent: raise CheckError, 'AddToTree() non-root node'
+		if self.parent is not None:
+			raise CheckError, 'AddToTree() non-root node'
 		if self.context is not parent.context:
 			# XXX Decide how to handle this later
 			raise CheckError, 'AddToTree() requires same context'
@@ -507,7 +509,7 @@ class MMNode(MMNodeBase.MMNode):
 		node = self
 		while 1:
 			parent = node.parent
-			if not parent:
+			if parent is None:
 				break
 			siblings = parent.children
 			index = siblings.index(node) # Cannot fail
@@ -525,7 +527,7 @@ class MMNode(MMNodeBase.MMNode):
 		node = self
 		while 1:
 			parent = node.parent
-			if not parent:
+			if parent is None:
 				break
 			siblings = parent.children
 			index = siblings.index(node) # Cannot fail
@@ -549,7 +551,7 @@ class MMNode(MMNodeBase.MMNode):
 	# Find the nearest bag given a minidocument
 	def FindMiniBag(self):
 		bag = self.parent
-		if bag and bag.type not in bagtypes:
+		if bag is not None and bag.type not in bagtypes:
 			raise CheckError, 'FindMiniBag: minidoc not rooted in a choice node!'
 		return bag
 
@@ -558,7 +560,7 @@ class MMNode(MMNodeBase.MMNode):
 ## 	#
 ## 	def _rmsummaries(self, keep):
 ## 		x = self
-## 		while x:
+## 		while x is not None:
 ## 			changed = 0
 ## 			for key in x.summaries.keys():
 ## 				if key not in keep:
@@ -577,7 +579,7 @@ class MMNode(MMNodeBase.MMNode):
 
 ## 	def _updsummaries(self, tofix):
 ## 		x = self
-## 		while x and tofix:
+## 		while x is not None and tofix:
 ## 			for key in tofix[:]:
 ## 				if not x.summaries.has_key(key):
 ## 					tofix.remove(key)
@@ -634,10 +636,10 @@ class MMNode(MMNodeBase.MMNode):
 	# Alternatively, call GenAllSR(), and then call EndPruneTree() to clear
 	# the garbage.
  	def PruneTree(self, seeknode):
-		if not seeknode or seeknode is self:
+		if seeknode is None or seeknode is self:
 			self._FastPruneTree()
 			return
-		if seeknode and not self.IsAncestorOf(seeknode):
+		if seeknode is not None and not self.IsAncestorOf(seeknode):
 			raise CheckError, 'Seeknode not in tree!'
 		self.sync_from = ([],[])
 		self.sync_to = ([],[])
@@ -646,11 +648,12 @@ class MMNode(MMNodeBase.MMNode):
 		self.wtd_children = []
 		if self.type == 'seq':
 			for c in self.children:
-				if seeknode and c.IsAncestorOf(seeknode):
+				if seeknode is not None and \
+				   c.IsAncestorOf(seeknode):
 					self.wtd_children.append(c)
 					c.PruneTree(seeknode)
 					seeknode = None
-				elif not seeknode:
+				elif seeknode is None:
 					self.wtd_children.append(c)
 					c._FastPruneTree()
 		elif self.type == 'par':
@@ -1162,6 +1165,7 @@ class MMNode(MMNodeBase.MMNode):
 
 
 	def GenAllSR(self, seeknode, getchannelfunc=None):
+		MMNodeBase.MMNode.getchannelfunc = getchannelfunc
 		self.SetPlayability(getchannelfunc=getchannelfunc)
 		if not seeknode:
 			seeknode = self
@@ -1306,7 +1310,7 @@ class MMNode(MMNodeBase.MMNode):
 		while x is not None:
 			if self is x: return 1
 			xnew = x.parent
-			if not xnew:
+			if xnew is None:
 				return 0
 			try:
 				if not x in xnew.wtd_children:

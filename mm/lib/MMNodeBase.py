@@ -75,8 +75,9 @@ class MMNodeContext:
 		import MMNode
 		for name, dict in list:
 			c = MMNode.MMChannel(self, name)
-			for key, val in dict.items():
-				c[key] = val
+## 			for key, val in dict.items():
+## 				c[key] = val
+			c.attrdict = dict # we know the internals...
 			self.channeldict[name] = c
 			self.channelnames.append(name)
 			self.channels.append(c)
@@ -288,10 +289,13 @@ class MMNode:
 			if not chan or not chan.getaltvalue(self):
 				playable = 0
 		self.playable = playable
-		for child in self.children:
-			child.SetPlayability(playable, getchannelfunc)
+## 		for child in self.children:
+## 			child.SetPlayability(playable, getchannelfunc)
 
 	def IsPlayable(self):
+		if not hasattr(self, 'playable'):
+			self.SetPlayability(self.parent.IsPlayable(),
+					    self.getchannelfunc)
 		return self.playable
 
 	def _compute_playable(self):
