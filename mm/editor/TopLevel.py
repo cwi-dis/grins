@@ -31,7 +31,8 @@ class TopLevel(ViewDialog, BasicDialog):
 	#
 	# Initialization.
 	#
-	def init(self, filename):
+	def init(self, main, filename):
+		self.main = main
 		self = ViewDialog.init(self, 'toplevel_')
 		self.filename = filename
 		self.select_fdlist = []

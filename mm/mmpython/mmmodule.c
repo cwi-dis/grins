@@ -57,9 +57,15 @@ static void
 my_qenter(ev, val)
     long ev, val;
 {
-    qenter(ev, val);
-    if ( qenter_sync_fd >= 0 )
-      write(qenter_sync_fd, " ", 1);
+#if 0
+	qenter(ev, val);
+#endif
+	if (qenter_sync_fd >= 0) {
+		char c;
+
+		c = (ev << 2) | val;
+		write(qenter_sync_fd, &c, 1);
+	}
 }
       
 static void
@@ -603,15 +609,16 @@ mm_init(self, args)
 */
 static object *
 mm_setsyncfd(self, args)
-    object *self, *args;
+	object *self;
+	object *args;
 {
-    int fd;
+	int fd;
     
-    if ( !getargs(args, "i", &fd))
-      return NULL;
-    qenter_sync_fd = fd;
-    INCREF(None);
-    return None;
+	if (!getargs(args, "i", &fd))
+		return NULL;
+	qenter_sync_fd = fd;
+	INCREF(None);
+	return None;
 }
 
 static struct methodlist mm_methods[] = {
