@@ -73,6 +73,8 @@
 #define IDI_ICON_BANDWIDTHGOOD          269
 #define IDI_ICON_ERROR                  270
 #define IDD_BANDWIDTH_DIALOG            271
+#define IDI_PLAY                        272
+#define IDI_STOP                        273
 #define IDD_EDITSTRINGATTR2             327
 #define IDD_EDITATTR_S7                 327
 #define IDD_EDITATTR_S5                 328
@@ -102,6 +104,7 @@
 #define IDD_EDITATTR_S1O2               348
 #define IDD_EDITATTR_P4                 349
 #define IDD_EDITATTR_R24                350
+#define IDD_EDITATTR_MF1                351
 #define IDC_EXPLANATION                 1002
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
@@ -321,9 +324,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        272
+#define _APS_NEXT_RESOURCE_VALUE        274
 #define _APS_NEXT_COMMAND_VALUE         32840
-#define _APS_NEXT_CONTROL_VALUE         1200
+#define _APS_NEXT_CONTROL_VALUE         1202
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
