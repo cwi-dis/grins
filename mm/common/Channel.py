@@ -1117,10 +1117,14 @@ class Channel:
 			nmsg = ' node ' + name
 		else:
 			nmsg = ''
+		if hasattr(self, 'window'):
+			pwindow = self.window
+		else:
+			pwindow = None
 		windowinterface.showmessage(
 			'While arming%s on channel %s:\n%s' %
 				(nmsg, self._name, msg),
-			mtype = 'question',
+			mtype = 'question', parent = pwindow,
 			cancelCallback = (self.__delaystop, ()))
 
 	def __delaystop(self):
@@ -1831,25 +1835,6 @@ class ChannelWindow(Channel):
 ##		self.armed_display.setpos((1.0 - w) / 2, (1.0 - h) / 2)
 ##		self.armed_display.fgcolor((255, 0, 0))		# red
 ##		box = self.armed_display.writestr(msg)
-
-	# use this code to get the error message on top of the window
-	# it belongs to (so that a subsequent pop() does not obscure
-	# the message).
-	def errormsg(self, node, msg):
-		if node:
-			node.set_infoicon('error', msg)
-			name = MMAttrdefs.getattr(node, 'name')
-			if not name:
-				name = '<unnamed node>'
-			nmsg = ' node ' + name
-		else:
-			nmsg = ''
-		windowinterface.showmessage(
-			'While arming%s on channel %s:\n%s' %
-				(nmsg, self._name, msg),
-			mtype = 'question', grab = 1, parent = self.window,
-			cancelCallback = (self._player.cc_stop, ()))
-
 
 	def defanchor(self, node, anchor, cb):
 		# This method is called when the user defines a new anchor. It
