@@ -159,3 +159,12 @@ class SoundChannel(Channel.ChannelAsync):
 		if self.__rc:
 			self.__rc.stopit()
 		Channel.ChannelAsync.stopplay(self, node)
+
+	def updatesoundlevel(self, val):
+		if self.__mc is not None:
+			self.__mc.setsoundlevel(val)
+		if self.__rc:
+			pass
+
+
+		

@@ -181,6 +181,10 @@ class MediaChannel:
 	def destroy(self):
 		self.release_player()
 
+	def setsoundlevel(self, lev):
+		print 'setsoundlevel', lev
+		pass
+
 	# Define the anchor area for visible medias
 	def prepare_anchors(self, node, window, coordinates):
 		if not window: return
