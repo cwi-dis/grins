@@ -357,3 +357,7 @@ class PlayerDialog:
 			self.pause_callback()
 		elif b is self.__stopbutton:
 			self.stop_callback()
+			
+	def get_adornments(self, channel):
+		return None
+		

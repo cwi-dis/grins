@@ -2,7 +2,7 @@ from ViewDialog import ViewDialog
 import windowinterface
 import WMEVENTS
 import MMAttrdefs
-import usercmd
+from usercmd import *
 
 begend = ('begin', 'end')
 

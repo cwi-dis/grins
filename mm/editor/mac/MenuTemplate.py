@@ -8,12 +8,19 @@ from usercmd import *
 [ENTRY, TOGGLE, SEP, CASCADE] = range(4)
 
 #
-# Global commands
-#
+# commands we know are not useable on the Mac:
+UNUSED_COMMANDS=(
+	ANCESTORS,
+	DESCENDANTS,
+	SIBLINGS,
+	SYNCARCS,
+	MAGIC_PLAY,
+)
 
 #
 # Menu structure
 #
+
 MENUBAR=(
 	('File', (
 		(ENTRY, 'New', 'N', NEW_DOCUMENT),
@@ -29,6 +36,7 @@ MENUBAR=(
 		(CASCADE, 'Debug', (
 			(TOGGLE, 'Enable call tracing', None, TRACE),
 			(ENTRY, 'Enter debugger', None, DEBUG),
+			(ENTRY, 'Abort', None, CRASH),
 			(ENTRY, 'Show log/debug window', None, CONSOLE))),
 		(SEP,),
 		(ENTRY, 'Quit', 'Q', EXIT))),
@@ -71,16 +79,21 @@ MENUBAR=(
 			(ENTRY, 'Enlarge height', None, CANVAS_HEIGHT),
 			(ENTRY, 'Reset', None, CANVAS_RESET))),
 		(SEP,),
-		(ENTRY, 'Toggle unused channels', 'T', TOGGLE_UNUSED),
+		(TOGGLE, 'Show unused channels', 'T', TOGGLE_UNUSED),
+		(TOGGLE, 'Show sync arcs', None, TOGGLE_ARCS),
+		(TOGGLE, 'Show image thumbnails', None, THUMBNAIL),
 		(SEP,),
 		(CASCADE, 'Mini-document', (
 			(ENTRY, 'Next', None, NEXT_MINIDOC),
 			(ENTRY, 'Previous', None, PREV_MINIDOC))))),
 		
 	('Play', (
-		(ENTRY, 'Whole document', 'P', PLAY),
-		(ENTRY, 'Node', None, PLAYNODE),
-		(ENTRY, 'Starting at node', None, PLAYFROM))),
+		(ENTRY, 'Play document', 'P', PLAY),
+		(ENTRY, 'Pause', None, PAUSE),
+		(ENTRY, 'Stop', None, STOP),
+		(SEP,),
+		(ENTRY, 'Play node', None, PLAYNODE),
+		(ENTRY, 'Play from node', None, PLAYFROM))),
 
 	('Focus', (
 		(ENTRY, 'Synchronize', 'F', PUSHFOCUS),
