@@ -57,6 +57,9 @@ class MainDialog:
 			qsg = MMurl.pathname2url(cmif.findfile('QuickStart.pdf'))
 			self.commandlist.append(
 				GRINS_QSG(callback = (self.grins_web_callback, (qsg,))))
+			tutorial = MMurl.pathname2url(cmif.findfile('Tutorial.pdf'))
+			self.commandlist.append(
+				GRINS_TUTORIAL(callback = (self.grins_web_callback, (tutorial,))))
 		import windowinterface
 		# register events for all frame wnds
 		windowinterface.register_event(WMEVENTS.PasteFile, self.pastefile, None)

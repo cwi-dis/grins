@@ -157,7 +157,7 @@ MENUBAR=(
 		(LIGHT, ENTRY, 'Play &node', None, PLAYNODE),
 		(LIGHT, ENTRY, 'Play &from node', None, PLAYFROM),
 		(CMIF, SEP,),
-		(SMIL, DYNAMICCASCADE, 'User &groups', USERGROUPS),
+		(CMIF, DYNAMICCASCADE, 'User &groups', USERGROUPS),
 		(CMIF, DYNAMICCASCADE, 'Visible &channels', CHANNELS),
 		)),
 
@@ -217,7 +217,7 @@ MENUBAR=(
 		(SMIL, ENTRY, '&Layout view\tF8', '2', LAYOUTVIEW),
 ##		(LIGHT, SEP,),
 		(SMIL, ENTRY, 'H&yperlinks', '5', LINKVIEW),
-		(SMIL, ENTRY, 'User &groups', '6', USERGROUPVIEW),
+		(CMIF, ENTRY, 'User &groups', '6', USERGROUPVIEW),
 ##		(LIGHT, SEP,),
 		(LIGHT, ENTRY, 'Sourc&e', '7', SOURCE),
 		)),
@@ -229,6 +229,7 @@ MENUBAR=(
 		(LIGHT, ENTRY, 'GRiNS on the &Web', None,GRINS_WEB),
 		(LIGHT, SEP,),
 		(LIGHT, ENTRY, '&Quick Start Guide', None, GRINS_QSG),
+		(LIGHT, ENTRY, '&Tutorial', None, GRINS_TUTORIAL),
 		(LIGHT, SEP,),
 		(LIGHT, ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
 
