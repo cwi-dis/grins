@@ -388,18 +388,58 @@ class SMILWriter:
 			self.fp.write('</%s>\n'%mtype)
 		elif type in ('imm', 'ext'):
 			# XXXX Not correct for imm
-			self.fp.write(attrlist+'>\n')
-			self.fp.push()
-			self.writelinks(x)
-			self.fp.pop()
-			self.fp.write('</%s>\n'%mtype)
+			pushed = 0
+			hassrc = 0
+			alist = x.GetAttrDef('anchorlist', [])
+			for id, type, args in alist:
+				if type == ATYPE_WHOLE:
+					links = x.GetContext().hyperlinks.findsrclinks((x.GetUID(), id))
+					if links:
+						a1, a2, dir, ltype = links[0]
+						self.fp.write('<a %s>\n' % self.linkattrs(a2, ltype))
+						self.fp.push()
+						pushed = pushed + 1
+				elif type in SourceAnchors:
+					hassrc = 1
+			if hassrc:
+				attrlist = attrlist + '>\n'
+			else:
+				attrlist = attrlist + '/>\n'
+			self.fp.write(attrlist)
+			if hassrc:
+				self.fp.push()
+				self.writelinks(x)
+				self.fp.pop()
+				self.fp.write('</%s>\n'%mtype)
+			for i in range(pushed):
+				self.fp.pop()
+				self.fp.write('</a>\n')
 		else:
 			raise CheckError, 'bad node type in writenode'
+
+	def linkattrs(self, a2, ltype):
+		attrs = []
+		if ltype == Hlinks.TYPE_CALL:
+			attrs.append('show="pause"')
+		elif ltype == Hlinks.TYPE_FORK:
+			attrs.append('show="new"')
+		# else show="replace" (default)
+		uid2, aid2 = a2
+		if '/' in uid2:
+			if aid2:
+				href = '%s#%s' % a2
+			else:
+				lastslash = string.rfind('/', uid2)
+				href = '%s#%s' % (uid2[:lastslash], uid2[lastslash+1:])
+		else:
+			href = '#' + self.uid2name[uid2]
+		attrs.append('href="%s"' % href)
+		return string.join(attrs)
 
 	def writelinks(self, x):
 		alist = x.GetAttrDef('anchorlist', [])
 		for id, type, args in alist:
-			if type in SourceAnchors:
+			if type in SourceAnchors and type != ATYPE_WHOLE:
 				self.writelink(x, id, type, args)
 
 	def writelink(self, x, id, atype, args):
@@ -414,21 +454,7 @@ class SMILWriter:
 			      x.GetUID()
 		if links:
 			a1, a2, dir, ltype = links[0]
-			if ltype == Hlinks.TYPE_CALL:
-				items.append('show="pause"')
-			elif ltype == Hlinks.TYPE_FORK:
-				items.append('show="new"')
-			# else show="replace" (default)
-			uid2, aid2 = a2
-			if '/' in uid2:
-				if aid2:
-					href = '%s#%s' % a2
-				else:
-					lastslash = string.rfind('/', uid2)
-					href = '%s#%s' % (uid2[:lastslash], uid2[lastslash+1:])
-			else:
-				href = '#' + self.aid2name[a2]
-			items.append('href="%s"'%href)
+			items.append(self.linkattrs(a2, ltype))
 		if atype == ATYPE_NORMAL:
 			ok = 0
 			if len(args) == 4:
