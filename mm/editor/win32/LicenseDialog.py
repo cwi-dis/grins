@@ -91,5 +91,5 @@ class LicenseDialog(components.ResDialog):
 		self.cb_try()
 
 def EnterkeyDialog(ok_callback):
-		import windowinterface
-		windowinterface.InputDialog("Enter key:", "", self.ok_callback)
+	import windowinterface
+       	windowinterface.InputDialog("Enter key:", "", ok_callback)
