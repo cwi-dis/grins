@@ -592,6 +592,8 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 				self.__slider = win32dialog.SeekDialog('Seek', self)
 				self.__slider.setRange(0, fulldur)
 				self.__slider.updateposcallback = player.setstarttime
+				self.__slider.timefunction = player.scheduler.timefunc
+				self.__slider.canusetimefunction = player.isplaying
 
 	def setEditorDocumentMenu(self,flag):
 		if USE_NODOC_MENUBAR:
