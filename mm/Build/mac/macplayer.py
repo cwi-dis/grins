@@ -106,7 +106,6 @@ else:
 # macfreeze: exclude audio.sndr
 # macfreeze: exclude audio.voc
 # macfreeze: exclude audio.Error
-# macfreeze: exclude imgpng
 # macfreeze: exclude msvcrt
 # macfreeze: exclude termios
 # macfreeze: exclude TERMIOS
