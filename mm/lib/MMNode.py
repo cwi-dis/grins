@@ -1877,7 +1877,7 @@ class MMNode_body:
 			endtime = timestamp + self.fullduration
 		else:
 			endtime = None
-		self.time_list.append((timestamp, endtime))
+		self.time_list.append((timestamp, endtime, endtime))
 		if self.parent and self.parent.type in ('switch', 'foreign', 'prio'):
 			self.parent.startplay(timestamp)
 
@@ -1886,10 +1886,13 @@ class MMNode_body:
 		if self.playing in (MMStates.IDLE, MMStates.PLAYED):
 			if debug: print 'stopplay: already stopped'
 			return
+		start, end1, end2 = self.time_list[-1]
+		if self.playing != MMStates.FROZEN:
+			end1 = timestamp
+		self.time_list[-1] = start, end1, timestamp
 		self.playing = MMStates.PLAYED
 		self.starting_children = 0
 		self.set_armedmode(ARM_DONE)
-		self.time_list[-1] = self.time_list[-1][0], timestamp
 		if self.parent and self.parent.type in ('switch', 'foreign', 'prio'):
 			# only say parent is stopped if all its children are stopped
 			for c in self.parent.children:
@@ -2276,7 +2279,7 @@ class MMNode(MMTreeElement):
 			endtime = timestamp + self.fullduration
 		else:
 			endtime = None
-		self.time_list.append((timestamp, endtime))
+		self.time_list.append((timestamp, endtime, endtime))
 		if self.parent and self.parent.type in ('switch', 'foreign', 'prio'):
 			self.parent.startplay(timestamp)
 
@@ -2285,10 +2288,13 @@ class MMNode(MMTreeElement):
 		if self.playing in (MMStates.IDLE, MMStates.PLAYED):
 			if debug: print 'stopplay: already stopped'
 			return
+		start, end1, end2 = self.time_list[-1]
+		if self.playing != MMStates.FROZEN:
+			end1 = timestamp
+		self.time_list[-1] = start, end1, timestamp
 		self.playing = MMStates.PLAYED
 		self.starting_children = 0
 		self.set_armedmode(ARM_DONE)
-		self.time_list[-1] = self.time_list[-1][0], timestamp
 		if self.parent and self.parent.type in ('switch', 'foreign', 'prio'):
 			# only say parent is stopped if all its children are stopped
 			for c in self.parent.children:
@@ -4146,6 +4152,10 @@ class MMNode(MMTreeElement):
 		if self.fullduration is not None:
 			duration = self.fullduration
 		else:
+			if self.playing in (MMStates.FROZEN, MMStates.PLAYED):
+				# use last invocation's duration
+				start, end1, end2 = self.time_list[-1]
+				return end1 - start
 			maybecached = 1
 			pnode = self.GetSchedParent()
 			if pnode is not None and pnode.type == 'excl':
