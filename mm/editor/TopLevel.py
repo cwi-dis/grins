@@ -506,17 +506,28 @@ class TopLevel(ViewDialog, BasicDialog):
 		# XXXX Should check that document isn't active already,
 		# XXXX and, if so, should jump that instance of the
 		# XXXX document.
-		try:
-			top = TopLevel().init(filename)
-		except (IOError, MMExc.TypeError, MMExc.SyntaxError), msg:
-			fl.show_message('Open operation failed.  File:', \
-				filename, \
-				'Error: ' + `msg`)
-			return 0
+		for top in opentops:
+			if top.is_document(filename):
+				break
+		else:
+			try:
+				top = TopLevel().init(filename)
+			except (IOError, MMExc.TypeError, MMExc.SyntaxError), msg:
+				fl.show_message('Open operation failed.  File:', \
+					  filename, \
+					  'Error: ' + `msg`)
+				return 0
 		top.show()
 		top.player.show()
 		top.player.playfromanchor(top.root, aid)
 		return 1
+	#
+	def is_document(self, filename):
+		import posix
+
+		ourdata = posix.stat(self.filename)
+		hisdata = posix.stat(filename)
+		return (ourdata == hisdata)
 	#
 	def _getlocalexternalanchors(self):
 		fn = self.filename
