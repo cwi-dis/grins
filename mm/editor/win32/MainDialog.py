@@ -54,8 +54,7 @@ class MainDialog:
 				HELP_CONTENTS(callback = (self.help_contents_callback, ())))
 			self.commandlist.append(
 				GRINS_WEB(callback = (self.grins_web_callback, ('http://www.oratrix.com/GRiNS/index.html',))))
-			qsg = MMurl.pathname2url(cmif.findfile('QSG-L4G2.pdf'))
-##			qsg = MMurl.pathname2url(r'd:\ufs\mm\cmif\Build\common\QSG-L4G2.pdf')
+			qsg = MMurl.pathname2url(cmif.findfile('QuickStart.pdf'))
 			self.commandlist.append(
 				GRINS_QSG(callback = (self.grins_web_callback, (qsg,))))
 		import windowinterface
