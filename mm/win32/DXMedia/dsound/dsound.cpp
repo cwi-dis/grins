@@ -1,6 +1,6 @@
 
 /***********************************************************
-Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
+Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 
                         All Rights Reserved
 
@@ -250,6 +250,31 @@ newDS3DLISTENERObject()
 	return self;
 }
 
+// 
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+    BYTE pbBuffer[512];	
+	WAVEFORMATEX *pWF;
+	int cbSize;
+} WaveFormatExObject;
+
+staticforward PyTypeObject WaveFormatExType;
+
+static WaveFormatExObject *
+newWaveFormatExObject()
+{
+	WaveFormatExObject *self;
+
+	self = PyObject_NEW(WaveFormatExObject, &WaveFormatExType);
+	if (self == NULL)
+		return NULL;
+	self->pWF=(WAVEFORMATEX*)self->pbBuffer;
+	self->cbSize=0;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
 ///////////////////////////////////////////
 ///////////////////////////////////////////
 // Objects definitions
@@ -300,10 +325,30 @@ DirectSound_CreateSoundBuffer(DirectSoundObject *self, PyObject *args)
 	return (PyObject*) obj;
 }
 
+// TEMPORARY
+IDirectSoundBuffer* CreateDSBufferFromFile(IDirectSound *pI, DSBUFFERDESC *pdsbd, char *pszFilename);
+static char DirectSound_CreateSoundBufferFromFile__doc__[] =
+""
+;
+static PyObject *
+DirectSound_CreateSoundBufferFromFile(DirectSoundObject *self, PyObject *args)
+{
+	DSBUFFERDESCObject *dsbdObj;
+	char *pszFilename;
+	if (!PyArg_ParseTuple(args, "O!s",&DSBUFFERDESCType,&dsbdObj,&pszFilename))
+		return NULL;	
+	DirectSoundBufferObject *obj = newDirectSoundBufferObject();
+	if(!obj) return NULL;
+
+	obj->pI = CreateDSBufferFromFile(self->pI, &dsbdObj->d, pszFilename);
+	if(obj->pI == NULL) return NULL;
+	return (PyObject*) obj;
+}
 
 static struct PyMethodDef DirectSound_methods[] = {
 	{"SetCooperativeLevel", (PyCFunction)DirectSound_SetCooperativeLevel, METH_VARARGS, DirectSound_SetCooperativeLevel__doc__},
 	{"CreateSoundBuffer", (PyCFunction)DirectSound_CreateSoundBuffer, METH_VARARGS, DirectSound_CreateSoundBuffer__doc__},
+	{"CreateSoundBufferFromFile", (PyCFunction)DirectSound_CreateSoundBufferFromFile, METH_VARARGS, DirectSound_CreateSoundBufferFromFile__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -365,14 +410,13 @@ DirectSoundBuffer_GetCaps(DirectSoundBufferObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;	
-	HRESULT hr = DS_OK;
-
+	DSBCAPSObject *obj = newDSBCAPSObject();
+	HRESULT hr = self->pI->GetCaps(&obj->d);
 	if (FAILED(hr)){
 		seterror("DirectSoundBuffer_GetCaps", hr);
 		return NULL;
 	}
-	Py_INCREF(Py_None);
-	return Py_None;
+	return (PyObject *)obj;
 }
 
 static char DirectSoundBuffer_GetCurrentPosition__doc__[] =
@@ -383,14 +427,14 @@ DirectSoundBuffer_GetCurrentPosition(DirectSoundBufferObject *self, PyObject *ar
 {
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;	
-	HRESULT hr = DS_OK;
-
+	DWORD dwCurrentPlayCursor;
+	DWORD dwCurrentWriteCursor;
+	HRESULT hr = self->pI->GetCurrentPosition(&dwCurrentPlayCursor,&dwCurrentWriteCursor);
 	if (FAILED(hr)){
 		seterror("DirectSoundBuffer_GetCurrentPosition", hr);
 		return NULL;
 	}
-	Py_INCREF(Py_None);
-	return Py_None;
+	return Py_BuildValue("ii",dwCurrentPlayCursor, dwCurrentWriteCursor);
 }
 
 static char DirectSoundBuffer_GetFormat__doc__[] =
@@ -400,15 +444,16 @@ static PyObject *
 DirectSoundBuffer_GetFormat(DirectSoundBufferObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
-		return NULL;	
-	HRESULT hr = DS_OK;
-
+		return NULL;
+	WaveFormatExObject *obj = newWaveFormatExObject();
+	DWORD dwSizeAllocated = 512;
+	DWORD dwSizeWritten = 0;
+	HRESULT hr = self->pI->GetFormat(obj->pWF, dwSizeAllocated, &dwSizeWritten);
 	if (FAILED(hr)){
 		seterror("DirectSoundBuffer_GetFormat", hr);
 		return NULL;
 	}
-	Py_INCREF(Py_None);
-	return Py_None;
+	return (PyObject *)obj;
 }
 
 static char DirectSoundBuffer_GetVolume__doc__[] =
@@ -418,15 +463,14 @@ static PyObject *
 DirectSoundBuffer_GetVolume(DirectSoundBufferObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
-		return NULL;	
-	HRESULT hr = DS_OK;
-
+		return NULL;
+	long level;
+	HRESULT hr = self->pI->GetVolume(&level);
 	if (FAILED(hr)){
 		seterror("DirectSoundBuffer_GetVolume", hr);
 		return NULL;
 	}
-	Py_INCREF(Py_None);
-	return Py_None;
+	return Py_BuildValue("l",level);
 }
 
 static char DirectSoundBuffer_GetPan__doc__[] =
@@ -437,14 +481,13 @@ DirectSoundBuffer_GetPan(DirectSoundBufferObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;	
-	HRESULT hr = DS_OK;
-
+	long pan;
+	HRESULT hr = self->pI->GetPan(&pan);
 	if (FAILED(hr)){
 		seterror("DirectSoundBuffer_GetPan", hr);
 		return NULL;
 	}
-	Py_INCREF(Py_None);
-	return Py_None;
+	return Py_BuildValue("l", pan);
 }
 
 static char DirectSoundBuffer_GetFrequency__doc__[] =
@@ -455,14 +498,13 @@ DirectSoundBuffer_GetFrequency(DirectSoundBufferObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;	
-	HRESULT hr = DS_OK;
-
+	DWORD dwFrequency;
+	HRESULT hr = self->pI->GetFrequency(&dwFrequency);
 	if (FAILED(hr)){
 		seterror("DirectSoundBuffer_GetFrequency", hr);
 		return NULL;
 	}
-	Py_INCREF(Py_None);
-	return Py_None;
+	return Py_BuildValue("i", dwFrequency);
 }
 
 static char DirectSoundBuffer_GetStatus__doc__[] =
@@ -472,15 +514,14 @@ static PyObject *
 DirectSoundBuffer_GetStatus(DirectSoundBufferObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
-		return NULL;	
-	HRESULT hr = DS_OK;
-
+		return NULL;
+	DWORD status;
+	HRESULT hr = self->pI->GetStatus(&status);
 	if (FAILED(hr)){
 		seterror("DirectSoundBuffer_GetStatus", hr);
 		return NULL;
 	}
-	Py_INCREF(Py_None);
-	return Py_None;
+	return Py_BuildValue("i", status);
 }
 
 static char DirectSoundBuffer_Initialize__doc__[] =
@@ -489,10 +530,11 @@ static char DirectSoundBuffer_Initialize__doc__[] =
 static PyObject *
 DirectSoundBuffer_Initialize(DirectSoundBufferObject *self, PyObject *args)
 {
-	if (!PyArg_ParseTuple(args, ""))
+	DirectSoundObject *ds;
+	DSBUFFERDESCObject *dsbd;
+	if (!PyArg_ParseTuple(args, "O!O!", &DirectSoundType, &ds, &DSBUFFERDESCType, &dsbd))
 		return NULL;	
-	HRESULT hr = DS_OK;
-
+	HRESULT hr = self->pI->Initialize(ds->pI, &dsbd->d);
 	if (FAILED(hr)){
 		seterror("DirectSoundBuffer_Initialize", hr);
 		return NULL;
@@ -508,9 +550,18 @@ static PyObject *
 DirectSoundBuffer_Lock(DirectSoundBufferObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
-		return NULL;	
-	HRESULT hr = DS_OK;
-
+		return NULL;
+	seterror("DirectSoundBuffer_Lock not implemented");
+	return NULL;
+	DWORD dwWriteCursor = 0;   
+	DWORD dwWriteBytes = 0;  
+	BYTE *pvAudioPtr = NULL;  
+	DWORD dwAudioBytes;  
+	BYTE *pvWrapAudioPtr = NULL;  
+	DWORD dwWrapAudioBytes;  
+	DWORD dwFlags  = 0;          
+	HRESULT hr = self->pI->Lock(dwWriteCursor, dwWriteBytes, (void**)&pvAudioPtr, 
+		&dwAudioBytes, (void**)&pvWrapAudioPtr, &dwWrapAudioBytes, dwFlags);         
 	if (FAILED(hr)){
 		seterror("DirectSoundBuffer_Lock", hr);
 		return NULL;
@@ -525,10 +576,12 @@ static char DirectSoundBuffer_Play__doc__[] =
 static PyObject *
 DirectSoundBuffer_Play(DirectSoundBufferObject *self, PyObject *args)
 {
-	if (!PyArg_ParseTuple(args, ""))
+	DWORD dwPriority = 0;
+	DWORD dwFlags = 0;
+	if (!PyArg_ParseTuple(args, "|ii", dwPriority, dwFlags))
 		return NULL;	
-	HRESULT hr = DS_OK;
-
+	DWORD dwReserved1 = 0;
+	HRESULT hr = self->pI->Play(dwReserved1, dwPriority, dwFlags);
 	if (FAILED(hr)){
 		seterror("DirectSoundBuffer_Play", hr);
 		return NULL;
@@ -543,10 +596,12 @@ static char DirectSoundBuffer_SetCurrentPosition__doc__[] =
 static PyObject *
 DirectSoundBuffer_SetCurrentPosition(DirectSoundBufferObject *self, PyObject *args)
 {
-	if (!PyArg_ParseTuple(args, ""))
+	// New position, in bytes, from the beginning of the buffer that will 
+	// be used when the sound buffer is played. 
+	DWORD dwNewPosition = 0;
+	if(!PyArg_ParseTuple(args, "i", &dwNewPosition))
 		return NULL;	
-	HRESULT hr = DS_OK;
-
+	HRESULT hr = self->pI->SetCurrentPosition(dwNewPosition);
 	if (FAILED(hr)){
 		seterror("DirectSoundBuffer_SetCurrentPosition", hr);
 		return NULL;
@@ -560,11 +615,11 @@ static char DirectSoundBuffer_SetFormat__doc__[] =
 ;
 static PyObject *
 DirectSoundBuffer_SetFormat(DirectSoundBufferObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ""))
+{	
+	WaveFormatExObject *obj;
+	if (!PyArg_ParseTuple(args, "O!", &WaveFormatExType, &obj))
 		return NULL;	
-	HRESULT hr = DS_OK;
-
+	HRESULT hr = self->pI->SetFormat(obj->pWF);
 	if (FAILED(hr)){
 		seterror("DirectSoundBuffer_SetFormat", hr);
 		return NULL;
@@ -579,10 +634,16 @@ static char DirectSoundBuffer_SetVolume__doc__[] =
 static PyObject *
 DirectSoundBuffer_SetVolume(DirectSoundBufferObject *self, PyObject *args)
 {
-	if (!PyArg_ParseTuple(args, ""))
-		return NULL;	
-	HRESULT hr = DS_OK;
-
+	// The volume is specified in hundredths of decibels (dB) i.e. cdB
+	// V = V_0 * 2^(cdb/1000)
+    // cdb=-1000 -> V_0 / 2
+	// cdb=-2000 -> V_0 / 4 etc
+	LONG cdB;
+	if(!PyArg_ParseTuple(args, "l", &cdB))
+		return NULL;
+	if(cdB>DSBVOLUME_MAX) cdB = DSBVOLUME_MAX; // 0 dB
+	else if(cdB<DSBVOLUME_MIN) cdB = DSBVOLUME_MIN; // -10000 cdB = -100 dB
+	HRESULT hr = self->pI->SetVolume(cdB);
 	if (FAILED(hr)){
 		seterror("DirectSoundBuffer_SetVolume", hr);
 		return NULL;
@@ -592,15 +653,15 @@ DirectSoundBuffer_SetVolume(DirectSoundBufferObject *self, PyObject *args)
 }
 
 static char DirectSoundBuffer_SetPan__doc__[] =
-""
+"Set relative volume between the left and right channels"
 ;
 static PyObject *
 DirectSoundBuffer_SetPan(DirectSoundBufferObject *self, PyObject *args)
 {
-	if (!PyArg_ParseTuple(args, ""))
+	int pan;
+	if (!PyArg_ParseTuple(args, "i", &pan))
 		return NULL;	
-	HRESULT hr = DS_OK;
-
+	HRESULT hr = self->pI->SetPan(pan);
 	if (FAILED(hr)){
 		seterror("DirectSoundBuffer_SetPan", hr);
 		return NULL;
@@ -610,15 +671,17 @@ DirectSoundBuffer_SetPan(DirectSoundBufferObject *self, PyObject *args)
 }
 
 static char DirectSoundBuffer_SetFrequency__doc__[] =
-""
+"Sets the frequency at which the audio samples are played (100Hz and 100kHz)"
 ;
 static PyObject *
 DirectSoundBuffer_SetFrequency(DirectSoundBufferObject *self, PyObject *args)
 {
-	if (!PyArg_ParseTuple(args, ""))
-		return NULL;	
-	HRESULT hr = DS_OK;
-
+	DWORD dwFrequency; // New frequency, in hertz (Hz), at which to play the audio samples
+	if (!PyArg_ParseTuple(args, "i", &dwFrequency))
+		return NULL;
+	if(dwFrequency<DSBFREQUENCY_MIN) dwFrequency = DSBFREQUENCY_MIN;
+	if(dwFrequency>DSBFREQUENCY_MAX) dwFrequency = DSBFREQUENCY_MAX;
+	HRESULT hr = self->pI->SetFrequency(dwFrequency);
 	if (FAILED(hr)){
 		seterror("DirectSoundBuffer_SetFrequency", hr);
 		return NULL;
@@ -635,8 +698,7 @@ DirectSoundBuffer_Stop(DirectSoundBufferObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;	
-	HRESULT hr = DS_OK;
-
+	HRESULT hr = self->pI->Stop();
 	if (FAILED(hr)){
 		seterror("DirectSoundBuffer_Stop", hr);
 		return NULL;
@@ -652,9 +714,14 @@ static PyObject *
 DirectSoundBuffer_Unlock(DirectSoundBufferObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
-		return NULL;	
-	HRESULT hr = DS_OK;
-
+		return NULL;
+	seterror("DirectSoundBuffer_Unlock not implemented");
+	return NULL;
+	BYTE *pvAudioPtr;
+	DWORD dwAudioBytes; 
+	BYTE *pvWrapAudioPtr = NULL; 
+	DWORD dwWrapAudioBytes = 0;  
+	HRESULT hr = self->pI->Unlock(pvAudioPtr, dwAudioBytes, pvWrapAudioPtr, dwWrapAudioBytes);
 	if (FAILED(hr)){
 		seterror("DirectSoundBuffer_Unlock", hr);
 		return NULL;
@@ -671,8 +738,7 @@ DirectSoundBuffer_Restore(DirectSoundBufferObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;	
-	HRESULT hr = DS_OK;
-
+	HRESULT hr = self->pI->Restore();
 	if (FAILED(hr)){
 		seterror("DirectSoundBuffer_Restore", hr);
 		return NULL;
@@ -789,6 +855,92 @@ static PyTypeObject DirectSoundBufferType = {
 };
 
 // End of code for DirectSoundBuffer object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
+// WaveFormatEx object  (WAVEFORMATEX)
+
+static char WaveFormatEx_GetMembers__doc__[] =
+"";
+static PyObject *
+WaveFormatEx_GetMembers(WaveFormatExObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))return NULL;
+	return Py_BuildValue("(iiiiiii)",
+		self->pWF->wFormatTag,
+		self->pWF->nChannels,
+		self->pWF->nSamplesPerSec,
+		self->pWF->nAvgBytesPerSec,
+		self->pWF->nBlockAlign,
+		self->pWF->wBitsPerSample,
+		self->pWF->cbSize
+		);
+}       
+static char WaveFormatEx_GetBuffer__doc__[] =
+"";
+
+static PyObject *
+WaveFormatEx_GetBuffer(WaveFormatExObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))return NULL;
+	PyObject *obj1 = PyString_FromStringAndSize((char*)self->pbBuffer,(int)self->cbSize);
+	if (obj1 == NULL) return NULL;
+	PyObject *obj2 = Py_BuildValue("O", obj1);
+	Py_DECREF(obj1);
+	return obj2;
+	
+}
+
+static struct PyMethodDef WaveFormatEx_methods[] = {
+	{"GetMembers", (PyCFunction)WaveFormatEx_GetMembers, METH_VARARGS, WaveFormatEx_GetMembers__doc__},
+	{"GetBuffer", (PyCFunction)WaveFormatEx_GetBuffer, METH_VARARGS, WaveFormatEx_GetBuffer__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WaveFormatEx_dealloc(WaveFormatExObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WaveFormatEx_getattr(WaveFormatExObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WaveFormatEx_methods, (PyObject *)self, name);
+}
+
+static char WaveFormatExType__doc__[] =
+""
+;
+
+static PyTypeObject WaveFormatExType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WaveFormatEx",			/*tp_name*/
+	sizeof(WaveFormatExObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WaveFormatEx_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WaveFormatEx_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WaveFormatExType__doc__ /* Documentation string */
+};
+
+// End of code for WaveFormatEx object 
 ////////////////////////////////////////////
 
 ////////////////////////////////////////////
@@ -1384,6 +1536,153 @@ CreateDirectSound(PyObject *self, PyObject *args)
 	return (PyObject*)obj;
 }
 
+
+static char CreateDSBufferDesc__doc__[] =
+""
+;
+static PyObject *
+CreateDSBufferDesc(PyObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, "")) return NULL;
+	DSBUFFERDESCObject *obj = newDSBUFFERDESCObject();
+	if (obj == NULL) return NULL;
+	return (PyObject*)obj;
+}
+
+// TEMPORARY
+#include "riff.h"
+IDirectSoundBuffer* CreateDSBufferFromFile(IDirectSound *pI, DSBUFFERDESC *pdsbd, char *pszFilename)
+	{
+	RIFFFile riff;
+	if(!riff.open(pszFilename))
+		{
+		seterror("Failed opening wave file");
+        return NULL;
+		}
+
+	if(!riff.seekToData())
+		{
+		seterror("Failed finding wave data");
+        return NULL;
+		}
+
+	// fill DSBUFFERDESC with format
+    DWORD dwDataSize = riff.ckIn.cksize;
+    pdsbd->dwBufferBytes = dwDataSize;
+    DWORD dw = riff.pwfxInfo->cbSize + sizeof(WAVEFORMATEX);
+	pdsbd->lpwfxFormat = (WAVEFORMATEX*) new BYTE[dw];
+	memcpy(pdsbd->lpwfxFormat, riff.pwfxInfo, dw);
+
+	// create DS buffer
+	IDirectSoundBuffer* lpDSB=NULL;
+    if(pI->CreateSoundBuffer(pdsbd, &lpDSB, NULL) != 0)
+		{
+  		seterror("CreateSoundBuffer failed");
+        return NULL;
+        }
+
+	// lock buffer
+    LPBYTE lpData = NULL;
+    DWORD dwBSize;
+    DWORD dwWrapBSize;
+    LPVOID lpWrapPtr;
+	HRESULT hr = lpDSB->Lock(0, dwDataSize, (LPLPVOID)&lpData, &dwBSize, &lpWrapPtr, &dwWrapBSize, 0L);
+	if(FAILED(hr))
+		{
+    	seterror("CreateDSBufferFromFile::Lock failed");
+		return NULL;
+		}
+	
+	// read data
+	dwDataSize = dwBSize;
+	UINT cbActualRead;
+    if (!riff.readData(dwDataSize, lpData, &cbActualRead))
+        {
+        if(lpData != NULL) GlobalFree(lpData);
+		lpDSB->Release();
+    	seterror("CreateDSBufferFromFile::RIFF::readData failed");
+		return NULL;
+		} 
+
+	// unlock buffer
+    if (lpDSB != NULL)
+        lpDSB->Unlock(lpData, cbActualRead,NULL, 0 );
+    return lpDSB;
+	}
+
+
+static char GetWaveoutVolume__doc__[] =
+""
+;
+static PyObject *
+GetWaveoutVolume(PyObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, "")) return NULL;
+	bool found = false;
+	DWORD dwLRV = 0;
+	UINT uNumDevs = waveOutGetNumDevs();
+	for(UINT uDeviceID=0; uDeviceID<uNumDevs; uDeviceID++)
+		{	
+		WAVEOUTCAPS waveCaps;
+		int res = waveOutGetDevCaps(uDeviceID, &waveCaps, sizeof(WAVEOUTCAPS));
+		if(res != MMSYSERR_NOERROR) continue;
+		if(waveCaps.dwSupport & WAVECAPS_VOLUME)
+			{
+			res = waveOutGetVolume((HWAVEOUT)uDeviceID, &dwLRV);
+			if(res == MMSYSERR_NOERROR) 
+				{
+				found = true;
+				break;
+				}
+			}
+		}
+	if(!found)
+		{
+		seterror("No device found supporting volume");
+		return NULL;
+		}
+	int lv = LOWORD(dwLRV);
+	int rv = HIWORD(dwLRV);
+	return Py_BuildValue("ii",lv, rv);
+}
+
+static char SetWaveoutVolume__doc__[] =
+""
+;
+static PyObject *
+SetWaveoutVolume(PyObject *self, PyObject *args)
+{
+	int lv, rv;
+	if (!PyArg_ParseTuple(args, "ii", &lv, &rv)) return NULL;
+	if(lv>0xFFFF || lv<0) lv = 0xFFFF;
+	if(rv>0xFFFF || rv<0) rv = 0xFFFF;
+	DWORD dwLRV = MAKELONG(WORD(lv),WORD(rv));
+	bool found = false;
+	UINT uNumDevs = waveOutGetNumDevs();
+	for(UINT uDeviceID=0; uDeviceID<uNumDevs; uDeviceID++)
+		{	
+		WAVEOUTCAPS waveCaps;
+		int res = waveOutGetDevCaps(uDeviceID, &waveCaps, sizeof(WAVEOUTCAPS));
+		if(res != MMSYSERR_NOERROR) continue;
+		if(waveCaps.dwSupport & WAVECAPS_VOLUME)
+			{
+			res = waveOutSetVolume((HWAVEOUT)uDeviceID, dwLRV);
+			if(res == MMSYSERR_NOERROR)
+				{
+				found = true;
+				break;
+				}
+			}
+		}
+	if(!found)
+		{
+		seterror("No device found supporting volume");
+		return NULL;
+		}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 // std com stuff for independance
 static char CoInitialize__doc__[] =
 ""
@@ -1414,6 +1713,9 @@ CoUninitialize(PyObject *self, PyObject *args)
 
 static struct PyMethodDef dsound_methods[] = {
 	{"CreateDirectSound", (PyCFunction)CreateDirectSound, METH_VARARGS, CreateDirectSound__doc__},
+	{"CreateDSBufferDesc", (PyCFunction)CreateDSBufferDesc, METH_VARARGS, CreateDSBufferDesc__doc__},
+	{"GetWaveoutVolume", (PyCFunction)GetWaveoutVolume, METH_VARARGS, GetWaveoutVolume__doc__},
+	{"SetWaveoutVolume", (PyCFunction)SetWaveoutVolume, METH_VARARGS, SetWaveoutVolume__doc__},
 	{"CoInitialize", (PyCFunction)CoInitialize, METH_VARARGS, CoInitialize__doc__},
 	{"CoUninitialize", (PyCFunction)CoUninitialize, METH_VARARGS, CoUninitialize__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
@@ -1464,6 +1766,19 @@ static struct constentry _dsbcaps[] ={
 	{NULL,0}
 	};
 
+static struct constentry _dsbstatus[] ={
+	{"DSBSTATUS_PLAYING",DSBSTATUS_PLAYING},
+	{"DSBSTATUS_BUFFERLOST",DSBSTATUS_BUFFERLOST},
+	{"DSBSTATUS_LOOPING",DSBSTATUS_LOOPING},
+	{NULL,0}
+	};
+
+static struct constentry _dsbvolume[] ={
+	{"DSBVOLUME_MAX",DSBVOLUME_MAX},
+	{"DSBVOLUME_MIN",DSBVOLUME_MIN},
+	{NULL,0}
+	};
+
 static struct constentry _ds3d[] ={
 	{"DS3D_IMMEDIATE",DS3D_IMMEDIATE},
 	{"DS3D_DEFERRED",DS3D_DEFERRED},
@@ -1502,6 +1817,8 @@ void initdsound()
 	// add symbolic constants
 	FATAL_ERROR_IF(SetItemEnum(d,_dsscl)<0)
 	FATAL_ERROR_IF(SetItemEnum(d,_dsbcaps)<0)
+	FATAL_ERROR_IF(SetItemEnum(d,_dsbvolume)<0)
+	FATAL_ERROR_IF(SetItemEnum(d,_dsbstatus)<0)
 	FATAL_ERROR_IF(SetItemEnum(d,_ds3d)<0)
 	FATAL_ERROR_IF(SetItemEnum(d,_ds3dmode)<0)
 
