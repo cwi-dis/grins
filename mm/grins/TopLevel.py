@@ -69,7 +69,8 @@ class TopLevel(TopLevelDialog):
 		self.makeplayer()
 		self.commandlist = [
 			CLOSE(callback = (self.close_callback, ())),
-			RELOAD(callback = (self.reload_callback, ())), 
+			RELOAD(callback = (self.reload_callback, ())),
+			USERGROUPS(callback = self.usergroup_callback),
 			]
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
@@ -97,6 +98,7 @@ class TopLevel(TopLevelDialog):
 		   hasattr(windowinterface, 'textwindow'):
 			if settings.get('showsource'):
 				self.source_callback()
+		self.setusergroups()
 
 	def destroy(self):
 		if self in self.main.tops:
@@ -278,6 +280,34 @@ class TopLevel(TopLevelDialog):
 
 	def close(self):
 		self.destroy()
+
+	def usergroup_callback(self, name):
+		self.setwaiting()
+		title, u_state, override, uid = self.context.usergroups[name]
+		if not em.transaction():
+			return
+		if u_state == 'RENDERED':
+			u_state = 'NOT_RENDERED'
+		else:
+			u_state = 'RENDERED'
+		self.context.usergroups[name] = title, u_state, override, uid
+		self.setusergroups()
+
+	def setusergroups(self):
+		menu = []
+		ugroups = self.context.usergroups.keys()
+		ugroups.sort()
+		showhidden = settings.get('showhidden')
+		for name in ugroups:
+			title, u_state, override, uid = self.context.usergroups[name]
+			if not showhidden and override != 'visible':
+				continue
+			if not title:
+				title = name
+			menu.append((title, (name,), 't', u_state == 'RENDERED'))
+		w = self.window
+		if w is not None:
+			w.set_dynamiclist(USERGROUPS, menu)
 
 	def help_callback(self, params=None):
 		import Help
