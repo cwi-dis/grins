@@ -39,17 +39,24 @@ def WriteOpenFile(root, fp):
 # Internals to move attributes between context and root
 
 def fixroot(root):
-##	root.attrdict['styledict'] = root.context.styledict
 	root.attrdict['hyperlinks'] = root.context.get_hyperlinks(root)
 	clist = []
 	for cname in root.context.channelnames:
 		clist.append(cname, root.context.channeldict[cname]._getdict())
 	root.attrdict['channellist'] = clist
+	llist = []
+	for name, chans in root.context.layouts.items():
+		channels = []
+		for chan in chans:
+			channels.append(chan.name)
+		llist.append(name, channels)
+	root.attrdict['layouts'] = llist
 
 def unfixroot(root):
 ##	del root.attrdict['styledict']
 	del root.attrdict['hyperlinks']
 	del root.attrdict['channellist']
+	del root.attrdict['layouts']
 
 
 # Private functions to write nodes to a file.

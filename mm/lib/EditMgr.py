@@ -253,6 +253,58 @@ class EditMgr:
 			del c[attrname]
 		else:
 			c[attrname] = value
+
+	#
+	# Layout operations
+	#
+	def addlayout(self, name):
+		if self.context.layouts.has_key(name):
+			raise MMExc.AssertError, \
+			      'duplicate layout name in addlayout'
+		self.addstep('addlayout', name)
+		self.context.addlayout(name)
+
+	def dellayout(self, name):
+		layout = self.context.layouts.get(name)
+		if layout is None:
+			raise MMExc.AssertError, 'unknown layout in dellayout'
+		self.addstep('dellayout', name, layout)
+		self.context.dellayout(name)
+
+	def addlayoutchannel(self, name, channel):
+		layout = self.context.layouts.get(name)
+		if layout is None:
+			raise MMExc.AssertError, \
+			      'unknown layout in addlayoutchannel'
+		if channel in layout:
+			raise MMExc.AssertError, \
+			      'channel already in layout in addlayoutchannel'
+		self.addstep('addlayoutchannel', name, channel)
+		self.context.addlayoutchannel(name, channel)
+
+	def dellayoutchannel(self, name, channel):
+		layout = self.context.layouts.get(name)
+		if layout is None:
+			raise MMExc.AssertError, \
+			      'unknown layout in addlayoutchannel'
+		if channel not in layout:
+			raise MMExc.AssertError, \
+			      'channel not in layout in dellayoutchannel'
+		self.addstep('dellayoutchannel', name, channel)
+		self.context.dellayoutchannel(name, channel)
+
+	def setlayoutname(self, name, newname):
+		if newname == name:
+			return		# no change
+		if not self.context.layouts.has_key(name):
+			raise MMExc.AssertError, \
+			      'unknown layout name in setlayoutname'
+		if self.context.layouts.has_key(newname):
+			raise MMExc.AssertError, \
+			      'name already in use in setlayoutname'
+		self.addstep('setlayoutname', name, newname)
+		self.context.setlayoutname(name, newname)
+		
 ##	#
 ##	# Style operations
 ##	#

@@ -18,10 +18,12 @@ class MMNodeContext:
 		self.channels = []
 		self.channeldict = {}
 		self.hyperlinks = Hlinks()
+		self.layouts = {}
 		self.dirname = None
 		self.nextuid = 1
 		self.editmgr = None
 		self.armedmode = None
+		self.getchannelbynode = None
 
 	def __repr__(self):
 		return '<MMNodeContext instance, channelnames=' \
@@ -146,6 +148,11 @@ class MMNodeContext:
 			raise CheckError, 'delchannel: non-existing name'
 		i = self.channelnames.index(name)
 		c = self.channels[i]
+		for channels in self.layouts.values():
+			for j in range(len(channels)):
+				if c is channels[j]:
+					del channels[j]
+					break
 		del self.channels[i]
 		del self.channelnames[i]
 		del self.channeldict[name]
@@ -164,12 +171,11 @@ class MMNodeContext:
 		# Patch references to this channel in nodes
 		for uid in self.uidmap.keys():
 			n = self.uidmap[uid]
-			try:
-				if n.GetRawAttr('channel') == oldname:
-					n.SetAttr('channel', newname)
-			except NoSuchAttrError:
-				pass
+			if n.GetRawAttrDef('channel', None) == oldname:
+				n.SetAttr('channel', newname)
 
+	def registergetchannelbynode(self, func):
+		self.getchannelbynode = func
 	#
 	# Hyperlink administration
 	#
@@ -195,6 +201,64 @@ class MMNodeContext:
 		links = self.hyperlinks.selectlinks(self._isgoodlink)
 		del self._roots
 		return links
+
+	#
+	# Layout administration
+	#
+	def addlayouts(self, list):
+		for name, channels in list:
+			chans = []
+			for channame in channels:
+				chan = self.channeldict.get(channame)
+				if chan is None:
+					print 'channel %s in layout %s does not exist' % (channame, name)
+				else:
+					chans.append(chan)
+			self.layouts[name] = chans
+
+	def addlayout(self, name):
+		if self.layouts.has_key(name):
+			raise CheckError, 'addlayout: existing name'
+		self.layouts[name] = []
+
+	def dellayout(self, name):
+		if not self.layouts.has_key(name):
+			raise CheckError, 'dellayout: non-existing name'
+		del self.layouts[name]
+
+	def setlayoutname(self, oldname, newname):
+		if newname == oldname: return # No change
+		if self.layouts.has_key(newname):
+			raise CheckError, 'setlayoutname: duplicate name'
+		layout = self.layouts.get(oldname)
+		if layout is None:
+			raise CheckError, 'setlayoutname: unknown layout'
+		del self.layouts[oldname]
+		self.layouts[newname] = layout
+		# Patch references to this layout in nodes
+		for uid in self.uidmap.keys():
+			n = self.uidmap[uid]
+			if n.GetRawAttrDef('layout', None) == oldname:
+				n.SetAttr('layout', newname)
+
+	def addlayoutchannel(self, name, channel):
+		channels = self.layouts.get(name)
+		if channels is None:
+			raise CheckError, 'addlayoutchannel: non-existing name'
+		for ch in channels:
+			if ch is channel:
+				raise CheckError, 'addlayoutchannel: channel already in layout'
+		channels.append(channel)
+
+	def dellayoutchannel(self, name, channel):
+		channels = self.layouts.get(name)
+		if channels is None:
+			raise CheckError, 'dellayoutchannel: non-existing name'
+		for i in range(len(channels)):
+			if channels[i] is channel:
+				del channels[i]
+				return
+		raise CheckError, 'dellayoutchannel: channel not in layout'
 
 	# Internal: predicates to select nodes pertaining to self._roots
 	def _isbadlink(self, link):
@@ -326,7 +390,7 @@ class MMNode:
 		self.uid = uid
 		self.attrdict = {}
 		self.values = []
-		self.playable = 1
+		self.playable = None
 		self.parent = None
 		self.children = []
 ##		self.summaries = {}
@@ -987,6 +1051,7 @@ class MMNode:
 		if not self.wtd_children:
 			return self.gensr_empty()
 		selected_child = None
+##		import pdb ; pdb.set_trace() # DBG
 		for child in self.wtd_children:
 			if child.IsPlayable():
 				selected_child = child
@@ -1384,9 +1449,8 @@ class MMNode:
 		return sched_actions, schedstop_actions, srlist
 
 
-	def GenAllSR(self, seeknode, getchannelfunc=None):
-		MMNode.getchannelfunc = getchannelfunc
-		self.SetPlayability(getchannelfunc=getchannelfunc)
+	def GenAllSR(self, seeknode):
+		self.SetPlayability()
 		if not seeknode:
 			seeknode = self
 ## Commented out for now: this cache messes up Scheduler.GenAllPrearms()
@@ -1542,6 +1606,15 @@ class MMNode:
 
 	def GetWtdChildren(self):
 		return self.wtd_children
+		
+	def IsWanted(self):
+		# This is not very efficient...
+		if self.parent == None:
+			return 1
+		parent = self.parent
+		if not hasattr(parent, 'wtd_children'):
+			return 1
+		return self in parent.wtd_children and parent.IsWanted()
 
 	#
 	# SetArcSrc sets the source of a sync arc.
@@ -1565,9 +1638,10 @@ class MMNode:
 	#
 	# Playability depending on system/environment parameters
 	#
-	def SetPlayability(self, playable=1, getchannelfunc=None):
+	def SetPlayability(self, playable=1):
 		if playable:
 			playable = self._compute_playable()
+		getchannelfunc = self.context.getchannelbynode
 		if playable and self.type in leaftypes and getchannelfunc:
 			# For media nodes check that the channel likes
 			# the node
@@ -1576,12 +1650,15 @@ class MMNode:
 				playable = 0
 		self.playable = playable
 ## 		for child in self.children:
-## 			child.SetPlayability(playable, getchannelfunc)
+## 			child.SetPlayability(playable)
 
 	def IsPlayable(self):
-		if not hasattr(self, 'playable'):
-			self.SetPlayability(self.parent.IsPlayable(),
-					    self.getchannelfunc)
+		if self.playable is None:
+			if self.parent is None:
+				parent_playable = 1
+			else:
+				parent_playable = self.parent.IsPlayable()
+			self.SetPlayability(parent_playable)
 		return self.playable
 
 	def _compute_playable(self):
