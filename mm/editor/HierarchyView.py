@@ -1819,7 +1819,7 @@ class HierarchyView(HierarchyViewDialog):
 				w.set_dangling_event()
 		elif self.selected_widget:
 			self.__clear_event_source()
-			self.event_sources = self.selected_widget.get_node() # which works even if it's an icon.
+			self.event_sources = [self.selected_widget.get_node()] # which works even if it's an icon.
 			self.selected_widget.set_dangling_event()
 		else:
 			windowinterface.beep() # Should not happen
