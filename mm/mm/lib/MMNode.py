@@ -10,8 +10,7 @@ from Hlinks import Hlinks
 import MMurl
 import settings
 
-# import grins.DOM.Core
-import xml.dom.core
+import grinsDOM.dom.core
 
 class MMNodeContext:
 	def __init__(self, nodeclass):
@@ -453,10 +452,10 @@ class MMNode:
 		return self.type 
 					
 	def _get_nodeValue(self) :
-		raise xml.dom.core.DOMException('reading nodeValue is illegal')
+		raise grinsDOM.dom.core.DOMException('reading nodeValue is illegal')
 
 	def _get_nodeType(self) :
-		return xml.dom.core.ELEMENT_NODE
+		return grinsDOM.dom.core.ELEMENT_NODE
 
 	def _get_parentNode(self) :
 		return self.parent
@@ -486,9 +485,9 @@ class MMNode:
 		return None
 
 	def _get_attributes(self):
-		namedNodeMap = xml.dom.core.NamedNodeMap()
+		namedNodeMap = grinsDOM.dom.core.NamedNodeMap()
 		for a in self.attrdict.items() :
-			newAttribute = xml.dom.core.Attr(a[0],a[1]) 
+			newAttribute = grinsDOM.dom.core.Attr(a[0],a[1]) 
 			namedNodeMap.setNamedItem(newAttribute)
 		return namedNodeMap     
 
