@@ -447,7 +447,7 @@ static PyObject *
 DirectDrawSurface_AddAttachedSurface(DirectDrawSurfaceObject *self, PyObject *args)
 {
 	DirectDrawSurfaceObject *obj;
-	if (!PyArg_ParseTuple(args, "!O",&DirectDrawSurfaceType,&obj))
+	if (!PyArg_ParseTuple(args, "O!",&DirectDrawSurfaceType,&obj))
 		return NULL;	
 	HRESULT hr;
 	hr = self->pI->AddAttachedSurface(obj->pI);
@@ -466,7 +466,7 @@ static PyObject *
 DirectDrawSurface_SetClipper(DirectDrawSurfaceObject *self, PyObject *args)
 {
 	DirectDrawClipperObject *obj;
-	if (!PyArg_ParseTuple(args, "!O",&DirectDrawClipperType,&obj))
+	if (!PyArg_ParseTuple(args, "O!",&DirectDrawClipperType,&obj))
 		return NULL;	
 	HRESULT hr;
 	hr = self->pI->SetClipper(obj->pI);
@@ -485,7 +485,7 @@ static PyObject *
 DirectDrawSurface_SetPalette(DirectDrawSurfaceObject *self, PyObject *args)
 {
 	DirectDrawPaletteObject *obj;
-	if (!PyArg_ParseTuple(args, "!O",&DirectDrawPaletteType,&obj))
+	if (!PyArg_ParseTuple(args, "O!",&DirectDrawPaletteType,&obj))
 		return NULL;	
 	HRESULT hr;
 	hr = self->pI->SetPalette(obj->pI);
@@ -508,7 +508,7 @@ DirectDrawSurface_Blt(DirectDrawSurfaceObject *self, PyObject *args)
 	RECT rcFrom;
 	DWORD dwFlags = DDBLT_WAIT;	
 	DDBLTFXObject *pbltfx = NULL;
-	if (!PyArg_ParseTuple(args, "(iiii)!O(iiii)|i!O",
+	if (!PyArg_ParseTuple(args, "(iiii)O!(iiii)|iO!",
 			&rcTo.left,&rcTo.top,&rcTo.right,&rcTo.bottom, 
 			&DirectDrawSurfaceType,&ddsFrom,
 			&rcFrom.left,&rcFrom.top,&rcFrom.right,&rcFrom.bottom, 
