@@ -36,7 +36,7 @@ class SchedulerContext:
 		#self.parent.ui.duration_ind.label = '??:??'
 
 		self.prepare_minidoc(seeknode)
-		if debugevents:self.dump()
+##		if debugevents:self.dump()
 
 
 	#
@@ -215,7 +215,7 @@ class SchedulerContext:
 	# for the next time through the loop
 	#
 	def restartloop(self, node):
-		if debugevents: self.dump()
+##		if debugevents: self.dump()
 		# XXXX Not a good idea, this algorithm: a looping node
 		# will cause actions to grow without bound.
 		srdict = node.GenLoopSR()
@@ -274,8 +274,17 @@ class SchedulerContext:
 		srlist = self.getsrlist(ev)
 		self.queuesrlist(srlist)
 
-	def StartEvent(self, node):
-		if debugevents: print 'StartEvent', `node`
+	def Event(self, arc):
+		node = arc.dstnode
+		if debugevents: print 'Event', `node`
+		if not arc.isstart:
+			if node.playing != MMStates.PLAYING:
+				# ignore end event if not playing
+				if debugevents: print 'node not playing'
+				return
+			if debugevents: print 'terminating node'
+			self.parent.do_terminate(self, node)
+			return
 		pnode = node.GetParent()
 		if not pnode or pnode.playing != MMStates.PLAYING:
 			# ignore event when node can't play
@@ -295,7 +304,7 @@ class SchedulerContext:
 		srdict = pnode.gensr_child_par(node)
 		self.srdict.update(srdict)
 		self.parent.event(self, (SR.SCHED, node))
-		if debugevents: self.dump()
+##		if debugevents: self.dump()
 
 	def queuesrlist(self, srlist):
 		for sr in srlist:
@@ -642,6 +651,16 @@ class Scheduler(scheduler):
 			raise error, 'Scheduler: running from finished context'
 		if debugevents: print 'exec: ', SR.ev2string(todo)
 		action, arg = todo
+		if action == SR.SCHED_START or action == SR.LOOPSTART or action == SR.LOOPRESTART:
+			node = arg
+			if action == SR.LOOPSTART or action == SR.LOOPRESTART:
+				node = node.looping_body_self
+			node.playing = MMStates.PLAYING
+			for arc in node.sched_children:
+				if arc.event == 'begin' and \
+				   arc.marker is None and \
+				   arc.delay is not None:
+					self.enter(self.delay, 0, sctx.Event, (arc,))
 		if action == SR.PLAY:
 			self.do_play(sctx, arg)
 		elif action == SR.PLAY_STOP:
@@ -667,24 +686,6 @@ class Scheduler(scheduler):
 			if action == SR.SCHED_STOPPING and \
 			   (arg.GetType() in interiortypes or arg.realpix_body or arg.caption_body):
 				self.remove_terminate(sctx, arg)
-			if action == SR.SCHED_START:
-				arg.playing = MMStates.PLAYING
-				if hasattr(arg, 'helpertype'):
-					# MMNode_body
-					node = arg.parent
-				else:
-					node = arg
-				for ch in arg.sched_children:
-					beginlist = MMAttrdefs.getattr(ch, 'beginlist')
-					if not beginlist:
-						self.enter(0.0, 0, sctx.StartEvent, (ch,))
-						continue
-					for arc in beginlist:
-						if arc.event == 'begin' and \
-						   arc.src is node and \
-						   arc.marker is None and \
-						   arc.delay is not None:
-							self.enter(self.delay, 0, sctx.StartEvent, (ch,))
 			if action == SR.SCHED_STOPPING:
 				arg.playing = MMStates.PLAYED
 				for ch in arg.children:

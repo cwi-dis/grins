@@ -156,15 +156,16 @@ class SoundChannel(ChannelAsync):
 		self.arm_fp = None
 		self.armed_markers = {}
 		rate = self.play_fp.getframerate()
-		for mark in node.events.keys():
-			for delay, ynode, aid in node.events[mark]:
-				if self.play_markers.has_key(mark):
-					t = self.play_markers[mark] / float(rate) + delay
-					if t <= 0:
-						self.__signal(ynode, aid)
-					else:
-						qid = self._scheduler.enter(t, 0, self.__signal, (ynode, aid,))
-						self.__evid.append(qid)
+		for arc in node.sched_children:
+			mark = arc.marker
+			if mark is None or not self.play_markers.has_key(mark):
+				continue
+			t = self.play_markers[mark] / float(rate) + (arc.delay or 0)
+			if t <= 0:
+				self._playcontext.Event(arc)
+			else:
+				qid = self._scheduler.enter(t, 0, self._playcontext.Event, (arc,))
+				self.__evid.append(qid)
 		if self.armed_duration > 0:
 			self.__qid = self._scheduler.enter(
 				self.armed_duration, 0, self.__stopplay, ())
@@ -176,9 +177,6 @@ class SoundChannel(ChannelAsync):
 			return
 		if self.play_loop == 0 and self.armed_duration == 0:
 			self.playdone(0)
-
-	def __signal(self, ynode, aid):
-		self._playcontext.Event(ynode, aid)
 
 	def __stopplay(self):
 		self.__qid = None
