@@ -964,7 +964,10 @@ class Object:
 			node.abox = l+hmargin, t+vmargin, l+hmargin+awidth, t+vmargin+aheight
 			if hasattr(node, 'expanded'):
 				# expanded node, point down
-				d.drawfpolygon(EXPCOLOR,
+				expcolor = EXPCOLOR
+				if node == self.mother.root:
+					expcolor = BGCOLOR
+				d.drawfpolygon(expcolor,
 					[(l+hmargin, t+vmargin),
 					 (l+hmargin+awidth,t+vmargin),
 					 (l+hmargin+awidth/2,t+vmargin+aheight)])
