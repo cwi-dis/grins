@@ -29,11 +29,17 @@ class SoundChannel(ChannelAsync):
 		self.play_fp = None
 		self.__qid = None
 
+	def do_show(self, pchan):
+		# we can only be shown if we can play
+		return player is not None
+
 	def do_arm(self, node, same=0):
 		if same and self.arm_fp:
 			return 1
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
+			return 1
+		if player is None:
 			return 1
 		if debug: print 'SoundChannel: arm', node
 		fn = self.getfileurl(node)
@@ -66,7 +72,7 @@ class SoundChannel(ChannelAsync):
 		return 1
 
 	def do_play(self, node):
-		if not self.arm_fp:
+		if not self.arm_fp or player is None:
 			print 'SoundChannel: not playing'
 			self.play_fp = None
 			self.arm_fp = None
@@ -136,7 +142,8 @@ class SoundChannel(ChannelAsync):
 
 	def setpaused(self, paused):
 		if debug: print 'setpaused', paused
-		player.setpaused(paused)
+		if player is not None:
+			player.setpaused(paused)
 		self._paused = paused
 
 	def do_hide(self):
@@ -147,8 +154,6 @@ class SoundChannel(ChannelAsync):
 				nframes = 1
 			rate = self.play_fp.getframerate()
 			self.play_fp = None
-			if self.__qid or self.play_loop == 0:
-				return
 			self._qid = self._scheduler.enter(
 				float(nframes) / rate, 0,
 				self.playdone, (0,))
@@ -304,4 +309,7 @@ class Player:
 							(self.__playsome, ()))
 				return
 
-player = Player()
+try:
+	player = Player()
+except:
+	player = None
