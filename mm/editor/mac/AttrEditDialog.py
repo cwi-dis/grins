@@ -1450,6 +1450,7 @@ class AreaTabPage(MultiDictTabPage):
 			
 	def init_controls(self, item0):
 		rv = MultiDictTabPage.init_controls(self, item0)
+		preview_image = self.getareaimage()
 		self._area = self.attreditor._window.AreaWidget(item0+self.ITEM_PREVIEW, 
 				callback=self._preview_to_labels, scaleitem=item0+self.ITEM_SCALE)
 		self._area.setinfo(self.getmaxarea())
@@ -1562,7 +1563,39 @@ class AreaTabPage(MultiDictTabPage):
 			return 0, 0, w, h
 		x0, y0, x1, y1 = Qd.qd.screenBits.bounds
 		return x0, y0, (x1-x0), (y1-y0)
+		
+	def getmaxareaforsubregion(self):
+		# Another hack. Find the dimensions of the RealPix channel.
+		import MMAttrdefs
+		wrapper = self.attreditor.wrapper
+		node = wrapper.node
+		pnode = node.parent
+		w, h = MMAttrdefs.getattr(pnode, 'size')
+		return 0, 0, w, h
 
+	def getareaimage(self):
+		# The third hack: get the background image for the area widget.
+		import MMAttrdefs
+		import Sizes
+		w = 1000
+		h = 1000
+		wrapper = self.attreditor.wrapper
+		node = wrapper.node
+		url = MMAttrdefs.getattr(node, 'file')
+		if url:
+			url = wrapper.getcontext.findurl(url)
+		if url:
+			try:
+				w, h = Sizes.GetSize(url)
+			except:
+				pass
+		self.area_image_w = w
+		self.area_image_h = h
+		return None
+		
+	def getmaxareaforimage(self):
+		return 0, 0, self.area_image_w, self.area_image_h
+		
 class SourceAreaTabPage(AreaTabPage):
 	TAB_LABEL='Source area'
 	
@@ -1586,6 +1619,15 @@ class SourceAreaTabPage(AreaTabPage):
 	_xywhfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H)
 	_otherfields = ()
 	helpstring = 'Use these fields to use only part of the source image in the transition.'
+	
+	def getmaxarea(self):
+		import MMAttrdefs
+		wrapper = self.attreditor.wrapper
+		node = wrapper.node
+		if MMAttrdefs.getattr(node, 'tag') == 'viewchange':
+			return self.getmaxareaforregion()
+		else:
+			return self.getmaxareaforimage()
 			
 class DestinationAreaTabPage(AreaTabPage):
 	TAB_LABEL='Destination area'
@@ -1612,6 +1654,9 @@ class DestinationAreaTabPage(AreaTabPage):
 	_xywhfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H)
 	_otherfields = ()
 	
+	def getmaxarea(self):
+		return self.getmaxareaforregion()
+	
 class Destination1AreaTabPage(DestinationAreaTabPage):
 	# Destination area without "keep aspect" checkbox (fadeout)
 	items_to_hide=(12,)
@@ -1621,6 +1666,9 @@ class Destination1AreaTabPage(DestinationAreaTabPage):
 	attrs_on_page = ['displayfull', 'subregionxy', 'subregionwh']
 	_checkboxes = (DestinationAreaTabPage.ITEM_WHOLE, )
 	helpstring = 'Use these fields to do the transition on a subsection of the RealPix region.'
+	
+	def getmaxarea(self):
+		return self.getmaxareaforregion()
 	
 class ChannelAreaTabPage(AreaTabPage):
 	TAB_LABEL='Position and Size'
