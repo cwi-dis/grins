@@ -696,7 +696,7 @@ class SMILHtmlTimeWriter(SMIL):
 		for name, func in smil_attrs:
 			if attributes.has_key(name):
 				if name == 'type':
-					value = getstringattr(self, node, "trtype")
+					value = node.GetRawAttr("trtype", None)
 				else:
 					value = func(self, node)
 				if value: value = scriptidref(value)
