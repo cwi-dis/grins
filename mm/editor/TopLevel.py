@@ -367,6 +367,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 						    'Error: '+msg[1])
 			return 0
 		print 'done saving.'
+		self.main._update_recent(MMurl.pathname2url(filename))
 		self.changed = 0
 		self.new_file = 0
 		self.setcommands(self.commandlist)
