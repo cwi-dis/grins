@@ -1355,7 +1355,7 @@ class MMNode:
 			srlist.append( ([(LOOPEND_DONE, self)], []) )
 		elif self.curloopcount < 0:
 			sched_actions = sched_actions + scheddone_actions
-			terminate_actions.append( (TERMINATE, self) )
+			#terminate_actions.append( (TERMINATE, self) )
 			srlist.append( ([(LOOPEND_DONE, self)], []) )
 		else:
 			srlist.append( ([(LOOPEND_DONE, self)],
