@@ -17,6 +17,7 @@
 #define IDC_PSS4                        1007
 #define IDC_PSS5                        1008
 #define IDC_LANGUAGE                    1009
+#define IDC_MMS                         1010
 #define IDM_MAIN_COMMAND1               40001
 #define IDM_HELP_ABOUT                  40003
 #define IDM_MAIN_COMMAND2               40007
