@@ -77,6 +77,10 @@ SOURCE=.\RES\Drag.cur
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\draghand.cur
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\Draglink.cur
 # End Source File
 # Begin Source File
@@ -177,7 +181,15 @@ SOURCE=.\RES\player8bit.bmp
 # End Source File
 # Begin Source File
 
+SOURCE="..\..\..\Build\products\g2-15\pro\splash8bit.bmp"
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\splashimg.bmp
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\..\Build\products\g2-15\lite\splashpr.bmp"
 # End Source File
 # Begin Source File
 
