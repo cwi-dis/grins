@@ -402,7 +402,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 	
 	# return commnds class id
 	def get_cmdclass_id(self,cmdcl):
-		if cmdcl in usercmdui.class2ui.keys():
+		if usercmdui.class2ui.has_key(cmdcl):
 			return usercmdui.class2ui[cmdcl].id
 		else: 
 			print 'CmdClass not found',cmdcl

@@ -369,6 +369,7 @@ class ControlsDict:
 	def items(self): return self._subwnddict.items()
 	def values(self): return self._subwnddict.values()
 	def has_key(self, key): return self._subwnddict.has_key(key)
+	def get(self, key, default): return self._subwnddict.get(key, default)
 
 ##############################
 def dllFromDll(dllid):
@@ -433,6 +434,7 @@ class DialogBase(window.Wnd):
 	def items(self): return self.data.items()
 	def values(self): return self.data.values()
 	def has_key(self, key): return self.data.has_key(key)
+	def get(self, key, default): return self.data.get(key, default)
 
 # Base class for dialogs created using a resource template 
 class ResDialog(DialogBase):
