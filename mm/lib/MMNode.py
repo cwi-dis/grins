@@ -3300,15 +3300,15 @@ class MMNode(MMTreeElement):
 					pchildren = pnode.GetChildren()
 				for c in pchildren:
 					if c.IsAncestorOf(self):
+						if not self.checkendlist(sctx, val, endlist):
+							return None
 						if maybecached:
 							self.start_time = val
 							parent = self.parent
 							while parent and parent.type in ('switch', 'foreign'):
 								parent.start_time = val
 								parent = parent.parent
-						if self.checkendlist(sctx, val, endlist):
-							return val
-						return None
+						return val
 					e, MBcached = c.__calcendtime(val, sctx)
 					if e is None or e < 0:
 						return None
@@ -3327,10 +3327,26 @@ class MMNode(MMTreeElement):
 			return None
 		min = None
 		maybecached = 1
+		duration = self.GetAttrDef('duration', None)
+		if duration == -2:	# dur="media"
+			if self.type in interiortypes:
+				duration = None	# shouldn't happen
+			else:
+				duration = Duration.get(self, ignoreloop=1, ignoredur=1)
+		if duration is not None and duration > 0:
+			if MMAttrdefs.getattr(self, 'autoReverse'):
+				duration = duration * 2
+			speed = MMAttrdefs.getattr(self, 'speed')
+			if speed > 0:
+				duration = duration / float(speed)
 		for arc in beginlist:
 			if arc.isresolved(sctx):
 				v = arc.resolvedtime(sctx)
-				if self.checkendlist(sctx, v, endlist) and (min is None or v < min):
+				if duration is not None and duration >= 0 and v + duration < presolved:
+					continue
+				if not self.checkendlist(sctx, v, endlist):
+					continue
+				if min is None or v < min:
 					min = v
 			if arc.timestamp is None:
 				maybecached = 0
@@ -3338,7 +3354,7 @@ class MMNode(MMTreeElement):
 			# no resolved sync arcs
 			return None
 		if maybecached:
-			self.start_time = presolved + min
+			self.start_time = min
 			parent = self.parent
 			while parent and parent.type in ('switch', 'foreign'):
 				parent.start_time = presolved + min
@@ -3400,11 +3416,6 @@ class MMNode(MMTreeElement):
 		fill = self.GetFill()
 
 		#
-		# We are started when we get our SCHED and all our
-		# incoming head-syncarcs.
-		#
-		sched_events = [(SCHED, self)]
-		#
 		# Once we are started we should fire our outgoing head
 		# syncarcs
 		#
@@ -3414,11 +3425,6 @@ class MMNode(MMTreeElement):
 		# and fire our outgoing tail syncarcs.
 		#
 		scheddone_actions_arg = [(SCHED_STOPPING, self)]
-		#
-		# And when the parent is really done with us we get a
-		# SCHED_STOP
-		#
-		schedstop_events = [(SCHED_STOP, self)]
 
 		sched_actions, schedstop_actions,  \
 			       srdict = gensr_envelope(gensr_body, repeatCount,
@@ -3430,12 +3436,13 @@ class MMNode(MMTreeElement):
 			# Tie our start-events to the envelope/body
 			# start-actions
 			#
-			action = [len(sched_events), [(SCHED_START, self)]]
-			for event in sched_events:
-				self.srdict[event] = action # MUST all be same object
-				srdict[event] = self.srdict
-			self.srdict[(SCHED_START, self)] = [1, sched_actions]
-			srdict[(SCHED_START, self)] = self.srdict
+			ev = (SCHED, self)
+			self.srdict[ev] = [1, [(SCHED_START, self)]]
+			srdict[ev] = self.srdict
+
+			ev = (SCHED_START, self)
+			self.srdict[ev] = [1, sched_actions]
+			srdict[ev] = self.srdict
 
 			#
 			# Tie the envelope/body done events to our done actions
@@ -3444,10 +3451,14 @@ class MMNode(MMTreeElement):
 			if fill == 'remove':
 				sched_done = sched_done + schedstop_actions
 				schedstop_actions = []
-			action = [len(schedstop_events), schedstop_actions]
-			for event in schedstop_events:
-				self.srdict[event] = action # MUST all be same object
-				srdict[event] = self.srdict # or just self?
+			#
+			# And when the parent is really done with us we get a
+			# SCHED_STOP
+			#
+			ev = (SCHED_STOP, self)
+			self.srdict[ev] = [1, schedstop_actions]
+			srdict[ev] = self.srdict
+
 			ev = (SCHED_STOPPING, self)
 			self.srdict[ev] = [1, sched_done]
 			srdict[ev] = self.srdict
@@ -3698,13 +3709,14 @@ class MMNode(MMTreeElement):
 			chname = MMAttrdefs.getattr(child, 'name')
 			beginlist = child.GetBeginList()
 			beginlist = self.FilterArcList(beginlist)
+			subpath = None
 			if path and path[0] is child:
 				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = sctx.parent.timefunc() - self.start_time)
 				self_body.arcs.append((srcnode, arc))
 				srcnode.add_arc(arc, sctx)
 				schedule = 1
-				if path and path[0] is child:
-					arc.path = path[1:]
+				subpath = path[1:]
+				arc.path = subpath
 			elif not beginlist:
 				if defbegin is None:
 					child.set_infoicon('error', 'node cannot start')
@@ -3712,8 +3724,6 @@ class MMNode(MMTreeElement):
 				self_body.arcs.append((srcnode, arc))
 				srcnode.add_arc(arc, sctx)
 				schedule = defbegin is not None
-				if path and path[0] is child:
-					arc.path = path[1:]
 			else:
 				schedule = 0
 				for arc in beginlist:
@@ -3724,8 +3734,6 @@ class MMNode(MMTreeElement):
 					   arc.marker is None and \
 					   arc.delay is not None:
 						schedule = 1
-					if path and path[0] is child:
-						arc.path = path[1:]
 			if self.type == 'seq':
 				pass
 			elif termtype in ('FIRST', chname): ## or

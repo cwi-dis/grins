@@ -182,7 +182,8 @@ class SchedulerContext:
 			dev = 'begin'
 ##			list = arc.dstnode.GetBeginList()
 			list = []
-			if not node.checkendlist(self, timestamp):
+			if arc.dstnode.isresolved(self) is None:
+##			if not node.checkendlist(self, timestamp):
 				# we didn't find a time interval
 				if debugevents: print 'sched_arc: not allowed to start',arc,self.parent.timefunc()
 				if external:
@@ -281,6 +282,8 @@ class SchedulerContext:
 		# event or marker happening on node.  Only one of
 		# event and marker is supplied (i.e. not None).
 		if debugevents: print 'sched_arcs',`node`,event,marker,timestamp,self.parent.timefunc(),depth
+		if node.isresolved(self) is None:
+			return
 		if timestamp is None:	# Retrieve the timestamp if it was not supplied.
 			timestamp = self.parent.timefunc()
 		channel = accesskey = None
@@ -698,6 +701,11 @@ class SchedulerContext:
 		node.set_start_time(timestamp)
 		if runchild:
 			parent.event(self, (SR.SCHED, node), timestamp)
+			for child in node.GetSchedChildren():
+				for a in child.FilterArcList(child.GetBeginList()):
+					if a.qid is None and a.isresolved(self) and child.isresolved(self) is not None:
+						a.qid = parent.enterabs(a.resolvedtime(self), 0, self.trigger, (a,None,None,timestamp))
+						self.sched_arcs(child, 'begin', timestamp = a.resolvedtime(self))
 		else:
 			if debugevents: print 'trigger, no run',parent.timefunc()
 			node.startplay(timestamp)
@@ -1435,11 +1443,12 @@ class Scheduler(scheduler):
 				sctx.sched_arcs(arg, 'end', timestamp=timestamp)
 			sctx.event((action, arg), timestamp)
 		elif action == SR.SCHED_START:
-			if arg.type in leaftypes and arg.looping_body_self is None:
-				self.do_play(sctx, arg, timestamp)
-			else:
-				arg.startplay(timestamp)
-			sctx.sched_arcs(arg, 'begin', timestamp=timestamp)
+			if arg.isresolved(sctx) is not None:
+				if arg.type in leaftypes and arg.looping_body_self is None:
+					self.do_play(sctx, arg, timestamp)
+				else:
+					arg.startplay(timestamp)
+				sctx.sched_arcs(arg, 'begin', timestamp=timestamp)
 ##				adur = arg.calcfullduration(self)
 ##				if arg.fullduration is not None and adur is not None and adur >= 0:
 ##					sctx.sched_arcs(arg, 'end', timestamp=timestamp+adur)
