@@ -32,8 +32,8 @@ class ChannelMap:
 			try:
 				exec 'from %(chan)s import %(chan)s' % \
 				     {'chan': chan}
-			except ImportError:
-				print 'Warning: cannot import channel %s' % chan
+			except ImportError, arg:
+				print 'Warning: cannot import channel %s: %s' % (chan, arg)
 			else:
 				return eval(chan)
 		# no success, use NullChannel as backup
