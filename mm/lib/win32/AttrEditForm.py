@@ -3952,7 +3952,7 @@ class ActiveDuration1Group(AttrGroup):
 		a = self.getattr('repeatdur')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_REPDURL,grinsRC.IDC_REPDURV))
 		a = self.getattr('terminator')
-		self._endSync = cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_ENDSYNCL,grinsRC.IDC_ENDSYNCV))
+		self._endSync = cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_ENDSYNCL,grinsRC.IDC_ENDSYNCV))
 		return cd
 
 class ActiveDuration2Group(ActiveDuration1Group):
