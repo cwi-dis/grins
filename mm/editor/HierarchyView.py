@@ -638,6 +638,14 @@ class HierarchyView(HierarchyViewDialog):
 		# Multiple selection.
 		for i in self.multi_selected_widgets:
 			i.draw_selected(d)
+		# Draw focus in the bandwidth strip. Note that
+		# calling this here isn't very elegant, but I couldn't
+		# think of another way
+		if self.scene_graph.bwstrip:
+			selnodes = []
+			for i in self.multi_selected_widgets:
+				selnodes.append(i.node)
+			self.scene_graph.bwstrip.focuschanged(d, selnodes)
 
 		# Draw the arrows on top.
 		newdl = d
