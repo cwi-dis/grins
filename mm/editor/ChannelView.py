@@ -13,7 +13,7 @@
 
 
 from math import sin, cos, atan2, pi, ceil, floor
-import windowinterface, EVENTS, StringStuff
+import windowinterface, WMEVENTS, StringStuff
 from ViewDialog import ViewDialog
 
 from MMNode import alltypes, leaftypes, interiortypes
@@ -114,9 +114,9 @@ class ChannelView(ViewDialog):
 		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1)
 		if self.waiting:
 			self.window.setcursor('watch')
-		self.window.register(EVENTS.Mouse0Press, self.mouse, None)
-		self.window.register(EVENTS.ResizeWindow, self.redraw, None)
-		self.window.register(EVENTS.WindowExit, self.hide, None)
+		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
+		self.window.register(WMEVENTS.ResizeWindow, self.redraw, None)
+		self.window.register(WMEVENTS.WindowExit, self.hide, None)
 		self.window.bgcolor(BGCOLOR)
 		# Other administratrivia
 		self.editmgr.register(self)

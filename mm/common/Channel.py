@@ -5,7 +5,7 @@ from AnchorDefs import *
 import os
 debug = os.environ.has_key('CHANNELDEBUG')
 import MMAttrdefs
-import windowinterface, EVENTS
+import windowinterface, WMEVENTS
 error = 'Channel.error'
 
 channel_device = 1
@@ -797,7 +797,7 @@ class ChannelWindow(Channel):
 			else:
 				self.window = windowinterface.newwindow(x, y,
 						width, height, self._name)
-			self.window.register(EVENTS.WindowExit,
+			self.window.register(WMEVENTS.WindowExit,
 					     self._destroy_callback, None)
 			if hasattr(self._player.toplevel, 'hierarchyview'):
 				menu.append('', 'push focus', (self.focuscall, ()))
@@ -807,9 +807,9 @@ class ChannelWindow(Channel):
 			self.window.bgcolor(self._attrdict['bgcolor'])
 		if self._attrdict.has_key('fgcolor'):
 			self.window.fgcolor(self._attrdict['fgcolor'])
-		self.window.register(EVENTS.ResizeWindow, self.resize, None)
-		self.window.register(EVENTS.Mouse0Press, self.mousepress, None)
-		self.window.register(EVENTS.Mouse0Release, self.mouserelease,
+		self.window.register(WMEVENTS.ResizeWindow, self.resize, None)
+		self.window.register(WMEVENTS.Mouse0Press, self.mousepress, None)
+		self.window.register(WMEVENTS.Mouse0Release, self.mouserelease,
 				     None)
 		self.window.create_menu(menu, title = self._name)
 
@@ -914,7 +914,7 @@ class ChannelWindow(Channel):
 		if debug:
 			print 'ChannelWindow.do_hide('+`self`+')'
 		if self.window:
-			self.window.unregister(EVENTS.ResizeWindow)
+			self.window.unregister(WMEVENTS.ResizeWindow)
 			self.window.close()
 			self.window = None
 			self.armed_display = self.played_display = None

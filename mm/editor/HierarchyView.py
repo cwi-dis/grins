@@ -4,7 +4,7 @@
 # positive Y coordinates point down from the top of the window.
 # Also the convention for box coordinates is (left, top, right, bottom)
 
-import windowinterface, EVENTS, StringStuff
+import windowinterface, WMEVENTS, StringStuff
 import MMAttrdefs
 import MMNode
 from ViewDialog import ViewDialog
@@ -77,9 +77,9 @@ class HierarchyView(ViewDialog):
 		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1)
 		if self.waiting:
 			self.window.setcursor('watch')
-		self.window.register(EVENTS.Mouse0Press, self.mouse, None)
-		self.window.register(EVENTS.ResizeWindow, self.redraw, None)
-		self.window.register(EVENTS.WindowExit, self.hide, None)
+		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
+		self.window.register(WMEVENTS.ResizeWindow, self.redraw, None)
+		self.window.register(WMEVENTS.WindowExit, self.hide, None)
 		self.window.bgcolor(BGCOLOR)
 		self.objects = []
 		# Other administratrivia
