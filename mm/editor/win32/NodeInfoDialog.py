@@ -157,6 +157,14 @@ class NodeInfoDialog:
 					    cancelCallback = (self.newchan_callback, ()),
 					    parent = self.__window)
 
+	def chanundef(self, default):
+		import windowinterface
+		dlg=windowinterface.ChannelUndefDlg('Channel is undefined',
+			default,parent = self.__window)
+		dlg._cb_ok=self.newchan_ok_callback
+		dlg._cb_undef_ok=self.undefined_ok_callback
+		dlg.show()
+
 	# Interface to the list of node types.  This part consists of
 	# a label and a list of strings of which one is always the
 	# current selection.  Only one element of the list needs to be
