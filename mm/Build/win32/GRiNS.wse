@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=1729688251
+  File Checksum=4026063522
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1127,6 +1127,11 @@ item: Display Graphic
 end
 item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
+end
+item: Install File
+  Source=c:\Winnt\system32\Msvcirt.dll
+  Destination=%SYS32%\Msvcirt.dll
+  Flags=0000001010000011
 end
 item: Install File
   Source=c:\Winnt\system32\Msvcp60.dll
