@@ -977,7 +977,9 @@ class SubWindow(Window):
 		rgn = win32ui.CreateRgn()
 		rgn.CreateRectRgn((x,y,x+w,y+h))
 		if rel==self: return rgn
-		rgn.CombineRgn(rgn,self._parent.getClipRgn(rel),win32con.RGN_AND)
+		prgn = self._parent.getClipRgn(rel)
+		rgn.CombineRgn(rgn,prgn,win32con.RGN_AND)
+		prgn.DeleteObject()
 		return rgn
 
 	def clipRect(self, rc, rgn):
@@ -1032,9 +1034,11 @@ class SubWindow(Window):
 			self._active_displist._render(dc,None)
 			if self._showing:
 				win32mu.FrameRect(dc,self._rect,self._showing)
-			#win32mu.FrameRect(dc,self._rect,(255, 0, 0)) # debug
 		elif self._transparent == 0:
-			dc.FillSolidRect(self.ltrb(dst),win32mu.RGB(self._bgcolor))
+			dc.FillSolidRect(self._rect,win32mu.RGB(self._bgcolor))
+		
+		# debug:
+		#win32mu.FrameRect(dc,self._rect,(0, 0, 255))
 
 		dc.SetWindowOrg((x0,y0))
 		dc.Detach()
