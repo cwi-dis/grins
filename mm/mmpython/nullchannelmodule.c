@@ -168,7 +168,7 @@ nullchannel_init(self, args)
 	} else {
 		INCREF(null_chan_obj);
 	}
-	return null_chan_obj;
+	return (object *) null_chan_obj;
 }
 
 static struct methodlist nullchannel_methods[] = {
