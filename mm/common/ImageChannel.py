@@ -9,9 +9,10 @@ from MMurl import urlretrieve
 
 class ImageChannel(ChannelWindow):
 	_our_attrs = ['bucolor', 'hicolor', 'scale', 'scalefilter', 'center',
-		      'crop', 'project_quality']
+		      'crop']
+	node_attrs = ChannelWindow.node_attrs + ['project_quality']
 	if CMIF_MODE:
-		node_attrs = ChannelWindow.node_attrs + _our_attrs
+		node_attrs = node_attrs + _our_attrs
 	else:
 		chan_attrs = ChannelWindow.chan_attrs + _our_attrs
 

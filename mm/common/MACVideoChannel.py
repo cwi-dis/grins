@@ -18,7 +18,7 @@ debug = 0 # os.environ.has_key('CHANNELDEBUG')
 class VideoChannel(ChannelWindow):
 	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center', 'project_videotype', 'project_targets']
 	node_attrs = ChannelWindow.node_attrs + \
-		     ['clipbegin', 'clipend']
+		     ['clipbegin', 'clipend', 'project_videotype', 'project_targets']
 	if CMIF_MODE:
 		node_attrs = node_attrs + _our_attrs
 	else:
