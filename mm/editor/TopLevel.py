@@ -60,6 +60,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			RESTORE(callback = (self.restore_callback, ())),
 			CLOSE(callback = (self.close_callback, ())),
 			PROPERTIES(callback = (self.prop_callback, ())),
+
+			HIDE_PLAYERVIEW(callback = (self.hide_view_callback, (0,))),
+			HIDE_HIERARCHYVIEW(callback = (self.hide_view_callback, (1,))),
+			HIDE_CHANNELVIEW(callback = (self.hide_view_callback, (2,))),
+			HIDE_LINKVIEW(callback = (self.hide_view_callback, (3,))),
+			HIDE_LAYOUTVIEW(callback = (self.hide_view_callback, (4,))),
+			HIDE_USERGROUPVIEW(callback = (self.hide_view_callback, (5,))),
 			]
 		if hasattr(self, 'do_edit'):
 			self.commandlist.append(EDITSOURCE(callback = (self.edit_callback, ())))
@@ -77,8 +84,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				HELP(callback = (self.help_callback, ())))
 		if hasattr(self.root, 'source') and \
 		   hasattr(windowinterface, 'textwindow'):
-			self.commandlist.append(
-				SOURCE(callback = (self.source_callback, ())))
+			self.commandlist = self.commandlist + [
+				SOURCE(callback = (self.source_callback, ())),
+				HIDE_SOURCE(callback = (self.hide_source_callback, ())),
+				]
 
 		TopLevelDialog.__init__(self)
 		self.makeviews()
@@ -182,19 +191,26 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.player.show((self.player.playsubtree, (self.root,)))
 
 	def source_callback(self):
+		import SMILTreeWrite
+		self.showsource(SMILTreeWrite.WriteString(self.root))
+
+	def hide_source_callback(self):
 		if self.source:
 			self.showsource(None)
-		else:
-			import SMILTreeWrite
-			self.showsource(SMILTreeWrite.WriteString(self.root))
 
 	def view_callback(self, viewno):
 		self.setwaiting()
 		view = self.views[viewno]
+		view.show()
+##		if view.is_showing():
+##			view.hide()
+##		else:
+##			view.show()
+
+	def hide_view_callback(self, viewno):
+		view = self.views[viewno]
 		if view.is_showing():
 			view.hide()
-		else:
-			view.show()
 
 	def save_callback(self):
 		if self.new_file:
