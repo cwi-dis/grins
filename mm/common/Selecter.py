@@ -219,6 +219,20 @@ class Selecter:
 		return self.gotonode(seek_node, dest_aid)
 
 	def gotonode(self, seek_node, dest_aid):
+		# First check whether this is an indirect anchor
+		list = self.followcompanchors(seek_node, dest_aid)
+		if list <> None:
+			for node_id, aid in list:
+				try:
+					node = self.context.mapuid(node_id)
+				except NoSuchUIDError:
+					self.toplevel.setready()
+					dialogs.showmessage(\
+						  'Dangling composite anchor')
+					return 0
+				self.gotonode(node, aid)
+			return
+		# It is not a composite anchor. Continue
 		while seek_node.GetType() == 'bag':
 			dest_aid = None
 			seek_node = choosebagitem(seek_node, 1)
@@ -239,6 +253,15 @@ class Selecter:
 		self.runslots.append(mini, new_sctx, bag, parent)
 		self.updateuibaglist()
 		return 1
+	#
+	def followcompanchors(self, node, aid):
+		if not aid:
+			return None
+		alist = MMAttrdefs.getattr(node, 'anchorlist')
+		for id, tp, arg in alist:
+			if id == aid and tp == ATYPE_COMP:
+				return arg
+		return None
 	#
 	# bagevent is called by the scheduler to start/stop a bag.
 	#
