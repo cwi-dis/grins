@@ -295,7 +295,7 @@ def main():
 			print
 			pdb.post_mortem(exc_traceback)
 	finally:
-		if sys.platform != 'nt':
+		if sys.platform != 'win32':
 			import windowinterface
 			windowinterface.close()
 			if stats:
