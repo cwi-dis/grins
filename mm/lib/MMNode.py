@@ -30,17 +30,17 @@ class MMNodeContext:
 			+ `self.channelnames` + '>'
 	#
 	def newnode(self, type):
-		_stat('newnode')
+		##_stat('newnode')
 		return self.newnodeuid(type, self.newuid())
 	#
 	def newnodeuid(self, (type, uid)):
-		_stat('newnodeuid')
+		##_stat('newnodeuid')
 		node = self.nodeclass().Init(type, self, uid)
 		self.knownode(uid, node)
 		return node
 	#
 	def newuid(self):
-		_stat('newuid')
+		##_stat('newuid')
 		while 1:
 			uid = `self.nextuid`
 			self.nextuid = self.nextuid + 1
@@ -48,39 +48,39 @@ class MMNodeContext:
 				return uid
 	#
 	def mapuid(self, uid):
-		_stat('mapuid')
+		##_stat('mapuid')
 		if not self.uidmap.has_key(uid):
 			raise NoSuchUIDError, 'in mapuid()'
 		return self.uidmap[uid]
 	#
 	def knownode(self, (uid, node)):
-		_stat('knownode')
+		##_stat('knownode')
 		if self.uidmap.has_key(uid):
 			raise DuplicateUIDError, 'in knownode()'
 		self.uidmap[uid] = node
 	#
 	def forgetnode(self, uid):
-		_stat('forgetnode')
+		##_stat('forgetnode')
 		del self.uidmap[uid]
 	#
 	def addstyles(self, dict):
-		_stat('addstyles')
+		##_stat('addstyles')
 		# XXX How to handle duplicates?
 		for key in dict.keys():
 			self.styledict[key] = dict[key]
 	#
 	def addchannels(self, list):
-		_stat('addchannels')
+		##_stat('addchannels')
 		for name, dict in list:
 			self.channelnames.append(name)
 			self.channeldict[name] = dict
 	#
 	def addhyperlinks(self, list):
-		_stat('addhyperlinks')
+		##_stat('addhyperlinks')
 		self.hyperlinks.addlinks(list)
 	#
 	def addhyperlink(self, link):
-		_stat('addhyperlink')
+		##_stat('addhyperlink')
 		self.hyperlinks.addlink(link)
 	#
 	def seteditmgr(self, editmgr):
@@ -99,14 +99,14 @@ class MMNodeContext:
 	# XXX this should also fix the stack overflows...
 	#
 	def lookinstyles(self, (name, styles)):
-		_stat('lookinstyles')
+		##_stat('lookinstyles')
 		for style in styles:
 			attrdict = self.styledict[style]
 			if attrdict.has_key(name):
 				return attrdict[name]
 			if attrdict.has_key('style'):
 				try:
-					_stat('lookinstyles recursive call')
+					##_stat('lookinstyles recursive call')
 					return self.lookinstyles(name, \
 						attrdict['style'])
 				except NoSuchAttrError:
@@ -170,11 +170,11 @@ class MMNode:
 		return self.context.mapuid(uid)
 	#
 	def GetParent(self):
-		_stat('GetParent')
+		##_stat('GetParent')
 		return self.parent
 	#
 	def GetRoot(x):
-		_stat('GetRoot')
+		##_stat('GetRoot')
 		root = None
 		while x:
 			root = x
@@ -182,7 +182,7 @@ class MMNode:
 		return root
 	#
 	def GetPath(x):
-		_stat('GetPath')
+		##_stat('GetPath')
 		path = []
 		while x:
 			path.append(x)
@@ -191,14 +191,14 @@ class MMNode:
 		return path
 	#
 	def IsAncestorOf(self, x):
-		_stat('IsAncestorOf')
+		##_stat('IsAncestorOf')
 		while x <> None:
 			if self == x: return 1
 			x = x.parent
 		return 0
 	#
 	def CommonAncestor(self, x):
-		_stat('CommonAncestor')
+		##_stat('CommonAncestor')
 		p1 = self.GetPath()
 		p2 = x.GetPath()
 		n = min(len(p1), len(p2))
@@ -208,51 +208,51 @@ class MMNode:
 		else: return p1[i-1]
 	#
 	def GetChildren(self):
-		_stat('GetChildren')
+		##_stat('GetChildren')
 		return self.children
 	#
 	def GetChild(self, i):
-		_stat('GetChild')
+		##_stat('GetChild')
 		return self.children[i]
 	#
 	def GetValues(self):
-		_stat('GetValues')
+		##_stat('GetValues')
 		return self.values
 	#
 	def GetValue(self, i):
-		_stat('GetValue')
+		##_stat('GetValue')
 		return self.values[i]
 	#
 	def GetAttrDict(self):
 		return self.attrdict
 	#
 	def GetRawAttr(self, name):
-		_stat('GetRawAttr' + '.' + name)
+		##_stat('GetRawAttr' + '.' + name)
 		try:
 			return self.attrdict[name]
 		except KeyError:
 			raise NoSuchAttrError, 'in GetRawAttr()'
 	#
 	def GetRawAttrDef(self, (name, default)):
-		_stat('GetRawAttrDef' + '.' + name)
+		##_stat('GetRawAttrDef' + '.' + name)
 		try:
 			return self.GetRawAttr(name)
 		except NoSuchAttrError:
 			return default
 	#
 	def GetStyleDict(self):
-		_stat('GetStyleDict')
+		##_stat('GetStyleDict')
 		return self.context.styledict
 	#
 	def GetAttr(self, name):
-		_stat('GetAttr' + '.' + name)
+		##_stat('GetAttr' + '.' + name)
 		try:
 			return self.attrdict[name]
 		except KeyError:
 			return self.GetDefAttr(name)
 	#
 	def GetDefAttr(self, name):
-		_stat('GetDefAttr' + '.' + name)
+		##_stat('GetDefAttr' + '.' + name)
 		try:
 			styles = self.attrdict['style']
 		except KeyError:
@@ -260,14 +260,14 @@ class MMNode:
 		return self.context.lookinstyles(name, styles)
 	#
 	def GetAttrDef(self, (name, default)):
-		_stat('GetAttrDef' + '.' + name)
+		##_stat('GetAttrDef' + '.' + name)
 		try:
 			return self.GetAttr(name)
 		except NoSuchAttrError:
 			return default
 	#
 	def GetInherAttr(x, name):
-		_stat('GetInherAttr' + '.' + name)
+		##_stat('GetInherAttr' + '.' + name)
 		while x:
 			if x.attrdict:
 				try:
@@ -278,7 +278,7 @@ class MMNode:
 		raise NoSuchAttrError, 'in GetInherAttr()'
 	#
 	def GetDefInherAttr(self, name):
-		_stat('GetInherDefAttr' + '.' + name)
+		##_stat('GetInherDefAttr' + '.' + name)
 		try:
 			return self.GetDefAttr(name)
 		except NoSuchAttrError:
@@ -294,14 +294,14 @@ class MMNode:
 		raise NoSuchAttrError, 'in GetInherDefAttr()'
 	#
 	def GetInherAttrDef(self, (name, default)):
-		_stat('GetInherAttrDef' + '.' + name)
+		##_stat('GetInherAttrDef' + '.' + name)
 		try:
 			return self.GetInherAttr(name)
 		except NoSuchAttrError:
 			return default
 	#
 	def GetSummary(self, name):
-		_stat('GetSummary')
+		##_stat('GetSummary')
 		if not self.summaries.has_key(name):
 			self.summaries[name] = self._summarize(name)
 		return self.summaries[name]
@@ -331,7 +331,7 @@ class MMNode:
 	# Make a "deep copy" of a subtree
 	#
 	def DeepCopy(self):
-		_stat('DeepCopy')
+		##_stat('DeepCopy')
 		uidremap = {}
 		copy = self._deepcopy(uidremap)
 		copy._fixuidrefs(uidremap)
@@ -340,7 +340,7 @@ class MMNode:
 	# Private methods for DeepCopy
 	#
 	def _deepcopy(self, uidremap):
-		_stat('_deepcopy')
+		##_stat('_deepcopy')
 		copy = self.context.newnode(self.type)
 		uidremap[self.uid] = copy.uid
 		copy.attrdict = _valuedeepcopy(self.attrdict)
@@ -375,19 +375,19 @@ class MMNode:
 		self.values = values
 	#
 	def SetAttr(self, (name, value)):
-		_stat('SetAttr')
+		##_stat('SetAttr')
 		self.attrdict[name] = value
 		self._updsummaries([name])
 	#
 	def DelAttr(self, name):
-		_stat('DelAttr')
+		##_stat('DelAttr')
 		if not self.attrdict.has_key(name):
 			raise NoSuchAttrError, 'in DelAttr()'
 		del self.attrdict[name]
 		self._updsummaries([name])
 	#
 	def Destroy(self):
-		_stat('Destroy')
+		##_stat('Destroy')
 		if self.parent: raise CheckError, 'Destroy() non-root node'
 		self.context.forgetnode(self.uid)
 		for child in self.children:
@@ -404,7 +404,7 @@ class MMNode:
 		self.widget = None
 	#
 	def Extract(self):
-		_stat('Extract')
+		##_stat('Extract')
 		if not self.parent: raise CheckError, 'Extract() root node'
 		parent = self.parent
 		self.parent = None
@@ -412,7 +412,7 @@ class MMNode:
 		parent._fixsummaries(self.summaries)
 	#
 	def AddToTree(self, (parent, i)):
-		_stat('AddToTree')
+		##_stat('AddToTree')
 		if self.parent: raise CheckError, 'AddToTree() non-root node'
 		if self.context is not parent.context:
 			# XXX Decide how to handle this later
@@ -446,7 +446,7 @@ class MMNode:
 		self._updsummaries(tofix)
 	#
 	def _updsummaries(x, tofix):
-		_stat('_updsummaries')
+		##_stat('_updsummaries')
 		while x and tofix:
 			for key in tofix[:]:
 				if not x.summaries.has_key(key):
@@ -460,7 +460,7 @@ class MMNode:
 			x = x.parent
 	#
 	def _summarize(self, name):
-		_stat('_summarize')
+		##_stat('_summarize')
 		try:
 			summary = [self.GetAttr(name)]
 		except NoSuchAttrError:
@@ -478,7 +478,7 @@ class MMNode:
 # Make a "deep copy" of an arbitrary value
 #
 def _valuedeepcopy(value):
-	_stat('_valuedeepcopy')
+	##_stat('_valuedeepcopy')
 	if type(value) == type({}):
 		copy = {}
 		for key in value.keys():
