@@ -429,6 +429,75 @@ class MMNode:
 		parent._fixsummaries(self.summaries)
 		parent._rmsummaries(self.summaries.keys())
 	#
+	# Methods for mini-document management
+	#
+	# Check whether a node is the top of a mini-document
+
+	def IsMiniDocument(node):
+		if node.GetType() == 'bag':
+			return 0
+		parent = node.GetParent()
+		return parent == None or parent.GetType() == 'bag'
+
+	# Find the first mini-document in a tree
+
+	def FirstMiniDocument(node):
+		if node.GetType() <> 'bag':
+			return node
+		for child in node.GetChildren():
+			mini = child.FirstMiniDocument()
+			if mini <> None:
+				return mini
+		return None
+
+	# Find the last mini-document in a tree
+
+	def LastMiniDocument(node):
+		if node.GetType() <> 'bag':
+			return node
+		res = None
+		for child in node.GetChildren():
+			mini = child.LastMiniDocument()
+			if mini <> None:
+				res = mini
+		return res
+
+	# Find the next mini-document in a tree after the given one
+	# Return None if this is the last one
+
+	def NextMiniDocument(node):
+		while 1:
+			parent = node.GetParent()
+			if not parent:
+				break
+			siblings = parent.GetChildren()
+			index = siblings.index(node) # Cannot fail
+			while index+1 < len(siblings):
+				index = index+1
+				mini = siblings[index].FirstMiniDocument()
+				if mini <> None:
+					return mini
+			node = parent
+		return None
+
+	# Find the previous mini-document in a tree after the given one
+	# Return None if this is the first one
+
+	def PrevMiniDocument(node):
+		while 1:
+			parent = node.GetParent()
+			if not parent:
+				break
+			siblings = parent.GetChildren()
+			index = siblings.index(node) # Cannot fail
+			while index > 0:
+				index = index-1
+				mini = siblings[index].LastMiniDocument()
+				if mini <> None:
+					return mini
+			node = parent
+		return None
+	#
 	# Private methods for summary management
 	#
 	def _rmsummaries(x, keep):
