@@ -3426,7 +3426,11 @@ class PreviousWidget(Widget):
 				self._nodeRefToNodeTree[nodeRef] = node
 				self.displayViewport(nodeRef)
 			return
-		elif nodeType == TYPE_REGION:
+		if not self._nodeRefToNodeTree.has_key(pNodeRef):
+			# no parent: The parent node may be unvisible (sound, ...)
+			return
+			
+		if nodeType == TYPE_REGION:
 			node = self.addRegion(pNodeRef, nodeRef)
 			self._nodeRefToNodeTree[nodeRef] = node
 		elif nodeType == TYPE_MEDIA:
@@ -3457,6 +3461,10 @@ class PreviousWidget(Widget):
 			return
 
 		regionNode = self.getNode(regionRef)
+		if regionNode is None:
+			# the region has not been created
+			return
+		
 		if regionNode.isShowed():
 			# already showed
 			return
