@@ -42,10 +42,4 @@ class TOOLBAR_PLAYER(_CommandBase):
 class TOOLBAR_ALIGNMENT(_CommandBase):
 	help = 'Show/Hide the region alignment toolbar'
 
-class TB_PLAY(_CommandBase):
-	help = 'Play document'
-class TB_PAUSE(_CommandBase):
-	help = 'Pause playing document'
-class TB_STOP(_CommandBase):
-	help = 'Stop playing document'
 
