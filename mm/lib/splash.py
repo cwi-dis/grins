@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import Xt, Xm, sys, X
 
 def _roundi(x):
