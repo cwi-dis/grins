@@ -172,21 +172,16 @@ class _AssetsView(GenView.GenView, docview.ListView):
 		cb = self._cmddict.get('startdrag')
 		if not cb:
 			return 0
-		type, value = cb(cursel)
-		if not type:
-			return 0
+		return cb(cursel)
+
+	def doDragDrop(self, type, value):
 		if type == 'URL':
 			rv = self.listCtrl.DoDragDrop(self.CF_URL, value)
-			print 'DoDragDrop URL RV=', `rv`
-			return 1
 		elif type == 'node':
 			value = string.join(value, ',')
 			print 'DBG DoDragDrop', self.CF_NODEUID, value
 			rv = self.listCtrl.DoDragDrop(self.CF_NODEUID, value)
-			print 'DoDragDrop NodeUID rv=', `rv`
-			cb = self._cmddict.get('finishdrag')
-			if cb:
-				cb(rv)
-			return 1
-		print 'Unknown assetview dragtype', type
-		return 0
+		else:
+			print 'Unknown assetview dragtype', type
+			rv = None
+		return rv

@@ -155,26 +155,50 @@ class AssetsView(AssetsViewDialog):
 
 	def startdrag_callback(self, index):
 		if self.whichview == 'clipboard':
-			return None, None
+			return 0
 		if index < 0 or index > len(self.listdata):
 			windowinterface.beep()
-			return None, None
+			return 0
 		if self.whichview == 'all':
 			url = self.listdata[index][5]
-			return 'URL', url
+			action = self.dodragdrop('URL', url)
+			# We don't remove URLs from the all media view
+			return 1
 		if self.whichview == 'unused':
 			iteminfo = self.listdata[index][0]
 			if type(iteminfo) == type(''):
 				# String means it's a url
-				url = self.listdata[index][3]
-				return 'URL', url
+				value = self.listdata[index][3]
+				tp = 'URL'
 			elif hasattr(iteminfo, 'getClassName') and iteminfo.getClassName() == 'MMNode':
 				contextid = `id(iteminfo.context)`
 				nodeuid = iteminfo.GetUID()
-				return 'node', (contextid, nodeuid)
+				value = (contextid, nodeuid)
+				tp = 'node'
 			else:
 				windowinterface.beep()
-				return None, None
+				return 0
+			action = self.dodragdrop(tp, value)
+			if action == 'move':
+				# We should remove the item
+				item = self.listdata[index][0]
+				if not self.editmgr.transaction():
+					print "No transaction"
+					return 0
+				self.editmgr.delasset(item)
+				self.editmgr.commit()
+			elif action == 'copy' and tp == 'node':
+				item = self.listdata[index][0]
+				newitem = item.DeepCopy()
+				if not self.editmgr.transaction():
+					print "No transaction"
+					newitem.Destroy()
+					return 0
+				self.editmgr.delasset(item)
+				self.editmgr.addasset(newitem)
+				self.editmgr.commit()
+			# Otherwise there's nothing to do for us.
+			return 1
 		print 'Unknown self.whichview', self.whichview
 		return None, None
 
