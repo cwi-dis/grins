@@ -117,6 +117,21 @@ static PyObject* Qt_SetDDObject(PyObject *self, PyObject *args)
 	return Py_None;
 	}
 
+static PyObject* Qt_GetDDObject(PyObject *self, PyObject *args) 
+	{
+	OSErr _err;
+	IDirectDraw *pI = NULL;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	_err = QTGetDDObject((void**)&pI);
+	if (_err != noErr)
+		{
+		PyErr_SetString(PyMac_GetOSErrException(), "QTGetDDObject failed");
+		return NULL;
+		}
+	return Py_BuildValue("i", int(pI));
+	}
+
 static PyObject* Qt_SetDDPrimarySurface(PyObject *self, PyObject *args) 
 	{
 	OSErr _err;
@@ -153,5 +168,7 @@ static PyObject* Qt_SetDDPrimarySurface(PyObject *self, PyObject *args)
 	"(HWND hwnd) -> (GrafPtr ptr)"},\
 	{"SetDDObject", (PyCFunction)Qt_SetDDObject, 1,\
 	"(DirectDrawObject obj) -> ()"},\
+	{"GetDDObject", (PyCFunction)Qt_GetDDObject, 1,\
+	"() -> (IDirectDrawPtr ptr)"},\
 	{"SetDDPrimarySurface", (PyCFunction)Qt_SetDDPrimarySurface, 1,\
 	"(DirectDrawSurfaceObject obj) -> ()"},
