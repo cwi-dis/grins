@@ -716,7 +716,7 @@ def getanchors(node, recursive):
 	uid = node.GetUID()
 	anchors = []
 	for i in rawanchors:
-		anchors.append((uid, i[0]))
+		anchors.append((uid, i[A_ID]))
 	if recursive and node.GetType() in interiortypes:
 		children = node.GetChildren()
 		for i in children:

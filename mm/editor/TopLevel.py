@@ -7,6 +7,7 @@ import windowinterface
 import MMAttrdefs, MMurl
 from urlparse import urlparse, urlunparse
 from MMExc import *
+from AnchorDefs import *
 from EditMgr import EditMgr
 import Timing
 from ViewDialog import ViewDialog
@@ -920,9 +921,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if not '/' in fn:
 			fn = './' + fn
 		rv = []
-		alist = MMAttrdefs.getattr(self.root, 'anchorlist')
-		for i, t, v in alist:
-			rv.append((fn, i))
+		for a in MMAttrdefs.getattr(self.root, 'anchorlist'):
+			rv.append((fn, a[A_ID]))
 		return rv
 
 	def getallexternalanchors(self):
