@@ -813,6 +813,14 @@ class MMNodeContext:
 	def getassets(self):
 		return self.assetlist
 
+	def getAssetByName(self, name):
+		# XXX Should be done by UID
+		for asset in self.assetlist:
+			if MMAttrdefs.getattr(asset, 'name') == name:
+				return asset
+		print 'No asset named', name
+		return None
+
 class MMRegPoint:
 	def __init__(self, context, name):
 		self.context = context
@@ -3284,7 +3292,44 @@ class MMNode(MMTreeElement):
 	def getAllowedMimeTypes(self):
 		# For now simply return the attribute value. Later this
 		# will change for structure nodes.
-		return self.GetAttrDef('allowedmimetypes', None)
+		mimelist = self.GetAttrDef('allowedmimetypes', None)
+		if mimelist or not self.type in interiortypes:
+			return mimelist
+		forcechild = self.getForcedChild()
+		if not forcechild:
+			return None
+		if not forcechild.type in interiortypes:
+			return forcechild.getAllowedMimeTypes()
+		all = []
+		for grandchild in forcechild.children:
+			more = grandchild.getAllowedMimeTypes()
+			if more is None:
+				# A grandchild accepts anything. So do we.
+				print 'accepting all', grandchild
+				return None
+			all = all + more # Gives dups, but who cares...
+		return all
+
+	def getForcedChild(self):
+		# XXX Should be done by UID
+		name = self.GetAttrDef('project_forcechild', None)
+		if not name:
+			return None
+		node = self.context.getAssetByName(name)
+		return node
+
+	def findMimetypeAcceptor(self, mimetype):
+		# Called on forcedchild nodes only. Returns the node
+		# that accepts this mimetype.
+		if self.type in interiortypes:
+			lookat = self.children
+		else:
+			lookat = [self]
+		for ch in lookat:
+			allowed = ch.getAllowedMimeTypes()
+			if mimetype in allowed:
+				return ch
+		return None
 
 	#
 	# Make a "deep copy" of a subtree

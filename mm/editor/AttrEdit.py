@@ -583,6 +583,7 @@ class NodeWrapper(Wrapper):
 			namelist.append('project_default_region_image')
 			namelist.append('project_default_region_sound')
 			namelist.append('project_default_region_text')
+			namelist.append('project_forcechild')
 		if ntype == 'switch':
 			if 'begin' in namelist:
 				namelist.remove('begin')
@@ -593,6 +594,7 @@ class NodeWrapper(Wrapper):
 			namelist.remove('endlist')
 		if ntype in leaftypes:
 			namelist.append('alt')
+			namelist.append('allowedmimetypes')
 			if not snap:
 				namelist.append('longdesc')
 				if ctype != 'brush':

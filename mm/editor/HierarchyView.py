@@ -1180,7 +1180,7 @@ class HierarchyView(HierarchyViewDialog):
 			# if node is expanded, determine where in the node
 			# the file is dropped, else create at end
 			i = obj.get_nearest_node_index((x,y))
-			self.create(0, url, i)
+			self.create(0, url, i, dropped=1)
 		else:
 			# check that URL compatible with node's channel
 			if features.lightweight and \
@@ -1258,7 +1258,7 @@ class HierarchyView(HierarchyViewDialog):
 		for c in root.GetChildren():
 			self.fixsyncarcs(c, nodelist)
 
-	def create(self, where, url = None, index = -1, chtype = None, ntype = None):
+	def create(self, where, url = None, index = -1, chtype = None, ntype = None, dropped=0):
 		# Create a new node in the Structure view.
 		# (assuming..) 'where' is -1:before, 0:here, 1:after. -mjvdg
 
@@ -1314,7 +1314,23 @@ class HierarchyView(HierarchyViewDialog):
 			layout = MMAttrdefs.getattr(parent, 'layout')
 		else:
 			layout = MMAttrdefs.getattr(node, 'layout')
-		node = node.GetContext().newnode(type) # Create a new node
+
+		newnode = None
+		if dropped:
+			# If this is a drag/drop operation we have to
+			# check whether this parent has a forced child
+			template = pnode.getForcedChild()
+			if template:
+				mimetype = MMmimetypes.guess_type(url)[0]
+				if '/' in mimetype:
+					mimetype = string.split(mimetype, '/')[0]
+				cnode = template.DeepCopy()
+				newnode = cnode.findMimetypeAcceptor(mimetype)
+		if newnode:
+			node = newnode
+		else:
+			node = node.GetContext().newnode(type) # Create a new node
+			cnode = node # This is the node we'll insert into the tree
 
 		if url is not None:
 			node.SetAttr('file', url)
@@ -1369,7 +1385,7 @@ class HierarchyView(HierarchyViewDialog):
 		   self.toplevel.layoutview is not None and \
 		   self.toplevel.layoutview.curlayout is not None:
 			node.SetAttr('layout', self.toplevel.layoutview.curlayout)
-		if self.insertnode(node, where, index, start_transaction = start_transaction, end_transaction = 0):
+		if self.insertnode(cnode, where, index, start_transaction = start_transaction, end_transaction = 0):
 ##			prearmtime = node.compute_download_time()
 ##			if prearmtime:
 ##				arc = MMNode.MMSyncArc(node, 'begin', srcnode='syncbase', delay=prearmtime)

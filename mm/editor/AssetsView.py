@@ -125,10 +125,10 @@ class AssetsView(AssetsViewDialog):
 				print 'cannot paste', (tp, data)
 				return
 				
-		data = self.editmgr.getclipcopy()
 		if not self.editmgr.transaction():
 			print 'No transaction'
 			return
+		data = self.editmgr.getclipcopy()
 		for node in data:
 			self.editmgr.addasset(node)
 		self.editmgr.commit()
