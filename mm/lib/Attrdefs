@@ -29,7 +29,7 @@
 (anchorid (int) 1 'Next anchor UID' default
 	'Next anchor UID to use' raw)
 
-(anchorlist (list (enclosed (tuple (int) (enclosed (list (int)))))) () 'Anchors' default
+(anchorlist (list (enclosed (tuple (int) (int) (enclosed (list (int)))))) () 'Anchors' default
 	'List of anchors on this node' raw)
 
 (arm_duration (float) -1.0 'Arm duration' default
