@@ -107,12 +107,15 @@ def Boot(what = 0):
 		win32ui.MessageBox("The application resource DLL 'GRiNSRes.dll' can not be located\r\n\r\nPlease correct this problem, and restart the application")
 		# For now just continue!?!?!
 	# run the given cmif file
-	if what==PLAYER:
-		import grins
-	elif what==SUBSYSTEM:
-		exec 'import %s\n' % subsystemModuleName
-	else:
-		import cmifed
+	try:
+		if what==PLAYER:
+			import grins
+		elif what==SUBSYSTEM:
+			exec 'import %s\n' % subsystemModuleName
+		else:
+			import cmifed
+	except SystemExit, rc:
+		win32ui.GetMainFrame().PostMessage(WM_CLOSE)
 
 
 def GuessCMIFRoot():
