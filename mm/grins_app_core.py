@@ -1,7 +1,7 @@
 # grins_app_core.py  - The Pythonwin Application class for the GRINS Player and Editor.
 #
 import sys, os
-import win32ui, win32con
+import win32ui, win32con, win32api
 from pywin.framework import app, intpyapp
 import traceback
 import longpath
@@ -32,10 +32,7 @@ def SafeCallbackCaller(fn, args):
 			rc = int(rc[0])
 		except (ValueError, TypeError):
 			rc = 0
-		import windowinterface 
-		windowinterface.close()
-		# use afx to free com/ole libs
-		(win32ui.GetAfx()).PostQuitMessage(rc)
+		win32api.PostQuitMessage(rc)
 	except:
 		# We trap all other errors, ensure the main window is shown, then
 		# print the traceback.
@@ -90,9 +87,11 @@ class GrinsApp(app.CApp):
 		if self.frame and hasattr(self.frame,'DestroyWindow'):
 			self.frame.DestroyWindow()
 		self.frame = None
-		self.SetMainFrame(None)
+		if hasattr(self,'SetMainFrame'):
+			self.SetMainFrame(None)
 		import __main__
-		del __main__.resdll
+		if hasattr(__main__,'resdll'):
+			del __main__.resdll
 		return 0
 
 	def BootGrins(self):
