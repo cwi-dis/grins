@@ -64,8 +64,8 @@ class TreeCtrl(window.Wnd):
 		self.HookMessage(self.OnLButtonDown, win32con.WM_LBUTTONDOWN)
 		self.HookMessage(self.OnLButtonUp, win32con.WM_LBUTTONUP)
 		self.HookMessage(self.OnKeyDown, win32con.WM_KEYDOWN)
-		self.parent.HookNotify(self.OnSelChanged, commctrl.TVN_SELCHANGED)
-		self.parent.HookNotify(self.OnExpanded,commctrl.TVN_ITEMEXPANDED)
+		self.GetParent().HookNotify(self.OnSelChanged, commctrl.TVN_SELCHANGED)
+		self.GetParent().HookNotify(self.OnExpanded,commctrl.TVN_ITEMEXPANDED)
 		self.HookMessage(self.OnKillFocus,win32con.WM_KILLFOCUS)
 		self.HookMessage(self.OnSetFocus,win32con.WM_SETFOCUS)
 		
@@ -240,7 +240,6 @@ class TreeCtrl(window.Wnd):
 		
 	def OnSelChanged(self, std, extra):
 		nsel = len(self._selections)
-
 		# Important note: these line allow to detect, if there is an auto select (by the system) due to an initial focus
 		# in this case, we reset the selection
 		if nsel == 0:
@@ -355,8 +354,8 @@ class TreeCtrl(window.Wnd):
 
 	def __updateSelectedItems(self):
 		rc = self.GetWindowRect()
-		rc = self.parent.ScreenToClient(rc)
-		self.parent.InvalidateRect(rc)
+		rc = self.GetParent().ScreenToClient(rc)
+		self.GetParent().InvalidateRect(rc)
 
 	# update the listener				
 	def OnMultiSelChanged(self):
