@@ -1,17 +1,14 @@
 __version__ = "$Id$"
 
 """ @win32doc|_LayoutView
-This module contains the ui implementation of the LayoutView.
-It is implemented as a dialog bar.
-The MFC CDialogBar class provides the functionality of 
-a Windows modeless dialog box in a control bar. 
-A dialog bar resembles a dialog box in that it contains 
-standard Windows controls that the user can tab between. 
-Another similarity is that you create a dialog template 
-to represent the dialog bar.
+This module contains the ui implementation of LayoutView.
+It view is implemented as a Form view (MFC term).
+The MFC CFormView is essentially a view that contains controls. 
+These controls are laid out based on a dialog-template resource
+similar to a dialog box.
 Objects of this class are exported to Python through the win32ui pyd
-as objects of type PyCDialogBar.
-The _LayoutView extends the PyCDialogBar.
+as objects of type PyCFormView.
+The _LayoutView extends the GenFormView which is an extension to PyCFormView.
 
 The _LayoutView is created using the resource dialog template with identifier IDD_LAYOUT1.
 To edit this template, open it using the resource editor. 
@@ -38,12 +35,11 @@ from usercmdui import *
 # GRiNS resource ids
 import grinsRC
 
+from GenFormView import GenFormView
 
-class _LayoutView(components.DlgBar):
-
-	# Class contructor. Associates member controls with their ids
-	def __init__(self):
-		components.DlgBar.__init__(self)
+class _LayoutView(GenFormView):
+	def __init__(self,doc):
+		GenFormView.__init__(self,doc,grinsRC.IDD_LAYOUT2)	
 		self._lnames=l=('LayoutList','ChannelList','OtherList')
 		self[l[0]]=components.ListBox(self,grinsRC.IDC_LAYOUTS)
 		self[l[1]]=components.ListBox(self,grinsRC.IDC_LAYOUT_CHANNELS)
@@ -56,24 +52,15 @@ class _LayoutView(components.DlgBar):
 		self[REMOVE_CHANNEL]=components.Button(self,grinsRC.IDCMD_REMOVE_CHANNEL)
 		self[ATTRIBUTES]=components.Button(self,grinsRC.IDCMD_ATTRIBUTES)
 		self[ADD_CHANNEL]=components.Button(self,grinsRC.IDCMD_ADD_CHANNEL)
-		self[CLOSE_WINDOW]=components.Button(self,grinsRC.IDCMD_CLOSE_WINDOW)
 		
 		self._activecmds={}
 
-	# Helper function to create the OS window.
-	def create(self,frame):
-		components.DlgBar.create(self,frame,grinsRC.IDD_LAYOUT1,afxres.CBRS_ALIGN_LEFT)
-		for i in self.keys():self[i].attach_to_parent()
-		frame.RecalcLayout()
-		for cl in self.keys():
-			if cl in self._lnames:
-				frame.HookCommand(self.OnListCmd,self[cl]._id)
-			else:
-				frame.HookCommand(self.OnCmd,self[cl]._id)
-		# disable all buttons
-		for cl in self.keys():
-			if cl not in self._lnames: 
-				frame.HookCommandUpdate(frame.OnUpdateCmdDissable,self[cl]._id)
+	def OnInitialUpdate(self):
+		GenFormView.OnInitialUpdate(self)
+		self.GetParent().freezeSize()
+		# enable all lists
+		for name in self._lnames:	
+			self.EnableCmd(name,1)
 
 	# Sets the acceptable commands. 
 	def set_commandlist(self,commandlist):
@@ -81,14 +68,36 @@ class _LayoutView(components.DlgBar):
 		contextcmds=self._activecmds
 		for cl in self.keys():
 			if type(cl)!=type(''):
-				frame.HookCommandUpdate(frame.OnUpdateCmdDissable,self[cl]._id)
+				self.EnableCmd(cl,0)
 		contextcmds.clear()
 		if not commandlist: return
 		for cmd in commandlist:
+			if cmd.__class__== CLOSE_WINDOW:continue
 			id=self[cmd.__class__]._id
-			frame.HookCommandUpdate(frame.OnUpdateCmdEnable,id)
+			self.EnableCmd(cmd.__class__,1)
 			contextcmds[id]=cmd
-	
+
+	# Reponse to message WM_COMMAND
+	def OnCmd(self,params):
+		# crack message
+		msg=win32mu.Win32Msg(params)
+		id=msg.cmdid()
+		nmsg=msg.getnmsg()
+		
+		# delegate list notifications
+		for name in self._lnames:	
+			if id==self[name]._id:
+				self.OnListCmd(id,nmsg)
+				return
+
+		# process rest
+		cmd=None
+		contextcmds=self._activecmds
+		if contextcmds.has_key(id):
+			cmd=contextcmds[id]
+		if cmd is not None and cmd.callback is not None:
+			apply(apply,cmd.callback)
+
 	# Response to a selection change of the listbox 
 	def OnListCmd(self,id,code):
 		if code==win32con.LBN_SELCHANGE:
@@ -96,39 +105,6 @@ class _LayoutView(components.DlgBar):
 				if self[s]._id==id:
 					self[s].callcb()
 					break
-
-	# Response to control notification
-	def OnCmd(self,id,code):
-		cmd=None
-		contextcmds=self._activecmds
-		if contextcmds.has_key(id):
-			cmd=contextcmds[id]
-		if cmd.__class__==CLOSE_WINDOW:
-			self.GetParent().PostMessage(win32con.WM_COMMAND,LAYOUTVIEW_UI.id)
-		elif cmd is not None and cmd.callback is not None:
-			apply(apply,cmd.callback)
-
-	# Returns true if the window is visible
-	def is_showing(self):
-		return self.GetSafeHwnd() and self.IsWindowVisible()
-
-	# Called by the core system to close this view
-	def close(self):
-		frame=self.GetParent()
-		self.DestroyWindow()
-		frame.RecalcLayout()
-
-	# Called by the core system to show the view
-	def show(self):
-		if self.GetSafeHwnd():
-			frame=self.GetParent()
-			self.ShowWindow(win32con.SW_SHOW)
-			frame.RecalcLayout()
-
-	# Called by the core system to hide the view
-	def hide(self):
-		if self.GetSafeHwnd():
-			frame=self.GetParent()
-			self.ShowWindow(win32con.SW_HIDE)
-			frame.RecalcLayout()
+		if code==win32con.LBN_DBLCLK and id==self['ChannelList']._id:
+			self.PostMessage(win32con.WM_COMMAND,self[ATTRIBUTES]._id)				
 
