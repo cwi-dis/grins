@@ -8,7 +8,7 @@ import sys
 import string
 import app
 import traceback
-from pywin.mfc import window, afxres, dialog
+from pywinlib.mfc import window, afxres, dialog
 import commctrl
 
 lastLocateFileName = ".py" # used in the "File/Locate" dialog...
@@ -230,19 +230,7 @@ class InteractivePythonApp(app.CApp):
 	#
 	def OnViewBrowse( self, id, code ):
 		" Called when ViewBrowse message is received "
-		from pywin.mfc import dialog
-		from pywin.tools import browser
-		obName = dialog.GetSimpleInput('Object', '__builtins__', 'Browse Python Object')
-		if obName is None:
-			return
-		try:
-			browser.Browse(eval(obName, __main__.__dict__, __main__.__dict__))
-		except NameError:
-			win32ui.MessageBox('This is no object with this name')
-		except AttributeError:
-			win32ui.MessageBox('The object has no attribute of that name')
-		except:
-			win32ui.MessageBox('This object can not be browsed')
+		pass
 		
 	def OnFileImport( self, id, code ):
 		" Called when a FileImport message is received. Import the current or specified file"
@@ -265,7 +253,7 @@ class InteractivePythonApp(app.CApp):
 		scriptutils.RunScript(None, None, showDlg)
 
 	def OnFileLocate( self, id, code ):
-		from pywin.mfc import dialog
+		from pywinlib.mfc import dialog
 		import scriptutils
 		import os
 		global lastLocateFileName # save the new version away for next time...
@@ -291,7 +279,7 @@ class InteractivePythonApp(app.CApp):
 	def OnViewOptions(self, id, code):
 		sheet = dialog.PropertySheet("Pythonwin Options")
 		# Add property pages we know about that need manual work.
-		from pywin.dialogs import ideoptions
+		from pywinlib.dialogs import ideoptions
 		import interact
 		sheet.AddPage( ideoptions.OptionsPropPage() )
 		

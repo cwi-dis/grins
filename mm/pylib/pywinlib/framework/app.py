@@ -10,7 +10,7 @@ import win32ui
 import sys
 import string
 import os
-from pywin.mfc import window, dialog, thread, afxres
+from pywinlib.mfc import window, dialog, thread, afxres
 import traceback
 
 ## NOTE: App and AppBuild should NOT be used - instead, you should contruct your
