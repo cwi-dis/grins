@@ -11,11 +11,6 @@ _IBM_FORMAT_ADPCM = 0x0103
 
 class reader:
 	def __init__(self, file):
-		self.__handlers = {
-			'fmt ': self.__read_fmt_chunk,
-			'data': self.__read_data_chunk,
-			}
-
 		if type(file) == type(''):
 			self.__filename = file # only needed for __repr__
 			self.__file = file = open(file, 'rb')
@@ -50,9 +45,10 @@ class reader:
 			else:
 				self.__chunk = chunk
 			chunkname = chunk.getname()
-			func = self.__handlers.get(chunkname)
-			if func is not None:
-				func(chunk)
+			if chunkname == 'fmt ':
+				self.__read_fmt_chunk(chunk)
+			elif chunkname == 'data':
+				self.__read_data_chunk(chunk)
 			if name == chunkname:
 				return
 			chunk.skip()
