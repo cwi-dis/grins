@@ -25,6 +25,7 @@ rem It is the same for both player(GRiNS) and editor (GRiNSed)
 
 set PYTHONEX=%PYTHONHOME%\Extensions
 set FREEZE=%PYTHONHOME%\Tools\freeze\freeze.py
+set COMPILE=%PYTHONHOME%\Lib\compileall.py
 
 rem GENERAL PART
 set LIB=%LIB%;%pythonex%\win32\build;%pythonex%\pythonwin\build;%GRINS_HOME%\win32\src\Build
@@ -77,8 +78,6 @@ rem echo -x MPEGVideoDuration >> FreezeOpts
 rem ****************************
 
 rem Audio stuff not supported on this platform
-echo -x audio.aifc >> FreezeOpts
-echo -x audio.au >> FreezeOpts
 echo -x audio.convert >> FreezeOpts
 echo -x audio.devsun >> FreezeOpts
 echo -x audio.devmac >> FreezeOpts
@@ -90,7 +89,6 @@ echo -x audio.sndr >> FreezeOpts
 echo -x audio.sndt >> FreezeOpts
 echo -x audio.svx8 >> FreezeOpts
 echo -x audio.voc >> FreezeOpts
-echo -x audio.wav >> FreezeOpts
 echo -x audio.what >> FreezeOpts
 echo -x audioop >> FreezeOpts
 echo -x sunaudiodev >> FreezeOpts
@@ -103,6 +101,7 @@ echo -x voc >> FreezeOpts
 
 rem Other platform specific stuff
 echo -x macostools >> FreezeOpts
+echo -x EasyDialogs >> FreezeOpts
 echo -x mm >> FreezeOpts
 echo -x mv >> FreezeOpts
 echo -x SOCKS >> FreezeOpts
@@ -142,6 +141,10 @@ echo -x win32dbg >> FreezeOpts
 
 rem EXCLUDE_WHAT
 echo -x %EXCLUDE_WHAT% >> FreezeOpts
+
+%PYTHON_EXE% -c "import MMAttrdefs" >> log.txt
+
+%PYTHON_EXE% %COMPILE% >> log.txt
 
 %PYTHON_EXE% %FREEZE% -s windows -i FreezeOpts -e %GRINS_HOME%\win32\extensions.ini %main_script% >> log.txt
 
