@@ -623,7 +623,6 @@ newWMWriterAdvancedObject()
 //
 typedef struct {
 	PyObject_HEAD
-	/* XXXX Add your own stuff here */
 	IWMStreamConfig* pI;
 } WMStreamConfigObject;
 
@@ -633,15 +632,29 @@ static WMStreamConfigObject *
 newWMStreamConfigObject()
 {
 	WMStreamConfigObject *self;
-
 	self = PyObject_NEW(WMStreamConfigObject, &WMStreamConfigType);
-	if (self == NULL)
-		return NULL;
+	if (self == NULL) return NULL;
 	self->pI = NULL;		
-	/* XXXX Add your own initializers here */
 	return self;
 }
 
+//
+typedef struct {
+	PyObject_HEAD
+	IWMCodecInfo* pI;
+} WMCodecInfoObject;
+
+staticforward PyTypeObject WMCodecInfoType;
+
+static WMCodecInfoObject *
+newWMCodecInfoObject()
+{
+	WMCodecInfoObject *self;
+	self = PyObject_NEW(WMCodecInfoObject, &WMCodecInfoType);
+	if (self == NULL) return NULL;
+	self->pI = NULL;		
+	return self;
+}
 
 //
 typedef struct {
@@ -2266,7 +2279,7 @@ static char WMProfileManager_CreateEmptyProfile__doc__[] =
 static PyObject *
 WMProfileManager_CreateEmptyProfile(WMProfileManagerObject *self, PyObject *args)
 {
-	WMT_VERSION dwVersion = WMT_VER_4_0;
+	WMT_VERSION dwVersion = WMT_VER_7_0;
 	if (!PyArg_ParseTuple(args,"|i",&dwVersion))
 		return NULL;
 	
@@ -2284,10 +2297,34 @@ WMProfileManager_CreateEmptyProfile(WMProfileManagerObject *self, PyObject *args
 	return (PyObject*)obj;
 }
 
+
+static char WMProfileManager_QueryIWMCodecInfo__doc__[] =
+""
+;
+static PyObject *
+WMProfileManager_QueryIWMCodecInfo(WMProfileManagerObject *self, PyObject *args)
+{
+	WMT_VERSION dwVersion = WMT_VER_7_0;
+	if (!PyArg_ParseTuple(args,"|i",&dwVersion))
+		return NULL;
+	
+	WMCodecInfoObject *obj = newWMCodecInfoObject();
+	if (obj == NULL) return NULL;
+	
+	HRESULT hr=self->pI->QueryInterface(IID_IWMCodecInfo, (void **)obj->pI);
+	if (FAILED(hr)){
+		Py_DECREF(obj);
+		seterror("WMProfileManager_QueryIWMCodecInfo", hr);
+		return NULL;
+	}
+	return (PyObject*)obj;
+}
+
 static struct PyMethodDef WMProfileManager_methods[] = {
 	{"GetSystemProfileCount", (PyCFunction)WMProfileManager_GetSystemProfileCount, METH_VARARGS, WMProfileManager_GetSystemProfileCount__doc__},
 	{"LoadSystemProfile", (PyCFunction)WMProfileManager_LoadSystemProfile, METH_VARARGS, WMProfileManager_LoadSystemProfile__doc__},
 	{"CreateEmptyProfile", (PyCFunction)WMProfileManager_CreateEmptyProfile, METH_VARARGS, WMProfileManager_CreateEmptyProfile__doc__},
+	{"QueryIWMCodecInfo", (PyCFunction)WMProfileManager_QueryIWMCodecInfo, METH_VARARGS, WMProfileManager_QueryIWMCodecInfo__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -4871,6 +4908,124 @@ static PyTypeObject WMStreamConfigType = {
 ////////////////////////////////////////////
 
 ////////////////////////////////////////////
+// WMCodecInfo object (IWMCodecInfo)
+
+static char WMCodecInfo_GetCodecInfoCount__doc__[] =
+""
+;
+static PyObject *
+WMCodecInfo_GetCodecInfoCount(WMCodecInfoObject *self, PyObject *args)
+{
+	GUIDObject *obj;
+	if (!PyArg_ParseTuple(args,"O!", &GUIDType, &obj)) 
+		return NULL;
+	DWORD cCodecs;
+	HRESULT hr = self->pI->GetCodecInfoCount(obj->guid, &cCodecs);
+	if (FAILED(hr)) {
+		seterror("WMCodecInfo_GetCodecInfoCount", hr);
+		return NULL;
+	}
+	return Py_BuildValue("i", cCodecs);
+}
+      
+static char WMCodecInfo_GetCodecFormatCount__doc__[] =
+""
+;
+static PyObject *
+WMCodecInfo_GetCodecFormatCount(WMCodecInfoObject *self, PyObject *args)
+{
+	GUIDObject *obj;
+	DWORD dwCodecIndex;
+	if (!PyArg_ParseTuple(args,"O!i", &GUIDType, &obj, &dwCodecIndex)) 
+		return NULL;
+	DWORD cFormats;
+	HRESULT hr = self->pI->GetCodecFormatCount(obj->guid, dwCodecIndex, &cFormats);
+	if (FAILED(hr)) {
+		seterror("WMCodecInfo_GetCodecFormatCount", hr);
+		return NULL;
+	}
+	return Py_BuildValue("i", cFormats);
+}
+
+static char WMCodecInfo_GetCodecFormat__doc__[] =
+""
+;
+static PyObject *
+WMCodecInfo_GetCodecFormat(WMCodecInfoObject *self, PyObject *args)
+{
+	GUIDObject *guidobj;
+	DWORD dwCodecIndex;
+	DWORD dwFormatIndex;
+	if (!PyArg_ParseTuple(args,"O!ii", &GUIDType, &guidobj, &dwCodecIndex, &dwFormatIndex)) 
+		return NULL;
+	WMStreamConfigObject *obj = newWMStreamConfigObject();
+	if(obj==NULL) return NULL;
+	
+	HRESULT hr = self->pI->GetCodecFormat(guidobj->guid, dwCodecIndex, dwFormatIndex, &obj->pI);
+	if (FAILED(hr)) {
+		Py_DECREF(obj);
+		seterror("WMCodecInfo_GetCodecFormat", hr);
+		return NULL;
+	}
+	return (PyObject *)obj;
+}
+
+												  
+static struct PyMethodDef WMCodecInfo_methods[] = {
+	{"GetCodecInfoCount", (PyCFunction)WMCodecInfo_GetCodecInfoCount, METH_VARARGS, WMCodecInfo_GetCodecInfoCount__doc__},
+	{"GetCodecFormatCount", (PyCFunction)WMCodecInfo_GetCodecFormatCount, METH_VARARGS, WMCodecInfo_GetCodecFormatCount__doc__},
+	{"GetCodecFormat", (PyCFunction)WMCodecInfo_GetCodecFormat, METH_VARARGS, WMCodecInfo_GetCodecFormat__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WMCodecInfo_dealloc(WMCodecInfoObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WMCodecInfo_getattr(WMCodecInfoObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WMCodecInfo_methods, (PyObject *)self, name);
+}
+
+static char WMCodecInfoType__doc__[] =
+""
+;
+
+static PyTypeObject WMCodecInfoType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WMCodecInfo",			/*tp_name*/
+	sizeof(WMCodecInfoObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WMCodecInfo_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WMCodecInfo_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WMCodecInfoType__doc__ /* Documentation string */
+};
+
+// End of code for WMCodecInfo object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
 // WMStreamList object 
    
 static struct PyMethodDef WMStreamList_methods[] = {
@@ -6230,6 +6385,7 @@ static struct enumentry _wmt_stream_selection[] ={
 
 static struct enumentry _wmt_version[] ={
     {"WMT_VER_4_0", WMT_VER_4_0},
+    {"WMT_VER_7_0", WMT_VER_7_0},
 	{NULL,0}
 	};
 
