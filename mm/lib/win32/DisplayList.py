@@ -113,12 +113,11 @@ class DisplayList:
 		if not wnd or not hasattr(wnd,'_obj_')or not hasattr(wnd,'RedrawWindow'):
 			return
 		for b in self._buttons:
-			b._highlighted = 0 	
+			b._highlighted = 0 
 		wnd._active_displist = self
-		#print 'Rendering dl',self,'for',wnd._title,'z=',wnd._z
 
 		# we set to not transparent in order to 
-		# accomodate windows bug
+		# accomodate win32 bug
 		# and preserve z-order
 		if wnd._transparent in (1,-1):
 			wnd.setWndNotTransparent()
@@ -129,15 +128,16 @@ class DisplayList:
 	# Render the display list on dc within the region	
 	def _render(self, dc, region):
 		self._rendered = 1
-		w = self._window
+
 		clonestart = self._clonestart
-		if not self._cloneof or self._cloneof is not w._active_displist:
+		if not self._cloneof or self._cloneof is not self._window._active_displist:
 			clonestart = 0
+
 		for i in range(clonestart, len(self._list)):
 			self._do_render(self._list[i],dc, region)
+
 		for b in self._buttons:
-			if b._highlighted:
-				b._do_highlight()
+			if b._highlighted:b._do_highlight()
 
 	# Close this display list and destroy its resources
 	def close(self):
