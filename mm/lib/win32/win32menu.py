@@ -104,6 +104,20 @@ class Menu:
 		del self._exec_list
 		self._cb_obj2id=None
 
+	# create popup from a <menubar_spec_list>
+	def create_popup_from_menubar_spec_list(self,list,cb_obj2id=None):
+		self._exec_list=[] # common list for algorithm
+		self._cb_obj2id=cb_obj2id # callback for id transl
+		self._submenus_dict={} # dictionary for 1st level submenus
+		self._create_menu(self,list)
+		while len(self._exec_list):
+			proc_list=self._exec_list[:]
+			self._exec_list=[]
+			for submenu,spec_list in proc_list:
+				self._create_menu(submenu,spec_list)
+		del self._exec_list
+		self._cb_obj2id=None
+
 	# create toplevel menubar from a <menubar_spec_list>
 	# returns a <menu_exec_list>
 	def _create_toplevel_menu(self,menu,list):
