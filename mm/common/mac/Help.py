@@ -22,12 +22,18 @@ def hashelp():
 
 helpbase = None				# directory where the help files live
 helpwindow = None
+helpprogram = "player"
 
 #
 # This could be done better, by putting the version number in here.
 #
-DEFAULT_BASE_URL="http://www.cwi.nl/GRiNS/help/%s/index.html"%sys.platform
+DEFAULT_BASE_URL="http://www.cwi.nl/GRiNS/help/%s/%s/index.html" % \
+	(sys.platform, helpprogram)
 
+def sethelpprogram(program):
+	global helpprogram
+	helpprogram = program
+	
 def sethelpdir(dirname):
 	global helpbase
 	helpbase = MMurl.pathname2url(os.path.join(dirname, 'index.html'))
@@ -37,6 +43,7 @@ def fixhelpdir():
 	if helpbase is None:
 		import cmif
 		helpdir = os.path.join(cmif.findfile('Help'), sys.platform)
+		helpdir = os.path.join(helpdir, helpprogram)
 		if os.path.exists(helpdir):
 			basefile = os.path.join(helpdir, 'index.html')
 			helpbase = MMurl.pathname2url(basefile)
