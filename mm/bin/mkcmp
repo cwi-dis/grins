@@ -52,10 +52,19 @@ pythonlib="$pythonsrc/Lib"
 CMIF="$dir"
 export CMIF
 
+mkcmif=$dir/player/mkcmifcache.py
+
 PYTHONPATH=$CMIF/editor
 PYTHONPATH=$PYTHONPATH:$CMIF/common
 PYTHONPATH=$PYTHONPATH:$CMIF/lib
 PYTHONPATH=$PYTHONPATH:$CMIF/video
+if [ -d $CMIF/pylib ]
+then
+	for dir in `find $CMIF/pylib -type d ! -name CVS -print`
+	do
+		PYTHONPATH=$PYTHONPATH:$dir
+	done
+fi
 
 PYTHONPATH=$PYTHONPATH:$pythonlib
 PYTHONPATH=$PYTHONPATH:$pythonlib/test
@@ -66,4 +75,4 @@ PYTHONPATH=$PYTHONPATH:$pythonsrc/Extensions/midi/Lib
 
 export PYTHONPATH
 
-exec $python $dir/player/mkcmifcache.py ${1+"$@"}
+exec $python $mkcmif ${1+"$@"}
