@@ -81,6 +81,19 @@ class Hlinks:
 				rv.append(self.revlink(l))
 		return rv
 
+	# Find the hyperlinks with the specified anchor as destination.
+	# Returns a list of all such links
+	def finddstlinks(self, anchor):
+		rv = []
+		for l in self.links:
+			if l[ANCHOR2]==anchor and \
+			   l[DIR] in (DIR_1TO2, DIR_2WAY):
+				rv.append(l)
+			elif l[ANCHOR1]==anchor and \
+			     l[DIR] in (DIR_2TO1, DIR_2WAY):
+				rv.append(self.revlink(l))
+		return rv
+
 	# Find all links related to one or two anchors.
 	def findalllinks(self, a1, a2):
 		rv = []
