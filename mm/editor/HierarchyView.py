@@ -270,7 +270,7 @@ class HierarchyView(HierarchyViewDialog):
 			rv.append(NEW_UNDER_HTML(callback = (self.createundercall, ('html',))))
 		if heavy or ctx.compatchannels(chtype='svg'):
 			rv.append(NEW_UNDER_SVG(callback = (self.createundercall, ('svg',))))
-		rv.append(NEW_UNDER_ANIMATION(callback = (self.createundercall, ('animate',))))
+		rv.append(NEW_UNDER_ANIMATE(callback = (self.createundercall, ('animate',))))
 		return rv
 
 
@@ -312,16 +312,16 @@ class HierarchyView(HierarchyViewDialog):
 			rv.append(NEW_AFTER_HTML(callback = (self.createaftercall, ('html',))))
 		if heavy or ctx.compatchannels(chtype='svg'):
 			rv.append(NEW_AFTER_SVG(callback = (self.createaftercall, ('svg',))))
-		rv.append(NEW_BEFORE_ANIMATION(callback = (self.createbeforecall, ('animate',))))
-		rv.append(NEW_AFTER_ANIMATION(callback = (self.createaftercall, ('animate',))))
+		rv.append(NEW_BEFORE_ANIMATE(callback = (self.createbeforecall, ('animate',))))
+		rv.append(NEW_AFTER_ANIMATE(callback = (self.createaftercall, ('animate',))))
 		rv.append(MERGE_PARENT(callback=(self.merge_parent, ())))
 		return rv
 
 	def _getanimatecommands(self, ctx):
 		rv = []
-		rv.append(NEW_BEFORE_ANIMATION(callback = (self.createbeforecall, ('animate',))))
-		rv.append(NEW_AFTER_ANIMATION(callback = (self.createaftercall, ('animate',))))
-		rv.append(NEW_UNDER_ANIMATION(callback = (self.createundercall, ('animate',))))
+		rv.append(NEW_BEFORE_ANIMATE(callback = (self.createbeforecall, ('animate',))))
+		rv.append(NEW_AFTER_ANIMATE(callback = (self.createaftercall, ('animate',))))
+		rv.append(NEW_UNDER_ANIMATE(callback = (self.createundercall, ('animate',))))
 		return rv
 
 	def __compute_commands(self, commands):
@@ -1213,7 +1213,7 @@ class HierarchyView(HierarchyViewDialog):
 
 		if chtype=='animate':
 			animlist = ['animate','set','animateMotion', 'animateColor',]
-			i = windowinterface.multchoice('Choose animation element', animlist, 0, parent = self.window)
+			i = windowinterface.multchoice('Choose animate type', animlist, 0, parent = self.window)
 			if i < 0: return # cancel creation
 			newnode = self.root.context.newanimatenode(animlist[i])
 			newnode.targetnode = node
@@ -1407,7 +1407,7 @@ class HierarchyView(HierarchyViewDialog):
 				node.Destroy()
 				return 0
 		elif where == 0 and node.GetChannelType()!='animate':
-			# Special condition for animation
+			# Special condition for animate
 			ntype = self.focusnode.GetType()
 			if ntype not in MMNode.interiortypes and \
 			   (ntype != 'ext' or
