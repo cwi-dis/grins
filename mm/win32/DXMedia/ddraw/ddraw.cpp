@@ -1111,12 +1111,10 @@ DirectDrawSurface_GetColorMatch(DirectDrawSurfaceObject *self, PyObject *args)
 		ck = FindColour(r,g,b);
 		}
 	else if(dwRGBBitCount==16){
-		int rs=256/(int)pow(2,numREDbits);
-		int gs=256/(int)pow(2,numGREENbits);
-		int bs=256/(int)pow(2,numBLUEbits);
-		ck = (DWORD(r/float(rs)) <<loREDbit)   | 
-			 (DWORD(g/float(gs)) <<loGREENbit) | 
-			 (DWORD(b/float(bs)) <<loBLUEbit);
+		int rs = 8-numREDbits;
+		int gs = 8-numGREENbits;
+		int bs = 8-numBLUEbits;
+		ck = ((r >> rs) << loREDbit) | ((g>>gs) << loGREENbit) | ((b>>bs) << loBLUEbit);
 		}
 	else if (dwRGBBitCount==24 || dwRGBBitCount==32){
 		ck = (r<<loREDbit) | (g<<loGREENbit) | (b<<loBLUEbit);		
@@ -1229,11 +1227,9 @@ DirectDrawSurface_Blt_RGB32_On_RGB32(DirectDrawSurfaceObject *self, PyObject *ar
 	for(int row=h-1;row>=0;row--)
 		{
 		RGBQUAD* surfpixel=(RGBQUAD*)((BYTE*)desc.lpSurface+row*desc.lPitch);
-		for (DWORD col=0;col<w;col++)
+		for (DWORD col=0;col<w;col++,p++)
 			{
-			*(DWORD*)surfpixel = (p->rgbRed << loREDbit)|(p->rgbGreen << loGREENbit)| (p->rgbBlue << loBLUEbit);
-			p++;
-			surfpixel++;
+			*(DWORD*)surfpixel++ = (p->rgbRed << loREDbit)|(p->rgbGreen << loGREENbit)| (p->rgbBlue << loBLUEbit);
 			}
 		}
 	Py_END_ALLOW_THREADS
@@ -1269,11 +1265,9 @@ DirectDrawSurface_Blt_RGB32_On_RGB24(DirectDrawSurfaceObject *self, PyObject *ar
 	for(int row=h-1;row>=0;row--)
 		{
 		RGBTRIPLE* surfpixel=(RGBTRIPLE*)((BYTE*)desc.lpSurface+row*desc.lPitch);
-		for (DWORD col=0;col<w;col++)
+		for (DWORD col=0;col<w;col++,p++)
 			{
-			*(DWORD*)surfpixel = (p->rgbRed << loREDbit)|(p->rgbGreen << loGREENbit)| (p->rgbBlue << loBLUEbit);
-			p++;
-			surfpixel++;
+			*(DWORD*)surfpixel++ = (p->rgbRed << loREDbit)|(p->rgbGreen << loGREENbit)| (p->rgbBlue << loBLUEbit);
 			}
 		}
 	Py_END_ALLOW_THREADS
@@ -1303,22 +1297,17 @@ DirectDrawSurface_Blt_RGB32_On_RGB16(DirectDrawSurfaceObject *self, PyObject *ar
 		seterror("DirectDrawSurface_Blt_RGB32_On_RGB16", hr);
 		return NULL;
 	}	
-	int rs=256/(int)pow(2,numREDbits);
-	int gs=256/(int)pow(2,numGREENbits);
-	int bs=256/(int)pow(2,numBLUEbits);
-	
+	int rs = 8-numREDbits;
+	int gs = 8-numGREENbits;
+	int bs = 8-numBLUEbits;	
 	Py_BEGIN_ALLOW_THREADS		
 	RGBQUAD *p = (RGBQUAD*)pImageBits;	
 	for(int row=h-1;row>=0;row--)
 		{
 		WORD* surfpixel=(WORD*)((BYTE*)desc.lpSurface+row*desc.lPitch);
-		for (DWORD col=0;col<w;col++)
+		for (DWORD col=0;col<w;col++,p++)
 			{
-			*surfpixel = WORD((WORD(p->rgbRed/float(rs)) <<loREDbit)  | 
-				(WORD(p->rgbGreen/float(gs)) <<loGREENbit) | 
-				(WORD(p->rgbBlue/float(bs)) <<loBLUEbit));
-			p++;
-			surfpixel++;
+			*surfpixel++ = WORD(((p->rgbRed >> rs) << loREDbit) | ((p->rgbGreen>>gs) << loGREENbit) | ((p->rgbBlue>>bs) << loBLUEbit));
 			}
 		}
 	Py_END_ALLOW_THREADS	
@@ -1354,11 +1343,9 @@ DirectDrawSurface_Blt_RGB32_On_RGB8(DirectDrawSurfaceObject *self, PyObject *arg
 	for(int row=h-1;row>=0;row--)
 		{
 		BYTE* surfpixel=((BYTE*)desc.lpSurface+row*desc.lPitch);
-		for (DWORD col=0;col<w;col++)
+		for (DWORD col=0;col<w;col++,p++)
 			{
-			*surfpixel = FindColour(p->rgbRed,p->rgbGreen,p->rgbBlue);
-			p++;
-			surfpixel++;
+			*surfpixel++ = FindColour(p->rgbRed,p->rgbGreen,p->rgbBlue);
 			}
 		}
 	Py_END_ALLOW_THREADS
@@ -1394,11 +1381,9 @@ DirectDrawSurface_Blt_RGB24_On_RGB32(DirectDrawSurfaceObject *self, PyObject *ar
 	for(int row=h-1;row>=0;row--)
 		{
 		RGBQUAD* surfpixel=(RGBQUAD*)((BYTE*)desc.lpSurface+row*desc.lPitch);
-		for (DWORD col=0;col<w;col++)
+		for (DWORD col=0;col<w;col++,p++)
 			{
-			*(DWORD*)surfpixel = (p->rgbtRed << loREDbit) | (p->rgbtGreen << loGREENbit) | (p->rgbtBlue << loBLUEbit);
-			p++;
-			surfpixel++;
+			*(DWORD*)surfpixel++ = (p->rgbtRed << loREDbit) | (p->rgbtGreen << loGREENbit) | (p->rgbtBlue << loBLUEbit);
 			}
 		}
 	Py_END_ALLOW_THREADS
@@ -1434,11 +1419,9 @@ DirectDrawSurface_Blt_RGB24_On_RGB24(DirectDrawSurfaceObject *self, PyObject *ar
 	for(int row=h-1;row>=0;row--)
 		{
 		RGBTRIPLE* surfpixel=(RGBTRIPLE*)((BYTE*)desc.lpSurface+row*desc.lPitch);
-		for (DWORD col=0;col<w;col++)
+		for (DWORD col=0;col<w;col++,p++)
 			{
-			*(DWORD*)surfpixel = (p->rgbtRed << loREDbit) | (p->rgbtGreen << loGREENbit) | (p->rgbtBlue << loBLUEbit);
-			p++;
-			surfpixel++;
+			*(DWORD*)surfpixel++ = (p->rgbtRed << loREDbit) | (p->rgbtGreen << loGREENbit) | (p->rgbtBlue << loBLUEbit);
 			}
 		}
 	Py_END_ALLOW_THREADS	
@@ -1468,25 +1451,17 @@ DirectDrawSurface_Blt_RGB24_On_RGB16(DirectDrawSurfaceObject *self, PyObject *ar
 		seterror("DirectDrawSurface_Blt_RGB24_On_RGB16", hr);
 		return NULL;
 	}		
-	int rs=256/(int)pow(2,numREDbits);
-	int gs=256/(int)pow(2,numGREENbits);
-	int bs=256/(int)pow(2,numBLUEbits);
-
+	int rs = 8-numREDbits;
+	int gs = 8-numGREENbits;
+	int bs = 8-numBLUEbits;	
 	Py_BEGIN_ALLOW_THREADS	
 	RGBTRIPLE *p = (RGBTRIPLE *)pImageBits;
 	for(int row=h-1;row>=0;row--)
 		{
 		WORD* surfpixel=(WORD*)((BYTE*)desc.lpSurface+row*desc.lPitch);
-		for (DWORD col=0;col<w;col++)
+		for (DWORD col=0;col<w;col++,p++)
 			{
-			WORD b = p->rgbtBlue;
-			WORD g = p->rgbtGreen;
-			WORD r = p->rgbtRed;
-			*surfpixel = WORD((WORD(r/float(rs)) <<loREDbit)  | 
-				(WORD(g/float(gs)) <<loGREENbit) | 
-				(WORD(b/float(bs)) <<loBLUEbit));
-			surfpixel++;
-			p++;
+			*surfpixel++ = WORD(((p->rgbtRed >> rs) << loREDbit) | ((p->rgbtGreen>>gs) << loGREENbit) | ((p->rgbtBlue>>bs) << loBLUEbit));
 			}
 		}
 	Py_END_ALLOW_THREADS	
@@ -1522,11 +1497,9 @@ DirectDrawSurface_Blt_RGB24_On_RGB8(DirectDrawSurfaceObject *self, PyObject *arg
 	for(int row=h-1;row>=0;row--)
 		{
 		BYTE* surfpixel=((BYTE*)desc.lpSurface+row*desc.lPitch);
-		for (DWORD col=0;col<w;col++)
+		for (DWORD col=0;col<w;col++,p++)
 			{
-			*surfpixel = FindColour(p->rgbtRed,p->rgbtGreen,p->rgbtBlue);
-			surfpixel++;
-			p++;
+			*surfpixel++ = FindColour(p->rgbtRed,p->rgbtGreen,p->rgbtBlue);
 			}
 		}
 	Py_END_ALLOW_THREADS	
