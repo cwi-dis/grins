@@ -71,15 +71,16 @@ class EditableMMNode(MMNode.MMNode):
 			i = i.parent
 		return rv
 
-	__timing = ['beginlist',
-		    'duration',
-		    'endlist',
+	__basictiming = ['beginlist',
+			 'duration',
+			 'endlist',
+			 'loop',
+			 'max',
+			 'min',
+			 'repeatdur']
+	__timing = __basictiming + [
 		    'fill',
 		    'fillDefault',
-		    'loop',
-		    'max',
-		    'min',
-		    'repeatdur',
 		    'restart',
 		    'restartDefault',
 		    'syncBehavior',
@@ -107,7 +108,7 @@ class EditableMMNode(MMNode.MMNode):
 			'system_screen_size', 'system_screen_depth',
 			'system_component',
 			]
-		if features.EXPORT_SMIL2 in features.feature_set:
+		if features.USER_GROUPS in features.feature_set:
 			namelist.append('u_group')
 		if withspecials and features.EDIT_TYPE in features.feature_set:
 			namelist.append('.type')
@@ -168,6 +169,18 @@ class EditableMMNode(MMNode.MMNode):
 					 'pauseDisplay'])
 			if withspecials and features.EDIT_TYPE in features.feature_set:
 				namelist.append('.type')
+			return namelist
+
+		if ntype == 'anchor':
+			namelist.extend(self.__basictiming)
+			namelist.extend(['accesskey',
+					 'acoords',
+					 'actuate',
+					 'ashape',
+					 'fragment',
+					 'tabindex'])
+			if features.EXPORT_REAL in features.feature_set:
+				namelist.append('sendTo')
 			return namelist
 
 		ctype = self.GetChannelType()

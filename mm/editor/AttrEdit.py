@@ -365,201 +365,6 @@ class NodeWrapper(Wrapper):
 	#
 	def attrnames(self):
 		return self.node.getallattrnames(1)
-##		import settings
-##		boston = self.context.attributes.get('project_boston', 0)
-##		ntype = self.node.GetType()
-##		if ntype == 'prio':
-##			# special case for prio nodes
-##			list = ['name', 'title', 'abstract', 'author',
-##				'copyright',
-##				'higher', 'peers', 'lower', 'pauseDisplay']
-##			if features.EDIT_TYPE in features.feature_set:
-##				list.insert(1, '.type')
-##			return list
-##		elif ntype == 'comment':
-##			# special case for comment nodes
-##			return ['.values']
-##		elif ntype == 'foreign':
-##			return self.node.attrdict.keys()
-
-##		# Tuples are optional names and will be removed if they
-##		# aren't set
-##		namelist = [
-##			'name', ('channel',), ('file',), # From nodeinfo window
-##			('.type',),
-##			('terminator',),
-##			'beginlist', 'endlist',
-##			'duration', ('min',), ('max',), 'loop', 'repeatdur', # Time stuff
-##			('restart',), ('restartDefault',),
-##			('clipbegin',), ('clipend',),	# More time stuff
-##			('sensitivity',),
-##			('top',), ('height',), ('bottom',),
-##			('left',), ('width',), ('right',),
-##			('fit',),
-##			('fill',), ('fillDefault',), ('erase',),
-##			('syncBehavior',), ('syncBehaviorDefault',),
-##			'title', ('abstract',), ('alt',), ('longdesc',), ('readIndex',), 'author',
-##			'copyright',
-##			'layout', 'u_group',
-##			('fgcolor',),
-##			('mimetype',),	# XXXX Or should this be with file?
-##			('system_audiodesc',), 'system_bitrate',
-##			('system_captions',), ('system_cpu',),
-##			'system_language', ('system_operating_system',),
-##			('system_overdub_or_caption',), ('system_required',),
-##			('system_screen_size',), ('system_screen_depth',),
-##			]
-##		ctype = self.node.GetChannelType()
-##		if ntype in mediatypes or features.compatibility == features.CMIF:
-##			namelist.append('channel')
-##		if features.EDIT_TYPE in features.feature_set:
-##			namelist.append('.type')
-##		namelist.append('abstract')
-##		namelist.append('system_captions')
-##		namelist.append('system_overdub_or_caption')
-##		namelist.append('system_required')
-##		namelist.append('system_screen_size')
-##		namelist.append('system_screen_depth')
-##		if boston:
-##			namelist.append('system_audiodesc')
-##			namelist.append('system_cpu')
-##			namelist.append('system_operating_system')
-##			namelist.append('system_component')
-##			if ntype != 'switch':
-##				namelist.append('restart')
-##				namelist.append('restartDefault')
-##				namelist.append('fillDefault')
-##				namelist.append('syncBehavior')
-##				namelist.append('syncBehaviorDefault')
-##				namelist.append('min')
-##				namelist.append('max')
-##			if ntype in mediatypes:
-##				namelist.append('readIndex')
-##				namelist.append('erase')
-##				if features.EXPORT_REAL in features.feature_set:
-##					if ctype != 'sound':
-##						namelist.append('backgroundOpacity')
-##						namelist.append('chromaKey')
-##						namelist.append('chromaKeyOpacity')
-##						namelist.append('chromaKeyTolerance')
-##						namelist.append('mediaOpacity')
-##					namelist.append('reliable')
-##					if ctype in ('text','image'):
-##						namelist.append('strbitrate')
-##		if features.EXPORT_REAL in features.feature_set and 'u_group' in namelist:
-##			namelist.remove('u_group')
-##		if (ntype in playabletypes or boston) and ntype != 'switch':
-##			namelist.append('fill')
-##		if boston:
-##			namelist.append('alt')
-##			namelist.append('longdesc')
-##		if ntype in ('par', 'excl') or (ntype in termtypes and boston):
-##			namelist.append('terminator')
-##		if ntype in interiortypes:
-##			namelist.append('thumbnail_icon')
-##			namelist.append('dropicon')
-##			namelist.append('empty_icon')
-##			namelist.append('empty_text')
-##			namelist.append('empty_color')
-##			namelist.append('empty_duration')
-##			namelist.append('non_empty_icon')
-##			namelist.append('non_empty_text')
-##			namelist.append('non_empty_color')
-##			namelist.append('thumbnail_scale')
-##		if ntype in ('par', 'seq', 'excl'):
-##			namelist.append('duration')
-##			namelist.append('project_default_region_video')
-##			namelist.append('project_default_region_image')
-##			namelist.append('project_default_region_sound')
-##			namelist.append('project_default_region_text')
-##			namelist.append('project_forcechild')
-##		if ntype == 'switch':
-##			if 'begin' in namelist:
-##				namelist.remove('begin')
-##			namelist.remove('loop')
-##			namelist.remove('duration')
-##			namelist.remove('repeatdur')
-##			namelist.remove('beginlist')
-##			namelist.remove('endlist')
-##		if ntype in playabletypes:
-##			namelist.append('alt')
-##			namelist.append('allowedmimetypes')
-##			namelist.append('longdesc')
-##			if ctype != 'brush':
-##				namelist.append('clipbegin')
-##				namelist.append('clipend')
-##			if boston:
-##				if ChannelMap.isvisiblechannel(ctype):
-##					namelist.append('left')
-##					namelist.append('width')
-##					namelist.append('right')
-##					namelist.append('top')
-##					namelist.append('height')
-##					namelist.append('bottom')
-##					namelist.append('fit')
-##					namelist.append('regPoint')
-##					namelist.append('regAlign')
-##					namelist.append('z')
-##				namelist.append('sensitivity')
-##				if ctype == 'brush':
-##					namelist.append('fgcolor')
-
-##			# specific time preference
-##			namelist.append('immediateinstantiationmedia')
-##			namelist.append('bitratenecessary')
-##			namelist.append('systemmimetypesupported')
-##			namelist.append('attachtimebase')
-##			namelist.append('qtchapter')
-##			namelist.append('qtcompositemode')
-			
-##		if ntype == 'imm':
-##			namelist.append('.values')
-##		if 'layout' in namelist and not self.context.layouts:
-##			# no sense bothering the user with an attribute that
-##			# doesn't do anything...
-##			namelist.remove('layout')
-##		# Get the channel class (should be a subroutine!)
-##		if ChannelMap.channelmap.has_key(ctype):
-##			cclass = ChannelMap.channelmap[ctype]
-##			# Add the class's declaration of attributes
-##			namelist = namelist + cclass.node_attrs
-##			if cmifmode():
-##				for name in cclass.chan_attrs:
-##					if name in namelist: continue
-##					defn = MMAttrdefs.getdef(name)
-##					if defn[5] == 'channel':
-##						namelist.append(name)
-##		# Merge in nonstandard attributes
-##		extras = []
-##		for name in self.node.GetAttrDict().keys():
-##			if name not in namelist and \
-##				     MMAttrdefs.getdef(name)[3] <> 'hidden':
-##				extras.append(name)
-##		extras.sort()
-##		namelist = namelist + extras
-##		retlist = []
-##		for name in namelist:
-##			if name in retlist:
-##				continue
-##			if type(name) == type(()):
-##				if name[0] in namelist:
-##					# It is in the list, insert it here
-##					retlist.append(name[0])
-##				else:
-##					# Not in the list for this node, skip
-##					pass
-##			else:
-##				retlist.append(name)
-			
-##		if not cmifmode():
-##			# cssbgcolor is used instead
-##			if 'bgcolor' in retlist: retlist.remove('bgcolor')
-##			if 'transparent' in retlist: retlist.remove('transparent')
-##			if ctype == 'brush':
-##				if 'file' in retlist:
-##					retlist.remove('file')
-			
-##		return retlist
 
 	def getdef(self, name):
 		if name == '.type':
@@ -643,58 +448,6 @@ class AnimationWrapper(NodeWrapper):
 	def __init__(self, toplevel, node):
 		NodeWrapper.__init__(self, toplevel, node)
 
-##	def attrnames(self):
-##		namelist = ['atag', 'name', 
-##				'beginlist', 'endlist',
-##				'duration', 'min', 'max', 'loop', 'repeatdur',
-##			    'restart', 'restartDefault', 'fill', 'fillDefault',
-##			    'speed', 'accelerate', 'decelerate', 'autoReverse',
-##			    ]
-##		ctype = 'animate'
-##		if ChannelMap.internalchannelmap.has_key(ctype):
-##			cclass = ChannelMap.internalchannelmap[ctype]
-##			# Add the class's declaration of attributes
-##			namelist = namelist + cclass.node_attrs
-##		tag = self.node.GetAttr('atag')
-##		rmlist = []
-##		if tag == 'animateMotion':
-##			rmlist.append('attributeName')
-##			rmlist.append('attributeType')
-##		elif tag == 'animate':
-##			rmlist.append('path')
-##			rmlist.append('origin')
-##		elif tag == 'animateColor':
-##			rmlist.append('path')
-##			rmlist.append('origin')
-##		elif tag == 'set':
-##			rmlist.append('path')
-##			rmlist.append('origin')
-##			rmlist.append('calcMode')
-##			rmlist.append('values')
-##			rmlist.append('keyTimes')
-##			rmlist.append('keySplines')
-##			rmlist.append('from')
-##			rmlist.append('by')
-##			rmlist.append('additive')
-##			rmlist.append('accumulate')
-##		elif tag == 'transitionFilter':
-##			rmlist.append('attributeName')
-##			rmlist.append('attributeType')
-##			rmlist.append('path')
-##			rmlist.append('origin')
-##		parent = self.node.GetParent()
-##		if parent.GetType() in playabletypes:
-##			rmlist.append('targetElement')
-##		for attr in rmlist:
-##			if attr in namelist:
-##				namelist.remove(attr)
-##		if tag == 'transitionFilter':
-##			namelist.append('trtype')
-##			namelist.append('subtype')
-##			namelist.append('mode')
-##			namelist.append('fadeColor')
-##		return namelist
-
 	def maketitle(self):
 		name = MMAttrdefs.getattr(self.node, 'name')
 		tag = MMAttrdefs.getattr(self.node, 'atag')
@@ -712,39 +465,11 @@ class PrefetchWrapper(NodeWrapper):
 	def __init__(self, toplevel, node):
 		NodeWrapper.__init__(self, toplevel, node)
 
-##	def attrnames(self):
-##		namelist = ['name','file',
-##			'begin', 'duration', 
-##			'clipbegin', 'clipend',
-##			'mediaSize', 'mediaTime', 'bandwidth',
-##			]
-##		return namelist
-
 	def maketitle(self):
 		name = MMAttrdefs.getattr(self.node, 'name')
 		return 'Properties of prefetch node %s' % name
 
 class AnchorWrapper(NodeWrapper):
-	def attrnames(self):
-		namelist = ['name','acoords','beginlist', 'endlist','title']
-		if self.context.attributes.get('project_boston', 0):
-			namelist.extend(['alt','longdesc','max','min','loop',
-					 'repeatdur','tabindex',
-					 'duration','system_language',
-					 'system_bitrate','system_captions',
-					 'system_overdub_or_caption',
-					 'system_required',
-					 'system_screen_size',
-					 'system_screen_depth',
-					 'system_audiodesc','system_cpu',
-					 'system_operating_system',
-					 'system_component','u_group',
-					 'fragment','accesskey','ashape',
-					 'actuate'])
-			if features.EXPORT_REAL in features.feature_set:
-				namelist.append('sendTo')
-			return namelist
-
 	def maketitle(self):
 		name = MMAttrdefs.getattr(self.node, 'name')
 		if name:
@@ -1182,10 +907,6 @@ class PreferenceWrapper(Wrapper):
 			return (('bool', None), self.getdefault(name),
 				defs[2] or name, 'captionoverdub',
 				self.__specprefs[name], 'raw', flags.FLAG_ALL)
-##		elif name == 'system_overdub_or_subtitle':
-##			return (('bool', None), self.getdefault(name),
-##				defs[2] or name, 'subtitleoverdub',
-##				self.__specprefs[name], 'raw', flags.FLAG_ALL)
 
 	def stillvalid(self):
 		return 1
@@ -1311,12 +1032,6 @@ class AttrEditor(AttrEditorDialog):
 
 			if initattr and initattr == name:
 				initattrinst = b
-##			if not self.show_all_attributes and b != initattrinst:
-##				# If we are not showing all atrributes we hide all those
-##				# that have a default value, unless they're the initattrinst.
-##				if b.isdefault():
-##					b.earlyclose()
-##					b = None
 			if b != None:
 				list.append(b)
 		self.attrlist = list
@@ -1392,28 +1107,6 @@ class AttrEditor(AttrEditorDialog):
 				return 1
 		return 0
 				
-##	def mustshow(self, advflags):
-##		# Return true if we should show this attribute
-##		can_show_advanced = \
-##			features.ADVANCED_PROPERTIES in features.feature_set and \
-##			self.show_all_attributes
-##		can_show_template = can_show_advanced and \
-##			features.CREATE_TEMPLATES in features.feature_set and \
-##			settings.get('enable_template')
-##		if (advflags & flags.FLAG_TEMPLATE):
-##			# Only show if both "show all" and "template"
-##			# are enabled
-##			if can_show_template:
-##				return 1
-##			return 0
-##		elif advflags & flags.FLAG_ADVANCED:
-##			# Only show is "advanced" is enabled
-##			if can_show_advanced:
-##				return 1
-##			return 0
-##		# The rest we always show
-##		return 1
-
 	def showall_callback(self):
 #		if not self.pagechange_allowed():
 #			self.fixbuttonstate()
@@ -1745,10 +1438,6 @@ class AttrEditorField(AttrEditorDialogField):
 
 	def gethelptext(self):
 		return '%s\ndefault: %s' % (self.attrdef[4], self.getdefault())
-##		return 'atribute: %s\n' \
-##		       'default: %s\n' \
-##		       '%s' % (self.__name, self.getdefault(),
-##			       self.attrdef[4])
 
 	def gethelpdata(self):
 		return self.__name, self.getdefault(), self.attrdef[4]
@@ -2655,7 +2344,6 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	def getoptions(self):
 		import settings
 
-		# experimental code:
 		# for the full version, any region may be selected: for now, it's the only case supported
 		# (for other version, we have to test the new 'subtype' channel attribute)
 		ctx = self.wrapper.context
@@ -2677,98 +2365,6 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			regionList.append(NEW_REGION)
 					
 		return regionList
-		# end experimental code
-		
-##		# channelnames1 -- compatible channels in node's layout
-##		# channelnames2 -- new channel
-##		# channelnames3 -- incompatible channels in node's layout
-##		# channelnames4 -- compatible channels not in node's layout
-##		# channelnames5 -- incompatible channels not in node's layout
-##		# In the lite version there are no layouts, so all channels
-##		# are in category 1 or 3.  Only channelnames1 is shown.
-##		ctx = self.wrapper.context
-##		node = self.wrapper.node
-##		chtype = node.GetChannelType()
-##		b = self.attreditor._findattr('file')
-##		if b is not None:
-##			url = b.getvalue()
-##		else:
-##			url = None
-##		chlist = ctx.compatchannels(url, chtype)
-##		lightweight = features.lightweight
-##		layoutchannels = {}
-##		if not lightweight:
-##			layout = MMAttrdefs.getattr(node, 'layout')
-##			if layout != UNDEFINED:
-##				for ch in ctx.layouts.get(layout, []):
-##					layoutchannels[ch.name] = 1
-##		channelnames1 = []
-##		if hasattr(self, 'newchannels'):
-##			channelnames2 = self.newchannels[:]
-##		else:
-##			channelnames2 = []
-##		channelnames3 = []
-##		channelnames4 = []
-##		channelnames5 = []
-##		for ch in ctx.channels:
-##			# experimental SMIL Boston layout code
-##			if ch.get('type') != 'layout':
-##				continue
-##			# end experimental
-##			if lightweight or layoutchannels.has_key(ch.name):
-##				if ch.get('type','') != 'layout' and ch.name in chlist:
-##					channelnames1.append(ch.name)
-##				else:
-##					channelnames3.append(ch.name)
-##			else:
-##				if ch.get('type','') != 'layout' and ch.name in chlist:
-##					channelnames4.append(ch.name)
-##				else:
-##					channelnames5.append(ch.name)
-##		channelnames1.sort()
-##		channelnames2.sort()
-##		channelnames3.sort()
-##		channelnames4.sort()
-##		channelnames5.sort()
-##		if lightweight:
-##			if channelnames1:
-##				return channelnames1
-##			allchannelnames = [UNDEFINED]
-##			if channelnames3:
-##				allchannelnames.append(None)
-##				allchannelnames = allchannelnames + channelnames3
-##			return allchannelnames
-##		all = [UNDEFINED]
-##		if channelnames1:
-##			# add separator between lists
-##			if all:
-##				all.append(None)
-##			all = all + channelnames1
-##		if channelnames2:
-##			# add separator between lists
-##			if all:
-##				all.append(None)
-##			all = all + channelnames2
-##		if channelnames3:
-##			# add separator between lists
-##			if all:
-##				all.append(None)
-##			all = all + channelnames3
-##		if channelnames4:
-##			# add separator between lists
-##			if all:
-##				all.append(None)
-##			all = all + channelnames4
-##		if channelnames5:
-##			# add separator between lists
-##			if all:
-##				all.append(None)
-##			all = all + channelnames5
-##		if hasattr(self, 'newchannels') and not self.newchannels:
-##			if all:
-##				all.append(None)
-##			all = all + [NEW_REGION]
-##		return all
 
 	def parsevalue(self, str):
 		if str == UNDEFINED: 
