@@ -66,10 +66,10 @@ GENERAL_TEMPLATE = (
 		Separator(6),
 		Button(wndusercmd.CLOSE_ACTIVE_WINDOW, TBICON_CLOSE_WINDOW),
 		Separator(12),
-		Button(usercmd.HELP, TBICON_HELP),
-		Separator(12),
 		Pulldown('Bitrate'),
 		Pulldown('Language'),
+		Separator(12),
+		Button(usercmd.HELP, TBICON_HELP),
 		)
 	)
 )
