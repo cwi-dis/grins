@@ -3,7 +3,6 @@
 import MMExc
 import MMAttrdefs
 
-import posix
 import gl
 import DEVICE
 import fl
