@@ -203,7 +203,6 @@ class Main(MainDialog):
 		import version
 		import windowinterface
 		import settings
-		import string
 		url = 'http://www.oratrix.com/indir/%s/updatecheck.txt'%version.shortversion
 		try:
 			fp = MMurl.urlopen(url)
@@ -213,15 +212,15 @@ class Main(MainDialog):
 			windowinterface.showmessage('Unable to check for upgrade. You can try again later, or visit www.oratrix.com with your webbrowser.')
 			print "Could not load URL", url
 			return
+		data = data.strip()
 		if not data:
 			windowinterface.showmessage('You are running the latest version of the software')
 			return
-		cancel = windowinterface.GetOKCancel('There appears to be a newer version!\nDo you want to hear more?')
+		cancel = windowinterface.GetOKCancel('There appears to be a newer version!\nDo you want to know more?')
 		if cancel:
 			return
-		data = string.strip(data)
 		# Pass the version and the second item of the license along.
-		id = string.split(settings.get('license'), '-')[1]
+		id = settings.get('license').split('-')[1]
 		url = '%s?version=%s&id=%s'%(data, version.shortversion, id)
 		windowinterface.htmlwindow(url)
 
@@ -365,9 +364,8 @@ def findfile(name):
 		return name
 	if cmifpath is None:
 		if os.environ.has_key('CMIFPATH'):
-			import string
 			var = os.environ['CMIFPATH']
-			cmifpath = string.splitfields(var, ':')
+			cmifpath = var.split(':')
 		elif os.environ.has_key('CMIF'):
 			cmifpath = [os.environ['CMIF']]
 		else:
