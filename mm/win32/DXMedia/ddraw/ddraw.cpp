@@ -1863,10 +1863,10 @@ DirectDrawSurface_dealloc(DirectDrawSurfaceObject *self)
 	Py_BEGIN_ALLOW_THREADS
 	if(self->releaseI && self->pI)
 		{
-		try {
+		//try {
 			self->pI->Release();
-			}
-		catch(...){}
+		//	}
+		//catch(...){}
 		}
 	Py_END_ALLOW_THREADS
 	PyMem_DEL(self);
