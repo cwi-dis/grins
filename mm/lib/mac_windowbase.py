@@ -521,6 +521,14 @@ class _Toplevel(_Event):
 	def usewindowlock(self, lock):
 		pass
 		
+	def getscreensize(self):
+		l, t, r, b = Qd.qd.screenBits.bounds
+		return (r-l), (b-t)
+		
+	def getscreendepth(self):
+		# Unfortunately this is very difficult to get at...
+		return 8
+		
 class _CommonWindow:
 	"""Code common to toplevel window and subwindow"""
 		
