@@ -10,13 +10,13 @@ from MMNode import alltypes, leaftypes, interiortypes
 
 cwd = os.getcwd()
 
-def shownodeinfo(toplevel, node):
+def shownodeinfo(toplevel, node, new = 0):
 	try:
 		nodeinfo = node.nodeinfo
 	except AttributeError:
 		nodeinfo = NodeInfo(toplevel, node)
 		node.nodeinfo = nodeinfo
-	nodeinfo.open()
+	nodeinfo.open(new)
 
 
 def hidenodeinfo(node):
@@ -30,6 +30,7 @@ def hidenodeinfo(node):
 class NodeInfo:
 
 	def __init__(self, toplevel,  node):
+		self.new = 0
 		self.toplevel = toplevel
 		self.node = node
 		self.context = node.GetContext()
@@ -195,8 +196,10 @@ class NodeInfo:
 		self.close()
 		self.destroy()
 
-	def open(self):
+	def open(self, new = 0):
+		self.new = 0
 		if self.is_showing():
+			self.new = new
 			self.window.show()
 		else:
 			self.close()
@@ -204,6 +207,7 @@ class NodeInfo:
 			self.getvalues(1)
 			self.updateform()
 			self.register(self)
+			self.new = new
 			self.show()
 
 	def getvalues(self, always):
@@ -356,6 +360,12 @@ class NodeInfo:
 		if self.is_showing():
 			self.unregister(self)
 			self.hide()
+		if self.new:
+			editmgr = self.editmgr
+			if not editmgr.transaction():
+				return # Not possible at this time
+			editmgr.delnode(self.node)
+			editmgr.commit()
 	#
 	# Standard callbacks (from Dialog())
 	#
@@ -364,10 +374,12 @@ class NodeInfo:
 		self.updateform()
 
 	def apply_callback(self):
+		self.new = 0
 		if self.changed or self.ch_name() or self.ch_immtext():
 			dummy = self.setvalues()
 
 	def ok_callback(self):
+		self.new = 0
 		ok = 1
 		if self.changed or self.ch_name() or self.ch_immtext():
 			ok = self.setvalues()

@@ -10,7 +10,7 @@ import MMAttrdefs
 form_template = None # Initialized on first use
 
 
-def showarcinfo(root, snode, sside, delay, dnode, dside):
+def showarcinfo(root, snode, sside, delay, dnode, dside, new = 0):
 	context = root.context
 	try:
 		arcinfos = context.arcinfos
@@ -19,13 +19,14 @@ def showarcinfo(root, snode, sside, delay, dnode, dside):
 	key = snode.GetUID() + `sside, delay, dside` + dnode.GetUID()
 	if not arcinfos.has_key(key):
 		arcinfos[key] = ArcInfo(root,
-					snode, sside, delay, dnode, dside)
+					snode, sside, delay, dnode, dside, new)
 	arcinfos[key].open()
 
 
 class ArcInfo:
 
-	def __init__(self, root, snode, sside, delay, dnode, dside):
+	def __init__(self, root, snode, sside, delay, dnode, dside, new = 0):
+		self.new = new
 		self.root = root
 		self.context = root.context
 		self.snode = snode
@@ -91,8 +92,16 @@ class ArcInfo:
 			self.getvalues()
 
 	def close(self):
-		self.context.editmgr.unregister(self)
+		editmgr = self.context.editmgr
+		editmgr.unregister(self)
 		self.hide()
+		if self.new:
+			if not editmgr.transaction():
+				return
+			editmgr.delsyncarc(self.snode, self.sside, self.delay,
+					   self.dnode, self.dside)
+			#...cleanup() ?
+			editmgr.commit()
 
 	def setchoices(self):
 		self.src_markers = self.setchoice(self.src_choice, self.snode)
@@ -184,6 +193,7 @@ class ArcInfo:
 		self.dst_choice.setpos(i)
 
 	def setvalues(self):
+		self.new = 0
 		editmgr = self.context.editmgr
 		if not editmgr.transaction():
 			return # Not possible at this time

@@ -712,7 +712,7 @@ class ChannelView(ViewDialog):
 		editmgr.commit()
 		if placement_type in (PLACING_NEW, PLACING_COPY):
 			import AttrEdit
-			AttrEdit.showchannelattreditor(channel)
+			AttrEdit.showchannelattreditor(channel, new = 1)
 
 	# Window stuff
 
@@ -1173,7 +1173,8 @@ class NodeBox(GO):
 		editmgr.commit()
 		# NB: when we get here, this object is nearly dead already!
 		import ArcInfo
-		ArcInfo.showarcinfo(root, snode, sside, delay, dnode, dsize)
+		ArcInfo.showarcinfo(root, snode, sside, delay, dnode, dsize,
+				    new = 1)
 
 	def select(self):
 		self.unlock()

@@ -261,7 +261,7 @@ class HierarchyView(ViewDialog):
 		node = self.root.context.newnode(type)
 		if self.insertnode(node, where):
 			import NodeInfo
-			NodeInfo.shownodeinfo(self.toplevel, node)
+			NodeInfo.shownodeinfo(self.toplevel, node, new = 1)
 
 	def insertparent(self, type):
 		node = self.focusnode
