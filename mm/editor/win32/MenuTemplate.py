@@ -291,7 +291,7 @@ POPUP_CVIEW_SYNCARC = (
 )
 
 MAIN_FRAME_POPUP = (
-		(ENTRY, '&Paste file\tCtrl+Shift+V', None, PASTE_FILE),
+		(ENTRY, '&Paste document\tCtrl+Shift+V', None, PASTE_FILE),
 		(SEP,),
 		(ENTRY, '&New\tCtrl+N', 'N', NEW_DOCUMENT),
 		(ENTRY, '&Open...\tCtrl+O', 'O', OPEN),
