@@ -14,6 +14,7 @@ if sys.platform == 'mac':
 	import MMurl
 	import urlparse
 	import MacOS
+	import os
 	try:
 		import ic
 		_ic_instance = ic.IC()
@@ -50,16 +51,17 @@ if sys.platform == 'mac':
 			return None, None
 		import windowinterface
 		filename = MMurl.url2pathname(path)
+		filename_lastpart = os.path.split(filename)[-1]
 		try:
 			creator, type = MacOS.GetCreatorAndType(filename)
 		except MacOS.Error:
 			# File doesn't exist. Give the long talk.
-			windowinterface.showmessage('For use with GRiNS (and for use on the web in general) please give your file the correct extension.', identity='nomimetype')
+			windowinterface.showmessage('Extension for "%s" not recognized.\nFor use with GRiNS (and for use on the web in general) please give your file the correct extension.'%filename_lastpart, identity='nomimetype')
 			return None, None
 		descr = _ic_instance.maptypecreator(type, creator, url)
 		if not descr:
-			windowinterface.showmessage('For use with GRiNS (and for use on the web in general) please give your file the correct extension.', identity='nomimetype')
+			windowinterface.showmessage('Extension for "%s" not recognized.\nFor use with GRiNS (and for use on the web in general) please give your file the correct extension.'%filename_lastpart, identity='nomimetype')
 			return None, None
 		import windowinterface
-		windowinterface.showmessage('Incorrect extension for %s\nThis may cause problems on the web'%url, identity='mimetypemismatch')
+		windowinterface.showmessage('Incorrect extension for "%s"\nThis may cause problems on the web'%filename_lastpart, identity='mimetypemismatch')
 		return descr[8], None	# The mimetype
