@@ -121,10 +121,6 @@ class SoundChannel(ChannelAsync):
 		self.armed_duration = duration = node.GetAttrDef('duration', None)
 		begin = int(self.getclipbegin(node, 'sec') * rate + .5)
 		end = int(self.getclipend(node, 'sec') * rate + .5)
-		self.armed_markers = {}
-		for mid, mpos, mname in self.arm_fp.getmarkers() or []:
-			if mname:
-				self.armed_markers[mname] = mpos - begin
 		if begin or end or duration:
 			from audio.select import select
 			if duration is not None and duration > 0:
@@ -132,6 +128,9 @@ class SoundChannel(ChannelAsync):
 				if duration < end - begin:
 					end = begin + duration
 			self.arm_fp = select(self.arm_fp, [(begin, end)])
+		self.armed_markers = {}
+		for mid, mpos, mname in self.arm_fp.getmarkers() or []:
+			self.armed_markers[mname] = mpos
 		self.__ready = 1
 		return 1
 
@@ -185,6 +184,12 @@ class SoundChannel(ChannelAsync):
 		if repeatdur > 0:
 			self.__qid = self._scheduler.enter(
 				repeatdur, 0, self.__stopplay, ())
+		t0 = self._scheduler.timefunc()
+		if t0 > node.start_time:
+			from audio.select import select
+			print 'skipping',node.start_time,t0,t0-node.start_time
+			self.play_fp = select(self.play_fp, [((t0-node.start_time)*rate, None)])
+		self.event('beginEvent')
 		try:
 			player.play(self.play_fp, (self.my_playdone, ()))
 		except audio.Error, msg:
