@@ -429,7 +429,10 @@ class ChannelView(ChannelViewDialog):
 ##		for ch in self.context.layouts.get(self.curlayout, self.context.channels):
 ##			layout[ch.name] = 0
 		if self.showall:
-			channels = self.context.channels
+			channels = []
+			for c in self.context.channels:
+				if c['type'] == 'layout':
+					channels.append(c)
 		else:
 			channels = self.usedchannels
 ##		ret = []
@@ -577,6 +580,8 @@ class ChannelView(ChannelViewDialog):
 
 	def initchannels(self, focus):
 		for c in self.context.channels:
+			if c['type'] != 'layout':
+				continue
 			obj = ChannelBox(self, c)
 			self.objects.append(obj)
 			if focus[0] == 'c' and focus[1] is c:
@@ -671,6 +676,8 @@ class ChannelView(ChannelViewDialog):
 		t = node.GetType()
 		if t in leaftypes:
 			channel = node.GetChannel()
+			if channel:
+				channel = channel.GetLayoutChannel()
 			if channel:
 				channel.used = 1
 				obj = NodeBox(self, node)
@@ -1920,6 +1927,8 @@ class NodeBox(GO, NodeBoxCommand):
 	def reshape(self):
 		# Compute ideal box coordinates
 		channel = self.node.GetChannel()
+		if channel:
+			channel = channel.GetLayoutChannel()
 		if self.pausenode:
 			parent = self.node.GetParent()
 			if parent is None:
