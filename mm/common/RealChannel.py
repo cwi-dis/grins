@@ -179,6 +179,9 @@ class RealChannel:
 ##		windowinterface.addclosecallback(self.release_player,())
 		
 	def destroy(self):
+		if self.__qid:
+			self.__channel._scheduler.cancel(self.__qid)
+			self.__qid = None
 		del self.__channel
 
 	def release_player(self):
