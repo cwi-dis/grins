@@ -1201,7 +1201,8 @@ class _DisplayList:
 				'line_width': 1}
 		self._list = []
 		if window._transparent <= 0:
-			self._list.append(('clear',))
+			self._list.append(('clear',
+					self._window._convert_color(bgcolor)))
 		self._optimdict = {}
 		self._cloneof = None
 		self._clonestart = 0
@@ -1235,10 +1236,6 @@ class _DisplayList:
 				win._pixmap.CopyArea(win._form, win._gc,
 						     x, y, w, h, x, y)
 		del self._cloneof
-		try:
-			del self._clonedata
-		except AttributeError:
-			pass
 		del self._optimdict
 		del self._list
 		del self._buttons
@@ -1257,7 +1254,6 @@ class _DisplayList:
 		if self._rendered:
 			new._cloneof = self
 			new._clonestart = len(self._list)
-			new._clonedata = self._fgcolor, self._font
 			new._imagemask = self._imagemask
 		for key, val in self._optimdict.items():
 			new._optimdict[key] = val
@@ -1316,11 +1312,6 @@ class _DisplayList:
 			have_pixmap = 1
 		gc = w._gc
 		gc.ChangeGC(self._gcattr)
-		if clonestart > 0:
-			fg, font = self._clonedata
-			gc.foreground = w._convert_color(fg)
-			if font:
-				gc.SetFont(font._font)
 		gc.SetRegion(region)
 		if clonestart == 0 and self._imagemask:
 			# restrict to drawing outside the image
@@ -1352,12 +1343,8 @@ class _DisplayList:
 		w = self._window
 		gc = w._gc
 		if cmd == 'clear':
-			fg = gc.foreground
-			gc.foreground = gc.background
-			apply(gc.FillRectangle, w._rect)
-			gc.foreground = fg
-		elif cmd == 'fg':
 			gc.foreground = entry[1]
+			apply(gc.FillRectangle, w._rect)
 		elif cmd == 'image':
 			mask = entry[1]
 			if mask:
@@ -1377,46 +1364,39 @@ class _DisplayList:
 			if mask:
 				gc.SetRegion(region)
 		elif cmd == 'line':
-			fg = gc.foreground
 			gc.foreground = entry[1]
-			points = entry[2]
+			gc.line_width = entry[2]
+			points = entry[3]
 			x0, y0 = points[0]
 			for x, y in points[1:]:
 				gc.DrawLine(x0, y0, x, y)
 				x0, y0 = x, y
-			gc.foreground = fg
 		elif cmd == 'box':
-			apply(gc.DrawRectangle, entry[1])
+			gc.foreground = entry[1]
+			gc.line_width = entry[2]
+			apply(gc.DrawRectangle, entry[3])
 		elif cmd == 'fbox':
-			fg = gc.foreground
 			gc.foreground = entry[1]
 			apply(gc.FillRectangle, entry[2])
-			gc.foreground = fg
 		elif cmd == 'marker':
-			fg = gc.foreground
 			gc.foreground = entry[1]
 			x, y = entry[2]
 			radius = 5 # XXXX
 			gc.FillArc(x-radius, y-radius, 2*radius, 2*radius,
 				   0, 360*64)
-			gc.foreground = fg
-		elif cmd == 'font':
-			gc.SetFont(entry[1])
 		elif cmd == 'text':
-			apply(gc.DrawString, entry[1:])
-		elif cmd == 'linewidth':
-			gc.line_width = entry[1]
+			gc.foreground = entry[1]
+			gc.SetFont(entry[2])
+			apply(gc.DrawString, entry[3:])
 
 	def fgcolor(self, color):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		self._list.append('fg', self._window._convert_color(color))
 		self._fgcolor = color
 
 	def linewidth(self, width):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		self._list.append('linewidth', width)
 		self._linewidth = width
 
 	def newbutton(self, coordinates, z = 0):
@@ -1437,9 +1417,9 @@ class _DisplayList:
 			r = Xlib.CreateRegion()
 			r.UnionRectWithRegion(dest_x, dest_y, width, height)
 			self._imagemask = r
-		self._list.append('image', mask, image, src_x, src_y,
-				  dest_x, dest_y, width, height)
-		self._optimize(2)
+		self._list.append(('image', mask, image, src_x, src_y,
+				   dest_x, dest_y, width, height))
+		self._optimize((2,))
 		x, y, w, h = w._rect
 		return float(dest_x - x) / w, float(dest_y - y) / h, \
 		       float(width) / w, float(height) / h
@@ -1448,37 +1428,41 @@ class _DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
-		color = w._convert_color(color)
 		p = []
 		for point in points:
 			p.append(w._convert_coordinates(point))
-		self._list.append('line', color, p)
+		self._list.append(('line', w._convert_color(color),
+				   self._linewidth, p))
+		self._optimize((1,))
 
 	def drawbox(self, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		self._list.append('box',
-				self._window._convert_coordinates(coordinates))
-		self._optimize()
+		w = self._window
+		self._list.append(('box', w._convert_color(self._fgcolor),
+				   self._linewidth,
+				   w._convert_coordinates(coordinates)))
+		self._optimize((1,))
 
 	def drawfbox(self, color, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		self._list.append('fbox', self._window._convert_color(color),
-				self._window._convert_coordinates(coordinates))
-		self._optimize(1)
+		w = self._window
+		self._list.append(('fbox', w._convert_color(color),
+				   w._convert_coordinates(coordinates)))
+		self._optimize((1,))
 
 	def drawmarker(self, color, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		self._list.append('marker', self._window._convert_color(color),
-				self._window._convert_coordinates(coordinates))
+		w = self._window
+		self._list.append(('marker', w._convert_color(color),
+				   w._convert_coordinates(coordinates)))
 
 	def usefont(self, fontobj):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		self._font = fontobj
-		self._list.append('font', fontobj._font)
 		return self.baseline(), self.fontheight(), self.pointsize()
 
 	def setfont(self, font, size):
@@ -1525,7 +1509,8 @@ class _DisplayList:
 		maxx = oldx
 		for str in strlist:
 			x0, y0 = w._convert_coordinates((x, y))
-			list.append('text', x0, y0, str)
+			list.append('text', self._window._convert_color(self._fgcolor), self._font._font, x0, y0, str)
+			self._optimize((1,))
 			self._curpos = x + float(f.TextWidth(str)) / w._rect[_WIDTH], y
 			x = self._xpos
 			y = y + height
@@ -1534,9 +1519,7 @@ class _DisplayList:
 		newx, newy = self._curpos
 		return oldx, oldy, maxx - oldx, newy - oldy + height - base
 
-	def _optimize(self, ignore = []):
-		if type(ignore) is IntType:
-			ignore = [ignore]
+	def _optimize(self, ignore = ()):
 		entry = self._list[-1]
 		x = []
 		for i in range(len(entry)):

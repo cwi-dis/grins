@@ -414,11 +414,9 @@ class _DisplayList(X_windowbase._DisplayList):
 		w = self._window
 		gc = w._gc
 		if cmd == 'fpolygon':
-			fg = gc.foreground
 			gc.foreground = entry[1]
 			gc.FillPolygon(entry[2], X.Convex,
 				       X.CoordModeOrigin)
-			gc.foreground = fg
 		elif cmd == '3dbox':
 			cl, ct, cr, cb = entry[1]
 			l, t, w, h = entry[2]
@@ -435,7 +433,6 @@ class _DisplayList(X_windowbase._DisplayList):
 			tt = t + 2
 			rr = r - 2
 			bb = b - 3
-			fg = gc.foreground
 			gc.foreground = cl
 			gc.FillPolygon([(l1, t1), (ll, tt), (ll, bb), (l1, b1)],
 				       X.Convex, X.CoordModeOrigin)
@@ -448,9 +445,10 @@ class _DisplayList(X_windowbase._DisplayList):
 			gc.foreground = cb
 			gc.FillPolygon([(l1, b1), (ll, bb), (rr, bb), (r1, b1)],
 				       X.Convex, X.CoordModeOrigin)
-			gc.foreground = fg
 		elif cmd == 'diamond':
-			x, y, w, h = entry[1]
+			gc.foreground = entry[1]
+			gc.line_width = entry[2]
+			x, y, w, h = entry[3]
 			gc.DrawLines([(x, y + h/2),
 				      (x + w/2, y),
 				      (x + w, y + h/2),
@@ -458,7 +456,6 @@ class _DisplayList(X_windowbase._DisplayList):
 				      (x, y + h/2)],
 				     X.CoordModeOrigin)
 		elif cmd == 'fdiamond':
-			fg = gc.foreground
 			gc.foreground = entry[1]
 			x, y, w, h = entry[2]
 			gc.FillPolygon([(x, y + h/2),
@@ -467,7 +464,6 @@ class _DisplayList(X_windowbase._DisplayList):
 					(x + w/2, y + h),
 					(x, y + h/2)],
 				       X.Convex, X.CoordModeOrigin)
-			gc.foreground = fg
 		elif cmd == '3ddiamond':
 			cl, ct, cr, cb = entry[1]
 			l, t, w, h = entry[2]
@@ -480,7 +476,6 @@ class _DisplayList(X_windowbase._DisplayList):
 			tt = t + 3
 			rr = r - n
 			bb = b - 3
-			fg = gc.foreground
 			gc.foreground = cl
 			gc.FillPolygon([(l, y), (x, t), (x, tt), (ll, y)],
 				       X.Convex, X.CoordModeOrigin)
@@ -493,14 +488,12 @@ class _DisplayList(X_windowbase._DisplayList):
 			gc.foreground = cb
 			gc.FillPolygon([(l, y), (ll, y), (x, bb), (x, b)],
 				       X.Convex, X.CoordModeOrigin)
-			gc.foreground = fg
 		elif cmd == 'arrow':
-			fg = gc.foreground
 			gc.foreground = entry[1]
-			apply(gc.DrawLine, entry[2])
-			gc.FillPolygon(entry[3], X.Convex,
+			gc.line_width = entry[2]
+			apply(gc.DrawLine, entry[3])
+			gc.FillPolygon(entry[4], X.Convex,
 				       X.CoordModeOrigin)
-			gc.foreground = fg
 		else:
 			X_windowbase._DisplayList._do_render(self, entry, region)
 
@@ -513,7 +506,6 @@ class _DisplayList(X_windowbase._DisplayList):
 		if self._rendered:
 			new._cloneof = self
 			new._clonestart = len(self._list)
-			new._clonedata = self._fgcolor, self._font
 		for key, val in self._optimdict.items():
 			new._optimdict[key] = val
 		return new
@@ -526,8 +518,8 @@ class _DisplayList(X_windowbase._DisplayList):
 		p = []
 		for point in points:
 			p.append(w._convert_coordinates(point))
-		self._list.append('fpolygon', color, p)
-		self._optimize(1)
+		self._list.append(('fpolygon', color, p))
+		self._optimize((1,))
 
 	def draw3dbox(self, cl, ct, cr, cb, coordinates):
 		if self._rendered:
@@ -538,15 +530,17 @@ class _DisplayList(X_windowbase._DisplayList):
 		ct = window._convert_color(ct)
 		cr = window._convert_color(cr)
 		cb = window._convert_color(cb)
-		self._list.append('3dbox', (cl, ct, cr, cb), coordinates)
-		self._optimize(1)
+		self._list.append(('3dbox', (cl, ct, cr, cb), coordinates))
+		self._optimize((1,))
 
 	def drawdiamond(self, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		coordinates = self._window._convert_coordinates(coordinates)
-		self._list.append('diamond', coordinates)
-		self._optimize()
+		self._list.append(('diamond',
+				   self._window._convert_color(self._fgcolor),
+				   self._linewidth, coordinates))
+		self._optimize((1,))
 
 	def drawfdiamond(self, color, coordinates):
 		if self._rendered:
@@ -559,8 +553,8 @@ class _DisplayList(X_windowbase._DisplayList):
 			y, h = y + h, -h
 		coordinates = window._convert_coordinates((x, y, w, h))
 		color = window._convert_color(color)
-		self._list.append('fdiamond', color, coordinates)
-		self._optimize(1)
+		self._list.append(('fdiamond', color, coordinates))
+		self._optimize((1,))
 
 	def draw3ddiamond(self, cl, ct, cr, cb, coordinates):
 		if self._rendered:
@@ -571,8 +565,8 @@ class _DisplayList(X_windowbase._DisplayList):
 		cr = window._convert_color(cr)
 		cb = window._convert_color(cb)
 		coordinates = window._convert_coordinates(coordinates)
-		self._list.append('3ddiamond', (cl, ct, cr, cb), coordinates)
-		self._optimize(1)
+		self._list.append(('3ddiamond', (cl, ct, cr, cb), coordinates))
+		self._optimize((1,))
 
 	def drawarrow(self, color, src, dst):
 		if self._rendered:
@@ -611,8 +605,9 @@ class _DisplayList(X_windowbase._DisplayList):
 			points.append(roundi(ndx + ARR_LENGTH*cos - ARR_HALFWIDTH*sin),
 				      roundi(ndy + ARR_LENGTH*sin + ARR_HALFWIDTH*cos))
 			window.arrowcache[(src,dst)] = nsx, nsy, ndx, ndy, points
-		self._list.append('arrow', color, (nsx, nsy, ndx, ndy), points)
-		self._optimize(1)
+		self._list.append(('arrow', color, self._linewidth,
+				   (nsx, nsy, ndx, ndy), points))
+		self._optimize((1,))
 
 toplevel = _Toplevel()
 from X_windowbase import *
