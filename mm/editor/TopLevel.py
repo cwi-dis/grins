@@ -592,7 +592,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				return 0
 		elif mimetype == 'application/smil':
 			if not exporting:
-				answer = windowinterface.multchoice('You will lose information by saving your project as SMIL.\nDo you want to continue?',
+				answer = windowinterface.multchoice('You will lose GRiNS specific information by saving your project as SMIL.\nDo you want to continue?',
 					['OK', 'Cancel'], 1)
 				if answer != 0:
 					return
