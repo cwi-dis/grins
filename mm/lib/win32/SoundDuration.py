@@ -2,17 +2,14 @@ __version__ = "$Id$"
 
 # Cache info about sound files
 
+import MMurl
+
 # Used to get full info
 def getfullinfo(url):
-	from MMurl import urlretrieve
-	try:
-		filename = urlretrieve(url)[0]
-	except (IOError), msg:
-		print 'error in sound file', url, ':', msg
-		return 0, 8000, []
-	#return nframes, framerate, markers
+	url = MMurl.canonURL(url)
 	import windowinterface
-	return windowinterface.GetMediaDuration(filename),1,[]
+	#return nframes, framerate, markers
+	return windowinterface.GetMediaDuration(url),1,[]
 
 import FileCache
 allinfo_cache = FileCache.FileCache(getfullinfo)
