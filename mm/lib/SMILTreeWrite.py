@@ -1214,6 +1214,16 @@ class SMILWriter(SMIL):
 		import version
 		ctx = self.root.GetContext()
 		fp = self.fp
+
+		# if the document is not valid, just write the raw source code
+		# XXX this code should move to another location. I don't know where ?
+		parseErrors = ctx.getParseErrors()
+		if parseErrors != None:
+			source = parseErrors.getSource()
+			fp.write(source)
+			fp.close()
+			return
+			
 		fp.write(SMILdecl)	# MUST come first
 		if self.evallicense:
 			fp.write('<!--%s-->\n' % EVALcomment)
