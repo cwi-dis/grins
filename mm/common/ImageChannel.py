@@ -28,7 +28,9 @@ class ImageWindow(ChannelWindow):
 		return self
 	#
 	def show(self):
-		if self.wid <> 0: return
+		if self.wid <> 0:
+			self.setwin()
+			return
 		ChannelWindow.show(self)
 		fl.qdevice(DEVICE.MOUSE3)
 		self.render()
@@ -112,6 +114,7 @@ class ImageWindow(ChannelWindow):
 			print 'Cannot read image file', filename, ':', msg
 	def showimage(self):
 		if self.wid:
+			self.pop()
 			gl.winset(self.wid)
 			self.render()
 	def setanchors(self, anchors):
@@ -168,7 +171,7 @@ class ImageChannel(Channel):
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
 	#
-	chan_attrs = ['winsize', 'winpos', 'visible', 'border']
+	chan_attrs = ['winsize', 'winpos', 'visible']
 	node_attrs = ['file', 'duration', 'bgcolor', 'scale', 'arm_duration']
 	#
 	def init(self, (name, attrdict, player)):
@@ -180,9 +183,6 @@ class ImageChannel(Channel):
 	def show(self):
 		if self.may_show():
 			self.window.show()
-			if self.no_border():
-				gl.noborder()
-				gl.winconstraints()
 	#
 	def hide(self):
 		self.window.hide()
