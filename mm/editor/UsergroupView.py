@@ -36,7 +36,6 @@ class UsergroupView(UsergroupViewDialog):
 			return
 		self.editmgr.unregister(self)
 		UsergroupViewDialog.hide(self)
-		self.toplevel.showstate(self, 0)
 
 	def transaction(self):
 		return 1		# It's always OK to start a transaction
