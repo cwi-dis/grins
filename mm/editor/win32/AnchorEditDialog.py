@@ -79,9 +79,9 @@ class AnchorEditorDialog:
 		
 		formid=adornments['form_id']
 		toplevel_window=self.toplevel.window
-		self.__window=toplevel_window.newformobj(formid)
+		self.__window=toplevel_window.newviewobj(formid)
 		self.__window.do_init(title, typelabels, list, initial,adornments)
-		toplevel_window.showform(self.__window,formid)
+		toplevel_window.showview(self.__window,formid)
 
 	def close(self):
 		"""Close the dialog and free resources."""

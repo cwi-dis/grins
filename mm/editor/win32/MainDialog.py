@@ -47,6 +47,8 @@ class MainDialog:
 			import usercmd
 			self.commandlist.append(
 				usercmd.CONSOLE(callback=(self.console_callback, ())))
+			self.commandlist.append(
+				usercmd.SCHEDDEBUG(callback=(self.scheddebug_callback, ())))
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
 			import cmif, MMurl
@@ -99,7 +101,7 @@ class MainDialog:
 			return
 		import windowinterface
 		f=windowinterface.getmainwnd()
-		filetypes = ['application/x-grins-project', 'application/smil']
+		filetypes = ['/SMIL presentation', 'application/x-grins-project', 'application/smil']
 ##		import features
 ##		if not features.lightweight:
 ##			filetypes.append('application/x-grins-cmif')
@@ -205,6 +207,10 @@ class MainDialog:
 			cwnd.ShowWindow(win32con.SW_RESTORE)
 			cwnd.ShowWindow(win32con.SW_SHOW)
 			cwnd.BringWindowToTop()
+
+	def scheddebug_callback(self):
+		import Scheduler
+		Scheduler.debugevents = not Scheduler.debugevents
 
 	def help_contents_callback(self, params=None):
 		import Help

@@ -172,6 +172,8 @@ class PlayerDialog:
 		"""
 		ostate = self.__state
 		self.__state = state
+
+		
 #		w = self.__window
 #		if w is not None:
 #			if state == STOPPED:
