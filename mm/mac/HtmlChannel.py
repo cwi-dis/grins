@@ -288,39 +288,6 @@ class HtmlChannel(Channel.ChannelWindow):
 ##		self.htmlw.footerText = '<P>[<A HREF="'+self.armed_url+\
 ##			  '">BACK</A> to CMIF node]<P>'
 
-	def resolveImage(self, widget, src, noload = 0):
-		import X
-		src = urllib.basejoin(self.url, src)
-		try:
-			return image_cache[src]
-		except KeyError:
-			pass
-		if noload:
-			return None
-		try:
-			filename, info = urllib.urlretrieve(src)
-		except IOError:
-			return None
-		import img, imgformat
-		visual = widget.visual
-		if visual.c_class == X.TrueColor and visual.depth == 8:
-			format = windowinterface.myxrgb8
-		else:
-			format = imgformat.xcolormap
-		try:
-			reader = img.reader(format, filename)
-		except:
-			return
-		if hasattr(reader, 'transparent') and hasattr(reader, 'colormap'):
-			reader.colormap[reader.transparent] = windowinterface.toplevel._colormap.QueryColor(widget.background)[1:4]
-		if format is windowinterface.myxrgb8:
-			colors = map(lambda x: (x, x, x), range(256))
-		else:
-			colors = map(lambda x: x, reader.colormap)
-		dict = {'width': reader.width, 'height': reader.height,
-			'image_data': reader.read(), 'colors': colors}
-		image_cache[src] = dict
-		return dict
 
 image_cache = {}
 
