@@ -50,6 +50,7 @@ class box():
 		if self.hidden <> 0 or self.boxtype = BG_BOX:
 			return
 		nodecolor()
+		l = getlwidth()
 		x = self.x
 		y = self.y
 		w = self.w
@@ -62,14 +63,13 @@ class box():
 		v2f(w, h)
 		v2f(0, h)
 		endpolygon()
-		l = getlwidth()
 		linewidth(l * 2)
 		if self.boxtype = FOCUS_BOX:
 			focuscolor()
 		elif self.boxtype = LOCK_BOX:
 			altfocuscolor()
 		else:
-			bgcolor()
+			nodecolor()
 		bgnclosedline()
 		v2f(0, 0)
 		v2f(w, 0)
