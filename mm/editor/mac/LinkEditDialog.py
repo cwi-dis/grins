@@ -86,7 +86,7 @@ ITEMLIST_TYPE=ITEMrange(ITEM_TYPE_TITLE, ITEM_TYPE_FORK)
 
 ITEMLIST_ALL=ITEMrange(ITEM_LEFT_ATITLE, ITEM_OK)
 
-__version__ = "$Id"
+__version__ = "$Id$"
 
 class LinkEditDialog(windowinterface.MACDialog):
 	def __init__(self, title, dirstr, typestr, menu1, cbarg1, menu2, cbarg2):

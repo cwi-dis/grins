@@ -6,7 +6,7 @@ an interface to turn options on and off.
 
 """
 
-__version__ = "$Id"
+__version__ = "$Id$"
 
 import windowinterface, WMEVENTS
 
