@@ -2,71 +2,20 @@ __version__ = "$Id$"
 
 import audio
 from format import *
+from chunk import Chunk
 
 _WAVE_FORMAT_PCM = 0x0001
 _IBM_FORMAT_MULAW = 0x0101
 _IBM_FORMAT_ALAW = 0x0102
 _IBM_FORMAT_ADPCM = 0x0103
 
-def _read_long(file):
-	x = 0L
-	for i in range(4):
-		byte = file.read(1)
-		if byte == '':
-			raise EOFError
-		x = x + (ord(byte) << (8 * i))
-	if x >= 0x80000000L:
-		x = x - 0x100000000L
-	return int(x)
-
-def _read_short(file):
-	x = 0
-	for i in range(2):
-		byte = file.read(1)
-		if byte == '':
-			raise EOFError
-		x = x + (ord(byte) << (8 * i))
-	if x >= 0x8000:
-		x = x - 0x10000
-	return x
-
-class Chunk:
-	def __init__(self, file):
-		self.file = file
-		self.chunkname = self.file.read(4)
-		if len(self.chunkname) < 4:
-			raise EOFError
-		self.chunksize = _read_long(self.file)
-		self.size_read = 0
-		self.offset = self.file.tell()
-
-	def rewind(self):
-		self.file.seek(self.offset, 0)
-		self.size_read = 0
-
-	def getpos(self):
-		return self.size_read
-
-	def setpos(self, pos):
-		if pos < 0 or pos > self.chunksize:
-			raise RuntimeError
-		self.file.seek(self.offset + pos, 0)
-		self.size_read = pos
-
-	def read(self, length):
-		if self.size_read >= self.chunksize:
-			return ''
-		if length > self.chunksize - self.size_read:
-			length = self.chunksize - self.size_read
-		data = self.file.read(length)
-		self.size_read = self.size_read + len(data)
-		return data
-
-	def skip(self):
-		self.file.seek(self.chunksize - self.size_read, 1)
-
 class reader:
 	def __init__(self, file):
+		self.__handlers = {
+			'fmt ': self.__read_fmt_chunk,
+			'data': self.__read_data_chunk,
+			}
+
 		if type(file) == type(''):
 			self.__filename = file # only needed for __repr__
 			self.__file = file = open(file, 'rb')
@@ -75,54 +24,46 @@ class reader:
 			self.__file = file
 		self.__soundpos = 0
 		self.__framesread = 0
+		self.__data_chunk = None
+		self.__chunk = None
+		self.__format = None
 		# start parsing
-		form = file.read(4)
-		if form != 'RIFF':
+		self.__file = file = Chunk(file, bigendian = 0)
+		if file.getname() != 'RIFF':
 			raise audio.Error, 'file does not start with RIFF id'
-		formlength = _read_long(file)
-		if formlength <= 4:
-			raise audio.Error, 'invalid RIFF chunk data size'
-		formdata = file.read(4)
-		formlength = formlength - 4
-		if formdata != 'WAVE':
+		if file.read(4) != 'WAVE':
 			raise audio.Error, 'not a WAVE file'
-		fmt_chunk_read = 0
-		while formlength > 1:
-			data_seek_needed = 1
-			chunk = Chunk(self.__file)
-			if chunk.chunkname == 'fmt ':
-				self.__read_fmt_chunk(chunk)
-				fmt_chunk_read = 1
-			elif chunk.chunkname == 'data':
-				if not fmt_chunk_read:
-					raise audio.Error, 'data chunk before fmt chunk'
-				self.__data_chunk = chunk
-				fmt = self.__format
-				self.__nframes = chunk.chunksize * \
-						 fmt.getfpb() / \
-						 fmt.getblocksize()
-				data_seek_needed = 0
-			formlength = formlength - 8 - chunk.chunksize
-			if formlength > 1:
-				chunk.skip()
-		if not fmt_chunk_read or not self.__data_chunk:
-			raise audio.Error, 'fmt chunk and/or data chunk missing'
-		if data_seek_needed:
-			self.__data_chunk.rewind()
 
 	def __repr__(self):
+		if self.__format is None:
+			return '<WAVreader instance, file=%s, unknown format>' % self.__filename
 		return '<WAVreader instance, file=%s, format=%s, framerate=%d>' % (self.__filename, `self.__format`, self.__framerate)
 
+	def __read_until(self, name):
+		if self.__chunk is not None:
+			self.__chunk.skip()
+		while 1:
+			try:
+				chunk = Chunk(self.__file, bigendian = 0)
+			except EOFError:
+				raise audio.Error, 'chunk %s not found' % name
+			else:
+				self.__chunk = chunk
+			chunkname = chunk.getname()
+			func = self.__handlers.get(chunkname)
+			if func is not None:
+				func(chunk)
+			if name == chunkname:
+				return
+			chunk.skip()
+
 	def __read_fmt_chunk(self, chunk):
-		wFormatTag = _read_short(chunk)
-		nchannels = _read_short(chunk)
+		from struct import unpack
+		wFormatTag, nchannels, self.__framerate, dwAvgBytesPerSec, wBlockAlign = unpack('<hhllh', chunk.read(14))
 		if nchannels < 1 or nchannels > 2:
 			raise audio.Error, 'Unsupported format'
-		self.__framerate = _read_long(chunk)
-		dwAvgBytesPerSec = _read_long(chunk)
-		wBlockAlign = _read_short(chunk)
 		if wFormatTag == _WAVE_FORMAT_PCM:
-			bps = _read_short(chunk)
+			bps = unpack('<h', chunk.read(2))[0]
 			if bps > 16:
 				raise audio.Error, 'Unsupported format'
 			if bps <= 8:
@@ -139,16 +80,37 @@ class reader:
 		else:
 			raise audio.Error, 'unknown WAVE format'
 
+	def __read_data_chunk(self, chunk):
+		if self.__format is None:
+			raise audio.Error, 'data chunk before fmt chunk'
+		self.__data_chunk = chunk
+		fmt = self.__format
+		self.__nframes = chunk.getsize() * fmt.getfpb() / fmt.getblocksize()
+		self.__data_curpos = self.getpos()
+
 	def getformat(self):
+		if self.__format is None:
+			self.__read_until('fmt ')
 		return self.__format
 
 	def getnframes(self):
+		if self.__format is None:
+			self.__read_until('fmt ')
 		return self.__nframes
 
 	def getframerate(self):
+		if self.__format is None:
+			self.__read_until('fmt ')
 		return self.__framerate
 
 	def readframes(self, nframes = -1):
+		if self.__format is None:
+			self.__read_until('fmt ')
+		if self.__data_chunk is None:
+			self.__read_until('data')
+		if self.__chunk is not self.__data_chunk:
+			self.__chunk = self.__data_chunk
+			self.__data_chunk.setpos(self.__data_curpos)
 		fmt = self.__format
 		if nframes >= 0:
 			nbytes = (nframes / fmt.getfpb()) * fmt.getblocksize()
@@ -157,17 +119,22 @@ class reader:
 		data = self.__data_chunk.read(nbytes)
 		nframes = len(data) * fmt.getfpb() / fmt.getblocksize()
 		self.__framesread = self.__framesread + nframes
+		self.__data_curpos = self.getpos()
 		return data, nframes
 
 	def rewind(self):
-		self.__data_chunk.rewind()
+		self.__data_chunk.seek(0)
 		self.__framesread = 0
+		self.__data_curpos = self.getpos()
+		self.__chunk = self.__data_chunk
 
 	def getpos(self):
-		return self.__data_chunk.getpos(), self.__framesread
+		if self.__data_chunk is None:
+			self.__read_until('data')
+		return self.__data_chunk.tell(), self.__framesread
 
 	def setpos(self, (pos, framesread)):
-		self.__data_chunk.setpos(pos)
+		self.__data_chunk.seek(pos)
 		self.__framesread = framesread
 
 	def getmarkers(self):
