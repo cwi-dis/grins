@@ -103,4 +103,7 @@ def HasSvgSupport():
 	import win32ui
 	return win32ui.HasSvgSupport()
 
+def is_embedded():
+	import __main__
+	return hasattr(__main__,'embedded') and __main__.embedded
 
