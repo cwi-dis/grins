@@ -2823,6 +2823,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		ctx.cssResolver.setRawAttrs(img.getMediaCssId(), [])
 		img.attrdict['duration'] = -1
 		img.attrdict['channel'] = 'Skin Image'
+		par = ctx.newnode('par')
+		par.__forcechild = None, 0
+		brush = ctx.newnode('brush')
+		brush.attrdict['fgcolor'] = dict.get('displaybgcolor', vp.attrdict.get('bgcolor') or (0,0,0))
+		brush.attrdict['channel'] = 'Skin Area'
+		par._addchild(brush)
 		if dict.has_key('displayimage'):
 			import Sizes
 			image = MMurl.basejoin(skin, dict['displayimage'])
@@ -2830,11 +2836,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if width == 0 or height == 0:
 				self.warning('error getting skin displayimage dimensions')
 			else:
-				r = ctx.newnode('par')
-				r.__forcechild = None, 0
-				r._addchild(oldroot)
 				i = ctx.newnode('ext')
-				r._addchild(i)
+				par._addchild(i)
 				i.attrdict['file'] = MMurl.basejoin(skin, dict['displayimage'])
 				i.attrdict['regAlign'] = 'center'
 				i.attrdict['regPoint'] = 'center'
@@ -2847,9 +2850,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				cssattrs = [('left',(coords[2] - width) / 2), ('width', width), ('top', (coords[3] - height) / 2), ('height', height)]
 				ctx.cssResolver.setRawAttrs(i.getSubRegCssId(), cssattrs)
 				ctx.cssResolver.setRawAttrs(i.getMediaCssId(), cssattrs)
-				r.SMILidmap = oldroot.SMILidmap
-				del oldroot.SMILidmap
-				oldroot = r
+		par._addchild(oldroot)
+		if not oldroot.attrdict.has_key('name'):
+			oldroot.attrdict['name'] = 'Old Root Node'
+		par.attrdict['terminator'] = oldroot.GetRawAttr('name')
+		oldroot = par
 		beginlist = []
 		endlist = []
 		keys = []		# list of accesskey keys
@@ -2865,8 +2870,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				lcd['width'] = coords[2]
 				lcd['height'] = coords[3]
 				lcd['showBackground'] = 'whenActive'
-				lcd['bgcolor'] = dict.get('displaybgcolor', vp.attrdict.get('bgcolor') or (0,0,0))
-				lcd['transparent'] = 0
+				lcd['transparent'] = 1
 				settings.setScreenSize(coords[2], coords[3])
 				ctx.cssResolver.setRawAttrs(lcd.getCssId(), [('left', coords[0]), ('top', coords[1]), ('width', coords[2]), ('height', coords[3])])
 				if settings.get('centerskin') and (vp.has_key('width') or vp.has_key('height')):
@@ -2920,17 +2924,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		oldroot.attrdict['beginlist'] = beginlist
 		oldroot.attrdict['endlist'] = endlist
 		oldroot.attrdict['restart'] = 'whenNotActive'
-		oldroot.removeOwner(OWNER_DOCUMENT)
+		self.__root.removeOwner(OWNER_DOCUMENT)
 		root._addchild(oldroot)
 		assets = []
-		for c in oldroot.children:
+		for c in self.__root.children:
 			if c.type == 'assets':
 				assets.append(c)
-			for c in assets:
-				c.Extract()
-				root._addchild(c)
-		root.SMILidmap = oldroot.SMILidmap
-		del oldroot.SMILidmap
+		for c in assets:
+			c.Extract()
+			root._addchild(c)
+		root.SMILidmap = self.__root.SMILidmap
+		del self.__root.SMILidmap
 		self.__root = root
 		for r in vp.GetChildren()[:]:
 			r.Extract()
