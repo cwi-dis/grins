@@ -1707,8 +1707,8 @@ class ChannelWindow(Channel):
 			self.played_display.close()
 			self.played_display = d
 
-	# get the area media geom according to registration points
-	# Actual duration: about 1ms
+	# get the space display area of media according to registration points
+	# return pourcent values relative to the subregion or region
 	def getmediageom(self, node):
 		subreg_height = node.__subreg_height
 		subreg_width = node.__subreg_width
@@ -1814,7 +1814,8 @@ class ChannelWindow(Channel):
 					 float(area_width)/subreg_width, float(area_height)/subreg_height
 		
 	# get the sub channel geom according to registration sub-regions
-	def getwingeom(self, node):		
+	# return in pixel value
+	def getwingeom(self, node):	
 		subreg_left = node.GetAttrDef('left', 0)
 		subreg_right = node.GetAttrDef('right', 0)
 		subreg_top = node.GetAttrDef('top', 0)
@@ -1822,14 +1823,14 @@ class ChannelWindow(Channel):
 
 		reg_left, reg_top, reg_width, reg_height =  \
 			self._get_parent_channel()._attrdict['base_winoff']
-		
+
 		# translate in pixel 
 		if type(subreg_left) == type(0.0):
-			subreg_left = int(reg_height*subreg_left)
+			subreg_left = int(reg_width*subreg_left)
 		if type(subreg_top) == type(0.0):
 			subreg_top = int(reg_height*subreg_top)
 		if type(subreg_right) == type(0.0):
-			subreg_right = int(reg_height*subreg_right)
+			subreg_right = int(reg_width*subreg_right)
 		if type(subreg_bottom) == type(0.0):
 			subreg_bottom = int(reg_height*subreg_bottom)
 
@@ -1839,12 +1840,22 @@ class ChannelWindow(Channel):
 		# print 'sub region height =',subreg_height
 		# print 'sub region width = ',subreg_width
 		
+		# allow only no null value
+		if subreg_height == 0:
+			subreg_height = 1
+		if subreg_width == 0:
+			subreg_width = 1
+		if subreg_top == 0:
+			subreg_top = 1
+		if subreg_height == 0:
+			subreg_height = 1
+
 		node.__subreg_height = subreg_height
 		node.__subreg_width = subreg_width
 		node.__subreg_top = subreg_top
 		node.__subreg_left = subreg_left
 
-		# print 'subreg geom : ',subreg_left, subreg_top, subreg_width, subreg_height
+		# print subreg_left, subreg_top, subreg_width, subreg_height
 		return subreg_left, subreg_top, subreg_width, subreg_height
 		
 	def play(self, node):
