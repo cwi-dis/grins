@@ -269,6 +269,7 @@
 #define IDC_STALLTIME                   1197
 #define IDC_STALLCOUNT                  1198
 #define IDC_ERRORCOUNT                  1199
+#define IDC_CANCEL                      1202
 #define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
@@ -328,7 +329,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        275
 #define _APS_NEXT_COMMAND_VALUE         32840
-#define _APS_NEXT_CONTROL_VALUE         1202
+#define _APS_NEXT_CONTROL_VALUE         1203
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
