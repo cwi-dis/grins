@@ -244,12 +244,14 @@ class HierarchyView(ViewDialog):
 		node = self.focusnode
 		if node is None:
 			windowinterface.showmessage(
-				'There is no focus to insert to')
+				'There is no focus to insert to',
+				type = 'error')
 			return
 		parent = node.GetParent()
 		if parent is None and where <> 0:
 			windowinterface.showmessage(
-				"Can't insert before/after the root")
+				"Can't insert before/after the root",
+				type = 'error')
 			return
 		type = node.GetType()
 		if where == 0:
@@ -265,12 +267,14 @@ class HierarchyView(ViewDialog):
 		node = self.focusnode
 		if node is None:
 			windowinterface.showmessage(
-				'There is no focus to insert at')
+				'There is no focus to insert at',
+				type = 'error')
 			return
 		parent = node.GetParent()
 		if parent is None:
 			windowinterface.showmessage(
-				"Can't insert above the root")
+				"Can't insert above the root",
+				type = 'error')
 			return
 		em = self.editmgr
 		if not em.transaction():
@@ -291,11 +295,13 @@ class HierarchyView(ViewDialog):
 		type, node = Clipboard.getclip()
 		if type <> 'node' or node is None:
 			windowinterface.showmessage(
-			    'The clipboard does not contain a node to paste')
+			    'The clipboard does not contain a node to paste',
+			    type = 'error')
 			return
 		if self.focusnode is None:
 			windowinterface.showmessage(
-				'There is no focus to paste to')
+				'There is no focus to paste to',
+				type = 'error')
 			return
 		if node.context is not self.root.context:
 			node = node.CopyIntoContext(self.root.context)
@@ -309,12 +315,14 @@ class HierarchyView(ViewDialog):
 			parent = self.focusnode.GetParent()
 			if parent is None:
 				windowinterface.showmessage(
-					"Can't insert before/after the root")
+					"Can't insert before/after the root",
+					type = 'error')
 				node.Destroy()
 				return 0
 		elif where == 0:
 		    if self.focusnode.GetType() not in MMNode.interiortypes:
-			windowinterface.showmessage('Focus is a leaf node!')
+			windowinterface.showmessage('Focus is a leaf node!',
+						    type = 'error')
 			node.Destroy()
 			return 0
 		em = self.editmgr
@@ -679,36 +687,16 @@ class Object:
 ##			('h', 'Help...', (self.helpcall, ())),
 			]
 
-##	def before_call(self):
-##		print 'callback start'
-##		self.locked = 0
-##		if GLLock.gl_lock:
-##			print 'try acquire'
-##			if not GLLock.gl_lock.acquire(0):
-##				print 'acquire failed'
-##				self.locked = 1
-##			print 'release'
-##			GLLock.gl_lock.release()
-##	def after_call(self):
-##		print 'callback end'
-##		if self.locked:
-##			print 're-acquire'
-##			GLLock.gl_lock.acquire()
-
 	# Handle a right button mouse click in the object
 	def popupmenu(self, x, y):
-##		self.before_call()
 		func = self.__class__.menu.popup(x, y)
 		if func: func(self)
-##		self.after_call()
 
 	# Handle a shortcut in the object
 	def shortcut(self, c):
 		func = self.__class__.menu.shortcut(c)
-##		self.before_call()
 		if func: func(self)
 		else: gl.ringbell()
-##		self.after_call()
 
 	# Make this object the focus
 	def select(self):
