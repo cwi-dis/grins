@@ -45,6 +45,7 @@ class Selecter:
 	def stopped(self):
 		self.runslots = []
 		self.bags_needing_done_ev = []
+		self.playing = 0
 		self.updateuibaglist()
 		self.showstate()
 	#
