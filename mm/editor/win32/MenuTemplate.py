@@ -77,39 +77,6 @@ MENUBAR=(
 		(LIGHT, ENTRY, '&Delete\tCtrl+Del', None, DELETE),
 		(LIGHT, SEP,),
 		(SMIL, ENTRY, '&New node...', None, NEW_AFTER),
-		(LIGHT, CASCADE, 'Ne&w node special', (
-			(LIGHT, CASCADE, '&Image node', (
-				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_IMAGE),
-				(LIGHT, ENTRY, '&After', None, NEW_AFTER_IMAGE),
-				(LIGHT, ENTRY, '&Within', None, NEW_UNDER_IMAGE),
-			)),
-			(LIGHT, CASCADE, '&Slideshow node', (
-				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_SLIDESHOW),
-				(LIGHT, ENTRY, '&After', None, NEW_AFTER_SLIDESHOW),
-				(LIGHT, ENTRY, '&Within', None, NEW_UNDER_SLIDESHOW),
-			)),
-			(LIGHT, CASCADE, '&Text node', (
-				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_TEXT),
-				(LIGHT, ENTRY, '&After', None, NEW_AFTER_TEXT),
-				(LIGHT, ENTRY, '&Within', None, NEW_UNDER_TEXT),
-			)),
-			(LIGHT, CASCADE, 'S&ound node', (
-				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_SOUND),
-				(LIGHT, ENTRY, '&After', None, NEW_AFTER_SOUND),
-				(LIGHT, ENTRY, '&Within', None, NEW_UNDER_SOUND),
-			)),
-			(LIGHT, CASCADE, '&Video node', (
-				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_VIDEO),
-				(LIGHT, ENTRY, '&After', None, NEW_AFTER_VIDEO),
-				(LIGHT, ENTRY, '&Within', None, NEW_UNDER_VIDEO),
-			)),
-			(SMIL, ENTRY, '&Before...', None, NEW_BEFORE),
-			(SMIL, ENTRY, '&Within...', None, NEW_UNDER),
-			(LIGHT, ENTRY, '&Par parent', None, NEW_PAR),
-			(LIGHT, ENTRY, '&Seq parent', None, NEW_SEQ),
-			(LIGHT, ENTRY, 'Swit&ch parent', None, NEW_ALT),
-			(CMIF, ENTRY, 'C&hoice parent', None, NEW_CHOICE),
-			)),
 		(SMIL, ENTRY, 'New c&hannel', None, NEW_CHANNEL),
 
 ## Windows dialogs apparently don't use usercmd commands.
@@ -119,7 +86,7 @@ MENUBAR=(
 		(SMIL, ENTRY, 'C&opy channel', None, COPY_CHANNEL),
 		(CMIF, ENTRY, 'To&ggle channel state', None, TOGGLE_ONOFF),
 ##		(SMIL, ENTRY, 'Edit Source...', None, EDITSOURCE),
-		(LIGHT, SEP,),
+		(SMIL, SEP,),
 		(SMIL, ENTRY, '&Info...', 'I', INFO),
 		(LIGHT, ENTRY, 'Propertie&s...', 'A', ATTRIBUTES),
 		(LIGHT, ENTRY, '&Edit Content...', 'E', CONTENT),
@@ -127,6 +94,39 @@ MENUBAR=(
 		(LIGHT, ENTRY, 'Pre&ferences...', None, PREFERENCES),
 		)),
 
+	('&Insert', (
+		(LIGHT, CASCADE, '&Image node', (
+			(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_IMAGE),
+			(LIGHT, ENTRY, '&After', None, NEW_AFTER_IMAGE),
+			(LIGHT, ENTRY, '&Within', None, NEW_UNDER_IMAGE),
+		)),
+		(LIGHT, CASCADE, 'Sli&deshow node', (
+			(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_SLIDESHOW),
+			(LIGHT, ENTRY, '&After', None, NEW_AFTER_SLIDESHOW),
+			(LIGHT, ENTRY, '&Within', None, NEW_UNDER_SLIDESHOW),
+		)),
+		(LIGHT, CASCADE, '&Text node', (
+			(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_TEXT),
+			(LIGHT, ENTRY, '&After', None, NEW_AFTER_TEXT),
+			(LIGHT, ENTRY, '&Within', None, NEW_UNDER_TEXT),
+		)),
+		(LIGHT, CASCADE, 'S&ound node', (
+			(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_SOUND),
+			(LIGHT, ENTRY, '&After', None, NEW_AFTER_SOUND),
+			(LIGHT, ENTRY, '&Within', None, NEW_UNDER_SOUND),
+		)),
+		(LIGHT, CASCADE, '&Video node', (
+			(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_VIDEO),
+			(LIGHT, ENTRY, '&After', None, NEW_AFTER_VIDEO),
+			(LIGHT, ENTRY, '&Within', None, NEW_UNDER_VIDEO),
+		)),
+		(SMIL, ENTRY, '&Before...', None, NEW_BEFORE),
+		(SMIL, ENTRY, '&Within...', None, NEW_UNDER),
+		(LIGHT, ENTRY, '&Par parent', None, NEW_PAR),
+		(LIGHT, ENTRY, '&Seq parent', None, NEW_SEQ),
+		(LIGHT, ENTRY, 'Swit&ch parent', None, NEW_ALT),
+		(CMIF, ENTRY, 'C&hoice parent', None, NEW_CHOICE),
+		)),
 	('&Play', (
 		(LIGHT, ENTRY, '&Play\tCtrl+P', 'P', PLAY),
 		(LIGHT, ENTRY, 'Pa&use\tCtrl+U', 'U', PAUSE),
