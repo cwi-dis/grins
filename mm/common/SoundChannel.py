@@ -11,7 +11,8 @@
 # We also support sound files created by our tools on the 4D/25.
 
 
-import al
+# Don't import 'al' here; this makes it possible to use the CMIF editor
+# on workstations without audio, as long as the document has no sound...
 import AL
 import aiff
 import posix
@@ -25,6 +26,12 @@ import MMAttrdefs
 
 
 class SoundChannel() = Channel():
+	#
+	# Declaration of attributes that are relevant to this channel,
+	# respectively to nodes belonging to this channel.
+	#
+	chan_attrs = Channel.chan_attrs + []
+	node_attrs = Channel.node_attrs + ['file']
 	#
 	def init(self, (name, attrdict, player)):
 		self = Channel.init(self, (name, attrdict, player))
@@ -166,6 +173,7 @@ def getinfo(filename):
 
 
 def prepare(f, nchannels, nsampframes, sampwidth, samprate, format):
+	import al
 	if format = 'FORM':
 		type, size = aiff.read_chunk_header(f)
 		if type <> 'SSND':
@@ -198,10 +206,11 @@ def prepare(f, nchannels, nsampframes, sampwidth, samprate, format):
 # Save sound channel parameters for restore()
 #
 sound_params = [AL.OUTPUT_RATE, 0]
-al.getparams(AL.DEFAULT_DEVICE, sound_params)
 
 
 # Restore sound channel parameters
 #
 def restore():
-	al.setparams(AL.DEFAULT_DEVICE, sound_params)
+	if sound_params[1] <> 0:
+		import al
+		al.setparams(AL.DEFAULT_DEVICE, sound_params)
