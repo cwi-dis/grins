@@ -9,7 +9,7 @@ Number of forms: 1
 Name: main
 Width: 340.000000
 Height: 280.000000
-Number of Objects: 10
+Number of Objects: 15
 
 --------------------
 class: 1
@@ -32,14 +32,14 @@ type: 5
 box: 10.000000 90.000000 320.000000 30.000000
 boxtype: 2
 colors: 47 47
-alignment: 1
+alignment: 0
 style: 0
 size: 11.000000
 lcol: 0
-label: delay (press shift for fine control)
+label: 
 name: delay_slider
 callback: dummy_callback 
-argument: 
+argument: 0
 
 --------------------
 class: 10000
@@ -69,7 +69,7 @@ lcol: 0
 label: from end
 name: from_end
 callback: dummy_callback 
-argument: 
+argument: 0
 
 --------------------
 class: 12
@@ -84,7 +84,7 @@ lcol: 0
 label: from beginning
 name: from_beginning
 callback: dummy_callback 
-argument: 
+argument: 0
 
 --------------------
 class: 20000
@@ -129,7 +129,7 @@ lcol: 0
 label: to beginning
 name: to_beginning
 callback: dummy_callback 
-argument: 
+argument: 0
 
 --------------------
 class: 12
@@ -144,7 +144,82 @@ lcol: 0
 label: to end
 name: to_end
 callback: dummy_callback 
+argument: 0
+
+--------------------
+class: 20000
+type: 0
+box: 0.000000 0.000000 0.000000 0.000000
+boxtype: 0
+colors: 0 0
+alignment: 4
+style: 0
+size: 11.000000
+lcol: 0
+label: 
+name: 
+callback: 
 argument: 
+
+--------------------
+class: 10000
+type: 0
+box: 0.000000 0.000000 0.000000 0.000000
+boxtype: 0
+colors: 0 0
+alignment: 4
+style: 0
+size: 11.000000
+lcol: 0
+label: 
+name: precision
+callback: 
+argument: 
+
+--------------------
+class: 12
+type: 2
+box: 10.000000 50.000000 100.000008 30.000000
+boxtype: 1
+colors: 39 3
+alignment: 4
+style: 0
+size: 11.000000
+lcol: 0
+label: 0-1 sec
+name: one_sec
+callback: one_sec_callback
+argument: 0
+
+--------------------
+class: 12
+type: 2
+box: 120.000000 50.000000 100.000008 30.000000
+boxtype: 1
+colors: 39 3
+alignment: 4
+style: 0
+size: 11.000000
+lcol: 0
+label: 0-10 sec
+name: ten_sec
+callback: ten_sec_callback
+argument: 0
+
+--------------------
+class: 12
+type: 2
+box: 230.000000 50.000000 100.000008 30.000000
+boxtype: 1
+colors: 39 3
+alignment: 4
+style: 0
+size: 11.000000
+lcol: 0
+label: 0-100 sec
+name: hundred_sec
+callback: hundred_sec_callback
+argument: 0
 
 --------------------
 class: 20000
