@@ -31,7 +31,7 @@ class SourceViewDialog:
 			self.__textwindow.set_mother(self)
 		else:
 			# Pop it up
-			pass
+			self.pop()
 		self.__updateCommandList()
 		self.__textwindow.setListener(self)
 
