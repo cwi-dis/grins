@@ -186,7 +186,6 @@ class InlineTransitionEngine:
 	def __init__(self, window, trtype, subtype, trmode='in'):
 		self.window = window
 		self.dict = {'trtype':trtype, 'subtype':subtype, 'mode':trmode}
-
 		klass = Transitions.TransitionFactory(trtype, subtype)
 		self.__transitiontype = klass(self, self.dict)
 
@@ -221,7 +220,10 @@ class InlineTransitionEngine:
 		if wnd.is_closed():
 			return
 		
-		wnd.updateBackDDS(self._tosurf, exclwnd=wnd)
+		if self.dict['mode']=='out':
+			wnd.updateBackDDS(self._tosurf, exclwnd=wnd) 
+		else:
+			wnd._paintOnDDS(self._tosurf, wnd._rect)
 		
 		fromsurf = 	wnd._fromsurf
 		tosurf = self._tosurf	
@@ -245,7 +247,7 @@ class InlineTransitionEngine:
 		wnd = self.window
 		while 1:
 			try:
-				wnd._fromsurf = wnd.getBackDDS()
+				wnd._fromsurf = wnd.getBackDDS(exclwnd=wnd)
 				wnd._drawsurf = wnd.createDDS()
 				self._tosurf = wnd.createDDS()
 				self._tmp = wnd.createDDS()

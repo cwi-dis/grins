@@ -140,6 +140,7 @@ class Animator:
 		# transitionFilter
 		self._trtype = None
 		self._trsubtype = None
+		self._trmode = None
 
 	def getDOMValue(self):
 		return self._domval
@@ -313,9 +314,10 @@ class Animator:
 	def setEffectiveAnimator(self, ea):
 		self._effectiveAnimator = ea
 
-	def setTransition(self, trtype, trsubtype):
+	def setTransition(self, trtype, trsubtype, trmode):
 		self._trtype = trtype
 		self._trsubtype = trsubtype
+		self._trmode = trmode
 
 	def _setAutoReverse(self,f):
 		if f: self._autoReverse = 1
@@ -1001,9 +1003,9 @@ class EffectiveAnimator:
 		if debug:
 			print 'update',self.__attr,'of channel',self.__chan._name,'to',value
 	
-	def __begintransition(self, animator):
+	def __begintransition(self, anim):
 		if self.__chan and self.__chan.window:
-			self.__chan.window.begininlinetransition(animator._trtype, animator._trsubtype)
+			self.__chan.window.begininlinetransition(anim._trtype, anim._trsubtype, anim._trmode)
 		if debug: print 'begintransition', animator._trtype, animator._trsubtype
 
 	def __endtransition(self):
@@ -1533,6 +1535,11 @@ class AnimateElementParser:
 		calcmode = self.__calcMode
 		dur = self.getDuration()
 
+		# get transition attrs
+		trtype = MMAttrdefs.getattr(self.__anim, 'trtype')
+		trsubtype = MMAttrdefs.getattr(self.__anim, 'subtype')
+		trmode = MMAttrdefs.getattr(self.__anim, 'mode')
+
 		# check for keyTimes, keySplines
 		if not splineAnimation or calcmode == 'paced':
 			# ignore times and splines for 'paced' animation
@@ -1542,7 +1549,6 @@ class AnimateElementParser:
 			splines = self.__getInterpolationKeySplines()
 
 		if self.__animtype == 'invalid':
-			trmode = MMAttrdefs.getattr(self.__anim, 'mode')
 			if trmode=='in':
 				values = (0, 1)
 				self.__domval = 1
@@ -1555,9 +1561,7 @@ class AnimateElementParser:
 		anim = Animator(attr, self.__domval, values, dur, calcmode, times, splines, accumulate, additive)
 		self.__setTimeManipulators(anim)
 
-		trtype = MMAttrdefs.getattr(self.__anim, 'trtype')
-		trsubtype = MMAttrdefs.getattr(self.__anim, 'subtype')
-		anim.setTransition(trtype, trsubtype)
+		anim.setTransition(trtype, trsubtype, trmode)
 
 		return anim
 
