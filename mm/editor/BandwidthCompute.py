@@ -158,7 +158,7 @@ def compute_bandwidth(root):
 	# Get list (sorted by begin time) of all bandwidth requirements
 	#
 	allbandwidthdata = []
-	errorcount = getallbandwidthdata(allbandwidthdata, root)
+	errorcount = _getallbandwidthdata(allbandwidthdata, root)
 	allbandwidthdata.sort()
 	#
 	# Compute preroll time (prearms needed at t0==0)
@@ -219,11 +219,11 @@ def compute_bandwidth(root):
 	
 	return maxbandwidth, prerolltime, delaycount, errorseconds, errorcount
 	
-def getallbandwidthdata(datalist, node):
+def _getallbandwidthdata(datalist, node):
 	"""Recursively get all bandwidth usage info. Modifies first argument"""
 	errorcount = 0
 	try:
-		this = getbandwidthdata(node)
+		this = _getbandwidthdata(node)
 	except Bandwidth.Error, arg:
 		node.set_infoicon('error', arg)
 		this = None
@@ -231,10 +231,10 @@ def getallbandwidthdata(datalist, node):
 	if this:
 		datalist.append(this)
 	for child in node.children:
-		errorcount = errorcount + getallbandwidthdata(datalist, child)
+		errorcount = errorcount + _getallbandwidthdata(datalist, child)
 	return errorcount
 	
-def getbandwidthdata(node):
+def _getbandwidthdata(node):
 	"""Get bandwidth usage info for a single node"""
 	if node.type != 'ext':
 		return None
