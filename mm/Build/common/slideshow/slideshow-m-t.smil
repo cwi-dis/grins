@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<smil xmlns="http://www.w3.org/2001/SMIL20/Language">
+  <head>
+    <meta name="title" content="Slideshow with Music"/>
+    <meta name="generator" content="GRiNS Pro for SMIL 2.0, v2.1 win32 build 123"/>
+    <meta name="author" content="Sjoerd Mullender"/>
+    <layout>
+      <root-layout id="Basic_GRiNS_Slideshow" backgroundColor="black" width="330" height="270"/>
+      <region id="audio"/>
+      <region id="bkgd_image" width="330" height="270"/>
+      <region id="Images" left="7" width="320" top="7" height="240" z-index="1" fit="meet"/>
+    </layout>
+    <transition id="slideover" type="slideWipe"/>
+    <transition id="fade" type="fade"/>
+    <transition id="push" type="pushWipe"/>
+  </head>
+  <body>
+    <par id="BasicSlideshow">
+      <seq id="ImageSet" fillDefault="freeze">
+        <img id="Pict0001" region="Images" dur="5s" type="image/jpeg" src="slideshow.data/Pict0001.jpg"/>
+        <img id="Pict0002" region="Images" dur="5s" type="image/jpeg" src="slideshow.data/Pict0002.jpg"/>
+        <img id="Pict0003" region="Images" dur="5s" type="image/jpeg" src="slideshow.data/Pict0003.jpg"/>
+        <img id="Pict0004" region="Images" dur="5s" type="image/jpeg" src="slideshow.data/Pict0004.jpg"/>
+        <img id="Pict0005" region="Images" dur="5s" type="image/jpeg" src="slideshow.data/Pict0005.jpg"/>
+        <img id="Pict0006" region="Images" dur="5s" type="image/jpeg" src="slideshow.data/Pict0006.jpg"/>
+        <img id="Pict0007" region="Images" dur="5s" type="image/jpeg" src="slideshow.data/Pict0007.jpg"/>
+        <img id="Pict0008" region="Images" dur="5s" type="image/jpeg" src="slideshow.data/Pict0008.jpg"/>
+        <img id="Pict0009" region="Images" dur="5s" type="image/jpeg" src="slideshow.data/Pict0009.jpg"/>
+        <img id="Pict0010" region="Images" dur="5s" type="image/jpeg" src="slideshow.data/Pict0010.jpg"/>
+        <img id="Pict0011" region="Images" dur="5s" type="image/jpeg" src="slideshow.data/Pict0011.jpg"/>
+        <img id="Pict0012" region="Images" dur="5s" type="image/jpeg" src="slideshow.data/Pict0012.jpg"/>
+        <img id="Pict0013" region="Images" dur="5s" type="image/jpeg" src="slideshow.data/Pict0013.jpg"/>
+        <img id="Pict0014" region="Images" dur="5s" type="image/jpeg" src="slideshow.data/Pict0014.jpg"/>
+        <img id="Pict0015" region="Images" dur="5s" type="image/jpeg" src="slideshow.data/Pict0015.jpg"/>
+      </seq>
+      <img id="BkgdImg" region="bkgd_image" fill="freeze" type="image/jpeg" src="slideshow.data/Back3.jpg"/>
+    </par>
+  </body>
+</smil>
