@@ -111,10 +111,17 @@ def main():
 				result = fl.check_forms()
 				if locked:
 					GLLock.gl_lock.release()
+				wtd = [glfd, qenterpipe_r]
+				for top in tops:
+					wtd = wtd + top.select_fdlist
 				ifdlist, ofdlist, efdlist = select.select(\
-					  [glfd, qenterpipe_r], [], [], 0.1)
+					  wtd, [], [], 0.1)
 				if qenterpipe_r in ifdlist:
 					dummy = posix.read(qenterpipe_r, 10000)
+				for top in tops:
+					for fd in top.select_fdlist:
+						if fd in ifdlist:
+							top.select_ready(fd)
 ##			fl.do_forms()
 			# This point isn't reached
 			raise RuntimeError, 'unexpected do_forms return'
