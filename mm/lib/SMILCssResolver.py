@@ -250,6 +250,7 @@ class RegionNode(Node):
 		return pxbegin, pxsize
 
 	def _updatePxOnContainerWidthChanged(self):
+		self._toInitState()
 		self.pxValuesHasChanged = 0
 		
 		containersize = self.container.pxwidth        
@@ -274,16 +275,17 @@ class RegionNode(Node):
 			self._onGeomChanged()
 
 	def _updatePxOnContainerHeightChanged(self):
+		self._toInitState()
 		self.pxValuesHasChanged = 0
 		
 		containersize = self.container.pxheight
 		pxtop, pxheight = self._resolveCSS2Rule(self.top, self.height, self.bottom, containersize)
 		if pxtop != self.pxtop:
-			self.pxtop = top
+			self.pxtop = pxtop
 			self._onChangePxValue('top',pxtop)
 		if pxheight != self.pxheight:
 			self._onChangePxValue('height',pxheight)
-			self.pxheight = height
+			self.pxheight = pxheight
 			
 			if self.pxValuesHasChanged:
 				self._onGeomChanged()
@@ -338,7 +340,7 @@ class RegionNode(Node):
 			elif name == 'bottom':
 				self.bottom = value
 
-			pxtop, pxheight = self._resolveCSS2Rule(self, self.top, self.height, self.bottom, self.container.pxheight)
+			pxtop, pxheight = self._resolveCSS2Rule(self.top, self.height, self.bottom, self.container.pxheight)
 			if pxtop != self.pxtop:
 				self._onChangePxValue('top',pxtop)
 				self.pxtop = pxtop
@@ -370,29 +372,31 @@ class RegionNode(Node):
 			child._updateRawOnContainerWidthChanged()
 
 	def _updateRawOnContainerWidthChanged(self):
+		self._toInitState()
 		if type(self.left) is type(0.0):
-			self.left = float(self.pxleft/self.container.pxwidth)
+			self.left = float(self.pxleft)/self.container.pxwidth
 			self._onChangeRawValue('left',self.left)
 		elif type(self.width) is type(0.0):
-			self.width = float(self.pxwidth/self.container.pxwidth)
+			self.width = float(self.pxwidth)/self.container.pxwidth
 			self._onChangeRawValue('width',self.width)
 			for child in self.children:
 				child._updateRawOnContainerWidthChanged()       
 		elif type(self.right) is type(0.0):
-			self.right = float((self.container.pxwidth-self.pxleft-self.pxwidth)/self.container.pxwidth)
+			self.right = float(self.container.pxwidth-self.pxleft-self.pxwidth)/self.container.pxwidth
 			self._onChangeRawValue('right',self.right)
 
 	def _updateRawOnContainerHeightChanged(self):
+		self._toInitState()
 		if type(self.top) is type(0.0):
-			self.top = float(self.pxtop/self.container.pxheight)
+			self.top = float(self.pxtop)/self.container.pxheight
 			self._onChangeRawValue('top',self.top)
 		elif type(self.height) is type(0.0):
-			self.height = float(self.pxheight/self.container.pxheight)
+			self.height = float(self.pxheight)/self.container.pxheight
 			self._onChangeRawValue('height',self.height)
 			for child in self.children:
 				child._updateRawOnContainerHeightChanged()
 		elif type(self.bottom) is type(0.0):
-			self.bottom = float((self.container.pxheight-self.pxtop-self.pxheight)/self.container.pxheight)
+			self.bottom = float(self.container.pxheight-self.pxtop-self.pxheight)/self.container.pxheight
 			self._onChangeRawValue('bottom',self.bottom)
 
 	# change an pixel value only (left/width/top and height)
@@ -406,90 +410,105 @@ class RegionNode(Node):
 			if type(self.left) is type(0.0):
 				self.left = float(value)/self.container.pxwidth
 				self._onChangeRawValue('left',self.left)
+				self.pxleft = value
 			elif type(self.left) is type(0):
 				self.left = value
 				self._onChangeRawValue('left',self.left)
+				self.pxleft = value
 			elif type(self.right) is type(0.0):
 				offset = value-self.pxleft
 				self.right = float(self.right+offset)/self.container.pxwidth
 				self._onChangeRawValue('right',self.right)
+				self.pxleft = value
 			elif type(self.right) is type(0):
 				offset = value-self.pxleft
 				self.right = self.right+offset
 				self._onChangeRawValue('right',self.right)
+				self.pxleft = value
 			else:
 				self.left = value
 				self._onChangeRawValue('left',self.left)
+				self.pxleft = value
 
-			self._onChangePxValue('left',value)
 		elif name == 'width':
 			if type(self.width) is type(0.0):
 				self.width = float(value)/self.container.pxwidth
 				self._onChangeRawValue('width',self.width)
+				self.pxwidth = value
 			elif type(self.width) is type(0):
 				self.width = value
 				self._onChangeRawValue('width',self.width)
+				self.pxwidth = value
 			elif type(self.left) is not None and type(self.right) is not None:
 				if type(self.right) is type(0.0):
 					offset = value-self.pxwidth
-					self.width = float(self.width+offset)/self.container.pxwidth
-					self._onChangeRawValue('width',self.width)
+					self.right = float(self.right-offset)/self.container.pxwidth
+					self._onChangeRawValue('right',self.right)
+					self.pxwidth = value
 				elif type(self.right) is type(0):
 					offset = value-self.pxwidth
-					self.width = self.width+offset
-					self._onChangeRawValue('width',self.width)
+					self.right = self.width-offset
+					self._onChangeRawValue('right',self.right)
+					self.pxwidth = value
 			else:
 				self.width = value
 				self._onChangeRawValue('width',self.width)
+				self.pxwidth = value
 
 			for child in self.children:
 				child._updateRawOnContainerWidthChanged()
-			self._onChangePxValue('width',value)
 
 		elif name == 'top':
 			if type(self.top) is type(0.0):
 				self.top = float(value)/self.container.pxheight
 				self._onChangeRawValue('top',self.top)
+				self.pxtop = value
 			elif type(self.top) is type(0):
 				self.top = value
 				self._onChangeRawValue('top',self.top)
+				self.pxtop = value
 			elif type(self.bottom) is type(0.0):
 				offset = value-self.pxtop
 				self.bottom = float(self.bottom+offset)/self.container.pxheight
 				self._onChangeRawValue('bottom',self.bottom)
+				self.pxtop = value
 			elif type(self.bottom) is type(0):
 				offset = value-self.pxtop
 				self.bottom = self.bottom+offset
 				self._onChangeRawValue('bottom',self.bottom)
+				self.pxtop = value
 			else:
 				self.top = value
 				self._onChangeRawValue('top',self.top)
-
-			self._onChangePxValue('top',value)
+				self.pxtop = value
 
 		elif name == 'height':
 			if type(self.height) is type(0.0):
 				self.height = float(value)/self.container.pxheight
 				self._onChangeRawValue('height',self.height)
+				self.pxheight = value
 			elif type(self.height) is type(0):
 				self.height = value
 				self._onChangeRawValue('height',self.height)
+				self.pxheight = value
 			elif type(self.top) is not None and type(self.bottom) is not None:
 				if type(self.bottom) is type(0.0):
 					offset = value-self.pxheight
-					self.height = float(self.height+offset)/self.container.pxheight
-					self._onChangeRawValue('height',self.height)
+					self.bottom = float(self.bottom-offset)/self.container.pxheight
+					self._onChangeRawValue('bottom',self.bottom)
+					self.pxheight = value
 				elif type(self.bottom) is type(0):
 					offset = value-self.pxheight
-					self.height = self.height+offset
-					self._onChangeRawValue('height',self.height)
+					self.bottom = self.bottom-offset
+					self._onChangeRawValue('bottom',self.bottom)
+					self.pxheight = value
 			else:
 				self.height = value
 				self._onChangeRawValue('height',self.height)
+				self.pxheight = value
 
 			for child in self.children:
 				child._updateRawOnContainerHeightChanged()
-			self._onChangePxValue('height',height)
 
 		if self.pxValuesHasChanged:
 			self._onGeomChanged()
@@ -732,6 +751,7 @@ class MediaNode(Node):
 	# wM2 is the size from alignpoint to media right edge
 	# wM1 and wM2 are pixel only (integer). You have to specify the both in the same time
 	def _minsizeRp(self, wR1, wR2, wM1, wM2, minsize):
+
 		# for now. Avoid to have in some case some to big values
 		MAX_REGION_SIZE = 5000
 
@@ -831,10 +851,12 @@ class MediaNode(Node):
 		self._onGeomChanged()
 
 	def _updateOnContainerHeightChanged(self):
+		self._toInitState()
 		self.pxleft, self.pxwidth, self.pxtop, self.pxheight = self._getMediaSpaceArea()
 		self._onGeomChanged()
 		
 	def _updateOnContainerWidthChanged(self):
+		self._toInitState()
 		self.pxleft, self.pxwidth, self.pxtop, self.pxheight = self._getMediaSpaceArea()
 		self._onGeomChanged()
 	
