@@ -34,12 +34,11 @@ ITEM_SELECT_ITEM=6
 
 # Input dialogs
 ID_INPUT_DIALOG=524
-ID_INPUT_URL_DIALOG=525
+ID_INPUTURL_DIALOG=525
 ITEM_INPUT_OK=1
 ITEM_INPUT_CANCEL=2
-ITEM_INPUT_PROMPT=3
-ITEM_INPUT_TEXT=4
-ITEM_INPUTURL_BROWSE=5
+ITEM_INPUT_TEXT=3
+ITEM_INPUTURL_BROWSE=4
 
 # For messages and questions:
 ID_MESSAGE_DIALOG=521
@@ -1427,16 +1426,20 @@ class InputDialog(DialogWindow):
 	
 	def __init__(self, prompt, default, cb, cancelCallback = None):
 		# First create dialogwindow and set static items
-		DialogWindow.__init__(self, self.DIALOG_ID)
-		# XXXX Use title here?
-		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_PROMPT)
-		Dlg.SetDialogItemText(h, prompt)
+		print 'prompt=', prompt
+		DialogWindow.__init__(self, self.DIALOG_ID, title=prompt)
+##		# XXXX Use title here?
+##		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_PROMPT)
+##		Dlg.SetDialogItemText(h, prompt)
 		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
 		Dlg.SetDialogItemText(h, default)
+		self._wid.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
 		self._wid.SetDialogDefaultItem(ITEM_INPUT_OK)
 		self._wid.SetDialogCancelItem(ITEM_INPUT_CANCEL)
 		self._cb = cb
 		self._cancel = cancelCallback
+		
+		self.show()
 
 	def do_itemhit(self, item, event):
 		if item == ITEM_INPUT_CANCEL:
@@ -1453,7 +1456,11 @@ class InputDialog(DialogWindow):
 	def done(self):
 		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
 		rv = Dlg.GetDialogItemText(h)
+		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_OK)
+		ctl = h.as_Control()
+		ctl.HiliteControl(10)
 		self._cb(rv)
+		ctl.HiliteControl(0)
 		self.close()
 		
 class InputURLDialog(InputDialog):
@@ -1461,14 +1468,16 @@ class InputURLDialog(InputDialog):
 
 	def do_itemhit(self, item, event):
 		if item == ITEM_INPUTURL_BROWSE:
-			# XXXX Should do defaults a bit better
-			fss, ok = macfs.StandardGetFile('TEXT')
+			# XXXX This is an error in Python:
+			##fss, ok = macfs.StandardGetFile('TEXT')
+			fss, ok = macfs.StandardGetFile()
 			if ok:
-				import MMUrl
+				import MMurl
 				pathname = fss.as_pathname()
-				url = MMurl.pathname2url(filename)
+				url = MMurl.pathname2url(pathname)
 				tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
-				Dlg.SetDialogItemText(h, url)				
+				Dlg.SetDialogItemText(h, url)
+				self._wid.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
 		else:
 			InputDialog.do_itemhit(self, item, event)
 
