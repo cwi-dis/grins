@@ -223,11 +223,16 @@ class Main(MainDialog):
 				toclose.append(top)
 			else:
 				ok = 0
+## Original code did not close each top:
+##		if not ok:
+##			# can't exit yet but close the ones that are
+##			# ok to close
+##			for top in toclose:
+##				top.close()
+##			return
+		for top in toclose:
+			top.close()
 		if not ok:
-			# can't exit yet but close the ones that are
-			# ok to close
-			for top in toclose:
-				top.close()
 			return
 		if exitcallback:
 			rtn, arg = exitcallback
