@@ -48,3 +48,13 @@ def uniqueid():
 	open(fname, 'w').write('%d\n'%newid)
 	os.unlink(lname)
 	return newid
+
+def loglicense(license):
+	fname = os.path.join(DATABASE, ".licenselog")
+	str = "License: %s\n"%license
+	str = str + "Generated-Date: %s\n"%time.ctime(time.time())
+	str = str + "Generated-By: %s\n"%USER
+	str = str + "\n"
+	fp = open(fname, "a")
+	fp.write(str)
+	fp.close()
