@@ -423,7 +423,7 @@ newNSSBufferObject()
 typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
-    BYTE pbBuffer[1024];
+    BYTE pbBuffer[2048];
     WM_MEDIA_TYPE *pMediaType;		
     DWORD cbBuffer;
 } WMMediaTypeObject;
@@ -1790,17 +1790,12 @@ DDWMWriter_AllocateDDSample(DDWMWriterObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "O", &obj))
 		return NULL;
 
-	typedef struct {
-		PyObject_HEAD
-		IDirectDrawSurface* pI;
-	} DirectDrawSurfaceObject;
-	
-	DirectDrawSurfaceObject *ddsobj = (DirectDrawSurfaceObject *)obj;
+	IDirectDrawSurface *surf = (IDirectDrawSurface *)((UnknownObject*)obj)->pI;
 	DDSURFACEDESC desc;
 	ZeroMemory(&desc, sizeof(desc));
 	desc.dwSize=sizeof(desc);
 	HRESULT hr;
-	hr = ddsobj->pI->Lock(0,&desc,DDLOCK_WAIT | DDLOCK_READONLY, 0);
+	hr = surf->Lock(0,&desc,DDLOCK_WAIT | DDLOCK_READONLY, 0);
 	if (FAILED(hr)){
 		seterror("DDWMWriter_AllocateDDSample:Lock", hr);
 		return NULL;
@@ -1813,7 +1808,7 @@ DDWMWriter_AllocateDDSample(DDWMWriterObject *self, PyObject *args)
 	NSSBufferObject *bufobj = newNSSBufferObject();
 	hr = self->pIWMWriter->AllocateSample(nrows*pitch,&bufobj->pI);
 	if (FAILED(hr)){
-		ddsobj->pI->Unlock(0);
+		surf->Unlock(0);
 		Py_DECREF(bufobj);
 		seterror("DDWMWriter_AllocateDDSample:AllocateSample", hr);
 		return NULL;
@@ -1825,7 +1820,7 @@ DDWMWriter_AllocateDDSample(DDWMWriterObject *self, PyObject *args)
 		CopyMemory(pbsBuffer, pBuffer + row*pitch, pitch);
 		pbsBuffer += pitch;
 	}
-	ddsobj->pI->Unlock(0);
+	surf->Unlock(0);
 	
 	return (PyObject*)bufobj;
 }
@@ -5376,33 +5371,128 @@ CreateDDWriter(PyObject *self, PyObject *args)
 }
 
 
-static void FillBitmapInfo(BITMAPINFOHEADER *pbmih, int width, int height, int depth, char *pszSubtype)
+static WORD LowBitPos(DWORD dword)
 	{
-	ZeroMemory(pbmih,sizeof(BITMAPINFOHEADER) + 12);
+	DWORD test=1;
+	for (WORD i=0;i<32;i++)
+		{
+		if ( dword & test )
+			return i;
+		test<<=1;
+		}
+	return 0;
+	}
+static WORD HighBitPos(DWORD dword)
+	{
+	DWORD test=1;
+	test<<=31;
+	for (WORD i=0;i<32;i++)
+		{
+		if ( dword & test )
+			return (WORD)(31-i);
+		test>>=1;
+		}
+	return 0;
+	}
+
+static char CreateDDVideoWMType__doc__[] =
+""
+;
+static PyObject *
+CreateDDVideoWMType(PyObject *self, PyObject *args)
+{
+	PyObject *ddsobj;
+	if (!PyArg_ParseTuple(args,"O",&ddsobj))
+		return NULL;
+	IDirectDrawSurface *surf = (IDirectDrawSurface *)((UnknownObject*)ddsobj)->pI;
+
+	DDPIXELFORMAT format;
+	ZeroMemory(&format,sizeof(format));
+	format.dwSize=sizeof(format);
+	HRESULT hr = surf->GetPixelFormat(&format);
+	if (FAILED(hr)){
+		seterror("CreateDDVideoWMType:GetPixelFormat", hr);
+		return NULL;
+	}
+	
+	if(format.dwRGBBitCount!=32 && format.dwRGBBitCount!=24 && format.dwRGBBitCount!=16 && format.dwRGBBitCount!=8)
+		{
+		seterror("Format not supported");
+		return NULL;
+		}
+	
+	WORD loREDbit = LowBitPos(format.dwRBitMask);
+	WORD hiREDbit = HighBitPos(format.dwRBitMask );
+	WORD numREDbits=(WORD)(hiREDbit-loREDbit+1);
+
+	WORD loGREENbit = LowBitPos(format.dwGBitMask);
+	WORD hiGREENbit = HighBitPos(format.dwGBitMask);
+	WORD numGREENbits=(WORD)(hiGREENbit-loGREENbit+1);
+
+	WORD loBLUEbit  = LowBitPos(format.dwBBitMask);
+	WORD hiBLUEbit  = HighBitPos(format.dwBBitMask);
+	WORD numBLUEbits=(WORD)(hiBLUEbit-loBLUEbit+1);
+
+	DDSURFACEDESC ddsd;
+	ZeroMemory( &ddsd, sizeof(ddsd) );
+	ddsd.dwSize = sizeof(ddsd);
+	hr = surf->GetSurfaceDesc(&ddsd);
+	if (FAILED(hr)){
+		seterror("CreateDDVideoWMType:GetSurfaceDesc", hr);
+		return NULL;
+	}	
+	int depth = format.dwRGBBitCount;
+	int width = ddsd.dwWidth;
+	int height = ddsd.dwHeight;
+	int cbFormat = sizeof(WMVIDEOINFOHEADER);
+	if(depth==16 && numREDbits==5 && numGREENbits==6 && numBLUEbits==5)
+		cbFormat+=3*sizeof(RGBQUAD);
+	else if(depth==8)
+		cbFormat+=256*sizeof(RGBQUAD);
+	
+	WMMediaTypeObject *obj = newWMMediaTypeObject();
+	if (obj == NULL) return NULL;
+	WM_MEDIA_TYPE& mt = *obj->pMediaType;
+
+	DWORD dwSampleSize=width*height*(depth/8);
+	DWORD rate = 10*dwSampleSize*8;
+	LONGLONG atpf=LONGLONG(100)*10000;
+
+	
+	WMVIDEOINFOHEADER* pVideoInfo = (WMVIDEOINFOHEADER*) new BYTE[cbFormat];
+	ZeroMemory(pVideoInfo,cbFormat);
+
+	// fill bitmap info header
+	BITMAPINFOHEADER* pbmih = &pVideoInfo->bmiHeader;
 	pbmih->biSize = sizeof(BITMAPINFOHEADER);
 	pbmih->biWidth    = width;
 	pbmih->biHeight   = height;
 	pbmih->biPlanes   = 1;
 	pbmih->biBitCount = depth;
-	if(depth==16 && lstrcmpi(pszSubtype,"RGB565")==0)
-		{
-		pbmih->biCompression = BI_BITFIELDS;
-		DWORD *p = (DWORD*) (((BYTE*)pbmih) + pbmih->biSize);
-		*p++ = 0x001F; // b
-		*p++ = 0x07E0; // g
-		*p++ = 0xF800; // r
-		}
-	else
-		pbmih->biCompression=BI_RGB;
+	pbmih->biCompression=BI_RGB;
 	pbmih->biSizeImage = 0;
 	pbmih->biClrUsed = 0;
-	}
-
-static WMVIDEOINFOHEADER* CreateVideoInfo(int width, int height, int depth, char *pszSubtype, DWORD rate, LONGLONG atpf)
-	{
-	WMVIDEOINFOHEADER* pVideoInfo = (WMVIDEOINFOHEADER*) new BYTE[sizeof(WMVIDEOINFOHEADER)+12];
-	BITMAPINFOHEADER& bmi = pVideoInfo->bmiHeader;
-	FillBitmapInfo(&pVideoInfo->bmiHeader, width, height, depth, pszSubtype);
+	pbmih->biClrImportant = 0;
+	if(depth==16 && numREDbits==5 && numGREENbits==6 && numBLUEbits==5)
+		{
+		pbmih->biCompression = BI_BITFIELDS;
+		typedef struct {BITMAPINFOHEADER bmiHeader; DWORD bitMask[3];} _BITMAPINFO;
+		_BITMAPINFO *p = (_BITMAPINFO*)&pVideoInfo->bmiHeader;
+		p->bitMask[0] = format.dwRBitMask;
+		p->bitMask[1] = format.dwGBitMask;
+		p->bitMask[2] = format.dwBBitMask;
+		}
+	else if(depth==8)
+		{
+		pbmih->biClrUsed = 256;
+		pbmih->biClrImportant = 256;
+		typedef struct {BITMAPINFOHEADER bmiHeader; PALETTEENTRY bmiColors[256];} _BITMAPINFO;
+		_BITMAPINFO *p = (_BITMAPINFO*)&pVideoInfo->bmiHeader;
+		HDC hdc = GetDC(NULL);
+		GetSystemPaletteEntries(hdc, 0, 256, p->bmiColors);
+		ReleaseDC(NULL, hdc);		
+		}
+	// fill rest of video info
 	pVideoInfo->rcSource.left	= 0;
 	pVideoInfo->rcSource.top	= 0;
 	pVideoInfo->rcSource.right	= width;
@@ -5411,70 +5501,37 @@ static WMVIDEOINFOHEADER* CreateVideoInfo(int width, int height, int depth, char
 	pVideoInfo->dwBitRate		= rate;
 	pVideoInfo->dwBitErrorRate	= 0;
 	pVideoInfo->AvgTimePerFrame = atpf;
-	return pVideoInfo;
-	}
-
-static char CreateVideoWMType__doc__[] =
-""
-;
-static PyObject *
-CreateVideoWMType(PyObject *self, PyObject *args)
-{
-	int width, height;
-	char *pszSubtype;
-	if (!PyArg_ParseTuple(args,"iis",&width,&height,&pszSubtype))
-		return NULL;
-
-	GUID subtype;
-	int depth;
-	int cbFormat = sizeof(WMVIDEOINFOHEADER);
-	if(lstrcmpi(pszSubtype,"RGB32")==0){
-		subtype = WMMEDIASUBTYPE_RGB32;
-		depth = 32;
-	}
-	else if(lstrcmpi(pszSubtype,"RGB24")==0){
-		subtype = WMMEDIASUBTYPE_RGB24;
-		depth = 24;
-	}
-	else if(lstrcmpi(pszSubtype,"RGB555")==0){
-		subtype = WMMEDIASUBTYPE_RGB555;
-		depth = 16;
-	}
-	else if(lstrcmpi(pszSubtype,"RGB565")==0){
-		subtype = WMMEDIASUBTYPE_RGB565;
-		depth = 16;
-		cbFormat += 12;
-	}
-	else {
-		seterror("unsupported format");
-		return NULL;
-	}
-	
-	WMMediaTypeObject *obj = newWMMediaTypeObject();
-	if (obj == NULL) return NULL;
-	
-	WM_MEDIA_TYPE& mt=*obj->pMediaType;
-
-	DWORD dwSampleSize=width*height*(depth/8);
-	DWORD rate = 10*dwSampleSize*8;
-	LONGLONG atpf=LONGLONG(100)*10000;
-	WMVIDEOINFOHEADER* pVideoInfo = CreateVideoInfo(width, height, depth, pszSubtype, rate, atpf);
 	memcpy(obj->pbBuffer+sizeof(WM_MEDIA_TYPE),pVideoInfo,cbFormat);
 	delete[] (BYTE*)pVideoInfo;
 	
 	mt.majortype = WMMEDIATYPE_Video;
-	mt.subtype = subtype;
+	if(depth==32)
+		mt.subtype = WMMEDIASUBTYPE_RGB32;
+	else if(depth==24)
+		mt.subtype = WMMEDIASUBTYPE_RGB24;
+	else if(depth==16)
+		{
+		if(numREDbits==5 && numGREENbits==5 && numBLUEbits==5)
+			mt.subtype = WMMEDIASUBTYPE_RGB555;
+		else if(numREDbits==5 && numGREENbits==6 && numBLUEbits==5)
+			mt.subtype = WMMEDIASUBTYPE_RGB565;
+		}
+	else if(depth==8)
+		{
+		mt.subtype = WMMEDIASUBTYPE_RGB8;
+		}
 	mt.bFixedSizeSamples = TRUE;
-	mt.bTemporalCompression = FALSE;
+	mt.bTemporalCompression = TRUE;
 	mt.lSampleSize = width*height*(depth/8);
 	mt.formattype = WMFORMAT_VideoInfo;
 	mt.pUnk = NULL;
 	mt.cbFormat = cbFormat;
 	mt.pbFormat = obj->pbBuffer+sizeof(WM_MEDIA_TYPE);
+	
 	return (PyObject*)obj;
 }
 
-	
+
 static char CreateReader__doc__[] =
 ""
 ;
@@ -5745,7 +5802,7 @@ CoUninitialize(PyObject *self, PyObject *args)
 static struct PyMethodDef wmfapi_methods[] = {
 	{"CreateWriter", (PyCFunction)CreateWriter, METH_VARARGS, CreateWriter__doc__},
 	{"CreateDDWriter", (PyCFunction)CreateDDWriter, METH_VARARGS, CreateDDWriter__doc__},
-	{"CreateVideoWMType", (PyCFunction)CreateVideoWMType, METH_VARARGS, CreateVideoWMType__doc__},
+	{"CreateDDVideoWMType", (PyCFunction)CreateDDVideoWMType, METH_VARARGS, CreateDDVideoWMType__doc__},
 	{"CreateReader", (PyCFunction)CreateReader, METH_VARARGS, CreateReader__doc__},
 	{"CreateEditor", (PyCFunction)CreateEditor, METH_VARARGS, CreateEditor__doc__},
 	{"CreateIndexer", (PyCFunction)CreateIndexer, METH_VARARGS, CreateIndexer__doc__},
