@@ -84,6 +84,11 @@ class MainDialog:
 		else:
 			windowinterface.showmessage('Incorrect filetype for drop/paste')
 
+	def set_recent_list(self, list):
+		import windowinterface
+		f=windowinterface.getactivedocframe()
+		f.set_dynamiclist(OPEN_RECENT, list)
+
 	def __ccallback(self):
 		self.__owindow.close()
 		self.__owindow = None
