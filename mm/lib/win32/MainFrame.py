@@ -1150,16 +1150,16 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 		f.Create(title,rc,self,0)
 		view.init(rc,title,units,adornments,canvassize,commandlist)
 		self.MDIActivate(f)
-		if IsPlayer:
-			self.RecalcLayout()
-			rcco=self.GetWindowRect()
-			client=self.GetMDIClient()
-			rcci= client.GetWindowRect() #self.GetClientRect()
-			l,t,r,b=f.GetWindowRect()
-			w=r-l;h=b-t
-			dhp=(rcco[3]-rcco[1])-(rcci[3]-rcci[1])
-			dwp=2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)+2*sysmetrics.cxframe
-			self.setcoords((x,y,w+dw,h+dhp),units)
+#		if IsPlayer:
+#			self.RecalcLayout()
+#			rcco=self.GetWindowRect()
+#			client=self.GetMDIClient()
+#			rcci= client.GetWindowRect() #self.GetClientRect()
+#			l,t,r,b=f.GetWindowRect()
+#			w=r-l;h=b-t
+#			dhp=(rcco[3]-rcco[1])-(rcci[3]-rcci[1])
+#			dwp=2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)+2*sysmetrics.cxframe
+#			self.setcoords((x,y,w+dw,h+dhp),units)
 		return view
 
 
