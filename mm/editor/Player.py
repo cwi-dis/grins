@@ -68,7 +68,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		stop = STOP(callback = (self.stop_callback, ()))
 		self.stoplist = self.commandlist + [
 			# when stopped, we can play and pause
-			play,
+			#play,
 			pause,
 			stop,
 			]
@@ -80,7 +80,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.pauselist = self.commandlist + [
 			# when pausing, we can continue (play or
 			# pause) and stop
-			play,
+			#play,
 			pause,
 			stop,
 			]
