@@ -142,6 +142,15 @@ implements SMILDocument, SMILController, SMILRenderer
              
     public double getDuration() {return dur;}
     public int getFrameRate() {return frameRate;}
+    public int getMediaFrameRate(String fileOrUrlStr) throws GRiNSException
+        {
+        int mfr = 0;
+        if(hgrins!=0)
+            mfr = ngetMediaFrameRate(hgrins, fileOrUrlStr);
+        if(mfr<0) 
+            throw new GRiNSException("Invalid media item");
+        return mfr;
+        }
     
     public void setTime(double t)
         {
@@ -219,6 +228,7 @@ implements SMILDocument, SMILController, SMILRenderer
     private native double ngetSpeed(int hgrins);
     private native int ngetCookie(int hgrins);
     private native int ngetFrameRate(int hgrins);
+    private native int ngetMediaFrameRate(int hgrins, String fileOrUrlStr);
     static {
          System.loadLibrary("grinsp");
      }
