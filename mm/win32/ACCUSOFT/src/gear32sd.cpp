@@ -279,7 +279,7 @@ static char ig_ip_crop__doc__[] =
 static PyObject* ig_ip_crop(PyObject *self, PyObject *args)
 	{
 	HIGEAR img;
-	AT_RECT rect;
+	RECT rect;
 	if (!PyArg_ParseTuple(args,"l(iiii)",&img,
 						&rect.left, &rect.top,
 						&rect.right, &rect.bottom))
@@ -291,7 +291,24 @@ static PyObject* ig_ip_crop(PyObject *self, PyObject *args)
 		return NULL;
 		}
 
-	AT_ERRCOUNT nError=IG_IP_crop(img,&rect);
+	if(IsRectEmpty(&rect)){
+		seterror("ig_ip_crop","crop rect is empty");
+		return NULL;		
+		}
+	
+	AT_DIMENSION width=0,height=0;
+	UINT bitsPerPixel;
+	IG_image_dimensions_get(img,&width,&height,&bitsPerPixel);
+	RECT rcImg = {0, 0, width, height};
+
+	RECT rcInImg;
+	if(!IntersectRect(&rcInImg, &rcImg, &rect)){
+		seterror("ig_ip_crop","crop rect out of img");
+		return NULL;		
+		}
+
+	AT_RECT atrect = {rcInImg.left, rcInImg.top, rcInImg.right, rcInImg.bottom};
+	AT_ERRCOUNT nError=IG_IP_crop(img,&atrect);
 
 	if(nError!=0)
 		{
