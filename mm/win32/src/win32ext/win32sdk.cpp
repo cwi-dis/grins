@@ -785,6 +785,23 @@ sdk_intersect_rect(PyObject *self, PyObject *args)
 	BOOL inrersect=::IntersectRect(&rcDst,&rcSrc1,&rcSrc2);
 	return Py_BuildValue("(iiii)i",rcDst.left,rcDst.top,rcDst.right,rcDst.bottom,inrersect);
 	}
+
+// @sdkproto BOOL UnionRect(LPRECT lprcDst,CONST RECT *lprcSrc1,CONST RECT *lprcSrc2)  
+// @pymethod |PyWin32Sdk|UnionRect|Calculates the intersection of two source rectangles 
+static PyObject *
+sdk_union_rect(PyObject *self, PyObject *args)
+	{
+	RECT rcSrc1,rcSrc2;
+	if (!PyArg_ParseTuple(args,"(iiii)(iiii):IntersectRect",
+		        &rcSrc1.left, &rcSrc1.top, &rcSrc1.right,&rcSrc1.bottom,
+				&rcSrc2.left, &rcSrc2.top, &rcSrc2.right,&rcSrc2.bottom
+				))
+		return NULL;
+	RECT rcDst;
+	BOOL notempty = ::UnionRect(&rcDst,&rcSrc1,&rcSrc2);
+	return Py_BuildValue("(iiii)i",rcDst.left,rcDst.top,rcDst.right,rcDst.bottom, notempty);
+	}
+
 // @sdkproto DWORD GetTickCount(VOID)
 // @pymethod |PyWin32Sdk|GetTickCount|Retrieves the number of milliseconds that have elapsed since the system was started
 static PyObject *
@@ -1130,6 +1147,7 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"GetTickCount",sdk_get_tick_count,1}, // @pymeth GetTickCount|Retrieves the number of milliseconds that have elapsed since the system was started
 
 	{"IntersectRect",sdk_intersect_rect,1}, // @pymeth IntersectRect|Calculates the intersection of two source rectangles
+	{"UnionRect",sdk_union_rect,1}, // @pymeth UnionRect|Calculates the union of two rectangles
 
 	{"GetCurrentDirectory",sdk_get_current_directory,1}, 
 	{"SetCurrentDirectory",sdk_set_current_directory,1}, 
