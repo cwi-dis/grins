@@ -101,6 +101,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.errormsg(node, 'Node must be external')
 			return 1
 		url = self.getfileurl(node)
+		if not url:
+			self.errormsg(node, 'No URL set on this node')
+			return 1
 		try:
 			f, hdr = MMurl.urlretrieve(url)
 		except IOError, arg:
