@@ -276,6 +276,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		w_left,w_top,w_width,w_height = window.GetClientRect()
 
 		left,top,width,height = window._convert_coordinates(coordinates)
+		if width==0 or height==0:
+			print 'warning: zero size media rect' 
+			width, height = w_width, w_height
 		self.__rcMediaWnd=(left,top,width,height)
 		
 		return (left/float(w_width), top/float(w_height), width/float(w_width), height/float(w_height))
