@@ -7,6 +7,7 @@ from MMTypes import *
 from MMExc import *
 from SR import *
 from AnchorDefs import *
+from ArmStates import *
 from Hlinks import Hlinks
 import MMurl
 import settings
@@ -1558,6 +1559,7 @@ class MMNode_body:
 	def startplay(self, timestamp):
 		if debug: print 'startplay',`self`,timestamp,self.fullduration
 		self.playing = MMStates.PLAYING
+		self.set_armedmode(ARM_PLAYING)
 		if self.GetFill() == 'remove' and \
 		   self.fullduration is not None and \
 		   self.fullduration >= 0:
@@ -1574,6 +1576,7 @@ class MMNode_body:
 			if debug: print 'stopplay: already stopped'
 			return
 		self.playing = MMStates.PLAYED
+		self.set_armedmode(ARM_DONE)
 		self.time_list[-1] = self.time_list[-1][0], timestamp
 		if self.parent and self.parent.type == 'switch':
 			self.parent.stopplay(timestamp)
@@ -1723,6 +1726,7 @@ class MMNode:
 		self.happenings = {}
 		if full_reset:
 			self.playing = MMStates.IDLE
+			self.set_armedmode(ARM_NONE)
 		self.start_time = None
 		if debug: print 'MMNode.reset', `self`
 		if self.parent and self.parent.type == 'switch':
@@ -1921,6 +1925,7 @@ class MMNode:
 	def startplay(self, timestamp):
 		if debug: print 'startplay',`self`,timestamp,self.fullduration
 		self.playing = MMStates.PLAYING
+		self.set_armedmode(ARM_PLAYING)
 		if self.GetFill() == 'remove' and \
 		   self.fullduration is not None and \
 		   self.fullduration >= 0:
@@ -1937,6 +1942,7 @@ class MMNode:
 			if debug: print 'stopplay: already stopped'
 			return
 		self.playing = MMStates.PLAYED
+		self.set_armedmode(ARM_DONE)
 		self.time_list[-1] = self.time_list[-1][0], timestamp
 		if self.parent and self.parent.type == 'switch':
 			self.parent.stopplay(timestamp)

@@ -757,7 +757,6 @@ class SchedulerContext:
 				if chan:
 					if debugevents: print 'stopplay',`node`,parent.timefunc()
 					chan.stopplay(node)
-					node.set_armedmode(ARM_DONE)
 			if node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
 				for c in [node.looping_body_self,
 					  node.realpix_body,
@@ -863,6 +862,7 @@ class SchedulerContext:
 				if not parent.playing:
 					return
 			node.playing = MMStates.FROZEN
+			node.set_armedmode(ARM_WAITSTOP)
 
 	def do_pause(self, pnode, node, action, timestamp):
 		if debugevents: print 'pause',node,timestamp,self.parent.timefunc()
@@ -903,6 +903,7 @@ class SchedulerContext:
 		for c in node.GetSchedChildren():
 			self.pause_play(c, action, timestamp)
 		node.playing = MMStates.PAUSED
+		node.set_armedmode(ARM_WAITSTOP) # XXX ?
 
 	def do_resume(self, node, timestamp):
 		if debugevents: print 'resume',node,timestamp,self.parent.timefunc()
@@ -938,6 +939,7 @@ class SchedulerContext:
 			for c in node.GetSchedChildren():
 				self.resume_play(c, timestamp)
 		node.playing = MMStates.PLAYING
+		node.set_armedmode(ARM_PLAYING)
 
 	def queuesrlist(self, srlist, timestamp = None):
 		for sr in srlist:
@@ -951,7 +953,6 @@ class SchedulerContext:
 			self.parent.add_runqueue(self, prio, sr, timestamp)
 	#
 	def play_done(self, node, timestamp = None):
-		node.set_armedmode(ARM_WAITSTOP)
 		if node.GetTerminator() == 'MEDIA' and \
 		   not node.attrdict.has_key('duration') and \
 		   not node.FilterArcList(node.GetEndList()):
@@ -1179,8 +1180,8 @@ class Scheduler(scheduler):
 	#
 	def event(self, sctx, ev, timestamp):
 		if sctx.active:
-			if ev[0] == SR.ARM_DONE:
-				ev[1].set_armedmode(ARM_ARMED)
+##			if ev[0] == SR.ARM_DONE:
+##				ev[1].set_armedmode(ARM_ARMED)
 			sctx.event(ev, timestamp)
 		self.updatetimer()
 	#
@@ -1307,7 +1308,6 @@ class Scheduler(scheduler):
 		if chan not in sctx.channels:
 			sctx.channels.append(chan)
 			chan.startcontext(sctx)
-		node.set_armedmode(ARM_PLAYING)
 		node.startplay(timestamp)
 ##		sctx.sched_arcs(node, 'begin', timestamp = timestamp)
 ##		ndur = node.calcfullduration(self)
@@ -1323,7 +1323,6 @@ class Scheduler(scheduler):
 			if debugevents: print 'do_play_stop: already stopped',`node`,self.timefunc()
 			return
 		chan = self.ui.getchannelbynode(node)
-		node.set_armedmode(ARM_DONE)
 		chan.freeze(node)
 		node.stopplay(timestamp)
 
