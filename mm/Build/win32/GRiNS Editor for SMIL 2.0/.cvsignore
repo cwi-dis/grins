@@ -1,0 +1,13 @@
+*.c
+FreezeOpts
+GRiNS_SV1.exe
+GRiNS_SV1.exp
+GRiNS_SV1.lib
+GRiNS_SV1.ncb
+GRiNS_SV1.opt
+log.txt
+Makefile
+Release
+Build
+Debug
+*.plg
