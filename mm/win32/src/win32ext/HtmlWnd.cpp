@@ -15,6 +15,11 @@
 static CString strLicKey("Webster Pro - Copyright (c) 1995-1998 Home Page Software Inc. - A Webster CodeBase Product"); 
 static BSTR bstrLicKey=strLicKey.AllocSysString(); 
 
+// FRAMESET SUPPORT FOR IE5
+static CString strHtmlFrame("about:<HTML><HEAD></HEAD><FRAMESET><FRAME SRC=\"%s\" NAME=\"channel\" SCROLLING=\"auto\"></FRAMESET></HTML>");
+static CString strEmptyHtmlFrame("about:<HTML><HEAD></HEAD><FRAMESET></FRAMESET></HTML>");
+#include "RegKey.h"
+
 // the c++/mfc class 
 class CHtmlWnd: public CWnd
 	{
@@ -24,7 +29,7 @@ class CHtmlWnd: public CWnd
 	DECLARE_MESSAGE_MAP()
 
 	public:
-	CHtmlWnd():m_selHtmlCtrl(0),m_bCtrlCreated(false),m_isclient(false){}
+	CHtmlWnd():m_selHtmlCtrl(0),m_bCtrlCreated(false),m_isclient(false),m_majorCtrlVersion(1){}
 	virtual ~CHtmlWnd(){}
 	virtual BOOL Create(LPCTSTR lpszClassName, LPCTSTR lpszWindowName,
 		DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID,
@@ -36,7 +41,7 @@ class CHtmlWnd: public CWnd
 	void UseWebsterCtrl(){m_selHtmlCtrl=WEBSTER_CONTROL;}
 	int m_selHtmlCtrl;
 	enum {IE_CONTROL=0,WEBSTER_CONTROL=1};
-
+	int m_majorCtrlVersion;
 
 	// Control creation
 	BOOL CreateHtmlCtrl();
@@ -208,7 +213,11 @@ BOOL CHtmlWnd::CreateHtmlCtrl()
 			//DestroyWindow();
 			return FALSE;
 			}
-		m_wndWebBrowser.Navigate("about:",NULL,NULL,NULL,NULL);
+		m_majorCtrlVersion=GetIEVersion();
+		if(m_majorCtrlVersion<5)
+			m_wndWebBrowser.Navigate("about:",NULL,NULL,NULL,NULL);
+		else
+			m_wndWebBrowser.Navigate(strEmptyHtmlFrame,NULL,NULL,NULL,NULL);
 		m_wndWebBrowser.ShowWindow(SW_SHOW);
 		m_bCtrlCreated=true;
 		}
@@ -258,7 +267,16 @@ void CHtmlWnd::Navigate(LPCTSTR lpszURL)
 	if(m_selHtmlCtrl==WEBSTER_CONTROL)
 		m_wndWebsterBrowser.Navigate(lpszURL,0,0,NULL,NULL,NULL);
 	else
-		m_wndWebBrowser.Navigate(lpszURL,NULL,NULL,NULL,NULL);
+		{
+		if(m_majorCtrlVersion<5)
+			m_wndWebBrowser.Navigate(lpszURL,NULL,NULL,NULL,NULL);
+		else
+			{
+			CString strfURL;
+			strfURL.Format(strHtmlFrame,lpszURL);
+			m_wndWebBrowser.Navigate(strfURL,NULL,NULL,NULL,NULL);
+			}
+		}
 	}
 
 void CHtmlWnd::SetImmHtml(LPCTSTR str)
@@ -275,8 +293,17 @@ void CHtmlWnd::SetImmHtml(LPCTSTR str)
 		}
 	else
 		{
-		CString strp("about:");
-		m_wndWebBrowser.Navigate(strp+str,NULL,NULL,NULL,NULL);
+		if(m_majorCtrlVersion<5)
+			{
+			CString strp("about:");
+			m_wndWebBrowser.Navigate(strp+str,NULL,NULL,NULL,NULL);
+			}
+		else
+			{
+			CString strf;
+			strf.Format(strHtmlFrame,str);
+			m_wndWebBrowser.Navigate(strf,NULL,NULL,NULL,NULL);
+			}
 		}
 	}
 void CHtmlWnd::Refresh()
