@@ -1042,14 +1042,18 @@ class DDWndLayer:
 		ddsd.SetFlags(ddraw.DDSD_CAPS)
 		ddsd.SetCaps(ddraw.DDSCAPS_PRIMARYSURFACE)
 		self._frontBuffer = self._ddraw.CreateSurface(ddsd)
-
+			
 		# size of back buffer
 		# for now we create it at the size of the screen
 		# to avoid resize manipulations
+		from __main__ import toplevel
+		W = toplevel._scr_width_pxl
+		H = toplevel._scr_height_pxl
 		if w==0 or h==0:
-			from __main__ import toplevel
-			w = toplevel._scr_width_pxl
-			h = toplevel._scr_height_pxl
+			w = W
+			h = H
+		if w>1600: w = 1600
+		if h>1200: h = 1200
 
 		# create back buffer 
 		# we draw everything on this surface and 
@@ -1058,8 +1062,14 @@ class DDWndLayer:
 		ddsd.SetFlags(ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT | ddraw.DDSD_CAPS)
 		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
 		ddsd.SetSize(w,h)
-		self._backBuffer = self._ddraw.CreateSurface(ddsd)
-		
+		try:
+			self._backBuffer = self._ddraw.CreateSurface(ddsd)
+		except ddraw.error, arg:
+			print arg
+			if self.fixDimensions(w, h, ddsd):
+				print 'warning: viewport size too big'
+				self._backBuffer = self._ddraw.CreateSurface(ddsd)
+				
 		self._clipper = self._ddraw.CreateClipper(self.GetSafeHwnd())
 		self._frontBuffer.SetClipper(self._clipper)
 		self._pxlfmt = self._frontBuffer.GetPixelFormat()
@@ -1123,6 +1133,17 @@ class DDWndLayer:
 				return None
 		return self._backBuffer
 
+	def fixDimensions(self, w, h, ddsd):
+		from __main__ import toplevel
+		W = toplevel._scr_width_pxl
+		H = toplevel._scr_height_pxl
+		if w>W or h>H:
+			if w>W: w = W
+			if h>H: h = H
+			ddsd.SetSize(w,h)
+			return 1
+		return 0
+
 	def CreateSurface(self, w, h):
 		if not self._ddraw: return None
 		ddsd = ddraw.CreateDDSURFACEDESC()
@@ -1136,6 +1157,8 @@ class DDWndLayer:
 			except ddraw.error, arg:
 				print arg
 				dds = None
+				if self.fixDimensions(w, h, ddsd):
+					print 'warning: viewport size too big'
 				win32api.Sleep(50)
 		ddcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255,255,255))
 		while 1:
@@ -1556,7 +1579,7 @@ class Region(Window):
 			if self._oswnd:
 				self._oswnd.InvalidateRect(self._oswnd.GetClientRect())
 			
-		elif self._transparent == 0:
+		elif self._transparent == 0 and self._bgcolor:
 			if self._convbgcolor == None:
 				r, g, b = self._bgcolor
 				self._convbgcolor = dds.GetColorMatch((r,g,b))
