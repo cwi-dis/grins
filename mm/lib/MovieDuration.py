@@ -6,8 +6,11 @@ import FileCache
 import MMurl
 
 def getduration(filename):
-	filename = MMurl.urlretrieve(filename)[0]
-	fp = open(filename, 'rb')
+	try:
+		filename = MMurl.urlretrieve(filename)[0]
+		fp = open(filename, 'rb')
+	except IOError:
+		return 1.0
 	import VFile
 	import os
 	VerrorList = VFile.Error, os.error, IOError, RuntimeError, EOFError
@@ -15,7 +18,7 @@ def getduration(filename):
 		vfile = VFile.RandomVinFile(fp)
 		vfile.filename = filename
 	except VerrorList, msg:
-		raise IOError, (0, 'bad movie file: ' + str(msg))
+		return 1.0
 	vfile.readcache()
 	t, ds, cs = vfile.getrandomframeheader(len(vfile.index)-1)
 	if t == 0: t = 1000
