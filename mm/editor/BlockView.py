@@ -73,10 +73,10 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		return self.new(width, height, self.root)
 	def show(self):
 		if self.showing: return
-		try:
-			self.form.doublebuf = 1
-		except:
-			pass # Old versions of Python don't accept this...
+#		try:
+#			self.form.doublebuf = 1
+#		except:
+#			pass # Old versions of Python don't accept this...
 		self.editmgr.register(self)
 		BasicDialog.show(self)
 	def hide(self):
