@@ -117,7 +117,6 @@ inline memfile::memfile():
 	m_prdata(NULL),
 	m_hf(INVALID_HANDLE_VALUE)
 	{
-	reserve(1572864UL);
 	}
 
 inline memfile::~memfile()
@@ -136,23 +135,23 @@ inline void memfile::reserve(DWORD dwBytes)
 	{
 	if(m_begin==NULL)
 		{
-		m_begin=(BYTE*)::HeapAlloc(GetProcessHeap(),0,dwBytes);
+		m_begin= (BYTE*)::HeapAlloc(GetProcessHeap(), 0, dwBytes);
 		if(m_begin==NULL)
 			{
 			//AfxMessageBox("Memory allocation failure");
 			return;
 			}
-		m_capacity=::HeapSize(GetProcessHeap(),0,m_begin);
+		m_capacity= ::HeapSize(GetProcessHeap(), 0, m_begin);
 		}
 	else
 		{
 		if(dwBytes>m_capacity)
 			{
-			m_begin = (BYTE*)::HeapReAlloc(GetProcessHeap(),0,m_begin,dwBytes); 
-			m_capacity=::HeapSize(GetProcessHeap(),0,m_begin);
+			m_begin = (BYTE*)::HeapReAlloc(GetProcessHeap(), 0, m_begin, dwBytes); 
+			m_capacity = ::HeapSize(GetProcessHeap(), 0, m_begin);
 			}
 		}
-	m_prdata=m_begin; // init read/write pointer 
+	m_prdata = m_begin; // init read/write pointer 
 	}
 
 inline bool memfile::open(LPCTSTR szFileName)
