@@ -1081,6 +1081,9 @@ class MMNode_body:
 		self.durarcs = []
 		self.time_list = []
 		self.has_min = 0
+		self.looping_body_self = None
+		self.realpix_body = None
+		self.caption_body = None
 		if debug: print 'MMNode_body.__init__', `self`
 
 	def __repr__(self):
@@ -3244,6 +3247,9 @@ class MMNode:
 	# Check whether the current loop has reached completion.
 	#
 	def moreloops(self, decrement=0):
+		if self.playing in (MMStates.IDLE, MMStates.PLAYED, MMStates.FROZEN):
+			self.curloopcount = 0
+			return 0
 		rv = self.curloopcount
 		if decrement and self.curloopcount > 0:
 			self.curloopcount = self.curloopcount - 1
