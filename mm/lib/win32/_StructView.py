@@ -1,4 +1,4 @@
-x__version__ = "$Id$"
+__version__ = "$Id$"
 
 # win32 libs
 import win32ui, win32con
@@ -114,7 +114,6 @@ class _StructView(DisplayListView):
 			self._dragging = msgpos
 
 	def onLButtonUp(self, params):
-		print "DEBUG: onLButtonUp."
 		DisplayListView.onLButtonUp(self, params)
 		if self._enableNodeDragDrop:
 			if self._dragging: 
