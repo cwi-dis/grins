@@ -1,27 +1,15 @@
 TODO for Michael :-) 
 ---------------------------------------------
 
-* THe apply button doesn't work in the event editor
 * help doesn't work.
-*Bug in the arrowing code somewhere (fixed by disabling arrows)
 
-* Make a marker - think about this.
-* two events for toplevels - open() and close
-
-* Editing a wallclock attribute.
-* Get rid of all the debug messages.
-* markers.
-* Optimise the structure view.
-
+* Can't reference another node.
 * Editing events directly from the Structure view.
 * Events seem to be a bit wrong in the structure view! Test them.
 * Test if editing the document makes the events stay properly.
 
-* Selecting events from the Event editor somehow.
 
 * Undo - doesn't work with drag and drop in the StructureView.
-
-* Delete icons doesn't work.
 
 * Multiple selection.
 	- Dragging and dropping.

@@ -1470,28 +1470,32 @@ class EventCtrl(AttrCtrl):
 	def set_repeatwidget(self):
 		# Only for event widgets or markers.
 		if not self._eventstruct:
-			self._repeatlabel.settext("")
-			self._repeatwidget.settext("")
-			self._repeatwidget.enable(0)
+			self.__setrepeatwidget_clear()
 		else:
 			event = self._eventstruct.get_event()
-			if event == 'repeat':
+			if event.startswith('repeat'):
 				i = self._eventstruct.get_repeat()
 				if i:
 					self._repeatlabel.settext("Repeat:")
 					self._repeatwidget.settext(`i`)
 					self._repeatwidget.enable(1)
+				else:
+					self.__setrepeatwidget_clear()
 			elif event == 'marker':
 				i = self._eventstruct.get_marker()
 				if i:
 					self._repeatlabel.settext("Marker:")
 					self._repeatwidget.settext(i)
 					self._repeatwidget.enable(1)				
+				else:
+					self.__setrepeatwidget_clear()
 			else:
-				self._repeatlabel.settext("")
-				self._repeatwidget.settext("")
-				self._repeatwidget.enable(0)
+				self.__setrepeatwidget_clear()
 
+	def __setrepeatwidget_clear(self):
+		self._repeatlabel.settext("")
+		self._repeatwidget.settext("")
+		self._repeatwidget.enable(0)
 
 	def _listcallback(self, id, code):
 		if code != win32con.CBN_SELCHANGE:
@@ -1554,7 +1558,7 @@ class EventCtrl(AttrCtrl):
 		if code == win32con.EN_KILLFOCUS and self._eventstruct:
 			self.enableApply()
 			e = self._eventstruct.get_event()
-			if e == 'repeat':
+			if e.startswith('repeat'):
 				try:
 					self._eventstruct.set_repeat(int(self._repeatwidget.gettext()))
 				except ValueError:

@@ -1,6 +1,5 @@
 # This module is a collection of useful functions for working with events.
 
-# TODO: the cancel button doesn't work yet.
 # TODO: how do I reference other nodes?
 
 import MMNode, windowinterface, SMILTreeWrite
@@ -49,7 +48,6 @@ class EventStruct:
 	# copy of that syncarc which can return another syncarc.
 	def __init__(self, syncarc, node=None, action=None):
 		# if syncarc is None, make a new one. 
-		# TODO: action is not a good name.. 
 		self.cause = None
 		self.clear_vars()
 		self._node = node
@@ -135,7 +133,6 @@ class EventStruct:
 			self.cause = 'region'
 			self.thing = x.channel.name
 		else:
-			# TODO: more work needed here.
 			self.cause = 'node'
 			if isinstance(x.srcnode, MMNode.MMNode):
 				self.thing = x.srcnode.GetName()
@@ -258,7 +255,6 @@ class EventStruct:
 					# if it does then there is something wrong with the event lists.
 			return ""
 		elif self.event.startswith('repeat'):
-			# TODO: repeated times.
 			return 'repeat'
 		elif self.event.startswith('marker'):
 			return 'marker'
