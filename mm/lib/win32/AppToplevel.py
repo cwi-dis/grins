@@ -30,14 +30,14 @@ def beep():
 
 ################
 # temporary test
-ENABLE_AUTOMATION = 0
+ENABLE_CML_AUTOMATION = 1
 
-class CmdListener:
-	def __init__(self):
-		print 'CmdListener'
+import usercmd, usercmdui
 
-	def __del__(self):
-		print '~CmdListener'
+class AutomationCmdListener:
+	def __init__(self, toplevel):
+		self._toplevel = toplevel
+		self._callbacks = {}
 
 	def __message(self, msg):
 		win32api.MessageBeep()
@@ -47,19 +47,24 @@ class CmdListener:
 		self.__message('Open: ' + fileOrUrl)
 
 	def Close(self):
-		self.__message('Close')
+		wnd = self._toplevel.getmainwnd()
+		wnd.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.CLOSE].id)
 
 	def Play(self):
-		self.__message('Play')
+		wnd = self._toplevel.getmainwnd()
+		wnd.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PLAY].id)
 
 	def Stop(self):
-		self.__message('Stop')
+		wnd = self._toplevel.getmainwnd()
+		wnd.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.STOP].id)
 
 	def Pause(self):
-		self.__message('Pause')
+		wnd = self._toplevel.getmainwnd()
+		wnd.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.PAUSE].id)
 
 	def OnClick(self, x, y):
 		self.__message('OnClick at %d %d' % (x, y) )
+
 ################
 		 
 # The _Toplevel class represents the root of all windows.  It is never
@@ -347,16 +352,18 @@ class _Toplevel:
 			if grinspapi:
 				grinspapi.commodule.RegisterClassObjects()
 
-		if ENABLE_AUTOMATION:
+		# CML automation support
+		if ENABLE_CML_AUTOMATION:
 			import cmld
 			server = cmld.CreateCMLServer(5001)
-			server.SetCmdListener(CmdListener())
+			server.SetCmdListener(AutomationCmdListener(self))
 			server.Start()
 
 		# enter application loop
 		win32ui.GetApp().RunLoop()
 
-		if ENABLE_AUTOMATION:
+		# revoke CML automation support
+		if ENABLE_CML_AUTOMATION:
 			server.Stop()
 			del server
 
@@ -666,3 +673,4 @@ class htmlwindow:
 		
 
 
+ 
