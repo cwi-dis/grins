@@ -883,6 +883,7 @@ class ControlsDict:
 ##############################
 class KeyTimesSlider(window.Wnd):
 	TICKS_OFFSET = 9
+	DELTA = 0.05
 	def __init__(self, dlg, id):
 		self._parent = dlg
 		hwnd = Sdk.GetDlgItem(dlg.GetSafeHwnd(),id)
@@ -901,11 +902,21 @@ class KeyTimesSlider(window.Wnd):
 		
 		self._selected = -1
 		self._prevSelectedRect = None
+		self._dragging = None
 
+	def updateKeyTimes(self):
+		l, t, r, b = self.GetWindowRect()
+		l, t, r, b = self._parent.ScreenToClient( (l, t, r, b) )
+		rc = l, b, r, b+8
+		self._parent.InvalidateRect(rc)
+
+	def getDeviceRange(self):
+		l, t, r, b = self.GetWindowRect()
+		return r-l-2*self.TICKS_OFFSET-1 
+			
 	def drawOn(self, dc):
 		l, t, r, b = self.GetWindowRect()
 		l, t, r, b = self._parent.ScreenToClient( (l, t, r, b) )
-		rc = l + 100, b - 8, l + 104, b+8
 		x0 = l + self.TICKS_OFFSET # first tick in pixels or pos zero 
 		w = r-l-2*self.TICKS_OFFSET-1 # last tick in pixels or pos 100
 		index = 0
@@ -945,11 +956,17 @@ class KeyTimesSlider(window.Wnd):
 				return index, rect.tuple()
 			index = index + 1
 		return -1, None
-				
+	
+	def isDraggable(self):
+		return self._selected>0 and self._selected<len(self._keyTimes)-1
+					
 	def onSelect(self, point, flags):
 		# test hit on a key time
 		index, rect = self.getKeyTime(point)
 		if index >= 0:
+			if self._selected == index and self.isDraggable():
+				self._dragging = point
+				self._dragfrom = self._keyTimes[index]
 			self._selected = index
 			self._parent.InvalidateRect(rect)
 			if self._prevSelectedRect:
@@ -957,10 +974,20 @@ class KeyTimesSlider(window.Wnd):
 			self._prevSelectedRect = rect
 
 	def onDeselect(self, point, flags):
-		pass
+		self._dragging = None
 
 	def onDrag(self, point, flags):
-		pass
-
+		if self._dragging:
+			x1, y1 = self._dragging
+			x2, y2 = point
+			range = float(self.getDeviceRange())
+			v = self._dragfrom + (x2-x1)/range
+			n = self._selected
+			if v < self._keyTimes[n-1] + self.DELTA:
+				v = self._keyTimes[n-1] + self.DELTA
+			if v > self._keyTimes[n+1] - self.DELTA:
+				v = self._keyTimes[n+1] - self.DELTA
+			self._keyTimes[self._selected] = v
+			self.updateKeyTimes()
 
 
