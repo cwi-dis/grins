@@ -1104,12 +1104,13 @@ class LayoutView2(LayoutViewDialog2):
 	# deleted region
 	# Note: those method have to be called winthin a transaction
 	def __delRegion(self, nodeRef, removeRef = 1):
-		regionNameToDel = []
-		self.__makeRegionListToDel(nodeRef, regionNameToDel)
-		for name in regionNameToDel:
-			nodeRef = self.nameToNodeRef(name)
-			self.treeHelper.delNode(nodeRef) 
-			self.editmgr.delchannel(nodeRef)
+		self.editmgr.delchannel(nodeRef)
+#		regionNameToDel = []
+#		self.__makeRegionListToDel(nodeRef, regionNameToDel)
+#		for name in regionNameToDel:
+#			nodeRef = self.nameToNodeRef(name)
+#			self.treeHelper.delNode(nodeRef) 
+#			self.editmgr.delchannel(nodeRef)
 			
 		# remove all references which refer to those region
 		# XXX to do this in mmnode
@@ -1733,17 +1734,6 @@ class LayoutView2(LayoutViewDialog2):
 #					self.editmgr.setnodeattr(node, 'channel', selectedNode.name)
 		self.editmgr.commit()
 
-	def __copyIntoClipboard(self, selectedNode):
-		if self.getNodeType(selectedNode) == TYPE_REGION:
-			exportedNode = selectedNode.deepExport()
-			self.editmgr.setclip('region', exportedNode)
-		elif self.getNodeType(selectedNode) == TYPE_VIEWPORT:
-			exportedNode = selectedNode.deepExport()
-			self.editmgr.setclip('viewport', exportedNode)
-		elif self.getNodeType(selectedNode) == TYPE_MEDIA:
-			# XXX special case, put for now just the node itself
-			self.editmgr.setclip('media', selectedNode)
-				
 	def newRegion(self, parentRef):
 		# choice a default name which doesn't exist		
 		channeldict = self.context.channeldict
@@ -1858,7 +1848,9 @@ class LayoutView2(LayoutViewDialog2):
 				self.editmgr.commit('REGION_TREE')
 		elif targetNodeType in (TYPE_REGION, TYPE_VIEWPORT):
 			if self.editmgr.transaction():
-				self.editmgr.setchannelattr(sourceNodeRef.name, 'base_window', targetNodeRef.name)
+				self.editmgr.delchannel(sourceNodeRef)
+				self.editmgr.addchannel(targetNodeRef, -1, sourceNodeRef)
+#				self.editmgr.setchannelattr(sourceNodeRef.name, 'base_window', targetNodeRef.name)
 				self.editmgr.commit('REGION_TREE')
 
 		return 1
