@@ -1809,7 +1809,12 @@ class LayoutPage(AttrPage):
 		l2, t2, r2, b2 = preview.getwindowrect()
 		self._layoutpos = l2-l1, t2-t1
 		self._layoutsize = r2-l2, b2-t2
-		self.createLayoutContext(self._form._winsize)
+
+		import MMAttrdefs
+		pnode = self._form._node.parent
+		w, h = MMAttrdefs.getattr(pnode, 'size')
+		self.findLayoutScale((w, h))
+
 		self._layoutctrl = self.createLayoutCtrl()
 
 		t = components.Static(self,grinsRC.IDC_SCALE1)
@@ -1852,26 +1857,11 @@ class LayoutPage(AttrPage):
 		self.initLayoutCtrl(v)
 		return v
 	
-	# XXX: old
 	def initLayoutCtrl(self, v):
-		#v.SetLayoutMode(0)
-		self._scale = LayoutScale(v,self._xscale,self._yscale,self._boxoff)
-		#v.SetScale(self._scale)
-		return
+		self._scale = LayoutScale(v, self._xscale, self._yscale, self._boxoff)
+		# add regions of interest to layout control
 
-		(x,y,w,h), bunits = self._form.GetBBox()
-		rc = x, y, x+w, y+h
-		rc = v._convert_coordinates(rc, units = bunits)
-		rc = self._scale.layoutbox(rc, UNIT_PXL)
-		v.SetBRect(rc)
-
-		(x,y,w,h), bunits = self._form.GetCBox()
-		rc= x, y, x+w, y+h
-		rc = v._convert_coordinates(rc, units = bunits)
-		rc = self._scale.layoutbox(rc,UNIT_PXL)
-		v.SetCRect(rc)
-
-	def createLayoutContext(self,winsize=None,units=appcon.UNIT_PXL):
+	def findLayoutScale(self, winsize = None, units = appcon.UNIT_PXL):
 		if winsize:
 			sw, sh = winsize
 		else:
@@ -1909,22 +1899,6 @@ class LayoutPage(AttrPage):
 			self._layoutctrl.setObject(box)
 			self._layoutctrl.selectTool('select')
 
-	# XXX: old
-	def check_units(self):
-		units=self._form.getunits()
-		if units!=self._units:
-			self._units=units
-			v=self._layoutctrl
-			v.SetUnits(self._units)
-			v.InvalidateRect()
-			if v._objects:
-				drawObj=v._objects[0]
-				rb=v.inverse_coordinates(drawObj._position.tuple_ps(), units = self._units)
-				apply(self.update, rb)
-				from __main__ import toplevel
-				toplevel.settimer(0.1,(self._form._prsht.onApply,(0,0)))
-
-			
 	def setvalue(self, attr, val):
 		if not self._initdialog: return
 		self._cd[attr].setvalue(val)
@@ -1988,7 +1962,7 @@ class LayoutPage(AttrPage):
 
 class PosSizeLayoutPage(LayoutPage):
 	def __init__(self,form):
-		LayoutPage.__init__(self,form)
+		LayoutPage.__init__(self, form)
 		self._xy=None
 		self._wh=None
 		ch = form._node.parent.GetChannel()
@@ -2108,7 +2082,7 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 			else:
 				w, h = self._layoutsize
 		self.__bbox = w,h
-		self.createLayoutContext((w,h))
+		self.findLayoutScale((w,h))
 		self._layoutctrl=self.createLayoutCtrl()
 
 		t=components.Static(self,grinsRC.IDC_SCALE1)
@@ -2123,21 +2097,8 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 			self.loadimg(url)
 
 	def initLayoutCtrl(self, v):
-		v.SetLayoutMode(0)
-		self._scale=LayoutScale(v,self._xscale,self._yscale,self._boxoff)
-		v.SetScale(self._scale)
-
-		x=y=0
-		w,h = self.__bbox
-		rc=(x,y,x+w,y+h)
-		rc = v._convert_coordinates(rc, units = UNIT_PXL)
-		rc=self._scale.layoutbox(rc,UNIT_PXL)
-		v.SetBRect(rc)
-
-		rc=(x,y,x+w,y+h)
-		rc = v._convert_coordinates(rc, units = UNIT_PXL)
-		rc=self._scale.layoutbox(rc,UNIT_PXL)
-		v.SetCRect(rc)
+		self._scale = LayoutScale(v, self._xscale, self._yscale, self._boxoff)
+		# add regions of interest to layout control
 
 	def loadimg(self,url):
 		import MMurl
@@ -2146,13 +2107,8 @@ class SubImgLayoutPage(PosSizeLayoutPage):
 		except IOError, arg:
 			print 'failed to retrieve',url
 			return
-		from win32ig import win32ig
-		try:
-			img = win32ig.load(f)
-		except error:
-			print 'failed to load',f
-			return
-		self._layoutctrl.SetBkImg(img)
+		if self._layoutctrl:
+			self._layoutctrl.setImage(f, fit='fill', mediadisplayrect = None)
 		
 class AnchorlistPage(LayoutPage):
 	def getcurrentbox(self, saved = 1):
@@ -2221,8 +2177,8 @@ class AnchorlistPage(LayoutPage):
 				w, h = self._layoutsize
 		else:
 			w, h = self._layoutsize
-		self._imagesize = w,h
-		self.createLayoutContext((w, h))
+		self._imagesize = w, h
+		self.findLayoutScale((w, h))
 		self._layoutctrl = self.createLayoutCtrl()
 
 		t = components.Static(self, grinsRC.IDC_SCALE1)
@@ -2237,22 +2193,8 @@ class AnchorlistPage(LayoutPage):
 			self.loadimg(url)
 
 	def initLayoutCtrl(self, v):
-		#v.SetLayoutMode(0)
-		self._scale=LayoutScale(v, self._xscale, self._yscale, self._boxoff)
-		#v.SetScale(self._scale)
-		return
-
-		x = y = 0
-		w, h = self._imagesize
-		rc = x, y, x + w, y + h
-		rc = v._convert_coordinates(rc, units = UNIT_PXL)
-		rc = self._scale.layoutbox(rc, UNIT_PXL)
-		#v.SetBRect(rc)
-
-		rc = x, y, x + w, y + h
-		rc = v._convert_coordinates(rc, units = UNIT_PXL)
-		rc=self._scale.layoutbox(rc, UNIT_PXL)
-		#v.SetCRect(rc)
+		self._scale = LayoutScale(v, self._xscale, self._yscale, self._boxoff)
+		# add regions of interest to layout control
 
 	def loadimg(self,url):
 		import MMurl
@@ -2261,7 +2203,8 @@ class AnchorlistPage(LayoutPage):
 		except IOError, arg:
 ##			print 'failed to retrieve',url
 			return
-		self._layoutctrl.setImage(f, fit='fill', mediadisplayrect = None)
+		if self._layoutctrl:
+			self._layoutctrl.setImage(f, fit='fill', mediadisplayrect = None)
 		
 ############################
 # Base class for media renderers
@@ -4084,7 +4027,7 @@ class AttrEditForm(GenFormView):
 		self._window_created = 0
 
 	# Creates the actual OS window
-	def createWindow(self,parent):
+	def createWindow(self, parent):
 		self._parent=parent
 		import __main__
 		dll=__main__.resdll
@@ -4233,70 +4176,32 @@ class AttrEditForm(GenFormView):
 
 	# XXX: either the help string (default value for units) must be corrected 
 	#      or the attrdict.get calls in Channel.py and LayoutView.py and here
-	def getunits(self,ch=None):
-		if not ch:
-			if not self._channel:
-				return appcon.UNIT_SCREEN
-			return self._channel.attrdict.get('units',appcon.UNIT_SCREEN)
-		else:
-			return ch.attrdict.get('units',appcon.UNIT_SCREEN)
+	def getunits(self):
+		if self._channel:
+			return self._channel.attrdict.get('units', appcon.UNIT_SCREEN)
+		return appcon.UNIT_PXL
 			
 	def buildcontext(self):
-		self._channels={}
-		self._channels_rc={}
+		self._node = None
+		self._channel = None
 
-		self._winsize=None
-		self._layoutch=None
-		
 		if not self._attriblist:
 			return
-		a=self._attriblist[0]
-		if hasattr(a.wrapper, 'toplevel') and a.wrapper.toplevel:
-			channels = a.wrapper.toplevel.root.context.channels
-			self._baseURL=a.wrapper.context.baseurl
-			for ch in channels:
-				self._channels[ch.name]=ch
-				units=self.getunits(ch)
-				t=ch.attrdict['type']
-				if t=='layout' and ch.attrdict.has_key('winsize'):
-					w,h=ch.attrdict['winsize']
-					self._winsize=(w,h)
-					self._channels_rc[ch.name]=((0,0,w,h),units)
-					self._layoutch=ch
-				elif ch.attrdict.has_key('base_winoff'):
-					self._channels_rc[ch.name]=(ch.attrdict['base_winoff'],units)
-				else:
-					self._channels_rc[ch.name]=((0,0,0,0),0)
-			
+
+		a = self._attriblist[0]
+
+		self._baseURL = a.wrapper.context.baseurl
+
 		if hasattr(a.wrapper,'node'):
-			self._node=a.wrapper.node
-			chname=self.getchannel(self._node)
-			self._channel=self._channels.get(chname)
+			self._node = a.wrapper.node
+ 			if hasattr(a.wrapper, 'toplevel') and a.wrapper.toplevel:
+				self._channel =  a.wrapper.toplevel.root.context.channeldict[self.getchannel(self._node)]
 		else:
-			self._node=None		
-
-		if hasattr(a.wrapper,'channel'):
-			self._channel=a.wrapper.channel
-
+ 			self._node = None		
 	
 	def getchannel(self,node):
 		import MMAttrdefs
 		return MMAttrdefs.getattr(node, 'channel')
-
-	def GetBBox(self):
-		if not self._channel:
-			return ((0,0,0,0),0) # XXX ?
-		if self._node:
-			return self._channels_rc[self._channel.name]
-		else:
-			bw=self._channel.attrdict['base_window']
-			return self._channels_rc[bw]
-
-	def GetCBox(self):
-		if not self._channel:
-			return ((0,0,0,0),0) # XXX ?
-		bw=self._channel.attrdict['base_window']
-		return self._channels_rc[bw]
 					
 	def OnInitialUpdate(self):
 		GenFormView.OnInitialUpdate(self)
@@ -4325,7 +4230,6 @@ class AttrEditForm(GenFormView):
 		childframe=self.GetParent()
 		frame=childframe.GetMDIFrame()
 		frame.LoadAccelTable(grinsRC.IDR_ATTR_EDIT)
-
 		
 	# Called when the view is deactivated 
 	def deactivate(self):
