@@ -664,9 +664,15 @@ class SeekDialog(ResDialog):
 		ResDialog.__init__(self,grinsRC.IDD_SEEK, parent)
 		self._parent=parent
 		self.IDC_SLIDER = grinsRC.IDC_SLIDER_POS+1
+
 		self.updateposcallback = None
-		self._curpos = 0
-		
+		self.timefunction = None
+		self.canusetimefunction = None
+
+		self.__curpos = 0
+		self.__timerid = 0
+		self.__enableExternalUpdate = 1
+
 		self._minind = Static(self, grinsRC.IDC_MIN)
 		self._maxind = Static(self, grinsRC.IDC_MAX)
 
@@ -691,12 +697,19 @@ class SeekDialog(ResDialog):
 		self.slider.SetPageSize(20)
 		self.slider.SetRange(0, 100)
 
-		self.HookMessage(self.OnNotify, win32con.WM_NOTIFY) 
+		self.HookNotify(self.OnNotify, commctrl.NM_RELEASEDCAPTURE)
+		self.slider.HookMessage(self.OnSliderLButtonDown, win32con.WM_LBUTTONDOWN)
+		
+		self.HookMessage(self.OnTimer, win32con.WM_TIMER)
+		self.__timerid = self.SetTimer(1,200)
+
 		return ResDialog.OnInitDialog(self)
 
 	def close(self):
+		if self.__timerid:
+			self.KillTimer(self.__timerid)
 		if self.updateposcallback:
-			self.updateposcallback(0)
+			self.updateposcallback(0, 0)
 		self.EndDialog(win32con.IDCANCEL)
 
 	def OnCancel(self):
@@ -712,13 +725,22 @@ class SeekDialog(ResDialog):
 	def setPos(self, pos):
 		self.slider.SetPos(int(pos+0.5))
 
-	def OnNotify(self, params):
+	def OnNotify(self, std, extra):
 		pos = self.slider.GetPos()
-		if pos != self._curpos:
-			self._curpos = pos
+		if pos != self.__curpos:
+			self.__curpos = pos
 			if self.updateposcallback:
 				self.updateposcallback(pos)
+		self.__enableExternalUpdate = 1
 
+	def OnSliderLButtonDown(self, params):
+		self.__enableExternalUpdate = 0
+		return 1 # continue normal processing
+
+	def OnTimer(self, params):
+		if self.__enableExternalUpdate and self.canusetimefunction and\
+			self.canusetimefunction() and self.timefunction:
+			self.setPos(self.timefunction())
 
 		
 # Implementation of the channel undefined dialog
