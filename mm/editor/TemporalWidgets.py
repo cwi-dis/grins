@@ -294,7 +294,7 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 			self.happily_receive_dropped_object(source)
 
 	def happily_receive_dropped_object(self, obj):
-		print "DEBUG: O.k, smart alec. Exactly what is a TimeCanvas going to do with a ", obj
+		print "DEBUG: What is a TimeCanvas going to do with a ", obj
 
 
 ######################################################################
@@ -681,6 +681,12 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 
 	def happily_receive_dropped_object(self, obj):
 		print "DEBUG: Channel recieved an object: ", obj
+		if isinstance(obj, TimeWidget):
+			# It's a node.
+			obj.change_channel(self.name)
+		elif isinstance(obj, ChannelWidget):
+			# Don't really know what to do.
+			windowinterface.beep()
 
 
 class TimeWidget(MMNodeWidget, GeoDisplayWidget):
@@ -734,6 +740,16 @@ class TimeWidget(MMNodeWidget, GeoDisplayWidget):
 
 	def happily_receive_dropped_object(self, obj):
 		print "DEBUG: TimeWidget received a dropped object.", obj
+		if isinstance(obj, ChannelWidget):
+			windowinterface.beep()
+		elif isinstance(obj, TimeWidget):
+			if obj is self:
+				windowinterface.beep()
+			else:
+				# Append that object to the end of this one.
+				print "TODO: append objects"
+		else:
+			windowinterface.beep()
 
 
 class MMWidget(TimeWidget, GeoDisplayWidget):
@@ -743,9 +759,10 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		TimeWidget.setup(self)
 		self.w_fbox = self.graph.AddWidget(FBox(self.mother))
 		self.w_fbox.set_color(CNODE)
+		self.w_outerbox = self.graph.AddWidget(Box(self.mother))
+		self.w_filltimeouterbox = self.graph.AddWidget(Box(self.mother))
 		self.w_filltimebox = self.graph.AddWidget(FBox(self.mother))
 		self.w_filltimebox.set_color(CFILLTIME);
-		self.w_outerbox = self.graph.AddWidget(Box(self.mother))
 		self.name = self.node.GetAttrDef('name', '')
 		self.w_text = self.graph.AddWidget(Text(self.mother))
 		self.w_text.set_text(self.name)
@@ -757,6 +774,7 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		self.graph.DelWidget(self.w_text)
 		self.graph.DelWidget(self.w_fbox)
 		self.graph.DelWidget(self.w_filltimebox)
+		self.graph.DelWidget(self.w_filltimeouterbox)
 
 	def moveto(self, coords):
 		l,t,r,b = coords
@@ -764,7 +782,6 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 			self.hide()
 			return
 		TimeWidget.moveto(self, coords)
-		self.w_outerbox.moveto(coords)
 		self.w_text.moveto(coords)
 
 		start_time, end_time, endfill_time, download_delay, begin_delay = self.node.GetTimes()
@@ -776,8 +793,11 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		except ZeroDivisionError:
 			f = 0
 		middle = f * (r-l) + l
+		self.w_outerbox.moveto((l,t,middle, b))
 		self.w_fbox.moveto((l,t,middle,b))
-		self.w_filltimebox.moveto((middle,t,r,b))
+		# This overlaps the borders a bit to make the fill part and the play part merge a bit.
+		self.w_filltimebox.moveto((middle-1, t+(1.0/5*float(b-t))+1,r,(b-(1.0/5*float(b-t)))))
+		self.w_filltimeouterbox.moveto((middle, t+(1.0/5*float(b-t)),r,(b-(1.0/5*float(b-t)))))
 
 	def hide(self):
 		print "TODO: hide a node."
@@ -798,17 +818,19 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 	def select(self):
 		Widgets.Widget.select(self)
 		self.w_fbox.need_redraw()
+		self.w_outerbox.set_color((255,255,255))
+		self.w_filltimeouterbox.set_color((255,255,255))
 		self.w_filltimebox.need_redraw()
 		self.w_text.need_redraw()
-		self.w_outerbox.set_color((255,255,255))
 		# Also select my superiors.
 		self.select_parents()
 	def unselect(self):
 		Widgets.Widget.unselect(self)
 		self.w_fbox.need_redraw()
+		self.w_outerbox.set_color((0,0,0))
+		self.w_filltimeouterbox.set_color((0,0,0))
 		self.w_filltimebox.need_redraw()
 		self.w_text.need_redraw()
-		self.w_outerbox.set_color((0,0,0))
 		self.unselect_parents()
 
 #	def select(self):
@@ -846,6 +868,9 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		self.channel_index = i;
 	def get_channel_index(self):
 		return self.channel_index
+
+	def change_channel(self, channelstr):
+		print "TODO: change a node's channel."
 
 
 class MultiMMWidget(TimeWidget):
@@ -896,6 +921,9 @@ class MultiMMWidget(TimeWidget):
 		self.leafnode = 1
 	def uncollapse(self):
 		self.leafnode = 0
+
+	def change_channel(self, new_channel):
+		return			# Structure nodes don't have channels.
 
 
 class SeqMMWidget(MultiMMWidget):
