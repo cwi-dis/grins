@@ -577,11 +577,13 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		x, y, w, h = coords
 		x,y,w,h=to_pixels(x,y,w,h,units)
 		rc=(x,y,x+w,y+h)
-		l,t,r,b=self.CalcWindowRect(rc,0)
-		w=r-l+2*cxframe+4
-		h=b-t+3*cycaption+16+4
+		#l,t,r,b=self.CalcWindowRect(rc,0)
+		#w=r-l+2*cxframe+4
+		#h=b-t+3*cycaption+16+4
+		self.RecalcLayout()
 		flags=win32con.SWP_NOZORDER|win32con.SWP_NOACTIVATE |win32con.SWP_NOMOVE
 		self.SetWindowPos(0,(0,0,w,h),flags)
+		
 
 	# Maximize window
 	def maximize(self,child):
