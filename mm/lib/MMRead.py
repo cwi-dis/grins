@@ -71,18 +71,20 @@ def _readparser(p, filename):
 	except EOFError:
 		p.reporterror(filename, 'Unexpected EOF', sys.stderr)
 		raise EOFError
-	except MSyntaxError, msg:
+	except MSyntaxError:
+		msg, tb = sys.exc_info()[1:3]
 		if type(msg) is type(()):
 			gotten, expected = msg
 			msg = 'got "'+gotten+'", expected "'+expected+'"'
 		p.reporterror(filename, 'Syntax error: ' + msg, sys.stderr)
-		raise MSyntaxError, msg
-	except MTypeError, msg:
+		raise MSyntaxError, msg, tb
+	except MTypeError:
+		msg, tb = sys.exc_info()[1:3]
 		if type(msg) is type(()):
 			gotten, expected = msg
 			msg = 'got "'+gotten+'", expected "'+expected+'"'
 		p.reporterror(filename, 'Type error: ' + msg, sys.stderr)
-		raise MTypeError, msg
+		raise MTypeError, msg, tb
 	#
 	# Make sure that there is no garbage in the file after the node.
 	#

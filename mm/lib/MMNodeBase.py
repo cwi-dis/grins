@@ -112,13 +112,14 @@ class MMChannel:
 	def __getitem__(self, key):
 		try:
 			return self.attrdict[key]
-		except KeyError, msg:
+		except KeyError:
+			msg, tb = sys.exc_info()[1:3]
 			# special case for background color
 			if key == 'bgcolor' and self.attrdict.has_key('base_window'):
 				pname = self.attrdict['base_window']
 				pchan = self.context.channeldict[pname]
 				return pchan['bgcolor']
-			raise KeyError, msg
+			raise KeyError, msg, tb
 
 	def __setitem__(self, key, value):
 		self.attrdict[key] = value
