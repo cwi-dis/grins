@@ -1937,6 +1937,7 @@ class RealAudioRenderer(RealRenderer):
 class RealWndCtrl(components.WndCtrl):
 	def prepare(self):
 		self.HookMessage(self.onSize,win32con.WM_SIZE)
+		self.HookMessage(self.onFocus,win32con.WM_SETFOCUS)
 		l,t,r,b=self.GetWindowRect()
 		lr,tr,rr,br=self.GetParent().GetWindowRect()
 		self._rcref=win32mu.Rect((l-lr,t-tr,r-lr,b-tr))
@@ -1951,6 +1952,10 @@ class RealWndCtrl(components.WndCtrl):
 		self.SetWindowPos(self.GetSafeHwnd(),self._box,
 			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER)
 
+	# Fix strange rma focus attraction behavior
+	# When the focus is set to the real window everything freezes
+	def onFocus(self,params):
+		self.GetParent().SetFocus()
 
 #################################
 class PreviewPage(AttrPage):
