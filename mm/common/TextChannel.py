@@ -8,6 +8,8 @@ from MMExc import *
 import MMAttrdefs
 
 import gl
+import fl
+import DEVICE
 import fm
 
 from Channel import Channel
@@ -47,8 +49,9 @@ def mustfitstring(s, sizefunc, length):
 
 class TextWindow(ChannelWindow):
 	#
-	def init(self, (title, attrdict)):
+	def init(self, (title, attrdict, player)):
 		self = ChannelWindow.init(self, (title, attrdict))
+		self.player = player
 		self.text = [] # Initially, display no text
 		self.node = None
 		self.setcolors()
@@ -68,9 +71,27 @@ class TextWindow(ChannelWindow):
 		if self.wid <> 0: return
 		self.resetfont()
 		ChannelWindow.show(self)
+		fl.qdevice(DEVICE.MOUSE3)
 		# Clear it immediately (looks better)
 		gl.RGBcolor(self.bgcolor)
 		gl.clear()
+	#
+	def mouse(self, (dev, val)):
+		if (dev, val) <> (DEVICE.MOUSE3, 1):
+			return
+		if not self.node:
+			print 'mouse: no current node'
+			gl.ringbell()
+			return
+		try:
+			alist = self.node.GetRawAttr('anchorlist')
+		except NoSuchAttrError:
+			# No anchors on this node, ignore.
+			print 'Mouse: no anchors on this node'
+			gl.ringbell()
+			return
+		# XXX Should see *which* anchor fired here
+		self.player.anchorfired(self.node, alist)
 	#
 	def resetfont(self):
 		# Get the default colors
@@ -212,7 +233,7 @@ class TextChannel(Channel):
 	#
 	def init(self, (name, attrdict, player)):
 		self = Channel.init(self, (name, attrdict, player))
-		self.window = TextWindow().init(name, attrdict)
+		self.window = TextWindow().init(name, attrdict, player)
 		return self
 	#
 	def show(self):
