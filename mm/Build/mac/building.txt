@@ -15,9 +15,13 @@ instructions for this are in the Python:Mac:Demo folder. Test Python.
 
 To build cmifed and grins go to the cmif:Build:mac folder.
 
-You may have to rebuild the attrdefs.rsrc files. You can do this with
-mkattrdefsresource.py script (XXXX but that script is old, so it may
-need a bit of massaging).
+First you have to build the balloons.rsrc and playercontrols.rsrc
+files. Run the project balloons.prj in the balloons folder and
+the project playercontrols.prj in the icons folder.
+
+Next you may have to rebuild the attrdefs.py file. To do this,
+run macgrins.py once.
+
 
 Next, running the macbuild.py script should do the complete build.
 In case it doesn't work, here are the steps it does:
