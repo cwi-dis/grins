@@ -1370,6 +1370,13 @@ class SlideMMNode(MMNode.MMNode):
 	def setgensr(self):
 		self.gensr = self.gensr_leaf
 
+	def GetAttrDef(self, attr, default):
+		if self.attrdict.has_key(attr):
+			return self.attrdict[attr]
+		if attr == 'color':
+			return MMAttrdefs.getattr(self.GetParent(), 'bgcolor')
+		return default
+
 class DummyRP:
 	# used when parsing the RealPix file failed for some reason
 	aspect = 'true'
