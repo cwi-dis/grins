@@ -473,6 +473,7 @@ class _CommonWindow:
 		#
 		# First see whether the click is in any of our children
 		#
+##		import pdb ; pdb.set_trace() # XXXX
 		for ch in self._subwindows:
 			if Qd.PtInRect(where, ch.qdrect()):
 				try:
@@ -710,7 +711,7 @@ class _AdornmentsMixin:
 					print 'CNTL resource %d not found: %s'%(resid, arg)
 				else:
 					self._cmd_to_cntl[cmd] = cntl
-					self._cntl_to_cmd = cmd
+					self._cntl_to_cmd[cntl] = cmd
 			#
 			# Create the toolbar
 			#
@@ -742,8 +743,16 @@ class _AdornmentsMixin:
 		return 0
 		
 	def _control_callback(self, ctl, part):
-		print 'DBG controlhit', ctl, part, self._cntl_to_cmd[ctl]
-				
+##		print 'DBG controlhit', ctl, part, self._cntl_to_cmd[ctl]
+		# XXXX Check for scrollbars
+		cmd = self._cntl_to_cmd[ctl]
+		callback = self.get_command_callback(cmd)
+		if not callback:
+			print 'No callback for toolbar command', cmd
+		else:
+			func, arglist = callback
+			apply(func, arglist)
+
 	def close(self):
 		del self._cmd_to_cntl
 		del self._cntl_to_cmd
@@ -770,7 +779,7 @@ class _AdornmentsMixin:
 			cntl.SetControlValue(value)
 			print 'TOGGLE', cmd, value #DBG
 		
-class _Window(_CommonWindow, _WindowGroup, _ScrollMixin, _AdornmentsMixin):
+class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 	"""Toplevel window"""
 	
 	def __init__(self, parent, wid, x, y, w, h, defcmap = 0, pixmap = 0, 
