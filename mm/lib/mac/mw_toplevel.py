@@ -542,7 +542,6 @@ class _Toplevel(_Event):
 		self._wid_to_window = {}
 		self._bgcolor = 0xffff, 0xffff, 0xffff # white
 		self._fgcolor =      0,      0,      0 # black
-		self._hfactor = self._vfactor = 1.0
 		self._next_xpos = 16
 		self._next_ypos = 44
 		self._command_handler = None
