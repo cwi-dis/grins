@@ -1,22 +1,20 @@
 """Dialog for the Attribute Editor.
 
-The Attribute editor dialog consists of four buttons that are always
-present (`Cancel', `Restore', `Apply', and `OK'), and a row of
-attribute editor fields.  The number and type of these fields are
-determined at run time, but there are only a limited number of
-different types.  The fields are represented by instances of
-sub-classes of the AttrEditorDialogField.  A list of these instances
-is passed to the constructor of the AttrEditorDialog class.
+This module contains three classes:
+AttrEditorDialog is used as a baseclass for AttrEdit, and represents the whole
+dialog. It has a number of attributepages as children, one of which is displayed
+at any one time.
+It handles the ok/apply/cancel buttons and the listwidget to select which page
+to display.
 
-Each of the attribute editor fields has a label with the name of the
-attribute, an interface to edit the value (the interface depends on
-the type of the value), and a `Reset' button.  There are two callbacks
-associated with an attribute editor field, one to get help, and one
-that is called when the `Reset' button is pressed.  There are also
-some methods to get and set the current value of the attribute.
+TabPage is an attribute page. It contains the GUI-controls for a number of
+attributes, which it has references to. It handles display of attrvalues and
+updating of those values by the user.
 
-The base class of the AttrEditorDialogField class must provide some
-methods also.
+AttrEditorDialogField is the baseclass for AttrEditorField, and is the glue
+between that class and the TabPage to which it belongs. It also keeps the
+current value of an attribute, as set through the GUI, which may be different
+from the real current value which is kept by AttrEditorField.
 
 """
 
@@ -60,23 +58,11 @@ ITEM_3_PICK=17
 ITEM_4_GROUP=18			# Option
 ITEM_4_MENU=19
 
+ALL_GROUPS=[ITEM_1_GROUP, ITEM_2_GROUP, ITEM_3_GROUP, ITEM_4_GROUP]
 
-ITEM_BALLOONHELP=15
+# ITEM_BALLOONHELP=15
 
-
-# Variant items
-ITEM_COLOR_SELECT=14
-
-ITEMLIST_STRING=[ITEM_1_GROUP]
-ITEMLISTNOT_STRING=[ITEM_2_GROUP, ITEM_3_GROUP, ITEM_4_GROUP]
-ITEMLIST_FILE=[ITEM_2_GROUP]
-ITEMLISTNOT_FILE=[ITEM_1_GROUP, ITEM_3_GROUP, ITEM_4_GROUP]
-ITEMLIST_COLOR=[ITEM_3_GROUP]
-ITEMLISTNOT_COLOR=[ITEM_1_GROUP, ITEM_2_GROUP, ITEM_4_GROUP]
-ITEMLIST_OPTION=[ITEM_4_GROUP]
-ITEMLISTNOT_OPTION=[ITEM_1_GROUP, ITEM_2_GROUP, ITEM_3_GROUP]
-
-ITEMLIST_ALL=ITEMrange(ITEM_SELECT, ITEM_BALLOONHELP)
+ITEMLIST_ALL=ITEMrange(ITEM_OK, ITEM_4_MENU)
 
 class AttrEditorDialog(windowinterface.MACDialog):
 	def __init__(self, title, attriblist, toplevel=None, initattr=None):
@@ -93,10 +79,10 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		"""
 		windowinterface.MACDialog.__init__(self, title, ID_DIALOG_NODEATTR,
 				ITEMLIST_ALL, default=ITEM_OK, cancel=ITEM_CANCEL)
+## This doesn't work for (a) tabbing to a field and (b) popup menus
+		self._ok_enabled = 0
+##		self._setsensitive([ITEM_APPLY, ITEM_OK], 0)
 
-		# XXXX This should go elsewhere
-		self._option = windowinterface.SelectWidget(self._dialog, ITEM_4_MENU,
-				[], None)
 		#
 		# Create the pages with the attributes, and the datastructures linking
 		# attributes and pages together
@@ -105,28 +91,32 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		self._attr_to_pageindex = {}
 		self._pages = []
 		for a in attriblist:
-			page = TabPage([a])
+			pageclass = tabpage_singleattr(a)
+			page = pageclass(self, [a])
 			if a is initattr:
 				initpagenum = len(self._pages)
 			self._attr_to_pageindex[a] = len(self._pages)
 			self._pages.append(page)
+		self._hideitemcontrols(ALL_GROUPS)
 		self._cur_page = None
 		#
 		# Create the page browser data and select the initial page
 		#
 		pagenames = []
 		for a in self._pages:
-			label = a.createwidget(self)
+			label = a.createwidget()
 			pagenames.append(label)
 		self._pagebrowser = self._window.ListWidget(ITEM_SELECT, pagenames)
 		self._selectpage(initpagenum)
 
 		self.show()
+##		# Should work above...
+##		self._hideitemcontrols(allgroups)
+##		self._selectpage(initpagenum)
 
 	def close(self):
 		for p in self._pages:
 			p.close()
-		self._option.delete()
 		del self._pagebrowser
 		del self._pages
 		windowinterface.MACDialog.close(self)
@@ -142,6 +132,12 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		except KeyError:
 			pass
 		self._selectpage(num)
+		
+	def _enable_ok(self):
+		if self._ok_enabled:
+			return
+		self._ok_enabled = 1
+		self._setsensitive([ITEM_APPLY, ITEM_OK], 1)
 
 	def do_itemhit(self, item, event):
 		if item == ITEM_SELECT:
@@ -149,28 +145,19 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			self._selectpage(item)
 			# We steal back the keyboard focus
 			self._pagebrowser.setkeyboardfocus()
-##		elif item == ITEM_RESET:
-##			if self._cur_page:
-##				self._cur_page.reset_callback()
-		elif item in (ITEM_1_STRING, ITEM_2_STRING, ITEM_3_STRING):
-			pass
-		elif item == ITEM_2_BROWSE:
-			if self._cur_page:
-				self._cur_page.browser_callback()
-		elif item == ITEM_4_MENU:
-			if self._cur_page:
-				self._cur_page._option_click()
-		elif item == ITEM_3_PICK:
-			if self._cur_page:
-				self._cur_page._select_color()
 		elif item == ITEM_CANCEL:
 			self.cancel_callback()
 		elif item == ITEM_OK:
 			self.ok_callback()
-##		elif item == ITEM_RESTORE:
-##			self.restore_callback()
 		elif item == ITEM_APPLY:
 			self.apply_callback()
+		elif self._cur_page and self._cur_page.do_itemhit(item, event):
+			pass
+##		elif item == ITEM_RESTORE:
+##			self.restore_callback()
+##		elif item == ITEM_RESET:
+##			if self._cur_page:
+##				self._cur_page.reset_callback()
 		else:
 			print 'Unknown NodeAttrDialog item', item, 'event', event
 		return 1
@@ -189,6 +176,9 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			self._cur_page = self._pages[item] # XXXX?
 			self._cur_page.show()
 			self._pagebrowser.select(item)
+		for i in ITEMLIST_ALL:
+			print '%d:%d',i, self._dialog.GetDialogItemAsControl(i).IsControlVisible()
+		print
 
 
 	def _is_shown(self, attrfield):
@@ -197,103 +187,148 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			return 0
 		num = self._attr_to_pageindex[attrfield]
 		return (self._pages[num] is self._cur_page)
+		
+	def _savepagevalues(self):
+		"""Save values from the current page (if any)"""
+		if self._cur_page:
+			self._cur_page.save()
+
+	def _updatepagevalues(self):
+		"""Update values in the current page (if any)"""
+		if self._cur_page:
+			self._cur_page.update()
 
 	def showmessage(self, *args, **kw):
 		apply(windowinterface.showmessage, args, kw)
 
 class TabPage:
-	"""The internal representation of a tab-page"""
-	def __init__(self, fieldlist):
+	"""The internal representation of a tab-page. Used for subclassing only."""
+	
+	def __init__(self, dialog, fieldlist):
 		self.fieldlist = fieldlist
+		self.attreditor = dialog
+		self.init_controls()
+
+	def init_controls(self):
+		"""Initialize optional controls, overriden by subclasses that need it"""
+		pass
 		
 	def close(self):
 		del self.fieldlist
+		del self.attreditor
 		
-	def createwidget(self, dialog):
+	def createwidget(self):
 		for f in self.fieldlist:
-			name = f._createwidget(dialog)
+			name = f._widgetcreated()
 		return name 
 		
 	def show(self):
 		"""Called by the dialog when the page is shown. Show all
 		controls and update their values"""
-		for f in self.fieldlist:
-			f._show()
+		self.update()
+		self.attreditor._showitemcontrols([self.GROUP])
+		if not self.attrs_on_page:
+			# Multi-attribute pages are responsible for their own labels.
+			# For single-attribute pages we do the work.
+			attrname, default, help = self.fieldlist[0].gethelpdata()
+			self.attreditor._setlabel(ITEM_TABGROUP, attrname)
+			self.attreditor._setlabel(ITEM_HELP, help)
+			if default:
+				self.attreditor._setlabel(ITEM_DEFAULT, default)
+				self.attreditor._showitemcontrols([ITEM_DEFAULTGROUP])
+			else:
+				self.attreditor._hideitemcontrols([ITEM_DEFAULTGROUP])
 			
 	def hide(self):
 		"""Called by the dialog when the page is hidden. Save values
 		and hide controls"""
-		for f in self.fieldlist:
-			f._save()
+		self.save()
+		self.attreditor._hideitemcontrols([self.GROUP])
+	
+	def save(self):
+		"""Save all values from the dialogpage to the attrfields"""
+		raise 'No save() for page' # Cannot happen
+		
+	def update(self):
+		"""Update all values in the dialogpage from the attrfields"""
+		raise 'No update() for page' # Cannot happen
 			
 	def getcurattr(self):
 		"""Return our first attr, so it can be reshown after an apply"""
 		return self.fieldlist[0]
+		
+	def do_itemhit(self, item, event):
+		return 0	# To be overridden
+				
+class StringTabPage(TabPage):
+	attrs_on_page=None
+	type_supported=None
+	GROUP=ITEM_1_GROUP
 
-class AttrEditorDialogField:
-	
-##	def __init__(self):
-##		pass
+	def do_itemhit(self, item, event):
+		if item == ITEM_1_STRING:
+			self.attreditor._enable_ok()
+			return 1
+		return 0
 
-	def _createwidget(self, parent):
-		self.__parent = parent
-		label = self.getlabel()
-		self.__value = self.getcurrent()
-		return '%s' % label
+	def save(self):
+		value = self.attreditor._getlabel(ITEM_1_STRING)
+		self.fieldlist[0]._savevaluefrompage(value)
+		
+	def update(self):
+		"""Update controls to self.__value"""
+		value = self.fieldlist[0]._getvalueforpage()
+		self.attreditor._setlabel(ITEM_1_STRING, value)
 
-	def _save(self):
-		if self.type == 'option':
-			self.__value = self.__parent._option.getselectvalue()
-		elif self.type == 'color':
-			self.__value =  self.__parent._getlabel(ITEM_3_STRING)
-		elif self.type == 'file':
-			self.__value =  self.__parent._getlabel(ITEM_2_STRING)
-		else:
-			self.__value =  self.__parent._getlabel(ITEM_1_STRING)
+class FileTabPage(TabPage):
+	attrs_on_page=None
+	type_supported='file'
+	GROUP=ITEM_2_GROUP
 
-	def _show(self):
-		value = self.__value
-		attrname, default, help = self.gethelpdata()
-		if self.type == 'file':
-			toshow=ITEMLIST_FILE
-			tohide=ITEMLISTNOT_FILE
-		elif self.type == 'color':
-			toshow=ITEMLIST_COLOR
-			tohide=ITEMLISTNOT_COLOR
-		elif self.type == 'option':
-			list = self.getoptions()
-			toshow=ITEMLIST_OPTION
-			tohide=ITEMLISTNOT_OPTION
-		else:
-			toshow=ITEMLIST_STRING
-			tohide=ITEMLISTNOT_STRING
-		if default is None:
-			tohide = tohide + [ITEM_DEFAULTGROUP]
-		else:
-			toshow = toshow + [ITEM_DEFAULTGROUP]
-		self.__parent._hideitemlist(tohide)
-		# It appears input fields have to be shown before
-		# values are inserted??!?
-##		if ITEM_STRING in toshow:
-##			self.__parent._showitemlist([ITEM_STRING])
-		self.__parent._showitemlist(toshow)
-		self._dosetvalue(initialize=1)
-		if not default is None:
-			self.__parent._setlabel(ITEM_DEFAULT, default)
-		self.__parent._setlabel(ITEM_HELP, help)
-##		self.__parent._showitemlist(toshow)
+	def do_itemhit(self, item, event):
+		if item == ITEM_2_STRING:
+			self.attreditor._enable_ok()
+			return 1
+		elif item == ITEM_2_BROWSE:
+			self.fieldlist[0].browser_callback()
+			return 1
+		return 0
 
-	def close(self):
-		"""Close the instance and free all resources."""
-		del self.__parent
-		del self.__value
+	def save(self):
+		value =  self.attreditor._getlabel(ITEM_2_STRING)
+		self.fieldlist[0]._savevaluefrompage(value)
 
-	def _option_click(self):
-		pass
+	def update(self):
+		"""Update controls to self.__value"""
+		value = self.fieldlist[0]._getvalueforpage()
+		self.attreditor._setlabel(ITEM_2_STRING, value)
+
+class ColorTabPage(TabPage):
+	attrs_on_page=None
+	type_supported='color'
+	GROUP=ITEM_3_GROUP
+
+	def do_itemhit(self, item, event):
+		if item == ITEM_3_STRING:
+			self.attreditor._enable_ok()
+			return 1
+		elif item == ITEM_3_PICK:
+			self._select_color()
+			return 1
+		return 0
+
+	def save(self):
+		value =  self.attreditor._getlabel(ITEM_3_STRING)
+		self.fieldlist[0]._savevaluefrompage(value)
+
+	def update(self):
+		"""Update controls to self.__value"""
+		value = self.fieldlist[0]._getvalueforpage()
+		self.attreditor._setlabel(ITEM_3_STRING, value)
 
 	def _select_color(self):
 		import ColorPicker
-		value = self.__parent._getlabel(ITEM_3_STRING)
+		value = self.attreditor._getlabel(ITEM_3_STRING)
 		import string
 		rgb = string.split(string.strip(value))
 		if len(rgb) == 3:
@@ -316,8 +351,99 @@ class AttrEditorDialogField:
 		if ok:
 			r, g, b = color
 			value = "%d %d %d"%((r>>8), (g>>8), (b>>8))
-			self.__parent._setlabel(ITEM_3_STRING, value)
-			self.__parent._selectinputfield(ITEM_3_STRING)
+			self.attreditor._setlabel(ITEM_3_STRING, value)
+			self.attreditor._selectinputfield(ITEM_3_STRING)
+		
+class OptionTabPage(TabPage):
+	attrs_on_page=None
+	type_supported='option'
+	GROUP=ITEM_4_GROUP
+
+	def init_controls(self):
+		self._option = windowinterface.SelectWidget(self.attreditor._dialog, ITEM_4_MENU,
+				[], None)
+
+	def close(self):
+		self._option.delete()
+		TabPage.close(self)
+		
+	def do_itemhit(self, item, event):
+		if item == ITEM_4_MENU:
+			self._option_click()
+			return 1
+		return 0
+
+	def save(self):
+		value = self._option.getselectvalue()
+		self.fieldlist[0]._savevaluefrompage(value)
+
+	def update(self):
+		"""Update controls to self.__value"""
+		value = self.fieldlist[0]._getvalueforpage()
+		list = self.fieldlist[0].getoptions()
+		self._option.setitems(list, value)
+
+	def _option_click(self):
+		pass
+		
+SINGLE_ATTR_CLASSES = [ FileTabPage, ColorTabPage, OptionTabPage, StringTabPage ]
+
+def tabpage_singleattr(attrfield):
+	for cl in SINGLE_ATTR_CLASSES:
+		if cl.type_supported == attrfield.type:
+			return cl
+		if cl.type_supported is None:
+			return cl
+	raise 'Unsupported attrclass' # Cannot happen
+
+class AttrEditorDialogField:
+	
+	def _widgetcreated(self):
+		label = self.getlabel()
+		self.__value = self.getcurrent()
+		return '%s' % label
+
+	def _savevaluefrompage(self, value):
+		self.__value = value
+		
+	def _getvalueforpage(self):
+		return self.__value
+				
+##	def _show(self): # XXXX Should go to tabpage
+##		value = self.__value
+##		attrname, default, help = self.gethelpdata()
+##		if self.type == 'file':
+##			toshow=ITEMLIST_FILE
+##			tohide=ITEMLISTNOT_FILE
+##		elif self.type == 'color':
+##			toshow=ITEMLIST_COLOR
+##			tohide=ITEMLISTNOT_COLOR
+##		elif self.type == 'option':
+##			list = self.getoptions()
+##			toshow=ITEMLIST_OPTION
+##			tohide=ITEMLISTNOT_OPTION
+##		else:
+##			toshow=ITEMLIST_STRING
+##			tohide=ITEMLISTNOT_STRING
+##		if default is None:
+##			tohide = tohide + [ITEM_DEFAULTGROUP]
+##		else:
+##			toshow = toshow + [ITEM_DEFAULTGROUP]
+##		self.attreditor._hideitemlist(tohide)
+##		# It appears input fields have to be shown before
+##		# values are inserted??!?
+####		if ITEM_STRING in toshow:
+####			self.attreditor._showitemlist([ITEM_STRING])
+##		self.attreditor._showitemlist(toshow)
+##		xxxx self._dosetvalue(initialize=1)
+##		if not default is None:
+##			self.attreditor._setlabel(ITEM_DEFAULT, default)
+##		self.attreditor._setlabel(ITEM_HELP, help)
+####		self.attreditor._showitemlist(toshow)
+
+	def close(self):
+		"""Close the instance and free all resources."""
+		del self.__value
 
 	def getvalue(self):
 		"""Return the current value of the attribute.
@@ -326,8 +452,8 @@ class AttrEditorDialogField:
 		"""
 		if self.type is None:
 			return self.getcurrent()
-		if self.__parent._is_shown(self):
-			self._save() # XXXX via parent
+		if self.attreditor._is_shown(self):
+			self.attreditor._savepagevalues()
 		return self.__value
 
 	def setvalue(self, value):
@@ -337,36 +463,15 @@ class AttrEditorDialogField:
 		value -- string giving the new value
 		"""
 		self.__value = value
-		if self.__parent._is_shown(self):
-			self._dosetvalue() # XXXX via parent
+		if self.attreditor._is_shown(self):
+			self.attreditor._updatepagevalues()
+		if value != self.getcurrent():
+			self.attreditor._enable_ok()
 			
-	def _dosetvalue(self, initialize=0):
-		"""Update controls to self.__value"""
-		value = self.__value
-		if self.type == 'option':
-			if initialize:
-				list = self.getoptions()
-				self.__parent._option.setitems(list, value)
-			else:
-				self.__parent._option.select(value)
-		else:
-			if self.type == 'color':
-				item = ITEM_3_STRING
-			elif self.type == 'file':
-				item = ITEM_2_STRING
-			else:
-				item = ITEM_1_STRING
-			self.__parent._setlabel(item, value)
-			self.__parent._selectinputfield(item)
-
 	def recalcoptions(self):
 		"""Recalculate the list of options and set the value."""
-		if not self.__parent._is_shown(self):
-			return
-		if self.type == 'option':
-			val = self.getcurrent()
-			list = self.getoptions()
-			self.__parent._option.setitems(list, val)
+		if self.attreditor._is_shown(self) and self.type == 'option':
+			self.attreditor._updatepagevalues()
 
 	def askchannelname(self, default):
 		windowinterface.InputDialog('Name for new channel',
