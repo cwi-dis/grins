@@ -122,7 +122,7 @@ class Window:
 			return
 		wd, hd = self._rect[2:]
 		ws, hs = self._mediadisplayrect[2:]
-		if self._fit==-4 and ws>wd or hs>hd:
+		if self._fit==-4 and (ws>wd or hs>hd):
 			self._canscroll = 1	
 			self.setdefaultcursor('draghand')
 
@@ -2870,4 +2870,5 @@ class _ResizeableDisplayList(_DisplayList):
 			raise error, 'displaylist already rendered'
 		self._list.append(('label', str))
  
-  
+ 
+ 
