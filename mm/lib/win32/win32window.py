@@ -2038,26 +2038,45 @@ class Viewport(Region):
 
 
 #############################
+
 # selection modes
-[SM_NONE, SM_MOVE, SM_SIZE] = range(3)
+[SM_NONE, SM_MOVE, SM_SIZE, SM_NET] = range(4)
+
 Sdk = win32ui.GetWin32Sdk()
 	 
 class DrawContext:
 	def __init__(self):
-		self._last = 0, 0
+		self._moveRefPt = 0, 0
 		self._selected = None
 		self._selmode = SM_NONE
 		self._ixDragHandle = 0
 		self._capture = None
-		self._curtool = SelectTool(self)
 		self._listeners = []
 
+		# for select, move and resize
+		self._seltool = SelectTool(self)
+
+		# new objects creation
+		# we don't need this tool when
+		# new objects creation is not allowed
+		self._shapetool = ShapeTool(self)
+
+		# set current tool
+		self._curtool = self._seltool
+
+		# muliselect support
+		self._muliselect = 0
+		self._downPt = 0, 0
+		self._lastPt = 0, 0
+		self._focusdrawn = 0
+
 	def reset(self):
-		self._last = 0, 0
+		self._moveRefPt = 0, 0
 		self._selected = None
 		self._selmode = SM_NONE
 		self._ixDragHandle = 0
 		self._capture = None
+		self._curtool = self._seltool
 	
 	def setCapture(self):
 		self._capture = self
@@ -2067,6 +2086,9 @@ class DrawContext:
 
 	def hasCapture(self):
 		return self._capture
+
+	def inSelectMode(self):
+		return self._curtool == self._seltool
 
 	def setcursor(self, strid):
 		if strid=='arrow':
@@ -2079,6 +2101,8 @@ class DrawContext:
 			cursor=Sdk.LoadStandardCursor(win32con.IDC_SIZENESW)
 		elif strid=='sizewe':
 			cursor=Sdk.LoadStandardCursor(win32con.IDC_SIZEWE)
+		elif strid=='cross':
+			cursor=Sdk.LoadStandardCursor(win32con.IDC_CROSS)
 		else:
 			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
 		Sdk.SetCursor(cursor)
@@ -2099,7 +2123,7 @@ class DrawContext:
 	#
 	def moveSelectionTo(self, point):
 		xp, yp = point
-		xl, yl = self._last
+		xl, yl = self._moveRefPt
 		if self._selected:
 			self._selected.invalidateDragHandles()
 			self._selected.moveBy((xp-xl, yp-yl))
@@ -2123,7 +2147,11 @@ class DrawContext:
 		if self._selected:
 			for obj in self._listeners:
 				obj.onProperties(self._selected)
-				
+	
+	def __notifyListeners(self, shape):
+		for obj in self._listeners:
+			obj.onShapeChange(shape)
+
 	#
 	# Mouse input
 	#
@@ -2140,14 +2168,59 @@ class DrawContext:
 		self._curtool.onLButtonDblClk(flags, point)
 
 	def onNCButton(self):
-		self._last = 0, 0
+		self._moveRefPt = 0, 0
 		self._selmode = SM_NONE
 		self._ixDragHandle = 0
 		self._capture = None
 
-	def __notifyListeners(self, shape):
-		for obj in self._listeners:
-			obj.onShapeChange(shape)
+
+	#
+	# Create new objects support
+	# Do not implement if this support is not needed
+	#
+	def createObject(self):
+		# create a new object
+		# at self._downPt with zero dimensions
+		pass
+
+	def removeObject(self, shape):
+		# remove shape
+		# used by shape tool to remove objects
+		# with zero dimensions
+		self._curtool = self._seltool
+
+	#
+	# Multi-select support
+	# Do not implement if this support is not needed
+	#
+	def drawFocusRect(self, rc):
+		pass
+
+	def selectWithinRect(self, rc):
+		pass
+
+	def drawFocus(self, pt1, pt2):
+		self.drawFocusRect(self.__rectFromPoints(pt1, pt2))
+				
+	def selectWithin(self, pt1, pt2):
+		self._selected = self.selectWithinRect(self.__rectFromPoints(pt1, pt2))
+
+	def __rectFromPoints(self, pt1, pt2):
+		x1, y1 = pt1
+		x2, y2 = pt2
+		if x1<=x2: 
+			l = x1
+			r = x2
+		else:
+			l = x2
+			r = x1
+		if y1<=y2: 
+			t = y1
+			b = y2
+		else:
+			t = y2
+			b = y1
+		return l, t, r-l, b-t
 				
 class Shape:
 	def getDragHandle(self, ix):
@@ -2183,13 +2256,19 @@ class DrawTool:
 
 	def onLButtonDown(self, flags, point):
 		ctx = self._ctx
+		ctx._downPt = point
+		ctx._lastPt = point
 		ctx.setCapture()
 
 	def onLButtonUp(self, flags, point):
-		self._ctx.releaseCapture()
+		ctx = self._ctx
+		ctx.releaseCapture()
+		if point == ctx._downPt:
+			ctx._curtool = ctx._seltool
 
 	def onMouseMove(self, flags, point):
 		ctx = self._ctx
+		ctx._lastPt = point
 		ctx.setcursor('arrow')
 	
 	def onLButtonDblClk(self, flags, point):
@@ -2218,17 +2297,27 @@ class SelectTool(DrawTool):
 			if shape:
 				ctx._selmode = SM_MOVE
 				ctx.select(shape)
-			else:
-				ctx.select(None)
-				self._ctx.update()
 
-		ctx._last = point
+		# bgclick
+		if ctx._selmode == SM_NONE:
+			ctx.select(None)
+			ctx.update()
+			if ctx._muliselect:
+				ctx._selmode = SM_NET
+
+		ctx._moveRefPt = point
 		DrawTool.onLButtonDown(self, flags, point)
-				
+	
 	def onLButtonUp(self, flags, point):
 		ctx = self._ctx
-		if ctx.hasCapture() and ctx._selmode != SM_NONE:
-			ctx.update()
+		if ctx.hasCapture():
+			if ctx._selmode == SM_NET:
+				if ctx._focusdrawn:
+					ctx.drawFocus(ctx._downPt, ctx._lastPt)
+					ctx._focusdrawn = 0
+				ctx.selectWithin(ctx._downPt, ctx._lastPt)
+			elif ctx._selmode != SM_NONE:
+				ctx.update()
 		DrawTool.onLButtonUp(self, flags, point)
 
 	def onMouseMove(self, flags, point):
@@ -2236,11 +2325,21 @@ class SelectTool(DrawTool):
 		shape = ctx._selected
 
 		if not ctx.hasCapture():
-			if shape:
+			if shape and ctx.inSelectMode():
 				ctx._ixDragHandle = shape.getDragHandleAt(point)
 				if ctx._ixDragHandle:
 					ctx.setcursor(shape.getDragHandleCursor(ctx._ixDragHandle))
 					return
+			if ctx.inSelectMode():
+				DrawTool.onMouseMove(self, flags, point)
+			return
+		
+		# nulti-select if enabled
+		if ctx._selmode == SM_NET:
+			if ctx._focusdrawn:
+				ctx.drawFocus(ctx._downPt, ctx._lastPt)
+			ctx.drawFocus(ctx._downPt, point)
+			ctx._focusdrawn = 1
 			DrawTool.onMouseMove(self, flags, point)
 			return
 					
@@ -2251,13 +2350,14 @@ class SelectTool(DrawTool):
 			elif ctx._ixDragHandle:
 				ctx.moveSelectionHandleTo(point)
 
-		ctx._last = point
+		ctx._moveRefPt = point
 
-		if ctx._selmode == SM_SIZE:
-			if shape:
-				ctx.setcursor(shape.getDragHandleCursor(ctx._ixDragHandle))
+		if ctx._selmode == SM_SIZE and ctx.inSelectMode():
+			ctx._lastPt = point
+			ctx.setcursor(shape.getDragHandleCursor(ctx._ixDragHandle))
 			return
 
+		ctx._lastPt = point
 		DrawTool.onMouseMove(self, flags, point)
 
 	def onLButtonDblClk(self, flags, point):
@@ -2265,14 +2365,37 @@ class SelectTool(DrawTool):
 			self._ctx.showproperties()
 
 
+# Tool to create new shapes
+class ShapeTool(DrawTool):
+	def __init__(self, ctx):
+		DrawTool.__init__(self, ctx)
+
+	def onLButtonDown(self, flags, point):
+		DrawTool.onLButtonDown(self, flags, point)
+		ctx = self._ctx
+		ctx._selected = ctx.createObject()
+		ctx._selmode = SM_SIZE
+		ctx._moveRefPt = point
+
+	def onLButtonUp(self, flags, point):
+		ctx = self._ctx
+		if point==ctx._downPt:
+			if ctx._selected:
+				ctx.removeObject(ctx._selected)
+				ctx._selected = None
+			ctx._seltool.onLButtonDown(self, flags, point)
+		ctx._seltool.onLButtonDown(self, flags, point)
+
+	def onMouseMove(self, flags, point):
+		ctx = self._ctx
+		ctx.setcursor('cross')
 
 
-			
 
 
 
 
-
+	
 
 
 
