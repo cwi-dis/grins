@@ -1688,6 +1688,8 @@ def writenodes(node, evallicense=0):
 			print 'cannot write file for node',node
 
 def cvslideurl(url, purl):
+	# Convert url to be relative to purl.
+	# If this is not posible, complain and return None.
 	utype, host, path, params, query, tag = urlparse.urlparse(purl)
 	if (utype and utype != 'file') or (host and host != 'localhost'):
 		windowinterface.showmessage('Can only edit local RealPix files', mtype = 'warning')
