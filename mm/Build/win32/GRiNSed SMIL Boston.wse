@@ -19,7 +19,7 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_2.0-124.exe
+  EXE Filename=..\..\bin\win32\grins_win_2.0-124.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -37,7 +37,7 @@ item: Global
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
   Variable Name2=_WISE_
-  Variable Default2=E:\PROGRA~1\WISEIN~1.1
+  Variable Default2=C:\Program Files\Wise InstallBuilder 8.1
   Variable Flags2=00001000
   Variable Name3=_ALIASNAME_
   Variable Flags3=00001000
@@ -75,7 +75,7 @@ item: Get Temporary Filename
   Variable=READMEFILE
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\products\smil-20\lllicense.txt
+  Source=..\products\smil-20\lllicense.txt
   Destination=%TEMP%\%READMEFILE%
   Flags=0000000000100010
 end
@@ -1437,7 +1437,7 @@ item: Check Disk Space
   Component=COMPONENTS
 end
 item: Display Graphic
-  Pathname=D:\ufs\mm\cmif\Build\products\smil-20\editor\splash8bit.bmp
+  Pathname=..\products\smil-20\editor\splash8bit.bmp
   X Position=32784
   Y Position=16
 end
@@ -1445,17 +1445,17 @@ item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\products\smil-20\win32\readme.txt
+  Source=..\products\smil-20\win32\readme.txt
   Destination=%MAINDIR%\relnotes.html
   Flags=0000000010000010
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\products\smil-20\license.txt
+  Source=..\products\smil-20\license.txt
   Destination=%MAINDIR%\license.txt
   Flags=0000000010000010
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\products\smil-20\win32\readme.txt
+  Source=..\products\smil-20\win32\readme.txt
   Destination=%MAINDIR%\readme.txt
   Flags=0000000010000010
 end
@@ -1465,257 +1465,257 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\anchor.tiff
+  Source=..\..\GRiNS-Icons\anchor.tiff
   Destination=%MAINDIR%\GRiNS-Icons\anchor.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\win32\DXMedia\bin\vidpipe.ax
+  Source=..\..\win32\DXMedia\bin\vidpipe.ax
   Destination=%MAINDIR%\Producer-SDK\vidpipe.ax
   Flags=0001000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\win32\DXMedia\bin\audpipe.ax
+  Source=..\..\win32\DXMedia\bin\audpipe.ax
   Destination=%MAINDIR%\Producer-SDK\audpipe.ax
   Flags=0001000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\extend.tiff
+  Source=..\..\Templates\icons\extend.tiff
   Destination=%MAINDIR%\Templates\icons\extend.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Qt.pyd
+  Source=..\..\bin\win32\Qt.pyd
   Destination=%MAINDIR%\Qt.pyd
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\RealPix.tiff
+  Source=..\..\Templates\icons\RealPix.tiff
   Destination=%MAINDIR%\Templates\icons\RealPix.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\RealAudio.tiff
+  Source=..\..\Templates\icons\RealAudio.tiff
   Destination=%MAINDIR%\Templates\icons\RealAudio.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\prefetch.tiff
+  Source=..\..\Templates\icons\prefetch.tiff
   Destination=%MAINDIR%\Templates\icons\prefetch.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\null.tiff
+  Source=..\..\Templates\icons\null.tiff
   Destination=%MAINDIR%\Templates\icons\null.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\layout.tiff
+  Source=..\..\Templates\icons\layout.tiff
   Destination=%MAINDIR%\Templates\icons\layout.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\image.tiff
+  Source=..\..\Templates\icons\image.tiff
   Destination=%MAINDIR%\Templates\icons\image.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\html.tiff
+  Source=..\..\Templates\icons\html.tiff
   Destination=%MAINDIR%\Templates\icons\html.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\dropbox.tiff
+  Source=..\..\Templates\icons\dropbox.tiff
   Destination=%MAINDIR%\Templates\icons\dropbox.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\comment.tiff
+  Source=..\..\Templates\icons\comment.tiff
   Destination=%MAINDIR%\Templates\icons\comment.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\animate.tiff
+  Source=..\..\Templates\icons\animate.tiff
   Destination=%MAINDIR%\Templates\icons\animate.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\RealVideo.tiff
+  Source=..\..\Templates\icons\RealVideo.tiff
   Destination=%MAINDIR%\Templates\icons\RealVideo.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\S2_21_adapt1A.grins
+  Source=..\..\Templates\S2_21_adapt1A.grins
   Destination=%MAINDIR%\Templates\S2_21_adapt1A.grins
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\S2_99_empty.grins
+  Source=..\..\Templates\S2_99_empty.grins
   Destination=%MAINDIR%\Templates\S2_99_empty.grins
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\empty_S2.bmp
+  Source=..\..\Templates\icons\empty_S2.bmp
   Destination=%MAINDIR%\Templates\icons\empty_S2.bmp
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\adapt_1_1A.bmp
+  Source=..\..\Templates\icons\adapt_1_1A.bmp
   Destination=%MAINDIR%\Templates\icons\adapt_1_1A.bmp
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\slideshow_1A.bmp
+  Source=..\..\Templates\icons\slideshow_1A.bmp
   Destination=%MAINDIR%\Templates\icons\slideshow_1A.bmp
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\video_3_1A.bmp
+  Source=..\..\Templates\icons\video_3_1A.bmp
   Destination=%MAINDIR%\Templates\icons\video_3_1A.bmp
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\video_2_1A.bmp
+  Source=..\..\Templates\icons\video_2_1A.bmp
   Destination=%MAINDIR%\Templates\icons\video_2_1A.bmp
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\video_1_1A.bmp
+  Source=..\..\Templates\icons\video_1_1A.bmp
   Destination=%MAINDIR%\Templates\icons\video_1_1A.bmp
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\slideshow_2AC.bmp
+  Source=..\..\Templates\icons\slideshow_2AC.bmp
   Destination=%MAINDIR%\Templates\icons\slideshow_2AC.bmp
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\slideshow_2A.bmp
+  Source=..\..\Templates\icons\slideshow_2A.bmp
   Destination=%MAINDIR%\Templates\icons\slideshow_2A.bmp
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\video_4_1A.bmp
+  Source=..\..\Templates\icons\video_4_1A.bmp
   Destination=%MAINDIR%\Templates\icons\video_4_1A.bmp
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\slideshow_2Ax.bmp
+  Source=..\..\Templates\icons\slideshow_2Ax.bmp
   Destination=%MAINDIR%\Templates\icons\slideshow_2Ax.bmp
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\slideshow_2ACx.bmp
+  Source=..\..\Templates\icons\slideshow_2ACx.bmp
   Destination=%MAINDIR%\Templates\icons\slideshow_2ACx.bmp
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\adapt_1_1Ax.bmp
+  Source=..\..\Templates\icons\adapt_1_1Ax.bmp
   Destination=%MAINDIR%\Templates\icons\adapt_1_1Ax.bmp
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\adapt_3_1Ax.bmp
+  Source=..\..\Templates\icons\adapt_3_1Ax.bmp
   Destination=%MAINDIR%\Templates\icons\adapt_3_1Ax.bmp
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\adapt_2_1Ax.bmp
+  Source=..\..\Templates\icons\adapt_2_1Ax.bmp
   Destination=%MAINDIR%\Templates\icons\adapt_2_1Ax.bmp
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\adapt_4_1Ax.bmp
+  Source=..\..\Templates\icons\adapt_4_1Ax.bmp
   Destination=%MAINDIR%\Templates\icons\adapt_4_1Ax.bmp
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\ring.rt
+  Source=..\..\Templates\media\ring.rt
   Destination=%MAINDIR%\Templates\media\ring.rt
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\text.tiff
+  Source=..\..\Templates\icons\text.tiff
   Destination=%MAINDIR%\Templates\icons\text.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\svg.tiff
+  Source=..\..\Templates\icons\svg.tiff
   Destination=%MAINDIR%\Templates\icons\svg.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\Back3.gif
+  Source=..\..\Templates\media\Back3.gif
   Destination=%MAINDIR%\Templates\media\Back3.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\Back2.gif
+  Source=..\..\Templates\media\Back2.gif
   Destination=%MAINDIR%\Templates\media\Back2.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\external_player.html
+  Source=..\..\Templates\external_player.html
   Destination=%MAINDIR%\Templates\external_player.html
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\video.tiff
+  Source=..\..\Templates\icons\video.tiff
   Destination=%MAINDIR%\Templates\icons\video.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\embedded_player.html
+  Source=..\..\Templates\embedded_player.html
   Destination=%MAINDIR%\Templates\embedded_player.html
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\S2_14_video1A.grins
+  Source=..\..\Templates\S2_14_video1A.grins
   Destination=%MAINDIR%\Templates\S2_14_video1A.grins
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\GetGRiNS.gif
+  Source=..\..\Templates\GetGRiNS.gif
   Destination=%MAINDIR%\Templates\GetGRiNS.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\S2_01_slideshow1A.grins
+  Source=..\..\Templates\S2_01_slideshow1A.grins
   Destination=%MAINDIR%\Templates\S2_01_slideshow1A.grins
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\S2_03_slideshow2AC.grins
+  Source=..\..\Templates\S2_03_slideshow2AC.grins
   Destination=%MAINDIR%\Templates\S2_03_slideshow2AC.grins
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\sound.tiff
+  Source=..\..\Templates\icons\sound.tiff
   Destination=%MAINDIR%\Templates\icons\sound.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\S2_11_video1A.grins
+  Source=..\..\Templates\S2_11_video1A.grins
   Destination=%MAINDIR%\Templates\S2_11_video1A.grins
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\S2_12_video1A.grins
+  Source=..\..\Templates\S2_12_video1A.grins
   Destination=%MAINDIR%\Templates\S2_12_video1A.grins
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\S2_13_video1A.grins
+  Source=..\..\Templates\S2_13_video1A.grins
   Destination=%MAINDIR%\Templates\S2_13_video1A.grins
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\S2_02_slideshow2A.grins
+  Source=..\..\Templates\S2_02_slideshow2A.grins
   Destination=%MAINDIR%\Templates\S2_02_slideshow2A.grins
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\RealText.tiff
+  Source=..\..\Templates\icons\RealText.tiff
   Destination=%MAINDIR%\Templates\icons\RealText.tiff
   Flags=0000000010000010
 end
@@ -1770,37 +1770,37 @@ item: Set Variable
   Variable=BACKUPDIR
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\win32\vcredist\oleaut32.dll
+  Source=vcredist\oleaut32.dll
   Destination=%SYS32%\Oleaut32.dll
   Flags=0000001010000011
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\win32\vcredist\mfc42.dll
+  Source=vcredist\mfc42.dll
   Destination=%SYS32%\mfc42.dll
   Flags=0001001010000011
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\win32\vcredist\msvcp60.dll
+  Source=vcredist\msvcp60.dll
   Destination=%SYS32%\Msvcp60.dll
   Flags=0000001010000011
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\win32\vcredist\msvcirt.dll
+  Source=vcredist\msvcirt.dll
   Destination=%SYS32%\Msvcirt.dll
   Flags=0000001010000011
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\win32\vcredist\olepro32.dll
+  Source=vcredist\olepro32.dll
   Destination=%SYS32%\Olepro32.dll
   Flags=0001001010000011
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\win32\vcredist\msvcrt.dll
+  Source=vcredist\msvcrt.dll
   Destination=%SYS32%\Msvcrt.dll
   Flags=0000001010000011
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\win32\vcredist\msvcrt40.dll
+  Source=vcredist\msvcrt40.dll
   Destination=%SYS32%\Msvcrt40.dll
   Flags=0000001010000011
 end
@@ -1817,227 +1817,227 @@ end
 item: End Block
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\svg.tiff
+  Source=..\..\GRiNS-Icons\svg.tiff
   Destination=%MAINDIR%\GRiNS-Icons\svg.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\wingdi.pyd
+  Source=..\..\bin\win32\wingdi.pyd
   Destination=%MAINDIR%\wingdi.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\comment.tiff
+  Source=..\..\GRiNS-Icons\comment.tiff
   Destination=%MAINDIR%\GRiNS-Icons\comment.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\dsound.pyd
+  Source=..\..\bin\win32\dsound.pyd
   Destination=%MAINDIR%\dsound.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\GRiNS_SV2.exe
+  Source=..\..\bin\win32\GRiNS_SV2.exe
   Destination=%MAINDIR%\GRiNS_SV2.exe
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Common\rnco3260.dll
+  Source=..\..\bin\win32\Producer-SDK\Common\rnco3260.dll
   Destination=%MAINDIR%\Producer-SDK\Common\rnco3260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\rv303260.dll
+  Source=..\..\bin\win32\Producer-SDK\Codecs\rv303260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\rv303260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\rv203260.dll
+  Source=..\..\bin\win32\Producer-SDK\Codecs\rv203260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\rv203260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\erv13260.dll
+  Source=..\..\bin\win32\Producer-SDK\Codecs\erv13260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\erv13260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Tools\rmto3260.dll
+  Source=..\..\bin\win32\Producer-SDK\Tools\rmto3260.dll
   Destination=%MAINDIR%\Producer-SDK\Tools\rmto3260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Tools\rmme3260.dll
+  Source=..\..\bin\win32\Producer-SDK\Tools\rmme3260.dll
   Destination=%MAINDIR%\Producer-SDK\Tools\rmme3260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Tools\enlv3260.dll
+  Source=..\..\bin\win32\Producer-SDK\Tools\enlv3260.dll
   Destination=%MAINDIR%\Producer-SDK\Tools\enlv3260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\sipr3260.dll
+  Source=..\..\bin\win32\Producer-SDK\Codecs\sipr3260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\sipr3260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\rv103260.dll
+  Source=..\..\bin\win32\Producer-SDK\Codecs\rv103260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\rv103260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\espr3260.dll
+  Source=..\..\bin\win32\Producer-SDK\Codecs\espr3260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\espr3260.dll
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\ednt3260.dll
+  Source=..\..\bin\win32\Producer-SDK\Codecs\ednt3260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\ednt3260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\dnet3260.dll
+  Source=..\..\bin\win32\Producer-SDK\Codecs\dnet3260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\dnet3260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\14_43260.dll
+  Source=..\..\bin\win32\Producer-SDK\Codecs\14_43260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\14_43260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Plugins\basc3260.dll
+  Source=..\..\bin\win32\Producer-SDK\Plugins\basc3260.dll
   Destination=%MAINDIR%\Producer-SDK\Plugins\basc3260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Plugins\auth3260.dll
+  Source=..\..\bin\win32\Producer-SDK\Plugins\auth3260.dll
   Destination=%MAINDIR%\Producer-SDK\Plugins\auth3260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\28_83260.dll
+  Source=..\..\bin\win32\Producer-SDK\Codecs\28_83260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\28_83260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Plugins\sdpp3260.dll
+  Source=..\..\bin\win32\Producer-SDK\Plugins\sdpp3260.dll
   Destination=%MAINDIR%\Producer-SDK\Plugins\sdpp3260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\cook3260.dll
+  Source=..\..\bin\win32\Producer-SDK\Codecs\cook3260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\cook3260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\atrc3260.dll
+  Source=..\..\bin\win32\Producer-SDK\Codecs\atrc3260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\atrc3260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Common\pnrs3260.dll
+  Source=..\..\bin\win32\Producer-SDK\Common\pnrs3260.dll
   Destination=%MAINDIR%\Producer-SDK\Common\pnrs3260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\erv33260.dll
+  Source=..\..\bin\win32\Producer-SDK\Codecs\erv33260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\erv33260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Common\encn3260.dll
+  Source=..\..\bin\win32\Producer-SDK\Common\encn3260.dll
   Destination=%MAINDIR%\Producer-SDK\Common\encn3260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\erv23260.dll
+  Source=..\..\bin\win32\Producer-SDK\Codecs\erv23260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\erv23260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Plugins\rn5a3260.dll
+  Source=..\..\bin\win32\Producer-SDK\Plugins\rn5a3260.dll
   Destination=%MAINDIR%\Producer-SDK\Plugins\rn5a3260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\win32trace.pyd
+  Source=..\..\bin\win32\win32trace.pyd
   Destination=%MAINDIR%\win32trace.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\win32api.pyd
+  Source=..\..\bin\win32\win32api.pyd
   Destination=%MAINDIR%\win32api.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Scintilla.DLL
+  Source=..\..\bin\win32\Scintilla.DLL
   Destination=%MAINDIR%\Scintilla.DLL
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\rmbe3260.dll
+  Source=..\..\bin\win32\rmbe3260.dll
   Destination=%MAINDIR%\rmbe3260.dll
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\pngu3266.dll
+  Source=..\..\bin\win32\pngu3266.dll
   Destination=%MAINDIR%\pngu3266.dll
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\pncrt.dll
+  Source=..\..\bin\win32\pncrt.dll
   Destination=%MAINDIR%\pncrt.dll
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\imgop.pyd
+  Source=..\..\bin\win32\imgop.pyd
   Destination=%MAINDIR%\imgop.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\imgjpeg.pyd
+  Source=..\..\bin\win32\imgjpeg.pyd
   Destination=%MAINDIR%\imgjpeg.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\imgformat.pyd
+  Source=..\..\bin\win32\imgformat.pyd
   Destination=%MAINDIR%\imgformat.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\imgcolormap.pyd
+  Source=..\..\bin\win32\imgcolormap.pyd
   Destination=%MAINDIR%\imgcolormap.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\prefetch.tiff
+  Source=..\..\GRiNS-Icons\prefetch.tiff
   Destination=%MAINDIR%\GRiNS-Icons\prefetch.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\dropbox.tiff
+  Source=..\..\GRiNS-Icons\dropbox.tiff
   Destination=%MAINDIR%\GRiNS-Icons\dropbox.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\animate.tiff
+  Source=..\..\GRiNS-Icons\animate.tiff
   Destination=%MAINDIR%\GRiNS-Icons\animate.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Codecs\tokr3260.dll
+  Source=..\..\bin\win32\Producer-SDK\Codecs\tokr3260.dll
   Destination=%MAINDIR%\Producer-SDK\Codecs\tokr3260.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\wmfapi.pyd
+  Source=..\..\bin\win32\wmfapi.pyd
   Destination=%MAINDIR%\wmfapi.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\ddraw.pyd
+  Source=..\..\bin\win32\ddraw.pyd
   Destination=%MAINDIR%\ddraw.pyd
   Flags=0000000010000010
 end
@@ -2047,107 +2047,107 @@ item: Install File
   Flags=0001001010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\_socket.pyd
+  Source=..\..\bin\win32\_socket.pyd
   Destination=%MAINDIR%\_socket.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\PyWinTypes.dll
+  Source=..\..\bin\win32\PyWinTypes.dll
   Destination=%MAINDIR%\PyWinTypes.dll
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\python16.dll
+  Source=..\..\bin\win32\python16.dll
   Destination=%MAINDIR%\python16.dll
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\gear32sd.pyd
+  Source=..\..\bin\win32\gear32sd.pyd
   Destination=%MAINDIR%\gear32sd.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\RealVideo.tiff
+  Source=..\..\GRiNS-Icons\RealVideo.tiff
   Destination=%MAINDIR%\GRiNS-Icons\RealVideo.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\RealAudio.tiff
+  Source=..\..\GRiNS-Icons\RealAudio.tiff
   Destination=%MAINDIR%\GRiNS-Icons\RealAudio.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\video.tiff
+  Source=..\..\GRiNS-Icons\video.tiff
   Destination=%MAINDIR%\GRiNS-Icons\video.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\text.tiff
+  Source=..\..\GRiNS-Icons\text.tiff
   Destination=%MAINDIR%\GRiNS-Icons\text.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\sound.tiff
+  Source=..\..\GRiNS-Icons\sound.tiff
   Destination=%MAINDIR%\GRiNS-Icons\sound.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\html.tiff
+  Source=..\..\GRiNS-Icons\html.tiff
   Destination=%MAINDIR%\GRiNS-Icons\html.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\image.tiff
+  Source=..\..\GRiNS-Icons\image.tiff
   Destination=%MAINDIR%\GRiNS-Icons\image.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\layout.tiff
+  Source=..\..\GRiNS-Icons\layout.tiff
   Destination=%MAINDIR%\GRiNS-Icons\layout.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\null.tiff
+  Source=..\..\GRiNS-Icons\null.tiff
   Destination=%MAINDIR%\GRiNS-Icons\null.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\RealPix.tiff
+  Source=..\..\GRiNS-Icons\RealPix.tiff
   Destination=%MAINDIR%\GRiNS-Icons\RealPix.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\GRiNS-Icons\RealText.tiff
+  Source=..\..\GRiNS-Icons\RealText.tiff
   Destination=%MAINDIR%\GRiNS-Icons\RealText.tiff
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\win32ui.pyd
+  Source=..\..\bin\win32\win32ui.pyd
   Destination=%MAINDIR%\win32ui.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\GRiNSRes.dll
+  Source=..\..\bin\win32\GRiNSRes.dll
   Destination=%MAINDIR%\GRiNSRes.dll
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Gear32sd.dll
+  Source=..\..\bin\win32\Gear32sd.dll
   Destination=%MAINDIR%\Gear32sd.dll
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\rma.pyd
+  Source=..\..\bin\win32\rma.pyd
   Destination=%MAINDIR%\rma.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\producer.pyd
+  Source=..\..\bin\win32\producer.pyd
   Destination=%MAINDIR%\producer.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\dshow.pyd
+  Source=..\..\bin\win32\dshow.pyd
   Destination=%MAINDIR%\dshow.pyd
   Flags=0000000010000010
 end
