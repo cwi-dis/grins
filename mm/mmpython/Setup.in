@@ -1,22 +1,18 @@
+XDIR=		$(srcdir)/../python/Extensions/X11
+
 # Irix 5.X version, with support both for GL and X.
-BASEDIR=	$(srcdir)/../python/Extensions/X11
-BASELIB=	$(BASEDIR)/irix5/lib.a
-BASESETUP=	$(BASEDIR)/irix5/Setup
 
 mm mmmodule.o -DMM_DEBUG
 
-moviechannel moviechannelmodule.o -DMM_DEBUG -DUSE_CL -DUSE_XM -DUSE_GL -I$(BASEDIR)
-mpegchannel mpegchannelmodule.o -DMM_DEBUG -DUSE_CL -DUSE_XM -DUSE_GL -I$(BASEDIR)
-soundchannel soundchannelmodule.o -DMM_DEBUG
+moviechannel moviechannelmodule.o -DMM_DEBUG -DUSE_CL -DUSE_XM -DUSE_GL -I$(XDIR) -lcl
+mpegchannel mpegchannelmodule.o -DMM_DEBUG -DUSE_CL -DUSE_XM -DUSE_GL -I$(XDIR) -lcl
+soundchannel soundchannelmodule.o -DMM_DEBUG -laudio -lawareaudio
 #nullchannel nullchannelmodule.o -DMM_DEBUG
 #imagechannel imagechannelmodule.o -DMM_DEBUG
 
 # Solaris 2.3 (SunOS 5.X) version, with support both for GL and X
-# BASEDIR=	$(srcdir)../python/Extensions/X11
-# BASELIB=	$(BASEDIR)/sunos5/lib.a
-# BASESETUP=	$(BASEDIR)/sunos5/Setup
 # 
 # mm mmmodule.o -DMM_DEBUG
 # 
-# moviechannel moviechannelmodule.o -DMM_DEBUG -DUSE_XM -DUSE_GL -I$(BASEDIR) -I/opt/SUNWmotif/include -I/usr/openwin/include -I/opt/NPGL/include -I/opt/SUNWits/Graphics-sw/xgl-3.0/include -DSOLARIS
+# moviechannel moviechannelmodule.o -DMM_DEBUG -DUSE_XM -DUSE_GL -I$(XDIR) -I/opt/SUNWmotif/include -I/usr/openwin/include -I/opt/NPGL/include -I/opt/SUNWits/Graphics-sw/xgl-3.0/include -DSOLARIS
 # soundchannel soundchannelmodule.o -DMM_DEBUG -I/usr/demo/SOUND/include -L/usr/demo/SOUND/lib -laudio

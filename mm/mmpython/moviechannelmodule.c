@@ -65,7 +65,7 @@ struct movie_data {
 	long m_offset;		/* offset in file before we go seeking */
 	void *m_frame;		/* one frame */
 	void *m_bframe;		/* one frame, converted to big format */
-	int m_size;		/* size of frame */
+	int m_size;		/* size of input frame */
 	long m_bgcolor;		/* background color for window */
 #ifdef USE_GL
 	int m_bgindex;		/* colormap index for background color */
@@ -74,6 +74,8 @@ struct movie_data {
 	CL_Handle m_decomp;	/* decompressor for compressed movie */
 	object *m_comphdr;	/* header info for compressed movie */
 #endif
+	int m_planes;		/* depth of the window in bits per pixel */
+	int m_depth;		/* depth of the window in bytes per pixel */
 };
 struct movie {
 	int m_width, m_height;	/* width and height of window */
@@ -92,10 +94,6 @@ struct movie {
 
 #define PRIV	((struct movie *) self->mm_private)
 
-#ifdef sun
-#define CONVERT_32
-#endif
-
 #ifdef USE_GL
 static char graphics_version[12]; /* gversion() output */
 static int is_entry_indigo;	/* true iff we run on an Entry Indigo */
@@ -105,10 +103,9 @@ static int colors_saved;	/* whether we've already saved the colors */
 static int first_index;		/* used for restoring the colormap */
 static type_lock gl_lock;	/* interlock of window system */
 extern type_lock getlocklock PROTO((object *));
-#ifdef CONVERT_32
-static unsigned long cv_8_to_32[256];
-#endif
 #endif /* USE_GL */
+
+static unsigned long cv_8_to_32[256];
 
 static int nplaying;		/* number of instances playing */
 
@@ -177,6 +174,13 @@ movie_init(self)
 		dprintf(("movie_init(%lx): gl_lock = %lx\n",
 			 (long) self, (long) gl_lock));
 #endif
+#ifdef sun
+		PRIV->m_arm.m_planes = 24;
+		PRIV->m_arm.m_depth = 4;
+#else
+		PRIV->m_arm.m_planes = 8;
+		PRIV->m_arm.m_depth = 1;
+#endif
 	}
 #endif /* USE_GL */
 #ifdef USE_XM
@@ -197,10 +201,24 @@ movie_init(self)
 			goto error_return;
 		}
 		v = dictlookup(self->mm_attrdict, "visual");
-		if (v && is_visualobject(v))
-			PRIV->m_visual = getvisualinfovalue(v)->visual;
-		else {
+		if (v && is_visualobject(v)) {
+			XVisualInfo *vptr = getvisualinfovalue(v);
+			PRIV->m_visual = vptr->visual;
+			PRIV->m_arm.m_planes = vptr->depth;
+		} else {
 			ERROR(movie_init, RuntimeError, "no visual specified");
+			goto error_return;
+		}
+		switch (PRIV->m_arm.m_planes) {
+		case 8:
+			PRIV->m_arm.m_depth = 1;
+			break;
+		case 24:
+			PRIV->m_arm.m_depth = 4;
+			break;
+		default:
+			ERROR(movie_init, RuntimeError,
+			      "unsupported visual depth");
 			goto error_return;
 		}
 	}
@@ -222,6 +240,8 @@ movie_init(self)
 	PRIV->m_play.m_comphdr = NULL;
 	PRIV->m_arm.m_comphdr = NULL;
 #endif
+	PRIV->m_play.m_planes = PRIV->m_arm.m_planes;
+	PRIV->m_play.m_depth = PRIV->m_arm.m_depth;
 	return 1;
 
  error_return:
@@ -446,18 +466,25 @@ movie_arm(self, file, delay, duration, attrdict, anchorlist)
 			free(PRIV->m_arm.m_bframe);
 			PRIV->m_arm.m_bframe = NULL;
 		}
+		if (PRIV->m_arm.m_frame) {
+			free(PRIV->m_arm.m_frame);
+			PRIV->m_arm.m_frame = NULL;
+		}
 		PRIV->m_arm.m_size = PRIV->m_arm.m_width * PRIV->m_arm.m_height;
-		PRIV->m_arm.m_bframe = malloc(PRIV->m_arm.m_size);
+		PRIV->m_arm.m_bframe = malloc(PRIV->m_arm.m_size * PRIV->m_arm.m_depth);
 		if (PRIV->m_arm.m_bframe == NULL) {
 			ERROR(movie_arm, RuntimeError, "malloc failed");
 			return 0;
 		}
 		PRIV->m_arm.m_image = XCreateImage(XtDisplay(PRIV->m_widget),
 						   PRIV->m_visual,
-						   8, ZPixmap, 0,
+						   PRIV->m_arm.m_planes,
+						   ZPixmap, 0,
 						   PRIV->m_arm.m_bframe,
 						   PRIV->m_arm.m_width,
-						   PRIV->m_arm.m_height, 8, 0);
+						   PRIV->m_arm.m_height,
+						   PRIV->m_arm.m_depth * 8,
+						   PRIV->m_arm.m_width * PRIV->m_arm.m_depth);
 	}
 #endif /* USE_XM */
 	v = dictlookup(attrdict, "index");
@@ -547,14 +574,89 @@ movie_arm(self, file, delay, duration, attrdict, anchorlist)
 }
 
 static void
+movie_readframe(self, ptr, fd)
+	mmobject *self;
+	struct movie_data *ptr;
+	int fd;
+{
+	unsigned char *p;
+	unsigned long *lp;
+	int i;
+
+	switch (windowsystem) {
+#ifdef USE_XM
+	case WIN_X:
+#ifdef USE_CL
+		if (ptr->m_format == FORMAT_CL) {
+			if (ptr->m_frame == NULL) {
+				ptr->m_frame = malloc(ptr->m_size);
+				if (ptr->m_frame == NULL) {
+					dprintf(("movie_readframe: malloc failed\n"));
+					return;
+				}
+			}
+			if (read(fd, ptr->m_frame, ptr->m_size)
+			    != ptr->m_size)
+				dprintf(("movie_armer: read incorrect amount\n"));
+		} else
+#endif /* USE_CL */
+		{
+			/* read image upside down */
+			if (ptr->m_depth == 1)
+				p = (unsigned char *) ptr->m_bframe + ptr->m_size;
+			else {
+				if (ptr->m_frame == NULL) {
+					ptr->m_frame = malloc(ptr->m_size);
+					if (ptr->m_frame == NULL) {
+						dprintf(("movie_readframe: malloc failed\n"));
+						return;
+					}
+				}
+				p = (unsigned char *) ptr->m_frame + ptr->m_size;
+			}
+			for (i = ptr->m_height; i > 0; i--) {
+				p -= ptr->m_width;
+				read(fd, p, ptr->m_width);
+			}
+		}
+		break;
+#endif /* USE_XM */
+#ifdef USE_GL
+	case WIN_GL:
+		if (read(fd, ptr->m_frame, ptr->m_size)
+		    != ptr->m_size)
+			dprintf(("movie_armer: read incorrect amount\n"));
+		break;
+#endif /* USE_GL */
+	default:
+		abort();
+	}
+
+#ifdef USE_CL
+	if (ptr->m_format == FORMAT_CL) {
+		if (clDecompress(ptr->m_decomp, 1, ptr->m_size,
+				 ptr->m_frame, ptr->m_bframe)
+		    == FAILURE)
+			dprintf(("movie_armer: decompress failed"));
+	} else
+#endif /* USE_CL */
+	if (ptr->m_depth == 4 && ptr->m_format == FORMAT_RGB8) {
+		if (ptr->m_bframe == NULL)
+			ptr->m_bframe = malloc(ptr->m_size * ptr->m_depth);
+		p = (unsigned char *) ptr->m_frame;
+		lp = (unsigned long *) ptr->m_bframe;
+		for (i = ptr->m_size; i > 0; i--)
+			*lp++ = cv_8_to_32[*p++];
+	}
+}
+
+static void
 movie_armer(self)
 	mmobject *self;
 {
 	object *v, *t;
 	long offset;
 	int fd;
-	int i;
-	unsigned char *p;
 
 	denter(movie_armer);
 	if (PRIV->m_arm.m_frame) {
@@ -629,7 +731,10 @@ movie_armer(self)
 		switch (windowsystem) {
 #ifdef USE_XM
 		case WIN_X:
-			params[1] = CL_RGB332;
+			if (PRIV->m_arm.m_planes == 8)
+				params[1] = CL_RGB332;
+			else
+				params[1] = CL_RGBX;
 			params[3] = CL_TOP_DOWN;
 			break;
 #endif
@@ -637,6 +742,8 @@ movie_armer(self)
 		case WIN_GL:
 			params[1] = CL_RGBX;
 			params[3] = CL_BOTTOM_UP;
+			PRIV->m_arm.m_planes = 24;
+			PRIV->m_arm.m_depth = 8;
 			break;
 #endif
 		default:
@@ -666,60 +773,7 @@ movie_armer(self)
 	fd = fileno(getfilefile(PRIV->m_arm.m_f));
 	PRIV->m_arm.m_offset = lseek(fd, 0L, SEEK_CUR);
 	(void) lseek(fd, offset, SEEK_SET);
-	switch (windowsystem) {
-#ifdef USE_XM
-	case WIN_X:
-#ifdef USE_CL
-		if (PRIV->m_arm.m_format == FORMAT_CL) {
-			PRIV->m_arm.m_frame = malloc(PRIV->m_arm.m_size);
-			if (PRIV->m_arm.m_frame == NULL) {
-				dprintf(("movie_armer: malloc failed\n"));
-				return;
-			}
-			if (read(fd, PRIV->m_arm.m_frame, PRIV->m_arm.m_size)
-			    != PRIV->m_arm.m_size)
-				dprintf(("movie_armer: read incorrect amount\n"));
-		} else
-#endif /* USE_CL */
-		{
-			/* read image upside down */
-			p = (unsigned char *) PRIV->m_arm.m_bframe + PRIV->m_arm.m_size;
-			for (i = PRIV->m_arm.m_height; i > 0; i--) {
-				p -= PRIV->m_arm.m_width;
-				read(fd, p, PRIV->m_arm.m_width);
-			}
-		}
-		break;
-#endif /* USE_XM */
-#ifdef USE_GL
-	case WIN_GL:
-		if (read(fd, PRIV->m_arm.m_frame, PRIV->m_arm.m_size)
-		    != PRIV->m_arm.m_size)
-			dprintf(("movie_armer: read incorrect amount\n"));
-#ifdef CONVERT_32
-		if (PRIV->m_arm.m_format == FORMAT_RGB8) {
-			unsigned long *lp;
-			PRIV->m_arm.m_bframe = malloc(sizeof(long)*PRIV->m_arm.m_size);
-			p = (unsigned char *) PRIV->m_arm.m_frame;
-			lp = (unsigned long *) PRIV->m_arm.m_bframe;
-			for (i = PRIV->m_arm.m_size; i > 0; i--)
-				*lp++ = cv_8_to_32[*p++];
-		}
-#endif /* CONVERT_32 */
-		break;
-#endif /* USE_GL */
-	default:
-		abort();
-	}
-
-#ifdef USE_CL
-	if (PRIV->m_arm.m_format == FORMAT_CL) {
-		if (clDecompress(PRIV->m_arm.m_decomp, 1, PRIV->m_arm.m_size,
-				 PRIV->m_arm.m_frame, PRIV->m_arm.m_bframe)
-		    == FAILURE)
-			dprintf(("movie_armer: decompress failed"));
-	}
-#endif /* USE_CL */
+	movie_readframe(self, &PRIV->m_arm, fd);
 }
 
 static int
@@ -1024,52 +1078,7 @@ movie_player(self)
 			}
 			PRIV->m_play.m_size = size;
 		}
-		switch (windowsystem) {
-#ifdef USE_XM
-		case WIN_X:
-#ifdef USE_CL
-			if (PRIV->m_play.m_format == FORMAT_CL) {
-				if (read(fd, PRIV->m_play.m_frame, size)
-				    != PRIV->m_play.m_size)
-					dprintf((
-				"movie_player: read incorrect amount\n"));
-			} else
-#endif
-			{
-				p = (unsigned char *) PRIV->m_play.m_bframe + PRIV->m_play.m_size;
-				for (i = PRIV->m_play.m_height; i > 0; i--) {
-					p -= PRIV->m_play.m_width;
-					read(fd, p, PRIV->m_play.m_width);
-				}
-			}
-			break;
-#endif /* USE_XM */
-#ifdef USE_GL
-		case WIN_GL:
-			if (read(fd, PRIV->m_play.m_frame, size) != size)
-				dprintf((
-				"movie_player: read incorrect amount\n"));
-#ifdef CONVERT_32
-			if (PRIV->m_play.m_format == FORMAT_RGB8) {
-				unsigned long *lp;
-				p = (unsigned char *) PRIV->m_play.m_frame;
-				lp = (unsigned long *) PRIV->m_play.m_bframe;
-				for (i = PRIV->m_play.m_size; i > 0; i--)
-					*lp++ = cv_8_to_32[*p++];
-			}
-#endif
-			break;
-#endif /* USE_GL */
-		default:
-			abort();
-		}
-#ifdef USE_CL
-		if (PRIV->m_play.m_format == FORMAT_CL) {
-			(void) clDecompress(PRIV->m_play.m_decomp, 1, size,
-					    PRIV->m_play.m_frame,
-					    PRIV->m_play.m_bframe);
-		}
-#endif
+		movie_readframe(self, &PRIV->m_play, fd);
 		do {
 			gettimeofday(&tm, NULL);
 			td = (tm.tv_sec - tm0.tv_sec) * 1000 +
@@ -1395,7 +1404,6 @@ initmoviechannel()
 #endif
 	dprintf(("initmoviechannel\n"));
 	(void) initmodule("moviechannel", moviechannel_methods);
-#if defined(USE_GL) && defined(CONVERT_32)
 	for (r = 0; r < 8; r++) {
 		int R = (int) ((double) r / 7.0 * 255.0);
 		for (g = 0; g < 8; g++) {
@@ -1407,5 +1415,4 @@ initmoviechannel()
 			}
 		}
 	}
-#endif
 }

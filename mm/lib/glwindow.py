@@ -153,8 +153,7 @@ from DEVICE import WINSHUT, WINQUIT, MOUSEX, MOUSEY
 
 # Locked on entry, locked on return.
 def dispatch(dev, val):
-	import windowinterface, EVENTS
-	global focuswindow, focuswid
+	import windowinterface
 ##	print 'dispatch:', `dev,val` #DBG
 	if GLLock.gl_lock:
 ##		print 'release'
@@ -166,7 +165,10 @@ def dispatch(dev, val):
 ##		print 'dispatch now:', event #DBG
 ##	print 're-acquire'
 	GLLock.gl_lock.acquire()
-##	print `dummy`
+##	handle_event(dev, val)
+
+def handle_event(dev, val):
+	global focuswindow, focuswid
 	if dev == REDRAW:
 		# Ignore events for unregistered windows
 		key = `val`
