@@ -385,6 +385,14 @@ class EditMgr:
 			      'name already in use in settransitionname'
 		self.addstep('settransitionname', name, newname)
 		self.context.settransitionname(name, newname)
+		
+	def settransitionvalue(self, name, key, value):
+		if not self.context.transitions.has_key(name):
+			raise MMExc.AssertError, \
+			      'unknown transition name in settransitionname'
+		dict = self.context.transitions[name]
+		dict[key] = value
+		self.addstep('settransitionvalue', name, key, value)
 
 ##	#
 ##	# Style operations
