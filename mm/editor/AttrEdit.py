@@ -1932,7 +1932,7 @@ class CssPosAttrEditorField(AttrEditorField):
 		elif type(value) == type(0):
 			return `value`
 		elif type(value) == type(1.0):
-			val = `value*100`+'%'
+			val = fmtfloat(value*100,prec=2)+'%'
 			return val
 		else:
 			print 'unknown value ',value
