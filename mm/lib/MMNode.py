@@ -4913,7 +4913,7 @@ class MMNode(MMTreeElement):
 			refnode = arc.refnode()
 			if refnode is None:
 				continue
-			if refnode.GetRoot() is not self.GetRoot():
+			if refnode.GetSchedRoot() is not self.GetSchedRoot():
 				# refnode is not part of the document
 				# (it could be on the clip board)
 				continue
