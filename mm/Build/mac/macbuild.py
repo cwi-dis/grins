@@ -39,23 +39,29 @@ DIALOG_ID=512
 I_OK=1
 I_CANCEL=2
 
-I_CMIF_FREEZE=4
-I_CMIF_BUILD=5
+I_G2PRO_FREEZE=4
+I_G2PRO_BUILD=5
 
-I_LITE_FREEZE=7
-I_LITE_BUILD=8
+I_G2LITE_FREEZE=7
+I_G2LITE_BUILD=8
 
-I_GRINS_FREEZE=10
-I_GRINS_BUILD=11
+I_PLAYER_FREEZE=10
+I_PLAYER_BUILD=11
 
-N_BUTTONS=12			# Last button plus one
+I_SMILPRO_FREEZE=13
+I_SMILPRO_BUILD=14
+
+I_QTPRO_FREEZE=16
+I_QTPRO_BUILD=17
+
+N_BUTTONS=18			# Last button plus one
 
 #
 # Names of the various files/folders
 #
-class GRINS:
-	FREEZE_I = I_GRINS_FREEZE
-	BUILD_I = I_GRINS_BUILD
+class PLAYER:
+	FREEZE_I = I_PLAYER_FREEZE
+	BUILD_I = I_PLAYER_BUILD
 	
 	SRC="macplayer.py"
 	DIR="build.player"
@@ -63,27 +69,47 @@ class GRINS:
 	#TARGET="Player FAT"
 	TARGET="Player PPC"
 
-class CMIFED:
-	FREEZE_I = I_CMIF_FREEZE
-	BUILD_I = I_CMIF_BUILD
+class G2PRO:
+	FREEZE_I = I_G2PRO_FREEZE
+	BUILD_I = I_G2PRO_BUILD
 	
-	SRC="maceditor.py"
-	DIR="build.editor"
-	PROJECT="editor.prj"
+	SRC="macg2pro.py"
+	DIR="build.g2pro"
+	PROJECT="g2pro.prj"
 	#TARGET="Editor FAT"
 	TARGET="Editor PPC"
 
-class LITE:
-	FREEZE_I = I_LITE_FREEZE
-	BUILD_I = I_LITE_BUILD
+class G2LITE:
+	FREEZE_I = I_G2LITE_FREEZE
+	BUILD_I = I_G2LITE_BUILD
 	
-	SRC="maclite.py"
-	DIR="build.lite"
-	PROJECT="lite.prj"
+	SRC="macg2lite.py"
+	DIR="build.g2lite"
+	PROJECT="g2lite.prj"
 	#TARGET="Editor Lite FAT"
 	TARGET="Editor Lite PPC"
 
-ALL=(GRINS, CMIFED, LITE)
+class SMILPRO:
+	FREEZE_I = I_SMILPRO_FREEZE
+	BUILD_I = I_SMILPRO_BUILD
+	
+	SRC="macsmilpro.py"
+	DIR="build.smilpro"
+	PROJECT="smilpro.prj"
+	#TARGET="Editor FAT"
+	TARGET="Editor PPC"
+
+class QTPRO:
+	FREEZE_I = I_QTPRO_FREEZE
+	BUILD_I = I_QTPRO_BUILD
+	
+	SRC="macqtpro.py"
+	DIR="build.qtpro"
+	PROJECT="qtpro.prj"
+	#TARGET="Editor FAT"
+	TARGET="Editor PPC"
+
+ALL=(G2PRO, G2LITE, SMILPRO, QTPRO, PLAYER)
 
 #
 # Names of the Attrdefs input file and module.
@@ -110,35 +136,10 @@ MWERKS_CREATOR="CWIE"
 
 def main():
 	results = dodialog()
-	do_grins_freeze = (I_GRINS_FREEZE in results)
-	do_grins_build = (I_GRINS_BUILD in results)
-	do_cmif_freeze = (I_CMIF_FREEZE in results)
-	do_cmif_build = (I_CMIF_BUILD in results)
-	do_lite_freeze = (I_CMIF_FREEZE in results)
-	do_lite_build = (I_CMIF_BUILD in results)
-##	print results
-##	print do_grins_freeze, do_grins_build, do_cmif_freeze, do_cmif_build, do_rn_support
 	if not results:
 		sys.exit(0)
 
 	workdir = os.path.split(sys.argv[0])[0]
-##	print "workdir", workdir, sys.argv
-
-##	grins_dir = myjoin(workdir, GRINS_DIR)
-##	if do_rn_support:
-##		grins_py = myjoin(workdir, GRINS_RN_SRC)
-##		grins_prj = myjoin(grins_dir, GRINS_RN_PROJECT)
-##	else:
-##		grins_py = myjoin(workdir, GRINS_SRC)
-##		grins_prj = myjoin(grins_dir, GRINS_PROJECT)
-##
-##	cmifed_dir = myjoin(workdir, CMIFED_DIR)
-##	if do_rn_support:
-##		cmifed_py = myjoin(workdir, CMIFED_RN_SRC)
-##		cmifed_prj = myjoin(cmifed_dir, CMIFED_RN_PROJECT)
-##	else:
-##		cmifed_py = myjoin(workdir, CMIFED_SRC)
-##		cmifed_prj = myjoin(cmifed_dir, CMIFED_PROJECT)
 	
 	checkattrdefs(myjoin(workdir, ATTRDEFS_INPUT),
 				  myjoin(workdir, ATTRDEFS_OUTPUT))
