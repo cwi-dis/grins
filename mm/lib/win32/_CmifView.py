@@ -255,11 +255,13 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 	def pop(self):
 		# Do nothing
 		# Improperly used by core system
-		return
+		pass
+
+	# Bring window in front of peers
+	def activate(self):
 		self._parent.ActivateFrame()
 		self._parent.MDIActivate(self.GetParent())
-		#self.InvalidateRect()
-
+		
 	# Send window back of the peers
 	def push(self):
 		pass
@@ -369,10 +371,6 @@ class _CmifPlayerView(_CmifView):
 		self._canclose=0
 		self._resize_tree()
 		self._canclose=1
-
-		# Check activation !!!!!!!!!!!!!!!!!
-		# Since we need this the activation mechanism is wrong!
-		# self._parent.MDIActivate(self.GetParent())
 
 
 #################################################
@@ -555,7 +553,7 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 	
 	# Bring the subwindow infront of windows with the same z	
 	def pop(self):
-		#self._topwindow.pop()
+		self._topwindow.activate()
 		parent = self._parent
 		# put self in front of all siblings with equal or lower z
 		if self is not parent._subwindows[0]:
