@@ -137,7 +137,7 @@ MENUBAR=(
 
 	('&Tools', (
 		(ENTRY, 'Show &info...', 'I', INFO),
-		(ENTRY, 'Show at&tributes...', 'A', ATTRIBUTES),
+		(ENTRY, 'Show &properties...', 'A', ATTRIBUTES),
 		(ENTRY, 'Show &anchors...', 'T', ANCHORS),
 		(ENTRY, 'Edit &content...', 'E', CONTENT),
 		(SEP,),

@@ -21,7 +21,7 @@ The constant part of the dialog consists of the following items:
   selection, a callback must be called.  Also, it must be possible to
   set the current selection under program control.
 - Buttons, each with their own callback: `Cancel', `Restore', `Apply',
-  `OK', `Node attr...', `Channel attr...', and `Anchors...'.
+  `OK', `Node properties...', `Channel properties...', and `Anchors...'.
 
 The three variable parts are known as external, immediate, and
 interior.  A description of each follows.
