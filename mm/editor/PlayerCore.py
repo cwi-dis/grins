@@ -115,7 +115,7 @@ class PlayerCore(Selecter):
 			ch.set_visible(1)
 			self.setchannel(ch.name, 1)
 		return ch
-	#	
+	#
 	def defanchor(self, node, anchor, cb):
 		ch = self.anchorinit(node)
 		if ch is None:
@@ -130,7 +130,7 @@ class PlayerCore(Selecter):
 		if ch is None:
 			return 1	# Cannot set on internal nodes
 		return ch.updatefixedanchors(node)
-			
+
 	#
 	def pause(self, wantpause):
 		if self.pausing == wantpause:

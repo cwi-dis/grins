@@ -205,7 +205,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			self.toplevel.channelview.globalsetfocus(node)
 		else:
 			windowinterface.showmessage('That slot is not active')
-		
+
 	def dummy_callback(self, *dummy):
 		pass
 	#
@@ -230,7 +230,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		else:
 			state = PLAYING
 		self.setstate(state)
-		
+
 	def showtime(self):
 		pass
 #		if self.scheduler.getrate():
@@ -268,7 +268,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			 'Crash CMIF',
 			 'Dump scheduler data',
 			 ])
-			
+
 	def makemenu(self):
 		channels = []
 		for name in self.channelnames:
