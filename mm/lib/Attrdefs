@@ -401,6 +401,9 @@
 (system_component (list (string)) () 'System component' default
 	'Play node only if the components are supported' raw (smil2))
 
+(showhidden (bool) 0 'Show hidden custom tests' bool3
+	'Show hidden custom tests' raw (smil2))
+
 # RealPix attributes
 (aspect (bool) 1 'Keep aspect ratio' default
 	'Keep aspect ratio of image' inherited (g2))
