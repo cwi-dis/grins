@@ -11,10 +11,43 @@ import fm
 from Channel import Channel
 from ChannelWindow import ChannelWindow
 
+# find last occurence of space in string such that the size (according to some
+# size calculating function) of the initial substring is smaller than a given
+# number.  If there is no such substrings the first space in the string is
+# returned (if any) otherwise the length of the string
+nofit_error = 'no fitting substring'
+
+def fitstring(s, sizefunc, length):
+	l = len(s)
+	if sizefunc(s) <= length:
+		return l
+	p = -1
+	# would prefer a built-in index function to find the first occurrence
+	# of a space character
+	for i in range(l):
+		if s[i:i+1] = ' ':
+			if sizefunc(s[0:i]) <= length:
+				p = i
+			else:
+				l = i
+				break
+	if p >= 0:
+		return p
+	return l
+
+# In this case the string *must* fit.
+def mustfitstring(s, sizefunc, length):
+	l = fitstring(s, sizefunc, length)
+	if sizefunc(s[:l]) <= length:
+		return l
+	raise nofit_error, (s, length)
+
+MASK = 20
+
 class TextWindow() = ChannelWindow():
 	#
 	def init(self, (title, attrdict)):
-		self.text = '' # Initially, display no text
+		self.text = [] # Initially, display no text
 		return ChannelWindow.init(self, (title, attrdict))
 	#
 	def show(self):
@@ -42,17 +75,37 @@ class TextWindow() = ChannelWindow():
 		self.avgcharwidth, self.baseline, self.fontheight = \
 			getfontparams(self.font)
 	#
+	# settext resets on a new screen
 	def settext(self, text):
-		self.text = text
+		# comment these two out if you want to see addtext feature
+		self.text = [text]
+		self.redraw()
+		# to show addtext feature
+		#self.addtext(text)
+	#
+	# addtext adds text to a screen with possible scroll
+	def addtext(self, text):
+		self.text.append(text)
 		self.redraw()
 	#
+	# while addtext adds the additional text on a new line, appendtext
+	# continues on the same line
+	def appendtext(self, text):
+		l = len(self.text) - 1
+		if l >= 0:
+			self.text[l] = self.text[l] + ' ' + text
+		else:
+			self.text = [text]
+		self.redraw()
+	#
+	# a hack.  currently redraw recalculates everything.  when window size
+	# is not changed it sould only calculate possibly added text.
 	def redraw(self):
 		if self.wid = 0: return
 		gl.winset(self.wid)
 		gl.reshapeviewport()
 		x0, x1, y0, y1 = gl.getviewport()
 		width, height = x1-x0, y1-y0
-		MASK = 20
 		gl.viewport(x0-MASK, x1+MASK, y0-MASK, y1+MASK)
 		gl.scrmask(x0, x1, y0, y1)
 		gl.ortho2(-MASK, width+MASK, height+MASK, -MASK)
@@ -61,10 +114,31 @@ class TextWindow() = ChannelWindow():
 		gl.clear()
 		#
 		gl.RGBcolor(0, 0, 0)
-		gl.cmov2(0, self.baseline)
 		self.font.setfont()
-		fm.prstr(self.text)
 	#
+		curbase = self.baseline
+		margin = int(self.avgcharwidth / 2)
+		fmaxlines = height / self.fontheight
+		maxlines = int(fmaxlines)
+		if maxlines > fmaxlines:
+			maxlines = maxlines - 1
+		width = width - margin * 2
+		textlist = []
+		for toset in self.text:
+			while toset <> '':
+				ind = fitstring(toset, self.font.getstrwidth, \
+					width)
+				textlist.append(toset[:ind])
+				toset = toset[ind+1:]
+		lastline = len(textlist)
+		if lastline < maxlines:
+			firstline = 0
+		else:
+			firstline = lastline - maxlines
+		for str in textlist[firstline:lastline]:
+			gl.cmov2(margin,curbase)
+			fm.prstr(str)
+			curbase = curbase + self.fontheight
 
 
 # XXX Make the text channel class a derived class from TextWindow?!
