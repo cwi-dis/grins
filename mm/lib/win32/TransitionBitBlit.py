@@ -34,17 +34,23 @@ class BlitterClass:
 	def copyBits(self, src, dst, rcsrc, rcdst, flags=0, rgn=None):
 		if not self.isempty(rcsrc) and not self.isempty(rcdst):
 			if rgn==None:
-				flags = flags | ddraw.DDBLT_WAIT 	
-				dst.Blt(rcdst, src, rcsrc, flags)
+				flags = flags | ddraw.DDBLT_WAIT 
+				try:	
+					dst.Blt(rcdst, src, rcsrc, flags)
+				except ddraw.error, arg:
+					print arg
 			else:
-				dstDC = self.getDC(dst)	
-				srcDC = self.getDC(src)	
-				dstDC.SelectClipRgn(rgn)			
-				ls, ts, rs, bs = rcsrc
-				ld, td, rd, bd = rcdst
-				dstDC.BitBlt((ld,td),(rd-ld,bd-td),srcDC,(ls, ts), win32con.SRCCOPY)
-				self.releaseDC(dst,dstDC)
-				self.releaseDC(src,srcDC)
+				try:
+					dstDC = self.getDC(dst)	
+					srcDC = self.getDC(src)	
+					dstDC.SelectClipRgn(rgn)			
+					ls, ts, rs, bs = rcsrc
+					ld, td, rd, bd = rcdst
+					dstDC.BitBlt((ld,td),(rd-ld,bd-td),srcDC,(ls, ts), win32con.SRCCOPY)
+					self.releaseDC(dst,dstDC)
+					self.releaseDC(src,srcDC)
+				except ddraw.error, arg:
+					print arg
 
 	def getDC(self, dds):
 		hdc = dds.GetDC()
@@ -141,6 +147,9 @@ class FadeBlitterClass(BlitterClass):
 	"""Parameter is float in range 0..1, use this as blend value"""
 	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
 		value = parameters
-		dst.BltBlend(src2, src1, value)			
+		try:
+			dst.BltBlend(src2, src1, value)
+		except ddraw.error, arg:
+			print arg
 
 
