@@ -493,18 +493,21 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		displist.fgcolor(CTEXTCOLOR)
 		displist.usefont(f_title)
 		l,t,r,b = self.pos_abs
-		b = t + TITLESIZE + VEDGSIZE
+		t = t + VEDGSIZE
+		b = t + TITLESIZE
+		l = l + HEDGSIZE
+		r = r - HEDGSIZE
 		if self.iconbox is not None:
-			self.iconbox.moveto((l+HEDGSIZE,t+VEDGSIZE,r,b))
+			self.iconbox.moveto((l,t,r,b))
 			iw, ih = self.iconbox.get_minsize()
 			l = l + iw
 			if l <= r:
 				self.iconbox.draw(displist)
 		if l < r and self.name and (self.iconbox is None or not self.iconbox.vertical):
-			x, y = l, t+displist.baselinePXL()+2
+			x, y = l, t+displist.baselinePXL()
 			displist.setpos(x, y)
 			namewidth = displist.strsizePXL(self.name)[0]
-			liney = y-displist.baselinePXL()/2
+##			liney = y-displist.baselinePXL()/2
 			r = r - HEDGSIZE
 			if namewidth <= r-l:
 				# name fits fully
