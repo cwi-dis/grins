@@ -2573,12 +2573,16 @@ class TermnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 		extras = ['LAST', 'FIRST']
 		if self.wrapper.context.attributes.get('project_boston', 0):
 			extras.append('ALL')
+			if self.wrapper.node.GetType() in leaftypes:
+				extras.append('MEDIA')
 		return extras + list
 
 	def getcurrent(self):
 		val = self.wrapper.getvalue(self.getname())
 		if val is None:
-			return self.getdefault()
+			if self.wrapper.node.GetType() in leaftypes:
+				return 'MEDIA'
+			return 'LAST'
 		return self.valuerepr(val)
 
 class ChanneltypeAttrEditorField(PopupAttrEditorFieldNoDefault):
