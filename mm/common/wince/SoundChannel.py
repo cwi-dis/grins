@@ -85,6 +85,7 @@ class AudioPlayer:
 		self._rdr = None
 		self._u = None
 		self._rest = ''
+		self.decoder = None
 
 		u = MMurl.urlopen(srcurl)
 		if u.headers.maintype != 'audio':
@@ -124,6 +125,7 @@ class AudioPlayer:
 			for hdr in self._wavhdrs:
 				hdr.UnprepareHeader(self._waveout)
 		del self._wavhdrs
+		self.decoder = None
 
 	def read_basic_audio(self, u, atype):
 		try:
@@ -179,8 +181,9 @@ class AudioPlayer:
 	def read_mp3_audio(self, u, atype):
 		# create mp3 decoder
 		try:
-			decoder = winmm.CreateMp3Decoder()
+			self.decoder = decoder = winmm.CreateMp3Decoder()
 		except winmm.error, msg:
+			self.decoder = None
 			raise error, 'CreateMp3Decoder() failed'
 
 		# size of buffer holding encoded data
@@ -234,8 +237,9 @@ class AudioPlayer:
 		self._rest = data		
 
 	def read_more_mp3_audio(self):
-		if self._waveout is None:
+		if self._waveout is None or self.decoder is None:
 			return
+		decoder = self.decoder
 		# size of buffer holding encoded data
 		decode_buf_size = AudioPlayer.decode_buf_size	
 
