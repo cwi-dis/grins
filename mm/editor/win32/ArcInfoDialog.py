@@ -24,6 +24,8 @@ This class represents the interface between the ArcInfo platform independent
 class and its implementation ArcInfoForm in lib/win32/ArcInfoForm.py which 
 implements the actual dialog.
 
+Note: Protection code added to every function since the core code assumes
+that the dialog is always open
 """
 
 __version__ = "$Id$"
@@ -57,6 +59,7 @@ class ArcInfoDialog:
 				'OK':(self.ok_callback, ()),
 			},
 		}
+		if not self.cview: return
 		view=self.cview.window
 		formid=adornments['form_id']
 		fs=view.getformserver()
@@ -64,7 +67,7 @@ class ArcInfoDialog:
 		w.do_init(title, srclist, srcinit, dstlist, dstinit, delay, adornments)
 		frame=view.getframe()
 		w.create(frame)
-		self.__window=w
+		self._window=w
 
 	#
 	# interface methods
@@ -72,11 +75,13 @@ class ArcInfoDialog:
 
 	def close(self):
 		"""Close the dialog and free resources."""
-		self.__window.close()
-		del self.__window
+		if hasattr(self,'_window') and self._window:
+			self._window.close()
+			self._window=None
 
 	def is_closed(self):
-		return not hasattr(self,'__window')
+		if not hasattr(self,'_window') or self._window==None: return 1
+		return not self._window.IsWindow()
 
 	def settitle(self, title):
 		"""Set (change) the title of the window.
@@ -84,7 +89,8 @@ class ArcInfoDialog:
 		Arguments (no defaults):
 		title -- string to be displayed as new window title.
 		"""
-		self.__window.settitle(title)
+		if hasattr(self,'_window') and self._window:
+			self._window.settitle(title)
 
 	# Interface to the source list.
 	def src_setpos(self, pos):
@@ -93,11 +99,13 @@ class ArcInfoDialog:
 		Arguments (no defaults):
 		pos -- 0 <= pos < len(srclist) -- the requested position
 		"""
-		self.__window.src_setpos( pos)
+		if hasattr(self,'_window') and self._window:
+			self._window.src_setpos( pos)
 
 	def src_getpos(self):
 		"""Return the current selection in the source list."""
-		return self.__window.src_getpos()
+		if not hasattr(self,'_window') or self._window==None: return 0
+		return self._window.src_getpos()
 
 	# Interface to the destination list.
 	def dst_setpos(self, pos):
@@ -106,11 +114,13 @@ class ArcInfoDialog:
 		Arguments (no defaults):
 		pos -- 0 <= pos < len(srclist) -- the requested position
 		"""
-		self.__window.dst_setpos(pos)
+		if hasattr(self,'_window') and self._window:
+			self._window.dst_setpos(pos)
 
 	def dst_getpos(self):
 		"""Return the current selection in the destination list."""
-		return self.__window.dst_getpos()
+		if not hasattr(self,'_window') or self._window==None: return 0
+		return self._window.dst_getpos()
 
 	# Interface to the delay value.
 	def delay_setvalue(self, delay):
@@ -120,12 +130,14 @@ class ArcInfoDialog:
 		delay -- 0.0 <= delay <= 100.0 -- the new value of the
 			delay
 		"""
-		self.__window.delay_setvalue(delay)
+		if hasattr(self,'_window') and self._window:
+			self._window.delay_setvalue(delay)
 
 	def delay_getvalue(self):
 		"""Return the current value of the delay."""
 		# return delay with an accuracy of 2 digits
-		return self.__window.delay_getvalue()
+		if not hasattr(self,'_window') or self._window==None: return 0.0
+		return self._window.delay_getvalue()
 
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from
