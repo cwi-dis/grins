@@ -7,13 +7,12 @@ CONSISTENT_TIME_MAPPING=0
 DEBUG=0
 
 class TimeMapper:
-	def __init__(self, realtime=0):
+	def __init__(self):
 		self.collecting = 1
 		self.dependencies = []
 		self.collisions = []
 		self.collisiondict = {}
 		self.minpos = {}
-		self.consistent_time = realtime
 		
 	def adddependency(self, t0, t1, minpixeldistance):
 		if not self.collecting:
@@ -28,7 +27,7 @@ class TimeMapper:
 		self.collisions.append((time, minpixeldistance))
 		self.collisiondict[time] = 0
 		
-	def calculate(self):
+	def calculate(self, realtime=0):
 		if not self.collecting:
 			raise Error, 'Calculate called while not collecting data'
 		self.collecting = 0
@@ -47,7 +46,7 @@ class TimeMapper:
 				self.collisiondict[time] = pixels
 		self.times = self.collisiondict.keys()
 		self.times.sort()
-		if self.consistent_time:
+		if realtime:
 			min_pixels_per_second = 0
 			for t1, t0, pixels in self.dependencies:
 				if t1 != t0 and pixels/(t1-t0) > min_pixels_per_second:
@@ -59,7 +58,7 @@ class TimeMapper:
 		prev_t = self.times[0]
 		for t in self.times:
 			if t != prev_t: # for times[0] don't add the dependency
-				if self.consistent_time:
+				if realtime:
 					self.dependencies.append((t, prev_t, (t-prev_t)*min_pixels_per_second))
 				else:
 					self.dependencies.append((t, prev_t, min_pixels_per_second))

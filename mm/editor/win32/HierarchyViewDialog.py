@@ -90,8 +90,6 @@ class HierarchyViewDialog(ViewDialog):
 		w = self.window
 		w.set_toggle(THUMBNAIL, self.thumbnails)
 		w.set_toggle(PLAYABLE, self.showplayability)
-		w.set_toggle(TIMESCALE, self.timescale == 'global')
-		w.set_toggle(LOCALTIMESCALE, self.timescale == 'focus')
 
 	def helpcall(self):
 		import Help
