@@ -239,7 +239,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					hasLayoutView2 = 1
 					self.layoutview2 = LayoutView2.LayoutView2(self)
 			else:
-		       		self.layoutview2 = None
+				self.layoutview2 = None
 
 		if features.CHANNEL_VIEW in features.feature_set:
 			import ChannelView
@@ -253,7 +253,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			#import LayoutView
 			#self.layoutview = LayoutView.LayoutView(self)
 
-	       	if features.USER_GROUPS in features.feature_set:
+		if features.USER_GROUPS in features.feature_set:
 			import UsergroupView
 			self.ugroupview = UsergroupView.UsergroupView(self)
 			

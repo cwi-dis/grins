@@ -156,8 +156,8 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.htmlw.SetValues(wh)
 
 	def do_arm(self, node, same=0):
-	        if not same:
-	        	try:
+		if not same:
+			try:
 				self.armed_str = self.getstring(node)
 			except Channel.error, arg:
 				self.armed_str = '<H1>Cannot Open</H1>\n'+arg+'\n<P>\n'

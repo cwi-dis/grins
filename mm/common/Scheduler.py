@@ -110,7 +110,7 @@ class SchedulerContext:
 		for cn in self.channelnames:
 			ch = self.parent.ui.getchannelbyname(cn)
 			if not ch:
-			        import windowinterface
+				import windowinterface
 				windowinterface.showmessage(
 				    'Channel does not exist: ' + cn)
 				return 0

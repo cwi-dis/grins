@@ -9,11 +9,11 @@ import windowinterface
 import MMAttrdefs
 from AnchorDefs import *
 try:
-    import VCR
-    import VcrIndex
+	import VCR
+	import VcrIndex
 except ImportError:
-    VCR=None
-    VcrIndex=None
+	VCR=None
+	VcrIndex=None
 
 [V_NONE, V_SPR, V_SB, V_READY, V_PLAYING, V_ERROR] = range(6)
 
