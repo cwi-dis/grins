@@ -65,6 +65,10 @@ class MMNodeContext:
 	def setbaseurl(self, baseurl):
 		if baseurl:
 			# delete everything after last slash
+			# first make sure there is a slash
+			# this fixes a problem if the base url is
+			# something like http://www.example.org
+			baseurl = MMurl.basejoin(baseurl, 'index.html')
 			i = string.rfind(baseurl, '/')
 			if i >= 0:
 				baseurl = baseurl[:i+1]
