@@ -883,7 +883,6 @@ class _Toplevel(_Event):
 	def _openwindow(self, x, y, w, h, title, units, resizable=1, extras=(0,0,0,0)):
 		"""Internal - Open window given xywh, title.
 		Returns window-id"""
-		print 'DBG TopLevel._openwindow', (x, y, w, h), units, 'extra', extras
 		extraw, extrah, minw, minh = extras
 		if w <= 0 or h <= 0:
 			units = UNIT_PXL
@@ -965,7 +964,6 @@ class _Toplevel(_Event):
 			defprocid = 0
 		else:
 			defprocid = 4
-		print 'DBG TopLevel._openwindow sizes', (x, y, x1, y1)
 		wid = Win.NewCWindow((x, y, x1, y1), title, 1, defprocid, -1, 1, 0 )
 		
 		return wid, w, h
