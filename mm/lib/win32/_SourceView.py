@@ -258,9 +258,6 @@ class _SourceView(GenView, docview.RichEditView):
 		self.__ok.attach_to_parent()
 		self.__apply.attach_to_parent()
 		self.__revert.attach_to_parent()
-		# disable the default wrap behavior
-		self.SetWordWrap(win32ui.CRichEditView_WrapNone)
-		self.WrapChanged()
 
 	# Called by the framework after the OS window has been created
 	def OnInitialUpdate(self):
@@ -270,8 +267,14 @@ class _SourceView(GenView, docview.RichEditView):
 		self.GetParent().HookNotify(self.onSelChanged, win32con.EN_SELCHANGE)	
 
 
+		# disable the default wrap behavior
+		self.SetWordWrap(win32ui.CRichEditView_WrapNone)
+		self.WrapChanged()
+
 		# we are now showing of course
 		self.__showing = 1
+
+		self.GetRichEditCtrl().settext(self.__text)
 
 		# set text and readonly flag
 		self.SetReadOnly(self.__readonly)
