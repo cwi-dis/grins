@@ -61,8 +61,8 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, '&Play\tCtrl+P', 'P', PLAY),
 		(FLAG_ALL, ENTRY, 'Pa&use\tCtrl+U', 'U', PAUSE),
 		(FLAG_ALL, ENTRY, '&Stop\tCtrl+H', 'H', STOP),
-		(FLAG_CMIF, SEP,),
-		(FLAG_CMIF, DYNAMICCASCADE, 'User &groups', USERGROUPS),
+		(FLAG_BOSTON|FLAG_CMIF, SEP,),
+		(FLAG_BOSTON, DYNAMICCASCADE, 'Custom &tests', USERGROUPS),
 		(FLAG_CMIF, DYNAMICCASCADE, 'Visible &channels', CHANNELS),
 		)),
 
