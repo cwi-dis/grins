@@ -19,8 +19,8 @@ appform={
 	'attr_edit':{'cmd':-1,'title':'Property Editor','id':'attr_edit','obj':None,'class':AttrEditForm,'freezesize':1},
 	}
 
-import settings
-if not settings.get('lightweight'):
+import features
+if not features.lightweight:
 ##	from NodeInfoForm import NodeInfoForm
 ##	from AnchorEditForm import AnchorEditForm
 	from ArcInfoForm import ArcInfoForm
