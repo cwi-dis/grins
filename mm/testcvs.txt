@@ -1,9 +1,0 @@
-This is a testfile, to see whether remote CVS works to Epsilon.
-
-Added a line.
-
-Added one more .... Epsilon!
-
-And Jack has added yet another line.
-
-New CVS Test from Apostolos/ Tuesday, August 25
