@@ -920,14 +920,21 @@ def getcalcmode(writer, node):
 		return None
 	elif tag=='animateMotion' and mode == 'paced':
 		return None
-	if mode == 'spline': # not smil-boston
-		return None
 	return mode
 
 def getattributename(writer, node):
 	attr = MMAttrdefs.getattr(node, 'attributeName')
 	return attr
 
+def getpath(writer, node):
+	attr = MMAttrdefs.getattr(node, 'path')
+	# strange but IE manages only spaces
+	# grins both spaces and commas
+	# so use spaces at least for now
+	attr = string.join(string.split(attr,','),' ')
+	return attr
+
+	
 #
 # Mapping from SMIL attrs to functions to get them. Strings can be
 # used as a shortcut for node.GetAttr
@@ -1013,7 +1020,7 @@ smil_attrs=[
 	("to", lambda writer, node:getstringattr(writer, node, "to")),
 	("by", lambda writer, node:getstringattr(writer, node, "by")),
 	("values", lambda writer, node:getstringattr(writer, node, "values")),
-	("path", lambda writer, node:getstringattr(writer, node, "path")),
+	("path", getpath),
 	("origin", lambda writer, node:getstringattr(writer, node, "origin")),
 	("accumulate", getaccumulate),
 	("additive", getadditive),
