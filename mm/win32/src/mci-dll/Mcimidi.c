@@ -1,5 +1,7 @@
 #include <windows.h>
 #include <mmsystem.h>
+
+#define BUILD_MCIDLL // Indicate we are building (rather than just using) this DLL.
 #include "mcidll.h"
 
 
