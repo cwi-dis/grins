@@ -32,8 +32,8 @@ def main():
 		CMIF = os.environ['CMIF']
 	else:
 		CMIF = '/ufs/guido/mm/demo'
-	sys.path.append(os.join(CMIF, 'mm4'))
-	sys.path.append(os.join(CMIF, 'lib'))
+	sys.path.append(os.path.join(CMIF, 'mm4'))
+	sys.path.append(os.path.join(CMIF, 'lib'))
 	#
 	import MMExc
 	import TopLevel
