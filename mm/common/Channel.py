@@ -1116,8 +1116,6 @@ class _ChannelThread:
 		if self.threads:
 			self.threads.close()
 			self.threads = None
-		self._player.toplevel.main.setmmcallback(self._deviceno & 0x3f,
-			  None)
 
 	def play(self, node):
 		if debug:
