@@ -113,8 +113,8 @@ else:
 # macfreeze: exclude cmifex
 # macfreeze: exclude readline
 # macfreeze: exclude CORBA.services
-# XXXX it should optionally do this: macfreeze: exclude staticlicense
-
+# macfreeze: optional rma
+# macfreeze: exclude NodeInfoHelper
 
 #
 # And here's the code for non-standalone version of the editor:
