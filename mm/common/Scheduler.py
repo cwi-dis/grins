@@ -455,14 +455,12 @@ class Scheduler(scheduler):
 				work = 1
 		if not self.ui.playing:
 			delay = 0
-			#print 'updatetimer: not playing' #DBG
-		elif self.paused and work:
+		elif not self.paused and work:
 			#
 			# We have SR actions to execute. Make the callback
 			# happen as soon as possible.
 			#
 			delay = 0.001
-			#print 'updatetimer: runnable events' #DBG
 		elif self.runqueues[PRIO_LO]:
 			#
 			# We are not running (paused!=0), but we can do some
@@ -484,13 +482,11 @@ class Scheduler(scheduler):
 				delay = 0.001
 			else:
 				self.ui.showtime()
-			#print 'updatetimer: timed events' #DBG
 		elif not self.FutureWork():
 			#
 			# No more events (and nothing runnable either).
 			# We're thru.
 			#
-			#print 'updatetimer: no more work' #DBG
 			self.ui.showtime()
 			self.stop_playing()
 			return
@@ -501,8 +497,7 @@ class Scheduler(scheduler):
 			#
 			delay = 1
 			self.ui.showtime()
-			#print 'updatetimer: idle' #DBG
-		#print 'updatetimer: delay=', delay
+##		print 'updatetimer: delay=', delay #DBG
 		self.ui.set_timer(delay)
 	#
 	# Incoming events from channels, or the start event.
@@ -514,7 +509,7 @@ class Scheduler(scheduler):
 		if len(ev) == 1:
 			ev = ev[0]
 		sctx, ev = ev
-##		print 'event:',SR.ev2string(ev)
+##		print 'event:',SR.ev2string(ev) #DBG
 		
 		if ev[0] == SR.PLAY_DONE:
 			ev[1].set_armedmode(ARM_WAITSTOP)
@@ -583,7 +578,7 @@ class Scheduler(scheduler):
 	def runone(self, (sctx, todo, dummy)):
 		if not sctx.active:
 			raise 'Scheduler: running from finished context'
-		#DBG print 'exec: ', SR.ev2string(todo)
+##		print 'exec: ', SR.ev2string(todo) #DBG
 		action, arg = todo
 		if action == SR.PLAY:
 			self.do_play(sctx, arg)
