@@ -2355,13 +2355,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if features.compatibility == features.QT:
 			self.parseQTAttributeOnSmilElement(attributes)
 
-	def __checkid(self, attributes, defaultPrefixId='id'):
+	def __checkid(self, attributes, defaultPrefixId='id', checkid = 1):
 		id = attributes.get('id')
 		if id is not None:
-			res = xmllib.tagfind.match(id)
-			if res is None or res.end(0) != len(id):
-				self.syntax_error("illegal ID value `%s'" % id)
-				self.__ids[id] = 0
+			if checkid:
+				res = xmllib.tagfind.match(id)
+				if res is None or res.end(0) != len(id):
+					self.syntax_error("illegal ID value `%s'" % id)
 			if self.__ids.has_key(id):
 				self.syntax_error('non-unique id %s' % id)
 				id = self.__mkid(defaultPrefixId)
@@ -2593,25 +2593,35 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# ignore outside of smil-basic-layout/smil-extended-layout
 			return
 		from windowinterface import UNIT_PXL
-		id = None
+		id = self.__checkid(attributes, checkid = checkid)
+		# experimental code for switch layout
+		self.__elementindex = self.__elementindex+1
+		
+		if id is None:
+			id = '_#internalid%d' % self.__elementindex
+			if self.__ids.has_key(id):
+				# "cannot happen"
+				self.syntax_error('non-unique id %s' % id)
+			self.__ids[id] = 0
+
+		# end experimental code for switch layout
+
 		attrdict = {'z-index': 0,
 			    'minwidth': 0,
-			    'minheight': 0,}
+			    'minheight': 0,
+			    'id': id,
+			    'elementindex': self.__elementindex,
+			    }
 
+		self.__regions[id] = attrdict
+			
 		for attr, val in attributes.items():
 			if attr[:len(GRiNSns)+1] == GRiNSns + ' ':
 				attr = attr[len(GRiNSns)+1:]
 			val = string.strip(val)
 			if attr == 'id':
-				attrdict[attr] = id = val
-				if checkid:
-					res = xmllib.tagfind.match(id)
-					if res is None or res.end(0) != len(id):
-						self.syntax_error("illegal ID value `%s'" % id)
-				if self.__ids.has_key(id):
-					self.syntax_error('non-unique id %s' % id)
-				self.__ids[id] = 0
-				self.__regions[id] = attrdict
+				# already dealt with
+				pass
 			elif attr == 'regionName':
 				regions = self.__regionnames.get(val,[])
 				regions.append(id)
@@ -2875,24 +2885,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			del attrdict['right']
 		if attrdict.has_key('top') and attrdict.has_key('bottom') and attrdict.has_key('height'):
 			del attrdict['bottom']
-		
-		# experimental code for switch layout
-		self.__elementindex = self.__elementindex+1
-		attrdict['elementindex'] = self.__elementindex
-		
-		if id is None:
-			id = '_#internalid%d' % self.__elementindex
-			attrdict['id'] = id
-			if self.__ids.has_key(id):
-				self.syntax_error('non-unique id %s' % id)
-			self.__ids[id] = 0
-			self.__regions[id] = attrdict
-			
-		# end experimental code for switch layout
-
-		if id is None:
-			self.syntax_error('region without id attribute')
-			return
 		
 		if self.__region is not None:
 ##			if self.__viewport is None:
