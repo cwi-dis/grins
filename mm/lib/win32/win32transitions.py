@@ -32,14 +32,11 @@ class TransitionEngine:
 
 		self.__startprogress = dict.get('startProgress', 0)
 		self.__endprogress = dict.get('endProgress', 1)
-		if self.__endprogress<=self.__startprogress:
-			self.__startprogress = 0.0
-			self.__endprogress = 1.0
+		if self.__endprogress <= self.__startprogress:
+			self.__transperiod = 0
 			#raise AssertionError
-
-		self.__transperiod = self.__duration / (self.__endprogress-self.__startprogress)
-		self.__begin = self.__transperiod * self.__startprogress
-		self.__end = self.__transperiod * self.__endprogress
+		else:
+			self.__transperiod = float(self.__endprogress - self.__startprogress) / self.__duration
 
 	def __del__(self):
 		if self.__transitiontype:
@@ -48,7 +45,7 @@ class TransitionEngine:
 	def begintransition(self):
 		self.__createSurfaces()
 		self.__running = 1	
-		self.__start = time.time() - self.__begin
+		self.__start = time.time()
 		self.settransitionvalue(self.__startprogress)
 		if self.__duration<=0.0:
 			self.settransitionvalue(self.__endprogress)
@@ -73,6 +70,7 @@ class TransitionEngine:
 		for win in self.windows:
 			win._transition = None
 			win._drawsurf = None
+		wnd.update(wnd.getwindowpos())
 
 	def settransitionvalue(self, value):
 		if value<0.0 or value>1.0:
@@ -161,7 +159,7 @@ class TransitionEngine:
 			self.endtransition()
 			return
 		t_sec = time.time() - self.__start
-		if t_sec>=self.__end:
+		if t_sec>=self.__duration:
 			try:
 				self.settransitionvalue(self.__endprogress)
 				self.endtransition()
@@ -169,7 +167,7 @@ class TransitionEngine:
 				print arg			
 		else:
 			try:
-				self.settransitionvalue(t_sec/self.__transperiod)
+				self.settransitionvalue(self.__startprogress + self.__transperiod * t_sec)
 			except ddraw.error, arg:
 				print arg			
 				
@@ -182,4 +180,3 @@ class TransitionEngine:
 		if self.__fiber_id is not None:
 			windowinterface.cancelidleproc(self.__fiber_id)
 			self.__fiber_id = None
- 
