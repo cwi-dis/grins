@@ -735,11 +735,7 @@ class MMNodeContext:
 		# return filter(lambda ch: ch.GetParent() is None, self.__ctx.channels)
 		top_levels = []
 		for chan in self.channels:
-			if chan.GetParent() is None:
-				# XXX temporar. Currently, it's the only way to know whether it's a real viewport
-				# or a channel which has been extracted
-#				import SMILCssResolver
-#				if isinstance(chan._cssId, SMILCssResolver.RootNode) and chan.GetType() == 'layout':
+			if chan.GetParent() is None and chan.isInDocument():
 				top_levels.append(chan)
 		return top_levels
 
