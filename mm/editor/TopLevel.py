@@ -1162,11 +1162,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.root = SMILTreeRead.ReadString(text, self.filename, self.printfunc)
 
 	def edit_node_in_sourceview(self, node):
-		if self.sourceview and node.line_numbers:
-			s,e = node.line_numbers
+		if self.sourceview and node.char_positions:
+			s,e = node.char_positions
 			if not self.sourceview.is_showing():
 				self.sourceview.show()
-			self.sourceview.select_lines(s,e)
+			self.sourceview.select_chars(s,e)
 
 	def printfunc(self, msg):
 		windowinterface.showmessage('while reading %s\n\n' % self.filename + msg)

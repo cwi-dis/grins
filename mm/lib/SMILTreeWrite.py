@@ -48,6 +48,7 @@ class IndentedFile:
 		self.fp = fp
 		self.level = 0
 		self.bol = 1
+		self.charpos = 0
 
 	def push(self):
 		self.level = self.level + 2
@@ -58,15 +59,23 @@ class IndentedFile:
 	def write(self, data):
 		lines = string.split(data, '\n')
 		if not lines:
-			return
+			return self.charpos, self.charpos
+##		first = 1
+		start = self.charpos
 		for line in lines[:-1]:
 			if self.bol:
 				if self.level:
 					self.fp.write(' '*self.level)
+					self.charpos = self.charpos + self.level
 				self.bol = 0
 			if line:
+##				if first:
+##					start = self.charpos
+##					first = 0
 				self.fp.write(line)
+				self.charpos = self.charpos + len(line)
 			self.fp.write('\n')
+			self.charpos = self.charpos + 1
 			self.bol = 1
 
 		line = lines[-1]
@@ -74,8 +83,14 @@ class IndentedFile:
 			if self.bol:
 				if self.level:
 					self.fp.write(' '*self.level)
+					self.charpos = self.charpos + self.level
 				self.bol = 0
+##			if first:
+##				start = self.charpos
+##				first = 0
 			self.fp.write(line)
+			self.charpos = self.charpos + len(line)
+		return start, self.charpos
 
 	def writeline(self, data):
 		self.write(data)
@@ -93,7 +108,7 @@ class IndentedFile:
 Error = 'Error'
 
 def WriteFile(root, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0, evallicense = 0, progress = None, convertURLs = 0, convertfiles = 1):
-	fp = IndentedFile(open(filename, 'w'))
+	fp = open(filename, 'w')
 	try:
 		writer = SMILWriter(root, fp, filename, cleanSMIL, grinsExt, copyFiles, evallicense, progress = progress, convertURLs = convertURLs, convertfiles = convertfiles)
 	except Error, msg:
@@ -117,9 +132,8 @@ def WriteFTP(root, filename, ftpparams, cleanSMIL = 0, grinsExt = 1, copyFiles =
 	try:
 		conn = FtpWriter.FtpConnection(host, user=user, passwd=passwd, dir=dir)
 		ftp = conn.Writer(filename, ascii=1)
-		fp = IndentedFile(ftp)
 		try:
-			writer = SMILWriter(root, fp, filename, cleanSMIL, grinsExt, copyFiles,
+			writer = SMILWriter(root, ftp, filename, cleanSMIL, grinsExt, copyFiles,
 						evallicense, tmpcopy=1, progress=progress)
 		except Error, msg:
 			from windowinterface import showmessage
@@ -131,7 +145,6 @@ def WriteFTP(root, filename, ftpparams, cleanSMIL = 0, grinsExt = 1, copyFiles =
 		#
 		srcdir, dstdir, filedict = writer.getcopyinfo()
 		del writer
-		del fp
 		del ftp
 		if filedict and copyFiles:
 			conn.chmkdir(dstdir)
@@ -175,17 +188,17 @@ class MyStringIO(StringIO.StringIO):
 	def close(self):
 		pass
 
-def WriteString(root, cleanSMIL = 0, evallicense = 0):
-	fp = IndentedFile(MyStringIO())
-	writer = SMILWriter(root, fp, '<string>', cleanSMIL, evallicense=evallicense)
+def WriteString(root, cleanSMIL = 0, evallicense = 0, set_char_pos = 0):
+	fp = MyStringIO()
+	writer = SMILWriter(root, fp, '<string>', cleanSMIL, evallicense=evallicense, set_char_pos = set_char_pos)
 	writer.write()
-	return fp.fp.getvalue()
+	return fp.getvalue()
 
 def WriteBareString(node, cleanSMIL = 0):
-	fp = IndentedFile(MyStringIO())
+	fp = MyStringIO()
 	writer = SMILWriter(node, fp, '<string>', cleanSMIL)
 	writer.writebare()
-	return fp.fp.getvalue()
+	return fp.getvalue()
 
 #
 # Functions to encode data items
@@ -1082,7 +1095,8 @@ def mediatype(chtype, error=0):
 class SMILWriter(SMIL):
 	def __init__(self, node, fp, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0,
 		     evallicense = 0, tmpcopy = 0, progress = None,
-		     convertURLs = 0, convertfiles = 1):
+		     convertURLs = 0, convertfiles = 1, set_char_pos = 0):
+		self.set_char_pos = set_char_pos
 		ctx = node.GetContext()
 		if convertURLs:
 			url = MMurl.canonURL(MMurl.pathname2url(filename))
@@ -1137,7 +1151,7 @@ class SMILWriter(SMIL):
 		self.uses_qt_namespace = features.compatibility == features.QT and not cleanSMIL
 		self.smilboston = ctx.attributes.get('project_boston', 0)
 		self.root = node
-		self.fp = fp
+		self.fp = IndentedFile(fp)
 		self.__title = ctx.gettitle()
 
 		self.ids_used = {}
@@ -1182,30 +1196,42 @@ class SMILWriter(SMIL):
 	def pop(self):
 		fp = self.fp
 		if self.__isopen:
-			fp.write('/>\n')
+			start, end = fp.write('/>\n')
+			x = self.__stack[-1][2]
+			if self.set_char_pos and x is not None:
+				x.char_positions = x.char_positions[0], end
 			self.__isopen = 0
 			del self.__stack[-1]
 		fp.pop()
-		fp.write('</%s>\n' % self.__stack[-1][0])
+		start, end = fp.write('</%s>\n' % self.__stack[-1][0])
+		x = self.__stack[-1][2]
+		if self.set_char_pos and x is not None:
+			x.char_positions = x.char_positions[0], end
 		del self.__stack[-1]
 
 	def close(self):
 		fp = self.fp
 		if self.__isopen:
-			fp.write('/>\n')
+			start, end = fp.write('/>\n')
+			x = self.__stack[-1][2]
+			if self.set_char_pos and x is not None:
+				x.char_positions = x.char_positions[0], end
 			self.__isopen = 0
 			del self.__stack[-1]
 		while self.__stack:
 			self.pop()
 		fp.close()
 
-	def writetag(self, tag, attrs = None):
+	def writetag(self, tag, attrs = None, x = None):
 		compatibility = features.compatibility
 		if attrs is None:
 			attrs = []
 		write = self.fp.write
 		if self.__isopen:
-			write('/>\n')
+			start, end = write('/>\n')
+			n = self.__stack[-1][2]
+			if self.set_char_pos and n is not None:
+				n.char_positions = n.char_positions[0], end
 			self.__isopen = 0
 			del self.__stack[-1]
 		if self.__stack and self.__stack[-1][1]:
@@ -1240,7 +1266,9 @@ class SMILWriter(SMIL):
 					return
 				attrs.insert(0, (xmlnsQT, QTns))
 				hasprefix = 1
-		write('<' + tag)
+		start, end = write('<' + tag)
+		if self.set_char_pos and x is not None:
+			x.char_positions = start, None
 		for attr, val in attrs:
 			hasGRiNSprefix = attr[:len(NSGRiNSprefix)] == NSGRiNSprefix or \
 				        attr == xmlnsGRiNS
@@ -1252,7 +1280,7 @@ class SMILWriter(SMIL):
 			   (hasQTprefix and self.uses_qt_namespace)):
 				write(' %s=%s' % (attr, nameencode(val)))
 		self.__isopen = 1
-		self.__stack.append((tag, hasprefix))
+		self.__stack.append((tag, hasprefix, x))
 	
 	def writeQTAttributeOnSmilElement(self, attrlist):
 		attributes = self.root.GetContext().attributes
@@ -1663,12 +1691,12 @@ class SMILWriter(SMIL):
 				for key, val in ch.items():
 					if not cmif_chan_attrs_ignore.has_key(key):
 						attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))
-				self.writetag('topLayout', attrlist)
+				self.writetag('topLayout', attrlist, ch)
 				self.push()
 				self.writeregion(ch)
 				self.pop()
 			else:
-				self.writetag('root-layout', attrlist)
+				self.writetag('root-layout', attrlist, ch)
 		if not self.smilboston:	# implies one top-level
 			for ch in self.top_levels:
 				self.writeregion(ch)
@@ -1824,7 +1852,7 @@ class SMILWriter(SMIL):
 		for key, val in ch.items():
 			if not cmif_chan_attrs_ignore.has_key(key):
 				attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))
-		self.writetag('region', attrlist)
+		self.writetag('region', attrlist, ch)
 		subchans = self.__subchans.get(ch.name)
 		
 		# new 03-07-2000
@@ -2027,7 +2055,7 @@ class SMILWriter(SMIL):
 					self.push()
 				else:
 					mtype = 'body'
-			self.writetag(mtype, attrlist)
+			self.writetag(mtype, attrlist, x)
 			self.push()
 			for child in x.GetChildren():
 				self.writenode(child)
@@ -2042,7 +2070,7 @@ class SMILWriter(SMIL):
 			if not children:				
 				self.writemedianode(x, attrlist, mtype)
 			else:
-				self.writetag(mtype, attrlist)
+				self.writetag(mtype, attrlist, x)
 				self.push()
 				for child in x.GetChildren():
 					self.writenode(child)
@@ -2064,7 +2092,7 @@ class SMILWriter(SMIL):
 				parentattrlist.append((attr, val))
 		for item in parentattrlist:
 			attrlist.remove(item)
-		self.writetag('par', parentattrlist)
+		self.writetag('par', parentattrlist, x)
 		self.push()
 		self.writemedianode(x, attrlist, mtype)
 		self.writetag('textstream', [('src', rturl), ('region', region)])
@@ -2113,7 +2141,7 @@ class SMILWriter(SMIL):
 		if self.uses_qt_namespace:
 			self.writeQTAttributeOnMediaElement(x,attrlist)
 
-		self.writetag(mtype, attrlist)
+		self.writetag(mtype, attrlist, x)
 		hassrc = 0		# 1 if has source anchors
 		for a in alist:
 			if a.atype in SourceAnchors:
@@ -2140,7 +2168,7 @@ class SMILWriter(SMIL):
 					value = func(self, node)
 				if value and value != attributes[name]:
 					attrlist.append((name, value))
-		self.writetag(tag, attrlist)
+		self.writetag(tag, attrlist, node)
 
 	def writeprefetchnode(self, node):
 		attrlist = []
@@ -2150,7 +2178,7 @@ class SMILWriter(SMIL):
 				value = func(self, node)
 				if value and value != attributes[name]:
 					attrlist.append((name, value))
-		self.writetag('prefetch', attrlist)
+		self.writetag('prefetch', attrlist, node)
 
 
 
@@ -2455,4 +2483,3 @@ def intToEnumString(intValue, dict):
 		return dict[intValue]
 	else:
 		return dict[0]
- 

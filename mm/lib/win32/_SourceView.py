@@ -94,11 +94,11 @@ class _SourceView(docview.RichEditView):
 	def gettext(self):
 		return self.__editctrl.GetWindowText()
 
-	def select_lines(self, startline, endline):
-		# lines is a tuple of two lines. The text between them will be selected.
-		startchar = self.__editctrl.LineIndex(startline)
-		endchar = self.__editctrl.LineIndex(endline)
-		self.__editctrl.SetSel(startchar,endchar) # Automatically scrolls.
+	def select_chars(self, startchar, endchar):
+		# the text between startchar and endchar will be selected.
+		e = self.__editctrl
+		e.SetSel(startchar,endchar) # Automatically scrolls.
+		e.LineScroll(min(e.LineFromChar(startchar) - e.GetFirstVisibleLine(), 0), -1000)
 
 	def is_changed(self):
 		# Return true or false depending on whether the source view has been changed.
@@ -110,6 +110,7 @@ class _SourceView(docview.RichEditView):
 
 	# Convert the text from unix or mac to windows
 	def convert2ws(self,text):
+		return text
 		import string
 		nl=string.split(text,'\n')
 		rl=string.split(text,'\r')

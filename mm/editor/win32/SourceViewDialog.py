@@ -43,6 +43,6 @@ class SourceViewDialog:
 		if self.__textwindow:
 			return self.__textwindow.is_changed()
 
-	def select_lines(self, s, e):
-		self.__textwindow.select_lines(s,e)
+	def select_chars(self, s, e):
+		self.__textwindow.select_chars(s,e)
 

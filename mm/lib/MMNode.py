@@ -1702,7 +1702,7 @@ class MMNode:
 		self.views = {}		# Map {string -> Interactive} - that is, a list of views
 					# looking at this object.
 		self.collapsed = 0	# Whether this node is collapsed in the structure view.
-		self.line_numbers = None # The line numbers that this node corrosponds to in the source.
+		self.char_positions= None # The character positions that this node corresponds to in the source.
 		self.timing_info_dict = {}
 
 		self._subRegCssId = self.newSubRegCssId()
