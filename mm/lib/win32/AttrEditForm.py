@@ -3011,28 +3011,28 @@ class SubregionGroup(Subregion1Group):
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_LS1O3
 
-class Subregion3Group(ImgregionGroup):
-	data=attrgrsdict['subregion3']
+##class Subregion3Group(ImgregionGroup):
+##	data=attrgrsdict['subregion3']
 
-	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_SUBREGION
+##	def getpageresid(self):
+##		return grinsRC.IDD_EDITATTR_SUBREGION
 
-	def createctrls(self,wnd):
-		cd={}
-		a=self.getattr('left')
-		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
-		a=self.getattr('top')
-		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_13))
-		a=self.getattr('width')
-		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_14))
-		a=self.getattr('height')
-		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_15))
-		a=self.getattr('scale')
-		cd[a]=OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_22,))
-		return cd
+##	def createctrls(self,wnd):
+##		cd={}
+##		a=self.getattr('left')
+##		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
+##		a=self.getattr('top')
+##		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_13))
+##		a=self.getattr('width')
+##		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_14))
+##		a=self.getattr('height')
+##		cd[a]=FloatTupleNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_15))
+##		a=self.getattr('scale')
+##		cd[a]=OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_22,))
+##		return cd
 
-	def getpageclass(self):
-		return PosSizeLayoutPage
+##	def getpageclass(self):
+##		return PosSizeLayoutPage
 
 class AnchorlistGroup(AttrGroup):
 	data=attrgrsdict['anchorlist']
@@ -3526,7 +3526,7 @@ groupsui={
 	'imgregion':ImgregionGroup,
 	'subregion1':Subregion1Group,
 	'subregion2':Subregion2Group,
-	'subregion3':Subregion3Group,
+##	'subregion3':Subregion3Group,
 	'anchorlist':AnchorlistGroup,
 
 	'convert1':Convert1Group,
