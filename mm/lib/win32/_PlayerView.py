@@ -155,6 +155,9 @@ class _PlayerView(_CmifView, win32window.DDWndLayer):
 	def getContextOsWnd(self):
 		return self
 
+	def getwindowpos(self, rel=None):
+		return self._rect
+
 	def paint(self):
 		if self._backBuffer.IsLost():
 			if not self._backBuffer.Restore():
