@@ -243,6 +243,12 @@ attrgrs=(
 		'.anchorlist',
 		]},
 
+	{'name':'clip',
+	'title':'Clip',
+	'attrs':[
+		'clipbegin',
+		'clipend',
+		]},
 	)
 
 
