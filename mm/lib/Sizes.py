@@ -36,11 +36,7 @@ def GetSize(url, maintype = None, subtype = None):
 		if u is not None:
 			u.close()
 		del u
-		try:
-			file = MMurl.urlretrieve(url)[0]
-		except IOError:
-			return 0, 0
-		width, height = GetVideoSize(file)
+		width, height = GetVideoSize(url)
 	else:
 		width = height = 0
 	if width != 0 and height != 0:
@@ -64,10 +60,10 @@ def GetSvgSize(url):
 		print 'GetSvgSize raised Exception', arg
 		return 0, 0
 		
-def GetVideoSize(file, subtype=None):
+def GetVideoSize(url, subtype=None):
 	import windowinterface
 	try:
-		width, height = windowinterface.GetVideoSize(file)
+		width, height = windowinterface.GetVideoSize(url)
 	except Exception, arg:
 		print 'GetVideoSize raised Exception', arg
 		width = height = 0

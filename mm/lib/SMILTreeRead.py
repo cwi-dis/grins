@@ -1514,7 +1514,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				mtype = urlcache.mimetype(url)
 				if mtype is None:
 					# we have no idea what type the file is
-					self.warning('cannot open file %s' % url, self.lineno)
+					self.warning('cannot determine type of file %s' % url, self.lineno)
 
 			mediatype = tagname
 			if mtype is not None:

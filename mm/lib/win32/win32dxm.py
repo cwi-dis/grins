@@ -19,7 +19,8 @@ class GraphBuilder:
 		try:
 			self._builder = dshow.CreateGraphBuilder()
 		except dshow.error, arg:
-			print arg
+			if __debug__:
+				print arg
 			self._builder = None
 		self._rendered = 0
 
@@ -45,7 +46,8 @@ class GraphBuilder:
 		try:
 			self._builder.RenderFile(url)
 		except dshow.error, arg:
-			print arg
+			if __debug__:
+				print arg
 			self._rendered = 0
 		else:
 			self._rendered = 1
@@ -104,7 +106,8 @@ class GraphBuilder:
 		try:
 			return self._builder.QueryIVideoWindow()
 		except dshow.error, arg:
-			print arg
+			if __debug__:
+				print arg
 			return None
 
 	def SetVisible(self,f):
@@ -170,7 +173,8 @@ def HasVideo(url):
 	try:
 		builder = GraphBuilder()
 	except:
-		print 'Missing DirectShow infrasrucrure'
+		if __debug__:
+			print 'Missing DirectShow infrasrucrure'
 		return None
 	if not builder.RenderFile(url):
 		return None
@@ -183,13 +187,19 @@ def GetVideoSize(url):
 	if mtype and mtype.find('quicktime') >= 0:
 		import winqt
 		if winqt.HasQtSupport():
+			import MMurl
+			try:
+				filename = MMurl.urlretrieve(url)[0]
+			except IOError:
+				return 100, 100
 			player = winqt.QtPlayer()
 			player.open(url)
 			return player.getMovieRect()[2:]
 	try:
 		builder = GraphBuilder()
 	except:
-		print 'Missing DirectShow infrasrucrure'
+		if __debug__:
+			print 'Missing DirectShow infrasrucrure'
 		return 100, 100
 
 	if not builder.RenderFile(url):
@@ -203,7 +213,8 @@ def GetMediaDuration(url):
 	try:
 		builder = GraphBuilder()
 	except:
-		print 'Missing DirectShow infrasrucrure'
+		if __debug__:
+			print 'Missing DirectShow infrasrucrure'
 		return 0
 	if not builder.RenderFile(url):
 		return 0
@@ -215,17 +226,20 @@ def GetFrameRate(url):
 	try:
 		builder = dshow.CreateGraphBuilder()
 	except:
-		print 'Missing DirectShow infrasrucrure'
+		if __debug__:
+			print 'Missing DirectShow infrasrucrure'
 		return 0
 	try:
 		builder.RenderFile(url)
 	except:
-		print 'Failed to render', url
+		if __debug__:
+			print 'Failed to render', url
 		return 0
 	try:
 		bv = builder.QueryIBasicVideo()
 	except: 
-		print 'Failed to get frame rate of', url
+		if __debug__:
+			print 'Failed to get frame rate of', url
 		fr = 0
 	else:
 		fr = int(0.5 + 1.0/bv.GetAvgTimePerFrame())
@@ -240,7 +254,8 @@ class MMStream:
 		try:
 			mmstream.AddPrimaryAudioMediaStream()
 		except dshow.error, arg:
-			print arg
+			if __debug__:
+				print arg
 		self._mmstream = mmstream
 		self._mstream = None
 		self._ddstream = None
@@ -281,7 +296,8 @@ class MMStream:
 		try:
 			self._mmstream.OpenFile(url)
 		except:
-			print 'failed to render', url
+			if __debug__:
+				print 'failed to render', url
 			self._parsed = 0
 			return 0
 		self._parsed = 1
@@ -294,7 +310,8 @@ class MMStream:
 		try:
 			self._sample = self._ddstream.CreateSample()
 		except dshow.error, arg:
-			print arg
+			if __debug__:
+				print arg
 			return 0
 		self._dds = ddraw.CreateSurfaceObject()
 		self._rect = self._sample.GetSurface(self._dds)
@@ -330,7 +347,8 @@ class MMStream:
 		try:
 			self._mmstream.Seek(v)
 		except:
-			print 'seek not supported for media type'
+			if __debug__:
+				print 'seek not supported for media type'
 
 	def getDuration(self):
 		if not self._parsed: return
@@ -519,7 +537,8 @@ class MediaReader:
 			self._filtergraph.RenderFile(url)
 		except dshow.error, arg:
 			self._filtergraph = None
-			print arg
+			if __debug__:
+				print arg
 		if self._filtergraph is None:
 			raise IOError, "Cannot open: %s" % filename
 
@@ -633,14 +652,16 @@ class MediaReader:
 			try:
 				vpf = dshow.CreateFilter('Video Pipe')
 			except dshow.error:
-				print 'Video pipe filter not installed'
+				if __debug__:
+					print 'Video pipe filter not installed'
 				raise dshow.error, 'Video pipe filter not installed'
 		
 			# set listener
 			try:
 				pipe = vpf.QueryIPipe()
 			except:
-				print 'Filter does not support IPipe'
+				if __debug__:
+					print 'Filter does not support IPipe'
 				raise dshow.error, 'Filter does not support IPipe'
 
 			self._videofilter = ReaderFilter(self, 'video filter')
@@ -671,12 +692,14 @@ class MediaReader:
 			try:
 				apf = dshow.CreateFilter('Audio Pipe')
 			except:
-				print 'Audio pipe filter not installed'
+				if __debug__:
+					print 'Audio pipe filter not installed'
 				raise dshow.error, 'Audio pipe filter not installed'
 			try:
 				pipe = apf.QueryIPipe()
 			except:
-				print 'Filter does not support IPipe'
+				if __debug__:
+					print 'Filter does not support IPipe'
 				raise dshow.error, 'Filter does not support IPipe'
 			self._audiofilter = AudioReaderFilter(self, 'audio filter')
 			self._audiopeer = dshow.CreatePyRenderingListener(self._audiofilter)

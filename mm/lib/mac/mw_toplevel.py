@@ -30,8 +30,13 @@ def _qtavailable():
 if not _qtavailable():
 	Qt = None
 	
-def GetVideoSize(filename):
+def GetVideoSize(url):
 	if not Qt:
+		return 0,0
+	import MMurl
+	try:
+		filename = MMurl.urlretrieve(url)[0]
+	except IOError:
 		return 0,0
 	Qt.EnterMovies()
 	try:
