@@ -95,12 +95,10 @@ is_warned = 0
 def getduration(node):
 	import Duration
 	d = Duration.get(node)
-	if d > 0:
-		return d
 	if d < 0:
 		print 'Duration < 0 for', node
 		return 0
-	return 0
+	return d
 
 
 
@@ -115,18 +113,28 @@ def prep1(node):
 	node.hasterm = 0
 	type = node.GetType()
 	dur = node.GetAttrDef('duration', None)
+	if dur is None and not node.GetChildren():
+		dur = node.GetAttrDef('empty_duration', None)
 	if dur is not None and dur >= 0:
 		adddep(node, HD, dur, node, TL, 'TERM')
+	elif type in leaftypes:
+		dur = getduration(node)
+		if dur >= 0:
+			adddep(node, HD, dur, node, TL, 'TERM')
 	if type == 'seq': # XXX not right!
 		xnode, xside = node, HD
-		for c in node.GetSchedChildren(1):
+		for c in node.GetSchedChildren(0):
+			if not c.ShouldPlay():
+				continue
 			prep1(c)
 			adddep(xnode, xside, 0, c, HD)
 			xnode, xside = c, TL
 		adddep(xnode, xside, 0, node, TL)
-	elif type in ('par', 'switch', 'excl') or (type in leaftypes and node.GetSchedChildren(1)):
+	elif type in ('par', 'switch', 'excl') or (type in leaftypes and node.GetSchedChildren(0)):
 		term = node.GetTerminator()
-		for c in node.GetSchedChildren(1):
+		for c in node.GetSchedChildren(0):
+			if not c.ShouldPlay():
+				continue
 			prep1(c)
 			adddep(node, HD, 0, c, HD)
 			if term == 'FIRST':
@@ -160,9 +168,11 @@ def prep2(node, root):
 			if parent.GetType() == 'seq':
 				xnode = parent
 				xside = HD
-				for n in parent.GetSchedChildren(1):
+				for n in parent.GetSchedChildren(0):
 					if n is node:
 						break
+					if not n.ShouldPlay():
+						continue
 					xnode = n
 					xside = TL
 			else:
@@ -187,8 +197,9 @@ def prep2(node, root):
 				xside = TL
 			adddep(srcnode, xside, arc.delay, node, HD)
 			break
-	for c in node.GetSchedChildren(1):
-		prep2(c, root)
+	for c in node.GetSchedChildren(0):
+		if c.ShouldPlay():
+			prep2(c, root)
 
 
 # propdown - propagate timing down the tree again
@@ -201,10 +212,12 @@ def propdown(root, node, stoptime, dftstarttime=0):
 		node.t1 = stoptime
 
 	dur = node.GetAttrDef('duration', None)
+	if dur is None and not node.GetChildren():
+		dur = node.GetAttrDef('empty_duration', None)
 	if dur is not None and dur >= 0 and node.t0 + dur < stoptime:
 		stoptime = node.t1 = node.t0 + dur
 
-	children = node.GetSchedChildren(1)
+	children = node.GetSchedChildren(0)
 
 	if tp in ('par', 'switch', 'excl', 'prio') or tp in leaftypes:
 		term = node.GetTerminator()
@@ -213,11 +226,12 @@ def propdown(root, node, stoptime, dftstarttime=0):
 		elif term == 'FIRST':
 			stoptime = -1
 		elif term == 'ALL':
-			if len(node.GetSchedChildren(0)) == len(children):
-				stoptime = node.t0
-			else:
-				stoptime = -1
+			stoptime = node.t0
 		for c in children:
+			if not c.ShouldPlay():
+				if term == 'ALL':
+					stoptime = -1
+				continue
 			if term in ('LAST', 'ALL'):
 				if hasattr(c, 't1') and ((stoptime >= 0 and c.t1 > stoptime) or c.t1 < 0):
 					stoptime = c.t1
@@ -233,13 +247,16 @@ def propdown(root, node, stoptime, dftstarttime=0):
 			stoptime = node.t0 + dur
 		node.t1 = stoptime
 		for c in children:
-			propdown(root, c, stoptime, node.t0)
+			if c.ShouldPlay():
+				propdown(root, c, stoptime, node.t0)
 	elif tp == 'seq': # XXX not right!
 		if not children:
 			return
 		nextstart = node.t0
 		for i in range(len(children)):
 			c = children[i]
+			if not c.ShouldPlay():
+				continue
 			if i == len(children)-1:
 				endtime = node.t1
 			elif hasattr(children[i+1], 't0'):
@@ -258,16 +275,19 @@ def propdown2(root, node, stoptime, dftstarttime=0):
 
 	node.t2 = stoptime
 
-	children = node.GetSchedChildren(1)
+	children = node.GetSchedChildren(0)
 	if tp in ('par', 'switch', 'excl', 'prio') or tp in leaftypes:
 		for c in children:
-			propdown2(root, c, stoptime, node.t0)
+			if c.ShouldPlay():
+				propdown2(root, c, stoptime, node.t0)
 	elif tp == 'seq': # XXX not right!
 		if not children:
 			return
 		nextstart = node.t0
 		for i in range(len(children)):
 			c = children[i]
+			if not c.ShouldPlay():
+				continue
 			fill = c.GetFill()
 			if fill in ('freeze', 'transition'):
 				# not correct for transition
@@ -318,6 +338,8 @@ def decrement(q, delay, node, side, term = None):
 		return
 	if node.GetType() not in interiortypes and side == HD and not node.GetSchedChildren(1):
 		dt = getduration(node)
+##		if dt == 0 and node.GetSchedParent().GetType() == 'seq':
+##			dt = 5
 		id = q.enter(dt, 0, decrement, (q, 0, node, TL))
 	for d, n, s, t in node.deps[side]:
 		decrement(q, d, n, s, t)

@@ -1344,6 +1344,21 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attrdict['thumbnail_icon'] = MMurl.basejoin(self.__base, val)
 			elif attr == 'thumbnailScale':
 				attrdict['thumbnail_scale'] = val == 'true'
+			elif attr == 'emptyIcon':
+				attrdict['empty_icon'] = MMurl.basejoin(self.__base, val)
+			elif attr == 'emptyText':
+				attrdict['empty_text'] = val
+			elif attr == 'emptyColor':
+				val = self.__convert_color(val)
+				if val is not None:
+					attrdict['empty_color'] = val
+			elif attr == 'emptyDur':
+				try:
+					attrdict['empty_duration'] = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context)
+				except parseutil.error, msg:
+					self.syntax_error(msg)
+			elif attr == 'emptyShow':
+				attrdict['empty_nonempty'] = val == 'true'
 			elif attr not in smil_node_attrs:
 				# catch all
 				# this should not be used for normal operation

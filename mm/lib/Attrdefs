@@ -106,10 +106,22 @@
 (file (string) '' 'URL' file
 	'URL for the data of this node' normal (g2 qt smil10 smil2 cmif snap))
 
-(thumbnail_icon (string) '' 'Thumbnail URL' file
+(thumbnail_icon (string) '' 'Thumbnail URL' hidden
 	'URL for a thumbnail image of this node' normal (g2 qt smil10 smil2 cmif snap))
 
-(thumbnail_scale (bool) 1 'Scale thumbnail' default
+(empty_icon (string) '' 'Icon URL' hidden
+	'URL for an icon when this node is empty' normal (g2 qt smil10 smil2 cmif snap))
+
+(empty_text (string) '' 'Empty text' hidden
+	'Text to be displayed when this node is empty' normal (g2 qt smil10 smil2 cmif snap))
+
+(empty_color (tuple (int) (int) (int)) (0 0 0) 'Empty color' hidden
+	'Color to be used when this node is empty' normal (g2 qt smil10 smil2 cmif snap))
+
+(empty_duration (float) 0.0 'Empty duration' hidden
+	'Duration to be used for drawing when this node is empty' normal (g2 qt smil10 smil2 cmif snap))
+
+(thumbnail_scale (bool) 1 'Scale thumbnail' hidden
 	'Determines whether thumbnail images can be scaled' inherited (g2 qt smil10 smil2 cmif snap))
 
 # valid values: freeze, remove, hold, transition

@@ -379,13 +379,19 @@ def translatecolor(val):
 	else:
 		return '#%02x%02x%02x' % val
 
-def getcolor(writer, node):
+def getfgcolor(writer, node):
 	if node.GetChannelType() != 'brush':
 		return None
 	fgcolor = node.GetRawAttrDef('fgcolor', None)
 	if fgcolor is None:
 		return
 	return translatecolor(fgcolor)
+
+def getcolor(writer, node, attr):
+	color = node.GetRawAttrDef(attr, None)
+	if color is None:
+		return
+	return translatecolor(color)
 
 def getsubregionatt(writer, node, attr):
 	from windowinterface import UNIT_PXL, UNIT_SCREEN
@@ -886,7 +892,7 @@ smil_attrs=[
 	("systemScreenDepth", lambda writer, node:(not writer.prune and writer.smilboston and getcmifattr(writer, node, "system_screen_depth")) or None, "system_screen_depth"),
 	("customTest", getugroup, "u_group"),
 	("layout", getlayout, "layout"),
-	("color", getcolor, "fgcolor"),		# only for brush element
+	("color", getfgcolor, "fgcolor"),		# only for brush element
 	# subregion positioning
 	("left", lambda writer, node:getsubregionatt(writer, node, 'left'), "left"),
 	("right", lambda writer, node:getsubregionatt(writer, node, 'right'), "right"),
@@ -923,6 +929,11 @@ smil_attrs=[
 
 	("thumbnailIcon", lambda writer, node: geturl(writer, node, 'thumbnail_icon'), "thumbnail_icon"),
 	("thumbnailScale", lambda writer, node: getboolean(writer, node, 'thumbnail_scale', 1), "thumbnail_scale"),
+	("emptyIcon", lambda writer, node: geturl(writer, node, 'empty_icon'), "empty_icon"),
+	("emptyText", lambda writer, node:getcmifattr(writer, node, "empty_text"), "empty_text"),
+	("emptyColor", lambda writer, node: getcolor(writer, node, "empty_color"), "empty_color"),
+	("emptyDur", lambda writer, node:getduration(writer, node, "empty_duration"), "empty_duration"),
+	("emptyShow", lambda writer, node: getboolean(writer, node, 'empty_nonempty', 1), "empty_nonempty"),
 	("collapsed", getcollapsed, None),
 	("showtime", getshowtime, None),
 	("allowedmimetypes", getallowedmimetypes, None),
