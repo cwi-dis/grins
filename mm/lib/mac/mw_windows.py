@@ -373,7 +373,8 @@ class _CommonWindow:
 	def newdisplaylist(self, bgcolor=None):
 		"""Return new, empty display list"""
 		if bgcolor is None:
-			bgcolor = self._bgcolor
+			if not self._transparent:
+				bgcolor = self._bgcolor
 		else:
 			bgcolor = self._convert_color(bgcolor)
 		return mw_displaylist._DisplayList(self, bgcolor)
@@ -893,10 +894,7 @@ class _CommonWindow:
 		# First do opaque subwindows, topmost first
 		still_to_do = []
 		for child in self._subwindows:
-			# XXXX Remove for now
-			if 0 and child._transparent == 0 or \
-			   (child._transparent == -1 and
-			    child._active_displist):
+			if not child._transparent:
 				child._redraw(rgn)
 			else:
 				still_to_do.append(child)
@@ -1163,7 +1161,7 @@ class _CommonWindow:
 		if not self._rb_box:
 			return
 		if not self._clipincludingchildren:
-			self.mkclip()
+			self._mkclip()
 		Qd.SetClip(self._clipincludingchildren)
 		if self._onscreen_wid == Win.FrontWindow():
 			Qd.RGBForeColor((0xffff, 0, 0))
@@ -1224,7 +1222,7 @@ class _CommonWindow:
 		# Otherwise first erase old box, then draw the new one.
 		#
 		if not self._clipincludingchildren:
-			self.mkclip()
+			self._mkclip()
 		Qd.SetClip(self._clipincludingchildren)
 		port = self._onscreen_wid.GetWindowPort()
 		oldmode = port.pnMode

@@ -678,7 +678,8 @@ class _Window(_AdornmentSupport, _RubberBand):
 
 	def newdisplaylist(self, bgcolor = None):
 		if bgcolor is None:
-			bgcolor = self._bgcolor
+			if not self._transparent:
+				bgcolor = self._bgcolor
 		return _DisplayList(self, bgcolor)
 
 	def settitle(self, title):

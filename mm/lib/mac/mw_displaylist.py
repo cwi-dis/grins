@@ -64,8 +64,9 @@ class _DisplayList:
 		self._buttons = []
 		self._list = []
 		self._rendered = 0
-		if self._window._transparent <= 0:
-			self._list.append(('clear',))
+##		if self._window._transparent <= 0:
+##			self._list.append(('clear',))
+		self._list.append(('clear',))
 		self._optimdict = {}
 		self._cloneof = None
 		self._clonestart = 0
@@ -148,6 +149,8 @@ class _DisplayList:
 ##			depth=16 # XXX
 ##			App.SetThemeBackground(Appearance.kThemeBrushDocumentWindowBackground, depth, 1)
 ##			return
+		if bgcolor is None:
+			bgcolor = (0,0,0)
 		Qd.RGBBackColor(bgcolor)
 		
 	def _restorecolors(self):
@@ -235,7 +238,7 @@ class _DisplayList:
 		window = self._window
 		for entry in self._list:
 			cmd = entry[0]
-			if cmd == 'clear':
+			if cmd == 'clear' and self._bgcolor != None:
 				r = Qd.NewRgn()
 				Qd.RectRgn(r, window.qdrect())
 				return r
@@ -271,7 +274,8 @@ class _DisplayList:
 		xscrolloffset, yscrolloffset = window._scrolloffset()
 		
 		if cmd == 'clear':
-			Qd.EraseRect(window.qdrect())
+			if self._bgcolor != None:
+				Qd.EraseRect(window.qdrect())
 		elif cmd == 'fg':
 			Qd.RGBForeColor(entry[1])
 		elif cmd == 'font':
@@ -291,6 +295,17 @@ class _DisplayList:
 			dstx, dsty = dstx+xscrolloffset, dsty+yscrolloffset
 			srcrect = srcx, srcy, srcx+w, srcy+h
 			dstrect = dstx, dsty, dstx+w, dsty+h
+##			winrect = window.qdrect()
+##			if dstrect != winrect and self._bgcolor != None:
+##				# The image is smaller than the window. Clear the rest.
+##				dstrgn = Qd.NewRgn()
+##				Qd.RectRgn(dstrgn, dstrect)
+##				winrgn = Qd.NewRgn()
+##				Qd.RectRgn(winrgn, winrect)
+##				Qd.DiffRgn(winrgn, dstrgn, winrgn)
+##				Qd.EraseRgn(winrgn)
+##				Qd.DisposeRgn(winrgn)
+##				Qd.DisposeRgn(dstrgn)
 			self._setblackwhitecolors()
 			if mask:
 				Qd.CopyMask(image[0], mask[0],
