@@ -1,343 +1,229 @@
-from Channel import ChannelWindow, MPEG, error
-import urllib, MMurl
-from MMExc import *			# exceptions
-from AnchorDefs import *
+__version__ = "$Id$"
+
+#
+# WIN32 Video channel.
+#
+
+from Channel import *
+
+# node attributes
 import MMAttrdefs
 
-import string
-import time, mmsystem
+# url parsing
+import os, ntpath, urllib, MMurl
 
+# std win32 libs 
 import win32ui,win32con
-from win32modules import mpegex
 
-debug = 0
+# DirectShow support
+DirectShowSdk=win32ui.GetDS()
 
-MM_ARMDONE = 1
-MM_PLAYDONE = 2
-UM_SETCURSOR = 2001
+# private graph notification message
+WM_GRPAPHNOTIFY=win32con.WM_USER+101
 
-# arm states
-AIDLE = 1
-ARMING = 2
-ARMED = 3
-# play states
-PIDLE = 1
-PLAYING = 2
-PLAYED = 3
-
+# channel types
 [SINGLE, HTM, TEXT, MPEG] = range(4)
-ID_TIMER = 101
 
 class VideoChannel(ChannelWindow):
-	_window_type = MPEG
 	node_attrs = ChannelWindow.node_attrs + \
 		     ['bucolor', 'hicolor', 'scale', 'center',
 		      'clipbegin', 'clipend']
-
+	_window_type = MPEG
 	def __init__(self, name, attrdict, scheduler, ui):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
-		self._armed_movieIndex = None
-		self._play_movieIndex = None
-		self._played_movieIndex = None
-		self._armed_filename = ""
-		self._play_filename = ""
-		self._movieWindow = None
-		self._filename=" "
-		self.windc = None
-		self._arm_anc_ls = []
-		self._play_anc_ls = []
-		self.timerID = 0
-		self._start_time = None
-		self._stop_time = None
-		self._time_remain = None
+		
+		# DirectShow Graph builders
+		self._builders={}
+
+		# active builder from self._builders
+		self._playBuilder=None
+
+		# scheduler notification mechanism
+		self.__qid=None
 
 	def __repr__(self):
-		return '<MpegChannel instance, name=' + `self._name` + '>'
+		return '<VideoChannel instance, name=' + `self._name` + '>'
 
-	def resize(self, arg, window, event, value):
-		if self._playstate == PLAYING or self._playstate == PLAYED:
-			if self._armed_movieIndex!=None:
-				mpegex.position(self._armed_movieIndex)
-			if self._play_movieIndex!=None:
-				mpegex.position(self._play_movieIndex)
+	def do_show(self, pchan):
+		if not ChannelWindow.do_show(self, pchan):
+			return 0
+		for b in self._builders.values():
+			b.SetVisible(1)
+		return 1
 
+	def do_hide(self):
+		for b in self._builders.values():
+			b.SetVisible(0)
+		if self.played_display:
+			self.played.display.close()
+		ChannelWindow.do_hide(self)
 
-			if self.armed_display:
-				bgcolor = self.armed_display._bgcolor
-				self.armed_display.close()
-				self.armed_display = self.window.newdisplaylist(bgcolor)
-				for a in self._arm_anc_ls:
-					b = self.armed_display.newbutton((0,0,1,1))
-					self.setanchor(a[A_ID], a[A_TYPE], b)
-				self.armed_display._list.append(('video', self, self.update))
-
-			if self.played_display:
-				bgcolor = self.played_display._bgcolor
-				self.played_display.close()
-				self.played_display = self.window.newdisplaylist(bgcolor)
-				for a in self._play_anc_ls:
-					b = self.played_display.newbutton((0,0,1,1))
-					self.setanchor(a[A_ID], a[A_TYPE], b)
-				node = self._played_node
-				import MMAttrdefs
-				self._anchors = {}
-				self._played_anchors = self._armed_anchors[:]
-				durationattr = MMAttrdefs.getattr(node, 'duration')
-				self._has_pause = (durationattr < 0)
-				for (name, type, button) in self._played_anchors:
-					if type == ATYPE_PAUSE:
-						f = self.pause_triggered
-						self._has_pause = 1
-					else:
-						f = self._playcontext.anchorfired
-					self._anchors[button] = f, (node, [(name, type)], None)
-				self.played_display._list.append(('video', self, self.update))
-				self.played_display.render()
-		else:
-			ChannelWindow.resize(self, arg, window, event, value)
+	def destroy(self):
+		if self._playBuilder:
+			self._playBuilder.Stop()
+		for b in self._builders.values():
+			b.SetVisible(0)
+		del self._builders
+		ChannelWindow.destroy(self)
 
 	def do_arm(self, node, same=0):
-		if self.window == None:
-			win32ui.MessageBox("Window not Created yet!!", "Debug", win32con.MB_OK|win32con.MB_ICONSTOP)
+		if debug:print 'VideoChannel.do_arm('+`self`+','+`node`+'same'+')'
+		if node in self._builders.keys():
 			return 1
-		else:
-			self._movieWindow = self.window
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
-		self._armed_anchors = [] # may have been skipped in self.arm_0
-		if self.armed_display:
-			self.armed_display.close()
-		bgcolor = self.getbgcolor(node)
-		self.armed_display = self.window.newdisplaylist(bgcolor)
-
-		self.armed_display.fgcolor(self.getfgcolor(node))
-		filename = self.getfileurl(node)
-		tmp = []
-		tmp = string.splitfields(filename, '\\')
-		tmp = string.splitfields(tmp[-1], '.')
-		if len(tmp)>1:
-			ext = tmp[-1]
+		fn = self.getfileurl(node)
+		fn = MMurl.urlretrieve(fn)[0]
+		fn = self.toabs(fn)
+		builder=DirectShowSdk.CreateGraphBuilder()
+		if builder:
+			builder.RenderFile(fn)
+			self._builders[node]=builder
 		else:
-			ext = None
-		try:
-			filename = MMurl.urlretrieve(filename)[0]
-		except IOError:
-			filename = MMurl.url2pathname(filename)
-		tmp = []
-		tmp = string.splitfields(filename, '\\')
-		tmp = string.splitfields(tmp[-1], '.')
-		if ext != None and ext != tmp[-1]:
-			import os
-			newfilename = filename + '.' + ext
+			print 'Failed to create GraphBuilder'
 
-			try:
-				os.rename(filename,newfilename)
-
-			except:
-				pass
-			filename = newfilename
-
-		self._armed_filename = filename
-		scale = MMAttrdefs.getattr(node, 'scale')
-		self.armed_scale = scale
-		center = MMAttrdefs.getattr(node, 'center')
-		self.armed_center = center
-		if self.armed_scale==None:
-			self.armed_scale = 0.0
-		if self.armed_center==None:
-			self.armed_center = 0
-
-		self.callback(0, 0, 0, MM_ARMDONE)
-		self.armed_loop = self.getloop(node)
-		self.armed_duration = MMAttrdefs.getattr(node, 'duration')
-		if MMAttrdefs.getattr(node, 'clipbegin'):
-			self.__begin = eval(MMAttrdefs.getattr(node, 'clipbegin'))
+		drawbox = MMAttrdefs.getattr(node, 'drawbox')
+		if drawbox:
+			self.armed_display.fgcolor(self.getbucolor(node))
 		else:
-			self.__begin = 0
-		if MMAttrdefs.getattr(node, 'clipend'):
-			self.__end = eval(MMAttrdefs.getattr(node, 'clipend'))
-		else:
-			self.__end = 0
-		try:
-			alist = node.GetRawAttr('anchorlist')
-		except NoSuchAttrError:
-			alist = []
-		self._arm_anc_ls = []
-		for a in alist:
-			self._arm_anc_ls.append(a)
+			self.armed_display.fgcolor(self.getbgcolor(node))
+		hicolor = self.gethicolor(node)
+		for a in node.GetRawAttrDef('anchorlist', []):
+			atype = a[A_TYPE]
+			if atype not in SourceAnchors or atype == ATYPE_AUTO:
+				continue
 			b = self.armed_display.newbutton((0,0,1,1))
+			b.hiwidth(3)
+			if drawbox:
+				b.hicolor(hicolor)
 			self.setanchor(a[A_ID], a[A_TYPE], b)
-		self.armed_display._list.append(('video', self, self.update))
-		return 0
+		return 1
 
-	def onSetCursor(self, params):
-		x = params[2]
-		y = params[3]
-		self.window.onMouseMove((0,0,0,0,0,(x,y)))
-
-
-	def update(self, params):
-		return # TEST
-		if self._playstate == PLAYING: # or self._playstate == PLAYED:
-			if self._play_movieIndex!=None:
-				mpegex.Update(self._play_movieIndex)
-
-
-	def null_cal(self, params):
-		pass
-
-	#
-	# It appears that there is a bug in the cl mpeg decompressor
-	# which disallows the use of two mpeg decompressors in parallel.
-	#
-	# Redefining play() and playdone() doesn't really solve the problem,
-	# since two mpeg channels will still cause trouble,
-	# but it will solve the common case of arming the next file while
-	# the current one is playing.
-	#
-	# XXXX This problem has to be reassesed with the 5.2 cl. See also
-	# the note in mpegchannelmodule.c
-	#
+	# Async Channel play
 	def play(self, node):
-		res = 0
-		self.need_armdone = 0
+		if debug:print 'VideoChannel.play('+`self`+','+`node`+')'
 		self.play_0(node)
-		if not self._is_shown or self.syncplay:
+		if not self._is_shown or not node.IsPlayable() \
+		   or self.syncplay:
 			self.play_1()
 			return
 		if not self.nopop:
 			self.window.pop()
-		if self.played_display:
-			self.played.display.close()
-		if self.armed_display.is_closed():
-			# assume that we are going to get a
-			# resize event
-			pass
-		else:
-			self.armed_display.render()
-		self.played_display = self.armed_display
-		self.armed_display = None
-		self._play_anc_ls = self._arm_anc_ls
+		if self._is_shown:
+			self.do_play(node)
+		self.armdone()
 
-		from win32con import *
-		#self.window.HookMessage(self.onSetCursor, UM_SETCURSOR)
-		self._play_filename = self._armed_filename
-		self._armed_filename = ""
-		self.play_scale = self.armed_scale
-		self.play_center = self.armed_center
-
-		self._movieWindow.HookMessage(self._mmcallback, win32con.WM_TIMER)
-		self._armed_movieIndex = mpegex.arm(self._movieWindow, self._play_filename, 0, self.play_scale, self.play_center,self.__begin, self.__end)
-		if self._armed_movieIndex<0:
-			print 'MCI failed to open movie file'
-			print self._play_filename
-			print 'Movie not armed'
+	def do_play(self, node):
+		if debug:print 'VideoChannel.do_play('+`self`+','+`node`+')'
+		if node not in self._builders.keys():
+			print 'node not armed'
 			self.playdone(0)
 			return
 
-		self._play_movieIndex = self._armed_movieIndex
-		self._armed_movieIndex = None
-		self.play_duration = int(self.armed_duration*1000)
+		self.play_loop = self.getloop(node)
 
-		if self.play_duration <= 0 or self.armed_duration==None:
-			self.play_duration = mpegex.GetDuration(self._play_movieIndex)
+		# get duration in secs (float)
+		duration = MMAttrdefs.getattr(node, 'duration')
+		if duration > 0:
+			self._scheduler.enter(duration, 0, self._stopplay, ())
+	
+		if not self.armed_display.is_closed():
+			self.armed_display.render()
+		if self.played_display:
+			self.played.display.close()
+		self.played_display = self.armed_display
+		self.armed_display = None
+		self.played_display.render()
 
-		self.play_loop = self.armed_loop
-		res = mpegex.play(self._play_movieIndex, 0)
-		if self.play_duration > 0:
-			self._time_remain = self.play_duration
-			self._start_time = time.time()
-			self.timerID = self._movieWindow.SetTimer(ID_TIMER,self.play_duration)
-		self.do_play(node)
-		self.need_armdone = 1
-		if  res <> 1:
+		self._playBuilder=self._builders[node]
+		self._playBuilder.SetPosition(0)
+		if self.window and self.window.IsWindow():
+			self._playBuilder.SetWindow(self.window,WM_GRPAPHNOTIFY)
+			self.window.HookMessage(self.OnGraphNotify,WM_GRPAPHNOTIFY)
+		self._playBuilder.Run()
+		self._playBuilder.SetVisible(1)
+
+		if self.play_loop == 0 and duration == 0:
 			self.playdone(0)
-		if self.play_loop == 0 and not self.play_duration:
-			self.play_loop = 1
-			self.playdone(0)
 
-	def playdone(self, dummy):
-		if self.timerID >0:
-			self._movieWindow.KillTimer(self.timerID)
-			self.timerID = 0
-		if self.need_armdone:
-			self._armstate = ARMED
-			self.armdone()
-			self.need_armdone = 0
-		self.play_loop = self.play_loop-1
-		if self._play_movieIndex > -1:
-			if self.play_loop:
-				#self.play_loop = self.play_loop - 1
-				if self.play_loop:
-					mpegex.seekstart(self._play_movieIndex)
-					mpegex.play(self._play_movieIndex, 0)
-					if self.play_duration > 0:
-						self._time_remain = self.play_duration
-						self._start_time = time.time()
-						self.timerID = self._movieWindow.SetTimer(ID_TIMER,self.play_duration)
-					return
-				res = mpegex.stop(self._play_movieIndex)
-			ChannelWindow.playdone(self, dummy)
-		else:
-			ChannelWindow.playdone(self, dummy)
-
-	def callback(self, dummy1, dummy2, event, value):
-		if debug:
-			print 'ChannelWindow.callback'+`self,dummy1,dummy2,event,value`
-		if value == MM_PLAYDONE:
-			if self._playstate == PLAYING:
-				self.playdone(0)
-			elif self._playstate != PIDLE:
-				raise error, 'playdone event when not playing'
-		elif value == MM_ARMDONE:
-			if self._armstate == ARMING:
-				self.arm_1()
-			elif self._armstate != AIDLE:
-				raise error, 'armdone event when not arming'
-		else:
-			raise error, 'unrecognized event '+`value`
-
-	def _mmcallback(self, params):
-		if self.timerID >0:
-			self._movieWindow.KillTimer(self.timerID)
-			self.timerID = 0
-		self.callback(0, 0, 0, MM_PLAYDONE)
-
-	def stopplay(self, node):
-		if self.timerID>0:
-			self._movieWindow.KillTimer(self.timerID)
-			self.timerID = 0
-		self._played_movieIndex = self._play_movieIndex
-		self._play_movieIndex = -1
-		self._play_anc_ls = []
-		if self._played_movieIndex <> None :
-			res = mpegex.finished(self._played_movieIndex)
-			if res<0:
-				self._movieWindow.MessageBox("Already Destroyed!", "Debug",  win32con.MB_OK|win32con.MB_ICONSTOP)
-		self.need_armdone = 0
-		self.play_loop = 1
+	# scheduler callback, at end of duration
+	def _stopplay(self):
+		self.__qid = None
+		if self._playBuilder:
+			self._playBuilder.Stop()
+			self._playBuilder.SetVisible(0)
+			self._playBuilder=None
 		self.playdone(0)
+
+	# part of stop sequence
+	def stopplay(self, node):
+		if self.__qid is not None:
+			self._scheduler.cancel(self.__qid)
+			self.__qid = None
+		if self._playBuilder:
+			self._playBuilder.Stop()
+			self._playBuilder.SetVisible(0)
+			self._playBuilder=None
 		ChannelWindow.stopplay(self, node)
 
-
+	# toggles between pause and run
 	def setpaused(self, paused):
-		if self.timerID>0:
-			self._movieWindow.KillTimer(self.timerID)
-			self.timerID = 0
-		ChannelWindow.setpaused(self, paused)
-		if self._paused:
-			if self._play_movieIndex <> None:
-				self._stop_time = time.time()
-				self._time_remain = self._time_remain-int((self._stop_time-self._start_time)*1000)
-				if self._time_remain <=0:
-					self._time_remain = 1
-				res = mpegex.stop(self._play_movieIndex)
-		else:
-			if self._playstate == PLAYING:
-				if self._time_remain > 0:
-						self._start_time = time.time()
-						self.timerID = self._movieWindow.SetTimer(ID_TIMER,self._time_remain)
-				res = mpegex.play(self._play_movieIndex, self.play_duration-self._time_remain)
-		return
+		self._paused = paused
+		if self._playBuilder:
+			if self._paused:
+				self._playBuilder.Pause()
+			else:
+				self._playBuilder.Run()
+
+	# capture end of media
+	def OnGraphNotify(self,params):
+		if self._playBuilder:
+			duration=self._playBuilder.GetDuration()
+			t_msec=self._playBuilder.GetPosition()
+			if t_msec>=duration:self.OnMediaEnd()
+
+	def OnMediaEnd(self):
+		if debug: print 'VideoChannel: OnMediaEnd',`self`
+		if not self._playBuilder:
+			return		
+		if self.play_loop:
+			self.play_loop = self.play_loop - 1
+			if self.play_loop: # more loops
+				self._playBuilder.SetPosition(0)
+				self._playBuilder.Run()
+				return
+			# no more loops
+			self._playBuilder.Stop()
+			self._playBuilder.SetVisible(0)
+			self._playBuilder=None
+			# if event wait scheduler
+			if self.__qid is not None:return
+			# else end
+			self.playdone(0)
+			return
+		# play_loop is 0 so play until duration if set
+		self._playBuilder.SetPosition(0)
+		self._playBuilder.Run()
+
+
+	def defanchor(self, node, anchor, cb):
+		import windowinterface
+		windowinterface.showmessage('The whole window will be hot.')
+		cb((anchor[0], anchor[1], [0,0,1,1]))
+
+	def islocal(self,url):
+		utype, url = MMurl.splittype(url)
+		host, url = MMurl.splithost(url)
+		return not utype and not host
+
+	def toabs(self,url):
+		if not self.islocal(url):
+			return url
+		filename=MMurl.url2pathname(MMurl.splithost(url)[1])
+		if os.path.isfile(filename):
+			if not os.path.isabs(filename):
+				filename=os.path.join(os.getcwd(),filename)
+				filename=ntpath.normpath(filename)	
+		return filename
 
