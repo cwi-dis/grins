@@ -231,6 +231,7 @@ class reader:
 		self.__version = _read_long(chunk)
 
 	def __read_mark_chunk(self, chunk):
+		self.__markers = []
 		nmarkers = _read_short(chunk)
 		# Some files appear to contain invalid counts.
 		# Cope with this by testing for EOF.
@@ -275,8 +276,7 @@ class reader:
 		if self.__ssnd_chunk is None:
 			self.__read_until('SSND')
 		if self.__chunk is not self.__ssnd_chunk:
-			self.__chunk = self.__ssnd_chunk
-			self.__ssnd_chunk.setpos(self.__ssnd_curpos)
+			self.setpos(self.__ssnd_curpos)
 		fmt = self.__format
 		if nframes >= 0:
 			nbytes = (nframes / fmt.getfpb()) * fmt.getblocksize()
