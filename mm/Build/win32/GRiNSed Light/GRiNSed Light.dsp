@@ -261,6 +261,10 @@ SOURCE=.\M_ChannelMap.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_ChannelMime.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_chunk.c
 # End Source File
 # Begin Source File
@@ -346,6 +350,10 @@ SOURCE=.\M_Font.c
 # Begin Source File
 
 SOURCE=.\M_FormServer.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_fsm.c
 # End Source File
 # Begin Source File
 
@@ -450,6 +458,10 @@ SOURCE=.\M_imgsgi.c
 # Begin Source File
 
 SOURCE=.\M_imgxbm.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_InputValidator.c
 # End Source File
 # Begin Source File
 

@@ -1,6 +1,6 @@
 Document Type: WSE
 item: Global
-  Version=7.04
+  Version=7.041
   Title=Oratrix GRiNS Lite for G2, v1.5 Installation
   Flags=00010100
   Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
@@ -27,17 +27,17 @@ item: Global
   Per-User Version ID=1
   Dialogs Version=7
   Version File=1.5 beta
-  Version Description=Oratrix GRiNS Lite for G2
+  Version Description=GRiNS Lite for RealSystem G2
   Version Copyright=Copyright 1999 Oratrix Development BV
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=2632771577
+  File Checksum=2593089604
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
   Variable Name2=_WISE_
-  Variable Default2=D:\Program Files\Wise InstallMaker
+  Variable Default2=E:\EXTERN~1\WISEIN~1
   Variable Flags2=00001000
   Variable Name3=_ALIASNAME_
   Variable Flags3=00001000
@@ -96,7 +96,7 @@ item: Set Variable
 end
 item: Set Variable
   Variable=GROUP
-  Value=Oratrix GRiNS Lite for RealSystem G2
+  Value=GRiNS Lite for G2
   Flags=10000000
 end
 item: Set Variable
@@ -1166,7 +1166,7 @@ end
 item: End Block
 end
 item: Install File
-  Source=d:\Program Files\Wise InstallMaker\Unwise.exe
+  Source=E:\External Program Files\Wise InstallMaker\Unwise.exe
   Destination=%MAINDIR%\Unwise.exe
   Flags=0000000010000010
 end
@@ -1721,6 +1721,32 @@ item: Create Shortcut
   Icon Number=0
 end
 item: Else Statement
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Lite for G2
+  Command Line=%MAINDIR%\GRiNS_G2L.exe
+  Flags=01000000
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Lite for G2
+  Command Line=%MAINDIR%\GRiNS_G2L.exe
+  Flags=01000000
+end
+item: End Block
 end
 item: If/While Statement
   Variable=COMPONENTS

@@ -65,6 +65,9 @@ set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\Pythonwin\Build
 
 : Do the freeze
 if exist FreezeOpts del FreezeOpts
+echo -x NodeInfo >> FreezeOpts
+echo -x NodeInfoForm >> FreezeOpts
+
 rem The channels...
 echo -x ExternalChannel >> FreezeOpts
 echo -x MACVideoChannel >> FreezeOpts
@@ -104,6 +107,9 @@ echo -x svx8 >> FreezeOpts
 echo -x voc >> FreezeOpts
 
 rem Other platform specific stuff
+echo -x ce >> FreezeOpts
+echo -x Evt >> FreezeOpts
+echo -x MacOS >> FreezeOpts
 echo -x macostools >> FreezeOpts
 echo -x EasyDialogs >> FreezeOpts
 echo -x mm >> FreezeOpts
@@ -132,6 +138,8 @@ echo -x ic >> FreezeOpts
 echo -x sitecustomize >> FreezeOpts
 echo -x termios >> FreezeOpts
 
+echo -x CORBA >> FreezeOpts
+echo -x CORBA.services
 echo -x readline >> FreezeOpts
 echo -x pwd >> FreezeOpts
 
@@ -145,9 +153,15 @@ echo -x rma >> FreezeOpts
 rem exlude img related pyds
 REM echo -x img >> FreezeOpts
 echo -x imgcolormap >> FreezeOpts
+echo -x imgformat >> FreezeOpts
+echo -x imggif >> FreezeOpts
 echo -x imgjpeg >> FreezeOpts
 echo -x imgop >> FreezeOpts
-echo -x imgformat >> FreezeOpts
+echo -x imgpbm >> FreezeOpts
+echo -x imgpgm >> FreezeOpts
+echo -x imgpng >> FreezeOpts
+echo -x imgppm >> FreezeOpts
+echo -x imgtiff >> FreezeOpts
 
 rem producer stuff
 echo -x producer >> FreezeOpts
