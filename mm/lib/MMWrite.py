@@ -188,7 +188,7 @@ def writetype(value, dummy, fp):
 def writeany(value, dummy, fp):
 	if type(value) in (type(0), type(0.0), type('')):
 		fp.write(`value`)
-	elif type(value) == type({}):
+	elif type(value) is type({}):
 		fp.write('(')
 		writedict(value, (writeany, dummy), fp)
 		fp.write(')')
