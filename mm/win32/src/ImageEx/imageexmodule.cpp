@@ -7,25 +7,14 @@
 #include "Python.h"
 #include "win32ui.h"
 
-#define WIDTHBYTES(i)   ((i+31)/32*4)
-#define BFT_BITMAP 0x4d42   /* 'BM' */
-#define SIZEOF_BITMAPFILEHEADER_PACKED  (   \
-    sizeof(WORD) +      /* bfType      */   \
-    sizeof(DWORD) +     /* bfSize      */   \
-    sizeof(WORD) +      /* bfReserved1 */   \
-    sizeof(WORD) +      /* bfReserved2 */   \
-    sizeof(DWORD))      /* bfOffBits   */
-#define MAXREAD  32768
-
 static PyObject *ImageExError;
 
 PYW_EXPORT CWnd *GetWndPtr(PyObject *);
 
 static HIGEAR hIGear=NULL;
-//static HWND hWND;
 static BOOL fl;
 
-long reader(HWND hWND,LPSTR fname, float scale, RECT& rect, int center)
+long reader(HWND hWND,LPSTR fname, float scale, RECT& rect, int center, int transp)
 {
    AT_ERRCOUNT nError;
    //IG_image_delete(hIGear);
@@ -85,6 +74,12 @@ long reader(HWND hWND,LPSTR fname, float scale, RECT& rect, int center)
 		}
 	}
 
+	if(transp!=-1)
+	{
+		AT_RGB			rgbPaletteColor;
+		IG_palette_entry_get ( hIGear, &rgbPaletteColor,  transp);
+		IG_display_transparent_set ( hBitmap, &rgbPaletteColor, TRUE );
+	}
 	IG_device_rect_set(hBitmap,&rcImageRect);
 	
 	rect.top = rcImageRect.top;
@@ -185,6 +180,17 @@ void paintdll(HWND hWND,long bit,int r,int g,int b,float scale, int center)
    //return 0L;
 }
 
+void paintdll2(HDC dc,long bit)
+{
+	if (bit != 0)
+     {
+	  HIGEAR hBitmap =(HIGEAR) bit;
+
+	  IG_display_desktop_pattern_set(hBitmap,NULL,NULL,NULL,FALSE);
+
+	  IG_display_image(hBitmap,dc); 
+     }
+}
 
 void destroyimage(long bit)
 {
@@ -243,7 +249,7 @@ static PyObject* py_ImageEx_Prepare(PyObject *self, PyObject *args)
 
 	obWnd = GetWndPtr(testOb);
 	hW = obWnd->m_hWnd;
-	bit=reader(hW,filename,scale,rect,center);
+	bit=reader(hW,filename,scale,rect,center, transp);
 	
 	tmp = Py_BuildValue("lllll",bit,rect.left,rect.top,rect.right,rect.bottom);
 
@@ -325,6 +331,44 @@ static PyObject* py_ImageEx_ImageRect(PyObject *self, PyObject *args)
 }
 
 
+static PyObject* py_ImageEx_CreateBitmap(PyObject *self, PyObject *args)
+{
+	PyObject *ob = Py_None;
+	CWnd *hCWnd;
+	RECT rc, cl;
+	long im;
+	
+	if(!PyArg_ParseTuple(args, "Oliiii", &ob, &im, &rc.left, &rc.top, &rc.right, &rc.bottom))
+	{
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+	hCWnd = GetWndPtr( ob );
+	hCWnd->GetClientRect(&cl);
+	
+	HDC dc = GetDC(hCWnd->m_hWnd), cdc;
+	HBITMAP comp_bitmap;
+
+	cdc = CreateCompatibleDC(dc);
+
+	comp_bitmap = CreateCompatibleBitmap(dc, cl.right, cl.bottom);
+	
+	HBITMAP pOld1 = (HBITMAP)SelectObject(cdc,comp_bitmap);
+	
+	paintdll2(cdc,im);
+	
+	BitBlt(dc,rc.left, rc.top, rc.right-rc.left, rc.bottom-rc.top, 
+				cdc, rc.left, rc.top, SRCCOPY);
+
+	ReleaseDC(hCWnd->m_hWnd,dc);
+	DeleteDC(cdc);
+	
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+
+
 static PyMethodDef ImageExMethods[] = 
 {
 	{ "PutImage", (PyCFunction)py_ImageEx_PutImage, 1},
@@ -332,6 +376,7 @@ static PyMethodDef ImageExMethods[] =
 	{ "Destroy", (PyCFunction)py_ImageEx_Destroy, 1},
 	{ "SizeOfImage", (PyCFunction)py_ImageEx_SizeOfImage, 1},
 	{ "ImageRect", (PyCFunction)py_ImageEx_ImageRect, 1},
+	{ "CreateClip", (PyCFunction)py_ImageEx_CreateBitmap, 1},
 	{ NULL, NULL }
 };
 
