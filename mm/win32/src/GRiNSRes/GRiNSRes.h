@@ -379,6 +379,7 @@
 #define IDC_LAYOUT_REGION_W             1248
 #define IDC_LAYOUT_REGION_H             1249
 #define IDC_LAYOUT_REGION_Z             1250
+#define IDC_LAYOUT_REGION_H2            1250
 #define IDC_LAYOUT_PROPERTIES           1251
 #define IDC_LAYOUT_REGION_SEL           1252
 #define IDC_LAYOUT_VIEWPORT_SEL         1253
@@ -414,7 +415,6 @@
 #define IDC_LAYOUT_SHOW_ALLMEDIAS       1284
 #define IDC_GROUP4                      1285
 #define IDC_GROUP5                      1286
-#define IDC_GROUP6                      1287
 #define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
