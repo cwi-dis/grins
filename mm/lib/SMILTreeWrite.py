@@ -648,10 +648,8 @@ class SMILWriter(SMIL):
 			if i >= 0: url = url[:i+1]
 			else: url = ''
 			self.convertURLs = url
-			print 'converting',url,filename
 		else:
 			self.convertURLs = None
-			print 'not converting'
 		self.__cleanSMIL = cleanSMIL	# if set, no GRiNS namespace
 		self.evallicense = evallicense
 		self.__generate_number = 0
