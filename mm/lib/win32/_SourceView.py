@@ -17,15 +17,16 @@ from pywinlib.mfc import window,object,docview
 import windowinterface
 import afxres,commctrl
 
-class _SourceView(docview.EditView):
-	# Class contructor. Calls the base EditView constructor
+class _SourceView(docview.RichEditView):
+	# Class contructor. Calls the base RichEditView constructor
 	def __init__(self,doc,bgcolor=None):
 		self._mdiframe = None
-		docview.EditView.__init__(self,doc)
+		docview.RichEditView.__init__(self,doc)
 		self._text=''
 		self._close_cmd_list=[]
 		self.mother = None
 		self.readonly = 0
+		self.__editctrl = self.GetRichEditCtrl()
 
 	def setclosecmd(self, cmdid):
 		self._closecmdid = cmdid
@@ -40,7 +41,7 @@ class _SourceView(docview.EditView):
 	
 	# Called by the framework after the OS window has been created
 	def OnInitialUpdate(self):
-		edit=self.GetEditCtrl()	# Is it just me, or does this only return self?
+		edit=self.__editctrl	# Is it just me, or does this only return self?
 		edit.SetWindowText(self._text)
 		if self.readonly:
 			edit.SetReadOnly(1)
@@ -64,7 +65,7 @@ class _SourceView(docview.EditView):
 ##	def destroy_
 ##		saveme = windowinterface.GetOKCancel("Do you want to keep your changes?", self.GetParent())
 ##		if saveme==0:		# Which means the user clicked "yes"
-##			edit = self.GetEditCtrl()
+##			edit = self.__editctrl
 ##			text = edit.GetWindowText()
 ##			if self.mother:
 	
@@ -84,15 +85,17 @@ class _SourceView(docview.EditView):
 		self._text=self.convert2ws(text)
 		# if already visible, update text in window
 		if self._mdiframe is not None:
-			self.GetEditCtrl().SetWindowText(self._text)
+			self.__editctrl.SetWindowText(self._text)
+		self.__editctrl.SetModify(0) # No, this document has not been modified yet.
 
 	def get_text(self):
-		return self.GetEditCtrl().GetWindowText()
+		return self.__editctrl.GetWindowText()
 
 	def is_changed(self):
 		# Return true or false depending on whether the source view has been changed.
-		#return self.GetEditCtrl().GetModify()
-		return 1
+		modified = self.__editctrl.GetModify()
+		print "DEBUG: modified is: ", modified
+		return modified
 	
 	def setmother(self, mother):
 		self.mother = mother
