@@ -916,11 +916,56 @@ class AnimateContext:
 
 def getregionattr(node, attr):
 	v = None
-	if node.GetChannel():
-		d = node.GetChannel().attrdict
-	else:
-		# not actually a region
+	if node._type == 'mmnode':
 		d = node.attrdict
+	else:
+		d = node._region.attrdict
+
+	if settings.activeFullSmilCss:
+		if attr in ('position', 'size', 'left', 'top', 'width', 'height','right','bottom'):
+			if node._type == 'mmnode':
+				r = node.getPxGeom()
+			elif node._type == 'region':
+				r = node._region.getPxGeom()
+			else:
+				return None, attr, ''	
+			if attr == 'position':
+				return complex(r[0], r[1]), attr, 'position'
+			elif attr == 'size':
+				v = r[2], r[3]
+			elif attr == 'left':
+				v = r[0]
+			elif attr=='top':
+				v = r[1]
+			elif attr == 'right':
+				v = r[0] + r[2]
+			elif attr == 'bottom':
+				v = r[1] + r[3]
+			elif attr == 'width':
+				v = r[2]
+			elif attr == 'height':
+				v = r[3]
+			return v, attr, 'int'
+
+		elif attr == 'bgcolor':
+			if d.has_key('bgcolor'):
+				return d['bgcolor'], attr, 'color'
+			else:
+				return (0, 0, 0), attr, 'color'
+
+		elif attr == 'z':
+			if d.has_key('z'):
+				return d['z'], attr, 'int'
+			else:
+				return 0, attr, 'int'
+
+		elif attr == 'soundLevel':
+			if d.has_key('soundLevel'):
+				return d['soundLevel'], attr, 'float'
+			else:
+				return 0, attr, 'float'
+		return None, attr, ''
+
 
 	if attr in ('position', 'size', 'left', 'top', 'width', 'height','right','bottom'):
 		if d.has_key('base_winoff'):
@@ -1031,9 +1076,11 @@ class AnimateElementParser:
 				anim.targetnode = root.GetChildByName(te)
 				if not anim.targetnode:
 					self.__checkNotNodeElementsTargets(te)
-					if anim.targetnode: self.__isstdnode = 0
 			else:
-				anim.targetnode = anim.GetParent()	
+				anim.targetnode = anim.GetParent()
+				anim.targetnode._type = 'mmnode'	
+		else:
+			anim.targetnode._type = 'mmnode'
 				
 		if not anim.targetnode:
 			# the target node does not exist within grins
@@ -1264,10 +1311,11 @@ class AnimateElementParser:
 		if self.__elementTag=='animateMotion':
 			self.__grinsattrname = self.__attrname = 'position'
 			if settings.activeFullSmilCss:
-				if self.__isstdnode:
+				rc = None
+				if self.__target._type == 'mmnode':
 					rc = self.__target.getPxGeom()
-				else:
-					ch = self.__target.GetChannel()
+				elif self.__target._type == 'region':
+					ch = self.__target._region
 					rc = ch.getPxGeom()
 				if rc:
 					x, y, w, h = rc
@@ -1664,6 +1712,8 @@ class AnimateElementParser:
 				newnode.attrdict = targchan.attrdict.copy()
 				newnode.attrdict['channel'] = te
 				newnode.attrdict['tag'] = 'region'
+				newnode._type = 'region'
+				newnode._region = targchan
 				targchan._vnode = newnode
 			anim.targetnode = newnode
 		elif ctx.transitions.has_key(te):
@@ -1674,6 +1724,7 @@ class AnimateElementParser:
 			newnode.attrdict = tr.copy()
 			newnode.attrdict['channel'] = te
 			newnode.attrdict['tag'] = 'transition'
+			newnode._type = 'transition'
 			anim.targetnode = newnode
 		else:
 			# is it an area?
@@ -1693,6 +1744,7 @@ class AnimateElementParser:
 					newnode.attrdict['parent'] = parent
 					newnode.attrdict['type'] = a.atype
 					newnode.attrdict['times'] = a.atimes
+					newnode._type = 'area'
 					parent.__dict__[vnodename] = newnode
 				anim.targetnode = newnode
 	
