@@ -585,7 +585,7 @@ no)	;;
 				case "${f##*/}" in
 				CVS|\*)	;;
 				*)
-					install -m 0444 -idb $dist.sw.templates -src $f -F /usr/local/grins/Templates ${f##*/}
+					install -m 0444 -idb $dist.help.data -src $f -F /usr/local/grins/Templates ${f##*/}
 					;;
 				esac
 			done &&
