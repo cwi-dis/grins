@@ -41,6 +41,20 @@ class HELP(_CommandBase):
 class PREFERENCES(_CommandBase):
 	help = 'Display application preferences'
 
+# Help commands
+class GRINS_WEB(_CommandBase):
+	help = 'GRiNS on the Web'
+class GRINS_QSG(_CommandBase):
+	help = 'GRiNS QuickStart Guide'
+class GRINS_TUTORIAL(_CommandBase):
+	help = 'GRiNS Tutorial Users Guide'
+class GRINS_TDG(_CommandBase):
+	help = 'GRiNS Template Design Guide'
+class GRINS_REFERENCE(_CommandBase):
+	help = 'GRiNS Reference Manual'
+class GRINS_DEMOS(_CommandBase):
+	help = 'GRiNS Demo Documents'
+
 # Find/Replace commands
 class FIND(_CommandBase):
 	help = 'Find a object'
