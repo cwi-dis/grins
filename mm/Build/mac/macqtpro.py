@@ -64,6 +64,8 @@ else:
 # macfreeze: path :::pylib
 # xxxx macfreeze: path :::mmpython:producer:mac:bin
 #
+# Exclude for now:
+# macfreeze: exclude macos9htmlwidget
 # and some modules we don't want:
 # macfreeze: exclude X_window
 # macfreeze: exclude X_windowbase
