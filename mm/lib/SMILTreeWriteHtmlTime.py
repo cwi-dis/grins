@@ -53,6 +53,7 @@ class SMILHtmlTimeWriter(SMIL):
 
 		self.__isopen = 0
 		self.__stack = []
+		self.ch2style = {}
 
 	def writeAsHtmlTime(self):
 		write = self.fp.write
@@ -94,6 +95,9 @@ class SMILHtmlTimeWriter(SMIL):
 		
 		# body contents
 
+		# document
+		self.writetag('div',[('class', 'time'),])
+			
 		# viewports
 		ch = self.top_levels[0]
 		name = self.ch2name[ch]
@@ -103,6 +107,17 @@ class SMILHtmlTimeWriter(SMIL):
 		self.pop()
 
 		self.close()
+
+	def writefd(self):
+		fulldur = self.root.calcfullduration()
+		if fulldur is not None:
+			if fulldur<0:
+				fulldur = 'indefinite'
+			else:
+				fulldur = '%ds' % fulldur
+			self.writetag('div', [('class', 'time'), ('dur', fulldur)])
+		else:
+			self.writetag('div', [('class', 'time')])
 
 	def push(self):
 		if self.__isopen:
@@ -161,6 +176,8 @@ class SMILHtmlTimeWriter(SMIL):
 			mtype, xtype = mediatype(chtype)
 		
 		attrlist = []
+		regionName = None
+		src = None
 
 		# if node used as destination, make sure it's id is written
 		uid = x.GetUID()
@@ -189,10 +206,10 @@ class SMILHtmlTimeWriter(SMIL):
 			# legal for the type of node
 			# other attributes are caught below
 			if value and attributes.has_key(name) and value != attributes[name]:
-				if name not in ('top','left','width','height','right','bottom', 'backgroundColor', 'region'):
+				if name == 'region': regionName = value
+				elif name == 'src': src = value
+				if name not in ('top','left','width','height','right','bottom', 'backgroundColor', 'region', 'src'):
 					attrlist.append((name, value))
-
-		#print uid, self.uid2name[uid], mtype, xtype, x.getPxAbsGeomMedia(), attrlist
 		
 		if interior:
 			if root and (attrlist or type != 'seq'):
@@ -207,7 +224,7 @@ class SMILHtmlTimeWriter(SMIL):
 		elif type in ('imm', 'ext'):
 			children = x.GetChildren()
 			if not children:				
-				self.writemedianode(x, attrlist, mtype)
+				self.writemedianode(x, attrlist, mtype, regionName, src)
 			else:
 				self.writetag(mtype, attrlist)
 				self.push()
@@ -218,16 +235,29 @@ class SMILHtmlTimeWriter(SMIL):
 			raise CheckError, 'bad node type in writenode'
 
 
-	def writemedianode(self, x, attrlist, mtype):
+	def writemedianode(self, x, attrlist, mtype, regionName, src):
+		lch = self.root.GetContext().getchannel(regionName)
+		
+		attrlist.insert(0, ('class', 'time'))
+
+		if self.ch2style.has_key(lch):
+			attrlist.append(('style', self.ch2style[lch]))
+		self.writetag('div', attrlist)
+		self.push()
+
+		
+		mattrlist = []
+		if src:
+			mattrlist.append(('src', src))
 		if mtype=='video':
-			mtype = 'media'
-		geoms = x.getPxAbsGeomMedia()
+			mtype = 't:media'
+		geoms = x.getPxGeomMedia()
 		if geoms:
 			subRegGeom, mediaGeom = geoms
-			style = 'position=absolute;left=%d;top=%d;width=%d;height=%d;' % mediaGeom
-			attrlist.append( ('style',style) )
-		self.writetag('t:'+mtype, attrlist)
-
+			style = 'position=absolute;left=%d;top=%d;width=%d;height=%d;' % subRegGeom
+			mattrlist.append( ('style',style) )
+		self.writetag(mtype, mattrlist)
+		self.pop()
 
 	def writelayout(self):
 		x = xmargin = 20
@@ -237,17 +267,50 @@ class SMILHtmlTimeWriter(SMIL):
 			name = self.ch2name[ch]
 			if ch.has_key('bgcolor'):
 				bgcolor = ch['bgcolor']
-			elif features.compatibility == features.G2:
-				bgcolor = 0,0,0
 			else:
 				bgcolor = 255,255,255
 			if colors.rcolors.has_key(bgcolor):
 				bgcolor = colors.rcolors[bgcolor]
 			else:
 				bgcolor = '#%02x%02x%02x' % bgcolor
-			style = '{position:absolute;overflow:hidden;left=%d;top=%d;width=%d;height=%d;background-color=%s;}' % (x, y, w, h, bgcolor)
-			self.fp.write('.'+name + style + '\n')
+			style = 'position:absolute;overflow:hidden;left=%d;top=%d;width=%d;height=%d;background-color=%s;' % (x, y, w, h, bgcolor)
+			self.ch2style[ch] = style
+			self.fp.write('.'+name + ' {' + style + '}\n')
+
+			if self.__subchans.has_key(ch.name):
+				for sch in self.__subchans[ch.name]:
+					self.writeregion(sch)
+
 			x = x + w + xmargin
+
+	def writeregion(self, ch):
+		if ch['type'] != 'layout':
+			return
+
+		x, y, w, h = ch.getPxGeom()
+		style = 'position:absolute;overflow:hidden;left=%d;top=%d;width=%d;height=%d;' % (x, y, w, h)
+		
+		if ch.has_key('bgcolor'):
+			bgcolor = ch['bgcolor']
+			if colors.rcolors.has_key(bgcolor):
+				bgcolor = colors.rcolors[bgcolor]
+			else:
+				bgcolor = '#%02x%02x%02x' % bgcolor
+			style = style + 'background-color=%s;' % bgcolor
+			
+		z = ch.get('z', 0)
+		if z > 0:
+			style = style + 'z-index=%d;' % z
+
+		self.ch2style[ch] = style
+
+		name = self.ch2name[ch]
+		self.fp.write('.'+name + ' {' + style + '}\n')
+		
+		if self.__subchans.has_key(ch.name):
+			for sch in self.__subchans[ch.name]:
+				self.writeregion(sch)
+		
 
 	#
 	#
@@ -430,3 +493,4 @@ class SMILHtmlTimeWriter(SMIL):
 
 
 
+ 
