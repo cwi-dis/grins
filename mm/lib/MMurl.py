@@ -8,9 +8,13 @@ class FancyURLopener(_OriginalFancyURLopener):
 		apply(_OriginalFancyURLopener.__init__, (self,) + args)
 		self.tempcache = {}
 
-	def open(self, fullurl, data=None):
-		result = _OriginalFancyURLopener.open(self, fullurl, data)
-		self.openedurl = result.url
+	def retrieve(self, url, filename=None):
+		result = _OriginalFancyURLopener.retrieve(self, url, filename)
+		url = unwrap(url)
+		if self.tempcache.has_key(url):
+			self.openedurl = self.tempcache[url][2]
+		else:
+			self.openedurl = url
 		return result
 
 	def http_error_default(self, url, fp, errcode, errmsg, headers):
