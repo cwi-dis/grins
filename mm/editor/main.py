@@ -1,6 +1,8 @@
 # Main program for the CMIF editor
 
 import sys
+
+# patch the module search path so we are less dependent on where we are called
 sys.path.append('/ufs/guido/mm/demo/mm4')
 sys.path.append('/ufs/guido/mm/demo/lib')
 
@@ -13,24 +15,32 @@ import Channel
 def main():
 	playnow = 0
 	stats = 0
-	noarm = 0
-	opts, args = getopt.getopt(sys.argv[1:], 'psn')
+	#
+	opts, args = getopt.getopt(sys.argv[1:], 'psnh:')
+	#
 	for opt, arg in opts:
 		if opt == '-p':
 			playnow = 1
 		elif opt == '-s':
 			stats = 1
 		elif opt == '-n':
-			noarm = 1
+			Channel.disable_prearm()
+		elif opt == '-h':
+			TopLevel.sethelpdir(arg)
+	#
 	if args:
+		if len(args) > 1:
+			print 'Warning: only one document allowed'
 		filename = args[0]
 	else:
 		filename = 'demo.cmif'
 	#
-	if noarm:
-		Channel.disable_prearm()
+	try:
+		top = TopLevel.TopLevel().init(filename)
+	except IOError:
+		sys.stderr.write(filename + ': cannot open\n')
+		sys.exit(2)
 	#
-	top = TopLevel.TopLevel().init(filename)
 	top.show()
 	#
 	try:
