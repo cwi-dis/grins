@@ -244,6 +244,8 @@ PlayerObject::SetPyErrorSink(PyObject *self, PyObject *args)
 	ExampleClientContext *pCC = ((PlayerObject*)self)->pContext;
 	if (pCC)
 		pCC->m_pErrorSink->SetPyErrorSink(obj);
+	else
+		RETURN_ERR("PlayerObject has no Context");
 	RETURN_NONE;
 }
 
@@ -259,6 +261,8 @@ PlayerObject::SetPyStatusListener(PyObject *self, PyObject *args)
 		pCC->m_pClientSink->SetPyAdviceSink(obj);
 		pCC->m_pErrorSink->SetPyErrorSink(obj);
 		}
+	else
+		RETURN_ERR("PlayerObject has no Context");
 	RETURN_NONE;
 }
 
@@ -266,10 +270,13 @@ PlayerObject::SetPyStatusListener(PyObject *self, PyObject *args)
 PyObject *
 PlayerObject::SetOsWindow(PyObject *self, PyObject *args)
 {
+	PyObject *pywin = NULL;
 #ifdef _MACINTOSH
 	WindowPtr hwnd;
+	
 	if (!PyArg_ParseTuple(args, "O&", WinObj_Convert, &hwnd))
 		return NULL;
+	(void)PyArg_ParseTuple(args, "O", &pywin);
 #else
 	/* Windows */
 	int hwnd;
@@ -280,8 +287,12 @@ PlayerObject::SetOsWindow(PyObject *self, PyObject *args)
 	if(pCC) {
 		ExampleSiteSupplier *ss=pCC->m_pSiteSupplier;
 		if (ss)
-			ss->SetOsWindow((void*)hwnd);
+			ss->SetOsWindow((void*)hwnd, pywin);
+		else
+			RETURN_ERR("Context has no SiteSupplier");
 	}
+	else
+		RETURN_ERR("PlayerObject has no Context");
 	RETURN_NONE;
 }
 
@@ -295,8 +306,12 @@ PlayerObject::ShowInNewWindow(PyObject *self, PyObject *args)
 	if(pCC) {
 		ExampleSiteSupplier *ss=pCC->m_pSiteSupplier;
 		if (ss)
-			ss->ShowInNewWindow(f);
+			ss->SetOsWindow((void *)0, (PyObject *)0);
+		else
+			RETURN_ERR("Context has no SiteSupplier");
 	}
+	else
+		RETURN_ERR("PlayerObject has no Context");
 	RETURN_NONE;
 }
 
@@ -319,7 +334,11 @@ PlayerObject::SetPositionAndSize(PyObject *self, PyObject *args)
 		ExampleSiteSupplier *ss=pCC->m_pSiteSupplier;
 		if (ss)
 			ss->SetOsWindowPosSize(pos, size);
+		else
+			RETURN_ERR("Context has no SiteSupplier");
 	}
+	else
+		RETURN_ERR("PlayerObject has no Context");
 	RETURN_NONE;
 }
 
@@ -377,9 +396,14 @@ void
 PlayerObject::ReleaseObjects()
 {
 	if (pErrorSinkControl) {
-		pErrorSinkControl->RemoveErrorSink(pErrorSink);
+		if (pErrorSink)
+			pErrorSinkControl->RemoveErrorSink(pErrorSink);
 		pErrorSinkControl->Release();
 		pErrorSinkControl = NULL;
+	}
+	if (pErrorSink) {
+		pErrorSink->Release();
+		pErrorSink = NULL;
 	}
 	if (pContext) {
 		pContext->Release();
