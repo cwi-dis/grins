@@ -5,9 +5,10 @@ __version__ = "$Id$"
 # modules (everything to do with following hyperlinks).
 
 # Indices of the fields of an anchor triple:
-A_ID   = 0
-A_TYPE = 1
-A_ARGS = 2
+A_ID    = 0
+A_TYPE  = 1
+A_ARGS  = 2
+A_TIMES = 3
 # XXX These cannot really be changed, much code relies on these values
 
 # Types:
