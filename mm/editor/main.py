@@ -21,6 +21,81 @@ def usage(msg):
 	print 'file ...   : one or more CMIF files'
 	sys.exit(2)
 
+class Main:
+	def __init__(self, opts, files):
+		import TopLevel
+		self.tops = []
+		self._mm_callbacks = {}
+		import mm, posix
+		pipe_r, pipe_w = posix.pipe()
+		mm.setsyncfd(pipe_w)
+		self._mmfd = pipe_r
+		for fn in files:
+			top = TopLevel.TopLevel().init(self, fn)
+			top.setwaiting()
+			top.show()
+			for opt, arg in opts:
+				if opt == '-C':
+					top.channelview.show()
+				elif opt == '-H':
+					top.hierarchyview.show()
+				elif opt in ('-P', '-p', '-j'):
+					top.player.show()
+					if opt == '-p':
+						top.player.playsubtree(
+							  top.root)
+					if opt == '-j':
+						top.player.playfromanchor(
+							  top.root, arg)
+				elif opt == '-S':
+					top.styleview.show()
+				elif opt == '-L':
+					top.links.show()
+			top.checkviews()
+			self.tops.append(top)
+
+		for top in self.tops:
+			top.setready()
+
+	def run(self):
+		import select, gl, fl, posix, GLLock
+		glfd = gl.qgetfd()
+		while 1:
+			locked = None
+			if GLLock.gl_lock:
+				GLLock.gl_lock.acquire()
+				locked = 1
+			result = fl.check_forms()
+			if locked:
+				GLLock.gl_lock.release()
+			wtd = [glfd, self._mmfd]
+			for top in self.tops:
+				wtd = wtd + top.select_fdlist
+			ifdlist, ofdlist, efdlist = select.select(
+				  wtd, [], [], 0.1)
+			if self._mmfd in ifdlist:
+				self._mmcallback()
+			for top in self.tops:
+				for fd in top.select_fdlist:
+					if fd in ifdlist:
+						top.select_ready(fd)
+
+	def setmmcallback(self, dev, callback):
+		if callback:
+			self._mm_callbacks[dev] = callback
+		elif self._mm_callbacks.has_key(dev):
+			del self._mm_callbacks[dev]
+
+	def _mmcallback(self):
+		import posix
+		devval = ord(posix.read(self._mmfd, 1))
+		dev, val = devval >> 2, devval & 3
+		if self._mm_callbacks.has_key(dev):
+			func = self._mm_callbacks[dev]
+			func(val)
+		else:
+			print 'Warning: unknown device in mmcallback'
+
 def main():
 	#
 	try:
@@ -50,9 +125,6 @@ def main():
 	sys.path.append(findfile('video'))
 	#
 	import fl
-	import TopLevel
-	import SoundChannel
-	import ImageChannel
 	import Channel
 	import GLLock
 	#
@@ -70,65 +142,12 @@ def main():
 	GLLock.init()
 	import windowinterface
 	windowinterface.usewindowlock(GLLock.gl_lock)
-	tops = []
-	for fn in files:
-		top = TopLevel.TopLevel().init(fn)
-		top.setwaiting()
-		top.show()
-		for opt, arg in opts:
-			if opt == '-C':
-				top.channelview.show()
-			elif opt == '-H':
-				top.hierarchyview.show()
-			elif opt in ('-P', '-p', '-j'):
-				top.player.show()
-				if opt == '-p':
-					top.player.playsubtree(top.root)
-				if opt == '-j':
-					top.player.playfromanchor(top.root, \
-						  arg)
-			elif opt == '-S':
-				top.styleview.show()
-			elif opt == '-L':
-				top.links.show()
-		top.checkviews()
-		tops.append(top)
-	#
-	for top in tops:
-		top.setready()
-	#
+
+	m = Main(opts, files)
+
 	try:
 		try:
-			import select, gl, fl, mm, posix
-			glfd = gl.qgetfd()
-			qenterpipe_r, qenterpipe_w = posix.pipe()
-			mm.setsyncfd(qenterpipe_w)
-			while 1:
-##				while 1:
-##					result = windowinterface.pollevent()
-##					if not result:
-##						break
-				locked = None
-				if GLLock.gl_lock:
-					GLLock.gl_lock.acquire()
-					locked = 1
-				result = fl.check_forms()
-				if locked:
-					GLLock.gl_lock.release()
-				wtd = [glfd, qenterpipe_r]
-				for top in tops:
-					wtd = wtd + top.select_fdlist
-				ifdlist, ofdlist, efdlist = select.select(\
-					  wtd, [], [], 0.1)
-				if qenterpipe_r in ifdlist:
-					dummy = posix.read(qenterpipe_r, 10000)
-				for top in tops:
-					for fd in top.select_fdlist:
-						if fd in ifdlist:
-							top.select_ready(fd)
-##			fl.do_forms()
-			# This point isn't reached
-			raise RuntimeError, 'unexpected do_forms return'
+			m.run()
 ##		except KeyboardInterrupt:
 ##			print 'Interrupt.'
 		except SystemExit, sts:
