@@ -31,7 +31,7 @@ MENUBAR=(
 		(ENTRY, 'Preferences...', None, PREFERENCES),
 		(SEP,),
 		(CASCADE, 'Debug', (
-			(TOGGLE, 'Enable call tracing', None, TRACE),
+			(TOGGLE, ('Enable call tracing','Disable call tracing'), None, TRACE),
 			(ENTRY, 'Enter debugger', None, DEBUG),
 			(ENTRY, 'Abort', None, CRASH),
 			(ENTRY, 'Show log/debug window', None, CONSOLE))),
@@ -64,11 +64,11 @@ MENUBAR=(
 		(ENTRY, 'Toggle channel state', None, TOGGLE_ONOFF))),
 
 	(CASCADE, 'View', (
-		(TOGGLE, 'Player', '1', PLAYERVIEW),
-		(TOGGLE, 'Layout', '2', LAYOUTVIEW),
-		(TOGGLE, 'Hierarchy', '3', HIERARCHYVIEW),
-		(TOGGLE, 'Channel/timeline', '4', CHANNELVIEW),
-		(TOGGLE, 'Hyperlinks', '5', LINKVIEW),
+		(TOGGLE, ('Open Player', 'Close Player'), '1', PLAYERVIEW),
+		(TOGGLE, ('Open Layout view', 'Close Layout view'), '2', LAYOUTVIEW),
+		(TOGGLE, ('Open Hierarchy view', 'Close Hierarchy view'), '3', HIERARCHYVIEW),
+		(TOGGLE, ('Open Timeline view', 'Close Timeline view'), '4', CHANNELVIEW),
+		(TOGGLE, ('Open Hyperlink view', 'Close Hyperlink view'), '5', LINKVIEW),
 		(SEP,),
 		(ENTRY, 'Zoom in', None, ZOOMIN),
 		(ENTRY, 'Zoom out', None, ZOOMOUT),
@@ -78,9 +78,9 @@ MENUBAR=(
 			(ENTRY, 'Enlarge height', None, CANVAS_HEIGHT),
 			(ENTRY, 'Reset', None, CANVAS_RESET))),
 		(SEP,),
-		(TOGGLE, 'Show unused channels', 'T', TOGGLE_UNUSED),
-		(TOGGLE, 'Show sync arcs', None, TOGGLE_ARCS),
-		(TOGGLE, 'Show image thumbnails', None, THUMBNAIL),
+		(TOGGLE, 'Display unused channels', 'T', TOGGLE_UNUSED),
+		(TOGGLE, 'Display sync arcs', None, TOGGLE_ARCS),
+		(TOGGLE, 'Display image thumbnails', None, THUMBNAIL),
 		(SEP,),
 		(CASCADE, 'Minidoc navigation', (
 			(ENTRY, 'Next', None, NEXT_MINIDOC),
