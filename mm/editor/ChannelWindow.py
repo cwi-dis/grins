@@ -9,7 +9,7 @@ ChannelWinDict = {}
 
 class ChannelWindow(GLDialog):
 
-	def init(self, (name, attrdict, channel)):
+	def init(self, name, attrdict, channel):
 		global ChannelWinDict
 		self.name = name
 		self.attrdict = attrdict
@@ -91,7 +91,7 @@ class ChannelWindow(GLDialog):
 			self.attrdict['winpos'] = h, v
 			self.attrdict['winsize'] = width, height
 
-	def mouse(self, (dev, val)):
+	def mouse(self, dev, val):
 		if dev == DEVICE.RIGHTMOUSE:
 			if self.node == None:
 				self.channelmenu()
@@ -147,7 +147,7 @@ class ChannelWindow(GLDialog):
 			gl.endclosedline()
 		gl.drawmode(GL.NORMALDRAW)
 
-	def sqqmouse(self, (dev, val)):
+	def sqqmouse(self, dev, val):
 		if not self.sqq_square:
 			return
 		if val == 1:

@@ -127,7 +127,7 @@ style: 0
 size: 11.000000
 lcol: 0
 label: Dest only
-name: begin_button
+name: whole_button
 callback: setloc_callback
 argument: 0
 
@@ -142,7 +142,7 @@ style: 0
 size: 11.000000
 lcol: 0
 label: Auto-firing
-name: end_button
+name: auto_button
 callback: setloc_callback
 argument: 1
 
@@ -157,7 +157,7 @@ style: 0
 size: 11.000000
 lcol: 0
 label: Normal...
-name: whole_button
+name: normal_button
 callback: setloc_callback
 argument: 2
 
@@ -172,7 +172,7 @@ style: 0
 size: 11.000000
 lcol: 0
 label: Pausing...
-name: internal_button
+name: pause_button
 callback: setloc_callback
 argument: 3
 

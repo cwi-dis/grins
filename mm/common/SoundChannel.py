@@ -75,7 +75,7 @@ class SoundChannel(Channel):
 	chan_attrs = []
 	node_attrs = ['file']
 	#
-	def init(self, (name, attrdict, player)):
+	def init(self, name, attrdict, player):
 		self = Channel.init(self, name, attrdict, player)
 		self.info = self.port = None
 		self.rate = 0.0
@@ -131,7 +131,7 @@ class SoundChannel(Channel):
 			return
 		self.armed_node = node
 		
-	def play(self, (node, callback, arg)):
+	def play(self, node, callback, arg):
 		self.node = node
 		self.cb = (callback, arg)
 		self.dummy_event_id = None

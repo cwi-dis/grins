@@ -87,6 +87,7 @@ class PlayerCore(Scheduler):
 			self.showstate()
 	#
 	def playsubtree(self, node):
+		self.toplevel.setwaiting()
 		if not self.showing:
 			self.show()
 		if self.playing:
@@ -95,6 +96,7 @@ class PlayerCore(Scheduler):
 			raise CheckError, 'playsubtree with bad arg'
 		self.userplayroot = self.playroot = node
 		self.play()
+		self.toplevel.setready()
 	#
 	def defanchor(self, node, anchor):
 		if not self.showing:
@@ -105,7 +107,7 @@ class PlayerCore(Scheduler):
 		if ch == None:
 			fl.show_message('Cannot set internal anchor', \
 				  '(node not on a channel)', '')
-			return
+			return None
 		if not ch.is_showing():
 			ch.flip_visible()
 			self.makemenu()
@@ -217,6 +219,8 @@ class PlayerCore(Scheduler):
 				'channel ' +`name`+ ' has bad type ' +`type`
 		chclass = channelmap[type]
 		ch = chclass().init(name, attrdict, self)
+		if self.waiting:
+			ch.setwaiting()
 		self.channels[name] = ch
 		self.channeltypes[name] = type
 	#

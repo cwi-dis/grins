@@ -2,6 +2,7 @@
 
 import string
 import strop # String operations in C
+import regex
 
 from MMExc import *
 import MMAttrdefs
@@ -15,58 +16,33 @@ from Channel import Channel
 from ChannelWindow import ChannelWindow
 
 from ArmStates import *
+from AnchorDefs import *
 
-from AnchorEdit import \
-	A_ID, A_TYPE, A_ARGS, ATYPE_NORMAL, ATYPE_PAUSE, ATYPE_AUTO
 
-# Find last occurence of space in string such that the size (according to some
-# size calculating function) of the initial substring is smaller than a given
-# number.  If there is no such substrings the first space in the string is
-# returned (if any) otherwise the length of the string.
-# Assume sizefunc() is additive: sizefunc(s + t) == sizefunc(s) + sizefunc(t)
-
-def fitstring(s, sizefunc, limit):
-	words = strop.splitfields(s, ' ')
-	spw = sizefunc(' ')
-	okcount = -1
-	totsize = 0
-	totcount = 0
-	for w in words:
-		if w:
-			addsize = sizefunc(w)
-			if totsize > 0 and totsize + addsize > limit:
-				break
-			totsize = totsize + addsize
-			totcount = totcount + len(w)
-			okcount = totcount
-		# The space after the word
-		totsize = totsize + spw
-		totcount = totcount + 1
-	if okcount < 0:
-		return totcount
-	else:
-		return okcount
-
-def between(v, x0, x1):
-	return ((x0 <= v and v <= x1) or (x1 <= v and v <= x0))
+# The text channel's *window* -- this is distinct from the *channel*
+# (for better or for worse)
 
 class TextWindow(ChannelWindow):
 	#
-	def init(self, (name, attrdict, channel)):
+	def init(self, name, attrdict, channel):
 		self = ChannelWindow.init(self, name, attrdict, channel)
-		self.text = [] # Initially, display no text
+		self.parlist = [] # Initially, display no text
+		self.taglist = []
 		self.fontname = None
 		self.pointsize = None
 		self.node = None
 		self.vobj = None
-		self.setanchor = 0
-		self.anchors = []
 		self.curwidth = 0
 		self.curlines = []
+		self.partoline = []
+		self.linetopar = []
 		self.arm_node = None
-		self.arm_text = None
+		self.arm_parlist = None
+		self.arm_taglist = None
 		self.arm_curwidth = 0
 		self.arm_curlines = []
+		self.arm_partoline = []
+		self.arm_linetopar = []
 		self.setcolors()
 		return self
 	#
@@ -98,58 +74,56 @@ class TextWindow(ChannelWindow):
 		gl.RGBcolor(self.bgcolor)
 		gl.clear()
 	#
-	def mouse(self, (dev, val)):
-		if dev == DEVICE.RIGHTMOUSE:
-			ChannelWindow.mouse(self, (dev, val))
+	def mouse(self, dev, val):
+		#
+		if (dev, val) == (DEVICE.RIGHTMOUSE, 1):
+			ChannelWindow.mouse(self, dev, val)
 			return
+		#
+		if (dev, val) <> (DEVICE.LEFTMOUSE, 0):
+			return
+		#
+		# Now we know it's "left mouse button up"
+		#
 		if self.node == None:
-			gl.ringbell()
+			print 'TextChannel.mouse: no node'
 			return
+		#
+		if not self.taglist:
+			print 'TextChannel.mouse: node has no anchors'
+			return
+		#
+		# Get the mouse position and transform its coordinates
+		# (XXX Unfortunately this is not the position of the
+		# click but where the mouse is currently)
+		#
 		mx, my = fl.get_mouse()
 		mx, my = gl.mapw2(self.vobj, int(mx), int(my))
 		mx, my = int(mx), int(my)
-		if self.setanchor:
-			# We're not playing, we're defining anchors
-			if dev <> DEVICE.LEFTMOUSE:
-				gl.ringbell()
-				return
-			if val == 1:
-				self.pm = (mx, my)
-			else:
-				try:
-					# Check if self.pm is set -- somehow
-					# it is possible that the mouse-down
-					# was never seen (e.g. down outside
-					# the window and up inside it)
-					pm = self.pm
-				except AttributeError:
-					gl.ringbell()
-					return
-				a = self.anchors[0]
-				self.anchors[0] = (a[0], a[1], \
-					  [pm[0], pm[1], mx, my])
-				self.redraw()
-			return
-		if (dev, val) <> (DEVICE.LEFTMOUSE, 0):
-			return
-		if not self.anchors:
-			print 'mouse: no anchors on this node'
-		al2 = []
-		for a in self.anchors:
-			args = a[A_ARGS]
-			if not args:
-				al2.append(a)
-				continue
-			x0, y0, x1, y1 = args[0], args[1], args[2], args[3]
-			if between(mx, x0, x1) and between(my, y0, y1):
-				al2.append(a)
-		if not al2:
-			print 'Mouse: No anchor selected'
+		#
+		hits = self.which_tags(mx, my)
+		#
+		if not hits:
+			print 'TextChannel.mouse: none of the anchors was hit'
 			gl.ringbell()
 			return
+		#
+		if len(hits) > 1:
+			print 'TextChannel.mouse: more than one anchor was hit'
+			gl.ringbell()
+			return
+		#
+		name = hits[0][4]
+		#
+		al2 = []
+		for a in self.anchors:
+			if a[A_ID] == name:
+				al2.append(a)
 		rv = self.channel.player.anchorfired(self.node, al2)
-		# If this was a paused anchor and it didn't fire
-		# stop showing the node
+		#
+		# If this was a paused anchor and it didn't fire,
+		# we're done playing the node
+		#
 		if rv == 0 and len(al2) == 1 and al2[0][A_TYPE] == ATYPE_PAUSE:
 			self.channel.haspauseanchor = 0
 			self.channel.done(0)
@@ -194,20 +168,35 @@ class TextWindow(ChannelWindow):
 			getfontparams(self.font)
 		self.margin = int(self.avgcharwidth / 2)
 	#
-	# settext resets on a new screen
-	def settext(self, (text, node)):
+	# set new text and node (don't redraw)
+	def settext(self, text, node):
 		self.node = node
-		self.text = preptext(text)
+		self.anchors = []
+		self.parlist = extract_paragraphs(text)
+		self.taglist = extract_taglist(self.parlist)
+		fix_anchorlist(node, self.taglist)
 		self.curlines = []
 		self.curwidth = 0
 		self.resetfont()
 		if text <> '':
 			self.pop()
-		self.redraw()
 	#
-	# arm works ahead for settext
+	# pass the list of relevant anchors from the channel
+	def noteanchors(self, anchors):
+		self.anchors = anchors
+		validnames = []
+		for aid, atype, args in anchors:
+			if type(aid) == type(''): validnames.append(aid)
+		for item in self.taglist[:]:
+			if item[4] not in validnames:
+				self.taglist.remove(item)
+	#
+	# work ahead for settext_arm
+	# (XXX too much duplicated code from redraw)
 	def arm(self, text, node):
-		self.arm_text = preptext(text)
+		self.arm_parlist = extract_paragraphs(text)
+		self.arm_taglist = extract_taglist(self.arm_parlist)
+		fix_anchorlist(node, self.arm_taglist)
 		self.arm_node = node
 		if not self.is_showing():
 			self.arm_curwidth = 0
@@ -234,48 +223,33 @@ class TextWindow(ChannelWindow):
 		margin = int(avgcharwidth / 2)
 		self.arm_curwidth = width
 		width = width - 2*margin
-		self.arm_curlines = calclines(self.arm_text, font, width)
+		self.arm_curlines, self.arm_partoline, self.arm_linetopar = \
+			calclines(self.arm_parlist, font, width)
 	#
+	# like settext but use pre-arm results
 	def settext_arm(self, node):
 		self.node = self.arm_node
-		self.text = self.arm_text
+		self.anchors = []
+		self.parlist = self.arm_parlist
+		self.taglist = self.arm_taglist
 		self.curwidth = self.arm_curwidth
 		self.curlines = self.arm_curlines
+		self.partoline = self.arm_partoline
+		self.linetopar = self.arm_linetopar
 		self.arm_node = None
-		self.arm_text = None
+		self.arm_parlist = None
 		self.arm_curwidth = 0
 		self.arm_curlines = []
 		self.resetfont()
 		self.pop()
-		self.redraw()
 	#
-	# Set the anchor list.
-	#
-	def setanchors(self, anchors):
-		self.anchors = anchors
-
 	def clear(self):
-		self.anchors = []
 		self.settext('', None)
-	#
-	# Start defining an anchor
-	def setdefanchor(self, anchor):
-		self.anchors = [anchor]
-		self.setanchor = 1
-		self.redraw()
-	# Stop defining an anchor
-	def getdefanchor(self):
-		self.setanchor = 0
-		return self.anchors[0]
-	# Abort defining an anchor
-	def enddefanchor(self, anchor):
-		self.anchors = [anchor]
-		self.setanchor = 0
 		self.redraw()
 	#
 	def redraw(self):
 		if not self.is_showing(): return
-
+		#
 		self.setwin()
 		gl.reshapeviewport()
 		#
@@ -299,7 +273,8 @@ class TextWindow(ChannelWindow):
 		if self.curwidth <> width:
 			self.curwidth = width
 			width = width - 2*self.margin
-			self.curlines = calclines(self.text, self.font, width)
+			self.curlines, self.partoline, self.linetopar = \
+				calclines(self.parlist, self.font, width)
 		#
 		# Clear the window in the background color
 		gl.RGBcolor(self.bgcolor)
@@ -318,27 +293,69 @@ class TextWindow(ChannelWindow):
 		#
 		# Draw the anchors
 		gl.RGBcolor(self.hicolor)
-		for dummy, tp, a in self.anchors:
-			if len(a) <> 4: continue
+		#
+		# Draw the tags (almost the same as the anchors but not quite)
+		taglist = self.taglist
+		for item in taglist:
+			self.draw_tag(item)
+	#
+	# Find which anchor items are hit by a given point (mx, my)
+	def which_tags(self, mx, my):
+		result = []
+		taglist = self.taglist
+		for item in taglist:
+			if self.check_tag(mx, my, item):
+				result.append(item)
+		return result
+	#
+	# Check whether (mx, my) points into the given anchor item
+	def check_tag(self, mx, my, item):
+		boxes = self.tag_to_boxes(item)
+		for (x0, y0, x1, y1) in boxes:
+			if x0 <= mx <= x1 and y0 <= my <= y1:
+				return 1
+		return 0
+	#
+	# Draw the given anchor item
+	def draw_tag(self, item):
+		boxes = self.tag_to_boxes(item)
+		for (x0, y0, x1, y1) in boxes:
 			gl.bgnclosedline()
-			gl.v2i(a[0], a[1])
-			gl.v2i(a[0], a[3])
-			gl.v2i(a[2], a[3])
-			gl.v2i(a[2], a[1])
+			gl.v2i(x0, y0+1)
+			gl.v2i(x1, y0+1)
+			gl.v2i(x1, y1)
+			gl.v2i(x0, y1)
 			gl.endclosedline()
-
-
-def calclines(text, font, width):
-	curlines = []
-	for par in text:
-		while 1:
-			i = fitstring(par, font.getstrwidth, width)
-			curlines.append(par[:i])
-			n = len(par)
-			while i < n and par[i] == ' ': i = i+1
-			par = par[i:]
-			if not par: break
-	return curlines
+	#
+	# Convert an anchor to a set of boxes
+	def tag_to_boxes(self, item):
+		f = self.font.getstrwidth
+		par0, char0, par1, char1, name = item
+		line0, char0 = self.map_parpos_to_linepos(par0, char0, 0)
+		line1, char1 = self.map_parpos_to_linepos(par1, char1, 1)
+		x0 = self.margin + f(self.curlines[line0][:char0])
+		y0 = self.fontheight * line0
+		boxes = []
+		while line0 < line1:
+			x1 = self.margin + f(self.curlines[line0])
+			y1 = y0 + self.fontheight
+			boxes.append((x0, y0, x1, y1))
+			x0 = self.margin
+			y0 = y1
+			line0 = line0 + 1
+		x1 = self.margin + f(self.curlines[line1][:char1])
+		y1 = self.fontheight * (line1 + 1)
+		boxes.append((x0, y0, x1, y1))
+		return boxes
+	#
+	# Map a char position in a paragraph to one in a line
+	def map_parpos_to_linepos(self, parno, charno, last):
+		# This works only if parno and charno are valid
+		sublist = self.partoline[parno]
+		for lineno, char0, char1 in sublist:
+			if charno < char1+last:
+				return lineno, max(0, charno-char0)
+		return lineno, max(0, charno-char0)
 
 
 # Turn a text string into a list of strings, each representing a paragraph.
@@ -346,9 +363,9 @@ def calclines(text, font, width):
 # but this only works well at the start of a line or in a monospaced font.
 # Blank lines and lines starting with whitespace separate paragraphs.
 
-def preptext(text):
+def extract_paragraphs(text):
 	lines = strop.splitfields(text, '\n')
-	result = []
+	parlist = []
 	par = []
 	for line in lines:
 		if '\t' in line: line = string.expandtabs(line, 8)
@@ -356,14 +373,154 @@ def preptext(text):
 		while i >= 0 and line[i] == ' ': i = i-1
 		line = line[:i+1]
 		if not line or line[0] in ' \t':
-			result.append(string.join(par))
+			parlist.append(string.join(par))
 			par = []
 		if line:
 			par.append(line)
-	if par: result.append(string.join(par))
-	return result
+	if par: parlist.append(string.join(par))
+	return parlist
 
 
+# Calculate a set of lines from a set of paragraphs, given a font and
+# a maximum line width.  Also return mappings between paragraphs and
+# line numbers and back: (1) a list containing for each paragraph a
+# list of triples (lineno, start, end) where start and end are the
+# offset into the paragraph, and (2) a list containing for each line a
+# triple (parno, start, end)
+
+def calclines(parlist, font, width):
+	partoline = []
+	linetopar = []
+	curlines = []
+	for parno in range(len(parlist)):
+		par = parlist[parno]
+		sublist = []
+		partoline.append(sublist) # It will grow while in there
+		start = 0
+		while 1:
+			i = fitwords(par, font.getstrwidth, width)
+			sublist.append(len(curlines), start, start+i)
+			curlines.append(par[:i])
+			linetopar.append((parno, start, start+i))
+			n = len(par)
+			while i < n and par[i] == ' ': i = i+1
+			par = par[i:]
+			start = start + i
+			if not par: break
+	return curlines, partoline, linetopar
+
+
+# Find last occurence of space in string such that the size (according
+# to some size calculating function) of the initial substring is
+# smaller than a given number.  If there is no such substrings the
+# first space in the string is returned (if any) otherwise the length
+# of the string. Assume sizefunc() is additive:
+# sizefunc(s + t) == sizefunc(s) + sizefunc(t)
+
+def fitwords(s, sizefunc, limit):
+	words = strop.splitfields(s, ' ')
+	spw = sizefunc(' ')
+	okcount = -1
+	totsize = 0
+	totcount = 0
+	for w in words:
+		if w:
+			addsize = sizefunc(w)
+			if totsize > 0 and totsize + addsize > limit:
+				break
+			totsize = totsize + addsize
+			totcount = totcount + len(w)
+			okcount = totcount
+		# The space after the word
+		totsize = totsize + spw
+		totcount = totcount + 1
+	if okcount < 0:
+		return totcount
+	else:
+		return okcount
+
+
+# Extract anchor tags from a list of paragraphs.
+#
+# An anchor starts with "<A NAME=...>" and ends with "</A>".
+# These tags are case independent; whitespace is significant.
+# Anchors may span paragraphs but an anchor tag must be contained in
+# one paragraph.  Other occurrences of < are left in the text.
+#
+# The list of paragraps is modified in place (the tags are removed).
+# The return value is a list giving the start and end position
+# of each anchor and its name.  Start and end positions are given as
+# paragraph_number, character_offset.
+
+def extract_taglist(parlist):
+	# (1) Extract the raw tags, removing them from the text
+	pat = regex.compile('<[Aa] +[Nn][Aa][Mm][Ee]=\([a-zA-Z_]+\)>\|</[Aa]>')
+	rawtaglist = []
+	for i in range(len(parlist)):
+		par = parlist[i]
+		j = 0
+		while pat.search(par, j) >= 0:
+			regs = pat.regs
+			a, b = regs[0]
+			tag = par[a:b]
+			par = par[:a] + par[b:]
+			j = a
+			if tag[:2] != '</':
+				a, b = regs[1]
+				name = tag[a-j:b-j]
+			else:
+				name = None
+			rawtaglist.append((i, j, name))
+		parlist[i] = par
+	# (2) Parse the raw taglist, picking up the valid patterns
+	# (a begin tag immediately followed by an end tag)
+	taglist = []
+	last = None
+	for item in rawtaglist:
+		if item[2] is not None:
+			last = item
+		elif last:
+			taglist.append(last[:2] + item[:2] + last[2:3])
+			last = None
+	return taglist
+
+
+# XXX THIS IS A HACK
+# When we have extracted the anchors from a node's paragraph list,
+# add them to the node's anchor list.
+# This should be done differently, and doesn't even use the edit mgr,
+# but as a compatibility hack it's probably OK...
+
+def fix_anchorlist(node, taglist):
+	if not taglist:
+		return
+	names_in_anchors = []
+	names_in_taglist = []
+	for item in taglist:
+		names_in_anchors.append(item[4])
+	oldanchors = MMAttrdefs.getattr(node, 'anchorlist')
+	anchors = oldanchors[:]
+	for i in range(len(anchors)):
+		aid, atype, args = a = anchors[i]
+		if type(aid) <> type(''):
+			continue
+		if aid not in names_in_anchors:
+			print 'Remove text anchor from anchorlist:', a
+			anchors.remove(a)
+		else:
+			names_in_taglist.append(aid)
+	for item in taglist:
+		name = item[4]
+		if name not in names_in_taglist:
+			print 'Add text anchor to anchorlist:', name
+			anchors.append(name, ATYPE_NORMAL, [])
+	if anchors <> oldanchors:
+		print 'New anchors:', anchors
+		node.SetAttr('anchorlist', anchors)
+		MMAttrdefs.flushcache(node)
+
+
+# The text *channel*.
 # XXX Make the text channel class a derived class from TextWindow?!
 
 class TextChannel(Channel):
@@ -376,16 +533,20 @@ class TextChannel(Channel):
 		['font', 'pointsize', 'file', 'duration', 'fgcolor', \
 		 'hicolor', 'bgcolor']
 	#
-	# Initialization function.
+	# Initialize the instance
 	#
-	def init(self, (name, attrdict, player)):
+	def init(self, name, attrdict, player):
 		self = Channel.init(self, name, attrdict, player)
 		self.window = TextWindow().init(name, attrdict, self)
 		self.arm_node = None
 		return self
 	#
+	# Return a string representation for `self`
+	#
 	def __repr__(self):
 		return '<TextChannel instance, name=' + `self.name` + '>'
+	#
+	# Standard calls from player
 	#
 	def show(self):
 		if self.may_show():
@@ -407,57 +568,71 @@ class TextChannel(Channel):
 		return Channel.getduration(self, node)
 	#
 	# Called by Channel.clearnode to clear previous node
+	#
 	def clear(self):
 		self.window.clear()
 	#
-	def play(self, (node, callback, arg)):
+	# Play a node (called from Player)
+	#
+	def play(self, node, callback, arg):
 		self.node = node
-		self.showanchors(node)
 		self.showtext(node)
+		self.noteanchors(node)
+		self.window.redraw()
 		Channel.play(self, node, callback, arg)
 		dummy = \
 		    self.player.enter(0.001, 1, self.player.opt_prearm, node)
 	#
+	# Define an anchor (called from AnchorEdit)
+	#
 	def defanchor(self, node, anchor):
+		self.node = node
+		self.arm_node = None
 		self.showtext(node)
-		self.window.setdefanchor(anchor)
-
-		import AdefDialog
-		try:
-			rv = AdefDialog.anchor( \
-				'Select reactive area with mouse')
-			a = self.window.getdefanchor()
-			if rv == 0:
-				a = (a[0], a[1], [])
-			return a
-		except AdefDialog.cancel:
-			self.window.enddefanchor(anchor)
-			return None
-		
-	def showanchors(self, node):
+		##self.noteanchors(node)
+		self.window.redraw()
+		aid, atype, args = anchor
+		if atype not in (ATYPE_NORMAL, ATYPE_PAUSE):
+			return anchor
+		if type(aid) == type(''):
+			for item in self.window.taglist:
+				if item[4] == aid:
+					return anchor
+			msg1 = 'Sorry, I can\'t find '+`aid`+' in the text.'
+		else:
+			msg1 = 'Sorry, you can\'t promote a ' + \
+				'synthetic anchor to a labeled one.'
+		fl.show_message(msg1, \
+			'Please add labels to the text first, like this:', \
+			'... <A NAME=mylabel> anchor text </A> ...')
+		return None
+	#
+	# Internal: pass some anchors to the window
+	#
+	def noteanchors(self, node):
 		self.autoanchor = None
 		self.haspauseanchor = 0
 		try:
 			alist = node.GetRawAttr('anchorlist')
 		except NoSuchAttrError:
-			self.window.setanchors([])
-			return
+			alist = []
 		al2 = []
 		for a in alist:
 			if a[A_TYPE] == ATYPE_AUTO:
 				self.autoanchor = a
 			if a[A_TYPE] == ATYPE_PAUSE:
 				self.haspauseanchor = 1
-			if not a[A_TYPE] in (ATYPE_NORMAL, ATYPE_PAUSE):
-				continue
-			if len(a[A_ARGS]) not in (0,4):
-				print 'TextChannel: funny-sized anchor'
-			else:
+			if a[A_TYPE] in (ATYPE_NORMAL, ATYPE_PAUSE) and \
+				type(a[A_ID]) == type(''):
 				al2.append(a)
-		self.window.setanchors(al2)
+		self.window.noteanchors(al2)
+	#
+	# Reset the channel to a clear status
 	#
 	def reset(self):
 		self.window.clear()
+	#
+	# Arm (called from Channel)
 	#
 	def arm(self, node):
 		if not self.is_showing(): return
@@ -496,7 +671,9 @@ class TextChannel(Channel):
 	#
 	def setready(self):
 		self.window.setready()
-	#
+
+
+# Get some numbers about a font that are needed for our calculations
 
 def getfontparams(font):
 	avgcharwidth = font.getstrwidth('m')
@@ -504,6 +681,9 @@ def getfontparams(font):
 			fontheight, nglyphs) = font.getfontinfo()
 	baseline = fontheight - yorig
 	return avgcharwidth, baseline, fontheight
+
+
+# Map a possibly symbolic font name to a real font name and default point size
 
 fontmap = { \
 	'':		('Times-Roman', 12), \
@@ -517,7 +697,6 @@ fontmap = { \
 	  }
 
 def mapfont(fontname):
-#	print 'mapfont', fontname
 	if fontmap.has_key(fontname):
 		return fontmap[fontname]
 	else:

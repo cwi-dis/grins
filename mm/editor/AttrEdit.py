@@ -249,7 +249,7 @@ class NodeWrapper(Wrapper):
 
 class ChannelWrapper(Wrapper):
 	#
-	def init(self, (context, name)):
+	def init(self, context, name):
 		self.context = context
 		self.editmgr = context.geteditmgr()
 		self.name = name
@@ -356,7 +356,7 @@ class ChannelWrapper(Wrapper):
 
 class StyleWrapper(Wrapper):
 	#
-	def init(self, (context, name)):
+	def init(self, context, name):
 		self.context = context
 		self.editmgr = context.geteditmgr()
 		self.name = name
@@ -618,7 +618,7 @@ class AttrEditor(Dialog):
 
 class ButtonRow:
 	#
-	def init(b, (attreditor, name)):
+	def init(b, attreditor, name):
 		b.attreditor = attreditor
 		b.name = name
 		b.wrapper = attreditor.wrapper

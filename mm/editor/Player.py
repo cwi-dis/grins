@@ -61,17 +61,21 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		self.makechannels()
 		self.fullreset()
 		BasicDialog.show(self)
+		self.toplevel.setwaiting()
 		self.toplevel.checkviews()
 		self.showchannels()
 		self.showstate()
+		self.toplevel.setready()
 	#
 	def hide(self):
 		if not self.showing: return
+		self.toplevel.setwaiting()
 		self.stop()
 		self.fullreset()
 		BasicDialog.hide(self)
 		self.toplevel.checkviews()
 		self.destroychannels()
+		self.toplevel.setready()
 	#
 	def save_geometry(self):
 		ViewDialog.save_geometry(self)

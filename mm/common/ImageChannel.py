@@ -11,10 +11,8 @@ import fl
 from Channel import Channel
 from ChannelWindow import ChannelWindow
 
-from AnchorEdit import A_ID, A_TYPE, A_ARGS, ATYPE_NORMAL, ATYPE_PAUSE, \
-	ATYPE_AUTO
-
 from ArmStates import *
+from AnchorDefs import *
 
 import FileCache
 import pipes
@@ -58,7 +56,7 @@ class ImageWindow(ChannelWindow):
 	#
 	# Initialization function.
 	#
-	def init(self, (name, attrdict, channel)):
+	def init(self, name, attrdict, channel):
 		self = ChannelWindow.init(self, name, attrdict, channel)
 		self.nonode_ninfo = ImageNodeInfo().init()
 		self.nonode_ninfo.setdefcolors(attrdict)
@@ -82,8 +80,10 @@ class ImageWindow(ChannelWindow):
 			return
 		gl.reshapeviewport()
 		winwidth, winheight = gl.getsize()
-		self.ninfo.xcorner = int(winwidth - self.ninfo.xsize*self.ninfo.effscale) / 2
-		self.ninfo.ycorner = int(winheight - self.ninfo.ysize*self.ninfo.effscale) / 2
+		self.ninfo.xcorner = \
+		     int(winwidth - self.ninfo.xsize*self.ninfo.effscale) / 2
+		self.ninfo.ycorner = \
+		     int(winheight - self.ninfo.ysize*self.ninfo.effscale) / 2
 		gl.ortho2(-0.5, winwidth-0.5, -0.5, winheight-0.5)
 		self.render()
 	#
@@ -105,10 +105,10 @@ class ImageWindow(ChannelWindow):
 		my = int((my - self.ninfo.ycorner) / self.ninfo.mousescale)
 		return mx, my
 	#
-	def mouse(self, (dev, val)):
+	def mouse(self, dev, val):
 		if dev == DEVICE.RIGHTMOUSE or self.newanchor:
 			self.node = self.ninfo.node # ChannelWindow needs it
-			ChannelWindow.mouse(self, (dev, val))
+			ChannelWindow.mouse(self, dev, val)
 			return
 		if (dev, val) <> (DEVICE.LEFTMOUSE, 1):
 			return
@@ -299,7 +299,7 @@ class ImageChannel(Channel):
 		 'bgcolor', 'hicolor']
 ##		 'bgcolor', 'fgcolor', 'hicolor']
 	#
-	def init(self, (name, attrdict, player)):
+	def init(self, name, attrdict, player):
 		self = Channel.init(self, name, attrdict, player)
 		self.window = ImageWindow().init(name, attrdict, self)
 		self.armed_node = None
@@ -332,7 +332,7 @@ class ImageChannel(Channel):
 	def clear(self):
 		self.window.clear()
 	#
-	def play(self, (node, callback, arg)):
+	def play(self, node, callback, arg):
 		self.node = node
 		if not self.is_showing():
 			callback(arg)
@@ -353,7 +353,7 @@ class ImageChannel(Channel):
 
 		import AdefDialog
 		try:
-			rv = AdefDialog.anchor('Select reactive area with mouse')
+			rv = AdefDialog.anchor('Sweep anchor with mouse')
 			a = self.window.getdefanchor()
 			if rv == 0:
 				a = (a[0], a[1], [])

@@ -27,7 +27,7 @@ class MovieWindow(ChannelWindow):
 	#
 	# Initialization function.
 	#
-	def init(self, (name, attrdict, channel)):
+	def init(self, name, attrdict, channel):
 		self = ChannelWindow.init(self, name, attrdict, channel)
 		self.clear()
 		return self
@@ -156,7 +156,7 @@ class MovieChannel(Channel):
 	chan_attrs = ['base_window', 'base_winoff']
 	node_attrs = ['file', 'scale', 'bgcolor']
 	#
-	def init(self, (name, attrdict, player)):
+	def init(self, name, attrdict, player):
 		self = Channel.init(self, name, attrdict, player)
 		self.window = MovieWindow().init(name, attrdict, self)
 		self.armed_node = None
@@ -193,7 +193,7 @@ class MovieChannel(Channel):
 		self.window.setfile(filename, node, 0)
 		self.armed_node = node
 	#
-	def play(self, (node, callback, arg)):
+	def play(self, node, callback, arg):
 		self.node = node
 		self.cb = (callback, arg)
 		if not self.is_showing():
@@ -202,7 +202,7 @@ class MovieChannel(Channel):
 			return
 	        if node <> self.armed_node:
 			print 'MovieChannel: node not armed'
-			self.window.pop()
+			self.window.popup() # was: .pop(); --Guido
 			self.late_arm(node)
 		else:
 			self.window.popup()
@@ -233,6 +233,7 @@ class MovieChannel(Channel):
 	#
 	def reset(self):
 		self.window.clear()
+		self.node = None # Attempt to fix obscure bug --Guido
 	#
 	def getduration(self, node):
 		# To estimate the duration: read the header and the first
