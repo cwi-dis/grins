@@ -97,9 +97,3 @@ def toabs(url):
 			filename=os.path.join(os.getcwd(),filename)
 			filename=ntpath.normpath(filename)	
 	return filename
-
-def urlorpathname(url):
-	utype, host, path, params, query, fragment = urlparse.urlparse(url)
-	if (utype and utype != 'file') or (host and host != 'localhost'):
-		return url
-	return MMurl.url2pathname(path)
