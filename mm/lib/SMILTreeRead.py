@@ -310,6 +310,30 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					if val[0] in '+-' and not boston:
 						boston = 'signed clock value'
 					continue
+
+				res = wallclock.match(val)
+				if res is not None:
+					if not boston:
+						boston = 'wallclock time'
+					wc = string.strip(res.group('wallclock'))
+					res = wallclockval.match(wc)
+					if res is None:
+						self.syntax_error('bad wallclock value')
+						continue
+					# can't fail because of matching regexp
+					yr,mt,dy,hr,mn,tzhr,tzmn = map(lambda v: v and string.atoi(v), res.group('year','month','day','hour','min','tzhour','tzmin'))
+					sc, tzsg = res.group('sec', 'tzsign')
+					if sc is not None:
+						sc = string.atof(sc)
+					if res.group('Z') is not None:
+						tzhr = tzmn = 0
+						tzsg = '+'
+					list.append(MMNode.MMSyncArc(node, attr, wallclock = (yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn), delay = 0))
+					continue
+				if val[:9] == 'wallclock':
+					self.syntax_error('bad wallclock value')
+					continue
+
 				tokens = filter(None, map(string.strip, tokenize(val)))
 				ok = 1
 				i = 0
@@ -344,31 +368,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					list.append(MMNode.MMSyncArc(node, attr, srcnode = 'prev', event = tokens[2], delay = offset or 0))
 					continue
 
-				res = wallclock.match(val)
-				if res is not None:
-					if offset is not None:
-						self.syntax_error('no offset allowed with media marker')
-##						continue
-					if not boston:
-						boston = 'wallclock time'
-					wc = string.strip(res.group('wallclock'))
-					res = wallclockval.match(wc)
-					if res is None:
-						self.syntax_error('bad wallclock value')
-						continue
-					# can't fail because of matching regexp
-					yr,mt,dy,hr,mn,tzhr,tzmn = map(lambda v: v and string.atoi(v), res.group('year','month','day','hour','min','tzhour','tzmin'))
-					sc, tzsg = res.group('sec', 'tzsign')
-					if sc is not None:
-						sc = string.atof(sc)
-					if res.group('Z') is not None:
-						tzhr = tzmn = 0
-						tzsg = '+'
-					list.append(MMNode.MMSyncArc(node, attr, wallclock = (yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn), delay=offset or 0))
-					continue
-				if tokens[0] == 'wallclock':
-					self.syntax_error('bad wallclock value')
-					continue
 				res = accesskey.match(val)
 				if res is not None:
 					if not boston:
