@@ -1,7 +1,7 @@
 Document Type: WSE
 item: Global
   Version=7.04
-  Title=Oratrix GRiNS 1.0beta Installation
+  Title=Oratrix GRiNS 1.0 Installation
   Flags=00010100
   Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
   Japanese Font Name=MS Gothic
@@ -19,20 +19,20 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins-win-full-10beta.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins-win-full-10.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=jack
   Upload Directory=/var/www/OratrixWeb/downloaddir
   Per-User Version ID=1
   Dialogs Version=7
-  Version File=1.0beta
+  Version File=1.0
   Version Description=Oratrix GRiNS for SMIL
   Version Copyright=Copyright 1999 Oratrix Development BV
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=3206126650
+  File Checksum=892152571
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -91,12 +91,12 @@ item: End Block
 end
 item: Set Variable
   Variable=APPTITLE
-  Value=Oratrix GRiNS 1.0beta
+  Value=Oratrix GRiNS 1.0
   Flags=10000000
 end
 item: Set Variable
   Variable=GROUP
-  Value=Oratrix GRiNS 1.0beta
+  Value=Oratrix GRiNS 1.0
   Flags=10000000
 end
 item: Set Variable
@@ -105,7 +105,7 @@ item: Set Variable
 end
 item: Set Variable
   Variable=MAINDIR
-  Value=Oratrix\GRiNS 1.0beta
+  Value=Oratrix\GRiNS 1.0
   Flags=10000000
 end
 item: Check Configuration
@@ -1657,6 +1657,30 @@ item: Create Shortcut
   Icon Number=0
 end
 item: Else Statement
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Editor for SMIL
+  Command Line=%MAINDIR%\GRiNSed.exe
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=B
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS Player for SMIL
+  Command Line=%MAINDIR%\GRiNS.exe
+end
+item: End Block
 end
 item: If/While Statement
   Variable=COMPONENTS
