@@ -97,6 +97,7 @@ class view () :
 		self.addtocommand('c', channeleditfunc, 'channel editor')
 #TMP		self.addtocommand('d', deleteNode, 'delete node')
 		self.addtocommand('h', helpfunc, 'help message')
+		self.addtocommand('i', infofunc, 'open node info window')
 		self.addtocommand('l', lock_focus, 'lock current focus')
 #TMP		self.addtocommand('p', addParallel, 'add parallel node')
 		self.addtocommand('r', redrawfunc, 'redraw')
@@ -567,6 +568,17 @@ def channeleditfunc(bv):
 		return
 	name = node.GetInherAttrDef('channel', '?')
 	AttrEdit.showchannelattreditor(bv.root.context, name)
+
+import NodeInfo
+
+def infofunc(bv):
+	node = bv.focus
+	if node = None:
+		fl.show_message ('No node selected','','')
+		return
+	NodeInfo.shownodeinfo(node)
+
+
 #
 # delete the focussed node.
 # focus switches to parent.
