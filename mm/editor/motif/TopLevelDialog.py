@@ -8,9 +8,10 @@ class TopLevelDialog:
 		'toolbar': [
 			('Play', PLAY),
 			('Player', PLAYERVIEW, 't'),
-			('Hierarchy view', HIERARCHYVIEW, 't'),
-			('Channel view', CHANNELVIEW, 't'),
 			('Layout view', LAYOUTVIEW, 't'),
+			('User group view', USERGROUPVIEW, 't'),
+			('Hierarchy view', HIERARCHYVIEW, 't'),
+			('Timeline view', CHANNELVIEW, 't'),
 			('Hyperlinks', LINKVIEW, 't'),
 			('Source...', SOURCE),
 			('Save', SAVE),

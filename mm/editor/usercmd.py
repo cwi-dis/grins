@@ -72,6 +72,8 @@ class LINKVIEW(_CommandBase):
 	help = 'Show/hide Hyperlink View'
 class LAYOUTVIEW(_CommandBase):
 	help = 'Show/hide Layout View'
+class USERGROUPVIEW(_CommandBase):
+	help = 'Show/hide User Group Editor'
 
 #
 # Player view commands
@@ -84,6 +86,8 @@ class STOP(_CommandBase):
 	help = 'Stop playing document'
 class MAGIC_PLAY(_CommandBase):
 	help = 'Continue when paused, pause when playing, play when stopped'
+class USERGROUPS(_DynamicCascade):
+	help = 'User groups'
 class CHANNELS(_DynamicCascade):
 	help = 'Toggle channels on/off'
 class SYNCCV(_CommandBase):
