@@ -2280,18 +2280,6 @@ class Node:
 		for child in self._children:
 			child.applyOnAllNode(fnc, params)
 
-	def select(self):
-		if debug: print 'Node.select : ',self.getName()
-		if self.isShowed():
-			if debug: print 'Node.select: graphic select'
-			self._selecting = 1
-			self._graphicCtrl.select()
-			self._selecting = 0
-
-	def onUnselected(self):
-		if debug: print 'Node.Unselected : ',self.getName()
-		self._ctx._context.onSelect([])
-
 	def hide(self):
 		if debug: print 'Node.hide: ',self.getName()
 		if self._graphicCtrl != None:
@@ -2352,11 +2340,6 @@ class Node:
 		for child in self._children:
 			child.toHiddenState()	
 		self.hide()
-
-	def onSelected(self):
-		if not self._selecting:
-			if debug: print 'PreviousWidget.Node.onSelected : ',self.getName()
-			self._ctx.onSelect([self._nodeRef])
 
 class Region(Node):
 	def __init__(self, name, nodeRef, ctx):
@@ -2426,15 +2409,6 @@ class Region(Node):
 	#
 	# end update mothods
 	#
-
-	def onGeomChanging(self, geom):
-		# update only the geom field on dialog box
-		self._ctx._context.onFastGeomUpdate(self._nodeRef, geom)
-		
-	def onGeomChanged(self, geom):
-		# apply the new value
-		self._ctx.localSelect = 1 # temporare
-		self._ctx._context.applyGeom(self.getNodeRef(), geom)
 
 	def onProperties(self):
 		self._ctx.localSelect = 1 # temporare
@@ -2542,15 +2516,6 @@ class MediaRegion(Region):
 		if f is not None:
 			self._graphicCtrl.setImage(f, fit)
 		
-	def onGeomChanging(self, geom):
-		# update only the geom field on dialog box
-		self._ctx._context.onFastGeomUpdate(self._nodeRef, geom)
-		
-	def onGeomChanged(self, geom):
-		# apply the new value
-		self._ctx.localSelect = 1 # temporare
-		self._ctx._context.applyGeom(self.getNodeRef(), geom)
-
 	def onProperties(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self._ctx.localSelect = 1 # temporare
@@ -2625,17 +2590,6 @@ class Viewport(Node):
 		if self.isShowed():
 			self.showAllNodes()
 		
-	def onGeomChanging(self, geom):
-		# update only the geom field on dialog box
-		self._ctx._context.onFastGeomUpdate(self._nodeRef, geom[2:])
-
-	def onGeomChanged(self, geom):
-		self._ctx.localSelect = 1 # temporare
-		# apply the new value
-		self.currentX = geom[0]
-		self.currentY = geom[1]
-		self._ctx._context.applyGeom(self._nodeRef, geom[2:])
-
 	def onProperties(self):
 		self._ctx.localSelect = 1 # temporare
 		if features.CUSTOM_REGIONS in features.feature_set:
