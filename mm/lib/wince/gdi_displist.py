@@ -118,8 +118,8 @@ class DisplayList:
 				dx, dy = wnd._scrollpos
 				lsc, tsc, rsc, bsc = lsc+dx, tsc+dy, rsc+dx, bsc+dy
 
-			rc_dest = ldc, tdc, rdc - ldc - 1, bdc - tdc - 1
-			rc_src = lsc, tsc, rsc - lsc - 1, bsc - tsc - 1
+			rc_dest = ldc, tdc, rdc - ldc, bdc - tdc
+			rc_src = lsc, tsc, rsc - lsc, bsc - tsc
 
 			dcc = dc.CreateCompatibleDC()
 			bmp = dcc.SelectObject(image)

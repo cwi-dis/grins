@@ -408,13 +408,15 @@ class Viewport(Region):
 		oldBack = dcBack.SelectObject(self._backBuffer)
 
 		if dopaint:
-			rgn = wingdi.CreateRectRgn(rcd)
+			ltrb = xd, yd, xd + wd, yd + hd
+			rgn = wingdi.CreateRectRgn(ltrb)
 			dcBack.SelectClipRgn(rgn)
 			rgn.DeleteObject()
 			self.paint(dcBack, exlwnd = exclwnd)
 
 		dcReg = dcBack.CreateCompatibleDC()
-		regSurf = wingdi.CreateDIBSurface(dc, wd, hd)
+		bgcolor = region._bgcolor or self._bgcolor
+		regSurf = wingdi.CreateDIBSurface(dcBack, wd, hd, bgcolor)
 		oldReg = dcReg.SelectObject(regSurf)
 
 		# copy back to reg
@@ -440,7 +442,8 @@ class Viewport(Region):
 		dcBack = dc.CreateCompatibleDC()
 		oldBack = dcBack.SelectObject(self._backBuffer)
 
-		rgn = wingdi.CreateRectRgn(rcd)
+		ltrb = xd, yd, xd + wd, yd + hd
+		rgn = wingdi.CreateRectRgn(ltrb)
 		dcBack.SelectClipRgn(rgn)
 		rgn.DeleteObject()
 		self.paint(dcBack, exlwnd = exclwnd)
@@ -459,15 +462,19 @@ class Viewport(Region):
 		wnd.ReleaseDC(dc.Detach())
 
 	def blitSurfaceOn(self, dc, surf, rc):
-		# what rect to blit
-		rc_dst = xd, yd, wd, hd = self.LRtoDR(rc, round = 1)
+		# where to blit
+		xd, yd, wd, hd = self.LRtoDR(rc, round = 1)
+
+		# check
+		ws, hs = surf.GetSize()
+		assert(ws == wd)
+		assert(hs == hd)
 
 		dcc = dc.CreateCompatibleDC()
 		oldsurf = dcc.SelectObject(surf)
 
-		# copy back to reg
+		# copy surf
 		dc.BitBlt((xd, yd), (wd, hd), dcc, (0, 0), wincon.SRCCOPY)
-		#dc.StretchBlt(rc_dst, dcc, (0, 0, wd, hd), wincon.SRCCOPY)
 
 		# cleanup
 		dcc.SelectObject(oldsurf)

@@ -990,7 +990,7 @@ class Window:
 		l1, t1, r1, b1 = rc1[0], rc1[1], rc1[0] + rc1[2], rc1[1] + rc1[3]
 		l2, t2, r2, b2 = rc2[0], rc2[1], rc2[0] + rc2[2], rc2[1] + rc2[3]
 		l, t, r, b = min(l1, l2), min(t1, t2), max(r1, r2), max(b1, b2)
-		rc = l, t, r-l, b-t
+		rc = l, t, r-l+4, b-t+4
 		self.update(rc)
 
 	def updatezindex(self, z):

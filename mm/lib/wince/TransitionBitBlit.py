@@ -128,7 +128,13 @@ class FadeBlitterClass(BlitterClass):
 	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
 		value = parameters
 		try:
-			wingdi.BltBlendDIBSurface(src2, src1, dst, value)
+			#wingdi.BltBlendDIBSurface(src1, src2, dst, value)
+			w, h = dst.GetSize()
+			ltrb = 0, 0, w, h
+			if value<0.5:
+				wingdi.BitBltDIBSurface(src1, dst, ltrb, ltrb)
+			else:
+				wingdi.BitBltDIBSurface(src2, dst, ltrb, ltrb)
 		except wingdi.error, arg:
 			print arg
 
