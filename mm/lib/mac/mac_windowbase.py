@@ -2213,7 +2213,7 @@ class findfont:
 
 def showmessage(text, mtype = 'message', grab = 1, callback = None,
 		     cancelCallback = None, name = 'message',
-		     title = 'message'):
+		     title = 'message', parent = None):
 	import EasyDialogs
 	if '\n' in text:
 		text = string.join(string.split(text, '\n'), '\r')
