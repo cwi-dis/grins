@@ -31,6 +31,7 @@ static struct PyMethodDef winuser_methods[] = {
 	{"GetDC", (PyCFunction)Winuser_GetDC, METH_VARARGS, ""},
 	{"LoadStandardCursor", (PyCFunction)Winuser_LoadStandardCursor, METH_VARARGS, ""},
 	{"LoadCursor", (PyCFunction)Winuser_LoadCursor, METH_VARARGS, ""},
+	{"ShellExecute", (PyCFunction)Winuser_ShellExecute, METH_VARARGS, ""},
 
 	{"RegisterClassEx", (PyCFunction)Winuser_RegisterClassEx, METH_VARARGS, ""},
 
