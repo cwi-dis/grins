@@ -1783,10 +1783,7 @@ class NodeBox(GO, NodeBoxCommand):
 		duration = Duration.get(node)
 		self.pausenode = duration < 0
 		self.hasanchors = self.haspause = 0
-		try:
-			alist = self.node.GetRawAttr('anchorlist')
-		except NoSuchAttrError:
-			alist = None
+		alist = self.node.GetRawAttrDef('anchorlist', None)
 		if alist: # Not None and not []
 			self.hasanchors = 1
 			for a in alist:

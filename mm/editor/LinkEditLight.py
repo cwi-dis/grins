@@ -44,10 +44,10 @@ class LinkEditLight:
 	def __make_interesting(self, node):
 		uid = node.GetUID()
 		hlinks = self.context.hyperlinks
-		for aid, atype, aargs in node.GetAttrDef('anchorlist', []):
-			if atype not in SourceAnchors:
+		for a in node.GetAttrDef('anchorlist', []):
+			if a[A_TYPE] not in SourceAnchors:
 				continue
-			anchor = uid, aid
+			anchor = uid, a[A_ID]
 			if not hlinks.findsrclinks(anchor):
 				self.interesting.append(anchor)
 		for c in node.GetChildren():
@@ -65,8 +65,7 @@ class LinkEditLight:
 		hlinks = self.context.hyperlinks
 		for nid, aid in self.interesting:
 			node = self.context.mapuid(nid)
-			alist = MMAttrdefs.getattr(node, 'anchorlist')
-			for a in alist:
+			for a in MMAttrdefs.getattr(node, 'anchorlist'):
 				if a[A_ID] == aid:
 					if a[A_TYPE] not in SourceAnchors or \
 					   hlinks.findsrclinks((nid, aid)):
@@ -121,9 +120,9 @@ class LinkEditLight:
 			return None
 		if type == ATYPE_WHOLE and dest is not None:
 			# we can upgrade the destination-only anchor
-			alist[i] = a = (alist[i][0], ATYPE_WHOLE, alist[i][2])
+			alist[i] = a = (alist[i][0], ATYPE_WHOLE, alist[i][2], alist[i][3])
 		else:
-			a = ('0', type, [])
+			a = ('0', type, [], (0,0))
 			alist.append(a)
 		em.setnodeattr(node, 'anchorlist', alist[:])
 		if not notransaction:

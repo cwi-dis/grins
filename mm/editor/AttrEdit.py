@@ -228,7 +228,7 @@ class NodeWrapper(Wrapper):
 		anchors = {}
 		uid = self.node.GetUID()
 		hlinks = self.context.hyperlinks
-		for aid, atype, aargs in alist:
+		for aid, atype, aargs, times in alist:
 			links = []
 			if atype == ATYPE_DEST:
 				# don't show destination-only anchors
@@ -236,7 +236,7 @@ class NodeWrapper(Wrapper):
 			for a1, a2, ldir, ltype in hlinks.findsrclinks((uid, aid)):
 				links.append((a2, ldir, ltype))
 			links.sort()
-			anchors[aid] = atype, aargs, links
+			anchors[aid] = atype, aargs, times, links
 		return anchors
 
 	def __setanchors(self, newanchors):
@@ -259,8 +259,8 @@ class NodeWrapper(Wrapper):
 			dstlinks = dstlinks + hlinks.finddstlinks(anchor)
 		for aid in newanchors.keys():
 			anchor = uid, aid
-			atype, aargs, links = newanchors[aid]
-			anchorlist.append((aid, atype, aargs))
+			atype, aargs, times, links = newanchors[aid]
+			anchorlist.append((aid, atype, aargs, times))
 			if links:
 				if anchor in linkview.interesting:
 					linkview.interesting.remove(anchor)
@@ -336,7 +336,7 @@ class NodeWrapper(Wrapper):
 			self.editmgr.setnodevalues(self.node, [])
 			return
 		if name == '.anchorlist':
-			self.__setanchors([])
+			self.__setanchors({})
 			return
 		self.editmgr.setnodeattr(self.node, name, None)
 
@@ -447,12 +447,12 @@ class NodeWrapper(Wrapper):
 				'Data for node', 'raw', 'light')
 		if name == '.anchorlist':
 			# our own version of the anchorlist:
-			# [(AnchorID, AnchorType, AnchorArgs, LinkList) ... ]
+			# [(AnchorID, AnchorType, AnchorArgs, AnchorTimes, LinkList) ... ]
 			# the LinkList is a list of hyperlinks, each a tuple:
 			# (Anchor, Dir, Type)
 			# where Anchor is either a (NodeID,AnchorID) tuple or
 			# a string giving the external destination
-			return (('list', ('enclosed', ('tuple', [('any', None), ('int', None), ('enclosed', ('list', ('any', None))), ('enclosed', ('list', ('any', None)))]))), [],
+			return (('list', ('enclosed', ('tuple', [('any', None), ('int', None), ('enclosed', ('list', ('any', None))), ('enclosed', ('tuple', [('float', 0), ('float', 0)])), ('enclosed', ('list', ('any', None)))]))), [],
 				'Anchors', '.anchorlist',
 				'List of anchors on this node', 'raw', 'light')
 		return MMAttrdefs.getdef(name)
