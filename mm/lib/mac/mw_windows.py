@@ -755,6 +755,8 @@ class _CommonWindow:
 		del self._rb_display
 
 	def _rb_cvbox(self):
+		if self._rb_box is None:
+			return ()
 		x0, y0, x1, y1 = self._rb_box
 		xscrolloff, yscrolloff = self._scrolloffset()
 		x0, y0 = x0+xscrolloff, y0+yscrolloff
