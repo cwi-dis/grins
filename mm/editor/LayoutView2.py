@@ -634,6 +634,8 @@ class LayoutView2(LayoutViewDialog2):
 				ENABLE_ANIMATION(callback = (self.onEnableAnimation, ())),
 				CREATEANCHOR(callback = (self.onNewAnchor, ())),
 				CREATEANCHOREXTENDED(callback = (self.onNewAnchor, (1,))),
+				CREATEANCHOR_CONTEXT(callback = (self.onNewAnchor, (2,))),
+				CREATEANCHOR_BROWSER(callback = (self.onNewAnchor, (3,))),
 				]
 		else:
 			self.commandMediaList = []

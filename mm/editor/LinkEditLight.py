@@ -82,6 +82,9 @@ class LinkEditLight:
 			   c.GetAttrDef('endlist', None):
 				# no timing allowed on whole-node anchors
 				continue
+			if MMAttrdefs.getattr(c, 'actuate') != 'onRequest':
+				# only user-clickable anchors count
+				continue
 			return c
 		return None
 
@@ -109,6 +112,14 @@ class LinkEditLight:
 		if extended:
 			em.setnodeattr(anchor, 'show', 'new')
 			em.setnodeattr(anchor, 'sourcePlaystate', 'play')
+			if extended == 1:
+				em.setnodeattr(anchor, 'sendTo', 'osdefaultbrowser')
+			else:
+				em.setnodeattr(anchor, 'actuate', 'onLoad')
+				if extended == 2:
+					em.setnodeattr(anchor, 'sendTo', 'rpcontextwin')
+				elif extended == 3:
+					em.setnodeattr(anchor, 'sendTo', 'rpbrowser')
 		else:
 			em.setnodeattr(anchor, 'show', 'replace')
 			em.setnodeattr(anchor, 'sourcePlaystate', 'stop')

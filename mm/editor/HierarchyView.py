@@ -216,6 +216,8 @@ class HierarchyView(HierarchyViewDialog):
 		self.createanchorcommands = [
 			CREATEANCHOR(callback = (self.createanchorcall, ())),
 			CREATEANCHOREXTENDED(callback = (self.createanchorcall, (1,))),
+			CREATEANCHOR_CONTEXT(callback = (self.createanchorcall, (2,))),
+			CREATEANCHOR_BROWSER(callback = (self.createanchorcall, (3,))),
 			]
 		self.playcommands = [
 			PLAYNODE(callback = (self.playcall, ())),
@@ -332,10 +334,12 @@ class HierarchyView(HierarchyViewDialog):
 			commands = commands + self.interiorcommands # Add interior structure modifying commands.
 		if self.root.showtime:
 			commands = commands + self.timelinezoomcommands
-		if fntype in MMTypes.mediatypes and \
-		   fnode.GetChannelType() != 'sound' and \
-		   self.toplevel.links.findwholenodeanchor(fnode) is None:
-			commands = commands + self.createanchorcommands
+		if fntype in MMTypes.mediatypes:
+			if fnode.GetChannelType() != 'sound' and \
+			   self.toplevel.links.findwholenodeanchor(fnode) is None:
+				commands = commands + self.createanchorcommands
+			else:
+				commands = commands + self.createanchorcommands[2:4]
 
 		if fnode is not self.root:
 			# can't do certain things to the root
