@@ -11,7 +11,7 @@ ALL_LAYOUTS = '(All Channels)'
 
 
 SHOW_SIBLING_MEDIA_IN_PAR = 0
-SHOW_MEDIA_ON_PREVIOUS_FOCUS = 1
+SHOW_MEDIA_ON_PREVIOUS_FOCUS = 0
 	
 ###########################
 # helper class to build tree from list
@@ -20,7 +20,7 @@ TYPE_ABSTRACT, TYPE_REGION, TYPE_MEDIA, TYPE_VIEWPORT = range(4)
 
 class Node:
 	def __init__(self, name, dict, ctx):
-		self._canShow = 1
+		self._isExclude = 0
 		self._name = name
 		self._defattrdict = dict
 		self._parent = None
@@ -82,7 +82,7 @@ class Node:
 			if parent == None:
 				isExclude = 0
 				
-		self._canShow = not isExclude
+		self._isExclude = isExclude
 			
 	def getDocDict(self):
 		return self._defattrdict
@@ -141,9 +141,9 @@ class Node:
 
 	def isExclude(self):
 		return 0
-
+		
 	def canShow(self):
-		return self._canShow
+		return not self._isExclude
 	
 class Region(Node):
 	def __init__(self, name, dict, ctx):
@@ -171,7 +171,7 @@ class Region(Node):
 		self._curattrdict['z'] = self._defattrdict.get('z')
 	
 	def show(self):
-		if self.canShow():
+		if self.canShow and self._parent._graphicCtrl != None:
 			self._graphicCtrl = self._parent._graphicCtrl.addRegion(self._curattrdict, self._name)
 			self._graphicCtrl.showName(self.getShowName())		
 			self._graphicCtrl.addListener(self)
@@ -233,7 +233,10 @@ class Region(Node):
 		isExclude = self._defattrdict.get('isExclude')
 		
 		return isExclude
-	
+
+	def canShow(self):
+		return Node.canShow(self) and self._ctx.isSelectedRegion(self.getName())
+		
 class MediaRegion(Region):
 	def __init__(self, name, node, ctx):
 		self.mmnode = node
@@ -294,7 +297,10 @@ class MediaRegion(Region):
 	def show(self):
 		if not self.canShow():
 			return
-			
+
+		if self._parent._graphicCtrl == None:
+			return
+						
 		self._graphicCtrl = self._parent._graphicCtrl.addRegion(self._curattrdict, self._name)
 		self._graphicCtrl.showName(0)		
 		self._graphicCtrl.addListener(self)
@@ -335,7 +341,10 @@ class MediaRegion(Region):
 	def onProperties(self):
 		# nothing for now
 		pass
-		
+
+	def canShow(self):
+		return Node.canShow(self)
+	
 class Viewport(Node):
 	def __init__(self, name, dict, ctx):
 		self.currentX = 8
@@ -446,6 +455,8 @@ class LayoutView2(LayoutViewDialog2):
 		self.currentMediaRegionListSel = []
 		self.lastMediaNameSelected = None
 		self.previousFocus = None
+
+		self.currentSelectedRegionList = None		
 		
 		# init state of different dialog controls
 		self.showName = 1
@@ -539,13 +550,38 @@ class LayoutView2(LayoutViewDialog2):
 							if self.isValidMMNode(node):
 								appendList.append(node)
 
-		# append and update the local tree node structure
+		# append and update media node list
 		self.appendMediaNodeList(appendList)
-		self.updateMediaNodeList()
+
+		# if previously any region out, we have to re-draw all
+		if self.currentSelectedRegionList != None:
+			self.displayViewport(self.currentViewport.getName())
+		else:
+			self.updateMediaNodeList()
 
 	def focusOnNodeList(self, focusobject):
-		print 'focus on node list'	
-				
+		# remove all selected nodes
+		self.removeAllMediaNodeList()
+
+		appendList = []
+		selectedRegionList = []
+		for type, node in focusobject:
+			if type == 'MMChannel':
+				selectedRegionList.append(node.name)
+			elif type == 'MMNode':
+				appendList.append(node)
+		
+		if len(selectedRegionList) > 0:
+			self.currentSelectedRegionList = selectedRegionList
+		else:
+			self.currentSelectedRegionList = None
+
+		# append the media node list
+		self.appendMediaNodeList(appendList)
+		
+		# re display all viewport
+		self.displayViewport(self.currentViewport.getName())
+		
 	def updateMediaNodeList(self):
 		l = len(self.currentMediaRegionList)
 		if l > 0:
@@ -560,22 +596,24 @@ class LayoutView2(LayoutViewDialog2):
 			# if no media selected any more desactive the media selecter
 			self.disableMediaListOnDialogBox()
 			# active the region of the last selected media
-			if self.currentNodeSelected.getNodeType() == TYPE_MEDIA:				
-				self.currentNodeSelected.hide()
-				region = self.currentNodeSelected.getParent()
-				if region != None:
-					self.select(region)
+			if self.currentNodeSelected != None:
+				if self.currentNodeSelected.getNodeType() == TYPE_MEDIA:				
+					self.currentNodeSelected.hide()
+					region = self.currentNodeSelected.getParent()
+					if region != None:
+						self.select(region)
+
+	def isSelectedRegion(self, regionName):
+		# by default all region selected
+		if self.currentSelectedRegionList == None:
+			return 1
+		return regionName in self.currentSelectedRegionList
 		
 	def globalfocuschanged(self, focustype, focusobject):
 		# skip the focus if already had
 		if self.previousFocus == focusobject:
 			return		
 		self.previousFocus = focusobject
-		
-		# for now
-		if focustype != 'NodeList':
-			focustype = 'MMNode'
-		#
 		
 		if focustype == 'MMNode':
 			self.focusOnMMNode(focusobject)
@@ -626,8 +664,8 @@ class LayoutView2(LayoutViewDialog2):
 	
 	def updateRegionTree(self):
 		# We assume here that no region has been added or supressed
-		viewportNameList = self.getViewportList()
-		for viewportName in viewportNameList:	
+		viewportNameList = self.getViewportNameList()
+		for viewportName in viewportNameList:
 			viewport = self._viewports[viewportName]
 			viewport.updateAllAttrdict()
 		self.updateExcludeRegionOnDialogBox()
@@ -710,7 +748,7 @@ class LayoutView2(LayoutViewDialog2):
 			elif nodeType == TYPE_MEDIA:
 				self.updateMediaOnDialogBox(sNode)
 
-	def getViewportList(self):
+	def getViewportNameList(self):
 		return self._viewportsRegions.keys()
 
 	def getRegionNameList(self, vpname):
@@ -829,7 +867,7 @@ class LayoutView2(LayoutViewDialog2):
 	#
 	
 	def initDialogBox(self):
-		self.currentViewportList = self.getViewportList()
+		self.currentViewportList = self.getViewportNameList()
 		self.dialogCtrl.fillSelecterCtrl('ViewportSel', self.currentViewportList)
 		self.dialogCtrl.setCheckCtrl('ShowNames', self.showName)
 		self.dialogCtrl.setCheckCtrl('AsOutLine', self.asOutLine)
