@@ -325,6 +325,10 @@ SOURCE=.\M_cmif.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_codecs.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_colors.c
 # End Source File
 # Begin Source File
@@ -366,6 +370,38 @@ SOURCE=.\M_EditableObjects.c
 # Begin Source File
 
 SOURCE=.\M_embedding.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_encodings.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_encodings__aliases.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_encodings__ascii.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_encodings__latin_1.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_encodings__utf_16.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_encodings__utf_16_be.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_encodings__utf_16_le.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_encodings__utf_8.c
 # End Source File
 # Begin Source File
 
