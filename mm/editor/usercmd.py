@@ -354,6 +354,10 @@ class LOCALTIMESCALE(_CommandBase):
 	help = 'Show durations on focus node in structure view'
 class CORRECTLOCALTIMESCALE(_CommandBase):
 	help = 'Show consistent durations on focus node in structure view'
+class MERGE_PARENT(_CommandBase):
+	help = 'Merge this node and it\'s parent'
+class MERGE_CHILD(_CommandBase):
+	help = 'Merge this node and it\'s child'
 
 #
 # Channel view commands

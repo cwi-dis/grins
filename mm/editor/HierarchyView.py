@@ -126,6 +126,7 @@ class HierarchyView(HierarchyViewDialog):
 
 		self.interiorcommands = self._getmediaundercommands(self.toplevel.root.context) + [
 			EXPAND(callback = (self.expandcall, ())),
+			MERGE_CHILD(callback = (self.merge_child, ())),
 		]
 
 		if not lightweight:
@@ -283,6 +284,7 @@ class HierarchyView(HierarchyViewDialog):
 			rv.append(NEW_AFTER_SVG(callback = (self.createaftercall, ('svg',))))
 		rv.append(NEW_BEFORE_ANIMATION(callback = (self.createbeforecall, ('animate',))))
 		rv.append(NEW_AFTER_ANIMATION(callback = (self.createaftercall, ('animate',))))
+		rv.append(MERGE_PARENT(callback=(self.merge_parent, ())))
 		return rv
 
 	def _getanimatecommands(self, ctx):
@@ -1679,6 +1681,48 @@ class HierarchyView(HierarchyViewDialog):
 				other_icon = self.selected_icon.arrowto[0]
 				self.select_widget(other_icon)
 				self.draw()
+
+	def merge_parent(self):
+		# first check if this can happen.
+		if not self.selected_widget:
+			self.popup_error("No selected node!")
+			return
+		if not isinstance(self.selected_widget, StructureWidgets.MMNodeWidget):
+			self.popup_error("You can only merge nodes!")
+			return
+		child = self.selected_widget.node
+		if not child.parent:
+			self.popup_error("The root node has no parent to merge with!")
+			return
+		parent = child.parent
+		# Now, check that this node is an only child.
+		if len(parent.children) <> 1:
+			self.popup_error("You can only merge a node with it's parents if it has no siblings.")
+			return
+		parent.merge_with_child()
+		self.need_recalc = 1
+		self.draw()
+
+	def merge_child(self):
+		if not self.selected_widget:
+			self.popup_error("No selected node!")
+			return
+		if not isinstance(self.selected_widget, StructureWidgets.StructureObjWidget):
+			self.popup_error("This node cannot have children.")
+			return
+		parent = self.selected_widget.node
+		if len(parent.children) <> 1:
+			self.popup_error("To merge a node it must have only one child!")
+		child = parent.children[0]
+		if child.children:
+			self.popup_error("You can only merge a parent with it's child when the child has no children.")
+		parent.merge_with_child()
+		self.need_recalc = 1
+		self.draw()
+
+	def popup_error(self, message):
+		# I should have done this a long time ago.
+		windowinterface.showmessage(message, mtype="error", parent=self.window)
 
 def expandnode(node):
 	# Bad hack. I shouldn't refer to private attrs of a node.
