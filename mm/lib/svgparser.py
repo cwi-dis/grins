@@ -19,8 +19,7 @@ class SVG:
 		'xml:space': None,}
 	__styleAttrs = {'class':None,
 		  'style':None,}
-	__testAttrs = {
-		'requiredFeatures': None,
+	__testAttrs = {'requiredFeatures': None,
 		'requiredExtensions': None,
 		'systemLanguage': None,
 		'externalResourcesRequired': 'false',}
@@ -94,6 +93,12 @@ class SVG:
 	__presentAttrsAll.update(__presentAttrsTextContentElements)
 	__presentAttrsAll.update(__presentAttrsTextElements)
 	__presentAttrsAll.update(__presentAttrsViewports)
+	__xlinkRefAttrs = {'xlink:type': 'simple',
+		'xlink:role': None,
+		'xlink:arcrole': None,
+		'xlink:title': None,
+		'xlink:show': 'embed',
+		'xlink:actuate': 'onLoad',}
 	__graphicsElementEvents = {}		
 	__documentEvents = {}
 
@@ -119,14 +124,18 @@ class SVG:
 			'x': None,
 			'y': None, 
 			'width': None, 
-			'height': None,},
+			'height': None, 
+			'xlink:href': None, },
 		'image': {'transform': None,
 			'preserveAspectRatio': None,
-			'x': None,
 			'y': None, 
 			'width': None, 
 			'height': None,},
 		'switch': {'transform': None,},
+		'style': {'xml:space': 'preserve',
+			'type': None,
+			'media': None,
+			'title': None,},
 		'path':{'transform': None,
 			'd': None,
 			'pathLength': None,
@@ -162,7 +171,81 @@ class SVG:
 		'polygon':{'transform': None,
 			'points': None,
 			},
-		'metadata': {'id': None,},
+		'text':{'transform': None,
+			'x': None,
+			'y': None,
+			'textLength': None,
+			'lengthAdjust': None,},
+		'tspan':{'rotate': None,
+			'x': None,
+			'y': None,
+			'dx': None,
+			'dy': None,
+			'textLength': None,
+			'lengthAdjust': None,},
+		'tref':{'rotate': None,
+			'xlink:href': None,
+			'x': None,
+			'y': None,
+			'dx': None,
+			'dy': None,
+			'textLength': None,
+			'lengthAdjust': None,},
+		'textPath':{'startOffset': None,
+			'textLength': None,
+			'lengthAdjust': None,
+			'method': None,
+			'spacing': None,
+			},
+		'altGlyph':{'rotate': None,
+			'xlink:href': None,
+			'glyphRef': None,
+			'format': None,
+			'x': None,
+			'y': None,
+			'dx': None,
+			'dy': None,},
+		'altGlyphDef':{},
+		'altGlyphItem':{},
+		'glyphRef':{'xlink:href': None,
+			'glyphRef': None,
+			'format': None,
+			'x': None,
+			'y': None,
+			'dx': None,
+			'dy': None,},
+		'marker': {'viewBox': None,
+			'preserveAspectRatio': None,
+			'refX': None,
+			'refY': None,
+			'markerUnits': None,
+			'markerWidth': None,
+			'markerHeight': None,
+			'orient': None,
+			},
+		'color-profile': {'xlink:href': None,
+			'local': None,
+			'name': None,
+			'rendering-intent': 'auto',},
+		'linearGradient': {'xlink:href': None,
+			'gradientUnits': None,
+			'gradientTransform': None,
+			'x1': None,
+			'y1': None,
+			'x2': None,
+			'y2': None,
+			'spreadMethod': None,},
+		'radialGradient': {'xlink:href': None,
+			'gradientUnits': None,
+			'gradientTransform': None,
+			'cx': None,
+			'cy': None,
+			'r': None,
+			'fx': None,
+			'fy': None,
+			'spreadMethod': None,},
+		'stop': {'offset': None, 'style': None},
+		'metadata': {},
 		'foreignObject':{'transform': None,
 			'x': None,
 			'y': None,
@@ -173,22 +256,25 @@ class SVG:
   
 	# element sets
 	__groupingElements = ['svg', 'g']
-	__controlElements = ['defs', 'symbol', 'use', 'switch',]
+	__controlElements = ['defs', 'symbol', 'use', 'switch', 'marker']
 	__infoElements = ['title', 'desc',]
-	
 	__basicElements = ['rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon',]
 	__lineArtElements = ['path', ] +  __basicElements
 	__imageElements = ['image', ]
+	__textElements = ['text']
+	__textRefElements = ['tspan', 'tref', 'textPath', 'altGlyph',]
+	__fontSpecElements = __textRefElements + ['glyphRef',]
+	__textElementsAll = __textElements + __textRefElements
 	__foreignElements = ['foreignObject', ]
-	
+	__linkElements = ['use', 'tref', 'glyphRef', 'color-profile', 'linearGradient']
 	__pathElements = ['path', 'line', 'polyline', 'polygon', ]
-	__presentElements = __groupingElements + __controlElements + __foreignElements
-	__graphicsElements = __presentElements + __lineArtElements +  __imageElements
-
+	__gradientElements = ['linearGradient', 'radialGradient',]
 
 	# overall subsets
-	__styleElements = __graphicsElements + __infoElements
-	__resourceElements = __graphicsElements # + ...
+	__presentElements = __groupingElements + __controlElements + __foreignElements
+	__graphicsElements = __presentElements + __lineArtElements +  __imageElements + __textElementsAll
+	__styleElements = __graphicsElements + __infoElements + __gradientElements
+	__resourceElements = __graphicsElements + __gradientElements
 	__allElements = __styleElements # + ...
 
 	# update element sets with std collections
@@ -204,6 +290,9 @@ class SVG:
 	for __el in __resourceElements:
 		attributes[__el].update(__testAttrs)
 
+	# link attributes
+	for __el in __linkElements:
+		attributes[__el].update(__xlinkRefAttrs)
 
 	# event attributes
 	attributes['svg'].update(__documentEvents)
@@ -211,13 +300,15 @@ class SVG:
 	for __el in __graphicsElements:
 		attributes[__el].update(__graphicsElementEvents)
 
-
 	# presentation attributes
 	for __el in __presentElements:
 		attributes[__el].update(__presentAttrsAll)
 
 	for __el in __pathElements:
 		attributes[__el].update(__presentAttrsMarkers)
+
+	for __el in __gradientElements:
+		attributes[__el].update(__presentAttrsGradients)
 
 	for __el in __lineArtElements:
 		attributes[__el].update(__presentAttrsGraphics)
@@ -227,6 +318,18 @@ class SVG:
 		attributes[__el].update(__presentAttrsGraphics)
 		attributes[__el].update(__presentAttrsImages)
 		attributes[__el].update(__presentAttrsViewports)
+
+
+	for __el in __fontSpecElements:
+		attributes[__el].update(__presentAttrsFontSpecification)
+
+	for __el in __textElementsAll:
+		attributes[__el].update(__presentAttrsFillStroke)
+		attributes[__el].update(__presentAttrsGraphics)
+		attributes[__el].update(__presentAttrsTextContentElements)
+
+	for __el in __textElements:
+		attributes[__el].update(__presentAttrsTextElements)
 
 	# allowed content sets
 	__svgchildren = __allElements
@@ -239,7 +342,6 @@ class SVG:
 		'defs': __svgchildren,
 		'symbol': __svgchildren,
 		}
-
 	# cleanup
 	del __stdAttrs
 	del __langSpaceAttrs
@@ -260,6 +362,7 @@ class SVG:
 	del __presentAttrsViewports
 	del __presentAttrsAll
 
+	del __xlinkRefAttrs
 	del __documentEvents
 	del __graphicsElementEvents
 
@@ -269,16 +372,22 @@ class SVG:
 	del __basicElements
 	del __lineArtElements
 	del __imageElements
+	del __gradientElements
+	del __textElements
+	del __textRefElements
+	del __textElementsAll
+	del __fontSpecElements
 	del __infoElements
 	del __foreignElements
 
 	del __presentElements
 	del __graphicsElements
 
+	del __linkElements
 	del __styleElements
 	del __resourceElements
 	del __allElements
-
+	
 	del __svgchildren
 
 ####################################
@@ -467,7 +576,7 @@ def topxl(val):
 	val = string.lower(val)
 	if val[-1] in string.digits:
 		return string.atoi(val)
-	units = val[-2]
+	units = val[-2:]
 	factor = unitstopx.get(units) 
 	if factor is None:
 		print 'warning: bad units'
