@@ -448,15 +448,15 @@ class SMIL:
 				'type':None,
 				'subtype':None,
 				'dur':'1s',
-				'startPercent':'0',
-				'endPercent':'100',
+				'startProgress':'0.0',
+				'endProgress':'1.0',
 				'direction':'forward',
 				'horzRepeat':'0',
 				'vertRepeat':'0',
 				'borderWidth':'0',
 				'color':'black',
 				'multiElement':'false',
-				'childrenClip':None,
+				'childrenClip':'false',
 				},
 		}
 	attributes['seq'] = attributes['body']

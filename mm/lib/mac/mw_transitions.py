@@ -103,7 +103,7 @@ class NullTransition(TransitionClass, BlitterClass):
 			Qd.MoveTo(x0, (y0+y1)/2)
 			Qd.DrawString("%s %s"%(self.dict.get('trtype', '???'), self.dict.get('subtype', '')))
 		
-class EdgeWipeTransition(TransitionClass, R1R2BlitterClass):
+class BarWipeTransition(TransitionClass, R1R2BlitterClass):
 
 	def computeparameters(self, value, oldparameters):
 		x0, y0, x1, y1 = self.ltrb
@@ -112,7 +112,7 @@ class EdgeWipeTransition(TransitionClass, R1R2BlitterClass):
 		xcur = x0+xpixels
 		return ((x0, y0, xcur, y1), (xcur, y0, x1, y1), )
 			
-class IrisWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
+class MiscShapeWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
 
 	def computeparameters(self, value, oldparameters):
 		x0, y0, x1, y1 = self.ltrb
@@ -124,7 +124,7 @@ class IrisWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
 		yc1 = int((ymid+value*(y1-ymid))+0.5)
 		return ((xc0, yc0, xc1, yc1), (x0, y0, x1, y1))
 	
-class MatrixWipeTransition(TransitionClass, RlistR2OverlapBlitterClass):
+class SingleSweepWipeTransition(TransitionClass, RlistR2OverlapBlitterClass):
 
 	def __init__(self, engine, dict):
 		TransitionClass.__init__(self, engine, dict)
@@ -190,9 +190,9 @@ class FadeTransition(TransitionClass, FadeBlitterClass):
 		return value
 		
 TRANSITIONDICT = {
-	"edgeWipe" : EdgeWipeTransition,
-	"irisWipe" : IrisWipeTransition,
-	"matrixWipe" : MatrixWipeTransition,
+	"barWipe" : BarWipeTransition,
+	"miscShapeWipe" : MiscShapeWipeTransition,
+	"singleSweepWipe" : SingleSweepWipeTransition,
 	"pushWipe" : PushWipeTransition,
 	"slideWipe" : SlideWipeTransition,
 	"fade" : FadeTransition,
@@ -220,8 +220,18 @@ class TransitionEngine:
 		self.dstrgn = None
 		self.move_resize()
 		self.currentparameters = None
-		# xxx startpercent/endpercent
-		# xxx transition type, etc
+		
+		self.reverse = (dict['direction'] == 'reverse')
+		if not self.reverse:
+			self.startprogress = dict['startProgress']
+			self.endprogress = dict['endProgress']
+		else:
+			self.startprogress = 1.0 - dict['endProgress']
+			self.endprogress = 1.0 - dict['startProgress']
+		# Now recompute starttime and "duration" based on these values
+		self.duration = self.duration / (self.endprogress-self.startprogress)
+		self.starttime = self.starttime - (self.startprogress*self.duration)
+		
 		mw_globals.toplevel.setidleproc(self._idleproc)
 		
 	def join(self, window):
@@ -268,14 +278,16 @@ class TransitionEngine:
 		mustredraw is true we should do the recalc even if the transition hasn't advanced."""
 		if self.running:
 			self.value = float(time.time() - self.starttime) / self.duration
-			if self.value >= 1.0:
+			if self.reverse:
+				self.value = 1 - self.value
+			if self.value >= self.endprogress:
 				self._cleanup()
 				return
 		self._doredraw(mustredraw)
 		
 	def settransitionvalue(self, value):
 		"""Called by uppoer layer when it has a new percentage value"""
-		self.value = value / 100.0
+		self.value = value
 		self._doredraw()
 		
 	def _cleanup(self):

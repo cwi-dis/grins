@@ -397,7 +397,7 @@
 	'Keep aspect ratio of image' inherited (g2))
 
 (color (tuple (int) (int) (int)) (0 0 0) 'Effect color' color
-       'Color for transition effect' normal (smil2 g2))
+       'Color for transition effect' normal (g2))
 
 (direction (enum left right up down) left 'Wipe Direction' direction
 	'Direction of wipe' normal (g2))
@@ -570,8 +570,13 @@
 (trname (name) '' 'Name' default
 	'ID of transition, as used when referring to it' raw (smil2))
 	
-(trtype (enum fade slideWipe pushWipe matrixWipe radialWipe irisWipe edgeWipe) fade 
-		'Transition type' default
+(trtype (enum barWipe boxWipe fourBoxWipe barnDoorWipe diagonalWipe bowTieWipe
+		miscDiagonalWipe veeWipe barnVeeWipe zigZagWipe barnZigZagWipe miscShapeWipe
+		triangleWipe arrowHeadWipe pentagonWipe hexagonWipe ellipseWipe eyeWipe
+		roundRectWipe starWipe clockWipe pinWheelWipe singleSweepWipe fanWipe
+		doubleFanWipe doubleSweepWipe saloonDoorWipe windShieldWipe snakeWipe
+		spiralWipe parallelSnakesWipe boxSnakesWipe waterfallWipe pushWipe slideWipe fade
+	) fade 'Transition type' default
 	'The type of transition to perform' raw (smil2))
 	
 (subtype (name) '' 'Transition subtype' default
@@ -580,26 +585,30 @@
 (dur (float) 1.0 'Duration' default
 	'Duration of the transition' raw (smil2))
 
-(startPercent (int) 0 'Start value' default
+(startProgress (float) 0.0 'Start value' default
 	'Percentage at which the transition starts XXXX better wording?' raw (smil2))
 	
-(endPercent (int) 100 'End value' default
+(endProgress (float) 1.0 'End value' default
 	'Percentage at which the transition ends XXXX better wording?' raw (smil2))
 	
 (direction (enum forward reverse) forward 'Transition direction' default
 	'Spatial direction of the transition effect, if applicable' raw (smil2))
 	
+(fadeColor (tuple (int) (int) (int)) (0 0 0) 'Effect color' color
+       'Color for transition effect' normal (smil2))
+
 (horzRepeat (int) 0 'Horizontal repeat' default
 	'How often the transition pattern is repeated horizontally, if applicable' raw (smil2))
 
 (vertRepeat (int) 0 'Vertical repeat' default
 	'How often the transition pattern is repeated vertically, if applicable' raw (smil2))
 
+(borderColor (tuple (int) (int) (int)) (0 0 0) 'Border color' color
+       'Color for transition border (wipe only)' normal (smil2))
+
 (borderWidth (int) 0 'Border width' default
 	'Width of the border, applicable to wipe only' raw (smil2))
 	
-# color shared with RealPix (but ours really needs blend too as a value)
-
 (multiElement (bool) 0 'Multi-element transition' default
 	'Whether this is a coordinated transition across multiple elements' raw (smil2))
 	
