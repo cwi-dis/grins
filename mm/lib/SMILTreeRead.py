@@ -422,7 +422,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val != '#':
 					attrdict['file'] = MMurl.basejoin(self.__base, val)
 			elif attr == 'begin' or attr == 'end':
-				node.__syncarcs.append((attr, val, self.lineno))
+				if attr == 'begin' and \
+				   self.__container and \
+				   self.__container.type == 'seq' and \
+				   (offsetvalue.match(val) is None or
+				    val[0] == '-'):
+					self.syntax_error('bad begin attribute for child of seq node')
+				else:
+					node.__syncarcs.append((attr, val, self.lineno))
 			elif attr == 'dur':
 				if val == 'indefinite':
 					attrdict['duration'] = -1
