@@ -1016,7 +1016,13 @@ class HierarchyView(HierarchyViewDialog):
 		self.refresh_scene_graph()
 		self.need_resize = 1
 		self.need_redraw = 1
-		self.draw()
+		focustype, focusobject = self.editmgr.getglobalfocus()
+		if focustype is None and focusobject is None:
+			self.editmgr.setglobalfocus('MMNode', self.root)
+		else:
+			self.globalfocuschanged(focustype, focusobject)
+		if self.need_redraw:
+			self.draw()
 
 	def kill(self):
 		self.destroy()
