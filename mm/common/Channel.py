@@ -398,7 +398,6 @@ class Channel:
 		# callback just yet but wait till the anchor is hit.
 		if self._has_pause:
 			return
-		# Check whether there are any auto-fire anchors.
 		if not outside_induced:
 		    if self._try_auto_anchors():
 			return
@@ -421,7 +420,7 @@ class Channel:
 		   self._played_node == node:
 		    if not self.syncplay:
 			self._playcontext.play_done(node)
-		    self.playstate = PLAYED
+		    self._playstate = PLAYED
 		return didfire
 
 	def playstop(self):
