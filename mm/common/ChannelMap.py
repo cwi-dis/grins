@@ -10,6 +10,7 @@ from ShellChannel import ShellChannel
 from PythonChannel import PythonChannel
 from VcrChannel import VcrChannel
 from SocketChannel import SocketChannel
+from MpegChannel import MpegChannel
 
 channelmap = { \
 	'null': 	NullChannel, \
@@ -21,6 +22,7 @@ channelmap = { \
 	'shell': 	ShellChannel, \
 	'vcr':		VcrChannel, \
 	'socket':	SocketChannel, \
+	'mpeg':		MpegChannel, \
 	}
 
 channeltypes = ['null', 'text', 'image']

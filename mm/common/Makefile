@@ -45,6 +45,7 @@ LIBDEPS = $(LIBPYTHON) \
 OBJS =	$(BUILD)/pythonmain.o config.o \
 	soundchannelmodule.o \
 	moviechannelmodule.o \
+	mpegchannelmodule.o \
 	mmmodule.o
 
 all:	python
@@ -54,7 +55,7 @@ python: $(OBJS) $(LIBDEPS)
 
 ldfiles:
 	$(GUIDO)/bin/sgi/python -c \
-		'import mmmodule, nullchannel, moviechannel, soundchannel'
+		'import mmmodule, nullchannel, moviechannel, soundchannel, mpegchannel'
 
 clean:
 	rm -f *.o core

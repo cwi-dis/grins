@@ -320,6 +320,7 @@ extern void initXlib();
 extern void initmm();
 extern void initmoviechannel();
 extern void initsoundchannel();
+extern void initmpegchannel();
 
 struct {
 	char *name;
@@ -506,6 +507,7 @@ struct {
 	{"mm", initmm},
 	{"moviechannel", initmoviechannel},
 	{"soundchannel", initsoundchannel},
+	{"mpegchannel", initmpegchannel},
 
 	{0,		0}		/* Sentinel */
 };
