@@ -473,7 +473,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		return 1
 
 	def is_document(self, url):
-		return self.filename == url
+		if self.filename == url:
+			return 1
+		if MMurl.canonURL(self.filename) == MMurl.canonURL(url):
+			return 1
+		return 0
 
 	def _getlocalexternalanchors(self):
 		fn = self.filename
