@@ -288,6 +288,8 @@ class TreeHelper:
 
 class TreeNodeHelper:
 	def __init__(self, nodeRef, type):
+		# this method is called a lot of times. It has to be optimized
+		# read directly the attributes on the node: more efficient
 		self.isNew = 1
 		self.isUsed = 1
 		self.isUpdated = 0
@@ -298,7 +300,9 @@ class TreeNodeHelper:
 			self.name = nodeRef.attrdict.get('name')
 			self.mediatype = nodeRef.GetChannelType()
 		else:
-			self.name = nodeRef.name
+			name = nodeRef.attrdict.get('regionName')
+			if name == None:
+				self.name = nodeRef.name
 
 	def hasChild(self, child):
 		return self.children.has_key(child)
@@ -307,6 +311,8 @@ class TreeNodeHelper:
 		self.children[child] = 1
 
 	def checkMainUpdate(self):
+		# this method is called a lot of times. It has to be optimized
+		# read directly the attributes on the node: more efficient
 		nodeRef = self.nodeRef
 		if self.type == TYPE_MEDIA:
 			name = nodeRef.attrdict.get('name')
@@ -316,7 +322,9 @@ class TreeNodeHelper:
 				self.name = name
 				self.mediatype = mediatype
 		else:
-			name = nodeRef.name
+			name = nodeRef.attrdict.get('regionName')
+			if name == None:
+				name = nodeRef.name
 			if name != self.name:
 				self.isUpdated = 1
 				self.name = name
@@ -392,11 +400,13 @@ class LayoutView2(LayoutViewDialog2):
 				DELETE(callback = (self.onDelNode, ())),
 				COPY(callback = (self.onCopy, ())),
 				CUT(callback = (self.onCut, ())),
+				ATTRIBUTES_LAYOUT(callback = (self.onLayoutProperties, ())),
 				]
 		else:
 			self.commandViewportList = [
 				ATTRIBUTES(callback = (self.onSelectBgColor, ())),
 				]
+		self.__appendZoomCommands(self.commandViewportList)
 
 	def mkregioncommandlist(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
@@ -407,24 +417,30 @@ class LayoutView2(LayoutViewDialog2):
 				DELETE(callback = (self.onDelNode, ())),
 				COPY(callback = (self.onCopy, ())),
 				CUT(callback = (self.onCut, ())),
+				ATTRIBUTES_LAYOUT(callback = (self.onLayoutProperties, ())),
 				]
 		else:
 			self.commandRegionList = [
 				ATTRIBUTES(callback = (self.onSelectBgColor, ())),
 				]
+		self.__appendZoomCommands(self.commandRegionList)
 
 	def mkmediacommandlist(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandMediaList = [
 				ATTRIBUTES(callback = (self.onEditProperties, ())),
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
+				ATTRIBUTES_ANCHORS(callback = (self.onAnchors, ())),
+				ATTRIBUTES_LAYOUT(callback = (self.onLayoutProperties, ())),
 				]
 			if COPY_PASTE_MEDIAS:
 				self.commandMediaList.append(COPY(callback = (self.onCopy, ())))
 				self.commandMediaList.append(CUT(callback = (self.onCut, ())))
 		else:
 			self.commandMediaList = []
-
+		self.commandMediaList.append(CONTENT(callback = (self.onContent, ())))
+		self.__appendZoomCommands(self.commandMediaList)
+			
 	def mknositemcommandlist(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandNoSItemList = [
@@ -432,6 +448,7 @@ class LayoutView2(LayoutViewDialog2):
 				]
 		else:
 			self.commandNoSItemList = []
+		self.__appendZoomCommands(self.commandNoSItemList)
 
 	# available command when several items are selected
 	def mkmultisitemcommandlist(self):
@@ -441,7 +458,8 @@ class LayoutView2(LayoutViewDialog2):
 				]
 		else:
 			self.commandMultiSItemList = []		
-
+		self.__appendZoomCommands(self.commandMultiSItemList)
+		
 	def mkmultisiblingsitemcommandlist(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandMultiSiblingSItemList = [
@@ -450,7 +468,12 @@ class LayoutView2(LayoutViewDialog2):
 		else:
 			self.commandMultiSiblingSItemList = []
 		self.__appendAlignCommands()
+		self.__appendZoomCommands(self.commandMultiSiblingSItemList)
 
+	def __appendZoomCommands(self, commandlist):
+		commandlist.append(CANVAS_ZOOM_IN(callback = (self.onZoomIn, ())))
+		commandlist.append(CANVAS_ZOOM_OUT(callback = (self.onZoomOut, ())))
+			
 	def __appendAlignCommands(self):
 		self.commandMultiSiblingSItemList.append(ALIGN_LEFT(callback = (self.onAlignLeft, ())))
 		self.commandMultiSiblingSItemList.append(ALIGN_CENTER(callback = (self.onAlignCenter, ())))
@@ -923,7 +946,7 @@ class LayoutView2(LayoutViewDialog2):
 			# allow to choice attributes
 			import AttrEdit
 			AttrEdit.showattreditor(self.toplevel, nodeRef)
-			
+		
 	def sendBack(self, regionRef):
 		currentZ = regionRef.GetAttrDef('z',0)
 
@@ -1457,11 +1480,30 @@ class LayoutView2(LayoutViewDialog2):
 	#
 	#
 	#
-	
+
+	def onZoomIn(self):
+		self.zoomIn()
+		
+	def onZoomOut(self):
+		self.zoomOut()
+
+	def onContent(self):
+		if self.currentSelectedNodeList != None:
+			import NodeEdit
+			NodeEdit.showeditor(self.currentSelectedNodeList[0])
+		
 	def onEditProperties(self):
 		if self.currentSelectedNodeList != None:
 			self.editProperties(self.currentSelectedNodeList[0])
-						
+
+	def onLayoutProperties(self):
+		if self.currentSelectedNodeList != None:
+			self.editProperties(self.currentSelectedNodeList[0])
+
+	def onAnchors(self):
+		if self.currentSelectedNodeList != None:
+			self.editProperties(self.currentSelectedNodeList[0])
+							
 	def onSelectBgColor(self):
 		# apply some command which are automaticly applied when a control lost the focus
 		# it avoids some recursives transactions and some crashs
@@ -1622,26 +1664,32 @@ class LayoutView2(LayoutViewDialog2):
 		baseName = 'region'
 		i = 1
 		# XXX to change
-		name = baseName + `i`
-		while channeldict.has_key(name):
-			i = i+1
-			name = baseName + `i`
-			
-		self.__parentRef = parentRef
-		self.askname(name, 'Name for region', self.__regionNamedCallback)
-
-	def __regionNamedCallback(self, name):
-		id = name
-		channeldict = self.context.channeldict
-		i = 0
+		id = baseName + `i`
 		while channeldict.has_key(id):
 			i = i+1
-			id = name + `i`
-		if name == id:
-			name = None
-		self.applyNewRegion(self.__parentRef, id, name)
+			id = baseName + `i`
+			
+#		self.__parentRef = parentRef
+#		self.askname(id, 'Name for region', self.__regionNamedCallback)
+
+		self.applyNewRegion(parentRef, id, None)
 		self.setglobalfocus([self.nameToNodeRef(id)])
 		self.updateFocus()
+
+		self.editProperties(self.context.getchannel(id))
+
+#	def __regionNamedCallback(self, name):
+#		id = name
+#		channeldict = self.context.channeldict
+#		i = 0
+#		while channeldict.has_key(id):
+#			i = i+1
+#			id = name + `i`
+#		if name == id:
+#			name = None
+#		self.applyNewRegion(self.__parentRef, id, name)
+#		self.setglobalfocus([self.nameToNodeRef(id)])
+#		self.updateFocus()
 
 	def newViewport(self):
 		# choice a default name which doesn't exist		
@@ -1653,7 +1701,13 @@ class LayoutView2(LayoutViewDialog2):
 			i = i+1
 			name = baseName + `i`
 			
-		self.askname(name, 'Name for TopLayout', self.__viewportNamedCallback)
+#		self.askname(name, 'Name for TopLayout', self.__viewportNamedCallback)
+
+		self.applyNewViewport(name)
+		self.setglobalfocus([self.nameToNodeRef(name)])
+		self.updateFocus()
+
+		self.editProperties(self.context.getchannel(name))
 
 	def __viewportNamedCallback(self, name):
 		# check if the viewport already exist
@@ -2152,6 +2206,20 @@ class TreeWidget(Widget):
 				list.append(nodeTreeCtrlId)
 		self.treeCtrl.selectNodeList(list)
 
+		# update popup menu according to the last item selected
+		if len(nodeRefList) == 1:
+			lastNodeRef = nodeRefList[-1]
+			nodeType = self._context.getNodeType(lastNodeRef)
+			import MenuTemplate
+			if nodeType == TYPE_VIEWPORT:
+				self.treeCtrl.setpopup(MenuTemplate.POPUP_REGIONTREE_TOPLAYOUT)
+			elif nodeType == TYPE_REGION:
+				self.treeCtrl.setpopup(MenuTemplate.POPUP_REGIONTREE_REGION)
+			elif nodeType == TYPE_MEDIA:
+				self.treeCtrl.setpopup(MenuTemplate.POPUP_REGIONTREE_MEDIA)
+		else:
+			self.treeCtrl.setpopup(None)
+
 	#
 	#
 	#
@@ -2345,7 +2413,21 @@ class PreviousWidget(Widget):
 			if node != None and node._graphicCtrl != None:
 				shapeList.append(node._graphicCtrl)
 		self.previousCtrl.selectNodeList(shapeList)
-		
+
+		# update popup menu according to the last item selected
+		if len(nodeRefList) == 1:
+			lastNodeRef = nodeRefList[-1]
+			nodeType = self._context.getNodeType(lastNodeRef)
+			import MenuTemplate
+			if nodeType == TYPE_VIEWPORT:
+				self.previousCtrl.setpopup(MenuTemplate.POPUP_REGIONPREVIEW_TOPLAYOUT)
+			elif nodeType == TYPE_REGION:
+				self.previousCtrl.setpopup(MenuTemplate.POPUP_REGIONPREVIEW_REGION)
+			elif nodeType == TYPE_MEDIA:
+				self.previousCtrl.setpopup(MenuTemplate.POPUP_REGIONPREVIEW_MEDIA)
+		else:
+			self.previousCtrl.setpopup(None)
+				
 		self.__selecting = 0
 
 	#
