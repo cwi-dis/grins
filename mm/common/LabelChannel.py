@@ -7,8 +7,8 @@ import MMAttrdefs
 
 class LabelChannel(ChannelWindow):
 	node_attrs = ChannelWindow.node_attrs + \
-		     ['fgcolor', 'font', 'pointsize', 'textalign',
-		      'bgimg', 'scale', 'noanchors']
+		     ['bucolor', 'hicolor', 'fgcolor', 'font', 'pointsize',
+		      'textalign', 'bgimg', 'scale', 'noanchors']
 
 	def __repr__(self):
 		return '<LabelChannel instance, name=' + `self._name` + '>'

@@ -8,8 +8,9 @@ import string
 from urllib import urlopen
 
 class HtmlChannel(ChannelWindow):
-	node_attrs = ChannelWindow.node_attrs + ['fgcolor', 'font', \
-		  'pointsize']
+	node_attrs = ChannelWindow.node_attrs + ['bucolor', 'hicolor',
+						 'fgcolor', 'font',
+						 'pointsize']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)

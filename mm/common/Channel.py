@@ -683,7 +683,7 @@ class Channel:
 
 class ChannelWindow(Channel):
 	chan_attrs = Channel.chan_attrs + ['base_window', 'base_winoff', 'transparent']
-	node_attrs = Channel.node_attrs + ['duration', 'bgcolor', 'bucolor', 'hicolor']
+	node_attrs = Channel.node_attrs + ['duration', 'bgcolor']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.__init__(self, name, attrdict, scheduler, ui)

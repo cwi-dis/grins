@@ -18,7 +18,8 @@ if windowinterface.Version <> 'X':
 error = 'HtmlChannel.error'
 
 class HtmlChannel(Channel.ChannelWindow):
-	node_attrs = Channel.ChannelWindow.node_attrs + ['fgcolor', 'font']
+	node_attrs = Channel.ChannelWindow.node_attrs + ['bucolor', 'hicolor',
+							 'fgcolor', 'font']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.ChannelWindow.__init__(self, name, attrdict, scheduler, ui)

@@ -14,7 +14,8 @@ XRANGE = (1.0-2*XBORDER)
 YRANGE = (1.0-2*YBORDER)
 
 class GraphChannel(ChannelWindow):
-	node_attrs = ChannelWindow.node_attrs + ['gtype', 'fgcolor', 'align',
+	node_attrs = ChannelWindow.node_attrs + ['bucolor', 'hicolor',
+						 'gtype', 'fgcolor', 'align',
 						 'axis']
 
 	def __init__(self, name, attrdict, scheduler, ui):
