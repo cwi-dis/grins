@@ -161,6 +161,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'set': (self.start_set, self.end_set),
 			'animateMotion': (self.start_animatemotion, self.end_animatemotion),
 			'animateColor': (self.start_animatecolor, self.end_animatecolor),
+			'transitionFilter': (self.start_transitionfilter, self.end_transitionfilter),
 			'param': (self.start_param, self.end_param),
 			'transition': (self.start_transition, self.end_transition),
 			'regPoint': (self.start_regpoint, self.end_regpoint),
@@ -1567,7 +1568,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		else:
 			self.syntax_error('the target element of "%s" is unspecified' % tagname)
 
-		if tagname != 'animateMotion' and \
+		if tagname != 'animateMotion' and tagname != 'transitionFilter' and\
 		   not attributes.has_key('attributeName'):
 			self.syntax_error('required attribute attributeName missing in %s element' % tagname)
 			attributes['attributeName'] = ''
@@ -3579,6 +3580,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.NewAnimateNode('animateMotion', attributes)
 
 	def end_animatemotion(self):
+		self.EndAnimateNode()
+
+	def start_transitionfilter(self, attributes):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('animateMotion not compatible with SMIL 1.0')
+		self.__context.attributes['project_boston'] = 1
+		self.NewAnimateNode('transitionFilter', attributes)
+
+	def end_transitionfilter(self):
 		self.EndAnimateNode()
 
 	def start_animatecolor(self, attributes):
