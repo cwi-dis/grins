@@ -37,6 +37,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	def __init__(self, name, attrdict, scheduler, ui):
 		self.__mc = None
 		self.__rc = None
+		self.__qc = None
 		self.__type = None
 		self.__subtype = None
 		self.need_armdone = 0
@@ -103,10 +104,14 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.__mc.stopit()
 			self.__mc.destroy()
 			self.__mc = None
-		if self.__rc:
+		elif self.__rc:
 			self.__rc.stopit()
 			self.__rc.destroy()
 			self.__rc = None
+		elif self.__qc:
+			self.__qc.stopit()
+			self.__qc.destroy()
+			self.__qc = None
 		if self.window:
 			self.window.DestroyOSWindow()
 		Channel.ChannelWindowAsync.do_hide(self)
@@ -131,6 +136,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			node.__type = 'real'
 			if string.find(mtype, 'flash') >= 0:
 				node.__subtype = 'flash'
+		elif mtype and string.find(mtype, 'quicktime') >= 0:
+			node.__type = 'qt'
 		else:
 			node.__type = 'wm'
 			if string.find(mtype, 'x-ms-asf')>=0:
@@ -149,6 +156,14 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			if self.__rc:
 				if self.__rc.prepare_player(node):
 					self.__ready = 1
+		elif node.__type == 'qt' and MediaChannel.HasQtSupport():
+			if self.__qc is None:
+				self.__qc = MediaChannel.QtChannel(self)
+				try:
+					self.__qc.prepare_player(node, self.window)
+					self.__ready = 1
+				except MediaChannel.error, msg:
+					self.errormsg(node, msg)
 		else:
 			if self.__mc is None:
 				if not self.__windowless_wm_rendering:
@@ -186,7 +201,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			# arming failed, so don't even try playing
 			self.playdone(0, curtime)
 			return
-		if node.__type == 'real':
+		if self.__type == 'real':
 			bpp = self.window._topwindow.getRGBBitCount()
 			if bpp not in (8, 16, 24, 32) and self.__windowless_real_rendering:
 				self.__windowless_real_rendering = 0
@@ -221,6 +236,15 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				windowinterface.showmessage('No playback support for %s on this system\n'
 							    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
 				self.playdone(0, curtime)
+
+		elif self.__type == 'qt' and MediaChannel.HasQtSupport():
+			if not self.__qc:
+				self.playdone(0, curtime)
+			else:
+				if not self.__qc.playit(node, curtime, self.window, start_time):
+					windowinterface.showmessage('Failed to play media file', mtype = 'warning')
+					self.playdone(0, curtime)
+				
 		else:
 			if not self.__mc:
 				self.playdone(0, curtime)
@@ -236,8 +260,10 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		Channel.ChannelWindowAsync.setpaused(self, paused)
 		if self.__mc is not None:
 			self.__mc.pauseit(paused)
-		if self.__rc:
+		elif self.__rc:
 			self.__rc.pauseit(paused)
+		elif self.__qc is not None:
+			self.__qc.pauseit(paused)
 
 	def playstop(self, curtime):
 		# freeze video
@@ -251,6 +277,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 					self.__rc.stopit()
 					if self.__windowless_real_rendering:
 						self.cleanVideoRenderer()
+			elif self.__type == 'qt':
+				if self.__qc:
+					self.__qc.stopit()
 			else:
 				self.__mc.stopit()
 		self.__playing = None
@@ -260,6 +289,9 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			if self.__type == 'real':
 				if self.__rc:
 					self.__rc.freezeit()
+			elif self.__type == 'qt':
+				if self.__qc:
+					self.__qc.freezeit()
 			else:
 				self.__mc.freezeit()
 
