@@ -57,31 +57,21 @@ class _Toplevel:
 		self._immediate = []
 		# file descriptor handling
 		self._fdiddict = {}
-		# window system initialization
-		Xt.ToolkitInitialize()
-		dpy = Xt.OpenDisplay(None, None, 'Windowinterface', [],
-				     sys.argv)
+		import splash
+		items = splash.init()
+		for key, val in items:
+			setattr(self, '_' + key, val)
+		dpy = self._dpy
+		main = self._main
 		self._delete_window = dpy.InternAtom('WM_DELETE_WINDOW', FALSE)
-		self._setupcolormap(dpy)
-		self._main = Xt.CreateApplicationShell('shell',
-					Xt.ApplicationShell,
-					{'visual': self._visual,
-					 'colormap': self._colormap,
-					 'depth': self._depth,
-					 'mappedWhenManaged': FALSE,
-					 'x': 500,
-					 'y': 500,
-					 'width': 1,
-					 'height': 1,
-					 'input': TRUE})
-		self._default_colormap = self._main.DefaultColormapOfScreen()
-		self._default_visual = self._main.DefaultVisualOfScreen()
+		self._default_colormap = main.DefaultColormapOfScreen()
+		self._default_visual = main.DefaultVisualOfScreen()
 ## 		self._default_colormap = self._colormap
 ## 		self._default_visual = self._visual
-		self._mscreenwidth = self._main.WidthMMOfScreen()
-		self._mscreenheight = self._main.HeightMMOfScreen()
-		self._screenwidth = self._main.WidthOfScreen()
-		self._screenheight = self._main.HeightOfScreen()
+		self._mscreenwidth = main.WidthMMOfScreen()
+		self._mscreenheight = main.HeightMMOfScreen()
+		self._screenwidth = main.WidthOfScreen()
+		self._screenheight = main.HeightOfScreen()
 		self._hmm2pxl = float(self._screenwidth) / self._mscreenwidth
 		self._vmm2pxl = float(self._screenheight) / self._mscreenheight
 		self._dpi_x = int(25.4 * self._hmm2pxl + .5)
@@ -90,7 +80,7 @@ class _Toplevel:
 		self._channelcursor = dpy.CreateFontCursor(Xcursorfont.draped_box)
 		self._linkcursor = dpy.CreateFontCursor(Xcursorfont.hand1)
 		self._stopcursor = dpy.CreateFontCursor(Xcursorfont.pirate)
-		self._main.RealizeWidget()
+		main.RealizeWidget()
 
 	def close(self):
 		for func, args in self._closecallbacks:
@@ -192,109 +182,6 @@ class _Toplevel:
 	def _input_callback(self, client_data, fd, id):
 		func, args = client_data
 		apply(func, args)
-
-	# utility functions
-	def _setupcolormap(self, dpy):
-		# This method initializes the color system.  It
-		# creates the attributes _visual, _depth, _colormap,
-		# and for each of the color components red, green, and
-		# blue: _color_shift and _color_mask.
-		visattr = {'class': X.TrueColor}
-## 		visattr['depth'] = 8	# DEBUG--force 8-bit visual
-		visuals = dpy.GetVisualInfo(visattr)
-		if visuals:
-			# found one, use the deepest
-			v_best = visuals[0]
-			for v in visuals:
-				# we only support 8 and 24 bit deep visuals
-				if v.depth in (8, 24) and \
-				   v.depth > v_best.depth:
-					v_best = v
-			self._visual = v_best
-			self._depth = v_best.depth
-			self._red_shift, self._red_mask = \
-					 _colormask(v_best.red_mask)
-			self._green_shift, self._green_mask = \
-					   _colormask(v_best.green_mask)
-			self._blue_shift, self._blue_mask = \
-					  _colormask(v_best.blue_mask)
-			self._colormap = v_best.CreateColormap(X.AllocNone)
-			if self._depth == 8:
-				self._setupimg()
-##			print 'Using TrueColor visual of depth',self._depth
-			return
-		# no TrueColor visuals available, use a PseudoColor visual
-		visuals = dpy.GetVisualInfo({'depth': 8,
-					     'class': X.PseudoColor})
-		if len(visuals) == 0:
-			raise error, 'no proper visuals available'
-		self._visual = visuals[0]
-		self._depth = self._visual.depth
-		self._colormap = self._visual.CreateColormap(X.AllocNone)
-		r, g, b = imgformat.xrgb8.descr['comp'][:3]
-		self._red_shift,   self._red_mask   = r[0], (1 << r[1]) - 1
-		self._green_shift, self._green_mask = g[0], (1 << g[1]) - 1
-		self._blue_shift,  self._blue_mask  = b[0], (1 << b[1]) - 1
-		(plane_masks, pixels) = self._colormap.AllocColorCells(1, 8, 1)
-		xcolors = []
-		for n in range(256):
-			# The colormap is set up so that the colormap
-			# index has the meaning: rrrbbggg (same as
-			# imgformat.xrgb8).
-			xcolors.append(
-				(n+pixels[0],
-				 int(float((n >> self._red_shift) & self._red_mask) / self._red_mask * 65535. + .5),
-				 int(float((n >> self._green_shift) & self._green_mask) / self._green_mask * 65535. + .5),
-				 int(float((n >> self._blue_shift) & self._blue_mask) / self._blue_mask * 65535. + .5),
-				  X.DoRed|X.DoGreen|X.DoBlue))
-		self._colormap.StoreColors(xcolors)
-		self._setupimg()
-##		print 'Using PseudoColor visual of depth',self._depth
-
-	def _setupimg(self):
-		import imgcolormap, imgconvert
-		imgconvert.setquality(0)
-		rs, rm = self._red_shift, self._red_mask
-		gs, gm = self._green_shift, self._green_mask
-		bs, bm = self._blue_shift, self._blue_mask
-		r, g, b = imgformat.xrgb8.descr['comp'][:3]
-		xrs, xrm = r[0], (1 << r[1]) - 1
-		xgs, xgm = g[0], (1 << g[1]) - 1
-		xbs, xbm = b[0], (1 << b[1]) - 1
-		c = []
-		if (rm, gm, bm) != (xrm, xgm, xbm):
-			# too many locals to use map()
-			for n in range(256):
-				r = roundi(((n>>xrs) & xrm) / float(xrm) * rm)
-				g = roundi(((n>>xgs) & xgm) / float(xgm) * gm)
-				b = roundi(((n>>xbs) & xbm) / float(xbm) * bm)
-				c.append((r << rs) | (g << gs) | (b << bs))
-			lossy = 2
-		elif (rs, gs, bs) == (xrs, xgs, xbs):
-			# no need for extra conversion
-			self.myxrgb8 = imgformat.xrgb8
-			return
-		else:
-			# too many locals to use map()
-			for n in range(256):
-				r = (n >> xrs) & xrm
-				g = (n >> xgs) & xgm
-				b = (n >> xbs) & xbm
-				c.append((r << rs) | (g << gs) | (b << bs))
-			lossy = 0
-		self.myxrgb8 = imgformat.new('myxrgb8',
-					'X 3:3:2 RGB top-to-bottom',
-					{'type':'rgb', 'b2t':0, 'size':8,
-					 'align':8,
-					 # the 3,3,2 below are not
-					 # necessarily correct, but they
-					 # are not used anyway
-					 'comp':((rs,3),(gs,3),(bs,2))})
-		cmap = imgcolormap.new(reduce(lambda x, y: x + '000' + chr(y),
-					      c, ''))
-		imgconvert.addconverter(imgformat.xrgb8, imgformat.myxrgb8,
-				lambda d, r, src, dst, m=cmap: m.map8(d),
-				lossy)
 
 	def _convert_color(self, color, defcm):
 		r, g, b = color
@@ -414,7 +301,7 @@ class _Window:
 		y = int(float(y) * toplevel._vmm2pxl + 0.5)
 		w = int(float(w) * toplevel._hmm2pxl + 0.5)
 		h = int(float(h) * toplevel._vmm2pxl + 0.5)
-		# XXX--somehow set the posiion
+		# XXX--somehow set the position
 		geometry = '+%d+%d' % (x, y)
 		if not title:
 			title = ''
@@ -742,7 +629,7 @@ class _Window:
 		oscale = scale
 		tw = self._topwindow
 		if tw._depth == 8:
-			format = toplevel.myxrgb8
+			format = toplevel._myxrgb8
 		else:
 			format = imgformat.rgb
 		depth = format.descr['size'] / 8
