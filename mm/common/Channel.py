@@ -1292,7 +1292,7 @@ class ChannelWindow(Channel):
 			return
 		buttons = value[2]
 		if len(buttons) == 0:
-			if self._attrdict.get('transparent', 0):
+			if self.__transparent:
 				raise windowinterface.Continue
 ##			if hasattr(self._player, 'editmgr'):
 ##				self.highlight()
@@ -1307,7 +1307,7 @@ class ChannelWindow(Channel):
 ##			self.unhighlight()
 		buttons = value[2]
 		if len(buttons) == 0:
-			if self._attrdict.get('transparent', 0):
+			if self.__transparent:
 				raise windowinterface.Continue
 		elif self._paused not in ('hide', 'disable'):
 			button = buttons[0]
@@ -1649,7 +1649,8 @@ class ChannelWindow(Channel):
 #			self.window.updatecoordinates(wingeom, units)
 		# experimental subregion and regpoint code
 
-		if MMAttrdefs.getattr(node, 'transparent'):
+		self.__transparent = transparent = MMAttrdefs.getattr(node, 'transparent')
+		if transparent:
 			bgcolor = None
 		else:
 			bgcolor = self.getbgcolor(node)
