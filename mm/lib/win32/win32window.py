@@ -882,21 +882,21 @@ class Window:
 	#
 	# Transitions interface
 	#
-	def begintransition(self, inout, runit, dict, cb):
-		if cb:
-			apply(apply, cb)
+	def begintransition(self, outtrans, runit, dict, cb):
+		pass
+
+	def begininlinetransition(self, trtype, trsubtype, trmode='in'):
+		pass
 
 	def endtransition(self):
 		pass
 
-	def changed(self):
+	def jointransition(self, window, cb):
 		pass
-		
+				
 	def settransitionvalue(self, value):
 		pass
 		
-##	def freeze_content(self, how):
-##		pass
 
 
 	#
@@ -1799,7 +1799,7 @@ class Region(Window):
 	# trans engine: calls self._paintOnDDS(self._drawsurf)
 	# i.e. trans engine is responsible to paint only this 
 	def _paint_1(self, rc=None, exclwnd=None):
-		# print 'transition, multiElement==false', self
+		#print 'transition, multiElement==false', self
 		if exclwnd==self: return
 
 		# first paint self transition surface
@@ -2007,6 +2007,14 @@ class Region(Window):
 		else:
 			print 'begintransition runit=',runit
 
+	def begininlinetransition(self, trtype, trsubtype, trmode='in'):
+		#print 'begininlinetransition', self
+		self._multiElement = 0
+		self._childrenClip = 0
+		self._outtrans = 0
+		self._transition = win32transitions.InlineTransitionEngine(self, trtype, trsubtype, trmode)
+		self._transition.begintransition()
+
 	def endtransition(self):
 		if self._transition:
 			#print 'endtransition', self
@@ -2027,6 +2035,7 @@ class Region(Window):
 		
 	def settransitionvalue(self, value):
 		if self._transition:
+			#print 'settransitionvalue', value
 			self._transition.settransitionvalue(value)
 		else:
 			print 'settransitionvalue without a transition'
