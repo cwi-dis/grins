@@ -29,6 +29,9 @@ import mw_widgets
 # Scrollbar constants
 #
 SCROLLBARSIZE=16		# Full size, overlapping 1 pixel with window border
+# Parts of the scrollbar we track:
+TRACKED_PARTS=(Controls.inUpButton, Controls.inDownButton,
+		Controls.inPageUp, Controls.inPageDown)
 
 #
 # Cache for image sizes
@@ -650,52 +653,74 @@ def calc_extra_size(adornments, canvassize):
 class _ScrollMixin:
 	"""Mixin class for scrollable/resizable toplevel windows"""
 	
-	def __init__(self, width, height, canvassize=None):
+	def __init__(self, canvassize=None):
 		self._canvassize = canvassize
 		self._canvaspos = (0, 0)
 		self._barx = None
 		self._bary = None
 ##		self.bary = Ctl.NewControl(self.wid, rect, "", 1, vy, 0, dr[3]-dr[1]-(vr[3]-vr[1]), 16, 0)
-		if canvassize:
-			# Get measurements
-			innerw, innerh, horleft, horbot, vertright, verttop = \
-				self._getscrollbarposition(width, height)
-			# Create vertical scrollbar
-			rect = innerw, verttop, vertright, innerh
-			self._bary = Ctl.NewControl(self._wid, rect, "", 1, 0, 0, 0, 16, 0)
-			self._bary.HiliteControl(255)
-			# Create horizontal scrollbar
-			rect = horleft, innerh, innerw, horbot
-			self._barx = Ctl.NewControl(self._wid, rect, "", 1, 0, 0, 0, 16, 0)
-			self._barx.HiliteControl(255)
-			# And set useable canvas size
-			width, height = innerw, innerh
-		return width, height
+		if not canvassize:
+			return
+		# Get measurements
+		horleft, verttop, vertright, horbot, vertleft, hortop = self._initscrollbarposition()
+		# Create vertical scrollbar
+		rect = vertleft, verttop, vertright, hortop+1
+		self._bary = Ctl.NewControl(self._wid, rect, "", 1, 0, 0, 0, 16, 0)
+		self._bary.HiliteControl(255)
+		# Create horizontal scrollbar
+		rect = horleft, hortop, vertleft+1, horbot
+		self._barx = Ctl.NewControl(self._wid, rect, "", 1, 0, 0, 0, 16, 0)
+		self._barx.HiliteControl(255)
+		# And set useable canvas size
 		
 	def close(self):
 		pass
 		
-	def _getscrollbarposition(self, width, height):
-		l, t, r, b = 0, 0, width, height
-		return r - (SCROLLBARSIZE-1), b - (SCROLLBARSIZE-1), l-1, b+1, r+1, t-1
+	def _redraw(self):
+		if self._barx:
+			self._wid.DrawGrowIcon()
 		
-	def _resizescrollbars(self, width, height):
-		"""Move/resize scrollbars and return inner width/height""" 
-		return width, height
+	def _initscrollbarposition(self):
+		l, t, w, h = self._rect
+		r, b = l+w, t+h
+		newr, newb = r - (SCROLLBARSIZE-1), b - (SCROLLBARSIZE-1)
+		self._rect = l, t, newr-l, newb-t
+		return l-1, t-1,  r+1, b+1, newr, newb
+		
+	def _resized(self):
+		"""Move/resize scrollbars and update self._rect after a resize"""
+		if not self._barx:
+			return
+
+		horleft, verttop, vertright, horbot, vertleft, hortop = self._initscrollbarposition()
+
+		rect = vertleft, verttop, vertright, hortop+1
+		self._movescrollbar(self._bary, rect)
+
+		rect = horleft, hortop, vertleft+1, horbot
+		self._movescrollbar(self._barx, rect)
+
+	def _movescrollbar(self, bar, rect):
+		l, t, r, b = rect
+		bar.HideControl()
+		bar.MoveControl(l, t)
+		bar.SizeControl(r-l, (b-t))
+		bar.ShowControl()
 		
 	def _clipvisible(self, clip):
 		"""AND the visible region into the region clip"""
 		pass
 		
 	def _activate(self, onoff):
+		if not self._barx:
+			return
 		if onoff:
 			hilite = 0
 		else:
 			hilite = 255
-		if self._barx:
-			self._barx.HiliteControl(hilite)
-		if self._bary:
-			self._bary.HiliteControl(hilite)
+		self._barx.HiliteControl(hilite)
+		self._bary.HiliteControl(hilite)
+		self._wid.DrawGrowIcon()
 		
 	def setcanvassize(self, how):
 		if self._canvassize is None:
@@ -716,11 +741,13 @@ class _ScrollMixin:
 
 class _AdornmentsMixin:
 	"""Class to handle toolbars and other adornments on toplevel windows"""
-	def __init__(self):
+	def __init__(self, adornments):
 		self._cmd_to_cntl = {}
 		self._cntl_to_cmd = {}
+		self._cntl_handlers = {}
+		self._add_adornments(adornments)
 		
-	def _add_addornments(self, adornments):
+	def _add_adornments(self, adornments):
 		if not adornments:
 			return
 		if adornments.has_key('toolbar'):
@@ -733,6 +760,7 @@ class _AdornmentsMixin:
 				except Ctl.Error, arg:
 					print 'CNTL resource %d not found: %s'%(resid, arg)
 				else:
+					self._add_control(cntl, self._toolbar_callback)
 					self._cmd_to_cntl[cmd] = cntl
 					self._cntl_to_cmd[cntl] = cmd
 			#
@@ -751,23 +779,41 @@ class _AdornmentsMixin:
 			x, y, w, h = self._rect
 			self._rect = x, y+height, w, h-height
 			
+	def close(self):
+		del self._cmd_to_cntl
+		del self._cntl_to_cmd
+		del self._cntl_handlers
+
+	def _add_control(self, cntl, callback, trackhandler=None):
+		self._cntl_handlers[cntl] = (callback, trackhandler)
+			
+	def _del_control(self, cntl):
+		del self._cntl_handlers[cntl]
+			
+	def _resized(self):
+		"""Adjust self._rect after a resize"""
+		if not self._cmd_to_cntl:
+			return
+		x, y, w, h = self._rect
+		self._rect = x, y+height, w, h-height
+			
 	def _iscontrolclick(self, down, local, event):
 		if down:
 			# Check for control
 			ptype, ctl = Ctl.FindControl(local, self._wid)
 			if ptype and ctl:
-##				if ptype in TRACKED_PARTS:
-##					dummy = ctl.TrackControl(local, self.scrollbar_callback)
-##				else:
-				part = ctl.TrackControl(local)
-				if part:
-					self._control_callback(ctl, part)
+				control_callback, track_callback = self._cntl_handlers[ctl]
+				if ptype in TRACKED_PARTS and track_callback:
+					dummy = ctl.TrackControl(local, track_callback)
+				else:
+					part = ctl.TrackControl(local)
+					if part:
+						control_callback(ctl, part)
 				return 1
 		return 0
 		
-	def _control_callback(self, ctl, part):
+	def _toolbar_callback(self, ctl, part):
 ##		print 'DBG controlhit', ctl, part, self._cntl_to_cmd[ctl]
-		# XXXX Check for scrollbars
 		cmd = self._cntl_to_cmd[ctl]
 		callback = self.get_command_callback(cmd)
 		if not callback:
@@ -775,10 +821,6 @@ class _AdornmentsMixin:
 		else:
 			func, arglist = callback
 			apply(func, arglist)
-
-	def close(self):
-		del self._cmd_to_cntl
-		del self._cntl_to_cmd
 			
 	def set_commandlist(self, cmdlist):
 		enabled = {}
@@ -813,13 +855,18 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		
 		self._transparent = 0
 		
+		#
 		# Note: the toplevel init routine is called with pixel coordinates,
 		# not fractional coordinates
-		# XXXX Should move down.
-		w, h = _ScrollMixin.__init__(self, w, h, canvassize)
+		#
+		# Also, note the order here is important: the initializers modify
+		# self._rect, and the toolbar has to span the window with the scroll
+		# bars below it.
+		#
 		self._rect = 0, 0, w, h
-		_AdornmentsMixin.__init__(self)
-		self._add_addornments(adornments)
+		_AdornmentsMixin.__init__(self, adornments)
+		_ScrollMixin.__init__(self, canvassize)
+
 		_x_pixel_per_mm, _y_pixel_per_mm = \
 				 mw_globals.toplevel._getmmfactors()
 
@@ -938,6 +985,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		if rgn is None:
 			rgn = self._wid.GetWindowPort().visRgn
 		Ctl.UpdateControls(self._wid, rgn)
+		_ScrollMixin._redraw(self)
 		
 	def _activate(self, onoff):
 		_CommonWindow._activate(self, onoff)
@@ -955,9 +1003,19 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 			except _rb_done:
 				pass
 			mycreatebox._next_create_box[0:0] = next_create_box
+			
+		for d in self._displists[:]:
+			d.close()
+		self._wid.SizeWindow(width, height, 1)
+		Win.InvalRect(self.qdrect())
+		self._clipchanged()
+
 		x, y = self._rect[:2]
-		width, height = self._resizescrollbars(width, height)
 		self._rect = x, y, width, height
+		_AdornmentsMixin._resized(self)
+		_ScrollMixin._resized(self)
+		x, y, width, height = self._rect
+
 		# convert pixels to mm
 		parent = self._parent
 		_x_pixel_per_mm, _y_pixel_per_mm = \
@@ -966,11 +1024,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 						   / _x_pixel_per_mm)
 		self._vfactor = parent._vfactor / (float(height) /
 						   _y_pixel_per_mm)
-		for d in self._displists[:]:
-			d.close()
-		self._wid.SizeWindow(width, height, 1)
-		Win.InvalRect(self.qdrect())
-		self._clipchanged()
+
 		for w in self._subwindows:
 			w._do_resize1()
 		# call resize callbacks
@@ -1437,6 +1491,14 @@ class _SubWindow(_CommonWindow):
 			d.close()
 		for w in self._subwindows:
 			w._do_resize1()
+			
+	def _add_control(self, ctl, callback, tracker=None):
+		"""Add a control. Propagate up to the toplevel window"""
+		self._parent._add_control(ctl, callback, tracker)
+		
+	def _del_control(self, ctl):
+		"""Delete a control. Propagate up to the toplevel window"""
+		self._parent._del_control(ctl)
 
 class DialogWindow(_Window):
 	def __init__(self, resid, title='Dialog', default=None, cancel=None):
