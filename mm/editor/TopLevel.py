@@ -1,8 +1,7 @@
 # Top level menu.
 # Read the file and create a menu that accesses the basic functions.
 
-import posix
-import path
+import os
 
 import gl, DEVICE
 import fl
@@ -37,13 +36,12 @@ class TopLevel(ViewDialog, BasicDialog):
 	def init(self, filename):
 		self = ViewDialog.init(self, 'toplevel_')
 		self.filename = filename
-		self.dirname, self.basename = path.split(self.filename)
+		self.dirname, self.basename = os.path.split(self.filename)
 		MMAttrdefs.toplevel = self # For hack in MMAttrdefs.getattr()
 		self.read_it()
 		width, height = \
 			MMAttrdefs.getattr(self.root, 'toplevel_winsize')
 		self = BasicDialog.init(self, width, height, 'CMIF')
-		Timing.calctimes(self.root)
 		self.makeviews()	# References the form just made
 		return self
 	#
@@ -51,10 +49,10 @@ class TopLevel(ViewDialog, BasicDialog):
 	# directory, if the resulting filename exists.
 	#
 	def findfile(self, filename):
-		if path.isabs(filename):
+		if os.path.isabs(filename):
 			return filename
-		altfilename = path.join(self.dirname, filename)
-		if path.exists(altfilename):
+		altfilename = os.path.join(self.dirname, filename)
+		if os.path.exists(altfilename):
 			return altfilename
 		return filename # Let the caller find out it doesn't exist
 	#
@@ -232,8 +230,8 @@ class TopLevel(ViewDialog, BasicDialog):
 			self.help.save_geometry()
 		# Make a back-up of the original file...
 		try:
-			posix.rename(self.filename, self.filename + '~')
-		except posix.error:
+			os.rename(self.filename, self.filename + '~')
+		except os.error:
 			pass
 		print 'saving to', self.filename, '...'
 		MMTree.WriteFile(self.root, self.filename)
@@ -276,7 +274,6 @@ class TopLevel(ViewDialog, BasicDialog):
 			self.save_geometry()
 			self.show()
 		#
-		Timing.calctimes(self.root)
 		self.makeviews()
 		obj.set_button(0)
 	#
@@ -288,6 +285,7 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.root = MMTree.ReadFile(self.filename)
 		t1 = time.millitimer()
 		print 'done in', (t1-t0) * 0.001, 'sec.'
+		Timing.calctimes(self.root)
 		self.context = self.root.GetContext()
 		self.editmgr = EditMgr().init(self.root)
 		self.context.seteditmgr(self.editmgr)
