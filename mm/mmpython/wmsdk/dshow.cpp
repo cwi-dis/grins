@@ -79,6 +79,24 @@ newGraphBuilderObject()
 	return self;
 }
 
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IBasicVideo* pI;
+} BasicVideoObject;
+
+staticforward PyTypeObject BasicVideoType;
+
+static BasicVideoObject *
+newBasicVideoObject()
+{
+	BasicVideoObject *self = PyObject_NEW(BasicVideoObject, &BasicVideoType);
+	if (self == NULL) return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
 
 typedef struct {
 	PyObject_HEAD
@@ -683,6 +701,28 @@ GraphBuilder_QueryIVideoWindow(GraphBuilderObject *self, PyObject *args)
 	return (PyObject *) obj;
 }
 
+static char GraphBuilder_QueryIBasicVideo__doc__[] =
+""
+;
+static PyObject *
+GraphBuilder_QueryIBasicVideo(GraphBuilderObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	HRESULT hr;
+	BasicVideoObject *obj = newBasicVideoObject();
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pGraphBuilder->QueryInterface(IID_IBasicVideo, (void **)&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)) {
+		seterror("GraphBuilder_QueryIBasicVideo", hr);
+		obj->pI = NULL;
+		Py_DECREF(obj);
+		return NULL;
+	}
+	return (PyObject *) obj;
+}
+
 
 static char GraphBuilder_QueryIMediaEventEx__doc__[] =
 ""
@@ -909,6 +949,7 @@ static struct PyMethodDef GraphBuilder_methods[] = {
 	{"RemoveFilter", (PyCFunction)GraphBuilder_RemoveFilter, METH_VARARGS, GraphBuilder_RemoveFilter__doc__},
 	{"QueryIMediaPosition", (PyCFunction)GraphBuilder_QueryIMediaPosition, METH_VARARGS, GraphBuilder_QueryIMediaPosition__doc__},
 	{"QueryIVideoWindow", (PyCFunction)GraphBuilder_QueryIVideoWindow, METH_VARARGS, GraphBuilder_QueryIVideoWindow__doc__},
+	{"QueryIBasicVideo", (PyCFunction)GraphBuilder_QueryIBasicVideo, METH_VARARGS, GraphBuilder_QueryIBasicVideo__doc__},
 	{"QueryIMediaEventEx", (PyCFunction)GraphBuilder_QueryIMediaEventEx, METH_VARARGS, GraphBuilder_QueryIMediaEventEx__doc__},
 	{"EnumFilters", (PyCFunction)GraphBuilder_EnumFilters, METH_VARARGS, GraphBuilder_EnumFilters__doc__},
 	{"Connect", (PyCFunction)GraphBuilder_Connect, METH_VARARGS, GraphBuilder_Connect__doc__},
@@ -1324,6 +1365,131 @@ static PyTypeObject FileSinkFilterType = {
 };
 
 // End of FileSinkFilter
+////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////
+// BasicVideo object
+
+static char BasicVideo_GetAvgTimePerFrame__doc__[] =
+""
+;
+static PyObject *
+BasicVideo_GetAvgTimePerFrame(BasicVideoObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	REFTIME atpf;
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->get_AvgTimePerFrame(&atpf);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)) {
+		seterror("BasicVideo_GetAvgTimePerFrame", hr);
+		return NULL;
+	}
+	return Py_BuildValue("d", atpf);
+}
+
+
+static char BasicVideo_GetBitRate__doc__[] =
+""
+;
+static PyObject *
+BasicVideo_GetBitRate(BasicVideoObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	long bitRate;
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->get_BitRate(&bitRate);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)) {
+		seterror("BasicVideo_GetBitRate", hr);
+		return NULL;
+	}
+	return Py_BuildValue("l", bitRate);
+}
+
+static char BasicVideo_GetVideoSize__doc__[] =
+""
+;
+static PyObject *
+BasicVideo_GetVideoSize(BasicVideoObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	
+	long width, height;
+	HRESULT hr;
+	
+	hr = self->pI->get_VideoWidth(&width);
+	if (FAILED(hr)) {
+		seterror("get_VideoWidth", hr);
+		return NULL;
+	}
+
+	hr = self->pI->get_VideoHeight(&height);
+	if (FAILED(hr)) {
+		seterror("get_VideoHeight", hr);
+		return NULL;
+	}
+	return Py_BuildValue("ll", width, height);
+}
+
+
+static struct PyMethodDef BasicVideo_methods[] = {
+	{"GetAvgTimePerFrame", (PyCFunction)BasicVideo_GetAvgTimePerFrame, METH_VARARGS, BasicVideo_GetAvgTimePerFrame__doc__},
+	{"GetBitRate", (PyCFunction)BasicVideo_GetBitRate, METH_VARARGS, BasicVideo_GetBitRate__doc__},
+	{"GetVideoSize", (PyCFunction)BasicVideo_GetVideoSize, METH_VARARGS, BasicVideo_GetVideoSize__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+BasicVideo_dealloc(BasicVideoObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+BasicVideo_getattr(BasicVideoObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(BasicVideo_methods, (PyObject *)self, name);
+}
+
+static char BasicVideoType__doc__[] =
+""
+;
+
+static PyTypeObject BasicVideoType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"BasicVideo",			/*tp_name*/
+	sizeof(BasicVideoObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)BasicVideo_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)BasicVideo_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	BasicVideoType__doc__ /* Documentation string */
+};
+
+// End of code for BasicVideo object 
 ////////////////////////////////////////////
 
 /////////////////////////////////////////////
