@@ -11,6 +11,9 @@ import os
 
 debug = os.environ.has_key('CHANNELDEBUG')
 
+# This should be a channel option
+SECONDS_TO_BUFFER=2
+
 class SoundChannel(ChannelAsync):
 	# shared between all instances
 	__playing = 0			# # of active channels
@@ -92,7 +95,7 @@ class Player:
 		# __merger, __converter, __tid, and __data are all None/'',
 		# or none of them are.
 		self.__pausing = 0	# whether we're pausing
-		self.__port = audiodev.writer(qsize = 100000)
+		self.__port = audiodev.writer(qsize = SECONDS_TO_BUFFER*48000) # Worst-case queuesize
 		self.__merger = None	# merged readers
 		self.__converter = None	# merged readers, converted to port
 		self.__tid = None	# timer id
@@ -120,7 +123,7 @@ class Player:
 						 self.__port.getformats(),
 						 self.__port.getframerates())
 			self.__framerate = self.__converter.getframerate()
-			self.__readsize = self.__framerate
+			self.__readsize = SECONDS_TO_BUFFER*self.__framerate/2
 			self.__port.setformat(self.__converter.getformat())
 			self.__port.setframerate(self.__converter.getframerate())
 			fillable = self.__port.getfillable()
@@ -197,13 +200,18 @@ class Player:
 			self.__prevpos = self.__oldpos
 			self.__oldpos = converter.getpos()
 			self.__data = converter.readframes(self.__readsize)
-			if self.__data is None or port.getfillable() <= self.__readsize:
-				timeout = float(port.getfilled())/self.__framerate - self.__timeout
-				if timeout <= 0:
-					timeout = 0.001
-## 				print 'timeout %f' % timeout
-				self.__tid = windowinterface.settimer(timeout,
-								      (self.__playsome, ()))
+			
+			fillable = port.getfillable()
+			if self.__data is None:
+				timeout = float(port.getfilled())/self.__framerate - 0.1
+				if timeout > 0:
+					self.__tid = windowinterface.settimer(timeout, (self.__playsome, ()))
+					return
+				# else we go back into the loop to stop playing immediately
+			elif fillable < self.__readsize:
+				timeout = float(self.__readsize - fillable)/self.__framerate
+				self.__tid = windowinterface.settimer(timeout, (self.__playsome, ()))
 				return
+			# else we go back into the loop to write more data
 
 player = Player()
