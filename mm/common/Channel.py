@@ -1044,7 +1044,7 @@ class Channel:
 		if fgcolor is not None:
 			return fgcolor
 		r,g,b = self.getbgcolor(node, animated)
-		if r*r + g*g + b*b >= 3*128*128:
+		if MMAttrdefs.getattr(node, 'transparent', animated) or r*r + g*g + b*b >= 3*128*128:
 			return 0,0,0
 		else:
 			return 255,255,255
