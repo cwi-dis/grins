@@ -5,7 +5,7 @@ import os
 engine = None
 audiopin = None
 
-def convertaudiofile(u, dstdir, file, node, isaudio = 1):
+def convertaudiofile(u, dstdir, file, node):
 	import producer, MMAttrdefs, audio, audio.format
 	global engine, audiopin
 	if os.environ.has_key('REAL_PRODUCER'):
@@ -28,15 +28,12 @@ def convertaudiofile(u, dstdir, file, node, isaudio = 1):
 	engine.SetDoMultiRateEncoding(1)
 	cp = engine.GetClipProperties()
 	ts = engine.GetTargetSettings()
+	ts.RemoveAllTargetAudiences()
 	if node is not None:
 		cp.SetTitle(MMAttrdefs.getattr(node, 'title'))
 		cp.SetAuthor(MMAttrdefs.getattr(node, 'author'))
 		cp.SetCopyright(MMAttrdefs.getattr(node, 'copyright'))
-		if isaudio:
-			ts.SetAudioContent(MMAttrdefs.getattr(node, 'project_audiotype'))
-		else:
-			ts.SetVideoQuality(MMAttrdefs.getattr(node, 'project_videotype'))
-		ts.RemoveAllTargetAudiences()
+		ts.SetAudioContent(MMAttrdefs.getattr(node, 'project_audiotype'))
 		target = MMAttrdefs.getattr(node, 'project_targets')
 		for i in range(5):
 			if (1 << i) & target:
@@ -198,12 +195,12 @@ def convertvideofile(u, srcurl, dstdir, file, node):
 	engine.SetDoMultiRateEncoding(1)
 	cp = engine.GetClipProperties()
 	ts = engine.GetTargetSettings()
+	ts.RemoveAllTargetAudiences()
 	if node is not None:
 		cp.SetTitle(MMAttrdefs.getattr(node, 'title'))
 		cp.SetAuthor(MMAttrdefs.getattr(node, 'author'))
 		cp.SetCopyright(MMAttrdefs.getattr(node, 'copyright'))
 		ts.SetVideoQuality(MMAttrdefs.getattr(node, 'project_videotype'))
-		ts.RemoveAllTargetAudiences()
 		target = MMAttrdefs.getattr(node, 'project_targets')
 		for i in range(5):
 			if (1 << i) & target:
