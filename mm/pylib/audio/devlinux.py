@@ -19,7 +19,7 @@ class AudioDevLINUX:
 
 	try:
 		__port = linuxaudiodev.open('w')
-	except sunaudiodev.error:
+	except linuxaudiodev.error:
 		# can't open device, so keep the default
 		pass
 	else:
