@@ -46,7 +46,7 @@ class LayoutView(LayoutViewDialog):
 		if not self.is_showing():
 			return
 		self.editmgr.unregister(self)
-		self.toplevel.player.setlayout(None, None)
+		self.toplevel.player.setlayout()
 		LayoutViewDialog.hide(self)
 		self.toplevel.showstate(self, 0)
 
@@ -61,6 +61,10 @@ class LayoutView(LayoutViewDialog):
 
 	def kill(self):
 		self.destroy()
+
+	def selectchannel(self, channel):
+		self.curchannel = channel
+		self.fill()
 
 	def fill(self):
 		layouts = self.context.layouts.keys()
@@ -114,7 +118,7 @@ class LayoutView(LayoutViewDialog):
 		if self.curchannel is not None:
 			commandlist.append(ATTRIBUTES(callback = (self.attr_callback, ())))
 		self.setcommandlist(commandlist)
-		self.toplevel.player.setlayout(self.curlayout, self.curchannel)
+		self.toplevel.player.setlayout(self.curlayout, self.curchannel, self.selectchannel)
 
 	def new_callback(self):
 		if not self.editmgr.transaction():

@@ -12,7 +12,6 @@ class _AdornmentSupport(_CommandSupport, _ButtonSupport):
 		_CommandSupport.__init__(self)
 		self.__dynamicmenu = {}
 		self.__popupmenutemplate = None
-		self.__popupmenuwidgets = []
 
 	def close(self):
 		_CommandSupport.close(self)
@@ -126,10 +125,7 @@ class _AdornmentSupport(_CommandSupport, _ButtonSupport):
 		
 	def _destroy_popupmenu(self):
 		# Free resources held by self._popupmenu and set it to None
+		if self._popupmenu is not None:
+			self._popupmenu.DestroyWidget()
 		self._popupmenu = None
-		self.__popupmenutemplate = []
-		#
-		# And remove the widgets from the usercmd->widget mapping
-		#
-		self._remove_widgets(self.__popupmenuwidgets)
-		self.__popupmenuwidgets = []
+		self.__popupmenutemplate = None
