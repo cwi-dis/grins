@@ -496,10 +496,6 @@ SOURCE=.\editor\ChannelView.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\editor\cmif.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\editor\cmif_editors.ini
 # End Source File
 # Begin Source File
