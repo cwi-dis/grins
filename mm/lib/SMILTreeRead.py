@@ -2001,65 +2001,62 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				ch['regPoint'] = regName
 			del attrdict['regPoint']
 
-		if mtype in ('text', 'image', 'movie', 'video', 'mpeg',
-			     'html', 'label', 'graph', 'layout', 'RealPix','RealText', 'RealVideo',
-			     'sound', 'brush'):
-			# deal with channel with window
-			if attrdict.has_key('id'): del attrdict['id']
-			title = attrdict.get('title')
-			if title is not None:
-				if title != ch.name:
-					ch['title'] = title
-				del attrdict['title']
+		# deal with channel with window
+		if attrdict.has_key('id'): del attrdict['id']
+		title = attrdict.get('title')
+		if title is not None:
+			if title != ch.name:
+				ch['title'] = title
+			del attrdict['title']
 
-			ch['drawbox'] = 0
-			bg = attrdict['backgroundColor']
-			del attrdict['backgroundColor']
-			if features.compatibility == features.G2:
-				ch['transparent'] = 1
-				if bg != 'transparent':
-					ch['bgcolor'] = bg
-					ch['transparent'] = 0
-				elif mtype in ('text', 'RealText'):
-					ch['bgcolor'] = 255,255,255
-				else:
-					ch['bgcolor'] = 0,0,0
-			elif compatibility.QT == features.compatibility:
-				ch['transparent'] = 1
-				ch['fgcolor'] = 255,255,255
-
-			elif bg == 'transparent':
-				ch['transparent'] = 1
-			else:
-				if self.__context.attributes.get('project_boston'):
-					ch['transparent'] = 0
-				else:
-					# since we have suppressed the behavior transparent when empty
-					# it's not possible any more to set transparent to -1
-					ch['transparent'] = 1
-#					ch['transparent'] = -1
+		ch['drawbox'] = 0
+		bg = attrdict['backgroundColor']
+		del attrdict['backgroundColor']
+		if features.compatibility == features.G2:
+			ch['transparent'] = 1
+			if bg != 'transparent':
 				ch['bgcolor'] = bg
+				ch['transparent'] = 0
+			elif mtype in ('text', 'RealText'):
+				ch['bgcolor'] = 255,255,255
+			else:
+				ch['bgcolor'] = 0,0,0
+		elif compatibility.QT == features.compatibility:
+			ch['transparent'] = 1
+			ch['fgcolor'] = 255,255,255
 
-			ch['z'] = attrdict['z-index']
-			del attrdict['z-index']
-			x = attrdict['left']; del attrdict['left']
-			y = attrdict['top']; del attrdict['top']
-			w = attrdict['width']; del attrdict['width']
-			h = attrdict['height']; del attrdict['height']
-			ch['units'] = attrdict['units']; del attrdict['units']
-			fit = attrdict['fit']; del attrdict['fit']
-			if fit == 'hidden':
-				ch['scale'] = 1
-			elif fit == 'meet':
-				ch['scale'] = 0
-			elif fit == 'slice':
-				ch['scale'] = -1
-			elif fit == 'fill':
-				ch['scale'] = -3
-			ch['center'] = 0
-			# other fit options not implemented
+		elif bg == 'transparent':
+			ch['transparent'] = 1
+		else:
+			if self.__context.attributes.get('project_boston'):
+				ch['transparent'] = 0
+			else:
+				# since we have suppressed the behavior transparent when empty
+				# it's not possible any more to set transparent to -1
+				ch['transparent'] = 1
+#				ch['transparent'] = -1
+			ch['bgcolor'] = bg
 
-			ch['base_winoff'] = x, y, w, h
+		ch['z'] = attrdict['z-index']
+		del attrdict['z-index']
+		x = attrdict['left']; del attrdict['left']
+		y = attrdict['top']; del attrdict['top']
+		w = attrdict['width']; del attrdict['width']
+		h = attrdict['height']; del attrdict['height']
+		ch['units'] = attrdict['units']; del attrdict['units']
+		fit = attrdict['fit']; del attrdict['fit']
+		if fit == 'hidden':
+			ch['scale'] = 1
+		elif fit == 'meet':
+			ch['scale'] = 0
+		elif fit == 'slice':
+			ch['scale'] = -1
+		elif fit == 'fill':
+			ch['scale'] = -3
+		ch['center'] = 0
+		# other fit options not implemented
+
+		ch['base_winoff'] = x, y, w, h
 
 		# keep all attributes that we didn't use
 		for attr, val in attrdict.items():
@@ -2185,45 +2182,42 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ctx.channelnames.append(name)
 			ctx.channels.append(ch)
 			ch['type'] = mtype
-			if mtype in ('image', 'movie', 'video', 'mpeg',
-				     'text', 'label', 'html', 'graph', 'RealPix', 'RealText', 'RealVideo',
-				     'sound', 'brush'):
 		############################### WARNING ##################################
 		################# to move the test : doesn't work clearly ################
 		##########################################################################
-				if not self.__regions.has_key(region):
-					self.warning('no region %s in layout' %
-						     region, self.lineno)
-					self.__in_layout = self.__seen_layout
-					self.start_region({'id': region})
-					self.end_region()
-					self.__in_layout = LAYOUT_NONE
+			if not self.__regions.has_key(region):
+				self.warning('no region %s in layout' %
+					     region, self.lineno)
+				self.__in_layout = self.__seen_layout
+				self.start_region({'id': region})
+				self.end_region()
+				self.__in_layout = LAYOUT_NONE
 		##########################################################################
-				# we're going to change this locally...
-				attrdict = self.__regions[region]
+			# we're going to change this locally...
+			attrdict = self.__regions[region]
 
-				# new 03-07-2000
-				# add the new region in channel tree
-				attrdict['base_window'] = region
+			# new 03-07-2000
+			# add the new region in channel tree
+			attrdict['base_window'] = region
 
-				# for instance, we set z-index value to -1 in order to have to folow rule:.
-				# if a LayoutChannel and XXChannel are sibling, LayoutChannel
-				# is always in front of XXChannel
-				import ChannelMap
-				visiblechannel = ChannelMap.isvisiblechannel(mtype)
-				if visiblechannel:
-					attrdict['z-index'] = -1
-				self.__fillchannel(ch, attrdict, mtype)
+			# for instance, we set z-index value to -1 in order to have to folow rule:.
+			# if a LayoutChannel and XXChannel are sibling, LayoutChannel
+			# is always in front of XXChannel
+			import ChannelMap
+			visiblechannel = ChannelMap.isvisiblechannel(mtype)
+			if visiblechannel:
+				attrdict['z-index'] = -1
+			self.__fillchannel(ch, attrdict, mtype)
 
-				if not self.__region2channel.has_key(region):
-					self.__region2channel[region] = []
-				self.__region2channel[region].append(ch)
+			if not self.__region2channel.has_key(region):
+				self.__region2channel[region] = []
+			self.__region2channel[region].append(ch)
 
-				# temporarely
-				x, y, w, h = ch['base_winoff']
-				ch['base_winoff'] = 0, 0, w, h
+			# temporarely
+			x, y, w, h = ch['base_winoff']
+			ch['base_winoff'] = 0, 0, w, h
 
-				# end new
+			# end new
 
 		node.attrdict['channel'] = name
 
