@@ -96,6 +96,13 @@ class AttrEditorDialog:
 	def showmessage(self, *args, **kw):
 		apply(windowinterface.showmessage, args, kw)
 
+	def askchannelname(self, default, cb):
+		windowinterface.InputDialog('Name for new channel',
+					    default,
+					    cb,
+					    cancelCallback = (cb, ()),
+					    parent = self.__window)
+
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from
 	# this class).
@@ -132,7 +139,10 @@ class AttrEditorDialogField:
 
 		The return value is a string giving the current value.
 		"""
-		return self.__form.getvalue(self)
+		try:
+			return self.__form.getvalue(self)
+		except AttributeError:
+			return self.getcurrent()
 
 	def setvalue(self, value):
 		"""Set the current value of the attribute.
@@ -145,6 +155,9 @@ class AttrEditorDialogField:
 	def recalcoptions(self):
 		"""Recalculate the list of options and set the value."""
 		self.__form.setoptions(self,self.getoptions(), self.getcurrent())
+
+	def askchannelname(self, default):
+		self.attreditor.askchannelname(default, self.newchan_callback)
 
 
 	# Methods to be overridden by the sub class.
