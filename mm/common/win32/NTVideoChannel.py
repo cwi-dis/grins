@@ -71,7 +71,7 @@ class VideoChannel(ChannelWindow):
 	node_attrs = ChannelWindow.node_attrs + \
 		     ['bucolor', 'hicolor', 'scale', 'center',
 		      'clipbegin', 'clipend']
-	_window_type = MPEG
+	#_window_type = MPEG
 	def __init__(self, name, attrdict, scheduler, ui):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 		
@@ -245,6 +245,11 @@ class VideoChannel(ChannelWindow):
 
 	def arm_display(self,node):
 		if debug: print 'NTVideoChannel arm_display'
+
+		# force backgroud color (there must be a better way)
+		self.armed_display._bgcolor=self.getbgcolor(node)
+		self.armed_display.clear(self.window.getgeometry())
+
 		drawbox = MMAttrdefs.getattr(node, 'drawbox')
 		if drawbox:
 			self.armed_display.fgcolor(self.getbucolor(node))
