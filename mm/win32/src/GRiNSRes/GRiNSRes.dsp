@@ -57,11 +57,11 @@ InputPath=\ufs\mm\cmif\win32\src\Build\GRiNSRes.dll
 SOURCE="$(InputPath)"
 
 "$(OutDir)\grinsRC.py" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	d:\ufs\mm\python\PCbuild\python d:\ufs\mm\python\tools\scripts\h2py.py  GRiNSRes.h 
+	..\..\..\..\python\PCbuild\python ..\..\..\..\python\tools\scripts\h2py.py  GRiNSRes.h 
 	copy GRiNSRes.py $(OutDir)\grinsRC.py 
 	del GRiNSRes.py 
-	del d:\ufs\mm\cmif\bin\win32\GRiNSRes.dll 
-	copy $(OutDir)\GRiNSRes.dll d:\ufs\mm\cmif\bin\win32 
+	del ..\..\..\bin\win32\GRiNSRes.dll 
+	copy $(OutDir)\GRiNSRes.dll ..\..\..\bin\win32 
 	
 # End Custom Build
 # Begin Target
