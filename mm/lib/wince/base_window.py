@@ -10,11 +10,9 @@ import settings
 
 import sysmetrics
 
-import base_displist
-
 import mediainterface
 
-	
+
 # base class for subwindows
 # defines the interface of subwindows
 # implements the platform independent part of subwindows 
@@ -90,6 +88,7 @@ class Window:
 		self._convbgcolor = None
 
 	def newdisplaylist(self, bgcolor = None, units=UNIT_SCREEN):
+		import base_displist
 		if bgcolor is None:
 			if not self._transparent:
 				bgcolor = self._bgcolor
