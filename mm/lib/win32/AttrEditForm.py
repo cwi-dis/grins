@@ -1378,14 +1378,13 @@ class InfoGroup(AttrGroup):
 
 	def getctrlids(self,a):
 		ix=self._ix
-		exec 'ids=(grinsRC.IDC_%d,grinsRC.IDC_%d,grinsRC.IDC_%d)' % (ix*10+1,ix*10+2,ix*10+3)
 		self._ix=self._ix+1
-		return ids
+		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
+			   getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
+			   getattr(grinsRC, 'IDC_%d' % (ix*10+3))
 
 	def getpageresid(self):
-		n=len(self._al)
-		exec 'id=grinsRC.IDD_EDITATTR_S%d' % n
-		return id
+		return getattr(grinsRC, 'IDD_EDITATTR_S%d' % len(self._al))
 
 
 # base_winoff
@@ -1400,8 +1399,9 @@ class LayoutGroup(AttrGroup):
 		return grinsRC.IDD_EDITATTR_LS1
 	def getctrlids(self,a):
 		ix=self._data['attrs'].index(a.getname())
-		exec 'ids=(grinsRC.IDC_%d,grinsRC.IDC_%d,grinsRC.IDC_%d)' % (ix*10+1,ix*10+2,ix*10+3)
-		return ids
+		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
+			   getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
+			   getattr(grinsRC, 'IDC_%d' % (ix*10+3))
 	def getpageclass(self):
 		return LayoutPage
 	def islayoutattr(self,attr):
@@ -1432,8 +1432,9 @@ class SubregionGroup(AttrGroup):
 		return grinsRC.IDD_EDITATTR_LS1O2
 	def getctrlids(self,a):
 		ix=self._data['attrs'].index(a.getname())
-		exec 'ids=(grinsRC.IDC_%d,grinsRC.IDC_%d,grinsRC.IDC_%d)' % (ix*3+1,ix*3+2,ix*3+3)
-		return ids
+		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
+			   getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
+			   getattr(grinsRC, 'IDC_%d' % (ix*10+3))
 
 	def createctrls(self,wnd):
 		cd={}
@@ -1466,10 +1467,12 @@ class SystemGroup(AttrGroup):
 	def getctrlids(self,a):
 		ix=self._data['attrs'].index(a.getname())
 		ix=ix+1 # 1 based
-		if ix==2:
-			exec 'ids=(grinsRC.IDC_%d,grinsRC.IDC_%d,grinsRC.IDC_%d,grinsRC.IDC_%d,grinsRC.IDC_%d)' % (ix*10+1,ix*10+2,ix*10+3,ix*10+4,ix*10+5)
-		else:
-			exec 'ids=(grinsRC.IDC_%d,grinsRC.IDC_%d,grinsRC.IDC_%d)' % (ix*10+1,ix*10+2,ix*10+3)
+		ids = getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
+			  getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
+			  getattr(grinsRC, 'IDC_%d' % (ix*10+3))
+		if ix == 2:
+			ids = ids + (getattr(grinsRC, 'IDC_%d' % (ix*10+4)),
+						 getattr(grinsRC, 'IDC_%d' % (ix*10+5)))
 		return ids
 	def getpageclass(self):
 		return AttrPage
@@ -1483,8 +1486,9 @@ class NameGroup(AttrGroup):
 	def getctrlids(self,a):
 		ix=self._data['attrs'].index(a.getname())
 		ix=ix+1 # 1 based
-		exec 'ids=(grinsRC.IDC_%d,grinsRC.IDC_%d,grinsRC.IDC_%d)' % (ix*10+1,ix*10+2,ix*10+3)
-		return ids
+		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
+			   getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
+			   getattr(grinsRC, 'IDC_%d' % (ix*10+3))
 	def getpageclass(self):
 		return AttrPage
 	
@@ -1497,8 +1501,10 @@ class CNameGroup(AttrGroup):
 	def getctrlids(self,a):
 		ix=self._data['attrs'].index(a.getname())
 		ix=ix+1 # 1 based
-		exec 'ids=(grinsRC.IDC_%d,grinsRC.IDC_%d,grinsRC.IDC_%d)' % (ix*10+1,ix*10+2,ix*10+3)
-		return ids
+		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
+			   getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
+			   getattr(grinsRC, 'IDC_%d' % (ix*10+3))
+
 	def getpageclass(self):
 		return AttrPage
 		
@@ -1512,13 +1518,12 @@ class DurationGroup(AttrGroup):
 	def getctrlids(self,a):
 		ix=self._data['attrs'].index(a.getname())
 		ix=ix+1 # 1 based
-		exec 'ids=(grinsRC.IDC_%d,grinsRC.IDC_%d,grinsRC.IDC_%d)' % (ix*10+1,ix*10+2,ix*10+3)
-		return ids
+		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
+			   getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
+			   getattr(grinsRC, 'IDC_%d' % (ix*10+3))
 
 	def getpageresid(self):
-		n=len(self._al)
-		exec 'id=grinsRC.IDD_EDITATTR_S%d' % n
-		return id
+		return getattr(grinsRC, 'IDD_EDITATTR_S%d' % len(self._al))
 	
 	def oninitdialog(self,wnd):
 		ctrl=components.Control(wnd,grinsRC.ID_GROUP1)
