@@ -1,0 +1,8 @@
+ARMDbg*
+ARMRel*
+X86EMDbg*
+X86EMRel*
+Debug
+Release
+*.aps
+*.vcl
