@@ -1217,7 +1217,7 @@ class AttrSheet(dialog.PropertySheet):
 		if self._form._has_followSelection:
 			ctrl = components.CheckButton(self,102)
 			ctrl.create(components.CHECKBOX(), (0,0,100,h), 'Follow selection')
-			ctrl.setcheck(1)
+			ctrl.setcheck(self._form._followSelection_initial)
 			ctrl.hookmessage(self.onFollowSelection, win32con.WM_LBUTTONDOWN)
 			self._followSelection = ctrl
 		
