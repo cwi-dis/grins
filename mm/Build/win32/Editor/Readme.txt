@@ -1,6 +1,6 @@
 Build GRiNSed.exe
 
-1. check that all cmif releted projects found in
+1. check that all cmif related projects found in
    cmif\win32\src\cmif extensions.dsw
    have been build
 
