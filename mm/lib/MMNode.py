@@ -580,6 +580,7 @@ class MMNode:
 		self.curloopcount = 0
 		self.infoicon = ''
 		self.errormessage = None
+		self.force_switch_choice = 0
 
 	#
 	# Return string representation of self
@@ -1154,6 +1155,7 @@ class MMNode:
 		self.looping_body_self = None
 		self.realpix_body = None
 		self.caption_body = None
+		self.force_switch_choice = 0
 		if self.type in playabletypes:
 			return
 		self.wtd_children = []
@@ -1174,6 +1176,13 @@ class MMNode:
 					c.PruneTree(seeknode)
 				else:
 					c._FastPruneTree()
+		elif self.type == 'alt':
+			for c in self.children:
+				c.force_switch_choice = 0
+				if c.IsAncestorOf(seeknode):
+					self.wtd_children.append(c)
+					c.PruneTree(seeknode)
+					c.force_switch_choice = 1
 		else:
 			raise CheckError, 'Cannot PruneTree() on nodes of this type %s' % self.type
 	#
@@ -1185,6 +1194,7 @@ class MMNode:
 		self.looping_body_self = None
 		self.realpix_body = None
 		self.caption_body = None
+		self.force_switch_choice = 0
 		self.wtd_children = self.children[:]
 		for c in self.children:
 			c._FastPruneTree()
@@ -2042,6 +2052,9 @@ class MMNode:
 		"""For alt nodes, return the child that will be played"""
 		if childrentopickfrom is None:
 			childrentopickfrom = self.children
+		for ch in childrentopickfrom:
+			if ch.force_switch_choice:
+				return ch
 		for ch in childrentopickfrom:
 			if ch._CanPlay():
 				return ch
