@@ -46,7 +46,7 @@ struct mpeg {
 	struct mpeg_data arm, play;/* info for nodes being armed and played */
 	int rect[4];		/* origin and size of window */
 	int pipefd[2];		/* pipe for synchronization with player */
-	type_sema dispsema;	/* semaphore for display synchronization */
+	PyThread_type_sema dispsema;	/* semaphore for display synchronization */
 #ifdef USE_XM
 	Widget widget;		/* the widget in which to draw */
 	Visual *visual;		/* the visual of the window */
