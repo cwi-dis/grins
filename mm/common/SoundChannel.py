@@ -14,7 +14,7 @@ class SoundChannel(ChannelThread):
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
-		filename = self.getfilename(node)
+		filename = self.getfileurl(node)
 		try:
 			filename = urllib.urlretrieve(filename)[0]
 		except IOError:
