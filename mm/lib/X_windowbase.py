@@ -10,8 +10,6 @@ Version = 'X'
 
 toplevel = None
 
-myxrgb8 = None
-
 from types import *
 from WMEVENTS import *
 r = Xlib.CreateRegion()
@@ -243,7 +241,6 @@ class _Toplevel:
 
 	def _setupimg(self):
 		import imgcolormap, imgconvert
-		global myxrgb8
 		imgconvert.setquality(0)
 		rs, rm = self._red_shift, self._red_mask
 		gs, gm = self._green_shift, self._green_mask
@@ -263,7 +260,7 @@ class _Toplevel:
 			lossy = 2
 		elif (rs, gs, bs) == (xrs, xgs, xbs):
 			# no need for extra conversion
-			myxrgb8 = imgformat.xrgb8
+			self.myxrgb8 = imgformat.xrgb8
 			return
 		else:
 			# too many locals to use map()
@@ -273,7 +270,8 @@ class _Toplevel:
 				b = (n >> xbs) & xbm
 				c.append((r << rs) | (g << gs) | (b << bs))
 			lossy = 0
-		myxrgb8 = imgformat.new('myxrgb8', 'X 3:3:2 RGB top-to-bottom',
+		self.myxrgb8 = imgformat.new('myxrgb8',
+					'X 3:3:2 RGB top-to-bottom',
 					{'type':'rgb', 'b2t':0, 'size':8,
 					 'align':8,
 					 # the 3,3,2 below are not
@@ -714,7 +712,7 @@ class _Window:
 		oscale = scale
 		tw = self._topwindow
 		if tw._depth == 8:
-			format = myxrgb8
+			format = toplevel.myxrgb8
 		else:
 			format = imgformat.rgb
 		depth = format.descr['size'] / 8
