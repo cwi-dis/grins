@@ -147,10 +147,8 @@ class VideoChannel(ChannelWindow):
 			fn = MMurl.urlretrieve(url)[0]
 		except IOError:
 			self._builders[node]=None
-			return 1	
-		fn = MMurl.canonURL(fn)
-		# we need the next call (idiosyncrasy of Media Player)
-		fn = self.urlorpathname(fn)
+			return 1
+		fn = os.path.join(os.getcwd(), fn)
 		builder=DirectShowSdk.CreateGraphBuilder()
 		if builder:
 			if not builder.RenderFile(fn):
@@ -387,13 +385,3 @@ class VideoChannel(ChannelWindow):
 		import windowinterface
 		windowinterface.unregister(self._fiber_id)
 		self._fiber_id=0
-
-
-	################################# general url stuff
-	def toabs(self,url):
-		import Help_
-		return Help_.toabs(url)
-	def urlorpathname(self,url):
-		import Help_
-		return Help_.urlorpathname(url)
-		
