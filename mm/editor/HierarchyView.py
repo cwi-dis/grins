@@ -1794,15 +1794,14 @@ def writenodes(node, evallicense=0):
 
 def cvslideurl(url, purl):
 	# Convert url to be relative to purl.
-	# If this is not posible, complain and return None.
+	# If this is not posible, return a canonicalized version.
 	utype, host, path, params, query, tag = urlparse.urlparse(purl)
 	if (utype and utype != 'file') or (host and host != 'localhost'):
 		windowinterface.showmessage('Can only edit local RealPix files', mtype = 'warning')
 		return
 	sutype, shost, spath, sparams, squery, stag = urlparse.urlparse(url)
 	if (sutype and sutype != 'file') or (shost and shost != 'localhost'):
-		windowinterface.showmessage('Can only add local images to RealPix nodes', mtype = 'warning')
-		return
+		return MMurl.canonURL(url)
 	# both the RealPix URL and the slide URL are local files
 	import posixpath
 	if posixpath.isabs(spath):
@@ -1814,8 +1813,7 @@ def cvslideurl(url, purl):
 			# make relative
 			url = spath[len(dir)+1:]
 		else:
-			windowinterface.showmessage('Can only add slide images from the directory or a subdirectory of the RealPix file')
-			return
+			return MMurl.canonURL(url)
 	# nothing wrong with this URL that we can see
 	return url
 
