@@ -2,7 +2,7 @@ from audiodev import Error
 from audioformat import *
 
 class AudioDevMAC:
-	self.__formats = (linear_8_mono_excess,
+	__formats = (linear_8_mono_excess,
 			  linear_8_stereo_excess,
 			  linear_16_mono_big,
 			  linear_16_stereo_big)
