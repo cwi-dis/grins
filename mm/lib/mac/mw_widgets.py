@@ -228,7 +228,8 @@ class SelectWidget:
 		self.choice = None
 		self.control = self.wid.GetDialogItemAsControl(self.itemnum)
 		self.setitems(items, default)
-		self.usercallback = callback
+		if callback:
+			raise 'Menu-callbacks not supported anymore'
 		
 	def delete(self):
 		self.menu.delete()
@@ -247,10 +248,9 @@ class SelectWidget:
 			del self.menu
 		self.menu = mw_menucmd.SelectPopupMenu(items)
 		mhandle, mid = self.menu.getpopupinfo()
-##		self.control.SetPopupData(mhandle, mid)
-		ControlAccessor.SetControlData(self.control, Controls.kControlMenuPart,
+		self.control.SetControlDataHandle(Controls.kControlMenuPart,
 				Controls.kControlPopupButtonMenuHandleTag, mhandle)
-##		ControlAccessor.SetControlData(self.control,  Controls.kControlMenuPart,
+##		ControlAccessor.SetControlData(self.control, Controls.kControlMenuPart,
 ##				Controls.kControlPopupButtonMenuIDTag, mid)
 		self.control.SetControlMinimum(1)
 		self.control.SetControlMaximum(len(items)+1)
@@ -262,8 +262,8 @@ class SelectWidget:
 			item = self.data.index(item)
 		self.control.SetControlValue(item+1)
 		
-	def click(self, event=None):
-		self.usercallback()
+##	def click(self, event=None):
+##		self.usercallback()
 		
 	def getselect(self):
 		item = self.control.GetControlValue()-1
