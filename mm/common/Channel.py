@@ -43,8 +43,9 @@ class Channel():
 		self._playstate = PIDLE
 		self._qid = None
 		self._scheduler = scheduler
-		self._rate = 0.0
-		self._no_arm_ready = 0
+		self._paused = 1
+		self.syncarm = 0
+		self.syncplay = 0
 		if debug:
 			print 'Channel.init() -> '+`self`
 		return self
@@ -116,17 +117,22 @@ class Channel():
 		if self._playstate == PLAYED:
 			node = self._played_node
 			self._armstate = AIDLE
-			self.arm(node, None, None)
+			self.syncarm = 1
+			self.arm(node)
 			self._playstate = PIDLE
 			self.armed_duration = 0
-			self.play(node, None, None)
+			self.syncplay = 1
+			self.play(node)
 			self._armstate = AIDLE
 		if armstate == ARMED:
 			self._armstate = AIDLE
-			dummy = self.arm(armed_node, None, None)
+			self.syncarm = 1
+			dummy = self.arm(armed_node)
 		if self._armstate != armstate:
 			# maybe we should do something, but what?
 			raise error, 'don\'t know if this can happen'
+		self.syncarm = 0
+		self.syncplay = 0
 
 	def hide(self):
 		# Indicate that the channel must enter the HIDDEN
@@ -140,12 +146,7 @@ class Channel():
 		if self._armstate == ARMING:
 			self.arm_1()
 		if self._playstate == PLAYING:
-			self._has_pause = 0
-			if not self._qid:
-				# if there is a qid, we will get a
-				# PLAYDONE event in due time,
-				# otherwise generate it now
-				self.done(0)
+			self.playstop()
 
 	def pause(self):
 		# Pause playing the current node.
@@ -174,7 +175,7 @@ class Channel():
 		# shown.
 		pass
 
-	def arm_0(self, node, callback, arg):
+	def arm_0(self, node):
 		# This does the initial part of arming a node.  This
 		# method should be called by superclasses when they
 		# start arming.
@@ -186,10 +187,6 @@ class Channel():
 		self._armed_node = node
 		self._armed_anchors = []
 		self.armed_duration = self.getduration(node)
-		if callback:
-			self._arm_cb = (callback, arg)
-		else:
-			self._arm_cb = None
 
 	def arm_1(self):
 		# This does the final part of arming a node.  This
@@ -200,9 +197,9 @@ class Channel():
 		if self._armstate != ARMING:
 			raise error, 'not arming'
 		self._armstate = ARMED
-		if self._arm_cb:	# if not, then synchronous arm
-			func, arg = self._arm_cb
-			apply(func, arg)
+		# Only tell scheduler if not synchronous.
+		if not self.syncarm:
+			self._armcontext.arm_done(self._armed_node)
 
 	def armdone(self):
 		# This method should be called by superclasses to
@@ -213,18 +210,16 @@ class Channel():
 		if self._armstate != ARMED:
 			raise error, 'not arming'
 		self._armstate = AIDLE
-		if not self._no_arm_ready:
-			# an arm was done for which the scheduler
-			# thought it had already been done, so don't
-			# tell the scheduler about this arm
-			self._scheduler.arm_ready(self._name)
-		self._no_arm_ready = 0
+		# Only tell scheduler if not synchronous.
+		if not self.syncarm:
+			self._playcontext.arm_ready(self)
 		self._armed_node = None
 
 	def wait_for_arm(self):
-		if self._armstate == AIDLE:
-			return
-		while self._armstate != ARMED:
+		# Wait until the arm state is either AIDLE or ARMED so
+		# that we don't get any asynchronous events that tell
+		# us that arming finished.
+		while self._armstate not in (AIDLE, ARMED):
 			if not self._player.toplevel.waitevent():
 				return
 
@@ -236,7 +231,7 @@ class Channel():
 		if self._playstate == PLAYED:
 			# someone pushed the button again, I guess
 			return
-		if not self._scheduler.anchorfired(node, anchorlist):
+		if not self._playcontext.anchorfired(node, anchorlist):
 			if self._qid:
 				try:
 					self._scheduler.cancel(self._qid)
@@ -251,9 +246,9 @@ class Channel():
 					pass
 				self._qid = None
 			self._has_pause = 0
-			self.done(None)
+			self.playdone(None)
 
-	def play_0(self, node, callback, arg):
+	def play_0(self, node):
 		# This does the initial part of playing a node.
 		# Superclasses should call this method when they are
 		# starting to play a node.
@@ -270,11 +265,6 @@ class Channel():
 		self._playcontext = self._armcontext
 		self._playstate = PLAYING
 		self._played_node = node
-		if callback:
-			self._play_cb = (callback, arg)
-		else:
-			self._play_cb = None
-			self._no_arm_ready = 1
 		for (name, type, button) in self._played_anchors:
 			self._player.del_anchor(button)
 		self._played_anchors = self._armed_anchors
@@ -286,8 +276,9 @@ class Channel():
 				f = self.pause_triggered
 				self._has_pause = 1
 			else:
-				f = self._scheduler.anchorfired
-			self._player.add_anchor(button, f, (node, [(name, type)]))
+				f = self._playcontext.anchorfired
+			self._player.add_anchor(button, f, \
+				  (node, [(name, type)]))
 		self._qid = None
 
 	def play_1(self):
@@ -295,17 +286,18 @@ class Channel():
 		# should only be called by superclasses when they
 		# don't have an intrinsic duration.  Otherwise they
 		# should just call armdone to indicate that the armed
-		# information is not needed anymore, and call done
+		# information is not needed anymore, and call playdone
 		# when they are finished playing the node.
 		if debug:
 			print 'Channel.play_1('+`self`+')'
 		if self.armed_duration > 0:
-			self._qid = self._scheduler.enter(self.armed_duration, 0, self.done, 0)
+			self._qid = self._scheduler.enter(self.armed_duration,\
+				  0, self.playdone, 0)
 		else:
-			self.done(0)
+			self.playdone(0)
 		self.armdone()
 
-	def done(self, dummy):
+	def playdone(self, dummy):
 		# This method should be called by a superclass
 		# (possibly through play_1) to indicate that the node
 		# has finished playing.
@@ -314,7 +306,7 @@ class Channel():
 				s = ' (pause)'
 			else:
 				s = ''
-			print 'Channel.done('+`self`+')' + s
+			print 'Channel.playdone('+`self`+')' + s
 		if self._playstate != PLAYING:
 			raise error, 'not playing'
 		self._qid = None
@@ -322,9 +314,8 @@ class Channel():
 		# callback just yet but wait till the anchor is hit.
 		if self._has_pause:
 			return
-		if self._play_cb:
-			callback, arg = self._play_cb
-			apply(callback, arg)
+		if not self.syncplay:
+			self._playcontext.play_done(self._played_node)
 		self._playstate = PLAYED
 
 	def playstop(self):
@@ -349,7 +340,7 @@ class Channel():
 				pass
 			self._qid = None
 		self._has_pause = 0
-		self.done(0)
+		self.playdone(0)
 
 	def do_arm(self, node):
 		# Do the actual arm.
@@ -357,13 +348,9 @@ class Channel():
 		# Return 1 if arm is finished when this returns,
 		# otherwise return 0.  In the latter case, a callback
 		# should be done later.
+		# If self.syncarm is set, the arm should be finished
+		# when do_arm() returns.
 		return 1
-
-	def do_syncarm(self, node):
-		# Do the actual arm synchronously, i.e. wait for it.
-		dummy = self.do_arm(node)
-		if not dummy:
-			raise error, 'synchronous arm was not finished'
 
 	def armstop(self):
 		# Internal method to stop arming.
@@ -371,10 +358,14 @@ class Channel():
 			raise error, 'armstop called when not arming'
 		self.arm_1()
 
+	def do_play(self, node):
+		# Actually play the node.
+		pass
+
 	#
 	# The following methods can be called by the scheduler.
 	#
-	def arm(self, node, callback, arg):
+	def arm(self, node):
 		# Arm the specified node.  This will change the arming
 		# state from AIDLE to ARMING.  When the arm is
 		# finished, the state changes to ARMED.
@@ -385,16 +376,12 @@ class Channel():
 		# Do_arm() is called to do the actual arming.  If it
 		# returns 0, we should not call arm_1() because that
 		# will happen later.
-		self.arm_0(node, callback, arg)
-		if self.is_showing():
-			if callback:
-				if not self.do_arm(node):
-					return
-			else:
-				self.do_syncarm(node)
+		self.arm_0(node)
+		if self.is_showing() and not self.do_arm(node):
+			return
 		self.arm_1()
 
-	def play(self, node, callback, arg):
+	def play(self, node):
 		# Play the node that was last armed.  This will change
 		# the playing state from PIDLE to PLAYING.  This can
 		# only be called when the arming state is ARMED.
@@ -407,12 +394,13 @@ class Channel():
 		# data instead of from node attributes, the channel
 		# should override this method.  The channel should
 		# then call play_0 at the start of its play method and
-		# call done when playing is finished.  It should call
+		# call playdone when playing is finished.  It should call
 		# armdone when the armed information is not needed
 		# anymore.
 		if debug:
 			print 'Channel.play('+`self`+','+`node`+')'
-		self.play_0(node, callback, arg)
+		self.play_0(node)
+		self.do_play(node)
 		self.play_1()
 
 	def stopplay(self, node):
@@ -428,6 +416,7 @@ class Channel():
 			self.playstop()
 		if self._playstate != PLAYED:
 			raise error, 'not played'
+
 		self._playstate = PIDLE
 
 	def stoparm(self):
@@ -479,10 +468,10 @@ class Channel():
 				self.stoparm()
 			self._armcontext = None
 
-	def setrate(self, rate):
+	def setpaused(self, paused):
 		if debug:
-			print 'Channel.setrate('+`self`+','+`rate`+')'
-		self._rate = rate
+			print 'Channel.setpaused('+`self`+','+`paused`+')'
+		self._paused = paused
 
 	#
 	# Methods used by derived classes.
@@ -586,8 +575,8 @@ class ChannelWindow(Channel):
 			self.window = None
 			self.armed_display = self.played_display = None
 
-	def arm_0(self, node, callback, arg):
-		Channel.arm_0(self, node, callback, arg)
+	def arm_0(self, node):
+		Channel.arm_0(self, node)
 		if not self.is_showing():
 			return
 		if self.armed_display:
@@ -596,10 +585,10 @@ class ChannelWindow(Channel):
 		self.armed_display = self.window.newdisplaylist(bgcolor)
 		self.armed_display.fgcolor(self.getfgcolor(node))
 
-	def play(self, node, callback, arg):
+	def play(self, node):
 		if debug:
 			print 'ChannelWindow.play('+`self`+','+`node`+')'
-		self.play_0(node, callback, arg)
+		self.play_0(node)
 		if self.is_showing():
 			self.window.pop()
 			self.armed_display.render()
@@ -607,6 +596,7 @@ class ChannelWindow(Channel):
 				self.played_display.close()
 			self.played_display = self.armed_display
 			self.armed_display = None
+			self.do_play(node)
 		self.play_1()
 
 	def stopplay(self, node):
@@ -656,15 +646,16 @@ class _ChannelThread():
 		self._player.toplevel.events.setcallback(self._deviceno, \
 			  None, None)
 
-	def play(self, node, callback, arg):
+	def play(self, node):
 		if debug:
 			print 'ChannelThread.play('+`self`+','+`node`+')'
 		dummy = self._player.toplevel.events.testevent()
-		self.play_0(node, callback, arg)
-		if not self.is_showing() or not self._play_cb:
+		self.play_0(node)
+		if not self.is_showing() or self.syncplay:
 			self.play_1()
 			return
 		self.threads.play()
+		self.do_play(node)
 		self.armdone()
 
 	def playstop(self):
@@ -679,9 +670,9 @@ class _ChannelThread():
 		if self.is_showing():
 			self.threads.armstop()
 
-	def setrate(self, rate):
+	def setpaused(self, paused):
 		if self.is_showing():
-			self.threads.setrate(rate)
+			self.threads.setrate(not paused)
 
 	def callback(self, dummy1, dummy2, event, value):
 		if debug:
@@ -689,7 +680,7 @@ class _ChannelThread():
 		import mm
 		if value == mm.playdone:
 			if self._playstate == PLAYING:
-				self.done(None)
+				self.playdone(None)
 			elif self._playstate != PIDLE:
 				raise error, 'playdone event when not playing'
 		elif value == mm.armdone:
@@ -721,9 +712,9 @@ class ChannelThread(_ChannelThread, Channel):
 		_ChannelThread.armstop(self)
 		Channel.armstop(self)
 
-	def setrate(self, rate):
-		Channel.setrate(self, rate)
-		_ChannelThread.setrate(self, rate)
+	def setpaused(self, paused):
+		Channel.setpaused(self, paused)
+		_ChannelThread.setpaused(self, paused)
 
 class ChannelWindowThread(_ChannelThread, ChannelWindow):
 	def init(self, name, attrdict, scheduler, ui):
@@ -759,15 +750,15 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		_ChannelThread.armstop(self)
 		ChannelWindow.armstop(self)
 
-	def setrate(self, rate):
-		ChannelWindow.setrate(self, rate)
-		_ChannelThread.setrate(self, rate)
+	def setpaused(self, paused):
+		ChannelWindow.setpaused(self, paused)
+		_ChannelThread.setpaused(self, paused)
 
-	def play(self, node, callback, arg):
+	def play(self, node):
 		if debug:
 			print 'ChannelWindowThread.play('+`self`+','+`node`+')'
-		self.play_0(node, callback, arg)
-		if not self.is_showing() or not self._play_cb:
+		self.play_0(node)
+		if not self.is_showing() or self.syncplay:
 			self.play_1()
 			return
 		self.window.pop()
