@@ -106,9 +106,8 @@ class _Window(_AdornmentSupport, _RubberBand):
 	#	window
 	# _exp_reg: a region in which the exposed area is built up
 	#	(top-level window only)
-	def __init__(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0,
-		     units = UNIT_MM, adornments = None,
-		     canvassize = None, commandlist = None, resizable = 1):
+	def __init__(self, parent, x, y, w, h, title, defcmap, pixmap, units,
+		     adornments, canvassize, commandlist, resizable, bgcolor):
 		_AdornmentSupport.__init__(self)
 		menubar = toolbar = shortcuts = None
 		flags = 0xffff
@@ -126,6 +125,8 @@ class _Window(_AdornmentSupport, _RubberBand):
 		self._title = title
 		parent._subwindows.insert(0, self)
 		self._do_init(parent)
+		if bgcolor is not None:
+			self._bgcolor = bgcolor
 		self._topwindow = self
 		self._exp_reg = Xlib.CreateRegion()
 
@@ -634,11 +635,11 @@ class _Window(_AdornmentSupport, _RubberBand):
 				# do it for vertical scrollbar
 				vs.ScrollBarSetValues(value, slider_size, increment, page_increment, 1)
 
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
-		return _SubWindow(self, coordinates, 0, pixmap, transparent, z, units)
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor = None):
+		return _SubWindow(self, coordinates, 0, pixmap, transparent, z, units, bgcolor)
 
-	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
-		return _SubWindow(self, coordinates, 1, pixmap, transparent, z, units)
+	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor = None):
+		return _SubWindow(self, coordinates, 1, pixmap, transparent, z, units, bgcolor)
 
 	def fgcolor(self, color):
 		r, g, b = color
@@ -1372,7 +1373,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 		pass
 
 class _SubWindow(_Window):
-	def __init__(self, parent, coordinates, defcmap, pixmap, transparent, z, units):
+	def __init__(self, parent, coordinates, defcmap, pixmap, transparent, z, units, bgcolor):
 		self._z = z
 		x, y, w, h = parent._convert_coordinates(coordinates, crop = 1, units = units)
 		self._rect = x, y, w, h
@@ -1389,6 +1390,8 @@ class _SubWindow(_Window):
 		else:
 			parent._subwindows.append(self)
 		self._do_init(parent)
+		if bgcolor is not None:
+			self._bgcolor = bgcolor
 		self._motion_handler = parent._motion_handler
 		if parent._transparent:
 			self._transparent = parent._transparent
