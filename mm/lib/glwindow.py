@@ -118,7 +118,7 @@ check = fl.check_forms
 # Event dispatcher, installed as FORMS' event callback
 
 from DEVICE import REDRAW, KEYBD, MOUSE3, MOUSE2, MOUSE1, INPUTCHANGE
-from DEVICE import WINSHUT, WINQUIT
+from DEVICE import WINSHUT, WINQUIT, MOUSEX, MOUSEY
 
 def dispatch(dev, val):
 	global focuswindow, focuswid
@@ -143,6 +143,18 @@ def dispatch(dev, val):
 			focuswindow.mouse(dev, val)
 		else:
 			report('MOUSE event with no focus window')
+	elif dev == MOUSEX:
+		if focuswindow:
+			focuswindow.setwin()
+			focuswindow.mousex(val)
+		else:
+			report('MOUSEX event with no focus window')
+	elif dev == MOUSEY:
+		if focuswindow:
+			focuswindow.setwin()
+			focuswindow.mousey(val)
+		else:
+			report('MOUSEY event with no focus window')
 	elif dev == INPUTCHANGE:
 		if focuswindow:
 			focuswindow.setwin()
