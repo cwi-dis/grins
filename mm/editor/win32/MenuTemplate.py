@@ -96,7 +96,7 @@ MENUBAR=(
 		(CMIF, ENTRY, 'Toggle channel &state', None, TOGGLE_ONOFF),
 ##		(SMIL, ENTRY, 'Edit Source...', None, EDITSOURCE),
 		(LIGHT, SEP,),
-		(LIGHT, ENTRY, '&Info...', 'I', INFO),
+		(SMIL, ENTRY, '&Info...', 'I', INFO),
 		(LIGHT, ENTRY, '&Properties...', 'A', ATTRIBUTES),
 		(LIGHT, ENTRY, '&Edit Content...', 'E', CONTENT),
 		(LIGHT, SEP,),
@@ -206,7 +206,7 @@ POPUP_HVIEW_LEAF = (
 		(LIGHT, ENTRY, 'C&reate simple anchor', None, CREATEANCHOR),
 		(LIGHT, ENTRY, '&Finish hyperlink to selection', None, FINISH_LINK),
 		(LIGHT, SEP,),
-		(LIGHT, ENTRY, '&Info...', None, INFO),
+		(SMIL, ENTRY, '&Info...', None, INFO),
 		(LIGHT, ENTRY, 'P&roperties...', None, ATTRIBUTES),
 		(SMIL, ENTRY, '&Anchors...', None, ANCHORS),
 		(LIGHT, ENTRY, '&Edit content', None, CONTENT),
@@ -240,7 +240,7 @@ POPUP_HVIEW_STRUCTURE = (
 		(LIGHT, ENTRY, 'C&reate simple anchor', None, CREATEANCHOR),
 		(LIGHT, ENTRY, '&Finish hyperlink to selection', None, FINISH_LINK),
 		(LIGHT, SEP,),
-		(LIGHT, ENTRY, '&Info...', None, INFO),
+		(SMIL, ENTRY, '&Info...', None, INFO),
 		(LIGHT, ENTRY, 'P&roperties...', None, ATTRIBUTES),
 		(SMIL, ENTRY, '&Anchors...', None, ANCHORS),
 )
@@ -277,14 +277,14 @@ POPUP_CVIEW_NODE = (
 		(LIGHT, ENTRY, 'Finish &hyperlink to selection...', 'H', FINISH_LINK),
 		(LIGHT, ENTRY, 'Create &syncarc from selection...', 'L', FINISH_ARC),
 		(LIGHT, SEP,),
-		(LIGHT, ENTRY, '&Info...', 'I', INFO),
+		(SMIL, ENTRY, '&Info...', 'I', INFO),
 		(LIGHT, ENTRY, 'P&roperties...', 'A', ATTRIBUTES),
 		(SMIL, ENTRY, '&Anchors...', 'T', ANCHORS),
 		(LIGHT, ENTRY, '&Edit content', 'E', CONTENT),
 )
 
 POPUP_CVIEW_SYNCARC = (
-		(LIGHT, ENTRY, '&Info...', 'I', INFO),
+		(SMIL, ENTRY, '&Info...', 'I', INFO),
 		(LIGHT, SEP,),
 		(LIGHT, ENTRY, '&Delete', None, DELETE),
 )
