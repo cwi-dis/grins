@@ -130,6 +130,41 @@ class MMNodeContext:
 		self.channelnames.insert(i, name)
 		self.channels.insert(i, c)
 	#
+	def copychannel(self, name, i, orig):
+		##_stat('addchannel')
+		if name in self.channelnames:
+			raise CheckError, 'copychannel: existing name'
+		if not 0 <= i <= len(self.channelnames):
+			raise CheckError, 'copychannel: invalid position'
+		if not orig in self.channelnames:
+		        raise CheckError, 'copychannel: non-existing original'
+		c = MMChannel().init(self, name)
+		orig_i = self.channelnames.index(orig)
+		orig_ch = self.channels[orig_i]
+		for attr in orig_ch.keys():
+		    c[attr] = eval(repr(orig_ch[attr]))
+		self.channeldict[name] = c
+		self.channelnames.insert(i, name)
+		self.channels.insert(i, c)
+	#
+	def movechannel(self, name, i):
+		##_stat('addchannel')
+		if not name in self.channelnames:
+			raise CheckError, 'movechannel: non-existing name'
+		if not 0 <= i <= len(self.channelnames):
+			raise CheckError, 'movechannel: invalid position'
+		old_i = self.channelnames.index(name)
+		if old_i == i:
+		    return
+		self.channels.insert(i, self.channels[old_i])
+		self.channelnames.insert(i, name)
+		if old_i < i:
+		    del self.channelnames[old_i]
+		    del self.channels[old_i]
+		else:
+		    del self.channelnames[old_i+1]
+		    del self.channels[old_i+1]
+	#
 	def delchannel(self, name):
 		##_stat('delchannel')
 		if name not in self.channelnames:

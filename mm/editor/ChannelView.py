@@ -84,6 +84,11 @@ ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
 f_title = FontStuff.FontObject().init('Helvetica', 10)
 f_fontheight = f_title.fontheight
 
+# Types of things we can do in the (modal) channel-pointing mode
+PLACING_NEW = 1
+PLACING_COPY = 2
+PLACING_MOVE = 3
+
 
 # Channel view class
 
@@ -648,32 +653,88 @@ class ChannelView(ViewDialog, GLDialog):
 			type = list[i]
 			break
 		gl.setcursor(_CHANNEL, 0, 0)
-		self.placing_channel = 1
+		self.placing_channel = PLACING_NEW
 		self.placing_type = type
 
+	def copychannel(self, name):
+		if self.visiblechannels() <> self.context.channels:
+			fl.show_message( \
+				  'You can\'t create a new channel', \
+				  'unless you are showing unused channels', \
+				  '(use shortcut \'T\')')
+			return
+	        if self.placing_channel:
+		        fl.show_message(
+			    'Please place the other channel first!', '','')
+			return
+		#
+		# Slightly hacky code: we try to check here whether
+		# the transaction is possible, but we don't do it till later.
+		editmgr = self.editmgr
+		if not editmgr.transaction():
+			return		# Not possible at this time
+		editmgr.rollback()
+		gl.setcursor(_CHANNEL, 0, 0)
+		self.placing_channel = PLACING_COPY
+		self.placing_orig = name
+
+	def movechannel(self, name):
+		if self.visiblechannels() <> self.context.channels:
+			fl.show_message( \
+				  'You can\'t move a channel', \
+				  'unless you are showing unused channels', \
+				  '(use shortcut \'T\')')
+			return
+	        if self.placing_channel:
+		        fl.show_message(
+			    'Please place the other channel first!', '','')
+			return
+		#
+		# Slightly hacky code: we try to check here whether
+		# the transaction is possible, but we don't do it till later.
+		editmgr = self.editmgr
+		if not editmgr.transaction():
+			return		# Not possible at this time
+		editmgr.rollback()
+		gl.setcursor(_CHANNEL, 0, 0)
+		self.placing_channel = PLACING_MOVE
+		self.placing_orig = name
+
 	def finish_channel(self, x, y):
+	        placement_type = self.placing_channel
 	        self.placing_channel = 0
-		type = self.placing_type
 		index = self.channelgapindex(x)
 	        gl.setcursor(0, 0, 0)
 		editmgr = self.editmgr
 		if not editmgr.transaction():
 		    return		    
 		i = 1
-		base = 'NEW'
-		name = base + `i`
 		context = self.context
-		while context.channeldict.has_key(name):
+		if placement_type in (PLACING_NEW, PLACING_COPY):
+		    base = 'NEW'
+		    name = base + `i`
+		    while context.channeldict.has_key(name):
 			i = i+1
 			name = base + `i`
-		editmgr.addchannel(name, index, type)
+		else:
+		    name = self.placing_orig
+		    
+		if placement_type == PLACING_NEW:
+		    editmgr.addchannel(name, index, self.placing_type)
+		elif placement_type == PLACING_COPY:
+		    editmgr.copychannel(name, index, self.placing_orig)
+		else:
+		    c = context.channeldict[name]
+		    editmgr.movechannel(name, index)
+		    index = context.channels.index(c)
 		channel = context.channels[index]
 		self.future_focus = 'c', channel
 		self.showall = 1	# Force showing the new channel
 		self.cleanup()
 		editmgr.commit()
-		import AttrEdit
-		AttrEdit.showchannelattreditor(channel)
+		if placement_type in (PLACING_NEW, PLACING_COPY):
+		    import AttrEdit
+		    AttrEdit.showchannelattreditor(channel)
 
 
 # Base class for Graphical Objects.
@@ -1068,6 +1129,12 @@ class ChannelBox(GO):
 		self.mother.cleanup()
 		editmgr.commit()
 
+	def movecall(self):
+	        self.mother.movechannel(self.name)
+
+	def copycall(self):
+	        self.mother.copychannel(self.name)
+
 	def newchannelindex(self):
 		# Hook for newchannelcall to determine placement
 		return self.mother.context.channelnames.index(self.name)
@@ -1088,6 +1155,8 @@ class ChannelBox(GO):
 	c.append('i', '', attrcall)
 	c.append('a', 'Channel attr...', attrcall)
 	c.append('d', 'Delete channel',  delcall)
+	c.append('m', 'Move channel', movecall)
+	c.append('C', 'Copy channel', copycall)
 	c.append('', 'Highlight window', highlight)
 	c.append('', 'Unhighlight window', unhighlight)
 	menutitle = 'Channel ops'

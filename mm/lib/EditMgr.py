@@ -184,6 +184,22 @@ class EditMgr:
 		self.addstep('addchannel', name, i, type)
 		self.context.addchannel(name, i, type)
 	#
+	def copychannel(self, name, i, orig):
+		c = self.context.getchannel(name)
+		if c is not None:
+			raise MMExc.AssertError, \
+				'duplicate channel name in copychannel'
+		c = self.context.getchannel(orig)
+		if c is None:
+			raise MMExc.AssertError, \
+				'unknown orig channel name in copychannel'
+		self.addstep('copychannel', name, i, orig)
+		self.context.copychannel(name, i, orig)
+	#
+	def movechannel(self, name, i):
+		self.addstep('movechannel', name, i)
+		self.context.movechannel(name, i)
+	#
 	def delchannel(self, name):
 		c = self.context.getchannel(name)
 		if c is None:
