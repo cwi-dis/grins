@@ -97,20 +97,23 @@ class TreeHelper:
 		if self._isValidMMNode(nodeRef):
 			region = nodeRef.GetChannel()
 			if region == None:
+				pass
 				# the region doesn't exist, return the default region
-				parentRef = self.__getDefaultRegion()
+#				parentRef = self.__getDefaultRegion()
 			else:
 				parentRef = region
-			tParentNode =  self.__nodeList.get(parentRef)
-			if tParentNode == None:
-				tParentNode = self.__nodeList[parentRef] = TreeNodeHelper(parentRef, TYPE_REGION)
-			tNode =  self.__nodeList.get(nodeRef)
-			if tNode == None or not tParentNode.hasChild(tNode):
-				tNode = self.__nodeList[nodeRef] = TreeNodeHelper(nodeRef, TYPE_MEDIA)
-				tParentNode.addChild(tNode)
-			else:
-				tNode.checkMainUpdate()
-				tNode.isUsed = 1
+
+			if region != None:				
+				tParentNode =  self.__nodeList.get(parentRef)
+				if tParentNode == None:
+					tParentNode = self.__nodeList[parentRef] = TreeNodeHelper(parentRef, TYPE_REGION)
+				tNode =  self.__nodeList.get(nodeRef)
+				if tNode == None or not tParentNode.hasChild(tNode):
+					tNode = self.__nodeList[nodeRef] = TreeNodeHelper(nodeRef, TYPE_MEDIA)
+					tParentNode.addChild(tNode)
+				else:
+					tNode.checkMainUpdate()
+					tNode.isUsed = 1
 						
 		for child in nodeRef.GetChildren():
 			self.__checkMediaNodeList(child)
@@ -257,7 +260,7 @@ class TreeHelper:
 		self.__initDefaultRegion()
 		self._checkMediaNodeList()
 		self._checkRegionNodeList()
-		self._checkDefaultViewport()
+#		self._checkDefaultViewport()
 		self._detectMutation()
 		if debug: print 'treeHelper.onTreeMutation end'
 
