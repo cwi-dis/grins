@@ -98,6 +98,12 @@ class Main:
 		else:
 			print 'Warning: unknown device in mmcallback'
 
+	def save(self):
+		# this is a debug method.  it can be used after a
+		# crash to save the documents being edited.
+		for top in self.tops:
+			ok = top.save_to_file(top.filename)
+
 def main():
 	#
 	try:
