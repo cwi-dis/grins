@@ -68,6 +68,7 @@ class EditMgr(Clipboard.Clipboard):
 		self.registry = []
 		self.focus_registry = []
 		self.focus = None, None
+		self.save_focus = None
 		self.focus_busy = 0
 
 		self.playerstate_registry = []
@@ -147,6 +148,7 @@ class EditMgr(Clipboard.Clipboard):
 		else:
 			self.history.append(self.undostep)
 		self.busy = 1
+		self.save_focus = self.focus
 		return 1
 
 	def transaction(self, type=None):
@@ -197,6 +199,11 @@ class EditMgr(Clipboard.Clipboard):
 		
 		self.busy = 0
 		del self.undostep # To frustrate invalid addstep calls
+		if self.save_focus != self.focus:
+			focustype, focusobject = self.focus
+			for client in self.focus_registry:
+				client.globalfocuschanged(focustype, focusobject)
+		self.save_focus = None
 			
 	def rollback(self):
 		if not self.busy: raise MMExc.AssertError, 'invalid rollback'
@@ -241,8 +248,10 @@ class EditMgr(Clipboard.Clipboard):
 		if self.focus_busy: raise MMExc.AssertError, 'recursive focus'
 		self.focus_busy = 1
 		self.focus = (focustype, focusobject)
-		for client in self.focus_registry:
-			client.globalfocuschanged(focustype, focusobject)
+		if not self.busy:
+			# delay calling this until commit
+			for client in self.focus_registry:
+				client.globalfocuschanged(focustype, focusobject)
 		self.focus_busy = 0
 
 	def getglobalfocus(self):
