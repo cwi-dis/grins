@@ -267,17 +267,7 @@ class TopLevel:
 			url = uid[:-2]
 		else:
 			url = uid
-		utype, url = MMurl.splittype(url)
-		host, url = MMurl.splithost(url)
-		if not utype and not host:
-			filename = MMurl.url2pathname(url)
-			if not os.path.isabs(filename) and self.dirname:
-				filename = os.path.join(self.dirname, filename)
-			url = MMurl.pathname2url(filename)
-		if host:
-			url = '//%s%s' % (host, url)
-		if utype:
-			url = '%s:%s' % (utype, url)
+		url = MMurl.basejoin(self.filename, url)
 		for top in opentops:
 			if top is not self and top.is_document(url):
 				break
