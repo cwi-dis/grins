@@ -34,7 +34,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		
 		import settings
 		from SMILCssResolver import SMILCssResolver
-		self.cssResolver = SMILCssResolver(self.context)
+		self.cssResolver = self.context.cssResolver
 			
 		PlayerDialog.__init__(self, self.last_geometry,
 				      'Player (' + toplevel.basename + ')')

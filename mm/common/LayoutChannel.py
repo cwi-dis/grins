@@ -13,12 +13,6 @@ class LayoutChannel(ChannelWindow):
 		self._wingeomInPixel = None
 		self.__activeVisibleChannelDict = {}
 
-		parentChannel = self._get_parent_channel()
-		if parentChannel == None:
-			self.idCssNode = self.cssResolver.newRootNode()
-		else:
-			self.idCssNode = self.cssResolver.newRegion()
-
 	def do_arm(self, node, same=0):
 		print 'LayoutChannel: cannot play nodes on a layout channel'
 		return 1
@@ -79,10 +73,10 @@ class LayoutChannel(ChannelWindow):
 				adornments['exporting'] = 1
 			units = self._attrdict.get('units',
 						   windowinterface.UNIT_MM)
-#			width, height = self._attrdict.get('winsize', (50, 50))
 			
-			self.cssResolver.copyRawAttrs(self._attrdict._cssId, self.idCssNode)
 			width, height = self.cssResolver.getPxGeom(self._attrdict._cssId)
+			self._wingeom = width, height
+			
 			units = windowinterface.UNIT_PXL
 				
 			self._curvals['winsize'] = ((width, height), (50,50))
@@ -131,11 +125,7 @@ class LayoutChannel(ChannelWindow):
 		if pchan:
 			# parent is not None, so it's not the main window
 			
-			# copy all possitioning attributes from document source.
-			# because, the animation module haven't to modify the document source
-			self.cssResolver.copyRawAttrs(self._attrdict._cssId, self.idCssNode)
-			self.cssResolver.link(self.idCssNode, pchan.idCssNode)
-			self._wingeom = pgeom = self.cssResolver.getPxGeom(self.idCssNode)
+			self._wingeom = pgeom = self.cssResolver.getPxGeom(self._attrdict._cssId)
 			self._curvals['base_winoff'] = pgeom, None
 		
 		units = windowinterface.UNIT_PXL
@@ -145,7 +135,6 @@ class LayoutChannel(ChannelWindow):
 
 	def do_hide(self):
 		ChannelWindow.do_hide(self)
-		self.cssResolver.unlink(self.idCssNode)			
 				
 	def play(self, node):
 		print "can't play LayoutChannel"
@@ -180,17 +169,18 @@ class LayoutChannel(ChannelWindow):
 	def removeActiveVisibleChannel(self, channel):
 		del self.__activeVisibleChannelDict[channel]
 
-	def getOverlapRendererList(self, channelToCheck, nodeToCheck):
+	# return the list of the renderer which overlaps 'rendererToCheck'
+	def getOverlapRendererList(self, rendererToCheck, nodeToCheck):
 		overLapList = []
-		xR, yR, wR, hR = channelToCheck.cssResolver.getPxAbsGeom(channelToCheck.idCssNode)
+		xR, yR, wR, hR = rendererToCheck.getabswingeom()
 			
-		for channel,node in self.__activeVisibleChannelDict.items():
+		for renderer,node in self.__activeVisibleChannelDict.items():
 			# determinate absolute pixel positioning relative to the viewport
-			x, y, w, h = channel.cssResolver.getPxAbsGeom(channel.idCssNode)
+			x, y, w, h = renderer.getabswingeom()
 
 			# to do: optimized
 			if x < xR+wR and xR < x+w and y < yR+hR and yR < y+h:
 				# overlap
-				overLapList.append((channel, node))
+				overLapList.append((renderer, node))
 
 		return overLapList				

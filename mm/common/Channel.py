@@ -90,6 +90,7 @@ class Channel:
 		self._played_anchor2button = {}
 		self._hide_pending = 0
 		self._exporter = None
+		self.cssResolver = self._player.cssResolver
 		if debug:
 			print 'Channel() -> '+`self`
 		channels.append(self)
@@ -1162,7 +1163,6 @@ class ChannelWindow(Channel):
 		if not hasattr(self._player, 'ChannelWinDict'):
 			self._player.ChannelWinDict = {}
 		self._player.ChannelWinDict[self._name] = self
-		self.cssResolver = self._player.cssResolver
 		self.window = None
 		self.armed_display = self.played_display = None
 		self.update_display = None
@@ -1173,6 +1173,7 @@ class ChannelWindow(Channel):
 		self._active_multiregion_transition = None
 		self._wingeom = None
 		self._winabsgeom = None
+		self._mediaabsgeom = None
 		self._mediageom = None
 		self.__transparent = 1
 		self.__z = -1
@@ -1508,21 +1509,10 @@ class ChannelWindow(Channel):
 		pchan = self._get_parent_channel()
 		pchan.childToActiveState()
 
-		# region geometry			
-		self.idCssNode = self.cssResolver.newRegion()
-		self.idCssMedia = self.cssResolver.newMedia(node.GetDefaultMediaSize)
 		pchan = self._get_parent_channel()
 
-		# copy all possitioning attributes from document source.
-		# because, the animation module haven't to modify the document source
-		self.cssResolver.copyRawAttrs(node.getSubRegCssId(), self.idCssNode)
-		self.cssResolver.copyRawAttrs(node.getMediaCssId(), self.idCssMedia)
-			
-		self.cssResolver.link(self.idCssNode, pchan.idCssNode)
-		self._wingeom = self.cssResolver.getPxGeom(self.idCssNode)
-		self.cssResolver.link(self.idCssMedia, self.idCssNode)
-		self._mediageom = self.cssResolver.getPxGeom(self.idCssMedia)
-			
+		self.updateGeom(node)
+		
 		# force show of channel.
 		self.show(1)			
 			
@@ -1534,8 +1524,6 @@ class ChannelWindow(Channel):
 
 		# force hide the channel.
 		self.hide(1)
-		self.cssResolver.unlink(self.idCssMedia)
-		self.cssResolver.unlink(self.idCssNode)
 
 		self.__transparent = 1
 		self.__bgcolor = None
@@ -1692,6 +1680,11 @@ class ChannelWindow(Channel):
 		b = self._played_anchor2button.get(arc.srcanchor)
 		if b is not None:
 			b.setsensitive(1)
+
+	# update internal geometry variables. Get geometry from MMContext structure
+	def updateGeom(self, node):
+		self._wingeom, self._mediageom = node.getPxGeomMedia()
+		self._winabsgeom, self._winabsmedia = node.getPxAbsGeomMedia()
 
 	# get the space display area of media
 	# return pourcent values relative to the subregion or region
