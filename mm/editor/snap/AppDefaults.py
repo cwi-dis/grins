@@ -84,6 +84,7 @@ class sizes_notime:
       	GAPSIZE = 8
 	HEDGSIZE = 8
 	VEDGSIZE = 8 #3						# size of edges		
+	HANDLESIZE = 16;		# Size of the handle.
 
 	DROPAREASIZE = 64;		# size of the decoration at the end of a "roll of film"
 	FLATBOX = 0

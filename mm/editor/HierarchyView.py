@@ -494,29 +494,24 @@ class HierarchyView(HierarchyViewDialog):
 
 	def dropfile(self, maybenode, window, event, params):
 		# Called when a file is dragged-and-dropped onto this HeirachyView
+
 		x, y, filename = params
 
 		if maybenode is not None:
-			self.setfocusnode(maybenode)
-			obj = self.whichobj(maybenode)
+			# but how did dropfile() get a node?? Nevertheless..
+			obj = maybenode.views['struct_view'];
+			self.select_widget(obj);
+			#self.setfocusnode(maybenode)
+			#obj = self.whichobj(maybenode)
 		else:
-			obj = self.whichhit(x, y)
+			obj = self.scene_graph.get_obj_at((x,y));
+			#obj = self.whichhit(x, y)
 			if not obj:
 				windowinterface.beep()
 				return
-			self.setfocusobj(obj) # give the focus to the object which was dropped on.
+			self.select_widget(obj);
+			#self.setfocusobj(obj) # give the focus to the object which was dropped on.
 			
-		#if grins_snap:	# mjvdg 28-sept-2000
-			# update: 2-October - Nodes should never be empty, so this bit is pointless.
-			# The dropped object will be put into the left-most free node.
-			# Now, obj is the object which had a file dropped on it.
-			prev = obj.GetPrevious()
-		#	while prev != None and prev.HasNoURL(): # While this object has no URL
-		#		obj = prev
-		#		prev = obj.GetPrevious()
-		#	prev = None	
-
-
 		if event == WMEVENTS.DropFile:
 			url = MMurl.pathname2url(filename)
 		else:
@@ -537,6 +532,10 @@ class HierarchyView(HierarchyViewDialog):
 		# make URL relative to document
 		url = ctx.relativeurl(url)
 
+		# TODO: this code really could be less obfuscated.. the widgets should be able to handle their
+		# own drag and drop. The MMNode's should be able to create nodes after them if they are sequences
+		# and so forth.
+
 		# 'interior' is true if the type of node is in ['seq', 'par', 'excl'...]
 		# in other words, interior is false if this is a leaf node (TODO: confirm -mjvdg)
 		if interior:
@@ -551,9 +550,10 @@ class HierarchyView(HierarchyViewDialog):
 				# center of the child
 				# if no such child, return -1 (which means
 				# at the end)
+
 				children = obj.node.children
 				for i in range(len(children)):
-					box = children[i].box
+					box = children[i].views['struct_view'].get_box();
 					if (x,y)[not horizontal] <= (box[not horizontal] + box[(not horizontal) + 2]) / 2:
 						break
 				else:
@@ -959,9 +959,6 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Clear the list of objects
    	def cleanup(self):
-		print "DEBUG: Hierarchyview.cleanup called"
-		import traceback
-		traceback.print_stack()
 		return
 	
 ##	 	assert(0)

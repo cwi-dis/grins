@@ -44,6 +44,7 @@ Priority top-to-bottom.
 * Traverse through the files and use the options
 	in features.py.
 
+* Add nice handles to the par and seq nodes.
 
 Incoming
 --------
