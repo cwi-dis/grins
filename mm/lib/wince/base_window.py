@@ -254,6 +254,9 @@ class Window:
 			return 1
 		return rv
 
+	def onKeyboardEvent(self, key, ev):
+		self.onEvent(ev, key)
+
 	def setcursor_from_point(self, point):
 		rv = self.__recurse(point)
 		if type(rv) is type(()):
