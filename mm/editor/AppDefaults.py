@@ -53,6 +53,10 @@ BANDWIDTH_OK_COLOR = settings.get('structure_bandwidthok')
 BANDWIDTH_NOTOK_COLOR = settings.get('structure_bandwidthnotok')
 BANDWIDTH_OKFOCUS_COLOR = settings.get('structure_bandwidthokfocus')
 BANDWIDTH_NOTOKFOCUS_COLOR = settings.get('structure_bandwidthnotokfocus')
+# Timeline colors for stalls
+BWPREROLLCOLOR = settings.get('structure_bwprerollcolor')
+BWMAYSTALLCOLOR = settings.get('structure_bwmaystallcolor')
+BWSTALLCOLOR = settings.get('structure_bwstallcolor')
 
 # Focus color assignments (from light to dark gray)
 
