@@ -6,7 +6,7 @@ from Channel import ChannelAsync
 import MMAttrdefs
 import windowinterface
 import time
-import audio, audiodev, audiomerge, audioconvert
+import audio, audio.dev, audio.merge, audio.convert
 import MMurl
 import os
 
@@ -80,8 +80,8 @@ class SoundChannel(ChannelAsync):
 		begin = int(self.getclipbegin(node, 'sec') * rate + .5)
 		end = int(self.getclipend(node, 'sec') * rate + .5)
 		if begin or end:
-			import audioselect
-			self.arm_fp = audioselect.select(self.arm_fp, [(begin, end)])
+			from audio.select import select
+			self.arm_fp = select(self.arm_fp, [(begin, end)])
 		return 1
 
 	def do_play(self, node):
@@ -179,7 +179,7 @@ class Player:
 		# __merger, __converter, __tid, and __data are all None/'',
 		# or none of them are.
 		self.__pausing = 0	# whether we're pausing
-		self.__port = audiodev.writer(qsize = SECONDS_TO_BUFFER*48000) # Worst-case queuesize
+		self.__port = audio.dev.writer(qsize = SECONDS_TO_BUFFER*48000) # Worst-case queuesize
 		SECONDS_TO_BUFFER = float(self.__port.getfillable()) / 48000
 		self.__merger = None	# merged readers
 		self.__converter = None	# merged readers, converted to port
@@ -238,7 +238,7 @@ class Player:
 	def play(self, rdr, cb):
 		merger = self.__merger
 		if not merger:
-			merger = audiomerge.merge()
+			merger = audio.merge.merge()
 		else:
 			if self.__tid:
 				windowinterface.canceltimer(self.__tid)
@@ -249,7 +249,7 @@ class Player:
 			merger.add(rdr, (self.__callback, (rdr, cb,)))
 			if not self.__merger:
 				self.__merger = merger
-				self.__converter = audioconvert.convert(self.__merger,
+				self.__converter = audio.convert.convert(self.__merger,
 							 self.__port.getformats(),
 							 self.__port.getframerates())
 				self.__framerate = self.__converter.getframerate()
