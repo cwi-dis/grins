@@ -2602,7 +2602,7 @@ class MMNode:
 				srcnode = child
 				event = 'end'
 
-		if self.type == 'seq' and wtd_children:
+		if duration is None and (self.type == 'seq' or not wtd_children):
 			# connect last child's end to parent's end
 			# if no children, this would connects seq's begin to end
 			arc = MMSyncArc(self_body, 'end', srcnode=srcnode, event=event, delay=0)
