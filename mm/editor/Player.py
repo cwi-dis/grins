@@ -32,6 +32,12 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.playing = self.pausing = self.locked = 0
 		PlayerCore.__init__(self, toplevel)
 		self.load_geometry()
+		
+		import settings
+		if settings.activeFullSmilCss:
+			from SMILCssResolver import SMILCssResolver
+			self.cssResolver = SMILCssResolver(self.context)
+			
 		PlayerDialog.__init__(self, self.last_geometry,
 				      'Player (' + toplevel.basename + ')')
 		self.channelnames = []
@@ -87,10 +93,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			stop,
 			]
 		self.alllist = self.pauselist
-		import settings
-		if settings.activeFullSmilCss:
-			from SMILCssResolver import SMILCssResolver
-			self.cssResolver = SMILCssResolver(self.context)
 		
 	def destroy(self):
 		if not hasattr(self, 'toplevel'):
