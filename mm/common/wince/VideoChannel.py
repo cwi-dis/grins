@@ -25,6 +25,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.__video_player = None
 		self.__video_surf = None
 		self.__fiber_id = None
+		self.__update_box = None
 
 	def do_show(self, pchan):
 		if not Channel.ChannelWindowAsync.do_show(self, pchan):
@@ -80,6 +81,12 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.errormsg(node, 'Cannot display: %s\n\n%s.' %(f, msg))
 			return 1
 		self.setArmBox(imbox)
+
+		# construct video box for faster updates
+		x, y, w, h = self.armed_display._convert_coordinates(imbox, units = self.armed_display._units)
+		dx, dy = self.window.getwindowpos()[:2]
+		self.__update_box = x+dx, y+dy, w, h
+
 		return 1
 
 	def play(self, node, curtime):
@@ -207,7 +214,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 
 	def onIdle(self):
 		if self.window and not self.window.is_closed():
-			self.window.update()
+			self.window.update(self.__update_box)
 
 	def __register_for_timeslices(self):
 		if self.__fiber_id is None:
