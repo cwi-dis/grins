@@ -24,11 +24,6 @@ product grins
         id "GRiNS Player 0.5 Help Files"
         version 1
         order 9999
-	subsys html default
-	    id "GRiNS Player 0.5 Help Files"
-	    replaces self
-	    exp grins.help.html
-	endsubsys
         subsys examples default
             id "GRiNS Player 0.5 SMIL Examples"
             replaces self

@@ -47,12 +47,6 @@ product grinsed
         id "GRiNS 0.5 Help Files"
         version 1
         order 9999
-        subsys html default
-            id "GRiNS 0.5 Help Files"
-            replaces self
-            replaces grins.help.base 0 1
-            exp grinsed.help.html
-        endsubsys
         subsys data default
             id "GRiNS Editor 0.5 Tutorial Data"
             replaces self

@@ -540,16 +540,16 @@ no)	;;
 		rm -f $dist.rawidb &&
 		install -m 0444 -idb $dist.help.documentation -src mm/Build/common/QuickStart.pdf -F /usr/local/grins -O QuickStart.pdf &&
 		install -m 0555 -idb $dist.sw.$help -src frozen.$freeze.$ARCH/$main -F /usr/local/grins -O $dist &&
-		install -m 0444 -idb $dist.help.html -src mm/Help/unix/index.html -F /usr/local/grins/Help -O index.html &&
-		for f in mm/Help/unix/$help/*
-		do
-			case "${f##*/}" in
-			CVS|\*)	;;
-			*)
-				install -m 0444 -idb $dist.help.html -src $f -F /usr/local/grins/Help/unix/$help ${f##*/}
-				;;
-			esac
-		done &&
+# 		install -m 0444 -idb $dist.help.html -src mm/Help/unix/index.html -F /usr/local/grins/Help -O index.html &&
+# 		for f in mm/Help/unix/$help/*
+# 		do
+# 			case "${f##*/}" in
+# 			CVS|\*)	;;
+# 			*)
+# 				install -m 0444 -idb $dist.help.html -src $f -F /usr/local/grins/Help/unix/$help ${f##*/}
+# 				;;
+# 			esac
+# 		done &&
 		install -m 0444 -idb $dist.relnotes.relnotes -src mm/Build/unix/relnotes.html -F /usr/local/grins -O relnotes.html &&
 		for f in www-GRiNS/examples/*
 		do
