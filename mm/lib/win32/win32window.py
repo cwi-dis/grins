@@ -844,8 +844,6 @@ class Window:
 		else:
 			self._sizes = 0, 0, 1, 1
 
-		self.update()
-
 
 	def updatezindex(self, z):
 		self._z = z
@@ -857,14 +855,12 @@ class Window:
 				break
 		else:
 			parent._subwindows.append(self)
-		self.update()
 	
 	def updatebgcolor(self, color):
 		r, g, b = color
 		self._bgcolor = r, g, b
 		if self._active_displist:
 			self._active_displist.updatebgcolor(color)
-			self._parent.update()
 
 	#
 	# Transitions interface
@@ -977,6 +973,14 @@ class Window:
 		xr, yr, w, h = self._rectb
 		self.updatecoordinates((xr+dx, yr+dy, w, h), units=UNIT_PXL)
 		
+	def invalidateDragHandles(self):
+		x, y, w, h  = self.getwindowpos()
+		delta = 4
+		x = x-delta
+		y = y-delta
+		w = w+2*delta
+		h = h+2*delta
+		self.update((x, y, w, h))
 
 #################################################
 class DDWndLayer:
@@ -2063,15 +2067,21 @@ class DrawContext:
 		xp, yp = point
 		xl, yl = self._last
 		if self._selected:
+			self._selected.invalidateDragHandles()
 			self._selected.moveBy((xp-xl, yp-yl))
+			self._selected.invalidateDragHandles()
 			self.__notifyListeners(self._selected)
 	
 	def moveSelectionHandleTo(self, point):
 		if self._selected:
+			self._selected.invalidateDragHandles()
 			self._selected.moveDragHandleTo(self._ixDragHandle, point)
+			self._selected.invalidateDragHandles()
 			self.__notifyListeners(self._selected)
 
 	def select(self, shape):
+		if self._selected:
+			self._selected.invalidateDragHandles()	
 		self._selected = shape
 		self.__notifyListeners(shape)
 			
@@ -2115,7 +2125,10 @@ class Shape:
 
 	def inside(self, point):
 		return 0
-						
+	
+	def invalidateDragHandles(self):
+		pass
+								
 class DrawTool:
 	def __init__(self, ctx):
 		self._ctx = ctx

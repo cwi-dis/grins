@@ -41,7 +41,7 @@ class _LayoutView2(GenFormView):
 		# Initialize control objects
 		# save them in directory: accessible directly from LayoutViewDialog class
 		# note: if you modify the key names, you also have to modify them in LayoutViewDialog
-		self.__ctrlNames=n=('ViewportSel','RegionSel','RegionX','RegionY','RegionW','RegionH','RegionZ', 'ShowNames')
+		self.__ctrlNames=n=('ViewportSel','RegionSel','RegionX','RegionY','RegionW','RegionH','RegionZ', 'BgColor', 'ShowNames')
 		self[n[0]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_VIEWPORT_SEL)
 		self[n[1]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_REGION_SEL)
 		self[n[2]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_X)
@@ -49,10 +49,11 @@ class _LayoutView2(GenFormView):
 		self[n[4]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_W)
 		self[n[5]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_H)
 		self[n[6]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Z)
-		self[n[7]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_NAMES)
+		self[n[7]]=components.Button(self,grinsRC.IDC_LAYOUT_BACKGROUND)
+		self[n[8]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_NAMES)
 
 		# Initialize control objects whose command are activable as well from menu bar
-		self[ATTRIBUTES]=components.Button(self,grinsRC.IDC_LAYOUT_PROPERTIES)
+		self[ATTRIBUTES]=components.Button(self,grinsRC.IDCMD_ATTRIBUTES)
 		
 		self._activecmds={}
 
@@ -107,6 +108,7 @@ class _LayoutView2(GenFormView):
 		if not commandlist: return
 		for cmd in commandlist:
 			if cmd.__class__== CLOSE_WINDOW:continue
+			if not self.has_key(cmd.__class__):continue
 			id=self[cmd.__class__]._id
 			self.EnableCmd(cmd.__class__,1)
 			contextcmds[id]=cmd
@@ -126,8 +128,10 @@ class _LayoutView2(GenFormView):
 		# delegate combo box notifications
 		if nmsg==win32con.LBN_SELCHANGE:
 			if id == self['ViewportSel']._id:
+				self['ViewportSel'].callcb()
 				self.onViewportSelChange()	
 			elif id == self['RegionSel']._id:
+				self['RegionSel'].callcb()
 				self.onRegionSelChange()
 			return
 		
@@ -146,6 +150,10 @@ class _LayoutView2(GenFormView):
 				self.onEditZorder()
 			return
 
+		if id==self['BgColor']._id:
+			self.onBgColor()
+			return
+			
 		# process rest
 		cmd=None
 		contextcmds=self._activecmds
@@ -199,6 +207,18 @@ class _LayoutView2(GenFormView):
 				region.updatezindex(z)
 				self._layout.update()
 
+	def onBgColor(self):
+		name = self['RegionSel'].getvalue()
+		region = self._layout.getRegion(name)
+		if not region: return
+		r, g, b = region._bgcolor or (255, 255, 255)
+		dlg = win32ui.CreateColorDialog(win32api.RGB(r,g,b),win32con.CC_ANYCOLOR,self)
+		if dlg.DoModal() == win32con.IDOK:
+			newcol = dlg.GetColor()
+			rgb = win32ui.GetWin32Sdk().GetRGBValues(newcol)
+			region.updatebgcolor(rgb)
+			self._layout.update()
+
 
 	#
 	# Helpers for user input responses
@@ -232,6 +252,7 @@ class _LayoutView2(GenFormView):
 			self._mouse_update = 1
 			self['RegionZ'].settext('')
 			self['RegionSel'].setcursel(-1)
+			self['BgColor'].enable(0)
 			self._mouse_update = 0
 			return
 		rc = shape._rectb
@@ -242,6 +263,7 @@ class _LayoutView2(GenFormView):
 			i = i +1
 		self['RegionZ'].settext('%d' % shape._z)
 		self['RegionSel'].setcursel(self._region2ix[shape._name])
+		self['BgColor'].enable(1)
 		self._mouse_update = 0
 
 ###########################
@@ -305,6 +327,7 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		dc, paintStruct = self.BeginPaint()
 		
 		hf = dc.SelectObjectFromHandle(self.__hsmallfont)
+		dc.SetBkMode(win32con.TRANSPARENT)
 
 		self.paintOn(dc)
 		
@@ -359,30 +382,39 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 			rc = x, y, x+w, y+h
 		self.InvalidateRect(rc or self.GetClientRect())
 
+	def getClipRgn(self, rel=None):
+		rgn = win32ui.CreateRgn()
+		rgn.CreateRectRgn(self.GetClientRect())
+		return rgn
+
+	def OnEraseBkgnd(self,dc):
+		return 1
+
 	def paintOn(self, dc, rc=None):
 		rc = l, t, r, b = self.GetClientRect()
-		
+
 		# draw to offscreen bitmap for fast looking repaints
 		dcc=dc.CreateCompatibleDC()
 
 		bmp=win32ui.CreateBitmap()
 		bmp.CreateCompatibleBitmap(dc, r-l, b-t)
-		
-		#self.OnPrepareDC(dcc)
-		
+				
 		# offset origin more because bitmap is just piece of the whole drawing
 		dcc.OffsetViewportOrg((-l, -t))
 		oldBitmap = dcc.SelectObject(bmp)
 		dcc.SetBrushOrg((l % 8, t % 8))
 		dcc.IntersectClipRect(rc)
 
-		
+		rgn = self.getClipRgn()
+
 		# background decoration on dcc
 		dcc.FillSolidRect(rc,win32mu.RGB(self._bgcolor or (255,255,255)))
 
 		# draw objects on dcc
 		if self._viewport:
 			self._viewport.paintOn(dcc)
+			dcc.SelectClipRgn(rgn)
+			self._viewport._draw3drect(dcc)
 			self.drawTracker(dcc)
 
 		# copy bitmap
@@ -402,6 +434,9 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 	def drawTracker(self, dc):
 		if not self._selected: return
 		wnd = self._selected
+		if wnd != self._viewport:
+			rgn = self._viewport.getClipRgn()
+			dc.SelectClipRgn(rgn)
 		nHandles = wnd.getDragHandleCount()		
 		for ix in range(1,nHandles+1):
 			x, y, w, h = wnd.getDragHandleRect(ix)
@@ -478,21 +513,28 @@ class Viewport(win32window.Window):
 		if self.inside(point):
 			return self
 		return None
+	
+	def getClipRgn(self, rel=None):
+		x, y, w, h = self._rectb
+		rgn = win32ui.CreateRgn()
+		rgn.CreateRectRgn((x,y,x+w,y+h))
+		return rgn
 		
 	def paintOn(self, dc, rc=None):
 		x, y, w, h = self.getwindowpos()
-		l, t, r, b = x, y, x+w, y+h
+		ltrb = l, t, r, b = x, y, x+w, y+h
+
+		rgn = self.getClipRgn()
+		dc.SelectClipRgn(rgn)
 		if self._bgcolor:
-			dc.FillSolidRect((l, t, r, b),win32mu.RGB(self._bgcolor))
+			dc.FillSolidRect(ltrb,win32mu.RGB(self._bgcolor))
 
 		L = self._subwindows[:]
 		L.reverse()
 		for w in L:
 			w.paintOn(dc, rc)
 
-		self.__draw3drect(dc)
-
-	def __draw3drect(self, dc):
+	def _draw3drect(self, dc):
 		x, y, w, h = self.getwindowpos()
 		l, t, r, b = x, y, x+w, y+h
 		l, t, r, b = l-3, t-3, r+2, b+2
@@ -556,7 +598,11 @@ class Region(win32window.Window):
 
 	def paintOn(self, dc, rc=None):
 		ltrb = self.ltrb(self.getwindowpos())
-		if 	not self._transparent and self._bgcolor:
+
+		rgn = self.getClipRgn()
+
+		dc.SelectClipRgn(rgn)
+		if self._bgcolor: # not self._transparent
 			dc.FillSolidRect(ltrb,win32mu.RGB(self._bgcolor))
 
 		L = self._subwindows[:]
@@ -564,13 +610,23 @@ class Region(win32window.Window):
 		for w in L:
 			w.paintOn(dc)
 
+		dc.SelectClipRgn(rgn)
 		if self._showname:
-			dc.SetBkMode(win32con.TRANSPARENT)
 			dc.DrawText(self._name, ltrb, win32con.DT_SINGLELINE|win32con.DT_CENTER|win32con.DT_VCENTER)
 
 		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
 		dc.FrameRectFromHandle(ltrb,br)
 		Sdk.DeleteObject(br)
+
+	def getClipRgn(self, rel=None):
+		x, y, w, h = self.getwindowpos(rel);
+		rgn = win32ui.CreateRgn()
+		rgn.CreateRectRgn((x,y,x+w,y+h))
+		if rel==self: return rgn
+		prgn = self._parent.getClipRgn(rel)
+		rgn.CombineRgn(rgn,prgn,win32con.RGN_AND)
+		prgn.DeleteObject()
+		return rgn
 
 	def showNames(self, bv):
 		for w in self._subwindows:
