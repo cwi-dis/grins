@@ -1360,7 +1360,6 @@ class ChannelWindow(Channel):
 			# determinate the z-index
 			z = self._attrdict.get('z', -1)
 			self._curvals['z'] = (z, -1)
-			
 			if self.want_default_colormap:
 				self.window = pchan.window.newcmwindow(pgeom,
 						transparent = self.__transparent,
@@ -1497,6 +1496,8 @@ class ChannelWindow(Channel):
 
 	# Updates channels to visible if according to the showBackground/open and close attributes.
 	# Also: derterminate the background color before to show the channel
+	# for now, we set the window bg color equal to the displylist bg color in to order
+	# to avoid "flashing" if window is not transparent
 	def updateToActiveState(self, node):
 	
 		# determinate the transparent and background color attribute
@@ -1504,10 +1505,8 @@ class ChannelWindow(Channel):
 			transparent = node.GetAttr('transparent')
 		except NoSuchAttrError:
 			transparent = None
-		try:
-			bgcolor = node.GetAttr('bgcolor')
-		except NoSuchAttrError:
-			bgcolor = None					
+			
+		bgcolor = self.getbgcolor(node)
 				
 		if transparent == None:
 			if bgcolor != None:
@@ -1518,8 +1517,7 @@ class ChannelWindow(Channel):
 		self.__transparent = transparent
 		self.__bgcolor = bgcolor
 
-		# force show of channel. Allow to show the background color
-		# associate to the node
+		# force show of channel. 
 		self.show(1)
 		
 		pchan = self._get_parent_channel()
@@ -1528,8 +1526,7 @@ class ChannelWindow(Channel):
 	# Updates channels to unvisible if according to the showBackground/open and close attributes
 	def updateToInactiveState(self):
 		
-		# force hide of channel. Allow to hide the background color
-		# associate to the node
+		# force hide the channel. 
 		self.hide(1)
 
 		self.__transparent = 1
@@ -1580,6 +1577,13 @@ class ChannelWindow(Channel):
 ##				self.editmgr.commit()
 
 	def arm_0(self, node):
+		# experimental subregion and regpoint code
+		# determinate the channel size before to show the window
+		# For now, it allows to avoid a dynamic resize window (updatecoordinates)
+		wingeom = self.getwingeom(node)
+		self._wingeom = wingeom
+ 		# experimental subregion and regpoint code
+		
 		self.updateToActiveState(node)
 		same = Channel.arm_0(self, node)
 		if same and self.armed_display and \
@@ -1592,23 +1596,22 @@ class ChannelWindow(Channel):
 
 		if self.armed_display:
 			self.armed_display.close()
-		bgcolor = self.getbgcolor(node)
 		
 		# experimental subregion and regpoint code
 		# we have to resize the window before the do_arm() method call, because
 		# do_arm use the real window size to determinate the real scale of an image
 		# when the scale computation will be clean, we'll be able to resize the
 		# window from play method just before display the media.
-		wingeom = self.getwingeom(node)
-		if wingeom != self._wingeom:
-			self._wingeom = wingeom
+#		if wingeom != self._wingeom:
+#			self._wingeom = wingeom
 			# print 'old geom : ',self._wingeom
 			# print 'new geom : ',wingeom
-			units = self._attrdict.get('units',
-				   windowinterface.UNIT_SCREEN)
- 			self.window.updatecoordinates(wingeom, units)
+#			units = self._attrdict.get('units',
+#				   windowinterface.UNIT_SCREEN)
+# 			self.window.updatecoordinates(wingeom, units)
  		# experimental subregion and regpoint code
 
+		bgcolor = self.getbgcolor(node)
 		self.armed_display = self.window.newdisplaylist(bgcolor)
 			
 		for arc in node.sched_children:
