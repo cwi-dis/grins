@@ -56,6 +56,8 @@ class EXPORT_SMIL(_CommandBase):
 	help = 'Save document in new file as pure SMIL'
 class RESTORE(_CommandBase):
 	help = 'Restore document from file (undo all unsaved changes)'
+class PROPERTIES(_CommandBase):
+	help = 'Edit document properties'
 class SOURCE(_CommandBase):
 	help = 'Show source'
 class CLOSE(_CommandBase):
