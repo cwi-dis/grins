@@ -206,8 +206,16 @@ class Edit(Control):
 		return self.sendmessage_gl(win32con.EM_GETLINE,ix)
 	def getmodify(self):
 		return self.sendmessage(win32con.EM_GETMODIFY)
+	def setmodify(self, flag):
+		return self.sendmessage(win32con.EM_SETMODIFY, flag)
 	def getsel(self):
 		return self.sendmessage_ra(win32con.EM_GETSEL)[:2]
+	def setsel(self, start, end):
+		return self.sendmessage(win32con.EM_SETSEL, start, end)
+	def linescroll(self, nlines, nchars = 0):
+		return self.sendmessage(win32con.EM_LINESCROLL, nlines, nchars)
+	def getfirstvisibleline(self):
+		return self.sendmessage(win32con.EM_GETFIRSTVISIBLELINE)
 	def getinspos(self):
 		return self.sendmessage_ra(win32con.EM_GETSEL)[2]
 

@@ -110,6 +110,7 @@
 #define IDI_DURATION                    311
 #define IDI_ANIMATION                   312
 #define IDR_TB_PLAYER                   313
+#define IDD_SOURCEEDIT                  315
 #define IDR_TB_ALIGNMENT                319
 #define IDD_EDITSTRINGATTR2             327
 #define IDD_EDITATTR_S7                 327
@@ -429,6 +430,8 @@
 #define IDC_LAYOUT_SHOW_ALLMEDIAS       1284
 #define IDC_GROUP4                      1285
 #define IDC_GROUP5                      1286
+#define IDC_BUTTON2                     1288
+#define IDC_BUTTON3                     1289
 #define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772

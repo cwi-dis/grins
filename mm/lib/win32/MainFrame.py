@@ -89,14 +89,10 @@ from _SourceView import _SourceView
 
 #  Player views
 from _PlayerView import _PlayerView  
-_SourceView=_SourceView
 
 # editor document views
 _HierarchyView=_StructView
 _ChannelView=_StructView
-_LinkView=_LinkView
-_LayoutView=_LayoutView
-_LayoutView2=_LayoutView2
 
 # player document views
 if IsPlayer:
@@ -123,7 +119,7 @@ appview={
 	4:{'cmd':usercmd.HIDE_LAYOUTVIEW,'title':'Layout view','id':'lview_','class':_LayoutView,'freezesize':1},
 	5:{'cmd':usercmd.HIDE_USERGROUPVIEW,'title':'Custom tests','id':'ugview_','class':_UsergroupView,'freezesize':1},
 	6:{'cmd':usercmd.HIDE_TRANSITIONVIEW,'title':'Transitions','id':'trview_','class':_TransitionView,'freezesize':1},
-	7:{'cmd':usercmd.HIDE_SOURCEVIEW,'title':'Source','id':'sview_','class':_SourceView,'hosted':0},
+	7:{'cmd':usercmd.HIDE_SOURCEVIEW,'title':'Source','id':'sview_','class':_SourceView,'freezesize':1},
 	8:{'cmd':usercmd.HIDE_LAYOUTVIEW2,'title':'Layout view','id':'lview2_','class':_LayoutView2,'hosted':0},
 #	9:{'cmd':usercmd.HIDE_TEMPORALVIEW,'title':'Temporal view','id':'tview_','class':_ChannelView,},
 }
