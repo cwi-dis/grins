@@ -267,12 +267,14 @@ class Main(MainDialog):
 			trace.set_trace()
 			
 	def preferences_callback(self):
-		import Preferences
-		Preferences.showpreferences(1, self.prefschanged)
+		import AttrEdit
+		AttrEdit.showpreferenceattreditor(self.prefschanged)
 
 	def prefschanged(self):
+		import settings
 		for top in self.tops:
 			top.prefschanged()
+		settings.save()
 
 	def new_top(self, top):
 		top.show()
@@ -280,8 +282,8 @@ class Main(MainDialog):
 		self.tops.append(top)
 
 	def do_exit(self, exitcallback=None):
-		import Preferences
-		Preferences.showpreferences(0)
+		import AttrEdit
+		AttrEdit.closepreferenceattreditor()
 		ok = 1
 		for top in self.tops[:]:
 			top.close()
