@@ -144,6 +144,16 @@ class DisplayList:
 				dc.SelectObject(old_brush)
 				wingdi.DeleteObject(brush)
 
+		elif cmd == 'text':
+			modeorg = dc.SetBkMode(wincon.TRANSPARENT)
+			clr_org = dc.SetTextColor(entry[1])
+			horg = dc.SelectObject(entry[2].handle())
+			xd, yd, str = entry[3:]
+			dc.ExtTextOut((x+xd, y+yd), str)
+			dc.SetTextColor(clr_org)
+			dc.SelectObject(horg)
+			dc.SetBkMode(modeorg)
+
 	# Define a new button. Coordinates are in window relatives
 	def newbutton(self, coordinates, z = 0, sensitive = 1):
 		if self._rendered:
@@ -516,12 +526,12 @@ class DisplayList:
 		oldy = oldy - base
 		maxx = oldx
 		for str in strlist:
-			x0, y0 = x, y
+			x0, y0 = x, y - height 
 			list.append(('text', self._convert_color(self._fgcolor),f, x0, y0, str))
 			self._optimize((1,))
 			width=self._canvas[2]-self._canvas[0]
 			if width==0:width=1 
-			twidth,theight=f.TextSize(str)
+			twidth, theight =  f.TextSize(str)
 			self._curpos = x + twidth, y
 			self._update_bbox(x0,y0-theight, x0+twidth,y0)
 			x = self._xpos

@@ -146,11 +146,11 @@ class _Font:
 		strlist = string.splitfields(str, '\n')
 		hdc = winuser.GetDC()
 		dc = wingdi.CreateDCFromHandle(hdc)
-		self._hfont_org=dc.SelectObject(self._hfont)
+		self._hfont_org = dc.SelectObject(self._hfont)
 		maxwidth = 0
 		height = len(strlist) * self.fontheightPXL()
 		for str in strlist:
-			cx,cy=dc.GetTextExtent(str)
+			cx, cy = dc.GetTextExtent(str)
 			if cx > maxwidth:
 				maxwidth = cx
 		dc.SelectObject(self._hfont_org)
@@ -171,15 +171,16 @@ class _Font:
 		dc.Detach()
 		return tm
 	
-		
 	# Returns the string size in pixel	
 	def gettextextent(self,str):
 		hdc = winuser.GetDC()
 		dc = wingdi.CreateDCFromHandle(hdc)
 		self._hfont_org = dc.SelectObject(self._hfont)
 		cx, cy = dc.GetTextExtent(str)
-		dc.SelectObjectFromHandle(self._hfont_org)
+		dc.SelectObject(self._hfont_org)
 		dc.Detach()
+		if cy<0: cy = -cy
+		return cx, cy
 
 	# Returns the string width in pixel	
 	def TextWidth(self, str):
