@@ -68,6 +68,8 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		# init dims
 		l,t,r,b=self.GetClientRect()
 		self._rect=self._canvas=(0,0,r-l,b-t)
+		if USE_NEWSUBWINDOWSIMPL:
+			self._recta = 0,0,r-l,b-t
 
 		# set std attributes
 		self._title = ''	
@@ -452,9 +454,17 @@ class _CmifPlayerView(_CmifView):
 	def onPostResize(self,params=None):
 		self._tid=None
 		self._canclose=0
-		self._resize_tree()
+		if not USE_NEWSUBWINDOWSIMPL: 
+			self._resize_tree()
 		self._canclose=1
 
+	def OnDraw(self,dc):
+		if not USE_NEWSUBWINDOWSIMPL:
+			_CmifView.OnDraw(self,dc)
+			return
+		self.PaintOn(dc)
+		for i in range(len(self._subwindows)):
+			self._subwindows[i].paintOn(dc)
 
 #################################################
 # Specialization of _CmifView for smooth drawing	
@@ -588,7 +598,6 @@ class _CmifStructView(_CmifView):
 		else:
 			return usercmdui.class2ui[usercmd.PASTE_AFTER]
 							
-
 				
 #################################################
 class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
@@ -1036,3 +1045,16 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 
 	def AllowResize(self,f):
 		self._can_change_size=f
+
+
+#################################################
+USE_NEWSUBWINDOWSIMPL = 0
+
+import win32window
+
+def _NewSubWindow(parent, rel_coordinates, transparent, type_channel, 
+	defcmap, pixmap, z=0, units=None):
+	return win32window.SubWindow(parent, rel_coordinates, transparent, z, units)
+
+if USE_NEWSUBWINDOWSIMPL:
+	_SubWindow = _NewSubWindow
