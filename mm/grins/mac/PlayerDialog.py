@@ -221,6 +221,8 @@ class PlayerDialog:
 
 	def _getallwindows(self):
 		rv = []
+		if self.__window:
+			rv.append(self.__window)
 		for w in self.__all_windows:
 			if hasattr(w, 'window') and w.window:
 				rv.append(w.window)
