@@ -8,6 +8,14 @@ class MovieChannel(ChannelWindowThread):
 		import moviechannel
 		return moviechannel.init()
 
+	def getaltvalue(self, node):
+		import string
+		url = self.getfileurl(node)
+		i = string.rfind(url, '.')
+		if i > 0 and url[i:] == '.v':
+			return 1
+		return 0
+
 	def do_arm(self, node, same=0):
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
