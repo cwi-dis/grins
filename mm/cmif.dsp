@@ -184,6 +184,10 @@ SOURCE=.\common\ExternalChannel.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\common\flags.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\common\GLLock.py
 # End Source File
 # Begin Source File
@@ -896,6 +900,10 @@ SOURCE=.\lib\Attrdefs.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\Attrgrs.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\Bandwidth.py
 # End Source File
 # Begin Source File
@@ -913,6 +921,10 @@ SOURCE=.\lib\Clipboard.py
 # Begin Source File
 
 SOURCE=.\lib\cmif.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\colors.py
 # End Source File
 # Begin Source File
 
@@ -960,11 +972,19 @@ SOURCE=.\lib\grins_mimetypes.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\grins_mimetypesPrv.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\Hlinks.py
 # End Source File
 # Begin Source File
 
 SOURCE=.\lib\license.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\licparser.py
 # End Source File
 # Begin Source File
 
@@ -977,6 +997,10 @@ SOURCE=.\lib\MenuMaker.py
 # Begin Source File
 
 SOURCE=.\lib\mkimg.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\mklicense.py
 # End Source File
 # Begin Source File
 
@@ -1033,6 +1057,10 @@ SOURCE=.\lib\MovieDuration.py
 # Begin Source File
 
 SOURCE=.\lib\MPEGVideoDuration.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\NTVideoDuration.py
 # End Source File
 # Begin Source File
 
@@ -1093,6 +1121,10 @@ SOURCE=.\lib\StringStuff.py
 # Begin Source File
 
 SOURCE=.\lib\trace.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\urlcache.py
 # End Source File
 # Begin Source File
 
