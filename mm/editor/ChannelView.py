@@ -891,7 +891,7 @@ class ChannelView(ChannelViewDialog):
 		if index == None:
 			if self.focus and type(self.focus) <> type(()):
 				index = self.focus.newchannelindex()
-		print 'DBG: newchannel', self.focus, index
+##		print 'DBG: newchannel', self.focus, index
 		if self.visiblechannels() <> self.context.channels:
 			windowinterface.showmessage(
 				  "You can't create a new channel\n" +
