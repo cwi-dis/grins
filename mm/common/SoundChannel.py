@@ -43,9 +43,12 @@ class SoundChannel(ChannelAsync):
 			return 1
 		if debug: print 'SoundChannel: arm', node
 		fn = self.getfileurl(node)
+		self.arm_loop = loopcount = self.getloop(node)
+		if loopcount == 0:
+			loopcount = None
 		try:
 			fn = MMurl.urlretrieve(fn)[0]
-			self.arm_fp = audio.reader(fn)
+			self.arm_fp = audio.reader(fn, loop=loopcount)
 		except IOError:
 			self.errormsg(node, '%s: Cannot open audio file' % fn)
 			self.arm_fp = None
@@ -61,7 +64,6 @@ class SoundChannel(ChannelAsync):
 			self.arm_fp = None
 			self.armed_duration = 0
 			return 1
-		self.armed_loop = self.getloop(node)
 		self.armed_duration = MMAttrdefs.getattr(node, 'duration')
 		rate = self.arm_fp.getframerate()
 		begin = int(self.getclipbegin(node, 'sec') * rate + .5)
@@ -81,8 +83,8 @@ class SoundChannel(ChannelAsync):
 
 		if debug: print 'SoundChannel: play', node
 		self.play_fp = self.arm_fp
+		self.play_loop = self.arm_loop
 		self.arm_fp = None
-		self.play_loop = self.armed_loop
 		if self.armed_duration > 0:
 			self.__qid = self._scheduler.enter(
 				self.armed_duration, 0, self.__stopplay, ())
@@ -105,20 +107,20 @@ class SoundChannel(ChannelAsync):
 	def my_playdone(self):
 		if debug: print 'SoundChannel: playdone',`self`
 		if self.play_fp:
-			if self.play_loop:
-				self.play_loop = self.play_loop - 1
-				if self.play_loop:
-					self.play_fp.rewind()
-					player.play(self.play_fp,
-						    (self.my_playdone, ()))
-					return
+##			if self.play_loop:
+##				self.play_loop = self.play_loop - 1
+##				if self.play_loop:
+##					self.play_fp.rewind()
+##					player.play(self.play_fp,
+##						    (self.my_playdone, ()))
+##					return
 				self.play_fp = None
 				if self.__qid is not None:
 					return
 				self.playdone(0)
 				return
-			self.play_fp.rewind()
-			player.play(self.play_fp, (self.my_playdone, ()))
+##			self.play_fp.rewind()
+##			player.play(self.play_fp, (self.my_playdone, ()))
 
 	def stopplay(self, node):
 		if debug: print 'SoundChannel: stopplay'
