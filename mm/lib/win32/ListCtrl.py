@@ -1,6 +1,7 @@
 __version__ = "$Id$"
 
 import win32ui
+Sdk = win32ui.GetWin32Sdk()
 
 import win32con
 import commctrl
@@ -10,6 +11,7 @@ import win32mu
 from pywinlib.mfc import window
 
 class ListCtrl(window.Wnd):
+	CF_FILE = Sdk.RegisterClipboardFormat('FileName')
 	def __init__ (self, dlg=None, ctrl=None, resId=None):
 		self.parent = dlg
 		if not ctrl:
@@ -23,6 +25,10 @@ class ListCtrl(window.Wnd):
 		self.hookMessages()
 		self.popup = None
 		self.selected = -1
+
+		# drag support
+		self._down = 0
+		self._dragging = 0
 
 	def getStyle(self):
 		style = win32con.WS_VISIBLE | win32con.WS_CHILD\
@@ -47,6 +53,7 @@ class ListCtrl(window.Wnd):
 	def hookMessages(self):
 		self.HookMessage(self.OnLButtonDown, win32con.WM_LBUTTONDOWN)
 		self.HookMessage(self.OnLButtonUp, win32con.WM_LBUTTONUP)
+		self.HookMessage(self.OnMouseMove, win32con.WM_MOUSEMOVE)
 		self.HookMessage(self.OnKeyDown, win32con.WM_KEYDOWN)
 
 		# list notifications
@@ -63,9 +70,24 @@ class ListCtrl(window.Wnd):
 		msg = win32mu.Win32Msg(params)
 		point = msg.pos()
 		flags = msg._wParam
+		self._down = 1
+		self._dragging = 0
+		self.SetCapture()
 		return 1
 
 	def OnLButtonUp(self, params):
+		self._down = 0
+		self._dragging = 0
+		self.ReleaseCapture()
+		return 1
+
+	def OnMouseMove(self, params):
+		if self._down and not self._dragging:
+			sel = self.getSelected()
+			if sel	>=	0:
+				print self.GetItemText(sel,3)
+				self.DoDragDrop(self.CF_FILE, self.GetItemText(sel,3))
+				self._dragging = 1
 		return 1
 
 	def OnRButtonDown(self, params):		
