@@ -715,6 +715,10 @@ SOURCE=.\lib\win32\rbtk.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\lib\win32\SoundDuration.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\lib\win32\splash.py
 # End Source File
 # Begin Source File
@@ -885,6 +889,10 @@ SOURCE=.\lib\Attrdefs
 # Begin Source File
 
 SOURCE=.\lib\Attrdefs.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\Bandwidth.py
 # End Source File
 # Begin Source File
 
