@@ -2727,7 +2727,7 @@ class GeomFieldWidget(LightWidget):
 				elif nodeType == TYPE_REGION:
 					self.__onGeomOnRegionChanged(ctrlName, value)
 				elif nodeType == TYPE_MEDIA:
-					self.__onGeomOnMediaChanged(ctrlName, value)
+					self.__onGeomOnRegionChanged(ctrlName, value)
 
 	def __onGeomOnViewportChanged(self, ctrlName, value):
 		if len(self._context.currentSelectedNodeList) > 0:
@@ -2737,7 +2737,8 @@ class GeomFieldWidget(LightWidget):
 				w = value
 			elif ctrlName == 'RegionH':
 				h = value
-			self._context.applyGeom(nodeRef, (0,0,w,h))
+			if self.__checkSize(w, h):
+				self._context.applyGeom(nodeRef, (0,0,w,h))
 
 	def __onGeomOnRegionChanged(self, ctrlName, value):
 		if len(self._context.currentSelectedNodeList) > 0:		
@@ -2750,23 +2751,24 @@ class GeomFieldWidget(LightWidget):
 			elif ctrlName == 'RegionW':
 				w = value
 			elif ctrlName == 'RegionH':
-				h = value			
-			self._context.applyGeom(nodeRef, (x,y,w,h))
-
-	def __onGeomOnMediaChanged(self, ctrlName, value):
-		if len(self._context.currentSelectedNodeList) > 0:
-			nodeRef = self._context.currentSelectedNodeList[0]
-			x,y,w,h = self._context.getPxGeomWithContextAnimation(nodeRef)
-			if ctrlName == 'RegionX':
-				x = value
-			elif ctrlName == 'RegionY':
-				y = value			
-			elif ctrlName == 'RegionW':
-				w = value
-			elif ctrlName == 'RegionH':
 				h = value
-			self._context.applyGeom(nodeRef, (x,y,w,h))
+			if self.__checkSize(w, h) and self.__checkPos(x, y):
+				self._context.applyGeom(nodeRef, (x,y,w,h))
 
+	def __checkSize(self, w, h):
+		if w<1 or h<1 or w>20000 or h>20000:
+			windowinterface.showmessage('Bad size', mtype = 'error')
+			self._context.updateFocus()
+			return 0
+		return 1
+	
+	def __checkPos(self, x, y):
+		if x>20000 or y>20000:
+			windowinterface.showmessage('Bad position', mtype = 'error')
+			self._context.updateFocus()
+			return 0
+		return 1
+		
 class AnimateControlWidget(LightWidget):		
 	#
 	# inherited methods
