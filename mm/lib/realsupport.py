@@ -2,6 +2,7 @@ __version__ = "$Id$"
 
 import xmllib, string, re, os
 import MMurl
+import urlcache
 
 error = 'realsupport.error'
 
@@ -994,16 +995,15 @@ def rmff(url, fp):
 		chunk.close()
 	return info
 
-cache = {}
-
 def getinfo(url, fp = None, printfunc = None):
-	if cache.has_key(url):
-		return cache[url]
+	cache = urlcache.urlcache[url]
+	if cache.has_key('RMinfo'):
+		return cache['RMinfo']
 	if fp is None:
 		try:
 			fp = MMurl.urlopen(url)
 		except:
-			cache[url] = info = {}
+			cache['RMinfo'] = info = {}
 			return info
 	head = fp.read(4)
 	if head == '<imf':
@@ -1035,5 +1035,5 @@ def getinfo(url, fp = None, printfunc = None):
 		# unknown format
 		info = {}
 	fp.close()
-	cache[url] = info
+	cache['RMinfo'] = info
 	return info
