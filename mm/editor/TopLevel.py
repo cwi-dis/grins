@@ -46,6 +46,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			url = '//%s%s' % (host, url)
 		if utype:
 			url = '%s:%s' % (utype, url)
+		self.filename = url
+		self.window = None
+		self.source = None
 		self.read_it()
 
 		self.commandlist = [
@@ -68,9 +71,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.commandlist.append(
 				SOURCE(callback = (self.source_callback, ())))
 
-		self.filename = url
-		self.window = None
-		self.source = None
 		TopLevelDialog.__init__(self)
 		self.makeviews()
 
