@@ -1247,9 +1247,10 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		self._wndToolBar.SetButtonInfo(14,id,afxexttb.TBBS_BUTTON, 12)
 
 		if adornments.has_key('pulldown'):
-			index = 16
+			index = 15
 			for list, cb, init in adornments['pulldown']:
-				self._wndToolBar.SetButtonInfo(15,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
+				self._wndToolBar.SetButtonInfo(index,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
+				index = index + 1
 				# the return object is a components.ComboBox
 				global ID_TOOLBAR_COMBO
 				tbcb = self.createToolBarCombo(index, ID_TOOLBAR_COMBO, TOOLBAR_COMBO_WIDTH, TOOLBAR_COMBO_HEIGHT, self.onToolbarCombo)
@@ -1412,16 +1413,6 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		f.Create(title,rc,self,0)
 		view.init(rc,title,units,adornments,canvassize,commandlist,bgcolor)
 		self.MDIActivate(f)
-#		if IsPlayer:
-#			self.RecalcLayout()
-#			rcco=self.GetWindowRect()
-#			client=self.GetMDIClient()
-#			rcci= client.GetWindowRect() #self.GetClientRect()
-#			l,t,r,b=f.GetWindowRect()
-#			w=r-l;h=b-t
-#			dhp=(rcco[3]-rcco[1])-(rcci[3]-rcci[1])
-#			dwp=2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)+2*sysmetrics.cxframe
-#			self.setcoords((x,y,w+dw,h+dhp),units)
 		return view
 
 
