@@ -247,8 +247,12 @@ class MMNodeContext:
 			self._movetimestoobj(child, which)
 
 	def changedtimes(self):
-		for node in self.uidmap.values():
-			node.ClearTimesObjects()
+		self._changedtimes(self.getroot())
+		
+	def _changedtimes(self, node):
+		node.ClearTimesObjects()
+		for c in node.GetChildren():
+			c.ClearTimesObjects()
 
 	# compute the mime type according to the specified user mime type,
 	# and the url if no specified
@@ -291,6 +295,14 @@ class MMNodeContext:
 					computedMimeType = 'video/vnd.rn-realvideo'
 
 		return computedMimeType
+	#
+	# attribute containers
+	#
+	def newattrcontainer(self):
+		uid = self.newuid()
+		c = MMAttrContainer(self, uid)
+		self.knownode(uid, c)
+		return c
 
 	#
 	# Channel administration
@@ -1007,6 +1019,15 @@ class MMTreeElement:
 		print "Warning: getallattrnames not overridden:", self
 		return []
 
+class MMAttrContainer(MMTreeElement):
+	# This class is a simple container for a UID and an attrdict.
+	def __init__(self, context, uid):
+		MMTreeElement.__init__(self, context, uid)
+		self.attrdict = {}
+
+	def ClearTimesObjects(self):
+		pass
+		
 class MMChannel(MMTreeElement):
 	def __init__(self, context, name, type='undefined'):
 		MMTreeElement.__init__(self, context, name)
@@ -3097,7 +3118,6 @@ class MMNode(MMTreeElement):
 		for arc in arcs:
 			newarcs.append(arc.copy(uidremap))
 		self.SetAttr(attr, newarcs)
-
 	#
 	# Public methods for modifying a tree
 	#
