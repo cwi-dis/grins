@@ -19,12 +19,14 @@ from usercmd import *
 
 from version import version
 
+import features
+
 # empty document, used to get a working skin
 EMPTYDOC = 'data:application/smil,<smil/>'
 
 class Main(MainDialog):
 	def __init__(self):
-		import windowinterface, features
+		import windowinterface
 		if hasattr(features, 'expiry_date') and features.expiry_date:
 			import time
 			import version
@@ -57,10 +59,11 @@ class Main(MainDialog):
 ##			RELOAD(callback = (self.reload_callback, ())), 
 ##			PREFERENCES(callback = (self.preferences_callback, ())),
 ##			CHECKVERSION(callback=(self.checkversion_callback, ())),
-			CHOOSESKIN(callback = (self.skin_callback, ())),
 ##			CHOOSECOMPONENTS(callback = (self.components_callback, ())),
 			EXIT(callback = (self.close_callback, ())),
 			]
+		if not hasattr(features, 'trial') or not features.trial:
+			self.commandlist.append(CHOOSESKIN(callback = (self.skin_callback, ())))
 		import settings
 ##		if hasattr(windowinterface, 'is_embedded') and windowinterface.is_embedded():
 ##			settings.factory_defaults()
