@@ -74,6 +74,9 @@ class MainDialog:
 				filename = file
 		self.open_callback(MMurl.pathname2url(filename))
 
+	def setbutton(self, button, value):
+		pass			# for now...
+
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from
 	# this class).
