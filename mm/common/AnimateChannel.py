@@ -90,11 +90,12 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__targetChannel = None
 		self.__lastvalue = None
 		self.__start = None
+		self._pausedt = 0
 
 		if not hasattr(self._player,'_animateContext'):
 			self._player._animateContext = Animators.AnimateContext()
-		self.__context = self._player._animateContext
-
+		ctx = self._player._animateContext
+		
 		parser = Animators.AnimateElementParser(node)
 		self.__animator = parser.getAnimator()
 		if self.__animator:
@@ -102,7 +103,7 @@ class AnimateChannel(Channel.ChannelAsync):
 			speed = node.GetParent().GetRawAttrDefProduct('speed', 1.0)
 			self.__animator._setSpeed(speed)
 			# get the effective animator of the attribute
-			self.__effAnimator = self.__context.getEffectiveAnimator(
+			self.__effAnimator = ctx.getEffectiveAnimator(
 				parser.getTargetNode(), 
 				parser.getGrinsAttrName(), 
 				parser.getDOMValue())
@@ -134,12 +135,14 @@ class AnimateChannel(Channel.ChannelAsync):
 	def __pauseAnimate(self, paused):
 		if self.__animating:
 			if paused:
+				self._pausedt = time.time() - self.__start
 				self.__unregister_for_timeslices()
 			else:
+				self.__start = time.time() - self._pausedt
 				self.__register_for_timeslices()
 
 	def __animate(self):
-		dt = time.time()-self.__start
+		dt = time.time() - self.__start
 		val = self.__animator.getValue(dt)
 		if self.__effAnimator:
 			if self.__lastvalue != val:
