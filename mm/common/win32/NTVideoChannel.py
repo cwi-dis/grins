@@ -373,6 +373,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	def initVideoRenderer(self):
 		self.__rmdds = None
 		self.__rmrender = None
+		self.__blttimerid = 0
 		
 	def cleanVideoRenderer(self):
 		if self.window:
@@ -418,9 +419,11 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			except ddraw.error, arg:
 				print arg
 				return
-			windowinterface.settimer(0.01,(self.bltUpdate,()))
+			if not self.__blttimerid:
+				self.__blttimerid = windowinterface.settimer(0.01,(self.bltUpdate,()))
 
 	def bltUpdate(self):
+		self.__blttimerid = 0
 		if self.window:
 			self.window.update(self.window.getwindowpos())
 
