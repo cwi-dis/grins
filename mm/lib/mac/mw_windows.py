@@ -2674,10 +2674,8 @@ class _SubWindow(_CommonWindow):
 ##		print 'DBG: subwindow, units=', units, 'coords=', coordinates
 		_CommonWindow.__init__(self, parent, wid, z, bgcolor)
 		
-		print 'DBG: _Subwindow', coordinates, units
 		x, y, w, h = parent._convert_coordinates(coordinates, units = units)
 		xscrolloff, yscrolloff = parent._scrolloffset()
-		print 'DBG: result', (x, y, w, h), 'scrolloff', xscrolloff, yscrolloff
 		x, y = x+xscrolloff, y+yscrolloff
 		if parent._canscroll():
 			raise 'Subwindow in scrollable parent not implemented'

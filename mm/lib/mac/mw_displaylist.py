@@ -19,7 +19,7 @@ import CheckInsideArea
 from mw_globals import error
 from mw_globals import TRUE, FALSE
 from mw_globals import _X, _Y, _WIDTH, _HEIGHT, ICONSIZE_PXL
-from mw_globals import ARR_LENGTH, ARR_SLANT, ARR_HALFWIDTH, SIZE_3DBORDER, UNIT_PXL
+from mw_globals import ARR_LENGTH, ARR_SLANT, ARR_HALFWIDTH, SIZE_3DBORDER, UNIT_PXL, UNIT_SCREEN
 import mw_globals
 import mw_fonts
 import mw_resources
@@ -624,13 +624,10 @@ class _DisplayList:
 		self._list.append(('image', mask, image, src_x, src_y,
 				   coordinates, width, height, units))
 		self._optimize(2)
-##		x, y, w, h = win._rect
-##		wf, hf = win._scrollsizefactors()
-##		w, h = w*wf, h*hf
-##		return float(dest_x - x) / w, float(dest_y - y) / h, \
-##		       float(width) / w, float(height) / h
-		return dest_x, dest_y, width, height
-
+		# Note: we always return window-relative coordinates here!
+		dest_x1, dest_y1 = dest_x + width, dest_y + height
+		return self._window._convert_qdcoords((dest_x, dest_y, dest_x1, dest_y1))
+		
 	def drawline(self, color, points):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
@@ -1034,7 +1031,7 @@ class _Button:
 		pass
 		
 	def _convert_point(self, point):
-		return self._dispobj._convert_coordinates(point)
+		return self._dispobj._window._convert_coordinates(point, units=UNIT_SCREEN)
 
 	def _get_button_region(self):
 		"""Return our region, in global coordinates, if we are active"""
