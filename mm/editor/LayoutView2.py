@@ -4400,7 +4400,6 @@ class MediaRegion(Region):
 
 		if f is not None:
 			mediadisplayrect  = self._cssResolver.getPxGeom(self._mediaCssNode)
-			self._graphicCtrl.drawbox(mediadisplayrect)
 			
 			# the algorithm to show the preview of the media depend of its type
 			# for medias whose we can only show the icons (text, html, svg, ...), we show a matrix of icons to
@@ -4408,6 +4407,7 @@ class MediaRegion(Region):
 			if canBeScaled:
 				self._graphicCtrl.setImage(f, fit, mediadisplayrect)
 			else:
+				self._graphicCtrl.drawbox(mediadisplayrect)
 				left, top, width ,height = mediadisplayrect
 				import Sizes, MMurl
 				url = MMurl.guessurl(f)
@@ -4492,13 +4492,25 @@ class MediaRegion(Region):
 		self.drawPath()
 		
 	def fastUpdateAttrdict(self):
-		# XXX for now, just recreat the media. Should be optimized
-		if self._graphicCtrl is not None:
-			isSelected = self._graphicCtrl.isSelected or (hasattr(self._nodeRef, '_selectPath') and self._nodeRef._selectPath)
-		self.hide()
-		self.show()
-		if isSelected and self._graphicCtrl:	
-			self._ctx.previousCtrl.appendSelection([self._getSelectedObject()])
+		chtype = self._nodeRef.GetChannelType()
+		if chtype == 'image':
+			self._updateAnimateValues()
+			
+			self._curattrdict = self._curattrdict.copy()
+			self._updateAnimateValues()
+			self._curattrdict['wingeom'] = self.getWinGeom()
+			self._graphicCtrl.setAttrdict(self._curattrdict)
+			mediadisplayrect  = self._cssResolver.getPxGeom(self._mediaCssNode)
+			
+			self._graphicCtrl.updateImage('fill', mediadisplayrect)
+		else:
+			# XXX for now, just recreat the media. Should be optimized
+			if self._graphicCtrl is not None:
+				isSelected = self._graphicCtrl.isSelected or (hasattr(self._nodeRef, '_selectPath') and self._nodeRef._selectPath)
+			self.hide()
+			self.show()
+			if isSelected and self._graphicCtrl:	
+				self._ctx.previousCtrl.appendSelection([self._getSelectedObject()])
 
 	def hide(self):
 		if self.isShowed():
