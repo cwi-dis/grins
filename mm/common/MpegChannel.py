@@ -1,5 +1,9 @@
 from Channel import ChannelWindowThread
 import urllib
+import windowinterface
+from MMExc import *			# exceptions
+from AnchorDefs import *
+
 
 class MpegChannel(ChannelWindowThread):
 	def __repr__(self):
@@ -31,6 +35,17 @@ class MpegChannel(ChannelWindowThread):
 		except RuntimeError, msg:
 			print 'Bad mpeg file', `filename`, msg
 			return 1
+
+		try:
+			alist = node.GetRawAttr('anchorlist')
+			modanchorlist(alist)
+		except NoSuchAttrError:
+			alist = []
+		for a in alist:
+			b = self.armed_display.newbutton((0,0,1,1))
+			#b.hiwidth(3)
+			#b.hicolor(hicolor)
+			self.setanchor(a[A_ID], a[A_TYPE], b)
 		return self.syncarm
 
 	#
@@ -57,10 +72,10 @@ class MpegChannel(ChannelWindowThread):
 			# assume that we are going to get a
 			# resize event
 			pass
-#		else:
-#			self.armed_display.render()
-#		if self.played_display:
-#			self.played.display.close()
+		else:
+			self.armed_display.render()
+		if self.played_display:
+			self.played.display.close()
 		self.played_display = self.armed_display
 		self.armed_display = None
 		thread_play_called = 0
@@ -78,3 +93,7 @@ class MpegChannel(ChannelWindowThread):
 			self.armdone()
 			self.need_armdone = 0
 		ChannelWindowThread.playdone(self, dummy)
+
+	def defanchor(self, node, anchor, cb):
+		windowinterface.showmessage('The whole window will be hot.')
+		cb((anchor[0], anchor[1], [0,0,1,1]))
