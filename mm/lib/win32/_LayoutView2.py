@@ -1,10 +1,10 @@
 # Experimental layout view for light region view
 
 # std win32 modules
-import win32ui,win32con,win32api
+import win32ui, win32con, win32api
 
 # win32 lib modules
-import win32mu,components
+import win32mu, components
 
 # std mfc windows stuf
 from pywin.mfc import window,object,docview,dialog
@@ -16,6 +16,18 @@ from usercmdui import *
 
 # GRiNS resource ids
 import grinsRC
+
+
+# draw toolkit
+import DrawTk
+
+# we need win32window.Window 
+# for coordinates transformations
+# and other services
+import win32window
+
+# units
+from appcon import *
 
 from GenFormView import GenFormView
 
@@ -46,6 +58,15 @@ class _LayoutView2(GenFormView):
 		for name in self.__ctrlNames:	
 			self.EnableCmd(name,1)
 
+		# create layout window
+		preview = components.Control(self, grinsRC.IDC_LAYOUT_PREVIEW)
+		preview.attach_to_parent()
+		l1,t1,r1,b1 = self.GetWindowRect()
+		l2,t2,r2,b2 = preview.getwindowrect()
+		rc = l2-l1, t2-t1, r2-l2, b2-t2
+		bgcolor = (255, 255, 255)
+		self._drawwnd = LayoutWnd(self, rc, bgcolor)
+	
 	# Sets the acceptable commands. 
 	def set_commandlist(self,commandlist):
 		frame=self.GetParent()
@@ -90,4 +111,54 @@ class _LayoutView2(GenFormView):
 				if self[s]._id==id:
 					self[s].callcb()
 					break
+
+
+class LayoutWnd(window.Wnd, win32window.Window, DrawTk.DrawLayer):
+	def __init__(self, parent, rc, bgcolor):
+		window.Wnd.__init__(self, win32ui.CreateWnd())
+		win32window.Window.__init__(self)
+		DrawTk.DrawLayer.__init__(self)
+
+		self._parent = parent
+		self._rect = rc
+		self._bgcolor = bgcolor
+		self._active_displist = None
+		
+		self.create(None, rc, UNIT_PXL)
+
+		Afx=win32ui.GetAfx()
+		Sdk=win32ui.GetWin32Sdk()
+		brush=Sdk.CreateBrush(win32con.BS_SOLID,win32mu.RGB(bgcolor),0)
+		cursor=Afx.GetApp().LoadStandardCursor(win32con.IDC_ARROW)
+		icon=0
+		clstyle=win32con.CS_DBLCLKS
+		style=win32con.WS_CHILD | win32con.WS_CLIPSIBLINGS
+		exstyle = 0
+		title = '' 
+		strclass=Afx.RegisterWndClass(clstyle, cursor, brush, icon)
+		self.CreateWindowEx(exstyle,strclass, title, style,
+			(rc[0], rc[1], rc[0]+rc[2], rc[1]+rc[3]),parent,0)
+		self.ShowWindow(win32con.SW_SHOW)
+		self.UpdateWindow()
+
+	def OnCreate(self, params):
+		self.HookMessage(self.onLButtonDown,win32con.WM_LBUTTONDOWN)
+		self.HookMessage(self.onLButtonUp,win32con.WM_LBUTTONUP)
+		self.HookMessage(self.onMouseMove,win32con.WM_MOUSEMOVE)
+		
+		# initialize DrawTk.DrawLayer
+		self.SetRelCoordRef(self)
+		self.SetLayoutMode(0)
+		self.SetBRect(self.GetClientRect())
+		self.SetCRect(self.GetClientRect())
+		self.SetUnits(UNIT_PXL)
+
+	def OnPaint(self):
+		dc, paintStruct = self.BeginPaint()
+		self.paintOn(dc)
+		self.EndPaint(paintStruct)
+
+	def paintOn(self, dc):
+		self.DrawObjLayer(dc)
+
 
