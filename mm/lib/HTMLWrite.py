@@ -47,6 +47,8 @@ def WriteFile(root, filename, smilurl, oldfilename='', evallicense = 0, exportty
 		windowinterface.showmessage('Unsupported export type in this product: %s'%exporttype)
 	
 def __WriteFileG2(root, filename, smilurl, oldfilename='', evallicense = 0):
+	if not smilurl:
+		return
 	# XXXX If oldfilename set we should use that as a template
 	templatedir = findfile('Templates')
 	templatedir = MMurl.pathname2url(templatedir)
@@ -105,6 +107,8 @@ def __WriteFileQT(root, filename, smilurl, oldfilename='', evallicense = 0):
 
 import FtpWriter
 def WriteFTP(root, filename, smilurl, ftpparams, oldfilename='', evallicense = 0, exporttype = None):
+	if not smilurl:
+		return
 	host, user, passwd, dir = ftpparams
 	import settings
 	templatedir = settings.get('templatedir_url')
