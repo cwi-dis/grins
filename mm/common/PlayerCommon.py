@@ -98,10 +98,11 @@ class PlayerCommon:
 		renderer = None
 		regionName = node.GetChannelName()
 		chtype = node.GetChannelType()
+		pnode = node.GetSchedParent()
 		
 		# first 
 		# check if the renderer can be shared
-		if (node.GetSchedParent().GetType() == 'seq' and \
+		if (pnode.GetType() == 'seq' and \
 			node.GetFill() == 'hold') or \
 			node.GetFill() == 'transition':
 			noreuse = 1
@@ -120,7 +121,7 @@ class PlayerCommon:
 					# check whether renderer can be used
 					# we can only use a renderer if it isn't used
 					# by another node parallel/excl to this one
-					parent = node.GetSchedParent()
+					parent = pnode
 					while parent is not None:
 						pchanlist = self.__pnode2RendererList.get(parent)
 						if pchanlist != None and pchanlist.has_key(renderer):
@@ -159,10 +160,9 @@ class PlayerCommon:
 				rdList = self.__region2RendererList[regionName] = []
 			rdList.append(renderer)
 		
-			parentNode = node.GetSchedParent()
-			rdList = self.__pnode2RendererList.get(parentNode)
+			rdList = self.__pnode2RendererList.get(pnode)
 			if rdList == None:
-				rdList = self.__pnode2RendererList[parentNode] = {}
+				rdList = self.__pnode2RendererList[pnode] = {}
 			rdList[renderer] = 1
 		
 		if debug: print 'PlayerCore, findRenderer, end renderer=',renderer,' node=',node
