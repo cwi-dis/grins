@@ -25,11 +25,31 @@ class Document(Node):
 	def getDocumentElement(self):
 		return self.root
 
-	def createElement(self, tagName) :
+	def createElement(self, tagName, defIndex=0, defChannelType='layout') :
+		""" 
+		Creates Elements in three diffrent types:
+			- channels	: tagName = 'channel', 
+					name='_changeMe', 	# change this after creation!
+					index=0, 		# (add 1st)  
+					type='layout' 		# change this after creation!
+		- hyperlinks
+		- elements	: tagName = elementname
+		"""
 	# channels, hyperlinks, elements
-		nwnode = self.root.context.newnode(tagName)
-		print 'nwnode ', nwnode
-		return nwnode
+		if tagName == 'channel' :
+			import MMNode	# ???
+			defName = ''
+			nwNode = MMNode.MMChannel(self.root.context, defName)
+			print 'nwChannel ', nwNode
+			return nwNode
+		elif tagname == 'hyperlink':
+			# hyperlink
+			print 'nwHyperlink ', nwNode
+			return nwNode
+		else:
+			nwNode == self.root.context.newnode(tagName)
+			print 'nwNode ', nwNode
+			return nwNode
 
 	def createAttribute(self, name) :
 		nwAttribute = Attr(name)
@@ -43,11 +63,19 @@ class NamedNodeMap:
 		else:
 			self.__content = {}
 	def getNamedItem(self, name): 
-		return self.__content[name]
+		if self.__content.has_key(name):
+			return self.__content[name]
+		else:
+			return None
 	def setNamedItem(self, node): 
 		self.__content[node._get_nodeName()] = node
 	def removeNamedItem(self, name):
-		del self.__content[name]
+		if self.__content.has_key(name):
+			delnode = self.getNamedItem(name)
+			del self.__content[name]
+			return delnode
+		else:
+			return None
 	def item(self, index=0):
 		if index >= 0 and index < len(self.__content):
 			return self.__content.values()[index]

@@ -28,6 +28,7 @@ class MMNodeContext(domcore.Element):
 		self.editmgr = None
 		self.armedmode = None
 		self.getchannelbynode = None
+		self.element = self	# jst to do 
 
 	# Act like an XML DOM Core Node
 	# def _get_nodeName(self): return "context"
@@ -41,7 +42,41 @@ class MMNodeContext(domcore.Element):
 		l = l + self.channels
 		return domcore.NodeList(l)
 
+	def appendChild(self, newChild) :
+		em = self.editmgr
+		
+		# add channel
+		if newChild._get_tagName() == 'channel' :
+			channelName = newChild._get_attributes().getNamedItem('name')._get_nodeValue()
+			channelType = newChild._get_attributes().getNamedItem('type')._get_nodeValue()
+			print 'channelName ', channelName
+			print 'channelType', channelType
+			if channelName and channelType != None :
+                		if not em.transaction():
+                        		raise 'not ready'
+				index = len(self.channels)
+				print 'adding channel...', newChild 
+				em.addchannel(self, channelName, index ,channelType)
+                		em.commit()
+				return newChild
+			else:
+				return None
 
+		# add hyperlink
+		elif newChild._get_tagName() == 'hyperlink' :
+			print 'add hyperlink'
+
+		else:
+			raise 'only hyperlinks and channels in context'
+
+        def _editMgrAddChannel(self, index, newChannel ):
+		channelName = newChild._get_attributes().getNamedItem('name')._get_nodeValue()
+		channelType = newChild._get_attributes().getNamedItem('type')._get_nodeValue()
+                em = self.context.editmgr
+                if not em.transaction():
+                        raise 'not ready'
+                em.addchannel(self, name, index ,type)
+                em.commit()
 
 
 	def __repr__(self):
@@ -333,6 +368,7 @@ class MMNodeContext(domcore.Element):
 	def geteditmgr(self):
 		return self.editmgr
 
+#jst2
 class MMChannel(domcore.Element):
 	def __init__(self, context, name):
 		domcore.Element.__init__(self, 'channel')
