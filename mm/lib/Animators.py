@@ -414,9 +414,10 @@ class SetAnimator(Animator):
 ###########################
 # A special animator to manage to-only additive animate elements
 class EffValueAnimator(Animator):
-	def __init__(self, attr, domval, value, dur):
-		Animator.__init__(self, attr, domval, (domval, value,), dur, mode='linear',
-			times=None, splines=None, accumulate='none', additive='replace') 
+	def __init__(self, attr, domval, value, dur, mode='linear',
+			times=None, splines=None, accumulate='none', additive='replace'):
+		Animator.__init__(self, attr, domval, (domval, value,), dur, mode,
+			times, splines, accumulate, additive) 
 	def getValue(self, t):
 		if not self._effectiveAnimator:
 			return Animator.getValue(self, t)
@@ -528,9 +529,10 @@ class ColorAnimator(TupleAnimator):
 		return _round(r), _round(g), _round(b)
 
 class EffColorAnimator(ColorAnimator):
-	def __init__(self, attr, domval, value, dur):
-		ColorAnimator.__init__(self, attr, domval, (domval, value,), dur, mode='linear',
-			times=None, splines=None, accumulate='none', additive='replace')
+	def __init__(self, attr, domval, value, dur, mode='linear',
+			times=None, splines=None, accumulate='none', additive='replace'):
+		ColorAnimator.__init__(self, attr, domval, (domval, value,), dur, mode,
+			times, splines, accumulate, additive)
 	def getValue(self, t):
 		if not self._effectiveAnimator:
 			return ColorAnimator.getValue(self, t)
@@ -618,11 +620,12 @@ class MotionAnimator(Animator):
 		return _round(x), _round(y)
 	
 class EffMotionAnimator(Animator):
-	def __init__(self, attr, domval, value, dur):
+	def __init__(self, attr, domval, value, dur, mode='paced',
+			times=None, splines=None, accumulate='none', additive='replace'):
 		x, y = value
 		value = complex(x,y)
-		Animator.__init__(self, attr, domval, (domval, value,), dur, mode='linear',
-			times=None, splines=None, accumulate='none', additive='replace') 
+		Animator.__init__(self, attr, domval, (domval, value,), dur, mode,
+			times, splines, accumulate, additive) 
 
 	def getValue(self, t):
 		if not self._effectiveAnimator:
@@ -1179,20 +1182,20 @@ class AnimateElementParser:
 			anim = None
 			if self.__attrtype == 'int':
 				v = string.atoi(self.getTo())
-				anim = EffValueAnimator(attr, domval, v, dur)
+				anim = EffValueAnimator(attr, domval, v, dur, mode, times, splines, accumulate, additive)
 				anim.setRetunedValuesConverter(_round)
 			elif self.__attrtype == 'float':
 				v = string.atof(self.getTo())
-				anim = EffValueAnimator(attr, domval, v, dur)
+				anim = EffValueAnimator(attr, domval, v, dur, mode, times, splines, accumulate, additive)
 			elif self.__attrtype == 'color':
 				values = self.__getColorValues()
-				anim = EffColorAnimator(attr, domval, values, dur)
+				anim = EffColorAnimator(attr, domval, values, dur, mode, times, splines, accumulate, additive)
 			elif self.__attrtype == 'position':
 				coords = self.__getNumPairInterpolationValues()
-				anim = EffMotionAnimator(attr, domval, coords, dur)
+				anim = EffMotionAnimator(attr, domval, coords, dur, mode, times, splines, accumulate, additive)
 			elif self.__attrtype == 'inttuple':
 				coords = self.__getNumTupleInterpolationValues()
-				anim = EffIntTupleAnimator(attr, domval, coords, dur)
+				anim = EffIntTupleAnimator(attr, domval, coords, dur, mode, times, splines, accumulate, additive)
 			if anim:
 				self.__setTimeManipulators(anim)
 			return anim
