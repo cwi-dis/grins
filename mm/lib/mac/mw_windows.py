@@ -348,17 +348,6 @@ class _CommonWindow:
 		self._menu = mw_menucmd.FullPopupMenu(list, title,
 						self._accelerators)
 
-	def setpopupmenu(self, menutemplate):
-		# Menutemplate is a MenuTemplate-style menu template.
-		# It should be turned into an menu and put
-		# into self._popupmenu.
-		self._destroy_popupmenu()
-		pass
-		
-	def _destroy_popupmenu(self):
-		# Free resources held by self._popupmenu and set it to None
-		self._popupmenu = None
-
 	def _image_size(self, file):
 		"""Backward compatability: return wh of image given filename"""
 		if _size_cache.has_key(file):
@@ -1294,6 +1283,20 @@ class _AdornmentsMixin:
 			cntl = self._cmd_to_cntl[cmd]
 			value = cntl.GetControlMinimum() + onoff
 			cntl.SetControlValue(value)
+
+	def setpopupmenu(self, menutemplate):
+		# Menutemplate is a MenuTemplate-style menu template.
+		# It should be turned into an menu and put
+		# into self._popupmenu.
+		self._destroy_popupmenu()
+		self._popupmenu = mw_menucmd.ContextualPopupMenu(menutemplate, self.call_command)
+		self._popupmenu.update_menu_enabled(self.has_command)
+		
+	def _destroy_popupmenu(self):
+		# Free resources held by self._popupmenu and set it to None
+		if self._popupmenu:
+			self._popupmenu.delete()
+		self._popupmenu = None
 		
 class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 	"""Toplevel window"""
@@ -1364,7 +1367,9 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 	def set_commandlist(self, cmdlist):
 		_AdornmentsMixin.set_commandlist(self, cmdlist)
 		_WindowGroup.set_commandlist(self, cmdlist)
-		
+		if self._popupmenu:
+			self._popupmenu.update_menu_enabled(self.has_command)
+
 	def getgeometry(self, units=UNIT_MM):
 		rect = self._wid.GetWindowPort().portRect
 		Qd.SetPort(self._wid)
