@@ -733,7 +733,7 @@ else:
 
 if producer is None:
 	# dummies if we can't import producer
-	def convertaudiofile(u, dstdir, file, node, progress = None):
+	def convertaudiofile(u, srcurl, dstdir, file, node, progress = None):
 		u.close()
 		return None
 	def convertvideofile(u, srcurl, dstdir, file, node, progress = None):
