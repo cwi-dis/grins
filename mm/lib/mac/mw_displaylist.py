@@ -501,14 +501,14 @@ class _DisplayList:
 
 
 	# Define a new button. Coordinates are in window relatives
-	def newbutton(self, coordinates, z = 0, times = None):
+	def newbutton(self, coordinates, z = 0, times = None, sensitive = 1):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		
 		# factor out shape type
 		shape = coordinates[0]
 		coordinates = coordinates[1:]
-		return _Button(self, shape, coordinates, z, times)
+		return _Button(self, shape, coordinates, z, times, sensitive)
 
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
 				    center = 1, coordinates = None,
@@ -859,11 +859,12 @@ class _DisplayList:
 	##########################################
 
 #class _Button:
-#	def __init__(self, dispobj, coordinates, z=0, times=None):
+#	def __init__(self, dispobj, coordinates, z, times, sensitive):
 #		self._coordinates = coordinates
 #		self._dispobj = dispobj
 #		self._z = z
 #		self._times = times
+#		self._sensitive = sensitive
 #		buttons = dispobj._buttons
 #		for i in range(len(buttons)):
 #			if buttons[i]._z <= z:
@@ -886,6 +887,9 @@ class _DisplayList:
 #	def is_closed(self):
 #		return self._dispobj is None
 
+#	def setsensitive(self, sensitive):
+#		self._sensitive = sensitive
+
 #	def hiwidth(self, width):
 #		pass
 
@@ -899,6 +903,8 @@ class _DisplayList:
 #		pass
 		
 #	def _inside(self, x, y):
+#		if not self._sensitive:
+#			return 0
 #		bx, by, bw, bh = self._coordinates
 #		if bx <= x < bx+bw and by <= y < by+bh:
 #			if self._times:
@@ -940,12 +946,13 @@ class _DisplayList:
 #	##########################################
 
 class _Button:
-	def __init__(self, dispobj, shape, coordinates, z=0, times=None):
+	def __init__(self, dispobj, shape, coordinates, z, times, sensitive):
 		self._dispobj = dispobj
 		self._shape = shape
 		self._coordinates = coordinates
 		self._z = z
 		self._times = times
+		self._sensitive = sensitive
 
 		buttons = dispobj._buttons
 		for i in range(len(buttons)):
@@ -969,6 +976,9 @@ class _Button:
 	# Returns true if it is closed
 	def is_closed(self):
 		return self._dispobj is None
+
+	def setsensitive(self, sensitive):
+		self._sensitive = sensitive
 
 	# Increment height
 	def hiwidth(self, width):
@@ -995,6 +1005,8 @@ class _Button:
 	def _get_button_region(self):
 		"""Return our region, in global coordinates, if we are active"""
 		# XXXX Only rectangulars for now
+		if not self._sensitive:
+			return None
 		if not self._insidetemporal():
 			return None
 		rgn = Qd.NewRgn()
@@ -1024,6 +1036,8 @@ class _Button:
 		return rgn
 
 	def _inside(self, x, y):
+		if not self._sensitive:
+			return 0
 		if not self._insidetemporal():
 			return 0		
 		if self._shape == A_SHAPETYPE_RECT:
