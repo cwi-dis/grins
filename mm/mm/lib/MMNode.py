@@ -10,7 +10,8 @@ from Hlinks import Hlinks
 import MMurl
 import settings
 
-import grins.DOM.Core
+# import grins.DOM.Core
+import xml.dom.core
 
 class MMNodeContext:
 	def __init__(self, nodeclass):
@@ -448,26 +449,14 @@ class MMNode:
 	#
 	# jst
 
-	def atest(self) :
-		print 'before'
-		obj = self.boa.create('fred', ATest._FNORB_ID)
-		a = ATest()
-		print a._get_test1() 
-		self.boa.obj_is_ready(obj, a)
-		print 'after'
-		return a
-
-	def setBOA(self, nwboa) :
-		self.boa = nwboa
-
 	def _get_nodeName(self) :
 		return self.type 
 					
 	def _get_nodeValue(self) :
-		return None
+		raise xml.dom.core.DOMException('reading nodeValue is illegal')
 
 	def _get_nodeType(self) :
-		return org_w3c_dom.Node.ELEMENT_NODE
+		return xml.dom.core.ELEMENT_NODE
 
 	def _get_parentNode(self) :
 		return self.parent
@@ -477,9 +466,7 @@ class MMNode:
 
 	def _get_firstChild(self):
 		if len(self.children) > 0:
-			# obj = self.boa.create('fre', MMNode._FNORB_ID)
 			child = self.children[0] 
-			# self.boa.obj_is_ready(obj, child)
 			return child 
 		else:
 			return None
@@ -499,9 +486,9 @@ class MMNode:
 		return None
 
 	def _get_attributes(self):
-		namedNodeMap = grins.DOM.Core.NamedNodeMap()
+		namedNodeMap = xml.dom.core.NamedNodeMap()
 		for a in self.attrdict.items() :
-			newAttribute = grins.DOM.Core.Attr(a[0],a[1]) 
+			newAttribute = xml.dom.core.Attr(a[0],a[1]) 
 			namedNodeMap.setNamedItem(newAttribute)
 		return namedNodeMap     
 
