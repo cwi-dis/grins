@@ -43,17 +43,6 @@ import MMParser
 import sys
 
 
-# The file from which the attribute definitions are read.
-#
-ATTRDEFS_LOCAL = 'Attrdefs'
-import os
-if os.environ.has_key('CMIF'):
-	CMIF = os.environ['CMIF']
-else:
-	CMIF = '/ufs/guido/mm/demo'
-ATTRDEFS = os.path.join(CMIF, 'lib/Attrdefs')
-
-
 # Parse a file containing attribute definitions.
 #
 def readattrdefs(filename):
@@ -132,16 +121,6 @@ def useattrdefs(mapping):
 	for attrname in attrdefs.keys():
 		dict[attrname] = usetypedef(attrdefs[attrname][0], mapping)
 	return dict
-
-
-# Initialize the attrdefs table.
-#
-try:
-	attrdefs = readattrdefs(ATTRDEFS_LOCAL)
-	print '(Using local Attrdefs file)'
-except:
-	attrdefs = readattrdefs(ATTRDEFS)
-
 
 
 # Functional interface to the attrdefs table.
@@ -287,3 +266,20 @@ def parsevalue(name, string, context):
 	import MMParser
 	typedef = ('enclosed', getdef(name)[0])
 	return MMParser.parsevalue('('+string+')', typedef, context)
+
+
+# Initialize the attrdefs table.
+#
+def initattrdefs():
+	try:
+		attrdefs = readattrdefs('Attrdefs')
+		print '(Using local Attrdefs file)'
+	except:
+		import cmif
+		attrdefs = readattrdefs(cmif.findfile('lib/Attrdefs'))
+	return attrdefs
+
+
+# Call the initialization
+#
+attrdefs = initattrdefs()
