@@ -41,7 +41,8 @@ class MainDialog:
 			 ('Debug', (self.debug_callback, ())),
 			 ('Exit', (self.close_callback, ())),
 			 ],
-			vertical = 0, tight = 1)
+			vertical = 0, tight = 1,
+			top = None, bottom = None, left = None, right = None)
 		w.show()
 
 	def __openURL_callback(self):
