@@ -55,7 +55,8 @@ class _LayoutView2(GenFormView):
 		
 		self._activecmds={}
 
-		self._regions = {}
+		# region name : list index
+		self._region2ix = {}
 
 	def setContext(self, ctx):
 		self._context = ctx
@@ -136,8 +137,11 @@ class _LayoutView2(GenFormView):
 		self._layout.setViewport(name)
 		rgnList = self._layout.getRegions(name)
 		self['RegionSel'].resetcontent()
+		i = 0
 		for reg in rgnList:
 			self['RegionSel'].addstring(reg)
+			self._region2ix[reg] = i
+			i = i + 1
 		if rgnList:
 			self['RegionSel'].setcursel(0)
 			self.selectRegion(rgnList[0])
@@ -153,6 +157,7 @@ class _LayoutView2(GenFormView):
 			for name in ('RegionX','RegionY','RegionW','RegionH'):
 				self[name].settext('')
 			self['RegionZ'].settext('')
+			self['RegionSel'].setcursel(-1)
 			return
 		rc = shape._rectb
 		i = 0
@@ -160,6 +165,7 @@ class _LayoutView2(GenFormView):
 			self[name].settext('%d' % rc[i])
 			i = i +1
 		self['RegionZ'].settext('%d' % shape._z)
+		self['RegionSel'].setcursel(self._region2ix[shape._name])
 
 ###########################
 
