@@ -124,6 +124,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		
 	def do_play(self, node):
 		self.url = self.armed_url
+		self.played_str = self.armed_str
 		self.htmlw.SetText(self.armed_str, '', '')
 		self.fixanchorlist(node)
 		self.play_node = node
@@ -246,6 +247,9 @@ class HtmlChannel(Channel.ChannelWindow):
 			print 'list:', list
 			return
 		if href:
+			if href == 'XXXX:play/node':
+				self.htmlw.SetText(self.played_str, '', '')
+				return
 			href = urllib.basejoin(self.url, href)
 		else:
 			href = self.url
@@ -253,13 +257,18 @@ class HtmlChannel(Channel.ChannelWindow):
 			href = addquery(href, list)
 		self.url, tag = urllib.splittag(href)
 		try:
-			newtext = urlget(self.url)
+			u = urllib.urlopen(self.url)
+			if u.headers.maintype == 'image':
+				newtext = '<IMG SRC="%s">\n' % self.url
+			else:
+				newtext = u.read()
 		except IOError:
 			newtext = '<H1>Cannot Open</H1><P>'+ \
 				  'Cannot open '+self.url+':<P>'+ \
 				  `(sys.exc_type, sys.exc_value)`+ \
 				  '<P>\n'
-		self.htmlw.SetText(newtext, None, None, 0, tag)
+		footer = '<HR>[<A HREF="XXXX:play/node">BACK</A> to CMIF node]'
+		self.htmlw.SetText(newtext, None, footer, 0, tag)
 ##		self.htmlw.footerText = '<P>[<A HREF="'+self.armed_url+\
 ##			  '">BACK</A> to CMIF node]<P>'
 
