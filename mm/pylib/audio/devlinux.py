@@ -7,13 +7,13 @@ import linuxaudiodev
 
 class AudioDevLINUX:
 	# default supported formats and frame rates
-	__formats = {linear_8_mono_signed: linuxaudiodev.AFMT_S8,
+	__formats = {#linear_8_mono_signed: linuxaudiodev.AFMT_S8,
 		     linear_8_mono_excess: linuxaudiodev.AFMT_U8,
-		     ulaw_mono: linuxaudiodev.AFMT_MU_LAW,
-		     linear_16_mono_big_signed: linuxaudiodev.AFMT_S16_BE,
-		     linear_16_mono_big_excess: linuxaudiodev.AFMT_U16_BE,
+		     #ulaw_mono: linuxaudiodev.AFMT_MU_LAW,
+		     #linear_16_mono_big_signed: linuxaudiodev.AFMT_S16_BE,
+		     #linear_16_mono_big_excess: linuxaudiodev.AFMT_U16_BE,
 		     linear_16_mono_little_signed: linuxaudiodev.AFMT_S16_LE,
-		     linear_16_mono_little_excess: linuxaudiodev.AFMT_U16_LE,
+		     #linear_16_mono_little_excess: linuxaudiodev.AFMT_U16_LE,
 		     }
 	__rates = (8000, 11025, 16000, 22050, 32000, 44100, 48000)
 
@@ -25,7 +25,7 @@ class AudioDevLINUX:
 	else:
 		# try if hardware supports CD quality
 		try:
-		    __port.setparameters((44100, 16, 2, linuxaudiodev.AFMT_S16_LE))
+		    __port.setparameters(44100, 16, 2, linuxaudiodev.AFMT_S16_LE)
 		except linuxaudiodev.error:
 		    # CD quality not supported, use phone quality
 		    __formats = {linear_8_mono_signed:AudioDevLINUX.__formats[linear_8_mono_signed]}
@@ -112,9 +112,9 @@ class AudioDevLINUX:
 		bps = (fmt.getbps() + 7) & ~7
 		try:
 
-		    self.__port.setparameters((self.__framerate, bps, 
-					       fmt.getnchannels(),
-					       self.__formats[fmt]))
+		    self.__port.setparameters(self.__framerate, bps, 
+					      fmt.getnchannels(),
+					      self.__formats[fmt])
 		except linuxaudiodev.error:
 		    if fmt.getencoding() != 'linear' or \
 		       self.__framerate != 8000:
