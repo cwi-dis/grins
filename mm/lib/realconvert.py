@@ -320,12 +320,13 @@ def convertvideofile(u, srcurl, dstdir, file, node):
 	# do encoding
 	mc = b.QueryIMediaControl()
 	mc.Run()
-
+	
 	import sys
 	if sys.platform=='win32':
 		# remove messages in queue
 		# dispatch only paint message
 		import win32ui
+		win32ui.PumpWaitingMessages()
 		while b.WaitForCompletion(0)==0:
 			win32ui.PumpWaitingMessages()
 		mc.Stop()
@@ -333,5 +334,7 @@ def convertvideofile(u, srcurl, dstdir, file, node):
 	else:
 		b.WaitForCompletion()
 		mc.Stop()
+	
+	del b
 				
 	return file
