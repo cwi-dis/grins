@@ -19,9 +19,29 @@ class StyleEditor() = ViewDialog(), BasicDialog():
 	def init(self, root):
 		self = ViewDialog.init(self, 'style_')
 		self.root = root
-		self.context = root.GetContext()
+		self.context = self.root.GetContext()
+		self.editmgr = self.context.geteditmgr()
 		width, height = MMAttrdefs.getattr(self.root, 'style_winsize')
 		return BasicDialog.init(self, (width, height, 'Style editor'))
+	#
+	def transaction(self):
+		return 1
+	#
+	def rollback(self):
+		pass
+	#
+	def commit(self):
+		pass
+	#
+	def show(self):
+		if not self.showing:
+			BasicDialog.show(self)
+			self.editmgr.register(self)
+	#
+	def hide(self):
+		if self.showing:
+			self.editmgr.unregister(self)
+			BasicDialog.hide(self)
 	#
 	def make_form(self):
 		self.width, self.height = 300, 320
@@ -37,21 +57,21 @@ class StyleEditor() = ViewDialog(), BasicDialog():
 		for name in stylenames:
 			self.browser.add_browser_line(name)
 		#
-		x, y, w, h = 0, 250, 75, 39
+		x, y, w, h = 0, 250, 50, 39
 		self.addbutton = form.add_button(NORMAL_BUTTON,x,y,w,h, 'Add')
 		self.addbutton.set_call_back(self.add_callback, None)
 		#
-		x, y, w, h = 75, 250, 75, 39
+		x, y, w, h = 50, 250, 75, 39
 		self.deletebutton = \
 			form.add_button(NORMAL_BUTTON,x,y,w,h, 'Delete')
 		self.deletebutton.set_call_back(self.delete_callback, None)
 		#
-		x, y, w, h = 150, 250, 75, 39
+		x, y, w, h = 125, 250, 125, 39
 		self.renamebutton = \
 			form.add_button(RETURN_BUTTON,x,y,w,h, 'Rename')
 		self.renamebutton.set_call_back(self.rename_callback, None)
 		#
-		x, y, w, h = 225, 250, 75, 39
+		x, y, w, h = 250, 250, 50, 39
 		self.editbutton = \
 			form.add_button(NORMAL_BUTTON,x,y,w,h, 'Edit')
 		self.editbutton.set_call_back(self.edit_callback, None)
