@@ -680,6 +680,10 @@ SOURCE=.\editor\compatibility.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\editor\EditableObjects.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\editor\features.py
 # End Source File
 # Begin Source File
