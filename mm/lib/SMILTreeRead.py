@@ -1898,8 +1898,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if not name:
 			name = layout_name # only for anonymous root-layout
 		ctx = self.__context
-		ctx.addchannel(name, 0, 'layout')
-		layout = ctx.channeldict[name]
+		layout = ctx.newchannel(name, 0, 'layout')
 
 		self.__topchans.append(layout)
 		if isroot:
@@ -2130,8 +2129,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				while ctx.channeldict.has_key(name % i):
 					i = i + 1
 				name = name % i
-			ctx.addchannel(name, -1, 'layout')
-			ch = ctx.channeldict[name]
+			ch = ctx.newchannel(name, -1, 'layout')
 			list.append((region, ch))
 					
 		# Then fill the instances with the right attributes

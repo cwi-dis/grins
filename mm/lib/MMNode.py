@@ -373,6 +373,7 @@ class MMNodeContext:
 		chlist.sort()
 		return chlist
 
+	# Not currently used	
 	def addchannels(self, list):
 		for name, dict in list:
 			c = MMChannel(self, name)
@@ -383,10 +384,13 @@ class MMNodeContext:
 			self.channelnames.append(name)
 			self.channels.append(c)
 
+	# Return the channel instance from its name
 	def getchannel(self, name):
 		return self.channeldict.get(name)
 
-	def addchannel(self, name, i, type):
+	# Internal method to create and insert a channel into the document
+	# this method is only called from self.newchannel method
+	def _addchannel(self, name, i, type):
 		if name in self.channelnames:
 			raise CheckError, 'addchannel: existing name'
 		if not -1 <= i <= len(self.channelnames):
@@ -399,13 +403,14 @@ class MMNodeContext:
 		self.channelnames.insert(i, name)
 		self.channels.insert(i, c)
 
-	# for edition operations, use this method instead to use addchannel
-	# it's consistent with the MMNode operations.
-	# To add a node, editmgr needs an instance of MMChannel
+	# Create a new MMChannel instance.
+	# This method is used either by the parser or any view to create a new channel
+	# Any view call has to call this method before calling editmgr.addchannel
 	def newchannel(self, name, i, type):
-		self.addchannel(name, i, type)
+		self._addchannel(name, i, type)
 		return self.getchannel(name)
-	
+
+	# Not currently used. Look at as well editmgr.copychannel	
 	def copychannel(self, name, i, orig):
 		if name in self.channelnames:
 			raise CheckError, 'copychannel: existing name'
@@ -422,6 +427,7 @@ class MMNodeContext:
 		self.channelnames.insert(i, name)
 		self.channels.insert(i, c)
 
+	# Not currently used. Look at as well editmgr.movechannel
 	def movechannel(self, name, i):
 		if not name in self.channelnames:
 			raise CheckError, 'movechannel: non-existing name'
@@ -439,7 +445,9 @@ class MMNodeContext:
 			del self.channelnames[old_i+1]
 			del self.channels[old_i+1]
 
-	def delchannel(self, name):
+	# Internal method to remove the channel from the document
+	# this method is only called from MMChannel.Destroy method
+	def _delchannel(self, name):
 		if name not in self.channelnames:
 			raise CheckError, 'delchannel: non-existing name'
 		i = self.channelnames.index(name)
@@ -452,7 +460,6 @@ class MMNodeContext:
 		del self.channels[i]
 		del self.channelnames[i]
 		del self.channeldict[name]
-		c._destroy()
 
 	def setchannelname(self, oldname, newname):
 		if newname == oldname: return # No change
@@ -1219,17 +1226,18 @@ class MMChannel(MMTreeElement):
 	def _setname(self, name): # Only called from context.setchannelname()
 		self.name = name
 
-	def _destroy(self):
-		if self.attrdict.get('type') == 'layout':
-			self.context.cssResolver.unlink(self._cssId)
-		if self.has_key('base_window'):
-			del self['base_window']
-		self.context = None
-
 	def Destroy(self):
-		# XXX this call doesn't remove all.
-		# for channels, we need to remove as well the channels from the context,
-		# all references to this channel, ...
+		context = self.context
+		if context == None:
+			print 'MMChannel.Destroy: The channel is already destroyed : ',self.name
+			return
+		
+		# unlink the css id if not done
+		if self.attrdict.get('type') == 'layout':
+			self.context.cssResolver.unlink(self._cssId)			
+		# remove completly the channel from the document
+		context._delchannel(self.name)
+		# remove common chidren and common attributes
 		MMTreeElement.Destroy(self)
 
 	def stillvalid(self):
