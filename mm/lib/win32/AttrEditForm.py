@@ -45,13 +45,16 @@ class AttrCtrl:
 	want_colon_after_label = 1
 	want_default_help = 1
 
-	def __init__(self,wnd,attr,resid):
+	def __init__(self,wnd,attr,resid,residToHide=()):
 		self._wnd=wnd
 		self._attr=attr
 		self._resid=resid
 		self._initctrl=None
 		self._validator=None
 		self._listeners=[]
+		self._ctrlToHide = []
+		for resid in residToHide:
+			self._ctrlToHide.append(components.Edit(wnd, resid))
 
 	def getvalue(self):
 		raise error, 'you have to implement method \'getvalue\' for %s' % self.__class__.__name__
@@ -96,6 +99,11 @@ class AttrCtrl:
 		else:
 			return 1
 
+	def OnInitCtrl(self):
+		for ctrl in self._ctrlToHide:
+			ctrl.attach_to_parent()
+			ctrl.hide()
+			
 	def gethelp(self):
 		try:
 			hd=self._attr.gethelpdata()
@@ -1053,12 +1061,13 @@ class CssPosCtrl(AttrCtrl):
 	
 ##################################
 class StringCtrl(AttrCtrl):
-	def __init__(self,wnd,attr,resid):
-		AttrCtrl.__init__(self,wnd,attr,resid)
+	def __init__(self,wnd,attr, resid, residToHide = ()):
+		AttrCtrl.__init__(self,wnd,attr,resid, residToHide)
 		self._attrname=components.Edit(wnd,resid[0])
 		self._attrval=components.Edit(wnd,resid[1])
 
 	def OnInitCtrl(self):
+		AttrCtrl.OnInitCtrl(self)
 		self._initctrl=self
 		self._attrname.attach_to_parent()
 		self._attrval.attach_to_parent()
@@ -4978,7 +4987,10 @@ class Layout3Group(AttrGroup):
 									grinsRC.IDC_CTYPES, grinsRC.IDC_CTYPET,
 									grinsRC.IDC_CTYPEI))
 		a = self.getattr('width')
-		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_WIDTHL, grinsRC.IDC_WIDTHV, grinsRC.IDC_WIDTHU))
+		residToHide = ()
+		if not a.mustshow():
+			residToHide = (grinsRC.IDC_GROUP1,)
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_WIDTHL, grinsRC.IDC_WIDTHV, grinsRC.IDC_WIDTHU), residToHide)
 		a = self.getattr('height')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_HEIGHTL, grinsRC.IDC_HEIGHTV, grinsRC.IDC_HEIGHTU))
 
