@@ -313,7 +313,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 			elif units == UNIT_PXL:
 				width = int(width)
 				height = int(height)
-			spacing = form.spacing
 			attrs['width'] = 0
 			attrs['height'] = 0
 		self.setcursor(_WAITING_CURSOR)
@@ -575,7 +574,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 			w = h = 0
 		else:
 			w, h = box[2:4]
-		clipwin = self._scrwin
 		vs = self._scrwin.verticalScrollBar
 		hs = self._scrwin.horizontalScrollBar
 		val = self._scrwin.clipWindow.GetValues(['width', 'height'])
@@ -650,7 +648,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 			color = self._topwindow._bgcolor
 		if color == self._bgcolor:
 			return
-		bgcolor = self._bgcolor
 		self._bgcolor = color
 		# set window background if nothing displayed on it
 		if self._topwindow is self and not self._active_displist and \
@@ -964,7 +961,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 		# depth: depth of window (and image) in bytes
 		tw = self._topwindow
 		format = toplevel._imgformat
-		depth = format.descr['align'] / 8
 		reader = None
 		if type(file) is not type(''):
 			reader = file.reader()
@@ -1317,7 +1313,6 @@ class _Window(_AdornmentSupport, _RubberBand):
 		self._region = Xlib.CreateRegion()
 		apply(self._region.UnionRectWithRegion, self._rect)
 		# convert pixels to mm
-		parent = self._parent
 		w = float(width) / toplevel._hmm2pxl
 		h = float(height) / toplevel._vmm2pxl
 		if self._pixmap is None:

@@ -258,7 +258,7 @@ class _Splash:
 		gc.PutImage(image, 0, 0, 0, 0, width, height)
 		w.DefineCursor(self.watchcursor)
 		self.dpy.Flush()
-		import Xtdefs, time
+		import Xtdefs
 		while not self.__exposed:
 			# at least wait until we were exposed
 			Xt.ProcessEvent(Xtdefs.XtIMAll)

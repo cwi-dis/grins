@@ -5,9 +5,6 @@ from format import *
 import struct
 from chunk import Chunk
 
-_skiplist = ('COMT', 'INST', 'MIDI', 'AESD',
-	     'APPL', 'NAME', 'AUTH', '(c) ', 'ANNO')
-
 _AIFC_VERSION = 0xA2805140		# Version 1 of AIFF-C
 
 def _read_long(file):
