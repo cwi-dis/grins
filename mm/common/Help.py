@@ -25,10 +25,15 @@ helpbase = None				# directory where the help files live
 helpwindow = None
 helpprogram = "player"
 
+if os.name == 'posix':
+	platform = 'unix'
+else:
+	platform = sys.platform
+
 #
 # This could be done better, by putting the version number in here.
 #
-DEFAULT_BASE_URL="http://www.cwi.nl/GRiNS/help/%s/index.html"%sys.platform
+DEFAULT_BASE_URL="http://www.cwi.nl/GRiNS/help/%s/index.html"%platform
 
 def sethelpprogram(program):
 	global helpprogram
@@ -42,7 +47,7 @@ def fixhelpdir():
 	global helpbase
 	if helpbase is None:
 		import cmif
-		helpdir = os.path.join(cmif.findfile('Help'), sys.platform)
+		helpdir = os.path.join(cmif.findfile('Help'), platform)
 		helpdir = os.path.join(helpdir, helpprogram)
 		if os.path.exists(helpdir):
 			basefile = os.path.join(helpdir, 'index.html')
