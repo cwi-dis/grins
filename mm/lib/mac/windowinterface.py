@@ -32,12 +32,14 @@ ITEM_SELECT_ITEMLIST=4
 ITEM_SELECT_SELECTPROMPT=5
 ITEM_SELECT_ITEM=6
 
-# For askstring re-use Pythons standard EasyDialogs resource
-ID_INPUT_DIALOG=257
+# Input dialogs
+ID_INPUT_DIALOG=524
+ID_INPUT_URL_DIALOG=525
 ITEM_INPUT_OK=1
 ITEM_INPUT_CANCEL=2
 ITEM_INPUT_PROMPT=3
 ITEM_INPUT_TEXT=4
+ITEM_INPUTURL_BROWSE=5
 
 # For messages and questions:
 ID_MESSAGE_DIALOG=521
@@ -1421,9 +1423,12 @@ class SingleSelectionDialog(SelectionDialog):
 		toplevel.grab(None)
 			
 class InputDialog(DialogWindow):
+	DIALOG_ID= ID_INPUT_DIALOG
+	
 	def __init__(self, prompt, default, cb, cancelCallback = None):
 		# First create dialogwindow and set static items
-		DialogWindow.__init__(self, ID_INPUT_DIALOG)
+		DialogWindow.__init__(self, self.DIALOG_ID)
+		# XXXX Use title here?
 		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_PROMPT)
 		Dlg.SetDialogItemText(h, prompt)
 		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
@@ -1450,6 +1455,22 @@ class InputDialog(DialogWindow):
 		rv = Dlg.GetDialogItemText(h)
 		self._cb(rv)
 		self.close()
+		
+class InputURLDialog(InputDialog):
+	DIALOG_ID=ID_INPUTURL_DIALOG
+
+	def do_itemhit(self, item, event):
+		if item == ITEM_INPUTURL_BROWSE:
+			# XXXX Should do defaults a bit better
+			fss, ok = macfs.StandardGetFile('TEXT')
+			if ok:
+				import MMUrl
+				pathname = fss.as_pathname()
+				url = MMurl.pathname2url(filename)
+				tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
+				Dlg.SetDialogItemText(h, url)				
+		else:
+			InputDialog.do_itemhit(self, item, event)
 
 [TOP, CENTER, BOTTOM] = range(3)
 
