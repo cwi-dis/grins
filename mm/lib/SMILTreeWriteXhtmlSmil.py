@@ -167,6 +167,8 @@ class SMILXhtmlSmilWriter(SMIL):
 		self.sensitivityList = []
 		self.buildSensitivityList(self.root, self.sensitivityList)
 
+		self.freezeSyncDict = {}
+
 		self.__isopen = 0
 		self.__stack = []
 
@@ -415,6 +417,10 @@ class SMILXhtmlSmilWriter(SMIL):
 				if interior:
 					if name == 'fillDefault':
 						pass
+					elif name == 'id':
+						attrlist.append((name, value))
+						self.ids_written[value] = 1
+						nodeid = value
 					else:
 						attrlist.append((name, value))
 				else:	
@@ -444,7 +450,11 @@ class SMILXhtmlSmilWriter(SMIL):
 					attrlist.append(('fill', fillDefault))
 				else:
 					fill = fillDefault
-		
+
+		if not nodeid:
+			nodeid = 'm' + x.GetUID()
+			attrlist.append(('id', nodeid))
+
 		if interior:
 			if mtype in not_xhtml_smil_elements:
 				pass # self.showunsupported(mtype)
@@ -461,6 +471,11 @@ class SMILXhtmlSmilWriter(SMIL):
 			self.push()
 			for child in x.GetChildren():
 				self.writenode(child)
+			if self.freezeSyncDict.has_key(x):
+				if not nodeid:
+					nodeid = 'm' + x.GetUID()
+				transOut, trnodeid, trregionid = self.freezeSyncDict[x]
+				self.writeTransition(None, transOut, trnodeid, nodeid)
 			self.pop()
 
 		elif type in ('imm', 'ext', 'brush'):
@@ -472,9 +487,7 @@ class SMILXhtmlSmilWriter(SMIL):
 
 	def writemedianode(self, node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill):
 		pushed, inpar, pardur, regionid = 0, 0, None, ''
-		if not nodeid: 
-			nodeid = 'm' + node.GetUID()
-		
+
 		# write media node region
 		if mtype != 'audio': 
 			pushed, inpar, pardur, regionid  = \
@@ -519,7 +532,13 @@ class SMILXhtmlSmilWriter(SMIL):
 				self.writeTransition(None, transOut, nodeid, regionid)
 			else:
 				self.writeTransition(transIn, None, nodeid, regionid)
-				self.writeTransition(None, transOut, nodeid, regionid)
+				freezeSync = None
+				if fill == 'freeze':
+					freezeSync = self.locateFreezeSyncNode(node)
+				if freezeSync is None:
+					self.writeTransition(None, transOut, nodeid, regionid)
+				else:
+					self.freezeSyncDict[freezeSync] = transOut, nodeid, regionid
 
 		# restore stack
 		while pushed:
@@ -672,6 +691,15 @@ class SMILXhtmlSmilWriter(SMIL):
 						attrlist.append( ('fill', 'freeze') )
 					break
 
+	def locateFreezeSyncNode(self, node):
+		fill = MMAttrdefs.getattr(node, 'fill')
+		if fill != 'freeze':
+			return None
+		# XXX: find freeze sync
+		parent = node.GetParent()
+		if parent.GetType() == 'seq':
+			return parent.GetParent()
+
 	def writeAnchors(self, x, name):
 		hassrc = 0
 		for anchor in x.GetChildren():
@@ -811,6 +839,7 @@ class SMILXhtmlSmilWriter(SMIL):
 	def writelayout(self):
 		x = xmargin = 20
 		y = ymargin = 20
+		border = 0
 		for ch in self.root.GetContext().getviewports():
 			w, h = ch.getPxGeom()
 			name = self.ch2name[ch]
@@ -822,13 +851,20 @@ class SMILXhtmlSmilWriter(SMIL):
 				bgcolor = colors.rcolors[bgcolor]
 			else:
 				bgcolor = '#%02x%02x%02x' % bgcolor
+
+			if border:
+				borderSpec = 'border:%d groove %s;' % (border, bgcolor)
+				w = w + border + border
+				h = h  + border + border
 			style = 'position:absolute;overflow:hidden;left:%d;top:%d;width:%d;height:%d;background-color:%s;' % (x, y, w, h, bgcolor)
+			if border:
+				x = x + border
+				y = y + border
+				style = style + borderSpec
 			self.ch2style[ch] = style
 			#self.fp.write('.reg'+name + ' {' + style + '}\n')
-
 			for sch in ch.GetChildren():
 				self.writeregion(sch, x, y)
-
 			x = x + w + xmargin
 
 	def writeregion(self, ch, dx, dy):
