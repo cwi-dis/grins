@@ -212,9 +212,10 @@ class SVGAttr(Animateable):
 from svgpath import PathSeg, SVGPath
 
 class SVGEnum(SVGAttr):
-	def __init__(self, node, attr, val, default=None):
+	def __init__(self, node, attr, val, default = None, enum = None):
 		SVGAttr.__init__(self, node, attr, val, default)
 		self._value = val
+		self._enum = enum
 
 	def getValue(self):
 		if self._value is not None:
@@ -223,6 +224,10 @@ class SVGEnum(SVGAttr):
 
 	def isDefault(self):
 		return self._value is None or self._value == self._default
+
+	def isEnumarated(self):
+		if self._enum is None: return 0
+		return self._value in self._enum
 
 	def isAdditionDefined(self):
 		return 0
@@ -302,12 +307,11 @@ class SVGGEZeroNumber(SVGNumber):
 
 class SVGCount(SVGNumber):
 	def __init__(self, node, attr, str, default=None):
-		SVGAttr.__init__(self, node, attr, str, default)
 		if str == 'indefinite':
-			SVGAttr.__init__(self, node, attr, None, default)
+			SVGNumber.__init__(self, node, attr, None, default)
 			self._value = 'indefinite'
 		else:
-			SVGAttr.__init__(self, node, attr, str, default)
+			SVGNumber.__init__(self, node, attr, str, default)
 			assert self._value is None or self._value>=0, 'SVGCount should be GE to zero'
 
 class SVGNumberList(SVGAttr):
@@ -387,8 +391,6 @@ class SVGLength(SVGAttr):
 		elif self._units is None:
 			return '%s' % ff(self._value)
 		else:	
-			print self._value
-			return ''
 			return '%s%s' % (ff(self._value), self._units)
 
 	def getValue(self, units='px'):
@@ -707,336 +709,127 @@ class SVGTime:
 	def isDefault(self):
 		return self._value == self._default
 
-
-class SyncArc:
-	def __init__(self, node, attrobj):
-		self.node = node
-		self.target = attrobj # SyncVariant target
-
-	def __repr__(self):
-		return '%s.%s -> %s.%s' % (self.node.getTimeType(), self.target._syncevent, self.target._node.getTimeType(), self.target._attr)
-
-	def getScrNode(self):
-		return self.node
-
-	# return type in ('begin', 'end', 'repeat', 'event')
-	def getSrcEvent(self):
-		return self.target._syncevent
-
-	# params is repeat index or dom2event name
-	def getSrcEventParams(self):
-		return self.target._synceventparams
-
-	def getTargetNode(self):
-		return self.target._node
-
-	# return in ('begin', 'end')
-	def getTargetAttr(self):
-		return self.target._attr
-
-	# time t reference timer is self.node's parent timer
-	# the time has to be translated to self.target parent timer
-	def addInstanceTime(self, t, params=None):
-		p1 = self.node.getTimeParent()
-		if p1 is None: p1 = self.node
-		p2 = self.getTargetNode().getTimeParent()
-		if p2 is None: p2 = self.getTargetNode()
-		if p1 != p2:
-			# xxx: for oprimization use common ancestor
-			t = p2.document2simple(p1.simple2document(t))
-		if t != 'unresolved':
-			self.target.addInstanceTime(t, params)
-
-class SyncVariant:
+# 		
+from smiltime import SyncElement
+					
+class SyncElementList:
 	classre = re.compile(syncvalPat + '$')
 	svgunits = ('s', 'ms')
 	defaultunit = 's'
-	def __init__(self, node, attr, str):
-		# target node
-		self._node = node
-
-		# target attr
-		self._attr = attr
-
-		# source node specifiers
-		self._syncbase = None # 'id', 'prev', 'implicit'
-		self._syncbaseparams = None # id when syncbase == 'id' otherwise ignore
-
-		# source node event specifiers
-		self._syncevent = None # 'begin', 'end', 'repeat', 'event', 'implicit'
-
-		# when syncevent=='repeat' synceventparams is the repeat index
-		# when syncevent=='event' synceventparams is the dom2event name
-		self._synceventparams = None 
-
-		# target node offset specifiers
-		self._offset = None # (+|-)? clock-value | implicit-0 | indefinite
-		self._units = None
-
-		# source event instance list
-		self._insttimes = []
-
-		# parse str
-		if str:
-			str = string.strip(str)
-		if not str:
-			return
-		if str == 'indefinite':
-			self._offset = 'indefinite'
-			return
-		mo = self.classre.match(str)
-		if mo is not None:
-			self._syncbase, self._syncevent = mo.group('name'), mo.group('event')
-			i, d = mo.group('int1') or mo.group('int2'), mo.group('dec1') or mo.group('dec3')
-			self._offset = actof(mo.group('sign'), i, d) or 0
-			if self._offset is not None:
-				units = mo.group('units')
-				if units is None:
-					units = self.defaultunit
-				self._units = units
-			else:
-				self._offset = 0
-				self._units = self.defaultunit
-			if self._syncbase is None:
-				self._syncbase = 'implicit'
-			elif self._syncbase != 'prev':
-				self._syncbaseparams = self._syncbase
-				self._syncbase = 'id'
-
-			if self._syncevent is None:
-				self._syncevent = 'implicit'
-			elif self._syncevent not in ('begin', 'end', 'repeat'):
-				self._syncbaseparams = self._syncevent
-				self._syncevent = 'event'
-	
-	def __repr__(self):
-		if self._syncbaseparams is None:
-			base = self._syncbase
-		else:
-			base = '%s(%s)' % (self._syncbase, `self._syncbaseparams`) 
-		if self._synceventparams is None:
-			event = self._syncevent
-		else:
-			base = '%s(%s)' % (self._syncevent, `self._synceventparams`) 
-		return '%s.%s + %s' % (base, event, `self._offset`)
-
-	def setEvent(self, event, params=None):
-		self._syncbase = 'parent'
-
-		# source node event specifiers
-		self._syncevent = event # 'begin', 'end', 'repeat', 'event'
-
-		# when syncevent=='repeat' synceventparams is the repeat index
-		# when syncevent=='event' synceventparams is the dom2event name
-		self._synceventparams = params 
-
-	def setOffset(self, offset, units='s'):
-		self._offset = offset 
-		self._units = units
-		
-	def isEventBased(self):
-		return self._syncevent == 'event'
-			
-	def hasPendingEvents(self):
-		return self._syncevent == 'event' and len(self._insttimes)==0
-
-	def reset(self):
-		self._insttimes = []
-	
-	def addInstanceTime(self, t, params=None):
-		if self._syncevent == 'repeat':
-			if self._synceventparams is None: # repeat
-				self._insttimes.append(t)	
-			elif self._synceventparams == params: # repeat(index)
-				self._insttimes.append(t)	
-		else:
-			self._insttimes.append(t)
-
-	def getOffset(self, units='s'):
-		if self._offset is not None:
-			if self._offset == 'indefinite':
-				return 'indefinite'
-			if self._units == 'ms':
-				val = 0.001*self._offset
-			else:
-				val = self._offset
-			if units == 's':
-				return val
-			return 1000.0*val
-		return self._default
-
-	def createSyncArc(self):
-		if self._syncbase == 'id':
-			src = self._node.getDocument().getElementWithId(self._syncbaseparams)
-			if src:
-				arc = SyncArc(src, self)
-				src.addSyncArc(arc)
-		elif self._syncbase == 'prev':
-			src = self._node.getPrevTimeSibling()
-			if not src:
-				src = self._node.getParent()
-			if src:
-				arc = SyncArc(src, self)
-				src.addSyncArc(arc)
-		elif self._syncbase == 'implicit':
-			if self._syncevent == 'event':
-				arc = SyncArc(self._node, self)
-				self._node.addSyncArc(arc)
-			elif self._attr == 'begin':
-				parent = self._node.getTimeParent()
-				if not parent: return
-				ptype = parent.getTimeType()
-				if ptype == 'par':
-					self._syncbase = 'parent'
-					self._syncevent = 'begin'
-					arc = SyncArc(parent, self)
-					parent.addSyncArc(arc)
-				elif ptype == 'seq':
-					self._syncbase = 'prev'
-					self._syncevent = 'begin'
-					src = self._node.getPrevTimeSibling()
-					if not src:
-						src = self._node.getTimeParent()
-					if src:
-						arc = SyncArc(src, self)
-						src.addSyncArc(arc)
-				elif ptype == 'excl':
-					pass
-
-	def isIndefinite(self):
-		return self._offset == 'indefinite'
-
-	def getValueList(self):
-		offset = self.getOffset()
-		if offset == 'indefinite':
-			return []
-		L = []
-		for val in self._insttimes:
-			L.append(val+offset)
-		return L
-					
-class SyncVariantList:
 	def __init__(self, node, attr, str, default=None):
 		self._node = node
 		self._attr = attr
-		self._syncvarslist = []
+		self._syncslist = []
 		self._default = default
 		self._explicit = 0
+		self._dominsttimes = []
+		self._visited = 0
 		if str:
 			str = string.strip(str)
 		if not str:
 			return
 		synclist = string.split(str, ';')
 		for syncstr in synclist:
-			if syncstr:
-				self._syncvarslist.append(SyncVariant(node, attr, syncstr))
-		self._explicit = len(self._syncvarslist) != 0	
+			self._syncslist.append(self.createSyncElement(syncstr))
+		self._explicit = len(self._syncslist) != 0	
+
+	def createSyncElement(self, str):
+		e = SyncElement(self._node, self._attr)
+		if str:
+			str = string.strip(str)
+		if not str:
+			pass
+		elif str == 'indefinite':
+			e._offset = 'indefinite'
+		else:
+			mo = self.classre.match(str)
+			if mo is not None:
+				e._syncbase, e._baseevent = mo.group('name'), mo.group('event')
+				i, d = mo.group('int1') or mo.group('int2'), mo.group('dec1') or mo.group('dec3')
+				e._offset = actof(mo.group('sign'), i, d) or 0
+				e._units = mo.group('units')
+			else:
+				assert 0, 'syntax error %s' % str
+		return e
+
+	def reinterpret(self):
+		for syncel in self._syncslist:
+			syncel.reinterpret()
+
+	def reset(self):
+		self._dominsttimes = []
+		for syncel in self._syncslist:
+			syncel.reset()
+
+	def resetEvents(self, exclbegin=None):
+		# reset dom events
+		if exclbegin is not None and exclbegin in self._dominsttimes:
+			self._dominsttimes = [exclbegin,]
+		else:
+			self._dominsttimes = []
+		# reset sync events
+		for e in self._syncslist:
+			if e._baseevent in ('event', 'repeat'):
+				e.resetEvents(exclbegin)
+
+	def syncInstanceTimes(self):
+		for e in self._syncslist:
+			e.syncInstanceTimes()
+
+	def resetSyncBaseTimes(self, root):
+		for e in self._syncslist:
+			e.resetSyncBaseTimes(root)
+
+	def append(self, e=None):
+		self._syncslist.append(e)
+	
+	# from dom method calls
+	def addInstanceTime(self, t):
+		if self._visited: return
+		self._visited = 1
+		self._dominsttimes.append(t)
+		if self._node.isSyncSensitive(self._attr):
+			self._node.syncUpdate(self._attr)
+		self._visited = 0
 
 	def __repr__(self):
-		s = '%s =\"' % self._attr
-		for syncvar in self._syncvarslist:
-			s = s + repr(syncvar) + '; '
-		s = s[:-2] + '\"'
+		#s = '%s =\"' % self._attr
+		s = '['
+		for e in self._syncslist:
+			s = s + repr(e) + ', '
+		s = s[:-2] + ']'
 		return s
-					
-	def reset(self):
-		for syncvar in self._syncvarslist:
-			syncvar.reset()
 
 	def isEmpty(self):
-		return len(self._syncvarslist) == 0
+		return len(self._syncslist) == 0
 
 	def isExplicit(self):
 		return self._explicit
 
 	def createSyncArcs(self):
-		for syncvar in self._syncvarslist:
-			syncvar.createSyncArc()
+		for e in self._syncslist:
+			e.createSyncArc()
 
-	def getValueList(self):
+	def timesort(self, list):
+		nl = []
+		il = []
+		ul = []
+		for e in list:
+			if e == 'unresolved': ul.append('unresolved')
+			elif e == 'indefinite': il.append('indefinite')
+			else: nl.append(e)
+		nl.sort()
+		return nl + il + ul
+
+	def evaluate(self):
 		L = []
-		for syncvar in self._syncvarslist:
-			L = L + syncvar.getValueList()
-		L.sort()
-		for syncvar in self._syncvarslist:
-			if syncvar.isIndefinite():
-				L.append('indefinite')
-		return L
+		for e in self._syncslist:
+			L = L + e.evaluate()
+		if self._dominsttimes:
+			L = L + self._dominsttimes
+		return self.timesort(L)
 
-	def beginIteration(self):
-		L = []
-		for syncvar in self._syncvarslist:
-			L = L + syncvar.getValueList()
-		L.sort()
-		for syncvar in self._syncvarslist:
-			if syncvar.isIndefinite():
-				L.append('indefinite')
-		self._ilist = L[:]
-		self._iindex = 0
-
-	def hasPendingEvents(self):
-		for syncvar in self._syncvarslist:
-			if syncvar.hasPendingEvents():
-				return 1
-		return 0
-
-	def getNextGT(self, after):
-		if not self._ilist:
-			return None
-		n = len(self._ilist)
-		for i in range(self._iindex, n):
-			v = self._ilist[i]
-			self._iindex = i + 1
-			if v == 'indefinite':
-				if after != 'indefinite':
-					return 'indefinite'
-				else:
-					return None
-			elif after == 'indefinite':
-				return None
-			elif after == '-infinity':
-				return v
-			elif v > after:
-				return v
-		return None
-
-	def getFirstGE(self, after):
-		self.beginIteration()
-		return self.getNextGE(after)
-
-	def getNextGE(self, after):
-		if not self._ilist:
-			return None
-		n = len(self._ilist)
-		for i in range(self._iindex, n):
-			v = self._ilist[i]
-			self._iindex = i + 1
-			if v == 'indefinite':
-				return 'indefinite'
-			elif after == 'indefinite':
-				return None
-			elif after == '-infinity':
-				return v
-			elif v >= after:
-				return v
-		return None
-	
-	# XXX: temp test
-	def getValue(self):
-		self.beginIteration()
-		return self.getNextGT('-infinity')
-
-	def addSync(self, src, event, evparams=None, offset=0):
-		varlist = self._syncvarslist
-		var = SyncVariant(self._node, self._attr, None)
-		var.setEvent(event, evparams)
-		var.setOffset(offset)
-		varlist.append(var)
-		arc = SyncArc(src, var)
-		src.addSyncArc(arc)
-		return arc
-
-			
+		
 # fill:none; stroke:blue; stroke-width: 20
 class SVGStyle:
 	def __init__(self, node, attr, str, default=None):
@@ -1059,6 +852,11 @@ class SVGStyle:
 		for prop, val in self._styleprops.items():
 			if val is not None and val != 'none':
 				self._styleprops[prop] = CreateSVGAttr(self._node, prop, val)
+		# always pre-create visibility attr
+		prop, val = 'visibility', 'visible'
+		vis = self._styleprops.get(prop)
+		if vis is None:
+			self._styleprops[prop] = CreateSVGAttr(self._node, prop, val)
 
 	def __repr__(self):
 		s = ''
@@ -1461,7 +1259,7 @@ SVGAttrdefs = {'accent-height': (SVGHeight, None),
 	'font-size-adjust': (stringtype, None),
 	'font-stretch': (stringtype, None),
 	'font-style': (stringtype, None),
-	'font-variant': (stringtype, None),
+	'font-Var': (stringtype, None),
 	'font-weight': (stringtype, None),
 	'format': (stringtype, None),
 	'fx': (stringtype, None),
@@ -1607,7 +1405,7 @@ SVGAttrdefs = {'accent-height': (SVGHeight, None),
 	'vert-origin-y': (stringtype, None),
 	'viewBox': (SVGNumberList, None),
 	'viewTarget': (stringtype, None),
-	'visibility': (('hidden', 'visible'), None),
+	'visibility': (('hidden', 'visible'), 'visible'),
 	'width': (SVGWidth, None),
 	'widths': (stringtype, None),
 	'word-spacing': (stringtype, None),
@@ -1638,12 +1436,12 @@ SVGAttrdefs = {'accent-height': (SVGHeight, None),
 	'additive': (('sum', 'replace'), 'replace'),
 	'attributeName': (stringtype, None),
 	'attributeType': (('CSS', 'XML', 'auto'), 'auto'),
-	'begin': (SyncVariantList, None),
+	'begin': (SyncElementList, None),
 	'by': (stringtype, None),
 	'calcMode': (('linear', 'paced', 'discrete', 'spline'), 'linear'),
 	'animateMotion.calcMode': (('linear', 'paced', 'discrete', 'spline'), 'paced'),
 	'dur': (SVGTime, None),
-	'end': (SyncVariantList, None),
+	'end': (SyncElementList, None),
 	'from': (stringtype, None),
 	'keyPoints': (stringtype, None),
 	'keySplines': (stringtype, None),
@@ -1662,12 +1460,17 @@ SVGAttrdefs = {'accent-height': (SVGHeight, None),
 	'accelerate': (SVGNumber, 0.0),
 	'decelerate': (SVGNumber, 0.0),
 	'autoReverse': (SVGBoolean, 0),
+	'timeContainer': (('par', 'seq', 'excl', 'none'), 'none'),
+	'timeAction': (('intrinsic', 'display', 'visibility', 'style', 'class', 'none'), 'none'),
+	'endsync': (('first', 'last', 'all', 'media', '%id'), 'last'),
+	'restart': (('always', 'whenNotActive', 'never', 'default'), 'always'), # excl default for now
+	'smil:fill': (('remove', 'freeze'), 'remove'),
 	'animateTransform.type': (('translate', 'rotate', 'scale', 'skewX', 'skewY'), 'translate'),}
 
 # add qualified fill smil attr
 #smilfillenum = (('remove', 'freeze', 'hold', 'transition', 'auto', 'default'), 'remove')
 svgfillenum = (('remove', 'freeze'), 'remove')
-for tag in ('animate','set','animateMotion','animateColor','animateTransform',):
+for tag in ('animate','set','animateMotion','animateColor','animateTransform', 'par', 'seq', 'excl'):
 	qualifiedName = '%s.fill' % tag
 	SVGAttrdefs[qualifiedName] = svgfillenum
 
@@ -1681,12 +1484,16 @@ def CreateSVGAttr(node, name, strval):
 		print 'no spec for', name, strval
 		return strval
 	typeOrClassInfo, defval = info
+
 	if typeOrClassInfo == stringtype:
 		return strval
+
 	elif type(typeOrClassInfo) == type(('',)):
 		if strval is not None and strval not in typeOrClassInfo:
 			strval = None
-		return SVGEnum(node, name, strval, defval)
+		return SVGEnum(node, name, strval, typeOrClassInfo, defval)
+	
+	return typeOrClassInfo(node, name, strval, defval)
 	try:
 		return typeOrClassInfo(node, name, strval, defval)
 	except:
