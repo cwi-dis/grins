@@ -24,8 +24,6 @@ not_xhtml_time_attrs = ('min', 'max',  'customTest', 'fillDefault',
 	'showBackground',
 	)
 
-not_xhtml_time_attrs_values = ('prev.', '.activateEvent', 'accessKey')
-
 
 #
 #	XHTML+TIME DTD 
@@ -341,32 +339,28 @@ class SMILHtmlTimeWriter(SMIL):
 
 		for name, func in attrs:
 			value = func(self, x)
-			if value and attributes.has_key(name) and value != attributes[name]:
-				if name in not_xhtml_time_attrs:
-					pass # self.showunsupported(name)
-				for v in not_xhtml_time_attrs_values:
-					if string.find(value, v)>=0:
-						if v == '.activateEvent':
-							value = string.split(value, '.')[0] + '.click'
-						else:
-							pass # self.showunsupported(v)
-				
+			if value and attributes.has_key(name) and value != attributes[name]:				
+
 				# endsync translation
 				if name == 'endsync' and value not in ('first' , 'last'):
+					name = 'end'
 					if value[:3] == 'id(':
-						name = 'end'
 						value = scriptid(value[3:-1]) + '.end'
 					else:
-						name = 'end'
 						value = scriptid(value) + '.end'
 
-				# scriptify ids of known refs
-				if value: value = scriptidref(value)
-
-				# 
-				if name == 'end' and value == 'activateEvent':
+				# activateEvent exception
+				elif name == 'end' and value == 'activateEvent':
 					name = 'onClick'
-					value = 'endElement()'
+					value = 'endElement();'
+
+				# for the rest
+				else:
+					# scriptify ids of known refs
+					if value: value = scriptidref(value)
+				
+					# convert event refs
+					if value: value = event2xhtml(value)
 
 				if interior:
 					if name == 'id':
@@ -806,10 +800,9 @@ class SMILHtmlTimeWriter(SMIL):
 			href = a2
 
 		if href[:1] == '#':
-			action = scriptid(href[1:])
-			attrs.append(('href', '#'+action))
-			action = action + '.beginElement()'
-			attrs.append(('onClick', action))
+			withinhref = scriptid(href[1:])
+			attrs.append(('href', '#'+withinhref))
+			attrs.append(('onClick', withinhref + '.beginElement();'))
 		else:
 			attrs.append(('href', href))
 
@@ -1038,8 +1031,7 @@ def scriptid(name):
 		l.append(ch)
 	return string.join(l, '')
 
-smil20suffix = ('.begin', '.end', '.activateEvent',)
-xhtmlsuffix = ('.click', '.beginElement', '.endElement')
+smil20suffix = ('.begin', '.end', '.activateEvent', '.beginEvent', '.endEvent')
 
 def scriptidref(value):
 	if not value: return value
@@ -1047,12 +1039,18 @@ def scriptidref(value):
 		ix = string.find(value, suffix)
 		if ix>0: 
 			return scriptid(value[:ix]) + value[ix:]
-	for suffix in xhtmlsuffix:	
-		ix = string.find(value, suffix)
-		if ix>0: 
-			return scriptid(value[:ix]) + value[ix:]
 	return value
 
+smil20event2xhtml = {'.activateEvent':'.click', '.beginEvent':'.begin', '.endEvent':'.end'}
+def event2xhtml(value):
+	if not value: return value
+	for ev in smil20event2xhtml.keys():	
+		l = string.split(value, ev)
+		if len(l)==2:
+			return l[0]+smil20event2xhtml[ev] + l[1]
+	return value
+		
+	
 #
 #	Transitions
 # 
