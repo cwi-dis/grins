@@ -19,6 +19,7 @@ allinfo_cache = FileCache.FileCache(getfullinfo)
 
 def get(filename):
 	nframes, framerate, markers = allinfo_cache.get(filename)
+	if nframes == 0: nframes = framerate
 	duration = float(nframes) / framerate
 	return duration
 
