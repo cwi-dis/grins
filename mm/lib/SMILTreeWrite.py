@@ -29,6 +29,7 @@ NSGRiNSprefix = 'GRiNS'
 NSRP9prefix = 'rn'
 NSQTprefix = 'qt'
 NSPSS4prefix = 'pss4'
+NSPSS5prefix = 'pss5'
 
 # This string is written at the start of a SMIL file.
 ##encoding = ' encoding="ISO-8859-1"'
@@ -40,6 +41,7 @@ xmlnsGRiNS = 'xmlns:%s' % NSGRiNSprefix
 xmlnsRP9 = 'xmlns:%s' % NSRP9prefix
 xmlnsQT = 'xmlns:%s' % NSQTprefix
 xmlnsPSS4 = 'xmlns:%s' % NSPSS4prefix
+xmlnsPSS5 = 'xmlns:%s' % NSPSS5prefix
 
 
 
@@ -48,10 +50,10 @@ xmlnsPSS4 = 'xmlns:%s' % NSPSS4prefix
 cancel = 'cancel'
 
 def WriteFile(root, filename, grinsExt = 1, qtExt = features.EXPORT_QT in features.feature_set,
-	      rpExt = features.EXPORT_REAL in features.feature_set, pss4Ext = 0, copyFiles = 0, convertfiles = 1, convertURLs = 0,
+	      rpExt = features.EXPORT_REAL in features.feature_set, pssExt = None, copyFiles = 0, convertfiles = 1, convertURLs = 0,
 	      evallicense = 0, progress = None, prune = 0, smil_one = 0, addattrs = 0):
 	try:
-		writer = SMILWriter(root, None, filename, grinsExt = grinsExt, qtExt = qtExt, rpExt = rpExt, pss4Ext = pss4Ext, copyFiles = copyFiles, convertfiles = convertfiles, convertURLs = convertURLs, evallicense = evallicense, progress = progress, prune = prune, smil_one = smil_one, addattrs = addattrs)
+		writer = SMILWriter(root, None, filename, grinsExt = grinsExt, qtExt = qtExt, rpExt = rpExt, pssExt = pssExt, copyFiles = copyFiles, convertfiles = convertfiles, convertURLs = convertURLs, evallicense = evallicense, progress = progress, prune = prune, smil_one = smil_one, addattrs = addattrs)
 	except Error, msg:
 		from windowinterface import showmessage
 		showmessage(msg, mtype = 'error')
@@ -74,14 +76,14 @@ def WriteFile(root, filename, grinsExt = 1, qtExt = features.EXPORT_QT in featur
 
 import FtpWriter
 def WriteFTP(root, filename, ftpparams, wftpparams, grinsExt = 1, qtExt = features.EXPORT_QT in features.feature_set,
-	     rpExt = features.EXPORT_REAL in features.feature_set, pss4Ext = 0, copyFiles = 0, convertfiles = 1, convertURLs = 0,
+	     rpExt = features.EXPORT_REAL in features.feature_set, pssExt = None, copyFiles = 0, convertfiles = 1, convertURLs = 0,
 	     evallicense = 0, progress = None, prune = 0, smil_one = 0, weburl = None):
 	host, user, passwd, dir = ftpparams
 	try:
 		conn = FtpWriter.FtpConnection(host, user=user, passwd=passwd, dir=dir)
 		ftp = conn.Writer(filename, ascii=1)
 		try:
-			writer = SMILWriter(root, ftp, filename, tmpcopy = 1, grinsExt = grinsExt, qtExt = qtExt, rpExt = rpExt, pss4Ext = pss4Ext, copyFiles = copyFiles, convertfiles = convertfiles, convertURLs = convertURLs, evallicense = evallicense, progress = progress, prune = prune, smil_one = smil_one, weburl = weburl)
+			writer = SMILWriter(root, ftp, filename, tmpcopy = 1, grinsExt = grinsExt, qtExt = qtExt, rpExt = rpExt, pssExt = pssExt, copyFiles = copyFiles, convertfiles = convertfiles, convertURLs = convertURLs, evallicense = evallicense, progress = progress, prune = prune, smil_one = smil_one, weburl = weburl)
 		except Error, msg:
 			from windowinterface import showmessage
 			showmessage(msg, mtype = 'error')
@@ -347,7 +349,7 @@ class BaseSMILWriter:
 			self.__ignoring = 1
 			return
 		hasPSS4prefix = (self.__stack or 0) and self.__stack[-1][5]
-		if not hasPSS4prefix and self.pss4Ext:
+		if not hasPSS4prefix and self.pssExt == 'pss4':
 			for attr, val in attrs:
 				if attr == xmlnsPSS4:
 					hasPSS4prefix = 1
@@ -357,6 +359,20 @@ class BaseSMILWriter:
 					hasPSS4prefix = 1
 					break
 		if not hasPSS4prefix and tag[:len(NSPSS4prefix)] == NSPSS4prefix:
+			# ignore this tag
+			self.__ignoring = 1
+			return
+		hasPSS5prefix = (self.__stack or 0) and self.__stack[-1][6]
+		if not hasPSS5prefix and self.pssExt == 'pss5':
+			for attr, val in attrs:
+				if attr == xmlnsPSS5:
+					hasPSS5prefix = 1
+					break
+				if attr[:len(NSPSS5prefix)] == NSPSS5prefix:
+					attrs.insert(0, (xmlnsPSS5, PSS5ns))
+					hasPSS5prefix = 1
+					break
+		if not hasPSS5prefix and tag[:len(NSPSS5prefix)] == NSPSS5prefix:
 			# ignore this tag
 			self.__ignoring = 1
 			return
@@ -387,15 +403,17 @@ class BaseSMILWriter:
 				continue
 			if attr[:len(NSPSS4prefix)] == NSPSS4prefix and not hasPSS4prefix:
 				continue
+			if attr[:len(NSPSS5prefix)] == NSPSS5prefix and not hasPSS5prefix:
+				continue
 			write(' %s=%s' % (attr, nameencode(val)))
 		self.__isopen = 1
-		self.__stack.append((tag, x, hasGRiNSprefix, hasQTprefix, hasRP9prefix, hasPSS4prefix))
+		self.__stack.append((tag, x, hasGRiNSprefix, hasQTprefix, hasRP9prefix, hasPSS4prefix, hasPSS5prefix))
 
 class SMILWriter(SMIL, BaseSMILWriter, SMILWriterBase):
 	def __init__(self, node, fp, filename, grinsExt = 1,
 		     rpExt = features.EXPORT_REAL in features.feature_set,
 		     qtExt = features.EXPORT_QT in features.feature_set,
-		     pss4Ext = 0,
+		     pssExt = None,
 		     copyFiles = 0, evallicense = 0, tmpcopy = 0, progress = None,
 		     convertURLs = 0, convertfiles = 1, set_char_pos = 0, prune = 0,
 		     smil_one = 0, addattrs = 0, weburl = None):
@@ -408,7 +426,7 @@ class SMILWriter(SMIL, BaseSMILWriter, SMILWriterBase):
 		self.grinsExt = grinsExt
 		self.qtExt = qtExt
 		self.rpExt = rpExt
-		self.pss4Ext = pss4Ext
+		self.pssExt = pssExt
 		self.evallicense = evallicense
 		self.prune = prune
 		self.progress = progress
@@ -427,7 +445,8 @@ class SMILWriter(SMIL, BaseSMILWriter, SMILWriterBase):
 		self.uses_grins_namespace = grinsExt
 		self.uses_qt_namespace = self.qtExt and self.checkQTattrs()
 		self.uses_rp_namespace = self.rpExt
-		self.uses_pss4_namespace = self.pss4Ext
+		self.uses_pss4_namespace = self.pssExt == 'pss4'
+		self.uses_pss5_namespace = self.pssExt == 'pss5'
 		self.force_smil_1 = smil_one
 		if smil_one:
 			self.smilboston = 0
@@ -541,6 +560,9 @@ class SMILWriter(SMIL, BaseSMILWriter, SMILWriterBase):
 		if self.uses_pss4_namespace and self.smilboston:
 			attrlist.append((xmlnsPSS4, PSS4ns))
 			attrlist.append(('systemRequired', NSPSS4prefix))
+		if self.uses_pss5_namespace and self.smilboston:
+			attrlist.append((xmlnsPSS5, PSS5ns))
+			attrlist.append(('systemRequired', NSPSS5prefix))
 		if self.smilboston:
 			# test attributes are not allowed on the body element,
 			# but they are allowed on the smil element, so that's
@@ -549,6 +571,9 @@ class SMILWriter(SMIL, BaseSMILWriter, SMILWriterBase):
 			if sysreq:
 				for i in range(len(sysreq)):
 					if sysreq[i] == PSS4ns and self.uses_pss4_namespace:
+						# already dealt with
+						continue
+					if sysreq[i] == PSS5ns and self.uses_pss5_namespace:
 						# already dealt with
 						continue
 					attrlist.append(('xmlns:ext%d' % i, sysreq[i]))
@@ -781,8 +806,6 @@ class SMILWriter(SMIL, BaseSMILWriter, SMILWriterBase):
 		title = ch.get('title')
 		if title:
 			attrlist.append(('title', title))
-		elif self.ch2name[ch] != ch.name:
-			attrlist.append(('title', ch.name))
 
 		for name in ['left', 'width', 'right', 'top', 'height', 'bottom']:
 			value = ch.GetAttrDef(name, None)

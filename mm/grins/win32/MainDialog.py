@@ -79,7 +79,7 @@ class MainDialog:
 
 	def dropeffect(self, dummy, window, event, params):
 		x,y,filename=params
-		url=self.__path2url(filename)
+		url=MMurl.pathname2url(filename)
 		import urlcache, windowinterface
 		mimetype = urlcache.mimetype(url)
 		if mimetype in ('application/x-grins-project', 'application/smil', 'application/smil+xml', 'application/x-grins-cmif'):
@@ -89,7 +89,7 @@ class MainDialog:
 
 	def dropfile(self, arg, window, event, value):
 		x,y,filename=value
-		url=self.__path2url(filename)
+		url=MMurl.pathname2url(filename)
 		import urlcache, windowinterface
 		mimetype = urlcache.mimetype(url)
 		if mimetype in ('application/x-grins-project', 'application/smil', 'application/smil+xml', 'application/x-grins-cmif'):
@@ -108,13 +108,13 @@ class MainDialog:
 ##		import features
 ##		if not features.lightweight:
 ##			filetypes.append('application/x-grins-cmif')
-		windowinterface.FileDialog('Open file', '.', filetypes, '',
+		windowinterface.FileDialog('Open Document', '.', filetypes, '',
 					   self.__openfile_done, None, 1,
 					   parent = f)
 
 	def __openfile_done(self, filename):
 		# End of OPENFILE menu command. Open the file (as url)
-		url = self.__path2url(filename)
+		url = MMurl.pathname2url(filename)
 		if url:
 			self.openURL_callback(url)
 
@@ -125,7 +125,7 @@ class MainDialog:
 			else:
 				url = MMurl.canonURL(value)
 		else:
-			url = self.__path2url(value)
+			url = MMurl.pathname2url(value)
 		if url:
 			self.openURL_callback(url)
 		
@@ -160,35 +160,13 @@ class MainDialog:
 				dir, file = os.path.split(file)
 		f=windowinterface.getmainwnd()
 		filetypes = ['/All presentations', 'application/smil', 'application/x-grins-project', 'application/x-grins-binary-project']
-		windowinterface.FileDialog('Open file', dir, filetypes, file,
+		windowinterface.FileDialog('Open Document', dir, filetypes, file,
 					   self.__filecvt, None, 1,
 					   parent = f)
 
 	def __filecvt(self, filename):
-		text=self.__path2url(filename)
+		text=MMurl.pathname2url(filename)
 		self.__text.settext(text)
-
-	def __path2url(self, filename):
-		# this method is called also from the drop stuff
-		# so check for UNC names before calling pathname2url
-		# otherwise it will fail.
-		import os
-		if os.name != 'ce':
-			import longpath
-			filename = longpath.short2longpath(filename)
-##		if os.path.isabs(filename):
-##			cwd = os.getcwd()
-##			if os.path.isdir(filename):
-##				dir, file = filename, os.curdir
-##			else:
-##				dir, file = os.path.split(filename)
-##			# XXXX maybe should check that dir gets shorter!
-##			while len(dir) > len(cwd):
-##				dir, f = os.path.split(dir)
-##				file = os.path.join(f, file)
-##			if dir == cwd:
-##				filename = file
-		return MMurl.pathname2url(filename)
 
 	if __debug__:
 		def console_callback(self):

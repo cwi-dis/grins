@@ -116,7 +116,7 @@ class MainDialog:
 		import windowinterface
 		f=windowinterface.getmainwnd()
 		filetypes = ['/All presentations', 'application/x-grins-project', 'application/smil']
-		windowinterface.FileDialog('Open file', 'Desktop', filetypes, '',
+		windowinterface.FileDialog('Open Document', 'Desktop', filetypes, '',
 					   self.__openfile_done, None, 1,
 					   parent = f)
 
@@ -219,19 +219,20 @@ class MainDialog:
 ##				filename = file
 		return MMurl.pathname2url(filename)
 
-	def console_callback(self):
-		import win32ui,win32con
-		cwnd=win32ui.GetAfx().GetMainWnd()
-		if cwnd.IsWindowVisible():
-			cwnd.ShowWindow(win32con.SW_HIDE)
-		else:
-			cwnd.ShowWindow(win32con.SW_RESTORE)
-			cwnd.ShowWindow(win32con.SW_SHOW)
-			cwnd.BringWindowToTop()
+	if __debug__:
+		def console_callback(self):
+			import win32ui,win32con
+			cwnd=win32ui.GetAfx().GetMainWnd()
+			if cwnd.IsWindowVisible():
+				cwnd.ShowWindow(win32con.SW_HIDE)
+			else:
+				cwnd.ShowWindow(win32con.SW_RESTORE)
+				cwnd.ShowWindow(win32con.SW_SHOW)
+				cwnd.BringWindowToTop()
 
-	def scheddebug_callback(self):
-		import Scheduler
-		Scheduler.debugevents = not Scheduler.debugevents
+		def scheddebug_callback(self):
+			import Scheduler
+			Scheduler.debugevents = not Scheduler.debugevents
 
 	def help_contents_callback(self, params=None):
 		import Help
