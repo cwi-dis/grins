@@ -24,37 +24,10 @@ import mw_resources
 import mw_menucmd
 import mw_windows
 
-#
-# The cursors we need
-#
-_arrow = Qd.qd.arrow
-_watch = Qd.GetCursor(4).data
-_hand = None
-_channel = None
-_link = None
-_resize = None
-CURSORS={}
-
 CMDSET_WINDOW, CMDSET_GROUP, CMDSET_GLOBAL = 0, 1, 2
 
 def _beep():
 	MacOS.SysBeep()
-
-def _init_cursors():
-	global _hand, _channel, _link, _resize, CURSORS
-	_hand = Qd.GetCursor(512).data
-	_channel = Qd.GetCursor(513).data
-	_link = Qd.GetCursor(514).data
-	_resize = Qd.GetCursor(515).data
-	
-	# These funny names are the X names for the cursors, used by the
-	# rest of the code
-	CURSORS={
-		'watch': _watch,
-		'stop': _channel,
-		'channel': _channel,
-		'link': _link
-	}
 
 #
 # Conversion factors for mm->pixels
@@ -451,7 +424,7 @@ class _Event:
 class _Toplevel(_Event):
 	def __init__(self):
 		_Event.__init__(self)
-		_init_cursors()
+		self._init_cursors()
 		self._clearall()
 		self._initmenu()
 		
@@ -774,10 +747,33 @@ class _Toplevel(_Event):
 	#
 	# Cursor handling.
 	#
-	
+	def _init_cursors(self):
+		#
+		# The default cursor is either arrow or hand, and the resize cursor
+		# is used when hovering over the resize area.
+		#
+		self._arrow_cursor = Qd.qd.arrow
+		self._hand_cursor = Qd.GetCursor(512).data
+		self._resize_cursor = Qd.GetCursor(515).data
+		
+		watch = Qd.GetCursor(4).data
+		channel = Qd.GetCursor(513).data
+		link = Qd.GetCursor(514).data
+		
+		#
+		# These funny names are the X names for the cursors, used by the
+		# rest of the code
+		#
+		self._cursor_dict={
+			'watch': watch,
+			'stop': channel,
+			'channel': channel,
+			'link': link
+		}
+
 	def setcursor(self, cursor):
-		if CURSORS.has_key(cursor):
-			data = CURSORS[cursor]
+		if self._cursor_dict.has_key(cursor):
+			data = self._cursor_dict[cursor]
 			Qd.SetCursor(data)
 			self._cursor_is_default = 0
 		else:
@@ -795,7 +791,7 @@ class _Toplevel(_Event):
 			raise 'kaboo kaboo'
 		if not self._cursor_is_default:
 			return
-		wtd_cursor = _arrow
+		wtd_cursor = self._arrow_cursor
 		wid = Win.FrontWindow()
 		if self._wid_to_window.has_key(wid):
 			win = self._wid_to_window[wid]
@@ -806,9 +802,9 @@ class _Toplevel(_Event):
 			partcode, mwid = Win.FindWindow(where)
 			if not option_pressed and wid == mwid and \
 			   partcode == Windows.inGrow:
-				wtd_cursor = _resize
+				wtd_cursor = self._resize_cursor
 			elif win._mouse_over_button(lwhere):
-				wtd_cursor = _hand
+				wtd_cursor = self._hand_cursor
 		if wtd_cursor != self._cur_cursor: 
 			Qd.SetCursor(wtd_cursor)
 			self._cur_cursor = wtd_cursor
@@ -836,7 +832,7 @@ class _Toplevel(_Event):
 		return 8
 
 	def getsize(self):
-		return toplevel._mscreenwidth, toplevel._mscreenheight
+		return self._mscreenwidth, self._mscreenheight
 
 	def _getmbarheight(self):
 		return _screen_top_offset
