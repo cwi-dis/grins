@@ -550,11 +550,19 @@ no)	;;
 				;;
 			esac
 		done &&
-		install -m 0444 -idb $dist.relnotes.$help -src mm/Build/unix/relnotes.html -F /usr/local/grins -O relnotes.html &&
+		install -m 0444 -idb $dist.relnotes.relnotes -src mm/Build/unix/relnotes.html -F /usr/local/grins -O relnotes.html &&
 		case $dist in
 		grinsed)
 			install -m 0444 -idb $dist.help.documentation -src mm/Build/common/tutorials.pdf -F /usr/local/grins -O tutorials.pdf &&
 			install -m 0444 -idb $dist.sw.$help -src mm/.cmif_editors -F /usr/local/grins -O .cmif_editors &&
+			for f in mm/GRiNS-Icons/*
+			do
+				case "${f##*/}" in
+				*.tiff)
+					install -m 0444 -idb $dist.sw.$help -src $f -F /usr/local/grins/GRiNS-Icons ${f##*/}
+					;;
+				esac
+			done &&
 			for f in mm/Templates/*
 			do
 				case "${f##*/}" in
