@@ -158,7 +158,7 @@ CAPTION "New screen"
 FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "Screen name:",IDC_STATIC,7,8,45,8
-    EDITTEXT        IDC_EDIT1,51,7,128,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT1,53,7,126,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,59,34,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,129,34,50,14
 END
@@ -884,10 +884,10 @@ STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
     GROUPBOX        "System properties",IDC_GROUP1,6,5,287,123
-    LTEXT           "",IDC_11,12,19,96,8
+    LTEXT           "Bitrate:",IDC_11,12,19,96,8
     COMBOBOX        IDC_12,109,17,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "",IDC_21,12,35,96,8
+    LTEXT           "Captions:",IDC_21,12,35,96,8
     CONTROL         "Default",IDC_22,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
                     WS_TABSTOP,116,35,40,10
     CONTROL         "on",IDC_23,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,172,
@@ -897,8 +897,8 @@ BEGIN
     GROUPBOX        "",IDC_GROUP1,109,29,174,17
     COMBOBOX        IDC_32,109,49,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "",IDC_31,12,51,96,8
-    LTEXT           "",IDC_41,12,67,96,8
+    LTEXT           "Language:",IDC_31,12,51,96,8
+    LTEXT           "Overdub or Caption:",IDC_41,12,67,96,8
     CONTROL         "Default",IDC_42,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
                     WS_TABSTOP,116,67,40,10
     CONTROL         "caption",IDC_43,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
@@ -906,11 +906,11 @@ BEGIN
     CONTROL         "overdub",IDC_44,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
                     228,67,42,10
     GROUPBOX        "",IDC_GROUP1,109,61,174,17
-    LTEXT           "",IDC_51,12,83,96,8
+    LTEXT           "Required:",IDC_51,12,83,96,8
     EDITTEXT        IDC_52,109,81,174,12,ES_AUTOHSCROLL
-    LTEXT           "",IDC_61,12,99,96,8
+    LTEXT           "Screen depth:",IDC_61,12,99,96,8
     EDITTEXT        IDC_62,109,97,174,12,ES_AUTOHSCROLL
-    LTEXT           "",IDC_71,12,115,96,8
+    LTEXT           "Screen size:",IDC_71,12,115,96,8
     EDITTEXT        IDC_72,109,113,174,12,ES_AUTOHSCROLL
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
 END
@@ -920,19 +920,19 @@ STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
     GROUPBOX        "",IDC_GROUP1,6,5,287,81
-    LTEXT           "",IDC_11,12,19,96,8
+    LTEXT           "Bitrate:",IDC_11,12,19,96,8
     COMBOBOX        IDC_12,109,17,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "",IDC_21,12,35,96,8
+    LTEXT           "Captions:",IDC_21,12,35,96,8
     CONTROL         "on",IDC_22,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
                     WS_TABSTOP,116,35,24,10
     CONTROL         "off",IDC_23,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,196,
                     35,24,10
     GROUPBOX        "",IDC_GROUP1,109,29,174,17
-    LTEXT           "",IDC_31,12,51,96,8
+    LTEXT           "Language:",IDC_31,12,51,96,8
     COMBOBOX        IDC_32,109,49,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "",IDC_41,12,67,96,8
+    LTEXT           "Overdub or Caption:",IDC_41,12,67,96,8
     CONTROL         "caption",IDC_42,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
                     WS_TABSTOP,116,67,39,10
     CONTROL         "overdub",IDC_43,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
@@ -1331,6 +1331,53 @@ BEGIN
     LTEXT           "",IDC_ATTR_INFO,6,132,288,18,SS_SUNKEN
 END
 
+IDD_EDITATTR_ANCHOR1 DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LISTBOX         IDC_ALIST,171,2,83,44,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "New...",IDC_NEW,257,2,36,12
+    PUSHBUTTON      "Rename...",IDC_RENAME,257,17,36,12
+    PUSHBUTTON      "Delete",IDC_DELETE,257,33,36,12
+    GROUPBOX        "Anchor",IDC_GROUP1,170,50,124,80
+    LTEXT           "Type:",IDC_41,177,62,19,8
+    COMBOBOX        IDC_ATYPE,200,60,90,49,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Coordinates",IDC_11,173,74,117,36
+    LTEXT           "x",IDC_GROUP1,179,82,8,8
+    EDITTEXT        IDC_12,178,91,24,14,ES_AUTOHSCROLL
+    LTEXT           "y",IDC_GROUP1,207,82,8,8
+    EDITTEXT        IDC_13,206,91,24,14,ES_AUTOHSCROLL
+    LTEXT           "w",IDC_GROUP1,235,82,8,8
+    EDITTEXT        IDC_14,234,91,24,14,ES_AUTOHSCROLL
+    LTEXT           "h",IDC_GROUP1,263,82,8,8
+    EDITTEXT        IDC_15,262,91,24,14,ES_AUTOHSCROLL
+    LTEXT           "Start:",IDC_21,177,113,18,8
+    EDITTEXT        IDC_22,196,112,34,14,ES_AUTOHSCROLL
+    LTEXT           "End:",IDC_31,239,113,16,8
+    EDITTEXT        IDC_32,256,112,34,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Hyperlink...",IDC_LINK,117,118,50,12
+    PUSHBUTTON      "",IDC_PLAY,11,118,14,12,BS_ICON
+    PUSHBUTTON      "",IDC_PAUSE,31,118,14,12,BS_ICON
+    PUSHBUTTON      "",IDC_STOP,51,118,14,12,BS_ICON
+    LTEXT           "scale 1:1",IDC_SCALE1,12,4,51,8
+    PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,99,BS_FLAT | NOT 
+                    WS_VISIBLE | NOT WS_TABSTOP
+    LTEXT           "",IDC_ATTR_INFO,6,132,288,18,SS_SUNKEN
+END
+
+IDD_ANCHOR_NAME DIALOG DISCARDABLE  0, 0, 186, 55
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Anchor name"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Anchor name:",IDC_STATIC,7,8,45,8
+    EDITTEXT        IDC_EDIT1,53,7,126,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,59,34,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,129,34,50,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1597,6 +1644,19 @@ BEGIN
     IDD_EDITATTR_DR3, DIALOG
     BEGIN
         BOTTOMMARGIN, 163
+    END
+
+    IDD_EDITATTR_ANCHOR1, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_ANCHOR_NAME, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 48
     END
 END
 #endif    // APSTUDIO_INVOKED
