@@ -1055,26 +1055,27 @@ class SubWindow(Window):
 			if self._video:
 				# get video info
 				vdds, vrcDst, vrcSrc = self._video
-				ld, td, rd, bd = self.ltrb(vrcDst) 
+				xd, yd, wd, hd = vrcDst
+				ld, td, rd, bd = x+xd, y+yd, x+xd+wd, y+yd+hd
 				ls, ts, rs, bs = self.ltrb(vrcSrc)
 
 				# clip destination
-				ld, td, rd, bd = self.ltrb(self.rectAnd((xc, yc, wc, hc), 
-					(x+ld, y+td, rd-ld, bd-td)))
+				ldc, tdc, rdc, bdc = self.ltrb(self.rectAnd((xc, yc, wc, hc), 
+					(ld, td, rd-ld, bd-td)))
 			
 				# find part of source mapped to the clipped destination
 				# apply linear afine transformation from destination -> source
 				# x^p = ((x_2^p - x_1^p)*x + (x_1^p*x_2-x_2^p*x_1))/(x_2-x_1)
 				# rem: primes represent source coordinates
 				a = (rs-ls)/float(rd-ld);b=(ls*rd-rs*ld)/float(rd-ld)
-				ls = int(a*ld + b + 0.5)
-				rs = int(a*rd + b + 0.5)
+				lsc = int(a*ldc + b + 0.5)
+				rsc = int(a*rdc + b + 0.5)
 				a = (bs-ts)/float(bd-td);b=(ts*bd-bs*td)/float(bd-td)
-				ts = int(a*td + b + 0.5)
-				bs = int(a*bd + b + 0.5)
+				tsc = int(a*tdc + b + 0.5)
+				bsc = int(a*bdc + b + 0.5)
 			
 				# we are ready, blit it
-				dds.Blt((ld, td, rd, bd), vdds, (ls,ts,rs,bs), ddraw.DDBLT_WAIT)
+				dds.Blt((ldc, tdc, rdc, bdc), vdds, (lsc,tsc,rsc,bsc), ddraw.DDBLT_WAIT)
 
 			# draw now the display list but after clear
 			hdc = dds.GetDC()
