@@ -20,8 +20,8 @@ from the real current value which is kept by AttrEditorField.
 
 __version__ = "$Id$"
 
-import Dlg
-import Qd
+from Carbon import Dlg
+from Carbon import Qd
 import string
 import windowinterface
 import WMEVENTS
