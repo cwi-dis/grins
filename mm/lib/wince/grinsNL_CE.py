@@ -69,10 +69,20 @@ class Main(MainDialog):
 			self.openURL_callback(EMPTYDOC)
 ##		self._update_recent(None)
 
+	def __skin_done(self, filename):
+		if filename:
+			import settings
+			url = self.__path2url(filename)
+			settings.set('skin', url)
+			settings.save()
+
 	def skin_callback(self):
 		import settings
+		import windowinterface
 		oldskin = settings.get('skin')
-		MainDialog.skin_callback(self)
+		windowinterface.FileDialog('Open skin file', '.', ['text/x-grins-skin'], '',
+					   self.__skin_done, None, 1,
+					   parent = windowinterface.getmainwnd())
 		newskin = settings.get('skin')
 		if newskin and oldskin != newskin:
 			if self.tops:
