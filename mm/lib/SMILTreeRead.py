@@ -3513,7 +3513,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		return l
 
 	def __link_attrs(self, attributes):
-		show = self.parseEnumValue('show', attributes.get('show'))
+		show = self.parseEnumValue('show', attributes.get('show'), 'replace')
 		# XXX SMIL 2.0 Linking says default of show is "replace", but that doesn't do what we want.
 		stype = self.parseEnumValue('sourcePlaystate', attributes.get('sourcePlaystate'))
 		dtype = self.parseEnumValue('destinationPlaystate', attributes.get('destinationPlaystate'), A_DEST_PLAY)
@@ -3527,6 +3527,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 		if show == 'replace':
 			ltype = TYPE_JUMP
+			# this value overrides the sourcePlaystate value (in pause)
+			stype = A_SRC_PAUSE
 		elif show == 'pause':
 			ltype = TYPE_FORK
 			# this value overrides the sourcePlaystate value (in pause)

@@ -59,9 +59,9 @@ class PlayerCore(Selecter, PlayerCommon):
 		self.play()
 	#
 	def playfrom(self, node):
-		self.playfromanchor(node, None)
+		self.playfromanchor(node)
 	#
-	def playfromanchor(self, node, anchor):
+	def playfromanchor(self, node):
 		if not self.showing:
 			self.show()
 		if self.playing:
@@ -69,7 +69,7 @@ class PlayerCore(Selecter, PlayerCommon):
 		self.reset()
 		self.pause(1)
 		self.play()
-		if not self.gotonode(node, anchor, None):
+		if not self.gotonode(node, None):
 			# update the state to play (changed by gotonode).
 			# XXX this state should be changed directly from gotonode
 			self.pausing = 0
@@ -79,7 +79,6 @@ class PlayerCore(Selecter, PlayerCommon):
 		self.playing = 1
 		self.showstate()
 
-	#
 	def anchorinit(self, node):
 		if not self.showing:
 			self.show()
