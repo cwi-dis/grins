@@ -179,7 +179,7 @@ mpeg_init(self)
 		return 0;
 	}
 	bzero((char *)self->mm_private, sizeof(struct mpeg));
-	if ((PRIV->m_dispsema = allocate_sema(0)) == NULL) {
+	if ((PRIV->m_dispsema = PyThread_allocate_sema(0)) == NULL) {
 		ERROR(mpeg_init, PyExc_RuntimeError, "cannot create semaphore");
 		goto error_return_no_close;
 	}
@@ -273,7 +273,7 @@ mpeg_init(self)
 	(void) close(PRIV->m_pipefd[1]);
  error_return_no_close:
 	if (PRIV->m_dispsema)
-		free_sema(PRIV->m_dispsema);
+		PyThread_free_sema(PRIV->m_dispsema);
 	free(self->mm_private);
 	self->mm_private = NULL;
 	return 0;
@@ -286,7 +286,7 @@ mpeg_dealloc(self)
 	denter(mpeg_dealloc);
 	if (self->mm_private == NULL)
 		return;
-	free_sema(PRIV->m_dispsema);
+	PyThread_free_sema(PRIV->m_dispsema);
 	mpeg_free_old(&PRIV->m_play, 0);
 	mpeg_free_old(&PRIV->m_arm, 0);
 	(void) close(PRIV->m_pipefd[0]);
@@ -519,7 +519,7 @@ mpeg_play(self)
 	while (read(PRIV->m_pipefd[0], &c, 1) == 1)
 		;
 	(void) fcntl(PRIV->m_pipefd[0], F_SETFL, 0);
-	while (down_sema(PRIV->m_dispsema, NOWAIT_SEMA) > 0)
+	while (PyThread_down_sema(PRIV->m_dispsema, NOWAIT_SEMA) > 0)
 		;
 
 	switch (windowsystem) {
@@ -609,7 +609,7 @@ mpeg_player(self)
 		gettimeofday(&tm0, NULL);
 		dprintf(("mpeg_player(%lx): writing image\n", (long) self));
 		my_qenter(self->mm_ev, 3);
-		(void) down_sema(PRIV->m_dispsema, WAIT_SEMA);
+		(void) PyThread_down_sema(PRIV->m_dispsema, WAIT_SEMA);
 		clUpdateTail(PRIV->m_play.m_frameHdl, 1);
 		dprintf(("mpeg_player: read/decode next\n"));
 
@@ -730,7 +730,7 @@ mpeg_display(self)
 {
 	denter(mpeg_display);
 	mpeg_display_frame(self);
-	up_sema(PRIV->m_dispsema);
+	PyThread_up_sema(PRIV->m_dispsema);
 }
 
 int
@@ -789,7 +789,7 @@ mpeg_playstop(self)
 	if (write(PRIV->m_pipefd[1], "s", 1) < 0)
 		perror("write");
 	/* in case they're waiting */
-	up_sema(PRIV->m_dispsema);
+	PyThread_up_sema(PRIV->m_dispsema);
 	return 1;
 }
 
