@@ -58,6 +58,15 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) aygshell.lib /nologo /stack:0x10000,0x1000 /subsystem:windows /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /windowsce:emulation /MACHINE:IX86
 # ADD LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) aygshell.lib /nologo /stack:0x10000,0x1000 /subsystem:windows /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /windowsce:emulation /MACHINE:IX86
+# Begin Custom Build
+InputPath=.\X86EMRel\GRiNS Player.exe
+SOURCE="$(InputPath)"
+
+"C:\Windows CE Tools\wce300\MS Pocket PC\emulation\palm300\Program Files\GRiNS\bin\wince\grinsRC.py" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	..\..\..\..\python\PCbuild\python.exe ..\..\..\..\python\Tools\scripts\h2py.py  resource.h 
+	copy resource.py "C:\Windows CE Tools\wce300\MS Pocket PC\emulation\palm300\Program Files\GRiNS\bin\wince\grinsRC.py" 
+	
+# End Custom Build
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Debug"
 
@@ -87,6 +96,15 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) aygshell.lib /nologo /stack:0x10000,0x1000 /subsystem:windows /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /windowsce:emulation /MACHINE:IX86
 # ADD LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) aygshell.lib /nologo /stack:0x10000,0x1000 /subsystem:windows /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /windowsce:emulation /MACHINE:IX86
+# Begin Custom Build
+InputPath=.\X86EMDbg\GRiNS Player.exe
+SOURCE="$(InputPath)"
+
+"C:\Windows CE Tools\wce300\MS Pocket PC\emulation\palm300\Program Files\GRiNS\bin\wince\grinsRC.py" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	..\..\..\..\python\PCbuild\python.exe ..\..\..\..\python\Tools\scripts\h2py.py  resource.h 
+	copy resource.py C:\Windows CE Tools\wce300\MS Pocket PC\emulation\palm300\Program Files\GRiNS\bin\wince\grinsRC.py 
+	
+# End Custom Build
 
 !ENDIF 
 
@@ -392,6 +410,10 @@ SOURCE=.\pfc\app_wndproc.h
 # Begin Source File
 
 SOURCE=.\pfc\charconv.h
+# End Source File
+# Begin Source File
+
+SOURCE="C:\Windows CE Tools\wce300\MS Pocket PC\emulation\palm300\Program Files\GRiNS\bin\wince\grinsRC.py"
 # End Source File
 # Begin Source File
 
