@@ -2539,9 +2539,10 @@ class SMILWriter(SMIL):
 		if show != 'replace':
 			attrlist.append(('show', show))
 		sstate = MMAttrdefs.getattr(anchor, 'sourcePlaystate')
-		if show != 'new' or sstate != 'play':
+		if sstate != 'play':
 			# if show == 'replace' or show == 'pause', sourcePlaystate is ignored
 			# if show == 'new', sourcePlaystate == 'play' is default
+			# so we write sourcePlaystate if it isn't 'play'
 			if self.smilboston:
 				attrlist.append(('sourcePlaystate', sstate))
 		dstate = MMAttrdefs.getattr(anchor, 'destinationPlaystate')
