@@ -65,7 +65,7 @@
      2.BasicLayout
 	Fully implemented except fit="scroll" (recognized but not implemented)
      3.HierarchicalLayout
-	Fully implemented except new width and height attributes on media elements
+	Fully implemented except z-index, width and height attributes on media elements
      4.MultiWindowLayout
 	Fully implemented
 6.Linking
