@@ -5442,6 +5442,10 @@ class AttrEditForm(GenFormView):
 		return previous
 						
 	def RecreateWindow(self):
+		try:
+			old_focus = win32ui.GetFocus()
+		except win32ui.error:
+			old_focus = None
 		self.SetRedraw(0)
 		self.removepages()
 		self._attrchanged={}
@@ -5457,6 +5461,8 @@ class AttrEditForm(GenFormView):
 		self.finishbuildpages(initindex)
 		self.SetRedraw(1)
 		self.RedrawWindow()
+		if old_focus:
+			old_focus.SetFocus()
 
 	def getcurattr(self):
 		page = self._prsht.GetActivePage()
@@ -5474,7 +5480,13 @@ class AttrEditForm(GenFormView):
 		p = self._a2p.get(attr)
 		if not p:
 			return
+		try:
+			old_focus = win32ui.GetFocus()
+		except win32ui.error:
+			old_focus = None
 		self._prsht.SetActivePage(p)
+		if old_focus:
+			old_focus.SetFocus()
 
 	def setcurattrbyname(self,name):
 		a = self.getattrbyname(name)
