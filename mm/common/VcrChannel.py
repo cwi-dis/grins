@@ -120,7 +120,7 @@ class VcrChannel(Channel):
 		self.vcrstate = V_SPR
 		return 0
 
-	def seekanchor(self, node, aid):
+	def seekanchor(self, node, aid, aargs):
 		try:
 			alist = node.GetRawAttr('anchorlist')
 			modanchorlist(alist)

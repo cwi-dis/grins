@@ -156,7 +156,7 @@ def cleanup(node):
 # Return a node's nominal duration, in seconds, as a floating point value.
 # Should only be applied to leaf nodes.
 #
-from AnchorDefs import A_TYPE, ATYPE_PAUSE
+from AnchorDefs import A_TYPE, ATYPE_PAUSE, ATYPE_ARGS
 #
 def getduration(node):
 	import Duration
@@ -170,7 +170,7 @@ def getduration(node):
 		return d
 	if alist: # Not None and not []
 		for a in alist:
-			if a[A_TYPE] == ATYPE_PAUSE:
+			if a[A_TYPE] in (ATYPE_PAUSE, ATYPE_ARGS):
 				return d + 10
 	return d
 	

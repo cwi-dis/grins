@@ -201,13 +201,13 @@ class SchedulerContext:
 	#
 	# Start minidoc starts playing what we've prepared
 	#
-	def start(self, s_node, s_aid):
+	def start(self, s_node, s_aid, s_args):
 		if not self.gen_prearms():
 			return 0
 		self.run_initial_prearms()
 		self.startcontextchannels()
 		if s_node and s_aid:
-			self.seekanchor(s_node, s_aid)
+			self.seekanchor(s_node, s_aid, s_args)
 		self.parent.event((self, (SR.SCHED, self.playroot)))
 		self.parent.updatetimer()
 		return 1
@@ -215,10 +215,10 @@ class SchedulerContext:
 	# Seekanchor indicates that we are playing here because of the
 	# anchor specified.
 	#
-	def seekanchor(self, node, aid):
+	def seekanchor(self, node, aid, aargs):
 		chan = self.parent.ui.getchannelbynode(node)
 		if chan:
-			chan.seekanchor(node, aid)
+			chan.seekanchor(node, aid, aargs)
 	#
 	# Incoming events from channels, or the start event.
 	#
@@ -246,8 +246,8 @@ class SchedulerContext:
 	def arm_done(self, node):
 		self.parent.event(self, (SR.ARM_DONE, node))
 	#
-	def anchorfired(self, node, anchorlist):
-		return self.parent.anchorfired(self, node, anchorlist)
+	def anchorfired(self, node, anchorlist, arg):
+		return self.parent.anchorfired(self, node, anchorlist, arg)
 	#
 	# Partially handle an event, updating the internal queues and
 	# returning executable SRs, if any.
@@ -295,7 +295,7 @@ class Scheduler(scheduler):
 	#
 	# Playing algorithm.
 	#
-	def play(self, node, seek_node, anchor_id, end_action):
+	def play(self, node, seek_node, anchor_id, anchor_arg, end_action):
 		if node.GetType == 'bag':
 			raise 'Cannot play bag node'
 		self.toplevel.setwaiting()
@@ -305,7 +305,7 @@ class Scheduler(scheduler):
 		sctx = SchedulerContext().init(self, node, seek_node, end_action)
 		self.sctx_list.append(sctx)
 		self.playing = self.playing + 1
-		if not sctx.start(seek_node, anchor_id):
+		if not sctx.start(seek_node, anchor_id, anchor_arg):
 ##			print 'Scheduler: play abort'
 			sctx.stop()
 			return None

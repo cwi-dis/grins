@@ -100,7 +100,7 @@ class PlayerCore(Selecter):
 		if self.playing:
 			self.stop()
 		self.reset()
-		if not self.gotonode(node, anchor):
+		if not self.gotonode(node, anchor, None):
 			return
 		self.playing = 1
 		self.toplevel.setready()
