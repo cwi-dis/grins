@@ -515,6 +515,12 @@ class _List:
 	def getlistitem(self, pos):
 		return self._itemlist[pos]
 
+	def getselection(self):
+		pos = self.getselected()
+		if pos is None:
+			return None
+		return self.getlistitem(pos)
+
 	def getlist(self):
 		return self._itemlist
 
@@ -1219,10 +1225,65 @@ class _WindowHelpers:
 		return apply(Slider,
 			     (self, prompt, minimum, initial, maximum, cb),
 			     options)
+	def ScrolledWindow(self, **options):
+		return apply(ScrolledWindow, (self,), options)
 	def SubWindow(self, **options):
 		return apply(SubWindow, (self,), options)
 	def AlternateSubWindow(self, **options):
 		return apply(AlternateSubWindow, (self,), options)
+
+class ScrolledWindow(_Widget, _WindowHelpers):
+	def __init__(self, parent, name = 'windowScrolledWindow', **options):
+		attrs = {'resizePolicy': parent.resizePolicy}
+		self.resizePolicy = parent.resizePolicy
+		self._attachments(attrs, options)
+		self._attrs(attrs, options, 
+			    ['clipWindow', 'horizontalScrollBar', 'scrollBarDisplayPolicy',
+			     'scrollBarPlacement', 'scrolledWindowMarginHeight',
+			     'scrolledWindowMarginWidth', 'scrollingPolicy',
+			     'spacing', 'traverseObscuredCallback',
+			     'verticalScrollBar', 'visualPolicy',
+			     'workWindow'
+			    ])
+		if not attrs.has_key('visualPolicy'):
+			attrs['visualPolicy'] = Xmd.CONSTANT
+		if not attrs.has_key('scrollingpolicy'):
+			attrs['scrollingPolicy'] = Xmd.AUTOMATIC
+		form = parent._form.CreateManagedWidget(name, 
+							Xm.ScrolledWindow,
+							attrs)
+		_Widget.__init__(self, parent, form)
+		parent._fixkids.append(self)
+		self._fixkids = []
+		self._children = []
+
+	def __repr__(self):
+		return '<ScrolledWindow instance at %x>' % id(self)
+
+	def close(self):
+		_Widget.close(self)
+		_WindowHelpers.close(self)
+
+	def fix(self):
+		for w in self._fixkids:
+			w.fix()
+		self._form.ManageChild()
+		self._fixed = TRUE
+
+	def show(self):
+		_Widget.show(self)
+		if self._fixed:
+			for w in self._fixkids:
+				if w.is_showing():
+					w.show()
+				else:
+					w.hide()
+			self._fixkids = []
+
+        def _attrs(self, attr, options, lst):
+		for name in lst:
+			if options.has_key(name):
+				attr[name] = options[name]
 
 class SubWindow(_Widget, _WindowHelpers):
 	def __init__(self, parent, name = 'windowSubwindow', **options):
