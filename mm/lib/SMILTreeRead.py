@@ -580,16 +580,15 @@ class SMILParser(xmllib.XMLParser):
 				aid, atype, args = aid
 			src = node, aid
 			if href[:1] == '#':
-				if self.__anchormap.has_key(href[1:):
+				if self.__anchormap.has_key(href[1:]):
 					dst = self.__anchormap[href[1:]]
 				else:
 					if self.__nodemap.has_key(href[1:]):
 						dst = self.__nodemap[href[1:]]
+						dst = self.__wholenodeanchor(dst)
 					else:
 						print 'warning: unknown node id',href[1:]
 						continue
-					else:
-						dst = self.__wholenodeanchor(dst)
 				hlinks.addlink((src, dst, DIR_1TO2, ltype))
 			else:
 				href, tag = MMurl.splittag(href)
