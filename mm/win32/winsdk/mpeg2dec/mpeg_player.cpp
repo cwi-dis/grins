@@ -178,4 +178,14 @@ bool MpegPlayer::finished_playback()
 	return WaitForSingleObject(pVideoThread->GetStopHandle(), 0) == WAIT_OBJECT_0;
 	}
 
+void MpegPlayer::lock_surface()
+	{
+	if(display != 0) display->lock();
+	}
+
+void MpegPlayer::unlock_surface()
+	{
+	if(display != 0) display->unlock();
+	}
+
 

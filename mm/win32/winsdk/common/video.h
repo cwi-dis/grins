@@ -18,6 +18,8 @@ class VideoPlayer
 	virtual void suspend_playback() = 0;
 	virtual void resume_playback() = 0;
 	virtual bool finished_playback() = 0;
+	virtual void lock_surface() = 0;
+	virtual void unlock_surface() = 0;
 	};
 
 #endif // INC_VIDEO

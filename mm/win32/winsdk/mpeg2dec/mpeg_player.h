@@ -36,6 +36,8 @@ class MpegPlayer : public VideoPlayer
 	virtual void suspend_playback();
 	virtual void resume_playback();
 	virtual bool finished_playback();
+	virtual void lock_surface();
+	virtual void unlock_surface();
 
 	private:
 	MpegDecoder *decoder;
