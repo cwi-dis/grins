@@ -290,6 +290,10 @@ class SchedulerContext:
 			       ((event != 'begin' or arc.dstnode not in node.GetSchedChildren()) and
 			       (event != 'end' or arc.dstnode in node.GetSchedChildren()))):
 				continue
+			if arc.qid is not None and arc.timestamp < timestamp:
+				# loop in syncarcs
+				if debugevents: print 'break syncarc loop',arc
+				continue
 			atime = 0
 			if arc.srcanchor is not None:
 				for a in node.attrdict.get('anchorlist', []):
@@ -388,12 +392,7 @@ class SchedulerContext:
 					# must delay this arc
 					node.delayed_arcs.append(arc)
 					if arc in node.durarcs:
-						fill = node.GetFill()
-						self.do_terminate(node, timestamp, fill = fill)
-##						for c in node.GetSchedChildren():
-##							self.do_terminate(c, timestamp, fill = fill)
-##							if not parent.playing:
-##								return
+						self.do_terminate(node, timestamp, fill = node.GetFill())
 					parent.updatetimer()
 					return
 				if debugevents: print 'scheduled_children-1 g',`node`,`arc`,node.scheduled_children,parent.timefunc()
@@ -498,7 +497,10 @@ class SchedulerContext:
 						action = MMAttrdefs.getattr(p1[1], 'higher')
 					if debugevents: print 'action',action,parent.timefunc()
 					if action == 'stop':
-						self.do_terminate(sib, timestamp)
+						fill = sib.GetFill()
+						if fill != 'hold' and fill != 'transition':
+							fill = 'remove'
+						self.do_terminate(sib, timestamp, fill = fill)
 						if not parent.playing:
 							return
 					elif action == 'never':
@@ -529,7 +531,10 @@ class SchedulerContext:
 						self.do_pause(pnode, sib, pd, timestamp)
 					break
 				elif sib.playing == MMStates.FROZEN:
-					self.do_terminate(sib, timestamp)
+					fill = sib.GetFill()
+					if fill != 'hold' and fill != 'transition':
+						fill = 'remove'
+					self.do_terminate(sib, timestamp, fill = fill)
 					if not parent.playing:
 						return
 					break
@@ -970,7 +975,7 @@ class SchedulerContext:
 				# XXXX Hack to forestall crash on interior
 				# nodes with duration that are terminated:
 				# their terminating syncarc is still there...
-				print 'Warning: unexpected', SR.ev2string(ev),self.parent.timefunc()
+				if __debug__: print 'Warning: unexpected', SR.ev2string(ev),self.parent.timefunc()
 				return []
 			raise error, 'Scheduler: Unknown event: %s' % SR.ev2string(ev)
 		numsrlist = srdict.get(ev)
