@@ -72,6 +72,7 @@ from AppToplevel import beep
 
 # needed directly?
 GetImageSize=toplevel.GetImageSize
+from win32dxm import GetVideoSize
 from _UsergroupView import UsergroupEditDialog
 from _LinkView import LinkPropDlg
 
