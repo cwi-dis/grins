@@ -35,16 +35,13 @@ class AsyncMonikerFile : public CAsyncMonikerFile
 
 AsyncMonikerFile::AsyncMonikerFile()
 :	m_dwReadBefore(0),
-	m_pyListener(NULL),
-	m_saveAsFile("log.zip")
+	m_pyListener(NULL)
 	{
-	AfxMessageLog("AsyncMonikerFile");
 	}
 AsyncMonikerFile::~AsyncMonikerFile()
 	{
 	Py_XDECREF(m_pyListener);
 	m_pyListener=NULL;
-	AfxMessageLog("~AsyncMonikerFile");
 	}
 
 void AsyncMonikerFile::SetStatusListener(PyObject *obj)
@@ -57,6 +54,7 @@ void AsyncMonikerFile::SetStatusListener(PyObject *obj)
 
 void AsyncMonikerFile::OnDataAvailable(DWORD dwSize, DWORD bscfFlag)
 	{
+	/*
    if ((bscfFlag & BSCF_FIRSTDATANOTIFICATION) != 0)
 		{
 		FILE *f=fopen((LPCTSTR)m_saveAsFile,"wb");
@@ -88,6 +86,7 @@ void AsyncMonikerFile::OnDataAvailable(DWORD dwSize, DWORD bscfFlag)
 			} while(dwActual>0);
 		fclose(f);
 		}
+	*/
 	CAsyncMonikerFile::OnDataAvailable(dwSize, bscfFlag);
 	}
 
@@ -116,8 +115,6 @@ void AsyncMonikerFile::OnStopBinding(HRESULT hresult, LPCTSTR szError)
 		}
 
 	}
-
-
 
 ////////////////////////////////////////////
 PyAsyncMonikerFile::PyAsyncMonikerFile()
@@ -180,6 +177,36 @@ PyObject* SaveAs(PyObject *self, PyObject *args)
 	}
 
 static
+PyObject* Abort(PyObject *self, PyObject *args)
+	{
+	CHECK_NO_ARGS(args);
+	PyAsyncMonikerFile *pObj=(PyAsyncMonikerFile*)self;
+	IBinding* binding=pObj->GetAsyncMonikerFile()->GetBinding();
+	if(binding)binding->Abort();
+	RETURN_NONE;
+	}
+
+static
+PyObject* Suspend(PyObject *self, PyObject *args)
+	{
+	CHECK_NO_ARGS(args);
+	PyAsyncMonikerFile *pObj=(PyAsyncMonikerFile*)self;
+	IBinding* binding=pObj->GetAsyncMonikerFile()->GetBinding();
+	if(binding)binding->Suspend();
+	RETURN_NONE;
+	}
+
+static
+PyObject* Resume(PyObject *self, PyObject *args)
+	{
+	CHECK_NO_ARGS(args);
+	PyAsyncMonikerFile *pObj=(PyAsyncMonikerFile*)self;
+	IBinding* binding=pObj->GetAsyncMonikerFile()->GetBinding();
+	if(binding)binding->Resume();
+	RETURN_NONE;
+	}
+
+static
 PyObject* SetStatusListener(PyObject *self, PyObject *args)
 	{
 	PyObject *obj;
@@ -190,7 +217,6 @@ PyObject* SetStatusListener(PyObject *self, PyObject *args)
 	RETURN_NONE;
 	}
 
-
 static 
 struct PyMethodDef PyAsyncMonikerFile_methods[] = 
 	{
@@ -198,6 +224,9 @@ struct PyMethodDef PyAsyncMonikerFile_methods[] =
 	{"Close",Close,1}, 
 	{"SaveAs",SaveAs,1}, 
 	{"SetStatusListener",SetStatusListener,1}, 
+	{"Suspend",Suspend,1}, 
+	{"Resume",Resume,1}, 
+	{"Abort",Abort,1}, 
 	{NULL,NULL}		
 	};
 
