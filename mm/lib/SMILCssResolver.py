@@ -494,115 +494,109 @@ class RegionNode(Node):
 		self.pxValuesHasChanged = 0
 
 		if name == 'left':
-			if type(self.left) is type(0.0):
-				self.left = float(value)/self.container.pxwidth
-				self._onChangeRawValue('left',self.left)
-				self.pxleft = value
-			elif type(self.left) is type(0):
+			offset = value-self.pxleft
+			self.pxleft = value
+			if type(self.left) == type(None) and type(self.right) == type(None):
 				self.left = value
 				self._onChangeRawValue('left',self.left)
-				self.pxleft = value
-			elif type(self.right) is type(0.0):
-				offset = value-self.pxleft
-				self.right = float(self.right+offset)/self.container.pxwidth
-				self._onChangeRawValue('right',self.right)
-				self.pxleft = value
-			elif type(self.right) is type(0):
-				offset = value-self.pxleft
-				self.right = self.right+offset
-				self._onChangeRawValue('right',self.right)
-				self.pxleft = value
 			else:
-				self.left = value
-				self._onChangeRawValue('left',self.left)
-				self.pxleft = value
-
-		elif name == 'width':
-			if type(self.width) is type(0.0):
-				self.width = float(value)/self.container.pxwidth
-				self._onChangeRawValue('width',self.width)
-				if value <= 0: value = 1
-				self.pxwidth = value
-			elif type(self.width) is type(0):
-				self.width = value
-				self._onChangeRawValue('width',self.width)
-				if value <= 0: value = 1
-				self.pxwidth = value
-			elif type(self.left) != type(None) and type(self.right) != type(None):
+				if type(self.left) is type(0.0):
+					self.left = float(value)/self.container.pxwidth
+					self._onChangeRawValue('left',self.left)
+				elif type(self.left) is type(0):
+					self.left = value
+					self._onChangeRawValue('left',self.left)
 				if type(self.right) is type(0.0):
-					offset = value-self.pxwidth
 					self.right = float(self.right-offset)/self.container.pxwidth
 					self._onChangeRawValue('right',self.right)
-					if value <= 0: value = 1
-					self.pxwidth = value
 				elif type(self.right) is type(0):
-					offset = value-self.pxwidth
-					self.right = self.width-offset
+					self.right = self.right-offset
 					self._onChangeRawValue('right',self.right)
-					if value <= 0: value = 1
-					self.pxwidth = value
+
+		elif name == 'width':
+			if value <= 0: value = 1
+			offset = value-self.pxwidth
+			self.pxwidth = value
+			if type(self.right) is not type(None) and \
+				type(self.width) is type(None):
+				if type(self.right) is type(0.0):
+					self.right = float(self.right-offset)/self.container.pxwidth
+					self._onChangeRawValue('right',self.right)
+				elif type(self.right) is type(0):
+					self.right = self.right-offset
+					self._onChangeRawValue('right',self.right)
 			else:
-				self.width = value
-				self._onChangeRawValue('width',self.width)
-				if value <= 0: value = 1
-				self.pxwidth = value
+				if type(self.width) is type(0.0):
+					self.width = float(value)/self.container.pxwidth
+					self._onChangeRawValue('width',self.width)
+				else:
+					self.width = value
+					self._onChangeRawValue('width',self.width)
+				if type(self.width) != type(None) and type(self.right) != type(None):
+					if type(left) == type(None):
+						if type(self.right) is type(0.0):
+							self.right = float(self.right-offset)/self.container.pxwidth
+							self._onChangeRawValue('right',self.right)
+						elif type(self.right) is type(0):
+							self.right = self.right-offset
+							self._onChangeRawValue('right',self.right)
+					else:
+						self.right = None
+						self._onChangeRawValue('right',self.right)
 
 			for child in self.children:
 				child._updateRawOnContainerWidthChanged()
 
 		elif name == 'top':
-			if type(self.top) is type(0.0):
-				self.top = float(value)/self.container.pxheight
-				self._onChangeRawValue('top',self.top)
-				self.pxtop = value
-			elif type(self.top) is type(0):
+			offset = value-self.pxtop
+			self.pxtop = value
+			if type(self.top) == type(None) and type(self.bottom) == type(None):
 				self.top = value
 				self._onChangeRawValue('top',self.top)
-				self.pxtop = value
-			elif type(self.bottom) is type(0.0):
-				offset = value-self.pxtop
-				self.bottom = float(self.bottom+offset)/self.container.pxheight
-				self._onChangeRawValue('bottom',self.bottom)
-				self.pxtop = value
-			elif type(self.bottom) is type(0):
-				offset = value-self.pxtop
-				self.bottom = self.bottom+offset
-				self._onChangeRawValue('bottom',self.bottom)
-				self.pxtop = value
 			else:
-				self.top = value
-				self._onChangeRawValue('top',self.top)
-				self.pxtop = value
-
-		elif name == 'height':
-			if type(self.height) is type(0.0):
-				self.height = float(value)/self.container.pxheight
-				self._onChangeRawValue('height',self.height)
-				if value <= 0: value = 1
-				self.pxheight = value
-			elif type(self.height) is type(0):
-				self.height = value
-				self._onChangeRawValue('height',self.height)
-				if value <= 0: value = 1
-				self.pxheight = value
-			elif type(self.top) != type(None) and type(self.bottom) != type(None):
+				if type(self.top) is type(0.0):
+					self.top = float(value)/self.container.pxheight
+					self._onChangeRawValue('top',self.top)
+				elif type(self.top) is type(0):
+					self.top = value
+					self._onChangeRawValue('top',self.top)
 				if type(self.bottom) is type(0.0):
-					offset = value-self.pxheight
 					self.bottom = float(self.bottom-offset)/self.container.pxheight
 					self._onChangeRawValue('bottom',self.bottom)
-					if value <= 0: value = 1
-					self.pxheight = value
 				elif type(self.bottom) is type(0):
-					offset = value-self.pxheight
 					self.bottom = self.bottom-offset
 					self._onChangeRawValue('bottom',self.bottom)
-					if value <= 0: value = 1
-					self.pxheight = value
+
+		elif name == 'height':
+			if value <= 0: value = 1
+			offset = value-self.pxheight
+			self.pxheight = value
+			if type(self.bottom) is not type(None) and \
+				type(self.height) is type(None):
+				if type(self.bottom) is type(0.0):
+					self.bottom = float(self.bottom-offset)/self.container.pxheight
+					self._onChangeRawValue('bottom',self.bottom)
+				elif type(self.bottom) is type(0):
+					self.bottom = self.bottom-offset
+					self._onChangeRawValue('bottom',self.bottom)
 			else:
-				self.height = value
-				self._onChangeRawValue('height',self.height)
-				if value <= 0: value = 1
-				self.pxheight = value
+				if type(self.height) is type(0.0):
+					self.height = float(value)/self.container.pxheight
+					self._onChangeRawValue('height',self.height)
+				else:
+					self.height = value
+					self._onChangeRawValue('height',self.height)
+				if type(self.height) != type(None) and type(self.bottom) != type(None):
+					if type(top) == type(None):
+						if type(self.bottom) is type(0.0):
+							self.bottom = float(self.bottom-offset)/self.container.pxheight
+							self._onChangeRawValue('bottom',self.bottom)
+						elif type(self.bottom) is type(0):
+							self.bottom = self.bottom-offset
+							self._onChangeRawValue('bottom',self.bottom)
+					else:
+						self.bottom = None
+						self._onChangeRawValue('bottom',self.bottom)
 
 			for child in self.children:
 				child._updateRawOnContainerHeightChanged()
