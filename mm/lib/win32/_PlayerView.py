@@ -148,6 +148,14 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 			return DisplayListView.OnEraseBkgnd(self,dc)
 		win32mu.DrawRectangle(dc, self.GetClientRect(), self._bgcolor or (255, 255, 255))
 		return 1
+	
+	def rectAnd(self, rc1, rc2):
+		# until we make calcs
+		import win32ui
+		rc, ans= win32ui.GetWin32Sdk().IntersectRect(self.ltrb(rc1),self.ltrb(rc2))
+		if ans:
+			return self.xywh(rc)
+		return 0, 0, 0, 0
 		
 	def update(self, rc=None):
 		if not self._ddraw or not self._frontBuffer or not self._backBuffer:
@@ -175,13 +183,14 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 			x, y, w, h = self._viewport._rect
 			rcBack = x, y, x+w, y+h
 		else:
+			rc = self.rectAnd(rc, self._viewport._rect)
 			rcBack = rc[0], rc[1], rc[0]+rc[2], rc[1]+rc[3]
 		
 		rcFront = self.ClientToScreen(rcBack)
 		try:
 			self._frontBuffer.Blt(rcFront, self._backBuffer, rcBack)
 		except ddraw.error, arg:
-			print arg
+			print 'PlayerView.update', arg
 	
 	def getDrawBuffer(self):
 		return self._backBuffer
@@ -197,13 +206,15 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 			x, y, w, h = self._viewport._rect
 			rcPaint = x, y, x+w, y+h
 		else:
+			rc = self.rectAnd(rc, self._viewport._rect)
 			rcPaint = rc[0], rc[1], rc[0]+rc[2], rc[1]+rc[3] 
+
 		if self._convbgcolor == None:
 			self._convbgcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255, 255, 255) )
 		try:
 			self._backBuffer.BltFill(rcPaint, self._convbgcolor)
 		except ddraw.error, arg:
-			print arg
+			print 'PlayerView.paint',arg
 			return
 
 		if self._viewport:
