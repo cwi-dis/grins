@@ -694,7 +694,7 @@ class SubWindow(Window):
 	def __init__(self, parent, coordinates, transparent, z, units):
 		Window.__init__(self, parent, coordinates, units, z, transparent)
 		self._oswnd = None
-		self._dlsurf = None
+		self._video = None
 		self.__init_transitions()
 
 	def __repr__(self):
@@ -907,12 +907,11 @@ class SubWindow(Window):
 			dc.SetWindowOrg((x0,y0))
 			dc.Detach()
 			dds.ReleaseDC(hdc)
-			if self._dlsurf:
-				ddds, rc = self._dlsurf
-				xv, yv, wv, hv = rc
-				rc_dst = x+xv, y+yv, x+xv+wv, y+yv+hv
-				rc_src = (0, 0, wv, hv)
-				dds.Blt(rc_dst, ddds, rc_src, ddraw.DDBLT_WAIT)
+			if self._video:
+				vdds, vrcDst, vrcSrc = self._video
+				xv, yv, wv, hv = vrcDst
+				ltrb_dst = x+xv, y+yv, x+xv+wv, y+yv+hv
+				dds.Blt(ltrb_dst, vdds, vrcSrc, ddraw.DDBLT_WAIT)
 				
 	def paintOnDDS(self, dds, rel=None):
 		x, y, w, h = self.getwindowpos(rel)
@@ -962,6 +961,12 @@ class SubWindow(Window):
 		x, y, w, h = self._rect
 		dds = self._topwindow.CreateSurface(w,h)
 		return dds
+
+	def setvideo(self, dds, rcDst, rcSrc):
+		self._video = dds, rcDst, rcSrc
+	
+	def removevideo(self):
+		self._video = None
 
 	#
 	# Animations interface
