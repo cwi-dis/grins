@@ -132,7 +132,7 @@ def _showmenu(menu):	# Show (modal) editor choice dialog
     keys.sort()
     keys.append('Cancel')
     import dialogs
-    i = dialogs.multchoice('', keys, len(keys)-1)
+    i = dialogs.multchoice('Choose an editor:', keys, len(keys)-1)
     if 0 <= i < len(keys)-1:
 	return menu[keys[i]]
     else:
