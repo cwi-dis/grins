@@ -40,11 +40,6 @@ class Rect:
 	def __init__(self,r=(0,0,0,0)):
 		self.left=r[0];self.top=r[1]
 		self.right=r[2];self.bottom=r[3]
-
-		# obsolete
-		self.tuple = self.ltrb_tuple
-		self.tuple_ps = self.xywh_tuple
-
 	def ltrb_tuple(self):
 		return self.left,self.top,self.right,self.bottom
 	def xywh_tuple(self):
