@@ -52,7 +52,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /r
 CPP=clarm.exe
 # ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /Oxs /M$(CECrtMT) /c
-# ADD CPP /nologo /W3 /I "..\common" /I "..\..\CE\stl" /I "..\..\winsdk\common" /D "ARM" /D "_ARM_" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "COMPILED_FROM_DSP" /FR /YX /Oxs /M$(CECrtMT) /c
+# ADD CPP /nologo /W3 /I "..\common" /I "..\..\CE\stl" /D "ARM" /D "_ARM_" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "COMPILED_FROM_DSP" /FR /YX /Oxs /M$(CECrtMT) /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
@@ -85,7 +85,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /r
 CPP=clarm.exe
 # ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /M$(CECrtMTDebug) /c
-# ADD CPP /nologo /W3 /Zi /Od /I "..\common" /I "..\..\CE\stl" /I "..\..\winsdk\common" /D "_DEBUG" /D "DEBUG" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "COMPILED_FROM_DSP" /YX /M$(CECrtMTDebug) /c
+# ADD CPP /nologo /W3 /Zi /Od /I "..\common" /I "..\..\CE\stl" /D "_DEBUG" /D "DEBUG" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "COMPILED_FROM_DSP" /YX /M$(CECrtMTDebug) /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
@@ -119,7 +119,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "i486" /r
 CPP=cl.exe
 # ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "i486" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "NDEBUG" /YX /Gz /Oxs /c
-# ADD CPP /nologo /W3 /I "..\common" /I "..\..\CE\stl" /I "..\..\winsdk\common" /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "i486" /D "_X86_" /D "x86" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "COMPILED_FROM_DSP" /YX /Gz /Oxs /c
+# ADD CPP /nologo /W3 /I "..\common" /I "..\..\CE\stl" /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "i486" /D "_X86_" /D "x86" /D "NDEBUG" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "COMPILED_FROM_DSP" /YX /Gz /Oxs /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
@@ -153,7 +153,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "i486" /r
 CPP=cl.exe
 # ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "i486" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /YX /Gz /c
-# ADD CPP /nologo /W3 /Zi /Od /I "..\common" /I "..\..\CE\stl" /I "..\..\winsdk\common" /D "_DEBUG" /D "DEBUG" /D "i486" /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "_X86_" /D "x86" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "COMPILED_FROM_DSP" /YX /Gz /c
+# ADD CPP /nologo /W3 /Zi /Od /I "..\common" /I "..\..\CE\stl" /D "_DEBUG" /D "DEBUG" /D "i486" /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "_X86_" /D "x86" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "COMPILED_FROM_DSP" /YX /Gz /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
@@ -175,34 +175,6 @@ LINK32=link.exe
 # Begin Group "Toplevel UI"
 
 # PROP Default_Filter ""
-# Begin Group "Resource Files"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=".\nGRiNS Player.ico"
-# End Source File
-# End Group
-# Begin Group "Header Files"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\newres.h
-# End Source File
-# Begin Source File
-
-SOURCE=".\nGRiNS Player.h"
-# End Source File
-# Begin Source File
-
-SOURCE=.\resource.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\StdAfx.h
-# End Source File
-# End Group
 # Begin Group "Source Files"
 
 # PROP Default_Filter ""
@@ -252,10 +224,8 @@ DEP_CPP_NGRIN=\
 DEP_CPP_NGRIN=\
 	".\nGRiNS Player.h"\
 	".\StdAfx.h"\
-	
-NODEP_CPP_NGRIN=\
-	".\ipapi.h"\
-	".\ygshell.h"\
+	{$(INCLUDE)}"aygshell.h"\
+	{$(INCLUDE)}"sipapi.h"\
 	
 
 !ENDIF 
@@ -308,30 +278,38 @@ DEP_CPP_STDAF=\
 
 # End Source File
 # End Group
+# Begin Group "Header Files"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\newres.h
+# End Source File
+# Begin Source File
+
+SOURCE=".\nGRiNS Player.h"
+# End Source File
+# Begin Source File
+
+SOURCE=.\resource.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\StdAfx.h
+# End Source File
+# End Group
+# Begin Group "Resource Files"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=".\nGRiNS Player.ico"
+# End Source File
+# End Group
 # End Group
 # Begin Group "common"
 
 # PROP Default_Filter ""
-# Begin Group "lib"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\common\lib\charconv.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\lib\memfile.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\lib\re.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\lib\strutil.h
-# End Source File
-# End Group
 # Begin Group "xml"
 
 # PROP Default_Filter ""
@@ -351,6 +329,10 @@ SOURCE=..\common\smil\attrdef.h
 # Begin Group "expat"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\common\expat\winconfig.h
+# End Source File
 # Begin Source File
 
 SOURCE=..\common\expat\xmlparse.c
@@ -514,6 +496,10 @@ DEP_CPP_XMLTO=\
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=..\common\regex\hsregex.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\regex\regcomp.c
 
 !IF  "$(CFG)" == "nGRiNS Player - Win32 (WCE ARM) Release"
@@ -561,6 +547,10 @@ DEP_CPP_REGCO=\
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\regex\regcomp.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\regex\regerror.c
 
 !IF  "$(CFG)" == "nGRiNS Player - Win32 (WCE ARM) Release"
@@ -593,6 +583,14 @@ DEP_CPP_REGER=\
 
 !ENDIF 
 
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\regex\regerror.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\regex\regex2.h
 # End Source File
 # Begin Source File
 
@@ -701,6 +699,26 @@ SOURCE=..\common\img\decode_png.h
 SOURCE=..\common\img\surface.h
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE=..\common\charconv.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\memfile.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\re.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\strutil.h
+# End Source File
+# End Group
+# Begin Group "grins"
+
+# PROP Default_Filter ""
 # End Group
 # End Target
 # End Project
