@@ -66,7 +66,7 @@ set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\Pythonwin\Build
 : Do the freeze
 if exist FreezeOpts del FreezeOpts
 echo -x NodeInfo >> FreezeOpts
-echo -x NodeInfoForm >> FreezeOpts
+echo -x AnchorEdit >> FreezeOpts
 
 rem The channels...
 echo -x ExternalChannel >> FreezeOpts
