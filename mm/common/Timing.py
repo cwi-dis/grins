@@ -28,9 +28,8 @@ def changedtimes(node):
 		del node.initial_arms
 	except (KeyError, AttributeError): # initial_arms does not exist
 		pass
-	if node.GetType() == 'bag':
-		for child in node.GetChildren():
-			changedtimes(child)
+	for child in node.GetChildren():
+		changedtimes(child)
 
 def hastimes(node):
 	try:
