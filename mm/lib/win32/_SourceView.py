@@ -9,9 +9,8 @@ It is exposed to Python through the win32ui pyd as PyCEditView
 import win32ui,win32con
 Sdk=win32ui.GetWin32Sdk()
 Afx=win32ui.GetAfx()
-import win32mu,wc
+import win32mu
 
-import components
 import usercmd
 
 from pywin.mfc import window,object,docview
