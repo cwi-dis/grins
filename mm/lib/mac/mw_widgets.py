@@ -259,6 +259,10 @@ class _AreaWidget(_ControlWidget, _ImageMixin):
 		try:
 ##			print "hittest", ctl, x, y
 			if self.ourrect is None:
+				x0, y0, x1, y1 = self.rect
+				if x < x0 or x > x1 or y < y0 or y > y1:
+					# Ignore if outside our bounds
+					return
 				self.ourrect = (x, y, x, y)
 				self.recalclurven()
 			for i in range(len(self.lurven)-1, -1, -1):
