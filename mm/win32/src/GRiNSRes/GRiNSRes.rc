@@ -2940,16 +2940,16 @@ BEGIN
                     WS_TABSTOP,18,22,55,10
     COMBOBOX        IDC_22,73,42,73,113,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    COMBOBOX        IDC_32,199,42,73,113,CBS_DROPDOWNLIST | WS_VSCROLL | 
+    COMBOBOX        IDC_32,211,42,73,113,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    EDITTEXT        IDC_42,73,65,40,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_52,199,65,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_42,73,65,73,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_52,211,65,73,14,ES_AUTOHSCROLL
     GROUPBOX        "Synchronization",IDC_GROUP1,6,4,287,120
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
     LTEXT           "Sync behavior:",IDC_21,18,44,48,8
-    LTEXT           "Default:",IDC_31,169,44,26,8
+    LTEXT           "Behavior default:",IDC_31,151,43,54,8
     LTEXT           "Sync tolerance:",IDC_41,18,68,50,8
-    LTEXT           "Default:",IDC_51,169,68,26,8
+    LTEXT           "Tolerance default:",IDC_51,147,68,58,8
 END
 
 IDD_EDITATTR_ANIMATETARGETMOTION DIALOG DISCARDABLE  0, 0, 300, 164
