@@ -88,7 +88,8 @@ class _Window(X_windowbase._Window):
 			Xm.DrawingArea, attrs)
 		self._do_open_win()
 		if self._menu_title or self._menu_list:
-			self.create_menu(self._menu_title, self._menu_list)
+			self.create_menu(self._menu_list,
+					 title = self._menu_title)
 		self._open_subwins()
 
 	def _open_subwins(self):
@@ -216,7 +217,7 @@ class _Window(X_windowbase._Window):
 			if b != (0, 0, 1, 1):
 				d.drawbox(b)
 		self._rb_display = d.clone()
-		d.fgcolor(255, 0, 0)
+		d.fgcolor((255, 0, 0))
 		if box:
 			d.drawbox(box)
 		d.render()
@@ -335,7 +336,7 @@ class _Window(X_windowbase._Window):
 	def _end_rb(self, w, data, event):
 		self._rb_common(event)
 		self._rb_curdisp = self._rb_display.clone()
-		self._rb_curdisp.fgcolor(255, 0, 0)
+		self._rb_curdisp.fgcolor((255, 0, 0))
 		self._rb_curdisp.drawbox(self._rb_cvbox())
 		self._rb_curdisp.render()
 
@@ -852,7 +853,7 @@ class _MenuSupport:
 		'''Close the menu.'''
 		self.destroy_menu()
 
-	def create_menu(self, title, list):
+	def create_menu(self, list, title = None):
 		'''Create a popup menu.
 
 		TITLE is the title of the menu.  If None or '', the
@@ -2185,7 +2186,7 @@ class Window(_WindowHelpers, _MenuSupport):
 		func, args = client_data
 		apply(func, args)
 
-def Dialog(title, prompt, grab, vertical, list):
+def Dialog(list, title = '', prompt = None, grab = 1, vertical = 1):
 	w = Window(title, grab = grab)
 	options = {'top': None, 'left': None, 'right': None}
 	if prompt:
@@ -2233,7 +2234,8 @@ class _MultChoice:
 		list = []
 		for msg in msg_list:
 			list.append(msg, (self.callback, (msg,)))
-		self.dialog = Dialog(None, prompt, TRUE, FALSE, list)
+		self.dialog = Dialog(list, title = None, prompt = prompt,
+				     grab = TRUE, vertical = FALSE)
 
 	def run(self):
 		try:
@@ -2273,10 +2275,9 @@ getsize = toplevel.getsize
 
 usewindowlock = toplevel.usewindowlock
 
-getmouse = toplevel.getmouse
-
 def beep():
-	pass				# for now...
+	import sys
+	sys.stderr.write('\7')
 
 settimer = toplevel.settimer
 

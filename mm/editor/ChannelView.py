@@ -132,7 +132,7 @@ class ChannelView(ViewDialog):
 			obj = self.focus
 		else:
 			obj = self.baseobject
-		self.window.create_menu(obj.menutitle, obj.commandlist)
+		self.window.create_menu(obj.commandlist, title = obj.menutitle)
 
 	def hide(self, *rest):
 		if not self.is_showing():
@@ -541,7 +541,7 @@ class ChannelView(ViewDialog):
 			obj = self.focus
 		else:
 			obj = self.baseobject
-		self.window.create_menu(obj.menutitle, obj.commandlist)
+		self.window.create_menu(obj.commandlist, title = obj.menutitle)
 
 	# Global focus stuff
 
@@ -620,7 +620,7 @@ class ChannelView(ViewDialog):
 			list.append(name, (self.select_cb, (name,)))
 		list.append(None)
 		list.append('Cancel')
-		windowinterface.Dialog('Select', prompt, 1, 1, list)
+		windowinterface.Dialog(list, title = 'Select', prompt = prompt, grab = 1, vertical = 1)
 
 	def select_cb(self, name):
 		self.placing_channel = PLACING_NEW
@@ -800,7 +800,8 @@ class GO:
 		self.mother.deselect()
 		self.selected = 1
 		self.mother.focus = self
-		self.mother.window.create_menu(self.menutitle, self.commandlist)
+		self.mother.window.create_menu(self.commandlist,
+					       title = self.menutitle)
 		if self.ok:
 			self.drawfocus()
 
@@ -813,8 +814,8 @@ class GO:
 		mother.focus = None
 		if self.ok:
 			baseobject = mother.baseobject
-			mother.window.create_menu(baseobject.menutitle,
-						  baseobject.commandlist)
+			mother.window.create_menu(baseobject.commandlist,
+						  title = baseobject.menutitle)
 			self.drawfocus()
 
 	def ishit(self, x, y):
@@ -877,7 +878,7 @@ class TimeScaleBox(GO):
 		t = t + vmargin
 		r = (4*l+r)/5
 		b = b - vmargin
-		d.drawbox(l, t, r - l, b - t)
+		d.drawbox((l, t, r - l, b - t))
 		# Compute number of division boxes
 		t0, t1 = self.mother.timerange()
 		dt = t1 - t0
@@ -908,7 +909,7 @@ class TimeScaleBox(GO):
 			b = min(b, self.bottom)
 			if b <= t:
 				continue
-			d.drawfbox(BORDERCOLOR, l, t, r - l, b - t)
+			d.drawfbox(BORDERCOLOR, (l, t, r - l, b - t))
 			if i%div <> 0:
 				continue
 			StringStuff.centerstring(d,
@@ -1227,7 +1228,7 @@ class NodeBox(GO):
 			color = armcolors[self.node.armedmode]
 		else:
 			color = NODECOLOR
-		d.drawfbox(color, l, t, r - l, b - t)
+		d.drawfbox(color, (l, t, r - l, b - t))
 
 		# If the end time was inherited, make the bottom-right
 		# triangle of the box a lighter color
@@ -1237,20 +1238,20 @@ class NodeBox(GO):
 		# If there are anchors on this node,
 		# draw a small orange box in the bottom left corner
 		if self.hasanchors:
-			d.drawfbox(ANCHORCOLOR, l, b-vaboxsize,
-				   haboxsize, vaboxsize)
+			d.drawfbox(ANCHORCOLOR, (l, b-vaboxsize,
+						 haboxsize, vaboxsize))
 
 		# If there is a pausing anchor,
 		# draw an orange line at the bottom
 		if self.haspause:
-			d.drawfbox(ANCHORCOLOR, l, b-vaboxsize,
-				   r - l, vaboxsize)
+			d.drawfbox(ANCHORCOLOR, (l, b-vaboxsize,
+						 r - l, vaboxsize))
 
 		# If this is a pausing node
 		# draw a small orange box in the bottom right corner
 		if self.pausenode:
-			d.drawfbox(ANCHORCOLOR, r-haboxsize, b-vaboxsize,
-				   haboxsize, vaboxsize)
+			d.drawfbox(ANCHORCOLOR, (r-haboxsize, b-vaboxsize,
+						 haboxsize, vaboxsize))
 
 		# Draw a "3D" border if selected, else an "engraved" outline
 		if self.selected:
@@ -1258,7 +1259,7 @@ class NodeBox(GO):
 				    FOCUSBOTTOM, l, t, r - l, b - t)
 		else:
 			d.fgcolor(BORDERCOLOR)
-			d.drawbox(l, t, r - l, b - t)
+			d.drawbox((l, t, r - l, b - t))
 
 		# Draw the name, centered in the box
 		d.fgcolor(TEXTCOLOR)

@@ -78,7 +78,9 @@ def _showmenu(menu, filename):	# Show (modal) editor choice dialog
 		list.append(key, (_do_edit, (menu[key], filename)))
 	list.append(None)
 	list.append('Cancel', None)
-	w = windowinterface.Dialog('Choose', 'Choose an editor:', 1, 0, list)
+	w = windowinterface.Dialog(list, title = 'Choose',
+				   prompt = 'Choose an editor:', grab = 1,
+				   vertical = 0)
 
 # InitEditors - Initialize the module.
 def InitEditors():

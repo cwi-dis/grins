@@ -809,7 +809,7 @@ class ChannelWindow(Channel):
 		self.window.register(EVENTS.Mouse0Press, self.mousepress, None)
 		self.window.register(EVENTS.Mouse0Release, self.mouserelease,
 				     None)
-		self.window.create_menu(self._name, menu)
+		self.window.create_menu(menu, title = self._name)
 
 	def _destroy_callback(self, *rest):
 		self._player.cmenu_callback(self._name)
@@ -1010,7 +1010,7 @@ class ChannelWindow(Channel):
 ##		parms = self.armed_display.fitfont('Times-Roman', msg)
 ##		w, h = self.armed_display.strsize(msg)
 ##		self.armed_display.setpos((1.0 - w) / 2, (1.0 - h) / 2)
-##		self.armed_display.fgcolor(255, 0, 0)		# red
+##		self.armed_display.fgcolor((255, 0, 0))		# red
 ##		box = self.armed_display.writestr(msg)
 
 class _ChannelThread:

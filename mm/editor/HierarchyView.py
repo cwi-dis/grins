@@ -88,7 +88,8 @@ class HierarchyView(ViewDialog):
 		self.fixviewroot()
 		self.recalc()
 		self.draw()
-		self.window.create_menu(self.focusobj.name, self.focusobj.menu)
+		self.window.create_menu(self.focusobj.menu,
+					title = self.focusobj.name)
 
 	def hide(self, *rest):
 		if not self.is_showing():
@@ -519,8 +520,8 @@ class HierarchyView(ViewDialog):
 		if self.focusobj:
 			self.focusnode = self.focusobj.node
 			self.focusobj.selected = 1
-			self.window.create_menu(self.focusobj.name,
-						self.focusobj.menu)
+			self.window.create_menu(self.focusobj.menu,
+						title = self.focusobj.name)
 		else:
 			self.focusnode = None
 
@@ -703,7 +704,8 @@ class Object:
 			return
 		self.selected = 1
 		if self.ok:
-			self.mother.window.create_menu(self.name, self.menu)
+			self.mother.window.create_menu(self.menu,
+						       title = self.name)
 			self.drawfocus()
 
 	# Remove this object from the focus

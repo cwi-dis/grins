@@ -282,9 +282,6 @@ class _Toplevel:
 	def push(self):
 		pass
 
-	def getmouse(self):
-		return 0, 0
-
 	def usewindowlock(self, lock):
 		pass
 
@@ -646,36 +643,24 @@ class _Window:
 		else:
 			func(arg, self, WindowExit, None)
 
-	def newwindow(self, *coordinates, **options):
+	def newwindow(self, coordinates, **options):
 		return apply(self._new_window, (coordinates, FALSE), options)
 
-	def newcmwindow(self, *coordinates, **options):
+	def newcmwindow(self, coordinates, **options):
 		return apply(self._new_window, (coordinates, TRUE), options)
 		
 	def _new_window(self, coordinates, defcmap, **options):
-		if len(coordinates) == 1 and type(coordinates) is TupleType:
-			coordinates = coordinates[0]
-		if len(coordinates) != 4:
-			raise TypeError, ('arg count mismatch', `coordinates`)
 		x, y, w, h = coordinates
 		newwin = apply(_Window, (self, x, y, w, h, '', defcmap), options)
 		return newwin
 
-	def fgcolor(self, *color):
-		if len(color) == 1 and type(color[0]) is TupleType:
-			color = color[0]
-		if len(color) != 3:
-			raise TypeError, 'arg count mismatch'
+	def fgcolor(self, color):
+		self._xfgcolor = self._convert_color(color)
 		self._fgcolor = color
-		self._xfgcolor = self._convert_color(self._fgcolor)
 
-	def bgcolor(self, *color):
-		if len(color) == 1 and type(color[0]) is TupleType:
-			color = color[0]
-		if len(color) != 3:
-			raise TypeError, 'arg count mismatch'
+	def bgcolor(self, color):
+		self._xbgcolor = self._convert_color(color)
 		self._bgcolor = color
-		self._xbgcolor = self._convert_color(self._bgcolor)
 		self._gc.background = self._gc.foreground = self._xbgcolor
 		if not self._active_display_list:
 			self._form.SetValues({'background': self._xbgcolor})
@@ -881,7 +866,7 @@ class _Window:
 		self._menu_list = None
 		self._accelerators = {}
 
-	def create_menu(self, title, list):
+	def create_menu(self, list, title = None):
 		self.destroy_menu()
 		self._menu_title = title
 		self._menu_list = list
@@ -1050,17 +1035,13 @@ class _DisplayList:
 	#
 	# Color handling
 	#
-	def fgcolor(self, *color):
+	def fgcolor(self, color):
 		if self.is_closed():
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(color) == 1 and type(color[0]) is TupleType:
-			color = color[0]
-		if len(color) != 3:
-			raise TypeError, 'arg count mismatch'
+		self._xfgcolor = self._window._convert_color(color)
 		self._fgcolor = color
-		self._xfgcolor = self._window._convert_color(self._fgcolor)
 		self._list.append('fg', self._xfgcolor)
 
 	#
@@ -1183,17 +1164,11 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		return self.usefont(findfont(font, size))
 
-	def fitfont(self, fontname, str, *opt_margin):
+	def fitfont(self, fontname, str, margin = 0):
 		if self.is_closed():
 			raise error, 'displaylist already closed'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		if len(opt_margin) == 0:
-			margin = 0
-		elif len(opt_margin) == 1:
-			margin = opt_margin[0]
-		else:
-			raise error, 'too many arguments'
 		if margin < 0 or margin >= 1:
 			raise error, 'rediculous margin: ' + `margin`
 		mfac = 1 - margin
@@ -1253,30 +1228,9 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		if not self._font:
 			raise error, 'font not set'
-		strlist = string.splitfields(str, '\n')
-		maxwidth = 0
-		maxheight = 0
-		for str in strlist:
-			width, height = self._font.strsize(str)
-			width = width * _screenwidth / _mscreenwidth
-			if width > maxwidth:
-				maxwidth = width
-			maxheight = maxheight + self._fontheight
-		return float(maxwidth) / self._window._width, maxheight
-
-	def strfit(self, text, width, height):
-		# this could be made more efficient
-		if self.is_closed():
-			raise error, 'displaylist already closed'
-		if self._rendered:
-			raise error, 'displaylist already rendered'
-		if not self._font:
-			raise error, 'font not set'
-		for i in range(1, len(text)):
-			w, h = self.strsize(text[:i])
-			if w > width or h > height:
-				return i - 1
-		return len(text)
+		width, height = self._font.strsize(str)
+		return float(width) * _screenwidth / _mscreenwidth / self._window._width, \
+		       float(height) * _screenheight / _mscreenheight / self._window._height
 
 	def setpos(self, x, y):
 		if self.is_closed():
@@ -1357,23 +1311,14 @@ class _Button:
 		else:
 			return FALSE
 
-	def getwindow(self):
-		if self.is_closed():
-			raise error, 'button already closed'
-		return self._dispobj._window
-
 	def hiwidth(self, width):
 		self._hiwidth = width
 
-	def hicolor(self, *color):
+	def hicolor(self, color):
 		if self.is_closed():
 			raise error, 'button already closed'
-		if len(color) == 1 and type(color[0]) is TupleType:
-			color = color[0]
-		if len(color) != 3:
-			raise TypeError, 'arg count mismatch'
-		self._hicolor = color
 		self._xhicolor = self._dispobj._window._convert_color(color)
+		self._hicolor = color
 
 	def highlight(self):
 		if self.is_closed():
@@ -1575,7 +1520,8 @@ class showmessage:
 		self._widget = None
 
 class Dialog:
-	def __init__(self, title, prompt, grab, vertical, list):
+	def __init__(self, list, title = '', prompt = None, grab = 1,
+		     vertical = 1):
 		if not title:
 			title = ''
 		if grab:
@@ -1661,7 +1607,7 @@ class Dialog:
 			self._menu.DestroyWidget()
 		self._menu = None
 
-	def create_menu(self, title, list):
+	def create_menu(self, list, title = None):
 		self.destroy_menu()
 		menu = self._widget.CreatePopupMenu('dialogMenu', {})
 		if title:
@@ -1702,7 +1648,8 @@ class _MultChoice(Dialog):
 		list = []
 		for msg in msg_list:
 			list.append(msg, (self.callback, (msg,)))
-		Dialog.__init__(self, None, prompt, TRUE, FALSE, list)
+		Dialog.__init__(self, list, title = None, prompt = prompt,
+				grab = TRUE, vertical = FALSE)
 
 	def run(self):
 		try:

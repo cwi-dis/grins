@@ -118,7 +118,7 @@ class _Boxes:
 			if b != (0, 0, 1, 1):
 				d.drawbox(b)
 		self.display = d.clone()
-		d.fgcolor(255, 0, 0)
+		d.fgcolor((255, 0, 0))
 		if box:
 			d.drawbox(box)
 		d.render()
@@ -128,9 +128,10 @@ class _Boxes:
 		else:
 			msg = _box_message
 		self._looping = 0
-		self.dialog = Dialog(None, msg, 0, 0,
-				[('', 'Done', (self.done_callback, ())),
-				 ('', 'Cancel', (self.cancel_callback, ()))])
+		self.dialog = Dialog(
+			[('', 'Done', (self.done_callback, ())),
+			('', 'Cancel', (self.cancel_callback, ()))],
+			title = None, prompt = msg, grab = 0, vertical = 0)
 
 	def __del__(self):
 		self.close()
@@ -185,7 +186,7 @@ class _Boxes:
 
 	def after_press(self):
 		d = self.display.clone()
-		d.fgcolor(255, 0, 0)
+		d.fgcolor((255, 0, 0))
 		d.drawbox(self.box)
 		d.render()
 		self.cur_display.close()
@@ -470,12 +471,8 @@ class _DisplayList(GL_windowbase._DisplayList):
 		d.append(gl.popmatrix)
 
 class _Window(GL_windowbase._Window):
-	def newwindow(self, *coordinates, **options):
+	def newwindow(self, coordinates, **options):
 		if debug: print `self`+'.newwindow'+`coordinates`
-		if len(coordinates) == 1 and type(coordinates) == TupleType:
-			coordinates = coordinates[0]
-		if len(coordinates) != 4:
-			raise TypeError, 'arg count mismatch'
 		x, y, w, h = coordinates
 		x0, y0, x1, y1 = self._convert_coordinates(x, y, w, h)
 		toplevel._win_lock.acquire()
@@ -778,9 +775,10 @@ class _Window(GL_windowbase._Window):
 class _Question(Dialog):
 	def __init__(self, text):
 		self._finish = None
-		Dialog.__init__(self, None, text, 1, 0,
+		Dialog.__init__(self,
 				[('y', 'Yes', (self._ok_callback, ())),
-				 ('n', 'No', (self._cancel_callback, ()))])
+				 ('n', 'No', (self._cancel_callback, ()))],
+				None, text, 1, 0)
 
 	def run(self):
 		self._loop()
@@ -965,8 +963,6 @@ getsize = toplevel.getsize
 beep = gl.ringbell
 
 usewindowlock = toplevel.usewindowlock
-
-getmouse = toplevel.getmouse
 
 settimer = event.settimer
 
