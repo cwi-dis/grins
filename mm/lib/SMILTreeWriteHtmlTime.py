@@ -117,12 +117,12 @@ class SMILHtmlTimeWriter(SMIL):
 	def __init__(self, node, fp, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0,
 		     evallicense = 0, tmpcopy = 0, progress = None,
 		     convertURLs = 0):
+		self.smilboston = 1
 		ctx = node.GetContext()
 		self.root = node
 		self.fp = fp
 		self.__title = ctx.gettitle()
 		self.__animateContext = Animators.AnimateContext(node=node)
-		self.smilboston = ctx.attributes.get('project_boston', 0)
 		self.copydir = self.copydirurl = self.copydirname = None
 		if convertURLs:
 			url = MMurl.canonURL(MMurl.pathname2url(filename))
@@ -147,7 +147,6 @@ class SMILHtmlTimeWriter(SMIL):
 
 		self.ch2name = {}
 		self.top_levels = []
-		self.__subchans = {}
 		self.calcchnames1(node)
 
 		self.uid2name = {}
@@ -462,11 +461,12 @@ class SMILHtmlTimeWriter(SMIL):
 		while lch:
 			if lch.get('type') != 'layout':
 				continue
-			if lch in self.top_levels:
+			pch = lch.GetParent()
+			if pch is None:
 				viewport = lch
 				break
 			parents.insert(0, lch)
-			lch = lch.__parent
+			lch = pch
 	
 		if parents:
 			lch = parents[0]
@@ -619,11 +619,12 @@ class SMILHtmlTimeWriter(SMIL):
 		while lch:
 			if lch.get('type') != 'layout':
 				continue
-			if lch in self.top_levels:
+			pch = lch.GetParent()
+			if pch is None:
 				viewport = lch
 				break
 			parents.insert(0, lch)
-			lch = lch.__parent
+			lch = pch
 		
 		pushed = 0
 		if parents:
@@ -686,7 +687,7 @@ class SMILHtmlTimeWriter(SMIL):
 	def writelayout(self):
 		x = xmargin = 20
 		y = ymargin = 20
-		for ch in self.top_levels:
+		for ch in self.root.GetContext().getviewports():
 			w, h = ch.getPxGeom()
 			name = self.ch2name[ch]
 			if ch.has_key('bgcolor'):
@@ -701,9 +702,8 @@ class SMILHtmlTimeWriter(SMIL):
 			self.ch2style[ch] = style
 			self.fp.write('.reg'+scriptid(name) + ' {' + style + '}\n')
 
-			if self.__subchans.has_key(ch.name):
-				for sch in self.__subchans[ch.name]:
-					self.writeregion(sch, x, y)
+			for sch in ch.GetChildren():
+				self.writeregion(sch, x, y)
 
 			x = x + w + xmargin
 
@@ -734,9 +734,8 @@ class SMILHtmlTimeWriter(SMIL):
 		name = self.ch2name[ch]
 		self.fp.write('.reg'+scriptid(name) + ' {' + style + '}\n')
 		
-		if self.__subchans.has_key(ch.name):
-			for sch in self.__subchans[ch.name]:
-				self.writeregion(sch, x+dx, y+dy)
+		for sch in ch.GetChildren():
+			self.writeregion(sch, x+dx, y+dy)
 		
 	def rc2style(self, rc):
 		x, y, w, h = rc
@@ -874,7 +873,6 @@ class SMILHtmlTimeWriter(SMIL):
 		usergroups = node.GetContext().usergroups
 		if not usergroups:
 			return
-		self.smilboston = 1
 		for ugroup in usergroups.keys():
 			name = identify(ugroup, html = 1)
 			if self.ids_used.has_key(name):
@@ -910,7 +908,6 @@ class SMILHtmlTimeWriter(SMIL):
 		transitions = node.GetContext().transitions
 		if not transitions:
 			return
-		self.smilboston = 1
 		for transition in transitions.keys():
 			name = identify(transition, html = 1)
 			if self.ids_used.has_key(name):
@@ -974,24 +971,12 @@ class SMILHtmlTimeWriter(SMIL):
 			if not self.ids_used.has_key(name):
 				self.ids_used[name] = 0
 				self.ch2name[ch] = name
-			if ch.has_key('base_window'):
-				pch = ch['base_window']
-				if not self.__subchans.has_key(pch):
-					self.__subchans[pch] = []
-				self.__subchans[pch].append(ch)
-			if not ch.has_key('base_window') and \
-			   ch['type'] not in ('sound', 'null'):
+			if ch.GetParent() is None and \
+			   ChannelMap.isvisiblechannel(ch['type']):
 				# top-level channel with window
 				self.top_levels.append(ch)
-				if not self.__subchans.has_key(ch.name):
-					self.__subchans[ch.name] = []
 				if not self.__title:
 					self.__title = ch.name
-			# also check if we need to use the CMIF extension
-			#if not self.uses_grins_namespace and \
-			#   not smil_mediatype.has_key(ch['type']) and \
-			#   ch['type'] != 'layout':
-			#	self.uses_namespaces = 1
 		if not self.__title and channels:
 			# no channels with windows, so take very first channel
 			self.__title = channels[0].name
@@ -1000,8 +985,11 @@ class SMILHtmlTimeWriter(SMIL):
 		"""Calculate unique names for channels; second pass"""
 		context = node.GetContext()
 		channels = context.channels
-		if self.top_levels:
-			top0 = self.top_levels[0].name
+		for ch in context.getviewports():
+			if ChannelMap.isvisiblechannel(ch['type']):
+				# first top-level channel
+				top0 = ch.name
+				break
 		else:
 			top0 = None
 		for ch in channels:
@@ -1015,25 +1003,6 @@ class SMILHtmlTimeWriter(SMIL):
 				name = nn
 				self.ids_used[name] = 0
 				self.ch2name[ch] = name
-			if not ch.has_key('base_window') and \
-			   ch['type'] in ('sound', 'null') and top0:
-				self.__subchans[top0].append(ch)
-			# check for SMIL 2.0 feature: hierarchical regions
-			if not self.smilboston and \
-			   not ch in self.top_levels and \
-			   self.__subchans.get(ch.name):
-				for sch in self.__subchans[ch.name]:
-					if sch['type'] == 'layout':
-						self.smilboston = 1
-						break
-
-		# enable bottom up search
-		for ch in channels:
-			ch.__parent = None
-		for parentName, childs in self.__subchans.items():
-			parchan = self.root.GetContext().getchannel(parentName)
-			for ch in childs:
-				ch.__parent = parchan
 
 	def calcanames(self, node):
 		"""Calculate unique names for anchors"""
@@ -1096,7 +1065,7 @@ def scriptid(name):
 	if not name: return name
 	l = []
 	for ch in name:
-		if ch=='-': ch = '_'
+		if ch in ('-','.'): ch = '_'
 		l.append(ch)
 	return string.join(l, '')
 
