@@ -2964,6 +2964,89 @@ class AudioRenderer(MediaRenderer):
 	def needswindow(self):
 		return 0
 
+#################################
+import winqt
+
+class QtMediaRenderer(Renderer):
+	def __init__(self,wnd,rc,baseURL=''):
+		Renderer.__init__(self,wnd,rc,baseURL)
+		self._player = None
+	
+	def __del__(self):
+		self.release()
+		
+	def isstatic(self):
+		return 0
+
+	def needswindow(self):
+		return 1
+			
+	def release(self):
+		if self._player:
+			self._player.stop()
+			self._player = None
+
+	def load(self,rurl):
+		self.release()
+		if winqt.HasQtSupport():
+			self._player = winqt.QtPlayer()
+		else:
+			self.update()
+			return
+
+		import MMurl
+		url = self.urlqual(rurl)
+		try:
+			fn = MMurl.urlretrieve(url)[0]
+		except Exception, arg:
+			print arg
+			if self.needswindow():
+				self.update()
+			return
+
+		if not self._player.open(fn, asaudio = not self.needswindow()):
+			if self.needswindow():
+				self.update()
+			return
+
+		if self.needswindow():
+			left,top,width,height = self._player.getMovieRect()
+			src_x, src_y, dest_x, dest_y, width, height,rcKeep=\
+				self.adjustSize((width,height))
+			#self._player.SetWindowPosition((dest_x, dest_y, width, height))
+			#self._player.SetWindow(self._wnd, win32con.WM_USER+101)
+			self.update()
+	
+	def play(self):
+		if not self._player: return
+		self._player.run()
+
+	def pause(self):
+		if not self._player: return
+		self._player.stop()
+
+	def stop(self):
+		if not self._player: return
+		self._player.seek(0)
+		self._player.stop()
+
+	def ismediaend(self):
+		d = self._player.getDuration()
+		t = self._player.getTime()
+		return t>=d
+
+
+class QtVideoRenderer(QtMediaRenderer):
+	def __init__(self,wnd,rc,baseURL=''):
+		QtMediaRenderer.__init__(self,wnd,rc,baseURL)
+	def needswindow(self):
+		return 1
+
+class QtAudioRenderer(QtMediaRenderer):
+	def __init__(self,wnd,rc,baseURL=''):
+		QtMediaRenderer.__init__(self,wnd,rc,baseURL)
+	def needswindow(self):
+		return 0
 
 #################################
 try:
@@ -3105,8 +3188,12 @@ class PreviewPage(AttrPage):
 		self._renderer = None
 		if renderersig=='video':
 			self._renderer=VideoRenderer(self,self._prevrc,self._form._baseURL)
+		elif renderersig=='qtvideo':
+			self._renderer=QtVideoRenderer(self,self._prevrc,self._form._baseURL)
 		elif renderersig=='audio':
 			self._renderer=AudioRenderer(self,self._prevrc,self._form._baseURL)
+		elif renderersig=='qtaudio':
+			self._renderer=QtAudioRenderer(self,self._prevrc,self._form._baseURL)
 		elif renderersig=='realwnd':
 			self._renderer=RealWndRenderer(self,self._prevrc,self._form._baseURL)
 		elif renderersig=='realaudio':
@@ -3284,9 +3371,17 @@ class VideoPreviewPage(PreviewPage):
 	def __init__(self,form):
 		PreviewPage.__init__(self, form,'video')	
 
+class QtVideoPreviewPage(PreviewPage):
+	def __init__(self,form):
+		PreviewPage.__init__(self, form,'qtvideo')	
+
 class AudioPreviewPage(PreviewPage):
 	def __init__(self,form):
-		PreviewPage.__init__(self, form,'audio')	
+		PreviewPage.__init__(self, form,'audio')
+			
+class QtAudioPreviewPage(PreviewPage):
+	def __init__(self,form):
+		PreviewPage.__init__(self, form,'qtaudio')	
 
 class RealAudioPreviewPage(PreviewPage):
 	def __init__(self,form):
@@ -3990,10 +4085,14 @@ class FileGroup(AttrGroup):
 		elif mtype=='video':
 			if string.find(subtype,'realvideo')>=0:
 				mtype='realwnd'
+			elif string.find(subtype,'quicktime')>=0:
+				mtype='qtvideo'
 			self._preview=1
 		elif mtype=='audio':
 			if string.find(subtype,'realaudio')>=0:
 				mtype='realaudio'
+			if string.find(subtype,'x-aiff')>=0 or string.find(subtype,'quicktime')>=0:
+				mtype='qtaudio'
 			self._preview=1
 		elif mtype=='text':
 			if subtype=='html':
@@ -4037,8 +4136,12 @@ class FileGroup(AttrGroup):
 			return HtmlPreviewPage
 		elif self._mtypesig=='video':
 			return VideoPreviewPage
+		elif self._mtypesig=='qtvideo':
+			return QtVideoPreviewPage
 		elif self._mtypesig=='audio':
 			return AudioPreviewPage
+		elif self._mtypesig=='qtaudio':
+			return QtAudioPreviewPage
 		elif self._mtypesig=='realwnd':
 			return RealWndPreviewPage
 		elif self._mtypesig=='realaudio':
