@@ -1122,7 +1122,6 @@ class NodeBox(GO):
 		self.hasanchors = self.haspause = 0
 		try:
 			alist = self.node.GetRawAttr('anchorlist')
-			modanchorlist(alist)
 		except NoSuchAttrError:
 			alist = None
 		if alist: # Not None and not []
