@@ -266,7 +266,7 @@ class MMLWriter:
 		"""Write a node (possibly recursively)"""
 		type = x.GetType()
 		if type == 'bag':
-			print '** Bag node', \
+			print '** Choice node', \
 			      x.GetRawAttrDef('name', '<unnamed>'),\
 			      x.GetUID()
 

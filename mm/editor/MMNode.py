@@ -522,7 +522,7 @@ class MMNode(MMNodeBase.MMNode):
 	def FindMiniBag(self):
 		bag = self.parent
 		if bag and bag.type not in bagtypes:
-			raise 'FindMiniBag: minidoc not rooted in a bag!'
+			raise 'FindMiniBag: minidoc not rooted in a choice node!'
 		return bag
 
 ## 	#

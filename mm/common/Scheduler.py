@@ -302,7 +302,7 @@ class Scheduler(scheduler):
 	def play(self, node, seek_node, anchor_id, anchor_arg):
 		# XXXX Is the following true for alt nodes too?
 		if node.GetType() == 'bag':
-			raise 'Cannot play bag node'
+			raise 'Cannot play choice node'
 		# XXXX This statement should move to an intermedeate level.
 		if self.ui.sync_cv:
 			self.toplevel.channelview.globalsetfocus(node)
