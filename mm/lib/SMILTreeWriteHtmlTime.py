@@ -184,8 +184,9 @@ class SMILHtmlTimeWriter(SMIL):
 	def writeAsHtmlTime(self):
 		write = self.fp.write
 		import version
-		write('<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\">\n')
-		self.writetag('html', [('xmlns:t','urn:schemas-microsoft-com:time')])
+		write('<!DOCTYPE HTML PUBLIC \"-//W3C//DTD W3 HTML//EN\">\n')
+		#self.writetag('html', [('xmlns:t','urn:schemas-microsoft-com:time')])
+		self.writetag('html')
 		self.push()
 
 		# head
@@ -198,20 +199,26 @@ class SMILHtmlTimeWriter(SMIL):
 					       ('content', self.__title)])
 		self.writetag('meta', [('name', 'generator'),
 				       ('content','GRiNS %s'%version.version)])
-		
+
+		#
+		self.writetag('XML:namespace', [('prefix','t'),])
+
 		# style
 		self.writetag('style', [('type', 'text/css'),])
 		self.push()
 
 		# style contents
-		# Internet explorer style conventions for HTML+TIME support part 1
-		write('.time {behavior: url(#default#time2);}\n')
+
+		# Internet explorer style conventions for HTML+TIME support
+		write('.time {behavior: url(#default#time2); }\n')
+		write('t\:*  {behavior: url(#default#time2); }\n') # or part 2 below
+		
 		self.writelayout()
 
 		self.pop() # style
 
 		# Internet explorer style conventions for HTML+TIME support part 2
-		write('<?IMPORT namespace=\"t\" implementation=\"#default#time2\">\n')
+		#write('<?IMPORT namespace=\"t\" implementation=\"#default#time2\">\n')
 
 		if self.root.GetContext().transitions:
 			write(transScript)
