@@ -1,22 +1,21 @@
 __version__ = "$Id$"
 
-import MMAttrdefs
 import windowinterface
 import wmwriter
 
 class Exporter:
-	def __init__(self, filename, player, profile=20):
+	def __init__(self, filename, player, profile=19):
 		self.filename = filename
 		self.player = player
 		self.writer = None
 		self.profile = profile
 		self.topwindow = None
 		self.completed = 0
-		self.starttime = None
 
 		self.progress = windowinterface.ProgressDialog("Exporting", self.cancel_callback, None, 0)
 		self.progress.set('Exporting document to WMP...')
 
+		self.timefunc = self.player.scheduler.timefunc
 		self.player.exportplay(self)
 		
 	def __del__(self):
@@ -30,7 +29,6 @@ class Exporter:
 		self._setAudioFormat()
 		self.writer.setOutputFilename(self.filename)
 		self.writer.beginWriting()
-		self.starttime = windowinterface.getcurtime()
 		
 	def getWriter(self):
 		return self.writer
@@ -41,11 +39,16 @@ class Exporter:
 			if self.topwindow != window:
 				print "Cannot export multiple topwindows"
 			elif self.writer and self.progress:
-				dt = timestamp-self.starttime
+				dt = self.timefunc()
 				self.writer.update(dt)
 				if self.progress:
 					self.progress.set('Exporting document to WMP...', int(dt*100)%100, 100, int(dt*100)%100, 100)
 
+	def audiofragment(self, af):
+		dt = self.timefunc()
+		if self.progress:
+			self.progress.set('Exporting document to WMP...', int(dt*100)%100, 100, int(dt*100)%100, 100)
+		
 	def finished(self):
 		if self.progress:
 			self.progress.set('Encoding document for WMP...', 100, 100, 100, 100)
