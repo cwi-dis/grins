@@ -729,7 +729,7 @@ class _CommonWindow:
 		# Overriden for toplevel window
 		return 0
 				
-	def _contentclick(self, down, where, event, shifted, double):
+	def _contentclick(self, down, where, event, rightclick, double):
 		"""A click in our content-region. Note: this method is extended
 		for top-level windows (to do global-to-local coordinate
 		transforms)"""
@@ -737,7 +737,7 @@ class _CommonWindow:
 		# If we are rubberbanding handle that first.
 		#
 		if (self is _in_create_box) and down:
-				if self._rb_mousedown(where, shifted):
+				if self._rb_mousedown(where, rightclick):
 					return
 				# We are in create_box mode, but the mouse was way off.
 				# If we are in modal create we beep, in modeless create we
@@ -753,7 +753,7 @@ class _CommonWindow:
 			if Qd.PtInRect(where, ch.qdrect()):
 				try:
 					ch._contentclick(down, where, event,
-							 shifted, double)
+							 rightclick, double)
 				except Continue:
 					pass
 				else:
@@ -766,13 +766,14 @@ class _CommonWindow:
 		#
 		# Next, check for popup menu, if we have one
 		#
-		if down and shifted:
+		if down and rightclick:
 			if self._menu or self._popupmenu:
+				self._doclickcallback(Mouse0Press, where)
 				self._contentpopupmenu(where, event)
 				return
 		else:
 			if down and (self._menu or self._popupmenu):
-				# Not shifted, but we have a popup menu. Ask toplevel
+				# Not rightclick, but we have a popup menu. Ask toplevel
 				# to re-send the event in a short while
 				mw_globals.toplevel.setmousetimer(self._contentpopupmenu, (where, event))
 		
@@ -787,17 +788,20 @@ class _CommonWindow:
 		# Convert to our type of event and call the
 		# appropriate handler.
 		#
-		if not shifted:
-			if down:
-				evttype = Mouse0Press
-			else:
-				evttype = Mouse0Release
-		else:
+		if rightclick:
 			if down:
 				evttype = Mouse2Press
 			else:
 				evttype = Mouse2Release
-
+		else:
+			if down:
+				evttype = Mouse0Press
+			else:
+				evttype = Mouse0Release
+				
+		self._doclickcallback(evttype, where)
+		
+	def _doclickcallback(self, evttype, where):
 		try:
 			func, arg = self._eventhandlers[evttype]
 		except KeyError:
@@ -1342,7 +1346,7 @@ class _CommonWindow:
 		if y > y1: y = y1
 		return x, y
 
-	def _rb_mousedown(self, where, shifted): # XXXXSCROLL
+	def _rb_mousedown(self, where, rightclick): # XXXXSCROLL
 		# called on mouse press
 		# XXXX I'm not sure that both the render and the invalrect are needed...
 		self._rb_display.render()
@@ -2363,13 +2367,13 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 		if not self.close_window_command():
 			print 'No way to close this window!', self
 		
-	def _contentclick(self, down, where, event, shifted, double):
+	def _contentclick(self, down, where, event, rightclick, double):
 		"""A mouse click in our data-region"""
 		if not self._onscreen_wid or not self._parent:
 			return
 		Qd.SetPort(self._onscreen_wid)
 		where = Qd.GlobalToLocal(where)
-		_CommonWindow._contentclick(self, down, where, event, shifted, double)
+		_CommonWindow._contentclick(self, down, where, event, rightclick, double)
 
 	def _keyboardinput(self, char, where, event):
 		"""A character typed in our data-region"""
@@ -2464,107 +2468,129 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 		self._drop_enabled = onoff
 		
 	def _trackhandler(self, message, dragref, wid):
-		if not message in (Dragconst.kDragTrackingEnterWindow, 
-				Dragconst.kDragTrackingLeaveWindow,
-				Dragconst.kDragTrackingInWindow):
-			return
-		rect = None
-		oldport = Qd.GetPort()
-		Qd.SetPort(self._onscreen_wid)
-		dummy, where = dragref.GetDragMouse()
-		where = Qd.GlobalToLocal(where)
-		x, y = self._convert_qdcoords(where)
- 		if message == Dragconst.kDragTrackingInWindow:
- 			# We're dragging through the window. Give the track
- 			# handler a chance to update the mouse, if wanted
-			try:
-				#
-				# XXXX This is wrong: we should get the correct (DragFile or DragURL)
-				# handler here.
-				#
-				func, arg = self._eventhandlers[DragFile]
-			except KeyError:
+		try:
+			if not message in (Dragconst.kDragTrackingEnterWindow, 
+					Dragconst.kDragTrackingLeaveWindow,
+					Dragconst.kDragTrackingInWindow):
 				return
+			rect = None
+			oldport = Qd.GetPort()
+			Qd.SetPort(self._onscreen_wid)
+			dummy, where = dragref.GetDragMouse()
+			where = Qd.GlobalToLocal(where)
+			x, y = self._convert_qdcoords(where)
+	 		if message == Dragconst.kDragTrackingInWindow:
+	 			# We're dragging through the window. Give the track
+	 			# handler a chance to update the mouse, if wanted
+				try:
+					#
+					# XXXX This is wrong: we should get the correct (DragFile or DragURL)
+					# handler here.
+					#
+					func, arg = self._eventhandlers[DragFile]
+				except KeyError:
+					return
+				dummy, where = dragref.GetDragMouse()
+				Qd.SetPort(self._onscreen_wid)
+				where = Qd.GlobalToLocal(where)
+				x, y = self._convert_qdcoords(where)
+				func(arg, self, DragFile, (x, y))
+				return
+	 			
+	 		# We're entering or leaving the window. Draw or remove
+	 		# the highlight.
+	## 		if 0 < x < 1 and 0 < y < 1:
+			if 1:
+				rect = self.qdrect()
+				rgn = Qd.NewRgn()
+				Qd.RectRgn(rgn, rect)
+				if message == Dragconst.kDragTrackingEnterWindow:
+					dragref.ShowDragHilite(rgn, 1)
+				else:
+					dragref.HideDragHilite()
+				Qd.DisposeRgn(rgn)
+			Qd.SetPort(oldport)
+		except:
+			if hasattr(sys, 'exc_info'):
+				exc_type, exc_value, exc_traceback = sys.exc_info()
+			else:
+				exc_type, exc_value, exc_traceback = sys.exc_type, sys.exc_value, sys.exc_traceback
+			import traceback
+			print 'Error in Drag Handler:'
+			print
+			traceback.print_exception(exc_type, exc_value, None)
+			traceback.print_tb(exc_traceback)
+					
+		
+	def _receivehandler(self, dragref, wid):
+		try:
 			dummy, where = dragref.GetDragMouse()
 			Qd.SetPort(self._onscreen_wid)
 			where = Qd.GlobalToLocal(where)
 			x, y = self._convert_qdcoords(where)
-			func(arg, self, DragFile, (x, y))
-			return
- 			
- 		# We're entering or leaving the window. Draw or remove
- 		# the highlight.
-## 		if 0 < x < 1 and 0 < y < 1:
-		if 1:
-			rect = self.qdrect()
-			rgn = Qd.NewRgn()
-			Qd.RectRgn(rgn, rect)
-			if message == Dragconst.kDragTrackingEnterWindow:
-				dragref.ShowDragHilite(rgn, 1)
+			n = dragref.CountDragItems()
+			for i in range(1, n+1):
+				#
+				# See which flavors are available for this drag
+				#
+				refnum = dragref.GetDragItemReferenceNumber(i)
+				nflavor = dragref.CountDragItemFlavors(refnum)
+				flavors = []
+				for ii in range(1, nflavor+1):
+					flavors.append(dragref.GetFlavorType(refnum, ii))
+				#
+				# And check whether we support any of them.
+				#
+				if 'hfs ' in flavors:
+					try:
+						fflags = dragref.GetFlavorFlags(refnum, 'hfs ')
+					except Drag.Error:
+						print 'Wrong type...', i, dragref.GetFlavorType(refnum, 1)
+						MacOS.SysBeep()
+						return
+					datasize = dragref.GetFlavorDataSize(refnum, 'hfs ')
+					data = dragref.GetFlavorData(refnum, 'hfs ', datasize, 0)
+					tp, cr, flags, fss = self._decode_hfs_dropdata(data)
+					fname = fss.as_pathname()
+					try:
+						func, arg = self._eventhandlers[DropFile]
+					except KeyError:
+						print 'No DropFile handler!'
+						MacOS.SysBeep()
+						return
+					mw_globals.toplevel.settimer(0.1, (func, (arg, self, DropFile, (x, y, fname))))
+				elif 'URLD' in flavors:
+					try:
+						fflags = dragref.GetFlavorFlags(refnum, 'URLD')
+					except Drag.Error:
+						print 'Wrong type...', i, dragref.GetFlavorType(refnum, 1)
+						MacOS.SysBeep()
+						return
+					datasize = dragref.GetFlavorDataSize(refnum, 'URLD')
+					data = dragref.GetFlavorData(refnum, 'URLD', datasize, 0)
+					# Data is "url\rdescription"
+					url = string.split(data, '\r')[0]
+					try:
+						func, arg = self._eventhandlers[DropURL]
+					except KeyError:
+						print 'No DropURL handler!'
+						MacOS.SysBeep()
+						return
+					mw_globals.toplevel.settimer(0.1, (func, (arg, self, DropURL, (x, y, url))))
+				else:
+					print 'No supported flavors in drag item:', flavors
+					MacOS.SysBeep()
+					return
+		except:
+			if hasattr(sys, 'exc_info'):
+				exc_type, exc_value, exc_traceback = sys.exc_info()
 			else:
-				dragref.HideDragHilite()
-			Qd.DisposeRgn(rgn)
-		Qd.SetPort(oldport)
-					
-		
-	def _receivehandler(self, dragref, wid):
-		dummy, where = dragref.GetDragMouse()
-		Qd.SetPort(self._onscreen_wid)
-		where = Qd.GlobalToLocal(where)
-		x, y = self._convert_qdcoords(where)
-		n = dragref.CountDragItems()
-		for i in range(1, n+1):
-			#
-			# See which flavors are available for this drag
-			#
-			refnum = dragref.GetDragItemReferenceNumber(i)
-			nflavor = dragref.CountDragItemFlavors(refnum)
-			flavors = []
-			for ii in range(1, nflavor+1):
-				flavors.append(dragref.GetFlavorType(refnum, ii))
-			#
-			# And check whether we support any of them.
-			#
-			if 'hfs ' in flavors:
-				try:
-					fflags = dragref.GetFlavorFlags(refnum, 'hfs ')
-				except Drag.Error:
-					print 'Wrong type...', i, dragref.GetFlavorType(refnum, 1)
-					MacOS.SysBeep()
-					return
-				datasize = dragref.GetFlavorDataSize(refnum, 'hfs ')
-				data = dragref.GetFlavorData(refnum, 'hfs ', datasize, 0)
-				tp, cr, flags, fss = self._decode_hfs_dropdata(data)
-				fname = fss.as_pathname()
-				try:
-					func, arg = self._eventhandlers[DropFile]
-				except KeyError:
-					print 'No DropFile handler!'
-					MacOS.SysBeep()
-					return
-				mw_globals.toplevel.settimer(0.1, (func, (arg, self, DropFile, (x, y, fname))))
-			elif 'URLD' in flavors:
-				try:
-					fflags = dragref.GetFlavorFlags(refnum, 'URLD')
-				except Drag.Error:
-					print 'Wrong type...', i, dragref.GetFlavorType(refnum, 1)
-					MacOS.SysBeep()
-					return
-				datasize = dragref.GetFlavorDataSize(refnum, 'URLD')
-				data = dragref.GetFlavorData(refnum, 'URLD', datasize, 0)
-				# Data is "url\rdescription"
-				url = string.split(data, '\r')[0]
-				try:
-					func, arg = self._eventhandlers[DropURL]
-				except KeyError:
-					print 'No DropURL handler!'
-					MacOS.SysBeep()
-					return
-				mw_globals.toplevel.settimer(0.1, (func, (arg, self, DropURL, (x, y, url))))
-			else:
-				print 'No supported flavors in drag item:', flavors
-				MacOS.SysBeep()
-				return
+				exc_type, exc_value, exc_traceback = sys.exc_type, sys.exc_value, sys.exc_traceback
+			import traceback
+			print 'Error in Receive Handler:'
+			print
+			traceback.print_exception(exc_type, exc_value, None)
+			traceback.print_tb(exc_traceback)
 
 	def _decode_hfs_dropdata(self, data):
 		tp = data[0:4]
