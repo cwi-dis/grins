@@ -1174,21 +1174,53 @@ sdk_add_tool_info(PyObject *self, PyObject *args)
 	HWND hwnd, hwndParent;
 	int id;
 	RECT rc;
-	if (!PyArg_ParseTuple(args,"iii(iiii):AddToolInfo", &hwnd, &hwndParent, &id,
-		        &rc.left, &rc.top, &rc.right,&rc.bottom))
+	char *pszText=NULL;
+	if (!PyArg_ParseTuple(args,"iii(iiii)|s:AddToolInfo", &hwnd, &hwndParent, &id,
+		        &rc.left, &rc.top, &rc.right,&rc.bottom, &pszText))
 		return NULL;
+	char *buf = pszText;
+	if(pszText!=NULL)
+		{
+		buf = new char[strlen(pszText)+1];
+		strcpy(buf, pszText);
+		}
     TOOLINFO ti;
 	ti.cbSize = sizeof(TOOLINFO);
-    ti.uFlags = TTF_SUBCLASS;
+    ti.uFlags = 0; // TTF_SUBCLASS;
     ti.hwnd = hwndParent;
     ti.hinst = AfxGetInstanceHandle();
     ti.uId = id;
-    ti.lpszText = LPSTR_TEXTCALLBACK;
+    ti.lpszText = buf?buf:LPSTR_TEXTCALLBACK;
     ti.rect.left = rc.left;    
     ti.rect.top = rc.top;
     ti.rect.right = rc.right;
     ti.rect.bottom = rc.bottom;
     SendMessage(hwnd, TTM_ADDTOOL, 0, (LPARAM) (LPTOOLINFO) &ti);	
+	return Py_BuildValue("i", int(buf));
+	}
+
+// NewToolRect
+static PyObject*
+sdk_new_tool_rect(PyObject *self, PyObject *args)
+	{
+	HWND hwnd, hwndParent;
+	int id;
+	RECT rc;
+	if (!PyArg_ParseTuple(args,"iii(iiii):NewToolInfo", &hwnd, &hwndParent, &id,
+		        &rc.left, &rc.top, &rc.right,&rc.bottom))
+		return NULL;
+    TOOLINFO ti;
+	ti.cbSize = sizeof(TOOLINFO);
+    ti.uFlags = 0;
+    ti.hwnd = hwndParent;
+    ti.hinst = 0; //AfxGetInstanceHandle();
+    ti.uId = id;
+    ti.lpszText = NULL;
+    ti.rect.left = rc.left;    
+    ti.rect.top = rc.top;
+    ti.rect.right = rc.right;
+    ti.rect.bottom = rc.bottom;
+    SendMessage(hwnd, TTM_NEWTOOLRECT, 0, (LPARAM) (LPTOOLINFO) &ti);	
 	RETURN_NONE;
 	}
 
@@ -1259,6 +1291,7 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	
 	{"InitCommonControlsEx",sdk_init_common_controls_ex,1},
 	{"AddToolInfo",sdk_add_tool_info,1},
+	{"NewToolRect",sdk_new_tool_rect,1},
 	
 	///////////////////////////////////////////////////// Temporary
 	{"ParseDrawItemStruct",sdk_parse_drawitemstruct,1},// undocumented!
