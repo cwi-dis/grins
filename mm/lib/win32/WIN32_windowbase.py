@@ -17,8 +17,6 @@ UNIT_MM, UNIT_SCREEN, UNIT_PXL = 0, 1, 2
 
 RESET_CANVAS, DOUBLE_HEIGHT, DOUBLE_WIDTH = 0, 1, 2
 
-cmifexPath = cmifex.__file__
-
 Version = 'WIN32_DBG'
 toplevel = None
 
