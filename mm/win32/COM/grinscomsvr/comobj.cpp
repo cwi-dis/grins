@@ -189,6 +189,8 @@ class GRiNSPlayerAuto : public IGRiNSPlayerAuto
 	int m_focuswndid;
 	int m_framerate;
 	int m_permission;
+	char m_buf[64];
+	char m_filename[MAX_PATH];
 	};
 
 class GRiNSPlayerMoniker : public IGRiNSPlayerMoniker
@@ -293,7 +295,7 @@ GRiNSPlayerAuto::~GRiNSPlayerAuto()
 		return S_OK;
 		}
 	*pPermission = 0;
-	char *buf = new char[MAX_PATH];
+	char buf[MAX_PATH];
 	if(!WideCharToMultiByte(CP_ACP, 0, pLicense, -1, buf, MAX_PATH, NULL, NULL))
 		return E_UNEXPECTED;
 	if(getPyListener())
@@ -314,10 +316,9 @@ GRiNSPlayerAuto::~GRiNSPlayerAuto()
 HRESULT __stdcall GRiNSPlayerAuto::open(wchar_t *wszFileOrUrl)
 	{
 	if(m_permission == 0) return E_UNEXPECTED;
-	char *buf = new char[MAX_PATH];
-    if(WideCharToMultiByte(CP_ACP, 0, wszFileOrUrl, -1, buf, MAX_PATH, NULL, NULL))
+    if(WideCharToMultiByte(CP_ACP, 0, wszFileOrUrl, -1, m_filename, MAX_PATH, NULL, NULL))
 		{
-		PostMessage(getListener(), WM_USER_OPEN, WPARAM(this), LPARAM(buf));
+		PostMessage(getListener(), WM_USER_OPEN, WPARAM(this), LPARAM(m_filename));
 		}
 	return S_OK;
 	}
@@ -380,9 +381,8 @@ HRESULT __stdcall GRiNSPlayerAuto::setTopLayoutWindow(/* [in] */ int index,/* [i
 	{
 	if(index >= m_nViewports) return E_UNEXPECTED;
 	Viewport *p = m_pViewports[index];
-	char *buf = new char[64];
-	sprintf(buf, "%d %d", p->m_id, int(hwnd));
-	PostMessage(getListener(), WM_USER_SETHWND, WPARAM(this), LPARAM(buf));
+	sprintf(m_buf, "%d %d", p->m_id, int(hwnd));
+	PostMessage(getListener(), WM_USER_SETHWND, WPARAM(this), LPARAM(m_buf));
 	return S_OK;
 	}
 
