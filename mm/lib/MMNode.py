@@ -1425,8 +1425,8 @@ class MMNode:
 	# If there is overlap between parnode children the node in error
 	# is returned.
 	def GetAllChannels(self):
-		if self.type in bagtypes:
-			return [], None
+##		if self.type in bagtypes:
+##			return [], None
 		if self.type in leaftypes:
 			list = [MMAttrdefs.getattr(self, 'channel')]
 			captionchannel = MMAttrdefs.getattr(self, 'captionchannel')
@@ -1632,10 +1632,11 @@ class MMNode:
 	#
 	# Check whether a node is the top of a mini-document
 	def IsMiniDocument(self):
-		if self.type in bagtypes:
-			return 0
-		parent = self.GetSchedParent()
-		return parent is None or parent.type in bagtypes
+		return self.GetSchedParent() is None
+##		if self.type in bagtypes:
+##			return 0
+##		parent = self.GetSchedParent()
+##		return parent is None or parent.type in bagtypes
 
 	# Find the first mini-document in a tree
 	def FirstMiniDocument(self):
@@ -1696,19 +1697,21 @@ class MMNode:
 
 	# Find the root of a node's mini-document
 	def FindMiniDocument(self):
-		node = self
-		parent = node.parent
-		while parent is not None and parent.type not in bagtypes:
-			node = parent
-			parent = node.parent
-		return node
+		return self.GetRoot()
+##		node = self
+##		parent = node.parent
+##		while parent is not None and parent.type not in bagtypes:
+##			node = parent
+##			parent = node.parent
+##		return node
 
 	# Find the nearest bag given a minidocument
 	def FindMiniBag(self):
-		bag = self.parent
-		if bag is not None and bag.type not in bagtypes:
-			raise CheckError, 'FindMiniBag: minidoc not rooted in a choice node!'
-		return bag
+		return None
+##		bag = self.parent
+##		if bag is not None and bag.type not in bagtypes:
+##			raise CheckError, 'FindMiniBag: minidoc not rooted in a choice node!'
+##		return bag
 
 	#
 	# Set the correct method for generating scheduler records.
@@ -1716,8 +1719,8 @@ class MMNode:
 		type = self.type
 		if type in ('imm', 'ext'):
 			self.gensr = self.gensr_leaf
-		elif type == 'bag':
-			self.gensr = self.gensr_bag
+##		elif type == 'bag':
+##			self.gensr = self.gensr_bag
 		elif type in ('seq', 'par', 'excl', 'alt', 'bag'):
 			self.gensr = self.gensr_interior
 		elif type == 'prio':
@@ -1882,76 +1885,6 @@ class MMNode:
 		if debuggensr: self.__dump_srdict('gensr_leaf', srdict)
 		return srdict
 
-	def gensr_empty(self):
-		# generate SR list for empty interior node, taking
-		# sync arcs to the end and duration into account
-		duration = MMAttrdefs.getattr(self, 'duration')
-		actions = []
-		final = [(SCHED_STOPPING, self)]
-		srlist = [([(SCHED, self)], actions),
-			  ([(SCHED_STOP, self)], []),
-			  ([(SCHED_STOPPING, self)], [(SCHED_DONE, self)])]
-		endlist = MMAttrdefs.getattr(self, 'endlist')
-		for arc in endlist:
-			refnode = self.__find_refnode(arc)
-			refnode.add_arc(arc)
-		if duration > 0:
-			# wait for duration
-			actions.append((SYNC, (duration, self)))
-			srlist.append(([(SYNC_DONE, self)], []))
-		elif duration < 0 or endlist:
-			# indefinite duration or end sync arcs
-			# wait for something that isn't going to happen
-			# i.e., wait until terminated
-			srlist.append(([(SYNC_DONE, self)], final))
-		else:
-			# don't wait
-			actions[len(actions):] = final
-		srdict = {}
-		for events, actions in srlist:
-			action = [len(events), actions]
-			for event in events:
-				self.srdict[event] = action # MUST all be same object
-				srdict[event] = self.srdict # or just self?
-		if debuggensr: self.__dump_srdict('gensr_empty', srdict)
-		return srdict
-
-	def gensr_bag(self):
-		self.calcfullduration()
-		if not self.wtd_children:
-			return self.gensr_empty()
-		duration = MMAttrdefs.getattr(self, 'duration')
-		endlist = MMAttrdefs.getattr(self, 'endlist')
-		for arc in endlist:
-			refnode = self.__find_refnode(arc)
-			refnode.add_arc(arc)
-		srlist = [([(SCHED_STOPPING, self)],[(SCHED_DONE,self)]),
-			  ([(SCHED_STOP, self)],   [(BAG_STOP, self)])]
-		prereqs = [(BAG_DONE, self)]
-		if duration > 0:
-			# if duration set, we must trigger a timeout
-			# and we must catch the timeout to terminate
-			# the node
-			out0 = out0 + [(SYNC, (duration, self))]
-			srlist.append(([(SYNC_DONE, self)],
-				       [(TERMINATE, self)]))
-		elif duration < 0 or endlist:
-			# indefinite duration or end sync arcs
-			# wait for something that isn't going to happen
-			# i.e., wait until terminated
-			prereqs.append((SYNC_DONE, self))
-		srlist.append(([(SCHED, self)],
-			       [(BAG_START, self)] + out0))
-		srlist.append((prereqs, [(SCHED_STOPPING, self)]))
-		srdict = {}
-		for events, actions in srlist:
-			action = [len(events), actions]
-			for event in events:
-				self.srdict[event] = action # MUST all be same object
-				srdict[event] = self.srdict # or just self?
-		if debuggensr: self.__dump_srdict('gensr_bag', srdict)
-		return srdict
-
 	#
 	# There's a lot of common code for par and seq nodes.
 	# We attempt to factor that out with a few helper routines.
@@ -1982,15 +1915,16 @@ class MMNode:
 		# or, for looping nodes, the first or subsequent times through
 		# the loop.
 		#
-		loopcount = self.attrdict.get('loop', None)
-		loopdur = MMAttrdefs.getattr(self, 'repeatdur')
-		if loopdur != 0 and loopcount is None:
+		repeatCount = self.attrdict.get('loop', None)
+		repeatDur = MMAttrdefs.getattr(self, 'repeatdur')
+		if repeatDur != 0 and repeatCount is None:
 			# no loop attr and specified repeatdur attr, so loop indefinitely
 			# until time's up
-			loopcount = 0
-		if loopcount == 1 or (loopcount is None and loopdur == 0):
+			repeatCount = 0
+		if (repeatCount is not None and 0 < repeatCount <= 1) or \
+		   (repeatCount is None and repeatDur == 0):
 			gensr_envelope = self.gensr_envelope_nonloop
-			loopcount = 1
+			repeatCount = 1
 		elif looping == 0:
 			# First time loop generation
 			gensr_envelope = self.gensr_envelope_firstloop
@@ -2038,7 +1972,7 @@ class MMNode:
 		schedstop_events = [(SCHED_STOP, self)]
 
 		sched_actions, schedstop_actions,  \
-			       srdict = gensr_envelope(gensr_body, loopcount,
+			       srdict = gensr_envelope(gensr_body, repeatCount,
 						       sched_actions_arg,
 						       scheddone_actions_arg)
 		if not looping:
@@ -2079,9 +2013,9 @@ class MMNode:
 		if debuggensr: self.__dump_srdict('gensr_interior', srdict)
 		return srdict
 
-	def gensr_envelope_nonloop(self, gensr_body, loopcount, sched_actions,
+	def gensr_envelope_nonloop(self, gensr_body, repeatCount, sched_actions,
 				   scheddone_actions):
-		if loopcount != 1:
+		if repeatCount != 1:
 			raise 'Looping nonlooping node!'
 		self.curloopcount = 0
 
@@ -2091,17 +2025,17 @@ class MMNode:
 			self.__dump_srdict('gensr_envelope_nonloop', srdict)
 		return sched_actions, schedstop_actions, srdict
 
-	def gensr_envelope_firstloop(self, gensr_body, loopcount,
+	def gensr_envelope_firstloop(self, gensr_body, repeatCount,
 				     sched_actions, scheddone_actions):
 		srlist = []
 		terminate_actions = []
 		#
-		# Remember the loopcount.
+		# Remember the repeatCount.
 		#
-		if loopcount == 0:
+		if repeatCount == 0:
 			self.curloopcount = -1
 		else:
-			self.curloopcount = loopcount
+			self.curloopcount = repeatCount
 
 		#
 		# We create a helper node, to differentiate between terminates
@@ -2154,7 +2088,7 @@ class MMNode:
 		# 2. We loop indefinite:
 		#	Immedeately tell our parents we are done. No special
 		#	actions on end-of-loop.
-		# 3. Other cases (fixed loopcount and no duration/tailsync):
+		# 3. Other cases (fixed repeatCount and no duration/tailsync):
 		#	End-of-loop signals SCHED_DONE.
 		# In all cases a SCHED_STOP is translated to a terminate of
 		# ourselves.
@@ -2176,7 +2110,7 @@ class MMNode:
 		return sched_actions, terminate_actions, srdict
 
 
-	def gensr_envelope_laterloop(self, gensr_body, loopcount,
+	def gensr_envelope_laterloop(self, gensr_body, repeatCount,
 				     sched_actions, scheddone_actions):
 		srlist = []
 
