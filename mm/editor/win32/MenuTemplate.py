@@ -206,7 +206,7 @@ POPUP_HVIEW_LEAF = (
 		(ENTRY, 'Play &from node', None, PLAYFROM),
 		(SEP,),
 		(ENTRY, 'C&reate simple anchor', None, CREATEANCHOR),
-		(ENTRY, '&Finish hyperlink to focus', None, FINISH_LINK),
+		(ENTRY, '&Finish hyperlink to selection', None, FINISH_LINK),
 		(SEP,),
 		(ENTRY, '&Info...', None, INFO),
 		(ENTRY, 'P&roperties...', None, ATTRIBUTES),
@@ -240,7 +240,7 @@ POPUP_HVIEW_STRUCTURE = (
 		(ENTRY, 'Collapse recursively', None, COLLAPSEALL),
 		(SEP,),
 		(ENTRY, 'C&reate simple anchor', None, CREATEANCHOR),
-		(ENTRY, '&Finish hyperlink to focus', None, FINISH_LINK),
+		(ENTRY, '&Finish hyperlink to selection', None, FINISH_LINK),
 		(SEP,),
 		(ENTRY, '&Info...', None, INFO),
 		(ENTRY, 'P&roperties...', None, ATTRIBUTES),
@@ -248,7 +248,7 @@ POPUP_HVIEW_STRUCTURE = (
 )
 
 POPUP_CVIEW_NONE = (
-		(ENTRY, '&Create new channel', 'M', NEW_CHANNEL),
+		(ENTRY, '&New channel', 'M', NEW_CHANNEL),
 )
 
 POPUP_CVIEW_BWSTRIP = (
@@ -262,7 +262,6 @@ POPUP_CVIEW_BWSTRIP = (
 		)
 
 POPUP_CVIEW_CHANNEL = (
-		(ENTRY, '&Toggle channel state', None, TOGGLE_ONOFF),
 		(ENTRY, 'Show proper&ties', 'A', ATTRIBUTES),
 		(SEP,),
 		(ENTRY, '&Delete', None, DELETE),
@@ -277,8 +276,8 @@ POPUP_CVIEW_NODE = (
 		(ENTRY, 'Play from &node', None, PLAYFROM),
 		(SEP,),
 		(ENTRY, 'Create simple anchor', None, CREATEANCHOR),
-		(ENTRY, 'Finish &hyperlink to focus...', 'H', FINISH_LINK),
-		(ENTRY, 'Create &syncarc from focus...', 'L', FINISH_ARC),
+		(ENTRY, 'Finish &hyperlink to selection...', 'H', FINISH_LINK),
+		(ENTRY, 'Create &syncarc from selection...', 'L', FINISH_ARC),
 		(SEP,),
 		(ENTRY, '&Info...', 'I', INFO),
 		(ENTRY, 'P&roperties...', 'A', ATTRIBUTES),
