@@ -2255,6 +2255,7 @@ BEGIN
     VK_SPACE,       IDUC_MAGIC_PLAY,        VIRTKEY, CONTROL, NOINVERT
     "W",            IDUC_CLOSE_WINDOW,      VIRTKEY, CONTROL, NOINVERT
     "X",            IDUC_CUT,               VIRTKEY, CONTROL, NOINVERT
+    "Y",            IDUC_REDO,              VIRTKEY, CONTROL, NOINVERT
     "Z",            IDUC_UNDO,              VIRTKEY, CONTROL, NOINVERT
 END
 
@@ -2298,6 +2299,7 @@ BEGIN
     VK_UP,          IDUC_PREVSIBLING,       VIRTKEY, NOINVERT
     "W",            IDUC_CLOSE_WINDOW,      VIRTKEY, CONTROL, NOINVERT
     "X",            IDUC_CUT,               VIRTKEY, CONTROL, NOINVERT
+    "Y",            IDUC_REDO,              VIRTKEY, CONTROL, NOINVERT
     "Z",            IDUC_UNDO,              VIRTKEY, CONTROL, NOINVERT
 END
 

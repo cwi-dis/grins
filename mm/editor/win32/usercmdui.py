@@ -72,6 +72,7 @@ class CommandUI:
 
 CommandUI(CLOSE_WINDOW)
 CommandUI(UNDO,IDUC_UNDO)
+CommandUI(REDO,IDUC_REDO)
 CommandUI(CUT,IDUC_CUT)
 CommandUI(COPY,IDUC_COPY)
 CommandUI(PASTE,IDUC_PASTE)
