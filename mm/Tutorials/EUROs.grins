@@ -2,7 +2,7 @@
 <smil xmlns:GRiNS="http://www.oratrix.com/">
   <head>
     <meta name="title" content="root-layout"/>
-    <meta name="generator" content="GRiNS Pro for RealSystem G2, v1.5 "/>
+    <meta name="generator" content="GRiNS Pro for RealSystem G2, v1.5.1 "/>
     <meta name="project_html_page" content="external_player.html"/>
     <layout>
       <root-layout id="root-layout" background-color="#ffffff" width="400" height="440"/>
