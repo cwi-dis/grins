@@ -57,7 +57,7 @@ MENUBAR=(
 		
 			(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, '&Publish for SMIL 2.0...', None, EXPORT_SMIL),
 			(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, 'Pu&blish for SMIL 2.0 and upload...', None, UPLOAD_SMIL),
-			(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, 'Save as SMIL 2.0 and prune...', None, EXPORT_PRUNE),
+			(FLAG_SMIL_1_0|FLAG_PRO, ENTRY, 'Prune and Save As SMIL 2.0...', None, EXPORT_PRUNE),
 		)),
 		(FLAG_SMIL_1_0 | FLAG_QT | FLAG_G2 | FLAG_PRO, SEP,),
 		(FLAG_ALL, ENTRY, '&Document Properties...', None, PROPERTIES),
