@@ -7,7 +7,7 @@ if platform == 'irix6':
 		from SGIVideoChannel import *
 	except ImportError:
 		from MPEGVideoChannel import *
-elif platform == 'sunos5' or platform == 'irix5':
+elif platform == 'sunos5' or platform == 'irix5' or platform[:5] == 'linux':
 	from MPEGVideoChannel import *
 elif platform == 'mac':
 	from MACVideoChannel import *
