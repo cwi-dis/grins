@@ -331,7 +331,6 @@ class DrawObj:
 			for nHandle in range(1,nHandleCount+1):
 				handlept=self.getHandle(nHandle)
 				dc.PatBlt((handlept.x - 3, handlept.y - 3), (7, 7), win32con.DSTINVERT);
-		pass
 
 	def moveTo(self,position,view):
 		tk=view.drawTk
@@ -437,6 +436,23 @@ class DrawRect(DrawObj):
 	def clone(self,context=None):
 		return DrawObj.clone(self,context)
 
+	# fill with clr the dc outsite self._position
+	def crcfill(self,dc,tk,clr=(0,0,0)):
+		cr = win32mu.RGB(clr)
+		l,t,r,b = tk._crect.tuple()
+		li,ti,ri,bi = self._position.tuple()
+		dc.FillSolidRect((l,t,li,b),cr)
+		dc.FillSolidRect((l,t,r,ti),cr)
+		dc.FillSolidRect((ri,t,r,b),cr)
+		dc.FillSolidRect((l,bi,r,b),cr)
+
+	# invert the dc outsite self._position
+	def crcinvert(self,dc,tk):
+		l,t,r,b = tk._crect.tuple()
+		li,ti,ri,bi = self._position.tuple()
+		dc.PatBlt((l,t),(r-l,b-t), win32con.DSTINVERT);
+		dc.PatBlt((li,ti),(ri-li,bi-ti), win32con.DSTINVERT);
+		
 	def draw(self,dc,view):
 		tk=view.drawTk
 		# create pen and brush and select them in dc
@@ -448,12 +464,8 @@ class DrawRect(DrawObj):
 				clr=(0xC0, 0xC0, 0xC0)
 				dc.FillSolidRect(self._position.tuple(),win32mu.RGB(clr))
 			else:
-				l,t,r,b = tk._crect.tuple()
-				li,ti,ri,bi = self._position.tuple()
-				dc.FillSolidRect((l,t,li,b),win32mu.RGB((0,0,0)))
-				dc.FillSolidRect((l,t,r,ti),win32mu.RGB((0,0,0)))
-				dc.FillSolidRect((ri,t,r,b),win32mu.RGB((0,0,0)))
-				dc.FillSolidRect((l,bi,r,b),win32mu.RGB((0,0,0)))
+				#self.crcfill(dc,tk,(0,0,0))
+				self.crcinvert(dc,tk)
 
 		win32mu.FrameRect(dc,self._position.tuple(),(255,0,0))
 		
