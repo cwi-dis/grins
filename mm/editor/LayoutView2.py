@@ -992,7 +992,8 @@ class LayoutView2(LayoutViewDialog2):
 		self.treeWidget = widgetList['TreeWidget'] = TreeWidget(self)
 		self.geomFieldWidget = widgetList['GeomFieldWidget'] = GeomFieldWidget(self)
 		widgetList['ZFieldWidget'] = ZFieldWidget(self)
-				
+		self.keyTimeSliderWidget = widgetList['KeyTimeSliderWidget'] = KeyTimeSliderWidget(self)
+		
 	def applyGeom(self, nodeRef, geom):
 		# make a list of attr top apply according the geometry
 		list = []
@@ -1896,16 +1897,25 @@ class Widget:
 class LightWidget(Widget):
 	def __init__(self, context):
 		Widget.__init__(self, context)
+		self._context = context
 		self.dialogCtrl = context.dialogCtrl
 
+	def getSingleSelection(self, nodeRefList):
+		if len(nodeRefList) != 1:
+			# if no node selected or several nodes are selected in the same time, disable the fields
+			return 0, None
+		nodeRef = nodeRefList[0]
+		nodeType = self._context.getNodeType(nodeRef)
+
+		if nodeType == TYPE_REGION and nodeRef.isDefault():
+			return 0, None
+		return nodeType, nodeRef
+		
 #
 # z field widget management
 #
 
 class ZFieldWidget(LightWidget):
-	def __init__(self, context):
-		LightWidget.__init__(self, context)
-
 	#
 	# inherited methods
 	#
@@ -1917,17 +1927,8 @@ class ZFieldWidget(LightWidget):
 		self.dialogCtrl.removeListener('RegionZ')
 		
 	def selectNodeList(self, nodeRefList, keepShowedNodes=0):
-		if len(nodeRefList) != 1:
-			# if no node selected or several nodes are selected in the same time, disable the fields
-			self.__unselect()
-			return
-		nodeRef = nodeRefList[0]
-		nodeType = self._context.getNodeType(nodeRef)
-
-		if nodeType == TYPE_REGION and nodeRef.isDefault():
-			self.__unselect()
-			return
-				
+		nodeType, nodeRef = self.getSingleSelection(nodeRefList)
+		
 		if nodeType == TYPE_VIEWPORT:
 			self.dialogCtrl.enable('RegionZ',0)
 			self.dialogCtrl.setFieldCtrl('RegionZ',"")
@@ -1938,7 +1939,9 @@ class ZFieldWidget(LightWidget):
 		elif nodeType == TYPE_MEDIA:
 			self.dialogCtrl.enable('RegionZ',1)
 			z = nodeRef.GetAttrDef('z', 0)
-			self.dialogCtrl.setFieldCtrl('RegionZ',"%d"%z)		
+			self.dialogCtrl.setFieldCtrl('RegionZ',"%d"%z)
+		else:
+			self.__unselect()
 
 	# update the dialog box on unselection
 	def __unselect(self):
@@ -1970,10 +1973,7 @@ class ZFieldWidget(LightWidget):
 # geom field widget management
 #
 		
-class GeomFieldWidget(LightWidget):
-	def __init__(self, context):
-		LightWidget.__init__(self, context)
-	
+class GeomFieldWidget(LightWidget):	
 	#
 	# inherited methods
 	#
@@ -1988,19 +1988,10 @@ class GeomFieldWidget(LightWidget):
 		self.dialogCtrl.removeListener('RegionX')
 		self.dialogCtrl.removeListener('RegionY')
 		self.dialogCtrl.removeListener('RegionW')
-		self.dialogCtrl.removeListener('RegionZ')
+		self.dialogCtrl.removeListener('RegionH')
 	
 	def selectNodeList(self, nodeRefList, keepShowedNodes=0):
-		# if no node selected or several nodes are selected in the same time, disable the fields
-		if len(nodeRefList) != 1:
-			self.__unselect()
-			return
-		nodeRef = nodeRefList[0]
-		nodeType = self._context.getNodeType(nodeRef)
-
-		if nodeType == TYPE_REGION and nodeRef.isDefault():
-			self.__unselect()
-			return
+		nodeType, nodeRef = self.getSingleSelection(nodeRefList)
 				
 		if nodeType == TYPE_VIEWPORT:
 			self.__updateViewport(nodeRef)
@@ -2008,6 +1999,8 @@ class GeomFieldWidget(LightWidget):
 			self.__updateRegion(nodeRef)
 		elif nodeType == TYPE_MEDIA:
 			self.__updateMedia(nodeRef)
+		else:
+			self.__unselect()
 			
 	#
 	#
@@ -2131,6 +2124,61 @@ class GeomFieldWidget(LightWidget):
 			elif ctrlName == 'RegionH':
 				h = value
 			self._context.applyGeom(nodeRef, (x,y,w,h))
+
+class KeyTimeSliderWidget(LightWidget):		
+	#
+	# inherited methods
+	#
+
+	def show(self):
+		self.sliderCtrl = self._context.keyTimeSliderCtrl
+#		self.sliderCtrl.setListener(self)
+
+	def destroy(self):
+		pass
+#		self.sliderCtrl.removeListener()
+	
+	def selectNodeList(self, nodeRefList, keepShowedNodes=0):
+		nodeType, nodeRef = self.getSingleSelection(nodeRefList)
+				
+		if nodeType == TYPE_VIEWPORT:
+			self.__updateViewport(nodeRef)
+		elif nodeType == TYPE_REGION:
+			self.__updateRegion(nodeRef)
+		elif nodeType == TYPE_MEDIA:
+			self.__updateMedia(nodeRef)
+		else:
+			self.__unselect()
+			
+	#
+	#
+	#
+			
+	def __unselect(self):
+		self.__updateUnselected()						
+	
+	def __updateUnselected(self):
+		self.sliderCtrl.setKeyTimes([0.0, 1.0])		
+#		self.sliderCtrl.enable(0)
+	
+	def __updateViewport(self, nodeRef):
+		self.__updateUnselected()
+	
+	def __updateRegion(self, nodeRef):
+		self.__updateUnselected()
+	
+	def __updateMedia(self, nodeRef):
+		self.sliderCtrl.setKeyTimes([0.0, 1.0])		
+#		self.sliderCtrl.enable(1)
+
+		# if animated
+#		if 1:	
+										
+	#
+	# interface implementation of 'dialog controls callback' 
+	#
+	
+
 
 #
 # tree widget management
