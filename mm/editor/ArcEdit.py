@@ -13,7 +13,7 @@ HS = FL.HOR_SLIDER
 # it has two sets of radio buttons that indicate the position of the source
 # and destination of the timing arc and a slide that indicates the delay.
 #
-class ArcEditor():
+class ArcEditor:
 	def init(self, arrow):
 		arrow.arceditor = self
 		self.arrow = arrow
