@@ -94,7 +94,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance, LPTSTR szWindowClass)
 {
 	WNDCLASS	wc;
 
-    wc.style			= CS_HREDRAW | CS_VREDRAW;
+    wc.style			= CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
     wc.lpfnWndProc		= (WNDPROC) WndProc;
     wc.cbClsExtra		= 0;
     wc.cbWndExtra		= 0;
@@ -223,7 +223,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			SHHandleWMSettingChange(hWnd, wParam, lParam, &s_sai);
      		break;
 		default:
-			return DefWindowProc(hWnd, message, wParam, lParam);
+			return PyWnd_WndProc(hWnd, message, wParam, lParam);
+			//return DefWindowProc(hWnd, message, wParam, lParam);
    }
    return 0;
 }
