@@ -142,6 +142,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.after_chan_show()
 
 	def hide(self, *rest):
+		self.toplevel.layoutview.hide()
 		if not self.showing: return
 		self.showing = 0
 		self.stop()
