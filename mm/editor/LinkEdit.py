@@ -49,13 +49,13 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 			[('All internal', (self.menu_callback, (self.left, M_ALL))),
 			 ('Dangling',
 			  (self.menu_callback, (self.left, M_DANGLING))),
-			 ('Follow global focus',
+			 ('Follow selection',
 			  (self.menu_callback, (self.left, M_BVFOCUS))),
 			 ], self.left,
 			[('All internal', (self.menu_callback, (self.right, M_ALL))),
 			  ('Dangling',
 			   (self.menu_callback, (self.right, M_DANGLING))),
-			  ('Follow global focus',
+			  ('Follow selection',
 			   (self.menu_callback, (self.right, M_BVFOCUS))),
 			  ('All related anchors',
 			   (self.menu_callback, (self.right, M_RELATION))),
@@ -181,7 +181,7 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 		str.anchors = []
 
 	def fill_node(self, str):
-		str.browser_setlabel('From focus')
+		str.browser_setlabel('From selection')
 		str.anchors = []
 		for n in str.nodelist:
 			str.anchors = str.anchors + n.getanchors(0)
