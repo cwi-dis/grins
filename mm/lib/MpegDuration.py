@@ -54,10 +54,12 @@ def getduration(filename, bufsiz = 10240):
 				break
 			i = find(data, '\000\000\001')
 	try:
-		return nframes / VidRateNum[rate]
+		rate = VidRateNum[rate]
 	except IndexError:
 		# unknown frame rate, assume 30
-		return nframes / 30.0
+		rate = 30.0
+	if nframes == 0: nframes = rate
+	return nframes / rate
 	
 duration_cache = FileCache.FileCache(getduration)
 
