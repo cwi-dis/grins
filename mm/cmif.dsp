@@ -859,23 +859,11 @@ SOURCE=.\lib\win32\_SourceView.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\lib\win32\AnchorEditForm.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\lib\win32\appcon.py
 # End Source File
 # Begin Source File
 
 SOURCE=.\lib\win32\AppToplevel.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\win32\ArcInfoForm.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\win32\AttrEditForm.py
 # End Source File
 # Begin Source File
 
