@@ -128,7 +128,7 @@ class PlayerCore(Selecter):
 		ch.defanchor(node, anchor, cb)
 	#
 	def updatefixedanchors(self, node):
-		ch = self.anchorinit(node)
+		ch = self.getchannelbynode(node)
 		if ch is None:
 			return 1	# Cannot set on internal nodes
 		return ch.updatefixedanchors(node)
