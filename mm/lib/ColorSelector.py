@@ -1,97 +1,40 @@
-# Module ColorSelector -- a modal dialog using FORMS and GL.
+# Module ColorSelector -- a modal dialog using FORMS and GL (and glwindow).
 # Interface:
-#	from ColorSelector import ColorSelector
-#	cw = ColorSelector().init()
-#	nrgb = cw.run(rgb)
+#	import ColorSelector
+#	nrgb = ColorSelector.run(rgb)
 # where rgb and nrgb are (r, g, b) triples with r, g, b in the range [0..255].
 # If the user cancels, newrgn is the same as rgb.
-# You may call run() many times for one cw object.
-# There are provisions for deriving other classes with additional
-# functionality, e.g. an Apply button.
+# There are some provisions for deriving classes with additional
+# functionality, e.g. an Apply button, if you need them.
+
 
 from math import pi, sin, cos, atan2, sqrt
 import fl, FL
 import gl, GL, DEVICE
+import glwindow
+
 
 MOUSEEVENTS = DEVICE.LEFTMOUSE, DEVICE.MIDDLEMOUSE, DEVICE.RIGHTMOUSE
 
 Done = 'ColorSelector.Done' # Harmless exception
 
-class ColorSelector:
+form_template = None
+
+
+class ColorSelector(glwindow.glwindow):
 
 	def init(self):
 		self.placed = 0
-		self.form = self.make_form()
-		self.add_buttons()
-		self.add_fields()
-		self.add_slider()
+		self.make_form()
 		return self
 
 	def make_form(self):
-		# Derived classes may override this to change the form size
-		return fl.make_form(FL.FLAT_BOX, 550, 400)
-
-	def add_buttons(self):
-		# Derived classes may override or extend this
-		# to install more or different buttons
-		x, y, w, h = 10, 10, 90, 30
-		#
-		self.ok_b = self.form.add_button(FL.RETURN_BUTTON, \
-			x, y, w, h, 'OK')
-		self.ok_b.set_call_back(self.ok_callback, None)
-		y = y + 35
-		#
-		self.cancel_b = self.form.add_button(FL.NORMAL_BUTTON, \
-			x, y, w, h, 'Cancel')
-		self.cancel_b.set_call_back(self.cancel_callback, None)
-		y = y + 35
-		#
-		y = y + 15
-		#
-		self.restore_b = self.form.add_button(FL.NORMAL_BUTTON, \
-			x, y, w, h, 'Restore')
-		self.restore_b.set_call_back(self.restore_callback, None)
-		y = y + 35
-
-	def add_fields(self):
-		# Derived classes may override this function if they want
-		# to place the input fields at different locations
-		f = self.form
-		#
-		x, y, w, h = 40, 360, 50, 30
-		#
-		self.h_b = f.add_input(FL.FLOAT_INPUT, x, y, w, h, 'H')
-		self.h_b.set_call_back(self.hsv_callback, None)
-		y = y - 40
-		#
-		self.s_b = f.add_input(FL.FLOAT_INPUT, x, y, w, h, 'S')
-		self.s_b.set_call_back(self.hsv_callback, None)
-		y = y - 40
-		#
-		self.v_b = f.add_input(FL.FLOAT_INPUT, x, y, w, h, 'V')
-		self.v_b.set_call_back(self.hsv_callback, None)
-		y = y - 40
-		#
-		y = y - 20
-		#
-		self.r_b = f.add_input(FL.INT_INPUT, x, y, w, h, 'R')
-		self.r_b.set_call_back(self.rgb_callback, None)
-		y = y - 40
-		#
-		self.g_b = f.add_input(FL.INT_INPUT, x, y, w, h, 'G')
-		self.g_b.set_call_back(self.rgb_callback, None)
-		y = y - 40
-		#
-		self.b_b = f.add_input(FL.INT_INPUT, x, y, w, h, 'B')
-		self.b_b.set_call_back(self.rgb_callback, None)
-		y = y - 40
-
-	def add_slider(self):
-		x, y, w, h = 110, 10, 30, 380
-		self.slider = self.form.add_slider(FL.VERT_SLIDER, \
-			x, y, w, h, '')
-		self.slider.set_call_back(self.slider_callback, None)
-		self.slider.set_slider_bounds(0.0, 1.0)
+		global form_template
+		import flp
+		if form_template == None:
+			form_template = \
+				flp.parse_form('ColorSelectorForm', 'form')
+		flp.create_full_form(self, form_template)
 
 	def run(self, rgb):
 		self.save = rgb
@@ -103,74 +46,29 @@ class ColorSelector:
 		else:
 			place = FL.PLACE_SIZE
 			self.placed = 1
-		self.form.show_form(place, FL.TRUE, 'Color Selector')
+		#XXX self.form.set_object_focus(self.r_b)
+		self.form.show_form(place, FL.TRUE, 'CMIF Color Editor')
+		glwindow.register(self, self.form.window)
 		#
-		self.window = gl.swinopen(self.form.window)
-		gl.winposition(150, 550, 0, 400)
-		gl.doublebuffer()
-		gl.RGBmode()
-		gl.gconfig()
-		gl.ortho2(-1.02, 1.02, -1.02, 1.02)
+		wd = self.wheel_dummy
+		self.wheel = Wheel().init(self, wd.x, wd.y, wd.w, wd.h)
+		bd = self.box_dummy
+		self.box = Box().init(self, bd.x, bd.y, bd.w, bd.h)
 		#
-		unq = []
-		for e in MOUSEEVENTS:
-			if not fl.isqueued(e):
-				unq.append(e)
-				fl.qdevice(e)
-		#
-		self.from_rgb(rgb)
+		self.from_rgb(rgb, 1)
 		try:
-			self.mainloop()
+			dummy = fl.do_forms()
 		except Done:
 			pass
 		#
-		for e in unq:
-			fl.unqdevice(e)
-		#
 		rgb = self.get_rgb()
 		#
+		glwindow.unregister(self)
 		self.form.hide_form()
-		gl.winclose(self.window)
+		self.wheel.destroy()
 		fl.activate_all_forms()
 		#
 		return rgb
-
-	def mainloop(self):
-		while 1:
-			obj = fl.do_forms()
-			if obj == FL.EVENT:
-				self.do_event()
-			else:
-				print 'Color Selector: unexpected', obj
-
-	def do_event(self):
-		while fl.qtest():
-			dev, val = fl.qread()
-			if dev in MOUSEEVENTS:
-				self.do_mouse(dev, val)
-			elif dev == DEVICE.REDRAW:
-				self.do_redraw(dev, val)
-
-	def do_mouse(self, dev, val):
-		h, s, v = self.get_hsv()
-		gl.winset(self.window)
-		width, height = gl.getsize()
-		wh, hh = width*0.49, height*0.49
-		while gl.getbutton(dev):
-			mx, my = fl.get_mouse()
-			x = (mx - wh) / wh
-			y = (my - hh) / hh
-			angle = atan2(y, x)
-			h = (angle / (2*pi)) % 1.0
-			s = min(1.0, sqrt(x*x + y*y))
-			self.from_hsv((h, s, v))
-			self.drawmark()
-
-	def do_redraw(self, dev, val):
-		if val == self.window:
-			gl.winset(val)
-			gl.reshapeviewport()
-			self.render()
 
 	def ok_callback(self, dummy):
 		# Honor changes to the input fields that we haven't
@@ -185,54 +83,63 @@ class ColorSelector:
 		raise Done
 
 	def cancel_callback(self, dummy):
-		self.from_rgb(self.save)
-		self.render()
+		self.from_rgb(self.save, 1)
 		raise Done
 
 	def restore_callback(self, dummy):
-		self.from_rgb(self.save)
-		self.render()
+		self.from_rgb(self.save, 1)
 
 	def slider_callback(self, dummy):
 		h, s, v = self.get_hsv()
 		v = self.slider.get_slider_value()
-		self.from_hsv((h, s, v))
-		self.render()
+		self.from_hsv((h, s, v), 1)
 
 	def hsv_callback(self, dummy):
-		self.from_hsv(self.get_hsv())
-		self.render()
+		self.from_hsv(self.get_hsv(), 1)
 
 	def rgb_callback(self, dummy):
-		self.from_rgb(self.get_rgb())
-		self.render()
+		self.from_rgb(self.get_rgb(), 1)
 
 	def get_hsv(self):
 		h = safe_eval(self.h_b.get_input())
 		s = safe_eval(self.s_b.get_input())
 		v = safe_eval(self.v_b.get_input())
+		h = min(1.0, max(0.0, h))
+		s = min(1.0, max(0.0, s))
+		v = min(1.0, max(0.0, v))
 		return h, s, v
 
 	def get_rgb(self):
 		r = safe_eval(self.r_b.get_input())
 		g = safe_eval(self.g_b.get_input())
 		b = safe_eval(self.b_b.get_input())
+		r = min(255, max(0, r))
+		g = min(255, max(0, g))
+		b = min(255, max(0, b))
 		return r, g, b
 
-	def from_hsv(self, hsv):
+	def from_hsv(self, hsv, redrawflag):
 		rgb = x_hsv_to_rgb(hsv)
-		self.from_both(hsv, rgb)
+		self.from_both(hsv, rgb, redrawflag)
 
-	def from_rgb(self, rgb):
+	def from_rgb(self, rgb, redrawflag):
 		hsv = x_rgb_to_hsv(rgb)
-		self.from_both(hsv, rgb)
+		self.from_both(hsv, rgb, redrawflag)
 
-	def from_both(self, hsv, rgb):
+	def from_both(self, hsv, rgb, redrawflag):
 		self.form.freeze_form()
 		self.set_rgb(rgb)
 		self.set_hsv(hsv)
 		self.form.unfreeze_form()
-		gl.winset(self.window)
+		#
+		self.wheel.setwin()
+		if redrawflag:
+			self.wheel.render()
+		else:
+			self.wheel.drawmark()
+		#
+		self.box.setwin()
+		self.box.render()
 
 	def set_hsv(self, (h, s, v)):
 		self.h_b.set_input(`fix(h, 3)`)
@@ -245,17 +152,63 @@ class ColorSelector:
 		self.g_b.set_input(`g`)
 		self.b_b.set_input(`b`)
 
+	def winshut(self):
+		self.cancel_callback(None)
+
+
+class Wheel(glwindow.glwindow):
+
+	def init(self, parent, x, y, w, h):
+		self.parent = parent
+		wid = gl.swinopen(parent.form.window)
+		self = glwindow.glwindow.init(self, wid)
+		x, y, w, h = int(x), int(y), int(w), int(h)
+		gl.winposition(x, x+w-1, y, y+h-1)
+		gl.doublebuffer()
+		gl.RGBmode()
+		gl.gconfig()
+		gl.ortho2(-1.02, 1.02, -1.02, 1.02)
+		#
+		for e in MOUSEEVENTS:
+			if not fl.isqueued(e):
+				fl.qdevice(e)
+		#
+		glwindow.register(self, wid)
+		return self
+
+	def destroy(self):
+		glwindow.unregister(self)
+		gl.winclose(self.wid)
+
+	def mouse(self, (dev, val)):
+		width, height = gl.getsize()
+		h, s, v = self.parent.get_hsv()
+		wh, hh = width*0.49, height*0.49
+		while gl.getbutton(dev):
+			self.setwin()
+			mx, my = fl.get_mouse()
+			x = (mx - wh) / wh
+			y = (my - hh) / hh
+			angle = atan2(y, x)
+			h = (angle / (2*pi)) % 1.0
+			s = min(1.0, sqrt(x*x + y*y))
+			self.parent.from_hsv((h, s, v), 0)
+
+	def redraw(self):
+		gl.reshapeviewport()
+		self.render()
+
 	def render(self):
 		# Clear the background with the same gra used by the main form
 		c = 170
 		gl.RGBcolor(c, c, c)
 		gl.clear()
 		# Get current hsv setting
-		h, s, v = self.get_hsv()
+		h, s, v = self.parent.get_hsv()
 		# Compute center rgb value (depends on v only)
 		centercolor = x_hsv_to_rgb((0.0, 0.0, v))
 		# Draw the circle as n triangles, using Gouraud shading
-		n = 30
+		n = 26
 		for i in range(n):
 			gl.bgnpolygon()
 			gl.RGBcolor(centercolor)
@@ -278,7 +231,7 @@ class ColorSelector:
 	def drawmark(self):
 		# Draw a mark around current color in the pop-up planes
 		# Get current hsv setting
-		h, s, v = hsv = self.get_hsv()
+		h, s, v = hsv = self.parent.get_hsv()
 		r, g, b = x_hsv_to_rgb(hsv)
 		# Compute location of current hsv in the circle
 		a = h*pi*2
@@ -301,6 +254,48 @@ class ColorSelector:
 		gl.endclosedline()
 		gl.drawmode(GL.NORMALDRAW)
 
+
+class Box(glwindow.glwindow):
+
+	def init(self, parent, x, y, w, h):
+		self.parent = parent
+		wid = gl.swinopen(parent.form.window)
+		self = glwindow.glwindow.init(self, wid)
+		x, y, w, h = int(x), int(y), int(w), int(h)
+		##gl.winposition(x+5, x+w-6, y+5, y+h-6)
+		gl.winposition(x, x+w-1, y, y+h-1)
+		gl.RGBmode()
+		gl.gconfig()
+		gl.ortho2(-1.0, 1.0, -1.0, 1.0)
+		#
+		glwindow.register(self, wid)
+		return self
+
+	def destroy(self):
+		glwindow.unregister(self)
+		gl.winclose(self.wid)
+
+	def redraw(self):
+		gl.reshapeviewport()
+		self.render()
+
+	def render(self):
+		gl.RGBcolor(self.parent.save)
+		gl.bgnpolygon()
+		gl.v2f( 0.0, -1.0)
+		gl.v2f( 0.0,  1.0)
+		gl.v2f(-1.0,  1.0)
+		gl.v2f(-1.0, -1.0)
+		gl.endpolygon()
+		gl.RGBcolor(self.parent.get_rgb())
+		gl.bgnpolygon()
+		gl.v2f(0.0, -1.0)
+		gl.v2f(0.0,  1.0)
+		gl.v2f(1.0,  1.0)
+		gl.v2f(1.0, -1.0)
+		gl.endpolygon()
+
+
 # Evaluate a numeric string typed in an input field -- return 0 if problems
 def safe_eval(str):
 	try:
@@ -320,6 +315,7 @@ def fix(x, n):
 	x = x / f
 	return x
 
+
 # Convert hsv to rgb-scaled-to-255
 def x_hsv_to_rgb(hsv):
 	r, g, b = hsv_to_rgb(hsv)
@@ -328,6 +324,7 @@ def x_hsv_to_rgb(hsv):
 # Convert rgb-scaled-to-255 to hsv
 def x_rgb_to_hsv((r, g, b)):
 	return rgb_to_hsv((r/255.0, g/255.0, b/255.0))
+
 
 # Conversions between two color systems:
 # RGB: red, green, blue components
@@ -374,8 +371,17 @@ def hsv_to_rgb((h, s, v)):
 	if i == 5: return v, p, q
 	raise RuntimeError, ('hsv_to_rgb', (h, s, v), '->', (i, h, f))
 
-def test():
-	cw = ColorSelector().init()
-	cw.run(255, 0, 0)
 
-test()
+a_selector = None
+
+def run(rgb):
+	global a_selector
+	if a_selector == None:
+		a_selector = ColorSelector().init()
+	return a_selector.run(rgb)
+
+def test():
+	run(255, 255, 255)
+
+import sys
+if sys.argv == ['']: test()
