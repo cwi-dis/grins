@@ -117,14 +117,19 @@ class AssetsView(AssetsViewDialog):
 		self.editmgr.setclip('node', item)
 
 	def callback_paste(self):
-		tp, data = self.editmgr.getclip()
-		if not tp in ('node', 'multinode'):
+		data = self.editmgr.getclip()
+		if not type(data) in (type(()), type([])):
 			print 'cannot paste', (tp, data)
 			return
-		tp, data = self.editmgr.getclipcopy()
-		if tp == 'node':
-			tp = 'multinode'
-			data = [data]
+		for d in data:
+			if not hasattr(d, 'getClassName'):
+				print 'Focus items should have getClassName() method'
+				return
+			if not d.getClassName() == 'MMNode':
+				print 'cannot paste', (tp, data)
+				return
+				
+		data = self.editmgr.getclipcopy()
 		if not self.editmgr.transaction():
 			print 'No transaction'
 			return
@@ -138,7 +143,7 @@ class AssetsView(AssetsViewDialog):
 			print "No selection"
 			return
 		item = self.listdata[i][0]
-		self.editmgr.setclip('node', item)
+		self.editmgr.setclip([item])
 
 	def callback_delete(self):
 		i = self.getselection()
@@ -267,22 +272,23 @@ class AssetsView(AssetsViewDialog):
 				self._getallassetstree(ch, dict)
 
 	def getclipboard(self):
-		tp, data = self.editmgr.getclip()
-		if not tp or not data:
-			return []
-		if tp == 'node':
-			data = [data]
-		if tp == 'node' or tp == 'multinode':
-			rv = []
-			for n in data:
+		data = self.editmgr.getclip()
+		rv = []
+		for n in data:
+			className = n.getClassName()
+			if className == 'MMNode':
 				ntype = n.GetType()
 				name = MMAttrdefs.getattr(n, 'name')
 				rv.append((None, ntype, name, ntype))
-			return rv
-		name = ''
-		if tp in ('viewport', 'region'):
-			name = data.name
-		return [(None, tp, name, tp)]
+			elif className in ('Region','Viewport'):
+				if className == 'Region':
+					rv.append((None, 'region', n.name, 'region'))
+				elif className == 'Viewport':
+					rv.append((None, 'viewport', n.name, 'viewport'))
+			else:
+				rv.append((None, className, '', className))
+
+		return rv
 
 	# Callbacks from the UI
 	def setview_callback(self, which):
