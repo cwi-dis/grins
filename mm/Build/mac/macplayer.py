@@ -19,20 +19,16 @@ else:
 	import quietconsole
 	quietconsole.install()
 
-# XXXX Temp: enable Navigation
-import macfsn
-macfsn._install()
-
 ID_SPLASH_DIALOG=513
 # XXXX Debugging code: assure the resource file is available
 import Res
 try:
 	Res.GetResource('DLOG', ID_SPLASH_DIALOG)
 except:
-	Res.OpenResFile(':player.rsrc')
-	Res.OpenResFile(':playercontrols.rsrc')
-	Res.OpenResFile(':common.rsrc')
-	Res.OpenResFile(':playerballoons.rsrc')
+	Res.FSpOpenResFile(':player.rsrc', 0)
+	Res.FSpOpenResFile(':playercontrols.rsrc', 0)
+	Res.FSpOpenResFile(':common.rsrc', 0)
+	Res.FSpOpenResFile(':playerballoons.rsrc', 0)
 Res.GetResource('DLOG', ID_SPLASH_DIALOG)
 	
 # Now time for real work.
@@ -61,9 +57,8 @@ else:
 # macfreeze: path :::lib
 # macfreeze: path :::pylib
 #
-# Exclude for now:
-# macfreeze: exclude macos9htmlwidget
 # and some modules we don't want:
+# macfreeze: exclude BandwidthCompute
 # macfreeze: exclude X_window
 # macfreeze: exclude X_windowbase
 # macfreeze: exclude GL_window
