@@ -125,8 +125,6 @@ class TreeHelper:
 
 	# check the region/viewport node references and update the internal structure
 	def __checkRegionNodeList(self, parentRef, nodeRef, isFakePart = 0):
-		if not nodeRef.isInDocument():
-			return
 		if debug2: print 'treeHelper.__checkRegionNodeList : start ',nodeRef
 		tNode =  self.__nodeList.get(nodeRef)
 		if parentRef != None:
@@ -1101,7 +1099,7 @@ class LayoutView2(LayoutViewDialog2):
 
 	def applyNewViewport(self, name):
 		if self.editmgr.transaction():
-			channel = self.context.newchannel(name, -1, 'layout')
+			channel = self.context.newviewport(name, -1, 'layout')
 			self.editmgr.addchannel(None, -1, channel)
 			self.editmgr.setchannelattr(name, 'transparent', 0)
 			self.editmgr.setchannelattr(name, 'showEditBackground', 1)

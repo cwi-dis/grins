@@ -4,6 +4,7 @@ __version__ = "$Id$"
 
 import MMAttrdefs
 from MMTypes import *
+from Owner import *
 from MMExc import *
 from SR import *
 from AnchorDefs import *
@@ -380,24 +381,31 @@ class MMNodeContext:
 
 	# Internal method to create and insert a channel into the document
 	# this method is only called from self.newchannel method
-	def _addchannel(self, name, i, type):
+	def _addchannel(self, name, i, type, isViewport=0):
 		if name in self.channelnames:
 			raise CheckError, 'addchannel: existing name'
 		if not -1 <= i <= len(self.channelnames):
 			raise CheckError, 'addchannel: invalid position'
 		if i == -1:
 			i = len(self.channels)
-		c = MMChannel(self, name, type)
+		if isViewport:
+			c = MMViewport(self, name, type)
+		else:
+			c = MMChannel(self, name, type)
 		c._fillChannel()
 		self.channeldict[name] = c
 		self.channelnames.insert(i, name)
 		self.channels.insert(i, c)
 
-	# Create a new MMChannel instance.
+	# Create a new MMChannel/MMViewport instance.
 	# This method is used either by the parser or any view to create a new channel
 	# Any view call has to call this method before calling editmgr.addchannel
 	def newchannel(self, name, i, type):
 		self._addchannel(name, i, type)
+		return self.getchannel(name)
+
+	def newviewport(self, name, i, type):
+		self._addchannel(name, i, type, isViewport=1)
 		return self.getchannel(name)
 
 	# Not currently used. Look at as well editmgr.copychannel	
@@ -725,7 +733,7 @@ class MMNodeContext:
 		# return filter(lambda ch: ch.GetParent() is None, self.__ctx.channels)
 		top_levels = []
 		for chan in self.channels:
-			if chan.GetParent() is None and chan.isInDocument():
+			if chan.getClassName() == 'Viewport' and chan.getOwner() & OWNER_DOCUMENT:
 				top_levels.append(chan)
 		return top_levels
 
@@ -904,14 +912,15 @@ class MMRegPoint:
 # used by xpath method below
 _subscript = None
 
-class MMTreeElement:
+class MMTreeElement(Owner):
 	def __init__(self, context, uid):
+		Owner.__init__(self)
 		self.context = context	# From MMContext
 		self.uid = uid		# Unique identifier for each element (starts at 1)
 		self.parent = None
 		self.children = []
 		self.collapsed = 0	# Whether this element is collapsed in its view
-
+		
 	def _addchild(self, child):
 		# ASSERT self.type in interiortypes
 		child.parent = self
@@ -1065,11 +1074,16 @@ class MMTreeElement:
 		self.parent = None
 		self.children = None
 
+	def ClearRefs(self, rootNodeToInspect):
+		pass
+		
 	def Extract(self):
-		if self.parent is None: raise CheckError, 'Extract() root node'
-		parent = self.parent
-		self.parent = None
-		parent.children.remove(self)
+		# remove owner document (if set)
+		# look at the Owner module for more comments
+		if not self.parent is None: 
+			parent = self.parent
+			self.parent = None
+			parent.children.remove(self)
 
 	def AddToTree(self, parent, i):
 		if self.parent is not None:
@@ -1096,6 +1110,14 @@ class MMTreeElement:
 		print "Warning: getallattrnames not overridden:", self
 		return []
 
+	# allow to know whether this node is a part of the document or not
+	# unlike the getowner method, this one is not only valid for root element
+	def isInDocument(self):
+		root = self.GetRoot()
+		if root.getOwner() & OWNER_DOCUMENT:
+			return 1
+		return 0
+
 class MMAttrContainer(MMTreeElement):
 	# This class is a simple container for a UID and an attrdict.
 	def __init__(self, context, uid):
@@ -1117,10 +1139,6 @@ class MMChannel(MMTreeElement):
 		self.views = {}
 		self._cssId = None
 
-		# XXX allow to know if the node is part of the current document or clipboard
-		self.inDocument = 1
-		self.isRoot = 1
-		
 		if type == 'layout':
 			# by default it's a viewport
 			self._cssId = self.newCssId(1)
@@ -1137,14 +1155,14 @@ class MMChannel(MMTreeElement):
 	#	
 	def DeepCopy(self):
 		cNode = self.__deepCopy(self.context)
-		# XXX allow to know if the node is part of the current document or clipboard
-		cNode.inDocument = 0
 		return cNode
 
 	def __deepCopy(self, context):
 		cName = self.__getName(context, self.name)
-		cChannel = context.newchannel(cName, -1, self.get('type'))
-		
+		if self.getClassName() == 'Region':
+			cChannel = context.newchannel(cName, -1, self.get('type'))
+		else:
+			cChannel = context.newviewport(cName, -1, self.get('type'))
 		self.__attrsCopy(context, cChannel)
 		for child in self.GetChildren():
 			if child.get('type') == 'layout':
@@ -1159,8 +1177,6 @@ class MMChannel(MMTreeElement):
 				channelTarget[attrName] = attrValue
 		# keep the 'collapsed' information
 		channelTarget.collapsed = self.collapsed
-		# save whether it's a toplayout or a region
-		channelTarget.isRoot = self.isRoot
 
 	#
 	# Copy a subtree (deeply) into a new context
@@ -1190,10 +1206,8 @@ class MMChannel(MMTreeElement):
 	# allow to know the class name without use 'import xxx; isinstance'
 	# note: this method should be implemented for all basic classes of the document
 	def getClassName(self):
-		if self.isRoot:
-			return 'Viewport'
-		else:
-			return 'Region'
+		# by default, it's a viewport
+		return 'Region'
 
 	def __repr__(self):
 		return '<%s instance, name=%s>' % (self.__class__.__name__, `self.name`)
@@ -1317,9 +1331,6 @@ class MMChannel(MMTreeElement):
 		MMTreeElement.Extract(self)
 		if self.attrdict.get('type') == 'layout' and self._cssId != None:
 			self.context.cssResolver.unlink(self._cssId)
-
-		# XXX allow to know if the node is part of the current document or clipboard
-		self.inDocument = 0
 		
 	def __setitem__(self, key, value):
 		if key == 'type':
@@ -1327,7 +1338,6 @@ class MMChannel(MMTreeElement):
 			if ChannelMap.isvisiblechannel(value) and (not self.attrdict.has_key(key) or not ChannelMap.isvisiblechannel(self.attrdict[key])):
 				self.setvisiblechannelattrs(value)
 		elif key == 'base_window':
-			self.isRoot	= 0
 			parent = self.GetParent()
 			if parent is not None:
 				self.Extract()
@@ -1494,19 +1504,15 @@ class MMChannel(MMTreeElement):
 			return self.d_attrdict[name]
 		return self.attrdict.get(name, default)
 
-	# allow to know whether this node is a part of the document or not
-	# it may be a part of the clipboard
-	def isInDocument(self):
-		channel = self
-		while (channel != None):
-			if not channel.inDocument:
-				return 0
-			channel = channel.GetParent()
-
-		return 1
-
-class MMRegionAssociation:
+class MMViewport(MMChannel):
+	# allow to know the class name without use 'import xxx; isinstance'
+	# note: this method should be implemented for all basic classes of the document
+	def getClassName(self):
+		return 'Viewport'
+	
+class MMRegionAssociation(Owner):
 	def __init__(self, mediaNode):
+		Owner.__init__(self)
 		self.mediaNode = mediaNode
 
 	def getClassName(self):
@@ -2244,7 +2250,8 @@ class MMNode(MMTreeElement):
 	# note: this method should be implemented for all basic classes of the document
 	def getClassName(self):
 		return 'MMNode'
-		
+
+			
 	#
 	# Return string representation of self
 	#
@@ -3391,6 +3398,7 @@ class MMNode(MMTreeElement):
 
 	def Extract(self):
 		parent = self.parent
+		if parent is None: raise CheckError, 'Extract() root node'
 		MMTreeElement.Extract(self)
 		name = MMAttrdefs.getattr(self, 'name')
 		if name and parent.GetTerminator() == name:

@@ -29,6 +29,8 @@ __version__ = "$Id$"
 #		then *copy* it back to the clipboard:
 #		list = getclip(); x=[list]; setclip(type, [x.DeepCopy()])
 
+from Owner import *
+
 class Clipboard:
 
 	def __init__(self):
@@ -38,17 +40,20 @@ class Clipboard:
 	def __repr__(self):
 		return '<Clipboard instance, type=' + `self.type` + '>'
 
-	def setclip(self, data, owned=0):
+	def _setclip(self, data, owned=0):
 		if not type(data) in (type(()), type([])):
 			print 'Clipboard.setclip : data is not a list ',data
 			return
-		if self.__owned:
-			self.clearclip()
+		for node in data:
+			node.addOwner(OWNER_CLIPBOARD)
 		self.__data = data
 		self.__owned = owned
 
 	def getclip(self):
 		return self.__data
+
+	def getowned(self):
+		return self.__owned
 		
 	def getclipcopy(self):
 		data = self.getclip()
@@ -62,14 +67,14 @@ class Clipboard:
 					# Don't have DeepCopy method. So we guess we don't need to copy
 					# the object in this case
 					new_data.append(node)
-		self.__owned = 0 # So setclip doesn't destroy what we are going to return
-		self.setclip(new_data, owned=1)
+#		self.__owned = 0 # So setclip doesn't destroy what we are going to return
+		self.restoreclip(new_data, owned=1)
 		return data
 
 	def clearclip(self):
-		if self.__owned:
+		if not self.__owned:
+			# we don't need to clear the references if it's a copy of the original (because no reference)
 			for node in self.__data:
-				if hasattr(node, 'Destroy'):
-					node.Destroy()
+				self.clearRefs(node)
 			self.__owned = 0
 		self.__data = []

@@ -41,6 +41,7 @@ __version__ = "$Id$"
 
 import MMExc
 from HDTL import HD, TL
+from Owner import *
 import features
 import Clipboard
 
@@ -297,14 +298,6 @@ class EditMgr(Clipboard.Clipboard):
 	def getglobalfocus(self):
 		return self.focus
 
-	#
-	# Clipboard interface
-	#
-	def setclip(self, data, owned=0):
-		Clipboard.Clipboard.setclip(self, data, owned)
-		for client in self.clipboard_registry:
-			client.clipboardchanged()
-
 	# Note: we do NOT override clearclip() here, so the clearclip is
 	# not forwarded to the registered listeners. This is intentional:
 	# a clearclip() is an administrative call for using during cleanup
@@ -373,6 +366,11 @@ class EditMgr(Clipboard.Clipboard):
 		parent = node.GetParent()
 		i = parent.GetChildren().index(node)
 		self.addstep('delnode', parent, i, node)
+
+		# this node is now in the undo stack, and removed from the document
+		node.addOwner(OWNER_UNDOSTACK)
+		node.removeOwner(OWNER_UNDOSTACK)
+		
 		node.Extract()
 		sibs = parent.GetChildren()
 		if i < len(sibs):
@@ -389,12 +387,15 @@ class EditMgr(Clipboard.Clipboard):
 		self.addnode(parent, i, node)
 
 	def clean_delnode(self, parent, i, node):
-		if node.GetParent() is None:
+		if not node.getOwner() & OWNER_DOCUMENT:
 			node.Destroy()
 
 	def addnode(self, parent, i, node):
 		self.structure_changed = 1
 		self.addstep('addnode', node)
+		# this node is now in the undo stack, and the document
+		node.addOwner(OWNER_UNDOSTACK|OWNER_DOCUMENT)
+		
 		node.AddToTree(parent, i)
 		self.next_focus = [node]
 
@@ -559,8 +560,8 @@ class EditMgr(Clipboard.Clipboard):
 	def addchannel(self, parent, i, channel):
 		self.addstep('addchannel', channel)
 		
-		# XXX allow to know if the node is part of the current document or clipboard
-		channel.inDocument = 1
+		# this node is now in the undo stack and the document
+		channel.addOwner(OWNER_UNDOSTACK|OWNER_DOCUMENT)
 		
 		if parent != None:
 			self.setchannelattr(channel.name, 'base_window', parent.name)
@@ -618,11 +619,11 @@ class EditMgr(Clipboard.Clipboard):
 			i = parent.GetChildren().index(channel)
 		self.addstep('delchannel', parent, i, channel)
 
-		# XXX allow to know if the node is part of the current document or clipboard
-		channel.inDocument = 0
+		# this node is now in the undo stack, and removed from the document
+		channel.addOwner(OWNER_UNDOSTACK)
+		channel.removeOwner(OWNER_DOCUMENT)
 		
-		if parent != None:
-			channel.Extract()
+		channel.Extract()
 		
 		if parent:
 			sibs = parent.GetChildren()
@@ -643,7 +644,8 @@ class EditMgr(Clipboard.Clipboard):
 		self.addchannel(parent, i, channel)
 
 	def clean_delchannel(self, parent, i, channel):
-		if not channel.isInDocument():
+		# destroy channel if it's the only owner of the undo stack
+		if not channel.getOwner() & OWNER_DOCUMENT:
 			channel.Destroy()
 
 	def setchannelname(self, name, newname):
@@ -982,3 +984,75 @@ class EditMgr(Clipboard.Clipboard):
 
 	def clean_delasset(self, asset):
 		pass
+
+	#
+	# Clipboard interface
+	#
+
+	def setclip(self, data, owned=0):
+		# save the old content
+		olddata = Clipboard.Clipboard.getclip(self)
+		oldowned = Clipboard.Clipboard.getowned(self)
+		self.addstep('setclip', olddata, oldowned)
+
+		# the clip content is changing. So clear the references
+		# related to the data which is removed from the clipboard
+		self.clearclip()
+
+		Clipboard.Clipboard._setclip(self, data, owned)
+		for client in self.clipboard_registry:
+			client.clipboardchanged()
+
+	def undo_setclip(self, olddata, oldowned):
+		self.restoreclip(olddata, oldowned)
+
+	def clean_setclip(self, data, owned):
+		for node in data:
+			# destroy only if clipboard is the only owner
+			if node.getOwner() == OWNER_CLIPBOARD:
+				if hasattr(node, 'Destroy'):
+					node.Destroy()
+
+	def restoreclip(self, data, owned=0):
+		# save the old content
+		olddata = Clipboard.Clipboard.getclip(self)
+		oldowned = Clipboard.Clipboard.getowned(self)
+		self.addstep('restoreclip', olddata, oldowned)
+
+		# change the clipboard content, but don't clear the reference of the
+		# data which is restored into the document
+		Clipboard.Clipboard._setclip(self, data, owned)
+		for client in self.clipboard_registry:
+			client.clipboardchanged()
+	
+	def undo_restoreclip(self, olddata, oldowned):
+		self.setclip(olddata, oldowned)
+
+	def clean_restoreclip(self, data, owned):
+		# destroy the content only if it has never been related to the document
+		# in that case, the content can't be clean by the undo/redo clean up mechanism
+		for node in data:
+			# destroy only if clipboard is the only owner
+			if node.getOwner() == OWNER_CLIPBOARD:
+				if hasattr(node, 'Destroy'):
+					node.Destroy()
+
+	# clear all references that refer the current node
+	# Node can be any reference node being a part of the document
+	def clearRefs(self, nodeRef):
+		if hasattr(nodeRef, 'ClearRefs'):
+			# call that method on each root node of the reference document to inspect
+
+			# body root
+			nodeRef.ClearRefs(self.root)
+			
+			# viewports root
+			viewportList = self.context.getviewports()
+			for viewport in viewportList:
+				nodeRef.ClearRefs(viewport)
+				
+			# all root elements of the clipboard itself
+			data = self.getclip()
+			for node in data:
+				nodeRef.ClearRefs(data)
+

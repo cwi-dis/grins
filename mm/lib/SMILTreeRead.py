@@ -268,6 +268,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	
 	def MakeRoot(self, type):
 		self.__root = self.__context.newnodeuid(type, '1')
+		from Owner import OWNER_DOCUMENT
+		self.__root.addOwner(OWNER_DOCUMENT)
 		self.__root.SMILidmap = self.__idmap
 		return self.__root
 
@@ -1902,8 +1904,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if not name:
 			name = layout_name # only for anonymous root-layout
 		ctx = self.__context
-		layout = ctx.newchannel(name, 0, 'layout')
-
+		layout = ctx.newviewport(name, 0, 'layout')
+		
+		from Owner import OWNER_DOCUMENT
+		layout.addOwner(OWNER_DOCUMENT)
+			
 		self.__topchans.append(layout)
 		if isroot:
 			self.__base_win = name
