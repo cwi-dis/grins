@@ -5,10 +5,14 @@
 // that uses this DLL. This way any other project whose source files include this file see 
 // MP3LIBCE_API functions as being imported from a DLL, wheras this DLL sees symbols
 // defined with this macro as being exported.
+#ifdef MS_NO_COREDLL
+#define MP3LIB_API
+#else
 #ifdef MP3LIB_EXPORTS
 #define MP3LIB_API __declspec(dllexport)
 #else
 #define MP3LIB_API __declspec(dllimport)
+#endif
 #endif
 
 MP3LIB_API void mp3_lib_init(int,char*);
