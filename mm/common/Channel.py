@@ -1191,6 +1191,7 @@ class ChannelWindow(Channel):
 		if not self._player.editmgr.transaction():
 			return
 		self._player.toplevel.setwaiting()
+		self.unhighlight()
 		# we now know for sure we're not playing
 		pchan.window.create_box(
 			'Resize window for channel ' + self._name,
@@ -1206,6 +1207,7 @@ class ChannelWindow(Channel):
 			self._player.editmgr.commit()
 		else:
 			self._player.editmgr.rollback()
+		self.highlight()
 
 	def do_show(self, pchan):
 		if debug:
