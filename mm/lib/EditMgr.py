@@ -612,8 +612,10 @@ class EditMgr(Clipboard.Clipboard):
 		pass
 
 	def delchannel(self, channel):
-		i = self.context.channels.index(channel)
 		parent = channel.GetParent()
+		i = -1
+		if parent:
+			i = parent.GetChildren().index(channel)
 		self.addstep('delchannel', parent, i, channel)
 
 		# XXX allow to know if the node is part of the current document or clipboard
