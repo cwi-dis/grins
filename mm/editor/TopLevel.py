@@ -203,6 +203,7 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.cvbutton.set_button(self.channelview.is_showing())
 		self.pvbutton.set_button(self.player.is_showing())
 		self.svbutton.set_button(self.styleview.is_showing())
+		self.lvbutton.set_button(self.links.is_showing())
 		self.helpbutton.set_button(self.help.is_showing())
 	#
 	def destroyviews(self):
