@@ -974,13 +974,11 @@ class LayoutOsWndCtrl(LayoutOsWnd, win32window.Window):
 		x, y, w, h = selection.getwindowpos()
 		if self._updatehost:
 			self._host.updateBox(x, y, w, h)
-		self.update()
 			
 	def onDSelResize(self, selection):
 		x, y, w, h = selection.getwindowpos()
 		if self._updatehost:
 			self._host.updateBox(x, y, w, h)
-		self.update()
 
 	def update(self, rc=None):
 		if rc:
