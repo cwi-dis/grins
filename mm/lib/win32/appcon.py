@@ -21,6 +21,9 @@ Continue = 'Continue'
 
 error = 'windowinterface.error'
 
-
-
+import os
+GRiNSApp=os.environ['GRiNSApp']
+IsEditor = (GRiNSApp=='CMIFed')
+IsPlayer = (GRiNSApp=='GRiNS')
+AppDispName = GRiNSApp
 
