@@ -2,21 +2,6 @@ __version__ = "$Id$"
 
 
 """ @win32doc|AttrEditForm
-This module contains the ui implementation of the AttrEditDialog
-It is implemented as a ListView with dialog bars.
-
-The MFC class that offers the list view functionality is the CListView
-Objects of this class are exported to Python through the win32ui pyd
-as objects of type PyCView. The AttrEditForm extends the PyCListView.
-
-The MFC class that offers the dialog bar functionality is the CDialogBar
-Objects of this class are exported to Python through the win32ui pyd
-as objects of type PyCDialogBar. The dialog bars used by the AttrEditForm 
-extend the PyCDialogBar.
-
-The AttrEditForm dialog bars are created using the resource dialog templates 
-with identifiers IDD_EDITSTRINGATTR,IDD_EDITOPTIONSATTR,IDD_EDITFILEATTR and IDD_STDDLGBAR.
-Like all resources these templates can be found in cmif\win32\src\GRiNSRes\GRiNSRes.rc.
 
 """
 
@@ -528,6 +513,24 @@ class FloatTupleCtrl(TupleCtrl):
 				self._attrval[i].settext(s)
 	
 ##################################
+class AttrSheet(dialog.PropertySheet):
+	def __init__(self,form):
+		self._form=form
+		import __main__
+		dll=__main__.resdll
+		dialog.PropertySheet.__init__(self,grinsRC.IDR_GRINSED,dll)
+		self.HookMessage(self.onInitDialog,win32con.WM_INITDIALOG)
+
+	def onInitDialog(self,params):
+		self.HookCommand(self.onApply,afxres.ID_APPLY_NOW)
+		self.HookCommand(self.onOK,win32con.IDOK)
+		self.HookCommand(self.onCancel,win32con.IDCANCEL)
+
+	def onApply(self,id,code): self._form.call('Apply')
+	def onOK(self,id,code): self._form.call('OK')
+	def onCancel(self,id,code):self._form.call('Cancel')
+
+
 class AttrPage(dialog.PropertyPage):
 	def __init__(self,form):
 		self._form=form
@@ -548,10 +551,6 @@ class AttrPage(dialog.PropertyPage):
 	def OnInitDialog(self):
 		self._initdialog=self
 		dialog.PropertyPage.OnInitDialog(self)
-		self.HookCommand(self.OnRestore,grinsRC.IDUC_RESTORE)
-		self.HookCommand(self.OnApply,grinsRC.IDUC_APPLY)
-		self.HookCommand(self.OnCancel,win32con.IDCANCEL)
-		self.HookCommand(self.OnOK,win32con.IDOK)
 		self._attrinfo.attach_to_parent()
 		for ctrl in self._cd.values():ctrl.OnInitCtrl()
 		if self._group:
@@ -566,11 +565,6 @@ class AttrPage(dialog.PropertyPage):
 		for ctrl in self._cd.values():
 			ctrl.drawOn(dc)
 					
-	def OnRestore(self,id,code): self._form.call('Restore')
-	def OnApply(self,id,code): self._form.call('Apply')
-	def OnCancel(self,id,code): self._form.call('Cancel')
-	def OnOK(self,id,code): self._form.call('OK')
-
 	def setvalue(self, attr, val):
 		if self._cd.has_key(attr): 
 			self._cd[attr].setvalue(val)
@@ -1697,7 +1691,7 @@ class AttrEditForm(GenFormView):
 		self._parent=parent
 		import __main__
 		dll=__main__.resdll
-		prsht=dialog.PropertySheet(grinsRC.IDR_GRINSED,dll)
+		prsht=AttrSheet(self)
 		prsht.EnableStackedTabs(1)
 
 		self.buildcontext()
@@ -1746,6 +1740,11 @@ class AttrEditForm(GenFormView):
 
 		prsht.SetActivePage(self._pages[0])
 		prsht.RedrawWindow()
+
+		# enable apply
+		temp=components.Control(prsht,afxres.ID_APPLY_NOW)
+		temp.attach_to_parent()
+		temp.enable(1)
 
 	def creategrouppages(self):
 		grattrl=[]	 # all attr in groups
