@@ -575,6 +575,7 @@ class QtChannel:
 			t_sec = self.__qtplayer.getTime()
 			if self.__window:
 				self.__window.update(self.__window.getwindowpos())
+			t = self.__channel._scheduler.timefunc() - self.__start_time + self.__playBegin
 			syncBehavior, syncTolerance, syncMaster = self.__sync
 			if not running or t_sec >= self.__playEnd:
 				self.onMediaEnd()
