@@ -768,47 +768,22 @@ class LayoutManager(LayoutManagerBase):
 			pass
 
 	# called by base class OnDraw or OnPaint
-	def paintOn(self, dc, rc=None):
+	def paintOn(self, dc):
 		l, t, w, h = self._canvas
 		r, b = l+w, t+h
-
-		# draw to offscreen bitmap for fast looking repaints
-		dcc = dc.CreateCompatibleDC()
-
-		bmp = win32ui.CreateBitmap()
-		bmp.CreateCompatibleBitmap(dc, w, h)
-		
-		# called by win32ui
-		#self.OnPrepareDC(dcc)
-		
-		# offset origin more because bitmap is just piece of the whole drawing
-		dcc.OffsetViewportOrg((-l, -t))
-		oldBitmap = dcc.SelectObject(bmp)
-		dcc.SetBrushOrg((l % 8, t % 8))
-		dcc.IntersectClipRect((l, t, r, b))
-
 		rgn = self.getClipRgn()
 
 		# background decoration on dcc
-		dcc.FillSolidRect((l, t, r, b),win32mu.RGB(self._bgcolor or (255,255,255)))
+		dc.FillSolidRect((l, t, r, b),win32mu.RGB(self._bgcolor or (255,255,255)))
 
-		# draw objects on dcc
+		# draw objects on dc
 		if self._viewport:
-			self._viewport.paintOn(dcc)
-			dcc.SelectClipRgn(rgn)
-			self._viewport._draw3drect(dcc, self._hasfocus)
-			self.drawTracker(dcc)
+			self._viewport.paintOn(dc)
+			dc.SelectClipRgn(rgn)
+			self._viewport._draw3drect(dc, self._hasfocus)
+			self.drawTracker(dc)
 
-		# copy bitmap
-		dcc.SetViewportOrg((0, 0))
-		dcc.SetWindowOrg((0,0))
-		dcc.SetMapMode(win32con.MM_TEXT)
-		dc.BitBlt((l,t),(w, h),dcc,(0, 0), win32con.SRCCOPY)
-
-		# clean up
-		dcc.SelectObject(oldBitmap)
-		dcc.DeleteDC()
-		del bmp
+		rgn.DeleteObject()
 
 	def drawTracker(self, dc):
 		for wnd in self._selections:

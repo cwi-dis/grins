@@ -667,7 +667,7 @@ class LayoutWndContext:
 		hf = dc.SelectObjectFromHandle(self._hsmallfont)
 		dc.SetBkMode(win32con.TRANSPARENT)
 
-		self.paintOn(dc)
+		self.OffscreenPaintOn(dc)
 		
 		dc.SelectObjectFromHandle(hf)
 		
@@ -682,12 +682,9 @@ class LayoutWndContext:
 	def OnDraw(self, dc):
 		hf = dc.SelectObjectFromHandle(self._hsmallfont)
 		dc.SetBkMode(win32con.TRANSPARENT)
-		self.paintOn(dc)
+		self.OffscreenPaintOn(dc)
 		dc.SelectObjectFromHandle(hf)
 	
-	def paintOn(self, dc):
-		pass
-
 	def getClipRgn(self, rel=None):
 		rgn = win32ui.CreateRgn()
 		rgn.CreateRectRgn(self._canvas)
@@ -695,7 +692,46 @@ class LayoutWndContext:
 
 	def OnEraseBkgnd(self,dc):
 		return 1
+	
+	# called by OnDraw or OnPaint
+	def OffscreenPaintOn(self, dc):
+		l, t, w, h = self._canvas
+		r, b = l+w, t+h
+
+		# draw to offscreen bitmap for fast looking repaints
+		dcc = dc.CreateCompatibleDC()
+
+		bmp = win32ui.CreateBitmap()
+		bmp.CreateCompatibleBitmap(dc, w, h)
 		
+		# called by win32ui
+		#self.OnPrepareDC(dcc)
+		
+		# offset origin more because bitmap is just piece of the whole drawing
+		dcc.OffsetViewportOrg((-l, -t))
+		oldBitmap = dcc.SelectObject(bmp)
+		dcc.SetBrushOrg((l % 8, t % 8))
+		dcc.IntersectClipRect((l, t, r, b))
+
+		# draw objects on dcc
+		self.paintOn(dcc)
+
+		# copy bitmap
+		dcc.SetViewportOrg((0, 0))
+		dcc.SetWindowOrg((0,0))
+		dcc.SetMapMode(win32con.MM_TEXT)
+		dc.BitBlt((l,t),(w, h),dcc,(0, 0), win32con.SRCCOPY)
+
+		# clean up
+		dcc.SelectObject(oldBitmap)
+		dcc.DeleteDC()
+		del bmp
+
+	def paintOn(self, dc):
+		l, t, w, h = self._canvas
+		r, b = l+w, t+h
+		dc.FillSolidRect((l, t, r, b),win32mu.RGB(self._bgcolor or (255,255,255)))
+
 	#
 	# Scaling/scrolling support
 	#
@@ -786,4 +822,4 @@ class MSLayoutScrollOsWnd(docview.ScrollView, LayoutWndContext, MSDrawContext):
 
 		MSDrawContext.addListener(self, self) 
 		self._cancroll = 1
-
+ 
