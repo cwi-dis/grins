@@ -19,6 +19,10 @@ else:
 	import quietconsole
 	quietconsole.install()
 
+# XXXX Temp: enable Navigation
+import macfsn
+macfsn._install()
+
 ID_SPLASH_DIALOG=513
 # XXXX Debugging code: assure the resource file is available
 import Res
