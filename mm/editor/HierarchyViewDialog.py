@@ -12,17 +12,6 @@ class HierarchyViewDialog(ViewDialog):
 	def __init__(self):
 		ViewDialog.__init__(self, 'hview_')
 		self.menu = [
-			('Canvas', [
-				(None, 'Double height',
-				 (self.canvascall,
-				  (windowinterface.DOUBLE_HEIGHT,))),
-				(None, 'Double width',
-				 (self.canvascall,
-				  (windowinterface.DOUBLE_WIDTH,))),
-				(None, 'Reset',
-				 (self.canvascall,
-				  (windowinterface.RESET_CANVAS,))),
-				]),
 			('Edit', [
 				(None, 'New node', [
 					(None, 'Before focus',
@@ -71,6 +60,20 @@ class HierarchyViewDialog(ViewDialog):
 				('z', 'Zoom out', (self.zoomoutcall, ())),
 				('.', 'Zoom here', (self.zoomherecall, ())),
 				('Z', 'Zoom in', (self.zoomincall, ()))
+				]),
+			('View', [
+				(None, 'Double height of canvas',
+				 (self.canvascall,
+				  (windowinterface.DOUBLE_HEIGHT,))),
+				(None, 'Double width of canvas',
+				 (self.canvascall,
+				  (windowinterface.DOUBLE_WIDTH,))),
+				(None, 'Reset canvas size',
+				 (self.canvascall,
+				  (windowinterface.RESET_CANVAS,))),
+				(None, 'Show thumbnails',
+				 (self.thumbnailcall, ()),
+				 't', self.thumbnails),
 				]),
 			]
 		if Help.hashelp():
