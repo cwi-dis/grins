@@ -609,6 +609,19 @@ class _Window:
 			return
 		if debug: print `self`+'._input_callback()'
 		event = call_data.event
+		# this stuff is needed because events don't always
+		# arrive at the correct window.  this is especially
+		# true for menu button presses.
+		x, y = event.x, event.y
+		for w in self._subwindows:
+			v = w._form.GetValues(['x', 'y', 'width', 'height'])
+			fx, fy = v['x'], v['y']
+			fw, fh = v['width'], v['height']
+			if fx <= x < fx + fw and fy <= y < fy + fh:
+				event.x = x - fx
+				event.y = y - fy
+				w._input_callback(widget, client_data, call_data)
+				return
 		if event.type == X.KeyPress:
 ##			toplevel._win_lock.acquire()
 			string = Xlib.LookupString(event)[0]
