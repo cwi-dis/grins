@@ -599,7 +599,7 @@ class AttrCtrl:
 		return self._attr.getcurrent()
 
 	# temp stuff not safe
-	def a2tuple(self,str):
+	def atoit(self,str):
 		if not str: return ()
 		l=string.split(str, ' ')
 		n=[]
@@ -615,30 +615,59 @@ class AttrCtrl:
 			return (n[0],n[1],n[2],n[3])
 		return ()
 
-	def zerostuple(self,n):
+	def atoft(self,str):
+		if not str: return ()
+		l=string.split(str, ' ')
+		n=[]
+		for e in l:
+			if e: n.append(string.atof(e))
+		if len(n)==1:
+			return (n[0],)
+		elif len(n)==2:
+			return (n[0],n[1])
+		elif len(n)==3:
+			return (n[0],n[1],n[2])
+		elif len(n)==4:
+			return (n[0],n[1],n[2],n[3])
+		return ()
+
+	def emptytuple(self,n):
 		if n==1:
-			return ('0',)
+			return ('',)
 		elif n==2:
-			return ('0','0')
+			return ('','')
 		elif n==3:
-			return ('0','0','0')
+			return ('','','')
 		elif n==4:
-			return ('0','0','0','0')
+			return ('','','','')
 		else:
 			return ()
 
-	def dtuple2stuple(self,t,n):
+	def ittoat(self,t,n):
 		if not t:
-			return self.zerostuple(n)
+			return self.emptytuple(n)
 		if len(t)==1 and n==1:
-			return ('%d' % t[0],)
+			return '%d' % t[0]
 		elif len(t)==2 and n==2:
-			return ('%s' % t[0],'%s' % t[1])
+			return '%d' % t[0],'%d' % t[1]
 		elif len(t)==3 and n==3:
-			return ('%s' % t[0],'%s' % t[1],'%s' % t[2])
+			return '%d' % t[0],'%d' % t[1],'%d' % t[2]
 		elif len(t)==4 and n==4:
-			return ('%s' % t[0],'%s' % t[1],'%s' % t[2],'%s' % t[3])
-		return self.zerostuple(n)
+			return '%d' % t[0],'%d' % t[1],'%d' % t[2],'%d' % t[3]
+		return self.emptytuple(n)
+
+	def fttoat(self,t,n):
+		if not t:
+			return self.emptytuple(n)
+		if len(t)==1 and n==1:
+			return '%f' % t[0]
+		elif len(t)==2 and n==2:
+			return '%f' % t[0],'%s' % t[1]
+		elif len(t)==3 and n==3:
+			return '%f' % t[0],'%f' % t[1],'%f' % t[2]
+		elif len(t)==4 and n==4:
+			return '%f' % t[0],'%f' % t[1],'%f' % t[2],'%f' % t[3]
+		return self.emptytuple(n)
 
 ##################################
 class OptionsCtrl(AttrCtrl):
@@ -870,39 +899,44 @@ class StringCtrl(AttrCtrl):
 		if code==win32con.EN_SETFOCUS:
 			self.sethelp()
 
-class IntPairCtrl(AttrCtrl):
+class TupleCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
 		AttrCtrl.__init__(self,wnd,attr,resid)
 		self._attrname=components.Edit(wnd,resid[0])
-		self._attrval1=components.Edit(wnd,resid[1])
-		self._attrval2=components.Edit(wnd,resid[2])
+		self._nedit=len(resid)-2
+		self._attrval=[]
+		for i in range(self._nedit):
+			self._attrval.append(components.Edit(wnd,resid[i+1]))
 
 	def OnInitCtrl(self):
 		self._initctrl=self
 		self._attrname.attach_to_parent()
-		self._attrval1.attach_to_parent()
-		self._attrval2.attach_to_parent()
 		self._attrname.settext(self._attr.getlabel())
-
+		for i in range(self._nedit):		
+			self._attrval[i].attach_to_parent()
 		strxy=self._attr.getcurrent()
 		self.setvalue(strxy)
-		self._wnd.HookCommand(self.OnEdit,self._resid[1])
-		self._wnd.HookCommand(self.OnEdit,self._resid[2])
-		self._wnd.HookCommand(self.OnReset,self._resid[3])
+		for i in range(self._nedit):
+			self._attrval[i].hookcommand(self._wnd,self.OnEdit)
+		self._wnd.HookCommand(self.OnReset,self._resid[self._nedit+1])
 
 	def setvalue(self, val):
 		if self._initctrl:
-			t=self.a2tuple(val)
-			sx,sy=self.dtuple2stuple(t,2)
-			self._attrval1.settext(sx)
-			self._attrval2.settext(sy)
+			t=self.atoi_tuple(val)
+			st=self.dtuple2stuple(t,self._nedit)
+			for i in range(self._nedit):
+				self._attrval[i].settext(st[i])
 
 	def getvalue(self):
 		if not self._initctrl:
 			return self._attr.getcurrent()
-		sx=self._attrval1.gettext()
-		sy=self._attrval2.gettext()
-		return sx + ' ' + sy
+		st=[]
+		for i in range(self._nedit):
+			st.append(self._attrval[i].gettext())
+		s=st[0]
+		for i in range(1,self._nedit):
+			s = s + ' ' + st[i]
+		return s
 
 	def OnReset(self,id,code):
 		if self._attr:
@@ -912,6 +946,22 @@ class IntPairCtrl(AttrCtrl):
 		if code==win32con.EN_SETFOCUS:
 			self.sethelp()
 
+class IntTupleCtrl(TupleCtrl):
+	def setvalue(self, val):
+		if self._initctrl:
+			t=self.atoit(val)
+			st=self.ittoat(t,self._nedit)
+			for i in range(self._nedit):
+				self._attrval[i].settext(st[i])
+
+class FloatTupleCtrl(TupleCtrl):
+	def setvalue(self, val):
+		if self._initctrl:
+			t=self.atoft(val)
+			st=self.fttoat(t,self._nedit)
+			for i in range(self._nedit):
+				self._attrval[i].settext(st[i])
+	
 ##################################
 class AttrPage(dialog.PropertyPage):
 	def __init__(self,form):
@@ -1142,7 +1192,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 			self.setvalue2layout(val)
 
 	# not validating
-	def a2tuple(self,str):
+	def atoi_tuple(self,str):
 		if not str: return ()
 		l=string.split(str, ' ')
 		n=[]
@@ -1163,7 +1213,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		if not val:
 			box=None
 		else:
-			box=self.a2tuple(val)
+			box=self.atoi_tuple(val)
 			box=self.tolayout(box)		
 		return box
 	
@@ -1171,7 +1221,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		if not val:
 			box=()
 		else:
-			box=self.a2tuple(val)
+			box=self.atoi_tuple(val)
 			box=self.tolayout(box)
 		self.create_box(box)
 	
@@ -1204,7 +1254,7 @@ class PosSizeLayoutPage(LayoutPage):
 		swh=self._wh.getcurrent()
 		if not swh:swh='0 0'
 		val = sxy + ' ' + swh
-		box=self.a2tuple(val)
+		box=self.atoi_tuple(val)
 		box=self.tolayout(box)
 		return box
 
@@ -1214,7 +1264,7 @@ class PosSizeLayoutPage(LayoutPage):
 		swh=self._wh.getvalue()
 		if not swh:swh='0 0'
 		val= sxy + ' ' + swh
-		box=self.a2tuple(val)
+		box=self.atoi_tuple(val)
 		box=self.tolayout(box)
 		self.create_box(box)
 
@@ -1287,9 +1337,10 @@ class AttrGroup:
 	# override for special cases
 	def createctrls(self,wnd):
 		cd={}
-		for a in self._al:
+		for ix in range(len(self._al)):
+			a=self._al[ix]
 			CtrlCl=self.getctrlclass(a)
-			cd[a]=CtrlCl(wnd,a,self.getctrlids(a))
+			cd[a]=CtrlCl(wnd,a,self.getctrlids(ix+1))
 		return cd
 
 	special_attrcl={
@@ -1318,16 +1369,17 @@ class AttrGroup:
 class InfoGroup(AttrGroup):
 	data=attrgrsdict['infogroup']
 
-	def __init__(self,data=None):
-		if data:
-			AttrGroup.__init__(self,data)
-		else:
-			AttrGroup.__init__(self,InfoGroup.data)
-		self._ix=1
+	def __init__(self):
+		AttrGroup.__init__(self,InfoGroup.data)
 
-	def getctrlids(self,a):
-		ix=self._ix
-		self._ix=self._ix+1
+	def createctrls(self,wnd):
+		cd={}
+		for ix in range(len(self._al)):
+			a=self._al[ix]
+			cd[a]=StringCtrl(wnd,a,self.getctrlids(ix+1))
+		return cd
+
+	def getctrlids(self,ix):
 		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
 			   getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
 			   getattr(grinsRC, 'IDC_%d' % (ix*10+3))
@@ -1344,15 +1396,19 @@ class LayoutGroup(AttrGroup):
 			AttrGroup.__init__(self,data)
 		else:
 			AttrGroup.__init__(self,LayoutGroup.data)
+
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_LS1
-	def getctrlids(self,a):
-		ix=self._data['attrs'].index(a.getname())
-		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
-			   getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
-			   getattr(grinsRC, 'IDC_%d' % (ix*10+3))
+
+	def createctrls(self,wnd):
+		cd={}
+		a=self.getattr('base_winoff')
+		cd[a]=IntTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_14,grinsRC.IDC_15,grinsRC.IDC_16))
+		return cd
+
 	def getpageclass(self):
 		return LayoutPage
+
 	def islayoutattr(self,attr):
 		return (attr.getname()=='base_winoff')
 
@@ -1363,34 +1419,29 @@ class LayoutGroupWithUnits(LayoutGroup):
 		LayoutGroup.__init__(self,LayoutGroupWithUnits.data)
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_LS1O1
-	def getctrlids(self,a):
-		if a.getname()=='base_winoff':
-			ids=(grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3)
-		elif a.getname()=='units':
-			ids=(grinsRC.IDC_4,grinsRC.IDC_5,grinsRC.IDC_6)
-		else:
-			raise error,'LayoutGroup2 resource conflict'
-		return ids
 
+	def createctrls(self,wnd):
+		cd={}
+		a=self.getattr('base_winoff')
+		cd[a]=IntTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_14,grinsRC.IDC_15,grinsRC.IDC_16))
+		a=self.getattr('units')
+		cd[a]=OptionsCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23))
+		return cd
 
 class SubregionGroup(AttrGroup):
 	data=attrgrsdict['subregion']
 	def __init__(self):
 		AttrGroup.__init__(self,SubregionGroup.data)
+
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_LS1O2
-	def getctrlids(self,a):
-		ix=self._data['attrs'].index(a.getname())
-		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
-			   getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
-			   getattr(grinsRC, 'IDC_%d' % (ix*10+3))
 
 	def createctrls(self,wnd):
 		cd={}
 		a=self.getattr('subregionxy')
-		cd[a]=IntPairCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_16))
+		cd[a]=IntTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_16))
 		a=self.getattr('subregionwh')
-		cd[a]=IntPairCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_14,grinsRC.IDC_15,grinsRC.IDC_17))
+		cd[a]=IntTupleCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_14,grinsRC.IDC_15,grinsRC.IDC_17))
 		a=self.getattr('displayfull')
 		cd[a]=OptionsRadioCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23,grinsRC.IDC_24,grinsRC.IDC_25))		
 		a=self.getattr('subregionanchor')
@@ -1404,6 +1455,7 @@ class SubregionGroup(AttrGroup):
 
 	def getpageclass(self):
 		return PosSizeLayoutPage
+
 	def islayoutattr(self,attr):
 		return (attr.getname()=='subregionxy') or (attr.getname()=='subregionwh')
 
@@ -1411,11 +1463,11 @@ class SystemGroup(AttrGroup):
 	data=attrgrsdict['system']
 	def __init__(self):
 		AttrGroup.__init__(self,SystemGroup.data)
+
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_S1O1S5_R3
-	def getctrlids(self,a):
-		ix=self._data['attrs'].index(a.getname())
-		ix=ix+1 # 1 based
+
+	def getctrlids(self,ix):
 		ids = getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
 			  getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
 			  getattr(grinsRC, 'IDC_%d' % (ix*10+3))
@@ -1423,6 +1475,7 @@ class SystemGroup(AttrGroup):
 			ids = ids + (getattr(grinsRC, 'IDC_%d' % (ix*10+4)),
 						 getattr(grinsRC, 'IDC_%d' % (ix*10+5)))
 		return ids
+
 	def getpageclass(self):
 		return AttrPage
 
@@ -1432,9 +1485,7 @@ class NameGroup(AttrGroup):
 		AttrGroup.__init__(self,NameGroup.data)
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_S1O1
-	def getctrlids(self,a):
-		ix=self._data['attrs'].index(a.getname())
-		ix=ix+1 # 1 based
+	def getctrlids(self,ix):
 		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
 			   getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
 			   getattr(grinsRC, 'IDC_%d' % (ix*10+3))
@@ -1447,9 +1498,7 @@ class CNameGroup(AttrGroup):
 		AttrGroup.__init__(self,CNameGroup.data)
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_S1O1
-	def getctrlids(self,a):
-		ix=self._data['attrs'].index(a.getname())
-		ix=ix+1 # 1 based
+	def getctrlids(self,ix):
 		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
 			   getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
 			   getattr(grinsRC, 'IDC_%d' % (ix*10+3))
@@ -1464,9 +1513,7 @@ class DurationGroup(AttrGroup):
 	def __init__(self,data=None):
 		AttrGroup.__init__(self,DurationGroup.data)
 
-	def getctrlids(self,a):
-		ix=self._data['attrs'].index(a.getname())
-		ix=ix+1 # 1 based
+	def getctrlids(self,ix):
 		return getattr(grinsRC, 'IDC_%d' % (ix*10+1)), \
 			   getattr(grinsRC, 'IDC_%d' % (ix*10+2)), \
 			   getattr(grinsRC, 'IDC_%d' % (ix*10+3))
