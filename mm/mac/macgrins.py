@@ -83,9 +83,9 @@ try:
 			import profile
 			fss, ok = macfs.StandardPutFile("Profile output:")
 			if not ok: sys.exit(1)
-			profile.run("import main", fss.as_pathname())
+			profile.run("import grins", fss.as_pathname())
 		else:
-			import main
+			import grins
 		no_exception=1
 	except SystemExit:
 		no_exception=1
