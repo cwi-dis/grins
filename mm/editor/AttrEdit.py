@@ -422,7 +422,9 @@ class DocumentWrapper(Wrapper):
 		return self.toplevel in self.toplevel.main.tops
 
 	def maketitle(self):
-		return 'Properties of dcument %s' % self.toplevel.filename
+		import MMurl
+		basename = MMurl.unquote(self.toplevel.basename)
+		return 'Properties of document %s' % basename
 
 	def getattr(self, name):	# Return the attribute or a default
 		return self.getvalue() or ''

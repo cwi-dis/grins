@@ -638,7 +638,9 @@ class ChannelView(ChannelViewDialog):
 		self.setviewroot(node)
 
 	def fixtitle(self):
-		title = 'Timeline View (' + self.toplevel.basename + ')'
+		import MMurl
+		basename = MMurl.unquote(self.toplevel.basename)
+		title = 'Timeline View (' + basename + ')'
 		if None is not self.viewroot is not self.root:
 			name = MMAttrdefs.getattr(self.viewroot, 'name')
 			title = title + ': ' + name
