@@ -20,7 +20,7 @@
 /* #define USE_MAC_SHARED_LIBRARY	/* Enable code to add shared-library resources */
 #define USE_MAC_APPLET_SUPPORT	/* Enable code to run a PYC resource */
 /* #define USE_MAC_DYNAMIC_LOADING		/* Enable dynamically loaded modules */
-#define USE_MALLOC_DEBUG			/* Enable range checking and other malloc debugging */
+/* #define USE_MALLOC_DEBUG			/* Enable range checking and other malloc debugging */
 #define USE_GDBM		/* Include the gdbm module */
 #define USE_ZLIB		/* Include the zlib module */
 #ifdef __powerc
@@ -39,3 +39,10 @@
 #ifndef WITH_RMA_SUPPORT
 #define initrma	0
 #endif
+
+#ifdef WITH_REALPRODUCER_SUPPORT
+#define _MACINTOSH 1
+#define _MACPPC
+#else
+#define initproducer 0
+#endif /* WITH_REALPRODUCER_SUPPORT */
