@@ -2060,8 +2060,8 @@ class ViewportContext:
 		# apply only the 16 boundaries rule
 		# on my machine 4:3 always works best
 		# but on Dick's this ratio is 3:4
-		#wp, hp = self.__getWMPViewport(w, h, 4, 3)
-		wp, hp = self.__getBoundaries16(w, h)
+		#wp, hp = self.__getBoundaries16(w, h)
+		wp, hp = self.__getWMPViewport(w, h, 4, 3)
 		
 		self._viewport = Viewport(self, (wp-w)/2, (hp-h)/2, w, h, bgcolor)
 		self._rect = 0, 0, wp, hp
