@@ -58,6 +58,42 @@ int g_cTemplates = sizeof(g_Templates) / sizeof(g_Templates[0]);
 #pragma warning(disable:4355)
 
 
+class AudioPipeInputPin : public CRendererInputPin
+	{
+	public:
+    AudioPipeInputPin(CBaseRenderer *pRenderer,
+                      HRESULT *phr,
+                      LPCWSTR Name)
+	:	CRendererInputPin(pRenderer, phr, Name){}
+
+	STDMETHODIMP GetAllocator(IMemAllocator ** ppAllocator)
+		{
+		HRESULT hr = CRendererInputPin::GetAllocator(ppAllocator);
+		if(SUCCEEDED(hr))
+			{
+			ALLOCATOR_PROPERTIES props;
+			GetAllocatorRequirements(&props);
+
+			ALLOCATOR_PROPERTIES actual;
+			ZeroMemory(&actual, sizeof(ALLOCATOR_PROPERTIES));
+			
+			(*ppAllocator)->Decommit();
+			(*ppAllocator)->SetProperties(&props, &actual);
+			}
+		return hr;
+		}
+
+	STDMETHODIMP GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps)
+		{
+		pProps->cBuffers = 1;
+		pProps->cbBuffer = 4608;
+		pProps->cbAlign = 1;
+		pProps->cbPrefix = 0;
+		return S_OK;
+		}
+	};
+
+
 CAudioPipe::CAudioPipe(LPUNKNOWN pUnk,HRESULT *phr) :
     CBaseRenderer(CLSID_AudioPipe, NAME("Audio Pipe"), pUnk, phr),
 	m_pAdviceSink(NULL)
@@ -73,6 +109,27 @@ CUnknown * WINAPI CAudioPipe::CreateInstance(LPUNKNOWN pUnk, HRESULT *phr)
 {
     return new CAudioPipe(pUnk,phr);
 } 
+
+CBasePin *CAudioPipe::GetPin(int n)
+{
+
+    CAutoLock cRendererLock(&m_InterfaceLock);
+    HRESULT hr = NOERROR;
+    ASSERT(n == 0);
+
+    // Should only ever be called with zero
+
+    if (n != 0) {
+	return NULL;
+    }
+
+    // Create the input pin if not already done so
+
+    if (m_pInputPin == NULL) {
+	m_pInputPin = new AudioPipeInputPin(this,&hr,L"In");
+   }
+    return m_pInputPin;
+}
 
 
 STDMETHODIMP
@@ -135,6 +192,7 @@ HRESULT CAudioPipe::DoRenderSample(IMediaSample *pMediaSample)
 
 HRESULT CAudioPipe::Active()
 {
+	AdjustBufferSize();
 	if(m_pAdviceSink) m_pAdviceSink->OnActive();
 	return CBaseRenderer::Active();
 } 
@@ -152,6 +210,23 @@ HRESULT CAudioPipe::SetRendererAdviceSink(IRendererAdviceSink *pI)
 	m_pAdviceSink->AddRef();
 	return S_OK;
 }
+
+HRESULT CAudioPipe::AdjustBufferSize()
+	{
+	if(m_pInputPin == NULL) return E_UNEXPECTED;
+	if(m_pInputPin->Allocator() == NULL) return E_UNEXPECTED;
+	
+	ALLOCATOR_PROPERTIES props;
+	m_pInputPin->GetAllocatorRequirements(&props);
+
+	ALLOCATOR_PROPERTIES actual;
+	ZeroMemory(&actual, sizeof(ALLOCATOR_PROPERTIES));
+
+	m_pInputPin->Allocator()->Decommit();
+	m_pInputPin->Allocator()->SetProperties(&props, &actual);
+
+	return S_OK;
+	}
 
 ////////////////////////////////////////////////
 // Filter registration

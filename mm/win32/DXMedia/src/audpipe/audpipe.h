@@ -53,6 +53,7 @@ public:
     void OnReceiveFirstSample(IMediaSample *pMediaSample);
     HRESULT Active();
 	HRESULT Inactive();
+	CBasePin *GetPin(int n);
 
 
 	// Implements IPipe
@@ -60,6 +61,8 @@ public:
 	HRESULT __stdcall SetRendererAdviceSink(IRendererAdviceSink *pI);
 	
 protected:
+	HRESULT AdjustBufferSize();
+
     CMediaType m_mtIn;                  // Source connection media type
 	int m_ixsample;
 	IRendererAdviceSink *m_pAdviceSink;
