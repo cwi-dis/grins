@@ -102,7 +102,7 @@ class HierarchyView(HierarchyViewDialog):
 			ZOOMOUT(callback = (self.zoomoutcall, ())),
 			]
 		import Help
-		if Help.hashelp():
+		if hasattr(Help, 'hashelp') and Help.hashelp():
 			self.commands.append(HELP(callback=(self.helpcall,())))
 
 		self.window = None

@@ -50,7 +50,7 @@ class TopLevel(TopLevelDialog):
 			CLOSE(callback = (self.close_callback, ())),
 			]
 		import Help
-		if Help.hashelp():
+		if hasattr(Help, 'hashelp') and Help.hashelp():
 			self.commandlist.append(
 				HELP(callback = (self.help_callback, ())))
 		if hasattr(self.root, 'source') and \

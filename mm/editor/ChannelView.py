@@ -865,7 +865,7 @@ class GO(GOCommand):
 			LAYOUTS(callback = mother.layoutcall),
 			]
 		import Help
-		if Help.hashelp():
+		if hasattr(Help, 'hashelp') and Help.hashelp():
 			self.commandlist.append(HELP(callback=(self.helpcall,())))
 		GOCommand.__init__(self)
 
