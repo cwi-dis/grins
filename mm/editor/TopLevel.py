@@ -577,7 +577,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.editmgr.destroy() # kills subscribed views
 		self.context.seteditmgr(None)
 		self.root.Destroy()
+		save_new = self.new_file
+		self.new_file = 1
 		self.do_read_it(tmp)
+		self.new_file = save_new
 		try:
 			os.unlink(self.__edittmp)
 		except os.error:
