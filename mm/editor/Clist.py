@@ -10,6 +10,9 @@ import glwindow
 from MMExc import *
 import AttrEdit
 
+BWIDTH = 70
+BHEIGHT = 50
+
 class Clist():
 	#
 	def init(self, context):
@@ -23,14 +26,14 @@ class Clist():
 			print 'No channels!'
 			raise ExitException, 1
 		#
-		form = fl.make_form(FLAT_BOX, nchannels*100, 100)
+		form = fl.make_form(FLAT_BOX, nchannels*BWIDTH, BHEIGHT)
 		#
 		self.buttons = []
-		x, y, w, h = 0, 0, 100, 100
+		x, y, w, h = 0, 0, BWIDTH, BHEIGHT
 		for name in self.context.channelnames:
 			b = form.add_button(NORMAL_BUTTON,x,y,w,h, name)
 			b.set_call_back(self.callback, name)
-			x = x + 100
+			x = x + BWIDTH
 			self.buttons.append(b)
 		#
 		self.editors = {}
