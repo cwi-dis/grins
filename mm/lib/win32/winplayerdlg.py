@@ -181,13 +181,15 @@ class PlayerDlgBar(window.Wnd):
 		template = []
 		cs = win32con.WS_CHILD | win32con.WS_VISIBLE
 		x = 8
-		y = 6
+		y = 3
+		if self._resitems:
+			y = y + 3 # add some more place for horizontal gripper
 		cmdid = usercmdui.usercmd2id
 
 		# row 1
-		template.append([self.BUTTON, "Play", cmdid(usercmd.PLAY), (x, y, 12, 12), cs | win32con.BS_ICON])
-		template.append([self.BUTTON, "Pause", cmdid(usercmd.PAUSE), (x+16, y, 12, 12), cs | win32con.BS_ICON])
-		template.append([self.BUTTON, "Stop", cmdid(usercmd.STOP), (x+32, y, 12, 12), cs | win32con.BS_ICON])
+		template.append([self.BUTTON, "Play", cmdid(usercmd.PLAY), (x, y, 12, 12), cs | win32con.BS_ICON | win32con.BS_FLAT])
+		template.append([self.BUTTON, "Pause", cmdid(usercmd.PAUSE), (x+16, y, 12, 12), cs | win32con.BS_ICON | win32con.BS_FLAT])
+		template.append([self.BUTTON, "Stop", cmdid(usercmd.STOP), (x+32, y, 12, 12), cs | win32con.BS_ICON | win32con.BS_FLAT])
 		y = y + 12 + 4
 
 		maxWidth = 48 # The size needed for the play/stop/pause buttons
