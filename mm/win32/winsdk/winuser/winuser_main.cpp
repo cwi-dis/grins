@@ -86,3 +86,31 @@ PyObject* Winuser_GetDC(PyObject *self, PyObject *args)
 		}
 	return Py_BuildValue("i", hdc);
 }
+
+PyObject* Winuser_LoadStandardCursor(PyObject *self, PyObject *args)
+{
+	int nIndex;
+	if (!PyArg_ParseTuple(args, "i", &nIndex))
+		return NULL;
+	HCURSOR hCursor = LoadCursor(NULL, MAKEINTRESOURCE(nIndex));
+	if(hCursor == NULL){
+		seterror("LoadStandardCursor", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue("i", hCursor);
+}
+
+PyObject* Winuser_LoadCursor(PyObject *self, PyObject *args)
+{
+	HMODULE hModule;
+	int nIndex;
+	if (!PyArg_ParseTuple(args, "ii", &hModule, &nIndex))
+		return NULL;
+	HCURSOR hCursor = LoadCursor(hModule, MAKEINTRESOURCE(nIndex));
+	if(hCursor == NULL){
+		seterror("LoadCursor", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue("i", hCursor);
+}
+

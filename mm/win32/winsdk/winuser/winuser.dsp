@@ -128,6 +128,14 @@ SOURCE=.\winuser.rc
 # End Source File
 # Begin Source File
 
+SOURCE=.\winuser_dlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\winuser_dlg.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\winuser_main.cpp
 # End Source File
 # Begin Source File
@@ -141,6 +149,14 @@ SOURCE=.\winuser_menu.cpp
 # Begin Source File
 
 SOURCE=.\winuser_menu.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\winuser_ofn.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\winuser_ofn.h
 # End Source File
 # Begin Source File
 
