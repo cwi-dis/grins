@@ -46,6 +46,8 @@ import DrawTk
 from DisplayList import _DisplayList
 from DropTarget import DropTarget
 
+import win32transitions
+
 class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 	def __init__(self):
 		DropTarget.__init__(self)
@@ -97,6 +99,8 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		# temp sigs
 		self._wnd = None
 		self._hWnd = 0
+
+		self.__init_transitions()
 
 	# part of the constructor initialization
 	def _do_init(self,parent):
@@ -880,22 +884,37 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 #=========================================================
 #	transition section
 
+	def __init_transitions(self):
+		self._transition = None
+		self._sfrom = None
+		self._sto = None
+
 	def begintransition(self, inout, runit, dict):
-		pass
+		factory = win32transitions.TransitionFactory(dict, self._sfrom, self._sto)
+		transinst = factory.getTransition()
+		print transinst
+		self._transition = win32transitions.TransitionEngine(transinst, dict)
+		if runit:
+			self._transition.begintransition()
 		
 	def endtransition(self):
-		pass
-		
+		if self._transition:
+			self._transition.endtransition()
+			self._transition = None
+
 	def changed(self):
 		pass
 		
 	def settransitionvalue(self, value):
-		pass
+		if self._transition:
+			self._transition.settransitionvalue(value)
 		
 	def freeze_content(self, how):
 		# how is 'transition', 'hold' or None. Freeze the bits in the window
 		# (unless how=None, which unfreezes them) and use for updates and as passive
 		# source for next transition.
+		print 'freeze_content',how
+		self._sfrom = None # copy surface
 		pass
 		
 #=========================================================
