@@ -44,7 +44,7 @@ class MainDialog:
 
 	def __openURL_callback(self):
 		import windowinterface
-		windowinterface.InputDialog('Open location', '',
+		windowinterface.InputURLDialog('Open location', '',
 					    self.openURL_callback)
 
 	def __openfile_callback(self):
