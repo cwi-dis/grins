@@ -13,17 +13,20 @@ import win32ui,win32api
 
 
 #############################
-_imglist = []
-_transpdict = {}
 
 class ImageLib:
 	def __init__(self):
 		self.lib=win32ui.Getig()
+		self._imglist = []
+		self._transpdict = {}
 
 	# Delete resources
 	def deltemp(self):
-		for img in _imglist:
+		global _imglist
+		for img in self._imglist:
 			self.lib.image_delete(img)
+		self._imglist=[]
+		self._transpdict = {}
 
 	# Load image
 	# 1. use abs filenames
@@ -34,14 +37,14 @@ class ImageLib:
 		img,gif_trans,trans_rgb=self.lib.load_gif(filename)
 		if img>=0:
 			if gif_trans>=0:
-				_transpdict[img]=trans_rgb
+				self._transpdict[img]=trans_rgb
 		else:img = self.lib.load_file(filename)
-		if img>=0: _imglist.append(img)
+		if img>=0: self._imglist.append(img)
 		return img
 
 	# Returns image size
 	def size(self,img):
-		if img<0: return 10,10
+		if img<0: return 10,10,8
 		return self.lib.image_dimensions_get(img)
 
 	# Render image
@@ -50,17 +53,21 @@ class ImageLib:
 		if img<0: return
 		rc=(dest_x, dest_y, dest_x+width, dest_y+height)
 		self.lib.ip_crop(img,rcKeep)
-		if img in _transpdict.keys():
-			trans_rgb = _transpdict[img]
+		if img in self._transpdict.keys():
+			trans_rgb = self._transpdict[img]
 			self.lib.display_transparent_set(img,trans_rgb,1)			
 		self.lib.device_rect_set(img,rc)
 		self.lib.display_desktop_pattern_set(img,0)
 		self.lib.display_image(img,hdc)
 
-	# Destroy image (release resources)
-	def destroy(self,img):
-		if img>=0:
-			self.lib.image_delete(img)
+	# Delete image (release resources)
+	def delete(self,img):
+		if img<0:return
+		self.lib.image_delete(img)
+		if img in self._imglist: 
+			self._imglist.remove(img)
+		if img in self._transpdict.keys():
+			del self._transpdict[img]
 
 	# Return the absolute filename
 	def toabs(self,filename):
