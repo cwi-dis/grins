@@ -3,17 +3,6 @@ __version__ = "$Id$"
 import audiowhat, string
 from audio import Error
 
-# This dummy function is there to make freeze import the right modules
-def _dummy_freeze_func():
-	import audioaifc
-	import audioau
-	import audiohcom
-	import audiovoc
-	import audiowav
-	import audio8svx
-	import audiosndt
-	import audiosndr
-	
 class _FileDict:
 	__fmtdict = {
 		'aiff': 'audioaifc',

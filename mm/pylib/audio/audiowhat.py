@@ -3,7 +3,7 @@ __version__ = "$Id$"
 def what(file):
 	if type(file) == type(''):
 		pos = -1
-		file = open(filename, 'rb')
+		file = open(file, 'rb')
 		h = file.read(512)
 	else:
 		# assume it's a file object
