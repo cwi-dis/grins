@@ -117,6 +117,12 @@ class Window:
 		if self._showing:
 			self._showing = None
 
+	def show(self):
+		pass
+
+	def hide(self):
+		pass
+
 	def setcursor(self, cursor):
 		self._cursor = cursor
 
@@ -593,7 +599,6 @@ class Window:
 	def updatebgcolor(self, color):
 		pass
 
-
 	#
 	# Transitions interface
 	#
@@ -612,18 +617,20 @@ class Window:
 	def freeze_content(self, how):
 		pass
 
-########################################
-import win32ui, win32con, win32api
-Afx=win32ui.GetAfx()
-Sdk=win32ui.GetWin32Sdk()
 
-# import window core stuff
-from pywin.mfc import window
+
+########################################
+
+# regions, 
+import win32ui, win32con
+
+import win32transitions
 
 class SubWindow(Window):
 	def __init__(self, parent, coordinates, transparent, z, units):
 		Window.__init__(self, parent, coordinates, units, z, transparent)
 		self._oswnd = None
+		self.__init_transitions()
 
 	def __repr__(self):
 		return '<_SubWindow instance at %x>' % id(self)
@@ -631,7 +638,7 @@ class SubWindow(Window):
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
 		return SubWindow(self, coordinates, transparent, z, units)
 
-	def paintOn(self, dc):
+	def paintOn(self, dc, offsetOrg=1):
 		# first paint opaque subwindows
 		trsubwindows = []
 		for w in self._subwindows:
@@ -644,12 +651,14 @@ class SubWindow(Window):
 		
 		# then paint self
 		x, y, w, h = self.getwindowpos()
-		x0, y0 = dc.SetWindowOrg((-x,-y))
+		if offsetOrg:
+			x0, y0 = dc.SetWindowOrg((-x,-y))
 		if self._active_displist:
 			self._active_displist._render(dc,None)
 		if self._redrawfunc:
 			self._redrawfunc()
-		dc.SetWindowOrg((x0,y0))
+		if offsetOrg:
+			dc.SetWindowOrg((x0,y0))
 
 		# then paint transparent children
 		trsubwindows.reverse()
@@ -661,7 +670,6 @@ class SubWindow(Window):
 		
 		# debug:
 		#self.__showwindowOn(dc, (255,0,0))
-
 
 	def showwindow(self, color = (255,0,0)):
 		dc=self._topwindow.GetDC()
@@ -680,11 +688,169 @@ class SubWindow(Window):
 		return wnd.GetSafeHwnd()
 	
 	def GetClientRect(self):
-		return self._rect
+		x, y, w, h = self._rect
+		return x, y, x+w, y+h
 
 	def HookMessage(self, f, m):
 		if self._oswnd: wnd = self._oswnd
 		else: wnd = self._topwindow
 		wnd.HookMessage(f,m)
 		
+	def Invalidate(self):
+		x, y, w, h = self.getwindowpos()
+		self._topwindow.InvalidateRect((x, y, x+w, y+h))			
 
+	#
+	# Animations interface
+	#
+	def updatecoordinates(self, coordinates, units=UNIT_SCREEN):
+		# first convert any coordinates to pixel
+		coordinates = self._convert_coordinates(coordinates,units=units)
+		
+		# keep old pos
+		x0, y0, w0, h0 = self._rectb
+		x1, y1 = self.getwindowpos()[:2]
+		
+		# move or/and resize window
+		if len(coordinates)==2:
+			x, y = coordinates[:2]
+			w, h = w0, h0
+		elif len(coordinates)==4:
+			x, y, w, h = coordinates
+		else:
+			raise AssertionError
+
+		# create new
+		self._rect = 0, 0, w, h # client area in pixels
+		self._canvas = 0, 0, w, h # client canvas in pixels
+		self._rectb = x, y, w, h  # rect with respect to parent in pixels
+		self._sizes = self._parent._pxl2rel(self._rectb) # rect relative to parent
+		x2, y2 = self.getwindowpos()[:2]
+		
+		# update
+		rgn1 = win32ui.CreateRgn()
+		rgn1.CreateRectRgn((x1, y1, x1+w0, y1+h0))
+		rgn2 = win32ui.CreateRgn()
+		rgn2.CreateRectRgn((x2, y2, x2+w, y2+h))				
+		rgn = win32ui.CreateRgn()
+		rgn.CreateRectRgn((0, 0, 0, 0))
+		rgn.CombineRgn(rgn1,rgn2,win32con.RGN_OR)
+		flags = win32con.RDW_INVALIDATE | win32con.RDW_UPDATENOW | win32con.RDW_ERASE
+		self._topwindow.RedrawWindow(None, rgn, flags)
+		rgn1.DeleteObject()
+		rgn2.DeleteObject()
+		rgn.DeleteObject()
+
+	def updatezindex(self, z):
+		self._z = z
+		parent = self._parent
+		parent._subwindows.remove(self)
+		for i in range(len(parent._subwindows)):
+			if self._z > parent._subwindows[i]._z:
+				parent._subwindows.insert(i, self)
+				break
+		else:
+			parent._subwindows.append(self)
+		self.__invalidate()
+	
+	def updatebgcolor(self, color):
+		r, g, b = color
+		self._bgcolor = r, g, b
+		if self._active_displist:
+			self._active_displist.updatebgcolor(color)
+			rgn1 = win32ui.CreateRgn()
+			rgn1.CreateRectRgn(self.GetClientRect())			
+			rgn2 = self._active_displist._win32rgn
+			rgn  = win32ui.CreateRgn()
+			rgn.CreateRectRgn((0,0,0,0))
+			rgn.CombineRgn(rgn1,rgn2,win32con.RGN_DIFF)
+			x, y, w, h = self.getwindowpos()
+			rgn.OffsetRgn((x, y))
+			flags = win32con.RDW_INVALIDATE | win32con.RDW_UPDATENOW # | RDW_ERASE
+			self._topwindow.RedrawWindow(None, rgn, flags)			
+			rgn1.DeleteObject()
+			rgn.DeleteObject()
+
+	#
+	# Transitions interface
+	#
+	def __init_transitions(self):
+		self._transition = None
+		self._fromMemDC = None
+		self._toMemDC = None
+
+	def begintransition(self, inout, runit, dict):
+		self._toMemDC = MemDC(self)
+		factory = win32transitions.TransitionFactory(dict, self._fromMemDC, self._toMemDC)
+		transinst = factory.getTransition()
+		print transinst
+		self._transition = win32transitions.TransitionEngine(transinst, dict)
+		if runit:
+			self._transition.begintransition()
+
+	def endtransition(self):
+		if self._transition:
+			self._transition.endtransition()
+			self._transition = None
+
+	def changed(self):
+		pass
+		
+	def settransitionvalue(self, value):
+		if self._transition:
+			self._transition.settransitionvalue(value)
+		
+	def freeze_content(self, how):
+		# how is 'transition', 'hold' or None. Freeze the bits in the window
+		# (unless how=None, which unfreezes them) and use for updates and as passive
+		# source for next transition.
+		print 'freeze_content',how
+		if how:
+			self._fromMemDC = MemDC(self)
+
+	def close(self):
+		Window.close(self)
+
+
+# offscreen pixmap class
+class MemDC:
+	def __init__(self, wnd):
+		self._wnd = wnd
+		dc = wnd._topwindow.GetDC()
+		dcc=dc.CreateCompatibleDC()
+		bmp=win32ui.CreateBitmap()
+		x, y, w, h = wnd.getwindowpos()
+		bmp.CreateCompatibleBitmap(dc,w,h)
+		dcc.SelectObject(bmp)
+		wnd._topwindow.ReleaseDC(dc)
+		self._dc = dcc
+		self._bmp = bmp
+		self.capture()
+
+	def __del__(self):
+		try: self._dc.DeleteDC()
+		except:pass
+		del self._bmp
+
+	def __getattr__(self, attr):	
+		try:	
+			if attr != '__dict__':
+				o = self.__dict__['_dc']
+				if o:
+					return getattr(o, attr)
+		except KeyError:
+			pass
+		raise AttributeError, attr
+
+	def capture(self):
+		self._wnd.paintOn(self._dc, 0)
+
+	def render(self):
+		dc = self._wnd._topwindow.GetDC()
+		x, y, w, h = self._wnd.getwindowpos()
+		dc.BitBlt((x,y),(w,h),self._dc,(0, 0), win32con.SRCCOPY)
+		self._wnd._topwindow.ReleaseDC(dc)
+
+
+
+		 
