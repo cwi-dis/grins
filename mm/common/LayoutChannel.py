@@ -15,19 +15,29 @@ class LayoutChannel(ChannelWindow):
 	# for now
 	# get the parent window geometry in pixel
 	# need for sub-region, registration point,...
+	# WARNING: if the size of channel is dynamicly modify (for example from animation),
+	# we have to invalidate the current value in self._wingeomInPixel
 	def _getWingeomInPixel(self):
 	        parentChannel = self._get_parent_channel()
-	        # top window
+	        
 	        if parentChannel == None:
+		        # top window 
 	                size = self._attrdict.get('winsize', (50, 50))
 	                w,h = size
 	                return 0,0,w,h
 	                
 		units = self._attrdict['units']
-		if units != windowinterface.UNIT_SCREEN:
+		if units == windowinterface.UNIT_PXL:
+			# The size in smil source is specified in pixel, we don't need to 
+			# convert it and return directly it
 			return self._attrdict['base_winoff']
 		if self._wingeomInPixel != None:
+			# The size is expressed in pourcent in smil source document, but
+			# the size in pixel is already pre-calculate.
 			return self._wingeomInPixel
+
+		# The size is expressed in pourcent in smil source document, we don't determinate 
+		# yet its size in pixel. For this, we need to know the parent size in pixel
 		
 		parentChannel = self._get_parent_channel()
 		parentGeomInPixel = parentChannel._getWingeomInPixel()
@@ -35,6 +45,7 @@ class LayoutChannel(ChannelWindow):
 		x,y,w,h = self._attrdict['base_winoff']
 		px,py,pw,ph = parentGeomInPixel
 		
+		# we save the current size in pixel for the next request
 		self._wingeomInPixel = x*pw, y*ph, w*pw, h*ph
 		
 		return self._wingeomInPixel
@@ -115,26 +126,17 @@ class LayoutChannel(ChannelWindow):
 ##		if menu:
 ##			self.window.create_menu(menu, title = self._name)
 
+	# notes:
+	# unlike base ChannelWindow class, we can have pchan = None. It means that
+	# it's the main window. In this case, we don't need to determinate self._wingeom because 
+	# it not used in create_window. It's not a good design, but for now it works.
 	def do_show(self, pchan):
 		if debug:
 			print 'ChannelLayout.do_show('+`self`+')'
 	
-		# create a window for this channel
-		pgeom = None
-		units = self._attrdict.get('units',
-					   windowinterface.UNIT_SCREEN)
 		if pchan:
-			#
-			# Find the base window offsets, or ask for them.
-			#
-			if self._played_node:
-				try:
-					pgeom = MMAttrdefs.getattr(self._played_node, 'base_winoff')
-				except KeyError:
-					pass
-			if pgeom:
-				self._wingeom = pgeom
-			elif self._attrdict.has_key('base_winoff'):
+			# parent is not None, so it's not the main window
+			if self._attrdict.has_key('base_winoff'):
 				self._wingeom = pgeom = self._attrdict['base_winoff']
 			elif self._player.playing:
 				windowinterface.showmessage(
@@ -161,9 +163,8 @@ class LayoutChannel(ChannelWindow):
 				self._attrdict['units'] = units
 			self._curvals['base_winoff'] = pgeom, None
 		
-		units = self._attrdict.get('units',
-					   windowinterface.UNIT_SCREEN)
-		self.create_window(self._get_parent_channel(), self._wingeom, units)
+		units = self._attrdict.get('units', windowinterface.UNIT_SCREEN)
+		self.create_window(pchan, self._wingeom, units)
 		
 		return 1
 		
