@@ -1,0 +1,64 @@
+2000-03-31  Sjoerd Mullender  <Sjoerd.Mullender@oratrix.nl>
+
+	* pylib/audio/aifc.py (reader.__read_mark_chunk): Initialize
+	__markers.
+	(reader.readframes): Use self.setpos instead of chunk.setpos which
+	doesn't exist anymore anyway.
+
+	* pylib/xmllib.py (XMLParser.finish_endtag): Don't call end tag
+	handler if end tag was unexpected.
+
+	* lib/win32/AttrEditForm.py (AnchorlistCtrl.fill): Don't enable
+	Hyperlink button for new, unsaved anchors and anchors whose name
+	was changed.
+
+	* lib/realconvert.py (convertaudiofile): Protect calls to the
+	audio library with try/except.
+
+	* editor/LinkEditLight.py (LinkEditLight.fixinteresting): Typo
+	which caused a crash in rarely occuring circumstances.
+
+	* common/ChannelMap.py (SMILchanneltypes): Changed order of
+	channels so the order makes more sense.
+
+2000-03-22  Sjoerd Mullender  <Sjoerd.Mullender@oratrix.nl>
+
+	* Scheduler.py (Scheduler.setpaused): Bug fix:  Time was
+	manipulated incorrectly when pausing and continuing to play.
+
+2000-03-09  Sjoerd Mullender  <Sjoerd.Mullender@oratrix.nl>
+
+	* editor/LinkEdit.py (LinkEdit.reloadanchors): Bug fix.  There was
+	a crash when the anchors had to be reloaded in the View.
+
+2000-02-25  Sjoerd Mullender  <sjoerd.mullender@oratrix.nl>
+
+	* python15.dsp: Fixed problem that GRiNS doesn't start on some
+	systems.  The problem was that IGNORE_REGISTRY wasn't set in the
+	project file.
+
+2000-02-21  Sjoerd Mullender  <sjoerd.mullender@oratrix.nl>
+
+	* lib\MMNode.py (MMNode.PruneTree): Fixed a crash when looping
+	interior nodes.
+
+2000-02-17  Sjoerd Mullender  <sjoerd.mullender@oratrix.nl>
+
+	* win32\src\GRiNSRes\GRiNSRes.rc: Set want_return flag in
+	multi-line edit area in attribute editor tab.
+
+2000-02-04  Sjoerd Mullender  <sjoerd.mullender@oratrix.nl>
+
+	* editor\AttrEdit.py (ChannelWrapper.setattr): self.showmessage
+	doesn't exist.  Use self.channel.attreditor.showmessage instead.
+	This fixes PR#601.
+
+2000-02-01  Sjoerd Mullender  <sjoerd.mullender@oratrix.nl>
+
+	* editor\AttrEdit.py (DocumentWrapper.attrnames): Remove
+	project_html_page attribute from list of editable document
+	preferences in Lite version.
+
+	* Created a branch for patches to the GRiNS 1.5 release.  The
+	branch is called GRiNS_G2_15-patches.
+
