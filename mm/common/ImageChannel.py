@@ -85,7 +85,7 @@ class ImageChannel(ChannelWindow):
 		self.syncarm = save_syncarm
 		self.syncplay = save_syncplay
 		self._anchor = anchor
-		box = anchor[A_ARGS]
+		box = anchor.aargs
 		self._anchor_cb = cb
 		msg = 'Draw anchor in ' + self._name + '.'
 		if box == []:
@@ -124,7 +124,8 @@ class ImageChannel(ChannelWindow):
 			
 			# convert coordinates from window size to image size.
 			relativeCoordinates = self.convertShapeRelWindowToRelImage(winCoordinates)
-			arg = (self._anchor[0], self._anchor[1], relativeCoordinates, self._anchor[3])
+			from MMNode import MMAnchor
+			arg = MMAnchor(self._anchor.aid, self._anchor.atype, relativeCoordinates, self._anchor.atimes, self._achor.aaccess)
 		else:
 			arg = self._anchor
 		apply(self._anchor_cb, (arg,))
