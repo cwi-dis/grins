@@ -245,6 +245,10 @@ CommandUI(REMOVE_CHANNEL)
 CommandUI(ADD_CHANNEL)
 CommandUI(RENAME)
 
+# The temporal view specific commands..
+CommandUI(CANVAS_ZOOM_IN)
+CommandUI(CANVAS_ZOOM_OUT)
+
 
 #
 # Add the rest without a predefined id
