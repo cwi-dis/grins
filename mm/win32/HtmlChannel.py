@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 #
 # XXXX This is an initial stab at a HTML channel.
 #
