@@ -425,12 +425,60 @@ class OptionsCheckMultipleCtrl(AttrCtrl):
 		for ix in range(min(n,len(self._resid)-1)):
 			tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[ix+1]),self.gethelp(),None,0)
 
-class AnchorlistCtrl(AttrCtrl):
+class _TupleCtrlIntermediate:
+	def __init__(self, controls, isint):
+		self.__controls = controls
+		self.__isint = isint
+
+	def enable(self, enable):
+		for c in self.__controls:
+			c.enable(enable)
+
+	def attach_to_parent(self):
+		for c in self.__controls:
+			c.attach_to_parent()
+
+	def hookcommand(self, wnd, cbfunc):
+		for c in self.__controls:
+			c.hookcommand(wnd, cbfunc)
+
+	def clear(self):
+		for c in self.__controls:
+			c.settext('')
+
+	def setval(self, val):
+		if len(val) != len(self.__controls):
+			raise error, 'internal error'
+		for i in range(len(val)):
+			self.__controls[i].settext(`val[i]`)
+
+	def getval(self):
+		result = [0] * len(self.__controls)
+		if self.__isint:
+			atox = string.atoi
+		else:
+			atox = string.atof
+		for i in range(len(self.__controls)):
+			val = self.__controls[i].gettext()
+			try:
+				val = atox(val)
+			except ValueError:
+				pass
+			else:
+				result[i] = val
+		return result
+
+	def __getitem__(self, i):
+		return self.__controls[i]
+
+from AnchorList import AnchorList
+
+class AnchorlistCtrl(AttrCtrl, AnchorList):
 	def __init__(self, wnd, attr, resid):
 		AttrCtrl.__init__(self, wnd, attr, resid)
-		hasfixed = self._attr.wrapper.toplevel.player.updatefixedanchors(self._attr.wrapper.node)
-		self.__editable = not hasfixed
-		self.__curanchor = None
+##		hasfixed = self._attr.wrapper.toplevel.player.updatefixedanchors(self._attr.wrapper.node)
+##		self.__editable = not hasfixed
+		AnchorList.__init__(self)
 		self._list = components.ListBox(wnd, grinsRC.IDC_ALIST)
 		self._new = components.Button(wnd, grinsRC.IDC_NEW)
 		self._rename = components.Button(wnd, grinsRC.IDC_RENAME)
@@ -438,12 +486,14 @@ class AnchorlistCtrl(AttrCtrl):
 		self._link = components.Button(wnd, grinsRC.IDC_LINK)
 ##		self._type = components.ComboBox(wnd, grinsRC.IDC_ATYPE)
 		self._type = components.CheckButton(wnd, grinsRC.IDC_ATYPE)
-		self._xywh = []		# x,y,w,h coordinates
+		xywh = []		# x,y,w,h coordinates
 		for i in range(2,2+4):
-			self._xywh.append(components.Edit(wnd, getattr(grinsRC, 'IDC_1%d' % i)))
-		self._se = []
+			xywh.append(components.Edit(wnd, getattr(grinsRC, 'IDC_1%d' % i)))
+		self._xywh = _TupleCtrlIntermediate(xywh, 1)
+		se = []
 		for i in range(2,2+2):	# start,end values
-			self._se.append(components.Edit(wnd, getattr(grinsRC, 'IDC_%d2' % i)))
+			se.append(components.Edit(wnd, getattr(grinsRC, 'IDC_%d2' % i)))
+		self._se = _TupleCtrlIntermediate(se, 0)
 		self._iconplay = win32ui.GetApp().LoadIcon(grinsRC.IDI_PLAY)
 		self._iconpause = win32ui.GetApp().LoadIcon(grinsRC.IDI_PAUSE)
 		self._iconstop = win32ui.GetApp().LoadIcon(grinsRC.IDI_STOP)
@@ -454,10 +504,11 @@ class AnchorlistCtrl(AttrCtrl):
 	def OnInitCtrl(self):
 		self._initctrl = self
 		self._list.attach_to_parent()
-		for c in self._xywh + self._se:
-			c.attach_to_parent()
-			c.hookcommand(self._wnd, self.OnEdit)
-		self.__anchorlinks = self._attr.getcurrent() or {}
+		self._xywh.attach_to_parent()
+		self._xywh.hookcommand(self._wnd, self.OnEdit)
+		self._se.attach_to_parent()
+		self._se.hookcommand(self._wnd, self.OnEdit)
+		AnchorList.setvalue(self, self._attr.getcurrent() or {})
 		self._wnd.HookCommand(self.OnList, grinsRC.IDC_ALIST)
 		self._type.attach_to_parent()
 ##		self._type.resetcontent()
@@ -486,283 +537,71 @@ class AnchorlistCtrl(AttrCtrl):
 		self.setstate('stop')
 		self.fill()
 
-	def enable(self, enable):
-		if enable:
-			self._list.enable(1)
-			self.fill()	# enables the rest
-		else:
-			self._list.enable(0)
-			self._new.enable(0)
-			self._rename.enable(0)
-			self._delete.enable(0)
-			self._link.enable(0)
-			self._type.enable(0)
-			for c in self._xywh:
-				c.enable(0)
-			for c in self._se:
-				c.enable(0)
-			self._bplay.enable(0)
-			self._bpause.enable(0)
-			self._bstop.enable(0)
-		
 	def getvalue(self):
 		if self._initctrl:
-			return self.__anchorlinks
+			return AnchorList.getvalue(self)
 		return self._attr.getcurrent() or {}
 
 	def setvalue(self,val):
 		pass
 		#self.__anchorlinks = val
 
-	def fill(self, newlist = 1, nocreatebox = 0):
-		if newlist:
-			self.__anchors = self.__anchorlinks.keys()
-			self.__anchors.sort()
-			self._list.resetcontent()
-			self._list.addlistitems(self.__anchors)
-		if self.__curanchor is not None and not self.__anchorlinks.has_key(self.__curanchor):
-			self.__curanchor = None
-		if self._wnd._layoutctrl and not nocreatebox:
-			self._wnd.create_box(None)
-		if self.__curanchor is None:
-			self._list.setcursel(None)
-			self._type.enable(0)
-			self._rename.enable(0)
-			self._delete.enable(0)
-			self._link.enable(0)
-			for c in self._xywh + self._se:
-				c.settext('')
-				c.enable(0)
-		else:
-			i = self.__anchors.index(self.__curanchor)
-			self._list.setcursel(i)
-			atype, aargs, times = self.__anchorlinks[self.__curanchor][:3]
-			self._rename.enable(1)
-			self._delete.enable(1)
-			self._link.enable(1)
-			self._type.enable(1)
-			typelist = []
-			index = None
-			for i in range(len(AnchorDefs.TypeValues)):
-				if AnchorDefs.TypeValues[i] == AnchorDefs.ATYPE_DEST:
-					continue
-				elif AnchorDefs.TypeValues[i] == AnchorDefs.ATYPE_COMP:
-					continue
-				elif AnchorDefs.TypeValues[i] in AnchorDefs.WholeAnchors:
-					if self.__editable or atype in AnchorDefs.WholeAnchors:
-						typelist.append(AnchorDefs.TypeLabels[i])
-				elif self.__editable or atype not in AnchorDefs.WholeAnchors:
-					typelist.append(AnchorDefs.TypeLabels[i])
-				if atype == AnchorDefs.TypeValues[i]:
-					index = len(typelist) - 1
-##			self._type.resetcontent()
-##			self._type.setoptions(typelist)
-##			self._type.setcursel(index)
-			if atype not in AnchorDefs.WholeAnchors:
-				self._type.setcheck(1)
-				for c in self._xywh:
-					c.enable(1)
-				for i in range(len(self._se)):
-					self._se[i].enable(1)
-					self._se[i].settext(`times[i]`)
-				if aargs:
-					# maybe convert to pixel values
-					self.__convert(aargs)
-				self.setbox(aargs or None)
-				if self._wnd._layoutctrl and not nocreatebox:
-					self._wnd.create_box(self._wnd.getcurrentbox())
+	def askanchorname(self):
+		win32dialog.AnchorNameDlg('Anchor name', '', self.__newCBbox,
+					 parent = self._wnd._form).show()
+
+	def create_box(self, getbox):
+		if self._wnd._layoutctrl:
+			if getbox:
+				box = self._wnd.getcurrentbox()
 			else:
-				self._type.setcheck(0)
-				for c in self._xywh + self._se:
-					c.settext('')
-					c.enable(0)
-
-	def __convert(self, aargs):
-		need_conversion = 0
-		for a in aargs:
-			if a != int(a):	# any floating point number
-				need_conversion = 1
-				break
-		if not need_conversion and tuple(aargs) != (0,0,1,1):
-			return
-		xsize, ysize = self._wnd._imagesize
-		aargs[:] = [int(float(aargs[0]) * xsize + .5),
-			    int(float(aargs[1]) * ysize + .5),
-			    int(float(aargs[2]) * xsize + .5),
-			    int(float(aargs[3]) * ysize + .5)]
-
-	def getbox(self, saved):
-		if self.__curanchor is None:
-			return None
-		atype, aargs = self.__anchorlinks[self.__curanchor][:2]
-		if atype not in AnchorDefs.WholeAnchors:
-			if saved:
-				return aargs or None
-			aargs = [0,0,0,0]
-			for i in range(4):
-				val = self._xywh[i].gettext()
-				try:
-					val = string.atoi(val)
-				except string.atoi_error:
-					pass
-				else:
-					aargs[i] = val
-			return aargs
-		return None
-
-	def setbox(self, box = None):
-		if self.__curanchor is None:
-			if box is not None:
-				self.__box = box
-				w = win32dialog.AnchorNameDlg('Anchor name', '', self.__newCBbox,
-							     parent = self._wnd._form)
-				w.show()
-			return None
-		atype, aargs = self.__anchorlinks[self.__curanchor][:2]
-		if atype not in AnchorDefs.WholeAnchors:
-			if box:
-				while len(aargs) < len(box):
-					aargs.append(0)
-				for i in range(4):
-					aargs[i] = int(box[i] + .5)
-				boxstr = map(lambda x: '%.0f' % x, box)
-			else:
-				aargs[:] = []
-				boxstr = '','','',''
-			for i in range(4):
-				self._xywh[i].settext(boxstr[i])
-			self.enableApply()
+				box = None
+			self._wnd.create_box(box)
 
 	def OnList(self, id, code):
 		self.sethelp()
 		if code != win32con.CBN_SELCHANGE:
 			return
 		i = self._list.getcursel()
-		self.__curanchor = self.__anchors[i]
-		self.fill(newlist = 0)
+		self.listcb(i)
 
 	def OnNew(self, id, code):
-		w = win32dialog.AnchorNameDlg('Anchor name', '', self.__newCB,
-					     parent = self._wnd._form)
-		w.show()
+		win32dialog.AnchorNameDlg('Anchor name', '', self.newanchor,
+					 parent = self._wnd._form).show()
 
-	def __newCB(self, name, partial = 0):
-		if not name:
-			# no name, do we want to give an error message?
-##			win32dialog.showmessage('No name given', mtype = 'error', parent = self._wnd._form)
-			return
-		if self.__anchorlinks.has_key(name):
-			# not unique, so don't change
-			win32dialog.showmessage('Name should be unique', mtype = 'error', parent = self._wnd._form)
-			return
-		if partial:
-			atype = AnchorDefs.ATYPE_NORMAL
-		else:
-			atype = AnchorDefs.ATYPE_WHOLE
-		self.__anchorlinks[name] = atype, [], (0,0), [], ''
-		self.__curanchor = name
-		self.fill()
+	def showmessage(self, *args, **kw):
+		nkw = {'parent': self._wnd._form}
+		nkw.update(kw)
+		apply(win32dialog.showmessage, args, nkw)
 
 	def __newCBbox(self, name):
-		box = self.__box
-		del self.__box
-		self.__newCB(name, partial = 1)
-		if self.__curanchor == name:
-			self.setbox(box)
-			self.fill()
+		self.newanchor(name, partial = 1)
 
 	def OnRename(self, id, code):
-		if self.__curanchor is None:
+		name = self.getcurrent()
+		if name is None:
 			return
-		w = win32dialog.AnchorNameDlg('Anchor name', self.__curanchor,
-					     self.__renameCB, parent = self._wnd._form)
+		w = win32dialog.AnchorNameDlg('Anchor name', name,
+					      self.renamecb, parent = self._wnd._form)
 		w.show()
 
-	def __renameCB(self, name):
-		if name == self.__curanchor:
-			# no change, so do nothing
-			return
-		if not name:
-			# no name, do we want to give an error message?
-##			win32dialog.showmessage('No name given', mtype = 'error', parent = self._wnd._form)
-			return
-		if self.__anchorlinks.has_key(name):
-			# not unique, so don't change
-			win32dialog.showmessage('Name should be unique', mtype = 'error', parent = self._wnd._form)
-			return
-		a = self.__anchorlinks[self.__curanchor]
-		if len(a) == 4:
-			# remember original name
-			a = a + (self.__curanchor,)
-		self.__anchorlinks[name] = a
-		del self.__anchorlinks[self.__curanchor]
-		self.__curanchor = name
-		self.fill()
-
 	def OnDelete(self, id, code):
-		if self.__curanchor is None:
-			return
-		del self.__anchorlinks[self.__curanchor]
-		self.__curanchor = None
-		self.fill()
-		self.enableApply()
-
-	def fixtype(self):
-		if self.__curanchor is None:
-			return
-		a = self.__anchorlinks[self.__curanchor]
-		if self._type.getcheck():
-			atype = AnchorDefs.ATYPE_NORMAL
-		else:
-			atype = AnchorDefs.ATYPE_WHOLE
-		self.__anchorlinks[self.__curanchor] = (atype,) + a[1:]
+		self.deletecb()
 
 	def OnType(self, id, code):
-		if self.__curanchor is None or code != win32con.BN_CLICKED:
+		if code != win32con.BN_CLICKED:
 			return
-		self.fixtype()
-		self.fill(newlist = 0)
-		self.enableApply()
+		self.typecb()
 
 	def OnLink(self, id, code):
-		if self.__curanchor is None:
-			return None
-		self._attr.wrapper.toplevel.links.show(self._attr.wrapper.node, self.__curanchor)
+		self.linkcb(self._attr)
 
 	def OnEdit(self, id, code):
-		if self.__curanchor is None:
-			return None
 		if code == win32con.EN_SETFOCUS:
 			self.sethelp()
 		elif code == win32con.EN_CHANGE:
-			a = self.__anchorlinks[self.__curanchor]
-			aargs = list(a[1])
-			times = list(a[2])
-			for i in range(4):
-				if id == self._xywh[i]._id:
-					str = self._xywh[i].gettext()
-					try:
-						val = string.atoi(str)
-					except string.atoi_error:
-						pass
-					else:
-						while len(aargs) < 4:
-							aargs.append(0)
-						aargs[i] = val
-					break
-			for i in range(2):
-				if id == self._se[i]._id:
-					str = self._se[i].gettext()
-					try:
-						val = string.atof(str)
-					except string.atof_error:
-						pass
-					else:
-						times[i] = val
-					break
-			self.__anchorlinks[self.__curanchor] = (a[0], aargs, tuple(times)) + a[3:]
+			self.editcb()
 			self.notifylisteners('change')
-			self.enableApply()
 
 	def OnPlay(self,id,code):
 		if hasattr(self._wnd,'OnPlay'):
