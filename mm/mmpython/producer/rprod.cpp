@@ -26,6 +26,7 @@ Copyright 1991-1999 by Oratrix Development BV, Amsterdam, The Netherlands.
 #define APP_MAX_PATH	255
 
 static PyObject *ErrorObject;
+static void SetDllCategoryPaths(char *szAppDir);
 
 struct errors {
 	HRESULT error;
@@ -4076,10 +4077,29 @@ RP_CreateRMBuildEngine(PyObject *self, PyObject *args)
 	return (PyObject *) obj;
 }
 
+static char RP_SetDllCategoryPaths__doc__[] =
+"(string)->None. Set the name of the directory where the DLLs live."
+;
+
+static PyObject *
+RP_SetDllCategoryPaths(PyObject *self, PyObject *args)
+{
+	char *szAppDir;
+
+	if (!PyArg_ParseTuple(args, "s", &szAppDir))
+		return NULL;
+
+	SetDllCategoryPaths(szAppDir);
+	
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 /* List of methods defined in the module */
 
 static struct PyMethodDef RP_methods[] = {
 	{"CreateRMBuildEngine", (PyCFunction)RP_CreateRMBuildEngine, METH_VARARGS, RP_CreateRMBuildEngine__doc__},
+	{"SetDllCategoryPaths", (PyCFunction)RP_SetDllCategoryPaths, METH_VARARGS, RP_SetDllCategoryPaths__doc__},
 
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
@@ -4088,24 +4108,8 @@ static struct PyMethodDef RP_methods[] = {
 STDAPI SetDLLAccessPath(const char *pPathDescriptor);
 
 static void
-SetDllCategoryPaths()
+SetDllCategoryPaths(char *szAppDir)
 {
-	char szAppDir[APP_MAX_PATH+1] = "";
-
-	// Get the app dir -- this is platform specific
-#if 0
-#if defined(_WIN32)
-	GetModuleFileName(NULL, szAppDir, APP_MAX_PATH);
-	char* pLastChar = strrchr(szAppDir, '\\');
-	if (pLastChar != NULL)
-		*(pLastChar+1) = '\0';
-#elif defined(_MACINTOSH)
-	CMacStuff::GetApplicationDirectory(szAppDir);
-#endif
-#else
-	strcpy(szAppDir, "d:\\ufs\\mm\\cmif\\bin\\win32\\");
-#endif
-
 	// Set the DLL Access paths
 	// Win32 DEBUG builds and all Mac builds set everything to the app dir
 	// All other builds look in subdirs underneath the app dir
@@ -4124,6 +4128,20 @@ SetDllCategoryPaths()
 #else
 	SetDLLAccessPath(szDllPath);
 #endif
+}
+
+static void
+SetDefaultDllCategoryPaths()
+{
+	char szAppDir[APP_MAX_PATH+1] = "";
+
+	// Get the app dir -- this is platform specific
+#if defined(_MACINTOSH)
+	strcpy(szAppDir, "flap:jack:cmif:mmpython:producer:mac:bin:");
+#else
+	strcpy(szAppDir, "d:\\ufs\\mm\\cmif\\bin\\win32\\");
+#endif
+	SetDllCategoryPaths(szAppDir);
 }
 
 /* Initialization function for the module (*must* be called initproducer) */
@@ -4148,7 +4166,10 @@ initproducer()
 {
 	PyObject *m, *d, *x;
 
-	SetDllCategoryPaths();
+#if 1
+	/* XXXX To be fixed shortly */
+	SetDefaultDllCategoryPaths();
+#endif
 
 	/* Create the module and add the functions */
 	m = Py_InitModule4("producer", RP_methods,
