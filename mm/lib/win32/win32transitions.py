@@ -9,7 +9,7 @@ class TransitionEngine:
 	def __init__(self, window, inout, runit, dict):
 		self.window = window
 		self.duration = dict.get('dur', 1)
-		self.inout = inout
+		self.outtransition = inout
 
 		trtype = dict['trtype']
 		subtype = dict.get('subtype')
@@ -21,8 +21,20 @@ class TransitionEngine:
 		x, y, w, h = self.window._rect
 		self.transitiontype.move_resize((0, 0, w, h))
 
+		self.startprogress = dict['startProgress']
+		self.endprogress = dict['endProgress']
+		if self.endprogress<=self.startprogress:
+			self.startprogress = 0.0
+			self.endprogress = 1.0
+			#raise AssertionError
+
+		self.__transperiod = self.duration / (self.endprogress-self.startprogress)
+		self.__begin = self.__transperiod * self.startprogress
+		self.__end = self.__transperiod * self.endprogress
+
 	def __del__(self):
-		self.endtransition()
+		if self.transitiontype:
+			self.endtransition()
 
 	def begintransition(self):
 		# create surfaces
@@ -31,17 +43,17 @@ class TransitionEngine:
 		self._active = self.window.createDDS()
 		self._tmp = self.window.createDDS()
 
-		self.__start = time.time()
-		self.settransitionvalue(0.0)
+		self.__start = time.time() - self.__begin
+		self.settransitionvalue(self.startprogress)
 		if self.duration<=0.0:
-			self.settransitionvalue(1.0)
+			self.settransitionvalue(self.endprogress)
 		else:	
 			self.__register_for_timeslices()
 
 	def endtransition(self):
-		self.window._drawsurf = None
 		self.__unregister_for_timeslices()
-		self.__transition = None
+		self.window._drawsurf = None
+		self.transitiontype = None
 	
 	def settransitionvalue(self, value):
 		if value<0.0 or value>1.0:
@@ -49,33 +61,36 @@ class TransitionEngine:
 
 		parameters = self.transitiontype.computeparameters(value)
 		self.window.paintOnDDS(self._active, self.window)
-		src_active = self._active
-		src_passive = self.window._passive
+		if self.outtransition:
+			vfrom = self._active
+			vto = self.window._passive
+		else:
+			vfrom = self.window._passive
+			vto = self._active
 		tmp  = self._tmp
 		dst  = self.window._drawsurf
 		dstrgn = None
-		self.transitiontype.updatebitmap(parameters, src_active, src_passive, tmp, dst, dstrgn)
+		self.transitiontype.updatebitmap(parameters, vto, vfrom, tmp, dst, dstrgn)
 		self.window.update()
 
-	def __onDur(self):
-		self.endtransition()
-
-	def on_idle_callback(self):
-		self.__fiber_id=0
-		t_sec=time.time() - self.__start
-		if t_sec>=self.duration:
-			self.settransitionvalue(1.0)
-			self.__onDur()
+	def onIdle(self):
+		t_sec = time.time() - self.__start
+		if t_sec>=self.__end:
+			self.settransitionvalue(self.endprogress)
+			self.endtransition()
 		else:
-			self.settransitionvalue(t_sec/self.duration)
-			self.__register_for_timeslices()
-			
+			self.settransitionvalue(t_sec/self.__transperiod)
+	
+	def isCallable(self):
+		return self.transitiontype != None
+
 	def __register_for_timeslices(self):
-		if self.__fiber_id==0:
-			self.__fiber_id = windowinterface.settimer(0.05, (self.on_idle_callback,()))
+		if not self.__fiber_id:
+			self.__fiber_id=windowinterface.register((self.isCallable,()),(self.onIdle,()))
 
 	def __unregister_for_timeslices(self):
-		if self.__fiber_id!=0:
-			windowinterface.canceltimer(self.__fiber_id)
-			self.__fiber_id = 0
+		if self.__fiber_id:
+			windowinterface.unregister(self.__fiber_id)
+			self.__fiber_id=0
+
 
