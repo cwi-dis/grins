@@ -11,7 +11,7 @@ class LabelChannel(ChannelWindow):
 		      'bgimg', 'scale', 'noanchors']
 
 	def __repr__(self):
-		return '<NewChannel instance, name=' + `self._name` + '>'
+		return '<LabelChannel instance, name=' + `self._name` + '>'
 
 	def do_arm(self, node, same = 0):
 		if same and self.armed_display:
