@@ -1139,15 +1139,12 @@ class HierarchyView(HierarchyViewDialog):
 	def cvdrop(self, node, window, event, params):
 		# Change to an external node and re-drop it.
 		em = self.editmgr
-		if not em.transaction():
-			return
 		em.setnodevalues(node, [])
 		em.setnodetype(node, 'ext')
-		em.commit()
 		# try again, now with an ext node as destination
-		self.dropfile(node, window, event, params)
+		self.dropfile(node, window, event, params, transaction = 0)
 
-	def dropfile(self, maybenode, window, event, params):
+	def dropfile(self, maybenode, window, event, params, transaction = 1):
 		# Called when a file is dragged-and-dropped onto this HierarchyView
 		x, y, filename = params
 		# Convert to pixels.
@@ -1182,9 +1179,13 @@ class HierarchyView(HierarchyViewDialog):
 		ctx = obj.node.GetContext() # ctx is the node context (MMNodeContext)
 		t = obj.node.GetType()	# t is the type of node (String)
 		# Test for invalid targets.
-		if t == ('imm','brush','animate','prefetch'):
-			self.draw()
-			windowinterface.showmessage('Drop target is an immediate node. Change to external?', mtype = 'question', callback = (self.cvdrop, (obj.node, window, event, params)), parent = self.window)
+		if t in ('imm','brush','animate','prefetch'):
+			if transaction and not self.editmgr.transaction():
+				self.draw()
+				return
+			self.cvdrop(obj.node, window, event, params)
+			if transaction:
+				self.editmgr.commit()
 			return
 		else:
 			interior = (obj.node.GetType() in MMTypes.interiortypes)
@@ -1209,11 +1210,12 @@ class HierarchyView(HierarchyViewDialog):
 				dnode = obj.node.findMimetypeAcceptor(mimetype)
 				if dnode:
 					em = self.editmgr
-					if not em.transaction():
+					if transaction and not em.transaction():
 						self.draw()
 						return
 					em.setnodeattr(dnode, 'file', url)
-					em.commit()
+					if transaction:
+						em.commit()
 					return
 				else:
 					# This "shouldn't happen": the drag code
@@ -1227,11 +1229,12 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			# check that URL compatible with node's channel
 			em = self.editmgr
-			if not em.transaction():
+			if transaction and not em.transaction():
 				self.draw()
 				return
 			em.setnodeattr(obj.node, 'file', url)
-			em.commit()
+			if transaction:
+				em.commit()
 
 	def dragfile(self, dummy, window, event, params):
 		x, y = params
@@ -1532,7 +1535,7 @@ class HierarchyView(HierarchyViewDialog):
 		for a in ['name', 'file']:
 			if a in defattrlist: defattrlist.remove(a)
 
-		copylist = windowinterface.mmultchoice('Select properties for new parent node', attrlist, defattrlist, parent=self.getparentwindow())
+		copylist = windowinterface.mmultchoice('Select properties to move to new parent group', attrlist, defattrlist, parent=self.getparentwindow())
 		if copylist is None: return
 
 		em = self.editmgr
