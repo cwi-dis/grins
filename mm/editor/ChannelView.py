@@ -24,6 +24,7 @@ import Timing
 from MMExc import *
 from AnchorDefs import *
 from ArmStates import *
+from MMTypes import *
 
 
 def fix(r, g, b): return r, g, b	# Hook for color conversions
@@ -467,7 +468,7 @@ class ChannelView(ViewDialog):
 				self.objects.append(obj)
 				if focus[0] == 'n' and focus[1] is node:
 					obj.select()
-		elif t == 'bag':
+		elif t in bagtypes:
 			self.scandescendants(node)
 		else:
 			for c in node.GetChildren():
@@ -476,7 +477,7 @@ class ChannelView(ViewDialog):
 	def scandescendants(self, node):
 		for c in node.GetChildren():
 			t = c.GetType()
-			if t == 'bag':
+			if t in bagtypes:
 				self.scandescendants(c)
 			elif c.IsMiniDocument():
 				name = c.GetRawAttrDef('name', '(NoName)')
@@ -499,13 +500,13 @@ class ChannelView(ViewDialog):
 		parent = self.viewroot.GetParent()
 		if parent:
 			while parent.parent and \
-				  parent.parent.GetType() == 'bag':
+				  parent.parent.GetType() in bagtypes:
 				parent = parent.parent
 			self.scansiblings(parent)
 
 	def scansiblings(self, node):
 		for c in node.GetChildren():
-			if c.GetType() == 'bag':
+			if c.GetType() in bagtypes:
 				self.scansiblings(c)
 			elif c.IsMiniDocument():
 				name = c.GetRawAttrDef('name', '(NoName)')
@@ -525,7 +526,7 @@ class ChannelView(ViewDialog):
 		type = node.GetType()
 		if type in leaftypes and node.GetChannel():
 			self.addarcs(node, arcs)
-		elif type != 'bag':
+		elif type not in bagtypes:
 			for c in node.GetChildren():
 				self.scanarcs(c, focus, arcs)
 
