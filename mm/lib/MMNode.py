@@ -206,7 +206,7 @@ class MMNode:
 		return self.attrdict
 	#
 	def GetRawAttr(self, name):
-		_stat('GetRawAttr')
+		_stat('GetRawAttr' + '.' + name)
 		try:
 			return self.attrdict[name]
 		except RuntimeError:
@@ -215,7 +215,7 @@ class MMNode:
 			raise NoSuchAttrError, 'in GetRawAttr()'
 	#
 	def GetRawAttrDef(self, (name, default)):
-		_stat('GetRawAttrDef')
+		_stat('GetRawAttrDef' + '.' + name)
 		try:
 			return self.GetRawAttr(name)
 		except NoSuchAttrError:
@@ -226,7 +226,7 @@ class MMNode:
 		return self.context.styledict
 	#
 	def GetAttr(self, name):
-		_stat('GetAttr')
+		_stat('GetAttr' + '.' + name)
 		try:
 			return self.attrdict[name]
 		except RuntimeError:
@@ -235,7 +235,7 @@ class MMNode:
 			return self.GetDefAttr(name)
 	#
 	def GetDefAttr(self, name):
-		_stat('GetDefAttr')
+		_stat('GetDefAttr' + '.' + name)
 		try:
 			styles = self.attrdict['style']
 		except RuntimeError:
@@ -245,14 +245,14 @@ class MMNode:
 		return self.context.lookinstyles(name, styles)
 	#
 	def GetAttrDef(self, (name, default)):
-		_stat('GetAttrDef')
+		_stat('GetAttrDef' + '.' + name)
 		try:
 			return self.GetAttr(name)
 		except NoSuchAttrError:
 			return default
 	#
 	def GetInherAttr(x, name):
-		_stat('GetInherAttr')
+		_stat('GetInherAttr' + '.' + name)
 		while x:
 			if x.attrdict:
 				try:
@@ -263,7 +263,7 @@ class MMNode:
 		raise NoSuchAttrError, 'in GetInherAttr()'
 	#
 	def GetDefInherAttr(self, name):
-		_stat('GetInherDefAttr')
+		_stat('GetInherDefAttr' + '.' + name)
 		x = self.parent
 		while x:
 			if x.attrdict:
@@ -275,7 +275,7 @@ class MMNode:
 		raise NoSuchAttrError, 'in GetInherDefAttr()'
 	#
 	def GetInherAttrDef(self, (name, default)):
-		_stat('GetInherAttrDef')
+		_stat('GetInherAttrDef' + '.' + name)
 		try:
 			return self.GetInherAttr(name)
 		except NoSuchAttrError:
