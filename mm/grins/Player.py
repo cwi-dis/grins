@@ -62,9 +62,8 @@ class Player(PlayerCore, PlayerDialog):
 			]
 		self.alllist = self.pauselist
 		import settings
-		if settings.activeFullSmilCss:
-			from SMILCssResolver import SMILCssResolver
-			self.cssResolver = SMILCssResolver(self.context)
+		from SMILCssResolver import SMILCssResolver
+		self.cssResolver = SMILCssResolver(self.context)
 		self._exporter = None # Bad, bad hack.
 	
 	def destroy(self):

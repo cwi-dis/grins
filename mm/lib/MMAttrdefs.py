@@ -224,10 +224,9 @@ def getattr(node, attrname, animated=0):
 		return getdirattr(node, attrname, animated)
 
 	import settings
-	if settings.activeFullSmilCss:
-		if node != None:
-			if node.isCssAttr(attrname):
-				return node.getCssAttr(attrname)
+	if node != None:
+		if node.isCssAttr(attrname):
+			return node.getCssAttr(attrname)
 				
 	if attrstats is not None:
 		if attrstats.has_key(attrname):

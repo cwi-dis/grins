@@ -34,9 +34,8 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.load_geometry()
 		
 		import settings
-		if settings.activeFullSmilCss:
-			from SMILCssResolver import SMILCssResolver
-			self.cssResolver = SMILCssResolver(self.context)
+		from SMILCssResolver import SMILCssResolver
+		self.cssResolver = SMILCssResolver(self.context)
 			
 		PlayerDialog.__init__(self, self.last_geometry,
 				      'Player (' + toplevel.basename + ')')
