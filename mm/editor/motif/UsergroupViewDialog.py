@@ -80,16 +80,16 @@ class UsergroupEditDialog:
 		Create the dialog window (non-modal, so does not grab
 		the cursor) and pop it up.
 		"""
-		w = windowinterface.Window('Edit user group', resizable = 1)
+		w = windowinterface.Window('Edit custom test', resizable = 1)
 		self.__window = w
-		self.__ugroup = w.TextInput('User group name', ugroup, None,
+		self.__ugroup = w.TextInput('Custom test name', ugroup, None,
 					    None, top = None, left = None,
 					    right = None)
-		self.__title = w.TextInput('User group title', title, None,
+		self.__title = w.TextInput('Custom test title', title, None,
 					   None, top = self.__ugroup,
 					   left = None, right = None)
-		self.__state = w.OptionMenu('Initial state',
-					    ['NOT RENDERED', 'RENDERED'],
+		self.__state = w.OptionMenu('Default state',
+					    ['false', 'true'],
 					    ustate == 'RENDERED', None,
 					    top = self.__title, left = None,
 					    right = None)
@@ -98,7 +98,7 @@ class UsergroupEditDialog:
 					       override == 'allowed', None,
 					       top = self.__state,
 					       left = None, right = None)
-		self.__uid = w.TextInput('User group UID', uid, None, None,
+		self.__uid = w.TextInput('Custom test UID', uid, None, None,
 					 top = self.__override,
 					 left = None, right = None)
 		sep = w.Separator(top = self.__uid, left = None,
