@@ -452,16 +452,16 @@ class NodeInfo() = Dialog():
 
 # Routine to close all attribute editors in a node and its context.
 
-def closeall(root):
-	closenode(root)
+def hideall(root):
+	hidenode(root)
 
 # Recursively close the attribute editor for this node and its subtree.
 
-def closenode(node):
+def hidenode(node):
 	hidenodeinfo(node)
 	if node.GetType() in ('seq', 'par'):
 		for child in node.GetChildren():
-			closenode(child)
+			hidenode(child)
 
 
 # Test program -- edit the attributes of the root node.
