@@ -640,13 +640,13 @@
 
 # prefetch
 
-(mediaSize (float) 100.0 'Media size' default
-	'How much to fetch as a percentage of the file size of the resource' raw (smil2))
+(mediaSize (string) '100%' 'Media size' default
+	'How much to fetch as a function of the file size of the resource' raw (smil2))
 	
-(mediaTime (float) 100.0 'Media time' default
-	'How much to fetch as a percentage of the duration of the resource' raw (smil2))
+(mediaTime (string) '100%' 'Media time' default
+	'How much to fetch as a function of the duration of the resource' raw (smil2))
 
-(bandwidth (float) 100.0 'Bandwidth' default
+(bandwidth (string) '100%' 'Bandwidth' default
 	'How much bandwidth should use when doing the prefetch' raw (smil2))
 
 
