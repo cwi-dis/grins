@@ -112,9 +112,12 @@ class MMChannel:
 	def __getitem__(self, key):
 		try:
 			return self.attrdict[key]
-		except KeyError:
+		except KeyError, msg:
 			import sys
-			msg, tb = sys.exc_info()[1:3]
+			if hasattr(sys, 'exc_info'):
+				tb = sys.exc_info()[2]
+			else:
+				tb = sys.exc_traceback
 			# special case for background color
 			if key == 'bgcolor' and self.attrdict.has_key('base_window'):
 				pname = self.attrdict['base_window']

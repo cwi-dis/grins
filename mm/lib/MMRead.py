@@ -71,15 +71,21 @@ def _readparser(p, filename):
 	except EOFError:
 		p.reporterror(filename, 'Unexpected EOF', sys.stderr)
 		raise EOFError
-	except MSyntaxError:
-		msg, tb = sys.exc_info()[1:3]
+	except MSyntaxError, msg:
+		if hasattr(sys, 'exc_info'):
+			tb = sys.exc_info()[2]
+		else:
+			tb = sys.exc_traceback
 		if type(msg) is type(()):
 			gotten, expected = msg
 			msg = 'got "'+gotten+'", expected "'+expected+'"'
 		p.reporterror(filename, 'Syntax error: ' + msg, sys.stderr)
 		raise MSyntaxError, msg, tb
-	except MTypeError:
-		msg, tb = sys.exc_info()[1:3]
+	except MTypeError, msg:
+		if hasattr(sys, 'exc_info'):
+			tb = sys.exc_info()[2]
+		else:
+			tb = sys.exc_traceback
 		if type(msg) is type(()):
 			gotten, expected = msg
 			msg = 'got "'+gotten+'", expected "'+expected+'"'
