@@ -173,6 +173,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'viewport': (self.start_viewport, self.end_viewport),
 			GRiNSns+' '+'layouts': (self.start_layouts, self.end_layouts),
 			GRiNSns+' '+'layout': (self.start_Glayout, self.end_Glayout),
+			GRiNSns+' '+'viewinfo': (self.start_viewinfo, self.end_viewinfo),
 			'body': (self.start_body, self.end_body),
 			'par': (self.start_par, self.end_par),
 			'seq': (self.start_seq, self.end_seq),
@@ -250,6 +251,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__in_metadata = 0
 		self.__metadata = []
 		self.__errorList = []
+		self.__viewinfo = []
 		self.__progressCallback = progressCallback # tuple of (callback fnc, interval of time updated (max))
 		self.__progressTimeToUpdate = 0  # next time to update the progress bar (if progresscallback is not none
 		self.linenumber = 1 # number of lines. Useful to determinate the progress value
@@ -2499,6 +2501,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.FixAssets(self.__root)
 		metadata = ''.join(self.__metadata)
 		self.__context.metadata = metadata
+		if self.__viewinfo:
+			self.__context.setviewinfo(self.__viewinfo)
 		MMAttrdefs.flushcache(self.__root)
 
 	# head/body sections
@@ -3216,6 +3220,29 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__layouts[id] = regions.split()
 
 	def end_Glayout(self):
+		pass
+
+	def start_viewinfo(self, attributes):
+		self.__fix_attributes(attributes)
+		viewname = attributes.get('view')
+		t = attributes.get('top')
+		l = attributes.get('left')
+		w = attributes.get('width')
+		h = attributes.get('height')
+		if not viewname or not t or not l or not w or not h:
+			self.syntax_error('GRiNS viewinfo misses required attributes')
+			return
+		try:
+			t = int(t)
+			l = int(l)
+			w = int(w)
+			h = int(h)
+		except:
+			self.syntax_error('error parsing GRiNS viewinfo attribute')
+			return
+		self.__viewinfo.append((viewname, (l, t, w, h)))
+
+	def end_viewinfo(self):
 		pass
 
 	# container nodes

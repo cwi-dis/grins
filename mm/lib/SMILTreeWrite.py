@@ -1358,6 +1358,7 @@ class SMILWriter(SMIL):
 		self.writelayout()
 		self.writetransitions()
 		self.writegrinslayout()
+		self.writeviewinfo()
 		self.pop()
 
 		self.writenode(self.root, root = 1)
@@ -1924,6 +1925,19 @@ class SMILWriter(SMIL):
 				      [('id', self.layout2name[name]),
 				       ('regions', string.join(channames))])
 		self.pop()
+	
+	def writeviewinfo(self):
+		viewinfo = self.root.GetContext().getviewinfo()
+		if not viewinfo:
+			return
+		for view, geometry in viewinfo:
+			t, l, w, h = geometry
+			self.writetag('%s:viewinfo' % NSGRiNSprefix, [
+				('view', view),
+				('top', `t`),
+				('left', `l`),
+				('width', `w`),
+				('height', `h`)])
 
 	def writenode(self, x, root = 0):
 		"""Write a node (possibly recursively)"""
