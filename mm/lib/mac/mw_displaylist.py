@@ -898,13 +898,13 @@ class _Button:
 		
 	def _get_button_region(self):
 		"""Return our region, in global coordinates, if we are active"""
-		print 'getbuttonregion', self._dispobj._window._convert_coordinates(self._coordinates), self._times, time.time()-self._dispobj.starttime #DBG
+##		print 'getbuttonregion', self._dispobj._window._convert_coordinates(self._coordinates), self._times, time.time()-self._dispobj.starttime #DBG
 		if self._times:
 			curtime = time.time() - self._dispobj.starttime
 			# Workaround for the fact that timers seem to fire early, some times:
 			curtime = curtime + 0.05
 			t0, t1 = self._times
-			if curtime < t0 or curtime >= t1:
+			if curtime < t0 or (t1 and curtime >= t1):
 				return None
 		x0, y0, w, h = self._dispobj._window._convert_coordinates(self._coordinates)
 		x1, y1 = x0+w, y0+h
