@@ -18,11 +18,22 @@ class DisplayList:
 
 		self._fgcolor = window._fgcolor
 		self._canvas = window._canvas
-		self._buttons = []
+		self._linewidth = 1
+		self._font = None
+		self._curpos = 0, 0
+		self._xpos = 0
 
 		self._list = []
 		self._list.append(('clear', bgcolor))
 		self._rendered = 0
+
+		self._buttons = []
+
+		self._alphaSensitivity = None
+
+		# associate cmd names to list indices
+		self.__cmddict = {}
+		self.__butdict = {}
 
 	def render(self):
 		wnd = self._window
@@ -79,13 +90,23 @@ class DisplayList:
 	def display_image_from_file(self, file, crop = (0,0,0,0), fit = 'meet',
 				    center = 1, coordinates = None, clip = None, align = None,
 				    units = None):
-		pass
+		return 0, 0, 100, 100
 
 	def isTransparent(self, point):
 		return 0
 
+	# set the media sensitivity
+	# value is percentage value (0 == 'opaque', 100 == 'transparent')
+	def setAlphaSensitivity(self, value):
+		self._alphaSensitivity = value
+
 	#############################################
 	# draw primitives
+
+	# Set forground color
+	def fgcolor(self, color):
+		self._list.append(('fg', color))
+		self._fgcolor = color
 
 	# Insert a command to drawline
 	def drawline(self, color, points, units = None):
@@ -510,11 +531,42 @@ class DisplayList:
 	def _convert_color(self, color):
 		return color 
 
+	######################################
+	# Animation experimental methods
+	#
+
+	# Update cmd with name from diff display list
+	# we can get also update region from diff dl
+	def update(self, name, diffdl):
+		newcmd = diffdl.getcmd(name)
+		if newcmd and self.__cmddict.has_key(name):
+			ix = self.__cmddict[name]
+			self._list[ix] = newcmd
+
+	# Update cmd with name
+	def updatecmd(self, name, newcmd):
+		if self.__cmddict.has_key(name):
+			ix = self.__cmddict[name]
+			self._list[ix] = newcmd
+	
+	def getcmd(self, name):
+		if self.__cmddict.has_key(name):
+			ix = self.__cmddict[name]
+			return self._list[ix]
+		return None
+
+	def knowcmd(self, name):
+		self.__cmddict[name] = len(self._list)-1
+				
 	# Update background color
 	def updatebgcolor(self, color):
 		if self._list[0][0]!='clear':
 			raise AssertionError
 		self._list[0] = ('clear',color)
+
+	#
+	# End of animation experimental methods
+	##########################################
 
 ####################################################
 import CheckInsideArea

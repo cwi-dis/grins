@@ -10,5 +10,5 @@ class Image:
 	def getbpp(self):
 		return 24
 
-def get_image(self, filename):
+def get_image(filename):
 	return Image()
