@@ -73,6 +73,7 @@ class SchedulerContext:
 		# Create channel lists
 		#
 		self.channelnames, err = GetAllChannels(self.playroot)
+		self.channels = []
 		if err:
 			enode, echan = err
 			ename = MMAttrdefs.getattr(enode, 'name')
@@ -81,7 +82,6 @@ class SchedulerContext:
 				  '\nparent node:'+ename)
 			return 0
 			
-		self.channels = []
 		for cn in self.channelnames:
 			ch = self.parent.ui.getchannelbyname(cn)
 			if ch in self.parent.channels_in_use:

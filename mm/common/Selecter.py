@@ -28,10 +28,10 @@ class Selecter:
 		self.reset()
 		list = self.mkbaglist(self.userplayroot)
 		if not list:
-			return 0
+			return # 0 -- doesn't seem to be used -- sjoerd
 		list = self.killconflictingbags(list)
 		if not self.startbaglist(list):
-			return 0
+			return # 0 -- doesn't seem to be used -- sjoerd
 		self.playing = 1
 		self.updateuibaglist()
 		self.showstate()

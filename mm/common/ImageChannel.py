@@ -14,7 +14,16 @@ class ImageChannel(ChannelWindow):
 	def do_arm(self, node):
 		f = self.getfilename(node)
 		# remember coordinates for anchor editing (and only for that!)
-		self._arm_imbox = self.armed_display.display_image_from_file(f)
+		try:
+			self._arm_imbox = self.armed_display.display_image_from_file(f)
+		except IOError, msg:
+			msg = f + ':\n' + msg[1]
+			parms = self.armed_display.fitfont('Times-Roman', msg)
+			w, h = self.armed_display.strsize(msg)
+			self.armed_display.setpos((1.0 - w) / 2, (1.0 - h) / 2)
+			self.armed_display.fgcolor(255, 0, 0)		# red
+			box = self.armed_display.writestr(msg)
+			return 1
 		try:
 			alist = node.GetRawAttr('anchorlist')
 		except NoSuchAttrError:
