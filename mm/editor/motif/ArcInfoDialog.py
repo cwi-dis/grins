@@ -110,6 +110,9 @@ class ArcInfoDialog:
 		del self.__delay_slider
 		del self.__range_choice
 
+	def pop(self):
+		self.__window.pop()
+
 	def settitle(self, title):
 		"""Set (change) the title of the window.
 
