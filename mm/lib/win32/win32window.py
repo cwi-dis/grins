@@ -1682,10 +1682,10 @@ class Region(Window):
 	# trans engine: calls self.paintOnDDS(self._drawsurf, self)
 	# i.e. trans engine is responsible to paint correctly everything below
 	def _paint_3(self):
-		# the rgn where the transition will play is the region of self._subwindows
+		# the rgn where the transition will play is self region
 		# self should be the master of the multielement transition
 		# ask for rgn coords relative to topwindow
-		rgn = self.getChildrenRgn(self._topwindow)
+		rgn = self.getClipRgn(self._topwindow)
 
 		# first paint self on the complement of self._subwindows region
 		rgn2 = self.getChildrenRgnComplement(self._topwindow)
