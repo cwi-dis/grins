@@ -144,7 +144,7 @@ class BandwidthAccumulator:
 			t0 = tnext
 		return 0, overall_t0, overall_t1, boxes
 
-def compute_bandwidth(root, seticons=1):
+def compute_bandwidth(root, seticons=1, storetiming=None):
 	"""Compute bandwidth usage of a tree. Sets error icons, and returns
 	a tuple (bandwidth, prerolltime, delaycount, errorseconds, errorcount)"""
 	import settings
@@ -179,7 +179,9 @@ def compute_bandwidth(root, seticons=1):
 	for t0, t1, node, prearm, bandwidth in allbandwidthdata:
 		if bandwidth:
 			overflow, dummy = accum.reserve(t0, t1, bandwidth)
-			if overflow and seticons:
+			# For continuous media overflow we set the error icon always
+			# even if seticons isn't set.
+			if overflow:
 				msg = 'Uses %d bps more bandwidth than available'%overflow
 				node.set_infoicon('bandwidthbad', msg)
 				errornodes[node] = 1
@@ -200,6 +202,9 @@ def compute_bandwidth(root, seticons=1):
 					node.set_infoicon('bandwidthbad', msg)
 					errornodes[node] = 1
 					delaycount = delaycount + 1
+				if storetiming:
+					timeobj = node.GetTimesObject(storetiming)
+					timeobj.downloadlag = errorseconds
 		if node.GetType() == 'ext' and \
 		   node.GetChannelType() == 'RealPix':
 			# Create the SlideShow if it somehow doesn't exist yet
