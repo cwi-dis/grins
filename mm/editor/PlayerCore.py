@@ -44,9 +44,9 @@ class PlayerCore(Selecter):
 		if self.showing:
 			self.checkchannels()
 			# Check if any of the playroots has vanished
-			if self.playroot.GetRoot() <> self.root:
+			if self.playroot.GetRoot() is not self.root:
 				self.playroot = self.root
-			if self.userplayroot.GetRoot() <> self.root:
+			if self.userplayroot.GetRoot() is not self.root:
 				self.userplayroot = self.root
 		self.locked = 0
 		self.measure_armtimes = 1
@@ -76,22 +76,19 @@ class PlayerCore(Selecter):
 		self.showstate()
 	#
 	def playsubtree(self, node):
-		self.toplevel.setwaiting()
 		if not self.showing:
 			self.show()
 		if self.playing:
 			self.stop()
-		if node.GetRoot() <> self.root:
+		if node.GetRoot() is not self.root:
 			raise CheckError, 'playsubtree with bad arg'
 		self.userplayroot = self.playroot = node
 		self.play()
-		self.toplevel.setready()
 	#
 	def playfrom(self, node):
 		self.playfromanchor(node, None)
 	#
 	def playfromanchor(self, node, anchor):
-		self.toplevel.setwaiting()
 		if not self.showing:
 			self.show()
 		if self.playing:
@@ -100,7 +97,6 @@ class PlayerCore(Selecter):
 		if not self.gotonode(node, anchor, None):
 			return
 		self.playing = 1
-		self.toplevel.setready()
 		self.showstate()
 
 	#
@@ -110,7 +106,7 @@ class PlayerCore(Selecter):
 		if self.playing:
 			self.stop()
 		ch = self.getchannelbynode(node)
-		if ch == None:
+		if ch is None:
 			return None
 		if not ch.is_showing():
 			ch.set_visible(1)
@@ -119,7 +115,7 @@ class PlayerCore(Selecter):
 	#	
 	def defanchor(self, node, anchor, cb):
 		ch = self.anchorinit(node)
-		if ch == None:
+		if ch is None:
 			windowinterface.showmessage('Cannot set internal anchor\n' + \
 				  '(node not on a channel)')
 			apply(cb, (anchor,))
@@ -128,7 +124,7 @@ class PlayerCore(Selecter):
 	#
 	def updatefixedanchors(self, node):
 		ch = self.anchorinit(node)
-		if ch == None:
+		if ch is None:
 			return 1	# Cannot set on internal nodes
 		return ch.updatefixedanchors(node)
 			
