@@ -12,12 +12,6 @@ import sys
 ##else:
 ##	import quietconsole
 ##	quietconsole.install()
-## XXXX Debug
-import Res
-try:
-	Res.OpenResFile('macgrins.rsrc')
-except Res.Error:
-	pass
 	
 # Next, show the splash screen
 import MacOS
