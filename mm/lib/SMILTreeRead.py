@@ -420,7 +420,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					 'width': 0, 'height': 0,
 					 'z-index': 0, 'fit': 'hidden',
 					 'background-color': 'transparent'}
-		if mediatype in ('image', 'video'):
+		if self.__width > 0 and self.__height > 0:
+			# we don't have to calculate minimum sizes
+			pass
+		elif mediatype in ('image', 'video'):
 			x, y, w, h = ch['left'], ch['top'], ch['width'], ch['height']
 			# if we don't know the region size and
 			# position in pixels, we need to look at the
@@ -532,6 +535,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 	def FixSizes(self):
 		# calculate minimum required size of top-level window
+		if self.__width > 0 and self.__height > 0:
+			# there was a root-layout tag which specified the size
+			return
 		for attrdict in self.__regions.values():
 			try:
 				width = _minsize(attrdict['left'],
@@ -566,30 +572,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		bg = None
 		attrs = self.__root_layout
 		if attrs is not None:
-			width = attrs['width']
-			if width[-2:] == 'px':
-				width = width[:-2]
-			try:
-				width = string.atoi(width)
-			except string.atoi_error:
-				self.syntax_error('root-layout width not an integer')
-			else:
-				if width < 0:
-					self.syntax_error('root-layout width not a positive integer')
-				elif width > 0:
-					self.__width = width
-			height = attrs['height']
-			if height[-2:] == 'px':
-				height = height[:-2]
-			try:
-				height = string.atoi(height)
-			except string.atoi_error:
-				self.syntax_error('root-layout height not an integer')
-			else:
-				if height < 0:
-					self.syntax_error('root-layout height not a positive integer')
-				elif height > 0:
-					self.__height = height
 			bg = attrs['background-color']
 			bg = self.__convert_color(bg)
 			if not self.__title:
@@ -610,7 +592,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		   bg != 'inherit':
 			layout['bgcolor'] = bg
 		if self.__width == 0:
-			self.__width = 640
+			self.__widthcm = 640
 		if self.__height == 0:
 			self.__height = 480
 		layout['winsize'] = \
@@ -928,12 +910,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			    'minwidth': 0,
 			    'minheight': 0,}
 
-		val = attributes.get('id')
-		if val is None:
+		if id is None:
 			self.syntax_error('region without id attribute')
 			return
-		attrdict['id'] = val
-		self.__regions[val] = attrdict
+		attrdict['id'] = id
+		self.__regions[id] = attrdict
 
 		for attr in ('left', 'top', 'width', 'height'):
 			val = attributes[attr]
@@ -989,6 +970,30 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.syntax_error('non-unique id %s' % id)
 			self.__ids[id] = 0
 		self.__root_layout = attributes
+		width = attributes['width']
+		if width[-2:] == 'px':
+			width = width[:-2]
+		try:
+			width = string.atoi(width)
+		except string.atoi_error:
+			self.syntax_error('root-layout width not an integer')
+		else:
+			if width < 0:
+				self.syntax_error('root-layout width not a positive integer')
+			elif width > 0:
+				self.__width = width
+		height = attributes['height']
+		if height[-2:] == 'px':
+			height = height[:-2]
+		try:
+			height = string.atoi(height)
+		except string.atoi_error:
+			self.syntax_error('root-layout height not an integer')
+		else:
+			if height < 0:
+				self.syntax_error('root-layout height not a positive integer')
+			elif height > 0:
+				self.__height = height
 
 	def end_0root_layout(self):
 		pass
