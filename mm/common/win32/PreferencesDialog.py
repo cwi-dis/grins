@@ -30,6 +30,7 @@ boolitems = {
 	'system_captions': 'whether captions are to be shown',
 	'system_overdub_or_caption': 'audible or visible "captions"',
 	'cmif': 'enable GRiNS-specific extensions',
+	'html_control': 'choose between IE4 and WebsterPro HTML controls',
 	}
 
 class PreferencesDialog:
