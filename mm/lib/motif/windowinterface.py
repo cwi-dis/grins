@@ -145,7 +145,7 @@ class ProgressDialog:
 			label = label + " (%d of %d)"%(cur1, max1)
 		if cur2 != None:
 			label = label + ": %d%%"%(cur2*100/max2)
-		print label
+##		print label
 		
 from imgimagesize import GetImageSize
 def GetVideoSize(file):

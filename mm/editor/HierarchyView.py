@@ -38,6 +38,7 @@ BAGCOLOR = settings.get('structure_bagcolor')
 ALTCOLOR = settings.get('structure_altcolor')
 PARCOLOR = settings.get('structure_parcolor')
 SEQCOLOR = settings.get('structure_seqcolor')
+EXCLCOLOR = settings.get('structure_exclcolor')
 TEXTCOLOR = settings.get('structure_textcolor')
 CTEXTCOLOR = settings.get('structure_ctextcolor')
 EXPCOLOR = settings.get('structure_expcolor')
@@ -51,6 +52,7 @@ BAGCOLOR_NOPLAY = settings.get('structure_darkbag')
 ALTCOLOR_NOPLAY = settings.get('structure_darkalt')
 PARCOLOR_NOPLAY = settings.get('structure_darkpar')
 SEQCOLOR_NOPLAY = settings.get('structure_darkseq')
+EXCLCOLOR_NOPLAY = settings.get('structure_darkexcl')
 
 # Focus color assignments (from light to dark gray)
 
@@ -191,6 +193,8 @@ class HierarchyView(HierarchyViewDialog):
 			DELETE(callback = (self.deletecall, ())),
 			CUT(callback = (self.cutcall, ())),
 			]
+		if toplevel.root.context.attributes.get('project_boston', 0):
+			self.notatrootcommands.append(NEW_EXCL(callback = (self.createexclcall, ())))
 		self.createanchorcommands = [
 			CREATEANCHOR(callback = (self.createanchorcall, ())),
 			]
@@ -249,6 +253,8 @@ class HierarchyView(HierarchyViewDialog):
 			rv.append(NEW_UNDER_PAR(callback = (self.createunderintcall, ('par',))))
 			rv.append(NEW_UNDER_CHOICE(callback = (self.createunderintcall, ('bag',))))
 			rv.append(NEW_UNDER_ALT(callback = (self.createunderintcall, ('alt',))))
+			if ctx.attributes.get('project_boston', 0):
+				rv.append(NEW_UNDER_EXCL(callback = (self.createunderintcall, ('excl',))))
 		if heavy or ctx.compatchannels(chtype='image'):
 			rv.append(NEW_UNDER_IMAGE(callback = (self.createundercall, ('image',))))
 		if not slide and (heavy or ctx.compatchannels(chtype='sound')):
@@ -279,6 +285,9 @@ class HierarchyView(HierarchyViewDialog):
 				NEW_AFTER_CHOICE(callback = (self.createafterintcall, ('bag',))),
 				NEW_AFTER_ALT(callback = (self.createafterintcall, ('alt',))),
 				]
+			if ctx.attributes.get('project_boston', 0):
+				rv.append(NEW_AFTER_EXCL(callback = (self.createafterintcall, ('excl',))))
+				rv.append(NEW_BEFORE_EXCL(callback = (self.createbeforeintcall, ('excl',))))
 		if slide or heavy or ctx.compatchannels(chtype='image'):
 			rv.append(NEW_BEFORE_IMAGE(callback = (self.createbeforecall, ('image',))))
 		if not slide and (heavy or ctx.compatchannels(chtype='sound')):
@@ -503,7 +512,7 @@ class HierarchyView(HierarchyViewDialog):
 		# make URL relative to document
 		url = ctx.relativeurl(url)
 		if interior:
-			horizontal = (t in ('par', 'alt')) == DISPLAY_VERTICAL
+			horizontal = (t in ('par', 'alt', 'excl')) == DISPLAY_VERTICAL
 			i = -1
 			# if node is expanded, determine where in the node
 			# the file is dropped, else create at end
@@ -985,7 +994,7 @@ class HierarchyView(HierarchyViewDialog):
 		right = right - self.horedge
 		children = node.GetChildren()
 		size = 0
-		horizontal = (t in ('par', 'alt')) == DISPLAY_VERTICAL
+		horizontal = (t in ('par', 'alt', 'excl')) == DISPLAY_VERTICAL
 		for child in children:
 			size = size + child.boxsize[not horizontal]
 			if DISPLAY_VERTICAL != horizontal:
@@ -1314,6 +1323,9 @@ class HierarchyView(HierarchyViewDialog):
 	def createparcall(self):
 		if self.focusobj: self.focusobj.createparcall()
 
+	def createexclcall(self):
+		if self.focusobj: self.focusobj.createexclcall()
+
 	def createbagcall(self):
 		if self.focusobj: self.focusobj.createbagcall()
 
@@ -1381,7 +1393,7 @@ class HierarchyView(HierarchyViewDialog):
 			return node.boxsize
 		nchildren = len(children)
 		width = height = 0
-		horizontal = (ntype in ('par', 'alt')) == DISPLAY_VERTICAL
+		horizontal = (ntype in ('par', 'alt', 'excl')) == DISPLAY_VERTICAL
 		for child in children:
 			w, h, b = self.sizeboxes(child)
 			if horizontal:
@@ -1537,6 +1549,11 @@ class Object:
 				color = PARCOLOR
 			else:
 				color = PARCOLOR_NOPLAY
+		elif nt == 'excl':
+			if willplay:
+				color = EXCLCOLOR
+			else:
+				color = EXCLCOLOR_NOPLAY
 		elif nt == 'bag':
 			if willplay:
 				color = BAGCOLOR
@@ -1654,7 +1671,7 @@ class Object:
 			r1 = r - hmargin*2
 			b1 = b - vmargin*2
 			if l1 < r1 and t1 < b1:
-				if (node.GetType() in ('par', 'alt')) == DISPLAY_VERTICAL:
+				if (node.GetType() in ('par', 'alt', 'excl')) == DISPLAY_VERTICAL:
 					stepsize = (r1-l1)/2
 					while stepsize > hmargin*4:
 						stepsize = stepsize / 2

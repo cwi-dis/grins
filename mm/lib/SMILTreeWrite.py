@@ -9,6 +9,7 @@ import MMCache
 import MMAttrdefs
 import Hlinks
 from AnchorDefs import *
+import features
 import string
 import os
 import MMurl
@@ -108,8 +109,7 @@ def WriteFile(root, filename, cleanSMIL = 0, copyFiles = 0, evallicense = 0, pro
 		import macfs
 		import macostools
 		fss = macfs.FSSpec(filename)
-		import settings
-		if settings.get('compatibility') == settings.G2 and cleanSMIL:
+		if features.compatibility == features.G2 and cleanSMIL:
 			fss.SetCreatorType('PNst', 'PNRA')
 		else:
 			fss.SetCreatorType('GRIN', 'TEXT')
@@ -262,8 +262,7 @@ def getsrc(writer, node):
 	if writer.copycache.has_key(url):
 		# already seen and copied
 		val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(writer.copycache[url]))
-		import settings
-		if settings.get('compatibility') == settings.G2:
+		if features.compatibility == features.G2:
 			val = MMurl.unquote(val)
 		return val
 	if chtype == 'RealPix':
@@ -320,8 +319,7 @@ def getsrc(writer, node):
 			return val
 	writer.copycache[url] = file
 	val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
-	import settings
-	if settings.get('compatibility') == settings.G2:
+	if features.compatibility == features.G2:
 		val = MMurl.unquote(val)
 	return val
 
@@ -1043,8 +1041,7 @@ class SMILWriter(SMIL):
 
 	def writelayout(self):
 		"""Write the layout section"""
-		import settings
-		compatibility = settings.get('compatibility')
+		compatibility = features.compatibility
 		attrlist = []
 		if self.smilboston:
 			attrlist.append(('type', SMIL_EXTENDED))
@@ -1065,7 +1062,7 @@ class SMILWriter(SMIL):
 				pass
 			elif ch.has_key('bgcolor'):
 				bgcolor = ch['bgcolor']
-				if compatibility != settings.G2 or \
+				if compatibility != features.G2 or \
 				   bgcolor != (0,0,0):
 					if self.smilboston:
 						attrlist.append(('backgroundColor', '#%02x%02x%02x' % bgcolor))
@@ -1171,7 +1168,7 @@ class SMILWriter(SMIL):
 			transparent = ch.get('transparent', 0)
 			bgcolor = ch.get('bgcolor')
 			if transparent == 0:
-				if compatibility == settings.G2:
+				if compatibility == features.G2:
 					# in G2, setting a
 					# background-color implies
 					# transparent==never, so set
@@ -1194,7 +1191,7 @@ class SMILWriter(SMIL):
 			# the color is the default (g2-compatible) color: white for text channels
 			# and black for others.
 			if bgcolor is not None and \
-			   (compatibility != settings.G2 or
+			   (compatibility != features.G2 or
 			    ((ch['type'] not in ('text', 'RealText') or
 			      bgcolor != (255,255,255)) and
 			     bgcolor != (0,0,0))):
@@ -1509,11 +1506,11 @@ class SMILWriter(SMIL):
 		import posixpath, urlparse
 		utype, host, path, params, query, fragment = urlparse.urlparse(srcurl)
 		if utype == 'data':
-			import mimetypes
-			mtype = mimetypes.guess_type(srcurl)[0]
+			import MMmimetypes
+			mtype = MMmimetypes.guess_type(srcurl)[0]
 			if mtype is None:
 				mtype = 'text/plain'
-			ext = mimetypes.guess_extension(mtype)
+			ext = MMmimetypes.guess_extension(mtype)
 			base = 'data'
 		else:
 			file = MMurl.url2pathname(posixpath.basename(path))
@@ -1585,7 +1582,12 @@ class SMILWriter(SMIL):
 			# will, currently, to '.jpg').
 			if self.progress:
 				self.progress("Converting %s"%os.path.split(file)[1], None, None, None, None)
-			cfile = convertimagefile(u, srcurl, dstdir, file, node)
+			try:
+				cfile = convertimagefile(u, srcurl, dstdir, file, node)
+			except:
+				# XXXX Too many different errors can occur in convertimagefile:
+				# I/O errors, image file errors, etc.
+				cfile = None
 			if cfile:
 				self.files_generated[cfile] = 'b'
 				return cfile
