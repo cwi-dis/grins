@@ -383,7 +383,7 @@ class HierarchyView(HierarchyViewDialog):
 		node = self.focusnode
 		if node is None:
 			windowinterface.showmessage(
-				'There is no focus to insert to',
+				'There is no selection to insert into',
 				mtype = 'error')
 			return
 		parent = node.GetParent()
@@ -438,7 +438,7 @@ class HierarchyView(HierarchyViewDialog):
 		node = self.focusnode
 		if node is None:
 			windowinterface.showmessage(
-				'There is no focus to insert at',
+				'There is no selection to insert at',
 				mtype = 'error')
 			return
 		parent = node.GetParent()
@@ -474,7 +474,7 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		if self.focusnode is None:
 			windowinterface.showmessage(
-				'There is no focus to paste to',
+				'There is no selection to paste into',
 				mtype = 'error')
 			return
 		self.toplevel.setwaiting()
@@ -500,7 +500,7 @@ class HierarchyView(HierarchyViewDialog):
 			   (ntype != 'ext' or
 			    self.focusnode.GetChannelType() != 'RealPix' or
 			    node.__class__ is not SlideMMNode):
-				windowinterface.showmessage('Focus is a leaf node!',
+				windowinterface.showmessage('Selection is a leaf node!',
 							    mtype = 'error')
 				node.Destroy()
 				return 0
