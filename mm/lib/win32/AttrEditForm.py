@@ -3984,6 +3984,23 @@ class BeginListGroup(AttrGroup):
 		cd[a] = EventCtrl(wnd,a,())
 		return cd
 
+class BeginList2Group(BeginListGroup):
+	data=attrgrsdict['beginlist2']
+
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_EVENTLIST2
+
+	def createctrls(self,wnd):
+		cd = BeginListGroup.createctrls(self, wnd)
+		a = self.getattr('restart')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_RESTARTNODEL,grinsRC.IDC_RESTARTNODEV))
+		a = self.getattr('restartDefault')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_RESTARTDEFAULTL,grinsRC.IDC_RESTARTDEFAULTV))
+		return cd
+
 class EndListGroup(AttrGroup):
 	data=attrgrsdict['endlist']
 
@@ -4322,6 +4339,7 @@ groupsui={
 	'intname':INameGroup,
 
 	'beginlist':BeginListGroup,
+	'beginlist2':BeginList2Group,
 	'endlist':EndListGroup,
 	'timing1':DurationGroup,
 	'timing2':Duration2Group,
