@@ -107,8 +107,7 @@ class SoundChannel(ChannelAsync):
 		self.playdone(1)
 
 	def setpaused(self, paused):
-		if debug:
-			print 'setpaused', paused
+		if debug: print 'setpaused', paused
 		player.setpaused(paused)
 		self._paused = paused
 
@@ -136,12 +135,50 @@ class Player:
 		self.__framerate = 0
 		self.__readsize = 0
 		self.__timeout = 0
-		self.__callbacks = []
+		self.__callbacks = []	# callbacks that we have to do
 		self.__data = ''	# data already read but not yet played
-		self.__nframes = 0	# # of frames in current __data
-		self.__oldpos = None	# start position of current __data
-		self.__prevpos = None	# previous value of __oldpos
-		self.__prevframes = 0	# # of frames in previous __data
+		self.__framesread = 0	# total # of frames read
+		self.__frameswritten = 0 # total # of frames written
+		self.__nframes = 0	# number of frames in __data
+		self.__prevpos = []	# list of previous positions
+
+	def __read(self):
+		converter = self.__converter
+		self.__prevpos.append((self.__framesread, converter.getpos()))
+		self.__data, self.__nframes = converter.readframes(self.__readsize)
+		self.__framesread = self.__framesread + self.__nframes
+
+	def __write(self):
+		self.__port.writeframes(self.__data)
+		self.__frameswritten = self.__frameswritten + self.__nframes
+		self.__data = ''
+		self.__nframes = 0
+
+	def __stop(self):
+		filled = self.__port.getfilled()
+		self.__port.stop()
+		played = self.__frameswritten - filled
+		while 1:
+			nframes, pos = self.__prevpos[-1]
+			del self.__prevpos[-1]
+			if nframes <= played:
+				break
+		self.__converter.setpos(pos)
+		self.__framesread = played
+		self.__frameswritten = played
+		self.__nframes = 0
+		n = played - nframes
+		if n > 0:
+			dummy, nframes = self.__converter.readframes(n)
+
+	def __call(self):
+		callbacks = self.__callbacks
+		self.__callbacks = []
+		for rdr, cb in callbacks:
+			if self.__merger:
+				self.__merger.delete(rdr)
+			if cb:
+				apply(cb[0], cb[1])
 
 	def __callback(self, rdr, arg):
 		self.__callbacks.append((rdr, arg))
@@ -155,12 +192,7 @@ class Player:
 			if self.__tid:
 				windowinterface.canceltimer(self.__tid)
 				self.__tid = None
-			filled = self.__port.getfilled()
-			self.__port.stop()
-			self.__converter.setpos(self.__prevpos)
-			n = self.__prevframes - filled
-			if n > 0:
-				dummy, nframes = self.__converter.readframes(n)
+			self.__stop()
 		self.__merger.add(rdr, (self.__callback, (rdr, cb,)))
 		if first:
 			self.__converter = audioconvert.convert(self.__merger,
@@ -174,13 +206,9 @@ class Player:
 			if fillable < self.__readsize:
 				self.__readsize = fillable
 			self.__timeout = 0.5 * self.__readsize / self.__framerate
-			self.__oldpos = self.__converter.getpos()
-			self.__data, self.__nframes = self.__converter.readframes(self.__readsize)
-		else:
-			self.__oldpos = self.__converter.getpos()
-			self.__prevpos = None
-			self.__prevframes = 0
-			self.__data, self.__nframes = self.__converter.readframes(self.__readsize)
+			self.__prevpos = []
+			self.__framesread = self.__frameswritten = 0
+		self.__read()
 		self.__playsome()
 
 	def stop(self, rdr):
@@ -189,19 +217,13 @@ class Player:
 				del self.__callbacks[i]
 				break
 		if self.__merger:
-			self.__converter.setpos(self.__oldpos)
+			if self.__tid:
+				windowinterface.canceltimer(self.__tid)
+				self.__tid = None
+			self.__stop()
 			self.__merger.delete(rdr)
-			self.__data, self.__nframes = self.__converter.readframes(self.__readsize)
-			if not self.__data:
-				# deleted the last one
-				self.__port.stop()
-				self.__merger = None
-				self.__converter = None
-				self.__oldpos = None
-				self.__prevpos = None
-				if self.__tid:
-					windowinterface.canceltimer(self.__tid)
-					self.__tid = None
+			self.__read()
+			self.__playsome()
 
 	def setpaused(self, paused):
 		if self.__pausing == paused:
@@ -210,16 +232,8 @@ class Player:
 		if not self.__merger:
 			return
 		if paused:
-			filled = self.__port.getfilled()
-			self.__port.stop()
-			self.__converter.setpos(self.__prevpos)
-			n = self.__prevframes - filled
-			if n > 0:
-				dummy, nframes = self.__converter.readframes(n)
-			self.__oldpos = self.__converter.getpos()
-			self.__prevpos = None
-			self.__prevframes = 0
-			self.__data, self.__nframes = self.__converter.readframes(self.__readsize)
+			self.__stop()
+			self.__read()
 			if self.__tid:
 				windowinterface.canceltimer(self.__tid)
 				self.__tid = None
@@ -235,23 +249,11 @@ class Player:
 				port.wait()
 				self.__merger = None
 				self.__converter = None
-				callbacks = self.__callbacks
-				self.__callbacks = []
-				for rdr, cb in callbacks:
-					if cb:
-						apply(cb[0], cb[1])
+				self.__call()
 				return
-			port.writeframes(self.__data)
-			callbacks = self.__callbacks
-			self.__callbacks = []
-			for rdr, cb in callbacks:
-				self.__merger.delete(rdr)
-				if cb:
-					apply(cb[0], cb[1])
-			self.__prevpos = self.__oldpos
-			self.__prevframes = self.__nframes
-			self.__oldpos = converter.getpos()
-			self.__data, self.__nframes = converter.readframes(self.__readsize)
+			self.__write()
+			self.__call()
+			self.__read()
 			if not self.__data:
 				timeout = float(port.getfilled())/self.__framerate - 0.1
 				if timeout > 0:
