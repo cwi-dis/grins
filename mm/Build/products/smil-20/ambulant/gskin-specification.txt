@@ -1,0 +1,133 @@
+# GRiNS G-SKIN file Definition
+# v2.1
+
+# The Ambulant/G Player supports the Oratrix GRiNS G-SKIN active device model
+# specification. This file provides a quick overview of the basics of creating
+# your own gskin definition. Note that no skins are provided with the Ambulant/G
+# release.
+
+# To enable the search for active device models, add the following line to your
+# grprefs.txt file in the installation directory (without the '# '):
+
+# askskin = '1' 
+
+# Comments start with the character # and extend to the end of the
+# line; empty lines are ignored.
+#
+# Lines consist of a keyword and parameters, separated from each other
+# by white space.  The available keywords and their parameters are:
+#
+# "image"		URL of skin's image file (relative to gskin definition file)
+# "display"		4 numbers giving x, y, width, height
+# "centerskin"		if "1", causes the presentation to be centered in the DISPLAY area
+# "displayimage"	URL of an image file for within the DISPLAY (relative to gskin definition file)
+# "displaybgcolor"	3 numbers giving a R G B color, for filling the DISPLAY area.
+# "open"		shape coordinates
+# "play"		shape coordinates
+# "pause"		shape coordinates
+# "stop"		shape coordinates
+# "exit"		shape coordinates
+# "tab" 		shape coordinates
+# "key"			X shape coordinates
+# component		URI
+# profile		profile name
+# SmilBaseSet		"SMIL-3GPP-R4" or "SMIL-3GPP-R5"
+# SmilModules		list of SMIL module names
+#
+# Arguments:
+#     display-related support:
+#     ------------------------------------------------------------------------------------
+#     "display"        is an area definition relative to the image used for the skin.
+#     "centerskin"     (if set non-zero) allows a presentation to be centered within the
+#                      display are during rendering. (Otherwise, the presentation is anchored
+#                      at top=left.)
+#     "displayimage"   is an image that is put in the 'display' area, under the presentation.
+#     "displaybgcolor" allows the display are to have a separate background color be
+#                      painted before the presentation starts.
+#
+#     shapes and coordinates support:
+#     ------------------------------------------------------------------------------------
+#      "rect" with 4 numbers giving x, y, width, and height;
+#      "circle" with 3 numbers giving x, y, and radius;
+#      "poly" with an even number of numbers, each pair describing the x
+#             and y coordinates of a point.
+#
+#      A special shape is "rocker".
+#      The possible 'coordinates' for the "rocker" shape are:
+#      "left", "right", "up", "down", "center".
+#
+#     key button support:
+#     ------------------------------------------------------------------------------------
+#      syntax:
+#         key         X shape  coords
+#      where:
+#         key         is the literal text 'key'
+#
+#         X           is a single, possibly quoted, character.
+#                     If either ", ', or a space character needs to be specified,
+#                     it must be surrounded with quotes, otherwise quotes are optional.
+#                     Use ' to quote " and v.v.
+#                     Some special characters can also be specified: Use \t for TAB, \r
+#                     for ENTER, \b for BACKSPACE, and \n for LINEFEED.
+#
+#         shape       is the same as under 'shapes and coordinates', above
+#
+#         coords      is the same as under 'shapes and coordinates', above
+#
+#     components support:
+#     ------------------------------------------------------------------------------------
+#         User-defined device properties may be specified with the 
+#         components command. If the component is defined, then it is
+#         tested as 'true' in a SMIL switch statement.
+#
+#         The component command may be repeated and all components are
+#         returned as a single list
+#
+#     Profile support:
+#     ------------------------------------------------------------------------------------
+#         The profile can be one of (without the quotes):
+#    	    "SMIL 2.0 Language Profile" (default)
+#	    "3GPP PSS5 Profile"
+#	    "3GPP PSS4 Profile"
+#	    "SMIL 2.0 Basic Language Profile"
+#	    "SMIL MMS Profile"
+#
+#     SMIL base set support:
+#     ------------------------------------------------------------------------------------
+#         Within a profile, you may specify the defined base set of modules supported.
+#         Options are:
+#           "SMIL-3GPP-R4" or "SMIL-3GPP-R5" 
+#
+#     SMIL Modules support:
+#     ------------------------------------------------------------------------------------
+#         If a device supports extension modules, these can be defined with
+#         the SmilModules command.
+#
+# In addition to the above commands, you can also have lines to set
+# system attributes.  These lines are single Python assignments and
+# start with "system_".  E.g.
+#	system_bitrate = 33600
+
+# Sample G-Skin definition (demo.gskin) (remove the '# ' at the beginning of each line):
+# ============================================================================================
+# image G-DevC-EU.gif
+# display 55 101 240 268
+# 
+# play rect 67 373 18 20			# Play Icon
+# pause rect 88 373 18 20	         	# Pause Icon
+# stop rect 109 373 18 20			# Stop
+# exit rect 200 373 18 20			# Exit Button
+# open rect 142 373 18 20			# Open File Button
+# reopen rect 168 373 18 20
+# 
+# 
+# profile PSS5					# parsing profile
+# component MMS					# set a system component def
+# component PSS4				# set a system component def
+# component PSS5				# set a system component def
+# 
+# component EUmarket				# set a system component def
+# 
+# centerskin = 0				# set a config option
+# system_bitrate = 33600			# set a system test attrb def
+
