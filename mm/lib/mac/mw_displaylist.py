@@ -262,7 +262,8 @@ class _DisplayList:
 ##		t0 = Evt.TickCount()
 		self._really_rendered = 1
 		window = self._window
-		grafport = window._mac_getoswindowport()
+		self._render_grafport = window._mac_getoswindowport()
+		self._render_cliprgn = rgn
 		window._active_displist = self
 		self._restorecolors()
 		if clonestart:
@@ -273,11 +274,13 @@ class _DisplayList:
 		if self._window._convert_coordinates((0,0,1,1), units = self.__units) == (0,0,1,1):
 			self._need_convert_coordinates = 0
 		for entry in list:
-			self._render_one(entry, window, grafport, rgn)
+			self._render_one(entry)
 ##		print "Redraw time:", (Evt.TickCount()-t0)/60.0, self._dbg_did, 'of', len(list)
 		self._need_convert_coordinates = 1
+		self._render_grafport = None
+		self._render_cliprgn = None
 			
-	def _render_one(self, entry, window, grafport, rgn):
+	def _render_one(self, entry):
 		cmd = entry[0]
 		
 		if cmd == 'clear':
@@ -285,20 +288,20 @@ class _DisplayList:
 				r = self._getredrawguarantee(skipclear=1)
 				if r:
 					r2 = Qd.NewRgn()
-					Qd.RectRgn(r2, window.qdrect())
+					Qd.RectRgn(r2, self._window.qdrect())
 					Qd.DiffRgn(r2, r, r2)
 					Qd.EraseRgn(r2)
 					Qd.DisposeRgn(r)
 					Qd.DisposeRgn(r2)
 				else:
-					Qd.EraseRect(window.qdrect())
+					Qd.EraseRect(self._window.qdrect())
 		elif cmd == 'fg':
 			self._setfgcolor(entry[1])
 		elif cmd == 'font':
-			entry[1]._setfont(grafport)
+			entry[1]._setfont(self._render_grafport)
 		elif cmd == 'text':
 			x, y, w, h = self._convert_coordinates(entry[1:5])
-			if not self._overlaprgn(rgn, (x, y-h, x+w, y)):
+			if not self._render_overlaprgn((x, y-h, x+w, y)):
 				return
 			Qd.MoveTo(x, y)
 			 # XXXX Incorrect for long strings:
@@ -308,7 +311,7 @@ class _DisplayList:
 			if icon == None:
 				return
 			rect = self._convert_coordinates(entry[1])
-			if not self._overlaprgn(rgn, rect):
+			if not self._render_overlaprgn(rect):
 				return
 			x0, y0, x1, y1 = rect
 			if x1-x0 < ICONSIZE_PXL:
@@ -323,21 +326,21 @@ class _DisplayList:
 		elif cmd == 'image':
 			mask, image, srcx, srcy, dstx, dsty, w, h = entry[1:]
 			dstrect = self._convert_coordinates((dstx, dsty, w, h))
-			if not self._overlaprgn(rgn, dstrect):
+			if not self._render_overlaprgn(dstrect):
 				return
 			w = dstrect[2]-dstrect[0]
 			h = dstrect[3]-dstrect[1]
 			srcrect = srcx, srcy, srcx+w, srcy+h
 			self._setblackwhitecolors()
-			clip = window._mac_getclip()
+			clip = self._window._mac_getclip()
 			if mask:
 				# XXXX We should also take note of the clip here.
 				Qd.CopyMask(image[0], mask[0],
-					    grafport.portBits,
+					    self._render_grafport.portBits,
 					    srcrect, srcrect, dstrect)
 			else:
 				Qd.CopyBits(image[0],
-				      grafport.portBits,
+				      self._render_grafport.portBits,
 				      srcrect, dstrect,
 				      QuickDraw.srcCopy+QuickDraw.ditherCopy,
 				      clip)
@@ -354,11 +357,11 @@ class _DisplayList:
 			self._restorecolors()
 		elif cmd == '3dhline':
 			color1, color2, x0, x1, y = entry[1:]
-			fgcolor = grafport.rgbFgColor
+			fgcolor = self._render_grafport.rgbFgColor
 			self._setfgcolor(color1)
 			x0, y0 = self._convert_coordinates((x0, y))
 			x1, y1 = self._convert_coordinates((x1, y))
-			if not self._overlaprgn(rgn, (x0, y0, x1, y1+1)):
+			if not self._render_overlaprgn((x0, y0, x1, y1+1)):
 				return
 			Qd.MoveTo(x0, y0)
 			Qd.LineTo(x1, y1)
@@ -369,13 +372,13 @@ class _DisplayList:
 			self._restorecolors()
 		elif cmd == 'box':
 			rect = self._convert_coordinates(entry[1])
-			if not self._overlaprgn(rgn, rect):
+			if not self._render_overlaprgn(rect):
 				return
 			Qd.FrameRect(rect)
 		elif cmd == 'fbox':
 			color = entry[1]
 			rect = self._convert_coordinates(entry[2])
-			if not self._overlaprgn(rgn, rect):
+			if not self._render_overlaprgn(rect):
 				return
 			self._setfgcolor(color)
 			Qd.PaintRect(rect)
@@ -383,7 +386,7 @@ class _DisplayList:
 		elif cmd == 'linewidth':
 			Qd.PenSize(entry[1], entry[1])
 		elif cmd == 'fpolygon':
-			polyhandle = self._polyhandle(entry[2], cliprgn=rgn)
+			polyhandle = self._polyhandle(entry[2], cliprgn=self._render_cliprgn)
 			if not polyhandle:
 				return
 			self._setfgcolor(entry[1])
@@ -391,7 +394,7 @@ class _DisplayList:
 			self._restorecolors()
 		elif cmd == '3dbox':
 			rect = self._convert_coordinates(entry[2])
-			if not self._overlaprgn(rgn, rect):
+			if not self._render_overlaprgn(rect):
 				return
 			l, t, r, b = rect
 			cl, ct, cr, cb = entry[1]
@@ -400,7 +403,7 @@ class _DisplayList:
 			crb = _colormix(cr, cb)
 			cbl = _colormix(cb, cl)
 ##			print '3Dbox', (l, t, r, b) # DBG
-##			print 'window', window.qdrect() # DBG
+##			print 'window', self._window.qdrect() # DBG
 			# l, r, t, b are the corners
 			l3 = l + SIZE_3DBORDER
 			t3 = t + SIZE_3DBORDER
@@ -409,19 +412,19 @@ class _DisplayList:
 			# draw left side
 			self._setfgcolor(cl)
 			polyhandle = self._polyhandle([(l, t), (l3, t3), (l3, b3), (l, b)], conv=0)
-			Qd.PaintPoly(polyhandle)
+			if polyhandle: Qd.PaintPoly(polyhandle)
 			# draw top side
 			self._setfgcolor(ct)
 			polyhandle = self._polyhandle([(l, t), (r, t), (r3, t3), (l3, t3)], conv=0)
-			Qd.PaintPoly(polyhandle)
+			if polyhandle: Qd.PaintPoly(polyhandle)
 			# draw right side
 			self._setfgcolor(cr)
 			polyhandle = self._polyhandle([(r3, t3), (r, t), (r, b), (r3, b3)], conv=0)
-			Qd.PaintPoly(polyhandle)
+			if polyhandle: Qd.PaintPoly(polyhandle)
 			# draw bottom side
 			self._setfgcolor(cb)
 			polyhandle = self._polyhandle([(l3, b3), (r3, b3), (r, b), (l, b)], conv=0)
-			Qd.PaintPoly(polyhandle)
+			if polyhandle: Qd.PaintPoly(polyhandle)
 			# draw topleft
 			self._setfgcolor(clt)
 			Qd.PaintRect((l, t, l3, t3))
@@ -438,7 +441,7 @@ class _DisplayList:
 			self._restorecolors()
 		elif cmd == 'diamond':
 			rect = self._convert_coordinates(entry[1])
-			if not self._overlaprgn(rgn, rect):
+			if not self._render_overlaprgn(rect):
 				return
 			x, y, x1, y1 = rect
 			w = x1-x
@@ -450,7 +453,7 @@ class _DisplayList:
 			Qd.LineTo(x, y + h/2)
 		elif cmd == 'fdiamond':
 			rect = self._convert_coordinates(entry[2])
-			if not self._overlaprgn(rgn, rect):
+			if not self._render_overlaprgn(rect):
 				return
 			x, y, x1, y1 = rect
 			w = x1-x
@@ -461,11 +464,11 @@ class _DisplayList:
 					(x + w, y + h/2),
 					(x + w/2, y + h),
 					(x, y + h/2)])
-			Qd.PaintPoly(polyhandle)
+			if polyhandle: Qd.PaintPoly(polyhandle)
 			self._restorecolors()
 		elif cmd == '3ddiamond':
 			rect = self._convert_coordinates(entry[2])
-			if not self._overlaprgn(rgn, rect):
+			if not self._render_overlaprgn(rect):
 				return
 			l, t, r, b = rect
 			cl, ct, cr, cb = entry[1]
@@ -484,19 +487,19 @@ class _DisplayList:
 
 			self._setfgcolor(cl)
 			polyhandle = self._polyhandle([(l, y), (x, t), (x, tt), (ll, y)], conv=0)
-			Qd.PaintPoly(polyhandle)
+			if polyhandle: Qd.PaintPoly(polyhandle)
 			
 			self._setfgcolor(ct)
 			polyhandle = self._polyhandle([(x, t), (r, y), (rr, y), (x, tt)], conv=0)
-			Qd.PaintPoly(polyhandle)
+			if polyhandle: Qd.PaintPoly(polyhandle)
 			
 			self._setfgcolor(cr)
 			polyhandle = self._polyhandle([(r, y), (x, b), (x, bb), (rr, y)], conv=0)
-			Qd.PaintPoly(polyhandle)
+			if polyhandle: Qd.PaintPoly(polyhandle)
 			
 			self._setfgcolor(cb)
 			polyhandle = self._polyhandle([(l, y), (ll, y), (x, bb), (x, b)], conv=0)
-			Qd.PaintPoly(polyhandle)
+			if polyhandle: Qd.PaintPoly(polyhandle)
 			
 			self._restorecolors()
 		elif cmd == 'arrow':
@@ -504,7 +507,7 @@ class _DisplayList:
 			src = entry[2]
 			dst = entry[3]
 			x0, y0, x1, y1, points = self._arrowdata(src,dst)
-			if not self._overlaprgn(rgn, (x0, y0, x1, y1)):
+			if not self._render_overlaprgn((x0, y0, x1, y1)):
 				return
 
 			self._setfgcolor(color)
@@ -512,7 +515,7 @@ class _DisplayList:
 			Qd.MoveTo(x0, y0)
 			Qd.LineTo(x1, y1)
 			polyhandle = self._polyhandle(entry[3])
-			Qd.PaintPoly(polyhandle)
+			if polyhandle: Qd.PaintPoly(polyhandle)
 			self._restorecolors()
 		else:
 			raise 'Unknown displaylist command', cmd
@@ -531,14 +534,15 @@ class _DisplayList:
 			w, h = coords[2:]
 			return (x, y, x+w, y+h)
 	
-	def _overlaprgn(self, rgn, rect):
-		"""Return true if there is an overlap between the region and the rect"""
+	def _render_overlaprgn(self, rect):
+		"""Return true if there is an overlap between the current rendering region and the rect"""
+		if not self._render_cliprgn:
+			# Always draw if we have no clipping region (probably just-cloned displaylist)
+			return 1
 		r2 = self._tmprgn
 		Qd.RectRgn(r2, rect)
-		Qd.SectRgn(rgn, r2, r2)
+		Qd.SectRgn(self._render_cliprgn, r2, r2)
 		empty = Qd.EmptyRgn(r2)
-##		Qd.DisposeRgn(r2)
-##		print '_overlaprgn', rect, '->', not empty
 		return not empty
 		
 	def _pixel2units(self, coords):
@@ -731,7 +735,7 @@ class _DisplayList:
 		if conv:
 			minx, miny = self._convert_coordinates((minx, miny))
 			maxx, maxy = self._convert_coordinates((maxx, maxy))
-		if cliprgn and not self._overlaprgn(cliprgn, (minx, miny, maxx, maxy)):
+		if not self._render_overlaprgn((minx, miny, maxx, maxy)):
 			return
 		# Create structure head
 		size = len(pointlist)*4 + 10
