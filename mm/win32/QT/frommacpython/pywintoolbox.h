@@ -42,5 +42,7 @@ typedef struct {
 	IDirectDrawSurface* pI;
 } DirectDrawSurfaceObject;
 
+void UrlConvert(char *pszUrl);
+
 #endif
 
