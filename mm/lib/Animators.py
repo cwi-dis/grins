@@ -219,6 +219,9 @@ class Animator:
 	def isAccumulating(self):
 		return self._accumulate=='sum'
 
+	def isEffValueAnimator(self):
+		return 0
+
 	def addCurrValue(self, v):
 		return self.addValues(v, self._curvalue)
 
@@ -444,6 +447,8 @@ class EffValueAnimator(Animator):
 			times=None, splines=None, accumulate='none', additive='replace'):
 		Animator.__init__(self, attr, domval, (domval, value,), dur, mode,
 			times, splines, accumulate, additive) 
+	def isEffValueAnimator(self):
+		return 1
 	def getValue(self, t):
 		if not self._effectiveAnimator:
 			return Animator.getValue(self, t)
@@ -560,6 +565,8 @@ class EffIntTupleAnimator(IntTupleAnimator):
 			times=None, splines=None, accumulate='none', additive='replace'):
 		IntTupleAnimator.__init__(self, attr, domval, (domval, value,), dur, mode,
 			times, splines, accumulate, additive)
+	def isEffValueAnimator(self):
+		return 1
 	def getValue(self, t):
 		if not self._effectiveAnimator:
 			return IntTupleAnimator.getValue(self, t)
@@ -590,6 +597,8 @@ class EffColorAnimator(EffIntTupleAnimator):
 			times=None, splines=None, accumulate='none', additive='replace'):
 		EffIntTupleAnimator.__init__(self, attr, domval, value, dur, mode,
 			times, splines, accumulate, additive)
+	def isEffValueAnimator(self):
+		return 1
 	def clamp(self, v):
 		n = len(v)
 		r = []
@@ -645,6 +654,9 @@ class EffMotionAnimator(Animator):
 		value = complex(x,y)
 		Animator.__init__(self, attr, domval, (domval, value,), dur, mode,
 			times, splines, accumulate, additive) 
+
+	def isEffValueAnimator(self):
+		return 1
 
 	def getValue(self, t):
 		if not self._effectiveAnimator:
@@ -776,7 +788,7 @@ class EffectiveAnimator:
 
 		cv = self.__domval
 		for a in self.__animators:
-			if a.isAdditive():
+			if a.isAdditive() and not a.isEffValueAnimator():
 				cv = a.addCurrValue(cv)
 			else:
 				cv = a.getCurrValue()
