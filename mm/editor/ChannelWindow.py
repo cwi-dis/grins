@@ -34,7 +34,7 @@ class ChannelWindow(GLDialog):
 			try:
 				pchan = ChannelWinDict[pname]
 				pwid = pchan.wid
-			except:
+			except (KeyError, AttributeError):
 				pass
 		pgeom = None
 		if self.attrdict.has_key('base_winoff'):
