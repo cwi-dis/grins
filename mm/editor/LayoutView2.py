@@ -34,6 +34,10 @@ class Node:
 		self.importAttrdict()
 		self._nodeType = TYPE_ABSTRACT
 
+		# avoid a recursive loop when selecting:
+		# currently, on windows, a selecting operation generate a selected event !
+		self._selecting = 0
+	
 	def addNode(self, node):
 		self._children.append(node)
 		node._parent = self
@@ -105,7 +109,9 @@ class Node:
 
 	def select(self):
 		if self.isShowed():
+			self._selecting = 1
 			self._graphicCtrl.select()
+			self._selecting = 0
 
 	def hide(self):
 		if self._graphicCtrl != None:
@@ -213,7 +219,8 @@ class Region(Node):
 	#
 
 	def onSelected(self):
-		self._ctx.onPreviousSelectRegion(self)
+		if not self._selecting:
+			self._ctx.onPreviousSelectRegion(self)
 
 	def onUnselected(self):
 		pass
@@ -315,7 +322,8 @@ class MediaRegion(Region):
 		pass
 
 	def onSelected(self):
-		self._ctx.onPreviousSelectMedia(self)
+		if not self._selecting:
+			self._ctx.onPreviousSelectMedia(self)
 
 	def show(self):
 		if not self.canShow():
@@ -434,7 +442,8 @@ class Viewport(Node):
 			self.showAllNodes()
 		
 	def onSelected(self):
-		self._ctx.onPreviousSelectViewport(self)
+		if not self._selecting:
+			self._ctx.onPreviousSelectViewport(self)
 
 	def onUnselected(self):
 		pass
@@ -1563,6 +1572,8 @@ class LayoutView2(LayoutViewDialog2):
 			
 		if viewport != None:
 			self.displayViewport(viewport.getName())
+			self.myfocus = self.context.getchannel(viewport.getName())
+			self.editmgr.setglobalfocus('MMChannel',self.myfocus)
 			self.select(viewport)
 
 	def __selectRegion(self, name=None):
@@ -1575,6 +1586,8 @@ class LayoutView2(LayoutViewDialog2):
 		region = self.getRegion(name)
 		if region != None:
 			self.select(region)
+			self.myfocus = self.context.getchannel(name)
+			self.editmgr.setglobalfocus('MMChannel',self.myfocus)
 			self.lastRegionNameSelected = name
 
 	def __selectMedia(self, name=None):
@@ -1587,6 +1600,8 @@ class LayoutView2(LayoutViewDialog2):
 		media = self.getMedia(name)
 		if media != None:
 			self.select(media)
+			self.myfocus = media.mmnode
+			self.editmgr.setglobalfocus('MMNode',self.myfocus)
 			self.lastMediaNameSelected = name
 
 	def __showEditBackground(self, value):
@@ -1715,10 +1730,14 @@ class LayoutView2(LayoutViewDialog2):
 	def onPreviousSelectViewport(self, viewport):
 		self.currentNodeSelected = viewport	
 		self.updateViewportOnDialogBox(viewport)
+		self.myfocus = self.context.getchannel(viewport.getName())
+		self.editmgr.setglobalfocus('MMChannel',self.myfocus)
 		
 	def onPreviousSelectRegion(self, region):
 		self.currentNodeSelected = region												
 		self.updateRegionOnDialogBox(region)
+		self.myfocus = self.context.getchannel(region.getName())
+		self.editmgr.setglobalfocus('MMChannel',self.myfocus)
 		
 	def onPreviousSelectMedia(self, media):
 		self.currentNodeSelected = media				
