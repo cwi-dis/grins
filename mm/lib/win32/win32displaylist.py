@@ -89,6 +89,11 @@ class _DisplayList:
 		self.__cmddict = {}
 		self.__butdict = {}
 
+		# sense direct draw
+		self._directDraw = 0
+		if hasattr(window._topwindow,'CreateSurface'):
+			self._directDraw = 1
+			 
 	# Clones this display list
 	def clone(self):
 		w = self._window
@@ -184,8 +189,16 @@ class _DisplayList:
 			mask, image, src_x, src_y,dest_x, dest_y, width, height,rcKeep=entry[1:]
 			if not self._overlap(region, (dest_x, dest_y, width, height)):
 				return
-			win32ig.render(dc.GetSafeHdc(),self._bgcolor,
-				mask, image, src_x, src_y,dest_x, dest_y, width, height,rcKeep, aspect="none" )
+			if self._directDraw:
+				imghdc = image.GetDC()
+				if imghdc:
+					imgdc = win32ui.CreateDCFromHandle(imghdc)
+					dc.BitBlt((dest_x, dest_y),(width, height),imgdc,(0, 0), win32con.SRCCOPY)
+					imgdc.Detach()
+					image.ReleaseDC(imghdc)				
+			else:
+				win32ig.render(dc.GetSafeHdc(),self._bgcolor,
+					mask, image, src_x, src_y,dest_x, dest_y, width, height,rcKeep, aspect="none" )
 		elif cmd == 'video':
 			func=entry[1]
 			apply(func,(dc,))
@@ -405,6 +418,9 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep = \
 		       self._window._prepare_image(file, crop, scale, center, coordinates, clip, units)
+
+		if self._directDraw:
+			image = self.createDDSImage(image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep)
 		self._list.append(('image', mask, image, src_x, src_y,
 				   dest_x, dest_y, width, height,rcKeep))
 		self._optimize((2,))
@@ -439,7 +455,21 @@ class _DisplayList:
 			return 1
 			
 		return 0
-		
+	
+	def createDDSImage(self, image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep):
+		if not self._directDraw: return image
+		tw = self._window._topwindow
+		dds = tw.CreateSurface(width, height)
+		try:
+			imghdc = dds.GetDC()
+		except:
+			return dds
+		win32ig.render(imghdc, self._bgcolor,
+				mask, image, src_x, src_y, 0, 0, width, height, rcKeep, aspect="none" )
+		dds.ReleaseDC(imghdc)
+		return dds
+						
+
 	#############################################
 	# draw primitives
 
