@@ -972,6 +972,7 @@ class MMNode:
 		self.arcs = []
 		self.durarcs = []
 		self.reset()
+		self.first_start_time = None
 		self.fullduration = None
 		self.pausestack = []	# used only by excl nodes
 		# stuff to do with the min attribute
@@ -1912,7 +1913,6 @@ class MMNode:
 	# event) and return 4 items:
 	# - actions to be taken upon node starting (SCHED)
 	# - actions to be taken upon SCHED_STOP
-	# - actions to be taken upon TERMINATE or incoming tail-syncarcs
 	# - a list of all (event, action) tuples to be generated
 	# 
 	def gensr_interior(self, looping=0):
@@ -2018,14 +2018,6 @@ class MMNode:
 			ev = (SCHED_STOPPING, self)
 			self.srdict[ev] = [1, sched_done]
 			srdict[ev] = self.srdict
-			#
-			# And, for our incoming tail syncarcs and a
-			# TERMINATE for ourselves we abort everything.
-			#
-##		if self._is_realpix_with_captions():	#DBG
-##			print 'NODE', self # DBG
-##			for i in srlist: print i #DBG
-##			print 'NODE END' #DBG
 
 		if debuggensr: self.__dump_srdict('gensr_interior', srdict)
 		return srdict
@@ -2081,13 +2073,6 @@ class MMNode:
 		# When the loop has started we start the body
 		srlist.append( ([(LOOPSTART_DONE, self)], body_sched_actions) )
 
-		# Terminating the body doesn't terminate the loop,
-		# but the other way around it does
-##		srlist.append( ([(TERMINATE, self.looping_body_self)],
-##				body_terminate_actions) )
-##		terminate_actions = [(TERMINATE, self.looping_body_self),
-##				     (SCHED_STOPPING, self)]
-
 		# When the body is done we stop it, and we end/restart the loop
 		srlist.append( ([(SCHED_STOPPING, self.looping_body_self)],
 				[(SCHED_DONE, self.looping_body_self)]) )
@@ -2100,7 +2085,7 @@ class MMNode:
 		#
 		# Three cases for signalling the parent we're done:
 		# 1. Incoming tail sync arcs or an explicit duration:
-		#	When these fire we signal SCHED_DONE and TERMINATE
+		#	When these fire we signal SCHED_DONE
 		#	ourselves. No special action on end-of-loop
 		# 2. We loop indefinite:
 		#	Immedeately tell our parents we are done. No special
@@ -2140,11 +2125,6 @@ class MMNode:
 
 		# When the loop has started we start the body
 		srlist.append( ([(LOOPSTART_DONE, self)], body_sched_actions) )
-
-		# Terminating the body doesn't terminate the loop,
-		# but the other way around it does
-##		srlist.append( ([(TERMINATE, self.looping_body_self)],
-##				body_terminate_actions) )
 
 		# When the body is done we stop it, and we end/restart the loop
 		srlist.append( ([(SCHED_STOPPING, self.looping_body_self)],
@@ -2299,9 +2279,6 @@ class MMNode:
 				arc = MMSyncArc(self_body, 'end', srcnode=child, event='end', delay=0)
 				self_body.arcs.append((self_body, arc))
 				child.add_arc(arc)
-##				terminating_children.append(child)
-##				srlist.append(([(SCHED_DONE, child)],
-##					       [(TERMINATE, self_body)]))
 			elif schedule or termtype == 'ALL':
 				scheddone_events.append((SCHED_DONE, child))
 			for arc in MMAttrdefs.getattr(child, 'endlist'):
@@ -2413,9 +2390,6 @@ class MMNode:
 				for key, val in self.srdict.items():
 					if not val:
 						# I think this can't happen
-						continue
-					if key[0] == TERMINATE:
-						# we're not interested in this event
 						continue
 					num, srlist = val
 					for sr in srlist:
