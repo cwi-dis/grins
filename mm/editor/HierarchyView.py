@@ -864,7 +864,9 @@ class HierarchyView(HierarchyViewDialog):
 			layout = MMAttrdefs.getattr(parent, 'layout')
 		else:
 			layout = MMAttrdefs.getattr(node, 'layout')
-		node = ctx.newnode(type) # Create a new node
+
+		node = ctx.newnode(type)
+
 		if url is not None:
 			node.SetAttr('file', url)
 		if chname:

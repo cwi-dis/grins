@@ -285,6 +285,21 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		else:
 			self.happily_receive_dropped_object(source)
 
+	def dropfile(self, coords, url):
+		# I received a file. Yay.
+		x,y = coords
+		if x < CHANNELWIDTH:
+			windowinterface.beep()
+			return
+		else:
+			tgt = self.get_node_at(coords)
+
+		if tgt is None:
+			return
+
+		channel = self.channeltree.get_obj_at(coords)
+		tgt.happily_receive_dropped_file(url, channel)
+
 	def happily_receive_dropped_object(self, obj):
 		pass
 
@@ -742,6 +757,9 @@ class TimeWidget(MMNodeWidget, GeoDisplayWidget):
 		else:
 			windowinterface.beep()
 
+	def happily_receive_dropped_file(self, url, channel):
+		return			# Virtual function.
+
 
 class MMWidget(TimeWidget, GeoDisplayWidget):
 	# This is the box which represents one leaf node.
@@ -880,6 +898,9 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		# What is a leaf node going to do with an object?
 		windowinterface.beep()
 
+	def happily_receive_dropped_file(self, url, channel):
+		self.node.SetURL(url)	# the node handles the edit manager.
+
 
 class MultiMMWidget(TimeWidget):
 	# represents any node which has children.
@@ -945,6 +966,9 @@ class MultiMMWidget(TimeWidget):
 			# It is no type of object that I know of.
 			windowinterface.beep()
 
+	def happily_receive_dropped_file(self, url, channel):
+		# Add the file as a new leaf node.
+		self.node.NewLeafNode(url=url)
 
 class SeqMMWidget(MultiMMWidget):
 	# Represents a seq widget on the screen
