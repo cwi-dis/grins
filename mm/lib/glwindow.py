@@ -27,12 +27,16 @@ class glwindow():
 	#
 	# Registration method.  Call this from your init method,
 	# with the window ID of the window you've created.
+	# Events will be handled automatically whenever you call
+	# fl.do_forms() or fl.check_forms().
 	#
 	def register(self, wid):
+		fl.set_event_call_back(dispatch)
 		self.glwindow_wid = wid
 		windowmap[`wid`] = self
 	#
-	# Unregistration method.  Call this when you close the window.
+	# Unregistration method.
+	# Call this ***without argument*** when you close the window.
 	#
 	def unregister(self):
 		del windowmap[`self.glwindow_wid`]
@@ -84,11 +88,6 @@ class glwindow():
 		self.winshut()
 
 
-# Debug/warning output function
-def report(s):
-	print 'glwindow:', s
-
-
 # Global state
 class Struct(): pass
 state = Struct()
@@ -98,34 +97,33 @@ state.focuswid = None
 
 # Some utility functions
 
-def mainloop():
-	while 1:
-		if fl.do_forms() = FL.EVENT:
-			dispatch(fl.qread())
+# Old functions that used to be more complicated:
+mainloop = fl.do_forms
+check = fl.check_forms
 
-def check():
-	while 1:
-		obj = fl.check_forms()
-		if obj <> FL.EVENT: break
-		dispatch(fl.qread())
-
+# Event dispatcher, installed as FORMS' event callback
 def dispatch(dev, val):
 	if dev = REDRAW:
-		window = windowmap[`val`]
-		gl.winset(val)
-		window.redraw()
+		# Ignore events for unregistered windows
+		key = `val`
+		if windowmap.has_key(key):
+			window = windowmap[`val`]
+			gl.winset(val)
+			window.redraw()
+		else:
+			report('REDRAW event for unregistered window')
 	elif dev = KEYBD:
 		if state.focuswindow:
 			gl.winset(state.focuswid)
 			state.focuswindow.keybd(val)
 		else:
-			report('KEYBD event with no focus window!')
+			report('KEYBD event with no focus window')
 	elif dev in (MOUSE3, MOUSE2, MOUSE1): # In left-to-right order
 		if state.focuswindow:
 			gl.winset(state.focuswid)
 			state.focuswindow.mouse(dev, val)
 		else:
-			report('MOUSE event with no focus window!')
+			report('MOUSE event with no focus window')
 	elif dev = INPUTCHANGE:
 		if state.focuswindow:
 			gl.winset(state.focuswid)
@@ -140,15 +138,28 @@ def dispatch(dev, val):
 			gl.winset(val)
 			state.focuswindow.enter()
 	elif dev = WINSHUT:
-		gl.winset(val)
-		window = windowmap[`val`]
-		window.winshut()
+		key = `val`
+		if windowmap.has_key(key):
+			gl.winset(val)
+			window = windowmap[key]
+			window.winshut()
+		else:
+			report('WINSHUT for unregistered window')
 	elif dev = WINQUIT:
-		gl.winset(val)
-		window = windowmap[`val`]
-		window.winquit()
+		key = `val`
+		if windowmap.has_key(key):
+			gl.winset(val)
+			window = windowmap[key]
+			window.winquit()
+		else:
+			report('WINQUIT for unregistered window')
 	else:
-		report('dispatch unrecognized event')
+		report('unrecognized event: ' + `dev, val`)
+
+
+# Debug/warning output function for dispatch()
+def report(s):
+	print 'glwindow.dispatch:', s
 
 
 # Useful subroutine to call prefposition/prefsize.
