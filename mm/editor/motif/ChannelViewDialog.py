@@ -54,8 +54,13 @@ class ChannelViewDialog(ViewDialog):
 				('Select sync arc', SYNCARCS),
 				]),
 			('View', [
-				('Show unused channels', TOGGLE_UNUSED, 't'),
-				('Show sync arcs', TOGGLE_ARCS, 't'),
+				(('Show unused channels',
+				  'Hide unused channels'),
+				 TOGGLE_UNUSED, 't'),
+				(('Show sync arcs', 'Hide sync arcs'),
+				 TOGGLE_ARCS, 't'),
+				(('Show thumbnails', 'Hide thumbnails'),
+				 THUMBNAIL, 't'),
 				None,
 				('Minidocument', [
 					('Next', NEXT_MINIDOC),
@@ -71,8 +76,6 @@ class ChannelViewDialog(ViewDialog):
 				('Double height of canvas', CANVAS_HEIGHT),
 				('Double width of canvas', CANVAS_WIDTH),
 				('Reset canvas size', CANVAS_RESET),
-				None,
-				('Show thumbnails', THUMBNAIL, 't'),
 				]),
 			('Help', [
 				('Help...', HELP),
