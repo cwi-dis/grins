@@ -126,6 +126,9 @@
 (fill (string) '' 'Fill' fill
 	'Whether data should be retained on screen after playing' normal (smil2 cmif))
 
+(filldefault (string) '' 'Fill Default' fill
+	'Default value for the fill property on the children of this node' inherited (smil2 cmif))
+
 (font (string) 'Times-Roman' 'Font' font
 	'Font used to display text' channel (cmif))
 

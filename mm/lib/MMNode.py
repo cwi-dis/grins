@@ -1747,6 +1747,8 @@ class MMNode:
 				   [(PLAY, self)])]
 		fill = self.attrdict.get('fill')
 		if fill is None:
+			fill = self.GetInherAttrDef('fillDefault', None)
+		if fill is None:
 			if self.attrdict.get('duration') is None and \
 			   not MMAttrdefs.getattr(self, 'endlist') and \
 			   self.attrdict.get('repeatDur') is None and \
@@ -1994,7 +1996,9 @@ class MMNode:
 			self.arcs.append((self, arc))
 			self.add_arc(arc)
 
-		fill = self.attrdict.get('fill', 'remove')
+		fill = self.attrdict.get('fill')
+		if fill is None:
+			fill = self.GetInherAttrDef('fillDefault', 'remove')
 
 		#
 		# We are started when we get our SCHED and all our

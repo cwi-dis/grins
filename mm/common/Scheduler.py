@@ -870,7 +870,13 @@ class Scheduler(scheduler):
 		node.terminate_play()
 		ev = (SR.SCHED_STOPPING, node)
 		if sctx.srdict.has_key(ev):
-			self.event(sctx, ev, timestamp)
+			for q in self.runqueues[PRIO_INTERN]:
+				if q[:3] == (sctx, ev, 0):
+					# already queued
+					break
+			else:
+				# not yet queued
+				self.event(sctx, ev, timestamp)
 		return
 		if node.GetType() in interiortypes:
 			node.stoplooping()
