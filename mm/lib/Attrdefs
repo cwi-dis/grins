@@ -254,7 +254,7 @@
 (scale (float) 1.0 'Scale factor' scale
 	'Aspect ratio is maintained for all options' channel (g2 qt smil10 smil2 cmif snap))
 
-(sensitivity (enum opaque transparent alpha) alpha 'Event sensitivity' default
+(sensitivity (enum opaque transparent alpha) opaque 'Event sensitivity' default
 	'Event sensitivity of media' raw (cmif smil2))
 
 (showEditBackground (bool) 1 'Show edit background' default
