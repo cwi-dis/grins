@@ -137,14 +137,13 @@ MENUBAR=(
 		(TOGGLE, 'Channel/timeline', '3', CHANNELVIEW),
 		(TOGGLE, 'Hyperlinks', '4', LINKVIEW),
 		(SEP,),
-## Not yet implemented:
-##		(CASCADE, 'Canvas size', (
-##			(ENTRY, 'Enlarge width', None, CANVAS_WIDTH),
-##			(ENTRY, 'Enlarge height', None, CANVAS_HEIGHT),
-##			(ENTRY, 'Reset', None, CANVAS_RESET))),
 		(ENTRY, 'Zoom in', None, ZOOMIN),
 		(ENTRY, 'Zoom out', None, ZOOMOUT),
 		(ENTRY, 'Zoom to focus', 'Z', ZOOMHERE),
+		(CASCADE, 'Canvas size', (
+			(ENTRY, 'Enlarge width', None, CANVAS_WIDTH),
+			(ENTRY, 'Enlarge height', None, CANVAS_HEIGHT),
+			(ENTRY, 'Reset', None, CANVAS_RESET))),
 		(SEP,),
 		(ENTRY, 'Toggle unused channels', 'T', TOGGLE_UNUSED),
 		(SEP,),
