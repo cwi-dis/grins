@@ -1665,7 +1665,7 @@ class TextEdit(_Widget):
 	def __repr__(self):
 		return '<TextEdit instance at %x>' % id(self)
 
- 	def settext(self, text):
+	def settext(self, text):
 		if type(text) is ListType:
 			text = string.joinfields(text, '\n')
 		self._form.TextSetString(text)
