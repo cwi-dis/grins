@@ -112,6 +112,15 @@ attrgrs=(
 		'comment'
 		]},
 
+	{'name':'timingsb',
+	'title':'Timing',
+	'attrs':[
+		'duration',
+		'loop',
+		'repeatdur',
+		'begin',
+		]},
+
 	{'name':'timingpar',
 	'title':'Timing',
 	'attrs':[
@@ -347,6 +356,27 @@ attrgrs=(
 		'keySplines',
 		]},
 	
+	{'name':'transitionType',
+	'title':'Transition type',
+	'attrs':[
+		'trtype',
+		'subtype',
+		]},
+
+	{'name':'transitionRepeat',
+	'title':'Repeat',
+	'attrs':[
+		'horzRepeat',
+		'vertRepeat',
+		]},
+
+	{'name':'transitionStartEnd',
+	'title':'Transition timing',
+	'attrs':[
+		'startPercent',
+		'endPercent',
+		'dur',
+		]},
 	)
 
 
