@@ -38,24 +38,19 @@ class PlayerDialog:
 			],
 		'toolbar': [
 			({'label': playbuttonunselect.reader(),
-			  'labelInsensitive': imgconvert.stackreader(
-				  imgformat.grey, playbuttonunselect.reader()),
+			  'labelInsensitive': playbuttonunselect.reader(),
 			  'select': playbutton.reader(),
 			  'selectInsensitive': playbutton.reader(),
 			  }, PLAY, 't'),
 			({'label': pausebuttonunselect.reader(),
-			  'labelInsensitive': imgconvert.stackreader(
-				  imgformat.grey, pausebuttonunselect.reader()),
+			  'labelInsensitive': pausebuttonunselect.reader(),
 			  'select': pausebutton.reader(),
-			  'selectInsensitive': imgconvert.stackreader(
-				  imgformat.grey, pausebutton.reader()),
+			  'selectInsensitive': pausebutton.reader(),
 			  }, PAUSE, 't'),
 			({'label': stopbuttonunselect.reader(),
-			  'labelInsensitive': imgconvert.stackreader(
-				  imgformat.grey, stopbuttonunselect.reader()),
+			  'labelInsensitive': stopbuttonunselect.reader(),
 			  'select': stopbutton.reader(),
-			  'selectInsensitive': imgconvert.stackreader(
-				  imgformat.grey, stopbutton.reader()),
+			  'selectInsensitive': stopbutton.reader(),
 			  }, STOP, 't'),
 			],
 		'close': [ CLOSE_WINDOW, CLOSE, EXIT, ],
