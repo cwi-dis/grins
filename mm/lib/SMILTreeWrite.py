@@ -679,9 +679,9 @@ def gettransition(writer, node, which):
 	
 def getautoreverse(writer, node):
 	autoReverse = MMAttrdefs.getattr(node, 'autoReverse')
-	if autoReverse == 'false':
-		return None
-	return autoReverse
+	if autoReverse == 'true':
+		return 'true'
+	return None
 
 def getattributetype(writer, node):
 	atype = MMAttrdefs.getattr(node, 'attributeType')
@@ -750,6 +750,7 @@ smil_attrs=[
 	("speed", lambda writer, node:getspeed(writer, node, "speed")),
 	("accelerate", lambda writer, node:getproportion(writer, node, "accelerate")),
 	("decelerate", lambda writer, node:getproportion(writer, node, "decelerate")),
+	("autoReverse", getautoreverse),
 	("system-bitrate", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_bitrate")) or None),
 	("system-captions", lambda writer, node:(not writer.smilboston and getboolean(writer, node, 'system_captions')) or None),
 	("system-language", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_language")) or None),
