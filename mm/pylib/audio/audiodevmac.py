@@ -57,7 +57,7 @@ class AudioDevMAC:
 				self.__qsize / self.__nchannels / self.__sampwidth:
 			time.sleep(0.1)
 		h1 = struct.pack('llhhllbbl',
-			id(data)+12,	# ARGH!!!  HACK, HACK!
+			id(data)+16,	# ARGH!!!  HACK, HACK!
 			self.__nchannels,
 			self.__outrate, 0,
 			0,
