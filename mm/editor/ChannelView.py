@@ -402,7 +402,7 @@ class GO:
 		# Calculate our position in relative time
 		totaltop = self.mother.nodetop
 		totalbottom = self.mother.height
-		totalheight = totalbottom - totaltop
+		totalheight = totalbottom - totaltop - gl.getheight()
 		totaltime = self.mother.root.t1 - self.mother.root.t0
 		if totaltime <= 0: totaltime = 1
 		starttime = node.t0 - self.mother.root.t0
