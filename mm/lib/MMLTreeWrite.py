@@ -6,6 +6,8 @@ __version__ = "$Id$"
 from MMExc import *		# Exceptions
 from MMNode import alltypes, leaftypes, interiortypes
 import MMCache
+import Hlinks
+import AnchorDefs
 import string
 import os
 import urllib
@@ -190,6 +192,7 @@ class MMLWriter:
 		self.fp.push()
 		self.writelayout()
 		self.writenode(self.root)
+		self.writelinks()
 		self.fp.pop()
 		self.fp.write('</mml>\n')
 
@@ -314,6 +317,94 @@ class MMLWriter:
 			self.fp.write(attrlist+'/>\n')
 		else:
 			raise CheckError, 'bad node type in writenode'
+
+	def writelinks(self):
+		context = self.root.GetContext()
+		links = context.hyperlinks
+		linklist = links.getall()
+		for a1, a2, dir, type in linklist:
+			if dir == Hlinks.DIR_1TO2:
+				self.writelink(a1, a2, type)
+			elif dir == Hlinks.DIR_2TO1:
+				self.writelink(a2, a1, type)
+			else:
+				self.writelink(a1, a2, type)
+				self.writelink(a2, a1, type)
+
+	def writelink(self, a1, a2, type):
+		items = ["<hlink"]
+		if type == Hlinks.TYPE_CALL:
+			items.append('replace="pause"')
+		elif type == Hlinks.TYPE_FORK:
+			items.append('replace="new"')
+		self.fp.write(string.join(items, ' ') + '>\n')
+		self.fp.push()
+		self.writeanchor(a1, "src")
+		self.writeanchor(a2, "dst")
+		self.fp.pop()
+		self.fp.write('</hlink>\n')
+
+	def writeanchor(self, anchor, role):
+		# XXXX external anchor handling is broken
+		context = self.root.GetContext()
+		items = ["<anchor"]
+		items.append('role="%s"'%role)
+		uid, aid = anchor
+		if '/' in uid:
+			# External. Try to convert
+			lastslash = string.rfind('/', uid)
+			href = uid[:lastslash] + '#' + uid[lastslash+1:]
+		else:
+			# Internal
+			href = '#' + self.uid2name[uid]
+		items.append('href="%s"'%href)
+		tp, args = self.getanchor(uid, aid, href)
+		# First fixup unimplemented tps
+		if tp == AnchorDefs.ATYPE_AUTO:
+			print "** unsupported auto anchor on", href
+			tp = AnchorDefs.ATYPE_WHOLE
+		if tp == AnchorDefs.ATYPE_PAUSE:
+			print "** unsupported pausing anchor on", href
+			tp = AnchorDefs.ATYPE_NORMAL
+		if tp == AnchorDefs.ATYPE_COMP:
+			print "** unsupported comp anchor on", href
+			tp = AnchorDefs.ATYPE_WHOLE
+		if tp == AnchorDefs.ATYPE_ARGS:
+			print "** unsupported args anchor on", href
+			tp = AnchorDefs.ATYPE_WHOLE
+		if tp == AnchorDefs.ATYPE_WHOLE:
+			pass
+		elif tp == AnchorDefs.ATYPE_NORMAL:
+			# XXXX Hack: see if these are coordinates
+			ok = 0
+			if len(args) == 4:
+				x, y, w, h = tuple(args)
+				try:
+					x = int(x*100)
+					y = int(y*100)
+					w = int(w*100)
+					h = int(h*100)
+				except TypeError:
+					pass
+				else:
+					ok = 1
+			if ok:
+				items.append('shape="rect"')
+				items.append('coords="%d%%,%d%% %d%%,%d%%"'%
+					     (x,y,w,h))
+			elif args:
+				print '** Unparseable args on', href, args
+		self.fp.write(string.join(items, ' ')+'/>\n')
+
+	def getanchor(self, uid, aid, href):
+		context = self.root.GetContext()
+		node = context.mapuid(uid)
+		alist = node.GetAttrDef('anchorlist', [])
+		for id, type, args in alist:
+			if id == aid:
+				return type, args
+		print '** undefined anchor', href, aid
+		return AnchorDefs.ATYPE_WHOLE, []
 
 	def mmltempfile(self, node):
 		"""Return temporary file name for node"""
