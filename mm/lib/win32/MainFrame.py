@@ -985,13 +985,10 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 	# Get the command class instance
 	def GetUserCmd(self,cmdcl):
 		id=usercmdui.class2ui[cmdcl].id
-		cmd=None
-		for context in self._activecmds.keys():
-			contextcmds=self._activecmds[context]
+		for contextcmds in self._activecmds.values():
 			if contextcmds.has_key(id):
-				cmd=contextcmds[id]
-				break
-		return cmd
+				return contextcmds[id]
+		return None
 
 #  	def set_grins_snap_features(self):
 # 		# Assert features.version == 'grins snap!'
@@ -1030,7 +1027,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		for entry in list:
 			entry = (entry[0], (callback, entry[1])) + entry[2:]
 			menuspec.append(entry)			
-		if submenu:
+		if submenu is not None:
 			self._mainmenu.clear_cascade(command)
 			win32menu._create_menu(submenu,menuspec,idstart,self._dyncmds[command])
 			self.set_dyncbd(self._dyncmds[command],submenu)
