@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 ############################################################
 ###################### WARNING WARNING WARNING #############
 ############################################################
@@ -48,9 +50,9 @@ def isCompatibleVersion(versionToCheck):
 		if len(file_list) < 4:
 			return 0
 
-		# retrieve sub version pro, light, ...
-		cur_subversion = cur_list[0]
-		file_subversion = file_list[0]
+##		# retrieve sub version pro, light, ...
+##		cur_subversion = cur_list[0]
+##		file_subversion = file_list[0]
 
 		# retrieve sub version number, ...
 		cur_versnumber = cur_list[3]
