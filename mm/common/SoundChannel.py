@@ -31,7 +31,6 @@ class SoundChannel(ChannelAsync):
 		self.arm_fp = None
 		self.play_fp = None
 		self.__qid = None
-		self.__evid = []
 		self.__rc = None
 		self.__playing = None
 
@@ -78,8 +77,8 @@ class SoundChannel(ChannelAsync):
 		if not fn:
 			self.errormsg(node, 'No URL set on this node')
 			return 1
-		import mimetypes
-		mtype = mimetypes.guess_type(fn)[0]
+		import MMmimetypes
+		mtype = MMmimetypes.guess_type(fn)[0]
 		if mtype and string.find(mtype, 'real') >= 0:
 			node.__type = 'real'
 			if self.__rc is None:
@@ -121,10 +120,6 @@ class SoundChannel(ChannelAsync):
 		self.armed_duration = MMAttrdefs.getattr(node, 'duration')
 		begin = int(self.getclipbegin(node, 'sec') * rate + .5)
 		end = int(self.getclipend(node, 'sec') * rate + .5)
-		self.armed_markers = {}
-		for mid, mpos, mname in self.arm_fp.getmarkers() or []:
-			if mname:
-				self.armed_markers[mname] = mpos - begin
 		if begin or end:
 			from audio.select import select
 			self.arm_fp = select(self.arm_fp, [(begin, end)])
@@ -152,21 +147,7 @@ class SoundChannel(ChannelAsync):
 		if debug: print 'SoundChannel: play', node
 		self.play_fp = self.arm_fp
 		self.play_loop = self.arm_loop
-		self.play_markers = self.armed_markers
 		self.arm_fp = None
-		self.armed_markers = {}
-		rate = self.play_fp.getframerate()
-		for arc in node.sched_children:
-			mark = arc.marker
-			if mark is None or not self.play_markers.has_key(mark):
-				continue
-			t = self.play_markers[mark] / float(rate) + (arc.delay or 0)
-			arc.dstnode.parent.scheduled_children = arc.dstnode.parent.scheduled_children + 1
-			if t <= 0:
-				self._playcontext.trigger(arc)
-			else:
-				qid = self._scheduler.enter(t, 0, self._playcontext.trigger, (arc,))
-				self.__evid.append(qid)
 		if self.armed_duration > 0:
 			self.__qid = self._scheduler.enter(
 				self.armed_duration, 0, self.__stopplay, ())
@@ -202,12 +183,6 @@ class SoundChannel(ChannelAsync):
 				if self.__rc:
 					self.__rc.stopit()
 			else:
-				for qid in self.__evid:
-					try:
-						self._scheduler.cancel(qid)
-					except:
-						pass
-				self.__evid = []
 				if self.__qid is not None:
 					self._scheduler.cancel(self.__qid)
 					self.__qid = None
