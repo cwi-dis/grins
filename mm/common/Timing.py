@@ -80,13 +80,18 @@ def do_times(node):
 	try:
 		void = node.t1
 	except AttributeError:
-		import windowinterface
-		windowinterface.showmessage('WARNING: circular timing dependencies.\n'+\
-			  '(ignoring sync arcs and trying again)')
-		prep1(node)
-		_do_times_work(node)
+## XXXX The most common cause for this, nowadays, is an interior node
+##      with indefinite duration, so we don't show the warning but set
+##      a random time.
+##		import windowinterface
+##		windowinterface.showmessage('WARNING: circular timing dependencies.\n'+\
+##			  '(ignoring sync arcs and trying again)')
+##		prep1(node)
+##		_do_times_work(node)
+		node.t1 = node.t0 + 10.0
+		node.timing_discont = 9.9
 	t1 = time.time()
-	propdown(node, node.t1)
+	propdown(node, node.t1, node.t0)
 	t2 = time.time()
 
 	node.initial_arms = initial_arms
@@ -225,22 +230,35 @@ def prep2(node, root):
 
 
 # propdown - propagate timing down the tree again
-def propdown(node, stoptime):
+def propdown(node, stoptime, dftstarttime=0):
 	tp = node.GetType()
+	# Assure we have a start time and stop time
+	try:
+		dummy = node.t0
+	except AttributeError:
+		node.t0 = dftstarttime
+	try:
+		dummy = node.t1
+	except AttributeError:
+		node.t1 = stoptime
+		node.timing_discont = node.t1 - node.t0 - 0.1
+		
 	if not node.t0t1_inherited:
 		stoptime = node.t1
 	if tp in ('par', 'alt'):
 		for c in node.GetChildren():
-			propdown(c, stoptime)
+			propdown(c, stoptime, node.t0)
 	elif tp == 'seq': # XXX not right!
 		children = node.GetChildren()
 		if not children:
 			return
 		lastchild = children[-1]
 		children = children[:-1]
+		nextstart = node.t0
 		for c in children:
-			propdown(c, c.t1)
-		propdown(lastchild, stoptime)
+			propdown(c, c.t1, nextstart)
+			nextstart = c.t1
+		propdown(lastchild, stoptime, nextstart)
 	elif node.t0t1_inherited:
 		node.t1 = stoptime
 
