@@ -60,9 +60,11 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			CLOSE_WINDOW(callback = (self.close_callback, ()),
 				     help = 'Close the Player View'),
 			CHANNELS(callback = self.channel_callback),
-			SCHEDDUMP(callback = (self.scheduler.dump, ())),
 			MAGIC_PLAY(callback = (self.magic_play, ())),
 			]
+		if __debug__:
+			self.commandlist.append(
+				SCHEDDUMP(callback = (self.scheduler.dump, ())))
 ## These commands are implemented by TopLevel nowadays.
 ##		play = PLAY(callback = (self.play_callback, ()))
 ##		pause = PAUSE(callback = (self.pause_callback, ()))
