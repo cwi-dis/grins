@@ -1128,7 +1128,7 @@ class HierarchyView(HierarchyViewDialog):
 		# If srcnode is a parent of destnode, then we have a major case of incest.
 		# the node will be removed from it's position and appended to one of it's children.
 		# and then, garbage collected.
-		if destnode.hasParent(srcnode):
+		if srcnode.IsAncestorOf(destnode):
 			windowinterface.showmessage("You can't move a node into one of it's children.", mtype='error', parent = self.window);
 			return
 					  
@@ -1139,7 +1139,7 @@ class HierarchyView(HierarchyViewDialog):
 		if isinstance(dstobj, StructureObjWidget): # If it's an internal node.
 			nodeindex = dstobj.get_nearest_node_index(dst) # works for seqs and verticals!! :-)
 			self.focusnode = destnode
-			if nodeindex is not -1:
+			if nodeindex != -1:
 				assert nodeindex < len(destnode.children)
 				self.focusnode = destnode.children[nodeindex] # I hope that works!
 				if self.focusnode is srcnode: # The same node.
@@ -1148,24 +1148,18 @@ class HierarchyView(HierarchyViewDialog):
 				if len(destnode.children)>0 and destnode.children[-1] is srcnode:
 					# The same node.
 					return
+		else:
+			# can't move to leaf node
+			windowinterface.beep()
+			return
 
 		em = self.editmgr
 		if not em.transaction():
 			return
 		self.toplevel.setwaiting()
-		new_srcnode = srcnode.DeepCopy()
-		em.delnode(srcnode)	# Why don't we simply detach that node from the MMNode tree?
-
-		self.toplevel.setwaiting()
-		if new_srcnode.context is not self.root.context:
-			newsrcnode = newsrcnode.CopyIntoContext(self.root.context)
-
+		em.delnode(srcnode)
+		em.addnode(destnode, nodeindex, srcnode)
 		em.commit()
-
-		if nodeindex == -1:
-			dummy = self.insertnode(new_srcnode, 0)
-		else:
-			self.insertnode(new_srcnode, -1)
 
 	#################################################
 	# Internal subroutines                          #
