@@ -977,7 +977,7 @@ class Channel:
 
 	def errormsg(self, node, msg):
 		if node:
-			node.set_infoicon('error')
+			node.set_infoicon('error', msg)
 			name = MMAttrdefs.getattr(node, 'name')
 			if not name:
 				name = '<unnamed node>'
@@ -1469,7 +1469,7 @@ class ChannelWindow(Channel):
 	# the message).
 	def errormsg(self, node, msg):
 		if node:
-			node.set_infoicon('error')
+			node.set_infoicon('error', msg)
 			name = MMAttrdefs.getattr(node, 'name')
 			if not name:
 				name = '<unnamed node>'
