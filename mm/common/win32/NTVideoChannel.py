@@ -9,7 +9,7 @@ import Channel
 
 # common component
 import MediaChannel
-from RealChannel import RealChannel
+import RealChannel
 
 # node attributes
 import MMAttrdefs
@@ -42,10 +42,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	def do_show(self, pchan):
 		if not Channel.ChannelWindowAsync.do_show(self, pchan):
 			return 0
-		try:
-			self.__rc = RealChannel(self)
-		except:
-			pass
 		self.__mc = MediaChannel.MediaChannel(self)
 		self.__mc.showit(self.window)
 		return 1
@@ -55,7 +51,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.__mc.release_res()
 		self.__mc.paint()
 		self.__mc = None
-		if self.__rc is not None:
+		if self.__rc:
 			self.__rc.stopit()
 			self.__rc.destroy()
 			self.__rc = None
@@ -81,9 +77,15 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.prepare_armed_display(node)
 		if node.__type == 'real':
 			if self.__rc is None:
-				self.errormsg(node, 'No playback support for RealVideo in this version')
-			elif self.__rc.prepare_player(node):
-				self.__ready = 1
+				try:
+					self.__rc = RealChannel.RealChannel(self)
+				except RealChannel.error, msg:
+					# can't do RealAudio
+##					self.__rc = 0 # don't try again
+					self.errormsg(node, msg)
+			elif self.__rc:
+				if self.__rc.prepare_player(node):
+					self.__ready = 1
 		else:
 			try:
 				self.__mc.prepare_player(node)
@@ -99,7 +101,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.playdone(0)
 			return
 		if node.__type == 'real':
-			if self.__rc is None or not self.__rc.playit(node, self._getoswindow(), self._getoswinpos()):
+			if not self.__rc or not self.__rc.playit(node, self._getoswindow(), self._getoswinpos()):
 				self.playdone(0)
 		elif not self.__mc.playit(node,self.window):
 			windowinterface.settimer(5,(self.playdone,(0,)))
@@ -109,13 +111,13 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		Channel.ChannelWindowAsync.setpaused(self, paused)
 		if self.__mc is not None:
 			self.__mc.pauseit(paused)
-		if self.__rc is not None:
+		if self.__rc:
 			self.__rc.pauseit(paused)
 
 	# Part of stop sequence. Stop and remove last frame 
 	def stopplay(self, node):
 		if self.__type == 'real':
-			if self.__rc is not None:
+			if self.__rc:
 				self.__rc.stopit()
 		else:
 			if self.__mc is not None:

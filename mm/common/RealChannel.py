@@ -64,26 +64,20 @@ class RealEngine:
 class RealChannel:
 	__engine = None
 	__has_rma_support = rma is not None
-	__warned = 0
 
 	def __init__(self, channel):
 		if not self.__has_rma_support:
-			if not self.__warned:
-				windowinterface.showmessage("No RealPlayer G2 playback support in this version")
-				RealEngine.__warned = 1
-			raise error, 'no RMA support'
+			raise error, "No RealPlayer G2 playback support in this version"
 		self.__channel = channel
 		self.__rmaplayer = None
 		self.__qid = None
 		self.__using_engine = 0
-		if self.__engine is None and self.__has_rma_support:
+		if self.__engine is None:
 			try:
 				RealChannel.__engine = RealEngine()
 			except:
-				windowinterface.showmessage("Cannot initialize RealPlayer G2 playback. G2 installation problem?")
 				RealChannel.__has_rma_support = 0
-				RealChannel.__warned = 1
-				raise error, 'Cannot initialize RMA support'
+				raise error, "Cannot initialize RealPlayer G2 playback. G2 installation problem?"
 ##		# release any resources on exit
 ##		windowinterface.addclosecallback(self.release_player,())
 		
