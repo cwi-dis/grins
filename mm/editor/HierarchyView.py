@@ -1666,7 +1666,7 @@ class HierarchyView(HierarchyViewDialog):
 					mtype = 'error', parent = self.window)
 				node.Destroy()
 				return 0
-			if node.GetType() in ('anchor', 'animpar') and focus.GetType() not in MMTypes.mediatypes:
+			if node.GetType() in ('anchor', 'animpar') and parent.GetType() not in MMTypes.mediatypes:
 				windowinterface.showmessage(
 					"Can only insert %s in media objects." % node.GetType(),
 					mtype = 'error', parent = self.window)
