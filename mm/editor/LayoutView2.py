@@ -831,7 +831,8 @@ class LayoutView2(LayoutViewDialog2):
 						activePaste = 0
 						break					
 					activePaste = 1
-				elif className == 'RegionAssociation' and selectedType == TYPE_REGION and COPY_PASTE_MEDIAS:
+				elif (className == 'RegionAssociation' and selectedType == TYPE_REGION and COPY_PASTE_MEDIAS) or \
+					 (className == 'MMNode' and node.type == 'anchor' and selectedType == TYPE_MEDIA):
 					activePaste = 1
 				else:
 					# no valid paste
@@ -1912,6 +1913,11 @@ class LayoutView2(LayoutViewDialog2):
 					import MMNode
 					node = MMNode.MMRegionAssociation(nodeRef)
 					clipList.append(node)
+			elif nodeType == TYPE_ANCHOR:
+				if isACopy:
+					clipList.append(nodeRef.DeepCopy())
+				else:
+					clipList.append(nodeRef)
 			elif nodeType in (TYPE_REGION, TYPE_VIEWPORT):
 				if nodeRef.isDefault():
 					# Should not happen.
@@ -1963,6 +1969,9 @@ class LayoutView2(LayoutViewDialog2):
 			elif className in ('Region', 'Viewport'):
 				pnode = self.getParentNodeRef(node)
 				self.editmgr.delchannel(node)
+			elif className == 'MMNode' and node.type == 'anchor':
+				pnode = self.getParentNodeRef(node)
+				self.editmgr.delnode(node)
 		if pnode:
 			self.setglobalfocus([pnode])
 		else:
@@ -1977,12 +1986,12 @@ class LayoutView2(LayoutViewDialog2):
 		# it avoids some recursives transactions and some crashes
 		self.flushChangement()
 
-		selectedNodeType = None
+		selectedNode = None
 		if len(self.currentSelectedNodeList) > 0:		
 			selectedNode = self.currentSelectedNodeList[0]
 			selectedNodeType = self.getNodeType(selectedNode)
 
-		if selectedNode.isDefault():
+		if selectedNode is None or (selectedNode.getClassName() in ('Viewport', 'Region') and selectedNode.isDefault()):
 			# can't insert a node into the default region
 			return
 		
@@ -1996,14 +2005,16 @@ class LayoutView2(LayoutViewDialog2):
 			className = node.getClassName()
 
 			if className == 'Region':
-				if selectedNodeType in (TYPE_REGION, TYPE_VIEWPORT):
-					self.editmgr.addchannel(selectedNode, -1, node)
+				self.editmgr.addchannel(selectedNode, -1, node)
 				newFocus.append(node)
 			elif className == 'RegionAssociation':
 				if selectedNodeType == TYPE_REGION:
 					mediaNode = node.getMediaNode()
 					self.editmgr.setnodeattr(mediaNode, 'channel', selectedNode.name)					
 					newFocus.append(mediaNode)
+			elif className == 'MMNode' and node.type == 'anchor':
+				self.editmgr.addnode(selectedNode, -1, node)
+				newFocus.append(node)					
 			elif className == 'Viewport':
 				self.editmgr.addchannel(None, -1, node)
 				newFocus.append(node)
@@ -2096,12 +2107,12 @@ class LayoutView2(LayoutViewDialog2):
 				
 		targetNodeType = self.getNodeType(targetNodeRef)
 		# for now, accept only moving if the target node is viewport or region
-		if targetNodeType not in (TYPE_VIEWPORT, TYPE_REGION):
+		if targetNodeType not in (TYPE_VIEWPORT, TYPE_REGION, TYPE_MEDIA):
 			return 0
 
 		sourceNodeType = self.getNodeType(sourceNodeRef)
 		# for now, moving a viewport is forbidden
-		if sourceNodeType == TYPE_VIEWPORT:
+		if sourceNodeType is None or sourceNodeType == TYPE_VIEWPORT:
 			return 0
 
 		if sourceNodeType == TYPE_MEDIA and targetNodeType != TYPE_REGION:
@@ -2112,6 +2123,10 @@ class LayoutView2(LayoutViewDialog2):
 			return 0
 		if sourceNodeType == TYPE_REGION and sourceNodeRef.isDefault():
 			# you can't move the default region
+			return 0
+
+		if (targetNodeType == TYPE_MEDIA and sourceNodeType != TYPE_ANCHOR) or \
+		   (sourceNodeType == TYPE_ANCHOR and targetNodeType != TYPE_MEDIA):
 			return 0
 		
 		return 1
@@ -2128,6 +2143,11 @@ class LayoutView2(LayoutViewDialog2):
 			if self.editmgr.transaction():
 				self.editmgr.setnodeattr(sourceNodeRef, 'channel', targetNodeRef.name)
 				self.editmgr.commit('REGION_TREE')
+		elif sourceNodeType == TYPE_ANCHOR and targetNodeType == TYPE_MEDIA:
+			if self.editmgr.transaction():
+				self.editmgr.delnode(sourceNodeRef)
+				self.editmgr.addnode(targetNodeRef, -1, sourceNodeRef)
+				self.editmgr.commit()			
 		elif targetNodeType in (TYPE_REGION, TYPE_VIEWPORT):
 			if self.editmgr.transaction():
 				self.editmgr.delchannel(sourceNodeRef)
@@ -3151,28 +3171,30 @@ class TreeWidget(Widget):
 		nodeRef= self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
 		nodeType = self._context.getNodeType(nodeRef)
 		if nodeType == TYPE_MEDIA:
-			# XXX define type in another module
 			type = 'Media'
 			objectId = nodeRef.GetUID()
 		elif nodeType in (TYPE_VIEWPORT, TYPE_REGION):
-			# XXX define type in another module
 			type = 'Region'
-			# XXX the GetUID seems bugged, so we use directly the region Id as global id for now
 			objectId = nodeRef.name
-		elif nodeType in (TYPE_ANIMATE, TYPE_ANCHOR):
+		elif nodeType == TYPE_ANCHOR:
+			type = 'NodeUID'
+			objectId = nodeRef
+		elif nodeType in (TYPE_ANIMATE):
 			# not supported
 			return
 		self.treeCtrl.beginDrag(type, objectId)
 
 	def __dragObjectIdToNodeRef(self, type, objectId):
 		nodeRef = None
-		if type == 'Media': 
+		if type == 'Media':
 			# retrieve the reference of the source node
 			try:
 				nodeRef = self._context.context.mapuid(objectId)
 			except:
 				pass
-						
+		elif type == 'NodeUID':
+			arg, uid = objectId
+			nodeRef = self._context.context.mapuid(uid)		
 		elif type == 'Region':
 			# retrieve the reference of the source node
 			nodeRef = self._context.context.getchannel(objectId)
@@ -3192,7 +3214,7 @@ class TreeWidget(Widget):
 					return 'copy'
 			# Otherwise we can't drop it here.
 			return None
-		elif type in ('Region', 'Media'):
+		elif type in ('Region', 'Media', 'NodeUID'):
 			sourceNodeRef = self.__dragObjectIdToNodeRef(type, objectId)
 			if self._context.isValidMove(sourceNodeRef, targetNodeRef):
 				return 'move'
@@ -3216,7 +3238,7 @@ class TreeWidget(Widget):
 					return 'copy'
 			# Otherwise we can't drop it here.
 			return None
-		elif type in ('Region', 'Media'):
+		elif type in ('Region', 'Media', 'NodeUID'):
 			sourceNodeRef = self.__dragObjectIdToNodeRef(type, objectId)
 			return self._context.moveNode(sourceNodeRef, targetNodeRef)
 						   
