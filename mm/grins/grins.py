@@ -29,23 +29,20 @@ from version import version
 
 class Main(MainDialog):
 	def __init__(self, opts, files):
-		import features
-# Expiry date not relevant anymore since the Player requires a license.
-# On Windows in the frozen version, exiting here causes a crash.
-##		import windowinterface
-##		if hasattr(features, 'expiry_date') and features.expiry_date:
-##			import time
-##			import version
-##			tm = time.localtime(time.time())
-##			yymmdd = tm[:3]
-##			if yymmdd > features.expiry_date:
-##				rv = windowinterface.GetOKCancel(
-##				   "This beta copy of GRiNS has expired.\n\n"
-##				   "Do you want to check www.oratrix.com for a newer version?")
-##				if rv == 0:
-##					url = 'http://www.oratrix.com/indir/%s/update.html'%version.shortversion
-##					windowinterface.htmlwindow(url)
-##				sys.exit(0)
+		import windowinterface, features
+		if hasattr(features, 'expiry_date') and features.expiry_date:
+			import time
+			import version
+			tm = time.localtime(time.time())
+			yymmdd = tm[:3]
+			if yymmdd > features.expiry_date:
+				rv = windowinterface.GetOKCancel(
+				   "This beta copy of GRiNS has expired.\n\n"
+				   "Do you want to check www.oratrix.com for a newer version?")
+				if rv == 0:
+					url = 'http://www.oratrix.com/indir/%s/update.html'%version.shortversion
+					windowinterface.htmlwindow(url)
+				sys.exit(0)
 		self.tmpopts = opts
 		self.tmpfiles = files
 		if hasattr(features, 'license_features_needed') and features.license_features_needed:
