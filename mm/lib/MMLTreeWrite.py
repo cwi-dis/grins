@@ -9,6 +9,7 @@ import MMCache
 import string
 import os
 import urllib
+import regsub
 
 # A fileish object with indenting
 class IndentedFile:
@@ -183,6 +184,7 @@ class MMLWriter:
 		self.tmpdirname = filename + '.data'
 
 	def write(self):
+		self.fp.write('<!doctype mml system>\n')
 		self.fp.write('<mml>\n')
 		self.fp.push()
 		self.writelayout()
@@ -198,6 +200,8 @@ class MMLWriter:
 			if not name:
 				name = 'node'
 			name = '%s_%s'%(name, uid)
+		if self.names_used.has_key(name):
+			raise 'DuplicateNameError', name
 		self.names_used[name] = 1
 		self.uid2name[uid] = name
 		if node.GetType() in interiortypes:
@@ -233,7 +237,8 @@ class MMLWriter:
 		self.channels_defined = {}
 		for ch in channels:
 			dummy = mediatype(ch['type'], error=1)
-			attrlist = ['<channel name=%s'%self.ch2name[ch]]
+			attrlist = ['<channel name=%s' %
+				    nameencode(self.ch2name[ch])]
 			if not ch.has_key('base_window'):
 				continue	# Skip toplevel windows
 			if not ch.has_key('base_winoff'):
@@ -318,26 +323,23 @@ class MMLWriter:
 		return os.path.join(self.tmpdirname, filename)
 
 
-namechars = string.letters + string.digits + '_'
 def nameencode(value):
-	"""Quote a value if it contains non-identifier chars"""
-	needquote = 0
-	if value == '':
-		needquote = 1
-	else:
-		for c in value:
-			if c not in namechars:
-				needquote = 1
-				break
-	if needquote:
-		if '"' in value:
-			value = `value`
-		else:
-			value = '"' + value + '"'
-	return value
+	"""Quote a value"""
+	if '&' in value:
+		value = regsub.gsub('&', '&amp;', value)
+	if '>' in value:
+		value = regsub.gsub('>', '&gt;', value)
+	if '<' in value:
+		value = regsub.gsub('<', '&lt;', value)
+	if '"' in value:
+		value = regsub.gsub('"', '&quot;', value)
+	return '"' + value + '"'
+
+namechars = string.letters + string.digits + '_-.'
 
 def identify(name):
 	"""Turn a CMIF name into an identifier"""
+	name = string.lower(name)
 	rv = ''
 	for ch in name:
 		if ch in namechars:
