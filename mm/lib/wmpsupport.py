@@ -78,7 +78,6 @@ class Exporter:
 			self.progress.set('Encoding document for WMP...', 100, 100, 100, 100)
 		if self.writer:
 			self.writer.endWriting()
-			print 'End export', self.writer._filename
 			self.writer = None
 			self.topwindow = None
 		windowinterface.sleep(1)
