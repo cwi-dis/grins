@@ -703,6 +703,9 @@ class Channel:
 		# returns 0, we should not call arm_1() because that
 		# will happen later.
 		same = self.arm_0(node)
+		if not self._armcontext:
+			# The player has aborted
+			return
 		if self._is_shown and node.ShouldPlay():
 			if not self.do_arm(node, same):
 				return
@@ -1412,6 +1415,9 @@ class ChannelWindow(Channel):
 		pchan = self._get_parent_channel()
 
 		self.updateGeom(node)
+		# updateGeom can take a while, maybe we were stopped...
+		if not self._armcontext:
+			return
 		
 		# force show of channel.
 		self.show(1)			
@@ -1475,6 +1481,8 @@ class ChannelWindow(Channel):
 
 	def arm_0(self, node):
 		self.updateToActiveState(node)
+		if not self._armcontext:
+			return
 		same = Channel.arm_0(self, node)
 		if same and self.armed_display and \
 		   not self.armed_display.is_closed():
