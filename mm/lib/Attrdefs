@@ -122,6 +122,15 @@
 (font (string) 'Times-Roman' 'Font' font
 	'Font used to display text' channel cmif)
 
+(ftp_host (string) '' 'FTP Host' default
+	'FTP hostname to use for document upload' raw light)
+
+(ftp_user (string) '' 'FTP User' default
+	'FTP username to use for document upload' raw light)
+
+(ftp_dir (string) '' 'FTP Directory' default
+	'Directory on FTP server where uploaded documents will be stored' raw light)
+
 (gtype (string) 'line' 'Graphtype' default
 	'Type of graph: bar, line, hline' channel cmif)
 
