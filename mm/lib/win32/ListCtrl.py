@@ -178,7 +178,7 @@ class ListCtrl(window.Wnd):
 			initcount = len(normalList)
 			growby = initcount
 			normalImageList = win32ui.CreateImageList(32, 32, mask, initcount, growby)
-		
+			normalImageList.SetBkColor(win32mu.RGB((255,255,255)))
 			# populate normal image list
 			for id in normalList:
 				normalImageList.Add(app.LoadIcon(id))
@@ -188,7 +188,7 @@ class ListCtrl(window.Wnd):
 			initcount = len(smallList)
 			growby = initcount
 			smallImageList = win32ui.CreateImageList(16, 16, mask, initcount, growby)
-
+			smallImageList.SetBkColor(win32mu.RGB((255,255,255)))
 			# populate small image list
 			for id in normalList:
 				smallImageList.Add(app.LoadIcon(id))
