@@ -110,6 +110,26 @@ def WriteFile(root, filename, cleanSMIL = 0, copyFiles = 0, evallicense = 0):
 		fss.SetCreatorType('GRIN', 'TEXT')
 		macostools.touched(fss)
 
+import FtpWriter
+def WriteFTP(root, filename, ftpparams, cleanSMIL = 0, copyFiles = 0, evallicense = 0):
+	# XXXX For the moment (to be fixed):
+	copyFiles = 0
+	host, user, passwd, dir = ftpparams
+	try:
+		ftp = FtpWriter.FtpWriter(host, filename, user=user, passwd=passwd, dir=dir, ascii=1)
+		fp = IndentedFile(ftp)
+		try:
+			writer = SMILWriter(root, fp, filename, cleanSMIL, copyFiles, evallicense)
+		except Error, msg:
+			from windowinterface import showmessage
+			showmessage(msg, mtype = 'error')
+			return
+		writer.write()
+	except FtpWriter.all_errors, msg:
+		from windowinterface import showmessage
+		showmessage('FTP upload failed:\n' + msg, mtype = 'error')
+		return
+
 import StringIO
 class MyStringIO(StringIO.StringIO):
 	def close(self):
