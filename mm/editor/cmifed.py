@@ -410,10 +410,6 @@ def main():
 				print 'Exit', sts
 			sys.last_traceback = None
 			sys.exc_traceback = None
-## 			if os.name in ('nt', 'win'):
-## 				import win32ui
-## 				h1 = win32ui.GetMainFrame()
-## 				h1.DestroyWindow()
 			sys.exit(sts)
 		except:
 			sys.stdout = sys.stderr
@@ -434,12 +430,11 @@ def main():
 			print
 			pdb.post_mortem(exc_traceback)
 	finally:
-		if sys.platform != 'win32':
-			import windowinterface
-			windowinterface.close()
-			if stats:
-				import MMNode
-				MMNode._prstats()
+		import windowinterface
+		windowinterface.close()
+		if stats:
+			import MMNode
+			MMNode._prstats()
 
 
 # A copy of cmif.findfile().  It is copied here rather than imported

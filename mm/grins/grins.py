@@ -294,9 +294,8 @@ def main():
 				print 'GRiNS crash, please e-mail this output to grins-support@cwi.nl:'
 				traceback.print_exception(exc_type, exc_value, exc_traceback)
 	finally:
-		if sys.platform != 'win32':
-			import windowinterface
-			windowinterface.close()
+		import windowinterface
+		windowinterface.close()
 
 
 # A copy of cmif.findfile().  It is copied here rather than imported
