@@ -180,6 +180,12 @@ bool PyInterface::addto_sys_path(const TCHAR *pszpath)
 	return addto_sys_path(path);
 	}
 
+PyObject* PyInterface::import(const TCHAR *psztmodule)
+	{
+	AcquireThread at(PyInterface::getPyThreadState());
+	return PyImport_ImportModule(toMB(psztmodule));
+	}
+
 bool PyInterface::run_command(const TCHAR *command)
 	{
 	AcquireThread at(s_tstate);

@@ -34,6 +34,7 @@ class PyInterface
 	static bool run_command(const TCHAR *command);
 	static bool run_file(const TCHAR *filename);
 
+	static PyObject* import(const TCHAR *psztmodule);
 	static std::basic_string<TCHAR> get_copyright();
 
 	static PyThreadState* getPyThreadState() { return s_tstate;}

@@ -25,25 +25,28 @@ class AppPyInterface
 	static void restore_pysys_stdout(PyObject *pystdout);
 	static PyObject *s_pyapp;
 	static PyObject *s_pystdout;
-	static PyObject *winuser;
+	static PyObject *s_winuser;
 	};
 
 PyObject* AppPyInterface::s_pyapp = NULL;
 PyObject* AppPyInterface::s_pystdout = NULL;
-PyObject* AppPyInterface::winuser = NULL;
+PyObject* AppPyInterface::s_winuser = NULL;
 
 bool AppPyInterface::initialize(HWND hWnd)
 	{
+	// replace sys.stdout and sys.stderr
 	s_pystdout = CreatePyStdOut(hWnd);
 	set_pysys_stdout(s_pystdout);
+
+	// import winuser
+	s_winuser = PyInterface::import(TEXT("winuser"));
+	if(s_winuser == NULL)
 		{
-			AcquireThread at(PyInterface::getPyThreadState());
-			winuser = PyImport_ImportModule("winuser");
-			if (winuser == NULL) {
-				MessageBox (NULL, TEXT("Failed to import winuser module"), GetApplicationName(), MB_OK);
-				return false;
-			}
+		MessageBox (NULL, TEXT("Failed to import winuser module"), GetApplicationName(), MB_OK);
+		return false;
 		}
+
+	// get application representation from winuser module
 	s_pyapp = get_application();
 	if(s_pyapp == NULL)
 		{
@@ -51,6 +54,7 @@ bool AppPyInterface::initialize(HWND hWnd)
 		return false;
 		}
 
+	// set main window in application representation in winuser module
 	PyWnd *pywnd = PyWnd::createInstance();
 	if(pywnd == NULL)
 		{
@@ -71,16 +75,21 @@ bool AppPyInterface::initialize(HWND hWnd)
 void AppPyInterface::finalize()
 	{
 	AcquireThread at(PyInterface::getPyThreadState());
-	restore_pysys_stdout(s_pystdout);
-	Py_XDECREF(s_pystdout);
+	
 	Py_XDECREF(s_pyapp);
 	s_pyapp = NULL;
+	
+	Py_XDECREF(s_pystdout);
+	s_pystdout = NULL;
+
+	Py_XDECREF(s_winuser);
+	s_winuser = NULL;
 	}
 
 PyObject* AppPyInterface::get_application()
 	{
 	AcquireThread at(PyInterface::getPyThreadState());
-	PyObject *d = PyModule_GetDict(winuser);
+	PyObject *d = PyModule_GetDict(s_winuser);
 	PyObject *ga = PyDict_GetItemString(d, "GetApplication");
 	PyObject *arglist = Py_BuildValue("()");
 	PyObject *retobj = PyEval_CallObject(ga, arglist);
