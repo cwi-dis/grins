@@ -11,7 +11,7 @@ from ViewDialog import ViewDialog
 from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
 
 # an empty document
-EMPTY = "(seq '1' ((channellist ('root-layout' (type layout) (units 2) (winsize  640 480))) (hyperlinks)))"
+EMPTY = "(seq '1' ((channellist) (hyperlinks)))"
 
 class TopLevel(ViewDialog):
 	def __init__(self, main, url, new_file):
@@ -242,7 +242,7 @@ class TopLevel(ViewDialog):
 			return
 		utype, url = MMurl.splittype(self.filename)
 		host, url = MMurl.splithost(url)
-		if utype or host:
+		if (utype and utype != 'file) or host:
 			windowinterface.showmessage('Cannot save to remote URL',
 						    mtype = 'warning')
 			return
@@ -471,7 +471,7 @@ class TopLevel(ViewDialog):
 			return 1
 		utype, url = MMurl.splittype(self.filename)
 		host, url = MMurl.splithost(url)
-		if utype or host:
+		if (utype and utype != 'file') or host:
 			windowinterface.showmessage('Cannot save to URL',
 						    mtype = 'warning')
 			return 0
