@@ -163,6 +163,9 @@ class Text(GeoClientWidget):
 		print "TODO: Text.get_height()"
 		return 12;
 
+	def need_redraw(self):
+		self.parent.change_objects.append(self)
+
 class FPolygon(GeoClientWidget):
 	pass;
 
