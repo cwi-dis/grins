@@ -254,7 +254,8 @@ class _DisplayList:
 				return r
 		return None
 		
-	def _render(self, clonestart=0):
+	def _render(self, clonestart=0, rgn=None):
+		# rgn (region to be redrawn, None for everything) ignored for now
 		self._really_rendered = 1
 		window = self._window
 		grafport = window._mac_getoswindowport()
