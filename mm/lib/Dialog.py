@@ -1,10 +1,12 @@
 # Modeless dialog base class
 
-import gl
+import gl, GL, DEVICE
 import fl
 from FL import *
+import glwindow
 
-class Dialog():
+
+class Dialog() = (glwindow.glwindow)():
 	#
 	# Initialization routine
 	#
@@ -13,7 +15,7 @@ class Dialog():
 		self.height = height
 		self.title = title
 		self.hint = hint
-		self.is_shown = 0
+		self.showing = 0
 		self.last_origin = self.last_size = None
 		self.make_form()
 		return self
@@ -61,25 +63,39 @@ class Dialog():
 	# Standard show/hide/destroy interface
 	#
 	def show(self):
-		if not self.is_shown:
+		if not self.showing:
 			if self.last_origin and self.last_size:
 				x, y = self.last_origin
 				w, h = self.last_size
 				gl.prefposition(x, x+w, y, y+h)
-			self.form.show_form(PLACE_SIZE, TRUE, self.title)
-			self.is_shown = 1
+				type = PLACE_FREE
+			else:
+				type = PLACE_SIZE
+			fl.qdevice(DEVICE.WINSHUT)
+			self.form.show_form(type, TRUE, self.title)
+			gl.winset(self.form.window)
+			gl.winconstraints()
+			self.register(self.form.window)
+			self.showing = 1
 	#
 	def hide(self):
-		if self.is_shown:
+		if self.showing:
+			self.unregister()
 			gl.winset(self.form.window)
 			self.last_origin = gl.getorigin()
 			self.last_size = gl.getsize()
 			self.form.hide_form()
-			self.is_shown = 0
+			self.showing = 0
 	#
 	def destroy(self):
 		self.hide()
-		# XXX collect garbage here
+		# XXX collect other garbage here
+		del self.form
+	#
+	# Callback for GL event -- equate WINSHUT with cancel button
+	#
+	def winshut(self):
+		self.cancel_callback(self.cancel_button, None)
 	#
 	# Standard callbacks -- derived classes should override or extend these
 	#
@@ -102,7 +118,9 @@ class Dialog():
 def test():
 	d = Dialog().init(400, 200, 'Dialog.test', 'hint hint')
 	d.show()
-	while 1:
+	n = 5
+	while n > 0:
 		fl.check_forms()
-		if not d.is_shown:
+		if not d.showing:
+			n = n-1
 			d.show()
