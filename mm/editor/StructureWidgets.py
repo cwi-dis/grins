@@ -651,18 +651,23 @@ class MediaWidget(MMNodeWidget):
         # Compute the download time for this widget.
         # Values are in distances (self.downloadtime is a distance).
          
-        # First get available bandwidth. Silly algorithm to be replaced soon: in each par we evenly
+        # First get available bandwidth. Silly algorithm to be replaced sometime: in each par we evenly
         # divide the available bandwidth, for other structure nodes each child has the whole bandwidth
         # available.
-        totalbw  = settings.get('system_bitrate')
+        availbw  = settings.get('system_bitrate')
         division = 1
         ancestor = self.node.parent
+        bwfraction = MMAttrdefs.getattr(self.node, 'project_bandwidth_fraction')
         while ancestor:
             if ancestor.type == 'par':
-                # Divide bandwidth evenly among children
-                division = division * len(ancestor.children)
+                # If the child we are coming from has a bandwidth fraction defined
+                # we use that, otherwise we divide evenly
+                if bwfraction < 0:
+                    bwfraction = 1.0 / len(ancestor.children)
+                availbw = availbw * bwfraction
+            bwfraction = MMAttrdefs.getattr(ancestor, 'project_bandwidth_fraction')
             ancestor = ancestor.parent
-        availbw = totalbw / division
+        print 'DBG nodebw', self.node, availbw
         
         # Get amount of data we need to load
         try:
