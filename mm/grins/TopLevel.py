@@ -424,7 +424,8 @@ class TopLevel(TopLevelDialog):
 
 	def _docommandurl(self, command):
 		if command == 'pause()':
-			self.player.pause(1)
+			if not self.waspaused:
+				self.player.pause(1)
 			return 1
 		if command == 'stop()':
 			self.player.stop()
