@@ -46,6 +46,9 @@ class LightWeightControl:
 	def sendmessage_gl(self,msg,wparam,lparam=0):
 		if not self._hwnd: raise error, 'os control has not been created'
 		return Sdk.SendMessageGL(self._hwnd,msg,wparam,lparam)
+	def sendmessage_gt(self,msg,wparam,lparam=0):
+		if not self._hwnd: raise error, 'os control has not been created'
+		return Sdk.SendMessageGT(self._hwnd,msg,wparam,lparam)	
 	def enable(self,f):
 		if not self._hwnd: raise error, 'os control %d has not been created'
 		if f==None:f=0
@@ -235,7 +238,13 @@ class ListBox(Control):
 		self.sendmessage(win32con.LB_RESETCONTENT)
 	def sethorizontalextent(self,npixels):
 		self.sendmessage(win32con.LB_SETHORIZONTALEXTENT,npixels)
-	 
+
+	# Multi-select list support
+	def getselcount(self):
+		return self.sendmessage(win32con.LB_GETSELCOUNT)
+	def getselitems(self, itemNumber):
+		return self.sendmessage_gt(win32con.LB_GETSELITEMS, itemNumber)
+	
 	# cmif interface
 	# initialize cmif related part
 	def __icmif(self):
