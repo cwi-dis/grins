@@ -724,11 +724,12 @@ class MMSyncArc:
 			src = src + '.' + self.event
 		if self.marker is not None:
 			src = src + '.marker(%s)' % self.marker
-		if self.delay:
-			if self.delay > 0:
-				src = src + '+%g' % self.delay
-			else:
-				src = src + '%g' % self.delay
+		if self.delay is None:
+			src = src + '+indefinite'
+		elif self.delay > 0:
+			src = src + '+%g' % self.delay
+		elif self.delay < 0:
+			src = src + '%g' % self.delay
 		dst = `self.dstnode`
 		if self.isstart:
 			dst = dst + '.begin'
@@ -1036,6 +1037,14 @@ class MMNode:
 			return
 		if debug: print 'add_arc', `body`, `arc`
 		body.sched_children.append(arc)
+		if self.playing != MMStates.IDLE and \
+		   self.playing != MMStates.PLAYED and \
+		   self.type in leaftypes:
+			getchannelfunc = self.context.getchannelbynode
+			if getchannelfunc:
+				chan = getchannelfunc(self)
+				if chan:
+					chan.add_arc(self, arc)
 		if self.playing != MMStates.IDLE and arc.delay is not None:
 			# if arc's event has already occurred, trigger it
 			if arc.wallclock is not None:
