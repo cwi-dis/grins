@@ -502,7 +502,7 @@ class StarWipeTransition(_ShapeWipeTransition):
 	def computeparameters(self, value):
 		radius = int(value*self.range)
 		iradius = int(value*self.innerradius)
-		print value, radius, iradius
+##		print value, radius, iradius
 		points = []
 		for i in range(self._NPOINTS):
 			angle = self._FIRSTANGLE + (2*math.pi*i)/self._NPOINTS
@@ -631,7 +631,7 @@ class ArrowHeadWipeTransition(TransitionClass, PolyR2OverlapBlitterClass):
 			(self.xmid, ybotmid))
 		return points, self.ltrb
 	
-class MiscShapeWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
+class IrisWipeTransition(TransitionClass, R1R2OverlapBlitterClass):
 	# Reveal the new image by a square growing from the center outward
 
 	def computeparameters(self, value):
@@ -1034,7 +1034,7 @@ TRANSITIONDICT = {
 	"barnVeeWipe" : BarnVeeWipeTransition,
 	"zigZagWipe" : ZigZagWipeTransition,
 	"barnZigZagWipe" : BarnZigZagWipeTransition,
-	"miscShapeWipe" : MiscShapeWipeTransition,
+	"irisWipe" : IrisWipeTransition,
 	"triangleWipe" : TriangleWipeTransition,
 	"arrowHeadWipe" : ArrowHeadWipeTransition,
 	"pentagonWipe" : PentagonWipeTransition,
@@ -1043,6 +1043,7 @@ TRANSITIONDICT = {
 	"eyeWipe" : EyeWipeTransition,
 	"roundRectWipe" : RoundRectWipeTransition,
 	"starWipe" : StarWipeTransition,
+##	"miscShapeWipe" : MiscShapeWipe,
 	"clockWipe" : ClockWipeTransition,
 	"pinWheelWipe" : PinWheelWipeTransition,
 	"singleSweepWipe" : SingleSweepWipeTransition,

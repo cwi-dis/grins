@@ -1834,14 +1834,17 @@ class SMILWriter(SMIL):
 			return
 		defaults = {
 			'dur':'1',
-			'startPercent':'0',
-			'endPercent':'100',
-			'color':'black',
-			'vertRepeat':'0',
-			'horzRepeat':'0',
-			'borderWidth':'0',
+			'startProgress':'0.0',
+			'endProgress':'1.0',
+			'fadeColor':'black',
 			'direction':'forward',
-			'multiElement':'false'}
+			'vertRepeat':'1',
+			'horzRepeat':'1',
+			'borderWidth':'0',
+			'borderColor':'black',
+			'coordinated':'false',
+			'clipBoundary':'children',
+			}
 		for key, val in transitions.items():
 			attrlist = []
 			attrlist.append(('id', self.transition2name[key]))

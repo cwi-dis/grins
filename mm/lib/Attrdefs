@@ -586,9 +586,9 @@
 	'ID of transition, as used when referring to it' raw (smil2))
 	
 (trtype (enum barWipe boxWipe fourBoxWipe barnDoorWipe diagonalWipe bowTieWipe
-		miscDiagonalWipe veeWipe barnVeeWipe zigZagWipe barnZigZagWipe miscShapeWipe
+		miscDiagonalWipe veeWipe barnVeeWipe zigZagWipe barnZigZagWipe irisWipe
 		triangleWipe arrowHeadWipe pentagonWipe hexagonWipe ellipseWipe eyeWipe
-		roundRectWipe starWipe clockWipe pinWheelWipe singleSweepWipe fanWipe
+		roundRectWipe starWipe clockWipe miscShapeWipe pinWheelWipe singleSweepWipe fanWipe
 		doubleFanWipe doubleSweepWipe saloonDoorWipe windShieldWipe snakeWipe
 		spiralWipe parallelSnakesWipe boxSnakesWipe waterfallWipe pushWipe slideWipe fade
 	) fade 'Transition type' default
@@ -612,10 +612,10 @@
 (fadeColor (tuple (int) (int) (int)) (0 0 0) 'Effect color' color
        'Color for transition effect' normal (smil2))
 
-(horzRepeat (int) 0 'Horizontal repeat' default
+(horzRepeat (int) 1 'Horizontal repeat' default
 	'How often the transition pattern is repeated horizontally, if applicable' raw (smil2))
 
-(vertRepeat (int) 0 'Vertical repeat' default
+(vertRepeat (int) 1 'Vertical repeat' default
 	'How often the transition pattern is repeated vertically, if applicable' raw (smil2))
 
 (borderColor (tuple (int) (int) (int)) (0 0 0) 'Border color' color
@@ -624,11 +624,11 @@
 (borderWidth (int) 0 'Border width' default
 	'Width of the border, applicable to wipe only' raw (smil2))
 	
-(multiElement (bool) 0 'Multi-element transition' default
+(coordinated (bool) 0 'Multi-element transition' default
 	'Whether this is a coordinated transition across multiple elements' raw (smil2))
 	
-(childrenClip (bool) 0 'Clip to children' default
-	'When true the transition is only applied to the subregions' raw (smil2))
+(clipBoundary (enum children parent) children 'Clip to children' default
+	'Is transition limited to children only or parent plus children?' raw (smil2))
 
 # registration points
 
