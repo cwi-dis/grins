@@ -265,18 +265,18 @@ class _CommonWindow:
 		return self._parent is None
 
 	def newwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, z=0,
-		      type_channel = None):
+		      type_channel = None, units = None):
 		"""Create a new subwindow"""
 		rv = _SubWindow(self, self._wid, (x, y, w, h), 0, pixmap,
-				transparent, z)
+				transparent, z, units)
 		self._clipchanged()
 		return rv
 
 	def newcmwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, z=0,
-			type_channel = None):
+			type_channel = None, units = None):
 		"""Create a new subwindow"""
 		rv = _SubWindow(self, self._wid, (x, y, w, h), 1, pixmap,
-				transparent, z)
+				transparent, z, units)
 		self._clipchanged()
 		return rv
 
@@ -438,7 +438,7 @@ class _CommonWindow:
 		return (xim, image), mask, left, top, \
 		       x, y, w - left - right, h - top - bottom
 
-	def _convert_coordinates(self, coordinates):
+	def _convert_coordinates(self, coordinates, units = None):
 		"""Convert fractional xywh in our space to pixel-xywh
 		in toplevel-window relative pixels"""
 
@@ -465,7 +465,7 @@ class _CommonWindow:
 		them to upper layers, i.e. 1 divided by the amount of the window visible"""
 		return 1, 1
 		
-	def _convert_qdcoords(self, coordinates):
+	def _convert_qdcoords(self, coordinates, units = UNIT_SCREEN):
 		"""Convert QD coordinates to fractional xy or xywh coordinates"""
 		x0, y0 = coordinates[:2]
 		wx, wy, ww, wh = self._convert_coordinates((0,0,1,1))
@@ -474,12 +474,19 @@ class _CommonWindow:
 		wx, wy = wx+xscrolloff, wy+yscrolloff
 		x, y = x0-wx, y0-wy
 		if len(coordinates) == 2:
-			rv = float(x)/ww, float(y)/wh
+			coordinates = x, y
 		else:
 			x1, y1 = coordinates[2:]
 			w, h = x1-x0, y1-y0
-			rv = float(x)/ww, float(y)/wh, float(w)/ww, float(h)/wh
-		return rv
+			coordinates = x, y, w, h
+		if units == UNIT_PXL:
+			return coordinates
+		elif units == UNIT_SCREEN:
+			return self._pxl2rel(coordinates)
+		elif units == UNIT_MM:
+			raise 'kaboo','kaboo'
+		else:
+			raise error, 'bad units specified'
 		
 	def _convert_color(self, (r, g, b)):
 		"""Convert 8-bit r,g,b tuple to 16-bit r,g,b tuple"""
@@ -714,7 +721,7 @@ class _CommonWindow:
 		"""Start drawing (by upper layer) in this window"""
 		Qd.SetPort(self._wid)
 		
-	def create_box(self, msg, callback, box = None):
+	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN):
 		global _in_create_box
 		if _in_create_box:
 			raise 'Recursive create_box'
@@ -722,6 +729,9 @@ class _CommonWindow:
 			apply(callback, ())
 			return
 		_in_create_box = self
+		if box:
+			# convert box to relative sizes if necessary
+			box = self._pxl2rel(self._convert_coordinates(box, units = units))
 		self.pop()
 		if msg:
 			msg = msg + '\n\n' + _rb_message
@@ -755,6 +765,7 @@ class _CommonWindow:
 			callback = (self._rb_done, ()),
 			cancelCallback = (self._rb_cancel, ()))
 		self._rb_callback = callback
+		self._rb_units = units
 
 		mw_globals.toplevel.grabwids([self._rb_dialog._dialog, self._wid])
 		while not self._rb_finished:
@@ -769,24 +780,26 @@ class _CommonWindow:
 			self._rb_dl.render()
 		self._rb_display.close()
 		del self._rb_callback
+		del self._rb_units
 		self._rb_dialog.close()
 		self._rb_dialog = None
 		del self._rb_dl
 		del self._rb_display
 
-	def _rb_cvbox(self):
+	def _rb_cvbox(self, units = UNIT_SCREEN):
 		if self._rb_box is None:
 			return ()
 		x0, y0, x1, y1 = self._rb_box
 		xscrolloff, yscrolloff = self._scrolloffset()
 		x0, y0 = x0+xscrolloff, y0+yscrolloff
 		x1, y1 = x1+xscrolloff, y1+yscrolloff
-		return self._convert_qdcoords((x0, y0, x1, y1))
+		return self._convert_qdcoords((x0, y0, x1, y1), units = units)
 
 	def _rb_done(self):
 		callback = self._rb_callback
+		units = self._rb_units
 		self._rb_finish()
-		apply(callback, self._rb_cvbox())
+		apply(callback, self._rb_cvbox(units))
 		self._rb_finished = 1
 
 	def _rb_cancel(self):
@@ -1341,8 +1354,6 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 				 mw_globals.toplevel._getmmfactors()
 
 		hf, vf = self._scrollsizefactors()
-		self._hfactor = parent._hfactor / (hf*float(w) / _x_pixel_per_mm)
-		self._vfactor = parent._vfactor / (vf*float(h) / _y_pixel_per_mm)
 		_WindowGroup.__init__(self, title, commandlist)
 
 		self.arrowcache = {}
@@ -1513,10 +1524,6 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		_x_pixel_per_mm, _y_pixel_per_mm = \
 				 mw_globals.toplevel._getmmfactors()
 		hf, vf = self._scrollsizefactors()
-		self._hfactor = parent._hfactor / (hf*float(width)
-						   / _x_pixel_per_mm)
-		self._vfactor = parent._vfactor / (vf*float(height) /
-						   _y_pixel_per_mm)
 
 		for w in self._subwindows:
 			w._do_resize1()
@@ -1552,12 +1559,12 @@ class _SubWindow(_CommonWindow):
 	"""Window "living in" with a toplevel window"""
 
 	def __init__(self, parent, wid, coordinates, defcmap = 0, pixmap = 0, 
-			transparent = 0, z = 0):
+			transparent = 0, z = 0, units = None):
 		
 		self._istoplevel = 0
 		_CommonWindow.__init__(self, parent, wid, z)
 		
-		x, y, w, h = parent._convert_coordinates(coordinates)
+		x, y, w, h = parent._convert_coordinates(coordinates, units = units)
 		xscrolloff, yscrolloff = parent._scrolloffset()
 		x, y = x+xscrolloff, y+yscrolloff
 		if parent._canscroll():
@@ -1568,8 +1575,6 @@ class _SubWindow(_CommonWindow):
 		self._sizes = coordinates
 		
 		hf, vf = self._scrollsizefactors()
-		self._hfactor = parent._hfactor / (hf*self._sizes[_WIDTH])
-		self._vfactor = parent._vfactor / (vf*self._sizes[_HEIGHT])
 		
 		if parent._transparent:
 			self._transparent = parent._transparent
@@ -1681,8 +1686,6 @@ class _SubWindow(_CommonWindow):
 		if h == 0:
 			h = float(self._rect[_HEIGHT]) / parent._rect[_HEIGHT]
 		hf, vf = self._scrollsizefactors()
-		self._hfactor = parent._hfactor / (hf*w)
-		self._vfactor = parent._vfactor / (vf*h)
 		# We don't have to clear _clip, our parent did that.
 		self._active_displist = None
 		for d in self._displists[:]:
