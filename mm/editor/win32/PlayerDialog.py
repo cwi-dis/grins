@@ -61,7 +61,6 @@ class PlayerDialog:
 		if self.__window is not None:
 			self.__window.pop()
 			return
-		x, y, w, h = self.__coords
 		if subwindowof is not None:
 			raise 'kaboo kaboo'
 
@@ -169,7 +168,7 @@ class PlayerDialog:
 			PLAYING -- the player is in the playing state
 			PAUSING -- the player is in the pausing state
 		"""
-		ostate = self.__state
+##		ostate = self.__state
 		self.__state = state
 
 		

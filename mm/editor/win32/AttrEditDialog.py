@@ -170,8 +170,6 @@ class AttrEditorDialogField:
 ##		Arguments (no defaults):
 ##		form -- instance of AttrEditorForm
 ##		"""
-		if hasattr(self,'__form'):
-			raise error, 'cmifcore-win32 name conflict'
 		self.__form=form
 
 	def close(self):

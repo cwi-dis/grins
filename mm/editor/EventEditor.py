@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # This module is a collection of useful functions for working with events.
 
 # TODO: how do I reference other nodes?
@@ -169,7 +171,7 @@ class EventStruct:
 		# Must always return a string.
 		c = self.get_cause()
 		r = ""			# returnable value.
-		s = self._syncarc
+##		s = self._syncarc
 		if c == 'indefinite':
 			return c
 		elif c == 'wallclock':

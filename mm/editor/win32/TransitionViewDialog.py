@@ -40,7 +40,6 @@ class TransitionViewDialog:
 		if self.__window is not None:
 			self.__window.close()
 			self.__window = None
-			f=self.toplevel.window
 
 #### support win32 model
 	def createviewobj(self):

@@ -4,7 +4,7 @@ __version__ = "$Id$"
 
 
 import windowinterface
-#from MMExc import *
+from MMExc import CheckError
 import MMAttrdefs
 from Selecter import Selecter
 from PlayerCommon import PlayerCommon

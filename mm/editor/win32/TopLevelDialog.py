@@ -13,8 +13,6 @@ are enabled. This class has acces to the document and
 can display its various views and its source
 """
 
-import bitrates, languages
-
 class TopLevelDialog:
 	def __init__(self):
 		pass

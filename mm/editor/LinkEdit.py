@@ -38,7 +38,6 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 		ViewDialog.__init__(self, 'links_')
 		self.last_geometry = None
 		self.root = toplevel.root
-		title = self.__maketitle()
 		self.left = Struct()
 		self.right = Struct()
 		self.left.fillfunc = self.fill_all
@@ -417,7 +416,6 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 			link = self.links[self.linkfocus]
 			lfocus = link[ANCHOR1]
 			rfocus = link[ANCHOR2]
-		lnode = rnode = None
 		lanchor = self.findanchor(lfocus)
 		ranchor = self.findanchor(rfocus)
 		if lanchor is None or ranchor is None or \
@@ -621,7 +619,6 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 		except NoSuchUIDError:
 			print 'LinkEdit: anchor with unknown node UID!'
 			return
-		import AttrEdit
 		AttrEdit.showattreditor(self.toplevel, node, '.anchorlist')
 ##		import AnchorEdit
 ##		AnchorEdit.showanchoreditor(self.toplevel, node)
