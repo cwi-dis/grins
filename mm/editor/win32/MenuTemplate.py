@@ -183,7 +183,7 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'Play &from node', None, PLAYFROM),
 		(FLAG_BOSTON|FLAG_CMIF|FLAG_SNAP, SEP,),
 		(FLAG_BOSTON|FLAG_SNAP, DYNAMICCASCADE, 'Custom &tests', USERGROUPS),
-		(FLAG_ALL, ENTRY, 'System properties...', None, PREFERENCES),
+		(FLAG_ALL, ENTRY, 'Previer properties...', None, PREFERENCES),
 		(FLAG_CMIF, DYNAMICCASCADE, 'Visible &channels', CHANNELS),
 		)),
 
@@ -236,7 +236,8 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'E&xpand all', None, EXPANDALL),
 		(FLAG_ALL, ENTRY, '&Collapse all', None, COLLAPSEALL),
 		(FLAG_PRO, SEP,),
-		(FLAG_PRO, ENTRY, '&Zoom in', None, CANVAS_WIDTH),
+		(FLAG_PRO, ENTRY, '&Zoom in', None, CANVAS_ZOOM_IN),
+		(FLAG_PRO, ENTRY, '&Zoom out', None, CANVAS_ZOOM_OUT),
 		(FLAG_PRO, ENTRY, '&Fit in Window', None, CANVAS_RESET),
 		(FLAG_ALL, SEP,),
 #		(FLAG_PRO, TOGGLE, 'Show/Hide unused c&hannels', None, TOGGLE_UNUSED),
@@ -533,33 +534,76 @@ POPUP_EVENT_SOURCE = (
 #	(FLAG_ALL, ENTRY, 'P&roperties...', None, ATTRIBUTES),
 	)
 
-POPUP_REGIONTREE_REGION = (
-		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
+POPUP_REGIONTREE_TOPLAYOUT = (
+		(FLAG_ALL, ENTRY, 'Cu&t', None, CUT),
+		(FLAG_ALL, ENTRY, '&Copy', None, COPY),
+		(FLAG_ALL, ENTRY, '&Paste', None, PASTE_AFTER),
 		(FLAG_PRO, SEP,),
-		(FLAG_ALL, ENTRY, 'Set background color...', None, ATTRIBUTES_BACKGROUND),
-		(FLAG_ALL, ENTRY, 'Set z-order...', None, ATTRIBUTES_ZORDER),
-)
-POPUP_REGIONTREE_SUBREGION = (
-		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
+		(FLAG_ALL, ENTRY, '&Insert region', None, NEW_REGION),
+		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
 		(FLAG_PRO, SEP,),
-		(FLAG_ALL, ENTRY, 'Create anchor...', None, ATTRIBUTES_ANCHORS),
-		(FLAG_ALL, ENTRY, 'Set background color...', None, ATTRIBUTES_BACKGROUND),
+#		(FLAG_ALL, ENTRY, 'Layout...', None, ATTRIBUTES_LAYOUT),
+		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
 )
 
-POPUP_REGIONPREVIEW_REGION = (
-		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
+POPUP_REGIONTREE_REGION = (
+		(FLAG_ALL, ENTRY, 'Cu&t', None, CUT),
+		(FLAG_ALL, ENTRY, '&Copy', None, COPY),
+		(FLAG_ALL, ENTRY, '&Paste', None, PASTE_AFTER),
 		(FLAG_PRO, SEP,),
-		(FLAG_ALL, ENTRY, 'Set background color...', None, ATTRIBUTES_BACKGROUND),
-		(FLAG_ALL, ENTRY, 'Set z-order...', None, ATTRIBUTES_ZORDER),
+		(FLAG_ALL, ENTRY, '&Insert region', None, NEW_REGION),
+		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
+		(FLAG_PRO, SEP,),
+#		(FLAG_ALL, ENTRY, 'Layout...', None, ATTRIBUTES_LAYOUT),
+		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
+)
+
+POPUP_REGIONTREE_MEDIA = (
+		(FLAG_ALL, ENTRY, 'Cu&t', None, CUT),
+		(FLAG_PRO, SEP,),
+#		(FLAG_ALL, ENTRY, 'Layout...', None, ATTRIBUTES_LAYOUT),
+#		(FLAG_ALL, ENTRY, 'Anchors...', None, ATTRIBUTES_ANCHORS),
+		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
+		(FLAG_ALL, ENTRY, '&Edit Content...', 'E', CONTENT),
+)
+
+POPUP_REGIONPREVIEW_TOPLAYOUT = (
+		(FLAG_ALL, ENTRY, 'Cu&t', None, CUT),
+		(FLAG_ALL, ENTRY, '&Copy', None, COPY),
+		(FLAG_ALL, ENTRY, '&Paste', None, PASTE_AFTER),
+		(FLAG_PRO, SEP,),
+		(FLAG_ALL, ENTRY, '&Insert region', None, NEW_REGION),
+		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
+		(FLAG_PRO, SEP,),
+#		(FLAG_ALL, ENTRY, 'Layout...', None, ATTRIBUTES_LAYOUT),
+		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
 		(FLAG_PRO, SEP,),
 		(FLAG_PRO, ENTRY, '&Zoom in', None, CANVAS_ZOOM_IN),
 		(FLAG_PRO, ENTRY, '&Zoom out', None, CANVAS_ZOOM_OUT),
 )
-POPUP_REGIONPREVIEW_SUBREGION = (
+
+POPUP_REGIONPREVIEW_REGION = (
+		(FLAG_ALL, ENTRY, 'Cu&t', None, CUT),
+		(FLAG_ALL, ENTRY, '&Copy', None, COPY),
+		(FLAG_ALL, ENTRY, '&Paste', None, PASTE_AFTER),
+		(FLAG_PRO, SEP,),
+		(FLAG_ALL, ENTRY, '&Insert region', None, NEW_REGION),
+		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
+		(FLAG_PRO, SEP,),
+#		(FLAG_ALL, ENTRY, 'Layout...', None, ATTRIBUTES_LAYOUT),
 		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
 		(FLAG_PRO, SEP,),
-		(FLAG_ALL, ENTRY, 'Create anchor...', None, ATTRIBUTES_ANCHORS),
-		(FLAG_ALL, ENTRY, 'Set background color...', None, ATTRIBUTES_BACKGROUND),
+		(FLAG_PRO, ENTRY, '&Zoom in', None, CANVAS_ZOOM_IN),
+		(FLAG_PRO, ENTRY, '&Zoom out', None, CANVAS_ZOOM_OUT),
+)
+
+POPUP_REGIONPREVIEW_MEDIA = (
+		(FLAG_ALL, ENTRY, 'Cu&t', None, CUT),
+		(FLAG_PRO, SEP,),
+#		(FLAG_ALL, ENTRY, 'Layout...', None, ATTRIBUTES_LAYOUT),
+#		(FLAG_ALL, ENTRY, 'Anchors...', None, ATTRIBUTES_ANCHORS),
+		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
+		(FLAG_ALL, ENTRY, '&Edit Content...', 'E', CONTENT),
 		(FLAG_PRO, SEP,),
 		(FLAG_PRO, ENTRY, '&Zoom in', None, CANVAS_ZOOM_IN),
 		(FLAG_PRO, ENTRY, '&Zoom out', None, CANVAS_ZOOM_OUT),
