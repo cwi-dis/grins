@@ -265,7 +265,7 @@ def pixels2mm(h, v):
 	h = float(h) / gl.getgdesc(GL.GD_XPMAX) * gl.getgdesc(GL.GD_XMMAX)
 	v = float(v) / gl.getgdesc(GL.GD_YPMAX) * gl.getgdesc(GL.GD_YMMAX)
 	return h, v
-	
+
 # Useful subroutine to call prefposition/prefsize.
 # The input arguments (h, v) are in X screen coordinates (origin top left);
 # prefposition uses GL screen coordinates (origin bottom left).
