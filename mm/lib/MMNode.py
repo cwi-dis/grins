@@ -2301,6 +2301,8 @@ class MMNode(MMTreeElement):
 		self.reinit(recurse = 0)
 		self.reset()
 
+		self._animateNode = None # animate node when it's edited with the media node		
+
 	def reinit(self, recurse = 1):
 		self.looping_body_self = None
 		self.realpix_body = None
@@ -2346,6 +2348,8 @@ class MMNode(MMTreeElement):
 					mimetype = string.split(mimetype, '/')[0]
 				if mimetype:
 					return mimetype
+		if self.type == 'animpar':
+			return 'animate'
 		return self.type
 
 	#
@@ -2551,6 +2555,27 @@ class MMNode(MMTreeElement):
 		self.context.cssResolver.changePxValue(self._subRegCssId, 'height', height)
 		self.__unlinkCssId()
 
+	#
+	# 'light' animations support
+	#
+	
+	def getAnimateNode(self):
+		animated = self.attrdict.get('animated')
+		if animated:
+			# get the first animate node found
+			children = self.GetChildren()
+			for child in children:
+				if child.type in ('animate', 'animpar') and not child.attrdict.get('internal'):
+					return child
+		return None
+
+	def isAnimated(self):
+		return self.attrdict.get('animated')
+
+	#
+	#
+	#
+	
 	def set_start_time(self, timestamp, include_pseudo = 1):
 		self.start_time = timestamp
 		p = self.parent

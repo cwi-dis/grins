@@ -395,11 +395,7 @@ class EditMgr(Clipboard.Clipboard):
 		
 		node.AddToTree(parent, i)
 
-		if node.type != 'animpar':
-			self.next_focus = [node]
-		else:
-			# XXX for now the focus has to be put on its target node
-			self.next_focus = [node.GetParent()]
+		self.next_focus = [node]
 
 	def undo_addnode(self, node):
 		self.delnode(node)
@@ -428,11 +424,8 @@ class EditMgr(Clipboard.Clipboard):
 			node.SetAttr(name, value)
 		else:
 			node.DelAttr(name)
-		if node.type != 'animpar':
-			self.next_focus = [node]
-		else:
-			# XXX for now anim par node, the focus has to be put on its target node
-			self.next_focus = [node.GetParent()]
+			
+		self.next_focus = [node]
 
 	def undo_setnodeattr(self, node, name, oldvalue):
 		self.setnodeattr(node, name, oldvalue)

@@ -20,7 +20,6 @@ debug2 = 0
 debugPreview = 0
 
 COPY_PASTE_MEDIAS = 1
-SHOW_ANIMATE_NODES = 0
 
 # XXX we should use the same variable as the variable defined from component
 DELTA_KEYTIME = 0.01
@@ -52,7 +51,12 @@ class TreeHelper:
 		self.__mmnodeTreeRef = mmnodeTreeRef
 		self.__nodeList = {}
 		self.__rootList = {}
-
+		from MMTypes import mediatypes
+		if features.SPEPARATE_ANIMATE_NODE in features.feature_set:
+			self.__mmnodetypes = mediatypes+['animpar']
+		else:
+			self.__mmnodetypes = mediatypes
+			
 	def destroy(self):
 		self.__channelTreeRef = None
 		self.__mmnodeTreeRef = None
@@ -66,14 +70,13 @@ class TreeHelper:
 	def _getMMNodeType(self, node):
 		if node == None:
 			return None
-		from MMTypes import playabletypes
-		if not node.type in playabletypes:
+		if node.type not in self.__mmnodetypes:
 			return None
+		if node.type in ('animate', 'animpar'):
+			return TYPE_ANIMATE
 		chtype = node.GetChannelType()
 		if chtype == None:
 			return None
-		if chtype == 'animate':
-			return TYPE_ANIMATE
 		return TYPE_MEDIA
 
 	# check the media node references and update the internal structure
@@ -87,9 +90,12 @@ class TreeHelper:
 			if not parentRef is None:
 				self.__checkNode(parentRef, nodeRef, position, TYPE_VIEWPORT, TYPE_REGION, TYPE_MEDIA)
 		elif type == TYPE_ANIMATE:
-			if not SHOW_ANIMATE_NODES:
+			if features.SPEPARATE_ANIMATE_NODE not in features.feature_set:
 				return
 			parentRef = self.getParent(nodeRef, TYPE_ANIMATE)
+			if parentRef.getClassName() == 'MMNode' and parentRef.isAnimated():
+				# light animation
+				return
 			if not parentRef is None:
 				parentType = self._getMMNodeType(parentRef)
 				if parentType in (TYPE_MEDIA, TYPE_REGION):
@@ -436,8 +442,12 @@ class TreeHelper:
 		elif nodeType == TYPE_REGION:
 			return nodeRef.GetParent()
 		elif nodeType == TYPE_ANIMATE:
+			targetNode = None
 			if hasattr(nodeRef, 'targetnode'):
-				return nodeRef.targetnode
+				targetNode = nodeRef.targetnode
+			if targetNode is None:
+				targetNode = nodeRef.GetParent()
+			return targetNode
 
 		# no layout parent			
 		return None
@@ -478,6 +488,9 @@ class TreeNodeHelper:
 				self.name = nodeRef.name
 			else:
 				self.name = name
+		else:
+			self.name = attrdict.get('name')
+			
 		self.z = attrdict.get('z',0)
 		self.previewShowOption = attrdict.get('previewShowOption')
 
@@ -506,6 +519,12 @@ class TreeNodeHelper:
 			if name != self.name:
 				self.isUpdated = 1
 				self.name = name
+		else:
+			name = attrdict.get('name')
+			if name != self.name:
+				self.isUpdated = 1
+				self.name = name
+			
 		self.z = attrdict.get('z',0)
 		previewShowOption = attrdict.get('previewShowOption')
 		if self.previewShowOption != previewShowOption:
@@ -557,13 +576,9 @@ class LayoutView2(LayoutViewDialog2):
 		# - a tree widget which manage the standard tree control
 		# - a previous widget which manage the previous area
 		# - some light widgets (geom field, z-index field, buttons control, ...)
-		self.widgetList = {}
+		self.widgetList = []
 
-		self.currentKeyTimeIndex = None
 		self.timeValueChanged = 1
-		self.currentTimeValue = None
-		self.currentTargetAnimateNode = None
-		self.currentAnimateNode = None
 		
 	def fixtitle(self):
 		pass			# for now...
@@ -673,7 +688,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.treeMutation()
 
 		# show the widgets
-		for id, widget in self.widgetList.items():
+		for widget in self.widgetList:
 			widget.show()
 				
 		# XXX to implement
@@ -693,9 +708,9 @@ class LayoutView2(LayoutViewDialog2):
 		self.editmgr.unregister(self)
 
 		# XXX to do: destroy all objects and to check that they are garbage collected
-		for id, widget in self.widgetList.items():
+		for widget in self.widgetList:
 			widget.destroy()
-		self.widgetList = {}
+		self.widgetList = []
 		
 		# hide the windows	
 		LayoutViewDialog2.hide(self)
@@ -709,9 +724,6 @@ class LayoutView2(LayoutViewDialog2):
 		self.currentFocus = None
 		self.myfocus = None
 
-		self.currentTargetAnimateNode = None		
-		self.currentAnimateNode = None
-		
 	def transaction(self, type):
 		return 1		# It's always OK to start a transaction
 
@@ -727,10 +739,10 @@ class LayoutView2(LayoutViewDialog2):
 	
 	def onNewNodeRef(self, parentRef, nodeRef):
 		nodeType = self.getNodeType(nodeRef)
-
+		
+		self.previousWidget.appendNode(parentRef, nodeRef, nodeType)
 		# update tree widget		
 		self.treeWidget.appendNode(parentRef, nodeRef, nodeType)
-		self.previousWidget.appendNode(parentRef, nodeRef, nodeType)
 		
 	def onDelNodeRef(self, parentRef, nodeRef):
 		nodeType = self.getNodeType(nodeRef)
@@ -749,11 +761,11 @@ class LayoutView2(LayoutViewDialog2):
 	def treeMutation(self):
 		if debug: print 'call treeHelper.treeMutation'
 		# notify widgets that the document structure start to change
-		for id, widget in self.widgetList.items():
+		for widget in self.widgetList:
 			widget.startMutation()
 		self.treeHelper.onTreeMutation()
 		# notify widgets that the document structure end to change
-		for id, widget in self.widgetList.items():
+		for widget in self.widgetList:
 			widget.endMutation()
 
 	def commit(self, type):
@@ -766,14 +778,6 @@ class LayoutView2(LayoutViewDialog2):
 		self.previousWidget.mustBeUpdated()
 		self.updateFocus(1)
 
-	# update animation wrapper to be able to get interpolation values
-	def updateAnimationWrapper(self):
-		animateNode = self.getAnimateNode()
-		if animateNode is not None:
-			import AnimationWrappers
-			self.animationWrapper = AnimationWrappers.getAnimationWrapper(animateNode)
-			self.animationWrapper.updateAnimators(animateNode)
-
 	# make a list of nodes selected in this view
 	def makeSelectedNodeList(self, selList):
 		targetList = []
@@ -781,51 +785,13 @@ class LayoutView2(LayoutViewDialog2):
 			if self.existRef(nodeRef):
 				# keep only seleted nodes belong to this view
 				targetList.append(nodeRef)
-
+			elif nodeRef.getClassName() == 'MMNode' and nodeRef.type == 'animpar':
+				parentRef = self.treeHelper.getParent(nodeRef, TYPE_ANIMATE)
+				if parentRef is not None and parentRef.getAnimateNode() is nodeRef:
+					targetList.append(parentRef)
+			
 		self.currentSelectedNodeList = targetList
 		
-		# XXX to implement
-#	def toStopState(self):
-#		# save current state
-#		self.currentRegionRefListM = self.stopSelectedRegionList
-#		self.currentMediaRefListM = self.stopSelectedMediaList
-
-#		saveCurrentViewport = self.currentViewport
-#		self.rebuildAll()
-		
-#		# append the media/region node list
-#		self.appendRegionNodeList(self.currentRegionRefListM)
-#		self.appendMediaNodeList(self.currentMediaRefListM)
-		
-#		# re display all viewport
-#		self.displayViewport(saveCurrentViewport.getNodeRef())
-#		self.updateFocus()
-		
-#	def toPauseState(self, nodeobject):
-#		# save current state
-#		self.stopSelectedRegionList = self.currentRegionRefListM
-#		self.stopSelectedMediaList = self.currentMediaRefListM
-
-#		self.currentMediaRefListM = []
-#		self.currentRegionRefListM = []
-#		saveCurrentViewport = self.currentViewport
-#		self.rebuildAll()
-		
-#		for type, node in nodeobject:
-#			if type == 'MMChannel':
-#				self.currentRegionRefListM.append(node)
-#			elif type == 'MMNode':
-#				if self.isValidMMNode(node):
-#					self.currentMediaRefListM.append(node)
-		
-#		# append the media/region node list
-#		self.appendMediaNodeList(self.currentMediaRefListM)
-#		self.appendRegionNodeList(self.currentRegionRefListM)
-		
-#		# re display all viewport
-#		self.displayViewport(saveCurrentViewport.getNodeRef())
-#		self.updateFocus()
-
 	def updateCommandList(self, basecommandlist):
 		commandlist = basecommandlist[:]
 
@@ -877,8 +843,8 @@ class LayoutView2(LayoutViewDialog2):
 		self.setcommandlist(commandlist)
 
 	def updateVisibility(self,listToUpdate, visible):
-		self.treeWidget.updateVisibility(listToUpdate, visible)
 		self.previousWidget.updateVisibility(listToUpdate, visible)
+		self.treeWidget.updateVisibility(listToUpdate, visible)
 		
 	def updateFocus(self, keepShowedNodes=0):
 		if debug: print 'LayoutView.updateFocus: focus on List'
@@ -899,43 +865,6 @@ class LayoutView2(LayoutViewDialog2):
 		self.makeSelectedNodeList(focusobject)	
 		localSelList = self.currentSelectedNodeList
 
-		# animation support
-		enabled = 0
-		if len(localSelList) == 1:
-			nodeRef = localSelList[0]
-			nodeType = self.getNodeType(nodeRef)
-
-			self.currentAnimateNode = animateNode = self.findAnimateNode(nodeRef)
-			if animateNode is not None:
-				self.currentTargetAnimateNode = nodeRef
-				enabled = 1
-					
-		if enabled:
-			self.updateAnimationWrapper()
-			self.settoggle(ENABLE_ANIMATION, 1)
-			animvals = animateNode.attrdict.get('animvals')
-			if animvals is not None and len(animvals) > 0:
-				t, v = animvals[0]
-				selected = v.get('selected')
-				if selected is not None:
-					self.setKeyTimeIndex(selected, self.currentFocus[0])
-				else:
-					v['selected'] = 0
-					self.setKeyTimeIndex(0 , self.currentFocus[0])
-			else:
-				# invalid node
-				self.setKeyTimeIndex(None, None)
-		else:
-			self.currentTargetAnimateNode = None
-			self.currentAnimateNode = None
-			self.settoggle(ENABLE_ANIMATION, 0)
-			self.setKeyTimeIndex(None, None)
-
-#		if not enabled or self.currentFocus is None or len(self.currentFocus) != 1:
-#			self.setKeyTimeIndex(None, None)
-#		elif (self.previousSelectedNodeList is None or len(self.previousSelectedNodeList) != 1 or (not self.currentFocus[0] is self.previousSelectedNodeList[0])):
-#			self.setKeyTimeIndex(0, self.currentFocus[0])
-				
 		if self.timeValueChanged:
 			self.previousWidget.mustBeUpdated()
 			self.timeValueChanged = 0
@@ -968,7 +897,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.previousWidget.update()
 		
 		# update widgets
-		for id, widget in self.widgetList.items():
+		for widget in self.widgetList:
 			widget.selectNodeList(localSelList, keepShowedNodes)
 
 		if len(localSelList) == 0:
@@ -1081,69 +1010,28 @@ class LayoutView2(LayoutViewDialog2):
 	def getParentNodeRef(self, nodeRef, nodeType = None):
 		if nodeType == None:
 			nodeType = self.getNodeType(nodeRef)
-		if nodeType == TYPE_MEDIA:
+		if nodeType not in (TYPE_VIEWPORT, TYPE_REGION):
 			return self.treeHelper.getParent(nodeRef, nodeType)
 		else:
 			region = self.__channelTreeRef.getparent(nodeRef)
 			return region
 		return None
 
-	def setKeyTimeIndex(self, keyTimeIndex, nodeRef):
-		if self.currentKeyTimeIndex != keyTimeIndex:
-			self.timeValueChanged = 1
-		self.currentKeyTimeIndex = keyTimeIndex
-		if not nodeRef is None and not keyTimeIndex is None:
-			self.currentTimeValue = None # by default, indefinite
-			animateNode = self.getAnimateNode()
-			if animateNode is not None and animateNode.GetType() == 'animpar':
-				animvals = animateNode.GetAttrDef('animvals', [])
-				if len(animvals) > keyTimeIndex:
-					self.currentTimeValue, vals = animvals[keyTimeIndex]
-				t, v = animvals[0] 
-				v['selected'] = self.getKeyTimeIndex() # XXX trick to save the previous index for undo/redo					
-		else:
-			self.currentTimeValue = None
-
-	def getKeyTimeIndex(self):
-		return self.currentKeyTimeIndex
-	
-	def setCurrentTimeValue(self, currentTimeValue, nodeRef):
-		self.currentTimeValue = None # by default, indefinite
-		animateNode = self.getAnimateNode()
-		if animateNode is not None and animateNode.GetType() == 'animpar':
-			animvals = animateNode.GetAttrDef('animvals', [])
-			if self.currentTimeValue != currentTimeValue:
-				self.timeValueChanged = 1
-			self.currentTimeValue = currentTimeValue
-			keyTimeIndex = self.getKeyForThisTime(animvals, currentTimeValue, round=1)
-			if self.currentKeyTimeIndex != keyTimeIndex:
-				self.timeValueChanged = 1
-			self.currentKeyTimeIndex = keyTimeIndex					
-
-	def getCurrentTimeValue(self):
-		return self.currentTimeValue
-
-	def getTargetAnimateNode(self):
-		return self.currentTargetAnimateNode
-
-	def getAnimateNode(self):
-		return self.currentAnimateNode
-
-	def findAnimateNode(self, nodeRef):
+	def getAnimateNode(self, nodeRef):
 		nodeType = self.getNodeType(nodeRef)
-		# XX for now, support only animpar type
-		if nodeType == TYPE_MEDIA:
-			children = nodeRef.GetChildren()
-			for child in children:
-				if child.type == 'animpar':
-					return child
+		if nodeType == TYPE_ANIMATE:
+			# the animate node is itself
+			return nodeRef
+		elif nodeType == TYPE_MEDIA:
+			animateNode = nodeRef.getAnimateNode()
+			if animateNode is not None:
+				return animateNode
 		return None
 		
 	# have to be called from inside a transaction	
 	def insertKeyTime(self, nodeRef, tp, duplicateKey=None):
 		index = 0
-		self.currentTimeValue = None # by default, indefinite
-		animateNode = self.getAnimateNode()
+		animateNode = self.getAnimateNode(nodeRef)
 		if animateNode is not None and animateNode.GetType() == 'animpar':
 			animvals = animateNode.GetAttrDef('animvals', None)
 			if animvals is not None:
@@ -1159,13 +1047,10 @@ class LayoutView2(LayoutViewDialog2):
 						newvals = vals.copy()
 					else:
 						# interpolate values at this time
-						left, top, width, height = self.animationWrapper.getRectAt(tp)
+						left, top, width, height = animateNode._animateEditWrapper.getRectAt(tp)
 #						bgcolor = self.animationWrapper.getColorAt(tp)
 						newvals = {'left':left, 'top':top, 'width':width, 'height':height}
-
-					t, v = animvals[0] 
-					v['selected'] = self.getKeyTimeIndex() # XXX trick to save the previous index for undo/redo
-						
+					animateNode._currentTime = tp
 					canimvals = [] # don't modify the original to make undo/redo working
 					for t, v in animvals:
 						canimvals.append((t, v.copy()))
@@ -1174,18 +1059,15 @@ class LayoutView2(LayoutViewDialog2):
 					self.editmgr.setnodeattr(animateNode, 'animvals', canimvals)
 
 		if index > 0:
-			self.setKeyTimeIndex(index, nodeRef) # XXX for new code, nodeRef should be removed
 			self.animateControlWidget.insertKey(tp)
 			self.timeValueChanged = 1 # force layout to refresh
+		return index
 			
 	# have to be called from inside a transaction	
 	def removeKeyTime(self, nodeRef, index):
-		animateNode = self.getAnimateNode()
+		animateNode = self.getAnimateNode(nodeRef)
 		animvals = animateNode.GetAttrDef('animvals', [])
 		if index > 0 and index < len(animvals)-1:
-			
-			t, v = animvals[0] 
-			v['selected'] = self.getKeyTimeIndex() # XXX trick to save the previous index for undo/redo
 			
 			canimvals = [] # don't modify the original to make undo/redo working
 			for t, v in animvals:
@@ -1195,30 +1077,23 @@ class LayoutView2(LayoutViewDialog2):
 			del canimvals[index]
 			self.editmgr.setnodeattr(animateNode, 'animvals', canimvals)
 			self.animateControlWidget.removeKey(index)
-			self.setKeyTimeIndex(index-1, nodeRef)
 		
 	def getKeyForThisTime(self, list, time, round=0):
 		# first, search for the same value
 		for ind in range(len(list)):
-			timeRef, vals = list[ind]
+			timeRef = list[ind]
 			if time == timeRef:
 				return ind
 
 		if round:			
 			for ind in range(len(list)):
-				timeRef, vals = list[ind]
+				timeRef = list[ind]
 				if time > timeRef-DELTA_KEYTIME and time < timeRef+DELTA_KEYTIME:
 					return ind
 		return None
-	
-	def getPxGeomWithContextAnimation(self, nodeRef):
-		time = self.currentTimeValue
-		if time is not None and nodeRef is self.getTargetAnimateNode():
-			wingeom = self.animationWrapper.getRectAt(time)
-		else:
-			wingeom = nodeRef.getPxGeom()
-			
-		return wingeom
+
+	def getPxGeom(self, nodeRef):
+		return self.previousWidget.getPxGeom(nodeRef)
 		
 	# Test whether x is ancestor of node
 	def IsAncestorOf(self, node, x):
@@ -1232,7 +1107,7 @@ class LayoutView2(LayoutViewDialog2):
 		if nodeType == None:
 			nodeType = self.getNodeType(nodeRef)
 			
-		if nodeType == TYPE_MEDIA:
+		if nodeType in (TYPE_MEDIA, TYPE_ANIMATE):
 			name = nodeRef.attrdict.get('name')
 		elif nodeType == TYPE_REGION:
 			# show first the region name
@@ -1246,6 +1121,8 @@ class LayoutView2(LayoutViewDialog2):
 			name = nodeRef.name
 		else:
 			# unknown type
+			name = ''
+		if name is None:
 			name = ''
 			
 		return name
@@ -1356,12 +1233,21 @@ class LayoutView2(LayoutViewDialog2):
 	
 	def initWidgets(self):
 		widgetList = self.widgetList
-		self.previousWidget = widgetList['PreviousWidget'] = PreviousWidget(self)
-		self.treeWidget = widgetList['TreeWidget'] = TreeWidget(self)
-		self.geomFieldWidget = widgetList['GeomFieldWidget'] = GeomFieldWidget(self)
-		widgetList['ZFieldWidget'] = ZFieldWidget(self)		
-		widgetList['FitWidget'] = FitWidget(self)
-		self.animateControlWidget = widgetList['AnimateControlWidget'] = AnimateControlWidget(self)
+		# note: this widget has to be updated first, so keep it in the begining of the list
+		self.previousWidget = PreviousWidget(self)
+		widgetList.append(self.previousWidget)
+		
+		self.treeWidget = TreeWidget(self)
+		widgetList.append(self.treeWidget)
+
+		self.animateControlWidget = AnimateControlWidget(self)
+		widgetList.append(self.animateControlWidget)
+
+		self.geomFieldWidget = GeomFieldWidget(self)
+		widgetList.append(self.geomFieldWidget)
+		
+		widgetList.append(ZFieldWidget(self))
+		widgetList.append(FitWidget(self))
 
 	def applyGeom(self, nodeRef, geom):
 		# make a list of attr top apply according the geometry
@@ -1482,42 +1368,32 @@ class LayoutView2(LayoutViewDialog2):
 	def applyAttrList(self, nodeRefAndValueList):
 		if not self.editmgr.transaction():
 			return
-
-		animationEnabled = self.currentTargetAnimateNode is not None
-		
-		if animationEnabled:
-			animateNode = self.getAnimateNode()
-			animvals = animateNode.GetAttrDef('animvals', [])
-			
-			canimvals = [] # don't modify the original to make undo/redo working
-			for t, v in animvals:
-				canimvals.append((t, v.copy()))
-				
-			currentTimeValue = self.getCurrentTimeValue()
-			keyTimeIndex = self.getKeyForThisTime(animvals, currentTimeValue, round=1)
-			if keyTimeIndex is None:
-				self.insertKeyTime(animateNode, currentTimeValue)
-				canimvals = animateNode.attrdict.get('animvals')
-				keyTimeIndex = self.getKeyTimeIndex()
-				t, v = canimvals[0] 
-				v['selected'] = keyTimeIndex # XXX trick to save the previous index for undo/redo					
-			else:
-				# if previous time value wasn't exactly the same, update it
-				self.setKeyTimeIndex(keyTimeIndex, self.getTargetAnimateNode())
-					
+							
 		for nodeRef, attrName, attrValue in nodeRefAndValueList:
 			nodeType = self.getNodeType(nodeRef)
+			animateNode = self.getAnimateNode(nodeRef)
 			animated = 0
-			if animationEnabled and nodeRef is self.getTargetAnimateNode() and attrName in ('left', 'top', 'width', 'height') and \
-				not keyTimeIndex is None and keyTimeIndex >= 0:
-					animated = 1
+			if animateNode is not None and attrName in ('left', 'top', 'width', 'height'):
+				animated = 1
 			if animated:
-				# animation value
+				animvals = animateNode.GetAttrDef('animvals', [])
+				canimvals = [] # don't modify the original to make undo/redo working
+				for t, v in animvals:
+					canimvals.append((t, v.copy()))
+
+				editWrapper = animateNode._animateEditWrapper
+				currentTimeValue = animateNode._currentTime
+				keyTimeList = editWrapper.getKeyTimeList()
+				keyTimeIndex = self.getKeyForThisTime(keyTimeList, currentTimeValue, round=1)
+				if keyTimeIndex is None:
+					keyTimeIndex = self.insertKeyTime(nodeRef, currentTimeValue)
+					canimvals = animateNode.attrdict.get('animvals')
+					
 				time, vals = canimvals[keyTimeIndex]
 				vals[attrName] = attrValue
 				self.editmgr.setnodeattr(animateNode, 'animvals', canimvals)
 
-			if not animated or keyTimeIndex == 0:
+			if not animated or (keyTimeIndex == 0 and nodeType != TYPE_ANIMATE):
 				if nodeType in (TYPE_VIEWPORT, TYPE_REGION):					
 					self.editmgr.setchannelattr(nodeRef.name, attrName, attrValue)
 				elif nodeType == TYPE_MEDIA:
@@ -1558,14 +1434,14 @@ class LayoutView2(LayoutViewDialog2):
 		referenceNode = self.currentSelectedNodeList[-1]
 
 		# determinate the reference value		
-		l,t,w,h = self.getPxGeomWithContextAnimation(referenceNode)
+		l,t,w,h = self.getPxGeom(referenceNode)
 		referenceValue = l
 
 		# make a list of node/attr to change
 		list = []
 		for nodeRef in self.currentSelectedNodeList:
 			if not nodeRef is referenceNode:
-				l,t,w,h = self.getPxGeomWithContextAnimation(nodeRef)
+				l,t,w,h = self.getPxGeom(nodeRef)
 				l = referenceValue
 				# make the new geom
 				self.__makeAttrListToApplyFromGeom(nodeRef, (l,t,w,h), list)
@@ -1592,14 +1468,14 @@ class LayoutView2(LayoutViewDialog2):
 		referenceNode = self.currentSelectedNodeList[-1]
 
 		# for the reference object, determinate the center
-		l,t,w,h = self.getPxGeomWithContextAnimation(referenceNode)
+		l,t,w,h = self.getPxGeom(referenceNode)
 		referenceValue = int(l+w/2)
 		
 		# make a list of node/attr to change
 		list = []
 		for nodeRef in self.currentSelectedNodeList:
 			if not nodeRef is referenceNode:
-				l,t,w,h = self.getPxGeomWithContextAnimation(nodeRef)
+				l,t,w,h = self.getPxGeom(nodeRef)
 				center = int(l+w/2)
 				diff = center-referenceValue
 				l = l-diff
@@ -1628,14 +1504,14 @@ class LayoutView2(LayoutViewDialog2):
 		referenceNode = self.currentSelectedNodeList[-1]
 
 		# for the reference object, determinate the right border
-		l,t,w,h = self.getPxGeomWithContextAnimation(referenceNode)
+		l,t,w,h = self.getPxGeom(referenceNode)
 		referenceValue = l+w
 
 		# make a list of node/attr to change
 		list = []
 		for nodeRef in self.currentSelectedNodeList:
 			if not nodeRef is referenceNode:
-				l,t,w,h = self.getPxGeomWithContextAnimation(nodeRef)
+				l,t,w,h = self.getPxGeom(nodeRef)
 				diff = l+w-referenceValue
 				l = l-diff
 				# make the new geom
@@ -1663,14 +1539,14 @@ class LayoutView2(LayoutViewDialog2):
 		referenceNode = self.currentSelectedNodeList[-1]
 
 		# determinate the reference value		
-		l,t,w,h = self.getPxGeomWithContextAnimation(referenceNode)
+		l,t,w,h = self.getPxGeom(referenceNode)
 		referenceValue = t
 
 		# make a list of node/attr to change
 		list = []
 		for nodeRef in self.currentSelectedNodeList:
 			if not nodeRef is referenceNode:
-				l,t,w,h = self.getPxGeomWithContextAnimation(nodeRef)
+				l,t,w,h = self.getPxGeom(nodeRef)
 				t = referenceValue
 				# make the new geom
 				self.__makeAttrListToApplyFromGeom(nodeRef, (l,t,w,h), list)
@@ -1697,14 +1573,14 @@ class LayoutView2(LayoutViewDialog2):
 		referenceNode = self.currentSelectedNodeList[-1]
 
 		# for the reference object, determinate the center
-		l,t,w,h = self.getPxGeomWithContextAnimation(referenceNode)
+		l,t,w,h = self.getPxGeom(referenceNode)
 		referenceValue = int(t+h/2)
 		
 		# make a list of node/attr to change
 		list = []
 		for nodeRef in self.currentSelectedNodeList:
 			if not nodeRef is referenceNode:
-				l,t,w,h = self.getPxGeomWithContextAnimation(nodeRef)
+				l,t,w,h = self.getPxGeom(nodeRef)
 				center = int(t+h/2)
 				diff = center-referenceValue
 				t = t-diff
@@ -1733,14 +1609,14 @@ class LayoutView2(LayoutViewDialog2):
 		referenceNode = self.currentSelectedNodeList[-1]
 
 		# for the reference object, determinate the right border
-		l,t,w,h = self.getPxGeomWithContextAnimation(referenceNode)
+		l,t,w,h = self.getPxGeom(referenceNode)
 		referenceValue = t+h
 
 		# make a list of node/attr to change
 		list = []
 		for nodeRef in self.currentSelectedNodeList:
 			if not nodeRef is referenceNode:
-				l,t,w,h = self.getPxGeomWithContextAnimation(nodeRef)
+				l,t,w,h = self.getPxGeom(nodeRef)
 				diff = t+h-referenceValue
 				t = t-diff
 				# make the new geom
@@ -1765,7 +1641,7 @@ class LayoutView2(LayoutViewDialog2):
 		som = 0
 		sortedList = []
 		for node in self.currentSelectedNodeList:
-			l,t,w,h = self.getPxGeomWithContextAnimation(node)
+			l,t,w,h = self.getPxGeom(node)
 			if referenceMinValue == None or l < referenceMinValue:
 				referenceMinValue = l
 			if referenceMaxValue == None or l+w > referenceMaxValue:
@@ -1781,10 +1657,10 @@ class LayoutView2(LayoutViewDialog2):
 		# make a list of node/attr to change
 		list = []
 		firstNodeRef = sortedList[0]
-		l,t,w,h = self.getPxGeomWithContextAnimation(firstNodeRef)
+		l,t,w,h = self.getPxGeom(firstNodeRef)
 		posRef = l+w
 		for nodeRef in sortedList[1:]:
-			l,t,w,h = self.getPxGeomWithContextAnimation(nodeRef)
+			l,t,w,h = self.getPxGeom(nodeRef)
 			l = posRef+space
 			posRef = l+w
 			# make the new geom
@@ -1809,7 +1685,7 @@ class LayoutView2(LayoutViewDialog2):
 		som = 0
 		sortedList = []
 		for node in self.currentSelectedNodeList:
-			l,t,w,h = self.getPxGeomWithContextAnimation(node)
+			l,t,w,h = self.getPxGeom(node)
 			if referenceMinValue == None or t < referenceMinValue:
 				referenceMinValue = t
 			if referenceMaxValue == None or t+h > referenceMaxValue:
@@ -1825,10 +1701,10 @@ class LayoutView2(LayoutViewDialog2):
 		# make a list of node/attr to change
 		list = []
 		firstNodeRef = sortedList[0]
-		l,t,w,h = self.getPxGeomWithContextAnimation(firstNodeRef)
+		l,t,w,h = self.getPxGeom(firstNodeRef)
 		posRef = t+h
 		for nodeRef in sortedList[1:]:
-			l,t,w,h = self.getPxGeomWithContextAnimation(nodeRef)
+			l,t,w,h = self.getPxGeom(nodeRef)
 			t = posRef+space
 			posRef = t+h
 			# make the new geom
@@ -1837,8 +1713,8 @@ class LayoutView2(LayoutViewDialog2):
 
 	# this method will be used by the sort method
 	def __cmpNode(self, node1, node2):
-		l1,t1,w1,h1 = self.getPxGeomWithContextAnimation(node1)
-		l2,t2,w2,h2 = self.getPxGeomWithContextAnimation(node2)
+		l1,t1,w1,h1 = self.getPxGeom(node1)
+		l2,t2,w2,h2 = self.getPxGeom(node2)
 		if self.__sortAttr == 'left':
 			if l1 < l2:
 				return -1
@@ -1863,17 +1739,19 @@ class LayoutView2(LayoutViewDialog2):
 			import NodeEdit
 			NodeEdit.showeditor(self.currentSelectedNodeList[0])
 
+	# enable disable light animations
 	def onEnableAnimation(self):
 		if len(self.currentSelectedNodeList) > 0:
 			selectedNode = self.currentSelectedNodeList[0]
 			nodeType = self.getNodeType(selectedNode)
-			animateNode = self.getAnimateNode()
 			editmgr = self.editmgr
 			if not editmgr.transaction():
 				return
-			if animateNode is not None:
+			if selectedNode.GetAttrDef('animated', None):
 				# disable animation
+				animateNode = self.getAnimateNode(selectedNode)
 				editmgr.delnode(animateNode)
+				editmgr.setnodeattr(selectedNode, 'animated', None)
 			else:
 				# enable animation
 				animateNode = self.context.newnode('animpar')
@@ -1882,10 +1760,10 @@ class LayoutView2(LayoutViewDialog2):
 				animateNode.SetAttr('animvals', [(0.0, {'top':top, 'left':left, 'width':width, 'height':height}),
 														(1.0, {'top':top, 'left':left, 'width':width, 'height':height})])
 				editmgr.addnode(selectedNode, -1, animateNode)
+				editmgr.setnodeattr(selectedNode, 'animated', 1)
 					
 			editmgr.commit()
 			if animateNode is not None:
-				self.setCurrentTimeValue(0, selectedNode)
 				self.updateFocus()
 
 	def onEditProperties(self):
@@ -2230,10 +2108,10 @@ class LayoutView2(LayoutViewDialog2):
 	
 	def getPreviewOption(self, nodeRef, nodeType):
 		# the default value is node type dependent
-		if nodeType == TYPE_MEDIA:
-			return nodeRef.GetAttrDef('previewShowOption', 'onSelected')
-		elif nodeType in (TYPE_VIEWPORT, TYPE_REGION):
+		if nodeType in (TYPE_VIEWPORT, TYPE_REGION):
 			return nodeRef.GetAttrDef('previewShowOption', 'always')
+		else:
+			return nodeRef.GetAttrDef('previewShowOption', 'onSelected')
 
 	def isSelected(self, nodeRef):
 		for n in self.currentSelectedNodeList:
@@ -2262,7 +2140,7 @@ class LayoutView2(LayoutViewDialog2):
 			
 		return 1
 			
-	def getVisibility(self, nodeRef, nodeType, selected):		
+	def getVisibility(self, nodeRef, nodeType, selected):
 		optionValue = self.getPreviewOption(nodeRef, nodeType)
 		if (optionValue == 'always' or (optionValue == 'onSelected' and selected)) and \
 			self.isAVisibleNode(nodeRef, nodeType):
@@ -2312,7 +2190,7 @@ class LayoutView2(LayoutViewDialog2):
 				else:
 					value = None
 				editmgr.setchannelattr(nodeRef.name, 'previewShowOption', value)
-			elif nodeType == TYPE_MEDIA:
+			else:
 				if optionValue == 'always':
 					value = 'always'
 				else:
@@ -2472,6 +2350,16 @@ class LightWidget(Widget):
 			
 		return nodeType, nodeRef
 
+	def hasVisibleAnimate(self, nodeRef):
+		visibleAnimate = 0
+		children = self._context.getChildren(nodeRef)
+		for child in children:
+			childType = self._context.getNodeType(child)
+			if childType == TYPE_ANIMATE:
+				if self._context.getVisibility(child, childType, 0):
+					visibleAnimate = 1
+		return visibleAnimate
+
 	def onCheckCtrl(self, ctrlName, value):
 		pass
 		
@@ -2502,6 +2390,11 @@ class ZFieldWidget(LightWidget):
 			self.dialogCtrl.setFieldCtrl('RegionZ',"%d"%z)		
 		elif nodeType == TYPE_MEDIA:
 			self.dialogCtrl.enable('RegionZ',1)
+			z = nodeRef.GetAttrDef('z', 0)
+			self.dialogCtrl.setFieldCtrl('RegionZ',"%d"%z)
+		elif nodeType == TYPE_ANIMATE:
+			self.dialogCtrl.enable('RegionZ',0)
+			nodeRef = self._context.getParentNodeRef(nodeRef, TYPE_ANIMATE)
 			z = nodeRef.GetAttrDef('z', 0)
 			self.dialogCtrl.setFieldCtrl('RegionZ',"%d"%z)
 		else:
@@ -2563,6 +2456,8 @@ class FitWidget(LightWidget):
 			self.__update(nodeRef, nodeType)
 		elif nodeType == TYPE_MEDIA:
 			self.__update(nodeRef, nodeType)
+		elif nodeType == TYPE_ANIMATE:
+			self.__update(nodeRef, nodeType, readOnly=1)
 		else:
 			self.__unselect()
 
@@ -2573,13 +2468,15 @@ class FitWidget(LightWidget):
 		self.dialogCtrl.setLabel('FitLabel','Fit')
 
 	# update the dialog box on valid selection
-	def __update(self, nodeRef, nodeType):
+	def __update(self, nodeRef, nodeType, readOnly=0):
 		if nodeType == TYPE_REGION:
 			self.dialogCtrl.setLabel('FitLabel','Default fit')
 			fit = nodeRef.GetAttrDef('fit', 'hidden')
 			self.__currentShowedValues = self.showedValues
 			index = self.fitValues.index(fit)
-		elif nodeType == TYPE_MEDIA:
+		elif nodeType in (TYPE_MEDIA, TYPE_ANIMATE):
+			if nodeType == TYPE_ANIMATE:
+				nodeRef = self._context.getParentNodeRef(nodeRef, TYPE_ANIMATE)
 			self.dialogCtrl.setLabel('FitLabel','Fit')
 			fit = nodeRef.GetAttrDef('fit', None)
 			region = self._context.getParentNodeRef(nodeRef)
@@ -2589,11 +2486,14 @@ class FitWidget(LightWidget):
 				index = 0
 			else:
 				index = self.fitValues.index(fit)+1
-			self.__currentShowedValues = ['default ['+self.showedValues[defaultIndex]+']']+self.showedValues
+			self.__currentShowedValues = ['default ['+self.showedValues[defaultIndex]+']']+self.showedValues			
 			
 		self.dialogCtrl.fillSelecterCtrl('Fit', self.__currentShowedValues)		
 		self.dialogCtrl.setSelecterCtrl('Fit',index)
-		self.dialogCtrl.enable('Fit',1)
+		if readOnly:
+			self.dialogCtrl.enable('Fit',0)
+		else:
+			self.dialogCtrl.enable('Fit',1)
 		
 	#
 	# interface implementation of 'dialog controls callback' 
@@ -2640,6 +2540,11 @@ class GeomFieldWidget(LightWidget):
 		elif nodeType == TYPE_REGION:
 			self.__updateRegion(nodeRef)
 		elif nodeType == TYPE_MEDIA:
+			if self.hasVisibleAnimate(nodeRef):
+				self.__unselect()
+			else:
+				self.__updateMedia(nodeRef)
+		elif nodeType == TYPE_ANIMATE:
 			self.__updateMedia(nodeRef)
 		else:
 			self.__unselect()
@@ -2687,7 +2592,7 @@ class GeomFieldWidget(LightWidget):
 		self.dialogCtrl.enable('RegionW',1)
 		self.dialogCtrl.enable('RegionH',1)
 
-		geom = self._context.getPxGeomWithContextAnimation(nodeRef)
+		geom = self._context.getPxGeom(nodeRef)
 		self.updateRegionGeom(geom)
 		
 	def updateRegionGeom(self, geom):
@@ -2702,7 +2607,7 @@ class GeomFieldWidget(LightWidget):
 		self.dialogCtrl.enable('RegionW',1)
 		self.dialogCtrl.enable('RegionH',1)
 		
-		geom = self._context.getPxGeomWithContextAnimation(nodeRef)
+		geom = self._context.getPxGeom(nodeRef)
 		self.updateMediaGeom(geom)
 						
 	def updateMediaGeom(self, geom):
@@ -2726,7 +2631,7 @@ class GeomFieldWidget(LightWidget):
 					self.__onGeomOnViewportChanged(ctrlName, value)
 				elif nodeType == TYPE_REGION:
 					self.__onGeomOnRegionChanged(ctrlName, value)
-				elif nodeType == TYPE_MEDIA:
+				elif nodeType in (TYPE_MEDIA, TYPE_ANIMATE):
 					self.__onGeomOnRegionChanged(ctrlName, value)
 
 	def __onGeomOnViewportChanged(self, ctrlName, value):
@@ -2743,7 +2648,7 @@ class GeomFieldWidget(LightWidget):
 	def __onGeomOnRegionChanged(self, ctrlName, value):
 		if len(self._context.currentSelectedNodeList) > 0:		
 			nodeRef = self._context.currentSelectedNodeList[0]
-			x,y,w,h = self._context.getPxGeomWithContextAnimation(nodeRef)
+			x,y,w,h = self._context.getPxGeom(nodeRef)
 			if ctrlName == 'RegionX':
 				x = value
 			elif ctrlName == 'RegionY':
@@ -2793,11 +2698,36 @@ class AnimateControlWidget(LightWidget):
 		nodeType, nodeRef = self.getSingleSelection(nodeRefList)
 		self._selected = (nodeType, nodeRef)
 		
-		if nodeType == TYPE_MEDIA:
-			self.dialogCtrl.enable('AnimateEnable',1)
+		if nodeType in (TYPE_MEDIA, TYPE_ANIMATE):
+			if nodeType == TYPE_MEDIA:
+				if nodeRef.isAnimated():
+					# it's a light animation
+					enabled = 1
+					checked = 1
+				else:
+					# it's not a 'light' animation
+					enabled = 1
+					checked = 0
+					children = self._context.getChildren(nodeRef)
+					for child in children:
+						if self._context.getNodeType(child) == TYPE_ANIMATE and not child.attrdict.get('internal'):
+							# has some animate nodes
+							checked = 1
+							enabled = 0
+							break
+			else:
+				# it's not a 'light' animation, read only
+				enabled = 0
+				checked = 1
+
+			self.dialogCtrl.setCheckCtrl('AnimateEnable',checked)
+			self.dialogCtrl.enable('AnimateEnable',enabled)				
+			self._context.settoggle(ENABLE_ANIMATION, checked)
 			self.__updateNode(nodeRef)
 		else:
-			self.dialogCtrl.enable('AnimateEnable',0)
+			self.dialogCtrl.enable('AnimateEnable',0)				
+			self.dialogCtrl.setCheckCtrl('AnimateEnable',0)
+			self._context.settoggle(ENABLE_ANIMATION, 0)
 			self.__updateUnselected()
 		
 	#
@@ -2809,41 +2739,32 @@ class AnimateControlWidget(LightWidget):
 		self.sliderCtrl.setKeyTimes([0.0, 1.0])		
 		self.sliderCtrl.setCursorPos(0)
 		self.sliderCtrl.enable(0)
-		self.dialogCtrl.setCheckCtrl('AnimateEnable',0)
 	
 	def __updateViewport(self, nodeRef):
 		self.__updateUnselected()
 			
 	def __updateNode(self, nodeRef):
-		animateNode = self._context.getAnimateNode()
-		if animateNode is None or animateNode.GetType() != 'animpar':
+		animateNode = self._context.getAnimateNode(nodeRef)
+		if animateNode is None:
 			self.__updateUnselected()
 			return
 
-		if animateNode.GetType() == 'animpar':
-			animvals = animateNode.GetAttrDef('animvals', [])
-			keyTimeList = []
-			for time, vals in animvals:
-				keyTimeList.append(time)
-		else:
-			# no key time
-			keyTimeList = None
-			
+		editWrapper = animateNode._animateEditWrapper
+		keyTimeList = editWrapper.getKeyTimeList()
 		self.sliderCtrl.setKeyTimes(keyTimeList)
-		timeIndex = self._context.getKeyTimeIndex()
-		timeValue = self._context.getCurrentTimeValue()
+		
 		self.__selecting = 1
-		self.sliderCtrl.selectKeyTime(timeIndex)
-		if not timeIndex is None and timeIndex >= 0:
-			list = self.sliderCtrl.getKeyTimes()
-			self.sliderCtrl.setCursorPos(list[timeIndex])
-		elif not timeValue is None:
-			self.sliderCtrl.selectKeyTime(timeValue)			
+		timeValue = animateNode._currentTime
+		keyTimeIndex = self._context.getKeyForThisTime(keyTimeList, timeValue, round=1)
+		if keyTimeIndex is not None and keyTimeIndex >= 0:
+			self.sliderCtrl.selectKeyTime(keyTimeIndex)
+		else:
+			self.sliderCtrl.selectKeyTime(-1)
+		self.sliderCtrl.setCursorPos(timeValue)
 		self.__selecting = 0
-	
+				
 		self.isEnabled = 1
 		self.sliderCtrl.enable(1)
-		self.dialogCtrl.setCheckCtrl('AnimateEnable',1)
 		
 	def insertKey(self, time):
 		if self.isEnabled:
@@ -2852,7 +2773,7 @@ class AnimateControlWidget(LightWidget):
 	def removeKey(self, index):
 		if self.isEnabled:
 			self.sliderCtrl.removeKeyTimeAtIndex(index)
-			newIndex = self._context.getKeyTimeIndex()
+			newIndex = index-1
 			list = self.sliderCtrl.getKeyTimes()
 			self.sliderCtrl.setCursorPos(list[newIndex])
 			self.sliderCtrl.selectKeyTime(newIndex)
@@ -2882,29 +2803,32 @@ class AnimateControlWidget(LightWidget):
 	def onSelected(self, index):
 		if self.isEnabled and not self.__selecting:
 			nodeType, nodeRef = self._selected
-			self._context.setKeyTimeIndex(index, nodeRef)
-			list = self.sliderCtrl.getKeyTimes()
-			self.sliderCtrl.setCursorPos(list[index])
+
+			animateNode = self._context.getAnimateNode(nodeRef)
+			timeList = self.sliderCtrl.getKeyTimes()
+			time = timeList[index]
+			
+			animateNode._currentTime = time
+			self.sliderCtrl.setCursorPos(time)
 			self._context.updateFocus(1)
 
 	def onCursorPosChanged(self, pos):
 		if self.isEnabled:
+			context = self._context
 			nodeType, nodeRef = self._selected
-			self._context.setCurrentTimeValue(pos, nodeRef)
-			animateNode = self._context.getAnimateNode()
-			animvals = animateNode.GetAttrDef('animvals', [])
-			keyTimeIndex = self._context.getKeyForThisTime(animvals, pos, round=1)
+			animateNode = self._context.getAnimateNode(nodeRef)
+			editWrapper = animateNode._animateEditWrapper
+			animateNode._currentTime = pos
+			keyTimeList = editWrapper.getKeyTimeList()
+			keyTimeIndex = self._context.getKeyForThisTime(keyTimeList, pos, round=1)
 			if keyTimeIndex is not None and keyTimeIndex >= 0:
 				self.sliderCtrl.selectKeyTime(keyTimeIndex)
-				t, v = animvals[0] 
-				v['selected'] = keyTimeIndex # XXX trick to save the previous index for undo/redo
 			else:
 				self.sliderCtrl.selectKeyTime(-1)
 			previewWidget = self._context.previousWidget
 			if previewWidget is not None:
 				previewWidget.fastUpdate()
-			context = self._context
-			context.onFastGeomUpdate(nodeRef, context.getPxGeomWithContextAnimation(nodeRef))
+			context.onFastGeomUpdate(nodeRef, context.getPxGeom(nodeRef))
 
 	def onKeyTimeChanged(self, index, time):
 		if self.isEnabled:
@@ -2913,12 +2837,9 @@ class AnimateControlWidget(LightWidget):
 			if not editmgr.transaction(editmgr):
 				return
 
-			animateNode = self._context.getAnimateNode()
+			animateNode = self._context.getAnimateNode(nodeRef)
 			animvals = animateNode.GetAttrDef('animvals', [])
 
-			t, v = animvals[0] 
-			v['selected'] = self._context.getKeyTimeIndex() # XXX trick to save the previous index for undo/redo
-			
 			canimvals = [] # don't modify the original to make undo/redo working
 			for t, v in animvals:
 				canimvals.append((t, v.copy()))
@@ -2927,7 +2848,7 @@ class AnimateControlWidget(LightWidget):
 			canimvals[index] = (time, vals)
 			editmgr.setnodeattr(animateNode, 'animvals', canimvals)
 				
-			self._context.setCurrentTimeValue(time, nodeRef)
+			animateNode._currentTime = time
 			editmgr.commit()
 
 	def onKeyTimeChanging(self, time):
@@ -3026,9 +2947,8 @@ class TreeWidget(Widget):
 			# save the new node for expand. The expand operation can't be done here
 			self.__nodeRefListToExpand.append(nodeRef)
 
-		if nodeType in (TYPE_VIEWPORT, TYPE_REGION, TYPE_MEDIA):
-			visible = self._context.getVisibility(nodeRef, nodeType, selected=0)
-			self.updateVisibility([nodeRef], visible)
+		visible = self._context.getVisibility(nodeRef, nodeType, selected=0)
+		self.updateVisibility([nodeRef], visible)
 					
 	def removeNode(self, nodeRef, nodeType):
 		nodeTreeCtrlId = self.nodeRefToNodeTreeCtrlId.get(nodeRef)
@@ -3061,6 +2981,8 @@ class TreeWidget(Widget):
 				self.treeCtrl.setpopup(MenuTemplate.POPUP_REGIONTREE_REGION)
 			elif nodeType == TYPE_MEDIA:
 				self.treeCtrl.setpopup(MenuTemplate.POPUP_REGIONTREE_MEDIA)
+			else:
+				self.treeCtrl.setpopup(None)
 		else:
 			self.treeCtrl.setpopup(None)
 
@@ -3074,18 +2996,9 @@ class TreeWidget(Widget):
 	
 	def updateNode(self, nodeRef):
 		nodeType = self._context.getNodeType(nodeRef)
-		if nodeType == TYPE_MEDIA:
-			type = nodeRef.GetChannelType()
-			name = self._context.getShowedName(nodeRef, TYPE_MEDIA)
-		elif nodeType == TYPE_REGION:
-			type = 'region'
-			name = self._context.getShowedName(nodeRef, TYPE_REGION)
-		else:
-			type = 'viewport'
-			name = self._context.getShowedName(nodeRef, TYPE_VIEWPORT)
-		if name == None:
-			name=''
-		self.treeCtrl.updateNode(self.nodeRefToNodeTreeCtrlId[nodeRef], name, type, type)
+		iconname = nodeRef.getIconName(wantmedia=1)
+		name = self._context.getShowedName(nodeRef, nodeType)
+		self.treeCtrl.updateNode(self.nodeRefToNodeTreeCtrlId[nodeRef], name, iconname, iconname)
 		selected = self._context.isSelected(nodeRef)
 		visible = self._context.getVisibility(nodeRef, nodeType, selected=selected)
 		self.updateVisibility([nodeRef], visible)
@@ -3291,12 +3204,25 @@ class PreviousWidget(Widget):
 					self.__showRegion(nodeRef)
 				elif nodeType == TYPE_MEDIA:
 					self.__showMedia(nodeRef)
+				elif nodeType == TYPE_ANIMATE:
+					self.__showAnimate(nodeRef)
 			else:
 				if nodeType == TYPE_REGION:
 					self.__hideRegion(nodeRef)
 				elif nodeType == TYPE_MEDIA:
 					self.__hideMedia(nodeRef)
+				elif nodeType == TYPE_ANIMATE:
+					self.__hideAnimate(nodeRef)
 
+	# update animation wrapper to be able to get interpolation values
+	def updateAnimationWrapper(self, animateNode):
+		import AnimationWrappers
+		animateNode._animateEditWrapper = AnimationWrappers.getAnimationWrapper(animateNode)
+		if not hasattr(animateNode, '_currentTime'):
+			animateNode._currentTime = 0
+		animateNode._animateEditWrapper.updateAnimators(animateNode)
+		self.__mustBeUpdated = 1
+		
 	def update(self):
 		if self.__mustBeUpdated:
 			self.updateRegionTree()
@@ -3335,7 +3261,12 @@ class PreviousWidget(Widget):
 		shapeList = []
 		for nodeRef in nodeRefList:
 			node = self.getNode(nodeRef)
-			if node != None and node._graphicCtrl != None:
+			if node is None and self._context.getNodeType(nodeRef) == TYPE_ANIMATE:
+				# for animate node, the shape is associated to the target node
+				parentNodeRef = self._context.getParentNodeRef(nodeRef)
+				if parentNodeRef is not None:
+					node = self.getNode(parentNodeRef)
+			if node is not None and node._graphicCtrl != None:
 				shapeList.append(node._graphicCtrl)
 		self.previousCtrl.selectNodeList(shapeList)
 	
@@ -3380,9 +3311,6 @@ class PreviousWidget(Widget):
 		pNode.addNode(regionNode)
 		self.__mustBeUpdated = 1
 		return regionNode
-#		visible = self._context.getVisibility(regionRef, TYPE_REGION, selected=0)
-#		if visible:
-#			self.__showRegion(regionRef)
 
 	def addViewport(self, viewportRef):
 		viewportNode = Viewport(viewportRef, self)
@@ -3421,7 +3349,7 @@ class PreviousWidget(Widget):
 	def appendNode(self, pNodeRef, nodeRef, nodeType):
 		if not self._context.isAVisibleNode(nodeRef, nodeType):
 			return
-		
+
 		if nodeType == TYPE_VIEWPORT:
 			node = self.addViewport(nodeRef)
 			if node is not None:
@@ -3435,8 +3363,6 @@ class PreviousWidget(Widget):
 		if nodeType == TYPE_REGION:
 			node = self.addRegion(pNodeRef, nodeRef)
 			self._nodeRefToNodeTree[nodeRef] = node
-		elif nodeType == TYPE_MEDIA:
-			pass
 		
 		visible = self._context.getVisibility(nodeRef, nodeType, selected=0)
 		if visible:
@@ -3449,6 +3375,8 @@ class PreviousWidget(Widget):
 			self.removeRegion(nodeRef)
 		elif nodeType == TYPE_MEDIA:
 			self.__hideMedia(nodeRef)
+		elif nodeType == TYPE_ANIMATE:
+			self.__hideAnimate(nodeRef)
 				   
 	# ensure that the viewport is in showing state
 	def __showViewport(self, viewportRef):
@@ -3477,6 +3405,11 @@ class PreviousWidget(Widget):
 
 	# ensure that the media is in a showing state
 	def __showMedia(self, nodeRef):
+		# update the animator if the animate node is include inside the media node		
+		animateNode = nodeRef.getAnimateNode()
+		if animateNode is not None:
+			self.updateAnimationWrapper(animateNode)
+			
 		if self._nodeRefToNodeTree.has_key(nodeRef):
 			# already showed
 			return
@@ -3488,8 +3421,25 @@ class PreviousWidget(Widget):
 			parentNode.addNode(newNode)
 
 		newNode.toShowedState()
+			
 		self.__mustBeUpdated = 1
 
+	def __showAnimate(self, nodeRef):
+		targetAnimateNodeRef = self._context.getParentNodeRef(nodeRef)
+		targetAnimateNode = self._nodeRefToNodeTree.get(targetAnimateNodeRef)
+	
+		# force the target node to show if not
+		if targetAnimateNode is None or not targetAnimateNode.isShowed():
+			self.updateVisibility([targetAnimateNodeRef], 1)
+			targetAnimateNode = self._nodeRefToNodeTree.get(targetAnimateNodeRef)
+			if targetAnimateNode is None:
+				print 'PreviewPane: can not show animate , no target'
+				return
+		
+		self.updateAnimationWrapper(nodeRef)
+		targetAnimateNode.setAnimateNode(nodeRef)
+		self.__mustBeUpdated = 1
+			
 	def __hideRegion(self, regionRef):
 		regionNode = self.getNode(regionRef)
 		if regionNode is not None:
@@ -3508,15 +3458,24 @@ class PreviousWidget(Widget):
 		if parentNode != None:
 			parentNode.removeNode(node)
 		del self._nodeRefToNodeTree[mediaRef]
+
+		animateRef = mediaRef.getAnimateNode()
+		if animateRef is not None:
+			if hasattr(animateRef,'_animateEditWrapper'):
+				del animateRef._animateEditWrapper
+		
+		self.__mustBeUpdated = 1
+
+	def __hideAnimate(self, nodeRef):
+		targetAnimateNodeRef = self._context.getParentNodeRef(nodeRef)
+		targetAnimateNode = self._nodeRefToNodeTree.get(targetAnimateNodeRef)
+
+		if hasattr(nodeRef,'_animateEditWrapper'):
+			del nodeRef._animateEditWrapper
+		if targetAnimateNode:
+			targetAnimateNode.setAnimateNode(None)
 		self.__mustBeUpdated = 1
 									
-#	def removeRegionNode(self, regionRef):
-#		if regionRef in	self.currentRegionNodeListShowed:
-#			self.currentRegionNodeListShowed.remove(regionRef)
-#			regionNode = self.getNode(regionRef)
-#			regionNode.toHiddenState()
-#			self.__mustBeUpdated = 1
-							 
 	def onSelectChanged(self, objectList):
 		# prevent against infinite loop
 		if self.__selecting:
@@ -3545,7 +3504,11 @@ class PreviousWidget(Widget):
 		for nodeRef, nodeTree in self._nodeRefToNodeTree.items():
 			for obj in objectList:
 				if nodeTree._graphicCtrl is obj:
-					list.append(nodeRef)
+					animateNode = nodeTree.getAnimateNode()
+					if animateNode is None:
+						list.append(nodeRef)
+					else:
+						list.append(animateNode)
 
 		return list
 	
@@ -3572,6 +3535,10 @@ class PreviousWidget(Widget):
 		
 		# xxx to optimize
 		for  nodeRef, nodeTree in self._nodeRefToNodeTree.items():
+			animateNode = nodeTree.getAnimateNode()
+			if animateNode is not None:
+				if self._context.isSelected(animateNode):
+					nodeRef = animateNode			
 			for obj in objectList:
 				if nodeTree._graphicCtrl is obj:
 					self._context.onFastGeomUpdate(nodeRef, obj.getGeom())
@@ -3580,7 +3547,11 @@ class PreviousWidget(Widget):
 	def onGeomChanged(self, objectList):		
 		applyList = []
 		# xxx to optimize
-		for  nodeRef, nodeTree in self._nodeRefToNodeTree.items():
+		for nodeRef, nodeTree in self._nodeRefToNodeTree.items():
+			animateNode = nodeTree.getAnimateNode()
+			if animateNode is not None:
+				if self._context.isSelected(animateNode):
+					nodeRef = animateNode
 			for obj in objectList:
 				if nodeTree._graphicCtrl is obj:
 					applyList.append((nodeRef, obj.getGeom()))
@@ -3594,7 +3565,22 @@ class PreviousWidget(Widget):
 	def fastUpdate(self):
 		if self.currentViewport is not None:
 			self.currentViewport.fastUpdateAllAttrdict()
-		
+
+	def getPxGeom(self, nodeRef):
+		nodeType = self._context.getNodeType(nodeRef)
+		if nodeType == TYPE_ANIMATE:
+			parentRef = self._context.getParentNodeRef(nodeRef)
+			node = self._nodeRefToNodeTree.get(parentRef)
+		else:
+			node = self._nodeRefToNodeTree.get(nodeRef)
+		if node is None:
+			print 'Preview: unenable to get wingeom ',nodeRef
+			# return the dom value
+			return nodeRef.getPxGeom()
+		else:
+			# return the current value (dom or current animate value according to an eventual visible animate node)
+			return node.getWinGeom()
+				
 class Node:
 	def __init__(self, nodeRef, ctx):
 		self._nodeRef = nodeRef
@@ -3622,6 +3608,8 @@ class Node:
 		self._wantToShow = 0
 		self._mustUpdateEditBackground = 1
 		self._curattrdict = {}
+		
+		self._animateNode = None
 		
 	def _cleanup(self):
 		if self.isShowed:
@@ -3656,7 +3644,8 @@ class Node:
 		return self._viewport
 	
 	def importAttrdict(self):
-		self._curattrdict = {}
+		self._curattrdict = {}					  
+		self._curattrdict['bgcolor'] = self._computedEditBackground
 								
 	def getNodeRef(self):
 		return self._nodeRef
@@ -3830,18 +3819,35 @@ class Node:
 		self.hide()
 
 	# get the geom for region and media which depends of whether we edit or not an animation.
-	# if this node is being animated, we have to get an interpolated value, and put the result into
-	# the local css resolver in order than all geom children are correctly updated
+	# if this node is being animated, we have to get an interpolated value.
 	def getWinGeom(self):
-		context = self._ctx._context
-		targetAnimateNode = context.getTargetAnimateNode()
-		if targetAnimateNode is self._nodeRef:
-			wingeom = x, y, w, h = context.getPxGeomWithContextAnimation(self._nodeRef)
+		return self._cssResolver.getPxGeom(self._cssNode)
+
+	def setAnimateNode(self, animateNode):
+		self._animateNode = animateNode
+
+	def getAnimateNode(self):
+		return self._animateNode
+
+	def _updateAnimateValues(self):
+		if self._animateNode is not None:
+			# separate animate node
+			animateNode = self._animateNode
+		else:
+			if hasattr(self._nodeRef,'getAnimateNode'):
+				animateNode = self._nodeRef.getAnimateNode()
+			else:
+				animateNode = None
+		if animateNode is not None:
+			if hasattr(animateNode, '_animateEditWrapper'):
+				wingeom = animateNode._animateEditWrapper.getRectAt(animateNode._currentTime)
+			else:
+				print 'preview: unenable to get animate edit wrapper ',animateNode
+				wingeom = animateNode.getPxGeom()
+			x, y, w, h = wingeom
+			# put the result into the local css resolver in order than all geom (children) are correctly updated
 			updatedList = [('left', x), ('top', y), ('width', w), ('height', h), ('right', None), ('bottom', None)]
 			self._cssResolver.setRawAttrs(self._cssNode, updatedList)
-		else:
-			wingeom = self._cssResolver.getPxGeom(self._cssNode)
-		return wingeom
 
 class Region(Node):
 	def __init__(self, nodeRef, ctx):
@@ -3855,7 +3861,8 @@ class Region(Node):
 		Node.importAttrdict(self)
 
 		self._cssNode.copyRawAttrs(self._nodeRef.getCssId())
-			
+		self._updateAnimateValues()
+		
 		z = self._nodeRef.GetAttrDef('z', 0)
 		if z != self._z:
 			self._z = z
@@ -3894,6 +3901,7 @@ class Region(Node):
 		if self._graphicCtrl is not None:
 			# XXX do a copy to force the low level to update
 			self._curattrdict = self._curattrdict.copy()
+			self._updateAnimateValues()
 			self._curattrdict['wingeom'] = self.getWinGeom()
 			self._graphicCtrl.setAttrdict(self._curattrdict)
 
@@ -3948,6 +3956,7 @@ class MediaRegion(Region):
 
 		self._cssNode.copyRawAttrs(self._nodeRef.getSubRegCssId())
 		self._mediaCssNode.copyRawAttrs(self._nodeRef.getMediaCssId())
+		self._updateAnimateValues()
 				
 		showMode = self._ctx._context.getShowEditBackgroundMode(self._nodeRef)
 		if showMode == 'editBackground':
@@ -3967,28 +3976,6 @@ class MediaRegion(Region):
 			
 		# determinate the real fit attribute		
 		self.fit = fit = self._nodeRef.getCssAttr('fit','hidden')
-
-		# ajust the internal geom for edition. If no constraint neither on right nor botton,
-		# with fit==hidden: chg the internal region size.
-		# it avoid a unexepected effet during the edition when you resize. don't change the semantic
-#		right =	self._nodeRef.GetRawAttrDef('right', None) 
-#		bottom = self._nodeRef.GetRawAttrDef('bottom', None) 
-#		width =	self._nodeRef.GetRawAttrDef('width', None) 
-#		height = self._nodeRef.GetRawAttrDef('height', None)
-#		regPoint = self._nodeRef.GetAttrDef('regPoint', None)
-#		regAlign = self._nodeRef.GetAttrDef('regAlign', None)
-#		self.media_width, self.media_height = self._nodeRef.GetDefaultMediaSize(wingeom[2], wingeom[3])
-#		# protect against getdefaultmediasize method which may return 0 !
-#		if self.media_width <= 0 or self.media_height <= 0:
-#			self.media_width, self.media_height = wingeom[2], wingeom[3]
-#		if regPoint == 'topLeft' and regAlign == 'topLeft':
-#			if fit == 'hidden':
-#				if right == None and width == None:
-#					x,y,w,h = wingeom
-#					wingeom = x,y,self.media_width,h
-#				if bottom == None and height == None:
-#					x,y,w,h = wingeom
-#					wingeom = x,y,w,self.media_height
 
 		node = self._nodeRef
 		chtype = node.GetChannelType()
