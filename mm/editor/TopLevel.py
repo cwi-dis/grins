@@ -321,7 +321,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.do_read_it(self.filename)
 		self.context = self.root.GetContext()
 		if self.new_file:
-			self.context.dirname = ''
+			self.context.baseurl = ''
 		self.editmgr = EditMgr(self.root)
 		self.context.seteditmgr(self.editmgr)
 		self.editmgr.register(self)

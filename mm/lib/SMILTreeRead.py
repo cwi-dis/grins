@@ -1818,16 +1818,9 @@ def ReadFile(url, printfunc = None):
 
 def ReadFileContext(url, context, printfunc = None):
 	import posixpath
-	utype, str = MMurl.splittype(url)
-	host, path = MMurl.splithost(str)
-	dir = posixpath.dirname(path)
-	if host:
-		dir = '//%s%s' % (host, dir)
-	if utype:
-		dir = '%s:%s' % (utype, dir)
-	context.setdirname(dir)
 	p = SMILParser(context, printfunc)
 	u = MMurl.urlopen(url)
+	context.setbaseurl(u.geturl())
 	data = u.read()
 	p.feed(data)
 	p.close()

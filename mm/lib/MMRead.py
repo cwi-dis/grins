@@ -26,15 +26,8 @@ def ReadFile(url):
 	return rv
 
 def ReadFileContext(url, context):
-	import os, MMurl, posixpath
-	utype, str = MMurl.splittype(url)
-	host, path = MMurl.splithost(str)
-	dir = posixpath.dirname(path)
-	if host:
-		dir = '//%s%s' % (host, dir)
-	if utype:
-		dir = '%s:%s' % (utype, dir)
-	context.setdirname(dir)
+	import MMurl
+	context.setbaseurl(url)
 	if not utype and not host:
 		root = MMCache.loadcache(MMurl.url2pathname(url), context)
 	else:
@@ -47,6 +40,8 @@ def ReadFileContext(url, context):
 		return root
 	# no cache file, parse the file and create the cache (if possible)
 	u = MMurl.urlopen(url)
+	# do this again in case url was redirected
+	context.setbaseurl(u.geturl())
 	root = ReadOpenFileContext(u, url, context)
 	if not utype and not host:
 		import MMWrite
