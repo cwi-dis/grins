@@ -943,6 +943,58 @@ class GeneralTabPage(MultiTabPage):
 		self.attreditor._setsensitive([self.item0+self.ITEM_CHANNELPROPS], 
 				self.fieldlist[1].channelexists(name))
 
+class ChGeneralTabPage(MultiTabPage):
+	TAB_LABEL='General'
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_CH_GENERAL
+	ITEM_GROUP=1
+	ITEM_CHNAME=3
+	ITEM_CHTYPE=5
+	ITEM_TITLE=7
+	N_ITEMS=7
+	_attr_to_item = {
+		'.cname': ITEM_CHNAME,
+		'type': ITEM_CHTYPE,
+		'title': ITEM_TITLE,
+	}
+	attrs_on_page = ['.cname', 'type', 'title']
+	
+	def init_controls(self, item0):
+		rv = MultiTabPage.init_controls(self, item0)
+		self._typepopup = windowinterface.SelectWidget(self.attreditor._dialog,
+				self.item0+self.ITEM_CHTYPE, [], None)
+		return rv
+
+	def close(self):
+		self._typepopup.delete()
+		TabPage.close(self)
+		
+	def do_itemhit(self, item, event):
+		if item == self.item0+self.ITEM_CHNAME:
+			return 1
+		elif item == self.item0+self.ITEM_CHTYPE:
+			return 1
+		elif item == self.item0+self.ITEM_TITLE:
+			return 1
+		return 0
+		
+	def update(self):
+		value = self.fieldlist[0]._getvalueforpage()
+		self.attreditor._setlabel(self.item0+self.ITEM_CHNAME, value)
+		value = self.fieldlist[1]._getvalueforpage()
+		list = self.fieldlist[1].getoptions()
+		self._typepopup.setitems(list, value)
+		value = self.fieldlist[2]._getvalueforpage()
+		self.attreditor._setlabel(self.item0+self.ITEM_TITLE, value)
+
+	def save(self):
+		value = self.attreditor._getlabel(self.item0+self.ITEM_CHNAME)
+		self.fieldlist[0]._savevaluefrompage(value)
+		value = self._typepopup.getselectvalue()
+		self.fieldlist[1]._savevaluefrompage(value)
+		value = self.attreditor._getlabel(self.item0+self.ITEM_TITLE)
+		self.fieldlist[2]._savevaluefrompage(value)
+
 class SystemPropertiesTabPage(MultiTabPage):
 	TAB_LABEL='System properties'
 	
@@ -1253,7 +1305,7 @@ class AreaTabPage(MultiDictTabPage):
 		if item-self.item0 in self._checkboxes:
 			self.attreditor._togglebutton(item)
 			return 1
-		elif item-self.item0 in self._textfields:
+		elif item-self.item0 in self._otherfields:
 			return 1
 		return 0
 		
@@ -1262,12 +1314,16 @@ class AreaTabPage(MultiDictTabPage):
 			field = self._attr_to_field[name]
 			value = field._getvalueforpage()
 			self.attreditor._setbutton(self.item0+item, value=='on')
-		x, y = self._getpoint(self._xyfield)
-		w, h = self._getpoint(self._whfield)
+		x, y, w, h = self._getxywh()
 		self.attreditor._setlabel(self.item0+self.ITEM_X, `x`)
 		self.attreditor._setlabel(self.item0+self.ITEM_Y, `y`)
 		self.attreditor._setlabel(self.item0+self.ITEM_W, `w`)
 		self.attreditor._setlabel(self.item0+self.ITEM_H, `h`)
+		
+	def _getxywh(self):
+		x, y = self._getpoint(self._xyfield)
+		w, h = self._getpoint(self._whfield)
+		return x, y, w, h
 		
 	def _getpoint(self, fieldname):
 		str = self._attr_to_field[fieldname]._getvalueforpage()
@@ -1285,6 +1341,9 @@ class AreaTabPage(MultiDictTabPage):
 		y = self.attreditor._getlabel(self.item0+self.ITEM_Y)
 		w = self.attreditor._getlabel(self.item0+self.ITEM_W)
 		h = self.attreditor._getlabel(self.item0+self.ITEM_H)
+		self._savexywh(x, y, w, h)
+		
+	def _savexywh(self, x, y, w, h):
 		self._attr_to_field[self._xyfield]._savevaluefrompage(x+' '+y)
 		self._attr_to_field[self._whfield]._savevaluefrompage(w+' '+h)
 
@@ -1306,7 +1365,7 @@ class SourceAreaTabPage(AreaTabPage):
 	_whfield = 'imgcropwh'
 	attrs_on_page = ['fullimage', 'imgcropxy', 'imgcropwh']
 	_checkboxes = (ITEM_WHOLE, )
-	_textfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H)
+	_otherfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H)
 			
 class DestinationAreaTabPage(AreaTabPage):
 	TAB_LABEL='Destination area'
@@ -1328,7 +1387,7 @@ class DestinationAreaTabPage(AreaTabPage):
 	_whfield = 'subregionwh'
 	attrs_on_page = ['displayfull', 'aspect', 'subregionxy', 'subregionwh']
 	_checkboxes = (ITEM_WHOLE, ITEM_ASPECT)
-	_textfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H)
+	_otherfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H)
 	
 class Destination1AreaTabPage(DestinationAreaTabPage):
 	# Destination area without "keep aspect" checkbox (fadeout)
@@ -1339,7 +1398,60 @@ class Destination1AreaTabPage(DestinationAreaTabPage):
 	attrs_on_page = ['displayfull', 'subregionxy', 'subregionwh']
 	_checkboxes = (DestinationAreaTabPage.ITEM_WHOLE, )
 	
+class ChannelAreaTabPage(AreaTabPage):
+	TAB_LABEL='Position and Size'
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_CH_AREA
+	ITEM_GROUP=1
+	ITEM_X=3
+	ITEM_Y=5
+	ITEM_W=7
+	ITEM_H=9
+	ITEM_UNITS=11
+	ITEM_Z=13
+	N_ITEMS=13
+	_attr_to_checkbox = {
+	}
+	_attr_to_string = {
+		'z': ITEM_Z,
+	}
+	_xywhfield = 'base_winoff'
+	attrs_on_page = ['base_winoff', 'units', 'z']
+	_checkboxes = ()
+	_otherfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H, ITEM_UNITS, ITEM_Z)
 
+	def init_controls(self, item0):
+		rv = AreaTabPage.init_controls(self, item0)
+		self._unitspopup = windowinterface.SelectWidget(self.attreditor._dialog, 
+				self.item0+self.ITEM_UNITS, [], None)
+		return rv
+		
+	def update(self):
+		value = self._attr_to_field['units']._getvalueforpage()
+		list = self._attr_to_field['units'].getoptions()
+		self._unitspopup.setitems(list, value)
+		for name, item in self._attr_to_string.items():
+			value = self._attr_to_field[name]._getvalueforpage()
+			self.attreditor._setlabel(self.item0+item, value)
+		AreaTabPage.update(self)
+		
+	def _getxywh(self):
+		str = self._attr_to_field[self._xywhfield]._getvalueforpage()
+		if not str:
+			return 0, 0, 0, 0
+		[f1, f2, f3, f4] = string.split(str)
+		return string.atoi(f1), string.atoi(f2), string.atoi(f3), string.atoi(f4)
+		
+	def save(self):
+		value = self._unitspopup.getselectvalue()
+		self._attr_to_field['units']._savevaluefrompage(value)
+		for name, item in self._attr_to_string.items():
+			value = self.attreditor._getlabel(self.item0+item)
+			self._attr_to_field[name]._savevaluefrompage(value)
+		AreaTabPage.update(self)
+
+	def _savexywh(self, x, y, w, h):
+		self._attr_to_field[self._xywhfield]._savevaluefrompage(x+' '+y+' '+w+' '+h)
 #
 # List of classes handling pages with multiple attributes. The order is
 # important: we loop over these classes in order, and if all attributes
@@ -1350,6 +1462,8 @@ class Destination1AreaTabPage(DestinationAreaTabPage):
 # user
 #
 MULTI_ATTR_CLASSES = [ 
+	ChGeneralTabPage,
+	ChannelAreaTabPage,
 	GeneralTabPage,
 	TimingTabPage,
 	TransitionTabPage,
