@@ -73,7 +73,7 @@ class memfile
 	int write(int v){return write((BYTE*)&v, sizeof(int));}
 
 	HANDLE get_handle() const { return m_hf;}
-	HANDLE reset_file_pointer() 
+	void reset_file_pointer() 
 		{ SetFilePointer(m_hf, 0, NULL, FILE_BEGIN);}
 
 	FILE* get_as_cfile()
