@@ -441,8 +441,11 @@ def getbgcoloratt(writer, node, attr):
 		if transparent != 0:
 			return None
 		
-		bgcolor = node.GetRawAttr('bgcolor')
-		if colors.rcolors.has_key(bgcolor or (0,0,0)):
+		bgcolor = node.GetRawAttr('bgcolor',None)
+		if bgcolor is None:
+			# no bg color defined on this node, it's a inherit value
+			bgcolor= 'inherit'
+		elif colors.rcolors.has_key(bgcolor or (0,0,0)):
 			bgcolor = colors.rcolors[bgcolor or (0,0,0)]
 		else:
 			bgcolor = '#%02x%02x%02x' % (bgcolor or (0,0,0))
@@ -1792,6 +1795,10 @@ class SMILWriter(SMIL):
 			if fit is not None and fit != 'hidden':
 				attrlist.append(('fit', fit))
 
+		#
+		# Background color for SMIL before version 2:
+		#
+		
 			# SMIL says: either background-color
 			# or transparent; if different, set
 			# GRiNS attributes
@@ -1800,54 +1807,71 @@ class SMILWriter(SMIL):
 		#transp -1	no attr		b-g="bg"
 		#transp  0	GR:tr="0"	GR:tr="0" b-g="bg"
 		#transp  1	b-g="trans"	b-g="trans" (ignore bg)
-			transparent = ch.get('transparent', 0)
-			bgcolor = ch.get('bgcolor')
-			if transparent == 0:
-				if features.compatibility == features.G2:
-					# in G2, setting a
-					# background-color implies
-					# transparent==never, so set
-					# background-color if not
-					# transparent
-					if colors.rcolors.has_key(bgcolor or (0,0,0)):
-						bgcolor = colors.rcolors[bgcolor or (0,0,0)]
-					else:
-						bgcolor = '#%02x%02x%02x' % (bgcolor or (0,0,0))
-					if self.smilboston:
-						attrlist.append(('backgroundColor',
-								 bgcolor))
-					else:
+		
+			if not self.smilboston:
+				transparent = ch.get('transparent', 0)
+				bgcolor = ch.get('bgcolor')
+				if transparent == 0:
+					if features.compatibility == features.G2:
+						# in G2, setting a
+						# background-color implies
+						# transparent==never, so set
+						# background-color if not
+						# transparent
+						if colors.rcolors.has_key(bgcolor or (0,0,0)):
+							bgcolor = colors.rcolors[bgcolor or (0,0,0)]
+						else:
+							bgcolor = '#%02x%02x%02x' % (bgcolor or (0,0,0))
 						attrlist.append(('background-color',
 								 bgcolor))
-					bgcolor = None # skip below
-				# non-SMIL extension:
-				# permanently visible region
-				if not self.smilboston:
+						bgcolor = None # skip below
+					# non-SMIL extension:
+					# permanently visible region
 					attrlist.append(('%s:transparent' % NSGRiNSprefix,
-							 '0'))
-			#
-			# We write the background color only if it is not None.
-			# We also refrain from writing it if we're in G2 compatability mode and
-			# the color is the default (g2-compatible) color: white for text channels
-			# and black for others.
-			if bgcolor is not None and \
-			   (features.compatibility != features.G2 or
-			    ((ch['type'] not in ('text', 'RealText') or
-			      bgcolor != (255,255,255)) and
-			     bgcolor != (0,0,0))) and \
-			     (not self.__cleanSMIL or ch['type'] != 'RealText'):
-				if colors.rcolors.has_key(bgcolor):
-					bgcolor = colors.rcolors[bgcolor]
-				else:
-					bgcolor = '#%02x%02x%02x' % bgcolor
-				if self.smilboston:
-					attrlist.append(('backgroundColor',
-							 bgcolor))
-				else:
+								 '0'))
+				#
+				# We write the background color only if it is not None.
+				# We also refrain from writing it if we're in G2 compatability mode and
+				# the color is the default (g2-compatible) color: white for text channels
+				# and black for others.
+				if bgcolor is not None and \
+				   (features.compatibility != features.G2 or
+				    ((ch['type'] not in ('text', 'RealText') or
+				      bgcolor != (255,255,255)) and
+				     bgcolor != (0,0,0))) and \
+				     (not self.__cleanSMIL or ch['type'] != 'RealText'):
+					if colors.rcolors.has_key(bgcolor):
+						bgcolor = colors.rcolors[bgcolor]
+					else:
+						bgcolor = '#%02x%02x%02x' % bgcolor
 					attrlist.append(('background-color',
 							 bgcolor))
 			# Since background-color="transparent" is the
 			# default, we don't need to actually write that
+
+		#
+		# Background color for SMIL version 2:
+		#
+			# no transparent or bgcolor attribute : inherit value
+			# transparent != 0 : transparent (default value)
+			# otherwise : bgcolor
+			else:
+				transparent = ch.get('transparent', None)
+				bgcolor = ch.get('bgcolor', None)
+				if transparent == None:
+					bgcolor = 'inherit'
+				elif transparent != 0:
+					# default value
+					bgcolor = None
+				elif bgcolor != None:
+					if colors.rcolors.has_key(bgcolor):
+						bgcolor = colors.rcolors[bgcolor]
+					else:
+						bgcolor = '#%02x%02x%02x' % bgcolor
+
+				if bgcolor != None:					
+					attrlist.append(('backgroundColor', bgcolor))
+					
 			if ch.get('center', 1):
 				attrlist.append(('%s:center' % NSGRiNSprefix, '1'))
 			if ch.get('drawbox', 1):
