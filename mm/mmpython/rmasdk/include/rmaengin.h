@@ -26,10 +26,12 @@ typedef _INTERFACE	IRMABuffer			IRMABuffer;
 typedef _INTERFACE	IRMACallback			IRMACallback;
 typedef _INTERFACE	IRMAScheduler			IRMAScheduler;
 typedef _INTERFACE	IRMATCPResponse			IRMATCPResponse;
+typedef _INTERFACE	IRMALBoundTCPSocket		IRMALBoundTCPSocket;
 typedef _INTERFACE	IRMATCPSocket			IRMATCPSocket;
 typedef _INTERFACE	IRMAListenResponse		IRMAListenResponse;
 typedef _INTERFACE	IRMAListenSocket		IRMAListenSocket;
 typedef _INTERFACE	IRMANetworkServices		IRMANetworkServices;
+typedef _INTERFACE	IRMANetworkServices2		IRMANetworkServices2;
 typedef _INTERFACE	IRMAUDPResponse		    	IRMAUDPResponse;
 typedef _INTERFACE	IRMAUDPSocket			IRMAUDPSocket;
 typedef _INTERFACE	IRMAResolver			IRMAResolver;
@@ -38,11 +40,23 @@ typedef _INTERFACE	IRMAInterruptSafe		IRMAInterruptSafe;
 typedef _INTERFACE	IRMAAsyncIOSelection		IRMAAsyncIOSelection;
 typedef _INTERFACE	IRMAUDPMulticastInit		IRMAUDPMulticastInit;
 typedef _INTERFACE	IRMAInterruptState		IRMAInterruptState;
-
 typedef _INTERFACE	IRMAOptimizedScheduler		IRMAOptimizedScheduler;
 
 
-#define PNR_INADDR_ANY	(UINT32)0x00000000
+/*
+ * Address flags starting with PNR are depricated.
+ */
+#define PNR_INADDR_ANY	(UINT32)0x00000000  //THIS FLAG IS DEPRICATED
+#define PN_INADDR_ANY	(UINT32)0x00000000
+
+/*
+ * 255.255.255.254
+ *
+ * Bind to all ports in IPBindings list from
+ * server config.
+ */
+#define PNR_INADDR_IPBINDINGS (UINT32)0xfffffffe    //THIS FLAG IS DEPRICATED
+#define PN_INADDR_IPBINDINGS (UINT32)0xfffffffe
 
 
 /* Async IO Selection Type (Unix Only) */
@@ -543,6 +557,43 @@ DECLARE_INTERFACE_(IRMANetworkServices, IUnknown)
     STDMETHOD(CreateResolver)  	(THIS_
 			    	IRMAResolver**    /*OUT*/     ppResolver) PURE;
 };
+
+
+/****************************************************************************
+ * 
+ *  Interface:
+ * 
+ *	IRMANetworkServices2
+ * 
+ *  Purpose:
+ * 
+ *	This is a factory interface for the various types of networking
+ *	interfaces described above.
+ * 
+ *  IID_IRMANetworkServices:
+ * 
+ *	{17951551-5683-11d3-B6BA-00C0F031C237}
+ * 
+ */
+
+// {17951551-5683-11d3-B6BA-00C0F031C237}
+DEFINE_GUID(IID_IRMANetworkServices2, 0x17951551, 0x5683, 0x11d3, 0xb6, 0xba, 0x0, 0xc0, 0xf0, 0x31, 0xc2, 0x37);
+
+#undef  INTERFACE
+#define INTERFACE   IRMANetworkServices2
+
+DECLARE_INTERFACE_(IRMANetworkServices2, IRMANetworkServices)
+{
+    /************************************************************************
+     *	Method:
+     *	    IRMANetworkServices2::CreateLBoundTCPSocket
+     *	Purpose:
+     *	    Create a new local bound TCP socket.
+     */
+    STDMETHOD(CreateLBoundTCPSocket)	(THIS_
+				IRMATCPSocket**    /*OUT*/  ppTCPSocket) PURE;
+};
+
 
 
 /****************************************************************************
@@ -1175,6 +1226,274 @@ DECLARE_INTERFACE_(IRMALoadBalancedListen, IUnknown)
     STDMETHOD(SetReserveLimit)	(THIS_
 			    	UINT32		ulDescriptors,
 				UINT32		ulSockets) PURE;
+};
+
+
+/****************************************************************************
+ * 
+ *  Interface:
+ * 
+ *	IRMAOverrideDefaultServices
+ * 
+ *  Purpose:
+ * 
+ *	This interface is queried off of the context.  It allows
+ *	a plugin to override any default services provided by the G2 system.
+ *	Currently, it is supported only on the client side. 
+ *	You may currently override IRMANetworkServices using this interface
+ *	You can use the same interface to later restore back the overriden services.
+ *	This is done by calling the same OverrideServices() function with the 
+ *	original service QIed before the initial override.
+ * 
+ *  IID_IRMAOverrideDefaultServices:
+ * 
+ *	{00000111-0901-11d1-8B06-00A024406D59}
+ * 
+ */
+DEFINE_GUID(IID_IRMAOverrideDefaultServices, 0x00000111, 0x901, 0x11d1, 0x8b, 0x6, 0x0, 
+			0xa0, 0x24, 0x40, 0x6d, 0x59);
+
+#undef  INTERFACE
+#define INTERFACE   IRMAOverrideDefaultServices
+
+DECLARE_INTERFACE_(IRMAOverrideDefaultServices, IUnknown)
+{
+    /*
+     * IUnknown methods
+     */
+    STDMETHOD(QueryInterface)   (THIS_
+                                REFIID riid,
+				void** ppvObj) PURE;
+
+    STDMETHOD_(ULONG32,AddRef)  (THIS) PURE;
+
+    STDMETHOD_(ULONG32,Release) (THIS) PURE;
+
+   /*
+    * IRMAOverrideDefaultServices methods
+    */
+
+   /************************************************************************
+    *  Method:
+    *      IRMAOverrideDefaultServices::OverrideServices
+    *  Purpose:
+    *      Override default services provided by the G2 system.
+    *
+    */
+    STDMETHOD(OverrideServices)         (THIS_
+				IUnknown* pContext) PURE;
+};
+
+enum PN_SOCKET_OPTION
+{
+    PN_SOCKOPT_REUSE_ADDR,
+    PN_SOCKOPT_REUSE_PORT,
+    PN_SOCKOPT_BROADCAST,
+    PN_SOCKOPT_SET_RECVBUF_SIZE,
+    PN_SOCKOPT_SET_SENDBUF_SIZE
+};
+
+/****************************************************************************
+ * 
+ *  Interface:
+ * 
+ *	IRMASetSocketOption
+ * 
+ *  Purpose:
+ * 
+ *	Set sockt option
+ * 
+ *  IID_IRMASetSocketOption:
+ * 
+ *	IID_IRMASetSocketOption:    {00000114-0901-11d1-8B06-00A024406D59}
+ * 
+ */
+DEFINE_GUID(IID_IRMASetSocketOption,	
+    0x00000114, 0x901, 0x11d1, 0x8b, 0x6, 0x0, 0xa0, 0x24, 0x40, 0x6d, 0x59);
+
+#undef  INTERFACE
+#define INTERFACE   IRMASetSocketOption
+DECLARE_INTERFACE_(IRMASetSocketOption, IUnknown)
+{
+    /*
+     *  IUnknown methods
+     */
+    STDMETHOD(QueryInterface)		(THIS_
+					REFIID riid,
+					void** ppvObj) PURE;
+
+    STDMETHOD_(ULONG32,AddRef)		(THIS) PURE;
+
+    STDMETHOD_(ULONG32,Release)		(THIS) PURE;
+
+    /*
+     *	IRMAListenSocket methods
+     */
+
+    STDMETHOD(SetOption)		(THIS_ 
+					 PN_SOCKET_OPTION option,
+					 UINT32 ulValue) PURE;					 
+};
+
+#define RMA_THREADSAFE_METHOD_FF_GETPACKET		0x00000001
+/*
+ * FileFormat::GetPacket() only calls:
+ *     CCF->CI(Buffer), CCF->CI(Packet), CCF->CI(Values), *Alloc, *Free, 
+ *     FS->Read(), FS->Close(), FS->Seek(),
+ *     FFR->PacketReady(), FFR->StreamDone()
+ *     Context->Scheduler->*,
+ *     CCF->CI(Mutex), Mutex->*
+ *     Context->ErrorMessages
+ *
+ * XXXSMPNOW
+ */
+
+#define RMA_THREADSAFE_METHOD_FS_READ			0x00000002
+/*
+ * FileSystem::Read()/Seek()/Close() only calls:
+ *     CCF->CI(Buffer), CCF->CI(Packet), CCF->CI(Values), *Alloc, *Free, 
+ *     FS->Read(), FS->Close(), FS->Seek(),
+ *     Context->Scheduler->*,
+ *     CCF->CI(Mutex), Mutex->*
+ *     Context->ErrorMessages
+ *
+ * XXXSMPNOW
+ */
+#define RMA_THREADSAFE_METHOD_FSR_READDONE		0x00000004
+/*
+ * FileFormat::ReadDone()/SeekDone()/CloseDone() only calls:
+ *     CCF->CI(Buffer), CCF->CI(Packet), CCF->CI(Values), *Alloc, *Free, 
+ *     FS->Read(), FS->Close(), FS->Seek(),
+ *     FFR->PacketReady(), FFR->StreamDone()
+ *     Context->Scheduler->*,
+ *     CCF->CI(Mutex), Mutex->*
+ *     Context->ErrorMessages
+ *
+ * XXXSMPNOW
+ */
+#define RMA_THREADSAFE_METHOD_CACHE_FILE		0x00000008
+/*
+ * FileSystem::Read()/Seek()/Close() only calls:
+ *     CCF->CI(Buffer), CCF->CI(Packet), CCF->CI(Values), *Alloc, *Free, 
+ *     FS->Read(), FS->Close(), FS->Seek(),
+ *     IRMACacheFile->*, IRMACacheFileResponse->*,
+ *     Context->Scheduler->*,
+ *     CCF->CI(Mutex), Mutex->*
+ *     Context->ErrorMessages
+ *
+ * XXXSMPNOW
+ */
+#define RMA_THREADSAFE_METHOD_CACHE_FILE_RESPONSE	0x00000010
+/*
+ * FileSystem::Read()/Seek()/Close() only calls:
+ *     CCF->CI(Buffer), CCF->CI(Packet), CCF->CI(Values), *Alloc, *Free, 
+ *     FS->Read(), FS->Close(), FS->Seek(),
+ *     IRMACacheFile->*, IRMACacheFileResponse->*,
+ *     Context->Scheduler->*,
+ *     CCF->CI(Mutex), Mutex->*
+ *     Context->ErrorMessages
+ *
+ * XXXSMPNOW
+ */
+
+/****************************************************************************
+ * 
+ *  Interface:
+ * 
+ *	IRMAThreadSafeMethods
+ * 
+ *  Purpose:
+ * 
+ *	XXXSMPNOW
+ * 
+ *  IID_IRMAThreadSafeMethods:
+ * 
+ *	{00000115-0901-11d1-8B06-00A024406D59}
+ * 
+ */
+DEFINE_GUID(IID_IRMAThreadSafeMethods, 0x00000115, 0x901, 0x11d1, 0x8b, 0x6, 0x0, 
+			0xa0, 0x24, 0x40, 0x6d, 0x59);
+
+#undef  INTERFACE
+#define INTERFACE   IRMAThreadSafeMethods
+
+DECLARE_INTERFACE_(IRMAThreadSafeMethods, IUnknown)
+{
+    /*
+     *	IUnknown methods
+     */
+    STDMETHOD(QueryInterface)		(THIS_
+					REFIID riid,
+					void** ppvObj) PURE;
+
+    STDMETHOD_(ULONG32,AddRef)		(THIS) PURE;
+
+    STDMETHOD_(ULONG32,Release)		(THIS) PURE;
+
+    /*
+     *	IRMAThreadSafeMethods methods
+     */
+
+    /************************************************************************
+     *	Method:
+     *	    IRMAThreadSafeMethods::IsThreadSafe
+     *	Purpose:
+     *	    XXXSMPNOW
+     */
+    STDMETHOD_(UINT32,IsThreadSafe)	    (THIS) PURE;
+};
+
+
+/****************************************************************************
+ * 
+ *  Interface:
+ * 
+ *	IRMAMutex
+ * 
+ *  Purpose:
+ * 
+ *	XXXSMPNOW
+ * 
+ *  IID_IRMAMutex:
+ * 
+ *	{00000116-0901-11d1-8B06-00A024406D59}
+ * 
+ */
+DEFINE_GUID(IID_IRMAMutex, 0x00000116, 0x901, 0x11d1, 0x8b, 0x6, 0x0, 
+			0xa0, 0x24, 0x40, 0x6d, 0x59);
+
+#undef  INTERFACE
+#define INTERFACE   IRMAMutex
+
+/*
+ *  The IRMACommonClassFactory supports creating an instance
+ *  of this object.
+ */
+#define CLSID_IRMAMutex IID_IRMAMutex
+
+DECLARE_INTERFACE_(IRMAMutex, IUnknown)
+{
+    /*
+     *	IUnknown methods
+     */
+    STDMETHOD(QueryInterface)		(THIS_
+					REFIID riid,
+					void** ppvObj) PURE;
+
+    STDMETHOD_(ULONG32,AddRef)		(THIS) PURE;
+
+    STDMETHOD_(ULONG32,Release)		(THIS) PURE;
+
+    /*
+     *	IRMAMutex methods
+     */
+
+     /* XXXSMPNOW Comments */
+    STDMETHOD(Lock)	    (THIS) PURE;
+
+    STDMETHOD(TryLock)	    (THIS) PURE;
+
+    STDMETHOD(Unlock)	    (THIS) PURE;
 };
 
 

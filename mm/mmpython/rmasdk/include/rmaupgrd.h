@@ -38,7 +38,7 @@ typedef enum _RMAUpgradeType
  *
  *  Purpose:
  *
- *	Interface provided by IRMAPlayer. This interface allows collection 
+ *	Interface provided by the Context. This interface allows collection 
  *	of upgrade components by the client core and it's delegates 
  *	(i.e. renderer plugins etc.)
  *
@@ -171,6 +171,8 @@ DECLARE_INTERFACE_(IRMAUpgradeHandler, IUnknown)
      */			      
     STDMETHOD(HasComponents)  (THIS_ IRMAUpgradeCollection* pComponents) PURE;
 };
+
+
 
 #endif /* _RMAUPGRD_H */
  

@@ -15,6 +15,19 @@
  *
  */
 
+#ifdef _VXWORKS
+#include "types/vxTypesOld.h"
+#include "vxWorks.h"
+     /* md3 - added to override SENS macro. net/mbuf.h */
+#    ifdef m_flags
+#    undef m_flags
+#    endif /* m_flags */
+     /* md3 - added to override SENS macro, net/radix.h */
+#    ifdef Free
+#    undef Free
+#    endif /* Free */
+#endif
+
 #ifdef _MACINTOSH
 #pragma once
 #endif
@@ -48,11 +61,16 @@
 
 #endif /* !_WINDOWS || !_OSF1 || !_ALPHA */
 
+#ifndef _VXWORKS
 typedef char                    INT8;   /* signed 8 bit value */
 typedef unsigned char           UINT8;  /* unsigned 8 bit value */
 typedef short int               INT16;  /* signed 16 bit value */
 typedef unsigned short int      UINT16; /* unsigned 16 bit value */
 #if (defined _UNIX && (defined _ALPHA || defined _OSF1))
+typedef int                     INT32;  /* signed 32 bit value */
+typedef unsigned int            UINT32; /* unsigned 32 bit value */
+typedef unsigned int            UINT;
+#elif defined _VXWORKS
 typedef int                     INT32;  /* signed 32 bit value */
 typedef unsigned int            UINT32; /* unsigned 32 bit value */
 typedef unsigned int            UINT;
@@ -72,13 +90,28 @@ typedef unsigned int            UINT;
 #ifndef BOOL
 typedef int     BOOL;                   /* signed int value (0 or 1) */
 #endif
+#endif /* _VXWORKS */
+
+#define ARE_BOOLS_EQUAL(a,b)	(((a) && (b)) || (!(a) && !(b)))
+
+#ifndef PN_BITFIELD
+typedef unsigned char PN_BITFIELD;
+#endif
+
+#if defined __alpha__
+typedef long int                INT64;
+#elif defined _WINDOWS 
+typedef __int64			INT64;
+#else
+typedef long long		INT64;
+#endif /* _WINDOWS */
 
 /*
  * Added for ease of reading.
  * Instead of using __MWERKS__ you can  now use _MACINTOSH
  */
 #ifdef __MWERKS__
-    #if __dest_os==__mac_os
+    #if __dest_os==__macos
 	#ifndef _MACINTOSH
 	#define _MACINTOSH  1
 
@@ -118,6 +151,7 @@ extern "C" {            /* Assume C declarations for C++ */
 #define PLUS_PRODUCT_ID	"plus32"
 #endif
 
+
 #define MAX_DISPLAY_NAME        256
 #define PN_INVALID_VALUE	(ULONG32)0xffffffff
 
@@ -131,7 +165,9 @@ extern "C" {            /* Assume C declarations for C++ */
 
 typedef INT32   LONG32;                 /* signed 32 bit value */
 typedef UINT32  ULONG32;                /* unsigned 32 bit value */
+#ifndef _VXWORKS
 typedef UINT8   UCHAR;                  /* unsigned 8 bit value */
+#endif
 typedef INT8    CHAR;                   /* signed 8 bit value */
 
 typedef UINT8   BYTE;
@@ -203,7 +239,7 @@ typedef UINT16 PrefKey;
 #endif
 #endif
 
-#ifndef _WINDOWS	// defined in windef.h on Windows platform
+#ifndef _WINDOWS	/* defined in windef.h on Windows platform */
 #ifndef HIWORD
 #define HIWORD(x) ((x) >> 16)
 #endif
@@ -212,34 +248,13 @@ typedef UINT16 PrefKey;
 #endif
 #endif
  
-/*
- * NOTE: Some defines in windows.h and other common header files in windows
- * can cause the inline version of these handy macros to fail. As a result it
- * is easier to just provide the macro style defines...
- *
- * ALSO NOTE: that "inline" is a c++ -ism, so this part only applies if
- * a c++ compiler is being used!
- */
-
-#if defined (__cplusplus) && !(defined(_WIN32) || defined(_WINDOWS))
-    /* inline function versions */
-    inline int min(int a, int b) 
-    {
-            return a < b ? a : b;
-    }
-     
-    inline int max(int a, int b) 
-    {
-            return a > b ? a : b;
-    }
-#else /* macro versions */
-#       ifndef max
-#               define max(a, b)  (((a) > (b)) ? (a) : (b))
-#       endif
-#       ifndef min
-#               define min(a, b)  (((a) < (b)) ? (a) : (b))
-#       endif
-#endif /* end of #if !(defined(_WIN32) || defined(_WINDOWS)) */
+/* Always use macro versions of these! */
+#ifndef max
+#define max(a, b)  (((a) > (b)) ? (a) : (b))
+#endif
+#ifndef min
+#define min(a, b)  (((a) < (b)) ? (a) : (b))
+#endif
 
 /*--------------------------------------------------------------------------
 |   ZeroInit - initializes a block of memory with zeros
@@ -267,6 +282,10 @@ typedef unsigned char   Byte;
 #define LPCTSTR				LPCSTR
 #endif
 #else /* Not Windows... */
+
+
+
+
 #define PNEXPORT
 #define PNEXPORT_PTR        *
 #endif
@@ -547,6 +566,16 @@ typedef ULONG32 PNXIMAGE;
  */
 #if defined(_MSC_VER) && (_MSC_VER > 1100)
 #include "pnbastsd.h"
+#ifdef _WINCE
+#define _TYPES_H_
+#endif
+#endif
+
+#ifdef _VXWORKS
+/* throw in some defines for VXWORKS */
+#define MAXPATHLEN 255
+
+
 #endif
 
 #endif /* _PNTYPES_H_ */

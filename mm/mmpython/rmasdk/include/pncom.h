@@ -25,6 +25,21 @@
 #include "pntypes.h"		/* Needed for most type definitions */
 #include "string.h"
 
+// have to use the double expansion to get the prescan level
+
+#define STATCONCAT1(w,x,y,z) STATCONCAT2(w,x,y,z)
+#define STATCONCAT2(w,x,y,z) w##x##y##z  
+
+#ifdef _STATICALLY_LINKED
+#ifndef _PLUGINNAME
+#define ENTRYPOINT(func) STATCONCAT1(entrypoint_error_symbol_should_not_be_needed,_PLUGINNAME,_,func)
+#else /* _PLUGINNAME */
+#define ENTRYPOINT(func) STATCONCAT1(entrypoint_for_,_PLUGINNAME,_,func)
+#endif
+#else /* _STATICALLY_LINKED */
+#define ENTRYPOINT(func) func
+#endif
+
 /*
  * We include objbase.h when building for windows so that pncom.h can 
  * easily be used in any windows code.
@@ -46,6 +61,20 @@
 #define REF(type)	const type * const
 #endif
 
+/*
+ *  CONSTMETHOD:
+ *	Use this for constant methods in an interface 
+ *	Compiles away under C
+ */
+#if !defined( CONSTMETHOD )
+
+#if defined(__cplusplus)
+#define CONSTMETHOD	const
+#else
+#define CONSTMETHOD
+#endif
+
+#endif
 /*
  *  CALL:
  *
@@ -432,7 +461,7 @@ typedef GUID CLSID;
  *
  */
 
-#ifndef INITGUID
+#if !defined (INITGUID) || (defined (_STATICALLY_LINKED) && !defined(NCIHACK))
 #define DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
     EXTERN_C const GUID FAR name
 #else
@@ -442,7 +471,9 @@ typedef GUID CLSID;
                 = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
 #endif
 
+#ifndef _VXWORKS
 #include <memory.h>		/* for memcmp */
+#endif
 
 #ifdef __cplusplus
 inline BOOL IsEqualGUID(REFGUID rguid1, REFGUID rguid2)
@@ -611,6 +642,33 @@ inline void SetGUID(REFGUID rguid1, REFGUID rguid2)
 #define SetCLSID(rclsid1, rclsid2)  SetGUID(rclsid1, rclsid2)
 
 #endif /* !defined( _OBJBASE_H_ ) && !defined( _COMPOBJ_H_ )*/
+
+#ifdef IsEqualIID
+#undef IsEqualIID
+#endif
+
+#ifdef IsEqualCLSID
+#undef IsEqualCLSID
+#endif
+
+#define IsEqualIID(riid1, riid2) RNIsEqualGUID(riid1, riid2)
+#define IsEqualCLSID(rclsid1, rclsid2) RNIsEqualGUID(rclsid1, rclsid2)
+
+#ifdef __cplusplus
+inline BOOL RNIsEqualGUID(REFGUID rguid1, REFGUID rguid2)
+{
+   return (((UINT32*) &rguid1)[0] == ((UINT32*) &rguid2)[0]  &&
+	    ((UINT32*) &rguid1)[1] == ((UINT32*) &rguid2)[1] &&
+	    ((UINT32*) &rguid1)[2] == ((UINT32*) &rguid2)[2] &&
+	    ((UINT32*) &rguid1)[3] == ((UINT32*) &rguid2)[3]);
+}
+#else
+#define RNIsEqualGUID(rguid1, rguid2)		\
+	(((UINT32*) &rguid1)[0] == ((UINT32*) &rguid2)[0]  &&   \
+	    ((UINT32*) &rguid1)[1] == ((UINT32*) &rguid2)[1] && \
+	    ((UINT32*) &rguid1)[2] == ((UINT32*) &rguid2)[2] && \
+	    ((UINT32*) &rguid1)[3] == ((UINT32*) &rguid2)[3]);
+#endif
 
 /****************************************************************************
  *

@@ -43,11 +43,15 @@ typedef struct _PNxEvent PNxEvent;
 #pragma export on
 #endif
 
-#ifdef _UNIX
+#if defined _UNIX && !(defined _VXWORKS)
 /* Includes needed for select() stuff */
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#endif
+
+#ifdef _BEOS	// fd_set stuff
+#include <net/socket.h>
 #endif
 
 /* Used in renderer and advise sink interface */
@@ -589,7 +593,7 @@ DECLARE_INTERFACE_(IRMAClientEngine, IUnknown)
      *	Method:
      *	    IRMAClientEngine::ClosePlayer
      *	Purpose:
-     *	    Called by the engine when it is done using the player...
+     *	    Called by the client when it is done using the player...
      *
      */
     STDMETHOD(ClosePlayer)	(THIS_
@@ -626,7 +630,7 @@ DECLARE_INTERFACE_(IRMAClientEngine, IUnknown)
 				PNxEvent* /*IN*/ pEvent) PURE;
 };
 
-#ifdef _UNIX
+#if defined _UNIX && !defined (_VXWORKS)
 DEFINE_GUID(IID_IRMAClientEngineSelector, 0x00000404, 0x901, 0x11d1, 0x8b, 0x6, 0x0, 
 			0xa0, 0x24, 0x40, 0x6d, 0x59);
 

@@ -75,6 +75,7 @@ PixImageInfo;
 #define EFFECT_WIPE           4
 #define EFFECT_VIEWCHANGE     5
 #define EFFECT_EXTERNAL       6
+#define EFFECT_ANIMATE        7
 
 #define WIPE_DIRECTION_UP     0
 #define WIPE_DIRECTION_DOWN   1
@@ -129,6 +130,12 @@ PixEffectInfo;
  */
 typedef _INTERFACE IRMALiveRealPix         IRMALiveRealPix;
 typedef _INTERFACE IRMALiveRealPixResponse IRMALiveRealPixResponse;
+typedef _INTERFACE IRMALiveRealPixResend   IRMALiveRealPixResend;
+
+/*
+ * Forward declarations of interfaces used here
+ */
+typedef _INTERFACE IRMAValues              IRMAValues;
 
 /*
  * Declaration of the DLL entry point
@@ -313,6 +320,66 @@ DECLARE_INTERFACE_(IRMALiveRealPixResponse, IUnknown)
                                           const ULONG32 ulUserCode,
                                           const char   *pszUserString,
                                           const char   *pszMoreInfoURL) PURE;
+};
+
+/****************************************************************************
+ * 
+ *  Interface:
+ * 
+ *  IRMALiveRealPixResend
+ * 
+ *  Purpose:
+ * 
+ *  Allows re-sending and releasing of images with IRMALiveRealPix
+ * 
+ *  IID_IRMALiveRealPixResend:
+ * 
+ *  {D814DA11-8B02-11D3-8AF3-00C0F030B4E5}
+ */
+DEFINE_GUID(IID_IRMALiveRealPixResend, 0xd814da11, 0x8b02, 0x11d3, 0x8a, 0xfe, 0x0,
+            0xc0, 0xf0, 0x30, 0xb4, 0xe5);
+
+
+#undef  INTERFACE
+#define INTERFACE   IRMALiveRealPixResend
+
+DECLARE_INTERFACE_(IRMALiveRealPixResend, IUnknown)
+{
+    /*
+     *  IUnknown methods
+     */
+    STDMETHOD(QueryInterface)      (THIS_ REFIID riid, void** ppvObj) PURE;
+
+    STDMETHOD_(ULONG32,AddRef)     (THIS) PURE;
+
+    STDMETHOD_(ULONG32,Release)    (THIS) PURE;
+
+    /*
+     *  IRMALiveRealPixResend methods
+     */
+
+    /*
+     * InitResend() informs the encoder that from now on, after an
+     * image is sent with SendImage() it should not be discarded 
+     * but held in the encoder until ReleaseImage() is called().
+     */
+    STDMETHOD(InitResend)   (THIS_ IRMAValues* pOptions) PURE;
+
+    /*
+     * ReleaseImage() informs the encoder that the application no longer
+     * intends to call SendImage() on the image referenced by ulImageHandle
+     * and that it can discard the image. Further calls to SendImage(x) will
+     * return PNR_UNKNOWN_IMAGE after ReleaseImage(x) has been called.
+     * ReleaseImage(x) will return PNR_UNKNOWN_IMAGE if x is an unknown handle.
+     */
+    STDMETHOD(ReleaseImage) (THIS_ UINT32 ulImageHandle) PURE;
+
+    /*
+     * DumpAllQueuedPackets() clears any packets currently waiting to be
+     * sent to the server. These packets were put on the send queue by
+     * either IRMALiveRealPix::SendImage() or IRMALiveRealPix::SendEffect().
+     */
+    STDMETHOD(DumpAllQueuedPackets) (THIS) PURE;
 };
 
 #endif

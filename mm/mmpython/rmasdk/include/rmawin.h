@@ -135,6 +135,8 @@ DEFINE_GUID(IID_IRMASiteWindowless, 0x00000D02, 0x901, 0x11d1, 0x8b, 0x6, 0x0,
 #undef  INTERFACE
 #define INTERFACE   IRMASiteWindowless
 
+#define CLSID_IRMASiteWindowless IID_IRMASiteWindowless
+
 DECLARE_INTERFACE_(IRMASiteWindowless, IUnknown)
 {
     /*
@@ -763,6 +765,7 @@ DECLARE_INTERFACE_(IRMAEventHook, IUnknown)
     STDMETHOD(SiteRemoved)	(THIS_
     				IRMASite* pSite) PURE;
 };
+
 
 /****************************************************************************
  * 

@@ -16,6 +16,10 @@
 #ifndef _RMAPPV_H_
 #define _RMAPPV_H_
 
+#ifdef _MACINTOSH // Unsure whether this should be included on other platforms?
+#include <time.h> // Get definition of time_t.
+#endif
+
 /*
  * Structures and definitions for PPVPermission
  */

@@ -78,8 +78,8 @@ typedef struct PNEXPORT_CLASS _PNxRect
     INT32   bottom;
 } PNxRect;
 
-#define PNxRECT_WIDTH(r)	(r.right - r.left)
-#define PNxRECT_HEIGHT(r)	(r.bottom - r.top)
+#define PNxRECT_WIDTH(r)	((r).right - (r).left)
+#define PNxRECT_HEIGHT(r)	((r).bottom - (r).top)
 
 /****************************************************************************
  * 
@@ -110,7 +110,8 @@ typedef struct PNEXPORT_CLASS _PNxRect
  */
 typedef struct PNEXPORT_CLASS _PNxWindow
 {
-
+	/* NOTE: The window parameter is NOT guaranteed to be unique for every
+			 corresponding CPNWindow. Use PNxWindowID if this is desired. */
     void*	window;
     ULONG32	x;
     ULONG32	y;                   
@@ -121,6 +122,8 @@ typedef struct PNEXPORT_CLASS _PNxWindow
     void * display;
     #endif
 } PNxWindow;
+
+typedef void* PNxWindowID;
 
 /****************************************************************************
  * 
@@ -150,6 +153,7 @@ typedef struct PNEXPORT_CLASS _PNxWindow
  *      UNIX: Display*
  *	
  *	void*	param2
+ *      Mac:  for UpdateEvt, either NULL or RgnHandle to be filled with updated area
  *      UNIX: Native              XEvent*
  *            RMA_SURFACE_UPDATE  PNxWindow*
  *	

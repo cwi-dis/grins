@@ -684,4 +684,13 @@ DECLARE_INTERFACE_(IRMAPlugin2Handler, IUnknown)
 
 
 };
+
+
+
+
+
+
+
+
+
 #endif /* _RMAPLUGN_H_ */

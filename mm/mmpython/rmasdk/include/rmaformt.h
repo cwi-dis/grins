@@ -33,6 +33,7 @@ typedef _INTERFACE      IRMAValues                  IRMAValues;
 typedef _INTERFACE	IRMAPacketTimeOffsetHandler IRMAPacketTimeOffsetHandler;
 typedef _INTERFACE	IRMAPacketTimeOffsetHandlerResponse
 						    IRMAPacketTimeOffsetHandlerResponse;
+typedef _INTERFACE	IRMALiveFileFormatInfo	    IRMALiveFileFormatInfo;
 
 
 /****************************************************************************
@@ -400,6 +401,118 @@ DECLARE_INTERFACE_(IRMAPacketTimeOffsetHandlerResponse, IUnknown)
 					IRMAPacket* pPacket) PURE;
 
 };
+
+/****************************************************************************
+ * 
+ *  Interface:
+ * 
+ *	IRMALiveFileFormatInfo
+ * 
+ *  Purpose:
+ * 
+ *	Provides miscellaneous information needed to transmit a live stream.
+ *	Optionally implemented by the file format object.
+ * 
+ *  IID_IRMALiveFileFormatInfo:
+ * 
+ *	{00000F06-0901-11d1-8B06-00A024406D59}
+ * 
+ */
+DEFINE_GUID(IID_IRMALiveFileFormatInfo, 0x00000F06, 0x901, 0x11d1, 0x8b, 0x6, 0x0, 
+			0xa0, 0x24, 0x40, 0x6d, 0x59);
+
+#undef  INTERFACE
+#define INTERFACE   IRMALiveFileFormatInfo
+
+DECLARE_INTERFACE_(IRMALiveFileFormatInfo, IUnknown)
+{
+    /*
+     *	IUnknown methods
+     */
+    STDMETHOD(QueryInterface)		(THIS_
+					REFIID riid,
+					void** ppvObj) PURE;
+
+    STDMETHOD_(ULONG32,AddRef)		(THIS) PURE;
+
+    STDMETHOD_(ULONG32,Release)		(THIS) PURE;
+
+    /*
+     *	IRMALiveFileFormatInfo methods
+     */
+
+    /************************************************************************
+     *	Method:
+     *	    IRMALiveFileFormatInfo::VerifyFileCompatibility
+     *	Purpose:
+     *	    Compares two file headers and returns PNR_OK if these two 
+     *	    files can be transmitted sequentially in a single live 
+     *	    presentation.
+     */
+    STDMETHOD(VerifyFileCompatibility)	    (THIS_
+					    IRMAValues* pFileHeader1,
+					    IRMAValues* pFileHeader2) PURE;
+
+    /************************************************************************
+     *	Method:
+     *	    IRMALiveFileFormatInfo::VerifyStreamCompatibility
+     *	Purpose:
+     *	    Compares two stream headers and returns PNR_OK if these two  
+     *	    streams can be transmitted sequentially in a single live 
+     *	    presentation.
+     */
+    STDMETHOD(VerifyStreamCompatibility)    (THIS_
+					    IRMAValues* pStreamHeader1,
+					    IRMAValues* pStreamHeader2) PURE;
+
+    /************************************************************************
+     *	Method:
+     *	    IRMALiveFileFormatInfo::IsLiveResendRequired
+     *	Purpose:
+     *	    Returns TRUE if this stream requires the latest packet to be
+     *	    resent periodically in a live presentation.
+     */
+    STDMETHOD_(BOOL,IsLiveResendRequired)   (THIS_
+					    UINT16 unStreamNumber) PURE;
+
+    /************************************************************************
+     *	Method:
+     *	    IRMALiveFileFormatInfo::GetResendBitrate
+     *	Purpose:
+     *	    If periodic live resends are required for this stream, this
+     *	    method returns the rate at which we should resend packets. The 
+     *	    resend rate is measured in bits per second.
+     */
+    STDMETHOD(GetResendBitrate)		    (THIS_
+					    UINT16 unStreamNumber,
+					    REF(UINT32) ulBitrate) PURE;
+
+    /************************************************************************
+     *	Method:
+     *	    IRMALiveFileFormatInfo::GetResendDuration
+     *	Purpose:
+     *	    If periodic live resends are required for this stream, this
+     *	    method returns the number of milliseconds for which this packet 
+     *	    should be resent.
+     */
+    STDMETHOD(GetResendDuration)	    (THIS_
+					    IRMAPacket* pPacket,
+					    REF(UINT32) ulDuration) PURE;
+
+    /************************************************************************
+     *	Method:
+     *	    IRMALiveFileFormatInfo::FormResendPacket
+     *	Purpose:
+     *	    Forms a live resend packet based upon the original packet passed
+     *	    as the first parameter. This allows the file format plugin to
+     *	    make resend packets distinguishable from original packets.
+     */
+    STDMETHOD(FormResendPacket)		(THIS_
+					IRMAPacket* pOriginalPacket,
+					REF(IRMAPacket*) pResendPacket) PURE;
+};
+
+
 
 
 #endif  /* _RMAFORMT_H_ */
