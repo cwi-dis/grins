@@ -11,6 +11,8 @@ import svgdom
 
 import windowinterface
 
+import MMAttrdefs
+
 class SVGChannel(Channel.ChannelWindow):
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
@@ -58,18 +60,22 @@ class SVGChannel(Channel.ChannelWindow):
 		if self.window and svgdoc:
 			coordinates = self.getmediageom(node)
 			self.svgdstrect = left, top, width, height = self.window._convert_coordinates(coordinates)
-			self.svgsrcrect = 0, 0, width, height
-			self.svgdds = self.window.createDDS(width, height)
+			w, h = svgdom.GetSvgDocSize(svgdoc)
+			self.svgsrcrect = 0, 0, w, h
+			self.svgdds = self.window.createDDS(w, h)
 			self.renderOn(self.svgdds, svgdoc, update=0)
 			if svgdoc.hasTiming():
 				rendercb = (self.renderOn, (self.svgdds, svgdoc))
-				self.svgplayer = svgdom.SVGPlayer(svgdoc, windowinterface.toplevel, rendercb)	
+				self.svgplayer = svgdom.SVGPlayer(svgdoc, windowinterface.toplevel, rendercb)
+			fit = MMAttrdefs.getattr(node, 'fit')
+			self.window.setmediadisplayrect(self.svgdstrect)
+			self.window.setmediafit(fit)
 		return 1
 
 	def do_play(self, node):
 		if self.window and self.svgdds:
 			self.window.setredrawdds(self.svgdds, self.svgdstrect, self.svgsrcrect)
-			self.window.update(self.svgdstrect)
+			self.window.update(self.window.getwindowpos())
 			if self.svgplayer:
 				self.svgplayer.play()
 
