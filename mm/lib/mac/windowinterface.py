@@ -15,6 +15,9 @@ import mw_dialogs
 import mw_menucmd
 import mw_textwindow
 
+def sleep(sec):
+	pass				# for now
+
 #
 # There is a cyclic dependency between mw_dialogs and mw_windows. Solve it
 # by stuffing showmessage into mw_windows' namespace by hand.
