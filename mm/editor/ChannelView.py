@@ -1310,15 +1310,13 @@ class ArcBox(GO):
 		else: self.dy = dobj.top
 		self.sx = (sobj.left + sobj.right) / 2
 		self.dx = (dobj.left + dobj.right) / 2
-		#
-		lx = self.dx - self.sx
-		ly = self.dy - self.sy
-		if lx == 0.0 == ly: angle = 0.0
-		else: angle = atan2(lx, ly)
-		# print 'lx =', lx, 'ly =', ly, 'angle =', angle
-		self.cos = cos(angle)
-		self.sin = sin(angle)
-		self.rotation = 270 - angle * 180.0 / pi
+		if self.sx == self.dx and self.sy == self.dy:
+			# start and end of arrow are the same
+			# force a difference by moving up the start
+			dy = 0.0000000000001
+			while self.sy == self.dy:
+				dy = dy * 10
+				self.sy = self.sy - dy
 		self.ok = 1
 
 	def ishit(self, x, y):
