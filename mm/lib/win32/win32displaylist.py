@@ -368,11 +368,6 @@ class _DisplayList:
 		return float(dest_x - x) / w, float(dest_y - y) / h, \
 		       float(width) / w, float(height) / h
 
-	# Resize image buttons
-	def _resize_image_buttons(self):
-		type = self._list[1]
-		if type[0]!='image':
-			return
 	
 	#############################################
 	# draw primitives
@@ -437,6 +432,7 @@ class _DisplayList:
 
 	# Insert a command to clear box
 	def clear(self,coordinates):
+		raise AssertionError, 'obsolete call'
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		x, y, w, h = self._convert_coordinates(coordinates)
@@ -787,17 +783,9 @@ class _DisplayList:
 				
 	# Update background color
 	def updatebgcolor(self, color):
-		self._bgcolor = color
-		entry = self._list[0]
-		cmd = ('clear',self._window.GetClientRect())
-		if entry[0]!='clear':
-			self._list.insert(0, cmd)
-			d = self.__cmddict.copy()
-			# after render insertion, thus exception and so update known commands
-			for name, value in d.items():
-				self.__cmddict[name]= value + 1
-		else:
-			self._list[0]=cmd
+		if self._list[0][0]!='clear':
+			raise AssertionError
+		self._list[0] = ('clear',color)
 
 	#
 	# End of animation experimental methods
@@ -923,13 +911,6 @@ class _Button:
 		if self.is_closed(): return		
 		self._coordinates = self._dispobj._pxl2rel(coords)
 		self._dispobj._window.updateMouseCursor()
-
-#       drawing dissabled
-#		diffdl = self._dispobj._window.newdisplaylist()
-#		diffdl = self._dispobj.drawboxanchor(coords)
-#		cmdname = '%d' % id(self)
-#		diffdl.knowcmd(cmdname)
-#		self._dispobj.update(cmdname, diffdl)
 
 	# End of animation experimental methods
 	##########################################
