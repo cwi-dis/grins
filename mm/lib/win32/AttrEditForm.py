@@ -4117,6 +4117,18 @@ class AttrEditForm(GenFormView):
 ##		self._prsht = None # XXX Should we close or something?
 		self._pages = []
 
+	def showAllAttributes(self, flag):
+		previous = -1
+		if self._prsht and self._prsht._showAll:
+			previous = self._prsht._showAll.getcheck()
+			if flag:
+				if not previous:
+					self.call('Showall')
+			else:
+				if previous:
+					self.call('Showall')
+		return previous
+						
 	def RecreateWindow(self):
 		self.SetRedraw(0)
 		self.removepages()
