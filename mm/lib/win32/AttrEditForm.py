@@ -1806,7 +1806,7 @@ class AttrEditForm(GenFormView):
 		frc=self._parent.CalcWindowRect(rc)
 		mainframe=self._parent.GetMDIFrame()
 		frc=mainframe.ScreenToClient(frc)
-		frc=(30,4,frc[2]-frc[0]+30,frc[3]-frc[1]+4)
+		frc=(30,4,frc[2]-frc[0]+36,frc[3]-frc[1]+8)
 		self._parent.MoveWindow(frc)
 
 		
