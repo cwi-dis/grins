@@ -618,10 +618,11 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		return self._doc
 
 	# Create a text viewer
-	def textwindow(self,text, readonly = 0):
+	def textwindow(self,text, readonly = 0, close_callback = None):
 		sv=self.newviewobj('sview_')
 		sv.settext(text)
 		sv.set_readonly(readonly)
+		sv.set_closecallback(close_callback)
 		self.showview(sv,'sview_')
 		if self._cmifdoc:
 			sv.GetParent().SetWindowText('Source (%s)'%self._cmifdoc.basename)

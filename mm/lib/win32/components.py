@@ -212,6 +212,8 @@ class Edit(Control):
 		return self.sendmessage_ra(win32con.EM_GETSEL)[:2]
 	def setsel(self, start, end):
 		return self.sendmessage(win32con.EM_SETSEL, start, end)
+	def setreadonly(self, readonly):
+		return self.sendmessage(win32con.EM_SETREADONLY, readonly)
 	def linescroll(self, nlines, nchars = 0):
 		# note reversal of arguments
 		return self.sendmessage(win32con.EM_LINESCROLL, nchars, nlines)
