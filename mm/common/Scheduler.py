@@ -403,8 +403,7 @@ class SchedulerContext:
 				if node.has_min:
 					# must delay this arc
 					node.delayed_arcs.append(arc)
-					fill = node.GetFill()
-					if fill == 'remove':
+					if node.GetFill() == 'remove':
 						for c in node.GetSchedChildren():
 							self.do_terminate(c, timestamp)
 					else:
@@ -419,7 +418,10 @@ class SchedulerContext:
 					if debugevents: print 'node not playing'
 					return
 				if debugevents: print 'terminating node'
-				self.do_terminate(node, timestamp)
+				if node.GetFill() == 'remove':
+					self.do_terminate(node, timestamp)
+				else:
+					self.freeze_play(node)
 				pnode = node.GetSchedParent()
 				if pnode.type == 'excl' and pnode.pausestack:
 					node = pnode.pausestack[0]
@@ -446,7 +448,7 @@ class SchedulerContext:
 		equal = 0
 		if endlist:
 			for a in endlist:
-				if not a.isresolved():
+				if not a.isresolved(self.parent.timefunc):
 					# any unresolved time is after any resolved time
 					break
 				if a.resolvedtime(self.parent.timefunc) > timestamp:
@@ -607,6 +609,17 @@ class SchedulerContext:
 			for c in node.GetSchedChildren():
 				self.do_terminate(c, timestamp)
 			node.stopplay(timestamp)
+		queue = self.parent.selectqueue()
+		if queue:
+			self.parent.toplevel.setwaiting()
+			for action in queue:
+				if not self.parent.playing:
+					break
+				ts = None
+				if len(action) > 3:
+					ts = action[3]
+					action = action[:3]
+				self.parent.runone(action, ts)
 		ev = (SR.SCHED_STOPPING, node)
 		if self.srdict.has_key(ev):
 			for q in self.parent.runqueues[PRIO_INTERN]:
