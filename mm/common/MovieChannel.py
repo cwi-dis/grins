@@ -60,20 +60,15 @@ class MovieWindow() = ChannelWindow():
 	#
 	def erase(self):
 		if self.node <> None:
-			r, g, b = MMAttrdefs.getattr(self.node, 'color')
-			print r, g, b, 'from node'
-		elif self.attrdict.has_key('color'):
-			r, g, b = self.attrdict['color']
-			print r, g, b, 'from channel'
+			r, g, b = MMAttrdefs.getattr(self.node, 'bgcolor')
+		elif self.attrdict.has_key('bgcolor'):
+			r, g, b = self.attrdict['bgcolor']
 		else:
 			r, g, b = 255, 255, 255
-			print r, g, b, 'from built-in default'
 		#
 		if self.rgbmode:
-			print 'rgb mode'
 			gl.RGBcolor(r, g, b)
 		else:
-			print 'colormap mode'
 			INDEX = 255
 			gl.mapcolor(INDEX, r, g, b)
 			gl.color(INDEX)
@@ -91,6 +86,9 @@ class MovieWindow() = ChannelWindow():
 			print 'Empty movie file', `filename`
 			return
 		except (VFile.Errror, posix.error, RuntimeError), msg:
+			print 'Cannot open movie file', `filename`, ':', msg
+			return
+		except IOError, msg:
 			print 'Cannot open movie file', `filename`, ':', msg
 			return
 		self.node = node
@@ -147,7 +145,7 @@ class MovieChannel() = Channel():
 	# respectively to nodes belonging to this channel.
 	#
 	chan_attrs = ['winsize', 'winpos']
-	node_attrs = ['file', 'scale', 'color']
+	node_attrs = ['file', 'scale', 'bgcolor']
 	#
 	def init(self, (name, attrdict, player)):
 		self = Channel.init(self, (name, attrdict, player))
@@ -199,7 +197,8 @@ class MovieChannel() = Channel():
 		try:
 			vfile = VFile.VinFile().init(filename)
 		except:
-			print 'Cannot open', `filename`, 'to get duration'
+			print 'Cannot open movie file',
+			print `filename`, 'to get duration'
 			return 0.0
 		pos1 = vfile.fp.tell()
 		try:
