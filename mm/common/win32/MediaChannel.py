@@ -418,7 +418,7 @@ class VideoStream:
 		if self.__mmstream and not self.__playdone:
 			running = self.__mmstream.update()
 			if self.__window:
-				self.__window.update()
+				self.__window.update(self.__window.getwindowpos())
 			t_sec = self.__mmstream.getTime()
 			if not running or t_sec >= self.__playEnd:
 				self.onMediaEnd()
