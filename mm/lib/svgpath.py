@@ -152,8 +152,9 @@ class PathSeg:
 			self._y = self._y+dy
 
 class SVGPath:
-	def __init__(self,  node, pathstr, defval=None):
-		self.node = node
+	def __init__(self,  node, attr, pathstr, defval=None):
+		self._node = node
+		self._attr = attr
 		self._pathSegList = []
 		self.__constructors = {'z':self.__addClosePath,
 			'm':self.__addMoveTo,
@@ -186,7 +187,7 @@ class SVGPath:
 		return s
 
 	def clone(self):
-		new = SVGPath(self.node, None)
+		new = SVGPath(self._node, None, None)
 		new._pathSegList = self._pathSegList[:]
 		return new
 
@@ -677,12 +678,12 @@ class Path:
 		self.__lenValues = [0,] # curve in parametric form
 
 		if pathstr:
-			self.__svgpath = SVGPath(None, pathstr)
+			self.__svgpath = SVGPath(None, None, pathstr)
 			self.__svgpath.createPath(self)
 			self.__length = self.__getLength()
 
 	def constructFromSVGPathString(self, pathstr):
-		self.__svgpath = SVGPath(None, pathstr)
+		self.__svgpath = SVGPath(None, None, pathstr)
 		self._points = self.__svgpath.createPath(self)
 		#self.__length = self.__getLength()
 

@@ -25,10 +25,10 @@ class SVGGraphics:
 		# ...
 		# XXX:  initialize according to spec
 		self.cstyle = {
-			'stroke-width': svgtypes.SVGLength(None, '1'), 
+			'stroke-width': svgtypes.SVGLength(None, 'stroke-width', '1'), 
 			'font-family': 'Verdana', 
-			'font-size':svgtypes.SVGLength(None, '15'),
-			'fill':svgtypes.SVGColor(None, 'black'),
+			'font-size':svgtypes.SVGLength(None, 'font-size', '15'),
+			'fill':svgtypes.SVGColor(None, 'fill', 'black'),
 			}
 
 	def __repr__(self):
