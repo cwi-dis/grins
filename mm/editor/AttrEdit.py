@@ -551,6 +551,7 @@ class NodeWrapper(Wrapper):
 			if boston:
 				namelist.append('system_audiodesc')
 				namelist.append('system_cpu')
+				namelist.append('system_operating_system')
 				namelist.append('restart')
 				namelist.append('restartDefault')
 				namelist.append('fillDefault')
