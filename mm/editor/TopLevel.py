@@ -116,7 +116,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					UPLOAD_QT(callback = (self.bandwidth_callback, (self.upload_QT_callback,))),
 				]
 				
-			print "TODO: make this version dependant. TopLevel.py:__init__()"
+#			print "TODO: make this version dependant. TopLevel.py:__init__()"
 ##			self.commandlist.append(EXPORT_WMP(callback = (self.bandwidth_callback, (self.export_WMP_callback,))));
 			self.commandlist.append(EXPORT_WMP(callback = (self.export_WMP_callback,())))
 			self.commandlist.append(UPLOAD_WMP(callback = (self.bandwidth_callback, (self.upload_WMP_callback,))));

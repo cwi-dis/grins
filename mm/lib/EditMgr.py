@@ -117,9 +117,6 @@ class EditMgr:
 			x.commit()
 		self.busy = 0
 		del self.undostep # To frustrate invalid addstep calls
-		print "DEBUG: Editmanager committed.";
-		import traceback;
-		traceback.print_stack();
 	#
 	def rollback(self):
 		if not self.busy: raise MMExc.AssertError, 'invalid rollback'
@@ -146,7 +143,6 @@ class EditMgr:
 		if self.focus_busy: raise MMExc.AssertError, 'recursive focus'
 		self.focus_busy = 1
 		self.focus = (focustype, focusobject)
-		print "DEBUG: edit manager.setglobalfocus type is: ", focustype;
 		for client in self.focus_registry:
 			client.globalfocuschanged(focustype, focusobject)
 		self.focus_busy = 0

@@ -54,8 +54,8 @@ class HierarchyView(HierarchyViewDialog):
 		self.selected_widget = None
 		self.focusobj = None	# Old Object() code - remove this when no longer used. TODO
 		self.focusnode = self.prevfocusnode = self.root	# : MMNode - remove when no longer used.
-
 		self.editmgr = self.root.context.editmgr
+
 		self.destroynode = None	# node to be destroyed later
 		self.expand_on_show = 1
 		self.thumbnails = 1
@@ -301,8 +301,6 @@ class HierarchyView(HierarchyViewDialog):
 				commands = commands + self.finishlinkcommands
 			if fntype in MMNode.interiortypes or \
 			   (is_realpix and MMAttrdefs.getattr(fnode, 'file')):
-				print "DEBUG: Adding interior commands."
-				print "DEBUG: interior commands are: ", self.interiorcommands;
 				commands = commands + self.interiorcommands # Add interior structure modifying commands.
 			if fntype not in MMNode.interiortypes and \
 			   fnode.GetChannelType() != 'sound' and \
@@ -670,10 +668,6 @@ class HierarchyView(HierarchyViewDialog):
 
 	def deletefocus(self, cut):
 		# Deletes the node with focus.
-
-		import traceback;
-		traceback.print_stack()
-		
 		node = self.focusnode
 		if not node or node is self.root:
 			windowinterface.beep()
@@ -959,15 +953,6 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Copy node at position src to position dst
 	def copynode(self, dst, src):
-		print """
-TODO:
-    This copies a node. Should it move the node instead?
-    This should also be done in the MMNode structure, not here.
-    Drop on a sequence view -> seqview.node.insertat(index, newnode);
-    or: drop on a MMNode -> Clobber it. MMNode.replace_with(newnode);
-    for example.
-    """
-		
 		xd, yd = dst
 		xs, ys = src
 		# Problem: dstobj will be an internal node.
@@ -1071,7 +1056,6 @@ TODO:
 		# Make the widget the current selection.
 		if isinstance(self.selected_widget, Interactive.Interactive):
 			self.selected_widget.unselect()
-		print "DEBUG: Selecting widget ", widget
 		self.selected_widget = widget		
 		self.focusobj = widget	# Used for callbacks.
 		self.prevfocusnode = self.focusnode
@@ -1534,7 +1518,6 @@ TODO:
 		dialog.done()
 
 	def playcall(self):
-		print "DEBUG: Hierarchyview: focusobj is: ", self.focusobj
 		if self.focusobj: self.focusobj.playcall()
 
 	def playfromcall(self):
