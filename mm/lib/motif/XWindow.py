@@ -1365,8 +1365,10 @@ class _Window(_AdornmentSupport, _RubberBand):
 
 	# transition interface, placeholder
 	
-	def begintransition(self, inout, runit, dict):
+	def begintransition(self, inout, runit, dict, cb):
 		print 'Transition', dict['trtype']
+		if cb:
+			apply(apply, cb)
 		
 	def endtransition(self):
 		pass

@@ -1435,10 +1435,12 @@ class _CommonWindow:
 		Win.InvalRect(self.qdrect())
 
 	# Experimental transition interface
-	def begintransition(self, isouttransition, runit, dict):
+	def begintransition(self, isouttransition, runit, dict, cb):
 		if not self._transition_setup_before(isouttransition):
+			if cb:
+				apply(apply, cb)
 			return
-		self._transition = mw_transitions.TransitionEngine(self, isouttransition, runit, dict)
+		self._transition = mw_transitions.TransitionEngine(self, isouttransition, runit, dict, cb)
 		self._transition_setup_after()
 		
 	def jointransition(self, window):
