@@ -180,6 +180,7 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		#self._close_cmd_list.append(closecmd)
 		#self.onActivate(1)
 
+		self['RightList'].recalchorizontalextent()
 
 	# Called when the view is activated 
 	def activate(self):
@@ -357,10 +358,12 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		l=self['LeftList']
 		for pos in poslist:
 			l.deletestring(pos)
+		self['LeftList'].recalchorizontalextent()
 
 	def leftdelalllistitems(self):
 		"""Delete all items from the left list."""
 		self['LeftList'].resetcontent()
+		self['LeftList'].recalchorizontalextent()
 
 	def leftaddlistitems(self, items, pos):
 		"""Add items to the left list.
@@ -371,6 +374,7 @@ class _LinkView(docview.FormView,components.ControlsDict):
 			the items are to be added (-1: add at end)
 		"""
 		self['LeftList'].addlistitems(items, pos)
+		self['LeftList'].recalchorizontalextent()
 
 	def leftreplacelistitem(self, pos, newitem):
 		"""Replace an item in the left list.
@@ -380,7 +384,8 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		newitem -- string -- the new item
 		"""
 		self['LeftList'].replace(pos, newitem)
-		
+		self['LeftList'].recalchorizontalextent()
+	
 	def leftselectitem(self, pos):
 		"""Select an item in the left list.
 
@@ -447,10 +452,12 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		poslist.reverse()
 		for pos in poslist:
 			self['RightList'].deletestring(pos)
+		self['RightList'].recalchorizontalextent()
 
 	def rightdelalllistitems(self):
 		"""Delete all items from the right list."""
 		self['RightList'].resetcontent()
+		self['RightList'].recalchorizontalextent()
 
 	def rightaddlistitems(self, items, pos):
 		"""Add items to the right list.
@@ -461,6 +468,7 @@ class _LinkView(docview.FormView,components.ControlsDict):
 			the items are to be added (-1: add at end)
 		"""
 		self['RightList'].addlistitems(items,pos)
+		self['RightList'].recalchorizontalextent()
 
 	def rightreplacelistitem(self, pos, newitem):
 		"""Replace an item in the right list.
@@ -470,6 +478,7 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		newitem -- string -- the new item
 		"""
 		self['RightList'].replace(pos, newitem)
+		self['RightList'].recalchorizontalextent()
 		
 	def rightselectitem(self, pos):
 		"""Select an item in the right list.
