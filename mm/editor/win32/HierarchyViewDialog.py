@@ -200,7 +200,8 @@ class HierarchyViewDialog(ViewDialog):
 		from StructureWidgets import MMWidgetDecoration
 		if isinstance(dstwidget, MMWidgetDecoration):
 			dstwidget = dstwidget.mmwidget
-		dstnode = dstwidget.get_node()
+		if dstwidget:
+			dstnode = dstwidget.get_node()
 		if dstwidget and dstwidget.get_node().GetType() in MMNode.interiortypes:
 			if cmd=='move':
 				if srcnode.IsAncestorOf(dstnode):
