@@ -1,4 +1,4 @@
-#include "std.h"
+#include "Std.h"
 #include "PyCppApi.h"
 #include "StdRma.h"
 #include "Engine.h"
@@ -11,12 +11,12 @@
 #include "macglue.h"
 #endif
 
-class EngineObject : public Object {
+class EngineObject : public RMAObject {
 public:
 	MAKE_PY_CTOR(EngineObject)
 	static TypeObject type;
 	static PyObject *CreateInstance(PyObject *self, PyObject *args);
-	static TypeObject* GetBaseType(){return &Object::type;}
+	static TypeObject* GetBaseType(){return &RMAObject::type;}
 
 	// PyMethods
 	static PyObject *CreatePlayer(PyObject *self, PyObject *args);
@@ -192,7 +192,7 @@ EngineObject::CreateInstance(PyObject *self, PyObject *args)
 		Py_INCREF(EngineObject::inst);
 		return EngineObject::inst;
 	}
-	EngineObject::inst= (EngineObject*) Object::make(EngineObject::type);
+	EngineObject::inst= (EngineObject*) RMAObject::make(EngineObject::type);
 	if (!CreateEngine()) {
 		PyErr_SetString(PyExc_IOError, "CreateEngine failed");
 		Py_DECREF(EngineObject::inst);
@@ -213,7 +213,7 @@ EngineObject::repr()
 {
 	char buf[256];
 	sprintf (buf, " instance 0x%X", this);
-	return Object::repr() + buf;
+	return RMAObject::repr() + buf;
 }
 
 PyObject *
@@ -228,12 +228,10 @@ EngineObject::EventOccurred(PyObject *self, PyObject *args)
 {
 	PNxEvent pn_event;
 	PN_RESULT res;
-#ifdef _MACINTOSH
-	EventRecord ev;
-#endif
 	
 	/* Event = PyArg_ParseTuple(blabla) */
 #ifdef _MACINTOSH
+	EventRecord ev;
 	if (!PyArg_ParseTuple(args, "O&", PyMac_GetEventRecord, &ev))
 		return NULL;
 	pn_event.event = ev.what;
