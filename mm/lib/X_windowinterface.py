@@ -1382,6 +1382,12 @@ class _Event:
 		except error:
 			pass
 
+	def getregister(self, win, event):
+		try:
+			return self._windows[(win, event)]
+		except KeyError:
+			raise error, 'not registered'
+
 	def remove_window_callbacks(self, window):
 		# called when window closes
 		for (w, e) in self._windows.keys():
@@ -1616,6 +1622,9 @@ def register(win, ev, func, arg):
 
 def unregister(win, ev):
 	event.unregister(win, ev)
+
+def getregister(win, ev):
+	event.getregister(win, ev)
 
 def clean_callbacks():
 	event.clean_callbacks()
