@@ -3,6 +3,8 @@ __version__ = "$Id$"
 import xmllib, string, re, os
 import MMurl
 
+error = 'realsupport.error'
+
 from colors import colors
 # see SMILTreeRead for a more elaborate version
 color = re.compile('#(?P<hex>[0-9a-fA-F]{3}|'		# #f00
@@ -287,7 +289,7 @@ class RPParser(xmllib.XMLParser):
 	def close(self):
 		xmllib.XMLParser.close(self)
 		if not self.__headseen:
-			raise xmllib.Error, 'Not a .rp file, no <head> tag'
+			raise error, 'Not a .rp file, no <head> tag'
 		if self.__printfunc is not None and self.__printdata:
 			data = string.join(self.__printdata, '\n')
 			# first 30 lines should be enough
