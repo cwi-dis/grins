@@ -138,7 +138,7 @@ class SoundChannel(Channel.ChannelAsync):
 			self.armdone()
 
 	def playdone(self, dummy):
-		self.__playing = None
+#		self.__playing = None
 		if self.need_armdone:
 			self.need_armdone = 0
 			self.armdone()

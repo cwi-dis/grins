@@ -73,6 +73,7 @@ class PlayerDialog:
 		if self.__ugroups:self.setusergroups()
 		if self.__channels:self.setchannels()
 		self.__window.set_toggle(SYNCCV, self.sync_cv)
+		exit
 
 	def hide(self):
 		"""Hide the control panel."""
@@ -81,7 +82,8 @@ class PlayerDialog:
 			return
 
 		#self.__window.close()
-		self.__window.set_commandlist(None,self.__cmdtgt)
+#		self.__window.set_commandlist(None,self.__cmdtgt)
+		self.toplevel.setplayerstate(STOPPED)
 		self.__window = None
 
 	def settitle(self, title):
@@ -160,30 +162,30 @@ class PlayerDialog:
 		self.setchannels(self.__channels)
 
 	def setstate(self, state):
+		self.toplevel.setplayerstate(state)
 		"""Set the playing state of the control panel.
-
+		
 		Arguments (no defaults):
 		state -- the new state:
 			STOPPED -- the player is in the stopped state
 			PLAYING -- the player is in the playing state
 			PAUSING -- the player is in the pausing state
 		"""
-
 		ostate = self.__state
 		self.__state = state
-		w = self.__window
-		if w is not None:
-			if state == STOPPED:
-				w.set_commandlist(self.stoplist,self.__cmdtgt)
-			if state == PLAYING:
-				w.set_commandlist(self.playlist,self.__cmdtgt)
-			if state == PAUSING:
-				w.set_commandlist(self.pauselist,self.__cmdtgt)
-			self.setchannels(self.__channels)
-			if state != ostate:
-				#w.set_toggle(PLAY, state != STOPPED)
-				w.set_toggle(PAUSE, state == PAUSING)
-				w.set_toggle(STOP, state == STOPPED)
+#		w = self.__window
+#		if w is not None:
+#			if state == STOPPED:
+#				w.set_commandlist(self.stoplist,self.__cmdtgt)
+#			if state == PLAYING:
+#				w.set_commandlist(self.playlist,self.__cmdtgt)
+#			if state == PAUSING:
+#				w.set_commandlist(self.pauselist,self.__cmdtgt)
+#			if state != ostate:
+#				w.set_toggle(PLAY, state == PLAYING)
+#				w.set_toggle(PAUSE, state == PAUSING)
+#				w.set_toggle(STOP, state == STOPPED)
+		self.setchannels(self.__channels)
 
 	def getgeometry(self):
 		"""Get the coordinates of the control panel.
