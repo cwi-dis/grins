@@ -102,9 +102,9 @@ class TransitionEngine:
 		else:
 			if self.outtrans:
 				wnd._paintOnSurf(wnd._fromsurf)
-				#wnd.updateBackSurf(self._tosurf, exclwnd = wnd) 
+				wnd.updateBackSurf(self._tosurf, exclwnd = wnd) 
 			else:
-				#wnd.updateBackSurf(wnd._fromsurf, exclwnd = wnd)
+				wnd.updateBackSurf(wnd._fromsurf, exclwnd = wnd)
 				wnd._paintOnSurf(self._tosurf)
 	
 		fromsurf = 	wnd._fromsurf
@@ -128,7 +128,7 @@ class TransitionEngine:
 		else:
 			self.windows.append(window)
 
-		x, y, w, h = self.windows[0]._rect
+		x, y, w, h = wnd._topwindow.LRtoDR(wnd._rect, round = 1)
 		self.__transitiontype.move_resize((0, 0, w, h))
 
 	def _ismaster(self, wnd):
@@ -150,7 +150,7 @@ class TransitionEngine:
 			print arg
 
 		# resize to this window
-		x, y, w, h = wnd._rect
+		x, y, w, h = wnd._topwindow.LRtoDR(wnd._rect, round = 1)
 		self.__transitiontype.move_resize((0, 0, w, h))
 
 	def __onIdle(self):
