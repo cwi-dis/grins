@@ -99,6 +99,9 @@ class _Toplevel:
 		dummy = testevent()
 		return window
 
+	def pop(self):
+		pass
+
 	def getsize(self):
 		if debug: print 'Toplevel.getsize()'
 		return _mscreenwidth, _mscreenheight
@@ -1086,6 +1089,7 @@ class _Window:
 		return x, y, w, h
 
 	def pop(self):
+		self._parent_window.pop()
 		if _toplevel._win_lock:
 			_toplevel._win_lock.acquire()
 		gl.winset(self._window_id)
