@@ -635,13 +635,19 @@ class _Button:
 		self._linewidth = dispobj._linewidth
 		self._hiwidth = self._linewidth
 		self._highlighted = 0
+		dispobj._buttonlist.append(self)
+		# if button color and highlight color are all equal to
+		# the background color then don't draw the box (and
+		# don't highlight).
+		if self._color == dispobj._bgcolor and \
+		   self._hicolor == dispobj._bgcolor:
+			return
 		d = dispobj._displaylist
 		if dispobj._curcolor != self._color:
 			d.append(gl.RGBcolor, self._color)
 			dispobj._curcolor = self._color
 		d.append(gl.linewidth, self._linewidth)
 		d.append(gl.recti, self._coordinates)
-		dispobj._buttonlist.append(self)
 
 ##	def __del__(self):
 ##		print 'delete',`self`
@@ -676,6 +682,12 @@ class _Button:
 		dispobj = self._dispobj
 		if dispobj._window._active_display_list != dispobj:
 			raise error, 'can only highlight rendered button'
+		# if button color and highlight color are all equal to
+		# the background color then don't draw the box (and
+		# don't highlight).
+		if self._color == dispobj._bgcolor and \
+		   self._hicolor == dispobj._bgcolor:
+			return
 		toplevel._win_lock.acquire()
 		gl.winset(self._dispobj._window._window_id)
 		gl.RGBcolor(self._hicolor)
@@ -687,6 +699,8 @@ class _Button:
 	def unhighlight(self):
 		if self.is_closed():
 			raise error, 'button already closed'
+		if not self._highlighted:
+			return
 		self._highlighted = 0
 		dispobj = self._dispobj
 		if dispobj._window._active_display_list != dispobj:
@@ -1253,8 +1267,9 @@ class _Window:
 		self._redraw()
 
 	def dontshowwindow(self):
-		self._drawbox = 0
-		self._redraw()
+		if self._drawbox:
+			self._drawbox = 0
+			self._redraw()
 
 	def fgcolor(self, *color):
 		if debug: print `self`+'.fgcolor()'

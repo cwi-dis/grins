@@ -1059,12 +1059,18 @@ class _Button:
 		self._linewidth = dispobj._linewidth
 		self._hiwidth = self._linewidth
 		self._highlighted = 0
+		dispobj._buttonlist.append(self)
+		# if button color and highlight color are all equal to
+		# the background color then don't draw the box (and
+		# don't highlight).
+		if self._color == dispobj._bgcolor and \
+		   self._hicolor == dispobj._bgcolor:
+			return
 		if toplevel._win_lock:
 			toplevel._win_lock.acquire()
 		dispobj._gc.DrawRectangle(self._coordinates)
 		if toplevel._win_lock:
 			toplevel._win_lock.release()
-		dispobj._buttonlist.append(self)
 
 	def close(self):
 		if debug: print `self`+'.close()'
@@ -1110,6 +1116,12 @@ class _Button:
 		gc = window._gc
 		if window._active_display_list != dispobj:
 			raise error, 'can only highlight rendered button'
+		# if button color and highlight color are all equal to
+		# the background color then don't draw the box (and
+		# don't highlight).
+		if self._color == dispobj._bgcolor and \
+		   self._hicolor == dispobj._bgcolor:
+			return
 		if toplevel._win_lock:
 			toplevel._win_lock.acquire()
 		gc.background = dispobj._xbgcolor
