@@ -1,4 +1,4 @@
-__version__ = "$Id:"
+__version__ = "$Id$"
 
 # This file will contain the base objects for the various views.
 # There is meant to be one and only one instance of this class;
