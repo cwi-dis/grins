@@ -177,9 +177,9 @@ class SoundChannel(ChannelAsync):
 			qid = self._scheduler.enter(t, 0, self.__marker, (node, marker))
 			self.__evid.append(qid)
 		t0 = self._scheduler.timefunc()
+		mediadur = float(self.play_fp.getnframes()) / rate
 		if t0 > start_time and not settings.get('noskip'):
 			late = t0 - start_time
-			mediadur = float(self.play_fp.getnframes()) / rate
 			if late > mediadur:
 				self.playdone(0, max(curtime, start_time + mediadur))
 				return
