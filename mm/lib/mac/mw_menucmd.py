@@ -162,7 +162,6 @@ class _SpecialMenu(_DynamicMenu):
 				self.menus[cur].check(1)
 			self.cur = cur
 		return anything_there
-	
 
 class CommandHandler:
 	def __init__(self, menubartemplate):
@@ -184,7 +183,7 @@ class CommandHandler:
 ##		menu = mw_globals.toplevel._addmenu('Windows')
 ##		self.window_menu = _SpecialMenu(menu,
 ##			mw_globals.toplevel._pop_window)
-			
+
 	def install_cmd(self, number, group):
 		if self.all_cmd_groups[number] == group:
 			return 0

@@ -57,6 +57,7 @@ getscreendepth = toplevel.getscreendepth
 lopristarting = toplevel.lopristarting
 setidleproc = toplevel.setidleproc
 cancelidleproc = toplevel.cancelidleproc
+installaehandler = toplevel.installaehandler
 
 #
 # Make various other items from other modules available
