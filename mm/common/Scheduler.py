@@ -517,7 +517,7 @@ class SchedulerContext:
 						else:
 							x = p1[1]
 						pd = None
-						while (pd is None or pd == 'inherited') and x.type == 'prio':
+						while (pd is None or pd == 'inherit') and x.type == 'prio':
 							pd = x.attrdict.get('pauseDisplay')
 							x = x.parent
 						if pd is None:
@@ -955,6 +955,7 @@ class Scheduler(scheduler):
 		to_stop = None
 		if debugevents: print 'Now', self.sctx_list,self.timefunc()
 		if debugevents: self.dump()
+		self.queue = []		# XXX shouldn't be necessary, but it is
 		if self.starting_to_play:
 			self.starting_to_play = 0
 		self.playing = 0
