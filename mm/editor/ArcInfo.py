@@ -1,5 +1,4 @@
 # Arc info window (modeless dialog)
-print 'import ArcInfo'
 
 
 import gl
