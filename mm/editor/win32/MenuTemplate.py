@@ -181,7 +181,7 @@ MENUBAR=(
 		(SMIL, SEP,),
 		(SMIL, ENTRY, '&Synchronize selection', None, PUSHFOCUS),
 		(LIGHT, SEP,),
-		(SMIL, TOGGLE, 'Unused c&hannels', None, TOGGLE_UNUSED),
+		(SMIL, TOGGLE, 'Show/Hide unused c&hannels', None, TOGGLE_UNUSED),
 		(SMIL, TOGGLE, 'Sync &arcs', None, TOGGLE_ARCS),
 		(SMIL, TOGGLE, '&Image thumbnails', None, THUMBNAIL),
 		(LIGHT, ENTRY, 'Check bandwidth &usage', None, COMPUTE_BANDWIDTH),
@@ -228,7 +228,7 @@ MENUBAR=(
 		(LIGHT, SEP,),
 		(LIGHT, ENTRY, 'GRiNS on the &Web', None,GRINS_WEB),
 		(LIGHT, SEP,),
-		(LIGHT, ENTRY, '&QuickStart Guide', None, GRINS_QSG),
+		(LIGHT, ENTRY, '&Quick Start Guide', None, GRINS_QSG),
 		(LIGHT, SEP,),
 		(LIGHT, ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
 
