@@ -56,11 +56,11 @@ class MMNodeContext(domcore.Element):
                         		raise 'not ready'
 				index = len(self.channels)
 				print 'adding channel...', newChild 
-				em.addchannel(self, channelName, index ,channelType)
+				em.addchannel(channelName, index ,channelType)
                 		em.commit()
 				return newChild
 			else:
-				return None
+				raise 'Channel has no Type or Name'
 
 		# add hyperlink
 		elif newChild._get_tagName() == 'hyperlink' :
@@ -388,6 +388,20 @@ class MMChannel(domcore.Element):
 		attr = domcore.Attr('name', self.name)
 		nnm.setNamedItem(attr)
 		return nnm
+
+        def setAttribute(self, attrname, value):
+                em = self.context.editmgr
+                if not em.transaction():
+                        return None
+
+                if attrname=='name' :
+			em.setchannelname(self.name, value)
+			self.name = attrname
+		else:
+                	em.setchannelattr(self, self.name, attrname, value)
+                em.commit()
+                return None
+
 	def _get_childNodes(self):
 		nodeList =  domcore.NodeList([])
 		return nodeList

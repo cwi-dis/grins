@@ -37,11 +37,21 @@ class Document(Node):
 		"""
 	# channels, hyperlinks, elements
 		if tagName == 'channel' :
-			import MMNode	# ???
-			defName = ''
-			nwNode = MMNode.MMChannel(self.root.context, defName)
-			print 'nwChannel ', nwNode
-			return nwNode
+			# every channel has a name and a type. createElement only has only one argument which
+			# is reserverd for the elementname 'channel' (which indicates you want to create
+			# a channel)  Obviously this conflicts. 
+			# We solve this by first creating an Elementobject with 2 default attributes, 'name' 
+			# and 'type' with both a defaultvalue wich should be changed by the user.
+			# If and only if both name and type are changed the channel (Element) could be added 
+			# to the tree (--> root.firstChild = context),  otherwise an exception is raised
+			#
+			#	the appendChild (and similar) function scans for elements with special 
+			#	tagnames ('channel', 'hyperlink') and handles them diffrently
+
+			nwChannel = Element(tagName)
+			nwChannel.setAttribute('name', '')
+			nwChannel.setAttribute('type', '')
+			return nwChannel
 		elif tagname == 'hyperlink':
 			# hyperlink
 			print 'nwHyperlink ', nwNode
@@ -137,8 +147,10 @@ class Element(Node):
 	def getAttribute(self, name):
 		return self._get_attributes().getNamedItem(name)._get_value()
 	def getAttributeNode(self, name):
+		print 'get attribute ', name, value
 		return self._get_attributes().getNamedItem(name)
 	def setAttribute(self,name,value):
+		print '---- set attribute ', name, value
 		self.attrdict[name] = value
 	def removeAttribute(self, name):
 		raise self.ex
