@@ -469,7 +469,34 @@ sdk_set_class_long(PyObject *self, PyObject *args)
 	GUI_END_SAVE;
 	return Py_BuildValue("l",dwOldLong);
 	}
-  
+ 
+static PyObject *
+sdk_set_window_long(PyObject *self, PyObject *args)
+	{
+	HWND hWnd;
+	int nIndex;
+	LONG newLong;
+	if (!PyArg_ParseTuple (args, "iil",&hWnd,&nIndex,&newLong))
+		return NULL;
+	GUI_BGN_SAVE;
+	LONG oldLong=::SetWindowLong(hWnd,nIndex,newLong);
+	GUI_END_SAVE;
+	return Py_BuildValue("l",oldLong);
+	}
+
+static PyObject *
+sdk_get_window_long(PyObject *self, PyObject *args)
+	{
+	HWND hWnd;
+	int nIndex;
+	if (!PyArg_ParseTuple (args, "ii",&hWnd,&nIndex))
+		return NULL;
+	GUI_BGN_SAVE;
+	LONG attr=::GetWindowLong(hWnd,nIndex);
+	GUI_END_SAVE;
+	return Py_BuildValue("l",attr);
+	}
+ 
  // @pymethod |PyWin32Sdk|ShowWindow|sets the specified window's show state
 // Return Values: None
 static PyObject *
@@ -869,6 +896,15 @@ sdk_get_dialog_base_units(PyObject *self, PyObject *args)
 	return Py_BuildValue("(i,i)", LOWORD(l), HIWORD(l));
 	}
 
+
+static PyObject*
+sdk_get_focus(PyObject *self, PyObject *args) 
+	{
+	CHECK_NO_ARGS2(args,GetFocus);
+	HWND hWnd=GetFocus();
+	return Py_BuildValue("i", hWnd);
+	}
+
  // @object PyWin32Sdk|A module wrapper object.  It is a general utility object, and is not associated with an MFC object.
 BEGIN_PYMETHODDEF(Win32Sdk)
 	{"CreatePen",sdk_create_pen,	1},		// @pymeth CreatePen|Creates a pen and returns its handle
@@ -899,6 +935,8 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"GetWindowRect",sdk_get_window_rect,1}, // @pymeth GetWindowRect|Get the windows rectangle.
 	{"ShowWindow",sdk_show_window,1}, // @pymeth ShowWindow|sets the specified window's show state
 	{"SetClassLong",sdk_set_class_long,1}, // @pymeth SetClassLong|
+	{"SetWindowLong",sdk_set_window_long,1}, 
+	{"GetWindowLong",sdk_get_window_long,1}, 
 
 	{"GetTickCount",sdk_get_tick_count,1}, // @pymeth GetTickCount|Retrieves the number of milliseconds that have elapsed since the system was started
 
@@ -916,6 +954,7 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"RegisterClipboardFormat",sdk_register_clipboard_format,1}, 
 
 	{"GetDialogBaseUnits",sdk_get_dialog_base_units,1}, 
+	{"GetFocus",sdk_get_focus,1}, 
 	///////////////////////////////////////////////////// Temporary
 	{"ParseDrawItemStruct",sdk_parse_drawitemstruct,1},// undocumented!
 	{"CrackNMHDR",sdk_crack_nmhdr,1}, // undocumented!
