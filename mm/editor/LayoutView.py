@@ -38,8 +38,8 @@ class LayoutView(LayoutViewDialog):
 		if self.is_showing():
 			return
 		self.fill()
-		LayoutViewDialog.show(self)
 		self.toplevel.showstate(self, 1)
+		LayoutViewDialog.show(self)
 		self.editmgr.register(self)
 
 	def hide(self):
