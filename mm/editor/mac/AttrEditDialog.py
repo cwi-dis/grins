@@ -180,7 +180,6 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			self._cur_page.hide()
 		else:
 			if item == None:
-				self._sethelpstring('Select a property-page with the browser.')
 				return
 		self._cur_page = None
 
@@ -189,6 +188,9 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			self._cur_page.show()
 			self._sethelpstring(self._cur_page.helpstring)
 			self._pagebrowser.select(item)
+		else:
+			self._sethelpstring('Select a property-page with the browser.')
+
 
 	def _is_shown(self, attrfield):
 		"""Return true if this attr is currently being displayed"""
@@ -1565,6 +1567,7 @@ class ChannelAreaLiteTabPage(AreaTabPage):
 MULTI_ATTR_CLASSES = [ 
 	ChGeneralTabPage,
 	ChannelAreaTabPage,
+	ChannelAreaLiteTabPage,
 	GeneralTabPage,
 	TimingTabPage,
 	TransitionTabPage,
