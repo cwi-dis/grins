@@ -121,7 +121,6 @@ class _Window(X_windowbase._Window):
 		v['foreground'] = v['foreground'] ^ v['background']
 		v['function'] = X.GXxor
 		v['line_style'] = X.LineOnOffDash
-		v['line_style'] = X.LineOnOffDash
 		self._gc_rb = form.GetGC(v)
 		self._rb_box = box
 		if box:
@@ -138,6 +137,10 @@ class _Window(X_windowbase._Window):
 		else:
 			self._rb_start_x, self._rb_start_y, self._rb_width, \
 					  self._rb_height = self._rect
+		try:
+			Xt.MainLoop()
+		except _rb_done:
+			pass
 
 	def hitarrow(self, point, src, dst):
 		# return 1 iff (x,y) is within the arrow head
@@ -181,29 +184,35 @@ class _Window(X_windowbase._Window):
 		self.arrowcache = {}
 		w = _in_create_box
 		if w:
-			raised = 1
 			next_create_box = w._next_create_box
 			w._next_create_box = []
-			w._rb_cancel()
+			try:
+				w._rb_cancel()
+			except _rb_done:
+				pass
 			w._next_create_box[0:0] = next_create_box
 		X_windowbase._Window._resize_callback(self, form, client_data,
 						      call_data)
 		if w:
 			w._rb_end()
+			raise _rb_done
 
 	def _delete_callback(self, form, client_data, call_data):
 		self.arrowcache = {}
 		w = _in_create_box
 		if w:
-			raised = 1
 			next_create_box = w._next_create_box
 			w._next_create_box = []
-			w._rb_cancel()
+			try:
+				w._rb_cancel()
+			except _rb_done:
+				pass
 			w._next_create_box[0:0] = next_create_box
 		X_windowbase._Window._delete_callback(self, form, client_data,
 						      call_data)
 		if w:
 			w._rb_end()
+			raise _rb_done
 
 	# supporting methods for create_box
 	def _rb_finish(self):
@@ -263,12 +272,14 @@ class _Window(X_windowbase._Window):
 		self._rb_finish()
 		apply(callback, self._rb_cvbox())
 		self._rb_end()
+		raise _rb_done
 
 	def _rb_cancel(self):
 		callback = self._rb_callback
 		self._rb_finish()
 		apply(callback, ())
 		self._rb_end()
+		raise _rb_done
 
 	def _rb_end(self):
 		# execute pending create_box calls
