@@ -10,6 +10,7 @@ import string
 from AnchorDefs import *
 from Hlinks import DIR_1TO2, TYPE_JUMP, TYPE_CALL, TYPE_FORK
 import re
+import os
 
 error = 'SMILTreeRead.error'
 
@@ -1054,7 +1055,13 @@ class SMILParser(xmllib.XMLParser):
 		return node.GetUID(), a[2]
 
 def ReadFile(url):
-	return ReadFileContext(url, MMNode.MMNodeContext(MMNode.MMNode))
+	if os.name == 'mac':
+		import MacOS
+		MacOS.splash(514)	# Show "loading document" splash screen
+	rv = ReadFileContext(filename, MMNode.MMNodeContext(MMNode.MMNode))
+	if os.name == 'mac':
+		MacOS.splash(515)	# and "Initializing document" (to be removed in mainloop)
+	return rv
 
 def ReadFileContext(url, context):
 	import posixpath
