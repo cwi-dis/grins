@@ -8,10 +8,6 @@ from usercmd import *
 import MMAttrdefs
 
 ALL_LAYOUTS = '(All Channels)'
-
-
-SHOW_SIBLING_MEDIA_IN_PAR = 0
-SHOW_MEDIA_ON_PREVIOUS_FOCUS = 0
 	
 ###########################
 # helper class to build tree from list
@@ -454,7 +450,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.currentMediaRegionList = []
 		self.currentMediaRegionListSel = []
 		self.lastMediaNameSelected = None
-		self.previousFocus = None
+		self.currentFocus = None
 
 		self.currentSelectedRegionList = None		
 
@@ -501,18 +497,6 @@ class LayoutView2(LayoutViewDialog2):
 		type,focus = self.editmgr.getglobalfocus()
 		if focus != None:
 			self.globalfocuschanged(type, focus)
-
-		#		
-		# simulate the focus for test
-		#
-#		focustype = 1
-#		self.nodelist = []
-#		for key,node in self.context.uidmap.items():
-#			if node.type in ('imm','ext'):
-#				self.nodelist.append(node)
-#		self.globalfocuschanged(focustype, self.nodelist[0])
-#		self.globalfocuschanged(focustype, self.nodelist[1])
-		# ###
 		
 	def hide(self):
 		if not self.is_showing():
@@ -541,35 +525,27 @@ class LayoutView2(LayoutViewDialog2):
 
 	def focusOnMMNode(self, focusobject):
 		# remove media node from previous selection		
-		if not SHOW_MEDIA_ON_PREVIOUS_FOCUS or not self.isValidMMNode(focusobject):
-			self.removeAllFocusMediaNodeList()
-#			self.removeAllMediaNodeList()
-		else:
-			self.removeMediaFromPreviousFocus()
+		self.removeAllFocusMediaNodeList()
 
 		# make a append node list according to focusobject and the preferences
 		appendList = []
 		if self.isValidMMNode(focusobject):
 			if not focusobject.attrdict.get('name') in self.currentNodeListShowed:
 				appendList.append(focusobject)
-		# allow to show sibling medias
-		if SHOW_SIBLING_MEDIA_IN_PAR:
-			parentNode = focusobject.parent
-			if parentNode != None:
-				if parentNode.type == 'par':
-					for node in parentNode.children:
-						if node != focusobject:
-							if self.isValidMMNode(node):
-								appendList.append(node)
 
 		# append and update media node list
 		self.appendMediaNodeList(appendList)
-
-		# if previously any region out, we have to re-draw all
-		if self.currentSelectedRegionList != None:
-			self.displayViewport(self.currentViewport.getName())
-		else:
-			self.updateMediaNodeList()
+		self.updateMediaNodeList()
+		self.updateFocus(focusobject)
+		
+	def updateFocus(self, object):
+		# for now, select only one media (multiselection not supported yet)	
+		if self.isValidMMNode(object):
+			name = object.attrdict.get("name")
+			for mediaRegion, parentRegion in self.currentMediaRegionList:
+				if mediaRegion.getName() == name:
+					self.select(mediaRegion)
+					break
 
 	def showAllRegions(self):
 		# remove all selected nodes
@@ -581,9 +557,9 @@ class LayoutView2(LayoutViewDialog2):
 		# re display all viewport
 		self.displayViewport(self.currentViewport.getName())		
 
-		# add the nodes which contain the focus
-		if self.previousFocus != None:
-			self.focusOnMMNode(self.previousFocus)
+		# set the focus
+		if self.currentFocus != None:
+			self.focusOnMMNode(self.currentFocus)
 		
 	def showNodeList(self, nodeobject):
 		# remove all selected nodes
@@ -609,17 +585,20 @@ class LayoutView2(LayoutViewDialog2):
 		
 		# re display all viewport
 		self.displayViewport(self.currentViewport.getName())
-		
+
+		# set the focus
+		if self.currentFocus != None:
+			self.focusOnMMNode(self.currentFocus)
+
+			
 	def updateMediaNodeList(self):
 		l = len(self.currentMediaRegionList)
-		if l > 0:
+		if l > 0:					
 			lastMediaRegion, parentRegion = self.currentMediaRegionList[l-1]
 			
 			# display the right viewport
 			if self.currentViewport != parentRegion.getViewport():
 				self.displayViewport(parentRegion.getViewport().getName())
-			
-			self.select(lastMediaRegion)
 		else:			
 			# if no media selected any more desactive the media selecter
 			self.disableMediaListOnDialogBox()
@@ -639,12 +618,13 @@ class LayoutView2(LayoutViewDialog2):
 		
 	def globalfocuschanged(self, focustype, focusobject):
 		# skip the focus if already exist
-		if self.previousFocus == focusobject:
+		if self.currentFocus == focusobject:
 			return
-		if focusobject == self.myfocus:
+		if self.myfocus != None and focusobject == self.myfocus:
+			self.myfocus = None
 			return
 		self.myfocus = None
-		self.previousFocus = focusobject
+		self.currentFocus = focusobject
 		
 		if focustype == 'MMNode':
 			self.focusOnMMNode(focusobject)
@@ -709,14 +689,14 @@ class LayoutView2(LayoutViewDialog2):
 		if self.currentNodeSelected != None:
 			self.select(self.currentNodeSelected)
 
-	def removeMediaFromPreviousFocus(self):
-		l = len(self.currentMediaRegionList)
-		if l > 1:
-			mediaRegion, parentRegion = self.currentMediaRegionList[0]
-			parentRegion.removeNode(mediaRegion)
-			del self.currentMediaRegionList[0]
-			if self.lastMediaNameSelected == mediaRegion.getName():
-				self.lastMediaNameSelected = None				
+#	def removeMediaFromPreviousFocus(self):
+#		l = len(self.currentMediaRegionList)
+#		if l > 1:
+#			mediaRegion, parentRegion = self.currentMediaRegionList[0]
+#			parentRegion.removeNode(mediaRegion)
+#			del self.currentMediaRegionList[0]
+#			if self.lastMediaNameSelected == mediaRegion.getName():
+#				self.lastMediaNameSelected = None				
 			
 	def removeAllMediaNodeList(self):
 		if len(self.currentMediaRegionList) > 0:
@@ -735,14 +715,13 @@ class LayoutView2(LayoutViewDialog2):
 					removeList.append(i)
 					# remove from region tree
 					parentRegion.removeNode(mediaRegion)
+					if self.lastMediaNameSelected == mediaRegion.getName():					
+						self.lastMediaNameSelected = None
 				i = i+1
 
 		removeList.reverse()				
 		for num in removeList:
 			del self.currentMediaRegionList[num]
-
-		# for now			
-		self.lastMediaNameSelected = None
 									
 	def appendMediaNodeList(self, nodeList):
 		# create the media region nodes according to nodeList
