@@ -86,7 +86,7 @@ class MovieWindow(ChannelWindow):
 			self.centerimage()
 	#
 	def setfile(self, (filename, node)):
-		#self.clear()
+		self.clear()
 		self.vfile = None
 		try:
 			self.vfile = VFile.VinFile().init(filename)
@@ -112,7 +112,7 @@ class MovieWindow(ChannelWindow):
 		if gl.windepth(self.wid) <> 1:
 			self.pop()
 			if self.vfile:
-				self.vfile.initcolormap()
+				self.vfile.clear()
 	#
 	def centerimage(self):
 		w, h = self.vfile.width, self.vfile.height
@@ -200,7 +200,7 @@ class MovieChannel(Channel):
 			return
 	        if node <> self.armed_node:
 			print 'MovieChannel: node not armed'
-			self.pop()
+			self.window.pop()
 			self.arm(node)
 		else:
 			self.window.popup()
@@ -223,9 +223,9 @@ class MovieChannel(Channel):
 			t = self.window.nextframe(0)
 			self.played = self.played + 1
 			now = self.player.timefunc()
-##			while t and self.starttime + t <= now:
-##				t = self.window.nextframe(1)
-##				self.skipped = self.skipped + 1
+			while t and self.starttime + t <= now:
+				t = self.window.nextframe(1)
+				self.skipped = self.skipped + 1
 			self.qid = self.player.enterabs(self.starttime + t, \
 				1, self.poll, cb_arg)
 	#
@@ -242,6 +242,12 @@ class MovieChannel(Channel):
 	#
 	def getfilename(self, node):
 		return MMAttrdefs.getattr(node, 'file')
+	#
+	def setwaiting(self):
+		self.window.setwaiting()
+	#
+	def setready(self):
+		self.window.setready()
 	#
 
 
