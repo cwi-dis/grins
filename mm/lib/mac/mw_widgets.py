@@ -24,11 +24,11 @@ class _Widget:
 		
 class _ListWidget:
 	def __init__(self, wid, item, content=[], multi=0):
-		_Widget.__init__(self, wid, item)
 		self.control = wid.GetDialogItemAsControl(item)
-		h = self.control.GetControlDataHandle(Control.kControlListBoxListHandleTag)
-		self.list = h.as_List()
-		self.list.LAddRow(len(content))
+		h = self.control.GetControlDataHandle(Controls.kControlListBoxPart, 
+			Controls.kControlListBoxListHandleTag)
+		self.list = List.as_List(h)
+		self.list.LAddRow(len(content), 0)
 ##?		self.list.LSetDrawingMode(0)
 ##		# wid is the window (dialog) where our list is going to be in
 ##		# rect is it's item rectangle (as in dialog item)
