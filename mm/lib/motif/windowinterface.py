@@ -3104,6 +3104,10 @@ class showmessage:
 		self._main = w
 		self.setcursor(_WAITING_CURSOR)
 		toplevel._subwindows.append(self)
+		if grab:
+			toplevel.setready()
+			while self._grab:
+				Xt.DispatchEvent(Xt.NextEvent())
 
 	def close(self):
 		if self._main:
@@ -3112,6 +3116,7 @@ class showmessage:
 			self._main = None
 			w.UnmanageChild()
 			w.DestroyWidget()
+		self._grab = 0
 
 	def setcursor(self, cursor):
 		if cursor == _WAITING_CURSOR:
