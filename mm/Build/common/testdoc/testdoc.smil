@@ -20,39 +20,39 @@
     </layout>
   </head>
   <body>
-    <par>
+    <par id="test-text">
       <text region="description" src="data:,Playing%20a%20text%20node" type="text/plain" dur="2s"/>
       <text region="text" src="testdata.txt" type="text/plain"/>
     </par>
-    <par>
+    <par id="test-html">
       <text region="description" src="data:,Playing%20a%20html%20node" type="text/plain" dur="2s"/>
       <text region="html" src="testdata.html" type="text/html"/>
     </par>
-    <par>
+    <par id="test-image">
       <text region="description" src="data:,Playing%20an%20image%20node" type="text/plain" dur="2s"/>
       <img region="image" src="testdata.jpg"/>
     </par>
-    <par>
+    <par id="test-audio">
       <text region="description" src="data:,Playing%20a%20sound%20node" type="text/plain" dur="2s"/>
       <audio region="sound" src="testdata.aiff"/>
     </par>
-    <par>
+    <par id="test-video">
       <text region="description" src="data:,Playing%20a%20video%20node" type="text/plain" dur="2s"/>
       <video region="video" src="testdata.mpg"/>
     </par>
-    <par>
+    <par id="test-realaudio">
       <text region="description" src="data:,Playing%20a%20RealAudio%20node" type="text/plain" dur="2s"/>
       <audio region="realaudio" src="testdata.ra"/>
     </par>
-    <par>
+    <par id="test-realvideo">
       <text region="description" src="data:,Playing%20a%20RealVideo%20node" type="text/plain" dur="2s"/>
       <video region="realvideo" src="testdata.rv"/>
     </par>
-    <par>
+    <par id="test-realpix">
       <text region="description" src="data:,Playing%20a%20RealPix%20node" type="text/plain" dur="2s"/>
       <img region="realpix" src="testdata.rp"/>
     </par>
-    <par>
+    <par id="test-realtext">
       <text region="description" src="data:,Playing%20a%20RealText%20node" type="text/plain" dur="2s"/>
       <text region="realtext" src="testdata.rt"/>
     </par>
