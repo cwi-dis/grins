@@ -15,6 +15,9 @@ from ChannelWindow import ChannelWindow
 from AnchorEdit import A_ID, A_TYPE, A_ARGS, ATYPE_NORMAL, ATYPE_PAUSE, \
 	ATYPE_AUTO
 
+import FileCache
+
+
 def between(v, x0, x1):
 	return ((x0 <= v and v <= x1) or (x1 <= v and v <= x0))
 
@@ -114,6 +117,7 @@ class ImageWindow(ChannelWindow):
 			self.channel.done(0)
 	#
 	def armimage(self, (filename, node)):
+		filename = rgbcache.get(filename)
 		self.parray = None
 		try:
 			self.xsize, self.ysize, dummy = imgfile.getsizes(filename)
@@ -282,3 +286,44 @@ class ImageChannel(Channel):
 	def getfilename(self, node):
 		return MMAttrdefs.getattr(node, 'file')
 	#
+
+
+def makergbfile(filename):
+	import FileCache
+	import imghdr
+	type = imghdr.what(filename)
+##	print 'Type of', filename, 'is', type
+	if type == 'pnm':
+		return conv('fromppm $1 $2', filename)
+	if type == 'gif':
+		return conv('fromgif $1 $2', filename)
+	if type == 'tiff':
+		return conv('fromppm $1 $2', \
+			conv('tifftopnm <$1 >$2', filename))
+	if type == 'rast':
+		return conv('fromsun $1 $2', filename)
+	return filename
+
+temps = []
+
+def conv(cmd, filename):
+	import os
+	import tempfile
+	tempname = tempfile.mktemp()
+	temps.append(tempname)
+	cmd = 'set ' + filename + ' ' + tempname + '; ' + cmd
+	sts = os.system(cmd)
+	if sts:
+		print cmd
+		print  'Exit status:', sts
+	return tempname
+
+def cleanup():
+	import os
+	for tempname in temps:
+		try:
+			os.unlink(tempname)
+		except os.error, IOError:
+			pass
+
+rgbcache = FileCache.FileCache().init(makergbfile)

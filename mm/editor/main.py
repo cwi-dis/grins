@@ -37,6 +37,7 @@ def main():
 	#
 	import TopLevel
 	import SoundChannel
+	import ImageChannel
 	import Channel
 	#
 	playnow = 0
@@ -79,10 +80,8 @@ def main():
 		except KeyboardInterrupt:
 			print 'Interrupt.'
 	finally:
-		try:
-			SoundChannel.restore()
-		finally:
-			pass
+		SoundChannel.restore()
+		ImageChannel.cleanup()
 		#
 		if stats:
 			import MMNode
