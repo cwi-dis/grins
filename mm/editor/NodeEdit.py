@@ -112,7 +112,7 @@ def showeditor(node):
 			'NodeEdit.showeditor: Only extern nodes can be edited',
 			mtype = 'error')
 		return
-	import MMAttrdefs
+	import MMAttrdefs, MMurl
 	url = MMAttrdefs.getattr(node,'file')
 	utype, url = MMurl.splittype(url)
 	if utype:
