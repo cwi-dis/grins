@@ -506,7 +506,7 @@ class FloatTupleAnimator(Animator):
 		# pass to base the length parameters of values or path
 		values = self._path.getLengthValues()
 
-		Animator.__init__(self, attr, domval, values, dur, mode, 
+		Animator.__init__(self, attr, 0, values, dur, mode, 
 			times, splines, accumulate, additive)
 		
 		# time to paced interval convertion factor
@@ -537,6 +537,9 @@ class FloatTupleAnimator(Animator):
 			r.append(v1[i]+v2[i])
 		return tuple(r)
 
+	def getDOMValue(self):
+		return self._path.coords[0]
+
 class IntTupleAnimator(FloatTupleAnimator):
 	def convert(self, v):
 		n = len(v)
@@ -546,25 +549,25 @@ class IntTupleAnimator(FloatTupleAnimator):
 		return tuple(l)
 
 class EffIntTupleAnimator(IntTupleAnimator):
-	def __init__(self, attr, domval, value, dur):
-		IntTupleAnimator.__init__(self, attr, domval, (domval, value,), dur, mode='linear',
-			times=None, splines=None, accumulate='none', additive='replace')
+	def __init__(self, attr, domval, value, dur, mode='linear',
+			times=None, splines=None, accumulate='none', additive='replace'):
+		IntTupleAnimator.__init__(self, attr, domval, (domval, value,), dur, mode,
+			times, splines, accumulate, additive)
 	def getValue(self, t):
 		if not self._effectiveAnimator:
 			return IntTupleAnimator.getValue(self, t)
-		u, v = self._values[:2]
+		u, v = self._path.coords[:2]
 		u = self._effectiveAnimator.getcurrentbasevalue(self)
-		self._values = u, v
+		self._path = RNPath((u,v))
 		return IntTupleAnimator.getValue(self, t)
 
 ###########################
 # 'animateColor'  element animator
 class ColorAnimator(IntTupleAnimator):
-	def __init__(self, attr, domval, values, dur, mode='linear', 
+	def __init__(self, attr, domval, value, dur, mode='linear', 
 			times=None, splines=None, accumulate='none', additive='replace'):
-		IntTupleAnimator.__init__(self, attr, domval, values, dur, mode, 
-			None, None, accumulate, additive)
-		
+		IntTupleAnimator.__init__(self, attr, domval, value, dur, mode, 
+			times, splines, accumulate, additive)		
 	def clamp(self, v):
 		n = len(v)
 		r = []
@@ -575,18 +578,19 @@ class ColorAnimator(IntTupleAnimator):
 		return tuple(r)
 
 
-class EffColorAnimator(ColorAnimator):
+class EffColorAnimator(EffIntTupleAnimator):
 	def __init__(self, attr, domval, value, dur, mode='linear',
 			times=None, splines=None, accumulate='none', additive='replace'):
-		ColorAnimator.__init__(self, attr, domval, (domval, value,), dur, mode,
+		EffIntTupleAnimator.__init__(self, attr, domval, value, dur, mode,
 			times, splines, accumulate, additive)
-	def getValue(self, t):
-		if not self._effectiveAnimator:
-			return ColorAnimator.getValue(self, t)
-		u, v = self._values[:2]
-		u = self._effectiveAnimator.getcurrentbasevalue(self)
-		self._values = u, v
-		return ColorAnimator.getValue(self, t)
+	def clamp(self, v):
+		n = len(v)
+		r = []
+		for i in range(n):
+			if v[i]<0: r.append(0)
+			elif v[i]>255: r.append(255)
+			else: r.append(v[i])
+		return tuple(r)
 
 ###########################
 # 'animateMotion' element animator
@@ -598,7 +602,7 @@ class MotionAnimator(Animator):
 		# pass to base the length parameters of values or path
 		values = path.getLengthValues()
 
-		Animator.__init__(self, attr, domval, values, dur, mode, 
+		Animator.__init__(self, attr, 0, values, dur, mode, 
 			times, splines, accumulate, additive)
 		
 		# time to paced interval convertion factor
@@ -623,6 +627,10 @@ class MotionAnimator(Animator):
 		x, y = v.real, v.imag
 		return _round(x), _round(y)
 	
+	def getDOMValue(self):
+		x, y = self._path.getPointAtLength(0)
+		return complex(0,0)
+
 class EffMotionAnimator(Animator):
 	def __init__(self, attr, domval, value, dur, mode='paced',
 			times=None, splines=None, accumulate='none', additive='replace'):
