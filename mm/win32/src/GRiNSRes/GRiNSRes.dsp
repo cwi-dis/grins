@@ -217,6 +217,10 @@ SOURCE=.\Res\region.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Res\sound.bmp
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\..\Build\products\g2-15\lite\splash8bit.bmp"
 # End Source File
 # Begin Source File
