@@ -1172,6 +1172,8 @@ class ChannelWindow(Channel):
 		self.__out_trans_qid = None
 		self._active_multiregion_transition = None
 		self._wingeom = None
+		self._winabsgeom = None
+		self._mediageom = None
 		self.__transparent = 1
 		self.__z = -1
 		self.__bgcolor = None
@@ -1691,14 +1693,24 @@ class ChannelWindow(Channel):
 		if b is not None:
 			b.setsensitive(1)
 
-	# get the space display area of media according to registration points
+	# get the space display area of media
 	# return pourcent values relative to the subregion or region
 	def getmediageom(self, node):
 		subreg_left, subreg_top, subreg_width, subreg_height = self._wingeom
 		area_left, area_top, area_width, area_height = self._mediageom
 		return float(area_left)/subreg_width, float(area_top)/subreg_height, \
 				 float(area_width)/subreg_width, float(area_height)/subreg_height
-		
+
+	# get the channel geometry
+	# return pixel values relative to the parent region
+	def getwingeom(self):
+		return self._wingeom
+
+	# get the channel geometry
+	# return pixel values relative to the viewport
+	def getabswingeom(self):
+		return self._winabsgeom
+	
 	def play(self, node):
 		if debug:
 			print 'ChannelWindow.play('+`self`+','+`node`+')'
@@ -1782,7 +1794,7 @@ class ChannelWindow(Channel):
 
 	def endtransition(self, node):
 		# callback, called at end of transition
-		chlist = self.getViewportChannel().getOverlapChannelList(self, node)
+		chlist = self.getViewportChannel().getOverlapRendererList(self, node)
 		for ch, nd in chlist:
 			self._playcontext.transitiondone(nd)
 

@@ -180,7 +180,7 @@ class LayoutChannel(ChannelWindow):
 	def removeActiveVisibleChannel(self, channel):
 		del self.__activeVisibleChannelDict[channel]
 
-	def getOverlapChannelList(self, channelToCheck, nodeToCheck):
+	def getOverlapRendererList(self, channelToCheck, nodeToCheck):
 		overLapList = []
 		xR, yR, wR, hR = channelToCheck.cssResolver.getPxAbsGeom(channelToCheck.idCssNode)
 			
