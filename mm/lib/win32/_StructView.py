@@ -129,10 +129,24 @@ class _StructView(DisplayListView):
 		if self._enableNodeDragDrop:
 			if self._dragging: 
 				self._dragging = None
+	
+	def notifyTooltipForMouseMove(self, params):
+		if not self._tooltip: 
+			return
+		msg=win32mu.Win32Msg(params)
+		point=msg.pos()
+		if self._active_displist and self._active_displist._inside_bbox(point):
+			if 1: # over a tooltip source?
+				self._tooltip.activate(1)
+			else:
+				self._tooltip.activate(0)
+		else:
+			self._tooltip.activate(0)
+		self._tooltip.onMouseMove(params)
 
 	def onMouseMove(self, params):
 		if self._tooltip:
-			self._tooltip.onMouseMove(params)
+			self.notifyTooltipForMouseMove(params)
 		msg=win32mu.Win32Msg(params)
 		point=msg.pos()
 		self.onEvent(MouseMove, point)
