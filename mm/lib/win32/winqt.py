@@ -89,6 +89,7 @@ class QtPlayer:
 		self._videotrack = None
 		self._audiomedia = None
 		self._audiotrack = None
+		self._audiodescr = None
 		self._movie = None
 		self._movie = None
 		self._dds = None
@@ -146,6 +147,8 @@ class QtPlayer:
 		try:
 			self._videotrack = self._movie.GetMovieIndTrackType(1, winqtcon.VisualMediaCharacteristic, winqtcon.movieTrackCharacteristic)
 			self._videomedia = self._videotrack.GetTrackMedia()
+			self._videotimescale = self._videomedia.GetMediaTimeScale()
+			print 'videotimescale', self._videotimescale
 		except Qt.Error, arg:
 			print 'getVideoTracksInfo', msg
 			self._videomedia = None
@@ -157,8 +160,12 @@ class QtPlayer:
 		try:
 			self._audiotrack = self._movie.GetMovieIndTrackType(1, winqtcon.AudioMediaCharacteristic, winqtcon.movieTrackCharacteristic)
 			self._audiomedia = self._audiotrack.GetTrackMedia()
+			self._audiotimescale = self._audiomedia.GetMediaTimeScale()
+			self._audiodescr = self._audiomedia.GetAudioMediaSampleDescription(1)
+			print 'audiotimescale', self._audiotimescale
 		except Qt.Error, arg:
 			print 'getAudioTracksInfo', msg
+			self._audiodescr = none
 			self._audiomedia = None
 			self._audiotrack = None
 		
@@ -242,6 +249,11 @@ class QtPlayer:
 			return self._dds.GetDataAsRGB24()
 		return None
 
+	def getAudioData(self, sampletime, nframes):
+		size, actualtime, sampleduration, desc_index, actualcount, flags, data = \
+			self._audiomedia.GetAudioMediaSample(sampletime, nframes)
+		return data
+
 	def hasVideo(self):
 		self.getVideoTracksInfo()
 		return self._videomedia is not None
@@ -250,28 +262,38 @@ class QtPlayer:
 		self.getAudioTracksInfo()
 		return self._audiomedia is not None
 
-	def openForEncoding(self, filename, ddobj):
-		if not self.open(filename):
-			return None
-		self.createVideoDDS(ddobj)
-		self.getVideoTracksInfo()
-		if self._videomedia is None:
-			return None
-		#self.getAudioTracksInfo()
+	# attrname in ('dataFormat', 'numChannels', 'sampleSize', 'sampleRate')
+	def GetAudioAttribute(self, attrname):
+		if self._audiodescr is None:
+			self.getAudioTracksInfo()
+		return self._audiodescr.get(attrname)
+
+	def computeAudioSamples(self, nbytes):
+		nch = self.GetAudioAttribute('numChannels')
+		bps = self.GetAudioAttribute('sampleSize')
+		blocksize = (bps/8)*nch
+		return nbytes / blocksize
+
+	def getVideoProperties(self):
 		framerate = self.getFrameRate()
 		width, height = self.getMovieRect()[2:]
-		self._movie.SetMoviePlayHints(winqtcon.hintsHighQuality, winqtcon.hintsHighQuality)
-		self._movie.SetMovieTimeValue(0)
-		self._movie.SetMovieActive(1)
-		self._movie.MoviesTask(0)
-		self._movie.UpdateMovie()
 		return width, height, framerate
 
-	def nextVideoData(self, sampletime):
-		if sampletime is None: sampletime = 0
-		flags = winqtcon.nextTimeMediaSample | winqtcon.nextTimeStep    
-		sampletime, dur = self._videomedia.GetMediaNextInterestingTime(flags, sampletime, 1.0)
-		self._movie.SetMovieTimeValue(sampletime)
-		self._movie.MoviesTask(0)
-		self._movie.UpdateMovie()
-		return sampletime
+	def getAudioProperties(self):
+		if self._audiodescr is None:
+			self.getAudioTracksInfo()
+		if self._audiodescr is None:
+			return None
+		srt = self.GetAudioAttribute('sampleRate')
+		nch = self.GetAudioAttribute('numChannels')
+		bps = self.GetAudioAttribute('sampleSize')
+		return srt, nch, bps
+
+
+
+	
+
+
+
+
+		

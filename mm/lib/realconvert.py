@@ -259,11 +259,13 @@ def converttextfile(u, dstdir, file, node):
 		macostools.touched(fss)
 	return file
 
-
 def _win_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
+	if u.headers.subtype.find('quicktime') >=0:
+		return _other_convertvideofile(u, srcurl, dstdir, file, node, progress)
+	u.close()
+
 	global engine
 	import MMAttrdefs, MMurl
-	u.close()
 	try:
 		import dshow
 	except ImportError:
@@ -539,6 +541,8 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 			# XXXX To be done better
 			if video_fmt.getformat() == imgformat.macrgb:
 				prod_format = producer.ENC_VIDEO_FORMAT_BGR32_NONINVERTED
+			elif video_fmt.getformat() == imgformat.bmprgble_noalign:
+				prod_format = producer.ENC_VIDEO_FORMAT_RGB24
 			else:
 				raise 'Unsupported video source format', video_fmt.getformat()
 			w, h = video_fmt.getsize()
