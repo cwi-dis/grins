@@ -1,7 +1,7 @@
 __version__ = "$Id$"
 
 from audio import Error
-from audioformat import *
+from format import *
 import string
 
 class audio_filter:

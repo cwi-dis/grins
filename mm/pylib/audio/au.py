@@ -1,7 +1,7 @@
 __version__ = "$Id$"
 
 from audio import Error
-from audioformat import *
+from format import *
 
 _AUDIO_FILE_ENCODING_MULAW_8 = 1
 _AUDIO_FILE_ENCODING_LINEAR_8 = 2
