@@ -56,9 +56,13 @@ class SAVE(_CommandBase):
 	help = 'Save document'
 class SAVE_AS(_CommandBase):
 	help = 'Save document in new file'
-class EXPORT_SMIL(_CommandBase):
+class EXPORT_G2(_CommandBase):
 	help = 'Save document in new file as pure SMIL'
-class UPLOAD_SMIL(_CommandBase):
+class UPLOAD_G2(_CommandBase):
+	help = 'Upload pure SMIL document and media items to FTP server'
+class EXPORT_QT(_CommandBase):
+	help = 'Save document in new file as pure SMIL'
+class UPLOAD_QT(_CommandBase):
 	help = 'Upload pure SMIL document and media items to FTP server'
 class EXPORT_HTML(_CommandBase):
 	help = 'Create a template webpage linking to your presentation'
@@ -152,8 +156,6 @@ class NEW_BEFORE_SEQ(_CommandBase):
 	help = 'Create new sequential node before selected node'
 class NEW_BEFORE_PAR(_CommandBase):
 	help = 'Create new parallel node before selected node'
-class NEW_BEFORE_EXCL(_CommandBase):
-	help = 'Create new exclusive node before selected node'
 class NEW_BEFORE_CHOICE(_CommandBase):
 	help = 'Create new choice node before selected node'
 class NEW_BEFORE_ALT(_CommandBase):
@@ -174,8 +176,6 @@ class NEW_AFTER_SEQ(_CommandBase):
 	help = 'Create new sequential node after selected node'
 class NEW_AFTER_PAR(_CommandBase):
 	help = 'Create new parallel node after selected node'
-class NEW_AFTER_EXCL(_CommandBase):
-	help = 'Create new exclusive node after selected node'
 class NEW_AFTER_CHOICE(_CommandBase):
 	help = 'Create new choice node after selected node'
 class NEW_AFTER_ALT(_CommandBase):
@@ -196,8 +196,6 @@ class NEW_UNDER_SEQ(_CommandBase):
 	help = 'Create new sequential node under selected node'
 class NEW_UNDER_PAR(_CommandBase):
 	help = 'Create new parallel node under selected node'
-class NEW_UNDER_EXCL(_CommandBase):
-	help = 'Create new exclusive node under selected node'
 class NEW_UNDER_CHOICE(_CommandBase):
 	help = 'Create new choice node under selected node'
 class NEW_UNDER_ALT(_CommandBase):
@@ -206,8 +204,6 @@ class NEW_SEQ(_CommandBase):
 	help = 'Create new sequential node above selected node'
 class NEW_PAR(_CommandBase):
 	help = 'Create new parallel node above selected node'
-class NEW_EXCL(_CommandBase):
-	help = 'Create new exclusive node above selected node'
 class NEW_CHOICE(_CommandBase):
 	help = 'Create new choice node above selected node'
 class NEW_ALT(_CommandBase):

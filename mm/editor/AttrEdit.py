@@ -13,6 +13,7 @@ import features
 import string
 import os
 import sys
+import flags
 
 DEFAULT = 'Default'
 UNDEFINED = 'undefined'
@@ -405,6 +406,15 @@ class NodeWrapper(Wrapper):
 			namelist.append('longdesc')
 			if lightweight and ChannelMap.isvisiblechannel(ctype):
 				namelist.append('.hyperlink')
+				
+			# specific time preference
+			namelist.append('immediateinstantiationmedia')
+			namelist.append('bitratenecessary')
+			namelist.append('systemmimetypesupported')
+			namelist.append('attachtimebase')
+			namelist.append('qtchapter')
+			namelist.append('qtcompositemode')
+			
 		if ntype == 'imm':
 			namelist.append('.values')
 		if 'layout' in namelist and not self.context.layouts:
@@ -453,15 +463,15 @@ class NodeWrapper(Wrapper):
 			return (('string', None), '',
 				'Hyperlink', 'default',
 				'Links within the presentation or to another SMIL document',
-				'raw', 'light')
+				'raw', flags.FLAG_ALL)
 		if name == '.type':
 			return (('string', None), '',
 				'Node type', 'nodetype',
-				'Node type', 'raw', 'light')
+				'Node type', 'raw', flags.FLAG_ALL)
 		if name == '.values':
 			return (('string', None), '',
 				'Content', 'text',
-				'Data for node', 'raw', 'light')
+				'Data for node', 'raw', flags.FLAG_ALL)
 		if name == '.anchorlist':
 			# our own version of the anchorlist:
 			# [(AnchorID, AnchorType, AnchorArgs, AnchorTimes, LinkList) ... ]
@@ -471,7 +481,7 @@ class NodeWrapper(Wrapper):
 			# a string giving the external destination
 			return (('list', ('enclosed', ('tuple', [('any', None), ('int', None), ('enclosed', ('list', ('any', None))), ('enclosed', ('tuple', [('float', 0), ('float', 0)])), ('enclosed', ('list', ('any', None)))]))), [],
 				'Anchors', '.anchorlist',
-				'List of anchors on this node', 'raw', 'light')
+				'List of anchors on this node', 'raw', flags.FLAG_ALL)
 		return MMAttrdefs.getdef(name)
 
 class SlideWrapper(NodeWrapper):
@@ -659,7 +669,7 @@ class ChannelWrapper(Wrapper):
 			# Channelname -- special case
 			return (('name', ''), 'none',
 				'Channel name', 'default',
-				'Channel name', 'raw', 'light')
+				'Channel name', 'raw', flags.FLAG_ALL)
 		return MMAttrdefs.getdef(name)
 
 	def valuerepr(self, name, value):
@@ -676,10 +686,11 @@ class DocumentWrapper(Wrapper):
 	__stdnames = ['title', 'author', 'copyright', 'base', 
 			'project_ftp_host', 'project_ftp_user', 'project_ftp_dir',
 			'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media',
-			'project_smil_url']
+			'project_smil_url', 'autoplay', 'qttimeslider', 'qtnext',
+			'qtchaptermode', 'immediateinstantiation']
 
 	def __init__(self, toplevel):
-		Wrapper.__init__(self, toplevel, toplevel.context)
+ 		Wrapper.__init__(self, toplevel, toplevel.context)
 
 	def __repr__(self):
 		return '<DocumentWrapper instance, file=%s>' % self.toplevel.filename
@@ -709,8 +720,9 @@ class DocumentWrapper(Wrapper):
 		return None		# unrecognized
 
 	def getdefault(self, name):
-		return ''
-
+		attrdef = MMAttrdefs.getdef(name)
+		return attrdef[1]
+		
 	def setattr(self, name, value):
 		if name == 'title':
 			self.context.title = value
@@ -745,7 +757,7 @@ class DocumentWrapper(Wrapper):
 			names.remove('project_html_page')
 		names.sort()
 		return self.__stdnames + names
-
+		
 	def valuerepr(self, name, value):
 		if name in ('title', 'base'):
 			return MMAttrdefs.valuerepr(name, value)
@@ -815,19 +827,19 @@ class PreferenceWrapper(Wrapper):
 		if self.__strprefs.has_key(name):
 			return (('string', None), self.getdefault(name),
 				defs[2] or name, 'language',
-				self.__strprefs[name], 'raw', 'light')
+				self.__strprefs[name], 'raw', flags.FLAG_ALL)
 		elif self.__intprefs.has_key(name):
 			return (('int', None), self.getdefault(name),
 				defs[2] or name, 'bitrate',
-				self.__intprefs[name], 'raw', 'light')
+				self.__intprefs[name], 'raw', flags.FLAG_ALL)
 		elif self.__boolprefs.has_key(name):
 			return (('bool', None), self.getdefault(name),
 				defs[2] or name, 'default',
-				self.__boolprefs[name], 'raw', 'light')
+				self.__boolprefs[name], 'raw', flags.FLAG_ALL)
 		elif self.__specprefs.has_key(name):
 			return (('bool', None), self.getdefault(name),
 				defs[2] or name, 'captionoverdub',
-				self.__specprefs[name], 'raw', 'light')
+				self.__specprefs[name], 'raw', flags.FLAG_ALL)
 
 	def stillvalid(self):
 		return 1
@@ -904,6 +916,7 @@ class AttrEditor(AttrEditorDialog):
 
 	def __open_dialog(self, initattr):
 		import settings
+		import compatibility
 		wrapper = self.wrapper
 		list = []
 		allnamelist = wrapper.attrnames()
@@ -914,12 +927,16 @@ class AttrEditor(AttrEditorDialog):
 		else:
 			cmif = 0
 		for name in allnamelist:
-			flags = wrapper.getdef(name)[6]
-			if flags != 'light':
-				if lightweight or \
-				   (not cmif and flags == 'cmif'):
-					continue
+			from flags import curflags
+			fl = wrapper.getdef(name)[6]
+			if fl & curflags() == 0:
+				continue
+#			if flags != 'light':
+#				if lightweight or \
+#				   (not cmif and flags == 'cmif'):
+#					continue
 			namelist.append(name)
+			
 		self.__namelist = namelist
 		initattrinst = None
 		for i in range(len(namelist)):
@@ -972,6 +989,8 @@ class AttrEditor(AttrEditorDialog):
 				C = NodeTypeAttrEditorField
 			elif displayername == 'text':
 				C = TextAttrEditorField
+			elif displayername == 'qtchaptermode':
+				C = QTChapterModeEditorField
 			elif displayername == 'bool3':
 				C = BoolAttrEditorFieldWithDefault
 			elif displayername == 'captionoverdub':
@@ -1377,8 +1396,9 @@ class FileAttrEditorField(StringAttrEditorField):
 		if url == '' or url == '/dev/null':
 			dir, file = cwd, ''
 		else:
-			node = self.wrapper.node
-			url = node.GetContext().findurl(url)
+			if hasattr(self.wrapper, 'node'):
+				node = self.wrapper.node
+				url = node.GetContext().findurl(url)
 			utype, host, path, params, query, fragment = urlparse.urlparse(url)
 			if (utype and utype != 'file') or \
 			   (host and host != 'localhost'):
@@ -1576,6 +1596,26 @@ class UnitsAttrEditorField(PopupAttrEditorFieldNoDefault):
 
 	def valuerepr(self, value):
 		return self.__values[self.__valuesmap.index(value)]
+
+class QTChapterModeEditorField(PopupAttrEditorFieldNoDefault):
+	__values = ['all', 'clip']
+	__valuesmap = [0, 1]
+
+	# Choose from a list of unit types
+	def getoptions(self):
+		return self.__values
+
+	def parsevalue(self, str):
+		return self.__valuesmap[self.__values.index(str)]
+
+	def valuerepr(self, value):
+		return self.__values[self.__valuesmap.index(value)]
+		
+	def getcurrent(self):
+		val = self.wrapper.getvalue(self.getname())
+		if val is None:
+			return self.wrapper.getdefault(self.getname())
+		return self.valuerepr(val)
 
 class CaptionOverdubAttrEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['caption', 'overdub']

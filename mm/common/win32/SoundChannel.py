@@ -129,19 +129,19 @@ class SoundChannel(Channel.ChannelAsync):
 			self.__mc.pauseit(paused)
 		Channel.ChannelAsync.setpaused(self, paused)
 
-	def play(self, node):
-		self.play_0(node)
-		self.need_armdone = 1
-		if not self._is_shown or not node.ShouldPlay() \
-		   or self.syncplay:
-			self.need_armdone = 0 # play_1 does it, so we shouldn't
-			self.play_1()
-			return
-		if self._is_shown:
-			self.do_play(node)
-		if node.__type != 'real' and self.need_armdone:
-			self.need_armdone = 0
-			self.armdone()
+#	def play(self, node):
+#		self.play_0(node)
+#		self.need_armdone = 1
+#		if not self._is_shown or not node.ShouldPlay() \
+#		   or self.syncplay:
+#			self.need_armdone = 0 # play_1 does it, so we shouldn't
+#			self.play_1()
+#			return
+#		if self._is_shown:
+#			self.do_play(node)
+#		if node.__type != 'real' and self.need_armdone:
+#			self.need_armdone = 0
+#			self.armdone()
 
 	def playdone(self, outside_induced):
 		if self.need_armdone:

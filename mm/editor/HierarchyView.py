@@ -19,7 +19,7 @@ from math import ceil
 import string
 import MMmimetypes
 import features
-
+import compatibility
 
 import settings
 DISPLAY_VERTICAL = settings.get('vertical_structure')
@@ -257,8 +257,9 @@ class HierarchyView(HierarchyViewDialog):
 			rv.append(NEW_UNDER_VIDEO(callback = (self.createundercall, ('video',))))
 		if not slide and (heavy or ctx.compatchannels(chtype='text')):
 			rv.append(NEW_UNDER_TEXT(callback = (self.createundercall, ('text',))))
-		if not slide and (heavy or ctx.compatchannels(chtype='RealPix')):
-			rv.append(NEW_UNDER_SLIDESHOW(callback = (self.createundercall, ('RealPix',))))
+		if compatibility.G2 == features.compatibility:
+			if not slide and (heavy or ctx.compatchannels(chtype='RealPix')):
+				rv.append(NEW_UNDER_SLIDESHOW(callback = (self.createundercall, ('RealPix',))))
 		return rv
 
 	def _getmediacommands(self, ctx, slide = 0):
@@ -287,8 +288,9 @@ class HierarchyView(HierarchyViewDialog):
 			rv.append(NEW_BEFORE_VIDEO(callback = (self.createbeforecall, ('video',))))
 		if not slide and (heavy or ctx.compatchannels(chtype='text')):
 			rv.append(NEW_BEFORE_TEXT(callback = (self.createbeforecall, ('text',))))
-		if not slide and (heavy or ctx.compatchannels(chtype='RealPix')):
-			rv.append(NEW_BEFORE_SLIDESHOW(callback = (self.createbeforecall, ('RealPix',))))
+		if compatibility.G2 == features.compatibility:
+			if not slide and (heavy or ctx.compatchannels(chtype='RealPix')):
+				rv.append(NEW_BEFORE_SLIDESHOW(callback = (self.createbeforecall, ('RealPix',))))
 		if slide or heavy or ctx.compatchannels(chtype='image'):
 			rv.append(NEW_AFTER_IMAGE(callback = (self.createaftercall, ('image',))))
 		if not slide and (heavy or ctx.compatchannels(chtype='sound')):
@@ -297,8 +299,9 @@ class HierarchyView(HierarchyViewDialog):
 			rv.append(NEW_AFTER_VIDEO(callback = (self.createaftercall, ('video',))))
 		if not slide and (heavy or ctx.compatchannels(chtype='text')):
 			rv.append(NEW_AFTER_TEXT(callback = (self.createaftercall, ('text',))))
-		if not slide and (heavy or ctx.compatchannels(chtype='RealPix')):
-			rv.append(NEW_AFTER_SLIDESHOW(callback = (self.createaftercall, ('RealPix',))))
+		if compatibility.G2 == features.compatibility:
+			if not slide and (heavy or ctx.compatchannels(chtype='RealPix')):
+				rv.append(NEW_AFTER_SLIDESHOW(callback = (self.createaftercall, ('RealPix',))))
 		return rv
 
 	def aftersetfocus(self):

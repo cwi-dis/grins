@@ -15,6 +15,7 @@ from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
 from usercmd import *
 import MMmimetypes
 import features
+import compatibility
 
 # an empty document
 EMPTY = """
@@ -79,14 +80,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				CHANNELVIEW(callback = (self.view_callback, (2,))),
 				LINKVIEW(callback = (self.view_callback, (3,))),
 				LAYOUTVIEW(callback = (self.view_callback, (4,))),
+				USERGROUPVIEW(callback = (self.view_callback, (5,))),
 				HIDE_CHANNELVIEW(callback = (self.hide_view_callback, (2,))),
 				HIDE_LINKVIEW(callback = (self.hide_view_callback, (3,))),
 				HIDE_LAYOUTVIEW(callback = (self.hide_view_callback, (4,))),
 				HIDE_USERGROUPVIEW(callback = (self.hide_view_callback, (5,))),
 				]
-			self.__ugroup = [USERGROUPVIEW(callback = (self.view_callback, (5,)))]
-		else:
-			self.__ugroup = []
 		if hasattr(self, 'do_edit'):
 			self.commandlist.append(EDITSOURCE(callback = (self.edit_callback, ())))
 		#self.__save = None
@@ -94,9 +93,17 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.commandlist = self.commandlist + [
 				SAVE_AS(callback = (self.saveas_callback, ())),
 				SAVE(callback = (self.save_callback, ())),
-				EXPORT_SMIL(callback = (self.bandwidth_callback, (self.export_callback,))),
-				UPLOAD_SMIL(callback = (self.bandwidth_callback, (self.upload_callback,))),
 				]
+			if compatibility.G2 == features.compatibility:
+				self.commandlist = self.commandlist + [
+					EXPORT_G2(callback = (self.bandwidth_callback, (self.export_G2_callback, ))),
+					UPLOAD_G2(callback = (self.bandwidth_callback, (self.upload_G2_callback, ))),
+				]
+			if compatibility.QT == features.compatibility:
+				self.commandlist = self.commandlist + [
+					EXPORT_QT(callback = (self.bandwidth_callback, (self.export_QT_callback,))),
+					UPLOAD_QT(callback = (self.bandwidth_callback, (self.upload_QT_callback,))),
+				]								
 			#self.__save = SAVE(callback = (self.save_callback, ()))
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
@@ -117,8 +124,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def show(self):
 		TopLevelDialog.show(self)
-		if self.context.attributes.get('project_boston', 0):
-			self.setcommands(self.commandlist + self.__ugroup)
 		if self.hierarchyview is not None:
 			self.hierarchyview.show()
 
@@ -281,6 +286,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					   dftfilename, self.saveas_okcallback, None)
 
 	def export_okcallback(self, filename):
+		exporttype = features.compatibility
+			
 		if not filename:
 			return 'no file specified'
 		self.setwaiting()
@@ -312,7 +319,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		try:
 			import HTMLWrite
 			HTMLWrite.WriteFile(self.root, htmlfilename, smilurl, oldhtmlfilename,
-						evallicense=evallicense)
+						evallicense=evallicense, exporttype=exporttype)
 		except IOError, msg:
 			windowinterface.showmessage('HTML export failed:\n%s'%(msg,))
 
@@ -333,7 +340,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		dialog.setinfo(prerolltime, errorseconds, delaycount, errorcount)
 		dialog.done(do_export_callback, cancancel=1)
 
-	def export_callback(self):
+	def export_G2_callback(self):
+		self.export(compatibility.G2)
+		
+	def export_QT_callback(self):
+		self.export(compatibility.QT)
+
+	def export(self, exporttype):
 		ask = self.new_file
 		if not ask:
 			if MMmimetypes.guess_type(self.filename)[0] != 'application/x-grins-project':
@@ -361,7 +374,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		windowinterface.FileDialog('Publish SMIL file:', cwd, 'application/smil',
 					   '', self.export_okcallback, None)
 	   
-	def upload_callback(self):
+	def upload_G2_callback(self):
+		self.upload()
+		
+	def upload_QT_callback(self):
+		self.upload()
+
+	def upload(self):
 		# XXXX The filename business confuses project file name and resulting SMIL file
 		# XXXX name. To be fixed.
 		#
@@ -596,7 +615,16 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				import MMWrite
 				MMWrite.WriteFile(self.root, filename, evallicense=evallicense)
 			else:
-				cleanSMIL = (mimetype == 'application/smil')
+				if compatibility.QT == features.compatibility:
+					cleanSMIL = 0
+					if mimetype == 'application/smil':
+						grinsExt = 0
+					else:
+						grinsExt = 1
+				else:
+					cleanSMIL = (mimetype == 'application/smil')					
+					grinsExt = not cleanSMIL
+					
 				import SMILTreeWrite
 				if exporting:
 					# XXX enabling this currently crashes the application on Windows during video conversion
@@ -607,6 +635,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					progress = None
 				SMILTreeWrite.WriteFile(self.root, filename,
 							cleanSMIL = cleanSMIL,
+							grinsExt = grinsExt,
 							copyFiles = exporting,
 							evallicense=evallicense,
 							progress = progress,
@@ -631,10 +660,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.main._update_recent(MMurl.pathname2url(filename))
 			self.changed = 0
 			self.new_file = 0
-		if self.context.attributes.get('project_boston', 0):
-			self.setcommands(self.commandlist + self.__ugroup)
-		else:
-			self.setcommands(self.commandlist)
+		self.setcommands(self.commandlist)
 		return 1
 		
 	def save_to_ftp(self, filename, smilurl, w_ftpparams, m_ftpparams):
@@ -690,11 +716,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		except KeyboardInterrupt:
 			windowinterface.showmessage('Upload interrupted.')
 			return 0
-		# Is this needed?? (Jack)
-		if self.context.attributes.get('project_boston', 0):
-			self.setcommands(self.commandlist + self.__ugroup)
-		else:
-			self.setcommands(self.commandlist)
+		self.setcommands(self.commandlist) # Is this needed?? (Jack)
 		return 1
 		
 	def cancel_upload(self):
@@ -857,6 +879,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self._in_prefschanged = 1
 		if not self.editmgr.transaction():
 			return
+		self.root.ResetPlayability()
 		self.editmgr.commit()
 		self._in_prefschanged = 0
 	#
@@ -877,10 +900,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			# reshow source
 			import SMILTreeWrite
 			self.showsource(SMILTreeWrite.WriteString(self.root), optional=1)
-		if self.context.attributes.get('project_boston', 0):
-			self.setcommands(self.commandlist + self.__ugroup)
-		else:
-			self.setcommands(self.commandlist)
 		#if self.__save is not None:
 		#	self.setcommands(self.commandlist + [self.__save])
 
