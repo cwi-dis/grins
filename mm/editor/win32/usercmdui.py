@@ -246,8 +246,8 @@ CommandUI(ADD_CHANNEL)
 CommandUI(RENAME)
 
 # The temporal view specific commands..
-CommandUI(CANVAS_ZOOM_IN)
-CommandUI(CANVAS_ZOOM_OUT)
+CommandUI(CANVAS_ZOOM_IN, IDUC_CANVAS_ZOOM_IN)
+CommandUI(CANVAS_ZOOM_OUT, IDUC_CANVAS_ZOOM_OUT)
 
 
 #
