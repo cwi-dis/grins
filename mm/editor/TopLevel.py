@@ -34,7 +34,6 @@ class TopLevel() = ViewDialog(), BasicDialog():
 	#
 	def init(self, filename):
 		self = ViewDialog.init(self, 'toplevel_')
-		self.help = None
 		self.filename = filename
 		self.read_it()
 		width, height = \
@@ -119,7 +118,6 @@ class TopLevel() = ViewDialog(), BasicDialog():
 		y = y - h
 		self.helpbutton = \
 			form.add_lightbutton(PUSH_BUTTON,x,y,w,h, 'Help')
-		self.helpbutton.set_call_back(self.help_callback, None)
 		#
 		# The bottom three buttons are document-related commands.
 		# They remain pressed while the command is executing.
@@ -160,6 +158,10 @@ class TopLevel() = ViewDialog(), BasicDialog():
 		import StyleSheet
 		self.styleview = StyleSheet.StyleSheet().init(self)
 		#
+		import help
+		self.help = help.HelpWindow().init(HELPDIR, self)
+		#
+		# Views that are destroyed by restore
 		self.views = [self.blockview, self.channelview, \
 				self.player, self.styleview]
 		#
@@ -168,6 +170,7 @@ class TopLevel() = ViewDialog(), BasicDialog():
 						self.channelview)
 		self.pvbutton.set_call_back(self.view_callback, self.player)
 		self.svbutton.set_call_back(self.view_callback, self.styleview)
+		self.helpbutton.set_call_back(self.view_callback, self.help)
 	#
 	def hideviews(self):
 		for v in self.views: v.hide()
@@ -178,8 +181,7 @@ class TopLevel() = ViewDialog(), BasicDialog():
 		self.cvbutton.set_button(self.channelview.is_showing())
 		self.pvbutton.set_button(self.player.is_showing())
 		self.svbutton.set_button(self.styleview.is_showing())
-		if self.help <> None:
-			self.helpbutton.set_button(self.help.is_showing())
+		self.helpbutton.set_button(self.help.is_showing())
 	#
 	def destroyviews(self):
 		self.hideviews()
@@ -256,17 +258,6 @@ class TopLevel() = ViewDialog(), BasicDialog():
 	def quit_callback(self, (obj, arg)):
 		self.destroy()
 		raise MMExc.ExitException, 0
-	#
-	def help_callback(self, (obj, arg)):
-		if not obj.get_button():
-			if self.help <> None:
-				self.help.hide()
-			return
-		if self.help = None:
-			import help
-			self.help = \
-				help.HelpWindow().init(HELPDIR, self)
-		self.help.show()
 	#
 	# GL event callback for WINSHUT and WINQUIT (called from glwindow)
 	#
