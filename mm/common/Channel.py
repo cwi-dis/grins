@@ -84,6 +84,7 @@ class Channel:
 		self.syncplay = 0
 		self.is_layout_channel = 0
 		self.seekargs = None
+		self._anchor2button = {}
 		if debug:
 			print 'Channel() -> '+`self`
 		channels.append(self)
@@ -851,6 +852,7 @@ class Channel:
 		# is a button object which, when pressed, triggers the
 		# anchor.
 		self._armed_anchors.append((name, type, button, times))
+		self._anchor2button[name] = button
 
 	def getfileurl(self, node, animated=0):
 		name = node.GetAttrDef('name', None)
