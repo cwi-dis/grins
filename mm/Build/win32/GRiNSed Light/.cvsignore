@@ -10,4 +10,4 @@ Makefile
 Release
 Build
 Debug
-GRiNSed Light.plg
+*.plg
