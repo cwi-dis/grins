@@ -589,7 +589,6 @@ class Channel:
 
 	def onclick(self, node, anchorlist, arg):
 		if debug: print 'Channel.onclick'+`self,node,anchorlist,arg`
-		timestamp = self._scheduler.timefunc()
 		for (anchorname, type) in anchorlist:
 			if anchorname is not None:
 				anchor = node.GetUID(), anchorname
@@ -605,17 +604,15 @@ class Channel:
 				if arc.srcanchor == anchorname and \
 				   arc.event == ACTIVATEEVENT:
 					if anchorname is None:
-						self.event(ACTIVATEEVENT, timestamp)
+						self.event(ACTIVATEEVENT)
 					else:
-						self.event(ACTIVATEEVENT, timestamp, arc)
+						self.event(ACTIVATEEVENT, arc)
 
-	def event(self, event, timestamp = None, arc = None):
-		if debug: print 'Channel.event'+`self,event,timestamp,arc`
+	def event(self, event, arc = None):
+		if debug: print 'Channel.event'+`self,event,arc`
 		if not self._scheduler.playing:
 			# not currently interested in events
 			return
-		if timestamp is None:
-			timestamp = self._scheduler.timefunc()
 		if arc is None:
 			if type(event) is type(()):
 				node = self._player.root.GetSchedRoot()
@@ -623,11 +620,9 @@ class Channel:
 			else:
 				node = self._played_node
 				sctx = self._playcontext
-			node.event(timestamp, event)
-			sctx.sched_arcs(node, event, timestamp=timestamp)
+			sctx.sched_arcs(node, event)
 		else:
-			self._played_node.event(timestamp, event, arc.srcanchor)
-			self._playcontext.sched_arc(self._played_node, arc, event, timestamp=timestamp)
+			self._playcontext.sched_arc(self._played_node, arc, event)
 
 	def play_1(self):
 		# This does the final part of playing a node.  This
