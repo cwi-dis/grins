@@ -12,8 +12,6 @@ from HDTL import HD, TL
 # Not needed? from AnchorDefs import *
 import SR
 
-import windowinterface
-
 debugtimer = 0
 
 # Priorities for the various events:
@@ -79,6 +77,7 @@ class SchedulerContext:
 		self.channelnames, err = GetAllChannels(self.playroot)
 		self.channels = []
 		if err:
+			import windowinterface
 			enode, echan = err
 			ename = MMAttrdefs.getattr(enode, 'name')
 			windowinterface.showmessage('Error: overlap in channels'+ \
@@ -89,6 +88,7 @@ class SchedulerContext:
 		for cn in self.channelnames:
 			ch = self.parent.ui.getchannelbyname(cn)
 			if ch in self.parent.channels_in_use:
+				import windowinterface
 				windowinterface.showmessage('Channel already in use: '\
 					  + cn)
 				return 0
