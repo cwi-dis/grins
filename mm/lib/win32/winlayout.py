@@ -22,6 +22,8 @@ from appcon import *
 # 	def onDSelMove(self, selection): pass
 # 	def onDSelResize(self, selection): pass
 #	def onDSelProperties(self, shape): pass
+# 	def onDSelMoved(self, selection): pass
+# 	def onDSelResized(self, selection): pass
 
 # shape containers should implement the interface
 #class ShapeContainer:
@@ -53,6 +55,10 @@ class DrawContext:
 
 		# set current tool
 		self._curtool = self._seltool
+
+		#
+		self._poschanged = 0
+		self._sizechanged = 0
 
 		# DrawContext does not support multiple selections
 		# use  MSDrawContext instead 
@@ -115,15 +121,18 @@ class DrawContext:
 	def moveSelectionTo(self, point):
 		xp, yp = point
 		xl, yl = self._moveRefPt
-		if self._selected:
+		dx, dy = xp-xl, yp-yl
+		if dx!=0 or dy!=0 and self._selected:
+			self._poschanged = 1
 			self._selected.invalidateDragHandles()
-			self._selected.moveBy((xp-xl, yp-yl))
+			self._selected.moveBy((dx, dy))
 			self._selected.invalidateDragHandles()
 			for obj in self._listeners:
 				obj.onDSelMove(self._selected)
 	
 	def moveSelectionHandleTo(self, point):
 		if self._selected:
+			self._sizechanged = 1
 			self._selected.invalidateDragHandles()
 			self._selected.moveDragHandleTo(self._ixDragHandle, point)
 			self._selected.invalidateDragHandles()
@@ -141,6 +150,13 @@ class DrawContext:
 		if self._selected:
 			for obj in self._listeners:
 				obj.onDSelProperties(self._selected)
+
+	def checkChanged(self):
+		for obj in self._listeners:
+			if self._sizechanged:
+				obj.onDSelResized(self._selected)
+			if self._poschanged:
+				obj.onDSelMoved(self._selected)
 	#
 	# Mouse input
 	#
@@ -197,7 +213,9 @@ class DrawContext:
 		self._ixDragHandle = 0
 		self._capture = None
 		self._curtool = self._seltool
-	
+		self._poschanged = 0
+		self._sizechanged = 0
+
 	def selectTool(self, strid):
 		if strid=='shape':
 			self._curtool = self._shapetool
@@ -246,6 +264,8 @@ class DrawContext:
 # 	def onDSelMove(self, selections): pass
 # 	def onDSelResize(self, selection): pass
 #	def onDSelProperties(self, selection): pass
+# 	def onDSelMoved(self, selections): pass
+# 	def onDSelResized(self, selection): pass
 # where selections is the list of selected objects
 
 # You can set the selections by calling 
@@ -289,6 +309,8 @@ class MSDrawContext(DrawContext):
 
 	# force a move by
 	def moveSelectionBy(self, dx, dy):
+		if dx!=0 or dy!=0:
+			self._poschanged = 1
 		for shape in self._selections:
 			shape.invalidateDragHandles()
 			shape.moveBy((dx, dy))
@@ -352,6 +374,10 @@ class MSDrawContext(DrawContext):
 	def moveSelectionTo(self, point):
 		xp, yp = point
 		xl, yl = self._moveRefPt
+		dx, dy = xp-xl, yp-yl
+		if dx==0 and dy==0:
+			return
+		self._poschanged = 1
 		# Shapes in selections may have a parent child relationship.
 		# If its so, remove from selection list those that
 		# their movement will occur indirectly by an ancestor movement 
@@ -371,13 +397,20 @@ class MSDrawContext(DrawContext):
 
 	def moveSelectionHandleTo(self, point):
 		if self._selected:
+			self._sizechanged = 1
 			self._selected.invalidateDragHandles()
 			self._selected.moveDragHandleTo(self._ixDragHandle, point)
 			self._selected.invalidateDragHandles()
 			for obj in self._listeners:
 				obj.onDSelResize(self._selected)
 
-
+	def checkChanged(self):
+		for obj in self._listeners:
+			if self._sizechanged:
+				obj.onDSelResized(self._selected)
+			if self._poschanged:
+				obj.onDSelMoved(self._selections)
+		
 	#
 	# Mouse input (override)
 	#
@@ -489,6 +522,7 @@ class SelectTool(DrawTool):
 	def onLButtonDown(self, flags, point):
 		ctx = self._ctx
 		ctx._selmode = SM_NONE
+		ctx._isdirty = 0
 		canResize = not ctx._muliselect or len(ctx._selections)==1
 		isAppend = ctx._muliselect and (flags & win32con.MK_CONTROL)
 				 
@@ -526,6 +560,7 @@ class SelectTool(DrawTool):
 	
 	def onLButtonUp(self, flags, point):
 		ctx = self._ctx
+		ctx.checkChanged()
 		if ctx.hasCapture():
 			if ctx._selmode == SM_NET:
 				if ctx._focusdrawn:
@@ -644,7 +679,10 @@ class LayoutWnd:
 		if self._cancroll:
 			x1, y1, w1, h1 = self._canvas
 			self._canvas = x1, y1, w, h
-			self.SetScrollSizes(win32con.MM_TEXT,self._canvas[2:])
+			self.SetScrollSizes(win32con.MM_TEXT, self._canvas[2:])
+
+	def updateCanvasSize(self):
+		pass
 
 	def setDeviceToLogicalScale(self, device2logical):
 		self._device2logical = device2logical
@@ -674,7 +712,7 @@ class LayoutWnd:
 			self.UpdateWindow()
 		else:
 			if canvas is None:
-				self._canvas = 0, 0, 1280, 1024
+				self._canvas = 0, 0, 800, 600
 			self.CreateWindow(parent)
 			self.SetWindowPos(self.GetSafeHwnd(),rc,
 				win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER)
@@ -715,6 +753,12 @@ class LayoutWnd:
 	def onDSelResize(self, selection):
 		pass
 
+	def onDSelMoved(self, selection):
+		pass
+			
+	def onDSelResized(self, selection):
+		pass
+
 	def onDSelProperties(self, selection): 
 		pass
 	
@@ -745,25 +789,25 @@ class LayoutWnd:
 	def onLButtonDown(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
-		point = self.DPtoLSP(point)
+		point = self.DPtoLP(point)
 		self._drawContext.onLButtonDown(flags, point)
 
 	def onLButtonUp(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
-		point = self.DPtoLSP(point)
+		point = self.DPtoLP(point)
 		self._drawContext.onLButtonUp(flags, point)
 	
 	def onMouseMove(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
-		point = self.DPtoLSP(point)
+		point = self.DPtoLP(point)
 		self._drawContext.onMouseMove(flags, point)
 
 	def onLButtonDblClk(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
-		point = self.DPtoLSP(point)
+		point = self.DPtoLP(point)
 		self._drawContext.onLButtonDblClk(flags, point)
 
 	def onNCLButton(self, params):
@@ -797,6 +841,11 @@ class LayoutWnd:
 		dc.SelectObjectFromHandle(hf)
 	
 	def getClipRgn(self, rel=None):
+		rgn = win32ui.CreateRgn()
+		rgn.CreateRectRgn(self._canvas)
+		return rgn
+
+	def getCanvasClipRgn(self, rel=None):
 		rgn = win32ui.CreateRgn()
 		rgn.CreateRectRgn(self._canvas)
 		return rgn
@@ -844,20 +893,16 @@ class LayoutWnd:
 		dc.FillSolidRect((l, t, r, b),win32mu.RGB(self._bgcolor or (255,255,255)))
 
 	#
-	# Scaling/scrolling support
+	#   Scrolling/scaling support
 	#
-	def DPtoSP(self, pt):
-		# scaling
-		x, y = pt
-		sc = self._device2logical
-		return int(sc*x+0.5), int(sc*y+0.5)
+	#   Naming convention:
+	#   display coordinate system is called 'Device' (D)   
+	#   the canvas coordinate system is called 'Logical' (L) i.e. removing scrolling effect  
+	#   the original coordinate system is called 'Natural' (N) i.e. removing scaling effect  
 
-	def DRtoSR(self, rc):
-		x, y = self.DPtoSP(rc[:2])
-		w, h = self.DPtoSP(rc[2:])
-		return x, y, w, h
-
-
+	#
+	# Scrolling support
+	#
 	def DPtoLP(self, pt):
 		if not self._cancroll: 
 			return pt
@@ -870,18 +915,6 @@ class LayoutWnd:
 		x, y = self.DPtoLP(rc[:2])
 		w, h = self.DPtoLP(rc[2:])
 		return x, y, w, h
-
-
-	def SPtoDP(self, pt):
-		x, y = pt
-		sc = 1.0/self._device2logical
-		return int(sc*x+0.5), int(sc*y+0.5)
-
-	def SRtoDR(self, rc):
-		x, y = self.SPtoDP(rc[:2])
-		w, h = self.SPtoDP(rc[2:])
-		return x, y, w, h
-
 
 	def LPtoDP(self, pt):
 		if not self._cancroll: 
@@ -896,11 +929,46 @@ class LayoutWnd:
 		w, h = self.LPtoDP(rc[2:])
 		return x, y, w, h
 
-	def DPtoLSP(self, pt):
-		return self.DPtoLP(self.DPtoSP(pt))
 
-	def LSPtoDP(self, pt):
-		return self.LPtoDP(self.SPtoDP(pt))
+	#
+	# Scaling support
+	# 
+	def LPtoNP(self, pt):
+		# scaling
+		x, y = pt
+		sc = self._device2logical
+		return sc*x, sc*y
+
+	def LRtoNR(self, rc, round=0):
+		x, y = self.LPtoNP(rc[:2])
+		w, h = self.LPtoNP(rc[2:])
+		if round:
+			return int(x+0.5), int(y+0.5), int(w+0.5), int(h+0.5)
+		return x, y, w, h
+
+	def NPtoLP(self, pt):
+		x, y = pt
+		sc = 1.0/self._device2logical
+		return sc*x, sc*y
+
+	def NRtoLR(self, rc, round=0):
+		x, y = self.NPtoLP(rc[:2])
+		w, h = self.NPtoLP(rc[2:])
+		if round:
+			return int(x+0.5), int(y+0.5), int(w+0.5), int(h+0.5)
+		return x, y, w, h
+
+	def DPtoNP(self, pt):
+		return self.LPtoNP(self.DPtoLP(pt))
+
+	def NPtoDP(self, pt):
+		return self.LPtoDP(self.NPtoLP(pt))
+
+	def DRtoNR(self, rc):
+		return self.LRtoNR(self.DRtoLR(rc))
+
+	def NRtoDR(self, rc):
+		return self.LRtoDR(self.NRtoLR(rc, round=1))
 							
 #########################
 # Final concrete classes 
