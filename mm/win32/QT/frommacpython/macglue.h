@@ -21,26 +21,12 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
 OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 ******************************************************************/
-#ifdef _WIN32
-#define typeforward extern
-#define WITHOUT_FRAMEWORKS
-#else
-#define typeforward
-#endif
 
 #ifdef WITHOUT_FRAMEWORKS
-#ifdef _WIN32
-#include "MacTypes.h"
-#else
-#include <Types.h>
-#endif
+#include <MacTypes.h>
 #include <Files.h>
 #include <Events.h>
-#ifdef _WIN32
-#include <windows.h>
-#else
 #include <StandardFile.h>
-#endif
 #else /*WITHOUT_FRAMEWORKS */
 #include <Carbon/Carbon.h>
 #endif
