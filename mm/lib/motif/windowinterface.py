@@ -835,26 +835,34 @@ class SelectionDialog:
 		self.close()
 
 class InputDialog:
-	def __init__(self, prompt, default, cb, cancelCallback = None):
-		attrs = {'dialogStyle': Xmd.DIALOG_FULL_APPLICATION_MODAL,
+	def __init__(self, prompt, default, cb, cancelCallback = None,
+		     parent = None):
+		import time
+		attrs = {'textString': default or '',
+			 'selectionLabelString': prompt or '',
+			 'dialogStyle': Xmd.DIALOG_FULL_APPLICATION_MODAL,
 			 'colormap': toplevel._default_colormap,
 			 'visual': toplevel._default_visual,
 			 'depth': toplevel._default_visual.depth}
-		self._form = toplevel._main.CreatePromptDialog(
-						   'inputDialog', attrs)
+		if parent is None:
+			parent = toplevel._main
+		else:
+			while 1:
+				if hasattr(parent, '_shell'):
+					parent = parent._shell
+					break
+				elif hasattr(parent, '_main'):
+					parent = parent._main
+					break
+				parent = parent._parent
+		self._form = parent.CreatePromptDialog('inputDialog', attrs)
 		self._form.AddCallback('okCallback', self._ok, cb)
 		self._form.AddCallback('cancelCallback', self._cancel,
 				       cancelCallback)
 		self._form.Parent().AddWMProtocolCallback(
 			toplevel._delete_window, self._cancel, cancelCallback)
-		helpb = self._form.SelectionBoxGetChild(
-						Xmd.DIALOG_HELP_BUTTON)
-		helpb.UnmanageChild()
-		sel = self._form.SelectionBoxGetChild(
-					      Xmd.DIALOG_SELECTION_LABEL)
-		sel.labelString = prompt
-		text = self._form.SelectionBoxGetChild(Xmd.DIALOG_TEXT)
-		text.value = default
+		self._form.SelectionBoxGetChild(
+			Xmd.DIALOG_HELP_BUTTON).UnmanageChild()
 		self._form.ManageChild()
 		toplevel._subwindows.append(self)
 
