@@ -44,4 +44,12 @@ inline void seterror(const char *funcname, DWORD err)
 	LocalFree(pszmsg);
 	}
 
+inline int GetObjHandle(PyObject *obj)
+	{
+	if(PyInt_Check(obj))
+		return PyInt_AsLong(obj);
+	struct WrapperObj { PyObject_HEAD; int m_h;};
+	return ((WrapperObj*)obj)->m_h;
+	}
+
 #endif  // INC_UTILS
