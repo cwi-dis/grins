@@ -75,7 +75,7 @@ def readattrdefs(fp, filename):
 			helptext = parser.getstringvalue(None)
 			inheritance = parser.getenumvalue(
 				['raw', 'normal', 'inherited', 'channel', 'region'])
-			xtypedef = 'enclosed', ('list', ('enum', ['g2_light', 'g2_pro','qt_light','qt_pro', 'g2', 'qt', 'smil10', 'smil2', 'cmif', 'snap', 'all']))
+			xtypedef = 'enclosed', ('list', ('enum', ['advanced', 'template', 'g2_light', 'g2_pro','qt_light','qt_pro', 'g2', 'qt', 'smil10', 'smil2', 'cmif', 'snap', 'all']))
 			flags = parser.getgenericvalue(
 				usetypedef(xtypedef,
 				        MMParser.MMParser.basicparsers))
@@ -94,6 +94,10 @@ def readattrdefs(fp, filename):
 
 			binary_flags = 0
 			for fl in flags:
+				if fl == 'advanced':
+					binary_flags = binary_flags | FLAG_ADVANCED
+				if fl == 'template':
+					binary_flags = binary_flags | FLAG_TEMPLATE
 				if fl == 'g2_light':
 					binary_flags = binary_flags | FLAG_G2_LIGHT
 				elif fl == 'g2_pro':

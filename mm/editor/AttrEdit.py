@@ -230,8 +230,10 @@ class Wrapper: # Base class -- common operations
 		return self.context
 	def register(self, object):
 		self.editmgr.register(object, want_focus=1)
+		settings.register(object)
 	def unregister(self, object):
 		self.editmgr.unregister(object)
+		settings.unregister(object)
 	def transaction(self):
 		return self.editmgr.transaction()
 	def commit(self):
@@ -1165,6 +1167,7 @@ class PreferenceWrapper(Wrapper):
 		'saveopenviews': 'Save view placement in prefs file',
 		'initial_dialog': 'Show initial dialog on application start',
 		'vertical_icons': 'Show icons vertically in the Structure View',
+		'enable_template': 'Enable features specific to building template documents',
 		}
 	__specprefs = {
 		'system_overdub_or_caption': 'Text captions (subtitles) or overdub',
@@ -1197,11 +1200,9 @@ class PreferenceWrapper(Wrapper):
 		settings.unregister(object)
 
 	def transaction(self):
-		print 'SETTINGS TRANSACTION'
 		return settings.transaction()
 
 	def commit(self):
-		print 'SETTINGS COMMIT'
 		settings.commit()
 
 	def rollback(self):
@@ -1351,12 +1352,12 @@ class AttrEditor(AttrEditorDialog):
 
 			if initattr and initattr == name:
 				initattrinst = b
-			if not self.show_all_attributes and b != initattrinst:
-				# If we are not showing all atrributes we hide all those
-				# that have a default value, unless they're the initattrinst.
-				if b.isdefault():
-					b.earlyclose()
-					b = None
+##			if not self.show_all_attributes and b != initattrinst:
+##				# If we are not showing all atrributes we hide all those
+##				# that have a default value, unless they're the initattrinst.
+##				if b.isdefault():
+##					b.earlyclose()
+##					b = None
 			if b != None:
 				list.append(b)
 		self.attrlist = list
@@ -1415,9 +1416,9 @@ class AttrEditor(AttrEditorDialog):
 			if not b.getvalue() and not b.getcurrent():
 				continue
 			if b.getvalue() != b.getcurrent():
-				print 'DBG changed', b
-				print 'VALUE', b.getvalue()
-				print 'CURRENT', b.getcurrent()
+##				print 'DBG changed', b
+##				print 'VALUE', b.getvalue()
+##				print 'CURRENT', b.getcurrent()
 				return 1
 		return 0
 				
@@ -1717,6 +1718,24 @@ class AttrEditorField(AttrEditorDialogField):
 		del self.attreditor
 		del self.wrapper
 		del self.attrdef
+
+	def mustshow(self):
+		# Return true if we should show this attribute
+		advflags = self.attrdef[6]
+		if advflags & flags.FLAG_TEMPLATE:
+			# Only show if both "show all" and "template"
+			# are enabled
+			if self.attreditor.show_all_attributes and \
+					settings.get('enable_template'):
+				return 1
+			return 0
+		elif advflags & flags.FLAG_ADVANCED:
+			# Only show is "advanced" is enabled
+			if self.attreditor.show_all_attributes:
+				return 1
+			return 0
+		# The rest we always show
+		return 1
 
 	def getname(self):
 		return self.__name

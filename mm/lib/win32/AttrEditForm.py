@@ -156,6 +156,9 @@ class OptionsCtrl(AttrCtrl):
 		val = self._attr.getcurrent()
 		self.setoptions(list,val)
 		self._wnd.HookCommand(self.OnCombo,self._resid[1])
+		if not self._attr.mustshow():
+			self._attrname.hide()
+			self._options.hide()
 	
 	def enable(self, enable):
 		self._options.enable(enable)
@@ -197,6 +200,8 @@ class TransitionCtrl(OptionsCtrl):
 		self._properties = components.Button(self._wnd,self._resid[2])
 		self._properties.attach_to_parent()
 		self.updateproperties()
+		if not self._attr.mustshow():
+			self._properties.hide()
 
 	def OnTransition(self,id,code):
 		if self._attr:
@@ -231,6 +236,8 @@ class ChannelCtrl(OptionsCtrl):
 		self._properties = components.Button(self._wnd,self._resid[2])
 		self._properties.attach_to_parent()
 		self.updateproperties()
+		if not self._attr.mustshow():
+			self._properties.hide()
 
 	def OnChannel(self,id,code):
 		if self._attr:
@@ -307,6 +314,11 @@ class OptionsRadioCtrl(AttrCtrl):
 			self._radio[ix].hide()
 		val = self._attr.getcurrent()
 		self.setoptions(list,val)
+		if not self._attr.mustshow():
+			self._attrname.hide()
+			for rc in self._radio:
+				rc.hide()
+
 	
 	def enable(self, enable):
 		for ctrl in self._radio:
@@ -376,6 +388,9 @@ class OptionsCheckCtrl(AttrCtrl):
 		self._check.hookcommand(self._wnd,self.OnCheck)
 		val = self._attr.getcurrent()
 		self._check.setcheck(val=='on')
+		if not self._attr.mustshow():
+			self._check.hide()
+
 	
 	def enable(self, enable):
 		self._check.enable(enable)
@@ -423,6 +438,10 @@ class OptionsCheckMultipleCtrl(AttrCtrl):
 			self._check[ix].hookcommand(self._wnd,self.OnCheck)
 		val = self._attr.getcurrent()
 		self.setoptions(list,val)
+		if not self._attr.mustshow():
+			self._attrname.hide()
+			for cc in self._check:
+				cc.hide()
 	
 	def enable(self, enable):
 		for ctrl in self._check:
@@ -537,6 +556,9 @@ class FileCtrl(AttrCtrl):
 		self._attrval.settext(self._attr.getcurrent())
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
+		if not self._attr.mustshow():
+			self._attrname.hide()
+			self._attrval.hide()
 
 	def enable(self, enable):
 		self._attrval.enable(enable)
@@ -588,6 +610,11 @@ class FileMediaCtrl(FileCtrl):
 		self._wnd.HookCommand(self.OnPause,self._resid[4])
 		self._wnd.HookCommand(self.OnStop,self._resid[5])
 		self.setstate('stop')
+		if not self._attr.mustshow():
+			self._bplay.hide()
+			self._bpause.hide()
+			self._bstop.hide()
+
 
 	def enable(self, enable):
 		FileCtrl.enable(self, enable)
@@ -654,6 +681,9 @@ class ElementSelCtrl(AttrCtrl):
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 		self._wnd.HookCommand(self.OnBrowse,self._resid[2])
 		self._attrval.enable(0)
+		if not self._attr.mustshow():
+			self._attrname.hide()
+			self._attrval.hide()
 
 	def enable(self, enable):
 		self._attrval.enable(enable)
@@ -731,6 +761,10 @@ class ColorCtrl(AttrCtrl):
 		self.calcIndicatorRC()
 		if self._validator:
 			self._attrval.hookmessage(self.OnKeyDown,win32con.WM_KEYDOWN)
+		if not self._attr.mustshow():
+			# XXXX May also need to disable the color well...
+			self._attrname.hide()
+			self._attrval.hide()
 
 	def enable(self, enable):
 		self._attrval.enable(enable)
@@ -840,7 +874,6 @@ class CssColorCtrl(ColorCtrl):
 		self._radioTransparent.attach_to_parent()
 		self._radioInherit.attach_to_parent()
 		self._radioColor.attach_to_parent()
-
 		if self.want_label:
 			label = self._attr.getlabel()
 			if self.want_colon_after_label:
@@ -859,6 +892,11 @@ class CssColorCtrl(ColorCtrl):
 		self._wnd.HookCommand(self.onColorCheck,self._resid[3])
 		self._wnd.HookCommand(self.onTransparentCheck,self._resid[4])
 		self._wnd.HookCommand(self.onInheritCheck,self._resid[5])
+
+		if not self._attr.mustshow():
+			self._radioColor.hide()
+			self._radioTransparent.hide()
+			self._radioInherit.hide()
 
 	def setvalue(self, val):
 		self.currentValue = val
@@ -935,6 +973,11 @@ class CssPosCtrl(AttrCtrl):
 		self.setvalue(self._attr.getcurrent())
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
 		self._wnd.HookCommand(self.OnCombo,self._resid[2])
+
+		if not self._attr.mustshow():
+			self._ctrlValue.hide()
+			self._ctrlUnit.hide()
+
 	
 	def enable(self, enable):
 		self._ctrlValue.enable(enable)
@@ -1027,6 +1070,9 @@ class StringCtrl(AttrCtrl):
 			self._attrname.settext(label)
 		self.setvalue(self._attr.getcurrent())
 		self._wnd.HookCommand(self.OnEdit,self._resid[1])
+		if not self._attr.mustshow():
+			self._attrname.hide()
+			self._attrval.hide()
 
 	def enable(self, enable):
 		self._attrval.enable(enable)
@@ -1074,6 +1120,11 @@ class TupleCtrl(AttrCtrl):
 		self.setvalue(strxy)
 		for i in range(self._nedit):
 			self._attrval[i].hookcommand(self._wnd,self.OnEdit)
+		if not self._attr.mustshow():
+			self._attrname.hide()
+			for ne in self._attrval:
+				ne.hide()
+
 
 	def enable(self, enable):
 		for c in self._attrval:
@@ -1281,6 +1332,8 @@ class EventCtrl(AttrCtrl):
 		self._repeatwidget.hookcommand(self._wnd, self._repeatwidgetcallback)
 		self._thingbutton.hookcommand(self._wnd, self._thingbuttoncallback)
 		self._relative.hookcommand(self._wnd, self._relativecallback)
+		# XXXX No needshow() yet: this has to be done
+		# differently, as we want to show some of the controls.
 
 	def update(self, flags = RADIO|EVENT|TEXT|OFFSET|RESULT|REPEAT|RELATIVE|THINGBUTTON):
 		# Updates all the widgets.
@@ -1639,6 +1692,10 @@ class StringOptionsCtrl(AttrCtrl):
 			self._attrval.initoptions(self._options)
 		self.setvalue(self._attr.getcurrent())
 		self._wnd.HookCommand(self.OnCombo,self._resid[1])
+		if not self._attr.mustshow():
+			self.attrname.hide()
+			self._attrval.hide()
+
 
 	def enable(self, enable):
 		self._attrval.enable(enable)
@@ -1725,7 +1782,12 @@ class AttrSheet(dialog.PropertySheet):
 		h = b-t
 		if self._form._has_showAll:
 			ctrl = components.CheckButton(self,101)
-			ctrl.create(components.CHECKBOX(), (0,0,116,h), 'Show all properties')
+			import settings
+			if settings.get('enable_template'):
+				name = 'Builder/Advanced'
+			else:
+				name = 'Advanced'
+			ctrl.create(components.CHECKBOX(), (0,0,116,h), name)
 			ctrl.setcheck(self._form._showAll_initial)
 			self.HookCommand(self.onShowAll, 101)
 			self._showAll = ctrl
@@ -1760,21 +1822,9 @@ class AttrSheet(dialog.PropertySheet):
 
 	def onShowAll(self, id, code):
 		self._form.call('Showall')
-#		if self._showAll.getcheck():
-#			self._showAll.setcheck(0)
-#			print 'show most important' 
-#		else:
-#			self._showAll.setcheck(1) 
-#			print 'show all' 
 
 	def onFollowSelection(self, params):
 		self._form.call('Followselection')
-#		if self._followSelection.getcheck():
-#			self._followSelection.setcheck(0) 
-#			print 'do not follow selection' 
-#		else:
-#			self._followSelection.setcheck(1) 
-#			print 'follow selection' 
 		
 	def onSize(self, params):
 		flags = win32con.SWP_NOSIZE | win32con.SWP_NOZORDER | win32con.SWP_NOACTIVATE
@@ -4941,7 +4991,9 @@ class AttrEditForm(GenFormView):
 		l=self._attriblist[:]
 		for grdict in attrgrs:
 			grname=grdict['name']
-			if not groupsui.has_key(grname): continue
+			if not groupsui.has_key(grname):
+				print 'Attrgroup not in groupsui:', grname
+				continue
 			group=groupsui[grname]()
 			group.visit(l)
 			if group.matches():
