@@ -34,10 +34,10 @@ else:
 
 
 CMIFPATH = [
+	os.path.join(CMIFDIR, '%s\\snap' % specificPath), # Anything in this directory will override other imports.
+	os.path.join(CMIFDIR, '%s\\snap\\win32' % specificPath),
 	os.path.join(CMIFDIR, 'bin\\win32'),
 	os.path.join(CMIFDIR, '%s\\win32' % specificPath),
-	os.path.join(CMIFDIR, '%s\\snap' % specificPath),
-	os.path.join(CMIFDIR, '%s\\snap\\win32' % specificPath),
 	os.path.join(CMIFDIR, 'mmextensions\\real\\win32'),
 	os.path.join(CMIFDIR, 'common\\win32'),
 	os.path.join(CMIFDIR, 'lib\\win32'),
