@@ -615,6 +615,7 @@ class ChannelWindow(Channel):
 		return '<ChannelWindow instance, name=' + `self._name` + '>'
 
 	def destroy(self):
+		del ChannelWinDict[self._name]
 		Channel.destroy(self)
 		del self.window
 		del self.armed_display
@@ -648,6 +649,7 @@ class ChannelWindow(Channel):
 		if self._attrdict.has_key('base_window'):
 			# there is a base window, create a subwindow
 			pname = self._attrdict['base_window']
+			print 'LOOK FOR', pname, 'IN', ChannelWinDict
 			if ChannelWinDict.has_key(pname):
 				pchan = ChannelWinDict[pname]
 			else:
