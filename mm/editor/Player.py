@@ -64,6 +64,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.ff = 0
 		self.seeking = 0
 		self.seek_node = None
+		self.seek_nodelist = []
 		return BasicDialog.init(self, 0, 0, 'Player')
 	#
 	# EditMgr interface (as dependent client).
@@ -525,8 +526,6 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		return 1
 	#
 	def resume_1_playing(self,rate):
-		for cname in self.channelnames:
-			self.channels[cname].playerseek_lastnode = None
 		#MMAttrdefs.startstats()
 		self.playing = 1
 		self.reset()
@@ -567,25 +566,20 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		#MMAttrdefs.showstats(a)
 	#
 	def seek_done(self):
-		skipchannel = self.getchannel(self.seek_node)
-		for cname in self.channelnames:
-		    ch = self.channels[cname]
-		    if ch == skipchannel: continue
-		    node = ch.playerseek_lastnode
-		    if node:
-			if self.measure_armtimes:
-				dummy = self.enter(0.0, -1, \
-					  ch.arm_and_measure, node)
-			else:
-				dummy = self.enter(0.0, -1, \
-					  ch.arm_only, node)
-			self.setarmedmode(node, ARM_PLAYING)
-			dummy = self.enter(0.0, 0, ch.play, \
-				  (node, self.decrement, (0, node, TL)))
-			if self.setcurrenttime_callback:
-				self.setcurrenttime_callback(node.t0)
+		for node in self.seek_nodelist:
+		    ch = self.getchannel(node)
+		    if self.measure_armtimes:
+			    ch.arm_and_measure(node)
+		    else:
+			    ch.arm_only(node)
+		    self.setarmedmode(node, ARM_PLAYING)
+		    dummy = self.enter(0.0, 0, ch.play, \
+			      (node, self.decrement, (0, node, TL)))
+		    if self.setcurrenttime_callback:
+			    self.setcurrenttime_callback(node.t0)
 		self.seeking = 0
 		self.seek_node = None
+		self.seek_nodelist = []
 	def dummy(arg):
 		pass
 	def decrement(self, (delay, node, side)):
@@ -627,11 +621,14 @@ class Player(ViewDialog, scheduler, BasicDialog):
 				print 'Player: Play node w/o channel'
 				doit = 0
 			if doit and self.seeking:
-			    chan.playerseek_lastnode = node
-			    d = chan.getduration(node)
-			    print 'Player: Skip node duration=', d
-			    dummy = self.enter(d, 0, self.decrement, \
-				(0, node, TL))
+			    t = self.seek_node.t0
+			    if (node.t0 <= t) and (node.t1 > t):
+				    self.seek_nodelist.append(node)
+			    else:
+				    d = chan.getduration(node)
+				    print 'Player: Skip node duration=', d
+				    dummy = self.enter(d, 0, self.decrement, \
+					      (0, node, TL))
 			elif doit:
 			    if self.ff:
 				self.ff = 0
@@ -677,7 +674,8 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		    else:
 			# Side is Tail, so...
 			self.setarmedmode(node, ARM_DONE)
-			self.opt_prearm(node)
+			if not self.seeking:
+				self.opt_prearm(node)
 		for arg in node.deps[side]:
 			self.decrement(arg)
 		if node == self.playroot and side == TL:
