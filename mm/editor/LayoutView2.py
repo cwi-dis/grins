@@ -8,6 +8,7 @@ from usercmd import *
 import MMAttrdefs
 import settings
 import features
+import windowinterface
 
 ALL_LAYOUTS = '(All Channels)'
 	
@@ -1646,12 +1647,53 @@ class LayoutView2(LayoutViewDialog2):
 		self.newViewport()
 
 	def delRegion(self, regionNode):
+		# for now, we can only erase an empty viewport
+		if not self.isEmpty(regionNode):
+			msg = "you have to delete before the sub regions and associated medias"
+			windowinterface.showmessage(msg, mtype = 'error')
+			return
+		
 		parentNode = regionNode.getParent()
 		self.applyDelRegion(regionNode.getName())
 		# select parent node
 		self.select(parentNode)
 
+	# checking if the region/viewport node contains any sub-region or media
+	def isEmpty(self, node):
+		# checking if has sub-region
+		import MMNode
+		channelTreeRef = MMNode.MMChannelTree(self)
+		subregList = channelTreeRef.getsubregions(node.getName())
+		if len(subregList) > 0:
+			return 0
+
+		# checking if has a associated media
+		for uid in self.context.uidmap.keys():
+			n = self.context.uidmap[uid]
+			channelName = n.GetRawAttrDef('channel', None)
+			if channelName != None:
+				channel = self.context.getchannel(channelName)
+				if channel != None:
+					layoutChannel = channel.GetLayoutChannel()
+					if layoutChannel != None:
+						if layoutChannel.name == node.getName():
+							return 0
+
+		return 1			
+
 	def delViewport(self, viewportNode):
+		# for now, we have to keep at least one viewport
+		if len(self.currentViewportList) <= 1:
+			msg = "you can't delete the last viewport"
+			windowinterface.showmessage(msg, mtype = 'error')
+			return
+
+		# for now, we can only erase an empty viewport
+		if not self.isEmpty(viewportNode):
+			msg = "you have to delete before the sub regions and associated medias"
+			windowinterface.showmessage(msg, mtype = 'error')
+			return
+		
 		self.applyDelViewport(viewportNode.getName())
 		# choice another viewport to show (this first in the list)
 		viewportName = self.currentViewportList[0]
