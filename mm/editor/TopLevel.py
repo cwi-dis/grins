@@ -45,8 +45,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.main = main
 		self.new_file = new_file
 		self._in_prefschanged = 0
-		self.__root_editable_node = None # An editable abstraction for the MMNode tree.
-		self.__root_editable_region = None # An editable abstraction for the MMChannel class.
 		utype, host, path, params, query, fragment = urlparse(url)
 		dir, base = posixpath.split(path)
 		if (not utype or utype == 'file') and \
@@ -198,21 +196,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if self in self.main.tops:
 			self.main.tops.remove(self)
 
-	def create_editables(self):
-		# Creates editable objects to be used by the different views.
-		# Note that if you don't use them, they won't get created.
-		import EditableObjects
-		if self.__root_editable_node:
-			self.__root_editable_node.destroy()
-		self.__root_editable_node = EditableObjects.create_MMNode_editable(self.root)
-		if self.__root_editable_region:
-			self.__root_editable_region.destroy()
-		self.__root_editable_region = EditableObjects.create_MMChannel_editable("TODO")
-	def get_editable_rootnode(self):
-		return self.__root_editable_node
-	def get_editable_rootregion(self):
-		return self.__root_editable_region
-
 	def timer_callback(self):
 		self._last_timer_id = None
 		self.player.timer_callback()
@@ -239,7 +222,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.layoutview2 = None
 		self.transitionview = None
 		self.temporalview = None
-		
+
 		if features.STRUCTURE_VIEW in features.feature_set:
 			import HierarchyView
 			self.hierarchyview = HierarchyView.HierarchyView(self)
