@@ -245,19 +245,19 @@
 	'Convert data to RealMedia format' raw (advanced g2_pro cmif))
 
 (project_ftp_host (string) '' 'Webserver' default
-	'FTP hostname to use for webpage upload' raw (smil2 g2 qt snap))
+	'FTP hostname to use for webpage upload (default: same as media host)' raw (smil2 g2 qt snap))
 
 (project_ftp_host_media (string) '' 'Mediaserver' default
-	'FTP hostname to use for media file upload (default: same as webserver)' raw (smil2 g2 qt smil10 smil2 cmif snap))
+	'FTP hostname to use for media file upload' raw (smil2 g2 qt smil10 smil2 cmif snap))
 
 (project_ftp_user (string) '' 'Webserver User' default
-	'FTP username to use for webpage upload' raw (smil2 g2 qt snap))
+	'FTP username to use for webpage upload (default: same as media username)' raw (smil2 g2 qt snap))
 
 (project_ftp_user_media (string) '' 'Mediaserver User' default
 	'FTP username to use for media file upload' raw (smil2 g2 qt smil10 smil2 cmif snap))
 
 (project_ftp_dir (string) '' 'Webserver Directory' default
-	'Directory on FTP server where webpage will be stored' raw (smil2 g2 qt snap))
+	'Directory on FTP server where webpage will be stored (default: same as media directory)' raw (smil2 g2 qt snap))
 
 (project_ftp_dir_media (string) '' 'Mediaserver Directory' default
 	'Directory on FTP server where media files will be stored' raw (smil2 g2 qt smil10 smil2 cmif snap))
@@ -322,7 +322,7 @@
 	'Skip unknown content when parsing this document' raw (advanced cmif smil2))
 
 (syncBehavior (enum default canSlip locked independent) default 'Sync behavior' syncBehavior
-	'Defines the runtime synchronization behavior for an element' normal (advanced smil2 cmif))
+	'Defines the runtime synchronization behavior for an element' normal (template smil2 cmif))
 
 (syncBehaviorDefault (enum inherit canSlip locked independent) inherit 'Sync behavior default' syncBehavior
 	'Default value for the syncBehavior property on the children of this node' inherited (template smil2 cmif))

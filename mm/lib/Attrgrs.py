@@ -53,16 +53,6 @@ attrgrs=(
 		'displayfull',
 		]},
 
-##	{'name':'subregion3',
-##	'title':'Destination rendering',
-##	'attrs':[
-##		'left',
-##		'width',
-##		'top',
-##		'height',
-##		'scale',
-##		]},
-
 	{'name':'base_winoff_and_units',
 	'title':'Position and size',
 	'attrs':[
@@ -166,6 +156,20 @@ attrgrs=(
 		'.type',
 		]},
 
+	{'name':'infofilegroup',
+	'title': 'Info',
+	'match': 'first',
+	'attrs':[
+		'name',
+		'title',
+		'abstract',
+		'alt',
+		'longdesc',
+		'author',
+		'copyright',
+		'file',
+		]},
+
 	{'name':'infogroup',
 	'title': 'Info',
 	'match': 'first',
@@ -177,8 +181,16 @@ attrgrs=(
 		'longdesc',
 		'author',
 		'copyright',
-		'comment'
 		]},
+
+	{'name':'docinfo',
+	 'title':'Info',
+	 'attrs':['title',
+		  'author',
+		  'copyright',
+##		  'comment',
+		  ],
+	 },
 
 	# active duration group with endsync
 	{'name':'activeduration1',
@@ -279,6 +291,18 @@ attrgrs=(
 		'syncBehavior',
 		'syncBehaviorDefault',
 		]},
+
+	{'name':'server',
+	 'title':'Upload server',
+	 'attrs':['project_ftp_host_media',
+		  'project_ftp_user_media',
+		  'project_ftp_dir_media',
+		  'project_smil_url',
+		  'project_ftp_host',
+		  'project_ftp_user',
+		  'project_ftp_dir',
+		  ],
+	 },
 
  	{'name':'webserver',
 	'title':'Webserver',
@@ -497,8 +521,6 @@ attrgrs=(
 	'title':'Layout',
 	'attrs':[
 		'cssbgcolor',
-		'left', 'width', 'right',
-		'top', 'height', 'bottom',
 		'regPoint','regAlign',
 		'fit','z',
 		]},
@@ -587,6 +609,16 @@ attrgrs=(
 	 'attrs':['trtype', 'subtype', 'mode', 'fadeColor',],
 	 },
 
+	{'name':'realExtensions',
+	 'title':'Real extensions',
+	 'attrs':['backgroundOpacity',
+		  'chromaKey',
+		  'chromaKeyOpacity',
+		  'chromaKeyTolerance',
+		  'mediaOpacity',
+		  'reliable',
+		  'strbitrate',
+		  ],
+	 },
+
 	)
-
-
