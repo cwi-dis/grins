@@ -7,7 +7,8 @@ from FeatureSet import *
 import sys
 
 feature_set = [
-	EXPORT_SMIL2, EXPORT_REAL,
+##	EXPORT_SMIL2,
+	EXPORT_REAL,
 ##	EXPORT_QT, EXPORT_WMP,
 	EXPORT_HTML_TIME,
 ##	EXPORT_XMT,			# unimplemented anyway

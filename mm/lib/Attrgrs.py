@@ -174,7 +174,6 @@ attrgrs=(
 
 	{'name':'infofilegroup',
 	'title': 'Info',
-	'match': 'first',
 	'attrs':[
 		'name',
 		'title',
@@ -183,6 +182,16 @@ attrgrs=(
 		'longdesc',
 		'author',
 		'copyright',
+		'file',
+		]},
+
+	{'name':'infofile1group',
+	'title': 'Info',
+	'attrs':[
+		'name',
+		'title',
+		'alt',
+		'longdesc',
 		'file',
 		]},
 
@@ -208,8 +217,36 @@ attrgrs=(
 		  ],
 	 },
 
-	# active duration group with endsync
+	# active duration group with endsync, clip, and erase
 	{'name':'activeduration1',
+	'title':'Active duration',
+	'attrs':[
+		'fill', 'fillDefault',
+		'duration',
+		'min', 'max',
+		'loop', # repeatcount
+		'repeatdur',
+		'terminator',
+		'clipbegin',
+		'clipend',
+		'erase',
+		]},
+
+	# active duration group with endsync and erase
+	{'name':'activeduration4',
+	'title':'Active duration',
+	'attrs':[
+		'fill', 'fillDefault',
+		'duration',
+		'min', 'max',
+		'loop', # repeatcount
+		'repeatdur',
+		'terminator',
+		'erase',
+		]},
+
+	# active duration group with endsync
+	{'name':'activeduration3',
 	'title':'Active duration',
 	'attrs':[
 		'fill', 'fillDefault',
@@ -303,10 +340,12 @@ attrgrs=(
 
 	{'name':'synchronization',
 	'title':'Synchronization',
-	'attrs':[
-		'syncBehavior',
-		'syncBehaviorDefault',
-		]},
+	'attrs':['syncMaster',
+		 'syncBehavior',
+		 'syncBehaviorDefault',
+		 'syncTolerance',
+		 'syncToleranceDefault',
+		 ]},
 
 	{'name':'server',
 	 'title':'Upload server',
@@ -539,6 +578,7 @@ attrgrs=(
 		'cssbgcolor',
 		'regPoint','regAlign',
 		'fit','z',
+		'channel',
 		]},
 
 	{'name':'Layout2Real',
@@ -625,8 +665,8 @@ attrgrs=(
 	 'attrs':['trtype', 'subtype', 'mode', 'fadeColor',],
 	 },
 
-	{'name':'realExtensions',
-	 'title':'Real extensions',
+	{'name':'miscellaneous',
+	 'title':'Miscellaneous',
 	 'attrs':['backgroundOpacity',
 		  'chromaKey',
 		  'chromaKeyOpacity',
@@ -634,17 +674,28 @@ attrgrs=(
 		  'mediaOpacity',
 		  'reliable',
 		  'strbitrate',
+		  'sensitivity',
 		  ],
 	 },
 
-	{'name':'realExtensions2',
-	 'title':'Real extensions',
+	{'name':'miscellaneous2',
+	 'title':'Miscellaneous',
 	 'attrs':['backgroundOpacity',
 		  'chromaKey',
 		  'chromaKeyOpacity',
 		  'chromaKeyTolerance',
 		  'mediaOpacity',
 		  'reliable',
+		  'sensitivity',
+		  ],
+	 },
+
+	{'name':'prio',
+	 'title':'Priorities',
+	 'attrs':['higher',
+		  'lower',
+		  'peers',
+		  'pauseDisplay',
 		  ],
 	 },
 

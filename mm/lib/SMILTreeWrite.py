@@ -2608,6 +2608,7 @@ class SMILWriter(SMIL):
 			windowinterface.showmessage(msg)
 			u = MMurl.urlopen(srcurl)
 		if convert and u.headers.maintype == 'text' and \
+		   u.headers.subtype != 'html' and \
 		   string.find(u.headers.subtype, 'real') < 0:
 			from realconvert import converttextfile
 			# XXXX This is a hack. convertaudiofile may change the filename (and

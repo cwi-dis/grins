@@ -267,6 +267,11 @@
 #define IDD_EDITATTR_SERVER             468
 #define IDD_EDITATTR_S1R3S8             469
 #define IDD_EDITATTR_REALEXTENSION2     470
+#define IDD_EDITATTR_ACTIVEDUR3         471
+#define IDD_EDITATTR_ACTIVEDUR4         472
+#define IDD_EDITATTR_PRIO               473
+#define IDD_EDITATTR_S4F                474
+#define IDD_EDITATTR_SYNC               475
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -736,6 +741,30 @@
 #define IDC_BITRL                       1480
 #define IDC_NOTE                        1481
 #define IDC_83                          1482
+#define IDC_REGIONV                     1483
+#define IDC_REGIONL                     1484
+#define IDC_REGIONB                     1485
+#define IDC_SENSITIVITYL                1486
+#define IDC_SENSITIVITYV                1487
+#define IDC_CLIPBL                      1488
+#define IDC_CLIPBV                      1489
+#define IDC_CLIPEL                      1490
+#define IDC_CLIPEV                      1491
+#define IDC_HIGHERL                     1492
+#define IDC_PEERSL                      1493
+#define IDC_LOWERL                      1494
+#define IDC_PAUSEL                      1495
+#define IDC_HIGHERV1                    1496
+#define IDC_HIGHERV2                    1497
+#define IDC_PEERSV1                     1498
+#define IDC_PEERSV2                     1499
+#define IDC_PEERSV3                     1500
+#define IDC_PEERSV4                     1501
+#define IDC_LOWERV1                     1502
+#define IDC_LOWERV2                     1503
+#define IDC_PAUSEV1                     1504
+#define IDC_PAUSEV2                     1505
+#define IDC_PAUSEV3                     1506
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -845,7 +874,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        464
 #define _APS_NEXT_COMMAND_VALUE         32902
-#define _APS_NEXT_CONTROL_VALUE         1483
+#define _APS_NEXT_CONTROL_VALUE         1508
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

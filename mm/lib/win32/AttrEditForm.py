@@ -69,15 +69,9 @@ class AttrCtrl:
 		if not hasattr(self._wnd,'_attrinfo'): return
 		if not hasattr(self._attr,'wrapper'): return # already closed
 		infoc=self._wnd._attrinfo
-		try:
-			hd = self._attr.gethelpdata()
-		except:
-			print 'gethelpdata on', self._attr, 'failed'
-		else:
-			if hd[1] and self.want_default_help:
-				infoc.settext("%s (leave empty for %s)"%(hd[2], hd[1]))
-			else:
-				infoc.settext(hd[2])
+		help = self.gethelp()
+		if help:
+			infoc.settext(help)
 	
 	def getcurrent(self):
 		return self._attr.getcurrent()
@@ -105,11 +99,17 @@ class AttrCtrl:
 			return 1
 
 	def gethelp(self):
-		hd=self._attr.gethelpdata()
-		if hd[1] and self.want_default_help:
-			return "%s (leave empty for %s)"%(hd[2], hd[1])
+		try:
+			hd=self._attr.gethelpdata()
+		except:
+			if __debug__:
+				print 'gethelp on', self._attr, 'failed'
 		else:
-			return hd[2]
+			# only give default if wanted and not already there
+			if hd[1] and self.want_default_help and hd[2].lower().find('default') < 0:
+				return "%s (leave empty for %s)"%(hd[2], hd[1])
+			else:
+				return hd[2]
 
 	def settooltips(self,tooltipctrl):
 		pass
@@ -266,6 +266,9 @@ class ChannelCtrl(OptionsCtrl):
 		OptionsCtrl.settooltips(self,tooltipctrl)
 		tooltipctrl.AddTool(self._wnd.GetDlgItem(self._resid[2]),'Properties of channel',None,0)
 
+class ChannelNolabelCtrl(ChannelCtrl):
+	want_label = 0
+
 class RegionDefaultCtrl(ChannelCtrl):
 	def OnChannel(self,id,code):
 		if self._attr:
@@ -332,7 +335,8 @@ class OptionsRadioCtrl(AttrCtrl):
 			n = len(list)
 			n = min(n,len(self._resid)-1)
 			for i in range(n):
-				self._radio[i].settext(list[i])
+				if self.want_label:
+					self._radio[i].settext(list[i])
 				self._radio[i].setcheck(0)
 			ix=list.index(val)
 			if ix<n:
@@ -1089,12 +1093,13 @@ class SimpleFileCtrl(StringCtrl):
 
 	def setvalue(self, val):
 		if self._initctrl:
-			url = self._attr.wrapper.context.findurl(val)
-			import urlparse
-			scheme, netloc, url, params, query, fragment = urlparse.urlparse(url)
-			if not scheme or scheme == 'file':
-				import MMurl
-				val = MMurl.url2pathname(url)
+			if val:
+				url = self._attr.wrapper.context.findurl(val)
+				import urlparse
+				scheme, netloc, url, params, query, fragment = urlparse.urlparse(url)
+				if not scheme or scheme == 'file':
+					import MMurl
+					val = MMurl.url2pathname(url)
 			self._attrval.settext(val)
 
 	def getvalue(self):
@@ -1134,7 +1139,6 @@ class TupleCtrl(AttrCtrl):
 			self._attrname.hide()
 			for ne in self._attrval:
 				ne.hide()
-
 
 	def enable(self, enable):
 		for c in self._attrval:
@@ -1214,6 +1218,8 @@ class SystemScreenSizeCtrl(IntTupleNolabelCtrl):
 		return "Play node only if screen bigger or equal than the specified pixel value (leave height and width empty for Not set)"
 	
 	def setvalue(self, val):
+		if not self._initctrl:
+			return
 		if val == '':
 			for i in range(self._nedit):
 				self._attrval[i].settext('')
@@ -2060,6 +2066,10 @@ class SingleAttrPage(AttrPage):
 			(grinsRC.IDD_EDITATTR_R3,
 			 OptionsRadioNocolonCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4)),
+		'reliable':
+			(grinsRC.IDD_EDITATTR_CK1,
+			 OptionsCheckCtrl,
+			 (grinsRC.IDC_1,)),
 		'transparent':	# Four radio buttons
 			(grinsRC.IDD_EDITATTR_R4,
 			 OptionsRadioNocolonCtrl,
@@ -2116,6 +2126,10 @@ class SingleAttrPage(AttrPage):
 			(grinsRC.IDD_EDITATTR_O1,
 			 OptionsCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_2)),
+		'bool':			# A check button
+			(grinsRC.IDD_EDITATTR_CK1,
+			 OptionsCheckCtrl,
+			 (grinsRC.IDC_1,)),
 		'file':			# A file, with optional preview area
 			(grinsRC.IDD_EDITATTR_F1,
 			 FileCtrl,
@@ -3605,6 +3619,7 @@ class AttrGroup:
 			return AttrGroup.special_attrcl[n]
 		t = a.gettype()
 		if t=='option':return OptionsCtrl
+		elif t=='bool': return OptionsCheckCtrl
 		elif t=='file': return FileCtrl
 		elif t=='color': return ColorCtrl
 		else: return StringCtrl
@@ -3683,6 +3698,12 @@ class InfoFileGroup(StringGroup):
 		cd[a] = SimpleFileCtrl(wnd, a, (grinsRC.IDC_81, grinsRC.IDC_82, grinsRC.IDC_83,))
 		return cd
 
+class InfoFile1Group(InfoFileGroup):
+	data=attrgrsdict['infofile1group']
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_S4F
+
 class QTPlayerPreferencesGroup(AttrGroup):
 	data=attrgrsdict['qtpreferences']
 
@@ -3736,8 +3757,8 @@ class QTPlayerMediaPreferencesGroup(AttrGroup):
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_QTMEDIAPREF
 
-class RealExtension2Group(AttrGroup):
-	data=attrgrsdict['realExtensions2']
+class Misc2Group(AttrGroup):
+	data=attrgrsdict['miscellaneous2']
 	def __init__(self,data = None):
 		AttrGroup.__init__(self, self.data)
 
@@ -3757,19 +3778,42 @@ class RealExtension2Group(AttrGroup):
 		a = self.getattr('chromaKeyTolerance')
 		cd[a] = IntTupleNolabelCtrl(wnd,a,(grinsRC.IDC_CKTL, grinsRC.IDC_CKTV1, grinsRC.IDC_CKTV2, grinsRC.IDC_CKTV3,))
 		a = self.getattr('reliable')
-		cd[a] = OptionsCheckCtrl(wnd,a,(grinsRC.IDC_RELIABLE,))
+		cd[a] = OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_RELIABLE,))
+		a = self.getattr('sensitivity')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_SENSITIVITYL, grinsRC.IDC_SENSITIVITYV,))
 		return cd
 
-class RealExtensionGroup(RealExtension2Group):
-	data=attrgrsdict['realExtensions']
+class MiscGroup(Misc2Group):
+	data=attrgrsdict['miscellaneous']
 
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_REALEXTENSION2
 
 	def createctrls(self, wnd):
-		cd = RealExtension2Group.createctrls(self, wnd)
+		cd = Misc2Group.createctrls(self, wnd)
 		a = self.getattr('strbitrate')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_BITRL, grinsRC.IDC_BITRV,))
+		return cd
+
+class PrioGroup(AttrGroup):
+	data=attrgrsdict['prio']
+
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_PRIO
+
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('higher')
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_HIGHERL,grinsRC.IDC_HIGHERV1,grinsRC.IDC_HIGHERV2))
+		a = self.getattr('peers')
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_PEERSL,grinsRC.IDC_PEERSV1,grinsRC.IDC_PEERSV2,grinsRC.IDC_PEERSV3,grinsRC.IDC_PEERSV4))
+		a = self.getattr('lower')
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_LOWERL,grinsRC.IDC_LOWERV1,grinsRC.IDC_LOWERV2))
+		a = self.getattr('pauseDisplay')
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_PAUSEL,grinsRC.IDC_PAUSEV1,grinsRC.IDC_PAUSEV2,grinsRC.IDC_PAUSEV3))
 		return cd
 
 class ServerGroup(StringGroup):
@@ -3903,14 +3947,20 @@ class SynchronizationGroup(AttrGroup):
 		AttrGroup.__init__(self,self.data)
 
 	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_SYNCHRONIZATION
+		return grinsRC.IDD_EDITATTR_SYNC
 
 	def createctrls(self,wnd):
 		cd = {}
+		a = self.getattr('syncMaster')
+		cd[a] = OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_1,))
 		a = self.getattr('syncBehavior')
-		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_11, grinsRC.IDC_12))
-		a = self.getattr('syncBehaviorDefault')
 		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_21, grinsRC.IDC_22))
+		a = self.getattr('syncBehaviorDefault')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_31, grinsRC.IDC_32))
+		a = self.getattr('syncTolerance')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_41, grinsRC.IDC_42))
+		a = self.getattr('syncToleranceDefault')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_51, grinsRC.IDC_52))
 		return cd
 	
 # base_winoff
@@ -4635,14 +4685,11 @@ class ActiveDuration2Group(AttrGroup):
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_REPDURL,grinsRC.IDC_REPDURV))
 		return cd
 
-class ActiveDuration1Group(ActiveDuration2Group):
-	data=attrgrsdict['activeduration1']
-
-	def __init__(self):
-		AttrGroup.__init__(self, self.data)
+class ActiveDuration3Group(ActiveDuration2Group):
+	data=attrgrsdict['activeduration3']
 
 	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_ACTIVEDUR1
+		return grinsRC.IDD_EDITATTR_ACTIVEDUR3
 
 	def createctrls(self, wnd):
 		cd = ActiveDuration2Group.createctrls(self, wnd)
@@ -4650,7 +4697,32 @@ class ActiveDuration1Group(ActiveDuration2Group):
 		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_ENDSYNCL,grinsRC.IDC_ENDSYNCV))
 		return cd
 
-#
+class ActiveDuration4Group(ActiveDuration3Group):
+	data=attrgrsdict['activeduration4']
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_ACTIVEDUR4
+
+	def createctrls(self, wnd):
+		cd = ActiveDuration3Group.createctrls(self, wnd)
+		a = self.getattr('erase')
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_ERASEL, grinsRC.IDC_ERASEV2, grinsRC.IDC_ERASEV1))
+		return cd
+
+class ActiveDuration1Group(ActiveDuration4Group):
+	data=attrgrsdict['activeduration1']
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_ACTIVEDUR1
+
+	def createctrls(self, wnd):
+		cd = ActiveDuration4Group.createctrls(self, wnd)
+		a = self.getattr('clipbegin')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_CLIPBL,grinsRC.IDC_CLIPBV))
+		a = self.getattr('clipend')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_CLIPEL,grinsRC.IDC_CLIPEV))
+		return cd
+
 class AnimateGeneralGroup(AttrGroup):
 	data=attrgrsdict['animateGeneral']
 	def __init__(self):
@@ -4668,7 +4740,7 @@ class AnimateGeneralGroup(AttrGroup):
 		a = self.getattr('attributeName')
 		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42))
 		a = self.getattr('attributeType')
-		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_51,grinsRC.IDC_52,grinsRC.IDC_53,grinsRC.IDC_54))
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_51,grinsRC.IDC_52,grinsRC.IDC_53,grinsRC.IDC_54))
 		return cd
 
 #
@@ -4702,13 +4774,13 @@ class InlineTransitionGroup(AttrGroup):
 	def createctrls(self,wnd):
 		cd = {}
 		a = self.getattr('trtype')
-		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
 		a = self.getattr('subtype')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
 		a = self.getattr('mode')
-		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32, grinsRC.IDC_33))
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32, grinsRC.IDC_33))
 		a = self.getattr('fadeColor')
-		cd[a] = ColorCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42, grinsRC.IDC_43))
+		cd[a] = ColorNolabelCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42, grinsRC.IDC_43))
 		return cd
 
 #
@@ -4721,13 +4793,13 @@ class TimeManipulationGroup(AttrGroup):
 	def createctrls(self,wnd):
 		cd = {}
 		a = self.getattr('speed')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
 		a = self.getattr('accelerate')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
 		a = self.getattr('decelerate')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
 		a = self.getattr('autoReverse')
-		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43))
+		cd[a] = OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_41,))
 		return cd
 
 class CalcModeGroup(AttrGroup):
@@ -4837,13 +4909,15 @@ class Layout1Group(AttrGroup):
 									grinsRC.IDC_CTYPES, grinsRC.IDC_CTYPET,
 									grinsRC.IDC_CTYPEI))
 		a = self.getattr('fit')
-		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_FITL, grinsRC.IDC_FITV))
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_FITL, grinsRC.IDC_FITV))
 		a = self.getattr('z')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_ZL, grinsRC.IDC_ZV))
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_ZL, grinsRC.IDC_ZV))
 		a = self.getattr('regPoint')
-		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_REGPOINTL, grinsRC.IDC_REGPOINTV))
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_REGPOINTL, grinsRC.IDC_REGPOINTV))
 		a = self.getattr('regAlign')
-		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_REGALIGNL, grinsRC.IDC_REGALIGNV))
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_REGALIGNL, grinsRC.IDC_REGALIGNV))
+		a = self.getattr('channel')
+		cd[a] = ChannelNolabelCtrl(wnd,a,(grinsRC.IDC_REGIONL, grinsRC.IDC_REGIONV, grinsRC.IDC_REGIONB))
 
 		return cd
 
@@ -4956,6 +5030,7 @@ class MachineGroup(StringGroupNoTitle):
 groupsui={
 	'infogroup':InfoGroup,
 	'infofilegroup':InfoFileGroup,
+	'infofile1group':InfoFile1Group,
 	'general':GeneralGroup,
 	'docinfo':DocInfoGroup,
 
@@ -5003,6 +5078,7 @@ groupsui={
 	'synchronization':SynchronizationGroup,
 	'timingfadeout':TimingFadeoutGroup,
 	'timingpar':DurationParGroup,
+	'prio':PrioGroup,
 	'server':ServerGroup,
 	'webserver':WebserverGroup,
 	'mediaserver':MediaserverGroup,
@@ -5014,8 +5090,10 @@ groupsui={
 	'bandwidth':BandwidthGroup,
 	'activeduration1':ActiveDuration1Group,
 	'activeduration2':ActiveDuration2Group,
-	'realExtensions':RealExtensionGroup,
-	'realExtensions2':RealExtension2Group,
+	'activeduration3':ActiveDuration3Group,
+	'activeduration4':ActiveDuration4Group,
+	'miscellaneous':MiscGroup,
+	'miscellaneous2':Misc2Group,
 	
 	'qtpreferences':QTPlayerPreferencesGroup,
 	'qtmediapreferences':QTPlayerMediaPreferencesGroup,

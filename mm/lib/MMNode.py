@@ -1194,7 +1194,8 @@ class MMTreeElement(Owner):
 		return names
 		
 	def getallattrnames(self):
-		print "Warning: getallattrnames not overridden:", self
+		if __debug__:
+			print "Warning: getallattrnames not overridden:", self
 		return []
 
 	# allow to know whether this node is a part of the document or not
@@ -1501,7 +1502,7 @@ class MMChannel(MMTreeElement):
 										
 				pchan = self.context.channeldict.get(value)
 				if pchan is None:
-					print 'Error: The parent channel '+self.name+' have to be created before to set base_window'
+					print 'Error: The parent channel '+self.name+' should be created before setting base_window'
 				else:
 					self.context.cssResolver.link(self._cssId, pchan._cssId)
 
@@ -1969,7 +1970,7 @@ class MMSyncArc:
 			if refnode is None:
 				return None
 			pnode = self.dstnode.GetSchedParent()
-			if pnode.looping_body_self:
+			if pnode is not None and pnode.looping_body_self:
 				pnode = pnode.looping_body_self
 			if refnode is pnode:
 				return 'begin'
@@ -4925,141 +4926,185 @@ class MMNode(MMTreeElement):
 		for child in self.children:
 			child.ResetPlayability()
 			
-	def getallattrnames(self):
+	__timing = ['beginlist',
+		    'duration',
+		    'endlist',
+		    'fill',
+		    'fillDefault',
+		    'loop',
+		    'max',
+		    'min',
+		    'repeatdur',
+		    'restart',
+		    'restartDefault',
+		    'syncBehavior',
+		    'syncBehaviorDefault',
+		    'syncMaster',
+		    'syncTolerance',
+		    'syncToleranceDefault',
+		    ]
+	def getallattrnames(self, withspecials = 0):
 		import ChannelMap
 		ntype = self.GetType()
-		if ntype == 'prio':
-			# special case for prio nodes
-			return ['name', 'title', 'abstract', 'author',
-				'copyright', 'comment',
-				'higher', 'peers', 'lower', 'pauseDisplay']
-		elif ntype == 'comment':
+		if ntype == 'comment':
 			# special case for comment nodes
+			if withspecials:
+				return ['.values']
 			return []
-		elif ntype == 'foreign':
+		if ntype == 'foreign':
 			return self.node.attrdict.keys()
-
-		# Tuples are optional names and will be removed if they
-		# aren't set
 		namelist = [
-			'name', 'channel', 'file', # From nodeinfo window
-			'.type',
-			'terminator',
-			'beginlist', 'endlist',
-			'duration', 'min', 'max', 'loop', 'repeatdur', # Time stuff
-			'restart', 'restartDefault',
-			'clipbegin', 'clipend',	# More time stuff
-			'sensitivity',
-			'top', 'height', 'bottom',
-			'left', 'width', 'right',
-			'fit',
-			'fill', 'fillDefault', 'erase',
-			'syncBehavior', 'syncBehaviorDefault',
-			'title', 'abstract', 'alt', 'longdesc', 'readIndex', 'author',
-			'copyright', 'comment',
-			'layout', 'u_group',
-			'fgcolor',
-			'mimetype',	# XXXX Or should this be with file?
+			'name', 'title', 'alt', 'longdesc',
 			'system_audiodesc', 'system_bitrate',
 			'system_captions', 'system_cpu',
 			'system_language', 'system_operating_system',
 			'system_overdub_or_caption', 'system_required',
 			'system_screen_size', 'system_screen_depth',
+			'system_component',
 			]
+		if features.EXPORT_SMIL2 in features.feature_set:
+			namelist.append('u_group')
+		if withspecials and features.EDIT_TYPE in features.feature_set:
+			namelist.append('.type')
+		if ntype == 'prefetch':
+			namelist.extend(self.__timing)
+			namelist.extend(['clipbegin',
+					 'clipend',
+# XXX disabled for now since implementation is missing completely
+##					 'bandwidth',
+##					 'mediaSize',
+##					 'mediaTime',
+					 'file'])
+			return namelist
+		if ntype in ('par','seq','excl','prio','imm','ext','brush'):
+			namelist.extend(['copyright',
+					 'abstract',
+					 'author'])
+		if ntype == 'prio':
+			# special case for prio nodes
+			namelist.extend(['higher',
+					 'peers',
+					 'lower',
+					 'pauseDisplay'])
+			if withspecials and features.EDIT_TYPE in features.feature_set:
+				namelist.append('.type')
+			return namelist
+
 		ctype = self.GetChannelType()
 		if ntype in mediatypes:
 			namelist.append('channel')
-		namelist.append('abstract')
-		namelist.append('system_captions')
-		namelist.append('system_overdub_or_caption')
-		namelist.append('system_required')
-		namelist.append('system_screen_size')
-		namelist.append('system_screen_depth')
-		namelist.append('system_audiodesc')
-		namelist.append('system_cpu')
-		namelist.append('system_operating_system')
-		namelist.append('system_component')
 		if ntype != 'switch':
-			namelist.append('restart')
-			namelist.append('restartDefault')
-			namelist.append('fillDefault')
-			namelist.append('syncBehavior')
-			namelist.append('syncBehaviorDefault')
-			namelist.append('min')
-			namelist.append('max')
+			namelist.extend(self.__timing)
+		if withspecials and ntype in interiortypes:
+			namelist.extend(['thumbnail_icon',
+					 'dropicon',
+					 'empty_icon',
+					 'empty_text',
+					 'empty_color',
+					 'empty_duration',
+					 'non_empty_icon',
+					 'non_empty_text',
+					 'non_empty_color',
+					 'thumbnail_scale'])
+		if withspecials and ntype in ('par', 'seq', 'excl'):
+			namelist.extend(['project_default_region_video',
+					 'project_default_region_image',
+					 'project_default_region_sound',
+					 'project_default_region_text',
+					 'project_forcechild'])
 		if ntype in mediatypes:
-			namelist.append('readIndex')
-			namelist.append('erase')
-		if  ntype != 'switch':
-			namelist.append('fill')
-		namelist.append('alt')
-		namelist.append('longdesc')
+			if ntype != 'brush':
+				namelist.extend(['file',
+						 'mimetype',
+						 'allowedmimetypes'])
+			namelist.extend(['readIndex',
+					 'erase',
+					 'transIn',
+					 'transOut'])
+			if features.EXPORT_REAL in features.feature_set:
+				if ChannelMap.isvisiblechannel(ctype):
+					namelist.extend(['backgroundOpacity',
+							 'chromaKey',
+							 'chromaKeyOpacity',
+							 'chromaKeyTolerance',
+							 'mediaOpacity'])
+				namelist.append('reliable')
+				if ctype in ('text','image'):
+					namelist.append('strbitrate')
+			if ctype in ('sound', 'video'):
+				namelist.extend(['clipbegin',
+						 'clipend'])
+			if ChannelMap.isvisiblechannel(ctype):
+				namelist.extend(['left',
+						 'width',
+						 'right',
+						 'top',
+						 'height',
+						 'bottom',
+						 'fit',
+						 'regPoint',
+						 'regAlign',
+						 'z',
+						 'sensitivity',
+						 'cssbgcolor'])
+			# specific time preference
+			if features.EXPORT_QT in features.feature_set:
+				namelist.extend(['immediateinstantiationmedia',
+						 'bitratenecessary',
+						 'systemmimetypesupported',
+						 'attachtimebase',
+						 'qtchapter',
+						 'qtcompositemode'])
+			if features.EXPORT_REAL in features.feature_set:
+				mime = self.GetComputedMimeType()
+				if mime and mime.find('real') < 0 and mime not in ('image/jpeg', 'text/html'):
+					namelist.append('project_convert')
+					if ctype in ('sound', 'video'):
+						namelist.extend(['project_audiotype',
+								 'project_targets',
+								 'project_perfect',
+								 'project_mobile'])
+					if ctype == 'video':
+						namelist.append('project_videotype')
+					if ctype == 'image':
+						namelist.append('project_quality')
+		if ntype == 'brush' or (features.EXPORT_SMIL2 in features.feature_set and ctype == 'text'):
+			namelist.append('fgcolor')
+		if withspecials and ntype == 'imm':
+			namelist.append('.values')
 		if ntype in termtypes:
 			namelist.append('terminator')
-		if ntype in ('par', 'seq', 'excl', 'animpar'):
-			namelist.append('duration')
-		if ntype == 'switch':
-			if 'begin' in namelist:
-				namelist.remove('begin')
-			namelist.remove('loop')
-			namelist.remove('duration')
-			namelist.remove('repeatdur')
-			namelist.remove('beginlist')
-			namelist.remove('endlist')
-		if ntype in mediatypes:
-			namelist.append('alt')
-			namelist.append('longdesc')
-			namelist.append('clipbegin')
-			namelist.append('clipend')
-			if ChannelMap.isvisiblechannel(ctype):
-				namelist.append('left')
-				namelist.append('width')
-				namelist.append('right')
-				namelist.append('top')
-				namelist.append('height')
-				namelist.append('bottom')
-				namelist.append('fit')
-				namelist.append('regPoint')
-				namelist.append('regAlign')
-				namelist.append('z')
-				namelist.append('sensitivity')
-					
-			# specific time preference
-			namelist.append('immediateinstantiationmedia')
-			namelist.append('bitratenecessary')
-			namelist.append('systemmimetypesupported')
-			namelist.append('attachtimebase')
-			namelist.append('qtchapter')
-			namelist.append('qtcompositemode')
-			
-		if 'layout' in namelist and not self.context.layouts:
+		if self.context.layouts:
 			# no sense bothering the user with an attribute that
 			# doesn't do anything...
-			namelist.remove('layout')
+			namelist.append('layout')
 		# Get the channel class (should be a subroutine!)
-		if ChannelMap.channelmap.has_key(ctype):
-			cclass = ChannelMap.channelmap[ctype]
-			# Add the class's declaration of attributes
-			namelist = namelist + cclass.node_attrs
-		# Merge in nonstandard attributes
-		extras = []
-		for name in self.GetAttrDict().keys():
-			if name not in namelist and \
-				     MMAttrdefs.getdef(name)[3] <> 'hidden':
-				extras.append(name)
-		extras.sort()
-		namelist = namelist + extras
-		retlist = []
-		for name in namelist:
-			if name in retlist:
-				continue
-			retlist.append(name)
+##		if ChannelMap.channelmap.has_key(ctype):
+##			cclass = ChannelMap.channelmap[ctype]
+##			# Add the class's declaration of attributes
+##			for name in cclass.node_attrs:
+##				if name not in namelist:
+##					namelist.append(name)
+##		# Merge in nonstandard attributes
+##		extras = []
+##		for name in self.GetAttrDict().keys():
+##			if name not in namelist and \
+##				     MMAttrdefs.getdef(name)[3] <> 'hidden':
+##				extras.append(name)
+##		extras.sort()
+##		namelist = namelist + extras
+##		retlist = []
+##		for name in namelist:
+##			if name in retlist:
+##				continue
+##			retlist.append(name)
 			
-##		if not cmifmode():
-##			# cssbgcolor is used instead
-##			if 'bgcolor' in retlist: retlist.remove('bgcolor')
-##			if 'transparent' in retlist: retlist.remove('transparent')
-		return retlist
+####		if not cmifmode():
+####			# cssbgcolor is used instead
+####			if 'bgcolor' in retlist: retlist.remove('bgcolor')
+####			if 'transparent' in retlist: retlist.remove('transparent')
+##		return retlist
+		return namelist
 
 	def GetAllSystemTests(self, list=None):
 		# Return all system test attributes used in the
