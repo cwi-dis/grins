@@ -125,9 +125,6 @@ class _Toplevel:
 		import DrawTk
 		del DrawTk.drawTk
 
-		import __main__
-		del __main__.resdll
-
 
 
 	# Registration function for close callbacks
@@ -295,16 +292,14 @@ class _Toplevel:
 		if len(self._subwindows) == 1:self.show()
 		self.serve_events(())
 		win32ui.GetApp().AddIdleHandler(self.monitor)
-
+	
 		wnd=self.genericwnd()
 		wnd.create()
 		wnd.HookMessage(self.serve_events,win32con.WM_USER)
 		win32ui.GetApp().RunLoop(wnd)
+
 		wnd.DestroyWindow()
-
-		self.close()
-
-		(win32ui.GetAfx()).PostQuitMessage(0)
+		Afx.GetMainWnd().PostMessage(win32con.WM_CLOSE)
 
 	def monitor(self,handler,count):
 		self.serve_events()
