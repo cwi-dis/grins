@@ -311,8 +311,7 @@ class NodeInfo:
 		self.channel_select.setoptions(self.allchannelnames, i)
 
 		self.styles_browser.delalllistitems()
-		for i in self.styles_list:
-			self.styles_browser.addlistitem(i, -1)
+		self.styles_browser.addlistitems(self.styles_list, -1)
 
 		if self.allstyles:
 			self.styles_select.setoptions(self.allstyles, 0)
@@ -326,8 +325,7 @@ class NodeInfo:
 		self.file_input.settext(self.filename)
 
 		self.children_browser.delalllistitems()
-		for i in self.children:
-			self.children_browser.addlistitem(i, -1)
+		self.children_browser.addlistitems(self.children, -1)
 		if self.children:
 			self.children_browser.selectitem(0)
 
@@ -417,8 +415,8 @@ class NodeInfo:
 		new = self.allstyles[i]
 		if not new in self.styles_list:
 			self.styles_list.append(new)
-			self.styles_browser.addlistitem(new, -1)
-			self.styles_browser.selectitem(-1)
+		self.styles_browser.addlistitems(self.styles_list, -1)
+		self.styles_browser.selectitem(-1)
 
 	def styles_delete_callback(self):
 		if not self.styles_select.is_showing():
