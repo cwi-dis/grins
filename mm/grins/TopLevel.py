@@ -205,7 +205,7 @@ class TopLevel(TopLevelDialog):
 			try:			
 				import SMILTreeRead
 				self.root = SMILTreeRead.ReadFile(self.filename, self.printfunc, \
-											progressCallback=(self.progressCallback, 0.5))
+											progressCallback=(self.progressCallback, 0))
 
 			except (UserCancel, IOError):				
 				# the progress dialog will desapear
