@@ -96,7 +96,7 @@ class AnimationData:
 		self._data = []   # a list of key frames (rect, color)
 		self._times = []  # key times list
 		self._domrect, self._domcolor = self._target.getDomValues()
-		
+
 		self._animateMotion = None
 		self._animateWidth = None
 		self._animateHeight = None
@@ -106,7 +106,7 @@ class AnimationData:
 	#  public
 	#
 	def isEmpty(self):
-		return len(self._times)==0
+		return len(self._times) == 0
 
 	# animation editor call
 	# set key times and data explicitly
@@ -114,7 +114,7 @@ class AnimationData:
 		assert len(times) == len(data), ''
 		self._times = times
 		self._data = data
-
+				
 	# animation editor call
 	def getTimes(self):
 		return self._times
@@ -135,8 +135,11 @@ class AnimationData:
 			return
 
 		str = MMAttrdefs.getattr(animations[0], 'keyTimes')
-		self._times = self._strToFloatList(str)
-
+		if str:
+			self._times = self._strToFloatList(str)
+		else:
+			self._times = [0.0, 1.0]
+			
 		animateMotionValues = [] 
 		animateWidthValues = []
 		animateHeightValues = [] 
@@ -221,18 +224,14 @@ class AnimationData:
 
 		# update/insert animation nodes starting at this index
 		nodeIndex = 0 
-
+		
 		anim = existing.get('pos')
 		if anim is not None:
 			self._updateNode(anim, keyTimes, animateMotionValues)
 		elif self._writeAnimateMotion:
 			anim = context.newanimatenode('animateMotion')
-			# XXX temporare
-			anim.attrdict['duration'] = defaultDuration
-			anim.attrdict['fill'] = 'freeze'
-			# XXX end temporare
 			anim.targetnode = self._target.getTargetNode()
-			self._updateNode(anim, keyTimes, animateMotionValues, None, targname)
+			self._updateNode(anim, keyTimes, animateMotionValues, None, targname, dur = defaultDuration)
 			em.addnode(parent, nodeIndex, anim)
 			nodeIndex = nodeIndex + 1
 
@@ -241,12 +240,8 @@ class AnimationData:
 			self._updateNode(anim, keyTimes, animateWidthValues)
 		elif self._writeAnimateWidth:
 			anim = context.newanimatenode('animate')
-			# XXX temporare
-			anim.attrdict['duration'] = defaultDuration
-			anim.attrdict['fill'] = 'freeze'
-			# XXX end temporare
 			anim.targetnode = self._target.getTargetNode()
-			self._updateNode(anim, keyTimes, animateWidthValues, 'width', targname)
+			self._updateNode(anim, keyTimes, animateWidthValues, 'width', targname, dur = defaultDuration)
 			em.addnode(parent, nodeIndex, anim)
 			nodeIndex = nodeIndex + 1
 
@@ -255,12 +250,8 @@ class AnimationData:
 			self._updateNode(anim, keyTimes, animateHeightValues)
 		elif self._writeAnimateHeight:
 			anim = context.newanimatenode('animate')
-			# XXX temporare
-			anim.attrdict['duration'] = defaultDuration
-			anim.attrdict['fill'] = 'freeze'
-			# XXX end temporare
 			anim.targetnode = self._target.getTargetNode()
-			self._updateNode(anim, keyTimes, animateHeightValues, 'height', targname)
+			self._updateNode(anim, keyTimes, animateHeightValues, 'height', targname, dur = defaultDuration)
 			em.addnode(parent, nodeIndex, anim)
 			nodeIndex = nodeIndex + 1
 
@@ -269,12 +260,8 @@ class AnimationData:
 			self._updateNode(anim, keyTimes, animateColorValues)
 		elif self._writeAnimateColor:
 			anim = context.newanimatenode('animateColor')
-			# XXX temporare
-			anim.attrdict['duration'] = defaultDuration
-			anim.attrdict['fill'] = 'freeze'
-			# XXX end temporare
 			anim.targetnode = self._target.getTargetNode()
-			self._updateNode(anim, keyTimes, animateColorValues, 'backgroundColor', targname)
+			self._updateNode(anim, keyTimes, animateColorValues, 'backgroundColor', targname, dur = defaultDuration)
 			em.addnode(parent, nodeIndex, anim)
 			nodeIndex = nodeIndex + 1
 		
@@ -345,13 +332,17 @@ class AnimationData:
 	#
 	#  private
 	#
-	def _updateNode(self, node, times, values, attr = None, targname = None):
+	def _updateNode(self, node, times, values, attr = None, targname = None, dur = None):
 		if attr is not None:
 			node.attrdict['attributeName'] = attr
 		if targname is not None:
 			node.attrdict['targetElement'] = targname
-		node.attrdict['keyTimes'] = times
+		if times is not None:
+			node.attrdict['keyTimes'] = times
 		node.attrdict['values'] = values
+		if dur is not None:
+			node.attrdict['duration'] = dur
+		node.attrdict['fill'] = 'freeze'
 	
 	def _clampKeyTime(self, keyTime):
 		if keyTime<0.0:
@@ -418,7 +409,9 @@ class AnimationData:
 		return animateMotionValues, animateWidthValues, animateHeightValues, animateColorValues
 
 	def _timesToKeyTimesAttr(self):
-		return self._floatListToStr(self._times, prec = AnimationData.KEY_TIMES_WRITE_PREC)
+		if len(self._times) > 2:
+			return self._floatListToStr(self._times, prec = AnimationData.KEY_TIMES_WRITE_PREC)
+		return None
 
 	def _intListToStr(self, sl):
 		str = ''
