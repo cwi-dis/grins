@@ -1399,6 +1399,9 @@ class ChannelWindow(Channel):
 			a = alist[i]
 			atype = a[A_TYPE]
 			if atype == ATYPE_WHOLE:
+				anchor = node.GetUID(), a[A_ID]
+				if not self._player.context.hyperlinks.findsrclinks(anchor):
+					continue
 				if armed_anchor:
 					print 'multiple whole-node anchors on node'
 				armed_anchor = a
