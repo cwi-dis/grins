@@ -153,7 +153,7 @@ class MainDialog:
 		self.openURL_callback(url)
 		
 	def dropeffect(self, dummy, window, event, params):
-		import windowinterface
+		import windowinterface, urlcache
 		x,y,filename=params
 		url=self.__path2url(filename)
 		mimetype = urlcache.mimetype(url)
