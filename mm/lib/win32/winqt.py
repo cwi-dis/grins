@@ -8,9 +8,13 @@ except ImportError:
 import ddraw
 
 # support flags
+qtenvironment = None
 initialized = 0
 refcount = 0 
 
+# Qt should be initialized once per session (application instance)
+# Here is referenced counted and thus can be called per use 
+# (remember to call Terminate() per use if used this way)
 def Initialize(incrref = 1):
 	global initialized
 	global refcount
@@ -30,6 +34,7 @@ def Initialize(incrref = 1):
 		refcount = refcount + 1
 	return 1
 
+# Qt session terminate (application exit instance)
 def Terminate():
 	global initialized
 	global refcount
@@ -40,11 +45,42 @@ def Terminate():
 			Qt.TerminateQTML()
 			initialized = 0
 
+# module level Qt lifetime
+# keep alive Qt for module lifetime
+class QtEnvironment:
+	def __init__(self):
+		Initialize()
+	def __del__(self):
+		global qtenvironment
+		qtenvironment = None
+		Terminate()
+
+# pay (a delay) for Qt initializarion only if used
+def HasQtSupport():
+	global qtenvironment
+	if qtenvironment is not None:
+		return 1
+	if Qt is not None and Initialize(incrref = 0):
+		qtenvironment = QtEnvironment()
+		return 1
+	return 0
+
+# Implementation note on direct draw use by Qt
+# Qt.SetDDPrimarySurface is global so we have to use a global surface
+# for more than one video
+
 class QtPlayer:
 	def __init__(self):
+		Initialize()
 		self.movie = None
 		self._dds = None
 		self._rect = None
+
+	def __del__(self):
+		self.movie = None
+		self._dds = None
+		self._rect = None
+		Terminate()
 
 	def __repr__(self):
 		s = '<%s instance' % self.__class__.__name__
@@ -98,9 +134,6 @@ class QtPlayer:
 
 		self.movie.SetMovieBox((0, 0, w, h))
 		self.movie.SetMovieActive(1)
-
-	def __del__(self):
-		del self._dds
 			
 	def run(self):
 		if self.movie:
@@ -114,7 +147,7 @@ class QtPlayer:
 		if self.movie:
 			self.movie.MoviesTask(0)
 			self.movie.UpdateMovie()
-			return 1
+			return not self.movie.IsMovieDone()
 		return 0
 
 	def seek(self, secs):
