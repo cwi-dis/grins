@@ -80,9 +80,10 @@ class LayoutChannel(ChannelWindow):
 				
 			self._curvals['winsize'] = ((width, height), (50,50))
 			x, y = self._attrdict.get('winpos', (None, None))
+			title = mmchan.GetAttrDef('title', self._name)
 			if self.want_default_colormap:
 				self.window = windowinterface.newcmwindow(x, y,
-					width, height, self._name,
+					width, height, title,
 					visible_channel = self._visible,
 					type_channel = self._window_type,
 					units = units, adornments = adornments,
@@ -90,7 +91,7 @@ class LayoutChannel(ChannelWindow):
 					bgcolor = bgcolor)
 			else:
 				self.window = windowinterface.newwindow(x, y,
-					width, height, self._name,
+					width, height, title,
 					visible_channel = self._visible,
 					type_channel = self._window_type,
 					units = units, adornments = adornments,
