@@ -40,9 +40,13 @@ class ImageLib:
 ##				self._transpdict[img]=trans_rgb
 ##		else:
 		img = self.lib.load_file(filename)
-		if img == -1:
+		if img < 0:
+			errcodes = []
+			for i in range(self.lib.error_check()):
+				errcodes.append(`self.lib.error_get(i)`)
 			from windowinterface import error
-			raise error, 'failed to load image'
+			from string import join
+			raise error, 'failed to load image, errcode(s) = %s' % join(errcodes, ', ')
 		self._imglist.append(img)
 		return img
 
