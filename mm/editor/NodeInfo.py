@@ -113,8 +113,6 @@ class NodeInfo(NodeInfoDialog):
 	def calcchannelnames(self):
 		chtype = self.node.GetChannelType()
 		chlist = self.context.compatchannels(self.url, chtype)
-		if not chlist and not chtype:
-			chlist = self.context.channelnames
 		lightweight = settings.get('lightweight')
 		layout = MMAttrdefs.getattr(self.node, 'layout')
 		if layout == 'undefined':
@@ -155,6 +153,11 @@ class NodeInfo(NodeInfoDialog):
 				self.allchannelnames = all
 			else:
 				self.allchannelnames = [UNDEFINED]
+				if not chlist:
+					self.allchannelnames.append(None)
+					all = self.context.channelnames[:]
+					all.sort()
+					self.allchannelnames = self.allchannelnames + all
 		else:
 			self.allchannelnames = [UNDEFINED, None] + all
 
@@ -474,6 +477,9 @@ class NodeInfo(NodeInfoDialog):
 		AttrEdit.showchannelattreditor(self.toplevel, channel)
 
 	def anchors_callback(self):
+		if settings.get('lightweight'):
+			# you can push the button, but nothing happens...
+			return
 		import AnchorEdit
 		AnchorEdit.showanchoreditor(self.toplevel, self.node)
 	#
