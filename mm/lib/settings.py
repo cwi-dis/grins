@@ -20,7 +20,7 @@ default_settings = {
 ## Special case, see get() routine
 ##	'system_screen_size': windowinterface.getscreensize(), # Size of screen
 ##	'system_screen_depth': windowinterface.getscreendepth(), # Depth of screen
-	'system_required': '',		# Needs special handling in match...
+	'system_required': [],		# Needs special handling in match...
 	'system_audiodesc': 0,		# No audio description
 	'system_operating_system': 'UNKNOWN',
 	'system_cpu': 'UNKNOWN',
@@ -189,7 +189,10 @@ def match(name, wanted_value):
 		wanted_value = string.upper(wanted_value)
 		return opsys.cpu.has_key(wanted_value) and opsys.cpu[wanted_value]
 	if name == 'system_required':
-		return extensions.get(wanted_value, 0)
+		for v in wanted_value:
+			if not extensions.get(wanted_value, 0):
+				return 0
+			return 1
 	real_value = get(name)
 	if name in EXACT:
 		return (real_value == wanted_value)

@@ -1232,6 +1232,8 @@ class AttrEditor(AttrEditorDialog):
 				C = TransparencyAttrEditorField
 			elif displayername == 'usergroup':
 				C = UsergroupAttrEditorField
+			elif displayername == 'reqlist':
+				C = ReqListAttrEditorField
 			elif displayername == 'transition':
 				C = TransitionAttrEditorField
 ##			elif displayername == 'direction':
@@ -2396,11 +2398,22 @@ class BaseChannelnameAttrEditorField(ChannelnameAttrEditorField):
 		if ch is not None:
 			showchannelattreditor(self.wrapper.toplevel, ch)
 
-class UsergroupAttrEditorField(PopupAttrEditorFieldWithUndefined):
-	def getoptions(self):
-		list = self.wrapper.context.usergroups.keys()
-		list.sort()
-		return [DEFAULT, UNDEFINED] + list
+class ListAttrEditorField(AttrEditorField):
+	def valuerepr(self, value):
+		if value is None:
+			return ''
+		return string.join(value)
+
+	def parsevalue(self, str):
+		if not str:
+			return None
+		return string.split(str)
+
+class UsergroupAttrEditorField(ListAttrEditorField):
+	pass
+
+class ReqListAttrEditorField(ListAttrEditorField):
+	pass
 
 class ChildnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	# Choose from the node's children
