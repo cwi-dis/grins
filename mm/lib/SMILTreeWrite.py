@@ -671,7 +671,11 @@ def getugroup(writer, node):
 	u_group = MMAttrdefs.getattr(node, 'u_group')
 	if u_group == 'undefined':
 		return
-	return writer.ugr2name[u_group]
+	try:
+		return writer.ugr2name[u_group]
+	except KeyError:
+		print '** Attempt to write unknown usergroup', u_group
+		return
 
 def getlayout(writer, node):
 	if not node.GetContext().layouts:
@@ -679,7 +683,11 @@ def getlayout(writer, node):
 	layout = MMAttrdefs.getattr(node, 'layout')
 	if layout == 'undefined':
 		return
-	return writer.layout2name[layout]
+	try:
+		return writer.layout2name[layout]
+	except KeyError:
+		print '** Attempt to write unknown layout', layout
+		return
 
 def gettransition(writer, node, which):
 	if not node.GetContext().transitions:
@@ -687,7 +695,11 @@ def gettransition(writer, node, which):
 	transition = MMAttrdefs.getattr(node, which)
 	if not transition:
 		return
-	return writer.transition2name[transition]
+	try:
+		return writer.transition2name[transition]
+	except KeyError:
+		print '** Attempt to write unknown transition', transition
+		return
 	
 def getautoreverse(writer, node):
 	autoReverse = MMAttrdefs.getattr(node, 'autoReverse')
@@ -1604,8 +1616,15 @@ class SMILWriter(SMIL):
 			attrlist = []
 			attrlist.append(('id', self.transition2name[key]))
 			for akey, aval in val.items():
-				if akey != 'subtype':
+				if akey == 'color':
+					if colors.rcolors.has_key(aval):
+						aval = colors.rcolors[aval]
+					else:
+						aval = '#%02x%02x%02x' % aval
+				elif akey != 'subtype':
 					aval = MMAttrdefs.valuerepr(akey, aval)
+					if akey == 'trtype':
+						akey = 'type'
 				if defaults.has_key(akey) and defaults[akey] == aval:
 					continue
 				attrlist.append((akey, aval))
