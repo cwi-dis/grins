@@ -128,14 +128,6 @@ SOURCE=.\winuser.rc
 # End Source File
 # Begin Source File
 
-SOURCE=.\winuser_dlg.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\winuser_dlg.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\winuser_main.cpp
 # End Source File
 # Begin Source File

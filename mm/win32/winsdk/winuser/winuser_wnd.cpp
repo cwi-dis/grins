@@ -597,6 +597,45 @@ static PyObject* PyWnd_KillTimer(PyWnd *self, PyObject *args)
 	return none();
 	}
 
+static PyObject* PyWnd_ClientToScreen(PyWnd *self, PyObject *args)
+{
+	RECT rect;
+	POINT pt;
+	bool isrect = true;
+	if(!PyArg_ParseTuple(args,"(iiii)", &rect.left, &rect.top, &rect.right, &rect.bottom))
+		{
+		PyErr_Clear();
+		isrect = false;
+		if (!PyArg_ParseTuple(args,"(ii):ClientToScreen", &pt.x, &pt.y))
+			return NULL;
+		}
+	if (isrect)
+		{
+		POINT pt1 = {rect.left, rect.top};
+		BOOL res = ClientToScreen(self->m_hWnd, &pt1);
+		if(!res)
+			{
+			seterror("ClientToScreen", GetLastError());
+			return NULL;
+			}
+		POINT pt2 = {rect.right, rect.bottom};
+		res = ClientToScreen(self->m_hWnd, &pt2);
+		if(!res)
+			{
+			seterror("ClientToScreen", GetLastError());
+			return NULL;
+			}
+		return Py_BuildValue("(iiii)",pt1.x, pt1.y, pt2.x, pt2.y);
+		}
+	BOOL res = ClientToScreen(self->m_hWnd, &pt);
+	if(!res)
+		{
+		seterror("ClientToScreen", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue("(ii)",pt.x, pt.y);
+}
+
 PyMethodDef PyWnd::methods[] = {
 	{"ShowWindow", (PyCFunction)PyWnd_ShowWindow, METH_VARARGS, ""},
 	{"UpdateWindow", (PyCFunction)PyWnd_UpdateWindow, METH_VARARGS, ""},
@@ -623,6 +662,7 @@ PyMethodDef PyWnd::methods[] = {
 	{"MoveWindow", (PyCFunction)PyWnd_MoveWindow, METH_VARARGS, ""},
 	{"SetTimer", (PyCFunction)PyWnd_SetTimer, METH_VARARGS, ""},
 	{"KillTimer", (PyCFunction)PyWnd_KillTimer, METH_VARARGS, ""},
+	{"ClientToScreen", (PyCFunction)PyWnd_ClientToScreen, METH_VARARGS, ""},
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 };
 
