@@ -283,6 +283,9 @@ def getsrc(writer, node):
 			return val
 	writer.copycache[url] = file
 	val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
+	import settings
+	if settings.get('compatibility') == settings.G2:
+		val = MMurl.unquote(val)
 	return val
 
 def getcmifattr(writer, node, attr):
