@@ -19,7 +19,8 @@ UNUSED_COMMANDS=(MAGIC_PLAY,)   # Is implemented, but the check code doesn't kno
 #
 MENUBAR=(
 	(ALL, CASCADE, 'File', (
-		(ALL, ENTRY, 'Open...', 'O', OPEN),
+		(ALL, ENTRY, 'Open...', 'O', OPENFILE),
+		(ALL, ENTRY, 'Open URL...', 'L', OPEN),
 		(ALL, DYNAMICCASCADE, 'Open recent', OPEN_RECENT),
 		(ALL, ENTRY, 'Close Window', 'W', CLOSE_WINDOW),
 		(ALL, ENTRY, 'Close Document', None, CLOSE),

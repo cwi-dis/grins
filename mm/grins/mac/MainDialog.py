@@ -54,6 +54,34 @@ class MainDialog:
 		windowinterface.InputURLDialog('Open location', self.last_location,
 					    self.openURL_callback)
 
+	def openfile_callback(self):
+		"""Callback for OPENFILE menu command"""
+		import windowinterface
+		windowinterface.FileDialog('', '', '*.smil', '',
+					   self.__openfile_done, None, 1)
+
+	def __openfile_done(self, filename):
+		"""End of OPENFILE menu command. Open the file (as url)"""
+		url = self.__path2url(filename)
+		if url:
+			self.openURL_callback(url)
+
+	def __path2url(self, filename):
+		import os, MMurl
+		if os.path.isabs(filename):
+			cwd = os.getcwd()
+			if os.path.isdir(filename):
+				dir, file = filename, os.curdir
+			else:
+				dir, file = os.path.split(filename)
+			# XXXX maybe should check that dir gets shorter!
+			while len(dir) > len(cwd):
+				dir, f = os.path.split(dir)
+				file = os.path.join(f, file)
+			if dir == cwd:
+				filename = file
+		return MMurl.pathname2url(filename)
+
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from
 	# this class).
