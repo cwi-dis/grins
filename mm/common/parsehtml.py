@@ -65,6 +65,7 @@ class Parser(SGMLParser):
 			else:
 				self.unknown_endtag(self.__stack[-1])
 		id = None
+		name = None
 		for i in range(len(attrs)):
 			a, v = attrs[i]
 			if (a == 'id' or (tag == 'a' and a == 'name')) and \
@@ -79,6 +80,9 @@ class Parser(SGMLParser):
 				else:
 					id = v
 				break
+			elif a == 'id':
+				del attrs[i]
+				name = v
 		attrlist = ['<' + tag]
 		for (a, v) in attrs:
 			v = string.join(string.split(v, '"'), '&quot;')
@@ -88,7 +92,13 @@ class Parser(SGMLParser):
 		if tag not in self.__emptytags:
 			self.__stack.append(tag)
 		if id:
-			self.__data.append('<a href="cmif:%s">'%id)
+			self.__data.append('<a href="cmif:%s'%id)
+			if name:
+				self.__data.append(' name="%s"'%name)
+			self.__data.append('>')
+			self.__stack.append('a')
+		elif name:
+			self.__data.append('<a name="%s">'%name)
 			self.__stack.append('a')
 
 	def unknown_endtag(self, tag):
