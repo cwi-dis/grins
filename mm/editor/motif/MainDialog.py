@@ -36,15 +36,17 @@ class MainDialog:
 		self.__window = w = windowinterface.Window(
 			title, resizable = 0,
 			deleteCallback = (self.close_callback, ()))
-		buttons = w. ButtonRow(
-			[('New', (self.new_callback, ())),
-			 ('Open\nLocation...', (self.__openURL_callback, ())),
-			 ('Open\nFile...', (self.__openfile_callback, ())),
-			 ('Trace', (self.trace_callback, ()), 't'),
-			 ('Debug', (self.debug_callback, ())),
-			 ('Exit', (self.close_callback, ())),
-			 ],
-			vertical = 0, tight = 1,
+		buttons = [('New', (self.new_callback, ())),
+			('Open\nLocation...', (self.__openURL_callback, ())),
+			('Open\nFile...', (self.__openfile_callback, ())),
+			('Exit', (self.close_callback, ())),
+			]
+		if __debug__:
+			buttons[2:2] = [
+				('Trace', (self.trace_callback, ()), 't'),
+				('Debug', (self.debug_callback, ())),
+				]
+		buttons = w. ButtonRow(buttons, vertical = 0, tight = 1,
 			top = None, bottom = None, left = None, right = None)
 		w.show()
 
