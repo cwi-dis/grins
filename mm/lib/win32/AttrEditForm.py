@@ -3200,8 +3200,8 @@ class FileGroup(AttrGroup):
 		self._preview=0 # init to no preview
 		a=self.getattr('file')
 		f=a.getcurrent()
-		import mimetypes
-		mtype = mimetypes.guess_type(f)[0]
+		import MMmimetypes
+		mtype = MMmimetypes.guess_type(f)[0]
 		if mtype is None: 
 			return 0
 		mtype, subtype = string.split(mtype, '/')

@@ -22,7 +22,7 @@ import MainFrame
 from appcon import *
 from win32ig import win32ig
 import string
-import mimetypes
+import MMmimetypes
 import grins_mimetypes
 
 def beep():
@@ -528,7 +528,7 @@ class FileDialog:
 			newfilter = []
 			allext = []
 			for f in filter:
-				extlist = mimetypes.get_extensions(f)
+				extlist = MMmimetypes.get_extensions(f)
 				if not extlist:
 					extlist = ('.*',)
 				else:
