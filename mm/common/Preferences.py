@@ -14,7 +14,7 @@ class Preferences(PreferencesDialog):
 
 	_singleton = None
 
-	def __init__(self):
+	def __init__(self, callback):
 		if Preferences._singleton:
 			raise 'Singleton recreated'
 		Preferences._singleton = self
@@ -23,10 +23,12 @@ class Preferences(PreferencesDialog):
 		self.bool_names = self.getboolnames()
 		self.int_names = self.getintnames()
 		self.string_names = self.getstringnames()
+		self.callback = callback
 		self.load_settings()
 		self.show()
 		
 	def close(self):
+		self.callback = None
 		Preferences._singleton = None
 		PreferencesDialog.close(self)
 	
@@ -93,7 +95,9 @@ class Preferences(PreferencesDialog):
 		for name, value in values.items():
 			settings.set(name, value)
 		settings.save()
-		windowinterface.showmessage("New settings will not take effect until the next time you run GRiNS")
+		if self.callback:
+			self.callback()
+	
 		self.close()
 
 	def apply_callback(self):
@@ -108,12 +112,12 @@ class Preferences(PreferencesDialog):
 		self.load_settings()
 
 
-def showpreferences(on):
+def showpreferences(on, callback=None):
 	if on:
 		if Preferences._singleton:
 			Preferences._singleton.pop()
 		else:
-			preferences = Preferences()
+			preferences = Preferences(callback)
 	elif Preferences._singleton:
 		Preferences._singleton.close()
 		
