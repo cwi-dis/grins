@@ -59,14 +59,8 @@ class SchedulerContext:
 		print '--------- actions:'
 		for i in range(len(self.sractions)):
 			if self.sractions[i]:
-				if len(self.sractions[i]) == 2:
-					ac, list = self.sractions[i]
-					first = []
-				else:
-					ac, list, first = self.sractions[i]
+				ac, list = self.sractions[i]
 				print '%d\t%d\t%s' % (i, ac, SR.evlist2string(list))
-				if first:
-					print '\t\t%s' % SR.evlist2string(first)
 		print '------------ #prearms outstanding:'
 		for i in self.channels:
 			print i, '\t', len(self.prearmlists[i])
@@ -192,11 +186,6 @@ class SchedulerContext:
 	def FutureWork(self):
 		if self.srevents:
 			return 1
-## 		for ev in self.srevents.keys():
-## 			if ev[0] != SR.TERMINATE:
-## 				return 1
-## 		# no events left except possibly TERMINATE events
-## 		self.srevents = {}
 		self.parent.ui.sctx_empty(self) # XXXX
 		return 0
 	#
@@ -230,7 +219,7 @@ class SchedulerContext:
 	# Incoming events from channels, or the start event.
 	#
 	def event(self, ev):
-		srlist, firstevents = self.getsrlist(ev)
+		srlist = self.getsrlist(ev)
 		for sr in srlist:
 			if sr[0] == SR.PLAY:
 				prio = PRIO_START
@@ -241,8 +230,6 @@ class SchedulerContext:
 			else:
 				prio = PRIO_INTERN
 			self.parent.add_runqueue(self, prio, sr)
-		for sr in firstevents:
-			self.parent.add_runqueue(self, PRIO_LO, sr)
 	#
 	def arm_ready(self, chan):
 		if not self.prearmlists.has_key(chan):
@@ -273,24 +260,16 @@ class SchedulerContext:
 		srlist = self.sractions[actionpos]
 		if srlist is None:
 			raise error, 'Scheduler: actions already sched for ev: %s' % ev
-		if len(srlist) == 2:
-			num, srlist = srlist
-			firstactions = []
-		else:
-			#
-			# Firstactions are executed when the first
-			# event comes in and then immedeately forgotten
-			#
-			num, srlist, firstactions = srlist
+		num, srlist = srlist
 		num = num - 1
 		if num < 0:
 			raise error, 'Scheduler: waitcount<0: %s' % (num, srlist)
 		elif num == 0:
 			self.sractions[actionpos] = None
+			return srlist
 		else:
 			self.sractions[actionpos] = (num, srlist)
-			srlist = []
-		return srlist, firstactions
+		return []
 		
 class Scheduler(scheduler):
 	def __init__(self, ui):
