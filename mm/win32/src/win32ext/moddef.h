@@ -150,18 +150,36 @@ inline bool IsFile(LPCTSTR pstrName,CString& strNewName)
 	return (bWorking==TRUE);
 	}
 
-// Parse some std file references
-//1. file:///D|/<filepath>
-//2. file:/D|/<filepath>
+inline CString ToDosSeparator(const CString& str)
+	{
+	char *buf= new char[str.GetLength()+1];
+	lstrcpy(buf,str);
+	char *p=buf;
+	while(*p){if(*p=='/')*p='\\';p++;}
+	CString strRet(buf);
+	delete[] buf;
+	return strRet;
+	}
+
+// Parse some std GRiNS file references
+// 1. file:///D|/<filepath>
+// 2. file:/D|/<filepath>
+// 3. file:////Pride/pride-ufs/dcab/GRiNSDemos/Voronoi Algorithms/DONNEES/VIDEOORA/JDB11.MPG
+
 inline CString GetWindowsMediaUrl(LPCTSTR strUrl)
 	{
-	CString str(strUrl);	
-	CString strp,strl;
+	CString str(strUrl);
+	// 1.
 	if(str.Left(8)=="file:///" && str[9]=='|')
-		strp=CString(str[8]) + ":" + str.Mid(10);
+		return CString(str[8]) + ":" + ToDosSeparator(str.Mid(10));
+	// 2.
 	else if(str.Left(6)=="file:/" && str[7]=='|')
-		strp=CString(str[6]) + ":" + str.Mid(8);
-	if(IsFile(strp,strl))str=strl;
+		return CString(str[6]) + ":" + ToDosSeparator(str.Mid(8));
+	// 3.
+	else if(str.Left(9)=="file:////" && str.Find('|')<0) // UNC
+		return CString("\\\\")+ ToDosSeparator(str.Mid(9));
+
+	// return unchanged
 	return str;
 	}
 
