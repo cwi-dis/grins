@@ -64,8 +64,7 @@ class PreferencesDialog(windowinterface.MACDialog):
 				ITEMLIST_ALL, default=ITEM_OK, cancel=ITEM_CANCEL)
 
 	def _toggleboolvalue(self, item):
-		tp, h, rect = self._dialog.GetDialogItem(item)
-		ctl = h.as_Control()
+		ctl = self._dialog.GetDialogItemAsControl(item)
 		value = ctl.GetControlValue()
 		ctl.SetControlValue(not value)
 		
@@ -126,8 +125,7 @@ class PreferencesDialog(windowinterface.MACDialog):
 	def setboolitem(self, item, value):
 		if not BOOLEAN_ITEM_DICT.has_key(item):
 			raise 'Unknown preference item', item
-		tp, h, rect = self._dialog.GetDialogItem(BOOLEAN_ITEM_DICT[item])
-		ctl = h.as_Control()
+		ctl = self._dialog.GetDialogItemAsControl(BOOLEAN_ITEM_DICT[item])
 		if value:
 			ctl.SetControlValue(1)
 		else:
@@ -136,8 +134,7 @@ class PreferencesDialog(windowinterface.MACDialog):
 	def getboolitem(self, item):
 		if not BOOLEAN_ITEM_DICT.has_key(item):
 			raise 'Unknown preference item', item
-		tp, h, rect = self._dialog.GetDialogItem(BOOLEAN_ITEM_DICT[item])
-		ctl = h.as_Control()
+		ctl = self._dialog.GetDialogItemAsControl(BOOLEAN_ITEM_DICT[item])
 		return ctl.GetControlValue()
 		
 	def getboolnames(self):
