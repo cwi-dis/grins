@@ -3154,7 +3154,7 @@ class MMNode(MMTreeElement):
 
 	def GetTimes(self, which='virtual'):
 		if not self.timing_info_dict.has_key(which):
-			self.context.needtimes(which, self)
+			self.context.needtimes(which, self.GetRoot())
 		return self.timing_info_dict[which].GetTimes()
 
 	def GetTimesObject(self, which='virtual'):
@@ -4594,34 +4594,34 @@ class MMNode(MMTreeElement):
 		if debug: print 'calcfullduration:',`self`,`duration`,self.fullduration
 		return duration
 
-	def compute_download_time(self):
-		# Compute the download time for this node.
-		# Values are in distances (self.downloadtime is a distance).
-
-		# First get available bandwidth. Silly algorithm to be replaced sometime: in each par we evenly
-		# divide the available bandwidth, for other structure nodes each child has the whole bandwidth
-		# available.
-		availbw  = settings.get('system_bitrate')
-		ancestor = self.parent
-		bwfraction = MMAttrdefs.getattr(self, 'project_bandwidth_fraction')
-		while ancestor:
-			if ancestor.type == 'par':
-				# If the child we are coming from has a bandwidth fraction defined
-				# we use that, otherwise we divide evenly
-				if bwfraction < 0:
-					bwfraction = 1.0 / len(ancestor.children)
-				availbw = availbw * bwfraction
-			bwfraction = MMAttrdefs.getattr(ancestor, 'project_bandwidth_fraction')
-			ancestor = ancestor.parent
-
-		# Get amount of data we need to load
-		try:
-			prearm, bw = Bandwidth.get(self, target=1)
-		except Bandwidth.Error:
-			prearm = 0
-		if not prearm:
-			prearm = 0
-		return prearm / availbw
+##	def compute_download_time(self):
+##		# Compute the download time for this node.
+##		# Values are in distances (self.downloadtime is a distance).
+##
+##		# First get available bandwidth. Silly algorithm to be replaced sometime: in each par we evenly
+##		# divide the available bandwidth, for other structure nodes each child has the whole bandwidth
+##		# available.
+##		availbw  = settings.get('system_bitrate')
+##		ancestor = self.parent
+##		bwfraction = MMAttrdefs.getattr(self, 'project_bandwidth_fraction')
+##		while ancestor:
+##			if ancestor.type == 'par':
+##				# If the child we are coming from has a bandwidth fraction defined
+##				# we use that, otherwise we divide evenly
+##				if bwfraction < 0:
+##					bwfraction = 1.0 / len(ancestor.children)
+##				availbw = availbw * bwfraction
+##			bwfraction = MMAttrdefs.getattr(ancestor, 'project_bandwidth_fraction')
+##			ancestor = ancestor.parent
+##
+##		# Get amount of data we need to load
+##		try:
+##			prearm, bw = Bandwidth.get(self, target=1)
+##		except Bandwidth.Error:
+##			prearm = 0
+##		if not prearm:
+##			prearm = 0
+##		return prearm / availbw
 
 	def _is_realpix_with_captions(self):
 		if self.type == 'ext' and self.GetChannelType() == 'RealPix':
