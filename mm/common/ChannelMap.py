@@ -13,6 +13,7 @@ from SocketChannel import SocketChannel
 from MpegChannel import MpegChannel
 from CmifChannel import CmifChannel
 from LayoutChannel import LayoutChannel
+from NTextChannel import NTextChannel
 from MidiChannel import MidiChannel
 try:
 	from HtmlChannel import HtmlChannel
@@ -34,6 +35,7 @@ channelmap = {
 	'mpeg':		MpegChannel,
 	'cmif':		CmifChannel,
 	'html':		HtmlChannel,
+	'ntext':	NTextChannel,
 	'graph':	GraphChannel,
 	'layout':	LayoutChannel,
 	'midi':		MidiChannel,
@@ -43,7 +45,7 @@ channeltypes = ['null', 'text', 'image']
 commonchanneltypes = ['text', 'image', 'sound', 'movie', 'layout']
 otherchanneltypes = []
 channelhierarchy = [
-    ('text', ['text', 'html']),
+    ('text', ['ntext', 'text', 'html']),
     ('image', ['image', 'graph']),
     ('sound', ['sound']),
     ('movie', ['movie', 'mpeg', 'vcr']),
@@ -62,7 +64,8 @@ del ct, t
 shortcuts = {
 	'null': 	'0',
 	'text': 	'T',
-	'sound':	 'S',
+	'ntext':	't',
+	'sound':	'S',
 	'image': 	'I',
 	'movie': 	'M',
 	'python': 	'P',
