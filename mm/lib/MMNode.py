@@ -1115,8 +1115,7 @@ class MMChannelTree:
 			self.__appendCssRegions(resolver, top, csstop)
 		root = self.__ctx.getroot()
 		if root:
-			for node in root.children:
-				self.__appendCssNodes(resolver, node)
+			self.__appendCssNodes(resolver, root)
 		for top in self.top_levels:
 			csstop = resolver.getCssObj(top)
 			csstop.updateTree()
