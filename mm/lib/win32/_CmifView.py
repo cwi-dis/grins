@@ -33,8 +33,6 @@ import grinsRC
 from DisplayList import DisplayList
 
 import win32mu
-import usercmd,usercmdui
-import sysmetrics
 
 # constants to select web browser control
 [IE_CONTROL, WEBSTER_CONTROL]=0, 1
@@ -313,6 +311,8 @@ class _CmifStructView(_CmifView):
 	# Class contructor. initializes base classes
 	def __init__(self,doc):
 		_CmifView.__init__(self,doc)
+		self._button_down=0
+		self._drag_cmd_send=0
 
 	def PaintOn(self,dc):
 		# only paint the rect that needs repainting
@@ -347,14 +347,46 @@ class _CmifStructView(_CmifView):
 		dcc.SetMapMode(win32con.MM_TEXT)
 		dc.BitBlt(rect.pos(),rect.size(),dcc,(0, 0), win32con.SRCCOPY)
 
-		# clean up (revisit this)
+		# clean up
 		dcc.SelectObject(oldBitmap)
-		dcc.DeleteDC() # needed?
+		dcc.DeleteDC()
 		del bmp
 
 	def OnEraseBkgnd(self,dc):
 		return 1
 
+	# Response to left button double click
+	def onLButtonDblClk(self, params):
+		import usercmdui
+		self._parent.PostMessage(win32con.WM_COMMAND,usercmdui.INFO_UI.id)
+
+	# Response to mouse move
+	def onMouseMove(self, params):
+		_CmifView.onMouseMove(self, params)
+		if not self._button_down or self._drag_cmd_send: return
+		import usercmd,usercmdui
+		for cmd in self._commandlist:
+			if cmd.__class__==usercmd.MOVE_CHANNEL:
+				self._parent.PostMessage(win32con.WM_COMMAND,usercmdui.MOVE_CHANNEL_UI.id)
+				self._drag_cmd_send=1
+				break
+
+	# Response to left button down
+	def onLButtonDown(self, params):
+		_CmifView.onLButtonDown(self, params)
+		self._button_down=1
+				
+	# Response to left button up
+	def onLButtonUp(self, params):
+		_CmifView.onLButtonUp(self, params)
+		self._button_down=0
+		if self._drag_cmd_send:
+			msg=win32mu.Win32Msg(params)
+			self.onMouseEvent(msg.pos(),Mouse0Press)
+			self.onMouseEvent(msg.pos(),Mouse0Release)
+			self._drag_cmd_send=0
+
+				
 
 class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 
