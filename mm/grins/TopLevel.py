@@ -62,21 +62,23 @@ class TopLevel:
 		if self.showing:
 			return
 		self.load_geometry()
-		self.window = windowinterface.Window(self.basename,
-				deleteCallback = (self.close_callback, ()))
 		buttons = [('Open...', (self.open_callback, ())),
 			   ('Close', (self.close_callback, ())),
 			   None,
 			   ('Debug', (self.debug_callback, ())),
-			   ('Trace', (self.trace_callback, ()), 't')]
+			   ('Trace', (self.trace_callback, ()))]
 		if hasattr(self.root, 'source') and \
 		   hasattr(windowinterface, 'TextEdit'):
 			buttons.insert(0, ('View Source...', (self.source_callback, ())))
-		self.buttons = self.window.ButtonRow(
-			buttons,
-			top = None, bottom = None, left = None, right = None,
-			vertical = 1)
-		self.window.show()
+		self.window = windowinterface.MainDialog(
+			buttons, self.basename, grab = 0)
+## 		self.window = windowinterface.Window(self.basename,
+## 				deleteCallback = (self.close_callback, ()))
+## 		self.buttons = self.window.ButtonRow(
+## 			buttons,
+## 			top = None, bottom = None, left = None, right = None,
+## 			vertical = 1)
+## 		self.window.show()
 		self.showing = 1
 
 	def load_geometry(self):

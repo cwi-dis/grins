@@ -865,9 +865,9 @@ class GO:
 
 	# Methods corresponding to the menu entries
 
-	def helpcall(self):
-		import Help
-		Help.givehelp('Channel_view')
+## 	def helpcall(self):
+## 		import Help
+## 		Help.givehelp('Channel_view')
 
 	def newchannelcall(self):
 		self.mother.newchannel(self.newchannelindex())

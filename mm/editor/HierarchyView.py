@@ -807,9 +807,9 @@ class Object:
 
 	# Menu handling functions
 
-	def helpcall(self):
-		import Help
-		Help.givehelp('Hierarchy_view')
+## 	def helpcall(self):
+## 		import Help
+## 		Help.givehelp('Hierarchy_view')
 
 	def playcall(self):
 		top = self.mother.toplevel
