@@ -666,9 +666,9 @@ class StructureObjWidget(MMNodeWidget):
 			i.uncollapse_all()
 
 	def collapse_all(self):
-		self.collapse()
 		for i in self.children:
 			i.collapse_all()
+		self.collapse()
 
 	def get_obj_near(self, (x, y), timemapper = None, timeline = None):
 		l,t,r,b = self.pos_abs
