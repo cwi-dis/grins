@@ -197,13 +197,14 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	def _getoswinpos(self):
 		x, y, w, h = self.window._rect
 		return (x, y), (w, h)
-
+		
 	def play(self, node):
 		self.need_armdone = 1
 		self.play_0(node)
 		if self._is_shown and node.ShouldPlay() \
 		   and self.window and not self.syncplay:
 			self.check_popup()
+			self.schedule_transitions(node)
 			if self.armed_display.is_closed():
 				# assume that we are going to get a
 				# resize event
