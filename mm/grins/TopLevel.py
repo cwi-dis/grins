@@ -226,12 +226,29 @@ class TopLevel(TopLevelDialog):
 		else:
 			url, aid = MMurl.splittag(anchor)
 		url = MMurl.basejoin(self.filename, url)
+		
+		# by default, the document target will be handled by GRiNS
+		# note: this varib allow to manage correctly the sourcePlaystate attribute
+		# as well, even if the target document is not handled by GRiNS
+		grinsTarget = 1
+
 		for top in self.main.tops:
 			if top is not self and top.is_document(url):
 				break
 		else:
 			try:
-				top = TopLevel(self.main, url)
+				# if the destination document is not a smil/grins document,
+				# it's handle by an external application
+				import MMmimetypes, MMurl
+				utype, url2 = MMurl.splittype(url)
+				mtype = MMmimetypes.guess_type(url)[0]
+				if mtype in ('application/smil', 'application/x-grins-project', \
+					'application/x-grins-cmif'):
+					# in this case, the document is handle by grins
+					top = TopLevel(self.main, url)
+				else:
+					grinsTarget = 0
+					windowinterface.shell_execute(url)
 			except:
 				msg = sys.exc_value
 				if type(msg) is type(self):
@@ -244,27 +261,34 @@ class TopLevel(TopLevelDialog):
 					'File: '+url+'\n'+
 					'Error: '+`msg`)
 				return 0
-		top.show()
-		node = top.root
-		if type(anchor) is type (()) and  '/' not in uid:
-			try:
-				node = top.root.context.mapuid(uid)
-			except NoSuchUIDError:
-				print 'uid not found in document'
-		elif hasattr(node, 'SMILidmap') and node.SMILidmap.has_key(aid):
-			node = node.context.mapuid(node.SMILidmap[aid])
-		if dtype == A_DEST_PLAY:
-			top.player.show()
-			top.player.playfromanchor(node, aid)
-		elif dtype == A_DEST_PAUSE:
-			top.player.show()
-			top.player.playfromanchor(node, aid)
-			top.player.pause(1)
-		else:
-			print 'jump to external: invalid destination state'
+
+		if grinsTarget:
+			top.show()
+			node = top.root
+			if type(anchor) is type (()) and  '/' not in uid:
+				try:
+					node = top.root.context.mapuid(uid)
+				except NoSuchUIDError:
+					print 'uid not found in document'
+			elif hasattr(node, 'SMILidmap') and node.SMILidmap.has_key(aid):
+				node = node.context.mapuid(node.SMILidmap[aid])
+			if dtype == A_DEST_PLAY:
+				top.player.show()
+				top.player.playfromanchor(node, aid)
+			elif dtype == A_DEST_PAUSE:
+				top.player.show()
+				top.player.playfromanchor(node, aid)
+				top.player.pause(1)
+			else:
+				print 'jump to external: invalid destination state'
 			
 		if atype == TYPE_JUMP:
-			self.close()
+			if grinsTarget:
+				self.close()
+			else:
+				# The hide method doesn't work fine.
+				# So, for now stop only the player, instead to hide the window
+				self.player.stop()
 		elif atype == TYPE_FORK:
 			if stype == A_SRC_PLAY:
 				pass
