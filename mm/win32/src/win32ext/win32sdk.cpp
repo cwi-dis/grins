@@ -520,6 +520,34 @@ sdk_send_message_get_rect(PyObject *self, PyObject *args)
 	return Py_BuildValue("iiii",rc.left,rc.top,rc.right,rc.bottom);
 	}
 
+// @pymethod |PyWin32Sdk|SendMessageMS|A special version of send message for Python 
+// LPARAM is a tuple representing win32 MSG structure
+static PyObject *
+sdk_send_message_ms(PyObject *self, PyObject *args)
+	{
+	// message params
+	HWND hwnd;
+	UINT message;
+	WPARAM wParam;
+	
+	// LPARAM is a tuple equivalent to a win32 MSG struct
+	MSG msg;
+	LPARAM lParam;
+	if (!PyArg_ParseTuple(args, "iii(iiiiii):SendMessageMS",
+			  &hwnd,    // @pyparm handle|handle of destination window 
+		      &message, // @pyparm int|idMessage||The ID of the message to send.
+	          &wParam,  // @pyparm int|wParam||The wParam for the message
+	          &msg.hwnd, &msg.message, &msg.wParam, &msg.lParam, &msg.time, &lParam)) 
+		return NULL;
+	msg.pt.x= LOWORD(lParam);
+	msg.pt.y= HIWORD(lParam);
+	lParam = SendMessage(hwnd, message, 0, (LPARAM)&msg);
+	GUI_BGN_SAVE;
+	LPARAM ret = SendMessage(hwnd, message, wParam, (LPARAM)&msg);
+	GUI_END_SAVE;
+	return Py_BuildValue("i", lParam);
+	}
+
 
 // @pymethod |PyWin32Sdk|SetCursor|The SetCursor function establishes the cursor shape
 // Return Values: A handle to the previous cursor
@@ -1164,6 +1192,7 @@ sdk_add_tool_info(PyObject *self, PyObject *args)
 	RETURN_NONE;
 	}
 
+
  // @object PyWin32Sdk|A module wrapper object.  It is a general utility object, and is not associated with an MFC object.
 BEGIN_PYMETHODDEF(Win32Sdk)
 	{"CreatePen",sdk_create_pen,	1},		// @pymeth CreatePen|Creates a pen and returns its handle
@@ -1180,6 +1209,7 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"EndDeferWindowPos",sdk_end_defer_window_pos,	1}, // @pymeth EndDeferWindowPos|Simultaneously updates the position and size of one or more windows in a single screen-refreshing cycle.
 	{"DeferWindowPos",sdk_defer_window_pos,	1}, // @pymeth DeferWindowPos|Updates the specified multiple-window position structure for the specified window	
 	{"PostMessage",sdk_post_message,1}, // @pymeth PostMessage|Posts a message to a window.	
+	
 	{"SendMessage",sdk_send_message,1}, // @pymeth SendMessage|Sends a message to a window.	
 	{"SendMessageLS",sdk_send_message_ls,1}, // @pymeth SendMessage|Sends a message to a window. The LPARAM is a string	
 	{"SendMessageRS",sdk_send_message_rs,1}, // @pymeth SendMessage|Sends a message to a window. The return value is a string	
@@ -1187,6 +1217,8 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"SendMessageGL",sdk_send_message_gl,1}, // @pymeth SendMessageGL|Sends a message to an edit control. The return value is a string	
 	{"SendMessageGT",sdk_send_message_gt,1}, // @pymeth SendMessageGT|	
 	{"SendMessageGetRect",sdk_send_message_get_rect,1},// @pymeth SendMessageGetRect|A special version of send message for Python that returns a rectangle 
+	{"SendMessageMS",sdk_send_message_ms,1}, // @pymeth SendMessageMS|A special version of send message for Python. LPARAM is a tuple equivalent to a win32 MSG struct
+	
 	{"SetCursor",sdk_set_cursor,1}, // @pymeth SetCursor|Establishes a cursor shape.	
 	{"LoadStandardCursor",sdk_load_standard_cursor,1}, // @pymeth LoadStdCursor|Loads the specified predefined cursor resource.	
 	{"ShowCursor",sdk_show_cursor,1}, // @pymeth ShowCursor|Specifies whether the internal display counter is to be incremented or decremented
