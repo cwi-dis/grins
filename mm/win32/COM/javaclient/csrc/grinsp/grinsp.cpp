@@ -4,6 +4,7 @@
 #include "stdafx.h"
 
 #include "..\..\grins_GRiNSPlayer.h"
+#include "..\..\grins_GRiNSPlayerMonitor.h"
 
 #include "jni.h"
 #include "jvmdi.h"
@@ -43,7 +44,9 @@ static void ThrowCOMException(JNIEnv *env, const char *funcname, HRESULT hr) {
  */
 JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_initializeThreadContext(JNIEnv *env, jobject player)
 	{
-	CoInitialize(NULL);
+	HRESULT hr = CoInitialize(NULL);
+	if(FAILED(hr))
+		ThrowCOMException(env, "CoInitialize", hr);
 	}
 
 /*
@@ -393,6 +396,130 @@ JNIEXPORT jboolean JNICALL Java_grins_GRiNSPlayer_nmouseMoved(JNIEnv *env, jobje
 		}
 	return bIsHot?jboolean(JNI_TRUE):jboolean(JNI_FALSE);
 	}
+
+/*
+ * Class:     grins_GRiNSPlayer
+ * Method:    ngetCookie
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetCookie(JNIEnv *env, jobject player, jint hgrins)
+	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	long cookie = 0;
+	if(pIGRiNSPlayer)
+		{
+		HRESULT hr = pIGRiNSPlayer->getCookie(&cookie);	
+		if(FAILED(hr))
+			ThrowCOMException(env, "getCookie", hr);
+		}
+	return jint(cookie);
+	
+	}
+
+/////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////
+
+/*
+ * Class:     grins_GRiNSPlayerMonitor
+ * Method:    initializeThreadContext
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayerMonitor_initializeThreadContext(JNIEnv *env, jobject monitor)
+	{
+	HRESULT hr = CoInitialize(NULL);
+	if(FAILED(hr))
+		ThrowCOMException(env, "CoInitialize", hr);
+	}
+
+/*
+ * Class:     grins_GRiNSPlayerMonitor
+ * Method:    uninitializeThreadContext
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayerMonitor_uninitializeThreadContext(JNIEnv *env, jobject monitor)
+	{
+	CoUninitialize();		
+	}
+
+
+/*
+ * Class:     grins_GRiNSPlayerMonitor
+ * Method:    nconnect
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayerMonitor_nconnect(JNIEnv *env, jobject monitor, jint cookie)
+	{
+	DWORD dwClsContext = CLSCTX_LOCAL_SERVER;
+	IGRiNSPlayerMoniker *pIGRiNSPlayerMoniker = NULL;
+	HRESULT hr = CoCreateInstance(CLSID_GRiNSPlayerMoniker, NULL, dwClsContext, IID_IGRiNSPlayerMoniker,(void**)&pIGRiNSPlayerMoniker);
+	if(FAILED(hr))
+		{
+		ThrowCOMException(env, "CoCreateInstance", hr);
+		return 0;
+		}
+	IGRiNSPlayerAuto *pIGRiNSPlayer = NULL;
+	hr = pIGRiNSPlayerMoniker->getGRiNSPlayerAuto(long(cookie),&pIGRiNSPlayer);
+	if(FAILED(hr))
+		{
+		pIGRiNSPlayerMoniker->Release();
+		ThrowCOMException(env, "getGRiNSPlayerAuto", hr);
+		return 0;
+		}
+	pIGRiNSPlayerMoniker->Release();
+	return jint(pIGRiNSPlayer);
+	}
+/*
+ * Class:     grins_GRiNSPlayerMonitor
+ * Method:    ndisconnect
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayerMonitor_ndisconnect(JNIEnv *env, jobject monitor, jint hgrins)
+	{
+	if(hgrins) 
+		{
+		IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+		if(pIGRiNSPlayer) pIGRiNSPlayer->Release();
+		}	
+	}
+/*
+ * Class:     grins_GRiNSPlayerMonitor
+ * Method:    ngetState
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayerMonitor_ngetState(JNIEnv *env, jobject monitor, jint hgrins)
+	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	int plstate = 0;
+	if(pIGRiNSPlayer)
+		{
+		HRESULT hr = pIGRiNSPlayer->getState(&plstate);	
+		if(FAILED(hr))
+			ThrowCOMException(env, "getState", hr);
+		}
+	return jint(plstate);	
+	}
+
+/*
+ * Class:     grins_GRiNSPlayerMonitor
+ * Method:    ngetTime
+ * Signature: (I)D
+ */
+JNIEXPORT jdouble JNICALL Java_grins_GRiNSPlayerMonitor_ngetTime(JNIEnv *env, jobject monitor, jint hgrins)
+	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	double t = 0;
+	if(pIGRiNSPlayer)
+		{
+		HRESULT hr = pIGRiNSPlayer->getTime(&t);	
+		if(FAILED(hr))
+			ThrowCOMException(env, "getTime", hr);
+		}
+	return jdouble(t);	
+	}
+
+
+
+
 
 } //extern "C"
 
