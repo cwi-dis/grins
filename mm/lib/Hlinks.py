@@ -110,7 +110,6 @@ class Hlinks:
 	# Find all links related to one or two anchors.
 	def findalllinks(self, a1, a2):
 		rv = []
-		if a1 == a2: return rv
 		for l in self.links:
 			if a1 is l[ANCHOR1] and (a2 is None or a2 is l[ANCHOR2]):
 				rv.append(l)
@@ -141,45 +140,3 @@ class Hlinks:
 			dict[a1] = 1
 			dict[a2] = 1
 		return dict
-		
-	def findnodelinks(self, node):
-		# Note by Jack: this code should be run once on commit, and store
-		# the results in a dictionary indexed by node.
-		interesting = []
-		uid = node.GetUID()
-		for a1, a2, dir, tp, stp, dtp in self.links:
-			if a1 is node:
-				interesting.append((a1, a2, dir, tp, stp, dtp))
-			if a2 is node:
-				interesting.append(self.revlink((a1, a2, dir, tp, stp, dtp)))
-		is_src = 0
-		is_dst = 0
-		for a1, a2, dir, tp, stp, dtp in interesting:
-			if dir in (DIR_1TO2, DIR_2WAY):
-				is_src = 1
-			if dir in (DIR_2TO1, DIR_2WAY):
-				is_dst = 1
-		return is_src, is_dst
-
-		
-	def nodehasdanglinganchor(self, node):
-		# XXXX Note by Jack: fixinteresting should only be called on commit(),
-		# and it should create a cachedict indexed by node.
-		import MMAttrdefs
-		import AnchorDefs
-		uid = node.GetUID()
-		aiddict = {}
-		for c in node.GetChildren():
-			if c.GetType() == 'anchor':
-				aiddict[c.GetUID()] = 1
-		if not aiddict:
-			# no anchors
-			return 0
-		for a1, a2, dir, tp, stp, dtp in self.links:
-			if type(a1) is not type('') and aiddict.has_key(a1.GetUID()):
-				del aiddict[a1.GetUID()]
-			if type(a2) is not type('') and aiddict.has_key(a2.GetUID()):
-				del aiddict[a2.GetUID()]
-			if not aiddict:
-				return 0
-		return not not aiddict

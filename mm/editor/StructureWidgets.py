@@ -14,6 +14,7 @@ from AppDefaults import *
 from fmtfloat import fmtfloat
 import Duration
 import ArmStates
+from Hlinks import ANCHOR1, ANCHOR2
 
 TIMELINE_AT_TOP = 1
 TIMELINE_IN_FOCUS = 1
@@ -21,7 +22,8 @@ NAMEDISTANCE = 150
 SPACEWIDTH = f_title.strsizePXL(' ')[0]
 
 ICONSIZE = windowinterface.ICONSIZE_PXL
-ARROWCOLOR = (0,255,0)
+EVENTARROWCOLOR = (0,255,0)
+LINKARROWCOLOR = (0,0,255)
 
 EPSILON = GAPSIZE
 
@@ -106,6 +108,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		else:
 			self.iconbox = IconBox(self, self.mother, vertical = vertical_icons)
 		self.cause_event_icon = None
+		self.linksrc_icon = None
+		self.linkdst_icon = None
 		self.infoicon = None
 		if self.iconbox is not None and node.infoicon:
 			self.infoicon = self.iconbox.add_icon(node.infoicon, callback = self.show_mesg)
@@ -122,11 +126,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.dropbox = None
 		self.channelbox = None
 
-		if self.iconbox is not None:
-			linkicons = self.getlinkicons()
-			for icon in linkicons:
-				self.iconbox.add_icon(icon)
-
 	def __repr__(self):
 		return '<%s instance, name="%s", node=%s, id=%X>' % (self.__class__.__name__, self.name, `self.node`, id(self))
 
@@ -135,6 +134,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		node = self.node
 		self.playicon = None
 		self.cause_event_icon = None
+		self.linksrc_icon = None
+		self.linkdst_icon = None
 		self.infoicon = None
 		if self.iconbox is not None:
 			self.iconbox.destroy()
@@ -189,6 +190,44 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		assert self.node is not None
 		return self.node
 
+	def add_link_icons(self):
+		node = self.node
+		dangling = None
+		hlinks = node.GetContext().hyperlinks
+		nodes = filter(lambda x: x.GetType() == 'anchor', node.GetChildren())
+		for x in [node] + nodes:
+			links = hlinks.findsrclinks(x)
+			if x is not node and dangling is None and not links:
+				dangling = self.iconbox.add_icon('danglinganchor')
+			for l in links:
+				# we're the hyperlink source
+				otherwidget = None
+				if type(l[ANCHOR2]) is not type(''):
+					othernode = l[ANCHOR2]
+					while othernode is not None and not othernode.views.has_key('struct_view'):
+						othernode = othernode.GetParent()
+					if othernode is not None:
+						otherwidget = othernode.views['struct_view'].get_linkdst_icon()
+				if self.linksrc_icon is None:
+					self.linksrc_icon = self.iconbox.add_icon('linksrc', arrowto = otherwidget, arrowcolor = LINKARROWCOLOR)
+					self.linksrc_icon.set_properties(issrc=1)
+				else:
+					self.linksrc_icon.add_arrow(otherwidget, LINKARROWCOLOR)
+			for l in hlinks.finddstlinks(x):
+				# we're the hyperlink destination
+				otherwidget = None
+				if type(l[ANCHOR1]) is not type(''):
+					othernode = l[ANCHOR1]
+					while othernode is not None and not othernode.views.has_key('struct_view'):
+						othernode = othernode.GetParent()
+					if othernode is not None:
+						otherwidget = othernode.views['struct_view'].get_linksrc_icon()
+				if self.linkdst_icon is None:
+					self.linkdst_icon = self.iconbox.add_icon('linkdst', arrowto = otherwidget, arrowcolor = LINKARROWCOLOR)
+					self.linkdst_icon.set_properties(issrc=0)
+				else:
+					self.linkdst_icon.add_arrow(otherwidget, LINKARROWCOLOR)
+
 	def add_event_icons(self):
 		if self.node.GetType() != 'comment':
 			self.__add_events_helper('beginevent', 'beginlist')
@@ -198,19 +237,22 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		icon = None
 		for arc in MMAttrdefs.getattr(self.node, attr):
 			othernode = arc.refnode()
-			if othernode:
-				if not othernode.views.has_key('struct_view'):
-					if __debug__: print "DEBUG: Node is not in the structure view: ", othernode
-					continue
+			while othernode is not None and not othernode.views.has_key('struct_view'):
+				othernode = othernode.GetParent()
+			if othernode is not None:
 				otherwidget = othernode.views['struct_view'].get_cause_event_icon()
 				if icon is None:
-					icon = self.iconbox.add_icon(iconname, arrowto = otherwidget).set_properties(arrowable=1,initattr=attr).set_contextmenu(self.mother.event_popupmenu_dest)
+					icon = self.iconbox.add_icon(iconname, arrowto = otherwidget, arrowcolor = EVENTARROWCOLOR)
+					icon.set_properties(initattr=attr)
+					icon.set_contextmenu(self.mother.event_popupmenu_dest)
 				else:
-					icon.add_arrow(otherwidget)
-				otherwidget.add_arrow(icon)
+					icon.add_arrow(otherwidget, EVENTARROWCOLOR)
+				otherwidget.add_arrow(icon, EVENTARROWCOLOR)
 			else: # no arrow.
 				if icon is None:
-					icon = self.iconbox.add_icon(iconname).set_properties(arrowable=1,initattr=attr).set_contextmenu(self.mother.event_popupmenu_dest)
+					icon = self.iconbox.add_icon(iconname)
+					icon.set_properties(initattr=attr)
+					icon.set_contextmenu(self.mother.event_popupmenu_dest)
 
 	def uncollapse_all(self):
 		# Placeholder for a recursive function.
@@ -712,8 +754,22 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		# Returns the start position of an event arrow.
 		# Note that the "dangling" event icon overrides this one
 		if self.cause_event_icon is None:
-			self.cause_event_icon = self.iconbox.add_icon('causeevent').set_properties(arrowable = 1, arrowdirection=1).set_contextmenu(self.mother.event_popupmenu_source)
+			self.cause_event_icon = icon = self.iconbox.add_icon('causeevent')
+			icon.set_properties(issrc=1)
+			icon.set_contextmenu(self.mother.event_popupmenu_source)
 		return self.cause_event_icon
+
+	def get_linksrc_icon(self):
+		if self.linksrc_icon is None:
+			self.linksrc_icon = icon = self.iconbox.add_icon('linksrc')
+			icon.set_properties(issrc=1)
+		return self.linksrc_icon
+
+	def get_linkdst_icon(self):
+		if self.linkdst_icon is None:
+			self.linkdst_icon = icon = self.iconbox.add_icon('linkdst')
+			icon.set_properties(issrc=0)
+		return self.linkdst_icon
 
 	def set_dangling_event(self):
 		if self.cause_event_icon:
@@ -726,21 +782,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if self.cause_event_icon:
 			self.iconbox.del_icon(self.cause_event_icon)
 		self.cause_event_icon = None
-
-	def getlinkicons(self):
-		# Returns the icon to show for incoming and outgiong hyperlinks.
-		links = self.node.context.hyperlinks
-		is_src, is_dst = links.findnodelinks(self.node)
-		is_dangling = links.nodehasdanglinganchor(self.node)
-##		print 'DBG: getlinkicon', node, is_src, is_dst
-		rv = []
-		if is_dangling:
-			rv.append('danglinganchor')
-		elif is_src:
-			rv.append('linksrc')
-		if is_dst:
-			rv.append('linkdst')
-		return rv
 
 	def get_obj_near(self, (x, y), timemapper = None, timeline = None):
 		return None
@@ -902,6 +943,7 @@ class StructureObjWidget(MMNodeWidget):
 		self.dont_draw_children = 0
 		if parent is None:
 			self.add_event_icons()
+			self.add_link_icons()
 		self.previewchild = None
 		self.subiconnames = []
 		self.subicons = []
@@ -972,6 +1014,11 @@ class StructureObjWidget(MMNodeWidget):
 		MMNodeWidget.add_event_icons(self)
 		for c in self.children:
 			c.add_event_icons()
+
+	def add_link_icons(self):
+		MMNodeWidget.add_link_icons(self)
+		for c in self.children:
+			c.add_link_icons()
 
 	def collapse(self):
 		# remove_set_armedmode must be done before collapsed bit is set
@@ -2506,7 +2553,7 @@ class IconBox(MMWidgetDecoration):
 	del ntype, coll
 	iconorder = tuple(iconorder)
 
-	def add_icon(self, iconname=None, callback=None, contextmenu=None, arrowto=None):
+	def add_icon(self, iconname=None, callback=None, contextmenu=None, arrowto=None, arrowcolor=None):
 		# iconname - name of an icon, decides which icon to use.
 		# callback - function to call when icon is clicked on.
 		# contextmenu - pop-up menu to use.
@@ -2518,7 +2565,7 @@ class IconBox(MMWidgetDecoration):
 		if contextmenu:
 			icon.set_contextmenu(contextmenu)
 		if arrowto:
-			icon.add_arrow(arrowto)
+			icon.add_arrow(arrowto, arrowcolor)
 		i = 0
 		for n in self.iconorder + \
 			 ('idle', ArmStates.ARM_NONE, ArmStates.ARM_SCHEDULED,
@@ -2596,10 +2643,6 @@ class IconBox(MMWidgetDecoration):
 		else:
 			return
 
-		#if self.callback:
-		#	apply(apply, self.callback)
-
-
 class Icon(MMWidgetDecoration):
 	# Display an icon which can be clicked on. This can be used for
 	# any icon on screen.
@@ -2630,15 +2673,12 @@ class Icon(MMWidgetDecoration):
 
 	def set_icon(self, iconname):
 		self.icon = iconname
-		return self
 
-	def set_properties(self, selectable=1, callbackable=1, arrowable=0, arrowdirection=0, initattr=None):
+	def set_properties(self, selectable=1, callbackable=1, issrc=0, initattr=None):
 		self.selectable = selectable
 		self.callbackable = callbackable
-		self.arrowable = arrowable
-		self.arrowdirection = arrowdirection
+		self.issrc = issrc
 		self.initattr = initattr
-		return self
 
 	def select(self):
 		if self.selectable:
@@ -2650,7 +2690,6 @@ class Icon(MMWidgetDecoration):
 
 	def set_callback(self, callback, args=()):
 		self.callback = callback, args
-		return self
 
 	def mouse0release(self, coords):
 		if self.callback is not None and self.icon:
@@ -2661,7 +2700,6 @@ class Icon(MMWidgetDecoration):
 		iconsizex = ERRSIZE
 		iconsizey = ERRSIZE
 		MMWidgetDecoration.moveto(self, (l, t, l+iconsizex, t+iconsizey))
-		return self
 
 	def draw_selected(self, displist):
 		if not self.selectable:
@@ -2669,24 +2707,23 @@ class Icon(MMWidgetDecoration):
 			return
 ##		displist.drawfbox((0,0,0),self.get_box())
 		self.draw(displist)
-		if self.arrowable:	# The arrows get drawn by the Hierarchyview at a later stage.
-			for arrow in self.arrowto:
-				p = arrow.get_node().GetCollapsedParent()
-				if p:
-					l,t,r,b = p.views['struct_view'].get_collapse_icon().pos_abs
-				else:
-					l,t,r,b = arrow.pos_abs
-				if l == 0:
-					return
-				xd = (l+r)/2
-				yd = (t+b)/2
-				l,t,r,b = self.pos_abs
-				xs = (l+r)/2
-				ys = (t+b)/2
-				if self.arrowdirection:
-					self.mother.add_arrow(self, ARROWCOLOR, (xs,ys),(xd,yd))
-				else:
-					self.mother.add_arrow(self, ARROWCOLOR, (xd,yd),(xs,ys))
+		for arrow, color in self.arrowto:
+			p = arrow.get_node().GetCollapsedParent()
+			if p:
+				l,t,r,b = p.views['struct_view'].get_collapse_icon().pos_abs
+			else:
+				l,t,r,b = arrow.pos_abs
+			if l == 0:
+				return
+			xd = (l+r)/2
+			yd = (t+b)/2
+			l,t,r,b = self.pos_abs
+			xs = (l+r)/2
+			ys = (t+b)/2
+			if self.issrc:
+				self.mother.add_arrow(self, color, (xs,ys),(xd,yd))
+			else:
+				self.mother.add_arrow(self, color, (xd,yd),(xs,ys))
 
 	def draw_unselected(self, displist):
 		self.draw(displist)
@@ -2697,15 +2734,14 @@ class Icon(MMWidgetDecoration):
 
 	def set_contextmenu(self, foobar):
 		self.contextmenu = foobar			# TODO.
-		return self
+
 	def get_contextmenu(self):
 		return self.contextmenu
 
-	def add_arrow(self, dest):
+	def add_arrow(self, dest, color):
 		# dest can be any MMWidget.
 		if dest and dest not in self.arrowto:
-			self.arrowto.append(dest)
-		return self
+			self.arrowto.append((dest, color))
 
 	def is_selectable(self):
 		return self.selectable
@@ -2730,7 +2766,7 @@ class Icon(MMWidgetDecoration):
 ##		self.selectable = 1
 ##		self.callbackable = 1
 ##		self.arrowable = 1
-##		self.arrowdirection = 1
+##		self.issrc = 1
 ##		self.contextmenu = None
 
 ##class EventIcon(Icon):
