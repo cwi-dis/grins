@@ -1,3 +1,8 @@
+__version__ = "$Id$"
+
+""" @win32doc|GenWnd
+A Generic win32-Mfc Wnd class
+""" 
 
 import win32ui,win32con 
 Afx=win32ui.GetAfx()
