@@ -1,7 +1,7 @@
 # PlayerCore module -- Player stuff not related to UI or scheduling
 
 
-import dialogs
+import windowinterface
 #from MMExc import *
 import MMAttrdefs
 from Selecter import Selecter
@@ -35,7 +35,7 @@ class PlayerCore(Selecter):
 			m1 = 'You cannot change the document\n'
 			m2 = 'while it is playing.\n'
 			m3 = 'Do you want to stop playing?'
-			if not dialogs.showquestion(m1 + m2 + m3):
+			if not windowinterface.showquestion(m1 + m2 + m3):
 				return 0
 			self.stop()
 		self.locked = 1
@@ -123,7 +123,7 @@ class PlayerCore(Selecter):
 	def defanchor(self, node, anchor):
 		ch = self.anchorinit(node)
 		if ch == None:
-			dialogs.showmessage('Cannot set internal anchor\n' + \
+			windowinterface.showmessage('Cannot set internal anchor\n' + \
 				  '(node not on a channel)')
 			return None
 		return ch.defanchor(node, anchor)

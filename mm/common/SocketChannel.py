@@ -2,7 +2,7 @@ from debug import debug
 from Channel import *
 import string
 import sys
-import dialogs
+import windowinterface
 import MMAttrdefs
 import socket
 from AnchorDefs import *
@@ -22,7 +22,7 @@ class SocketChannel(Channel):
 		try:
 			self.socket.bind(('', port))
 		except socket.error, arg:
-			dialogs.showmessage('Cannot open socket '+`port`+': '+\
+			windowinterface.showmessage('Cannot open socket '+`port`+': '+\
 				  `arg`)
 			self.socket = None
 			return self
@@ -61,7 +61,7 @@ class SocketChannel(Channel):
 		cmd = fields[0]
 		if cmd == 'anchor':
 			if not self._played_node:
-				dialogs.showmessage('SocketChannel: no node playing\n')
+				windowinterface.showmessage('SocketChannel: no node playing\n')
 				return
 			if len(fields) == 2:
 				name = fields[1]
@@ -71,10 +71,10 @@ class SocketChannel(Channel):
 						    self._played_node, \
 						    [(nm,tp)])
 						return
-			dialogs.showmessage('SocketChannel: no such anchor\n'+
+			windowinterface.showmessage('SocketChannel: no such anchor\n'+
 				  rv)
 		else:
-			dialogs.showmessage('SocketChannel: unknown command\n'+
+			windowinterface.showmessage('SocketChannel: unknown command\n'+
 				  rv)
 
 	def do_arm(self, node):

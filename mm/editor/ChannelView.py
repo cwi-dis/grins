@@ -579,7 +579,7 @@ class ChannelView(ViewDialog, GLDialog):
 		editmgr = self.editmgr
 		if not editmgr.transaction():
 			return		# Not possible at this time
-		import dialogs
+		import windowinterface
 		from ChannelMap import commonchanneltypes, otherchanneltypes
 		prompt = 'Channel type:'
 		list = commonchanneltypes[:]
@@ -590,7 +590,7 @@ class ChannelView(ViewDialog, GLDialog):
 		olist.append('Cancel')
 		while 1:
 			default = len(list)-1
-			i = dialogs.multchoice(prompt, list, default)
+			i = windowinterface.multchoice(prompt, list, default)
 			if i+1 >= len(list):
 				editmgr.rollback()
 				return		# User doesn't want to choose

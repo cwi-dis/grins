@@ -3,7 +3,7 @@ from Channel import *
 import string
 import sys
 import VCR
-import dialogs
+import windowinterface
 import VcrIndex
 import MMAttrdefs
 from AnchorDefs import *
@@ -90,7 +90,7 @@ class VcrChannel(Channel):
 				break
 			except VCR.error, arg:
 				pass   # Fall thru
-			i = dialogs.multchoice('VCR not ready:\n' + arg, \
+			i = windowinterface.multchoice('VCR not ready:\n' + arg, \
 				  ['Hide channel', 'try again'], 0)
 			if i == 0:
 				self.hide()
@@ -155,7 +155,7 @@ class VcrChannel(Channel):
 		self.vcr.goto(start)
 		self.vcr.setasync(1)
 		self.stopcontext(context)
-		if not dialogs.multchoice(\
+		if not windowinterface.multchoice(\
 			  'Position video at position wanted for anchor.', \
 			  ['Cancel', 'Done'], 1):
 			return None
