@@ -74,7 +74,7 @@ class AnimationTarget:
 
 		# experimental: 
 		# append all nodes targeting this, not only self._animparent children
-		# self.__getSelfAnimations(self._root, children)
+		self.__getSelfAnimations(self._root, children)
 
 		return children
 
@@ -91,14 +91,17 @@ class AnimationTarget:
 		for node in parent.GetChildren():
 			ntype = node.GetType()
 			if ntype == 'animate':
-				if hasattr(node, 'targetnode') and node.targetnode == self._mmobj:
-					children.append(node)
+				anim = None
+				if node.targetnode == self._mmobj:
+					anim = node
 				elif node.GetParent() == self._mmobj:
-					children.append(node)
+					anim = node
 				else:
 					te = MMAttrdefs.getattr(node, 'targetElement')
 					if te and te == uid:
-						children.append(node)
+						anim = node
+				if anim is not None and anim not in children: 
+					children.append(anim)
 			self.__getSelfAnimations(node, children)
 
 
@@ -129,20 +132,48 @@ class AnimationData:
 	def isEmpty(self):
 		return len(self._times) == 0
 
+	def clear(self):
+		self._times = []
+		self._data = []
+		
 	# animation editor call
 	# set key times and data explicitly
 	def setTimesData(self, times, data):
-		assert len(times) == len(data), ''
+		assert type(times) == type([]), 'illegal times argument'
+		assert type(data) == type([]), 'illegal data argument'
+		assert len(times) == len(data), 'illegal arguments'
 		self._times = times
 		self._data = data
-				
+
+	def insertTimeData(self, index, keytime, data):
+		assert type(data) == type(()), 'illegal data argument'
+		assert len(data) == 2, 'illegal data argument'
+		assert type(keytime) == type(1.0) or type(keytime) == type(1), 'illegal keytime argument'
+		assert keytime >=0 and keytime <= 1, 'illegal keytime argument'
+		assert index >=0 and index <= len(self._times), 'illegal index argument'
+		self._times.insert(index, float(keytime))
+		self._data.insert(index, data)
+
+	def eraseTimeData(self, index):
+		if index >=0 and index < len(self._times):
+			del self._times[index]
+			del self._data[index]
+
+	def updateTime(self, index, newtime):
+		if index >=0 and index < len(self._times):
+			self._times[index]= newtime
+
+	def updateData(self, index, newdata):
+		if index >=0 and index < len(self._data):
+			self._data[index]= newdata
+			
 	# animation editor call
 	def getTimes(self):
-		return self._times
+		return self._times # [:] force protocol
 
 	# animation editor call
 	def getData(self):
-		return self._data
+		return self._data # [:] force protocol
 
 	def initData(self):
 		entry = self._domrect, self._domcolor
@@ -173,7 +204,6 @@ class AnimationData:
 				str2 = MMAttrdefs.getattr(anim, 'to')
 				if str1 and str2:
 					str = str1 + ';' + str2
-				print str
 			if str:
 				if tag == 'animateMotion':
 					animateMotionValues = self._strToPosList(str)
@@ -296,6 +326,9 @@ class AnimationData:
 		return 1
 
 	def createAnimators(self):
+		if self.isEmpty(): 
+			return
+
 		import svgpath
 		import Animators
 		
@@ -307,8 +340,7 @@ class AnimationData:
 
 		# animateMotion
 		path = svgpath.Path()
-		coords = animateMotionValues
-		path.constructFromPoints(coords)
+		path.constructFromPoints(animateMotionValues)
 		domval = complex(self._domrect[0],self._domrect[1])
 		self._animateMotion = Animators.MotionAnimator('position', domval, path, dur, mode='linear', times=times)
 		
