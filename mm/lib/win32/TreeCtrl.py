@@ -210,6 +210,46 @@ class TreeCtrl(window.Wnd):
 	def OnDragOver(self, dataobj, kbdstate, x, y):
 		pt = win32api.GetCursorPos()
 		pt = self.ScreenToClient(pt)
+
+		#
+		# Scroll Tree control depending on mouse position
+		#
+		
+		RECT_BORDER = 10
+		def MAKELONG(l,h): return int((l & 0xFFFF) | ((h << 16) & 0xFFFF0000))
+
+		rc = self.GetClientRect()
+		rcLeft, rcTop, rcRight, rcBottom = self.ClientToScreen(rc)
+		ptX, ptY = self.ClientToScreen(pt)
+		
+		# vertical scroll		
+		nScrollDir = -1
+		if ptY >= rcBottom - RECT_BORDER:
+			nScrollDir = win32con.SB_LINEDOWN
+		elif ptY <= (rcTop + RECT_BORDER):
+			nScrollDir = win32con.SB_LINEUP
+	
+		if nScrollDir != -1:
+			nScrollPos = self.GetScrollPos(win32con.SB_VERT)
+			wParam = MAKELONG(nScrollDir, nScrollPos)
+			Sdk.SendMessage(self.GetSafeHwnd(),win32con.WM_VSCROLL,wParam,0)
+
+		# horizontal scroll
+		nScrollDir = -1
+		if ptX >= rcRight - RECT_BORDER:
+			nScrollDir = win32con.SB_LINERIGHT
+		elif ptX <= (rcLeft + RECT_BORDER):
+			nScrollDir = win32con.SB_LINELEFT
+	
+		if nScrollDir != -1:
+			nScrollPos = self.GetScrollPos(win32con.SB_HORZ)
+			wParam = MAKELONG(nScrollDir, nScrollPos)
+			Sdk.SendMessage(self.GetSafeHwnd(),win32con.WM_HSCROLL,wParam,0)
+	
+		#
+		#
+		#
+		
 		flags, item = self.HitTest(pt)
 		if flags & commctrl.TVHT_ONITEM:
 			if self._dragdropListener:
