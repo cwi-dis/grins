@@ -74,6 +74,10 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 		elif hasattr(self.window, "_wid"):
 			# Macintosh
 			return self.window._wid
+		elif hasattr(self.window, '_form'):
+			# Motif
+			wnd = self.window._topwindow._form
+			return wnd.Window(), wnd.Display().GetDisplay()
 		else:
 			return None
 			
@@ -81,6 +85,9 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 		if hasattr(self.window, "qdrect"):
 			x0, y0, x1, y1 = self.window.qdrect()
 			return ((x0, y0), (x1-x0, y1-y0))
+		elif hasattr(self.window, '_rect'):
+			x, y, w, h = self.window._rect
+			return (x, y), (w, h)
 		return None
 
 	def play(self, node):
