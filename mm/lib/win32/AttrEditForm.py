@@ -1249,10 +1249,10 @@ class SingleAttrPage(AttrPage):
 	# the code will continue to work (with a boring popup menu)
 	# for the other platforms.
 	CTRLMAP_BYNAME = {
-		'layout':		# Two radio buttons
-			(grinsRC.IDD_EDITATTR_R2,
-			 OptionsRadioNocolonCtrl,
-			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3)),
+##		'layout':		# Two radio buttons
+##			(grinsRC.IDD_EDITATTR_R2,
+##			 OptionsRadioNocolonCtrl,
+##			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3)),
 		'aspect':		# Two radio buttons
 			(grinsRC.IDD_EDITATTR_R2,
 			 OptionsRadioNocolonCtrl,
@@ -1340,9 +1340,9 @@ class SingleAttrPage(AttrPage):
 		n = self._attr.getname()
 		t = self._attr.gettype()
 		# manage special cases
-		if n=='layout' and len(self._attr.getoptions())>2:
-			if self.CTRLMAP_BYTYPE.has_key(t):
-				return self.CTRLMAP_BYTYPE[t]
+##		if n=='layout' and len(self._attr.getoptions())>2:
+##			if self.CTRLMAP_BYTYPE.has_key(t):
+##				return self.CTRLMAP_BYTYPE[t]
 		if self.CTRLMAP_BYNAME.has_key(n):
 			return self.CTRLMAP_BYNAME[n]
 		if self.CTRLMAP_BYTYPE.has_key(t):
