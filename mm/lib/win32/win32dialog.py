@@ -364,12 +364,11 @@ class SelectElementDlg(ResDialog):
 			self._display_id = id
 
 		def isRegion(self):
-			classname = self._mmobj.__class__.__name__
-			return classname in ('MMChannel', 'MMViewport')
+			return self._mmobj.getClassName() in ('Region', 'Viewport')
 			
 		def getId(self):
 			if self._mmobj is None: return ''
-			if self._mmobj.getClassName() in ('MMRegion', 'MMViewport'):
+			if self._mmobj.getClassName() in ('Region', 'Viewport'):
 				return self._mmobj.GetUID()
 			elif self._mmobj.getClassName() == 'MMAnchor':
 				return self._mmobj.aid
@@ -709,7 +708,7 @@ class SelectElementDlg(ResDialog):
 		if mmid:
 			self._mmid2wrapper[mmid] = wrapper
 		else:
-			print 'Warning: SelectElement: no mmid for', itemid
+			pass # print 'Warning: SelectElement: no mmid for', itemid
 		return itemid
 
 # Implementation of the Layout name dialog
