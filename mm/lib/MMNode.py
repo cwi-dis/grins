@@ -1634,7 +1634,7 @@ class MMNode_body:
 		else:
 			endtime = None
 		self.time_list.append((timestamp, endtime))
-		if self.parent and self.parent.type in ('switch', 'foreign'):
+		if self.parent and self.parent.type in ('switch', 'foreign', 'prio'):
 			self.parent.startplay(timestamp)
 
 	def stopplay(self, timestamp):
@@ -1646,8 +1646,13 @@ class MMNode_body:
 		self.starting_children = 0
 		self.set_armedmode(ARM_DONE)
 		self.time_list[-1] = self.time_list[-1][0], timestamp
-		if self.parent and self.parent.type in ('switch', 'foreign'):
-			self.parent.stopplay(timestamp)
+		if self.parent and self.parent.type in ('switch', 'foreign', 'prio'):
+			# only say parent is stopped if all its children are stopped
+			for c in self.parent.children:
+				if c.playing not in (MMStates.IDLE, MMStates.PLAYED):
+					break
+			else:
+				self.parent.stopplay(timestamp)
 
 class MMNode_pseudopar_body(MMNode_body):
 	"""Helper for RealPix nodes with captions, common part"""
@@ -1801,7 +1806,7 @@ class MMNode(MMTreeElement):
 			self.set_armedmode(ARM_NONE)
 			self.start_time = None
 		if debug: print 'MMNode.reset', `self`
-		if self.parent and self.parent.type in ('switch', 'foreign'):
+		if self.parent and self.parent.type in ('switch', 'foreign', 'prio'):
 			self.parent.reset()
 
 
@@ -2011,7 +2016,7 @@ class MMNode(MMTreeElement):
 		else:
 			endtime = None
 		self.time_list.append((timestamp, endtime))
-		if self.parent and self.parent.type in ('switch', 'foreign'):
+		if self.parent and self.parent.type in ('switch', 'foreign', 'prio'):
 			self.parent.startplay(timestamp)
 
 	def stopplay(self, timestamp):
@@ -2023,8 +2028,13 @@ class MMNode(MMTreeElement):
 		self.starting_children = 0
 		self.set_armedmode(ARM_DONE)
 		self.time_list[-1] = self.time_list[-1][0], timestamp
-		if self.parent and self.parent.type in ('switch', 'foreign'):
-			self.parent.stopplay(timestamp)
+		if self.parent and self.parent.type in ('switch', 'foreign', 'prio'):
+			# only say parent is stopped if all its children are stopped
+			for c in self.parent.children:
+				if c.playing not in (MMStates.IDLE, MMStates.PLAYED):
+					break
+			else:
+				self.parent.stopplay(timestamp)
 ##		for c in self.GetSchedChildren():
 ##			c.resetall(self.sctx.parent)
 
