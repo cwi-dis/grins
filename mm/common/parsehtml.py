@@ -22,30 +22,32 @@ class Parser(SGMLParser):
 	__formctrl = ('input', 'select', 'textarea', 'label', 'button')
 	__inline = __fontstyle + __phrase + __special + __formctrl
 	__flow = __block + __inline
+	__html_content = ('head', 'body')
+	__head_content = ('title', 'base')
 	__head_misc = ('script', 'style', 'meta', 'link', 'object')
+	__tr = ('tr',)
 
 	# elements with optional endtags and their allowed contents
 	__optionalend = {'body': __block + ('script', 'ins', 'del'),
 			 'colgroup': ('col',),
 			 'dd': __flow,
 			 'dt': __inline,
-			 'head': ('title', 'base') + __head_misc,
-			 'html': ('head', 'body'),
+			 'head': __head_content + __head_misc,
+			 'html': __html_content,
 			 'li': __flow,
 			 'option': (),
 			 'p': __inline,
-			 'tbody': ('tr',),
+			 'tbody': __tr,
 			 'td': __flow,
-			 'tfoot': ('tr',),
+			 'tfoot': __tr,
 			 'th': __flow,
-			 'thead': ('tr',),
+			 'thead': __tr,
 			 'tr': ('th', 'td'),
 			 }
 
 	def __init__(self, idlist = []):
 		SGMLParser.__init__(self, 0)
 		self.__idlist = idlist
-		self.reset()
 
 	def reset(self):
 		SGMLParser.reset(self)
