@@ -1,7 +1,7 @@
 Document Type: WSE
 item: Global
   Version=7.041
-  Title=Oratrix GRiNS Lite for G2, v1.5 Installation
+  Title=Oratrix GRiNS for G2 Lite 1.5 Installation
   Flags=00010100
   Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
   Japanese Font Name=MS Gothic
@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Holding B.V.
   Distribute Type=2
   Step View=All
-  File Checksum=2794357395
+  File Checksum=27719421
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -91,12 +91,12 @@ item: End Block
 end
 item: Set Variable
   Variable=APPTITLE
-  Value=Oratrix GRiNS Lite for G2, v1.5
+  Value=Oratrix GRiNS for G2 Lite 1.5
   Flags=10000000
 end
 item: Set Variable
   Variable=GROUP
-  Value=GRiNS Lite for G2
+  Value=Oratrix GRiNS for RealSystem G2 v1.5\Lite
   Flags=10000000
 end
 item: Set Variable
@@ -1176,6 +1176,16 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\RealVideo.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\RealVideo.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\GRiNS-Icons\RealAudio.tiff
+  Destination=%MAINDIR%\GRiNS-Icons\RealAudio.tiff
+  Flags=0000000010000010
+end
+item: Install File
   Source=d:\ufs\mm\cmif\Templates\media\realtext-template.rt
   Destination=%MAINDIR%\Templates\media\realtext-template.rt
   Flags=0000000010000010
@@ -1676,7 +1686,7 @@ item: Create Shortcut
 end
 item: Create Shortcut
   Source=%MAINDIR%\Unwise.exe
-  Destination=%GROUP%\Uninstall GRiNS Lite for G2.lnk
+  Destination=%GROUP%\Uninstall GRiNS for G2 Lite 1.5.lnk
   Icon Number=0
 end
 item: If/While Statement
@@ -1686,7 +1696,7 @@ item: If/While Statement
 end
 item: Create Shortcut
   Source=%MAINDIR%\GRiNS_G2L.exe
-  Destination=%GROUP%\GRiNS Lite for G2.lnk
+  Destination=%GROUP%\GRiNS for G2 Lite 1.5.lnk
   Icon Number=0
 end
 item: End Block
@@ -1698,10 +1708,15 @@ item: If/While Statement
 end
 item: Create Shortcut
   Source=%MAINDIR%\GRiNS_G2L.exe
-  Destination=%DESKTOPDIR%\GRiNS Lite for G2.lnk
+  Destination=%DESKTOPDIR%\GRiNS for G2 Lite 1.5.lnk
   Icon Number=0
 end
 item: End Block
+end
+item: Create Shortcut
+  Source=%MAINDIR%\license.txt
+  Destination=%GROUP%\GRiNS for G2 Lite 1.5 License.lnk
+  Icon Number=0
 end
 item: If/While Statement
   Variable=COMPONENTS
@@ -1709,16 +1724,11 @@ item: If/While Statement
   Flags=00001010
 end
 item: Create Shortcut
-  Source=%MAINDIR%\QSG-L4G2.pdf
-  Destination=%GROUP%\QuickStart Guide.lnk
+  Source=%MAINDIR%\QuickStart.pdf
+  Destination=%GROUP%\Quick Start Guide.lnk
   Icon Number=0
 end
 item: End Block
-end
-item: Create Shortcut
-  Source=%MAINDIR%\license.txt
-  Destination=%GROUP%\GRiNS Lite for G2 License.lnk
-  Icon Number=0
 end
 item: Else Statement
 end
@@ -1729,7 +1739,7 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Lite for G2
+  Icon Name=GRiNS for G2 Lite 1.5
   Command Line=%MAINDIR%\GRiNS_G2L.exe
   Flags=01000000
 end
@@ -1742,7 +1752,7 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Lite for G2
+  Icon Name=GRiNS for G2 Lite 1.5
   Command Line=%MAINDIR%\GRiNS_G2L.exe
   Flags=01000000
 end
@@ -1755,7 +1765,7 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Lite for G2
+  Icon Name=GRiNS for G2 Lite 1.5
   Command Line=%MAINDIR%\GRiNS_G2L.exe
   Flags=01000000
 end
@@ -1768,7 +1778,7 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Lite for G2
+  Icon Name=GRiNS for G2 Lite 1.5
   Command Line=%MAINDIR%\GRiNS_G2L.exe
   Flags=01000000
 end
@@ -1781,26 +1791,7 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Lite for G2
-  Command Line=%MAINDIR%\GRiNS_G2L.exe
-  Flags=01000000
-end
-item: End Block
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=Uninstall GRiNS Lite for G2
-  Command Line=%MAINDIR%\Unwise.exe
-  Flags=01000000
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Lite for G2
+  Icon Name=GRiNS for G2 Lite 1.5
   Command Line=%MAINDIR%\GRiNS_G2L.exe
   Flags=01000000
 end
@@ -1813,7 +1804,59 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Lite for G2
+  Icon Name=GRiNS for G2 Lite 1.5
+  Command Line=%MAINDIR%\GRiNS_G2L.exe
+  Flags=01000000
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS for G2 Lite 1.5
+  Command Line=%MAINDIR%\GRiNS_G2L.exe
+  Flags=01000000
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS for G2 Lite 1.5
+  Command Line=%MAINDIR%\GRiNS_G2L.exe
+  Flags=01000000
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS for G2 Lite 1.5
+  Command Line=%MAINDIR%\GRiNS_G2L.exe
+  Flags=01000000
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS for G2 Lite 1.5
   Command Line=%MAINDIR%\GRiNS_G2L.exe
   Flags=01000000
 end
@@ -1826,15 +1869,47 @@ item: If/While Statement
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=QuickStart Guide
-  Command Line=%MAINDIR%\QSG-L4G2.pdf
+  Icon Name=Quick Start Guide
+  Command Line=%MAINDIR%\QuickStart.pdf
   Flags=01000000
 end
 item: End Block
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=GRiNS Lite for G2 License
+  Icon Name=Uninstall GRiNS for G2 Lite 1.5
+  Command Line=%MAINDIR%\Unwise.exe
+  Flags=01000000
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS for G2 Lite 1.5
+  Command Line=%MAINDIR%\GRiNS_G2L.exe
+  Flags=01000000
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=readme
+  Command Line=%MAINDIR%\readme.txt
+  Flags=01000000
+end
+item: End Block
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS for G2 Lite 1.5 License
   Command Line=%MAINDIR%\license.txt
   Flags=01000000
 end
