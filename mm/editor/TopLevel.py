@@ -840,8 +840,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# Fix the timing -- views may depend on this.
 		if not self._in_prefschanged:
 			self.changed = 1
-		MMAttrdefs.flushcache(self.root)
-		Timing.changedtimes(self.root)
 		if self.source:
 			# reshow source
 			import SMILTreeWrite
