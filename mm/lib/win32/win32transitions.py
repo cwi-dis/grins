@@ -44,7 +44,9 @@ class TransitionEngine:
 	def __del__(self):
 		if self.__transitiontype:
 			self.endtransition()
-	
+		del self._tosurf
+		del self._tmp
+
 	def begintransition(self):
 		self.__createSurfaces()
 		self.__running = 1	
