@@ -1021,13 +1021,14 @@ class MediaWidget(MMNodeWidget):
         self.transition_in = TransitionWidget(self, root, 'in')
         self.transition_out = TransitionWidget(self, root, 'out')
 
-        self.pushbackbar = PushBackBarWidget(root);
-        self.pushbackbar.parent = self; # The pushbackbar refers to values from self.
-        self.downloadtime = 0.0;        # Distance to draw - MEASURED IN PIXELS
-        self.downloadtime_lag = 0.0;    # Distance to push this node to the right - MEASURED IN PIXELS.
-        self.compute_download_time();
+        self.pushbackbar = PushBackBarWidget(root)
+        self.pushbackbar.parent = self # The pushbackbar refers to values from self.
+        self.downloadtime = 0.0        # Distance to draw - MEASURED IN PIXELS
+        self.downloadtime_lag = 0.0    # Distance to push this node to the right - MEASURED IN PIXELS.
+        self.downloadtime_lag_errorfraction = 1.0
+        self.compute_download_time()
         self.infoicon = Icon(None, self, self.node, self.root)
-        self.infoicon.set_callback(self.show_mesg);
+        self.infoicon.set_callback(self.show_mesg)
         self.node.views['struct_view'] = self        
         
     def destroy(self):
@@ -1055,6 +1056,18 @@ class MediaWidget(MMNodeWidget):
         else:
             prevnode_duration = 0
         lagtime = prearmtime - prevnode_duration
+        # Obtaining the begin delay is a bit troublesome:
+        beginlist = MMAttrdefs.getattr(self.node, 'beginlist')
+        if beginlist:
+        	begindelay = beginlist[0].delay
+        else:
+        	begindelay = 0
+        if begindelay <= 0:
+        	self.downloadtime_lag_errorfraction = 1
+        elif begindelay >= lagtime:
+        	self.downloadtime_lag_errorfraction = 0
+        else:
+        	self.downloadtime_lag_errorfraction = (lagtime-begindelay)/lagtime
         
         # Now convert this from time to distance. 
         node_duration = (self.node.t1-self.node.t0)
@@ -1273,13 +1286,19 @@ class PushBackBarWidget(Widgets.Widget):
     # This is a push-back bar between nodes.
     def draw(self, displist):
         # TODO: draw color based on something??
+        redfraction = self.parent.downloadtime_lag_errorfraction
+        x, y, w, h = self.get_box()
         displist.fgcolor(TEXTCOLOR)
-        displist.drawfbox(COLCOLOR, self.get_box())
+        displist.drawfbox(COLCOLOR, (x, y, w*redfraction, h))
+        displist.drawfbox(LEAFCOLOR, (x+w*redfraction, y, w*(1-redfraction), h))
         displist.drawbox(self.get_box())
 
     def drawselected(self, displist):
+        redfraction = self.parent.downloadtime_lag_errorfraction
+        x, y, w, h = self.get_box()
         displist.fgcolor(TEXTCOLOR)
-        displist.drawfbox(COLCOLOR, self.get_box())
+        displist.drawfbox(COLCOLOR, (x, y, w*redfraction, h))
+        displist.drawfbox(LEAFCOLOR, (x+redfraction, y, w*(1-redfraction), h))
         displist.drawbox(self.get_box())
 
     def select(self):
