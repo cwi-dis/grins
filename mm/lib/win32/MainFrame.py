@@ -553,12 +553,12 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		return self._doc
 
 	# Create a text viewer
-	def textwindow(self, text, readonly = 0, close_callback = None):
+	def textwindow(self, text, xywh=None, readonly = 0, close_callback = None):
 		sv=self.newviewobj('sview_')
 		sv.settext(text)
 		sv.set_readonly(readonly)
 		sv.set_closecallback(close_callback)
-		self.showview(sv,'sview_')
+		self.showview(sv,'sview_', xywh)
 		if self._cmifdoc:
 			sv.GetParent().SetWindowText('Source (%s)'%self._cmifdoc.basename)
 		return sv
@@ -1158,10 +1158,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		if not w or w<0: w = sysmetrics.scr_width_pxl/2
 		if not h or h<0: h = sysmetrics.scr_height_pxl/2
 
-		x,y,w,h=sysmetrics.to_pixels(x,y,w,h,units)
-		dw=2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)+2*sysmetrics.cxframe
-		dh=sysmetrics.cycaption + 2*win32api.GetSystemMetrics(win32con.SM_CYEDGE)+2*sysmetrics.cyframe
-		rcFrame=(x,y,x+w+dw,y+h+dh)
+		rcFrame = self._makeframecoords((x,y,w,h),units)
 		f=ChildFrame(view)	# This is where most child MDI windows get made.
 		f.Create(title,rcFrame,self,0)
 
@@ -1182,10 +1179,10 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		return None
 
 	# Show the view passed as argument
-	def showview(self, view, strid):
+	def showview(self, view, strid, xywh=None):
 		if not view or not view._obj_:
 			return
-		self.frameview(view, strid)
+		self.frameview(view, strid, xywh)
 
 	# Create the view with string id
 	def createview(self, strid):
@@ -1194,17 +1191,33 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		return view
 
 	# Create the child frame that will host this view
-	def frameview(self, view, strid):
-		if not appview.has_key(strid): return
+	def frameview(self, view, strid, xywh=None):
+		if not appview.has_key(strid):
+			print 'Unknown frameview name:', view
+			return
+		ltrb = self._makeframecoords(xywh)
 		if strid == 'lview2_':
 			f = SplitterBrowserChildFrame(view, not view.isResizeable())
-			f.Create(appview[strid]['title'],None,self,0)
+			f.Create(appview[strid]['title'],ltrb,self,0)
 		else:
 			f = ChildFrame(view, not view.isResizeable())
-			f.Create(appview[strid]['title'],None,self,0)
+			f.Create(appview[strid]['title'],ltrb,self,0)
 		self.MDIActivate(f)
 		self.updateViewCreationListeners(view, strid)
 	
+	def _makeframecoords(self, xywh, units=UNIT_PXL):
+		# Convert GRiNS xywh-style coordinates to ltrb-style.
+		# The w and h are also the sizes for the inner area, they
+		# should be offset for the outer area
+		if xywh is None:
+			return None
+		x, y, w, h = xywh
+		x,y,w,h=sysmetrics.to_pixels(x,y,w,h,units)
+		dw=2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)+2*sysmetrics.cxframe
+		dh=sysmetrics.cycaption + 2*win32api.GetSystemMetrics(win32con.SM_CYEDGE)+2*sysmetrics.cyframe
+		rcFrame=(x,y,x+w+dw,y+h+dh)
+		return rcFrame
+
 	# Adds to the view interface some common attributes
 	def add_common_interface(self, viewobj, strid):
 		viewobj._strid = strid
