@@ -44,9 +44,13 @@ class GenFormView(docview.FormView,components.ControlsDict):
 			self.EnableCmd(ck,0)
 		self.HookMessage(self.OnCmd,win32con.WM_COMMAND)
 
-	# Called by the framework when this view is activated
-	def onActivate(self,f):
-		return
+	# Called when the view is activated 
+	def activate(self):
+		pass
+
+	# Called when the view is deactivated 
+	def deactivate(self):
+		pass
 
 	# Called by the frame work before closing this View
 	def OnClose(self):
