@@ -735,6 +735,10 @@ def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0, baseurl = None, sile
 		import windowinterface
 		windowinterface.showmessage('Duration for RealPix node %s on channel %s too short to accomodate all transitions\n(duration = %g, required: %g)' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName(), rp.duration, endtime), mtype = 'warning')
 		node.set_infoicon('error', 'Duration too short to accomodate all transitions\n(duration = %g, required: %g)' % (rp.duration, endtime))
+	elif not rp.duration and not endtime and not silent:
+		import windowinterface
+		windowinterface.showmessage('No durations set for RealPix node %s on channel %s\nDocument may not play' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName()))
+		node.set_infoicon('error', 'No durations set')
 	f.write(sep+'duration="%g"' % (rp.duration or endtime))
 	f.write(sep+'bitrate="%d"' % rp.bitrate)
 	f.write(sep+'width="%d"' % rp.width)
