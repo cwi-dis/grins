@@ -28,7 +28,7 @@ default_settings = {
 	'system_bitrate': 56000,	# Fast modem
 	'system_captions': 0,		# Don't show captions
 	'system_language': 'en',	# English
-	'system_overdub_or_caption': 'caption', # Captions preferred over overdub
+	'system_overdub_or_caption': 'subtitle', # Subtitles preferred over overdub
 ## Special case, see get() routine
 ##	'system_screen_size': windowinterface.getscreensize(), # Size of screen
 ##	'system_screen_depth': windowinterface.getscreendepth(), # Depth of screen

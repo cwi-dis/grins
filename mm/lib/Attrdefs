@@ -361,8 +361,8 @@
 	'Play node only if end-user wants captions' raw (g2 qt smil10 smil2 cmif))
 (system_language (string) '' 'System language' language3
 	'Play node only if end-user prefers this language' raw (g2 qt smil10 smil2 cmif snap))
-(system_overdub_or_caption (string) '' 'System overdub or caption' captionoverdub3
-	'Play node only depending on end user overdub/caption preference' raw (g2 qt smil10 smil2 cmif))
+(system_overdub_or_caption (string) '' 'System overdub or subtitle' captionoverdub3
+	'Play node only depending on end user overdub/subtitle preference' raw (g2 qt smil10 smil2 cmif))
 (system_required (list (string)) () 'System required' reqlist
 	'Play node only if player supports these features' raw (g2 qt smil10 smil2 cmif))
 (system_screen_size (tuple (int) (int)) (0 0) 'System screen size' default

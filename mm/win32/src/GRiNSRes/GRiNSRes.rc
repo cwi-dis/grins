@@ -436,7 +436,7 @@ END
 IDD_LICENSE DIALOGEX 0, 0, 331, 234
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "License"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "Try",IDOK,7,191,50,14
     PUSHBUTTON      "Buy...",IDUC_BUY,106,191,50,14
@@ -886,8 +886,8 @@ BEGIN
     LTEXT           "Overdub or Subtitle:",IDC_41,12,67,96,8
     CONTROL         "Default",IDC_42,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
                     WS_TABSTOP,116,67,40,10
-    CONTROL         "caption",IDC_43,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
-                    172,67,39,10
+    CONTROL         "subtitle",IDC_43,"Button",BS_AUTORADIOBUTTON | 
+                    BS_NOTIFY,172,67,38,10
     CONTROL         "overdub",IDC_44,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
                     228,67,42,10
     GROUPBOX        "",IDC_GROUP1,109,61,174,17
@@ -918,8 +918,8 @@ BEGIN
     COMBOBOX        IDC_22,109,49,174,109,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     LTEXT           "Overdub or Subtitle:",IDC_41,12,67,96,8
-    CONTROL         "caption",IDC_42,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
-                    WS_TABSTOP,116,67,39,10
+    CONTROL         "subtitle",IDC_42,"Button",BS_AUTORADIOBUTTON | 
+                    BS_NOTIFY | WS_TABSTOP,116,67,38,10
     CONTROL         "overdub",IDC_43,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,
                     196,67,42,10
     LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
