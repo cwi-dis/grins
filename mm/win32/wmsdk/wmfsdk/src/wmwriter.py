@@ -1,3 +1,6 @@
+__version__ = "$Id$"
+
+
 import wmfapi
 large_int = wmfapi.large_int
 
@@ -39,7 +42,7 @@ for i in range(npins):
 if audiopinix>=0:
 	print 'audiopin is pin ',audiopinix
 
-writer.SetOutputFilename(r'D:\ufs\mm\cmif\win32\wmsdk\wmfsdk\src\test.wma');
+writer.SetOutputFilename(r'D:\ufs\mm\cmif\win32\wmsdk\wmfsdk\src\testdata\test.wma');
 
 # read header and set audiopinmt
 import avi
@@ -58,7 +61,6 @@ audiopinmt.SetFormat(wmfapi.WMFORMAT_WaveFormatEx,wfx.GetBuffer())
 audiopinprops.SetMediaType(audiopinmt)
 
 writer.SetInputProps(audiopinix,audiopinprops)
-
 
 nSamples = avistream.End()
 print nSamples,'samples in avi'
