@@ -649,4 +649,4 @@ class htmlwindow:
 	def goto_url(self,url):
 		shell_execute(url,'open')	
 	def close(self):pass
-	def is_closed(self):return 1 
+	def is_closed(self):return 1
