@@ -407,6 +407,17 @@ class DocumentWrapper(Wrapper):
 		names.sort()
 		return ['title', 'base'] + names
 
+	def valuerepr(self, name, value):
+		if name in ('title', 'base'):
+			return MMAttrdefs.valuerepr(name, value)
+		else:
+			return value
+
+	def parsevalue(self, name, str):
+		if name in ('title', 'base'):
+			return MMAttrdefs.parsevalue(name, str, self.context)
+		else:
+			return str
 	
 
 # Attribute editor class.
@@ -476,7 +487,7 @@ class AttrEditor(AttrEditorDialog):
 				C = TupleAttrEditorField
 			else:
 				C = AttrEditorField
-			b = C(self, name, labeltext)
+			b = C(self, name, labeltext or name)
 			list.append(b)
 		self.__list = list
 		AttrEditorDialog.__init__(self, wrapper.maketitle(), list)
