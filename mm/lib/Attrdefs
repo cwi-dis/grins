@@ -136,6 +136,15 @@
 (empty_duration (float) 0.0 'Empty duration' hidden
 	'Duration to be used for drawing when this node is empty' normal (g2 qt smil10 smil2 cmif snap))
 
+(non_empty_icon (string) '' 'Icon URL' hidden
+	'URL for a drop box icon when this node is not empty' normal (g2 qt smil10 smil2 cmif snap))
+
+(non_empty_text (string) '' 'Empty text' hidden
+	'Text to be displayed in the drop box when this node is not empty' normal (g2 qt smil10 smil2 cmif snap))
+
+(non_empty_color (tuple (int) (int) (int)) (0 0 0) 'Empty color' hidden
+	'Color to be used in the drop box when this node is not empty' normal (g2 qt smil10 smil2 cmif snap))
+
 (thumbnail_scale (bool) 1 'Scale thumbnail' hidden
 	'Determines whether thumbnail images can be scaled' inherited (g2 qt smil10 smil2 cmif snap))
 
