@@ -238,6 +238,18 @@ class MMNode():
 			x = x.parent
 		raise NoSuchAttrError, 'in GetInherAttr()'
 	#
+	def GetDefInherAttr(self, name):
+		_stat('GetInherDefAttr')
+		x = self.parent
+		while x:
+			if x.attrdict:
+				try:
+					return x.GetAttr(name)
+				except NoSuchAttrError:
+					pass
+			x = x.parent
+		raise NoSuchAttrError, 'in GetInherDefAttr()'
+	#
 	def GetInherAttrDef(self, (name, default)):
 		_stat('GetInherAttrDef')
 		try:
