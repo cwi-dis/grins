@@ -38,5 +38,5 @@ __version__ = "$Id$";
     H_VBANDWIDTH,                      # Shows the download time, variable.
     H_MODIFY_STRUCTURE,                # This is the biggy - decides between templates or not.
     H_DROPBOX,                          # Show an empty drop box at the end of a sequence.
-
-] = range(19)                           # don't forget to update the range!
+    H_COLLAPSE,                         # Enable internal node collapsing.
+] = range(20)                           # don't forget to update the range!

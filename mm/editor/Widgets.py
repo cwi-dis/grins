@@ -253,6 +253,7 @@ class Widget:
         self.root = None
         self.appended_to = None
         self.context_menu = None
+        print "DEBUG: destroying widget"
         self.parent = None
 
 ##############################################################################
