@@ -1244,6 +1244,10 @@ class ChannelWindow(Channel):
 ##			self._attrdict['winsize'] = w, h
 
 	def mousepress(self, arg, window, event, value):
+		# arg is a tuple of (x, y, buttons, params)
+		# x and y are expressed in pourcent values (relative to the channel geometry)
+		# buttons is a list of button. A button is a sensitive area associated to each anchor
+		# it can be a rectangle, circle or a polygon (see displaylist._Button class)
 		global _button
 		# a mouse button was pressed
 		if _button is not None and not _button.is_closed():
@@ -1256,7 +1260,7 @@ class ChannelWindow(Channel):
 		buttons = value[2]
 		if len(buttons) == 0:
 			if self.__transparent:
-				raise windowinterface.Continue
+				raise windowinterface.Continue		
 ##			if hasattr(self._player, 'editmgr'):
 ##				self.highlight()
 		else:
@@ -1265,13 +1269,17 @@ class ChannelWindow(Channel):
 			_button = button
 
 	def mouserelease(self, arg, window, event, value):
+		# arg is a tuple of (x, y, buttons, params)
+		# x and y are expressed in pourcent values (relative to the channel geometry)
+		# buttons is a list of button. A button is a sensitive area associated to each anchor
+		# it can be a rectangle, circle or a polygon (see displaylist._Button class)
 		global _button
 ##		if hasattr(self._player, 'editmgr'):
 ##			self.unhighlight()
 		buttons = value[2]
 		if len(buttons) == 0:
 			if self.__transparent:
-				raise windowinterface.Continue
+				raise windowinterface.Continue		
 		elif self._paused not in ('hide', 'disable'):
 			button = buttons[0]
 			if _button is button:
@@ -1586,6 +1594,10 @@ class ChannelWindow(Channel):
 		fgcolor = self.getfgcolor(node)
 		self.armed_display.fgcolor(fgcolor)
 
+		# set alpha sentitivity
+		alphaSensitivity = MMAttrdefs.getattr(node, 'sensitivity')
+		self.armed_display.setAlphaSensitivity(alphaSensitivity)
+		
 		return 0
 
 	# Activate a sensitive area in display list according to the anchors.
