@@ -70,7 +70,7 @@ class TreeHelper:
 		return TYPE_MEDIA
 
 	# check the media node references and update the internal structure
-	def __checkMediaNodeList(self, nodeRef):
+	def __checkMediaNodeList(self, nodeRef, position=0):
 		if debug2: print 'treeHelper.__checkMediaNodeList : start ',nodeRef
 		ctx = self._context.context
 		type = self._getMMNodeType(nodeRef)
@@ -78,7 +78,7 @@ class TreeHelper:
 		if type == TYPE_MEDIA:
 			parentRef = self.getParent(nodeRef, TYPE_MEDIA)
 			if not parentRef is None:
-				self.__checkNode(parentRef, nodeRef, TYPE_VIEWPORT, TYPE_REGION, TYPE_MEDIA)
+				self.__checkNode(parentRef, nodeRef, position, TYPE_VIEWPORT, TYPE_REGION, TYPE_MEDIA)
 		elif type == TYPE_ANIMATE:
 			if not SHOW_ANIMATE_NODES:
 				return
@@ -86,10 +86,12 @@ class TreeHelper:
 			if not parentRef is None:
 				parentType = self._getMMNodeType(parentRef)
 				if parentType in (TYPE_MEDIA, TYPE_REGION):
-					self.__checkNode(parentRef, nodeRef, TYPE_VIEWPORT, parentType, TYPE_ANIMATE)
-				
+					self.__checkNode(parentRef, nodeRef, position, TYPE_VIEWPORT, parentType, TYPE_ANIMATE)
+
+		childPosition = 0			
 		for child in nodeRef.GetChildren():
-			self.__checkMediaNodeList(child)
+			self.__checkMediaNodeList(child, childPosition)
+			childPosition = childPosition+1
 						
 		if debug2: print 'treeHelper.__checkMediaNodeList : end ',nodeRef
 
@@ -98,23 +100,27 @@ class TreeHelper:
 		self.__checkMediaNodeList(self.__mmnodeTreeRef)
 
 	# check the region/viewport node references and update the internal structure
-	def __checkRegionNodeList(self, parentRef, nodeRef):
+	def __checkRegionNodeList(self, parentRef, nodeRef, position):
 		if debug2: print 'treeHelper.__checkRegionNodeList : start ',nodeRef
 
-		self.__checkNode(parentRef, nodeRef, TYPE_VIEWPORT, TYPE_REGION, TYPE_REGION)
+		self.__checkNode(parentRef, nodeRef, position, TYPE_VIEWPORT, TYPE_REGION, TYPE_REGION)
+		childPosition = 0
 		for subreg in nodeRef.GetChildren():
 			if subreg.GetType() == 'layout':
-				self.__checkRegionNodeList(nodeRef, subreg)
+				self.__checkRegionNodeList(nodeRef, subreg, childPosition)
+				childPosition = childPosition+1
 			
 		if debug2: print 'treeHelper.__checkRegionNodeList : end ',nodeRef
 
 	# check the region/viewport node references and update the internal structure
 	def _checkRegionNodeList(self):
 		viewportRefList = self.__channelTreeRef.getviewports()
+		position = 0
 		for viewportRef in viewportRefList:
-			self.__checkRegionNodeList(None, viewportRef)
+			self.__checkRegionNodeList(None, viewportRef, position)
+			position = position+1
 
-	def __checkNode(self, parentRef, nodeRef, typeRoot, typeParent, typeChild):
+	def __checkNode(self, parentRef, nodeRef, orderRef, typeRoot, typeParent, typeChild):
 		# if no default region to show, exclude it	
 		if not self.hasDefaultRegion and typeChild == TYPE_REGION and nodeRef.isDefault():
 			return
@@ -150,48 +156,72 @@ class TreeHelper:
 			# case for existing root node (viewport)
 			tNode.checkMainUpdate()							
 			tNode.isUsed = 1
-										
+		tNode.orderRef = orderRef
+			
 	# this method is called when a node has to be deleted
-	def __onDelNode(self, parent, node, top=1):
+	def __onDelNode(self, parent, node, destroy=1):
 		if debug: print 'treeHelper.__onDelNode : ',node.nodeRef
+		if self.__nodeListToDel.has_key(node.nodeRef):
+			if debug2: print 'treeHelper.__onDelNode : already deleted, return'
+			return
 		for child in node.children.keys():
 			self.__onDelNode(node, child, 0)
-		if parent != None:
-			if top:
-				# extract from the parent only if it's the top node to delete
-				# it allows to not affect the sub-nodes if this node has to be moved
-				del parent.children[node]
-			parentRef = parent.nodeRef
-		else:
+		if parent == None:
 			parentRef = None
-			del self.__rootList[node.nodeRef]
-		self._context.onDelNodeRef(parentRef, node.nodeRef)
-		# we can't delete now the node because the node may have moved
-		self.__nodeListToDel.append(node.nodeRef)
-
+		else:
+			parentRef = parent.nodeRef
+		self._context.onDelNodeRef(parentRef , node.nodeRef)
+		if destroy:
+			# extract from the parent only if it's the top node to delete
+			# it allows to not affect the sub-nodes if this node has to be moved
+			if parent is not None:
+				del parent.children[node]
+				siblingList = parent.children.keys()
+			else:
+				del self.__rootList[node.nodeRef]
+				siblingList = self.__rootList.values()
+				
+			# update the current position
+			position = node.currentPosition
+			for sibling in siblingList:
+				spos = sibling.currentPosition
+				if spos >position:
+					sibling.currentPosition = spos-1
+	
+		self.__nodeListToDel[node.nodeRef] = 1
+		node.currentPosition = -1 # raz the current position
+		
 	# this method is called when a node has to be added	
-	def __onNewNode(self, parent, node):
+	def __onNewNode(self, parent, node, position):
 		if debug: print 'treeHelper.__onNewNode : ',node.nodeRef, 'child = ',node.children
 		if parent != None:
 			parentRef = parent.nodeRef
 		else:
-			parentRef = None		
+			parentRef = None
+		node.currentPosition = position
+
 		self._context.onNewNodeRef(parentRef, node.nodeRef)
-		for child in node.children.keys():
-			self.__onNewNode(node, child)
+
+		# get children in the right order
+		children = node.children.keys()
+		children.sort(self.__cmpNode)
+					
+		childPosition = 0
+		for child in children:
+			self.__onNewNode(node, child, childPosition)
+			childPosition = childPosition+1
+			
 		# reset the flags for the next time
 		node.isNew = 0
 		node.isUsed = 0
 		# if the node is marked to delete, we have to restore erase the mark
-		# note don't use remove. more efficient
-		for ind in range(len(self.__nodeListToDel)):
-			if self.__nodeListToDel[ind] is node.nodeRef:
-				del self.__nodeListToDel[ind]
-				break
+		if self.__nodeListToDel.has_key(node.nodeRef):
+			del self.__nodeListToDel[node.nodeRef]
 
 	# this method look for all mutations relative to the previous update		
 	def __detectDelMutation(self, parent, node):
 		if debug2: print 'treeHelper.__detectDelMutation : start ',node.nodeRef
+		
 		# detect the node to erase
 		if not node.isNew and not node.isUsed:
 			self.__onDelNode(parent, node)
@@ -205,32 +235,98 @@ class TreeHelper:
 				self.__detectDelMutation(node, child)
 		if debug2: print 'treeHelper.__detectDelMutation : end ',node.nodeRef
 
-	# this method look for all mutations relative to the previous update		
-	def __detectNewMutation(self, parent, node):
-		if debug2: print 'treeHelper.__detectNewMutation : start ',node.nodeRef
-		# detect the new nodes
-		if node.isNew:
-			self.__onNewNode(parent, node)
+	# this method will be used by the sort method
+	def __cmpNode(self, node1, node2):
+		# this method is called a lot of times. It has to be optimized
+		# first, try to sort by z-index
+		if node1.z > node2.z:
+			return 1
+		elif node1.z < node2.z:
+			return -1
 		else:
-			# detect if need to update the main attributes. basicly id and type
-			if node.isUpdated:
-				self._context.onMainUpdate(node.nodeRef)
-				node.isUpdated = 0
-			# if no changment, check in children
-			for child in node.children.keys():
-				self.__detectNewMutation(node, child)
+			# otherwise, by document order for region, and alphabethique for other types
+			if node1.type in (TYPE_REGION, TYPE_VIEWPORT) and node1.type == node2.type:
+				if node1.orderRef > node2.orderRef:
+					return 1
+				elif node1.orderRef < node2.orderRef:
+					return -1
+			else:
+				if node1.name > node2.name:
+					return 1
+				elif node1.name < node2.name:
+					return -1
+				
+		return 0
+
+	# this method look for all mutations relative to the previous update		
+	def __detectNewMutation(self, parent, node, position):		
+		if debug2: 
+			if node is not None: print 'treeHelper.__detectNewMutation : start ',node.nodeRef
+
+		# detect the new nodes		
+		if node is not None and node.isNew:
+			self.__onNewNode(parent, node, position)
+		else:
+			# get children in the right order
+			if node is not None:
+				children = node.children.keys()
+			else:
+				children = self.__rootList.values()
+			children.sort(self.__cmpNode)
+			
+			# check if the node has to be rebuild entirely. A better way would be probably
+			# to call the low level API for sorting. But it's very complex for now to interface Python and Windows API
+			rebuild = 0
+			position = 0
+			endFlag = 0
+			for child in children:
+				if position != child.currentPosition:
+					if child.currentPosition == -1:
+						endFlag = 1
+						continue
+					rebuild = 1
+					break
+				elif endFlag:
+					rebuild = 1
+					break
+				position = position+1
+			if rebuild:
+				if debug2:
+					if node is not None: print 'treeHelper.__detectNewMutation : change children order of',node.nodeRef
+					else: print 'treeHelper.__detectNewMutation : change root order'
+				# first delete all children
+				for child in children:
+					if not child.isNew:
+						self.__onDelNode(node, child, 0)
+				# then, re-create them in the right order
+				position = 0
+				for child in children:
+					self.__onNewNode(node, child, position)
+					position = position+1
+			else:
+				# detect whether need to update the main attributes. basicly id and type
+				if node is not None and node.isUpdated:
+					self._context.onMainUpdate(node.nodeRef)
+					node.isUpdated = 0
+				# if no change, check children
+				for child in children:
+					self.__detectNewMutation(node, child, position)
 			# reset the flags the the next time
-			node.isUsed = 0
-		if debug2: print 'treeHelper.__detectNewMutation : end ',node.nodeRef
+			if node is not None:
+				node.isUsed = 0
+		if debug2: 
+			if node is not None:
+				print 'treeHelper.__detectNewMutation : end ',node.nodeRef
 			
 	# this method look for all mutations relative to the previous update		
 	def _detectMutation(self):
-		self.__nodeListToDel = []
+		self.__nodeListToDel = {}
 		for key, root in self.__rootList.items():
-			self.__detectDelMutation(None, root)
-		for key, root in self.__rootList.items():
-			self.__detectNewMutation(None, root)
-		for node in self.__nodeListToDel:
+			self.__detectDelMutation(None, root)			
+		self.__detectNewMutation(None, None, 0)
+		for node in self.__nodeListToDel.keys():
+			if self.__rootList.has_key(node):
+				del self.__rootList[node]
 			del self.__nodeList[node]
 
 	#
@@ -253,17 +349,19 @@ class TreeHelper:
 	def getChildren(self, nodeRef):
 		list = []
 		node = self.__nodeList.get(nodeRef)
-		for child in node.children.keys():
-			list.append(child.nodeRef)
+		if node is not None:
+			for child in node.children.keys():
+				list.append(child.nodeRef)
 		return list
 
 	# return the media list of the regionRef children
 	def getMediaChildren(self, regionRef):
 		list = []
 		node = self.__nodeList.get(regionRef)
-		for child in node.children.keys():
-			if self.getNodeType(child.nodeRef) == TYPE_MEDIA:
-				list.append(child.nodeRef)
+		if node is not None:
+			for child in node.children.keys():
+				if self.getNodeType(child.nodeRef) == TYPE_MEDIA:
+					list.append(child.nodeRef)
 		return list
 
 	# return the region list inside the viewport
@@ -353,22 +451,28 @@ class TreeNodeHelper:
 	def __init__(self, nodeRef, type):
 		# this method is called a lot of times. It has to be optimized
 		# read directly the attributes on the node: more efficient
+
+		self.orderRef = 0		
+		self.currentPosition = -1
+		
 		self.isNew = 1
 		self.isUsed = 1
 		self.isUpdated = 0
 		self.nodeRef = nodeRef
 		self.children = {}
 		self.type = type
+		attrdict = nodeRef.attrdict
 		if type == TYPE_MEDIA:
-			self.name = nodeRef.attrdict.get('name')
+			self.name = attrdict.get('name')
 			self.mediatype = nodeRef.GetChannelType()
 		elif type in (TYPE_VIEWPORT, TYPE_REGION):
-			name = nodeRef.attrdict.get('regionName')
+			name = attrdict.get('regionName')
 			if name == None:
 				self.name = nodeRef.name
 			else:
 				self.name = name
-		self.previewShowOption = nodeRef.attrdict.get('previewShowOption')
+		self.z = attrdict.get('z',0)
+		self.previewShowOption = attrdict.get('previewShowOption')
 
 	def hasChild(self, child):
 		return self.children.has_key(child)
@@ -380,21 +484,23 @@ class TreeNodeHelper:
 		# this method is called a lot of times. It has to be optimized
 		# read directly the attributes on the node: more efficient
 		nodeRef = self.nodeRef
+		attrdict = nodeRef.attrdict
 		if self.type == TYPE_MEDIA:
-			name = nodeRef.attrdict.get('name')
+			name = attrdict.get('name')
 			mediatype = nodeRef.GetChannelType()
 			if name != self.name or mediatype != self.mediatype:
 				self.isUpdated = 1
 				self.name = name
 				self.mediatype = mediatype
 		elif self.type in (TYPE_VIEWPORT, TYPE_REGION):
-			name = nodeRef.attrdict.get('regionName')
+			name = attrdict.get('regionName')
 			if name == None:
 				name = nodeRef.name
 			if name != self.name:
 				self.isUpdated = 1
 				self.name = name
-		previewShowOption = nodeRef.attrdict.get('previewShowOption')
+		self.z = attrdict.get('z',0)
+		previewShowOption = attrdict.get('previewShowOption')
 		if self.previewShowOption != previewShowOption:
 			self.isUpdated = 1
 			self.previewShowOption = previewShowOption
@@ -602,10 +708,6 @@ class LayoutView2(LayoutViewDialog2):
 	def GetContext(self):
 		return self.context
 		
-	def rebuildAll(self):
-		self.treeMutation()
-		self.previousWidget.updateRegionTree()		
-
 	#
 	# implementation of tree helper handler methods
 	#
@@ -613,30 +715,16 @@ class LayoutView2(LayoutViewDialog2):
 	def onNewNodeRef(self, parentRef, nodeRef):
 		nodeType = self.getNodeType(nodeRef)
 
-		# update preview widget		
-		if nodeType == TYPE_VIEWPORT:
-			self.previousWidget.addViewport(nodeRef)			
-		elif nodeType == TYPE_REGION:
-			self.previousWidget.addRegion(parentRef, nodeRef)
-		elif nodeType == TYPE_MEDIA:
-			self.previousWidget.addMedia(parentRef, nodeRef)
-
 		# update tree widget		
 		self.treeWidget.appendNode(parentRef, nodeRef, nodeType)
+		self.previousWidget.appendNode(parentRef, nodeRef, nodeType)
 		
 	def onDelNodeRef(self, parentRef, nodeRef):
 		nodeType = self.getNodeType(nodeRef)
 		
-		# update preview widget		
-		if nodeType == TYPE_VIEWPORT:
-			self.previousWidget.removeViewport(nodeRef)
-		elif nodeType == TYPE_REGION:
-			self.previousWidget.removeRegion(nodeRef)
-		elif nodeType == TYPE_MEDIA:
-			self.previousWidget.removeMedia(nodeRef)
-
 		# update tree widget		
-		self.treeWidget.removeNode(nodeRef)
+		self.treeWidget.removeNode(nodeRef, nodeType)
+		self.previousWidget.removeNode(nodeRef, nodeType)
 
 	def onMainUpdate(self, nodeRef):
 		self.treeWidget.updateNode(nodeRef)
@@ -657,17 +745,13 @@ class LayoutView2(LayoutViewDialog2):
 
 	def commit(self, type):
 		self.root = self.toplevel.root
-		if type in ('REGION_GEOM', 'MEDIA_GEOM'):
-			self.previousWidget.updateRegionTree()
-		elif type == 'REGION_TREE':
+		if type not in ('REGION_GEOM', 'MEDIA_GEOM'):
 			self.treeMutation()
-			self.previousWidget.updateRegionTree()
-		else:
-			self.rebuildAll()
 
 		# after a commit, the focus may have changed
 		self.currentFocus = self.editmgr.getglobalfocus()
 		self.updateFocus(1)
+		self.previousWidget.mustBeUpdated()
 				
 	# make a list of nodes selected in this view
 	def makeSelectedNodeList(self, selList):
@@ -945,6 +1029,8 @@ class LayoutView2(LayoutViewDialog2):
 	def getViewportRef(self, nodeRef, nodeType = None):
 		if nodeType is None:
 			nodeType = self.getNodeType(nodeRef)
+		if nodeType == TYPE_VIEWPORT:
+			return nodeRef
 		while nodeType != TYPE_REGION:
 			nodeRef = self.treeHelper.getParent(nodeRef, nodeType)
 			nodeType = self.getNodeType(nodeRef)
@@ -1254,6 +1340,7 @@ class LayoutView2(LayoutViewDialog2):
 	def applyNewRegion(self, parentRef, id, regionName):
 		if self.editmgr.transaction():
 			channel = self.context.newchannel(id, -1, 'layout')
+#			channel.fillWithDefaultEditorValues()
 			self.editmgr.addchannel(parentRef, -1, channel)
 			self.editmgr.setchannelattr(id, 'regionName', regionName)
 			self.editmgr.commit('REGION_TREE')
@@ -2040,6 +2127,11 @@ class LayoutView2(LayoutViewDialog2):
 
 		return 'move'
 
+	def getShowEditBackgroundMode(self):
+		# XXX to complete
+#		return 'editBackground'
+		return 'originalBackground'
+	
 	def getPreviewOption(self, nodeRef, nodeType):
 		# the default value is node type dependent
 		if nodeType == TYPE_MEDIA:
@@ -2069,7 +2161,7 @@ class LayoutView2(LayoutViewDialog2):
 			if not ChannelMap.isvisiblechannel(type):
 				return  0
 			parentNodeRef =  self.getParentNodeRef(nodeRef)
-			if parentNodeRef.isDefault():
+			if parentNodeRef is None or parentNodeRef.isDefault():
 				return 0
 			
 		return 1
@@ -2701,7 +2793,7 @@ class TreeWidget(Widget):
 			visible = self._context.getVisibility(nodeRef, nodeType, selected=0)
 			self.updateVisibility([nodeRef], visible)
 					
-	def removeNode(self, nodeRef):
+	def removeNode(self, nodeRef, nodeType):
 		nodeTreeCtrlId = self.nodeRefToNodeTreeCtrlId.get(nodeRef)
 		if nodeTreeCtrlId != None:
 			self.treeCtrl.removeNode(nodeTreeCtrlId)
@@ -2927,20 +3019,13 @@ class PreviousWidget(Widget):
 		# current state
 		self.currentViewport = None		
 
-		# media list currently showed whichever the node which are the focus
-		self.currentMediaRefListM = []
-
-		# region list currently showed whichever the node which are the focus
-		self.currentRegionRefListM = []
-		# region list which are showing
-		self.currentRegionNodeListShowed = []
-
 		self.previousCtrl = self._context.previousCtrl
 
 		# to prevent against indefite loop
 		self.__selecting = 0
-
-		self.__mustBeUpdated = 0
+		
+		self.__mustBeUpdated = 1
+		self.__mustUpdateEditBackground = 1
 
 	#
 	# inherited methods
@@ -2959,15 +3044,12 @@ class PreviousWidget(Widget):
 			self.currentViewport.hideAllNodes()
 			self.currentViewport = None
 
-		self.currentMediaRefListM = None
-		self.currentRegionRefListM = None
-		self.currentRegionNodeListShowed = None
 		self.previousCtrl = None
 
-	def updateVisibility(self, nodeRefList, state):
+	def updateVisibility(self, nodeRefList, visible):
 		for nodeRef in nodeRefList:
 			nodeType = self._context.getNodeType(nodeRef)
-			if state:
+			if visible:
 				if nodeType == TYPE_REGION:
 					self.__showRegion(nodeRef)
 				elif nodeType == TYPE_MEDIA:
@@ -2976,23 +3058,26 @@ class PreviousWidget(Widget):
 				if nodeType == TYPE_REGION:
 					self.__hideRegion(nodeRef)
 				elif nodeType == TYPE_MEDIA:
-					self.removeMedia(nodeRef)
+					self.__hideMedia(nodeRef)
 
+	def update(self):
+		if self.__mustBeUpdated:
+			self.updateRegionTree()
+			self.__mustBeUpdated = 0
+					   
 	def selectNodeList(self, nodeRefList, keepShowedNodes):
 		# to prevent against indefite loop
 		self.__selecting = 1
 
-		if self.__mustBeUpdated:
-			self.updateRegionTree()
-			
+		# show the right selected nodes if need
+		listToShow = []
 		for nodeRef in nodeRefList:			
 			nodeType = self._context.getNodeType(nodeRef)
-			if nodeType == TYPE_VIEWPORT:
-				viewport = nodeRef
-			elif nodeType == TYPE_REGION:
-				self.__showRegion(nodeRef)
-			elif nodeType == TYPE_MEDIA:
-				self.__showMedia(nodeRef)
+			visible = self._context.getVisibility(nodeRef, nodeType, selected=1)
+			if visible:
+				listToShow.append(nodeRef)
+		self.updateVisibility(listToShow, 1)
+				
 		# determinate the right viewport to show
 		viewport = None
 		if len(nodeRefList) > 0:
@@ -3002,10 +3087,12 @@ class PreviousWidget(Widget):
 			for ind in indList:
 				n = nodeRefList[ind]
 				viewport = self._context.getViewportRef(n)
-				if viewport != None:
+				if viewport is not None:
 					break
-		if viewport != None:
+		if viewport is not None:
 			self.__showViewport(viewport)
+
+		self.update()
 
 		# select the list of shapes
 		shapeList = []
@@ -3014,7 +3101,7 @@ class PreviousWidget(Widget):
 			if node != None and node._graphicCtrl != None:
 				shapeList.append(node._graphicCtrl)
 		self.previousCtrl.selectNodeList(shapeList)
-
+	
 		# update popup menu according to the last item selected
 		if len(nodeRefList) == 1:
 			lastNodeRef = nodeRefList[-1]
@@ -3043,142 +3130,146 @@ class PreviousWidget(Widget):
 		viewportRefList = self._context.getViewportRefList()
 		for viewportRef in viewportRefList:
 			viewportNode = self.getNode(viewportRef)
-			if debug: print 'LayoutView.updateRegionTree: update viewport',viewportNode.getName()
-			viewportNode.updateAllAttrdict()
+			if viewportNode is not None:
+				if debug: print 'LayoutView.updateRegionTree: update viewport',viewportNode.getName()
+				viewportNode.updateAllAttrdict()
 		if debug: print 'LayoutView.updateRegionTree end'
 
 	def addRegion(self, parentRef, regionRef):
+		if regionRef.isDefault():
+			return None
 		pNode = self.getNode(parentRef)
-		self._nodeRefToNodeTree[regionRef] = regionNode = Region(regionRef, self)
+		regionNode = Region(regionRef, self)
 		pNode.addNode(regionNode)
+		self.__mustBeUpdated = 1
 
-		visible = self._context.getVisibility(regionRef, TYPE_REGION, selected=0)
-		if visible:
-			self.__showRegion(regionRef)
-
-	def addMedia(self, parentRef, mediaRef):
-		visible = self._context.getVisibility(mediaRef, TYPE_MEDIA, selected=0)
-		if visible:
-			self.__showMedia(mediaRef)
+		return regionNode
+#		visible = self._context.getVisibility(regionRef, TYPE_REGION, selected=0)
+#		if visible:
+#			self.__showRegion(regionRef)
 
 	def addViewport(self, viewportRef):
 		viewportNode = Viewport(viewportRef, self)
-		self._nodeRefToNodeTree[viewportRef] = viewportNode
+		self.__mustBeUpdated = 1
+		return viewportNode
 
 	def removeRegion(self, regionRef):
-		self.removeRegionNode(regionRef)
-		regionNode = self.getNode(regionRef)
+		if regionRef.isDefault():
+			return
+
+		if not self._nodeRefToNodeTree.has_key(regionRef):
+			return
+					
+		regionNode = self.getNode(regionRef)			
 		parentNode = regionNode.getParent()
 		parentNode.removeNode(regionNode)
-		viewportRef = parentNode.getViewport().getNodeRef()
-
-		if regionRef in self.currentRegionRefListM:
-			self.currentRegionRefListM.remove(regionRef)
-			
 		del self._nodeRefToNodeTree[regionRef]
+		self.__mustBeUpdated = 1
 		
-	def removeViewport(self, viewportRef):		
-		del self._nodeRefToNodeTree[viewportRef]
-		if viewportRef is self.currentViewport.getNodeRef():
+	def removeViewport(self, viewportRef):
+		if not self._nodeRefToNodeTree.has_key(viewportRef):
+			return
+
+		if self.currentViewport is not None and viewportRef is self.currentViewport.getNodeRef():
 			# show the first viewport in the list		
 			currentViewportList = self._context.getViewportRefList()
-			viewportRef = currentViewportList[0]
-			self.displayViewport(viewportRef)
-									
+			if len(currentViewportList) > 0:
+				newViewportRef = currentViewportList[0]
+				self.displayViewport(newViewportRef)
+			else:
+				self.currentViewport.hideAllNodes()
+				self.currentViewport = None
+		del self._nodeRefToNodeTree[viewportRef]
+		self.__mustBeUpdated = 1
+						
+	def appendNode(self, pNodeRef, nodeRef, nodeType):
+		if nodeType == TYPE_VIEWPORT:
+			node = self.addViewport(nodeRef)
+			if node is not None:
+				self._nodeRefToNodeTree[nodeRef] = node
+				self.displayViewport(nodeRef)
+			return
+		elif nodeType == TYPE_REGION:
+			node = self.addRegion(pNodeRef, nodeRef)
+			self._nodeRefToNodeTree[nodeRef] = node
+		elif nodeType == TYPE_MEDIA:
+			pass
+		
+		visible = self._context.getVisibility(nodeRef, nodeType, selected=0)
+		if visible:
+			self.updateVisibility([nodeRef], visible)
+			
+	def removeNode(self, nodeRef, nodeType):
+		if nodeType == TYPE_VIEWPORT:
+			self.removeViewport(nodeRef)
+		elif nodeType == TYPE_REGION:
+			self.removeRegion(nodeRef)
+		elif nodeType == TYPE_MEDIA:
+			pass
+				   
 	# ensure that the viewport is in showing state
 	def __showViewport(self, viewportRef):
 		if self.currentViewport == None or viewportRef != self.currentViewport.getNodeRef():
 			if debug: print 'LayoutView.select: change viewport =',viewportRef
 			self.displayViewport(viewportRef)
+			self.__mustBeUpdated = 1
 					
 	# ensure that the region is in showing state
 	def __showRegion(self, regionRef):
 		if regionRef.isDefault():
 			return
-		
-		type = regionRef.GetAttrDef('chsubtype', None)
-		if type != None:
-			# if the region is typed, we show only the region if visible
-			import ChannelMap
-			if not ChannelMap.isvisiblechannel(type):
-				return 
-				
-		if regionRef not in self.currentRegionRefListM: 
-			self.currentRegionRefListM.append(regionRef)
-			self.__mustBeUpdated = 1
+
 		regionNode = self.getNode(regionRef)
+		if regionNode.isShowed():
+			# already showed
+			return
+		
 		if regionNode is not None:
 			regionNode.toShowedState()									
+		self.__mustBeUpdated = 1
+
+	# ensure that the media is in a showing state
+	def __showMedia(self, nodeRef):
+		if self._nodeRefToNodeTree.has_key(nodeRef):
+			# already showed
+			return
+		
+		self._nodeRefToNodeTree[nodeRef] = newNode = MediaRegion(nodeRef, self)
+		parentRef = self._context.getParentNodeRef(nodeRef)
+		parentNode = self.getNode(parentRef)
+		if parentNode is not None:
+			parentNode.addNode(newNode)
+
+		newNode.toShowedState()
+		self.__mustBeUpdated = 1
 
 	def __hideRegion(self, regionRef):
-		if regionRef in self.currentRegionRefListM: 
-			self.currentRegionRefListM.remove(regionRef)
-			self.__mustBeUpdated = 1
 		regionNode = self.getNode(regionRef)
 		if regionNode is not None:
 			regionNode.toHiddenState()									
-		
-	# ensure that the media is in showing state
-	def __showMedia(self, mediaRef):
-		# show only visible medias in the preview area
-		chtype = mediaRef.GetChannelType()
-		import ChannelMap
-		if not ChannelMap.isvisiblechannel(chtype):
+		self.__mustBeUpdated = 1
+
+	def __hideMedia(self, mediaRef):
+		if not self._nodeRefToNodeTree.has_key(mediaRef):
+			# already hidden
 			return
 		
-		appendList = []
-		if mediaRef not in self.currentMediaRefListM:
-			self.__mustBeUpdated = 1
-			appendList.append(mediaRef)
-			self.currentMediaRefListM.append(mediaRef)
-
-			# append and update media node list
-			self.__appendMediaNodeList(appendList)
-
-	def removeAllMedias(self):
-		for mediaRef in self.currentMediaRefListM:
-			node = self.getNode(mediaRef)
-			parentNode = node.getParent()
-			# remove from region tree
-			if parentNode != None:
-				self.__mustBeUpdated = 1
-				parentNode.removeNode(node)
-			del self._nodeRefToNodeTree[mediaRef]
-		self.currentMediaRefListM = []
-					
-	def removeMedia(self, mediaRef):
 		node = self.getNode(mediaRef)
-		if node != None:
-			parentNode = node.getParent()
-			# remove from region tree
-			if parentNode != None:
-				parentNode.removeNode(node)
-			if mediaRef in self.currentMediaRefListM:
-				self.__mustBeUpdated = 1
-				self.currentMediaRefListM.remove(mediaRef)
-				del self._nodeRefToNodeTree[mediaRef]
-
-	def removeRegionNode(self, regionRef):
-		if regionRef in	self.currentRegionNodeListShowed:
-			self.currentRegionNodeListShowed.remove(regionRef)
-			regionNode = self.getNode(regionRef)
-			regionNode.toHiddenState()
-			self.__mustBeUpdated = 1
+		node.toHiddenState()
+		parentNode = node.getParent()
+		# remove from region tree
+		if parentNode != None:
+			parentNode.removeNode(node)
+		del self._nodeRefToNodeTree[mediaRef]
+		self.__mustBeUpdated = 1
+									
+#	def removeRegionNode(self, regionRef):
+#		if regionRef in	self.currentRegionNodeListShowed:
+#			self.currentRegionNodeListShowed.remove(regionRef)
+#			regionNode = self.getNode(regionRef)
+#			regionNode.toHiddenState()
+#			self.__mustBeUpdated = 1
 							 
-	def __appendMediaNodeList(self, nodeList):
-		# create the media region nodes according to nodeList
-		appendMediaRegionList = []
-		for nodeRef in nodeList:
-			newNode = MediaRegion(nodeRef, self)
-			parentRef = self._context.getParentNodeRef(nodeRef)
-			parentNode = self.getNode(parentRef)
-			if parentNode != None:
-				self.__mustBeUpdated = 1
-				self._nodeRefToNodeTree[nodeRef] = newNode
-				parentNode.addNode(newNode)
-				newNode.importAttrdict()
-				newNode.show()
-
 	def onSelectChanged(self, objectList):
 		# prevent against infinite loop
 		if self.__selecting:
@@ -3222,11 +3313,11 @@ class PreviousWidget(Widget):
 		self.currentViewport = self.getNode(viewportRef)
 		if self.currentViewport == None:
 			# shouldn't pass here
-			print 'can''t show viewport ',viewportRef
-			import traceback
-			traceback.print_stack()
+			if debugPreview: print 'can''t show viewport ',viewportRef
 			return
 		self.currentViewport.showAllNodes()
+		self.currentViewport.updateAllAttrdict()
+		self.__mustBeUpdated = 1
 
 	def onGeomChanging(self, objectList):
 		# update only if one object is moving
@@ -3263,6 +3354,8 @@ class Node:
 		
 		# graphic control (implementation: system dependant)
 		self._graphicCtrl = None		
+
+		self._computedEditBackground = (200, 200, 200)
 
 		# default attribute		
 		self.importAttrdict()
@@ -3355,11 +3448,88 @@ class Node:
 	def getGeom(self):
 		return self._curattrdict['wingeom']
 
-	def isShowEditBackground(self):
-		showEditBackground = self._nodeRef.GetAttrDef('showEditBackground',None)
-		if showEditBackground != None and showEditBackground == 1:
+	def computeEditBackground(self):
+		self.computeLightFactor()
+		self.computeEditBackground()
+
+	def __cmpZ(self, node1, node2):
+		if node1._nodeRef.GetAttrDef('z', 0) > node2._nodeRef.GetAttrDef('z', 0):
 			return 1
-		return 0		
+		else:
+			return -1
+		
+	def __computeLightFactor(self, factor=0, maxFactor=0):
+		self._lightFactor = factor
+		print 'light factor found = ',self._nodeRef,self._lightFactor
+		children = self._children
+		children.sort(self.__cmpZ)
+		currentZ = 0
+		nextFactor = factor
+		ind = 0
+		for child in children:
+			cz = child._nodeRef.GetAttrDef('z', 0)
+			if cz != currentZ:
+				factor = nextFactor
+			currentZ = cz
+			
+			context = self._ctx._context
+			nodeType = context.getNodeType(child._nodeRef)
+			if nodeType not in (TYPE_VIEWPORT, TYPE_REGION):
+				continue
+			visible = context.getVisibility(child._nodeRef, nodeType, selected=1)
+			if not visible:
+				continue
+			if child._nodeRef.GetAttrDef('editBackground',None) is not None:
+				child.computeLightFactor()
+				nextFactor = factor+1
+			else:
+				nextFactor, mFactor = child.__computeLightFactor(factor+1, maxFactor)
+				if mFactor > maxFactor:
+					maxFactor = mFactor
+			ind = ind+1
+		return factor+1, maxFactor
+			
+	def computeLightFactor(self):
+		dummy, maxFactor = self.__computeLightFactor()
+		self._maxFactor = maxFactor
+
+	def __computeEditBackground(self, maxFactor, baseColor):
+		factor = self._lightFactor
+		# experimental algorithm to determinate the computed color
+		r, g, b = baseColor
+		print 'factor,max found = ',factor,maxFactor
+		if maxFactor < 5:
+			colorNumber = 5
+		else:
+			colorNumber = maxFactor
+		m = min(r, g, b)
+		c = float(m)/colorNumber
+		s = int(c*factor)
+		self._computedEditBackground = r-s, g-s, b-s
+		print 'computedEditBg found = ',self._nodeRef,self._computedEditBackground
+		children = self._children
+		for child in children:
+			context = self._ctx._context
+			nodeType = context.getNodeType(child._nodeRef)
+			if nodeType not in (TYPE_VIEWPORT, TYPE_REGION):
+				continue
+			visible = context.getVisibility(child._nodeRef, nodeType, selected=1)
+			if not visible:
+				continue
+			if child._nodeRef.GetAttrDef('editBackground',None) is not None:
+				child.computeEditBackground()
+			else:
+				child.__computeEditBackground(maxFactor, baseColor)
+		
+	def computeEditBackground(self):
+		baseColor = self._nodeRef.GetAttrDef('editBackground',(200, 200, 200))
+		self.__computeEditBackground(self._maxFactor, baseColor)
+		
+#	def isShowEditBackground(self):
+#		showEditBackground = self._nodeRef.GetAttrDef('showEditBackground',None)
+#		if showEditBackground != None and showEditBackground == 1:
+#			return 1
+#		return 0		
 
 	def toShowedState(self):
 		if debug: print 'Node.toShowState',self.getName()
@@ -3374,6 +3544,7 @@ class Node:
 		for node in nodeToShow:
 			if node.getNodeType() != TYPE_VIEWPORT:
 				if debug: print 'Node.toShowState show parent',node.getName()
+				node.importAttrdict()
 				node.show()
 		if debug: print 'Node.toShowState end'
 
@@ -3395,19 +3566,15 @@ class Region(Node):
 	def importAttrdict(self):
 		Node.importAttrdict(self)
 
-		if self._ctx._context.asOutLine:
+		showMode = self._ctx._context.getShowEditBackgroundMode()
+		if showMode == 'editBackground':
+			self._curattrdict['bgcolor'] = self._computedEditBackground
+			self._curattrdict['transparent'] = 0
+		elif showMode == 'outLine':
 			self._curattrdict['transparent'] = 1
-		else:			
-			editBackground = None
-			if self.isShowEditBackground():
-				editBackground = self._nodeRef.GetAttrDef('editBackground',None)
-			
-			if editBackground != None:				
-					self._curattrdict['bgcolor'] = editBackground
-					self._curattrdict['transparent'] = 0
-			else:
-				self._curattrdict['bgcolor'] = self._nodeRef.GetInherAttrDef('bgcolor', (0,0,0))
-				self._curattrdict['transparent'] = self._nodeRef.GetInherAttrDef('transparent', 1)
+		else:								
+			self._curattrdict['bgcolor'] = self._nodeRef.GetInherAttrDef('bgcolor', (0,0,0))
+			self._curattrdict['transparent'] = self._nodeRef.GetInherAttrDef('transparent', 1)
 
 		self._curattrdict['wingeom'] = self._ctx._context.getPxGeomWithContextAnimation(self._nodeRef)
 		self._curattrdict['z'] = self._nodeRef.GetAttrDef('z', 0)
@@ -3475,8 +3642,15 @@ class MediaRegion(Region):
 
 	def importAttrdict(self):
 		Node.importAttrdict(self)
-#		self._curattrdict['bgcolor'] = MMAttrdefs.getattr(self._nodeRef, 'bgcolor')
-#		self._curattrdict['transparent'] = MMAttrdefs.getattr(self._nodeRef, 'transparent')
+		showMode = self._ctx._context.getShowEditBackgroundMode()
+		if showMode == 'editBackground':
+			self._curattrdict['transparent'] = 1			
+		elif showMode == 'outLine':
+			self._curattrdict['transparent'] = 1
+		else:								
+			self._curattrdict['bgcolor'] = self._nodeRef.GetInherAttrDef('bgcolor', (0,0,0))
+			self._curattrdict['transparent'] = self._nodeRef.GetInherAttrDef('transparent', 1)
+
 		self._curattrdict['transparent'] = 1
 		
 		# get wingeom according to the subregion positionning
@@ -3665,9 +3839,6 @@ class Viewport(Node):
 	def importAttrdict(self):
 		Node.importAttrdict(self)
 
-		editBackground = None
-		if self.isShowEditBackground():
-			editBackground = self._nodeRef.GetAttrDef('editBackground',None)
 			
 #		if editBackground != None:				
 #				self._curattrdict['bgcolor'] = editBackground
@@ -3675,7 +3846,7 @@ class Viewport(Node):
 #		else:
 #			self._curattrdict['bgcolor'] = self._nodeRef.GetInherAttrDef('bgcolor', (0,0,0))
 #			self._curattrdict['transparent'] = self._nodeRef.GetInherAttrDef('transparent', 1)
-		self._curattrdict['bgcolor'] = 200,200,200
+		self._curattrdict['bgcolor'] = 220,220,220
 		self._curattrdict['transparent'] = 0
 		
 		w,h=self._nodeRef.getPxGeom()
@@ -3735,7 +3906,10 @@ class Viewport(Node):
 			return
 		if debug: print 'LayoutView.updateAllAttrdict:',self.getName()
 		Node.updateAllAttrdict(self)
-		
+		showMode = self._ctx._context.getShowEditBackgroundMode()
+		if showMode == 'editBackground':
+			self.computeLightFactor()
+			self.computeEditBackground()
 		# for now refresh all
 		if self.isShowed():
 			self.showAllNodes()
