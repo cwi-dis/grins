@@ -140,7 +140,7 @@ def main():
 	except ImportError:
 		splash = None
 	else:
-		splash.splash(version = 'GRiNS V0.9')
+		splash.splash(version = 'GRiNS V0.2')
 
 	if ('-q', '') in opts:
 		sys.stdout = open('/dev/null', 'w')
