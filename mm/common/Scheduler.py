@@ -759,9 +759,12 @@ class SchedulerContext:
 
 	def cancelarc(self, arc, timestamp, cancel_gensr = 1):
 		if debugevents: print 'cancelarc',`arc`,timestamp
-		if arc.timestamp == timestamp:
-			if debugevents: print 'cancelarc returning early'
-			return
+# the commented-out lines fix a problem with
+# Default_Fill_on_time_container1.smil but cause worse problems with
+# hyperlinking.
+##		if arc.timestamp == timestamp:
+##			if debugevents: print 'cancelarc returning early'
+##			return
 		try:
 			self.parent.cancel(arc.qid)
 		except ValueError:
