@@ -47,38 +47,16 @@ def GetSize(url, maintype = None, subtype = None):
 	return width, height
 
 def GetImageSize(file):
+	import windowinterface
 	try:
-		import img
-	except ImportError:
-		import windowinterface
-		try:
-			width, height = windowinterface.GetImageSize(file)
-		except '':
-			width = height = 0
-	else:
-		try:
-			rdr = img.reader(None, file)
-		except img.error:
-			width = height = 0
-		else:
-			width, height = rdr.width, rdr.height
-	return width, height
+		return windowinterface.GetImageSize(file)
+	except:
+		return 0, 0
 
 def GetVideoSize(file):
+	import windowinterface
 	try:
-		import mv
-	except ImportError:
-		import windowinterface
-		try:
-			width, height = windowinterface.GetVideoSize(file)
-		except:
-			width = height = 0
-	else:
-		try:
-			movie = mv.OpenFile(file, mv.MV_MPEG1_PRESCAN_OFF)
-			track = movie.FindTrackByMedium(mv.DM_IMAGE)
-			width = track.GetImageWidth()
-			height = track.GetImageHeight()
-		except:
-			width = height = 0
+		width, height = windowinterface.GetVideoSize(file)
+	except:
+		width = height = 0
 	return width, height
