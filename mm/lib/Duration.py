@@ -10,6 +10,9 @@ import urlcache
 import string
 
 def getintrinsicduration(node, wanterror):
+	if node.GetType() not in ('ext', 'imm'):
+		# catch all for brush, prefetch, etc.
+		return 0
 	try:
 		clipbegin = node.GetClip('clipbegin', 'sec')
 	except ValueError:

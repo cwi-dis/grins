@@ -39,11 +39,7 @@ import Xt, Xm
 Xt.AddActionHook(actionhook, None)
 
 class HtmlChannel(Channel.ChannelWindow):
-	_our_attrs = ['fgcolor']
-	if Channel.CMIF_MODE:
-		node_attrs = Channel.ChannelWindow.node_attrs + _our_attrs
-	else:
-		chan_attrs = Channel.ChannelWindow.chan_attrs + _our_attrs
+	chan_attrs = Channel.ChannelWindow.chan_attrs + ['fgcolor']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
@@ -164,19 +160,18 @@ class HtmlChannel(Channel.ChannelWindow):
 		if self._is_shown and not self.htmlw:
 			self._after_creation()
 		self.armed_anchor = None
-		alist = node.GetRawAttrDef('anchorlist', [])
-		for i in range(len(alist)-1,-1,-1):
-			a = alist[i]
-			if a.atype == ATYPE_WHOLE:
-				if self.armed_anchor:
-					print 'multiple whole-node anchors on node'
-				self.armed_anchor = a
-		anchors = []
-		for a in alist:
-			atype = a.atype
-			if atype in SourceAnchors and \
-			   atype not in WholeAnchors:
-				anchors.append(a.aid)
+		anchors = {}
+		for c in node.GetSchedChildren():
+			if c.GetType() != 'anchor':
+				continue
+			fragment = MMAttrdefs.getattr(c, 'fragment')
+			if not fragment:
+				continue
+			if anchors.has_key(fragment):
+				print 'fragment',fragment,'used in multiple anchors'
+				# ignore all but first
+			else:
+				anchors[fragment] = c.GetUID()
 		parser = parsehtml.Parser(anchors)
 		parser.feed(self.armed_str)
 		self.armed_str = parser.close()
@@ -241,10 +236,12 @@ class HtmlChannel(Channel.ChannelWindow):
 		htmlw.SetText(self.played_str, '', '', 0, tag)
 		htmlw.MapWidget()
 		htmlw.UpdateDisplay()
-		self.fixanchorlist(node)
 		self.play_node = node
 
 	def stopplay(self, node, curtime):
+		if node.GetType() == 'anchor':
+			self.stop_anchor(node, curtime)
+			return
 		Channel.ChannelWindow.stopplay(self, node, curtime)
 		if self.htmlw:
 			self.htmlw.UnmapWidget()
@@ -265,7 +262,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		if self.played_anchor:
 			return
 		href = calldata.href
-		if href[:5] <> 'cmif:':
+		if href[:5] != 'cmif:':
 			self.www_jump(href, 'GET', None, None)
 		else:
 			i = string.find(href, '?')
@@ -291,7 +288,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		href = calldata.href
 		list = map(None,
 			   calldata.attribute_names, calldata.attribute_values)
-		if not href or href[:5] <> 'cmif:':
+		if not href or href[:5] != 'cmif:':
 			self.www_jump(href, calldata.method,
 				      calldata.enctype, list)
 		else:
@@ -299,53 +296,14 @@ class HtmlChannel(Channel.ChannelWindow):
 		windowinterface.toplevel.setready()
 
 	def cbcmifanchor(self, href, list):
-		aname = href[5:]
-		tp = self.findanchortype(aname)
-		if tp is None:
-			windowinterface.showmessage('Unknown CMIF anchor: '+aname, grab = 1, parent = self.window)
-			return
-		if tp == ATYPE_PAUSE:
-			f = self.pause_triggered
-		else:
-			f = self.anchor_triggered
-		f(self.play_node, [(aname, tp)], list)
-
-	def findanchortype(self, name):
-		for a in MMAttrdefs.getattr(self.play_node, 'anchorlist'):
-			if a.aid == name:
-				return a.atype
-		return None
-
-	def fixanchorlist(self, node):
-		allanchorlist = self.htmlw.GetHRefs()
+		uid = href[5:]
 		try:
-			allanchorlist = allanchorlist + self.htmlw.GetActions()
-		except TypeError:
-			# GetActions apparently does not exist
-			pass
-		anchorlist = []
-		for a in allanchorlist:
-			if a[:5] == 'cmif:':
-				i = string.find(a, '?')
-				if i > 0:
-					anchorlist.append(a[5:i])
-				else:
-					anchorlist.append(a[5:])
-		if len(anchorlist) == 0:
+			node = self.play_node.GetContext().mapuid(uid)
+		except:
+			windowinterface.showmessage('Unknown CMIF anchor: '+uid, grab = 1, parent = self.window)
 			return
-		nodeanchorlist = MMAttrdefs.getattr(node, 'anchorlist')[:]
-		oldanchorlist = map(lambda x: x.aid, nodeanchorlist)
-		newanchorlist = []
-		for a in anchorlist:
-			if a not in oldanchorlist:
-				newanchorlist.append(a)
-		if not newanchorlist:
-			return
-		from MMNode import MMAnchor
-		for a in newanchorlist:
-			nodeanchorlist.append(MMAnchor(a, ATYPE_NORMAL, [], (0,0), None))
-		node.SetAttr('anchorlist', nodeanchorlist)
-		MMAttrdefs.flushcache(node)
+		# XXX we're losing the list arg here
+		self.onclick(node)
 
 	def resolveImage(self, widget, src, noload = 0):
 		src = MMurl.basejoin(self.url, src)
@@ -468,7 +426,7 @@ def normalize(name):
 	for word in words[1:]:
 		word = string.upper(word[0]) + word[1:]
 		newname = newname + word
-## 	if newname <> name:
+## 	if newname != name:
 ## 		print 'HtmlChannel: "%s" has resource name "%s"'%(
 ## 			name, newname)
 	return newname

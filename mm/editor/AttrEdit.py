@@ -60,9 +60,12 @@ def showattreditor(toplevel, node, initattr = None):
 		# don't use __class__ - it doesn't support inheritance. -mjvdg.
 		#if node.__class__ is MMNode.MMNode:
 		if isinstance(node, MMNode.MMNode): # supports also EditableObjects.EditableMMNode
-			if node.GetChannelType() == 'animate' :
+			ntype = node.GetType()
+			if ntype == 'anchor':
+				wrapperclass = AnchorWrapper
+			elif ntype == 'animate' :
 				wrapperclass = AnimationWrapper
-			elif node.GetChannelType() == 'prefetch' :
+			elif ntype == 'prefetch' :
 				wrapperclass = PrefetchWrapper
 			else:	
 				wrapperclass = NodeWrapper
@@ -252,6 +255,8 @@ class Wrapper: # Base class -- common operations
 		raise 'getselection() called for attreditor not supporting it'
 	def setselection(self, selection):
 		raise 'setselection() called for attreditor not supporting it'
+	def checkconsistency(self, attreditor):
+		return 1
 
 class NodeWrapper(Wrapper):
 	def __init__(self, toplevel, node):
@@ -279,115 +284,7 @@ class NodeWrapper(Wrapper):
 		name = MMAttrdefs.getattr(self.node, 'name')
 		return 'Properties of node ' + name
 
-	def __findlink(self, new = None):
-		# if new == None, just return a link, if any
-		# if new == '', remove any existing link
-		# otherwise, remove old and set new link
-		srcanchor = self.toplevel.links.wholenodeanchor(self.node, notransaction = 1, create = new)
-		if not srcanchor:
-			# no whole node anchor, and we didn't have to create one
-			return None
-		links = self.context.hyperlinks.findsrclinks(srcanchor)
-		if links and new is not None:
-			# there is a link, and we want to replace or delete it
-			self.editmgr.dellink(links[0])
-			links = []
-		if not links:
-			if new is None:
-				return None
-			if not new:
-				# remove the anchor since it isn't used
-				alist = MMAttrdefs.getattr(self.node, 'anchorlist')[:]
-				for i in range(len(alist)):
-					if alist[i].atype == ATYPE_WHOLE:
-						del alist[i]
-						break
-				self.editmgr.setnodeattr(self.node, 'anchorlist', alist)
-				return None
-			link = srcanchor, new, DIR_1TO2, TYPE_JUMP, A_SRC_STOP, A_DEST_PLAY
-			self.editmgr.addlink(link)
-		else:
-			link = links[0]
-		dstanchor = link[1]
-		if type(dstanchor) == type(''):
-			# external link
-			return dstanchor
-		return '<Hyperlink within document>'	# place holder for internal link
-
-	def __findanchors(self):
-		alist = MMAttrdefs.getattr(self.node, 'anchorlist')
-		anchors = {}
-		uid = self.node.GetUID()
-		hlinks = self.context.hyperlinks
-		for a in alist:
-			links = []
-			if a.atype == ATYPE_DEST:
-				# don't show destination-only anchors
-				continue
-			for link in hlinks.findsrclinks((uid, a.aid)):
-				links.append(link[1:])
-			links.sort()
-			times = a.atimes[0], a.atimes[1] - a.atimes[0]
-			anchors[a.aid] = a.atype, a.aargs, times, a.aaccess, links
-		return anchors
-
-	def __setanchors(self, newanchors):
-		node = self.node
-		uid = node.GetUID()
-		hlinks = self.context.hyperlinks
-		linkview = self.toplevel.links
-		editmgr = self.editmgr
-		anchorlist = MMAttrdefs.getattr(node, 'anchorlist')[:]
-		newlinks = []
-		oldanchors = self.__findanchors()
-		oldanchonames = oldanchors.keys()
-		dstlinks = {}
-		for aid in oldanchors.keys():
-			anchor = uid, aid
-			for i in range(len(anchorlist)):
-				if anchorlist[i].aid == aid:
-					del anchorlist[i]
-					break
-			for link in hlinks.findsrclinks(anchor):
-				editmgr.dellink(link)
-			dstlinks[aid] = hlinks.finddstlinks(anchor)
-			for link in dstlinks[aid]:
-				editmgr.dellink(link)
-			if anchor in linkview.interesting:
-				linkview.interesting.remove(anchor)
-		rename = {}
-		for aid, a in newanchors.items():
-			if len(a) > 5 and a[5]:
-				rename[a[5]] = aid
-		for aid, a in newanchors.items():
-			anchor = uid, aid
-			oldname = aid
-			atype, aargs, times, access, links = a[:5]
-			times = times[0], times[0] + times[1]
-			if len(a) > 5:
-				oldname = a[5]
-			anchorlist.append(MMNode.MMAnchor(aid, atype, aargs, times, access))
-			if links:
-				if anchor in linkview.interesting:
-					linkview.interesting.remove(anchor)
-				for link in links:
-					editmgr.addlink((anchor,) + link)
-			else:
-				linkview.set_interesting(anchor)
-			for link in dstlinks.get(oldname, []):
-				# check whether src anchor renamed
-				a1 = link[0]
-				if a1[0] == uid:
-					a1 = uid, rename.get(a1[1], a1[1])
-					# check whether src anchor deleted
-					if not newanchors.has_key(a1[1]):
-						continue
-				editmgr.addlink((a1,) + link[1:])
-		editmgr.setnodeattr(node, 'anchorlist', anchorlist or None)
-
 	def getattr(self, name): # Return the attribute or a default
-		if name == '.hyperlink':
-			return self.__findlink() or ''
 		if name == '.type':
 			return self.node.GetType()
 		if name == '.begin1':
@@ -397,8 +294,6 @@ class NodeWrapper(Wrapper):
 			return beginlist[0].delay
 		if name == '.values':
 			return self.node.GetValues()
-		if name == '.anchorlist':
-			return self.__findanchors()
 		if name == 'cssbgcolor':
 			transparent = self.node.GetRawAttrDef('transparent', None)
 			bgcolor = self.node.GetRawAttrDef('bgcolor',None)
@@ -407,8 +302,6 @@ class NodeWrapper(Wrapper):
 		return MMAttrdefs.getattr(self.node, name)
 
 	def getvalue(self, name): # Return the raw attribute or None
-		if name == '.hyperlink':
-			return self.__findlink()
 		if name == '.type':
 			return self.node.GetType()
 		if name == '.begin1':
@@ -418,8 +311,6 @@ class NodeWrapper(Wrapper):
 			return beginlist[0].delay
 		if name == '.values':
 			return self.node.GetValues() or None
-		if name == '.anchorlist':
-			return self.__findanchors() or None
 		if name == 'cssbgcolor':
 			transparent = self.node.GetRawAttrDef('transparent', None)
 			bgcolor = self.node.GetRawAttrDef('bgcolor',None)
@@ -427,22 +318,15 @@ class NodeWrapper(Wrapper):
 		return self.node.GetRawAttrDef(name, None)
 
 	def getdefault(self, name): # Return the default or None
-		if name == '.hyperlink':
-			return None
 		if name == '.type':
 			return None
 		if name == '.begin1':
 			return 0
 		if name == '.values':
 			return None
-		if name == '.anchorlist':
-			return None
 		return MMAttrdefs.getdefattr(self.node, name)
 
 	def setattr(self, name, value):
-		if name == '.hyperlink':
-			self.__findlink(value)
-			return
 		if name == '.type':
 			if self.node.GetType() == 'imm' and value != 'imm':
 				self.editmgr.setnodevalues(self.node, [])
@@ -458,9 +342,6 @@ class NodeWrapper(Wrapper):
 			if self.node.GetType() in ('imm', 'comment'):
 				self.editmgr.setnodevalues(self.node, value)
 			return
-		if name == '.anchorlist':
-			self.__setanchors(value)
-			return
 		if name == 'cssbgcolor':
 			transparent, bgcolor = cssToCmifBgColor(value)
 			self.editmgr.setnodeattr(self.node, 'transparent', transparent)
@@ -473,14 +354,8 @@ class NodeWrapper(Wrapper):
 		if name == '.begin1':
 			self.editmgr.setnodeattr(self.node, 'beginlist', None)
 			return
-		if name == '.hyperlink':
-			self.__findlink('')
-			return
 		if name == '.values':
 			self.editmgr.setnodevalues(self.node, [])
-			return
-		if name == '.anchorlist':
-			self.__setanchors({})
 			return
 		if name == 'cssbgcolor':
 			return
@@ -542,7 +417,7 @@ class NodeWrapper(Wrapper):
 			('system_screen_size',), ('system_screen_depth',),
 			]
 		ctype = self.node.GetChannelType()
-		if ntype in leaftypes or features.compatibility == features.CMIF:
+		if ntype in mediatypes or features.compatibility == features.CMIF:
 			namelist.append('channel')
 		if not snap:
 			namelist.append('.type')
@@ -565,20 +440,20 @@ class NodeWrapper(Wrapper):
 					namelist.append('syncBehaviorDefault')
 					namelist.append('min')
 					namelist.append('max')
-				if ntype in leaftypes:
+				if ntype in mediatypes:
 					namelist.append('readIndex')
 					namelist.append('erase')
 		else:
 			# Snap!
 			if ntype != 'switch':
 				namelist.append('.begin1')
-		if not snap and (ntype in leaftypes or boston) and ntype != 'switch':
+		if not snap and (ntype in playabletypes or boston) and ntype != 'switch':
 			namelist.append('fill')
 		if boston:
 			namelist.append('alt')
 			if not snap:
 				namelist.append('longdesc')
-		if ntype in ('par', 'excl') or (ntype in leaftypes and boston):
+		if ntype in ('par', 'excl') or (ntype in termtypes and boston):
 			namelist.append('terminator')
 		if ntype in ('par', 'seq', 'excl'):
 			namelist.append('duration')
@@ -595,7 +470,7 @@ class NodeWrapper(Wrapper):
 			namelist.remove('repeatdur')
 			namelist.remove('beginlist')
 			namelist.remove('endlist')
-		if ntype in leaftypes:
+		if ntype in playabletypes:
 			namelist.append('alt')
 			namelist.append('allowedmimetypes')
 			if not snap:
@@ -603,8 +478,6 @@ class NodeWrapper(Wrapper):
 				if ctype != 'brush':
 					namelist.append('clipbegin')
 					namelist.append('clipend')
-			if lightweight and ChannelMap.isvisiblechannel(ctype):
-				namelist.append('.hyperlink')
 			if boston:
 				if not snap:
 					if ChannelMap.isvisiblechannel(ctype):
@@ -668,9 +541,6 @@ class NodeWrapper(Wrapper):
 					pass
 			else:
 				retlist.append(name)
-		if not lightweight and ntype in leaftypes \
-		   and sys.platform in ('win32', 'mac'): # XXX until implemented on other platforms
-			retlist.append('.anchorlist')
 			
 		if not cmifmode():
 			# cssbgcolor is used instead
@@ -683,11 +553,6 @@ class NodeWrapper(Wrapper):
 		return retlist
 
 	def getdef(self, name):
-		if name == '.hyperlink':
-			return (('string', None), '',
-				'Hyperlink', 'default',
-				'Links within the presentation or to another SMIL document',
-				'raw', flags.FLAG_ALL)
 		if name == '.type':
 			return (('enum', alltypes), '',
 				'Node type', 'nodetype',
@@ -700,16 +565,6 @@ class NodeWrapper(Wrapper):
 			return (('string', None), '',
 				'Content', 'text',
 				'Data for node', 'raw', flags.FLAG_ALL)
-		if name == '.anchorlist':
-			# our own version of the anchorlist:
-			# [(AnchorID, AnchorType, AnchorArgs, AnchorTimes, AccessKey, LinkList) ... ]
-			# the LinkList is a list of hyperlinks, each a tuple:
-			# (Anchor, Dir, Type)
-			# where Anchor is either a (NodeID,AnchorID) tuple or
-			# a string giving the external destination
-			return (('list', ('enclosed', ('tuple', [('any', None), ('int', None), ('enclosed', ('list', ('any', None))), ('enclosed', ('tuple', [('float', 0), ('float', 0)])), 'any', ('enclosed', ('list', ('any', None)))]))), [],
-				'Anchors', '.anchorlist',
-				'List of anchors on this node', 'raw', flags.FLAG_ALL)
 		return MMAttrdefs.getdef(name)
 
 	def getselection(self):
@@ -823,7 +678,7 @@ class AnimationWrapper(NodeWrapper):
 			rmlist.append('path')
 			rmlist.append('origin')
 		parent = self.node.GetParent()
-		if parent.GetType() in leaftypes:
+		if parent.GetType() in playabletypes:
 			rmlist.append('targetElement')
 		for attr in rmlist:
 			if attr in namelist:
@@ -869,6 +724,61 @@ class PrefetchWrapper(NodeWrapper):
 	def maketitle(self):
 		name = MMAttrdefs.getattr(self.node, 'name')
 		return 'Properties of prefetch node %s' % name
+
+class AnchorWrapper(NodeWrapper):
+	def attrnames(self):
+		namelist = ['name','acoords','beginlist', 'endlist','title']
+		if self.context.attributes.get('project_boston', 0):
+			namelist.extend(['alt','longdesc','max','min','loop',
+					 'repeatdur','tabindex',
+					 'duration','system_language',
+					 'system_bitrate','system_captions',
+					 'system_overdub_or_caption',
+					 'system_required',
+					 'system_screen_size',
+					 'system_screen_depth',
+					 'system_audiodesc','system_cpu',
+					 'system_operating_system',
+					 'system_component','u_group',
+					 'fragment','accesskey','ashape',
+					 'actuate'])
+			return namelist
+
+	def maketitle(self):
+		name = MMAttrdefs.getattr(self.node, 'name')
+		if name:
+			name = 'anchor %s' % name
+		else:
+			name = 'nameless anchor'
+		nname = MMAttrdefs.getattr(self.node.GetParent(), 'name') or 'nameless node'
+		return 'Properties of %s in %s' % (name, nname)
+
+	def checkconsistency(self, attreditor):
+		shape = attreditor._findattr('ashape')
+		if shape is not None:
+			shape = shape.getvalue()
+		else:
+			shape = 'rect'
+		coords = attreditor._findattr('acoords')
+		try:
+			coords = coords.parsevalue(coords.getvalue())
+		except:
+			# the error will be found again
+			return 1
+		if shape == 'rect':
+			if len(coords) != 4:
+				attreditor.showmessage('There should be 4 coordinates for rect', mtype = 'error')
+				return 0
+		elif shape == 'circle':
+			if len(coords) != 3:
+				attreditor.showmessage('There should be 3 coordinates for circle', mtype = 'error')
+				return 0
+		else:
+			# shape == 'poly'
+			if len(coords) % 2 != 0:
+				attreditor.showmessage('There should be an even number of coordinates for poly', mtype = 'error')
+				return 0
+		return 1
 
 class ChannelWrapper(Wrapper):
 	def __init__(self, toplevel, channel):
@@ -1550,6 +1460,8 @@ class AttrEditor(AttrEditorDialog):
 		# For those of us who can't tell verbs from nouns, apply here means "The Apply button"
 		# and this is a callback for when the "Apply button" is pressed - although it gets called
 		# from the "Ok" button also.
+		if not self.wrapper.checkconsistency(self):
+			return 1
 		self.__new = 0
 		# first collect all changes
 		dict = {}
@@ -3023,14 +2935,14 @@ class TermnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 		extras = ['LAST', 'FIRST']
 		if self.wrapper.context.attributes.get('project_boston', 0):
 			extras.append('ALL')
-			if self.wrapper.node.GetType() in leaftypes:
+			if self.wrapper.node.GetType() in mediatypes:
 				extras.append('MEDIA')
 		return extras + list
 
 	def getcurrent(self):
 		val = self.wrapper.getvalue(self.getname())
 		if val is None:
-			if self.wrapper.node.GetType() in leaftypes:
+			if self.wrapper.node.GetType() in mediatypes:
 				return 'MEDIA'
 			return 'LAST'
 		return self.valuerepr(val)
@@ -3055,7 +2967,7 @@ class FontAttrEditorField(PopupAttrEditorField):
 		fonts.sort()
 		return [DEFAULT] + fonts
 
-Alltypes = interiortypes+leaftypes
+Alltypes = interiortypes+playabletypes
 class NodeTypeAttrEditorField(PopupAttrEditorField):
 	def getoptions(self):
 		# XXX this needs work: we need to take animate
@@ -3065,7 +2977,7 @@ class NodeTypeAttrEditorField(PopupAttrEditorField):
 		ntype = self.wrapper.node.GetType()
 		if ntype in interiortypes:
 			if self.wrapper.node.GetChildren():
-				for tp in leaftypes:
+				for tp in playabletypes:
 					options.remove(tp)
 		elif ntype == 'imm' and self.wrapper.node.GetValues():
 			options = ['imm']
@@ -3077,12 +2989,38 @@ class NodeTypeAttrEditorField(PopupAttrEditorField):
 	def valuerepr(self, value):
 		return value
 
-class AnchorlistAttrEditorField(AttrEditorField):
-	def parsevalue(self, str):
-		return str
-
+from fmtfloat import fmtfloat
+class AnchorCoordsAttrEditorField(AttrEditorField):
 	def valuerepr(self, value):
-		return value
+		if value is None:
+			return ''
+		strl = []
+		for v in value:
+			if type(v) is type(0.0):
+				strl.append(fmtfloat(100*v, '%', prec = 1))
+			else:
+				strl.append(`v`)
+		return ' '.join(strl)
+
+	def parsevalue(self, str):
+		values = []
+		for s in str.split():
+			try:
+				if s[-1] == '%':
+					v = float(s[:-1])
+				elif '.' in s:
+					# assume floating point value is percentage
+					v = float(s)
+				else:
+					v = int(s)
+			except ValueError:
+				raise MParsingError, 'Coordinates should be a list of integers or percentage values'
+			else:
+				if type(v) is type(0.0):
+					# convert percentage
+					v = v / 100
+				values.append(v)
+		return values
 
 DISPLAYERS = {
 	'file': FileAttrEditorField,
@@ -3120,12 +3058,12 @@ DISPLAYERS = {
 	'bitrate': BitrateAttrEditorField,
 	'bitrate3': BitrateAttrEditorFieldWithDefault,
 	'quality': QualityAttrEditorField,
-	'.anchorlist': AnchorlistAttrEditorField,
 	'percent': PercentAttrEditorField,
 	'opsys': OperatingSystemAttrEditorField,
 	'cpu': CpuAttrEditorField,
 	'screensize': ScreenSizeAttrEditorField	,
 	'screendepth': ScreenDepthAttrEditorField,
+	'acoords': AnchorCoordsAttrEditorField,
 }
 
 TYPEDISPLAYERS = {

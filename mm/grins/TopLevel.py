@@ -371,20 +371,3 @@ class TopLevel(TopLevelDialog):
 
 	def is_document(self, url):
 		return self.filename == url
-
-	def _getlocalexternalanchors(self):
-		fn = self.filename
-		if not '/' in fn:
-			fn = './' + fn
-		rv = []
-		alist = MMAttrdefs.getattr(self.root, 'anchorlist')
-		for a in alist:
-			rv.append((fn, a.aid))
-		return rv
-
-	def getallexternalanchors(self):
-		rv = []
-		for top in self.main.tops:
-			if top is not self:
-				rv = rv + top._getlocalexternalanchors()
-		return rv

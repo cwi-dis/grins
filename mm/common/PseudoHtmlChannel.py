@@ -4,33 +4,17 @@ __version__ = "$Id$"
 # XXXX This is a placeholder for the coming HTML channel. It is just
 # an ordinary text channel, but it's anchors have arguments.
 #
-from Channel import ChannelWindow, error, CMIF_MODE
+from Channel import ChannelWindow, error
 from AnchorDefs import *
 import string
-from TextChannel import extract_paragraphs, extract_taglist, fix_anchorlist, mapfont
+from TextChannel import extract_paragraphs, extract_taglist, mapfont
 from StringStuff import calclines
 
 class HtmlChannel(ChannelWindow):
-	if CMIF_MODE:
-		node_attrs = ChannelWindow.node_attrs + [
-						 'fgcolor']
-	else:
-		chan_attrs = ChannelWindow.chan_attrs + [
-						 'fgcolor']
+	chan_attrs = ChannelWindow.chan_attrs + ['fgcolor']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
-
-	def updatefixedanchors(self, node):
-		try:
-			str = self.getstring(node)
-		except error, arg:
-			print arg
-			str = ''
-		parlist = extract_paragraphs(str)
-		taglist = extract_taglist(parlist)
-		fix_anchorlist(node, taglist)
-		return 1
 
 	def do_arm(self, node, same=0):
 		if same and self.armed_display:
@@ -42,7 +26,6 @@ class HtmlChannel(ChannelWindow):
 			str = ''
 		parlist = extract_paragraphs(str)
 		taglist = extract_taglist(parlist)
-		fix_anchorlist(node, taglist)
 ##			if taglist: print `taglist`
 		fontspec = getfont(node)
 		fontname, pointsize = mapfont(fontspec)

@@ -38,14 +38,12 @@ class LinkEditLight:
 	def __make_interesting(self, node):
 		uid = node.GetUID()
 		hlinks = self.context.hyperlinks
-		for a in node.GetAttrDef('anchorlist', []):
-			if a.atype not in SourceAnchors:
-				continue
-			anchor = uid, a.aid
-			if not hlinks.findsrclinks(anchor):
-				self.interesting.append(anchor)
 		for c in node.GetChildren():
-			self.__make_interesting(c)
+			if c.GetType() == 'anchor':
+				if not hlinks.findsrclinks(c):
+					self.interesting.append(c)
+			else:
+				self.__make_interesting(c)
 
 	def set_interesting(self, anchor):
 		self.interesting.append(anchor)
@@ -55,80 +53,57 @@ class LinkEditLight:
 
 	# Make sure all anchors in 'interesting' actually exist
 	def fixinteresting(self):
-		dlist = []
-		hlinks = self.context.hyperlinks
-		for nid, aid in self.interesting:
-			node = self.context.mapuid(nid)
-			for a in MMAttrdefs.getattr(node, 'anchorlist'):
-				if a.aid == aid:
-					if a.atype not in SourceAnchors or \
-					   hlinks.findsrclinks((nid, aid)):
-						# exists, but wrong type or has link
-						dlist.append((nid, aid))
-					break
-			else:
-				dlist.append((nid,aid))
-		for a in dlist:
-##			print 'lost anchor:', a
-			self.interesting.remove(a)
+		findsrclinks = self.context.hyperlinks.findsrclinks
+		root = self.toplevel.root
+		for anchor in self.interesting[:]:
+			if anchor.GetRoot() is not root or findsrclinks(anchor):
+				self.interesting.remove(anchor)
 
 	def islinksrc(self, node):
-		alist = MMAttrdefs.getattr(node, 'anchorlist')
-		uid = node.GetUID()
 		hlinks = self.context.hyperlinks
-		for a in alist:
-			anchor = uid, a.aid
-			if a.atype in SourceAnchors and \
-			   hlinks.findsrclinks(anchor):
+		if hlinks.findsrclinks(node): # unlikely...
+			return 1
+		for c in node.GetChildren():
+			if c.GetType() == 'anchor' and hlinks.findsrclinks(c):
 				return 1
 		return 0
 
 	# Method to return a whole-node anchor for a node, or optionally
 	# create one.
-	# If an anchor of type ATYPE_DEST is requested, we may return one
-	# of type ATYPE_WHOLE, since that can serve as a destination anchor.
-	# If an anchor of type ATYPE_WHOLE is requested, we may upgrade an
-	# anchor of ATYPE_DEST to ATYPE_WHOLE.
-	def wholenodeanchor(self, node, type=ATYPE_WHOLE, notransaction = 0, create = 1, interesting = 1):
-		alist = MMAttrdefs.getattr(node, 'anchorlist')[:]
-		dest = whole = None
-		for i in range(len(alist)):
-			a = alist[i]
-			if a.atype == ATYPE_DEST:
-				dest = i
-			elif a.atype == ATYPE_WHOLE:
-				whole = i
-			if type == a.atype:
-				if type == ATYPE_DEST or not create:
-					return (node.GetUID(), a.aid)
-				else:
-					windowinterface.showmessage("Such an anchor already exists on this node")
-					return None
+	def wholenodeanchor(self, node, notransaction = 0, create = 1, interesting = 1):
+		for c in node.GetChildren():
+			if c.GetType() != 'anchor':
+				continue
+			if MMAttrdefs.getattr(c, 'ashape') != 'rect':
+				# only rectangular anchors can be whole-node anchors
+				continue
+			if c.GetAttrDef('acoords', None) is not None:
+				# no coordinates allowed on whole-node anchors
+				continue
+			if c.GetAttrDef('beginlist', None) or \
+			   c.GetAttrDef('endlist', None):
+				# no timing allowed on whole-node anchors
+				continue
+			if not create:
+				return c
+			windowinterface.showmessage("Such an anchor already exists on this node")
+			return None
+
 		if not create:
 			return None
-		if type == ATYPE_DEST and whole is not None:
-			# return whole-node anchor for destination anchor
-			return (node.GetUID(), alist[whole].aid)
+
 		em = self.editmgr
 		if not notransaction and not em.transaction():
 			return None
-		alist = alist[:]
-		if type == ATYPE_WHOLE and dest is not None:
-			# we can upgrade the destination-only anchor
-			a = alist[i].copy()
-			a.atype = ATYPE_WHOLE
-			alist[i] = a
-		else:
-			from MMNode import MMAnchor
-			a = MMAnchor('0', type, [], (0,0), None)
-			alist.append(a)
-		em.setnodeattr(node, 'anchorlist', alist)
+		# create the anchor
+		anchor = node.GetContext().newnode('anchor')
+		# and insert it into the tree
+		em.addnode(node, -1, anchor)
 		if not notransaction:
 			em.commit()
-		rv = (node.GetUID(), a.aid)
 		if interesting:
-			self.interesting.append(rv)
-		return rv
+			self.interesting.append(anchor)
+		return anchor
 
 	def finish_link(self, node, notransaction = 0):
 		self.fixinteresting()
@@ -146,47 +121,29 @@ class LinkEditLight:
 			if i == 0:
 				return
 			srcanchor = self.interesting[i-1]
-		dstanchor = self.wholenodeanchor(node, type=ATYPE_DEST)
-		if not dstanchor:
-			return
 		em = self.editmgr
 		if not notransaction and not em.transaction():
 			return
 		self.interesting.remove(srcanchor)
-		if dstanchor in self.interesting:
-			self.interesting.remove(dstanchor)
-		link = srcanchor, dstanchor, DIR_1TO2, TYPE_JUMP, A_SRC_STOP, A_DEST_PLAY
+		if node in self.interesting: # unlikely...
+			self.interesting.remove(node)
+		link = srcanchor, node, DIR_1TO2, TYPE_JUMP, A_SRC_STOP, A_DEST_PLAY
 		em.addlink(link)
 		if not notransaction:
 			em.commit()
 
 	def makename(self, anchor):
-		if type(anchor) is not type(()):
+		if type(anchor) is type(''):
 			return anchor
-		uid, aid = anchor
-		if '/' in uid:
-			return aid + ' in ' + uid
-		node = self.context.mapuid(uid)
-		nodename = node.GetRawAttrDef('name', '#' + uid)
-		if self.findanchor(anchor).atype == ATYPE_DEST:
-			return nodename
-		if type(aid) is not type(''): aid = `aid`
-		return nodename + '.' + aid
-
-	def findanchor(self, anchor):
-		# Returns an MMAnchor which is the anchor.
-		# anchor is a tuple representing an anchor.
-		if anchor is not None:
-			if type(anchor) is not type(()):
-				from MMNode import MMAnchor
-				return MMAnchor(anchor, ATYPE_DEST, [], (0,0), None)
-			uid, aid = anchor
-			if '/' in uid:
-				# external anchor
-				from MMNode import MMAnchor
-				return MMAnchor(aid, ATYPE_DEST, [], (0,0), None)
-			node = self.context.mapuid(uid)
-			for a in MMAttrdefs.getattr(node, 'anchorlist'):
-				if a.aid == aid:
-					return a
-		return None
+		aname = MMAttrdefs.getattr(anchor, 'name')
+		if anchor.GetType() == 'anchor':
+			nname = MMAttrdefs.getattr(anchor.GetParent(), 'name')
+			if nname and aname:
+				return '%s in %s' % (aname, nname)
+			if nname:
+				return 'nameless anchor in %s' % nname
+			if not aname:
+				return 'nameless anchor in nameless node'
+		if aname:
+			return aname
+		return 'nameless node'

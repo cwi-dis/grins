@@ -52,6 +52,9 @@ class PrefetchChannel(Channel.ChannelAsync):
 		self.__pauseFetch(paused)
 
 	def stopplay(self, node, curtime):
+		if node.GetType() == 'anchor':
+			self.stop_anchor(node, curtime)
+			return
 		if self.__fetching:
 			self.__stopFetch()
 			self.__fetching = None

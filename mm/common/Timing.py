@@ -117,7 +117,7 @@ def prep1(node):
 		dur = node.GetAttrDef('empty_duration', None)
 	if dur is not None and dur >= 0:
 		adddep(node, HD, dur, node, TL, 'TERM')
-	elif type in leaftypes:
+	elif type in playabletypes:
 		dur = getduration(node)
 		if dur >= 0:
 			adddep(node, HD, dur, node, TL, 'TERM')
@@ -130,7 +130,7 @@ def prep1(node):
 			adddep(xnode, xside, 0, c, HD)
 			xnode, xside = c, TL
 		adddep(xnode, xside, 0, node, TL)
-	elif type in ('par', 'switch', 'excl') or (type in leaftypes and node.GetSchedChildren(0)):
+	elif type in ('par', 'switch', 'excl') or (type in playabletypes and node.GetSchedChildren(0)):
 		term = node.GetTerminator()
 		for c in node.GetSchedChildren(0):
 			if not c.ShouldPlay():
@@ -219,7 +219,7 @@ def propdown(root, node, stoptime, dftstarttime=0):
 
 	children = node.GetSchedChildren(0)
 
-	if tp in ('par', 'switch', 'excl', 'prio') or tp in leaftypes:
+	if tp in ('par', 'switch', 'excl', 'prio') or tp in playabletypes:
 		term = node.GetTerminator()
 		if term == 'LAST':
 			stoptime = node.t0
@@ -276,7 +276,7 @@ def propdown2(root, node, stoptime, dftstarttime=0):
 	node.t2 = stoptime
 
 	children = node.GetSchedChildren(0)
-	if tp in ('par', 'switch', 'excl', 'prio') or tp in leaftypes:
+	if tp in ('par', 'switch', 'excl', 'prio') or tp in playabletypes:
 		for c in children:
 			if c.ShouldPlay():
 				propdown2(root, c, stoptime, node.t0)

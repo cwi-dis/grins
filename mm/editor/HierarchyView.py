@@ -373,7 +373,7 @@ class HierarchyView(HierarchyViewDialog):
 			if findex < len(pchildren) - 1:
 				commands = commands + self.navigatecommands[2:3]
 
-		if fntype in MMNode.leaftypes and fnode.GetChannelType() != 'animate':
+		if fntype in MMNode.playabletypes and fnode.GetChannelType() != 'animate':
 			commands = commands + self.animatecommands[2:3]
 		if fntype == 'ext':
 			if fnode.GetComputedMimeType() == 'image/vnd.rn-realpix':
@@ -1438,12 +1438,12 @@ class HierarchyView(HierarchyViewDialog):
 	# search a default region in looking at the children of the parent,
 	# and recursivly until the root element
 	def __searchRegion1(self, pnode, childToExclude):
-		if pnode == None:
+		if pnode is None:
 			# no parent
 			return None
 		# look at in children
 		dftchannel = self.__searchRegion2(pnode, childToExclude)
-		if dftchannel != None:
+		if dftchannel is not None:
 			# region found. return this one
 			return dftchannel
 
@@ -1454,7 +1454,7 @@ class HierarchyView(HierarchyViewDialog):
 	# and recursively until the leaf elements
 	def __searchRegion2(self, pnode, childToExclude=None):
 		children = pnode.GetChildren()
-		if children != None:
+		if children is not None:
 			for child in children:
 				if child is not childToExclude:
 					type = child.GetType()
@@ -1462,7 +1462,7 @@ class HierarchyView(HierarchyViewDialog):
 					if type in MMTypes.mediatypes:
 						# media node
 						dftchannel = child.GetChannelName()
-						if dftchannel != 'undefined' and child.GetChannel() != None:
+						if dftchannel != 'undefined' and child.GetChannel() is not None:
 							# the region exist, return this one
 							return dftchannel
 					else:

@@ -131,11 +131,11 @@ class SchedulerContext:
 	#
 	# Start minidoc starts playing what we've prepared
 	#
-	def start(self, s_node, s_aid, s_args, timestamp = None):
-		if debugevents: print 'SchedulerContext.start',`self`, `s_node`, `s_aid`, `s_args`, timestamp, self.parent.timefunc()
+	def start(self, s_node, s_args, timestamp = None):
+		if debugevents: print 'SchedulerContext.start',`self`, `s_node`, `s_args`, timestamp, self.parent.timefunc()
 		self.startcontextchannels()
-		if s_node and s_aid:
-			self.seekanchor(s_node, s_aid, s_args)
+		if s_node:
+			self.seekanchor(s_node, s_args)
 		playroot = self.playroot
 		if timestamp is None:
 			timestamp = self.parent.timefunc()
@@ -148,12 +148,12 @@ class SchedulerContext:
 	# Seekanchor indicates that we are playing here because of the
 	# anchor specified.
 	#
-	def seekanchor(self, node, aid, aargs):
+	def seekanchor(self, node, aargs):
 		if isinstance(node, MMNode.MMNode_body):
 			node = node.parent
 		chan = self.parent.ui.getchannelbynode(node)
 		if chan:
-			chan.seekanchor(node, aid, aargs)
+			chan.seekanchor(node, aargs)
 	#
 	# Incoming events from channels, or the start event.
 	#
@@ -357,16 +357,7 @@ class SchedulerContext:
 				if do_continue:
 					continue
 			arc.__in_sched_arcs = 1	# to break recursion
-			atime = 0
-			if arc.srcanchor is not None:
-				for a in node.attrdict.get('anchorlist', []):
-					if a.aid == arc.srcanchor:
-						if event == 'end':
-							atime = a.atimes[1]
-						else:
-							atime = a.atimes[0]
-						break
-			self.sched_arc(node, arc, curtime, event, marker, timestamp+atime, depth, propagate = propagate)
+			self.sched_arc(node, arc, curtime, event, marker, timestamp, depth, propagate = propagate)
 			arc.__in_sched_arcs = 0
 		if depth == 0 and event == 'begin':
 			# also do children that are runnable
@@ -938,7 +929,7 @@ class SchedulerContext:
 ##				arc.dstnode.scheduled_children = arc.dstnode.scheduled_children - 1
 ##			node.delayed_arcs = []
 			getchannelfunc = node.context.getchannelbynode
-			if node.type in leaftypes and getchannelfunc:
+			if node.type in playtypes and getchannelfunc:
 				xnode = node
 				if isinstance(xnode, MMNode.MMNode_body):
 					xnode = xnode.parent
@@ -1066,7 +1057,7 @@ class SchedulerContext:
 		if debugevents: print 'freeze_play',`node`,curtime,parent.timefunc()
 		if node.playing in (MMStates.PLAYING, MMStates.PAUSED):
 			getchannelfunc = node.context.getchannelbynode
-			if node.type in leaftypes and getchannelfunc:
+			if node.type in playtypes and getchannelfunc:
 				xnode = node
 				if isinstance(xnode, MMNode.MMNode_body):
 					xnode = xnode.parent
@@ -1114,7 +1105,7 @@ class SchedulerContext:
 				self.cancelarc(arc, timestamp)
 				if debugevents: print 'pause_play',`arc`,arc.paused,self.parent.timefunc()
 		getchannelfunc = node.context.getchannelbynode
-		if node.type in leaftypes and getchannelfunc:
+		if node.type in playtypes and getchannelfunc:
 			xnode = node
 			if isinstance(xnode, MMNode.MMNode_body):
 				xnode = xnode.parent
@@ -1149,7 +1140,7 @@ class SchedulerContext:
 					arc.timestamp = timestamp + arc.paused
 					del arc.paused
 		getchannelfunc = node.context.getchannelbynode
-		if node.type in leaftypes and getchannelfunc:
+		if node.type in playtypes and getchannelfunc:
 			xnode = node
 			if isinstance(xnode, MMNode.MMNode_body):
 				xnode = xnode.parent
@@ -1180,6 +1171,7 @@ class SchedulerContext:
 			self.parent.add_runqueue(self, prio, sr, timestamp)
 	#
 	def play_done(self, node, curtime, timestamp = None):
+		return
 		if node.GetTerminator() == 'MEDIA' and \
 		   not node.attrdict.has_key('duration') and \
 		   not node.FilterArcList(node.GetEndList()):
@@ -1191,8 +1183,8 @@ class SchedulerContext:
 				self.parent.updatetimer(curtime) # ???
 
 	#
-	def anchorfired(self, node, anchorlist, arg):
-		return self.parent.anchorfired(self, node, anchorlist, arg)
+	def anchorfired(self, node, arg):
+		return self.parent.anchorfired(self, node, arg)
 	#
 	# Partially handle an event, updating the internal queues and
 	# returning executable SRs, if any.
@@ -1252,7 +1244,7 @@ class Scheduler(scheduler):
 		sctx = SchedulerContext(self, node, seek_node)
 		self.sctx_list.append(sctx)
 		self.playing = self.playing + 1
-		if not sctx.start(seek_node, anchor_id, anchor_arg, timestamp):
+		if not sctx.start(seek_node, anchor_arg, timestamp):
 			if debugevents: print 'Scheduler: play abort',self.timefunc()
 			sctx.stop(timestamp)
 			return None
@@ -1473,7 +1465,7 @@ class Scheduler(scheduler):
 		if action == SR.LOOPSTART:
 			self.do_loopstart(sctx, arg, timestamp)
 			arg.looping_body_self.set_start_time(timestamp)
-			if arg.type in leaftypes:
+			if arg.type in playtypes:
 				self.do_play(sctx, arg.looping_body_self, curtime, timestamp)
 			else:
 				arg.looping_body_self.startplay(timestamp)
@@ -1484,7 +1476,7 @@ class Scheduler(scheduler):
 		elif action == SR.LOOPRESTART:
 			if self.do_looprestart(sctx, arg, curtime, timestamp):
 				arg.looping_body_self.set_start_time(timestamp)
-				if arg.type in leaftypes:
+				if arg.type in playtypes:
 					self.do_play(sctx, arg.looping_body_self, curtime, timestamp)
 				else:
 					arg.looping_body_self.startplay(timestamp)
@@ -1523,7 +1515,7 @@ class Scheduler(scheduler):
 		elif action == SR.SCHED_START:
 			if arg.isresolved(sctx) is not None:
 				arg.set_start_time(timestamp)
-				if arg.type in leaftypes and arg.looping_body_self is None:
+				if arg.type in playtypes and arg.looping_body_self is None:
 					self.do_play(sctx, arg, curtime, timestamp)
 				else:
 					arg.startplay(timestamp)

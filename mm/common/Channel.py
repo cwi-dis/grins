@@ -31,7 +31,6 @@ PLAYING = 2
 PLAYED = 3
 
 import settings
-CMIF_MODE = settings.get('cmif')
 
 ACTIVATEEVENT = 'activateEvent'
 
@@ -82,7 +81,7 @@ class Channel:
 		self.armBox = (0.0, 0.0, 1.0, 1.0) # by default all window area
 		self.playBox = (0.0, 0.0, 1.0, 1.0) # by default all window area
 		self.nopop = 0
-		self.syncarm = settings.noprearm
+		self.syncarm = 1	# was: settings.noprearm (always 1)
 		self.syncplay = 0
 		self.is_layout_channel = 0
 		self.seekargs = None
@@ -524,32 +523,8 @@ class Channel:
 			if not self._player.toplevel.waitevent():
 				return
 
-	def anchor_triggered(self, node, anchorlist, arg):
-		return self._playcontext.anchorfired(node, anchorlist, arg)
-
-	def pause_triggered(self, node, anchorlist, arg):
-		# Callback which is called when the button of a pause
-		# anchor is pressed.
-		# If the anchor didn't fire, we're done playing the
-		# node.
-		if self._playstate == PLAYED:
-			# someone pushed the button again, I guess
-			return
-		if not self.anchor_triggered(node, anchorlist, arg):
-			if self._qid:
-				try:
-					self._scheduler.cancel(self._qid)
-				except RuntimeError:
-					# It may be that the done
-					# event was removed from the
-					# queue and is now somewhere
-					# in the internals of the
-					# scheduler where we can't
-					# remove it.  We ought to do
-					# something about that.
-					pass
-				self._qid = None
-			self.playdone(0, self._scheduler.timefunc())
+	def anchor_triggered(self, node, arg = None):
+		return self._playcontext.anchorfired(node, arg)
 
 	def play_0(self, node, curtime):
 	
@@ -564,20 +539,14 @@ class Channel:
 ##			print 'stopping playing node first',`self._played_node`
 			self.stopplay(self._played_node, curtime)
 		if self._armed_node is not node:
-			if settings.noprearm:
-				self.arm(node)
-				if not self._armcontext:
-					# aborted
-					return
-			else:
-				raise error, 'node was not the armed node '+`self,node`
+			self.arm(node)
+			if not self._armcontext:
+				# aborted
+				return
 		if self._playstate != PIDLE:
 			raise error, 'play not idle on '+self._name
 		if self._armstate != ARMED:
-			if settings.noprearm:
-				self.arm(node)
-			else:
-				raise error, 'arm not ready'
+			self.arm(node)
 		self._playcontext = self._armcontext
 		self._playstate = PLAYING
 		self._played_node = node
@@ -585,47 +554,33 @@ class Channel:
 		self._anchors = {}
 		self._played_anchors = self._armed_anchors[:]
 		self._played_anchor2button.update(self._armed_anchor2button)
-		for (name, type, button, times) in self._played_anchors:
-			self._anchors[button] = self.onclick, (node, [(name, type)], None)
+		for (button, a) in self._played_anchors:
+			self._anchors[button] = self.onclick, (a,)
 		self._qid = None
 
-	def onclick(self, node, anchorlist, arg):
-		if debug: print 'Channel.onclick'+`self,node,anchorlist,arg`
-		for (anchorname, type) in anchorlist:
-			if anchorname is not None:
-				anchor = node.GetUID(), anchorname
-				if self._player.context.hyperlinks.findsrclinks(anchor):
-					if type == ATYPE_PAUSE:
-						f = self.pause_triggered
-					else:
-						f = self.anchor_triggered
-					return f(node, anchorlist, arg)
+	def onclick(self, node):
+		if debug: print 'Channel.onclick'+`self,node`
+		if self._player.context.hyperlinks.findsrclinks(node):
+			return self.anchor_triggered(node)
 
-			# check if anchor is source of event
-			for arc in node.sched_children:
-				if arc.srcanchor == anchorname and \
-				   arc.event == ACTIVATEEVENT:
-					if anchorname is None:
-						self.event(ACTIVATEEVENT)
-					else:
-						self.event(ACTIVATEEVENT, arc)
+		# check if anchor is source of event
+		for arc in node.sched_children:
+			if arc.event == ACTIVATEEVENT and \
+			   arc.refnode() is node:
+				self.event(ACTIVATEEVENT)
 
-	def event(self, event, arc = None):
-		if debug: print 'Channel.event'+`self,event,arc`
+	def event(self, event):
+		if debug: print 'Channel.event'+`self,event`
 		if not self._scheduler.playing:
 			# not currently interested in events
 			return
-		if arc is None:
-			if type(event) is type(()):
-				node = self._player.root.GetSchedRoot()
-				sctx = self._scheduler.sctx_list[0] # XXX HACK!
-			else:
-				node = self._played_node
-				sctx = self._playcontext
-			sctx.sched_arcs(node, self._scheduler.timefunc(), event, external = 1)
+		if type(event) is type(()):
+			node = self._player.root.GetSchedRoot()
+			sctx = self._scheduler.sctx_list[0] # XXX HACK!
 		else:
-			self._played_node.event(self._playcontext.parent.timefunc(), event)
-			self._playcontext.sched_arc(self._played_node, arc, self._scheduler.timefunc(), event, external = 1)
+			node = self._played_node
+			sctx = self._playcontext
+		sctx.sched_arcs(node, self._scheduler.timefunc(), event, external = 1)
 
 	def play_1(self, curtime):
 		# This does the final part of playing a node.  This
@@ -652,11 +607,6 @@ class Channel:
 		else:
 			self.playdone(0, curtime)
 			
-		# in cmif mode, an auto anchor is triggered at the end of active duration
-		# in smil mode, an auto anchor is triggered at the begin of active duration
-		if not CMIF_MODE:
-			self._try_auto_anchors(curtime)
-
 	def playdone(self, outside_induced, curtime):
 		# This method should be called by a superclass
 		# (possibly through play_1) to indicate that the node
@@ -672,38 +622,16 @@ class Channel:
 		# If this node has a pausing anchor, don't call the
 		# callback just yet but wait till the anchor is hit.
 		if not self.syncplay:
-			# in cmif mode, an auto anchor is triggered at the end of active duration
-			# in smil mode, an auto anchor is triggered at the begin of active duration
-			if CMIF_MODE:
-				if not outside_induced:
-					if self._try_auto_anchors(curtime):
-						return
 			self._playcontext.play_done(self._played_node, curtime, curtime)
 		self._playstate = PLAYED
-
-	def _try_auto_anchors(self, curtime):
-		node = self._played_node
-		list = []
-		for a in MMAttrdefs.getattr(node, 'anchorlist'):
-			if a.atype == ATYPE_AUTO:
-##				print 'found auto anchor'
-				list.append((a.aid, a.atype))
-		if not list:
-			return 0
-		didfire = self.anchor_triggered(node, list, None)
-		if CMIF_MODE:
-			if didfire and self._playstate == PLAYING and \
-			   self._played_node is node:
-				if not self.syncplay:
-					self._playcontext.play_done(node, curtime)
-				self._playstate = PLAYED
-		return didfire
 
 	def freeze(self, node, curtime):
 		# Called by the Scheduler to stop playing and start freezing.
 		# The node is passed for consistency checking.
 		if debug:
 			print 'Channel.freeze'+`self,node`
+		if node.GetType() == 'anchor':
+			return
 		if self._played_node is not node or self._playstate != PLAYING:
 			return
 		self.playstop(curtime)
@@ -807,14 +735,53 @@ class Channel:
 			return
 		self.arm(node)
 
-	def seekanchor(self, node, aid, args):
+	def seekanchor(self, node, args):
 		# Called before arm on the node. Signifies that the node
 		# is played because a hyperjump to the specified anchor
 		# was executed. The channels can override this method, for
 		# instance to highlight the anchor. If the source anchor
 		# had arguments (as in HTML forms) these args are passed to
 		# the destination anchor here.
-		self.seekargs = (node, aid, args)
+		self.seekargs = (node, args)
+
+	def play_anchor(self, anchor, curtime):
+		print 'play anchor',anchor,curtime
+		actuate = MMAttrdefs.getattr(anchor, 'actuate')
+		print 'actuate',actuate
+		if actuate == 'onLoad':
+			self.onclick(anchor)
+			return
+
+		b = self._played_anchor2button.get(anchor)
+		if b is None:
+			print 'no button'
+			return
+
+		# make button sensitive if there is a listener
+		
+		for arc in anchor.sched_children:
+			if arc.event == ACTIVATEEVENT:
+				b.setsensitive(1)
+				return
+		print 'no events'
+
+		ctx = self._player.context
+		root = anchor.GetRoot()
+		for link in ctx.hyperlinks.findsrclinks(anchor):
+			if ctx.isgoodlink(link, root):
+				b.setsensitive(1)
+				return
+		print 'no links'
+
+	def stop_anchor(self, anchor, curtime):
+		print 'stop anchor',anchor,curtime
+		actuate = MMAttrdefs.getattr(anchor, 'actuate')
+		if actuate == 'onLoad':
+			return
+
+		b = self._played_anchor2button.get(anchor)
+		if b is not None:
+			b.setsensitive(0)
 
 	def play(self, node, curtime):
 		# Play the node that was last armed.  This will change
@@ -834,6 +801,9 @@ class Channel:
 		# anymore.
 		if debug:
 			print 'Channel.play('+`self`+','+`node`+')'
+		if node.GetType() == 'anchor':
+			self.play_anchor(node, curtime)
+			return
 		self.play_0(node, curtime)
 		if not self._armcontext:
 			return
@@ -849,6 +819,9 @@ class Channel:
 		# Node is only passed to do consistency checking.
 		if debug:
 			print 'Channel.stopplay('+`self`+','+`node`+')'
+		if node.GetType() == 'anchor':
+			self.stop_anchor(node, curtime)
+			return
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
@@ -935,10 +908,14 @@ class Channel:
 		self._paused = paused
 
 	def pause(self, node, action):
+		if node.GetType() == 'anchor':
+			return
 		if node is self._played_node:
 			self.setpaused(action)
 
 	def resume(self, node):
+		if node.GetType() == 'anchor':
+			return
 		if node is self._played_node:
 			self.setpaused(None)
 
@@ -953,26 +930,17 @@ class Channel:
 	#
 	# Methods used by derived classes.
 	#
-	def setanchor(self, name, type, button, times, arming = 1):
+	def setanchor(self, button, a, arming = 1):
 		# Define an anchor.  This method should be called by
-		# superclasses to define an anchor while arming.  Name
-		# is the name of the anchor, type is its type, button
-		# is a button object which, when pressed, triggers the
-		# anchor.
+		# superclasses to define an anchor while arming.
 		if arming:
-			self._armed_anchors.append((name, type, button, times))
-			self._armed_anchor2button[name] = button
+			self._armed_anchors.append((button, a))
+			self._armed_anchor2button[a] = button
 		else:
-			self._played_anchors.append((name, type, button, times))
-			self._played_anchor2button[name] = button
+			self._played_anchors.append((button, a))
+			self._played_anchor2button[a] = button
 
 	def getfileurl(self, node, animated=0):
-		name = node.GetAttrDef('name', None)
-		if name and self.seekargs and self.seekargs[0] is node and self.seekargs[2]:
-			name = name + '_file'
-			for arg, val in self.seekargs[2]:
-				if arg == name:
-					return node.context.findurl(val)
 		url = MMAttrdefs.getattr(node, 'file', animated)
 		if not url:
 			return ''
@@ -1085,15 +1053,6 @@ class Channel:
 					    mtype = 'warning')
 		apply(cb, (anchor,))
 
-	def updatefixedanchors(self, node):
-		# This method is called by the anchor editor to ensure that
-		# the 'anchorlist' attribute is correct for nodes on channels
-		# that have anchors implicit in the document. Such channels
-		# override this method by one that does the updating and
-		# returns 1. A return of '1' causes the anchor editor to refuse
-		# to edit an anchor.
-		return 0
-
 	__stopping = 0
 	def errormsg(self, node, msg):
 		if self.__stopping:
@@ -1135,13 +1094,8 @@ _button = None				# the currently highlighted button
 class ChannelWindow(Channel):
 	chan_attrs = Channel.chan_attrs + ['base_winoff', 'units', 'popup', 'z']
 	node_attrs = Channel.node_attrs[:]
-	if CMIF_MODE:
-		node_attrs.append('transparent')
-		chan_attrs.append('bgcolor')
-		chan_attrs.append('transparent')
-	else:
-		node_attrs.append('cssbgcolor')
-		chan_attrs.append('cssbgcolor')
+	node_attrs.append('cssbgcolor')
+	chan_attrs.append('cssbgcolor')
 	if 1: # XXX Should depend on SMIL-Boston. Can I test for that here??
 		node_attrs.append('transIn')
 		node_attrs.append('transOut')
@@ -1239,7 +1193,7 @@ class ChannelWindow(Channel):
 
 	def mousepress(self, arg, window, event, value):
 		# arg is a tuple of (x, y, buttons, params)
-		# x and y are expressed in pourcent values (relative to the channel geometry)
+		# x and y are expressed in percent values (relative to the channel geometry)
 		# buttons is a list of button. A button is a sensitive area associated to each anchor
 		# it can be a rectangle, circle or a polygon (see displaylist._Button class)
 		global _button
@@ -1264,7 +1218,7 @@ class ChannelWindow(Channel):
 
 	def mouserelease(self, arg, window, event, value):
 		# arg is a tuple of (x, y, buttons, params)
-		# x and y are expressed in pourcent values (relative to the channel geometry)
+		# x and y are expressed in percent values (relative to the channel geometry)
 		# buttons is a list of button. A button is a sensitive area associated to each anchor
 		# it can be a rectangle, circle or a polygon (see displaylist._Button class)
 		global _button
@@ -1275,25 +1229,18 @@ class ChannelWindow(Channel):
 			button = buttons[0]
 			if _button is button:
 				try:
-					f, a = self._anchors[button]
+					func, arg = self._anchors[button]
 				except KeyError:
 					pass
 				else:
-					a = self.setanchorargs(a, button, value)
 					self._player.toplevel.setwaiting()
-					apply(f, a) # may close channel
+					apply(func, arg) # may close channel
 ##		elif len(buttons) == 0:
 ##			if self.__transparent:
 ##				raise windowinterface.Continue		
 		if _button and not _button.is_closed():
 			_button.unhighlight()
 		_button = None
-
-	def setanchorargs(self, (node, nametypelist, args), button, value):
-		# Return the (node, nametypelist, args) tuple.
-		# Channels can override this to modify the args passed
-		# through the hyperjump (default: None)
-		return (node, nametypelist, args)
 
 	# set the display size of media after arming according to the size of media, fit attribute, ...
 	# this method is called by descendant
@@ -1605,54 +1552,41 @@ class ChannelWindow(Channel):
 
 		# create a button that covers the whole region, just
 		# in case we need one later on
-		windowCoordinates = self.convertShapeRelImageToRelWindow([A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0])
-		b = self.armed_display.newbutton(windowCoordinates, z = -1, sensitive = 0)
-		self.setanchor(None, None, b, None)
-
-		# create buttons for all anchors
-		ctx = node.GetContext()
-		root = node.GetRoot()
-		for a in MMAttrdefs.getattr(node, 'anchorlist'):
-			coordinates = a.aargs
-			if coordinates and coordinates[0] == A_SHAPETYPE_FRAGMENT:
-				continue
-			atype = a.atype
-			sensitive = 1
-			if atype not in SourceAnchors or \
-			   atype in (ATYPE_AUTO, ):
-				sensitive = 0
-			anchor = node.GetUID(), a.aid
-			srclinks = self._player.context.hyperlinks.findsrclinks(anchor)
-			if not srclinks:
-				sensitive = 0
-			else:
-				for link in srclinks:
-					if ctx.isgoodlink(link, root):
-						break
-				else:
-					sensitive = 0
-
-			# convert coordinates relative to the window size
-			windowCoordinates = self.convertShapeToRelWindow(coordinates)
-
-			b = self.armed_display.newbutton(windowCoordinates, times = a.atimes, sensitive = sensitive)
-			b.hiwidth(3)
-			self.setanchor(a.aid, atype, b, a.atimes)
-
 		# make buttons sensitive for which there is already a
 		# sync arc active
+		sensitive = 0
 		for arc in node.sched_children:
 			if arc.event == ACTIVATEEVENT:
-				b = self._armed_anchor2button.get(arc.srcanchor)
-				if b is None:
-					continue
-				b.setsensitive(1)
+				sensitive = 1
+				break
+
+		windowCoordinates = self.convertShapeRelImageToRelWindow([A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0])
+		b = self.armed_display.newbutton(windowCoordinates, z = -1, sensitive = sensitive)
+		self.setanchor(b, node)
+
+		# create buttons for all anchors
+		for a in node.GetChildren():
+			if a.GetType() != 'anchor':
+				continue
+			if MMAttrdefs.getattr(a, 'fragment'):
+				continue
+
+			# convert coordinates relative to the window size
+			windowCoordinates = self.convertShapeToRelWindow(MMAttrdefs.getattr(a, 'ashape'),
+									 MMAttrdefs.getattr(a, 'acoords'))
+
+			b = self.armed_display.newbutton(windowCoordinates, sensitive = 0)
+			b.hiwidth(3)
+			self.setanchor(b, a)
 
 	def add_arc(self, node, arc):
+		print 'add_arc',node,arc
+		if node.GetType() == 'anchor':
+			node = node.GetParent()
 		if node is not self._played_node or \
 		   arc.event != ACTIVATEEVENT:
 			return
-		b = self._played_anchor2button.get(arc.srcanchor)
+		b = self._played_anchor2button.get(arc.refnode())
 		if b is not None:
 			b.setsensitive(1)
 
@@ -1662,7 +1596,7 @@ class ChannelWindow(Channel):
 		self._winabsgeom, self._winabsmedia = node.getPxAbsGeomMedia()
 
 	# get the space display area of media
-	# return pourcent values relative to the subregion or region:
+	# return percent values relative to the subregion or region:
 	# tuple of (left/top/width/height)
 	def getmediageom(self, node):
 		subreg_left, subreg_top, subreg_width, subreg_height = self._wingeom
@@ -1683,6 +1617,9 @@ class ChannelWindow(Channel):
 	def play(self, node, curtime):
 		if debug:
 			print 'ChannelWindow.play('+`self`+','+`node`+')'
+		if node.GetType() == 'anchor':
+			self.play_anchor(node, curtime)
+			return
 		self.play_0(node, curtime)
 		if not self._armcontext:
 			return
@@ -1706,6 +1643,9 @@ class ChannelWindow(Channel):
 	def stopplay(self, node, curtime):
 		if debug:
 			print 'ChannelWindow.stopplay('+`self`+','+`node`+')'
+		if node.GetType() == 'anchor':
+			self.stop_anchor(node, curtime)
+			return
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
@@ -1893,76 +1833,74 @@ class ChannelWindow(Channel):
 	# For this, we need to know the real size of media which fit inside the region
 	# --> method getArmBox (channel dependent)
 	# This box is defined only after the call of do_arm method
-	def convertShapeToRelWindow(self, args, arming = 1):
+	def convertShapeToRelWindow(self, shape, coords, arming = 1):
 		# in this case we assume it's a rectangle area
-		if not args or args[0] == A_SHAPETYPE_ALLREGION:
-			args =  [A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0]
+		if not coords:
+			coords = [0.0, 0.0, 1.0, 1.0]
+			shape = 'rect'
 
 		# note: mLeft, mTop, ... is the geometry of the media after centering, scaling, ...
 		if arming:
-			mLeftInPourcent, mTopInPourcent, mWidthInPourcent, mHeightInPourcent = self.getArmBox()
+			mLeftInPercent, mTopInPercent, mWidthInPercent, mHeightInPercent = self.getArmBox()
 		else:
-			mLeftInPourcent, mTopInPourcent, mWidthInPourcent, mHeightInPourcent = self.getPlayBox()
+			mLeftInPercent, mTopInPercent, mWidthInPercent, mHeightInPercent = self.getPlayBox()
 			
 		wLeftInPixel, wTopInPixel, wWidthInPixel, wHeightInPixel = self.getwingeom()
 		
-		shapeType = args[0]
+		if shape != 'circle':
+			if shape == 'rect':
+				rArgs = [A_SHAPETYPE_RECT]
+			else:		# poly
+				rArgs = [A_SHAPETYPE_POLY]
 
-		if shapeType != A_SHAPETYPE_CIRCLE:
-			rArgs = [shapeType]
-			n=0
-			for a in args[1:]:
-				if type(a) == type(0):	# any integer number
+			for n in range(len(coords)):
+				a = coords[n]
+				if type(a) is type(0):	# any integer number
 					# integer values: the coordinates aren't related to the arm/play box
-						
 					# test if xCoordinates or yCoordinates
 					if n%2 == 0:
 						rArgs.append(float(a)/wWidthInPixel)
 					else:
 						rArgs.append(float(a)/wHeightInPixel)
 				else:
-					# pourcent values: the coordinates are related to the arm/play box
-					
+					# percent values: the coordinates are related to the arm/play box
 					# test if xCoordinates or yCoordinates
 					if n%2 == 0:
 						# convert coordinates from image to window size
-						rArgs.append(a*mWidthInPourcent + mLeftInPourcent)
+						rArgs.append(a*mWidthInPercent + mLeftInPercent)
 					else:
-						rArgs.append(a*mHeightInPourcent + mTopInPourcent)
-						
-				n = n+1
-				
+						rArgs.append(a*mHeightInPercent + mTopInPercent)
 		else:
-			# In internal, we manage only elipses
+			# Internally, we manage only elipses
 			# note: for an elipse, the meaning of rArg is a tuple of (xcenter, ycenter, xradius, yradius) 
 			rArgs = [A_SHAPETYPE_ELIPSE]
-			xCenter, yCenter, radius = args[1:]
+			xCenter, yCenter, radius = coords
 #			xsize, ysize = node.GetDefaultMediaSize(100, 100)
 #			# after a arming default, xsize or ysize value are equal to 0 !
 #			if xsize == 0: xsize=1
 #			if ysize == 0: ysize=1
 			
-			if type(xCenter) == type(0): # any integer number
+			if type(xCenter) is type(0): # any integer number
 				# integer values: the coordinates aren't related to the arm/play box
 				rArgs.append(float(xCenter)/wWidthInPixel)
 			else:
-				# pourcent values: the coordinates are related to the arm/play box
-				rArgs.append(xCenter*mWidthInPourcent + mLeftInPourcent)
+				# percent values: the coordinates are related to the arm/play box
+				rArgs.append(xCenter*mWidthInPercent + mLeftInPercent)
 				
-			if type(yCenter) == type(0): # any integer number
+			if type(yCenter) is type(0): # any integer number
 				# integer values: the coordinates aren't related to the arm/play box
 				rArgs.append(float(yCenter)/wHeightInPixel)
 			else:
-				# pourcent values: the coordinates are related to the arm/play box
-				rArgs.append(yCenter*mHeightInPourcent + mTopInPourcent)
+				# percent values: the coordinates are related to the arm/play box
+				rArgs.append(yCenter*mHeightInPercent + mTopInPercent)
 	
-			if type(radius) == type(0): 
+			if type(radius) is type(0): 
 				# integer values: the coordinates aren't related to the arm/play box
 				rArgs.append(float(radius)/wWidthInPixel)
 				rArgs.append(float(radius)/wHeightInPixel)
 			else:
-				mWidthInPixel = mWidthInPourcent*wWidthInPixel
-				mHeightInPixel = mHeightInPourcent*wHeightInPixel
+				mWidthInPixel = mWidthInPercent*wWidthInPixel
+				mHeightInPixel = mHeightInPercent*wHeightInPixel
 #				if xsize > ysize:
 				if mWidthInPixel > mHeightInPixel:
 					# radius is relative to the height
@@ -1971,8 +1909,7 @@ class ChannelWindow(Channel):
 					# radius is relative to the width
 					radiusInPixel = radius*mWidthInPixel
 				rArgs.append(radiusInPixel/wWidthInPixel)
-				rArgs.append(radiusInPixel/wHeightInPixel)												
-
+				rArgs.append(radiusInPixel/wHeightInPixel)
 		return rArgs
 	
 class ChannelAsync(Channel):
@@ -1980,6 +1917,9 @@ class ChannelAsync(Channel):
 	def play(self, node, curtime):
 		if debug:
 			print 'ChannelAsync.play('+`self`+','+`node`+')'
+		if node.GetType() == 'anchor':
+			self.play_anchor(node, curtime)
+			return
 		self.play_0(node, curtime)
 		if not self._armcontext:
 			return
@@ -1995,6 +1935,9 @@ class ChannelWindowAsync(ChannelWindow):
 	def play(self, node, curtime):
 		if debug:
 			print 'ChannelWindowAsync.play('+`self`+','+`node`+')'
+		if node.GetType() == 'anchor':
+			self.play_anchor(node, curtime)
+			return
 		self.play_0(node, curtime)
 		if not self._armcontext:
 			return
@@ -2036,7 +1979,7 @@ class AnchorContext:
 	def arm_ready(self, channel):
 		raise error, 'AnchorContext.arm_ready() called'
 
-	def anchorfired(self, node, anchorlist, arg):
+	def anchorfired(self, node, arg):
 		raise error, 'AnchorContext.anchorfired() called'
 
 	def play_done(self, node, curtime, timestamp = None):

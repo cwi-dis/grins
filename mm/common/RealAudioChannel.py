@@ -43,6 +43,9 @@ class RealAudioChannel(Channel.ChannelAsync):
 		self.__rc.pauseit(paused)
 
 	def stopplay(self, node, curtime):
+		if node.GetType() == 'anchor':
+			self.stop_anchor(node, curtime)
+			return
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return

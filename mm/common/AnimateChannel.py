@@ -87,6 +87,9 @@ class AnimateChannel(Channel.ChannelAsync):
 
 	def stopplay(self, node, curtime):
 		if debug: print 'stopplay'
+		if node.GetType() == 'anchor':
+			self.stop_anchor(node, curtime)
+			return
 		self.__stopAnimate()
 		self.__removeAnimate()
 		Channel.ChannelAsync.stopplay(self, node, curtime)

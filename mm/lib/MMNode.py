@@ -705,19 +705,14 @@ class MMNodeContext:
 
 	def _isgoodlink(self, link):
 		a1, a2 = link[:2]
-		if type(a1) is type(()):
-			uid1, aid1 = a1
-			srcok = (self.uidmap.has_key(uid1) and
-				 self.uidmap[uid1].GetRoot() in self._roots)
-		else:
+		if type(a1) is type(''):
 			srcok = 0
-		if type(a2) is type(()):
-			uid2, aid2 = a2
-			dstok = (('/' in uid2) or
-				 (self.uidmap.has_key(uid2) and
-				  self.uidmap[uid2].GetRoot() in self._roots))
 		else:
+			srcok = a1.GetRoot() in self._roots
+		if type(a2) is type(''):
 			dstok = 1
+		else:
+			dstok = a2.GetRoot() in self._roots
 		return (srcok and dstok)
 
 	#
@@ -1126,7 +1121,7 @@ class MMTreeElement(Owner):
 				if not (0 <= i < len(nodes)):
 					raise xpath_error, 'not enough children'
 				ntype = nodes[i].GetType()
-				if ntype == xhead or (xhead == 'media' and ntype in leaftypes):
+				if ntype == xhead or (xhead == 'media' and ntype in mediatypes):
 					index = index - step
 			return nodes[i].xpath(xtail)
 		raise xpath_error, "unrecognized XPath component `%s'" % xhead
@@ -1716,27 +1711,6 @@ class MMChannelTree:
 		return chan.GetRoot()
 
 
-# representation of anchors
-# See Hlink.py, LinkEditLight.py.
-class MMAnchor:
-	def __init__(self, aid, atype, aargs, atimes, aaccess):
-		self.aid = aid		# The name of this anchor, unique only within this node.
-		self.atype = atype
-		self.aargs = aargs
-		self.atimes = atimes
-		self.aaccess = aaccess
-
-	# allow to know the class name without use 'import xxx; isinstance'
-	# note: this method should be implemented for all basic classes of the document
-	def getClassName(self):
-		return 'MMAnchor'
-
-	def getIconName(self, wantmedia=0):
-		return 'linksrc'
-
-	def copy(self):
-		return MMAnchor(self.aid, self.atype, self.aargs, self.atimes, self.aaccess)
-
 # used below in get_repeat()
 _repeat_regexp = None
 
@@ -1755,10 +1729,10 @@ class MMSyncArc:
 		#    'end' means that self determines when the node ends.
 		# -mjvdg
 		if __debug__:
+			assert srcanchor is None
 			assert event is None or marker is None
 			if wallclock is not None:
 				assert srcnode is None
-				assert srcanchor is None
 				assert channel is None
 				assert event is None
 				assert marker is None
@@ -1766,29 +1740,24 @@ class MMSyncArc:
 				assert delay == 0
 			elif channel is not None:
 				assert srcnode is None
-				assert srcanchor is None
 				assert event is not None
 				assert marker is None
 				assert accesskey is None
 				assert delay is not None
 			elif accesskey is not None:
 				assert srcnode is None
-				assert srcanchor is None
 				assert event is None
 				assert marker is None
 				assert delay is not None
 			elif srcnode is not None:
 				if srcnode == 'syncbase':
 					assert marker is None
-					assert srcanchor is None
 				elif srcnode == 'prev':
 					assert marker is None
-					assert srcanchor is None
 			else:
 				# wallclock is None and channel is None
 				# and srcnode is None and accesskey is None:
 				# indefinite
-				assert srcanchor is None
 				assert event is None
 				assert marker is None
 				assert delay is None
@@ -1800,7 +1769,6 @@ class MMSyncArc:
 					# "syncbase" if syncbase;
 					# "prev" if previous;
 					# else MMNode instance
-		self.srcanchor = srcanchor
 		self.channel = channel	# MMChannel instance or None
 		self.event = event
 		self.marker = marker
@@ -1861,8 +1829,6 @@ class MMSyncArc:
 			src = 'xpath(%s)' % self.srcnode
 		else:
 			src = `self.srcnode`
-			if self.srcanchor is not None:
-				src = src + '#' + self.srcanchor
 		if self.event is not None:
 			src = src + '.' + self.event
 		if self.marker is not None:
@@ -1912,7 +1878,7 @@ class MMSyncArc:
 				srcnode = self.dstnode.context.mapuid(uidremap[uid])
 
 		return MMSyncArc(dstnode, action, srcnode,
-				 self.srcanchor, self.channel, self.event,
+				 None, self.channel, self.event,
 				 self.marker, self.wallclock,
 				 self.accesskey, self.delay)
 
@@ -2134,18 +2100,12 @@ class MMSyncArc:
 			return self.dstnode.GetSchedRoot().happenings[(self.channel._name, self.event)]
 
 		refnode = self.refnode()
-		atimes = (0, 0)
-		if self.srcanchor is not None:
-			for a in refnode.attrdict.get('anchorlist', []):
-				if a.aid == self.srcanchor:
-					atimes = a.atimes
-					break
 		event = self.getevent()
 		if event is None and self.marker is None:
 			# syncbase-relative offset
 			pnode = self.dstnode.GetSchedParent()
 			if pnode is None:
-				return atimes[0]
+				return 0
 			if pnode.type == 'seq':
 				if refnode is pnode:
 					event = 'begin'
@@ -2157,23 +2117,19 @@ class MMSyncArc:
 			t = refnode.isresolved(sctx)
 			if event == 'begin':
 				if refnode.start_time is not None:
-					self.timestamp = t + atimes[0] + self.delay
-				return t + atimes[0] + self.delay
+					self.timestamp = t + self.delay
+				return t + self.delay
 			if event == 'end':
-				if self.srcanchor is not None and atimes[1] > 0:
-					if refnode.start_time is not None:
-						self.timestamp = t + atimes[1] + self.delay
-					return t + atimes[1] + self.delay
 				if refnode.playing == MMStates.PLAYED:
-					return refnode.happenings[('event', event)] + atimes[1] + self.delay
+					return refnode.happenings[('event', event)] + self.delay
 				d = refnode.calcfullduration(sctx)
 				if refnode.start_time is not None and \
 				   refnode.fullduration is not None:
 					self.timestamp = t + d + self.delay
-				return t + d + atimes[1] + self.delay
-			return refnode.happenings[('event', event)] + atimes[1] + self.delay
+				return t + d + self.delay
+			return refnode.happenings[('event', event)] + self.delay
 		# self.marker is not None:
-		return refnode.markerhappened(self.marker, sctx) + atimes[0] + self.delay
+		return refnode.markerhappened(self.marker, sctx) + self.delay
 
 class MMNode_body:
 	"""Helper for looping nodes"""
@@ -2426,8 +2382,7 @@ class MMNode(MMTreeElement):
 
 	def _fill(self):
 		# fill with the requiered default attribute values
-		import MMTypes
-		if self.GetType() in MMTypes.mediatypes:
+		if self.GetType() in mediatypes:
 			self.attrdict['transparent'] = 1
 
 	# methods that have to do with playback
@@ -2674,10 +2629,19 @@ class MMNode(MMTreeElement):
 			body = self
 		if arc in body.sched_children:
 			return
-		body.sched_children.append(arc)
+		if not arc.isstart and arc.dstnode is self:
+			body.sched_children.append(arc)
+		else:
+			for i in range(len(body.sched_children)):
+				a = body.sched_children[i]
+				if not a.isstart and a.dstnode is self:
+					body.sched_children.insert(i, arc)
+					break
+			else:
+				body.sched_children.append(arc)
 		if self.playing != MMStates.IDLE and \
 		   self.playing != MMStates.PLAYED and \
-		   self.type in leaftypes:
+		   self.type in playtypes:
 			getchannelfunc = self.context.getchannelbynode
 			if getchannelfunc:
 				chan = getchannelfunc(self)
@@ -2791,12 +2755,12 @@ class MMNode(MMTreeElement):
 		mintime = self.attrdict.get('min')
 		maxtime = self.attrdict.get('max')
 		if mintime == -2:
-			if self.type in leaftypes:
+			if self.type in mediatypes:
 				mintime = Duration.get(self, ignoreloop=1, ignoredur=1)
 			else:
 				mintime = None
 		if maxtime == -2:
-			if self.type in leaftypes:
+			if self.type in mediatypes:
 				maxtime = Duration.get(self, ignoreloop=1, ignoredur=1)
 			else:
 				maxtime = None
@@ -3010,13 +2974,8 @@ class MMNode(MMTreeElement):
 			return child.GetChildByName(name)
 		return None
 
+	# XXX to be removed
 	def GetChildWithArea(self, name):
-		alist = MMAttrdefs.getattr(self, 'anchorlist')
-		for a in alist:
-			if a.aid == name:
-				return self, a
-		for child in self.children:
-			return child.GetChildWithArea(name)
 		return None
 
 	def GetValues(self):
@@ -3318,46 +3277,13 @@ class MMNode(MMTreeElement):
 		else:
 			self.SetAttr('channel', c.name)
 
-#	# GetAllChannels - Get a list of all leaf channels used in a tree.
-#	# If there is overlap between parnode children the node in error
-#	# is returned.
-#	def GetAllChannels(self):
-#		errnode = None
-#		overlap = []
-#		list = []
-#		if self.type in leaftypes:
-#			import MMTypes
-#			if self.GetType() in MMTypes.mediatypes:
-#				# XXX warning: this name is put from PlayerCore
-#				try:
-#					list.append(self._rendererName)
-#				except AttributeError:
-#					# undefined renderer
-#					list.append('undefined')
-#			else:
-#				# special types (animate, prefetch, ...)
-#				list.append(MMAttrdefs.getattr(self, 'channel'))
-#			# special case for real compatibility
-#			captionchannel = MMAttrdefs.getattr(self, 'captionchannel')
-#			if captionchannel and captionchannel != 'undefined':
-#				list.append(captionchannel)
-#		for ch in self.children:
-#			chlist, cherrnode = ch.GetAllChannels()
-#			if cherrnode:
-#				errnode = cherrnode
-#			list, choverlap = MergeLists(list, chlist)
-#			if choverlap:
-#				overlap = overlap + choverlap
-#		return list, errnode
-						
 	#
 	# GetAllMediaNodes - Get a list of all nodes may be played with
 	# a renderer channel.
 	def GetAllMediaNodes(self, list = None):
-		if list == None:
+		if list is None:
 			list = []
-		import MMTypes
-		if self.type in MMTypes.mediatypes:
+		if self.type in mediatypes:
 			list.append(self)
 			return list
 		for node in self.children:
@@ -3430,7 +3356,7 @@ class MMNode(MMTreeElement):
 		uidremap = {}
 		copy = self._deepcopy(uidremap, self.context)
 		copy._fixuidrefs(uidremap)
-		_copyoutgoinghyperlinks(self.context.hyperlinks, uidremap)
+		_copyoutgoinghyperlinks(self.context, uidremap)
 		return copy
 	#
 	# Copy a subtree (deeply) into a new context
@@ -3439,8 +3365,8 @@ class MMNode(MMTreeElement):
 		uidremap = {}
 		copy = self._deepcopy(uidremap, context)
 		copy._fixuidrefs(uidremap)
-		_copyinternalhyperlinks(self.context.hyperlinks,
-					copy.context.hyperlinks, uidremap)
+		_copyinternalhyperlinks(self.context,
+					copy.context, uidremap)
 		return copy
 	#
 	# Private methods for DeepCopy
@@ -3570,12 +3496,9 @@ class MMNode(MMTreeElement):
 		self._subRegCssId = None
 		if not fakeroot:
 			# delete hyperlinks referring to anchors here
-			alist = MMAttrdefs.getattr(self, 'anchorlist')
 			hlinks = self.context.hyperlinks
-			for a in alist:
-				aid = (self.uid, a.aid)
-				for link in hlinks.findalllinks(aid, None):
-					hlinks.dellink(link)
+			for link in hlinks.findalllinks(self, None):
+				hlinks.dellink(link)
 
 			MMTreeElement.Destroy(self)
 		self.type = None
@@ -4059,7 +3982,7 @@ class MMNode(MMTreeElement):
 
 	def cleanup_sched(self, sched, body = None):
 		if debug: print 'cleanup_sched', `self`, `body`
-		if self.type in leaftypes:
+		if self.type in playabletypes: # XXX is this correct?
 			return
 		if body is None:
 			if self.looping_body_self:
@@ -4247,7 +4170,7 @@ class MMNode(MMTreeElement):
 				refnode = arc.refnode()
 				refnode.add_arc(arc, curtime, sctx)
 			cdur = child.calcfullduration(sctx, ignoremin = 1)
-			if cdur is not None and (child.fullduration is not None or child.attrdict.has_key('duration') or child.type in leaftypes):
+			if cdur is not None and (child.fullduration is not None or child.attrdict.has_key('duration') or child.type in playabletypes):
 				if cdur < 0:
 					delay = None
 				else:
@@ -4513,10 +4436,10 @@ class MMNode(MMTreeElement):
 		# not taking into account the duration/end/repeat* attrs
 		maybecached = 1
 		termtype = self.GetTerminator()
-		if self.type in leaftypes and termtype == 'MEDIA':
+		if self.type in mediatypes and termtype == 'MEDIA':
 			return Duration.get(self, ignoreloop=1), maybecached
 		syncbase = self.isresolved(sctx)
-		if self.type in partypes + ['excl']:
+		if self.type in termtypes:
 			if termtype not in ('LAST', 'FIRST', 'ALL'):
 				for c in self.GetSchedChildren():
 					if MMAttrdefs.getattr(c, 'name') == termtype:
@@ -4864,7 +4787,7 @@ class MMNode(MMTreeElement):
 			return 0
 		# Check that we really can
 		getchannelfunc = self.context.getchannelbynode
-		if self.type in leaftypes and getchannelfunc:
+		if self.type in mediatypes and getchannelfunc:
 			# For media nodes check that the channel likes
 			# the node
 			chan = getchannelfunc(self)
@@ -5001,7 +4924,7 @@ class MMNode(MMTreeElement):
 			'system_screen_size', 'system_screen_depth',
 			]
 		ctype = self.GetChannelType()
-		if ntype in leaftypes:
+		if ntype in mediatypes:
 			namelist.append('channel')
 		namelist.append('abstract')
 		namelist.append('system_captions')
@@ -5021,14 +4944,14 @@ class MMNode(MMTreeElement):
 			namelist.append('syncBehaviorDefault')
 			namelist.append('min')
 			namelist.append('max')
-		if ntype in leaftypes:
+		if ntype in mediatypes:
 			namelist.append('readIndex')
 			namelist.append('erase')
 		if  ntype != 'switch':
 			namelist.append('fill')
 		namelist.append('alt')
 		namelist.append('longdesc')
-		if ntype in ('par', 'excl') or (ntype in leaftypes):
+		if ntype in termtypes:
 			namelist.append('terminator')
 		if ntype in ('par', 'seq', 'excl'):
 			namelist.append('duration')
@@ -5040,7 +4963,7 @@ class MMNode(MMTreeElement):
 			namelist.remove('repeatdur')
 			namelist.remove('beginlist')
 			namelist.remove('endlist')
-		if ntype in leaftypes:
+		if ntype in mediatypes:
 			namelist.append('alt')
 			namelist.append('longdesc')
 			namelist.append('clipbegin')
@@ -5193,61 +5116,49 @@ def _valuedeepcopy(value):
 # representation of hyperlinks.  However it knows more about anchors
 # than would be good for code placed in module Hlinks...
 #
-def _copyinternalhyperlinks(src_hyperlinks, dst_hyperlinks, uidremap):
-	links = src_hyperlinks.getall()
+def _copyinternalhyperlinks(src_context, dst_context, uidremap):
+	links = src_context.hyperlinks.getall()
 	newlinks = []
 	for a1, a2, dir, ltype, stype, dtype in links:
-		if type(a1) is not type(()) or type(a2) is not type(()):
+		if type(a1) is type('') or type(a2) is type(''):
 			continue
-		uid1, aid1 = a1
-		uid2, aid2 = a2
+		uid1 = a1.GetUID()
+		uid2 = a2.GetUID()
 		if uidremap.has_key(uid1) and uidremap.has_key(uid2):
 			uid1 = uidremap[uid1]
 			uid2 = uidremap[uid2]
-			a1 = uid1, aid1
-			a2 = uid2, aid2
+			a1 = dst_context.mapuid(uid1)
+			a2 = dst_context.mapuid(uid2)
 			link = a1, a2, dir, ltype, stype, dtype
 			newlinks.append(link)
 	if newlinks:
-		dst_hyperlinks.addlinks(newlinks)
+		dst_context.hyperlinks.addlinks(newlinks)
 
-def _copyoutgoinghyperlinks(hyperlinks, uidremap):
+def _copyoutgoinghyperlinks(context, uidremap):
 	from Hlinks import DIR_1TO2, DIR_2TO1, DIR_2WAY
-	links = hyperlinks.getall()
+	links = context.hyperlinks.getall()
 	newlinks = []
 	for a1, a2, dir, ltype, stype, dtype in links:
 		changed = 0
-		if type(a1) is type(()):
-			uid1, aid1 = a1
+		if type(a1) is not type(''):
+			uid1 = a1.GetUID()
 			if uidremap.has_key(uid1) and \
 			   dir in (DIR_1TO2, DIR_2WAY):
 				uid1 = uidremap[uid1]
-				a1 = uid1, aid1
+				a1 = context.mapuid(uid1)
 				changed = 1
-		if type(a2) is type(()):
-			uid2, aid2 = a2
+		if type(a2) is not type(''):
+			uid2 = a2.GetUID()
 			if uidremap.has_key(uid2) and \
 			   dir in (DIR_2TO1, DIR_2WAY):
 				uid2 = uidremap[uid2]
-				a2 = uid2, aid2
+				a2 = context.mapuid(uid2)
 				changed = 1
 		if changed:
 			link = a1, a2, dir, ltype, stype, dtype
 			newlinks.append(link)
-##		uid1, aid1 = a1
-##		uid2, aid2 = a2
-##		if uidremap.has_key(uid1) and dir in (DIR_1TO2, DIR_2WAY) or \
-##			uidremap.has_key(uid2) and dir in (DIR_2TO1, DIR_2WAY):
-##			if uidremap.has_key(uid1):
-##				uid1 = uidremap[uid1]
-##				a1 = uid1, aid1
-##			if uidremap.has_key(uid2):
-##				uid2 = uidremap[uid2]
-##				a2 = uid2, aid2
-##			link = a1, a2, dir, ltype
-##			newlinks.append(link)
 	if newlinks:
-		hyperlinks.addlinks(newlinks)
+		context.hyperlinks.addlinks(newlinks)
 
 #
 # MergeList merges two lists. It also returns a status value to indicate

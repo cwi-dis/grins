@@ -176,12 +176,6 @@ class PlayerCore(Selecter, PlayerCommon):
 			return
 		ch.defanchor(node, anchor, cb)
 	#
-	def updatefixedanchors(self, node):
-		ch = self.getchannelbynode(node)
-		if ch is None:
-			return 1	# Cannot set on internal nodes
-		return ch.updatefixedanchors(node)
-
 	def updateFocus(self, focusNode):
 		if focusNode != None:
 			self.editmgr.setglobalfocus([focusNode])
@@ -297,7 +291,11 @@ class PlayerCore(Selecter, PlayerCommon):
 
 	def getchannelbynode(self, node):
 		import MMTypes
-		if node.GetType() in MMTypes.mediatypes:
+		ntype = node.GetType()
+		if ntype == 'anchor':
+			node = node.GetParent()
+			ntype = node.GetType()
+		if ntype in MMTypes.mediatypes:
 			return self.getRenderer(node)
 		else:
 			cname = MMAttrdefs.getattr(node, 'channel')
@@ -390,15 +388,14 @@ class PlayerCore(Selecter, PlayerCommon):
 				self.__newichannel(name, attrdict)
 
 	def __showichannels(self):
-		for name in self.__ichannels.keys():
-			ch = self.__ichannels[name]
+		for ch in self.__ichannels.values():
 			if ch.may_show():
 				ch.show()
 
 	#
 	def __hideichannels(self):
-		for name in self.__ichannels.keys():
-			self.__ichannels[name].hide()
+		for ch in self.__ichannels.values():
+			ch.hide()
 
 	def __killchannel(self, name):
 		if self.__ichannels.has_key(name):
@@ -407,21 +404,18 @@ class PlayerCore(Selecter, PlayerCommon):
 
 	#
 	def __destroyichannels(self):
-		ichnames = self.__ichannels.keys()
-		for name in ichnames:
-			self.__ichannels[name].destroy()
+		for (name, ch) in self.__ichannels.items():
+			ch.destroy()
 			del self.__ichannels[name]
 
 	#
 	def __checkichannels(self):
-		ichannelnames = self.__ichannels.keys()
-		for name in ichannelnames[:]:
+		for name in self.__ichannels.keys():
 			if name not in self.context._ichannelnames:
 				self.__killchannel(name)
 
-		ichannelnames = self.__ichannels.keys()
 		for name in self.context._ichannelnames:
-			if name not in ichannelnames:
+			if not self.__ichannels.has_key(name):
 				attrdict = self.context._ichanneldict[name]
 				self.__newichannel(name, attrdict)
 

@@ -133,6 +133,9 @@ class SoundChannel(Channel.ChannelAsync):
 
 
 	def stopplay(self, node, curtime):
+		if node.GetType() == 'anchor':
+			self.stop_anchor(node, curtime)
+			return
 		self.__stopplayer()
 		Channel.ChannelAsync.stopplay(self, node, curtime)
 

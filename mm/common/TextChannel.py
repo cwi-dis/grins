@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 
-from Channel import ChannelWindow, error, CMIF_MODE
+from Channel import ChannelWindow, error
 from AnchorDefs import *
 import string
 import StringStuff
@@ -9,23 +9,7 @@ import os
 import re
 
 class TextChannel(ChannelWindow):
-	if CMIF_MODE:
-		node_attrs = ChannelWindow.node_attrs + [
-						 'fgcolor']
-	else:
-		chan_attrs = ChannelWindow.chan_attrs + [
-						 'fgcolor']
-
-	def updatefixedanchors(self, node):
-		try:
-			str = self.getstring(node)
-		except error, arg:
-			print arg
-			str = ''
-		parlist = extract_paragraphs(str)
-		taglist = extract_taglist(parlist)
-		fix_anchorlist(node, taglist)
-		return 1
+	chan_attrs = ChannelWindow.chan_attrs + ['fgcolor']
 
 	def do_arm(self, node, same=0):
 		if same and self.armed_display:
@@ -38,7 +22,6 @@ class TextChannel(ChannelWindow):
 			str = ''
 		parlist = extract_paragraphs(str)
 		taglist = extract_taglist(parlist)
-		fix_anchorlist(node, taglist)
 		fontspec = getfont(node)
 		fontname, pointsize = mapfont(fontspec)
 		baseline, fontheight, pointsize = \
@@ -218,49 +201,6 @@ def extract_taglist(parlist):
 			taglist.append(last[:2] + item[:2] + last[2:3])
 			last = None
 	return taglist
-
-# XXX THIS IS A HACK
-# When we have extracted the anchors from a node's paragraph list,
-# add them to the node's anchor list.
-# This should be done differently, and doesn't even use the edit mgr,
-# but as a compatibility hack it's probably OK...
-
-def fix_anchorlist(node, taglist):
-	if not taglist:
-		return
-	import MMAttrdefs
-	from MMNode import MMAnchor
-	names_in_anchors = []
-	names_in_taglist = []
-	anchor_types = {}
-	names_in_anchors = map(lambda item: item[4], taglist)
-	oldanchors = MMAttrdefs.getattr(node, 'anchorlist')
-	anchors = oldanchors[:]
-	i = 0
-	while i < len(anchors):
-		a = anchors[i]
-		if a.atype in [ATYPE_DEST, ATYPE_AUTO, ATYPE_COMP]:
-			pass
-		elif a.aid not in names_in_anchors:
-			print 'Remove text anchor from anchorlist:', a
-			anchors.remove(a)
-			i = i - 1	# compensate for later increment
-		else:
-			names_in_taglist.append(a.aid)
-			anchor_types[a.aid] = a.atype, a.atimes, a.aaccess
-		i = i + 1
-	for i in range(len(taglist)):
-		item = taglist[i]
-		name = item[4]
-		if not anchor_types.has_key(name):
-			print 'Add text anchor to anchorlist:', name
-			anchors.append(MMAnchor(name, ATYPE_NORMAL, [], (0,0), None))
-			anchor_types[name] = ATYPE_NORMAL, (0, 0), None
-		taglist[i] = taglist[i] + anchor_types[name]
-	if anchors <> oldanchors:
-		print 'New anchors:', anchors
-		node.SetAttr('anchorlist', anchors)
-		MMAttrdefs.flushcache(node)
 
 # Map a possibly symbolic font name to a real font name and default point size
 

@@ -1752,22 +1752,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			return 1
 		return 0
 
-	def _getlocalexternalanchors(self):
-		fn = self.filename
-		if not '/' in fn:
-			fn = './' + fn
-		rv = []
-		for a in MMAttrdefs.getattr(self.root, 'anchorlist'):
-			rv.append((fn, a.aid))
-		return rv
-
-	def getallexternalanchors(self):
-		rv = []
-		for top in self.main.tops:
-			if top is not self:
-				rv = rv + top._getlocalexternalanchors()
-		return rv
-
 	def __import_asx(self, filename):
 		windowinterface.showmessage('%s is an ASX file.\nCreating its SMIL representation.'%filename)
 		import ASXParser

@@ -92,14 +92,7 @@ class PlayerCore(Selecter, PlayerCommon):
 			ch.set_visible(1)
 			self.makemenu()
 		return ch
-	#
-	def updatefixedanchors(self, node):
-		ch = self.anchorinit(node)
-		if ch is None:
-			return 1	# Cannot set on internal nodes
-		return ch.updatefixedanchors(node)
 
-	#
 	def pause(self, wantpause):
 		if self.pausing == wantpause:
 			print 'Funny: pause state already ok...'
@@ -144,7 +137,11 @@ class PlayerCore(Selecter, PlayerCommon):
 	
 	def getchannelbynode(self, node):
 		import MMTypes
-		if node.GetType() in MMTypes.mediatypes:
+		ntype = node.GetType()
+		if ntype == 'anchor':
+			node = node.GetParent()
+			ntype = node.GetType()
+		if ntype in MMTypes.mediatypes:
 			return self.getRenderer(node)
 		else:
 			cname = MMAttrdefs.getattr(node, 'channel')

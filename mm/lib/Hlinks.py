@@ -5,10 +5,9 @@ __version__ = "$Id$"
 # An 'Hlinks' instance maintains a list of hyperlinks.
 # Normally there is one such instance per context.
 
-# This module doesn't care what an anchor is.  In practice, an anchor
-# is a tuple (uid, aid) where uid is a unique node id and aid is an
-# anchor id which is unique for that node.  (Uids are strings, while
-# aids are numbers.)
+# An anchor is an MMNode instance or a string.  If a string, the
+# anchor is a URL and refers to an external document.  It can then
+# only be a destination of a hyperlink.
 
 # The collection of hyperlinks is stored as a list of 6-tuples
 # (anchor1, anchor2, direction, type, src_type, dest_type), where:
@@ -113,9 +112,9 @@ class Hlinks:
 		rv = []
 		if a1 == a2: return rv
 		for l in self.links:
-			if a1==l[ANCHOR1] and (a2 is None or a2==l[ANCHOR2]):
+			if a1 is l[ANCHOR1] and (a2 is None or a2 is l[ANCHOR2]):
 				rv.append(l)
-			elif a1==l[ANCHOR2] and (a2 is None or a2==l[ANCHOR1]):
+			elif a1 is l[ANCHOR2] and (a2 is None or a2 is l[ANCHOR1]):
 				rv.append(self.revlink(l))
 		return rv
 
@@ -149,9 +148,9 @@ class Hlinks:
 		interesting = []
 		uid = node.GetUID()
 		for a1, a2, dir, tp, stp, dtp in self.links:
-			if type(a1) == type(()) and a1[0] == uid:
+			if a1 is node:
 				interesting.append((a1, a2, dir, tp, stp, dtp))
-			if type(a2) == type(()) and a2[0] == uid:
+			if a2 is node:
 				interesting.append(self.revlink((a1, a2, dir, tp, stp, dtp)))
 		is_src = 0
 		is_dst = 0
@@ -170,19 +169,17 @@ class Hlinks:
 		import AnchorDefs
 		uid = node.GetUID()
 		aiddict = {}
-		for anchor in MMAttrdefs.getattr(node, 'anchorlist'):
-			if not anchor.atype in AnchorDefs.SourceAnchors:
-				continue
-			aiddict[anchor.aid] = 1
+		for c in node.GetChildren():
+			if c.GetType() == 'anchor':
+				aiddict[c.GetUID()] = 1
 		if not aiddict:
+			# no anchors
 			return 0
 		for a1, a2, dir, tp, stp, dtp in self.links:
-			if type(a1) == type(()) and a1[0] == uid:
-				if aiddict.has_key(a1[1]):
-					del aiddict[a1[1]]
-			if type(a2) == type(()) and a2[0] == uid:
-				if aiddict.has_key(a2[1]):
-					del aiddict[a2[1]]
+			if type(a1) is not type('') and aiddict.has_key(a1.GetUID()):
+				del aiddict[a1.GetUID()]
+			if type(a2) is not type('') and aiddict.has_key(a2.GetUID()):
+				del aiddict[a2.GetUID()]
 			if not aiddict:
 				return 0
 		return not not aiddict
