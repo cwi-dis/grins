@@ -54,14 +54,17 @@ class VideoChannel(ChannelWindow):
 			self.play_movie.UpdateMovie()
 
 	def do_arm(self, node, same=0):
+		node.__type = ''
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
 		if debug: print 'VideoChannel: arm', node
 		fn = self.getfileurl(node)
+		if not fn:
+			self.errormsg(node, 'No URL set on this node')
+			return 1
 		import mimetypes, string
 		mtype = mimetypes.guess_type(fn)[0]
-		node.__type = ''
 		if string.find(mtype, 'real') >= 0:
 			node.__type = 'real'
 			if self.__rc is None:

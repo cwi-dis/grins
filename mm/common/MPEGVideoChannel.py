@@ -26,6 +26,9 @@ class VideoChannel(ChannelWindowThread):
 			self.errormsg(node, 'Node must be external')
 			return 1
 		url = self.getfileurl(node)
+		if not url:
+			self.errormsg(node, 'No URL set on this node')
+			return 1
 		try:
 			filename = MMurl.urlretrieve(url)[0]
 			fp = open(filename, 'rb')
