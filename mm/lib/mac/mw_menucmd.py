@@ -35,7 +35,29 @@ class MyMenu(MyMenuMixin, Menu):
 
 class MyPopupMenu(MyMenuMixin, PopupMenu):
 	"""This is either a cascading or button-triggered popup menu"""
-	pass
+	def __init__(self, bar):
+		PopupMenu.__init__(self, bar)
+		self._submenus = {}
+		
+	def delete(self):
+		PopupMenu.delete(self)
+		for m in self._submenus.values():
+			m.delete()
+		self._submenus = {}
+		
+	def adddependent(self, sub):
+		self._submenus[sub.id] = sub
+		
+	def dispatch(self, id, item, window, event):
+		if id == self.id:
+			MyMenuMixin.dispatch(self, id, item, window, event)
+		else:
+			try:
+				m = self._submenus[id]
+			except KeyError:
+				print "Warning: MenuEvent ID=%d received in Menu ID=%d"%(id, self.id)
+			else:
+				m.dispatch(id, item, window, event)
 	
 class FullPopupMenu:
 	"""This is a contextual (right-mouse) popup menu"""
@@ -108,17 +130,24 @@ class ContextualPopupMenu:
 	def _fill_menu(self, menu, list, callbackfunc):
 		self._cmd_to_item = {}
 		for item in list:
-			if item[0] == MenuTemplate.SEP:
+			flag = item[0]
+			if item[1] == MenuTemplate.SEP:
 				menu.addseparator()
-			elif item[0] == MenuTemplate.ENTRY:
-				itemstring = item[1]
-				cmd = item[3]
+			elif item[1] == MenuTemplate.ENTRY:
+				itemstring = item[2]
+				cmd = item[4]
 				callback = (callbackfunc, (cmd,))
 				m = MenuItem(menu, itemstring, '',
 					     callback)
 				self._cmd_to_item[cmd] = m
+			elif item[1] == MenuTemplate.CASCADE:
+				itemstring = item[2]
+				list = item[3]
+				m = menu.addsubmenu(itemstring)
+				self._themenu.adddependent(m)
+				self._fill_menu(m, list, callbackfunc)
 			else:
-				raise 'Only SEP or ENTRY in popup', list
+				raise 'Only SEP, ENTRY or CASCADE in popup', list
 				
 	def update_menu_enabled(self, testfunc):
 		for cmd, mentry in self._cmd_to_item.items():
