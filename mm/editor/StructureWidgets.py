@@ -115,11 +115,13 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.linkdst_icon = None
 		self.infoicon = None
 		if self.iconbox is not None and node.infoicon:
-			self.infoicon = self.iconbox.add_icon(node.infoicon, callback = self.show_mesg)
+			self.infoicon = self.iconbox.add_icon('infoicon', callback = self.show_mesg)
+			self.infoicon.set_icon(node.infoicon)
 		if self.iconbox is None or node.GetType() == 'comment':
 			self.playicon = None
 		else:
-			self.playicon = self.iconbox.add_icon(node.armedmode or 'idle')
+			self.playicon = self.iconbox.add_icon('playicon')
+			self.playicon.set_icon(node.armedmode or 'idle')
 			self.playicon.set_properties(selectable=0, callbackable=0)
 		# these 5 are never set in this class but are provided for the benefit of subclasses
 		# this means we also don't destroy these
@@ -208,6 +210,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			links = hlinks.findsrclinks(x)
 			if x is not node and dangling is None and not links:
 				dangling = self.iconbox.add_icon('danglinganchor')
+				dangling.set_icon('danglinganchor')
 			for l in links:
 				# we're the hyperlink source
 				otherwidget = None
@@ -219,6 +222,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 						otherwidget = othernode.views['struct_view'].get_linkdst_icon()
 				if self.linksrc_icon is None:
 					self.linksrc_icon = self.iconbox.add_icon('linksrc', arrowto = otherwidget, arrowcolor = LINKARROWCOLOR)
+					self.linksrc_icon.set_icon('linksrc')
 					self.linksrc_icon.set_properties(issrc=1)
 				else:
 					self.linksrc_icon.add_arrow(otherwidget, LINKARROWCOLOR)
@@ -233,6 +237,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 						otherwidget = othernode.views['struct_view'].get_linksrc_icon()
 				if self.linkdst_icon is None:
 					self.linkdst_icon = self.iconbox.add_icon('linkdst', arrowto = otherwidget, arrowcolor = LINKARROWCOLOR)
+					self.linkdst_icon.set_icon('linkdst')
 					self.linkdst_icon.set_properties(issrc=0)
 				else:
 					self.linkdst_icon.add_arrow(otherwidget, LINKARROWCOLOR)
@@ -252,6 +257,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				otherwidget = othernode.views['struct_view'].get_cause_event_icon()
 				if icon is None:
 					icon = self.iconbox.add_icon(iconname, arrowto = otherwidget, arrowcolor = EVENTARROWCOLOR)
+					icon.set_icon(iconname)
 					icon.set_properties(initattr=attr)
 					icon.set_contextmenu(self.mother.event_popupmenu_dest)
 				else:
@@ -459,11 +465,11 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 
 		# iconbox is displayed at top or left
 		if self.iconbox is not None and node.infoicon and self.infoicon is None:
-			self.infoicon = self.iconbox.add_icon(node.infoicon, callback = self.show_mesg)
+			self.infoicon = self.iconbox.add_icon('infoicon', callback = self.show_mesg)
+			self.infoicon.set_icon(node.infoicon)
 		elif not node.infoicon and self.infoicon is not None:
 			# self.infoicon is not None implies self.iconbox is not None
-			self.iconbox.del_icon(self.infoicon)
-			self.infoicon.destroy()
+			self.iconbox.del_icon('infoicon')
 			self.infoicon = None
 		if self.iconbox is not None:
 			node.set_infoicon = self.set_infoicon
@@ -773,14 +779,14 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.node.errormessage = msg
 		if self.infoicon is None:
 			# create a new info icon
-			self.infoicon = self.iconbox.add_icon(icon, callback = self.show_mesg)
+			self.infoicon = self.iconbox.add_icon('infoicon', callback = self.show_mesg)
+			self.infoicon.set_icon(icon)
 			self.mother.need_resize = 1
 			self.mother.draw()
 			return
 		if not icon:
 			# remove the info icon
-			self.iconbox.del_icon(self.infoicon)
-			self.infoicon.destroy()
+			self.iconbox.del_icon('infoicon')
 			self.infoicon = None
 			self.mother.need_resize = 1
 			self.mother.draw()
@@ -803,6 +809,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		# Note that the "dangling" event icon overrides this one
 		if self.cause_event_icon is None:
 			self.cause_event_icon = icon = self.iconbox.add_icon('causeevent')
+			self.cause_event_icon.set_icon('causeevent')
 			icon.set_properties(issrc=1)
 			icon.set_contextmenu(self.mother.event_popupmenu_source)
 		return self.cause_event_icon
@@ -810,25 +817,28 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def get_linksrc_icon(self):
 		if self.linksrc_icon is None:
 			self.linksrc_icon = icon = self.iconbox.add_icon('linksrc')
+			icon.set_icon('linksrc')
 			icon.set_properties(issrc=1)
 		return self.linksrc_icon
 
 	def get_linkdst_icon(self):
 		if self.linkdst_icon is None:
 			self.linkdst_icon = icon = self.iconbox.add_icon('linkdst')
+			icon.set_icon('linkdst')
 			icon.set_properties(issrc=0)
 		return self.linkdst_icon
 
 	def set_dangling_event(self):
 		if self.cause_event_icon:
-			self.iconbox.del_icon(self.cause_event_icon)
-		self.cause_event_icon = self.iconbox.add_icon('danglingevent')
+			self.iconbox.del_icon('causeevent')
+		self.cause_event_icon = self.iconbox.add_icon('causeevent')
+		self.cause_event_icon.set_icon('danglingevent')
 
 	def clear_dangling_event(self):
 		# XXXX Note that this is not really correct: if there was a causeevent icon before
 		# we installed the dangling icon we now lose it.
 		if self.cause_event_icon:
-			self.iconbox.del_icon(self.cause_event_icon)
+			self.iconbox.del_icon('causeevent')
 		self.cause_event_icon = None
 
 	def get_obj_near(self, (x, y), timemapper = None, timeline = None):
@@ -981,7 +991,8 @@ class StructureObjWidget(MMNodeWidget):
 			if ntype not in ('par', 'seq', 'switch', 'prio', 'excl'):
 				ntype = ''
 			icon = ntype + icon
-			self.collapsebutton = self.iconbox.add_icon(icon, self.toggle_collapsed)
+			self.collapsebutton = self.iconbox.add_icon('collapse', self.toggle_collapsed)
+			self.collapsebutton.set_icon(icon)
 			self.collapsebutton.set_properties(callbackable=1, selectable=0)
 		self.parent_widget = parent # This is the parent node. Used for recalcing optimisations.
 		for i in self.node.children:
@@ -1050,10 +1061,12 @@ class StructureObjWidget(MMNodeWidget):
 			# We should show them
 			if len(self.subiconnames) != len(self.subicons):
 				for n in self.subiconnames:
-					self.subicons.append(self.iconbox.add_icon(n))
+					icon = self.iconbox.add_icon(n)
+					icon.set_icon(n)
+					self.subicons.append(icon)
 		else:
 			# We should remove them
-			for icon in self.subicons:
+			for icon in self.subiconnames:
 				self.iconbox.del_icon(icon)
 			self.subicons = []
 
@@ -2898,70 +2911,54 @@ class BandWidthWidget(MMWidgetDecoration):
 # A box with icons in it.
 # Comes before the node's name.
 class IconBox(MMWidgetDecoration):
+	iconorder = ('collapse', 'playicon', 'infoicon', 'danglingevent', 'danglinganchor', 'linkdst', 'beginevent', 'linksrc', 'causeevent', 'endevent',)
+
 	def __init__(self, mmwidget, mother, vertical = 1):
 		MMWidgetDecoration.__init__(self, mmwidget, mother)
-		self._iconlist = []
+		self._icondict = {}
 		self.vertical = vertical
 
 	def destroy(self):
-		for icon in self._iconlist:
+		for icon in self._icondict.values():
 			icon.destroy()
-		self._iconlist = []
+		self._icondict = {}
 		MMWidgetDecoration.destroy(self)
-
-	iconorder = []
-	for ntype in ('par', 'seq', 'switch', 'prio', 'excl', ''):
-		for coll in ('open', 'closed'):
-			iconorder.append(ntype + coll)
-	del ntype, coll
-	iconorder = tuple(iconorder)
 
 	def add_icon(self, iconname=None, callback=None, contextmenu=None, arrowto=None, arrowcolor=None):
 		# iconname - name of an icon, decides which icon to use.
 		# callback - function to call when icon is clicked on.
 		# contextmenu - pop-up menu to use.
 		# arrowto - Draw an arrow to another icon on the screen.
+		if self._icondict.has_key(iconname):
+			return self._icondict[iconname]
+		if iconname not in self.iconorder:
+			self.iconorder.append(iconname)
 		icon = Icon(self.mmwidget, self.mother)
-		icon.set_icon(iconname)
+		self._icondict[iconname] = icon
 		if callback:
 			icon.set_callback(callback)
 		if contextmenu:
 			icon.set_contextmenu(contextmenu)
 		if arrowto:
 			icon.add_arrow(arrowto, arrowcolor)
-		i = 0
-		for n in self.iconorder + \
-			 ('idle', ArmStates.ARM_NONE, ArmStates.ARM_SCHEDULED,
-			  ArmStates.ARM_ARMING, ArmStates.ARM_ARMED,
-			  ArmStates.ARM_PLAYING, ArmStates.ARM_WAITSTOP,
-			  'error',
-			  'bandwidthgood', 'bandwidthbad',
-			  'danglingevent', 'danglinganchor',
-			  'linkdst', 'beginevent',
-			  'linksrc','causeevent',
-			  'endevent',  # Not sure where this one should go....
-			  ):
-			if iconname == n:
-				self._iconlist.insert(i, icon)
-				break
-			if i < len(self._iconlist) and self._iconlist[i].icon == n:
-				i = i + 1
-		else:
-			print 'Icon has no fixed position:', iconname
-			self._iconlist.append(icon)
 		self.recalc_minsize()
 		return icon
 
-	def del_icon(self, icon):
-		self._iconlist.remove(icon)
+	def get_icon(self, iconname):
+		return self._icondict.get(iconname)
+
+	def del_icon(self, iconname):
+		icon = self._icondict[iconname]
+		icon.destroy()
+		del self._icondict[iconname]
 		self.recalc_minsize()
 
 	def recalc_minsize(self):
 		# Always the number of icons.
 		if self.vertical:
-			self.boxsize = ICONXSIZE, len(self._iconlist) * ICONYSIZE
+			self.boxsize = ICONXSIZE, len(self._icondict) * ICONYSIZE
 		else:
-			self.boxsize = len(self._iconlist) * ICONXSIZE, ICONYSIZE
+			self.boxsize = len(self._icondict) * ICONXSIZE, ICONYSIZE
 		return self.boxsize
 
 	def get_clicked_obj_at(self, coords):
@@ -2972,13 +2969,16 @@ class IconBox(MMWidgetDecoration):
 		l,t,a,b = self.pos_abs
 		x,y = pos
 		if self.vertical:
-			return l < x < l+ICONXSIZE and t < y < t+(len(self._iconlist)*ICONYSIZE)
+			return l < x < l+ICONXSIZE and t < y < t+(len(self._icondict)*ICONYSIZE)
 		else:
-			return l < x < l+(len(self._iconlist)*ICONXSIZE) and t < y < t+ICONYSIZE
+			return l < x < l+(len(self._icondict)*ICONXSIZE) and t < y < t+ICONYSIZE
 
 	def draw(self, displist):
 		l,t,r,b = self.pos_abs
-		for icon in self._iconlist:
+		for name in self.iconorder:
+			if not self._icondict.has_key(name):
+				continue
+			icon = self._icondict[name]
 			icon.moveto((l,t,l+ICONXSIZE,t+ICONYSIZE))
 			icon.draw(displist)
 			if self.vertical:
@@ -2994,17 +2994,20 @@ class IconBox(MMWidgetDecoration):
 			index = int((y-t)/ICONYSIZE)
 		else:
 			index = int((x-l)/ICONXSIZE)
-		if 0 <= index < len(self._iconlist):
-			return self._iconlist[index]
+		# count down until we find the icon
+		# this magically works also if index not in the correct range
+		for name in self.iconorder:
+			if not self._icondict.has_key(name):
+				continue
+			if index == 0:
+				return self._icondict[name]
+			index = index - 1
 
 	def mouse0release(self, coords):
 		x,y = coords
-		l,t,r,b = self.pos_abs
 		icon = self.__get_icon_at_position(x,y)
 		if icon:
 			icon.mouse0release(coords)
-		else:
-			return
 
 class Icon(MMWidgetDecoration):
 	# Display an icon which can be clicked on. This can be used for
