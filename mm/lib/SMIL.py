@@ -5,6 +5,8 @@ CMIFns = "http://www.cwi.nl/Chameleon/"
 
 class SMIL:
 	# some abbreviations
+	__layouts = CMIFns + ' ' + 'layouts'
+	__layout = CMIFns + ' ' + 'layout'
 	__bag = CMIFns + ' ' 'bag'
 	__cmif = CMIFns + ' ' 'cmif'
 	__shell = CMIFns + ' ' 'shell'
@@ -39,6 +41,10 @@ class SMIL:
 				'skip-content':'true',
 				'title':None,
 				'width':'0'},
+		__layouts: {CMIFns+' ' 'id':None},
+		__layout: {CMIFns+' ' 'id':None,
+##			   CMIFns+' ' 'title':None,
+			   CMIFns+' ' 'regions':None},
 		'par': {'abstract':'',
 			'author':'',
 			'begin':None,
@@ -57,7 +63,8 @@ class SMIL:
 			'system-screen-depth':None,
 			'system-screen-size':None,
 			'title':None,
-			__u_group:None},
+			__u_group:None,
+			__layout:None},
 		'seq': {'abstract':'',
 			'author':'',
 			'begin':None,
@@ -74,7 +81,8 @@ class SMIL:
 			'system-screen-depth':None,
 			'system-screen-size':None,
 			'title':None,
-			__u_group:None},
+			__u_group:None,
+			__layout:None,},
 		'switch': {'id':None,
 			   'system-bitrate':None,
 			   'system-captions':None,
@@ -83,7 +91,8 @@ class SMIL:
 			   'system-required':None,
 			   'system-screen-depth':None,
 			   'system-screen-size':None,
-			   __u_group:None},
+			   __u_group:None,
+			   __layout:None},
 		__bag: {CMIFns+' ' 'abstract':'',
 			CMIFns+' ' 'author':'',
 			CMIFns+' ' 'bag-index':None,
@@ -98,7 +107,8 @@ class SMIL:
 			CMIFns+' ' 'system-screen-size':None,
 			CMIFns+' ' 'title':None,
 			CMIFns+' ' 'bag-index':None,
-			__u_group:None},
+			__u_group:None,
+			__layout:None},
 		'ref': {'abstract':'',
 			'alt':None,
 			'author':'',
@@ -123,7 +133,8 @@ class SMIL:
 			'system-screen-size':None,
 			'title':None,
 			'type':None,
-			__u_group:None},
+			__u_group:None,
+			__layout:None},
 		'a': {'href':None,
 		      'id':None,
 		      'show':'replace',
@@ -170,12 +181,13 @@ class SMIL:
 	# all entities with their allowed content
 	entities = {
 		'smil': ['head', 'body'],
-		'head': ['layout', 'switch', 'meta', __user_attributes],
+		'head': ['layout', 'switch', 'meta', __user_attributes, __layouts],
 		__user_attributes: [__u_group,],
 		__u_group: __empty,
 		'layout': ['region', 'root-layout'],
 		'region': __empty,
 		'meta': __empty,
+		__layouts: [__layout],
 		'body': __container_content,
 		'par': __container_content,
 		'seq': __container_content,
@@ -199,3 +211,4 @@ class SMIL:
 	del __bag, __cmif, __shell, __socket, __user_attributes
 	del __u_group, __media_object, __schedule, __container_content,
 	del __assoc_link, __empty
+	del __layouts, __layout
