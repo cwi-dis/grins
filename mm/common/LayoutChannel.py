@@ -111,7 +111,8 @@ class LayoutChannel(ChannelWindow):
 			
 			if settings.activeFullSmilCss:
 				self.cssResolver.setRootSize(self.idCssNode, width,height)
-			
+				units = windowinterface.UNIT_PXL
+				
 			self._curvals['winsize'] = ((width, height), (50,50))
 			x, y = self._attrdict.get('winpos', (None, None))
 			if self.want_default_colormap:
