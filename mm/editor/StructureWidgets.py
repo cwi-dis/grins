@@ -24,7 +24,7 @@ EPSILON = sizes_notime.GAPSIZE
 ######################################################################
 # Create new widgets
 
-def create_MMNode_widget(node, mother):
+def create_MMNode_widget(node, mother, parent = None):
 	assert mother != None
 	ntype = node.GetType()
 	if mother.usetimestripview:
@@ -33,38 +33,38 @@ def create_MMNode_widget(node, mother):
 		pnode = node.GetParent()
 		if pnode is None and ntype == 'seq':
 			# Don't show toplevel root (actually the <body> in SMIL)
-			return UnseenVerticalWidget(node, mother)
+ 			return UnseenVerticalWidget(node, mother, parent)
 		gpnode = pnode.GetParent() # grand parent node
 		if pnode is not None and gpnode is None and ntype == 'par':
 			# Don't show second-level par either
-			return UnseenVerticalWidget(node, mother)
+			return UnseenVerticalWidget(node, mother, parent)
 		if pnode is not None and gpnode is not None and gpnode.GetParent() is None and ntype == 'seq':
 			# And show secondlevel seq as a timestrip
-			return TimeStripSeqWidget(node, mother)
+			return TimeStripSeqWidget(node, mother, parent)
 	if ntype == 'seq':
-		return SeqWidget(node, mother)
+		return SeqWidget(node, mother, parent)
 	elif ntype == 'par':
-		return ParWidget(node, mother)
+		return ParWidget(node, mother, parent)
 	elif ntype == 'switch':
-		return SwitchWidget(node, mother)
+		return SwitchWidget(node, mother, parent)
 	elif ntype == 'ext':
-		return MediaWidget(node, mother)
+		return MediaWidget(node, mother, parent)
 	elif ntype == 'imm':
-		return MediaWidget(node, mother)
+		return MediaWidget(node, mother, parent)
 	elif ntype == 'excl':
-		return ExclWidget(node, mother)
+		return ExclWidget(node, mother, parent)
 	elif ntype == 'prio':
-		return PrioWidget(node, mother)
+		return PrioWidget(node, mother, parent)
 	elif ntype == 'brush':
-		return MediaWidget(node, mother)
+		return MediaWidget(node, mother, parent)
 	elif ntype == 'animate':
-		return MediaWidget(node, mother)
+		return MediaWidget(node, mother, parent)
 	elif ntype == 'prefetch':
-		return MediaWidget(node, mother)
+		return MediaWidget(node, mother, parent)
 	elif ntype == 'comment':
-		return CommentWidget(node, mother)
+		return CommentWidget(node, mother, parent)
 	elif ntype == 'foreign':
-		return ForeignWidget(node, mother)
+		return ForeignWidget(node, mother, parent)
 	else:
 		raise "Unknown node type", ntype
 		return None
@@ -81,7 +81,7 @@ def create_MMNode_widget(node, mother):
 #
 class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and the base class for a MMNode view.
 	# View of every MMNode within the Hierarchy view
-	def __init__(self, node, mother):
+	def __init__(self, node, mother, parent):
 		assert isinstance(node, MMNode.MMNode)
 		assert mother is not None
 		Widgets.Widget.__init__(self, mother)
@@ -97,7 +97,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 
 		# Holds little icons..
 		self.iconbox = IconBox(self, self.mother)
-		self.has_event_icons = 0
 		self.cause_event_icon = None
 		self.infoicon = None
 		if node.GetType() == 'comment':
@@ -171,9 +170,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		return self.node
 
 	def add_event_icons(self):
-		if self.has_event_icons: # calls this once only.
-			return
-		self.has_event_icons = 1
 		beginevents = MMAttrdefs.getattr(self.node, 'beginlist')
 		endevents = MMAttrdefs.getattr(self.node, 'endlist')
 
@@ -564,8 +560,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 class StructureObjWidget(MMNodeWidget):
 	# A view of a seq, par, excl or any internal structure node.
 	HAS_COLLAPSE_BUTTON = 1
-	def __init__(self, node, mother):
-		MMNodeWidget.__init__(self, node, mother)
+	def __init__(self, node, mother, parent):
+		MMNodeWidget.__init__(self, node, mother, parent)
 		assert self is not None
 		# Create more nodes under me if there are any.
 		self.children = []
@@ -582,13 +578,14 @@ class StructureObjWidget(MMNodeWidget):
 			self.collapsebutton.set_properties(callbackable=1, selectable=0)
 			self.collapsebutton.set_icon(icon)
 			self.collapsebutton.set_callback(self.toggle_collapsed)
-		self.parent_widget = None # This is the parent node. Used for recalcing optimisations.
+		self.parent_widget = parent # This is the parent node. Used for recalcing optimisations.
 		for i in self.node.children:
-			bob = create_MMNode_widget(i, mother)
+			bob = create_MMNode_widget(i, mother, self)
 			if bob is not None:
-				bob.parent_widget = self
 				self.children.append(bob)
 		self.dont_draw_children = 0
+		if parent is None:
+			self.add_event_icons()
 
 	def destroy(self):
 		if self.children:
@@ -600,6 +597,11 @@ class StructureObjWidget(MMNodeWidget):
 			self.collapsebutton = None
 		self.parent_widget = None
 		MMNodeWidget.destroy(self)
+
+	def add_event_icons(self):
+		MMNodeWidget.add_event_icons(self)
+		for c in self.children:
+			c.add_event_icons()
 
 	def collapse(self):
 		# remove_set_armedmode must be done before collapsed bit is set
@@ -722,7 +724,6 @@ class StructureObjWidget(MMNodeWidget):
 		# If the node sizes don't need to be changed, then don't
 		# change them.
 		# For the meanwhile, this is too difficult.
-		self.add_event_icons()
 		l,t,r,b = self.pos_abs
 		if self.collapsebutton is not None:
 			#l = l + self.get_relx(1)
@@ -1241,8 +1242,8 @@ class VerticalWidget(StructureObjWidget):
 class SeqWidget(HorizontalWidget):
 	# Any sequence node.
 	HAS_CHANNEL_BOX = 0
-	def __init__(self, node, mother):
-		HorizontalWidget.__init__(self, node, mother)
+	def __init__(self, node, mother, parent):
+		HorizontalWidget.__init__(self, node, mother, parent)
 		has_drop_box = not MMAttrdefs.getattr(node, 'project_readonly')
 		if mother.usetimestripview and has_drop_box:
 			self.dropbox = DropBoxWidget(self, mother)
@@ -1499,8 +1500,8 @@ class MediaWidget(MMNodeWidget):
 	# TODO: This class can be broken down into various different node types (img, video)
 	# if the drawing code is different enough to warrent this.
 
-	def __init__(self, node, mother):
-		MMNodeWidget.__init__(self, node, mother)
+	def __init__(self, node, mother, parent):
+		MMNodeWidget.__init__(self, node, mother, parent)
 		if mother.transboxes:
 			self.transition_in = TransitionWidget(self, mother, 'in')
 			self.transition_out = TransitionWidget(self, mother, 'out')
@@ -1546,7 +1547,6 @@ class MediaWidget(MMNodeWidget):
 			self.playicon.moveto((l+1, t+2,0,0))
 			w = ICONSIZE
 
-		self.add_event_icons()
 		self.iconbox.moveto((l+w+1, t+2,0,0))
 		# First compute pushback bar position
 		if self.pushbackbar is not None:
@@ -1795,9 +1795,6 @@ class CommentWidget(MMNodeWidget):
 class ForeignWidget(HorizontalWidget):
 	# Any foreign node.
 	HAS_CHANNEL_BOX = 0
-	def __init__(self, node, mother):
-		HorizontalWidget.__init__(self, node, mother)
-
 	def draw(self, displist):
 		willplay = not self.mother.showplayability or self.node.WillPlay()
 		if willplay:
