@@ -2,7 +2,7 @@
  * 
  *  $Id$
 
-/****************************************************************************
+ ****************************************************************************
  * Includes
  */
 #include "pntypes.h"
@@ -15,7 +15,7 @@
 #include "rmaclsnk.h"
 #include "exadvsnk.h"
 
-#include "std.h"
+#include "Std.h"
 #include "PyCppApi.h"
 
 
@@ -217,8 +217,6 @@ ExampleClientAdviceSink::OnStatisticsChanged(void)
     UINT32  unPlayerIndex = 0;
     UINT32  unSourceIndex = 0;
     UINT32  unStreamIndex = 0;
-
-    INT32   nRegistryValue = 0;
 
     char*   pszRegistryPrefix = "Statistics";
     char    szRegistryName[MAX_DISPLAY_NAME] = {0};
