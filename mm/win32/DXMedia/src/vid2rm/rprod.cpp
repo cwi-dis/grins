@@ -37,9 +37,10 @@ bool HasEngine();
 bool SetEngine(IUnknown *p);
 bool SetInputPin(IUnknown *p);
 bool CreateMediaSample();
-void SetVideoInfo(int w,int h,float rate);
-void EncodeSample(BYTE *p,int frame,bool isLast);
+bool SetVideoInfo(int w,int h,float rate);
+bool EncodeSample(BYTE *p,DWORD size,DWORD msec,bool isSync,bool isLast);
 void DoneEncoding();
+void Release();
 
 
 
@@ -81,10 +82,11 @@ bool CreateMediaSample()
 	return true;
 }
 
-void SetVideoInfo(int w,int h,float rate)
+// always encodes in RGB24
+bool SetVideoInfo(int w,int h,float rate)
 	{
-	if(!gVideoPin) return;
-
+	if(!gVideoPin) return false;
+	PN_RESULT res=PNR_OK;
 	IRMAPinProperties* pUnkPinProps;
 	IRMAVideoPinProperties* gVideoPinProps;
 	PN_CHECK(GetPinProperties,gVideoPin->GetPinProperties(&pUnkPinProps));
@@ -98,9 +100,10 @@ void SetVideoInfo(int w,int h,float rate)
 
 	CreateMediaSample();
 
-	PN_RESULT res=g_pRMBuildEngine->PrepareToEncode();
+	res=g_pRMBuildEngine->PrepareToEncode();
 	if(FAILED(res))
 		{
+		char sz[120];
 		switch(res)
 			{
 			case PNR_ENC_BAD_CHANNELS: Log("incorrect number of audio input channels\n"); break;
@@ -111,23 +114,27 @@ void SetVideoInfo(int w,int h,float rate)
  			case PNR_ENC_NO_OUTPUT_TYPES:Log("no output mime types specified\n"); break;
  			case PNR_ENC_NO_OUTPUT_FILE:Log("no output file or server specified\n"); break;
 			case PNR_NOT_INITIALIZED:Log("Build Engine not properly initialized with the necessary objects\n"); break;
-			default:Log("Undocumented error\n"); break; 
+			default:
+				sprintf(sz,"Undocumented error 0x%X\n",res);
+				Log(sz); 
+				break; 
 			}
 		}
+	return SUCCEEDED(res)!=FALSE;
 	}
 
-void EncodeSample(BYTE *p,int frame,bool isLast)
+
+// same arguments as SetBuffer but indirect flags
+// the bits are in in RGB24
+bool EncodeSample(BYTE *p,DWORD size,DWORD msec,bool isSync,bool isLast)
 	{
-	if(!gpVidSample) return;
+	if(!gpVidSample) return false;
 
-	BITMAPINFOHEADER *pbi=(BITMAPINFOHEADER*)p;
-
+	UINT16	unFlags=0;
+	if(isSync)unFlags|=MEDIA_SAMPLE_SYNCH_POINT;
+	if(isLast)unFlags|=MEDIA_SAMPLE_END_OF_STREAM;
 	PN_RESULT res=PNR_OK;
-	if(!isLast)
-		res = gpVidSample->SetBuffer((UCHAR*)(pbi+1), pbi->biSizeImage, frame, 0);
-	else
-		res = gpVidSample->SetBuffer((UCHAR*)(pbi+1), pbi->biSizeImage, frame, MEDIA_SAMPLE_END_OF_STREAM);
-
+	res = gpVidSample->SetBuffer(p,size,msec,unFlags);
 	if(SUCCEEDED(res))
 		{
 		res=gVideoPin->Encode(gpVidSample);
@@ -138,15 +145,20 @@ void EncodeSample(BYTE *p,int frame,bool isLast)
 		}
 	else 
 		Log("Failed to set VidSample buffer\n");
+	return SUCCEEDED(res)!=FALSE;
 	}
 
+void Release()
+	{
+	PN_RELEASE(gVideoPin);
+	PN_RELEASE(gpVidSample);
+	PN_RELEASE(g_pRMBuildEngine);
+	}
 
 void DoneEncoding()
 	{
 	g_pRMBuildEngine->DoneEncoding();
-	PN_RELEASE(gVideoPin);
-	PN_RELEASE(gpVidSample);
-	PN_RELEASE(g_pRMBuildEngine);
+	Release();
 	}
 
 
