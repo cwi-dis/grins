@@ -264,7 +264,7 @@ class TopLevel(ViewDialog):
 			l2 = '(This will destroy the changes you have made)\n'
 			l3 = 'Click OK to restore, Cancel to keep your changes'
 			windowinterface.showmessage(
-				l1+l2+l3, type = 'question',
+				l1+l2+l3, mtype = 'question',
 				callback = (self.do_restore, ()),
 				title = 'Destroy?')
 			return
