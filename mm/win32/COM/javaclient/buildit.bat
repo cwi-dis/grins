@@ -1,2 +1,3 @@
 javac *.java
-javah GRiNSPlayer
+javac grins/*.java
+javah grins.GRiNSPlayer
