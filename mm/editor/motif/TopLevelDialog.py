@@ -62,7 +62,8 @@ class TopLevelDialog:
 		self.source = windowinterface.textwindow(source)
 
 	def mayclose(self):
-		prompt = 'You haven\'t saved your changes yet;\n' + \
+		prompt = 'Document %s:\n' % self.filename + \
+			 "You haven't saved your changes yet;\n" \
 			 'do you want to save them before closing?'
 		b1 = 'Save'
 		b2 = "Don't save"
