@@ -202,7 +202,7 @@ class Player:
 			self.__data = converter.readframes(self.__readsize)
 			
 			fillable = port.getfillable()
-			if self.__data is None:
+			if not self.__data:
 				timeout = float(port.getfilled())/self.__framerate - 0.1
 				if timeout > 0:
 					self.__tid = windowinterface.settimer(timeout, (self.__playsome, ()))
