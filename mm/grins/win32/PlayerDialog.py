@@ -28,6 +28,7 @@ class PlayerDialog:
 				]),
 			('Channels', CHANNELS),
 			('Options', [
+				('Preferences...', PREFERENCES),
 				('Dump scheduler data', SCHEDDUMP),
 				]),
 			('Help', [
@@ -65,8 +66,8 @@ class PlayerDialog:
 		self.__channeldict = {}
 		
 	def preshow(self):
-		# If anything has to be done before showing the channels do it here.
-		pass
+		# If anything has to be done before showing the channels do it here.		
+		self.__create()
 
 	def topcommandlist(self, list):
 		if list != self.__topcommandlist:
@@ -85,9 +86,11 @@ class PlayerDialog:
 
 	def __create(self):
 		x, y, w, h = self.__coords
-		self.__window = window = windowinterface.newwindow(
-			x, y, 0, 0, self.__title, resizable = 0,
-			adornments = self.adornments,context='document')
+	
+		self.__window = windowinterface.newview(
+			x, y, w, h, self.__title,
+			adornments = self.adornments,
+			commandlist = None,context='pview_')
 		if self.__channels:
 			self.setchannels(self.__channels)
 
@@ -95,7 +98,6 @@ class PlayerDialog:
 		if self.__menu_created is None:
 			if self.__window is None:
 				self.__create()
-			self.__window.setcursor('watch')
 
 	def hide(self):
 		if self.__window is not None:
@@ -158,10 +160,6 @@ class PlayerDialog:
 
 	def getgeometry(self):
 		pass
-
-	def setcursor(self, cursor):
-		if self.__window is not None:
-			self.__window.setcursor(cursor)
 
 	def get_adornments(self, channel):
 		if self.__menu_created is not None or \
