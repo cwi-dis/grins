@@ -54,7 +54,6 @@ class MMNodeContext:
 		self._ichanneldict = {}
 		self.comment = ''
 		self.metadata = ''
-		self.root = None
 		self.toplevel = None	# This is set in TopLevel.read_it()
 		self.__channeltree = None
 		self._soundlevelinfo = {} # doc soundLevel stat
@@ -166,15 +165,7 @@ class MMNodeContext:
 		if which != 'virtual':
 			# For the bandwidth-dependent times we need the virtual times first
 			self.needtimes('virtual', node)
-		if node is None and not self.root:
-			uid = self.uidmap.keys()[0]
-			self.root = self.uidmap[uid].GetRoot()
-			if not self.root:
-				raise 'Cannot find root for this document'
-		if node is None:
-			node = self.root
-		else:
-			node.fakeparent = None
+		node.fakeparent = None
 		if which == 'bandwidth':
 			import BandwidthCompute
 			BandwidthCompute.compute_bandwidth(node, storetiming='bandwidth')
@@ -182,8 +173,7 @@ class MMNodeContext:
 		Timing.computetimes(node, which)
 		# XXX Temp
 		self._movetimestoobj(node, which)
-		if hasattr(node, 'fakeparent'):
-			del node.fakeparent
+		del node.fakeparent
 
 	def _movetimestoobj(self, node, which):
 		if not node.WillPlay():
