@@ -331,7 +331,7 @@ class _CommonWindow:
 		return not self.is_closed()
 
 	def newwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, z=0,
-		      type_channel = None, units = None, bgcolor=None):
+		      units = None, bgcolor=None):
 		"""Create a new subwindow"""
 		rv = _SubWindow(self, self._onscreen_wid, (x, y, w, h), 0, pixmap,
 				transparent, z, units, bgcolor)
