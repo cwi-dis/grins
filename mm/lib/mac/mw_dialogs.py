@@ -254,7 +254,10 @@ class FileDialog:
 		     existing=0):
 		# We implement this modally for the mac.
 		if directory:
-			macfs.SetFolder(os.path.join(directory + ':placeholder'))
+			try:
+				macfs.SetFolder(os.path.join(directory + ':placeholder'))
+			except macfs.error:
+				pass
 		if existing:
 			fss, ok = macfs.PromptGetFile(prompt)
 		else:
