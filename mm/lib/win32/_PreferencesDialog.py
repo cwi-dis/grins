@@ -23,6 +23,7 @@ class PreferencesDialog(ResDialog,ControlsDict):
 
 		self['system_bitrate']= Edit(self,grinsRC.IDC_EDIT1)
 		self['system_language']= Edit(self,grinsRC.IDC_EDIT2)
+		self['time_scale_factor'] = Edit(self,grinsRC.IDC_EDIT3)
 		self['system_captions']=CheckButton(self,grinsRC.IDC_CHECK1)
 		self['system_overdub_or_caption']=CheckButton(self,grinsRC.IDC_CHECK2)
 		self['cmif']=CheckButton(self, grinsRC.IDC_CHECK3)
@@ -35,6 +36,7 @@ class PreferencesDialog(ResDialog,ControlsDict):
 	
 		#mark as int edit
 		self['system_bitrate']._int=1
+		self['time_scale_factor']._int = 0
 
 	# Called by the OS after the OS window has been created
 	def OnInitDialog(self):	
@@ -77,7 +79,7 @@ class PreferencesDialog(ResDialog,ControlsDict):
 	def is_string(self,k):
 		return self[k].__class__==Edit and not hasattr(self[k],'_int')
 	def is_int(self,k):
-		return self[k].__class__==Edit and hasattr(self[k],'_int')
+		return self[k].__class__==Edit and hasattr(self[k],'_int') and self[k]._int
 	def is_bool(self,k):
 		return self[k].__class__==CheckButton  
 
@@ -131,6 +133,32 @@ class PreferencesDialog(ResDialog,ControlsDict):
 		for k in self.keys():
 			if self.is_int(k):l.append(k)
 		return l
+
+	# set the attribute of the float item to the value
+	def setfloatitem(self, item, value):
+		if not self.has_key(item):
+			raise 'Unknown preference item', item
+		if value is None:
+			self[item].settext('')
+		else:
+			self[item].settext('%g' % value)
+		
+	# get the attribute of the float item
+	def getfloatitem(self, item):
+		if not self.has_key(item):
+			raise 'Unknown preference item', item
+		value = self[item].gettext()
+		if value == '':
+			return None
+		try:
+			value = string.atof(value)
+		except ValueError:
+			raise PreferencesDialogError, '%s value should be float'%item
+		return value
+
+	# Get all int attributes	
+	def getfloatnames(self):
+		return ['time_scale_factor']
 
 	# set the attribute of the bool item to the value
 	def setboolitem(self, item, value):
