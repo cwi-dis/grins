@@ -643,8 +643,8 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 		if not self.setcursor_from_point(point):
 			self.setcursor(self._cursor)
 
-	# Set the cursor given its string id		
-	def setcursor(self, strid):
+	# Get the win32 cursor handle given its string id		
+	def getcursorhandle(self, strid):
 		if strid=='hand':
 			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_POINT_HAND)
 		elif strid=='channel':
@@ -655,15 +655,17 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAGLINK)
 		elif strid=='' or strid=='arrow':
 			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
-			strid='arrow'
 		elif strid=='draghand':
 			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAG_HAND)
 		else:
 			cursor=Sdk.LoadStandardCursor(win32con.IDC_ARROW)
-			strid='arrow'
-		Sdk.SetCursor(cursor)
-		self._curcursor = strid
+		return cursor
 
+	# Set the cursor given its string id		
+	def setcursor(self, strid):
+		self._curcursor = strid
+		cursor = self.getcursorhandle(strid)
+		Sdk.SetCursor(cursor)
 	
 	#
 	# Canvas and scrolling section
