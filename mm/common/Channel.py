@@ -1500,11 +1500,8 @@ class ChannelWindow(Channel):
 	# to avoid "flashing" if window is not transparent
 	def updateToActiveState(self, node):
 	
-		# determinate the transparent and background color attribute
-		try:
-			transparent = node.GetAttr('transparent')
-		except NoSuchAttrError:
-			transparent = None
+		# determine the transparent and background color attributes
+		transparent = node.GetAttrDef('transparent', None)
 			
 		bgcolor = self.getbgcolor(node)
 				
@@ -1611,7 +1608,10 @@ class ChannelWindow(Channel):
 #			self.window.updatecoordinates(wingeom, units)
  		# experimental subregion and regpoint code
 
-		bgcolor = self.getbgcolor(node)
+		if MMAttrdefs.getattr(node, 'transparent'):
+			bgcolor = None
+		else:
+			bgcolor = self.getbgcolor(node)
 		self.armed_display = self.window.newdisplaylist(bgcolor)
 			
 		for arc in node.sched_children:
@@ -1815,22 +1815,10 @@ class ChannelWindow(Channel):
 		
 	# get the sub channel geom according to registration sub-regions
 	def getwingeom(self, node):		
-		try:
-			subreg_left = node.GetAttr('left')
-		except NoSuchAttrError:
-			subreg_left = 0
-		try:
-			subreg_right = node.GetAttr('right')
-		except NoSuchAttrError:
-			subreg_right = 0
-		try:
-			subreg_top = node.GetAttr('top')
-		except NoSuchAttrError:
-			subreg_top = 0
-		try:
-			subreg_bottom = node.GetAttr('bottom')
-		except NoSuchAttrError:
-			subreg_bottom = 0
+		subreg_left = node.GetAttrDef('left', 0)
+		subreg_right = node.GetAttrDef('right', 0)
+		subreg_top = node.GetAttrDef('top', 0)
+		subreg_bottom = node.GetAttrDef('bottom', 0)
 
 		reg_left, reg_top, reg_width, reg_height =  \
 			self._get_parent_channel()._attrdict['base_winoff']
