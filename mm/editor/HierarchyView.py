@@ -907,51 +907,10 @@ class Object:
 	def pasteundercall(self):
 		self.mother.paste(0)
 
-	#XXXX Debug only
-	def testsrcall(self):
-		from SR import sr2string
-		srlist, children = self.node.gensr()
-		print 'SRlist for node', self.node.uid, '#children=', len(children)
-		for i in srlist:
-			print '\t', sr2string(i)
-
-	def testallsrcall(self):
-		import time
-		from SR import sr2string
-		t = time.time()
-		
-		arcs = self.node.GetArcList()
-		arcs = self.node.FilterArcList(arcs)
-		for i in range(len(arcs)):
-			n1, s1, n2, s2, delay = arcs[i]
-			n1.SetArcSrc(s1, delay, i)
-			n2.SetArcDst(s2, i)
-			
-		n = 0
-		todo = [self.node]
-		srlist_all = []
-		while todo:
-			cur = todo[:]
-			todo = []
-			for i in cur:
-				n = n + 1
-				srlist, children = i.gensr()
-				for c in children:
-					todo.append(c)
-				srlist_all = srlist_all + srlist
-		print 'Did',n,'nodes in', time.time()-t
-		fd = open('@srlist', 'w')
-		for e in srlist_all:
-			fd.write(sr2string(e) + '\n')
-		fd.close()
-		print 'Written'
-
 	# Menu and shortcut definitions are stored as data in the class,
 	# since they are the same for all objects of a class...
 
 	commandlist = [ \
-		(None, 'Test SR', testsrcall), \
-		(None, 'Test SR all%l', testallsrcall), \
 		(None, 'Create', [ \
 			(None, 'Before focus', createbeforecall), \
 			(None, 'After focus', createaftercall), \
