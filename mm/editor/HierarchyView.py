@@ -84,8 +84,8 @@ class sizes:
 	TITLESIZE = f_title.fontheightPXL()*1.2
 	CHNAMESIZE = 0
 	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
-	HOREXTRASIZE = f_title.strsizePXL(None, 'XX')[0]
-	ARRSIZE = f_title.strsizePXL(None, 'xx')[0]	# width of collapse/expand arrow
+	HOREXTRASIZE = f_title.strsizePXL('XX')[0]
+	ARRSIZE = f_title.strsizePXL('xx')[0]	# width of collapse/expand arrow
 	GAPSIZE = 2						# size of gap between nodes
 	EDGSIZE = 2						# size of edges
 
@@ -1065,7 +1065,7 @@ class HierarchyView(HierarchyViewDialog):
 			if self.sizes.SIZEUNIT == windowinterface.UNIT_MM:
 				namewidth = (name and f_title.strsize(name)[0]) or 0
 			else:
-				namewidth = (name and f_title.strsizePXL(None, name)[0]) or 0
+				namewidth = (name and f_title.strsizePXL(name)[0]) or 0
 			if ntype in MMNode.interiortypes or \
 			   (ntype == 'ext' and node.GetChannelType() == 'RealPix'):
 				namewidth = namewidth + self.sizes.ARRSIZE
