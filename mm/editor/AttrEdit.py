@@ -256,10 +256,15 @@ class NodeWrapper(Wrapper):
 			self.node.attreditor = attreditor
 			
 	def selection_changed(self, seltype, selvalue, doit=1):
-		if seltype != 'MMNode':
-			return 0
+		if not selvalue:
+			return
 		if type(selvalue) in (type(()), type([])):
 			print 'Multinode not yet supported'
+			return 0
+		if not hasattr(selvalue, 'getClassName'):
+			print 'Focus items should have getClassName() method'
+			return 0
+		if selvalue.getClassName() != 'MMNode':
 			return 0
 		if doit:
 			self.node = selvalue
