@@ -12,8 +12,8 @@
       <region id="audioRegion_2" GRiNS:type="sound"/>
       <region id="bkgd_imageRegion" width="415" height="245" GRiNS:type="image"/>
       <region id="videoRegion" left="5" top="5" width="400" height="180" z-index="1" GRiNS:type="video"/>
-      <region id="realpixRegion" left="5" top="5" width="400" height="180" z-index="1" GRiNS:type="RealPix"/>
-      <region id="realtextRegion" width="400" height="180" z-index="1" GRiNS:type="RealText"/>
+      <region id="realpixRegion" left="5" top="5" width="400" height="225" z-index="1" GRiNS:type="RealPix"/>
+      <region id="realtextRegion" width="280" height="211" z-index="1" GRiNS:type="RealText"/>
     </layout>
   </head>
   <body>
@@ -22,11 +22,11 @@
 	  <seq id="Video_Sequence">
         <video id="Video_Clip_1" region="videoRegion" src="media/video.mpg"/>
 	  </seq>
-	  <seq id="RealPix_Sequence">
-        <img id="RealPix-Slideshow_1" region="realpixRegion" src="media/realpix-template.rp" dur="10s" system-bitrate="28800"/>
+	  <seq id="RealPix_Sequence" system-bitrate="28800">
+        <img id="RealPix-Slideshow_1" region="realpixRegion" src="media/realpix-template.rp" dur="10s"/>
 	  </seq>
-	  <seq id="RealText_Sequence">
-        <text id="Realtext_1" region="realtextRegion" src="media/realtext-template.rt" system-bitrate="14400"/>
+	  <seq id="RealText_Sequence" system-bitrate="14400">
+        <text id="Realtext_1" region="realtextRegion" src="media/realtext-template.rt"/>
 	  </seq>
     </switch>
 	  <seq id="Audio_Sequence">
