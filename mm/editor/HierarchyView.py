@@ -623,7 +623,12 @@ class HierarchyView(ViewDialog):
 			box = left + amargin, top, right - amargin, newtop
 			list.append(node, ANCESTORBOX, box)
 			top = newtop
-		makeboxes(list, self.viewroot, left, top, right, bottom, displist)
+		minwidth = displist.strsize('x')[0] * 4
+		titleheight = displist.fontheight() * 1.5
+		hmargin = minwidth / 6
+		vmargin = titleheight / 5
+		makeboxes(list, self.viewroot, left, top, right, bottom,
+			  minwidth, titleheight, hmargin, vmargin)
 		return list
 
 	# Draw the window, assuming the object shapes are all right
@@ -722,53 +727,76 @@ class HierarchyView(ViewDialog):
 # Recursive procedure to calculate geometry of boxes.
 # This makes a box for the give node with the given dimensions,
 # and if possible makes boxes for the children.
-def makeboxes(list, node, left, top, right, bottom, displist):
-	minwidth = displist.strsize('x')[0] * 4
-	titleheight = displist.fontheight() * 1.5
-	hmargin = minwidth / 6
-	vmargin = titleheight / 5
+# The algorithm is as follows:
+# Each of the children of node are allocated a minimum space (minwidth
+# x titleheight).  How much of the extra space each child gets depends 
+# on how many children it has.  The "unit" extra space is the total
+# extra space divided by the total number of children and
+# grandchildren.  Each child is allocated n extra units where n is
+# equal to the number of grandchildren plus one.
+def makeboxes(list, node, left, top, right, bottom,
+	      minwidth, titleheight, hmargin, vmargin):
 	box = left, top, right, bottom
-	height = bottom-top
 	t = node.GetType()
-	n = len(node.GetChildren())
-	if t in MMNode.leaftypes or n == 0 \
-		  or right-left < minwidth + 2*hmargin \
-		  or bottom-top < 2*titleheight + 2*vmargin:
+	children = node.GetChildren()
+	nchildren = len(children)
+	if t in MMNode.leaftypes or \
+	   nchildren == 0 or \
+	   right-left < minwidth + 2*hmargin or \
+	   bottom-top < 2*titleheight + 2*vmargin:
+		# no children, or expanded children won't fit
 		list.append(node, LEAFBOX, box)
 		return
+
 	# Calculate space available for children
 	top = top + titleheight + vmargin
 	left = left + hmargin
 	right = right - hmargin
 	bottom = bottom - vmargin
+
+	# calculate number of grandchildren
+	ngrands = 0
+	for c in children:
+		ngrands = ngrands + len(c.GetChildren())
+
+	# the two branches here are basically identical--the
+	# horizontal and vertical directions have been exchanged
 	if t == 'par':
-		avail = (right-left+hmargin) / n - hmargin
-		if avail < minwidth:
+		# children laid out horizontally
+		# needed is the minimum space needed to draw all children
+		needed = nchildren * (minwidth + hmargin) - hmargin
+		# rest is the space left over to divide over the children
+		rest = right - left - needed
+		if rest < 0:
+			# expanded children don't fit
 			list.append(node, LEAFBOX, box)
 			return
+		# "draw" our box
 		list.append(node, INNERBOX, box)
-		for i in range(n):
-			c = node.GetChild(i)
-			makeboxes(list, c, left, top, left+avail, bottom,
-				  displist)
-			left = left+avail+hmargin
-			n = n-1
-			if n > 0:
-				avail = (right-left+hmargin) / n - hmargin
+		# extra is the "unit" extra space
+		extra = rest / (ngrands + nchildren)
+		for c in children:
+			# cright is the right edge of the child
+			cright = left+minwidth+(1+len(c.GetChildren()))*extra
+			makeboxes(list, c, left, top, cright, bottom,
+				  minwidth, titleheight, hmargin, vmargin)
+			# left is the left edge of the next child
+			left = cright + hmargin
 	else:
-		avail = (bottom-top+vmargin) / n - vmargin
-		if avail < titleheight:
+		# children laid out vertically
+		# for other comments, see the other branch
+		needed = nchildren * (titleheight + vmargin) - vmargin
+		rest = bottom - top - needed
+		if rest < 0:
 			list.append(node, LEAFBOX, box)
 			return
+		extra = rest / (ngrands + nchildren)
 		list.append(node, INNERBOX, box)
-		for i in range(n):
-			c = node.GetChild(i)
-			makeboxes(list, c, left, top, right, top+avail,
-				  displist)
-			top = top+avail+vmargin
-			n = n-1
-			if n > 0:
-				avail = (bottom-top+vmargin) / n - vmargin
+		for c in children:
+			cbottom = top+titleheight+(1+len(c.GetChildren()))*extra
+			makeboxes(list, c, left, top, right, cbottom,
+				  minwidth, titleheight, hmargin, vmargin)
+			top = cbottom + vmargin
 
 
 # XXX The following should be merged with ChannelView's GO class :-(
