@@ -114,6 +114,8 @@ class TopLevel():
 		self.channelview = ChannelView.ChannelView().init(self.root)
 		import Player
 		self.presview = Player.Player().init(self.root)
+		setcurrenttime = self.channelview.setcurrenttime
+		self.presview.set_setcurrenttime_callback(setcurrenttime)
 		import StyleEdit
 		self.styleview = StyleEdit.StyleEditor().init(self.root)
 		self.views = [self.blockview, self.channelview, \
