@@ -32,10 +32,10 @@ import features
 import version
 
 _documentation = [('QuickStart', GRINS_QSG),
-		  ('tutorials', GRINS_TUTORIAL),
+		  ('Howto-Basic', GRINS_TUTORIAL),
 		  ('TDG', GRINS_TDG),
 		  ('REFM', GRINS_REFERENCE),
-		  ('Demos', GRINS_DEMOS),]
+		  ('TDG', GRINS_DEMOS),]
 
 class MainDialog:
 	adornments = {}
