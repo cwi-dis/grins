@@ -254,8 +254,18 @@ void seterror(const char *funcname, PN_RESULT res)
 			PyErr_Format(module_error, "%s failed, error = %s (0x%x)", funcname, p->name, res);
 			return;
 		}
-	PyErr_Format(module_error, "%s failed, error = %x", funcname, res);
+	PyErr_Format(module_error, "%s failed, error = %s (0x%x)", funcname, "PNR_UNKNOWN", res);
 }
+
+char *geterrorstring(PN_RESULT res, char *pszBuffer){
+	for(error *p = errorlist; p->name; p++)
+		if (p->res == res){
+			strcpy(pszBuffer, p->name);
+			return pszBuffer;
+		}
+	strcpy(pszBuffer,"PNR_UNKNOWN");
+	return pszBuffer;
+	}
 
 struct constentry {char* s;int n;};
 
