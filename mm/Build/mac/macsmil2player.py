@@ -118,7 +118,6 @@ else:
 # macfreeze: exclude MpegChannel
 # macfreeze: exclude MidiChannel
 # macfreeze: exclude VcrChannel
-# macfreeze: exclude NTVideoChannel
 # macfreeze: exclude MPEGVideoChannel
 # macfreeze: exclude SGIVideoDuration
 # macfreeze: exclude audio.hcom
