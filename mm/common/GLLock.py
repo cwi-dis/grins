@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # This module defines a global lock on GL operations.
 # The gl_rawlock is the real lock, and the gl_lock is a wrapper that
 # allows you to do multiple acquires() within a single thread.
