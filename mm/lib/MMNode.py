@@ -341,6 +341,9 @@ class MMNodeContext:
 		regpoint['isdefault'] = isdefault
 		self.regpoints[name] = regpoint
 
+	def GetRegPoint(self, name):
+		return self.regpoints.get(name)
+	
 	#
 	# Hyperlink administration
 	#
@@ -573,11 +576,11 @@ class MMRegPoint:
 		if self.attrdict.has_key('left'):
 			x = self.attrdict['left']
 			if type(x) == type(1.0):
-				x = x*boxwidth
+				x = int(x*boxwidth+0.5)
 		elif self.attrdict.has_key('right'):
 			right = self.attrdict['right']
 			if type(right) == type(1.0):
-				right = right*boxwidth
+				right = int(right*boxwidth+0.5)
 			x = boxwidth-right
 		else:
 			x = 0
@@ -589,11 +592,11 @@ class MMRegPoint:
 		if self.attrdict.has_key('top'):
 			y = self.attrdict['top']
 			if type(y) == type(1.0):
-				y = y*boxheight
+				y = int(y*boxheight+0.5)
 		elif self.attrdict.has_key('bottom'):
 			bottom = self.attrdict['bottom']
 			if type(bottom) == type(1.0):
-				bottom = bottom*boxheight
+				bottom = int(bottom*boxheight+0.5)
 			y = boxheight-bottom
 		else:
 			y = 0
