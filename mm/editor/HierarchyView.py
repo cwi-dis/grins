@@ -1098,7 +1098,7 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			widget = node.views['struct_view']
 			self.select_widget(widget)
-		self.editmgr.setglobalfocus("MMNode", node)
+		#self.editmgr.setglobalfocus("MMNode", node)
 
 	# Handle a selection click at (x, y)
 	def select(self, x, y):
@@ -1111,6 +1111,8 @@ class HierarchyView(HierarchyViewDialog):
 			self.select_widget(widget)
 			self.aftersetfocus()
 			self.dirty = 1
+		assert isinstance(widget.node, MMNode.MMNode)
+		self.editmgr.setglobalfocus("MMNode", widget.node)
 
 
 	# Find the smallest object containing (x, y)
