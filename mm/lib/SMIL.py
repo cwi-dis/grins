@@ -305,6 +305,12 @@ class SMIL:
 			'transOut':None,
 			'type':None,
 			'uGroup':None,
+			# subregion positioning attributes
+		        'bottom':None,
+			'left':None,
+		        'right':None,
+		        'top':None,
+		        
 			__layout:None,
 			GRiNSns+' ' 'bgcolor':None,
 			GRiNSns+' ' 'comment':None,
@@ -360,6 +366,12 @@ class SMIL:
 			  'systemScreenSize':None,
 			  'title':None,
 			  'uGroup':None,
+			  # subregion positioning attributes
+		          'bottom':None,
+			  'left':None,
+		          'right':None,
+		          'top':None,
+			  
 			  __layout:None,
 			  GRiNSns+' ' 'bgcolor':None,
 			  GRiNSns+' ' 'comment':None,
