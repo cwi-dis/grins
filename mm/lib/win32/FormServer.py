@@ -28,6 +28,10 @@ if not settings.get('lightweight'):
 	appform['anchor_edit']={'cmd':-1,'title':'Anchor Editor','id':'anchor_edit','obj':None,'class':AnchorEditForm,'freezesize':1}
 	appform['arc_info']={'cmd':-1,'title':'ArcInfo Editor','id':'arc_info','obj':None,'class':ArcInfoForm,'freezesize':1}
 
+# controls whether to remove or not the minimize button 
+# when resize is not allowed. (my preference is NO_MINIMIZEBOX = 1)
+NO_MINIMIZEBOX = 0
+
 # interface needed for FormServer contructor argument
 class IFormServerContext:
 	def getdoc(self):
@@ -69,7 +73,10 @@ class ChildFrame(window.MDIChildWnd):
 			if cx:cs.cx=cx
 			if cx:cs.cy=cy
 		if self._freezesize:
-			cs.style = win32con.WS_CHILD|win32con.WS_OVERLAPPED |win32con.WS_CAPTION|win32con.WS_BORDER|win32con.WS_SYSMENU|win32con.WS_MINIMIZEBOX
+			cs.style = win32con.WS_CHILD|win32con.WS_OVERLAPPED\
+				|win32con.WS_CAPTION|win32con.WS_BORDER|win32con.WS_SYSMENU
+			if not NO_MINIMIZEBOX:
+				cs.style = cs.style |win32con.WS_MINIMIZEBOX
 		return cs.to_csd()
 	
 	# Called by the framework when this is activated or deactivated
