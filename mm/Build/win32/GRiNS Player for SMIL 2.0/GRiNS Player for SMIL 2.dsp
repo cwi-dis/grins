@@ -197,6 +197,10 @@ SOURCE=.\M___main__.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M__AssetsView.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M__FSPlayerView.c
 # End Source File
 # Begin Source File
@@ -554,6 +558,10 @@ SOURCE=.\M_licparser.c
 # Begin Source File
 
 SOURCE=.\M_linecache.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_ListCtrl.c
 # End Source File
 # Begin Source File
 
@@ -1037,6 +1045,10 @@ SOURCE=.\M_SVGChannel.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_svgcolors.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_svgdom.c
 # End Source File
 # Begin Source File
@@ -1045,11 +1057,23 @@ SOURCE=.\M_svgdtd.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_svggraphics.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_svgpath.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_svgrender.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_svgtypes.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_svgwin.c
 # End Source File
 # Begin Source File
 
