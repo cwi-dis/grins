@@ -53,14 +53,12 @@ class LayoutChannel(ChannelWindow):
 				self.window = pchan.window.newcmwindow(pgeom,
 						transparent = transparent,
 						z = z,
-						type_channel = self._window_type,
 						units = units,
 						bgcolor = bgcolor)
 			else:
 				self.window = pchan.window.newwindow(pgeom,
 						transparent = transparent,
 						z = z,
-						type_channel = self._window_type,
 						units = units,
 						bgcolor = bgcolor)
 ##			if hasattr(self._player, 'editmgr'):
@@ -88,16 +86,12 @@ class LayoutChannel(ChannelWindow):
 			if self.want_default_colormap:
 				self.window = windowinterface.newcmwindow(x, y,
 					width, height, title,
-					visible_channel = self._visible,
-					type_channel = self._window_type,
 					units = units, adornments = adornments,
 					commandlist = self.commandlist,
 					bgcolor = bgcolor)
 			else:
 				self.window = windowinterface.newwindow(x, y,
 					width, height, title,
-					visible_channel = self._visible,
-					type_channel = self._window_type,
 					units = units, adornments = adornments,
 					commandlist = self.commandlist,
 					bgcolor = bgcolor)
