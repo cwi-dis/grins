@@ -21,6 +21,7 @@ import windowinterface
 debug=0
 
 import rma
+
 USE_WINDOWLESS_REAL_RENDERING = 0
 	
 class VideoChannel(Channel.ChannelWindowAsync):
@@ -116,7 +117,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			return
 		if node.__type == 'real':
 			bpp = self.window._topwindow.getRGBBitCount()
-			if  bpp<=8 and USE_WINDOWLESS_REAL_RENDERING:
+			if bpp not in (8, 16, 24, 32) and USE_WINDOWLESS_REAL_RENDERING:
 				print 'windowless real rendering not supported for screen depth', bpp
 				global USE_WINDOWLESS_REAL_RENDERING
 				USE_WINDOWLESS_REAL_RENDERING = 0
@@ -324,16 +325,18 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			'32-32': self.__rmdds.Blt_RGB32_On_RGB32,
 			'32-24': self.__rmdds.Blt_RGB32_On_RGB24,
 			'32-16': self.__rmdds.Blt_RGB32_On_RGB16,
+			'32-8' : self.__rmdds.Blt_RGB32_On_RGB8,
 
 			'24-32': self.__rmdds.Blt_RGB24_On_RGB32,
 			'24-24': self.__rmdds.Blt_RGB24_On_RGB24,
 			'24-16': self.__rmdds.Blt_RGB24_On_RGB16,
+			'24-8' : self.__rmdds.Blt_RGB24_On_RGB8,
 			}
 
 		screenBPP = self.window._topwindow.getRGBBitCount()
 		self.__rmrender = None
 		
-		print 'Rendering real video: %s bpp=%d (%d x %d) on RGB%d' % (self.toStringFmt(fmt), bpp, w, h, screenBPP)
+		#print 'Rendering real video: %s bpp=%d (%d x %d) on RGB%d' % (self.toStringFmt(fmt), bpp, w, h, screenBPP)
 
 		if fmt==rma.RMA_RGB:
 			pair = '%d-%d' % (bpp, screenBPP)
@@ -347,6 +350,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				self.__rmrender = self.__rmdds.Blt_YUV420_On_RGB24, w, h
 			elif screenBPP==16:
 				self.__rmrender = self.__rmdds.Blt_YUV420_On_RGB16, w, h
+			elif screenBPP==8:
+				self.__rmrender = self.__rmdds.Blt_YUV420_On_RGB8, w, h
 		
 		if self.__rmrender:
 			self.window.setvideo(self.__rmdds, self.getMediaWndRect(), (0,0,w,h) )
@@ -364,6 +369,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	def EndBlt(self):
 		# do not remove video yet 
 		# it may be frozen
+		self.__rmdds = None
 		self.__rmrender = None
 
 
