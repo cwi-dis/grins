@@ -322,7 +322,7 @@ class ASXParser(ASXdoc, xmllib.XMLParser):
 		for e in entries:
 			url = MMurl.guessurl(e.GetAttr('href'))
 			url = MMurl.basejoin(baseurl, url)
-			str = str + """<video id="subject%d_alt%d" region="main" src="%s" dur="18s"/>"""\
+			str = str + """<video id="subject%d_alt%d" region="main" src="%s"/>"""\
 				% (index, altix, url)
 			altix = altix + 1
 		str = str + "\n</switch>"
