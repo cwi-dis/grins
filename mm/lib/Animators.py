@@ -1864,7 +1864,7 @@ class AnimateElementParser:
 			self.__attrtype = 'float'
 			if self.__target._type == 'region':
 				ch = self.__target._region
-				self.__domval = ch.get('soundLevel')
+				self.__domval = ch.get('soundLevel', 1.0)
 				return 1
 			return 0
 
