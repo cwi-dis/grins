@@ -217,6 +217,8 @@ class NEW_BEFORE_SOUND(_CommandBase):
 	help = 'Create new sound node before selected node'
 class NEW_BEFORE_VIDEO(_CommandBase):
 	help = 'Create new video node before selected node'
+class NEW_BEFORE_BRUSH(_CommandBase):
+	help = 'Create new brush node before selected node'
 class NEW_BEFORE_SLIDESHOW(_CommandBase):
 	help = 'Create new slideshow node before selected node'
 class NEW_BEFORE_SEQ(_CommandBase):
@@ -245,6 +247,8 @@ class NEW_AFTER_SOUND(_CommandBase):
 	help = 'Create new sound node after selected node'
 class NEW_AFTER_VIDEO(_CommandBase):
 	help = 'Create new video node after selected node'
+class NEW_AFTER_BRUSH(_CommandBase):
+	help = 'Create new brush node after selected node'
 class NEW_AFTER_SLIDESHOW(_CommandBase):
 	help = 'Create new slideshow node after selected node'
 class NEW_AFTER_SEQ(_CommandBase):
@@ -273,6 +277,8 @@ class NEW_UNDER_SOUND(_CommandBase):
 	help = 'Create new sound node under selected node'
 class NEW_UNDER_VIDEO(_CommandBase):
 	help = 'Create new video node under selected node'
+class NEW_UNDER_BRUSH(_CommandBase):
+	help = 'Create new brush node under selected node'
 class NEW_UNDER_SLIDESHOW(_CommandBase):
 	help = 'Create new slideshow node under selected node'
 class NEW_UNDER_SEQ(_CommandBase):
