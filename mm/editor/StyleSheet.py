@@ -50,6 +50,7 @@ class StyleSheet(ViewDialog, BasicDialog):
 			self.toplevel.checkviews()
 	#
 	def make_form(self):
+		# XXX should fdesign...
 		self.width, self.height = 300, 320
 		BasicDialog.make_form(self) # Make form & Cancel...OK buttons
 		form = self.form
