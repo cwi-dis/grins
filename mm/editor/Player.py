@@ -165,7 +165,6 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 		for cname in self.channelnames:
 			self.channels[cname].setrate(self.rate)
 		self.updatetimer()
-		self.showtime()
 	#
 	def updatetimer(self):
 		now = self.timefunc()
@@ -345,14 +344,17 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 	#
 	def play(self):
 		if not self.playing:
-			if not self.start_playing():
+			if not self.start_playing(1.0):
 				return
-		self.setrate(1.0)
-		self.showstate()
+		else:
+			self.setrate(1.0)
+			self.showstate()
 	#
 	def playsubtree(self, node):
-		if not self.showing or self.playing:
-			return
+		if not self.showing:
+			self.show()
+		if self.playing:
+			self.stop()
 		if node.GetRoot() <> self.root:
 			raise RuntimeError, 'playsubtree with bad arg'
 		self.playroot = node
@@ -360,10 +362,11 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 	#
 	def pause(self):
 		if not self.playing:
-			if not self.start_playing():
+			if not self.start_playing(0.0):
 				return
-		self.setrate(0.0)
-		self.showstate()
+		else:
+			self.setrate(0.0)
+			self.showstate()
 	#
 	def stop(self):
 		if self.playing:
@@ -372,13 +375,14 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 	#
 	def faster(self):
 		if not self.playing:
-			if not self.start_playing():
+			if not self.start_playing(2.0):
 				return
-		if self.rate = 0.0:
-			self.setrate(2.0)
 		else:
-			self.setrate(self.rate * 2.0)
-		self.showstate()
+			if self.rate = 0.0:
+				self.setrate(2.0)
+			else:
+				self.setrate(self.rate * 2.0)
+			self.showstate()
 	#
 	def maystart(self):
 		return not self.locked
@@ -500,13 +504,15 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 	#
 	# Playing algorithm.
 	#
-	def start_playing(self):
+	def start_playing(self, rate):
 		if not self.maystart():
 			return 0
 		self.playing = 1
 		self.reset()
+		self.setrate(rate)
 		if self.playroot.GetRoot() <> self.root:
 			self.playroot = self.root # In case it's been deleted
+		self.showstate() # Give the anxious user a clue...
 		Timing.prepare(self.playroot)
 		self.playroot.counter[HD] = 1
 		self.decrement(0, self.playroot, HD)
