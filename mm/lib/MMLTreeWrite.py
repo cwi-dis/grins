@@ -362,18 +362,21 @@ class MMLWriter:
 		# First fixup unimplemented tps
 		if tp == AnchorDefs.ATYPE_AUTO:
 			print "** unsupported auto anchor on", href
-			tp = AnchorDefs.ATYPE_WHOLE
+			tp = AnchorDefs.ATYPE_DEST
 		if tp == AnchorDefs.ATYPE_PAUSE:
 			print "** unsupported pausing anchor on", href
 			tp = AnchorDefs.ATYPE_NORMAL
 		if tp == AnchorDefs.ATYPE_COMP:
 			print "** unsupported comp anchor on", href
-			tp = AnchorDefs.ATYPE_WHOLE
+			tp = AnchorDefs.ATYPE_DEST
 		if tp == AnchorDefs.ATYPE_ARGS:
 			print "** unsupported args anchor on", href
-			tp = AnchorDefs.ATYPE_WHOLE
-		if tp == AnchorDefs.ATYPE_WHOLE:
+			tp = AnchorDefs.ATYPE_DEST # XXXX ATYPE_WHOLE
+		if tp == AnchorDefs.ATYPE_DEST:
 			pass
+## XXXX Not yet
+##		elif tp == AnchorDefs.ATYPE_WHOLE:
+##			pass
 		elif tp == AnchorDefs.ATYPE_NORMAL:
 			# XXXX Hack: see if these are coordinates
 			ok = 0
@@ -389,9 +392,10 @@ class MMLWriter:
 				else:
 					ok = 1
 			if ok:
-				items.append('shape="rect"')
-				items.append('coords="%d%%,%d%% %d%%,%d%%"'%
-					     (x,y,w,h))
+				if x, y, w, h != (0,0,100,100):
+					items.append('shape="rect"')
+					items.append('coords="%d%%,%d%% %d%%,%d%%"'%
+						     (x,y,w,h))
 			elif args:
 				print '** Unparseable args on', href, args
 		self.fp.write(string.join(items, ' ')+'/>\n')
@@ -404,7 +408,7 @@ class MMLWriter:
 			if id == aid:
 				return type, args
 		print '** undefined anchor', href, aid
-		return AnchorDefs.ATYPE_WHOLE, []
+		return AnchorDefs.ATYPE_DEST, []
 
 	def mmltempfile(self, node):
 		"""Return temporary file name for node"""
