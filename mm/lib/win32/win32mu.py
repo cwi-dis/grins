@@ -243,6 +243,12 @@ def roundi(x):
 		return roundi(x + 1024) - 1024
 	return int(x + 0.5)
 
+def UInt16ToInt16(x):
+	if x & 0x8000:
+		return -(~(x | 0xffff0000)+1)
+	else:
+		return x
+	
 class Pen:
 	def __init__(self,style=win32con.PS_INSIDEFRAME,size=Size((1,1)),color=(0,0,0)):
 		self._style=style

@@ -1086,6 +1086,12 @@ class LayoutWnd:
 	def onMouseMove(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
+		x, y = point
+		# x and y are signed number
+		x = win32mu.UInt16ToInt16(x)
+		y = win32mu.UInt16ToInt16(y)
+		point = x,y
+		
 		if self._lbuttondown is not None:
 			self._lbuttondown = point
 		point = self.DPtoLP(point)
