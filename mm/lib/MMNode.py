@@ -635,6 +635,61 @@ class MMNodeContext:
 		else:
 			self.__registers.append(x)
 
+	def getviewports(self):
+		# this method is equivalent to this snippet, except probably faster
+		# return filter(lambda ch: ch.GetParent() is None, self.__ctx.channels)
+		top_levels = []
+		for chan in self.channels:
+			if chan.GetParent() is None:
+				top_levels.append(chan)
+		return top_levels
+
+	# create a new linked SMILCssResolver
+	# it uses the context instance since it absorbed css attrs
+	def newCssResolver(self):
+		blackhole = self.cssResolver
+		from SMILCssResolver import SMILCssResolver
+		resolver =  SMILCssResolver(self)
+		top_levels = self.getviewports()
+		for top in top_levels:
+			csstop = resolver.newRootNode(top)
+			csstop.copyRawAttrs(blackhole.getCssObj(top))
+			self.__appendCssRegions(resolver, top, csstop)
+		root = self.getroot()
+		if root:
+			self.__appendCssNodes(resolver, root)
+		for top in top_levels:
+			csstop = resolver.getCssObj(top)
+			csstop.updateTree()
+			#csstop.dump()
+		return resolver
+
+	def __appendCssRegions(self, resolver, regarg, cssregarg):
+		blackhole = self.cssResolver
+		for reg in regarg.GetChildren():
+			if reg['type'] != 'layout':
+				continue
+			cssreg = resolver.newRegion(reg)
+			cssreg.copyRawAttrs(blackhole.getCssObj(reg))
+			cssreg.link(cssregarg)
+			self.__appendCssRegions(resolver, reg, cssreg)
+
+	def __appendCssNodes(self, resolver, nodearg):
+		blackhole = self.cssResolver
+		for node in nodearg.children:
+			ntype = node.GetType()
+			if ntype in mediatypes:
+				csssubreg = resolver.newRegion(node)
+				csssubreg.copyRawAttrs(blackhole.getCssObj(node))
+				csssubreg.media = resolver.newMedia(node.GetDefaultMediaSize, node)
+				csssubreg.media.copyRawAttrs(blackhole.getCssObj(node).media)
+				mmchan = node.GetChannel()
+				if mmchan:
+					reg = mmchan.GetLayoutChannel()
+					csssubreg.link(resolver.getCssObj(reg))
+					csssubreg.media.link(csssubreg)
+			self.__appendCssNodes(resolver, node)
+
 class MMRegPoint:
 	def __init__(self, context, name):
 		self.context = context
@@ -733,9 +788,115 @@ class MMRegPoint:
 	def items(self):
 		return self.attrdict.items()
 
-class MMChannel:
+class MMTreeElement:
+	def __init__(self, context, uid):
+		self.context = context	# From MMContext
+		self.uid = uid		# Unique identifier for each element (starts at 1)
+		self.parent = None
+		self.children = []
+		self.collapsed = 0	# Whether this element is collapsed in its view
+
+	def _addchild(self, child):
+		# ASSERT self.type in interiortypes
+		child.parent = self
+		self.children.append(child)
+
+	def GetContext(self):
+		return self.context
+
+	def GetUID(self):
+		return self.uid
+
+	def MapUID(self, uid):
+		return self.context.mapuid(uid)
+
+	def GetParent(self):
+		return self.parent
+
+	def GetRoot(self):
+		root = None
+		x = self
+		while x is not None:
+			root = x
+			x = x.parent
+		return root
+
+	def GetPath(self):
+		path = []
+		x = self
+		while x is not None:
+			path.append(x)
+			x = x.parent
+		path.reverse()
+		return path
+
+	def IsAncestorOf(self, x):
+		while x is not None:
+			if self is x: return 1
+			x = x.parent
+		return 0
+
+	def CommonAncestor(self, x):
+		p1 = self.GetPath()
+		p2 = x.GetPath()
+		n = min(len(p1), len(p2))
+		i = 0
+		while i < n and p1[i] == p2[i]: i = i+1
+		if i == 0: return None
+		else: return p1[i-1]
+
+	def GetPathsToCommonAncestor(self, x):
+		# Return the paths to the common ancestor of the elements.
+		# Return values include the common ancestor and the
+		# elements themselves.
+		p1 = self.GetPath()
+		p2 = x.GetPath()
+		n = min(len(p1), len(p2))
+		i = 0
+		while i < n and p1[i] == p2[i]:
+			i = i+1
+		if i == 0:
+			return None, None
+		else:
+			return p1[i-1:], p2[i-1:] # includes common ancestor
+
+	def GetChildren(self):
+		return self.children
+
+	def GetChild(self, i):
+		return self.children[i]
+
+	def Destroy(self):
+		self.context.forgetnode(self.uid)
+		for child in self.children:
+			child.parent = None
+			child.Destroy()
+		self.context = None
+		self.uid = None
+		self.parent = None
+		self.children = None
+
+	def Extract(self):
+		if self.parent is None: raise CheckError, 'Extract() root node'
+		parent = self.parent
+		self.parent = None
+		parent.children.remove(self)
+
+	def AddToTree(self, parent, i):
+		if self.parent is not None:
+			raise CheckError, 'AddToTree() non-root node'
+		if self.context is not parent.context:
+			# XXX Decide how to handle this later
+			raise CheckError, 'AddToTree() requires same context'
+		if i == -1:
+			parent.children.append(self)
+		else:
+			parent.children.insert(i, self)
+		self.parent = parent
+
+class MMChannel(MMTreeElement):
 	def __init__(self, context, name, type='undefined'):
-		self.context = context
+		MMTreeElement.__init__(self, context, name)
 		self.name = name
 		self.attrdict = {'type':type}
 		self.d_attrdict = {}
@@ -784,14 +945,7 @@ class MMChannel:
 		# actualy the layout channel is directly the parent channel
 		if self['type'] == 'layout':
 			return self		
-		return self.getParent()
-
-	# return the parent channel
-	def getParent(self):
-		cname = self.attrdict.get('base_window')
-		if not cname:
-			return None
-		return self.context.channeldict.get(cname)
+		return self.GetParent()
 
 	def getCssId(self):
 		return self._cssId
@@ -850,6 +1004,11 @@ class MMChannel:
 	# Emulate the dictionary interface
 	#
 	def __getitem__(self, key):
+		if key == 'base_window':
+			parent = self.GetParent()
+			if parent is not None:
+				return parent.name
+			raise KeyError, key
 		if self.attrdict.has_key(key):
 			return self.attrdict[key]
 		else:
@@ -868,15 +1027,14 @@ class MMChannel:
 			if ChannelMap.isvisiblechannel(value) and (not self.attrdict.has_key(key) or not ChannelMap.isvisiblechannel(self.attrdict[key])):
 				self.setvisiblechannelattrs(value)
 		elif key == 'base_window':
+			parent = self.GetParent()
+			if parent is not None:
+				self.Extract()
 			if self.attrdict.get('type') == 'layout':
-				if self.attrdict.has_key('base_window'):
-					del self['base_window']
-					wantNewEditBg = 0
-				else:
-					# if it's the first parent which is set, we assume it's the new region
-					# the default edit background is determinated according to its parent
-					wantNewEditBg = 1
-						
+				# if it's the first parent which is set, we assume it's the new region
+				# the default edit background is determinated according to its parent
+				wantNewEditBg = parent is None
+
 				# Base_window is set. So, it's not a viewport
 				# reset css node with the right type
 				self.newCssId(0)
@@ -910,6 +1068,9 @@ class MMChannel:
 					else:
 						b = 20
 					self.attrdict['editBackground'] = r,g,b
+			parent = self.context.channeldict[value]
+			parent._addchild(self)
+			return
 						
 		elif key == 'base_winoff':
 			# keep the compatibility with old version
@@ -923,22 +1084,37 @@ class MMChannel:
 	def __delitem__(self, key):
 		if self.isCssAttr(key):
 			self.setCssAttr(key, None)
-		else:
-			del self.attrdict[key]
-		if key == 'base_window':
+		elif key == 'base_window':
+			self.Extract()
 			if self.attrdict.get('type') == 'layout':
 					self.context.cssResolver.unlink(self._cssId)
+		else:
+			del self.attrdict[key]
 		
 	def has_key(self, key):
+		if key == 'base_window':
+			return self.GetParent() is not None
 		return self.attrdict.has_key(key)
 
 	def keys(self):
-		return self.attrdict.keys()
+		keys = self.attrdict.keys()
+		if self.GetParent() is not None:
+			keys.append('base_window')
+		return keys
 
 	def items(self):
-		return self.attrdict.items()
+		items = self.attrdict.items()
+		parent = self.GetParent()
+		if parent is not None:
+			items.append(('base_window', parent.name))
+		return items
 
 	def get(self, key, default = None):
+		if key == 'base_window':
+			parent = self.GetParent()
+			if parent is not None:
+				return parent.name
+			return default
 		if key == 'base_winoff':
 			return self.getPxGeom()
 		if self.attrdict.has_key(key):
@@ -982,13 +1158,13 @@ class MMChannel:
 			while x is not None:
 				if x.d_attrdict and x.d_attrdict.has_key(name):
 					return x.d_attrdict[name]
-				x = x.getParent()
+				x = x.GetParent()
 		
 		x = self
 		while x is not None:
 			if x.attrdict and x.attrdict.has_key(name):
 				return x.attrdict[name]
-			x = x.getParent()
+			x = x.GetParent()
 		return default
 
 	def GetAttr(self, name, animated=0):
@@ -1019,36 +1195,9 @@ class MMChannel:
 class MMChannelTree:
 	def __init__(self, ctx):
 		self.__ctx = ctx
-		self.commit(None)
-		if ctx.editmgr:
-			ctx.editmgr.register(self)
 
 	def close(self):
-		if self.__ctx and self.__ctx.editmgr:
-			self.__ctx.editmgr.unregister(self)
-		self.top_levels = None
-		self.subchans = None
 		self.__ctx = None
-
-	# editmanager stuff
-	def transaction(self, type):
-		return 1
-
-	def rollback(self):
-		pass
-
-	def commit(self, type):
-		self.top_levels = []
-		self.subchans = {}	# This is a tree of all channels
-					# of type channel_name:String->[subchannels:MMChannel]
-		self.__pchans = {}
-		self.__calc1()
-		self.__calc2()
-
-	def kill(self):
-		self.__ctx = None	# don't unregister after being killed
-		self.top_levels = None
-		self.subchans = None
 
 	def getchannel(self, chan):
 		if type(chan) is not type(''):
@@ -1056,136 +1205,43 @@ class MMChannelTree:
 		return self.__ctx.channeldict.get(chan)
 
 	def getsubchannels(self, chan):
-		if type(chan) is not type(''):
-			chan = chan.name
-		if self.subchans.has_key(chan):
-			return self.subchans[chan]
-		else:
-			return []
+		if type(chan) is type(''):
+			chan = self.__ctx.channeldict.get(chan)
+		return chan.GetChildren()
 
 	def getparent(self, chan):
 		if type(chan) is type(''):
 			chan = self.__ctx.channeldict.get(chan)
-		return self.__pchans.get(chan)
+		return chan.GetParent()
 
 	def getpath(self, chan):
-		path = []
-		chan = self.getchannel(chan)
-		while chan:
-			path.append(chan)
-			chan = self.__pchans.get(chan)
-		path.reverse()
-		return path
+		if type(chan) is type(''):
+			chan = self.__ctx.channeldict.get(chan)
+		return chan.GetPath()
 
 	# WORKING HERE (mjvdg) working here
 	# This is currently failing when I load the bridge demo with the temporal view.
 
 	def getsubregions(self, chan, all=0):
 		# Returns a list of all the sub-regions of a certain channel (which could be a region).
-		if type(chan) is not type(''):
-			chan = chan.name
-		return_me = []
-		if self.subchans.has_key(chan):
-			kids = self.subchans[chan]
-			for i in kids:
-				if i.get('type') =='layout' or all:
-					return_me.append(i)
-			return return_me
-		else:
-			return []
+		if type(chan) is type(''):
+			chan = self.__ctx.channeldict.get(chan)
+		# the rest of this method is equivalent to this snippet, but probably faster
+		# return filter(lambda chan: chan.get('type') == 'layout', chan.GetChildren())
+		subregs = []
+		for chan in chan.GetChildren():
+			if chan.get('type') == 'layout':
+				subregs.append(chan)
+		return subregs
 
 	def getviewports(self):
-		return self.top_levels
+		return self.__ctx.getviewports()
 
 	def getviewport(self, chan):
 		# Returns the viewport associated with the channel
-		iChan = chan
-		pChan = self.getparent(chan)
-		while pChan is not None:
-			iChan = pChan
-			pChan = self.getparent(pChan)
-		return iChan
-
-	# create a new linked SMILCssResolver
-	# it uses the context instance since it absorbed css attrs
-	def newCssResolver(self):
-		blackhole = self.__ctx.cssResolver
-		from SMILCssResolver import SMILCssResolver
-		resolver =  SMILCssResolver(self.__ctx)
-		for top in self.top_levels:
-			csstop = resolver.newRootNode(top)
-			csstop.copyRawAttrs(blackhole.getCssObj(top))
-			self.__appendCssRegions(resolver, top, csstop)
-		root = self.__ctx.getroot()
-		if root:
-			self.__appendCssNodes(resolver, root)
-		for top in self.top_levels:
-			csstop = resolver.getCssObj(top)
-			csstop.updateTree()
-			#csstop.dump()
-		return resolver
-
-	def __appendCssRegions(self, resolver, regarg, cssregarg):
-		blackhole = self.__ctx.cssResolver
-		subregs = self.getsubregions(regarg.name)
-		for reg in subregs:
-			cssreg = resolver.newRegion(reg)
-			cssreg.copyRawAttrs(blackhole.getCssObj(reg))
-			cssreg.link(cssregarg)
-			self.__appendCssRegions(resolver, reg, cssreg)
-
-	def __appendCssNodes(self, resolver, nodearg):
-		blackhole = self.__ctx.cssResolver
-		for node in nodearg.children:
-			ntype = node.GetType()
-			if ntype in mediatypes:
-				csssubreg = resolver.newRegion(node)
-				csssubreg.copyRawAttrs(blackhole.getCssObj(node))
-				csssubreg.media = resolver.newMedia(node.GetDefaultMediaSize, node)
-				csssubreg.media.copyRawAttrs(blackhole.getCssObj(node).media)
-				mmchan = node.GetChannel()
-				if mmchan:
-					reg = mmchan.GetLayoutChannel()
-					csssubreg.link(resolver.getCssObj(reg))
-					csssubreg.media.link(csssubreg)
-			self.__appendCssNodes(resolver, node)
-
-	def __calc1(self):
-		import ChannelMap
-		# Find the base windows, aka viewports.
-		channels = self.__ctx.channels
-		for ch in channels:
-			# If the channel has a base window that I don't know about, add it (? -mjvdg)
-			if ch.has_key('base_window'):
-				pch = ch['base_window']	# pch is the parent channel.
-				if not self.subchans.has_key(pch): # if I don't know about this base window, 
-					self.subchans[pch] = []	# I, er, add it as an empty list (?!).
-				self.subchans[pch].append(ch)
-			if not ch.has_key('base_window') and \
-			   ChannelMap.isvisiblechannel(ch['type']):
-				# top-level channel with window
-				self.top_levels.append(ch)
-				if not self.subchans.has_key(ch.name):
-					self.subchans[ch.name] = []
-
-	def __calc2(self):
-		import ChannelMap
-		channels = self.__ctx.channels
-		if self.top_levels:
-			top0 = self.top_levels[0].name # top0 is the main base window.
-		else:
-			top0 = None
-		for ch in channels:
-			if not ch.has_key('base_window') and \
-			   not ChannelMap.isvisiblechannel(ch['type']) and \
-			   top0:
-				self.subchans[top0].append(ch)
-				
-		# enable bottom up search
-		for parentName, children in self.subchans.items():
-			parchan = self.__ctx.getchannel(parentName)
-			for ch in children:
-				self.__pchans[ch] = parchan
+		if type(chan) is type(''):
+			chan = self.__ctx.channeldict.get(chan)
+		return chan.GetRoot()
 
 
 # representation of anchors
@@ -1650,7 +1706,7 @@ class _TimingInfo:
 clipre = None
 clock_val = None
 
-class MMNode:
+class MMNode(MMTreeElement):
 	# MMNode is the base class from which other Node classes are implemented.
 	# Each Node forms a doubly-linked n-tree - MMNode.children[] stores the
 	# children below the current node and MMNode.parent has a link back up to
@@ -1667,17 +1723,14 @@ class MMNode:
 
 	def __init__(self, type, context, uid):
 		# ASSERT type in alltypes
+		MMTreeElement.__init__(self, context, uid)
 		self.type = type	# see MMTypes.py
-		self.context = context	# From MMContext
-		self.uid = uid		# Unique identifier for each node (starts at 1)
 		self.attrdict = {}	# Attributes of this MMNode
 		self.d_attrdict = {}	# Dynamic (changing) attrs of this MMNode
 		self.values = []
 		self.willplay = None	# Used for colours in the editor
 		self.shouldplay = None
 		self.canplay = None
-		self.parent = None	# The parent of this MMNode
-		self.children = []	# The sub-nodes of this MMNode
 		self.looping_body_self = None
 		self.realpix_body = None
 		self.caption_body = None
@@ -1704,7 +1757,6 @@ class MMNode:
 		self.__calcendtimecalled = 0
 		self.views = {}		# Map {string -> Interactive} - that is, a list of views
 					# looking at this object.
-		self.collapsed = 0	# Whether this node is collapsed in the structure view.
 		self.char_positions= None # The character positions that this node corresponds to in the source.
 		self.timing_info_dict = {}
 
@@ -2034,11 +2086,6 @@ class MMNode:
 	#
 	# Private methods to build a tree
 	#
-	def _addchild(self, child):
-		# ASSERT self.type in interiortypes
-		child.parent = self
-		self.children.append(child)
-
 	def _addvalue(self, value):
 		# ASSERT self.type = 'imm'
 		self.values.append(value)
@@ -2236,18 +2283,6 @@ class MMNode:
 	def GetType(self):
 		return self.type
 
-	def GetContext(self):
-		return self.context
-
-	def GetUID(self):
-		return self.uid
-
-	def MapUID(self, uid):
-		return self.context.mapuid(uid)
-
-	def GetParent(self):
-		return self.parent
-
 	def GetSchedParent(self, check_playability = 1):
 		if hasattr(self, 'fakeparent'):
 			return self.fakeparent
@@ -2255,14 +2290,6 @@ class MMNode:
 		while parent is not None and (parent.type == 'prio' or (check_playability and parent.type == 'switch')):
 			parent = parent.parent
 		return parent
-
-	def GetRoot(self):
-		root = None
-		x = self
-		while x is not None:
-			root = x
-			x = x.parent
-		return root
 
 	def GetSchedRoot(self):
 		root = None
@@ -2273,45 +2300,6 @@ class MMNode:
 			root = x
 			x = x.parent
 		return root		# backup plan
-
-	def GetPath(self):
-		path = []
-		x = self
-		while x is not None:
-			path.append(x)
-			x = x.parent
-		path.reverse()
-		return path
-
-	def IsAncestorOf(self, x):
-		while x is not None:
-			if self is x: return 1
-			x = x.parent
-		return 0
-
-	def CommonAncestor(self, x):
-		p1 = self.GetPath()
-		p2 = x.GetPath()
-		n = min(len(p1), len(p2))
-		i = 0
-		while i < n and p1[i] == p2[i]: i = i+1
-		if i == 0: return None
-		else: return p1[i-1]
-
-	def GetPathsToCommonAncestor(self, x):
-		# Return the paths to the common ancestor of the nodes.
-		# Return values include the common ancestor and the
-		# nodes themselves.
-		p1 = self.GetPath()
-		p2 = x.GetPath()
-		n = min(len(p1), len(p2))
-		i = 0
-		while i < n and p1[i] == p2[i]:
-			i = i+1
-		if i == 0:
-			return None, None
-		else:
-			return p1[i-1:], p2[i-1:] # includes common ancestor
 
 	def PrioCompare(self, other):
 		if self is other:
@@ -2329,9 +2317,6 @@ class MMNode:
 			return cmp(i1, i2), p1, p2
 		# nodes are in the same priority class
 		return 0, p1, p2
-
-	def GetChildren(self):
-		return self.children
 
 	def GetSchedChildren(self, check_playability = 1):
 		children = []
@@ -2358,9 +2343,6 @@ class MMNode:
 			elif c is x:
 				return 1
 		return 0
-
-	def GetChild(self, i):
-		return self.children[i]
 
 	def GetChildByName(self, name):
 		if self.attrdict.has_key('name') and  self.attrdict['name']==name:
@@ -2884,6 +2866,9 @@ class MMNode:
 		if hasattr(self, 'slideshow'):
 			self.slideshow.destroy()
 			del self.slideshow
+		self.__unlinkCssId()
+		self._mediaCssId = None
+		self._subRegCssId = None
 		if not fakeroot:
 			# delete hyperlinks referring to anchors here
 			alist = MMAttrdefs.getattr(self, 'anchorlist')
@@ -2893,13 +2878,7 @@ class MMNode:
 				for link in hlinks.findalllinks(aid, None):
 					hlinks.dellink(link)
 
-			self.context.forgetnode(self.uid)
-			for child in self.children:
-				child.parent = None
-				child.Destroy()
-		self.__unlinkCssId()
-		self._mediaCssId = None
-		self._subRegCssId = None
+			MMTreeElement.Destroy(self)
 		self.type = None
 		self.context = None
 		self.uid = None
@@ -2927,29 +2906,13 @@ class MMNode:
 		self.timing_info_dict = None
 
 	def Extract(self):
-		if self.parent is None: raise CheckError, 'Extract() root node'
 		parent = self.parent
-		self.parent = None
-		parent.children.remove(self)
+		MMTreeElement.Extract(self)
 		name = MMAttrdefs.getattr(self, 'name')
 		if name and parent.GetTerminator() == name:
 			# only called from edit manager, so definitely inside transaction
 			self.context.editmgr.setnodeattr(self, 'terminator', None)
 ##		parent._fixsummaries(self.summaries)
-
-	def AddToTree(self, parent, i):
-		if self.parent is not None:
-			raise CheckError, 'AddToTree() non-root node'
-		if self.context is not parent.context:
-			# XXX Decide how to handle this later
-			raise CheckError, 'AddToTree() requires same context'
-		if i == -1:
-			parent.children.append(self)
-		else:
-			parent.children.insert(i, self)
-		self.parent = parent
-##		parent._fixsummaries(self.summaries)
-##		parent._rmsummaries(self.summaries.keys())
 
 
 	def ExpandParents(self):
@@ -3468,6 +3431,8 @@ class MMNode:
 			beginlist = child.GetBeginList()
 			beginlist = self.FilterArcList(beginlist)
 			if not beginlist:
+				if defbegin is None:
+					child.set_infoicon('error', 'node cannot start')
 				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = defbegin)
 				self_body.arcs.append((srcnode, arc))
 				srcnode.add_arc(arc, sctx)
