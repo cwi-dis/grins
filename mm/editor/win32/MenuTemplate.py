@@ -60,6 +60,8 @@ MENUBAR=(
 			(LIGHT, TOGGLE, 'Show &log/debug window', None, CONSOLE),
 			)),
 		(LIGHT, SEP,),
+		(LIGHT, ENTRY, 'C&heck for GRiNS update...', None, CHECKVERSION),
+		(LIGHT, SEP,),
 		(LIGHT, ENTRY, 'E&xit', None, EXIT),
 		)),
 
