@@ -17,7 +17,7 @@ import imageop
 import sys
 
 # XXXX Or is it better to copy these?
-from FrameWork import Menu, MenuBar, AppleMenu, MenuItem
+from FrameWork import Menu, MenuBar, AppleMenu, MenuItem, SubMenu
 class MyMenu(Menu):
 	# We call our callbacks in a simpler way...
 	def dispatch(self, id, item, window, event):
@@ -82,6 +82,12 @@ Version = 'mac'
 from WMEVENTS import *
 
 # Routines to save/restore complete textfont info
+def checkfontinfo(wid, finfo):
+	"""Return true if font info different from args"""
+	port = wid.GetWindowPort()
+	curfinfo = (port.txFont, port.txFace, port.txSize)
+	return finfo <> curfinfo
+	
 def savefontinfo(wid):
 	"""Return all font-pertaining info for a macos window"""
 	port = wid.GetWindowPort()
@@ -217,6 +223,23 @@ class _Event:
 
 	def _handle_keydown(self, event):
 		"""Handle a MacOS keyDown event"""
+		(what, message, when, where, modifiers) = event
+		c = chr(message & Events.charCodeMask)
+		if modifiers & Events.cmdKey:
+				result = MenuMODULE.MenuKey(ord(c))
+				id = (result>>16) & 0xffff	# Hi word
+				item = result & 0xffff		# Lo word
+				if id:
+					self._menubar.dispatch(id, item, None, event)
+					return
+#				elif c == 'w':
+#					w = FrontWindow()
+#					if w:
+#						self.do_close(w)
+#					else:
+#						if DEBUG: print 'Command-W without front window'
+#				else:
+#					if DEBUG: print "Command-" +`c`
 		MacOS.HandleEvent(event)
 
 	# timer interface
@@ -329,6 +352,7 @@ class _Toplevel(_Event):
 		
 	def _openwindow(self, x, y, w, h, title):
 		"""Internal - Open window given xywh, title. Returns window-id"""
+		print 'TOPLEVEL WINDOW', x, y, w, h, title
 		x = int(x*_x_pixel_per_mm)
 		y = int(y*_y_pixel_per_mm) + _screen_top_offset
 		w = int(w*_x_pixel_per_mm)
@@ -836,23 +860,6 @@ class _DisplayList:
 		self._font = None
 		self._old_fontinfo = None
 		
-	def _keepfont(self):
-		"""Save the old font for later"""
-		if self._old_fontinfo:
-			return
-		self._old_fontinfo = savefontinfo(self._window._wid) # Save current font info
-		
-	def _setfont(self, fontobj):
-		self._keepfont()
-		fontobj._setfont(self._window._wid)
-		
-	def _restore_font(self):
-		"""Restore the previous font"""
-		if self._old_fontinfo:
-			restorefontinfo(self._window._wid, self._old_fontinfo)
-		self._old_fontinfo = None
-
-
 	def close(self):
 		if self._window is None:
 			return
@@ -880,7 +887,6 @@ class _DisplayList:
 		Qd.RGBForeColor(self._fgcolor)
 		for i in self._list:
 			self._render_one(i)
-		self._restore_font()
 			
 	def _render_one(self, entry):
 		cmd = entry[0]
@@ -894,7 +900,7 @@ class _DisplayList:
 		elif cmd == 'fg':
 			Qd.RGBForeColor(entry[1])
 		elif cmd == 'font':
-			self._setfont(entry[1])
+			entry[1]._setfont(wid)
 		elif cmd == 'text':
 			Qd.MoveTo(entry[1], entry[2])
 			Qd.DrawString(entry[3]) # XXXX Incorrect for long strings
@@ -1026,7 +1032,10 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		w = self._window
 		list = self._list
-		self._setfont(self._font)
+		old_fontinfo = None
+		if self._font._checkfont(w._wid):
+			old_fontinfo = savefontinfo(w._wid)
+		self._font._setfont(w._wid)
 		base = self.baseline()
 		height = self.fontheight()
 		strlist = string.splitfields(str, '\n')
@@ -1044,7 +1053,8 @@ class _DisplayList:
 			if self._curpos[0] > maxx:
 				maxx = self._curpos[0]
 		newx, newy = self._curpos
-		self._restore_font()
+		if old_fontinfo:
+			restorefontinfo(w._wid, old_fontinfo)
 		return oldx, oldy, maxx - oldx, newy - oldy + height - base
 
 class _Button:
@@ -1106,27 +1116,29 @@ class findfont:
 		self._fontnum = Fm.GetFNum(_fontmap[fontname][0])
 		self._fontface = _fontmap[fontname][1]
 		self._pointsize = pointsize
+##DBG:		self._fontnum = 1; self._fontface = 0; self._pointsize = 0
 		self._inited = 0
 		
 	def _setfont(self, wid):
 		"""Set our font, saving the old one for later"""
-		self._old_fontinfo = savefontinfo(wid) # Save current font info
+		Qd.SetPort(wid)
 		Qd.TextFont(self._fontnum)
 		Qd.TextFace(self._fontface)
 		Qd.TextSize(self._pointsize)
 		
-	def _restorefont(self, wid):
-		"""Restore the previous font"""
-		restorefontinfo(wid, self._old_fontinfo)
+	def _checkfont(self, wid):
+		"""Check whether our font needs to be installed in this wid"""
+		return checkfontinfo(wid, (self._fontnum, self._fontface, self._pointsize))
 		
 	def _initparams(self, wid):
 		"""Obtain font params like ascent/descent, if needed"""
 		if self._inited:
 			return
 		self._inited = 1
+		old_fontinfo = savefontinfo(wid)
 		self._setfont(wid)
 		self.ascent, self.descent, widMax, self.leading = Qd.GetFontInfo()
-		self._restorefont(wid)
+		restorefontinfo(wid, old_fontinfo)
 
 	def close(self):
 		pass
@@ -1138,12 +1150,15 @@ class findfont:
 		strlist = string.splitfields(str, '\n')
 		maxwidth = 0
 		maxheight = len(strlist) * (self.ascent + self.descent + self.leading)
-		self._setfont(wid)
+		old_fontinfo = None
+		if self._checkfont(wid):
+			old_fontinfo = savefontinfo(wid)
 		for str in strlist:
 			width = Qd.TextWidth(str, 0, len(str))
 			if width > maxwidth:
 				maxwidth = width
-		self._restorefont(wid)
+		if old_fontinfo:
+			restorefontinfo(wid, old_fontinfo)
 ##		print 'WIDTH OF', strlist, 'IS', maxwidth, maxheight
 		return float(maxwidth) / _x_pixel_per_mm, \
 		       float(maxheight) / _y_pixel_per_mm
@@ -1174,7 +1189,7 @@ class Dialog:
 class MainDialog:
 	def __init__(self, list, title = None, prompt = None, grab = 1,
 		     vertical = 1):
-		print 'DIALOG', self, list, title, prompt, grab, vertical
+##		print 'DIALOG', self, list, title, prompt, grab, vertical
 		self.items = []
 		self._othermenu = None
 		self.menu = toplevel._addmenu('Control')
@@ -1188,7 +1203,11 @@ class MainDialog:
 			else:
 				title, callback = item[:2]
 				shortcut = ''
-				m = MenuItem(menu, title, shortcut, callback)
+				if type(callback) == type(()):
+					m = MenuItem(menu, title, shortcut, callback)
+				else:
+					m = SubMenu(menu, title, title)
+					self._createmenu(m, callback)
 				self.items.append(m)
 
 	def close(self):
