@@ -333,7 +333,10 @@ class ToolbarMixin(PanelMixin):
 			if not cb or not tbcb:
 				print 'No callback for pulldown:', id
 				return
-			cb(tbcb.getvalue())
+			if type(cb) == type(()):
+				apply(cb[0], (cb[1], tbcb.getvalue()))
+			else:
+				cb(tbcb.getvalue())
 
 class GRiNSToolbar(window.Wnd):
 	def __init__(self, parent, name, barid, resid, enabledrag):

@@ -237,7 +237,10 @@ class PlayerDlgBar(window.Wnd):
 			for ctrl in self._ctrls.values():
 				if ctrl._id == id:
 					if ctrl._cb:
-						ctrl._cb(ctrl.getvalue())
+						if type(ctrl._cb) == type(()):
+							apply(ctrl._cb[0], (ctrl._cb[1], ctrl.getvalue()))
+						else:
+							ctrl._cb(ctrl.getvalue())
 					break
 				
 	def onCheck(self, id, code):
