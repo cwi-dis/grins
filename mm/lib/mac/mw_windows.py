@@ -969,6 +969,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		for d in self._displists[:]:
 			d.close()
 		self._wid.SizeWindow(width, height, 1)
+		Win.InvalRect(self.qdrect())
 		self._clipchanged()
 		for w in self._subwindows:
 			w._do_resize1()
