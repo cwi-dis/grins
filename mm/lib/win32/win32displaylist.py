@@ -207,7 +207,7 @@ class _DisplayList:
 				try:
 					#print 'Blt: ',lsc, tsc, rsc, bsc, '->', ldc, tdc, rdc, bdc
 					dds.Blt((ldc, tdc, rdc, bdc), image, (lsc, tsc, rsc, bsc), flags)
- 				except ddraw.error, arg:
+				except ddraw.error, arg:
  					print arg
 
 			elif cmd == 'fbox':
