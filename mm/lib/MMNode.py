@@ -667,6 +667,7 @@ class MMNode:
 		self.sched_children = []
 		self.scheduled_children = 0
 		self.arcs = []
+		self.animations = []		
 		self.reset()
 
 	#
@@ -1262,7 +1263,7 @@ class MMNode:
 		elif type in ('seq', 'par', 'excl'):
 			self.gensr = self.gensr_interior
 		else:
-			raise CheckError, 'MMNode: unknown type %s' % self.type
+			raise CheckError, 'MMNode: unknown type %s' % self.type		 
 	#
 	# Methods for building scheduler records. The interface is as follows:
 	# - PruneTree() is called first, with a parameter that specifies the
@@ -1368,6 +1369,11 @@ class MMNode:
 			self.realpix_body = MMNode_realpix_body(self)
 			self.caption_body = MMNode_caption_body(self)
 			return self.gensr_interior(looping)
+		elif self.animations:
+			print 'ignoring animations for node', self
+			for n in self.animations:
+				print '\t',n.attrdict
+
 		# Clean up realpix stuff: the node may have been a realpix node in the past
 		self.realpix_body = None
 		self.caption_body = None
@@ -2032,7 +2038,7 @@ class MMNode:
 				self.srdict[event] = action # MUST all be same object
 				srdict[event] = self.srdict # or just self?
 		return sched_actions, schedstop_actions, srdict
-		
+			
 	def gensr_child(self, child, runchild = 1):
 		if runchild:
 			srdict = child.gensr()
