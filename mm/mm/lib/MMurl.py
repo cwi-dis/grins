@@ -40,12 +40,15 @@ class FancyURLopener(_OriginalFancyURLopener):
 			self._URLopener__tempfiles.append(filename)
 		result = filename, headers
 		tfp = open(filename, 'wb')
-		import windowinterface
+		import windowinterface, fcntl, FCNTL
+		fcntl.fcntl(fp.fileno(), FCNTL.F_SETFL, FCNTL.O_NDELAY)
 		windowinterface.select_setcallback(fp, self.__retrcb, (url, fp, tfp, callback, arg, result))
 
 	def __retrcb(self, url, fp, tfp, callback, arg, result):
-## 		data = os.read(fp.fileno(), 8192)
-		data = fp.read(512)
+		try:
+			data = fp.read()
+		except IOError:
+			return
 		if data:
 			tfp.write(data)
 			return
