@@ -19,10 +19,10 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_real_win_2.0-100.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_real_win_2.0-103.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
-  Upload Name=auginet
+  Upload Name=sjoerd
   Upload Directory=/var/www/htdocs/intranet/grins
   Per-User Version ID=1
   Dialogs Version=7
