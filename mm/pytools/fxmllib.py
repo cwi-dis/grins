@@ -113,6 +113,10 @@ if 0:
 
 _cleanre = re.compile(r'\(\?P<')
 def cleanre(re):
+    """cleanre(re) -> re
+
+       Remove named groups from a regular expression.  This is useful
+       if the pattern is to be used in a more complex expression."""
     while 1:
         res = _cleanre.search(re)
         if res is None:
