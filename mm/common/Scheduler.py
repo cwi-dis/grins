@@ -328,6 +328,9 @@ class SchedulerContext:
 			    event != 'begin'):
 				if debugevents: print 'continue'
 				continue
+			if depth > 0 and arc.srcnode == 'syncbase' and arc.dstnode in node.GetSchedChildren():
+				if debugevents: print 'continue too'
+				continue
 			if debugevents: print 'do it'
 			do_continue = 0	# on old Python we can't continue from inside try/except
 			try:
