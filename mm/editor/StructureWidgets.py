@@ -342,8 +342,16 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				for c in self.children:
 					c.node.showtime = showtime
 			else:
-				print "DBG: re-initialize timemapper"
 				timemapper = TimeMapper.TimeMapper()
+				# Hack by Jack - if we already have a timemapper
+				# we copy the stalls. This is probably not a good
+				# idea, but I don't know why we reallocate a timemapper
+				# anyway. Sjoerd?
+				if self.timemapper:
+					stalllist = self.timemapper.getallstalls()
+					for stalltime, (stalldur, stalltype) in stalllist:
+						timemapper.addstalltime(stalltime, stalldur, stalltype)
+
 				if self.timeline is None:
 					self.timeline = TimelineWidget(self, self.mother)
 				self.timemapper = timemapper
@@ -2503,17 +2511,17 @@ class TimelineWidget(MMWidgetDecoration):
 		displist.drawline(TEXTCOLOR, [(min, line_y), (max, line_y)])
 		length = max - min	# length of real timeline
 		displist.usefont(f_timescale)
-		displist.fgcolor(COLCOLOR)
 		for time, left, right in timemapper.gettimesegments(range=(t0, t2)):
 			if left != right:
 				stalltime, stalltype = timemapper.getstall(time)
 				if stalltime:
 					if stalltype == 'preroll':
-						color = TRUNCCOLOR
+						color = BWPREROLLCOLOR
 					elif stalltype == 'stall?':
-						color = TRUNCCOLOR
+						color = BWMAYSTALLCOLOR
 					else:
-						color = TRUNCCOLOR
+						color = BWSTALLCOLOR
+					print stalltype, color
 					displist.fgcolor(color)
 					label = '%ds %s'%(stalltime, stalltype)
 					lw = displist.strsizePXL(label)[0]
@@ -2673,8 +2681,8 @@ class BandWidthWidget(MMWidgetDecoration):
 		bwfactor = float(my_h)/float(self.maxbandwidth)
 		for box in boxes:
 			t0, t1, bwlo, bwhi, status = box
-			x0 = timemapper.interptime2pixel(t0)
-			x1 = timemapper.interptime2pixel(t1, align='right')
+			x0 = timemapper.interptime2pixel(t0, align='right')
+			x1 = timemapper.interptime2pixel(t1, align='left')
 			y0 = my_b - int(bwfactor*bwhi)
 			y1 = my_b - int(bwfactor*bwlo)
 			box = (x0, y0, x1-x0, y1-y0)
