@@ -1,10 +1,13 @@
 # Cache durations of mpeg files
 
 import FileCache
-import cl
 import urllib
 
 def getduration(filename):
+	try:
+		import cl
+	except ImportError:
+		raise IOError, 'cannot import cl module'
 	filename = urllib.url2pathname(filename)
 	fp = open(filename, 'rb')
 	hsize = cl.QueryMaxHeaderSize(cl.MPEG_VIDEO)
