@@ -13,6 +13,7 @@ def fmtfloat(val, suffix = '', withsign = 0, prec = -1):
 		val = val + 0.5 * 10.0 ** -prec
 	str = '%g' % val
 	if 'e' in str:
+		import string
 		str, x = string.split(str, 'e')
 		strs = string.split(str, '.')
 		if len(strs) == 1:
