@@ -63,6 +63,7 @@ class ImageChannel(ChannelWindow):
 		self.arm(node)
 		self.syncplay = 1
 		self.play(node)
+		self._playstate = PLAYED
 		self.syncarm = 0
 		self.syncplay = 0
 		box = anchor[2]
