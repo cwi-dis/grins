@@ -1062,6 +1062,8 @@ class Window:
 	#
 	def setDeviceToLogicalScale(self, scale):
 		self._device2logical = scale
+		for wnd in self._subwindows:
+			wnd.setDeviceToLogicalScale(scale)
 
 	def DPtoLP(self, pt):
 		x, y = pt
