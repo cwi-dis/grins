@@ -742,14 +742,14 @@ class Channel:
 		# returns 0, we should not call arm_1() because that
 		# will happen later.
 		same = self.arm_0(node)
-		if self._is_shown and node.ShouldPlay() and \
-		   not self.do_arm(node, same):
-			return
+		if self._is_shown and node.ShouldPlay():
+			if not self.do_arm(node, same):
+				return
+			self._prepareAnchors(node)
+
 		if not self._armcontext:
 			# The player has aborted
 			return
-
-		self._prepareAnchors(node)
 
 		self.arm_1()
 
