@@ -74,6 +74,9 @@ extern void initList();
 #ifndef initQt
 extern void initQt();
 #endif
+#ifndef initAE
+extern void initAE();
+#endif
 #ifndef initTE
 extern void initTE();
 #endif
@@ -128,9 +131,6 @@ extern void initerrno();
 #ifndef initpcre
 extern void initpcre();
 #endif
-#ifndef initregex
-extern void initregex();
-#endif
 #ifndef initarray
 extern void initarray();
 #endif
@@ -158,9 +158,6 @@ extern void initrma();
 #ifndef initRes
 extern void initRes();
 #endif
-#ifndef initAE
-extern void initAE();
-#endif
 #ifndef initDlg
 extern void initDlg();
 #endif
@@ -169,6 +166,9 @@ extern void initcStringIO();
 #endif
 #ifndef initimageop
 extern void initimageop();
+#endif
+#ifndef initimgcolormap
+extern void initimgcolormap();
 #endif
 #ifndef initimgtiff
 extern void initimgtiff();
@@ -179,8 +179,8 @@ extern void initimgpgm();
 #ifndef initimgpng
 extern void initimgpng();
 #endif
-#ifndef initimgcolormap
-extern void initimgcolormap();
+#ifndef initimp
+extern void initimp();
 #endif
 #ifndef initstruct
 extern void initstruct();
@@ -212,6 +212,7 @@ struct _inittab _PyImport_Inittab[] = {
 	{"mac", initmac},
 	{"List", initList},
 	{"Qt", initQt},
+	{"AE", initAE},
 	{"TE", initTE},
 	{"imggif", initimggif},
 	{"strop", initstrop},
@@ -230,7 +231,6 @@ struct _inittab _PyImport_Inittab[] = {
 	{"_socket", init_socket},
 	{"errno", initerrno},
 	{"pcre", initpcre},
-	{"regex", initregex},
 	{"array", initarray},
 	{"imgpbm", initimgpbm},
 	{"_sre", init_sre},
@@ -240,14 +240,14 @@ struct _inittab _PyImport_Inittab[] = {
 	{"imgppm", initimgppm},
 	{"rma", initrma},
 	{"Res", initRes},
-	{"AE", initAE},
 	{"Dlg", initDlg},
 	{"cStringIO", initcStringIO},
 	{"imageop", initimageop},
+	{"imgcolormap", initimgcolormap},
 	{"imgtiff", initimgtiff},
 	{"imgpgm", initimgpgm},
 	{"imgpng", initimgpng},
-	{"imgcolormap", initimgcolormap},
+	{"imp", initimp},
 	{"struct", initstruct},
 	{"Icn", initIcn},
 	{"audioop", initaudioop},
