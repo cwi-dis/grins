@@ -375,6 +375,37 @@ sdk_send_message_ra(PyObject *self, PyObject *args)
 	return Py_BuildValue("iii",rc,wParam,lParam);
 	}
 
+// @pymethod |PyWin32Sdk|SendMessageGT|Sends a message to a window. A special version for Python
+// Return Values: A tuple of integers
+PyObject *
+sdk_send_message_gt(PyObject *self, PyObject *args)
+	{
+	HWND hwnd;
+	UINT message;
+	WPARAM wParam=256;
+	LPARAM lParam=0;
+	if (!PyArg_ParseTuple(args, "ii|ii:SendMessageGT",
+			  &hwnd,    // @pyparm handle|handle of destination window 
+		      &message, // @pyparm int|idMessage||The ID of the message to send.
+	          &wParam,  // @pyparm int|wParam||The wParam for the message
+	          &lParam)) // @pyparm int|lParam||The lParam for the message
+		return NULL;
+	
+	int *data = new int[wParam];
+
+	GUI_BGN_SAVE;
+	// @pyseesdk Win32Sdk|SendMessage
+	LPARAM rc = ::SendMessage(hwnd,message,(WPARAM)wParam,(LPARAM)data);
+	GUI_END_SAVE;
+
+	PyObject *list = PyList_New(rc);
+	for (int i=0;i<rc;i++) 
+		PyList_SetItem(list,i,Py_BuildValue("i",data[i]));
+
+	delete[] data;
+	return list;
+	}
+
 // @pymethod |PyWin32Sdk|SendMessageGL|A special version of send message for Python that returns a string from an edit control 
 static PyObject *
 sdk_send_message_gl(PyObject *self, PyObject *args)
@@ -400,6 +431,32 @@ sdk_send_message_gl(PyObject *self, PyObject *args)
 	PyObject *strobj= Py_BuildValue("s",buf);
 	return strobj;
 	}
+
+// @pymethod |PyWin32Sdk|SendMessageGetRect|A special version of send message for Python that returns a rectangle 
+static PyObject *
+sdk_send_message_get_rect(PyObject *self, PyObject *args)
+	{
+	HWND hwnd;
+	UINT message;
+	WPARAM wParam;
+	LPARAM lParam=0;
+	if (!PyArg_ParseTuple(args, "iii|i:SendMessageGetRect",
+			  &hwnd,    // @pyparm handle|handle of destination window 
+		      &message, // @pyparm int|idMessage||The ID of the message to send.
+	          &wParam,  // @pyparm int|wParam||The wParam for the message
+	          &lParam)) // @pyparm int|lParam||The lParam for the message
+		return NULL;
+
+	RECT rc;
+	GUI_BGN_SAVE;
+	LPARAM ret = SendMessage(hwnd,message,wParam,(LPARAM)&rc);
+	GUI_END_SAVE;
+	if(ret==LB_ERR)
+		RETURN_ERR("SendMessageGetRect failed");
+	
+	return Py_BuildValue("iiii",rc.left,rc.top,rc.right,rc.bottom);
+	}
+
 
 // @pymethod |PyWin32Sdk|SetCursor|The SetCursor function establishes the cursor shape
 // Return Values: A handle to the previous cursor
@@ -976,6 +1033,8 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"SendMessageRS",sdk_send_message_rs,1}, // @pymeth SendMessage|Sends a message to a window. The return value is a string	
 	{"SendMessageRA",sdk_send_message_ra,1}, // @pymeth SendMessage|Sends a message to a window. The return value is a tuple	
 	{"SendMessageGL",sdk_send_message_gl,1}, // @pymeth SendMessageGL|Sends a message to an edit control. The return value is a string	
+	{"SendMessageGT",sdk_send_message_gt,1}, // @pymeth SendMessageGT|	
+	{"SendMessageGetRect",sdk_send_message_get_rect,1},// @pymeth SendMessageGetRect|A special version of send message for Python that returns a rectangle 
 	{"SetCursor",sdk_set_cursor,1}, // @pymeth SetCursor|Establishes a cursor shape.	
 	{"LoadStandardCursor",sdk_load_standard_cursor,1}, // @pymeth LoadStdCursor|Loads the specified predefined cursor resource.	
 	{"ShowCursor",sdk_show_cursor,1}, // @pymeth ShowCursor|Specifies whether the internal display counter is to be incremented or decremented
@@ -1011,6 +1070,8 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"CoInitialize",sdk_co_initialize,1}, 
 	{"CoUninitialize",sdk_co_uninitialize,1}, 
 	{"MapVirtualKey",sdk_map_virtual_key,1},
+	
+	
 	///////////////////////////////////////////////////// Temporary
 	{"ParseDrawItemStruct",sdk_parse_drawitemstruct,1},// undocumented!
 	{"CrackNMHDR",sdk_crack_nmhdr,1}, // undocumented!
