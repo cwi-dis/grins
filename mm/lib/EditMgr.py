@@ -680,7 +680,7 @@ class EditMgr:
 		self.context.deltransition(name)
 
 	def undo_deltransition(self, name, transition):
-		self.addtransition(name)
+		self.addtransition(name, transition)
 		for key, val in transition.items():
 			self.settransitionvalue(name, key, val)
 
