@@ -386,7 +386,7 @@ class MMNode(MMNodeBase.MMNode):
 			newarcs.append(xuid, xsize, delay, yside)
 		if newarcs <> arcs:
 			self.SetAttr('synctolist', newarcs)
-		
+
 	#
 	# Public methods for modifying a tree
 	#
@@ -758,7 +758,7 @@ class MMNode(MMNodeBase.MMNode):
 			# don't wait
 			actions[len(actions):] = final
 		return srlist
-		
+
 	# XXXX temporary hack to do at least something on ALT nodes
 	def gensr_alt(self):
 		if not self.wtd_children:
@@ -946,7 +946,7 @@ class MMNode(MMNodeBase.MMNode):
 			self.curloopcount = -1
 		else:
 			self.curloopcount = loopcount
-		
+
 		#
 		# We create a helper node, to differentiate between terminates
 		# from the inside and the outside (needed for par nodes with
@@ -976,7 +976,7 @@ class MMNode(MMNodeBase.MMNode):
 
 		# When the loop has started we start the body
 		srlist.append( ([(LOOPSTART_DONE, self)], body_sched_actions) )
-				
+
 		# Terminating the body doesn't terminate the loop,
 		# but the other way around it does
 ##		srlist.append( ([(TERMINATE, self.looping_body_self)],
@@ -989,7 +989,7 @@ class MMNode(MMNodeBase.MMNode):
 				 (SCHED_STOP, self.looping_body_self)]) )
 		srlist.append( ([(SCHED_STOP, self.looping_body_self)],
 				body_schedstop_actions) )
-		
+
 		#
 		# Three cases for signalling the parent we're done:
 		# 1. Incoming tail sync arcs or an explicit duration:
@@ -1018,9 +1018,9 @@ class MMNode(MMNodeBase.MMNode):
 ##		for ev in terminate_events + [(TERMINATE, self)]:
 ##			srlist.append( [ev], terminate_actions )
 		srlist.append([(TERMINATE, self)], terminate_actions)
-		
+
 		return sched_actions, terminate_actions, srlist
-		
+
 
 	def gensr_envelope_laterloop(self, gensr_body, loopcount,
 				     sched_actions, scheddone_actions,
@@ -1039,7 +1039,7 @@ class MMNode(MMNodeBase.MMNode):
 
 		# When the loop has started we start the body
 		srlist.append( ([(LOOPSTART_DONE, self)], body_sched_actions) )
-				
+
 		# Terminating the body doesn't terminate the loop,
 		# but the other way around it does
 ##		srlist.append( ([(TERMINATE, self.looping_body_self)],
@@ -1051,7 +1051,7 @@ class MMNode(MMNodeBase.MMNode):
 				 (SCHED_STOP, self.looping_body_self)]) )
 		srlist.append( ([(SCHED_STOP, self.looping_body_self)],
 				body_schedstop_actions) )
-		
+
 		return [], [], srlist
 
 	def gensr_body_par(self, sched_actions, scheddone_actions,
@@ -1074,7 +1074,7 @@ class MMNode(MMNodeBase.MMNode):
 				if MMAttrdefs.getattr(child, 'name') \
 				   == termtype:
 					terminating_children.append(child)
-					
+
 		for child in self.wtd_children:
 			srlist = srlist + child.gensr()
 
@@ -1102,7 +1102,7 @@ class MMNode(MMNodeBase.MMNode):
 			# events from our other children.
 			srlist.append( (scheddone_events, []) )
 			scheddone_events = []
-			
+
 		if scheddone_events:
 			srlist.append((scheddone_events,
 				       scheddone_actions))
@@ -1113,7 +1113,7 @@ class MMNode(MMNodeBase.MMNode):
 		for ev in terminate_events+[(TERMINATE, self_body)]:
 			srlist.append( [ev], terminate_actions )
 		return sched_actions, schedstop_actions, srlist
-		
+
 	def gensr_body_seq(self, sched_actions, scheddone_actions,
 			   terminate_events, self_body=None):
 		srlist = []
@@ -1157,10 +1157,10 @@ class MMNode(MMNodeBase.MMNode):
 
 		for ev in terminate_events+[(TERMINATE, self_body)]:
 			srlist.append( [ev], terminate_actions )
-		
+
 		return sched_actions, schedstop_actions, srlist
-		
-			
+
+
 	def GenAllSR(self, seeknode, getchannelfunc=None):
 		self.SetPlayability(getchannelfunc=getchannelfunc)
 		if not seeknode:
@@ -1189,7 +1189,7 @@ class MMNode(MMNodeBase.MMNode):
 		srlist.append(([(SCHED_DONE, self)], [(SCHED_STOP, self)]))
 
 		sractions, srevents = self.splitsrlist(srlist)
-		
+
 		seeknode.sractions = sractions[:]
 		seeknode.srevents = {}
 		for key, val in srevents.items():
@@ -1318,7 +1318,7 @@ class MMNode(MMNodeBase.MMNode):
 
 	def GetWtdChildren(self):
 		return self.wtd_children
-		
+
 	#
 	# SetArcSrc sets the source of a sync arc.
 	#
