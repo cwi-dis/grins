@@ -246,7 +246,7 @@ def fixsyncarc(writer, node, srcuid, srcside, delay, dstside, rv):
 			return rv
 		for xuid, xside, xdelay, yside in MMAttrdefs.getattr(x, 'synctolist'):
 			if yside == 0 and xdelay != 0:
-				# too compicated
+				# too complicated
 				print '** Out of scope syncarc to',\
 				      node.GetRawAttrDef('name', '<unnamed>'),\
 				      node.GetUID()
@@ -263,7 +263,7 @@ def fixsyncarc(writer, node, srcuid, srcside, delay, dstside, rv):
 			return rv
 		for xuid, xside, xdelay, yside in MMAttrdefs.getattr(x, 'synctolist'):
 			if yside == 0 and xdelay != 0 and x is not node:
-				# too compicated
+				# too complicated
 				print '** Out of scope syncarc to',\
 				      node.GetRawAttrDef('name', '<unnamed>'),\
 				      node.GetUID()
@@ -454,6 +454,8 @@ class SMILWriter(SMIL):
 		if len(self.top_levels) > 1:
 			print '** Document uses multiple toplevel channels'
 			self.uses_cmif_extension = 1
+
+		self.syncidscheck(node)
 
 		dir, file = os.path.split(filename) # get parent dir
 		file, ext = os.path.splitext(file) # and base name
@@ -704,6 +706,14 @@ class SMILWriter(SMIL):
 		if node.GetType() in interiortypes:
 			for child in node.children:
 				self.calcanames(child)
+
+	def syncidscheck(self, node):
+		# make sure all nodes referred to in sync arcs get their ID written
+		for srcuid, srcside, delay, dstside in node.GetRawAttrDef('synctolist', []):
+			self.ids_used[self.uid2name[srcuid]] = 1
+		if node.GetType() in interiortypes:
+			for child in node.children:
+				self.syncidscheck(child)
 
 	def writelayout(self):
 		"""Write the layout section"""
