@@ -1589,7 +1589,7 @@ class EventCtrl(AttrCtrl):
 			self.__setrepeatwidget_clear()
 		else:
 			event = self._eventstruct.get_event()
-			if event.startswith('repeat'):
+			if event.startswith('repeat') and event != 'repeatEvent':
 				i = self._eventstruct.get_repeat()
 				if i:
 					self._repeatlabel.settext("Repeat:")
@@ -1689,7 +1689,7 @@ class EventCtrl(AttrCtrl):
 	def _repeatwidgetcallback(self, id, code):
 		if code == win32con.EN_CHANGE and self._eventstruct:
 			e = self._eventstruct.get_event()
-			if e.startswith('repeat'):
+			if e.startswith('repeat') and e != 'repeatEvent':
 				t = self._repeatwidget.gettext()
 				if t:
 					try:
