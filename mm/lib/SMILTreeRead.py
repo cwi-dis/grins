@@ -15,6 +15,8 @@ LAYOUT_NONE = 0				# must be 0
 LAYOUT_SMIL = 1
 LAYOUT_UNKNOWN = -1
 
+layout_name = 'SMIL'			# name of layout channel
+
 coordre = re.compile('^(?P<x>[0-9]+%?),(?P<y>[0-9]+%?),'
 		      '(?P<w>[0-9]+%?),(?P<h>[0-9]+%?)$')
 idref = re.compile('id\((?P<id>' + xmllib._Name + ')\)')
@@ -334,9 +336,9 @@ class SMILParser(xmllib.XMLParser):
 				if self.__layout is None:
 					# create a layout channel
 					layout = MMNode.MMChannel(ctx,
-								  'layout')
-					ctx.channeldict['layout'] = layout
-					ctx.channelnames.insert(0, 'layout')
+								  layout_name)
+					ctx.channeldict[layout_name] = layout
+					ctx.channelnames.insert(0, layout_name)
 					ctx.channels.insert(0, layout)
 					self.__layout = layout
 					layout['type'] = 'layout'
@@ -348,7 +350,7 @@ class SMILParser(xmllib.XMLParser):
 					layout['winsize'] = \
 						self.__width, self.__height
 					layout['units'] = UNIT_PXL
-				ch['base_window'] = 'layout'
+				ch['base_window'] = layout_name
 				ch['z'] = attrdict['z-index']
 				x = attrdict['left']
 				y = attrdict['top']
