@@ -164,18 +164,24 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 
 	# Method to return a whole-node anchor for a node, or optionally
 	# create one.
-	def wholenodeanchor(self, node):
-		alist = MMAttrdefs.getattr(node, 'anchorlist')
+	def wholenodeanchor(self, node, type=ATYPE_WHOLE):
+		alist = MMAttrdefs.getattr(node, 'anchorlist')[:]
 		for a in alist:
-			if a[A_TYPE] == ATYPE_DEST:
-				return (node.GetUID(), a[A_ID])
+			if type == a[A_TYPE]:
+				if type == ATYPE_DEST:
+					return (node.GetUID(), a[A_ID])
+				else:
+					windowinterface.showmessage("Such an anchor already exists on this node")
+					return None
 		em = self.editmgr
 		if not em.transaction(): return None
-		a = ('0', ATYPE_DEST, [])
+		a = ('0', type, [])
 		alist.append(a)
 		em.setnodeattr(node, 'anchorlist', alist[:])
 		em.commit()
-		return (node.GetUID(), '0')
+		rv = (node.GetUID(), '0')
+		self.interesting.append(rv)
+		return rv
 
 	# Make sure all anchors in 'interesting' actually exist
 	def fixinteresting(self):
@@ -254,20 +260,25 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 		if not self.interesting:
 			windowinterface.showmessage('No reasonable sources for link')
 			return
-		anchors = ['Cancel']
-		for a in self.interesting:
-			anchors.append(self.makename(a))
-		i = windowinterface.multchoice('Choose source anchor',
-			  anchors, 0)
-		if i == 0:
-			return
-		srcanchor = self.interesting[i-1]
-		dstanchor = self.wholenodeanchor(node)
+		if len(self.interesting) == 1:
+			srcanchor = self.interesting[0]
+		else:
+			anchors = ['Cancel']
+			for a in self.interesting:
+				anchors.append(self.makename(a))
+			i = windowinterface.multchoice('Choose source anchor',
+				  anchors, 0)
+			if i == 0:
+				return
+			srcanchor = self.interesting[i-1]
+		dstanchor = self.wholenodeanchor(node, type=ATYPE_DEST)
 		if not dstanchor:
 			return
 		em = self.editmgr
 		if not em.transaction(): return
 		self.interesting.remove(srcanchor)
+		if dstanchor in self.interesting:
+			self.interesting.remove(dstanchor)
 		link = srcanchor, dstanchor, DIR_1TO2, TYPE_JUMP
 		em.addlink(link)
 		em.commit()
