@@ -242,13 +242,11 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 	def stopped(self):
 		PlayerCore.stopped(self)
 		if self._exporter:
-			# XXX Or should we do this before calling stopped()?
-			self._exporter.finished(0)  # XXX
+			self._exporter.finished()
 			for ch in self.channels.values():
 				ch.unregister_exporter(self._exporter) 
 			self._exporter = None
 			self.hide()
-			self.show()
 		if self.curlayout is None:
 			self.setlayout(self.savecurlayout, self.savecurchannel, self.savecallback)
 		else:
