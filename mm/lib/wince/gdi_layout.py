@@ -74,7 +74,7 @@ class Region(base_window.Window):
 		if not self._parent:
 			return self.getwindowpos()
 		# clip to parent
-		xywh = self.rectAnd(self.getwindowpos(), self._parent.getwindowpos())
+		xywh = self.rectAnd(self.getwindowpos(), self._parent.getVisibleWindowPos())
 		if xywh is None: 
 			return 0, 0, 0, 0
 		return xywh
