@@ -995,7 +995,7 @@ class EffectiveAnimator:
 	def __begintransition(self, anim):
 		if self.__chan and self.__chan.window:
 			self.__chan.window.begintransition(anim._trdict['mode']=='out', 0, anim._trdict, None)
-		if debug: print 'begintransition', animator._trtype, animator._trsubtype
+		if debug: print 'begintransition', anim._trdict
 
 	def __endtransition(self):
 		if self.__chan and self.__chan.window:
@@ -2270,3 +2270,4 @@ class AnimateElementParser:
 				i = i+1
 		l.append(str[end:])
 		return l
+ 
