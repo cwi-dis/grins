@@ -512,6 +512,7 @@ class SMILWriter(SMIL):
 
 	def write(self):
 		import version
+		ctx = self.root.GetContext()
 		fp = self.fp
 		fp.write(SMILdecl)
 		fp.write(doctype)
@@ -528,7 +529,10 @@ class SMILWriter(SMIL):
 					       ('content', self.__title)])
 		self.writetag('meta', [('name', 'generator'),
 				       ('content','GRiNS %s'%version.version)])
-		for key, val in self.root.GetContext().attributes.items():
+		if ctx.baseurl and ctx.baseurlset:
+			self.writetag('meta', [('name', 'base'),
+					       ('content', ctx.baseurl)])
+		for key, val in ctx.attributes.items():
 			self.writetag('meta', [('name', key),
 					       ('content', val)])
 		self.writelayout()

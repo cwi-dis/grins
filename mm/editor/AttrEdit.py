@@ -373,6 +373,8 @@ class DocumentWrapper(Wrapper):
 	def getvalue(self, name):	# Return the raw attribute or None
 		if name == 'title':
 			return self.context.title or None
+		if name == 'base':
+			return self.context.baseurl or None
 		if self.context.attributes.has_key(name):
 			return self.context.attributes[name]
 		return None		# unrecognized
@@ -383,12 +385,16 @@ class DocumentWrapper(Wrapper):
 	def setattr(self, name, value):
 		if name == 'title':
 			self.context.title = value
+		elif name == 'base':
+			self.context.setbaseurl(value)
 		else:
 			self.context.attributes[name] = value
 
 	def delattr(self, name):
 		if name == 'title':
 			self.context.title = None
+		elif name == 'base':
+			self.context.setbaseurl(None)
 		elif self.context.attributes.has_key(name):
 			del self.context.attributes[name]
 
@@ -399,7 +405,7 @@ class DocumentWrapper(Wrapper):
 	def attrnames(self):
 		names = self.context.attributes.keys()
 		names.sort()
-		return ['title'] + names
+		return ['title', 'base'] + names
 
 	
 

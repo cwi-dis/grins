@@ -1142,7 +1142,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 ##			else:
 ##				self.__title = ' %s ' % content
 		elif name == 'base':
-			self.__base = content
+			self.__context.setbaseurl(content)
+##			self.__base = content
 		elif name in ('pics-label', 'PICS-label', 'generator'):
 			pass
 		else:
@@ -1984,7 +1985,14 @@ def ReadFile(url, printfunc = None):
 def ReadFileContext(url, context, printfunc = None):
 	p = SMILParser(context, printfunc)
 	u = MMurl.urlopen(url)
-	context.setbaseurl(u.geturl())
+	baseurl = u.geturl()
+	i = string.rfind(baseurl, '/')
+	if i >= 0:
+		baseurl = baseurl[:i+1]	# keep the slash
+	else:
+		baseurl = None
+	context.setbaseurl(baseurl)
+	context.baseurlset = 0
 	data = u.read()
 	p.feed(data)
 	p.close()

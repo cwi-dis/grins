@@ -235,8 +235,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			return 'no file specified'
 		self.setwaiting()
 		if self.save_to_file(filename, cleanSMIL = 1):
-			self.filename = MMurl.pathname2url(filename)
-			self.fixtitle()
+## XXXX should we set the document filename and title???
+##			self.filename = MMurl.pathname2url(filename)
+##			self.fixtitle()
+			pass
 		else:
 			return 1
 
