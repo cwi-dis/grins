@@ -15,15 +15,21 @@ Copyright 1991-2000 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include <assert.h>
 
 #include "wmpyrcb.h"
+#include "pycbapi.h"
 
 #pragma comment (lib,"winmm.lib")
 
-
 static PyObject *ErrorObject;
 
+PyInterpreterState*
+PyCallbackBlock::s_pPyThreadState = NULL;
+
+void seterror(const char *msg){PyErr_SetString(ErrorObject, msg);}
+
+
+/////////////////////
 
 #define RELEASE(x) if(x) x->Release();x=NULL;
-
 
 static void
 seterror(const char *funcname, HRESULT hr)
@@ -41,10 +47,8 @@ seterror(const char *funcname, HRESULT hr)
 	PyErr_Format(ErrorObject, "%s failed, error = %s", funcname, pszmsg);
 	LocalFree(pszmsg);
 }
-void seterror(const char *msg)
-{
-	PyErr_SetString(ErrorObject, msg);
-}
+
+
 ///////////////////////////////////////////
 ///////////////////////////////////////////
 // Objects declarations
@@ -68,6 +72,7 @@ newWMReaderObject()
 	if (self == NULL)
 		return NULL;
 	self->pI = NULL;
+		
 	/* XXXX Add your own initializers here */
 	return self;
 }
@@ -311,7 +316,8 @@ WMReader_Open(WMReaderObject *self, PyObject *args)
 	char *pszURL;
 	WMPyReaderCallbackObject *obj;
 	if (!PyArg_ParseTuple(args, "sO!",&pszURL,&WMPyReaderCallbackType,&obj))
-		return NULL;	
+		return NULL;
+	
 	HRESULT hr;
 	WCHAR pwszURL[MAX_PATH];
 	MultiByteToWideChar(CP_ACP,0,pszURL,-1,pwszURL,MAX_PATH);
@@ -338,6 +344,7 @@ WMReader_Close(WMReaderObject *self, PyObject *args)
 	Py_BEGIN_ALLOW_THREADS
 	hr = self->pI->Close();
 	Py_END_ALLOW_THREADS
+		
 	if (FAILED(hr)){
 		seterror("WMReader_Close", hr);
 		return NULL;
@@ -462,7 +469,7 @@ WMReader_Start(WMReaderObject *self, PyObject *args)
 {
 	DWORD msStart,msDuration;
 	float fRate;
-	if (!PyArg_ParseTuple(args, "iid",&msStart,&msDuration,&fRate))
+	if (!PyArg_ParseTuple(args, "iif",&msStart,&msDuration,&fRate))
 		return NULL;	
 	HRESULT hr;
 	QWORD cnsStart=10000*msStart;
@@ -1724,13 +1731,11 @@ static char WMPyReaderCallback_SetListener__doc__[] =
 static PyObject *
 WMPyReaderCallback_SetListener(WMPyReaderCallbackObject *self, PyObject *args)
 {
-	PyObject *obj;
-	if (!PyArg_ParseTuple(args, "O",&obj))
+	PyObject *obj=NULL;
+	if (!PyArg_ParseTuple(args, "|O",&obj))
 		return NULL;
 	HRESULT hr;
-	Py_BEGIN_ALLOW_THREADS
 	hr = self->pI->SetListener(obj);
-	Py_END_ALLOW_THREADS
 	if (FAILED(hr)) {
 		seterror("WMPyReaderCallback_SetListener", hr);
 		return NULL;
@@ -1791,7 +1796,9 @@ static void
 WMPyReaderCallback_dealloc(WMPyReaderCallbackObject *self)
 {
 	/* XXXX Add your own cleanup code here */
+	Py_BEGIN_ALLOW_THREADS
 	RELEASE(self->pI);
+	Py_END_ALLOW_THREADS	
 	PyMem_DEL(self);
 }
 
@@ -1992,9 +1999,7 @@ CreatePyReaderCallback(PyObject *self, PyObject *args)
 	if (obj == NULL)
 		return NULL;
 	HRESULT hr;
-	Py_BEGIN_ALLOW_THREADS
 	hr = WMCreatePyReaderCallback(pycbobj,&obj->pI);
-	Py_END_ALLOW_THREADS
 	if (FAILED(hr)){
 		Py_DECREF(obj);
 		seterror("CreatePyReaderCallback", hr);
@@ -2014,6 +2019,8 @@ CoInitialize(PyObject *self, PyObject *args)
 		return NULL;
 	HRESULT hr=CoInitialize(NULL);
 	int res=(hr==S_OK || hr==S_FALSE)?1:0;
+	//res=TlsAlloc()>=0?1:0;
+	PyCallbackBlock::init();	
 	return Py_BuildValue("i",res);
 	}
 
@@ -2026,6 +2033,7 @@ CoUninitialize(PyObject *self, PyObject *args)
 	{
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
+	//PyCallbackBlock::free();	
 	CoUninitialize();
 	Py_INCREF(Py_None);
 	return Py_None;
