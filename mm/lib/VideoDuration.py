@@ -7,10 +7,10 @@ import MMurl
 
 def getduration(filename):
 	import mv
-	filename = MMurl.urlretrieve(filename)[0]
 	try:
+		filename = MMurl.urlretrieve(filename)[0]
 		f = mv.OpenFile(filename, mv.MV_MPEG1_PRESCAN_OFF)
-	except mv.error, msg:
+	except (mv.error, IOError), msg:
 		print 'error in video file', filename, ':', msg
 		return 1.0
 	duration = float(f.GetEstMovieDuration(1000)) / 1000
