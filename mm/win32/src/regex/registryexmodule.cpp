@@ -125,6 +125,7 @@ void InitFilterString(void)
 void ReadReg()
 {
 	long  lResult; 
+	LPBYTE tmp;
 	DWORD dwType, dwDisposition, cbData = sizeof(szInitialDir);
 	SECURITY_ATTRIBUTES sa;
 
@@ -140,20 +141,20 @@ void ReadReg()
     dwFlags = OFN_READONLY | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST ;
 
 
-	lResult= RegCreateKeyEx(HKEY_LOCAL_MACHINE, "Software\\Python\\PythonCore\\Cmif Path\\", 0,
+	lResult= RegCreateKeyEx(HKEY_LOCAL_MACHINE, /*"Software\\Python\\PythonCore\\Cmif Path\\"*/"Software\\Chameleon\\CmifDoc\\", 0,
 							NULL, REG_OPTION_NON_VOLATILE,
 							KEY_ALL_ACCESS, 
 							&sa, &hKey, &dwDisposition );
 	if(lResult!=ERROR_SUCCESS)
 	{
-		//MessageBox(NULL, "Error in RegCreateKeyEx!", "Error", MB_OK|MB_ICONSTOP);		
+		MessageBox(NULL, "Error in RegCreateKeyEx!", "Error", MB_OK|MB_ICONSTOP);		
 		TRACE("Error in RegCreateKeyEx!\n");
 		lstrcpy(szInitialDir, TEXT("c:\\")) ;
 	}
 
 	if(dwDisposition==REG_OPENED_EXISTING_KEY)
 	{
-		lResult= RegQueryValueEx(hKey, NULL, NULL,	&dwType, (unsigned char*)szInitialDir, &cbData);
+		lResult= RegQueryValueEx(hKey, "Software\\Chameleon\\CmifDoc\\", NULL, &dwType, tmp, &cbData);
 		if(lResult!=ERROR_SUCCESS)
 		{
 			//MessageBox(NULL, "Error in RegQueryKeyEx!", "Error", MB_OK|MB_ICONSTOP);		
@@ -161,7 +162,10 @@ void ReadReg()
 			lstrcpy(szInitialDir, TEXT("c:\\")) ;
 		}
 	}
-	//MessageBox(NULL, InitDir, "Inside ReadReg", MB_OK|MB_ICONSTOP);		
+	strcpy ((char *)tmp, szInitialDir);
+	MessageBox(NULL, (LPCTSTR)tmp, "Inside ReadReg", MB_OK|MB_ICONSTOP);		
+	MessageBox(NULL, szInitialDir, "szInitialDir", MB_OK|MB_ICONSTOP);		
+	
 }
 	
 	
@@ -202,7 +206,8 @@ void InitOpenStruct(LPOPENFILENAME po)
     po->nMaxFile             = FILENAMESIZE ;
     po->lpstrFileTitle       = szFileTitle ;
     po->nMaxFileTitle        = FILETITLESIZE ;
-    po->lpstrInitialDir      = szInitialDir ;
+	//po->lpstrInitialDir      = szInitialDir ;
+	strcpy(szInitialDir, po->lpstrInitialDir);
     po->lpstrTitle  = szDlgTitle ;
     po->Flags                = dwFlags ;
     po->nFileOffset          = 0 ;
@@ -220,7 +225,7 @@ static PyObject*  py_reg_open(PyObject *args)
 {
 	OPENFILENAME file;
 
-	ReadReg();
+	//ReadReg();
 
 	InitOpenStruct(&file);
 	
@@ -293,12 +298,59 @@ static PyObject* py_reg_close(PyObject *args)
 	return Py_BuildValue("s", szInitialDir);
 }
 
+
+static PyObject* py_reg_virtual_FileDialog(PyObject *self,PyObject *args)
+{
+		
+	char res[256];
+	CString strPath, strurl;
+	char* FileName;
+
+
+	if(!PyArg_ParseTuple(args, "s",  &FileName))
+	{
+		Py_INCREF(Py_None);
+		AfxMessageBox("Error Receiving CMIF presentation String", MB_OK);
+		return Py_None;
+		return NULL;
+	
+	}
+
+
+	static char filter[] = "HTM Files (*.HTM)|*.HTM|All Files (*.*)|*.*||";
+	CFileDialog Dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY|OFN_OVERWRITEPROMPT, 
+					filter, NULL);
+	Dlg.m_ofn.lpstrTitle = "Open File URL";
+	
+	AfxMessageBox("Before Copy File Name", MB_OK);
+	strcpy(Dlg.m_ofn.lpstrFile, FileName);
+	AfxMessageBox("After Copy File Name", MB_OK);
+
+	strPath = Dlg.GetPathName();
+
+	UINT length = strPath.GetLength();
+	char c = strPath.GetAt(2);
+	/*for (UINT i=0; i<length; i++)
+	{
+		if (strPath.GetAt(i) == ((TCHAR)'\\'))
+			strPath.SetAt(i, '/');
+	}
+	strPath.SetAt(1, '|');
+	TRACE("Path variable is now %s\n", strPath);*/
+	
+	strcpy(res, strPath);
+
+	return Py_BuildValue("s", res);
+}
+
+
 static PyMethodDef RegistryExMethods[] = 
 {
 	{ "init", (PyCFunction)py_reg_open, 1},
 	{ "close",(PyCFunction)py_reg_close, 1},
 	{ "read",(PyCFunction)py_reg_read, 1},
 	{ "openfile",(PyCFunction)py_reg_openfile, 1},
+	{ "convert_arg",(PyCFunction)py_reg_virtual_FileDialog, 1},
 	{ NULL, NULL }
 };
 
