@@ -28,6 +28,8 @@ import GenWnd
 
 import os
 from stat import ST_MTIME
+import features
+import version
 
 def beep():
 	win32api.MessageBeep()
@@ -164,7 +166,7 @@ class _Toplevel:
 	############ SDI/MDI Model Support
 	# Called by win32 modules to create the main frame
 	def createmainwnd(self,title = None, adornments = None, commandlist = None):
-		self._apptitle=AppDisplayName
+		self._apptitle = version.title
 		if adornments:
 			self._appadornments=adornments
 		if commandlist:
@@ -254,7 +256,8 @@ class _Toplevel:
 		sv=self.newviewobj('sview_')
 		sv.settext(text)
 		self.showview(sv,'sview_')
-		if IsEditor: sv.set_close_commandlist()
+		if features.editor:
+			sv.set_close_commandlist()
 		return sv
 
 	# Returns screen size in mm	

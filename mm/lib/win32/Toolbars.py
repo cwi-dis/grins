@@ -6,7 +6,6 @@ import afxexttb
 import afxres
 import commctrl
 import win32con
-import appcon
 import win32mu
 import win32ui
 Sdk = win32ui.GetWin32Sdk()
@@ -20,6 +19,7 @@ import grinsRC
 import DropTarget
 import ToolbarTemplate
 import settings
+import features
 
 import win32reg
 import ToolbarState
@@ -111,7 +111,7 @@ class NullPanelMixin:
 		pass
 
 # do not use player panel for player yet
-if not appcon.IsEditor:
+if not features.editor:
 	PanelMixin = NullPanelMixin
 
 ##############################

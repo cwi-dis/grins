@@ -33,6 +33,8 @@ import win32dialog
 
 
 import settings
+import version
+import features
 
 if settings.user_settings.get('use_nodoc_menubar'):
 	USE_NODOC_MENUBAR = 1
@@ -108,10 +110,10 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		# toolbar
 		self.CreateToolbars()
 		# Accellerators
-		if IsPlayer:
-			self.LoadAccelTable(grinsRC.IDR_GRINS)
-		else:
+		if features.editor:
 			self.LoadAccelTable(grinsRC.IDR_GRINSED)
+		else:
+			self.LoadAccelTable(grinsRC.IDR_GRINS)
 
 
 	# Register the window class
@@ -329,8 +331,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 
 	# Displays the about dialog
 	def OnAbout(self,id,code):
-		from version import version
-		dlg=win32dialog.AboutDlg(arg=0,version = 'GRiNS ' + version,parent=self)
+		dlg=win32dialog.AboutDlg(arg=0,version = 'GRiNS ' + version.version,parent=self)
 		dlg.DoModal()
 
 	# Displays the charset dialog
@@ -377,7 +378,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 
 		self.newcmwindow=self.newwindow #alias
 		self._canscroll = 0
-		self._title = AppDisplayName # ignore title		
+		self._title = version.title # ignore title		
 		self._topwindow = self
 		self._window_type = SINGLE # actualy not applicable
 		self._sizes = 0, 0, 1, 1
@@ -422,12 +423,12 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		else:
 			pulldownmenus = None
 		self.setToolbarPulldowns(pulldownmenus)
-		if not IsPlayer:
+		if features.editor:
 			self.setEditorDocumentMenu(1)
 		self.RecalcLayout()
 		if not __main__.toplevel.is_embedded():		
 			self.ActivateFrame(win32con.SW_SHOW)
-		if IsPlayer and SHOW_PLAYER_SEEK:
+		if not features.editor and SHOW_PLAYER_SEEK:
 			player = self._cmifdoc.player
 			ctx = player.userplayroot.GetContext()
 			fulldur = self._cmifdoc.player.userplayroot.calcfullduration(ctx)
@@ -577,7 +578,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		self._cmifdoc=None
 		self.set_commandlist(None,'document')
 		self.settitle(None,'document')
-		if not IsPlayer and len(__main__.toplevel._subwindows)==1:
+		if features.editor and len(__main__.toplevel._subwindows)==1:
 ##			self.setEditorFrameToolbar()
 			self.setEditorDocumentMenu(0)
 		# and document's views
