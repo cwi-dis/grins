@@ -1232,6 +1232,10 @@ class EventCtrl(AttrCtrl):
 		self._offsetwidget = components.Edit(self._wnd, grinsRC.IDC_EDITOFFSET)
 		self._repeatwidget = components.Edit(self._wnd, grinsRC.IDC_EDITREPEAT)
 
+		# Keep state for the event drop-down
+		self._old_eventlist = None
+		self._old_eventlist_selection = None
+
 		g = grinsRC
 		self._radiobuttons = {
 			g.IDC_RDELAY: 'delay',
@@ -1374,19 +1378,26 @@ class EventCtrl(AttrCtrl):
 		self._radiobuttonwidgets[cause].setcheck(1)
 	def set_eventwidget(self):
 		# Sets the value of the event widget.
-		self._eventwidget.resetcontent()
 		if not self._eventstruct:
+			self._eventwidget.resetcontent()
+			self._eventwidget.enable(0)
 			return
+		
 		l = self._eventstruct.get_possible_events()
-		if l:
-			#self._eventwidget.enable(1) # combo boxes don't have readonly attributes.
-			map(self._eventwidget.addstring, l)
-		#else:
-			#self._eventwidget.enable(0)
+		if l is not self._old_eventlist:
+			if l:
+				self._eventwidget.resetcontent()
+				self._eventwidget.enable(1) # combo boxes don't have readonly attributes.
+				map(self._eventwidget.addstring, l)
+			else:
+				self._eventwidget.enable(0)
+			self._old_eventlist = l
+			
 		i = self._eventstruct.get_event_index()
-		if i:
-			self._eventwidget.setcursel(i)
-		# else this doesn't really apply here. Maybe I should disable the event box.
+		if i is not self._old_eventlist_selection:
+			if i:
+				self._eventwidget.setcursel(i)
+			self._old_eventlist_selection = i
 			
 	def set_textwidget(self):
 		if not self._eventstruct:
@@ -1414,12 +1425,12 @@ class EventCtrl(AttrCtrl):
 			self._offsetwidget.enable(0)
 			return
 		r = self._eventstruct.get_offset()
-		#if r:
-		self._offsetwidget.enable(1)
-		self._offsetwidget.settext(fmtfloat(r))
-		#else:
-		#	self._offsetwidget.settext("")
-		#	self._offsetwidget.enable(0)
+		if r is not None:
+			self._offsetwidget.enable(1)
+			self._offsetwidget.settext(fmtfloat(r))
+		else:
+			self._offsetwidget.settext("")
+			self._offsetwidget.enable(0)
 	def set_repeatwidget(self):
 		# Only for event widgets or markers.
 		if not self._eventstruct:
@@ -1500,16 +1511,26 @@ class EventCtrl(AttrCtrl):
 
 	def _thingbuttoncallback(self, id, code):
 		if code == win32con.BN_CLICKED:
-			if self._eventstruct.get_cause() == 'wallclock':
+			c = self._eventstruct.get_cause()
+			if c == 'wallclock':
 				# TODO: more than just the wallclock.
 				dialog = win32dialog.WallclockDialog(parent=self._wnd._form)
 				dialog.setvalue(self._eventstruct.get_wallclock())
 				dialog.show()
 				self._eventstruct.set_wallclock(dialog.getvalue())
+			elif c == 'region':
+				# Pop up a region select dialog.
+				viewports = self._eventstruct.get_viewports()
+				l = []
+				for i in viewports:
+					l.append((i, (self._thingbuttondialogcallback, (i,))))
+				d = win32dialog.Dialog(list=l, title="Select viewport", prompt="Viewport:", parent=self._wnd._form)
 			else:
 				print "TODO: More than just editing the wallclock."
 			self.update()
 
+	def _thingbuttondialogcallback(self, region):
+		self._eventstruct.set_region(region)
 
 ##################################
 # StringOptionsCtrl can be used as a StringCtrl but the user 
