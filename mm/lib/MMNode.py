@@ -103,7 +103,7 @@ class MMNodeContext:
 		node = self.newnodeuid('imm', self.newuid())
 		node.attrdict['type'] = 'animate'
 		node.attrdict['tag'] = tagname
-		node.attrdict['mimetype'] = 'animate/%s',tagname
+		node.attrdict['mimetype'] = 'animate/%s' % tagname
 		chname = 'animate%s' % node.GetUID()
 		node.attrdict['channel'] = chname
 		self.addinternalchannels( [(chname, node.attrdict), ] )
@@ -142,7 +142,6 @@ class MMNodeContext:
 		return chlist
 
 	def addchannels(self, list):
-		print 'addchannels', list
 		for name, dict in list:
 			c = MMChannel(self, name)
 ##			for key, val in dict.items():
@@ -1441,7 +1440,7 @@ class MMNode:
 				[(SCHED,child),(PLAY,self)]  ))
 
 			srlist.append((  [(SCHED_STOPPING,self),], 
-				[(SCHED_DONE,self), (PLAY_STOP, self), (SCHED_STOPPING,child),]  ))
+				[(SCHED_DONE,self), (PLAY_STOP, self), ]  ))
 
 			srlist.append((  [(SCHED,child),], 
 				[(PLAY,child)]  ))
@@ -1453,17 +1452,14 @@ class MMNode:
 				srlist.append((  [(SCHED,child),(ARM_DONE, child),], 
 					[(PLAY,child)]  ))
 
-			srlist.append((  [(PLAY_DONE,child),], 
-				[(SCHED_STOPPING,child),]  ))
-
-			srlist.append((  [(SCHED_STOPPING,child)], 
-				[(SCHED_DONE,child), (PLAY_STOP,child),]  ))
-
 			srlist.append((  [(SCHED_STOP,self),], 
 				[(PLAY_STOP,self),(PLAY_STOP,child)]  ))
 
 			srlist.append((  [(SCHED_DONE,child),], 
 				[]  ))
+
+			srlist.append((  [(PLAY_DONE,child),], 
+				[(PLAY_STOP,child),]  ))
 
 		srdict = {}
 		for events, actions in srlist:
