@@ -80,6 +80,7 @@
 #define IDI_ICON_LINKSRC                276
 #define IDI_ICON_LINKDST                277
 #define IDI_ICON_LINKSRCDST             278
+#define IDC_DRAG_HAND                   280
 #define IDD_EDITSTRINGATTR2             327
 #define IDD_EDITATTR_S7                 327
 #define IDD_EDITATTR_S5                 328
@@ -377,7 +378,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        279
+#define _APS_NEXT_RESOURCE_VALUE        281
 #define _APS_NEXT_COMMAND_VALUE         32860
 #define _APS_NEXT_CONTROL_VALUE         1221
 #define _APS_NEXT_SYMED_VALUE           104
