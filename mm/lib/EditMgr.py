@@ -40,7 +40,6 @@ __version__ = "$Id$"
 
 
 import MMExc
-from HDTL import HD, TL
 from Owner import *
 import features
 import Clipboard
