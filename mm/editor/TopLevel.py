@@ -42,7 +42,7 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.read_it()
 		width, height = \
 			MMAttrdefs.getattr(self.root, 'toplevel_winsize')
-		self = BasicDialog.init(self, (width, height, 'CMIF'))
+		self = BasicDialog.init(self, width, height, 'CMIF')
 		Timing.calctimes(self.root)
 		self.makeviews()	# References the form just made
 		return self
