@@ -498,11 +498,18 @@ class XMLParser:
             return -1
         res = tagfind.match(rawdata, i+2)
         if not res:
+            if self.literal:
+                self.handle_data(rawdata[i])
+                return i+1
             self.syntax_error('no name specified in end tag')
             tag = ''
             k = i+2
         else:
             tag = res.group(0)
+            if self.literal:
+                if not self.stack or tag != self.stack[-1]:
+                    self.handle_data(rawdata[i])
+                    return i+1
             k = res.end(0)
         if k != end.start(0):
             self.syntax_error('garbage in end tag')
