@@ -15,7 +15,6 @@
 
 typedef struct {
 	PyObject_HEAD
-	int mm_wid;		/* window id */
 	int mm_ev;		/* event number */
 	int mm_flags;		/* flags */
 	type_sema mm_flagsema;	/* semaphore to protect mm_flags */
