@@ -31,6 +31,7 @@ def usage(msg):
 	sys.exit(2)
 
 from MainDialog import MainDialog
+from usercmd import *
 
 class Main(MainDialog):
 	def __init__(self, opts, files):
@@ -88,7 +89,6 @@ class Main(MainDialog):
 			windowinterface.select_setcallback(pipe_r,
 						self._mmcallback,
 						(posix.read, fcntl.fcntl, FCNTL))
-		from usercmd import *
 		self.commandlist = [
 			EXIT(callback = (self.close_callback, ())),
 			NEW_DOCUMENT(callback = (self.new_callback, ())),

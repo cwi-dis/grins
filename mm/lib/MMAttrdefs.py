@@ -45,7 +45,7 @@ import sys
 import os
 from stat import ST_MTIME
 import marshal
-import flags
+from flags import *
 
 verbose = 0
 
@@ -92,7 +92,6 @@ def readattrdefs(fp, filename):
 			if compatibility.QT == features.compatibility and attrname == 'project_convert':
 				defaultvalue = 0
 
-			from flags import *
 			binary_flags = 0
 			for fl in flags:
 				if fl == 'g2_light':
@@ -183,7 +182,7 @@ def useattrdefs(mapping):
 
 # Functional interface to the attrdefs table.
 #
-_default = (('any', None), None, '', 'default', '',  'normal', flags.FLAG_ALL)
+_default = (('any', None), None, '', 'default', '',  'normal', FLAG_ALL)
 def getdef(attrname):
 	return attrdefs.get(attrname, _default)
 #
