@@ -87,3 +87,6 @@ def GetImageSize(filename):
 	image = mediainterface.get_image(filename)
 	return image.GetSize()
 
+def	sleep(t):
+	import winkernel
+	winkernel.Sleep(int(t*1000.0+0.5))
