@@ -19,6 +19,10 @@
 // forward declares
 class ExampleWindowlessSite;
 
+// for PyObject
+#ifndef Py_PYTHON_H
+#include "Python.h"
+#endif
 
 
 class ExampleVideoSurface : IRMAVideoSurface
@@ -78,6 +82,11 @@ public:
 
     STDMETHOD(GetPreferredFormat)(THIS_
 				  REF(RMA_COMPRESSION_TYPE) /*OUT*/ ulType);
+
+	// Python support
+	void SetPyVideoRenderer(PyObject *obj);
+	PyObject *m_pPyVideoRenderer;
+
 };
 
 #endif	// _EXVSURF_H_
