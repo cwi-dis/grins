@@ -138,8 +138,11 @@ class MMNodeContext:
 		self.uidmap[uid] = node
 
 	def forgetnode(self, uid):
-		del self.uidmap[uid]
-
+		try:
+			del self.uidmap[uid]
+		except KeyError:
+			pass
+			
 	def newanimatenode(self, tagname='animate'):
 		node = self.newnodeuid('animate', self.newuid())
 		node.attrdict['atag'] = tagname
