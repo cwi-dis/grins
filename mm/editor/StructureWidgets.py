@@ -132,6 +132,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if self.playicon is not None:
 			self.playicon.destroy()
 			self.playicon = None
+			self.node.set_armedmode = None
 			del self.node.set_armedmode
 		self.cause_event_icon = None
 		self.infoicon = None
@@ -144,7 +145,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if self.timemapper is not None:
 			self.timemapper = None
 		if self.node is not None:
+			self.node.views['struct_view'] = None
 			del self.node.views['struct_view']
+			self.node.set_infoicon = None
 			del self.node.set_infoicon
 			self.node = None
 		Widgets.Widget.destroy(self)
