@@ -35,6 +35,7 @@ class AnimateChannel(Channel.ChannelAsync):
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.ChannelAsync.__init__(self, name, attrdict, scheduler, ui)
 		self.__duration = None
+		self.__repeatDur = None
 		self.__animating = None
 
 	def __repr__(self):
@@ -64,7 +65,9 @@ class AnimateChannel(Channel.ChannelAsync):
 		# get duration in secs (float)
 		#self.__duration = node.GetAttrDef('duration', None)
 		self.__duration = self.__animator.getTimeManipulatedDur()
-		
+
+		self.__repeatDur = node.GetAttrDef('repeatdur', None)
+
 		self.__startAnimate()
 
 	def setpaused(self, paused):
@@ -120,7 +123,10 @@ class AnimateChannel(Channel.ChannelAsync):
 		return self.__targetChannel
 		
 	def __startAnimate(self, repeat=0):
-		self.__start = self.__animating.start_time
+		if repeat==0:
+			self.__start = self.__animating.start_time
+		else:
+			self.__start = self._scheduler.timefunc()
 		if self.__start is None:
 			print 'Warning: None start_time for node',self.__animating
 			self.__start = 0
@@ -161,6 +167,13 @@ class AnimateChannel(Channel.ChannelAsync):
 			return
 		# set to the end for the benefit of freeze and repeat
 		self.__animator.setToEnd()
+		if self.__repeatDur:
+			self.__repeatDur = self.__repeatDur - self.__duration
+			if self.__repeatDur>0:
+				self.__startAnimate(repeat=1)
+				return
+			self.playdone(0)
+			return
 		if self.play_loop:
 			self.play_loop = self.play_loop - 1
 			if self.play_loop: # more loops ?
@@ -178,11 +191,12 @@ class AnimateChannel(Channel.ChannelAsync):
 			t_sec=self._scheduler.timefunc() - self.__start
 			# end-point exclusive model
 			if t_sec>=self.__duration:
-				self.__onAnimateDur()
 				self.__unregister_for_timeslices()
+				self.__onAnimateDur()
 			else:
 				self.__animate()
-				self.__register_for_timeslices()
+				if not USE_IDLE_PROC:
+					self.__register_for_timeslices()
 			
 	def __register_for_timeslices(self):
 		if self.__fiber_id is None:
@@ -198,3 +212,4 @@ class AnimateChannel(Channel.ChannelAsync):
 			else:
 				windowinterface.canceltimer(self.__fiber_id)
 			self.__fiber_id = None
+ 
