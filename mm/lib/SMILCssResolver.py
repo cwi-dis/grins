@@ -311,13 +311,13 @@ class RegionNode(Node):
 					pxsize = containersize
 				else:
 					pxsize = containersize-convertToPx(endValue, containersize)
-					pxbegin = containersize-pxsize
+					pxbegin = 0
 			elif endValue == None:
 				pxbegin = 0
 				pxsize = convertToPx(sizeValue,containersize)
 			else:
 				pxsize = convertToPx(sizeValue, containersize)
-				pxbegin = containersize-pxsize-convertToPx(endValue, containersize)                        
+				pxbegin = containersize-pxsize-convertToPx(endValue, containersize)
 		elif sizeValue == None:
 			if endValue == None:
 				pxbegin = convertToPx(beginValue, containersize)
