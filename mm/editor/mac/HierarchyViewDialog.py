@@ -18,6 +18,7 @@ class HierarchyViewDialog(ViewDialog):
 
 	def show(self):
 		if self.is_showing():
+			self.window.pop(poptop=1)
 			return
 		self.toplevel.showstate(self, 1)
 		title = 'Structure View (' + self.toplevel.basename + ')'
