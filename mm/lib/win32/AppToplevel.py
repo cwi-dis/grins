@@ -380,7 +380,7 @@ class _Toplevel:
 		self.serve_timeslices()
 
 		# setwaiting may have been called by one of the cbs
-		if not self._timers and not self._idles and self._waiting>0:
+		if not self._timers and not self._idles and self._waiting == 0:
 			self.StopTimer()
 
 	# Called by the core sustem to set the waiting cursor
