@@ -116,7 +116,7 @@ class _ChannelThread:
 				raise error, 'armdone event when not arming'
 		elif value == 3:	# KLUDGE for X movies
 			try:
-				self.window._gc.SetRegion(self.window._clip)
+				self.window._gc.SetRegion(self.window._getmyarea())
 				self.threads.do_display()
 			except AttributeError:
 				pass
@@ -180,8 +180,8 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		# hack for MovieChannel
 		self._player.toplevel.setwaiting()
 		if hasattr(window, '_gc'):
-			window._gc.SetRegion(window._clip)
-			window._gc.foreground = window._convert_color(window._bgcolor)
+			window._gc.SetRegion(window._getmyarea())
+			window._gc.foreground = window._convert_color(window._bgcolor or (0,0,0))
 		apply(self.threads.resized, window._rect)
 		return
 
@@ -212,8 +212,8 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		Channel.stopplay(self, node)   # These 2 lines repl prev.
 		self.played_display = None
 		if hasattr(w, '_gc'):
-			w._gc.SetRegion(w._clip)
-			w._gc.foreground = w._convert_color(w._bgcolor)
+			w._gc.SetRegion(w._getmyarea())
+			w._gc.foreground = w._convert_color(w._bgcolor or (0,0,0))
 		_ChannelThread.stopplay(self, node)
 
 	def setpaused(self, paused):
@@ -244,7 +244,7 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 			w = self.window
 			w.setredrawfunc(self.do_redraw)
 			try:
-				w._gc.SetRegion(w._clip)
+				w._gc.SetRegion(w._getmyarea())
 				w._gc.foreground = w._convert_color(self.getbgcolor(node))
 			except AttributeError:
 				pass
@@ -258,6 +258,6 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 
 	def do_redraw(self):
 		w = self.window
-		w._gc.SetRegion(w._clip)
-		w._gc.foreground = w._convert_color(w._bgcolor)
+		w._gc.SetRegion(w._getmyarea())
+		w._gc.foreground = w._convert_color(w._bgcolor or (0,0,0))
 		apply(self.threads.resized, w._rect)
