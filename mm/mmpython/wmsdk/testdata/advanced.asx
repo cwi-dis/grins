@@ -35,7 +35,7 @@
 	<COPYRIGHT>(c)1998 SoftImage</COPYRIGHT>
 
 <!-- This is a comment.  Change the following path to point to your ASF -->
-    <Ref href = "D:\ufs\mm\cmif\mmpython\wmsdk\testdata\usa.asf" />
+    <Ref href = "usa.asf" />
     </Entry>
 
     <Entry>
@@ -47,7 +47,7 @@
 	<ABSTRACT>This is where you can include your tool tips</ABSTRACT>
 
 <!-- This is a comment.  Change the following path to point to your ASF -->
-         <Ref href = "D:\ufs\mm\cmif\mmpython\wmsdk\testdata\kstr100.asf" />
+         <Ref href = "kstr100.asf" />
     </Entry>
 </ASX>
 
