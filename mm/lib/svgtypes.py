@@ -234,6 +234,31 @@ class SVGEnum(SVGAttr):
 		a = self.animators[n-1]
 		return a.getCurrValue()
 
+class SVGBoolean(SVGAttr):
+	def __init__(self, node, attr, val, default=0):
+		SVGAttr.__init__(self, node, attr, val, default)
+		if val == 'true':
+			self._value = 1
+		else:
+			self._value = 0
+
+	def __repr__(self):
+		if self._value: return 'true'
+		return 'false'
+
+	def getValue(self):
+		return self._value
+
+	def getPresentValue(self, below=None):
+		if not self.animators:
+			return self.getValue()
+		n = len(self.animators)
+		a = self.animators[n-1]
+		return a.getCurrValue()
+
+	def isDefault(self):
+		return self._value == self._default
+				
 class SVGInteger(SVGAttr):
 	classre = re.compile(_opS + signedIntPat + _opS)
 	def __init__(self, node, attr, str, default=None):
@@ -726,7 +751,7 @@ class SyncVariant:
 	classre = re.compile(syncvalPat + '$')
 	svgunits = ('s', 'ms')
 	defaultunit = 's'
-	def __init__(self, node, attr, str, default=None):
+	def __init__(self, node, attr, str):
 		# target node
 		self._node = node
 
@@ -889,7 +914,7 @@ class SyncVariant:
 		for val in self._insttimes:
 			L.append(val+offset)
 		return L
-				
+					
 class SyncVariantList:
 	def __init__(self, node, attr, str, default=None):
 		self._node = node
@@ -1633,6 +1658,10 @@ SVGAttrdefs = {'accent-height': (SVGHeight, None),
 	'rotate': (SVGAnimRotate, None),
 	'to': (stringtype, None),
 	'values': (stringtype, None),
+	'speed': (SVGNumber, 1.0),
+	'accelerate': (SVGNumber, 0.0),
+	'decelerate': (SVGNumber, 0.0),
+	'autoReverse': (SVGBoolean, 0),
 	'animateTransform.type': (('translate', 'rotate', 'scale', 'skewX', 'skewY'), 'translate'),}
 
 # add qualified fill smil attr
