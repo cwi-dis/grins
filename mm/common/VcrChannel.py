@@ -35,9 +35,6 @@ class VcrChannel(Channel):
 		del self.vcr
 		Channel.destroy(self)
 
-	def __repr__(self):
-		return '<VcrChannel instance, name=' + `self._name` + '>'
-
 	def vcr_ready(self, dummy):
 		if self.vcrstate == V_SPR:
 			d = self.vcr.edit_pb_standby()
