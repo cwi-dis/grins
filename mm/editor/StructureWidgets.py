@@ -748,15 +748,33 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			channel_type = 'RealAudio'
 		else:
 			channel_type = node.GetChannelType()
+		# If we don't have a channel type here we default to
+		# the accepted mime type (if we have it, and it is only
+		# a single mimetype, and we know the type)
+		if channel_type == 'null':
+			mimetypes = MMAttrdefs.getattr(node, 'allowedmimetypes')
+			if len(mimetypes) == 1 and mimetypes[0] in ('video', 'image', 'text'):
+				channel_type = mimetypes
+			elif len(mimetypes) == 1 and mimetypes[0] == 'audio':
+				channel_type = 'sound'
+		url = node.GetFile()
+		print 'DBG', node, url
 		if self.mother.thumbnails and channel_type == 'image':
 			if not image:
 				return None
-			url = node.GetFile()
 			try:
 				return MMurl.urlretrieve(url)[0]
 			except IOError, arg:
 				self.set_infoicon('error', 'Cannot open image: %s'%url)
-		# either not an image, or image couldn't be found
+		# either not an image, or image couldn't be found.
+		# Make a special case for empty URLs
+		if not url or url == '#':
+			emptyimage = os.path.join(self.mother.datadir, '%s-empty.tiff'%channel_type)
+			if os.path.exists(emptyimage):
+				print 'DBG using', emptyimage
+				return emptyimage
+			if __debug__:
+				print 'Missing empty icon:', emptyimage
 		return os.path.join(self.mother.datadir, '%s.tiff'%channel_type)
 
 	# used by MediaWidget and CommentWidget
