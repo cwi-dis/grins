@@ -84,6 +84,7 @@ static struct PyMethodDef winmm_methods[] = {
 #endif
 	{"CreateWaveHdr", (PyCFunction)Winmm_CreateWaveHdr, METH_VARARGS, ""},
 	{"WaveOutOpen", (PyCFunction)Winmm_WaveOutOpen, METH_VARARGS, ""},
+	{"WaveOutFromHandle", (PyCFunction)Winmm_WaveOutFromHandle, METH_VARARGS, ""},
 	{"SndPlaySound", (PyCFunction)SndPlaySound, METH_VARARGS, ""},
 	{"SndStopSound", (PyCFunction)SndStopSound, METH_VARARGS, ""},
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
