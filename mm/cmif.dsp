@@ -698,6 +698,26 @@ SOURCE=.\editor\snap\features.py
 SOURCE=.\editor\smilboston\features.py
 # End Source File
 # End Group
+# Begin Group "smil2real"
+
+# PROP Default_Filter ""
+# Begin Group "smil2real-win32"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\editor\smil2real\win32\splashbmp.py
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=.\editor\smil2real\features.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\smil2real\version.py
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\editor\AnchorEdit.py
@@ -864,6 +884,10 @@ SOURCE=.\lib\win32\appcon.py
 # Begin Source File
 
 SOURCE=.\lib\win32\AppToplevel.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\win32\AutoLicense.py
 # End Source File
 # Begin Source File
 
