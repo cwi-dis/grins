@@ -27,11 +27,12 @@ class _SourceView(docview.EditView):
 
 	# Create the OS window
 	def createWindow(self,parent):
+		import traceback; traceback.print_stack()
 		self.CreateWindow(parent)
 	
 	# Called by the framework after the OS window has been created
 	def OnInitialUpdate(self):
-		edit=self.GetEditCtrl()
+		edit=self.GetEditCtrl()	# Is it just me, or does this only return self?
 		edit.SetWindowText(self._text)
 		#edit.SetReadOnly(1)
 		self._mdiframe=(self.GetParent()).GetMDIFrame()
@@ -40,8 +41,11 @@ class _SourceView(docview.EditView):
 	def OnClose(self):
 		print "DEBUG: Warning! Saving source is not implemented yet."
 		saveme = windowinterface.GetYesNoCancel("Do you want to keep your changes?", self.GetParent())
-		if saveme==0:
-			windowinterface.showmessage("Sorry, saving changes is not implemented yet.")
+		if saveme==0:		# Which means the user clicked "yes"
+			edit = self.GetEditCtrl()
+			# Bugger. The TopLevel is miles away, through several rather bizarre API calls.
+			# For later, anyway:
+			print edit.GetWindowText()
 		if self._closecmdid>0:
 			self.GetParent().GetMDIFrame().PostMessage(win32con.WM_COMMAND,self._closecmdid)
 		else:
