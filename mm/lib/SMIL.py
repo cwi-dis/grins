@@ -1081,7 +1081,7 @@ extensions = {
 }
 
 for _k, _v in _modules.items():
-	extensions[SMIL2 + _k] = _v
-	extensions['http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/' + _k] = _v
-	extensions['http://www.w3.org/2000/SMIL20/CR/' + _k] = _v
-del _k, _v, _modules
+	for _ns in SMIL2ns:
+		if _ns[-1] == '/':
+			extensions[_ns + _k] = _v
+del _k, _v, _ns, _modules
