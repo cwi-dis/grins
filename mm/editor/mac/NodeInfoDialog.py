@@ -185,6 +185,12 @@ class NodeInfoDialog(windowinterface.MACDialog):
 		"""Get the string which is the current selection."""
 		return self.__channel_select.getselect()
 
+	def askchannelname(self, default):
+		windowinterface.InputDialog('Name for new channel',
+					    default,
+					    self.newchan_callback,
+					    cancelCallback = (self.newchan_callback, ()))
+
 	# Interface to the list of node types.  This part consists of
 	# a label and a list of strings of which one is always the
 	# current selection.  Only one element of the list needs to be
