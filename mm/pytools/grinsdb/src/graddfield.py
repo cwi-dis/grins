@@ -13,10 +13,11 @@ def main():
 	dbase = grinsdb.Database()
 	if len(sys.argv) <= 3:
 		value = getfield(dbase, user, field)
-		print "%s: %s"%(user, field)
+		print "%s: %s = %s"%(user, field, value)
 	else:
 		value = sys.argv[3]
 		addfield(dbase, user, field, value, override=1)
+	dbase.close()
 
 def getfield(dbase, user, field):
 	idlist = dbase.search('email', user)
@@ -27,6 +28,7 @@ def getfield(dbase, user, field):
 		print 'Multiple matches:',
 		for id in idlist:
 			print id,
+		dbase.close()
 		sys.exit(1)
 	record = dbase.open(idlist[0])
 	if record.has_key(field):
@@ -37,11 +39,13 @@ def addfield(dbase, user, field, value, override=0):
 	idlist = dbase.search('email', user)
 	if not idlist:
 		print 'No such user:', user
+		dbase.close()
 		sys.exit(1)
 	if len(idlist) > 1:
 		print 'Multiple matches:',
 		for id in idlist:
 			print id,
+		dbase.close()
 		sys.exit(1)
 	record = dbase.open(idlist[0], 'w')
 	if not override and record.has_key(field):
@@ -57,11 +61,13 @@ def delfield(dbase, user, field):
 	idlist = dbase.search('email', user)
 	if not idlist:
 		print 'No such user:', user
+		dbase.close()
 		sys.exit(1)
 	if len(idlist) > 1:
 		print 'Multiple matches:',
 		for id in idlist:
 			print id,
+		dbase.close()
 		sys.exit(1)
 	record = dbase.open(idlist[0], 'w')
 	if not record.has_key(field):

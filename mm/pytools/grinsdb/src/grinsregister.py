@@ -71,15 +71,18 @@ def register(file, filename):
 
 	if not obj.has_key('email'):
 		print "Message is not a registration form"
+		dbase.close()
 		raise Error
 	
 	user = obj['email']
 	if ':' in user or ' ' in user or not '@' in user:
 		print "Invalid email:", user
+		dbase.close()
 		raise Error
 	prevtime, oldobj = find_duplicate(dbase, obj)
 	if prevtime:
 		print "Duplicate not added.", filename
+		dbase.close()
 		if oldobj:
 			print "But password sent."
 			user = oldobj['email']
@@ -105,6 +108,7 @@ def register(file, filename):
 		license = ""
 
 	dbase.save(obj)
+	dbase.close()
 
 	clear = obj['password']
 	crypted = crypt_passwd(clear)
