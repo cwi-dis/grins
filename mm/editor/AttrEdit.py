@@ -993,7 +993,8 @@ class ChannelWrapper(Wrapper):
 			if 'traceImage' not in rv: rv.append('traceImage')			
 		else:
 			# region
-			if 'traceImage' in rv: rv.remove('traceImage')			
+			if 'traceImage' in rv: rv.remove('traceImage')
+			if 'scale' not in rv: rv.append('scale')
 ##		if not cmifmode():
 ##			if 'file' in rv: rv.remove('file')
 ##			if 'scale' in rv: rv.remove('scale')
