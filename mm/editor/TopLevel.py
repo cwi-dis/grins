@@ -1177,6 +1177,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.destroy()
 
 	def close_ok(self):
+		# special case for the source view
+		if not self.closeSourceView():
+			# in this case, there was some changement from the source view not applied,
+			# and the user has cancelled
+			return 0
 		if not self.changed:
 			return 1
 		reply = self.mayclose()

@@ -11,7 +11,7 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 		self.context = self.root.context
 		self.editmgr = self.context.editmgr
 		SourceViewDialog.SourceViewDialog.__init__(self)
-
+		
 	def fixtitle(self):
 		pass
 	def get_geometry(self):
@@ -73,6 +73,7 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 		text = self.get_text()
 		self.toplevel.save_source_callback(text)
 
+	# XXX Hack: see as well TopLevelDialog
 	def close_callback(self):
 		#self.toplevel.save_source_callback(text)
 		if self.is_changed():

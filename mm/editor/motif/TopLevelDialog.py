@@ -67,6 +67,11 @@ class TopLevelDialog:
 			return
 		self.source = windowinterface.textwindow(source)
 
+	# in the source view, the user may have done some changements without apply them.
+	# return 1 if the user want to continue (not cancel)
+	def closeSourceView(self):
+		return 1
+
 	def mayclose(self):
 		prompt = 'Document %s:\n' % self.filename + \
 			 "You haven't saved your changes yet;\n" \
