@@ -133,6 +133,27 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		       'bottomLeft':0, 'bottomMid':0, 'bottomRight':0,
 		       }
 
+	# enumeration values for parseEnumValue
+	__truefalse = {'false': 0, 'true': 1}
+	__enumattrs = {
+		'accumulate': {'none':'none', 'sum':'sum'},
+		'additive': {'replace':'replace', 'sum':'sum'},
+		'attach-timebase': __truefalse,
+		'attributeType': {'CSS':'CSS', 'XML':'XML', 'auto':'auto'},
+		'autoReverse': __truefalse,
+		'autoplay': __truefalse,
+		'chapter-mode': {'all':0,'clip':1},
+		'erase': {'never':'never', 'whenDone':'whenDone'},
+		'fill': {'freeze':'freeze', 'remove':'remove', 'hold':'hold', 'transition':'transition', 'auto':'auto', 'default':'default'},
+		'fillDefault': {'freeze':'freeze', 'remove':'remove', 'hold':'hold', 'transition':'transition', 'auto':'auto', 'inherit':'inherit'},
+		'immediate-instantiation': __truefalse,
+		'immediate-instantiation': __truefalse,
+		'mode': {'in':'in', 'out':'out'},
+		'origin': {'parent':'parent', 'element':'element'},
+		'syncMaster': __truefalse,
+		'time-slider': __truefalse,
+		}
+
 	def __init__(self, context, printfunc = None, new_file = 0, check_compatibility = 0, progressCallback=None):
 		self.elements = {
 			'smil': (self.start_smil, self.end_smil),
@@ -555,7 +576,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					try:
 						bitrate = string.atoi(val)
 					except string.atoi_error:
-						self.syntax_error('bad bitrate attribute in attr %s' % attr)
+						self.syntax_error('bad %s attribute value' % attr)
 					else:
 						if not attrdict.has_key('system_bitrate'):
 							attrdict['system_bitrate'] = bitrate
@@ -571,7 +592,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if not boston or self.__context.attributes.get('project_boston'):
 					res = screen_size.match(val)
 					if res is None:
-						self.syntax_error('bad screen-size attribute')
+						self.syntax_error('bad %s attribute value' % attr)
 					else:
 						if not attrdict.has_key('system_screen_size'):
 							attrdict['system_screen_size'] = tuple(map(string.atoi, res.group('x','y')))
@@ -588,7 +609,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					try:
 						depth = string.atoi(val)
 					except string.atoi_error:
-						self.syntax_error('bad screen-depth attribute')
+						self.syntax_error('bad %s attribute value' % attr)
 					else:
 						if not attrdict.has_key('system_screen_depth'):
 							attrdict['system_screen_depth'] = depth
@@ -609,7 +630,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						if not attrdict.has_key('system_captions'):
 							attrdict['system_captions'] = 0
 					else:
-						self.syntax_error('bad %s attribute' % attr)
+						self.syntax_error('bad %s attribute value' % attr)
 		if attributes.has_key('systemAudioDesc'):
 			val = attributes['systemAudioDesc']
 			del attributes['systemAudioDesc']
@@ -623,7 +644,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				elif val == 'off':
 					attrdict['system_audiodesc'] = 0
 				else:
-					self.syntax_error('bad system-audiodesc attribute')
+					self.syntax_error('bad %s attribute value' % attr)
 		for attr in ('system-language', 'systemLanguage'):
 			if attributes.has_key(attr):
 				val = attributes[attr]
@@ -662,7 +683,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					val = 'subtitle'
 				attrdict['system_overdub_or_caption'] = val
 			else:
-				self.syntax_error('bad system-overdub-or-caption attribute')
+				self.syntax_error('bad system-overdub-or-caption attribute value')
 		if attributes.has_key('systemOverdubOrSubtitle'):
 			val = attributes['systemOverdubOrSubtitle']
 			del attributes['systemOverdubOrSubtitle']
@@ -674,7 +695,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val in ('subtitle', 'overdub'):
 					attrdict['system_overdub_or_caption'] = val
 				else:
-					self.syntax_error('bad systemOverdubOrSubtitle attribute')
+					self.syntax_error('bad systemOverdubOrSubtitle attribute value')
 		nsdict = self.getnamespace()
 		for attr in ('system-required', 'systemRequired'):
 			if attributes.has_key(attr):
@@ -702,7 +723,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					for v in list:
 						nsuri = nsdict.get(v)
 						if not nsuri:
-							self.syntax_error('no namespace declaration for %s in effect' % v)
+							self.syntax_error('no namespace declaration for %s in effect in %s attribute' % (v, attr))
 						else:
 							val.append(nsuri)
 					if not attrdict.has_key('system_required') and list:
@@ -731,12 +752,155 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					else:
 						self.syntax_error("unknown customTest `%s'" % v)
 
+	def AddAnimateAttrs(self, attrdict, attributes):
+			if self.__context.attributes.get('project_boston') == 0 and not features.editor:
+				# we've already warned about the element, so no need to warn about the attributes
+				return
+			if attributes.has_key('fadeColor'):
+				fc = self.__convert_color(attributes['fadeColor'])
+				if fc is None:
+					pass # error already given
+				elif type(fc) is not type(()):
+					self.syntax_error("bad fadeColor attribute")
+				else:
+					attrdict['fadeColor'] = fc
+				del attributes['fadeColor']
+			for attr in ('by', 'from', 'to', 'values', 'path', 'subtype', 'attributeName', 'targetElement'):
+				if attributes.has_key(attr):
+					attrdict[attr] = attributes[attr]
+					del attributes[attr]
+			for attr in ('horzRepeat', 'vertRepeat', 'borderWidth'):
+				if not attributes.has_key(attr):
+					continue
+				val = attributes[attr]
+				try:
+					if val and val[0] in '+-':
+						raise ValueError('no sign allowed')
+					val = int(val)
+				except ValueError:
+					self.syntax_error("error parsing value of `%s' attribute" % attr)
+				else:
+					attrdict[attr] = val
+				del attributes[attr]
+			if attributes.has_key('mode'):
+				val = self.parseEnumValue('mode', attributes['mode'])
+				if val is not None:
+					attrdict['mode'] = val
+				del attributes['mode']
+			if attributes.has_key('origin'):
+				val = self.parseEnumValue('origin', attributes['origin'])
+				if val is not None:
+					attrdict['origin'] = val
+				del attributes['origin']
+			if attributes.has_key('attributeType'):
+				val = self.parseEnumValue('attributeType', attributes['attributeType'])
+				if val is not None:
+					attrdict['attributeType'] = val
+				del attributes['attributeType']
+			if attributes.has_key('calcMode'):
+				val = attributes['calcMode']
+				if val in ('discrete', 'linear', 'paced'):
+					attrdict['calcMode'] = val
+				elif val == 'spline':
+					if not settings.profileExtensions.get('SplineAnimation'):
+						self.warning('non-standard value for attribute calcMode', self.lineno)
+					attrdict['calcMode'] = val
+				else:
+					self.syntax_error("bad %s attribute" % attr)
+				del attributes['calcMode']
+			if attributes.has_key('keySplines'):
+				val = attributes['keySplines']
+				vals = val.split(';')
+				for v in vals:
+					if not controlpt.match(v):
+						self.syntax_error("bad keySplines attribute")
+						break
+				else:
+					attrdict['keySplines'] = val
+				del attributes['keySplines']
+			if attributes.has_key('keyTimes'):
+				val = attributes['keyTimes']
+				vals = val.split(';')
+				if attrdict.has_key('keySplines') and len(vals) != len(attrdict['keySplines'].split(';'))+1:
+					self.syntax_error("bad keyTimes attribute (wrong number of control points)")
+				else:
+					for v in vals:
+						if not fpre.match(v):
+							self.syntax_error("bad keyTimes attribute")
+							break
+					else:
+						attrdict['keyTimes'] = val
+				del attributes['keyTimes']
+			if attributes.has_key('accumulate'):
+				val = self.parseEnumValue('accumulate', attributes['accumulate'])
+				if val is not None:
+					attrdict['accumulate'] = val
+				del attributes['accumulate']
+			if attributes.has_key('additive'):
+				val = self.parseEnumValue('additive', attributes['additive'])
+				if val is not None:
+					attrdict['additive'] = val
+				del attributes['additive']
+			if attributes.has_key('borderColor'):
+				val = attributes['borderColor']
+				if val == 'blend':
+					attrdict['borderColor'] = (-1,-1,-1)
+				else:
+					val = self.__convert_color(val)
+					if type(val) is type(string):
+						self.syntax_error('bad borderColor attribute value')
+					elif val is not None:
+						attrdict['borderColor'] = val
+				del attributes['borderColor']
+			if attributes.has_key('borderWidth'):
+				val = attributes['borderWidth']
+				try:
+					width = string.atoi(val)
+				except string.atoi_error:
+					self.syntax_error('bad borderWidth attribute')
+				else:
+					attrdict['borderWidth'] = width
+				del attributes['borderWidth']
+
+	def addQTAttr(self, attrdict, attributes):
+		if attributes.has_key('immediate-instantiation'):
+			val = self.parseEnumValue('immediate-instantiation', attributes['immediate-instantiation'])
+			if val is not None:
+				attrdict['immediateinstantiationmedia'] = val
+			del attributes['immediate-instantiation']
+		if attributes.has_key('bitrate'):
+			try:
+				val = int(attributes['bitrate'])
+			except ValueError:
+				self.syntax_error("invalid `%s' value" % 'bitrate')
+			else:
+				attrdict['bitratenecessary'] = val
+			del attributes['bitrate']
+		if attributes.has_key('system-mime-type-supported'):
+			attrdict['systemmimetypesupported'] = attributes['system-mime-type-supported']
+			del attributes['system-mime-type-supported']
+		if attributes.has_key('attach-timebase'):
+			val = self.parseEnumValue('attach-timebase', attributes['attach-timebase'])
+			if val is not None:
+				attrdict['immediateinstantiationmedia'] = val == 'true'
+			del attributes['attach-timebase']
+		if attributes.has_key('chapter'):
+			attrdict['qtchapter'] = attributes['chapter']
+			del attributes['chapter']
+		if attributes.has_key('composite-mode'):
+			attrdict['qtcompositemode'] = attributes['composite-mode']
+			del attributes['composite-mode']
+
 	def AddAttrs(self, node, attributes):
 		node.__syncarcs = []
 		node.__anchorlist = []
 		attrdict = node.attrdict
 		pnode = node.GetSchedParent()
 		self.AddTestAttrs(attrdict, attributes)
+		if node.type == 'animate':
+			self.AddAnimateAttrs(attrdict, attributes)
+		if compatibility.QT == features.compatibility:
+			self.addQTAttr(attrdict, attributes)
 		for attr, val in attributes.items():
 			val = string.strip(val)
 			if attr == 'id':
@@ -877,20 +1041,20 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('bad %s attribute' % attr)
 				except parseutil.error, msg:
 					self.syntax_error(msg)
-			elif attr == 'readIndex':
+			elif attr in ('readIndex', 'tabindex'):
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 					if not features.editor:
 						continue
 				self.__context.attributes['project_boston'] = 1
 				try:
-					readIndex = string.atoi(val)
-					if readIndex < 0:
+					index = string.atoi(val)
+					if index < 0:
 						raise string.atoi_error, 'negative value'
 				except string.atoi_error:
 					self.syntax_error('bad %s attribute' % attr)
 				else:
-					attrdict['readIndex'] = readIndex
+					attrdict[attr] = index
 			elif attr == 'sensitivity':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
@@ -907,7 +1071,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						self.syntax_error('bad sensitivity attribute value')
 					else:
 						attrdict['sensitivity'] = int(val[:-1])
-			elif attr == 'transIn':
+			elif attr in ('transIn', 'transOut'):
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 					if not features.editor:
@@ -921,59 +1085,41 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					elif not warned:
 						self.syntax_error("invalid transition specified in %s attribute" % attr)
 						warned = 1
-				attrdict['transIn'] = transitions
-			elif attr == 'transOut':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				transitions = []
-				warned = 0
-				for val in map(string.strip, val.split(';')):
-					if self.__transitions.has_key(val):
-						transitions.append(val)
-					elif not warned:
-						self.syntax_error("invalid transition specified in %s attribute" % attr)
-						warned = 1
-				attrdict['transOut'] = transitions
+				attrdict[attr] = transitions
 			elif attr == 'layout':
 				if self.__layouts.has_key(val):
 					attrdict['layout'] = val
 				else:
 					self.syntax_error("unknown layout `%s'" % val)
 			elif attr == 'fill':
-				if node.type in interiortypes or \
-				   val in ('hold', 'transition', 'auto', 'default'):
-					if self.__context.attributes.get('project_boston') == 0:
-						self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-						if not features.editor:
-							continue
-					self.__context.attributes['project_boston'] = 1
-				if val in ('freeze', 'remove', 'hold', 'transition', 'auto', 'default'):
+				val = self.parseEnumValue(attr, val)
+				if val is not None:
+					if node.type in interiortypes or \
+					   val in ('hold', 'transition', 'auto', 'default'):
+						if self.__context.attributes.get('project_boston') == 0:
+							self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+							if not features.editor:
+								continue
+						self.__context.attributes['project_boston'] = 1
 					attrdict['fill'] = val
-				else:
-					self.syntax_error("bad fill attribute")
 			elif attr == 'fillDefault':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 					if not features.editor:
 						continue
 				self.__context.attributes['project_boston'] = 1
-				if val in ('freeze', 'remove', 'hold', 'transition', 'auto', 'inherit'):
+				val = self.parseEnumValue(attr, val)
+				if val is not None:
 					attrdict['fillDefault'] = val
-				else:
-					self.syntax_error("bad fillDefault attribute")
 			elif attr == 'erase':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 					if not features.editor:
 						continue
 				self.__context.attributes['project_boston'] = 1
-				if val in ('never', 'whenDone'):
+				val = self.parseEnumValue(attr, val)
+				if val is not None:
 					attrdict['erase'] = val
-				else:
-					self.syntax_error("bad %s attribute" % attr)
 			elif attr == 'mediaRepeat':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
@@ -989,7 +1135,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if fg is None:
 					pass # error already given
 				elif type(fg) is not type(()):
-					self.syntax_error("bad color attribute")
+					self.syntax_error("bad %s attribute" % attr)
 				else:
 					attrdict['fgcolor'] = fg
 			# sub-positionning attibutes allows to SMIL-Boston layout
@@ -1070,16 +1216,32 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('bad speed attribute')
 				else:
 					attrdict['speed'] = speed
-			elif attr == 'autoReverse':
+			elif attr in ('autoReverse', 'syncMaster'):
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 					if not features.editor:
 						continue
 				self.__context.attributes['project_boston'] = 1
-				if val not in ('true', 'false'):
-					self.syntax_error('bad autoReverse attribute')
+				val = self.parseEnumValue(attr, val)
+				if val is not None:
+					attrdict[attr] = val
+			elif attr in ('syncTolerance', 'syncToleranceDefault'):
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+					if not features.editor:
+						continue
+				self.__context.attributes['project_boston'] = 1
+				if (attr == 'syncTolerance' and val == 'default') or \
+				   (attr == 'syncToleranceDefault' and val == 'inherit'):
+					val = -1
 				else:
-					attrdict['autoReverse'] = val == 'true'
+					try:
+						val = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context)
+					except parseutil.error, msg:
+						self.syntax_error(msg)
+						val = None
+				if val is not None:
+					attrdict[attr] = val
 			elif attr in ('accelerate', 'decelerate'):
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
@@ -1097,7 +1259,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 							self.syntax_error('accelerate + decelerate > 1')
 					else:
 						self.syntax_error("`%s' attribute value out of allowed range" % attr)
-				
 			elif attr == 'syncBehavior':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
@@ -1118,71 +1279,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['syncBehaviorDefault'] = val
 				else:
 					self.syntax_error("bad %s attribute" % attr)
-			elif attr == 'attributeType':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				if val in ('CSS', 'XML', 'auto'):
-					attrdict['attributeType'] = val
-				else:
-					self.syntax_error("bad %s attribute" % attr)
-			elif attr == 'calcMode':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				if val in ('discrete', 'linear', 'paced'):
-					attrdict['calcMode'] = val
-				elif val == 'spline':
-					if not settings.profileExtensions.get('SplineAnimation'):
-						self.warning('non-standard value for attribute %s' % attr, self.lineno)
-					attrdict['calcMode'] = val
-				else:
-					self.syntax_error("bad %s attribute" % attr)
-			elif attr == 'keySplines':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				vals = val.split(';')
-				if attrdict.has_key('keyTimes') and len(vals) != len(attrdict['keyTimes'].split(';'))-1:
-					self.syntax_error("bad %s attribute (wrong number of control points)" % attr)
-				else:
-					for v in vals:
-						if not controlpt.match(v):
-							self.syntax_error("bad %s attribute" % attr)
-							break
-					else:
-						attrdict['keySplines'] = val
-			elif attr == 'keyTimes':
-				if self.__context.attributes.get('project_boston') == 0:
-					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
-					if not features.editor:
-						continue
-				self.__context.attributes['project_boston'] = 1
-				vals = val.split(';')
-				if attrdict.has_key('keySplines') and len(vals) != len(attrdict['keySplines'].split(';'))+1:
-					self.syntax_error("bad %s attribute (wrong number of control points)" % attr)
-				else:
-					for v in vals:
-						if not fpre.match(v):
-							self.syntax_error("bad %s attribute" % attr)
-							break
-					else:
-						attrdict['keyTimes'] = val
-			elif attr == 'attributeName':
-				attrdict['attributeName'] = val
-			elif attr == 'attributeType':
-				if val in ('CSS', 'XML', 'auto'):
-					attrdict['attributeType'] = val
-				else:
-					self.syntax_error("bad %s attribute" % attr)
-			elif attr == 'targetElement':
-				attrdict['targetElement'] = val
 			elif attr == 'project_default_region':
 				region = self.__selectregion(val)
 				attrdict['project_default_region'] = region
@@ -1218,9 +1314,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attrdict['thumbnail_icon'] = MMurl.basejoin(self.__base, val)
 			elif attr == 'thumbnail-scale':
 				attrdict['thumbnail_scale'] = val == 'true'
-			elif compatibility.QT == features.compatibility and \
-				self.addQTAttr(attr, val, node):
-				pass
+			elif attr == 'class':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+					if not features.editor:
+						continue
+				self.__context.attributes['project_boston'] = 1
+				attrdict[attr] = val
 			elif attr not in smil_node_attrs:
 				# catch all
 				# this should not be used for normal operation
@@ -1230,48 +1330,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error("couldn't parse `%s' value" % attr)
 					pass
 
-	def addQTAttr(self, key, val, node):
-		attrdict = node.attrdict
-		if key == 'immediate-instantiation':
-			internalval = self.parseEnumValue(val, {'false':0,'true':1}, key, 0)
-			attrdict['immediateinstantiationmedia'] = internalval
-			return 1
-		elif key == 'bitrate':
-			internalval = self.parseIntValue(val, key, 14400)
-			attrdict['bitratenecessary'] = internalval
-			return 1
-		elif key == 'system-mime-type-supported':
-			internalval = val
-			attrdict['systemmimetypesupported'] = internalval
-			return 1
-		elif key == 'attach-timebase':
-			internalval = self.parseEnumValue(val, {'false':0,'true':1}, key, 1)
-			attrdict['attachtimebase'] = internalval
-			return 1
-		elif key == 'chapter':
-			internalval = val
-			attrdict['qtchapter'] = internalval
-			return 1
-		elif key == 'composite-mode':
-			internalval = val
-			attrdict['qtcompositemode'] = internalval
-			return 1
-
-		return 0
-
-	def parseEnumValue(self, val, dict, smilattributename, default):
+	def parseEnumValue(self, attr, val):
+		dict = self.__enumattrs[attr]
 		if dict.has_key(val):
 			return dict[val]
-		else:
-			self.syntax_error("invalid `%s' value" % smilattributename)
-			return default
-
-	def parseIntValue(self, val, smilattributename, default):
-		try:
-			return string.atoi(val)
-		except string.atoi_error:
-			self.syntax_error("invalid `%s' value" % smilattributename)
-			return default
+		valid = dict.keys()
+		valid.sort()
+		self.syntax_error("invalid `%s' value (valid values are: %s)" % (attr, ', '.join(valid)))
 
 	def NewNode(self, tagname, attributes):
 		# update progress bar if needed
@@ -2271,16 +2336,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def parseQTAttributeOnSmilElement(self, attributes):
 		for key, val in attributes.items():
 			if key == 'time-slider':
-				internalval = self.parseEnumValue(val, {'false':0,'true':1}, key, 0)
-				self.__context.attributes['qttimeslider'] = internalval
+				internalval = self.parseEnumValue(key, val)
+				if internalval is not None:
+					self.__context.attributes['qttimeslider'] = internalval
 				del attributes[key]
 			elif key == 'autoplay':
-				internalval = self.parseEnumValue(val, {'false':0,'true':1}, key, 0)
-				self.__context.attributes['autoplay'] = internalval
+				internalval = self.parseEnumValue(key, val)
+				if internalval is not None:
+					self.__context.attributes['autoplay'] = internalval
 				del attributes[key]
 			elif key == 'chapter-mode':
-				internalval = self.parseEnumValue(val, {'all':0,'clip':1}, key, 0)
-				self.__context.attributes['qtchaptermode'] = internalval
+				internalval = self.parseEnumValue(key, val)
+				if internalval is not None:
+					self.__context.attributes['qtchaptermode'] = internalval
 				del attributes[key]
 			elif key == 'next':
 				if val is not None:
@@ -2289,8 +2357,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.__context.attributes['qtnext'] = val
 				del attributes[key]
 			elif key == 'immediate-instantiation':
-				internalval = self.parseEnumValue(val, {'false':0,'true':1}, key, 0)
-				self.__context.attributes['immediateinstantiation'] = internalval
+				internalval = self.parseEnumValue(key, val)
+				if internalval is not None:
+					self.__context.attributes['immediateinstantiation'] = internalval
 				del attributes[key]
 
 	# methods for start and end tags

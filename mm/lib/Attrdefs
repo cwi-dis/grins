@@ -270,8 +270,10 @@
 	'Audio playback queue size' channel (cmif))
 
 (readIndex (int) 0 'Read index' default
-	'Position in which descriptive text is read by assistive devices'
-	raw (cmif smil2))
+	'Position in which descriptive text is read by assistive devices' raw (cmif smil2))
+
+(tabindex (int) 0 'Tab index' default
+	'Position of the element in the tabbing order of the document' raw (cmif smil2))
 
 (regionName (name) 'undefined' 'Region name' default
 	'Region name' raw (cmif smil2 snap))
@@ -317,6 +319,15 @@
 
 (syncBehaviorDefault (enum inherit canSlip locked independent) inherit 'Sync behavior default' syncBehavior
 	'Default value for the syncBehavior property on the children of this node' inherited (smil2 cmif))
+
+(syncMaster (bool) 0 'Sync master' default
+	'Whether this element is the master clock for sibling elements' normal (smil2 cmif))
+
+(syncTolerance (float) -1 'Sync behavior' syncTolerance
+	'Defines the runtime synchronization tolearance for an element' normal (smil2 cmif))
+
+(syncToleranceDefault (float) -1 'Sync behavior default' syncTolerance
+	'Default value for the syncTolerance property on the children of this node' inherited (smil2 cmif))
 
 # The items are (srcnode, event or marker, delay).
 # things causing the node to start
@@ -648,6 +659,9 @@
 (coordinated (bool) 0 'Multi-element transition' default
 	'Whether this is a coordinated transition across multiple elements' raw (smil2))
 	
+(class (string) '' 'Class' default
+	'Class' raw (smil2))
+
 (clipBoundary (enum children parent) children 'Clip to children' default
 	'Is transition limited to children only or parent plus children?' raw (smil2))
 
