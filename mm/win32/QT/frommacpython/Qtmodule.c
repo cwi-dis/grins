@@ -8368,7 +8368,7 @@ static PyMethodDef Qt_methods[] = {
 
 
 
-
+extern "C" __declspec(dllexport)
 void initQt(void)
 {
 	PyObject *m;
