@@ -281,6 +281,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						offset = 0
 					if name == 'prev':
 						xnode = 'prev'
+					elif name is None:
+						xnode = node
 					else:
 						xnode = self.__nodemap.get(name)
 						if xnode is None:
@@ -1489,7 +1491,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if not self.__seen_layout:
 			self.__seen_layout = LAYOUT_SMIL
 		self.__fix_attributes(attributes)
-		id = self.__checkid(attributes)
 		if not self.__in_smil:
 			self.syntax_error('body not in smil')
 		if self.__seen_body:
@@ -1536,6 +1537,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			# We use these meta names for storing information such as snapshot
 			# and description in templates. Don't import them.
 			pass
+		elif name == 'project_boston':
+			content = content == 'on'
+			boston = self.__context.attributes.get('project_boston')
+			if boston is not None and content != boston:
+				self.syntax_error('conflicting project_boston attribute')
+			self.__context.attributes['project_boston'] = content
 		else:
 			if self.__warnmeta:
 				self.warning('unrecognized meta property', self.lineno)
