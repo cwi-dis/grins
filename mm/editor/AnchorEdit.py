@@ -1,18 +1,19 @@
-# Anchor editor
+# Anchor editor modeless dialog
+print 'import AnchorEdit'
 
-import MMExc
-import MMAttrdefs
+
 import fl
 import gl
 from FL import *
 import flp
 from Dialog import Dialog
 
+import MMExc
+import MMAttrdefs
+from MMNode import alltypes, leaftypes, interiortypes
 
-FORMWIDTH = 350
-FORMHEIGHT = 230
 
-formtemplate = None
+form_template = None
 
 
 def showanchoreditor(node):
@@ -28,7 +29,7 @@ def hideanchoreditor(node):
 	try:
 		anchoreditor = node.anchoreditor
 	except AttributeError:
-		return # No node info form active
+		return # No anchor editor for this node
 	anchoreditor.close()
 
 
@@ -43,14 +44,17 @@ class AnchorEditor(Dialog):
 		self.focus = None # None or 0...len(self.anchorlist)-1
 		self.changed = 0
 		#
+		global form_template
+		if form_template == None:
+		    form_template = flp.parse_form('AnchorEditForm', 'form')
+		#
+		width = form_template[0].Width
+		height = form_template[0].Height
 		title = self.maketitle()
-		self = Dialog.init(self, (FORMWIDTH, FORMHEIGHT, title, ''))
+		hint = ''
+		self = Dialog.init(self, width, height, title, hint)
 		#
-		global formtemplate
-		if formtemplate == None:
-		    formtemplate = flp.parse_form('AnchorEditForm', 'form')
-		#
-		flp.merge_full_form(self, self.form, formtemplate)
+		flp.merge_full_form(self, self.form, form_template)
 		#
 		return self
 
@@ -62,11 +66,11 @@ class AnchorEditor(Dialog):
 
 	def register(self, object):
 		if self.editmgr <> None:   # DEBUG
-		    self.editmgr.register(object)
+			self.editmgr.register(object)
 
 	def unregister(self, object):
 		if self.editmgr <> None:   # DEBUG
-		    self.editmgr.unregister(object)
+			self.editmgr.unregister(object)
 
 	def stillvalid(self):
 		return self.node.GetRoot() is self.root
@@ -75,18 +79,20 @@ class AnchorEditor(Dialog):
 		if not self.stillvalid():
 			self.close()
 		else:
+			self.settitle(self.maketitle())
 			self.getvalues(FALSE)
 			self.updateform()
-			self.title = self.maketitle()
-			gl.winset(self.form.window)
-			gl.wintitle(self.title)
 
 	def rollback(self):
 		pass
 
+	def kill(self):
+		self.close()
+		self.destroy()
+
 	def open(self):
 		self.close()
-		self.title = self.maketitle()
+		self.settitle(self.maketitle())
 		self.getvalues(TRUE)
 		self.updateform()
 		self.register(self)
@@ -222,6 +228,21 @@ class AnchorEditor(Dialog):
 		if self.focus == None:
 			print 'AnchorEdit: no focus in setloc!'
 		self.show_location()
+
+
+# Routine to close all attribute editors in a node and its context.
+
+def hideall(root):
+	hidenode(root)
+
+
+# Recursively close the attribute editor for this node and its subtree.
+
+def hidenode(node):
+	hideanchoreditor(node)
+	if node.GetType() in interiortypes:
+		for child in node.GetChildren():
+			hidenode(child)
 
 
 # Test program -- edit anchors of the root node
