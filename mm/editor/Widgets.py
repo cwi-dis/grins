@@ -127,6 +127,8 @@ class Widget:
 		self.parent = None	# Sometimes nodes have parents.
 		self.dirty = 1		# Do I need re-drawing?
 
+		self.name = "Nameless widget."
+
 	def draw(self, displist):
 		# For the base Widget, nothing will be drawn.
 		self.recalc()
@@ -221,6 +223,10 @@ class Widget:
 		if not self.root:
 			print "Error! Node has no root - should I be selected?"
 		self.root.dirty = 1
+		# DEBUG:
+		print "Selected: ", self
+		print "          coords: ", self.pos_abs
+		print self.name
 
 	def unselect(self):
 		self.selected = 0
