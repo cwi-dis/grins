@@ -360,6 +360,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			internalval = val
 			attrdict['qtchapter'] = internalval
 			return 1
+		elif key == 'composite-mode':
+			internalval = val
+			attrdict['qtcompositemode'] = internalval
+			return 1
 		
 		return 0
 				

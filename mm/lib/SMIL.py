@@ -183,6 +183,7 @@ class SMIL:
 			QTns+' ' 'system-mime-type-supported':None,			
 			QTns+' ' 'attach-timebase':None,			
 			QTns+' ' 'chapter':None,			
+			QTns+' ' 'composite-mode':None,			
 			},
 		'a': {'href':None,
 		      'id':None,

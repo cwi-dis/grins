@@ -500,7 +500,7 @@ class AnchorlistCtrl(AttrCtrl, AnchorList):
 		self._bplay = components.Button(wnd, grinsRC.IDC_PLAY)
 		self._bpause = components.Button(wnd, grinsRC.IDC_PAUSE)
 		self._bstop = components.Button(wnd, grinsRC.IDC_STOP)
-
+		
 	def OnInitCtrl(self):
 		self._initctrl = self
 		self._list.attach_to_parent()
@@ -1072,7 +1072,13 @@ class StringOptionsCtrl(AttrCtrl):
 
 class HtmlTemplateCtrl(StringOptionsCtrl):
 	def __init__(self,wnd,attr,resid):
-		options=['external_player.html','embedded_player.html']
+		import compatibility
+		import features
+		# for instance, only embedded_player is supported in QuickTime version
+		if compatibility.QT == features.compatibility:
+			options=['embedded_player.html']
+		else:
+			options=['external_player.html','embedded_player.html']
 		StringOptionsCtrl.__init__(self,wnd,attr,resid,options)
 
 	
@@ -2733,6 +2739,8 @@ class QTPlayerMediaPreferencesGroup(AttrGroup):
 		cd[a] = OptionsCheckNolabelCtrl(wnd,a,(grinsRC.IDC_ATTACHTIMEBASE,))
 		a = self.getattr('qtchapter')
 		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_GROUP1, grinsRC.IDC_QTCHAPTER,))	
+		a = self.getattr('qtcompositemode')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_GROUP1, grinsRC.IDC_QTCOMPOSITEMODE,))	
 		return cd
 
 	def getpageresid(self):

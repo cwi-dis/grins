@@ -62,7 +62,7 @@
 	'Start delay of node' normal common)
 
 (bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
-	'Color used for background of window' channel common)
+	'Color used for background of window' channel g2_light)
 #(bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
 #	'Color used for background of window. Overriden by "transparent".' channel light)
 
@@ -89,10 +89,10 @@
 	'Channels used in this document (root node only)' normal common)
 
 (clipbegin (string) '' 'Clip begin' default
-	'Start of range of frames to be played. Simplest form is "npt=3s".' channel g2_pro)
+	'Start of range of frames to be played. Simplest form is "npt=3s".' channel g2_pro_and_quicktime)
 
 (clipend (string) '' 'Clip end' default
-	'End of range of frames to be played. Simplest form is "npt=3s".' channel g2_pro)
+	'End of range of frames to be played. Simplest form is "npt=3s".' channel g2_pro_and_quicktime)
 
 (comment (string) '' 'Comment' default
 	 'A comment (authoring convenience only)' raw cmif)
@@ -201,10 +201,10 @@
 
 (project_audiotype (int) 0 'Audio type' audiotype
 	'Audio type, determines quality of audio when converting to RealAudio'
-	raw common)
+	raw g2_light)
 
 (project_convert (bool) 1 'Convert data' default
-	'Convert data to RealMedia format' raw g2_pro_and_quicktime)
+	'Convert data to RealMedia format' raw g2_pro)
 
 (project_ftp_host (string) '' 'Webserver' default
 	'FTP hostname to use for webpage upload' raw common)
@@ -228,23 +228,23 @@
 	'Template used to generate web page for this presentation' raw common)
 
 (project_mobile (bool) 0 'Mobile play' default
-	'Allow download' raw g2_pro_and_quicktime)
+	'Allow download' raw g2_pro)
 
 (project_perfect (bool) 1 'Perfect play' default
-	'Buffered playback' raw g2_pro_and_quicktime)
+	'Buffered playback' raw g2_pro)
 
 (project_quality (int) 75 'Image quality' quality
-	'Quality of image conversion to JPEG' raw common)
+	'Quality of image conversion to JPEG' raw g2_light)
 
 (project_smil_url (string) '' 'Mediaserver URL' default
 	'URL of SMIL document on the media server' raw common)
 
 (project_targets (int) 3 'Target audience' targets
-	'One or more bandwidths for which this item should be converted' raw common)
+	'One or more bandwidths for which this item should be converted' raw g2_light)
 
 (project_videotype (int) 0 'Video type' videotype
 	'Video type, determines quality of video when converting to RealVideo'
-	raw common)
+	raw g2_light)
 
 (queuesize (float) 0 'Queue size' default
 	'Audio playback queue size' channel cmif)
@@ -289,7 +289,7 @@
 	 'Window size for top level menu' raw common)
 
 (transparent (int) 0 'Transparent' transparency
-	'Determines transparency of window, overrides background color' raw g2_pro_and_quicktime)
+	'Determines transparency of window, overrides background color' raw g2_pro)
 
 (type (name) null 'Channel type' channeltype
 	'Type of media this channel will be used for' raw common)
@@ -451,3 +451,9 @@
 
 (qtchapter (string) '' 'Chapter' default
 	'Specify a chapter name' normal quicktime)
+
+(anchortarget (string) '' 'Target' default
+	'Specify where the presentation specified by the href attribute in the anchor tag will play' normal quicktime)
+
+(qtcompositemode (string) '' 'Composite mode' default
+	'Specifies how to composite a visual media element with other visual media elements behind it' normal quicktime)

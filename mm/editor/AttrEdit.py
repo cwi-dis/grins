@@ -412,6 +412,7 @@ class NodeWrapper(Wrapper):
 			namelist.append('systemmimetypesupported')
 			namelist.append('attachtimebase')
 			namelist.append('qtchapter')
+			namelist.append('qtcompositemode')
 			
 		if ntype == 'imm':
 			namelist.append('.values')

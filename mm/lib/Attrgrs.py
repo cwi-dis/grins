@@ -308,7 +308,9 @@ attrgrs=(
 		'systemmimetypesupported',
 		'attachtimebase',
 		'qtchapter',
+		'qtcompositemode',
 		]},
+	
 	)
 
 

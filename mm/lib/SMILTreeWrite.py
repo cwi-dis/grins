@@ -625,7 +625,7 @@ cmif_chan_attrs_ignore = {
 
 qt_node_attrs = {
 	'immediateinstantiationmedia':0,'bitratenecessary':0,'systemmimetypesupported':0,
-	'attachtimebase':0,'qtchapter':0,
+	'attachtimebase':0,'qtchapter':0,'qtcompositemode':0,
 	} 
 
 # Mapping from CMIF channel types to smil media types
@@ -895,6 +895,8 @@ class SMILWriter(SMIL):
 			if key == 'qtchaptermode':
 				continue
 			if key == 'immediateinstantiation':
+				continue
+			if key == 'qtcompositemode':
 				continue
 			self.writetag('meta', [('name', key),
 					       ('content', val)])
@@ -1408,6 +1410,8 @@ class SMILWriter(SMIL):
 					attrlist.append(('%s:attach-timebase' % NSQTprefix, intToEnumString(val,{0:'false',1:'true'})))
 			if key == 'qtchapter':
 				attrlist.append(('%s:chapter' % NSQTprefix, val))
+			if key == 'qtcompositemode':
+				attrlist.append(('%s:composite-mode' % NSQTprefix, val))
 
 	def writemedianode(self, x, attrlist, mtype):
 		# XXXX Not correct for imm
@@ -1565,16 +1569,12 @@ class SMILWriter(SMIL):
 				convert = MMAttrdefs.getattr(node, 'project_convert')
 		else:
 			convert = 1
-		# for instance, the conversion is turn off for QuickTime docucment.
-		# In order to supress a specific traitment, in future we should extend the attrdef management 
-		if compatibility.QT == features.compatibility:
-			convert = 0
 
 		if convert and u.headers.maintype == 'audio' and \
 		   string.find(u.headers.subtype, 'real') < 0:
-			from realconvert import convertaudiofile
+		 	from realconvert import convertaudiofile
 			# XXXX This is a hack. convertaudiofile may change the filename (and
-			# will, currently, to '.ra').
+		  	# will, currently, to '.ra').
 			if self.progress:
 				self.progress("Converting %s"%os.path.split(file)[1], None, None, None, None)
 				progress = (self.progress, ("Converting %s"%os.path.split(file)[1], None, None))

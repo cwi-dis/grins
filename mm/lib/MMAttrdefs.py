@@ -80,6 +80,15 @@ def readattrdefs(fp, filename):
 			if dict.has_key(attrname):
 			    if verbose:
 				print 'Warning: duplicate attr def', attrname
+		  
+			# WARNING: HACK
+			# for instance, the conversion is turn off for QuickTime docucment.
+			# In order to supress a specific traitment, in future we should extend the attrdef management 
+			import compatibility
+			import features
+			if compatibility.QT == features.compatibility and attrname == 'project_convert':
+				defaultvalue = 0
+				
 			dict[attrname] = typedef, defaultvalue, labeltext, \
 				displayername, helptext, inheritance, flags
 	except EOFError:
