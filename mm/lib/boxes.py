@@ -17,7 +17,7 @@ def create_box(window, msg, *box):
 		msg = msg + '\n\n' + message
 	else:
 		msg = message
-	dialog = dialogs.Dialog().init((msg, '!Done', 'Cancel'))
+	dialog = dialogs.Dialog((msg, '!Done', 'Cancel'))
 	while not box:
 		win, ev, val = windowinterface.readevent()
 		if win == window and ev == EVENTS.Mouse0Press:
