@@ -27,9 +27,9 @@
     </par>
     <GRiNS:assets skip-content="true">
      <switch id="mediaSelector" >
-         <seq GRiNS:emptyDur="10s" GRiNS:emptyText="320x240 video object (112K and above)." GRiNS:emptyColor="#c0c0c0" systemBitrate="112000">
+         <seq GRiNS:emptyDur="10s" GRiNS:emptyText="320x240 video object (112K and above)." GRiNS:emptyColor="#c0c0c0" systemBitrate="115200">
          </seq>
-         <seq GRiNS:emptyDur="10s" GRiNS:emptyText="240x180 video object (56K - 112K)." GRiNS:emptyColor="#c0c0c0" systemBitrate="56000">
+         <seq GRiNS:emptyDur="10s" GRiNS:emptyText="240x180 video object (56K - 112K)." GRiNS:emptyColor="#c0c0c0" systemBitrate="34400">
          </seq>
          <seq GRiNS:emptyDur="10s" GRiNS:emptyText="Image Set (less than 56K)." GRiNS:emptyColor="#c0c0c0">
          </seq>
