@@ -1,6 +1,7 @@
 
 #include "htmlex.h"
 #include "ContainerWnd.h"
+#include "GRiNSRes.h"
 
 
 static PyObject *HtmlExError;
@@ -16,13 +17,13 @@ PyObject *CallbackMap = NULL;
 #define ALL_CURSOR		    5
 
 
-char cmifClass[100]="";
+static char cmifClass[100]="";
 
-WNDPROC	orgProc;
-BOOL flag=FALSE;
+static WNDPROC	orgProc;
+static BOOL flag=FALSE;
 
-PyIMPORT CWnd *GetWndPtr(PyObject *);
-PyIMPORT CFrameWnd *GetFramePtr(PyObject *self);
+PYW_EXPORT CWnd *GetWndPtr(PyObject *);
+PYW_EXPORT CFrameWnd *GetFramePtr(PyObject *self);
 
 
 
@@ -36,7 +37,7 @@ extern "C" {
 
 
 
-LRESULT CALLBACK MyWndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK MyWndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
 
 	//HWND parent;
@@ -126,10 +127,10 @@ static PyObject* py_Html_CreateHtmlCtrl(PyObject *self, PyObject *Wnd)
 		rc.DeflateRect(0,0,0,st_bar_h);
 		
 		BOOL bRet = Container->m_html.Create(NULL, WS_VISIBLE|WS_BORDER|WS_CLIPSIBLINGS,
-						rc, Container, IDC_HTMLCTRL);
+						rc, Container, 3000); // NOTE: Magic number for thisID!!!!
 
 		Container->m_Status = CreateStatusWindow(WS_CHILD|WS_VISIBLE, "Status Bar", 
-						Container->m_hWnd, 31000); 
+						Container->m_hWnd, 31000);  // And this!
 
 		
 		SetWindowText(Container->m_Status, "Ready");
@@ -143,7 +144,7 @@ static PyObject* py_Html_CreateHtmlCtrl(PyObject *self, PyObject *Wnd)
 		CWaitCursor wait;
 		//create the Html control
 		BOOL bRet = Container->m_html.Create(NULL, WS_VISIBLE|WS_CLIPSIBLINGS ,
-						rc, Container, IDC_HTMLCTRL);
+						rc, Container, 3000);
 		
 		Container->m_Status = NULL;
 
@@ -394,7 +395,7 @@ static PyObject* py_CreateWindow(PyObject *self, PyObject *args)
 	TRACE("Window Handle %X\n", mainWnd->m_hWnd);
 	
 	if(cmifClass[0]==0)
-	strcpy(cmifClass, AfxRegisterWndClass(CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS, LoadCursor (NULL, IDC_ARROW), (HBRUSH) GetStockObject (WHITE_BRUSH), LoadIcon(NULL, MAKEINTRESOURCE(IDR_PYTHON))));
+	strcpy(cmifClass, AfxRegisterWndClass(CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS, LoadCursor (NULL, IDC_ARROW), (HBRUSH) GetStockObject (WHITE_BRUSH), AfxGetApp()->LoadIcon(MAKEINTRESOURCE(IDR_PYTHON))));
 
 	TRACE("Cmifclass is %s", cmifClass);
 		
@@ -622,7 +623,6 @@ static PyObject* py_FDlg(PyObject *self, PyObject *args)
 	char *title, *fname, *fltr;
 	char filename[256];
 	char filter[512];
-	char ext[256];
 	
 	if(!PyArg_ParseTuple(args, "sss", &title, &fname, &fltr))
 	{
@@ -742,7 +742,7 @@ static PyMethodDef HtmlExMethods[] =
 };
 
 
-PyEXPORT 
+__declspec(dllexport) 
 void initHtmlex()
 {
 	PyObject *m, *d;
