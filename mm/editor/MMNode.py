@@ -427,6 +427,9 @@ class MMNode(MMNodeBase.MMNode):
 		parent = self.parent
 		self.parent = None
 		parent.children.remove(self)
+		name = MMAttrdefs.getattr(self, 'name')
+		if name and MMAttrdefs.getattr(parent, 'terminator') == name:
+			parent.DelAttr('terminator')
 ##		parent._fixsummaries(self.summaries)
 
 	def AddToTree(self, parent, i):
@@ -752,49 +755,53 @@ class MMNode(MMNodeBase.MMNode):
 	def gensr_par(self):
 		in0, in1 = self.sync_from
 		out0, out1 = self.sync_to
-		if not self.wtd_children:
-			# Empty node needs special code:
-			return [
-			     ([(SCHED, self)]+in0,[(SCHED_DONE, self)]+out0),
-			     ([(SCHED_STOP, self)]+in1,out1),
-			     ([(TERMINATE, self)], [])], []
+		duration = MMAttrdefs.getattr(self, 'duration')
 		termtype = MMAttrdefs.getattr(self, 'terminator')
-		alist = []
+		alist = out0[:]
 		plist = []
 		slist = out1[:]
 		tlist = []
-		result = [([(SCHED_STOP, self)]+in1, slist),
+		result = [([(SCHED, self)] + in0, alist),
+			  ([(SCHED_STOP, self)]+in1, slist),
 			  ([(TERMINATE, self)], tlist)]
-		if termtype == 'LAST':
-			result.append((plist, [(SCHED_DONE, self)]))
-		else:
-			result.append((plist, []))
+		added_entry = 0
 		for arg in self.wtd_children:
 			alist.append((SCHED, arg))
 			slist.append((SCHED_STOP, arg))
 			tlist.append((TERMINATE, arg))
 			if termtype == 'FIRST' and Duration.get(arg) > 0:
+				added_entry = 1
 				result.append(([(SCHED_DONE, arg)],
 					       [(TERMINATE, self),
 						(SCHED_DONE, self)]))
 			elif termtype != 'FIRST' and \
 			     termtype != 'LAST' and \
 			     MMAttrdefs.getattr(arg, 'name') == termtype:
+				added_entry = 1
 				result.append(([(SCHED_DONE, arg)],
 					       [(TERMINATE, self),
 						(SCHED_DONE, self)]))
 			else:
 				plist.append((SCHED_DONE, arg))
-		duration = MMAttrdefs.getattr(self, 'duration')
+		if plist:
+			if not added_entry or termtype == 'LAST':
+				added_entry = 1
+				result.append((plist, [(SCHED_DONE, self)]))
+			else:
+				result.append((plist, []))
 		if duration > 0:
 			# if duration set, we must trigger a timeout
 			# and we must catch the timeout to terminate
 			# the node
-			result.append(([(SCHED, self) ] + in0,
-				       alist + out0 + [(SYNC, (duration, self))]))
-			result.append(([(SYNC_DONE, self)], [(TERMINATE, self)]))
-		else:
-			result.append(([(SCHED, self) ]+in0, alist+out0))
+			alist.append((SYNC, (duration, self)))
+			if not added_entry:
+				result.append(([(SYNC_DONE, self)],
+					       [(SCHED_DONE, self)]))
+			else:
+				result.append(([(SYNC_DONE, self)],
+					       [(TERMINATE, self)]))
+		elif not self.wtd_children:
+			alist.append((SCHED_DONE, self))
 		return result, self.wtd_children
 # 	#
 #	# gensr_arcs returns 4 lists of sync arc events: incoming head,
