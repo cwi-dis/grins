@@ -4,14 +4,6 @@ __version__ = "$Id$"
 # This is separated out of AnchorEdit because it is used by many other
 # modules (everything to do with following hyperlinks).
 
-# Indices of the fields of an anchor triple:
-A_ID    = 0
-A_TYPE  = 1
-A_ARGS  = 2
-A_TIMES = 3
-A_ACCESS= 4
-# XXX These cannot really be changed, much code relies on these values
-
 # Types:
 ATYPE_DEST   = 0	# The whole node is the anchor (destination-only anchor)
 ATYPE_AUTO   = 1	# Auto-firing anchor (fires when the node is done)

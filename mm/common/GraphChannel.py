@@ -76,8 +76,8 @@ class GraphChannel(ChannelWindow):
 		else:
 			self.armed_display.fgcolor(bgcolor)
 		for a in node.GetRawAttrDef('anchorlist', []):
-			b = self.armed_display.newbutton((0,0,1,1), times = a[A_TIMES])
-			self.setanchor(a[A_ID], a[A_TYPE], b, a[A_TIMES])
+			b = self.armed_display.newbutton((0,0,1,1), times = a.atimes)
+			self.setanchor(a.aid, a.atype, b, a.atimes)
 
 		return 1
 
