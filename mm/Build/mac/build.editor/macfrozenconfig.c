@@ -41,9 +41,6 @@ PERFORMANCE OF THIS SOFTWARE.
 
 
 /* -- ADDMODULE MARKER 1 -- */
-#ifndef inittime
-extern void inittime();
-#endif
 #ifndef initimgsgi
 extern void initimgsgi();
 #endif
@@ -140,6 +137,9 @@ extern void initColorPicker();
 #ifndef initimgjpeg
 extern void initimgjpeg();
 #endif
+#ifndef inittime
+extern void inittime();
+#endif
 #ifndef initsocket
 extern void initsocket();
 #endif
@@ -154,6 +154,9 @@ extern void initrma();
 #endif
 #ifndef initRes
 extern void initRes();
+#endif
+#ifndef initaudioop
+extern void initaudioop();
 #endif
 #ifndef initDlg
 extern void initDlg();
@@ -170,8 +173,8 @@ extern void initimgpgm();
 #ifndef initstruct
 extern void initstruct();
 #endif
-#ifndef initaudioop
-extern void initaudioop();
+#ifndef initproducer
+extern void initproducer();
 #endif
 #ifndef initMacOS
 extern void initMacOS();
@@ -183,7 +186,6 @@ extern void initimp();
 struct _inittab _PyImport_Inittab[] = {
 
 /* -- ADDMODULE MARKER 2 -- */
-	{"time", inittime},
 	{"imgsgi", initimgsgi},
 	{"imgcolormap", initimgcolormap},
 	{"imageop", initimageop},
@@ -216,17 +218,19 @@ struct _inittab _PyImport_Inittab[] = {
 	{"imgpbm", initimgpbm},
 	{"ColorPicker", initColorPicker},
 	{"imgjpeg", initimgjpeg},
+	{"time", inittime},
 	{"socket", initsocket},
 	{"math", initmath},
 	{"imgppm", initimgppm},
 	{"rma", initrma},
 	{"Res", initRes},
+	{"audioop", initaudioop},
 	{"Dlg", initDlg},
 	{"cStringIO", initcStringIO},
 	{"imgtiff", initimgtiff},
 	{"imgpgm", initimgpgm},
 	{"struct", initstruct},
-	{"audioop", initaudioop},
+	{"producer", initproducer},
 	{"MacOS", initMacOS},
 
 	/* This module "lives in" with marshal.c */
