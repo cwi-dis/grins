@@ -656,7 +656,7 @@ def writeRP(file, rp, node):
 	endtime = _calcdur(rp.tags)
 	if rp.duration and rp.duration < endtime:
 		import windowinterface
-		windowinterface.showmessage('Duration for RealPix node %s on channel %s too short to accomodate all transitions\n(duration = %g, required: %g)' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName(), rp.duration, start + duration), mtype = 'warning')
+		windowinterface.showmessage('Duration for RealPix node %s on channel %s too short to accomodate all transitions\n(duration = %g, required: %g)' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName(), rp.duration, endtime), mtype = 'warning')
 	f.write(sep+'duration="%g"' % (rp.duration or endtime))
 	f.write(sep+'bitrate="%d"' % rp.bitrate)
 	f.write(sep+'width="%d"' % rp.width)
