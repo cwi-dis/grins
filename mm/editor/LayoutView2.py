@@ -623,6 +623,9 @@ class LayoutView2(LayoutViewDialog2):
 		if len(viewportToAppendList) > 0 or len(viewportToRemoveList) > 0:
 			self.fillViewportListOnDialogBox()
 		# the other properties will be refreshed with a selection
+
+		# update selection
+		self.select(self.currentViewport)
 			
 	def addRegion(self, regionRef, parentRef):
 		# update data structure
@@ -649,6 +652,8 @@ class LayoutView2(LayoutViewDialog2):
 		regionNode.hide()
 		parentNode = regionNode.getParent()
 		parentNode.removeNode(regionNode)
+		if regionNode == self.currentNodeSelected:
+			self.currentNodeSelected = parentNode
 
 		# update data struture
 		viewportNode = regionNode.getViewport()
@@ -662,12 +667,9 @@ class LayoutView2(LayoutViewDialog2):
 		del self._viewportsRegions[viewportId]
 					 
 	def commit(self, type):
-		if type == 'REGION_TREE':
+		if type not in ('REGION_GEOM', 'MEDIA_GEOM'):
 			self.treeMutation()
-		else:
-			# we have to update the tree
-			# note: in this case, the tree structure hasn't changed
-			self.updateRegionTree()
+		self.updateRegionTree()
 
 	def isValidMMNode(self, node):
 		if node == None:
