@@ -456,6 +456,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				dur = ' dur="indefinite"'
 			else:
 				dur = ''
+			self.new_file = 1
 			self.root = SMILTreeRead.ReadString('''\
 <smil>
   <body>
