@@ -188,7 +188,9 @@ echo -x wmfapi >> FreezeOpts
 rem EXCLUDE_WHAT
 echo -x %EXCLUDE_WHAT% >> FreezeOpts
 
-%PYTHON_EXE% -O -c "import MMAttrdefs" >> log.txt
+rem make sure Attrdefs.py is up to date
+rem do not use python -O for this
+%PYTHON_EXE% -c "import MMAttrdefs" >> log.txt
 
 %PYTHON_EXE% -O %COMPILE% >> log.txt
 
