@@ -288,16 +288,18 @@ def fix_anchorlist(node, taglist):
 
 # Map a possibly symbolic font name to a real font name and default point size
 
-fontmap = { \
-	'':		('Times-Roman', 12), \
-	'default':	('Times-Roman', 12), \
-	'plain':	('Times-Roman', 12), \
-	'italic':	('Times-Italic', 12), \
-	'bold':		('Times-Bold', 12), \
-	'courier':	('Courier', 12), \
-	'bigbold':	('Times-Bold', 14), \
-	'title':	('Times-Bold', 24), \
-	  }
+fontmap = {
+	'':		('Times-Roman', 12),
+	'default':	('Times-Roman', 12),
+	'plain':	('Times-Roman', 12),
+	'italic':	('Times-Italic', 12),
+	'bold':		('Times-Bold', 12),
+	'courier':	('Courier', 12),
+	'bigbold':	('Times-Bold', 14),
+	'title':	('Times-Bold', 24),
+	'greek':	('Greek', 14),
+	'biggreek':	('Greek', 17),
+	}
 
 def mapfont(fontname):
 	if fontmap.has_key(fontname):
