@@ -738,6 +738,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					attrdict['erase'] = val
 				else:
 					self.syntax_error("bad %s attribute" % attr)
+			elif attr == 'mediaRepeat':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				if val in ('strip', 'preserve'):
+					attrdict['mediaRepeat'] = val
+				else:
+					self.syntax_error("bad %s attribute" % attr)
 			elif attr == 'color' and node.__chantype == 'brush':
 				fg = self.__convert_color(val)
 				if type(fg) is not type(()):
@@ -3899,6 +3907,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.EndAnimateNode()
 
 	def start_param(self, attributes):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('param not compatible with SMIL 1.0')
+		self.__context.attributes['project_boston'] = 1
+		self.__fix_attributes(attributes)
+		id = self.__checkid(attributes)
+		vtype = attributes.get('valuetype', 'data')
+		if vtype not in ('data', 'ref', 'object'):
+			self.syntax_error('illegal value for valuetype attribute')
 		pass			# XXX needs to be implemented
 
 	def end_param(self):
