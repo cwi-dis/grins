@@ -4,9 +4,9 @@
 struct DIBSurf
 	{
 	HBITMAP m_hBmp;
-	surface<le::trible> *m_psurf;
+	surface<color_repr_t> *m_psurf;
 
-	DIBSurf(HBITMAP hBmp = NULL, surface<le::trible> *psurf = NULL)
+	DIBSurf(HBITMAP hBmp = NULL, surface<color_repr_t> *psurf = NULL)
 	: m_hBmp(hBmp), m_psurf(psurf) {}
 
 	~DIBSurf()
@@ -16,10 +16,10 @@ struct DIBSurf
 		if(m_hBmp != NULL)
 			DeleteObject(m_hBmp);
 		}
-	surface<le::trible> *get_pixmap() { return m_psurf;}
+	surface<color_repr_t> *get_pixmap() { return m_psurf;}
 	
 	HBITMAP detach_handle() {HBITMAP hBmp = m_hBmp; m_hBmp = NULL; return hBmp;}
-	surface<le::trible>* detach_pixmap() {surface<le::trible> *psurf = m_psurf; m_psurf = NULL; return psurf;}
+	surface<color_repr_t>* detach_pixmap() {surface<color_repr_t> *psurf = m_psurf; m_psurf = NULL; return psurf;}
 	};
 
 typedef void (*ERROR_FUNCT)(const char *, const char *);
@@ -42,7 +42,7 @@ class ImgDecoder
 	ERROR_FUNCT m_ef;
 	};
 
-inline BITMAPINFO* GetBmpInfo24(int width, int height)
+inline BITMAPINFO* GetBmpInfo(int width, int height, int depth)
 	{
 	static BITMAPINFO bmi;
 	BITMAPINFOHEADER& h = bmi.bmiHeader;
@@ -51,7 +51,7 @@ inline BITMAPINFO* GetBmpInfo24(int width, int height)
     h.biWidth = width;
     h.biHeight = height;
     h.biPlanes = 1;
-    h.biBitCount = 24;
+    h.biBitCount = depth;
     h.biCompression = BI_RGB;
     h.biSizeImage = 0;
     h.biXPelsPerMeter = 0;
@@ -61,6 +61,5 @@ inline BITMAPINFO* GetBmpInfo24(int width, int height)
 	memset(&bmi.bmiColors[0], 0, sizeof(RGBQUAD));
 	return &bmi;
 	}
-
 
 #endif // INC_PARSE_I
