@@ -141,7 +141,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		fontname, pointsize = mapfont(fontspec)
 		fontobj = windowinterface.findfont(fontname, pointsize)
 		num, face, size = fontobj._getinfo()
-		htmlw.setfonts(num, num, size)
+		htmlw.setfonts(num, None, size)
 
 		bg = self.played_display._bgcolor
 		fg = self.played_display._fgcolor
