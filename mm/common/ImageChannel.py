@@ -15,9 +15,9 @@ class ImageWindow() = ChannelWindow():
 	# Initialization function.
 	#
 	def init(self, (title, attrdict)):
-		self.parray = None
-		self.xsize = self.ysize = 0
-		return ChannelWindow.init(self, (title, attrdict))
+		self = ChannelWindow.init(self, (title, attrdict))
+		self.clear()
+		return self
 	#
 	def show(self):
 		if self.wid <> 0: return
@@ -30,21 +30,31 @@ class ImageWindow() = ChannelWindow():
 		self.render()
 	#
 	def clear(self):
+		self.node = None
 		self.parray = None
 		self.xsize = self.ysize = 0
+		self.setcolors()
 		if self.wid <> 0:
 			gl.winset(self.wid)
-			gl.RGBcolor(255, 255, 255)
+			gl.RGBcolor(self.bgcolor)
 			gl.clear()
 	#
-	def setimage(self, (filename, scale)):
+	def setcolors(self):
+		if self.attrdict.has_key('bgcolor'):
+			self.bgcolor = self.attrdict['bgcolor']
+		else:
+			self.bgcolor = 255, 255, 255
+	#
+	def setimage(self, (filename, node)):
 		self.parray = None
 		try:
 			self.xsize, self.ysize = image.imgsize(filename)
 		except:
 			print 'Cannot get size of image file', `filename`
 			return
-		self.scale = scale
+		self.node = node
+		self.scale = MMAttrdefs.getattr(node, 'scale')
+		self.bgcolor = MMAttrdefs.getattr(node, 'bgcolor')
 		tempfile = image.cachefile(filename)
 		f = open(tempfile, 'r')
 		f.seek(8192)
@@ -54,7 +64,7 @@ class ImageWindow() = ChannelWindow():
 			self.render()
 	#
 	def render(self):
-		gl.RGBcolor(255, 255, 255)
+		gl.RGBcolor(self.bgcolor)
 		gl.clear()
 		if self.parray:
 			width, height = gl.getsize()
@@ -73,8 +83,8 @@ class ImageChannel() = Channel():
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
 	#
-	chan_attrs = ['winsize', 'winpos', 'scale']
-	node_attrs = ['file', 'wait_for_close', 'duration']
+	chan_attrs = ['winsize', 'winpos']
+	node_attrs = ['file', 'duration', 'bgcolor', 'scale']
 	#
 	def init(self, (name, attrdict, player)):
 		self = Channel.init(self, (name, attrdict, player))
@@ -120,8 +130,7 @@ class ImageChannel() = Channel():
 		self.window.clear()
 	#
 	def showimage(self, node):
-		scale = MMAttrdefs.getattr(node, 'scale')
-		self.window.setimage(self.getfilename(node), scale)
+		self.window.setimage(self.getfilename(node), node)
 	#
 	def getfilename(self, node):
 		# XXX Doesn't use self...
