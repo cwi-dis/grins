@@ -88,7 +88,10 @@ static struct PyMethodDef winmm_methods[] = {
 	{"WaveOutFromHandle", (PyCFunction)Winmm_WaveOutFromHandle, METH_VARARGS, ""},
 	{"SndPlaySound", (PyCFunction)SndPlaySound, METH_VARARGS, ""},
 	{"SndStopSound", (PyCFunction)SndStopSound, METH_VARARGS, ""},
+
 	{"CreateVideoPlayerFromFile", (PyCFunction)Winmm_CreateVideoPlayerFromFile, METH_VARARGS, ""},
+	{"GXOpenDisplay", (PyCFunction)Winmm_GXOpenDisplay, METH_VARARGS, ""},
+	{"GXCloseDisplay", (PyCFunction)Winmm_GXCloseDisplay, METH_VARARGS, ""},
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 };
 
