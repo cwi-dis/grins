@@ -600,9 +600,6 @@
 (qtchapter (string) '' 'Chapter' default
 	'Specify a chapter name' normal (advanced qt_pro))
 
-(anchortarget (string) '' 'Target' default
-	'Specify where the presentation specified by the href attribute in the anchor tag will play' normal (advanced qt_pro))
-
 (qtcompositemode (string) '' 'Composite mode' default
 	'Specifies how to composite a visual media element with other visual media elements behind it' normal (advanced qt_pro))
 
