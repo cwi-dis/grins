@@ -185,9 +185,12 @@ class TopLevel(TopLevelDialog):
 ##		t0 = time.time()
 		import urlcache
 		mtype = urlcache.mimetype(self.filename)
-		if mtype not in ('application/x-grins-project', 'application/smil'):
-			if windowinterface.showquestion('MIME type not application/smil or application/x-grins-project.\nOpen as SMIL document anyway?'):
+		if mtype not in ('application/x-grins-project', 'application/smil', 'application/x-grins-binary-project'):
+			ans = windowinterface.GetYesNoCancel('MIME type not application/smil or application/x-grins-project.\nOpen as SMIL document anyway?')
+			if ans == 0:	# yes
 				mtype = 'application/smil'
+			elif ans == 2:	# cancel
+				raise IOError('user request')
 		if mtype in ('application/x-grins-project', 'application/smil'):
 			# init progress dialog
 			if mtype == 'application/smil':
@@ -213,6 +216,9 @@ class TopLevel(TopLevelDialog):
 			# the progress dialog will desapear
 			self.progress = None
 			
+		elif mtype == 'application/x-grins-binary-project':
+			import QuickRead
+			self.root = QuickRead.ReadFile(self.filename)
 ##		elif mtype == 'application/x-grins-cmif':
 ##			import MMRead
 ##			self.root = MMRead.ReadFile(self.filename)

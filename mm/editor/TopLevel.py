@@ -99,7 +99,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			mtype = MMmimetypes.guess_type(url)[0]
 		else:
 			mtype = urlcache.mimetype(url)
-		if mtype in ('application/x-grins-project', 'application/smil'):
+		if mtype in ('application/x-grins-project', 'application/smil', 'application/x-grins-binary-project'):
 			self.basename = posixpath.splitext(base)[0]
 		else:
 			self.basename = base
@@ -662,7 +662,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			else:
 				cwd = os.getcwd()
 		title = 'Save GRiNS project:'
-		filetypes = ['application/x-grins-project']
+		filetypes = ['application/x-grins-project', 'application/x-grins-binary-project']
 		if prune:
 			filetypes = ['application/smil']
 			title = 'Save SMIL file:'
@@ -1076,7 +1076,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			# remote file
 			self.dirname = ''
 		mtype = urlcache.mimetype(self.filename)
-		if mtype in ('application/x-grins-project', 'application/smil'):
+		if mtype in ('application/x-grins-project', 'application/smil', 'application/x-grins-binary-project'):
 			self.basename = posixpath.splitext(base)[0]
 		else:
 			self.basename = base
@@ -1161,37 +1161,41 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			progress = None
 			exporttype = None
 
-		try:
-			import SMILTreeWrite
+		if mimetype == 'application/x-grins-binary-project':
+			import QuickWrite
+			QuickWrite.WriteFile(self.root, filename)
+		else:
 			try:
-				SMILTreeWrite.WriteFile(self.root, filename,
-							grinsExt = grinsExt,
-							qtExt = qtExt,
-							rpExt = rpExt,
-							copyFiles = copyfiles,
-							convertfiles = convertfiles,
-							convertURLs = 1,
-							evallicense = evallicense,
-							progress = progress,
-							prune = self.prune,
-							smil_one = smil_one)
-			finally:
-				self.prune = 0
-		except IOError, msg:
-			if exporting:
-				operation = 'Publish'
-			else:
-				operation = 'Save'
-			windowinterface.showmessage('%s failed:\n%s'%(operation, msg))
-			return 0
-		except KeyboardInterrupt:
-			# Clear exception:
-			try:
-				raise 'foo'
-			except:
-				pass
-			windowinterface.showmessage('Publish interrupted.')
-			return 0
+				import SMILTreeWrite
+				try:
+					SMILTreeWrite.WriteFile(self.root, filename,
+								grinsExt = grinsExt,
+								qtExt = qtExt,
+								rpExt = rpExt,
+								copyFiles = copyfiles,
+								convertfiles = convertfiles,
+								convertURLs = 1,
+								evallicense = evallicense,
+								progress = progress,
+								prune = self.prune,
+								smil_one = smil_one)
+				finally:
+					self.prune = 0
+			except IOError, msg:
+				if exporting:
+					operation = 'Publish'
+				else:
+					operation = 'Save'
+				windowinterface.showmessage('%s failed:\n%s'%(operation, msg))
+				return 0
+			except KeyboardInterrupt:
+				# Clear exception:
+				try:
+					raise 'foo'
+				except:
+					pass
+				windowinterface.showmessage('Publish interrupted.')
+				return 0
 		if sys.platform == 'mac':
 			import macostools
 			macostools.touched(filename)
@@ -1409,7 +1413,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##		print 'parsing', filename, '...'
 ##		t0 = time.time()
 		mtype = urlcache.mimetype(filename)
-		if mtype not in ('application/x-grins-project', 'application/smil'):
+		if mtype not in ('application/x-grins-project', 'application/smil', 'application/x-grins-binary-project'):
 			if windowinterface.showquestion('MIME type not application/smil or application/x-grins-project.\nOpen as SMIL document anyway?'):
 				mtype = 'application/smil'
 		if mtype in ('application/smil', 'application/x-grins-project'):
@@ -1450,6 +1454,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##					# XXXX Not sure about this, this may mess up code in read_it
 ##					self.new_file = 1
 
+		elif mtype == 'application/x-grins-binary-project':
+			import QuickRead
+			self.root = QuickRead.ReadFile(filename)
 		else:
 			if sys.platform == 'win32':
 				# XXX: experimental code
