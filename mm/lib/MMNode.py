@@ -441,7 +441,7 @@ class MMNodeContext:
 		return not self._isgoodlink(link)
 
 	def _isgoodlink(self, link):
-		a1, a2, dir, ltype = link
+		a1, a2, dir, ltype, stype, dtype = link
 		if type(a1) is type(()):
 			uid1, aid1 = a1
 			srcok = (self.uidmap.has_key(uid1) and
