@@ -24,9 +24,16 @@ class ChannelMap:
 	has_key = channelmap.has_key
 	keys = channelmap.keys
 
+	def __init__(self):
+		self.channelmodules = {} # cache of imported channels
+
 	def __getitem__(self, key):
+		try:
+			return self.channelmodules[key]
+		except KeyError:
+			pass
 		item = self.channelmap[key]
-		if type(item) == type(''):
+		if type(item) is type(''):
 			item = [item]
 		for chan in item:
 			try:
@@ -35,9 +42,12 @@ class ChannelMap:
 			except ImportError, arg:
 				print 'Warning: cannot import channel %s: %s' % (chan, arg)
 			else:
-				return eval(chan)
+				mod = eval(chan)
+				self.channelmodules[key] = mod
+				return mod
 		# no success, use NullChannel as backup
 		exec 'from NullChannel import NullChannel'
+		self.channelmodules[key] = NullChannel
 		return NullChannel
 
 channelmap = ChannelMap()
