@@ -3095,6 +3095,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			attrdict['base_window'] = self.__viewport
 			self.__childregions[self.__viewport].append(id)
 		else:
+			if settings.activeFullSmilCss:
+				attrdict['base_window'] = layout_name
 #			if not self.__tops.has_key(None):
 #				attrs = {}
 #				for key, val in self.attributes['root-layout'].items():
