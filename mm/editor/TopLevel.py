@@ -91,7 +91,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		context = self.root.GetContext()
 		parseErrors = context.getParseErrors()
 		if parseErrors != None:
-			ret = windowinterface.GetYesNoCancel("The source document contains some errors.\nDo you wish to accept GRiNS' automatic fixes", self.window)
+			ret = windowinterface.GetYesNoCancel("The source document contains some errors.\nDo you wish to accept GRiNS' automatic fixes?", self.window)
 			if ret == 0: # yes
 				# accept the errors automatically fixed by GRiNS
 				context.setParseErrors(None)
