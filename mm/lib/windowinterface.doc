@@ -207,10 +207,11 @@ The methods of the window_object are:
 		Remove the outline of the window.
 		[ non-essential ]
 
-	getgeometry() -> x, y, width, height
-		Return the current size of the window.  For a
-		toplevel window, this returns the size in mm, for a
-		subwindow, this returns the size in fractions.
+	getgeometry(units = UNIT_MM) -> x, y, width, height
+		Return the current size of the window.  For a toplevel
+		window, this returns the size in mm (or whatever units
+		are specified), for a subwindow, this returns the size
+		in fractions.
 		[ can return original sizes ]
 
 	fgcolor(color)
@@ -332,11 +333,6 @@ The display object has the following methods:
 		actual window contents changes.
 		After a display object has been rendered, no more
 		changes can be made to it.
-
-	render_now()
-		The same as render().  (The Mac implementation has
-		some special requirements which made this function
-		necessary.)
 
 	clone() -> new_display_object
 		Create a new display object which is a copy of the
