@@ -34,6 +34,7 @@ import grinsRC
 from DisplayList import DisplayList
 
 import win32mu
+import usercmd,wndusercmd,usercmdui
 
 # constants to select web browser control
 [IE_CONTROL, WEBSTER_CONTROL]=0, 1
@@ -384,8 +385,12 @@ class _CmifStructView(_CmifView):
 
 	def OnCreate(self,params):
 		_CmifView.OnCreate(self,params)
-		# enable drag and drop
-		# self.dragAcceptFiles()
+		# enable mechanism to accept paste files
+		# when the event PasteFile is registered
+		id=usercmdui.class2ui[wndusercmd.PASTE_FILE].id
+		frame=self.GetParent().GetMDIFrame()
+		frame.HookCommand(self.OnPasteFile,id)
+		frame.HookCommandUpdate(self.OnUpdateEditPaste,id)
 
 	def PaintOn(self,dc):
 		# only paint the rect that needs repainting
