@@ -1217,19 +1217,12 @@ class LayoutView2(LayoutViewDialog2):
 		if self.editmgr.transaction():
 			self.editmgr.addchannel(name, 0, 'layout')
 			self.editmgr.setchannelattr(name, 'base_window', parentId)
-			self.editmgr.setchannelattr(name, 'transparent', 1)
-			self.editmgr.setchannelattr(name, 'center', 0)
-			self.editmgr.setchannelattr(name, 'drawbox', 0)
-			self.editmgr.setchannelattr(name, 'z', -1)
 			self.editmgr.commit('REGION_TREE')
 
 	def applyNewViewport(self, name):
 		if self.editmgr.transaction():
 			self.editmgr.addchannel(name, 0, 'layout')
 			self.editmgr.setchannelattr(name, 'transparent', 0)
-			self.editmgr.setchannelattr(name, 'center', 0)
-			self.editmgr.setchannelattr(name, 'drawbox', 0)
-			self.editmgr.setchannelattr(name, 'z', -1)
 			self.editmgr.setchannelattr(name, 'winsize', (400, 400))
 			self.editmgr.setchannelattr(name, 'units', UNIT_PXL)									
 			self.editmgr.commit('REGION_TREE')
