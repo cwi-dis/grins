@@ -234,6 +234,12 @@ attrgrs=(
 		'direction',
 		]},
 
+	{'name':'anchorlist',
+	'title':'Anchors',
+	'attrs':[
+		'.anchorlist',
+		]},
+
 	)
 
 
