@@ -53,9 +53,8 @@ class _LayoutView2(GenFormView):
 		self.__ctrlNames=n=('ViewportSel','RegionSel','RegionX','RegionY',
 							'RegionW','RegionH','RegionZ', 'ShowNames',
 							'AsOutLine',
-#							'RegionList',
 							'ShowRbg', 'SendBack', 'BringFront', 'MediaSel',
-							'ViewportCheck','RegionCheck','MediaCheck')
+							'ViewportCheck','RegionCheck','MediaCheck','HideRegion','HideMedia')
 		if features.CUSTOM_REGIONS in features.feature_set:
 			n = n + ('NewRegion', 'DelRegion', 'NewView')
 			
@@ -69,7 +68,6 @@ class _LayoutView2(GenFormView):
 		self[n[i]]=components.Edit(self,grinsRC.IDC_LAYOUT_REGION_Z); i=i+1
 		self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_NAMES); i=i+1
 		self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_AS_OUTLINE); i=i+1
-#		self[n[i]]=components.ListBox(self,grinsRC.IDC_LAYOUT_REGIONLIST); i=i+1
 		self[n[i]]=components.CheckButton(self,grinsRC.IDC_LAYOUT_SHOW_RBG); i=i+1
 		self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_SENDBACK); i=i+1
 		self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_BRINGFRONT); i=i+1
@@ -77,6 +75,8 @@ class _LayoutView2(GenFormView):
 		self[n[i]]=components.RadioButton(self,grinsRC.IDC_LAYOUT_VIEWPORT_RADIO); i=i+1
 		self[n[i]]=components.RadioButton(self,grinsRC.IDC_LAYOUT_REGION_RADIO); i=i+1
 		self[n[i]]=components.RadioButton(self,grinsRC.IDC_LAYOUT_MEDIA_RADIO); i=i+1
+		self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_HIDEREGION); i=i+1
+		self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_HIDEMEDIA); i=i+1
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_NEWREGION); i=i+1
 			self[n[i]]=components.Button(self,grinsRC.IDC_LAYOUT_DELREGION); i=i+1
@@ -230,14 +230,14 @@ class _LayoutView2(GenFormView):
 				return
 
 			# multi selection ctrl			
-			if id == self['RegionList']._id:
-				ctrlName = 'RegionList'
-			if ctrlName != None:
-				self[ctrlName].callcb()
-				itemNumber = self[ctrlName].getselcount()
-				items = self[ctrlName].getselitems(itemNumber)
-				self._dialogHandler.onMultiSelCtrl(ctrlName, items)				
-				return
+#			if id == self['RegionList']._id:
+#				ctrlName = 'RegionList'
+#			if ctrlName != None:
+#				self[ctrlName].callcb()
+#				itemNumber = self[ctrlName].getselcount()
+#				items = self[ctrlName].getselitems(itemNumber)
+#				self._dialogHandler.onMultiSelCtrl(ctrlName, items)				
+#				return
 		
 		if nmsg==win32con.BN_CLICKED:
 			ctrlName = None
@@ -264,6 +264,10 @@ class _LayoutView2(GenFormView):
 				ctrlName = 'SendBack'
 			elif id == self['BringFront']._id:
 				ctrlName = 'BringFront'
+			elif id == self['HideRegion']._id:
+				ctrlName = 'HideRegion'
+			elif id == self['HideMedia']._id:
+				ctrlName = 'HideMedia'
 			if ctrlName == None:
 				if features.CUSTOM_REGIONS in features.feature_set:
 					if id == self['NewRegion']._id:
