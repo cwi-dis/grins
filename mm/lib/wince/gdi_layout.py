@@ -17,13 +17,15 @@ class Region(base_window.Window):
 		
 		# create the window
 		self.create(parent, coordinates, units, z, transparent, bgcolor)
+		if self._topwindow:
+			self._canvas = self._topwindow.LRtoDR(self._canvas, round = 1)
 						
 	def __repr__(self):
 		return '<Region instance at %x>' % id(self)
 		
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, units = None, bgcolor=None):
 		return Region(self, coordinates, transparent, z, units, bgcolor)
-
+	
 	def close(self):
 		if self._parent is None:
 			return
@@ -43,11 +45,32 @@ class Region(base_window.Window):
 
 	def update(self, rc = None):
 		if self._topwindow and self._topwindow != self:
-			self._topwindow.update()
+			if rc is None:
+				rc = self.getwindowpos()
+			self._topwindow.update(rc)
+	
+	def getDR(self):
+		rc = self.getwindowpos()
+		return self._topwindow.LRtoDR(rc, round = 1)
+
+	def getClipDR(self, dc):
+		# dc box
+		ltrb1 = dc.GetClipBox()
+
+		# clip to parent
+		ltrb2a = winstruct.ltrb(self.getwindowpos())
+		ltrb2b = winstruct.ltrb(self._parent.getwindowpos())
+		ltrb2 = winstruct.rectAnd(ltrb2a, ltrb2b)
+		if ltrb2 is None: return None
+		ltrb2 = self._topwindow.LRtoDR(ltrb2, round = 1)
+
+		# common box
+		return winstruct.rectAnd(ltrb1, ltrb2)
 
 	def _paintOnDC(self, dc):
-		rc = self.getwindowpos()
-		ltrb = winstruct.ltrb(rc)
+		ltrb = self.getClipDR(dc)
+		if ltrb is None:
+			return
 		if self._active_displist:
 			entry = self._active_displist._list[0]
 			bgcolor = None
@@ -62,7 +85,7 @@ class Region(base_window.Window):
 				dc.SelectObject(old_brush)
 				wingdi.DeleteObject(brush)
 			self._active_displist._render(dc, ltrb, start=1)
-			if 1 or self._showing:
+			if self._showing:
 				brush =  wingdi.CreateSolidBrush((255, 0, 0))
 				dc.FrameRect(ltrb, brush)
 				wingdi.DeleteObject(brush)
@@ -95,13 +118,19 @@ class Viewport(Region):
 		
 		# adjust some variables
 		self._topwindow = self
-		
+		self._canvas = self.LRtoDR(self._canvas, round = 1)
+
 		# viewport context (here an os window) 
 		self._ctx = context
 		
+		# scaling
+		self._device2logical = self._ctx._d2l
+			
+		self._bgbrush = wingdi.CreateSolidBrush(bgcolor)
+			
 		# init bmp 
-		w, h = coordinates[2:]
-		self._bmp = self.createBmp(w, h)
+		wd, hd = self.LPtoDP(coordinates[2:])
+		self._backBuffer = self.createSurface(wd, hd, bgcolor)
 			
 	def __repr__(self):
 		return '<Viewport instance at %x>' % id(self)
@@ -130,6 +159,12 @@ class Viewport(Region):
 		del self._topwindow
 		ctx.update()
 
+		#
+		if self._bgbrush:
+			wingdi.DeleteObject(self._bgbrush)
+		self._bgbrush = 0
+
+
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, units = None, bgcolor=None):
 		return Region(self, coordinates, transparent, z, units, bgcolor)
 	newcmwindow = newwindow
@@ -146,37 +181,42 @@ class Viewport(Region):
 	# 
 	# Painting section
 	#
-	def createBmp(self, w, h):
+	def createSurface(self, w, h, bgcolor):
 		if self.is_closed(): return
 		wnd = self._ctx
 		dc = wingdi.CreateDCFromHandle(wnd.GetDC())
-		bmp = dc.CreateCompatibleBitmap(w, h)
+		surf = wingdi.CreateDIBSurface(dc, w, h, bgcolor)
 		wnd.ReleaseDC(dc.Detach())
-		return bmp
+		return surf
 	
-	def getBmp(self):
-		return self._bmp
+	def getBackBuffer(self):
+		return self._backBuffer
 
 	def update(self, rc=None):
-		if self._ctx is None or self._bmp is None: 
+		if self._ctx is None or self._backBuffer is None: 
 			return
-		wnd = self._ctx
+		if rc is None:
+			rc = self._viewport.getwindowpos()
+		self._ctx.update(rc)
+
+	def paint(self, dc):
+		ltrb = dc.GetClipBox()
+		old_brush = dc.SelectObject(self._bgbrush)
+		dc.Rectangle(ltrb)
+		dc.SelectObject(old_brush)
 		
-		# prepare
-		dc = wingdi.CreateDCFromHandle(wnd.GetDC())
+		L = self._subwindows[:]
+		L.reverse()
+		for w in L:
+			w.paint(dc)
+
+	def paintSurfAt(self, dc, surf, pos):
 		dcc = dc.CreateCompatibleDC()
-		oldbmp = dcc.SelectObject(self._bmp)
-		
-		# do paint
-		self.paint(dcc)
-
-		# cleanup
-		dcc.SelectObject(oldbmp)
+		bmp = dcc.SelectObject(surf)
+		dc.BitBlt(pos, surf.GetSize(), dcc, (0, 0), wincon.SRCCOPY)
+		dcc.SelectObject(bmp)
 		dcc.DeleteDC()
-		wnd.ReleaseDC(dc.Detach())
-
-		# finally update screen
-		self._ctx.update()
+	
 	# 
 	# Mouse section
 	# 
@@ -214,3 +254,4 @@ class Viewport(Region):
 		self.setcursor(self._cursor)
 
 
+	
