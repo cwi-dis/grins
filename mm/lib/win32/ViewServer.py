@@ -39,21 +39,22 @@ import usercmdui
 import sysmetrics
 
 if appcon.IsPlayer:
-	PLAYERVIEW=CLOSE
-	HIERARCHYVIEW=None
-	CHANNELVIEW=None
-	LINKVIEW=None
-	LAYOUTVIEW=None
-	USERGROUPVIEW=None
+	HIDE_PLAYERVIEW=CLOSE
+	HIDE_HIERARCHYVIEW=None
+	HIDE_CHANNELVIEW=None
+	HIDE_LINKVIEW=None
+	HIDE_LAYOUTVIEW=None
+	HIDE_USERGROUPVIEW=None
+	HIDE_SOURCE=None
 
 appview={
-	0:{'cmd':PLAYERVIEW,'title':'Player','id':'pview_','class':_PlayerView,},
-	1:{'cmd':HIERARCHYVIEW,'title':'Structure view','id':'hview_','class':_HierarchyView,},
-	2:{'cmd':CHANNELVIEW,'title':'Timeline view','id':'cview_','class':_ChannelView,},
-	3:{'cmd':LINKVIEW,'title':'Hyperlinks','id':'leview_','class':_LinkView,'freezesize':1},
-	4:{'cmd':LAYOUTVIEW,'title':'Layout view','id':'lview_','class':_LayoutView,'freezesize':1},
-	5:{'cmd':USERGROUPVIEW,'title':'User groups','id':'ugview_','class':_UsergroupView,'freezesize':1},
-	6:{'cmd':SOURCE,'title':'Source','id':'sview_','class':_SourceView,'hosted':0},
+	0:{'cmd':HIDE_PLAYERVIEW,'title':'Player','id':'pview_','class':_PlayerView,},
+	1:{'cmd':HIDE_HIERARCHYVIEW,'title':'Structure view','id':'hview_','class':_HierarchyView,},
+	2:{'cmd':HIDE_CHANNELVIEW,'title':'Timeline view','id':'cview_','class':_ChannelView,},
+	3:{'cmd':HIDE_LINKVIEW,'title':'Hyperlinks','id':'leview_','class':_LinkView,'freezesize':1},
+	4:{'cmd':HIDE_LAYOUTVIEW,'title':'Layout view','id':'lview_','class':_LayoutView,'freezesize':1},
+	5:{'cmd':HIDE_USERGROUPVIEW,'title':'User groups','id':'ugview_','class':_UsergroupView,'freezesize':1},
+	6:{'cmd':HIDE_SOURCE,'title':'Source','id':'sview_','class':_SourceView,'hosted':0},
 	7:{'cmd':-1,'title':'','id':'cmifview_','class':_CmifView,'hosted':0},
 }
 
