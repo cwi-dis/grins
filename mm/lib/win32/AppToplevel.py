@@ -552,14 +552,18 @@ def shell_execute(url,verb='open', showmsg=1):
 	islocal = (not utype or utype == 'file') and (not host or host == 'localhost')
 	if islocal:
 		filename=MMurl.url2pathname(path)
-		if os.path.isfile(filename):
-			if not os.path.isabs(filename):
-				filename=os.path.join(os.getcwd(),filename)
-				filename=ntpath.normpath(filename)
-		else:
-			if showmsg:
-				win32ui.MessageBox(filename+'\nnot found')
-			return -1
+		if not os.path.isabs(filename):
+			filename=os.path.join(os.getcwd(),filename)
+			filename=ntpath.normpath(filename)
+		if not os.path.isfile(filename):
+			rv = win32ui.MessageBox(filename+': not found.\nCreate?',
+					 '', win32con.MB_OKCANCEL)
+			if rv == win32con.IDCANCEL:
+				return -1
+			try:
+				open(filename, 'w').close()
+			except:
+				pass
 		url=filename
 	rc,msg=Sdk.ShellExecute(0,verb,url,None,"", win32con.SW_SHOW)
 	if rc<=32:
