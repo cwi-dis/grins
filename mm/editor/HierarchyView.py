@@ -124,8 +124,9 @@ class HierarchyView(HierarchyViewDialog):
 			COLLAPSEALL(callback = (self.expandallcall, (0,))),
 			
 			COMPUTE_BANDWIDTH(callback = (self.bandwidthcall, ())),
-			CREATE_BEGIN_EVENT_SOURCE(callback = (self.create_begin_event_source, ())),
-			CREATE_BEGIN_EVENT_DESTINATION(callback = (self.create_begin_event_dest, ())),
+			CREATE_EVENT_SOURCE(callback = (self.create_begin_event_source, ())),
+			CREATE_BEGIN_EVENT(callback = (self.create_begin_event_dest, ())),
+##			CREATE_END_EVENT(callback = (self.create_end_event_dest, ())),
 			FIND_EVENT_SOURCE(callback = (self.find_event_source, ())),
 			DRAG_PAR(),
 			DRAG_SEQ(),

@@ -171,7 +171,7 @@ class HierarchyViewDialog(ViewDialog):
 		(FLAG_ALL, None,),
 		(FLAG_ALL, 'Delete', DELETE),
 		(FLAG_ALL, None,),
-		(FLAG_ALL, 'Event source', CREATE_BEGIN_EVENT_SOURCE),
+		(FLAG_ALL, 'Event source', CREATE_EVENT_SOURCE),
 		(FLAG_ALL, None,),
 		(FLAG_ALL, 'Properties...', ATTRIBUTES),
 		)
