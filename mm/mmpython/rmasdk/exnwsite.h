@@ -16,6 +16,11 @@
 
 class	ExampleVideoSurface;
 
+// for PyObject
+#ifndef Py_PYTHON_H
+#include "Python.h"
+#endif
+
 /****************************************************************************
  * 
  *  Class:
@@ -336,7 +341,7 @@ public:
 	/*
 	*   Python support methods
 	*/
-	ExampleVideoSurface* GetVideoSurface(){return m_pVideoSurface;}
+	void SetPyVideoRenderer(PyObject *obj){m_pVideoSurface->SetPyVideoRenderer(obj);}
 };
 
 #endif // _EXNWSITE_H_
