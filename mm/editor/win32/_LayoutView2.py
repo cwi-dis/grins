@@ -462,20 +462,32 @@ class _LayoutView2(GenFormView):
 	def OnZoomOut(self, id, params):
 		self.zoomOut()
 
-	def zoomIn(self):
+	def zoomIn(self, factor=None):
 		if self._layout is None:
 			return
 		d2lscale = self._layout.getDeviceToLogicalScale()
-		d2lscale = d2lscale - 0.1
-		if d2lscale < 0.1 : d2lscale = 0.1
+		if factor == None:
+			factor = 1.2
+		d2lscale = d2lscale / float(factor)
+##		d2lscale = d2lscale - 0.1
+##		if d2lscale < 0.1 : d2lscale = 0.1
 		self._layout.updateScale(d2lscale)
 
-	def zoomOut(self):
+	def zoomOut(self, factor=None):
 		if self._layout is None:
 			return
 		d2lscale = self._layout.getDeviceToLogicalScale()
-		d2lscale = d2lscale + 0.1
-		if d2lscale>10.0: d2lscale = 10.0
+		if factor == None:
+			factor = 1.2
+		d2lscale = d2lscale * factor
+##		d2lscale = d2lscale + 0.1
+##		if d2lscale>10.0: d2lscale = 10.0
+		self._layout.updateScale(d2lscale)
+
+	def zoomReset(self):
+		if self._layout is None:
+			return
+		d2lscale = 1
 		self._layout.updateScale(d2lscale)
 
 	def addPreviewButtons(self):
