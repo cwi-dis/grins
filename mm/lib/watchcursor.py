@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Define a 16x16 cursor looking like a watch
 
 # X11 bitmap file:
