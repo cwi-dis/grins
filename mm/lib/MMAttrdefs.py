@@ -45,6 +45,7 @@ import sys
 import os
 from stat import ST_MTIME
 import marshal
+import flags
 
 verbose = 0
 
@@ -74,14 +75,50 @@ def readattrdefs(fp, filename):
 			helptext = parser.getstringvalue(None)
 			inheritance = parser.getenumvalue(
 				['raw', 'normal', 'inherited', 'channel'])
-			flags = parser.getenumvalue(
-				['light', 'smil', 'smil2', 'cmif'])
+			xtypedef = 'enclosed', ('list', ('enum', ['g2_light', 'g2_pro','qt_light','qt_pro', 'g2', 'smil_1.0','cmif', 'all']))
+			flags = parser.getgenericvalue(
+				usetypedef(xtypedef,
+				        MMParser.MMParser.basicparsers))
+#			flags = parser.getgenericvalue(
+#			usetypedef(xtypedef,
+#					   MMParser.MMParser.basicparsers))
+#				['g2_light', 'g2_pro','qt_light','qt_pro', 'g2', 'smil_1.0','cmif', 'all'])
+#			print flags
 			parser.close()
 			if dict.has_key(attrname):
 			    if verbose:
 				print 'Warning: duplicate attr def', attrname
+		  
+			# WARNING: HACK
+			# for instance, the conversion is turn off for QuickTime docucment.
+			# In order to supress a specific traitment, in future we should extend the attrdef management 
+			import compatibility
+			import features
+			if compatibility.QT == features.compatibility and attrname == 'project_convert':
+				defaultvalue = 0
+
+			from flags import *
+			binary_flags = 0
+			for fl in flags:
+				if fl == 'g2_light':
+					binary_flags = binary_flags | FLAG_G2_LIGHT
+				elif fl == 'g2_pro':
+					binary_flags = binary_flags | FLAG_G2_PRO
+				elif fl == 'qt_light':
+					binary_flags = binary_flags | FLAG_QT_LIGHT
+				elif fl == 'qt_pro':
+					binary_flags = binary_flags | FLAG_QT_PRO
+				elif fl == 'smil1.0':
+					binary_flags = binary_flags | FLAG_SMIL_1_0
+				elif fl == 'cmif':
+					binary_flags = binary_flags | FLAG_CMIF
+				elif fl == 'g2':
+					binary_flags = binary_flags | FLAG_G2
+				elif fl == 'all':
+					binary_flags = binary_flags | FLAG_ALL
+
 			dict[attrname] = typedef, defaultvalue, labeltext, \
-				displayername, helptext, inheritance, flags
+				displayername, helptext, inheritance, binary_flags
 	except EOFError:
 		parser.reporterror(filename, 'Unexpected EOF', sys.stderr)
 		raise EOFError
@@ -145,7 +182,7 @@ def useattrdefs(mapping):
 
 # Functional interface to the attrdefs table.
 #
-_default = (('any', None), None, '', 'default', '',  'normal', 'light')
+_default = (('any', None), None, '', 'default', '',  'normal', flags.FLAG_ALL)
 def getdef(attrname):
 	return attrdefs.get(attrname, _default)
 #
