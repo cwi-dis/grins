@@ -66,7 +66,7 @@ parser::~parser()
 	delete m_rootnode;
 	}
 
-// prepare for resuse
+// prepare for reuse
 void parser::reset()
 	{
 	if(m_rootnode != 0)
@@ -454,6 +454,7 @@ void parser::unknown_starttag(const char *tag, raw_attr_list_t *pattrs)
 	std::basic_string<TCHAR> msg(TEXT("unknown start tag "));
 	msg += TextPtr(tag);
 	showmessage(msg.c_str());
+
 	new_node(tag, pattrs);
 	}
 
@@ -467,7 +468,7 @@ void parser::new_node(const char *name, raw_attr_list_t *pattrs)
 	{
 	if(m_curnode != NULL)
 		{
-		tree_node *p = new tree_node("smil", pattrs);
+		tree_node *p = new tree_node(name, pattrs);
 		m_curnode->appendChild(p);
 		m_curnode = p;
 		}
