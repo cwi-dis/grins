@@ -19,6 +19,8 @@ from AnchorDefs import *
 import windowinterface
 
 debug=0
+
+USE_WINDOWLESS_REAL_RENDERING = 0
 	
 class VideoChannel(Channel.ChannelWindowAsync):
 	_our_attrs = ['bucolor', 'hicolor', 'scale', 'center']
@@ -113,10 +115,16 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			return
 		if node.__type == 'real':
 			# real needs an os window yet
-			self.window.CreateOSWindow(rect=self.getMediaWndRect())
+			if not USE_WINDOWLESS_REAL_RENDERING:
+				self.window.CreateOSWindow(rect=self.getMediaWndRect())
 			if not self.__rc:
 				self.playdone(0)
-			elif not self.__rc.playit(node, self._getoswindow(), self._getoswinpos()):
+				return
+			if USE_WINDOWLESS_REAL_RENDERING:
+				res =self.__rc.playit(node,windowless=1)
+			else:
+				res = self.__rc.playit(node, self._getoswindow(), self._getoswinpos())
+			if not res:
 				import windowinterface, MMAttrdefs
 				name = MMAttrdefs.getattr(node, 'name')
 				if not name:
@@ -256,5 +264,45 @@ class VideoChannel(Channel.ChannelWindowAsync):
 
 	def getMediaWndRect(self):
 		return self.__rcMediaWnd
+
+	#############################
+	def getRealVideoRenderer(self):
+		self.initIVideoRenderer()
+		return self
+
+	# 
+	# Implement interface of real video renderer
+	# 
+	def initIVideoRenderer(self):
+		self.__rmdds = None
+		self.__rmrender = None
+
+	def OnFormatChange(self, w, h, bpp, comp):
+		import rma, ddraw
+		print 'OnFormatChange', w, h, bpp, comp
+		if not self.window: return
+		self.__rmdds = self.window._topwindow.CreateSurface(w, h)
+		if comp==rma.RMA_RGB:
+			print 'RMA_RGB'
+			if bpp==24:
+				self.__rmrender = self.__rmdds.Blt_RGB24_On_RGB32, w, h
+			elif bpp==32:
+				self.__rmrender = self.__rmdds.Blt_RGB32_On_RGB32, w, h
+		elif comp==rma.RMA_YUV420:
+			print 'RMA_YUV420'
+			self.__rmrender = self.__rmdds.Blt_YUV420_On_RGB32, w, h
+		
+		if self.__rmdds and self.__rmrender:
+			print 'rendering video in', self.getMediaWndRect()
+			self.window.setvideo(self.__rmdds, self.getMediaWndRect(), (0,0,w,h) )
+		else:
+			self.__rmdds = None
+			
+	def Blt(self, data):
+		if self.__rmdds and self.__rmrender:
+			render, w, h = self.__rmrender
+			render(data, w, h)
+			if self.window:
+				self.window.update()
 
 
