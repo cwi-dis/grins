@@ -272,7 +272,10 @@ class _Event:
 		# Nothing to do for mouse moved events
 	
 	def _scrap_to_TE(self):
-		TE.TEFromScrap()
+		try:
+			TE.TEFromScrap()
+		except TE.Error:	# There may not be anything there...
+			pass
 		
 	def _TE_to_scrap(self):
 		Scrap.ZeroScrap()
