@@ -15,13 +15,7 @@ DIR="/usr/local/www.cwi.nl/GRiNS/player"
 # PASSWD=os.path.join(DIR, ".htpasswd")
 PASSWD="/ufs/jack/test"
 
-RESPONSE_MESSAGE=os.path.join(grinsdb.DATABASE, ".mailresponse")
-RESPONSE_SENDER="grins-request-admin@oratrix.com"
-RESPONSE_URL="http://www.cwi.nl/GRiNS/player/index.html"
-
-SENDMAIL="/usr/lib/sendmail -t"
-
-Error="grinsregister.Error"
+Error="grcheckdb.Error"
 
 def main():
 	if len(sys.argv) > 2:
