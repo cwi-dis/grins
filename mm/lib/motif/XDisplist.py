@@ -255,9 +255,9 @@ class _DisplayList:
 			gc.line_width = entry[2]
 			units = entry[3]
 			points = entry[4]
-			x0, y0 = window._convert_coordinates(points[0], units)
+			x0, y0 = window._convert_coordinates(points[0], units=units)
 			for p in points[1:]:
-				x, y = window._convert_coordinates(p, units)
+				x, y = window._convert_coordinates(p, units=units)
 				gc.DrawLine(x0, y0, x, y)
 				x0, y0 = x, y
 		elif cmd == '3dhline':
