@@ -719,20 +719,17 @@ class SMILXhtmlSmilWriter(SMIL):
 
 		# write inner hierarchy
 		ix = path.index(currMediaRegion)
-		self.removeAttr(divlist, 'id')
-		self.removeAttr(divlist, 'repeatCount')
-		self.removeAttr(divlist, 'repeatDur')
 		for region in path[ix+1:]:
-			self.removeAttr(divlist, 'volume')
+			divlist = []
 			forceTransparent = region in self.currLayout or mtype == 'audio'
 			regstyle = self.getRegionStyle(region, None, forceTransparent)
-			self.replaceAttrVal(divlist, 'style', regstyle)
-			self.replaceAttrVal(divlist, 'begin', '0')
+			divlist.append(('style', regstyle))
 			volume = region.get('soundLevel', None)
 			if volume is not None:
 				volume = 100.0*string.atof(volume)
 				volume = fmtfloat(volume)
 				self.replaceAttrVal(divlist, 'volume', volume)
+				divlist.append(('volume', volume))
 			self.writetag('div', divlist)
 			self.push()
 			pushed = pushed + 1
@@ -747,7 +744,7 @@ class SMILXhtmlSmilWriter(SMIL):
 			subRegGeom, mediaGeom = geoms
 		if subRegGeom is not None and mediaGeom is not None:
 			# possible overrides: fit, z-index, and backgroundColor 
-			divlist.insert(0, ('id', nodeid))
+			divlist = [('id', nodeid)]
 			x, y, w, h = subRegGeom
 			bgcolor = getbgcoloratt(self, node, 'bgcolor')
 			z = getcmifattr(self, node, 'z')
@@ -756,12 +753,10 @@ class SMILXhtmlSmilWriter(SMIL):
 			regstyle = 'position:absolute;overflow:%s;left:%d;top:%d;width:%d;height:%d;' % (overflow, x, y, w, h)
 			if bgcolor: regstyle = regstyle + 'background-color:%s;' % bgcolor
 			if z: regstyle = regstyle + 'z-index:%s;' % z
-			self.replaceAttrVal(divlist, 'style', regstyle)
-			self.replaceAttrVal(divlist, 'begin', '0')
+			divlist.append(('style', regstyle))
 			self.writetag('div', divlist)
 			self.push()
 			pushed = pushed + 1
-			#self.replaceAttrVal(attrlist, 'id', nodeid + '_m')
 
 		# save current layout and return
 		self.currLayout = path
@@ -1124,7 +1119,7 @@ class SMILXhtmlSmilWriter(SMIL):
 			self.writetag('t:'+tag, attrlist)
 		else:
 			# region animation
-			if not not self.regions_alias.get(target):
+			if not self.regions_alias.get(target):
 				self.writeEmptyRegion(target)
 			for name in self.regions_alias[target]:
 				self.replaceAttrVal(attrlist, 'targetElement', name)				
