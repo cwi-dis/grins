@@ -202,7 +202,23 @@ def GetMediaDuration(url):
 
 	return builder.GetDuration()
 
-
+# Returns frames per second or zero on failure	
+def GetFrameRate(url):
+	try:
+		builder = GraphBuilder()
+	except:
+		print 'Missing DirectShow infrasrucrure'
+		return 0
+	if not builder.RenderFile(url):
+		return 0
+	try:
+		bv = builder.QueryIBasicVideo()
+		fr = int(0.5 + 1.0/bv.GetAvgTimePerFrame())
+		del bv
+	except: 
+		fr = 0
+	return fr
+	
 class MMStream:
 	def __init__(self, ddobj):
 		mmstream = dshow.CreateMultiMediaStream()
