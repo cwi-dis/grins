@@ -14,6 +14,12 @@ if os.name == 'mac':
 else:
 	NEEDTICKER = 0
 
+# check implicitly rma version
+if rma and hasattr(rma,'CreateClientContext'):
+	HAS_PRECONFIGURED_PLAYER = 0
+else:
+	HAS_PRECONFIGURED_PLAYER = 1
+		
 error = 'RealChannel.error'
 
 realenginedebug=0
@@ -37,8 +43,11 @@ class RealEngine:
 		self.close()
 		
 	def CreatePlayer(self):
-		return self.engine.CreatePlayer()
-		
+		if HAS_PRECONFIGURED_PLAYER:
+			return self.engine.CreatePlayer()
+		else:
+			return RealPlayer(self.engine)
+
 	def startusing(self):
 		if NEEDTICKER and self.usagecount == 0:
 			self._startticker()
@@ -60,6 +69,77 @@ class RealEngine:
 	def _tick(self):
 		# XXXX Mac-specific
 		self.engine.EventOccurred((0, 0, Evt.TickCount(), (0, 0), 0))
+
+
+class RealPlayer:
+	# This class is for use with the new rma pyd. 
+	# The new rma pyd has not a preconfigured player. 
+	# An object of this class exposes to clients
+	# the same interface as the previous rma buildin player
+	def __init__(self, rmengine):
+		p=rmengine.CreatePlayer()
+		self.__dict__['_obj_'] = p
+
+		# create client context objects
+		# player is an optional arg
+		# passing a player as arg we implicitly request 
+		# part of the config to happen automatically (see source)
+		adviseSink = rma.CreateClientAdviseSink(p)
+		errorSink = rma.CreateErrorSink(p)
+		authManager = rma.CreateAuthenticationManager(p)
+		siteSupplier = rma.CreateSiteSupplier(p)
+
+		# create player's client context with what interfaces
+		# we would like to support
+		clientContext = rma.CreateClientContext()
+		clientContext.AddInterface(adviseSink.QueryIUnknown())
+		clientContext.AddInterface(errorSink.QueryIUnknown())
+		clientContext.AddInterface(authManager.QueryIUnknown())
+		clientContext.AddInterface(siteSupplier.QueryIUnknown())
+	
+		# and give it to player
+		# the player will use this context to request
+		# available client interfaces (through QueryInterface)
+		p.SetClientContext(clientContext)
+		del clientContext # now belongs to player
+
+		# keep refs to our client context objects
+		# so that we can configure them later
+		self._adviseSink = adviseSink
+		self._errorSink = errorSink
+		self._authManager = authManager
+		self._siteSupplier = siteSupplier
+
+	def __del__(self):
+		self._obj_.Stop()
+		del self._obj_
+
+	def __getattr__(self, attr):	
+		try:	
+			if attr != '__dict__':
+				o = self.__dict__['_obj_']
+				if o:
+					return getattr(o, attr)
+		except KeyError:
+			pass
+		raise AttributeError, attr
+			
+	def SetStatusListener(self, listener):
+		self._adviseSink.SetPyListener(listener)
+		self._errorSink.SetPyListener(listener)
+
+	def SetPyAdviceSink(self, listener):
+		self._adviseSink.SetPyListener(listener)
+
+	def SetPyErrorSink(self, listener):
+		self._errorSink.SetPyListener(listener)
+
+	def SetOsWindow(self, window):
+		self._siteSupplier.SetOsWindow(window)
+
+	def SetPositionAndSize(self, pos, size):
+		self._siteSupplier.SetPositionAndSize(pos, size)
+
 
 class RealChannel:
 	__engine = None

@@ -2246,6 +2246,12 @@ try:
 except ImportError:
 	rma = None
 
+# check implicitly rma version
+if rma and hasattr(rma,'CreateClientContext'):
+	HAS_PRECONFIGURED_PLAYER = 0
+else:
+	HAS_PRECONFIGURED_PLAYER = 1
+
 class RealRenderer(Renderer):
 	realengine=None
 	def __init__(self,wnd,rc,baseURL=''):
@@ -2264,7 +2270,11 @@ class RealRenderer(Renderer):
 				RealRenderer.realengine=None
 		if RealRenderer.realengine and not self._rmaplayer:
 			try:
-				self._rmaplayer = RealRenderer.realengine.CreatePlayer()
+				if HAS_PRECONFIGURED_PLAYER:
+					self._rmaplayer = RealRenderer.realengine.CreatePlayer()
+				else:
+					from RealChannel import RealPlayer
+					self._rmaplayer = RealPlayer(RealRenderer.realengine)
 			except:
 				self._rmaplayer=None
 	
