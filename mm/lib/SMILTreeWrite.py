@@ -8,7 +8,7 @@ from MMNode import alltypes, leaftypes, interiortypes
 import MMCache
 import MMAttrdefs
 import Hlinks
-import AnchorDefs
+from AnchorDefs import *
 import string
 import os
 import MMurl
@@ -291,7 +291,10 @@ class SMILWriter:
 		alist = node.GetAttrDef('anchorlist', [])
 		for id, type, args in alist:
 			aid = (uid, id)
-			aname = '%s-%s' % (self.uid2name[uid], id)
+			if type in SourceAnchors:
+				aname = '%s-%s' % (self.uid2name[uid], id)
+			else:
+				aname = self.uid2name[uid]
 			self.aid2name[aid] = aname
 		if node.GetType() in interiortypes:
 			for child in node.children:
@@ -396,7 +399,8 @@ class SMILWriter:
 	def writelinks(self, x):
 		alist = x.GetAttrDef('anchorlist', [])
 		for id, type, args in alist:
-			self.writelink(x, id, type, args)
+			if type in SourceAnchors:
+				self.writelink(x, id, type, args)
 
 	def writelink(self, x, id, atype, args):
 		items = ["<anchor"]
@@ -425,7 +429,7 @@ class SMILWriter:
 			else:
 				href = '#' + self.aid2name[a2]
 			items.append('href="%s"'%href)
-		if atype == AnchorDefs.ATYPE_NORMAL:
+		if atype == ATYPE_NORMAL:
 			ok = 0
 			if len(args) == 4:
 				x, y, w, h = tuple(args)
