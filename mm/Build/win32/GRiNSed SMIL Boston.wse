@@ -1166,7 +1166,7 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\GRiNS_SV2.exe
   Destination=%MAINDIR%\GRiNS_SV2.exe
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\Producer-SDK\Common\rnco3260.dll
@@ -1301,22 +1301,22 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\Scintilla.DLL
   Destination=%MAINDIR%\Scintilla.DLL
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\rmbe3260.dll
   Destination=%MAINDIR%\rmbe3260.dll
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\pngu3266.dll
   Destination=%MAINDIR%\pngu3266.dll
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\pncrt.dll
   Destination=%MAINDIR%\pncrt.dll
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\imgop.pyd
@@ -1366,17 +1366,17 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\wmfapi.pyd
   Destination=%MAINDIR%\wmfapi.pyd
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\ddraw.pyd
   Destination=%MAINDIR%\ddraw.pyd
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
   Destination=%MAINDIR%\WebPro32.ocx
-  Flags=0001001010000011
+  Flags=0001001010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\Templates\extended-slideshow.bmp
@@ -1401,12 +1401,12 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\python16.dll
   Destination=%MAINDIR%\python16.dll
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\gear32sd.pyd
   Destination=%MAINDIR%\gear32sd.pyd
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\GRiNS-Icons\RealVideo.tiff
@@ -1426,12 +1426,12 @@ end
 item: Install File
   Source=c:\Winnt\system32\Oleaut32.dll
   Destination=%SYS32%\Oleaut32.dll
-  Flags=0000001010000011
+  Flags=0000011010010011
 end
 item: Install File
   Source=c:\Winnt\system32\mfc42.dll
   Destination=%SYS32%\mfc42.dll
-  Flags=0001001010000011
+  Flags=0001011010010011
 end
 item: Install File
   Source=d:\ufs\mm\cmif\Templates\qsg1.bmp
@@ -1606,12 +1606,12 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\GRiNSRes.dll
   Destination=%MAINDIR%\GRiNSRes.dll
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\Gear32sd.dll
   Destination=%MAINDIR%\Gear32sd.dll
-  Flags=0000000010000011
+  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\rma.pyd
@@ -1626,12 +1626,12 @@ end
 item: Install File
   Source=c:\Winnt\system32\Msvcp60.dll
   Destination=%SYS32%\Msvcp60.dll
-  Flags=0000001010000011
+  Flags=0000011010010011
 end
 item: Install File
   Source=c:\Winnt\system32\Msvcirt.dll
   Destination=%SYS32%\Msvcirt.dll
-  Flags=0000001010000011
+  Flags=0000011010010011
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\dshow.pyd
@@ -1641,17 +1641,17 @@ end
 item: Install File
   Source=c:\Winnt\system32\Olepro32.dll
   Destination=%SYS32%\Olepro32.dll
-  Flags=0001001010000011
+  Flags=0001011010010011
 end
 item: Install File
   Source=c:\Winnt\system32\Msvcrt.dll
   Destination=%SYS32%\Msvcrt.dll
-  Flags=0000001010000011
+  Flags=0000011010010011
 end
 item: Install File
   Source=c:\Winnt\system32\Msvcrt40.dll
   Destination=%SYS32%\Msvcrt40.dll
-  Flags=0000001010000011
+  Flags=0000011010010011
 end
 item: End Block
 end
