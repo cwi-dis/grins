@@ -53,7 +53,7 @@ class _AssetsView(GenView.GenView, docview.ListView):
 
 		# add components 
 		self._showAll = components.RadioButton(self._dlgBar, grinsRC.IDC_RADIO_ALL)
-		self._showUnused = components.RadioButton(self._dlgBar, grinsRC.IDC_RADIO_UNUSED)
+		self._showTemplate = components.RadioButton(self._dlgBar, grinsRC.IDC_RADIO_TEMPLATE)
 		self._showClipboard = components.RadioButton(self._dlgBar, grinsRC.IDC_RADIO_CLIPBOARD)
 		
 		self.listCtrl = None
@@ -83,7 +83,7 @@ class _AssetsView(GenView.GenView, docview.ListView):
 		
 		# attach components
 		self._showAll.attach_to_parent()
-		self._showUnused.attach_to_parent()
+		self._showTemplate.attach_to_parent()
 		self._showClipboard.attach_to_parent()
 
 	# Called by the framework after the OS window has been created
@@ -102,8 +102,8 @@ class _AssetsView(GenView.GenView, docview.ListView):
 		hctrl = msg._lParam
 		if id == self._showAll._id and code == win32con.BN_CLICKED:
 			self.showAll()
-		elif id == self._showUnused._id and code == win32con.BN_CLICKED:
-			self.showUnused()
+		elif id == self._showTemplate._id and code == win32con.BN_CLICKED:
+			self.showTemplate()
 		elif id == self._showClipboard._id and code == win32con.BN_CLICKED:
 			self.showClipboard()
 		else:
@@ -113,9 +113,9 @@ class _AssetsView(GenView.GenView, docview.ListView):
 		cb = self._cmddict['setview']
 		cb('all')
 	
-	def showUnused(self):
+	def showTemplate(self):
 		cb = self._cmddict['setview']
-		cb('unused')
+		cb('template')
 
 	def showClipboard(self):
 		cb = self._cmddict['setview']
@@ -123,7 +123,7 @@ class _AssetsView(GenView.GenView, docview.ListView):
 
 	def setView(self, which):
 		self._showAll.setcheck(which == 'all')
-		self._showUnused.setcheck(which == 'unused')
+		self._showTemplate.setcheck(which == 'template')
 		self._showClipboard.setcheck(which == 'clipboard')
 
 	def rebuildList(self):

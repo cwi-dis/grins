@@ -19,7 +19,7 @@ class AssetsView(AssetsViewDialog):
 			('right', 50, 'Used'),
 			('left', 200, 'URL'),
 		],
-		'unused':[
+		'template':[
 			('left', 120, 'Name'),
 			('left', 70, 'Type'),
 			('left', 200, 'URL'),
@@ -35,7 +35,7 @@ class AssetsView(AssetsViewDialog):
 		self.root = toplevel.root
 		self.context = self.root.context
 		self.editmgr = self.context.editmgr
-		self.whichview = 'unused'
+		self.whichview = 'template'
 		AssetsViewDialog.__init__(self)
 
 	def fixtitle(self):
@@ -86,8 +86,8 @@ class AssetsView(AssetsViewDialog):
 		if which == 'all':
 			self.listdata = self.getallassets()
 			cmdlist = []
-		elif which == 'unused':
-			self.listdata = self.getunusedassets()
+		elif which == 'template':
+			self.listdata = self.gettemplateassets()
 			cmdlist = [
 				usercmd.CUT(callback=(self.callback_cut, ())),
 				usercmd.COPY(callback=(self.callback_copy, ())),
@@ -164,7 +164,7 @@ class AssetsView(AssetsViewDialog):
 			action = self.dodragdrop('URL', url)
 			# We don't remove URLs from the all media view
 			return 1
-		if self.whichview == 'unused':
+		if self.whichview == 'template':
 			iteminfo = self.listdata[index][0]
 			if type(iteminfo) == type(''):
 				# String means it's a url
@@ -210,7 +210,7 @@ class AssetsView(AssetsViewDialog):
 		else:
 			print "AssetView: nothing to do", how
 
-	def getunusedassets(self):
+	def gettemplateassets(self):
 		assetlist = []
 		for node in self.context.getassets():
 			# XXX Logic is suboptimal: we consider all ext
@@ -227,14 +227,14 @@ class AssetsView(AssetsViewDialog):
 				mimetype = string.split(mimetype, '/')[0]
 				pathname = urlparse.urlparse(url)[2]
 				shortname = posixpath.split(pathname)[1]
-				assetlist.append((mimetype, mimetype, shortname, url))
+				assetlist.append((mimetype, mimetype, shortname, mimetype, url))
 			else:
 				assetlist.append((node, tp, name, tp, ''))
 		return assetlist
 
 	def getallassets(self):
 		assetdict = {}
-		# First add the unused assets
+		# First add the template assets
 		for node in self.context.getassets():
 			if node.getClassName() == 'MMNode':
 				self._getallassetstree(node, assetdict, intree=0)
@@ -265,7 +265,7 @@ class AssetsView(AssetsViewDialog):
 						dict[url] = mimetype, [node]
 				else:
 					# Not in tree, so we're picking up from the
-					# unused assests list. Don't store the nodes.
+					# template assests list. Don't store the nodes.
 					if not dict.has_key(url):
 						dict[url] = mimetype, []
 		if tp in interiortypes:
@@ -274,6 +274,8 @@ class AssetsView(AssetsViewDialog):
 
 	def getclipboard(self):
 		tp, data = self.editmgr.getclip()
+		if not tp or not data:
+			return []
 		if tp == 'node':
 			data = [data]
 		if tp == 'node' or tp == 'multinode':
