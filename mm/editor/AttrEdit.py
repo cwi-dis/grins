@@ -507,12 +507,22 @@ class FileAttrEditorField(StringAttrEditorField):
 
 	def browser_callback(self):
 		import os
+		cwd = self.wrapper.toplevel.dirname
+		if not cwd:
+			cwd = os.getcwd()
+		elif not os.path.isabs(cwd):
+			cwd = os.path.join(os.getcwd(), cwd)
 		file = self.getvalue()
 		if file == '' or file == '/dev/null':
-			dir, file = os.curdir, ''
+			dir, file = cwd, ''
 		else:
 			import urllib
+			type, file = urllib.splittype(file)
+			if type:
+				windowinterface.showmessage('Cannot browse URLs')
+				return
 			file = urllib.url2pathname(file)
+			file = os.path.join(cwd, file)
 			if os.path.isdir(file):
 				dir, file = file, ''
 			else:
@@ -526,6 +536,8 @@ class FileAttrEditorField(StringAttrEditorField):
 			cwd = self.wrapper.toplevel.dirname
 			if not cwd:
 				cwd = os.getcwd()
+			elif not os.path.isabs(cwd):
+				cwd = os.path.join(os.getcwd(), cwd)
 			if os.path.isdir(pathname):
 				dir, file = pathname, os.curdir
 			else:
