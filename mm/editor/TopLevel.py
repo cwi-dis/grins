@@ -123,7 +123,7 @@ class TopLevel(ViewDialog, BasicDialog):
 	#
 	def make_form(self):
 		width, height = glwindow.mm2pixels(self.width, self.height)
-		bheight = height/12.5
+		bheight = height/13.5
 		self.form = form = fl.make_form(FLAT_BOX, width, height)
 		#
 		# The topmost button is a shortcut to start playing.
@@ -165,7 +165,7 @@ class TopLevel(ViewDialog, BasicDialog):
 		# The bottom three buttons are document-related commands.
 		# They remain pressed while the command is executing.
 		#
-		y = 6.25*bheight
+		y = 7.25*bheight
 		#
 		y = y - h
 		self.openbutton = \
@@ -191,6 +191,13 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.closebutton = \
 			form.add_button(INOUT_BUTTON,x,y,w,h, 'Close')
 		self.closebutton.set_call_back(self.close_callback, None)
+		#
+		# The debug button is almost at the bottom
+		#
+		y = bheight
+		self.debugbutton = \
+			form.add_button(NORMAL_BUTTON,x,y,w,h, 'Debug')
+		self.debugbutton.set_call_back(self.debug_callback, None)
 		#
 		# The help button is at the very bottom
 		#
@@ -457,6 +464,10 @@ class TopLevel(ViewDialog, BasicDialog):
 		if reply == 2:
 			return 1
 		return self.save_to_file(self.filename)
+	#
+	def debug_callback(self, obj, arg):
+		import pdb
+		pdb.set_trace()
 	#
 	def help_callback(self, obj, arg):
 		import Help
