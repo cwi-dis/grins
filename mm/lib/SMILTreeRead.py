@@ -1020,6 +1020,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# create the node
 		node = self.__context.newnode('imm')
 		self.AddAttrs(node, attributes)
+		if self.__node:
+			self.__node._addchild(node)
+		else:
+			self.__container._addchild(node)
 
 		# + what AddAttrs has not translated to grins conventions
 		attributeName = attributes.get('attributeName')
@@ -1039,7 +1043,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# else keep it for later fix
 		if targetnode:
 			targetnode.__chanlist = {}
-			targetnode._addchild(node)
 			node.targetnode = targetnode
 		elif targetid:
 			node.__targetid = targetid
@@ -1579,8 +1582,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			targetid = node.__targetid
 			if self.__nodemap.has_key(targetid):
 				targetnode = self.__nodemap[targetid]
-				targetnode.__chanlist = {}
-				targetnode._addchild(node)
 				node.targetnode = targetnode
 				del node.__targetid
 		del self.__animatenodes
