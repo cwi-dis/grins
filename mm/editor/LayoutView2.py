@@ -22,6 +22,9 @@ debugPreview = 0
 COPY_PASTE_MEDIAS = 1
 SHOW_ANIMATE_NODES = 0
 
+# XXX we should use the same variable as the variable defined from component
+DELTA_KEYTIME = 0.01
+
 TYPE_UNKNOWN, TYPE_REGION, TYPE_MEDIA, TYPE_VIEWPORT, TYPE_ANIMATE = range(5)
 CHILD_TYPE = (TYPE_ANIMATE,)
 
@@ -558,7 +561,6 @@ class LayoutView2(LayoutViewDialog2):
 
 		self.currentKeyTimeIndex = None
 		self.timeValueChanged = 1
-		self.isAKeyTime = 0
 		self.currentTimeValue = None
 		self.currentTargetAnimateNode = None
 		self.currentAnimateNode = None
@@ -1087,7 +1089,6 @@ class LayoutView2(LayoutViewDialog2):
 		return None
 
 	def setKeyTimeIndex(self, keyTimeIndex, nodeRef):
-		self.isAKeyTime = 0
 		if self.currentKeyTimeIndex != keyTimeIndex:
 			self.timeValueChanged = 1
 		self.currentKeyTimeIndex = keyTimeIndex
@@ -1100,7 +1101,6 @@ class LayoutView2(LayoutViewDialog2):
 					self.currentTimeValue, vals = animvals[keyTimeIndex]
 				t, v = animvals[0] 
 				v['selected'] = self.getKeyTimeIndex() # XXX trick to save the previous index for undo/redo					
-			self.isAKeyTime = 1
 		else:
 			self.currentTimeValue = None
 
@@ -1115,10 +1115,7 @@ class LayoutView2(LayoutViewDialog2):
 			if self.currentTimeValue != currentTimeValue:
 				self.timeValueChanged = 1
 			self.currentTimeValue = currentTimeValue
-			self.isAKeyTime = 0
-			keyTimeIndex = self.getKeyForThisTime(animvals, currentTimeValue)
-			if not keyTimeIndex is None:
-				self.isAKeyTime = 1
+			keyTimeIndex = self.getKeyForThisTime(animvals, currentTimeValue, round=1)
 			if self.currentKeyTimeIndex != keyTimeIndex:
 				self.timeValueChanged = 1
 			self.currentKeyTimeIndex = keyTimeIndex					
@@ -1200,12 +1197,18 @@ class LayoutView2(LayoutViewDialog2):
 			self.animateControlWidget.removeKey(index)
 			self.setKeyTimeIndex(index-1, nodeRef)
 		
-	def getKeyForThisTime(self, list, time):
-		index = 0
-		for timeRef, vals in list:
-			if timeRef == time:
-				return index
-			index = index+1
+	def getKeyForThisTime(self, list, time, round=0):
+		# first, search for the same value
+		for ind in range(len(list)):
+			timeRef, vals = list[ind]
+			if time == timeRef:
+				return ind
+
+		if round:			
+			for ind in range(len(list)):
+				timeRef, vals = list[ind]
+				if time > timeRef-DELTA_KEYTIME and time < timeRef+DELTA_KEYTIME:
+					return ind
 		return None
 	
 	def getPxGeomWithContextAnimation(self, nodeRef):
@@ -1490,13 +1493,17 @@ class LayoutView2(LayoutViewDialog2):
 			for t, v in animvals:
 				canimvals.append((t, v.copy()))
 				
-			keyTimeIndex = self.getKeyTimeIndex()
 			currentTimeValue = self.getCurrentTimeValue()
-			if not currentTimeValue is None:
-				if not self.isAKeyTime:
-					self.insertKeyTime(animateNode, currentTimeValue)
-					canimvals = animateNode.attrdict.get('animvals')
-					keyTimeIndex = self.getKeyTimeIndex()
+			keyTimeIndex = self.getKeyForThisTime(animvals, currentTimeValue, round=1)
+			if keyTimeIndex is None:
+				self.insertKeyTime(animateNode, currentTimeValue)
+				canimvals = animateNode.attrdict.get('animvals')
+				keyTimeIndex = self.getKeyTimeIndex()
+				t, v = canimvals[0] 
+				v['selected'] = keyTimeIndex # XXX trick to save the previous index for undo/redo					
+			else:
+				# if previous time value wasn't exactly the same, update it
+				self.setKeyTimeIndex(keyTimeIndex, self.getTargetAnimateNode())
 					
 		for nodeRef, attrName, attrValue in nodeRefAndValueList:
 			nodeType = self.getNodeType(nodeRef)
@@ -2884,9 +2891,11 @@ class AnimateControlWidget(LightWidget):
 			self._context.setCurrentTimeValue(pos, nodeRef)
 			animateNode = self._context.getAnimateNode()
 			animvals = animateNode.GetAttrDef('animvals', [])
-			keyTimeIndex = self._context.getKeyForThisTime(animvals, pos)
+			keyTimeIndex = self._context.getKeyForThisTime(animvals, pos, round=1)
 			if keyTimeIndex is not None and keyTimeIndex >= 0:
 				self.sliderCtrl.selectKeyTime(keyTimeIndex)
+				t, v = animvals[0] 
+				v['selected'] = keyTimeIndex # XXX trick to save the previous index for undo/redo
 			else:
 				self.sliderCtrl.selectKeyTime(-1)
 			previewWidget = self._context.previousWidget
