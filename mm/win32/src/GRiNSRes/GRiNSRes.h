@@ -470,8 +470,10 @@
 #define IDC_CTYPES                      1270
 #define IDC_CTYPET                      1271
 #define IDC_CTYPEI                      1272
+#define IDC_SHOWBACKGROUNDV1            1273
 #define IDC_COLORS                      1274
 #define IDC_COLOR_PICK                  1275
+#define IDC_SHOWBACKGROUNDV2            1276
 #define IDC_LABEL                       1277
 #define IDC_LABEL2                      1278
 #define IDC_SLIDER_POS                  1279
@@ -596,6 +598,7 @@
 #define IDC_ERASEV2                     1420
 #define IDC_RESTARTNODEL                1421
 #define IDC_RESTARTDEFAULTL             1422
+#define IDC_SHOWBACKGROUNDL             1422
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -684,7 +687,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        411
 #define _APS_NEXT_COMMAND_VALUE         32877
-#define _APS_NEXT_CONTROL_VALUE         1422
+#define _APS_NEXT_CONTROL_VALUE         1423
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
