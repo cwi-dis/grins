@@ -4587,35 +4587,43 @@ class ActiveDuration1Group(ActiveDuration2Group):
 		return cd
 
 #
-class AnimateTargetGroup(AttrGroup):
-	data=attrgrsdict['animateTarget']
-	def __init__(self):
-		AttrGroup.__init__(self,self.data)
-	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_ANIMATETARGET
-	def createctrls(self,wnd):
-		cd = {}
-		a = self.getattr('targetElement')
-		cd[a] = ElementSelCtrl(wnd,a,(grinsRC.IDC_11, grinsRC.IDC_12, grinsRC.IDC_13))
-		a = self.getattr('attributeName')
-		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
-		a = self.getattr('attributeType')
-		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32))
-		return cd
-
 class AnimateGeneralGroup(AttrGroup):
 	data=attrgrsdict['animateGeneral']
 	def __init__(self):
 		AttrGroup.__init__(self,self.data)
 	def getpageresid(self):
-		return grinsRC.IDD_EDITATTR_S1O2
+		return grinsRC.IDD_EDITATTR_ANIMATEGENERAL
 	def createctrls(self,wnd):
 		cd = {}
 		a = self.getattr('name')
 		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
 		a = self.getattr('atag')
 		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
+		a = self.getattr('targetElement')
+		cd[a] = ElementSelCtrl(wnd,a,(grinsRC.IDC_31, grinsRC.IDC_32, grinsRC.IDC_33))
+		a = self.getattr('attributeName')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42))
+		a = self.getattr('attributeType')
+		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_51,grinsRC.IDC_52,grinsRC.IDC_53,grinsRC.IDC_54))
 		return cd
+
+#
+class AnimateMotionGeneralGroup(AttrGroup):
+	data=attrgrsdict['animateMotionGeneral']
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_ANIMATEGENERALM
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('name')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
+		a = self.getattr('atag')
+		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
+		a = self.getattr('targetElement')
+		cd[a] = ElementSelCtrl(wnd,a,(grinsRC.IDC_31, grinsRC.IDC_32, grinsRC.IDC_33))
+		return cd
+
 #
 class AnimateValuesGroup(StringGroup):
 	data=attrgrsdict['animateValues']
@@ -4631,16 +4639,12 @@ class InlineTransitionGroup(AttrGroup):
 		cd = {}
 		a = self.getattr('trtype')
 		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12))
-
 		a = self.getattr('subtype')
 		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22))
-
 		a = self.getattr('mode')
 		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32, grinsRC.IDC_33))
-
 		a = self.getattr('fadeColor')
 		cd[a] = ColorCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42, grinsRC.IDC_43))
-
 		return cd
 
 #
@@ -4918,7 +4922,7 @@ groupsui={
 	'qtmediapreferences':QTPlayerMediaPreferencesGroup,
 
 	'animateGeneral':AnimateGeneralGroup,
-	'animateTarget':AnimateTargetGroup,
+	'animateMotionGeneral':AnimateMotionGeneralGroup,
 	'animateValues':AnimateValuesGroup,
 	'timeManipulation':TimeManipulationGroup,
 	'calcMode':CalcModeGroup,
