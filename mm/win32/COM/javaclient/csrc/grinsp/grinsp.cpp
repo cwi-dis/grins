@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 
-#include "..\..\GRiNSPlayer.h"
+#include "..\..\grins_GRiNSPlayer.h"
 
 #include "jni.h"
 #include "jvmdi.h"
@@ -41,7 +41,7 @@ static void ThrowCOMException(JNIEnv *env, const char *funcname, HRESULT hr) {
  * Method:    initializeThreadContext
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_GRiNSPlayer_initializeThreadContext(JNIEnv *env, jobject player)
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_initializeThreadContext(JNIEnv *env, jobject player)
 	{
 	CoInitialize(NULL);
 	}
@@ -51,7 +51,7 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_initializeThreadContext(JNIEnv *env, job
  * Method:    uninitializeThreadContext
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_GRiNSPlayer_uninitializeThreadContext(JNIEnv *env, jobject player)
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_uninitializeThreadContext(JNIEnv *env, jobject player)
 	{
 	CoUninitialize();		
 	}
@@ -62,7 +62,7 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_uninitializeThreadContext(JNIEnv *env, j
  * Method:    nconnect
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_GRiNSPlayer_nconnect(JNIEnv *env, jobject player)
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_nconnect(JNIEnv *env, jobject player)
 	{
 	DWORD dwClsContext = CLSCTX_LOCAL_SERVER;
 	IGRiNSPlayerAuto *pIGRiNSPlayer = NULL;
@@ -80,7 +80,7 @@ JNIEXPORT jint JNICALL Java_GRiNSPlayer_nconnect(JNIEnv *env, jobject player)
  * Method:    nsetWindow
  * Signature: (ILjava/awt/Component;)V
  */
-JNIEXPORT void JNICALL Java_GRiNSPlayer_nsetWindow(JNIEnv *env, jobject player, jint hgrins, jobject component)
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nsetWindow(JNIEnv *env, jobject player, jint hgrins, jobject component)
 	{
 	// Get the AWT
 	JAWT awt;
@@ -135,7 +135,7 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_nsetWindow(JNIEnv *env, jobject player, 
  * Method:    disconnect
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_GRiNSPlayer_ndisconnect(JNIEnv *env, jobject player, jint hgrins)
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_ndisconnect(JNIEnv *env, jobject player, jint hgrins)
 	{
 	if(hgrins) 
 		{
@@ -149,7 +149,7 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_ndisconnect(JNIEnv *env, jobject player,
  * Method:    open
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_GRiNSPlayer_nopen(JNIEnv *env, jobject player, jint hgrins, jstring url)
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nopen(JNIEnv *env, jobject player, jint hgrins, jstring url)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	if(pIGRiNSPlayer)
@@ -169,7 +169,7 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_nopen(JNIEnv *env, jobject player, jint 
  * Method:    close
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_GRiNSPlayer_nclose(JNIEnv *env, jobject player, jint hgrins)
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nclose(JNIEnv *env, jobject player, jint hgrins)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	if(pIGRiNSPlayer) pIGRiNSPlayer->close();	
@@ -180,7 +180,7 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_nclose(JNIEnv *env, jobject player, jint
  * Method:    getSizeAdvice
  * Signature: (I)Ljava/awt/Dimension;
  */
-JNIEXPORT jobject JNICALL Java_GRiNSPlayer_ngetPreferredSize(JNIEnv *env, jobject player, jint hgrins)
+JNIEXPORT jobject JNICALL Java_grins_GRiNSPlayer_ngetPreferredSize(JNIEnv *env, jobject player, jint hgrins)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	jint w=0, h=0;
@@ -200,7 +200,7 @@ JNIEXPORT jobject JNICALL Java_GRiNSPlayer_ngetPreferredSize(JNIEnv *env, jobjec
  * Method:    play
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_GRiNSPlayer_nplay(JNIEnv *env, jobject player, jint hgrins)
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nplay(JNIEnv *env, jobject player, jint hgrins)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	if(pIGRiNSPlayer)
@@ -216,7 +216,7 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_nplay(JNIEnv *env, jobject player, jint 
  * Method:    paint
  * Signature: (Ljava/awt/Graphics;)V
  */
-JNIEXPORT void JNICALL Java_GRiNSPlayer_nupdate(JNIEnv *env, jobject player, jint hgrins)
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nupdate(JNIEnv *env, jobject player, jint hgrins)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	if(pIGRiNSPlayer) pIGRiNSPlayer->update();		
@@ -227,7 +227,7 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_nupdate(JNIEnv *env, jobject player, jin
  * Method:    pause
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_GRiNSPlayer_npause(JNIEnv *env, jobject player, jint hgrins)
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_npause(JNIEnv *env, jobject player, jint hgrins)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	if(pIGRiNSPlayer)
@@ -244,7 +244,7 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_npause(JNIEnv *env, jobject player, jint
  * Method:    stop
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_GRiNSPlayer_nstop(JNIEnv *env, jobject player, jint hgrins)
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nstop(JNIEnv *env, jobject player, jint hgrins)
 	 {
 	 IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	 if(pIGRiNSPlayer)
@@ -260,7 +260,7 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_nstop(JNIEnv *env, jobject player, jint 
  * Method:    ngetDuration
  * Signature: (I)D
  */
-JNIEXPORT jdouble JNICALL Java_GRiNSPlayer_ngetDuration(JNIEnv *env, jobject player, jint hgrins)
+JNIEXPORT jdouble JNICALL Java_grins_GRiNSPlayer_ngetDuration(JNIEnv *env, jobject player, jint hgrins)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	double dur = 0;
@@ -278,7 +278,7 @@ JNIEXPORT jdouble JNICALL Java_GRiNSPlayer_ngetDuration(JNIEnv *env, jobject pla
  * Method:    ngetSpeed
  * Signature: (I)D
  */
-JNIEXPORT jdouble JNICALL Java_GRiNSPlayer_ngetSpeed(JNIEnv *env, jobject player, jint hgrins)
+JNIEXPORT jdouble JNICALL Java_grins_GRiNSPlayer_ngetSpeed(JNIEnv *env, jobject player, jint hgrins)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	double speed = 1;
@@ -296,7 +296,7 @@ JNIEXPORT jdouble JNICALL Java_GRiNSPlayer_ngetSpeed(JNIEnv *env, jobject player
  * Method:    ngetState
  * Signature: (I)I
  */
-JNIEXPORT jint JNICALL Java_GRiNSPlayer_ngetState(JNIEnv *env, jobject player, jint hgrins)
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetState(JNIEnv *env, jobject player, jint hgrins)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	int plstate = 0;
@@ -314,7 +314,7 @@ JNIEXPORT jint JNICALL Java_GRiNSPlayer_ngetState(JNIEnv *env, jobject player, j
  * Method:    ngetTime
  * Signature: (I)D
  */
-JNIEXPORT jdouble JNICALL Java_GRiNSPlayer_ngetTime(JNIEnv *env, jobject player, jint hgrins)
+JNIEXPORT jdouble JNICALL Java_grins_GRiNSPlayer_ngetTime(JNIEnv *env, jobject player, jint hgrins)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	double t = 0;
@@ -332,7 +332,7 @@ JNIEXPORT jdouble JNICALL Java_GRiNSPlayer_ngetTime(JNIEnv *env, jobject player,
  * Method:    nsetSpeed
  * Signature: (ID)V
  */
-JNIEXPORT void JNICALL Java_GRiNSPlayer_nsetSpeed(JNIEnv *env, jobject player, jint hgrins, jdouble speed)
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nsetSpeed(JNIEnv *env, jobject player, jint hgrins, jdouble speed)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	if(pIGRiNSPlayer)
@@ -349,7 +349,7 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_nsetSpeed(JNIEnv *env, jobject player, j
  * Method:    nsetTime
  * Signature: (ID)V
  */
-JNIEXPORT void JNICALL Java_GRiNSPlayer_nsetTime(JNIEnv *env, jobject player, jint hgrins, jdouble t)
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nsetTime(JNIEnv *env, jobject player, jint hgrins, jdouble t)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	if(pIGRiNSPlayer)
@@ -365,7 +365,7 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_nsetTime(JNIEnv *env, jobject player, ji
  * Method:    nmouseClicked
  * Signature: (III)V
  */
-JNIEXPORT void JNICALL Java_GRiNSPlayer_nmouseClicked(JNIEnv *env, jobject player, jint hgrins, jint x, jint y)
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayer_nmouseClicked(JNIEnv *env, jobject player, jint hgrins, jint x, jint y)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	if(pIGRiNSPlayer)
@@ -381,7 +381,7 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_nmouseClicked(JNIEnv *env, jobject playe
  * Method:    nmouseMoved
  * Signature: (III)Z
  */
-JNIEXPORT jboolean JNICALL Java_GRiNSPlayer_nmouseMoved(JNIEnv *env, jobject player, jint hgrins, jint x, jint y)
+JNIEXPORT jboolean JNICALL Java_grins_GRiNSPlayer_nmouseMoved(JNIEnv *env, jobject player, jint hgrins, jint x, jint y)
 	{
 	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
 	BOOL bIsHot = FALSE;
