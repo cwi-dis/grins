@@ -14,10 +14,10 @@ typedef struct {
 	int mm_wid;		/* window id */
 	int mm_ev;		/* event number */
 	int mm_flags;		/* flags */
-	type_lock mm_flaglock;	/* lock to protect mm_flags */
+	type_sema mm_flagsema;	/* semaphore to protect mm_flags */
 	object *mm_attrlist;	/* channel attribute list */
-	type_lock mm_armlock;	/* lock for starting arm thread */
-	type_lock mm_playlock;	/* lock for startin play thread */
+	type_sema mm_armsema;	/* semaphore for starting arm thread */
+	type_sema mm_playsema;	/* semaphore for starting play thread */
 	type_sema mm_exitsema;	/* semaphore used for exiting */
 	struct channelobject *mm_chanobj; /* pointers to the channel's functions */
 	void *mm_private;	/* private pointer */

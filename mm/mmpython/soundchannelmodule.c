@@ -26,7 +26,7 @@ struct sound_data {
 	int sampsread;		/* # of samples in sampbuf */
 };
 struct sound {
-	type_lock s_lock;	/* lock to protect s_flag */
+	type_sema s_sema;	/* semaphore to protect s_flag */
 	int s_flag;
 	ALport s_port;		/* audio port used for playing sound */
 	double s_playrate;	/* speed with which to play samples */
@@ -46,7 +46,7 @@ struct sound {
  */
 static int device_used;
 static long old_rate, sound_rate;
-static type_lock device_lock;
+static type_sema device_sema;
 
 static int
 sound_init(self)
@@ -62,9 +62,9 @@ sound_init(self)
 	}
 	PRIV->s_play.sampbuf = NULL;
 	PRIV->s_arm.sampbuf = NULL;
-	PRIV->s_lock = allocate_lock();
-	if (PRIV->s_lock == NULL) {
-		err_setstr(RuntimeError, "cannot allocate lock");
+	PRIV->s_sema = allocate_sema(1);
+	if (PRIV->s_sema == NULL) {
+		err_setstr(RuntimeError, "cannot allocate semaphore");
 		free(self->mm_private);
 		self->mm_private = NULL;
 		return 0;
@@ -73,7 +73,7 @@ sound_init(self)
 	PRIV->s_port = NULL;
 	if (pipe(PRIV->s_pipefd) < 0) {
 		err_setstr(RuntimeError, "cannot create pipe");
-		free_lock(PRIV->s_lock);
+		free_sema(PRIV->s_sema);
 		free(self->mm_private);
 		self->mm_private = NULL;
 		return 0;
@@ -193,7 +193,7 @@ sound_player(self)
 
 	denter(sound_player);
 
-	(void) acquire_lock(device_lock, WAIT_LOCK);
+	down_sema(device_sema);
 	if (device_used++ == 0) {
 		/* first one to open the device */
 		buf[0] = AL_OUTPUT_RATE;
@@ -208,8 +208,8 @@ sound_player(self)
 		ALsetparams(AL_DEFAULT_DEVICE, buf, 2L);
 		sound_rate = PRIV->s_play.samprate;
 	}
-	release_lock(device_lock);
-	(void) acquire_lock(PRIV->s_lock, WAIT_LOCK);
+	up_sema(device_sema);
+	down_sema(PRIV->s_sema);
 	config = ALnewconfig();
 	ALsetwidth(config, PRIV->s_play.sampwidth);
 	ALsetchannels(config, PRIV->s_play.nchannels);
@@ -217,7 +217,7 @@ sound_player(self)
 	PRIV->s_port = ALopenport("sound channel", "w", config);
 	PRIV->s_flag |= PORT_OPEN;
 	portfd = ALgetfd(PRIV->s_port);
-	release_lock(PRIV->s_lock);
+	up_sema(PRIV->s_sema);
 
 	rate = 0;
 	while (nsamps > 0 || ALgetfilled(PRIV->s_port) > 0) {
@@ -261,7 +261,7 @@ sound_player(self)
 			dprintf(("sound_player(%lx): reading from pipe\n", (long) self));
 			(void) read(PRIV->s_pipefd[0], &c, 1);
 			dprintf(("sound_player(%lx): read %c\n", (long) self, c));
-			(void) acquire_lock(PRIV->s_lock, WAIT_LOCK);
+			down_sema(PRIV->s_sema);
 			if (c == 'p' || c == 'r')
 				filled = ALgetfilled(PRIV->s_port);
 			ALcloseport(PRIV->s_port);
@@ -272,15 +272,15 @@ sound_player(self)
 			}
 			if (c == 'p') {
 				dprintf(("sound_player(%lx): waiting to continue\n", (long) self));
-				release_lock(PRIV->s_lock);
+				up_sema(PRIV->s_sema);
 				(void) read(PRIV->s_pipefd[0], &c, 1);
 				dprintf(("sound_player(%lx): continue playing, read %c\n", (long) self, c));
-				(void) acquire_lock(PRIV->s_lock, WAIT_LOCK);
+				down_sema(PRIV->s_sema);
 			}
 			if (c == 'r') {
 				PRIV->s_port = ALopenport("sound channel", "w", config);
 				portfd = ALgetfd(PRIV->s_port);
-				release_lock(PRIV->s_lock);
+				up_sema(PRIV->s_sema);
 				continue;
 			} else {
 				dprintf(("sound_player(%lx): stopping with playing\n", (long) self));
@@ -315,20 +315,20 @@ sound_player(self)
 			ALwritesamps(PRIV->s_port, PRIV->s_play.sampbuf, n);
 		}
 	}
-	(void) acquire_lock(PRIV->s_lock, WAIT_LOCK);
+	down_sema(PRIV->s_sema);
 	ALcloseport(PRIV->s_port);
  cleanup:
 	PRIV->s_port = NULL;
 	PRIV->s_flag &= ~PORT_OPEN;
-	release_lock(PRIV->s_lock);
-	(void) acquire_lock(device_lock, WAIT_LOCK);
+	up_sema(PRIV->s_sema);
+	down_sema(device_sema);
 	if (--device_used == 0) {
 		/* last one to close the audio port */
 		buf[0] = AL_OUTPUT_RATE;
 		buf[1] = old_rate;
 		ALsetparams(AL_DEFAULT_DEVICE, buf, 2L);
 	}
-	release_lock(device_lock);
+	up_sema(device_sema);
 }
 
 static int
@@ -352,12 +352,12 @@ sound_stop(self)
 	mmobject *self;
 {
 	denter(sound_stop);
-	(void) acquire_lock(PRIV->s_lock, WAIT_LOCK);
+	down_sema(PRIV->s_sema);
 	if (PRIV->s_flag & PORT_OPEN) {
 		PRIV->s_flag |= STOP;
 		(void) write(PRIV->s_pipefd[1], "s", 1);
 	}
-	release_lock(PRIV->s_lock);
+	up_sema(PRIV->s_sema);
 	return 1;
 }
 
@@ -369,7 +369,7 @@ sound_setrate(self, rate)
 	char msg;
 
 	dprintf(("sound_setrate(%lx,%g)\n", (long) self, rate));
-	(void) acquire_lock(PRIV->s_lock, WAIT_LOCK);
+	down_sema(PRIV->s_sema);
 	if (rate == 0) {
 		PRIV->s_flag |= PAUSE;
 		msg = 'p';
@@ -384,7 +384,7 @@ sound_setrate(self, rate)
 		dprintf(("sound_setrate(%lx): writing %c\n", (long) self, msg));
 		(void) write(PRIV->s_pipefd[1], &msg, 1);
 	}
-	release_lock(PRIV->s_lock);
+	up_sema(PRIV->s_sema);
 	return 1;
 }
 
@@ -475,7 +475,7 @@ initsoundchannel()
 #endif
 	dprintf(("initsoundchannel\n"));
 	(void) initmodule("soundchannel", soundchannel_methods);
-	device_lock = allocate_lock();
-	if (device_lock == NULL)
-		fatal("soundchannelmodule: can't allocate lock");
+	device_sema = allocate_sema(1);
+	if (device_sema == NULL)
+		fatal("soundchannelmodule: can't allocate semaphore");
 }
