@@ -1149,6 +1149,16 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\Templates\empty_S2.grins
+  Destination=%MAINDIR%\Templates\empty_S2.grins
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\empty_S2.bmp
+  Destination=%MAINDIR%\Templates\empty_S2.bmp
+  Flags=0000000010000010
+end
+item: Install File
   Source=d:\ufs\mm\cmif\GRiNS-Icons\svg.tiff
   Destination=%MAINDIR%\GRiNS-Icons\svg.tiff
   Flags=0000000010000010
