@@ -116,7 +116,7 @@
 (gtype (string) 'line' 'Graphtype' CMIFdefault
 	'Type of graph: bar, line, hline' channel)
 
-(hicolor (tuple (int) (int) (int)) (255 0 0) 'Hilight color' CMIFcolor
+(hicolor (tuple (int) (int) (int)) (255 0 0) 'Highlight color' CMIFcolor
 	'Color used for highlighted anchors in window' channel)
 
 (bucolor (tuple (int) (int) (int)) (255 0 0) 'Button color' CMIFcolor
