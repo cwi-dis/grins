@@ -46,7 +46,9 @@ PRODUCT_TO_FEATURE = {
 	"G2R": ["smil2real"],
 	"smil2pro": ["smil2pro"],
 
-	"ALLPRODUCTS": ["ALLPRODUCTS"]
+	"ALLPRODUCTS": ["ALLPRODUCTS"],
+
+	"preregistered": ["preregistered"],
 	}
 
 PLATFORM_TO_PLATFORM = {
@@ -59,9 +61,12 @@ PLATFORM_TO_PLATFORM = {
 	}
 
 def gencommerciallicense(version=None, platform=None,
-			 user=None, organization=None):
+			 user=None, organization=None,
+			 preregistered=0):
 	features = PRODUCT_TO_FEATURE[version]
 	features = features + [PLATFORM_TO_PLATFORM[platform]]
+	if preregistered:
+		features = features + ["preregistered"]
 	features = encodefeatures(features)
 	dbase = grinsdb.Database()
 	newid = grinsdb.uniqueid()
@@ -219,10 +224,20 @@ def usage():
 	print " -E           Evaluation license, no user required"
 	print " -n id        Use this id for new license"
 	print " -d yyyymmdd  Use this expiry date (+N for N days in future)"
-	print " -f f1,f2,... Enable these features (default: all features, all platforms!)"
+	print " -f f1,f2,... Enable these features (default: ALLPRODUCTS, ALLPLATFORMS!)"
 	print " -u name      Encode this licenseename"
 	print " -o file      Write output to file (with backup)"
 	print " -D license   Decode a license and print information"
+
+	print "Features:",
+	for k, v in PRODUCT_TO_FEATURE.items():
+		if k in v:
+			print k,
+	print
+	print "Platforms:",
+	for k, v in PLATFORM_TO_PLATFORM.items():
+		print k,
+	print
 
 def getdefaultfeatures():
 	return encodefeatures(["ALLPRODUCTS", "ALLPLATFORMS"])
