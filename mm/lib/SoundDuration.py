@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Cache info about sound files
 
 # Used to get full info

@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Cache durations of mpeg files
 
 import FileCache
