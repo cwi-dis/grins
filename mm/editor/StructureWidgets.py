@@ -463,11 +463,16 @@ class SeqWidget(StructureObjWidget):
 
 	def draw(self, display_list):
 		# print "DEBUG: seq drawing ", self.get_box()
+		willplay = not self.mother.showplayability or self.node.WillPlay()
+		if willplay:
+			color = SEQCOLOR
+		else:
+			color = SEQCOLOR_NOPLAY
 		if self.selected: 
-			display_list.drawfbox(self.highlight(SEQCOLOR), self.get_box())
+			display_list.drawfbox(self.highlight(color), self.get_box())
 			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
 		else:
-			display_list.drawfbox(SEQCOLOR, self.get_box())
+			display_list.drawfbox(color, self.get_box())
 			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
 
 		if self.channelbox and not self.iscollapsed():
@@ -1143,11 +1148,16 @@ class VerticalWidget(StructureObjWidget):
 class ParWidget(VerticalWidget):
 	# Parallel node
 	def draw(self, display_list):
+		willplay = not self.mother.showplayability or self.node.WillPlay()
+		if willplay:
+			color = PARCOLOR
+		else:
+			color = PARCOLOR_NOPLAY
 		if self.selected:
-			display_list.drawfbox(self.highlight(PARCOLOR), self.get_box())
+			display_list.drawfbox(self.highlight(color), self.get_box())
 			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
 		else:
-			display_list.drawfbox(PARCOLOR, self.get_box())
+			display_list.drawfbox(color, self.get_box())
 			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
 		VerticalWidget.draw(self, display_list)
 
@@ -1155,11 +1165,16 @@ class ParWidget(VerticalWidget):
 class ExclWidget(VerticalWidget):
 	# Exclusive node.
 	def draw(self, display_list):
+		willplay = not self.mother.showplayability or self.node.WillPlay()
+		if willplay:
+			color = EXCLCOLOR
+		else:
+			color = EXCLCOLOR_NOPLAY
 		if self.selected:
-			display_list.drawfbox(self.highlight(EXCLCOLOR), self.get_box())
+			display_list.drawfbox(self.highlight(color), self.get_box())
 			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
 		else:
-			display_list.drawfbox(EXCLCOLOR, self.get_box())
+			display_list.drawfbox(color, self.get_box())
 			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
 		VerticalWidget.draw(self, display_list)
 
@@ -1167,11 +1182,16 @@ class ExclWidget(VerticalWidget):
 class PrioWidget(VerticalWidget):
 	# Prio node (?!) - I don't know what they are, but here is the code I wrote! :-)
 	def draw(self, display_list):
+		willplay = not self.mother.showplayability or self.node.WillPlay()
+		if willplay:
+			color = PRIOCOLOR
+		else:
+			color = PRIOCOLOR_NOPLAY
 		if self.selected:
-			display_list.drawfbox(self.highlight(PRIOCOLOR), self.get_box())
+			display_list.drawfbox(self.highlight(color), self.get_box())
 			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
 		else:
-			display_list.drawfbox(PRIOCOLOR, self.get_box())
+			display_list.drawfbox(color, self.get_box())
 			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
 		VerticalWidget.draw(self, display_list)
 
@@ -1179,11 +1199,16 @@ class PrioWidget(VerticalWidget):
 class SwitchWidget(VerticalWidget):
 	# Switch Node
 	def draw(self, display_list):
+		willplay = not self.mother.showplayability or self.node.WillPlay()
+		if willplay:
+			color = ALTCOLOR
+		else:
+			color = ALTCOLOR_NOPLAY
 		if self.selected:
-			display_list.drawfbox(self.highlight(ALTCOLOR), self.get_box())
+			display_list.drawfbox(self.highlight(color), self.get_box())
 			display_list.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
 		else:
-			display_list.drawfbox(ALTCOLOR, self.get_box())
+			display_list.drawfbox(color, self.get_box())
 			display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
 		VerticalWidget.draw(self, display_list)
 
@@ -1278,7 +1303,7 @@ class MediaWidget(MMNodeWidget):
 		y = y + sizes_notime.TITLESIZE
 		h = h - sizes_notime.TITLESIZE
 		
-		willplay = self.mother.showplayability or self.node.WillPlay()
+		willplay = not self.mother.showplayability or self.node.WillPlay()
 		ntype = self.node.GetType()
 
 		if willplay:
@@ -1294,21 +1319,26 @@ class MediaWidget(MMNodeWidget):
 			displist.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())			
 
 		# Draw the image.
-		image_filename = self.__get_image_filename()
-		if image_filename != None:
-			try:
-				box = displist.display_image_from_file(
-					image_filename,
-					center = 1,
-					# The coordinates should all be floating point numbers.
-					coordinates = (x+w/12, y+h/6, 5*(w/6), 4*(h/6)),
-					scale = -2
-					)
-			except windowinterface.error:
-				pass					# Shouldn't I use another icon or something?
-			else:
-				displist.fgcolor(TEXTCOLOR)
-				displist.drawbox(box)
+		if self.node.GetChannelType() == 'brush':
+			displist.drawfbox(MMAttrdefs.getattr(self.node, 'fgcolor'), (x+w/12, y+h/6, 5*(w/6), 4*(h/6)))
+			displist.fgcolor(TEXTCOLOR)
+			displist.drawbox((x+w/12, y+h/6, 5*(w/6), 4*(h/6)))
+		else:
+			image_filename = self.__get_image_filename()
+			if image_filename != None:
+				try:
+					box = displist.display_image_from_file(
+						image_filename,
+						center = 1,
+						# The coordinates should all be floating point numbers.
+						coordinates = (x+w/12, y+h/6, 5*(w/6), 4*(h/6)),
+						scale = -2
+						)
+				except windowinterface.error:
+					pass					# Shouldn't I use another icon or something?
+				else:
+					displist.fgcolor(TEXTCOLOR)
+					displist.drawbox(box)
 
 		# Draw the name
 		iconsizex = 16
