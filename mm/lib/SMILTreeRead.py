@@ -2947,7 +2947,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						continue
 
 			mods = ATTRIBUTES.get(attr)
-			if not ns and not ans and mods:
+			if not ns and not ' ' in tagname and not ans and mods:
 				if type(mods) is type({}):
 					for mod, elems in mods.items():
 						if settings.MODULES.get(mod) and (elems is None or tagname in elems):
@@ -4788,7 +4788,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def finish_starttag(self, tagname, attrdict, method):
 		nstag = tagname.split(' ')
 		if len(nstag) == 2 and \
-		   (nstag[0] in [SMIL1, GRiNSns]+SMIL2ns or extensions.has_key(nstag[0])):
+		   (nstag[0] in [SMIL1]+SMIL2ns or extensions.has_key(nstag[0])):
 			ns, tagname = nstag
 		else:
 			ns = ''
@@ -4799,7 +4799,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ptag = self.stack[-2][2]
 			nstag = ptag.split(' ')
 			if len(nstag) == 2 and \
-			   nstag[0] in [SMIL1, GRiNSns]+SMIL2ns:
+			   nstag[0] in [SMIL1]+SMIL2ns:
 				pns, ptag = nstag
 			else:
 				pns = ''
@@ -4826,7 +4826,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__fix_attributes(ns, tagname, attrdict)
 		if self._elements.has_key(tagname):
 			method = self._elements[tagname][0]
-		if method is not None:
+		if method is not None and (ns or ' ' not in tagname):
 			for module in ELEMENTS.get(tagname, []):
 				if settings.MODULES.get(module):
 					break
@@ -4837,17 +4837,22 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def unknown_endtag(self, tagname):
 		nstag = tagname.split(' ')
 		if len(nstag) == 2 and \
-		   (nstag[0] in [SMIL1, GRiNSns]+SMIL2ns or extensions.has_key(nstag[0])):
+		   (nstag[0] in [SMIL1]+SMIL2ns or extensions.has_key(nstag[0])):
 			ns, tagname = nstag
 		else:
 			ns = ''
-		for module in ELEMENTS.get(tagname, []):
-			if settings.MODULES.get(module):
-				method = self._elements.get(tagname, (None, None))[1]
-				if method is not None:
-					self.handle_endtag(tagname, method)
-					return
-				break
+		if self._elements.has_key(tagname):
+			method = self._elements[tagname][1]
+		else:
+			method = None
+		if method is not None and (ns or ' ' not in tagname):
+			for module in ELEMENTS.get(tagname, []):
+				if settings.MODULES.get(module):
+					break
+			else:
+				method = None
+		if method is not None:
+			self.handle_endtag(tagname, method)
 		if self.__in_body and self.__container is not None and self.__container.GetType() == 'foreign':
 			self.__container = self.__container.GetParent()
 
