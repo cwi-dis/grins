@@ -72,7 +72,7 @@ class _UsergroupView(GenFormView):
 		# std stuff
 		for k in self.keys():
 			if self[k]._id==id:
-				if k in self._cmddict.keys():
+				if self._cmddict.has_key(k):
 					apply(apply,self._cmddict[k])
 				return
 
