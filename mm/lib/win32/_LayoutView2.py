@@ -42,7 +42,7 @@ import DropTarget
 import IconMixin
 
 
-HIDE_TOPSIBLING = 0
+HIDE_TOPSIBLING = 1
 
 class _LayoutView2(GenFormView):
 	def __init__(self,doc,bgcolor=None):
@@ -1139,6 +1139,8 @@ class LayoutManager(LayoutManagerBase):
 		# draw objects on dc
 		if self._viewport:
 			self._viewport._draw3drect(dc, self._hasfocus)
+			if HIDE_TOPSIBLING:
+				self._viewport.computeExcludeRegion()
 			self._viewport.paintContentOn(dc)
 			self._viewport.paintBorderOn(dc, clipRgn=[])
 			self.paintTrakersOn(dc)
@@ -1171,10 +1173,55 @@ class UserEventMng:
 			
 ###########################
 
+def intersect(rect1, rect2):
+	rgn1 = win32ui.CreateRgn()
+	rgn1.CreateRectRgn(rect1)
+	rgn2 = win32ui.CreateRgn()
+	rgn2.CreateRectRgn(rect2)
+	rgn2.CombineRgn(rgn1,rgn2,win32con.RGN_AND)
+	type, newRect = rgn2.GetRgnBox()
+	rgn1.DeleteObject()
+	rgn2.DeleteObject()
+	return newRect
+		
 class Shape:
 	def __init__(self, context):
 		self._ctx = context
 		self._relatedShape = None
+		self._isTransparent = 1
+		self._exclRgn  = []
+		self._exclMediaRgn  = []
+		self._mediadisplayrect = None
+
+	def computeExcludeRegion(self, exclRgnTop=[]):
+		self._exclRgn = exclRgnTop
+		
+		# XXX note: it would be probably more efficient to create a 'real' Windows region to
+		# manage clipping. Unfortunaltly it doesn't work very well during painting (the UI is refreshed correctly only when
+		# you release the mouse button) for a raison I don't know.
+		
+		exclRgnChildSum = []		
+		for child in self._subwindows:
+			exclRgn = child.computeExcludeRegion(exclRgnTop+exclRgnChildSum)
+			exclRgnChildSum = exclRgnChildSum+exclRgn
+
+		sx, sy, sw, sh = self.LRtoDR(self.getwindowpos(), round=1)
+		geom = (sx, sy, sx+sw, sy+sh)
+		if not self._transparent:
+			# the clipping area is the entire region			
+			return [geom]
+
+		exclRgnRet = []
+		if self._mediadisplayrect is not None:
+			bx, by, bw, bh = self.LRtoDR(self.getwindowpos(), round=1)
+			sx, sy, sw, sh = self.LRtoDR(self._mediadisplayrect, round=1)
+			mediaGeom = (sx+bx, sy+by, sx+bx+sw, sy+by+sh)
+			exclRgnRet.append(intersect(mediaGeom, geom))
+
+		for childGeom in exclRgnChildSum:
+			exclRgnRet.append(intersect(childGeom, geom))
+
+		return exclRgnRet
 		
 	# method responsible to paint borders
 	# that method paint first hidden borders, then visible borders
@@ -1193,11 +1240,6 @@ class Shape:
 		newClipRgn.append(self.getClipRect())
 
 		newExclRgn = exclRgn[:]
-		if HIDE_TOPSIBLING:
-			topSibling = self.getTopSibling()
-			for sib in topSibling:
-				sx, sy, sw, sh = self.LRtoDR(sib.getwindowpos(), round=1)
-				newExclRgn.append((sx, sy, sx+sw, sy+sh))
 
 		hsave = dc.SaveDC()
 		self.paintHiddenBorderOn(dc, rc)		
@@ -1207,7 +1249,7 @@ class Shape:
 		for rect in newClipRgn:
 			dc.IntersectClipRect(rect)
 		if HIDE_TOPSIBLING:
-			for rect in newExclRgn:
+			for rect in self._exclRgn:
 				dc.ExcludeClipRect(rect)
 		self.paintVisibleBorderOn(dc, rc)		
 		dc.RestoreDC(hsave)
@@ -1233,17 +1275,15 @@ class Shape:
 	def getClipRect(self):
 		return (0, 0, 0, 0)
 	
-	def getTopSibling(self):
-		parent = self._parent
-		if parent is not None:
-			sibling = parent._subwindows
-			length = len(sibling)
-			for index in range(length):
-				if sibling[index] is self:
-					return sibling[:index]
-
-		return []
-
+	def isTransparent(self, transparent, bgcolor):
+		if transparent == None:
+			if bgcolor != None:
+				return 0
+			else:
+				return 1
+			
+		return transparent
+				
 class RectShape(win32window.Window, Shape, UserEventMng):
 	def __init__(self, name, context, attrdict):
 		self._attrdict = attrdict
@@ -1343,6 +1383,7 @@ class RectShape(win32window.Window, Shape, UserEventMng):
 		return 0	
 
 	def setImage(self, filename, fit, mediadisplayrect = None):
+		self._mediadisplayrect = mediadisplayrect
 		if self._active_displist != None:
 			self._active_displist.newimage(filename, fit, mediadisplayrect)
 
@@ -1453,13 +1494,10 @@ class Viewport(RectShape):
 		z = 0
 		transparent = attrdict.get('transparent')
 		bgcolor = attrdict.get('bgcolor')
-		if transparent == None:
-			if bgcolor != None:
-				transparent = 0
-			else:
-				transparent = 1
 
-		self.create(None, (self._uidx, self._uidy, w, h), units, z, transparent, bgcolor)
+		self._isTransparent = self.isTransparent(transparent, bgcolor)
+
+		self.create(None, (self._uidx, self._uidy, w, h), units, z, self._isTransparent, bgcolor)
 		self.setDeviceToLogicalScale(d2lscale)
 
 		# adjust some variables
@@ -1499,6 +1537,8 @@ class Viewport(RectShape):
 		newGeom = attrdict.get('wingeom')
 		oldGeom = self._attrdict.get('wingeom')
 		self._attrdict = attrdict
+
+		self._isTransparent = self.isTransparent(None, newBgcolor)
 
 		if oldGeom != newGeom:
 			self.updatecoordinates(newGeom, units=UNIT_PXL)			
@@ -1574,12 +1614,10 @@ class Region(RectShape):
 		z = attrdict.get('z')
 		transparent = attrdict.get('transparent')
 		bgcolor = attrdict.get('bgcolor')
-		if transparent == None:
-			if bgcolor != None:
-				transparent = 0
-			else:
-				transparent = 1
-		self.create(parent, (x, y, w, h), units, z, transparent, bgcolor)
+		
+		self._isTransparent = self.isTransparent(transparent, bgcolor)
+		
+		self.create(parent, (x, y, w, h), units, z, self._isTransparent, bgcolor)
 		self.setDeviceToLogicalScale(d2lscale)
 		
 		self.initDisplayList()
@@ -1614,7 +1652,10 @@ class Region(RectShape):
 		newZ = attrdict.get('z')
 		oldZ = self._attrdict.get('z')
 		self._attrdict = attrdict
+		transparent = attrdict.get('transparent')
 
+		self._isTransparent = self.isTransparent(transparent, newBgcolor)
+		
 		if oldGeom != newGeom:
 			self.updatecoordinates(newGeom, units=UNIT_PXL)
 		if newBgcolor != oldBgcolor:
