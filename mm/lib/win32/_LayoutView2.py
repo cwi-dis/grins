@@ -163,6 +163,7 @@ class _LayoutView2(GenFormView):
 		self.HookMessage(self.onMouse,win32con.WM_MOUSEMOVE)
 
 		self.addZoomButtons()
+		self.addFocusCtrl()
 
 	#
 	# setup the dialog control values
@@ -355,6 +356,33 @@ class _LayoutView2(GenFormView):
 		scale = self._layout.getDeviceToLogicalScale()
 		if scale<4: scale = scale + 0.1
 		self._layout.setDeviceToLogicalScale(scale)
+
+	#
+	# Focus adjustements
+	#
+	def addFocusCtrl(self):
+		fctrl = components.Control(self, grinsRC.IDC_1)
+		fctrl.attach_to_parent()
+		fctrl.hookmessage(self.OnHilight, win32con.WM_SETFOCUS)
+		fctrl.hookmessage(self.OnUnhilight, win32con.WM_KILLFOCUS)
+		fctrl.hookmessage(self.OnPaneKey, win32con.WM_KEYDOWN)
+
+	def OnHilight(self, params):
+		self._layout.hilight(1)
+					
+	def OnUnhilight(self, params):
+		focusReceiver =  params[2] 
+		if focusReceiver != self._layout.GetSafeHwnd():
+			self._layout.hilight(0)			
+
+	def OnPaneKey(self, params):
+		key = params[2]
+		if key == win32con.VK_TAB: 
+			self.GetParent().GetPane(0,0).GetTreeCtrl().SetFocus()
+		else:
+			self._layout.onKeyDown(params)
+		return 0
+
 	#
 	# Reposition controls on size
 	#
@@ -556,12 +584,18 @@ class LayoutManager(LayoutManagerBase):
 		LayoutManagerBase.__init__(self)
 		self._listener = None
 		self._viewport = None
+		self._hasfocus = 0
 			
 	# allow to create a LayoutManager instance before the onInitialUpdate of dialog box
 	def onInitialUpdate(self, parent, rc, bgcolor):
 		self.createWindow(parent, rc, bgcolor, (0, 0, 1280, 1024))
 		self.__initState()
 
+	def OnCreate(self, cs):
+		LayoutManagerBase.OnCreate(self, cs)
+		self.HookMessage(self.OnSetFocus,win32con.WM_SETFOCUS)
+		self.HookMessage(self.OnKillFocus,win32con.WM_KILLFOCUS)
+		
 	def __initState(self):
 		# allow to know the last state about shape (selected, moving, resizing)
 		self._selectedList = []
@@ -762,7 +796,7 @@ class LayoutManager(LayoutManagerBase):
 		if self._viewport:
 			self._viewport.paintOn(dcc)
 			dcc.SelectClipRgn(rgn)
-			self._viewport._draw3drect(dcc)
+			self._viewport._draw3drect(dcc, self._hasfocus)
 			self.drawTracker(dcc)
 
 		# copy bitmap
@@ -785,7 +819,16 @@ class LayoutManager(LayoutManagerBase):
 			for ix in range(1,nHandles+1):
 				x, y, w, h = wnd.getDragHandleRect(ix)
 				dc.PatBlt((x, y), (w, h), win32con.DSTINVERT);
+	
+	def hilight(self, f):
+		self._hasfocus = f
+		self.InvalidateRect(self.GetClientRect())	
 
+	def OnSetFocus(self, params):
+		self.hilight(1)
+
+	def OnKillFocus(self, f):
+		self.hilight(0)
 
 # for now manage only on listener in the same time
 # it should be enough
@@ -963,13 +1006,18 @@ class Viewport(win32window.Window, UserEventMng):
 		for w in L:
 			w.paintOn(dc, rc)
 
-	def _draw3drect(self, dc):
+	def _draw3drect(self, dc, hilight=0):
 		x, y, w, h = self.LRtoDR(self.getwindowpos())
 		l, t, r, b = x, y-self._cycaption, x+w, y+h
 		l, t, r, b = l-3, t-3, r+2, b+2
-		c1, c2 = 220, 150
+		c1, c2 = 180, 100
+		if hilight:
+			c1, c2 = 220, 150
 		for i in range(3):
-			dc.Draw3dRect((l,t,r,b),win32api.RGB(c1, c1, c1), win32api.RGB(c2, c2, c2))
+			if hilight:
+				dc.Draw3dRect((l,t,r,b),win32api.RGB(c1, c1, 0), win32api.RGB(c2, c2, 0))
+			else:
+				dc.Draw3dRect((l,t,r,b),win32api.RGB(c1, c1, c1), win32api.RGB(c2, c2, c2))
 			c1, c2 = c1-15, c2-15
 			l, t, r, b = l+1, t+1, r-1, b-1
 
