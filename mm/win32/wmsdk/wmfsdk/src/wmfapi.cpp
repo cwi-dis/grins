@@ -231,6 +231,27 @@ newMediaTypeObject()
 typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
+    IWMHeaderInfo *pI;	
+} WMHeaderInfoObject;
+
+staticforward PyTypeObject WMHeaderInfoType;
+
+static WMHeaderInfoObject *
+newWMHeaderInfoObject()
+{
+	WMHeaderInfoObject *self;
+	self = PyObject_NEW(WMHeaderInfoObject, &WMHeaderInfoType);
+	if (self == NULL)
+		return NULL;
+	self->pI=NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
     IWMReaderCallback *pI;	
 } WMReaderCallbackObject;
 
@@ -514,6 +535,27 @@ WMReader_Resume(WMReaderObject *self, PyObject *args)
 	return Py_None;
 }
 
+static char WMReader_QueryIWMHeaderInfo__doc__[] =
+""
+;
+static PyObject *
+WMReader_QueryIWMHeaderInfo(WMReaderObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	HRESULT hr;
+	WMHeaderInfoObject *obj = newWMHeaderInfoObject();	
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->QueryInterface(IID_IWMHeaderInfo,(void**)&obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)){
+		Py_DECREF(obj);
+		seterror("WMReader_QueryIWMHeaderInfo", hr);
+		return NULL;
+	}
+	return (PyObject*) obj;
+}
+
 static struct PyMethodDef WMReader_methods[] = {
 	{"Open", (PyCFunction)WMReader_Open, METH_VARARGS, WMReader_Open__doc__},
 	{"Close", (PyCFunction)WMReader_Close, METH_VARARGS, WMReader_Close__doc__},
@@ -526,6 +568,7 @@ static struct PyMethodDef WMReader_methods[] = {
 	{"Stop", (PyCFunction)WMReader_Stop, METH_VARARGS, WMReader_Stop__doc__},
 	{"Pause", (PyCFunction)WMReader_Pause, METH_VARARGS, WMReader_Pause__doc__},
 	{"Resume", (PyCFunction)WMReader_Resume, METH_VARARGS, WMReader_Resume__doc__},
+	{"QueryIWMHeaderInfo", (PyCFunction)WMReader_QueryIWMHeaderInfo, METH_VARARGS, WMReader_QueryIWMHeaderInfo__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -1564,6 +1607,111 @@ static PyTypeObject MediaTypeType = {
 ////////////////////////////////////////////
 
 ////////////////////////////////////////////
+// WMHeaderInfo object 
+
+static char WMHeaderInfo_GetAttributeCount__doc__[] =
+""
+;
+static PyObject *
+WMHeaderInfo_GetAttributeCount(WMHeaderInfoObject *self, PyObject *args)
+{
+	WORD wStreamNum=0;
+	if (!PyArg_ParseTuple(args, "|i",&wStreamNum))
+		return NULL;
+	HRESULT hr;
+	WORD cAttributes;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->GetAttributeCount(wStreamNum,&cAttributes);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)) {
+		seterror("WMHeaderInfo_GetAttributeCount", hr);
+		return NULL;
+	}
+	return Py_BuildValue("i",cAttributes);
+}
+
+// XXX: placeholder
+static char WMHeaderInfo_GetAttributeByIndex__doc__[] =
+""
+;
+static PyObject *
+WMHeaderInfo_GetAttributeByIndex(WMHeaderInfoObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	HRESULT hr;
+	WORD wIndex=0;
+	WORD wStreamNum=0;
+	WCHAR wszName[512];
+	WORD cchNamelen = 512;
+	WMT_ATTR_DATATYPE type;
+	BYTE pValue[512];
+	WORD cbLength = 512;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->GetAttributeByIndex(wIndex,&wStreamNum,wszName,&cchNamelen,&type,pValue,&cbLength);
+	Py_END_ALLOW_THREADS
+	if (FAILED(hr)) {
+		seterror("WMHeaderInfo_GetAttributeByIndex", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;	
+}
+
+
+static struct PyMethodDef WMHeaderInfo_methods[] = {
+	{"GetAttributeCount", (PyCFunction)WMHeaderInfo_GetAttributeCount, METH_VARARGS, WMHeaderInfo_GetAttributeCount__doc__},
+	{"GetAttributeByIndex", (PyCFunction)WMHeaderInfo_GetAttributeByIndex, METH_VARARGS, WMHeaderInfo_GetAttributeByIndex__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+WMHeaderInfo_dealloc(WMHeaderInfoObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+WMHeaderInfo_getattr(WMHeaderInfoObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(WMHeaderInfo_methods, (PyObject *)self, name);
+}
+
+static char WMHeaderInfoType__doc__[] =
+""
+;
+static PyTypeObject WMHeaderInfoType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"WMHeaderInfo",			/*tp_name*/
+	sizeof(WMHeaderInfoObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)WMHeaderInfo_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)WMHeaderInfo_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0, /*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	WMHeaderInfoType__doc__ /* Documentation string */
+};
+
+// End of code for WMHeaderInfo object 
+////////////////////////////////////////////
+
+////////////////////////////////////////////
 // WMReaderCallback object 
 
 static struct PyMethodDef WMReaderCallback_methods[] = {
@@ -1824,6 +1972,17 @@ static struct {const GUID *p;char* s;} wmguids[] ={
 	{NULL,NULL}
 };
 
+static struct {int n;char* s;} wmcon[] ={
+	{0, "WMT_TYPE_DWORD"},
+	{1, "WMT_TYPE_STRING"},
+	{2, "WMT_TYPE_BINARY"},
+	{3, "WMT_TYPE_BOOL"},
+	{4, "WMT_TYPE_QWORD"},
+	{5, "WMT_TYPE_WORD"},
+	{6, "WMT_TYPE_GUID"},
+	{0,NULL}
+	};
+
 static char wmfapi_module_documentation[] =
 "Windows Media Format API"
 ;
@@ -1854,6 +2013,17 @@ void initwmfapi()
 		Py_DECREF(x);
 		}
 
+	for(i=0;wmcon[i].s;i++)
+		{
+		x = PyInt_FromLong((long) wmcon[i].n);
+		if (x == NULL || PyDict_SetItemString(d, wmcon[i].s, x) < 0)
+			{
+			Py_FatalError("can't initialize module wmfapi");
+			return;
+			}
+		Py_DECREF(x);
+		}
+	
 	/* Check for errors */
 	if (PyErr_Occurred())
 		Py_FatalError("can't initialize module wmfapi");
