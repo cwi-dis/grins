@@ -1488,11 +1488,16 @@ class MMNode:
 		if name in ['regPoint', 'regAlign', 'scale']:
 			if self._mediaCssId == None:
 				return defaultValue
+			
+			self.__linkCssId()
 			value = self.context.cssResolver.getAttr(self._mediaCssId, name)
+			self.__unlinkCssId()
 		else:
 			if self._subRegCssId == None:
 				return defaultValue
+			self.__linkCssId()
 			value = self.context.cssResolver.getAttr(self._subRegCssId, name)
+			self.__unlinkCssId()
 		if value == None:
 			return defaultValue
 		return value
@@ -1833,6 +1838,10 @@ class MMNode:
 	def GetRawAttr(self, name, animated=0):
 		if animated and self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
+		if settings.activeFullSmilCss:
+			# only for css positioning attributes
+			if self.isCssAttr(name):
+				return self.getCssRawAttr(name)
 		if self.attrdict.has_key(name):
 			return self.attrdict[name]
 		raise NoSuchAttrError, 'in GetRawAttr()'
@@ -1840,11 +1849,19 @@ class MMNode:
 	def GetRawAttrDef(self, name, default, animated=0):
 		if animated and self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
+		if settings.activeFullSmilCss:
+			# only for css positioning attributes
+			if self.isCssAttr(name):
+				return self.getCssRawAttr(name)
 		return self.attrdict.get(name, default)
 
 	def GetAttr(self, name, animated=0):
 		if animated and self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
+		if settings.activeFullSmilCss:
+			# only for css positioning attributes
+			if self.isCssAttr(name):
+				return self.getCssAttr(name)
 		if self.attrdict.has_key(name):
 			return self.attrdict[name]
 		raise NoSuchAttrError, 'in GetAttr'
@@ -1852,6 +1869,10 @@ class MMNode:
 	def GetAttrDef(self, name, default, animated=0):
 		if animated and self.d_attrdict.has_key(name):
 			return self.d_attrdict[name]
+		if settings.activeFullSmilCss:
+			# only for css postioning attributes
+			if self.isCssAttr(name):
+				return self.getCssAttr(name)
 		return self.attrdict.get(name, default)
 
 	def GetInherAttr(self, name, animated=0):
