@@ -108,8 +108,9 @@ class Main(MainDialog):
 			self.openURL_callback('data:application/smil,<smil/>', 0, 0)
 		self._update_recent(None)
 		# then play them
-		for top in self.tops:
-			top.player.playsubtree(top.root)
+		if not hasattr(windowinterface, 'is_embedded') or not windowinterface.is_embedded():
+			for top in self.tops:
+				top.player.playsubtree(top.root)
 
 	def __skin_done(self, filename):
 		if filename:
@@ -144,7 +145,7 @@ class Main(MainDialog):
 			top.player.show()
 			if update_recent:
 				self._update_recent(url)
-			if startplay:
+			if startplay and (not hasattr(windowinterface, 'is_embedded') or not windowinterface.is_embedded()):
 				top.player.playsubtree(top.root)
 
 	def open_recent_callback(self, url):
