@@ -298,7 +298,7 @@ no)	;;
 		exclude="$GLexcl $exclthread -x FCNTL
 			-x PseudoHtmlChannel -x devsun -x audio.devsun"
 		;;
-	sunos*)	exclude="$GLexcl -x glXconst -x glX -x mv -x audio.devsgi -x devsgi -x cl -x sgimidi -x VCR"
+	sunos*)	exclude="$GLexcl -x glXconst -x glX -x mv -x audio.devsgi -x devsgi -x cl -x sgimidi -x VCR -x SGIVideoDuration"
 		extend="-e $CHAMELEON/mm/mmpython/$ARCH"
 		extpath=''
 		;;
