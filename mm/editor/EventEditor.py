@@ -24,7 +24,6 @@ EVENTS_CNODE = [				# What the event actually is.
 	'begin',
 	'end',
 	'repeat',			# what about it's integer argument??
-	'click',
 	'focusInEvent',
 	'focusOutEvent',		# NO OFFSET!
 	'activateEvent',
