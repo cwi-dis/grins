@@ -129,6 +129,9 @@ class MdbDatabase:
 		self._filefilter = filefilter
 		self._objfactory = objfactory
 
+	def close(self):
+		pass
+
 	def allids(self):
 		filenames = os.listdir(self._dirname)
 		return filter(self._filefilter, filenames)
@@ -267,6 +270,7 @@ class MdbDatabase:
 
 class Index:
 	def __init__(self, filename, mode='r', keylist=[]):
+		self.__lock(filename)
 		try:
 			self._db = anydbm.open(filename, mode)
 		except anydbm.error:
@@ -278,6 +282,51 @@ class Index:
 			self._db['.KEYLIST'] = string.join(keylist, ',')
 		else:
 			self._keylist = string.split(self._db['.KEYLIST'], ',')
+
+	def close(self):
+		if self._db is not None:
+			self._db.close()
+		self._db = None
+		self.__unlock()
+
+	def __lock(self, filename):
+		import tempfile
+		tempfile.tempdir = os.path.dirname(filename)
+		lockname = filename + '.LCK'
+		self.__lockname = lockname
+		tmpname = tempfile.mktemp()
+		f = open(tmpname, 'w')
+		while 1:
+			try:
+				os.link(tmpname, lockname)
+			except (OSError, IOError):
+				try:
+					mtime = os.stat(lockname)[stat.ST_MTIME]
+				except (OSError, IOError):
+					# Gone in the mean time
+					continue
+				if mtime < time.time()-20:
+					sys.stderr.write("Breaking lock: %s\n"
+							 %lockname)
+					# More than 20 seconds old
+					try:
+						os.unlink(lockname)
+					except (OSError, IOError):
+						pass
+				else:
+					sys.stderr.write("Wait on lock: %s\n"
+							 %lockname)
+					time.sleep(2)
+			else:
+				break
+		os.unlink(tmpname)
+		
+
+	def __unlock(self):
+		try:
+			os.unlink(self.__lockname)
+		except:
+			pass
 
 	def add(self, key, value, id):
 		if not key in self._keylist:
@@ -317,6 +366,10 @@ class IndexedMdbDatabase(MdbDatabase):
 		indexname = os.path.join(dirname, '.index')
 		self.__index = Index(indexname, 'w')
 
+	def close(self):
+		MdbDatabase.close(self)
+		self.__index.close()
+
 	def search(self, field, value):
 		if self.__index.has_key(field):
 			return self.__index.get(field, value)
@@ -351,6 +404,7 @@ def _test():
 		if write:
 			obj['Matched'] = 'yes'
 			dbase.save(obj)
+	dbase.close()
 
 if __name__ == "__main__":
 	_test()
