@@ -99,8 +99,12 @@ class MediaChannel:
 		if not url:
 			raise error, 'No URL on node'
 		
-		url = MMurl.canonURL(url)
-		url=urllib.unquote(url)
+		if MMurl.urlretrieved(url):
+			url = MMurl.urlretrieve(url)[0]
+		else:
+			url = MMurl.canonURL(url)
+			url = urllib.unquote(url)
+
 		if not self.__armBuilder.RenderFile(url):
 			self.__armFileHasBeenRendered=0
 			raise error, 'Failed to render '+url
