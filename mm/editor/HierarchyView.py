@@ -65,6 +65,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.old_selected_widget = None	# This is the node that used to have the focus but needs redrawing.
 		self.selected_icon = None
 		self.begin_event_source = None
+		self.droppable_widget = None
 
 		# Remove sometime.
 		self.focusnode = self.prevfocusnode = self.root	# : MMNode - remove when no longer used.
@@ -526,12 +527,15 @@ class HierarchyView(HierarchyViewDialog):
 			self.base_display_list = self.window.newdisplaylist(BGCOLOR, windowinterface.UNIT_PXL)
 			self.scene_graph.draw(self.base_display_list) # Keep it for later!
 			self.need_redraw = 0
+			self.droppable_widget = None
 
 		d = self.base_display_list.clone()
-		if self.selected_widget:
+		if self.selected_widget is not None:
 			self.selected_widget.draw_selected(d)
-		if self.selected_icon:
+		if self.selected_icon is not None:
 			self.selected_icon.draw_selected(d)
+		if self.droppable_widget is not None:
+			self.droppable_widget.draw_box(d)
 
 		# Draw the arrows on top.
 		self.draw_arrows(d)

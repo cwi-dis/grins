@@ -101,12 +101,17 @@ class HierarchyViewDialog(ViewDialog):
 			x = x * self.mcanvassize[0]
 			y = y * self.mcanvassize[1]		
 		obj = self.whichhit(x, y)
+		self.droppable_widget = None
 		if not obj:
-			return windowinterface.DROPEFFECT_NONE
+			rv = windowinterface.DROPEFFECT_NONE
 		elif obj.node.GetType() in MMNode.leaftypes:
-			return windowinterface.DROPEFFECT_MOVE
+			self.droppable_widget = obj
+			rv = windowinterface.DROPEFFECT_MOVE
 		else:
-			return windowinterface.DROPEFFECT_COPY
+			self.droppable_widget = obj
+			rv = windowinterface.DROPEFFECT_COPY
+		self.draw()
+		return rv
 	
 	def pastefile(self, maybenode, window, event, params):
 		import MMurl
@@ -125,14 +130,21 @@ class HierarchyViewDialog(ViewDialog):
 			yf = yf * self.mcanvassize[1]
 		obj = self.whichhit(x, y)
 		objSrc = self.whichhit(xf, yf)
+		self.droppable_widget = None
 		if obj and obj.node.GetType() in MMNode.interiortypes:
 			if cmd=='move':
 				if objSrc.node.IsAncestorOf(obj.node):
-					return windowinterface.DROPEFFECT_NONE
-				return windowinterface.DROPEFFECT_MOVE
-			else: 
-				return windowinterface.DROPEFFECT_COPY
-		return windowinterface.DROPEFFECT_NONE
+					rv = windowinterface.DROPEFFECT_NONE
+				else:
+					self.droppable_widget = obj
+					rv = windowinterface.DROPEFFECT_MOVE
+			else:
+				self.droppable_widget = obj
+				rv = windowinterface.DROPEFFECT_COPY
+		else:
+			rv = windowinterface.DROPEFFECT_NONE
+		self.draw()
+		return rv
 			
 	def dropnode(self, dummy, window, event, params):
 		# event handler for dropping the node.
