@@ -130,10 +130,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.errormsg(node, 'No URL set on node.')
 			return 1
 		mtype = node.GetAttrDef('type', None)
-		import settings
-		if not mtype and settings.get('checkext'):
-			import MMmimetypes
-			mtype = MMmimetypes.guess_type(url)[0]
 		if not mtype:
 			import urlcache
 			mtype = urlcache.mimetype(url)
