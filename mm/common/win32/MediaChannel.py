@@ -177,6 +177,10 @@ class MediaChannel:
 		self.__paused=0
 		self._playBuilder.Run()
 		self.register_for_timeslices()
+		if duration > 0:
+			self._qid = self._scheduler.enter(duration, 0, self.playdone, (0,))
+		elif self.play_loop == 0:
+			self.playdone(0)
 		return 1
 
 					
