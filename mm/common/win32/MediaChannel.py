@@ -133,6 +133,9 @@ class MediaChannel:
 			return 0
 
 		url=self.__channel.getfileurl(node)
+		if not url:
+			print 'No URL on node'
+			return -1
 		self.__armIsAsx=0
 		if self.isASX(url):
 			self.__armIsAsx=1
