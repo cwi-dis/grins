@@ -131,7 +131,7 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		elif i == 7:
 			raise 'Crash requested by user'
 		elif i == 8:
-			self.dump()
+			self.scheduler.dump()
 		else:
 			print 'Player: Option menu: funny choice', i
 		self.makeomenu()
