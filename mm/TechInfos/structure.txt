@@ -1,0 +1,59 @@
+Show time should be allowed on multiple nodes and must not be bound to
+the focus.  Whether we show a single time strip for the whole document
+or a time strip per timed node needs to be resolved.  The question
+came up whether show time should be limited to the children of the
+node, or recursively all descendants.  We decided to show time for all
+descendants but we may consider closing children.
+
+Use yellow warning triangles to show that a node has zero duration and
+as a result will not show during playback.  The triangle must be
+removed as soon as the situation changes.
+
+The SV can show lots of information, but it should be optional what
+information is show.  This can be achieved using a (dockable? --
+Menus, icons and properties group) window where the options are shown.
+
+We could have a semi-permanent properties window that shows the
+properties of the currently selected node in the SV.  We could split
+this properties window up in separate dockable windows.  This is
+something for the Menus, icons and properties group to consider.  If
+we do this, we may not need to show all that much information in the
+SV.
+
+When dropping a file onto an interior node (i.e. when creating a new
+leaf node), use the currently selected region.  If region property of
+currently selected node is permanently visible, it is easy to change
+if it was the wrong region.  Have to be careful that the user doesn't
+change the region on the current node before they drop the file.
+
+One of the optional icons should be the playstate of nodes.  We could
+make an icon or just a small rectangle that gets updated when the
+playstate changes.
+
+When hovering over the edge of a node, the cursor should change into a
+double-headed arrow, and the side should be draggable, with a tool tip
+giving the current new delay.  This can be done when time is shown in
+the parent node (in which case the pixel to time mapping should follow
+the time to pixel mapping of the parent) but also when no time is
+being shown.
+
+Maybe we want a Preview Media Element command to show a media element
+in the Player View.  This would be different from playing the element,
+since that would take timing into account.
+
+When creating a parent element, optionally move attributes to the new
+parent.  We should probably then have a dialog where the user can
+indicate which attributes to move.
+
+Allow begin/end on switch elements and on writing the SMIL file,
+create a par parent and move all attributes from the switch to the
+par.  Compare to create parent element.
+
+We could create 4 icons to be used to display the type of value of the
+begin and end attributes.  The icons could indicate
+	begin="0" (or no begin for nodes with non-excl parent)
+	begin="scheduled begin time"
+	begin="event-based begin time"
+	begin="both scheduled and event-based begin times"
+
+We could have icons to indicate the type of interior nodes.
