@@ -1681,13 +1681,13 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,78,107,10
 END
 
-IDD_BANDWIDTH_DIALOG DIALOG DISCARDABLE  0, 0, 190, 117
+IDD_BANDWIDTH_DIALOG DIALOG DISCARDABLE  0, 0, 190, 146
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Bandwidth computation"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,133,96,50,14,WS_DISABLED
-    PUSHBUTTON      "Cancel",IDCANCEL,7,96,50,14,WS_DISABLED
+    DEFPUSHBUTTON   "OK",IDOK,133,125,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,7,125,50,14,WS_DISABLED
     LTEXT           "Static",IDC_MESSAGE,7,7,176,8
     LTEXT           "Preroll time needed:",IDC_STATIC,8,25,112,8
     LTEXT           "Stall time during presentation:",IDC_STATIC,8,40,112,8
@@ -1695,7 +1695,10 @@ BEGIN
     LTEXT           "Computing...",IDC_PREROLL,132,25,47,8
     LTEXT           "Computing...",IDC_STALLTIME,132,40,47,8
     LTEXT           "Computing...",IDC_STALLCOUNT,132,54,47,8
-    PUSHBUTTON      "Help",IDHELP,133,74,50,14
+    PUSHBUTTON      "Help",IDHELP,133,104,50,14
+    LTEXT           "Number of items with errors:",IDC_STATIC,8,68,112,8
+    LTEXT           "Computing...",IDC_ERRORCOUNT,132,68,47,8
+    LTEXT           "",IDC_MESSAGE2,7,86,176,8
 END
 
 
@@ -1736,7 +1739,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 183
         TOPMARGIN, 7
-        BOTTOMMARGIN, 110
+        BOTTOMMARGIN, 139
     END
 END
 #endif    // APSTUDIO_INVOKED

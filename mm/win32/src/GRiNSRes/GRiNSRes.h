@@ -175,6 +175,7 @@
 #define IDC_INT_LIST                    1092
 #define IDC_MESSAGE                     1097
 #define IDC_VERSION_MSG                 1098
+#define IDC_MESSAGE2                    1098
 #define IDC_LINK_D                      1099
 #define IDC_LINK_T                      1100
 #define IDCMD_NEW_GROUP                 1101
@@ -255,6 +256,7 @@
 #define IDC_PREROLL                     1196
 #define IDC_STALLTIME                   1197
 #define IDC_STALLCOUNT                  1198
+#define IDC_ERRORCOUNT                  1199
 #define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
