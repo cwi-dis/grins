@@ -150,6 +150,8 @@ class PLAYFROM(_CommandBase):
 	help = 'Start playing from the selected node'
 class PUSHFOCUS(_CommandBase):
 	help = 'Select the selected node in other views'
+class CREATEANCHOR(_CommandBase):
+	help = 'Create a simple fullnode anchor on the focus'
 class FINISH_LINK(_CommandBase): 
 	help = 'Create hyperlink from recent anchor to focus'
 class FINISH_ARC(_CommandBase): 
