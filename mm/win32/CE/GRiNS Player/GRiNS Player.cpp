@@ -188,31 +188,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			wmEvent = HIWORD(wParam); 
 			// Parse the menu selections:
 			switch (wmId)
-			{	
+				{	
 				case IDM_HELP_ABOUT:
 					DialogBox(hInst, (LPCTSTR)IDD_ABOUTBOX, hWnd, (DLGPROC)About);
-				    break;
+				    return 0;
 				case IDOK:
 					SendMessage(hWnd, WM_ACTIVATE, MAKEWPARAM(WA_INACTIVE, 0), (LPARAM)hWnd);
 					SendMessage (hWnd, WM_CLOSE, 0, 0);
-					break;
+					return 0;
 				default:
 					return PyWnd_WndProc(hWnd, message, wParam, lParam);
 					//return DefWindowProc(hWnd, message, wParam, lParam);
-			}
+				}
 			break;
 		case WM_CREATE:
 			hwndCB = CreateRpCommandBar(hWnd);
 			break;
 		case WM_PAINT:
 			return PyWnd_WndProc(hWnd, message, wParam, lParam);
-			/*
-			RECT rt;
-			GetClientRect(hWnd, &rt);
-			LoadString(hInst, IDS_HELLO, szHello, MAX_LOADSTRING);
-			DrawText(hdc, szHello, _tcslen(szHello), &rt, 
-				DT_SINGLELINE | DT_VCENTER | DT_CENTER);
-			break; */
+		case WM_SETFOCUS:
+		case WM_KILLFOCUS:
+			return DefWindowProc(hWnd, message, wParam, lParam);
 		case WM_DESTROY:
 			CommandBar_Destroy(hwndCB);
 			//PostQuitMessage(0);
