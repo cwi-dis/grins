@@ -740,8 +740,9 @@ class Viewport(win32window.Window, UserEventMng):
 		
 	def getMouseTarget(self, point):
 		for w in self._subwindows:
-			if w.inside(point):
-				return w
+			target = w.getMouseTarget(point)
+			if target:
+				return target
 		if self.inside(point):
 			return self
 		return None
@@ -824,10 +825,7 @@ class Region(win32window.Window, UserEventMng):
 
 		x0, y0 = dc.SetWindowOrg((-l,-t))
 		if self._active_displist:
-			entry = self._active_displist._list[0]
-			if entry[0] == 'clear' and entry[1]:
-				dc.FillSolidRect((0,0,r-l,b-t),win32mu.RGB(entry[1]))
-			self._active_displist._render(dc, None, clear=0)
+			self._active_displist._render(dc, None)
 		dc.SetWindowOrg((x0,y0))
 
 		L = self._subwindows[:]
@@ -837,6 +835,7 @@ class Region(win32window.Window, UserEventMng):
 
 		dc.SelectClipRgn(rgn)
 		if self._showname:
+			dc.SetBkMode(win32con.TRANSPARENT)
 			dc.DrawText(self._name, ltrb, win32con.DT_SINGLELINE|win32con.DT_CENTER|win32con.DT_VCENTER)
 
 		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
@@ -852,6 +851,15 @@ class Region(win32window.Window, UserEventMng):
 		rgn.CombineRgn(rgn,prgn,win32con.RGN_AND)
 		prgn.DeleteObject()
 		return rgn
+
+	def getMouseTarget(self, point):
+		for w in self._subwindows:
+			target = w.getMouseTarget(point)
+			if target:
+				return target
+		if self.inside(point):
+			return self
+		return None
 
 	# 
 	# interface implementation: function called from an external module
