@@ -44,7 +44,7 @@ def convertaudiofile(u, dstdir, file, node):
 		cp.SetCopyright(MMAttrdefs.getattr(node, 'copyright'))
 		ts.SetAudioContent(MMAttrdefs.getattr(node, 'project_audiotype'))
 		target = MMAttrdefs.getattr(node, 'project_targets')
-		for i in range(5):
+		for i in range(6):
 			if (1 << i) & target:
 				ts.AddTargetAudience(i)
 		if not target:
@@ -211,7 +211,7 @@ def convertvideofile(u, srcurl, dstdir, file, node):
 		cp.SetCopyright(MMAttrdefs.getattr(node, 'copyright'))
 		ts.SetVideoQuality(MMAttrdefs.getattr(node, 'project_videotype'))
 		target = MMAttrdefs.getattr(node, 'project_targets')
-		for i in range(5):
+		for i in range(6):
 			if (1 << i) & target:
 				ts.AddTargetAudience(i)
 		if not target:
