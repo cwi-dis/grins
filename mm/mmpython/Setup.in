@@ -6,15 +6,15 @@ BASESETUP=	$(X11DIR)/Setup $(IMGDIR)/Setup
 PYTHONPATH=	$(COREPYTHONPATH)$(XPATH)$(IMGPATH)
 MPEGDIR=	/ufs/sjoerd/ansjovis/src/ooMPEG/$(MACHDEP)
 
-# Irix 5.X version, with support both for GL and X.
+# Irix 5.X version, with support both for X.
 
 mm mmmodule.o -DMM_DEBUG
 
-moviechannel moviechannelmodule.o -DMM_DEBUG -DUSE_CL -DUSE_XM -DUSE_GL -I$(X11DIR) -lcl
-# new version:
-mpegchannel mpegchannelmodule.o -DMM_DEBUG -DUSE_XM -I$(X11DIR) -I$(MPEGDIR) -L$(MPEGDIR) -lmpeg
-# old version:
-#mpegchannel mpegchannelmodule.o -DMM_DEBUG -DUSE_CL -DUSE_XM -DUSE_GL -I$(X11DIR) -lcl
+moviechannel moviechannelmodule.o -DMM_DEBUG -DUSE_CL -DUSE_XM -I$(X11DIR) -lcl
+# Berkeley MPEG version:
+#mpegchannel mpegchannelmodule.o -DMM_DEBUG -DUSE_XM -I$(X11DIR) -I$(MPEGDIR) -L$(MPEGDIR) -lmpeg
+# Compression Library version:
+mpegchannel mpegchannelmodule-cl.o -DMM_DEBUG -DUSE_CL -DUSE_XM -I$(X11DIR) -lcl
 soundchannel soundchannelmodule.o -DMM_DEBUG -laudio -lawareaudio
 #nullchannel nullchannelmodule.o -DMM_DEBUG
 #imagechannel imagechannelmodule.o -DMM_DEBUG
