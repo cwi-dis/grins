@@ -23,7 +23,7 @@ def modanchorlist(list):
 	didwork = 0
 	for i in range(len(list)):
 		id, tp, args = list[i]
-		if type(id) <> type(''):
+		if type(id) is not type(''):
 			id = `id`
 			list[i] = (id, tp, args)
 			didwork = 1
