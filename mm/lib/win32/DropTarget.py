@@ -3,7 +3,7 @@ import WMEVENTS
 import win32ui, win32con
 import longpath
 import string
-import usercmd
+import usercmdui
 
 Sdk=win32ui.GetWin32Sdk()
 
@@ -61,7 +61,7 @@ def DecodeDragData(dataobj):
 		rv = tuple(map(eval, rv))
 	elif name == 'Tool':
 		cmdid = eval(data)
-		rv = usercmd.id2usercmd(cmdid)
+		rv = usercmdui.id2usercmd(cmdid)
 	elif name == 'NodeUID':
 		context, nodeuid = string.split(data)
 		rv = (eval(context), nodeuid)
@@ -86,7 +86,7 @@ def EncodeDragData(name, args):
 	if name == 'Node':
 		return CF_NODE, "%d %d"%args
 	if name == 'Tool':
-		cmdid = usercmd.usercmd2id(args)
+		cmdid = usercmdui.usercmd2id(args)
 		return CF_TOOL, "%d"%cmdid
 	if name == 'NodeUID':
 		if type(args) == type(()):
