@@ -34,13 +34,13 @@
 	'How the anchor gets actuated' raw (smil2 cmif))
 
 (fragment (string) '' 'Fragment name' default
-	'Fragment identifier' raw (advanced smil2 cmif))
+	'Fragment identifier' raw (template smil2 cmif))
 
 (ashape (enum rect poly circle) rect 'Anchor shape' default
-	'Shape of anchor' raw (advanced smil2 cmif))
+	'Shape of anchor' raw (template smil2 cmif))
 
 (acoords (list (enclosed (float))) () 'Coordinates' acoords
-	'Anchor coordinates' raw (advanced smil2 cmif))
+	'Anchor coordinates' raw (template smil2 cmif))
 
 (show (enum new pause replace) replace 'Show' default
 	'How to show current presentation after hyperjump' raw (smil2))
@@ -52,18 +52,18 @@
 	'What happens to new presentation after hyperjump' raw (smil2))
 
 (external (bool) 0 'External link' default
-	'Use external application to open destination of hyperlink' raw (advanced smil2))
+	'Use external application to open destination of hyperlink' raw (template smil2))
 
 (target (string) '' 'Target window' default
-	'Target window for hyperjump' raw (advanced smil2))
+	'Target window for hyperjump' raw (template smil2))
 
 (sourceLevel (float) 1 'Source level' percent
 	'Specifies the relative volume in percent of the source presentation after hyperjump'
-	raw (advanced smil2))
+	raw (template smil2))
 
 (destinationLevel (float) 1 'Destination level' percent
 	'Specifies the relative volume in percent of the destination presentation after hyperjump'
-	raw (advanced smil2))
+	raw (template smil2))
 
 (abstract (string) '' 'Abstract' default 'A brief description of the contents (informational only)' raw (g2 qt smil10 smil2 cmif snap))
 
@@ -323,7 +323,7 @@
 	'Position in which descriptive text is read by assistive devices' raw (template cmif smil2))
 
 (tabindex (int) 0 'Tab index' default
-	'Position of the element in the tabbing order of the document' raw (advanced cmif smil2))
+	'Position of the element in the tabbing order of the document' raw (template cmif smil2))
 
 (regionName (name) 'undefined' 'Region name' default
 	'Region name' raw (advanced cmif smil2 snap))
@@ -563,6 +563,10 @@
 	'Makes all opaque areas transparent' normal (advanced g2 smil2))
 (sendTo (enum rpcontextwin rpbrowser osdefaultbrowser rpengine) rpbrowser 'Send to' default
 	'Specifies window that opens the HTML page' normal (g2 smil2))
+(contextwidth (int) 0 'Context window width' default
+	'Width of Context subwindow' normal (template smil2))
+(contextheight (int) 0 'Context window height' default
+	'Height of Context subwindow' normal (template smil2))
 (reliable (bool) 0 'Reliable transmission' default
 	'Ensures reliable transmission' normal (advanced g2 smil2))
 (strbitrate (int) 12288 'Stream bitrate' default
