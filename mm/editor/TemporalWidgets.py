@@ -38,7 +38,6 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		self._factory = TemporalWidgetFactory()
 		self._factory.set_root(root)
 		self.channelWidgets = {} # All channel widgets, which node widgets belong to.
-		self.breaks = {}	# A dict of times->syncbars.
 		self.channelNameWidth = 100 # Length of the name of the channel
 		self.channelPlayWidth = 600 # Length of the playable part of the channel
 		self.channelHeight = 16
@@ -46,6 +45,8 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		self.__init_create_channels(self.node.context.channels)
 		self.lbar = self._factory.createbar(self.node)
 		self.rbar = self._factory.createbar(self.node) # also.
+		self.breaks = {0:self.lbar, self.maxtime:self.rbar}	# A dict of times->syncbars.
+		self.syncbars = [self.lbar, self.rbar] # otherwise two bars with the same times will clobber each other.
 		self.__init_create_widgets(self.node, self.lbar, self.rbar)
 		self.editmgr = node.context.editmgr
 
@@ -53,6 +54,13 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		self.nodes_l = self.channelNameWidth + 6
 		x,y,w,h = self.get_box()
 		self.nodes_r = x+w
+
+	def destroy(self):
+		# A destructor.
+		for i in self.syncbars:
+			i.destroy()
+		for i in self.channelWidgets:
+			i.destroy()
 
 	def set_maxtime(self, time):
 		# Sets the maximum time for this presentation.
@@ -72,16 +80,17 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 			kids = node.GetSchedChildren()
 			lb = leftbar
 			for i in range(0, len(kids)):
-				# Create a new bar after this child
-				rb = self._factory.createbar(node)
-				# Fill in the new bar.
-				self.__init_create_widgets(kids[i], lb, rb)
-				self.breaks[rb.get_time()] = rb
-				lb = rb
 				if i == len(kids)-1:
 					# Then this is the final bar.
-					rightbar.attach_widget_left(rb)
-					rb.attach_widget_right(rightbar)
+					self.__init_create_widgets(kids[i], lb, rightbar)
+				else:
+					# Create a new bar after this child
+					# Note that this is the only place new bars should be created.
+					rb = self._factory.createbar(node)
+					self.syncbars.append(rb) # add it to the list of bars
+					self.breaks[rb.get_time()] = rb	# and to the list of breaks in time.
+					self.__init_create_widgets(kids[i], lb, rb)
+					lb = rb
 		elif node.type == 'par':
 			for i in node.GetSchedChildren():
 				# Create a node for each child and add it here.. conceptually only.
@@ -115,7 +124,7 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 			i.moveto((l,t,r,t+self.channelHeight))
 			t = t + self.channelHeight + 2
 		# Move all of my breaks (each syncbar only needs to know it's x position)
-		for i in self.breaks.values():
+		for i in self.syncbars:
 			x = self.time2pixel(i.get_time())
 			i.moveto((x,42,69,13)) # I just think that those numbers are cool. Life. Love. Death.
 		self.lbar.moveto((self.time2pixel(0), 1,2,3))
@@ -126,31 +135,32 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		# 1) check the sync bars
 		# 2) check the nodes.
 		# You may need to add more to this as time goes by.
-		if self.lbar.is_hit(coords):
-			self.select_syncbar(self.lbar)
-		elif self.rbar.is_hit(coords):
-			self.select_syncbar(self.rbar)
-		else:
-			for i in self.breaks.values():
-				if i.is_hit(coords):
-					self.select_syncbar(i)
-			for c in self.channelWidgets.values():
-				if c.is_hit_y(coords):
-					if c.is_hit(coords):
-						self.select_channel(c)
-					else:
-						n = c.get_node_at(coords)
-						self.select_node(n)
-						
+		for i in self.syncbars:
+			if i.is_hit(coords):
+				self.select_syncbar(i)
+		for c in self.channelWidgets.values():
+			if c.is_hit_y(coords):
+				if c.is_hit(coords):
+					self.select_channel(c)
+				else:
+					n = c.get_node_at(coords)
+					self.select_node(n)
+		
 	# TODO: what about CTRL-clicks for multiple selection?
 
 	def select_syncbar(self, bar):
-		print "Selected: ", bar, " (TODO)"
+		self.root.unselect_nodes()
 		if isinstance(bar, SyncBarWidget):
+			self.root.select_node(bar)
 			bar.select()
+			self.editmgr.setglobalfocus('MMNode', bar.node)
+			# Also, set the node's channel.
+
 
 	def select_channel(self, channel):
-		print "Selected: ", channel, " (TODO)"
+		print "DEBUG: these are the syncbars:"
+		for i in self.syncbars:
+			print " * ",i.tostring()
 		self.root.unselect_channels()
 		if isinstance(channel, ChannelWidget):
 			self.root.select_channel(channel)
@@ -158,7 +168,6 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 			self.editmgr.setglobalfocus('MMChannel', channel.channel)
 
 	def select_node(self, mmwidget):
-		print "Selected: ", mmwidget, " (TODO)"
 		self.root.unselect_nodes()
 		if isinstance(mmwidget, MMWidget):
 			self.root.select_node(mmwidget)
@@ -212,12 +221,18 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 		# Once this widget has recieved something to display on, it can create some
 		# widgets.
 		self.name = self.channel.name
-		self.nodes = []		# A list of all nodes in this channel.
+		self.nodes = []		# A list of all node widgets in this channel.
 
 		self.w_outerbox = self.graph.AddWidget(Box(self.root))
 		self.w_name = self.graph.AddWidget(Text(self.root))
 		self.w_name.set_text(self.name)
 
+	def destroy(self):
+		for i in self.nodes:
+			i.destroy()	# nodes is a list of mmwidgets, not MMNodes.
+		self.nodes = None
+		self.w_outerbox.destroy()
+		self.w_name.destroy()
 
 	def set_channel(self, c):
 		self.channel = c
@@ -284,10 +299,16 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		self.w_text = self.graph.AddWidget(Text(self.root))
 		self.w_text.set_text(self.name)
 
+	def destroy(self):
+		# TODO: remove me from the list of MMNode Views.
+		self.w_outerbox.destroy()
+		self.w_text.destroy()
+
 	def moveto(self, coords):
 		TimeWidget.moveto(self, coords)
 		self.w_outerbox.moveto(coords)
 		self.w_text.moveto(coords)
+		print "DEBUG: MMWidget moved to ", self.get_box()
 
 	def set_channel(self, c):
 		print "TODO"
@@ -309,6 +330,7 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		Widgets.Widget.unselect(self)
 		self.w_outerbox.set_color((0,0,0))
 
+
 class SyncBarWidget(TimeWidget, GeoDisplayWidget):
 	# This is a syncronisation bar.
 	# EVERY SYNCRONISATION BAR CREATES A BREAK IN THE TIMELINE.
@@ -320,11 +342,14 @@ class SyncBarWidget(TimeWidget, GeoDisplayWidget):
 	# If I represent a seq, I am either the start, end or an element.
 	# My node that I represent is stored in self.node in a superclass.
 
+	def tostring(self):
+		return "SyncBar "+str(id(self))+" left:"+repr(self.attached_left) \
+			+" right:"+repr(self.attached_right)
+
 	def __repr__(self):
-		return "SyncBar "+self.node.uid+" left:"+str(len(self.attached_left))+" right:"+str(len(self.attached_right))
-	
+		return "SyncBar instance " + str(id(self))
+
 	def setup(self):
-		print "DEBUG: new syncbar instance: ", self.node.uid
 		self.attached_left = []
 		self.w_blobs_left = []	# These two arrays are mapped together.
 
@@ -333,6 +358,15 @@ class SyncBarWidget(TimeWidget, GeoDisplayWidget):
 
 		# I am a bar with little blobs attaching me to the right and left nodes there.
 		self.w_bar = self.graph.AddWidget(Box(self.root))
+
+	def destroy(self):
+		for i in self.w_blobs_left + self.w_blobs_right:
+			i.destroy()
+		self.w_bar.destroy()
+		self.w_blobs_left = None
+		self.w_blobs_right = None
+		self.attached_left = None # Prevents circular references.
+		self.attached_right = None
 
 	def attach_widget_left(self, widget):
 		self.attached_left.append(widget)
@@ -351,17 +385,19 @@ class SyncBarWidget(TimeWidget, GeoDisplayWidget):
 
 		# Remember that sometimes, w_blobs_left may contain another blob.
 		for i in range(0,len(self.w_blobs_left)):
-			nx, ny, nh, nw = self.attached_left[i].get_box()
+			print "---DEBUG: It's a ", self.attached_left[i]
+			nx, ny, nw, nh = self.attached_left[i].get_box()
 
 			# Find the highest and lowest point.
 			if t == None or t > ny:
 				t = ny
 			if b == None or b < ny+nh:
 				b = ny+nh
-			print "DEBUG: b now: ", b, "ny: ", ny, ", nh: ", nh
 			self.w_blobs_left[i].moveto((l-barwidth/2-4,ny+6,l-barwidth/2+2,ny+12))
-			#print self, " left blob rendered at ", self.w_blobs_left[i].get_box()
+			print "DEBUG: b now: ", b, "ny: ", ny, ", nh: ", nh
+			print self, " left blob rendered at ", self.w_blobs_left[i].get_box()
 		for i in range(0,len(self.w_blobs_right)):
+			print "---DEBUG: It's a ", self.attached_right[i]
 			nx, ny, nw, nh = self.attached_right[i].get_box()
 
 			# Find the highest and lowest point.
@@ -371,11 +407,13 @@ class SyncBarWidget(TimeWidget, GeoDisplayWidget):
 				b = ny+nh
 			print "DEBUG: b now: ", b, "ny: ", ny, ", nh: ", nh
 			self.w_blobs_right[i].moveto((l+barwidth/2-2,ny+6,l+barwidth/2+4,ny+12))
+			print self, " right blob rendered at ", self.w_blobs_right[i].get_box()			
 		if t == None: t=0
 		if b == None: b = 10
-		self.w_bar.moveto((l-(barwidth/2), t-3, l+(barwidth/2), b+3))
+		coords = (l-(barwidth/2), t-3, l+(barwidth/2), b+3)
+		self.w_bar.moveto(coords)
 		# I need to move myself to handle clicks.
-		TimeWidget.moveto(self, (l-(barwidth/2), t-3, r+(barwidth/2), b+3))
+		TimeWidget.moveto(self, coords)
 
 	def get_time(self):
 		if len(self.attached_right) > 0:
@@ -384,6 +422,18 @@ class SyncBarWidget(TimeWidget, GeoDisplayWidget):
 			return self.attached_left[0].node.t1
 		else:
 			print "I have no attached nodes."
+
+	def select(self):
+		self.w_bar.set_color((255,255,255))
+		for i in self.w_blobs_left+self.w_blobs_right:
+			i.set_color((255,255,255))
+		TimeWidget.select(self)
+
+	def unselect(self):
+		self.w_bar.set_color((0,0,0))
+		for i in self.w_blobs_left+self.w_blobs_right:
+			i.set_color((0,0,0))
+		TimeWidget.unselect(self)
 
 ##class MediaBarWidget(Widget, GeoDisplayWidget):
 ##	# This is the media bar at the bottom of the view.
