@@ -115,6 +115,10 @@ class MACDialog:
 			text = string.split(text, '\r')
 			text = string.join(text, '\n')
 		return text
+
+	def _selectinputfield(self, item):
+		"""Select all text in an input field"""
+		self._dialog.SelectDialogItemText(item, 0, 32767)
 		
 	def _setbutton(self, item, value):
 		tp, h, rect = self._dialog.GetDialogItem(item)
