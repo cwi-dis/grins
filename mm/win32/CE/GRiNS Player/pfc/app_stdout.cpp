@@ -25,7 +25,9 @@ struct PyStdOut
 	static PyMethodDef methods[];
 	static PyStdOut *createInstance(HWND hWnd=NULL)
 		{
+#ifdef WITH_THREAD
 		AcquireThread at(PyInterface::getPyThreadState());
+#endif
 		PyStdOut *instance = PyObject_NEW(PyStdOut, &type);
 		if (instance == NULL) return NULL;
 		instance->m_hWnd = hWnd;
