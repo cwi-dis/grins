@@ -3361,8 +3361,8 @@ class TextInput(_Widget):
 		self._text = text
 		text.value = inittext
 		if cb:
-			text.AddCallback('activateCallback', self._callback,
-					 cb)
+			text.AddCallback('valueChangedCallback',
+					 self._callback, cb)
 		_Widget.__init__(self, widget)
 
 	def _callback(self, w, (func, arg), call_data):
