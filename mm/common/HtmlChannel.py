@@ -197,7 +197,10 @@ class HtmlChannel(ChannelWindow):
 			print 'enctype:', enctype
 			print 'list:', list
 			return
-		href = urljoin(self.url, href)
+		if href:
+			href = urllib.basejoin(self.url, href)
+		else:
+			href = self.url
 		if list:
 			href = addquery(href, list)
 		self.url, tag = urllib.splittag(href)
@@ -211,32 +214,6 @@ class HtmlChannel(ChannelWindow):
 		self.htmlw.text = newtext
 		self.htmlw.footerText = '<P>[<A HREF="'+self.armed_url+\
 			  '">BACK</A> to CMIF node]<P>'
-
-#
-# Given a base URL and a HREF return the URL of the new document
-#
-def urljoin(base, href):
-	print 'urljoin', (base, href)
-	type, path = urllib.splittype(href)
-	if type:
-		print '->', href
-		return href
-	host, path = urllib.splithost(path)
-	basetype, basepath = urllib.splittype(base)
-	basehost, basepath = urllib.splithost(basepath)
-	type = basetype or 'file'
-	if path[:1] != '/':
-		i = string.rfind(basepath, '/')
-		if i < 0: basepath = '/'
-		else: basepath = basepath[:i+1]
-		path = basepath + path
-	if not host: host = basehost
-	if host:
-		print '->',type + '://' + host + path
-		return type + '://' + host + path
-	else:
-		print '->', type + ':' + path
-		return type + ':' + path
 
 def addquery(href, list):
 	if not list: return href
