@@ -1730,9 +1730,21 @@ class HierarchyView(HierarchyViewDialog):
 			return
 
 		attrlist = node.getattrnames()
-		defattrlist = attrlist[:]
-		for a in ['name', 'file']:
-			if a in defattrlist: defattrlist.remove(a)
+##		defattrlist = attrlist[:]
+##		for a in ['name', 'file']:
+##			if a in defattrlist: defattrlist.remove(a)
+		#
+		# Select the attributes we probably want to move to the
+		# parent
+		#
+		defattrlist = []
+		for a in ['duration', 'fillDefault', 'layout', 'loop', 'max',
+				'min', 'repeatdur', 'restart', 'restartDefault',
+				'syncBehavior', 'syncBehaviorDefault', 'syncMaster',
+				'syncTolerance', 'syncToleranceDefault', 'beginlist',
+				'endlist', 'u_group']:
+			if a in attrlist:
+				defattrlist.append(a)
 
 		copylist = windowinterface.mmultchoice('Select properties to move to new parent group', attrlist, defattrlist, parent=self.getparentwindow())
 		if copylist is None: return
@@ -2668,8 +2680,10 @@ class HierarchyView(HierarchyViewDialog):
 			# Now either set the value through the edit mgr or manually
 			if editmgr:
 				editmgr.setnodeattr(newnode, attrname, attrvalue)
+				editmgr.setnodeattr(oldnode, attrname, None)
 			else:
 				newnode.attrdict[attrname] = attrvalue
+				del oldnode.attrdict[attrname]
 
 	def popup_error(self, message):
 		windowinterface.showmessage(message, mtype="error", parent=self.window)
