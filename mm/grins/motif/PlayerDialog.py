@@ -77,7 +77,6 @@ class PlayerDialog(PlayerDialogBase):
 			PlayerDialogBase.show(self)
 		else:
 			self.setchannels()
-			self.setusergroups()
 
 	def after_chan_show(self, channel=None):
 		pass
