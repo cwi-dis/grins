@@ -14,6 +14,7 @@ import os
 import MMurl
 import regsub
 import re
+from cmif import findfile
 
 
 def nameencode(value):
@@ -53,65 +54,21 @@ nonascii = re.compile('[\200-\377]')
 
 isidre = re.compile('^[a-zA-Z_][-A-Za-z0-9._]*$')
 
-# A fileish object with indenting
-class IndentedFile:
-	def __init__(self, fp):
-		self.fp = fp
-		self.level = 0
-		self.bol = 1
-
-	def push(self):
-		self.level = self.level + 2
-
-	def pop(self):
-		self.level = self.level - 2
-
-	def write(self, data):
-		lines = string.split(data, '\n')
-		if not lines:
-			return
-		for line in lines[:-1]:
-			if self.bol:
-				if self.level:
-					self.fp.write(' '*self.level)
-				self.bol = 0
-			if line:
-				self.fp.write(line)
-			self.fp.write('\n')
-			self.bol = 1
-
-		line = lines[-1]
-		if line:
-			if self.bol:
-				if self.level:
-					self.fp.write(' '*self.level)
-				self.bol = 0
-			self.fp.write(line)
-
-	def writeline(self, data):
-		self.write(data)
-
-	def writelines(self, data):
-		self.write(string.join(data, '\n'))
-
-	def close(self):
-		self.fp.close()
-
-
-
-# Write a node to a CMF file, given by filename
 
 Error = 'Error'
 
-def WriteFile(root, filename, smilurl, embed=0, embedlayout=0, evallicense = 0):
-	fp = IndentedFile(open(filename, 'w'))
+def WriteFile(root, filename, smilurl, oldfilename='', evallicense = 0):
+	# XXXX If oldfilename set we should use that as a template
+	fp = open(filename, 'w')
+	# XXXX this is wrong
+	ramurl = smilurl
 	try:
-		writer = HTMLWriter(root, fp, filename, smilurl, embed, embedlayout, evallicense)
+		writer = HTMLWriter(root, fp, filename, ramurl, oldfilename, evallicense)
+		writer.write()
 	except Error, msg:
 		from windowinterface import showmessage
 		showmessage(msg, mtype = 'error')
 		return
-	writer.write()
 	if os.name == 'mac':
 		import macfs
 		import macostools
@@ -120,45 +77,31 @@ def WriteFile(root, filename, smilurl, embed=0, embedlayout=0, evallicense = 0):
 		macostools.touched(fss)
 
 import FtpWriter
-def WriteFTP(root, filename, smilurl, ftpparams, embed=0, embedlayout=0, evallicense = 0):
+def WriteFTP(root, filename, smilurl, ftpparams, oldfilename='', evallicense = 0):
 	# XXXX For the moment (to be fixed):
 	host, user, passwd, dir = ftpparams
+	# XXXX this is wrong
+	ramurl = smilurl
+	# XXXX Need to check for existing file here
 	try:
 		ftp = FtpWriter.FtpWriter(host, filename, user=user, passwd=passwd, dir=dir, ascii=1)
 		fp = IndentedFile(ftp)
 		try:
-			writer = HTMLWriter(root, fp, filename, smilurl, embed, embedlayout, evallicense)
+			writer = HTMLWriter(root, fp, filename, ramurl, oldfilename, evallicense)
+			writer.write()
 		except Error, msg:
 			from windowinterface import showmessage
 			showmessage(msg, mtype = 'error')
 			return
-		writer.write()
 	except FtpWriter.all_errors, msg:
 		from windowinterface import showmessage
 		showmessage('FTP upload failed:\n' + msg, mtype = 'error')
 		return
 
-import StringIO
-class MyStringIO(StringIO.StringIO):
-	def close(self):
-		pass
-
-def WriteString(root, smilurl, embed=0, embedlayout=0):
-	fp = IndentedFile(MyStringIO())
-	writer = HTMLWriter(root, fp, '<string>', smilurl, embed, embedlayout)
-	writer.write()
-	return fp.fp.getvalue()
-
-
 class HTMLWriter:
-	def __init__(self, node, fp, filename, smilurl, embed = 0, embedlayout = 0, evallicense = 0):
-		self.__embed = embed
-		self.__embedlayout = embedlayout
+	def __init__(self, node, fp, filename, ramurl, oldfilename='', evallicense = 0):
 		self.evallicense = evallicense
-		self.smilurl = smilurl
-
-		self.__isopen = 0
-		self.__stack = []
+		self.ramurl = ramurl
 
 		self.root = node
 		self.fp = fp
@@ -166,184 +109,114 @@ class HTMLWriter:
 
 		self.ids_used = {}
 
-##		self.layout2name = {}
-##		self.calclayoutnames(node)
-
 		self.ch2name = {}
 		self.top_levels = []
 		self.calcchnames1(node)
-
-##		self.uid2name = {}
-##		self.calcnames1(node)
-
-##		# second pass
-##		self.calcnames2(node)
-##		self.calcchnames2(node)
-
-##		# must come after second pass
-##		self.aid2name = {}
-##		self.calcanames(node)
 
 		if len(self.top_levels) > 1:
 			print '** Document uses multiple toplevel channels'
 			self.uses_cmif_extension = 1
 
-##		self.syncidscheck(node)
 
-	def push(self):
-		if self.__isopen:
-			self.fp.write('>\n')
-			self.__isopen = 0
-		self.fp.push()
-
-	def pop(self):
-		fp = self.fp
-		if self.__isopen:
-##			fp.write('/>\n')
-			fp.write('>\n')
-			self.__isopen = 0
-			del self.__stack[-1]
-		fp.pop()
-		fp.write('</%s>\n' % self.__stack[-1])
-		del self.__stack[-1]
-
-	def close(self):
-		fp = self.fp
-		if self.__isopen:
-##			fp.write('/>\n')
-			fp.write('>\n')
-			self.__isopen = 0
-			del self.__stack[-1]
-		while self.__stack:
-			self.pop()
-		fp.close()
-
-	def writetag(self, tag, attrs = None):
+	def outtag(self, tag, attrs = None):
 		if attrs is None:
 			attrs = []
-		write = self.fp.write
-		if self.__isopen:
-##			write('/>\n')
-			write('>\n')
-			self.__isopen = 0
-			del self.__stack[-1]
-		write('<' + tag)
+		out = '<' + tag
 		for attr, val in attrs:
-			write(' %s=%s' % (attr, nameencode(val)))
-		self.__isopen = 1
-		self.__stack.append(tag)
-		
-	def writedata(self, data):
-		if self.__isopen:
-			self.fp.write('>\n')
-			self.__isopen = 0
-		self.fp.write(data)
-
-	def writecomment(self, comment):
-		if self.__isopen:
-			self.fp.write('>\n')
-			self.__isopen = 0
-		self.fp.write('<!-- %s -->\n'%comment)
-		
+			out = out + ' %s=%s' % (attr, nameencode(val))
+		out = out + '>\n'
+		return out
+				
 	def write(self):
 		import version
-		ctx = self.root.GetContext()
-		fp = self.fp
-##		fp.write(HTMLdecl) -- Don't: I think the embed/applet stuff is non-standard
+		ctxa = self.root.GetContext().attributes
+		#
+		# Step one - Read the template data. This is an html file
+		# with %(name)s constructs that will be filled in later
+		#
+		if not ctxa.has_key('template_html_page'):
+			raise Error, 'No HTML template selected'
+		template_name = ctxa['template_html_page']
+		templatedir = findfile('Templates')
+		templatefile = os.path.join(templatedir, template_name)
+		if not os.path.exists(templatefile):
+			raise Error, 'HTML template file does not exist'
+		try:
+			template_data = open(templatefile).read()
+		except IOError, arg:
+			raise Error, 'HTML template %s: I/O error'%templatename
+		
+		#
+		# Step two - Construct the dictionary for the %(name)s values
+		#
+		outdict = {}
+
 		if self.evallicense:
-			fp.write(EVALcomment)
-##		if not self.uses_cmif_extension:
-##			fp.write(doctype)
-		attrlist = []
-		self.writetag('html', attrlist)
-		self.push()
-		self.writetag('head')
-		self.push()
-		if self.__title:
-			self.writetag('title')
-			self.push()
-			self.writedata(self.__title)
-			self.pop()
-		self.writetag('meta', [('name', 'generator'),
-				       ('content','GRiNS %s'%version.version)])
-		self.pop() # End of head
-		self.writetag('body')
-		self.push()
-		if self.__title:
-			self.writetag('h1')
-			self.push()
-			self.writedata(self.__title)
-			self.pop()
-		self.writetag('p')
-		self.push()
-		self.writedata("This presentation uses G2. You don't have it? You're hosed....\n")
-		self.pop()
-		
-		playername = "clip_1"
-		
-		if self.__embed:
-			if self.__embedlayout:
-				channels = self.get_visible_channels()
-				for region, x, y, w, h in channels:
-					if not w or not h:
-						self.writecomment('Region %s used for non-visible media only, skipped'%region)
-						continue
-					self.writecomment('Object for region %s, position %d, %d'%(region, x, y))
-					self.writetag('p')
-					self.push()
-					self.writeobject(w, h, [
-						('controls', 'ImageWindow'),
-						('console', playername),
-						('autostart', 'false'),
-						('region', region),
-						('src', self.smilurl)])
-					self.pop()
-				self.writecomment('Object for control panel')
-				self.writetag('p')
-				self.push()
-				self.writeobject(275, 125, [
-					('controls', 'All'),
-					('console', playername)])
-				self.pop()
-			else:
-				# First create an output area. Optional: don't do this if there are
-				# only non-visible media (and, hence, no toplevel layout channel)
-				if self.top_levels:
-					if len(self.top_levels) > 1:
-						raise Error, "Multiple toplevel windows"
-					w, h = self.top_channel_size(self.top_levels[0])
-					if not w or not h:
-						raise Error, "Zero-sized presentation window"
-					self.writecomment('Object for output window')
-					self.writetag('p')
-					self.push()
-					self.writeobject(w, h, [
-						('controls', 'ImageWindow'),
-						('console', playername),
-						('autostart', 'false'),
-						('src', self.smilurl)])
-					self.pop()
-				else:
-					self.writecomment('No visible media, hence no output window')
-				self.writecomment('Object for control panel')
-				self.writetag('p')
-				self.push()
-				self.writeobject(275, 125, [
-					('controls', 'All'),
-					('console', playername)])
-				self.pop()
-					
+			outdict['evallicense'] = EVALcomment + '\n'
 		else:
-			self.writetag('p')
-			self.push()
-			self.writedata('Imagine an link here.\n')
-			self.pop()
+			outdict['evallicense'] = ''
+
+		outdict['title'] = self.__title
+		outdict['generator'] = '<meta name="generator" content="GRiNS %s">'%version.version
+		outdict['ramurl'] = self.ramurl
+		
+		playername = 'clip_1'
+		
+		out = '<!-- START-GRINS-GENERATED-CODE multiregion -->\n'
+		channels = self.get_visible_channels()
+		for region, x, y, w, h, z in channels:
+			if not w or not h:
+				out = out+'<!-- Region %s used for non-visible media only, skipped-->\n'%region
+				continue
+			tmp2 = 'left:%dpx; top:%dpx; width:%dpx; height:%dpx;'%(x, y, w, h)
+			if z > 0:
+				tmp2 = tmp2+ ' z-index:%d'%z
+			out = out + '<div layout="position:absolute; %s">\n'%tmp2
 			
-##		self.writelayout()
-##		self.writeusergroups()
-##		self.writegrinslayout()
-		self.pop() # End of body
-		self.close()
+			out = out + self.outobject(w, h, [
+				('controls', 'ImageWindow'),
+				('console', playername),
+				('autostart', 'false'),
+				('region', region),
+				('src', self.ramurl)])
+				
+			out = out + '</div>\n'
+		out = out + '<!-- END-GRINS-GENERATED-CODE multiregion -->\n'
+		outdict['multiregion'] = out
+		
+		out = '<!-- START-GRINS-GENERATED-CODE singleregion -->\n'
+
+		if self.top_levels:
+			if len(self.top_levels) > 1:
+				raise Error, "Multiple toplevel windows"
+			w, h = self.top_channel_size(self.top_levels[0])
+			if not w or not h:
+				raise Error, "Zero-sized presentation window"
+
+			out = out + '<div>\n'
+			
+			out = out + self.outobject(w, h, [
+				('controls', 'ImageWindow'),
+				('console', playername),
+				('autostart', 'false'),
+				('src', self.ramurl)])
+				
+			out = out + '</div>\n'
+			
+		out = out + '<!-- END-GRINS-GENERATED-CODE singleregion -->\n'
+		outdict['singleregion'] = out
+		
+		#
+		# Step three - generate the output
+		#
+		try:
+			output = template_data % outdict
+		except:
+			raise Error, "Error in HTML template %s"%templatename
+		#
+		# Step four - Write it
+		#
+		self.fp.write(output)
 		
 	def get_visible_channels(self):
 		if not self.top_levels:
@@ -359,17 +232,17 @@ class HTMLWriter:
 				continue
 			name = self.ch2name[ch]
 			x, y, w, h = self.channel_pos(ch, top_w, top_h)
-			rv.append(name, x, y, w, h)
+			z = ch.get('z', 0)
+			rv.append(name, x, y, w, h, z)
 		return rv
 		
-	def writeobject(self, width, height, arglist):
-		self.writetag('object', [
+	def outobject(self, width, height, arglist):
+		out = self.outtag('object', [
 			('classid', 'clsid:CFCDAA03-8BE4-11cf-B84B-0020AFBBCCFA'),
 			('width', `width`),
 			('height', `height`)])
-		self.push()
 		for arg, val in arglist:
-			self.writetag('param', [(arg, val)])
+			out = out + self.outtag('param', [(arg, val)])
 		# Trick: if the browser understands the object tag but not the embed
 		# tag (inside it) it will quietly skip it.
 		arglist = arglist[:]
@@ -377,8 +250,9 @@ class HTMLWriter:
 		arglist.append(('height', `height`))
 		arglist.append(('type', 'audio/x-pn-realaudio-plugin'))
 		arglist.append(('nojava', 'true'))
-		self.writetag('embed', arglist)
-		self.pop()
+		out = out + self.outtag('embed', arglist)
+		out = out + '</object>\n'
+		return out
 		
 	def calcchnames1(self, node):
 		"""Calculate unique names for channels; first pass"""
@@ -437,140 +311,6 @@ class HTMLWriter:
 			raise Error, "Cannot use relative coordinates for toplevel window"
 		# else: units are already in pixels
 		return int(w), int(h)
-
-	def XXXXwritelayout(self):
-		"""Write the layout section"""
-		self.writetag('layout') # default: type="text/smil-basic-layout"
-		self.push()
-		channels = self.root.GetContext().channels
-		if len(self.top_levels) == 1:
-			attrlist = []
-			ch = self.top_levels[0]
-			if ch['type'] == 'layout':
-				attrlist.append(('id', self.ch2name[ch]))
-			title = ch.get('title')
-			if title:
-				attrlist.append(('title', title))
-			elif self.ch2name[ch] != ch.name:
-				attrlist.append(('title', ch.name))
-			if ch.get('transparent', 0) == 1:
-				# background-color="transparent" is default
-				pass
-			elif ch.has_key('bgcolor'):
-				attrlist.append(('background-color', '#%02x%02x%02x' % ch['bgcolor']))
-			if ch.has_key('winsize'):
-				units = ch.get('units', 0)
-				w, h = ch['winsize']
-				if units == 0:
-					# convert mm to pixels
-					# (assuming 100 dpi)
-					w = int(w / 25.4 * 100.0 + .5)
-					h = int(h / 25.4 * 100.0 + .5)
-					units = 2
-				if units == 1:
-					attrlist.append(('width', '%d%%' % int(w * 100 + .5)))
-					attrlist.append(('height', '%d%%' % int(h * 100 + .5)))
-				else:
-					attrlist.append(('width', '%d' % int(w + .5)))
-					attrlist.append(('height', '%d' % int(h + .5)))
-			self.writetag('root-layout', attrlist)
-		for ch in channels:
-			mtype, xtype = mediatype(ch['type'], error=1)
-			isvisual = mtype in ('img', 'video', 'text')
-			if len(self.top_levels) == 1 and \
-			   ch['type'] == 'layout' and \
-			   not ch.has_key('base_window'):
-				# top-level layout channel has been handled
-				continue
-			attrlist = [('id', self.ch2name[ch])]
-			title = ch.get('title')
-			if title:
-				attrlist.append(('title', title))
-			elif self.ch2name[ch] != ch.name:
-				attrlist.append(('title', ch.name))
-			# if toplevel window, define a region elt, but
-			# don't define coordinates (i.e., use defaults)
-			if ch.has_key('base_window') and \
-			   ch.has_key('base_winoff'):
-				x, y, w, h = ch['base_winoff']
-				units = ch.get('units', 2)
-				if units == 0:		# UNIT_MM
-					# convert mm to pixels (assuming 100 dpi)
-					x = int(x / 25.4 * 100 + .5)
-					y = int(y / 25.4 * 100 + .5)
-					w = int(w / 25.4 * 100 + .5)
-					h = int(h / 25.4 * 100 + .5)
-				elif units == 1:	# UNIT_SCREEN
-					if x+w >= 1.0: w = 0
-					if y+h >= 1.0: h = 0
-				elif units == 2:	# UNIT_PXL
-					x = int(x)
-					y = int(y)
-					w = int(w)
-					h = int(h)
-				for name, value in [('left', x), ('top', y), ('width', w), ('height', h)]:
-					if not value:
-						continue
-					if type(value) is type(0.0):
-						value = '%d%%' % int(value*100)
-					else:
-						value = '%d' % value
-					attrlist.append((name, value))
-			if isvisual:
-				z = ch.get('z', 0)
-				if z > 0:
-					attrlist.append(('z-index', "%d" % z))
-				scale = ch.get('scale', 0)
-				if scale == 0:
-					fit = 'meet'
-				elif scale == -1:
-					fit = 'slice'
-				elif scale == 1:
-					fit = 'hidden'
-				else:
-					fit = None
-					print '** Channel uses unsupported scale value', name
-				if fit is not None and fit != 'hidden':
-					attrlist.append(('fit', fit))
-
-				# SMIL says: either background-color
-				# or transparent; if different, set
-				# GRiNS attributes
-			# We have the following possibilities:
-			#		no bgcolor	bgcolor set
-			#transp -1	no attr		b-g="bg"
-			#transp  0	GR:tr="0"	GR:tr="0" b-g="bg"
-			#transp  1	b-g="trans"	b-g="trans" (ignore bg)
-				transparent = ch.get('transparent', 0)
-				bgcolor = ch.get('bgcolor')
-				if transparent == 0:
-					# non-SMIL extension:
-					# permanently visible region
-					attrlist.append(('%s:transparent' % NSprefix,
-							 '0'))
-				if bgcolor is not None:
-					attrlist.append(('background-color',
-							 "#%02x%02x%02x" % bgcolor))
-				# Since background-color="transparent" is the
-				# default, we don't need to actually write that
-##				if transparent == 1:
-##					attrlist.append(('background-color',
-##							 'transparent'))
-##					# having a bg color on a transparent
-##					# region is nonsense...
-####					if bgcolor is not None:
-####						attrlist.append(('%s:bgcolor' % NSprefix,
-####								 "#%02x%02x%02x" % bgcolor))
-				if ch.get('center', 1):
-					attrlist.append(('%s:center' % NSprefix, '1'))
-				if ch.get('drawbox', 1):
-					attrlist.append(('%s:drawbox' % NSprefix, '1'))
-
-			for key, val in ch.items():
-				if key not in cmif_chan_attrs_ignore:
-					attrlist.append(('%s:%s' % (NSprefix, key), MMAttrdefs.valuerepr(key, val)))
-			self.writetag('region', attrlist)
-		self.pop()
 
 namechars = string.letters + string.digits + '_-.'
 
