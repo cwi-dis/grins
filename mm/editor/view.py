@@ -5,6 +5,7 @@ from figures import *
 #import DEVICE
 from ArcEdit import *
 import MMAttrdefs
+import Timing
 
 # the view class.
 #
@@ -19,6 +20,7 @@ import MMAttrdefs
 #
 XMARG = 10 # margin width
 YMARG = 5 # two time the  margin width
+THERMW = 50
 HDR_SIZE = 100 # header size for diamonds
 B=5	# the size of the round button
 
@@ -46,13 +48,17 @@ class view () :
 		self._initcommanddict()
 		self.channellist = []
 		self.arrowlist = []
-		duration = self.calcDuration(root) # for channel headers
+		Timing.calctimes(root)
+	 	duration = self.calcDuration(root) # for channel headers
 		self.channellist.sort()
 		self.nrchannels = len(self.channellist)
 		self.chanboxes = []
+		self.thermleft = w - THERMW
 		w = w / 2
-		self.unitwidth = w / self.nrchannels
-		self.unitheight = (h - HDR_SIZE) / duration
+		self.unitwidth = (w - THERMW) / self.nrchannels
+		self.unitheight = (h - HDR_SIZE) / root.t1
+		self.thermo = thermo().new(self.thermleft + XMARG, YMARG, THERMW - XMARG * 2, h - HDR_SIZE - YMARG * 2)
+		self.currenttime = root.t1 / 3
 		self.dividor = w
 		xi = w + XMARG
 		wi = self.unitwidth - XMARG*2
@@ -67,8 +73,15 @@ class view () :
 		self.focus = root
 		self.setfocus(root)
 		self.locked_focus = None
-
 		return self
+
+	def recalc(self):
+		Timing.calctimes(self.root)
+		self.unitheight = (self.h - HDR_SIZE) / self.root.t1
+		self.re_mkView((0,0,self.w / 2,self.h,self.h-HDR_SIZE),self.root)
+		for arrow in self.arrowlist:
+			self.mod_arrow(arrow)
+
 	#
 	# addtocommand adds a command to the commanddictionary.
 	# Anybody can submit their own commands
@@ -86,7 +99,7 @@ class view () :
 		self.addtocommand('h', helpfunc, 'help message')
 		self.addtocommand('l', lock_focus, 'lock current focus')
 #TMP		self.addtocommand('p', addParallel, 'add parallel node')
-#TMP		self.addtocommand('r',  rotatefunc, 'rotate node')
+		self.addtocommand('r', redrawfunc, 'redraw')
 #TMP		self.addtocommand('s', addSequential, 'add sequential node')
 		self.addtocommand('t', add_arrow, 'add timing arc')
 		self.addtocommand('u', unlock_focus, 'unfocus locked focus')
@@ -143,8 +156,11 @@ class view () :
 			left = self.unitwidth * index + XMARG + self.dividor
 			right = self.unitwidth * (index + 1) - XMARG + self.dividor
 			kind = FG_BOX
-		top = h1 - YMARG * 2
-		bottom = h1 - self.unitheight * node.duration + YMARG
+		top = h1 - YMARG
+		duration = node.t1 - node.t0
+		bottom = top - self.unitheight * duration + YMARG * 2
+		if bottom > top:
+			bottom = top
 		chobj = box().new(FOCUS_BOX,left,bottom,right-left,top-bottom,'')
 		if type in ('seq','par','grp'):
 			chobj.hidden = 1
@@ -168,10 +184,47 @@ class view () :
 
 
 			for child in kids :
-				self.mkView((x,y,w,h,h1), child)
+				childh1 = h1 - (child.t0 - node.t0) * self.unitheight
+				self.mkView((x,y,w,h,childh1), child)
 				x, y = x + dx, y + dy
-				if type in ('seq','grp'):
-					h1 = h1 - child.duration * self.unitheight
+
+	def re_mkView(self, ((x,y,w,h,h1), node)):
+		text = node.GetInherAttrDef('channel', '?')
+		type = node.GetType()
+		kids = node.GetChildren()
+		if type in ('seq','par','grp'):
+			left = self.dividor
+			right = self.nrchannels * self.unitwidth + self.dividor
+		else:
+			index = self.channellist.index(text)
+			left = self.unitwidth * index + XMARG + self.dividor
+			right = self.unitwidth * (index + 1) - XMARG + self.dividor
+		top = h1 - YMARG * 2
+		duration = node.t1 - node.t0
+		bottom = top - self.unitheight * duration + YMARG * 2
+		if bottom > top:
+			bottom = top
+		chobj = node.channelobj
+		chobj.x = left
+		chobj.w = right - left
+		chobj.y = bottom
+		chobj.h = top - bottom
+		if type in ('seq','par','grp') and len(kids) > 0:
+                        if type in ('grp', 'seq') :
+				y = y + h
+                                h = h / len(kids)
+                                dx, dy = 0, -h
+				y = y - h
+                        else:                            # parallel node
+                                w = w / len(kids)
+                                dx, dy = w, 0
+                        x,y,w,h = x+XMARG,y+YMARG,w-2*XMARG,h-2*YMARG
+
+
+			for child in kids :
+				childh1 = h1 - (child.t0 - node.t0) * self.unitheight
+				self.re_mkView((x,y,w,h,childh1), child)
+				x, y = x + dx, y + dy
 
 	def mkArrows(self, node):
 		synclist = MMAttrdefs.getattr(node, 'synctolist')
@@ -326,26 +379,17 @@ class view () :
 			return
 		self.add_arrow_at(self.locked_focus, self.focus, 1, 0.0, 0).draw()
 
-	def add_arrow_at(self, (mysrc, mydst, f, d, t)):
-		lo = mysrc.channelobj
-		fo = mydst.channelobj
-		lx = lo.x + lo.w / 2
-		ly1 = lo.y
-		ly2 = ly1 + lo.h
-		fx = fo.x + fo.w / 2
-		fy1 = fo.y
-		fy2 = fy1 + fo.h
-	#	if fy2 < ly1:
-	#		ly, fy = fy2, ly1
-	#		lx, fx = fx, lx
-	#		src = mydst
-	#		dst = mysrc
-	#	else:
-	#		ly, fy = ly2, fy1
-	#		src = mysrc
-	#		dst = mydst
-		src, dst = mysrc, mydst #TMP
-		ly, fy = ly1, fy2 #TMP
+	def add_arrow_at(self, (src, dst, f, d, t)):
+		fro = src.channelobj
+		too = dst.channelobj
+		frx = fro.x + fro.w / 2
+		fry = fro.y
+		if f = 0:
+			fry = fry + fro.h
+		tox = too.x + too.w / 2
+		toy = too.y
+		if t = 0:
+			toy = toy + too.h
 		arcinfo = (src.GetUID(), f, d, t)
 		arclist = MMAttrdefs.getattr(dst, 'synctolist')
 		if not arcinfo in arclist:
@@ -353,9 +397,25 @@ class view () :
 			arclist1.append(arcinfo)
 			dst.SetAttr('synctolist', arclist1)
 		thisarc = (view, dst, arcinfo)
-		arr = arrow().new(lx, ly, fx, fy, thisarc)
+		arr = arrow().new(frx, fry, tox, toy, thisarc, src, dst)
 		self.arrowlist.append(arr)
 		return(arr)
+
+	def mod_arrow(self, arr):
+		fro = arr.src.channelobj
+		too = arr.dst.channelobj
+		view, dst, info = arr.arc
+		uid, f, delay, t = info
+		frx = fro.x + fro.w / 2
+		fry = fro.y
+		if f = 0:
+			fry = fry + fro.h
+		tox = too.x + too.w / 2
+		toy = too.y
+		if t = 0:
+			toy = toy + too.h
+		arr.repos(frx, fry, tox, toy)
+
 	def arrowhit(self, arrow):
 		showarceditor(arrow)
 	def setarcvalues(self, (arrow, newinfo)):
@@ -468,12 +528,22 @@ class view () :
 		self.redraw_node(self.root)
 		for arrow in self.arrowlist:
 			arrow.draw()
+		self.thermo.draw(self.currenttime * self.unitheight)
+
+	def redrawfunc(self):
+		self.recalc()
+		self.redraw()
 
 	def redraw_node(self, node):
 		node.blockobj.draw()
 		node.channelobj.draw()
 		for child in node.GetChildren():
 			self.redraw_node(child)
+
+	def setcurrenttime(self, curtim):
+		print 'T =', curtim
+		self.currenttime = curtim
+		self.thermo.draw(curtim * self.unitheight)
 
 def helpfunc (bv) :
 	dict = bv.commanddict
@@ -513,4 +583,5 @@ def unlock_focus(self):
 	self.unlock_focus()
 def add_arrow(self):
 	self.add_arrow()
-
+def redrawfunc(self):
+	self.redrawfunc()
