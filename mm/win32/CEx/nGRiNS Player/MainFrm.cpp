@@ -126,7 +126,7 @@ void CMainWindow::OnCmdOpen()
 		return; // open cancelled
 	if(g_pGRiNSMain != NULL)
 		{
-		if(g_pGRiNSMain->open_file(TEXT("\\My Documents\\Presentations\\slideshow-1.smil")))
+		if(g_pGRiNSMain->open_file(filename))
 			{
 			m_is_open = true;
 			m_play_state = STOPPED;
