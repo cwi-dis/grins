@@ -60,9 +60,8 @@ MENUBAR=(
 	('&View', (
 		(FLAG_ALL, CASCADE, 'T&oolbars', (
 			(FLAG_ALL, ENTRY, '&General', None, TOOLBAR_GENERAL),
-			(FLAG_ALL, ENTRY, '&Player Controls', None, TOOLBAR_PLAYER),
-                        (FLAG_ALL, SEP,),
-			(FLAG_ALL, ENTRY, 'Pre&viewer Control Panel', None, PLAYER_PANEL),
+##			(FLAG_ALL, ENTRY, '&Player Controls', None, TOOLBAR_PLAYER),
+			(FLAG_ALL, ENTRY, '&Player Controls', None, PLAYER_PANEL),
 			)),
 		(FLAG_ALL, TOGGLE, '&Source', None, SOURCEVIEW))),
 
