@@ -13,7 +13,7 @@ set PYTHON_EXE=..\..\..\..\python\PCbuild\python.exe
 
 set PYTHONHOME=..\..\..\..\python
 
-call c:\"Program Files"\"Microsoft Visual Studio"\VC98\Bin\vcvars32.bat
+rem call c:\"Program Files"\"Microsoft Visual Studio"\VC98\Bin\vcvars32.bat
 
 rem END_CUSTOMIZATION
 

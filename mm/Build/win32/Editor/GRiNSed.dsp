@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo /o"./GRiNS_G2P.bsc"
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 python15.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386 /out:"./GRiNS_G2P.exe" /libpath:"..\..\..\..\python\PCbuild" /libpath:"..\..\..\..\python\Extensions\win32\Build"
+# ADD LINK32 python16.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386 /out:"./GRiNS_G2P.exe" /libpath:"..\..\..\..\python\PCbuild" /libpath:"..\..\..\..\python\Extensions\win32\Build"
 # Begin Custom Build
 OutDir=.\.
 InputPath=.\GRiNS_G2P.exe
@@ -90,7 +90,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo /o"Debug/GRiNS_G2P.bsc"
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 python15_d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /out:"Debug/GRiNS_G2P.exe" /pdbtype:sept /libpath:"..\..\..\..\python\PCbuild" /libpath:"..\..\..\..\python\Extensions\win32\Build"
+# ADD LINK32 python16_d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /out:"Debug/GRiNS_G2P.exe" /pdbtype:sept /libpath:"..\..\..\..\python\PCbuild" /libpath:"..\..\..\..\python\Extensions\win32\Build"
 # Begin Custom Build
 OutDir=.\Debug
 InputPath=.\Debug\GRiNS_G2P.exe
@@ -321,6 +321,10 @@ SOURCE=.\M_commctrl.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_compatibility.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_components.c
 # End Source File
 # Begin Source File
@@ -374,14 +378,6 @@ SOURCE=.\M_fnmatch.c
 # Begin Source File
 
 SOURCE=.\M_Font.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_FormServer.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_fsm.c
 # End Source File
 # Begin Source File
 
@@ -486,10 +482,6 @@ SOURCE=.\M_imgsgi.c
 # Begin Source File
 
 SOURCE=.\M_imgxbm.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_InputValidator.c
 # End Source File
 # Begin Source File
 
@@ -1050,10 +1042,6 @@ SOURCE=.\M_VideoDuration.c
 # Begin Source File
 
 SOURCE=.\M_ViewDialog.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_ViewServer.c
 # End Source File
 # Begin Source File
 
