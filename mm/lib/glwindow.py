@@ -245,4 +245,5 @@ if posix.environ.has_key('WMCORR'):
 	WMCORR_X = int(WMCORR_X)
 	WMCORR_Y = int(WMCORR_Y)
 else:
-	WMCORR_X, WMCORR_Y = 0, 0
+	import calcwmcorr
+	WMCORR_X, WMCORR_Y = calcwmcorr.WMCORR
