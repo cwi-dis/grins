@@ -38,147 +38,147 @@ Tag anchor:
 		to be supplied
 Tag animate:
 	Attribute accelerate:
-		to be supplied
+		Implemented
 	Attribute accumulate:
-		to be supplied
+		Implemented
 	Attribute additive:
-		to be supplied
+		Implemented
 	Attribute attributeName:
-		to be supplied
+		Implemented
 	Attribute attributeType:
-		to be supplied
+		Parsed, not implemented
 	Attribute autoReverse:
-		to be supplied
+		Implemented
 	Attribute begin:
-		to be supplied
+		Implemented, common
 	Attribute by:
-		to be supplied
+		Implemented
 	Attribute calcMode:
-		to be supplied
+		Implemented
 	Attribute decelerate:
-		to be supplied
+		Implemented
 	Attribute dur:
-		to be supplied
+		Implemented, common
 	Attribute end:
-		to be supplied
+		Implemented, common
 	Attribute fill:
 		to be supplied
 	Attribute fillDefault:
 		to be supplied
 	Attribute from:
-		to be supplied
+		Implemented
 	Attribute id:
-		to be supplied
+		Implemented, common
 	Attribute keySplines:
-		to be supplied
+		Implemented
 	Attribute keyTimes:
-		to be supplied
+		Implemented
 	Attribute max:
 		to be supplied
 	Attribute min:
 		to be supplied
 	Attribute repeatCount:
-		to be supplied
+		Implemented, common
 	Attribute repeatDur:
-		to be supplied
+		Implemented, common
 	Attribute restart:
 		to be supplied
 	Attribute speed:
-		to be supplied
+		Implemented
 	Attribute targetElement:
-		to be supplied
+		Implemented
 	Attribute to:
-		to be supplied
+		Implemented
 	Attribute values:
-		to be supplied
+		Implemented
 Tag animateColor:
 	Attribute accelerate:
-		to be supplied
+		Implemented
 	Attribute accumulate:
-		to be supplied
+		Implemented
 	Attribute additive:
-		to be supplied
+		Implemented
 	Attribute attributeName:
-		to be supplied
+		Implemented
 	Attribute attributeType:
-		to be supplied
+		Parsed, not implemented
 	Attribute autoReverse:
-		to be supplied
+		Implemented
 	Attribute begin:
-		to be supplied
+		Implemented, common
 	Attribute by:
-		to be supplied
+		Implemented
 	Attribute calcMode:
-		to be supplied
+		Implemented
 	Attribute decelerate:
-		to be supplied
+		Implemented
 	Attribute dur:
-		to be supplied
+		Implemented, common
 	Attribute end:
-		to be supplied
+		Implemented, common
 	Attribute fill:
 		to be supplied
 	Attribute fillDefault:
 		to be supplied
 	Attribute from:
-		to be supplied
+		Implemented
 	Attribute id:
-		to be supplied
+		Implemented, common
 	Attribute keySplines:
-		to be supplied
+		Implemented
 	Attribute keyTimes:
-		to be supplied
+		Implemented
 	Attribute max:
 		to be supplied
 	Attribute min:
 		to be supplied
 	Attribute repeatCount:
-		to be supplied
+		Implemented, common
 	Attribute repeatDur:
-		to be supplied
+		Implemented, common
 	Attribute restart:
 		to be supplied
 	Attribute speed:
-		to be supplied
+		Implemented
 	Attribute targetElement:
-		to be supplied
+		Implemented
 	Attribute to:
-		to be supplied
+		Implemented
 	Attribute values:
-		to be supplied
+		Implemented
 Tag animateMotion:
 	Attribute accelerate:
-		to be supplied
+		Implemented
 	Attribute accumulate:
-		to be supplied
+		Implemented
 	Attribute additive:
-		to be supplied
+		Implemented
 	Attribute autoReverse:
-		to be supplied
+		Implemented
 	Attribute begin:
-		to be supplied
+		Implemented, common
 	Attribute by:
-		to be supplied
+		Implemented
 	Attribute calcMode:
-		to be supplied
+		Implemented
 	Attribute decelerate:
-		to be supplied
+		Implemented
 	Attribute dur:
-		to be supplied
+		Implemented, common
 	Attribute end:
-		to be supplied
+		Implemented, common
 	Attribute fill:
 		to be supplied
 	Attribute fillDefault:
 		to be supplied
 	Attribute from:
-		to be supplied
+		Implemented
 	Attribute id:
-		to be supplied
+		Implemented, common
 	Attribute keySplines:
-		to be supplied
+		Implemented
 	Attribute keyTimes:
-		to be supplied
+		Implemented
 	Attribute max:
 		to be supplied
 	Attribute min:
@@ -186,21 +186,21 @@ Tag animateMotion:
 	Attribute origin:
 		to be supplied
 	Attribute path:
-		to be supplied
+		Implemented
 	Attribute repeatCount:
-		to be supplied
+		Implemented, common
 	Attribute repeatDur:
-		to be supplied
+		Implemented, common
 	Attribute restart:
 		to be supplied
 	Attribute speed:
-		to be supplied
+		Implemented
 	Attribute targetElement:
-		to be supplied
+		Implemented
 	Attribute to:
-		to be supplied
+		Implemented
 	Attribute values:
-		to be supplied
+		Implemented
 Tag animation:
 	Attribute abstract:
 		to be supplied
@@ -889,25 +889,25 @@ Tag par:
 		to be supplied
 Tag prefetch:
 	Attribute bandwidth:
-		to be supplied
+		Parsed. Not implemented.
 	Attribute begin:
-		to be supplied
+		Implemented, common.
 	Attribute clip-begin:
 		to be supplied
 	Attribute clip-end:
 		to be supplied
 	Attribute dur:
-		to be supplied
+		Implemented, common.
 	Attribute end:
-		to be supplied
+		Implemented, common.
 	Attribute id:
-		to be supplied
+		Implemented, common.
 	Attribute mediaSize:
-		to be supplied
+		Parsed. Not implemented.
 	Attribute mediaTime:
-		to be supplied
+		Parsed. Not implemented.
 	Attribute src:
-		to be supplied
+		Parsed. Not implemented.
 Tag priorityClass:
 	Attribute abstract:
 		to be supplied
@@ -1151,7 +1151,7 @@ Tag set:
 	Attribute accelerate:
 		to be supplied
 	Attribute attributeName:
-		to be supplied
+		Implemented
 	Attribute attributeType:
 		to be supplied
 	Attribute autoReverse:
@@ -1161,7 +1161,7 @@ Tag set:
 	Attribute decelerate:
 		to be supplied
 	Attribute dur:
-		to be supplied
+		Implemented, common
 	Attribute end:
 		to be supplied
 	Attribute fill:
@@ -1169,7 +1169,7 @@ Tag set:
 	Attribute fillDefault:
 		to be supplied
 	Attribute id:
-		to be supplied
+		Implemented, common
 	Attribute max:
 		to be supplied
 	Attribute min:
@@ -1177,15 +1177,15 @@ Tag set:
 	Attribute repeatCount:
 		to be supplied
 	Attribute repeatDur:
-		to be supplied
+		Implemented, common
 	Attribute restart:
 		to be supplied
 	Attribute speed:
 		to be supplied
 	Attribute targetElement:
-		to be supplied
+		Implemented
 	Attribute to:
-		to be supplied
+		Implemented
 Tag smil:
 	Attribute id:
 		to be supplied
