@@ -111,6 +111,8 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			self._selectattr(num)
 		else:
 			self._selectattr(0)
+			self._attrbrowser.setkeyboardfocus()
+
 
 		self.show()
 ##		w = windowinterface.Window(title, resizable = 1,
@@ -161,6 +163,8 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		if item == ITEM_SELECT:
 			item = self._attrbrowser.getselect()
 			self._selectattr(item)
+			# We steal back the keyboard focus
+			self._attrbrowser.setkeyboardfocus()
 		elif item == ITEM_RESET:
 			if self._cur_attrfield:
 				self._cur_attrfield.reset_callback()
@@ -201,6 +205,7 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			self._cur_attrfield = self._attrfields[item] # XXXX?
 			self._cur_attrfield._show()
 			self._attrbrowser.select(item)
+
 
 	def _is_current(self, attrfield):
 		return (attrfield is self._cur_attrfield)
@@ -369,17 +374,6 @@ class AttrEditorDialogField:
 			self.__parent._setlabel(ITEM_STRING, value)
 			self.__parent._selectinputfield(ITEM_STRING)
 
-##	def __option_callback(self):
-##		"""Callback called when a new option is to be selected."""
-##		_MySelectionDialog(self.getlabel(), self.__label,
-##				   self.getoptions(),
-##				   self.__option_done_callback)
-##
-##	def __option_done_callback(self, value):
-##		"""Callback called when a new option was selected."""
-##		self.__widget.setlabel(value)
-##		self.__label = value
-##
 	def getvalue(self):
 		"""Return the current value of the attribute.
 
@@ -463,15 +457,3 @@ class AttrEditorDialogField:
 	def help_callback(self):
 		"""Callback called when help is requested."""
 		pass
-
-class _MySelectionDialog(windowinterface.SelectionDialog):
-	def __init__(self, label, current, options, callback):
-		self.OkCallback = callback
-		windowinterface.SelectionDialog.__init__(
-			self, 'Choose from', label, options, current)
-
-	def OkCallback(self, value):
-		pass
-
-	def NomatchCallback(self, value):
-		return '%s is not a valid choice' % value
