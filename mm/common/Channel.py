@@ -2125,7 +2125,7 @@ class ChannelWindow(Channel):
 		lchan._active_multiregion_transition = None
 
 	def _find_multiregion_transition(self, trans, transtime):
-		if not trans.get('multiElement', 0):
+		if not trans.get('coordinated', 0):
 			return None
 		# Unfortunately the transition name isn't in the dictionary.
 		# We use the id of the dictionary as its unique value
