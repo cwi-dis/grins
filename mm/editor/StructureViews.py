@@ -218,6 +218,7 @@ class StructureObjWidget(MMNodeWidget):
         for i in self.children:
             i.draw(displist)
 
+
 class SeqWidget(StructureObjWidget):
     def draw(self, display_list):
         if self.selected: 
@@ -227,6 +228,11 @@ class SeqWidget(StructureObjWidget):
             display_list.drawfbox(SEQCOLOR, self.get_box())
             display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box());
 
+        if self.root.pushbackbars:
+            for i in self.children:
+                if isinstance(i, MediaWidget):
+                    i.pushbackbar.draw(display_list);
+
         StructureObjWidget.draw(self, display_list)
 
     def get_minsize(self):
@@ -235,18 +241,23 @@ class SeqWidget(StructureObjWidget):
 
         for i in self.children:
             w, h = i.get_minsize()
+            if self.root.pushbackbars and isinstance(i, MediaWidget):
+                pushover = self.get_relx(i.downloadtime_lag);
+            else:
+                pushover = 0.0;
             #assert w < 1.0 and w > 0.0
             #assert h < 1.0 and h > 0.0
-            min_width = min_width + w
+            min_width = min_width + w + pushover;
             if h > min_height:
                 min_height = h
         xgap = self.get_relx(sizes_notime.GAPSIZE)
-
+#        handle = self.get_relx(sizes_notime.HANDLESIZE);
+#        droparea = self.get_relx(sizes_notime.DROPAREASIZE);
         #assert min_width < 1.0
         #assert min_height < 1.0
 
         #             current +   gaps between nodes  +  gaps at either end      
-        min_width = min_width + xgap*( len(self.children) - 1) + 2*self.get_relx(sizes_notime.HEDGSIZE)
+        min_width = min_width + xgap*( len(self.children)-1) + 2*self.get_relx(sizes_notime.HEDGSIZE)
         min_height = min_height + 2 *self.get_rely(sizes_notime.VEDGSIZE)
         return min_width, min_height
 
@@ -254,11 +265,14 @@ class SeqWidget(StructureObjWidget):
         # Everything here calculated in pixels.
         mw=0; mh=0
         for i in self.children:
-            #assert isinstance(i, MMNodeWidget)
+            if self.root.pushbackbars and isinstance(i, MediaWidget):
+                pushover = i.downloadtime_lag
+            else:
+                pushover = 0;
             w,h = i.get_minsize_abs()
             if h > mh: mh=h
-            mw = mw + w
-        mw = mw + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.HEDGSIZE
+            mw = mw + w + pushover;
+        mw = mw + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.HEDGSIZE 
         mh = mh + 2*sizes_notime.VEDGSIZE
         return mw, mh
         
@@ -272,17 +286,20 @@ class SeqWidget(StructureObjWidget):
         l, t, r, b = self.pos_rel
         min_width, min_height = self.get_minsize()
 
-        free_width = (r-l) - min_width
+        free_width = (r-l) - min_width #- self.get_relx(sizes_notime.HANDLESIZE) - self.get_relx(sizes_notime.DROPAREASIZE);
         if free_width < 0.0:
             print "Warning! free_width is less than 0.0!:", free_width
             free_width = 0.0
 
-        l = float(l) + self.get_relx(sizes_notime.HEDGSIZE)
+        l = float(l) + self.get_relx(sizes_notime.HEDGSIZE) #+ self.get_relx(sizes_notime.HANDLESIZE);
         t = float(t) + self.get_rely(sizes_notime.VEDGSIZE)
 
         b = float(b) - self.get_rely(sizes_notime.VEDGSIZE)
 
         for medianode in self.children:    # for each MMNode:
+            if self.root.pushbackbars and isinstance(medianode, MediaWidget):
+                print "TODO: test downloadtime pushover and sequence lags."
+                l = l +  self.get_relx(medianode.downloadtime_lag);
             w,h = medianode.get_minsize()
             if h > (b-t):               # If the node needs to be bigger than the available space...
                 print "Error: Node is too tall!"
@@ -402,6 +419,14 @@ class VerticalWidget(StructureObjWidget):
             medianode.recalc()
             t = b + self.get_rely(sizes_notime.GAPSIZE)
 
+    def draw(self, display_list):
+        if self.root.pushbackbars:
+            for i in self.children:
+                if isinstance(i, MediaWidget):
+                    print "Par: drawing bar";
+                    i.pushbackbar.draw(display_list);
+        StructureObjWidget.draw(self, display_list);
+
 class ParWidget(VerticalWidget):
     def draw(self, display_list):
         if self.selected:
@@ -410,7 +435,7 @@ class ParWidget(VerticalWidget):
         else:
             display_list.drawfbox(PARCOLOR, self.get_box())
             display_list.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box());
-        StructureObjWidget.draw(self, display_list)
+        VerticalWidget.draw(self, display_list)
 
 class ExclWidget(VerticalWidget):
     def draw(self, display_list):
@@ -470,8 +495,8 @@ class MediaWidget(MMNodeWidget):
         # Remove myself from the MMNode view{} dict.
         MMNodeWidget.destroy(self)
 
-    def is_hit(self, pos):
-        return self.pushbackbar.is_hit(pos) or MMNodeWidget.is_hit(self, pos);
+#    def is_hit(self, pos):
+ #       return self.pushbackbar.is_hit(pos) or MMNodeWidget.is_hit(self, pos);
 
     def compute_download_time(self):
         # Compute the download time for this widget.
@@ -492,40 +517,26 @@ class MediaWidget(MMNodeWidget):
         l,t,r,b = self.pos_rel
         self.transition_in.moveto((l,b-(1.0/6.0)*(b-t),l+(r-l)*(1.0/6.0),b))
         self.transition_out.moveto((l+(5.0/6.0)*(r-l),b-(1.0/6.0)*(b-t),r,b))
-        self.pushbackbar.moveto((l-(self.downloadtime_lag),t-(b-t)*(1.0/12.0),l,t+(b-t)*(1.0/12.0)));
+        lag = self.get_relx(self.downloadtime_lag);
+        dt = self.get_relx(self.downloadtime);
+        tw = (1.0 / 12.0)*(b-t);
+        self.pushbackbar.moveto((l-(lag+dt),t-tw,l,t+tw));
         MMNodeWidget.recalc(self) # This is probably not necessary.
-
-    def move_to(self, pos):
-        # Move to the position - but remember that the bar is in the way.
-        if not self.root.pushbackbars:
-            MMNodeWidget.move_to(pos);
-            return;
-        l,t,r,b = pos;
-        l = l + self.downloadtime;
-        MMNodeWidget.move_to((l,t,r,b));
 
     def get_minsize(self):
         xsize = self.get_relx(sizes_notime.MINSIZE)
-        if self.root.pushbackbars:
-            xsize = xsize + self.get_relx(self.downloadtime_lag);
-#        print "xsize is: ", xsize;
-        #assert xsize < 1.0;
         return xsize, self.get_rely(sizes_notime.MINSIZE)
 
     def get_minsize_abs(self):
         # return the minimum size of this node, in pixels.
         # Calld to work out the size of the canvas.
         xsize = sizes_notime.MINSIZE;
-        if self.root.pushbackbars:
-            xsize = xsize + self.downloadtime_lag;
         return (xsize, sizes_notime.MINSIZE)
     
     def get_maxsize(self):
         return self.get_relx(sizes_notime.MAXSIZE), self.get_rely(sizes_notime.MAXSIZE)
 
     def draw(self, displist):
-        self.pushbackbar.draw(displist)
-        
         x,y,w,h = self.get_box()     
         
         willplay = self.root.showplayability or self.node.WillPlay()
@@ -607,6 +618,7 @@ class PushBackBarWidget(Interactive.Interactive):
     def draw(self, displist):
         # TODO: draw color based on something??
         displist.drawfbox(COLCOLOR, self.get_box());
+        displist.drawbox(self.get_box());
 
     def select(self):
         self.parent.select();
