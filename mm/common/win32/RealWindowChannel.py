@@ -101,7 +101,7 @@ class RealWindowChannel(Channel.ChannelWindow):
 		name = MMAttrdefs.getattr(node, 'name')
 		if not name:
 			name = '<unnamed node>'
-		msg = 'Warning:\nNo playback support for RealMedia on your platform\n' \
+		msg = 'Warning:\nNo playback support for RealMedia on your system\n' \
 		      'node %s on channel %s' % (name, self._name)
 		parms = self.armed_display.fitfont('Times-Roman', msg)
 		w, h = self.armed_display.strsize(msg)
