@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Definition of the lay-out and types of anchor triples.
 # This is separated out of AnchorEdit because it is used by many other
 # modules (everything to do with following hyperlinks).
