@@ -337,7 +337,7 @@ class _Toplevel:
 			func(arg, None, TimerEvent, client_data)
 
 	# file descriptor interface
-	def select_setcallback(self, fd, func, arg, mask = ReadMask):
+	def select_setcallback(self, fd, func, args, mask = ReadMask):
 		if type(fd) is not IntType:
 			fd = fd.fileno()
 		try:
@@ -355,11 +355,11 @@ class _Toplevel:
 		if mask & WriteMask:
 			xmask = xmask | Xtdefs.XtInputWriteMask
 		self._fdmap[fd] = Xt.AddInput(fd, xmask, self._input_callback,
-					      (func, arg))
+					      (func, args))
 
 	def _input_callback(self, client_data, fd, id):
-		func, arg = client_data
-		func(arg)
+		func, args = client_data
+		apply(func, args)
 
 class _Window:
 	def __init__(self, parent, x, y, w, h, title, defcmap, **options):
