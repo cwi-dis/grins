@@ -386,7 +386,7 @@ class Viewport(Region):
 		if self._ctx is None or self._backBuffer is None: 
 			return
 		if rc is None:
-			rc = self._viewport.getwindowpos()
+			rc = self.getwindowpos()
 		self._ctx.update(rc)
 
 	def updateNow(self, rc = None):
