@@ -329,6 +329,9 @@ class SMIL:
 				'height':None,
 				'skip-content':None,
 				'width':None,
+				GRiNSns+' ' 'showEditBackground':None,
+				GRiNSns+' ' 'editBackground':None,
+				GRiNSns+' ' 'traceImage':None,
 				GRiNSns+' ' 'collapsed':None,
 				RP9ns+' ' 'resizeBehavior':None,
 				},
@@ -341,8 +344,8 @@ class SMIL:
 			      'open':None,
 			      # edit preferences of new layout view
 			      GRiNSns+' ' 'showEditBackground':None,
-			      GRiNSns+' ' 'editBackground':None,					 
-			      GRiNSns+' ' 'traceImage':None,					 
+			      GRiNSns+' ' 'editBackground':None,
+			      GRiNSns+' ' 'traceImage':None,
 			      GRiNSns+' ' 'collapsed':None,
 			      RP9ns+' ' 'resizeBehavior':None,
 			      },
@@ -785,11 +788,13 @@ class SMIL:
 	_attributes['animateMotion']['calcMode'] = None
 	_attributes['animateMotion']['path'] = None
 	_attributes['animateMotion']['origin'] = None
+	_attributes['animateMotion'][GRiNSns+' ' 'editGroup'] = None
 	del _attributes['animateMotion']['attributeName']
 	del _attributes['animateMotion']['attributeType']
 
 	_attributes['animate'] = __animate_attrs_core.copy()
 	_attributes['animate'].update(__animate_attrs_extra)
+	_attributes['animate'][GRiNSns+' ' 'editGroup'] = None
 
 	_attributes['animateColor'] = __animate_attrs_core.copy()
 	_attributes['animateColor'].update(__animate_attrs_extra)
