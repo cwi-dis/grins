@@ -2527,13 +2527,13 @@ import gear32sd
 class _ResizeableDisplayList(_DisplayList):
 	def __init__(self, window, bgcolor):
 		_DisplayList.__init__(self, window, bgcolor, UNIT_SCREEN)
-		self._imgid = None
+		self._img = None
 
 	def close(self):
 		_DisplayList.close(self)
-		if self._imgid is not None:
-			win32ig.delete(self._imgid)	
-			self._imgid = None
+		if self._img is not None:
+			self._img.delete()	
+			self._img = None
 
 	def _do_render(self, entry, dc, region):
 		cmd = entry[0]
@@ -2543,33 +2543,33 @@ class _ResizeableDisplayList(_DisplayList):
 		if cmd == 'clear' and entry[1]:
 			dc.FillSolidRect(rc,win32mu.RGB(entry[1]))
 		elif cmd == 'image':
-			imgid = entry[1]
+			img = entry[1]
 			fit = entry[2]
 			lm, tm, wm, hm = wnd.LRtoDR(entry[3])
 			rm, bm = lm + wm, tm + hm
-			wi, hi, bpp = gear32sd.image_dimensions_get(imgid)
+			wi, hi, bpp = img.image_dimensions_get()
 			wi, hi = wnd.LPtoDP((wi, hi))
 			if fit=='fill':
-				gear32sd.device_rect_set(imgid, getValidRect(lm, tm, rm, bm))
+				img.device_rect_set(getValidRect(lm, tm, rm, bm))
 			elif fit=='meet':
-				lp, tp, rp, bp = gear32sd.display_adjust_aspect(imgid, getValidRect(lm, tm, rm, bm), gear32sd.IG_ASPECT_DEFAULT)
-				gear32sd.device_rect_set(imgid, getValidRect(lm,tm,lm+rp-lp,tm+bp-tp))
+				lp, tp, rp, bp = img.display_adjust_aspect(getValidRect(lm, tm, rm, bm), gear32sd.IG_ASPECT_DEFAULT)
+				img.device_rect_set(getValidRect(lm,tm,lm+rp-lp,tm+bp-tp))
 			elif fit=='hidden':
-				gear32sd.device_rect_set(imgid,getValidRect(lm,tm,lm+wi,tm+hi))
+				img.device_rect_set(getValidRect(lm,tm,lm+wi,tm+hi))
 			elif fit=='slice':
 				wr = wm/float(wi)
 				hr = hm/float(hi)
 				if wr>hr: r = wr
 				else: r = hr
 				wp, hp = int(wi*r+0.5), int(hi*r+0.5)
-				lp, tp, rp, bp = gear32sd.display_adjust_aspect(imgid, getValidRect(lm,tm,lm+wp,tm+hp), gear32sd.IG_ASPECT_DEFAULT)
-				gear32sd.device_rect_set(imgid,getValidRect(lm,tm,lm+rp-lp,tm+bp-tp))
+				lp, tp, rp, bp = img.display_adjust_aspect(getValidRect(lm,tm,lm+wp,tm+hp), gear32sd.IG_ASPECT_DEFAULT)
+				img.device_rect_set(getValidRect(lm,tm,lm+rp-lp,tm+bp-tp))
 			elif fit=='scroll':
-				gear32sd.device_rect_set(imgid,getValidRect(lm,tm,lm+wi,tm+hi))
+				img.device_rect_set(getValidRect(lm,tm,lm+wi,tm+hi))
 			else:
-				gear32sd.device_rect_set(imgid,getValidRect(lm,tm,lm+wi,tm+hi))
-			gear32sd.display_desktop_pattern_set(imgid,0)
-			gear32sd.display_image(imgid,dc.GetSafeHdc())
+				img.device_rect_set(getValidRect(lm,tm,lm+wi,tm+hi))
+			img.display_desktop_pattern_set(0)
+			img.display_image(dc.GetSafeHdc())
 		elif cmd == 'label':
 			str = entry[1]
 			dc.SetBkMode(win32con.TRANSPARENT)
@@ -2587,19 +2587,19 @@ class _ResizeableDisplayList(_DisplayList):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 
-		if self._imgid is not None:
-			win32ig.delete(self._imgid)	
-			self._imgid = None
+		if self._img is not None:
+			self._img.delete(self._img)	
+			self._img = None
 
 		try:
-			imgid = win32ig.load(filename)
+			img = win32ig.load(filename)
 		except:
 			print 'failed to load', filename
 			return
-		self._imgid = imgid
+		self._img = img
 		if mediadisplayrect is None:
 			mediadisplayrect = self._window._rect
-		self._list.append(('image', imgid, fit, mediadisplayrect))
+		self._list.append(('image', img, fit, mediadisplayrect))
 
 	def updateimage(self, fit='hidden', mediadisplayrect=None):
 		list = self._list
@@ -2607,7 +2607,7 @@ class _ResizeableDisplayList(_DisplayList):
 			entry = list[ind][0]
 			if entry == 'image':
 				entry, id, ofit, omediadisplayrect = list[ind]
-				if id == self._imgid:
+				if id == self._img:
 					list[ind] = (entry, id, fit, mediadisplayrect)
 					break
 				

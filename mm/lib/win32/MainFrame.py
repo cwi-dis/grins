@@ -598,9 +598,6 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 	# XXXXXXXXXXXXXXXXXXXXXXXXXX
 	def onApplicationExit(self):
 		Toolbars.ToolbarMixin.OnClose(self)
-		from win32ig import win32ig
-		win32ig.deltemp()
-		__main__.toplevel._image_cache = {}
 
 	# Called by the framework when the user closes the window
 	def OnClose(self):
