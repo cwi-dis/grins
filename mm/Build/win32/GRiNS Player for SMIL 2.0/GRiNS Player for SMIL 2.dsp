@@ -617,10 +617,6 @@ SOURCE=.\M_nturl2path.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_NTVideoChannel.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_NTVideoDuration.c
 # End Source File
 # Begin Source File
