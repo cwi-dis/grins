@@ -79,7 +79,7 @@ def fast_find_module(module):
 		    pass
 
     isabs = os.path.isabs
-    
+
     try:
 	dir, name, suff, mode, type, prio = modcache[module]
     except KeyError:
