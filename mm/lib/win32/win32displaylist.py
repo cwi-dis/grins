@@ -350,14 +350,14 @@ class _DisplayList:
 		self._fgcolor = color
 
 	# Define a new button. Coordinates are in window relatives
-	def newbutton(self, coordinates, z = 0, times = None):
+	def newbutton(self, coordinates, z = 0, times = None, sensitive = 1):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		
 		# Split tuple. It should'n be unified anyway
 		shape, coordinates = coordinates[0], coordinates[1:]
 		
-		return _Button(self, shape, coordinates, z, times)
+		return _Button(self, shape, coordinates, z, times, sensitive)
 
 	# display image from file
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
@@ -826,12 +826,13 @@ from AnchorDefs import *
 import CheckInsideArea
 
 class _Button:
-	def __init__(self, dispobj, shape, coordinates, z=0, times=None):
+	def __init__(self, dispobj, shape, coordinates, z, times, sensitive):
 		self._dispobj = dispobj
 		self._shape = shape
 		self._coordinates = coordinates
 		self._z = z
 		self._times = times
+		self._sensitive = sensitive
 
 		buttons = dispobj._buttons
 		for i in range(len(buttons)):
@@ -874,6 +875,9 @@ class _Button:
 	def is_closed(self):
 		return self._dispobj is None
 
+	def setsensitive(self, sensitive):
+		self._sensitive = sensitive
+
 	# Increment height
 	def hiwidth(self, width):
 		pass
@@ -906,6 +910,9 @@ class _Button:
 		return 1
 	
 	def _inside(self, x, y):
+		if not self._sensitive:
+			# if not sensitive, no click is inside
+			return 0
 		return self._insidetemporal() and self._insideshape(x, y)
 
 	# Returns true if the point is inside the box	

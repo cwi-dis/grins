@@ -405,29 +405,29 @@ class _DisplayList:
 			raise error, 'displaylist already rendered'
 		self._linewidth = width
 
-#	def newbutton(self, coordinates, z = 0, times = None):
+#	def newbutton(self, coordinates, z = 0, times = None, sensitive = 1):
 #		if self._rendered:
 #			raise error, 'displaylist already rendered'
-#		return _Button(self, coordinates, z, times)
+#		return _Button(self, coordinates, z, times, sensitive)
 
 	# Define a new button. Coordinates are in window relatives
-	def newbutton(self, coordinates, z = 0, times = None):
+	def newbutton(self, coordinates, z = 0, times = None, sensitive = 1):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		
 		# test of shape type
 		from AnchorDefs import *
 		if coordinates[0] == A_SHAPETYPE_RECT:
-			return _ButtonRect(self, coordinates, z, times)
+			return _ButtonRect(self, coordinates, z, times, sensitive)
 		elif coordinates[0] == A_SHAPETYPE_POLY:
-			return _ButtonPoly(self, coordinates, z, times)
+			return _ButtonPoly(self, coordinates, z, times, sensitive)
 		elif coordinates[0] == A_SHAPETYPE_CIRCLE:
-			return _ButtonCircle(self, coordinates, z, times)
+			return _ButtonCircle(self, coordinates, z, times, sensitive)
 		elif coordinates[0] == A_SHAPETYPE_ELIPSE:
-			return _ButtonElipse(self, coordinates, z, times)
+			return _ButtonElipse(self, coordinates, z, times, sensitive)
 		else:
 			print 'Internal error: invalid shape type'			
-			return _ButtonRect(self, [A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0], z, times)
+			return _ButtonRect(self, [A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0], z, times, sensitive)
 
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
 				    center = 1, coordinates = None,
