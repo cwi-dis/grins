@@ -144,7 +144,6 @@ def prep1(node):
 
 def prep2(node, root):
 	# XXX we only deal with a single offset syncarc; all others are ignored
-	arcs = MMAttrdefs.getattr(node, 'beginlist')
 	delay = None
 	# We ask the node for its begindelay.
 	# If we're computing timing with download lags we should also get the
