@@ -1,4 +1,4 @@
-import Dlg
+from Carbon import Dlg
 
 firsttime = 1
 _dialog = None

@@ -9,7 +9,7 @@ except ImportError:
 import MMurl
 import os
 if os.name == 'mac':
-	import Evt
+	from Carbon import Evt
 	NEEDTICKER = 1
 elif os.name == 'posix':
 	NEEDTICKER = 1
