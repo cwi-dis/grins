@@ -21,6 +21,8 @@ import sys
 
 UNIT_MM, UNIT_SCREEN, UNIT_PXL = 0, 1, 2
 
+ENABLE_TRANSPARENT_IMAGES=1
+
 # XXXX Or is it better to copy these?
 from FrameWork import Menu, MenuBar, AppleMenu, MenuItem, SubMenu
 class MyMenu(Menu):
@@ -710,7 +712,7 @@ class _CommonWindow:
 		right = int(right * scale + .5)
 
 		
-		if hasattr(reader, 'transparent'):
+		if ENABLE_TRANSPARENT_IMAGES and hasattr(reader, 'transparent'):
 			r = img.reader(imgformat.xrgb8, file)
 			for i in range(len(r.colormap)):
 				r.colormap[i] = 255, 255, 255
@@ -726,7 +728,7 @@ class _CommonWindow:
 				# grey2mono doesn't pad lines :-(
 				bitmap = bitmap + imageop.grey2mono(
 					image[i*w:(i+1)*w], w, 1, 128)
-			mask = mac_image.mkbitmap(w, h, imgformat.xbmpacked, bitmap)
+			mask = (mac_image.mkbitmap(w, h, imgformat.xbmpacked, bitmap), bitmap)
 		else:
 			mask = None
 		try:
@@ -1128,12 +1130,14 @@ class _DisplayList:
 		# On the mac, we can only render after a full setup.
 		# Hence, we schedule a redraw only
 		#
+		window = self._window
 		self._rendered = 1
 		# XXXX buttons?
-		self._window._active_displist = self
-		Qd.SetPort(self._window._wid)
-		Win.InvalRect(self._window.qdrect())
-		# XXXX render transparent sub/sibling windows?
+		window._active_displist = self
+		Qd.SetPort(window._wid)
+		Win.InvalRect(window.qdrect())
+		if window._transparent == -1:
+			window._parent._clipchanged()
 		
 	def _render(self):
 		self._window._active_displist = self
@@ -1161,14 +1165,12 @@ class _DisplayList:
 			Qd.DrawString(entry[3]) # XXXX Incorrect for long strings
 		elif cmd == 'image':
 			mask, image, srcx, srcy, dstx, dsty, w, h = entry[1:]
-			if mask:
-				raise 'kaboo kaboo'
 			srcrect = srcx, srcy, srcx+w, srcy+h
 			dstrect = dstx, dsty, dstx+w, dsty+h
 ##			print 'IMAGE', image[0], srcrect, dstrect
 			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
 			if mask:
-				Qd.CopyMask(image[0], mask, wid.GetWindowPort().portBits,
+				Qd.CopyMask(image[0], mask[0], wid.GetWindowPort().portBits,
 					srcrect, srcrect, dstrect)
 			else:
 				Qd.CopyBits(image[0], wid.GetWindowPort().portBits, srcrect, dstrect,
