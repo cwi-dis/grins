@@ -139,7 +139,7 @@ class MediaChannel:
 		self.play_loop = self.__channel.getloop(node)
 
 		# get duration in secs (float)
-		duration = MMAttrdefs.getattr(node, 'duration')
+		duration = node.GetAttrDef('duration', None)
 		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
 		if repeatdur and self.play_loop == 1:
 			self.play_loop = 0
@@ -147,7 +147,7 @@ class MediaChannel:
 		clip_end = self.__channel.getclipend(node,'sec')
 		self.__playBuilder.SetPosition(clip_begin)
 		self.__playBegin = clip_begin
-		if duration:
+		if duration is not None and duration >= 0:
 			if not clip_end:
 				clip_end = clip_begin + duration
 			else:

@@ -175,7 +175,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		movie.SetViewBackground(bg)
 		self.armed_bg = self.window._convert_color(bg)
 		self.armed_loop = self.getloop(node)
-		self.armed_duration = MMAttrdefs.getattr(node, 'duration')
 		drawbox = MMAttrdefs.getattr(node, 'drawbox')
 		if drawbox:
 			self.armed_display.fgcolor(self.getbucolor(node))
@@ -231,7 +230,11 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				mtype = 'warning')
 			self.playdone(0)
 			return
+		duration = node.GetAttrDef('duration', None)
+		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
 		loop = self.armed_loop
+		if repeatdur and loop == 1:
+			loop = 0
 		self.played_loop = loop
 		if loop == 0:
 			movie.SetPlayLoopLimit(mv.MV_LIMIT_FOREVER)
@@ -242,18 +245,31 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if self.__begin:
 			movie.SetStartFrame(self.__begin)
 			movie.SetCurrentFrame(self.__begin)
+			begin = movie.GetStartTime()
+		else:
+			begin = 0
 		if self.__end:
 			movie.SetEndFrame(self.__end)
-		if self.armed_duration > 0:
+			end = movie.GetEndTime()
+		else:
+			end = 0
+		if duration is not None and duration > 0 and \
+		   (not end or (end > begin and duration < end - begin)):
+			movie.SetEndTime(1000L * (begin + duration), 1000)
+		elif duration is not None:
+			# XXX need special code to freeze temporarily at
+			# the end of each loop
+			pass
+		if repeatdur > 0:
 			self.__qid = self._scheduler.enter(
-				self.armed_duration, 0, self.__stopplay, ())
+				repeatdur, 0, self.__stopplay, ())
 		movie.Play()
 		self.__stopped = 0
 		r = Xlib.CreateRegion()
 		r.UnionRectWithRegion(0, 0, window._form.width, window._form.height)
 		r.SubtractRegion(window._region)
 		window._topwindow._do_expose(r)
-		if loop == 0 and not self.armed_duration:
+		if loop == 0 and not repeatdur:
 			self.playdone(0)
 
 	def __stopplay(self):

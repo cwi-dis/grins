@@ -18,7 +18,7 @@ SECONDS_TO_BUFFER=4
 
 class SoundChannel(ChannelAsync):
 	node_attrs = ChannelAsync.node_attrs + [
-		'duration', 'clipbegin', 'clipend',
+		'clipbegin', 'clipend',
 		'project_audiotype', 'project_targets',
 		'project_perfect', 'project_mobile']
 
@@ -118,15 +118,19 @@ class SoundChannel(ChannelAsync):
 			self.arm_fp = None
 			self.armed_duration = 0
 			return 1
-		self.armed_duration = MMAttrdefs.getattr(node, 'duration')
+		self.armed_duration = duration = node.GetAttrDef('duration', None)
 		begin = int(self.getclipbegin(node, 'sec') * rate + .5)
 		end = int(self.getclipend(node, 'sec') * rate + .5)
 		self.armed_markers = {}
 		for mid, mpos, mname in self.arm_fp.getmarkers() or []:
 			if mname:
 				self.armed_markers[mname] = mpos - begin
-		if begin or end:
+		if begin or end or duration:
 			from audio.select import select
+			if duration is not None and duration > 0:
+				duration = int(duration * rate + .5)
+				if duration < end - begin:
+					end = begin + duration
 			self.arm_fp = select(self.arm_fp, [(begin, end)])
 		self.__ready = 1
 		return 1
@@ -154,6 +158,10 @@ class SoundChannel(ChannelAsync):
 		self.play_loop = self.arm_loop
 		self.play_markers = self.armed_markers
 		self.arm_fp = None
+		duration = node.GetAttrDef('duration', None)
+		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
+		if repeatdur and self.play_loop == 1:
+			self.play_loop = 0
 		self.armed_markers = {}
 		rate = self.play_fp.getframerate()
 		for arc in node.sched_children:
@@ -167,16 +175,16 @@ class SoundChannel(ChannelAsync):
 			else:
 				qid = self._scheduler.enter(t, 0, self._playcontext.trigger, (arc,))
 				self.__evid.append(qid)
-		if self.armed_duration > 0:
+		if repeatdur > 0:
 			self.__qid = self._scheduler.enter(
-				self.armed_duration, 0, self.__stopplay, ())
+				repeatdur, 0, self.__stopplay, ())
 		try:
 			player.play(self.play_fp, (self.my_playdone, ()))
 		except audio.Error, msg:
 			print 'error reading file %s: %s' % (self.getfileurl(node), msg)
 			self.playdone(0)
 			return
-		if self.play_loop == 0 and self.armed_duration == 0:
+		if self.play_loop == 0 and repeatdur == 0:
 			self.playdone(0)
 
 	def __stopplay(self):
