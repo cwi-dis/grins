@@ -37,7 +37,7 @@ def fixhelpdir():
 	global helpbase
 	global helpbase_web
 	if helpbase_web is None:
-			helpbase_web = 'http://www.oratrix.com/indir/%s/help/index.html'%version.shortversion
+		helpbase_web = 'http://www.oratrix.com/indir/%s/help/index.html'%version.shortversion
 	if helpbase is None:
 		import cmif
 		helpdir = cmif.findfile('Help')

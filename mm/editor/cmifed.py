@@ -333,7 +333,6 @@ class Main(MainDialog):
 	def checkversion_callback(self):
 		import MMurl
 		import windowinterface
-		import string
 		url = self._get_versiondep_url('updatecheck.txt')
 
 		try:
@@ -346,10 +345,10 @@ class Main(MainDialog):
 		if not data:
 			windowinterface.showmessage('You are running the latest version of the software.')
 			return
-		cancel = windowinterface.GetOKCancel('There appears to be a newer version!\nDo you want to hear more?')
+		cancel = windowinterface.GetOKCancel('There appears to be a newer version!\nDo you want to know more?')
 		if cancel:
 			return
-		data = string.strip(data)
+		data = data.strip()
 		url = self._add_license_id(self, data)
 		windowinterface.htmlwindow(url)
 
@@ -364,7 +363,7 @@ class Main(MainDialog):
 		if fullkey:
 			url = url + '&key=' + settings.get('license')
 		else:
-			id = string.split(settings.get('license'), '-')[1]
+			id = settings.get('license').split('-')[1]
 			url = url + '&id=' + id
 		return url
 
@@ -552,9 +551,8 @@ def findfile(name):
 		return name
 	if cmifpath is None:
 		if os.environ.has_key('CMIFPATH'):
-			import string
 			var = os.environ['CMIFPATH']
-			cmifpath = string.splitfields(var, ':')
+			cmifpath = var.split(':')
 		elif os.environ.has_key('CMIF'):
 			cmifpath = [os.environ['CMIF']]
 		else:

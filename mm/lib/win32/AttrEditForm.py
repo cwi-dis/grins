@@ -2089,10 +2089,6 @@ class SingleAttrPage(AttrPage):
 			 OptionsCheckMultipleNolabelCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_CHECK1,grinsRC.IDC_CHECK2,grinsRC.IDC_CHECK3,grinsRC.IDC_CHECK4,grinsRC.IDC_CHECK5,
 			  grinsRC.IDC_CHECK6)),
-		'project_convert':	# A check button
-			(grinsRC.IDD_EDITATTR_CK1,
-			 OptionsCheckCtrl,
-			 (grinsRC.IDC_1,)),
 		'base_window':		# Drop down list plus Properties button
 			(grinsRC.IDD_EDITATTR_CH1,
 			 ChannelCtrl,

@@ -277,7 +277,7 @@
 (project_smil_url (string) '' 'Mediaserver URL' default
 	'URL of SMIL document on the media server' raw (smil2 g2 qt snap))
 
-(project_targets (int) 3 'Target audience' targets
+(project_targets (int) 2 'Target audience' targets
 	'One or more bandwidths for which this item should be converted' raw (advanced g2 snap))
 
 (project_videotype (int) 0 'Video type' videotype

@@ -2570,7 +2570,7 @@ class RMTargetsAttrEditorField(PopupAttrEditorField):
 
 	def parsevalue(self, str):
 		if str == DEFAULT:
-			str = '28k8 modem,56k modem'
+			return self.getdefaultvalue()
 		strs = string.split(str, ',')
 		rv = 0
 		for str in strs:
@@ -2579,9 +2579,7 @@ class RMTargetsAttrEditorField(PopupAttrEditorField):
 
 	def valuerepr(self, value):
 		if value is None:
-			value = 3	# '28k8 modem,56k modem'
-		str = self.__values[0]	# XXX use lowest as default
-		# XXX just the last one for now
+			value = self.getdefaultvalue()
 		strs = []
 		for i in range(len(self.__values)):
 			if value & (1 << i):

@@ -1392,7 +1392,8 @@ class HierarchyView(HierarchyViewDialog):
 				# media type after all. I think this "should
 				# not happen" because the drag handler will
 				# forestall this, but better be sure than sorry
-				print "forced child did not accept media type:", mimetype
+				if __debug__:
+					print "forced child did not accept media type:", mimetype
 				cnode.Destroy()
 			node = node.GetContext().newnode(type) # Create a new node
 			cnode = node # This is the node we'll insert into the tree

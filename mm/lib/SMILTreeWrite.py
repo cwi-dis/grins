@@ -284,6 +284,9 @@ def getsrc(writer, node):
 			realnode.writenode(node)
 		if tmp_file_name:
 			node.DelAttr('file')
+	if chtype == 'text' and val[:5] == 'data:':
+		# don't convert data: URLs to text files
+		return val
 	if not val:
 		if writer.copydir:
 			# Exporting without a URL is an error
@@ -2607,17 +2610,17 @@ class SMILWriter(SMIL):
 			import windowinterface
 			windowinterface.showmessage(msg)
 			u = MMurl.urlopen(srcurl)
-		if convert and u.headers.maintype == 'text' and \
-		   u.headers.subtype != 'html' and \
-		   string.find(u.headers.subtype, 'real') < 0:
-			from realconvert import converttextfile
-			# XXXX This is a hack. convertaudiofile may change the filename (and
-			# will, currently, to '.rt').
-			if self.progress:
-				self.progress("Converting %s"%os.path.split(file)[1], None, None, None, None)
-			file = converttextfile(u, dstdir, file, node)
-			self.files_generated[file] = ''
-			return file
+##		if convert and u.headers.maintype == 'text' and \
+##		   u.headers.subtype != 'html' and \
+##		   string.find(u.headers.subtype, 'real') < 0:
+##			from realconvert import converttextfile
+##			# XXXX This is a hack. convertaudiofile may change the filename (and
+##			# will, currently, to '.rt').
+##			if self.progress:
+##				self.progress("Converting %s"%os.path.split(file)[1], None, None, None, None)
+##			file = converttextfile(u, dstdir, file, node)
+##			self.files_generated[file] = ''
+##			return file
 		if u.headers.maintype == 'text' or string.find(u.headers.subtype, 'xml') >= 0:
 			binary = ''
 		else:
