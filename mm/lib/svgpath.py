@@ -556,6 +556,7 @@ class Path:
 		self.__length = self.__getLength()
 
 	def constructFromPoints(self, coords):
+		self._points = coords[:]
 		n = len(coords)
 		if n==0: return
 		self.moveTo(coords[0])
@@ -563,6 +564,12 @@ class Path:
 			self.lineTo(coords[i])
 		self.__length = self.__getLength()
 		
+	def getPoints(self):
+		points = []
+		for x, y in self._points:
+			points.append(complex(x,y))
+		return points
+
 	# main query method
 	# get point at length t
 	def getPointAt(self, t):
