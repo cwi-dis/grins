@@ -1029,6 +1029,8 @@ class MMTreeElement:
 			if n.GetType() != 'comment':
 				newnodes.append(n)
 		nodes = newnodes
+		if self_index >= 0:
+			self_index = nodes.index(self)
 		if xhead == '*':
 			if 0 <= self_index + index < len(nodes):
 				return nodes[self_index + index].xpath(xtail)
