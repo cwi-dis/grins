@@ -7,6 +7,7 @@ import time
 
 class TransitionEngine:
 	def __init__(self, window, inout, runit, dict):
+		self.window = window
 		self.duration = dict.get('dur', 1)
 
 		trtype = dict['trtype']
@@ -16,10 +17,12 @@ class TransitionEngine:
 		#print klass, inout, runit, dict
 
 		# implementation artifact vars
-		self._memdc = window._passiveMemDC
+		self._passive = window._passive
+		self._tmp = self.window.createDDS()
+		self._region = None
 		self.__fiber_id = 0
 
-		w, h = self._memdc.getSize()
+		x, y, w, h = self.window._rect
 		self.transitiontype.move_resize((0, 0, w, h))
 
 	def __del__(self):
@@ -38,14 +41,12 @@ class TransitionEngine:
 		self.__transition = None
 	
 	def settransitionvalue(self, value):
-		print 'settransitionvalue',value
 		if value<0.0 or value>1.0:
 			raise AssertionError
-		curMemDC = self._memdc.createCurMemDC()
-		dc = self._memdc.beginUpdate()
+		active = self.window.createDDS()
 		parameters = self.transitiontype.computeparameters(value)
-		self.transitiontype.updatebitmap(parameters, self._memdc, curMemDC, None, dc, None)
-		self._memdc.endUpdate()
+		self.transitiontype.updatebitmap(parameters, self._passive, active, self._tmp, self.window._active, self._region)
+		self.window.update()
 
 	def __onDur(self):
 		self.endtransition()

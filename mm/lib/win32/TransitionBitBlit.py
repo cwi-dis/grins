@@ -2,8 +2,7 @@
 # See comment at the beginning of Transitions for an explanation of the overall
 # architecture.
 
-def POS(rc):
-	return rc[0], rc[1]
+import ddraw
 
 class BlitterClass:
 	SHOW_UNIMPLEMENTED_TRANSITION_NAME=1
@@ -25,30 +24,41 @@ class BlitterClass:
 		"""Convert an lrtb-style rectangle to the local convention"""
 		l,t,r,b = ltrb
 		return l,t,r-l,b-t
-
 	
+	def isempty(self, ltrb):
+		l,t,r,b = ltrb
+		return r==l or b==t
+
 	def copyBits(self, src, dst, rcsrc, rcdst):
-		if rcsrc[2]!=0 and rcsrc[3]!=0:
-			self._engine._memdc.drawMemDCOn(dst,rcdst,src,POS(rcsrc))
+		if not self.isempty(rcsrc) and not self.isempty(rcdst):		
+			dst.Blt(rcdst, src, rcsrc, ddraw.DDBLT_WAIT)
 
 		
 class R1R2BlitterClass(BlitterClass):
 	"""parameter is 2 rects, first copy rect2 from src2, then rect1 from src1"""
 	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
-		print 'updatebitmap', parameters
 		rect1, rect2 = parameters
-		rect1 = self._convertrect(rect1)
-		rect2 = self._convertrect(rect2)
 		self.copyBits(src2, dst, rect2, rect2)
 		self.copyBits(src1, dst, rect1, rect1)
 		
 class R1R2R3R4BlitterClass(BlitterClass):
 	"""Parameter is 4 rects. Copy src1[rect1] to rect2, src2[rect3] to rect4"""
-	pass
+	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
+		srcrect1, dstrect1, srcrect2, dstrect2 = parameters
+		self.copyBits(src1, dst, srcrect1, dstrect1)
+		self.copyBits(src2, dst, srcrect2, dstrect2)
 		
 class R1R2OverlapBlitterClass(BlitterClass):
 	"""Like R1R2BlitterClass but rects may overlap, so copy via the temp bitmap"""
-	pass
+	
+	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
+		rect1, rect2 = parameters
+		self.copyBits(src2, tmp, rect2, rect2)
+		self.copyBits(src1, tmp, rect1, rect1)
+		self.copyBits(tmp, dst, self.ltrb, self.ltrb)
+			
+	def needtmpbitmap(self):
+		return 1
 	
 class RlistR2OverlapBlitterClass(BlitterClass):
 	"""Like R1R2OverlapBlitterClass, but first item is a list of rects"""
@@ -63,3 +73,7 @@ class FadeBlitterClass(BlitterClass):
 	"""Parameter is float in range 0..1, use this as blend value"""
 	pass
 	
+class PolylistR2OverlapBlitterClass(BlitterClass):
+	pass
+
+
