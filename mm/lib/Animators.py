@@ -861,7 +861,6 @@ class EffectiveAnimator:
 			if csssubregion.media:
 				csssubregion.media.update()
 				mediacoords = csssubregion.media.getPxGeom()
-			print coords, scale, mediacoords
 			if chan.window:
 				chan.window.updatecoordinates(coords, UNIT_PXL, scale, mediacoords)
 		
