@@ -741,8 +741,7 @@ class Channel:
 				'gettext on wrong node type: ' +`node.type`
 
 	def getduration(self, node):
-		import Duration
-		return Duration.get(node)
+		return MMAttrdefs.getattr(node, 'duration')
 
 	def getbgcolor(self, node):
 		return MMAttrdefs.getattr(node, 'bgcolor')
