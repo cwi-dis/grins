@@ -122,13 +122,15 @@ class _ListWidget:
 			if not ok: return
 			self.list.LSetSelect(0, pt)
 			
-	def select(self, num):
+	def select(self, num, autoscroll=0):
 		self._deselectall()
 		if num in self._data:
 			num = self._data.index(num)
 		if num is None or num < 0:
 			return
 		self.list.LSetSelect(1, (0, num))
+		if autoscroll:
+			self.list.LAutoScroll()
 		
 	def getselect(self):
 		ok, (x, y) = self.list.LGetSelect(1, (0,0))
