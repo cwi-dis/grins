@@ -59,7 +59,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def __init__(self, main, url, new_file):
 		ViewDialog.__init__(self, 'toplevel_')
 		self.prune = 0
-		self.smil_one = 0
 		self.select_fdlist = []
 		self.select_dict = {}
 		self._last_timer_id = None
@@ -251,8 +250,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			REDO(callback = (self.redo_callback, ())),
 			]
 
-		self.commandlist_g2 = [] # default, avoid some crashed
-		
 		if hasattr(self, 'do_edit'):
 			self.commandlist.append(EDITSOURCE(callback = (self.edit_callback, ())))
 		if self.main.cansave():
@@ -264,8 +261,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				]
 			if features.EXPORT_REAL in features.feature_set:
 				self.publishcommandlist = self.publishcommandlist + [
-					EXPORT_G2(callback = (self.bandwidth_callback, ('real', self.export_G2_callback))),
-					UPLOAD_G2(callback = (self.bandwidth_callback, ('real', self.upload_G2_callback))),
+					EXPORT_G2(callback = (self.bandwidth_callback, ('real', self.export_REAL_callback))),
+					UPLOAD_G2(callback = (self.bandwidth_callback, ('real', self.upload_REAL_callback))),
 					]
 			if features.EXPORT_QT in features.feature_set:
 				self.publishcommandlist = self.publishcommandlist + [
@@ -276,8 +273,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			if features.EXPORT_WMP in features.feature_set:
 				self.publishcommandlist = self.publishcommandlist + [
 					EXPORT_WMP(callback = (self.bandwidth_callback, ('wmp', self.export_WMP_callback))),
-##					EXPORT_WMP(callback = (self.export_WMP_callback,())),
-					UPLOAD_WMP(callback = (self.bandwidth_callback, ('wmp', self.upload_WMP_callback))),
+##					UPLOAD_WMP(callback = (self.bandwidth_callback, ('wmp', self.upload_WMP_callback))),
 					]
 			if features.EXPORT_HTML_TIME in features.feature_set:
 				self.publishcommandlist = self.publishcommandlist + [
@@ -285,13 +281,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					]
 			if features.EXPORT_SMIL2 in features.feature_set:
 				self.publishcommandlist = self.publishcommandlist + [
-					EXPORT_SMIL(callback = (self.bandwidth_callback, ('smil', self.export_SMIL_callback,))),
-					UPLOAD_SMIL(callback = (self.bandwidth_callback, ('smil', self.upload_SMIL_callback,))),
+					EXPORT_SMIL(callback = (self.bandwidth_callback, ('smil', self.export_SMIL2_callback,))),
+					UPLOAD_SMIL(callback = (self.bandwidth_callback, ('smil', self.upload_SMIL2_callback,))),
 					EXPORT_PRUNE(callback = (self.saveas_callback, (1,))),
 					]
 			if features.EXPORT_SMIL1 in features.feature_set:
 				self.publishcommandlist = self.publishcommandlist + [
-					EXPORT_SMIL1(callback = (self.saveas_callback, (0, 1,))),
+					EXPORT_SMIL1(callback = (self.export_SMIL1_callback, ())),
 					]
 ##			if features.EXPORT_XMT in features.feature_set:
 ##				self.publishcommandlist = self.publishcommandlist + [
@@ -299,7 +295,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##					UPLOAD_XMT(callback = (self.bandwidth_callback, ('xmt', self.upload_XMT_callback,))),
 ##					]
 		else:
-			self.savecommandlist = self.publishcommandlist = self.publishg2commandlist = []
+			self.savecommandlist = self.publishcommandlist = []
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
 			self.commandlist.append(
@@ -319,8 +315,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				utype, host, path, params, query, fragment = urlparse(self.filename)
 				if (not utype or utype == 'file') and (not host or host == 'localhost'):
 					commandlist = commandlist + self.savecommandlist
-			if not self.context.attributes.get('project_boston', 0):
-				commandlist = commandlist + self.publishg2commandlist
 			commandlist = commandlist + self.publishcommandlist
 		else:
 			commandlist = commandlist + self.errorscommandlist
@@ -652,7 +646,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		else:
 			return 1
 
-	def saveas_callback(self, prune = 0, smil_one = 0, close = 0):
+	def saveas_callback(self, prune = 0, close = 0):
 		if self.new_file:
 			cwd = settings.get('savedir')
 		else:
@@ -669,10 +663,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			filetypes = ['application/smil']
 			title = 'Save SMIL file:'
 			self.prune = 1
-		if smil_one:
-			filetypes = ['application/smil']
-			title = 'Save SMIL 1.0 file'
-			self.smil_one = 1
 		dftfilename = ''
 		if self.filename:
 			utype, host, path, params, query, fragment = urlparse(self.filename)
@@ -694,8 +684,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		evallicense= (license < 0)
 		if not self.save_to_file(filename, exporting = 1):
 			return		# Error, don't save HTML file
-		if exporttype in (compatibility.SMIL10, compatibility.Boston):
-			return		# don't create HTML file for SMIL 1.0 export
+		if exporttype in ('SMIL1', 'SMIL2'):
+			return		# don't create HTML file for SMIL export
 		attrs = self.context.attributes
 		if not attrs.has_key('project_html_page') or not attrs['project_html_page']:
 			if features.lightweight:
@@ -743,17 +733,20 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			# usage (yet)
 			do_export_callback()
 
-	def export_G2_callback(self):
-		self.export(compatibility.G2)
+	def export_REAL_callback(self):
+		self.export('REAL')
 		
 	def export_QT_callback(self):
-		self.export(compatibility.QT)
+		self.export('QuickTime')
 
-	def export_SMIL_callback(self):
-		self.export(compatibility.Boston)
+	def export_SMIL2_callback(self):
+		self.export('SMIL2')
+
+	def export_SMIL1_callback(self):
+		self.export('SMIL1')
 
 	def export_XMT_callback(self):
-		self.export(compatibility.XMT)
+		self.export('XMT')
 
 	def export_WMP_callback(self):
 		import wmpsupport
@@ -832,21 +825,20 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		windowinterface.FileDialog('Publish SMIL file:', cwd, 'application/smil',
 					   '', self.export_okcallback, None)
 	   
-	def upload_G2_callback(self):
-		self.upload(compatibility.G2)
+	def upload_REAL_callback(self):
+		self.upload('REAL')
 		
 	def upload_QT_callback(self):
-		self.upload(compatibility.QT)
+		self.upload('QuickTime')
 
-	def upload_SMIL_callback(self):
-		self.upload(compatibility.Boston)
+	def upload_SMIL2_callback(self):
+		self.upload('SMIL2')
 
 	def upload_XMT_callback(self):
-		self.upload(compatibility.XMT)
+		self.upload('XMT')
 
 	def upload_WMP_callback(self):
-		self.upload(compatibility.WMP)
-		return
+		self.upload('WMP')
 
 	def upload(self, exporttype):
 		self.exporttype = exporttype
@@ -859,24 +851,38 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if not self.filename:
 			windowinterface.showmessage('Cannot upload unsaved document.\nPlease save first.')
 			return
-		filename, smilurl, self.w_ftpinfo, self.m_ftpinfo = self.get_upload_info()
+		filename, smilurl, weburl, self.w_ftpinfo, self.m_ftpinfo = self.get_upload_info()
 			
 		missing = ''
 		attr = None
 		attrs = self.context.attributes
-		# G2 and QT products require a web page
-		if features.compatibility in (compatibility.G2, compatibility.QT):
+		# REAL and QT products require a web page
+		hlinks = self.context.hyperlinks
+		have_local_links = 0
+		for a1 in self.root.getanchors(1):
+			for link in hlinks.findalllinks(a1, None):
+				a2 = link[ANCHOR2]
+				if type(a2) is type(''):
+					utype, host, path, params, query, fragment = urlparse(a2)
+					if (not utype or utype == 'file') and (not host or host == 'localhost'):
+						have_local_links = 1
+						break
+
+		if exporttype in ('REAL', 'QuickTime'):
 			have_web_page = 1
 		else:
 			have_web_page = attrs.has_key('project_html_page')
-		if have_web_page:
-			if not self.w_ftpinfo[0] or not self.m_ftpinfo[0]:
+		if have_web_page or have_local_links:
+			if not self.w_ftpinfo[0]:
 				attr = 'project_ftp_host'
-				missing = '\n- webserver and mediaserver FTP info'
-			if not smilurl:
+				missing = '\n- Webserver FTP info'
+			if have_web_page and not smilurl:
 				if not attr: attr = 'project_smil_url'
 				missing = missing + '\n- Mediaserver SMILfile URL'
-			if not attrs.has_key('project_html_page') or not attrs['project_html_page']:
+			if have_local_links and not weburl:
+				if not attr: attr = 'project_web_url'
+				missing = missing + '\n- Webserver URL'
+			if have_web_page and not attrs.get('project_html_page'):
 				if features.lightweight:
 					attrs['project_html_page'] = 'external_player.html'
 				else:
@@ -884,12 +890,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					missing = missing + '\n- HTML Template'
 		else:
 			# We only have to check mediaserver params (we don't generate a webpage)
-			# For ease of coding we copy the m_ftpinfo to w_ftpinfo, and we then
-			# just skip generating/uploading the HTML later
-			self.w_ftpinfo = self.m_ftpinfo
 			if not self.m_ftpinfo[0]:
 				attr = 'project_ftp_host_media'
 				missing = '\n- Mediaserver FTP info'
+
 		if missing:
 			if windowinterface.showquestion('Document properties needed but not set:'+missing+
 					'\n\nDo you want to set these?'):
@@ -897,7 +901,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			return
 		if have_web_page:
 			# Do a sanity check on the SMILfile URL
-			fn = MMurl.url2pathname(string.split(smilurl, '/')[-1])
+			fn = MMurl.url2pathname(smilurl.split('/')[-1])
 			if os.path.split(filename)[1] != os.path.split(fn)[1]:
 				# The SMIL upload filename and URL don't match. Warn.
 				if not windowinterface.showquestion('Warning: Mediaserver SMIL URL appears incorrect:\n'+smilurl+'\nContinue anyway?'):
@@ -929,8 +933,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# Third stage of upload: we have the passwords
 		m_hostname, m_username, dummy, m_dirname = self.m_ftpinfo
 		self.m_ftpinfo = m_hostname, m_username, passwd, m_dirname
-		filename, smilurl, d1, d2  = self.get_upload_info()
-		self.save_to_ftp(filename, smilurl, self.w_ftpinfo, self.m_ftpinfo)
+		filename, smilurl, weburl, d1, d2  = self.get_upload_info()
+		self.save_to_ftp(filename, smilurl, weburl, self.w_ftpinfo, self.m_ftpinfo)
 		del self.w_ftpinfo
 		del self.m_ftpinfo
 		
@@ -953,22 +957,21 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		w_hostname = ''
 		w_username = ''
 		w_dirname = ''
-		if have_web_page:
-			if attrs.has_key('project_ftp_host'):
-				w_hostname = attrs['project_ftp_host']
-			if attrs.has_key('project_ftp_user'):
-				w_username = attrs['project_ftp_user']
-			if attrs.has_key('project_ftp_dir'):
-				w_dirname = attrs['project_ftp_dir']
+		if attrs.has_key('project_ftp_host'):
+			w_hostname = attrs['project_ftp_host']
+		if attrs.has_key('project_ftp_user'):
+			w_username = attrs['project_ftp_user']
+		if attrs.has_key('project_ftp_dir'):
+			w_dirname = attrs['project_ftp_dir']
 
-			# Website FTP params default to Mediasite FTP parameters
-			if not w_hostname:
-				w_hostname = m_hostname
-			if not w_username:
-				w_username = m_username
-			if not w_dirname:
-				w_dirname = m_dirname
-			
+		# Website FTP params default to Mediasite FTP parameters
+		if not w_hostname:
+			w_hostname = m_hostname
+		if not w_username:
+			w_username = m_username
+		if not w_dirname:
+			w_dirname = m_dirname
+
 		# Filename for SMIL file on media site
 		# XXXX This may be wrong, because it uses the "project" filename
 		utype, host, path, params, query, fragment = urlparse(self.filename)
@@ -977,12 +980,19 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			   MMmimetypes.guess_extension('application/smil')
 		
 		# URL of the SMIL file as it appears on the net
-		if have_web_page and attrs.has_key('project_smil_url'):
-			smilurl = attrs['project_smil_url']
-		else:
-			smilurl = ''
+		smilurl = attrs.get('project_smil_url', '')
 
-		return (filename, smilurl,
+		# URL of the directory of the webpage as it appears on the net
+		weburl = attrs.get('project_web_url')
+		if weburl:
+			if weburl[-1:] != '/':
+				weburl = weburl + '/'
+		else:
+			# use directory part of smilurl as default for weburl
+			utype, host, path, params, query, fragment = urlparse(smilurl)
+			weburl = urlunparse((utype, host, path[:path.rfind('/')+1], '', '', '')) # includes final /
+
+		return (filename, smilurl, weburl,
 				(w_hostname, w_username, w_passwd, w_dirname), 
 				(m_hostname, m_username, m_passwd, m_dirname))
 
@@ -1124,12 +1134,15 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			copyfiles = 1
 			qtExt = 0
 			rpExt = 0
+			smil_one = 0
 			convertfiles = 0
-			if exporttype == compatibility.G2:
+			if exporttype == 'REAL':
 				rpExt = 1
 				convertfiles = 1
-			elif exporttype == compatibility.QT:
+			elif exporttype == 'QuickTime':
 				qtExt = 1
+			elif exporttype == 'SMIL1':
+				smil_one = 1
 			# XXX enabling this currently crashes the application on Windows during video conversion
 			progress = windowinterface.ProgressDialog("Publishing", self.cancel_upload)
 			progress.set('Publishing document...')
@@ -1138,6 +1151,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			grinsExt = mimetype != 'application/smil'
 			qtExt = features.EXPORT_QT in features.feature_set
 			rpExt = features.EXPORT_REAL in features.feature_set
+			smil_one = 0
 			copyfiles = 0
 			convertfiles = 0
 			progress = None
@@ -1156,10 +1170,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 							evallicense = evallicense,
 							progress = progress,
 							prune = self.prune,
-							smil_one = self.smil_one)
+							smil_one = smil_one)
 			finally:
 				self.prune = 0
-				self.smil_one = 0
 		except IOError, msg:
 			if exporting:
 				operation = 'Publish'
@@ -1185,14 +1198,14 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.update_undocommandlist()
 		return 1
 		
-	def save_to_ftp(self, filename, smilurl, w_ftpparams, m_ftpparams):
+	def save_to_ftp(self, filename, smilurl, weburl, w_ftpparams, m_ftpparams):
 		license = self.main.wanttosave()
 		if not license:
 			windowinterface.showmessage('Cannot obtain a license to save.')
 			return 0
 		evallicense= (license < 0)
 		self.pre_save()
-		have_web_page = (self.exporttype in (compatibility.G2, compatibility.QT))
+		have_web_page = (self.exporttype in ('REAL', 'QuickTime'))
 
 		#
 		# Export params
@@ -1200,12 +1213,15 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		exporttype = self.exporttype
 		qtExt = 0
 		rpExt = 0
+		smil_one = 0
 		convertfiles = 0
-		if exporttype == compatibility.G2:
+		if exporttype == 'REAL':
 			rpExt = 1
 			convertfiles = 1
-		elif exporttype == compatibility.QT:
+		elif exporttype == 'QuickTime':
 			qtExt = 1
+		elif exporttype == 'SMIL1':
+			smil_one = 1
 		#
 		# Progress dialog
 		#
@@ -1218,7 +1234,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		try:
 			import SMILTreeWrite
 			try:
-				SMILTreeWrite.WriteFTP(self.root, filename, m_ftpparams,
+				SMILTreeWrite.WriteFTP(self.root, filename, m_ftpparams, w_ftpparams,
 						       grinsExt = 0,
 						       qtExt = qtExt,
 						       rpExt = rpExt,
@@ -1228,10 +1244,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 						       evallicense = evallicense,
 						       progress = progress.set,
 						       prune = self.prune,
-						       smil_one = self.smil_one)
+						       smil_one = smil_one,
+						       weburl = weburl)
 			finally:
 				self.prune = 0
-				self.smil_one = 0
 		except IOError, msg:
 			windowinterface.showmessage('Media upload failed:\n%s'%(msg,))
 			return 0
@@ -1621,14 +1637,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			# no, don't save, and close
 			return 1
 
-		# the user want to save the document, before to close
+		# the user wants to save the document before closing
 		utype, host, path, params, query, fragment = urlparse(self.filename)
-		if (utype and utype != 'file') or (host and host != 'localhost'):
+		if self.new_file or (utype and utype != 'file') or (host and host != 'localhost'):
+			# new or remote document, save locally
 			self.saveas_callback(close = 1)
 			return 0
 		file = MMurl.url2pathname(path)
-		# XXXX This is wrong, we should ask where to save if self.new_file is set.
-		# But we can't do that because we have to synchronously return...
 		return self.save_to_file(file)
 
 	def help_callback(self, params=None):

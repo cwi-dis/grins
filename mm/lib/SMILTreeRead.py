@@ -947,6 +947,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				    val[0] == '-'):
 					self.syntax_error('bad begin attribute for child of seq node')
 					# accept anyway ...
+					node.set_infoicon('error', 'bad begin attribute for child of seq node')
 				node.__syncarcs.append((attr, val, self.lineno))
 			elif attr == 'dur':
 				if val == 'indefinite':

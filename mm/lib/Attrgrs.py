@@ -375,6 +375,7 @@ attrgrs=(
 		  'project_ftp_host',
 		  'project_ftp_user',
 		  'project_ftp_dir',
+		  'project_web_url',
 		  ],
 	 },
 

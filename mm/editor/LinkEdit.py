@@ -184,11 +184,11 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 		str.browser_setlabel('From focus')
 		str.anchors = []
 		for n in str.nodelist:
-			str.anchors = str.anchors + getanchors(n, 0)
+			str.anchors = str.anchors + n.getanchors(0)
 
 	def fill_all(self, str):
 		str.browser_setlabel('All internal')
-		str.anchors = getanchors(self.root, 1)
+		str.anchors = self.root.getanchors(1)
 
 	def fill_relation(self, str):
 		if str != self.right:
@@ -205,7 +205,7 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 
 	def fill_dangling(self, str):
 		str.browser_setlabel('Dangling')
-		all = getanchors(self.root, 1)
+		all = self.root.getanchors(1)
 		nondangling = \
 			  self.context.hyperlinks.findnondanglinganchordict()
 		str.anchors = []
@@ -225,7 +225,7 @@ class LinkEdit(LinkEditLight, LinkBrowserDialog, ViewDialog):
 	def fill_keep(self, str):
 		str.browser_setlabel('Kept')
 		# check that all anchors still exist
-		allanchors = getanchors(self.root, 1)
+		allanchors = self.root.getanchors(1)
 		oldanchors = str.anchors
 		str.anchors = []
 		for a in oldanchors:
@@ -698,14 +698,3 @@ class LinkEditEditor(LinkEditorDialog):
 
 	def cancel_callback(self):
 		self.close()
-#
-# General functions
-#
-def getanchors(node, recursive):
-	anchors = []
-	if node.GetType() == 'anchor':
-		anchors.append(node)
-	elif recursive or (features.SHOW_MEDIA_CHILDREN not in features.feature_set and node.GetType() in MMTypes.mediatypes):
-		for c in node.GetChildren():
-			anchors.extend(getanchors(c, recursive))
-	return anchors

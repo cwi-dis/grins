@@ -696,7 +696,7 @@ class DocumentWrapper(Wrapper):
 	__publishnames = [
 			'project_ftp_host', 'project_ftp_user', 'project_ftp_dir',
 			'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media',
-			'project_smil_url']
+			'project_smil_url', 'project_web_url']
 	__qtnames = ['autoplay', 'qttimeslider', 'qtnext', 'qtchaptermode', 'immediateinstantiation']
 
 	def __init__(self, toplevel):
@@ -1932,8 +1932,7 @@ class CssPosAttrEditorField(AttrEditorField):
 		elif type(value) == type(0):
 			return `value`
 		elif type(value) == type(1.0):
-			val = fmtfloat(value*100,prec=2)+'%'
-			return val
+			return fmtfloat(value*100, '%', prec=2)
 		else:
 			print 'unknown value ',value
 
