@@ -2813,6 +2813,19 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if boston is not None and content != boston:
 				self.syntax_error('conflicting project_boston attribute')
 			self.__context.attributes['project_boston'] = content
+		elif name == 'customcolors':
+			color_list = []
+			for color in map(string.strip, content.split(',')):
+				if color == '':
+					color_list.append(None)
+				else:
+					color = self.__convert_color(color)
+					if color is None:
+						break
+					color_list.append(color)
+			else:
+				# all colors were recognized as colors
+				self.__context.color_list = color_list
 		else:
 			if self.__warnmeta:
 				self.warning('unrecognized meta property', self.lineno)
