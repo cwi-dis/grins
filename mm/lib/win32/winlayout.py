@@ -26,6 +26,7 @@ from appcon import *
 # shape containers should implement the interface
 #class ShapeContainer:
 #	def getMouseTarget(self, point): pass
+#	def update(self, rc=None): pass
 
 # shape factories should implement the interface
 #class ShapeFactory:
@@ -54,30 +55,14 @@ class DrawContext:
 		self._curtool = self._seltool
 
 		# DrawContext does not support multiple selections
-		# use  MultiSelectDrawContext instead 
+		# use  MSDrawContext instead 
 		self._muliselect = 0
 
 		#
 		self._shapeContainer = None
 
-		# and object responsible to create new shapes
+		# an object responsible to create new shapes
 		self._shapeFactory = None
-
-	def reset(self):
-		self._moveRefPt = 0, 0
-		self._selected = None
-		self._selmode = SM_NONE
-		self._ixDragHandle = 0
-		self._capture = None
-		self._curtool = self._seltool
-	
-	def selectTool(self, strid):
-		if strid=='shape':
-			self._curtool = self._shapetool
-		elif strid=='select':
-			self._curtool = self._seltool
-		else:
-			self._curtool = self._seltool
 
 	def setCapture(self):
 		self._capture = self
@@ -94,28 +79,39 @@ class DrawContext:
 	def setcursor(self, strid):
 		cursor = win32window.getcursorhandle(strid)
 		Sdk.SetCursor(cursor)
-			
+
+
+	#
+	#   shape container links
+	#
+	# forward target lookup to shapeContainer	
 	def getMouseTarget(self, point):
 		if self._shapeContainer:
 			return self._shapeContainer.getMouseTarget(point)
 		return None
 	
+	# forward area update to shapeContainer	
 	def update(self, rc=None):
-		pass
+		if self._shapeContainer:
+			return self._shapeContainer.update(rc)
 	
 	# the entity registered through this method 
 	# will be asked for the mouse target 
 	def setShapeContainer(self, entity):
 		self._shapeContainer = entity
 
+	#
+	# update section
+	# these methods are called by drawing tools
+	# they manipulate shapes and notify listeners
+	#
+
+	# client registration
 	# the entity registered through this method 
 	# will receive update notifications 
 	def addListener(self, entity):
 		self._listeners.append(entity)
 
-	#
-	# update section
-	#
 	def moveSelectionTo(self, point):
 		xp, yp = point
 		xl, yl = self._moveRefPt
@@ -164,11 +160,16 @@ class DrawContext:
 		if self._curtool:
 			self._curtool.onLButtonDblClk(flags, point)
 
+	# non client area hit
 	def onNCButton(self):
 		self._moveRefPt = 0, 0
 		self._selmode = SM_NONE
 		self._ixDragHandle = 0
 		self._capture = None
+
+	#
+	#   Direct manipulation by clients
+	#
 
 	# force selection
 	def selectShape(self, shape):
@@ -178,9 +179,35 @@ class DrawContext:
 		if self._selected:
 			self._selected.invalidateDragHandles()
 
+	# force a move by
+	def moveSelectionBy(self, dx, dy):
+		if self._selected:
+			shape = self._selected
+			shape.invalidateDragHandles()
+			shape.moveBy((dx, dy))
+			shape.invalidateDragHandles()
+		if self._selected:
+			for obj in self._listeners:
+				obj.onDSelMove(self._selected)
+
+	def reset(self):
+		self._moveRefPt = 0, 0
+		self._selected = None
+		self._selmode = SM_NONE
+		self._ixDragHandle = 0
+		self._capture = None
+		self._curtool = self._seltool
+	
+	def selectTool(self, strid):
+		if strid=='shape':
+			self._curtool = self._shapetool
+		elif strid=='select':
+			self._curtool = self._seltool
+		else:
+			self._curtool = self._seltool
+
 	#
 	# Create new objects support
-	# Do not implement if this support is not needed
 	#
 	def setShapeFactory(self, factory):
 		self._shapeFactory = factory
@@ -243,6 +270,10 @@ class MSDrawContext(DrawContext):
 		self._lastPt = 0, 0
 		self._focusdrawn = 0
 	
+	#
+	#   Direct manipulation by clients
+	#
+
 	# force selection
 	def selectShapes(self, shapeList):
 		for shape in self._selections:
@@ -265,7 +296,17 @@ class MSDrawContext(DrawContext):
 		if self._selections:
 			for obj in self._listeners:
 				obj.onDSelMove(self._selections)
+
+	def reset(self):
+		DrawContext.reset(self)
+		self._selections = []
 		
+	#
+	# update section (overrides)
+	# these methods are called by drawing tools
+	# they manipulate shapes and notify listeners
+	#
+
 	def select(self, shape, mode=SO_REPLACE):
 		# if we don't support multisel then set
 		if not self._muliselect:
@@ -336,17 +377,18 @@ class MSDrawContext(DrawContext):
 			for obj in self._listeners:
 				obj.onDSelResize(self._selected)
 
-	def reset(self):
-		DrawContext.reset(self)
-		self._selections = []
 
+	#
+	# Mouse input (override)
+	#
 	def onNCButton(self):
 		DrawContext.onNCButton(self)
 		self._selections = []
 
-	#
-	# Multi-select support
-	# Do not implement if this support is not needed
+	#	
+	#  Net-multi-select mechanism 
+	#  (select all objects that have intersection with the user drawn net rect)
+	#  Do not implement if this support is not needed
 	#
 	def drawFocusRect(self, rc):
 		pass
@@ -378,7 +420,8 @@ class MSDrawContext(DrawContext):
 		return l, t, r-l, b-t
 
 #########################
-# interface of acceptable objects			
+# interface of shapes this framework can create/manipulate			
+
 class Shape:
 	def getDragHandle(self, ix):
 		return 3, 3
@@ -539,7 +582,8 @@ class SelectTool(DrawTool):
 			self._ctx.showproperties()
 
 
-# Tool to create new shapes
+# base class for shape creation tools
+# its concrete and ready to be used for any ine-kind shapes
 class ShapeTool(DrawTool):
 	def __init__(self, ctx):
 		DrawTool.__init__(self, ctx)
@@ -660,7 +704,7 @@ class LayoutWnd:
 			Sdk.DeleteObject(self._hsmallfont)
 
 	#
-	#  MSDrawContext listener interface
+	#  DrawContext listener interface
 	#
 	def onDSelChanged(self, selection):
 		pass
@@ -674,6 +718,24 @@ class LayoutWnd:
 	def onDSelProperties(self, selection): 
 		pass
 	
+	def getMouseTarget(self, point):
+		return None
+
+	#
+	#  ShapeFactory interface implementation
+	#	
+	def newObjectAt(self, point, strid):
+		return None
+
+	def removeObject(self, obj):
+		pass
+
+	def onNewObject(self, obj):
+		pass
+	
+	#
+	#  ShapeContainer interface implementation
+	#	
 	def getMouseTarget(self, point):
 		return None
 
@@ -740,7 +802,7 @@ class LayoutWnd:
 		return rgn
 
 	def OnEraseBkgnd(self,dc):
-		return 1
+		return 1 # promise: we will paint our background
 	
 	# called by OnDraw or OnPaint
 	def OffscreenPaintOn(self, dc):
@@ -843,11 +905,14 @@ class LayoutWnd:
 #########################
 # Final concrete classes 
 
+# a layout window based on a generic MFC wnd
 class LayoutOsWnd(window.Wnd, LayoutWnd):
 	def __init__(self, drawContext):
 		window.Wnd.__init__(self, win32ui.CreateWnd())
 		LayoutWnd.__init__(self, drawContext)
 
+# a layout window based on an MFC ScrollView
+# the benefit of this is that scrolling is much more easier to handle
 class LayoutScrollOsWnd(docview.ScrollView, LayoutWnd):
 	def __init__(self, drawContext):
 		doc = docview.Document(docview.DocTemplate())
@@ -858,7 +923,9 @@ class LayoutScrollOsWnd(docview.ScrollView, LayoutWnd):
 #########################
 # Utility classes 
 
-# 1. minimal concrete win32window.Window
+# 1. Minimal concrete win32window.Window
+# its not an os window
+# can be used as a rich rect shape
 
 class Region(win32window.Window):
 	def __init__(self, parent, rc, scale, bgcolor):
@@ -874,6 +941,10 @@ class Region(win32window.Window):
 				bgcolor = self._bgcolor
 		return win32window._ResizeableDisplayList(self, bgcolor)
 	
+	def setImage(self, filename, fit, mediadisplayrect = None):
+		if self._active_displist != None:
+			self._active_displist.newimage(filename, fit, mediadisplayrect)
+
 	def paintOn(self, dc, rc=None):
 		ltrb = l, t, r, b = self.ltrb(self.LRtoDR(self.getwindowpos()))
 
@@ -915,6 +986,7 @@ class Region(win32window.Window):
 			return self
 		return None
 
+# 2. Minimal concrete layout control
 
 class LayoutOsWndCtrl(LayoutOsWnd, win32window.Window):
 	def __init__(self, host, scale, drawContext = None):
@@ -924,15 +996,25 @@ class LayoutOsWndCtrl(LayoutOsWnd, win32window.Window):
 		win32window.Window.__init__(self)
 		self._topwindow = self
 
-		self._host = host
 		self._device2logical = scale
+
+		# root of shapes tree
 		self._region = None
+
+		# the control container 
+		self._host = host
+
+		# host notification flow control flag  
 		self._updatehost = 0
 
+		# we are all these
 		self._drawContext.addListener(self) 
 		self._drawContext.setShapeContainer(self)
 		self._drawContext.setShapeFactory(self)
-		
+	
+	#
+	#  ShapeFactory interface implementation
+	#	
 	def newObjectAt(self, point, strid):
 		x, y = point
 		self._region = Region(self, (x, y, 1, 1), self._device2logical, (255,0,0))
@@ -947,29 +1029,26 @@ class LayoutOsWndCtrl(LayoutOsWnd, win32window.Window):
 		self.selectTool('shape')
 		self.update()
 
-	def setObject(self, rc, strid):
-		self._drawContext.reset()
-		if self._region:
-			self._region.updatecoordinates(rc)
-		else:
-			self._region = Region(self, rc, self._device2logical, (255,0,0))
-		self.update()
-		self._updatehost = 1
-		return self._region
-	
 	def onNewObject(self, obj):
 		self.selectTool('select')
 		x, y, w, h = obj.getwindowpos()
 		self._host.updateBox(x, y, w, h)
 		self._updatehost = 1
-				 
+	
+	#
+	#  ShapeContainer interface implementation
+	#	
 	def getMouseTarget(self, point):
 		if not self._region:
 			return None
 		if self._region.inside(point):
 			return self._region
 		return None
-
+	
+	
+	#
+	#  Listener interface overrides
+	#	
 	def onDSelMove(self, selection):
 		x, y, w, h = selection.getwindowpos()
 		if self._updatehost:
@@ -979,7 +1058,25 @@ class LayoutOsWndCtrl(LayoutOsWnd, win32window.Window):
 		x, y, w, h = selection.getwindowpos()
 		if self._updatehost:
 			self._host.updateBox(x, y, w, h)
+	
+				 
+	#
+	#  Called by hosting environment to set an object 
+	#	
+	def setObject(self, rc, strid):
+		self._drawContext.reset()
+		if self._region:
+			self._region.updatecoordinates(rc)
+		else:
+			self._region = Region(self, rc, self._device2logical, (255,0,0))
+		self.update()
+		self._updatehost = 1
+		return self._region
 
+
+	#
+	#	win32window.Window overrides
+	# 
 	def update(self, rc=None):
 		if rc:
 			x, y, w, h = rc
@@ -990,6 +1087,9 @@ class LayoutOsWndCtrl(LayoutOsWnd, win32window.Window):
 	def getwindowpos(self, rel=None):
 		return self._rect
 
+	#
+	#	painting
+	# 
 	def paintOn(self, dc):
 		l, t, w, h = self._canvas
 		r, b = l+w, t+h
