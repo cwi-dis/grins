@@ -200,6 +200,12 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		self.ReleaseDC(dc)
 		return pt
 
+	def getClipRgn(self):
+		x, y, w, h = self._canvas;
+		rgn = win32ui.CreateRgn()
+		rgn.CreateRectRgn((x,y,x+w,y+h))
+		return rgn
+
 	# It is called by the core system when it wants to create a child window
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
 		if self._usesLightSubWindows:
