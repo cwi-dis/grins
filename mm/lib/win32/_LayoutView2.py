@@ -641,11 +641,11 @@ class LayoutManager(LayoutManagerBase):
 		if self._listener != None:
 			self._listener.onGeomChanging([selection, ])		
 
- 	def onDSelMoved(self, selections):
+	def onDSelMoved(self, selections):
 		if self._listener != None:
 			self._listener.onGeomChanged(selections)		
 
- 	def onDSelResized(self, selection):
+	def onDSelResized(self, selection):
 		if self._listener != None:
 			self._listener.onGeomChanged([selection, ])		
 
@@ -740,7 +740,7 @@ class LayoutManager(LayoutManagerBase):
 	#  popup menu
 	#
 	# which in ('topLayout', 'region', 'subregion')
- 	def setpopup(self, menutemplate, which):
+	def setpopup(self, menutemplate, which):
 		import win32menu
 		popup = win32menu.Menu('popup')
 		popup.create_popup_from_menubar_spec_list(menutemplate, usercmd2id)
@@ -960,7 +960,7 @@ class Viewport(win32window.Window, UserEventMng):
 	#
 	#  end interface implementation
 	#
- 	
+	
 #	def createRegions(self):
 		# create the regions of this viewport
 #		parentNode = self._ctx._viewports
