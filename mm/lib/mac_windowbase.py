@@ -519,8 +519,14 @@ class _Toplevel(_Event):
 class _CommonWindow:
 	"""Code common to toplevel window and subwindow"""
 		
-	def __init__(self, parent, wid):
-		parent._subwindows.insert(0, self)
+	def __init__(self, parent, wid, z=0):
+		self._z = z
+		for i in range(len(parent._subwindows)):
+			if self._z >= parent._subwindows[i]._z:
+				parent._subwindows.insert(i, self)
+				break
+		else:
+			parent._subwindows.insert(0, self)
 		self._parent = parent
 		self._wid = wid
 		self._subwindows = []
@@ -569,15 +575,15 @@ class _CommonWindow:
 		"""Return true if window is closed"""
 		return self._parent is None
 
-	def newwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, type_channel = SINGLE):
+	def newwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, z=0, type_channel = SINGLE):
 		"""Create a new subwindow"""
-		rv = _SubWindow(self, self._wid, (x, y, w, h), 0, pixmap, transparent)
+		rv = _SubWindow(self, self._wid, (x, y, w, h), 0, pixmap, transparent, z)
 		self._clipchanged()
 		return rv
 
-	def newcmwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, type_channel = SINGLE):
+	def newcmwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, z=0, type_channel = SINGLE):
 		"""Create a new subwindow"""
-		rv = _SubWindow(self, self._wid, (x, y, w, h), 1, pixmap, transparent)
+		rv = _SubWindow(self, self._wid, (x, y, w, h), 1, pixmap, transparent, z)
 		self._clipchanged()
 		return rv
 
@@ -598,9 +604,7 @@ class _CommonWindow:
 		pass
 
 	def setcursor(self, cursor):
-		raise 'window.setcursor called'
-		for win in self._subwindows:
-			win.setcursor(cursor)
+		self._parent.setcursor(cursor)
 
 	def newdisplaylist(self, *bgcolor):
 		"""Return new, empty display list optionally specifying bgcolor"""
@@ -947,9 +951,9 @@ class _SubWindow(_CommonWindow):
 	"""Window "living in" with a toplevel window"""
 
 	def __init__(self, parent, wid, coordinates, defcmap = 0, pixmap = 0, 
-			transparent = 0):
+			transparent = 0, z = 0):
 		
-		_CommonWindow.__init__(self, parent, wid)
+		_CommonWindow.__init__(self, parent, wid, z)
 		
 		x, y, w, h = parent._convert_coordinates(coordinates)
 		self._rect = x, y, w, h
@@ -981,27 +985,40 @@ class _SubWindow(_CommonWindow):
 		"""Pop to top of subwindow stack"""
 		if not self._parent:
 			return
-		if self._parent._subwindows[0] == self:
+		parent = self._parent
+		if parent._subwindows[0] is self:
 			return
-		self._parent._subwindows.remove(self)
-		self._parent._subwindows.insert(0, self)
-		self._parent._clipchanged()
+		parent._subwindows.remove(self)
+		
+		for i in range(len(parent._subwindows)):
+			if self._z >= parent._subwindows[i]._z:
+				parent._subwindows.insert(i, self)
+				break
+		else:
+			parent._subwindows.insert(0, self)
+		parent._clipchanged()
 		Qd.SetPort(self._wid)
 		Win.InvalRect(self.qdrect())
-		self._parent.pop()
+		parent.pop()
 
 	def push(self):
 		"""Push to bottom of subwindow stack"""
 		if not self._parent:
 			return
-		if self._parent._subwindows[-1] == self:
+		parent = self._parent
+		if parent._subwindows[-1] is self:
 			return
-		self._parent._subwindows.remove(self)
-		self._parent._subwindows.append(self)
-		self._parent._clipchanged()
+		parent._subwindows.remove(self)
+		for i in range(len(parent._subwindows)-1,-1,-1):
+			if self._z <= parent._subwindows[i]._z:
+				parent._subwindows.insert(i+1, self)
+				break
+		else:
+			parent._subwindows.append(self)
+		parent._clipchanged()
 		Qd.SetPort(self._wid)
 		Win.InvalRect(self.qdrect())
-		self._parent.push()
+		parent.push()
 
 	def _mkclip(self):
 		if not self._parent:
@@ -1256,10 +1273,16 @@ class _DisplayList:
 		return oldx, oldy, maxx - oldx, newy - oldy + height - base
 
 class _Button:
-	def __init__(self, dispobj, coordinates):
+	def __init__(self, dispobj, coordinates, z=0):
 		self._coordinates = coordinates
 		self._dispobj = dispobj
-		dispobj._buttons.append(self)
+		self._z = z
+		for i in range(len(buttons)):
+			if buttons[i]._z <= z:
+				buttons.insert(i, self)
+				break
+		else:
+			buttons.append(self)
 		self._hicolor = self._color = dispobj._fgcolor
 		self._width = self._hiwidth = dispobj._linewidth
 		if self._color == dispobj._bgcolor:
