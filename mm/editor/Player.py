@@ -59,7 +59,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.commandlist = [
 			CLOSE_WINDOW(callback = (self.close_callback, ()),
 				     help = 'Close the Player View'),
-			USERGROUPS(callback = self.usergroup_callback),
 			CHANNELS(callback = self.channel_callback),
 			SCHEDDUMP(callback = (self.scheduler.dump, ())),
 			MAGIC_PLAY(callback = (self.magic_play, ())),
@@ -148,7 +147,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			self.showchannels()
 		else:
 			self.setlayout(self.curlayout, self.curchannel, self.savecallback)
-		self.makeugroups()
 		self.showstate()
 		self.after_chan_show()
 
@@ -330,21 +328,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 	def close_callback(self):
 		self.hide()
 
-	def usergroup_callback(self, name):
-		self.toplevel.setwaiting()
-		title, u_state, override, uid = self.context.usergroups[name]
-		em = self.context.editmgr
-		if not em.transaction():
-			return
-		if u_state == 'RENDERED':
-			u_state = 'NOT_RENDERED'
-		else:
-			u_state = 'RENDERED'
-		em.delusergroup(name)
-		em.addusergroup(name, (title, u_state, override, uid))
-		em.commit()
-		self.setusergroup(name, u_state == 'RENDERED')
-
 	def channel_callback(self, name):
 		import settings
 		if settings.get('cmif'):
@@ -395,15 +378,3 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			channels.append((name, self.channels[name].is_showing()))
 		channels.sort()
 		self.setchannels(channels)
-
-	def makeugroups(self):
-		import settings
-		ugroups = []
-		showhidden = settings.get('showhidden')
-		for name, (title, u_state, override, uid) in self.context.usergroups.items():
-			if not showhidden and override != 'visible':
-				continue
-			if not title:
-				title = name
-			ugroups.append((name, title, u_state == 'RENDERED'))
-		self.setusergroups(ugroups)
