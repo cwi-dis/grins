@@ -368,6 +368,12 @@ class HierarchyView(HierarchyViewDialog):
 		# and create a scene graph from it.
 		self.scene_graph = create_MMNode_view(self.root, self)
 
+	def refresh_scene_graph(self):
+		if self.scene_graph:
+			self.scene_graph.destroy();
+		self.create_scene_graph();
+		self.draw();
+
 	# Callbacks for the Interactive classes.
 	def get_window_size_abs(self):
 		return self.window.getcanvassize(self.sizes.SIZEUNIT)
@@ -418,6 +424,8 @@ class HierarchyView(HierarchyViewDialog):
 		return self.window is not None
 
 	def destroy(self):
+		self.scene_graph.destroy();
+		self.scene_graph = None;
 		self.hide()
 
 	def get_geometry(self):
@@ -618,12 +626,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.destroynode.Destroy()
 		self.destroynode = None
 
-		# TODO: Invent a better architecture than this!! I don't like this approach: -mjvdg
-		self.scene_graph.destroy()
-		self.create_scene_graph()
-		# Creating the scene graph will recalculate the boxes.
-		#if self.is_showing():
-		#	self.recalcboxes()
+		self.refresh_scene_graph();
 
 	def kill(self):
 		self.destroy()
@@ -673,6 +676,8 @@ class HierarchyView(HierarchyViewDialog):
 			n.Destroy()
 		Clipboard.setclip('node', node.DeepCopy())
 		self.aftersetfocus()
+
+		print "TODO: should HierarchyView.py commit the Editmanager??"
 
 	def create(self, where, url = None, index = -1, chtype = None, ntype = None):
 		# Create a new node in the Structure view.
@@ -794,6 +799,7 @@ class HierarchyView(HierarchyViewDialog):
 			if not lightweight:
 				import AttrEdit
 				AttrEdit.showattreditor(self.toplevel, node, chtype = chtype)
+		print "DEBUG: Should HierarchyView.create() commit??";
 
 	def insertparent(self, type):
 		node = self.focusnode
@@ -1031,13 +1037,12 @@ class HierarchyView(HierarchyViewDialog):
 	# Handle a selection click at (x, y)
 	def select(self, x, y):
 		widget = self.scene_graph.get_obj_at((x,y))
-		if widget == self.selected_widget:
+		if widget==None or widget==self.selected_widget:
 			return
 		else:
 			self.select_widget(widget)
-
-		self.aftersetfocus()
-		self.draw()
+			self.aftersetfocus()
+			self.draw()
 
 ##		obj = self.whichhit(x, y)
 ##		if not obj:

@@ -83,6 +83,7 @@ class EditMgr:
 			x.commit()
 		self.busy = 0
 		del self.undostep # To frustrate invalid addstep calls
+		print "DEBUG: Editmanager committed.";
 	#
 	def rollback(self):
 		if not self.busy: raise MMExc.AssertError, 'invalid rollback'
