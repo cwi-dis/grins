@@ -1,0 +1,9 @@
+; mp3lib.def : Declares the module parameters.
+
+LIBRARY      "mp3lib.dll"
+
+EXPORTS
+	Init				@1
+	Exit				@2
+	DecompressMp3		@3
+	GetHeaderInfo		@4
