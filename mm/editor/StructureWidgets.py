@@ -122,9 +122,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		self.dropbox = None
 		self.channelbox = None
 
-		linkicon = self.getlinkicon()
-		if linkicon:
-			self.iconbox.add_icon(linkicon)
+		linkicons = self.getlinkicons()
+		for icon in linkicons:
+			self.iconbox.add_icon(icon)
 
 	def __repr__(self):
 		return '<%s instance, name="%s", node=%s, id=%X>' % (self.__class__.__name__, self.name, `self.node`, id(self))
@@ -526,21 +526,20 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			self.cause_event_icon = self.iconbox.add_icon('causeevent').set_properties(arrowable = 1, arrowdirection=1).set_contextmenu(self.mother.event_popupmenu_source)
 		return self.cause_event_icon
 
-	def getlinkicon(self):
+	def getlinkicons(self):
 		# Returns the icon to show for incoming and outgiong hyperlinks.
 		links = self.node.context.hyperlinks
 		is_src, is_dst = links.findnodelinks(self.node)
+		is_dangling = 0
 ##		print 'DBG: getlinkicon', node, is_src, is_dst
-		if is_src:
-			if is_dst:
-				return 'linksrcdst'
-			else:
-				return 'linksrc'
-		else:
-			if is_dst:
-				return 'linkdst'
-			else:
-				return ''
+		rv = []
+		if is_dangling:
+			rv.append('danglinganchor')
+		elif is_src:
+			rv.append('linksrc')
+		if is_dst:
+			rv.append('linkdst')
+		return rv
 
 	def get_obj_near(self, (x, y), timemapper = None, timeline = None):
 		return None
@@ -2317,7 +2316,7 @@ class IconBox(MMWidgetDecoration):
 		if arrowto:
 			icon.add_arrow(arrowto)
 		i = 0
-		for n in ('linksrc','linksrcdst','linkdst','beginevent','causeevent','endevent','error'):
+		for n in ('linksrc','linkdst','beginevent','causeevent','endevent','error'):
 			if iconname == n:
 				self._iconlist.insert(i, icon)
 				break
