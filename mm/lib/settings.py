@@ -9,7 +9,7 @@ import os
 # enable or dissable language extensions
 profileExtensions = {
 	'AccessKeyTiming': 0,
-	'InlineTransitions': 0,
+	'InlineTransitions': 1,
 	'MediaClipMarkers': 0,
 	'MediaMarkerTiming': 0,
 	'SplineAnimation': 1,
