@@ -2,9 +2,6 @@
 <!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"
                       "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
 <smil>
-  <head>
-    <meta name="base" content="http://www.cwi.nl/GRiNS/examples/"/>
-  </head>
   <body>
 
         <seq id="HERENGRACHT_stroll">

@@ -1,9 +1,8 @@
 <smil>
   <head>
-    <meta name="title" content="     A'DAM FACADES - HERENGRACHT    "/>
-    <meta name="base" content="http://www.cwi.nl/GRiNS/examples/"/>
+    <meta name="title" content="A'DAM FACADES - HERENGRACHT"/>
     <layout>
-      <root-layout title="     A'DAM FACADES - HERENGRACHT    " id="A-DAM-FACADES--HERENGRACHT-" width="600" height="400"/>
+      <root-layout title="A'DAM FACADES - HERENGRACHT" id="A-DAM-FACADES--HERENGRACHT" width="600" height="400"/>
       <region title="Acknowledgements1" id="Acknowledgements1" z-index="3" top="95%" left="5%"/>
       <region title="image4" height="6%" id="image4" top="1%" width="75%" left="12%"/>
       <region title="image1" height="80%" id="image1" top="13%" width="65%" left="24%"/>
