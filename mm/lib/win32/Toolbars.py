@@ -210,6 +210,7 @@ class ToolbarMixin:
 			tbcb, cb = self._pulldowncallbackdict.get(id, (None, None))
 			if not cb or not tbcb:
 				print 'No callback for pulldown:', id
+				return
 			cb(tbcb.getvalue())
 
 class GRiNSToolbar(window.Wnd):
