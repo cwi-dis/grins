@@ -561,6 +561,8 @@ class HierarchyView(HierarchyViewDialog):
 		obj = self.whichobj(node)
 		if obj:
 			self.setfocusobj(obj)
+			x1,y1,x2,y2 = obj.box
+			self.window.scrollvisible((x1,y1,x2-x1,y2-y1))
 			return
 		self.prevfocusnode = self.focusnode
 		self.focusnode = node
@@ -656,6 +658,8 @@ class HierarchyView(HierarchyViewDialog):
 			self.focusobj = rootobj
 			rootobj.selected = 1
 		self.aftersetfocus()
+		x1,y1,x2,y2 = self.focusobj.box
+		self.window.scrollvisible((x1,y1,x2-x1,y2-y1))
 
 	def recalc(self):
 		from windowinterface import UNIT_MM
@@ -903,8 +907,8 @@ class Object:
 			ctype = node.GetChannelType()
 			f = os.path.join(self.mother.datadir, '%s.tiff' % ctype)
 			if ctype == 'image' and self.mother.thumbnails:
+				import MMurl
 				try:
-					import MMurl
 					f = MMurl.urlretrieve(node.context.findurl(MMAttrdefs.getattr(node, 'file')))[0]
 				except IOError:
 					# f not reassigned!
