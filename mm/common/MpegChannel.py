@@ -22,9 +22,6 @@ class MpegChannel(ChannelWindowThread):
 				msg = msg[1]
 			self.errormsg(node, filename + ':\n' + msg)
 			return 1
-		except IOError, msg:
-			print 'IO Error: ' + `msg`
-			return 1
 		try:
 			import MMAttrdefs, GLLock
 			arminfo = {'scale': MMAttrdefs.getattr(node, 'scale'),
