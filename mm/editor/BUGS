@@ -1,0 +1,41 @@
+channel view: crashes if a leaf node has no valid channel
+
+channel view: if root is selected, focus isn't shown
+
+------------------------------ FEATURES ---------------------------
+
+block view: needs Copy command as well
+
+channel view: needs command structure like block view
+
+channel view: need commands to add/delete channels
+
+block & channel view: want to show other view's focus
+
+player: should remember & save which channels are "off"
+
+player: when playing a subtree, should make sure that at least one
+ 	of the channels it uses is on?
+
+------------------------------ NITS -------------------------------
+
+info window: should be smaller
+
+------------------------------ FIXED ------------------------------
+
+player: crashes if a node has no valid channel
+
+MMWrite.writename: empty string as name is not quoted
+
+editmgr: deleting attrs that don't exist breaks
+
+X??? FORMS???:	the lower half of the toplevel menu is cleared to white
+		when the player is opened, *if* there is an image or
+		movie window.  Moving the menu fixes it...
+		[turned out that clear() called gl.clear() even if wid=0...]
+
+info window: need a button to edit or create 'ext' data
+
+info window: window doesn't disappear when restore destroys the tree
+
+toplevel: hierarchy button light stays on when view is closed by restore
