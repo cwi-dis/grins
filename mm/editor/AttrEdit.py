@@ -26,7 +26,7 @@ NEW_REGION = 'New region...'
 # editor is allowed per node, and extra show calls are also ignored
 # (actually, this pops up the window, to draw the user's attention...).
 
-def showattreditor(toplevel, node, initattr = None, chtype = None):
+def showattreditor(toplevel, node, initattr = None):
 	try:
 		attreditor = node.attreditor
 	except AttributeError:
@@ -46,7 +46,7 @@ def showattreditor(toplevel, node, initattr = None, chtype = None):
 				node.slideshow = realnode.SlideShow(node)
 		else:
 			wrapperclass = SlideWrapper
-		attreditor = AttrEditor(wrapperclass(toplevel, node), initattr=initattr, chtype=chtype)
+		attreditor = AttrEditor(wrapperclass(toplevel, node), initattr=initattr)
 		node.attreditor = attreditor
 	else:
 		attreditor.pop()
@@ -1350,7 +1350,7 @@ class PreferenceWrapper(Wrapper):
 from AttrEditDialog import AttrEditorDialog, AttrEditorDialogField
 
 class AttrEditor(AttrEditorDialog):
-	def __init__(self, wrapper, new = 0, initattr = None, chtype = None):
+	def __init__(self, wrapper, new = 0, initattr = None):
 		if wrapper.canhideproperties():
 			import settings
 			self.show_all_attributes = settings.get('show_all_attributes')
@@ -1358,7 +1358,6 @@ class AttrEditor(AttrEditorDialog):
 			self.show_all_attributes = 1
 		self.follow_selection = 0
 		self.__new = new
-		self.__chtype = chtype
 		self.wrapper = wrapper
 		wrapper.register(self)
 		self.__open_dialog(initattr)
@@ -1709,50 +1708,6 @@ class AttrEditor(AttrEditorDialog):
 		em.addchannel(channelname, index, 'layout')
 		if root:
 			em.setchannelattr(channelname, 'base_window', key)
-
-	def guesstype(self, url):
-		# guess channel type from URL
-		b = self._findattr('.type')
-		if b:
-			ntype = b.getvalue()
-		else:
-			# can't determine node type
-			return 'null'
-		if ntype == 'imm':
-			# assume all immediate nodes are text nodes
-			return 'text'
-		if ntype != 'ext':
-			# interior node, doesn't make much sense
-			return 'null'
-		if not url:
-			return self.__chtype or 'null'
-		import MMmimetypes
-		mtype = MMmimetypes.guess_type(url)[0]
-		if mtype is None:
-			# just guessing now...
-			# Most often, this is because there was no file name.
-			# Webservers will then generally return an HTML page.
-			import settings
-			if features.compatibility == features.G2 or features.compatibility == features.QT:
-				# G2 and QuickTime players don't do HTML
-				return 'text'
-			return 'html'
-		chtypes = ChannelMime.MimeChannel.get(mtype)
-		if not chtypes:
-			# fallback
-			return 'text'
-		if len(chtypes) == 1:
-			return chtypes[0]
-		# Currently the only reason why there might be more than one
-		# channel type is because we have a RealMedia file.  We will
-		# therefore now check whether the file has video in it or not.
-		import realsupport
-		info = realsupport.getinfo(url)
-		if not info:
-			return 'video'
-		if info.has_key('width'):
-			return 'video'
-		return 'sound'
 
 	#
 	# EditMgr interface
