@@ -18,7 +18,6 @@ opentops = []
 
 class TopLevel(ViewDialog):
 	def __init__(self, main, filename, new_file):
-		self._tracing = 0
 		self.waiting = 0
 		ViewDialog.__init__(self, 'toplevel_')
 		self.showing = 0
@@ -77,15 +76,12 @@ class TopLevel(ViewDialog):
 			   ('Channel view', (self.view_callback, (2,)), 't'),
 			   ('Hyperlinks', (self.view_callback, (3,)), 't'),
 			   None,
-			   ('Open...', (self.open_callback, ())),
 			   ('Save', (self.save_callback, ())),
-			   ('Save for Player', (self.save_player_callback, ())),
+## 			   ('Save for Player', (self.save_player_callback, ())),
 			   ('Save as...', (self.saveas_callback, ())),
 			   ('Restore', (self.restore_callback, ())),
 			   ('Close', (self.close_callback, ())),
-			   None,
-			   ('Debug', (self.debug_callback, ())),
-			   ('Trace', (self.trace_callback, ()), 't')]
+			   ]
 		if hasattr(self.root, 'source') and \
 		   hasattr(windowinterface, 'TextEdit'):
 			buttons.insert(5, ('View Source...', (self.source_callback, ())))
@@ -126,8 +122,8 @@ class TopLevel(ViewDialog):
 		for v in self.views:
 			v.toplevel = None
 		self.views = []
-		if self in opentops:
-			opentops.remove(self)
+		if self in self.main.tops:
+			self.main.tops.remove(self)
 
 	def timer_callback(self):
 		self._last_timer_id = None
@@ -475,8 +471,8 @@ class TopLevel(ViewDialog):
 		ok = self.close_ok()
 		if ok:
 			self.destroy()
-			if len(opentops) == 0:
-				raise SystemExit, 0
+## 			if len(opentops) == 0:
+## 				raise SystemExit, 0
 
 	def close_ok(self):
 		if not self.changed:
@@ -499,19 +495,6 @@ class TopLevel(ViewDialog):
 			return 0
 		file = MMurl.url2pathname(url)
 		return self.save_to_file(file)
-
-	def debug_callback(self):
-		import pdb
-		pdb.set_trace()
-
-	def trace_callback(self):
-		import trace
-		if self._tracing:
-			trace.unset_trace()
-			self._tracing = 0
-		else:
-			self._tracing = 1
-			trace.set_trace()
 
 ## 	def help_callback(self):
 ## 		import Help
