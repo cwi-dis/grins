@@ -2491,6 +2491,16 @@ class MMNode:
 					duration = repeatCount * duration
 				else:
 					duration = -1
+		
+		# adjust duration when we have time manipulations
+		if duration > 0:
+			speed = self.attrdict.get('speed')
+			if speed:
+				duration = string.atof(speed) * duration
+			autoReverse = self.attrdict.get('autoReverse')
+			if autoReverse and autoReverse=='true':
+				duration = 2.0 * duration
+
 		self.fullduration = duration
 
 	def _is_realpix_with_captions(self):
