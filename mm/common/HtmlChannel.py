@@ -349,7 +349,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		import img, imgformat
 		visual = widget.visual
 		if visual.c_class == X.TrueColor and visual.depth == 8:
-			format = windowinterface.toplevel.myxrgb8
+			format = windowinterface.toplevel._myxrgb8
 		else:
 			format = imgformat.xcolormap
 		try:
