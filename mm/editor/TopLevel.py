@@ -315,4 +315,4 @@ class TopLevel(ViewDialog, BasicDialog):
 	# GL event callback for WINSHUT and WINQUIT (called from glwindow)
 	#
 	def winshut(self):
-		self.quit_callback(self.quit_button, 0)
+		self.quit_callback(self.quitbutton, 0)
