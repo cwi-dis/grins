@@ -317,7 +317,7 @@ class Channel:
 					pass
 				self._qid = None
 			self._has_pause = 0
-			self.playdone(None)
+			self.playdone(0)
 
 	def play_0(self, node):
 		# This does the initial part of playing a node.
@@ -371,7 +371,7 @@ class Channel:
 			self.playdone(0)
 		self.armdone()
 
-	def playdone(self, dummy):
+	def playdone(self, outside_induced):
 		# This method should be called by a superclass
 		# (possibly through play_1) to indicate that the node
 		# has finished playing.
@@ -388,9 +388,26 @@ class Channel:
 		# callback just yet but wait till the anchor is hit.
 		if self._has_pause:
 			return
+		# Check whether there are any auto-fire anchors.
+		if not outside_induced:
+		    if self._try_auto_anchors():
+			return
 		if not self.syncplay:
 			self._playcontext.play_done(self._played_node)
 		self._playstate = PLAYED
+
+	def _try_auto_anchors(self):
+	        node = self._played_node
+	        anchorlist = MMAttrdefs.getattr(node, 'anchorlist')
+		list = []
+		for (name, type, args) in anchorlist:
+			if type == ATYPE_AUTO:
+##				print 'found auto anchor'
+				list.append((name, type))
+		if not list:
+			return 0
+		didfire = self._playcontext.anchorfired(node, list, None)
+		return didfire
 
 	def playstop(self):
 		# Internal method to stop playing.
@@ -414,7 +431,7 @@ class Channel:
 				pass
 			self._qid = None
 		self._has_pause = 0
-		self.playdone(0)
+		self.playdone(1)
 
 	def do_arm(self, node):
 		# Do the actual arm.
@@ -982,7 +999,7 @@ class _ChannelThread:
 		import mm
 		if value == mm.playdone:
 			if self._playstate == PLAYING:
-				self.playdone(None)
+				self.playdone(0)
 			elif self._playstate != PIDLE:
 				raise error, 'playdone event when not playing'
 		elif value == mm.armdone:
