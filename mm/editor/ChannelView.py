@@ -125,6 +125,7 @@ class ChannelView(ChannelViewDialog):
 		self.chanheight = NOTHUMB_CHANHEIGHT
 		self.showbandwidthstrip = 0
 		self._ignore_resize = 0
+		self._common_commandlist = None
 ##		self.layouts = [('All channels', ())]
 ##		for name in self.context.layouts.keys():
 ##			self.layouts.append((name, (name,)))
@@ -878,7 +879,11 @@ class ChannelView(ChannelViewDialog):
 
 	# Create a new channel
 	# XXXX Index is obsolete!
-	def newchannel(self, index, chtype = None):
+	def newchannel(self, index = None, chtype = None):
+		if index == None:
+			if self.focus and type(self.focus) <> type(()):
+				index = self.focus.newchannelindex()
+		print 'DBG: newchannel', self.focus, index
 		if self.visiblechannels() <> self.context.channels:
 			windowinterface.showmessage(
 				  "You can't create a new channel\n" +
@@ -905,21 +910,21 @@ class ChannelView(ChannelViewDialog):
 					'Unknown channel type in newchannel',
 					mtype = 'error')
 				return
-			self.select_cb(chtype)
+			self.select_cb(index, chtype)
 			return
-		prompt = 'Select channel type, then place channel:'
+		prompt = 'Select channel type:'
 		list = []
 		import ChannelMap
 		for name in ChannelMap.getvalidchanneltypes():
-			list.append((name, (self.select_cb, (name,))))
+			list.append((name, (self.select_cb, (index, name,))))
 		list.append(None)
 		list.append('Cancel')
 		windowinterface.Dialog(list, title = 'Select', prompt = prompt, grab = 1, vertical = 1, parent = self.window)
 
-	def select_cb(self, name):
+	def select_cb(self, index, name):
 		self.placing_channel = PLACING_NEW
 		self.placing_type = name
-		self.finish_channel(1.0, 1.0)
+		self.finish_channel(1.0, 1.0, index)  # X, Y ignored if index specified
 ##		windowinterface.setcursor('stop')
 ##		self.window.setcursor('channel')
 
@@ -973,10 +978,11 @@ class ChannelView(ChannelViewDialog):
 		self.placing_channel = PLACING_MOVE
 		self.placing_orig = name
 
-	def finish_channel(self, x, y):
+	def finish_channel(self, x, y, index=None):
 		placement_type = self.placing_channel
 		self.placing_channel = 0
-		index = self.channelgapindex(y)
+		if not index:
+			index = self.channelgapindex(y)
 		windowinterface.setcursor('')
 		self.window.setcursor('')
 		editmgr = self.editmgr
@@ -1074,24 +1080,26 @@ class GO(GOCommand):
 		# the class
 
 		self.menutitle = 'Base ops'
-		self.commandlist = [
-			CLOSE_WINDOW(callback = (mother.hide, ())),
-##			CANVAS_HEIGHT(callback = (self.canvascall,
-##					(windowinterface.DOUBLE_HEIGHT,))),
-			CANVAS_WIDTH(callback = (self.canvascall,
-					(windowinterface.DOUBLE_WIDTH,))),
-			CANVAS_RESET(callback = (self.canvascall,
-					(windowinterface.RESET_CANVAS,))),
-			NEW_CHANNEL(callback = (self.newchannelcall, ())),
-			ANCESTORS(callback = mother.setviewrootcb),
-			SIBLINGS(callback = mother.setviewrootcb),
-			DESCENDANTS(callback = mother.setviewrootcb),
-			TOGGLE_UNUSED(callback = (mother.toggleshow, ())),
-			THUMBNAIL(callback = (mother.thumbnailcall, ())),
-			TOGGLE_ARCS(callback = (mother.togglearcs, ())),
-##			LAYOUTS(callback = mother.layoutcall),
-			TOGGLE_BWSTRIP(callback = (mother.togglebwstrip, ())),
-			]
+		if not mother._common_commandlist:
+			mother._common_commandlist = [
+				CLOSE_WINDOW(callback = (mother.hide, ())),
+##				CANVAS_HEIGHT(callback = (mother.canvascall,
+##						(windowinterface.DOUBLE_HEIGHT,))),
+				CANVAS_WIDTH(callback = (mother.canvascall,
+						(windowinterface.DOUBLE_WIDTH,))),
+				CANVAS_RESET(callback = (mother.canvascall,
+						(windowinterface.RESET_CANVAS,))),
+				NEW_CHANNEL(callback = (mother.newchannel, ())),
+				ANCESTORS(callback = mother.setviewrootcb),
+				SIBLINGS(callback = mother.setviewrootcb),
+				DESCENDANTS(callback = mother.setviewrootcb),
+				TOGGLE_UNUSED(callback = (mother.toggleshow, ())),
+				THUMBNAIL(callback = (mother.thumbnailcall, ())),
+				TOGGLE_ARCS(callback = (mother.togglearcs, ())),
+##				LAYOUTS(callback = mother.layoutcall),
+				TOGGLE_BWSTRIP(callback = (mother.togglebwstrip, ())),
+				]
+		self.commandlist = mother._common_commandlist[:]
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
 			self.commandlist.append(HELP(callback=(self.helpcall,())))
@@ -1175,11 +1183,8 @@ class GO(GOCommand):
 ##		import Help
 ##		Help.givehelp('Channel_view')
 
-	def canvascall(self, code):
-		self.mother.canvascall(code)
-
-	def newchannelcall(self, chtype = None):
-		self.mother.newchannel(self.newchannelindex(), chtype)
+##	def newchannelcall(self, chtype = None):
+##		self.mother.newchannel(self.newchannelindex(), chtype)
 
 	def nextminicall(self):
 		mother = self.mother
@@ -1823,7 +1828,7 @@ class ChannelBox(GO, ChannelBoxCommand):
 
 	def newchannelindex(self):
 		# Hook for newchannelcall to determine placement
-		return self.mother.context.channelnames.index(self.name)
+		return self.mother.context.channelnames.index(self.name)+1
 
 	def highlight(self):
 		channels = self.mother.toplevel.player.channels
