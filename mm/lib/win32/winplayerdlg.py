@@ -102,7 +102,7 @@ class PlayerDlgBar(window.Wnd):
 		if type(frame) == self._miniframetype:
 			miniframe = frame
 		if miniframe:
-			l, t, r, b = self.GetWindowRect()	
+			l, t, r, b = miniframe.GetWindowRect()	
 		self.destroy()
 		window.Wnd.__init__(self, win32ui.CreateDialogBar())
 		self.createWindow(parent, attributes)
