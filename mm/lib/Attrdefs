@@ -77,7 +77,7 @@
 (file (string) '/dev/null' 'File' file
 	'File name for external node' channel)
 
-(font (string) 'default' 'Font' font
+(font (string) 'Times-Roman' 'Font' font
 	'Font used to display text' channel)
 
 (gtype (string) 'line' 'Graphtype' default

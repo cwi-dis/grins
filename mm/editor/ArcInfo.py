@@ -35,33 +35,28 @@ class ArcInfo:
 		self.dside = dside
 
 		title = self.maketitle()
-		self.window = windowinterface.Window(title,
-					{'resizable': 1,
-					 'deleteCallback': (self.close, ())})
+		self.window = windowinterface.Window(title, resizable = 1,
+					deleteCallback = (self.close, ()))
 		self.src_choice = self.window.OptionMenu('From:',
 					['dummy name'],
-					0, None,
-					{'top': None, 'left': None})
+					0, None, top = None, left = None)
 		self.dst_choice = self.window.OptionMenu('To:',
 					['dummy name'],
-					0, None,
-					{'top': None, 'left': self.src_choice,
-					 'right': None})
+					0, None, top = None,
+					left = self.src_choice, right = None)
 		self.delay_slider = self.window.Slider(None, 0, 0, 10, None,
-					{'top': self.src_choice, 'left': None})
+					top = self.src_choice, left = None)
 		self.range_choice = self.window.OptionMenu(None,
 					['0-1 sec', '0-10 sec', '0-100 sec'],
 					0, (self.range_callback, ()),
-					{'top': self.dst_choice,
-					 'left': self.delay_slider,
-					 'right': None})
+					top = self.dst_choice,
+					left = self.delay_slider, right = None)
 		buttons = self.window.ButtonRow(
 			[('Cancel', (self.close, ())),
 			 ('Restore', (self.getvalues, ())),
 			 ('Apply', (self.setvalues, ())),
 			 ('OK', (self.ok_callback, ()))],
-			{'left': None, 'top': self.delay_slider,
-			 'vertical': 0})
+			left = None, top = self.delay_slider, vertical = 0)
 
 		self.window.fix()
 

@@ -370,19 +370,18 @@ class AttrEditor:
 		list = []
 		self.namelist = self.wrapper.attrnames()
 		self.dialog = windowinterface.Window(self.wrapper.maketitle(),
-				     {'resizable': 1,
-				      'deleteCallback': (self.hide, ())})
+				     resizable = 1,
+				     deleteCallback = (self.hide, ()))
 		buttons = self.dialog.ButtonRow(
 			[('Cancel', (self.hide, ())),
 			 ('Restore', (self.restore, ())),
 			 ('Apply', (self.apply, ())),
 			 ('Ok', (self.ok, ()))],
-			{'left': None, 'right': None, 'bottom': None,
-			 'vertical': 0})
-		sep = self.dialog.Separator({'left': None, 'right': None,
-					     'bottom': buttons})
-		form = self.dialog.SubWindow({'left': None, 'right': None,
-					      'bottom': sep, 'top': None})
+			left = None, right = None, bottom = None, vertical = 0)
+		sep = self.dialog.Separator(left = None, right = None,
+					    bottom = buttons)
+		form = self.dialog.SubWindow(left = None, right = None,
+					     bottom = sep, top = None)
 		height = 1.0 / len(self.namelist)
 		l = r = w = None
 		self.list = list
@@ -424,11 +423,11 @@ class AttrEditor:
 			l = form.Button(labeltext,
 					(windowinterface.showmessage,
 					 (b.gethelptext(),)),
-					{'top': l, 'left': None, 'right': 0.5,
-					 'bottom': (i+1)*height})
+					top = l, left = None, right = 0.5,
+					bottom = (i+1)*height)
 			r = form.Button('Reset', (self.reset, (b,)),
-					{'top': r, 'right': None,
-					 'bottom': (i+1)*height})
+					top = r, right = None,
+					bottom = (i+1)*height)
 			b.createwidget(form, l, r, w, (i+1)*height)
 			w = b.widget
 			list.append(b)
@@ -440,6 +439,10 @@ class AttrEditor:
 	def reset(self, b):
 		b.setvalue(b.getcurrent())
 
+	def resetall(self):
+		for b in self.list:
+			b.setvalue(b.getcurrent())
+
 	def restore(self):
 		for b in self.list:
 			b.setvalue(b.getdefault())
@@ -447,6 +450,7 @@ class AttrEditor:
 	def hide(self):
 		if self.dialog:
 			self.dialog.close()
+			self.wrapper.unregister(self)
 		self.dialog = None
 		self.list = []
 
@@ -463,7 +467,7 @@ class AttrEditor:
 				return 0
 			cur = b.getcurrent()
 			if value != cur:
-				dict[b.name] = value
+				dict[b.name] = (value, b)
 		if not dict:
 			# nothing to change
 			return 1
@@ -472,7 +476,7 @@ class AttrEditor:
 			return 0
 		# this may take a while...
 		windowinterface.setcursor('watch')
-		for name, value in dict.items():
+		for name, (value, b) in dict.items():
 			self.wrapper.delattr(name)
 			if value != b.getdefault():
 				self.wrapper.setattr(name, value)
@@ -505,7 +509,7 @@ class AttrEditor:
 					self.open()
 			else:
 ##				self.fixvalues()
-				self.restore()
+				self.resetall()
 				self.settitle(self.wrapper.maketitle())
 
 	def rollback(self):
@@ -530,8 +534,7 @@ class ButtonRow:
 	def createwidget(self, parent, left, right, top, bottom):
 		self.widget = parent.TextInput(
 			None, self.valuerepr(self.getcurrent()), None, None,
-			{'top': top, 'bottom': bottom,
-			 'left': left, 'right': right})
+			top = top, bottom = bottom, left = left, right = right)
 
 	def getcurrent(self):
 		value = self.wrapper.getvalue(self.name)
@@ -580,12 +583,11 @@ class FileButtonRow(ButtonRow):
 
 	def createwidget(self, parent, left, right, top, bottom):
 		but = parent.Button('Brwsr', (self.browser, ()),
-				    {'top': top, 'bottom': bottom,'right':
-				     right})
+				    top = top, bottom = bottom, right = right)
 		self.widget = parent.TextInput(None, self.getcurrent(),
 					       None, None,
-					       {'top': top, 'bottom': bottom,
-						'left': left, 'right': but})
+					       top = top, bottom = bottom,
+					       left = left, right = but)
 
 	def browser(self):
 		file = self.widget.gettext()
@@ -667,18 +669,16 @@ class PopupButtonRow(ButtonRow):
 			cur = 0
 		if len(choices) > 30:
 			but = parent.Button('Choose', (self. choose, ()),
-					    {'top': top, 'bottom': bottom,
-					     'right': right})
+					    top = top, bottom = bottom,
+					    right = right)
 			self.widget = parent.TextInput(
-				None, current, None, None,
-				{'top': top, 'bottom': bottom,
-				 'left': left, 'right': but})
+				None, current, None, None, top = top,
+				bottom = bottom, left = left, right = but)
 			self.isoption = 0
 		else:
 			self.widget = parent.OptionMenu(
-				None, choices, cur, None,
-				{'top': top, 'bottom': bottom,
-				 'left': left, 'right': right})
+				None, choices, cur, None, top = top,
+				bottom = bottom, left = left, right = right)
 			self.isoption = 1
 
 	def choose(self):

@@ -633,7 +633,8 @@ class Channel:
 		# This method is called when the user defines a new anchor. It
 		# may be overridden by derived classes.
 		windowinterface.showmessage('Channel '+self._name+
-			  ' does not support\nediting of anchors (yet)')
+			  ' does not support\nediting of anchors (yet)',
+					    type = 'warning')
 		apply(cb, (anchor,))
 
 	def updatefixedanchors(self, node):
@@ -653,8 +654,10 @@ class Channel:
 			nmsg = ' node ' + name
 		else:
 			nmsg = ''
-		windowinterface.showmessage('Warning:\nWhile arming' + nmsg +
-				' on channel ' + self._name + ':\n' + msg)
+		windowinterface.showmessage(
+			'While arming %s on channel %s:\n%s' %
+				(nmsg, self._name, msg),
+			type = 'warning')
 
 ### dictionary with channels that have windows
 ##ChannelWinDict = {}
@@ -708,7 +711,7 @@ class ChannelWindow(Channel):
 			top.hierarchyview.globalsetfocus(node)
 			top.channelview.globalsetfocus(node)
 		else:
-			windowinterface.showmessage('Can only push focus when playing')
+			windowinterface.showmessage('Can only push focus when playing', type = 'warning')
 
 	def save_geometry(self):
 		if self._is_shown and self.window:
@@ -848,12 +851,14 @@ class ChannelWindow(Channel):
 				pchan = None
 				windowinterface.showmessage(
 					'Base window '+`pname`+' for '+
-					`self._name`+' not found')
+					`self._name`+' not found',
+					type = 'error')
 				
 			if pchan and self in pchan._subchannels:
 				windowinterface.showmessage(
 					'Channel '+`self._name`+' is part of'+
-					' a base-window loop')
+					' a base-window loop',
+					type = 'error')
 				pchan = None
 		if pchan:
 			pchan._subchannels.append(self)
@@ -865,7 +870,8 @@ class ChannelWindow(Channel):
 			if not pchan.window:
 				windowinterface.showmessage(
 					'parent window for ' + `self._name`+
-					' not shown (channel order problem?)')
+					' not shown (channel order problem?)',
+					type = 'warning')
 				pchan._subchannels.remove(self)
 				pchan = None
 		if pchan:

@@ -70,35 +70,33 @@ class AnchorEditor:
 
 		title = self.maketitle()
 
-		self.window = w = windowinterface.Window(title,
-			 {'resizable': 1,
-			  'deleteCallback': (self.cancel_callback, ())})
+		self.window = w = windowinterface.Window(title, resizable = 1,
+				deleteCallback = (self.cancel_callback, ()))
 
 		buttons = w.ButtonRow(
-				[('Cancel', (self.cancel_callback, ())),
-				 ('Restore', (self.restore_callback, ())),
-				 ('Apply', (self.apply_callback, ())),
-				 ('OK', (self.ok_callback, ()))],
-				{'bottom': None, 'left': None, 'right': None,
-				 'vertical': 0})
-		self.composite = w.Label('Composite:',
-				{'bottom': buttons,
-				 'left': None, 'right': None})
+			[('Cancel', (self.cancel_callback, ())),
+			 ('Restore', (self.restore_callback, ())),
+			 ('Apply', (self.apply_callback, ())),
+			 ('OK', (self.ok_callback, ()))],
+			bottom = None, left = None, right = None, vertical = 0)
+		self.composite = w.Label('Composite:', useGadget = 0,
+					 bottom = buttons, left = None,
+					 right = None)
 		self.type_choice = w.OptionMenu('Type:', TypeLabels, 0,
 						(self.type_callback, ()),
-				{'bottom': self.composite,
-				 'left': None, 'right': None})
+						bottom = self.composite,
+						left = None, right = None)
 		self.buttons = w.ButtonRow(
 			[('New', (self.add_callback, ())),
 			 ('Edit...', (self.edit_callback, ())),
 			 ('Delete', (self.delete_callback, ())),
 			 ('Export...', (self.export_callback, ()))],
-			{'top': None, 'right': None})
+			top = None, right = None)
 		self.anchor_browser = w.Selection(None, 'Id:', [],
 						  (self.anchor_callback, ()),
-						  {'top': None, 'left': None,
-						   'right': self.buttons,
-						   'bottom': self.type_choice})
+						  top = None, left = None,
+						  right = self.buttons,
+						  bottom = self.type_choice)
 		w.fix()
 		return self
 
@@ -437,8 +435,7 @@ def test():
 
 	print 'quit button ...'
 	quitform = windowinterface.Window('Quit')
-	b = quitform.ButtonRow([('QUIT', (sys.exit, (0,)))],
-			       {'vertical': 0})
+	b = quitform.ButtonRow([('QUIT', (sys.exit, (0,)))], vertical = 0)
 
 	print 'showanchoreditor ...'
 	showanchoreditor(root)
