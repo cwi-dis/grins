@@ -99,6 +99,16 @@ class MMNodeContext:
 	def forgetnode(self, uid):
 		del self.uidmap[uid]
 
+	def newanimatenode(self, tagname='animate'):
+		node = self.newnodeuid('imm', self.newuid())
+		node.attrdict['type'] = 'animate'
+		node.attrdict['tag'] = tagname
+		node.attrdict['mimetype'] = 'animate/%s',tagname
+		chname = 'animate%s' % node.GetUID()
+		node.attrdict['channel'] = chname
+		self.addinternalchannels( [(chname, node.attrdict), ] )
+		return node
+
 	#
 	# Channel administration
 	#
@@ -132,6 +142,7 @@ class MMNodeContext:
 		return chlist
 
 	def addchannels(self, list):
+		print 'addchannels', list
 		for name, dict in list:
 			c = MMChannel(self, name)
 ##			for key, val in dict.items():
@@ -711,7 +722,7 @@ class MMNode:
 	def add_arc(self, arc, body = None):
 		if body is None:
 			body = self
-		print 'add_arc', `body`, `arc`
+		#print 'add_arc', `body`, `arc`
 		body.sched_children.append(arc)
 		if self.playing != MMStates.IDLE and arc.delay is not None:
 			# if arc's event has already occurred, trigger it
@@ -914,6 +925,8 @@ class MMNode:
 		else: return 'undefined'
 
 	def GetChannelType(self):
+		if self.attrdict.get('type')=='animate':
+			return 'animate'
 		c = self.GetChannel()
 		if c and c.has_key('type'):
 			return c['type']
@@ -990,7 +1003,7 @@ class MMNode:
 		children = self.children
 		if self.type == 'ext' and self.GetChannelType() == 'RealPix':
 			if not hasattr(self, 'slideshow'):
-				print 'MMNode._deepcopy: creating SlideShow'
+				#print 'MMNode._deepcopy: creating SlideShow'
 				import realnode
 				self.slideshow = realnode.SlideShow(self)
 			self.slideshow.copy(copy)
@@ -1904,7 +1917,7 @@ class MMNode:
 		return [], [], srdict
 
 	def cleanup(self):
-		print 'cleanup', `self`
+		#print 'cleanup', `self`
 		self.sched_children = []
 		for child in self.children:
 			child.cleanup()
@@ -1917,21 +1930,21 @@ class MMNode:
 				return
 			body = self
 		for node, arc in body.arcs:
-			print 'deleting', `arc`
+			#print 'deleting', `arc`
 			node.sched_children.remove(arc)
 		body.arcs = []
 		for child in self.wtd_children:
 			beginlist = MMAttrdefs.getattr(child, 'beginlist')
 			if beginlist:
 				for arc in beginlist:
-					print 'deleting arc',`arc`
+					#print 'deleting arc',`arc`
 					refnode = child.__find_refnode(arc)
 					refnode.sched_children.remove(arc)
 					if arc.qid is not None:
 						self.cancel(arc.qid)
 						arc.qid = None
 			for arc in MMAttrdefs.getattr(child, 'endlist'):
-				print 'deleting arc',`arc`
+				#print 'deleting arc',`arc`
 				refnode = child.__find_refnode(arc)
 				refnode.sched_children.remove(arc)
 				if arc.qid is not None:
@@ -2132,7 +2145,7 @@ class MMNode:
 					# if found, stop searching
 					break
 				else:
-					print 'gensr_child: no SCHED_DONE\'s found'
+					#print 'gensr_child: no SCHED_DONE\'s found'
 					srlist = [(SCHED_STOPPING, body)]
 					val = [1, srlist]
 					self.srdict[(SCHED_DONE, child)] = val
