@@ -28,6 +28,9 @@ class ColorSelector(glwindow.glwindow):
 		self.make_form()
 		return self
 
+	def __repr__(self):
+		return '<ColorSelector instance, form=' + `self.form` + '>'
+
 	def make_form(self):
 		global form_template
 		import flp
@@ -176,6 +179,9 @@ class Wheel(glwindow.glwindow):
 		glwindow.register(self, wid)
 		return self
 
+	def __repr__(self):
+		return '<Wheel instance, wid=' + `self.wid` + '>'
+
 	def destroy(self):
 		glwindow.unregister(self)
 		gl.winclose(self.wid)
@@ -270,6 +276,9 @@ class Box(glwindow.glwindow):
 		#
 		glwindow.register(self, wid)
 		return self
+
+	def __repr__(self):
+		return '<Box instance, wid=' + `self.wid` + '>'
 
 	def destroy(self):
 		glwindow.unregister(self)

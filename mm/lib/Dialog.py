@@ -48,6 +48,11 @@ class BasicDialog(glwindow.glwindow):
 		self.make_form()
 		return self
 	#
+	# Return a string representation of self
+	#
+	def __repr__(self):
+		return '<BasicDialog instance, form=' + `self.form` + '>'
+	#
 	# Make the form.
 	# Derived classes are expected to override this method.
 	#
@@ -138,6 +143,11 @@ class Dialog(BasicDialog):
 		self.hint = hint
 		return BasicDialog.init(self, width, height, title)
 	#
+	# Return a string representation of self
+	#
+	def __repr__(self):
+		return '<Dialog instance, form=' + `self.form` + '>'
+	#
 	# Internal routine to create the form and buttons.
 	#
 	def make_form(self):
@@ -218,6 +228,10 @@ class GLDialog(glwindow.glwindow):
 		self.last_geometry = None
 		self.used_as_base = 0
 		return self
+
+	def __repr__(self):
+		return '<GLDialog instance, wid=' + `self.wid` \
+			+ ', title=' + `self.title` + '>'
 
 	def setparent(self, pwid, pgeom):
 		self.parentwid = pwid
