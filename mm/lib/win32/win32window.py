@@ -639,6 +639,12 @@ class SubWindow(Window):
 		return SubWindow(self, coordinates, transparent, z, units)
 
 	def paintOn(self, dc, offsetOrg=1):
+		
+		# avoid painting while frozen
+		if self._transition and self._passiveMemDC and offsetOrg:
+			self._passiveMemDC.drawOn(dc)
+			return
+
 		# first paint opaque subwindows
 		trsubwindows = []
 		for w in self._subwindows:
@@ -695,10 +701,29 @@ class SubWindow(Window):
 		if self._oswnd: wnd = self._oswnd
 		else: wnd = self._topwindow
 		wnd.HookMessage(f,m)
-		
+	
+	def GetDC(self):
+		return self._topwindow.GetDC()
+
+	def GetDCEx(self, rgn, flags):
+		return self._topwindow.GetDCEx(rgn, flags)
+
+	def ReleaseDC(self, dc):
+		self._topwindow.ReleaseDC(dc)
+			
 	def Invalidate(self):
 		x, y, w, h = self.getwindowpos()
 		self._topwindow.InvalidateRect((x, y, x+w, y+h))			
+
+	def Redraw(self):
+		x, y, w, h = self.getwindowpos()
+		rgn=win32ui.CreateRgn()
+		rgn.CreateRectRgn((x, y, x+w, y+h))
+		dcx=self.GetDCEx(rgn,win32con.DCX_CACHE|win32con.DCX_CLIPSIBLINGS)
+		self.paintOn(dcx)
+		self.ReleaseDC(dcx)
+		rgn.DeleteObject()
+		del rgn
 
 	#
 	# Animations interface
@@ -776,14 +801,14 @@ class SubWindow(Window):
 	#
 	def __init_transitions(self):
 		self._transition = None
-		self._fromMemDC = None
-		self._toMemDC = None
+		self._passiveMemDC = None
 
 	def begintransition(self, inout, runit, dict):
-		self._toMemDC = MemDC(self)
-		factory = win32transitions.TransitionFactory(dict, self._fromMemDC, self._toMemDC)
+		if not self._passiveMemDC:
+			self._passiveMemDC = MemDC(self)
+		factory = win32transitions.TransitionFactory(dict, self._passiveMemDC)
 		transinst = factory.getTransition()
-		print transinst
+		print transinst, inout, runit, dict
 		self._transition = win32transitions.TransitionEngine(transinst, dict)
 		if runit:
 			self._transition.begintransition()
@@ -792,6 +817,7 @@ class SubWindow(Window):
 		if self._transition:
 			self._transition.endtransition()
 			self._transition = None
+		self.Redraw()
 
 	def changed(self):
 		pass
@@ -806,51 +832,71 @@ class SubWindow(Window):
 		# source for next transition.
 		print 'freeze_content',how
 		if how:
-			self._fromMemDC = MemDC(self)
+			self._passiveMemDC = MemDC(self)
+		else:
+			self._passiveMemDC = None
 
 	def close(self):
 		Window.close(self)
 
-
-# offscreen pixmap class
 class MemDC:
 	def __init__(self, wnd):
 		self._wnd = wnd
-		dc = wnd._topwindow.GetDC()
+		x, y, w, h = self._wnd._rect
+		dc = self._wnd.GetDC()
 		dcc=dc.CreateCompatibleDC()
 		bmp=win32ui.CreateBitmap()
-		x, y, w, h = wnd.getwindowpos()
 		bmp.CreateCompatibleBitmap(dc,w,h)
-		dcc.SelectObject(bmp)
-		wnd._topwindow.ReleaseDC(dc)
-		self._dc = dcc
+		oldbmp = dcc.SelectObject(bmp)
+		self._wnd.paintOn(dcc, 0)
+		dcc.SelectObject(oldbmp)
+		dcc.DeleteDC()
+		self._wnd.ReleaseDC(dc)
 		self._bmp = bmp
-		self.capture()
+		self._w, self._h = w, h
 
 	def __del__(self):
-		try: self._dc.DeleteDC()
-		except:pass
-		del self._bmp
+		if self._bmp: del self._bmp
 
-	def __getattr__(self, attr):	
-		try:	
-			if attr != '__dict__':
-				o = self.__dict__['_dc']
-				if o:
-					return getattr(o, attr)
-		except KeyError:
-			pass
-		raise AttributeError, attr
+	def getSize(self):
+		return self._w, self._h
 
-	def capture(self):
-		self._wnd.paintOn(self._dc, 0)
+	def getBmp(self):
+		return self._bmp
 
-	def render(self):
-		dc = self._wnd._topwindow.GetDC()
+	def createCurMemDC(self):
+		return MemDC(self._wnd)
+
+	def drawOn(self, dc):
+		self.drawMemDCOn(dc, self._wnd.getwindowpos(), self, (0,0))
+
+	def drawMemDCOn(self, dc, rect, memdc, pos):
+		x, y, w, h = rect
+		xs, ys = pos
+		dcc=dc.CreateCompatibleDC()
+		oldbmp = dcc.SelectObject(memdc.getBmp())
+		dc.BitBlt((x,y),(w,h),dcc,(xs, ys),win32con.SRCCOPY)
+		dcc.SelectObject(oldbmp)
+		dcc.DeleteDC()
+
+	def beginUpdate(self):
+		self.__dc = self._wnd.GetDC()
+		self.__dcc=self.__dc.CreateCompatibleDC()
+		self.__bmp=win32ui.CreateBitmap()
+		w, h = self.getSize()
+		self.__bmp.CreateCompatibleBitmap(self.__dc,w,h)
+		self.__oldbmp = self.__dcc.SelectObject(self.__bmp)
+		return self.__dcc
+
+	def endUpdate(self):
+		# transfer offsceen bmp
 		x, y, w, h = self._wnd.getwindowpos()
-		dc.BitBlt((x,y),(w,h),self._dc,(0, 0), win32con.SRCCOPY)
-		self._wnd._topwindow.ReleaseDC(dc)
+		self.__dc.BitBlt((x,y),(w,h),self.__dcc,(0, 0),win32con.SRCCOPY)
+
+		# release offscreen dc
+		self.__dcc.SelectObject(self.__oldbmp)
+		self.__dcc.DeleteDC()
+		self._wnd.ReleaseDC(self.__dc)
 
 
-
-		 
+			 

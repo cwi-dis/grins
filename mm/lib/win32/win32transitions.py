@@ -1,22 +1,66 @@
 
 # base class for transition taxonomy
 class Transition:
-	def __init__(self, sfrom, sto):
-		self._sfrom, self._sto = sfrom, sto
+	def __init__(self, memdc):
+		self._memdc = memdc
 
 	def setValue(self, d):
 		if d<0.0 or d>1.0:
 			raise AssertionError
-		print 'transition.setValue',d
-		if d==0.0:
-			return self._sfrom
-		elif d==1.0:
-			return self._sto
-		else:
-			return None
+		self._curvalue = d
+		curMemDC = self._memdc.createCurMemDC()
+		dc = self._memdc.beginUpdate()
+		params = self.coputeparams()
+		self.updatebitmap(dc, self._memdc, curMemDC, params)
+		self._memdc.endUpdate()
+
+	def getSize(self):
+		return self._memdc.getSize()
+
+	def getRect(self):
+		w, h = self._memdc.getSize()
+		return 0, 0, w, h
+
+	def bitblt(self, dc1, rc, dc2, pos):
+		if rc[2]!=0 and rc[3]!=0:
+			self._memdc.drawMemDCOn(dc1,rc,dc2,pos)
+	
+	def updatebitmap(self, dc, dc1, dc2, params):
+		rc1, pos1, rc2, pos2 = params
+		self.bitblt(dc, rc1, dc1, pos1)
+		self.bitblt(dc, rc2, dc2, pos2)
+
+	# default to a subtype of EdgeWipeTransition
+	def coputeparams(self):
+		w, h = self.getSize()
+		d = self._curvalue
+		dw = int(d*w+0.5)
+
+		# copy frozen bmp
+		rc1 = dw, 0, w-dw, h # copy to this rect
+		pos1 = dw, 0 # starting from bmp pos
+
+		# copy current bmp
+		rc2 = 0, 0, dw, h # copy to this rect
+		pos2 = 0, 0 # starting from bmp pos
+
+		return rc1, pos1, rc2, pos2
 
 class EdgeWipeTransition(Transition):
-	pass
+	def coputeparams(self):
+		w, h = self.getSize()
+		d = self._curvalue
+		dw = int(d*w+0.5)
+
+		# copy frozen bmp
+		rc1 = dw, 0, w-dw, h # copy to this rect
+		pos1 = dw, 0 # starting from bmp pos
+
+		# copy current bmp
+		rc2 = 0, 0, dw, h # copy to this rect
+		pos2 = 0, 0 # starting from bmp pos
+
+		return rc1, pos1, rc2, pos2
 
 class IrisWipeTransition(Transition):
 	pass
@@ -28,16 +72,40 @@ class MatrixWipeTransition(Transition):
 	pass
 
 class PushWipeTransition(Transition):
-	pass
+	def coputeparams(self):
+		w, h = self.getSize()
+		d = self._curvalue
+		dw = int(d*w+0.5)
+
+		# copy frozen bmp
+		rc1 = dw, 0, w-dw, h # copy to this rect
+		pos1 = 0, 0 # starting from bmp pos
+
+		# copy current bmp
+		rc2 = 0, 0, dw, h # copy to this rect
+		pos2 = 0, 0 # starting from bmp pos
+
+		return rc1, pos1, rc2, pos2
 
 class SlideWipeTransition(Transition):
-	pass
+	def coputeparams(self):
+		w, h = self.getSize()
+		d = self._curvalue
+		dw = int(d*w+0.5)
+
+		# copy frozen bmp
+		rc1 = dw, 0, w-dw, h # copy to this rect
+		pos1 = dw, 0 # starting from bmp pos
+
+		# copy current bmp
+		rc2 = 0, 0, dw, h # copy to this rect
+		pos2 = w-dw, 0 # starting from bmp pos
+
+		return rc1, pos1, rc2, pos2
 
 class FadeTransition(Transition):
 	pass
 
-class SlideWipeTransition(Transition):
-	pass
 
 ###################################
 # TransitionFactory
@@ -55,16 +123,16 @@ TRANSITIONDICT = {
 }
 
 class TransitionFactory:
-	def __init__(self, dict, sfrom, sto):
+	def __init__(self, dict, memdc):
 		self._dict = dict
-		self._sfrom, self._sto = sfrom, sto
+		self._memdc = memdc
 
 	# return the appropriate transition class
 	def getTransition(self):
 		trtype = self._dict.get('trtype')
 		if TRANSITIONDICT.has_key(trtype):
-			return TRANSITIONDICT[trtype](self._sfrom, self._sto)
-		return Transition(self._sfrom, self._sto)
+			return TRANSITIONDICT[trtype](self._memdc)
+		return Transition(self._memdc)
 
 ###################################
 # TransitionEngine
