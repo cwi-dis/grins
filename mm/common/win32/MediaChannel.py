@@ -29,6 +29,9 @@ import windowinterface
 # DirectShow support
 import win32dxm
 
+# QuickTime support
+import winqt
+
 # we need const WM_USER
 import win32con
 
@@ -398,6 +401,162 @@ class VideoStream:
 			windowinterface.cancelidleproc(self.__fiber_id)
 			self.__fiber_id = None
 
+##################################################
+HasQtSupport = winqt.HasQtSupport
+
+class QtChannel:
+	def __init__(self, channel):
+		self.__channel = channel
+		self.__window = None
+		self.__playBegin=0
+		self.__playEnd=0
+		self.__playdone=1
+		self.__fiber_id=None
+		self.__rcMediaWnd = None
+		self.__qid = self.__dqid = None
+		self.__qtplayer = None
+
+	def destroy(self):
+		if self.__window:
+			self.__window.removevideo()
+		del self.__qtplayer
+
+	def prepare_player(self, node, window):
+		if not window:
+			raise error, 'not a window'
+		ddobj = window._topwindow.getDirectDraw()
+		self.__qtplayer = winqt.QtPlayer()
+
+		url=self.__channel.getfileurl(node)
+		if not url:
+			raise error, 'No URL on node'
+		
+		try:
+			fn = MMurl.urlretrieve(url)[0]
+		except IOError, arg:
+			if type(arg) == type(()):
+				arg = arg[-1]
+			raise error, 'Failed to retrieve %s'% url
+
+		if not self.__qtplayer.open(fn, self.__channel._exporter):
+			raise error, 'Failed to render %s'% url
+		self.__qtplayer.createVideoDDS(ddobj)
+		return 1
+
+	def playit(self, node, curtime, window, start_time = 0):
+		if not window: return 0
+		if not self.__qtplayer: return 0
+
+		self.__pausedelay = 0
+		self.__pausetime = 0
+		self.__start_time = start_time
+		duration = node.GetAttrDef('duration', None)
+		clip_begin = self.__channel.getclipbegin(node,'sec')
+		clip_end = self.__channel.getclipend(node,'sec')
+		self.__playBegin = clip_begin
+
+		if duration is not None and duration >= 0:
+			if not clip_end:
+				clip_end = clip_begin + duration
+			else:
+				clip_end = min(clip_end, clip_begin + duration)
+		if clip_end:
+			self.__playEnd = clip_end
+		else:
+			self.__playEnd = self.__qtplayer.getDuration()
+
+		t0 = self.__channel._scheduler.timefunc()
+		if t0 > start_time and not self.__channel._exporter and not settings.get('noskip'):
+			if __debug__: print 'skipping',start_time,t0,t0-start_time
+			mediadur = self.__playEnd - self.__playBegin
+			late = t0 - start_time
+			if late > mediadur:
+				self.__channel.playdone(0, start_time + mediadur)
+				return 1
+			clip_begin = clip_begin + late
+		self.__qtplayer.seek(clip_begin)
+		
+		self.__playdone=0
+
+		window.setvideo(self.__qtplayer._dds, self.__channel.getMediaWndRect(), self.__qtplayer._rect)
+		self.__window = window
+		self.__qtplayer.run()
+		self.__qtplayer.update()
+		self.__window.update()
+		self.__register_for_timeslices()
+
+		return 1
+
+	def stopit(self):
+		if self.__dqid:
+			try:
+				self.__channel._scheduler.cancel(self.__dqid)
+			except:
+				pass
+			self.__dqid = None
+		if self.__qid:
+			try:
+				self.__channel._scheduler.cancel(self.__qid)
+			except:
+				pass
+			self.__qid = None
+		if self.__qtplayer:
+			self.__qtplayer.stop()
+			self.__unregister_for_timeslices()
+
+	def pauseit(self, paused):
+		if self.__qtplayer:
+			t0 = self.__channel._scheduler.timefunc()
+			if paused:
+				if self.__dqid:
+					try:
+						self.__channel._scheduler.cancel(self.__dqid)
+					except:
+						pass
+					self.__dqid = None
+				if self.__qid:
+					try:
+						self.__channel._scheduler.cancel(self.__qid)
+					except:
+						pass
+					self.__qid = None
+				self.__qtplayer.stop()
+				self.__unregister_for_timeslices()
+				self.__pausetime = t0
+			else:
+				self.__pausedelay = self.__pausedelay + t0 - self.__pausetime
+				self.__qtplayer.run()
+				self.__register_for_timeslices()
+
+	def freezeit(self):
+		if self.__qtplayer:
+			self.__qtplayer.stop()
+			self.__unregister_for_timeslices()
+
+	def onMediaEnd(self):
+		if not self.__qtplayer:
+			return		
+		self.__playdone=1
+		self.__channel.playdone(0, self.__start_time + self.__playEnd - self.__playBegin)
+
+	def onIdle(self):
+		if self.__qtplayer and not self.__playdone:
+			running = self.__qtplayer.update()
+			t_sec = self.__qtplayer.getTime()
+			if self.__window:
+				self.__window.update(self.__window.getwindowpos())
+			if not running or t_sec >= self.__playEnd:
+				self.onMediaEnd()
+	
+	def __register_for_timeslices(self):
+		if self.__fiber_id is None:
+			self.__fiber_id = windowinterface.setidleproc(self.onIdle)
+
+	def __unregister_for_timeslices(self):
+		if self.__fiber_id is not None:
+			windowinterface.cancelidleproc(self.__fiber_id)
+			self.__fiber_id = None
+
 
 ##################################################
 import dsound
@@ -505,7 +664,6 @@ class DSPlayer:
 			return dsound.DSBVOLUME_MIN
 		ratio = soundLevelMax/float(soundLevel)
 		return int(-1000.0*math.log10(ratio)/math.log10(2))
-
 
 
 
