@@ -120,12 +120,16 @@ class ImageLib:
 				filename=ntpath.normpath(filename)	
 		return filename
 
+
 	# Accusoft gets grazy when it sees the following sig(s)
 	# (enters an infinite loop consuming all available sys memory)
 	def islibexcept(self,filename):
-		file = open(filename, 'rb')
-		formdata = file.read(4)
-		file.close()
+		try:
+			file = open(filename, 'rb')
+			formdata = file.read(4)
+			file.close()
+		except:
+			formdata = ''
 		if formdata == '.RMF':
 			return 1
 		return 0
