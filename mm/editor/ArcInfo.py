@@ -35,22 +35,24 @@ class ArcInfo:
 		self.dside = dside
 
 		title = self.maketitle()
-		self.window = windowinterface.Window(title)
+		self.window = windowinterface.Window(title, {'resizable': 1})
 		self.src_choice = self.window.OptionMenu('From:',
-					['*Begin (0.0)*', '*End (10.0)*'],
+					['dummy name'],
 					0, None,
 					{'top': None, 'left': None})
 		self.dst_choice = self.window.OptionMenu('To:',
-					['*Begin*', '*End*'],
+					['dummy name'],
 					0, None,
-					{'top': None, 'left': self.src_choice})
+					{'top': None, 'left': self.src_choice,
+					 'right': None})
 		self.delay_slider = self.window.Slider(None, 0, 0, 10, None,
 					{'top': self.src_choice, 'left': None})
 		self.range_choice = self.window.OptionMenu(None,
 					['0-1 sec', '0-10 sec', '0-100 sec'],
 					0, (self.range_callback, ()),
 					{'top': self.dst_choice,
-					 'left': self.delay_slider})
+					 'left': self.delay_slider,
+					 'right': None})
 		buttons = self.window.ButtonRow(
 			[('Cancel', (self.close, ())),
 			 ('Restore', (self.getvalues, ())),

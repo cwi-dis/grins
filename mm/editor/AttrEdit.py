@@ -64,36 +64,36 @@ def haschannelattreditor(channel):
 	return attreditor.is_showing()
 
 
-# And again a similar interface for styles.
-# The administration is kept in context.styleattreditors,
-# which is created here if necessary.
-
-def showstyleattreditor(context, name):
-	try:
-		dict = context.styleattreditors
-	except AttributeError:
-		dict = context.styleattreditors = {}
-	if not dict.has_key(name):
-		dict[name] = AttrEditor(StyleWrapper(context, name))
-	dict[name].open()
-
-def hidestyleattreditor(context, name):
-	try:
-		dict = context.styleattreditors
-	except AttributeError:
-		return
-	if not dict.has_key(name):
-		return
-	dict[name].hide()
-
-def hasstyleattreditor(context, name):
-	try:
-		dict = context.styleattreditors
-	except AttributeError:
-		return 0
-	if not dict.has_key(name):
-		return 0
-	return dict[name].is_showing()
+### And again a similar interface for styles.
+### The administration is kept in context.styleattreditors,
+### which is created here if necessary.
+##
+##def showstyleattreditor(context, name):
+##	try:
+##		dict = context.styleattreditors
+##	except AttributeError:
+##		dict = context.styleattreditors = {}
+##	if not dict.has_key(name):
+##		dict[name] = AttrEditor(StyleWrapper(context, name))
+##	dict[name].open()
+##
+##def hidestyleattreditor(context, name):
+##	try:
+##		dict = context.styleattreditors
+##	except AttributeError:
+##		return
+##	if not dict.has_key(name):
+##		return
+##	dict[name].hide()
+##
+##def hasstyleattreditor(context, name):
+##	try:
+##		dict = context.styleattreditors
+##	except AttributeError:
+##		return 0
+##	if not dict.has_key(name):
+##		return 0
+##	return dict[name].is_showing()
 
 # The "Wrapper" classes encapsulate the differences between attribute
 # editors for nodes and channels.  If you want editors for other
@@ -282,67 +282,67 @@ class ChannelWrapper(Wrapper):
 		return MMAttrdefs.parsevalue(name, string, self.context)
 
 
-class StyleWrapper(Wrapper):
-	def __init__(self, context, name):
-		self.name = name
-		self.attrdict = context.styledict[name]
-		Wrapper.__init__(self, context)
-
-	def __repr__(self):
-		return '<StyleWrapper, name=' + `self.name` + '>'
-
-	def stillvalid(self):
-		return self.context.styledict.has_key(self.name) and \
-			self.context.styledict[self.name] == self.attrdict
-
-	def maketitle(self):
-		return 'Attributes for style: ' + self.name
-
-	def getattr(self, name):
-		if self.attrdict.has_key(name):
-			return self.attrdict[name]
-		else:
-			return MMAttrdefs.getdef(name)[1]
-
-	def getvalue(self, name): # Return the raw attribute or None
-		if self.attrdict.has_key(name):
-			return self.attrdict[name]
-		else:
-			return None
-
-	def getdefault(self, name): # Return the default or None
-		return MMAttrdefs.getdef(name)[1]
-
-	def setattr(self, name, value):
-		self.editmgr.setstyleattr(self.name, name, value)
-
-	def delattr(self, name):
-		self.editmgr.setstyleattr(self.name, name, None)
-	#
-	# Return a list of attribute names that make sense for this style,
-	# in an order that makes sense to the user.
-	#
-	def attrnames(self):
-		namelist = ['type', 'channel', 'comment']
-		# Get the channel class (should be a subroutine!)
-		if self.attrdict.has_key('type'):
-			ctype = self.attrdict['type']
-		else:
-			ctype = 'unknown'
-		if channelmap.has_key(ctype):
-			cclass = channelmap[ctype]
-			# Add the class's declaration of attributes
-			for name in cclass.node_attrs + cclass.chan_attrs:
-				if MMAttrdefs.getdef(name)[5] <> 'raw':
-					namelist.append(name)
-		# Merge in nonstandard attributes
-		extras = []
-		for name in self.attrdict.keys():
-			if name not in namelist and \
-					MMAttrdefs.getdef(name)[3] <> 'hidden':
-				extras.append(name)
-		extras.sort()
-		return namelist + extras
+##class StyleWrapper(Wrapper):
+##	def __init__(self, context, name):
+##		self.name = name
+##		self.attrdict = context.styledict[name]
+##		Wrapper.__init__(self, context)
+##
+##	def __repr__(self):
+##		return '<StyleWrapper, name=' + `self.name` + '>'
+##
+##	def stillvalid(self):
+##		return self.context.styledict.has_key(self.name) and \
+##			self.context.styledict[self.name] == self.attrdict
+##
+##	def maketitle(self):
+##		return 'Attributes for style: ' + self.name
+##
+##	def getattr(self, name):
+##		if self.attrdict.has_key(name):
+##			return self.attrdict[name]
+##		else:
+##			return MMAttrdefs.getdef(name)[1]
+##
+##	def getvalue(self, name): # Return the raw attribute or None
+##		if self.attrdict.has_key(name):
+##			return self.attrdict[name]
+##		else:
+##			return None
+##
+##	def getdefault(self, name): # Return the default or None
+##		return MMAttrdefs.getdef(name)[1]
+##
+##	def setattr(self, name, value):
+##		self.editmgr.setstyleattr(self.name, name, value)
+##
+##	def delattr(self, name):
+##		self.editmgr.setstyleattr(self.name, name, None)
+##	#
+##	# Return a list of attribute names that make sense for this style,
+##	# in an order that makes sense to the user.
+##	#
+##	def attrnames(self):
+##		namelist = ['type', 'channel', 'comment']
+##		# Get the channel class (should be a subroutine!)
+##		if self.attrdict.has_key('type'):
+##			ctype = self.attrdict['type']
+##		else:
+##			ctype = 'unknown'
+##		if channelmap.has_key(ctype):
+##			cclass = channelmap[ctype]
+##			# Add the class's declaration of attributes
+##			for name in cclass.node_attrs + cclass.chan_attrs:
+##				if MMAttrdefs.getdef(name)[5] <> 'raw':
+##					namelist.append(name)
+##		# Merge in nonstandard attributes
+##		extras = []
+##		for name in self.attrdict.keys():
+##			if name not in namelist and \
+##					MMAttrdefs.getdef(name)[3] <> 'hidden':
+##				extras.append(name)
+##		extras.sort()
+##		return namelist + extras
 
 
 # Attribute editor class.
