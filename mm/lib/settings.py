@@ -311,7 +311,7 @@ def save():
 	import windowinterface
 	if hasattr(windowinterface, 'is_embedded') and windowinterface.is_embedded():
 		# don't save when embedded
-		return
+		return 1
 	try:
 		fp = open(PREFSFILENAME, 'w')
 	except IOError:
