@@ -136,19 +136,6 @@ SOURCE=.\Qt.rc
 # End Source File
 # Begin Source File
 
-SOURCE=.\Qtmodule.c
-
-!IF  "$(CFG)" == "Qt - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "Qt - Win32 Debug"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\Qtmodule.cpp
 # End Source File
 # Begin Source File
