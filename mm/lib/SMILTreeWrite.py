@@ -1129,6 +1129,7 @@ class SMILWriter(SMIL):
 		self.progress = progress
 		self.convert = convertfiles # we only convert if we have to copy
 		self.root = node
+		self.__ignoring = 0	# whether we're ignoring a tag (see writetag())
 
 		# some abbreviations
 		self.context = ctx = node.GetContext()
@@ -1224,12 +1225,18 @@ class SMILWriter(SMIL):
 				self.calcnames1(anode)
 
 	def push(self):
+		if self.__ignoring > 0:
+			self.__ignoring = self.__ignoring + 1
+			return
 		if self.__isopen:
 			self.fp.write('>\n')
 			self.__isopen = 0
 		self.fp.push()
 
 	def pop(self):
+		if self.__ignoring > 0:
+			self.__ignoring = self.__ignoring - 1
+			return
 		fp = self.fp
 		if self.__isopen:
 			start, end = fp.write('/>\n')
@@ -1278,6 +1285,10 @@ class SMILWriter(SMIL):
 			x.char_positions = start, end
 
 	def writetag(self, tag, attrs = None, x = None):
+		if self.__ignoring > 1:
+			# ignoring ancestor, so ignore this as well
+			return
+		self.__ignoring = 0
 		if attrs is None:
 			attrs = []
 		write = self.fp.write
@@ -1301,6 +1312,7 @@ class SMILWriter(SMIL):
 					break
 		if not hasRP9prefix and tag[:len(NSRP9prefix)] == NSRP9prefix:
 			# ignore this tag
+			self.__ignoring = 1
 			return
 		hasQTprefix = (self.__stack or 0) and self.__stack[-1][3]
 		if not hasQTprefix and self.qtExt:
@@ -1314,6 +1326,7 @@ class SMILWriter(SMIL):
 					break
 		if not hasQTprefix and tag[:len(NSQTprefix)] == NSQTprefix:
 			# ignore this tag
+			self.__ignoring = 1
 			return
 		hasGRiNSprefix = (self.__stack or 0) and self.__stack[-1][2]
 		if not hasGRiNSprefix and self.grinsExt:
@@ -1327,6 +1340,7 @@ class SMILWriter(SMIL):
 					break
 		if not hasGRiNSprefix and tag[:len(NSGRiNSprefix)] == NSGRiNSprefix:
 			# ignore this tag
+			self.__ignoring = 1
 			return
 		start, end = write('<' + tag)
 		if self.set_char_pos and x is not None:
