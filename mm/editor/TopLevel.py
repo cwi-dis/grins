@@ -345,17 +345,21 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			return
 			
 		missing = ''
+		attr = None
 		if not self.w_ftpinfo[0] or not self.m_ftpinfo[0]:
+			attr = 'project_ftp_host'
 			missing = '\n- webserver and mediaserver FTP info'
 		if not smilurl:
+			if not attr: attr = 'project_smil_url'
 			missing = missing + '\n- Mediaserver SMILfile URL'
 		attrs = self.context.attributes
 		if not attrs.has_key('project_html_page') or not attrs['project_html_page']:
+			if not attr: attr = 'project_html_page'
 			missing = missing + '\n- HTML template'
 
 		if missing:
 			if windowinterface.showquestion('Please set these parameters then try again:'+missing):
-				self.prop_callback()
+				self.prop_callback(attr)
 			return
 		else:
 			# Do a sanity check on the SMILfile URL
@@ -440,9 +444,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				(w_hostname, w_username, w_passwd, w_dirname), 
 				(m_hostname, m_username, m_passwd, m_dirname))
 
-	def prop_callback(self):
+	def prop_callback(self, initattr = None):
 		import AttrEdit
-		AttrEdit.showdocumentattreditor(self)
+		AttrEdit.showdocumentattreditor(self, initattr = initattr)
 
 	def edit_callback(self):
 		if not self.editmgr.transaction():

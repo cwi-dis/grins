@@ -1806,6 +1806,7 @@ class AttrEditForm(GenFormView):
 		self._title='Properties'
 		self._attriblist=None
 		self._cbdict=None
+		self._initattr=None
 		self._prsht=None;
 		self._a2p={}
 		self._pages=[]
@@ -1842,10 +1843,13 @@ class AttrEditForm(GenFormView):
 		l=self._pages[:]
 		self._pages=[]
 		ix=0
+		initindex = 0
 		for i in range(len(self._attriblist)):
 			a=self._attriblist[i]
 			p=self._a2p[a]
 			if p in l:
+				if self._initattr and self._initattr == a.getname():
+					initindex = ix
 				p.settabix(ix)
 				ix=ix+1
 				self._pages.append(p)
@@ -1864,7 +1868,7 @@ class AttrEditForm(GenFormView):
 		for page in self._pages:
 			page.settabtext(tabctrl)
 
-		prsht.SetActivePage(self._pages[0])
+		prsht.SetActivePage(self._pages[initindex])
 		prsht.RedrawWindow()
 
 
