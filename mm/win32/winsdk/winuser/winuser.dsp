@@ -116,6 +116,10 @@ SOURCE=.\mtpycall.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\utils.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\winuser.cpp
 # End Source File
 # Begin Source File
@@ -124,20 +128,32 @@ SOURCE=.\winuser.rc
 # End Source File
 # Begin Source File
 
-SOURCE=.\winuser_globals.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\winuser_main.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\winuser_pymenu.cpp
+SOURCE=.\winuser_main.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\winuser_pywnd.cpp
+SOURCE=.\winuser_menu.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\winuser_menu.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\winuser_wnd.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\winuser_wnd.h
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE=.\wingeneric.py
+# End Source File
 # End Target
 # End Project

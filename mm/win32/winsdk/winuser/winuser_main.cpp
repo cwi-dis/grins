@@ -10,7 +10,9 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include <windows.h>
 
-#include "winuser_globals.h"
+#include "winuser_main.h"
+
+#include "utils.h"
 
 PyObject* Winuser_MessageLoop(PyObject *self, PyObject *args)
 {
@@ -48,4 +50,39 @@ PyObject* Winuser_MessageBox(PyObject *self, PyObject *args)
 	res = MessageBox(NULL, text, caption, type);
 	Py_END_ALLOW_THREADS
 	return Py_BuildValue("i", res);
+}
+
+PyObject* Winuser_GetSystemMetrics(PyObject *self, PyObject *args)
+{
+	int nIndex;
+	if (!PyArg_ParseTuple(args, "i", &nIndex))
+		return NULL;
+	int res = GetSystemMetrics(nIndex);
+	if(res == 0){
+		seterror("GetSystemMetrics", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue("i", res);
+}
+
+PyObject* Winuser_GetSysColor(PyObject *self, PyObject *args)
+{
+	int nIndex;
+	if (!PyArg_ParseTuple(args, "i", &nIndex))
+		return NULL;
+	DWORD res = GetSysColor(nIndex);
+	return Py_BuildValue("i", res);
+}
+
+PyObject* Winuser_GetDC(PyObject *self, PyObject *args)
+{
+	HWND hWnd = NULL;
+	if (!PyArg_ParseTuple(args, "|i", &hWnd))
+		return NULL;
+	HDC hdc = GetDC(hWnd);
+	if(hdc == 0){
+		seterror("GetDC", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue("i", hdc);
 }
