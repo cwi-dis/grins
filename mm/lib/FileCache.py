@@ -3,17 +3,10 @@ import os
 
 class FileCache:
 
-	def __init__(self, *funcs):
-		if len(funcs) == 1:
-			self.func = funcs[0]
-			self.rm = self.check = None
-		elif len(funcs) == 2:
-			self.func, self.rm = funcs
-			self.check = None
-		elif len(funcs) == 3:
-			self.func, self.rm, self.check = funcs
-		else:
-			raise TypeError, 'FileCache() w. wrong #args'
+	def __init__(self, func, rm = None, check = None):
+		self.func = func
+		self.rm = rm
+		self.check = check
 		self.cache = {}
 
 	def __repr__(self):
