@@ -41,21 +41,29 @@ class VideoChannel(ChannelWindow):
 		if debug: print 'VideoChannel: arm', node
 
 		fn = self.getfileurl(node)
-		fn = MMurl.urlretrieve(fn)[0]
-
+		try:
+			fn = MMurl.urlretrieve(fn)[0]
+		except IOError, arg:
+			if type(arg) == type(()):
+				arg = arg[-1]
+			self.errormsg(node, 'Cannot open %s: %s'%(fn, arg))
 		self.window._macsetwin()
 		
 		try:
 			movieResRef = Qt.OpenMovieFile(fn, 1)
 		except (ValueError, Qt.Error), arg:
-			self.errormsg(node, 'Cannot open: '+`arg`)
+			if type(arg) == type(()):
+				arg = arg[-1]
+			self.errormsg(node, 'QuickTime cannot open %s: %s'%(fn, arg))
 			return 1
 		try:
 			self.arm_movie, d1, d2 = Qt.NewMovieFromFile(movieResRef, 0,
 					QuickTime.newMovieActive)
 		except (ValueError, Qt.Error), arg:
 			Qt.CloseMovieFile(movieResRef)
-			self.errormsg(node, 'Not a valid movie file: '+`arg`)
+			if type(arg) == type(()):
+				arg = arg[-1]
+			self.errormsg(node, 'QuickTime cannot parse %s: %s'%(fn, arg))
 			return 1
 		Qt.CloseMovieFile(movieResRef)
 		rate = self.arm_movie.GetMoviePreferredRate()
