@@ -14,7 +14,7 @@ if not '%FREEZE_ENV%==' goto freeze
 
 echo Setting up freeze environment variables.
 set FREEZE_ENV=1
-set LIB=%LIB%;%pythonex%\win32\build;%pythonex%\pythonwin\build;..\win32\src\Build
+set LIB=%LIB%;%pythonex%\win32\build;%pythonex%\pythonwin\build;%GRINS_HOME%\win32\src\Build
 set INCLUDE=%INCLUDE%;%pythonex%\win32\src;%pythonex%\pythonwin
 rem Set the following line if win32ui is frozen into the final .exe
 rem set CL=%CL%;/D FREEZE_WIN32UI
