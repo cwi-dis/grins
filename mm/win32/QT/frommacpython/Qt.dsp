@@ -144,6 +144,10 @@ SOURCE=.\Qtmodule.cpp
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\MediaObj.inc
+# End Source File
+# Begin Source File
+
 SOURCE=.\MovieCtlObj.inc
 # End Source File
 # Begin Source File
@@ -164,7 +168,15 @@ SOURCE=.\DdTestQt.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\qtmovie2rm.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\testqt.py
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\lib\win32\winqtcon.py
 # End Source File
 # End Group
 # End Target
