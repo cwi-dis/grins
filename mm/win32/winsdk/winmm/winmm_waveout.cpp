@@ -19,18 +19,20 @@ struct PyWaveOut
 		PyWaveOut *instance = PyObject_NEW(PyWaveOut, &type);
 		if (instance == NULL) return NULL;
 		instance->m_hWaveOut = hWaveOut;
-		instance->m_pWaveHdr = new WAVEHDR;
-		memset(instance->m_pWaveHdr, 0, sizeof(WAVEHDR));
+		instance->m_pWaveHdr = NULL;
 		return instance;
 		}
 
-	static void dealloc(PyWaveOut *instance) 
+	static void dealloc(PyWaveOut *p) 
 		{ 
-		if(instance->m_hWaveOut != NULL) 
-			waveOutClose(instance->m_hWaveOut);
-		if(instance->m_pWaveHdr != NULL)
-			delete instance->m_pWaveHdr;
-		PyMem_DEL(instance);
+		if(p->m_hWaveOut != NULL && p->m_pWaveHdr != NULL)
+			{
+			waveOutUnprepareHeader(p->m_hWaveOut, p->m_pWaveHdr, sizeof(WAVEHDR));
+			delete p->m_pWaveHdr;
+			}
+		if(p->m_hWaveOut != NULL) 
+			waveOutClose(p->m_hWaveOut);
+		PyMem_DEL(p);
 		}
 
 	static PyObject *getattr(PyWaveOut *instance, char *name)
@@ -39,15 +41,12 @@ struct PyWaveOut
 		}
 	};
 
-PyObject* Winmm_WaveOutOpen(PyObject *self, PyObject *args)
+PyObject* Winmm_WaveOutQuery(PyObject *self, PyObject *args)
 {
-	int nChannels, nBlockAlign, wBitsPerSample, cbSize;
+	int nChannels, nBlockAlign, wBitsPerSample;
 	long nSamplesPerSec, nAvgBytesPerSec;
-	HWND hwnd;
-	DWORD flags = WAVE_FORMAT_QUERY; // CALLBACK_WINDOW, CALLBACK_FUNCTION
-	if(!PyArg_ParseTuple(args, "(illiii)il", 
-		&nChannels, &nSamplesPerSec, &nAvgBytesPerSec, &nBlockAlign, &wBitsPerSample, &cbSize,
-		&hwnd, &flags))
+	if(!PyArg_ParseTuple(args, "(illii)", 
+		&nChannels, &nSamplesPerSec, &nAvgBytesPerSec, &nBlockAlign, &wBitsPerSample))
 		return NULL;
 	WAVEFORMATEX wf = {WAVE_FORMAT_PCM, 
 		WORD(nChannels), 
@@ -55,13 +54,57 @@ PyObject* Winmm_WaveOutOpen(PyObject *self, PyObject *args)
 		DWORD(nAvgBytesPerSec),
 		WORD(nBlockAlign),
 		WORD(wBitsPerSample),
-		WORD(cbSize) 
+		WORD(0) 
 		};
-	HWAVEOUT hWaveOut;
+	DWORD flags = WAVE_FORMAT_QUERY;
+	MMRESULT mmres = waveOutOpen(NULL, WAVE_MAPPER, &wf, 0, 0, flags);
+	if(mmres != MMSYSERR_NOERROR)
+		return Py_BuildValue("i", 0);
+	return Py_BuildValue("i", 1);
+}
+
+PyObject* Winmm_WaveOutOpen(PyObject *self, PyObject *args)
+{
+	int nChannels, nBlockAlign, wBitsPerSample;
+	long nSamplesPerSec, nAvgBytesPerSec;
+	PyObject *cbobj;
+	DWORD flags = CALLBACK_WINDOW; // CALLBACK_WINDOW, CALLBACK_FUNCTION
+	if(!PyArg_ParseTuple(args, "(illii)O|l", 
+		&nChannels, &nSamplesPerSec, &nAvgBytesPerSec, &nBlockAlign, &wBitsPerSample,
+		&cbobj, &flags))
+		return NULL;
+	if( (flags & WAVE_FORMAT_QUERY) ==  WAVE_FORMAT_QUERY)
+		{
+		seterror("Invalid flag (WAVE_FORMAT_QUERY)");
+		return NULL;
+		}
+	WAVEFORMATEX wf = {WAVE_FORMAT_PCM, 
+		WORD(nChannels), 
+		DWORD(nSamplesPerSec), 
+		DWORD(nAvgBytesPerSec),
+		WORD(nBlockAlign),
+		WORD(wBitsPerSample),
+		WORD(0) 
+		};
+	HWAVEOUT hWaveOut = NULL;
+	HWND hwnd = (HWND)GetObjHandle(cbobj);
 	MMRESULT mmres = waveOutOpen(&hWaveOut, WAVE_MAPPER, &wf, (DWORD)hwnd, 0, flags);
 	if(mmres != MMSYSERR_NOERROR)
 		{
-		seterror("waveOutOpen", mmres);
+		if(mmres == MMSYSERR_INVALHANDLE)
+			seterror("waveOutOpen", "MMSYSERR_INVALHANDLE, Specified device handle is invalid.");
+		else if(mmres == MMSYSERR_BADDEVICEID)
+			seterror("waveOutOpen", "MMSYSERR_BADDEVICEID, Specified device identifier is out of range.");
+		else if(mmres == MMSYSERR_NODRIVER)
+			seterror("waveOutOpen", "MMSYSERR_NODRIVER, No device driver is present");
+		else if(mmres == MMSYSERR_NOMEM)
+			seterror("waveOutOpen", "MMSYSERR_NOMEM, Unable to allocate or lock memory.");
+		else if(mmres == WAVERR_BADFORMAT)
+			seterror("waveOutOpen", "WAVERR_BADFORMAT, Attempted to open with an unsupported waveform-audio format.");
+		else if(mmres == WAVERR_SYNC)
+			seterror("waveOutOpen", "WAVERR_SYNC, Device is synchronous but waveOutOpen was called without using the WAVE_ALLOWSYNC flag");
+		else
+			seterror("waveOutOpen", mmres);
 		return NULL;
 		}
 	return (PyObject*)PyWaveOut::createInstance(hWaveOut); 
@@ -74,6 +117,12 @@ static PyObject* PyWaveOut_Close(PyWaveOut *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
+	if(self->m_hWaveOut != NULL && self->m_pWaveHdr != NULL)
+		{
+		waveOutUnprepareHeader(self->m_hWaveOut, self->m_pWaveHdr, sizeof(WAVEHDR));
+		delete self->m_pWaveHdr;
+		self->m_pWaveHdr = NULL;
+		}
 	MMRESULT mmres = waveOutClose(self->m_hWaveOut);
 	if(mmres != MMSYSERR_NOERROR)
 		{
@@ -107,23 +156,24 @@ static PyObject* PyWaveOut_PlayChunk(PyWaveOut *self, PyObject *args)
 		self->m_pWaveHdr = new WAVEHDR;
 		memset(self->m_pWaveHdr, 0, sizeof(WAVEHDR));
 		}
-	WAVEHDR *pWaveHdr = self->m_pWaveHdr;
-	pWaveHdr->lpData = PyString_AS_STRING(obj);
-	pWaveHdr->dwBufferLength = PyString_GET_SIZE(obj);
-	pWaveHdr->dwFlags = 0;
-	pWaveHdr->dwLoops = 0;
+	self->m_pWaveHdr->lpData = PyString_AS_STRING(obj);
+	self->m_pWaveHdr->dwBufferLength = PyString_GET_SIZE(obj);
+	self->m_pWaveHdr->dwFlags = 0;
+	self->m_pWaveHdr->dwLoops = 0;
 
-	MMRESULT mmres = waveOutPrepareHeader(self->m_hWaveOut, pWaveHdr, sizeof(WAVEHDR));
+	MMRESULT mmres = waveOutPrepareHeader(self->m_hWaveOut, self->m_pWaveHdr, sizeof(WAVEHDR));
 	if(mmres != MMSYSERR_NOERROR)
 		{
+		delete self->m_pWaveHdr;
+		self->m_pWaveHdr = NULL;
 		seterror("waveOutPrepareHeader", mmres);
 		return NULL;
 		}
-	mmres = waveOutWrite(self->m_hWaveOut, pWaveHdr, sizeof(WAVEHDR));
+	mmres = waveOutWrite(self->m_hWaveOut, self->m_pWaveHdr, sizeof(WAVEHDR));
  	if(mmres != MMSYSERR_NOERROR)
 		{
-		waveOutUnprepareHeader(self->m_hWaveOut, pWaveHdr, sizeof(WAVEHDR));
-		delete pWaveHdr;
+		waveOutUnprepareHeader(self->m_hWaveOut, self->m_pWaveHdr, sizeof(WAVEHDR));
+		delete self->m_pWaveHdr;
 		self->m_pWaveHdr = NULL;
 		seterror("waveOutWrite", mmres);
 		return NULL;

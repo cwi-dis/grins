@@ -73,6 +73,7 @@ static PyObject* SndStopSound(PyObject *self, PyObject *args)
 static struct PyMethodDef winmm_methods[] = {
 	{"WaveOutGetNumDevs", (PyCFunction)WaveOutGetNumDevs, METH_VARARGS, ""},
 	{"WaveOutGetDevCaps", (PyCFunction)WaveOutGetDevCaps, METH_VARARGS, ""},
+	{"WaveOutQuery", (PyCFunction)Winmm_WaveOutQuery, METH_VARARGS, ""},
 	{"WaveOutOpen", (PyCFunction)Winmm_WaveOutOpen, METH_VARARGS, ""},
 	{"SndPlaySound", (PyCFunction)SndPlaySound, METH_VARARGS, ""},
 	{"SndStopSound", (PyCFunction)SndStopSound, METH_VARARGS, ""},
