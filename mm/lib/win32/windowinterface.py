@@ -69,6 +69,7 @@ GetImageSize=toplevel.GetImageSize
 GetVideoSize=toplevel.GetVideoSize
 from _PreferencesDialog import PreferencesDialog
 from _UsergroupView import UsergroupEditDialog
+from _LinkView import LinkPropDlg
 
 def beep():
 	import sys
