@@ -10,6 +10,7 @@ import windowinterface, WMEVENTS
 import MMAttrdefs
 import MMNode
 from HierarchyViewDialog import HierarchyViewDialog
+import BandwidthCompute
 from usercmd import *
 import os
 import urlparse, MMurl
@@ -162,6 +163,8 @@ class HierarchyView(HierarchyViewDialog):
 
 			EXPANDALL(callback = (self.expandallcall, (1,))),
 			COLLAPSEALL(callback = (self.expandallcall, (0,))),
+			
+			TOGGLE_BWSTRIP(callback = (self.bandwidthcall, ())), # XXXX Wrong command name
 			]
 		self.interiorcommands = [
 			NEW_UNDER(callback = (self.createundercall, ())),
@@ -1083,6 +1086,22 @@ class HierarchyView(HierarchyViewDialog):
 			self.new_displist.close()
 		self.new_displist = self.window.newdisplaylist(BGCOLOR)
 		self.recalc()
+		
+	def bandwidthcall(self):
+		self.toplevel.setwaiting()
+		bandwidth, prerolltime, errorcount, errorseconds = \
+				BandwidthCompute.compute_bandwidth(self.root)
+		if bandwidth > 1000000:
+			bwname = "%dMbps"%(bandwidth/1000000)
+		elif bandwidth % 1000 == 0:
+			bwname = "%dkbps"%(bandwidth/1000)
+		else:
+			bwname = "%dbps"%bandwidth
+		msg = "Bandwidth usage report (%s):\n"%bwname
+		msg = msg + "Preroll time: %d seconds\n"%prerolltime
+		msg = msg + "Stall time: %d seconds\n"%errorseconds
+		msg = msg + "Caused by: %d media items\n"%errorcount
+		windowinterface.showmessage(msg)
 
 	def playcall(self):
 		if self.focusobj: self.focusobj.playcall()
