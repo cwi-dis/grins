@@ -113,7 +113,10 @@ class SlideShow:
 			self.update(changed = 1)
 
 	def destroy(self):
-		self.node.GetContext().unregister(self)
+		em = self.node.GetContext().geteditmgr()
+		# EditMgr may have been reset so check whether still valid
+		if em.is_registered(self):
+			em.unregister(self)
 		del self.node
 		del self.rp
 
