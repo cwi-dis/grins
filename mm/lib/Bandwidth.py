@@ -126,7 +126,12 @@ def GetSize(url, target=0, attrs = {}):
 		import tempfile, realconvert
 		tmp = tempfile.mktemp('.jpg')
 		dir, file = os.path.split(tmp)
-		cfile = realconvert.convertimagefile(None, url, dir, file, attrs)
+		try:
+			cfile = realconvert.convertimagefile(None, url, dir, file, attrs)
+		except:
+			# XXXX Too many different errors can occur in convertimagefile:
+			# I/O errors, image file errors, etc.
+			cfile = None
 		if cfile: file = cfile
 		filename = tmp = os.path.join(dir, file)
 	try:
