@@ -12,10 +12,9 @@ error = 'parseskin.error'
 #
 # "image"	URL of image file (relative to skin definition file)
 # "display"	4 numbers giving x, y, width, height
-# "components"	URL of file containing recognized systemComponents URIs
-#		(relative to skin definition file)
 # "key"		key shape coordinates
 # command	shape coordinates
+# component	URI
 #
 # The key is a single, possibly quoted, character.  If either ", ', or
 # a space character needs to be specified, it must be surrounded with
@@ -29,6 +28,9 @@ error = 'parseskin.error'
 # "circle" with 3 numbers giving x, y, and radius;
 # "poly" with an even number of numbers, each pair describing the x
 # and y coordinates of a point.
+#
+# The component command may be repeated and all components are
+# returned as a single list
 #
 # Example skin definition file:
 
@@ -56,8 +58,15 @@ def parsegskin(file):
 		if len(line) == 1:
 			raise error, 'syntax error in skin on line %d' % lineno
 		cmd, rest = line
-		if cmd in ('image', 'components'):
+		if cmd =='image':
 			dict[cmd] = rest.strip()
+			continue
+		if cmd == 'component':
+			v = rest.strip()
+			if dict.has_key('component'):
+				dict['component'].append(v)
+			else:
+				dict['component'] = [v]
 			continue
 		if cmd == 'key':
 			quote = None

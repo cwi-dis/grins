@@ -2794,8 +2794,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 		dict['width'] = width
 		dict['height'] = height
-		if dict.has_key('components'):
-			settings.read_components(MMurl.basejoin(skin, dict['components']))
+		# XXXX Re-parses skin file
+		settings.read_components_from_skin(skip)
 		apply(settings.setScreenSize, dict['display'][1][2:4])
 		self.__skin = dict
 
