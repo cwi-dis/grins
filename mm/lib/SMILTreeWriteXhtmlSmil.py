@@ -396,6 +396,7 @@ class SMILXhtmlSmilWriter(SMIL):
 				if name == 'fill':
 					hasfill = 1
 					fill = value
+
 				# endsync translation
 				if name == 'endsync' and value not in ('first' , 'last'):
 					name = 'end'
@@ -443,28 +444,30 @@ class SMILXhtmlSmilWriter(SMIL):
 			# no fill attr, be explicit about fillDefault value
 			fillDefault = MMAttrdefs.getattr(x, 'fillDefault')
 			if fillDefault != 'inherit':
-				#attrlist.append(('fill', fillDefault))
-				fill = fillDefault
+				if interior:
+					attrlist.append(('fill', fillDefault))
+				else:
+					fill = fillDefault
 		
 		if interior:
 			if mtype in not_xhtml_smil_elements:
 				pass # self.showunsupported(mtype)
 
-			# append if removed
-			if hasfill:
-				attrlist.append( ('fill', fill) )	
-
 			if ':' in mtype:
 				self.writetag(mtype, attrlist)
 			else:
 				# IE hack first please!
-				if mtype == 'seq' and not hasfill:
-					children = x.GetChildren()
-					if children:
-						last = children[len(children)-1]
-						lastfill = MMAttrdefs.getattr(last, 'fill')
-						if lastfill == 'freeze':
-							attrlist.append( ('fill', 'freeze') )
+				# set fill = 'freeze' if last visible child has it
+				if mtype == 'seq' and not hasfill and x.GetChildren():
+					children = x.GetChildren()[:]
+					children.reverse()
+					for i in range(len(children)):
+						last = children[i]
+						if last.GetType() != 'audio':
+							lastfill = MMAttrdefs.getattr(last, 'fill')
+							if lastfill == 'freeze':
+								attrlist.append( ('fill', 'freeze') )
+							break
 				# normal
 				self.writetag('t:'+mtype, attrlist)
 			self.push()
