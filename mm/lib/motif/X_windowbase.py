@@ -21,6 +21,8 @@ Version = 'X'
 
 toplevel = None
 
+_def_useGadget = 1			# whether to use gadgets or not
+
 from types import *
 from WMEVENTS import *
 r = Xlib.CreateRegion()
@@ -386,14 +388,17 @@ class _Window:
 		self._menubar = None
 		if menubar is not None:
 			mb = form.CreateMenuBar(
-				'toplevelMenuBar',
+				'menubar',
 				{'leftAttachment': Xmd.ATTACH_FORM,
 				 'rightAttachment': Xmd.ATTACH_FORM,
 				 'topAttachment': Xmd.ATTACH_FORM})
 			mb.ManageChild()
 			attrs['topAttachment'] = Xmd.ATTACH_WIDGET
 			attrs['topWidget'] = mb
-			cascade = Xm.CascadeButtonGadget
+			if _def_useGadget:
+				cascade = Xm.CascadeButtonGadget
+			else:
+				cascade = Xm.CascadeButton
 			for item, list in menubar:
 				menu = mb.CreatePulldownMenu('toplevelMenu',
 					{'colormap': toplevel._default_colormap,
@@ -2047,14 +2052,21 @@ class Dialog:
 			 'topAttachment': Xmd.ATTACH_FORM,
 			 'leftAttachment': Xmd.ATTACH_FORM,
 			 'rightAttachment': Xmd.ATTACH_FORM}
+		if _def_useGadget:
+			label = Xm.LabelGadget
+			separator = Xm.SeparatorGadget
+			pushbutton = Xm.PushButtonGadget
+		else:
+			label = Xm.Label
+			separator = Xm.Separator
+			pushbutton = Xm.PushButton
 		if prompt:
-			l = w.CreateManagedWidget('label', Xm.LabelGadget,
+			l = w.CreateManagedWidget('label', label,
 					{'labelString': prompt,
 					 'topAttachment': Xmd.ATTACH_FORM,
 					 'leftAttachment': Xmd.ATTACH_FORM,
 					 'rightAttachment': Xmd.ATTACH_FORM})
-			sep = w.CreateManagedWidget('separator',
-					Xm.SeparatorGadget,
+			sep = w.CreateManagedWidget('separator', separator,
 					{'topAttachment': Xmd.ATTACH_WIDGET,
 					 'topWidget': l,
 					 'leftAttachment': Xmd.ATTACH_FORM,
@@ -2070,7 +2082,7 @@ class Dialog:
 				else:
 					attrs = {'orientation': Xmd.VERTICAL}
 				dummy = row.CreateManagedWidget('separator',
-							Xm.SeparatorGadget,
+							separator,
 							attrs)
 				continue
 			if type(entry) is TupleType:
@@ -2079,8 +2091,7 @@ class Dialog:
 				label, callback = entry, None
 			if callback and type(callback) is not TupleType:
 				callback = (callback, (label,))
-			b = row.CreateManagedWidget('button',
-						    Xm.PushButtonGadget,
+			b = row.CreateManagedWidget('button', pushbutton,
 						    {'labelString': label})
 			if callback:
 				b.AddCallback('activateCallback',
@@ -2204,7 +2215,19 @@ def _colormask(mask):
 def _generic_callback(widget, (func, args), call_data):
 	apply(func, args)
 
-def _create_menu(menu, list, visual, colormap, acc = None):
+def _create_menu(menu, list, visual, colormap, acc = None, widgets = {}):
+	if _def_useGadget:
+		separator = Xm.SeparatorGadget
+		label = Xm.LabelGadget
+		cascade = Xm.CascadeButtonGadget
+		toggle = Xm.ToggleButtonGadget
+		pushbutton = Xm.PushButtonGadget
+	else:
+		separator = Xm.Separator
+		label = Xm.Label
+		cascade = Xm.CascadeButton
+		toggle = Xm.ToggleButton
+		pushbutton = Xm.PushButton
 	accelerator = None
 	length = 0
 	i = 0
@@ -2213,8 +2236,7 @@ def _create_menu(menu, list, visual, colormap, acc = None):
 		i = i + 1
 		if entry is None:
 			dummy = menu.CreateManagedWidget('separator',
-							 Xm.SeparatorGadget,
-							 {})
+							 separator, {})
 			continue
 		if length == 20 and i < len(list) - 3:
 			entry = ('More', list[i-1:])
@@ -2224,38 +2246,61 @@ def _create_menu(menu, list, visual, colormap, acc = None):
 		length = length + 1
 		if type(entry) is StringType:
 			dummy = menu.CreateManagedWidget(
-				'menuLabel', Xm.LabelGadget,
+				'menuLabel', label,
 				{'labelString': entry})
+			widgets[entry] = dummy, None
 			continue
+		btype = 'p'		# default is pushbutton
+		initial = 0
 		if acc is None:
-			label, callback = entry
+			labelString, callback = entry[:2]
+			if len(entry) > 2:
+				btype = entry[2]
+				if len(entry) > 3:
+					initial = entry[3]
 		else:
-			accelerator, label, callback = entry
+			accelerator, labelString, callback = entry[:3]
+			if len(entry) > 3:
+				btype = entry[3]
+				if len(entry) > 4:
+					initial = entry[4]
 		if type(callback) is ListType:
 			submenu = menu.CreatePulldownMenu('submenu',
 				{'colormap': colormap,
 				 'visual': visual,
 				 'depth': visual.depth})
 			button = menu.CreateManagedWidget(
-				'submenuLabel', Xm.CascadeButtonGadget,
-				{'labelString': label, 'subMenuId': submenu})
-			_create_menu(submenu, callback, visual, colormap, acc)
+				'submenuLabel', cascade,
+				{'labelString': labelString, 'subMenuId': submenu})
+			subwidgets = {}
+			widgets[labelString] = button, subwidgets
+			_create_menu(submenu, callback, visual, colormap, acc,
+				     subwidgets)
 		else:
 			if type(callback) is not TupleType:
-				callback = (callback, (label,))
-			attrs = {'labelString': label}
+				callback = (callback, (labelString,))
+			attrs = {'labelString': labelString}
 			if accelerator:
 				if type(accelerator) is not StringType or \
 				   len(accelerator) != 1:
 					raise error, 'menu accelerator must be single character'
 				acc[accelerator] = callback
 				attrs['acceleratorText'] = accelerator
-			button = menu.CreateManagedWidget('menuLabel',
-						Xm.PushButtonGadget, attrs)
-			button.AddCallback('activateCallback',
-					   _generic_callback, callback)
+			if btype == 't':
+				attrs['set'] = initial
+				button = menu.CreateManagedWidget('menuToggle',
+						toggle, attrs)
+				cbfunc = 'valueChangedCallback'
+			else:
+				button = menu.CreateManagedWidget('menuLabel',
+						pushbutton, attrs)
+				cbfunc = 'activateCallback'
+			button.AddCallback(cbfunc, _generic_callback, callback)
+			widgets[labelString] = button, None
 
 def _setcursor(form, cursor):
+	if not form.IsRealized():
+		return
 	if cursor == 'watch':
 		form.DefineCursor(toplevel._watchcursor)
 	elif cursor == 'channel':
