@@ -18,18 +18,11 @@ class GraphChannel(ChannelWindow):
 	node_attrs = ChannelWindow.node_attrs + ['gtype', 'fgcolor', 'align',
 						 'axis']
 
-	def init(self, name, attrdict, scheduler, ui):
-		return ChannelWindow.init(self, name, attrdict, scheduler, ui)
+	def __init__(self, name, attrdict, scheduler, ui):
+		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
 		return '<GraphChannel instance, name=' + `self._name` + '>'
-
-	def errormsg(self, msg):
-		parms = self.armed_display.fitfont('Times-Roman', msg)
-		w, h = self.armed_display.strsize(msg)
-		self.armed_display.setpos((1.0 - w) / 2, (1.0 - h) / 2)
-		self.armed_display.fgcolor(255, 0, 0)		# red
-		box = self.armed_display.writestr(msg)
 
 	def do_arm(self, node):
 		str = self.getstring(node)
@@ -74,7 +67,7 @@ class GraphChannel(ChannelWindow):
 		elif tp == 'bar':
 			self.do_bar(node)
 		else:
-			self.errormsg('Unknown graphtype '+tp)
+			self.errormsg(node, 'Unknown graphtype '+tp)
 		return 1
 
 	def do_xaxis(self, step, isbar):
@@ -167,8 +160,8 @@ class GraphChannel(ChannelWindow):
 			del colorlist[0]
 			self.armed_display.drawline(c, d2)
 
-	def defanchor(self, node, anchor):
-		return anchor
+	def defanchor(self, node, anchor, cb):
+		apply(cb, (anchor,))
 
 	def getstring(self, node):
 		if node.type == 'imm':

@@ -57,7 +57,7 @@ image:imp:/ufs/guido/bin/sgi/imp $file
 image:imged:imged $file
 image:ipaste:ipaste $file
 
-sound:sounded:/ufs/sjoerd/bin.sgi/sounded $file
+sound:sounded:/ufs/sjoerd/bin.sgi5/sounded $file
 sound:soundeditor:soundeditor $file
 sound:sfplay:sfplay $file
 sound:sfinfo:sfinfo $file

@@ -1,13 +1,7 @@
 # Anchor editor modeless dialog
 
 
-import fl
-import gl
-from FL import *
-import flp
-from Dialog import Dialog
-import glwindow
-
+import windowinterface
 import MMExc
 import MMAttrdefs
 from MMNode import alltypes, leaftypes, interiortypes
@@ -24,12 +18,12 @@ from MMNode import alltypes, leaftypes, interiortypes
 
 from AnchorDefs import *
 
-form_template = None	# result of flp.parse_form is stored here
-
 TypeValues = [ ATYPE_WHOLE, ATYPE_NORMAL, ATYPE_PAUSE, ATYPE_AUTO, ATYPE_COMP,
 	  ATYPE_ARGS]
 TypeLabels = [ 'dest only', 'normal', 'pausing (obsolete)', 'auto-firing', 'composite',
 	  'with arguments']
+
+FALSE, TRUE = 0, 1
 
 # Top-level interface to show/hide a node's anchor editor
 
@@ -61,7 +55,7 @@ def hideanchoreditor(node):
 # (2) -> (3): when (1) -> (2) is done or when data is changed (e.g. Add / Del)
 # (2) <- (3): by callback functions or just before [OK] / [Accept]
 
-class AnchorEditor(Dialog):
+class AnchorEditor:
 
 	def init(self, toplevel, node):
 		self.node = node
@@ -73,27 +67,52 @@ class AnchorEditor(Dialog):
 		self.focus = None # None or 0...len(self.anchorlist)-1
 		self.changed = 0
 		self.editable = 1
-		#
-		global form_template
-		if form_template == None:
-		    form_template = flp.parse_form('AnchorEditForm', 'form')
-		#
-		width, height = glwindow.pixels2mm(form_template[0].Width, \
-			  form_template[0].Height)
+
 		title = self.maketitle()
-		hint = ''
-		self = Dialog.init(self, width, height, title, hint)
-		#
-		flp.merge_full_form(self, self.form, form_template)
-		self.id_input.set_input_return(1)
-		self.type_choice.clear_choice()
-		for t in TypeLabels:
-			self.type_choice.addto_choice(t)
-		#
+
+		self.window = w = windowinterface.Window(title)
+
+		self.anchor_browser = w.Selection(None, 'Id:', [],
+						  (self.anchor_callback, ()),
+						  {'top': None, 'left': None})
+		self.buttons = w.ButtonRow(1,
+			[('', 'New', (self.add_callback, ())),
+			 ('', 'Edit...', (self.edit_callback, ())),
+			 ('', 'Delete', (self.delete_callback, ())),
+			 ('', 'Export...', (self.export_callback, ()))],
+			{'top': None, 'left': self.anchor_browser,
+			 'right': None})
+		self.type_choice = w.OptionMenu('Type:', TypeLabels, 0,
+						(self.type_callback, ()),
+				{'top': self.anchor_browser,
+				 'left': None, 'right': None})
+		self.composite = w.Label('Composite:',
+				{'top': self.type_choice,
+				 'left': None, 'right': None})
+		buttons = w.ButtonRow(0,
+				[('', 'Cancel', (self.cancel_callback, ())),
+				 ('', 'Restore', (self.restore_callback, ())),
+				 ('', 'Apply', (self.apply_callback, ())),
+				 ('', 'OK', (self.ok_callback, ()))],
+				{'top': self.composite,
+				 'left': None, 'right': None})
+		w.fix()
 		return self
 
 	def __repr__(self):
 		return '<AnchorEditor instance, node=' + `self.node` + '>'
+
+	def show(self):
+		self.window.show()
+
+	def hide(self):
+		self.window.hide()
+
+	def is_showing(self):
+		return self.window.is_showing()
+
+	def settitle(self, title):
+		self.window.settitle(title)
 
 	def transaction(self):
 		return 1
@@ -129,7 +148,7 @@ class AnchorEditor(Dialog):
 
 	def open(self):
 		if self.is_showing():
-			self.pop()
+			self.window.pop()
 			return
 		self.close()
 		self.settitle(self.maketitle())
@@ -188,34 +207,33 @@ class AnchorEditor(Dialog):
 	# Fill form from local data.  Clear the form beforehand.
 	#
 	def updateform(self):
-		self.form.freeze_form()
-		self.anchor_browser.clear_browser()
+		self.anchor_browser.delalllistitems()
 		for i in self.anchorlist:
 			id = i[A_ID]
 			if type(id) <> type(''): id = `id`
 			#name = '#' + self.name + '.' + id
 			name = id
-			self.anchor_browser.add_browser_line(name)
+			self.anchor_browser.addlistitem(name, -1)
 		self.show_focus()
-		self.form.unfreeze_form()
 
 	def show_focus(self):
-		self.anchor_browser.deselect_browser()
+##		self.anchor_browser.deselect_browser()
 		if self.focus and self.editable:
-			self.edit_button.show_object()
+			self.buttons.show(1)
 		else:
-			self.edit_button.hide_object()
+			self.buttons.hide(1)
 		if self.focus == None:
-			self.group.hide_object()
-			self.comp_group.hide_object()
-			self.id_input.hide_object()
+			self.buttons.hide(2)
+			self.type_choice.hide()
+##			self.group.hide_object()
+			self.composite.hide()
+##			self.id_input.hide_object()
 		else:
-			self.anchor_browser.select_browser_line(self.focus+1)
-			self.group.show_object()
+			self.anchor_browser.selectitem(self.focus)
+			self.buttons.show(2)
+			self.type_choice.show()
+##			self.group.show_object()
 			self.show_type()
-			id = self.anchorlist[self.focus]
-			self.id_input.set_input(id[0])
-			self.id_input.show_object()
 
 	def show_type(self):
 		if self.focus == None:
@@ -224,25 +242,22 @@ class AnchorEditor(Dialog):
 		a = self.anchorlist[self.focus]
 		loc = a[A_ARGS]
 		type = a[A_TYPE]
-		self.form.freeze_form()
 		if type == ATYPE_COMP:
-			self.comp_group.show_object()
-			self.type_choice.hide_object()
-			self.edit_button.hide_object()
-			self.comp_name.label = `loc`
-			self.form.unfreeze_form()
+			self.composite.show()
+			self.type_choice.hide()
+			self.buttons.hide(1)
+			self.composite.setlabel('Composite: ' + `loc`)
 			return
-		self.type_choice.show_object()
-		self.comp_group.hide_object()
+		self.type_choice.show()
+		self.composite.hide()
 		for i in range(len(TypeValues)):
 			if type == TypeValues[i]:
-				self.type_choice.set_choice(i+1)
+				self.type_choice.setpos(i)
 		if type in (ATYPE_NORMAL, ATYPE_PAUSE, ATYPE_ARGS) \
 			  and self.editable:
-			self.edit_button.show_object()
+			self.buttons.show(1)
 		else:
-			self.edit_button.hide_object()
-		self.form.unfreeze_form()
+			self.buttons.hide(1)
 
 	def set_type(self, type):
 		if self.focus == None:
@@ -256,50 +271,52 @@ class AnchorEditor(Dialog):
 		else:
 			new = (new[0], type, new[2])
 			if self.editable:
-				new = self.toplevel.player.defanchor(\
-					  self.node, new)
-				if new == None:
-					new = old
+				self.toplevel.player.defanchor(
+					self.node, new, self._anchor_cb)
+				return
 		if new <> old:
 			self.anchorlist[self.focus] = new
 			self.changed = 1
 		self.show_type()
 
+	def _anchor_cb(self, new):
+		if self.anchorlist[self.focus] != new:
+			self.anchorlist[self.focus] = new
+			self.changed = 1
+		self.show_type()
+
 	def close(self):
-		if self.showing:
+		if self.is_showing():
 			self.unregister(self)
 			self.hide()
 	#
-	# Standard callbacks (from Dialog())
+	# Standard callbacks
 	#
-	def cancel_callback(self, *dummy):
+	def cancel_callback(self):
 		self.close()
 
-	def restore_callback(self, obj, arg):
+	def restore_callback(self):
 		self.getvalues(TRUE)
 		self.updateform()
 
-	def apply_callback(self, obj, arg):
-		obj.set_button(1)
+	def apply_callback(self):
 		if self.changed:
 			dummy = self.setvalues()
-		obj.set_button(0)
 
-	def ok_callback(self, obj, arg):
-		obj.set_button(1)
+	def ok_callback(self):
 		if not self.changed or self.setvalues():
 			self.close()
-		obj.set_button(0)
+
 	#
 	# Private callbacks
 	#
-	def anchor_callback(self, *dummy):
-		self.focus = self.anchor_browser.get_browser() - 1
-		if not 0 <= self.focus < len(self.anchorlist):
-			self.focus = None
-		self.show_focus()
+	def anchor_callback(self):
+		focus = self.anchor_browser.getselected()
+		if focus != self.focus:
+			self.focus = focus
+			self.show_focus()
 
-	def add_callback(self, *dummy):
+	def add_callback(self):
 		self.changed = 1
 		maxid = 0
 		for id, atype, args in self.anchorlist:
@@ -313,7 +330,7 @@ class AnchorEditor(Dialog):
 		#name = '#' + self.name + '.' + id
 		name = id
 		self.anchorlist.append((id, ATYPE_WHOLE, []))
-		self.anchor_browser.add_browser_line(name)
+		self.anchor_browser.addlistitem(name, -1)
 		self.focus = len(self.anchorlist)-1
 		self.show_focus()
 
@@ -329,10 +346,10 @@ class AnchorEditor(Dialog):
 		self.anchorlist[self.focus] = anchor
 		self.show_focus()
 
-	def delete_callback(self, *dummy):
+	def delete_callback(self):
 		# XXXX Does not work for non-whole-node anchors if
 		# self.editable is false
-		if self.focus != self.anchor_browser.get_browser() - 1:
+		if self.focus != self.anchor_browser.getselected():
 			print 'AnchorEdit: wrong focus in delete!'
 			self.focus = None
 			self.show_focus()
@@ -343,40 +360,40 @@ class AnchorEditor(Dialog):
 		id, atype, arg = self.anchorlist[self.focus]
 		self.changed = 1
 		del self.anchorlist[self.focus]
-		self.anchor_browser.delete_browser_line(self.focus+1)
+		self.anchor_browser.dellistitem(self.focus)
 		if self.focus >= len(self.anchorlist):
 			self.focus = self.focus - 1
 			if self.focus < 0:
 				self.focus = None
 		self.show_focus()
 
-	def type_callback(self, obj, value):
+	def type_callback(self):
 		if self.focus == None:
 			print 'AnchorEdit: no focus in setloc!'
 			return
-		i = obj.get_choice()
-		if i == 0:
-			self.set_type(None)
-		else:
-			self.set_type(TypeValues[i-1])
+		i = self.type_choice.getpos()
+		self.set_type(TypeValues[i])
 
 
-	def edit_callback(self, *dummy):
+	def edit_callback(self):
 		if self.focus == None:
 			print 'AnchorEdit: no focus in edit_callback'
 		self.set_type(None)
 
-	def export_callback(self, *dummy):
+	def export_callback(self):
 		if self.focus == None:
 			print 'AnchorEdit: no focus in export_callback'
 			return
-		name = fl.show_input('External name for anchor:', '')
+		dummy = windowinterface.InputDialog(
+			'External name for anchor:', '', self.do_export)
+
+	def do_export(self, name):
 		if not name:
 			return
 		rootanchors = MMAttrdefs.getattr(self.root, 'anchorlist')
 		for a in rootanchors:
 			if a[A_ID] == name:
-				fl.show_message('Already exists', '', '')
+				windowinterface.showmessage('Already exists')
 				return
 		aid = self.anchorlist[self.focus][A_ID]
 		a = (name, ATYPE_COMP, [(self.uid, aid)])
@@ -385,7 +402,6 @@ class AnchorEditor(Dialog):
 		if not em.transaction(): return 0
 		em.setnodeattr(self.root, 'anchorlist', rootanchors[:])
 		em.commit()
-		return 1
 
 
 # Routine to close all attribute editors in a node and its context.
@@ -411,23 +427,16 @@ def test():
 		filename = sys.argv[1]
 	else:
 		filename = 'demo.cmif'
-	#
+
 	print 'parsing', filename, '...'
 	root = MMTree.ReadFile(filename)
-	#
+
 	print 'quit button ...'
-	quitform = fl.make_form(FLAT_BOX, 50, 50)
-	quitbutton = quitform.add_button(NORMAL_BUTTON, 0, 0, 50, 50, 'Quit')
-	quitform.set_form_position(600, 10)
-	quitform.show_form(PLACE_POSITION, FALSE, 'QUIT')
-	#
+	quitform = windowinterface.Window('Quit')
+	b = quitform.ButtonRow(0, [('', 'QUIT', (sys.exit, (0,)))], {})
+
 	print 'showanchoreditor ...'
 	showanchoreditor(root)
-	#
+
 	print 'go ...'
-	while 1:
-		obj = fl.do_forms()
-		if obj == quitbutton:
-			hideanchoreditor(root)
-			break
-		print 'This object should have a callback!', `obj.label`
+	windowinterface.mainloop()

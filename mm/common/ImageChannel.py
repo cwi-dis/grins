@@ -8,22 +8,15 @@ from urllib import urlretrieve
 class ImageChannel(ChannelWindow):
 	node_attrs = ChannelWindow.node_attrs + ['scale', 'scalefilter']
 
-	def init(self, name, attrdict, scheduler, ui):
-		return ChannelWindow.init(self, name, attrdict, scheduler, ui)
+	def __init__(self, name, attrdict, scheduler, ui):
+		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
 		return '<ImageChannel instance, name=' + `self._name` + '>'
 
-	def errormsg(self, msg):
-		parms = self.armed_display.fitfont('Times-Roman', msg)
-		w, h = self.armed_display.strsize(msg)
-		self.armed_display.setpos((1.0 - w) / 2, (1.0 - h) / 2)
-		self.armed_display.fgcolor(255, 0, 0)		# red
-		box = self.armed_display.writestr(msg)
-
 	def do_arm(self, node):
 		if node.type != 'ext':
-			self.errormsg('node must be external')
+			self.errormsg(node, 'Node must be external')
 			return 1
 		f = self.getfilename(node)
 		try:
@@ -36,7 +29,7 @@ class ImageChannel(ChannelWindow):
 		except (windowinterface.error, IOError), msg:
 			if type(msg) == type(()):
 				msg = msg[1]
-			self.errormsg(f + ':\n' + msg)
+			self.errormsg(node, f + ':\n' + msg)
 			return 1
 		try:
 			alist = node.GetRawAttr('anchorlist')
@@ -65,15 +58,15 @@ class ImageChannel(ChannelWindow):
 			self.setanchor(a[A_ID], a[A_TYPE], b)
 		return 1
 
-	def defanchor(self, node, anchor):
-		import boxes, windowinterface
+	def defanchor(self, node, anchor, cb):
+		import windowinterface
 		if self._armstate != AIDLE:
 			raise error, 'Arm state must be idle when defining an anchor'
 		if self._playstate != PIDLE:
 			raise error, 'Play state must be idle when defining an anchor'
 		windowinterface.setcursor('watch')
-		context = AnchorContext().init()
-		self.startcontext(context)
+		self._anchor_context = AnchorContext()
+		self.startcontext(self._anchor_context)
 		self.syncarm = 1
 		self.arm(node)
 		self.syncplay = 1
@@ -81,11 +74,13 @@ class ImageChannel(ChannelWindow):
 		self._playstate = PLAYED
 		self.syncarm = 0
 		self.syncplay = 0
+		self._anchor = anchor
 		box = anchor[2]
 		windowinterface.setcursor('')
+		self._anchor_cb = cb
 		msg = 'Draw anchor in ' + self._name + '.'
 		if box == []:
-			box = boxes.create_box(self.window, msg)
+			self.window.create_box(msg, self._box_cb)
 		else:
 			f = self.getfilename(node)
 			try:
@@ -98,16 +93,23 @@ class ImageChannel(ChannelWindow):
 			y = box[1] * self._arm_imbox[3] + self._arm_imbox[1]
 			w = box[2] * self._arm_imbox[2]
 			h = box[3] * self._arm_imbox[3]
-			box = boxes.create_box(self.window, msg, (x, y, w, h))
-		self.stopcontext(context)
-		if box:
+			self.window.create_box(msg, self._box_cb, (x, y, w, h))
+
+	def _box_cb(self, *box):
+		self.stopcontext(self._anchor_context)
+		if len(box) == 4:
 			# convert coordinates from window size to image size.
 			x = (box[0] - self._arm_imbox[0]) / self._arm_imbox[2]
 			y = (box[1] - self._arm_imbox[1]) / self._arm_imbox[3]
 			w = box[2] / self._arm_imbox[2]
 			h = box[3] / self._arm_imbox[3]
-			return (anchor[0], anchor[1], [x, y, w, h])
-		return None
+			arg = (self._anchor[0], self._anchor[1], [x, y, w, h])
+		else:
+			arg = self._anchor
+		apply(self._anchor_cb, (arg,))
+		del self._anchor_cb
+		del self._anchor_context
+		del self._anchor
 
 	# Hack to convert pixel offsets into relative offsets and to make
 	# the coordinates relative to the upper-left corner instead of

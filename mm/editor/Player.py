@@ -1,33 +1,33 @@
 # Player module -- mostly defines the Player class.
 
 
-import gl
-import GL
-import fl
-from FL import *
-import GLLock
-import flp
 from Scheduler import del_timing
 from PlayerCore import PlayerCore
 from MMExc import *
 import MMAttrdefs
-from Dialog import BasicDialog
 from ViewDialog import ViewDialog
 import Timing
-import windowinterface
+import windowinterface, EVENTS
 
-MYGREY=8
-MYRED=9
-MYGREEN=GL.GREEN
-MYYELLOW=GL.YELLOW
-MYBLUE=MYGREY
+BLACK = 0, 0, 0
+GREY = 100, 100, 100
+GREEN = 0, 255, 0
+YELLOW = 255, 255, 0
+BGCOLOR = 200, 200, 200
+FOCUSLEFT = 244, 244, 244
+FOCUSTOP = 204, 204, 204
+FOCUSRIGHT = 40, 40, 40
+FOCUSBOTTOM = 91, 91, 91
+
+##titles = ['Channels', 'Options', 'Run slots']
+titles = ['Channels', 'Options']
 
 # The Player class normally has only a single instance.
 #
 # It implements a queue using "virtual time" using an invisible timer
 # object in its form.
 
-class Player(ViewDialog, BasicDialog, PlayerCore):
+class Player(ViewDialog, PlayerCore):
 	#
 	# Initialization.
 	#
@@ -49,76 +49,164 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		self.sync_cv = 1
 		self.continuous = 0
 		self.toplevel = toplevel
-		title = 'Player (' + toplevel.basename + ')'
-		self = BasicDialog.init(self, 0, 0, title)
-		self.set_timer = self.timerobject.set_timer
+		self.set_timer = toplevel.set_timer
+		self.showing = 0
+		self.waiting = 0
+		self.last_geometry = None
+		self.window = None
 		return self
-	#
+
+	def destroy(self):
+		self.close()
+
+	def close(self):
+		self.hide()
+
 	def fixtitle(self):
 		self.settitle('Player (' + self.toplevel.basename + ')')
-	#
+
+	def settitle(self, title):
+		if self.is_showing():
+			self.window.settitle(title)
+
 	def __repr__(self):
 		return '<Player instance, root=' + `self.root` + '>'
 	#
 	# Extend BasicDialog show/hide/destroy methods.
 	#
+	def is_showing(self):
+		return self.showing
+
 	def show(self):
 		if self.is_showing():
-			self.pop()
+			self.window.pop()
 			return
+		title = 'Player (' + self.toplevel.basename + ')'
 		self.makechannels()
 		self.fullreset()
-		BasicDialog.show(self)
+		self.load_geometry()
+		x, y, w, h = self.last_geometry
+		window = windowinterface.newcmwindow(x, y, w, h, title)
+		self.window = window
+		window.bgcolor(BGCOLOR)
+		if self.waiting:
+			window.setcursor('watch')
+		font = windowinterface.findfont('Helvetica', 10)
+		d = window.newdisplaylist()
+		dummy = d.usefont(font)
+		mw, mh = 0, 0
+		for t in titles:
+			w, h = d.strsize(t)
+			if w > mw: mw = w
+			if h > mh: mh = h
+		if mw > .5: mw = .5
+		self.width = 1.0 - mw	# useful width
+		d.close()
+		self.subwin = []
+		n = len(titles)
+		for i in range(n):
+			self.subwin.append(window.newcmwindow(1.0 - mw,
+					i / float(n), mw, 1.0 / float(n)))
+		self.redraw()
+		self.showing = 1
+		window.register(EVENTS.Mouse0Release, self._mouse, None)
+		window.register(EVENTS.ResizeWindow, self.redraw, None)
 		self.toplevel.setwaiting()
 		self.toplevel.checkviews()
 		self.showchannels()
 		self.showstate()
 		self.toplevel.setready()
-	#
+
+	def drawplaybutton(self, active, d):
+		if active:
+			color = GREEN
+			cl, ct, cr, cb = FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP
+		else:
+			color = GREY
+			cl, ct, cr, cb = FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM
+		points = []
+		for x, y in [(.2, .1), (.2, .4), (.3, .25)]:
+			points.append(x * self.width, y)
+		d.drawfpolygon(color, points)
+		d.draw3dbox(cl, ct, cr, cb,
+			    (.01 * self.width, .01, .48 * self.width, .48))
+
+	def drawpausebutton(self, active, d):
+		if active:
+			color = YELLOW
+			cl, ct, cr, cb = FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP
+		else:
+			color = GREY
+			cl, ct, cr, cb = FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM
+		d.drawfbox(color, .7 * self.width, .1, .03 * self.width, .3)
+		d.drawfbox(color, .77 * self.width, .1, .03 * self.width, .3)
+		d.draw3dbox(cl, ct, cr, cb,
+			    (.51 * self.width, .01, .48 * self.width, .48))
+
+	def drawstopbutton(self, active, d):
+		if active:
+			color = BLACK
+			cl, ct, cr, cb = FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP
+		else:
+			color = GREY
+			cl, ct, cr, cb = FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM
+		d.drawfbox(color, .2 * self.width, .6, .6 * self.width, .3)
+		d.draw3dbox(cl, ct, cr, cb,
+			    (.01 * self.width, .51, .98 * self.width, .48))
+
+	def redraw(self, *rest):
+		import StringStuff
+		font = windowinterface.findfont('Helvetica', 10)
+		for i in range(len(titles)):
+			w = self.subwin[i]
+			t = titles[i]
+			d = w.newdisplaylist()
+			dummy = d.usefont(font)
+			StringStuff.centerstring(d, 0, 0, 1, 1, t)
+			d.render()
+		d = self.window.newdisplaylist()
+		self.drawplaybutton(self.playing, d)
+		self.drawpausebutton(self.pausing, d)
+		self.drawstopbutton(not self.playing, d)
+		d.render()
+		self.displist = d
+
 	def hide(self):
 		if not self.showing: return
+		self.showing = 0
 		self.toplevel.setwaiting()
 		self.stop()
 		self.fullreset()
-		BasicDialog.hide(self)
+		self.save_geometry()
+		self.window.close()
+		self.window = None
 		self.toplevel.checkviews()
 		self.destroychannels()
 		self.toplevel.setready()
-	#
+
 	def save_geometry(self):
 		ViewDialog.save_geometry(self)
 		for name in self.channelnames:
 			self.channels[name].save_geometry()
-	#
-	def make_form(self):
-		ftemplate = flp.parse_form('PlayerForm', 'form')
-		flp.create_full_form(self, ftemplate)
-		self.makeomenu()
-		
+
+	def get_geometry(self):
+		if self.window:
+			self.last_geometry = self.window.getgeometry()
+
+	def _mouse(self, dummy, window, ev, val):
+		x, y = val[:2]
+		if 0 < y < .5:
+			if 0 < x < .5 * self.width:
+				self.play_callback()
+			elif .5 * self.width < x < self.width:
+				self.pause_callback()
+		elif 0 < x < self.width:
+			self.stop_callback()
 	#
 	# FORMS callbacks.
 	#
-	#
-## 	def before_call(self):
-##		print 'callback start'
-##		self.waslocked = 0
-##		if GLLock.gl_lock:
-##			print 'try acquire'
-##			if not GLLock.gl_lock.acquire(0):
-##				print 'acquire failed'
-##				self.waslocked = 1
-##			print 'release'
-##			GLLock.gl_lock.release()
-##	#
-##	def after_call(self):
-##		print 'callback end'
-##		if self.waslocked:
-##			print 're-acquire'
-##			GLLock.gl_lock.acquire()
-	#
-	def play_callback(self, obj, arg):
-##		self.before_call()
-		self.playbutton.lcol = MYBLUE
+	def play_callback(self):
+##		self.playbutton.lcol = MYBLUE
 		if self.playing and self.pausing:
 			# Case 1: user pressed play to cancel pause
 			self.pause(0)
@@ -128,11 +216,9 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		else:
 			# nothing, restore state.
 			self.showstate()
-##		self.after_call()
 	#
-	def pause_callback(self, obj, arg):
-##		self.before_call()
-		self.pausebutton.lcol = MYBLUE
+	def pause_callback(self):
+##		self.pausebutton.lcol = MYBLUE
 		if self.playing and self.pausing:
 			# Case 1: press pause to cancel pause
 			self.pause(0)
@@ -142,35 +228,25 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		else:
 			# Case 3: not playing. Go to paused mode
 			self.pause(1)
-			self.playbutton.lcol = MYBLUE
+##			self.playbutton.lcol = MYBLUE
 			self.play()
-##		self.after_call()
 	#
-	def stop_callback(self, obj, arg):
-##		self.before_call()
+	def stop_callback(self):
 		self.cc_stop()
-##		self.after_call()
 
 	def cc_stop(self):
-		self.stopbutton.lcol = MYBLUE
+##		self.stopbutton.lcol = MYBLUE
 		self.continuous = 0
 		self.stop()
 		if self.pausing:
 			self.pause(0)
 
-	def timer_callback(self, obj, arg):
-##		self.before_call()
+	def timer_callback(self, *rest):
 		self.scheduler.timer_callback()
-##		self.after_call()
 	#
-	def cmenu_callback(self, obj, arg):
-##		self.before_call()
-		i = self.cmenubutton.get_menu() - 1
-		if 0 <= i < len(self.channelnames):
-			name = self.channelnames[i]
-			isvis = self.channels[name].get_visible()
-			self.cc_enable_ch(name, (not isvis))
-##		self.after_call()
+	def cmenu_callback(self, name):
+		isvis = self.channels[name].get_visible()
+		self.cc_enable_ch(name, (not isvis))
 
 	def cc_enable_ch(self, name, onoff):
 		try:
@@ -182,9 +258,7 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		self.toplevel.channelview.channels_changed()
 		self.makemenu()
 	#
-	def omenu_callback(self, obj, arg):
-##		self.before_call()
-		i = self.omenubutton.get_menu()
+	def omenu_callback(self, i):
 		if i == 1:
 			self.measure_armtimes = (not self.measure_armtimes)
 			if self.measure_armtimes:
@@ -209,47 +283,39 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		else:
 			print 'Player: Option menu: funny choice', i
 		self.makeomenu()
-##		self.after_call()
 
-	def slotmenu_callback(self, obj, arg):
-##		self.before_call()
-		slot = obj.get_menu()
-		if slot:
-			node = self.runslots[slot-1][0]
-			if node:
-				self.toplevel.channelview.globalsetfocus(node)
-			else:
-				windowinterface.showmessage('That slot is not active')
-##		self.after_call()
+	def slotmenu_callback(self, slot):
+		node = self.runslots[slot][0]
+		if node:
+			self.toplevel.channelview.globalsetfocus(node)
+		else:
+			windowinterface.showmessage('That slot is not active')
 		
 	def dummy_callback(self, *dummy):
 		pass
 	#
 	#
 	def showstate(self):
-		if self.playing:
-			self.playbutton.lcol = MYGREEN
-			self.stopbutton.lcol = MYGREY
-		else:
-			self.playbutton.lcol = MYGREY
-			self.stopbutton.lcol = GL.BLACK
-		if self.pausing:
-			self.pausebutton.lcol = MYYELLOW
-		else:
-			self.pausebutton.lcol = MYGREY
-		self.playbutton.set_button(self.playing)
-		self.stopbutton.set_button(not self.playing)
-		self.pausebutton.set_button(self.pausing)
+		if not self.is_showing():
+			return
+		d = self.displist.clone()
+		self.drawplaybutton(self.playing, d)
+		self.drawstopbutton(not self.playing, d)
+		self.drawpausebutton(self.pausing, d)
+		d.render()
+		self.displist.close()
+		self.displist = d
 
 		#self.calctimingbutton.set_button(self.measure_armtimes)
 		self.makeomenu()
 		self.showtime()
 	#
 	def showpauseanchor(self, pausing):
-		if pausing:
-			self.pausebutton.lcol = MYYELLOW
-		else:
-			self.pausebutton.lcol = MYGREY
+		d = self.displist.clone()
+		self.drawpausebutton(self.pausing, d)
+		d.render()
+		self.displist.close()
+		self.displist = d
 		
 	def showtime(self):
 		pass
@@ -267,61 +333,88 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 #		#
         #
 	def makeslotmenu(self, list):
-		self.slotmenubutton.set_menu('')
-		for l in list:
-			self.slotmenubutton.addto_menu(l)
-	#
+		if not self.is_showing() or len(titles) < 3:
+			return
+		menu = []
+		for i in range(len(list)):
+			l = list[i]
+			menu.append('', l, (self.slotmenu_callback, (i,)))
+		self.subwin[2].create_menu('Run slots', menu)
+
 	def makeomenu(self):
-		self.omenubutton.set_menu('')
+		if not self.is_showing():
+			return
+		menu = []
 		if self.measure_armtimes:
-			self.omenubutton.addto_menu('\xa4 Calculate timing')
+			menu.append('', '\xa4 Calculate timing',
+				    (self.omenu_callback, (1,)))
 		else:
-			self.omenubutton.addto_menu('   Calculate timing')
+			menu.append('', '   Calculate timing',
+				    (self.omenu_callback, (1,)))
 		if self.play_all_bags:
-			self.omenubutton.addto_menu('\xa4 Play all bags')
+			menu.append('', '\xa4 Play all bags',
+				    (self.omenu_callback, (2,)))
 		else:
-			self.omenubutton.addto_menu('   Play all bags')
+			menu.append('', '   Play all bags',
+				    (self.omenu_callback, (2,)))
 		if self.ignore_delays:
-			self.omenubutton.addto_menu('\xa4 Ignore delays')
+			menu.append('', '\xa4 Ignore delays',
+				    (self.omenu_callback, (3,)))
 		else:
-			self.omenubutton.addto_menu('   Ignore delays')
+			menu.append('', '   Ignore delays',
+				    (self.omenu_callback, (3,)))
 		if self.ignore_pauses:
-			self.omenubutton.addto_menu('\xa4 Ignore pauses')
+			menu.append('', '\xa4 Ignore pauses',
+				    (self.omenu_callback, (4,)))
 		else:
-			self.omenubutton.addto_menu('   Ignore pauses')
+			menu.append('', '   Ignore pauses',
+				    (self.omenu_callback, (4,)))
 		if self.sync_cv:
-			self.omenubutton.addto_menu('\xa4 Keep Timechart in sync')
+			menu.append('', '\xa4 Keep Timechart in sync',
+				    (self.omenu_callback, (5,)))
 		else:
-			self.omenubutton.addto_menu('   Keep Timechart in sync')
+			menu.append('', '   Keep Timechart in sync',
+				    (self.omenu_callback, (5,)))
 		if self.pause_minidoc:
-			self.omenubutton.addto_menu('\xa4 autopause minidoc')
+			menu.append('', '\xa4 autopause minidoc',
+				    (self.omenu_callback, (6,)))
 		else:
-			self.omenubutton.addto_menu('   autopause minidoc')
-		self.omenubutton.addto_menu('   Crash CMIF')
-		self.omenubutton.addto_menu('   Dump scheduler data')
+			menu.append('', '   autopause minidoc',
+				    (self.omenu_callback, (6,)))
+		menu.append('', '   Crash CMIF', (self.omenu_callback, (7,)))
+		menu.append('', '   Dump scheduler data',
+			    (self.omenu_callback, (8,)))
 		if not self.continuous:
-			self.omenubutton.addto_menu('   Continuous play')
+			menu.append('', '   Continuous play',
+				    (self.omenu_callback, (9,)))
 		else:
-			self.omenubutton.addto_menu('\xa4 Continuous play')
+			menu.append('', '\xa4 Continuous play',
+				    (self.omenu_callback, (9,)))
+		self.subwin[1].create_menu('Options', menu)
 			
 	def makemenu(self):
-		self.cmenubutton.set_menu('')
+		if not self.is_showing():
+			return
+		menu = []
 		for name in self.channelnames:
 			if self.channels[name].is_showing():
 				onoff = ''
 			else:
 				onoff = ' (off)'
-			self.cmenubutton.addto_menu(name + onoff)
-			# XXX This is for FORMS version 2.0b;
-			# XXX for version 2.0 (beta), append a '|'.
+			menu.append('', name + onoff,
+				    (self.cmenu_callback, (name,)))
+		self.subwin[0].create_menu('Channels', menu)
 	#
 	def setwaiting(self):
-##		self.statebutton.lcol = GL.MAGENTA
-		BasicDialog.setwaiting(self)
+		self.waiting = 1
+		if self.window:
+			self.window.setcursor('watch')
 		for cname in self.channelnames:
 			self.channels[cname].setwaiting()
 	#
 	def setready(self):
-		BasicDialog.setready(self)
+		self.waiting = 0
+		if self.window:
+			self.window.setcursor('')
 		for cname in self.channelnames:
 			self.channels[cname].setready()

@@ -1,4 +1,5 @@
-from debug import debug
+import os
+debug = os.environ.has_key('CHANNELDEBUG')
 from Channel import *
 import string
 import sys
@@ -15,18 +16,17 @@ except ImportError:
 [V_NONE, V_SPR, V_SB, V_READY, V_PLAYING, V_ERROR] = range(6)
 
 class VcrChannel(Channel):
-	def init(self, name, attrdict, scheduler, ui):
-		self = Channel.init(self, name, attrdict, scheduler, ui)
-		if VCR==None or VcrIndex==None:
-		    print 'ERROR: VCR or VcrIndex module not found. Expect a crash soon'
-		    return self
+	def __init__(self, name, attrdict, scheduler, ui):
+		Channel.__init__(self, name, attrdict, scheduler, ui)
+		if VCR == None or VcrIndex == None:
+			print 'ERROR: VCR or VcrIndex module not found. Expect a crash soon'
+			return
 		self.vcr = VCR.VCR().init()
 		self.vcr.setcallback(self.vcr_ready, None)
 		toplevel = self._player.toplevel
 		toplevel.select_setcallback(self.vcr, self.vcr.poll, ())
 		self.vcrstate = V_NONE
 		self.seekinfo = None
-		return self
 
 	def destroy(self):
 		self.vcr.setcallback(None, None)
@@ -148,12 +148,12 @@ class VcrChannel(Channel):
 			return
 		self.seekinfo = (node, pos)
 
-	def defanchor(self, node, anchor):
+	def defanchor(self, node, anchor, cb):
 		if self._armstate != AIDLE:
 			raise error, 'Arm state must be idle when defining an anchor'
 		if self._playstate != PIDLE:
 			raise error, 'Play state must be idle when defining an anchor'
-		context = AnchorContext().init()
+		context = AnchorContext()
 		self.startcontext(context)
 		self.vcr.setasync(0)
 		start, stop = self.getstartstop(node)
@@ -165,10 +165,9 @@ class VcrChannel(Channel):
 		if not windowinterface.multchoice(\
 			  'Position video at position wanted for anchor.', \
 			  ['Cancel', 'Done'], 1):
-			return None
-		return (anchor[0], anchor[1], self.vcr.where())
-		
-		
+			apply(cb, (anchor,))
+		else:
+			apply(cb, ((anchor[0], anchor[1], self.vcr.where()),))
 
 	def play(self, node):	# XXX Override Channel method.
 		self.play_0(node)

@@ -30,8 +30,17 @@ class Main:
 		pipe_r, pipe_w = posix.pipe()
 		mm.setsyncfd(pipe_w)
 		self._mmfd = pipe_r
+		import windowinterface, EVENTS
+		windowinterface.select_setcallback(pipe_r,
+						   self._mmcallback, ())
+		windowinterface.setcallback(EVENTS.TimerEvent, self.timeout,
+					    None)
+		new_file = 0
+		if not files:
+			files = ['NEW DOCUMENT.cmif']
+			new_file = 1
 		for fn in files:
-			top = TopLevel.TopLevel().init(self, fn)
+			top = TopLevel.TopLevel().init(self, fn, new_file)
 			top.setwaiting()
 			top.show()
 			for opt, arg in opts:
@@ -57,45 +66,18 @@ class Main:
 		for top in self.tops:
 			top.setready()
 
+	def timeout(self, dummy, window, event, func):
+		func()
+
 	def do_exit(self, *args):
 		for top in self.tops:
 			top.close()
 
 	def run(self):
-		import select, gl, fl, posix, GLLock, windowinterface, EVENTS
+		import windowinterface, EVENTS
 		windowinterface.setcallback(EVENTS.WindowExit, self.do_exit,
 					    None)
-		glfd = gl.qgetfd()
-		while 1:
-			locked = None
-			if GLLock.gl_lock:
-				GLLock.gl_lock.acquire()
-				locked = 1
-			result = fl.check_forms()
-##			if result: print 'check_forms:',`result`
-			if locked:
-				GLLock.gl_lock.release()
-			wtd = [glfd, self._mmfd]
-			for top in self.tops:
-				wtd = wtd + top.select_fdlist
-			try:
-				ifdlist, ofdlist, efdlist = \
-					 select.select(wtd, [], [], 0.1)
-			except select.error, arg:
-				if type(arg) is type(()) and \
-				   arg[0] == 4: # interrupted system call
-					# ignore errors due to interrupts
-					ifdlist = ofdlist = efdlist = []
-				else:
-					# re-raise
-					raise select.error, arg
-##			if ifdlist: print 'select:',`wtd`,`ifdlist`
-			if self._mmfd in ifdlist:
-				self._mmcallback()
-			for top in self.tops:
-				for fd in top.select_fdlist:
-					if fd in ifdlist:
-						top.select_ready(fd)
+		windowinterface.mainloop()
 
 	def setmmcallback(self, dev, callback):
 		if callback:
@@ -104,8 +86,17 @@ class Main:
 			del self._mm_callbacks[dev]
 
 	def _mmcallback(self):
-		import posix
-		devval = ord(posix.read(self._mmfd, 1))
+		import posix, fcntl, FCNTL
+		# set in non-blocking mode
+		dummy = fcntl.fcntl(self._mmfd, FCNTL.F_SETFL, FCNTL.FNDELAY)
+		# read a byte
+		devval = posix.read(self._mmfd, 1)
+		# set in blocking mode
+		dummy = fcntl.fcntl(self._mmfd, FCNTL.F_SETFL, 0)
+		# return if nothing read
+		if not devval:
+			return
+		devval = ord(devval)
 		dev, val = devval >> 2, devval & 3
 		if self._mm_callbacks.has_key(dev):
 			func = self._mm_callbacks[dev]
@@ -124,7 +115,6 @@ def handler(sig, frame):
 	pdb.set_trace()
 
 def main():
-	#
 	try:
 		opts, files = getopt.getopt(sys.argv[1:], 'qpj:snh:CHPSL')
 	except getopt.error, msg:
@@ -135,12 +125,13 @@ def main():
 		pass
 	else:
 		signal.signal(signal.SIGINT, handler)
-	if not files:
-		usage('No files specified')
-	#
+
 	if ('-q', '') in opts:
 		sys.stdout = open('/dev/null', 'w')
-	#
+
+	if sys.argv[0] and sys.argv[0][0] == '-':
+		sys.argv[0] = 'cmifed'
+
 	for fn in files:
 		try:
 			# Make sure the files exist first...
@@ -149,15 +140,13 @@ def main():
 		except IOError, msg:
 			sys.stderr.write(fn + ': cannot open ' + `msg` + '\n')
 			sys.exit(2)
-	#
+
 	# patch the module search path
 	# so we are less dependent on where we are called
-	#
 	sys.path.append(findfile('mm4'))
 	sys.path.append(findfile('lib'))
 	sys.path.append(findfile('video'))
-	#
-	import fl
+
 	import Channel
 	import GLLock
 	#
@@ -198,8 +187,8 @@ def main():
 			print
 			print '\t' + sys.exc_type + ':', `sys.exc_value`
 			print
-			import os
-			sts = os.system('/ufs/guido/bin/playaudio /ufs/guido/lib/woowoo &')
+##			import os
+##			sts = os.system('/ufs/guido/bin/playaudio /ufs/guido/lib/woowoo &')
 			import pdb
 			pdb.post_mortem(sys.exc_traceback)
 	finally:

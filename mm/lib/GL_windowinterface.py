@@ -1,15 +1,5 @@
 # Names that start with `_' are for internal use only.
 
-# There's a hack in this file in order to be able to work with the
-# FORMS library.  The hack is that we import fl_or_gl and use the
-# function mayblock() from that file.  If using gl, the funtion will
-# always return 1, but when using fl, the function will sometimes
-# return 1 and sometimes 0.  Other parts of CMIFed/CMIFplay call the
-# functions windowinterface.startmonitormode() and
-# windowinterface.endmonitormode().  These functions are also defined
-# in fl_or_gl.  The CMIFplay versions are dummies, but the CMIFed
-# versions do some work.
-
 import gl, GL, DEVICE
 ##_dev_map = {}
 ##for key in DEVICE.__dict__.keys():
@@ -22,17 +12,84 @@ import fm
 import string
 from EVENTS import *
 _Accelerator = 1024
-#from debug import debug
-debug = 0
 import os
-if os.environ.has_key('WINDOWDEBUG'):
-	debug = 1
+debug = os.environ.has_key('WINDOWDEBUG')
 import time, select
 
 error = 'windowinterface.error'
 Version = 'GL'
 
-from fl_or_gl import *
+# size of arrow head
+ARR_LENGTH = 18
+ARR_HALFWIDTH = 5
+ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
+
+import sys
+
+_has_fl = sys.modules.has_key('fl')
+_last_forms = None
+
+def startmonitormode():
+	global _has_fl
+	if _has_fl or sys.modules.has_key('fl'):
+		import fl, glwindow
+		_has_fl = 1
+		fl.deactivate_all_forms()
+		glwindow.stop_callback_mode()
+
+def endmonitormode():
+	global _has_fl
+	if _has_fl or sys.modules.has_key('fl'):
+		import fl, glwindow
+		_has_fl = 1
+		fl.activate_all_forms()
+		glwindow.start_callback_mode()
+
+def qread():
+	global _last_forms, _has_fl
+	if _has_fl or sys.modules.has_key('fl'):
+		import fl, glwindow
+		_has_fl = 1
+		toplevel._win_lock.acquire()
+		while not _last_forms:
+			_last_forms = fl.do_forms()
+		dev, val = fl.qread()
+##		glwindow.dispatch(dev, val)
+		toplevel._win_lock.release()
+##		dev, val = 0, 0
+	else:
+		import gl
+		dev, val = gl.qread()
+	_last_forms = None
+	return dev, val
+
+def qtest():
+	global _last_forms, _has_fl
+	retval = None
+	if _has_fl or sys.modules.has_key('fl'):
+		import fl
+		_has_fl = 1
+		toplevel._win_lock.acquire()
+		if not _last_forms:
+			_last_forms = fl.check_forms()
+		retval = fl.qtest()
+		if retval:
+			_last_forms = -1
+		toplevel._win_lock.release()
+	else:
+		import gl
+		retval = gl.qtest()
+	return retval
+
+def qdevice(dev):
+	global _has_fl
+	if _has_fl or sys.modules.has_key('fl'):
+		import fl
+		_has_fl = 1
+		fl.qdevice(dev)
+	else:
+		import gl
+		gl.qdevice(dev)
 
 have_cl = have_jpeg = 0
 try:
@@ -100,13 +157,13 @@ class _DummyLock:
 
 class _Toplevel:
 	def __init__(self):
-		if debug: print 'TopLevel.init('+`self`+')'
 		self._parent_window = None
 		self._subwindows = []
 		self._fgcolor = _DEF_FGCOLOR
 		self._bgcolor = _DEF_BGCOLOR
 		self._cursor = ''
 		self._win_lock = _DummyLock()
+		if debug: print 'TopLevel.init('+`self`+')'
 
 	def close(self):
 		if debug: print 'Toplevel.close()'
@@ -152,7 +209,6 @@ class _Toplevel:
 			self._win_lock = lock
 		else:
 			self._win_lock = _DummyLock()
-		uselock(lock)
 
 	def getmouse(self):
 		mx = gl.getvaluator(DEVICE.MOUSEX)
@@ -161,9 +217,162 @@ class _Toplevel:
 			  float(my) * _mscreenheight / _screenheight
 
 
+_box_message = """\
+Use left mouse button to draw a box.
+Click `Done' when ready or `Cancel' to cancel."""
+
+# symbol used for returning
+_box_finished = '_finished'
+
+class _Boxes:
+	def __init__(self, window, msg, callback, box):
+		if len(box) == 1 and type(box) == type(()):
+			box = box[0]
+		if len(box) not in (0, 4):
+			raise TypeError, 'bad arguments'
+		if len(box) == 0:
+			self.box = None
+		else:
+			self.box = box
+		self.window = window
+		self.callback = callback
+		self.old_display = window._active_display_list
+		window.pop()
+		window._close_subwins()
+		win = window
+		fa1 = []
+		fa2 = []
+		while win:
+			try:
+				fa = getregister(win, Mouse0Press)
+			except error:
+				fa = None
+			else:
+				win.unregister(Mouse0Press)
+			fa1.append(fa)
+			try:
+				fa = getregister(win, Mouse0Release)
+			except error:
+				fa = None
+			else:
+				win.unregister(Mouse0Release)
+			fa2.append(fa)
+			win = win._parent_window
+		self.fa1 = fa1
+		self.fa2 = fa2
+		if not self.box:
+			window.register(Mouse0Press, self.first_press, None)
+		else:
+			window.register(Mouse0Press, self.press, None)
+		if self.old_display and not self.old_display.is_closed():
+			d = self.old_display.clone()
+		else:
+			d = window.newdisplaylist()
+		for win in window._subwindows:
+			b = win._sizes
+			if b != (0, 0, 1, 1):
+				d.drawbox(b)
+		self.display = d.clone()
+		d.fgcolor(255, 0, 0)
+		if box:
+			d.drawbox(box)
+		d.render()
+		self.cur_display = d
+		if msg:
+			msg = msg + '\n\n' + _box_message
+		else:
+			msg = _box_message
+		self._looping = 0
+		self.dialog = Dialog(None, msg, 0, 0,
+				[('', 'Done', (self.done_callback, ())),
+				 ('', 'Cancel', (self.cancel_callback, ()))])
+
+	def __del__(self):
+		self.close()
+
+	def close(self):
+		self.window._open_subwins()
+		if self.old_display and not self.old_display.is_closed():
+			self.old_display.render()
+		self.display.close()
+		self.cur_display.close()
+		self.dialog.close()
+
+	def _size_cb(self, x, y, w, h):
+		self.box = x, y, w, h
+
+	def first_press(self, dummy, win, ev, val):
+		win._sizebox((val[0], val[1], 0, 0), 0, 0, self._size_cb)
+		win.register(Mouse0Press, self.press, None)
+		self.after_press()
+
+	def press(self, dummy, win, ev, val):
+		x, y = val[0:2]
+		b = self.box
+		if b[0] + b[2]/4 < x < b[0] + b[2]*3/4:
+			constrainx = 1
+		else:
+			constrainx = 0
+		if b[1] + b[3]/4 < y < b[1] + b[3]*3/4:
+			constrainy = 1
+		else:
+			constrainy = 0
+		self.display.render()
+		
+		if constrainx and constrainy:
+			self.box = win._movebox(b, 0, 0)
+		else:
+			if x < b[0] + b[2]/2:
+				x0 = b[0] + b[2]
+				w = -b[2]
+			else:
+				x0 = b[0]
+				w = b[2]
+			if y < b[1] + b[3]/2:
+				y0 = b[1] + b[3]
+				h = -b[3]
+			else:
+				y0 = b[1]
+				h = b[3]
+			win._sizebox((x0, y0, w, h),
+				    constrainx, constrainy, self._size_cb)
+		self.after_press()
+
+	def after_press(self):
+		d = self.display.clone()
+		d.fgcolor(255, 0, 0)
+		d.drawbox(self.box)
+		d.render()
+		self.cur_display.close()
+		self.cur_display = d
+
+	def loop(self):
+		startmonitormode()
+		self.window.setcursor('')
+		try:
+			try:
+				self._looping = 1
+				while 1:
+					dummy = event.readevent()
+			except _box_finished:
+				return
+		finally:
+			endmonitormode()
+
+	def done_callback(self):
+		self.close()
+		apply(self.callback, self.box)
+		if self._looping:
+			raise _box_finished
+
+	def cancel_callback(self):
+		self.close()
+		apply(self.callback, ())
+		if self._looping:
+			raise _box_finished
+
 class _Event:
 	def __init__(self):
-		if debug: print 'Event.init('+`self`+')'
 		self._queue = []
 		self._curwin = None
 		self._savemouse = None
@@ -179,18 +388,19 @@ class _Event:
 		self._timenow = time.time()
 		self._timerid = 0
 		self._modal = []
+		if debug: print 'Event.init('+`self`+')'
 
 	def _qdevice(self):
 		if debug: print 'Event.qdevice()'
 ##		toplevel._win_lock.acquire()
-		fl_or_gl.qdevice(DEVICE.REDRAW)
-		fl_or_gl.qdevice(DEVICE.INPUTCHANGE)
-		fl_or_gl.qdevice(DEVICE.WINQUIT)
-		fl_or_gl.qdevice(DEVICE.WINSHUT)
-		fl_or_gl.qdevice(DEVICE.KEYBD)
-		fl_or_gl.qdevice(DEVICE.LEFTMOUSE)
-		fl_or_gl.qdevice(DEVICE.MIDDLEMOUSE)
-		fl_or_gl.qdevice(DEVICE.RIGHTMOUSE)
+		qdevice(DEVICE.REDRAW)
+		qdevice(DEVICE.INPUTCHANGE)
+		qdevice(DEVICE.WINQUIT)
+		qdevice(DEVICE.WINSHUT)
+		qdevice(DEVICE.KEYBD)
+		qdevice(DEVICE.LEFTMOUSE)
+		qdevice(DEVICE.MIDDLEMOUSE)
+		qdevice(DEVICE.RIGHTMOUSE)
 		gl.tie(DEVICE.LEFTMOUSE, DEVICE.MOUSEX, DEVICE.MOUSEY)
 		gl.tie(DEVICE.MIDDLEMOUSE, DEVICE.MOUSEX, DEVICE.MOUSEY)
 		gl.tie(DEVICE.RIGHTMOUSE, DEVICE.MOUSEX, DEVICE.MOUSEY)
@@ -252,35 +462,42 @@ class _Event:
 		if timeout == 0 or self._queue:
 			if self._nestingdepth > 0:
 				return
-		if self._queue:
-			timeout = 0
 		self._nestingdepth = self._nestingdepth + 1
 		try:
 			if debug:
 				print 'Event._readeventtimeout('+`timeout`+')'
-			if timeout is not None and timeout > 0 and not mayblock():
-				raise error, 'won\'t block in _readeventtimeout()'
+			while qtest():
+				dev, val = qread()
+				self._dispatch(dev, val)
+			if self._queue:
+				timeout = 0
 			fdlist = [self._winfd] + self._fdlist
-			if timeout is None:
-				ifdlist, ofdlist, efdlist = select.select(
-					  fdlist, [], [])
-			else:
-				ifdlist, ofdlist, efdlist = select.select(
-					  fdlist, [], [], timeout)
+			try:
+				if timeout is None:
+					ifdlist, ofdlist, efdlist = select.select(
+						  fdlist, [], [])
+				else:
+					ifdlist, ofdlist, efdlist = select.select(
+						  fdlist, [], [], timeout)
+			except select.error, msg:
+				if type(msg) == type(()) and msg[0] == 4:
+					# ignode EINTR
+					ifdlist = []
+				else:
+					# re-raise exception
+					raise select.error, msg
 			for fd in ifdlist:
 				if fd in self._fdlist:
 					self.entereventunique(None, FileEvent,
 						  fd)
-			while fl_or_gl.qtest():
-				dev, val = fl_or_gl.qread()
+			while qtest():
+				dev, val = qread()
 				self._dispatch(dev, val)
 		finally:
 			self._nestingdepth = self._nestingdepth - 1
 
 	def _readevent(self):
 		if debug: print 'Event._readevent()'
-		if not mayblock():
-			raise error, 'won\'t block in _readevent()'
 		self._readeventtimeout(None)
 
 	def _getevent(self, timeout):
@@ -305,8 +522,6 @@ class _Event:
 				return 1
 			if timeout is not None and timeout <= 0:
 				return 0
-			if not mayblock():
-				raise error, 'won\'t block in _getevent()'
 
 	def _dispatch(self, dev, val):
 		if (dev, val) == (0, 0):
@@ -323,12 +538,11 @@ class _Event:
 			if val == 0:
 				self._curwin = None
 			elif not _window_list.has_key(val):
-##				print 'inputchange to unknown window '+`val`
 				self._curwin = None
 			else:
 				self._curwin = _window_list[val]
-			return
-		if dev == DEVICE.REDRAW:
+				return
+		elif dev == DEVICE.REDRAW:
 			self._savemouse = None
 			if _window_list.has_key(val):
 				win = _window_list[val]
@@ -340,70 +554,72 @@ class _Event:
 					toplevel._win_lock.release()
 					if (w, h) != (win._width, win._height):
 						win._resize()
-						return
-##			else:
-##				print 'redraw event for unknown window '+`val`
-			return
-		if dev == DEVICE.KEYBD:
+				return
+		elif dev == DEVICE.KEYBD:
 			self._savemouse = None
-			if gl.getvaluator(DEVICE.LEFTALTKEY) or \
-				  gl.getvaluator(DEVICE.RIGHTALTKEY):
-				val = val + 128
-			self._queue.append((self._curwin, KeyboardInput, chr(val)))
-			return
+			if self._curwin:
+				if gl.getvaluator(DEVICE.LEFTALTKEY) or \
+				   gl.getvaluator(DEVICE.RIGHTALTKEY):
+					val = val + 128
+				self._queue.append((self._curwin, KeyboardInput, chr(val)))
+				return
 		elif dev in (DEVICE.LEFTMOUSE, DEVICE.MIDDLEMOUSE, DEVICE.RIGHTMOUSE):
-			self._savemouse = dev, val
-			return
+			if self._curwin:
+				self._savemouse = dev, val
+				return
 		elif dev == DEVICE.MOUSEX:
-			self._savex = val
-			return
+			if self._curwin:
+				self._savex = val
+				return
 		elif dev == DEVICE.MOUSEY:
-			if not self._curwin or not self._savemouse:
-##				print 'mouse event when not in known window'
+			if self._curwin:
+				if not self._savemouse:
+					return
+				if self._curwin.is_closed():
+					return
+				y = val
+				dev, val = self._savemouse
+				x = self._savex
+				toplevel._win_lock.acquire()
+				gl.winset(self._curwin._window_id)
+				x0, y0 = gl.getorigin()
+				toplevel._win_lock.release()
+				x = float(x - x0) / self._curwin._width
+				y = 1.0 - float(y - y0) / self._curwin._height
+				if x < 0 or x > 1 or y < 0 or y > 1:
+					print 'mouse click outside of window'
+				buttons = []
+				adl = self._curwin._active_display_list
+				if adl:
+					for but in adl._buttonlist:
+						if but._inside(x, y):
+							buttons.append(but)
+				if dev == DEVICE.LEFTMOUSE:
+					if val:
+						dev = Mouse0Press
+					else:
+						dev = Mouse0Release
+				elif dev == DEVICE.MIDDLEMOUSE:
+					if val:
+						dev = Mouse1Press
+					else:
+						dev = Mouse1Release
+				else:
+					if val:
+						dev = Mouse2Press
+					else:
+						dev = Mouse2Release
+				self._queue.append(self._curwin, dev,
+						   (x, y, buttons))
 				return
-			if self._curwin.is_closed():
-##				print 'window is closed'
-				return
-			y = val
-			dev, val = self._savemouse
-			x = self._savex
-			toplevel._win_lock.acquire()
-			gl.winset(self._curwin._window_id)
-			x0, y0 = gl.getorigin()
-			toplevel._win_lock.release()
-			x = float(x - x0) / self._curwin._width
-			y = 1.0 - float(y - y0) / self._curwin._height
-			if x < 0 or x > 1 or y < 0 or y > 1:
-				print 'mouse click outside of window'
-			buttons = []
-			adl = self._curwin._active_display_list
-			if adl:
-				for but in adl._buttonlist:
-					if but._inside(x, y):
-						buttons.append(but)
-			if dev == DEVICE.LEFTMOUSE:
-				if val:
-					dev = Mouse0Press
-				else:
-					dev = Mouse0Release
-			elif dev == DEVICE.MIDDLEMOUSE:
-				if val:
-					dev = Mouse1Press
-				else:
-					dev = Mouse1Release
-			else:
-				if val:
-					dev = Mouse2Press
-				else:
-					dev = Mouse2Release
-			self._queue.append((self._curwin, dev, (x, y, buttons)))
-			return
 		elif dev in (DEVICE.WINSHUT, DEVICE.WINQUIT):
 			self._queue.append((self._curwin, WindowExit, None))
 			return
-##		else:
-##			print 'huh!',`dev,val`
-		self._queue.append((self._curwin, dev, val))
+##		self._queue.append((self._curwin, dev, val))
+		import sys
+		if sys.modules.has_key('glwindow'):
+			import glwindow
+			glwindow.handle_event(dev, val)
 
 	def _doevent(self, dev, val):
 		if debug: print 'Event._doevent'+`dev,val`
@@ -610,9 +826,12 @@ class _Font:
 ##		self._pointsize = float(self.fontheight()) * 72.0 / 25.4
 ##		print '_Font().init() pointsize:',size,self._pointsize
 
-##	def __repr__(self):
-##		return '<_Font instance, font=' + self._fontname + ', ps=' + \
-##			  `self._pointsize` + '>'
+	def __repr__(self):
+		s = '<_Font instance, font=' + `self._fontname` + \
+		    ', ps=' + `self._pointsize`
+		if self.is_closed():
+			s = s + ' (closed)'
+		return s + '>'
 
 	def close(self):
 		self._closed = 1
@@ -762,7 +981,6 @@ class _DisplayList:
 	def __init__(self, window):
 		self._window = window	# window to which this belongs
 ##		print 'create',`self`
-		if debug: print 'DisplayList.init'+`self,window`
 		self._rendered = 0	# 1 iff rendered at some point
 		self._bgcolor = window._bgcolor
 		self._fgcolor = window._fgcolor
@@ -776,13 +994,23 @@ class _DisplayList:
 		self._linewidth = 1
 		self._curpos = 0, 0
 		self._xpos = 0
+		self._cloneof = None
 		window._displaylists.append(self)
+		if debug: print 'DisplayList.init'+`self,window`
 
 ##	def __del__(self):
 ##		print 'delete',`self`
 
-##	def __repr__(self):
-##		return '<_DisplayList instance, window='+`self._window`+'>'
+	def __repr__(self):
+		s = '<_DisplayList instance, window=' + `self._window`
+		if self.is_closed():
+			s = s + ' (closed)'
+		elif self._rendered:
+			if self._window._active_display_list is self:
+				s = s + ' (active)'
+			else:
+				s = s + ' (rendered)'
+		return s + '>'
 
 	def close(self):
 		if debug: print `self`+'.close()'
@@ -792,7 +1020,10 @@ class _DisplayList:
 			button.close()
 		window = self._window
 		window._displaylists.remove(self)
-		if window._active_display_list == self:
+		for d in window._displaylists:
+			if d._cloneof is self:
+				d._cloneof = None
+		if window._active_display_list is self:
 			window._active_display_list = None
 			window._redraw()
 		self._window = None
@@ -801,6 +1032,7 @@ class _DisplayList:
 		del self._font
 		del self._curfont
 		del self._buttonlist
+		del self._cloneof
 
 	def is_closed(self):
 		return self._window is None
@@ -813,17 +1045,21 @@ class _DisplayList:
 		if window._active_display_list:
 			for but in window._active_display_list._buttonlist:
 				but._highlighted = 0
-		window._active_display_list = self
 		toplevel._win_lock.acquire()
 		gl.winset(window._window_id)
-		gl.RGBcolor(self._bgcolor)
-		gl.clear()
-		for funcargs in self._displaylist:
+		if not self._cloneof or \
+		   self._cloneof is not window._active_display_list or \
+		   window._active_display_list._buttonlist:
+			gl.RGBcolor(self._bgcolor)
+			gl.clear()
+			self._clonestart = 0
+		for funcargs in self._displaylist[self._clonestart:]:
 			if type(funcargs) == type(()):
 				func, args = funcargs
 				func(args)
 			else:
 				funcargs()
+		window._active_display_list = self
 		if _drawbox or window._drawbox:
 			gl.linewidth(1)
 			gl.RGBcolor(self._fgcolor)
@@ -840,13 +1076,20 @@ class _DisplayList:
 		new._displaylist = self._displaylist[:]
 		new._fgcolor = self._fgcolor
 		new._bgcolor = self._bgcolor
-		new._curcolor = self._curcolor
+		new._curcolor = None
 		new._font = self._font
 		new._fontheight = self._fontheight
 		new._baseline = self._baseline
-		new._curfont = self._curfont
+		new._curfont = None
+		if self._rendered:
+			new._cloneof = self
+			new._clonestart = len(self._displaylist)
 		return new
 
+
+	#
+	# Color handling
+	#
 	def fgcolor(self, *color):
 		if self.is_closed():
 			raise error, 'displaylist already closed'
@@ -858,9 +1101,9 @@ class _DisplayList:
 			raise TypeError, 'arg count mismatch'
 		self._fgcolor = color
 
-	def linewidth(self, width):	# XXX--should use a better unit
-		self._linewidth = int(width)
-
+	#
+	# Buttons
+	#
 	def newbutton(self, *coordinates):
 		if self.is_closed():
 			raise error, 'displaylist already closed'
@@ -873,26 +1116,9 @@ class _DisplayList:
 		x, y, w, h = coordinates
 		return _Button(self, x, y, w, h)
 
-	def drawbox(self, *coordinates):
-		window = self._window
-		if self.is_closed():
-			raise error, 'displaylist already closed'
-		if self._rendered:
-			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == type(()):
-			coordinates = coordinates[0]
-		if len(coordinates) != 4:
-			raise TypeError, 'arg count mismatch'
-		if debug: print `self`+'.drawbox'+`coordinates`
-		x, y, w, h = coordinates
-		d = self._displaylist
-		x0, y0, x1, y1 = window._convert_coordinates(x, y, w, h)
-		if self._curcolor != self._fgcolor:
-			d.append(gl.RGBcolor, self._fgcolor)
-			self._curcolor = self._fgcolor
-		d.append(gl.linewidth, self._linewidth)
-		d.append(gl.recti, (x0, y0, x1, y1))
-
+	#
+	# Images
+	#
 	def display_image_from_file(self, file, *crop):
 		if self.is_closed():
 			raise error, 'displaylist already closed'
@@ -932,6 +1158,311 @@ class _DisplayList:
 			  float(win_w) / window._width, \
 			  float(win_h) / window._height
 
+	#
+	# Drawing methods
+	#
+	def linewidth(self, width):	# XXX--should use a better unit
+		self._linewidth = int(width)
+
+	def drawline(self, color, points):
+		window = self._window
+		if self.is_closed():
+			raise error, 'displaylist already closed'
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		if debug: print `self`+'.drawline'+`points`
+		d = self._displaylist
+		if self._curcolor != color:
+			d.append(gl.RGBcolor, color)
+			self._curcolor = color
+		d.append(gl.linewidth, self._linewidth)
+		d.append(gl.bgnline)
+		x0, y0 = points[0]
+		for x, y in points:
+			x, y = window._convert_coordinates(x, y, 0, 0)[:2]
+			d.append(gl.v2f, (x, y))
+		d.append(gl.endline)
+
+	def drawfpolygon(self, color, points):
+		window = self._window
+		if self.is_closed():
+			raise error, 'displaylist already closed'
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		if debug: print `self`+'.drawfpolygon'+`points`
+		d = self._displaylist
+		if self._curcolor != color:
+			d.append(gl.RGBcolor, color)
+			self._curcolor = color
+		d.append(gl.bgnpolygon)
+		for x, y in points:
+			x, y = window._convert_coordinates(x, y, 0, 0)[:2]
+			d.append(gl.v2f, (x, y))
+		d.append(gl.endpolygon)
+
+	def drawbox(self, *coordinates):
+		window = self._window
+		if self.is_closed():
+			raise error, 'displaylist already closed'
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		if len(coordinates) == 1 and type(coordinates) == type(()):
+			coordinates = coordinates[0]
+		if len(coordinates) != 4:
+			raise TypeError, 'arg count mismatch'
+		if debug: print `self`+'.drawbox'+`coordinates`
+		x, y, w, h = coordinates
+		d = self._displaylist
+		x0, y0, x1, y1 = window._convert_coordinates(x, y, w, h)
+		if self._curcolor != self._fgcolor:
+			d.append(gl.RGBcolor, self._fgcolor)
+			self._curcolor = self._fgcolor
+		d.append(gl.linewidth, self._linewidth)
+		d.append(gl.recti, (x0, y0, x1, y1))
+
+	def drawfbox(self, color, *coordinates):
+		window = self._window
+		if self.is_closed():
+			raise error, 'displaylist already closed'
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		if len(coordinates) == 1 and type(coordinates) == type(()):
+			coordinates = coordinates[0]
+		if len(coordinates) != 4:
+			raise TypeError, 'arg count mismatch'
+		if debug: print `self`+'.drawfbox'+`coordinates`
+		x, y, w, h = coordinates
+		d = self._displaylist
+		x0, y0, x1, y1 = window._convert_coordinates(x, y, w, h)
+		if self._curcolor != color:
+			d.append(gl.RGBcolor, color)
+			self._curcolor = color
+		d.append(gl.linewidth, self._linewidth)
+		d.append(gl.bgnpolygon)
+		d.append(gl.v2f, (x0, y0))
+		d.append(gl.v2f, (x0, y1))
+		d.append(gl.v2f, (x1, y1))
+		d.append(gl.v2f, (x1, y0))
+		d.append(gl.endpolygon)
+
+	def draw3dbox(self, cl, ct, cr, cb, *coordinates):
+		window = self._window
+		if self.is_closed():
+			raise error, 'displaylist already closed'
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		if len(coordinates) == 1 and type(coordinates) == type(()):
+			coordinates = coordinates[0]
+		if len(coordinates) != 4:
+			raise TypeError, 'arg count mismatch'
+		if debug: print `self`+'.draw3dbox'+`coordinates`
+		x, y, w, h = coordinates
+		d = self._displaylist
+		l, b, r, t = window._convert_coordinates(x, y, w, h)
+		l = l+1
+		t = t-1
+		r = r-1
+		b = b+1
+		l1 = l - 1
+		t1 = t + 1
+		r1 = r
+		b1 = b
+		ll = l + 2
+		tt = t - 2
+		rr = r - 2
+		bb = b + 3
+		if self._curcolor != cl:
+			d.append(gl.RGBcolor, (cl))
+			self._curcolor = cl
+		d.append(gl.bgnpolygon, ())
+		d.append(gl.v2i, (l1, t1))
+		d.append(gl.v2i, (ll, tt))
+		d.append(gl.v2i, (ll, bb))
+		d.append(gl.v2i, (l1, b1))
+		d.append(gl.endpolygon, ())
+		if self._curcolor != ct:
+			d.append(gl.RGBcolor, (ct))
+			self._curcolor = ct
+		d.append(gl.bgnpolygon, ())
+		d.append(gl.v2i, (l1, t1))
+		d.append(gl.v2i, (r1, t1))
+		d.append(gl.v2i, (rr, tt))
+		d.append(gl.v2i, (ll, tt))
+		d.append(gl.endpolygon, ())
+		if self._curcolor != cr:
+			d.append(gl.RGBcolor, (cr))
+			self._curcolor = cr
+		d.append(gl.bgnpolygon, ())
+		d.append(gl.v2i, (r1, t1))
+		d.append(gl.v2i, (r1, b1))
+		d.append(gl.v2i, (rr, bb))
+		d.append(gl.v2i, (rr, tt))
+		d.append(gl.endpolygon, ())
+		if self._curcolor != cb:
+			d.append(gl.RGBcolor, (cb))
+			self._curcolor = cb
+		d.append(gl.bgnpolygon, ())
+		d.append(gl.v2i, (l1, b1))
+		d.append(gl.v2i, (ll, bb))
+		d.append(gl.v2i, (rr, bb))
+		d.append(gl.v2i, (r1, b1))
+		d.append(gl.endpolygon, ())
+
+	def drawdiamond(self, *coordinates):
+		window = self._window
+		if self.is_closed():
+			raise error, 'displaylist already closed'
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		if len(coordinates) == 1 and type(coordinates) == type(()):
+			coordinates = coordinates[0]
+		if len(coordinates) != 4:
+			raise TypeError, 'arg count mismatch'
+		if debug: print `self`+'.drawfdiamond'+`coordinates`
+		x, y, w, h = coordinates
+		d = self._displaylist
+		x0, y0, x1, y1 = window._convert_coordinates(x, y, w, h)
+		if self._curcolor != self._fgcolor:
+			d.append(gl.RGBcolor, self._fgcolor)
+			self._curcolor = self._fgcolor
+		d.append(gl.linewidth, self._linewidth)
+		d.append(gl.bgnclosedline, ())
+		d.append(gl.v2i, (x0, (y0 + y1)/2))
+		d.append(gl.v2i, ((x0 + x1)/2, y1))
+		d.append(gl.v2i, (x1, (y0 + y1)/2))
+		d.append(gl.v2i, ((x0 + x1)/2, y0))
+		d.append(gl.endclosedline, ())
+
+	def drawfdiamond(self, color, *coordinates):
+		window = self._window
+		if self.is_closed():
+			raise error, 'displaylist already closed'
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		if len(coordinates) == 1 and type(coordinates) == type(()):
+			coordinates = coordinates[0]
+		if len(coordinates) != 4:
+			raise TypeError, 'arg count mismatch'
+		if debug: print `self`+'.drawfdiamond'+`coordinates`
+		x, y, w, h = coordinates
+		d = self._displaylist
+		x0, y0, x1, y1 = window._convert_coordinates(x, y, w, h)
+		if self._curcolor != color:
+			d.append(gl.RGBcolor, color)
+			self._curcolor = color
+		d.append(gl.linewidth, self._linewidth)
+		d.append(gl.bgnpolygon)
+		d.append(gl.v2i, (x0, (y0 + y1)/2))
+		d.append(gl.v2i, ((x0 + x1)/2, y1))
+		d.append(gl.v2i, (x1, (y0 + y1)/2))
+		d.append(gl.v2i, ((x0 + x1)/2, y0))
+		d.append(gl.endpolygon)
+
+	def draw3ddiamond(self, cl, ct, cr, cb, *coordinates):
+		window = self._window
+		if self.is_closed():
+			raise error, 'displaylist already closed'
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		if len(coordinates) == 1 and type(coordinates) == type(()):
+			coordinates = coordinates[0]
+		if len(coordinates) != 4:
+			raise TypeError, 'arg count mismatch'
+		if debug: print `self`+'.draw3dbox'+`coordinates`
+		x, y, w, h = coordinates
+		d = self._displaylist
+		l, b, r, t = window._convert_coordinates(x, y, w, h)
+		x = (l + r) / 2
+		y = (t + b) / 2
+		n = int(3.0 * (r-l) / (t-b) + 0.5)
+		ll = l + n
+		tt = t - 3
+		rr = r - n
+		bb = b + 3
+
+		d.append(gl.RGBcolor, cl)
+		d.append(gl.bgnpolygon, ())
+		d.append(gl.v2f, (l, y))
+		d.append(gl.v2f, (x, t))
+		d.append(gl.v2f, (x, tt))
+		d.append(gl.v2f, (ll, y))
+		d.append(gl.endpolygon, ())
+
+		d.append(gl.RGBcolor, ct)
+		d.append(gl.bgnpolygon, ())
+		d.append(gl.v2f, (x, t))
+		d.append(gl.v2f, (r, y))
+		d.append(gl.v2f, (rr, y))
+		d.append(gl.v2f, (x, tt))
+		d.append(gl.endpolygon, ())
+
+		d.append(gl.RGBcolor, cr)
+		d.append(gl.bgnpolygon, ())
+		d.append(gl.v2f, (r, y))
+		d.append(gl.v2f, (x, b))
+		d.append(gl.v2f, (x, bb))
+		d.append(gl.v2f, (rr, y))
+		d.append(gl.endpolygon, ())
+
+		d.append(gl.RGBcolor, cb)
+		d.append(gl.bgnpolygon, ())
+		d.append(gl.v2f, (l, y))
+		d.append(gl.v2f, (ll, y))
+		d.append(gl.v2f, (x, bb))
+		d.append(gl.v2f, (x, b))
+		d.append(gl.endpolygon, ())
+
+##		d.append(gl.RGBcolor, (FOCUSBORDER))
+##		d.append(gl.linewidth, (1))
+##		d.append(gl.bgnclosedline, ())
+##		d.append(gl.v2f, (l, y))
+##		d.append(gl.v2f, (x, t))
+##		d.append(gl.v2f, (r, y))
+##		d.append(gl.v2f, (x, b))
+##		d.append(gl.endclosedline, ())
+
+	def drawarrow(self, color, sx, sy, dx, dy):
+		import math
+		window = self._window
+		if self.is_closed():
+			raise error, 'displaylist already closed'
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		d = self._displaylist
+		sx, sy = window._convert_coordinates(sx, sy, 0, 0)[:2]
+		dx, dy = window._convert_coordinates(dx, dy, 0, 0)[:2]
+		lx = dx - sx
+		ly = dy - sy
+		if lx == ly == 0:
+			angle = 0.0
+		else:
+			angle = math.atan2(ly, lx)
+		rotation = 180 + angle * 180.0 / math.pi
+		if self._curcolor != color:
+			d.append(gl.RGBcolor, color)
+			self._curcolor = color
+		# Draw the line from src to dst
+		d.append(gl.linewidth, 2)
+		d.append(gl.bgnline)
+		d.append(gl.v2i, (sx, sy))
+		d.append(gl.v2i, (dx, dy))
+		d.append(gl.endline)
+		# Draw the arrowhead
+		# Translate so that the point of the arrowhead is (0, 0)
+		# Rotate so that it comes in horizontally from the right
+		d.append(gl.pushmatrix)
+		d.append(gl.translate, (dx, dy, 0))
+		d.append(gl.rot, (rotation, 'z'))
+		d.append(gl.bgnpolygon)
+		d.append(gl.v2f, (0, 0))
+		d.append(gl.v2f, (ARR_LENGTH, ARR_HALFWIDTH))
+		d.append(gl.v2f, (ARR_LENGTH, -ARR_HALFWIDTH))
+		d.append(gl.endpolygon)
+		d.append(gl.popmatrix)
+
+	#
+	# Font and text handling
+	#
 	def usefont(self, fontobj):
 		if self.is_closed():
 			raise error, 'displaylist already closed'
@@ -971,7 +1502,7 @@ class _DisplayList:
 		fontobj = findfont(fontname, 100)
 		firsttime = 1
 		height = fontobj.fontheight() * _screenheight / _mscreenheight
-		while firsttime or height > window._height*mfac:
+		while firsttime or nlines * height > window._height * mfac:
 			firsttime = 0
 			ps = float(window._height*mfac*_mscreenheight*fontobj.pointsize())/\
 				  float(nlines*fontobj.fontheight()*_screenheight)
@@ -992,6 +1523,27 @@ class _DisplayList:
 				width, height = fontobj.strsize(str)
 				width = width * _screenwidth / _mscreenwidth
 		return self.usefont(fontobj)
+
+	def baseline(self):
+		if self.is_closed():
+			raise error, 'displaylist already closed'
+		if not self._font:
+			raise error, 'font not set'
+		return self._baseline
+
+	def fontheight(self):
+		if self.is_closed():
+			raise error, 'displaylist already closed'
+		if not self._font:
+			raise error, 'font not set'
+		return self._fontheight
+
+	def pointsize(self):
+		if self.is_closed():
+			raise error, 'displaylist already closed'
+		if not self._font:
+			raise error, 'font not set'
+		return self._font.pointsize()
 
 	def strsize(self, str):
 		if self.is_closed():
@@ -1061,8 +1613,7 @@ class _DisplayList:
 		oldy = oldy - self._baseline
 		maxx = oldx
 		for str in strlist:
-			x0, y0, x1, y1 = \
-				  w._convert_coordinates(x, y, 0, 0)
+			x0, y0 = w._convert_coordinates(x, y, 0, 0)[:2]
 			d.append(gl.cmov2, (x0, y0))
 			d.append(fm.prstr, str)
 			self._curpos = x + float(f.getstrwidth(
@@ -1074,50 +1625,6 @@ class _DisplayList:
 		newx, newy = self._curpos
 		return oldx, oldy, maxx - oldx, \
 			  newy - oldy + self._fontheight - self._baseline
-
-	def drawline(self, color, points):
-		window = self._window
-		if self.is_closed():
-			raise error, 'displaylist already closed'
-		if self._rendered:
-			raise error, 'displaylist already rendered'
-		if debug: print `self`+'.drawline'+`points`
-		d = self._displaylist
-		if self._curcolor != color:
-			d.append(gl.RGBcolor, color)
-			self._curcolor = color
-		d.append(gl.linewidth, self._linewidth)
-		d.append(gl.bgnline)
-		x0, y0 = points[0]
-		for x, y in points:
-			x, y, h, w = window._convert_coordinates(x, y, 0, 0)
-			d.append(gl.v2f, (x, y))
-		d.append(gl.endline)
-
-	def drawfbox(self, color, *coordinates):
-		window = self._window
-		if self.is_closed():
-			raise error, 'displaylist already closed'
-		if self._rendered:
-			raise error, 'displaylist already rendered'
-		if len(coordinates) == 1 and type(coordinates) == type(()):
-			coordinates = coordinates[0]
-		if len(coordinates) != 4:
-			raise TypeError, 'arg count mismatch'
-		if debug: print `self`+'.drawfbox'+`coordinates`
-		x, y, w, h = coordinates
-		d = self._displaylist
-		x0, y0, x1, y1 = window._convert_coordinates(x, y, w, h)
-		if self._curcolor != color:
-			d.append(gl.RGBcolor, color)
-			self._curcolor = color
-		d.append(gl.linewidth, self._linewidth)
-		d.append(gl.bgnpolygon)
-		d.append(gl.v2f, (x0, y0))
-		d.append(gl.v2f, (x0, y1))
-		d.append(gl.v2f, (x1, y1))
-		d.append(gl.v2f, (x1, y0))
-		d.append(gl.endpolygon)
 
 
 class _Window:
@@ -1147,22 +1654,29 @@ class _Window:
 		else:
 			noborder = 0
 		self._window_id = gl.winopen(title)
+		self._title = title
 		if debug: print 'Window.init'+`self, parent, x, y, w, h, title`
 		if noborder:
 			gl.noborder()
 		gl.winconstraints()
 		self._init2()
 
-##	def __repr__(self):
-##		s = '<_Window instance, window-id=' + `self._window_id`
-##		if self._parent_window is None:
-##			s = s + ' (no parent)'
-##		else:
-##			s = s + ', parent=' + `self._parent_window`
-##		if self.is_closed():
-##			s = s + ' (closed)'
-##		s = s + '>'
-##		return s
+	def __repr__(self):
+		s = '<_Window instance'
+		if hasattr(self, '_window_id'):
+			s = s + ', window_id=' + `self._window_id`
+		if hasattr(self, '_parent_window'):
+			if self._parent_window is toplevel:
+				if hasattr(self, '_title'):
+					s = s + ', title=' + `self._title`
+				else:
+					s = s + ', toplevel'
+			else:
+				s = s + ', parent=' + `self._parent_window`
+		if self.is_closed():
+			s = s + ' (closed)'
+		s = s + '>'
+		return s
 
 	def __del__(self):
 		if not _window_list.has_key(self._window_id):
@@ -1366,6 +1880,7 @@ class _Window:
 		gl.winset(self._window_id)
 		gl.wintitle(title)
 		toplevel._win_lock.release()
+		self._title = title
 
 	def newdisplaylist(self, *bgcolor):
 		if self.is_closed():
@@ -1379,7 +1894,10 @@ class _Window:
 			raise TypeError, 'arg count mismatch'
 		return list
 
-	def sizebox(self, (x, y, w, h), constrainx, constrainy):
+	def create_box(self, msg, callback, *box):
+		_Boxes(self, msg, callback, box).loop()
+
+	def _sizebox(self, (x, y, w, h), constrainx, constrainy, callback):
 		if debug: print `self`+'.sizebox()'
 		if self.is_closed():
 			raise error, 'window already closed'
@@ -1456,9 +1974,9 @@ class _Window:
 			w = 1 - x
 		if y + h > 1:
 			h = 1 - y
-		return x, y, w, h
+		apply(callback, (x, y, w, h))
 
-	def movebox(self, (x, y, w, h), constrainx, constrainy):
+	def _movebox(self, (x, y, w, h), constrainx, constrainy):
 		if debug: print `self`+'.movebox()'
 		if self.is_closed():
 			raise error, 'window already closed'
@@ -1606,6 +2124,8 @@ class _Window:
 		enterevent(self, ResizeWindow, None)
 
 	def _redraw(self):
+		if not hasattr(self, '_closecallbacks'):
+			return		# closing: don't redraw
 		if debug: print `self`+'._redraw()',
 		if self._subwindows_closed:
 			if debug: print 'draw subwindows'
@@ -1934,6 +2454,34 @@ class _Window:
 				self._menuprocs.append(callback)
 		return menu
 
+	def hitarrow(self, x, y, sx, sy, dx, dy):
+		# return 1 iff (x,y) is within the arrow head
+		import math
+		if self.is_closed():
+			raise error, 'window already closed'
+		sx, sy = self._convert_coordinates(sx, sy, 0, 0)[:2]
+		dx, dy = self._convert_coordinates(dx, dy, 0, 0)[:2]
+		x, y = self._convert_coordinates(x, y, 0, 0)[:2]
+		lx = dx - sx
+		ly = dy - sy
+		if lx == ly == 0:
+			angle = 0.0
+		else:
+			angle = math.atan2(lx, ly)
+		cos = math.cos(angle)
+		sin = math.sin(angle)
+		# translate
+		x, y = x - dx, y - dy
+		# rotate
+		nx = x * cos - y * sin
+		ny = x * sin + y * cos
+		# test
+		if ny > 0 or ny < -ARR_LENGTH:
+			return 0
+		if nx > -ARR_SLANT * ny or nx < ARR_SLANT * ny:
+			return 0
+		return 1
+
 # Font stuff
 def _findfont(fontname, size):
 	if not _fontmap.has_key(fontname):
@@ -1964,6 +2512,7 @@ _fontmap = {
 	  'Helvetica-Bold':	'Helvetica-Bold',
 	  'Helvetica-Oblique':	'Helvetica-Oblique',
 	  }
+fonts = _fontmap.keys()
 
 toplevel = _Toplevel()
 event = _Event()
@@ -2112,32 +2661,77 @@ DEFANSWER = '\r', '\n'			# keys that trigger default answer
 _break_loop = '_break_loop'
 
 class Dialog:
-	def __init__(self, prompt, grab, list):
+	def __init__(self, title, prompt, grab, vertical, list, *coordinates):
 		if len(list) == 0:
 			raise TypeError, 'arg count mismatch'
 		# self.events is used to remember events that we are
 		# not interested in but that may be important for
 		# whoever calls us.
+		self.vertical = vertical
 		self.events = []
+		self.title = title
 		self.message = prompt
 		self.buttons = []
+		self.buttonlist = list
 		self._callbacks = {}
 		self._accelerators = {}
 		self._grab = grab
 		self._looping = 0
 		self._finish = None
+		mx, my, winwidth, winheight = self._calcsize()
+		if len(coordinates) == 1 and type(coordinates) == type(()):
+			coordinates = coordinates[0]
+		if len(coordinates) == 0:
+			coordinates = mx, my, winwidth, winheight
+		elif len(coordinates) != 4:
+			raise TypeError, 'arg count mismatch'
+		mx, my, winwidth, winheight = coordinates
+		self.window = newwindow(mx, my, winwidth, winheight, title)
+		self.window.bgcolor(BGCOLOR)
+		# remember these settings since we may need them later
+		self.INTERBUTTONGAP = INTERBUTTONGAP
+		self.CENTERLINES = CENTERLINES
+		self.DEFBUTTON = DEFBUTTON
+		self.DEFLINEWIDTH = DEFLINEWIDTH
+		self.DEFANSWER = DEFANSWER
+		self.HICOLOR = HICOLOR
+		self.FGCOLOR = FGCOLOR
+		self.FONT = FONT
+		self.draw_window()
+		self.window.register(Mouse0Press, self._mpress, None)
+		self.window.register(Mouse0Release, self._mrelease, None)
+		self.window.register(KeyboardInput, self._kboard, None)
+		self.window.register(ResizeWindow, self.draw_window, None)
+		if grab:
+			self.window.register(None, self._ignore, None)
+
+	def _calcsize(self):
+		title = self.title
+		prompt = self.message
+		list = self.buttonlist
+		vertical = self.vertical
 		font = findfont(FONT, POINTSIZE)
+		mw = 0			# max width of a button
+		mh = 0			# max height in lines of a button
+		nsep = 0		# number of separators
 		if type(prompt) == type(''):
+			mw = 0
+			for txt in string.splitfields(prompt, '\n'):
+				width, height = font.strsize(txt)
+				if vertical and width > mw:
+					mw = width
+					self.widest_button = txt
 			width, height = font.strsize(prompt)
 			height = height + font.fontheight()
-		elif prompt == None:
+		elif prompt is None:
 			width, height = 0, 0
 		else:
 			raise TypeError, 'message must be text or `None\''
-		mw = 0
-		mh = 0
 		self.defstr = None
 		for entry in list:	# loops at least once
+			if entry is None:
+				nsep = nsep + 1
+				continue
 			if type(entry) == type(()):
 				accelerator, label, callback = entry
 			else:
@@ -2157,12 +2751,20 @@ class Dialog:
 					self.widest_button = txt
 			if len(butstrs) > mh:
 				mh = len(butstrs)
-		self.buttonlines = mh
-		buttonwidth = len(self.buttons) * mw
-		buttonheight = self.buttonlines * bh
 		sw, sh = font.strsize(INTERBUTTONGAP)
 		font.close()
-		buttonwidth = buttonwidth + (len(self.buttons) - 1) * sw
+		self.buttonlines = mh
+		self.nseparators = nsep
+		if vertical:
+			buttonwidth = mw
+			buttonheight = mh * bh * len(self.buttons)
+			sw, sh = 0, sh * 0.5
+##			buttonheight = buttonheight + (len(self.buttons) - 1) * sh
+			buttonheight = buttonheight + nsep * sh
+		else:
+			buttonwidth = len(self.buttons) * mw
+			buttonheight = mh * bh
+			buttonwidth = buttonwidth + (len(self.buttons) - 1) * sw
 		if buttonwidth > width:
 			width = buttonwidth
 		height = height + buttonheight
@@ -2174,72 +2776,81 @@ class Dialog:
 		mw = float(mw) / width
 		sw = float(sw) / width
 		mx, my = getmouse()
-		mx = mx - winwidth / 2
+		mx = mx - winwidth * 0.5
 		if mx < 0:
 			mx = 0
 		if mx + winwidth > scrwidth:
 			mx = scrwidth - winwidth
-		my = my - winheight / 2
+		my = my - winheight * 0.5
 		if my < 0:
 			my = 0
 		if my + winheight > scrheight:
 			my = scrwidth - winheight
-		self.window = newwindow(mx, my,
-			  winwidth, winheight, WINDOWTITLE)
-		self.window.bgcolor(BGCOLOR)
-		# remember these settings since we may need them later
-		self.INTERBUTTONGAP = INTERBUTTONGAP
-		self.CENTERLINES = CENTERLINES
-		self.DEFBUTTON = DEFBUTTON
-		self.DEFLINEWIDTH = DEFLINEWIDTH
-		self.DEFANSWER = DEFANSWER
-		self.HICOLOR = HICOLOR
-		self.FGCOLOR = FGCOLOR
-		self.FONT = FONT
-		self.draw_window()
-		self.window.register(Mouse0Press, self._mpress, None)
-		self.window.register(Mouse0Release, self._mrelease, None)
-		self.window.register(KeyboardInput, self._kboard, None)
-		self.window.register(ResizeWindow, self.draw_window, None)
-		if grab:
-			self.window.register(None, self._ignore, None)
+		return mx, my, winwidth, winheight
 
 	def __del__(self):
 		self.close()
 
 	def draw_window(self, *rest):
+		vertical = self.vertical
 		d = self.window.newdisplaylist()
 		d.fgcolor(self.FGCOLOR)
-		d.drawbox(0,0,1,1)
-		bm = (self.widest_button + self.INTERBUTTONGAP) * (len(self.buttons) - 1) + self.widest_button
-		if type(self.message) == type(''):
-			m = self.message + '\n' + '\n' * self.buttonlines + bm
+		if not self.title:
+			d.drawbox(0,0,1,1)
+		if vertical:
+##			bm = self.widest_button + '\n' * (len(self.buttons) * self.buttonlines - 1 + (len(self.buttons) + self.nseparators + 1) * 0.5)
+			bm = self.widest_button + '\n' * (len(self.buttons) * self.buttonlines - 1 + (self.nseparators + 1) / 2)
 		else:
-			m = '\n' * (self.buttonlines - 1) + bm
+			bm = (self.widest_button + self.INTERBUTTONGAP) * \
+				(len(self.buttons) - 1) + \
+			     self.widest_button + '\n' * (self.buttonlines - 1)
+		if type(self.message) == type(''):
+			m = self.message + '\n' + '\n' + bm
+		else:
+			m = bm
 		bl, fh, ps = d.fitfont(self.FONT, m, 0.10)
+		yorig = 0.05 + bl
 		if type(self.message) == type(''):
 			w, h = d.strsize(self.message)
-			yorig = 0.05 + bl
 			if self.CENTERLINES:
 				for str in string.splitfields(self.message, '\n'):
 					dx, dy = d.strsize(str)
-					d.setpos((1.0 - dx) / 2, yorig)
+					d.setpos((1.0 - dx) * 0.5, yorig)
 					x, y, dx, dy = d.writestr(str)
 					yorig = yorig + dy
 			else:
-				d.setpos((1.0 - w) / 2, yorig)
+				d.setpos((1.0 - w) * 0.5, yorig)
 				x, y, dx, dy = d.writestr(self.message)
+				yorig = yorig + dy
 		mw, h = d.strsize(self.widest_button)
 		mh = h * self.buttonlines	# height of the buttons
-		sw, h = d.strsize(self.INTERBUTTONGAP)
 		w, h = d.strsize(bm)
-		xbase = (1.0 - w) / 2
-		if type(self.message) == type(''):
-			ybase = 1.0 - 0.05 - mh
+		sw, sh = d.strsize(self.INTERBUTTONGAP)
+		# calculate (xbase, ybase), the top-left corner of the button
+		xbase = (1.0 - w) * 0.5
+		if vertical:
+			sw, sh = 0, sh * 0.5
+			buttonheight = mh * len(self.buttons)
+##			buttonheight = buttonheight + (len(self.buttons) - 1) * sh
+			buttonheight = buttonheight + self.nseparators * sh
+			if type(self.message) == type(''):
+				ybase = 1.0 - 0.05 - buttonheight
+			else:
+				ybase = (1.0 - buttonheight) * 0.5
 		else:
-			ybase = (1.0 - mh) / 2
+			sh = 0
+			if type(self.message) == type(''):
+				ybase = 1.0 - 0.05 - mh
+			else:
+				ybase = (1.0 - mh) * 0.5
 		self.buttonboxes = []
-		for entry in self.buttons:
+		for entry in self.buttonlist:
+			if entry is None:
+				d.drawline(self.FGCOLOR,
+					   [(0, ybase + sh * 0.5),
+					    (1, ybase + sh * 0.5)])
+				ybase = ybase + sh
+				continue
 			if type(entry) == type(()):
 				accelerator, butstr, callback = entry
 			else:
@@ -2249,20 +2860,24 @@ class Dialog:
 			else:
 				d.linewidth(1)
 			w, h = d.strsize(butstr)
-			ypos = ybase + float(mh - h) / 2 + bl
+			ypos = ybase + (mh - h) * 0.5 + bl
 			if self.CENTERLINES:
 				for bt in string.splitfields(butstr, '\n'):
 					w, h = d.strsize(bt)
-					d.setpos(xbase + (mw - w) / 2, ypos)
+					d.setpos(xbase + (mw - w) * 0.5, ypos)
 					box = d.writestr(bt)
 					ypos = ypos + fh
 			else:
-				d.setpos(xbase + (mw - w) / 2, ypos)
+				d.setpos(xbase + (mw - w) * 0.5, ypos)
 				box = d.writestr(butstr)
 			buttonbox = d.newbutton(xbase, ybase, mw, mh)
 			buttonbox.hicolor(self.HICOLOR)
 			self.buttonboxes.append(buttonbox)
-			xbase = xbase + mw + sw
+			if vertical:
+##				ybase = ybase + mh + sh
+				ybase = ybase + mh
+			else:
+				xbase = xbase + mw + sw
 		d.render()
 		self.highlighted = []
 
@@ -2332,6 +2947,15 @@ class Dialog:
 			endmonitormode()
 			event.endmodal()
 
+	#
+	# Some functions we provide for our window.
+	#
+	def settitle(self, title):
+		self.window.settitle(title)
+
+	def getgeometry(self):
+		return self.window.getgeometry()
+
 	def create_menu(self, title, list):
 		self.window.create_menu(title, list)
 
@@ -2339,13 +2963,13 @@ class Dialog:
 		self.window.close()
 
 def showmessage(text):
-	d = Dialog(text, 1, [('\r', 'Done', None)])
+	d = Dialog(None, text, 1, 0, [('\r', 'Done', None)])
 	d._loop()
 
 class _Question(Dialog):
 	def __init__(self, text):
 		self._finish = None
-		Dialog.__init__(self, text, 1,
+		Dialog.__init__(self, None, text, 1, 0,
 				[('y', 'Yes', (self._ok_callback, ())),
 				 ('n', 'No', (self._cancel_callback, ()))])
 
@@ -2375,7 +2999,7 @@ class _MultChoice(Dialog):
 			else:
 				acc = ''
 			list.append(acc, msg, (self._callback, (msg,)))
-		Dialog.__init__(self, prompt, 1, list)
+		Dialog.__init__(self, None, prompt, 1, 0, list)
 
 	def run(self):
 		self._loop()
@@ -2391,96 +3015,459 @@ def multchoice(prompt, list, defindex):
 	d = _MultChoice(prompt, list, defindex)
 	return d.run()
 		
-def getstring(prompt):
-	fg = 0, 0, 0
-	bg = 255, 255, 255
-	w = newwindow(0,0,50,10,'DIALOG')
-	event.startmodal(w)
-	d = w.newdisplaylist()
-	bl, fh, ps = d.setfont('Times-Roman', 10)
-	d.setpos(0, bl)
-	dummy = d.writestr(prompt)
-	cursor = d.writestr(' ')
-	sw = w.newwindow(cursor)
-	sw.bgcolor(fg)
-	sw.fgcolor(bg)
-	sd = sw.newdisplaylist()
-	bl, fh, ps = sd.setfont('Times-Roman', 10)
-	sd.setpos(0, bl)
-	dummy = sd.writestr(' ')
-	d.render()
-	sd.render()
-	str = ''
-	redraw = 0
-	curpos = 0
-	while 1:
-		win, ev, val = readevent()
-		if ev == WindowExit:
-			w.close()
-			event.endmodal()
-			return None
-		elif ev == ResizeWindow:
-			redraw = 1
-		elif ev == KeyboardInput:
-			if val == '\b':
-				if len(str) >= 0 and curpos > 0:
-					str = str[:curpos-1] + str[curpos:]
-					redraw = 1
-					curpos = curpos - 1
-			elif val in ('\033', '\n', '\r'):
-				w.close()
-				modal.endmodal()
-				return str
-			elif ' ' <= val <= '~':
-				str = str[:curpos] + val + str[curpos:]
-				curpos = curpos + 1
-				redraw = 1
-			elif val == '\001':		# ^A
-				if curpos != 0:
-					redraw = 1
-				curpos = 0
-			elif val == '\005':		# ^E		
-				if curpos != len(str):
-					redraw = 1
-				curpos = len(str)
-			elif val == '\002':		# ^B
-				if curpos > 0:
-					curpos = curpos - 1
-					redraw = 1
-			elif val == '\006':		# ^F
-				if curpos < len(str):
-					curpos = curpos + 1
-					redraw = 1
-			elif val == '\013':		# ^K
-				if len(str) > curpos:
-					str = str[:curpos]
-					redraw = 1
-			elif val == '\004':		# ^D
-				if len(str) > curpos:
-					str = str[:curpos] + str[curpos+1:]
-					redraw = 1
-		if redraw:
-			sw.close()
-			nd = w.newdisplaylist()
-			bl, fh, ps = nd.setfont('Times-Roman', 10)
-			nd.setpos(0, bl)
-			dummy = nd.writestr(prompt + str[:curpos])
-			if curpos >= len(str):
-				c = ' '
-				cursor = nd.writestr(c)
+def FileDialog(prompt, directory, filter, file, cb_ok, cb_cancel):
+	import fl
+	filename = fl.show_file_selector(prompt, directory, filter, file)
+	if filename:
+		if cb_ok:
+			cb_ok(filename)
+	else:
+		if cb_cancel:
+			cb_cancel()
+
+def InputDialog(prompt, default, cb):
+	import fl
+	value = fl.show_input(prompt, default)
+	if value and cb is not None:
+		cb(value)
+
+class AttrDialog:
+	def __init__(self, title, prompt, entries, cb_apply, cb_close):
+		import fl, FL
+		self._cb_apply = cb_apply
+		self._cb_close = cb_close
+		itemwidth = 450
+		itemheight = 25
+		formwidth = itemwidth
+		formheight = len(entries) * itemheight + 30
+		self._form = fl.make_form(FL.FLAT_BOX, formwidth, formheight)
+		form = self._form
+		x, y, w, h = 0, 0, 66, 26
+
+		x = 0
+		b = form.add_button(FL.NORMAL_BUTTON, x, y, w, h, 'Cancel')
+		b.set_call_back(self.cancel_callback, None)
+		self.cancel_button = b
+
+		x = x + 70
+		b = form.add_button(FL.NORMAL_BUTTON, x, y, w, h, 'Restore')
+		b.set_call_back(self.restore_callback, None)
+		self.restore_button = b
+
+		x = x + 70
+		w1 = formwidth - 4*70
+		b = form.add_text(FL.NORMAL_TEXT, x, y, w1, h,
+				  '[Click on labels for help]')
+		b.align = FL.ALIGN_CENTER
+		self.hint_button = b
+
+		x = formwidth - 70 - 70
+		b = form.add_button(FL.NORMAL_BUTTON, x, y, w, h, 'Apply')
+		b.set_call_back(self.apply_callback, None)
+		self.apply_button = b
+
+		x = x + 70
+		b = form.add_button(FL.RETURN_BUTTON, x, y, w, h, 'OK')
+		b.set_call_back(self.ok_callback, None)
+		self.ok_button = b
+
+		itemw3 = 50
+		itemw2 = itemwidth/2
+		itemw1 = itemwidth - itemw2 - itemw3
+
+		itemx1 = 0
+		itemx2 = itemx1 + itemw1
+		itemx3 = itemx2 + itemw2
+
+		self.blist = []
+		for i in range(len(entries)):
+			entry = entries[i]
+			name, label, help, bclass, value, default = entry[:6]
+			if len(entry) > 6:
+				list = entry[6]
 			else:
-				c = str[curpos]
-				cursor = nd.writestr(c)
-				dummy = nd.writestr(str[curpos+1:])
-			sw = w.newwindow(cursor)
-			sw.bgcolor(fg)
-			sw.fgcolor(bg)
-			sd = sw.newdisplaylist()
-			bl, fh, ps = sd.setfont('Times-Roman', 10)
-			sd.setpos(0, bl)
-			dummy = sd.writestr(c)
-			nd.render()
-			d.close()
-			d = nd
-			sd.render()
-			redraw = 0
+				list = None
+			itemy = formheight - (i+1)*itemheight
+			b = bclass(self, name)
+			b.makelabeltext(itemx1, itemy, itemw1, itemheight, label)
+			b.makehelpbutton(itemx1, itemy, itemw1, itemheight, help)
+			b.makevalueinput(itemx2, itemy, itemw2, itemheight, value, list)
+			b.makeresetbutton(itemx3, itemy, itemw3, itemheight, default)
+			self.blist.append(b)
+		form.show_form(FL.PLACE_SIZE, 1, title)
+
+	def __del__(self):
+		self.close()
+
+	def close(self):
+		if self._form:
+			self._form.hide_form()
+			self._form = None
+			if self._cb_close:
+				self._cb_close()
+
+	def do_apply(self):
+		dict = {}
+		for b in self.blist:
+			name = b.name
+			value = b.currentvalue
+			if value != b.initvalue:
+				dict[name] = value
+		if self._cb_apply:
+			self._cb_apply(dict)
+
+	def cancel_callback(self, *dummy):
+		self.close()
+
+	def restore_callback(self, obj, arg):
+		obj.set_button(1)
+		for b in self.blist:
+			b.resetcallback()
+		obj.set_button(0)
+
+	def apply_callback(self, obj, arg):
+		obj.set_button(1)
+		self.fixfocus()
+		self.do_apply()
+		obj.set_button(0)
+
+	def ok_callback(self, obj, arg):
+		self.apply_callback(obj, arg)
+		self.close()
+
+	def fixfocus(self):
+		for b in self.blist:
+			if b.value.focus:
+				b.valuecallback(b.value, None)
+
+class _C:
+	def __init__(self, parent, name):
+		self.parent = parent
+		self.name = name
+		self.form = parent._form
+		self.changed = 0
+
+	def __repr__(self):
+		return '<_C instance, name=' + `self.name` + '>'
+
+	def makelabeltext(self, x, y, w, h, labeltext):
+		import FL
+		self.labeltext = labeltext
+		self.label = self.form.add_text(FL.NORMAL_TEXT, x, y, w-1, h,
+						labeltext)
+
+	def makehelpbutton(self, x, y, w, h, helptext):
+		import FL
+		self.help = self.form.add_button(FL.HIDDEN_BUTTON, x, y, w-1, h,
+						 '')
+		self.helptext = helptext
+		self.help.set_call_back(self.helpcallback, None)
+
+	def makevalueinput(self, x, y, w, h, value, dummy):
+		import FL
+		self.currentvalue = value
+		self.initvalue = value
+		self.value = self.form.add_input(FL.NORMAL_INPUT, x, y, w-1, h,
+						 '')
+		self.value.lstyle = FL.FIXED_STYLE
+		self.value.set_call_back(self.valuecallback, None)
+		self.update_specific()
+
+	def makeresetbutton(self, x, y, w, h, default):
+		import FL
+		self.defaultvalue = default
+		self.reset = self.form.add_button(FL.PUSH_BUTTON, x, y, w-1, h,
+						  'reset')
+		self.reset.set_call_back(self.resetcallback, None)
+
+	def valuecallback(self, *rest):
+		import FL
+		newtext = self.value.get_input()[:FL.INPUT_MAX-1]
+		if newtext == self.currenttext[:FL.INPUT_MAX-1]:
+			return # No change
+		try:
+			value = self.parsevalue(newtext)
+		except _apply_error:
+			return
+		self.currentvalue = value
+		self.isdefault = 0
+		self.changed = 1
+		self.update()
+
+	def helpcallback(self, *rest):
+		showmessage(self.helptext)
+
+	def resetcallback(self, *rest):
+		self.currentvalue = self.defaultvalue
+		self.isdefault = 1
+		self.changed = 1
+		self.update()
+
+	def update_specific(self):
+		import FL
+		self.currenttext = self.valuerepr(self.currentvalue)
+		self.value.set_input(self.currenttext[:FL.INPUT_MAX-1])
+
+	def update(self):
+		import FL
+		self.update_specific()
+		self.reset.set_button(self.isdefault)
+		if self.isdefault and not self.changed:
+			self.reset.hide_object()
+		else:
+			self.form.freeze_form()
+			if self.changed:
+				self.reset.boxtype = FL.UP_BOX
+			else:
+				self.reset.boxtype = FL.FRAME_BOX
+			self.reset.show_object()
+			self.form.unfreeze_form()
+
+	def valuerepr(self, value):
+		return value
+
+	def parsevalue(self, string):
+		return string
+
+
+class AttrOption(_C):
+	def __repr__(self):
+		return '<AttrOption instance, name=' + `self.name` + '>'
+
+	def makevalueinput(self, x, y, w, h, value, choices):
+		import FL
+		self.currentvalue = value
+		self.initvalue = value
+		self.choices = choices
+		self.value = self.form.add_choice(FL.NORMAL_CHOICE, x, y, w-3, h-2, '')
+		self.value.boxtype = FL.SHADOW_BOX
+		for choice in choices:
+			self.value.addto_choice(choice)
+		self.value.set_call_back(self.valuecallback, None)
+		self.update_specific()
+
+	def valuecallback(self, *dummy):
+		i = self.value.get_choice()
+		choices = self.choices
+		if 1 <= i <= len(choices):
+			value = choices[i-1]
+		else:
+			value = ''
+		if value <> self.currentvalue:
+			self.currentvalue = value
+			self.isdefault = 0
+			self.changed = 1
+			self.update()
+
+	def update_specific(self):
+		choices = self.choices
+		if self.currentvalue in choices:
+			i = choices.index(self.currentvalue) + 1
+		else:
+			i = 0
+		self.value.set_choice(i)
+
+class AttrString(_C):
+	def __repr__(self):
+		return '<AttrString instance, name=' + `self.name` + '>'
+
+class AttrInt(_C):
+	def __repr__(self):
+		return '<AttrInt instance, name=' + `self.name` + '>'
+
+	def makevalueinput(self, x, y, w, h, value, dummy):
+		import FL
+		self.currentvalue = value
+		self.initvalue = value
+		self.value = self.form.add_input(FL.INT_INPUT, x, y, w-1, h,
+						 '')
+		self.value.lstyle = FL.FIXED_STYLE
+		self.value.set_call_back(self.valuecallback, None)
+		self.update_specific()
+
+	def valuerepr(self, value):
+		return `value`
+
+	def parsevalue(self, value):
+		import string
+		return string.atoi(value)
+			
+class AttrFloat(_C):
+	def __repr__(self):
+		return '<AttrFloat instance, name=' + `self.name` + '>'
+
+	def makevalueinput(self, x, y, w, h, value, dummy):
+		import FL
+		self.currentvalue = value
+		self.initvalue = value
+		self.value = self.form.add_input(FL.FLOAT_INPUT, x, y, w-1, h,
+						 '')
+		self.value.lstyle = FL.FIXED_STYLE
+		self.value.set_call_back(self.valuecallback, None)
+		self.update_specific()
+
+	def valuerepr(self, value):
+		return `value`
+
+	def parsevalue(self, value):
+		import string
+		return string.atof(value)
+			
+class AttrFile(AttrString):
+	def __repr__(self):
+		return '<AttrFile instance, name=' + `self.name` + '>'
+
+	def makevalueinput(self, x, y, w, h, value, dummy):
+		import FL
+		bw = 2*h
+		AttrString.makevalueinput(self, x, y, w-bw, h, value, dummy)
+		self.selectorbutton = self.form.add_button(FL.NORMAL_BUTTON,
+						x + w-bw, y, bw-1, h, 'Brwsr')
+		self.selectorbutton.set_call_back(self.selectorcallback, None)
+
+	def selectorcallback(self, *dummy):
+		import os
+		base = ''
+		file = self.currentvalue
+		if file:
+			if os.path.isdir(file):
+				base, file = file, ''
+			else:
+				base, file = os.path.split(file)
+		FileDialog('Choose File for ' + self.labeltext, base, '*',
+			   file, self._ok_cb, None)
+
+	def _ok_cb(self, filename):
+		self.currentvalue = filename
+		self.isdefault = 0
+		self.changed = 1
+		self.update()
+
+class ListDialog:
+	def __init__(self, title, prompt, listprompt, itemprompt, itemlist,
+		     buttonlist):
+		import fl, FL
+		self._title = title
+		self._callbacks = {}
+
+		self._form = fl.make_form(FL.FLAT_BOX, 300, 320)
+		form = self._form
+
+		x, y, w, h = 0, 0, 300, 250
+		self._browser = form.add_browser(FL.HOLD_BROWSER, x, y, w, h,
+						 listprompt)
+		self._browser.set_call_back(self._browser_callback, None)
+
+		buttonwidth = 300 / len(buttonlist)
+		x, y, w, h = 0, 250, buttonwidth, 39
+		for entry in buttonlist:
+			if type(entry) == type(()):
+				accelerator, label, callback = entry
+			else:
+				accelerator, label, callback = '', entry, None
+			if callback and type(callback) is not type(()):
+				callback = (callback, (label,))
+			button = form.add_button(FL.NORMAL_BUTTON, x, y, w, h,
+						 label)
+			button.set_call_back(self._callback, label)
+			self._callbacks[label] = callback
+			x = x + buttonwidth
+
+		x, y, w, h = 50, 290, 250, 30
+		if itemprompt is None:
+			itemprompt = 'Selection'
+		self.nameinput = form.add_input(FL.NORMAL_INPUT, x, y, w, h,
+						itemprompt)
+		self.nameinput.set_call_back(self.name_callback, None)
+
+		for item in itemlist:
+			self._browser.add_browser_line(item)
+
+		self.showing = 0
+
+	def __del__(self):
+		self.close()
+
+	def show(self):
+		import FL
+		if self.showing:
+			return
+		self._form.show_form(FL.PLACE_SIZE, 1, self._title)
+		self.showing = 1
+
+	def hide(self):
+		if not self.showing:
+			return
+		self._form.hide_form()
+		self.showing = 0
+
+	def close(self):
+		self._browser = None
+		self._form = None
+
+	def getselection(self):
+		return self.nameinput.get_input()
+
+	def getselected(self):
+		i = self._browser.get_browser()
+		if i:
+			return i - 1
+		else:
+			return None
+
+	def getlistitem(self, pos):
+		if pos < 0:
+			pos = self._browser.get_browser_maxline()
+		else:
+			pos = pos + 1
+		return self._browser.get_browser_line(pos)
+
+	def addlistitem(self, item, pos):
+		if pos < 0:
+			self._browser.add_browser_line(item)
+		else:
+			self._browser.insert_browser_line(pos + 1, item)
+
+	def dellistitem(self, pos):
+		self._browser.delete_browser_line(pos + 1)
+
+	def replacelistitem(self, pos, newitem):
+		self._browser.replace_browser_line(pos + 1, newitem)
+
+	def delalllistitems(self):
+		self._browser.clear_browser()
+
+	def selectitem(self, pos):
+		if pos < 0:
+			pos = self._browser.get_browser_maxline()
+		else:
+			pos = pos + 1
+		self._browser.select_browser_line(pos)
+		line = self._browser.get_browser_line(pos)
+		self.nameinput.set_input(line)
+
+	#
+	# Various callbacks
+	#
+	def _browser_callback(self, obj, arg):
+		# When an item is selected in the browser,
+		# copy its name to the input box.
+		i = self._browser.get_browser()
+		if i == 0:
+			return
+		name = self._browser.get_browser_line(i)
+		self.nameinput.set_input(name)
+
+	def _callback(self, obj, arg):
+		callback = self._callbacks[arg]
+		if callback:
+			apply(callback)
+
+	def name_callback(self, obj, arg):
+		# When the user presses TAB or RETURN,
+		# search the browser for a matching name and select it.
+		name = self.nameinput.get_input()
+		for i in range(self._browser.get_browser_maxline()):
+			if self._browser.get_browser_line(i+1) == name:
+				self._browser.select_browser_line(i+1)
+				break

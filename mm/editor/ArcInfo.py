@@ -1,15 +1,10 @@
 # Arc info window (modeless dialog)
 
 
-import gl
-import fl
-import FL
+import windowinterface
 
 import MMExc
 import MMAttrdefs
-
-from Dialog import Dialog
-import glwindow
 
 
 form_template = None # Initialized on first use
@@ -28,10 +23,9 @@ def showarcinfo(root, snode, sside, delay, dnode, dside):
 	arcinfos[key].open()
 
 
-class ArcInfo(Dialog):
+class ArcInfo:
 
 	def init(self, root, snode, sside, delay, dnode, dside):
-		import flp
 		self.root = root
 		self.context = root.context
 		self.snode = snode
@@ -39,26 +33,50 @@ class ArcInfo(Dialog):
 		self.delay = delay
 		self.dnode = dnode
 		self.dside = dside
-		#
-		global form_template
-		if not form_template:
-			form_template = flp.parse_form('ArcInfoForm', 'main')
-		#
-		width, height = glwindow.pixels2mm(form_template[0].Width, \
-			  form_template[0].Height)
+
 		title = self.maketitle()
-		hint = ''
-		self = Dialog.init(self, width, height, title, hint)
-		flp.merge_full_form(self, self.form, form_template)
-		self.range_choice.clear_choice()
-		self.range_choice.addto_choice('0-1 sec')
-		self.range_choice.addto_choice('0-10 sec')
-		self.range_choice.addto_choice('0-100 sec')
+		self.window = windowinterface.Window(title)
+		self.src_choice = self.window.OptionMenu('From:',
+					['*Begin (0.0)*', '*End (10.0)*'],
+					0, None,
+					{'top': None, 'left': None})
+		self.dst_choice = self.window.OptionMenu('To:',
+					['*Begin*', '*End*'],
+					0, None,
+					{'top': None, 'left': self.src_choice})
+		self.delay_slider = self.window.Slider(None, 0, 0, 0, 10, None,
+					{'top': self.src_choice, 'left': None})
+		self.range_choice = self.window.OptionMenu(None,
+					['0-1 sec', '0-10 sec', '0-100 sec'],
+					0, (self.range_callback, ()),
+					{'top': self.dst_choice,
+					 'left': self.delay_slider})
+		buttuns = self.window.ButtonRow(0,
+				[('', 'Cancel', (self.close, ())),
+				 ('', 'Restore', (self.getvalues, ())),
+				 ('', 'Apply', (self.setvalues, ())),
+				 ('', 'OK', (self.ok_callback, ()))],
+				{'left': None, 'top': self.delay_slider})
+
+		self.window.fix()
+
 		return self
 
 	def __repr__(self):
 		return '<ArcInfo instance for ' + \
 	`(self.snode, self.sside, self.delay, self.dnode, self.dside)` + '>'
+
+	def show(self):
+		self.window.show()
+
+	def hide(self):
+		self.window.hide()
+
+	def is_showing(self):
+		return self.window.is_showing()
+
+	def settitle(self, title):
+		self.window.settitle(title)
 
 	def maketitle(self):
 		sname = MMAttrdefs.getattr(self.snode, 'name')
@@ -67,7 +85,7 @@ class ArcInfo(Dialog):
 
 	def open(self):
 		if self.is_showing():
-			self.pop()
+			self.window.pop()
 		else:
 			self.setchoices()
 			self.show()
@@ -83,10 +101,9 @@ class ArcInfo(Dialog):
 		self.dst_markers = self.setchoice(self.dst_choice, self.dnode)
 
 	def setchoice(self, choice, node):
-		choice.clear_choice()
-		choice.addto_choice('*Begin*')
-		choice.addto_choice('*End*')
+		options = ['*Begin*', '*End*']
 		if node.GetChannelType() <> 'sound':
+			choice.setoptions(options, 0)
 			return []
 		# XXX Need to do this more general (i.e. also for video)
 		import SoundDuration
@@ -99,14 +116,14 @@ class ArcInfo(Dialog):
 		import SoundChannel
 		try:
 			duration = SoundDuration.get(filename)
-##			markers = SoundDuration.getmarkers(filename)
+			markers = SoundDuration.getmarkers(filename)
 		except IOError, msg:
 			pass
-		choice.clear_choice()
-		choice.addto_choice('*Begin* (0.0)')
-##		for id, pos, name in markers:
-##			choice.addto_choice('  %s (%.2g)' % (name, pos))
-		choice.addto_choice('*End* (%.2g)' % duration)
+		options = ['*Begin* (0.0)']
+		for id, pos, name in markers:
+			options.append('  %s (%.2g)' % (name, pos))
+		options.append('*End* (%.2g)' % duration)
+		choice.setoptions(options, 0)
 		return markers
 
 	# Override event handler
@@ -139,57 +156,34 @@ class ArcInfo(Dialog):
 		arc = self.snode.GetUID(), self.sside, self.delay, self.dside
 		return arc in MMAttrdefs.getattr(self.dnode, 'synctolist')
 
-	# Standard callbacks (referenced from Dialog)
-
-	def cancel_callback(self, *args):
-		self.close()
-
-	def restore_callback(self, *args):
-		self.getvalues()
-
-	def apply_callback(self, *args):
-		self.setvalues()
-
-	def ok_callback(self, *args):
+	def ok_callback(self):
 		self.setvalues()
 		self.close()
 
-	def range_callback(self, *args):
-		i = self.range_choice.get_choice()
-		range = float(pow(10, i-1))
-		delay = min(range, self.delay_slider.get_slider_value())
-		self.delay_slider.set_slider_value(delay)
-		self.delay_slider.set_slider_bounds(0.0, range)
-		self.delay_slider.set_slider_precision(3-i)
-
-	# callbacks for source, destination and delay slider
-
-	def src_callback(self, *args):
-		pass
-
-	def dst_callback(self, *args):
-		pass
-
-	def slider_callback(self, *args):
-		pass
+	def range_callback(self):
+		i = self.range_choice.getpos()
+		range = float(pow(10, i))
+		delay = min(range, self.delay_slider.getvalue())
+		self.delay_slider.setvalue(delay)
+		self.delay_slider.setrange(0.0, range)
 
 	# Get/set values (get: from object to form; set: from form to object)
 
 	def getvalues(self):
 		if self.delay > 10.0:
-			self.range_choice.set_choice(3)
+			self.range_choice.setpos(2)
 		elif self.delay > 1.0:
-			self.range_choice.set_choice(2)
+			self.range_choice.setpos(1)
 		else:
-			self.range_choice.set_choice(1)
+			self.range_choice.setpos(0)
 		self.range_callback()
-		self.delay_slider.set_slider_value(self.delay)
-		if self.sside: i = len(self.src_markers) + 2
-		else: i = 1
-		self.src_choice.set_choice(i)
-		if self.dside: i = len(self.dst_markers) + 2
-		else: i = 1
-		self.dst_choice.set_choice(i)
+		self.delay_slider.setvalue(self.delay)
+		if self.sside: i = len(self.src_markers) + 1
+		else: i = 0
+		self.src_choice.setpos(i)
+		if self.dside: i = len(self.dst_markers) + 1
+		else: i = 0
+		self.dst_choice.setpos(i)
 
 	def setvalues(self):
 		editmgr = self.context.editmgr
@@ -197,13 +191,13 @@ class ArcInfo(Dialog):
 			return # Not possible at this time
 		editmgr.delsyncarc(self.snode, self.sside, self.delay, \
 			self.dnode, self.dside)
-		d = self.delay_slider.get_slider_value()
-		p = 100.0 / self.delay_slider.get_slider_bounds()[1]
+		d = self.delay_slider.getvalue()
+		p = 100.0 / self.delay_slider.getrange()[1]
 		self.delay = int(d*p + 0.5) / p
-		self.delay_slider.set_slider_value(self.delay)
+		self.delay_slider.setvalue(self.delay)
 		# XXX For now, clip sides to [0, 1]
-		self.sside = min(self.src_choice.get_choice() - 1, 1)
-		self.dside = min(self.dst_choice.get_choice() - 1, 1)
+		self.sside = min(self.src_choice.getpos(), 1)
+		self.dside = min(self.dst_choice.getpos(), 1)
 		editmgr.addsyncarc(self.snode, self.sside, self.delay, \
 			self.dnode, self.dside)
 		editmgr.commit()

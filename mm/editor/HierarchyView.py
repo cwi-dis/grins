@@ -1,22 +1,12 @@
 # New hierarchy view implementation.
 
-# Like the channel view, this uses raw GL windows -- much simpler than
-# trying to abuse FORMS.
-
 # Beware: this module uses X11-like world coordinates:
 # positive Y coordinates point down from the top of the window.
 # Also the convention for box coordinates is (left, top, right, bottom)
 
-import gl
-import GL
-import DEVICE
-import fl
-import GLLock
+import windowinterface, EVENTS, StringStuff
 import MMAttrdefs
 import MMNode
-import FontStuff
-import MenuMaker
-from Dialog import GLDialog
 from ViewDialog import ViewDialog
 
 
@@ -48,14 +38,6 @@ FOCUSBOTTOM = fix(91, 91, 91)
 FOCUSBORDER = fix(0, 0, 0)		# Thin line around it
 
 
-# Geometry parameters
-
-TITLEHEIGHT = 25			# Height of box' title bar
-MINWIDTH = 30				# Minimal box width
-MARGIN = 5				# Margin around nested boxes
-AMARGIN = 15				# Margin left/right of ANCESTORBOXes
-
-
 # Box types
 
 ANCESTORBOX = 0
@@ -63,51 +45,91 @@ INNERBOX = 1
 LEAFBOX = 2
 
 
-class HierarchyView(ViewDialog, GLDialog):
+class HierarchyView(ViewDialog):
 
 	#################################################
-	# Outside interface (inherited from GLDialog)   #
+	# Outside interface                             #
 	#################################################
 
 	def init(self, toplevel):
+		self.window = None
+		self.displist = None
+		self.new_displist = None
+		self.waiting = 0
+		self.last_geometry = None
 		self.toplevel = toplevel
 		self.root = self.toplevel.root
 		self.viewroot = self.root
 		self.focusnode = self.root
 		self.editmgr = self.root.context.editmgr
-		title = 'Hierarchy View (' + toplevel.basename + ')'
 		self = ViewDialog.init(self, 'hview_')
-		return GLDialog.init(self, title)
+		return self
 
 	def __repr__(self):
 		return '<HierarchyView instance, root=' + `self.root` + '>'
 
 	def show(self):
 		if self.is_showing():
-			if GLLock.gl_lock:
-				GLLock.gl_lock.acquire()
-			self.setwin()
-			if GLLock.gl_lock:
-				GLLock.gl_lock.release()
 			return
-		GLDialog.show(self)
-		self.initwindow()
+		title = 'Hierarchy View (' + self.toplevel.basename + ')'
+		self.load_geometry()
+		x, y, w, h = self.last_geometry
+		self.window = windowinterface.newcmwindow(x, y, w, h, title)
+		if self.waiting:
+			self.window.setcursor('watch')
+		self.window.register(EVENTS.Mouse0Press, self.mouse, None)
+		self.window.register(EVENTS.ResizeWindow, self.redraw, None)
+		self.window.bgcolor(BGCOLOR)
 		self.objects = []
 		# Other administratrivia
 		self.editmgr.register(self)
 		self.toplevel.checkviews()
 		self.fixviewroot()
-		self.getshape()
 		self.recalc()
-		# don't draw because we'll get a redraw event in a nanosecond
+		self.draw()
+		self.window.create_menu(self.focusobj.name, self.focusobj.menu)
 
 	def hide(self):
 		if not self.is_showing():
 			return
-		GLDialog.hide(self)
+		self.save_geometry()
+		self.window.close()
+		self.window = None
 		self.cleanup()
 		self.editmgr.unregister(self)
 		self.toplevel.checkviews()
+
+	def setwaiting(self):
+		self.waiting = 1
+		if self.window:
+			self.window.setcursor('watch')
+
+	def setready(self):
+		self.waiting = 0
+		if self.window:
+			self.window.setcursor('')
+
+	def is_showing(self):
+		return self.window is not None
+
+	def destroy(self):
+		self.hide()
+
+	def get_geometry(self):
+		if self.window:
+			self.last_geometry = self.window.getgeometry()
+
+	def init_display(self):
+		if self.new_displist:
+			print 'init_display: new_displist alread exists'
+			self.new_displist.close()
+		self.new_displist = self.displist.clone()
+
+	def render(self):
+		self.new_displist.render()
+		self.displist.close()
+		self.displist = self.new_displist
+		self.new_displist = None
 
 	#################################################
 	# Outside interface (inherited from ViewDialog) #
@@ -121,50 +143,31 @@ class HierarchyView(ViewDialog, GLDialog):
 			return
 		if not self.root.IsAncestorOf(node):
 			raise RuntimeError, 'bad node passed to globalsetfocus'
+		self.init_display()
 		self.setfocusnode(node)
+		if self.new_displist:
+			# setfocusnode may have drawn already
+			self.render()
 
 	def fixtitle(self):
-		title = 'Hierarchy View (' + self.toplevel.basename + ')'
-		self.settitle(title)
+		if self.is_showing():
+			title = 'Hierarchy View (' + self.toplevel.basename + ')'
+			self.window.settitle(title)
 
 	#################################################
-	# Event handlers (called by GLDialog)           #
+	# Event handlers                                #
 	#################################################
 
-	def redraw(self):
-		# REDRAW event.  This may also mean a resize!
-		if (self.width, self.height) <> gl.getsize():
-			self.getshape()
-			self.recalc()
+	def redraw(self, *rest):
+		# RESIZE event.
+		self.recalc()
 		self.draw()
 
-	def mouse(self, dev, val):
-		# MOUSE[123] event (1 is right!)
-		# 'dev' is MOUSE[123].  'val' is 1 for down, 0 for up.
-		# First translate (x, y) to world coordinates
-		# (This assumes world coord's are X-like)
-		if val == 0:
-			return # ignore up clicks
-		x = gl.getvaluator(DEVICE.MOUSEX)
-		y = gl.getvaluator(DEVICE.MOUSEY)
-		x0, y0 = gl.getorigin()
-		width, height = gl.getsize()
-		x = x - x0
-		y = height - (y - y0)
-		#
-		if dev == DEVICE.LEFTMOUSE:
-			self.select(x, y)
-		elif dev == DEVICE.RIGHTMOUSE:
-			if self.focusobj:
-				self.focusobj.popupmenu(x, y)
+	def mouse(self, dummy, window, event, params):
+		x, y = params[0:2]
+		self.select(x, y)
 
-	def keybd(self, val):
-		# KEYBD event.
-		# 'val' is the ASCII value of the character.
-		c = chr(val)
-		if self.focusobj:
-			self.focusobj.shortcut(c)
-
+	# this doesn't work yet...
 	def rawkey(self, dev, val):
 		# raw key event (0-255)
 		# 'val' is the key code as defined in DEVICE or <device.h>
@@ -193,14 +196,9 @@ class HierarchyView(ViewDialog, GLDialog):
 	def commit(self):
 		self.cleanup()
 		if self.is_showing():
-			if GLLock.gl_lock:
-				GLLock.gl_lock.acquire()
-			self.setwin()
 			self.fixviewroot()
 			self.recalc()
 			self.draw()
-			if GLLock.gl_lock:
-				GLLock.gl_lock.release()
 
 	def kill(self):
 		self.destroy()
@@ -212,7 +210,7 @@ class HierarchyView(ViewDialog, GLDialog):
 	def deletefocus(self, cut):
 		node = self.focusnode
 		if not node or node is self.root:
-			gl.ringbell()
+			windowinterface.beep()
 			return
 		em = self.editmgr
 		if not em.transaction():
@@ -232,7 +230,7 @@ class HierarchyView(ViewDialog, GLDialog):
 	def copyfocus(self):
 		node = self.focusnode
 		if not node:
-			gl.ringbell()
+			windowinterface.beep()
 			return
 		import Clipboard
 		Clipboard.setclip('node', node.DeepCopy())
@@ -240,12 +238,13 @@ class HierarchyView(ViewDialog, GLDialog):
 	def create(self, where):
 		node = self.focusnode
 		if node is None:
-			fl.show_message('There is no focus to insert to','','')
+			windowinterface.showmessage(
+				'There is no focus to insert to')
 			return
 		parent = node.GetParent()
 		if parent is None and where <> 0:
-			fl.show_message( \
-			  'Can\'t insert before/after the root','','')
+			windowinterface.showmessage(
+				"Can't insert before/after the root")
 			return
 		type = node.GetType()
 		if where == 0:
@@ -260,11 +259,13 @@ class HierarchyView(ViewDialog, GLDialog):
 	def insertparent(self, type):
 		node = self.focusnode
 		if node is None:
-			fl.show_message('There is no focus to insert at','','')
+			windowinterface.showmessage(
+				'There is no focus to insert at')
 			return
 		parent = node.GetParent()
 		if parent is None:
-			fl.show_message('Can\'t insert above the root','','')
+			windowinterface.showmessage(
+				"Can't insert above the root")
 			return
 		em = self.editmgr
 		if not em.transaction():
@@ -284,12 +285,12 @@ class HierarchyView(ViewDialog, GLDialog):
 		import Clipboard
 		type, node = Clipboard.getclip()
 		if type <> 'node' or node is None:
-			fl.show_message( \
-			  'The clipboard does not contain a node to paste', \
-			  '', '')
+			windowinterface.showmessage(
+			    'The clipboard does not contain a node to paste')
 			return
 		if self.focusnode is None:
-			fl.show_message('There is no focus to paste to','','')
+			windowinterface.showmessage(
+				'There is no focus to paste to')
 			return
 		if node.context is not self.root.context:
 			node = node.CopyIntoContext(self.root.context)
@@ -302,8 +303,8 @@ class HierarchyView(ViewDialog, GLDialog):
 		if where <> 0:
 			parent = self.focusnode.GetParent()
 			if parent is None:
-				fl.show_message( \
-				  'Can\'t insert before/after the root','','')
+				windowinterface.showmessage(
+					"Can't insert before/after the root")
 				node.Destroy()
 				return 0
 		elif where == 0:
@@ -329,75 +330,45 @@ class HierarchyView(ViewDialog, GLDialog):
 
 	def zoomout(self):
 		if self.viewroot is self.root:
-			gl.ringbell()
+			windowinterface.beep()
 			return
+		windowinterface.setcursor('watch')
 		self.viewroot = self.viewroot.GetParent()
 		self.recalc()
 		self.draw()
+		windowinterface.setcursor('')
 
 	def zoomin(self):
 		if self.viewroot is self.focusnode or not self.focusnode:
-			gl.ringbell()
+			windowinterface.beep()
 			return
+		windowinterface.setcursor('watch')
 		path = self.focusnode.GetPath()
 		i = path.index(self.viewroot)
 		self.viewroot = path[i+1]
 		self.recalc()
 		self.draw()
+		windowinterface.setcursor('')
 
 	def zoomhere(self):
 		if self.viewroot is self.focusnode or not self.focusnode:
 			return
+		windowinterface.setcursor('watch')
 		self.viewroot = self.focusnode
 		self.recalc()
 		self.draw()
+		windowinterface.setcursor('')
 
 	#################################################
 	# Internal subroutines                          #
 	#################################################
-
-	# Initialize the GL settings for the window
-	def initwindow(self):
-		# Use RGB mode
-		gl.RGBmode()
-		# Use double buffering if enough bitplanes available
-		rbits = gl.getgdesc(GL.GD_BITS_NORM_DBL_RED)
-		gbits = gl.getgdesc(GL.GD_BITS_NORM_DBL_GREEN)
-		bbits = gl.getgdesc(GL.GD_BITS_NORM_DBL_BLUE)
-		if rbits + gbits + bbits >= 12:
-			gl.doublebuffer()
-		gl.gconfig()
-		# Clear the window right now (looks better)
-		gl.RGBcolor(BGCOLOR)
-		gl.clear()
-		gl.swapbuffers()
-		# Ask for events
-		self.initevents()
-
-	# Initialize the event settings for the window
-	def initevents(self):
-		# Called by initwindow() above to ask for these events
-		fl.qdevice(DEVICE.LEFTMOUSE)
-		fl.qdevice(DEVICE.MIDDLEMOUSE)
-		fl.qdevice(DEVICE.RIGHTMOUSE)
-		fl.qdevice(DEVICE.KEYBD)
-		fl.qdevice(DEVICE.LEFTARROWKEY)
-		fl.qdevice(DEVICE.RIGHTARROWKEY)
-		fl.qdevice(DEVICE.UPARROWKEY)
-		fl.qdevice(DEVICE.DOWNARROWKEY)
-		fl.qdevice(DEVICE.PAD2)
-		fl.qdevice(DEVICE.PAD4)
-		fl.qdevice(DEVICE.PAD5)
-		fl.qdevice(DEVICE.PAD6)
-		fl.qdevice(DEVICE.PAD8)
-		fl.qdevice(DEVICE.PADPERIOD)
 
 	# Make sure the view root and focus make sense (after a tree update)
 	def fixviewroot(self):
 		if self.viewroot.GetRoot() is not self.root:
 			self.viewroot = self.root
 		if self.focusnode and \
-			  not self.root.IsAncestorOf(self.focusnode):
+		   not self.root.IsAncestorOf(self.focusnode):
 			self.focusnode = None
 		if self.focusnode is None:
 			self.focusnode = self.viewroot
@@ -412,41 +383,41 @@ class HierarchyView(ViewDialog, GLDialog):
 
 	def tosibling(self, direction):
 		if not self.focusnode:
-			gl.ringbell()
+			windowinterface.beep()
 			return
 		parent = self.focusnode.GetParent()
 		if not parent:
-			gl.ringbell()
+			windowinterface.beep()
 			return
 		siblings = parent.GetChildren()
 		i = siblings.index(self.focusnode) + direction
 		if not 0 <= i < len(siblings):
 			# XXX Could go to parent instead?
-			gl.ringbell()
+			windowinterface.beep()
 			return
 		self.setfocusnode(siblings[i])
 
 	def toparent(self):
 		if not self.focusnode:
-			gl.ringbell()
+			windowinterface.beep()
 			return
 		parent = self.focusnode.GetParent()
 		if not parent:
-			gl.ringbell()
+			windowinterface.beep()
 			return
 		self.setfocusnode(parent)
 
 	def tochild(self, i):
 		if not self.focusnode:
-			gl.ringbell()
+			windowinterface.beep()
 			return
 		if self.focusnode.GetType() not in MMNode.interiortypes:
-			gl.ringbell()
+			windowinterface.beep()
 			return
 		children = self.focusnode.GetChildren()
 		if i < 0: i = i + len(children)
 		if not 0 <= i < len(children):
-			gl.ringbell()
+			windowinterface.beep()
 			return
 		self.setfocusnode(children[i])
 
@@ -454,16 +425,20 @@ class HierarchyView(ViewDialog, GLDialog):
 	def select(self, x, y):
 		obj = self.whichhit(x, y)
 		if not obj:
-			gl.ringbell()
+			windowinterface.beep()
 			return
 		if obj.node is self.focusnode:
 			# Double click -- zoom in or out
 			if self.viewroot is not self.focusnode:
+				windowinterface.setcursor('watch')
 				self.viewroot = self.focusnode
 				self.recalc()
 				self.draw()
+				windowinterface.setcursor('')
 			return
+		self.init_display()
 		self.setfocusobj(obj)
+		self.render()
 
 	# Find the smallest object containing (x, y)
 	def whichhit(self, x, y):
@@ -482,10 +457,6 @@ class HierarchyView(ViewDialog, GLDialog):
 
 	# Select the given object, deselecting the previous focus
 	def setfocusobj(self, obj):
-		if GLLock.gl_lock:
-			GLLock.gl_lock.acquire()
-		self.setwin()
-		gl.frontbuffer(1)
 		if self.focusobj:
 			self.focusobj.deselect()
 		if obj:
@@ -495,9 +466,6 @@ class HierarchyView(ViewDialog, GLDialog):
 		else:
 			self.focusnode = None
 			self.focusobj = None
-		gl.frontbuffer(0)
-		if GLLock.gl_lock:
-			GLLock.gl_lock.release()
 
 	# Select the given node as focus, possibly zooming around
 	def setfocusnode(self, node):
@@ -517,12 +485,7 @@ class HierarchyView(ViewDialog, GLDialog):
 			self.recalc()
 			if self.focusnode is node:
 				break
-		if GLLock.gl_lock:
-			GLLock.gl_lock.acquire()
-		self.setwin()
 		self.draw()
-		if GLLock.gl_lock:
-			GLLock.gl_lock.release()
 
 	# Recalculate the set of objects
 	def recalc(self):
@@ -543,36 +506,48 @@ class HierarchyView(ViewDialog, GLDialog):
 		if self.focusobj:
 			self.focusnode = self.focusobj.node
 			self.focusobj.selected = 1
+			self.window.create_menu(self.focusobj.name,
+						self.focusobj.menu)
 		else:
 			self.focusnode = None
 
 	# Make a list of geometries for boxes
 	def makegeometries(self):
+		if self.new_displist:
+			self.new_displist.close()
+		displist = self.window.newdisplaylist(BGCOLOR)
+		self.new_displist = displist
+		bl, titleheight, ps = displist.usefont(f_title)
+		amargin = displist.strsize('x')[0] * 2
+		titleheight = titleheight * 1.5
 		list = []
 		left, top = 0, 0
-		right, bottom = self.width, self.height
+		right, bottom = 1, 1
 		path = self.viewroot.GetPath() # Ancestors of viewroot
-		if bottom-top < len(path) * TITLEHEIGHT:
+		if bottom-top < len(path) * titleheight:
 			# Truncate path, move viewroot up
-			n = max(0, (bottom-top)/TITLEHEIGHT - 1)
+			n = max(0, int((bottom-top)/titleheight) - 1)
 			self.viewroot = path[n]
 			path = path[:n+1]
 		for node in path[:-1]:
-			newtop = top + TITLEHEIGHT
-			box = left + AMARGIN, top, right - AMARGIN, newtop
+			newtop = top + titleheight
+			box = left + amargin, top, right - amargin, newtop
 			list.append(node, ANCESTORBOX, box)
 			top = newtop
-		makeboxes(list, self.viewroot, left, top, right, bottom)
+		makeboxes(list, self.viewroot, left, top, right, bottom, displist)
 		return list
 
 	# Draw the window, assuming the object shapes are all right
 	def draw(self):
-		gl.RGBcolor(BGCOLOR)
-		gl.clear()
-		f_title.setfont() # Save some calls to setfont...
+		displist = self.new_displist
+		dummy = displist.usefont(f_title)
 		for obj in self.objects:
 			obj.draw()
-		gl.swapbuffers()
+		displist.render()
+		if self.displist:
+			self.displist.close()
+		self.displist = displist
+		self.new_displist = None
 
 	# Get the current window shape and set the transformation.
 	# Note that the Y axis is made to point down, like X coordinates!
@@ -591,70 +566,112 @@ class HierarchyView(ViewDialog, GLDialog):
 # Recursive procedure to calculate geometry of boxes.
 # This makes a box for the give node with the given dimensions,
 # and if possible makes boxes for the children.
-def makeboxes(list, node, left, top, right, bottom):
+def makeboxes(list, node, left, top, right, bottom, displist):
+	minwidth = displist.strsize('x')[0] * 4
+	titleheight = displist.fontheight() * 1.5
+	hmargin = minwidth / 6
+	vmargin = titleheight / 5
 	box = left, top, right, bottom
 	height = bottom-top
 	t = node.GetType()
 	n = len(node.GetChildren())
 	if t in MMNode.leaftypes or n == 0 \
-		  or right-left < MINWIDTH + 2*MARGIN \
-		  or bottom-top < 2*TITLEHEIGHT + 2*MARGIN:
+		  or right-left < minwidth + 2*hmargin \
+		  or bottom-top < 2*titleheight + 2*vmargin:
 		list.append(node, LEAFBOX, box)
 		return
 	# Calculate space available for children
-	top = top + TITLEHEIGHT + MARGIN
-	left = left + MARGIN
-	right = right - MARGIN
-	bottom = bottom - MARGIN
+	top = top + titleheight + vmargin
+	left = left + hmargin
+	right = right - hmargin
+	bottom = bottom - vmargin
 	if t == 'par':
-		avail = (right-left+MARGIN) / n - MARGIN
-		if avail < MINWIDTH:
+		avail = (right-left+hmargin) / n - hmargin
+		if avail < minwidth:
 			list.append(node, LEAFBOX, box)
 			return
 		list.append(node, INNERBOX, box)
 		for i in range(n):
 			c = node.GetChild(i)
-			makeboxes(list, c, left, top, left+avail, bottom)
-			left = left+avail+MARGIN
+			makeboxes(list, c, left, top, left+avail, bottom,
+				  displist)
+			left = left+avail+hmargin
 			n = n-1
 			if n > 0:
-				avail = (right-left+MARGIN) / n - MARGIN
+				avail = (right-left+hmargin) / n - hmargin
 	else:
-		avail = (bottom-top+MARGIN) / n - MARGIN
-		if avail < TITLEHEIGHT:
+		avail = (bottom-top+vmargin) / n - vmargin
+		if avail < titleheight:
 			list.append(node, LEAFBOX, box)
 			return
 		list.append(node, INNERBOX, box)
 		for i in range(n):
 			c = node.GetChild(i)
-			makeboxes(list, c, left, top, right, top+avail)
-			top = top+avail+MARGIN
+			makeboxes(list, c, left, top, right, top+avail,
+				  displist)
+			top = top+avail+vmargin
 			n = n-1
 			if n > 0:
-				avail = (bottom-top+MARGIN) / n - MARGIN
+				avail = (bottom-top+vmargin) / n - vmargin
 
 
 # XXX The following should be merged with ChannelView's GO class :-(
 
 # Create a new object
 def makeobject(mother, item):
-	return Object().init(mother, item)
+	return Object(mother, item)
 
 # Fonts used below
-f_title = FontStuff.FontObject().init('Helvetica', 10)
-f_channel = FontStuff.FontObject().init('Helvetica', 8)
+f_title = windowinterface.findfont('Helvetica', 10)
+f_channel = windowinterface.findfont('Helvetica', 8)
 
 # (Graphical) object class
 class Object:
 
 	# Initialize an instance
-	def init(self, mother, item):
+	def __init__(self, mother, item):
 		self.mother = mother
 		self.node, self.boxtype, self.box = item
 		self.name = MMAttrdefs.getattr(self.node, 'name')
 		self.selected = 0
 		self.ok = 1
-		return self
+		self.menu = [
+			(None, 'New node', [
+				(None, 'Before focus', (self.createbeforecall, ())),
+				(None, 'After focus', (self.createaftercall, ())),
+				(None, 'Under focus', (self.createundercall, ())),
+				(None, 'Above focus', [
+					(None, 'Sequential', (self.createseqcall, ())),
+					(None, 'Parallel', (self.createparcall, ())),
+					(None, 'Bag', (self.createbagcall, ())),
+					]),
+				]),
+			('d', 'Delete focus', (self.deletecall, ())),
+			None,
+			('x', 'Cut focus', (self.cutcall, ())),
+			('c', 'Copy focus', (self.copycall, ())),
+			(None, 'Paste', [
+				(None, 'Before focus', (self.pastebeforecall, ())),
+				(None, 'After focus', (self.pasteaftercall, ())),
+				(None, 'Under focus', (self.pasteundercall, ())),
+				]),
+			None,
+			('p', 'Play node...', (self.playcall, ())),
+			('G', 'Play from here...', (self.playfromcall, ())),
+			None,
+			('i', 'Node info...', (self.infocall, ())),
+			('a', 'Node attr...', (self.attrcall, ())),
+			('e', 'Edit contents...', (self.editcall, ())),
+			('t', 'Edit anchors...', (self.anchorcall, ())),
+			('L', 'Finish hyperlink...', (self.hyperlinkcall, ())),
+			None,
+			('f', 'Push focus', (self.focuscall, ())),
+			('z', 'Zoom out', (self.zoomoutcall, ())),
+			('.', 'Zoom here', (self.zoomherecall, ())),
+			('Z', 'Zoom in', (self.zoomincall, ())),
+##			None,
+##			('h', 'Help...', (self.helpcall, ())),
+			]
 
 ##	def before_call(self):
 ##		print 'callback start'
@@ -693,6 +710,7 @@ class Object:
 			return
 		self.selected = 1
 		if self.ok:
+			self.mother.window.create_menu(self.name, self.menu)
 			self.drawfocus()
 
 	# Remove this object from the focus
@@ -701,6 +719,7 @@ class Object:
 			return
 		self.selected = 0
 		if self.ok:
+			self.mother.window.destroy_menu()
 			self.drawfocus()
 
 	# Check for mouse hit inside this object
@@ -712,60 +731,60 @@ class Object:
 		self.mother = None
 
 	def draw(self):
+		d = self.mother.new_displist
+		dummy = d.usefont(f_title)
+		titleheight = d.fontheight() * 1.5
+		hmargin = d.strsize('x')[0] / 1.5
+		vmargin = titleheight / 5
 		l, t, r, b = self.box
 		nt = self.node.GetType()
 		if nt in MMNode.leaftypes:
-			gl.RGBcolor(LEAFCOLOR)
+			color = LEAFCOLOR
 		elif nt == 'seq':
-			gl.RGBcolor(SEQCOLOR)
+			color = SEQCOLOR
 		elif nt == 'par':
-			gl.RGBcolor(PARCOLOR)
+			color = PARCOLOR
 		elif nt == 'bag':
-			gl.RGBcolor(BAGCOLOR)
+			color = BAGCOLOR
 		else:
-			gl.RGBcolor(255, 0, 0) # Red -- error indicator
-		gl.bgnpolygon()
-		gl.v2i(l, t)
-		gl.v2i(r, t)
-		gl.v2i(r, b)
-		gl.v2i(l, b)
-		gl.endpolygon()
+			color = 255, 0, 0 # Red -- error indicator
+		d.drawfbox(color, (l, t, r - l, b - t))
 		self.drawfocus()
 		# Draw the name, centered in the box
 		if self.node.GetType() in MMNode.leaftypes:
 			b1 = b
 			# Leave space for the channel if at all possible
-			if b1-t-6 >= 2*TITLEHEIGHT:
-				b1 = b1 - TITLEHEIGHT
+			if b1-t-vmargin >= 2*titleheight:
+				b1 = b1 - titleheight
 				# And draw it now
-				self.drawchannelname(l+3, b1, r-3, b-3)
+				self.drawchannelname(l+hmargin/2, b1,
+						     r-hmargin/2, b-vmargin/2)
 		else:
-			b1 = min(b, t + TITLEHEIGHT + MARGIN)
-		gl.RGBcolor(TEXTCOLOR)
-		f_title.centerstring(l+3, t+3, r-3, b1-3, self.name)
+			b1 = min(b, t + titleheight + vmargin)
+		d.fgcolor(TEXTCOLOR)
+		StringStuff.centerstring(d, l, t, r, b1, self.name)
 		# If this is a node with suppressed detail,
 		# draw some lines
 		if self.boxtype == LEAFBOX and \
 			  self.node.GetType() in MMNode.interiortypes and \
 			  len(self.node.GetChildren()) > 0:
-			l1 = l + 10
-			t1 = t + TITLEHEIGHT + MARGIN
-			r1 = r - 10
-			b1 = b - 10
+			l1 = l + hmargin*2
+			t1 = t + titleheight + vmargin
+			r1 = r - hmargin*2
+			b1 = b - vmargin*2
 			if l1 < r1 and t1 < b1:
-				gl.RGBcolor(TEXTCOLOR)
 				if self.node.GetType() == 'par':
-					for x in range(l1, r1, 4):
-						gl.bgnline()
-						gl.v2i(x, t1)
-						gl.v2i(x, b1)
-						gl.endline()
+					x = l1
+					while x < r1:
+						d.drawline(TEXTCOLOR,
+							   [(x, t1), (x, b1)])
+						x = x + hmargin
 				else:
-					for y in range(t1, b1, 3):
-						gl.bgnline()
-						gl.v2i(l1, y)
-						gl.v2i(r1, y)
-						gl.endline()
+					y = t1
+					while y < b1:
+						d.drawline(TEXTCOLOR,
+							   [(l1, y), (r1, y)])
+						y = y + vmargin
 
 	def drawchannelname(self, l, t, r, b):
 		import ChannelMap
@@ -776,19 +795,13 @@ class Object:
 			C = map[ctype]
 		else:
 			C = '?'
-		gl.RGBcolor(CTEXTCOLOR)
-		f_channel.setfont()
-		f_channel.centerstring(l, t, r, b, C + ': ' + cname)
-		f_title.setfont()
+		d = self.mother.new_displist
+		d.fgcolor(CTEXTCOLOR)
+		dummy = d.usefont(f_channel)
+		StringStuff.centerstring(d, l, t, r, b, C + ': ' + cname)
+		dummy = d.usefont(f_title)
 
 	def drawfocus(self):
-		l, t, r, b = self.box
-		l = l+1
-		t = t+1
-		r = r-1
-		b = b-1
-		# Draw a Motif style border
-		# (True Motif would also require making the focus darker)
 		cl = FOCUSLEFT
 		ct = FOCUSTOP
 		cr = FOCUSRIGHT
@@ -796,42 +809,9 @@ class Object:
 		if self.selected:
 			cl, cr = cr, cl
 			ct, cb = cb, ct
-		l1 = l - 1
-		t1 = t - 1
-		r1 = r
-		b1 = b
-		ll = l + 2
-		tt = t + 2
-		rr = r - 2
-		bb = b - 3
-		gl.RGBcolor(cl)
-		gl.bgnpolygon()
-		gl.v2i(l1, t1)
-		gl.v2i(ll, tt)
-		gl.v2i(ll, bb)
-		gl.v2i(l1, b1)
-		gl.endpolygon()
-		gl.RGBcolor(ct)
-		gl.bgnpolygon()
-		gl.v2i(l1, t1)
-		gl.v2i(r1, t1)
-		gl.v2i(rr, tt)
-		gl.v2i(ll, tt)
-		gl.endpolygon()
-		gl.RGBcolor(cr)
-		gl.bgnpolygon()
-		gl.v2i(r1, t1)
-		gl.v2i(r1, b1)
-		gl.v2i(rr, bb)
-		gl.v2i(rr, tt)
-		gl.endpolygon()
-		gl.RGBcolor(cb)
-		gl.bgnpolygon()
-		gl.v2i(l1, b1)
-		gl.v2i(ll, bb)
-		gl.v2i(rr, bb)
-		gl.v2i(r1, b1)
-		gl.endpolygon()
+		d = self.mother.new_displist
+		l, t, r, b = self.box
+		d.draw3dbox(cl, ct, cr, cb, (l, t, r - l, b - t))
 
 	# Menu handling functions
 
@@ -911,40 +891,3 @@ class Object:
 
 	def pasteundercall(self):
 		self.mother.paste(0)
-
-	# Menu and shortcut definitions are stored as data in the class,
-	# since they are the same for all objects of a class...
-
-	commandlist = [ \
-		(None, 'New node', [ \
-			(None, 'Before focus', createbeforecall), \
-			(None, 'After focus', createaftercall), \
-			(None, 'Under focus', createundercall), \
-			(None, 'Above focus', [ \
-				(None, 'Sequential', createseqcall), \
-				(None, 'Parallel', createparcall), \
-				(None, 'Bag', createbagcall), \
-				]), \
-			]), \
-		('d', 'Delete focus%l', deletecall), \
-		('x', 'Cut focus', cutcall), \
-		('c', 'Copy focus', copycall), \
-		(None, 'Paste%l', [ \
-			(None, 'Before focus', pastebeforecall), \
-			(None, 'After focus', pasteaftercall), \
-			(None, 'Under focus', pasteundercall), \
-			]), \
-		('p', 'Play node...', playcall), \
-		('G', 'Play from here...%l', playfromcall), \
-		('i', 'Node info...', infocall), \
-		('a', 'Node attr...', attrcall), \
-		('e', 'Edit contents...', editcall), \
-		('t', 'Edit anchors...', anchorcall), \
-		('L', 'Finish hyperlink...%l', hyperlinkcall), \
-		('f', 'Push focus', focuscall), \
-		('z', 'Zoom out', zoomoutcall), \
-		('.', 'Zoom here', zoomherecall), \
-		('Z', 'Zoom in%l', zoomincall), \
-		('h', 'Help...', helpcall), \
-		]
-	menu = MenuMaker.MenuObject().init('', commandlist)

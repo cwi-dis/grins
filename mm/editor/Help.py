@@ -7,11 +7,8 @@
 # When the help window is already open, it is popped up.
 
 
-import fl
 import os
 import string
-import flp
-from Dialog import BasicDialog
 import sys
 sys.path.append('/ufs/guido/src/www') # XXX
 import helplib
