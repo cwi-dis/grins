@@ -1138,7 +1138,6 @@ class HierarchyView(HierarchyViewDialog):
 		self.setfocusnode(children[i])
 
 	def select_widget(self, widget):
-		print 'select_widget',`widget`
 		# Set the focus to a specific widget on the user interface.
 		# Make the widget the current selection.
 		if isinstance(self.selected_widget, Widgets.Widget):
