@@ -277,7 +277,7 @@ class HTMLWriter:
 			name = self.ch2name[ch]
 			x, y, w, h = self.channel_pos(ch, top_w, top_h)
 			z = ch.get('z', 0)
-			rv.append(name, x, y, w, h, z)
+			rv.append((name, x, y, w, h, z))
 		return rv
 		
 	def outobject(self, width, height, arglist):
