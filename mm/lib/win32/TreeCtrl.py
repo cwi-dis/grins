@@ -93,11 +93,30 @@ class TreeCtrl(window.Wnd):
 	# simulate dialog tab
 	def OnKeyDown(self, params):
 		key = params[2]
+		
 		if key == win32con.VK_TAB: 
 			self.parent.SetFocus() 
 		elif key == win32con.VK_DELETE:
 			if hasattr(self.parent, 'OnDelete'):
 				self.parent.OnDelete()
+		elif (win32api.GetKeyState(win32con.VK_SHIFT) & 0x8000) and key == win32con.VK_DOWN:
+			if len(self._selections) <= 0:
+				return
+			lastSel = self._selections[-1]
+			try:
+				item = self.GetNextItem(lastSel, commctrl.TVGN_NEXTVISIBLE)
+			except:
+				return
+			self._ShiftMultiSelect(item)
+		elif (win32api.GetKeyState(win32con.VK_SHIFT) & 0x8000) and key == win32con.VK_UP:
+			if len(self._selections) <= 0:
+				return
+			lastSel = self._selections[-1]
+			try:
+				item = self.GetNextItem(lastSel, commctrl.TVGN_PREVIOUSVISIBLE)
+			except:
+				return
+			self._ShiftMultiSelect(item)
 		else:
 			self._selEventSource = EVENT_SRC_KeyDown
 			return 1
@@ -139,7 +158,7 @@ class TreeCtrl(window.Wnd):
 			if debug: self.scheduleDump()
 			return 1
 
-		if not (flags & win32con.MK_CONTROL):
+		if not (flags & win32con.MK_CONTROL) and not (flags & win32con.MK_SHIFT):
 			# remove multi-select mode
 #			nsel = len(self._selections)
 			self.__clearMultiSelect(hititem)
@@ -151,7 +170,96 @@ class TreeCtrl(window.Wnd):
 
 		# if the focus is not set, set it. 
 		self.SetFocus()
+
+		if (flags & win32con.MK_SHIFT):
+			self._ShiftMultiSelect(hititem)
+		elif (flags & win32con.MK_CONTROL):
+			self._CtrlMultiSelect(hititem)
+			
+		# absorb event		
+		return 0
+
+	# do a shift multi select
+	def _ShiftMultiSelect(self, hititem):
+		# don't update the listener when selecting
+		self.__selecting = 1
 		
+		hitItemIsBefore = 0
+		# find out the first selected item
+		try:
+			firstSelectedItem = self.GetNextItem(0, commctrl.TVGN_ROOT)
+		except:
+			firstSelectedItem = None
+		while firstSelectedItem and not firstSelectedItem in self._selections:
+			try:
+				if firstSelectedItem == hititem:
+					hitItemIsBefore = 1
+					break
+				firstSelectedItem = self.GetNextVisibleItem(firstSelectedItem)
+			except:
+				break
+			
+		# find out the last selected item
+		if firstSelectedItem and not hitItemIsBefore:
+			lastSelectedItem = hititem
+		elif firstSelectedItem and hitItemIsBefore:
+			if not hititem in self._selections:
+				count = 0
+			else:
+				count = 1
+			lastSelectedItem = hititem
+			while 1:
+				if lastSelectedItem in self._selections:
+					count = count + 1
+				if count >= len(self._selections):
+					break
+				try:
+					lastSelectedItem = self.GetNextVisibleItem(lastSelectedItem)
+				except:
+					# fail. Shouldn't happen
+					break
+			# selecting
+		if firstSelectedItem and lastSelectedItem:				
+			self.SelectItem(hititem)
+			self.SetItemState(hititem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)					
+			# select the rest until the last item selected
+			curItem = firstSelectedItem
+			while curItem != None:
+				if curItem != hititem:
+					self.SetItemState(curItem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)					
+					if not curItem in self._selections:
+						self.appendSelection(curItem)
+				if curItem == lastSelectedItem:
+					break
+				curItem = self.GetNextVisibleItem(curItem)
+				# select the last item normally hit item the same way base would do
+
+			if hititem in self._selections:
+				self.removeSelection(hititem)
+			self.appendSelection(hititem)
+				
+		# un-selecting
+		if lastSelectedItem and not hitItemIsBefore:
+			try:
+				curItem = self.GetNextVisibleItem(lastSelectedItem)
+				while curItem != None:
+					if curItem in self._selections:
+						# unselect							
+						self.SetItemState(curItem, 0, commctrl.TVIS_SELECTED)
+						self.removeSelection(curItem)
+					curItem = self.GetNextVisibleItem(curItem)
+			except:
+				# end
+				pass
+					
+		# don't update the listener when selecting
+		self.__selecting = 0
+		# update the listener
+		self.OnMultiSelChanged()
+
+	# do a ctrl multi select
+	def _CtrlMultiSelect(self, hititem):
+		self.__selecting = 1
 		# selected item on entry
 		try: 
 			selitem = self.GetSelectedItem()
@@ -160,38 +268,27 @@ class TreeCtrl(window.Wnd):
 		except: 
 			selitem = None
 		nsel = len(self._selections)
-
-		# select/deselect normally hit item the same way base would do
+			# select/deselect normally hit item the same way base would do
 		hitstate = self.GetItemState(hititem, commctrl.TVIS_SELECTED)
 		if hitstate & commctrl.TVIS_SELECTED:
 			self.SetItemState(hititem, 0, commctrl.TVIS_SELECTED)
 			self.removeSelection(hititem)
 			# update the listener
-			self.OnMultiSelUpdated(hititem, 0)
+			updateFl = 0
 		else:
 			self.SelectItem(hititem)
 			self.SetItemState(hititem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
 			self.appendSelection(hititem)
 			# update the listener
-			self.OnMultiSelUpdated(hititem, 1)
-		
+			updateFl = 1
+	
 		# restore selection of previously selected item once not the hit item
 		if nsel > 0:
 			if selitem and selitem!=hititem and (selstate & commctrl.TVIS_SELECTED):
 				self.SetItemState(selitem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
-
-#		# keep always at least one selection
-#		if not self._selections:
-#			self.SetItemState(hititem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
-#			self.appendSelection(hititem)
+			self.__selecting = 0
+		self.OnMultiSelUpdated(hititem, updateFl)
 		
-		# motify listeners
-#		if nsel != len(self._selections):
-#			self.OnMultiSelChanged()
-
-		# absorb event		
-		return 0
-
 	def OnLButtonUp(self, params):
 		return 1
 
@@ -388,6 +485,8 @@ class TreeCtrl(window.Wnd):
 		return 1
 		
 	def OnSelChanged(self, std, extra):
+		if self.__selecting:
+			return 0
 		nsel = len(self._selections)
 		# Important note: these line allow to detect, if there is an auto select (by the system) due to an initial focus
 		# in this case, we reset the selection
@@ -437,6 +536,8 @@ class TreeCtrl(window.Wnd):
 	#
 
 	def SelectItemList(self, list):
+		if self.__selecting:
+			return
 		# don't update the listener when selecting
 		self.__selecting = 1
 
@@ -459,12 +560,13 @@ class TreeCtrl(window.Wnd):
 			# for the last item, select normally item the same way base would do
 			self.SelectItem(lastItem)
 			self.SetItemState(lastItem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
-			self.appendSelection(lastItem)
 			
 			# for all items except the last, select/deselect with SetItemState
 			for item in firstItemList:
 				self.SetItemState(item, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
 				self.appendSelection(item)
+
+			self.appendSelection(lastItem)
 			
 		self.__selecting = 0
 				
@@ -495,21 +597,27 @@ class TreeCtrl(window.Wnd):
 	def OnMultiSelChanged(self):
 		# don't update the listener when selecting
 		# avoid some recursive problems
-		if not self.__selecting and not self.__deleting:
-			for listener in self._multiSelListeners:
-				listener.OnMultiSelChanged()
-			if debug:
-				self.scheduleDump()
+		if self.__selecting or self.__deleting:
+			return
+		self.__selecting = 1
+		for listener in self._multiSelListeners:
+			listener.OnMultiSelChanged()
+		if debug:
+			self.scheduleDump()
+		self.__selecting = 0
 
 	# update the listener				
 	def OnMultiSelUpdated(self, item, state):
 		# don't update the listener when selecting
 		# avoid some recursive problems
-		if not self.__selecting:
-			for listener in self._multiSelListeners:
-				listener.OnMultiSelUpdated([item], state)
-			if debug:
-				self.scheduleDump()
+		if self.__selecting:
+			return
+		self.__selecting = 1
+		for listener in self._multiSelListeners:
+			listener.OnMultiSelUpdated([item], state)
+		if debug:
+			self.scheduleDump()
+		self.__selecting = 0
 
 	# add an expand listener 
 	def addExpandListener(self, listener):
