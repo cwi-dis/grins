@@ -530,7 +530,9 @@ class _MenubarSupport(_ToolTip):
 			if type(label) is StringType:
 				button.labelString = label
 				continue
-			attrs = {'labelType': Xmd.PIXMAP}
+			attrs = {'labelType': Xmd.PIXMAP,
+				 'marginHeight': 0,
+				 'marginWidth': 0}
 			pixmaptypes = (
 				'label',
 				'labelInsensitive',
@@ -745,31 +747,54 @@ class _Window(_MenubarSupport):
 			self._menubar = mb
 		self._toolbar = None
 		if toolbar is not None:
-			tbattrs = {'leftAttachment': Xmd.ATTACH_FORM,
-				   'marginWidth': 0,
+			# create a XmForm widget with 2 children:
+			# an XmRowColumn widget for the toolbar and an
+			# XmFrame widget to fill up the space.
+			# The toolbar can be horizontal or vertical
+			# depending on toolbarvertical.
+			fattrs = {'leftAttachment': Xmd.ATTACH_FORM}
+			tbattrs = {'marginWidth': 0,
 				   'marginHeight': 0,
 				   'spacing': 0,
+				   'leftAttachment': Xmd.ATTACH_FORM,
+				   'topAttachment': Xmd.ATTACH_FORM,
+				   'navigationType': Xmd.NONE,
 				   }
 			if toolbarvertical:
 				tbattrs['orientation'] = Xmd.VERTICAL
-				tbattrs['bottomAttachment'] = Xmd.ATTACH_FORM
+				tbattrs['rightAttachment'] = Xmd.ATTACH_FORM
+				fattrs['bottomAttachment'] = Xmd.ATTACH_FORM
 			else:
 				tbattrs['orientation'] = Xmd.HORIZONTAL
-				tbattrs['rightAttachment'] = Xmd.ATTACH_FORM
+				tbattrs['bottomAttachment'] = Xmd.ATTACH_FORM
+				fattrs['rightAttachment'] = Xmd.ATTACH_FORM
 			if self._menubar is not None:
-				tbattrs['topAttachment'] = Xmd.ATTACH_WIDGET
-				tbattrs['topWidget'] = self._menubar
+				fattrs['topAttachment'] = Xmd.ATTACH_WIDGET
+				fattrs['topWidget'] = self._menubar
 			else:
-				tbattrs['topAttachment'] = Xmd.ATTACH_FORM
+				fattrs['topAttachment'] = Xmd.ATTACH_FORM
 				attrs['topAttachment'] = Xmd.ATTACH_WIDGET
-			tb = form.CreateManagedWidget('toolbar', Xm.RowColumn,
-						      tbattrs)
-			self._toolbar = tb
+			fr = form.CreateManagedWidget('toolform', Xm.Form,
+						      fattrs)
+			tb = fr.CreateManagedWidget('toolbar', Xm.RowColumn,
+						    tbattrs)
+			frattrs = {'rightAttachment': Xmd.ATTACH_FORM,
+				   'bottomAttachment': Xmd.ATTACH_FORM,
+				   'shadowType': Xmd.SHADOW_OUT}
 			if toolbarvertical:
+				frattrs['leftAttachment'] = Xmd.ATTACH_FORM
+				frattrs['topAttachment'] = Xmd.ATTACH_WIDGET
+				frattrs['topWidget'] = tb
 				attrs['leftAttachment'] = Xmd.ATTACH_WIDGET
-				attrs['leftWidget'] = tb
+				attrs['leftWidget'] = fr
 			else:
-				attrs['topWidget'] = tb
+				frattrs['leftAttachment'] = Xmd.ATTACH_WIDGET
+				frattrs['leftWidget'] = tb
+				frattrs['topAttachment'] = Xmd.ATTACH_FORM
+				attrs['topWidget'] = fr
+			void = fr.CreateManagedWidget('toolframe', Xm.Frame,
+						      frattrs)
+			self._toolbar = tb
 			self._create_toolbar(tb, toolbar, toolbarvertical,
 					     self._visual, self._colormap)
 		if canvassize is not None and \
