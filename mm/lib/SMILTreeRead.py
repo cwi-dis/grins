@@ -956,10 +956,10 @@ class SMILParser(xmllib.XMLParser):
 		if not self.__container:
 			return
 		self.__container.__endsync = attributes.get('endsync')
-		if self.__container.__endsync is not None and \
-		   self.__container.attrdict.has_key('duration'):
-			self.warning('ignoring dur attribute')
-			del self.__container.attrdict['duration']
+## 		if self.__container.__endsync is not None and \
+## 		   self.__container.attrdict.has_key('duration'):
+## 			self.warning('ignoring dur attribute')
+## 			del self.__container.attrdict['duration']
 
 	def end_par(self):
 		node = self.__container
