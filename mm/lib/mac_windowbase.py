@@ -121,7 +121,8 @@ class _Event:
 				sec, cb, tid = self._timers[0]
 				sec = sec - (t - self._time)
 				self._time = t
-				if sec <= 0:
+				# if sec <= 0:
+				if sec <= 0.002:
 					del self._timers[0]
 					func, args = cb
 					apply(func, args)
@@ -788,12 +789,10 @@ class _CommonWindow:
 					
 	def _do_redraw(self):
 		"""Do actual redraw"""
-##		Qd.EraseRect(self.qdrect())
 		if self._active_displist:
 			self._active_displist._render()
 		else:
 			Qd.EraseRect(self.qdrect())
-##			print 'Erased', self.qdrect(),'to', self._wid.GetWindowPort().rgbBkColor
 			
 	def _macsetwin(self):
 		"""Start drawing (by upper layer) in this window"""
@@ -997,19 +996,16 @@ class _DisplayList:
 		return self._window is None
 
 	def render(self):
-		self._rendered = 1
-		# XXXX buttons?
-		self._render()
-		# XXXX render transparent sub/sibling windows?
-		
-	def render_now(self):
 		#
 		# On the mac, we can only render after a full setup.
 		# Hence, we schedule a redraw only
 		#
+		self._rendered = 1
+		# XXXX buttons?
 		self._window._active_displist = self
 		Qd.SetPort(self._window._wid)
 		Win.InvalRect(self._window.qdrect())
+		# XXXX render transparent sub/sibling windows?
 		
 	def _render(self):
 		self._window._active_displist = self
