@@ -241,12 +241,13 @@ class AboutDlg(ResDialog):
 
 # Implementation of the open loaction dialog
 class OpenLocationDlg(ResDialog):
-	def __init__(self,callbacks=None,parent=None, default=''):
+	def __init__(self,callbacks=None,parent=None, default='', recent_files = []):
 		ResDialog.__init__(self,grinsRC.IDD_DIALOG_OPENLOCATION,parent)
 		self._callbacks=callbacks
 		self._default = default
+		self._recent_files = recent_files
 
-		self._text= Edit(self,grinsRC.IDC_EDIT_LOCATION)
+		self._text= ComboBox(self,grinsRC.IDC_EDIT_LOCATION)
 		self._bcancel = Button(self,win32con.IDCANCEL)
 		self._bopen = Button(self,win32con.IDOK)
 		self._bbrowse= Button(self,grinsRC.IDC_BUTTON_BROWSE)
@@ -256,8 +257,20 @@ class OpenLocationDlg(ResDialog):
 		self._bopen.enable(0)
 		self._text.hookcommand(self,self.OnEditChange)
 		self._bbrowse.hookcommand(self,self.OnBrowse)
-		self._text.settext(self._default)
+		self.set_recentfiles()
 		return ResDialog.OnInitDialog(self)
+
+	def set_recentfiles(self):
+		self._text.resetcontent()
+		self._text.settext(self._default)
+		for i in self._recent_files:
+			shortname, more = i
+			longname = more[0]
+			self._text.addstring(longname)
+		if self._default and len(self._default) > 0:
+			self._text.setedittext(self._default)
+		else:
+			self._text.setcursel(0)
 
 	def OnOK(self):
 		self.onevent('Open')
@@ -274,10 +287,16 @@ class OpenLocationDlg(ResDialog):
 		self.onevent('Browse')
 
 	def OnEditChange(self,id,code):
-		if code==win32con.EN_CHANGE and self._text.hasid(id):
-			l=self._text.gettextlength()
-			self._bopen.enable(l)
+		if self._text.hasid(id):
+			if code == win32con.CBN_EDITCHANGE:
+				l=self._text.getedittextlength()
+				self._bopen.enable(l)
+			elif code == win32con.CBN_SELCHANGE:
+				self._bopen.enable(1)
 
+	def gettext(self):
+		# Returns whatever is in the combo box.
+		return self._text.getedittext()
 
 ##############################
 

@@ -56,6 +56,7 @@ class Main(MainDialog):
 		self.tmpfiles = files
 		self.tmplicensedialog = license.WaitLicense(self.do_init,
 					   features.license_features_needed)
+		self.recent_file_list = [] # This is the list of recently opened files.
 
 	def do_init(self, license):
 		opts, files = self.tmpopts, self.tmpfiles
@@ -263,24 +264,35 @@ class Main(MainDialog):
 		self.openURL_callback(url)
 		
 	def _update_recent(self, url):
+		if url:
+			self.add_recent_file(url)
+		doclist = self.get_recent_files()
+		self.set_recent_list(doclist)
+
+	def get_recent_files(self):
 		if not hasattr(self, 'set_recent_list'):
 			return
 		import settings
 		import posixpath
 		recent = settings.get('recent_documents')
-		if url:
-			if url in recent:
-				recent.remove(url)
-			recent.insert(0, url)
-			if len(recent) > NUM_RECENT_FILES:
-				recent = recent[:NUM_RECENT_FILES]
-			settings.set('recent_documents', recent)
-			settings.save()
 		doclist = []
 		for url in recent:
 			base = posixpath.basename(url)
 			doclist.append( (base, (url,)))
-		self.set_recent_list(doclist)
+		return doclist
+
+	def add_recent_file(self, url):
+		# Add url to the top of the recent file list.
+		assert url
+		import settings
+		recent = settings.get('recent_documents')
+		if url in recent:
+			recent.remove(url)
+		recent.insert(0, url)
+		if len(recent) > NUM_RECENT_FILES:
+			recent = recent[:NUM_RECENT_FILES]
+		settings.set('recent_documents', recent)
+		settings.save()
 
 	def close_callback(self, exitcallback=None):
 		import windowinterface
