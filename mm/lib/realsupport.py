@@ -284,7 +284,7 @@ class RPParser(xmllib.XMLParser):
 		self.duration = duration
 		self.width = width
 		self.height = height
-		self.bitreate = bitrate
+		self.bitrate = bitrate
 
 	def syntax_error(self, msg):
 		print 'Warning: syntax error in file %s, line %d: %s' % (self.__file, self.lineno, msg)
@@ -336,7 +336,7 @@ def rmff(file, data):
 		print '%s: not a RealMedia file' % file
 		return
 	object_version = struct.unpack('>h', chunk.read(2))[0]
-	if object_version != 0:
+	if object_version != 0 and object_version != 1:
 		print '%s: unknown .RMF version' % file
 	else:
 		file_version, num_headers = struct.unpack('>ll', chunk.read(8))
@@ -346,7 +346,6 @@ def rmff(file, data):
 		chunk.close()
 		chunk = Chunk(fp)
 		name = chunk.getname()
-##		print 'CHUNK', name
 		if name == 'PROP':
 			object_version = struct.unpack('>h', chunk.read(2))[0]
 			if object_version != 0:
@@ -374,11 +373,20 @@ def rmff(file, data):
 				print '%s: unknown MDPR version' % file
 			else:
 				stream_number, max_bit_rate, avg_bit_rate, max_packet_size, avg_packet_size, start_time, preroll, duration, stream_name_size = struct.unpack('>hlllllllb', chunk.read(31))
-				stream_name = chunk.read(stream_name_size)
+				if stream_name_size > 0:
+					stream_name = chunk.read(stream_name_size)
+				else:
+					stream_name = ''
 				mime_type_size = struct.unpack('>b', chunk.read(1))[0]
-				mime_type = chunk.read(mime_type_size)
+				if mime_type_size > 0:
+					mime_type = chunk.read(mime_type_size)
+				else:
+					mime_type = ''
 				type_specific_len = struct.unpack('>l', chunk.read(4))[0]
-				type_specific_data = chunk.read(type_specific_len)
+				if type_specific_len > 0:
+					type_specific_data = chunk.read(type_specific_len)
+				else:
+					type_specific_data = ''
 ##				print 'stream_number', `stream_number`
 ##				print 'max_bit_rate', `max_bit_rate`
 ##				print 'avg_bit_rate', `avg_bit_rate`
@@ -405,11 +413,20 @@ def rmff(file, data):
 				title_len = struct.unpack('>h', chunk.read(2))[0]
 				title = chunk.read(title_len)
 				author_len = struct.unpack('>h', chunk.read(2))[0]
-				author = chunk.read(author_len)
+				if author_len > 0:
+					author = chunk.read(author_len)
+				else:
+					author = ''
 				copyright_len = struct.unpack('>h', chunk.read(2))[0]
-				copyright = chunk.read(copyright_len)
+				if copyright_len > 0:
+					copyright = chunk.read(copyright_len)
+				else:
+					copyright = ''
 				comment_len = struct.unpack('>h', chunk.read(2))[0]
-				comment = chunk.read(comment_len)
+				if comment_len > 0:
+					comment = chunk.read(comment_len)
+				else:
+					comment = ''
 ##				print 'title_len', `title_len`
 ##				print 'title', `title`
 ##				print 'author_len', `author_len`
@@ -444,7 +461,7 @@ def getinfo(file):
 	if cache.has_key(file):
 		return cache[file]
 	try:
-		data = open(MMurl.urlretrieve(file)[0]).read()
+		data = open(MMurl.urlretrieve(file)[0], 'rb').read()
 	except:
 		cache[file] = info = {}
 		return info
