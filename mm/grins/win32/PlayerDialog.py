@@ -65,20 +65,20 @@ class PlayerDialog:
 			for viewport1 in viewportList:
 				for viewport2 in viewportList:
 					if viewport1 != viewport2:
-						w1, h1 = viewport1.get('winsize', (100, 100))
-						w2, h2 = viewport2.get('winsize', (100, 100))
+						w1, h1 = viewport1.getPxGeom()
+						w2, h2 = viewport2.getPxGeom()
 						if w1+w2 > minWidth:
 							minWidth = w1+w2
 		elif len(viewportList) == 1:	
 			viewport = viewportList[0]
-			w, h = viewport.get('winsize', (100, 100))
+			w, h = viewport.getPxGeom()
 			if w>minWidth:
 				minWidth=w
 				
 		# h size				
 		currentDefaultY = 0
 		for viewport in viewportList:
-			w, h = viewport.get('winsize', (100, 100))
+			w, h = viewport.getPxGeom()
 			l, t = viewport.get('winpos', (100, currentDefaultY))
 			currentDefaultY = currentDefaultY + 10
 			h=h+t
