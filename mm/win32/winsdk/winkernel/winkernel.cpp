@@ -31,25 +31,71 @@ seterror(const char *funcname, DWORD err)
 	LocalFree(pszmsg);
 }
 
+static PyObject* GetVersionEx(PyObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	
+	OSVERSIONINFO vi;
+	memset(&vi, 0, sizeof(OSVERSIONINFO));
+	vi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO); 
+	BOOL res = GetVersionEx(&vi);
+	if(!res){
+		seterror("GetVersionEx", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue("iiiis", vi.dwMajorVersion, vi.dwMinorVersion, vi.dwBuildNumber, 
+		vi.dwPlatformId, vi.szCSDVersion);
+}
 
-static char Sleep__doc__[] =
-"suspends the execution of the current thread for the specified milliseconds interval"
-;
-static PyObject*
-Sleep(PyObject *self, PyObject *args)
+static PyObject* Sleep(PyObject *self, PyObject *args)
 {
 	DWORD dwMilliseconds;
 	if (!PyArg_ParseTuple(args, "i", &dwMilliseconds))
 		return NULL;
+	Py_BEGIN_ALLOW_THREADS
 	Sleep(dwMilliseconds);
+	Py_END_ALLOW_THREADS
 	Py_INCREF(Py_None);
 	return Py_None;
 }
 
+static PyObject* GetTickCount(PyObject *self, PyObject *args)
+{
+	if(!PyArg_ParseTuple(args, ""))
+		return NULL;
+	DWORD ticks;
+	Py_BEGIN_ALLOW_THREADS
+	ticks = GetTickCount();
+	Py_END_ALLOW_THREADS
+	return Py_BuildValue("l",ticks);
+}
+
+static PyObject* LoadLibrary(PyObject *self, PyObject *args)
+{
+	char *filename;
+	int flags = 0;
+	if (!PyArg_ParseTuple(args, "s|i", &filename, &flags))
+		return NULL;
+	HMODULE hModule = GetModuleHandle(filename);
+	if(hModule == NULL) 
+		{
+		hModule = LoadLibraryEx(filename, NULL, flags);
+		if(hModule == NULL) 
+			{
+			seterror("LoadLibrary", GetLastError());
+			return NULL;
+			}
+		}
+	return Py_BuildValue("i", hModule);
+}
 	
 static struct PyMethodDef winkernel_methods[] = {
-	{"Sleep", (PyCFunction)Sleep, METH_VARARGS, Sleep__doc__},
-	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+	{"GetVersionEx", (PyCFunction)GetVersionEx, METH_VARARGS, ""},
+	{"Sleep", (PyCFunction)Sleep, METH_VARARGS, ""},
+	{"GetTickCount", (PyCFunction)GetTickCount, METH_VARARGS, ""},
+	{"LoadLibrary", (PyCFunction)LoadLibrary, METH_VARARGS, ""},
+	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 };
 
 /////////////////////////////////////
@@ -74,8 +120,6 @@ void initwinkernel()
 	ErrorObject = PyString_FromString("winkernel.error");
 	PyDict_SetItemString(d, "error", ErrorObject);
 
-	// add symbolic constants
-	//FATAL_ERROR_IF(SetItemEnum(d,_sdk)<0)
 
 	// Check for errors
 	if (PyErr_Occurred())
