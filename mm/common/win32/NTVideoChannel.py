@@ -95,7 +95,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			node.__type = 'wm'
 			if string.find(mtype, 'x-ms-asf')>=0:
 				node.__subtype = 'asf'
-				self.__windowless_wm_rendering = 0
+				if not self._exporter:
+					self.__windowless_wm_rendering = 0
 
 		if node.__type == 'real':
 			if self.__rc is None:
@@ -110,7 +111,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 					self.__ready = 1
 		else:
 			if self.__mc is None:
-				if node.__subtype == 'asf':
+				if not self.__windowless_wm_rendering:
 					self.__mc = MediaChannel.MediaChannel(self)
 				else:	
 					self.__mc = MediaChannel.VideoStream(self)
