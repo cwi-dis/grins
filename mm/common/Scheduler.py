@@ -1007,8 +1007,7 @@ def GenAllPrearms(ui, node, channels):
 #  Remove all arm_duration attributes (so they will be recalculated)
 
 def del_timing(node):
-	if node.GetAttrDict().has_key('arm_duration'):
-		node.DelAttr('arm_duration')
+	node.DelAttr('arm_duration')
 	children = node.GetChildren()
 	for child in children:
 		del_timing(child)
