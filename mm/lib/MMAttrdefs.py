@@ -37,7 +37,7 @@ __version__ = "$Id$"
 #		A function that gets a node's attribute value, from
 #		the node or from several defaults, guided by the
 #		attribute definition.  If this fails your tree is broken!
-
+#'
 
 from MMExc import *
 import MMParser
@@ -72,17 +72,16 @@ def readattrdefs(fp, filename):
 			labeltext = parser.getstringvalue(None)
 			displayername = parser.getnamevalue(None)
 			helptext = parser.getstringvalue(None)
-			if parser.peektoken() == ')':
-				inheritance = 'normal'
-			else:
-				inheritance = parser.getenumvalue(
-				    ['raw', 'normal', 'inherited', 'channel'])
+			inheritance = parser.getenumvalue(
+				['raw', 'normal', 'inherited', 'channel'])
+			flags = parser.getenumvalue(
+				['light', 'smil', 'cmif'])
 			parser.close()
 			if dict.has_key(attrname):
 			    if verbose:
 				print 'Warning: duplicate attr def', attrname
 			dict[attrname] = typedef, defaultvalue, labeltext, \
-				displayername, helptext, inheritance
+				displayername, helptext, inheritance, flags
 	except EOFError:
 		parser.reporterror(filename, 'Unexpected EOF', sys.stderr)
 		raise EOFError
@@ -146,7 +145,7 @@ def useattrdefs(mapping):
 
 # Functional interface to the attrdefs table.
 #
-_default = (('any', None), None, '', 'default', '',  'normal')
+_default = (('any', None), None, '', 'default', '',  'normal', 'light')
 def getdef(attrname):
 	return attrdefs.get(attrname, _default)
 #

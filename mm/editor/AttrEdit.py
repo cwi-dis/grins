@@ -225,9 +225,6 @@ class NodeWrapper(Wrapper):
 					defn = MMAttrdefs.getdef(name)
 					if defn[5] == 'channel':
 						namelist.append(name)
-			for name in cclass.node_attrs:
-				if name in namelist: continue
-				namelist.append(name)
 		# Merge in nonstandard attributes (except synctolist!)
 		extras = []
 		for name in self.node.GetAttrDict().keys():
@@ -435,9 +432,9 @@ class ChannelWrapper(Wrapper):
 	def getdef(self, name):
 		if name == '.cname':
 			# Channelname -- special case
-			return (('name', ''), 'none', \
-				'Channel name', 'default', \
-				'Channel name', 'raw')
+			return (('name', ''), 'none',
+				'Channel name', 'default',
+				'Channel name', 'raw', 'light')
 		return MMAttrdefs.getdef(name)
 
 	def valuerepr(self, name, value):
@@ -540,22 +537,29 @@ class AttrEditor(AttrEditorDialog):
 		self.__open_dialog()
 
 	def __open_dialog(self):
+		import settings
 		wrapper = self.wrapper
 		list = []
 		allnamelist = wrapper.attrnames()
 		namelist = []
+		lightweight = settings.get('lightweight')
+		if not lightweight:
+			cmif = settings.get('cmif')
+		else:
+			cmif = 0
 		for name in allnamelist:
-			displayername = wrapper.getdef(name)[3]
-			if mustshowdisplayer(displayername):
-				namelist.append(name)
+			flags = wrapper.getdef(name)[6]
+			if flags != 'light':
+				if lightweight or \
+				   (not cmif and flags == 'cmif'):
+					continue
+			namelist.append(name)
 		self.__namelist = namelist
 		for i in range(len(namelist)):
 			name = namelist[i]
 			typedef, defaultvalue, labeltext, displayername, \
-				 helptext, inheritance = \
+				 helptext, inheritance, flags = \
 				 wrapper.getdef(name)
-			if displayername[:4] == 'CMIF':
-				displayername = displayername[4:]
 			type = typedef[0]
 			if displayername == 'file':
 				C = FileAttrEditorField
