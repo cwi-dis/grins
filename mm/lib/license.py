@@ -127,12 +127,12 @@ class WaitLicense(LicenseDialog):
 		self.do_callback()
 		
 	def cb_buy(self):
-		import windowinterface
-		windowinterface.showmessage("Go buy it, then")
+		import Help
+		Help.givehelp('buy')
 		
 	def cb_eval(self):
-		import windowinterface
-		windowinterface.showmessage("Go get one, then")
+		import Help
+		Help.givehelp('eval')
 		
 	def cb_enterkey(self):
 		import windowinterface
