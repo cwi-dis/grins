@@ -190,7 +190,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		      ('header5Font', 7.8),
 		      ('header6Font', 6.5)]
 
-	def do_play(self, node):
+	def do_play(self, node, curtime):
 		import Xm
 		htmlw = self.htmlw
 		self.played_url = self.url = self.armed_url
@@ -245,8 +245,8 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.fixanchorlist(node)
 		self.play_node = node
 
-	def stopplay(self, node):
-		Channel.ChannelWindow.stopplay(self, node)
+	def stopplay(self, node, curtime):
+		Channel.ChannelWindow.stopplay(self, node, curtime)
 		if self.htmlw:
 			self.htmlw.UnmapWidget()
 			self.htmlw.SetText('', '', '')

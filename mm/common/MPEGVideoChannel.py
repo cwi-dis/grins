@@ -70,11 +70,11 @@ class VideoChannel(ChannelWindowThread):
 	# XXXX This problem has to be reassesed with the 5.2 cl. See also
 	# the note in mpegchannelmodule.c
 	#
-	def play(self, node):
+	def play(self, node, curtime):
 		self.need_armdone = 0
-		self.play_0(node)
+		self.play_0(node, curtime)
 		if not self._is_shown or self.syncplay:
-			self.play_1()
+			self.play_1(curtime)
 			return
 		if not self.nopop:
 			self.window.pop()
@@ -101,16 +101,16 @@ class VideoChannel(ChannelWindowThread):
 			self.threads.play()
 			thread_play_called = 1
 		if self._is_shown:
-			self.do_play(node)
+			self.do_play(node, curtime)
 		self.need_armdone = 1
 		if not thread_play_called:
-			self.playdone(0)
+			self.playdone(0, curtime)
 
-	def playdone(self, dummy):
+	def playdone(self, outside_induced, curtime):
 		if self.need_armdone:
 			self.armdone()
 			self.need_armdone = 0
-		ChannelWindowThread.playdone(self, dummy)
+		ChannelWindowThread.playdone(self, outside_induced, curtime)
 
 	def defanchor(self, node, anchor, cb):
 		import windowinterface

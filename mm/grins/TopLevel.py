@@ -83,17 +83,17 @@ class TopLevel(TopLevelDialog):
 		self.hide()
 		self.root.Destroy()
 
-	def timer_callback(self):
+	def timer_callback(self, curtime):
 		self.__intimer = 1
 		self.setwaiting()
 		self._last_timer_id = None
-		self.player.timer_callback()
+		self.player.timer_callback(curtime)
 		while self.__immediate:
 			self.__immediate = 0
-			self.player.timer_callback()
+			self.player.timer_callback(curtime)
 		self.__intimer = 0
 
-	def set_timer(self, delay):
+	def set_timer(self, delay, arg):
 		if self._last_timer_id is not None:
 			windowinterface.canceltimer(self._last_timer_id)
 			self._last_timer_id = None
@@ -103,7 +103,7 @@ class TopLevel(TopLevelDialog):
 				self.__immediate = 1
 			else:
 				self._last_timer_id = windowinterface.settimer(
-					delay, (self.timer_callback, ()))
+					delay, (self.timer_callback, (arg,)))
 
 	#
 	# View manipulation.

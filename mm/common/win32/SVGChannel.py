@@ -81,7 +81,7 @@ class SVGChannel(Channel.ChannelWindow):
 			self.window.setmediafit(fit)
 		return 1
 
-	def do_play(self, node):
+	def do_play(self, node, curtime):
 		if self.window and self.svgdds:
 			self.registerEvents(self.window, 1)
 			self.window.setredrawdds(self.svgdds, self.svgdstrect, self.svgsrcrect)
@@ -89,7 +89,7 @@ class SVGChannel(Channel.ChannelWindow):
 			if self.svgplayer:
 				self.svgplayer.play()
 
-	def stopplay(self, node):
+	def stopplay(self, node, curtime):
 		if self.window:
 			self.window.setredrawdds(None)
 			if self.svgplayer:
@@ -98,7 +98,7 @@ class SVGChannel(Channel.ChannelWindow):
 			self.svgdds = None
 			self.svgrenderer = None
 			self.registerEvents(self.window, 0)
-		Channel.ChannelWindow.stopplay(self, node)
+		Channel.ChannelWindow.stopplay(self, node, curtime)
 	
 	def setpaused(self, paused):
 		Channel.ChannelWindow.setpaused(self, paused)
@@ -208,9 +208,9 @@ class SVGOsChannel(Channel.ChannelWindow):
 			self.errormsg(node, 'No SVG support detected on this system')
 		return 1
 
-	def stopplay(self, node):
+	def stopplay(self, node, curtime):
 		if self.window and hasattr(self.window,'DestroySvgCtrl'):
 			self.window.DestroySvgCtrl()
-		Channel.ChannelWindow.stopplay(self, node)
+		Channel.ChannelWindow.stopplay(self, node, curtime)
 		
 

@@ -91,7 +91,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 					# add time of remaining loops
 					t = (looplimit - loopcount - 1) * d + t
 				self._qid = self._scheduler.enter(
-					t, 0, self.playdone, (0,))
+					t, 0, self.playdone, (0,t))
 		if self.__context:
 			self.__context.DestroyContext()
 			self.__context = None
@@ -169,13 +169,13 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.setArmBox(imbox)
 		return 1
 
-	def do_play(self, node):
+	def do_play(self, node, curtime):
 		window = self.window
 		self.played_movie = movie = self.armed_movie
 		self.armed_movie = None
 		start_time = node.get_start_time()
 		if movie is None:
-			self.playdone(0, start_time)
+			self.playdone(0, curtime)
 			return
 		self.played_fit = self.armed_fit
 		self.played_size = self.armed_size
@@ -191,7 +191,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				print 'skipping',start_time,t0,t0-start_time
 			late = t0 - start_time
 			if late > self.__mediadur:
-				self.playdone(0, start_time + self.__mediadur)
+				self.playdone(0, max(curtime, start_time + self.__mediadur))
 				return
 			movie.SetCurrentTime(long((self.__begin + late) * 1000L), 1000)
 		begin = movie.GetStartTime(1000) / 1000.0
@@ -208,9 +208,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				'Cannot play movie node %s on channel %s:\n%s'%
 					(name, self._name, msg),
 				mtype = 'warning')
-			self.playdone(0, start_time)
+			self.playdone(0, curtime)
 			return
-		self.event('beginEvent')
 		movie.Play()
 		self.__stopped = 0
 		r = Xlib.CreateRegion()
@@ -218,19 +217,19 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		r.SubtractRegion(window._region)
 		window._topwindow._do_expose(r)
 
-	def playstop(self):
+	def playstop(self, curtime):
 		if self.__qid:
 			self._scheduler.cancel(self.__qid)
 			self.__qid = None
 		if self.played_movie:
 			self.played_movie.Stop()
-		self.playdone(1)
+		self.playdone(1, curtime)
 
-	def stopplay(self, node):
+	def stopplay(self, node, curtime):
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
-		Channel.ChannelWindowAsync.stopplay(self, node)
+		Channel.ChannelWindowAsync.stopplay(self, node, curtime)
 		if self.played_movie:
 			self.played_movie.UnbindOpenGLWindow()
 			del _mvmap[self.played_movie]

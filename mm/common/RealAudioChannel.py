@@ -26,8 +26,7 @@ class RealAudioChannel(Channel.ChannelAsync):
 		self.__rc.prepare_player(node)
 		return 1
 
-	def do_play(self, node):
-		self.event('beginEvent')
+	def do_play(self, node, curtime):
 		if not self.__rc.playit(node):
 			import windowinterface, MMAttrdefs
 			name = MMAttrdefs.getattr(node, 'name')
@@ -36,16 +35,16 @@ class RealAudioChannel(Channel.ChannelAsync):
 			chtype = self.__class__.__name__[:-7] # minus "Channel"
 			windowinterface.showmessage('No playback support for %s on this system\n'
 						    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
-			self.playdone(0, node.get_start_time())
+			self.playdone(0, curtime)
 
 	# toggles between pause and run
 	def setpaused(self, paused):
 		Channel.ChannelAsync.setpaused(self, paused)
 		self.__rc.pauseit(paused)
 
-	def stopplay(self, node):
+	def stopplay(self, node, curtime):
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
 		self.__rc.stopit()
-		Channel.ChannelAsync.stopplay(self, node)
+		Channel.ChannelAsync.stopplay(self, node, curtime)

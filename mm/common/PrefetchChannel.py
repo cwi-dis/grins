@@ -31,13 +31,13 @@ class PrefetchChannel(Channel.ChannelAsync):
 	def do_hide(self):
 		Channel.ChannelAsync.do_hide(self)
 	
-	def do_play(self, node):
-		Channel.ChannelAsync.do_play(self, node)
+	def do_play(self, node, curtime):
+		Channel.ChannelAsync.do_play(self, node, curtime)
 
 		self.__initEngine(node)
 
 		if not self.__ready():
-			self.playdone(0)
+			self.playdone(0, curtime)
 			return
 		
 		self.__fetching = node
@@ -51,11 +51,11 @@ class PrefetchChannel(Channel.ChannelAsync):
 		Channel.ChannelAsync.setpaused(self, paused)
 		self.__pauseFetch(paused)
 
-	def stopplay(self, node):
+	def stopplay(self, node, curtime):
 		if self.__fetching:
 			self.__stopFetch()
 			self.__fetching = None
-		Channel.ChannelAsync.stopplay(self, node)
+		Channel.ChannelAsync.stopplay(self, node, curtime)
 
 	#
 	# Fetch engine
@@ -119,12 +119,12 @@ class PrefetchChannel(Channel.ChannelAsync):
 		if self.__urlopener and self._playstate == Channel.PLAYING:
 			if not self.__urlopener.do_retrieve(self.__url, 1024):
 				self.__urlopener.end_retrieve(url)
-				self.playdone(0)
+				self.playdone(0, self._scheduler.timefunc())
 
 	def __onFetchDur(self):
 		if not self.__fetching:
 			return
-		self.playdone(0)
+		self.playdone(0, self.__start+self.__duration)
 
 	def onIdle(self):
 		self.__fiber_id = None

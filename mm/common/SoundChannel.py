@@ -137,23 +137,23 @@ class SoundChannel(ChannelAsync):
 		if self._played_node == node:
 			node.marker(self._scheduler.timefunc(), marker)
 
-	def do_play(self, node):
+	def do_play(self, node, curtime):
 		self.__playing = node
 		self.__type = node.__type
 		start_time = node.get_start_time()
 		if not self.__ready:
 			# arming failed, so don't even try playing
-			self.playdone(0, start_time)
+			self.playdone(0, curtime)
 			return
 		if node.__type == 'real':
 			if not self.__rc or not self.__rc.playit(node, start_time = start_time):
-				self.playdone(0, start_time)
+				self.playdone(0, curtime)
 			return
 		if not self.arm_fp or player is None:
 ##			print 'SoundChannel: not playing'
 			self.play_fp = None
 			self.arm_fp = None
-			self.playdone(0, start_time)
+			self.playdone(0, curtime)
 			return
 
 		if debug: print 'SoundChannel: play', node
@@ -181,28 +181,27 @@ class SoundChannel(ChannelAsync):
 			late = t0 - start_time
 			mediadur = float(self.play_fp.getnframes()) / rate
 			if late > mediadur:
-				self.playdone(0, start_time + mediadur)
+				self.playdone(0, max(curtime, start_time + mediadur))
 				return
 			from audio.select import select
 			if __debug__: print 'skipping',start_time,t0,late
 			self.play_fp = select(self.play_fp, [(int((late)*rate+.5), None)])
-		self.event('beginEvent')
 		try:
-			player.play(self.play_fp, (self.my_playdone, (start_time + mediadur,)))
+			player.play(self.play_fp, (self.my_playdone, (max(start_time + mediadur, curtime),)))
 		except audio.Error, msg:
 			print 'error reading file %s: %s' % (self.getfileurl(node), msg)
-			self.playdone(0, node.get_start_time())
+			self.playdone(0, curtime)
 			return
 
-	def my_playdone(self, endtime):
+	def my_playdone(self, curtime):
 		if debug: print 'SoundChannel: playdone',`self`
 		if self.play_fp:
 			self.play_fp = None
 			if self.__qid is not None:
 				return
-			self.playdone(0, endtime)
+			self.playdone(0, curtime)
 
-	def playstop(self):
+	def playstop(self, curtime):
 		if debug: print 'SoundChannel: playstop'
 		if self.__playing:
 			if self.__type == 'real':
@@ -227,7 +226,7 @@ class SoundChannel(ChannelAsync):
 		# a playdone() call (as happens on the Mac) and it may not.
 		# We only call playdone if we see it hasn't happened yet.
 		if self._playstate == PLAYING:
-			self.playdone(1)
+			self.playdone(1, curtime)
 
 	def setpaused(self, paused):
 		if debug: print 'setpaused', paused
@@ -247,9 +246,8 @@ class SoundChannel(ChannelAsync):
 			self.play_fp = None
 			if self.__qid is not None:
 				return
-			self.__qid = self._scheduler.enter(
-				float(nframes) / rate, 0,
-				self.playdone, (0,))
+			t = node.get_start_time() + float(nframes) / rate
+			self.__qid = self._scheduler.enterabs(t, 0, self.playdone, (0, t))
 		if self.__rc:
 			self.__rc.stopit()
 			self.__rc.destroy()

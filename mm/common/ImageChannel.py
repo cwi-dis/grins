@@ -71,12 +71,12 @@ class ImageChannel(ChannelWindow):
 		self.arm(node)
 		if not hasattr(self, '_arm_imbox'):
 			self.syncarm = save_syncarm
-			self.stopcontext(self._anchor_context)
+			self.stopcontext(self._anchor_context, 0)
 			windowinterface.showmessage("Can't display image, so can't edit anchors", parent = self.window)
 			return
 		save_syncplay = self.syncplay
 		self.syncplay = 1
-		self.play(node)
+		self.play(node, 0)
 		self._playstate = PLAYED
 		self.syncarm = save_syncarm
 		self.syncplay = save_syncplay
@@ -112,7 +112,7 @@ class ImageChannel(ChannelWindow):
 				print 'Shape type doesn''t supported yet for edition'
 
 	def _box_cb(self, *box):
-		self.stopcontext(self._anchor_context)
+		self.stopcontext(self._anchor_context, 0)
 		# for now, keep the compatibility with old structure
 		if len(box) == 4:
 			x, y, w, h = box

@@ -135,7 +135,7 @@ class LayoutChannel(ChannelWindow):
 	def do_hide(self):
 		ChannelWindow.do_hide(self)
 				
-	def play(self, node):
+	def play(self, node, curtime):
 		print "can't play LayoutChannel"
 
 	# A channel pass active (when one more media play inside).

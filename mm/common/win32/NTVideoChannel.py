@@ -179,7 +179,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.prepare_armed_display(node)
 		return 1
 
-	def do_play(self, node):
+	def do_play(self, node, curtime):
 		self.__playing = node
 		self.__type = node.__type
 		self.__subtype = node.__subtype
@@ -187,7 +187,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 
 		if not self.__ready:
 			# arming failed, so don't even try playing
-			self.playdone(0, start_time)
+			self.playdone(0, curtime)
 			return
 		if node.__type == 'real':
 			bpp = self.window._topwindow.getRGBBitCount()
@@ -199,7 +199,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			if not self.__windowless_real_rendering:
 				self.window.CreateOSWindow(rect=self.getMediaWndRect())
 			if not self.__rc:
-				self.playdone(0, start_time)
+				self.playdone(0, curtime)
 				return
 			try:
 				if self.__windowless_real_rendering:
@@ -213,7 +213,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 					name = '<unnamed node>'
 ## Don't call this.  The ErrorOccurred callback is called which produces the error message.
 ##				windowinterface.showmessage('Error while starting to play node %s on channel %s:\n%s' % (name, self._name, msg), mtype = 'warning')
-				self.playdone(0, start_time)
+				self.playdone(0, curtime)
 				return
 			if not res:
 				import windowinterface, MMAttrdefs
@@ -223,16 +223,16 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				chtype = self.__class__.__name__[:-7] # minus "Channel"
 				windowinterface.showmessage('No playback support for %s on this system\n'
 							    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
-				self.playdone(0, start_time)
+				self.playdone(0, curtime)
 		else:
 			if not self.__mc:
-				self.playdone(0, start_time)
+				self.playdone(0, curtime)
 			else:
 				if not self.__windowless_wm_rendering:
 					self.window.CreateOSWindow(rect=self.getMediaWndRect())
 				if not self.__mc.playit(node, self.window, start_time):
 					windowinterface.showmessage('Failed to play media file', mtype = 'warning')
-					self.playdone(0, start_time)
+					self.playdone(0, curtime)
 
 	# toggles between pause and run
 	def setpaused(self, paused):
@@ -242,10 +242,10 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if self.__rc:
 			self.__rc.pauseit(paused)
 
-	def playstop(self):
+	def playstop(self, curtime):
 		# freeze video
 		self.__freezeplayer()
-		self.playdone(1)		
+		self.playdone(1, curtime)		
 				
 	def __stopplayer(self):
 		if self.__playing:
@@ -289,13 +289,13 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		x, y, w, h = self.window._rect
 		return (x, y), (w, h)
 		
-	def play(self, node):
+	def play(self, node, curtime):
 		self.need_armdone = 1
-		self.play_0(node)
+		self.play_0(node, curtime)
 		if self._is_shown and node.ShouldPlay() \
 		   and self.window and not self.syncplay:
 			self.check_popup()
-			self.schedule_transitions(node)
+			self.schedule_transitions(node, curtime)
 			if self.armed_display.is_closed():
 				# assume that we are going to get a
 				# resize event
@@ -306,28 +306,28 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				self.played_display.close()
 			self.played_display = self.armed_display
 			self.armed_display = None
-			self.do_play(node)
+			self.do_play(node, curtime)
 			if self.need_armdone and node.__type != 'real':
 				self.need_armdone = 0
 				self.armdone()
 		else:
 			self.need_armdone = 0 # play_1 calls armdone()
-			self.play_1()
+			self.play_1(curtime)
 
-	def playdone(self, outside_induced, end_time = None):
+	def playdone(self, outside_induced, curtime):
 		if self.need_armdone:
 			self.need_armdone = 0
 			self.armdone()
-		Channel.ChannelWindowAsync.playdone(self, outside_induced, end_time)
+		Channel.ChannelWindowAsync.playdone(self, outside_induced, curtime)
 		if not outside_induced:
 			self.__playing = None
 
-	def stopplay(self, node):
+	def stopplay(self, node, curtime):
 		if node and self._played_node is not node:
 ##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
 		self.__stopplayer()
-		Channel.ChannelWindowAsync.stopplay(self, node)
+		Channel.ChannelWindowAsync.stopplay(self, node, curtime)
 
 	# Define the anchor area for visible medias
 	def prepare_anchors(self, node, window, coordinates):
