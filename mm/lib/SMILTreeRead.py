@@ -103,7 +103,8 @@ _comma_sp = _opS + '(' + _S + '|,)' + _opS
 _fp = r'(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)'
 controlpt = re.compile('^'+_opS+_fp+_comma_sp+_fp+_comma_sp+_fp+_comma_sp+_fp+_opS+'$')
 fpre = re.compile('^' + _fp + '$')
-fppairre = re.compile('^'+_opS+_fp+_comma_sp+_fp+_opS+'$')
+fppairre = re.compile(_opS+r'\('+_opS+'-?'+_fp+'%?'+_comma_sp+'-?'+_fp+'%?'+_opS+r'\)'+_opS+'$')
+fppairre_bad = re.compile(_opS+'-?'+_fp+'%?'+_comma_sp+'-?'+_fp+'%?'+_opS+'$') # like fppairre but without ()
 smil_node_attrs = [
 	'region', 'clip-begin', 'clip-end', 'endsync', 
 	'type', 'clipBegin', 'clipEnd',
@@ -372,7 +373,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						self.syntax_error('bad wallclock value')
 						continue
 					if date is not None:
-						yr,mt,dy = map(lambda v: v and string.atoi(v), res.group('year','month','day'))
+						yr,mt,dy = map(lambda v: v and int(v), res.group('year','month','day'))
 					else:
 						yr = mt = dy = None
 					if time is None:
@@ -384,14 +385,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						if date is not None and date[-1] != 'T':
 							self.syntax_error('bad wallclock value')
 							continue
-						hr,mn = map(lambda v: v and string.atoi(v), res.group('hour','min'))
+						hr,mn = map(lambda v: v and int(v), res.group('hour','min'))
 						sc = res.group('sec')
 						if sc is not None:
-							sc = string.atof(sc)
+							sc = float(sc)
 						else:
 							sc = 0
 					tzsg = res.group('tzsign')
-					tzhr,tzmn = map(lambda v: v and string.atoi(v), res.group('tzhour','tzmin'))
+					tzhr,tzmn = map(lambda v: v and int(v), res.group('tzhour','tzmin'))
 					if res.group('Z') is not None:
 						tzhr = tzmn = 0
 						tzsg = '+'
@@ -572,8 +573,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.__context.attributes['project_boston'] = 1
 				if not boston or self.__context.attributes.get('project_boston'):
 					try:
-						bitrate = string.atoi(val)
-					except string.atoi_error:
+						bitrate = int(val)
+					except ValueError:
 						self.syntax_error('bad %s attribute value' % attr)
 					else:
 						if not attrdict.has_key('system_bitrate'):
@@ -593,7 +594,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						self.syntax_error('bad %s attribute value' % attr)
 					else:
 						if not attrdict.has_key('system_screen_size'):
-							attrdict['system_screen_size'] = tuple(map(string.atoi, res.group('x','y')))
+							attrdict['system_screen_size'] = tuple(map(int, res.group('x','y')))
 		for attr in ('system-screen-depth', 'systemScreenDepth'):
 			if attributes.has_key(attr):
 				val = attributes[attr]
@@ -605,8 +606,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.__context.attributes['project_boston'] = 1
 				if not boston or self.__context.attributes.get('project_boston'):
 					try:
-						depth = string.atoi(val)
-					except string.atoi_error:
+						depth = int(val)
+					except ValueError:
 						self.syntax_error('bad %s attribute value' % attr)
 					else:
 						if not attrdict.has_key('system_screen_depth'):
@@ -846,8 +847,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if attributes.has_key('borderWidth'):
 				val = attributes['borderWidth']
 				try:
-					width = string.atoi(val)
-				except string.atoi_error:
+					width = int(val)
+				except ValueError:
 					self.syntax_error('bad borderWidth attribute')
 				else:
 					attrdict['borderWidth'] = width
@@ -990,8 +991,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				else:
 					try:
 						# fractional values are actually allowed in repeatCount
-						repeat = string.atof(val)
-					except string.atof_error:
+						repeat = float(val)
+					except ValueError:
 						self.syntax_error('bad repeat attribute')
 						ignore = 1
 					else:
@@ -1044,13 +1045,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.__context.attributes['project_boston'] = 1
 				try:
 					if val[-1:]=='%':
-						p = string.atof(val[:-1])
+						p = float(val[:-1])
 					elif attr in ('mediaSize', 'bandwidth'):
-						p = string.atof(val)
+						p = float(val)
 					elif attr == 'mediaTime':
 						p = parseutil.parsecounter(val, syntax_error = self.syntax_error, context = self.__context) 
 					attrdict[attr] = val;	
-				except string.atof_error:
+				except ValueError:
 					self.syntax_error('bad %s attribute' % attr)
 				except parseutil.error, msg:
 					self.syntax_error(msg)
@@ -1061,10 +1062,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						continue
 				self.__context.attributes['project_boston'] = 1
 				try:
-					index = string.atoi(val)
+					index = int(val)
 					if index < 0:
-						raise string.atoi_error, 'negative value'
-				except string.atoi_error:
+						raise ValueError, 'negative value'
+				except ValueError:
 					self.syntax_error('bad %s attribute' % attr)
 				else:
 					attrdict[attr] = index
@@ -1161,12 +1162,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val != 'auto': # "auto" is equivalent to no attribute
 					try:
 						if val[-1:] == '%':
-							val = string.atof(val[:-1]) / 100.0
+							val = float(val[:-1]) / 100.0
 						else:
 							if val[-2:] == 'px':
 								val = val[:-2]
-							val = string.atoi(val)
-					except (string.atoi_error, string.atof_error):
+							val = int(val)
+					except ValueError:
 						self.syntax_error('invalid subregion attribute value')
 					else:
 						attrdict[attr] = val
@@ -1195,8 +1196,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						continue
 				self.__context.attributes['project_boston'] = 1
 				try:
-					val = string.atoi(val)
-				except string.atoi_error:
+					val = int(val)
+				except ValueError:
 					self.syntax_error('bad z-index attribute')
 				else:
 					if val < 0:
@@ -1227,8 +1228,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						continue
 				self.__context.attributes['project_boston'] = 1
 				try:
-					speed = string.atof(val)
-				except string.atof_error:
+					speed = float(val)
+				except ValueError:
 					self.syntax_error('bad speed attribute')
 				else:
 					attrdict['speed'] = speed
@@ -1265,8 +1266,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						continue
 				self.__context.attributes['project_boston'] = 1
 				try:
-					val = string.atof(val)
-				except string.atof_error:
+					val = float(val)
+				except ValueError:
 					self.syntax_error('bad %s attribute' % attr)
 				else:
 					if 0 <= val <= 1:
@@ -1303,11 +1304,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif attr == 'project_bandwidth_fraction':
 				try:
 					if val[-1]=='%':
-						p = string.atof(val[:-1])/100.0
+						p = float(val[:-1])/100.0
 					else:
-						p = string.atof(val)
+						p = float(val)
 					attrdict[attr] = p
-				except string.atof_error:
+				except ValueError:
 					self.syntax_error('bad %s attribute' % attr)
 			elif attr in ('project_default_duration', 'project_default_duration_image', 'project_default_duration_text'):
 				if val == 'indefinite':
@@ -1331,8 +1332,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('bad %s attribute' % attr)
 			elif attr == 'timezoom':
 				try:
-					node.min_pxl_per_sec = string.atof(val)
-				except string.atof_error:
+					node.min_pxl_per_sec = float(val)
+				except ValueError:
 					self.syntax_error('invalid timezoom attribute value')
 			elif attr == 'allowedmimetypes':
 				attrdict[attr] = map(string.strip, val.split(','))
@@ -1374,14 +1375,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif attr in ('backgroundOpacity', 'chromaKeyOpacity', 'mediaOpacity'):
 				try:
 					if val[-1] == '%':
-						val = string.atof(val[:-1]) / 100.0
+						val = float(val[:-1]) / 100.0
 						if val < 0 or val > 1:
 							self.syntax_error('%s value out of range' % attr)
 							val = None
 					else:
 						self.syntax_error('only percentage values allowed on %s attribute' % attr)
 						val = None
-				except (string.atoi_error, string.atof_error):
+				except ValueError:
 					self.syntax_error('invalid %s attribute value' % attr)
 					val = None
 				if val is not None:
@@ -1968,88 +1969,80 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			val = attributes['values']
 			vals = val.split(';')
 			if tagname == 'animateMotion':
+				nvals = []
 				for v in vals:
 					if v and not fppairre.match(v):
-						self.syntax_error("invalid motion values")
-						break
+						if fppairre_bad.match(v):
+							self.syntax_error("missing parentheses on animateMotion values")
+							v = '('+v+')'
+						else:
+							self.syntax_error("invalid motion values")
+							del attributes['values']
+							break
+					nvals.append(v)
+				else:
+					attributes['values'] = ';'.join(nvals)
 			elif tagname == 'animateColor':
 				for v in vals:
 					if v and not self.__convert_color(v):
 						self.syntax_error("invalid color values")
+						del attributes['values']
 						break
 			elif attrtype == 'coord':
 				for v in vals:
 					if v and not coordre.match(v):
 						self.syntax_error("invalid %s values" % attributeName)
+						del attributes['values']
 						break
 			elif attrtype == 'int':
 				for v in vals:
 					try: 
 						if v:
-							v = string.atoi(v)
-					except string.atoi_error: 
+							v = int(v)
+					except ValueError:
 						self.syntax_error('invalid %s values' % attributeName)
+						del attributes['values']
 					break
 		else:
+			# check attribute values for validity
+			for attr in ('from', 'to', 'by'):
+				val = attributes[attr]
+				if tagname == 'animateMotion' and not fppairre.match(val):
+					if fppairre_bad.match(val):
+						self.syntax_error("missing parentheses in from value")
+						# fix up value since we know how
+						attributes[attr] = '(' + val + ')'
+					else:
+						self.syntax_error("invalid from value")
+						del attributes[attr]
+				elif tagname == 'animateColor' and not self.__convert_color(val):
+					self.syntax_error("invalid from value")
+					del attributes[attr]
+				elif attrtype == 'coord' and not coordre.match(val):
+					self.syntax_error("invalid from value")
+					del attributes[attr]
+				elif attrtype == 'int':
+					try:
+						v = int(val)
+					except ValueError:
+						self.syntax_error('invalid from value')
+						del attributes[attr]
+
+			# remaining attributes are valid, now determine animation type
 			v1 = attributes.get('from')
 			v2 = attributes.get('to')
 			dv = attributes.get('by')
 			if v2 or dv:
 				if v1:
-					if tagname == 'animateMotion' and not fppairre.match(v1):
-						self.syntax_error("invalid from value")
-					elif tagname == 'animateColor' and not self.__convert_color(v1):
-						self.syntax_error("invalid from value")
-					elif attrtype == 'coord' and not coordre.match(v1):
-						self.syntax_error("invalid from value")
-					elif attrtype == 'int':
-						try: v = string.atoi(v1)
-						except string.atoi_error:self.syntax_error('invalid from value')
 					if v2:			
 						animtype = 'from-to'
-						if tagname == 'animateMotion' and not fppairre.match(v2):
-							self.syntax_error("invalid to value")
-						elif tagname == 'animateColor' and not self.__convert_color(v2):
-							self.syntax_error("invalid to value")
-						elif attrtype == 'coord' and not coordre.match(v2):
-							self.syntax_error("invalid to value")
-						elif attrtype == 'int':
-							try: v = string.atoi(v2)
-							except string.atoi_error:self.syntax_error('invalid to value')
 					else:
 						animtype = 'from-by'
-						if tagname == 'animateMotion' and not fppairre.match(dv):
-							self.syntax_error("invalid by value")
-						elif tagname == 'animateColor' and not self.__convert_color(dv):
-							self.syntax_error("invalid by value")
-						elif attrtype == 'coord' and not coordre.match(dv):
-							self.syntax_error("invalid by value")
-						elif attrtype == 'int':
-							try: v = string.atoi(dv)
-							except string.atoi_error:self.syntax_error('invalid by value')
 				else:
 					if v2:			
 						animtype = 'to'
-						if tagname == 'animateMotion' and not fppairre.match(v2):
-							self.syntax_error("invalid to value")
-						elif tagname == 'animateColor' and not self.__convert_color(v2):
-							self.syntax_error("invalid to value")
-						elif attrtype == 'coord' and not coordre.match(v2):
-							self.syntax_error("invalid to value")
-						elif attrtype == 'int':
-							try: v = string.atoi(v2)
-							except string.atoi_error:self.syntax_error('invalid to value')
 					else:
 						animtype = 'by'
-						if tagname == 'animateMotion' and not fppairre.match(dv):
-							self.syntax_error("invalid by value")
-						elif tagname == 'animateColor' and not self.__convert_color(dv):
-							self.syntax_error("invalid by value")
-						elif attrtype == 'coord' and not coordre.match(dv):
-							self.syntax_error("invalid by value")
-						elif attrtype == 'int':
-							try: v = string.atoi(dv)
-							except string.atoi_error:self.syntax_error('invalid by value')
 		if animtype is None:
 			self.syntax_error('invalid values in %s element' % tagname)
 
@@ -2077,9 +2070,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			for s in values:
 				if s:
 					if s[-1]=='%':
-						val = 0.01*string.atof(s[:-1])
+						val = 0.01*float(s[:-1])
 					else:
-						val = string.atof(s)
+						val = float(s)
 					minval = min(minval, val)
 					maxval = max(maxval, val)
 			self.__context.updateSoundLevelInfo('anim', 1)
@@ -3077,25 +3070,25 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val != 'auto': # "auto" is equivalent to no attribute
 					try:
 						if val[-1] == '%':
-							val = string.atof(val[:-1]) / 100.0
+							val = float(val[:-1]) / 100.0
 							if attr in ('width','height') and val < 0:
 								self.syntax_error('region with negative %s' % attr)
 								val = 0.0
 						else:
 							if val[-2:] == 'px':
 								val = val[:-2]
-							val = string.atoi(val)
+							val = int(val)
 							if attr in ('width','height') and val < 0:
 								self.syntax_error('region with negative %s' % attr)
 								val = 0
-					except (string.atoi_error, string.atof_error):
+					except ValueError:
 						self.syntax_error('invalid region attribute value')
 						val = 0
 					attrdict[attr] = val
 			elif attr == 'z-index':
 				try:
-					val = string.atoi(val)
-				except string.atoi_error:
+					val = int(val)
+				except ValueError:
 					self.syntax_error('invalid z-index value')
 				else:
 					if val < 0:
@@ -3146,14 +3139,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.__context.attributes['project_boston'] = 1
 				try:
 					if val[-1] == '%':
-						val = string.atof(val[:-1]) / 100.0
+						val = float(val[:-1]) / 100.0
 						if val < 0:
 							self.syntax_error('volume with negative %s' % attr)
 							val = 1.0
 					else:
 						self.syntax_error('only relative volume is allowed on soundLevel attribute')
 						val = 1.0
-				except (string.atoi_error, string.atof_error):
+				except ValueError:
 					self.syntax_error('invalid soundLevel attribute value')
 					val = 1.0
 				attrdict[attr] = val
@@ -3203,14 +3196,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif attr == 'opacity':
 				try:
 					if val[-1] == '%':
-						val = string.atof(val[:-1]) / 100.0
+						val = float(val[:-1]) / 100.0
 						if val < 0 or val > 1:
 							self.syntax_error('opacity value out of range')
 							val = None
 					else:
 						self.syntax_error('only percentage values allowed on %s attribute' % attr)
 						val = None
-				except (string.atoi_error, string.atof_error):
+				except ValueError:
 					self.syntax_error('invalid %s attribute value' % attr)
 					val = None
 				if val is not None:
@@ -3265,8 +3258,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		elif width[-2:] == 'px':
 			width = width[:-2]
 		try:
-			width = string.atoi(width)
-		except string.atoi_error:
+			width = int(width)
+		except ValueError:
 			self.syntax_error('root-layout width not a pixel value')
 			width = 0
 		else:
@@ -3279,8 +3272,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		elif height[-2:] == 'px':
 			height = height[:-2]
 		try:
-			height = string.atoi(height)
-		except string.atoi_error:
+			height = int(height)
+		except ValueError:
 			self.syntax_error('root-layout height not a pixel value')
 			height = 0
 		else:
@@ -3353,8 +3346,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if val[-2:] == 'px':
 					val = val[:-2]
 				try:
-					val = string.atoi(val)
-				except string.atoi_error:
+					val = int(val)
+				except ValueError:
 					self.syntax_error('viewport %s not a pixel value'%attr)
 					val = 0
 				else:
@@ -3442,13 +3435,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				else:
 					try:
 						if val[-1] == '%':
-							val = string.atof(val[:-1]) / 100.0
+							val = float(val[:-1]) / 100.0
 						else:
 							if val[-2:] == 'px':
 								val = val[:-2]
-							val = string.atoi(val)
+							val = int(val)
 						attrdict[attr] = val
-					except (string.atoi_error, string.atof_error):
+					except ValueError:
 						self.syntax_error('invalid region attribute value')
 			elif attr == 'regAlign':
 				if self.__alignvals.has_key(val):
@@ -4363,7 +4356,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		vl = []
 		for s in sl:
 			if s: 
-				vl.append(string.atoi(s))
+				vl.append(int(s))
 		return vl	
 
 	def __strToPosList(self, str):
@@ -4379,11 +4372,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def __getNumPair(self, str):
 		if not str: return None
 		str = string.strip(str)
+		if str[:1] == '(' and str[-1:] == ')':
+			str = str[1:-1].strip()
 		import tokenizer
-		sl = tokenizer.splitlist(str, delims=' ,')
+		sl = tokenizer.splitlist(str, delims=' ,\t\n\r')
 		if len(sl)==2:
 			x, y = sl
-			return string.atoi(x), string.atoi(y)
+			return int(x), int(y)
 		return None
 
 	def __strToColorList(self, str):
