@@ -106,26 +106,26 @@ def showeditor(node):
 		dummy = _Convert(node)
 		return
 	if node.GetType() <> 'ext':
-		print 'NodeEdit.showeditor: Only extern nodes can be edited'
-		windowinterface.beep()
+		windowinterface.showmessage(
+			'NodeEdit.showeditor: Only extern nodes can be edited',
+			mtype = 'error')
 		return
 	import MMAttrdefs
 	filename = MMAttrdefs.getattr(node,'file')
 	chtype = node.GetChannelType()
-	try:
-		import os
-		if chtype == 'html' and not channeleditors.has_key('html'):
-		    chtype = 'text'
-		if not channeleditors.has_key(chtype):
-			print 'NodeEdit.showeditor: no editors for chtype', chtype
-			raise _LocalError
-		editor = channeleditors[chtype]
-		if type(editor) is type(''):
-			_do_edit(editor, filename)
-		else:
-			cmd = _showmenu(editor, filename)
-	except _LocalError:
-		windowinterface.beep()
+	import os
+	if chtype == 'html' and not channeleditors.has_key('html'):
+	    chtype = 'text'
+	if not channeleditors.has_key(chtype):
+		windowinterface.showmessage(
+			'NodeEdit.showeditor: no editors for chtype ' + chtype,
+			mtype = 'warning')
+		return
+	editor = channeleditors[chtype]
+	if type(editor) is type(''):
+		_do_edit(editor, filename)
+	else:
+		cmd = _showmenu(editor, filename)
 
 # Simple test program. Only tests editor file parsing.
 def test():
