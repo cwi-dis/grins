@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 #
 # Mac CMIF Player wrapper
 #
