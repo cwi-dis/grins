@@ -444,9 +444,17 @@ class MyHTMLParser(htmllib.HTMLParser):
 		self.do_p(attrs)
 	
 	def handle_image(self, src, alt, ismap, align, width, height):
+		print 'IMAGE', self.url, src
 		url = urllib.basejoin(self.url, src)
+		print 'URL', url
 		fname = urllib.urlretrieve(url)[0]
-		image = img.reader(imgformat.macrgb16, fname)
+		print 'FILENAME', fname
+		try:
+			image = img.reader(imgformat.macrgb16, fname)
+		except img.error:
+			print 'FAILED'
+			self.formatter.add_flowing_data(alt)
+			return
 		data = image.read()
 		handle = _gifkeeper.new(fname, image.width, image.height, data)
 		self.formatter.my_add_image(handle)
