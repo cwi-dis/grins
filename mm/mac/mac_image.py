@@ -1,4 +1,7 @@
 """mac_image - Helper routines (hacks) for images"""
+
+__version__ = "$Id$"
+
 import imgformat
 import Qd
 import time
