@@ -215,12 +215,12 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 						# get a color that is different
 						# than the background
 						bgcolor = ch._attrdict.get('bgcolor')
-						pch = ch
-						while bgcolor is None:
-							pch = pch.pchan
-							bgcolor = pch._attrdict.get('bgcolor')
-						color = bgcolor[0],(bgcolor[1]+128)%256,bgcolor[2]
-						ch.highlight(color)
+						if bgcolor:
+							import colorsys
+							hsv = colorsys.rgb_to_hsv(bgcolor[0]/255.,bgcolor[1]/255.,bgcolor[2]/255.)
+							color = colorsys.hsv_to_rgb((hsv[0]+0.25)%1.0,hsv[1],(hsv[2]+0.5)%1.0)
+							color = int(color[0]*255+.5),int(color[2]*255+.5),int(color[2]*255+.5)
+							ch.highlight(color)
 					ch.sensitive((selectchannelcb, (chname,)))
 			elif not ch._attrdict.has_key('base_window'):
 				ch.show()
