@@ -646,6 +646,14 @@ SOURCE=.\editor\snap\AppDefaults.py
 SOURCE=.\editor\snap\features.py
 # End Source File
 # End Group
+# Begin Group "editor/smilboston"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\editor\smilboston\features.py
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\editor\AnchorEdit.py
