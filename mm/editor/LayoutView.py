@@ -157,7 +157,7 @@ class LayoutView(LayoutViewDialog):
 		if not self.editmgr.transaction():
 			return		# Not possible at this time
 		channeldict = self.context.channeldict
-		from ChannelMap import commonchanneltypes, otherchanneltypes
+		import ChannelMap
 		base = 'NEW'
 		i = 1
 		name = base + `i`
@@ -165,7 +165,7 @@ class LayoutView(LayoutViewDialog):
 			i = i+1
 			name = base + `i`
 		self.askchannelnameandtype(name,
-					commonchanneltypes + otherchanneltypes)
+					ChannelMap.getvalidchanneltypes())
 
 	def newchannel_callback(self, name = None, type = None):
 		editmgr = self.editmgr
