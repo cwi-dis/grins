@@ -28,6 +28,8 @@ class TopLevel(ViewDialog):
 		self.dirname, self.basename = os.path.split(self.filename)
 		if self.basename[-5:] == '.cmif':
 			self.basename = self.basename[:-5]
+		elif self.basename[-4:] == '.mml':
+			self.basename = self.basename[:-4]
 		self.read_it()
 		self.makeviews()
 		self.window = None
@@ -196,7 +198,11 @@ class TopLevel(ViewDialog):
 		self.save_callback()
 		self.setwaiting()
 		import MMPlayerTree
-		MMPlayerTree.WriteFile(self.root, self.filename)
+		if self.filename[-4:] == '.mml':
+			filename = self.filename[:-4] + '.cmif'
+		else:
+			filename = self.filename
+		MMPlayerTree.WriteFile(self.root, filename)
 		self.setready()
 
 	def saveas_okcallback(self, filename):
@@ -253,7 +259,11 @@ class TopLevel(ViewDialog):
 			pass
 		print 'saving to', filename, '...'
 		try:
-			MMTree.WriteFile(self.root, filename)
+			if filename[-4:] == '.mml':
+				import MMLTree
+				MMLTree.WriteFile(self.root, filename)
+			else:
+				MMTree.WriteFile(self.root, filename)
 		except IOError, msg:
 			windowinterface.showmessage('Save operation failed.\n'+
 						    'File: '+filename+'\n'+
@@ -311,7 +321,11 @@ class TopLevel(ViewDialog):
 		else:
 			print 'parsing', self.filename, '...'
 			t0 = time.time()
-			self.root = MMTree.ReadFile(self.filename)
+			if self.filename[-4:] == '.mml':
+				import MMLTreeRead
+				self.root = MMLTreeRead.ReadFile(self.filename)
+			else:
+				self.root = MMTree.ReadFile(self.filename)
 			t1 = time.time()
 			print 'done in', round(t1-t0, 3), 'sec.'
 		Timing.changedtimes(self.root)
