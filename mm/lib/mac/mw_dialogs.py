@@ -18,6 +18,15 @@ from mw_globals import FALSE, TRUE
 from mw_resources import *
 from mw_windows import DialogWindow
 
+def _string2dialog(text):
+	"""Prepare a Python string for use in a dialog"""
+	if '\n' in text:
+		text = string.split(text, '\n')
+		text = string.join(text, '\r')
+	if len(text) > 253:
+		text = text[:253] + '\311'
+	return text
+
 #
 # XXXX Maybe the previous class should be combined with this one, or does that
 # give too many stuff in one object (window, dialogwindow, per-dialog info, editor
@@ -96,9 +105,7 @@ class MACDialog:
 			
 	def _setlabel(self, item, text):
 		"""Set the text of a static text or edit text"""
-		if '\n' in text:
-			text = string.split(text, '\n')
-			text = string.join(text, '\r')
+		text = _string2dialog(text)
 		tp, h, rect = self._dialog.GetDialogItem(item)
 		Dlg.SetDialogItemText(h, text)
 
@@ -183,6 +190,7 @@ def _ModalDialog(title, dialogid, text, okcallback, cancelcallback=None):
 	if cancelcallback:
 		d.SetDialogCancelItem(ITEM_QUESTION_CANCEL)
 	tp, h, rect = d.GetDialogItem(ITEM_QUESTION_TEXT)
+	text = _string2dialog(text)
 	Dlg.SetDialogItemText(h, text)
 	w = d.GetDialogWindow()
 	w.ShowWindow()
@@ -279,9 +287,9 @@ class SelectionDialog(DialogWindow):
 		if not hascancel:
 			self._wid.HideDialogItem(ITEM_SELECT_CANCEL)
 		tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_LISTPROMPT)
-		Dlg.SetDialogItemText(h, listprompt)
+		Dlg.SetDialogItemText(h, _string2dialog(listprompt))
 		tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_SELECTPROMPT)
-		Dlg.SetDialogItemText(h, selectionprompt)
+		Dlg.SetDialogItemText(h, _string2dialog(selectionprompt))
 		
 		# Now setup the scrolled list
 		self._itemlist = itemlist
@@ -292,7 +300,7 @@ class SelectionDialog(DialogWindow):
 			
 		# and the default item
 		tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_ITEM)
-		Dlg.SetDialogItemText(h, default)
+		Dlg.SetDialogItemText(h, _string2dialog(default))
 		
 		# And show it
 		self.show()
@@ -312,7 +320,7 @@ class SelectionDialog(DialogWindow):
 			if item is None:
 				return
 			tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_ITEM)
-			Dlg.SetDialogItemText(h, self._itemlist[item])
+			Dlg.SetDialogItemText(h, _string2dialog(self._itemlist[item]))
 			is_ok = isdouble
 		elif item == ITEM_SELECT_ITEM:
 			pass
@@ -371,7 +379,7 @@ class InputDialog(DialogWindow):
 ##		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_PROMPT)
 ##		Dlg.SetDialogItemText(h, prompt)
 		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
-		Dlg.SetDialogItemText(h, default)
+		Dlg.SetDialogItemText(h, _string2dialog(default))
 		self._wid.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
 		self._cb = cb
 		self._cancel = cancelCallback
@@ -412,7 +420,7 @@ class InputURLDialog(InputDialog):
 				pathname = fss.as_pathname()
 				url = MMurl.pathname2url(pathname)
 				tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
-				Dlg.SetDialogItemText(h, url)
+				Dlg.SetDialogItemText(h, _string2dialog(url))
 				self._wid.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
 		else:
 			InputDialog.do_itemhit(self, item, event)
