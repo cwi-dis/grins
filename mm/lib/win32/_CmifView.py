@@ -99,7 +99,8 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 
 	# called by the framework before the window is closed
 	def OnClose(self):
-		if self.in_create_box_mode():return
+		if self.in_modal_create_box_mode(): return
+		self.assert_not_in_create_box()
 		if self._closecmdid>0:
 			self.GetParent().GetMDIFrame().PostMessage(win32con.WM_COMMAND,self._closecmdid)
 		else:
@@ -220,6 +221,9 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		if self._parent is None:
 			return		# already closed
 
+		if self.in_modal_create_box_mode(): return
+		self.assert_not_in_create_box()
+
 		self.setcursor('arrow')
 		for dl in self._displists[:]:
 			dl.close()
@@ -328,7 +332,8 @@ class _CmifPlayerView(_CmifView):
 
 	def OnInitialUpdate(self):
 		_CmifView.OnInitialUpdate(self)
-		#self.HookMessage(self.onPostResize,win32con.WM_USER)
+		self.HookMessage(self.onCreateBoxOK,WM_USER_CREATE_BOX_OK)
+		self.HookMessage(self.onCreateBoxCancel,WM_USER_CREATE_BOX_CANCEL)
 
 	# Do not close and recreate topwindow, due to flushing screen
 	# and loose of focus. 
@@ -565,6 +570,8 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 			win32con.WM_MOUSEMOVE:self.onMouseMove,
 			win32con.WM_SIZE:self.onSize,}
 		self._enable_response(self._msg_cbs)
+		self.HookMessage(self.onCreateBoxOK,WM_USER_CREATE_BOX_OK)
+		self.HookMessage(self.onCreateBoxCancel,WM_USER_CREATE_BOX_CANCEL)
 		self.show()
 
 	# Called by the core system to create a child window to the subwindow
