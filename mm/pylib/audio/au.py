@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 
-from audio import Error
+import audio
 from format import *
 
 _AUDIO_FILE_ENCODING_MULAW_8 = 1
@@ -49,18 +49,18 @@ class reader:
 		self.__framesread = 0
 		magic = file.read(4)
 		if magic != '.snd':
-			raise Error, 'not a AU file'
+			raise audio.Error, 'not a AU file'
 		self.__hdr_size = _read_ulong(file)
 		if self.__hdr_size < 24:
-			raise Error, 'header size too small'
+			raise audio.Error, 'header size too small'
 		if self.__hdr_size > 100:
-			raise Error, 'header size rediculously large'
+			raise audio.Error, 'header size rediculously large'
 		data_size = _read_long(file)
 		encoding = _read_long(file)
 		self.__framerate = _read_long(file)
 		nchannels = _read_long(file)
 		if nchannels < 1 or nchannels > 2:
-			raise Error, 'Unsupported format'
+			raise audio.Error, 'Unsupported format'
 		if encoding == _AUDIO_FILE_ENCODING_MULAW_8:
 			if nchannels == 1:
 				self.__format = ulaw_mono
@@ -80,7 +80,7 @@ class reader:
 				self.__format = linear_16_stereo_big
 			self.__nframes = data_size / nchannels / 2
 		else:
-			raise Error, 'Unsupported format'
+			raise audio.Error, 'Unsupported format'
 		if data_size < 0:
 			self.__nframes = -1
 		if self.__hdr_size > 24:
