@@ -319,7 +319,7 @@
 	'Play node only if bitrate >= value here' raw light)
 (system_captions (bool) 0 'System captions' bool3
 	'Play node only if end-user wants captions' raw light)
-(system_language (string) '' 'System language' default
+(system_language (string) '' 'System language' language3
 	'Play node only if end-user prefers this language' raw light)
 (system_overdub_or_caption (string) '' 'System overdub or caption' captionoverdub3
 	'Play node only depending on end user overdub/caption preference' raw light)
