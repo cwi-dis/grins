@@ -64,7 +64,9 @@ class PlayerCore(Selecter, PlayerCommon):
 			if self.playing:
 				return
 
-		self.mustCheckRenderer = 1
+		# remove temporary
+		# playability is not inherited by new renderers
+		#self.mustCheckRenderer = 1
 		
 		self.checkchannels()
 		if self.showing:
