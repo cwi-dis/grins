@@ -381,15 +381,7 @@ class RPParser(xmllib.XMLParser):
 		self.aspect = string.lower(attributes['aspect'])
 		self.author = attributes.get('author')
 		self.copyright = attributes.get('copyright')
-		maxfps = attributes.get('maxfps')
-		if maxfps is not None:
-			try:
-				self.maxfps = string.atoi(maxfps)
-			except string.atoi_error:
-				self.syntax_error('badly formatted maxfps attribute')
-				self.maxfps = None
-		else:
-			self.maxfps = None
+		self.maxfps = self.__maxfps(attributes)
 		preroll = attributes.get('preroll')
 		if preroll is not None:
 			try:
@@ -433,7 +425,7 @@ class RPParser(xmllib.XMLParser):
 		color = self.__color(attributes)
 		start = self.__time('start', attributes)
 		duration = self.__time('duration', attributes)
-		maxfps = attributes.get('maxfps', self.maxfps)
+		maxfps = self.__maxfps(attributes)
 		self.tags.append({'tag': 'fadeout',
 				  'caption': attributes.get('grins_image_caption', ''),
 				  'color': color,
@@ -453,7 +445,7 @@ class RPParser(xmllib.XMLParser):
 
 	def start_viewchange(self, attributes):
 		duration = self.__time('duration', attributes)
-		maxfps = attributes.get('maxfps', self.maxfps)
+		maxfps = self.__maxfps(attributes)
 		dstrect = self.__rect('dst', attributes)
 		srcrect = self.__rect('src', attributes)
 		start = self.__time('start', attributes)
@@ -475,7 +467,7 @@ class RPParser(xmllib.XMLParser):
 		aspect = (attributes.get('aspect', self.aspect) == 'true')
 		dstrect = self.__rect('dst', attributes)
 		duration = self.__time('duration', attributes)
-		maxfps = attributes.get('maxfps', self.maxfps)
+		maxfps = self.__maxfps(attributes)
 		srcrect = self.__rect('src', attributes)
 		start = self.__time('start', attributes)
 		target = attributes.get('target')
@@ -584,6 +576,16 @@ class RPParser(xmllib.XMLParser):
 			self.syntax_error(msg)
 			return 0
 		return time
+
+	def __maxfps(self, attributes):
+		maxfps = attributes.get('maxfps')
+		if maxfps is not None:
+			try:
+				maxfps = string.atoi(maxfps)
+			except string.atoi_error:
+				self.syntax_error('badly formatted maxfps attribute')
+				maxfps = None
+		return maxfps
 
 	def syntax_error(self, msg):
 		if self.__printfunc is None:
