@@ -1578,10 +1578,6 @@ SOURCE=.\pylib\audio\what.py
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\pylib\pywinlib\mfc\activex.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\pylib\pywinlib\mfc\afxres.py
 # End Source File
 # Begin Source File
@@ -1614,11 +1610,15 @@ SOURCE=.\pylib\pywinlib\framework\app.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\pylib\pywinlib\framework\cmdline.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\pylib\pywinlib\framework\interact.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\pylib\pywinlib\framework\intpyapp.py
+SOURCE=.\pylib\pywinlib\framework\scriptutils.py
 # End Source File
 # Begin Source File
 
