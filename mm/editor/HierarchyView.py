@@ -107,7 +107,6 @@ class HierarchyView(HierarchyViewDialog):
 		self.need_redraw_select = 0
 
 		self.event_sources = [] # This is the specially selected "I am the node from which a new begin event will be made to"
-		self.old_event_sources = []
 		self.droppable_widget = None # ahh.. something that sjoerd added. Assume that it's used for the fancy drop-notification.
 		self.old_droppable_widget = None
 
@@ -613,13 +612,11 @@ class HierarchyView(HierarchyViewDialog):
 			self.old_selected_widget = None
 			self.old_selected_icon = None
 			self.old_multi_selected_widgets = []
-			self.old_event_sources = []
 			self.playicons = []
 		elif w is self.old_selected_widget and \
 		     self.selected_icon is self.old_selected_icon and \
 		     self.droppable_widget is self.old_droppable_widget and \
 		     len(self.old_multi_selected_widgets)==0 and \
-		     self.event_sources is self.old_event_sources and \
 		     not self.need_redraw_selection:
 			# nothing to do
 			self.redrawing = 0
@@ -628,10 +625,6 @@ class HierarchyView(HierarchyViewDialog):
 			d = self.base_display_list.clone()
 
 		# 2. Undraw stuff.
-		for b in self.old_event_sources:
-			b.views['struct_view'].draw_unselected(d)
-		for b in self.event_sources:
-			b.views['struct_view'].draw_unselected(d)
 		for i in self.old_multi_selected_widgets:
 			i.draw_unselected(d)
 		self.old_multi_selected_widgets = []
@@ -2472,15 +2465,15 @@ class HierarchyView(HierarchyViewDialog):
 			for w in self.multi_selected_widgets: # This must be the _actual_ list of widgets.
 				self.event_sources.append(w.get_node())
 				w.set_dangling_event()
+			self.need_resize = 1
+			self.draw()
+			self.aftersetfocus()
 		else:
 			windowinterface.beep() # Should not happen
-		self.draw()
-		self.aftersetfocus()
 
 	def __clear_event_source(self):
 		# Resets the event source list.
 		# called only from set_event_source
-		self.old_event_sources = self.event_sources
 		for b in self.event_sources:
 			widget = b.views['struct_view']
 			widget.clear_dangling_event()
@@ -2502,7 +2495,6 @@ class HierarchyView(HierarchyViewDialog):
 				# I assume a draw is not needed (due to NewBeginEvent)...
 			self.editmgr.commit()
 			self.event_sources = []
-			self.old_event_sources = []
 		else:
 			windowinterface.beep() # Should not happen
 
@@ -2519,7 +2511,6 @@ class HierarchyView(HierarchyViewDialog):
 				# I assume a draw is not needed (due to NewBeginEvent)...
 			self.editmgr.commit()
 			self.event_sources = []
-			self.old_event_sources = []
 		else:
 			windowinterface.beep() # Should not happen
 
