@@ -270,14 +270,22 @@ class NodeInfo(NodeInfoDialog):
 			return 'html'
 		mtype, subtype = string.split(mtype, '/')
 		if mtype == 'audio':
+			if subtype == 'vnd.rn-realaudio':
+				return 'RealAudio'
 			return 'sound'
 		if mtype == 'image':
+			if subtype == 'vnd.rn-realpix':
+				return 'RealPix'
 			return 'image'
 		if mtype == 'video':
+			if subtype == 'vnd.rn-realvideo':
+				return 'RealVideo'
 			return 'video'
 		if mtype == 'text':
 			if subtype == 'html':
 				return 'html'
+			if subtype == 'vnd.rn-realtext':
+				return 'RealText'
 		# fallback
 		return 'text'
 	#
