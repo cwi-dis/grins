@@ -6,39 +6,10 @@ from usercmd import *
 class SourceViewDialog:
 	def __init__(self):
 		self.__textwindow = None
-		self.__setCommandSelClipNotEmpty()
-		self.__setCommandSelClipEmpty()
-		self.__setCommandUnselClipNotEmpty()
-		self.__setCommandUnselClipEmpty()
+		self.__setCommonCommandList()
 
-	def __addCommonCommand(self, list):
-		pass
-	
-	def __setCommandSelClipNotEmpty(self):
-		# Add the user-interface commands that are used for this window.
-		self.commandSelClipNotEmpty = []
-		self.__addCommonCommand(self.commandSelClipNotEmpty)
-		self.commandSelClipNotEmpty.append(COPY(callback = (self.onCopy, ())))
-		self.commandSelClipNotEmpty.append(CUT(callback = (self.onCut, ())))
-		self.commandSelClipNotEmpty.append(PASTE(callback = (self.onPaste, ())))
-
-	def __setCommandSelClipEmpty(self):
-		# Add the user-interface commands that are used for this window.
-		self.commandSelClipEmpty = []
-		self.__addCommonCommand(self.commandSelClipNotEmpty)
-		self.commandSelClipEmpty.append(COPY(callback = (self.onCopy, ())))
-		self.commandSelClipEmpty.append(CUT(callback = (self.onCut, ())))
-
-	def __setCommandUnselClipNotEmpty(self):
-		# Add the user-interface commands that are used for this window.
-		self.commandUnselClipNotEmpty = []
-		self.__addCommonCommand(self.commandUnselClipNotEmpty)
-		self.commandUnselClipNotEmpty.append(PASTE(callback = (self.onPaste, ())))
-
-	def __setCommandUnselClipEmpty(self):
-		# Add the user-interface commands that are used for this window.
-		self.commandUnselClipEmpty = []
-		self.__addCommonCommand(self.commandUnselClipEmpty)
+	def __setCommonCommandList(self):
+		self._commonCommandList = []
 		
 	def destroy(self):
 		self.__textwindow = None
@@ -54,16 +25,29 @@ class SourceViewDialog:
 		self.__textwindow.setListener(self)
 
 	def __updateCommandList(self):
+		commandList = []
+
+		# undo
+		if self.__textwindow.canUndo():
+			commandList.append(UNDO(callback = (self.onUndo, ())))
+
+		# copy/paste/cut			
 		if self.__textwindow.isSelected():
 			if self.__textwindow.isClipboardEmpty():
-				self.setcommandlist(self.commandSelClipEmpty)
+				commandList.append(COPY(callback = (self.onCopy, ())))
+				commandList.append(CUT(callback = (self.onCut, ())))
 			else:
-				self.setcommandlist(self.commandSelClipNotEmpty)
-		elif self.__textwindow.isClipboardEmpty():
-			self.setcommandlist(self.commandUnselClipEmpty)
-		else:
-			self.setcommandlist(self.commandUnselClipNotEmpty)
-						
+				commandList.append(COPY(callback = (self.onCopy, ())))
+				commandList.append(CUT(callback = (self.onCut, ())))
+				commandList.append(PASTE(callback = (self.onPaste, ())))
+		elif not self.__textwindow.isClipboardEmpty():
+			commandList.append(PASTE(callback = (self.onPaste, ())))
+
+		# other operations all the time actived
+		commandList = commandList+self._commonCommandList
+		
+		self.setcommandlist(commandList)
+		
 	def is_showing(self):
 		if self.__textwindow:
 			return 1
@@ -106,8 +90,7 @@ class SourceViewDialog:
 	def onSelChanged(self):
 		self.__updateCommandList()
 
-	# this call back is called when the content of the clipboard change
-	# XXX: it's currently not working
+	# this call back is called when the content of the clipboard change (or may have changed)
 	def onClipboardChanged(self):
 		self.__updateCommandList()
 			
@@ -124,3 +107,6 @@ class SourceViewDialog:
 
 	def onPaste(self):
 		self.__textwindow.Paste()
+
+	def onUndo(self):
+		self.__textwindow.Undo()

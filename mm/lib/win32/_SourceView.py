@@ -224,14 +224,27 @@ from pywinlib.mfc import docview
 
 import grinsRC, components
 from GenView import GenView
-					
+
+class SourceViewTemplate(docview.RichEditDocTemplate):
+	pass
+
+class SourceViewDocument(docview.RichEditDoc):
+	pass
+
 class _SourceView(GenView, docview.RichEditView):
 	def __init__(self, doc, bgcolor=None):
 		self.__showing = 0
 		self.__setting = 0
-		
 		# base init
 		GenView.__init__(self, bgcolor)
+
+		# important: a rich edit ctrl have to be created the right template and the right document
+		# (see MFC doc: RichEditCtrl and architecture MDI).
+		# If you don't do this, the application crash on some operations (drag and drop, ...)
+		sourceTemplate = SourceViewTemplate()
+		win32ui.GetApp().AddDocTemplate(sourceTemplate)
+		doc = SourceViewDocument(sourceTemplate)
+		
 		docview.RichEditView.__init__(self, doc)
 
 		# view decor
@@ -259,22 +272,24 @@ class _SourceView(GenView, docview.RichEditView):
 		self.__apply.attach_to_parent()
 		self.__revert.attach_to_parent()
 
+		# disable the default wrap behavior
+		self.SetWordWrap(win32ui.CRichEditView_WrapNone)
+		self.WrapChanged()
+
 	# Called by the framework after the OS window has been created
 	def OnInitialUpdate(self):
+		self.__editctrl = self.GetRichEditCtrl()
 		# redirect all command messages to self.OnCmd
 		self.GetParent().HookMessage(self.OnCmd, win32con.WM_COMMAND)
 		# allow to detect when the selection change
 		self.GetParent().HookNotify(self.onSelChanged, win32con.EN_SELCHANGE)	
 
-
-		# disable the default wrap behavior
-		self.SetWordWrap(win32ui.CRichEditView_WrapNone)
-		self.WrapChanged()
+		self.GetParent().HookMessage(self.OnSetFocus,win32con.WM_SETFOCUS)
 
 		# we are now showing of course
 		self.__showing = 1
 
-		self.GetRichEditCtrl().settext(self.__text)
+		self.settext(self.__text)
 
 		# set text and readonly flag
 		self.SetReadOnly(self.__readonly)
@@ -283,6 +298,38 @@ class _SourceView(GenView, docview.RichEditView):
 		self.enableDlgBarComponent(self.__ok, 1)
 		self.enableDlgBarComponent(self.__apply, 0)
 		self.enableDlgBarComponent(self.__revert, 0)
+		
+	def Paste(self):
+		if not self.isClipboardEmpty():
+			# call the ancestor's method
+			self._obj_.Paste()
+			
+		self.__updateClipboardInfo()
+
+	def Copy(self):
+		# call the ancestor's method
+		self._obj_.Copy()
+		
+		self.__updateClipboardInfo()
+
+	def Cut(self):
+		# call the ancestor's method
+		self._obj_.Cut()
+		
+		self.__updateClipboardInfo()
+
+	# this method update the listener in order that the menu item PASTE be refreshed
+	# we have to call this method when the clipboard may change its contain. It's not the best way
+	# but this framework doesn't allow to use the right solution as advised in Microsoft documentation
+	# So, currently, we update the listener when either:
+	# - the source view get the focus
+	# - a copy/cut/paste opperation is done from the source view
+	def __updateClipboardInfo(self):
+		if self.__listener != None:
+			self.__listener.onClipboardChanged()
+
+	def OnSetFocus(self, params):
+		self.__updateClipboardInfo()
 
 	def OnCmd(self, params):
 		if not self.is_showing():
@@ -290,7 +337,7 @@ class _SourceView(GenView, docview.RichEditView):
 		editCtrl = self.GetRichEditCtrl()
 		if not editCtrl: 
 			return
-
+		
 		# crack win32 message
 		msg=win32mu.Win32Msg(params)
 		code = msg.HIWORD_wParam()
@@ -300,7 +347,7 @@ class _SourceView(GenView, docview.RichEditView):
 		# response/dispatch cmd
 		if hctrl == editCtrl.GetSafeHwnd():
 			if code == win32con.EN_CHANGE:
-				if self.GetModify() and not self.__setting:
+				if self.__editctrl.GetModify() and not self.__setting:
 					self.enableDlgBarComponent(self.__apply, 1)
 					self.enableDlgBarComponent(self.__revert, 1)
 		elif id == self.__ok._id:
@@ -428,7 +475,16 @@ class _SourceView(GenView, docview.RichEditView):
 			self.SetWindowText(self.__text)
 			self.SetModify(0)
 			self.__setting = 0
-			
+
+	# undo operation
+	def Undo(self):
+		return Sdk.SendMessage(self.GetSafeHwnd(),win32con.EM_UNDO,0,0)
+
+#	def findText(self):
+#		n, start, end = self.FindText(FR_MATCHCASE|FR_WHOLEWORD, &ft);
+#		if (n != -1)
+#		   pmyRichEditCtrl->SetSel(ft.chrgText);
+
 	# select a part of the text
 	def select_chars(self, startchar, endchar, scroll = 1, pop = 0):
 		# the text between startchar and endchar will be selected.
@@ -464,9 +520,14 @@ class _SourceView(GenView, docview.RichEditView):
 		begin, end = self.GetSel()
 		return end-begin > 0
 
-	# return true if the system clipboard is empty
-	# XXX not implemented yet
+	# return true if the system clipboard doen't contain text datas
 	def isClipboardEmpty(self):
-		# for now
-		return 0
-	
+		Sdk=win32ui.GetWin32Sdk()
+		n = Sdk.IsClipboardFormatAvailable(win32con.CF_TEXT)
+		return n <= 0
+
+	# return true if the undo is possible	
+	def canUndo(self):
+		return Sdk.SendMessage(self.GetSafeHwnd(),win32con.EM_CANUNDO,0,0)
+		
+		
