@@ -2,8 +2,8 @@
 # Suggested usage:
 #	from MMExc import *
 
-TypeError = 'MMExc.TypeError'		# Invalid type in input file
-SyntaxError = 'MMExc.SyntaxError'	# Invalid syntax in input file
+MTypeError = 'MMExc.TypeError'		# Invalid type in input file
+MSyntaxError = 'MMExc.SyntaxError'	# Invalid syntax in input file
 
 CheckError = 'MMExc.CheckError'		# Invalid call from client
 AssertError = 'MMExc.AssertError'	# Internal inconsistency
