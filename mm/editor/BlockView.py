@@ -55,13 +55,14 @@ class BlockView () = ViewDialog(), BasicDialog () :
 	#
 	# init() method compatible with the other views.
 	#
-	def init(self, root):
+	def init(self, toplevel):
 		self = ViewDialog.init(self, 'blockview_')
-		self.root = root
+		self.toplevel = toplevel
+		self.root = self.toplevel.root
 		width, height = \
-			MMAttrdefs.getattr(root, 'blockview_winsize')
+			MMAttrdefs.getattr(self.root, 'blockview_winsize')
 		self = BasicDialog.init(self, (width, height, 'Hierarchy'))
-		return self.new(width, height, root)
+		return self.new(width, height, self.root)
 	#
 	# new makes an object of type 'blockview'
 	#
@@ -106,12 +107,13 @@ class BlockView () = ViewDialog(), BasicDialog () :
 		self.addtocommand('a', attreditfunc, 'attribute editor')
 		self.addtocommand('d', deleteNode, 'delete node')
 		self.addtocommand('h', helpfunc, 'help message')
-		self.addtocommand('p', addParallel, 'add parallel node')
-		self.addtocommand('r',  rotatefunc, 'rotate node')
-		self.addtocommand('s', addSequential, 'add sequential node')
+		self.addtocommand('i', infofunc, 'open node info window')
+		self.addtocommand('p', playfunc, 'play node')
+		self.addtocommand('r', rotatefunc, 'rotate node')
 		self.addtocommand('u', unzoomfunc, 'unzoom node')
 		self.addtocommand('z', zoomfunc, 'zoom node')
-		self.addtocommand('i', infofunc, 'open node info window')
+		self.addtocommand('P', addParallel, 'add parallel node')
+		self.addtocommand('S', addSequential, 'add sequential node')
 	#
 
 	# blockview gets a region in the form where it recursively
@@ -544,3 +546,7 @@ import NodeInfo
 def infofunc(bv):
 	node = bv.focus
 	NodeInfo.shownodeinfo(node)
+
+def playfunc(bv):
+	node = bv.focus
+	bv.toplevel.player.playsubtree(node)
