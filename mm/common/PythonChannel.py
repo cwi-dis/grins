@@ -16,8 +16,8 @@ class PythonChannel(Channel):
 	chan_attrs = ['startupfile']
 	node_attrs = ['duration', 'file']
 
-	def init(self, name, attrdict, player):
-		self = Channel.init(self, name, attrdict, player)
+	def init(self, name, attrdict, scheduler, ui):
+		self = Channel.init(self, name, attrdict, scheduler, ui)
 		self.reset()
 		return self
 
@@ -27,15 +27,16 @@ class PythonChannel(Channel):
 	def reset(self):
 		self.node = None
 		self.env = {}
-		self.env['player'] = self.player
-		self.env['toplevel'] = self.player.toplevel
-		self.env['root'] = self.player.root
-		self.env['context'] = self.player.root.context
+		self.env['scheduler'] = self.scheduler
+		self.env['ui'] = self.ui
+		self.env['toplevel'] = self.scheduler.toplevel
+		self.env['root'] = self.scheduler.root
+		self.env['context'] = self.scheduler.root.context
 		self.env['node'] = None
 		if self.attrdict.has_key('startupfile'):
 			startupfile = self.attrdict['startupfile']
 			startupfile = \
-				self.player.toplevel.findfile(startupfile)
+				self.scheduler.toplevel.findfile(startupfile)
 			try:
 				execfile(startupfile, self.env)
 			except:
@@ -52,7 +53,8 @@ class PythonChannel(Channel):
 				file = '<commands>'
 			else:
 				file = \
-				    self.player.toplevel.getattr(node, 'file')
+				    self.scheduler.toplevel.getattr(node, \
+				    'file')
 				cmd = 'execfile(' + `file` + ')\n'
 			self.env['node'] = node
 			try:

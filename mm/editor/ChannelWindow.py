@@ -248,7 +248,7 @@ def do_channel_attr(cwin):
 	AttrEdit.showchannelattreditor(cwin.attrdict)
 
 def do_node_play(cwin):
-	cwin.channel.player.playsubtree(cwin.node)
+	cwin.channel.ui.playsubtree(cwin.node)
 
 def do_node_info(cwin):
 	import NodeInfo

@@ -17,9 +17,9 @@ class ShellChannel(Channel):
 	chan_attrs = []
 	node_attrs = ['duration', 'file']
 
-	def init(self, name, attrdict, player):
+	def init(self, name, attrdict, scheduler, ui):
 		self.pid = None
-		return Channel.init(self, name, attrdict, player)
+		return Channel.init(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
 		return '<ShellChannel instance, name=' + `self.name` + '>'
@@ -35,7 +35,8 @@ class ShellChannel(Channel):
 				argv = ['sh', '-c', cmd]
 			else:
 				prog = \
-				    self.player.toplevel.getattr(node, 'file')
+				    self.scheduler.toplevel.getattr(node, \
+				    'file')
 				argv = [prog]
 			self.pid = startprog(prog, argv)
 		Channel.play(self, node, callback, arg)
@@ -49,8 +50,8 @@ class ShellChannel(Channel):
 				pid, sts = 0, 0
 			if pid == 0:
 				# Try again in a second
-				self.qid = \
-					self.player.enter(1, 0, self.done, 0)
+				self.qid = self.scheduler.enter(1, 0, \
+					self.done, 0)
 				return
 			if sts <> 0:
 				print 'Exit status:', hex(sts)

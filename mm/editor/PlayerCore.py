@@ -225,7 +225,7 @@ class PlayerCore():
 			raise TypeError, \
 				'channel ' +`name`+ ' has bad type ' +`type`
 		chclass = channelmap[type]
-		ch = chclass().init(name, attrdict, self.scheduler)
+		ch = chclass().init(name, attrdict, self.scheduler, self)
 		if self.waiting:
 			ch.setwaiting()
 		self.channels[name] = ch
