@@ -282,12 +282,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					   '', self.export_okcallback, None)
 					   
 	def export_html_callback(self):
-		ttype = 0
+		# XXXX We could sort-of override the meaning of the document base attribute
+		# here. Is this correct?
 		attrs = self.context.attributes
-		if attrs.has_key('html_template_type'):
-			ttype = attrs['html_template_type']
-		if not ttype:
-			if windowinterface.showquestion('Please set webpage type first, then try again'):
+		if not attrs.has_key('smil_url'):
+			if windowinterface.showquestion('Please set SMIL URL first, then try again'):
 				self.prop_callback()
 			return
 		cwd = self.dirname
@@ -301,25 +300,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					   '', self.export_html_okcallback, None)
 
 	def export_html_okcallback(self, filename):
-		smilurl = "test.smil" # XXXX
+		smilurl = "unknown.smil" # Will be overridden
 		if not filename:
 			return 'no file specified'
 		self.setwaiting()
-		ttype = 0
 		attrs = self.context.attributes
-		if attrs.has_key('html_template_type'):
-			ttype = attrs['html_template_type']
-		# XXXX Apparently <meta> attributes are always read back as strings.
-		# This is a bug in SMILTreeRead, but not worth fixing right now.
-		if type(ttype) == type(''):
-			ttype = eval(ttype)
-		mkram = embed = embedlayout = 0
-		if ttype == 2:
-			mkram = 1
-		if ttype >= 3:
-			embed = 1
-		if ttype >= 4:
-			embedlayout = 1
+		if attrs.has_key('smil_url'):
+			smilurl = attrs['smil_url']
 
 		license = self.main.wanttosave()
 		if not license:
@@ -327,14 +314,15 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			return 0
 		evallicense= (license < 0)
 		# Make a back-up of the original file...
+		oldfilename = ''
 		try:
-			os.rename(filename, make_backup_filename(filename))
+			oldfilename = make_backup_filename(filename)
+			os.rename(filename, oldfilename)
 		except os.error:
 			pass
 		try:
 			import HTMLWrite
-			HTMLWrite.WriteFile(self.root, filename, smilurl,
-						embed=embed, embedlayout=embedlayout,
+			HTMLWrite.WriteFile(self.root, filename, smilurl, oldfilename,
 						evallicense=evallicense)
 		except IOError, msg:
 			windowinterface.showmessage('Write failed.\n'+
