@@ -953,7 +953,7 @@ def rmff(url, fp):
 				else:
 					type_specific_data = ''
 				if mime_type == 'video/x-pn-realvideo' and \
-				   type_specific_len == 34:
+				   type_specific_len >= 34:
 					width, height = struct.unpack('>hh', type_specific_data[12:16])
 					info['width'] = width
 					info['height'] = height
