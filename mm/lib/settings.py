@@ -32,6 +32,8 @@ ELEMENT=['system_required']
 ALL=['system_bitrate', 'system_captions', 'system_language',
      'system_overdub_or_caption', 'system_screen_size',
      'system_screen_depth', 'system_required']
+     
+NEEDS_RESTART=['cmif', 'vertical_structure', 'no_canvas_resize', 'root_expanded']
 
 # Where is the preferences file:
 if os.name == 'posix':
@@ -82,10 +84,16 @@ def match(name, wanted_value):
 def getsettings():
 	return ALL
 	
+_warned_already = 0
 def set(setting, value):
+	global _warned_already
+	if setting in NEEDS_RESTART and value != get(setting) and not _warned_already:
+		_warned_already = 1
+		windowinterface.showmessage('You have to restart GRiNS for some of these changes to take effect')
 	user_settings[setting] = value
 	
 def save():
+	needrestart = 0
 	try:
 		fp = open(PREFSFILENAME, 'w')
 	except IOError:
