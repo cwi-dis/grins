@@ -1,4 +1,5 @@
 # Attribute editor using the FORMS library (fl, FL), based upon Dialog.
+print 'import AttrEdit'
 
 
 import gl
@@ -154,6 +155,8 @@ def hasstyleattreditor(context, name):
 # a common base class implementing most functions.)
 
 class Wrapper: # Base class -- common operations
+	def init(self):
+		return self
 	def getcontext(self):
 		return self.context
 	def register(self, object):
@@ -181,7 +184,7 @@ class NodeWrapper(Wrapper):
 		self.context = node.GetContext()
 		self.editmgr = self.context.geteditmgr()
 		self.root = node.GetRoot()
-		return self
+		return Wrapper.init(self)
 	#
 	def stillvalid(self):
 		return self.node.GetRoot() is self.root
@@ -244,7 +247,7 @@ class ChannelWrapper(Wrapper):
 		self.editmgr = context.geteditmgr()
 		self.name = name
 		self.attrdict = self.context.channeldict[name]
-		return self
+		return Wrapper.init(self)
 	#
 	def stillvalid(self):
 		return self.context.channeldict.has_key(self.name) and \
@@ -347,7 +350,7 @@ class StyleWrapper(Wrapper):
 		self.editmgr = context.geteditmgr()
 		self.name = name
 		self.attrdict = self.context.styledict[name]
-		return self
+		return Wrapper.init(self)
 	#
 	def stillvalid(self):
 		return self.context.styledict.has_key(self.name) and \
@@ -469,11 +472,13 @@ class AttrEditor(Dialog):
 				self.open() # Causes re-open
 			else:
 				self.fixvalues()
-				gl.winset(self.form.window)
-				gl.wintitle(self.wrapper.maketitle())
+				self.settitle(self.wrapper.maketitle())
 	#
 	def rollback(self):
 		pass
+	#
+	def kill(self):
+		self.destroy()
 	#
 	def open(self):
 		self.hide()
