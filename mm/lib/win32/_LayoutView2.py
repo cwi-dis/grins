@@ -82,7 +82,7 @@ class _LayoutView2(GenFormView):
 			self['ViewportSel'].addstring(vpname)
 		if vpList:
 			self['ViewportSel'].setcursel(0)
-			self.onViewportSelChange()
+			self.selectViewport(vpList[0])
 
 	# Sets the acceptable commands. 
 	def set_commandlist(self,commandlist):
@@ -126,27 +126,37 @@ class _LayoutView2(GenFormView):
 
 	def onViewportSelChange(self):
 		vpname = self['ViewportSel'].getvalue()
-		rgnList = self._layout.getRegions(vpname)
+		self.selectViewport(vpname)
+			
+	def onRegionSelChange(self):
+		rgnname = self['RegionSel'].getvalue()
+		self.selectRegion(rgnname)
+
+	def selectViewport(self, name):
+		self._layout.setViewport(name)
+		rgnList = self._layout.getRegions(name)
 		self['RegionSel'].resetcontent()
 		for reg in rgnList:
 			self['RegionSel'].addstring(reg)
 		if rgnList:
 			self['RegionSel'].setcursel(0)
-			self.onRegionSelChange()
-		self._layout.setViewport(vpname)
+			self.selectRegion(rgnList[0])
+	
+	def selectRegion(self, name):
+		region = self._layout.getRegion(name)
+		if region:
+			self._layout.selectRegion(name)
+			self.onShapeChange(region)
 			
-	def onRegionSelChange(self):
-		rgnname = self['RegionSel'].getvalue()
-		self._layout.selectRegion(rgnname)
-
-	# Response to a selection change of the listbox 
-	def OnComboBoxCmd(self, id, code):
-		if code==win32con.LBN_SELCHANGE:
-			for s in self.__ctrlNames:
-				if self[s]._id==id:
-					self[s].callcb()
-					break
-
+	def onShapeChange(self, shape):
+		if shape is None: return
+		if id(shape)==id(self._layout._viewport): return
+		rc = shape._rectb
+		i = 0
+		for name in ('RegionX','RegionY','RegionW','RegionH'):
+			self[name].settext('%d' % rc[i])
+			i = i +1
+		self['RegionZ'].settext('%d' % shape._z)
 
 ###########################
 
@@ -154,6 +164,9 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 	def __init__(self, parent, rc, bgcolor):
 		window.Wnd.__init__(self, win32ui.CreateWnd())
 		win32window.DrawContext.__init__(self)
+		
+		# register dialog as listener
+		win32window.DrawContext.addListener(self, parent) 
 
 		self._parent = parent
 		self._bgcolor = bgcolor
@@ -273,8 +286,9 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		dcc.FillSolidRect(rc,win32mu.RGB(self._bgcolor or (255,255,255)))
 
 		# draw objects on dcc
-		self._viewport.paintOn(dcc)
-		self.drawTracker(dcc)
+		if self._viewport:
+			self._viewport.paintOn(dcc)
+			self.drawTracker(dcc)
 
 		# copy bitmap
 		dc.SetViewportOrg((0, 0))
