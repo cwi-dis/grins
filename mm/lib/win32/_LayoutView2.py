@@ -142,13 +142,13 @@ class _LayoutView2(GenFormView):
 		frame = self.GetParent().GetParent().GetMDIFrame()
 		frame.set_commandlist(self._commandlist,self._strid)
 		self.set_menu_state()
-		frame.LoadAccelTable(grinsRC.IDR_SOURCE_EDIT)
+		#frame.LoadAccelTable(grinsRC.IDR_SOURCE_EDIT)
 
 	def deactivate(self):
 		self._is_active=0
 		frame = self.GetParent().GetParent().GetMDIFrame()
 		frame.set_commandlist(None,self._strid)
-		frame.LoadAccelTable(grinsRC.IDR_SOURCE_EDIT)
+		#frame.LoadAccelTable(grinsRC.IDR_SOURCE_EDIT)
 
 	def OnDelete(self):
 		print 'OnDelete'
