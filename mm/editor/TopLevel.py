@@ -503,6 +503,9 @@ class TopLevel(ViewDialog, BasicDialog):
 	# Global hyperjump interface
 	#
 	def jumptoexternal(self, filename, aid):
+		# XXXX Should check that document isn't active already,
+		# XXXX and, if so, should jump that instance of the
+		# XXXX document.
 		try:
 			top = TopLevel().init(filename)
 		except (IOError, MMExc.TypeError, MMExc.SyntaxError), msg:
@@ -514,5 +517,20 @@ class TopLevel(ViewDialog, BasicDialog):
 		top.player.show()
 		top.player.playfromanchor(top.root, aid)
 		return 1
-		
-		
+	#
+	def _getlocalexternalanchors(self):
+		fn = self.filename
+		if not '/' in fn:
+			fn = './' + fn
+		rv = []
+		alist = MMAttrdefs.getattr(self.root, 'anchorlist')
+		for i, t, v in alist:
+			rv.append((fn, i))
+		return rv
+	#
+	def getallexternalanchors(self):
+		rv = []
+		for top in opentops:
+			if top <> self:
+				rv = rv + top._getlocalexternalanchors()
+		return rv
