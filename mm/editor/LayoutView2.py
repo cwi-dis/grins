@@ -1314,10 +1314,16 @@ class LayoutView2(LayoutViewDialog2):
 		self.dialogCtrl.setCheckCtrl('RegionCheck', 0)
 		self.dialogCtrl.setCheckCtrl('MediaCheck', 0)
 
+		self.dialogCtrl.enable('ShowRbg',0)
+		self.dialogCtrl.setCheckCtrl('ShowRbg', 0)
+
 		# don't allow to remove or add new regions
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.dialogCtrl.enable('NewRegion',0)
 			self.dialogCtrl.enable('DelRegion',0)
+
+		commandList = []	
+		self.setcommands(commandList, '')
 		
 	def updateViewportOnDialogBox(self, nodeRef):
 		# update region list
@@ -1524,7 +1530,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.dialogCtrl.enable('SendBack',0)
 		self.dialogCtrl.enable('BringFront',0)
 		self.dialogCtrl.enable('ShowRbg',0)
-		self.dialogCtrl.setCheckCtrl('ShowRbg', 1)
+		self.dialogCtrl.setCheckCtrl('ShowRbg', 0)
 		self.dialogCtrl.enable('RegionZ',0)
 
 #		self.dialogCtrl.enable('BgColor', 0)
