@@ -75,14 +75,6 @@ item: WinCE Component
     Platform Support=37
   end
   item: WinCE File
-    Source Path=..\..\..\..\lib-src\jpeg\wince\ARMRel\libjpeg.dll
-    Dest Path=\Program Files\GRiNS\libjpeg.dll
-    Check Date Options=2
-    Dest Dir=\Program Files\GRiNS
-    Dest FileName=libjpeg.dll
-    Platform Support=37
-  end
-  item: WinCE File
     Source Path=ARMRelFS\Frozen Static GRiNS Player.exe
     Dest Path=\Program Files\GRiNS\GRiNS Player.exe
     Skip Options=1
