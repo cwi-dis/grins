@@ -3442,16 +3442,6 @@ class MMNode:
 		event = 'begin'
 		if self.type == 'excl':
 			defbegin = None
-		elif self.type == 'bag':
-			# defbegin will be set on each iteration
-			# here we find out to what
-			indexname = MMAttrdefs.getattr(self, 'bag_index')
-			bagindex = None
-			for child in self.GetSchedChildren():
-				chname = MMAttrdefs.getattr(child, 'name')
-				if chname and chname == indexname:
-					bagindex = child
-					break
 		else:
 			defbegin = 0.0
 
@@ -3485,11 +3475,6 @@ class MMNode:
 			beginlist = child.GetBeginList()
 			beginlist = self.FilterArcList(beginlist)
 			if not beginlist:
-				if self.type == 'bag':
-					if bagindex is child:
-						defbegin = 0.0
-					else:
-						defbegin = None
 				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = defbegin)
 				self_body.arcs.append((srcnode, arc))
 				srcnode.add_arc(arc, sctx)
