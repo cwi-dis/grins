@@ -132,7 +132,8 @@ class SMILHtmlTimeWriter(SMIL):
 		# Internet explorer style conventions for HTML+TIME support part 2
 		write('<?IMPORT namespace=\"t\" implementation=\"#default#time2\">\n')
 
-		write(transScript)
+		if self.root.GetContext().transitions:
+			write(transScript)
 
 		self.pop() # head
 
