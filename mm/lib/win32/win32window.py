@@ -1584,17 +1584,17 @@ class Region(Window):
 
 	# get a copy of the screen area of this window
 	def getBackDDS(self):
-		self._topwindow.update()
-		bf = self._topwindow.getDrawBuffer()
-		if bf.IsLost():
-			self.clearSurface(dds)
-			return
-		x, y, w, h = self.getwindowpos()
 		dds = self.createDDS()
+		bf = self._topwindow.getDrawBuffer()
+		while bf.IsLost():
+			win32api.Sleep(50)
+			bf.Restore()
+		x, y, w, h = self.getwindowpos()
+		self._topwindow.paint()
 		try:
 			dds.Blt((0,0,w,h), bf, (x, y, x+w, y+h), ddraw.DDBLT_WAIT)
 		except ddraw.error, arg:
-			print arg			
+			print arg
 		return dds
 
 	def bltDDS(self, srfc):
@@ -1890,7 +1890,6 @@ class Region(Window):
 		if self._transition:
 			print 'Multiple Transitions!'
 			return 0
-		self._topwindow.update()
 		self._passive = self.getBackDDS()
 		return 1
 
