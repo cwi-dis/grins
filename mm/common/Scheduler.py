@@ -292,17 +292,16 @@ class SchedulerContext:
 		srlist = self.getsrlist(ev)
 		self.queuesrlist(srlist, timestamp)
 
-	def sched_arc(self, node, arc, event = None, marker = None, deparc = None, timestamp = None):
+	def sched_arc(self, node, arc, event = None, marker = None, timestamp = None):
 		# Schedules a single SyncArc for a node.
 		
 		# node is the node for the start of the arc.
 		# arc is the SyncArc
 		# event is the event 
 		# marker is ?
-		# deparc is the dependant arcs on this SyncArc
 		# timestamp is the time.. now.
 
-		if debugevents: print 'sched_arc',`node`,`arc`,event,marker,`deparc`,timestamp,self.parent.timefunc()
+		if debugevents: print 'sched_arc',`node`,`arc`,event,marker,timestamp,self.parent.timefunc()
 		if arc.wallclock is not None:
 			timestamp = arc.resolvedtime(self.parent.timefunc)-arc.delay
 		if arc.ismin:
@@ -374,23 +373,21 @@ class SchedulerContext:
 			arc.qid = self.parent.enterabs(arc.timestamp, prio, self.trigger, (arc,))
 			if arc.isstart:
 				arc.dstnode.start_time = arc.timestamp
-			if arc.depends is not None:
-				try:
-					arc.deparcs.remove(arc)
-				except ValueError:
-					pass
-			arc.depends = deparc # can be None
-			if deparc is not None:
-				deparc.deparcs.append(arc)
+				arc.dstnode.depends['begin'].append(arc)
+			else:
+				arc.dstnode.depends['end'].append(arc)
+			if node.deparcs.has_key(event) and arc not in node.deparcs[event]:
+				node.deparcs[event].append(arc)
+				arc.depends.append((node, event))
 		if not arc.ismin and (arc.dstnode is not node or dev != event):
 			ts = timestamp+arc.delay
 			if arc.dstnode.has_min and dev == 'end':
 				# maybe delay dependent sync arcs
 				mintime = arc.dstnode.GetMin()
 				ts = max(ts, arc.dstnode.start_time + mintime)
-			self.sched_arcs(arc.dstnode, dev, deparc = arc, timestamp=ts)
+			self.sched_arcs(arc.dstnode, dev, timestamp=ts)
 
-	def sched_arcs(self, node, event = None, marker = None, deparc = None, timestamp = None):
+	def sched_arcs(self, node, event = None, marker = None, timestamp = None):
 		# Schedules all event-based syncarcs for a single node.
 		# Note that syncarcs that can be derived from the node structure (i.e. start and end of nodes)
 		# are made already in SMILTreeRead and are accessable in MMNode via the 'beginlist' and 'endlist'
@@ -399,7 +396,6 @@ class SchedulerContext:
 		# node is the node.
 		# event is a tuple of (event, ?, ((channel, event)|accessKey))
 		# marker is (?)
-		# deparc are the dependand arcs
 		# timestamp is the time "now".
 
 		if debugevents: print 'sched_arcs',`node`,event,marker,timestamp,self.parent.timefunc()
@@ -442,7 +438,7 @@ class SchedulerContext:
 						else:
 							atime = a.atimes[0]
 						break
-			self.sched_arc(node, arc, event, marker, deparc, timestamp+atime)
+			self.sched_arc(node, arc, event, marker, timestamp+atime)
 		if debugevents: print 'sched_arcs return',`node`,event,marker,timestamp,self.parent.timefunc()
 
 	def trigger(self, arc, node = None, path = None, timestamp = None):
@@ -459,7 +455,6 @@ class SchedulerContext:
 			return
 		parent.paused = paused
 
-		deparcs = []
 		if arc is not None:
 			if arc.qid is None:
 				if debugevents: print 'trigger: ignore arc',`arc`
@@ -472,16 +467,12 @@ class SchedulerContext:
 				arc.qid = parent.enterabs(arc.qid[0], arc.qid[1], self.trigger, (arc,))
 				parent.updatetimer()
 				return
-			if arc.depends is not None:
+			for nd, ev in arc.depends:
 				try:
-					arc.depends.deparcs.remove(arc)
+					nd.deparcs[ev].remove(arc)
 				except ValueError:
 					pass
-				arc.depends = None
-			deparcs = arc.deparcs
-			for a in arc.deparcs:
-				a.depends = None
-			arc.deparcs = []
+			arc.depends = []
 			timestamp = arc.resolvedtime(parent.timefunc)
 			node = arc.dstnode
 			arc.qid = None
@@ -584,8 +575,6 @@ class SchedulerContext:
 			# ignore event when node doesn't want to play
 			if debugevents: print "node won't restart",parent.timefunc()
 			self.cancelarc(arc, timestamp)
-			for a in deparcs:
-				self.cancelarc(a, timestamp)
 			parent.updatetimer()
 			return
 		endlist = MMAttrdefs.getattr(node, 'endlist')
@@ -654,8 +643,6 @@ class SchedulerContext:
 					elif action == 'never':
 						if arc is not None:
 							self.cancelarc(arc, timestamp)
-							for a in deparcs:
-								self.cancelarc(a, timestamp)
 						self.cancel_gensr(node)
 						parent.updatetimer()
 						return
@@ -674,8 +661,6 @@ class SchedulerContext:
 							node.realpix_body.start_time = node.start_time
 						if node.caption_body:
 							node.caption_body.start_time = node.start_time
-						for a in deparcs:
-							self.cancelarc(a, timestamp)
 						self.do_pause(pnode, node, 'hide', timestamp)
 						parent.updatetimer()
 						return
@@ -773,13 +758,30 @@ class SchedulerContext:
 			if debugevents: print 'scheduled_children-1 j',`arc.dstnode`,`arc`,arc.dstnode.scheduled_children,self.parent.timefunc()
 			arc.dstnode.scheduled_children = arc.dstnode.scheduled_children - 1
 		arc.qid = None
-		deparcs = arc.deparcs
-		arc.deparcs = []
-		if arc.isstart and cancel_gensr:
-			self.cancel_gensr(arc.dstnode)
-		for a in deparcs:
-			self.cancelarc(a, timestamp, cancel_gensr)
-			a.depends = None
+		for nd, ev in arc.depends:
+			try:
+				nd.deparcs[ev].remove(arc)
+			except ValueError:
+				pass
+		arc.depends = []
+		if arc.isstart:
+			ev = 'begin'
+		else:
+			ev = 'end'
+		depends = arc.dstnode.depends[ev]
+		try:
+			depends.remove(arc)
+		except ValueError:
+			pass
+		if not depends:
+			# no more arcs can cause the event to happen:
+			# cancel any dependant arcs
+			deparcs = arc.dstnode.deparcs[ev]
+			arc.dstnode.deparcs[ev] = []
+			if arc.isstart and cancel_gensr:
+				self.cancel_gensr(arc.dstnode)
+			for a in deparcs:
+				self.cancelarc(a, timestamp, cancel_gensr)
 
 	def gototime(self, node, gototime, timestamp, path = None):
 		# XXX trigger syncarcs that should go off after gototime?

@@ -1196,8 +1196,7 @@ class MMSyncArc:
 		self.delay = delay
 		self.qid = None
 		self.timestamp = None
-		self.deparcs = []	# arcs dependent on this one
-		self.depends = None	# arc this one depends on
+		self.depends = []	# node/event combos this arc depends on
 		self.path = None	# used in hyperjumps
 		if debug: print 'MMSyncArc.__init__', `self`
 
@@ -1604,6 +1603,8 @@ class MMNode:
 		self.scheduled_children = 0
 		self.arcs = []
 		self.durarcs = []
+		self.deparcs = {'begin': [], 'end': []}	# arcs that depend on the event
+		self.depends = {'begin': [], 'end': []}	# arcs on which the event depends
 		self.reset()
 		self.time_list = []
 		self.fullduration = None
