@@ -1920,7 +1920,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if not name:
 			name = layout_name # only for anonymous root-layout
 		ctx = self.__context
-		layout = MMNode.MMChannel(ctx, name)
+		layout = MMNode.MMChannel(ctx, name, 'layout')
 		if not self.__region2channel.has_key(top):
 			self.__region2channel[top] = []
 		self.__region2channel[top].append(layout)
@@ -1930,7 +1930,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		ctx.channels.insert(0, layout)
 		if isroot:
 			self.__base_win = name
-		layout['type'] = 'layout'
 		if bg is not None and \
 		   bg != 'transparent' and \
 		   bg != 'inherit':
@@ -2147,12 +2146,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				while ctx.channeldict.has_key(name % i):
 					i = i + 1
 				name = name % i
-			ch = MMNode.MMChannel(ctx, name)
+			chtype = 'layout'
+			ch = MMNode.MMChannel(ctx, name, chtype)
 			ctx.channeldict[name] = ch
 			ctx.channelnames.append(name)
 			ctx.channels.append(ch)
 
-			chtype = 'layout'
 			# the layout channel may has a sub type. This sub type is useful to restreint its sub-channel types
 			# by default a layout channel may contain different types of sub-channels.
 			chsubtype = attrdict.get('type')
@@ -2225,7 +2224,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		ch = ctx.channeldict.get(name)
 		# there is no channel of the right name and type, then we create a new channel
 		if ch is None:
-			ch = MMNode.MMChannel(ctx, name)
+			ch = MMNode.MMChannel(ctx, name, mtype)
 			# old 03-07-2000
 			# actualy the region can be 'unnamed' only after a error (if the region doesn't exist)
 			# if region != '<unnamed>':
@@ -2235,7 +2234,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ctx.channeldict[name] = ch
 			ctx.channelnames.append(name)
 			ctx.channels.append(ch)
-			ch['type'] = mtype
 		############################### WARNING ##################################
 		################# to move the test : doesn't work clearly ################
 		##########################################################################
