@@ -236,7 +236,7 @@ def has_key(name):
 		return 1
 	return name == 'system_screen_size' or name == 'system_screen_depth'
 
-components = ['http://www.oratrix.com/GRiNS/']
+components = ['http://www.oratrix.com/GRiNS/smil2.0']
 
 def match(name, wanted_value):
 	if name == 'system_operating_system':
