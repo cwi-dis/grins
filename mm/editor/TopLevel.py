@@ -215,6 +215,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.setwaiting()
 		if self.save_to_file(filename):
 			self.filename = MMurl.pathname2url(filename)
+			self.context.setbaseurl(self.filename)
 			self.fixtitle()
 		else:
 			return 1
