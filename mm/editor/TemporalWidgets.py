@@ -34,6 +34,8 @@ MOVE_NODE_START = 2
 MOVE_NODE_END = 3
 MOVE_CHANNEL = 4
 
+# Some sizes and colors.
+barwidth = 8
 
 class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 	# This implements a container that contains time-based classes.
@@ -57,18 +59,18 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		self.channelNameWidth = 100 # Length of the name of the channel
 		self.channelPlayWidth = 600 # Length of the playable part of the channel
 		self.channelHeight = 16
-		self.maxtime = node.t1
+		self.maxtime = self.node.GetTimes()[1]
 		self.__init_create_channels(self.node.context.channels)
 		self.lbar = self._factory.createbar(self.node)
+		self.lbar.time = -1
+		self.lbar.special =1
 		self.rbar = self._factory.createbar(self.node) # also.
-		self.breaks = {0:self.lbar, self.maxtime:self.rbar}	# A dict of times->syncbars.
+		self.rbar.time = self.maxtime - 0.00001
+		#self.breaks = {0:self.lbar, self.maxtime:self.rbar}	# A dict of times->syncbars.
 		self.syncbars = [self.lbar, self.rbar] # otherwise two bars with the same times will clobber each other.
 		self.__init_create_widgets(self.node, self.lbar, self.rbar)
 		self.editmgr = node.context.editmgr
 
-		self.pointer_status = NORMAL	# What the pointer is.
-		self.pointer_objects = []	# A list of objects which only exist when the user
-					# is doing direct manipulation. These are geodl objects.
 		self.pointer_object_of_interest = None # Which object looks appealing to the selection.
 
 	def setup(self):
@@ -101,6 +103,7 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		if node.type == 'seq':
 			kids = node.GetSchedChildren()
 			lb = leftbar
+			leftbar.start_of_sequence = 1
 			for i in range(0, len(kids)):
 				if i == len(kids)-1:
 					# Then this is the final bar.
@@ -110,10 +113,12 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 					# Note that this is the only place new bars should be created.
 					rb = self._factory.createbar(node)
 					self.syncbars.append(rb) # add it to the list of bars
-					self.breaks[rb.get_time()] = rb	# and to the list of breaks in time.
+					#self.breaks[rb.get_time()] = rb	# and to the list of breaks in time.
 					self.__init_create_widgets(kids[i], lb, rb)
 					lb = rb
 		elif node.type == 'par':
+			if leftbar.par is None:
+				leftbar.par = node
 			for i in node.GetSchedChildren():
 				# Create a node for each child and add it here.. conceptually only.
 				self.__init_create_widgets(i, leftbar, rightbar)
@@ -127,7 +132,17 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 
 	def time2pixel(self, time):
 		# Also need to take time breaks into consideration (TODO)
-		return ((self.channelPlayWidth/self.maxtime) * time) + self.channelNameWidth + 4
+		if time < 0:
+			print "Time below zero: ", time
+			return self.channelNameWidth + 4
+		elif time == 0:
+			return self.channelNameWidth + 4 + barwidth
+		num_breaks = 0
+		for i in self.syncbars:
+			if float(i.get_time()) <= float(time) :
+				num_breaks = num_breaks + 1
+		return_me = ((self.channelPlayWidth/self.maxtime) * time) + self.channelNameWidth + 4 + num_breaks*barwidth
+		return return_me
 
 	def moveto(self, (l,t,r,b)):
 		# Oooh. I'm being moved. All of my children will also have to be moved.
@@ -148,10 +163,12 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 			t = t + self.channelHeight + 2
 		# Move all of my breaks (each syncbar only needs to know it's x position)
 		for i in self.syncbars:
-			x = self.time2pixel(i.get_time())
+			time = i.get_time() - 0.0001
+			x = self.time2pixel(time)
+			print "Moving bar to: ", x, " time is: ", time, "channelNameWidth: ", self.channelNameWidth
 			i.moveto((x,42,69,13)) # I just think that those numbers are cool. Life. Love. Death.
-		self.lbar.moveto((self.time2pixel(0), 1,2,3))
-		self.rbar.moveto((self.time2pixel(self.node.t1), 1, 2, 3))
+		#self.lbar.moveto((self.time2pixel(), 1,2,3))
+		#self.rbar.moveto((self.time2pixel(self.node.t1), 1, 2, 3))
 
 	def click(self, coords):
 		# The z-ordering goes as follows:
@@ -170,21 +187,6 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 					self.select_node(n)
 		
 	# TODO: what about CTRL-clicks for multiple selection?
-
-	def dragging_node(self, coords, object):
-		# React to a node-dragging event.
-		# We use the current selection for dropping.
-		x,y = coords
-
-		if self.pointer_status == NORMAL:
-			# Just move nodes for the meanwhile.
-			if self.root.selected_nodes:
-				self.pointer_status = DRAGGING_NODE
-				for i in self.root.selected_nodes:
-					self.pointer_objects = self.pointer_objects + i.get_draggable(coords)
-		elif self.pointer_status == DRAGGING_NODE:
-			for i in self.pointer_objects:
-				i.moveto((x,y,0,0))
 
 	def select_syncbar(self, bar):
 		self.root.unselect_nodes()
@@ -212,6 +214,10 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 			mmwidget.select()
 			self.editmgr.setglobalfocus('MMNode', mmwidget.node)
 			# Also, set the node's channel.
+
+	def dragging_node(self, tgtcoords, srccoords, mode):
+		print "DEBUG: dragging node; ", tgtcoords, srccoords, mode
+		return windowinterface.DROPEFFECT_NONE
 
 ######################################################################
 # A factory to create new widgets in this file.
@@ -261,6 +267,8 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 		self.name = self.channel.name
 		self.nodes = []		# A list of all node widgets in this channel.
 
+		self.w_fbox = self.graph.AddWidget(FBox(self.root))
+		self.w_fbox.set_color((232,193,152))
 		self.w_outerbox = self.graph.AddWidget(Box(self.root))
 		self.w_name = self.graph.AddWidget(Text(self.root))
 		self.w_name.set_text(self.name)
@@ -271,6 +279,7 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 		self.nodes = None
 		self.graph.DelWidget(self.w_outerbox)
 		self.graph.DelWidget(self.w_name)
+		self.graph.DelWidget(self.w_fbox)
 
 	def set_channel(self, c):
 		self.channel = c
@@ -292,6 +301,7 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 		Widgets.Widget.moveto(self, coords)
 		self.w_outerbox.moveto(coords)
 		self.w_name.moveto(coords)
+		self.w_fbox.moveto(coords)
 
 		# Move all of my nodes too.
 		mx,my,mw,mh = self.get_box()
@@ -336,6 +346,8 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 	# I am a slave to my channel. My channel will resize me and move me around.
 	def setup(self):
 		TimeWidget.setup(self)
+		self.w_fbox = self.graph.AddWidget(FBox(self.root))
+		self.w_fbox.set_color((205,207,194))
 		self.w_outerbox = self.graph.AddWidget(Box(self.root))
 		self.name = self.node.GetAttr('name')
 		self.w_text = self.graph.AddWidget(Text(self.root))
@@ -347,12 +359,17 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		del self.node.views['tempview']
 		self.graph.DelWidget(self.w_outerbox)
 		self.graph.DelWidget(self.w_text)
+		self.graph.DelWidget(self.w_fbox)
 
 	def moveto(self, coords):
+		l,t,r,b = coords
+		if r-l < barwidth:
+			coords = l,t,l+barwidth, b
 		TimeWidget.moveto(self, coords)
+		self.w_fbox.moveto(coords)
 		self.w_outerbox.moveto(coords)
 		self.w_text.moveto(coords)
-		print "DEBUG: MMWidget moved to ", self.get_box()
+#		print "DEBUG: MMWidget moved to ", self.get_box()
 
 	def set_channel(self, c):
 		print "TODO"
@@ -362,10 +379,14 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		return self.node.GetChannel().GetLayoutChannel().name
 
 	def get_starttime(self):
-		return self.node.t0
+		times = self.node.GetTimes()
+		return times[0]
+		#return self.node.t0
 
 	def get_endtime(self):
-		return self.node.t1
+		times = self.node.GetTimes()
+		return times[1]
+		#return float(self.node.t1) - 0.000001 # Must be /before/ the end.
 
 	def select(self):
 		Widgets.Widget.select(self)
@@ -409,12 +430,18 @@ class SyncBarWidget(TimeWidget, GeoDisplayWidget):
 		self.w_blobs_right = []	# These two arrays are mapped together.
 
 		# I am a bar with little blobs attaching me to the right and left nodes there.
+		self.w_fbox = self.graph.AddWidget(FBox(self.root))
+		self.w_fbox.set_color((110,110,110))
 		self.w_bar = self.graph.AddWidget(Box(self.root))
+		self.start_of_sequence = 0
+		self.par = None
+		self.time = None	# for hard-coding the time.
 
 	def destroy(self):
 		for i in self.w_blobs_left + self.w_blobs_right:
 			self.graph.DelWidget(i)
 		self.graph.DelWidget(self.w_bar)
+		self.graph.DelWidget(self.w_fbox)
 		self.w_blobs_left = None
 		self.w_blobs_right = None
 		self.attached_left = None # Prevents circular references.
@@ -422,15 +449,19 @@ class SyncBarWidget(TimeWidget, GeoDisplayWidget):
 
 	def attach_widget_left(self, widget):
 		self.attached_left.append(widget)
-		self.w_blobs_left.append(self.graph.AddWidget(Box(self.root)))
+		blob = self.graph.AddWidget(FBox(self.root))
+		blob.set_color((40,40,40))
+		self.w_blobs_left.append(blob)
 
 	def attach_widget_right(self, widget):
 		self.attached_right.append(widget)
-		self.w_blobs_right.append(self.graph.AddWidget(Box(self.root)))
+		blob = self.graph.AddWidget(FBox(self.root))
+		blob.set_color((40,40,40))
+		self.w_blobs_right.append(blob)
 
 	def moveto(self, coords):
+		print "DEBUG: syncbar moving to: ", coords
 		l,t,r,b = coords
-		barwidth = 8
 		# Blatently ignore t, b, r.
 		t = None
 		b = None
@@ -445,7 +476,7 @@ class SyncBarWidget(TimeWidget, GeoDisplayWidget):
 			if b == None or b < ny+nh:
 				b = ny+nh
 			# Make it stretch to the node.
-			self.w_blobs_left[i].moveto((nx+nw-4,ny+6,l-barwidth/2+2,ny+12))
+			self.w_blobs_left[i].moveto((nx+nw-3,ny+6,l+5,ny+12))
 		for i in range(0,len(self.w_blobs_right)):
 			nx, ny, nw, nh = self.attached_right[i].get_box()
 
@@ -454,65 +485,54 @@ class SyncBarWidget(TimeWidget, GeoDisplayWidget):
 				t = ny
 			if b == None or b < ny+nh:
 				b = ny+nh
-			self.w_blobs_right[i].moveto((l+barwidth/2-2,ny+6, nx+4,ny+12))
+			self.w_blobs_right[i].moveto((l+barwidth-2,ny+6,nx+5,ny+12))
 		if t == None: t=0
 		if b == None: b = 10
-		coords = (l-(barwidth/2), t-3, l+(barwidth/2), b+3)
-		self.w_bar.moveto(coords)
+		l = l + 1
+		ncoords = (l, t-2, l+barwidth, b+2)
+		self.w_fbox.moveto(ncoords)
+		self.w_bar.moveto(ncoords)
 		# I need to move myself to handle clicks.
-		TimeWidget.moveto(self, coords)
+		TimeWidget.moveto(self, ncoords)
 
 	def get_time(self):
-		# Note that this should really be based on the start and end times of my sequence.
-		if len(self.attached_right) > 0:
-			return self.attached_right[0].node.t0
-		elif self.attached_left:
-			return self.attached_left[0].node.t1
-		else:
-			print "ERROR: I have no attached nodes, thus no time."
+		# Based on the position in the sequence.
+		if self.time is not None:
+#			print "DEBUG: returning hard-coded time: ", self.time
+			return self.time
+		elif self.start_of_sequence:
+#			print "DEBUG: returning start of sequence: ", self.node.t0
+			times = self.node.GetTimes()
+			return times[0]
+			#return self.node.t0
+		elif self.par is not None:
+#			print "DEBUG: returning start of par: ", self.par.t0
+			times = self.par.GetTimes()
+			return times[0]
+			#return self.par.t0
+		else:	
+			print "Error: syncbar has no associated widget."
+			
+			#if len(self.attached_right) > 0:
+			#	return self.attached_right[0].node.t0
+			#elif self.attached_left:
+			#	return self.attached_left[0].node.t1
+			#else:
+			#	print "ERROR: I have no attached nodes, thus no time."
 
 	def select(self):
 		self.w_bar.set_color((255,255,255))
-		print "self.w_blobs_left: ", self.w_blobs_left, " w_blobs_right: ", self.w_blobs_right
 		for i in self.w_blobs_left+self.w_blobs_right:
 			i.set_color((255,255,255))
 		TimeWidget.select(self)
 
 	def unselect(self):
 		self.w_bar.set_color((0,0,0))
-		print "self.w_blobs_left: ", self.w_blobs_left, " w_blobs_right: ", self.w_blobs_right
 		for i in self.w_blobs_left + self.w_blobs_right:
-			i.set_color((0,0,0))
+			i.set_color((40,40,40))
 		TimeWidget.unselect(self)
 
-	def get_draggable(self, coords):
-		# return a box.
-		return [self.graph.AddWidget(DraggableBox(self.root))]
+##	def get_draggable(self, coords):
+##		# return a box.
+##		return [self.graph.AddWidget(DraggableBox(self.root))]
 
-class DraggableBox(Box):
-	def moveto(self, coords):
-		l,t,r,b = coords
-		if r == 0 and b == 0:
-			Box.moveto(self, (l,t,l+self.width, t+self.height))
-		else:
-			self.width = r-l
-			self.height = b-t
-			Box.moveto(self, (l-self.width/2,t-self.height/2,r+self.width/2,b+self.width/2))
-
-##class MediaBarWidget(Widget, GeoDisplayWidget):
-##	# This is the media bar at the bottom of the view.
-##	def get_prefered_size(self):
-##		return 24,800
-
-##	def setup(self):
-##		self.w_play = None # Working here.
-
-
-##class ButtonWidget(Widget, GeoDisplayWidget):
-##	# This is a button.
-##	pass
-
-
-##class SliderWidget(Widget, GeoDisplayWidget):
-##	# This is a slider.
-##	pass
