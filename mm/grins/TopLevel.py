@@ -115,7 +115,8 @@ class TopLevel:
 				filename = file
 		try:
 			top = TopLevel(self.main, filename)
-		except (IOError, MMExc.MTypeError, MMExc.MSyntaxError), msg:
+		except:
+			msg = sys.exc_value
 			if type(msg) is type(self):
 				if hasattr(msg, 'strerror'):
 					msg = msg.strerror
@@ -221,7 +222,8 @@ class TopLevel:
 		else:
 			try:
 				top = TopLevel(self.main, filename)
-			except (IOError, MMExc.MTypeError, MMExc.MSyntaxError), msg:
+			except:
+				msg = sys.exc_value
 				if type(msg) is type(self):
 					if hasattr(msg, 'strerror'):
 						msg = msg.strerror
