@@ -2356,11 +2356,18 @@ class EnumAttrEditorField(PopupAttrEditorFieldNoDefault):
 				pnode = self.attreditor.wrapper.node.GetParent()
 				default = None
 				if name == 'fillDefault':
-					default = pnode.GetInherAttrDef('fillDefault', 'auto')
+					if pnode is None:
+						default = 'auto'
+					else:
+						default = pnode.GetInherAttrDef('fillDefault', 'auto')
 				elif name == 'restartDefault':
-					default = pnode.GetRestart('default')
+					if pnode is None:
+						default = 'always'
+					else:
+						default = pnode.GetRestart('default')
 				elif name == 'syncBehaviorDefault':
-					default = pnode.GetSyncBehavior('default')
+					if pnode is not None:
+						default = pnode.GetSyncBehavior('default')
 				if default is not None:
 					self.__values[i] = self.__inherit = 'inherit [%s]' % default
 
