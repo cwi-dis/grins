@@ -198,3 +198,8 @@ def showeditor(node):
 def test():
     InitEditors()
     print channeleditors
+
+# This is mostly Jack's code, so...
+# Local variables:
+# py-indent-offset: 4
+# end:

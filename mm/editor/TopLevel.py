@@ -89,7 +89,7 @@ class TopLevel(ViewDialog, BasicDialog):
 		# Fix the timing -- views may depend on this.
 		self.changed = 1
 		MMAttrdefs.flushcache(self.root)
-		Timing.calctimes(self.root)
+		Timing.changedtimes(self.root)
 	#
 	def rollback(self):
 		# Nothing has happened.
@@ -286,7 +286,7 @@ class TopLevel(ViewDialog, BasicDialog):
 		self.root = MMTree.ReadFile(self.filename)
 		t1 = time.millitimer()
 		print 'done in', (t1-t0) * 0.001, 'sec.'
-		Timing.calctimes(self.root)
+		Timing.changedtimes(self.root)
 		self.context = self.root.GetContext()
 		self.editmgr = EditMgr().init(self.root)
 		self.context.seteditmgr(self.editmgr)
