@@ -1,8 +1,8 @@
 // -*- Mode: C++; tab-width: 4 -*-
 // $Id$
 //
-#include "cmifex.h"
-#include "sampledll.h"
+//#include "cmifex.h"
+//#include "sampledll.h"
 
 #define VC_EXTRALEAN
 #define STRICT
@@ -10,6 +10,18 @@
 #include <afxwin.h>
 #include <mmsystem.h>
 #include "audiostream.h"
+
+//Win32 Header Files
+#include <process.h>
+
+//Python Header Files
+#include "Python.h"
+
+//PythonWin Header Files
+#include "win32ui.h"
+#include "win32assoc.h"
+#include "win32cmd.h"
+#include "win32win.h"
 
 #define _SNDDLL_
 #include "sampledll.h"
@@ -171,7 +183,7 @@ seekstart(int i)
 
 static PyObject *CmifExError;
 
-PyIMPORT CWnd *GetWndPtr(PyObject *);
+PYW_EXPORT CWnd *GetWndPtr(PyObject *);
 
 #ifdef __cplusplus
 extern "C" {
@@ -313,7 +325,7 @@ static PyMethodDef CmifExMethods[] =
 	{ NULL, NULL }
 };
 
-PyEXPORT 
+__declspec(dllexport) 
 void initdsoundex()
 {
 	PyObject *m, *d;
