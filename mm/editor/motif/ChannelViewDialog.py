@@ -24,6 +24,7 @@ class ChannelViewDialog(ViewDialog):
 			'L': FINISH_LINK,
 			'e': CONTENT,
 			't': ANCHORS,
+			'b': TOGGLE_BWSTRIP,
 			},
 		'menubar': [
 			('Close', [
@@ -68,6 +69,8 @@ class ChannelViewDialog(ViewDialog):
 				 TOGGLE_ARCS, 't'),
 				(('Show thumbnails', 'Hide thumbnails'),
 				 THUMBNAIL, 't'),
+				(('Show bandwidth strip', 'Hide bandwidth strip'),
+				 TOGGLE_BWSTRIP, 't'),
 				None,
 				('Highlight in player', HIGHLIGHT),
 				('Unhighlight in player', UNHIGHLIGHT),
