@@ -156,18 +156,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "smil"=..\..\..\SMIL\smil\smil.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
 Project: "win32api"=..\..\..\python\Extensions\win32\win32api.dsp - Package Owner=<4>
 
 Package=<5>
@@ -241,6 +229,10 @@ Global:
 
 Package=<5>
 {{{
+    begin source code control
+    "$/cmif", TRAAAAAA
+    .
+    end source code control
 }}}
 
 Package=<3>
