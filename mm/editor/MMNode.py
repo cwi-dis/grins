@@ -293,7 +293,7 @@ class MMNode(MMNodeBase.MMNode):
 	# If there is overlap between parnode children the node in error
 	# is returned.
 	def GetAllChannels(self):
-		if self.type == 'bag':
+		if self.type in bagtypes:
 			return [], None
 		if self.type in leaftypes:
 			return [MMAttrdefs.getattr(self, 'channel')], None
@@ -447,10 +447,10 @@ class MMNode(MMNodeBase.MMNode):
 	#
 	# Check whether a node is the top of a mini-document
 	def IsMiniDocument(self):
-		if self.type == 'bag':
+		if self.type in bagtypes:
 			return 0
 		parent = self.parent
-		return parent is None or parent.type == 'bag'
+		return parent is None or parent.type in bagtypes
 
 	# Find the first mini-document in a tree
 	def FirstMiniDocument(self):
@@ -513,7 +513,7 @@ class MMNode(MMNodeBase.MMNode):
 	def FindMiniDocument(self):
 		node = self
 		parent = node.parent
-		while parent is not None and parent.type != 'bag':
+		while parent is not None and parent.type not in bagtypes:
 			node = parent
 			parent = node.parent
 		return node
@@ -521,7 +521,7 @@ class MMNode(MMNodeBase.MMNode):
 	# Find the nearest bag given a minidocument
 	def FindMiniBag(self):
 		bag = self.parent
-		if bag and bag.type <> 'bag':
+		if bag and bag.type not in bagtypes:
 			raise 'FindMiniBag: minidoc not rooted in a bag!'
 		return bag
 
@@ -582,6 +582,8 @@ class MMNode(MMNodeBase.MMNode):
 			self.gensr = self.gensr_leaf
 		elif type == 'bag':
 			self.gensr = self.gensr_bag
+		elif type == 'alt':
+			self.gensr = self.gensr_bag
 		elif type == 'seq':
 			self.gensr = self.gensr_seq
 		elif type == 'par':
@@ -613,7 +615,7 @@ class MMNode(MMNodeBase.MMNode):
 			raise 'Seeknode not in tree!'
 		self.sync_from = ([],[])
 		self.sync_to = ([],[])
-		if self.type in ('imm', 'ext', 'bag'):
+		if self.type in playabletypes:
 			return
 		self.wtd_children = []
 		if self.type == 'seq':
