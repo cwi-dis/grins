@@ -2411,7 +2411,10 @@ class GreyoutWidget(MMWidgetDecoration):
 
 	def draw(self, displist):
 		x, y, w, h = self.get_box()
+		xw = x + w
 		for left, right in self.greyout_ranges:
+			left = max(x, left)
+			right = min(xw, right)
 			displist.drawstipplebox(self.mmwidget.PLAYCOLOR, (left, y, right-left+1, h))
 
 	def redraw_partial(self, displist, left, right):
@@ -2598,6 +2601,7 @@ class TimelineWidget(MMWidgetDecoration):
 				break
 ##			tick_x = timemapper.interptime2pixel(time)
 			tick_x2 = timemapper.interptime2pixel(time, align='right')
+			tick_x2 = min(tick_x2, mx)
 ##			tick_x_mid = (tick_x + tick_x2) / 2
 			tick_x = tick_x_mid = tick_x2
 			# Check whether it is time for a tick
