@@ -2303,6 +2303,8 @@ class Window(_WindowHelpers, _MenuSupport):
 			attrs['dialogStyle'] = \
 					     Xmd.DIALOG_FULL_APPLICATION_MODAL
 			parent = options.get('parent', toplevel)
+			if parent is None:
+				parent = toplevel
 			while 1:
 				if hasattr(parent, '_shell'):
 					parent = parent._shell
