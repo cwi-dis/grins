@@ -1,4 +1,4 @@
-GRiNS Java SDK preview release
+GRiNS for Java 2 SDK preview release
 
 Requirements:
 	GRiNS Player 2 (Build 44 or later)
