@@ -608,8 +608,8 @@ class MediaReader:
 			try:
 				vpf = dshow.CreateFilter('Video Pipe')
 			except dshow.error:
-				print 'Video converter pipe filter not installed'
-				raise dshow.error, 'Video converter pipe filter not installed'
+				print 'Video pipe filter not installed'
+				raise dshow.error, 'Video pipe filter not installed'
 		
 			# set listener
 			try:
