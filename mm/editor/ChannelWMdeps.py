@@ -10,6 +10,8 @@ from ArmStates import *
 
 prearm_disabled = 0
 
+channel_device = 0x4001
+
 # Calling this routine disables the prearm facility. It is mainly
 # meant to be able to demonstrate the effect of prearms on timing.
 
@@ -44,6 +46,7 @@ class Channel:
 	# is reset, so changes made while it was dormant are noted.
 
 	def init(self, (name, attrdict, player)):
+		global channel_device
 		self.name = name
 		self.attrdict = attrdict
 		self.player = player
@@ -52,6 +55,8 @@ class Channel:
 		self.autoanchor = None
 		self.haspauseanchor = 0
 		self.node = None
+		self.deviceno = channel_device
+		channel_device = channel_device + 1
 		return self
 
 	def show(self):
