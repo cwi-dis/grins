@@ -122,13 +122,14 @@ class AnimateChannel(Channel.ChannelAsync):
 		if self.__targetChannel:
 			return self.__targetChannel
 		targnode = self.__effAnimator.getTargetNode()
-
-		chname = MMAttrdefs.getattr(targnode, 'channel')
-		if targnode.GetChannelType()!='layout':
-			# XXX: not always correct
-			# whats the method to  find node's channel (name %d)?	
-			chname = chname + ' 0' 
-		self.__targetChannel = self._player.getchannelbyname(chname)
+		if targnode._type == 'mmnode':
+			self.__targetChannel = self._player.getRenderer(targnode)
+		elif targnode._type == 'region':
+			regionName = targnode.GetChannelName()
+			self.__targetChannel = self._player.getchannelbyname(regionName)
+		elif targnode._type == 'area':
+			parentnode = targnode.attrdict.get('parent')
+			self.__targetChannel = self._player.getRenderer(parentnode)
 		return self.__targetChannel
 		
 	def __startAnimate(self):
@@ -212,3 +213,4 @@ class AnimateChannel(Channel.ChannelAsync):
 			else:
 				windowinterface.canceltimer(self.__fiber_id)
 			self.__fiber_id = None
+ 
