@@ -4,12 +4,11 @@ __version__ = "$Id$"
 # XXXX Note: the separation is not correct: there are still things in HierarchyView
 # that really belong here...
 
-""" @win32doc|HierarchyViewDialog
-This class represents the interface between the HierarchyView platform independent
-class and its implementation class _HierarchyView in lib/win32/_HierarchyView.py which 
-implements the actual view.
+# @win32doc|HierarchyViewDialog
+# This class represents the interface between the HierarchyView platform independent
+# class and its implementation class _HierarchyView in lib/win32/_HierarchyView.py which 
+# implements the actual view.
 
-"""
 import string
 from ViewDialog import ViewDialog
 import WMEVENTS
