@@ -81,6 +81,7 @@ class PyIntListConverter
 		{
 		if(!m_pint || m_num==0)
 			return NULL;
+		if(m_pbyte!=NULL) delete[] m_pbyte;
 		m_pbyte = new BYTE[m_num];
 		for(int i=0;i<m_num;i++) 
 			m_pbyte[i]=BYTE(m_pint[i]);
