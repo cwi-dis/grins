@@ -324,6 +324,7 @@ class _CmifPlayerView(_CmifView):
 		_CmifView.OnInitialUpdate(self)
 		#self.HookMessage(self.onPostResize,win32con.WM_USER)
 
+
 	# Do not close and recreate topwindow, due to flushing screen
 	# and loose of focus. 
 	# Nobody would excpect to destroy a window by resizing it!
@@ -341,6 +342,11 @@ class _CmifPlayerView(_CmifView):
 		# and re-created. The effect of calling it is
 		# a flickering screen 
 #		self._do_resize(msg.width(),msg.height())
+		
+		# destroy displists while dragging?
+		# i.e repaint previous content while dragging?
+		# Its a preference. 
+#		self._destroy_displists_tree()
 
 		# after _do_resize because it uses old self._rect
 		self._rect=0,0,msg.width(),msg.height()
@@ -354,7 +360,7 @@ class _CmifPlayerView(_CmifView):
 		from __main__ import toplevel
 		if self._tid:
 			toplevel.canceltimer(self._tid)
-		self._tid=toplevel.settimer(0.1,(self.onPostResize,()))
+		self._tid=toplevel.settimer(0.2,(self.onPostResize,()))
 
 	def onPostResize(self,params=None):
 		self._tid=None
