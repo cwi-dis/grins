@@ -72,12 +72,12 @@ class ChildFrame(window.MDIChildWnd):
 	# Called by the framework when this is activated or deactivated
 	def onMdiActivate(self,params):
 		msg=win32mu.Win32Msg(params)
-		if msg._lParam==self._hwnd:
-			if self._form: 
-				self._form.onActivate(1)
-		elif msg._wParam==self._hwnd:
-			if self._form:
-				self._form.onActivate(0)
+		hwndChildDeact = msg._wParam; # child being deactivated 
+		hwndChildAct = msg._lParam; # child being activated
+		if hwndChildAct == self.GetSafeHwnd():
+			self._form.activate()
+		elif hwndChildDeact == self.GetSafeHwnd():
+			self._form.deactivate()
 	
 	# Creates and sets the view 	
 	# create view (will be created by default if)
