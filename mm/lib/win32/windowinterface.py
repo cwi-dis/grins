@@ -72,6 +72,12 @@ from Font import findfont,fonts
 from AppToplevel import FileDialog
 from win32dialog import *
 
+# override some dialogs when embedded
+import __main__
+if hasattr(__main__,'embedded') and __main__.embedded:
+	import embedding
+	showmessage = embedding.showmessage
+
 # Auxiliary functions
 from AppToplevel import beep
 
