@@ -12,9 +12,7 @@
 # equivalents of the GL device routines, like fl.(un)qdevice(),
 # fl.qtest() and fl.qread().  If you don't you're in big trouble! ***
 
-import gl
-from GL import *
-from DEVICE import *
+import gl, GL, DEVICE
 import fl, FL
 
 
@@ -112,6 +110,9 @@ check = fl.check_forms
 
 # Event dispatcher, installed as FORMS' event callback
 
+from DEVICE import REDRAW, KEYBD, MOUSE3, MOUSE2, MOUSE1, INPUTCHANGE
+from DEVICE import WINSHUT, WINQUIT
+
 def dispatch(dev, val):
 	if dev = REDRAW:
 		# Ignore events for unregistered windows
@@ -197,8 +198,8 @@ def setgeometry(arg):
 	if h < 0 and v < 0:
 		gl.prefsize(width, height)
 	else:
-		scrwidth = gl.getgdesc(GD_XPMAX)
-		scrheight = gl.getgdesc(GD_YPMAX)
+		scrwidth = gl.getgdesc(GL.GD_XPMAX)
+		scrheight = gl.getgdesc(GL.GD_YPMAX)
 		x, y = h, scrheight-v-height
 		# Correction for window manager frame size
 		x = x - WMCORR_X
@@ -212,9 +213,21 @@ def setgeometry(arg):
 def getgeometry():
 	x, y = gl.getorigin()
 	width, height = gl.getsize()
-	scrwidth = gl.getgdesc(GD_XPMAX)
-	scrheight = gl.getgdesc(GD_YPMAX)
+	scrwidth = gl.getgdesc(GL.GD_XPMAX)
+	scrheight = gl.getgdesc(GL.GD_YPMAX)
 	return x, scrheight - y - height, width, height
+
+
+# Change the geometry of a window
+
+def relocate(arg):
+	if arg = None: return
+	h, v, width, height = arg
+	scrwidth = gl.getgdesc(GL.GD_XPMAX)
+	scrheight = gl.getgdesc(GL.GD_YPMAX)
+	x1, x2 = h, h + width
+	y1, y2 = scrheight-v-height, scrheight-v
+	gl.winposition(x1, x2, y1, y2)
 
 
 # Hack, hack: some X window managers interpret the prefered position
