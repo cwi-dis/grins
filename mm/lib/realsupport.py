@@ -153,15 +153,43 @@ class RTParser(xmllib.XMLParser):
 		self.__printfunc = None
 
 	# the rest is to check that the nesting of elements is done
-	# properly (i.e. according to the SMIL DTD)
+	# properly
 	def finish_starttag(self, tagname, attrdict, method):
 		if len(self.stack) > 1:
 			ptag = self.stack[-2][2]
 			if tagname not in self.entities.get(ptag, ()):
-				self.syntax_error('%s element not allowed inside %s' % (self.stack[-1][0], self.stack[-2][0]))
+				if not self.entities.get(ptag):
+					# missing close tag of empty element, just remove the entry from the stack
+					del self.stack[-2]
+				else:
+					self.syntax_error('%s element not allowed inside %s' % (self.stack[-1][0], self.stack[-2][0]))
 		elif tagname != self.topelement:
 			self.syntax_error('outermost element must be "%s"' % self.topelement)
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
+
+	# special version that doesn't complain about missing end tags
+	def finish_endtag(self, tag):
+		self.literal = 0
+		if not tag:
+			xmllib.XMLParser.finish_endtag(self, tag)
+			return
+		else:
+			found = -1
+			for i in range(len(self.stack)):
+				if tag == self.stack[i][0]:
+					found = i
+			if found == -1:
+				xmllib.XMLParser.finish_endtag(self, tag)
+				return
+		while len(self.stack) > found+1:
+			nstag = self.stack[-1][2]
+			method = self.elements.get(nstag, (None, None))[1]
+			if method is not None:
+				self.handle_endtag(nstag, method)
+			else:
+				self.unknown_endtag(nstag)
+			del self.stack[-1]
+		xmllib.XMLParser.finish_endtag(self, tag)
 
 class RPParser(xmllib.XMLParser):
 	topelement = 'imfl'
