@@ -68,7 +68,7 @@ class _rbtk:
 			d.drawbox(b)
 		self._topwindow.ShowWindows(win32con.SW_HIDE)
 
-		d.fgcolor((255, 0, 0))
+		#d.fgcolor((255, 0, 0))
 		if box:
 			# add the rect obj
 			box_pxl=self.get_pixel_coords(box)
