@@ -99,6 +99,21 @@ Package=<4>
 
 ###############################################################################
 
+Project: "winmm"=..\..\winsdk\winmm\winmm.vcp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name Python16
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "winuser"=..\..\WINSDK\WINUSER\winuser.vcp - Package Owner=<4>
 
 Package=<5>
