@@ -100,7 +100,11 @@ class _Toplevel:
 	def forcePaint(self):
 		for w in self._subwindows:
 			w._forcePaint()
-
+	
+	# 
+	def forceclose(self):
+		(win32ui.GetAfx()).PostQuitMessage(0)
+	
 	# Call by the core to close the application
 	def close(self):
 		for func, args in self._closecallbacks:
