@@ -563,19 +563,6 @@ class HierarchyView(ViewDialog):
 		self.displist = displist
 		self.new_displist = None
 
-	# Get the current window shape and set the transformation.
-	# Note that the Y axis is made to point down, like X coordinates!
-	# Assume we are the current window.
-	def getshape(self):
-		gl.reshapeviewport()
-		self.width, self.height = gl.getsize()
-		x0, x1, y0, y1 = gl.getviewport()
-		width, height = x1-x0, y1-y0
-		MASK = 20
-		gl.viewport(x0-MASK, x1+MASK, y0-MASK, y1+MASK)
-		gl.scrmask(x0, x1, y0, y1)
-		gl.ortho2(-MASK, width+MASK, height+MASK, -MASK)
-
 
 # Recursive procedure to calculate geometry of boxes.
 # This makes a box for the give node with the given dimensions,
@@ -686,17 +673,6 @@ class Object:
 ##			None,
 ##			('h', 'Help...', (self.helpcall, ())),
 			]
-
-	# Handle a right button mouse click in the object
-	def popupmenu(self, x, y):
-		func = self.__class__.menu.popup(x, y)
-		if func: func(self)
-
-	# Handle a shortcut in the object
-	def shortcut(self, c):
-		func = self.__class__.menu.shortcut(c)
-		if func: func(self)
-		else: gl.ringbell()
 
 	# Make this object the focus
 	def select(self):
