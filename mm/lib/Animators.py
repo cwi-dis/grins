@@ -18,8 +18,8 @@ import settings
 
 # modules flags
 basicAnimation	= 1
-splineAnimation = settings.profileExtensions.get('SplineAnimation')
-timeManipulations = settings.profileExtensions.get('TimeManipulations')
+splineAnimation = settings.MODULES.get('SplineAnimation')
+timeManipulations = settings.MODULES.get('TimeManipulations')
 
 # debug flags
 debug = 0
