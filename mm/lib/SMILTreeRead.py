@@ -211,6 +211,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'prefetch': (self.start_prefetch, self.end_prefetch),
 			GRiNSns + ' ' + 'assets': (self.start_assets, self.end_assets),
 			}
+		self.__readskin()
 		self.__encoding = 'utf-8'
 		xmllib.XMLParser.__init__(self, complain_foreign_namespace = 0)
 		self.__seen_smil = 0
@@ -2499,7 +2500,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 								       ('height',ch.get('height'))])
 			# if not width or height specified, guess it
 			width, height = self.__context.cssResolver.getPxGeom(ch.getCssId())
-			# fix all the time a pixel geom value for viewport.
+			# always fix the pixel geometry value for viewport.
 			self.__context.cssResolver.setRawAttrs(cssId, [('width', width),
 								       ('height', height)])
 			ch['width'] = width
@@ -2772,13 +2773,17 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		for c in node.GetChildren():
 			self.__fix_accesskey(c, keys)
 
-	def __parseskin(self):
+	def __readskin(self):
 		import parseskin
 		import Sizes
+		self.__skin = None
 		skin = settings.get('skin')
+		if not skin:
+			return
 		try:
 			f = MMurl.urlopen(skin)
 			dict = parseskin.parsegskin(f)
+			f.close()
 		except parseskin.error, msg:
 			self.warning('error parsing skin description file')
 			return
@@ -2787,8 +2792,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if width == 0 or height == 0:
 			self.warning('error getting skin image dimensions')
 			return
+		dict['width'] = width
+		dict['height'] = height
 		if dict.has_key('components'):
 			settings.read_components(MMurl.basejoin(skin, dict['components']))
+		apply(settings.setScreenSize, dict['display'][1][2:4])
+		self.__skin = dict
+
+	def __fixskin(self):
+		dict = self.__skin
+		if not dict:
+			return
+		skin = settings.get('skin')
 		ctx = self.__context
 		vp = ctx.getviewports()[0] # we already know there's exactly one
 		top = ctx.newviewport('The Skin', -1, 'layout')
@@ -2799,7 +2814,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		root.__forcechild = None, 0
 		img = ctx.newnode('ext')
 		root._addchild(img)
-		img.attrdict['file'] = image
+		img.attrdict['file'] = MMurl.basejoin(skin, dict['image'])
+		width = dict['width']
+		height = dict['height']
 		top['width'] = reg['width'] = width
 		top['height'] = reg['height'] = height
 		ctx.cssResolver.setRawAttrs(top.getCssId(), [('width', width), ('height', height)])
@@ -2812,7 +2829,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		endlist = []
 		keys = []		# list of accesskey keys
 		for key, val in dict.items():
-			if key == 'image':
+			if key in ('image', 'width', 'height'):
 				continue
 			if key == 'display':
 				coords = val[1]
@@ -2881,7 +2898,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			self.__newTopRegion()
 		self.Recurse(self.__root, self.FixSyncArcs)
 		if not features.editor and settings.get('skin') and len(ctx.getviewports()) == 1:
-			self.__parseskin()
+			self.__fixskin()
 		self.FixLayouts()
 		self.FixSizes()
 		self.FixBaseWindow()
@@ -3343,6 +3360,30 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.AddCoreAttrs(topLayout, attributes)
 
 		cssAttrs = []
+
+		scrw, scrh = settings.get('system_screen_size')
+		changed = 0
+		try:
+			width = int(attributes.get('width'))
+		except ValueError:
+			width = None
+		if width is not None and width > scrw:
+			attributes['width'] = `scrw`
+			changed = 1
+		try:
+			height = int(attributes.get('height'))
+		except ValueError:
+			height = None
+		if height is not None and height > scrh:
+			attributes['height'] = `scrh`
+			changed = 1
+		if width is not None and height is not None and changed:
+			xsc = float(width) / scrw
+			ysc = float(height) / scrh
+			if xsc < ysc:
+				attributes['height'] = `int(height * xsc + .5)`
+			elif xsc > ysc:
+				attributes['width'] = `int(width * ysc + .5)`
 
 		for attr,val in attributes.items():
 			if attr in ('open', 'close'):
