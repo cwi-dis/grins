@@ -114,7 +114,7 @@ class MMNodeContext:
 		##_stat('getchannel')
 		try:
 			return self.channeldict[name]
-		except AttributeError:
+		except KeyError:
 			return None
 	#
 	def addchannel(self, name, i, type):

@@ -7,8 +7,12 @@ cache = {}
 
 def fast__import__(name, globals=None, locals=None, fromlist=None):
     # Fast path: see if the module has already been imported.
-    if sys.modules.has_key(name):
+    # Use try--except on the assumption that most of the time the
+    # module has already been imported.
+    try:
         return sys.modules[name]
+    except KeyError:
+	pass
 
     # If any of the following calls raises an exception,
     # there's a problem we can't handle -- let the caller handle it.
