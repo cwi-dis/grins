@@ -129,7 +129,7 @@ class TreeCtrl(window.Wnd, IconMixin.CtrlMixin):
 		rc = dlg.ScreenToClient(rc)
 		self.create(dlg, rc, id)
 
-	def __clearMultiSelect(self, hititem):
+	def __setSingleSelect(self, hititem):
 		for item in self._selections:
 			if item != hititem:
 				try:
@@ -161,7 +161,7 @@ class TreeCtrl(window.Wnd, IconMixin.CtrlMixin):
 		if not (flags & win32con.MK_CONTROL) and not (flags & win32con.MK_SHIFT):
 			# remove multi-select mode
 #			nsel = len(self._selections)
-			self.__clearMultiSelect(hititem)
+			self.__setSingleSelect(hititem)
 
 			# do a normal selection/deselection
 			return 1
@@ -508,7 +508,7 @@ class TreeCtrl(window.Wnd, IconMixin.CtrlMixin):
 		item, field2, field3, field4, field5, field6, field7, field8 = itemNew
 
 		if self._selEventSource not in (EVENT_SRC_Expanded, EVENT_SRC_LButtonDown):
-			self.__clearMultiSelect(item)
+			self.__setSingleSelect(item)
 
 		self._selEventSource = None
 		
