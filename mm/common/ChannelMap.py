@@ -1,5 +1,8 @@
 __version__ = "$Id$"
 
+import compatibility
+import features
+
 # Table mapping channel types to channel classes.
 # Edit this module to add new classes.
 from sys import platform
@@ -108,7 +111,10 @@ channelhierarchy = {
 		'null'],
     'ole': ['word'],
     }
-SMILchanneltypes = ['image', 'sound', 'video', 'RealPix', 'RealText', 'text', 'null']
+SMILchanneltypes = ['image', 'sound', 'video', 'text']
+if compatibility.G2 == features.compatibility:
+        SMILchanneltypes = SMILchanneltypes+['RealPix', 'RealText']
+SMILchanneltypes = SMILchanneltypes+['null']
 
 ct = channelmap.keys()
 ct.sort()
