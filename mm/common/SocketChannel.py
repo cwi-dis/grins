@@ -53,12 +53,16 @@ class SocketChannel(Channel):
 		fields = string.split(rv)
 		cmd = fields[0]
 		if cmd == 'anchor':
+			if not self._played_node:
+				dialogs.showmessage('SocketChannel: no node playing\n')
+				return
 			if len(fields) == 2:
 				name = fields[1]
-				for a in self.anchorlist:
-					if a[A_ID] == name:
+				for nm, tp, bt in self._played_anchors:
+					if nm == name:
 						self._playcontext.anchorfired(\
-						    self._played_node, [a])
+						    self._played_node, \
+						    [(nm,tp)])
 						return
 			dialogs.showmessage('SocketChannel: no such anchor\n'+
 				  rv)
@@ -67,11 +71,13 @@ class SocketChannel(Channel):
 				  rv)
 
 	def do_arm(self, node):
+		alist =  MMAttrdefs.getattr(node, 'anchorlist')
+		modanchorlist(alist)
+		for a in alist:
+			self.setanchor(a[A_ID], a[A_TYPE], None)
 		return 1
 
 	def do_play(self, node):
-		self.anchorlist = MMAttrdefs.getattr(node, 'anchorlist')
-		modanchorlist(self.anchorlist)
 		if node.GetType() <> 'imm':
 			return
 		cmds = node.GetValues()
