@@ -13,14 +13,9 @@ from win32con import *
 from __main__ import resdll
 
 def Boot( bEditor = 0 ):
-	print 'Running CMIF Multimedia presentation'
-	if len(sys.argv)>1:
-		print sys.argv[1]
-	
 	CMIFDIR = win32api.GetFullPathName(os.path.join(os.path.split(sys.argv[0])[0], "." ))
 
 	# TEMP TEST FOLDER
-	print "Main GRiNS directory is", CMIFDIR
 	if bEditor:
 		specificPath = "editor"
 		os.environ['GRiNSApp']='GRiNSed'
@@ -59,7 +54,6 @@ def Boot( bEditor = 0 ):
 	try:
 		global resdll
 		resdll = win32ui.LoadLibrary(os.path.join(dllPath, "GRiNSRes.dll"))
-		print "Loaded", resdll, "from", dllPath
 		resdll.AttachToMFC()
 	except win32ui.error:
 		win32ui.MessageBox("The application resource DLL 'GRiNSRes.dll' can not be located\r\n\r\nPlease correct this problem, and restart the application")
