@@ -28,7 +28,8 @@
 text:vi-xterm:xterm -e vi $file
 text:vi-wsh:wsh -C 0,8,3,1 -fScreen-Bold.15 -c vi $file
 text:emacs:emacs $file
-text:emacsclient:emacsclient $file
+text:gnuclient:/usr/local/emacs/bin/gnuclient $file
+text:emacsclient:/usr/local/emacs/bin/emacsclient $file
 
 image:imp:/ufs/guido/bin/sgi/imp $file
 image:imged:imged $file

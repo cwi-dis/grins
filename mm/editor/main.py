@@ -75,10 +75,31 @@ def main():
 		try:
 			if playnow:
 				top.player.playsubtree(top.root)
+			if sys.__dict__.has_key('mdebug'):
+				import os
+				if os.environ.has_key('MDEBUG'):
+					flag = eval(os.environ['MDEBUG'])
+					print 'mallopt( M_DEBUG,', flag, ')'
+					sys.mdebug(flag)
 			top.run()
+			# Actually, this point isn't reached
 			top.destroy()
 		except KeyboardInterrupt:
 			print 'Interrupt.'
+		except SystemExit, sts:
+			sys.exit(sts)
+		except:
+			print
+			print '\t-------------------------------------------'
+			print '\t| Entering debugger -- call Guido or Jack |'
+			print '\t-------------------------------------------'
+			print
+			print '\t' + sys.exc_type + ':', `sys.exc_value`
+			print
+			import pdb
+			tb = sys.exc_traceback
+			f = None
+			pdb.Pdb().init().interaction(f, tb)
 	finally:
 		SoundChannel.restore()
 		ImageChannel.cleanup()
