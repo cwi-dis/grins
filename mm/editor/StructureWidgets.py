@@ -2741,6 +2741,11 @@ class BandWidthWidget(MMWidgetDecoration):
 	def _drawboxes(self, displist, color, boxes):
 		for node, box in boxes:
 			displist.drawfbox(color, box)
+			# This draws a line around the box. I'm not
+			# sure I like it.
+			x, y, w, h = box
+			if w > 1 and h > 1:
+				displist.drawbox((x, y, w+1, h+1))
 
 	def focuschanged(self, displist, focusnodes):
 		# This is gross. This method is called by HierarchyView
@@ -2777,6 +2782,7 @@ class BandWidthWidget(MMWidgetDecoration):
 			self.okfocusboxes.append(nb)
 		for nb in tonotokfocus:
 			self.notokfocusboxes.append(nb)
+		displist.fgcolor(TEXTCOLOR)
 		self._drawboxes(displist, BANDWIDTH_OK_COLOR, took)
 		self._drawboxes(displist, BANDWIDTH_NOTOK_COLOR, tonotok)
 		self._drawboxes(displist, BANDWIDTH_OKFOCUS_COLOR, tookfocus)
