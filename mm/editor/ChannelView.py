@@ -363,15 +363,25 @@ class ChannelView(ViewDialog, GLDialog):
 	# View root stuff
 
 	def nextviewroot(self):
-		node = self.viewroot.NextMiniDocument()
-		if node == None:
-			node = self.root.FirstMiniDocument()
+		for c in self.viewroot.GetChildren():
+			node = c.FirstMiniDocument()
+			if node: break
+		else:
+			node = self.viewroot.NextMiniDocument()
+			if node is None:
+				node = self.root.FirstMiniDocument()
 		self.setviewroot(node)
 
 	def prevviewroot(self):
-		node = self.viewroot.PrevMiniDocument()
-		if node == None:
-			node = self.root.LastMiniDocument()
+		children = self.viewroot.GetChildren()[:]
+		children.reverse()
+		for c in children:
+			node = c.LastMiniDocument()
+			if node: break
+		else:
+			node = self.viewroot.PrevMiniDocument()
+			if node is None:
+				node = self.root.LastMiniDocument()
 		self.setviewroot(node)
 
 	# Make sure the view root is set to *something*, and fix the title
@@ -545,7 +555,7 @@ class ChannelView(ViewDialog, GLDialog):
 			if mini == None:
 				return
 		self.setviewroot(mini) # No-op if already there
-		if not hasattr(node, 'cb_obj'):
+		if not hasattr(node, 'cv_obj'):
 			return
 		obj = node.cv_obj
 		self.setwin()
