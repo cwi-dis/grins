@@ -40,7 +40,7 @@ struct sound_data {
 #endif
 };
 struct sound {
-	type_sema s_sema;	/* semaphore to protect s_flag */
+	PyThread_type_sema s_sema;	/* semaphore to protect s_flag */
 	int s_flag;
 #ifdef __sgi
 	ALport s_port;		/* audio port used for playing sound */
@@ -66,7 +66,7 @@ struct sound {
  */
 static int device_used;
 static long old_rate, sound_rate;
-static type_sema device_sema;
+static PyThread_type_sema device_sema;
 
 static int
 sound_init(self)
