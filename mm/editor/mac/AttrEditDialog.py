@@ -144,10 +144,7 @@ class AttrEditorDialog(windowinterface.MACDialog):
 
 	def do_itemhit(self, item, event):
 		if item == ITEM_SELECT:
-			(what, message, when, where, modifiers) = event
-			Qd.SetPort(self._dialog)
-			where = Qd.GlobalToLocal(where)
-			item, is_double = self._attrbrowser.click(where, modifiers)
+			item = self._attrbrowser.getselect()
 			self._selectattr(item)
 		elif item == ITEM_RESET:
 			if self._cur_attrfield:

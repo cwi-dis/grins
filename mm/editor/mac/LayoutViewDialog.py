@@ -52,23 +52,26 @@ class LayoutViewDialog(windowinterface.MACDialog):
 			
 	def do_itemhit(self, item, event):
 		if item == ITEM_LAYOUT_LIST:
-			self._listclick(event, self.__layoutlist, self.__layoutcb, ())
+##			self._listclick(event, self.__layoutlist, self.__layoutcb, ())
+			self.__layoutcb()
 		elif item == ITEM_CHANNEL_LIST:
-			self._listclick(event, self.__channellist, self.__channelcb, ())
+##			self._listclick(event, self.__channellist, self.__channelcb, ())
+			self.__channelcb()
 		elif item == ITEM_OCHANNEL_LIST:
-			self._listclick(event, self.__otherlist, self.__othercb, ())
+##			self._listclick(event, self.__otherlist, self.__othercb, ())
+			self.__othercb()
 		else:
 			print 'LayoutViewDialog: unexpected item/event:', item, event
 		return 1
 
-	def _listclick(self, event, list, cbfunc, cbarg):
-		(what, message, when, where, modifiers) = event
-		Qd.SetPort(self._window._wid)
-		where = Qd.GlobalToLocal(where)
-		old_select = list.getselect()
-		item, is_double = list.click(where, modifiers)
-		if old_select != item:
-			apply(cbfunc, cbarg)
+## 	def _listclick(self, event, list, cbfunc, cbarg):
+## 		(what, message, when, where, modifiers) = event
+## 		Qd.SetPort(self._window._wid)
+## 		where = Qd.GlobalToLocal(where)
+## 		old_select = list.getselect()
+## 		item, is_double = list.click(where, modifiers)
+## 		if old_select != item:
+## 			apply(cbfunc, cbarg)
 
 	def setlayoutlist(self, layouts, cur):
 		if layouts != self.__layoutlist.get():

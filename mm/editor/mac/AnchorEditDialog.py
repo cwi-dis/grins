@@ -106,10 +106,7 @@ class AnchorEditorDialog(windowinterface.MACDialog):
 
 	def do_itemhit(self, item, event):
 		if item == ITEM_BROWSER:
-			(what, message, when, where, modifiers) = event
-			Qd.SetPort(self._dialog)
-			where = Qd.GlobalToLocal(where)
-			item, is_double = self.__anchor_browser.click(where, modifiers)
+			# Real event handling is done by the control itself
 			self._setidfromlist()
 			self.anchor_callback()
 		elif item == ITEM_ID:
