@@ -350,8 +350,8 @@ movie_arm(self, file, delay, duration, attrdict, anchorlist)
 	}
 #endif
 	XDECREF(PRIV->m_arm.m_f);
+	XINCREF(file);
 	PRIV->m_arm.m_f = file;
-	XINCREF(PRIV->m_arm.m_f);
 	dprintf(("movie_arm(%lx): fd: %d\n", (long) self, fileno(getfilefile(PRIV->m_arm.m_f))));
 	return 1;
 }
@@ -607,7 +607,7 @@ movie_player(self)
 		/*dprintf(("movie_player(%lx): td = %d\n", (long) self, td));*/
 		if (td < 0)
 			td = 0;
-		pollfd.fd = PRIV->m_pipefd[1];
+		pollfd.fd = PRIV->m_pipefd[0];
 		pollfd.events = POLLIN;
 		pollfd.revents = 0;
 		dprintf(("movie_player(%lx): polling %d\n", (long) self, td));
@@ -738,11 +738,15 @@ movie_finished(self)
 		}
 	}
 	XDECREF(PRIV->m_play.m_index);
+	PRIV->m_play.m_index = NULL;
 	XDECREF(PRIV->m_play.m_f);
+	PRIV->m_play.m_f = NULL;
 	if (PRIV->m_play.m_frame)
 		free(PRIV->m_play.m_frame);
+	PRIV->m_play.m_frame = NULL;
 	if (PRIV->m_play.m_bframe)
 		free(PRIV->m_play.m_bframe);
+	PRIV->m_play.m_bframe = NULL;
 	PRIV->m_play.m_wid = -1;
 	return 1;
 }

@@ -838,11 +838,21 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		ChannelWindow.do_hide(self)
 
 	def playstop(self):
+		import GLLock
+		if GLLock.gl_lock.count:
+			GLLock.gl_lock.lock.release()
 		_ChannelThread.playstop(self)
+		if GLLock.gl_lock.count:
+			GLLock.gl_lock.lock.acquire()
 		ChannelWindow.playstop(self)
 
 	def armstop(self):
+		import GLLock
+		if GLLock.gl_lock.count:
+			GLLock.gl_lock.lock.release()
 		_ChannelThread.armstop(self)
+		if GLLock.gl_lock.count:
+			GLLock.gl_lock.lock.acquire()
 		ChannelWindow.armstop(self)
 
 	def stopplay(self, node):
