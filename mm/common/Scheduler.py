@@ -603,6 +603,9 @@ class Scheduler(scheduler):
 	def skiptimer(self, amount):
 		self.time_origin = self.time_origin - amount
 	#
+	def getpaused(self):
+		return self.paused
+		
 	def setpaused(self, paused):
 		if self.paused == paused:
 			return

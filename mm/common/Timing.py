@@ -252,7 +252,6 @@ def adddep(xnode, xside, delay, ynode, yside):
 
 
 def decrement(q, delay, node, side):
-	print 'DEC', delay, node, side
 	if delay > 0:
 		id = q.enter(delay, 0, decrement, (q, 0, node, side))
 		return
