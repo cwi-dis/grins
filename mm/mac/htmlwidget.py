@@ -27,6 +27,7 @@ HTML_SIZE={
 
 class HTMLWidget:
 	def __init__(self, window, rect, name):
+		self.bary = None
 		self.anchor_offsets = []
 		self.anchor_hrefs = []
 		self.bg_color = (0xffff, 0xffff, 0xffff)
@@ -51,6 +52,8 @@ class HTMLWidget:
 		
 	def close(self):
 ##		del self.barx
+		if self.bary:
+			self.bary.DisposeControl()
 		del self.bary
 		del self.ted
 		del self.wid
@@ -69,6 +72,8 @@ class HTMLWidget:
 		#
 		# See if we need them.
 		#
+		if self.bary:
+			self.bary.DisposeControl()
 		self.bary = None
 		l, t, r, b = self.rect
 		if reset:
@@ -154,7 +159,6 @@ class HTMLWidget:
 		# Now do the command.
 		#
 		value = self.bary.GetControlValue()
-		print 'old', value, self.bary.GetControlMaximum()
 		if where == Controls.inUpButton:
 			value = value - lineheight
 		elif where == Controls.inPageUp:
@@ -163,7 +167,6 @@ class HTMLWidget:
 			value = value + lineheight
 		elif where == Controls.inPageDown:
 			value = value + pageheight
-		print 'new', value
 		self.bary.SetControlValue(value)
 		self.updatedocview()
 		return 1
@@ -190,7 +193,7 @@ class HTMLWidget:
 		if Qd.EmptyRgn(myregion):
 			return
 		Qd.RGBBackColor(self.bg_color)
-		Qd.EraseRgn(myregion) # XXXX Set background color
+		Qd.EraseRgn(visregion) # XXXX Set background color
 		self.ted.WEUpdate(myregion)
 ##		self.updatescrollbars()
 		
@@ -304,7 +307,7 @@ class HTMLWidget:
 		if italic: face = face | 2
 		face = face | self.html_style
 		self.ted.WESetStyle(WASTEconst.weDoFont | WASTEconst.weDoFace | 
-				WASTEconst.weDoSize | WASTEconst.weDoColor,
+				WASTEconst.weDoReplaceFace | WASTEconst.weDoSize | WASTEconst.weDoColor,
 				(font, face, size, self.html_color))
 		
 	def new_margin(self, margin, level):

@@ -37,6 +37,10 @@ class HtmlChannel(Channel.ChannelWindow):
 		if self.htmlw:
 			self.htmlw.close()
 			self.htmlw = None
+		self.window.unregister(WMEVENTS.WindowActivate)
+		self.window.unregister(WMEVENTS.WindowDeactivate)
+		self.window.setredrawfunc(None)
+		self.window.setclickfunc(None)
 		Channel.ChannelWindow.do_hide(self)
 
 	def _after_creation(self):
@@ -133,7 +137,6 @@ class HtmlChannel(Channel.ChannelWindow):
 		fontname, pointsize = mapfont(fontspec)
 		fontobj = windowinterface.findfont(fontname, pointsize)
 		num, face, size = fontobj._getinfo()
-		print 'HTML FONT', fontspec, fontname, pointsize, (num, face, size)
 		htmlw.setfonts(num, num, size)
 
 		bg = self.played_display._bgcolor
