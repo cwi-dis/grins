@@ -1,8 +1,7 @@
 __version__ = "$Id$"
 
-""" @win32doc|GenWnd
-A Generic win32-Mfc Wnd class
-""" 
+# @win32doc|GenWnd
+# A Generic win32-Mfc Wnd class
 
 import win32ui,win32con 
 Afx=win32ui.GetAfx()
@@ -10,7 +9,7 @@ Sdk=win32ui.GetWin32Sdk()
 from pywinlib.mfc import window
 
 class GenWnd(window.Wnd):
-	"""Generic win32-Mfc Wnd class"""
+	# Generic win32-Mfc Wnd class
 	def __init__ (self):
 		window.Wnd.__init__(self,win32ui.CreateWnd())
 		self._clstyle=0
