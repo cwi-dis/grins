@@ -91,7 +91,7 @@ static PyObject *Qt_Error;
 
 /* ------------------ Object type MovieController ------------------- */
 
-PyTypeObject MovieController_Type;
+typeforward PyTypeObject MovieController_Type;
 
 #define MovieCtlObj_Check(x) ((x)->ob_type == &MovieController_Type)
 
@@ -953,7 +953,7 @@ PyTypeObject MovieController_Type = {
 
 /* ---------------------- Object type TimeBase ---------------------- */
 
-PyTypeObject TimeBase_Type;
+typeforward PyTypeObject TimeBase_Type;
 
 #define TimeBaseObj_Check(x) ((x)->ob_type == &TimeBase_Type)
 
@@ -1347,7 +1347,7 @@ PyTypeObject TimeBase_Type = {
 
 /* ---------------------- Object type UserData ---------------------- */
 
-PyTypeObject UserData_Type;
+typeforward PyTypeObject UserData_Type;
 
 #define UserDataObj_Check(x) ((x)->ob_type == &UserData_Type)
 
@@ -1624,7 +1624,7 @@ PyTypeObject UserData_Type = {
 
 /* ----------------------- Object type Media ------------------------ */
 
-PyTypeObject Media_Type;
+typeforward PyTypeObject Media_Type;
 
 #define MediaObj_Check(x) ((x)->ob_type == &Media_Type)
 
@@ -2658,7 +2658,7 @@ PyTypeObject Media_Type = {
 
 /* ----------------------- Object type Track ------------------------ */
 
-PyTypeObject Track_Type;
+typeforward PyTypeObject Track_Type;
 
 #define TrackObj_Check(x) ((x)->ob_type == &Track_Type)
 
@@ -3745,7 +3745,7 @@ PyTypeObject Track_Type = {
 
 /* ----------------------- Object type Movie ------------------------ */
 
-PyTypeObject Movie_Type;
+typeforward PyTypeObject Movie_Type;
 
 #define MovieObj_Check(x) ((x)->ob_type == &Movie_Type)
 
