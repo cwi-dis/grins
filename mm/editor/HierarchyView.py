@@ -1734,7 +1734,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.aftersetfocus()	# XXX change this.
 
 		if not external:
-			self.editmgr.setglobalfocus('MMNode', self.get_selected_widgets())
+			self.editmgr.setglobalfocus('MMNode', widget.get_node())
 
 	def also_select_widget(self, widget):
 		# XXX UNTESTED
