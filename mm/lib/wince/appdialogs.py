@@ -74,9 +74,8 @@ class ProgressDialog:
 		
 	def cleanup(self):
 		if self._progress:
-			self._progress.DestroyWindow()
+			self._wnd.DestroyProgressBar()
 			self._wnd.setStatusMsg('')
-			self._wnd.InvalidateRect()
 			self._progress = None
 
 	def __del__(self):
@@ -97,7 +96,8 @@ class ProgressDialog:
 			if max2 == None:
 				max2 = 0
 			if self._progress:
-				self._progress.SendMessage(wincon.PBM_SETRANGE, 0, max2)
+				lparam = max2 << 16
+				self._progress.SendMessage(wincon.PBM_SETRANGE, 0, lparam)
 		if cur2 != self._curcur:
 			self._curcur = cur2
 			if cur2 == None:

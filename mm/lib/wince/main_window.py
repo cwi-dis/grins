@@ -30,6 +30,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		self._splash_pos = 0, 0
 		self._ready = 0
 		self._status_msg = 'Looading modules ...'
+		self._progress = None
 
 	def __getattr__(self, attr):
 		if attr != '__dict__':
@@ -212,7 +213,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		self.EndPaint(ps)
 
 	def paintOn(self, dc):
-		if self._viewport is None:
+		if self._viewport is None or self._progress is not None:
 			# show splash when no document is open
 			self.paintSplash(dc)
 			#l, t, r, b = self.GetClientRect()
@@ -290,7 +291,12 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		l, t, r, b = self.getStatusRect()
 		l, t, r, b = l+16, b+8, r-16, b
 		wnd = self.__dict__['_obj_']
-		progress = winuser.CreateWindowEx(0, wndclass, '', 
+		self._progress = winuser.CreateWindowEx(0, wndclass, '', 
 			wincon.WS_VISIBLE | wincon.WS_BORDER , (l, t), (r-l, height), wnd, 0)
-		progress.ShowWindow(wincon.SW_SHOW)
-		return progress
+		self._progress.ShowWindow(wincon.SW_SHOW)
+		return self._progress
+
+	def DestroyProgressBar(self):
+		self._progress.DestroyWindow()
+		self._progress = None
+		self.InvalidateRect()
