@@ -198,10 +198,10 @@ class _DisplayList:
 					dest_x, dest_y, width, height = mediadisplayrect
 
 				# src rect taking into account fit
-				rcKeep = wnd._getmediacliprect(rcKeep[2:], (dest_x, dest_y, width, height), fit=fit)
+				rcSrc = wnd._getmediacliprect(rcKeep[2:], (dest_x, dest_y, width, height), fit=fit)
 
 				# split rects
-				ls, ts, rs, bs = wnd.ltrb(rcKeep)
+				ls, ts, rs, bs = wnd.ltrb(rcSrc)
 				xd, yd, wd, hd = dest_x, dest_y, width, height
 				ld, td, rd, bd = x+xd, y+yd, x+xd+wd, y+yd+hd
 
@@ -211,6 +211,12 @@ class _DisplayList:
 				# find src clip ltrb given the destination clip
 				lsc, tsc, rsc, bsc =  wnd._getsrcclip((ld, td, rd, bd), (ls, ts, rs, bs), (ldc, tdc, rdc, bdc))
 				
+				if fit == -4:
+					wk, hk = rcKeep[2:]
+					if wk>w: 
+						pass # print 'horiz scroll'
+					if hk>h: 
+						pass # print 'vert scroll'
 				try:
 					dds.Blt((ldc, tdc, rdc, bdc), image, (lsc, tsc, rsc, bsc), flags)
  				except:
