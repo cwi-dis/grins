@@ -1465,6 +1465,16 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\DropRight.gif
+  Destination=%MAINDIR%\Templates\icons\DropRight.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\icons\adapt_1_1A.bmp
+  Destination=%MAINDIR%\Templates\icons\adapt_1_1A.bmp
+  Flags=0000000010000010
+end
+item: Install File
   Source=d:\ufs\mm\cmif\win32\DXMedia\bin\vidpipe.ax
   Destination=%MAINDIR%\Producer-SDK\vidpipe.ax
   Flags=0001000010000010
@@ -1473,11 +1483,6 @@ item: Install File
   Source=d:\ufs\mm\cmif\win32\DXMedia\bin\audpipe.ax
   Destination=%MAINDIR%\Producer-SDK\audpipe.ax
   Flags=0001000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\extend.tiff
-  Destination=%MAINDIR%\Templates\icons\extend.tiff
-  Flags=0000000010000010
 end
 item: Install File
   Source=d:\ufs\mm\cmif\bin\win32\Qt.pyd
@@ -1520,11 +1525,6 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\dropbox.tiff
-  Destination=%MAINDIR%\Templates\icons\dropbox.tiff
-  Flags=0000000010000010
-end
-item: Install File
   Source=d:\ufs\mm\cmif\Templates\icons\comment.tiff
   Destination=%MAINDIR%\Templates\icons\comment.tiff
   Flags=0000000010000010
@@ -1555,23 +1555,8 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\adapt_1_1A.bmp
-  Destination=%MAINDIR%\Templates\icons\adapt_1_1A.bmp
-  Flags=0000000010000010
-end
-item: Install File
   Source=d:\ufs\mm\cmif\Templates\icons\slideshow_1A.bmp
   Destination=%MAINDIR%\Templates\icons\slideshow_1A.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\video_3_1A.bmp
-  Destination=%MAINDIR%\Templates\icons\video_3_1A.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\video_2_1A.bmp
-  Destination=%MAINDIR%\Templates\icons\video_2_1A.bmp
   Flags=0000000010000010
 end
 item: Install File
@@ -1590,11 +1575,6 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\video_4_1A.bmp
-  Destination=%MAINDIR%\Templates\icons\video_4_1A.bmp
-  Flags=0000000010000010
-end
-item: Install File
   Source=d:\ufs\mm\cmif\Templates\icons\slideshow_2Ax.bmp
   Destination=%MAINDIR%\Templates\icons\slideshow_2Ax.bmp
   Flags=0000000010000010
@@ -1602,31 +1582,6 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\Templates\icons\slideshow_2ACx.bmp
   Destination=%MAINDIR%\Templates\icons\slideshow_2ACx.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\adapt_1_1Ax.bmp
-  Destination=%MAINDIR%\Templates\icons\adapt_1_1Ax.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\adapt_3_1Ax.bmp
-  Destination=%MAINDIR%\Templates\icons\adapt_3_1Ax.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\adapt_2_1Ax.bmp
-  Destination=%MAINDIR%\Templates\icons\adapt_2_1Ax.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\icons\adapt_4_1Ax.bmp
-  Destination=%MAINDIR%\Templates\icons\adapt_4_1Ax.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\media\ring.rt
-  Destination=%MAINDIR%\Templates\media\ring.rt
   Flags=0000000010000010
 end
 item: Install File
@@ -1660,16 +1615,6 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\embedded_player.html
-  Destination=%MAINDIR%\Templates\embedded_player.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\S2_14_video1A.grins
-  Destination=%MAINDIR%\Templates\S2_14_video1A.grins
-  Flags=0000000010000010
-end
-item: Install File
   Source=d:\ufs\mm\cmif\Templates\GetGRiNS.gif
   Destination=%MAINDIR%\Templates\GetGRiNS.gif
   Flags=0000000010000010
@@ -1697,11 +1642,6 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\Templates\S2_12_video1A.grins
   Destination=%MAINDIR%\Templates\S2_12_video1A.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\S2_13_video1A.grins
-  Destination=%MAINDIR%\Templates\S2_13_video1A.grins
   Flags=0000000010000010
 end
 item: Install File
