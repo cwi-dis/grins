@@ -15,6 +15,7 @@ Copyright 1991-2002 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "winmm_waveout.h"
 #include "winmm_wavehdr.h"
+#include "winmm_video.h"
 
 #ifdef LINK_MP3LIB
 #include "winmm_mp3dec.h"
@@ -87,6 +88,7 @@ static struct PyMethodDef winmm_methods[] = {
 	{"WaveOutFromHandle", (PyCFunction)Winmm_WaveOutFromHandle, METH_VARARGS, ""},
 	{"SndPlaySound", (PyCFunction)SndPlaySound, METH_VARARGS, ""},
 	{"SndStopSound", (PyCFunction)SndStopSound, METH_VARARGS, ""},
+	{"CreateVideoPlayerFromFile", (PyCFunction)Winmm_CreateVideoPlayerFromFile, METH_VARARGS, ""},
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 };
 
