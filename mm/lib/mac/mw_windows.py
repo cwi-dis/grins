@@ -438,7 +438,21 @@ class _CommonWindow:
 		return px, py, pw, ph
 		
 	def scrolloffset(self):
+		"""Return the x,y to be added to coordinates to convert them to QD
+		values"""
 		return 0, 0
+		
+	def _convert_qdcoords(self, coordinates):
+		"""Convert QD coordinates to fractional xy or xywh coordinates"""
+		x0, y0 = coordinates[:2]
+		wx, wy, ww, wh = self._rect
+		x, y = x0-wx, y0-wy
+		if len(coordinates) == 2:
+			return float(x)/ww, float(y)/wh
+		else:
+			x1, y1 = coordinates[2:]
+			w, h = x1-x0, y1-y0
+			return float(x)/ww, float(y)/wh, float(w)/ww, float(h)/wh
 		
 	def _convert_color(self, (r, g, b)):
 		"""Convert 8-bit r,g,b tuple to 16-bit r,g,b tuple"""
@@ -559,10 +573,7 @@ class _CommonWindow:
 			sys.exc_traceback = None
 			return # Not wanted
 			
-		wx, wy, ww, wh = self._rect # XXXXSCROLL
-		x, y = where
-		x = float(x-wx)/ww
-		y = float(y-wy)/wh
+		x, y = self._convert_qdcoords(where)
 		
 		buttons = []
 		if self._active_displist:
@@ -730,17 +741,7 @@ class _CommonWindow:
 		del self._rb_display
 
 	def _rb_cvbox(self):
-		wx0, wy0, wx1, wy1 = self.qdrect() # XXXXSCROLL
-		ww = wx1-wx0
-		wh = wy1-wy0
-		x0, y0, x1, y1 = self._rb_box
-		x0 = float(x0-wx0)/ww
-		y0 = float(y0-wy0)/wh
-		x1 = float(x1-wx0)/ww
-		y1 = float(y1-wy0)/wh
-		return x0, y0, (x1-x0), (y1-y0)
-
-		raise 'not yet implemented'
+		return self._convert_qdcoords(self._rb_box)
 
 	def _rb_done(self):
 		callback = self._rb_callback
