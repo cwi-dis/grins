@@ -51,7 +51,6 @@ class _Toplevel:
 		self._subwindows = []
 		self._bgcolor = 255, 255, 255 # white
 		self._fgcolor =   0,   0,   0 # black
-		self._hfactor = self._vfactor = 1.0
 		self._cursor = ''
 		self._image_size_cache = {}
 		self._image_cache = {}
