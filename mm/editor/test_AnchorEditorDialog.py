@@ -10,6 +10,7 @@ if os.name == 'posix':
 elif os.name == 'mac':
 	sys.path.append("::lib")
 	sys.path.append("::mac")
+	sys.path.insert(0, ":mac")
 # etc...
 
 
@@ -85,6 +86,7 @@ class AnchorEditorTest(AnchorEditorDialog):
 	def delete_callback(self):
 		focus = self.selection_getselection()
 		print 'Deleting', self.__names[focus]
+		del self.__names[focus]
 		self.selection_deleteitem(focus)
 		self.selection_setselection(None)
 		self.__setfocus()
@@ -99,6 +101,7 @@ class AnchorEditorTest(AnchorEditorDialog):
 				maxid = id
 		name = `maxid + 1`
 		print 'Adding',name
+		self.__names.append(name)
 		self.selection_append(name)
 		focus = len(self.__names) - 1
 		self.selection_setselection(focus)
