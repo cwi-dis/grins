@@ -10,7 +10,7 @@ import regsub
 import __main__
 
 import app
-from pywin.mfc import dialog
+from pywinlib.mfc import dialog
 
 import win32ui
 import win32api
@@ -18,7 +18,7 @@ import win32con
 import traceback
 
 import winout
-from pywin.mfc import window
+from pywinlib.mfc import window
 
 sectionProfile = "Interactive Window"
 valueFormatTitle = "FormatTitle"
