@@ -174,9 +174,11 @@ def converttextfile(u, dstdir, file, node):
 	return file
 
 
-def convertvideofile(u, dstdir, file, node):
-	import producer
+def convertvideofile(u, srcurl, dstdir, file, node):
+	import producer, MMAttrdefs, urllib
 	global engine
+	u.close()
+	fin = urllib.urlretrieve(srcurl)[0]
 	if os.environ.has_key('REAL_PRODUCER'):
 		producer.SetDllCategoryPaths(os.environ['REAL_PRODUCER'])
 	# ignore suggested extension and make our own
@@ -228,7 +230,7 @@ def convertvideofile(u, dstdir, file, node):
 	except ImportError:
 		return
 	b = dshow.CreateGraphBuilder()
-	b.RenderFile(u)
+	b.RenderFile(fin)
 	renderer=b.FindFilterByName('Video Renderer')
 	enumpins=renderer.EnumPins()
 	pin=enumpins.Next()
@@ -286,5 +288,5 @@ def convertvideofile(u, dstdir, file, node):
 	mc.Run()
 	b.WaitForCompletion()
 	mc.Stop()
-
+	del b
 	return file
