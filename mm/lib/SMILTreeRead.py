@@ -769,6 +769,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if type(h) is type(0.0) and self.__root_height:
 					h = int(h * self.__root_height + .5)
 				thetype = None # type of 1st elem != 0
+				broken = 0
 				for val in x, y, w, h:
 					if val == 0:
 						continue
@@ -777,6 +778,26 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						continue
 					elif type(val) is thetype:
 						continue
+					broken = 1
+					break
+				else:
+					# all the same type or 0
+					if thetype is type(0):
+						units = UNIT_PXL
+					else:
+						units = UNIT_SCREEN
+					ch['units'] = units
+					if w == 0 and self.__width != 0:
+						if units == UNIT_PXL:
+							w = self.__width - x
+						else:
+							w = 1.0 - x
+					if h == 0 and self.__height != 0:
+						if units == UNIT_PXL:
+							h = self.__height - y
+						else:
+							h = 1.0 - y
+				if broken:
 					# we only get here if there
 					# are multiple values != 0 of
 					# different types
@@ -809,22 +830,12 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						else:
 							h = float(h) / self.__height
 					ch['units'] = UNIT_SCREEN
-					break
-				else:
-					# all the same type or 0
-					if thetype is type(0):
-						ch['units'] = UNIT_PXL
-					else:
-						ch['units'] = UNIT_SCREEN
-					if w == 0 and self.__width != 0:
-						w = self.__width - x
-					if h == 0 and self.__height != 0:
-						h = self.__height - y
 				ch['base_winoff'] = x, y, w, h
 			# keep all attributes that we didn't use
 			for attr, val in attrdict.items():
 				if attr not in ('minwidth', 'minheight',
-						'skip-content'):
+						'skip-content') and \
+				   not self.attributes['region'].has_key(attr):
 					ch[attr] = parseattrval(attr, val, self.__context)
 		node.attrdict['channel'] = name
 
