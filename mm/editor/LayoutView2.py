@@ -416,7 +416,6 @@ class LayoutView2(LayoutViewDialog2):
 		self.currentFocus = None
 		# allow to identify if the focus has been fixed by this view
 		self.myfocus = None	# used to break recursion in setglobalfocus -> globalfocuschanged
-		self.commitAlreadyUpdated = 0
 
 		# when you swap to the pause state, the current region showed list is saved
 		# it allows to restore the context when document is stopped
@@ -522,6 +521,7 @@ class LayoutView2(LayoutViewDialog2):
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
 				COPY(callback = (self.onCopy, ())),
 				CUT(callback = (self.onCut, ())),
+				DELETE(callback = (self.onDelNode, ())),
 				]
 		else:
 			self.commandMultiSItemList = []		
@@ -533,6 +533,7 @@ class LayoutView2(LayoutViewDialog2):
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
 				COPY(callback = (self.onCopy, ())),
 				CUT(callback = (self.onCut, ())),
+				DELETE(callback = (self.onDelNode, ())),
 				]
 		else:
 			self.commandMultiSiblingSItemList = []
@@ -608,7 +609,6 @@ class LayoutView2(LayoutViewDialog2):
 		self.currentSelectedNodeList = []
 		self.currentFocus = None
 		self.myfocus = None
-		self.commitAlreadyUpdated = 0
 		
 	def transaction(self, type):
 		return 1		# It's always OK to start a transaction
@@ -673,9 +673,6 @@ class LayoutView2(LayoutViewDialog2):
 
 	def commit(self, type):
 		self.root = self.toplevel.root
-		if self.commitAlreadyUpdated:
-			self.commitAlreadyUpdated = 0
-			return
 		if type in ('REGION_GEOM', 'MEDIA_GEOM'):
 			self.previousWidget.updateRegionTree()
 		elif type == 'REGION_TREE':
@@ -688,9 +685,6 @@ class LayoutView2(LayoutViewDialog2):
 		self.currentFocus = self.editmgr.getglobalfocus()
 		self.updateFocus(1)
 				
-	def isValidMMNode(self, node):
-		return self.treeHelper._isValidMMNode(node)
-
 	# make a list of nodes selected in this view
 	def makeSelectedNodeList(self, selList):
 		targetList = []
@@ -1113,24 +1107,6 @@ class LayoutView2(LayoutViewDialog2):
 			self.editmgr.setchannelattr(name, 'height', 400)
 			self.editmgr.commit('REGION_TREE')
 
-	# remove from the document this region and all subregions
-	# if removeRef = 1, remove all nodes (MMNode, ...) which refer to those
-	# deleted region
-	# Note: those method have to be called winthin a transaction
-	def __delRegion(self, nodeRef, removeRef = 1):
-		self.editmgr.delchannel(nodeRef)
-#		regionNameToDel = []
-#		self.__makeRegionListToDel(nodeRef, regionNameToDel)
-#		for name in regionNameToDel:
-#			nodeRef = self.nameToNodeRef(name)
-#			self.treeHelper.delNode(nodeRef) 
-#			self.editmgr.delchannel(nodeRef)
-			
-		# remove all references which refer to those region
-		# XXX to do this in mmnode
-#		if removeRef:
-#			self.__recurUnrefMMNodes(self.root, regionNameToDel)
-
 	def __makeRegionListToDel(self, nodeRef, list):
 		# remove the children before removing the node
 		children = self.getChildren(nodeRef)
@@ -1157,17 +1133,7 @@ class LayoutView2(LayoutViewDialog2):
 				self.editmgr.setnodeattr(nodeRef, attrName, None)
 
 		# XXX to do: event
-		
-	def applyDelRegion(self, regionRef):
-		if self.editmgr.transaction():
-			self.__delRegion(regionRef)
-			self.editmgr.commit('REGION_TREE')
-			
-	def applyDelViewport(self, viewportRef):
-		if self.editmgr.transaction():
-			self.__delRegion(viewportRef)
-			self.editmgr.commit('REGION_TREE')
-
+					
 	def applyAttrList(self, nodeRefAndValueList):
 		if self.editmgr.transaction():
 			for nodeRef, attrName, attrValue in nodeRefAndValueList:
@@ -1576,14 +1542,23 @@ class LayoutView2(LayoutViewDialog2):
 		# apply some command which are automaticly applied when a control lost the focus
 		# it avoids some recursives transactions and some crashs
 		self.flushChangement()
-		
-		if len(self.currentSelectedNodeList) > 0:
-			nodeType = self.getNodeType(self.currentSelectedNodeList[0])
-			if nodeType == TYPE_VIEWPORT:
-				self.delViewport(self.currentSelectedNodeList[0])
-			elif nodeType == TYPE_REGION:
-				self.delRegion(self.currentSelectedNodeList[0])
 
+		if not self.editmgr.transaction():
+			return
+		
+		nodeListToDel = self.makeListWithoutRelationShip(self.currentSelectedNodeList)
+		newFocus = []
+		if len(nodeListToDel) > 0:
+			if self.canDel(nodeListToDel):
+				for nodeRef in nodeListToDel:
+					parent = self.getParentNodeRef(nodeRef)
+					if parent != None:
+						newFocus = [parent]
+					self.editmgr.delchannel(nodeRef)
+
+		self.setglobalfocus(newFocus)
+		self.editmgr.commit()
+		
 	def onNewRegion(self):
 		# apply some command which are automaticly applied when a control lost the focus
 		# it avoids some recursives transactions and some crashs
@@ -1779,19 +1754,6 @@ class LayoutView2(LayoutViewDialog2):
 		self.setglobalfocus([self.nameToNodeRef(name)])
 		self.updateFocus()
 
-	def delRegion(self, regionRef, check=1, removeLink = 0):
-		# if this region or any sub region contain a media, show a warning message, and ask confirmation
-		if check and self.doesContainMedias(regionRef):
-			ret = windowinterface.GetOKCancel("The region that you want to remove contains some medias. Do you want to continue ?", self.toplevel.window)
-			if ret != 0:
-				# cancel
-				return
-			
-		parentRef = self.getParentNodeRef(regionRef, TYPE_REGION)
-		self.setglobalfocus([parentRef])
-		self.updateFocus()
-		self.applyDelRegion(regionRef)
-
 	# check if moving a source node into a target node is valid
 	def isValidMove(self, sourceNodeRef, targetNodeRef):
 		if sourceNodeRef == None or targetNodeRef == None:
@@ -1857,33 +1819,39 @@ class LayoutView2(LayoutViewDialog2):
 				return 1
 
 		return 0
-	
-	def delViewport(self, nodeRef, check=1):
-		# for now, we have to keep at least one viewport
-		currentViewportList = self.getViewportRefList()
-		if len(currentViewportList) <= 1:
-			msg = "you can't delete or cut the last viewport"
-			windowinterface.showmessage(msg, mtype = 'error')
-			return
 
-		# if this region or any sub region contain a media, show a warning message, and ask confirmation
-		if check and self.doesContainMedias(nodeRef):
-			ret = windowinterface.GetOKCancel("The topLayout element that you want to remove contains some medias. Do you want to continue ?", self.toplevel.window)
-			if ret != 0:
-				# cancel
-				return
-		
-		# change the focus
-		# choice another viewport to show (this first in the list)
+	def canDel(self, nodeListToDel):
 		currentViewportList = self.getViewportRefList()
-		for viewportRef in currentViewportList:
-			if viewportRef != nodeRef:
-				self.setglobalfocus([viewportRef])
-				self.updateFocus()
-				break
-		
-		self.applyDelViewport(nodeRef)
+		viewportToDel = []
+		error = 0
+		for nodeRef in nodeListToDel:
+			nodeType = self.getNodeType(nodeRef)
+			if nodeType == TYPE_VIEWPORT:
+				viewportToDel.append(nodeRef)
+				if len(currentViewportList) == len(viewportToDel):
+					error = 3
+					break
+			if nodeType in (TYPE_VIEWPORT, TYPE_REGION):
+				if self.doesContainMedias(nodeRef):
+					if error < 1:
+						error = 1
+			elif nodeType == TYPE_MEDIA:
+				if error < 2:
+					error = 2
 
+		if error == 3:
+			# show in priority that error
+			windowinterface.showmessage("you can't delete the last viewport", mtype = 'error')
+		elif error == 2:
+			windowinterface.showmessage("You can't remove any media from the Layout view.\n Use Cut/Paste or Drag/Drop to move a media.", mtype = 'error')
+		elif error == 1:
+			ret = windowinterface.GetOKCancel("At least one item that you want to remove contains some medias. Do you want to continue ?", self.toplevel.window)
+			if ret == 0:
+				# ok
+				error = 0
+
+		return error == 0
+			
 	def onFastGeomUpdate(self, nodeRef, geom):
 		nodeType = self.getNodeType(nodeRef)
 		if nodeType == TYPE_VIEWPORT:
@@ -2513,10 +2481,9 @@ class PreviousWidget(Widget):
 			indList.reverse()
 			for ind in indList:
 				n = nodeRefList[ind]
-				if (n.getClassName() == 'MMNode' and self._context.isValidMMNode(n)) or n.getClassName() == 'MMChannel':
-					if nodeType != TYPE_MEDIA or nodeRef.GetChannel():
-						viewport = self._context.getViewportRef(n)
-						break
+				viewport = self._context.getViewportRef(n)
+				if viewport != None:
+					break
 		if viewport != None:
 			self.__showViewport(viewport)
 
