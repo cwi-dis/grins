@@ -73,16 +73,13 @@ elif os.name == 'mac':
 	import MacOS
 	import macfs
 	import aetools
-	import Required_Suite
-
-	class ExtApp(aetools.TalkTo, Required_Suite.Required_Suite):
-		pass
+	import StdSuites
 
 	def startprog(prog, file, argisurl):
 		if argisurl:
 			print 'ExternalChannel: URL passing not implemented yet'
 		try:
-			prog = ExtApp(prog, start=1)
+			prog = StdSuites.StdSuites(prog, start=1)
 		except (aetools.Error, MacOS.Error), arg:
 			print 'ExternalChannel: Cannot start app', prog, arg
 		try:
