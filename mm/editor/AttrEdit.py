@@ -1682,8 +1682,7 @@ class CaptionOverdubAttrEditorFieldWithDefault(PopupAttrEditorField):
 		return [self.default] + self.__values
 
 class LanguageAttrEditorField(PopupAttrEditorField):
-	from 
-	ges import *
+	from languages import *
 	default = 'Not set'
 	nodefault = 1
 
