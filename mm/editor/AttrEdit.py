@@ -587,6 +587,9 @@ class AnimationWrapper(NodeWrapper):
 		NodeWrapper.__init__(self, toplevel, node)
 
 	def attrnames(self):
+		self._durattrs  = ['begin', 'duration', 'loop', 
+			'repeatdur', 'speed', 'autoReverse']
+
 		namelist = ['name',
 			'begin', 'duration', 'loop', 'repeatdur', 'restart', 'fill',
 			'speed', 'accelerate', 'decelerate', 'autoReverse',
@@ -635,7 +638,7 @@ class AnimationWrapper(NodeWrapper):
 			root = self.node.GetRoot()
 			targnode = root.GetChildByName(value)
 			self.node.targetnode = targnode
-		elif name == 'speed' or name =='autoReverse':
+		elif name in self._durattrs:
 			self.node.fullduration = None # recalculate it
 		NodeWrapper.setattr(self, name, value)
 		
