@@ -192,13 +192,13 @@ def rpconvert(node):
 				else:
 					trdict['trtype'] = 'pushWipe'
 					if dir == 'left':
-						trdict['subtype'] = 'fromLeft'
-					elif dir == 'right':
 						trdict['subtype'] = 'fromRight'
+					elif dir == 'right':
+						trdict['subtype'] = 'fromLeft'
 					elif dir == 'up':
-						trdict['subtype'] = 'fromTop'
-					elif dir == 'down':
 						trdict['subtype'] = 'fromBottom'
+					elif dir == 'down':
+						trdict['subtype'] = 'fromTop'
 			else:
 				trdict['trtype'] = 'fade'
 			for trname, trval in ctx.transitions.items():
