@@ -90,6 +90,10 @@ class VideoChannel(ChannelWindow):
 		# keep last frame support
 		self._bmp=None
 
+		# until we clarify why destroy is not called
+		import windowinterface
+		windowinterface.addclosecallback(self.release_res,())
+
 	def __repr__(self):
 		return '<VideoChannel instance, name=' + `self._name` + '>'
 
@@ -103,6 +107,15 @@ class VideoChannel(ChannelWindow):
 	# the current ChannelWindow.do_hide implementation 
 	# destroy the window
 	def do_hide(self):
+		self.release_res()
+		ChannelWindow.do_hide(self)
+
+	def destroy(self):
+		self.unregister_for_timeslices()
+		self.release_res()
+		ChannelWindow.destroy(self)
+
+	def release_res(self):
 		for b in self._builders.values():
 			b.Stop()
 			b.SetVisible(0)		
@@ -111,20 +124,7 @@ class VideoChannel(ChannelWindow):
 		del self._builders
 		self._builders={}
 		self._playBuilder=None
-		ChannelWindow.do_hide(self)
-
-	def destroy(self):
-		self.unregister_for_timeslices()
-		for b in self._builders.values():
-			b.Stop()
-			b.SetVisible(0)
-			b.SetWindowNull()
-			b.Release()
-		del self._builders
-		self._builders={}
-		self._playBuilder=None
-		ChannelWindow.destroy(self)
-
+		
 	def do_arm(self, node, same=0):
 		if debug:print 'VideoChannel.do_arm('+`self`+','+`node`+'same'+')'
 		if same and self.armed_display:
@@ -166,7 +166,10 @@ class VideoChannel(ChannelWindow):
 			if not self.syncplay:
 				self.do_play(node)
 				self.armdone()
-			else: # replaynode call, may be due to resize
+			else: # replaynode call, due to resize or other reason
+				self._playBuilder.SetWindow(self.window,WM_GRPAPHNOTIFY)
+				self._playBuilder.SetVisible(1)	
+				self.__freeze()
 				self.play_1()
 
 	def do_play(self, node):
@@ -241,9 +244,14 @@ class VideoChannel(ChannelWindow):
 
 	# Make a copy of frame and keep it until stopplay is called
 	def __freeze(self):
-		import win32mu
+		import win32mu,win32api
 		if self.window and self.window.IsWindow():
+			if self._bmp: 
+				self._bmp.DeleteObject()
+				del self._bmp
+			win32api.Sleep(0)
 			self._bmp=win32mu.WndToBmp(self.window)
+
 	def update(self,dc):
 		import win32mu
 		if self._playBuilder and (self.__playdone or self._paused):
@@ -267,9 +275,8 @@ class VideoChannel(ChannelWindow):
 			self._playBuilder.SetVisible(0)
 			self._playBuilder=None
 		if self._bmp:self._bmp=None
+		if self.window:self.window.update()
 		ChannelWindow.stopplay(self, node)
-		if self.window:
-			self.window.update()
 
 	# toggles between pause and run
 	def setpaused(self, paused):
