@@ -776,6 +776,12 @@
 	'Playback will be fully synchronized by default' raw (smil2))
 (default_sync_tolerance (float) 0.1 'Tolerance' default
 	'Maximum media clock drift for synchronized playback' raw (smil2))
+(template_name (string) '' 'Template name' default
+	'Name of the template' raw (smil2 template cmif))
+(template_description (string) '' 'Template description' default
+	'Longer description of the template' raw (smil2 template cmif))
+(template_snapshot (string) '' 'Template snapshot' file
+	'URL of a snapshot image that represents the template' raw (smil2 template cmif))
 
 # RTIPA start
 (RTIPA_server (string) '' 'RTIPA server' default

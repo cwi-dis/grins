@@ -3186,8 +3186,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			pass
 		elif name[:9] == 'template_':
 			# We use these meta names for storing information such as snapshot
-			# and description in templates. Don't import them.
-			pass
+			# and description in templates.
+			if not self.__new_file:
+				# opening an existing file, keep the property
+				self.__context.attributes[name] = content
 		elif name == 'project_links':
 			# space-separated list of external anchors
 			self.__context.externalanchors = content.split()
