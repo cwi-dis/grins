@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 2.0//EN"
+                      "http://www.w3.org/TR/REC-smil/2000/SMIL20.dtd">
+<!--		
+	Author: Kleanthis Kleanthous		
+	Version: Sept 21, 2000, v1	
+	Module: Content Control Module Level 1: prefetch 
+	Feature: prefetch
+	File Name: prefetch.smil
+	Media Components: MPG, TXT through HTTP
+	Expected Behavior: 
+
+-->
+<smil xmlns="http://www.w3.org/TR/REC-smil/2000/SMIL20">
+  <head>
+    <meta name="title" content=" SMIL "/>
+    <meta name="generator" content="GRiNS Pro for SMIL Boston, v2.0 "/>
+    <layout>
+      <viewport id="SMIL" backgroundColor="white" width="400" height="440">
+        <region id="unnamed-region-0" title="Window" width="200" height="150" z-index="1"/>
+      </viewport>
+    </layout>
+  </head>
+  <body>
+    <par>
+      <text id="title" region="unnamed-region-0" type="text/plain" fill="freeze" src="http://dev1/text/test.txt"/>
+      <prefetch id="prefetching" dur="5s" src="http://dev1/videos/test.mpg"/>
+    </par>
+    <video id="prrefetched" region="unnamed-region-0" dur="5s" src="http://dev1/videos/test.mpg"/>
+  </body>
+</smil>
