@@ -110,8 +110,8 @@ class HtmlChannel(Channel.ChannelWindow):
 			self.window.SetImmHtml(self.armed_str)
 		else:
 			import settings
-			url=self.getfileurl(node)
-			url = MMurl.basejoin('file:'+MMurl.pathname2url(os.getcwd())+'/',url)
+			url = MMurl.canonURL(self.getfileurl(node))
+##			url = MMurl.basejoin('file:'+MMurl.pathname2url(os.getcwd())+'/',url)
 			if not settings.get('html_control'):
 				url=urllib.unquote(url)
 			self.window.RetrieveUrl(url)	
