@@ -177,7 +177,7 @@ class view () :
 		synclist = MMAttrdefs.getattr(node, 'synctolist')
 		for i in synclist:
 			uid, frompos, delay, topos = i
-			self.add_arrow_at(self.root.MapUID(uid), node, frompos, delay, topos)
+			j = self.add_arrow_at(self.root.MapUID(uid), node, frompos, delay, topos)
 		for i in node.GetChildren():
 			self.mkArrows(i)
 	#
@@ -324,7 +324,7 @@ class view () :
 		if self.focus = None:
 			fl.show_message ('There is no focus','','')
 			return
-		self.add_arrow_at(self.locked_focus, self.focus, 1, 0.0, 0)
+		self.add_arrow_at(self.locked_focus, self.focus, 1, 0.0, 0).draw()
 
 	def add_arrow_at(self, (mysrc, mydst, f, d, t)):
 		lo = mysrc.channelobj
@@ -335,24 +335,27 @@ class view () :
 		fx = fo.x + fo.w / 2
 		fy1 = fo.y
 		fy2 = fy1 + fo.h
-		if fy2 < ly1:
-			ly, fy = fy2, ly1
-			lx, fx = fx, lx
-			src = mydst
-			dst = mysrc
-		else:
-			ly, fy = ly2, fy1
-			src = mysrc
-			dst = mydst
+	#	if fy2 < ly1:
+	#		ly, fy = fy2, ly1
+	#		lx, fx = fx, lx
+	#		src = mydst
+	#		dst = mysrc
+	#	else:
+	#		ly, fy = ly2, fy1
+	#		src = mysrc
+	#		dst = mydst
+		src, dst = mysrc, mydst #TMP
+		ly, fy = ly1, fy2 #TMP
 		arcinfo = (src.GetUID(), f, d, t)
 		arclist = MMAttrdefs.getattr(dst, 'synctolist')
-		arclist1 = arclist[0:len(arclist)]
-		arclist1.append(arcinfo)
-		dst.SetAttr('synctolist', arclist1)
+		if not arcinfo in arclist:
+			arclist1 = arclist[0:len(arclist)]
+			arclist1.append(arcinfo)
+			dst.SetAttr('synctolist', arclist1)
 		thisarc = (view, dst, arcinfo)
-		arr = arrow().new(fx, fy, lx, ly, thisarc)
-		arr.draw()
+		arr = arrow().new(lx, ly, fx, fy, thisarc)
 		self.arrowlist.append(arr)
+		return(arr)
 	def arrowhit(self, arrow):
 		showarceditor(arrow)
 	def setarcvalues(self, (arrow, newinfo)):
@@ -361,8 +364,15 @@ class view () :
 		arclist = MMAttrdefs.getattr(dst, 'synctolist')
 		arclist.remove(arcinfo)
 		arclist.append(newinfo)
-		print 'setting new arclist', arclist, 'on node', dst.uid
 		dst.SetAttr('synctolist', arclist)
+	#def deletearc(self, arrow):
+	#	view, dst, arcinfo = arrow.arc
+	#	arclist = MMAttrdefs.getattr(dst, 'synctolist')
+	#	arclist.remove(arcinfo)
+	#	dst.SetAttr('synctolist', arclist)
+	#	arrow.hidden = 1
+	#	del arrow
+	#	self.redraw(self)
 	def diamhit(self, diam):
 		i = self.chanboxes.index(diam)
 		name = self.channellist[i]
