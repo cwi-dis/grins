@@ -34,7 +34,7 @@ class EditableMMNode(MMNode.MMNode):
 		try:
 			return self.GetAttr('name')
 		except MMExc.NoSuchAttrError:
-			return "not_yet_defined"
+			return 'nameless %s' % self.GetType()
 	#def GetType(self) - defined in MMNode.py
 	
 	def NewBeginEvent(self, othernode, event, editmgr = None):
