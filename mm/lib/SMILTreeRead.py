@@ -1447,7 +1447,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if y1[-1] == '%':
 				y1 = string.atoi(y1[:-1]) / 100.0
 			else:
-				y1 = string.atoi(h)
+				y1 = string.atoi(y1)
 			if x1 <= x0 or y1 <= y0:
 				self.warning('Anchor coordinates incorrect. XYWH-style?.',
 					self.lineno)
