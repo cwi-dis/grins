@@ -81,10 +81,11 @@ attrgrs=(
 		]},
 
 	{'name':'duration_and_loop',
-	'title':'Duration and loop',
+	'title':'Timing',
 	'attrs':[
 		'duration',
 		'loop',
+		'begin',
 		]},
 
  	{'name':'webserver',
