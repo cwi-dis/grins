@@ -20,19 +20,18 @@ class Channel():
 	def init(self, (name, attrdict, player)):
 		self.name = name
 		self.attrdict = attrdict
-		self.rate = 1.0
 		self.player = player
 		self.qid = None
 		return self
 	#
-	# Set the playback rate.  
-	# The rate argument should be 1.0 for normal playback,
-	# > 1.0 for fast forward, 0.0 < rate < 1.0 for slow motion.
-	# Don't use a rate of 0.0 to pause; use freeze/unfreeze instead.
-	# Don't use negative rates for reverse playback (yet).
+	def show(self):
+		pass
 	#
-	def setrate(self, rate):
-		self.rate = float(rate)
+	def hide(self):
+		pass
+	#
+	def destroy(self):
+		pass
 	#
 	# Return the nominal duration of a node, in seconds.
 	# (This does not depend on the playback rate!)
@@ -47,7 +46,7 @@ class Channel():
 		self.qid = self.player.enter(secs, 0, self.done, \
 							(callback, arg))
 	#
-	# Don't call done() directly -- it's a callback used internally.
+	# Function called when an even't time is up.
 	#
 	def done(self, (callback, arg)):
 		self.qid = None
