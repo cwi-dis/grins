@@ -213,11 +213,6 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		id=usercmdui.class2ui[wndusercmd.CLOSE_ACTIVE_WINDOW].id
 		self.HookCommand(self.OnCloseActiveWindow,id)
 	
-		# copy/paste file support
-		id=usercmdui.class2ui[wndusercmd.PASTE_FILE].id
-		self.HookCommand(self.OnPasteFile,id)
-		self.HookCommandUpdate(self.OnUpdateEditPaste,id)
-
 		id=usercmdui.class2ui[wndusercmd.ABOUT_GRINS].id
 		self.HookCommand(self.OnAbout,id)
 		self.HookCommandUpdate(self.OnUpdateCmdEnable,id)
@@ -232,14 +227,17 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		# hook tab sel change
 		#TCN_FIRST =-550;TCN_SELCHANGE  = TCN_FIRST - 1
 		#self.HookNotify(self.OnNotifyTcnSelChange,TCN_SELCHANGE)
-
-		# drag/drop is enabled by register
 		
-		# copy/paste support
+		# set main frame popup
 		if hasattr(MenuTemplate,'MAIN_FRAME_POPUP'):
 			client.HookMessage(self.onRButtonDown,win32con.WM_RBUTTONDOWN)
 			self.setpopupmenu(MenuTemplate.MAIN_FRAME_POPUP)
 		
+		# enable mechanism to accept paste files
+		# when the event PasteFile is registered
+		id=usercmdui.class2ui[wndusercmd.PASTE_DOCUMENT].id
+		self.HookCommand(self.OnPasteFile,id)
+		self.HookCommandUpdate(self.OnUpdateEditPaste,id)
 		return 0
 
 	# drag and drop files support for MainFrame
@@ -266,16 +264,6 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			filename=win32api.DragQueryFile(hDrop,ix)
 			self.onEvent(DropFile,(0, 0, filename))
 		win32api.DragFinish(hDrop)
-
-	# copy/paste file support
-	def OnPasteFile(self,id,code):
-		filename=Sdk.GetClipboardFileData()
-		if filename:
-			import longpath
-			filename=longpath.short2longpath(filename)
-			self.onEvent(PasteFile,(0, 0, filename))
-	def OnUpdateEditPaste(self,cmdui):
-		cmdui.Enable(Sdk.IsClipboardFileDataAvailable())
 
 	def onInitMenu(self,params):
 		if Sdk.IsClipboardFormatAvailable(win32con.CF_TEXT):
@@ -760,7 +748,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			cmd=self.GetUserCmd(usercmd.EXIT)
 			if cmd:apply(apply,cmd.callback)
 			return
-
+			
 		# look first self._active_child cmds
 		if self._active_child and self._activecmds.has_key(self._active_child._view._strid):
 			contextcmds=self._activecmds[self._active_child._view._strid]
