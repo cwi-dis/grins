@@ -1423,110 +1423,10 @@ class AttrEditor(AttrEditorDialog):
 				 helptext, inheritance, flags = \
 				 wrapper.getdef(name)
 			type = typedef[0]
-			if displayername == 'file':
-				C = FileAttrEditorField
-			elif displayername == 'font':
-				C = FontAttrEditorField
-			elif displayername == 'timelist':
-				C = TimelistAttrEditorField
-			elif displayername == 'color':
-				C = ColorAttrEditorField
-			elif displayername == 'csscolor':
-				C = CssColorAttrEditorField
-			elif displayername == 'csspos':
-				C = CssPosAttrEditorField
-			elif displayername == 'regpoint':
-				C = RegpointAttrEditorField
-			elif displayername == 'layoutname':
-				C = LayoutnameAttrEditorField
-			elif displayername == 'channelname':
-				C = ChannelnameAttrEditorField
-			elif displayername == 'captionchannelname':
-				C = CaptionChannelnameAttrEditorField
-			elif displayername == 'basechannelname':
-				C = BaseChannelnameAttrEditorField
-			elif displayername == 'childnodename':
-				C = ChildnodenameAttrEditorField
-			elif displayername == 'channeltype':
-				C = ChanneltypeAttrEditorField
-			elif displayername == 'units':
-				C = UnitsAttrEditorField
-			elif displayername == 'termnodename':
-				C = TermnodenameAttrEditorField
-			elif displayername == 'transparency':
-				C = TransparencyAttrEditorField
-			elif displayername == 'usergroup':
-				C = UsergroupAttrEditorField
-			elif displayername == 'reqlist':
-				C = ReqListAttrEditorField
-			elif displayername == 'transition':
-				C = TransitionAttrEditorField
-##			elif displayername == 'direction':
-##				C = WipeDirectionAttrEditorField
-##			elif displayername == 'wipetype':
-##				C = WipeTypeAttrEditorField
-			elif displayername == 'subregionanchor':
-				C = AnchorTypeAttrEditorField
-			elif displayername == 'targets':
-				C = RMTargetsAttrEditorField
-			elif displayername == 'audiotype':
-				C = RMAudioAttrEditorField
-			elif displayername == 'videotype':
-				C = RMVideoAttrEditorField
-			elif displayername == 'nodetype':
-				C = NodeTypeAttrEditorField
-			elif displayername == 'text':
-				C = TextAttrEditorField
-			elif displayername == 'qtchaptermode':
-				C = QTChapterModeEditorField
-			elif displayername == 'bool3':
-				C = BoolAttrEditorFieldWithDefault
-			elif displayername == 'captionoverdub':
-				C = CaptionOverdubAttrEditorField
-			elif displayername == 'captionoverdub3':
-				C = CaptionOverdubAttrEditorFieldWithDefault
-##			elif displayername == 'subtitleoverdub':
-##				C = SubtitleOverdubAttrEditorField
-##			elif displayername == 'subtitleoverdub3':
-##				C = SubtitleOverdubAttrEditorFieldWithDefault
-			elif displayername == 'language':
-				C = LanguageAttrEditorField
-			elif displayername == 'language3':
-				C = LanguageAttrEditorFieldWithDefault
-			elif displayername == 'bitrate':
-				C = BitrateAttrEditorField
-			elif displayername == 'bitrate3':
-				C = BitrateAttrEditorFieldWithDefault
-			elif displayername == 'quality':
-				C = QualityAttrEditorField
-			elif displayername == 'chanpos':
-				C = ChanPosAttrEditorField
-			elif displayername == '.anchorlist':
-				C = AnchorlistAttrEditorField
-			elif displayername == 'percent':
-				C = PercentAttrEditorField
-			elif displayername == 'opsys':
-				C = OperatingSystemAttrEditorField
-			elif displayername == 'cpu':
-				C = CpuAttrEditorField
-			elif displayername == 'screensize':
-				C = ScreenSizeAttrEditorField				
-			elif displayername == 'screendepth':
-				C = ScreenDepthAttrEditorField				
-			elif type == 'bool':
-				C = BoolAttrEditorField
-			elif type == 'name':
-				C = NameAttrEditorField
-			elif type == 'string':
-				C = StringAttrEditorField
-			elif type == 'int':
-				C = IntAttrEditorField
-			elif type == 'float':
-				C = FloatAttrEditorField
-			elif type == 'tuple':
-				C = TupleAttrEditorField
-			elif type == 'enum':
-				C = EnumAttrEditorField
+			if DISPLAYERS.has_key(displayername):
+				C = DISPLAYERS[displayername]
+			elif TYPEDISPLAYERS.has_key(type):
+				C = TYPEDISPLAYERS[type]
 			else:
 				C = AttrEditorField
 
@@ -2999,3 +2899,55 @@ class AnchorlistAttrEditorField(AttrEditorField):
 	def valuerepr(self, value):
 		return value
 
+DISPLAYERS = {
+	'file': FileAttrEditorField,
+	'font': FontAttrEditorField,
+	'timelist': TimelistAttrEditorField,
+	'color': ColorAttrEditorField,
+	'csscolor': CssColorAttrEditorField,
+	'csspos': CssPosAttrEditorField,
+	'regpoint': RegpointAttrEditorField,
+	'layoutname': LayoutnameAttrEditorField,
+	'channelname': ChannelnameAttrEditorField,
+	'captionchannelname': CaptionChannelnameAttrEditorField,
+	'basechannelname': BaseChannelnameAttrEditorField,
+	'childnodename': ChildnodenameAttrEditorField,
+	'channeltype': ChanneltypeAttrEditorField,
+	'units': UnitsAttrEditorField,
+	'termnodename': TermnodenameAttrEditorField,
+	'transparency': TransparencyAttrEditorField,
+	'usergroup': UsergroupAttrEditorField,
+	'reqlist': ReqListAttrEditorField,
+	'transition': TransitionAttrEditorField,
+	'subregionanchor': AnchorTypeAttrEditorField,
+	'targets': RMTargetsAttrEditorField,
+	'audiotype': RMAudioAttrEditorField,
+	'videotype': RMVideoAttrEditorField,
+	'nodetype': NodeTypeAttrEditorField,
+	'text': TextAttrEditorField,
+	'qtchaptermode': QTChapterModeEditorField,
+	'bool3': BoolAttrEditorFieldWithDefault,
+	'captionoverdub': CaptionOverdubAttrEditorField,
+	'captionoverdub3': CaptionOverdubAttrEditorFieldWithDefault,
+	'language': LanguageAttrEditorField,
+	'language3': LanguageAttrEditorFieldWithDefault,
+	'bitrate': BitrateAttrEditorField,
+	'bitrate3': BitrateAttrEditorFieldWithDefault,
+	'quality': QualityAttrEditorField,
+	'.anchorlist': AnchorlistAttrEditorField,
+	'percent': PercentAttrEditorField,
+	'opsys': OperatingSystemAttrEditorField,
+	'cpu': CpuAttrEditorField,
+	'screensize': ScreenSizeAttrEditorField	,
+	'screendepth': ScreenDepthAttrEditorField,
+}
+
+TYPEDISPLAYERS = {
+	'bool': BoolAttrEditorField,
+	'name': NameAttrEditorField,
+	'string': StringAttrEditorField,
+	'int': IntAttrEditorField,
+	'float': FloatAttrEditorField,
+	'tuple': TupleAttrEditorField,
+	'enum': EnumAttrEditorField,
+}
