@@ -74,6 +74,7 @@ class UsergroupViewDialog:
 		self.__window = None
 
 class UsergroupEditDialog:
+	__overrideindex = {'not-allowed':0,'allowed':1,'uid-only':2}
 	def __init__(self, ugroup, title, ustate, override, uid):
 		"""Create the UsergroupEdit dialog.
 
@@ -94,8 +95,8 @@ class UsergroupEditDialog:
 					    top = self.__title, left = None,
 					    right = None)
 		self.__override = w.OptionMenu('User override',
-					       ['not allowed', 'allowed'],
-					       override == 'allowed', None,
+					       ['not allowed', 'allowed', 'uid only'],
+					       self.__overrideindex[override], None,
 					       top = self.__state,
 					       left = None, right = None)
 		self.__uid = w.TextInput('Custom test UID', uid, None, None,
@@ -130,18 +131,25 @@ class UsergroupEditDialog:
 		ugroup -- string name of the user group
 		title -- string title of the user group
 		ustate -- string 'RENDERED' or 'NOT RENDERED'
-		override -- string 'allowed' or 'not allowed'
+		override -- string 'allowed', 'not-allowed', or 'uid-only'
 		"""
 		self.__ugroup.settext(ugroup)
 		self.__title.settext(title)
 		self.__state.setpos(ustate == 'RENDERED')
-		self.__override.setpos(override == 'allowed')
+		self.__override.setpos(self.__overrideindex[override])
 		self.__uid.settext(uid)
 
 	def getstate(self):
 		"""Return the current values in the dialog."""
+		opos = self.__override.getpos()
+		for k, v in self.__overrideindex.items():
+			if v == opos:
+				override = k
+				break
+		else:
+			override = 'not-allowed'
 		return self.__ugroup.gettext(), \
 		       self.__title.gettext(), \
 		       self.__state.getvalue(), \
-		       self.__override.getvalue(), \
+		       override, \
 		       self.__uid.gettext()
