@@ -13,11 +13,6 @@ PyIMPORT CWnd *GetWndPtr(PyObject *);
 extern "C" {
 #endif
 
-//***************************
-//Things to do:
-//	- built a LinkList with the used windows so as to preserve MemoryManagement
-//	- use cmifClass in a more clever way to cover every case
-//***************************
 
 #pragma data_seg("SHARED")
 PyObject *testOb = Py_None;

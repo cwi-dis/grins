@@ -8,10 +8,7 @@
 #include "StdAfx.h"
 
 //Python Header Files
-#define Py_USE_NEW_NAMES
-#include "allobjects.h"
-#include "modsupport.h"
-#include "abstract.h"
+#include "Python.h"
 
 //PythonWin Header Files
 #include "win32ui.h"
@@ -23,3 +20,4 @@
 #define PyIMPORT  __declspec(dllimport)
 #define PyEXPORT  __declspec(dllexport)
 
+#endif
