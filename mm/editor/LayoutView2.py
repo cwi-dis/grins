@@ -3988,6 +3988,13 @@ class MediaRegion(Region):
 #					x,y,w,h = wingeom
 #					wingeom = x,y,w,self.media_height
 
+		node = self._nodeRef
+		chtype = node.GetChannelType()
+		if chtype == 'brush':
+			# show just the brush color	(the bgcolor is overrided whatever its value)
+			self._curattrdict['bgcolor'] = node.GetAttrDef('fgcolor', (0,0,0))
+			self._curattrdict['transparent'] = 0
+
 		self._curattrdict['wingeom'] = wingeom
 		self._z = self._nodeRef.GetAttrDef('z', 0)
 		self._curattrdict['z'] = self._z
@@ -4022,6 +4029,10 @@ class MediaRegion(Region):
 		# copy from old hierarchical view to determinate the image to showed
 		node = self._nodeRef
 		chtype = node.GetChannelType()
+
+		if chtype == 'brush':
+			# special case for brush elements: no image to show and no scaling.
+			return
 		
 		canBeScaled = 1
 		f = None
