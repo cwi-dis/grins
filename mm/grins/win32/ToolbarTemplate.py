@@ -56,18 +56,18 @@ GENERAL_TEMPLATE = (
 	)
 )
 
-PLAYER_TEMPLATE = (
-	('Player Controls', 'toolbar', 'docked', wndusercmd.TOOLBAR_PLAYER, IDW_TOOLBAR_PLAYER, grinsRC.IDR_TB_COMMON, 0, (
-		Button(usercmd.PLAY, TBICON_PLAY),
-		Button(usercmd.PAUSE, TBICON_PAUSE),
-		Button(usercmd.STOP, TBICON_STOP),
-		)
-	)
-)
+##PLAYER_TEMPLATE = (
+##	('Player Controls', 'toolbar', 'docked', wndusercmd.TOOLBAR_PLAYER, IDW_TOOLBAR_PLAYER, grinsRC.IDR_TB_COMMON, 0, (
+##		Button(usercmd.PLAY, TBICON_PLAY),
+##		Button(usercmd.PAUSE, TBICON_PAUSE),
+##		Button(usercmd.STOP, TBICON_STOP),
+##		)
+##	)
+##)
 
 TOOLBARS=[
 	GENERAL_TEMPLATE,
-	PLAYER_TEMPLATE,
+##	PLAYER_TEMPLATE,
 ]
 
 TOOLBARS.reverse()  # For now...
