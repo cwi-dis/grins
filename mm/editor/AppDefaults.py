@@ -15,6 +15,8 @@ vertical_spread = settings.get('vertical_spread')
 f_title = windowinterface.findfont('Helvetica', 10)
 f_channel = windowinterface.findfont('Helvetica', 8)
 f_timescale = f_channel
+FONTTWEAK = 2				# potentially system-dependant vertical tweak of fonts
+					# this is used to vertically center text
 
 # Color assignments (RGB)
 BGCOLOR = settings.get('structure_bgcolor')
@@ -31,6 +33,7 @@ TEXTCOLOR = settings.get('structure_textcolor')
 CTEXTCOLOR = settings.get('structure_ctextcolor')
 EXPCOLOR = settings.get('structure_expcolor')
 COLCOLOR = settings.get('structure_colcolor')
+FILLCOLOR = settings.get('structure_fillcolor')
 FREEZECOLOR = settings.get('structure_freezecolor')
 REPEATCOLOR = settings.get('structure_repeatcolor')
 TRUNCCOLOR = settings.get('structure_trunccolor')

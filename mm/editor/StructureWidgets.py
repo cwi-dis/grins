@@ -717,7 +717,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			displist.fgcolor(CTEXTCOLOR)
 			displist.usefont(f_title)
 			nx = box[0] + box[2] + 2
-			ny = box[1] + box[3] - 2
+##			ny = box[1] + box[3] - 2
+			ny = y + (h + displist.baselinePXL()) / 2 + FONTTWEAK
 			displist.setpos(nx, ny)
 			namewidth = displist.strsizePXL(name)[0]
 			if nx + namewidth <= r:
@@ -742,14 +743,17 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			if image_filename:
 				box = displist.display_image_from_file(
 					image_filename,
-					center = 0,
 					coordinates = coordinates,
-					fit = 'icon')
+					fit = 'icon',
+					align = 'bottomleft')
 				displist.drawbox(box)
 			else:
 				box = (x, y, 0, imh)
 			if forcetext or (self.iconbox is not None and self.iconbox.vertical):
-				displist.setpos(box[0] + box[2] + 2, box[1] + box[3] - 2)
+				nx = box[0] + box[2] + 2
+##				ny = box[1] + box[3] - 2
+				ny = y + (h + displist.baselinePXL()) / 2 + FONTTWEAK
+				displist.setpos(nx, ny)
 				displist.writestr(name)
 
 	#
@@ -2200,7 +2204,7 @@ class MediaWidget(MMNodeWidget):
 			displist.drawfbox(TRUNCCOLOR, (x+w-TRUNCSIZE,y,TRUNCSIZE,h))
 		if dw > 0:
 			displist.drawfbox(color, (x, y, dw, h))
-		displist.drawfbox(color, (x,y,w,16)) # fill bar
+		displist.drawfbox(FILLCOLOR, (x,y+h/3,w,h/3)) # fill bar
 
 	def draw_selected(self, displist):
 		self.__draw_box(displist, (255,255,255))
