@@ -1319,7 +1319,7 @@ class _Window:
 			try:
 				import rgbimg
 				rgbimg.longstoimage(retval[10],
-					  retval[6], retval[7], 1,
+					  retval[6], retval[7], 3,
 					  filename)
 			except:		# any error...
 				print 'Warning: caching image failed'
