@@ -193,7 +193,7 @@ class VideoChannel(ChannelWindowAsync):
 			self.place_movie(None, self.play_movie)
 			self.play_movie.UpdateMovie()
 
-	def _playsome(self, *dummy):
+	def _playsome(self):
 		if debug: print 'VideoChannel: playsome'
 		if not self.play_movie:
 			return
@@ -361,9 +361,9 @@ class VideoChannel(ChannelWindowAsync):
 		if wantone == self.idleprocactive:
 			return
 		if wantone:
-			windowinterface.setidleproc(self._playsome)
+			self.__id = windowinterface.setidleproc(self._playsome)
 		else:
-			windowinterface.cancelidleproc(self._playsome)
+			windowinterface.cancelidleproc(self.__id)
 		self.idleprocactive = wantone
 		
 	def setpaused(self, paused):

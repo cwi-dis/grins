@@ -19,7 +19,7 @@ class TransitionEngine:
 		klass = Transitions.TransitionFactory(trtype, subtype)
 		self.__transitiontype = klass(self, dict)
 
-		self.__fiber_id = 0
+		self.__fiber_id = None
 
 		self.__startprogress = dict['startProgress']
 		self.__endprogress = dict['endProgress']
@@ -142,10 +142,9 @@ class TransitionEngine:
 	
 	def __register_for_timeslices(self):
 		if not self.__fiber_id:
-			windowinterface.setidleproc(self.__onIdle)
-			self.__fiber_id = 1
+			self.__fiber_id = windowinterface.setidleproc(self.__onIdle)
 
 	def __unregister_for_timeslices(self):
-		if self.__fiber_id:
-			windowinterface.cancelidleproc(self.__onIdle)
-			self.__fiber_id = 0
+		if self.__fiber_id is not None:
+			windowinterface.cancelidleproc(self.__fiber_id)
+			self.__fiber_id = None

@@ -55,7 +55,7 @@ class MediaChannel:
 		self.__playFileHasBeenRendered=0
 		
 		# main thread monitoring fiber id
-		self.__fiber_id=0
+		self.__fiber_id=None
 		self.__playdone=1
 		self.__paused=1
 
@@ -282,14 +282,13 @@ class MediaChannel:
 			self.paint()
 	
 	def __register_for_timeslices(self):
-		if not self.__fiber_id:
-			windowinterface.setidleproc(self.onIdle)
-			self.__fiber_id = 1
+		if self.__fiber_id is None:
+			self.__fiber_id = windowinterface.setidleproc(self.onIdle)
 
 	def __unregister_for_timeslices(self):
-		if self.__fiber_id:
-			windowinterface.cancelidleproc(self.onIdle)
-			self.__fiber_id = 0
+		if self.__fiber_id is not None:
+			windowinterface.cancelidleproc(self.__fiber_id)
+			self.__fiber_id = None
 
 
 ###################################
@@ -303,7 +302,7 @@ class VideoStream:
 		self.__playEnd=0
 		self.__playdone=1
 		self.__paused=1
-		self.__fiber_id=0
+		self.__fiber_id=None
 		self.__rcMediaWnd = None
 
 	def destroy(self):
@@ -416,13 +415,12 @@ class VideoStream:
 				self.onMediaEnd()
 	
 	def __register_for_timeslices(self):
-		if not self.__fiber_id:
-			windowinterface.setidleproc(self.onIdle)
-			self.__fiber_id = 1
+		if self.__fiber_id is None:
+			self.__fiber_id = windowinterface.setidleproc(self.onIdle)
 
 	def __unregister_for_timeslices(self):
-		if self.__fiber_id:
-			windowinterface.cancelidleproc(self.onIdle)
-			self.__fiber_id = 0
+		if self.__fiber_id is not None:
+			windowinterface.cancelidleproc(self.__fiber_id)
+			self.__fiber_id = None
 
 

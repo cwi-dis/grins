@@ -40,7 +40,7 @@ class TransitionEngine:
 		self.starttime = self.starttime - (self.startprogress*self.duration)
 
 		
-		mw_globals.toplevel.setidleproc(self._idleproc)
+		self.__idleid = mw_globals.toplevel.setidleproc(self._idleproc)
 		
 	def join(self, window, ismaster):
 		"""Join this (sub or super) window to an existing transition"""
@@ -57,7 +57,7 @@ class TransitionEngine:
 			self.value = 1.0
 			self._doredraw(0)
 			# Tear down our datastructures
-			mw_globals.toplevel.cancelidleproc(self._idleproc)
+			mw_globals.toplevel.cancelidleproc(self.__idleid)
 			self.windows = None
 			self.transitiontype = None
 		
