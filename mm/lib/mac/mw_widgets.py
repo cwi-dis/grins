@@ -86,7 +86,7 @@ class _ListWidget(_ControlWidget):
 		self.control = dlg.GetDialogItemAsControl(item)
 ##		d1, d2, self.rect = wid.GetDialogItem(item)
 		self.rect = (0, 0, 1000, 1000) # DBG
-		h = self.control.GetControlDataHandle(Controls.kControlListBoxPart, 
+		h = self.control.GetControlData_Handle(Controls.kControlListBoxPart, 
 			Controls.kControlListBoxListHandleTag)
 		self.list = List.as_List(h)
 		self.list.LAddRow(len(content), 0)
@@ -203,9 +203,9 @@ class _AreaWidget(_ControlWidget, _ImageMixin):
 		self.scaleitem = scaleitem
 		self.control = dlg.GetDialogItemAsControl(item)
 		self.rect = self.control.GetControlRect()
-		self.control.SetControlDataCallback(0, Controls.kControlUserPaneDrawProcTag, self.redraw)
-		self.control.SetControlDataCallback(0, Controls.kControlUserPaneHitTestProcTag, self.hittest)
-##		self.control.SetControlDataCallback(0, Controls.kControlUserPaneTrackingProcTag, self.tracking)
+		self.control.SetControlData_Callback(0, Controls.kControlUserPaneDrawProcTag, self.redraw)
+		self.control.SetControlData_Callback(0, Controls.kControlUserPaneHitTestProcTag, self.hittest)
+##		self.control.SetControlData_Callback(0, Controls.kControlUserPaneTrackingProcTag, self.tracking)
 		self.image = None
 		self.outerrect = (0, 0, 1, 1)
 		self.otherrects = []
@@ -475,7 +475,7 @@ class _SelectWidget(_ControlWidget):
 ##		print 'DBG: close', self
 		del self.wid
 		del self.dlg
-##		self.control.SetControlDataHandle(Controls.kControlMenuPart,
+##		self.control.SetControlData_Handle(Controls.kControlMenuPart,
 ##				Controls.kControlPopupButtonMenuHandleTag, self.orig_menu)
 		del self.control
 ##		self.menu.delete()
@@ -498,9 +498,9 @@ class _SelectWidget(_ControlWidget):
 		oldmenu = self.menu
 		self.menu = mw_menucmd.SelectPopupMenu(items)
 		mhandle, mid = self.menu.getpopupinfo()
-##		self.orig_menu = self.control.GetControlDataHandle(Controls.kControlMenuPart,
+##		self.orig_menu = self.control.GetControlData_Handle(Controls.kControlMenuPart,
 ##				Controls.kControlPopupButtonMenuHandleTag)
-		self.control.SetControlDataHandle(Controls.kControlMenuPart,
+		self.control.SetControlData_Handle(Controls.kControlMenuPart,
 				Controls.kControlPopupButtonMenuHandleTag, mhandle)
 ##		ControlAccessor.SetControlData(self.control, Controls.kControlMenuPart,
 ##				Controls.kControlPopupButtonMenuIDTag, mid)
