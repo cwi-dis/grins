@@ -31,6 +31,8 @@ from MMTypes import *
 import os
 import Bandwidth
 
+OPTION_TIMESCALEBOX_BOXES = 0		# Turn on for measure-tape timeline
+
 
 def fix(r, g, b): return r, g, b	# Hook for color conversions
 
@@ -1178,7 +1180,10 @@ class TimeScaleBox(GO):
 		t = t + vmargin
 		r = r - hmargin
 		b = (4*t+b)/5
-		d.drawbox((l, t, r - l, b - t))
+		if OPTION_TIMESCALEBOX_BOXES:
+			d.drawbox((l, t, r - l, b - t))
+		else:
+			d.drawline(BORDERCOLOR, [(l, b), (r, b)])
 		# Compute number of division boxes
 		t0, t1 = self.mother.timerange()
 		if t0 < 0:
@@ -1219,12 +1224,39 @@ class TimeScaleBox(GO):
 			r = min(r, self.right)
 			if r <= l:
 				continue
-			d.drawfbox(BORDERCOLOR, (l, t, r - l, b - t))
+			if OPTION_TIMESCALEBOX_BOXES:
+				d.drawfbox(BORDERCOLOR, (l, t, r - l, b - t))
+			elif i%div == 0:
+				d.drawline(BORDERCOLOR, [(l, t), (l, b)])
+			else:
+				d.drawline(BORDERCOLOR, [(l, (t+b)/2), (l, b)])
 			if i%div <> 0:
 				continue
 			d.centerstring(l-f_width*3, b,
 				       l+f_width*3, self.bottom,
 				       `i*tickstep`)
+		# For things left of t0 (preload time) draw ticks only,
+		# and the total value
+		fart0, dummy = self.mother.timerange()
+		farleft, dummy = self.mother.maptimes(fart0, t1)
+		it0 = t0 - tickstep
+		i = 0
+		while it0 > fart0:
+			i = i + 1
+			l, dummy = self.mother.maptimes(it0, t0)
+			if i%div == 0:
+				d.drawline(BORDERCOLOR, [(l, t), (l, b)])
+			else:
+				d.drawline(BORDERCOLOR, [(l, (t+b)/2), (l, b)])
+			it0 = it0 - tickstep
+		if fart0 != t0:
+			l, r = self.mother.maptimes(it0, t0)
+			d.drawline(BORDERCOLOR, [(l, t), (l, b)])
+			d.centerstring(l-f_width*5, b,
+				       r, self.bottom,
+				       "%ds preroll"%(t0-fart0))
+			
+		# And draw markers in places where time breaks
 		for i in self.mother.discontinuities:
 		        l, r = self.mother.maptimes(i, i)
 			d.drawline(ANCHORCOLOR, [(l, t), (l, b)])
@@ -1238,6 +1270,7 @@ class BandwidthAccumulator:
 	def __init__(self, max):
 		self.max = max
 		self.used = [(0, 0)]
+		self.maxused = 0
 
 	def _findslot(self, t0):
 		"""Find the slot in which t0 falls"""
@@ -1301,6 +1334,8 @@ class BandwidthAccumulator:
 			boxes.append((t0, cur_t1, oldbw, oldbw+bandwidth,
 				      curbwtype))
 			self.used[i] = (t0, oldbw+bandwidth)
+			if oldbw + bandwidth > self.maxused:
+				self.maxused = oldbw + bandwidth
 			t0 = cur_t1
 			if t0 >= t1:
 				break
@@ -1351,6 +1386,8 @@ class BandwidthAccumulator:
 				overall_t0 = t0
 			overall_t1 = tnext
 			self.used[i] = t0, self.max
+			if self.max > self.maxused:
+				self.maxused = self.max
 			size = int(size - size_in_slot)
 			t0 = tnext
 		return overall_t0, overall_t1, boxes
@@ -1383,14 +1420,7 @@ class BandwidthStripBox(GO, BandwidthStripBoxCommand):
 		self.focusboxes = []
 		import settings
 		self.bandwidth = settings.get('system_bitrate')
-		if self.BWNAMES.has_key(self.bandwidth):
-			self.bwname = self.BWNAMES[self.bandwidth]
-		elif self.bandwidth > 1000000:
-			self.bwname = "%d Mbps" % (self.bandwidth / 1000000)
-		elif self.bandwidth > 1000:
-			self.bwname = "%d Kbps" % (self.bandwidth / 1000)
-		else:
-			self.bwname = "%d bps" % self.bandwidth
+		self.bwname = self._bwstr(self.bandwidth)
 
 		self.maxbw = 2*self.bandwidth
 		self.usedbandwidth = BandwidthAccumulator(self.bandwidth)
@@ -1408,6 +1438,16 @@ class BandwidthStripBox(GO, BandwidthStripBoxCommand):
 			]
 		BandwidthStripBoxCommand.__init__(self)
 
+	def _bwstr(self, bandwidth):
+		# Convert bandwidth number to string
+		if self.BWNAMES.has_key(bandwidth):
+			return self.BWNAMES[bandwidth]
+		elif bandwidth > 1000000:
+			return"%d Mbps" % (bandwidth / 1000000)
+		elif bandwidth > 1000:
+			return "%d Kbps" % (bandwidth / 1000)
+		return "%d bps" % bandwidth
+		
 	def getbandwidth(self):
 		return self.bandwidth
 
@@ -1437,7 +1477,13 @@ class BandwidthStripBox(GO, BandwidthStripBoxCommand):
 		d.drawline(BORDERCOLOR, [(l, bwpos), (r, bwpos)])
 		d.fgcolor(TEXTCOLOR)
 		d.centerstring(0, bwpos-f_height/2, self.mother.channelright,
-			       bwpos+f_height, self.bwname)
+			       bwpos+f_height/2, self.bwname)
+		if self.usedbandwidth.maxused > self.usedbandwidth.max:
+			d.fgcolor(PLAYERRORCOLOR)
+			d.centerstring(0, t, self.mother.channelright,
+				       t+f_height, self._bwstr(
+					       self.usedbandwidth.maxused))
+				       
 		for box in self.boxes:
 			self._drawbox(box, 0)
 		for box in self.focusboxes:
