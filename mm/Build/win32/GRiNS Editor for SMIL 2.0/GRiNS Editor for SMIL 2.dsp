@@ -321,14 +321,6 @@ SOURCE=.\M_ChannelMime.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_ChannelView.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_ChannelViewDialog.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_CheckInsideArea.c
 # End Source File
 # Begin Source File
