@@ -13,7 +13,7 @@ static PyObject *MpegExError;
 
 BOOL first;
 
-PyIMPORT CWnd *GetWndPtr(PyObject *);
+PYW_EXPORT CWnd *GetWndPtr(PyObject *);
 
 
 #ifdef __cplusplus
@@ -22,7 +22,7 @@ extern "C" {
 
 void MpegExErrorFunc(char *str);
 
-void init()
+static void init()
 {
 	TRACE("Initializing...\n");
 	for (UINT k=0; k<MAX_CHAN; k++)
