@@ -97,10 +97,10 @@ class Widget:
 	# Widget's area and only has relative coordinates, perhaps by having each Widget in
 	# it's own window.
 
-	def __init__(self, root):
+	def __init__(self, mother):
 		# Root is the Hierarchy view window.
-		assert root != None
-		self.root = root
+		assert mother != None
+		self.mother = mother
 
 		# Mutable attributes
 #		self.pos_rel = (0.0, 0.0, 1.0, 1.0) # relative position (0.0 <= n <= 1.0)
@@ -213,9 +213,9 @@ class Widget:
 
 	def select(self):
 		self.selected = 1
-		if not self.root:
-			print "Error! Node has no root - should I be selected?"
-		self.root.dirty = 1
+		if not self.mother:
+			print "Error! Node has no mother - should I be selected?"
+		self.mother.dirty = 1
 		# DEBUG:
 		#print "Selected: ", self
 		#print "          coords: ", self.pos_abs
@@ -223,7 +223,7 @@ class Widget:
 
 	def unselect(self):
 		self.selected = 0
-		self.root.dirty = 1
+		self.mother.dirty = 1
 
 	def get_minsize(self):
 		# Return the least size that this widget is likely to be.
@@ -241,10 +241,10 @@ class Widget:
 	
 	def get_relx(self, xvalue):
 		return xvalue
-		#return float(xvalue)/ self.root.get_window_size_abs()[0]
+		#return float(xvalue)/ self.mother.get_window_size_abs()[0]
 
 	def get_rely(self, yvalue):
-		#return float(yvalue) / self.root.get_window_size_abs()[1]
+		#return float(yvalue) / self.mother.get_window_size_abs()[1]
 		return yvalue
 
 	def is_hit(self, (x, y)):
@@ -287,8 +287,8 @@ class Widget:
 ##	# This object behaves like a collection - you can add and remove Widgets from
 ##	# it. 
 
-##	def __init__(self, root):
-##		Widget.__init__(self, root)
+##	def __init__(self, mother):
+##		Widget.__init__(self, mother)
 ##		self.widgets = []
 		
 ##	def draw(self, displist):
