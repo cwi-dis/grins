@@ -26,16 +26,8 @@ import MMmimetypes
 import features
 import compatibility
 
-# mjvdg: Enable or disable the slideshow view (make the heirachy flat!)
-# TODO: replace this code.
-try:
-	if features.grins_snap:
-		grins_snap = 1;
-	else:
-		grins_snap = 0;
-except AttributeError:
-	# grins_snap was not defined in features.py
-	grins_snap = 0;
+if features.H_NIPPLES in features.feature_set:
+	grins_snap = 1;			# TODO: this is not used properly everywhere in this file.
 
 import settings
 hierarchy_minimum_sizes = settings.get('hierarchy_minimum_sizes')
@@ -350,6 +342,7 @@ class HierarchyView(HierarchyViewDialog):
 
 		rv = [];
 # mjvdg 12-oct-2000: moved this to the constructor.
+# TODO: delete this code, if it is correct.
 # 		if slide:
 # 			rv = []
 # 		else:
@@ -1617,9 +1610,17 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			minwidth = minwidth + self.sizes.HOREXTRASIZE
 		children = node.GetChildren()
+		# if this is an empty root...
+		if node == self.root and not children and ntype in ('seq', 'par', 'alt', 'excl', 'prio'):
+			print "DEBUG: this is the root node without any children.";
+			width = minwidth + 2*self.sizes.HOREXTRASIZE;
+			height = minheight + 2*self.sizes.GAPSIZE + self.sizes.LABSIZE;	# Bah. It's sort of the same size. Who'll notice?
+			node.boxsize = width, height, begin
+			return node.boxsize;
 		if not hasattr(node, 'expanded') or not children:
 			node.boxsize = minwidth, minheight + self.sizes.LABSIZE, begin
 			return node.boxsize
+			
 		nchildren = len(children)
 		width = height = 0
 		horizontal = (ntype not in ('par', 'alt', 'excl', 'prio'))
@@ -1911,8 +1912,9 @@ class Object:
 					d.drawicon(iconbox, 'closed')
 			else:
 				node.abox = (0, 0, -1, -1)
-
-		if ntype == 'seq' and grins_snap and not self.boxtype==LEAFBOX: # Draw a decoration at the end of the node.
+				
+		# Draw a decoration at the end of the node.
+		if ntype == 'seq' and grins_snap and (not self.boxtype==LEAFBOX or self.node==self.mother.root): 
 			border = float(sizes_notime.HEDGSIZE)/rw;
 			base = float(sizes_notime.VEDGSIZE)/rh
 			
