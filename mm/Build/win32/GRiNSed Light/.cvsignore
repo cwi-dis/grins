@@ -1,10 +1,10 @@
 *.c
 FreezeOpts
-GRiNSed.exe
-GRiNSed.exp
-GRiNSed.lib
-GRiNSed.ncb
-GRiNSed.opt
+GRiNS_G2L.exe
+GRiNS_G2L.exp
+GRiNS_G2L.lib
+GRiNS_G2L.ncb
+GRiNS_G2L.opt
 log.txt
 Makefile
 Release
