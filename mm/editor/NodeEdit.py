@@ -27,7 +27,7 @@ def _do_convert(node, fn):	# Convert imm node to ext
 class _Convert:
 	def __init__(self, node):
 		self.node = node
-		self.dialog = windowinterface.FileDialog(
+		windowinterface.FileDialog(
 			'This is an internal node. Convert to external?',
 			'.', '*', _inventname(node.GetChannelName()),
 			self.ok, None)
@@ -43,7 +43,6 @@ class _Convert:
 		self.convert(file)
 
 	def convert(self, file):
-		self.dialog.close()
 		_do_convert(self.node, file)
 		showeditor(self.node)
 
