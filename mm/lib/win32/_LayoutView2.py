@@ -590,6 +590,9 @@ class _LayoutView2(GenFormView):
 		# controls margin + posibly scrollbar
 		cm = 120
 
+		if  self.GetStyle() & win32con.WS_HSCROLL:
+			cm = cm+20
+			
 		lf, tf, rf, bf = self.GetWindowRect()
 
 		# move controls in their right position
