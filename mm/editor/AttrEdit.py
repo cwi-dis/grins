@@ -1352,6 +1352,9 @@ class TermnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 class ChanneltypeAttrEditorField(PopupAttrEditorField):
 	# Choose from the standard channel types
 	def getoptions(self):
+		import settings
+		if settings.get('lightweight'):
+			return [self.getcurrent()]
 		return ['Default'] + ChannelMap.getvalidchanneltypes()
 
 class FontAttrEditorField(PopupAttrEditorField):
