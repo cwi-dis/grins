@@ -10,10 +10,11 @@ class and its implementation class _HierarchyView in lib/win32/_HierarchyView.py
 implements the actual view.
 
 """
-
+import string
 from ViewDialog import ViewDialog
 import WMEVENTS
 import MMNode
+import MMmimetypes
 import windowinterface
 
 from usercmd import *
@@ -120,9 +121,30 @@ class HierarchyViewDialog(ViewDialog):
 		x = x * self.mcanvassize[0]
 		y = y * self.mcanvassize[1]		
 		obj = self.whichhit(x, y)
+		# On the grey area we fail
 		if not obj:
 			rv = windowinterface.DROPEFFECT_NONE
-		elif obj.node.GetType() in MMNode.leaftypes:
+			self.draw()
+			return
+		node = obj.node
+		# If the node accepts only certain mimetypes
+		# we check for that too.
+		mimetypes = node.getAllowedMimeTypes()
+		if mimetypes:
+			if event == WMEVENTS.DropFile:
+				url = MMurl.pathname2url(filename)
+			else:
+				url = filename
+			mimetype = MMmimetypes.guess_type(url)[0]
+			if '/' in mimetype:
+				mimetype = string.split(mimetype, '/')[0]
+			if not mimetype in mimetypes:
+				print 'Type', mimetype, 'not in', mimetypes
+				self.draw()
+				return windowinterface.DROPEFFECT_NONE
+		# All seems fine. Return copy or link depending on
+		# the node type.
+		if node.GetType() in MMNode.leaftypes:
 			self.droppable_widget = obj
 			rv = windowinterface.DROPEFFECT_LINK
 		else:

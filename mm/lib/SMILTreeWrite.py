@@ -826,6 +826,7 @@ smil_attrs=[
 	("project_default_region_video", lambda writer, node:getcmifattr(writer, node, "project_default_region_video"), "project_default_region_video"),
 	("project_default_region_sound", lambda writer, node:getcmifattr(writer, node, "project_default_region_sound"), "project_default_region_sound"),
 	("project_default_region_text", lambda writer, node:getcmifattr(writer, node, "project_default_region_text"), "project_default_region_text"),
+	("project_forcechild", lambda writer, node:getcmifattr(writer, node, "project_forcechild"), "project_forcechild"),
 	("project_default_type", lambda writer, node:getcmifattr(writer, node, 'project_default_type'), "project_default_type"),
 	("project_bandwidth_fraction", lambda writer, node:getpercentage(writer, node, 'project_bandwidth_fraction'), "project_bandwidth_fraction"),
 	("type", getmimetype, "mimetype"),
