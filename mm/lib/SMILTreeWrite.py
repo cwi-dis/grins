@@ -326,6 +326,7 @@ def getlayout(writer, node):
 #
 smil_attrs=[
 	("id", getid),
+	("title", lambda writer, node:getcmifattr(writer, node, "title")),
 	("region", getchname),
 	("src", lambda writer, node:getcmifattr(writer, node, "file")),
 	("type", getmimetype),
@@ -682,7 +683,11 @@ class SMILWriter(SMIL):
 			ch = self.top_levels[0]
 			if ch['type'] == 'layout':
 				attrlist.append(('id', self.ch2name[ch]))
-			attrlist.append(('title', ch.name))
+			title = ch.get('title')
+			if title:
+				attrlist.append(('title', title))
+			elif self.ch2name[ch] != ch.name:
+				attrlist.append(('title', ch.name))
 			if ch.get('transparent', 0) == 1:
 				# background-color="transparent" is default
 				pass
@@ -712,8 +717,12 @@ class SMILWriter(SMIL):
 			   not ch.has_key('base_window'):
 				# top-level layout channel has been handled
 				continue
-			attrlist = [('id', self.ch2name[ch]),
-				    ('title', ch.name)]
+			attrlist = [('id', self.ch2name[ch])]
+			title = ch.get('title')
+			if title:
+				attrlist.append(('title', title))
+			elif self.ch2name[ch] != ch.name:
+				attrlist.append(('title', ch.name))
 			# if toplevel window, define a region elt, but
 			# don't define coordinates (i.e., use defaults)
 			if ch.has_key('base_window') and \
