@@ -631,6 +631,24 @@ ui_mdi_child_window_get_mdi_frame(PyObject *self, PyObject *args)
 */
 
 
+// @pymethod <o PyCWnd>|win32ui|SubclassWindow|Creates a <o PyCWnd> from an integer containing a HWND
+PyObject *
+ui_window_subclass_window(PyObject *self, PyObject *args)
+{
+	HWND hwnd;
+	if (!PyArg_ParseTuple(args, "i:SubclassWindow", &hwnd)) 
+		return NULL;
+	CWnd *pWnd = GetWndPtr(self);
+	if (!pWnd)
+		return NULL;
+	GUI_BGN_SAVE;
+	BOOL rc = pWnd->SubclassWindow(hwnd);
+	GUI_END_SAVE;
+	return Py_BuildValue( "i", rc);
+}
+
+// SubclassDlgItem
+
 ///////////////////////
 // @pymeth GetWindowLong|Gets the style of a window.
 // @pymeth SetWindowLong|Modifies the style of a window.
@@ -649,7 +667,8 @@ ui_mdi_child_window_get_mdi_frame(PyObject *self, PyObject *args)
 	{"IsKindOfMDIChildWnd",ui_window_is_kind_of_mdi_child_wnd,1},\
     {"GetWindowLong",ui_window_get_window_long,1},\
 	{"SetWindowLong",ui_window_set_window_long,1},\
-	{"ChildWindowFromPoint",ui_window_child_window_from_point,1},
+	{"ChildWindowFromPoint",ui_window_child_window_from_point,1},\
+	{"SubclassWindow",ui_window_subclass_window,1},
 
 
 /*
