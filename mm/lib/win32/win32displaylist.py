@@ -832,11 +832,11 @@ class _Button:
 		
 		# for now, until draw works for circle and poly
 		# otherwise : crash
-		if shape == A_SHAPETYPE_RECT:
-			if self._color != dispobj._bgcolor:
-				self._dispobj.drawboxanchor((coordinates[0], \
-				coordinates[1],coordinates[2]-coordinates[0], \
-				coordinates[3]-coordinates[1]))
+##		if shape == A_SHAPETYPE_RECT:
+##			if self._color != dispobj._bgcolor:
+##				self._dispobj.drawboxanchor((coordinates[0], \
+##				coordinates[1],coordinates[2]-coordinates[0], \
+##				coordinates[3]-coordinates[1]))
 
 	# Destroy button
 	def close(self):
