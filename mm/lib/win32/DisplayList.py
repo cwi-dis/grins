@@ -37,12 +37,33 @@ import math,string
 
 import win32ui, win32con, win32api
 from win32ig import win32ig
+import grinsRC
 
 from types import *		
 from appcon import *	# draw contants
 from win32mu import *	# paint utilities
 from Font import findfont
 from sysmetrics import pixel_per_mm_x,pixel_per_mm_y
+
+# Icon storage
+_icons = {}
+_icon_ids = {
+	# '' is special: don't draw any icon (needed for removing icons in optimize)
+	'closed': grinsRC.IDI_ICON_CLOSED,
+	'open': grinsRC.IDI_ICON_OPEN,
+	'bandwidthgood': grinsRC.IDI_ICON_BANDWIDTHGOOD,
+	'bandwidthbad': grinsRC.IDI_ICON_BANDWIDTHBAD,
+	'error': grinsRC.IDI_ICON_ERROR
+}
+
+def _get_icon(which):
+	if not _icons:
+		for name, resid in _icon_ids.items():
+			if resid is None:
+					continue
+			_icons[name] = win32ui.GetApp().LoadIcon(resid)
+		_icons[''] = None
+	return _icons[which]
 
 # The list cloneboxes contains all the bounding boxes
 # The union of these boxes is the display region
@@ -337,6 +358,17 @@ class DisplayList:
 			dc.TextOut(x,y,str)
 			dc.SetTextColor(clr_org)
 			dc.SelectObjectFromHandle(horg)
+		elif cmd == 'icon':
+			if entry[2] != None:
+				x, y, w, h = entry[1]
+##				fgcolor = wid.GetWindowPort().rgbFgColor
+##				Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
+##				Qd.RGBForeColor((0xffff, 0, 0))
+##				Icn.PlotCIcon((x, y, x+w, y+h), entry[2])
+				dc.DrawIcon((x, y), entry[2])
+##				Qd.RGBBackColor(self._bgcolor)
+##				Qd.RGBForeColor(fgcolor)
+
 
 
 	# Returns true if this is closed
@@ -524,14 +556,19 @@ class DisplayList:
 	def drawicon(self, coordinates, icon):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		# Icon names needed:
-		# '' is special: don't draw any icon (needed for removing icons in optimize)
-		# 'closed' used for closed structure nodes
-		# 'open': used for open structure nodes
-		# 'bandwidthgood' used to show bandwidth usage is fine
-		# 'bandwidthbad' too much banwidth used
-		# 'error' Some error has occurred on the node
-		pass # To be implemented
+		window = self._window
+		x, y, w, h = self._convert_coordinates(coordinates)
+		# Keep it square, top it off, center it
+		size = min(w, h, ICONSIZE_PXL)
+		xextra = w-size
+		yextra = h-size
+		if xextra > 0:
+			x = x + xextra/2
+		if yextra > 0:
+			y = y + yextra/2
+		data = _get_icon(icon)
+		self._list.append('icon', (x, y, size, size), data)
+		self._optimize((2,))
 		
 	# Insert a command to draw an arrow
 	def drawarrow(self, color, src, dst):
