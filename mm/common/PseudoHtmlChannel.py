@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 #
 # XXXX This is a placeholder for the coming HTML channel. It is just
 # an ordinary text channel, but it's anchors have arguments.

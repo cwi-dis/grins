@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Scheduler - The scheduler for playing cmif documents.
 
 import time

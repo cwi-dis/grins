@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 from Channel import Channel, PLAYING
 import string
 from MMExc import *			# exceptions

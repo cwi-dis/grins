@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Interface to calculate the timing of a (sub)tree
 
 import time

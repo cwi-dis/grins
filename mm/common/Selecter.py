@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 #
 # Selecter module - Handles hyperjumps and assigning contexts to
 # bagnode-runslots.
