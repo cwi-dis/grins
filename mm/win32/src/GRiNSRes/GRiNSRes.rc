@@ -2854,8 +2854,8 @@ IDI_GRINS_STOP          ICON    DISCARDABLE     "res\\ico00003.ico"
 IDI_PLAY                ICON    DISCARDABLE     "RES\\play.ico"
 IDI_STOP                ICON    DISCARDABLE     "RES\\stop.ico"
 IDI_PAUSE               ICON    DISCARDABLE     "RES\\pause.ico"
-IDI_ICON_LINKSRC        ICON    DISCARDABLE     "res\\icon_lin.ico"
-IDI_ICON_LINKDST        ICON    DISCARDABLE     "res\\ico00008.ico"
+IDI_ICON_LINKSRC        ICON    DISCARDABLE     "res\\linkout.ico"
+IDI_ICON_LINKDST        ICON    DISCARDABLE     "res\\linkin.ico"
 IDI_ICON_LINKSRCDST     ICON    DISCARDABLE     "res\\ico00009.ico"
 IDI_ICON_OPEN           ICON    DISCARDABLE     "res\\icon_ope.ico"
 IDI_ICON_CLOSED         ICON    DISCARDABLE     "res\\ico00004.ico"
@@ -3175,6 +3175,15 @@ BEGIN
                             "Distribute horizontal space\nDistribute horizontal space"
     IDUC_DISTRIBUTE_VERTICALLY 
                             "Distribute vertical space\nDistribute vertical space"
+    IDUC_CREATE_ANCHOR      "Create hyperlink source\nCreate hyperlink source"
+    IDUC_FINISH_LINK        "Finish hyperlink\nFinish hyperlink"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_BUTTON32785          "Cut\nCut"
+    ID_BUTTON32786          "Copy\nCopy"
+    ID_BUTTON32787          "Paste\nPaste"
 END
 
 #endif    // English (U.S.) resources

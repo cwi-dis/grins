@@ -100,6 +100,7 @@
 #define IDB_HTML                        302
 #define IDB_SOUND                       303
 #define IDI_EVENTIN                     304
+#define IDI_EVENTINXX                   304
 #define IDI_EVENTOUT                    305
 #define IDI_CAUSEEVENT                  306
 #define IDI_HAPPYFACE                   307

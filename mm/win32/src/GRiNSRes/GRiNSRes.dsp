@@ -417,6 +417,14 @@ SOURCE=.\RES\Image.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\linkin.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\linkout.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\Node.ico
 # End Source File
 # Begin Source File
