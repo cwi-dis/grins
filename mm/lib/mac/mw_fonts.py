@@ -126,7 +126,7 @@ class findfont:
 	def is_closed(self):
 		return 0
 
-	def strsizePXL(self, wid, str):
+	def strsizePXL(self, str, wid=None):
 		self._initparams(wid)
 		strlist = string.splitfields(str, '\n')
 		maxwidth = 0
@@ -146,7 +146,7 @@ class findfont:
 	def strsize(self, str):
 		_x_pixel_per_mm, _y_pixel_per_mm = \
 				 mw_globals.toplevel._getmmfactors()
-		maxw, maxh = self.strsizePXL(None, str)
+		maxw, maxh = self.strsizePXL(str)
 		return float(maxw) / _x_pixel_per_mm, \
 		       float(maxh) / _y_pixel_per_mm
 		
