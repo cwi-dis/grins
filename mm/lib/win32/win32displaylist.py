@@ -68,6 +68,8 @@ class _DisplayList:
 		self._canvas = window._canvas
 		self._linewidth = 1
 		self._list = []
+		if window._transparent <= 0:
+			self._list.append(('clear', self._canvas))
 		self._optimdict = {}
 		self._rendered = 0
 		self._font = None
@@ -121,6 +123,7 @@ class _DisplayList:
 		for b in self._buttons:
 			b._highlighted = 0 
 		wnd._active_displist = self
+		wnd.pop()
 		wnd.update()
 
 	# Render the display list on dc within the region	
