@@ -84,8 +84,9 @@ class SoundChannel(ChannelAsync):
 				nframes = 1
 			rate = self.play_fp.getframerate()
 			self.play_fp = None
-			windowinterface.settimer(float(nframes) / rate,
-						 (self.playdone, (0,)))
+			self._qid = self._scheduler.enter(
+				float(nframes) / rate, 0,
+				self.playdone, (0,))
 
 class Player:
 	def __init__(self):
@@ -171,28 +172,39 @@ class Player:
 			self.__playsome(1)
 
 	def __playsome(self, first = 0):
+## 		print 'playsome called'
 		self.__tid = None
-		if not self.__data:
-			self.__port.wait()
-			self.__merger = None
-			self.__converter = None
+		port = self.__port
+		converter = self.__converter
+		while 1:
+			if not self.__data:
+				port.wait()
+				self.__merger = None
+				self.__converter = None
+				for cb in self.__callbacks:
+					if cb:
+						apply(cb[0], cb[1])
+				self.__callbacks = []
+				return
+## 			fmt = converter.getformat()
+## 			print 'writing %d frames' % (len(self.__data)/
+## 						     fmt.getblocksize()*
+## 						     fmt.getfpb())
+			port.writeframes(self.__data)
 			for cb in self.__callbacks:
 				if cb:
 					apply(cb[0], cb[1])
 			self.__callbacks = []
-			return
-		self.__port.writeframes(self.__data)
-		for cb in self.__callbacks:
-			if cb:
-				apply(cb[0], cb[1])
-		self.__callbacks = []
-		self.__prevpos = self.__oldpos
-		self.__oldpos = self.__converter.getpos()
-		self.__data = self.__converter.readframes(self.__readsize)
-		timeout = float(self.__port.getfilled())/self.__framerate - self.__timeout
-		if timeout <= 0:
-			timeout = 0.001
-		self.__tid = windowinterface.settimer(timeout,
-						      (self.__playsome, ()))
+			self.__prevpos = self.__oldpos
+			self.__oldpos = converter.getpos()
+			self.__data = converter.readframes(self.__readsize)
+			if self.__data is None or port.getfillable() <= self.__readsize:
+				timeout = float(port.getfilled())/self.__framerate - self.__timeout
+				if timeout <= 0:
+					timeout = 0.001
+## 				print 'timeout %f' % timeout
+				self.__tid = windowinterface.settimer(timeout,
+								      (self.__playsome, ()))
+				return
 
 player = Player()
