@@ -12,6 +12,7 @@ import windowinterface, WMEVENTS
 from usercmd import *
 
 RED = 255, 0, 0
+GREEN = 0, 255, 0
 BLACK = 0, 0, 0
 
 # The Player class normally has only a single instance.
@@ -211,7 +212,15 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 						ch.modeless_resize_window()
 					else:
 						ch.cancel_modeless_resize()
-						ch.highlight(BLACK)
+						# get a color that is different
+						# than the background
+						bgcolor = ch._attrdict.get('bgcolor')
+						pch = ch
+						while bgcolor is None:
+							pch = pch.pchan
+							bgcolor = pch._attrdict.get('bgcolor')
+						color = bgcolor[0],(bgcolor[1]+128)%256,bgcolor[2]
+						ch.highlight(color)
 					ch.sensitive((selectchannelcb, (chname,)))
 			elif not ch._attrdict.has_key('base_window'):
 				ch.show()
