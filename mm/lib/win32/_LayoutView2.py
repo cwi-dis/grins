@@ -96,6 +96,15 @@ class _LayoutView2(GenFormView):
 		# update show names check box 
 		self['ShowNames'].setcheck(self._showRegionNames)
 
+		# we have to notify layout if has capture
+		self.HookMessage(self.onMouse,win32con.WM_LBUTTONDOWN)
+		self.HookMessage(self.onMouse,win32con.WM_LBUTTONUP)
+		self.HookMessage(self.onMouse,win32con.WM_MOUSEMOVE)
+
+	def onMouse(self, params):
+		if self._layout.hasCapture():
+			self._layout.onNCLButton(params)
+
 	# Sets the acceptable commands. 
 	def set_commandlist(self,commandlist):
 		frame=self.GetParent()
@@ -349,6 +358,9 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
 		win32window.DrawContext.onLButtonDblClk(self, flags, point)
+
+	def onNCLButton(self, params):
+		win32window.DrawContext.onNCButton(self)
 
 	def OnPaint(self):
 		dc, paintStruct = self.BeginPaint()
