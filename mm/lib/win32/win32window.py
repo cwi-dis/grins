@@ -1297,8 +1297,9 @@ class Region(Window):
 
 		# resizing
 		self._resizing = 0
+		self._mediacoords = None
 		self._scale = None
-		self._orgrect = self._rect
+		self._domrect = self._rect
 		self._scalesurf = None
 						
 	def __repr__(self):
@@ -1594,6 +1595,8 @@ class Region(Window):
 			if self._video:
 				# get video info
 				vdds, vrcDst, vrcSrc = self._video
+				if self._mediacoords:
+					vrcDst = self._mediacoords
 				xd, yd, wd, hd = vrcDst
 				ld, td, rd, bd = x+xd, y+yd, x+xd+wd, y+yd+hd
 				ls, ts, rs, bs = self.ltrb(vrcSrc)
@@ -1621,7 +1624,7 @@ class Region(Window):
 
 			if self._active_displist._issimple:
 				try:
-					self._active_displist._ddsrender(dds, dst, rgn, clear=0)
+					self._active_displist._ddsrender(dds, dst, rgn, clear=0, mediacoords = self._mediacoords)
 				except:
 					pass
 			else:
@@ -1880,12 +1883,6 @@ class Region(Window):
 		if not self._fromsurf.IsLost():
 			self.bltDDS(self._fromsurf)
 
-	# painting while resizing
-	def _paint_5(self, rc=None, exclwnd=None):
-		if exclwnd==self: return
-		if self._resizing and self._scale and self._scalesurf:
-			self.bltDDS(self._scalesurf)
-
 	def paint(self, rc=None, exclwnd=None):
 		if not self._isvisible or exclwnd==self:
 			return
@@ -1901,8 +1898,8 @@ class Region(Window):
 					self._paint_1(rc, exclwnd)
 			return
 
-		if self._resizing and self._scale and self._scalesurf:
-			self._paint_5(rc, exclwnd)
+		if self._resizing and self._scalesurf:
+			self.bltDDS(self._scalesurf)
 			return
 
 		self._paint_0(rc, exclwnd)
@@ -1931,24 +1928,33 @@ class Region(Window):
 		
 		x, y, w, h = coordinates
 
-		# keep old pos
+		# old pos
 		x0, y0, w0, h0 = self._rectb
 		x1, y1, w1, h1 = self.getwindowpos()
 
+		wdom, hdom = self._domrect[2:]
+
+
+		# fit: 'hidden':1, 'meet':0, 'slice':-1, 'scroll':-2, 'fill':-3
+
 		# sense a size change/restore
-		if scale == -3:
-			if not self._resizing:
-				if w!=w0 or h!=h0:
+		if not self._resizing:
+			if w!=wdom or h!=hdom:
+				if scale == -3:
 					self._scalesurf = self.getBackDDS()
-					self._resizing = 1
-					self._scale = scale
-					self._orgrect = self._rect
-			elif w==w0 and h==h0:	
-				self._resizing = 0
-				del self._scalesurf
-				self._scalesurf = None
-		
-							
+				self._resizing = 1
+				self._scale = scale
+				self._domrect = self._rect
+		elif w==hdom and h==hdom:	
+			self._resizing = 0
+			del self._scalesurf
+			self._scalesurf = None
+
+		if self._resizing:
+			self._mediacoords = mediacoords
+		else:
+			self._mediacoords = None
+										
 		# resize/move
 		self._rect = 0, 0, w, h # client area in pixels
 		self._canvas = 0, 0, w, h # client canvas in pixels

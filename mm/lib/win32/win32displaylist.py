@@ -157,7 +157,7 @@ class _DisplayList:
 			if b._highlighted:b._do_highlight()
 	
 	# Optimized rendering for simple display lists on a direct draw surface	
-	def _ddsrender(self, dds, dst, rgn, clear=1):
+	def _ddsrender(self, dds, dst, rgn, clear=1, mediacoords=None):
 		self._rendered = 1
 		clonestart = self._clonestart
 		if not self._cloneof or self._cloneof is not self._window._active_displist:
@@ -176,14 +176,16 @@ class _DisplayList:
 		for i in range(clonestart, len(self._list)):
 			entry = self._list[i]
 			cmd = entry[0]
-			w = self._window
+			wnd = self._window
 			if cmd == 'clear' and entry[1]:
 				r, g, b = entry[1]
 				convbgcolor = dds.GetColorMatch((r,g,b))
-				dds.BltFill((x, y, x+w, y+h), convbgcolor)
+				dds.BltFill((xc, yc, xc+wc, yc+hc), convbgcolor)
 			elif cmd == 'image':
 				mask, image, flags, src_x, src_y,dest_x, dest_y, width, height,rcKeep=entry[1:]
-				xdc, ydc, wdc, hdc = w.rectAnd((x+dest_x, y+dest_y, width, height), (xc, yc, wc, hc))
+				if mediacoords:
+					dest_x, dest_y, width, height = mediacoords
+				xdc, ydc, wdc, hdc = wnd.rectAnd((x+dest_x, y+dest_y, width, height), (xc, yc, wc, hc))
 				xsc, ysc, wsc, hsc = xdc-(x+dest_x), ydc-(y+dest_y), wdc, hdc
 				try:	
  					dds.Blt((xdc,ydc,xdc+wdc,ydc+hdc), image, (xsc, ysc, xsc+wsc, ysc+hsc), flags)
