@@ -5,12 +5,14 @@ import Xt, Xm, Xmd, sys, X, Xcursorfont
 error = 'windowinterface.error'
 
 # try these visuals in this order
-tryvisuals = [(X.TrueColor, 24),
-	      (X.TrueColor, 32),
-	      (X.TrueColor, 16),
-	      (X.TrueColor, 15),
-	      (X.TrueColor, 8),
-	      (X.PseudoColor, 8)]
+tryvisuals = [
+	(X.TrueColor, 24),
+	(X.TrueColor, 32),
+	(X.TrueColor, 16),
+	(X.TrueColor, 15),
+	(X.TrueColor, 8),
+	(X.PseudoColor, 8),
+	]
 
 resources = [
 # fonts
@@ -83,6 +85,7 @@ def _colormask(mask):
 
 def findformat(visual):
 	import imgformat
+	cmap = visual.CreateColormap(X.AllocNone)
 	if visual.c_class == X.PseudoColor:
 		r, g, b = imgformat.xrgb8.descr['comp'][:3]
 		red_shift,   red_mask   = r[0], (1 << r[1]) - 1
@@ -129,7 +132,6 @@ def findformat(visual):
 			# no need for extra conversion
 			myxrgb8 = imgformat.xrgb8
 		else:
-			# too many locals to use map()
 			for n in range(256):
 				r = (n >> xrs) & xrm
 				g = (n >> xgs) & xgm
@@ -152,8 +154,7 @@ def findformat(visual):
 					  (green_shift, 3),
 					  (blue_shift, 2))})
 			cm = imgcolormap.new(
-				reduce(lambda x, y: x + '000' + chr(y),
-				       c, ''))
+				reduce(lambda x, y: x + '000' + chr(y), c, ''))
 			imgconvert.addconverter(
 				imgformat.xrgb8,
 				imgformat.myxrgb8,
@@ -182,7 +183,7 @@ def findformat(visual):
 				break
 		else:
 			raise error, 'no proper imgformat available'
-	return format, red_shift, red_mask, green_shift, green_mask, blue_shift, blue_mask
+	return format, cmap, red_shift, red_mask, green_shift, green_mask, blue_shift, blue_mask
 
 class _Splash:
 	def __init__(self):
@@ -287,12 +288,15 @@ class _Splash:
 			else:
 				raise error, 'no proper visuals available'
 		self.visual = visual = visuals[0]
-		self.colormap = cmap = visual.CreateColormap(X.AllocNone)
-		self.imgformat, self.red_shift, self.red_mask, self.green_shift, self.green_mask, self.blue_shift, self.blue_mask = findformat(visual)
+		self.imgformat, self.colormap, \
+				self.red_shift, self.red_mask, \
+				self.green_shift, self.green_mask, \
+				self.blue_shift, self.blue_mask = \
+					findformat(visual)
 		main = Xt.CreateApplicationShell('splash', Xt.ApplicationShell,
 						 {'visual': visual,
 						  'depth': visual.depth,
-						  'colormap': cmap,
+						  'colormap': self.colormap,
 						  'mappedWhenManaged': X.FALSE,
 						  'input': X.TRUE,
 						  'x': 500, 'y': 500,
