@@ -13,7 +13,7 @@ import AttrEdit
 BWIDTH = 70
 BHEIGHT = 50
 
-class ChannelEditor():
+class ChannelEditor:
 	#
 	def init(self, context):
 		self.context = context
@@ -22,7 +22,7 @@ class ChannelEditor():
 	#
 	def makeform(self):
 		nchannels = len(self.context.channelnames)
-		if nchannels = 0:
+		if nchannels == 0:
 			print 'No channels!'
 			raise ExitException, 1
 		#
