@@ -69,11 +69,11 @@ class HierarchyViewDialog(ViewDialog):
 		w.set_toggle(THUMBNAIL, self.thumbnails)
 		w.set_toggle(PLAYABLE, self.showplayability)
 		w.set_toggle(TIMESCALE, self.root.showtime == 'focus')
-		if self.selected_widget is None:
+		if self.get_selected_widget() is None:
 			w.set_toggle(LOCALTIMESCALE, 0)
 			w.set_toggle(CORRECTLOCALTIMESCALE, 0)
 		else:
-			n = self.selected_widget.get_node()
+			n = self.get_selected_node()
 			w.set_toggle(LOCALTIMESCALE, n.showtime == 'focus')
 			w.set_toggle(CORRECTLOCALTIMESCALE, n.showtime == 'cfocus')
 
