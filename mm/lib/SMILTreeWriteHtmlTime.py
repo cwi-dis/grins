@@ -527,6 +527,14 @@ class SMILHtmlTimeWriter(SMIL):
 			if nodeid:
 				attrlist.insert(0,('id', scriptid(nodeid)))
 			style = 'position=absolute;left=%d;top=%d;width=%d;height=%d;' % mediaGeom
+			if mtype == 'brush':
+				l = []
+				for a, v in attrlist:
+					if a == 'color':
+						style = style + 'background-color=%s;' % v
+					else:
+						l.append((a, v))
+				attrlist = l
 			attrlist.append( ('style',style) )
 
 		if self.writeAnchors(x, nodeid):
