@@ -39,6 +39,8 @@ class PlayerDialog:
 		self.__title = title
 		self.__coords = coords
 		self.__state = -1
+		self.__ugroups = []
+		self.__ugroupdict = {}
 		self.__channels = []
 		self.__channeldict = {}
 		self.__strid='player'
@@ -56,8 +58,6 @@ class PlayerDialog:
 
 	def show(self, subwindowof=None):
 		"""Show the control panel."""
-
-		
 		if self.__window is not None:
 			self.__window.pop()
 			return
@@ -67,8 +67,11 @@ class PlayerDialog:
 
 		self.__window = self.toplevel.window
 		self.__window.set_commandlist(self.stoplist,self.__cmdtgt)
-		if self.__channels:
-			self.setchannels(self.__channels)
+
+		self.makeugroups() ##<--- check!!!
+
+		if self.__ugroups:self.setusergroups()
+		if self.__channels:self.setchannels()
 		self.__window.set_toggle(SYNCCV, self.sync_cv)
 
 	def hide(self):
@@ -91,7 +94,31 @@ class PlayerDialog:
 		if self.__window is not None:
 			self.__window.settitle(title)
 
-	def setchannels(self, channels):
+	def setusergroups(self, ugroups = None):
+		if ugroups is None:
+			ugroups = self.__ugroups
+		else:
+			self.__ugroups = ugroups
+		menu = []
+		self.__ugroupdict = {}
+		for i in range(len(ugroups)):
+			name, title, onoff = ugroups[i]
+			self.__ugroupdict[name] = i
+			menu.append((title, (name,), 't', onoff))
+		w = self.__window
+		if w is not None:
+			w.set_dynamiclist(USERGROUPS, menu)
+
+	def setusergroup(self, ugroup, onoff):
+		i = self.__ugroupdict.get(ugroup)
+		if i is None:
+			raise RuntimeError, 'unknown user group'
+		if self.__ugroups[i][2] == onoff:
+			return
+		self.__ugroups[i] = self.__ugroups[i][:2] + (onoff,)
+		self.setusergroups()
+
+	def setchannels(self, channels=None):
 		"""Set the list of channels.
 
 		Arguments (no defaults):
@@ -100,8 +127,11 @@ class PlayerDialog:
 			to the user, and onoff indicates whether the
 			channel is on or off (1 if on, 0 if off)
 		"""
+		if channels is None:
+			channels = self.__channels
+		else:
+			self.__channels = channels
 
-		self.__channels = channels
 		self.__channeldict = {}
 		menu = []
 		for i in range(len(channels)):
