@@ -404,6 +404,9 @@ class LinkEdit(ViewDialog):
 ##		if str.focus == None and str.anchors:
 ##			str.focus = 0
 ##			self.linkedit = 0
+		if str.focus == None and len(str.anchors) == 1:
+			str.focus = 0
+			self.linkedit = 0
 		if str.focus <> None:
 			str.browser.selectitem(str.focus)
 			if not str.browser.is_visible(str.focus):
