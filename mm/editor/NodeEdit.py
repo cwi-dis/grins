@@ -120,7 +120,7 @@ def showeditor(node):
 			print 'NodeEdit.showeditor: no editors for chtype', chtype
 			raise _LocalError
 		editor = channeleditors[chtype]
-		if type(editor) == type(''):
+		if type(editor) is type(''):
 			_do_edit(editor, filename)
 		else:
 			cmd = _showmenu(editor, filename)

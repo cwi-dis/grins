@@ -186,10 +186,12 @@ class LinkEdit(ViewDialog):
 		self.window = None
 
 	def setwaiting(self):
-		pass
+		if self.window:
+			self.window.setcursor('watch')
 
 	def setready(self):
-		pass
+		if self.window:
+			self.window.setcursor('')
 
 	def is_showing(self):
 		return self.window.is_showing()
@@ -247,7 +249,7 @@ class LinkEdit(ViewDialog):
 			print 'LinkEdit: left anchorlist cannot be related!'
 		str.browser.setlabel('Related')
 		str.anchors = []
-		if self.left.focus == None:
+		if self.left.focus is None:
 			return
 		lfocus = self.left.anchors[self.left.focus]
 		links = self.context.hyperlinks.findalllinks(lfocus, None)
@@ -312,7 +314,7 @@ class LinkEdit(ViewDialog):
 			return aid + ' in ' + uid
 		node = self.context.mapuid(uid)
 		nodename = node.GetRawAttrDef('name', uid)
-		if type(aid) <> type(''): aid = `aid`
+		if type(aid) is not type(''): aid = `aid`
 		return '#' + nodename + '.' + aid
 
 	# This functions re-loads one of the anchor browsers.
@@ -324,7 +326,7 @@ class LinkEdit(ViewDialog):
 		else:
 			str.browser.show()
 		# Try to keep focus correct
-		if str.focus <> None:
+		if str.focus is not None:
 			focusvalue = str.anchors[str.focus]
 		else:
 			focusvalue = None
@@ -332,7 +334,7 @@ class LinkEdit(ViewDialog):
 		# If the browser is node-bound, check that the node still
 		# exists.
 		if str.node:
-			if str.node.GetRoot() <> self.root:
+			if str.node.GetRoot() is not self.root:
 				str.node = None
 				str.fillfunc = self.fill_none
 		if hasattr(str, 'anchors'):
@@ -401,13 +403,13 @@ class LinkEdit(ViewDialog):
 				str.focus = str.anchors.index(focusvalue)
 			except ValueError:
 				pass
-##		if str.focus == None and str.anchors:
+##		if str.focus is None and str.anchors:
 ##			str.focus = 0
 ##			self.linkedit = 0
-		if str.focus == None and len(str.anchors) == 1:
+		if str.focus is None and len(str.anchors) == 1:
 			str.focus = 0
 			self.linkedit = 0
-		if str.focus <> None:
+		if str.focus is not None:
 			str.browser.selectitem(str.focus)
 			if scroll and not str.browser.is_visible(str.focus):
 				str.browser.scrolllist(str.focus,
@@ -426,7 +428,7 @@ class LinkEdit(ViewDialog):
 	def reloadlinks(self):
 		slf = self.left.focus
 		srf = self.right.focus
-		if slf == None or (srf == None and not self.right.hidden):
+		if slf is None or (srf is None and not self.right.hidden):
 			# At least one unfocussed anchorlist. No browser
 			self.link_browser.hide()
 			self.link_new.hide()
@@ -441,7 +443,7 @@ class LinkEdit(ViewDialog):
 			rfocus = None
 		else:
 			rfocus = self.right.anchors[srf]
-		if self.linkfocus == None:
+		if self.linkfocus is None:
 			fvalue = None
 		else:
 			fvalue = self.links[self.linkfocus]
@@ -459,9 +461,9 @@ class LinkEdit(ViewDialog):
 				self.linkfocus = self.links.index(fvalue)
 			except ValueError:
 				pass
-		if self.links and self.linkfocus == None and not self.linkedit:
+		if self.links and self.linkfocus is None and not self.linkedit:
 			self.linkfocus = 0
-		if self.linkfocus == None:
+		if self.linkfocus is None:
 			self.link_edit.hide()
 			pass
 		else:
@@ -490,7 +492,7 @@ class LinkEdit(ViewDialog):
 
 	# Start editing a link
 	def startlinkedit(self, fromfocus):
-		if fromfocus and  self.linkfocus == None:
+		if fromfocus and  self.linkfocus is None:
 			print 'LinkEdit: Start editing without focus!'
 			return
 		self.linkedit = 1
@@ -500,7 +502,7 @@ class LinkEdit(ViewDialog):
 		else:
 			slf = self.left.focus
 			srf = self.right.focus
-			if slf==None or (srf==None and not self.right.hidden):
+			if slf is None or (srf is None and not self.right.hidden):
 				print 'LinkEdit: edit without anchor focus!'
 				self.linkedit = 0
 				return
@@ -518,7 +520,7 @@ class LinkEdit(ViewDialog):
 		linkdir = self.editlink[DIR]
 		linktype = self.editlink[TYPE]
 		self.link_dir.setpos(linkdir)
-		if self.linkfocus == None:
+		if self.linkfocus is None:
 			# We seem to be adding
 			self.ok_group.show()
 			return
@@ -537,7 +539,7 @@ class LinkEdit(ViewDialog):
 			self.updateform(str)
 
 	def show_callback(self, str):
-		if str.focus == None:
+		if str.focus is None:
 			print 'LinkEdit: show without a focus!'
 			return
 		anchor = str.anchors[str.focus]
@@ -565,13 +567,13 @@ class LinkEdit(ViewDialog):
 			str.fillfunc = self.fill_interesting
 		elif ind == M_TCFOCUS:
 			str.node = self.GetChannelViewtFocus()
-			if str.node == None:
+			if str.node is None:
 				str.fillfunc = self.fill_none
 			else:
 				str.fillfunc = self.fill_node
 		elif ind == M_BVFOCUS:
 			str.node = self.GetHierarchyViewFocus()
-			if str.node == None:
+			if str.node is None:
 				str.fillfunc = self.fill_none
 			else:
 				str.fillfunc = self.fill_node
@@ -618,7 +620,7 @@ class LinkEdit(ViewDialog):
 		self.updateform()
 
 	def link_delete_callback(self):
-		if self.linkfocus == None:
+		if self.linkfocus is None:
 			print 'LinkEdit: delete link w/o focus!'
 			return
 		l = self.links[self.linkfocus]
@@ -626,7 +628,7 @@ class LinkEdit(ViewDialog):
 		self.updateform()
 
 	def link_edit_callback(self):
-		if self.linkfocus == None:
+		if self.linkfocus is None:
 			print 'LinkEdit: edit w/o focus!'
 			return
 		self.startlinkedit(1)
@@ -645,7 +647,7 @@ class LinkEdit(ViewDialog):
 		if not self.linkedit:
 			print 'LinkEdit: OK while not editing!'
 			return
-		if self.linkfocus <> None:
+		if self.linkfocus is not None:
 			l = self.links[self.linkfocus]
 			self.context.hyperlinks.dellink(l)
 		self.context.hyperlinks.addlink(self.editlink)
@@ -657,7 +659,7 @@ class LinkEdit(ViewDialog):
 		self.updateform()
 
 	def anchoredit_callback(self, str):
-		if str.focus == None:
+		if str.focus is None:
 			print 'LinkEdit: anchoredit without a focus!'
 			return
 		anchor = str.anchors[str.focus]
