@@ -2622,7 +2622,10 @@ def getcursorhandle(strid):
 	if strid == 'hand':
 		cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_POINT_HAND)
 	elif strid == 'darrow':
-		cursor = win32ui.GetWin32Sdk().LoadStandardCursor(win32con.IDC_SIZEWE)
+		#cursor = win32ui.GetWin32Sdk().LoadStandardCursor(win32con.IDC_SIZEWE)
+		cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DARROW)
+	elif strid == 'darrowhit':
+		cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DARROWHIT)
 	elif strid == 'channel':
 		cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_DRAGMOVE)
 	elif strid == 'stop':
