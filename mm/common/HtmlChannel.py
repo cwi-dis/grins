@@ -85,11 +85,11 @@ class HtmlChannel(Channel.ChannelWindow):
 	def updatefixedanchors(self, node):
 		if self._armstate != Channel.AIDLE or \
 		   self._playstate != Channel.PIDLE:
-		    if self._played_node == node:
-			# Ok, all is well, we've played it.
+			if self._played_node == node:
+				# Ok, all is well, we've played it.
+				return 1
+			windowinterface.showmessage('Cannot recompute anchorlist (channel busy)')
 			return 1
-		    windowinterface.showmessage('Cannot recompute anchorlist (channel busy)')
-		    return 1
 		windowinterface.setcursor('watch')
 		context = Channel.AnchorContext()
 		self.startcontext(context)
@@ -97,9 +97,10 @@ class HtmlChannel(Channel.ChannelWindow):
 		self.arm(node)
 		self.syncplay = 1
 		self.play(node)
-		self._playstate = Channel.PLAYED
+		self.stopplay(node)
 		self.syncarm = 0
 		self.syncplay = 0
+		windowinterface.setcursor('')
 		return 1
 
 #	def seekanchor(self, node, aid, args):
