@@ -10,16 +10,45 @@
 
     <p>
       These are the release notes for GRiNS for RealSystem G2, version 1.5
-      for Windows.  This file contains release notes for both the Light and the
+      for Windows.  This file contains release notes for both the Lite and the
       Pro version.
       
       For a more up-to-date version of
-      these notes, see <a href="http://www.oratrix.com/GRiNS">http://www.oratrix.com/GRiNS</a>.
+      these notes, see <a href="http://www.oratrix.com/GRiNS/">http://www.oratrix.com/GRiNS</a>.
     </p>
 
     <h3>Open Issues</h3>
     <p>
-	  None.
+      Using the <em>Edit Content</em> command starts the program
+      registered for that file type.  This may not always be an editor.
+    </p>
+    <p>
+      Although it is possible to create timed anchors (Pro version
+      only), the preview player does not honor them.  The RealPlayer
+      G2, however, does.
+    </p>
+    <p>
+      There are some differences in execution between the preview
+      player and the RealPlayer G2 when repeats are involved.
+    </p>
+    <p>
+      Text nodes get translated to RealText files when publishing the
+      document.  If such a text node does not have an explicit
+      duration set, the RealText file will not have one either.  No
+      duration in a RealText file means that it will have an implicit
+      duration of one minute, which is probably not what was intended.
+      It is better to always add an explicit duration to text nodes.
+    </p>
+    <p>
+      If text does not fit in its region, a small red box is shown in
+      the bottom right corner of the preview player to indicate that
+      not all text is shown.
+    </p>
+    <p>
+      In SMIL it is not allowed to jump (hyperlink) into a switch
+      node.  GRiNS currently does not prevent the user from creating
+      such hyperlinks and also does not warn about them.  The
+      RealPlayer G2 refuses to follow such links.
     </p>
 
   </body>
