@@ -45,6 +45,7 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		return self._viewport.newwindow(coordinates, pixmap, transparent, z, type_channel, units, bgcolor)
 
 	def closeViewport(self, viewport):
+		self.GetParent().GetMDIFrame().registerPos(self)
 		DisplayListView.close(self)
 
 	def OnCreate(self,params):
