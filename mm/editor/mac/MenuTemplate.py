@@ -32,6 +32,8 @@ MENUBAR=(
 		(ENTRY, 'Save as...', None, SAVE_AS),
 		(ENTRY, 'Restore', None, RESTORE),
 		(SEP,),
+		(ENTRY, 'Preferences...', None, PREFERENCES),
+		(SEP,),
 		(CASCADE, 'Debug', (
 			(TOGGLE, 'Enable call tracing', None, TRACE),
 			(ENTRY, 'Enter debugger', None, DEBUG),

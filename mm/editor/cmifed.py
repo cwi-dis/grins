@@ -53,6 +53,7 @@ class Main(MainDialog):
 		self.commandlist = [
 			NEW_DOCUMENT(callback = (self.new_callback, ())),
 			OPEN(callback = (self.open_callback, ())),
+			PREFERENCES(callback = (self.preferences_callback, ())),
 			EXIT(callback = (self.close_callback, ())),
 			]
 		if __debug__:
@@ -129,6 +130,10 @@ class Main(MainDialog):
 		else:
 			self._tracing = 1
 			trace.set_trace()
+			
+	def preferences_callback(self):
+		import Preferences
+		Preferences.showpreferences(1)
 
 	def new_top(self, top):
 		top.show()
@@ -136,6 +141,8 @@ class Main(MainDialog):
 		self.tops.append(top)
 
 	def do_exit(self):
+		import Preferences
+		Preferences.showpreferences(0)
 		ok = 1
 		toclose = []
 		for top in self.tops:

@@ -31,6 +31,8 @@ class DELETE(_CommandBase):
 	help = 'Delete selected object'
 class HELP(_CommandBase):
 	help = 'Display help'
+class PREFERENCES(_CommandBase):
+	help = 'Display application preferences'
 
 #
 # MainDialog commands
