@@ -245,9 +245,3 @@ class PlayerCore(Selecter):
 			ch.setwaiting()
 		self.channels[name] = ch
 		self.channeltypes[name] = type
-	#
-	def add_anchor(self, button, func, arg):
-		self.toplevel.add_anchor(button, func, arg)
-
-	def del_anchor(self, button):
-		self.toplevel.del_anchor(button)
