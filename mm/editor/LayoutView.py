@@ -11,7 +11,7 @@ class LayoutView(LayoutViewDialog):
 		self.root = toplevel.root
 		self.context = self.root.context
 		self.editmgr = self.context.editmgr
-		self.curlayout = None
+		self.curlayout = ALL_LAYOUTS
 		self.curchannel = None
 		self.curother = None
 		LayoutViewDialog.__init__(self)
@@ -101,6 +101,8 @@ class LayoutView(LayoutViewDialog):
 				commandlist.append(ATTRIBUTES(callback = (self.attr_callback, ())))
 			if self.curother is not None:
 				commandlist.append(ADD_CHANNEL(callback = (self.add_callback, ())))
+		if self.curlayout == ALL_LAYOUTS:
+			commandlist.append(NEW_CHANNEL(callback = (self.new_channel_callback, ())))
 		self.setcommandlist(commandlist)
 		self.toplevel.player.setlayout(self.curlayout, self.curchannel)
 
@@ -179,7 +181,8 @@ class LayoutView(LayoutViewDialog):
 		ch = context.channeldict[name]
 		if root:
 			ch['base_window'] = root
-		editmgr.addlayoutchannel(self.curlayout, ch)
+		if self.curlayout != ALL_LAYOUTS:
+			editmgr.addlayoutchannel(self.curlayout, ch)
 		self.curchannel = name
 		editmgr.commit()
 
