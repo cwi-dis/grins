@@ -6,14 +6,32 @@ from graddfield import addfield, getfield, delfield
 import sys
 import os
 import string
-CMIFLIB=os.path.join(sys.path[0], "../../../lib")
+try:
+	_curdir=os.path.split(__file__)[0]
+except:
+	_curdir=None
+if not _curdir:
+	_curdir=sys.path[0]
+CMIFLIB=os.path.join(_curdir, "../../../lib")
 sys.path.append(CMIFLIB)
 import licparser
 license = licparser
 import getopt
-
+import whrandom
+import time
+		
 Error = license.Error
 
+def gencommerciallicense():
+	dbase = grinsdb.Database()
+	features = getdefaultfeatures()
+	newid = grinsdb.uniqueid()
+	date = (1999, 8, 31)	# Temporary!
+	name = None
+	license = codelicense(newid, date, features, name)
+	grinsdb.loglicense(license)
+	return license
+	
 def main():
 	try:
 		options, args = getopt.getopt(sys.argv[1:], "lcrn:d:f:u:Eo:")
@@ -155,7 +173,6 @@ def getdate(str):
 			days = string.atoi(str[1:])
 		except string.atoi_error:
 			raise ValueError, "Incorrect date offset"
-		import time
 		tv = time.time()
 		tv = tv + days*24*60*60
 		yyyy, mm, dd = time.localtime(tv)[:3]
@@ -206,7 +223,6 @@ def _codestr(value):
 
 def _codedate(date):
 	if date is None:
-		import whrandom
 		yyyy = whrandom.randint(3000,9999)
 		mm = whrandom.randint(1,12)
 		dd = whrandom.randint(1,31)
