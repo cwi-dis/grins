@@ -1504,7 +1504,11 @@ class AttrEditor(AttrEditorDialog):
 			elif displayername == '.anchorlist':
 				C = AnchorlistAttrEditorField
 			elif displayername == 'percent':
-				C = PercentAttrEditorField				
+				C = PercentAttrEditorField
+			elif displayername == 'opsys':
+				C = OperatingSystemAttrEditorField
+			elif displayername == 'cpu':
+				C = CpuAttrEditorField
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -2392,6 +2396,37 @@ class EnumAttrEditorField(PopupAttrEditorFieldNoDefault):
 
 	def getoptions(self):
 		return self.__values
+
+class EnumAttrEditorFieldWithDefault(EnumAttrEditorField):
+	default = 'Not set'
+	nodefault = 1
+
+	def getoptions(self):
+		return [self.default]+EnumAttrEditorField.getoptions(self)
+
+	def getcurrent(self):
+		val = self.wrapper.getvalue(self.getname())
+		if val is None:
+			return self.default
+		return self.valuerepr(val)	
+
+	def valuerepr(self, value):
+		if value is None:
+			if self.nodefault:
+				return self.getdefault()
+			return self.default
+		return EnumAttrEditorField.valuerepr(self, value)
+
+	def parsevalue(self, str):
+		if str == self.default:
+			return None
+		return EnumAttrEditorField.parsevalue(self, str)
+
+class CpuAttrEditorField(EnumAttrEditorFieldWithDefault):
+	default = 'Not set'
+
+class OperatingSystemAttrEditorField(EnumAttrEditorFieldWithDefault):
+	default = 'Not set'
 
 class RegpointAttrEditorField(EnumAttrEditorField):
 	type = 'regpoint'
