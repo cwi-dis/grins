@@ -269,7 +269,7 @@ class Player(PlayerCore):
 		if self.pausing:
 			self.pause(0)
 
-	def cmenu_callback(self, name):
+	def channel_callback(self, name):
 		isvis = self.channels[name].may_show()
 		self.cc_enable_ch(name, (not isvis))
 
@@ -317,7 +317,7 @@ class Player(PlayerCore):
 			else:
 				onoff = ' (off)'
 			menu.append('', name + onoff,
-				    (self.cmenu_callback, (name,)))
+				    (self.channel_callback, (name,)))
 		self.subwin[0].create_menu(menu, title = 'Channels')
 	#
 	def setwaiting(self):
