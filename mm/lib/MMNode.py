@@ -117,6 +117,18 @@ class MMNodeContext:
 			c['center'] = 0
 			c['drawbox'] = 0
 			c['scale'] = 1
+		if settings.get('compatibility') == settings.G2:
+			# specialized settings for G2-compatibility
+			from windowinterface import UNIT_PXL
+			c['units'] = UNIT_PXL
+			c['transparent'] = -1
+			c['center'] = 0
+			c['drawbox'] = 0
+			c['scale'] = 1
+			if type == 'text':
+				c['bgcolor'] = 255,255,255
+			else:
+				c['bgcolor'] = 0,0,0
 		self.channeldict[name] = c
 		self.channelnames.insert(i, name)
 		self.channels.insert(i, c)
