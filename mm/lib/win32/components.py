@@ -1154,8 +1154,7 @@ class InputDialog(DialogBase):
 				parent=None, passwd=0):
 		self.title=prompt
 		dll=None
-##		if passwd:
-		if 0:
+		if passwd:
 			id = grinsRC.IDD_PASSWD_DIALOG
 			idedit=grinsRC.IDC_EDIT1
 			idprompt=grinsRC.IDC_PROMPT1
