@@ -68,6 +68,16 @@ class GraphChannel(ChannelWindow):
 		else:
 			self.errormsg(node,
 				      'Unknown graphtype '+self.armed_type)
+
+		try:
+			alist = node.GetRawAttr('anchorlist')
+			modanchorlist(alist)
+		except NoSuchAttrError:
+			alist = []
+		for a in alist:
+			b = self.armed_display.newbutton((0,0,1,1))
+			self.setanchor(a[A_ID], a[A_TYPE], b)
+			
 		return 1
 
 	def findminmax(self):
