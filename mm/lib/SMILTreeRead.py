@@ -3153,7 +3153,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				name = 'trtype'
 			elif name == 'dur':
 				value = self.__parsecounter(value)
-			elif name == 'color':
+			elif name in ('borderColor', 'fadeColor'):
 				# XXXX Need support for blend
 				value = self.__convert_color(value)
 			else:
