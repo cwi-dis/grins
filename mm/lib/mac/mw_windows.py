@@ -2234,6 +2234,15 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 		Qd.SetPort(self._onscreen_wid)
 		x, y = Qd.LocalToGlobal((0,0))
 		w, h = rect[2]-rect[0], rect[3]-rect[1]
+		# Adjust for scrollbars
+		if self._barx:
+			w = w - (SCROLLBARSIZE - 1)
+		if self._bary:
+			h = h - (SCROLLBARSIZE - 1)
+		# And for buttons along the top
+		if self._cntl_to_cmd:
+			dummy, dummy, extraheight = MenuTemplate.TOOLBAR
+			h = h - extraheight
 		_x_pixel_per_mm, _y_pixel_per_mm = \
 				 mw_globals.toplevel._getmmfactors()
 		_screen_top_offset = mw_globals.toplevel._getmbarheight()
