@@ -2,8 +2,6 @@
 
 #include <windows.h>
 
-#include "resource.h"
-
 #include "pyinterface.h"
 #include "app_pyinterface.h"
 
@@ -33,56 +31,6 @@ class AppPyInterface
 PyObject* AppPyInterface::s_pyapp = NULL;
 PyObject* AppPyInterface::s_pystdout = NULL;
 PyObject* AppPyInterface::s_winuser = NULL;
-
-LRESULT CALLBACK ProfileSelectionDialogFunc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	switch (message) {
-	case WM_INITDIALOG:
-		ShowWindow(hDlg, SW_SHOW);
-		return TRUE;
-	case WM_COMMAND:
-		char *name = NULL;
-		switch (LOWORD(wParam)) {
-		case IDC_BASIC:
-			name = "SMIL_BASIC_MODULES";
-			break;
-		case IDC_MMS:
-			name = "SMIL_MMS_MODULES";
-			break;
-		case IDC_PSS4:
-			name = "SMIL_PSS4_MODULES";
-			break;
-		case IDC_PSS5:
-			name = "SMIL_PSS5_MODULES";
-			break;
-		case IDC_LANGUAGE:
-			name = "SMIL_20_MODULES";
-			break;
-		default:
-			return TRUE;
-		}
-		ShowWindow(hDlg, SW_HIDE);
-		DestroyWindow(hDlg);
-		PyObject *settings = PyInterface::import(TEXT("settings"));
-		PyObject *d = PyModule_GetDict(settings); // borrowed reference
-		PyObject *l = PyDict_GetItemString(d, name); // borrowed reference
-		PyObject *t = Py_BuildValue("(O)", l); // to be deleted
-		PyObject *f = PyDict_GetItemString(d, "switch_profile"); // borrowed reference
-		PyObject *r = PyEval_CallObject(f, t);
-		Py_XDECREF(r);
-		Py_XDECREF(t);
-		return TRUE;
-	}
-	return FALSE;
-}
-
-HWND CreateSelectionDialog(HWND hWndParent)
-{
-	HWND hWnd;
-	hWnd = CreateDialog(GetApplicationInstance(), MAKEINTRESOURCE(IDD_PROFILE), 
-			    hWndParent, (DLGPROC)ProfileSelectionDialogFunc);
-	return hWnd;
-}
 
 bool AppPyInterface::initialize(HWND hWnd)
 	{
@@ -121,8 +69,6 @@ bool AppPyInterface::initialize(HWND hWnd)
 	PyWnd::wnds[hWnd] = pywnd;
 	if(!set_mainwnd(s_pyapp, (PyObject*)pywnd))
 		MessageBox(NULL, TEXT("Failed to set_mainwnd"), GetApplicationName(), MB_OK);
-
-	(void) CreateSelectionDialog(hWnd);
 
 	return true;
 	}
