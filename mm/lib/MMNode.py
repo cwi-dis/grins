@@ -949,6 +949,89 @@ class MMChannel(MMTreeElement):
 			# this flag shouldn't be accessible in the future
 			self.attrdict['base_winoff'] = (0, 0, 100, 100)
 
+	#
+	# clipboard method supports
+	#
+	
+	# export the sub tree. The result is a region tree independant of any context. It's important because
+	# the context is not all the time the same, and CopyIntoContext have to work whatever the context
+	def deepExport(self):
+		node = self.__deepExport()
+		return node
+
+	def __deepExport(self):
+		channel = MMChannel(None, self.name, None)
+		channel['type'] = self.get('type')
+		self.__attrsExport(channel)
+		for child in self.GetChildren():
+			if child.get('type') == 'layout':
+				cChild = child.__deepExport()
+				cChild.AddToTree(channel, -1)
+		return channel
+
+	def __attrsExport(self, channelTarget):
+		# copy attributes on this node, except base_window
+		# if you copy base_window, it doesn't work, because the current context will be affected
+		# (see __setitem__ method).
+		for attrName, attrValue in self.items():
+			if attrName != 'base_window' and attrName != 'base_winoff':
+				# special action for positioning attributes
+				if attrName not in _CssAttrs:
+					channelTarget[attrName] = attrValue
+				else:
+					#XXX for now, change the original name to make working
+					channelTarget['css_'+attrName] = attrValue
+
+		
+	# copy the a tree into a parent region of a specified context
+	# REQUIEREMENTS:
+	#  - the sub tree had to be created with deepExport only
+	#  - this method have to be called into a edit manager transaction
+
+	def CopyIntoContext(self, context, parentRegion):
+		cRegion = self.__copyIntoContext(context)
+		if parentRegion != None:
+			context.editmgr.setchannelattr(cRegion.name, 'base_window', parentRegion.name)
+		return cRegion
+
+	def __copyIntoContext(self, context):
+		cName = self.__newName(context, self.name)
+		context.editmgr.addchannel(cName, -1, self.get('type'))
+		cRegion = context.getchannel(cName)
+		for child in self.GetChildren():
+			cChild = child.__copyIntoContext(context)
+			context.editmgr.setchannelattr(cChild.name, 'base_window', cName)
+		self.__attrsImport(context, cRegion)
+		
+		return cRegion
+
+	def __attrsImport(self, context, channelTarget):
+		# copy attributes on this node
+		for attrName, attrValue in self.items():
+			cssName = None
+			# special action for positioning attributes. See also deepexport method
+			for attr in _CssAttrs:
+				#XXX retrieve the original name 
+				if ('css_'+attr) == attrName:
+					attrName = attr
+					break
+			if attrName != 'type':
+				context.editmgr.setchannelattr(channelTarget.name, attrName, attrValue)
+					
+	# compute a region name according to a base name
+	def __newName(self, context, baseName):
+		# search a new channel name
+		name = baseName + ' %d'
+		i = 0
+		while context.channeldict.has_key(name % i):
+			i = i + 1
+
+		return name	% i
+
+	#
+	# end of clipboard support methods
+	#
+	
 	# allow to know the class name without use 'import xxx; isinstance'
 	# note: this method should be implemented for all basic classes of the document
 	def getClassName(self):
