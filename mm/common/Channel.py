@@ -4,7 +4,6 @@ __version__ = "$Id$"
 # (from module ChannelThread) as a superclass, but never more than
 # one.
 
-from AnchorDefs import *
 import os
 debug = os.environ.has_key('CHANNELDEBUG')
 import MMAttrdefs
@@ -1541,7 +1540,7 @@ class ChannelWindow(Channel):
 				sensitive = 1
 				break
 
-		windowCoordinates = self.convertShapeRelImageToRelWindow([A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0])
+		windowCoordinates = self.convertShapeRelImageToRelWindow(['rect', 0.0, 0.0, 1.0, 1.0])
 		b = self.armed_display.newbutton(windowCoordinates, z = -1, sensitive = sensitive)
 		self.setanchor(b, node)
 
@@ -1801,27 +1800,6 @@ class ChannelWindow(Channel):
 
 		return rArgs
 
-# not currently used
-##	# Convert relative window offsets to relative image offsets
-##	def convertShapeRelWindowToRelImage(self, args):
-##		shapeType = args[0]
-
-##		if shapeType == A_SHAPETYPE_ALLREGION:
-##			return args
-
-##		rArgs = [shapeType,]
-##		n=0
-##		for a in args[1:]:
-##			# test if xCoordinates or yCoordinates
-##			if n%2 == 0:
-##				# convert coordinates from image to window size
-##				rArgs = rArgs + [(a - self._arm_imbox[0]) / self._arm_imbox[2]]
-##			else:
-##				rArgs = rArgs + [(a - self._arm_imbox[1]) / self._arm_imbox[3]]
-##			n = n+1
-
-##		return rArgs
-
 	# convert shape coordinates (as defined in SMIL specification) relative to the window. The result is float values
 	# For this, we need to know the real size of media which fit inside the region
 	# --> method getArmBox (channel dependent)
@@ -1842,9 +1820,9 @@ class ChannelWindow(Channel):
 		
 		if shape != 'circle':
 			if shape == 'rect':
-				rArgs = [A_SHAPETYPE_RECT]
+				rArgs = ['rect']
 			else:		# poly
-				rArgs = [A_SHAPETYPE_POLY]
+				rArgs = ['poly']
 
 			for n in range(len(coords)):
 				a = coords[n]
@@ -1866,7 +1844,7 @@ class ChannelWindow(Channel):
 		else:
 			# Internally, we manage only elipses
 			# note: for an elipse, the meaning of rArg is a tuple of (xcenter, ycenter, xradius, yradius) 
-			rArgs = [A_SHAPETYPE_ELIPSE]
+			rArgs = ['elipse']
 			xCenter, yCenter, radius = coords
 #			xsize, ysize = node.GetDefaultMediaSize(100, 100)
 #			# after a arming default, xsize or ysize value are equal to 0 !

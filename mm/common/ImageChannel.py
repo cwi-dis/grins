@@ -2,7 +2,6 @@ __version__ = "$Id$"
 
 from Channel import *
 from MMExc import *			# exceptions
-from AnchorDefs import *
 import windowinterface			# for windowinterface.error
 from MMurl import urlretrieve
 
@@ -96,23 +95,21 @@ class ImageChannel(ChannelWindow):
 
 			shapeType = box[0]
 			# for instance we manage only the rect shape
-			if shapeType == A_SHAPETYPE_RECT:
+			if shapeType == 'rect':
 				x = windowCoordinates[1]
 				y = windowCoordinates[2]
 				w = windowCoordinates[3] - x
 				h = windowCoordinates[4] - y
 				self.window.create_box(msg, self._box_cb, (x, y, w, h))
-			elif shapeType == A_SHAPETYPE_ALLREGION:
-				pass
 			else:
-				print 'Shape type doesn''t supported yet for edition'
+				print 'Shape type not supported yet for editing'
 
 	def _box_cb(self, *box):
 		self.stopcontext(self._anchor_context, 0)
 		# for now, keep the compatibility with old structure
 		if len(box) == 4:
 			x, y, w, h = box
-			winCoordinates = [A_SHAPETYPE_RECT, x ,y ,x+w, y+h]
+			winCoordinates = ['rect', x ,y ,x+w, y+h]
 			
 			# convert coordinates from window size to image size.
 			relativeCoordinates = self.convertShapeRelWindowToRelImage(winCoordinates)

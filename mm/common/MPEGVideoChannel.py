@@ -3,7 +3,6 @@ __version__ = "$Id$"
 from ChannelThread import ChannelWindowThread
 import MMurl
 from MMExc import *			# exceptions
-from AnchorDefs import *
 
 
 class VideoChannel(ChannelWindowThread):
