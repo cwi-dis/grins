@@ -47,11 +47,12 @@ from WMEVENTS import *
 from appcon import *
 from sysmetrics import *
 import grinsRC
+import afxexttb
 
 import win32mu
 import usercmd, usercmdui, wndusercmd
 
-from components import *
+import win32dialog
 
 import win32menu, MenuTemplate
 import __main__
@@ -68,7 +69,6 @@ else:
 from pywin.mfc import window,object,docview,dialog
 import afxres,commctrl
 import cmifwnd	
-import afxexttb # part of generated afxext.py
 
 
 ##################################
@@ -91,29 +91,6 @@ class GRiNSToolbar(window.Wnd):
 		wndToolBar.ModifyStyle(0, commctrl.TBSTYLE_FLAT)
 		window.Wnd.__init__(self,wndToolBar)
 
-class GRiNSDlgBar(window.Wnd):
-	def __init__(self, parent):
-		AFX_IDW_DIALOGBAR=0xE805
-		wndDlgBar = win32ui.CreateDialogBar()
-		window.Wnd.__init__(self,wndDlgBar)
-		wndDlgBar.CreateWindow(parent,grinsRC.IDD_GRINSEDBAR,
-			afxres.CBRS_ALIGN_BOTTOM,AFX_IDW_DIALOGBAR)
-		import components
-		self._tab=components.TabCtrl(self,grinsRC.IDC_TAB_GRINSVIEWS)
-		self._tab.attach_to_parent()
-		for viewno in range(len(appview.keys())):
-			self._tab.insertitem(viewno,appview[viewno]['title'])
-		rc=win32mu.Rect(parent.GetClientRect())
-		self.sizeto(rc.width(),rc.height())
-
-	def getid(self):
-		return grinsRC.IDD_GRINSEDBAR
-	def sizeto(self,w,h):
-		rc=win32mu.Rect(self._tab.getwindowrect())
-		self._tab.setwindowpos(0,(0,0,w,rc.height()),
-			win32con.SWP_NOMOVE|win32con.SWP_NOZORDER)
-	def settab(self,ix):
-		self._tab.setcursel(ix)
 
 ####################################
 class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
@@ -341,23 +318,12 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		self.HookCommandUpdate(self.OnUpdateCmdEnable,afxres.ID_WINDOW_TILE_HORZ)
 		self.PostMessage(WM_KICKIDLE)
 
-	# Tabs Notification response
-	def OnNotifyTcnSelChange(self, nm, nmrest=(0,)):
-		self.ActivateFrame()
-		hwndFrom,idFrom,code=nm
-		if idFrom==grinsRC.IDC_TAB_GRINSVIEWS:
-			viewno=self._wndDlgBar._tab.getcursel()
-			if appview[viewno]['obj']:
-				self.MDIActivate(appview[viewno]['obj'])
-			return 1
-		return 0
-
 	# Displays the about dialog
 	def OnAbout(self,id,code):
 		if self.in_modal_create_box_mode(): return
 		self.assert_not_in_create_box()
 		from version import version
-		dlg=AboutDlg(arg=0,version = 'GRiNS ' + version,parent=self)
+		dlg=win32dialog.AboutDlg(arg=0,version = 'GRiNS ' + version,parent=self)
 		dlg.DoModal()
 
 	# Displays the charset dialog
@@ -367,7 +333,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		list = []
 		for name in Font.win32_charsets_list:
 			list.append((name, (Font.set_win32_charset, (name,))))
-		Dialog(list, title = 'Select Charset', prompt = prompt, grab = 1, vertical = 1, parent = self)
+		win32dialog.Dialog(list, title = 'Select Charset', prompt = prompt, grab = 1, vertical = 1, parent = self)
 
 	# Response to windows arrangement commands
 	def OnWndUserCmd(self,id,code):
@@ -433,8 +399,6 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 		l,t,r,b=self.GetClientRect()
 		self._canvas=self._rect=(l,t,r-l,b-t)
-		if hasattr(self,'_wndDlgBar'):
-			self._wndDlgBar.sizeto(r-l,b-t)
 	
 	# Called when a new document is oppened
 	def newdocument(self,cmifdoc,adornments,commandlist):
@@ -459,7 +423,6 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		if not IsPlayer:
 			self.setEditorDocumentToolbar()
 			self.setEditorDocumentMenu(1)
-			#self._wndDlgBar=GRiNSDlgBar(self)
 			self.RecalcLayout()	
 		self.ActivateFrame()
 
@@ -534,11 +497,6 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		for w in l:
 			w.DestroyWindow()
 
-	# Activate tab
-	def setviewtab(self,viewno):
-		if hasattr(self,'_wndDlgBar'):
-			self._wndDlgBar.settab(viewno)
-
 	# Set the waiting cursor
 	def setwaiting(self):
 		#self.BeginWaitCursor();
@@ -566,10 +524,6 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		# and document's views
 		self.close_all_views()
 
-		if hasattr(self,'_wndDlgBar'):
-			self._wndDlgBar.DestroyWindow()
-			self.RecalcLayout()
-
 		# 3. if there is another top-level frame
 		# we should close self frame
 		if len(__main__.toplevel._subwindows)>1:
@@ -590,8 +544,6 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		msg=win32mu.Win32Msg(params)
 		if msg.minimized(): return
 		self._rect=self._canvas=0,0,msg.width(),msg.height()
-		if hasattr(self,'_wndDlgBar'):
-			self._wndDlgBar.sizeto(msg.width(),msg.height())
 		MDIFrameWnd.wndismax=msg.maximized()
 		if not msg.maximized():
 			rc=self.GetWindowRect()
