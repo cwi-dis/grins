@@ -8,7 +8,11 @@ def GetSize(url, maintype = None, subtype = None):
 		return width, height
 	u = None
 	if maintype is None:
-		u = MMurl.urlopen(url)
+		try:
+			u = MMurl.urlopen(url)
+		except IOError:
+			# don't cache non-existing file
+			return 0, 0
 		maintype = u.headers.getmaintype()
 		subtype = u.headers.getsubtype()
 	if string.find(string.lower(subtype), 'real') >= 0:
@@ -18,10 +22,16 @@ def GetSize(url, maintype = None, subtype = None):
 		width = info.get('width', 200)
 		height = info.get('height', 200)
 	elif maintype == 'image':
-		file = MMurl.urlretrieve(url)[0]
+		try:
+			file = MMurl.urlretrieve(url)[0]
+		except IOError:
+			return 0, 0
 		width, height = GetImageSize(file)
 	elif maintype == 'video':
-		file = MMurl.urlretrieve(url)[0]
+		try:
+			file = MMurl.urlretrieve(url)[0]
+		except IOError:
+			return 0, 0
 		width, height = GetVideoSize(file)
 	else:
 		width = height = 0
