@@ -195,15 +195,6 @@ class _CommonWindow:
 			parent._subwindows.append(self)
 		self._parent = parent
 		self._onscreen_wid = wid
-		self._drawing_wid = wid
-		self._drawing_gworld = None
-		self._drawing_bitmap = None
-		self._passive_wid = None
-		self._passive_gworld = None
-		self._passive_bitmap = None
-		self._tmp_wid = None
-		self._tmp_gworld = None
-		self._tmp_bitmap = None
 		self._transition = None
 		self._frozen = None
 		self._subwindows = []
@@ -259,15 +250,6 @@ class _CommonWindow:
 		del self._redrawfunc
 		del self._clickfunc
 		del self._onscreen_wid
-		del self._drawing_wid
-		del self._drawing_gworld
-		del self._drawing_bitmap
-		del self._passive_wid
-		del self._passive_gworld
-		del self._passive_bitmap
-		del self._tmp_wid
-		del self._tmp_gworld
-		del self._tmp_bitmap
 		del self._accelerators
 		del self._menu
 		del self._popupmenu
@@ -881,7 +863,6 @@ class _CommonWindow:
 		Qd.RGBBackColor(self._bgcolor)
 		Qd.RGBForeColor(self._fgcolor)
 		if self._redrawfunc:
-##			print 'DBG: redraw through redrawfunc', self, self._drawing_wid, self._onscreen_wid
 			self._redrawfunc()
 		else:
 			self._do_redraw()
@@ -904,10 +885,8 @@ class _CommonWindow:
 	def _do_redraw(self):
 		"""Do actual redraw"""
 		if self._active_displist:
-			print 'DBG: redraw from displaylist', self, self._drawing_wid, self._onscreen_wid
 			self._active_displist._render()
 		elif self._frozen:
-			print 'DBG: redraw from frozen', self, self._drawing_wid, self._onscreen_wid
 			self._mac_setwin(0)
 			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
 			Qd.RGBForeColor((0, 0, 0))
@@ -917,10 +896,7 @@ class _CommonWindow:
 			Qd.CopyBits(src, dst, rect, rect, QuickDraw.srcCopy, None)
 			self._mac_setwin() # Don't think this is needed...
 		elif self._transparent == 0 or self._istoplevel:
-			print 'DBG: redraw erase', self, self._drawing_wid, self._onscreen_wid
 			Qd.EraseRect(self.qdrect())
-		else:
-			print 'DBG: redraw none at all', self, self._drawing_wid, self._onscreen_wid
 			
 	def _mac_setwin(self, which=None):
 		"""Start drawing (by upper layer) in this window"""
@@ -977,6 +953,10 @@ class _CommonWindow:
 		else:
 			raise 'unexpected pixmap indicator'
 					
+	_mac_invalwin = None
+	_mac_getoswindow = None
+	_mac_getoswindowpixmap = None
+	
 	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN, modeless=0):
 		global _in_create_box
 		if _in_create_box:
@@ -1363,31 +1343,6 @@ class _CommonWindow:
 			self._passive_bitmap = None
 			self._mac_invalwin()
 		
-	def _create_offscreen_wid(self, copybits=1):
-		cur_depth = 16 # 0
-		cur_rect = self.qdrect()
-		cur_port, cur_dev = Qdoffs.GetGWorld()
-		gworld = Qdoffs.NewGWorld(cur_depth,  cur_rect, None, None, QDOffscreen.keepLocal)
-		grafptr = gworld.as_GrafPtr()
-		Qdoffs.SetGWorld(grafptr, None)
-		pixmap = gworld.GetGWorldPixMap()
-		Qdoffs.LockPixels(pixmap)
-		bitmap = Qd.RawBitMap(pixmap.data)
-		# XXXX Set font
-		if copybits:
-			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
-			Qd.RGBForeColor((0,0,0))			
-			portBits = self._onscreen_wid.GetWindowPort().portBits
-			Qd.CopyBits(portBits, bitmap, cur_rect, cur_rect, QuickDraw.srcCopy, None)
-		else:
-			Qd.RGBBackColor(self._bgcolor)
-			Qd.EraseRect(cur_rect)
-			print 'Erase offscreen', cur_rect
-		Qd.RGBBackColor(self._bgcolor)
-		Qd.RGBForeColor(self._fgcolor)
-		Qdoffs.SetGWorld(cur_port, cur_dev)
-		return gworld, grafptr, bitmap
-		
 	def _dump_bits(self, which):
 		srcbits = self._mac_getoswindowpixmap(which)
 		currect = srcbits
@@ -1412,6 +1367,119 @@ def calc_extra_size(adornments, canvassize):
 		extrah = extrah + SCROLLBARSIZE - 1
 	return extraw, extrah, minw, minh
 		
+class _OffscreenMixin:
+	def __init__(self, wid):
+		self.__wids = [self._onscreen_wid, None, None]
+		self.__gworlds = [None, None, None]
+		self.__bitmaps = [None, None, None]
+		self.__refcounts = [0, 0, 0]
+		self._drawing_wid = wid
+		self._drawing_gworld = None
+		self._drawing_bitmap = None
+		self._passive_wid = None
+		self._passive_gworld = None
+		self._passive_bitmap = None
+		self._tmp_wid = None
+		self._tmp_gworld = None
+		self._tmp_bitmap = None
+
+	def close(self):
+		del self.__wids
+		del self.__gworlds
+		del self.__bitmaps
+		del self._onscreen_wid
+
+	def _mac_create_gworld(self, which, copybits, area):
+		if which < 0:
+			raise 'Incorrect gworld indicator'
+		cur_port, cur_dev = Qdoffs.GetGWorld()
+		if self.__refcounts[which] == 0:
+			#
+			# No such offscreen bitmap yet. Create it.
+			#
+			cur_depth = 16 # XXX
+			cur_rect = self.qdrect()
+			gworld = Qdoffs.NewGWorld(cur_depth,  cur_rect, None, None, QDOffscreen.keepLocal)
+			grafptr = gworld.as_GrafPtr()
+			Qdoffs.SetGWorld(grafptr, None)
+			pixmap = gworld.GetGWorldPixMap()
+			Qdoffs.LockPixels(pixmap)
+			bitmap = Qd.RawBitMap(pixmap.data)
+			# XXXX Set font?
+			#
+			# And store it.
+			#
+			self.__refcounts[which] = 1
+			self.__wids[which] = grafptr
+			self.__gworlds[which] = gworld
+			self.__bitmaps[which] = bitmap
+		else:
+			#
+			# We have this bitmap already.
+			#
+			self.__refcounts[which] = self.__refcounts[which] + 1
+			grafptr = self.__wids[which]
+			gworld = self.__gworlds[which]
+			bitmap = self.__bitmaps[which]
+			Qdoffs.SetGWorld(grafptr, None)
+		#
+		# Finally copy or erase the portion of the bitmap to be used.
+		#
+		if copybits:
+			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
+			Qd.RGBForeColor((0,0,0))			
+			portBits = self._onscreen_wid.GetWindowPort().portBits
+			Qd.CopyBits(portBits, bitmap, area, area, QuickDraw.srcCopy, None)
+		else:
+			Qd.RGBBackColor(self._bgcolor)
+			Qd.EraseRect(area)
+			print 'Erase offscreen', cur_rect
+		Qdoffs.SetGWorld(cur_port, cur_dev)
+		
+	def _mac_dispose_gworld(self, which):
+		if which < 0:
+			raise 'Incorrect gworld indicator'
+		self.__refcounts[which] = self.__refcounts[which] - 1
+		if self.__refcounts[which] < 0:
+			raise 'gworld refcount < 0'
+		if self.__refcounts[which]:
+			return
+		if which == BM_DRAWING:
+			self.__wids[which] = self._onscreen_wid
+		else:
+			self.__wids[which] = None
+		self.__bitmaps[which] = None
+		self.__gworlds[which] = None
+
+	def _mac_getoswindow(self):
+		return self.__wids[BM_DRAWING]
+		
+	def _mac_getoswindowport(self, which=BM_DRAWING):
+		if which == BM_ONSCREEN:
+			return self._onscreen_wid.GetWindowPort()
+		elif which == BM_DRAWING:
+			# Slightly tricky: getting the port is different for onscreen and
+			# offscfreen bitmaps.
+			if self.__wids[BM_DRAWING] == self.onscreen_wid:
+				return self._onscreen_wid.GetWindowPort()
+			else:
+				return self.self.__wids[BM_DRAWING].as_GrafPtr()
+		else:
+			# The others aren't needed (yet)
+			raise '_mac_getoswindowport unexpected flag: %d'%which
+			
+	def _mac_getoswindowpixmap(self, which=None):
+		if which == None:
+			if self._transition:
+				which = BM_DRAWING
+			else:
+				which = BM_ONSCREEN
+		if which == BM_ONSCREEN:
+			return self._onscreen_wid.GetWindowPort().portBits
+		else:
+			return self.__bitmaps[which]
+					
+			
 class _ScrollMixin:
 	"""Mixin class for scrollable/resizable toplevel windows"""
 	
