@@ -107,10 +107,20 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.playdone(0)
 			return
 		if node.__type == 'real':
-			if not self.__rc or not self.__rc.playit(node, self._getoswindow(), self._getoswinpos()):
+			if not self.__rc:
 				self.playdone(0)
-		elif not self.__mc.playit(node,self.window):
-			windowinterface.settimer(5,(self.playdone,(0,)))
+			elif not self.__rc.playit(node, self._getoswindow(), self._getoswinpos()):
+				import windowinterface, MMAttrdefs
+				name = MMAttrdefs.getattr(node, 'name')
+				if not name:
+					name = '<unnamed node>'
+				chtype = self.__class__.__name__[:-7] # minus "Channel"
+				windowinterface.showmessage('No playback support for %s on this system\n'
+							    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
+				self.playdone(0)
+		elif not self.__mc.playit(node, self.window):
+			self.errormsg(node,'Can not play')
+			self.playdone(0)
 
 	# toggles between pause and run
 	def setpaused(self, paused):
@@ -167,7 +177,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		return self.window.GetSafeHwnd()
 			
 	def _getoswinpos(self):
-		return None
+		x, y, w, h = self.window._rect
+		return (x, y), (w, h)
 
 	def play(self, node):
 		self.need_armdone = 1
@@ -200,3 +211,10 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		Channel.ChannelWindowAsync.playdone(self, outside_induced)
 		if not outside_induced:
 			self.__playing = None
+
+	def stopplay(self, node):
+		if self.__mc is not None:
+			self.__mc.stopit()
+		if self.__rc:
+			self.__rc.stopit()
+		Channel.ChannelWindowAsync.stopplay(self, node)
