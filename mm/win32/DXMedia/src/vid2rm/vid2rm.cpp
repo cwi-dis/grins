@@ -15,6 +15,12 @@ Copyright 1991-1999 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include "vid2rm.h"
 
 
+// debug
+#include <stdio.h>
+FILE *logFile;
+static void Log(const char *psz)
+	{if(logFile) fwrite(psz,1,lstrlen(psz),logFile);}
+
 // Setup data
 
 
@@ -68,9 +74,15 @@ CVid2rmFilter::CVid2rmFilter(CVid2rm *pVid2rm,
     CBaseFilter(NAME("vid2rm filter"), pUnk, pLock, CLSID_Vid2rm),
     m_pVid2rm(pVid2rm)
 {
+	logFile=fopen("vid2rm.log","w");
+	Log("Filter created\n");
+
 }
 
-
+CVid2rmFilter::~CVid2rmFilter()
+	{
+	if(logFile) fclose(logFile);
+	}
 //
 // GetPin
 //
@@ -165,6 +177,25 @@ HRESULT CVid2rmInputPin::CheckMediaType(const CMediaType *)
 }
 
 
+HRESULT CVid2rmInputPin::SetMediaType(const CMediaType *pmt)
+{
+    CAutoLock cObjectLock(m_pLock);
+
+    m_mtIn = *pmt;
+	
+    VIDEOINFO *pVideoInfo = (VIDEOINFO *) pmt->Format();
+	if(!pVideoInfo) return NOERROR; // needed!
+
+    BITMAPINFOHEADER *pbmi;     // Image format data
+	pbmi = HEADER(m_mtIn.Format());
+	char sz[128]="";
+	CRefTime rt(pVideoInfo->AvgTimePerFrame);
+	sprintf(sz,"Size: %ld %ld fps:%ld\n",pbmi->biWidth,pbmi->biHeight,1000/rt.Millisecs());
+	Log(sz);
+
+	return NOERROR;
+}
+
 //
 // BreakConnect
 //
@@ -186,7 +217,7 @@ HRESULT CVid2rmInputPin::BreakConnect()
 //
 STDMETHODIMP CVid2rmInputPin::ReceiveCanBlock()
 {
-    return S_FALSE;
+    return S_OK;//S_FALSE;
 }
 
 
@@ -225,6 +256,7 @@ STDMETHODIMP CVid2rmInputPin::Receive(IMediaSample *pSample)
 	return NOERROR;
     //return m_pVid2rm->Write(pbData,pSample->GetActualDataLength());
 }
+
 
 
 //
@@ -335,6 +367,7 @@ HRESULT CVid2rmInputPin::WriteStringInfo(IMediaSample *pSample)
 //
 STDMETHODIMP CVid2rmInputPin::EndOfStream(void)
 {
+	Log("EndOfStream\n");
     CAutoLock lock(m_pReceiveLock);
     return CRenderedInputPin::EndOfStream();
 
