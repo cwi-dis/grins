@@ -14,14 +14,18 @@ debug = 0
 EVENT_SRC_LButtonDown, EVENT_SRC_Expanded, EVENT_SRC_KeyDown = range(3)
 
 class TreeCtrl(window.Wnd):
-	def __init__ (self, dlg=None, resId=None ):
+	def __init__ (self, dlg=None, resId=None, ctrl=None):
 		# if the tree res is specified from a dialox box, we just create get the existing instance
 		# if try to re-create it, the focus doesn't work, and you get some very unexpected behavior
-		if resId != None:
-			self.parent = dlg
-			ctrl = dlg.GetDlgItem(resId)
+		self.parent = dlg
+		if not ctrl:
+			if resId != None:
+				ctrl = dlg.GetDlgItem(resId)
+			else:
+				ctrl = win32ui.CreateTreeCtrl()
 		else:
-			ctrl = win32ui.CreateTreeCtrl()
+			ctrl.SetWindowLong(win32con.GWL_STYLE,self.getStyle())
+
 		window.Wnd.__init__(self, ctrl)
 		self._selections = []
 		self._multiSelListeners = []
@@ -31,16 +35,19 @@ class TreeCtrl(window.Wnd):
 		self.__selecting = 0
 		if resId != None:		
 			self._setEvents()
-		
-	# create a new instance of the tree ctrl.
-	# Note: don't call this method, if the tree widget come from a dialog box
-	def create(self, parent, rc, id):
+	
+	def getStyle(self):
 		style = win32con.WS_VISIBLE | commctrl.TVS_HASBUTTONS |\
 				commctrl.TVS_HASLINES | commctrl.TVS_SHOWSELALWAYS |\
 				win32con.WS_BORDER | win32con.WS_TABSTOP\
 				 | commctrl.TVS_LINESATROOT
+		return style
+
+	# create a new instance of the tree ctrl.
+	# Note: don't call this method, if the tree widget come from a dialog box
+	def create(self, parent, rc, id):
 		self.parent = parent
-		self.CreateWindow(style, rc, parent, id)
+		self.CreateWindow(self.getStyle(), rc, parent, id)
 		self._setEvents()
 		
 	# set the events that we manage in the tree widget
