@@ -84,8 +84,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			'head': (self.start_head, self.end_head),
 			'meta': (self.start_meta, self.end_meta),
 			'layout': (self.start_layout, self.end_layout),
-			GRiNSns+' '+'user-attributes': (self.start_user_attributes, self.end_user_attributes),
-			GRiNSns+' '+'u-group': (self.start_u_group, self.end_u_group),
+			'userAttributes': (self.start_user_attributes, self.end_user_attributes),
+			'uGroup': (self.start_u_group, self.end_u_group),
 			'region': (self.start_region, self.end_region),
 			'root-layout': (self.start_root_layout, self.end_root_layout),
 			GRiNSns+' '+'layouts': (self.start_layouts, self.end_layouts),
@@ -914,7 +914,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ch['base_winoff'] = x, y, w, h
 		# keep all attributes that we didn't use
 		for attr, val in attrdict.items():
-			if attr not in ('minwidth', 'minheight',
+			if attr not in ('minwidth', 'minheight', 'units',
 					'skip-content') and \
 			   not self.attributes['region'].has_key(attr):
 				ch[attr] = parseattrval(attr, val, self.__context)
@@ -1349,6 +1349,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 
 		if self.__region is not None:
+			if self.__context.attributes.get('project_boston') == 0:
+				self.syntax_error('nested regions not compatible with SMIL 1.0')
+			self.__context.attributes['project_boston'] = 1
 			pregion = self.__region[0]
 			attrdict['base_window'] = pregion
 			self.__childregions[pregion].append(id)
@@ -1409,6 +1412,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		pass
 
 	def start_user_attributes(self, attributes):
+		if self.__context.attributes.get('project_boston') == 0:
+			self.syntax_error('userAttributes not compatible with SMIL 1.0')
+		self.__context.attributes['project_boston'] = 1
 		for key, val in attributes.items():
 			if key[:len(GRiNSns)+1] == GRiNSns + ' ':
 				del attributes[key]
@@ -1439,8 +1445,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				self.syntax_error('non-unique id %s' % id)
 			self.__ids[id] = 0
 		title = attributes.get('title', '')
-		u_state = attributes['u-state']
-		override = attributes['override']
+		u_state = attributes['uState']
+		override = attributes.get('override', 'allowed')
 		self.__u_groups[id] = title, u_state == 'RENDERED', override == 'allowed'
 
 	def end_u_group(self):
@@ -1868,10 +1874,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return
 		if pubid == SMILpubid and syslit == SMILdtd:
 			# SMIL version 1.0
-			self.entities['region'] = []
+			self.__context.attributes['project_boston'] = 0
 		elif pubid == SMILBostonPubid and syslit == SMILBostonDtd:
 			# SMIL Boston
-			self.entities['region'] = ['region']
 			self.__context.attributes['project_boston'] = 1
 
 	def handle_proc(self, name, data):

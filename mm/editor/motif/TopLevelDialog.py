@@ -13,7 +13,7 @@ class TopLevelDialog:
 			(SMIL, 'Timeline View', CHANNELVIEW),
 			(SMIL, 'Layout View', LAYOUTVIEW),
 			(SMIL, 'Hyperlinks', LINKVIEW),
-			(CMIF, 'User Groups', USERGROUPVIEW),
+			(SMIL, 'User Groups', USERGROUPVIEW),
 			(LIGHT, 'Properties...', PROPERTIES),
 			(LIGHT, 'Source...', SOURCE),
 			(LIGHT, 'Edit Source...', EDITSOURCE),

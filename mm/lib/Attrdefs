@@ -298,7 +298,7 @@
 	'Type of media this channel will be used for' raw light)
 
 (u_group (name) undefined 'User group' usergroup
-	'User group that controls rendering of this node' inherited cmif)
+	'User group that controls rendering of this node' inherited smil2)
 
 (unixprog (string) '' 'Unix program name' default
 	'Application name (unix only)' channel cmif)
@@ -308,7 +308,7 @@
 
 (usergroups (list (enclosed (tuple (name) (tuple (string) (bool) (bool)))))
 	() 'User groups' hidden
-	'Usergroups used in this document (root node only)' normal cmif)
+	'Usergroups used in this document (root node only)' normal smil2)
 
 (video (bool) 0 'Video output' default
 	'Do image smoothing for video output' channel cmif)

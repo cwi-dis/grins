@@ -596,7 +596,7 @@ smil_attrs=[
 	("system-screen-size", getscreensize),
 	("system-screen-depth", lambda writer, node:getrawcmifattr(writer, node, "system_screen_depth")),
 	("choice-index", getbagindex),
-	("u-group", getugroup),
+	("uGroup", getugroup),
 	("layout", getlayout),
 ]
 
@@ -861,6 +861,7 @@ class SMILWriter(SMIL):
 		if not usergroups:
 			return
 		self.uses_cmif_extension = 1
+		self.smilboston = 1
 		for ugroup in usergroups.keys():
 			name = identify(ugroup)
 			if self.ids_used.has_key(name):
@@ -1199,7 +1200,7 @@ class SMILWriter(SMIL):
 		u_groups = self.root.GetContext().usergroups
 		if not u_groups:
 			return
-		self.writetag('%s:user-attributes' % NSprefix)
+		self.writetag('userAttributes')
 		self.push()
 		for key, val in u_groups.items():
 			attrlist = []
@@ -1208,10 +1209,10 @@ class SMILWriter(SMIL):
 			if title:
 				attrlist.append(('title', title))
 			if u_state != 'RENDERED':
-				attrlist.append(('u-state', u_state))
+				attrlist.append(('uState', u_state))
 			if override != 'allowed':
 				attrlist.append(('override', override))
-			self.writetag('%s:u-group' % NSprefix, attrlist)
+			self.writetag('uGroup', attrlist)
 		self.pop()
 
 	def writegrinslayout(self):
