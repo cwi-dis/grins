@@ -411,22 +411,44 @@ class DisplayList:
 		self._list.append(('image', mask, image, src_x, src_y,
 				   dest_x, dest_y, width, height,rcKeep))
 		if id:
-			self._cmddict[id] = (len(self._list)-1, crop, scale, center, coordinates, clip)
+			self._cmddict[id] = {'index':len(self._list)-1,
+				'file': file, 'crop': crop, 'scale': scale,
+				'center':center,'coordinates':coordinates,'clip':clip,
+				'image':image,'mask' :mask,'rcKeep':rcKeep,
+				'src_x':src_x,'src_y':src_y,
+				'dest_x':dest_x, 'dest_y':dest_y, 'width':width, 'height':height,
+				'x':dest_x, 'y':dest_y, 'w':width, 'h':height,}
 		self._optimize((2,))
 		self._update_bbox(dest_x, dest_y, dest_x+width, dest_y+height)
 		x, y, w, h = self._canvas
 		return float(dest_x - x) / w, float(dest_y - y) / h, \
 		       float(width) / w, float(height) / h
 
-	def update_image(self, id, file):
+	def update_image(self, id, value, cmd):
 		if not self._cmddict.has_key(id):
 			return
-		index, crop, scale, center, coordinates, clip = self._cmddict[id]
-		image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep = \
-		       self._window._prepare_image(file, crop, scale, center, coordinates, clip)
-		self._list[index] = ('image', mask, image, src_x, src_y, dest_x, dest_y, width, height,rcKeep)
-		self._window.InvalidateRect()
-
+		if cmd == 'file':
+			d = self._cmddict[id]
+			image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep = \
+		       self._window._prepare_image(value, d['crop'], d['scale'], d['center'], d['coordinates'], d['clip'])
+			self._list[d['index']] = ('image', mask, image, src_x, src_y, dest_x, dest_y, width, height,rcKeep)
+			self._window.InvalidateRect()
+		elif cmd in ('left', 'top', 'width', 'height'):
+			d = self._cmddict[id]
+			l,t,w,h = d['x'], d['y'], d['w'], d['h']
+			ln, tn, wn, hn = l,t,w,h
+			if cmd == 'left': ln = value
+			elif cmd == 'top': tn = value
+			elif cmd == 'width': wn = value
+			elif cmd == 'height': hn = value
+			self._list[d['index']] = ('image', d['mask'], d['image'], d['src_x'], d['src_y'], ln, tn, wn, hn, d['rcKeep'])
+			rgn=win32ui.CreateRgn()
+			rgn.CreateRectRgn((l,t,l+w,t+h))
+			rgn2 = win32ui.CreateRgn()
+			rgn2.CreateRectRgn((ln,tn,ln+wn,tn+hn))
+			rgn.CombineRgn(rgn, rgn2, win32con.RGN_AND)
+			self._window.InvalidateRgn(rgn)
+			d['x']=ln;d['y']=tn;d['w']=wn; d['h']=hn
 	# Resize image buttons
 	def _resize_image_buttons(self):
 		type = self._list[1]
