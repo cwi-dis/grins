@@ -47,6 +47,7 @@ class VideoChannel(ChannelWindow):
 			self.__rc = RealChannel(self)
 		except:
 			pass
+		return 1
 
 	def redraw(self):
 		if self.play_movie:
@@ -59,7 +60,7 @@ class VideoChannel(ChannelWindow):
 		if debug: print 'VideoChannel: arm', node
 		fn = self.getfileurl(node)
 		import mimetypes, string
-		mtype = mimetypes.guess_type(url)[0]
+		mtype = mimetypes.guess_type(fn)[0]
 		node.__type = ''
 		if string.find(mtype, 'real') >= 0:
 			node.__type = 'real'
@@ -155,8 +156,7 @@ class VideoChannel(ChannelWindow):
 				
 		movieBox = l, t, int(l+(r-l)*scale), int(t+(b-t)*scale)
 		nMovieBox = self._scalerect(screenBox, movieBox, center)
-		if nMovieBox != screenBox:
-			movie.SetMovieBox(nMovieBox)
+		movie.SetMovieBox(nMovieBox)
 		
 	def _playsome(self, *dummy):
 		if debug: print 'VideoChannel: playsome'
