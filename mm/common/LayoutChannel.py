@@ -10,7 +10,6 @@ class LayoutChannel(ChannelWindow):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 		self.is_layout_channel = 1
 		self._activeMediaNumber = 0
-		self._wingeomInPixel = None
 		self.__activeVisibleChannelDict = {}
 
 	def do_arm(self, node, same=0):
