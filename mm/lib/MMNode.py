@@ -136,8 +136,8 @@ class MMNodeContext:
 		for ch in self.channels:
 			if ch['type'] == chtype:
 				chlist.append(ch.name)
-			if chtype == 'image' and ch['type'] == 'RealPix':
-				chlist.append(ch.name)
+##			if chtype == 'image' and ch['type'] == 'RealPix':
+##				chlist.append(ch.name)
 		chlist.sort()
 		return chlist
 
