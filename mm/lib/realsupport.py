@@ -667,7 +667,7 @@ def _calcdur(tags):
 			endtime = start + duration
 	return endtime
 
-def writeRP(file, rp, node, savecaptions=0):
+def writeRP(rpfile, rp, node, savecaptions=0):
 	from SMILTreeWrite import nameencode
 	import MMAttrdefs
 
@@ -680,7 +680,7 @@ def writeRP(file, rp, node, savecaptions=0):
 	else:
 		baseurl = ''		# no slashes
 
-	f = open(file, 'w')
+	f = open(rpfile, 'w')
 	f.write('<imfl>\n')
 	f.write('  <head')
 	sep = ' '
@@ -808,7 +808,7 @@ def writeRP(file, rp, node, savecaptions=0):
 	if os.name == 'mac':
 		import macfs
 		import macostools
-		fss = macfs.FSSpec(file)
+		fss = macfs.FSSpec(rpfile)
 		fss.SetCreatorType('PNst', 'PNRM')
 		macostools.touched(fss)
 
