@@ -29,7 +29,6 @@ FLAG_QT_PRO = 0x0008
 FLAG_CMIF = 0x0010
 FLAG_SMIL_1_0 = 0x0020
 FLAG_BOSTON = 0x0040
-FLAG_SNAP = 0x0080			# mjvdg 9-oct-2000
 
 FLAG_TEMPLATE = 0x2000
 FLAG_ADVANCED = 0x4000
@@ -41,7 +40,7 @@ FLAG_DBG = 0x8000
 FLAG_G2 = FLAG_G2_LIGHT | FLAG_G2_PRO
 FLAG_QT = FLAG_QT_LIGHT | FLAG_QT_PRO
 FLAG_PRO = FLAG_G2_PRO | FLAG_QT_PRO | FLAG_SMIL_1_0 | FLAG_BOSTON
-FLAG_ALL = FLAG_G2 | FLAG_QT | FLAG_CMIF | FLAG_SMIL_1_0 | FLAG_BOSTON | FLAG_SNAP
+FLAG_ALL = FLAG_G2 | FLAG_QT | FLAG_CMIF | FLAG_SMIL_1_0 | FLAG_BOSTON
 
 _curflags = None
 
@@ -58,8 +57,6 @@ def curflags():
 				flags = flags | FLAG_QT
 			if features.EXPORT_SMIL2 in features.feature_set:
 				flags = flags | FLAG_BOSTON
-		if hasattr(features, 'grins_snap') and features.grins_snap:
-			flags = flags | FLAG_SNAP
 		elif features.compatibility == features.G2:
 			if features.lightweight:
 				flags = flags | FLAG_G2_LIGHT
