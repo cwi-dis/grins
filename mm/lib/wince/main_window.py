@@ -35,6 +35,9 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 
 		# player state
 		self.__playerstate = None
+		
+		# using GAPI flag
+		self._in_gapi_mode = 0
 
 	def __getattr__(self, attr):
 		if attr != '__dict__':
@@ -70,6 +73,8 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		if self._timer:
 			self.KillTimer(self._timer)
 			self._timer = 0
+		if self._in_gapi_mode:
+			self.EnableGAPI(0)
 		self.execute_cmd(usercmd.EXIT)
 			
 	def destroy(self):
@@ -423,6 +428,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		self.UpdateWindow()
 
 	def setReady(self):
+		self.setStatusMsg('')
 		self._ready = 1
 
 	def CreateProgressBar(self):
@@ -445,3 +451,16 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		self._status_msg = ''
 		self._ready = 1
 		self.redraw()
+	
+	def EnableGAPI(self, flag):
+		import winmm
+		if flag:
+			if not self._in_gapi_mode:
+				winmm.GXOpenDisplay(self.GetSafeHwnd())
+				self._in_gapi_mode = 1
+		else:
+			if self._in_gapi_mode:
+				winmm.GXCloseDisplay()
+				self._in_gapi_mode = 0
+			
+
