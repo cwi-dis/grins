@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Holding B.V.
   Distribute Type=2
   Step View=All
-  File Checksum=2597031149
+  File Checksum=86696483
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -96,7 +96,7 @@ item: Set Variable
 end
 item: Set Variable
   Variable=GROUP
-  Value=Oratrix GRiNS for RealSystem G2 v1.5\Pro
+  Value=Oratrix GRiNS\GRiNS for RealSystem G2 v1.5 Pro
   Flags=10000000
 end
 item: Set Variable
@@ -1691,17 +1691,17 @@ item: Set Variable
 end
 item: Create Shortcut
   Source=%MAINDIR%\readme.txt
-  Destination=%GROUP%\readme.lnk
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Readme.lnk
   Icon Number=0
 end
 item: Create Shortcut
   Source=%MAINDIR%\Unwise.exe
-  Destination=%GROUP%\Uninstall GRiNS for G2 Pro 1.5.lnk
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Uninstall GRiNS for G2 Pro 1.5.lnk
   Icon Number=0
 end
 item: Create Shortcut
   Source=%MAINDIR%\license.txt
-  Destination=%GROUP%\GRiNS for G2 Pro 1.5 License.lnk
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS for G2 Pro 1.5 License.lnk
   Icon Number=0
 end
 item: If/While Statement
@@ -1711,7 +1711,7 @@ item: If/While Statement
 end
 item: Create Shortcut
   Source=%MAINDIR%\QuickStart.pdf
-  Destination=%GROUP%\Quick Start Guide.lnk
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Quick Start Guide.lnk
   Icon Number=0
 end
 item: End Block
@@ -1723,7 +1723,7 @@ item: If/While Statement
 end
 item: Create Shortcut
   Source=%MAINDIR%\GRiNS_G2P.exe
-  Destination=%DESKTOPDIR%\GRiNS for G2 Pro 1.5.lnk
+  Destination=%CDESKTOPDIR%\GRiNS for G2 Pro 1.5.lnk
   Icon Number=0
 end
 item: End Block
@@ -1735,17 +1735,43 @@ item: If/While Statement
 end
 item: Create Shortcut
   Source=%MAINDIR%\GRiNS_G2P.exe
-  Destination=%GROUP%\GRiNS for G2 Pro 1.5.lnk
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS for G2 Pro 1.5.lnk
   Icon Number=0
 end
 item: End Block
 end
 item: Create Shortcut
   Source=%MAINDIR%\relnotes.html
-  Destination=%GROUP%\Release Notes.lnk
+  Destination=%CGROUPDIR%\%CGROUP_SAVE%\Release Notes.lnk
   Icon Number=0
 end
 item: Else Statement
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS for G2 Pro 1.5
+  Command Line=%MAINDIR%\GRiNS_G2P.exe
+  Flags=01000000
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=COMPONENTS
+  Value=A
+  Flags=00001010
+end
+item: Add ProgMan Icon
+  Group=%GROUP%
+  Icon Name=GRiNS for G2 Pro 1.5
+  Command Line=%MAINDIR%\GRiNS_G2P.exe
+  Flags=01000000
+end
+item: End Block
 end
 item: If/While Statement
   Variable=COMPONENTS
@@ -1764,7 +1790,6 @@ item: Add ProgMan Icon
   Group=%GROUP%
   Icon Name=Release Notes
   Command Line=%MAINDIR%\relnotes.html
-  Flags=01000000
 end
 item: If/While Statement
   Variable=COMPONENTS
@@ -1840,27 +1865,23 @@ item: Add ProgMan Icon
   Group=%GROUP%
   Icon Name=GRiNS for G2 Pro 1.5
   Command Line=%MAINDIR%\GRiNS_G2P.exe
-  Flags=01000000
 end
 item: End Block
 end
 item: Add ProgMan Icon
   Group=%GROUP%
-  Icon Name=readme
+  Icon Name=Readme
   Command Line=%MAINDIR%\readme.txt
-  Flags=01000000
 end
 item: Add ProgMan Icon
   Group=%GROUP%
   Icon Name=Uninstall GRiNS for G2 Pro 1.5
   Command Line=%MAINDIR%\Unwise.exe
-  Flags=01000000
 end
 item: Add ProgMan Icon
   Group=%GROUP%
   Icon Name=GRiNS for G2 Pro 1.5 License
   Command Line=%MAINDIR%\license.txt
-  Flags=01000000
 end
 item: If/While Statement
   Variable=COMPONENTS
@@ -1871,7 +1892,6 @@ item: Add ProgMan Icon
   Group=%GROUP%
   Icon Name=Quick Start Guide
   Command Line=%MAINDIR%\QuickStart.pdf
-  Flags=01000000
 end
 item: End Block
 end
