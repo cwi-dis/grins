@@ -100,7 +100,7 @@ channelhierarchy = {
 		'null'],
     'ole': ['word'],
     }
-SMILchanneltypes = ['null', 'html', 'image', 'sound', 'video', 'layout']
+SMILchanneltypes = ['null', 'text', 'html', 'image', 'sound', 'video', 'layout']
 
 ct = channelmap.keys()
 ct.sort()
