@@ -449,8 +449,9 @@ class _Window:
 		gc.DrawRectangle(x, y, w-1, h-1)
 
 	def dontshowwindow(self):
-		self._showing = 0
-		self._topwindow._do_expose(self._region)
+		if self._showing:
+			self._showing = 0
+			self._topwindow._do_expose(self._region)
 
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0):
 		return _SubWindow(self, coordinates, 0, pixmap, transparent)
