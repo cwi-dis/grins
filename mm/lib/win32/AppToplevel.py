@@ -100,7 +100,7 @@ class _Toplevel:
 		self._activeDocFrame=None
 		self._register_entries=[]
 
-		self._embedded = 0
+		# embedding support state
 		self._embeddedcallbacks = {}
 		self._embeddedHwnd = {}
 		self._embeddedwnd = {}
@@ -233,11 +233,11 @@ class _Toplevel:
 	
 	def enableCOMAutomation(self):
 		import __main__
-		if hasattr(__main__,'grinspapi'):
+		if hasattr(__main__,'commodule'):
 			import embedding
 			listenerWnd = embedding.ListenerWnd(self)
 			self.addclosecallback(listenerWnd.DestroyWindow, ())
-			commodule = __main__.grinspapi.commodule
+			commodule = __main__.commodule
 			commodule.SetListener(listenerWnd.GetSafeHwnd())
 			commodule.RegisterClassObjects()
 	

@@ -648,7 +648,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 	def newEmbedded(self, x, y, w, h, title, units = UNIT_MM, adornments=None, canvassize=None, commandlist=None, strid='cmifview_', bgcolor=None):
 		id, hwnd =  __main__.toplevel.get_last_embedded_hwnd()
 		import embedding
-		wnd = embedding.EmbeddedWnd(self, w, h, units, bgcolor, hwnd, title)
+		wnd = embedding.EmbeddedWnd(self, w, h, units, bgcolor, hwnd, title, id)
 		__main__.toplevel.set_embedded_wnd(id, wnd)
 		return wnd
 
