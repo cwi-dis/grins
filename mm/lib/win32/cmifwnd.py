@@ -87,9 +87,6 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		# default z-order
 		self._z=0
 
-		# an alias
-		self._relative_coordinates=self._inverse_coordinates
-
 		# temp sigs
 		self._wnd = None
 		self._hWnd = 0
@@ -102,12 +99,12 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		self._cursor = parent._cursor
 
 	# Called by the core system to create a subwindow
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
 		raise error, 'overwrite newwindow'
 		return None
 
 	# Called by the core system to create a subwindow
-	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
+	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
 		raise error, 'overwrite newcmwindow'
 		return None
 		
@@ -408,7 +405,7 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 		if not rc_child:rc=win32mu.Rect(self.GetWindowRect())
 		else: rc=rc_child
 		rcParent=win32mu.Rect(self._parent.GetWindowRect())
-		return self._relative_coordinates(rc.tuple_ps(),rcParent.tuple_ps())
+		return self._inverse_coordinates(rc.tuple_ps(),rcParent.tuple_ps())
 	# Returns the relative coordinates of a wnd with respect to its parent with 2 decimal digits
 	def getsizes100(self):
 		ps=self.getsizes()
@@ -420,11 +417,22 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 
 	# Returns the pixel coordinates of this window
 	def get_relative_coords(self,box):
-		return self._relative_coordinates(box,self._canvas)
+		return self._inverse_coordinates(box,self._canvas)
 	# Returns the relative coordinates of the box with 2 decimal digits
-	def get_relative_coords100(self,box):
-		ps=self._relative_coordinates(box,self._canvas)
-		return float(int(100.0*ps[0]+0.5)/100.0),float(int(100.0*ps[1]+0.5)/100.0),float(int(100.0*ps[2]+0.5)/100.0),float(int(100.0*ps[3]+0.5)/100.0)
+	def get_relative_coords100(self,box, units = UNIT_SCREEN):
+		if units == UNIT_PXL:
+			return self._canvas
+		elif units == UNIX_SCREEN:
+			ps=self._inverse_coordinates(box,self._canvas)
+			return float(int(100.0*ps[0]+0.5)/100.0),float(int(100.0*ps[1]+0.5)/100.0),float(int(100.0*ps[2]+0.5)/100.0),float(int(100.0*ps[3]+0.5)/100.0)
+		elif units == UNIT_MM:
+			x, y, w, h = self._canvas
+			return float(x) / toplevel._pixel_per_mm_x, \
+			       float(y) / toplevel._pixel_per_mm_y, \
+			       float(w) / toplevel._pixel_per_mm_x, \
+			       float(h) / toplevel._pixel_per_mm_y
+		else:
+			raise error, 'bad units specified'
 
 	# Returns true if the point is inside the window
 	def inside(self,pt):
@@ -775,7 +783,8 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 	# using as rect of reference for relative coord
 	# this wnd client rect (default) and as pixel origin
 	# the left top corner of the client rect
-	def _convert_coordinates(self, coordinates,ref_rect=None):
+	def _convert_coordinates(self, coordinates, ref_rect = None, crop = 0,
+				 units = UNIT_SCREEN):
 		x, y = coordinates[:2]
 		if len(coordinates) > 2:
 			w, h = coordinates[2:]
@@ -786,38 +795,68 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 			rx, ry, rw, rh = ref_rect
 		else: 
 			rx, ry, rw, rh = self._rect
-			
-		px = int((rw - 1) * x + 0.5) + rx
-		py = int((rh - 1) * y + 0.5) + ry
+
+		if units == UNIT_PXL or (units is None and type(x) is type(0)):
+			px = int(x)
+		else:
+			px = int((rw - 1) * x + 0.5) + rx
+		if units == UNIT_PXL or (units is None and type(y) is type(0)):
+			py = int(y)
+		else:
+			py = int((rh - 1) * y + 0.5) + ry
+		pw = ph = 0
+		if crop:
+			if px < 0:
+				px, pw = 0, px
+			if px >= rx + rw:
+				px, pw = rx + rw - 1, px - rx - rw + 1
+			if py < 0:
+				py, ph = 0, py
+			if py >= ry + rh:
+				py, ph = ry + rh - 1, py - ry - rh + 1
 		if len(coordinates) == 2:
 			return px, py
 
-		pw = int((rw - 1) * w + 0.5) 
-		ph = int((rh - 1) * h + 0.5)
+		if units == UNIT_PXL or (units is None and type(w) is type(0)):
+			pw = int(w + pw)
+		else:
+			pw = int((rw - 1) * w + 0.5) + pw
+		if units == UNIT_PXL or (units is None and type(h) is type(0)):
+			ph = int(h + ph)
+		else:
+			ph = int((rh - 1) * h + 0.5) + ph
+		if crop:
+			if pw <= 0:
+				pw = 1
+			if px + pw > rx + rw:
+				pw = rx + rw - px
+			if ph <= 0:
+				ph = 1
+			if py + ph > ry + rh:
+				ph = ry + rh - py
 		return px, py, pw, ph
 
 	# convert pixel coordinates to relative coordinates
 	# using as rect of reference for relative coord
 	# this wnd client rect (default) and as pixel origin
 	# the left top corner of the client rect
-	def _inverse_coordinates(self,coordinates,ref_rect=None):		
-		x, y = coordinates[:2]
-		if len(coordinates) > 2:
-			w, h = coordinates[2:]
-		else:
-			w, h = 0, 0
-		
-		if ref_rect:rx, ry, rw, rh = ref_rect
-		else: rx, ry, rw, rh = self._rect
+	def _inverse_coordinates(self,coordinates,ref_rect=None):
+		px, py = coordinates[:2]
 
-		px = float(x-rx)/rw
-		py = float(y-ry)/rh
+		if ref_rect:
+			rx, ry, rw, rh = ref_rect
+		else:
+			rx, ry, rw, rh = self._rect
+
+		x = float(px - rx) / (rw - 1)
+		y = float(py - ry) / (rh - 1)
 		if len(coordinates) == 2:
-			return px, py
-		
-		pw = float(w)/rw
-		ph = float(h)/rh
-		return px, py, pw, ph
+			return x, y
+
+		pw, ph = coordinates[2:]
+		w = float(pw) / (rw - 1)
+		h = float(ph) / (rh - 1)
+		return x, y, w, h
 
 	# convert from client (device) coordinates to canvas (logical)
 	def _DPtoLP(self,pt):

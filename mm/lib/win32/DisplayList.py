@@ -71,8 +71,6 @@ class DisplayList:
 		if self._canvas[2]==0 or self._canvas[3]==0:
 			print 'invalid canvas for wnd',window
 			self._canvas=(0,0,10,10)
-		self._hfactor = 1.0/(self._canvas[2]/pixel_per_mm_x)
-		self._vfactor = 1.0/(self._canvas[3]/pixel_per_mm_y)
 
 		#cloning support
 		self._cloneof = None
@@ -559,11 +557,13 @@ class DisplayList:
 
 	# Returns font's  baseline
 	def baseline(self):
-		return self._font.baseline() * self._vfactor
+		baseline = self._font.baseline()
+		return self._inverse_coordinates((0,0,0,baseline))[3]
 
 	# Returns font's  height
 	def fontheight(self):
-		return self._font.fontheight() * self._vfactor
+		fontheight = self._font.fontheight()
+		return self._inverse_coordinates((0,0,0,fontheight))[3]
 
 	# Returns font's  pointsize
 	def pointsize(self):
@@ -572,7 +572,7 @@ class DisplayList:
 	# Returns string's  size
 	def strsize(self, str):
 		width, height = self._font.strsize(str)
-		return width*self._hfactor,height*self._vfactor
+		return self._inverse_coordinates((0,0,width,height))[2:4]
 
 	# Set the current position
 	def setpos(self, x, y):
@@ -687,42 +687,14 @@ class DisplayList:
 
 
 	# convert relative coordinates to (owner wnd) pixel coordinates
-	def _convert_coordinates(self, coordinates):
-		x, y = coordinates[:2]
-		if len(coordinates) > 2:
-			w, h = coordinates[2:]
-		else:
-			w, h = 0, 0
-		
-		rx, ry, rw, rh = self._canvas
-			
-		px = int((rw-1) * x + 0.5) + rx
-		py = int((rh-1) * y + 0.5) + ry
-		if len(coordinates) == 2:
-			return px, py
-
-		pw = int((rw-1) * w + 0.5) 
-		ph = int((rh-1) * h + 0.5)
-		return px, py, pw, ph
+	def _convert_coordinates(self, coordinates, units = UNIT_SCREEN):
+		return self._window._convert_coordinates(coordinates,
+					ref_rect = self._canvas, units = units)
 
 	# convert (owner wnd) pixel coordinates to relative coordinates
-	def _inverse_coordinates(self,coordinates):		
-		x, y = coordinates[:2]
-		if len(coordinates) > 2:
-			w, h = coordinates[2:]
-		else:
-			w, h = 0, 0
-		
-		rx, ry, rw, rh = self._canvas
-
-		px = float(x-rx)/rw
-		py = float(y-ry)/rh
-		if len(coordinates) == 2:
-			return px, py
-		
-		pw = float(w)/rw
-		ph = float(h)/rh
-		return px, py, pw, ph
+	def _inverse_coordinates(self,coordinates):
+		return self._window._inverse_coordinates(coordinates,
+					ref_rect = self._canvas)
 
 	# Conver color (does nothing for win32)
 	def _convert_color(self, color):

@@ -62,10 +62,6 @@ class _Window(_AdornmentSupport):
 	# _region: _rect as an X Region
 	# _clip: an X Region representing the visible area of the
 	#	window
-	# _hfactor: horizontal multiplication factor to convert pixels
-	#	to relative sizes
-	# _vfactor: vertical multipliction factor to convert pixels to
-	#	relative sizes
 	# _cursor: the desired cursor shape (only has effect for
 	#	top-level windows)
 	# _callbacks: a dictionary with callback functions and
@@ -313,8 +309,6 @@ class _Window(_AdornmentSupport):
 		self._gc = gc
 		w = float(w) / toplevel._hmm2pxl
 		h = float(h) / toplevel._vmm2pxl
-		self._hfactor = parent._hfactor / w
-		self._vfactor = parent._vfactor / h
 		self._clip = Xlib.CreateRegion()
 		apply(self._clip.UnionRectWithRegion, self._rect)
 		form.AddCallback('exposeCallback', self._expose_callback, None)
@@ -498,11 +492,11 @@ class _Window(_AdornmentSupport):
 				attrs['height'] = cheight - vmargin
 			self._form.SetValues(attrs)
 
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
-		return _SubWindow(self, coordinates, 0, pixmap, transparent, z)
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
+		return _SubWindow(self, coordinates, 0, pixmap, transparent, z, units)
 
-	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
-		return _SubWindow(self, coordinates, 1, pixmap, transparent, z)
+	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
+		return _SubWindow(self, coordinates, 1, pixmap, transparent, z, units)
 
 	def fgcolor(self, color):
 		r, g, b = color
@@ -613,10 +607,10 @@ class _Window(_AdornmentSupport):
 					self._menuaccel.append(key)
 		self._menu = menu
 		
-	def create_box(self, msg, callback, box = None):
+	def create_box(self, msg, callback, box = None, units = UNIT_SCREEN):
 		import Xcursorfont
 		if toplevel._in_create_box:
-			toplevel._in_create_box._next_create_box.append((self, msg, callback, box))
+			toplevel._in_create_box._next_create_box.append((self, msg, callback, box, units))
 			return
 		if self.is_closed():
 			apply(callback, ())
@@ -624,6 +618,9 @@ class _Window(_AdornmentSupport):
 		toplevel.setcursor('stop')
 		self._topwindow.setcursor('')
 		toplevel._in_create_box = self
+		if box:
+			# convert box to relative sizes if necessary
+			box = self._pxl2rel(self._convert_coordinates(box, units = units))
 		self.pop()
 		if msg:
 			msg = msg + '\n\n' + _rb_message
@@ -671,6 +668,7 @@ class _Window(_AdornmentSupport):
 			callback = (self._rb_done, ()),
 			cancelCallback = (self._rb_cancel, ()))
 		self._rb_callback = callback
+		self._rb_units = units
 		form = self._form
 		form.RemoveEventHandler(X.PointerMotionMask, FALSE,
 					self._motion_handler, None)
@@ -740,7 +738,7 @@ class _Window(_AdornmentSupport):
 		return self._parent._convert_color(color,
 			self._colormap is not self._parent._colormap)
 
-	def _convert_coordinates(self, coordinates, crop = 0):
+	def _convert_coordinates(self, coordinates, crop = 0, units = UNIT_SCREEN):
 		# convert relative sizes to pixel sizes relative to
 		# upper-left corner of the window
 		# if crop is set, constrain the coordinates to the
@@ -753,8 +751,14 @@ class _Window(_AdornmentSupport):
 		rx, ry, rw, rh = self._rect
 ##		if not (0 <= x <= 1 and 0 <= y <= 1):
 ##			raise error, 'coordinates out of bounds'
-		px = int((rw - 1) * x + 0.5) + rx
-		py = int((rh - 1) * y + 0.5) + ry
+		if units == UNIT_PXL or (units is None and type(x) is type(0)):
+			px = int(x)
+		else:
+			px = int((rw - 1) * x + 0.5) + rx
+		if units == UNIT_PXL or (units is None and type(y) is type(0)):
+			py = int(y)
+		else:
+			py = int((rh - 1) * y + 0.5) + ry
 		pw = ph = 0
 		if crop:
 			if px < 0:
@@ -767,11 +771,14 @@ class _Window(_AdornmentSupport):
 				py, ph = ry + rh - 1, py - ry - rh + 1
 		if len(coordinates) == 2:
 			return px, py
-##		if not (0 <= w <= 1 and 0 <= h <= 1 and
-##			0 <= x + w <= 1 and 0 <= y + h <= 1):
-##			raise error, 'coordinates out of bounds'
-		pw = int((rw - 1) * w + 0.5) + pw
-		ph = int((rh - 1) * h + 0.5) + ph
+		if units == UNIT_PXL or (units is None and type(w) is type(0)):
+			pw = int(w + pw)
+		else:
+			pw = int((rw - 1) * w + 0.5) + pw
+		if units == UNIT_PXL or (units is None and type(h) is type(0)):
+			ph = int(h + ph)
+		else:
+			ph = int((rh - 1) * h + 0.5) + ph
 		if crop:
 			if pw <= 0:
 				pw = 1
@@ -782,6 +789,18 @@ class _Window(_AdornmentSupport):
 			if py + ph > ry + rh:
 				ph = ry + rh - py
 		return px, py, pw, ph
+
+	def _pxl2rel(self, coordinates):
+		px, py = coordinates[:2]
+		rx, ry, rw, rh = self._rect
+		x = float(px - rx) / (rw - 1)
+		y = float(py - ry) / (rh - 1)
+		if len(coordinates) == 2:
+			return x, y
+		pw, ph = coordinates[2:]
+		w = float(pw) / (rw - 1)
+		h = float(ph) / (rh - 1)
+		return x, y, w, h
 
 	def _mkclip(self):
 		if self._parent is None:
@@ -1149,8 +1168,6 @@ class _Window(_AdornmentSupport):
 		parent = self._parent
 		w = float(width) / toplevel._hmm2pxl
 		h = float(height) / toplevel._vmm2pxl
-		self._hfactor = parent._hfactor / w
-		self._vfactor = parent._vfactor / h
 		if self._pixmap is None:
 			pixmap = None
 		else:
@@ -1235,7 +1252,7 @@ class _Window(_AdornmentSupport):
 		del self._rb_display
 		del self._gc_rb
 
-	def _rb_cvbox(self):
+	def _rb_cvbox(self, units = UNIT_SCREEN):
 		x0 = self._rb_start_x
 		y0 = self._rb_start_y
 		x1 = x0 + self._rb_width
@@ -1253,15 +1270,26 @@ class _Window(_AdornmentSupport):
 		if y0 >= y + height: y0 = y + height - 1
 		if y1 < y: y1 = y
 		if y1 >= y + height: y1 = y + height - 1
-		return float(x0 - x) / (width - 1), \
-		       float(y0 - y) / (height - 1), \
-		       float(x1 - x0) / (width - 1), \
-		       float(y1 - y0) / (height - 1)
+		if units == UNIT_SCREEN:
+			return float(x0 - x) / (width - 1), \
+			       float(y0 - y) / (height - 1), \
+			       float(x1 - x0) / (width - 1), \
+			       float(y1 - y0) / (height - 1)
+		elif units == UNIT_PXL:
+			return x0 - x, y0 - y, x1 - x0, y1 - y0
+		elif units == UNIT_MM:
+			return float(x0 - x) / toplevel._hmm2pxl, \
+			       float(y0 - y) / toplevel._vmm2pxl, \
+			       float(x1 - x0) / toplevel._hmm2pxl, \
+			       float(y1 - y0) / topevel._vmm2pxl
+		else:
+			raise error, 'bad units specified'
 
 	def _rb_done(self):
 		callback = self._rb_callback
+		units = self._rb_units
 		self._rb_finish()
-		apply(callback, self._rb_cvbox())
+		apply(callback, self._rb_cvbox(units))
 		self._rb_end()
 		self._rb_looping = 0
 
@@ -1276,8 +1304,8 @@ class _Window(_AdornmentSupport):
 		# execute pending create_box calls
 		next_create_box = self._next_create_box
 		self._next_create_box = []
-		for win, msg, cb, box in next_create_box:
-			win.create_box(msg, cb, box)
+		for win, msg, cb, box, units in next_create_box:
+			win.create_box(msg, cb, box, units)
 
 	def _rb_draw(self):
 		x = self._rb_start_x
@@ -1392,26 +1420,16 @@ class _Window(_AdornmentSupport):
 		del self._rb_cy
 
 class _SubWindow(_Window):
-	def __init__(self, parent, coordinates, defcmap, pixmap, transparent, z):
+	def __init__(self, parent, coordinates, defcmap, pixmap, transparent, z, units):
 		if z < 0:
 			raise error, 'invalid z argument'
 		self._z = z
-		x, y, w, h = parent._convert_coordinates(coordinates, crop = 1)
+		x, y, w, h = parent._convert_coordinates(coordinates, crop = 1, units = units)
 		self._rect = x, y, w, h
-		self._sizes = coordinates
-		x, y, w, h = coordinates
+		self._sizes = self._pxl2rel(self._rect)
 		if w == 0 or h == 0:
 			showmessage('Creating subwindow with zero dimension',
 				    mtype = 'warning', parent = parent)
-		if w == 0:
-			w = float(self._rect[_WIDTH]) / parent._rect[_WIDTH]
-		if h == 0:
-			h = float(self._rect[_HEIGHT]) / parent._rect[_HEIGHT]
-		# conversion factors to convert from mm to relative size
-		# (this uses the fact that _hfactor == _vfactor == 1.0
-		# in toplevel)
-		self._hfactor = parent._hfactor / w
-		self._vfactor = parent._vfactor / h
 
 		self._convert_color = parent._convert_color
 		for i in range(len(parent._subwindows)):
@@ -1480,8 +1498,18 @@ class _SubWindow(_Window):
 	def settitle(self, title):
 		raise error, 'can only settitle at top-level'
 
-	def getgeometry(self, units = UNIT_MM):
-		return self._sizes
+	def getgeometry(self, units = UNIT_SCREEN):
+		if units == UNIT_PXL:
+			return self._rect
+		elif units == UNIT_SCREEN:
+			return self._sizes
+		elif units == UNIT_MM:
+			x, y, w, h = self._rect
+			return float(x) / toplevel._hmm2pxl, \
+			       float(y) / toplevel._vmm2pxl, \
+			       float(w) / toplevel._hmm2pxl, \
+			       float(h) / toplevel._vmm2pxl
+		raise error, 'bad units specified'
 
 	def setcursor(self, cursor):
 		pass
@@ -1560,8 +1588,6 @@ class _SubWindow(_Window):
 			w = float(self._rect[_WIDTH]) / parent._rect[_WIDTH]
 		if h == 0:
 			h = float(self._rect[_HEIGHT]) / parent._rect[_HEIGHT]
-		self._hfactor = parent._hfactor / w
-		self._vfactor = parent._vfactor / h
 		self._region = Xlib.CreateRegion()
 		apply(self._region.UnionRectWithRegion, self._rect)
 		self._active_displist = None

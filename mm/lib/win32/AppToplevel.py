@@ -51,7 +51,6 @@ class _Toplevel:
 		self._scr_height_mm = sysmetrics.scr_height_mm
 		self._pixel_per_mm_x = sysmetrics.pixel_per_mm_x
 		self._pixel_per_mm_y = sysmetrics.pixel_per_mm_y
-		self._hfactor = self._vfactor = 1.000
 	
 		# generic wnd class
 		import GenWnd
