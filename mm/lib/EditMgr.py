@@ -13,6 +13,9 @@ class EditMgr:
 		self.context = root.GetContext()
 		return self
 	#
+	def __repr__(self):
+		return '<EditMgr instance, context=' + `self.context` + '>'
+	#
 	def reset(self):
 		self.root = self.context = None
 		self.busy = 0
