@@ -9,13 +9,16 @@ Sdk = win32ui.GetWin32Sdk()
 import ListCtrl
 import components
 from win32mu import Win32Msg
+import longpath
 
 import grinsRC
-import DropTarget
 
 from pywinlib.mfc import docview
 import GenView
+import DropTarget
 import string
+
+import MMurl
 
 ICONNAME_TO_RESID={
 	None: grinsRC.IDI_ICON_ASSET_BLANK,
@@ -41,13 +44,17 @@ ICONNAME_TO_RESID={
 	'brush': grinsRC.IDI_BRUSH,
 }
 
-class _AssetsView(GenView.GenView, docview.ListView):
-	CF_URL = DropTarget.CF_URL
-	CF_NODEUID = DropTarget.CF_NODEUID
+class _AssetsView(GenView.GenView, docview.ListView, DropTarget.DropTargetListener):
 
 	def __init__(self, doc, bgcolor=None):
 		GenView.GenView.__init__(self, bgcolor)
 		docview.ListView.__init__(self, doc)
+		DropTarget.DropTargetListener.__init__(self)
+		self._dropmap = {
+			'FileName': (self.dragfile, self.dropfile),
+			'URL': (self.dragurl, self.dropurl),
+		##	'NodeUID': (self.dragnode, self.dropnode),
+		}
 
 		# view decor
 		self._dlgBar = win32ui.CreateDialogBar()
@@ -95,6 +102,8 @@ class _AssetsView(GenView.GenView, docview.ListView):
 		self.GetParent().HookMessage(self.OnCmd, win32con.WM_COMMAND)
 		
 		self.rebuildList()
+		self.registerDropTargetFor(self.listCtrl)
+		# XXXX There is no cleanup method!
 
 	def OnCmd(self, params):
 		msg = Win32Msg(params)
@@ -180,9 +189,68 @@ class _AssetsView(GenView.GenView, docview.ListView):
 			rv = self.listCtrl.DoDragDrop(DropTarget.CF_URL, value)
 		elif type == 'node':
 			value = string.join(value, ',')
-			print 'DBG DoDragDrop', DropTarget.CF_NODEUID, value
 			rv = self.listCtrl.DoDragDrop(DropTarget.CF_NODEUID, value)
 		else:
 			print 'Unknown assetview dragtype', type
 			rv = None
 		return rv
+
+	#
+	# drag/drop destination code
+	#
+
+	def dragfile(self,dataobj,kbdstate,x,y):
+		cb = self._cmddict.get('dragurl')
+		if not cb:
+			return 0
+		filename=dataobj.GetGlobalData(DropTarget.CF_FILE)
+		filename=longpath.short2longpath(filename)
+		if not filename:
+			return 0
+		url = MMurl.pathname2url(filename)
+		rv = cb(x, y, url)
+		rrv = self._string2drageffect(rv)
+		return rrv
+
+	def dropfile(self,dataobj,effect,x,y):
+		cb = self._cmddict.get('dropurl')
+		if not cb:
+			return 0
+		filename=dataobj.GetGlobalData(DropTarget.CF_FILE)
+		filename=longpath.short2longpath(filename)
+		if not filename:
+			return 0
+		url = MMurl.pathname2url(filename)
+		rv = cb(x, y, url)
+		return self._string2drageffect(rv)
+
+	def dragurl(self,dataobj,kbdstate,x,y):
+		cb = self._cmddict.get('dragurl')
+		if not cb:
+			return 0
+		url = dataobj.GetGlobalData(DropTarget.CF_URL)
+		if not url:
+			return 0
+		rv = cb(x, y, url)
+		return self._string2drageffect(rv)
+
+	def dropurl(self,dataobj,effect,x,y):
+		cb = self._cmddict.get('dropurl')
+		if not cb:
+			return 0
+		url = dataobj.GetGlobalData(DropTarget.CF_URL)
+		if not url:
+			return 0
+		rv = cb(x, y, url)
+		return self._string2drageffect(rv)
+
+	def _string2drageffect(self, str):
+		if str == 'move':
+			return DropTarget.DROPEFFECT_MOVE
+		elif str == 'copy':
+			return DropTarget.DROPEFFECT_COPY
+		elif str == 'link':
+			return DropTarget.DROPEFFECT_LINK
+		if str != None:
+			print 'Unknown drageffect', str
+		return 0
