@@ -79,6 +79,10 @@ class PanelMixin:
 		for name, info in optionsdict.items():
 			self._pbar.setOption(name, info)
 
+	def update(self):
+		if self._pbar:
+			self._pbar.eraseClose() 
+
 # null player panel mixin
 class NullPanelMixin:
 	def __init__(self):
@@ -88,6 +92,8 @@ class NullPanelMixin:
 	def destroy(self):
 		pass
 	def setOptions(self, optionsdict):
+		pass
+	def update(self):
 		pass
 
 # do not use player panel for player yet
@@ -121,9 +127,11 @@ class ToolbarMixin(PanelMixin):
 	def _restoreToolbarState(self):
 		if self.IsFirstTime():
 			self.PositionForFirstTime()
+			PanelMixin.update(self)
 			return
 		try:
 			self.LoadBarState("GRiNSToolBars")
+			PanelMixin.update(self)
 		except:
 			print "_restoreToolbarState: Could not load bar state, setting default"
 ##			for bar in self._bars.values():
