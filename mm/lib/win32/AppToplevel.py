@@ -201,8 +201,6 @@ class _Toplevel:
 
 	# Set the application cursor to the cursor with string id
 	def setcursor(self, strid):
-		if strid!='arrow':
-			print 'AppTopLevel.setcursor',strid
 		App=win32ui.GetApp()
 		import grinsRC
 		if strid=='hand':

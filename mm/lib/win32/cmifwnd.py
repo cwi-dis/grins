@@ -593,7 +593,6 @@ class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
 
 	# Set the cursor given its string id		
 	def setcursor(self, strid):
-		if strid!='arrow': print 'cmifwnd.setcursor',strid
 		if strid=='hand':
 			#cursor=Sdk.LoadStandardCursor(win32con.IDC_HAND)
 			cursor = win32ui.GetApp().LoadCursor(grinsRC.IDC_POINT_HAND)
