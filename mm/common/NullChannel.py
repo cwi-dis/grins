@@ -3,4 +3,5 @@ __version__ = "$Id$"
 from Channel import Channel
 
 class NullChannel(Channel):
-	pass
+	def getaltvalue(self, node):
+		return 0
