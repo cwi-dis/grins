@@ -1374,7 +1374,8 @@ class Selection(_Widget, _List):
 		except KeyError:
 			pass
 		else:
-			selection.AddCallback('okCallback', self._callback, cb)
+			txt = selection.SelectionBoxGetChild(Xmd.DIALOG_TEXT)
+			txt.AddCallback('activateCallback', self._callback, cb)
 		_List.__init__(self, list, itemlist, sel_cb)
 		_Widget.__init__(self, parent, selection)
 
