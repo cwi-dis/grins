@@ -9,6 +9,7 @@ import MMNode
 from MMTypes import *
 from AnchorDefs import *		# ATYPE_*
 from Hlinks import DIR_1TO2, TYPE_JUMP
+import features
 import string
 import os
 import sys
@@ -176,6 +177,10 @@ class NodeWrapper(Wrapper):
 		del self.node
 		del self.root
 		Wrapper.close(self)
+
+	def commit(self):
+		self.root.ResetPlayability()
+		Wrapper.commit(self)
 
 	def stillvalid(self):
 		return self.node.GetRoot() is self.root
@@ -364,7 +369,7 @@ class NodeWrapper(Wrapper):
 	#
 	def attrnames(self):
 		import settings
-		lightweight = settings.get('lightweight')
+		lightweight = features.lightweight
 		# Tuples are optional names and will be removed if they
 		# aren't set
 		namelist = [
@@ -372,27 +377,25 @@ class NodeWrapper(Wrapper):
 			'.type',
 			('terminator',),
 			'begin', ('duration',), 'loop',	# Time stuff
-			'restart',
 			('clipbegin',), ('clipend',),	# More time stuff
 			'title', 'abstract', ('alt',), ('longdesc',), 'author',
 			'copyright', 'comment',
-			'layout', 'u_group',
+			'layout', ('u_group',),
 			('mimetype',),	# XXXX Or should this be with file?
 			'system_bitrate', 'system_captions',
 			'system_language', 'system_overdub_or_caption',
 			'system_required', 'system_screen_size',
-			'system_screen_depth', 'system_audiodesc',
-			'system_overdub_or_subtitle',
+			'system_screen_depth',
 			]
 		ntype = self.node.GetType()
 		ctype = self.node.GetChannelType()
-		if ntype in leaftypes or not settings.get('lightweight'):
+		if ntype in leaftypes or not lightweight:
 			namelist[1:1] = ['channel']
 		if ntype == 'bag':
 			namelist.append('bag_index')
 		if ntype == 'par':
 			namelist.append('terminator')
-		if ntype in ('par', 'seq', 'excl'):
+		if ntype in ('par', 'seq'):
 			namelist.append('duration')
 		if ntype == 'alt':
 			namelist.remove('begin')
@@ -452,7 +455,7 @@ class NodeWrapper(Wrapper):
 				'Links within the presentation or to another SMIL document',
 				'raw', 'light')
 		if name == '.type':
-			return (('enum', alltypes), '',
+			return (('string', None), '',
 				'Node type', 'nodetype',
 				'Node type', 'raw', 'light')
 		if name == '.values':
@@ -671,9 +674,9 @@ class ChannelWrapper(Wrapper):
 
 class DocumentWrapper(Wrapper):
 	__stdnames = ['title', 'author', 'copyright', 'base', 
-		      'project_ftp_host', 'project_ftp_user', 'project_ftp_dir',
-		      'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media',
-		      'project_smil_url', 'project_boston']
+			'project_ftp_host', 'project_ftp_user', 'project_ftp_dir',
+			'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media',
+			'project_smil_url']
 
 	def __init__(self, toplevel):
 		Wrapper.__init__(self, toplevel, toplevel.context)
@@ -706,8 +709,6 @@ class DocumentWrapper(Wrapper):
 		return None		# unrecognized
 
 	def getdefault(self, name):
-		if name == 'project_boston':
-			return 0
 		return ''
 
 	def setattr(self, name, value):
@@ -736,11 +737,10 @@ class DocumentWrapper(Wrapper):
 		for name in self.__stdnames:
 			if attrs.has_key(name):
 				names.remove(name)
-		import settings
-		if not settings.get('lightweight') and \
+		if not features.lightweight and \
 		   not attrs.has_key('project_html_page'):
 			names.append('project_html_page')
-		elif settings.get('lightweight') and \
+		elif features.lightweight and \
 		     attrs.has_key('project_html_page'):
 			names.remove('project_html_page')
 		names.sort()
@@ -768,13 +768,11 @@ class PreferenceWrapper(Wrapper):
 		}
 	__boolprefs = {
 		'system_captions': 'Whether captions are to be shown',
-		'system_audiodesc': 'Whether to "show" audio descriptions',
 		'cmif': 'Enable CMIF-specific extensions',
 		'html_control': 'Choose between IE4 and WebsterPro HTML controls',
 		}
 	__specprefs = {
 		'system_overdub_or_caption': 'Audible or visible "captions"',
-		'system_overdub_or_subtitle': 'Overdub or subtitles',
 		}
 
 	def __init__(self, callback):
@@ -826,14 +824,10 @@ class PreferenceWrapper(Wrapper):
 			return (('bool', None), self.getdefault(name),
 				defs[2] or name, 'default',
 				self.__boolprefs[name], 'raw', 'light')
-		elif name == 'system_overdub_or_caption':
+		elif self.__specprefs.has_key(name):
 			return (('bool', None), self.getdefault(name),
 				defs[2] or name, 'captionoverdub',
-				'Audible or visible "captions"', 'raw', 'light')
-		elif name == 'system_overdub_or_subtitle':
-			return (('bool', None), self.getdefault(name),
-				defs[2] or name, 'subtitleoverdub',
-				'Overdub or subtitles', 'raw', 'light')
+				self.__specprefs[name], 'raw', 'light')
 
 	def stillvalid(self):
 		return 1
@@ -866,9 +860,8 @@ class PreferenceWrapper(Wrapper):
 		pass
 
 	def attrnames(self):
-		import settings
 		attrs = self.__strprefs.keys() + self.__intprefs.keys() + self.__boolprefs.keys() + self.__specprefs.keys()
-		if settings.get('compatibility') == settings.G2:
+		if features.compatibility == features.G2:
 			attrs.remove('cmif')
 			attrs.remove('html_control')
 		elif os.name in ('posix', 'mac'):
@@ -915,21 +908,18 @@ class AttrEditor(AttrEditorDialog):
 		list = []
 		allnamelist = wrapper.attrnames()
 		namelist = []
-		lightweight = settings.get('lightweight')
-		smil2 = 0
-		if hasattr(wrapper, 'context'):
-			smil2 = wrapper.context.attributes.get('project_boston', 0)
+		lightweight = features.lightweight
 		if not lightweight:
 			cmif = settings.get('cmif')
 		else:
 			cmif = 0
 		for name in allnamelist:
 			flags = wrapper.getdef(name)[6]
-			if cmif or \
-			   (smil2 and (flags == 'smil2' or flags == 'smil' or flags == 'light')) or \
-			   (not lightweight and (flags == 'smil' or flags == 'light')) or \
-			   (lightweight and flags == 'light'):
-				namelist.append(name)
+			if flags != 'light':
+				if lightweight or \
+				   (not cmif and flags == 'cmif'):
+					continue
+			namelist.append(name)
 		self.__namelist = namelist
 		initattrinst = None
 		for i in range(len(namelist)):
@@ -964,12 +954,12 @@ class AttrEditor(AttrEditorDialog):
 				C = TransparencyAttrEditorField
 			elif displayername == 'usergroup':
 				C = UsergroupAttrEditorField
-##			elif displayername == 'transition':
-##				C = TransitionAttrEditorField
-##			elif displayername == 'direction':
-##				C = WipeDirectionAttrEditorField
-##			elif displayername == 'wipetype':
-##				C = WipeTypeAttrEditorField
+			elif displayername == 'transition':
+				C = TransitionAttrEditorField
+			elif displayername == 'direction':
+				C = WipeDirectionAttrEditorField
+			elif displayername == 'wipetype':
+				C = WipeTypeAttrEditorField
 			elif displayername == 'subregionanchor':
 				C = AnchorTypeAttrEditorField
 			elif displayername == 'targets':
@@ -988,10 +978,6 @@ class AttrEditor(AttrEditorDialog):
 				C = CaptionOverdubAttrEditorField
 			elif displayername == 'captionoverdub3':
 				C = CaptionOverdubAttrEditorFieldWithDefault
-			elif displayername == 'subtitleoverdub':
-				C = SubtitleOverdubAttrEditorField
-			elif displayername == 'subtitleoverdub3':
-				C = SubtitleOverdubAttrEditorFieldWithDefault
 			elif displayername == 'language':
 				C = LanguageAttrEditorField
 			elif displayername == 'language3':
@@ -1016,8 +1002,6 @@ class AttrEditor(AttrEditorDialog):
 				C = FloatAttrEditorField
 			elif type == 'tuple':
 				C = TupleAttrEditorField
-			elif type == 'enum':
-				C = EnumAttrEditorField
 			else:
 				C = AttrEditorField
 			b = C(self, name, labeltext or name)
@@ -1124,12 +1108,12 @@ class AttrEditor(AttrEditorDialog):
 
 	def checkurl(self, url):
 		import settings
-		if not settings.get('lightweight'):
+		if not features.lightweight:
 			return 1
 		if self.wrapper.__class__ is SlideWrapper:
 			# node is a slide
-			import mimetypes
-			mtype = mimetypes.guess_type(url)[0]
+			import MMmimetypes
+			mtype = MMmimetypes.guess_type(url)[0]
 			if not mtype:
 				# unknown type, not compatible
 				return 0
@@ -1206,14 +1190,14 @@ class AttrEditor(AttrEditorDialog):
 			return 'null'
 		if not url:
 			return 'null'
-		import mimetypes
-		mtype = mimetypes.guess_type(url)[0]
+		import MMmimetypes
+		mtype = MMmimetypes.guess_type(url)[0]
 		if mtype is None:
 			# just guessing now...
 			# Most often, this is because there was no file name.
 			# Webservers will then generally return an HTML page.
 			import settings
-			if settings.get('compatibility') == settings.G2:
+			if features.compatibility == features.G2:
 				# G2 player doesn't do HTML
 				return 'text'
 			return 'html'
@@ -1276,7 +1260,7 @@ class AttrEditorField(AttrEditorDialogField):
 		self.label = label
 		self.attreditor = attreditor
 		self.wrapper = attreditor.wrapper
-		self.attrdef = self.wrapper.getdef(name)
+		self.__attrdef = self.wrapper.getdef(name)
 
 	def __repr__(self):
 		return '<%s instance, name=%s>' % (self.__class__.__name__,
@@ -1286,7 +1270,7 @@ class AttrEditorField(AttrEditorDialogField):
 		AttrEditorDialogField.close(self)
 		del self.attreditor
 		del self.wrapper
-		del self.attrdef
+		del self.__attrdef
 
 	def getname(self):
 		return self.__name
@@ -1298,14 +1282,14 @@ class AttrEditorField(AttrEditorDialogField):
 		return self.label
 
 	def gethelptext(self):
-		return '%s\ndefault: %s' % (self.attrdef[4], self.getdefault())
+		return '%s\ndefault: %s' % (self.__attrdef[4], self.getdefault())
 ##		return 'atribute: %s\n' \
 ##		       'default: %s\n' \
 ##		       '%s' % (self.__name, self.getdefault(),
-##			       self.attrdef[4])
+##			       self.__attrdef[4])
 
 	def gethelpdata(self):
-		return self.__name, self.getdefault(), self.attrdef[4]
+		return self.__name, self.getdefault(), self.__attrdef[4]
 
 	def getcurrent(self):
 		return self.valuerepr(self.wrapper.getvalue(self.__name))
@@ -1620,33 +1604,6 @@ class CaptionOverdubAttrEditorFieldWithDefault(PopupAttrEditorField):
 	def getoptions(self):
 		return [self.default] + self.__values
 
-class SubtitleOverdubAttrEditorField(PopupAttrEditorFieldNoDefault):
-	__values = ['subtitle', 'overdub']
-	nodefault = 1
-
-	def getoptions(self):
-		return self.__values
-
-class SubtitleOverdubAttrEditorFieldWithDefault(PopupAttrEditorField):
-	__values = ['subtitle', 'overdub']
-	default = 'Not set'
-	nodefault = 0
-
-	def parsevalue(self, str):
-		if str == self.default:
-			return None
-		return str
-
-	def valuerepr(self, value):
-		if value is None:
-			if self.nodefault:
-				return self.getdefault()
-			return self.default
-		return value
-
-	def getoptions(self):
-		return [self.default] + self.__values
-
 class LanguageAttrEditorField(PopupAttrEditorField):
 	from languages import *
 	default = 'Not set'
@@ -1717,14 +1674,6 @@ class BitrateAttrEditorFieldWithDefault(BitrateAttrEditorField):
 		if val is None:
 			return self.default
 		return self.valuerepr(val)
-
-class EnumAttrEditorField(PopupAttrEditorFieldNoDefault):
-	def __init__(self, attreditor, name, label):
-		PopupAttrEditorFieldNoDefault.__init__(self, attreditor, name, label)
-		self.__values = self.attrdef[0][1]
-
-	def getoptions(self):
-		return self.__values
 
 class QualityAttrEditorField(PopupAttrEditorFieldNoDefault):
 	__values = ['low', 'normal', 'high', 'highest']
@@ -1849,9 +1798,8 @@ class LayoutnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 
 class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 	# Choose from the current channel names
-	def __init__(self, attreditor, name, label, wantnewchannels = 1):
-		if wantnewchannels:
-			self.newchannels = []
+	def __init__(self, attreditor, name, label):
+		self.newchannels = []
 		self.__current = None
 		PopupAttrEditorFieldWithUndefined.__init__(self, attreditor, name, label)
 
@@ -1873,7 +1821,7 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 		else:
 			url = None
 		chlist = ctx.compatchannels(url, chtype)
-		lightweight = settings.get('lightweight')
+		lightweight = features.lightweight
 		layoutchannels = {}
 		if not lightweight:
 			layout = MMAttrdefs.getattr(node, 'layout')
@@ -1881,10 +1829,7 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 				for ch in ctx.layouts.get(layout, []):
 					layoutchannels[ch.name] = 1
 		channelnames1 = []
-		if hasattr(self, 'newchannels'):
-			channelnames2 = self.newchannels[:]
-		else:
-			channelnames2 = []
+		channelnames2 = self.newchannels[:]
 		channelnames3 = []
 		channelnames4 = []
 		channelnames5 = []
@@ -1938,7 +1883,7 @@ class ChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			if all:
 				all.append(None)
 			all = all + channelnames5
-		if hasattr(self, 'newchannels') and not self.newchannels:
+		if not self.newchannels:
 			if all:
 				all.append(None)
 			all = all + [NEW_CHANNEL]
@@ -2027,9 +1972,6 @@ class CaptionChannelnameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			showchannelattreditor(self.wrapper.toplevel, ch)
 
 class BaseChannelnameAttrEditorField(ChannelnameAttrEditorField):
-	def __init__(self, attreditor, name, label):
-		ChannelnameAttrEditorField.__init__(self, attreditor, name, label, wantnewchannels = 0)
-
 	# Choose from the current channel names
 	def getoptions(self):
 		list = []
@@ -2077,10 +2019,7 @@ class TermnodenameAttrEditorField(PopupAttrEditorFieldWithUndefined):
 			except NoSuchAttrError:
 				pass
 		list.sort()
-		extras = ['LAST', 'FIRST']
-		if self.wrapper.context.attributes.get('project_boston', 0):
-			extras.append('ALL')
-		return extras + list
+		return ['LAST', 'FIRST'] + list
 
 	def getcurrent(self):
 		val = self.wrapper.getvalue(self.getname())
@@ -2092,8 +2031,7 @@ class ChanneltypeAttrEditorField(PopupAttrEditorFieldNoDefault):
 	# Choose from the standard channel types
 	def getoptions(self):
 		current = self.getcurrent()
-		import settings
-		if settings.get('lightweight'):
+		if features.lightweight:
 			return [current]
 		all = ChannelMap.getvalidchanneltypes()
 		if not current in all:
