@@ -106,7 +106,7 @@ class SMILParser(xmllib.XMLParser):
 		self.__root_layout = None
 		self.__container = None
 		self.__node = None	# the media object we're in
-		self.__channels = {}
+		self.__regions = {}
 		self.__width = self.__height = 0
 		self.__layout = None
 		self.__nodemap = {}
@@ -370,22 +370,22 @@ class SMILParser(xmllib.XMLParser):
 				nodedata = string.split(nodedata, '\n')
 				node.values = nodedata
 
-		# connect to channel
-		if attributes.has_key('channel'):
-			channel = attributes['channel']
-			if not self.__channels.has_key(channel):
-				self.syntax_error('unknown channel')
+		# connect to region
+		if attributes.has_key('region'):
+			region = attributes['region']
+			if not self.__regions.has_key(region):
+				self.syntax_error('unknown region')
 		else:
-			self.warning('node without channel attribute')
-			channel = '<unnamed %d>'
+			self.warning('node without region attribute')
+			region = '<unnamed %d>'
 			i = 0
-			while self.__channels.has_key(channel % i):
+			while self.__regions.has_key(region % i):
 				i = i + 1
-			channel = channel % i
-		node.__channel = channel
-		ch = self.__channels.get(channel)
+			region = region % i
+		node.__region = region
+		ch = self.__regions.get(region)
 		if ch is None:
-			self.__channels[channel] = ch = \
+			self.__regions[region] = ch = \
 					{'minwidth': 0, 'minheight': 0,
 					 'left': 0, 'top': 0,
 					 'width': 0, 'height': 0,
@@ -393,7 +393,7 @@ class SMILParser(xmllib.XMLParser):
 					 'background-color': 'transparent'}
 		if mediatype in ('image', 'video'):
 			x, y, w, h = ch['left'], ch['top'], ch['width'], ch['height']
-			# if we don't know the channel size and
+			# if we don't know the region size and
 			# position in pixels, we need to look at the
 			# media objects to figure out the size to use.
 			if w > 0 and h > 0 and \
@@ -535,7 +535,7 @@ class SMILParser(xmllib.XMLParser):
 
 	def FixSizes(self):
 		# calculate minimum required size of top-level window
-		for attrdict in self.__channels.values():
+		for attrdict in self.__regions.values():
 			try:
 				width = _minsize(attrdict['left'],
 						 attrdict['width'],
@@ -565,16 +565,66 @@ class SMILParser(xmllib.XMLParser):
 			self.SyncArc(node, attr, val)
 		del node.__syncarcs
 
+	def CreateLayout(self):
+		bg = None
+		if self.__root_layout is not None:
+			attrs = self.__root_layout
+			width = attrs['width']
+			if width[-2:] == 'px':
+				width = width[:-2]
+			try:
+				width = string.atoi(width)
+			except string.atoi_error:
+				self.syntax_error('root-layout width not an integer')
+			else:
+				if width < 0:
+					self.syntax_error('root-layout width not a positive integer')
+				elif width > 0:
+					self.__width = width
+			height = attrs['height']
+			if height[-2:] == 'px':
+				height = height[:-2]
+			try:
+				height = string.atoi(height)
+			except string.atoi_error:
+				self.syntax_error('root-layout height not an integer')
+			else:
+				if height < 0:
+					self.syntax_error('root-layout height not a positive integer')
+				elif height > 0:
+					self.__height = height
+			bg = attrs['background-color']
+			bg = self.__convert_color(bg)
+		ctx = self.__context
+		layout = MMNode.MMChannel(ctx,
+					  self.__title)
+		ctx.channeldict[self.__title] = layout
+		ctx.channelnames.insert(0, self.__title)
+		ctx.channels.insert(0, layout)
+		self.__layout = layout
+		layout['type'] = 'layout'
+		if bg is not None and \
+		   bg != 'transparent' and \
+		   bg != 'inherit':
+			layout['bgcolor'] = bg
+		if self.__width == 0:
+			self.__width = 640
+		if self.__height == 0:
+			self.__height = 480
+		layout['winsize'] = \
+			self.__width, self.__height
+		layout['units'] = 2 # UNIT_PXL
+
 	def FixChannel(self, node):
 		if node.GetType() not in leaftypes:
 			return
 		mediatype, subtype = node.__mediatype
 		del node.__mediatype
 		try:
-			channel = node.__channel
-			del node.__channel
+			region = node.__region
+			del node.__region
 		except AttributeError:
-			channel = '<unnamed>'
+			region = '<unnamed>'
 		if mediatype == 'audio':
 			mtype = 'sound'
 		elif mediatype == 'image':
@@ -595,17 +645,17 @@ class SMILParser(xmllib.XMLParser):
 		else:
 			mtype = mediatype
 			print 'warning: unrecognized media type',mtype
-		name = '%s %s' % (channel, mediatype)
+		name = '%s %s' % (region, mediatype)
 		ctx = self.__context
-		for key in channel, name:
+		for key in region, name:
 			ch = ctx.channeldict.get(key)
 			if ch is not None and ch['type'] == mtype:
 				name = key
 				break
 		else:
 			# there is no channel of the right name and type
-			if not ctx.channeldict.has_key(channel):
-				name = channel
+			if not ctx.channeldict.has_key(region):
+				name = region
 			ch = MMNode.MMChannel(ctx, name)
 			ctx.channeldict[name] = ch
 			ctx.channelnames.append(name)
@@ -613,58 +663,16 @@ class SMILParser(xmllib.XMLParser):
 			ch['type'] = mtype
 			if mediatype in ('image', 'video', 'text'):
 				# deal with channel with window
-				if not self.__channels.has_key(channel):
-					self.warning('no channel %s in layout' %
-						     channel)
+				if not self.__regions.has_key(region):
+					self.warning('no region %s in layout' %
+						     region)
 					self.__in_layout = LAYOUT_SMIL
-					self.start_channel({'id': channel})
+					self.start_region({'id': region})
 					self.__in_layout = LAYOUT_NONE
-				attrdict = self.__channels[channel]
+				attrdict = self.__regions[region]
 				if self.__layout is None:
 					# create a layout channel
-					bg = None
-					if self.__root_layout is not None:
-						attrs = self.__root_layout
-						width = attrs['width']
-						try:
-							width = string.atoi(width)
-						except string.atoi_error:
-							self.syntax_error('root-layout width not an integer')
-						else:
-							if width < 0:
-								self.syntax_error('root-layout width not a positive integer')
-							elif width > 0:
-								self.__width = width
-						height = attrs['height']
-						try:
-							height = string.atoi(height)
-						except string.atoi_error:
-							self.syntax_error('root-layout height not an integer')
-						else:
-							if height < 0:
-								self.syntax_error('root-layout height not a positive integer')
-							elif height > 0:
-								self.__height = height
-						bg = attrs['background-color']
-						bg = self.__convert_color(bg)
-					layout = MMNode.MMChannel(ctx,
-								  self.__title)
-					ctx.channeldict[self.__title] = layout
-					ctx.channelnames.insert(0, self.__title)
-					ctx.channels.insert(0, layout)
-					self.__layout = layout
-					layout['type'] = 'layout'
-					if bg is not None and \
-					   bg != 'transparent' and \
-					   bg != 'inherit':
-						layout['bgcolor'] = bg
-					if self.__width == 0:
-						self.__width = 640
-					if self.__height == 0:
-						self.__height = 480
-					layout['winsize'] = \
-						self.__width, self.__height
-					layout['units'] = 2 # UNIT_PXL
+					self.CreateLayout()
 				ch['base_window'] = self.__title
 				title = attrdict.get('title')
 				if title is not None:
@@ -828,7 +836,7 @@ class SMILParser(xmllib.XMLParser):
 				return
 			self.par_attributes['sync'] = content
 		elif name == 'title':
-			# make sure __title cannot be a SMIL channel id
+			# make sure __title cannot be a SMIL region id
 			self.__title = ' %s ' % content
 		elif name == 'base':
 			self.__base = content
@@ -863,13 +871,13 @@ class SMILParser(xmllib.XMLParser):
 	def end_layout(self):
 		self.__in_layout = LAYOUT_NONE
 
-	channel_attributes = {'id':None, 'left':'0', 'top':'0', 'z-index':'0',
+	region_attributes = {'id':None, 'left':'0', 'top':'0', 'z-index':'0',
 			      'width':'0', 'height':'0', 'fit':'meet',
 			      'background-color':'transparent',
 			      'skip-content':'true', 'title':None}
-	def start_channel(self, attributes):
+	def start_region(self, attributes):
 		if not self.__in_layout:
-			self.syntax_error('channel not in layout')
+			self.syntax_error('region not in layout')
 			return
 		if self.__in_layout != LAYOUT_SMIL:
 			# ignore outside of smil-basic-layout
@@ -884,13 +892,13 @@ class SMILParser(xmllib.XMLParser):
 
 		val = attributes.get('id')
 		if val is None:
-			self.syntax_error('channel without id attribute')
+			self.syntax_error('region without id attribute')
 			return
-		if self.__channels.has_key(val):
-			self.syntax_error('multiple channel tags for id=%s' % val)
+		if self.__regions.has_key(val):
+			self.syntax_error('multiple region tags for id=%s' % val)
 			return
 		attrdict['id'] = val
-		self.__channels[val] = attrdict
+		self.__regions[val] = attrdict
 
 		for attr in ('left', 'top', 'width', 'height'):
 			val = attributes[attr]
@@ -898,16 +906,18 @@ class SMILParser(xmllib.XMLParser):
 				if val[-1] == '%':
 					val = string.atof(val[:-1]) / 100.0
 					if val < 0 or val > 1:
-						self.syntax_error('channel with impossible size')
+						self.syntax_error('region with impossible size')
 						if val < 0: val = 0.0
 						else: val = 1.0
 				else:
+					if val[-2:] == 'px':
+						val = val[:-2]
 					val = string.atoi(val)
 					if val < 0:
-						self.syntax_error('channel with impossible size')
+						self.syntax_error('region with impossible size')
 						val = 0
 			except (string.atoi_error, string.atof_error):
-				self.syntax_error('invalid channel attribute value')
+				self.syntax_error('invalid region attribute value')
 				val = 0
 			attrdict[attr] = val
 
@@ -918,13 +928,13 @@ class SMILParser(xmllib.XMLParser):
 			self.syntax_error('invalid z-index value')
 			val = 0
 		if val < 0:
-			self.syntax_error('channel with negative z-index')
+			self.syntax_error('region with negative z-index')
 			val = 0
 		attrdict['z-index'] = val
 
 		val = attributes['fit']
 		if val not in ['meet', 'slice', 'fill', 'visible', 'hidden',
-			       'auto', 'scroll']:
+			       'scroll']:
 			self.syntax_error('illegal fit attribute')
 		attrdict['fit'] = val
 
@@ -934,11 +944,12 @@ class SMILParser(xmllib.XMLParser):
 
 		attrdict['title'] = attributes.get('title')
 
-	def end_channel(self):
+	def end_region(self):
 		pass
 
 	root_layout_attributes = {'background-color':'transparent',
 				  'id':None, 'height':'0', 'width':'0',
+				  'overflow':'hidden',
 				  'skip-content':'true', 'title':None}
 	def start_0root_layout(self, attributes):
 		self.__root_layout = attributes
@@ -950,7 +961,8 @@ class SMILParser(xmllib.XMLParser):
 
 	par_attributes = {'title':None, 'id':None, 'endsync':None, 'sync':None,
 			  'dur':None, 'repeat':'1',
-			  'channel':None, 'begin':None, 'end':None,
+			  'region':None, 'begin':None, 'end':None,
+			  'author':'', 'copyright':'', 'abstract':'',
 			  'system-bitrate':None, 'system-language':None,
 			  'system-captions':None,
 			  'system-overdub-or-caption':None,
@@ -995,6 +1007,7 @@ class SMILParser(xmllib.XMLParser):
 
 	seq_attributes = {'id':None, 'title':None, 'dur':None, 'begin':None,
 			  'end':None, 'repeat':'1',
+			  'author':'', 'copyright':'', 'abstract':'',
 			  'system-bitrate':None, 'system-language':None,
 			  'system-captions':None,
 			  'system-overdub-or-caption':None,
@@ -1033,11 +1046,12 @@ class SMILParser(xmllib.XMLParser):
 
 	# media items
 
-	basic_attributes = {'id':None, 'src':None, 'type':None, 'channel':None,
+	basic_attributes = {'id':None, 'src':None, 'type':None, 'region':None,
 			    'dur':None, 'begin':None, 'end':None, 'repeat':'1',
 			    'fill':None, 'encoding':'base64',
 			    'alt':None, 'longdesc':None, 'title':None,
 			    'clip-begin':None, 'clip-end':None,
+			    'author':'', 'copyright':'', 'abstract':'',
 			    'system-bitrate':None, 'system-language':None,
 			    'system-captions':None,
 			    'system-overdub-or-caption':None,
@@ -1477,8 +1491,8 @@ class SMILParser(xmllib.XMLParser):
 	__allowed_content = {
 		'smil': ('head', 'body'),
 		'head': ('layout', 'switch', 'meta'),
-		'layout': ('channel', 'root-layout',),
-		'channel': __empty,
+		'layout': ('region', 'root-layout',),
+		'region': __empty,
 		'meta': __empty,
 		'body': __container_content,
 		'par': __container_content,
@@ -1550,7 +1564,7 @@ def _minsize(start, extent, minsize):
 		if type(extent) is type(0.0):
 			# extent is fraction
 			if extent == 0 or (extent == 1 and start > 0):
-				raise error, 'channel with impossible size'
+				raise error, 'region with impossible size'
 			if extent == 1:
 				return minsize
 			size = int(start / (1 - extent) + 0.5)
@@ -1565,7 +1579,7 @@ def _minsize(start, extent, minsize):
 	else:
 		# start is fraction
 		if start == 1:
-			raise error, 'channel with impossible size'
+			raise error, 'region with impossible size'
 		if type(extent) is type(0):
 			# extent is pixel value
 			if extent == 0:
