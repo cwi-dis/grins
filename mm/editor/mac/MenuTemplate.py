@@ -75,13 +75,11 @@ MENUBAR=(
 		(SEP,),
 		(DYNAMICCASCADE, 'Channel visibility', CHANNELS))),
 
-	(CASCADE, 'Focus', (
+	(CASCADE, 'Tools', (
 		(ENTRY, 'Show info', 'I', INFO),
 		(ENTRY, 'Show attributes', 'A', ATTRIBUTES),
 		(ENTRY, 'Show anchors', 'T', ANCHORS),
 		(ENTRY, 'Edit content', 'E', CONTENT),
-		(SEP,),
-		(DYNAMICCASCADE, 'Select syncarc', SYNCARCS),
 		(SEP,),
 		(ENTRY, 'Finish hyperlink to focus...', 'H', FINISH_LINK),
 		(ENTRY, 'Create syncarc from focus...', 'L', FINISH_ARC))),
@@ -90,12 +88,14 @@ MENUBAR=(
 		(ENTRY, 'Zoom in', None, ZOOMIN),
 		(ENTRY, 'Zoom out', None, ZOOMOUT),
 		(ENTRY, 'Zoom to focus', 'Z', ZOOMHERE),
-		(CASCADE, 'Canvas size', (
-			(ENTRY, 'Enlarge width', None, CANVAS_WIDTH),
-			(ENTRY, 'Enlarge height', None, CANVAS_HEIGHT),
-			(ENTRY, 'Reset', None, CANVAS_RESET))),
+		(CASCADE, 'Level of detail', (
+			(ENTRY, 'More horizontal detail', None, CANVAS_WIDTH),
+			(ENTRY, 'More vertical detail', None, CANVAS_HEIGHT),
+			(ENTRY, 'Reset to document', None, CANVAS_RESET))),
 		(SEP,),
 		(ENTRY, 'Send focus to other views', 'F', PUSHFOCUS),
+		(DYNAMICCASCADE, 'Select syncarc', SYNCARCS),
+		(SEP,),
 		(SEP,),
 		(TOGGLE, 'Display unused channels', 'T', TOGGLE_UNUSED),
 		(TOGGLE, 'Display sync arcs', None, TOGGLE_ARCS),
