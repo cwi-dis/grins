@@ -1129,8 +1129,15 @@ class SMILWriter(SMIL):
 				    ((ch['type'] not in ('text', 'RealText') or
 				      bgcolor != (255,255,255)) and
 				     bgcolor != (0,0,0))):
-					attrlist.append(('background-color',
-							 "#%02x%02x%02x" % bgcolor))
+					# also don't write background color
+					# in RealText regions when writing
+					# a .smil file (since the color is
+					# ignored by the RealPlayer anyway,
+					# except when you don't want it).
+					if not self.__cleanSMIL or \
+					   ch['type'] != 'RealText':
+						attrlist.append(('background-color',
+								 "#%02x%02x%02x" % bgcolor))
 				# Since background-color="transparent" is the
 				# default, we don't need to actually write that
 ##				if transparent == 1:
