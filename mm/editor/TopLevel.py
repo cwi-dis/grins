@@ -16,6 +16,7 @@ import MMmimetypes
 import features
 import compatibility
 import settings
+import systemtestnames
 
 # Mapping view numbers to view names and the reverse
 VIEWNUM2NAME=[
@@ -614,56 +615,23 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		alltests = self.root.GetAllSystemTests()
 ##		print 'ALLSYSTEMTESTS', time.time()-t, alltests
 		dict = {}
-		if 'system_bitrate' in alltests:
-			alltests.remove('system_bitrate')
-			import bitrates
-			bitrate = settings.get('system_bitrate')
-			rates = []
-			initbitrate = bitrates.bitrates[0][1]
-			for val, str in bitrates.bitrates:
-				rates.append(str)
-				if val <= bitrate:
-					initbitrate = str
-			dict['Bitrate'] = (rates, self.bitratecb, initbitrate)
-		if 'system_language' in alltests:
-			alltests.remove('system_language')
-			import languages
-			language = settings.get('system_language')
-			langs = []
-			initlang = 'English'	# we know this occurs
-			for val, str in languages.languages:
-				langs.append(str)
-				if language == val:
-					initlang = str
-			dict['Language'] = (langs, self.languagecb, initlang)
+		for testname in alltests:
+			exttestname = systemtestnames.int2extattr(testname)
+			val = settings.get(testname)
+			values = systemtestnames.getallexternal(testname)
+			init = systemtestnames.int2extvalue(testname, val)
+			dict[exttestname] = (values, (self.systemtestcb, testname), init)
 		# The rest can probably be used verbatim
 		return dict
 
 	def update_toolbarpulldowns(self):
 		self.setsettingsdict(self.getsettingsdict())
 
-	def bitratecb(self, bitrate):
-		import bitrates, settings
-##		if not self.editmgr.transaction():
-##			return 0	# indicate failure
-		for val, str in bitrates.bitrates:
-			if bitrate == str:
-				if settings.get('system_bitrate') != val:
-					settings.set('system_bitrate', val)
-				break
-##		self.editmgr.commit()
-		return 1		# indicate success
-
-	def languagecb(self, language):
-		import languages, settings
-##		if not self.editmgr.transaction():
-##			return 0	# indicate failure
-		for val, str in languages.languages:
-			if language == str:
-				if settings.get('system_language') != val:
-					settings.set('system_language', val)
-				break
-##		self.editmgr.commit()
+	def systemtestcb(self, attrname, extvalue):
+		attrvalue = systemtestnames.ext2intvalue(attrname, extvalue)
+		if settings.get(attrname) != attrvalue:
+			settings.set(attrname, attrvalue)
+			self.root.ResetPlayability()
 		return 1		# indicate success
 
 	def save_callback(self):
