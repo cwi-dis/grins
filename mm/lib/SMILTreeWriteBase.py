@@ -921,67 +921,72 @@ def getrepeat(writer, node):
 		return fmtfloat(value)
 
 nonascii = re.compile('[\200-\377]')
-def getsrc(writer, node):
-	ntype = node.GetType()
-	chtype = node.GetChannelType()
-	if chtype == 'brush':
-		return None
-	elif ntype == 'ext':
-		val = node.GetAttrDef('file', None)
-	elif ntype == 'imm':
-		if chtype == 'html':
-			mime = 'text/html'
-##		elif chtype == 'RealPix':
-##			mime = 'image/vnd.rn-realpix'
-		else:
-			mime = ''
-		# This funny way of handling empty lines is for
-		# the benefit of RealONE, and it doesn't harm
-		# GRiNS.
-		data = ''
-		for line in node.GetValues():
-			if not line:
-				data = data + '\n'
+def getsrc(writer, node, attr = None):
+	if attr is None:
+		ntype = node.GetType()
+		chtype = node.GetChannelType()
+		if chtype == 'brush':
+			return None
+		elif ntype == 'ext':
+			val = node.GetAttrDef('file', None)
+		elif ntype == 'imm':
+			if chtype == 'html':
+				mime = 'text/html'
+##			elif chtype == 'RealPix':
+##				mime = 'image/vnd.rn-realpix'
 			else:
-				data = data + line + '\r\n'
-##		'\r\n'.join(node.GetValues())
-##		if data and data[-1] != '\n':
-##			# end with newline if not empty
-##			data = data + '\n'
-		if nonascii.search(data):
-			mime = mime + ';charset=ISO-8859-1'
-		val = 'data:%s,%s' % (mime, MMurl.quote(data))
+				mime = ''
+			# This funny way of handling empty lines is for
+			# the benefit of RealONE, and it doesn't harm
+			# GRiNS.
+			data = ''
+			for line in node.GetValues():
+				if not line:
+					data = data + '\n'
+				else:
+					data = data + line + '\r\n'
+##			'\r\n'.join(node.GetValues())
+##			if data and data[-1] != '\n':
+##				# end with newline if not empty
+##				data = data + '\n'
+			if nonascii.search(data):
+				mime = mime + ';charset=ISO-8859-1'
+			val = 'data:%s,%s' % (mime, MMurl.quote(data))
+		else:
+			return None
+		if chtype == 'RealPix':
+			# special case for RealPix nodes, which we should write
+			# sometimes, but don't want to write always
+			do_write = 0
+			tmp_file_name = 0
+			if not val and not writer.copydir:
+				# no URL and not exporting, save as data: URL
+				import base64, realnode
+				node.SetAttr('file', MMurl.basejoin(writer.convertURLs, 'dummy.rp'))
+				data = realnode.writenode(node, tostring = 1)
+				node.DelAttr('file')
+				return 'data:image/vnd.rn-realpix;base64,' + \
+				       ''.join(base64.encodestring(data).split('\n'))
+##				return 'data:image/vnd.rn-realpix;charset=ISO-8859-1,' + \
+##				       MMurl.quote(data)
+			if not val:
+				val = writer.gen_rpfile()
+				do_write = 1
+				tmp_file_name = 1
+				node.SetAttr('file', val)
+			if hasattr(node, 'tmpfile') and not writer.copydir:
+				# Also save if the node has changed and we're saving (not exporting)
+				do_write = 1
+			if do_write:
+				import realnode
+				realnode.writenode(node)
+			if tmp_file_name:
+				node.DelAttr('file')
 	else:
-		return None
-	if chtype == 'RealPix':
-		# special case for RealPix nodes, which we should write
-		# sometimes, but don't want to write always
-		do_write = 0
-		tmp_file_name = 0
-		if not val and not writer.copydir:
-			# no URL and not exporting, save as data: URL
-			import base64, realnode
-			node.SetAttr('file', MMurl.basejoin(writer.convertURLs, 'dummy.rp'))
-			data = realnode.writenode(node, tostring = 1)
-			node.DelAttr('file')
-			return 'data:image/vnd.rn-realpix;base64,' + \
-			       ''.join(base64.encodestring(data).split('\n'))
-##			return 'data:image/vnd.rn-realpix;charset=ISO-8859-1,' + \
-##			       MMurl.quote(data)
+		val = node.GetAttrDef(attr, None)
 		if not val:
-			val = writer.gen_rpfile()
-			do_write = 1
-			tmp_file_name = 1
-			node.SetAttr('file', val)
-		if hasattr(node, 'tmpfile') and not writer.copydir:
-			# Also save if the node has changed and we're saving (not exporting)
-			do_write = 1
-		if do_write:
-			import realnode
-			realnode.writenode(node)
-		if tmp_file_name:
-			node.DelAttr('file')
-	if chtype == 'text' and val[:5] == 'data:':
+			return None
+	if val[:5] == 'data:':
 		# don't convert data: URLs to text files
 		return val
 	if not val:
@@ -1219,12 +1224,6 @@ def getinlinetrmode(writer, node):
 		return None
 	return mode
 
-def geturl(writer, node, attr):
-	val = node.GetAttrDef(attr, None)
-	if not val:
-		return val
-	return writer.fixurl(val)
-
 def getcolor(writer, node, attr, use_name = 1):
 	color = node.GetRawAttrDef(attr, None)
 	if color is None:
@@ -1404,16 +1403,16 @@ smil_attrs=[
 	("mediaTime", lambda writer, node: (writer.smilboston and node.GetRawAttrDef("mediaTime", None)) or None, "mediaTime"),
 	("bandwidth", lambda writer, node: (writer.smilboston and node.GetRawAttrDef("bandwidth", None)) or None, "bandwidth"),
 
-	("thumbnailIcon", lambda writer, node: geturl(writer, node, 'thumbnail_icon'), "thumbnail_icon"),
+	("thumbnailIcon", lambda writer, node: getsrc(writer, node, 'thumbnail_icon'), "thumbnail_icon"),
 	("thumbnailScale", lambda writer, node: getboolean(writer, node, 'thumbnail_scale', 1), "thumbnail_scale"),
-	("emptyIcon", lambda writer, node: geturl(writer, node, 'empty_icon'), "empty_icon"),
+	("emptyIcon", lambda writer, node: getsrc(writer, node, 'empty_icon'), "empty_icon"),
 	("emptyText", lambda writer, node:getcmifattr(writer, node, "empty_text"), "empty_text"),
 	("emptyColor", lambda writer, node: getcolor(writer, node, "empty_color"), "empty_color"),
 	("emptyDur", lambda writer, node:getduration(writer, node, "empty_duration"), "empty_duration"),
-	("nonEmptyIcon", lambda writer, node: geturl(writer, node, 'non_empty_icon'), "non_empty_icon"),
+	("nonEmptyIcon", lambda writer, node: getsrc(writer, node, 'non_empty_icon'), "non_empty_icon"),
 	("nonEmptyText", lambda writer, node:getcmifattr(writer, node, "non_empty_text"), "non_empty_text"),
 	("nonEmptyColor", lambda writer, node: getcolor(writer, node, "non_empty_color"), "non_empty_color"),
-	("dropIcon", lambda writer, node: geturl(writer, node, 'dropicon'), "dropicon"),
+	("dropIcon", lambda writer, node: getsrc(writer, node, 'dropicon'), "dropicon"),
 	("collapsed", getcollapsed, None),
 	("showtime", getshowtime, None),
 	("timezoom", gettimezoom, None),
@@ -1437,16 +1436,16 @@ prio_attrs = [
 	('peers', lambda writer, node: getcmifattr(writer, node, 'peers', 'stop'), "peers"),
 	('higher', lambda writer, node: getcmifattr(writer, node, 'higher', 'pause'), "higher"),
 	('pauseDisplay', lambda writer, node: getcmifattr(writer, node, 'pauseDisplay', 'inherit'), "pauseDisplay"),
-	("thumbnailIcon", lambda writer, node: geturl(writer, node, 'thumbnail_icon'), "thumbnail_icon"),
+	("thumbnailIcon", lambda writer, node: getsrc(writer, node, 'thumbnail_icon'), "thumbnail_icon"),
 	("thumbnailScale", lambda writer, node: getboolean(writer, node, 'thumbnail_scale', 1), "thumbnail_scale"),
-	("emptyIcon", lambda writer, node: geturl(writer, node, 'empty_icon'), "empty_icon"),
+	("emptyIcon", lambda writer, node: getsrc(writer, node, 'empty_icon'), "empty_icon"),
 	("emptyText", lambda writer, node:getcmifattr(writer, node, "empty_text"), "empty_text"),
 	("emptyColor", lambda writer, node: getcolor(writer, node, "empty_color"), "empty_color"),
 	("emptyDur", lambda writer, node:getduration(writer, node, "empty_duration"), "empty_duration"),
-	("nonEmptyIcon", lambda writer, node: geturl(writer, node, 'non_empty_icon'), "non_empty_icon"),
+	("nonEmptyIcon", lambda writer, node: getsrc(writer, node, 'non_empty_icon'), "non_empty_icon"),
 	("nonEmptyText", lambda writer, node:getcmifattr(writer, node, "non_empty_text"), "non_empty_text"),
 	("nonEmptyColor", lambda writer, node: getcolor(writer, node, "non_empty_color"), "non_empty_color"),
-	("dropIcon", lambda writer, node: geturl(writer, node, 'dropicon'), "dropicon"),
+	("dropIcon", lambda writer, node: getsrc(writer, node, 'dropicon'), "dropicon"),
 	("collapsed", getcollapsed, None),
 	("showtime", getshowtime, None),
 	("timezoom", gettimezoom, None),

@@ -203,6 +203,8 @@ default_settings = {
 	'default_sync_behavior_locked' : 0,
 	'default_sync_tolerance' : 0.1,
 
+	'templatedirs': ['My Templates', 'Templates'], # List of template directories.  May be relative to installation directory
+
 ##	'compatibility': G2,		# Try to be compatible with...
 	'cmif': 0,			# Show cmif-only attributes
 	'debug': 0,			# Show debug commands

@@ -254,26 +254,6 @@ qt_media_attrs = [
 	('composite-mode', lambda writer, node: getcmifattr(writer, node, 'qtcompositemode'), 'qtcompositemode'),
 	]
 
-# attributes that we know about and so don't write into the SMIL file using
-# our namespace extension
-cmif_chan_attrs_ignore = {
-	'id':0, 'title':0, 'base_window':0, 'base_winoff':0, 'z':0, 'fit':0,
-	'transparent':0, 'bgcolor':0, 'winpos':0, 'winsize':0, 'rect':0,
-	'units':0,
-	# new 03-07-2000
-	# we can't save the chan type inside a region since a node may be associate to several nodes
-	# the channel type is determinate according to the node type
-	'type':0,
-	# end new
-	'showBackground':0,
-	'traceImage':0,
-	'soundLevel':0,
-	'regAlign':0, 'regPoint':0, 'close':0, 'open':0, 'chsubtype':0,
-	'left':0, 'top':0, 'width':0, 'height':0, 'right':0, 'bottom':0,
-	'regionName':0,
-	'resizeBehavior':0,
-	}
-
 qt_context_attrs = {
 	'qttimeslider':0,
 	'qtchaptermode':0,
