@@ -10,21 +10,20 @@ LIBDL = $(GSRC)/dl/libdl.a
 
 DEFS =	\
 	-DUSE_SELECT \
-	-DUSE_GL \
 	-DUSE_MATH \
-	-DUSE_FL \
 	-DUSE_TIME \
 	-DUSE_POSIX \
 	-DUSE_REGEX \
 	-DUSE_PWD \
 	-DUSE_THREAD \
 	-DUSE_MARSHAL \
-	-DUSE_CL \
-	-DUSE_FM \
 	-DUSE_IMGFILE \
 	-DUSE_STROP \
 	-DUSE_IMAGEOP \
 	-DUSE_FCNTL \
+	-DUSE_XLIB -DUSE_XT -DUSE_XM \
+	-DUSE_GL -DUSE_FL -DUSE_FM \
+	-DUSE_CL \
 	-DMM_DEBUG \
 	-DPYTHONPATH='"$(GUIDO)/lib/python"'
 
@@ -35,7 +34,8 @@ LIBS =	$(LIBPYTHON) \
 	$(LIBFORMS) \
 	$(LIBREADLINE) \
 	-lm -lsun -laudio -lsvideo -lXext -limage -lgutil -lm  \
-	$(LIBDL) -lmld -lmpc -lfm_s -lgl_s -lX11 -ltermcap
+	$(LIBDL) -lmld -lmpc -lfm_s -lgl_s \
+	-lXm_s -lPW -lXmu -lXt_s -lX11_s -ltermcap
 
 LIBDEPS = $(LIBPYTHON) \
 	$(LIBFORMS) \

@@ -53,7 +53,7 @@ static object *MmError;		/* exception mm.error */
 				}
 int qenter_sync_fd = -1;
 
-static void
+void
 my_qenter(ev, val)
     long ev, val;
 {
@@ -158,7 +158,7 @@ mm_player(arg)
 /*
  * resized()
  *	Called when the main loop notices that the window has changed
- *	size.
+ *	size or has to be redrawn.
  */
 static object *
 mm_resized(self, args)
@@ -176,15 +176,19 @@ mm_resized(self, args)
 }
 
 /*
- * arm(file, delay, duration, attrlist, anchorlist)
+ * arm(file, delay, duration, attrdict, anchorlist, syncarm)
  *	Prepare to play file 'file' next, and try to have it done
- *	within 'delay seconds. 'duration' is an estimate of how long
+ *	within 'delay' seconds. 'duration' is an estimate of how long
  *	the arm operation will take. These parameters are only used to
  *	influence scheduling decisions. An arm may be scheduled before
- *	the previous play is finished. Attrlist is again a list of
- *	(name, value) pairs like in the init call. Anchorlist is a
+ *	the previous play is finished. Attrdict is a dictionary of
+ *	name to value mappings like in the init call. Anchorlist is a
  *	list of tuples where each tuple describes (in a channel
  *	dependent way) how and where to show an anchor.
+ *	If 'syncarm' is set, the arm is synchronous, that is, when arm()
+ *	returns, the arm is finished.  If 'syncarm' is not set, an
+ *	ARMDONE event is generated when the arm finishes.
+ *	('delay', 'duration', and 'anchorlist' are not yet implemented.)
  */
 static object *
 mm_arm(self, args)
@@ -192,16 +196,16 @@ mm_arm(self, args)
 	object *args;
 {
 	int delay, duration, syncarm;
-	object *file, *attrlist, *anchorlist;
+	object *file, *attrdict, *anchorlist;
 
 	CheckMmObject(self);
 	denter(mm_arm);
-	if (!getargs(args, "(OiiOOi)", &file, &delay, &duration, &attrlist,
+	if (!getargs(args, "(OiiOOi)", &file, &delay, &duration, &attrdict,
 		     &anchorlist, &syncarm)) {
 		err_clear();
 		syncarm = 0;
 		if (!getargs(args, "(OiiOO)", &file, &delay, &duration,
-			     &attrlist, &anchorlist))
+			     &attrdict, &anchorlist))
 			return NULL;
 	}
 	down_sema(self->mm_flagsema);
@@ -218,7 +222,7 @@ mm_arm(self, args)
 		self->mm_flags &= ~SYNCARM;
 	up_sema(self->mm_flagsema);
 	if (!(*self->mm_chanobj->chan_funcs->arm)(self, file, delay, duration,
-						  attrlist, anchorlist)) {
+						  attrdict, anchorlist)) {
 		down_sema(self->mm_flagsema);
 		self->mm_flags &= ~ARMING;
 		up_sema(self->mm_flagsema);
@@ -236,6 +240,7 @@ mm_arm(self, args)
  *	Start playing the armed node. The actual time needed for the
  *	arm is returned. Calling play before the ARMDONE event is
  *	received is an error, to help in detecting programming errors.
+ *	(The return value is not implemented.)
  */
 static object *
 mm_play(self, args)
@@ -259,6 +264,7 @@ mm_play(self, args)
 		return NULL;
 	}
 	self->mm_flags |= PLAYING;
+	self->mm_flags &= ~ARMED;
 	up_sema(self->mm_flagsema);
 	if (!(*self->mm_chanobj->chan_funcs->play)(self)) {
 		down_sema(self->mm_flagsema);
@@ -342,7 +348,9 @@ mm_armstop(self, args)
 
 /*
  * finished()
- *	Called when the node is finished.
+ *	Called when the node is finished and any node-related data may
+ *	be released.  This will also clear the window, if there is one.
+ *	This can only be called when not playing anymore.
  */
 static object *
 mm_finished(self, args)
@@ -368,7 +376,7 @@ mm_finished(self, args)
 /*
  * setrate(rate)
  *	Set the playing rate to the given value. Takes effect
- *	immedeately.
+ *	immediately.
  */
 static object *
 mm_setrate(self, args)
@@ -412,8 +420,8 @@ do_close(self)
 	(*self->mm_chanobj->chan_funcs->dealloc)(self);
 
 	/* now cleanup our own mess */
-	XDECREF(self->mm_attrlist);
-	self->mm_attrlist = NULL;
+	XDECREF(self->mm_attrdict);
+	self->mm_attrdict = NULL;
 	free_sema(self->mm_armsema);
 	self->mm_armsema = NULL;
 	free_sema(self->mm_playsema);
@@ -428,6 +436,11 @@ do_close(self)
 	self->mm_chanobj = NULL;
 }
 
+/*
+ * close()
+ *	Stop arming and playing and free all resources.  After this
+ *	call, the instance cannot be used anymore.
+ */
 static object *
 mm_close(self)
 	mmobject *self;
@@ -435,6 +448,22 @@ mm_close(self)
 	CheckMmObject(self);
 	denter(mm_close);
 	do_close(self);
+	INCREF(None);
+	return None;
+}
+
+static object *
+mm_do_display(self, args)
+	mmobject *self;
+	object *args;
+{
+	CheckMmObject(self);
+	if (self->mm_chanobj->chan_funcs->do_display)
+		(*self->mm_chanobj->chan_funcs->do_display)(self);
+	else {
+		err_setstr(AttributeError, "do_display");
+		return NULL;
+	}
 	INCREF(None);
 	return None;
 }
@@ -448,6 +477,7 @@ static struct methodlist channel_methods[] = {
 	{"resized",		mm_resized},
 	{"setrate",		mm_setrate},
 	{"finished",		mm_finished},
+	{"do_display",		mm_do_display},
 	{NULL,			NULL}		/* sentinel */
 };
 
@@ -489,10 +519,10 @@ static typeobject Mmtype = {
 };
 
 static object *
-newmmobject(wid, ev, attrlist, armsema, playsema, flagsema, exitsema, armwaitsema, chanobj)
+newmmobject(wid, ev, attrdict, armsema, playsema, flagsema, exitsema, armwaitsema, chanobj)
 	int wid;
 	int ev;
-	object *attrlist;
+	object *attrdict;
 	type_sema armsema, playsema, flagsema, exitsema, armwaitsema;
 	channelobject *chanobj;
 {
@@ -503,8 +533,8 @@ newmmobject(wid, ev, attrlist, armsema, playsema, flagsema, exitsema, armwaitsem
 	mmp->mm_wid = wid;
 	mmp->mm_ev = ev;
 	mmp->mm_flags = 0;
-	XINCREF(attrlist);
-	mmp->mm_attrlist = attrlist;
+	XINCREF(attrdict);
+	mmp->mm_attrdict = attrdict;
 	mmp->mm_armsema = armsema;
 	mmp->mm_playsema = playsema;
 	mmp->mm_flagsema = flagsema;
@@ -517,20 +547,20 @@ newmmobject(wid, ev, attrlist, armsema, playsema, flagsema, exitsema, armwaitsem
 }
 
 /*
- * obj = init(chanobj, wid, ev, attrlist)
- *	Initialization routine.  Chanobj is a channel object which identifies
- *	the channel.   Wid is the window-id of the GL window
+ * obj = init(chanobj, wid, ev, attrdict)
+ *	Initialization routine.  Chanobj is a channel object which
+ *	identifies the channel.  Wid is the window-id of the GL window
  *	to render in (or ignored for windowless channels like audio).
- *	(if the channel has a window).  Ev is an event number.
- *	Whenever something 'interesting' happens the raw channel
- *	deposits an event of this type into the gl event queue to
- *	signal this fact to the main thread. The value of the event
- *	will be one of the following:
+ *	Ev is an event number.  Whenever something 'interesting' happens
+ *	the raw channel writes an event of this type onto the file
+ *	descriptor that was specified using setsyncfd() to signal this
+ *	fact to the main thread. The value of the event will be one of
+ *	the following:
  *	ARMDONE - when the current arm is done
  *	PLAYDONE - when the current file has finished playing
  *
- *	Attrlist is a list of (attributename, value) pairs specifying
- *	things like background color, etc.
+ *      Attrdict is a dictionary of attributename to value mappings
+ *	specifying things like background color, etc.
  *	
  *	The reason for letting the main program specify the event
  *	number is that this allows the main program to use a different
@@ -542,7 +572,7 @@ mm_init(self, args)
 	object *args;
 {
 	int wid, ev;
-	object *attrlist;
+	object *attrdict;
 	object *mmp;
 	channelobject *chanobj;
 	type_sema armsema = NULL, playsema = NULL;
@@ -550,10 +580,7 @@ mm_init(self, args)
 	int i;
 
 	dprintf(("mm_init\n"));
-	wid = 0;
-	ev = 0;
-	attrlist = 0;
-	if (!getargs(args, "(OiiO)", &mmp, &wid, &ev, &attrlist))
+	if (!getargs(args, "(OiiO)", &mmp, &wid, &ev, &attrdict))
 		return NULL;
 	if (!is_channelobject(mmp)) {
 		err_setstr(RuntimeError, "first arg must be channel object");
@@ -578,7 +605,7 @@ mm_init(self, args)
 		return NULL;
 	}
 
-	mmp = newmmobject(wid, ev, attrlist, armsema, playsema, flagsema,
+	mmp = newmmobject(wid, ev, attrdict, armsema, playsema, flagsema,
 			  exitsema, armwaitsema, chanobj);
 	dprintf(("newmmobject() --> %lx\n", (long) mmp));
 	if (mmp == NULL ||
@@ -593,7 +620,7 @@ mm_init(self, args)
 		free_sema(flagsema);
 		free_sema(exitsema);
 		free_sema(armwaitsema);
-		XDECREF(((mmobject *) mmp)->mm_attrlist);
+		XDECREF(((mmobject *) mmp)->mm_attrdict);
 		DECREF(((mmobject *) mmp)->mm_chanobj);
 		DECREF(mmp);
 		return NULL;
@@ -602,11 +629,13 @@ mm_init(self, args)
 }
 
 /*
-** set_syncfd set a file descriptor on which a byte is written every time
-** qenter() is called. This enables us to use select() in the mainline
-** thread and still be awoken even when we ourselves do a qenter() (which
-** does not wake the select, unlike external events).
-*/
+ * setsyncfd()
+ *	Set a file descriptor on which a byte is written every time
+ *	qenter() is called. This enables us to use select() in the
+ *	mainline thread and still be awoken even when we ourselves do a
+ *	qenter() (which does not wake the select, unlike external
+ *	events).
+ */
 static object *
 mm_setsyncfd(self, args)
 	object *self;

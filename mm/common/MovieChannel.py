@@ -19,6 +19,7 @@ class MovieChannel(ChannelWindowThread):
 		if node.type != 'ext':
 			self.errormsg('node must be external')
 			return 1
+		import MMAttrdefs, GLLock
 		filename = self.getfilename(node)
 		try:
 			import VFile
@@ -35,22 +36,19 @@ class MovieChannel(ChannelWindowThread):
 			vfile.readcache()
 		except VFile.Error:
 			print `filename` + ': no cached index'
+		arminfo = {'width': vfile.width,
+			   'height': vfile.height,
+			   'format': vfile.format,
+			   'index': vfile.index,
+			   'c0bits': vfile.c0bits,
+			   'c1bits': vfile.c1bits,
+			   'c2bits': vfile.c2bits,
+			   'offset': vfile.offset,
+			   'scale': MMAttrdefs.getattr(node, 'scale'),
+			   'bgcolor': self.getbgcolor(node)}
+		if vfile.format == 'compress':
+			arminfo['compressheader'] = vfile.compressheader
 		try:
-			import MMAttrdefs, GLLock
-			arminfo = {'width': vfile.width,
-				   'height': vfile.height,
-				   'format': vfile.format,
-				   'index': vfile.index,
-				   'c0bits': vfile.c0bits,
-				   'c1bits': vfile.c1bits,
-				   'c2bits': vfile.c2bits,
-				   'offset': vfile.offset,
-				   'scale': MMAttrdefs.getattr(node, 'scale'),
-				   'wid': self.window._window_id,
-				   'bgcolor': self.getbgcolor(node),
-				   'gl_lock': GLLock.gl_rawlock}
-			if vfile.format == 'compress':
-				arminfo['compressheader'] = vfile.compressheader
 			self.threads.arm(vfile.fp, 0, 0, arminfo, None,
 				  self.syncarm)
 		except RuntimeError, msg:
