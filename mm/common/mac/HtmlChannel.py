@@ -12,6 +12,14 @@ import windowinterface
 import MMurl
 import urlparse
 import htmlwidget
+import settings
+if settings.get('html_control'):
+	try:
+		import macos9htmlwidget
+	except ImportError:
+		pass
+	else:
+		htmlwidget = macos9htmlwidget
 from TextChannel import getfont, mapfont
 import WMEVENTS
 
