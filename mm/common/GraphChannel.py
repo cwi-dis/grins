@@ -3,12 +3,7 @@ from MMExc import *			# exceptions
 from AnchorDefs import *
 import windowinterface			# for windowinterface.error
 import string
-
-try:
-	from urlopen import urlopen
-except ImportError:
-	def urlopen(file):
-		return open(file, 'r')
+from urllib import urlopen
 
 XBORDER = 0.05
 YBORDER = 0.05

@@ -9,17 +9,11 @@ import HTML
 import MMAttrdefs
 import sys
 import windowinterface
+import urllib
 
 if windowinterface.Version <> 'X':
 	print 'HtmlChannel: Cannot work without X (use CMIF_USE_X=1)'
 	raise ImportError
-
-try:
-	import urlopen
-	URLOPEN = urlopen.urlopen
-except ImportError:
-	def URLOPEN(file):
-		return open(file, 'r')
 
 num=1
 
@@ -155,7 +149,7 @@ class HtmlChannel(ChannelWindow):
 			filename = self.getfilename(node)
 			self.armed_url = filename
 			try:
-				fp = URLOPEN(filename)
+				fp = urllib.urlopen(filename)
 			except IOError:
 				return '<H1>Cannot Open</H1><P>'+ \
 					  'Cannot open '+filename+':<P>'+ \
@@ -260,7 +254,7 @@ class HtmlChannel(ChannelWindow):
 		href = urljoin(self.url, href)
 		if list:
 			href = addquery(href, list)
-		self.url, tag = urlopen.splittag(href)
+		self.url, tag = urllib.splittag(href)
 		try:
 			newtext = urlget(self.url)
 		except IOError:
@@ -277,13 +271,13 @@ class HtmlChannel(ChannelWindow):
 #
 def urljoin(base, href):
 	print 'urljoin', (base, href)
-	type, path = urlopen.splittype(href)
+	type, path = urllib.splittype(href)
 	if type:
 		print '->', href
 		return href
-	host, path = urlopen.splithost(path)
-	basetype, basepath = urlopen.splittype(base)
-	basehost, basepath = urlopen.splithost(basepath)
+	host, path = urllib.splithost(path)
+	basetype, basepath = urllib.splittype(base)
+	basehost, basepath = urllib.splithost(basepath)
 	type = basetype or 'file'
 	if path[:1] != '/':
 		i = string.rfind(basepath, '/')
@@ -312,5 +306,4 @@ def addquery(href, list):
 # Get the data-behind-the-URL
 #
 def urlget(newurl):
-	return urlopen.urlopen(newurl).read()
-	
+	return urllib.urlopen(newurl).read()

@@ -2,13 +2,7 @@ from Channel import ChannelWindow
 from AnchorDefs import *
 from debug import debug
 import string
-
-try:
-	from urlopen import urlopen
-except ImportError:
-	print 'TextChannel: warning: no url support!'
-	def urlopen(file):
-		return open(file, 'r')
+from urllib import urlopen
 
 class TextChannel(ChannelWindow):
 	node_attrs = ChannelWindow.node_attrs + ['fgcolor', 'font', \
@@ -101,8 +95,9 @@ class TextChannel(ChannelWindow):
 			filename = self.getfilename(node)
 			try:
 				fp = urlopen(filename)
-			except IOError:
-				print 'Cannot open text file', `filename`
+			except IOError, msg:
+				print 'Cannot open text file', `filename`,
+				print ':', msg
 				return ''
 			text = fp.read()
 			fp.close()

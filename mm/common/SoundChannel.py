@@ -1,12 +1,6 @@
 from Channel import *
 from debug import debug
-
-
-try:
-	from urlopen import urlretrieve
-except ImportError:
-	def urlretrieve(file):
-		return file, None
+from urllib import urlretrieve
 
 
 class SoundChannel(ChannelThread):
