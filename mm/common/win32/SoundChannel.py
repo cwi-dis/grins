@@ -85,22 +85,23 @@ class SoundChannel(Channel):
 		self._fiber_id=0
 		self.__playdone=1
 
+		# until we clarify why destroy is not called
+		import windowinterface
+		windowinterface.addclosecallback(self.release_res,())
+
 	def __repr__(self):
 		return '<SoundChannel instance, name=' + `self._name` + '>'
 
 	def do_hide(self):
-		for b in self._builders.values():
-			b.Stop()
-			b.Release()
-		del self._builders
-		self._builders={}
-		self._playBuilder=None
-		if self._notifyWindow and self._notifyWindow.IsWindow():
-			self._notifyWindow.DestroyWindow()
-		self._notifyWindow=None
+		self.release_res()
 		Channel.do_hide(self)
 
 	def destroy(self):
+		self.release_res()
+		self.unregister_for_timeslices()
+		Channel.destroy(self)
+
+	def release_res(self):
 		for b in self._builders.values():
 			b.Stop()
 			b.Release()
@@ -110,8 +111,6 @@ class SoundChannel(Channel):
 		if self._notifyWindow and self._notifyWindow.IsWindow():
 			self._notifyWindow.DestroyWindow()
 		self._notifyWindow=None
-		self.unregister_for_timeslices()
-		Channel.destroy(self)
 
 	def do_arm(self, node, same=0):
 		if debug:print 'SoundChannel.do_arm('+`self`+','+`node`+'same'+')'
