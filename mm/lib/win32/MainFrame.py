@@ -1310,7 +1310,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		import components
 		ctrl = components.ComboBox(self._wndToolBar,ctrlid)
 		ctrl.create(components.COMBOBOX(), rc)
-		logfont = {'height': 11, 'weight': win32con.FW_MEDIUM,}
+		logfont = {'name':'MS San Serif', 'height': 11, 'weight': win32con.FW_MEDIUM,}
 		ctrl.setfont(logfont)
 		if responseCb:
 			self.HookCommand(responseCb,ctrlid)
