@@ -17,16 +17,22 @@ def get(node):
 		ctype = channel['type']
 		filename = MMAttrdefs.getattr(node, 'file')
 		filename = context.findurl(filename)
-		if ctype == 'movie':
+		if ctype == 'video':
+			import VideoDuration
+			try:
+				return VideoDuration.get(filename)
+			except IOError, msg:
+				print filename, msg
+		elif ctype == 'movie':
 			import MovieDuration
 			try:
 				return MovieDuration.get(filename)
 			except IOError, msg:
 				print filename, msg
 		elif ctype == 'mpeg':
-			import MpegDuration
+			import VideoDuration
 			try:
-				return MpegDuration.get(filename)
+				return VideoDuration.get(filename)
 			except IOError, msg:
 				print filename, msg
 		elif ctype == 'sound':
