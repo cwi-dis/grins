@@ -9,23 +9,25 @@ __version__ = "$Id$"
 """
 import Channel, RealChannel
 
-class RealAudioChannel(Channel.ChannelAsync, RealChannel.RealChannel):
+class RealAudioChannel(Channel.ChannelAsync):
 	node_attrs = Channel.ChannelAsync.node_attrs + ['duration']
 
 	def __init__(self, name, attrdict, scheduler, ui):
-		RealChannel.RealChannel.__init__(self)
+		self.__rc = RealChannel.RealChannel(self)
 		Channel.ChannelAsync.__init__(self, name, attrdict, scheduler, ui)
 
 	def do_hide(self):
-		self.stopit()
+		self.__rc.stopit()
 		Channel.ChannelAsync.do_hide(self)
+		self.__rc.destroy()
+		del self.__rc
 		
 	def do_arm(self, node, same = 0):
-		self.prepare_player(node)
+		self.__rc.prepare_player(node)
 		return 1
 
 	def do_play(self, node):
-		if not self.playit(node):
+		if not self.__rc.playit(node):
 			import windowinterface, MMAttrdefs
 			name = MMAttrdefs.getattr(node, 'name')
 			if not name:
@@ -38,8 +40,8 @@ class RealAudioChannel(Channel.ChannelAsync, RealChannel.RealChannel):
 	# toggles between pause and run
 	def setpaused(self, paused):
 		Channel.ChannelAsync.setpaused(self, paused)
-		self.pauseit(paused)
+		self.__rc.pauseit(paused)
 
 	def stopplay(self, node):
-		self.stopit()
+		self.__rc.stopit()
 		Channel.ChannelAsync.stopplay(self, node)
