@@ -73,7 +73,6 @@ class TransitionEngine:
 		exclude_first_window = self.exclude_first_window
 		x0, y0, x1, y1 = self.windows[0].qdrect()
 		self.dstrgn = Qd.NewRgn()
-		print 'move_resize', self, (x0, y0, x1, y1)
 		for w in self.windows:
 			rect = w.qdrect()
 			newrgn = w._mac_getclip()
@@ -95,7 +94,6 @@ class TransitionEngine:
 		# We still subtract our children (there may be transparent windows in there)
 		if self.verbatimrgn:
 			Qd.DiffRgn(self.verbatimrgn, self.dstrgn, self.verbatimrgn)
-		print 'transition size now', (x0, y0, x1, y1), self
 		self.ltrb = (x0, y0, x1, y1)
 		self.transitiontype.move_resize(self.ltrb)
 			
