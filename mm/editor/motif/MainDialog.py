@@ -120,7 +120,7 @@ class MainDialog:
 			if not type or type == 'file':
 				import os
 				dir, file = os.path.split(MMurl.url2pathname(MMurl.splithost(rest)[1]))
-		filetypes = ['application/x-grins-project', 'application/smil']
+		filetypes = ['/SMIL presentation', 'application/x-grins-project', 'application/smil']
 ##		import features
 ##		if not features.lightweight:
 ##			filetypes.append('application/x-grins-cmif')
