@@ -267,6 +267,10 @@ class SlideWrapper(NodeWrapper):
 			if tag == 'wipe':
 				namelist.append('direction')
 				namelist.append('wipetype')
+			if tag == 'fadein':
+				namelist = namelist + \
+					   ['fadeout', 'fadeouttime',
+					    'fadeoutcolor', 'fadeoutduration']
 		elif tag == 'fadeout':
 			namelist = ['color', 'subregionxy', 'displayfull',
 				    'subregionwh', 'subregionanchor', 'start',
