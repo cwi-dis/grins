@@ -9,6 +9,7 @@ import MMCache
 import MMAttrdefs
 import Hlinks
 from AnchorDefs import *
+import features
 import string
 import os
 import MMurl
@@ -107,8 +108,7 @@ def WriteFile(root, filename, cleanSMIL = 0, copyFiles = 0, evallicense = 0, pro
 		import macfs
 		import macostools
 		fss = macfs.FSSpec(filename)
-		import settings
-		if settings.get('compatibility') == settings.G2 and cleanSMIL:
+		if features.compatibility == features.G2 and cleanSMIL:
 			fss.SetCreatorType('PNst', 'PNRA')
 		else:
 			fss.SetCreatorType('GRIN', 'TEXT')
@@ -261,8 +261,7 @@ def getsrc(writer, node):
 	if writer.copycache.has_key(url):
 		# already seen and copied
 		val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(writer.copycache[url]))
-		import settings
-		if settings.get('compatibility') == settings.G2:
+		if features.compatibility == features.G2:
 			val = MMurl.unquote(val)
 		return val
 	if chtype == 'RealPix':
@@ -319,8 +318,7 @@ def getsrc(writer, node):
 			return val
 	writer.copycache[url] = file
 	val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
-	import settings
-	if settings.get('compatibility') == settings.G2:
+	if features.compatibility == features.G2:
 		val = MMurl.unquote(val)
 	return val
 
@@ -1000,8 +998,7 @@ class SMILWriter(SMIL):
 
 	def writelayout(self):
 		"""Write the layout section"""
-		import settings
-		compatibility = settings.get('compatibility')
+		compatibility = features.compatibility
 		self.writetag('layout') # default: type="text/smil-basic-layout"
 		self.push()
 		channels = self.root.GetContext().channels
@@ -1020,7 +1017,7 @@ class SMILWriter(SMIL):
 				pass
 			elif ch.has_key('bgcolor'):
 				bgcolor = ch['bgcolor']
-				if compatibility != settings.G2 or \
+				if compatibility != features.G2 or \
 				   bgcolor != (0,0,0):
 					attrlist.append(('background-color', '#%02x%02x%02x' % bgcolor))
 			if ch.has_key('winsize'):
@@ -1109,7 +1106,7 @@ class SMILWriter(SMIL):
 				transparent = ch.get('transparent', 0)
 				bgcolor = ch.get('bgcolor')
 				if transparent == 0:
-					if compatibility == settings.G2:
+					if compatibility == features.G2:
 						# in G2, setting a
 						# background-color implies
 						# transparent==never, so set
@@ -1128,7 +1125,7 @@ class SMILWriter(SMIL):
 				# the color is the default (g2-compatible) color: white for text channels
 				# and black for others.
 				if bgcolor is not None and \
-				   (compatibility != settings.G2 or
+				   (compatibility != features.G2 or
 				    ((ch['type'] not in ('text', 'RealText') or
 				      bgcolor != (255,255,255)) and
 				     bgcolor != (0,0,0))):
