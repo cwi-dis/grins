@@ -5,6 +5,13 @@ __version__ = "$Id:"
 # * It's dog slow
 # * Structure nodes overlap each other.
 
+# TODO:
+# * Collapsing nodes
+# * Collapsing regions
+# * Show the time scale.
+# * Clean this code up.
+# * Finish this TODO list.
+
 import types
 
 import Widgets
@@ -40,7 +47,7 @@ MOVE_CHANNEL = 4
 BARWIDTH = settings.get('temporal_barwidth')
 CHANNELWIDTH = settings.get('temporal_channelwidth')
 NODESTART = settings.get('temporal_nodestart')
-NODEEND = settings.get('temporal_nodeend')
+#NODEEND = settings.get('temporal_nodeend')
 CHANNELHEIGHT = settings.get('temporal_channelheight')
 CHANNELTREEINDENT = 8
 CCHAN = settings.get('temporal_channelcolor')
@@ -50,7 +57,8 @@ CSEQ = settings.get('temporal_seqcolor')
 CEXCL = settings.get('temporal_exclcolor')
 CPRIO = settings.get('temporal_priocolor')
 CSWITCH = settings.get('temporal_switchcolor')
-
+TIMESCALE = settings.get('temporal_timescale')
+CFILLTIME = settings.get('temporal_fillcolor')
 
 class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 	# This implements a container that contains time-based classes.
@@ -94,6 +102,7 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		self.mainnode = self.__init_create_widgets(self.node)
 		self.channeltree = global_factory.createchanneltree(node)
 		self.editmgr = node.context.editmgr
+		self.timescale = TIMESCALE
 
 		self.pointer_object_of_interest = None # Which object looks appealing to the selection.
 
@@ -288,7 +297,6 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 				for i in self.node_channel_mapping[w_channel_name]:
 					yr = y + CHANNELHEIGHT*i.get_channel_index()
 					i.set_y(yr,yr+CHANNELHEIGHT)
-
 		self.channeltree.recalc()
 
 		# delete me: 
@@ -298,8 +306,10 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		#	x = self.time2pixel(time)
 		#	print "DEBUG: Moving bar to: ", x, " time is: ", time, "channelNameWidth: ", self.channelNameWidth
 		#	i.moveto((x,42,69,13)) # I just think that those numbers are cool. Life. Love. Death.
-		
-		self.mainnode.moveto((NODESTART, 2, NODEEND, t+self.channelHeight+2))
+
+		nwidth = self.mainnode.get_width(self.timescale)
+		print "DEBUG: nwidth is: ", nwidth
+		self.mainnode.moveto((NODESTART, 2, NODESTART+nwidth, t+self.channelHeight+2))
 		self.mainnode.recalc()
 
 	def click(self, coords):
@@ -371,6 +381,7 @@ class TemporalWidgetFactory:
 	def createnode(self, m):
 		assert isinstance(m, MMNode.MMNode)
 		bob = MMWidget(m, self.mother)
+		bob.timecanvas = self.timecanvas
 		bob.set_display(self.mother.get_geodl())
 		bob.setup()
 		return bob
@@ -721,6 +732,17 @@ class TimeWidget(MMNodeWidget, GeoDisplayWidget):
 	def GetTimes(self):
 		return self.node.GetTimes()
 
+	def get_starttime(self):
+		return self.node.GetTimes()[0]
+
+	def get_endtime(self):
+		return self.node.GetTimes()[1]
+
+	def get_width(self, timescale):
+		times = self.node.GetTimes()
+		print "DEBUG: Node times are: ", times
+		return (times[1] - times[0])*timescale
+
 
 class MMWidget(TimeWidget, GeoDisplayWidget):
 	# This is the box which represents one leaf node.
@@ -729,6 +751,8 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 		TimeWidget.setup(self)
 		self.w_fbox = self.graph.AddWidget(FBox(self.mother))
 		self.w_fbox.set_color(CNODE)
+		self.w_filltimebox = self.graph.AddWidget(FBox(self.mother))
+		self.w_filltimebox.set_color(CFILLTIME);
 		self.w_outerbox = self.graph.AddWidget(Box(self.mother))
 		self.name = self.node.GetAttrDef('name', '')
 		self.w_text = self.graph.AddWidget(Text(self.mother))
@@ -745,15 +769,39 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 	def moveto(self, coords):
 		l,t,r,b = coords
 		if r-l < BARWIDTH:
-			coords = l,t,l+BARWIDTH, b
+			self.hide()
+			return
 		TimeWidget.moveto(self, coords)
-		self.w_fbox.moveto(coords)
 		self.w_outerbox.moveto(coords)
 		self.w_text.moveto(coords)
+
+		start_time, end_time, endfill_time, download_delay, begin_delay = self.node.GetTimes()
+		# l is proportional to start_time, r is proportional to endfill_time
+		# middle is proportional to end_time, which is where the boxes change color.
+		# so if 'f' is the fraction of the bar that is not fill time,
+		try:
+			f = (end_time-start_time) / (endfill_time - start_time)
+		except ZeroDivisionError:
+			f = 0
+		print "DEBUG: Times are: ", self.node.GetTimes()
+		print "DEBUG: f is: ", f
+		# and
+		middle = f * (r-l) + l
+		print "DEBUG: l,m,r: ", l,middle, r
+		# so:
+		#middle = (end_time / (endfill_time - start_time)) * (r-l) + l
+		self.w_fbox.moveto((l,t,middle,b))
+		self.w_filltimebox.moveto((middle,t,r,b))
 #		print "DEBUG: MMWidget moved to ", self.get_box()
 
+	def hide(self):
+		print "TODO: hide a node."
+		return
+		# for all of my widgets, call w.hide()
+		self.hidden = 1
+
 	def set_channel(self, c):
-		print "TODO"
+		print "TODO: set channel."
 
 	def get_channel(self):
 		# Returns a string which is this node's channel.
@@ -762,19 +810,13 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 			return 'undefined'
 		return self.node.GetChannel().GetLayoutChannel().name
 
-	def get_starttime(self):
-		return self.node.GetTimes()[0]
+#	def select(self):
+#		Widgets.Widget.select(self)
+#		self.w_outerbox.set_color((255,255,255))
 
-	def get_endtime(self):
-		return self.node.GetTimes()[1]
-
-	def select(self):
-		Widgets.Widget.select(self)
-		self.w_outerbox.set_color((255,255,255))
-
-	def unselect(self):
-		Widgets.Widget.unselect(self)
-		self.w_outerbox.set_color((0,0,0))
+#	def unselect(self):
+#		Widgets.Widget.unselect(self)
+#		self.w_outerbox.set_color((0,0,0))
 
 	def get_draggable(self, coords):
 		# return a box.
@@ -947,6 +989,7 @@ class MultiMMWidget(TimeWidget):
 	# represents any node which has children.
 	def setup(self):
 		self.subwidgets = []
+		self.leafnode = 0;	# will hide all children if I am.
 	def add(self, bob):
 		self.subwidgets.append(bob)
 	def destroy(self):
@@ -976,6 +1019,10 @@ class MultiMMWidget(TimeWidget):
 		self.w_startbar.set_color(self.color)
 		self.w_endbar.set_color(self.color)
 
+	def collapse(self):
+		self.leafnode = 1
+	def uncollapse(self):
+		self.leafnode = 0
 
 
 class SeqMMWidget(MultiMMWidget):
@@ -1023,6 +1070,7 @@ class SeqMMWidget(MultiMMWidget):
 		endx = x + w # - BARWIDTH + BARWIDTH
 
 		# Add the start and end bars.
+		# TODO: Make this better.
 		t, b = self.get_y_start()
 		self.w_startbar.moveto((x,t,x+BARWIDTH,b))
 		self.w_startbar_b.moveto((x,t,x+BARWIDTH,b))
@@ -1035,13 +1083,14 @@ class SeqMMWidget(MultiMMWidget):
 		prevx = x
 		prevy = (t+b)/2
 		#self.w_debugbar.moveto((x,y,x+w,y+h))
-		if mytimes[1]>mytimes[0] or mytimes[2]>mytimes[0]:
-			if mytimes[1] > mytimes[0]:
-				#print "DEBUG: using t1 for structure node."
-				endtime = mytimes[1]
-			else:
+		#if mytimes[1]>mytimes[0] or mytimes[2]>mytimes[0]:
+		if mytimes[2]>mytimes[0]:
+			#if mytimes[1] > mytimes[0]:
+			#	#print "DEBUG: using t1 for structure node."
+			#	endtime = mytimes[1]
+			#else:
 				#print "DEBUG: using t2 for structure node."
-				endtime = mytimes[2]
+			endtime = mytimes[2]
 			ppt = (w-(len(self.subwidgets)-1)*BARWIDTH)/(endtime-mytimes[0])	# pixels per time
 			for i in range(0, len(self.subwidgets)):
 				ctime = self.subwidgets[i].GetTimes()
