@@ -62,15 +62,15 @@ channelmap = ChannelMap()
 channeltypes = ['null', 'text', 'image']
 commonchanneltypes = ['text', 'image', 'sound', 'video', 'layout']
 otherchanneltypes = []
-channelhierarchy = [
-    ('text', ['label', 'text', 'html']),
-    ('image', ['image', 'graph']),
-    ('sound', ['sound']),
-    ('movie', ['video', 'movie', 'mpeg', 'vcr']),
-    ('control', ['layout', 'cmif', 'socket', 'shell', 'python', 'external',
-		 'null']),
-    ('ole', ['word']),
-    ]
+channelhierarchy = {
+    'text': ['label', 'text', 'html'],
+    'image': ['image', 'graph'],
+    'sound': ['sound'],
+    'movie': ['video', 'movie', 'mpeg', 'vcr'],
+    'control': ['layout', 'cmif', 'socket', 'shell', 'python', 'external',
+		'null'],
+    'ole': ['word'],
+    }
 
 ct = channelmap.keys()
 ct.sort()
