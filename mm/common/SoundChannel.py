@@ -216,7 +216,11 @@ def getinfo(filename):
 	try:
 		a = aiff.Aiff().init(f, 'rf')
 	except EOFError:
-		return f, 1, 0, 8, 8000, 'null'
+		print 'EOF on sound file', filename
+		return f, 1, 0, 1, 8000, 'eof'
+	except aiff.Error, msg:
+		print 'error in sound file', filename, ':', msg
+		return f, 1, 0, 1, 8000, 'error'
 	return f, a.nchannels, a.nsampframes, a.sampwidth, a.samprate, 'AIFF'
 
 def prepare(f, nchannels, nsampframes, sampwidth, samprate, format):
