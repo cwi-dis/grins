@@ -432,6 +432,7 @@ class _Event:
 		c = chr(message & Events.charCodeMask)
 		if modifiers & Events.cmdKey:
 				self._handle_menu_key(c, event)
+				MenuMODULE.HiliteMenu(0)
 				return
 		else:
 			w = Win.FrontWindow()
@@ -1069,6 +1070,9 @@ class _CommonWindow:
 		if scale == 0:
 			scale = min(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
+		elif scale == -1:
+			scale = max(float(width)/(xsize - left - right),
+				    float(height)/(ysize - top - bottom))
 				    
 		top = int(top * scale + .5)
 		bottom = int(bottom * scale + .5)
@@ -1334,7 +1338,7 @@ class _CommonWindow:
 	def _macsetwin(self):
 		"""Start drawing (by upper layer) in this window"""
 		Qd.SetPort(self._wid)
-
+		
 class _Window(_CommonWindow, _WindowGroup):
 	"""Toplevel window"""
 	
@@ -1396,6 +1400,9 @@ class _Window(_CommonWindow, _WindowGroup):
 		if not self._wid or not self._parent:
 			return
 		self._wid.SendBehind(0)
+		
+	def _is_on_top(self):
+		return 1
 		
 	def _contentclick(self, down, where, event, shifted):
 		"""A mouse click in our data-region"""
@@ -1509,7 +1516,8 @@ class _SubWindow(_CommonWindow):
 			parent._subwindows.append(self)
 		parent._clipchanged()
 		Qd.SetPort(self._wid)
-		Win.InvalRect(self.qdrect())
+		if self._transparent <= 0:
+			Win.InvalRect(self.qdrect())
 		parent.pop()
 
 	def push(self):
@@ -1530,6 +1538,13 @@ class _SubWindow(_CommonWindow):
 		Qd.SetPort(self._wid)
 		Win.InvalRect(self.qdrect())
 		parent.push()
+		
+	def _is_on_top(self):
+		"""Return true if no other subwindow overlaps us"""
+		if not self._parent:
+			return 0
+		# XXXX This is not good enough, really...
+		return (self._parent._subwindows[0] is self)
 
 	def _mkclip(self):
 		if not self._parent:
@@ -1645,6 +1660,9 @@ class _DisplayList:
 		self._rendered = 1
 		# XXXX buttons?
 		Qd.SetPort(window._wid)
+		if window._transparent == -1:
+			window._parent._clipchanged()
+		window._active_displist = self
 		#
 		# We make one optimization here: if we are a clone
 		# and our parent is the current display list and
@@ -1653,16 +1671,48 @@ class _DisplayList:
 		# to send an InvalRect for the whole window area but
 		# only for the bit that differs between clone and parent.
 		#
-		if self._cloneof and self._cloneof is window._active_displist \
+		# XXXX This stopped working due to a mod by Sjoerd...
+		if 0 and self._cloneof and self._cloneof is window._active_displist \
 				and self._cloneof._really_rendered and self._clonebboxes:
 			for bbox in self._clonebboxes:
 				Win.InvalRect(bbox)
 			self._clonebboxes = []
+		elif self._can_render_now():
+			if not window._clip:
+				window._mkclip()
+			saveclip = Qd.NewRgn()
+			Qd.GetClip(saveclip)
+			Qd.SetClip(window._clip)
+			self._render()
+			Qd.SetClip(saveclip)
+			Qd.DisposeRgn(saveclip)
 		else:
 			Win.InvalRect(window.qdrect())
-		if window._transparent == -1:
-			window._parent._clipchanged()
-		window._active_displist = self
+	
+	def _can_render_now(self):
+		"""Return true if we can do the render now, in stead of
+		scheduling the update event"""
+		##return 0
+		# First check that no update events are pending.
+		window = self._window
+		rgn = Qd.NewRgn()
+		window._wid.GetWindowUpdateRgn(rgn)
+		ok = Qd.EmptyRgn(rgn)
+		if ok:
+			ok = window._is_on_top()
+## Debug: show the region to update
+##		if not ok:
+##			Qd.RGBForeColor((0xffff, 0, 0))
+##			Qd.PaintRgn(rgn)
+##			Qd.RGBForeColor((0x0, 0, 0))
+##			Qd.PaintRgn(rgn)
+##			Qd.RGBForeColor((0xffff, 0, 0))
+##			Qd.PaintRgn(rgn)
+##			import time
+##			MacOS.SysBeep()
+##			time.sleep(2)
+		Qd.DisposeRgn(rgn)
+		return ok
 		
 	def _render(self):
 		self._really_rendered = 1
