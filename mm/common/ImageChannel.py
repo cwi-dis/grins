@@ -39,6 +39,7 @@ class ImageNodeInfo():
 			raise 'setcolors without node'
 		self.bgcolor = MMAttrdefs.getattr(self.node, 'bgcolor')
 		self.hicolor = MMAttrdefs.getattr(self.node, 'hicolor')
+		self.fgcolor = self.hicolor
 		
 	def setdefcolors(self, attrdict):
 		if attrdict.has_key('bgcolor'):
