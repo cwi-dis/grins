@@ -926,9 +926,38 @@ class DOMIterator:
 ####################################
 # utilities
 
-def GetSvgSizeFromSrc(source):
-	svg = SvgDocument(source)
-	root =  svg.getRoot()
+class DocCache:
+	def __init__(self):
+		self._stack = []
+		self.capacity = 3
+
+	def cache(self, url, doc):
+		self._stack.append((url, doc))
+		if len(self._stack) > self.capacity:
+			self._stack = self._stack[1:]
+
+	def hasdoc(self, url):
+		for ref, doc in self._stack:
+			if ref == url:
+				return 1
+		return 0
+
+	def getDoc(self, url):
+		for ref, doc in self._stack:
+			if ref == url:
+				return doc
+		return None
+
+	def clear(self):
+		del self._stack
+		self._stack = []
+
+
+doccache = DocCache()
+
+
+def GetSvgDocSize(svgdoc):
+	root =  svgdoc.getRoot()
 	if not root or root.getType()!='svg':
 		return 0, 0
 	width, height = root.getSize()
@@ -936,7 +965,14 @@ def GetSvgSizeFromSrc(source):
 		width, height = 0, 0
 	return width, height
 
+def GetSvgSizeFromSrc(source):
+	svgdoc = SvgDocument(source)
+	return GetSvgDocSize(svgdoc)
+
 def GetSvgSize(url):
+	if doccache.hasdoc(url):
+		svgdoc = doccache.getDoc(url)
+		return GetSvgDocSize(svgdoc)
 	import MMurl
 	try:
 		u = MMurl.urlopen(url)
@@ -945,9 +981,9 @@ def GetSvgSize(url):
 		return 0, 0
 	source = u.read()
 	u.close()
-	return GetSvgSizeFromSrc(source)
-
-
+	svgdoc = SvgDocument(source)
+	doccache.cache(url, svgdoc)
+	return GetSvgDocSize(svgdoc)
 
 ####################################
 # test

@@ -34,23 +34,29 @@ class SVGChannel(Channel.ChannelWindow):
 			self.errormsg(node, 'No URL set on node')
 			return 1
 		
-		try:
-			u = MMurl.urlopen(url)
-		except IOError, arg:
-			if type(arg) is type(self):
-				arg = arg.strerror
-			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (f, arg))
-			return 1
+		import svgdom
+		if svgdom.doccache.hasdoc(url):
+			svgdoc = svgdom.doccache.getDoc(url)
+		else:
+			try:
+				u = MMurl.urlopen(url)
+			except IOError, arg:
+				if type(arg) is type(self):
+					arg = arg.strerror
+				self.errormsg(node, 'Cannot resolve URL "%s": %s' % (f, arg))
+				return 1
+			
+			source = u.read()
+			u.close()
+			svgdoc = svgdom.SvgDocument(source)
+			svgdom.doccache.cache(url, svgdoc)
 
-		source = u.read()
-		u.close()
-		
-		if self.window and source:
+		if self.window and svgdoc:
 			coordinates = self.getmediageom(node)
 			self.svgdstrect = left, top, width, height = self.window._convert_coordinates(coordinates)
 			self.svgsrcrect = 0, 0, width, height
 			self.svgdds = self.window.createDDS(width, height)
-			self.renderOn(self.svgdds, source)
+			self.renderOn(self.svgdds, svgdoc)
 		return 1
 
 	def do_play(self, node):
@@ -64,9 +70,8 @@ class SVGChannel(Channel.ChannelWindow):
 			self.svgdds = None
 		Channel.ChannelWindow.stopplay(self, node)
 		
-	def renderOn(self, dds, source):
-		import svgdom, svgrender, svgwin
-		svgdoc = svgdom.SvgDocument(source)
+	def renderOn(self, dds, svgdoc):
+		import svgrender, svgwin
 		svggraphics = svgwin.SVGWinGraphics()
 		ddshdc = dds.GetDC()
 		svggraphics.tkStartup(ddshdc)
@@ -74,7 +79,6 @@ class SVGChannel(Channel.ChannelWindow):
 		renderer.render()
 		svggraphics.tkShutdown()
 		dds.ReleaseDC(ddshdc)
-
 
 ###################################
 # SVG channel alt using an OS window and Adobe's SVG viewer
