@@ -1,0 +1,109 @@
+1.Timing
+     1.AccessKeyTiming
+	Not implemented.
+     2.BasicInlineTiming
+	 Fully implemented
+     3.BasicTimeContainers
+	Fully implemented
+     4.EventTiming
+	Fully implemented
+     5.ExclTimeContainers
+	Fully implemented
+     6.FillDefault
+	Fully implemented
+     7.MediaMarkerTiming
+	Recognized, implemented for some media types on some platforms
+	(not part of SMIL 2.0 Language?)
+     8.MinMaxTiming
+	Fully implemented
+     9.MultiArcTiming
+	Fully implemented
+    10.PrevTiming
+	Fully implemented
+    11.RepeatTiming
+	Fully implemented
+    12.RepeatValueTiming
+	Not implemented
+	(not part of SMIL 2.0 Language?)
+    13.RestartDefault
+	Fully implemented
+    14.RestartTiming
+	Fully implemented
+    15.SyncbaseTiming
+	Fully implemented
+    16.SyncBehavior
+	Only syncBehavior="independent" implemented (other values recognized)
+    17.SyncBehaviorDefault
+	Fully implemented
+    18.SyncMaster
+	Not implemented
+	(not part of SMIL 2.0 Language?)
+    19.TimeContainerAttributes
+	Not implemented (not part of SMIL 2.0 Language)
+    20.WallclockTiming
+	Fully implemented
+2.Time Manipulations
+     1.TimeManipulations
+	Not implemented (not part of SMIL 2.0 Language)
+3.Animation
+     1.BasicAnimation
+	Fully implemented
+     2.SplineAnimation
+	Not implemented (not part of SMIL 2.0 Language)
+4.Content Control
+     1.BasicContentControl
+	Fully implemented
+     2.CustomTestAttributes
+	Fully implemented
+     3.PrefetchControl
+	Implemented XXX what is the status exactly?
+     4.SkipContentControl
+	Recognized but ignored
+5.Layout
+     1.AudioLayout
+	Recognized
+     2.BasicLayout
+	Fully implemented
+     3.HierarchicalLayout
+	Fully implemented
+     4.MultiWindowLayout
+	Fully implemented
+6.Linking
+     1.BasicLinking
+	Fully implemented
+     2.LinkingAttributes
+	Mostly implemented (all but level attributes, tabindex, and accesskey)
+     3.ObjectLinking
+	Fully implemented
+7.Media Objects
+     1.BasicMedia
+	Fully implemented
+     2.BrushMedia
+	Fully implemented
+     3.MediaAccessibility
+	Fully implemented (although no UI aspects implemented)
+     4.MediaClipping
+	Fully implemented
+     5.MediaClipMarkers
+	Not implemented
+     6.MediaDescription
+	Fully implemented
+     7.MediaParam
+	Recognized, but no renderers use the param information; erase
+	and mediaRepeat recognized but not implemented
+8.Metainformation
+     1.Metainformation
+	Fully implemented
+9.Structure
+     1.Structure
+	Fully implemented
+10.Transitions
+     1.BasicTransistions
+	Mostly implemented (all but direction; only a single subtype
+	per type; transOut not always properly scheduled)
+     2.CoordinatedTransitions
+	Fully implemented
+     3.InlineTransitions
+	Not implemented (not part of SMIL 2.0 Language)
+     4.TransitionModifiers
+	Parsed, not implemented
