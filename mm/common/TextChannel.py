@@ -224,7 +224,7 @@ class TextWindow(ChannelWindow):
 		self.arm_curwidth = width
 		width = width - 2*margin
 		self.arm_curlines, self.arm_partoline, self.arm_linetopar = \
-			calclines(self.arm_parlist, font, width)
+			calclines(self.arm_parlist, font.getstrwidth, width)
 	#
 	# like settext but use pre-arm results
 	def settext_arm(self, node):
@@ -274,7 +274,7 @@ class TextWindow(ChannelWindow):
 			self.curwidth = width
 			width = width - 2*self.margin
 			self.curlines, self.partoline, self.linetopar = \
-				calclines(self.parlist, self.font, width)
+			  calclines(self.parlist, self.font.getstrwidth, width)
 		#
 		# Clear the window in the background color
 		gl.RGBcolor(self.bgcolor)
@@ -348,14 +348,22 @@ class TextWindow(ChannelWindow):
 		boxes.append((x0, y0, x1, y1))
 		return boxes
 	#
-	# Map a char position in a paragraph to one in a line
+	# Map a char position in a paragraph to one in a line.
+	# Return a pair (lineno, charno)
 	def map_parpos_to_linepos(self, parno, charno, last):
 		# This works only if parno and charno are valid
 		sublist = self.partoline[parno]
 		for lineno, char0, char1 in sublist:
-			if charno < char1+last:
-				return lineno, max(0, charno-char0)
-		return lineno, max(0, charno-char0)
+			if charno <= char1:
+				i = max(0, charno-char0)
+				if last:
+					return lineno, i
+				curline = self.curlines[lineno]
+				n = len(curline)
+				while i < n and curline[i] == ' ': i = i+1
+				if i < n:
+					return lineno, charno-char0
+				charno = char1
 
 
 # Turn a text string into a list of strings, each representing a paragraph.
@@ -388,7 +396,7 @@ def extract_paragraphs(text):
 # offset into the paragraph, and (2) a list containing for each line a
 # triple (parno, start, end)
 
-def calclines(parlist, font, width):
+def calclines(parlist, sizefunc, limit):
 	partoline = []
 	linetopar = []
 	curlines = []
@@ -398,12 +406,12 @@ def calclines(parlist, font, width):
 		partoline.append(sublist) # It will grow while in there
 		start = 0
 		while 1:
-			i = fitwords(par, font.getstrwidth, width)
+			i = fitwords(par, sizefunc, limit)
+			n = len(par)
+			while i < n and par[i] == ' ': i = i+1
 			sublist.append(len(curlines), start, start+i)
 			curlines.append(par[:i])
 			linetopar.append((parno, start, start+i))
-			n = len(par)
-			while i < n and par[i] == ' ': i = i+1
 			par = par[i:]
 			start = start + i
 			if not par: break
