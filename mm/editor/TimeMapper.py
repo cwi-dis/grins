@@ -116,7 +116,41 @@ class TimeMapper:
 			cd = self.collisiondict[tm]
 			if pos < mp:
 				if lasttime is not None:
-					return lasttime + float(pos - lastpos) * (tm - lasttime) / float(mp - lastpos)
+					# need to interpolate
+					# "perfect" interpolation, but
+					# this gives way too many
+					# decimal places
+					time = lasttime + float(pos - lastpos) * (tm - lasttime) / float(mp - lastpos)
+					# "resolution" of time, i.e. #seconds per pixel
+					resolution = (tm - lasttime) / float(mp - lastpos)
+					# normalize to value between 1
+					# (inclusive) and 10 (not
+					# inclusive)
+					# fac is factor with which to
+					# multiply, div is factor by
+					# which to divide (one or both
+					# will be 1)
+					fac = div = 1
+					while resolution >= 10:
+						resolution = resolution / 10
+						fac = fac * 10
+					while resolution < 1:
+						resolution = resolution * 10
+						div = div * 10
+					# normalized and truncated time
+					# this is truncated with last digit == 0
+					xtime = int(time * div / (fac * 10)) * 10
+					# try different last digits to
+					# find a "nice" one that will
+					# result in the correct pixel
+					# value (order is important)
+					for off in (0,10,5,2,4,6,8,1,3,7,9):
+						t = (xtime + off) * fac / float(div)
+						if self.interptime2pixel(t) == pxl:
+							return t
+					# didn't find any, use fallback mechanism
+					time = int(time * div / fac + .5) * fac / float(div)
+					return time
 				# before left edge
 				# extrapolate first interval to the left
 				for tm2 in self.times: # find first time that's different
@@ -126,6 +160,7 @@ class TimeMapper:
 				# no multiple times, use pixel == second
 				return tm + (pos - mp)
 			if mp <= pos <= mp + cd:
+				# inside "grey area": time is exact
 				return tm
 			lastpos = mp + cd
 			lasttime = tm
