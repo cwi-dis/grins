@@ -215,6 +215,14 @@ def getsrc(writer, node):
 		# sometimes, but don't want to write always
 		do_write = 0
 		tmp_file_name = 0
+		if not val and not writer.copydir:
+			# no URL and not exporting, save as data: URL
+			import base64, realnode
+			node.SetAttr('file', 'dummy.rp')
+			data = realnode.writenode(node, tostring = 1)
+			node.DelAttr('file')
+			return 'data:image/vnd.rn-realpix;base64,' + \
+			       string.join(string.split(base64.encodestring(data), '\n'), '')
 		if not val:
 			val = writer.gen_rpfile()
 			do_write = 1
