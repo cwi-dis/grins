@@ -90,7 +90,7 @@ class EventStruct:
 		elif c == 'region' and self._setregion:
 			print "TODO: don't know how to set region."
 		elif c == 'accesskey' and self._setkey:
-			s.__init__(self._node, action, accesskey=self._setkey, event=self.get_event(), delay=self.get_offset())
+			s.__init__(self._node, action, accesskey=self._setkey, delay=self.get_offset())
 		elif c == 'marker' and self._setmarker:
 			s.__init__(self._node, action, marker=self._setmarker, delay=0)
 		elif c == 'delay':
