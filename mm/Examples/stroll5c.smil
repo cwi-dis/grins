@@ -21,16 +21,16 @@
   <body>
     <par id="HERENGRACHT">
       <text type="text/plain" id="Credits" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam"/>
-        <img id="stroll" region="image4" src="stroll.gif"/>
+        <img id="stroll" region="image4" src="stroll.jpg"/>
 
 
 
         <seq id="HERENGRACHT_stroll">
 
-        <img id="map" region="image1" src="1map.gif" dur="5s"/>
+        <img id="map" region="image1" src="1map.jpg" dur="5s"/>
 
          <par id="herengracht_168">      
-          <img id="herengracht_168-image" region="image2" src="1h168.gif"/>
+          <img id="herengracht_168-image" region="image2" src="1h168.jpg"/>
           <text type="text/plain" id="herengracht_168-adress" region="adress" src="data:,HERENGRACHT%20168" dur="5.521s"/>
           <text type="text/plain" id="herengracht_168-year" region="year" src="data:,ANNO%201638" dur="5.521s"/>
           <audio id="herengracht_168-sound" region="sound" src="168.au"/>
@@ -39,7 +39,7 @@
 
          <par id="herengracht_218">
 
-          <img id="herengracht_218-image" region="image3" src="1h218.gif"/>
+          <img id="herengracht_218-image" region="image3" src="1h218.jpg"/>
           <text type="text/plain" id="herengracht_218-adress" region="adress" src="data:,HERENGRACHT%20218" dur="8.613s"/>
           <text type="text/plain" id="herengracht_218-year" region="year" src="data:,ANNO%201616" dur="8.613s"/>
           <audio id="herengracht_218-sound" region="sound" src="218.au"/>
@@ -47,7 +47,7 @@
          </par>
 
          <par id="herengracht_284">
-          <img id="herengracht_284-image" region="image2" src="1h284.gif"/>
+          <img id="herengracht_284-image" region="image2" src="1h284.jpg"/>
           <text type="text/plain" id="herengracht_284-adress" region="adress" src="data:,HERENGRACHT%20284" dur="5.604s"/>
           <text type="text/plain" id="herengracht_284-year" region="year" src="data:,ANNO%201728" dur="5.604s"/>
           <audio id="herengracht_284-sound" region="sound" src="284.au"/>
