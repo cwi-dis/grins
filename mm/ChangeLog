@@ -1,3 +1,8 @@
+2000-03-09  Sjoerd Mullender  <Sjoerd.Mullender@oratrix.nl>
+
+	* editor/LinkEdit.py (LinkEdit.reloadanchors): Bug fix.  There was
+	a crash when the anchors had to be reloaded in the View.
+
 2000-02-21    <sjoerd.mullender@oratrix.nl>
 
 	* lib\MMNode.py (MMNode.PruneTree): Fixed a crash when looping
