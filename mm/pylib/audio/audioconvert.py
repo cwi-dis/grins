@@ -68,6 +68,7 @@ class dvi2linear(audio_filter):
 		audio_filter.__init__(self, rdr, fmt)
 		self.__width = (self._dstfmt.getbps() + 7) / 8
 		self.__state = None
+		self.__positions = []
 
 	def readframes(self, nframes = -1):
 		import audioop
@@ -99,6 +100,7 @@ class linear2dvi(audio_filter):
 		audio_filter.__init__(self, rdr, fmt)
 		self.__width = (self._srcfmt.getbps() + 7) / 8
 		self.__state = None
+		self.__positions = []
 
 	def readframes(self, nframes = -1):
 		import audioop
@@ -201,6 +203,7 @@ class cvrate(audio_filter):
 		self.__inrate = rdr.getframerate()
 		self.__outrate = rate
 		self.__state = None
+		self.__positions = []
 
 	def __repr__(self):
 		return '<%s instance, src=%s, format=%s, framerate=%d>' % (self.__class__.__name__, `self._rdr`, `self._srcfmt`, self.__outrate)
