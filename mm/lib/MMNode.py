@@ -702,7 +702,7 @@ class MMChannel:
 		return self._cssId
 
 	def setCssAttr(self, name, value):
-		self.context.cssResolver.setRawAttr(self._cssId, name, value)
+		self.context.cssResolver.setRawAttrs(self._cssId, ([name, value],))
 
 	def getCssAttr(self, name, defaultValue=None):
 		value = self.context.cssResolver.getAttr(self._cssId, name)
@@ -1607,9 +1607,9 @@ class MMNode:
 
 	def setCssAttr(self, name, value):
 		if name in ['regPoint', 'regAlign', 'scale']:
-			self.context.cssResolver.setRawAttr(self._mediaCssId, name, value)
+			self.context.cssResolver.setRawAttrs(self._mediaCssId, ([name, value]))
 		else:
-			self.context.cssResolver.setRawAttr(self._subRegCssId, name, value)
+			self.context.cssResolver.setRawAttr(self._subRegCssId, ([name, value]))
 
 	def getCssRawAttr(self, name, defaultValue = None):
 		if name in ['regPoint', 'regAlign', 'scale']:
