@@ -293,6 +293,7 @@ class HTMLWidget:
 	def insert_html(self, data, url, tag=None):		
 		if data == '':
 			self.must_clear = 1
+			Qd.SetPort(self.wid)
 			Win.InvalRect(self.rect)
 			return
 

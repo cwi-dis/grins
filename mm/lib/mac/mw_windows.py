@@ -287,12 +287,14 @@ class _CommonWindow:
 	def showwindow(self, color=(255, 0, 0)):
 		"""Highlight the window"""
 		self._outline_color = self._convert_color(color)
+		Qd.SetPort(self._wid)
 		Win.InvalRect(self.qdrect())
 		
 	def dontshowwindow(self):
 		"""Don't highlight the window"""
 		if not self._outline_color is None:
 			self._outline_color = None
+			Qd.SetPort(self._wid)
 			Win.InvalRect(self.qdrect())
 		pass
 
@@ -725,6 +727,7 @@ class _CommonWindow:
 		else:
 			self._rb_box = None
 		self._rb_dragpoint = None
+		Qd.SetPort(self._wid)
 		Win.InvalRect(self.qdrect())
 		self._rb_finished = 0
 		self._rb_dialog = showmessage(
@@ -1450,6 +1453,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		for d in self._displists[:]:
 			d.close()
 		self._wid.SizeWindow(width, height, 1)
+		Qd.SetPort(self._wid)
 		Win.InvalRect(self.qdrect())
 		self._clipchanged()
 
