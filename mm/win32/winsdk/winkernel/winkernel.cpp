@@ -89,12 +89,67 @@ static PyObject* LoadLibrary(PyObject *self, PyObject *args)
 		}
 	return Py_BuildValue("i", hModule);
 }
+
+static PyObject* FindResource(PyObject *self, PyObject *args)
+{
+	HMODULE hModule;
+	UINT rcId;
+	UINT rcType; // ex: RT_DIALOG
+	if (!PyArg_ParseTuple(args, "iii", &hModule, &rcId, &rcType))
+		return NULL;
+	HRSRC hrsrc = FindResource(hModule, MAKEINTRESOURCE(rcId), (LPCTSTR)rcType);
+	if(hrsrc == NULL) 
+		{
+		seterror("FindResource", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue("i", hrsrc);
+}
+
+typedef void* (__stdcall *LRF)(struct HINSTANCE__ *,const char *);
+
+static PyObject* LoadResourceType(const char *what, LRF fn, PyObject *self, PyObject *args)
+{
+	HMODULE hModule;
+	UINT rcId;
+	if (!PyArg_ParseTuple(args, "ii", &hModule, &rcId))
+		return NULL;
+	HANDLE handle = (*fn)(hModule, MAKEINTRESOURCE(rcId));
+	if(handle == NULL) 
+		{
+		seterror("LoadAccelerators", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue("i", handle);
+}
+
+static PyObject* Winkernel_LoadAccelerators(PyObject *self, PyObject *args)
+	{return LoadResourceType("LoadAccelerators", (LRF)LoadAccelerators, self, args);}
+
+static PyObject* Winkernel_LoadBitmap(PyObject *self, PyObject *args)
+	{return LoadResourceType("LoadBitmap", (LRF)LoadBitmap, self, args);}
+
+static PyObject* Winkernel_LoadCursor(PyObject *self, PyObject *args)
+	{return LoadResourceType("LoadCursor", (LRF)LoadCursor, self, args);}
+
+static PyObject* Winkernel_LoadIcon(PyObject *self, PyObject *args)
+	{return LoadResourceType("LoadIcon", (LRF)LoadIcon, self, args);}
+
+static PyObject* Winkernel_LoadMenu(PyObject *self, PyObject *args)
+	{return LoadResourceType("LoadMenu", (LRF)LoadMenu, self, args);}
+
 	
 static struct PyMethodDef winkernel_methods[] = {
 	{"GetVersionEx", (PyCFunction)GetVersionEx, METH_VARARGS, ""},
 	{"Sleep", (PyCFunction)Sleep, METH_VARARGS, ""},
 	{"GetTickCount", (PyCFunction)GetTickCount, METH_VARARGS, ""},
 	{"LoadLibrary", (PyCFunction)LoadLibrary, METH_VARARGS, ""},
+	{"FindResource", (PyCFunction)FindResource, METH_VARARGS, ""},
+	{"LoadAccelerators", (PyCFunction)Winkernel_LoadAccelerators, METH_VARARGS, ""},
+	{"LoadBitmap", (PyCFunction)Winkernel_LoadBitmap, METH_VARARGS, ""},
+	{"LoadCursor", (PyCFunction)Winkernel_LoadCursor, METH_VARARGS, ""},
+	{"LoadIcon", (PyCFunction)Winkernel_LoadIcon, METH_VARARGS, ""},
+	{"LoadMenu", (PyCFunction)Winkernel_LoadMenu, METH_VARARGS, ""},
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 };
 
