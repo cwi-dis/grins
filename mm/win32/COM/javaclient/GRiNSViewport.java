@@ -35,6 +35,7 @@ public class GRiNSViewport extends Canvas {
 		}
 
     public void gpOpen(String str) {
+        gpConnect();
 		if(hgrins!=0){
 		    if(hasSource) close(hgrins);
 		    open(hgrins, str);
