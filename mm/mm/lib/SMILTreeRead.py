@@ -3664,7 +3664,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		for c in node.children:
 			if c.type == 'prio':
 				has_prio = 1
-			else:
+			elif c.type != 'comment':
 				has_nonprio = 1
 		if has_prio and has_nonprio:
 			self.syntax_error('cannot mix priorityClass and other children in excl element')
