@@ -137,7 +137,7 @@ class HTMLWidget:
 			rect = r-(SCROLLBARWIDTH-1), t-1, r+1, b+1
 			vy = self.getybarvalue()
 			self.bary = Ctl.NewControl(self.wid, rect, "", 1, vy, 0, dr[3]-dr[1]-(vr[3]-vr[1]), 16, 0)
-			if not self.activated: self.bary.HiliteControl(255)
+			if not self.activated: self.bary.DeactivateControl()
 			self.updatedocview()
 			if self.controlhandler:
 				self.controlhandler._add_control(self.bary, 
@@ -222,14 +222,14 @@ class HTMLWidget:
 		Qd.SetPort(self.wid)
 		self.ted.WEActivate()
 		if self.bary:
-			self.bary.HiliteControl(0)
+			self.bary.ActivateControl()
 		self.activated = 1
 
 	def do_deactivate(self):
 		Qd.SetPort(self.wid)
 		self.ted.WEDeactivate()
 		if self.bary:
-			self.bary.HiliteControl(255)
+			self.bary.DeactivateControl()
 		self.activated = 0
 		
 	def do_update(self):
