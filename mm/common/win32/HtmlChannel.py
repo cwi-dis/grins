@@ -47,20 +47,18 @@ import sys, string
 #import WMEVENTS
 
 import windowinterface
+import win32ui,win32con
 
 error = 'HtmlChannel.error'
 
-# channel types
-[SINGLE, HTM, TEXT, MPEG] = range(4)
-
 class HtmlChannel(Channel.ChannelWindow):
 	node_attrs = Channel.ChannelWindow.node_attrs + ['fgcolor', 'font']
-	_window_type = HTM
+	_window_type = windowinterface.HTM
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		self.played_str = ()
 		self.__errors=[]
-		
+		self.__armed=0
 		# release any resources on exit
 		windowinterface.addclosecallback(self.release_res,())
 		
@@ -85,12 +83,16 @@ class HtmlChannel(Channel.ChannelWindow):
 			self.window.DestroyHtmlCtrl()
 
 	def do_arm(self, node, same=0):
-		if not same:
-			try:
-				self.armed_str = self.getstring(node)
-			except:
-				self.armed_str = 'Cannot Open: '+self.getfileurl(node)
-				self.__errors.append(node)
+		if node.type != 'ext':
+			self.armed_str = self.getstring(node)
+		else:
+			self.armed_str=''		
+		self.armed_url=self.getfileurl(node)
+		self.__armed=0
+		if not self.window.HasHtmlCtrl():
+			self.window.CreateHtmlCtrl()
+			self.window.ShowWindow(win32con.SW_HIDE)
+			self.__arm(node)
 		return 1
 
 	def do_play(self, node):
@@ -105,21 +107,14 @@ class HtmlChannel(Channel.ChannelWindow):
 		bg = self.played_display._bgcolor
 		self.window.SetBackColor(windowinterface.RGB(bg))
 
-		if node.type == 'imm':
-			self.window.SetImmHtml(self.armed_str)
-		else:
-			import settings
-			url = MMurl.canonURL(self.getfileurl(node))
-##			url = MMurl.basejoin('file:'+MMurl.pathname2url(os.getcwd())+'/',url)
-			if not settings.get('html_control'):
-				url=urllib.unquote(url)
-			self.window.RetrieveUrl(url)
+		if not self.__armed:self.__arm(node)
 		if not self.window.HasHtmlCtrl():
 			print 'Warning: Failed to create Html control'
+		self.window.ShowWindow(win32con.SW_SHOW)
 		self.window.setredrawfunc(self.redraw)
 
 	def redraw(self):
-		#self.window.RedrawWindow()
+		#self.window.UpdateWindow()
 		self.window.Refresh()
 
 	def stopplay(self, node):
@@ -130,6 +125,17 @@ class HtmlChannel(Channel.ChannelWindow):
 			self.window.setredrawfunc(None)
 		Channel.ChannelWindow.stopplay(self, node)
 		
+
+	def __arm(self,node):
+		if node.type == 'imm':
+			self.window.SetImmHtml(self.armed_str)
+		else:
+			import settings
+			url = MMurl.canonURL(self.getfileurl(node))
+			if not settings.get('html_control'):
+				url=urllib.unquote(url)
+			self.window.RetrieveUrl(url)
+		self.__armed=1
 
 #################################
 	def updatefixedanchors(self, node):
