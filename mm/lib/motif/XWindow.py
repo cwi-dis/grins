@@ -863,7 +863,7 @@ class _Window(_AdornmentSupport):
 		else:
 			try:
 				reader = img.reader(format, file)
-			except img.error, arg:
+			except (img.error, IOError), arg:
 				raise error, arg
 			xsize = reader.width
 			ysize = reader.height
