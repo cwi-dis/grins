@@ -389,7 +389,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 			try:
 				dict = parseskin.parsegskin(MMurl.urlopen(skin))
 				filename = MMurl.urlretrieve(MMurl.basejoin(skin, dict['image']))[0]
-			except parsesking.error, msg:
+			except parseskin.error, msg:
 				settings.set('skin', '')
 				from windowinterface import showmessage
 				showmessage(msg)
@@ -469,6 +469,3 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 			if self._in_gapi_mode:
 				winmm.GXCloseDisplay()
 				self._in_gapi_mode = 0
-			
-
-		
