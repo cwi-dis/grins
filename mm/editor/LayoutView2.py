@@ -2302,7 +2302,9 @@ class KeyTimeSliderWidget(LightWidget):
 		timeIndex = self._context.getKeyTimeIndex()
 		if timeIndex >= 0:
 			self.__selecting = 1
-			self.sliderCtrl.select(timeIndex)
+			list = self.sliderCtrl.getKeyTimes()
+			self.sliderCtrl.setCursorPos(list[timeIndex])
+			self.sliderCtrl.selectKeyTime(timeIndex)
 			self.__selecting = 0
 
 		self.isEnabled = 1
@@ -2329,8 +2331,10 @@ class KeyTimeSliderWidget(LightWidget):
 				data.insert(index, data[index-1])
 				timeList.insert(index, tp)
 				self.sliderCtrl.insertKeyTime(tp)
+				list = self.sliderCtrl.getKeyTimes()
+				self.sliderCtrl.setCursorPos(list[index])
 				self._context.setKeyTimeIndex(index)
-				self.sliderCtrl.select(index)
+				self.sliderCtrl.selectKeyTime(index)
 				self._context.applyAnimationData(nodeRef)
 
 	def onRemoveKey(self, index):
@@ -2346,15 +2350,31 @@ class KeyTimeSliderWidget(LightWidget):
 					del timeList[index]
 					self.sliderCtrl.removeKeyTimeAtIndex(index)
 					self._context.setKeyTimeIndex(index-1)
-					self.sliderCtrl.select(index-1)
+					list = self.sliderCtrl.getKeyTimes()
+					self.sliderCtrl.setCursorPos(list[index-1])
+					self.sliderCtrl.selectKeyTime(index-1)
 					self._context.applyAnimationData(nodeRef)
 
 	def onSelected(self, index):
 		if self.isEnabled and not self.__selecting:
 			nodeType, nodeRef = self._selected
 			self._context.setKeyTimeIndex(index)
+			list = self.sliderCtrl.getKeyTimes()
+			self.sliderCtrl.setCursorPos(list[index])
 			self._context.updateFocus(1)
 
+	def onCursorPosChanged(self, pos):
+		self._context.updateFocus(1)
+
+	def onKeyTimeChanged(self, index, time):
+		if self.isEnabled:
+			nodeType, nodeRef = self._selected
+			animationData = nodeRef.getAnimationData()
+			timeList = animationData.getTimes()
+			timeList[index] = time
+			self._context.applyAnimationData(nodeRef)
+			self._context.updateFocus(1)
+				
 #
 # tree widget management
 #
