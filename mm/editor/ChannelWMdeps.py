@@ -169,8 +169,10 @@ class Channel:
 			self.player.arm_ready(self.name)
 		if self.haspauseanchor and not self.player.ui.ignore_pauses:
 			return
-		callback, arg = self.cb
-		apply(callback, arg)
+		if self.cb:
+			callback, arg = self.cb
+			apply(callback, arg)
+			self.cb = None
 		if self.autoanchor:
 			rv = self.player.anchorfired(self.node, [self.autoanchor])
 		self.autoanchor = None

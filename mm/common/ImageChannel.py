@@ -137,8 +137,10 @@ class ImageWindow(ChannelWindow):
 			self.drawanchor(a[A_ARGS], 1)
 		rv = self.player.anchorfired(self.ninfo.node, al2)
 		# If this was a paused anchor and it didn't fire
-		# stop showing the node
-		if rv == 0 and len(al2) == 1 and al2[0][A_TYPE] == ATYPE_PAUSE:
+		# stop showing the node. We also clear the haspauseanchor
+		# field, so we won't execute this code again.
+		if rv == 0 and self.channel.haspauseanchor and \
+			  len(al2) == 1 and al2[0][A_TYPE] == ATYPE_PAUSE:
 			self.channel.haspauseanchor = 0
 			self.channel.pauseanchor_done(0)
 	#

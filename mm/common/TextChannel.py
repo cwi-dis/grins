@@ -125,7 +125,8 @@ class TextWindow(ChannelWindow):
 		# If this was a paused anchor and it didn't fire,
 		# we're done playing the node
 		#
-		if rv == 0 and len(al2) == 1 and al2[0][A_TYPE] == ATYPE_PAUSE:
+		if rv == 0 and self.channel.haspauseanchor and \
+			  len(al2) == 1 and al2[0][A_TYPE] == ATYPE_PAUSE:
 			self.channel.haspauseanchor = 0
 			self.channel.pauseanchor_done(0)
 	#
