@@ -63,7 +63,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.channels = {}
 		self.channeltypes = {}
 		self.timing_changed = 0
-		return BasicDialog.init(self, (0, 0, 'Player'))
+		return BasicDialog.init(self, 0, 0, 'Player')
 	#
 	# EditMgr interface (as dependent client).
 	#
