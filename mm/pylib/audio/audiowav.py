@@ -68,6 +68,7 @@ class reader:
 		self.__filename = filename # only needed for __repr__
 		self.__file = file = open(filename, 'rb')
 		self.__soundpos = 0
+		self.__framesread = 0
 		# start parsing
 		form = file.read(4)
 		if form != 'RIFF':
@@ -147,16 +148,21 @@ class reader:
 			nbytes = (nframes / fmt.getfpb()) * fmt.getblocksize()
 		else:
 			nbytes = -1
-		return self.__data_chunk.read(nbytes)
+		data = self.__data_chunk.read(nbytes)
+		nframes = len(data) * fmt.getfpb() / fmt.getblocksize()
+		self.__framesread = self.__framesread + nframes
+		return data
 
 	def rewind(self):
 		self.__data_chunk.rewind()
+		self.__framesread = 0
 
 	def getpos(self):
-		return self.__data_chunk.getpos()
+		return self.__data_chunk.getpos(), self.__framesread
 
-	def setpos(self, pos):
+	def setpos(self, (pos, framesread)):
 		self.__data_chunk.setpos(pos)
+		self.__framesread = framesread
 
 	def getmarkers(self):
 		return []

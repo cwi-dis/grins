@@ -40,6 +40,7 @@ class reader:
 	def __init__(self, filename):
 		self.__filename = filename # only needed for __repr__
 		self.__file = file = open(filename, 'rb')
+		self.__framesread = 0
 		magic = file.read(4)
 		if magic != '.snd':
 			raise Error, 'not a AU file'
@@ -86,7 +87,7 @@ class reader:
 		return self.__format
 
 	def getnframes(self):
-		return self.__nframes
+		return self.__nframes - self.__framesread
 
 	def getframerate(self):
 		return self.__framerate
@@ -97,16 +98,21 @@ class reader:
 			nbytes = (nframes / fmt.getfpb()) * fmt.getblocksize()
 		else:
 			nbytes = -1
-		return self.__file.read(nbytes)
+		data = self.__file.read(nbytes)
+		nframes = len(data) * fmt.getfpb() / fmt.getblocksize()
+		self.__framesread = self.__framesread + nframes
+		return data
 
 	def rewind(self):
 		self.__file.seek(self.__hdr_size)
+		self.__framesread = 0
 
 	def getpos(self):
-		return self.__file.tell()
+		return self.__file.tell(), self.__framesread
 
-	def setpos(self, pos):
+	def setpos(self, (pos, framesread)):
 		self.__file.seek(pos)
+		self.__framesread = framesread
 
 	def getmarkers(self):
 		return []
