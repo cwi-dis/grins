@@ -2606,6 +2606,8 @@ class DrawContext:
 # You can set the selections by calling 
 # MSDrawContext.selectShapes(self, shapeList)
 
+debugMSDrawContext = 0
+
 class MSDrawContext(DrawContext):
 	def __init__(self):
 		DrawContext.__init__(self)
@@ -2640,12 +2642,18 @@ class MSDrawContext(DrawContext):
 		if not self._muliselect:
 			mode=SO_REPLACE
 
+		if debugMSDrawContext:
+			if shape:
+				print 'select', shape.getwindowpos(), 'mode=', mode
+			else:
+				print 'select None'
+			
 		# remove selections if shape is None
 		if not shape:
 			self._selected = None
 			if self._selections:
-				for shape in self._selections:
-					shape.invalidateDragHandles()
+				for sh in self._selections:
+					sh.invalidateDragHandles()
 				self._selections = []
 		else:
 			# set last selected shape
@@ -2653,8 +2661,8 @@ class MSDrawContext(DrawContext):
 			# update selections
 			if mode==SO_REPLACE:
 				if self._selections:
-					for shape in self._selections:
-						shape.invalidateDragHandles()
+					for sh in self._selections:
+						sh.invalidateDragHandles()
 				self._selections = [shape,]
 			elif mode==SO_APPEND:
 				if shape not in self._selections:
@@ -2671,6 +2679,10 @@ class MSDrawContext(DrawContext):
 		self.notifyForSelChange()
 
 	def notifyForSelChange(self):
+		if debugMSDrawContext:
+			for shape in self._selections:
+				print shape.getwindowpos(),
+			print ""
 		self._notifyListeners(self._selected)
 		for obj in self._listeners:
 			obj.onMultiSelChanged(self._selections)
