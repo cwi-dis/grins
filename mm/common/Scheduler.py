@@ -190,11 +190,13 @@ class SchedulerContext:
 	# time in the future (i.e. if we're not done yet)
 	#
 	def FutureWork(self):
-		for ev in self.srevents.keys():
-			if ev[0] != SR.TERMINATE:
-				return 1
-		# no events left except possibly TERMINATE events
-		self.srevents = {}
+		if self.srevents:
+			return 1
+## 		for ev in self.srevents.keys():
+## 			if ev[0] != SR.TERMINATE:
+## 				return 1
+## 		# no events left except possibly TERMINATE events
+## 		self.srevents = {}
 		self.parent.ui.sctx_empty(self) # XXXX
 		return 0
 	#
