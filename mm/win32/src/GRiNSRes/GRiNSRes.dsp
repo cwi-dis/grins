@@ -108,6 +108,14 @@ SOURCE=.\RES\eventout.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\Excl_close.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Excl_open.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\focusin.ico
 # End Source File
 # Begin Source File
@@ -125,6 +133,10 @@ SOURCE=.\RES\GRiNSed.ico
 # Begin Source File
 
 SOURCE=..\Build\grinsRC.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\GRiNSRes.h
 # End Source File
 # Begin Source File
 
@@ -228,6 +240,14 @@ SOURCE=.\RES\outtransition.ICO
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\Par_close.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Par_open.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\pause.ico
 # End Source File
 # Begin Source File
@@ -244,11 +264,27 @@ SOURCE=.\RES\playing.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\Prio_close.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Prio_open.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\Res\region.bmp
 # End Source File
 # Begin Source File
 
 SOURCE=.\RES\repeat.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Seq_close.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Seq_open.ico
 # End Source File
 # Begin Source File
 
@@ -273,6 +309,10 @@ SOURCE=..\..\..\Build\products\qt\pro\splash8bit.bmp
 # Begin Source File
 
 SOURCE="..\..\..\Build\products\smil-10\splash8bit.bmp"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\..\Build\products\smil-20\editor\splash8bit.bmp"
 # End Source File
 # Begin Source File
 
@@ -316,6 +356,14 @@ SOURCE=.\RES\stop.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\Switch_close.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\Switch_open.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\tb_alignment.bmp
 # End Source File
 # Begin Source File
@@ -346,63 +394,6 @@ SOURCE=.\RES\waitstop.ico
 
 SOURCE=.\RES\wallcloc.ico
 # End Source File
-# End Group
-# Begin Source File
-
-SOURCE=.\RES\Anim_close.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\RES\Anim_open.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\RES\Excl_close.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\RES\Excl_open.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\GRiNSRes.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\RES\Par_close.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\RES\Par_open.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\RES\Prio_close.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\RES\Prio_open.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\RES\Seq_close.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\RES\Seq_open.ico
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\Build\products\smil-20\editor\splash8bit.bmp"
-# End Source File
-# Begin Source File
-
-SOURCE=.\RES\Switch_close.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\RES\Switch_open.ico
-# End Source File
 # Begin Source File
 
 SOURCE=.\RES\zoomin.ico
@@ -411,5 +402,6 @@ SOURCE=.\RES\zoomin.ico
 
 SOURCE=.\RES\zoomout.ico
 # End Source File
+# End Group
 # End Target
 # End Project
