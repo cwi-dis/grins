@@ -99,7 +99,7 @@ class RealChannel:
 	def destroy(self):
 		if self.__qid:
 			self.__channel._scheduler.cancel(self.__qid)
-			self.__qid = None
+		self.__qid = None
 		del self.__channel
 
 	def release_player(self):
@@ -152,6 +152,10 @@ class RealChannel:
 		if realenginedebug:
 			print 'RealChannel.playit', self, `url`
 		self.__rmaplayer.OpenURL(url)
+		t0 = self.__channel._scheduler.timefunc()
+		if t0 > node.start_time:
+			print 'skipping',node.start_time,t0,t0-node.start_time
+			self.__rmaplayer.Seek(int((t0-node.start_time)*1000))
 		self.__rmaplayer.Begin()
 		self.__engine.startusing()
 		self.__using_engine = 1
@@ -225,6 +229,10 @@ class RealChannel:
 		if self.__rmaplayer:
 			if realenginedebug:
 				print 'RealChannel.stopit', self
+			self.__loop = 1
+			if self.__qid:
+				self.__channel._scheduler.cancel(self.__qid)
+			self.__qid = 0
 			self.__rmaplayer.Stop()
 			if self.__using_engine:
 				self.__engine.stopusing()
