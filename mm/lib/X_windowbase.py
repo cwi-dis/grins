@@ -1758,6 +1758,8 @@ def findfont(fontname, pointsize):
 	psize = pointsize
 	scfont = None
 	thefont = None
+	smsize = 9999			# something big
+	smfont = None
 	for font in fontlist:
 		try:
 			parsedfont = _parsefontname(font)
@@ -1781,6 +1783,8 @@ def findfont(fontname, pointsize):
 			scfont = parsedfont
 			continue
 		p = string.atoi(parsedfont[_PIXELS])
+		if p < smsize:
+			smfont = font
 		# either use closest, or use next smaller
 		if abs(pixelsize - p) < abs(pixelsize - bestsize): # closest
 ##		if p <= pixelsize and p > bestsize: # biggest <= wanted
@@ -1798,6 +1802,10 @@ def findfont(fontname, pointsize):
 			scfont[_AVG_WIDTH] = '*'
 			thefont = _makefontname(scfont)
 			psize = pointsize
+		elif smfont is not None:
+			# nothing smaller, so take next bigger
+			thefont = font
+			psize = smsize * 72.0 / toplevel._dpi_y
 		else:
 			# no font available, complain.  Loudly.
 			raise error, "can't find any fonts"
