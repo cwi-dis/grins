@@ -29,6 +29,10 @@ def textcolor(): RGBcolor(0, 0, 0)		# BLACK
 def thermocolor(): RGBcolor(255, 255, 0)	# YELLOW
 def altthermocolor(): RGBcolor(0, 0, 255)	# BLUE
 
+def arm1color(): RGBcolor(255, 175, 0)		# ORANGE
+def arm2color(): RGBcolor(255, 128, 0)		# ORANGE
+def arm3color(): RGBcolor(255, 0, 0)		# red
+
 def clear_window():
 	bgcolor()
 	clear()
@@ -44,12 +48,25 @@ class box:
 		self.h = h
 		self.label = name
 		self.hidden = 0
+		self.armedmode = 0
 		return self
+
+	def setarmedmode(self, mode):
+		self.armedmode = mode
+		self.draw()
 
 	def draw(self):
 		if self.hidden <> 0 or self.boxtype == BG_BOX:
 			return
-		nodecolor()
+		# Arm color overrides focus.
+		if self.armedmode == 1:
+			arm1color()
+		elif self.armedmode == 2:
+			arm2color()
+		elif self.armedmode == 3:
+			arm3color()
+		else:
+			nodecolor()
 		l = getlwidth()
 		x = self.x
 		y = self.y
@@ -68,8 +85,8 @@ class box:
 			focuscolor()
 		elif self.boxtype == LOCK_BOX:
 			altfocuscolor()
-		else:
-			nodecolor()
+		#else:
+		#	nodecolor()
 		bgnclosedline()
 		v2f(0, 0)
 		v2f(w, 0)
@@ -257,6 +274,7 @@ def putlabel(label):
 class thermo:
 
 	def new(self,(x,y,w,h)):
+		return self # gna gna gna...
 		self.x = x
 		self.y = y
 		self.w = w
@@ -264,6 +282,7 @@ class thermo:
 		return self
 
 	def draw(self, val):
+		return # gna gna gna...
 		thermocolor()
 		x = self.x
 		y = self.y
