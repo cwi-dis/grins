@@ -7,6 +7,7 @@ class SMIL:
 	# some abbreviations
 	__layouts = GRiNSns + ' ' + 'layouts'
 	__layout = GRiNSns + ' ' + 'layout'
+	__choice = GRiNSns + ' ' 'choice'
 	__bag = GRiNSns + ' ' 'bag'
 	__cmif = GRiNSns + ' ' 'cmif'
 	__shell = GRiNSns + ' ' 'shell'
@@ -113,23 +114,24 @@ class SMIL:
 			   'system-screen-size':None,
 			   __u_group:None,
 			   __layout:None},
-		__bag: {GRiNSns+' ' 'abstract':'',
-			GRiNSns+' ' 'author':'',
-			GRiNSns+' ' 'bag-index':None,
-			GRiNSns+' ' 'copyright':'',
-			GRiNSns+' ' 'id':None,
-			GRiNSns+' ' 'system-bitrate':None,
-			GRiNSns+' ' 'system-captions':None,
-			GRiNSns+' ' 'system-language':None,
-			GRiNSns+' ' 'system-overdub-or-caption':None,
-			GRiNSns+' ' 'system-required':None,
-			GRiNSns+' ' 'system-screen-depth':None,
-			GRiNSns+' ' 'system-screen-size':None,
-			GRiNSns+' ' 'title':None,
-			__u_group:None,
-			__layout:None,
-			GRiNSns+' ' 'comment':None,
-			},
+		__choice: {GRiNSns+' ' 'abstract':'',
+			   GRiNSns+' ' 'author':'',
+			   GRiNSns+' ' 'choice-index':None,
+			   GRiNSns+' ' 'copyright':'',
+			   GRiNSns+' ' 'id':None,
+			   GRiNSns+' ' 'system-bitrate':None,
+			   GRiNSns+' ' 'system-captions':None,
+			   GRiNSns+' ' 'system-language':None,
+			   GRiNSns+' ' 'system-overdub-or-caption':None,
+			   GRiNSns+' ' 'system-required':None,
+			   GRiNSns+' ' 'system-screen-depth':None,
+			   GRiNSns+' ' 'system-screen-size':None,
+			   GRiNSns+' ' 'title':None,
+			   __u_group:None,
+			   __layout:None,
+			   GRiNSns+' ' 'comment':None,
+			   },
+		__bag = __choice
 		'ref': {'abstract':'',
 			'alt':None,
 			'author':'',
@@ -201,7 +203,7 @@ class SMIL:
 			attributes[__el] = attributes['ref']
 	del __el, __at
 
-	__schedule = ['par', 'seq', __bag] + __media_object
+	__schedule = ['par', 'seq', __choice, _bag] + __media_object
 	__container_content = __schedule + ['switch', 'a']
 	__assoc_link = ['anchor']
 	__empty = []
@@ -219,6 +221,7 @@ class SMIL:
 		'body': __container_content,
 		'par': __container_content,
 		'seq': __container_content,
+		__choice: __container_content,
 		__bag: __container_content,
 		'switch': ['layout'] + __container_content,
 		'ref': __assoc_link,
@@ -236,7 +239,7 @@ class SMIL:
 		}
 
 	# cleanup
-	del __bag, __cmif, __shell, __socket, __user_attributes
+	del __choice, __bag, __cmif, __shell, __socket, __user_attributes
 	del __u_group, __media_object, __schedule, __container_content,
 	del __assoc_link, __empty
 	del __layouts, __layout

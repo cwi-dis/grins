@@ -346,7 +346,7 @@ smil_attrs=[
 	("system-required", lambda writer, node:getrawcmifattr(writer, node, "system_required")),
 	("system-screen-size", getscreensize),
 	("system-screen-depth", lambda writer, node:getrawcmifattr(writer, node, "system_screen_depth")),
-	("bag-index", getbagindex),
+	("choice-index", getbagindex),
 	("u-group", getugroup),
 	("layout", getlayout),
 ]
@@ -811,8 +811,8 @@ class SMILWriter(SMIL):
 		interior = (type in interiortypes)
 		if interior:
 			if type == 'bag':
-				mtype = '%s:bag' % NSprefix
-				xtype = '%s bag' % GRiNSns
+				mtype = '%s:choice' % NSprefix
+				xtype = '%s choice' % GRiNSns
 			elif type == 'alt':
 				xtype = mtype = 'switch'
 			else:
