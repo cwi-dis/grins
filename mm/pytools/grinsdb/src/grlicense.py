@@ -16,7 +16,7 @@ Error = license.Error
 def main():
 	try:
 		options, args = getopt.getopt(sys.argv[1:], "lcrn:d:f:u:")
-	except getopt.Error:
+	except getopt.error:
 		usage()
 		sys.exit(1)
 	list = 0
