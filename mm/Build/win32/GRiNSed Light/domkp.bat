@@ -41,22 +41,20 @@ rem Set up the PYTHONPATH for the freeze - this points to all the cmif directori
 rem we need to perform the freeze.
 set PYTHONPATH=%GRINS_HOME%
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%\win32
-set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\lib\win32
-set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\common\win32
-set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\win32\src\Build
-
 IF NOT %INCLUDE_MMEXTENSIONS%==yes GOTO restpath
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\mmextensions\real\win32
-
 :restpath
+set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\common\win32
+set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\lib\win32
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\%FREEZE_WHAT%
-set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\lib
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\common
+set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\lib
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\pylib
-set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\pylib\audio
+set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\win32\src\Build
 
 
 rem And the standard Python extensions.
+set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\img\Lib
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\win32\lib
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\win32\Build
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\Pythonwin
@@ -98,19 +96,14 @@ rem echo -x MPEGVideoDuration >> FreezeOpts
 rem ****************************
 
 rem Audio stuff not supported on this platform
-echo -x audio.convert >> FreezeOpts
 echo -x audio.devsun >> FreezeOpts
 echo -x audio.devmac >> FreezeOpts
 echo -x audio.devsgi >> FreezeOpts
-echo -x audio.file >> FreezeOpts
-echo -x audio.format >> FreezeOpts
 echo -x audio.hcom >> FreezeOpts
 echo -x audio.sndr >> FreezeOpts
 echo -x audio.sndt >> FreezeOpts
 echo -x audio.svx8 >> FreezeOpts
 echo -x audio.voc >> FreezeOpts
-echo -x audio.what >> FreezeOpts
-echo -x audioop >> FreezeOpts
 echo -x sunaudiodev >> FreezeOpts
 echo -x SUNAUDIODEV >> FreezeOpts
 echo -x hcom >> FreezeOpts
@@ -145,10 +138,6 @@ echo -x glX >> FreezeOpts
 echo -x glXconst >> FreezeOpts
 echo -x greekconv >> FreezeOpts
 echo -x ic >> FreezeOpts
-echo -x img >> FreezeOpts
-echo -x imgcolormap >> FreezeOpts
-echo -x imgconvert >> FreezeOpts
-echo -x imgformat >> FreezeOpts
 echo -x sitecustomize >> FreezeOpts
 echo -x termios >> FreezeOpts
 
@@ -162,6 +151,16 @@ echo -x win32dbg >> FreezeOpts
 rem exclude RMASDK
 echo -x rma >> FreezeOpts
 
+rem exlude img related pyds
+REM echo -x img >> FreezeOpts
+echo -x imgcolormap >> FreezeOpts
+echo -x imgjpeg >> FreezeOpts
+echo -x imgop >> FreezeOpts
+echo -x imgformat >> FreezeOpts
+
+rem producer stuff
+echo -x producer >> FreezeOpts
+
 rem EXCLUDE_WHAT
 echo -x %EXCLUDE_WHAT% >> FreezeOpts
 
@@ -169,7 +168,7 @@ echo -x %EXCLUDE_WHAT% >> FreezeOpts
 
 %PYTHON_EXE% -O %COMPILE% >> log.txt
 
-%PYTHON_EXE% -O %FREEZE% -s windows -i FreezeOpts -e %GRINS_HOME%\win32\extensions.ini %main_script% >> log.txt
+%PYTHON_EXE% -O %FREEZE% -s windows -i FreezeOpts -e %GRINS_HOME%\win32\grins_extensions.ini %main_script% >> log.txt
 
 : Make the target
 rem echo Executing NMAKE

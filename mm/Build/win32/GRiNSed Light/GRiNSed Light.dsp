@@ -239,6 +239,10 @@ SOURCE=.\M_Bandwidth.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_BandwidthCompute.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_base64.c
 # End Source File
 # Begin Source File
@@ -339,6 +343,10 @@ SOURCE=.\M_flags.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_fnmatch.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_Font.c
 # End Source File
 # Begin Source File
@@ -372,6 +380,10 @@ SOURCE=.\M_getpass.c
 # Begin Source File
 
 SOURCE=.\M_GLLock.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_glob.c
 # End Source File
 # Begin Source File
 
@@ -424,6 +436,30 @@ SOURCE=.\M_httplib.c
 # Begin Source File
 
 SOURCE=.\M_ImageChannel.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_img.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_imgbmp.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_imgconvert.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_imghdr.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_imgsgi.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_imgxbm.c
 # End Source File
 # Begin Source File
 
