@@ -740,6 +740,9 @@ class Channel:
 	def gethicolor(self, node):
 		return MMAttrdefs.getattr(node, 'hicolor')
 
+	def getloop(self, node):
+		return MMAttrdefs.getattr(node, 'loop')
+
 	def defanchor(self, node, anchor, cb):
 		# This method is called when the user defines a new anchor. It
 		# may be overridden by derived classes.

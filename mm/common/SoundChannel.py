@@ -3,6 +3,7 @@ __version__ = "$Id$"
 # XXXX Still needs some work, esp. in the callback time calc section
 #
 from Channel import ChannelAsync
+import MMAttrdefs
 import windowinterface
 import time
 import audio, audiodev, audiomerge, audioconvert
@@ -15,6 +16,8 @@ debug = os.environ.has_key('CHANNELDEBUG')
 SECONDS_TO_BUFFER=2
 
 class SoundChannel(ChannelAsync):
+	node_attrs = ChannelAsync.node_attrs + ['duration', 'loop']
+
 	# shared between all instances
 	__playing = 0			# # of active channels
 
@@ -23,7 +26,7 @@ class SoundChannel(ChannelAsync):
 		if debug: print 'SoundChannel: init', name
 		self.arm_fp = None
 		self.play_fp = None
-		self._timer_id = None
+		self.__qid = None
 
 	def do_arm(self, node, same=0):
 		if same and self.arm_fp:
@@ -46,11 +49,13 @@ class SoundChannel(ChannelAsync):
 			self.arm_fp = None
 			self.armed_duration = 0
 			return 1
+		self.armed_loop = self.getloop(node)
+		self.armed_duration = MMAttrdefs.getattr(node, 'duration')
 		return 1
 		
 	def do_play(self, node):
 		if not self.arm_fp:
-			print 'not playing'
+			print 'SoundChannel: not playing'
 			self.play_fp = None
 			self.arm_fp = None
 			self.playdone(0)
@@ -59,17 +64,43 @@ class SoundChannel(ChannelAsync):
 		if debug: print 'SoundChannel: play', node
 		self.play_fp = self.arm_fp
 		self.arm_fp = None
-		player.play(self.play_fp, (self.my_playdone, (0,)))
-		
-	def my_playdone(self, outside_induces):
-		if debug: print 'SoundChannel: playdone',`self`
+		self.play_loop = self.armed_loop
+		if self.armed_duration:
+			self.__qid = self._scheduler.enter(
+				self.armed_duration, 0, self.__stopplay, ())
+		player.play(self.play_fp, (self.my_playdone, ()))
+
+	def __stopplay(self):
 		if self.play_fp:
+			self.__qid = None
 			player.stop(self.play_fp)
 			self.play_fp = None
-			self.playdone(outside_induces)
+			self.playdone(0)
+
+	def my_playdone(self):
+		if debug: print 'SoundChannel: playdone',`self`
+		if self.play_fp:
+			if self.play_loop:
+				self.play_loop = self.play_loop - 1
+				if self.play_loop:
+					self.play_fp.rewind()
+					player.play(self.play_fp,
+						    (self.my_playdone, ()))
+					return
+				if self.__qid:
+					self._scheduler.cancel(self.__qid)
+					self.__qid = None
+				self.play_fp = None
+				self.playdone(0)
+				return
+			self.play_fp.rewind()
+			player.play(self.play_fp, (self.my_playdone, ()))
 
 	def playstop(self):
 		if debug: print 'SoundChannel: playstop'
+		if self.__qid:
+			self._scheduler.cancel(self.__qid)
+			self.__qid = None
 		if self.play_fp:
 			player.stop(self.play_fp)
 			self.play_fp = None
@@ -189,20 +220,23 @@ class Player:
 				port.wait()
 				self.__merger = None
 				self.__converter = None
-				for rdr, cb in self.__callbacks:
+				callbacks = self.__callbacks
+				self.__callbacks = []
+				for rdr, cb in callbacks:
 					if cb:
 						apply(cb[0], cb[1])
-				self.__callbacks = []
 				return
 ## 			fmt = converter.getformat()
 ## 			print 'writing %d frames' % (len(self.__data)/
 ## 						     fmt.getblocksize()*
 ## 						     fmt.getfpb())
 			port.writeframes(self.__data)
+			callbacks = self.__callbacks
+			self.__callbacks = []
 			for rdr, cb in self.__callbacks:
+				self.__merger.delete(rdr)
 				if cb:
 					apply(cb[0], cb[1])
-			self.__callbacks = []
 			self.__prevpos = self.__oldpos
 			self.__oldpos = converter.getpos()
 			self.__data = converter.readframes(self.__readsize)

@@ -9,13 +9,15 @@ import urllib
 import Xlib
 
 class VideoChannel(Channel.ChannelWindowAsync):
-	node_attrs = Channel.ChannelWindowAsync.node_attrs + ['scale']
+	node_attrs = Channel.ChannelWindowAsync.node_attrs + \
+		     ['bucolor', 'hicolor', 'scale', 'loop']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
 		self.__context = None
 		self.played_movie = self.armed_movie = None
 		self.__stopped = 0
+		self.__qid = None
 
 	def do_show(self, pchan):
 		if not Channel.ChannelWindowAsync.do_show(self, pchan):
@@ -85,6 +87,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		bg = self.getbgcolor(node)
 		movie.SetViewBackground(bg)
 		self.armed_bg = self.window._convert_color(bg)
+		self.armed_loop = self.getloop(node)
+		self.armed_duration = MMAttrdefs.getattr(node, 'duration')
 		try:
 			alist = node.GetRawAttr('anchorlist')
 		except NoSuchAttrError:
@@ -102,27 +106,47 @@ class VideoChannel(Channel.ChannelWindowAsync):
 
 	def do_play(self, node):
 		window = self.window
-		self.played_movie = self.armed_movie
+		self.played_movie = movie = self.armed_movie
 		self.armed_movie = None
-		if self.played_movie is None:
+		if movie is None:
 			self.playdone(0)
 			return
 		self.played_scale = self.armed_scale
 		self.played_size = self.armed_size
 		self.played_bg = self.armed_bg
 		window.setredrawfunc(self.redraw)
-		self.played_movie.BindOpenGLWindow(self.window._form,
-						   self.__context)
-		self.played_movie.Play()
+		movie.BindOpenGLWindow(self.window._form, self.__context)
+		loop = self.armed_loop
+		if loop == 0:
+			movie.SetPlayLoopLimit(mv.MV_LIMIT_FOREVER)
+		else:
+			movie.SetPlayLoopLimit(loop)
+		if loop != 1:
+			movie.SetPlayLoopMode(mv.MV_LOOP_CONTINUOUSLY)
+		if self.armed_duration:
+			self.__qid = self._scheduler.enter(
+				self.armed_duration, 0, self.__stopplay, ())
+		movie.Play()
 		self.__stopped = 0
 		r = Xlib.CreateRegion()
 		r.UnionRectWithRegion(0, 0, window._form.width, window._form.height)
 		r.SubtractRegion(window._region)
 		window._topwindow._do_expose(r)
 
-	def playstop(self):
+	def __stopplay(self):
 		if self.played_movie:
 			self.played_movie.Stop()
+			self.played_movie = None
+			self.__qid = None
+			self.playdone(0)
+
+	def playstop(self):
+		if self.__qid:
+			self._scheduler.cancel(self.__qid)
+			self.__qid = None
+		if self.played_movie:
+			self.played_movie.Stop()
+			self.played_movie = None
 		self.playdone(1)
 
 	def stopplay(self, node):
@@ -174,6 +198,10 @@ class VideoChannel(Channel.ChannelWindowAsync):
 
 	def stopped(self):
 		if not self.__stopped:
+			if self.__qid:
+				self._scheduler.cancel(self.__qid)
+			self.__qid = None
+			self.played_movie = None
 			self.playdone(0)
 
 def _selcb():
