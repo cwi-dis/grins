@@ -754,7 +754,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if channel_type == 'null':
 			mimetypes = MMAttrdefs.getattr(node, 'allowedmimetypes')
 			if len(mimetypes) == 1 and mimetypes[0] in ('video', 'image', 'text'):
-				channel_type = mimetypes
+				channel_type = mimetypes[0]
 			elif len(mimetypes) == 1 and mimetypes[0] == 'audio':
 				channel_type = 'sound'
 		url = node.GetFile()
