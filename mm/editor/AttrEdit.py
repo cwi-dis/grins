@@ -16,15 +16,8 @@ def showattreditor(node):
 	except AttributeError:
 		attreditor = AttrEditor(NodeWrapper(node))
 		node.attreditor = attreditor
-	attreditor.open()
-
-
-def hideattreditor(node):
-	try:
-		attreditor = node.attreditor
-	except AttributeError:
-		return			# No attribute editor active
-	attreditor.hide()
+	else:
+		attreditor.pop()
 
 # An additional call to check whether the attribute editor is currently
 # active for a node (so the caller can put up a warning "you are already
@@ -35,7 +28,7 @@ def hasattreditor(node):
 		attreditor = node.attreditor
 	except AttributeError:
 		return 0		# No attribute editor active
-	return attreditor.is_showing()
+	return 1
 
 
 # A similar interface for channels (note different arguments!).
@@ -46,55 +39,18 @@ def showchannelattreditor(channel, new = 0):
 	try:
 		attreditor = channel.attreditor
 	except AttributeError:
-		channel.attreditor = attreditor = \
-				     AttrEditor(ChannelWrapper(channel))
-	attreditor.open(new)
-
-def hidechannelattreditor(channel):
-	try:
-		attreditor = channel.attreditor
-	except AttributeError:
-		return
-	attreditor.hide()
+		attreditor = AttrEditor(ChannelWrapper(channel), new)
+		channel.attreditor = attreditor
+	else:
+		attreditor.pop()
 
 def haschannelattreditor(channel):
 	try:
 		attreditor = channel.attreditor
 	except AttributeError:
 		return 0
-	return attreditor.is_showing()
+	return 1
 
-
-### And again a similar interface for styles.
-### The administration is kept in context.styleattreditors,
-### which is created here if necessary.
-##
-##def showstyleattreditor(context, name):
-##	try:
-##		dict = context.styleattreditors
-##	except AttributeError:
-##		dict = context.styleattreditors = {}
-##	if not dict.has_key(name):
-##		dict[name] = AttrEditor(StyleWrapper(context, name))
-##	dict[name].open()
-##
-##def hidestyleattreditor(context, name):
-##	try:
-##		dict = context.styleattreditors
-##	except AttributeError:
-##		return
-##	if not dict.has_key(name):
-##		return
-##	dict[name].hide()
-##
-##def hasstyleattreditor(context, name):
-##	try:
-##		dict = context.styleattreditors
-##	except AttributeError:
-##		return 0
-##	if not dict.has_key(name):
-##		return 0
-##	return dict[name].is_showing()
 
 # The "Wrapper" classes encapsulate the differences between attribute
 # editors for nodes and channels.  If you want editors for other
@@ -312,96 +268,25 @@ class ChannelWrapper(Wrapper):
 		return MMAttrdefs.parsevalue(name, string, self.context)
 
 
-##class StyleWrapper(Wrapper):
-##	def __init__(self, context, name):
-##		self.name = name
-##		self.attrdict = context.styledict[name]
-##		Wrapper.__init__(self, context)
-##
-##	def __repr__(self):
-##		return '<StyleWrapper, name=' + `self.name` + '>'
-##
-##	def stillvalid(self):
-##		return self.context.styledict.has_key(self.name) and \
-##			self.context.styledict[self.name] == self.attrdict
-##
-##	def maketitle(self):
-##		return 'Attributes for style: ' + self.name
-##
-##	def getattr(self, name):
-##		if self.attrdict.has_key(name):
-##			return self.attrdict[name]
-##		else:
-##			return MMAttrdefs.getdef(name)[1]
-##
-##	def getvalue(self, name): # Return the raw attribute or None
-##		if self.attrdict.has_key(name):
-##			return self.attrdict[name]
-##		else:
-##			return None
-##
-##	def getdefault(self, name): # Return the default or None
-##		return MMAttrdefs.getdef(name)[1]
-##
-##	def setattr(self, name, value):
-##		self.editmgr.setstyleattr(self.name, name, value)
-##
-##	def delattr(self, name):
-##		self.editmgr.setstyleattr(self.name, name, None)
-##	#
-##	# Return a list of attribute names that make sense for this style,
-##	# in an order that makes sense to the user.
-##	#
-##	def attrnames(self):
-##		namelist = ['type', 'channel', 'comment']
-##		# Get the channel class (should be a subroutine!)
-##		if self.attrdict.has_key('type'):
-##			ctype = self.attrdict['type']
-##		else:
-##			ctype = 'unknown'
-##		if channelmap.has_key(ctype):
-##			cclass = channelmap[ctype]
-##			# Add the class's declaration of attributes
-##			for name in cclass.node_attrs + cclass.chan_attrs:
-##				if MMAttrdefs.getdef(name)[5] <> 'raw':
-##					namelist.append(name)
-##		# Merge in nonstandard attributes
-##		extras = []
-##		for name in self.attrdict.keys():
-##			if name not in namelist and \
-##					MMAttrdefs.getdef(name)[3] <> 'hidden':
-##				extras.append(name)
-##		extras.sort()
-##		return namelist + extras
-
 
 # Attribute editor class.
 
 class AttrEditor:
-	def __init__(self, wrapper):
-		self.new = 0
-		self.wrapper = wrapper
-		self.dialog = None
-
-	def open(self, new = 0):
+	def __init__(self, wrapper, new = 0):
 		self.new = new
-		self.show()
-
-	def show(self):
-		if self.dialog:
-			self.dialog.show()
-			return
-		self.wrapper.register(self)
+		self.wrapper = wrapper
+		wrapper.register(self)
 		list = []
-		self.namelist = self.wrapper.attrnames()
-		self.dialog = windowinterface.Window(self.wrapper.maketitle(),
-				     resizable = 1,
-				     deleteCallback = (self.hide, ()))
+		self.namelist = wrapper.attrnames()
+		self.dialog = windowinterface.Window(
+			wrapper.maketitle(),
+			resizable = 1,
+			deleteCallback = (self.cancel_callback, ()))
 		buttons = self.dialog.ButtonRow(
-			[('Cancel', (self.hide, ())),
-			 ('Restore', (self.restore, ())),
-			 ('Apply', (self.apply, ())),
-			 ('Ok', (self.apply, (1,)))],
+			[('Cancel', (self.cancel_callback, ())),
+			 ('Restore', (self.restore_callback, ())),
+			 ('Apply', (self.apply_callback, ())),
+			 ('Ok', (self.ok_callback, ()))],
 			left = None, right = None, bottom = None, vertical = 0)
 		sep = self.dialog.Separator(left = None, right = None,
 					    bottom = buttons)
@@ -414,7 +299,7 @@ class AttrEditor:
 			name = self.namelist[i]
 			typedef, defaultvalue, labeltext, displayername, \
 				 helptext, inheritance = \
-				 self.wrapper.getdef(name)
+				 wrapper.getdef(name)
 			type = typedef[0]
 			if displayername == 'file':
 				C = FileButtonRow
@@ -430,6 +315,8 @@ class AttrEditor:
 				C = ChildnodenameButtonRow
 			elif displayername == 'channeltype':
 				C = ChanneltypeButtonRow
+			elif displayername == 'units':
+				C = UnitsButtonRow
 			elif type == 'bool':
 				C = BoolButtonRow
 			elif type == 'name':
@@ -470,20 +357,27 @@ class AttrEditor:
 		for b in self.list:
 			b.setvalue(b.getcurrent())
 
-	def restore(self):
+	def restore_callback(self):
 		for b in self.list:
 			b.setvalue(None)
 
-	def hide(self):
-		if self.dialog:
-			self.dialog.close()
-			self.wrapper.unregister(self)
-		self.dialog = None
-		self.list = []
+	def close(self):
+		self.dialog.close()
+		self.wrapper.unregister(self)
 		if self.new:
 			self.wrapper.delete()
+		del self.dialog
+		del self.list
+		del self.wrapper
 
-	def apply(self, remove = 0):
+	def cancel_callback(self):
+		self.close()
+
+	def ok_callback(self):
+		if not self.apply_callback():
+			self.close()
+
+	def apply_callback(self):
 		self.new = 0
 		# first collect all changes
 		dict = {}
@@ -494,21 +388,17 @@ class AttrEditor:
 				windowinterface.showmessage(
 					'%s: parsing value failed' %
 						b.name)
-				return
+				return 1
 			cur = b.getcurrent()
 			if value != cur:
 				dict[b.name] = (value, b)
 		if not dict:
 			# nothing to change
-			if remove:
-				self.hide()
 			return
 		if not self.wrapper.transaction():
 			# can't do a transaction
-			return
+			return 1
 		# this may take a while...
-		if remove:
-			self.hide()
 		windowinterface.setcursor('watch')
 		for name, (value, b) in dict.items():
 			self.wrapper.delattr(name)
@@ -528,7 +418,7 @@ class AttrEditor:
 
 	def commit(self):
 		if not self.wrapper.stillvalid():
-			self.hide()
+			self.close()
 		else:
 			namelist = self.wrapper.attrnames()
 			if namelist != self.namelist:
@@ -553,7 +443,8 @@ class ButtonRow:
 		self.attrdef = self.wrapper.getdef(name)
 
 	def __repr__(self):
-		return '<ButtonRow instance, name='+`self.name`+'>'
+		return '<%s instance, name=%s>' % (self.__class__.__name__,
+						   self.name)
 
 	def gethelptext(self):
 		return 'attribute: ' + self.name + '\n' + \
@@ -597,17 +488,12 @@ class ButtonRow:
 		return self.wrapper.parsevalue(self.name, string)
 
 class IntButtonRow(ButtonRow):
-	def __repr__(self):
-		return '<IntButtonRow instance, name='+`self.name`+'>'
+	pass
 
 class FloatButtonRow(ButtonRow):
-	def __repr__(self):
-		return '<FloatButtonRow instance, name='+`self.name`+'>'
+	pass
 
 class StringButtonRow(ButtonRow):
-	def __repr__(self):
-		return '<StringButtonRow instance, name='+`self.name`+'>'
-
 	def parsevalue(self, value):
 		return value
 
@@ -617,9 +503,6 @@ class StringButtonRow(ButtonRow):
 NameButtonRow = StringButtonRow
 
 class FileButtonRow(ButtonRow):
-	def __repr__(self):
-		return '<FileButtonRow instance, name='+`self.name`+'>'
-
 	def createwidget(self, parent, left, right, top, bottom):
 		but = parent.Button('Brwsr', (self.browser, ()),
 				    top = top, bottom = bottom, right = right)
@@ -664,18 +547,12 @@ class FileButtonRow(ButtonRow):
 		return value
 
 class TupleButtonRow(ButtonRow):
-	def __repr__(self):
-		return '<TupleButtonRow instance, name=' + `self.name` + '>'
-
 	def valuerepr(self, value):
 		if type(value) is type(''):
 			return value
 		return ButtonRow.valuerepr(self, value)
 
 class ColorButtonRow(TupleButtonRow):
-	def __repr__(self):
-		return '<ColorButtonRow instance, name=' + `self.name` + '>'
-
 	def parsevalue(self, value):
 		import string
 		value = string.strip(value)
@@ -699,9 +576,6 @@ class ColorButtonRow(TupleButtonRow):
 
 class PopupButtonRow(ButtonRow):
 	# A choice menu choosing from a list -- base class only
-	def __repr__(self):
-		return '<PopupButtonRow instance, name=' + `self.name` + '>'
-
 	def createwidget(self, parent, left, right, top, bottom):
 		choices = ['Default'] + self.choices()
 		current = self.getcurrent()
@@ -770,9 +644,6 @@ class PopupButtonRow(ButtonRow):
 class BoolButtonRow(PopupButtonRow):
 	offon = ['off', 'on']
 
-	def __repr__(self):
-		return '<BoolButtonRow instance, name='+`self.name`+'>'
-
 	def parsevalue(self, value):
 		return self.offon.index(value)
 
@@ -782,12 +653,20 @@ class BoolButtonRow(PopupButtonRow):
 	def choices(self):
 		return self.offon
 
+class UnitsButtonRow(PopupButtonRow):
+	units = ['mm', 'relative', 'pixels']
+	# Choose from a list of unit types
+	def choices(self):
+		return self.units
+
+	def parsevalue(self, value):
+		return self.units.index(value)
+
+	def valuerepr(self, value):
+		return self.units[value]
+
 class ChannelnameButtonRow(PopupButtonRow):
 	# Choose from the current channel names
-	def __repr__(self):
-		return '<ChannelnameButtonRow instance, name=' \
-			+ `self.name` + '>'
-
 	def choices(self):
 		list = ['undefined']
 		ctx = self.wrapper.context
@@ -798,10 +677,6 @@ class ChannelnameButtonRow(PopupButtonRow):
 
 class BaseChannelnameButtonRow(ChannelnameButtonRow):
 	# Choose from the current channel names
-	def __repr__(self):
-		return '<BaseChannelnameButtonRow instance, name=' \
-			+ `self.name` + '>'
-
 	def choices(self):
 		list = ['undefined']
 		ctx = self.wrapper.context
@@ -816,10 +691,6 @@ class BaseChannelnameButtonRow(ChannelnameButtonRow):
 
 class ChildnodenameButtonRow(PopupButtonRow):
 	# Choose from the node's children
-	def __repr__(self):
-		return '<ChildnodenameButtonRow instance, name=' \
-			+ `self.name` + '>'
-
 	def choices(self):
 		list = ['undefined']
 		for child in self.wrapper.node.GetChildren():
@@ -831,19 +702,12 @@ class ChildnodenameButtonRow(PopupButtonRow):
 
 class ChanneltypeButtonRow(PopupButtonRow):
 	# Choose from the standard channel types
-	def __repr__(self):
-		return '<ChanneltypeButtonRow instance, name=' \
-			+ `self.name` + '>'
-
 	def choices(self):
 		from ChannelMap import channeltypes
 		return channeltypes
 
 class FontButtonRow(PopupButtonRow):
 	# Choose from all possible font names
-	def __repr__(self):
-		return '<FontButtonRow instance, name=' + `self.name` + '>'
-
 	def choices(self):
 		fonts = windowinterface.fonts[:]
 		fonts.sort()
