@@ -740,6 +740,9 @@ class DocumentWrapper(Wrapper):
 		if not settings.get('lightweight') and \
 		   not attrs.has_key('project_html_page'):
 			names.append('project_html_page')
+		elif settings.get('lightweight') and \
+		     attrs.has_key('project_html_page'):
+			names.remove('project_html_page')
 		names.sort()
 		return self.__stdnames + names
 
