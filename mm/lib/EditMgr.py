@@ -643,7 +643,8 @@ class EditMgr(Clipboard.Clipboard):
 		self.addchannel(parent, i, channel)
 
 	def clean_delchannel(self, parent, i, channel):
-		channel.Destroy()
+		if not channel.isInDocument():
+			channel.Destroy()
 
 	def setchannelname(self, name, newname):
 		self.attrs_changed = 1
