@@ -8,13 +8,22 @@ class EditMgr:
 	# Initialization.
 	#
 	def init(self, root):
+		self.reset()
 		self.root = root
 		self.context = root.GetContext()
+		return self
+	#
+	def reset(self):
+		self.root = self.context = None
 		self.busy = 0
 		self.history = []
 		self.future = []
 		self.registry = []
-		return self
+	#
+	def destroy(self):
+		for x in self.registry[:]:
+			x.kill()
+		self.reset()
 	#
 	# Dependent client interface.
 	#
