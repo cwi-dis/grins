@@ -26,11 +26,10 @@ class LicenseDialog:
 		fmt = windowinterface.toplevel._imgformat
 		rdr = imgconvert.stackreader(fmt, splashimg.reader())
 		self.__imgsize = rdr.width, rdr.height
-		data = rdr.read()
-		depth = fmt.descr['align'] / 8
-		xim = visual.CreateImage(visual.depth, X.ZPixmap, 0, data,
-					 rdr.width, rdr.height, depth * 8,
-					 rdr.width * depth)
+		xim = visual.CreateImage(visual.depth, X.ZPixmap, 0,
+					 rdr.read(), rdr.width, rdr.height,
+					 fmt.descr['align'], 0)
+		xim.byte_order = windowinterface.toplevel._byteorder
 		img = w.CreateDrawingArea('splash',
 					  {'width': rdr.width,
 					   'height': rdr.height,
