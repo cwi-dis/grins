@@ -1,5 +1,6 @@
 import Win
 import Qd
+import List
 
 #
 # Stuff needed from other mw_ modules
@@ -21,7 +22,7 @@ class _ListWidget(_Widget):
 		# rect is it's item rectangle (as in dialog item)
 		self.rect = rect
 		rect2 = rect[0]+1, rect[1]+1, rect[2]-16, rect[3]-1
-		self.list = MacList.LNew(rect2, (0, 0, 1, len(content)),
+		self.list = List.LNew(rect2, (0, 0, 1, len(content)),
 					 (0,0), 0, wid,	0, 0, 0, 1)
 		self._data = []
 		self._setcontent(0, len(content), content)
@@ -155,7 +156,7 @@ class SelectWidget:
 		if self.menu:
 			self.menu.delete()
 			del self.menu
-		self.menu = wm_menus.SelectPopupMenu(items)
+		self.menu = mw_menucmd.SelectPopupMenu(items)
 		mhandle, mid = self.menu.getpopupinfo()
 		self.control.SetPopupData(mhandle, mid)
 		self.control.SetControlMinimum(1)

@@ -8,6 +8,7 @@ import img
 import imageop
 import sys
 import MenuTemplate
+import usercmd
 
 #
 # Stuff we use from other mw_ modules
@@ -17,14 +18,11 @@ import mw_globals
 from mw_globals import error, Continue
 from mw_globals import UNIT_MM, UNIT_SCREEN, UNIT_PXL
 from mw_globals import RESET_CANVAS, DOUBLE_HEIGHT, DOUBLE_WIDTH
+from mw_globals import FALSE, TRUE
+from mw_globals import _X, _Y, _WIDTH, _HEIGHT
 import mw_displaylist
 import mw_menucmd
 import mw_widgets
-
-#
-# Useful constants:
-#
-FALSE, TRUE = 0, 1
 
 #
 # Cache for image sizes
@@ -39,15 +37,6 @@ Use left mouse button to draw a box.
 Click `OK' when ready or `Cancel' to cancel."""
 _rb_done = '_rb_done'			# exception to stop create_box loop
 _in_create_box = None
-
-#
-# Indices into a (x, y, w, h) tuple.
-#
-_X=0
-_Y=1
-_WIDTH=2
-_HEIGHT=3
-
 
 class _WindowGroup:
 	"""A windowgroup serves two purposes: it is an "invisible window",
@@ -106,7 +95,7 @@ class _WindowGroup:
 		for item in list:
 			cmd = item.__class__
 			if __debug__:
-				if not _all_commands.has_key(cmd):
+				if not mw_globals._all_commands.has_key(cmd):
 					print 'Warning: user has no way to issue command', cmd
 			dict[cmd] = item
 		self._set_cmd_dict(dict)
@@ -197,7 +186,7 @@ class _CommonWindow:
 		return self._parent is None
 
 	def newwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, z=0,
-		      type_channel = SINGLE):
+		      type_channel = None):
 		"""Create a new subwindow"""
 		rv = _SubWindow(self, self._wid, (x, y, w, h), 0, pixmap,
 				transparent, z)
@@ -205,7 +194,7 @@ class _CommonWindow:
 		return rv
 
 	def newcmwindow(self, (x, y, w, h), pixmap = 0, transparent = 0, z=0,
-			type_channel = SINGLE):
+			type_channel = None):
 		"""Create a new subwindow"""
 		rv = _SubWindow(self, self._wid, (x, y, w, h), 1, pixmap,
 				transparent, z)
@@ -853,7 +842,7 @@ class _Window(_CommonWindow, _WindowGroup, _ScrollMixin, _AdornmentsMixin):
 	def _resize_callback(self, width, height):
 		self.arrowcache = {}
 		mycreatebox = _in_create_box
-		if w:
+		if mycreatebox:
 			next_create_box = mycreatebox._next_create_box
 			mycreatebox._next_create_box = []
 			try:
@@ -880,8 +869,8 @@ class _Window(_CommonWindow, _WindowGroup, _ScrollMixin, _AdornmentsMixin):
 			w._do_resize1()
 		# call resize callbacks
 		self._do_resize2()
-		if my_createbox:
-			my_createbox._rb_end()
+		if mycreatebox:
+			mycreatebox._rb_end()
 			raise _rb_done
 
 	def create_box(self, msg, callback, box = None):

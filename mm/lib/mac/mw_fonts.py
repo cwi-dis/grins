@@ -5,6 +5,7 @@ import string
 #
 # Stuff imported from other mw_ modules
 #
+import mw_globals
 from mw_globals import error
 
 #
@@ -122,13 +123,19 @@ class findfont:
 				maxwidth = width
 		if old_fontinfo:
 			_restorefontinfo(wid, old_fontinfo)
+		_x_pixel_per_mm, _y_pixel_per_mm = \
+				 mw_globals.toplevel._getmmfactors()
 		return float(maxwidth) / _x_pixel_per_mm, \
 		       float(maxheight) / _y_pixel_per_mm
 
 	def baseline(self):
+		_x_pixel_per_mm, _y_pixel_per_mm = \
+				 mw_globals.toplevel._getmmfactors()
 		return float(self.ascent+self.leading) / _y_pixel_per_mm
 
 	def fontheight(self):
+		_x_pixel_per_mm, _y_pixel_per_mm = \
+				 mw_globals.toplevel._getmmfactors()
 		return float(self.ascent + self.descent + self.leading) \
 			/ _y_pixel_per_mm
 

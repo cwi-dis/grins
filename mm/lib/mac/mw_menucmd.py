@@ -13,7 +13,7 @@ import mw_globals
 # but override a few methods.
 #
 
-from FrameWork import Menu, PopupMenu, MenuBar, AppleMenu, MenuItem, SubMenu
+from FrameWork import Menu, PopupMenu, MenuItem, SubMenu
 
 class MyMenuMixin:
 	# We call our callbacks in a simpler way...
@@ -103,6 +103,40 @@ class SelectPopupMenu(PopupMenu):
 	def getpopupinfo(self):
 		return self.menu, self.id
 
+class _SpecialMenu:
+	"""_SpecialMenu - Helper class for CommandHandler Window and Document menus"""
+	
+	def __init__(self, title, callbackfunc):
+		self.items = []
+		self.menus = []
+		self.cur = None
+		self.title = title
+		self.callback = callbackfunc
+		self.menu = mw_globals.toplevel._addmenu(self.title)
+		
+	def set(self, list, cur):
+		if list != self.items:
+			# If the list isn't the same we have to modify it
+			if list[:len(self.items)] != self.items:
+				# And if the old list isn't a prefix we start from scratch
+				self.menus.reverse()
+				for m in self.menus:
+					m.delete()
+				self.menus = []
+				self.items = []
+				self.cur = None
+			list = list[len(self.items):]
+			for item in list:
+				self.menus.append(MenuItem(self.menu, item, None, (self.callback, (item,))))
+				self.items.append(item)
+		if cur != self.cur:
+			if self.cur != None:
+				self.menus[self.cur].check(0)
+			if cur != None:
+				self.menus[cur].check(1)
+			self.cur = cur
+		self.menu.enable(not not self.items)
+
 class CommandHandler:
 	def __init__(self, menubartemplate):
 		self.cmd_to_menu = {}
@@ -151,7 +185,7 @@ class CommandHandler:
 			if entry_type in (MenuTemplate.ENTRY,
 					  MenuTemplate.TOGGLE):
 				dummy, name, shortcut, cmd = entry
-				_all_commands[cmd] = 1
+				mw_globals._all_commands[cmd] = 1
 				if self.cmd_to_menu.has_key(cmd):
 					raise 'Duplicate menu command', \
 					      (name, cmd)

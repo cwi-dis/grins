@@ -1,13 +1,19 @@
 import Win
 import Qd
+import Res
 import string
 import QuickDraw
 from types import *
+import struct
+import math
 
 #
 # Stuff needed from other mw_ modules:
 #
 from mw_globals import error
+from mw_globals import TRUE, FALSE
+from mw_globals import _X, _Y, _WIDTH, _HEIGHT
+import mw_fonts
 
 #
 # Constants for arrow drawing
@@ -510,10 +516,10 @@ class _DisplayList:
 		return self.baseline(), self.fontheight(), self.pointsize()
 
 	def setfont(self, font, size):
-		return self.usefont(findfont(font, size))
+		return self.usefont(mw_fonts.findfont(font, size))
 
 	def fitfont(self, fontname, str, margin = 0):
-		return self.usefont(findfont(fontname, 10))
+		return self.usefont(mw_fonts.findfont(fontname, 10))
 
 	def baseline(self):
 		return self._font.baseline() * self._window._vfactor
@@ -540,7 +546,7 @@ class _DisplayList:
 		list = self._list
 		old_fontinfo = None
 		if self._font._checkfont(w._wid):
-			old_fontinfo = savefontinfo(w._wid)
+			old_fontinfo = mw_fonts._savefontinfo(w._wid)
 		self._font._setfont(w._wid)
 		base = self.baseline()
 		height = self.fontheight()
@@ -563,7 +569,7 @@ class _DisplayList:
 				maxx = self._curpos[0]
 		newx, newy = self._curpos
 		if old_fontinfo:
-			restorefontinfo(w._wid, old_fontinfo)
+			mw_fonts._restorefontinfo(w._wid, old_fontinfo)
 		return oldx, oldy, maxx - oldx, newy - oldy + height - base
 		
 	# Draw a string centered in a box, breaking lines if necessary

@@ -10,12 +10,16 @@ import mw_fonts
 import mw_windows
 import mw_widgets
 import mw_dialogs
+import mw_menucmd
 
 #
-# Initialize toplevel and make it available
+# Initialize toplevel and make it available. Initializing the commands
+# has to be done later (it depends on mw_globals.toplevel being available
+# at some low level).
 #
-toplevel = mw_toplevel._TopLevel()
+toplevel = mw_toplevel._Toplevel()
 mw_globals.toplevel = toplevel
+toplevel._initcommands()
 
 #
 # Import a few other constants and such from mw_globals
@@ -24,6 +28,7 @@ from mw_globals import UNIT_MM, UNIT_SCREEN, UNIT_PXL
 from mw_globals import ReadMask, WriteMask
 from mw_globals import RESET_CANVAS, DOUBLE_HEIGHT, DOUBLE_WIDTH
 from mw_globals import SINGLE, HTM, TEXT, MPEG
+from mw_globals import TRUE, FALSE
 #
 # Make various methods from toplevel available externally
 #
@@ -55,6 +60,8 @@ findfont = mw_fonts.findfont
 DialogWindow = mw_windows.DialogWindow
 
 SelectWidget = mw_widgets.SelectWidget
+
+FullPopupMenu = mw_menucmd.FullPopupMenu
 
 MACDialog = mw_dialogs.MACDialog
 FileDialog = mw_dialogs.FileDialog
