@@ -848,14 +848,14 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 	# convert any coordinates to pixel coordinates
 	# ref_rect is the reference rect for relative coord
 	def _convert_coordinates(self, coordinates, ref_rect = None, crop = 0,
-				 units = UNIT_SCREEN):
+				 units = UNIT_SCREEN, round=1):
 		x, y = coordinates[:2]
 		if len(coordinates) > 2:
 			w, h = coordinates[2:]
 		else:
 			w, h = 0, 0
 		if units==UNIT_MM:
-			x,y,w,h = self._mmtopxl((x,y,w,h))
+			x,y,w,h = self._mmtopxl((x,y,w,h),round)
 			units=UNIT_PXL
 
 		if ref_rect:
@@ -863,16 +863,20 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		else: 
 			rx, ry, rw, rh = self._rect
 		if units == UNIT_PXL or (units is None and type(x) is type(0)):
-			px = int(x)
+			if round: px = int(x)
+			else: px= x
 			dx = 0
 		else:
-			px = int(rw * x + 0.5)
+			if round: px = int(rw * x + 0.5)
+			else: px = rw * x
 			dx = px - rw * x
 		if units == UNIT_PXL or (units is None and type(y) is type(0)):
-			py = int(y)
+			if round: py = int(y)
+			else: py=y
 			dy = 0
 		else:
-			py = int(rh * y + 0.5)
+			if round: py = int(rh * y + 0.5)
+			else: py = rh * y
 			dy = py - rh * y
 		pw = ph = 0
 		if crop:
@@ -887,13 +891,17 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		if len(coordinates) == 2:
 			return px+rx, py+ry
 		if units == UNIT_PXL or (units is None and type(w) is type(0)):
-			pw = int(w + pw - dx)
+			if round: pw = int(w + pw - dx)
+			else: pw = w + pw - dx
 		else:
-			pw = int(rw * w + 0.5 - dx) + pw
+			if round: pw = int(rw * w + 0.5 - dx) + pw
+			else: pw = (rw * w - dx) + pw
 		if units == UNIT_PXL or (units is None and type(h) is type(0)):
-			ph = int(h + ph - dy)
+			if round: ph = int(h + ph - dy)
+			else: ph = h + ph - dy
 		else:
-			ph = int(rh * h + 0.5 - dy) + ph
+			if round: ph = int(rh * h + 0.5 - dy) + ph
+			else: ph = (rh * h - dy) + ph
 		if crop:
 			if pw <= 0:
 				pw = 1
@@ -947,17 +955,27 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 			raise error, 'bad units specified in inverse_coordinates'
 
 	# convert coordinates in mm to pixel
-	def _mmtopxl(self, coordinates):
+	def _mmtopxl(self, coordinates, round=1):
 		x, y = coordinates[:2]
 		toplevel=__main__.toplevel
 		if len(coordinates) == 2:
-			return int(x * toplevel._pixel_per_mm_x + 0.5), \
-				int(y * toplevel._pixel_per_mm_y + 0.5)
+			if round:
+				return int(x * toplevel._pixel_per_mm_x + 0.5), \
+					int(y * toplevel._pixel_per_mm_y + 0.5)
+			else:
+				return x * toplevel._pixel_per_mm_x, \
+					y * toplevel._pixel_per_mm_y
 		w, h = coordinates[2:]
-		return int(x * toplevel._pixel_per_mm_x + 0.5), \
+		if round:
+			return int(x * toplevel._pixel_per_mm_x + 0.5), \
 			   int(y * toplevel._pixel_per_mm_y + 0.5),\
 			   int(w * toplevel._pixel_per_mm_x + 0.5), \
 			   int(h * toplevel._pixel_per_mm_y + 0.5)
+		else:
+			return x * toplevel._pixel_per_mm_x, \
+			   y * toplevel._pixel_per_mm_y,\
+			   w * toplevel._pixel_per_mm_x, \
+			   h * toplevel._pixel_per_mm_y
 
 	# convert coordinates in mm to pixel coordinates
 	def _pxltomm(self, coordinates):
