@@ -1,11 +1,10 @@
-# Presentation view
+# Presentation view -- main program for testing
 
 import sys
 from MMExc import *
 import MMTree
 import Player
-
-# Main program for testing
+import Clist
 
 def main():
 	if sys.argv[1:]:
@@ -15,6 +14,9 @@ def main():
 	#
 	print 'parsing...'
 	root = MMTree.ReadFile(filename)
+	#
+	print 'make clist...'
+	clist = Clist.Clist().init(root.context)
 	#
 	print 'make player...'
 	player = Player.Player().init(root)
