@@ -58,8 +58,10 @@ LURF_BOTMID=8
 
 
 #
-# Cache for image sizes
+# Cache for images and sizes
 #
+IMAGE_CACHE_SIZE=1000000
+_image_cache = {}
 _size_cache = {}
 
 #
@@ -400,14 +402,19 @@ class _CommonWindow:
 		oscale = scale
 		format = imgformat.macrgb16
 		depth = format.descr['size'] / 8
-
-		try:
-			reader = img.reader(format, file)
-		except (img.error, IOError), arg:
-			raise error, arg
-		w = xsize = reader.width
-		h = ysize = reader.height
-		_size_cache[file] = xsize, ysize
+		reader = None
+		if _size_cache.has_key(file):
+			w, h = _size_cache[file]
+			xsize = w
+			ysize = h
+		else:
+			try:
+				reader = img.reader(format, file)
+			except (img.error, IOError), arg:
+				raise error, arg
+			w = xsize = reader.width
+			h = ysize = reader.height
+			_size_cache[file] = xsize, ysize
 			
 		top, bottom, left, right = crop
 		top = int(top * ysize + 0.5)
@@ -431,37 +438,45 @@ class _CommonWindow:
 		left = int(left * scale + .5)
 		right = int(right * scale + .5)
 
-		
-		if hasattr(reader, 'transparent'):
-			r = img.reader(imgformat.xrgb8, file)
-			for i in range(len(r.colormap)):
-				r.colormap[i] = 255, 255, 255
-			r.colormap[r.transparent] = 0, 0, 0
-			image = r.read()
+		key = '%s@%f' % (`file`, scale)
+		try:
+			image, w, h, mask = _image_cache[key]
+		except:			# reading from cache failed
+			if not reader:
+				reader = img.reader(format, file)
+			if hasattr(reader, 'transparent'):
+				r = img.reader(imgformat.xrgb8, file)
+				for i in range(len(r.colormap)):
+					r.colormap[i] = 255, 255, 255
+				r.colormap[r.transparent] = 0, 0, 0
+				image = r.read()
+				if scale != 1:
+					w = int(xsize * scale + .5)
+					h = int(ysize * scale + .5)
+					image = imageop.scale(image, 1,
+							xsize, ysize, w, h)
+				bitmap = ''
+				for i in range(h):
+					# grey2mono doesn't pad lines :-(
+					bitmap = bitmap + imageop.grey2mono(
+						image[i*w:(i+1)*w], w, 1, 128)
+				mask = (mac_image.mkbitmap(w, h, imgformat.xbmpacked,
+							   bitmap), bitmap)
+			else:
+				mask = None
+			try:
+				image = reader.read()
+			except:
+				raise error, 'unspecified error reading image'
 			if scale != 1:
 				w = int(xsize * scale + .5)
 				h = int(ysize * scale + .5)
-				image = imageop.scale(image, 1,
-						xsize, ysize, w, h)
-			bitmap = ''
-			for i in range(h):
-				# grey2mono doesn't pad lines :-(
-				bitmap = bitmap + imageop.grey2mono(
-					image[i*w:(i+1)*w], w, 1, 128)
-			mask = (mac_image.mkbitmap(w, h, imgformat.xbmpacked,
-						   bitmap), bitmap)
-		else:
-			mask = None
-		try:
-			image = reader.read()
-		except:
-			raise error, 'unspecified error reading image'
-		if scale != 1:
-			w = int(xsize * scale + .5)
-			h = int(ysize * scale + .5)
-			image = imageop.scale(image, depth,
-					      xsize, ysize, w, h)
-
+				image = imageop.scale(image, depth,
+						      xsize, ysize, w, h)
+			#
+			# Put it in the cache, possibly emptying other things
+			#
+##			self._put_image_in_cache(key, image, w, h, mask)
 		if center:
 			x, y = x + (width - (w - left - right)) / 2, \
 			       y + (height - (h - top - bottom)) / 2
@@ -469,6 +484,27 @@ class _CommonWindow:
 		return (xim, image), mask, left, top, \
 		       x, y, w - left - right, h - top - bottom
 
+	def _put_image_in_cache(self, key, image, w, h, mask):
+		if len(image) > IMAGE_CACHE_SIZE/2:
+			return	# Don't cache huge images
+		size, xkey = self._image_cache_size()
+		while len(image) + size > IMAGE_CACHE_SIZE:
+			# Too big, delete biggest
+			del _image_cache[xkey]
+			size, xkey = self._image_cache_size()
+		_image_cache[key] = (image, w, h, mask)
+		
+	def _image_cache_size(self):
+		size = 0
+		max = -1
+		xkey = None
+		for key, (image, w, h, mask) in _image_cache.items():
+			size = size + len(image)
+			if len(image) > max:
+				max = len(image)
+				xkey = key
+		return size, xkey
+			
 	def _convert_coordinates(self, coordinates, crop = 0, units = UNIT_SCREEN):
 		"""Convert fractional xywh in our space to pixel-xywh
 		in toplevel-window relative pixels"""
