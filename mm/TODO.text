@@ -4,15 +4,13 @@ TODO for Michael :-)
 What am I doing:
 ----------------
 
-* Trying to add things to the Hierarchy view and test the 
-	new Interactive() code.
+* Fix drag and drop and copy of everything.
 
-* Really, really annoying bug - widgets don't have enough room.
-
-* Get Jack to make a routine to find download times for nodes.
 
 Priority top-to-bottom.
 ------------------------
+
+* Get Jack to make a routine to find download times for nodes.
 
 * New build for Dick of Snap! and the 2.0 player.
 
@@ -33,14 +31,11 @@ Priority top-to-bottom.
 * Traverse through the files and use the options
 	in features.py.
 
-* Free width is still wrong.
 
 Incoming
 --------
 
 * Add drop-downs in the toolbar for bitrate. Ask Kleanthis.
 * Add a asset box for transitions.
-
-* Test + Fix D&D of everything.
 * Windows media support.
 * Configure Eudora to do mail locally rather than to the server.
