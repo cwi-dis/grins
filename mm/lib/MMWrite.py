@@ -5,63 +5,45 @@ __version__ = "$Id$"
 
 from MMExc import *		# Exceptions
 from MMNode import interiortypes
-import MMCache
 import os
 
 
-# Write a node to a CMF file, given by filename
-
-def WriteFile(root, filename, evallicense=0):
-	fp = open(filename, 'w')
-	fixroot(root)
-	writenode(root, fp)
-	fp.write('\n')
-	fp.close() # Make sure the CMIF file is at least as old as the cache
-	if os.name == 'mac':
-		import macfs
-		import macostools
-		fss = macfs.FSSpec(filename)
-		fss.SetCreatorType('GRIN', 'TEXT')
-		macostools.touched(fss)
-	MMCache.dumpcache(root, filename)
-	unfixroot(root)
+if __debug__:
+	# Write a node to a CMF file that is already open (for writing)
+	# only used by MMParser in test mode
+	def WriteOpenFile(root, fp):
+		fixroot(root)
+		writenode(root, fp)
+		fp.write('\n')
+		unfixroot(root)
 
 
-# Write a node to a CMF file that is already open (for writing)
+	# Internals to move attributes between context and root
 
-def WriteOpenFile(root, fp):
-	fixroot(root)
-	writenode(root, fp)
-	fp.write('\n')
-	unfixroot(root)
+	def fixroot(root):
+		root.attrdict['hyperlinks'] = root.context.get_hyperlinks(root)
+		clist = []
+		for cname in root.context.channelnames:
+			clist.append((cname, root.context.channeldict[cname]._getdict()))
+		root.attrdict['channellist'] = clist
+		llist = []
+		for name, chans in root.context.layouts.items():
+			channels = []
+			for chan in chans:
+				channels.append((chan.name))
+			llist.append((name, channels))
+		root.attrdict['layouts'] = llist
+		ulist = []
+		for name, group in root.context.usergroups.items():
+			ulist.append((name, (group[0], group[1] == 'RENDERED', group[2])))
+		root.attrdict['usergroups'] = ulist
 
-
-# Internals to move attributes between context and root
-
-def fixroot(root):
-	root.attrdict['hyperlinks'] = root.context.get_hyperlinks(root)
-	clist = []
-	for cname in root.context.channelnames:
-		clist.append((cname, root.context.channeldict[cname]._getdict()))
-	root.attrdict['channellist'] = clist
-	llist = []
-	for name, chans in root.context.layouts.items():
-		channels = []
-		for chan in chans:
-			channels.append((chan.name))
-		llist.append((name, channels))
-	root.attrdict['layouts'] = llist
-	ulist = []
-	for name, group in root.context.usergroups.items():
-		ulist.append((name, (group[0], group[1] == 'RENDERED', group[2])))
-	root.attrdict['usergroups'] = ulist
-
-def unfixroot(root):
-##	del root.attrdict['styledict']
-	del root.attrdict['hyperlinks']
-	del root.attrdict['channellist']
-	del root.attrdict['layouts']
-	del root.attrdict['usergroups']
+	def unfixroot(root):
+##		del root.attrdict['styledict']
+		del root.attrdict['hyperlinks']
+		del root.attrdict['channellist']
+		del root.attrdict['layouts']
+		del root.attrdict['usergroups']
 
 
 # Private functions to write nodes to a file.

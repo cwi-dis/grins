@@ -4,7 +4,6 @@ __version__ = "$Id$"
 
 
 from MMExc import *		# Exceptions
-import MMCache
 import MMAttrdefs
 import Hlinks
 import string
