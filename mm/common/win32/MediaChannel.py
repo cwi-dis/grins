@@ -138,6 +138,8 @@ class MediaChannel:
 		if t0 > node.start_time and not self.__channel._exporter:
 			print 'skipping',node.start_time,t0,t0-node.start_time
 			clip_begin = clip_begin + t0 - node.start_time
+			if repeatdur:
+				repeatdur = repeatdur - t0 + node.start_time
 		self.__playBuilder.SetPosition(clip_begin)
 		if duration is not None and duration >= 0:
 			if not clip_end:
@@ -164,10 +166,14 @@ class MediaChannel:
 		self.__playBuilder.Run()
 		self.__register_for_timeslices()
 		if repeatdur > 0:
-			self.__qid = self.__channel._scheduler.enter(repeatdur, 0, self.__channel.playdone, (0,))
+			self.__qid = self.__channel._scheduler.enter(repeatdur, 0, self.__stoprepeat, ())
 		elif self.play_loop == 0 and repeatdur == 0:
 			self.__channel.playdone(0)
 		return 1
+
+	def __stoprepeat(self):
+		self.stopit()
+		self.__channel.playdone(0)
 
 	def pauseit(self, paused):
 		if self.__playBuilder:
@@ -228,7 +234,7 @@ class MediaChannel:
 			self.__channel.playdone(0)
 			return
 		# self.play_loop is 0 so repeat
-		self.__playBuilder.SetPosition(0)
+		self.__playBuilder.SetPosition(self.__playBegin)
 		self.__playBuilder.Run()
 		
 	def onIdle(self):
@@ -299,14 +305,16 @@ class VideoStream:
 			self.play_loop = 0
 		clip_begin = self.__channel.getclipbegin(node,'sec')
 		clip_end = self.__channel.getclipend(node,'sec')
+		self.__playBegin = clip_begin
+
 		t0 = self.__channel._scheduler.timefunc()
 		if t0 > node.start_time and not self.__channel._exporter:
 			print 'skipping',node.start_time,t0,t0-node.start_time
 			clip_begin = clip_begin + t0 - node.start_time
+			if repeatdur:
+				repeatdur = repeatdur - t0 + node.start_time
 		self.__mmstream.seek(clip_begin)
 		
-		self.__playBegin = clip_begin
-
 		if duration is not None and duration >= 0:
 			if not clip_end:
 				clip_end = clip_begin + duration
@@ -321,7 +329,7 @@ class VideoStream:
 		self.__paused=0
 
 		if repeatdur > 0:
-			self.__qid = self.__channel._scheduler.enter(repeatdur, 0, self.__channel.playdone, (0,))
+			self.__qid = self.__channel._scheduler.enter(repeatdur, 0, self.__stoprepeat, ())
 		elif self.play_loop == 0 and repeatdur == 0:
 			self.__channel.playdone(0)
 		
@@ -333,6 +341,10 @@ class VideoStream:
 		self.__register_for_timeslices()
 
 		return 1
+
+	def __stoprepeat(self):
+		self.stopit()
+		self.__channel.playdone(0)
 
 	def stopit(self):
 		if self.__mmstream:
