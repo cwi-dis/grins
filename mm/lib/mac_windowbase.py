@@ -338,6 +338,17 @@ class _Toplevel(_Event):
 
 	def _mselect_about(self, *args):
 		d = Dlg.GetNewDialog(ABOUT_ID, -1)
+		if not d:
+			return
+		w = d.GetDialogWindow()
+		port = w.GetWindowPort()
+		l, t, r, b = port.portRect
+		sl, st, sr, sb = Qd.qd.screenBits.bounds
+		x = ((sr-sl) - (r-l)) / 2
+		y = ((sb-st-16) - (b-t)) / 5
+		w.MoveWindow(x, y, 0)
+		w.ShowWindow()
+		d.DrawDialog()
 		while 1:
 			n = Dlg.ModalDialog(None)
 			if n == 1:
