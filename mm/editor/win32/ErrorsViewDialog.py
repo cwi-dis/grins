@@ -1,10 +1,7 @@
 __version__ = "$Id$"
 
-"""Dialog for the Errors View.
-
-The Errors View is a window that displays a list of source errors 
-
-"""
+# Dialog for the Errors View.
+# The Errors View is a window that displays a list of source errors 
 
 import windowinterface
 from usercmd import *
