@@ -485,7 +485,6 @@ class HierarchyView(HierarchyViewDialog):
 			print "Error: unconverted relative coordinates found. HierarchyView:497"
 		self.scene_graph.moveto((0,0,x,y))
 		self.scene_graph.recalc()
-		self.mcanvassize = x,y
 		self.window.setcanvassize((self.sizes.SIZEUNIT, x, y)) # Causes a redraw() event.
 
 	def draw_scene(self):
@@ -1051,7 +1050,6 @@ class HierarchyView(HierarchyViewDialog):
 ##			self.destroynode.Destroy()
 ##		self.destroynode = None
 		self.selected_widget = None
-		self.selected_widget = None
 		self.focusnode = None
 
 		self.refresh_scene_graph()
@@ -1397,7 +1395,6 @@ class HierarchyView(HierarchyViewDialog):
 	def cleanup(self):
 		if self.scene_graph is not None:
 			self.scene_graph.destroy()
-		self.selected_widget = None
 		self.selected_widget = None
 
 	# Navigation functions
