@@ -138,6 +138,11 @@ class ChannelCtrl(OptionsCtrl):
 		if self._attr:
 			self._attr.channelprops()
 
+	def OnCombo(self,id,code):
+		OptionsCtrl.OnCombo(self,id,code)
+		if hasattr(self._attr, 'optioncb'):
+			self._attr.optioncb()
+
 class OptionsRadioCtrl(AttrCtrl):
 	want_default_help = 0
 
