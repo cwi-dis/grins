@@ -494,6 +494,28 @@ JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetFrameRate(JNIEnv *env, jobject
 	return jint(fr);	
 	}
 
+/*
+ * Class:     grins_GRiNSPlayer
+ * Method:    ngetMediaFrameRate
+ * Signature: (ILjava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_grins_GRiNSPlayer_ngetMediaFrameRate(JNIEnv *env, jobject player, jint hgrins, jstring url)
+	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	long fr = 10;
+	if(pIGRiNSPlayer)
+		{
+		const char *psz = env->GetStringUTFChars(url, NULL);
+		WCHAR wPath[MAX_PATH];
+		MultiByteToWideChar(CP_ACP,0,LPCTSTR(psz),-1,wPath,MAX_PATH);	
+		HRESULT hr = pIGRiNSPlayer->getMediaFrameRate(wPath, &fr);
+		env->ReleaseStringUTFChars(url, psz);	
+		if(FAILED(hr))
+			ThrowCOMException(env, "getMediaFrameRate", hr);
+		}
+	return jint(fr);	
+	}
+
 /////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////
 
