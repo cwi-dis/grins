@@ -277,8 +277,8 @@ class EditMgr(Clipboard.Clipboard):
 	#
 	# Clipboard interface
 	#
-	def setclip(self, type, data):
-		Clipboard.Clipboard.setclip(self, type, data)
+	def setclip(self, type, data, owned=0):
+		Clipboard.Clipboard.setclip(self, type, data, owned)
 		for client in self.clipboard_registry:
 			client.clipboardchanged()
 
