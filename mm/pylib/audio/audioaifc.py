@@ -163,9 +163,13 @@ class Chunk:
 			dummy = self.read(1)
 
 class reader:
-	def __init__(self, filename):
-		self.__filename = filename # only needed for __repr__
-		self.__file = file = open(filename, 'rb')
+	def __init__(self, file):
+		if type(file) == type(''):
+			self.__filename = file # only needed for __repr__
+			self.__file = file = open(file, 'rb')
+		else:
+			self.__filename = '<unknown filename>'
+			self.__file = file
 		# initialization
 		self.__version = None
 		self.__markers = []
