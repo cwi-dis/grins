@@ -38,6 +38,7 @@
 #define IDC_DRAGMOVE                    237
 #define IDC_DRAGLINK                    238
 #define IDB_SPLASHPLAY                  243
+#define IDD_LICENSE                     244
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
 #define IDC_EDIT_LOCATION               1020
@@ -113,6 +114,9 @@
 #define IDCMD_DELETE_GROUP              1105
 #define IDC_CHECK3                      1107
 #define IDC_CHECK4                      1108
+#define IDUC_BUY                        1119
+#define IDUC_EVALLICENSE                1120
+#define IDUC_ENTERKEY                   1121
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -156,9 +160,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        244
+#define _APS_NEXT_RESOURCE_VALUE        245
 #define _APS_NEXT_COMMAND_VALUE         32828
-#define _APS_NEXT_CONTROL_VALUE         1118
+#define _APS_NEXT_CONTROL_VALUE         1123
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
