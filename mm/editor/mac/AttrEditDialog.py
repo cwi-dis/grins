@@ -35,7 +35,8 @@ ITEM_OK=1
 ITEM_CANCEL=2
 ITEM_APPLY=3
 ITEM_SELECT=4
-ITEM_LAST_COMMON=4
+ITEM_HELPSTRING=5
+ITEM_LAST_COMMON=5
 
 class AttrEditorDialog(windowinterface.MACDialog):
 	def __init__(self, title, attriblist, toplevel=None, initattr=None):
@@ -179,12 +180,14 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			self._cur_page.hide()
 		else:
 			if item == None:
+				self._sethelpstring('Select a property-page with the browser.')
 				return
 		self._cur_page = None
 
 		if item != None:
 			self._cur_page = self._pages[item] # XXXX?
 			self._cur_page.show()
+			self._sethelpstring(self._cur_page.helpstring)
 			self._pagebrowser.select(item)
 
 	def _is_shown(self, attrfield):
@@ -206,9 +209,17 @@ class AttrEditorDialog(windowinterface.MACDialog):
 
 	def showmessage(self, *args, **kw):
 		apply(windowinterface.showmessage, args, kw)
+		
+	def _sethelpstring(self, str):
+		self._setlabel(ITEM_HELPSTRING, str)
+		
+	def _sethelpforfield(self, field):
+		str = 'help for %s'%field
+		self._sethelpstring(str)
 
 class TabPage:
 	"""The internal representation of a tab-page. Used for subclassing only."""
+	helpstring = ""
 	items_to_hide = []		# Can be overridden by subsubclasses to hide some items
 	
 	def __init__(self, dialog, fieldlist):
@@ -305,9 +316,9 @@ class SingleTabPage(TabPage):
 	def show(self):
 		# For single-attribute pages we do the help and default work
 		attrname, default, help = self.fieldlist[0].gethelpdata()
+		self.helpstring = help
 		label = self.fieldlist[0].getlabel()
 		self.attreditor._settitle(self.item0+self.ITEM_GROUP, label)
-		self.attreditor._setlabel(self.item0+self.ITEM_HELP, help)
 		TabPage.show(self)
 		
 class SingleDefaultTabPage(SingleTabPage):
@@ -328,12 +339,10 @@ class StringTabPage(SingleDefaultTabPage):
 	
 	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_STRING
 	ITEM_GROUP=1
-	ITEM_HELPGROUP=2
-	ITEM_HELP=3
-	ITEM_DEFAULTGROUP=4
-	ITEM_DEFAULT=5
-	ITEM_STRING=6
-	N_ITEMS=6
+	ITEM_DEFAULTGROUP=2
+	ITEM_DEFAULT=3
+	ITEM_STRING=4
+	N_ITEMS=4
 
 	def do_itemhit(self, item, event):
 		if item == self.item0+self.ITEM_STRING:
@@ -356,10 +365,8 @@ class TextTabPage(SingleTabPage):
 	
 	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_TEXT
 	ITEM_GROUP=1
-	ITEM_HELPGROUP=2
-	ITEM_HELP=3
-	ITEM_STRING=4
-	N_ITEMS=4
+	ITEM_STRING=2
+	N_ITEMS=2
 
 	def do_itemhit(self, item, event):
 		if item == self.item0+self.ITEM_STRING:
@@ -382,11 +389,9 @@ class FileTabPage(SingleTabPage):
 	
 	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_FILE
 	ITEM_GROUP=1
-	ITEM_HELPGROUP=2
-	ITEM_HELP=3
-	ITEM_STRING=4
-	ITEM_BROWSE=5
-	N_ITEMS=5
+	ITEM_STRING=2
+	ITEM_BROWSE=3
+	N_ITEMS=3
 
 	def do_itemhit(self, item, event):
 		if item == self.item0+self.ITEM_STRING:
@@ -417,13 +422,11 @@ class ColorTabPage(SingleDefaultTabPage):
 	
 	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_COLOR
 	ITEM_GROUP=1
-	ITEM_HELPGROUP=2
-	ITEM_HELP=3
-	ITEM_DEFAULTGROUP=4
-	ITEM_DEFAULT=5
-	ITEM_STRING=6
-	ITEM_PICK=7
-	N_ITEMS=7
+	ITEM_DEFAULTGROUP=2
+	ITEM_DEFAULT=3
+	ITEM_STRING=4
+	ITEM_PICK=5
+	N_ITEMS=5
 
 	def do_itemhit(self, item, event):
 		if item == self.item0+self.ITEM_STRING:
@@ -477,10 +480,8 @@ class OptionTabPage(SingleTabPage):
 	
 	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_OPTION
 	ITEM_GROUP=1
-	ITEM_HELPGROUP=2
-	ITEM_HELP=3
-	ITEM_MENU=4
-	N_ITEMS=4
+	ITEM_MENU=2
+	N_ITEMS=2
 
 	def init_controls(self, item0):
 		rv = SingleTabPage.init_controls(self, item0)
@@ -515,11 +516,9 @@ class ChannelTabPage(OptionTabPage):
 	
 	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_CHANNEL
 	ITEM_GROUP=1
-	ITEM_HELPGROUP=2
-	ITEM_HELP=3
-	ITEM_MENU=4
-	ITEM_CHATTRS=5
-	N_ITEMS=5
+	ITEM_MENU=2
+	ITEM_CHATTRS=3
+	N_ITEMS=3
 
 	def do_itemhit(self, item, event):
 		if item == self.item0+self.ITEM_CHATTRS:
@@ -586,6 +585,7 @@ class InfoTabPage(MultiStringTabPage):
 	}
 	attrs_on_page = ['title', 'author', 'copyright', 'abstract', 'alt', 'longdesc']
 	_items_on_page = _attr_to_item.values()
+	helpstring = 'General info. These fields are descriptive only.'
 	
 class InteriorInfoTabPage(InfoTabPage):
 	"""Info page without the alt and longdesc items"""
@@ -613,6 +613,7 @@ class TimingTabPage(MultiStringTabPage):
 	}
 	attrs_on_page = ['duration', 'loop', 'begin']
 	_items_on_page = _attr_to_item.values()
+	helpstring = 'Item duration, start-delay (both in seconds) and number of times to repeat.'
 
 class UploadTabPage(MultiStringTabPage):
 	TAB_LABEL='Upload'
@@ -639,6 +640,7 @@ class UploadTabPage(MultiStringTabPage):
 	attrs_on_page = ['project_ftp_host', 'project_ftp_user', 'project_ftp_dir',
 		'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media']
 	_items_on_page = _attr_to_item.values()
+	helpstring = 'Where your presentation will be sent when you publish and upload.'
 
 class ClipTabPage(MultiStringTabPage):
 	TAB_LABEL='Clip'
@@ -654,6 +656,7 @@ class ClipTabPage(MultiStringTabPage):
 	}
 	attrs_on_page = ['clipbegin', 'clipend']
 	_items_on_page = _attr_to_item.values()
+	helpstring = 'These allow you to play a subsection of your mediafile in your presentation.'
 
 class TargetAudienceTabPage(MultiTabPage):
 	TAB_LABEL='Target audience'
@@ -678,6 +681,7 @@ class TargetAudienceTabPage(MultiTabPage):
 	}
 	attrs_on_page = ['project_targets']
 	_items_on_page = _value_to_item.values()
+	helpstring = 'Select your expected audience(s). Multiple selections only work if you have RealServer.'
 
 	def do_itemhit(self, item, event):
 		if item-self.item0 in self._items_on_page:
@@ -718,6 +722,7 @@ class ImageConversionTabPage(MultiTabPage):
 	ITEM_QUALITY=4
 	N_ITEMS=4
 	attrs_on_page = ['project_convert', 'project_quality']
+	helpstring = 'Whether to convert your image (and at what quality) or use the original.'
 	
 	def close(self):
 		self._qualitypopup.delete()
@@ -792,6 +797,7 @@ class ConversionTabPage(MultiDictTabPage):
 	attrs_on_page = ['project_convert', 'project_targets', 'project_videotype',
 		'project_audiotype', 'project_mobile', 'project_perfect']
 	_items_on_page = _value_to_item.values() + _attr_to_item.values()
+	helpstring = 'How to convert this media item. Influences playback quality, bitrate, etc.'
 	
 	def close(self):
 		if self._videopopup:
@@ -905,6 +911,7 @@ class GeneralTabPage(MultiTabPage):
 		'.type': ITEM_NODETYPE,
 	}
 	attrs_on_page = ['name', 'channel', '.type']
+	helpstring = 'Name of this item (used in links) and where and how to play it.'
 	
 	def init_controls(self, item0):
 		rv = MultiTabPage.init_controls(self, item0)
@@ -973,6 +980,7 @@ class ChGeneralTabPage(MultiTabPage):
 		'title': ITEM_TITLE,
 	}
 	attrs_on_page = ['.cname', 'type', 'title']
+	helpstring = 'General information on this channel/region.'
 	
 	def init_controls(self, item0):
 		rv = MultiTabPage.init_controls(self, item0)
@@ -1042,6 +1050,7 @@ class SystemPropertiesTabPage(MultiTabPage):
 		'system_screen_depth',
 		'system_screen_size',
 	]
+	helpstring = 'Set these if you only want this item to be played when these conditions are met.'
 	
 	def init_controls(self, item0):
 		rv = MultiTabPage.init_controls(self, item0)
@@ -1179,6 +1188,7 @@ class TransitionTabPage(MultiDictTabPage, ColorTabPage):
 	}
 	attrs_on_page = ['tag', 'start', 'tduration', 'color']
 	_items_on_page = _attr_to_item.values()
+	helpstring = 'Select type of transition, relative start time and duration of the transition.'
 	
 	def close(self):
 		self._typepopup.delete()
@@ -1249,6 +1259,7 @@ class WipeTabPage(MultiTabPage):
 		'direction': ITEM_DIRECTION,
 	}
 	attrs_on_page = ['wipetype', 'direction']
+	helpstring = 'Select type and direction of the wipe transition.'
 	
 	def init_controls(self, item0):
 		rv = MultiTabPage.init_controls(self, item0)
@@ -1303,6 +1314,7 @@ class FadeoutTabPage(MultiTabPage, ColorTabPage):
 	}
 	attrs_on_page = ['fadeout', 'fadeouttime', 'fadeoutduration', 'fadeoutcolor']
 	_items_on_page = _attr_to_item.values()
+	helpstring = 'Use this tabpage for an optional fadeout following the fadein.'
 	
 	def do_itemhit(self, item, event):
 		if item == self.item0+self.ITEM_FADEOUT:
@@ -1399,6 +1411,7 @@ class SourceAreaTabPage(AreaTabPage):
 	attrs_on_page = ['fullimage', 'imgcropxy', 'imgcropwh']
 	_checkboxes = (ITEM_WHOLE, )
 	_otherfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H)
+	helpstring = 'Use these fields to use only part of the source image in the transition.'
 			
 class DestinationAreaTabPage(AreaTabPage):
 	TAB_LABEL='Destination area'
@@ -1430,6 +1443,7 @@ class Destination1AreaTabPage(DestinationAreaTabPage):
 	}
 	attrs_on_page = ['displayfull', 'subregionxy', 'subregionwh']
 	_checkboxes = (DestinationAreaTabPage.ITEM_WHOLE, )
+	helpstring = 'Use these fields to do the transition on a subsection of the RealPix region.'
 	
 class ChannelAreaTabPage(AreaTabPage):
 	TAB_LABEL='Position and Size'
@@ -1452,6 +1466,7 @@ class ChannelAreaTabPage(AreaTabPage):
 	attrs_on_page = ['base_winoff', 'units', 'z']
 	_checkboxes = ()
 	_otherfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H, ITEM_UNITS, ITEM_Z)
+	helpstring = 'Coordinates of this channel. Higher Z values are on top.'
 
 	def init_controls(self, item0):
 		rv = AreaTabPage.init_controls(self, item0)
@@ -1511,6 +1526,7 @@ class ChannelAreaLiteTabPage(AreaTabPage):
 	attrs_on_page = ['base_winoff', 'z']
 	_checkboxes = ()
 	_otherfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H, ITEM_Z)
+	helpstring = 'Coordinates of this channel. Higher Z values are on top.'
 
 	def init_controls(self, item0):
 		rv = AreaTabPage.init_controls(self, item0)
