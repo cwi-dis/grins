@@ -99,13 +99,13 @@ class ArcInfo(Dialog):
 		import SoundChannel
 		try:
 			duration = SoundDuration.get(filename)
-			markers = SoundDuration.getmarkers(filename)
+##			markers = SoundDuration.getmarkers(filename)
 		except IOError, msg:
 			pass
 		choice.clear_choice()
 		choice.addto_choice('*Begin* (0.0)')
-		for id, pos, name in markers:
-			choice.addto_choice('  %s (%.2g)' % (name, pos))
+##		for id, pos, name in markers:
+##			choice.addto_choice('  %s (%.2g)' % (name, pos))
 		choice.addto_choice('*End* (%.2g)' % duration)
 		return markers
 
