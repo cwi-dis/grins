@@ -977,7 +977,7 @@ class MMNode:
 			  ([(PLAY_DONE, arg) ]    ,[(SCHED_DONE,arg)]+out1),\
 			  ([(SCHED_STOP, arg)]    ,[(PLAY_STOP, arg)]) ], []
 		else:
-			print 'Duration set to',MMAttrdefs.getattr(self, 'duration') 
+##			print 'Duration set to',MMAttrdefs.getattr(self, 'duration') 
 			return [\
 			  ([(SCHED, arg), (ARM_DONE, arg)]+in0,\
 			                           [(PLAY, arg)     ]+out0),\
