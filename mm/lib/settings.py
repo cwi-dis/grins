@@ -413,6 +413,7 @@ def read_RTIPA():
 		u = MMurl.urlopen(url)
 	except:
 		return
+	RTIPA_QoS = get('RTIPA_QoS')
 	while 1:
 		line = u.readline()
 		if not line:
@@ -423,7 +424,8 @@ def read_RTIPA():
 			continue
 		ip, qos = res.group('IP', 'class')
 		ip = socket.inet_aton(ip) # normalize
-		RTIPA_bitrates[ip] = get('RTIPA_QoS')[qos]
+		if RTIPA_QoS.has_key(qos):
+			RTIPA_bitrates[ip] = RTIPA_QoS[qos]
 
 #
 # RTIPA end
