@@ -8,6 +8,7 @@ ChannelMime = {
 		'image/jpeg',
 		'image/png',
 		'image/tiff',
+		'image/bmp',
 		'image/x-cmu-raster',
 		'image/x-portable-anymap',
 		'image/x-portable-bitmap',
