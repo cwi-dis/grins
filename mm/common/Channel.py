@@ -573,6 +573,15 @@ class Channel:
 			return
 		self.arm_1()
 
+	# Called by the scheduler when it is not sure whether this
+	# node is armed or not.
+	def optional_arm(self, node):
+		if self._armed_node is node and self._armstate == ARMED:
+			if not self.syncarm:
+				self._armcontext.arm_done(node)
+			return
+		self.arm(node)
+
 	def seekanchor(self, node, aid, args):
 		# Called before arm on the node. Signifies that the node
 		# is played because a hyperjump to the specified anchor
