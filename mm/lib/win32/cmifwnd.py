@@ -43,16 +43,16 @@ import __main__
 
 import  rbtk
 import DrawTk
-from win32displaylist import _DisplayList
 from DropTarget import DropTarget
 
-import win32transitions
+import win32window
 
-class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
+class _CmifWnd(win32window.Window, DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 	def __init__(self):
 		DropTarget.__init__(self)
 		rbtk._rbtk.__init__(self)
 		DrawTk.DrawLayer.__init__(self)
+
 		self._subwindows = []
 		self._displists = []
 		self._active_displist = None
@@ -99,8 +99,6 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		# temp sigs
 		self._wnd = None
 		self._hWnd = 0
-
-		self.__init_transitions()
 
 	# part of the constructor initialization
 	def _do_init(self,parent):
@@ -155,24 +153,6 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 	def OnUpdateEditPaste(self,cmdui):
 		cmdui.Enable(Sdk.IsClipboardFileDataAvailable())
 	
-	# Called by the core system to create a subwindow
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
-		raise error, 'override newwindow'
-		return None
-
-	# Called by the core system to create a subwindow
-	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
-		raise error, 'override newcmwindow'
-		return None
-		
-	# Called by the core system to craete a new display list
-	def newdisplaylist(self, *bgcolor):
-		if bgcolor != ():
-			bgcolor = bgcolor[0]
-		else:
-			bgcolor = self._bgcolor
-		return  _DisplayList(self, bgcolor)
-
 	# Sets the window title
 	def settitle(self, title):
 		if self._obj_ != None:
@@ -199,18 +179,12 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		else:
 			self.ShowWindow(win32con.SW_HIDE)
 	
-	# Returns true if this a top window
-	def is_topwindow(self):
-		return self._topwindow == self
-
 	# Response to channel highlight
 	def showwindow(self,color=(255,0,0)):
 		self._showing = color
 		dc=self.GetDC()
 		if self._topwindow != self: 
 			win32mu.FrameRect(dc,self.GetClientRect(),self._showing)
-#		if self._topwindow != self:
-#			self._display_info(dc)
 		self.ReleaseDC(dc)
 
 	# Highlight the window
@@ -237,10 +211,6 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		self.showwindow(self._bgcolor)
 		self._showing=None
 		self.update()
-
-	# Return true if this window highlighted
-	def is_showing(self):
-		return self._showing
 	
 	# Highlight/unhighlight all channels
 	def showall(self,f):
@@ -334,24 +304,6 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		del self.arrowcache
 		self._obj_ = None
 
-	# Return true if this window is closed
-	def is_closed(self):
-		return self._parent is None
-
-	# Bring window in front of sibling with equal z
-	def pop(self):
-		print 'override pop for',self
-
-	# Bring window back of siblings with equal z
-	def push(self):
-		print 'override push for',self
-
-	# Set the function that takes the painting responsiblities 
-	def setredrawfunc(self, func):
-		if func is None or callable(func):
-			self._redrawfunc = func
-		else:
-			raise error, 'invalid function'
 
 	# Sets this window to OS transparent
 	def setWndTransparent(self):
@@ -412,18 +364,7 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 	def _destroy_popupmenu(self):
 		# Free resources held by self._popupmenu and set it to None
 		if self._popupmenu:self._popupmenu.DestroyMenu()
-		self._popupmenu = None
-		
-
-	# Sets the forground color
-	def fgcolor(self, color):
-		r, g, b = color
-		self._fgcolor = r, g, b
-
-	# Sets the background color
-	def bgcolor(self, color):
-		self._bgcolor = self._convert_color(color)
-
+		self._popupmenu = None		
 
 	# Returns true if the point is inside the window
 	def inside(self,pt):
@@ -435,6 +376,7 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		w=self._topwindow
 		frame=(w.GetParent()).GetMDIFrame()		
 		return frame._cmifdoc
+
 	# Returns the grins frame
 	def getgrinsframe(self):
 		w=self._topwindow
@@ -629,32 +571,6 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		if cursor!=Sdk.GetCursor():
 			Sdk.SetClassLong(self.GetSafeHwnd(),win32con.GCL_HCURSOR,cursor)
 
-	# Return true if an arrow has been hit
-	def hitarrow(self, point, src, dst):
-		# return 1 iff (x,y) is within the arrow head
-		sx, sy = self._convert_coordinates(src,self._canvas)
-		dx, dy = self._convert_coordinates(dst,self._canvas)
-		x, y = self._convert_coordinates(point,self._canvas)
-		lx = dx - sx
-		ly = dy - sy
-		if lx == ly == 0:
-			angle = 0.0
-		else:
-			angle = math.atan2(lx, ly)
-		cos = math.cos(angle)
-		sin = math.sin(angle)
-		# translate
-		x, y = x - dx, y - dy
-		# rotate
-		nx = x * cos - y * sin
-		ny = x * sin + y * cos
-		# test
-		if ny > 0 or ny < -ARR_LENGTH:
-			return FALSE
-		if nx > -ARR_SLANT * ny or nx < ARR_SLANT * ny:
-			return FALSE
-		return TRUE
-
 
 #====================================== Char
 	# Callback for keyboard input
@@ -669,16 +585,6 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 
 
 #====================================== Paint
-
-	# not used any more (same as OnPaint)
-	# Respont to message WM_PAINT
-	def onPaint(self, params):
-		if self._parent is None or self._window_type == HTM:
-			return		# already closed
-		dc, paintStruct = self.BeginPaint()
-		if self._active_displist:
-			self._active_displist._render(dc,paintStruct[2])
-		self.EndPaint(paintStruct)
 
 	# Renders the display list at any time other than OnPaint
 	def _do_expose(self,region=None):
@@ -823,7 +729,7 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		return hdwp
 	
 #=========================================================
-#	animation section
+#	animation section overrides
 
 	def updatecoordinates(self, coordinates, units=UNIT_SCREEN):
 		# first convert any coordinates to pixel
@@ -881,44 +787,9 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 			rgn1.DeleteObject()
 			rgn.DeleteObject()
 
-#=========================================================
-#	transition section
-
-	def __init_transitions(self):
-		self._transition = None
-		self._sfrom = None
-		self._sto = None
-
-	def begintransition(self, inout, runit, dict):
-		factory = win32transitions.TransitionFactory(dict, self._sfrom, self._sto)
-		transinst = factory.getTransition()
-		print transinst
-		self._transition = win32transitions.TransitionEngine(transinst, dict)
-		if runit:
-			self._transition.begintransition()
-		
-	def endtransition(self):
-		if self._transition:
-			self._transition.endtransition()
-			self._transition = None
-
-	def changed(self):
-		pass
-		
-	def settransitionvalue(self, value):
-		if self._transition:
-			self._transition.settransitionvalue(value)
-		
-	def freeze_content(self, how):
-		# how is 'transition', 'hold' or None. Freeze the bits in the window
-		# (unless how=None, which unfreezes them) and use for updates and as passive
-		# source for next transition.
-		print 'freeze_content',how
-		self._sfrom = None # copy surface
-		pass
 		
 #=========================================================
-#	geometry and coordinates convert section
+#	geometry and coordinates convert section overrides
 	
 	# Returns the coordinates of this window in pix
 	def getpixgeometry(self):
@@ -927,196 +798,12 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		rc=rcNormalPosition
 		return rc[0],rc[1],rc[2]-rc[0],rc[3]-rc[1]
 		
-	# Returns the coordinates of this window in units
-	def getgeometry(self, units = UNIT_MM):
-		x,y,w,h=self.getpixgeometry()
-		toplevel=__main__.toplevel
-		if units == UNIT_MM:
-			return float(x) / toplevel._pixel_per_mm_x, float(y) / toplevel._pixel_per_mm_y, \
-				   float(w) / toplevel._pixel_per_mm_x, float(h) / toplevel._pixel_per_mm_y
-		elif units == UNIT_SCREEN:
-			return float(x) / toplevel._scr_width_pxl, \
-			       float(y) / toplevel._scr_height_pxl, \
-			       float(w) / toplevel._scr_width_pxl, \
-			       float(h) / toplevel._scr_height_pxl
-		elif units == UNIT_PXL:
-			return x, y, w, h
-
-
-	# convert any coordinates to pixel coordinates
-	# ref_rect is the reference rect for relative coord
-	def _convert_coordinates(self, coordinates, ref_rect = None, crop = 0,
-				 units = UNIT_SCREEN, round=1):
-		x, y = coordinates[:2]
-		if len(coordinates) > 2:
-			w, h = coordinates[2:]
-		else:
-			w, h = 0, 0
-		if units==UNIT_MM:
-			x,y,w,h = self._mmtopxl((x,y,w,h),round)
-			units=UNIT_PXL
-
-		if ref_rect:
-			rx, ry, rw, rh = ref_rect
-		else: 
-			rx, ry, rw, rh = self._rect
-		if units == UNIT_PXL or (units is None and type(x) is type(0)):
-			if round: px = int(x)
-			else: px= x
-			dx = 0
-		else:
-			if round: px = int(rw * x + 0.5)
-			else: px = rw * x
-			dx = px - rw * x
-		if units == UNIT_PXL or (units is None and type(y) is type(0)):
-			if round: py = int(y)
-			else: py=y
-			dy = 0
-		else:
-			if round: py = int(rh * y + 0.5)
-			else: py = rh * y
-			dy = py - rh * y
-		pw = ph = 0
-		if crop:
-			if px < 0:
-				px, pw = 0, px
-			if px >= rw:
-				px, pw = rw - 1, px - rw + 1
-			if py < 0:
-				py, ph = 0, py
-			if py >= rh:
-				py, ph = rh - 1, py - rh + 1
-		if len(coordinates) == 2:
-			return px+rx, py+ry
-		if units == UNIT_PXL or (units is None and type(w) is type(0)):
-			if round: pw = int(w + pw - dx)
-			else: pw = w + pw - dx
-		else:
-			if round: pw = int(rw * w + 0.5 - dx) + pw
-			else: pw = (rw * w - dx) + pw
-		if units == UNIT_PXL or (units is None and type(h) is type(0)):
-			if round: ph = int(h + ph - dy)
-			else: ph = h + ph - dy
-		else:
-			if round: ph = int(rh * h + 0.5 - dy) + ph
-			else: ph = (rh * h - dy) + ph
-		if crop:
-			if pw <= 0:
-				pw = 1
-			if px + pw > rw:
-				pw = rw - px
-			if ph <= 0:
-				ph = 1
-			if py + ph > rh:
-				ph = rh - py
-		return px+rx, py+ry, pw, ph
-
-	# convert pixel coordinates to relative coordinates
-	def _pxl2rel(self,coordinates,ref_rect=None):
-		px, py = coordinates[:2]
-
-		if ref_rect:
-			rx, ry, rw, rh = ref_rect
-		else:
-			rx, ry, rw, rh = self._rect
-
-		x = float(px - rx) / rw
-		y = float(py - ry) / rh
-		if len(coordinates) == 2:
-			return x, y
-
-		pw, ph = coordinates[2:]
-		w = float(pw) / rw
-		h = float(ph) / rh
-		return x, y, w, h
-
-	# convert pixel coordinates to coordinates in units with precision
-	# for relative cordinates is the same as _pxl2rel
-	def inverse_coordinates(self, coordinates, ref_rect=None, units = UNIT_SCREEN, precision = -1):
-		if units == UNIT_PXL:
-			return coordinates
-		elif units == UNIT_SCREEN:
-			if not ref_rect: ref_rect=self._canvas
-			coord=self._pxl2rel(coordinates, self._canvas)
-			if precision<0: 
-				return coord
-			else:
-				return self._coord_in_prec(coord, precision)
-		elif units == UNIT_MM:
-			toplevel=__main__.toplevel
-			coord=self._pxltomm(coordinates)
-			if precision<0: 
-				return coord
-			else:
-				return self._coord_in_prec(coord, precision)
-		else:
-			raise error, 'bad units specified in inverse_coordinates'
-
-	# convert coordinates in mm to pixel
-	def _mmtopxl(self, coordinates, round=1):
-		x, y = coordinates[:2]
-		toplevel=__main__.toplevel
-		if len(coordinates) == 2:
-			if round:
-				return int(x * toplevel._pixel_per_mm_x + 0.5), \
-					int(y * toplevel._pixel_per_mm_y + 0.5)
-			else:
-				return x * toplevel._pixel_per_mm_x, \
-					y * toplevel._pixel_per_mm_y
-		w, h = coordinates[2:]
-		if round:
-			return int(x * toplevel._pixel_per_mm_x + 0.5), \
-			   int(y * toplevel._pixel_per_mm_y + 0.5),\
-			   int(w * toplevel._pixel_per_mm_x + 0.5), \
-			   int(h * toplevel._pixel_per_mm_y + 0.5)
-		else:
-			return x * toplevel._pixel_per_mm_x, \
-			   y * toplevel._pixel_per_mm_y,\
-			   w * toplevel._pixel_per_mm_x, \
-			   h * toplevel._pixel_per_mm_y
-
-	# convert coordinates in mm to pixel coordinates
-	def _pxltomm(self, coordinates):
-		x, y = coordinates[:2]
-		toplevel=__main__.toplevel
-		if len(coordinates) == 2:
-			return	float(x) / toplevel._pixel_per_mm_x, \
-					float(y) / toplevel._pixel_per_mm_y
-		w, h = coordinates[2:]
-		return float(x) / toplevel._pixel_per_mm_x, \
-			       float(y) / toplevel._pixel_per_mm_y, \
-			       float(w) / toplevel._pixel_per_mm_x, \
-			       float(h) / toplevel._pixel_per_mm_y
-	
-	# return coordinates with precision 
-	def _coord_in_prec(self, coordinates, precision=-1):
-		x, y = coordinates[:2]
-		if len(coordinates) == 2:
-			if precision<0: 
-				return x,y
-			else:
-				factor=float(pow(10,precision))
-				return float(int(factor*x+0.5)/factor),float(int(factor*y+0.5)/factor)
-		w, h = coordinates[2:]
-		if precision<0: 
-			return x,y,w,h
-		else:
-			factor=float(pow(10,precision))
-			return float(int(factor*x+0.5)/factor), float(int(factor*y+0.5)/factor),\
-				float(int(factor*w+0.5)/factor), float(int(factor*h+0.5)/factor)
-		
-
 	# Returns the relative coordinates of a wnd with respect to its parent
 	def getsizes(self,rc_child=None):
 		if not rc_child:rc=win32mu.Rect(self.GetWindowRect())
 		else: rc=rc_child
 		rcParent=win32mu.Rect(self._parent.GetWindowRect())
 		return self._pxl2rel(rc.tuple_ps(),rcParent.tuple_ps())
-
-	# Returns the relative coordinates of a wnd with respect to its parent with 2 decimal digits
-	def getsizes100(self):
-		ps=self.getsizes()
-		return float(int(100.0*ps[0]+0.5)/100.0),float(int(100.0*ps[1]+0.5)/100.0),float(int(100.0*ps[2]+0.5)/100.0),float(int(100.0*ps[3]+0.5)/100.0)
 
 
 #	End of convert coordinates section
@@ -1126,7 +813,7 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 
 
 #====================================== 
-#	Image section
+#	Image section overrides
 
 	# Returns the size of the image
 	def _image_size(self, file):
@@ -1141,171 +828,10 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 		self.imgAddDocRef(file)
 		return xsize, ysize
 
-	# Prepare an image for display (load,crop,scale, etc)
-	def _prepare_image(self, file, crop, scale, center, coordinates, clip):
-		# width, height: width and height of window
-		# xsize, ysize: width and height of unscaled (original) image
-		# w, h: width and height of scaled (final) image
-		# depth: depth of window (and image) in bytes
-		
-		# get image size. If it can't be found in the cash read it.
-		xsize, ysize = self._image_size(file)
-		# check for valid crop proportions
-		top, bottom, left, right = crop
-		if top + bottom >= 1.0 or left + right >= 1.0 or \
-		   top < 0 or bottom < 0 or left < 0 or right < 0:
-			raise error, 'bad crop size'
+	def _image_handle(self, file):
+		return __main__.toplevel._image_cache[file]
 
-		# convert the crop sizes (proportions of the image size) to pixels
-		top = int(top * ysize + 0.5)
-		bottom = int(bottom * ysize + 0.5)
-		left = int(left * xsize + 0.5)
-		right = int(right * xsize + 0.5)
-		rcKeep=left,top,xsize-right,ysize-bottom
-
-		# get window sizes, and convert them to pixels
-		if coordinates is None:
-			x, y, width, height = self._canvas
-		else:
-			x, y, width, height = self._convert_coordinates(coordinates,self._canvas)
-		# compute scale taking into account the hint (0,-1)
-		if scale == 0:
-			scale = min(float(width)/(xsize - left - right),
-				    float(height)/(ysize - top - bottom))
-		elif scale == -1:
-			scale = max(float(width)/(xsize - left - right),
-				    float(height)/(ysize - top - bottom))
-		elif scale == -2:
-			scale = min(float(width)/(xsize - left - right),
-				    float(height)/(ysize - top - bottom))
-			if scale > 1:
-				scale = 1
-
-		# scale crop sizes
-		top = int(top * scale + .5)
-		bottom = int(bottom * scale + .5)
-		left = int(left * scale + .5)
-		right = int(right * scale + .5)
-
-		image = __main__.toplevel._image_cache[file]
-		mask=None
-		w=xsize
-		h=ysize
-		if scale != 1:
-			w = int(xsize * scale + .5)
-			h = int(ysize * scale + .5)
-
-		if center:
-			x, y = x + (width - (w - left - right)) / 2, \
-			       y + (height - (h - top - bottom)) / 2
-	
-		# x -- left edge of window (left edge of the display rect)
-		# y -- top edge of window (top edge of the display rect)
-		# width -- width of window
-		# height -- height of window
-		# w -- width of scaled image
-		# h -- height of scaled image
-		# left, right, top, bottom -- part to be cropped (offsets from edges)
-		if clip is not None:
-			clip = self._convert_coordinates(clip, self._canvas)
-			if clip[0] <= x:
-				# left edge visible
-				if clip[0] + clip[2] <= x:
-					# not visible at all
-					rcKeep = rcKeep[0],rcKeep[1],0,0
-				elif clip[0] + clip[2] < x + w:
-					# clipped at right end
-					rcKeep2 = rcKeep[2]
-					delta = x + w - clip[0] - clip[2]
-					right = right + delta
-					rcKeep2 = rcKeep2 - int(rcKeep2 * float(delta)/w + .5)
-					rcKeep = rcKeep[0],rcKeep[1],rcKeep2,rcKeep[3]
-				else:
-					# totally visible
-					pass
-			elif x < clip[0] < x + w:
-				# left edge not visible
-				if clip[0] + clip[2] < x + w:
-					# only center visible
-					rcKeep2 = rcKeep[2]
-					delta = clip[0]-x
-					x = x + delta
-					left = left + delta
-					delta = int(rcKeep2 * float(delta)/w + .5)
-					rcKeep0 = rcKeep[0] + delta
-					rcKeep2 = rcKeep2 - delta
-					delta = x + w - clip[0] - clip[2]
-					right = right + delta
-					delta = int(rcKeep2 * float(delta)/w + .5)
-					rcKeep2 = rcKeep2 - delta
-					rcKeep = rcKeep0,rcKeep[1],rcKeep2,rcKeep[3]
-				else:
-					# clipped at left
-					rcKeep2 = rcKeep[2]
-					delta = clip[0]-x
-					x = x + delta
-					left = left + delta
-					delta = int(rcKeep2 * float(delta)/w + .5)
-					rcKeep0 = rcKeep[0] + delta
-					rcKeep2 = rcKeep2 - delta
-					rcKeep = rcKeep0,rcKeep[1],rcKeep2,rcKeep[3]
-			else:
-				# not visible at all
-				rcKeep = rcKeep[0],rcKeep[1],0,0
-			if clip[1] <= y:
-				# top edge visible
-				if clip[1] + clip[3] <= y:
-					# not visible at all
-					rcKeep = rcKeep[0],rcKeep[1],0,0
-				elif clip[1] + clip[3] < y + h:
-					# clipped at bottom end
-					rcKeep3 = rcKeep[3]
-					delta = y + h - clip[1] - clip[3]
-					bottom = bottom + delta
-					rcKeep3 = rcKeep3 - int(rcKeep3 * float(delta)/h + .5)
-					rcKeep = rcKeep[0],rcKeep[1],rcKeep[2],rcKeep3
-				else:
-					# totally visible
-					pass
-			elif y < clip[1] < y + h:
-				# top edge not visible
-				if clip[1] + clip[3] < y + h:
-					# only center visible
-					rcKeep3 = rcKeep[3]
-					delta = clip[1]-y
-					y = y + delta
-					top = top + delta
-					delta = int(rcKeep3 * float(delta)/h + .5)
-					rcKeep1 = rcKeep[1] + delta
-					rcKeep3 = rcKeep3 - delta
-					delta = y + h - clip[1] - clip[3]
-					bottom = bottom + delta
-					delta = int(rcKeep3 * float(delta)/h + .5)
-					rcKeep3 = rcKeep3 - delta
-					rcKeep = rcKeep[0],rcKeep1,rcKeep[2],rcKeep3
-				else:
-					# clipped at top
-					rcKeep3 = rcKeep[3]
-					delta = clip[1]-y
-					y = y + delta
-					top = top + delta
-					delta = int(rcKeep3 * float(delta)/h + .5)
-					rcKeep1 = rcKeep[1] + delta
-					rcKeep3 = rcKeep3 - delta
-					rcKeep = rcKeep[0],rcKeep1,rcKeep[2],rcKeep3
-			else:
-				# not visible at all
-				rcKeep = rcKeep[0],rcKeep[1],0,0
-		# return:
-		# image, mask
-		# left,top  of crop rect
-		# x,y left-top of display rect
-		# w_img,h_img crop rect of  width and height
-		# rcKeep  image keep unscaled rectangle
-
-		return image, mask, left, top, x, y,\
-			w - left - right, h - top - bottom,rcKeep
-
+	# XXX: to be removed
 	def imgAddDocRef(self,file):
 		toplevel=__main__.toplevel
 		doc=self.getgrinsdoc()
@@ -1315,3 +841,9 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 				toplevel._image_docmap[doc].append(file)
 		else:
 			toplevel._image_docmap[doc]=[file,]
+
+
+# End of image section overrides
+#########################
+
+

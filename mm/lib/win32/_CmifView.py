@@ -486,7 +486,7 @@ class _CmifPlayerView(_CmifView):
 			return
 		
 		for w in self._subwindows:
-			if w.IsClientPoint(point):
+			if w.inside(point):
 				w.onMouseEvent(point, ev)
 				return
 
@@ -507,7 +507,7 @@ class _CmifPlayerView(_CmifView):
 		msg=win32mu.Win32Msg(params)
 		point=msg.pos()
 		for w in self._subwindows:
-			if w.IsClientPoint(point):
+			if w.inside(point):
 				w.setcursor_from_point(point)
 				return
 		self.setcursor_from_point(point, self)
@@ -1183,13 +1183,6 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 	def AllowResize(self,f):
 		self._can_change_size=f
 
-	# temp: support interface of os-windowless subwindows
-	def CreateOSWindow(self):
-		pass
-	def DestroyOSWindow(self):
-		pass
-	def paint(self):
-		self.RedrawWindow()
 
 #################################################
 USE_NEWSUBWINDOWSIMPL = 1
