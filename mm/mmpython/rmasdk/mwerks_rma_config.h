@@ -6,5 +6,6 @@
 #define USE_MSL			/* Use MSL libraries */
 #ifdef USE_MSL
 #define MSL_USE_PRECOMPILED_HEADERS 1	/* Use precomp headers */
+#define WITHOUT_FRAMEWORKS
 #include <ansi_prefix.mac.h>
 #endif
