@@ -57,6 +57,9 @@ class MidiChannel(Channel):
 		if same and self.arm_data:
 		    return 1
 		fn = self.getfileurl(node)
+		if not fn:
+			self.errormsg(node, 'No URL set on this node')
+			return 1
 		#
 		# Read the midifile, mixing all tracks
 		#
