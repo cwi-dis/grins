@@ -1667,6 +1667,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if attrdict.has_key('showBackground'):
 			ch['showBackground'] = attrdict['showBackground']
 			del attrdict['showBackground']
+		if attrdict.has_key('soundLevel'):
+			ch['soundLevel'] = attrdict['soundLevel']
+			del attrdict['soundLevel']
 		
 		if mtype in ('text', 'image', 'movie', 'video', 'mpeg',
 			     'html', 'label', 'graph', 'layout', 'RealPix','RealText', 'RealVideo',
@@ -2356,6 +2359,23 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					val = self.__convert_color(val)
 					if val is not None:
 						attrdict['backgroundColor'] = val
+			elif attr == 'soundLevel':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				try:
+					if val[-1] == '%':
+						val = string.atof(val[:-1]) / 100.0
+						if val < 0:
+							self.syntax_error('volume with negative %s' % attr)
+							val = 1.0
+					else:
+						self.syntax_error('only relative volume is allowed on soundLevel attribute')
+						val = 1.0
+				except (string.atoi_error, string.atof_error):
+					self.syntax_error('invalid soundLevel attribute value')
+					val = 1.0
+				attrdict[attr] = val								
 			elif attr == 'type':
 				# map channel type to something we can deal with
 				# this should loop at most twice (RealPix->RealVideo->video)
