@@ -3,11 +3,15 @@
 // File:   sha.h
 //
 // Microsoft Digital Rights Management
-// Copyright (C) Microsoft Corporation, 1998 - 1999, All Rights Reserved
+// Copyright (C) Microsoft Corporation, 1998 - 2001.  All Rights Reserved.
 //
 // Description:
 //
 //-----------------------------------------------------------------------------
+
+#ifndef RSA32API
+#define RSA32API __stdcall
+#endif
 
 /* Copyright (C) RSA Data Security, Inc. created 1993.  This is an
    unpublished work protected as such under copyright law.  This work
@@ -19,22 +23,6 @@
 
 #ifndef _SHA_H_
 #define _SHA_H_ 1
-
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
-#ifndef RSA32API
-
-#if defined WIN32
-#define RSA32API __stdcall
-#elif defined _WIN32_WCE
-#define RSA32API __stdcall
-#else
-#define RSA32API 
-#endif
-
-#endif
 
 #ifdef __cplusplus
 extern "C" {
