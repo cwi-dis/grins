@@ -8,6 +8,7 @@ from MMExc import CheckError
 import MMAttrdefs
 from Selecter import Selecter
 from PlayerCommon import PlayerCommon
+import settings
 
 # The Player class normally has only a single instance.
 #
@@ -26,6 +27,7 @@ class PlayerCore(Selecter, PlayerCommon):
 		self.context = self.root.GetContext()
 		self.editmgr = self.context.geteditmgr()
 		self.editmgr.register(self)
+		settings.register(self)
 		self.chans_showing = 0
 		Selecter.__init__(self)
 		PlayerCommon.__init__(self)
@@ -38,6 +40,7 @@ class PlayerCore(Selecter, PlayerCommon):
 
 	def destroy(self):
 		self.editmgr.unregister(self)
+		settings.unregister(self)
 
 	#
 	# EditMgr interface (as dependent client).

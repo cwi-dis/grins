@@ -62,7 +62,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self._last_timer_id = None
 		self.main = main
 		self.new_file = new_file
-		self._in_prefschanged = 0
 		utype, host, path, params, query, fragment = urlparse(url)
 		dir, base = posixpath.split(path)
 		if (not utype or utype == 'file') and \
@@ -1622,14 +1621,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def setwaiting(self):
 		windowinterface.setwaiting()
 
-	def prefschanged(self):
-		# HACK: we don't want to set the file changed bit (in the
-		# commit call below)
-		self._in_prefschanged = 1
-		if not self.editmgr.transaction():
-			return
-		self.editmgr.commit()
-		self._in_prefschanged = 0
 	#
 	# EditMgr interface (as dependent client).
 	# This is the first registered client; hence its commit routine
@@ -1642,8 +1633,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def commit(self, type):
 		# Fix the timing -- views may depend on this.
-		if not self._in_prefschanged:
-			self.changed = 1
+		self.changed = 1
 ##		if self.source:
 ##			# reshow source
 ##			license = self.main.wanttosave()
