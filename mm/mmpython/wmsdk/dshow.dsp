@@ -57,14 +57,14 @@ LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
 # ADD LINK32 ..\..\..\python\PCbuild\python16.lib version.lib winmm.lib vfw32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /out:"Release/dshow.pyd"
 # Begin Custom Build - Performing Custom Build Step on $(TargetPath)
-TargetDir=.\Release
 TargetPath=.\Release\dshow.pyd
 InputPath=.\Release\dshow.pyd
 SOURCE="$(InputPath)"
 
-"$(TargetDir)\log.txt" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy $(TargetPath) ..\..\bin\win32
-
+"..\..\bin\win32\dshow.pyd" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	del ..\..\bin\win32\dshow.pyd 
+	copy $(TargetPath) ..\..\bin\win32 
+	
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "dshow - Win32 Debug"
@@ -94,14 +94,14 @@ LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 ..\..\..\python\PCbuild\python16_d.lib version.lib winmm.lib vfw32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /out:"Debug/dshow_d.pyd" /pdbtype:sept
 # Begin Custom Build
-TargetDir=.\Debug
 TargetPath=.\Debug\dshow_d.pyd
 InputPath=.\Debug\dshow_d.pyd
 SOURCE="$(InputPath)"
 
-"$(TargetDir)\log.txt" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy $(TargetPath) ..\..\bin\win32
-
+"..\..\bin\win32\dshow_d.pyd" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	del ..\..\bin\win32\dshow_pyd.pyd 
+	copy $(TargetPath) ..\..\bin\win32 
+	
 # End Custom Build
 
 !ENDIF 
