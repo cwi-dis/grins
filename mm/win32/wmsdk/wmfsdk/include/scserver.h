@@ -1,6 +1,6 @@
 //
-//  Microsoft Windows Media Technology
-//  Copyright (C) Microsoft Corporation, 1999 - 2001.  All Rights Reserved.
+//  Microsoft Windows Media Technologies
+//  Copyright (C) Microsoft Corporation, 1999 - 2001. All rights reserved.
 //
 
 #ifndef _CSECURECHANNELSERVER_H_2AD99357_6FD2_11d3_8497_00C04F79DBC0
