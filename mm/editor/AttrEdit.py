@@ -451,7 +451,8 @@ class NodeWrapper(Wrapper):
 		if name == '.hyperlink':
 			return (('string', None), '',
 				'Hyperlink', 'default',
-				'Hyperlink', 'raw', 'light')
+				'Links within the presentation or to another SMIL document',
+				'raw', 'light')
 		if name == '.type':
 			return (('string', None), '',
 				'Node type', 'nodetype',
@@ -478,12 +479,12 @@ class SlideWrapper(NodeWrapper):
 		tag = self.node.GetAttrDict()['tag']
 		if tag == 'fill':
 			namelist = ['color', 'displayfull', 'subregionxy',
-				    'subregionwh', 'subregionanchor', 'start']
+				    'subregionwh', 'start']
 		elif tag in ('fadein', 'crossfade', 'wipe'):
 			namelist = ['file', 'caption', 'fullimage', 'imgcropxy',
-				    'imgcropwh', 'imgcropanchor', 'aspect',
+				    'imgcropwh', 'aspect',
 				    'displayfull', 'subregionxy',
-				    'subregionwh', 'subregionanchor', 'start',
+				    'subregionwh', 'start',
 				    'tduration', 'maxfps', 'href',
 				    'project_quality', 'project_convert']
 			if tag == 'wipe':
@@ -495,13 +496,13 @@ class SlideWrapper(NodeWrapper):
 					    'fadeoutcolor', 'fadeoutduration']
 		elif tag == 'fadeout':
 			namelist = ['color', 'subregionxy', 'displayfull',
-				    'subregionwh', 'subregionanchor', 'start',
+				    'subregionwh', 'start',
 				    'tduration', 'maxfps']
 		elif tag == 'viewchange':
 			namelist = ['fullimage', 'imgcropxy', 'imgcropwh',
-				    'imgcropanchor', 'displayfull',
+				    'displayfull',
 				    'subregionxy', 'subregionwh',
-				    'subregionanchor', 'start', 'tduration',
+				    'start', 'tduration',
 				    'maxfps']
 		else:
 			namelist = []
