@@ -13,6 +13,7 @@ import features
 import string
 import os
 import sys
+import flags
 
 DEFAULT = 'Default'
 UNDEFINED = 'undefined'
@@ -462,15 +463,15 @@ class NodeWrapper(Wrapper):
 			return (('string', None), '',
 				'Hyperlink', 'default',
 				'Links within the presentation or to another SMIL document',
-				'raw', 'light')
+				'raw', flags.FLAG_ALL)
 		if name == '.type':
 			return (('string', None), '',
 				'Node type', 'nodetype',
-				'Node type', 'raw', 'light')
+				'Node type', 'raw', flags.FLAG_ALL)
 		if name == '.values':
 			return (('string', None), '',
 				'Content', 'text',
-				'Data for node', 'raw', 'light')
+				'Data for node', 'raw', flags.FLAG_ALL)
 		if name == '.anchorlist':
 			# our own version of the anchorlist:
 			# [(AnchorID, AnchorType, AnchorArgs, AnchorTimes, LinkList) ... ]
@@ -480,7 +481,7 @@ class NodeWrapper(Wrapper):
 			# a string giving the external destination
 			return (('list', ('enclosed', ('tuple', [('any', None), ('int', None), ('enclosed', ('list', ('any', None))), ('enclosed', ('tuple', [('float', 0), ('float', 0)])), ('enclosed', ('list', ('any', None)))]))), [],
 				'Anchors', '.anchorlist',
-				'List of anchors on this node', 'raw', 'light')
+				'List of anchors on this node', 'raw', flags.FLAG_ALL)
 		return MMAttrdefs.getdef(name)
 
 class SlideWrapper(NodeWrapper):
@@ -668,7 +669,7 @@ class ChannelWrapper(Wrapper):
 			# Channelname -- special case
 			return (('name', ''), 'none',
 				'Channel name', 'default',
-				'Channel name', 'raw', 'light')
+				'Channel name', 'raw', flags.FLAG_ALL)
 		return MMAttrdefs.getdef(name)
 
 	def valuerepr(self, name, value):
@@ -826,19 +827,19 @@ class PreferenceWrapper(Wrapper):
 		if self.__strprefs.has_key(name):
 			return (('string', None), self.getdefault(name),
 				defs[2] or name, 'language',
-				self.__strprefs[name], 'raw', 'common')
+				self.__strprefs[name], 'raw', flags.FLAG_ALL)
 		elif self.__intprefs.has_key(name):
 			return (('int', None), self.getdefault(name),
 				defs[2] or name, 'bitrate',
-				self.__intprefs[name], 'raw', 'common')
+				self.__intprefs[name], 'raw', flags.FLAG_ALL)
 		elif self.__boolprefs.has_key(name):
 			return (('bool', None), self.getdefault(name),
 				defs[2] or name, 'default',
-				self.__boolprefs[name], 'raw', 'common')
+				self.__boolprefs[name], 'raw', flags.FLAG_ALL)
 		elif self.__specprefs.has_key(name):
 			return (('bool', None), self.getdefault(name),
 				defs[2] or name, 'captionoverdub',
-				self.__specprefs[name], 'raw', 'common')
+				self.__specprefs[name], 'raw', flags.FLAG_ALL)
 
 	def stillvalid(self):
 		return 1
@@ -926,24 +927,14 @@ class AttrEditor(AttrEditorDialog):
 		else:
 			cmif = 0
 		for name in allnamelist:
-			flags = wrapper.getdef(name)[6]
+			from flags import curflags
+			fl = wrapper.getdef(name)[6]
+			if fl & curflags() == 0:
+				continue
 #			if flags != 'light':
 #				if lightweight or \
 #				   (not cmif and flags == 'cmif'):
 #					continue
-			if compatibility.G2 == features.compatibility:
-				if lightweight:
-					if (flags != 'common') and \
-						(flags != 'g2_light'):
-						continue
-				else:
-				        if (not cmif and flags == 'cmif') or \
-				        (flags == 'quicktime'):
-						continue
-			elif compatibility.QT == features.compatibility:
-			        if (flags == 'cmif') or (flags == 'g2_light') or \
-			        (flags == 'g2_pro'):
-			                continue
 			namelist.append(name)
 			
 		self.__namelist = namelist
