@@ -756,9 +756,9 @@ class MMChannel:
 			
 	def newCssId(self, isRoot = 0):
 		if not isRoot:
-			self._cssId = self.context.cssResolver.newRegion()
+			self._cssId = self.context.cssResolver.newRegion(self)
 		else:
-			self._cssId = self.context.cssResolver.newRootNode()
+			self._cssId = self.context.cssResolver.newRootNode(self)
 		return self._cssId
 
 	def _setname(self, name): # Only called from context.setchannelname()
@@ -1129,6 +1129,27 @@ class MMChannelTree:
 			iChan = pChan
 			pChan = self.getparent(pChan)
 		return iChan
+
+	# convert this to a SMILCssResolver and return it
+	# it uses the context instance since it absorbed css attrs
+	def toCssResolver(self):
+		blackhole = self.__ctx.cssResolver
+		from SMILCssResolver import SMILCssResolver
+		resolver =  SMILCssResolver(self.__ctx)
+		for top in self.top_levels:
+			csstop = resolver.newRootNode(top)
+			csstop.copyRawAttrs(blackhole.getCssObj(top))
+			self.__appendCssRegions(resolver, top, csstop)
+		return resolver
+
+	def __appendCssRegions(self, resolver, regarg, cssregarg):
+		blackhole = self.__ctx.cssResolver
+		subregs = self.getsubregions(regarg.name)
+		for reg in subregs:
+			cssreg = resolver.newRegion(reg)	
+			cssreg.copyRawAttrs(blackhole.getCssObj(reg))
+			cssreg.link(cssregarg)
+			self.__appendCssRegions(resolver, reg, cssreg)
 
 	def __calc1(self):
 		import ChannelMap
@@ -1815,14 +1836,14 @@ class MMNode:
 		cssResolver.unlink(self._subRegCssId)
 
 	def newSubRegCssId(self):
-		self._subRegCssId = self.context.cssResolver.newRegion()
+		self._subRegCssId = self.context.cssResolver.newRegion(self)
 		return self._subRegCssId
 
 	def getSubRegCssId(self):
 		return self._subRegCssId
 
 	def newMediaCssId(self):
-		self._mediaCssId = self.context.cssResolver.newMedia(self.GetDefaultMediaSize)
+		self._mediaCssId = self.context.cssResolver.newMedia(self.GetDefaultMediaSize, self)
 		return self._mediaCssId
 
 	def getMediaCssId(self):
@@ -4309,3 +4330,4 @@ def MergeLists(l1, l2):
 		else:
 			l1.append(i)
 	return l1, overlap
+ 
