@@ -226,9 +226,6 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 ##################################
 # This is temporary here for testing
 
-import wmfapi
-large_int = wmfapi.large_int
-
 import time
 import windowinterface
 
@@ -262,6 +259,7 @@ SYSTEM_PROFILE  = 18
 		
 class WMWriter:
 	def __init__(self, ctx, w, h, filename):
+		import wmfapi
 		profman = wmfapi.CreateProfileManager()
 		prof = profman.LoadSystemProfile(SYSTEM_PROFILE) 
 		writer = wmfapi.CreateDDWriter(prof)
@@ -316,5 +314,6 @@ class WMWriter:
 		elif screenBPP==16:
 			rgbfmt = 'RGB%d%d%d' % pxlfmt[1:]
 		else:
+			import wmfapi
 			raise wmfapi.error
 		return rgbfmt
