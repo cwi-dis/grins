@@ -92,10 +92,10 @@ class IndentedFile:
 
 Error = 'Error'
 
-def WriteFile(root, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0, evallicense = 0, progress = None, convertURLs = 0):
+def WriteFile(root, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0, evallicense = 0, progress = None, convertURLs = 0, convertfiles = 1):
 	fp = IndentedFile(open(filename, 'w'))
 	try:
-		writer = SMILWriter(root, fp, filename, cleanSMIL, grinsExt, copyFiles, evallicense, progress = progress, convertURLs = convertURLs)
+		writer = SMILWriter(root, fp, filename, cleanSMIL, grinsExt, copyFiles, evallicense, progress = progress, convertURLs = convertURLs, convertfiles = convertfiles)
 	except Error, msg:
 		from windowinterface import showmessage
 		showmessage(msg, mtype = 'error')
@@ -1123,7 +1123,7 @@ def mediatype(chtype, error=0):
 class SMILWriter(SMIL):
 	def __init__(self, node, fp, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0,
 		     evallicense = 0, tmpcopy = 0, progress = None,
-		     convertURLs = 0):
+		     convertURLs = 0, convertfiles = 1):
 		ctx = node.GetContext()
 		if convertURLs:
 			url = MMurl.canonURL(MMurl.pathname2url(filename))
@@ -1143,6 +1143,7 @@ class SMILWriter(SMIL):
 		self.files_generated = {}
 		self.bases_used = {}
 		self.progress = progress
+		self.convert = convertfiles # we only convert if we have to copy
 		if copyFiles:
 			dir, base = os.path.split(filename)
 			base, ext = os.path.splitext(base)
@@ -2319,7 +2320,9 @@ class SMILWriter(SMIL):
 		dstdir = self.copydir
 		file = self.newfile(srcurl)
 		u = MMurl.urlopen(srcurl)
-		if node is not None:
+		if not self.convert:
+			convert = 0
+		elif node is not None:
 			if type(node) == type({}):
 				convert = node.get('project_convert', 1)
 			else:
