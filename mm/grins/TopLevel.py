@@ -214,6 +214,8 @@ class TopLevel(TopLevelDialog):
 			# just update that the loading is finished
 			self.progressCallback(1.0)
 			# the progress dialog will desapear
+			if sys.platform == 'wince':
+				self.progress.close()
 			self.progress = None
 			
 		elif mtype == 'application/x-grins-binary-project':
