@@ -8,11 +8,11 @@ class TopLevelDialog:
 		'toolbar': [
 			('Play', PLAY),
 			('Player', PLAYERVIEW, 't'),
-			('Layout view', LAYOUTVIEW, 't'),
-			('User groups', USERGROUPVIEW, 't'),
 			('Structure view', HIERARCHYVIEW, 't'),
 			('Timeline view', CHANNELVIEW, 't'),
+			('Layout view', LAYOUTVIEW, 't'),
 			('Hyperlinks', LINKVIEW, 't'),
+			('User groups', USERGROUPVIEW, 't'),
 			('Source...', SOURCE),
 			('Save', SAVE),
 			('Save as...', SAVE_AS),
