@@ -176,6 +176,10 @@ class NodeWrapper(Wrapper):
 		del self.root
 		Wrapper.close(self)
 
+	def commit(self):
+		self.root.ResetPlayability()
+		Wrapper.commit(self)
+
 	def stillvalid(self):
 		return self.node.GetRoot() is self.root
 
