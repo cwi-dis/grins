@@ -228,3 +228,19 @@
 
 (z (int) 0 'Z order' default
 	'Z order' normal)
+
+# SMIL system test attributes
+(system_bitrate (int) 0 'System bitrate' default
+	'System bitrate' raw)
+(system_captions (bool) 0 'System captions' default
+	'System captions' raw)
+(system_language (string) '' 'System language' default
+	'System language' raw)
+(system_overdub_or_captions (string) '' 'System overdub or captions' default
+	'System overdub or captions' raw)
+(system_required (string) '' 'System required' default
+	'System required' raw)
+(system_screen_size (tuple (int) (int)) (0 0) 'System screen size' default
+	'System screen size' raw)
+(system_screen_depth (int) 0 'System screen depth' default
+	'System screen depth' raw)

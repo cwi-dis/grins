@@ -49,7 +49,7 @@ clock = re.compile(r'(?P<name>local|remote):'
 		   r'(?P<seconds>\d{2})'
 		   r'(?P<fraction>\.\d+)?'
 		   r'(?:Z(?P<sign>[-+])(?P<ohours>\d{2}):(?P<omin>\d{2}))?$')
-screen_size = re.compile(r'\d+X\d+$')
+screen_size = re.compile(r'(?P<x>\d+)X(?P<y>\d+)$')
 range_re = re.compile('^(?:'
 		   '(?:(?P<npt>npt)=(?P<nptstart>[^-]*)-(?P<nptend>[^-]*))|'
 		   '(?:(?P<smpte>smpte(?:-30-drop|-25)?)=(?P<smptestart>[^-]*)-(?P<smpteend>[^-]*))'
@@ -194,6 +194,7 @@ class SMILParser(xmllib.XMLParser):
 
 	def AddAttrs(self, node, attributes):
 		node.__syncarcs = []
+		attrdict = node.attrdict
 		for attr, val in attributes.items():
 			if attr == 'id':
 				if self.__nodemap.has_key(val):
@@ -203,22 +204,22 @@ class SMILParser(xmllib.XMLParser):
 				res = namedecode.match(val)
 				if res is not None:
 					val = res.group('name')
-				node.attrdict['name'] = val
+				attrdict['name'] = val
 			elif attr == 'src':
-				node.attrdict['file'] = MMurl.basejoin(self.__base, val)
+				attrdict['file'] = MMurl.basejoin(self.__base, val)
 			elif attr == 'begin' or attr == 'end':
 				node.__syncarcs.append(attr, val)
 			elif attr == 'dur':
 				if val == 'indefinite':
-					node.attrdict['duration'] = -1
+					attrdict['duration'] = -1
 				else:
 					try:
-						node.attrdict['duration'] = self.__parsecounter(val, 0)
+						attrdict['duration'] = self.__parsecounter(val, 0)
 					except error, msg:
 						self.syntax_error(msg)
 			elif attr == 'repeat':
 				if val == 'indefinite':
-					node.attrdict['loop'] = 0
+					attrdict['loop'] = 0
 				else:
 					try:
 						repeat = string.atoi(val)
@@ -228,23 +229,45 @@ class SMILParser(xmllib.XMLParser):
 						if repeat <= 0:
 							self.warning('bad repeat value')
 						else:
-							node.attrdict['loop'] = repeat
+							attrdict['loop'] = repeat
 			elif attr == 'system-bitrate':
 				try:
 					bitrate = string.atoi(val)
 				except string.atoi_error:
 					self.syntax_error('bad bitrate attribute')
-				# XXXX system-bitrate is ignored
+				else:
+					attrdict['system_bitrate'] = bitrate
 			elif attr == 'system-screen-size':
-				if screen_size.match(val) is None:
+				res = screen_size.match(val)
+				if res is None:
 					self.syntax_error('bad screen-size attribute')
-				# XXXX system-screen-size is ignored
+				else:
+					attrdict['system_screen_size'] = \
+						tuple(map(string.atoi,
+							  res.group('x','y')))
 			elif attr == 'system-screen-depth':
 				try:
 					depth = string.atoi(val)
 				except string.atoi_error:
 					self.syntax_error('bad screen-depth attribute')
-				# XXXX system-screen-depth is ignored
+				else:
+					attrdict['system_screen_depth'] = depth
+			elif attr == 'system-captions':
+				if val == 'on':
+					attrdict['system_captions'] = 1
+				elif val == 'off':
+					attrdict['system_captions'] = 0
+				else:
+					self.syntax_error('bad screen-captions attribute')
+			elif attr == 'system-language':
+				attrdict['system_language'] = val
+			elif attr == 'system-overdub-or-caption':
+				if val in ('caption', 'overdub'):
+					attrdict['system_overdub_or_caption'] = val
+				else:
+					self.syntax_error('bad screen-overdub-or-caption attribute')
+			elif attr == 'system-required':
+				attrdict['system_required'] = val
 
 	def NewNode(self, mediatype, attributes):
 		if not self.__in_smil:
@@ -750,6 +773,9 @@ class SMILParser(xmllib.XMLParser):
 		self.FixSizes()
 		self.Recurse(self.__root, self.FixChannel, self.FixSyncArcs)
 		self.FixLinks()
+
+		# now calculate which nodes we will actually play
+		self.__root.SetPlayable()
 
 	# head/body sections
 

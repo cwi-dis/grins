@@ -12,6 +12,7 @@ class MMNodeContext(MMNodeBase.MMNodeContext):
 	def __init__(self, nodeclass):
 		MMNodeBase.MMNodeContext.__init__(self, nodeclass)
 		self.nextuid = 1
+		self.editmgr = None
 		self.armedmode = None
 
 	def newnode(self, type):
@@ -137,6 +138,15 @@ class MMNodeContext(MMNodeBase.MMNodeContext):
 		dstok = (('/' in uid2) or (self.uidmap.has_key(uid2) \
 		   and self.uidmap[uid2].GetRoot() in self._roots))
 		return (srcok and dstok)
+
+	#
+	# Editmanager
+	#
+	def seteditmgr(self, editmgr):
+		self.editmgr = editmgr
+
+	def geteditmgr(self):
+		return self.editmgr
 
 class MMChannel(MMNodeBase.MMChannel):
 	def _setname(self, name): # Only called from context.setchannelname()
@@ -1110,6 +1120,8 @@ class MMNode(MMNodeBase.MMNode):
 		seeknode.srevents = {}
 		for key, val in srevents.items():
 			seeknode.srevents[key] = val
+		if self.context.editmgr:
+			self.context.editmgr.register(seeknode)
 		return sractions, srevents
 
 	def splitsrlist(self, srlist, offset=0):
@@ -1147,6 +1159,11 @@ class MMNode(MMNodeBase.MMNode):
 	def stoplooping(self):
 		self.curloopcount = 0
 
+	def SetPlayable(self):
+		# XXXX to be done by Jack
+		pass
+
+	# eidtmanager stuff
 	def transaction(self):
 		return 1
 
@@ -1167,6 +1184,7 @@ class MMNode(MMNodeBase.MMNode):
 			del self.prearmlists
 		except AttributeError:
 			pass
+		self.context.editmgr.unregister(self)
 
 	def kill(self):
 		pass
