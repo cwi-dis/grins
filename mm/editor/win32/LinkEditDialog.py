@@ -41,10 +41,10 @@ class and its implementation class LinkForm in lib/win32/LinkForm.py which
 implements the actual dialog.
 
 """
-	
+import windowinterface
 
-class LinkEditDialog:
-	def __init__(self, title, dirstr, typestr, menu1, cbarg1, menu2, cbarg2):
+class LinkBrowserDialog:
+	def __init__(self, title, menu1, cbarg1, menu2, cbarg2):
 		"""Create the LinkEditor dialog.
 
 		Create the dialog window (non-modal, so does not grab
@@ -53,8 +53,6 @@ class LinkEditDialog:
 
 		Arguments (no defaults):
 		title -- string to be display as window title
-		dirstr -- list of strings used as menu labels for the
-			link direction menu in the edit group
 		menu1 -- list of tuples -- the menu for the left list
 			(see module doc for description of tuples)
 		cbarg1 -- any object -- argument passed on to
@@ -66,10 +64,6 @@ class LinkEditDialog:
 		"""
 		self._adornments={'form_id':'leview_',
 			'callbacks':{
-				'OK':(self.ok_callback, ()),
-				'Cancel':(self.cancel_callback, ()),
-				'LinkDir':(self.linkdir_callback, ()),
-				'LinkType':(self.linktype_callback, ()),
 				'LeftPushFocus':(self.show_callback, (cbarg1,)),
 				'LeftAnchorEd':(self.anchoredit_callback, (cbarg1,)),
 				'LeftList':(self.anchor_browser_callback, (cbarg1,)),
@@ -83,7 +77,7 @@ class LinkEditDialog:
 			}
 		}
 		# hold args so that we can create wnd later
-		self._init_args=(title, dirstr, typestr, menu1, cbarg1, menu2, cbarg2,self._adornments)
+		self._init_args=(title, menu1, cbarg1, menu2, cbarg2,self._adornments)
 		self.__window=None
 								
 	def is_showing(self):
@@ -367,6 +361,54 @@ class LinkEditDialog:
 		"""Show the edit group."""
 		self.__window.editgroupshow()
 
+	# Callback functions.  These functions should be supplied by
+	# the user of this class (i.e., the class that inherits from
+	# this class).
+	def delete_callback(self):
+		"""Called when `Delete' button is pressed."""
+		pass
+
+	def show_callback(self, client_data):
+		"""Called when a new entry in the left or right list is selected."""
+		pass
+
+	def anchoredit_callback(self, client_data):
+		"""Called when the left or right `Anchor editor...' button is pressed."""
+		pass
+
+	def anchor_browser_callback(self, client_data):
+		"""Called when the left or right `Push focus' button is pressed."""
+		pass
+
+	def link_new_callback(self):
+		"""Called when the `Add...' button is pressed."""
+		pass
+
+	def link_edit_callback(self):
+		"""Called when the `Edit...' button is pressed."""
+		pass
+
+	def link_delete_callback(self):
+		"""Called when the `Delete' button is pressed."""
+		pass
+
+	def link_browser_callback(self):
+		"""Called when a new selection is made in the middle list."""
+		pass
+
+class LinkEditorDialog:
+	def __init__(self, title, dirstr, typestr, dir, type):
+		cbd = {
+				'OK':(self.ok_callback, ()),
+				'Cancel':(self.cancel_callback, ()),
+				'LinkDir':(self.linkdir_callback, ()),
+				'LinkType':(self.linktype_callback, ()),
+		}
+		self.__window = windowinterface.LinkPropDlg(cbd, dir, type)
+
+	def show(self):
+		self.__window.show()
+
 	def oksetsensitive(self, sensitive):
 		"""Make the Add button (in)sensitive.
 
@@ -374,7 +416,7 @@ class LinkEditDialog:
 		sensitive -- boolean indicating whether to make
 			sensitive or insensitive
 		"""
-		self.__window.oksetsensitive(sensitive)
+		pass
 
 	def cancelsetsensitive(self, sensitive):
 		"""Make the Add button (in)sensitive.
@@ -383,7 +425,7 @@ class LinkEditDialog:
 		sensitive -- boolean indicating whether to make
 			sensitive or insensitive
 		"""
-		self.__window.cancelsetsensitive(sensitive)
+		pass
 
 	def linkdirsetsensitive(self, pos, sensitive):
 		"""Make an entry in the link dir menu (in)sensitive.
@@ -393,7 +435,7 @@ class LinkEditDialog:
 		sensitive -- boolean indicating whether to make
 			sensitive or insensitive
 		"""
-		self.__window.linkdirsetsensitive(pos, sensitive)
+		pass
 
 	def linkdirsetchoice(self, choice):
 		"""Set the current choice of the link dir list.
@@ -429,53 +471,3 @@ class LinkEditDialog:
 		"""Return the current choice in the link type list."""
 		return self.__window.linktypegetchoice()
 
-	# Callback functions.  These functions should be supplied by
-	# the user of this class (i.e., the class that inherits from
-	# this class).
-	def delete_callback(self):
-		"""Called when `Delete' button is pressed."""
-		pass
-
-	def linkdir_callback(self):
-		"""Called when a new link direction entry is selected."""
-		pass
-
-	def linktype_callback(self):
-		"""Called when a new link type entry is selected."""
-		pass
-
-	def ok_callback(self):
-		"""Called when `OK' button is pressed."""
-		pass
-
-	def cancel_callback(self):
-		"""Called when `Cancel' button is pressed."""
-		pass
-
-	def show_callback(self, client_data):
-		"""Called when a new entry in the left or right list is selected."""
-		pass
-
-	def anchoredit_callback(self, client_data):
-		"""Called when the left or right `Anchor editor...' button is pressed."""
-		pass
-
-	def anchor_browser_callback(self, client_data):
-		"""Called when the left or right `Push focus' button is pressed."""
-		pass
-
-	def link_new_callback(self):
-		"""Called when the `Add...' button is pressed."""
-		pass
-
-	def link_edit_callback(self):
-		"""Called when the `Edit...' button is pressed."""
-		pass
-
-	def link_delete_callback(self):
-		"""Called when the `Delete' button is pressed."""
-		pass
-
-	def link_browser_callback(self):
-		"""Called when a new selection is made in the middle list."""
-		pass
