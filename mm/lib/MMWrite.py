@@ -34,7 +34,7 @@ def fixroot(root):
 	root.attrdict['hyperlinks'] = root.context.get_hyperlinks(root)
 	clist = []
 	for cname in root.context.channelnames:
-		clist.append(cname, root.context.channeldict[cname])
+		clist.append(cname, root.context.channeldict[cname]._getdict())
 	root.attrdict['channellist'] = clist
 
 def unfixroot(root):
