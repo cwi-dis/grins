@@ -154,7 +154,7 @@ class BandwidthAccumulator:
 				overflowbits = overflowbps * (t1-t0)
 				overflowseconds = overflowbits / self.initialmax
 				totaloverflowseconds = totaloverflowseconds + overflowseconds
-				stalls.append((t1, overflowseconds))
+				stalls.append((t1, overflowseconds, 'stall'))
 			t1 = t0
 		return totaloverflowseconds, stalls
 		
