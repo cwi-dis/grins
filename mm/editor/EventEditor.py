@@ -243,6 +243,10 @@ class EventStruct:
 			# Then time information is required.
 			self.clear_vars()
 			self.set_offset(0)
+			if newcause == 'node':
+				self.set_event('activateEvent')
+			elif newcause == 'accesskey':
+				self._setkey = 'a'
 		elif newcause == 'region':
 			self.clear_vars()
 			self.set_region(None)
@@ -278,6 +282,7 @@ class EventStruct:
 			except Exception:
 				return None
 	def set_event(self, newevent):
+		assert newevent in EVENTS_NODE or newevent in EVENTS_REGION
 		self._setevent = newevent
 	def get_possible_events(self):
 		if self.get_cause() == 'node':
