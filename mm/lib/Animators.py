@@ -822,7 +822,7 @@ class EffectiveAnimator:
 			scale = mmchan['scale']
 
 		if settings.activeFullSmilCss:
-			coordinates, rcm = self.__node.getPxGeomMedia()
+			coordinates = self.__node.getPxGeom()
 		else:
 			coordinates = mmchan.GetPresentationAttr('base_winoff')
 		if coordinates and attr in ('position','left','top','width','height','right','bottom'):
@@ -1262,17 +1262,12 @@ class AnimateElementParser:
 		if self.__elementTag=='animateMotion':
 			self.__grinsattrname = self.__attrname = 'position'
 			if settings.activeFullSmilCss:
-				if self.__target.__class__ == MMNode.MMNode:
-					rcs = self.__target.getPxGeomMedia()
-					if rcs:
-						rc, rcm =rcs
-						x, y, w, h = rc
-					else:
-						return 0
-				else:
-					x, y, w, h = self.__target.getPxGeom()
-				self.__domval = complex(x, y)
-				return 1
+				rc = self.__target.getPxGeom()
+				if rc:
+					x, y, w, h = rc
+					self.__domval = complex(x, y)
+					return 1
+				return 0
 			else:
 				d = self.__target.GetChannel().attrdict
 				if d.has_key('base_winoff'):
