@@ -4,24 +4,24 @@ __version__ = "$Id$"
 # Animate Channel (Virtual)
 #
 
-# This channel is not indended to be directly visible to users.
-# Nodes of this channel (i.e animations) should play in parallel 
-# with the animated node simulating the smil section:
-# <par>
-# <animatedNode>
-# <animate ...>
-# <animate ...>
-# <par>
- 
+# This channel is also a kind of a player as are the other channels.
+# It belongs to the 'control' family of channels (python, socket, etc)
+# It is not actually very different from a python channel.
+# It also executes a kind of a script.
+# The script it executes is build from the animate elements of the document.
+# The special thing with this one is that it has no effect by itself.
+# Its effect comes from the script's target channel.
+# It acts on its target channel by changing its attributes.
+# It can play only when its target channel is playing.
+# The strong relation with its target channel and the fact 
+# that is an async channel is what makes it special.
 
 import Channel
 import MMAttrdefs
 import time
-
 import Animators
 
 debug = 1
-	
 
 class AnimateChannel(Channel.ChannelAsync):
 	node_attrs = ['targetElement','attributeName',
@@ -34,16 +34,16 @@ class AnimateChannel(Channel.ChannelAsync):
 		Channel.ChannelAsync.__init__(self, name, attrdict, scheduler, ui)
 		self.__animating = None
 		self.__duration = 0
-		self.__fiber_id=0
+		self.__fiber_id = 0
 		self.__playdone = 0
 		self.__animator = None
 		self.__targetchan = None
 		self.__isattrsupported = 0
 		self.__lastvalue = None
-
+		
 	def __repr__(self):
 		return '<AnimateChannel instance, name=' + `self._name` + '>'
-
+		
 	def do_show(self, pchan):
 		if not Channel.ChannelAsync.do_show(self, pchan):
 			return 0
@@ -55,21 +55,21 @@ class AnimateChannel(Channel.ChannelAsync):
 		Channel.ChannelAsync.do_hide(self)
 
 	def do_arm(self, node, same=0):
-		if debug:
-			print 'AnimateChannel.do_arm',node.attrdict
-			print 'target node:',node.targetnode.attrdict
 		parser = Animators.AnimateElementParser(node, node.targetnode)
 		self.__animator = parser.getAnimator()
-		if self.__animator:
-			print 'animate attr start value:',self.__animator.getValue(0)
-
-		targetchname = node.targetnode.attrdict['channel']
+		targetchname = MMAttrdefs.getattr(node.targetnode, 'channel') 
 		self.__targetchan = self._player.getchannelbyname(targetchname)
 		if self.__targetchan and self.__animator:
 			self.__isattrsupported = self.__targetchan.canupdateattr(node.targetnode, self.__animator.getAttrName())
 			if not self.__isattrsupported:
-				print 'animation of attribute is not supported, continue for now'
-				self.__isattrsupported = 1
+				print 'animating attribute %s is not supported.' % self.__animator.getAttrName()
+			self.__isattrsupported = 1 # support all for dev
+			self.__lastvalue = self.__animator.getDOMValue()
+
+		if debug:
+			print 'AnimateChannel.do_arm',node.attrdict
+			print 'target node:',node.targetnode.attrdict
+
 		return 1
 
 	def do_play(self, node):
@@ -103,6 +103,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		if self.__animator:
 			print 'start animation, initial value', self.__animator.getValue(0)
 		self.__start = time.time()
+		self.__animate()
 		self.__register_for_timeslices()
 
 	def __stopAnimate(self):
@@ -132,14 +133,14 @@ class AnimateChannel(Channel.ChannelAsync):
 		if node and self.__targetchan:
 			if self.__lastvalue != val:
 				self.__targetchan.updateattr(node, attr, val)
-				self.__lastvalue =val
+				self.__lastvalue = val
 		if debug:
 			msg = 'animating %s =' % self.__animator.getAttrName()
 			print msg, self.__animator.getValue(dt)
 
 	def __onAnimateDur(self):
 		if not self.__animating:
-			return		
+			return	
 		if self.play_loop:
 			self.play_loop = self.play_loop - 1
 			if self.play_loop: # more loops ?
@@ -162,10 +163,12 @@ class AnimateChannel(Channel.ChannelAsync):
 
 	def is_callable(self):
 		return self.__animating
+
 	def __register_for_timeslices(self):
 		if self.__fiber_id: return
 		import windowinterface
 		self.__fiber_id=windowinterface.register((self.is_callable,()),(self.on_idle_callback,()))
+
 	def __unregister_for_timeslices(self):
 		if not self.__fiber_id: return
 		import windowinterface
