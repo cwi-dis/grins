@@ -264,27 +264,25 @@ class SMILHtmlTimeWriter(SMIL):
 
 		for name, func in attrs:
 			value = func(self, x)
-			# only write attributes that have a value and are
-			# legal for the type of node
-			# other attributes are caught below
 			if value and attributes.has_key(name) and value != attributes[name]:
-				if name == 'region': 
-					regionName = value
-				elif name == 'src': 
-					src = value
-				elif name == 'id':
-					self.ids_written[value] = 1
-					nodeid = value
-				elif name == 'transIn':
-					transIn = value
-				elif name == 'transOut':
-					transOut = value
-				if name not in ('id', 'top','left','width','height','right','bottom', 'backgroundColor', 'region', 'src', 'transIn', 'transOut'):
+				if interior:
 					attrlist.append((name, value))
+				else:	
+					if name == 'region': 
+						regionName = value
+					elif name == 'src': 
+						src = value
+					elif name == 'id':
+						self.ids_written[value] = 1
+						nodeid = value
+					elif name == 'transIn':
+						transIn = value
+					elif name == 'transOut':
+						transOut = value
+					if name not in ('id', 'top','left','width','height','right','bottom', 'backgroundColor', 'region', 'src', 'transIn', 'transOut'):
+						attrlist.append((name, value))
 		
 		if interior:
-			if root and (attrlist or type != 'seq'):
-				root = 0
 			if not root:
 				self.writetag('t:'+mtype, attrlist)
 				self.push()
@@ -292,6 +290,7 @@ class SMILHtmlTimeWriter(SMIL):
 				self.writenode(child)
 			if not root:
 				self.pop()
+
 		elif type in ('imm', 'ext'):
 			children = x.GetChildren()
 			if not children:				
@@ -356,8 +355,6 @@ class SMILHtmlTimeWriter(SMIL):
 			if not nodeid:
 				nodeid = 'm' + x.GetUID()
 			subregid = nodeid + 'd1'
-			times = x.GetTimes()
-			end = '%ds' % times[1]
 
 
 		subRegGeom, mediaGeom = None, None
@@ -372,7 +369,7 @@ class SMILHtmlTimeWriter(SMIL):
 			if transIn or transOut:
 				divlist.append(('id', subregid))
 				style = style + 'filter:'
-				self.writetag('t:par', [('dur', end)])
+				self.writetag('t:par')
 				self.push()
 				pushed = pushed + 1
 			
@@ -429,10 +426,10 @@ class SMILHtmlTimeWriter(SMIL):
 			pushed = pushed - 1
 			if transIn:
 				trans = 'transIn(%s, \'%s\')' % (subregid, transInName)
-				self.writetag('t:ref', [ ('begin','%s.begin' % nodeid), ('dur', '%d' % transInDur), ('onbegin', trans), ])
+				self.writetag('t:set', [ ('begin','%s.begin' % nodeid), ('dur', '%d' % transInDur), ('onbegin', trans), ])
 			if transOut:	
 				trans = 'transOut(%s, \'%s\')' % (subregid, transOutName)
-				self.writetag('t:ref', [ ('begin','%s.end-%d' % (nodeid,transOutDur)), ('dur', '%d' % transOutDur), ('onbegin', trans), ])
+				self.writetag('t:set', [ ('begin','%s.end-%d' % (nodeid,transOutDur)), ('dur', '%d' % transOutDur), ('onbegin', trans), ])
 			self.pop()
 			pushed = pushed - 1
 		
