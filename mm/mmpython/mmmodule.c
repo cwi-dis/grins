@@ -250,7 +250,7 @@ mm_stop(self, args)
 		if (!(*self->mm_chanobj->chan_funcs->stop)(self))
 			return NULL;
 	} else {
-		dprintf(("already stopped\n"));
+		printf("mmmodule: mm_stop: already stopped\n");
 		release_lock(self->mm_flaglock);
 	}
 	INCREF(None);

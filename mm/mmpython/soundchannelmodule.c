@@ -376,7 +376,9 @@ sound_setrate(self, rate)
 		msg = 'r';
 		PRIV->s_playrate = rate;
 	}
-	if (self->mm_flags & PLAYING) {
+	/* it can happen that the channel has already been stopped but the */
+	/* player thread hasn't reacted yet.  Hence the check on STOPPING. */
+	if ((self->mm_flags & (PLAYING | STOPPING)) == PLAYING) {
 		dprintf(("setrate: writing %c\n", msg));
 		(void) write(PRIV->s_pipefd[1], &msg, 1);
 	}
