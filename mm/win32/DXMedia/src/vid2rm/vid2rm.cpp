@@ -327,8 +327,10 @@ HRESULT CVideoRenderer::Active()
 {
 	Log("Active\n");
 	VIDEOINFOHEADER *pVideoInfo = (VIDEOINFOHEADER *)m_mtIn.Format();
+	float rate = 15; // default when pVideoInfo->AvgTimePerFrame is zero (asf)
 	CRefTime rt(pVideoInfo->AvgTimePerFrame);
-	float rate=1000/float(rt.Millisecs());
+	if(pVideoInfo->AvgTimePerFrame > 0)
+		rate=1000/float(rt.Millisecs());
 	if(RProducer::HasEngine())
 		RProducer::SetVideoInfo(m_VideoSize.cx,m_VideoSize.cy,rate);
 	char sz[128];
