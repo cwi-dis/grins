@@ -43,7 +43,8 @@ class Main(MainDialog):
 		if settings.get('lightweight'):
 			whichversion = 'light'
 		else:
-			whichversion = 'editor'
+			whichversion = 'pro'
+		# The old version uses 'editor'
 		self.tmplicensedialog = license.WaitLicense(self.do_init,
 					   (whichversion,))
 
