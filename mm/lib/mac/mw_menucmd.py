@@ -1,4 +1,4 @@
-import Menu
+from Carbon import Menu
 MenuMODULE=Menu  # Silly name clash with FrameWork.Menu
 import MenuTemplate
 import flags

@@ -1,15 +1,15 @@
-import Win
-import Windows
-import Qd
-import QuickDraw
-import Qdoffs
-import QDOffscreen
-import Dlg
-import Ctl
-import Controls
-import Events
-import Drag
-import Dragconst
+from Carbon import Win
+from Carbon import Windows
+from Carbon import Qd
+from Carbon import QuickDraw
+from Carbon import Qdoffs
+from Carbon import QDOffscreen
+from Carbon import Dlg
+from Carbon import Ctl
+from Carbon import Controls
+from Carbon import Events
+from Carbon import Drag
+from Carbon import Dragconst
 import MacOS
 import mac_image
 import imgformat

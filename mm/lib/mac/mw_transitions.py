@@ -1,6 +1,6 @@
 import time
-import Qd
-import QuickDraw
+from Carbon import Qd
+from Carbon import QuickDraw
 import mw_globals
 import Transitions
 	

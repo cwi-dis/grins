@@ -1,14 +1,14 @@
-import Win
-import Qd
-import QuickDraw
-import List
-import Lists
-import Ctl
-import Controls
-import ControlAccessor
-import App
-import Evt
-import Dlg
+from Carbon import Win
+from Carbon import Qd
+from Carbon import QuickDraw
+from Carbon import List
+from Carbon import Lists
+from Carbon import Ctl
+from Carbon import Controls
+from Carbon import ControlAccessor
+from Carbon import App
+from Carbon import Evt
+from Carbon import Dlg
 
 import img
 import imgformat

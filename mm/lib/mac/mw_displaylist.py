@@ -1,11 +1,11 @@
-import Win
-import Qd
-import Res
-import Icn
-import App
-import Appearance
+from Carbon import Win
+from Carbon import Qd
+from Carbon import Res
+from Carbon import Icn
+from Carbon import App
+from Carbon import Appearance
 import string
-import QuickDraw
+from Carbon import QuickDraw
 from types import *
 import struct
 import math

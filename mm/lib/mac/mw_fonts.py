@@ -1,5 +1,5 @@
-import Qd
-import Fm
+from Carbon import Qd
+from Carbon import Fm
 import string
 
 #
