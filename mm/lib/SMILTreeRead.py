@@ -1217,7 +1217,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif mediatype == 'audio':
 				chtype = 'sound'
 			elif mediatype == 'image':
-				chtype = 'image'
+				if subtype == 'svg-xml':
+					chtype = 'svg'
+				else:
+					chtype = 'image'
 			elif mediatype == 'video':
 				chtype = 'video'
 			elif mediatype == 'text':
