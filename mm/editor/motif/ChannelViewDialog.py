@@ -55,7 +55,7 @@ class ChannelViewDialog(ViewDialog):
 			('Navigate', [
 				('Level of detail', [
 					('More horizontal detail', CANVAS_WIDTH),
-					('More vertical detail', CANVAS_HEIGHT),
+##					('More vertical detail', CANVAS_HEIGHT),
 					('Fit in window', CANVAS_RESET),
 					]),
 				None,

@@ -96,7 +96,7 @@ MENUBAR=(
 		(ENTRY, 'Collapse recursively', None, COLLAPSEALL),
 		(CASCADE, 'Level of detail', (
 			(ENTRY, 'More horizontal detail', None, CANVAS_WIDTH),
-			(ENTRY, 'More vertical detail', None, CANVAS_HEIGHT),
+##			(ENTRY, 'More vertical detail', None, CANVAS_HEIGHT),
 			(ENTRY, 'Fit in window', None, CANVAS_RESET))),
 		(SEP,),
 		(ENTRY, 'Send focus to other views', 'F', PUSHFOCUS),

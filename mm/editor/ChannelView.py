@@ -243,7 +243,13 @@ class ChannelView(ChannelViewDialog):
 		self.draw()
 
 	def canvascall(self, code):
-		self.window.setcanvassize(code)
+		from windowinterface import UNIT_MM
+		width, height = self.window.getcanvassize(UNIT_MM)
+		if code == windowinterface.RESET_CANVAS:
+			width = 1.0
+		elif code == windowinterface.DOUBLE_WIDTH:
+			width = 2 * width
+		self.window.setcanvassize((UNIT_MM, width, height))
 
 ##	def layoutcall(self, name = None):
 ##		curlayout = self.curlayout
@@ -1046,8 +1052,8 @@ class GO(GOCommand):
 		self.menutitle = 'Base ops'
 		self.commandlist = [
 			CLOSE_WINDOW(callback = (mother.hide, ())),
-			CANVAS_HEIGHT(callback = (self.canvascall,
-					(windowinterface.DOUBLE_HEIGHT,))),
+##			CANVAS_HEIGHT(callback = (self.canvascall,
+##					(windowinterface.DOUBLE_HEIGHT,))),
 			CANVAS_WIDTH(callback = (self.canvascall,
 					(windowinterface.DOUBLE_WIDTH,))),
 			CANVAS_RESET(callback = (self.canvascall,
