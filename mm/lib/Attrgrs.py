@@ -498,6 +498,12 @@ attrgrs=(
 		'cssbgcolor',
 		]},
 
+	{'name':'beginlist2',
+	'title':'Begin',
+	'attrs':['beginlist',
+			'restart', 'restartDefault',
+		]},
+
 	{'name':'beginlist',
 	 'title':'Begin',
 	 'attrs':['beginlist',],
