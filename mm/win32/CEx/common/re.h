@@ -10,6 +10,12 @@ Copyright 1991-2002 by Oratrix Development BV, Amsterdam, The Netherlands.
 #ifndef INC_RE
 #define INC_RE
 
+#ifdef _WIN32_WCE
+//#include <windef.h>
+//#include <types.h>
+typedef long off_t;
+#endif
+
 #ifndef _REGEX_H_
 #include "regex/hsregex.h"
 #endif
@@ -96,7 +102,7 @@ class RE
 	char* eprint(int err) const;
 
 	regex_t *m_pre;
-	string m_pattern;
+	std::string m_pattern;
 	int m_copts;
 	int m_eopts;
 	REMatch *m_pmatch;
@@ -119,7 +125,7 @@ inline RE::RE(const char *pattern)
 	{
 	compile();
 	}
-inline RE::RE(const string& pattern)
+inline RE::RE(const std::string& pattern)
 :	m_pre(NULL), m_pattern(pattern),
 	m_copts(REG_EXTENDED), m_eopts(0),
 	m_pmatch(NULL),
