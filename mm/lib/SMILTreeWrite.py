@@ -708,7 +708,7 @@ class SMILWriter(SMIL):
 					       ('content', self.__title)])
 		self.writetag('meta', [('name', 'generator'),
 				       ('content','GRiNS %s'%version.version)])
-		if ctx.baseurl and ctx.baseurlset:
+		if ctx.baseurl and ctx.baseurlset and not self.copydir:
 			self.writetag('meta', [('name', 'base'),
 					       ('content', ctx.baseurl)])
 		for key, val in ctx.attributes.items():
