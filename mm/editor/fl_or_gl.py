@@ -56,8 +56,9 @@ def _qtest():
 	global _last_forms
 	if not _last_forms:
 		_last_forms = fl.check_forms()
-	if _last_forms:
-		retval = _real_qtest()
+	retval = _real_qtest()
+	if retval:
+		_last_forms = -1
 	if _lock:
 		_lock.release()
 	return retval
