@@ -122,7 +122,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			flag = 0
 		else:
 			flag = mv.MV_MPEG1_PRESCAN_OFF
-		flag = 0	# MV_MPEG1_PRESCAN_OFF does not work well
 		self.armed_flag = flag
 		try:
 			self.armed_movie = movie = mv.OpenFile(f, flag)
@@ -145,15 +144,12 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			movie.SetViewSize(width, height)
 			width, height = movie.QueryViewSize(width, height)
 			if center:
-				imbox = float((w - width) / 2)/w, float((h - height) / 2)/h, float(width)/w, float(height)/h
 				x = x + (w - width) / 2
 				y = self.window._form.height - y - (h + height) / 2
 			else:
-				imbox = 0, 0, float(width)/w, float(height)/h
-				y = self.window._form.height - y - height
+				y = self.window._form.height - y - h
 			movie.SetViewOffset(x, y, mv.DM_TRUE)
 		else:
-			imbox = 0, 0, 1, 1
 			movie.SetViewSize(w, h)
 			# X coordinates don't work, so use GL coordinates
 			movie.SetViewOffset(x,
@@ -174,6 +170,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		bg = self.getbgcolor(node)
 		movie.SetViewBackground(bg)
 		self.armed_bg = self.window._convert_color(bg)
+		self.armed_loop = self.getloop(node)
+		self.armed_duration = MMAttrdefs.getattr(node, 'duration')
 		drawbox = MMAttrdefs.getattr(node, 'drawbox')
 		if drawbox:
 			self.armed_display.fgcolor(self.getbucolor(node))
@@ -184,21 +182,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			atype = a[A_TYPE]
 			if atype not in SourceAnchors or atype in (ATYPE_AUTO, ATYPE_WHOLE):
 				continue
-			args = a[A_ARGS]
-			if len(args) == 0:
-				args = [0,0,1,1]
-			elif len(args) == 4:
-				args = self.convert_args(f, args)
-			if len(args) != 4:
-				print 'VideoChannel: funny-sized anchor'
-				continue
-			x, y, w, h = args[0], args[1], args[2], args[3]
-			# convert coordinates from image to window size
-			x = x * imbox[2] + imbox[0]
-			y = y * imbox[3] + imbox[1]
-			w = w * imbox[2]
-			h = h * imbox[3]
-			b = self.armed_display.newbutton((x,y,w,h), times = a[A_TIMES])
+			b = self.armed_display.newbutton((0,0,1,1), times = a[A_TIMES])
 			b.hiwidth(3)
 			if drawbox:
 				b.hicolor(hicolor)
@@ -229,15 +213,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				mtype = 'warning')
 			self.playdone(0)
 			return
-		duration = node.GetAttrDef('duration', None)
-		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
-		loop = node.GetAttrDef('loop', None)
+		loop = self.armed_loop
 		self.played_loop = loop
-		if loop is None:
-			if repeatdur:
-				loop = 0
-			else:
-				loop = 1
 		if loop == 0:
 			movie.SetPlayLoopLimit(mv.MV_LIMIT_FOREVER)
 		else:
@@ -247,31 +224,18 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if self.__begin:
 			movie.SetStartFrame(self.__begin)
 			movie.SetCurrentFrame(self.__begin)
-			begin = movie.GetStartTime()
-		else:
-			begin = 0
 		if self.__end:
 			movie.SetEndFrame(self.__end)
-			end = movie.GetEndTime()
-		else:
-			end = 0
-		if duration is not None and duration > 0 and \
-		   (not end or (end > begin and duration < end - begin)):
-			movie.SetEndTime(1000L * (begin + duration), 1000)
-		elif duration is not None:
-			# XXX need special code to freeze temporarily at
-			# the end of each loop
-			pass
-		if repeatdur > 0:
+		if self.armed_duration > 0:
 			self.__qid = self._scheduler.enter(
-				repeatdur, 0, self.__stopplay, ())
+				self.armed_duration, 0, self.__stopplay, ())
 		movie.Play()
 		self.__stopped = 0
 		r = Xlib.CreateRegion()
 		r.UnionRectWithRegion(0, 0, window._form.width, window._form.height)
 		r.SubtractRegion(window._region)
 		window._topwindow._do_expose(r)
-		if loop == 0 and not repeatdur:
+		if loop == 0 and not self.armed_duration:
 			self.playdone(0)
 
 	def __stopplay(self):
@@ -340,28 +304,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 
 	def stopped(self):
 		if not self.__stopped:
-			if self.__qid or self.played_loop is None:
+			if self.__qid:
 				return
 			self.playdone(0)
-
-	# Convert pixel offsets into relative offsets.
-	# If the offsets are in the range [0..1], we don't need to do
-	# the conversion since the offsets are already fractions of
-	# the image.
-	def convert_args(self, file, args):
-		need_conversion = 1
-		for a in args:
-			if a != int(a):	# any floating point number
-				need_conversion = 0
-				break
-		if not need_conversion:
-			return args
-		if args == (0, 0, 1, 1) or args == [0, 0, 1, 1]:
-			# special case: full image
-			return args
-		import Sizes
-		xsize, ysize = Sizes.GetSize(file)
-		return float(args[0]) / float(xsize), \
-		       float(args[1]) / float(ysize), \
-		       float(args[2]) / float(xsize), \
-		       float(args[3]) / float(ysize)
