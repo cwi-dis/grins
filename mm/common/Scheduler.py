@@ -578,7 +578,7 @@ class SchedulerContext:
 		# if node is playing (or not stopped), must terminate it first
 		if node.playing not in (MMStates.IDLE, MMStates.PLAYED):
 			if debugevents: print 'terminating node',parent.timefunc()
-			self.do_terminate(node, timestamp, no_extend = 1)
+			self.do_terminate(node, timestamp)
 			if not parent.playing:
 				return
 			self.sched_arcs(node, 'begin', timestamp=timestamp)
@@ -604,7 +604,7 @@ class SchedulerContext:
 						action = MMAttrdefs.getattr(p1[1], 'higher')
 					if debugevents: print 'action',action,parent.timefunc()
 					if action == 'stop':
-						self.do_terminate(sib, timestamp, no_extend = arc is None)
+						self.do_terminate(sib, timestamp)
 						if not parent.playing:
 							return
 					elif action == 'never':
@@ -648,7 +648,7 @@ class SchedulerContext:
 						self.do_pause(pnode, sib, pd, timestamp)
 					break
 				elif sib.playing == MMStates.FROZEN:
-					self.do_terminate(sib, timestamp, no_extend = arc is None)
+					self.do_terminate(sib, timestamp)
 					if not parent.playing:
 						return
 					break
@@ -660,9 +660,9 @@ class SchedulerContext:
 				if c is not node and c.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
 					# if fill="hold", freeze child, otherwise kill
 					fill = c.GetFill()
-					if fill != 'hold':
+					if fill != 'hold' and fill != 'transition':
 						fill = 'remove'
-					self.do_terminate(c, timestamp, fill = fill, cancelarcs = arc is None, no_extend = arc is None)
+					self.do_terminate(c, timestamp, fill = fill, cancelarcs = arc is None)
 					if not parent.playing:
 						return
 					# there can be only one active child
@@ -782,7 +782,7 @@ class SchedulerContext:
 				return
 		if node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
 			# no valid intervals, so node should not play
-			self.do_terminate(node, timestamp, no_extend = 1)
+			self.do_terminate(node, timestamp)
 			if not parent.playing:
 				return
 		if path is not None or node.playing == MMStates.IDLE:
@@ -795,7 +795,7 @@ class SchedulerContext:
 				self.sched_arcs(node, 'begin', timestamp = resolved)
 		return
 
-	def do_terminate(self, node, timestamp, fill = 'remove', cancelarcs = 0, chkevent = 1, no_extend = 0):
+	def do_terminate(self, node, timestamp, fill = 'remove', cancelarcs = 0, chkevent = 1):
 		parent = self.parent
 		if debugevents: print 'do_terminate',node,timestamp,fill,parent.timefunc()
 		if debugdump: parent.dump()
@@ -814,11 +814,11 @@ class SchedulerContext:
 			if node.type in leaftypes and getchannelfunc:
 				chan = getchannelfunc(node)
 				if chan:
-					if debugevents: print 'stopplay',`node`,no_extend,parent.timefunc()
-					chan.stopplay(node, no_extend)
+					if debugevents: print 'stopplay',`node`,parent.timefunc()
+					chan.stopplay(node)
 					node.set_armedmode(ARM_DONE)
 			for c in node.GetSchedChildren():
-				self.do_terminate(c, timestamp, fill=fill, cancelarcs=cancelarcs, no_extend=no_extend)
+				self.do_terminate(c, timestamp, fill=fill, cancelarcs=cancelarcs)
 				if not parent.playing:
 					return
 			node.stopplay(timestamp)
@@ -871,6 +871,13 @@ class SchedulerContext:
 			if arc.srcnode is node and arc.getevent() == 'end':
 				if debugevents: print 'do_terminate: cancel',`arc`,parent.timefunc()
 				self.cancelarc(arc, timestamp)
+
+	# callback from channel to indicate that a transition finished
+	# on a region overlapping with this node's region, so we must
+	# terminate this node if it was frozen with fill="transition"
+	def transitiondone(self, node):
+		if node.playing == MMStates.FROZEN and node.GetFill() == 'transition':
+			self.do_terminate(node, self.parent.timefunc())
 
 	def flushqueue(self, xxx = 0):
 		parent = self.parent
@@ -1406,7 +1413,7 @@ class Scheduler(scheduler):
 			return
 		chan = self.ui.getchannelbynode(node)
 		node.set_armedmode(ARM_DONE)
-		chan.stopplay(node)
+		chan.freeze(node)
 		node.stopplay(timestamp)
 
 	#
