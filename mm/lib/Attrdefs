@@ -243,7 +243,7 @@
 	raw (cmif smil2))
 
 (regionName (name) 'undefined' 'Region name' default
-	'Region nam' raw (cmif smil2 snap))
+	'Region name' raw (cmif smil2 snap))
 
 (repeatdur (float) 0 'Repeat duration' default
 	'Time the node should repeat' raw (smil2))
