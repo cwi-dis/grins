@@ -43,7 +43,8 @@ MENUBAR=(
 		(ALL, ENTRY, '&Open...\tCtrl+O', 'O', OPENFILE),
 		(ALL, ENTRY, '&Open URL...\tCtrl+L', 'O', OPEN),
 		(ALL, DYNAMICCASCADE, 'Open &recent', OPEN_RECENT),
-		(ALL, SEP,),
+		(ALL, ENTRY, '&Close', None, CLOSE),
+ 		(ALL, SEP,),
 		(ALL, ENTRY, '&Save\tCtrl+S', 'S', SAVE),
 		(ALL, ENTRY, 'Save &as...', None, SAVE_AS),
 		(ALL, CASCADE, '&Export', (
@@ -61,8 +62,7 @@ MENUBAR=(
 			(ALL, TOGGLE, 'Show log/debug window', None, CONSOLE),
 			)),
 		(ALL, SEP,),
-		(ALL, ENTRY, '&Close', None, CLOSE),
- 		(ALL, ENTRY, 'E&xit', None, EXIT),
+		(ALL, ENTRY, 'E&xit', None, EXIT),
 		)),
 
 	('&Edit', (
@@ -156,7 +156,7 @@ MENUBAR=(
 ##		)),
 
 	('&Window', (
-		(ALL, ENTRY, 'Cl&ose\tAlt+X', 'X', CLOSE_ACTIVE_WINDOW),
+		(ALL, ENTRY, 'Cl&ose\tCtrl+W', 'W', CLOSE_ACTIVE_WINDOW),
 		(ALL, SEP,),
 		(ALL, ENTRY, '&Cascade', 'C', CASCADE_WNDS),
 		(ALL, ENTRY, 'Tile &Horizontally', 'H', TILE_HORZ),
@@ -187,17 +187,13 @@ MENUBAR=(
 # Popup menus for various states
 #
 POPUP_HVIEW_LEAF = (
-		(CASCADE, '&New node', (
-			(ENTRY, '&Before', None, NEW_BEFORE),
-			(ENTRY, '&After', None, NEW_AFTER),
-			)),
+		(ENTRY, '&New node...', None, NEW_AFTER),
+		(ENTRY, 'New node &before...', None, NEW_BEFORE),
 		(SEP,),
 		(ENTRY, 'Cu&t', None, CUT),
 		(ENTRY, '&Copy', None, COPY),
-		(CASCADE, '&Paste', (
-			(ENTRY, '&Before', None, PASTE_BEFORE),
-			(ENTRY, '&After', None, PASTE_AFTER),
-			)),
+		(ENTRY, '&Paste', None, PASTE_AFTER),
+		(ENTRY, 'Paste before', None, PASTE_BEFORE),
 		(ENTRY, 'Paste file', None, PASTE_FILE),
 		(SEP,),
 		(ENTRY, '&Delete', None, DELETE),
@@ -215,17 +211,17 @@ POPUP_HVIEW_LEAF = (
 )
 
 POPUP_HVIEW_STRUCTURE = (
-		(CASCADE, '&New node', (
-			(ENTRY, '&Before', None, NEW_BEFORE),
-			(ENTRY, '&After', None, NEW_AFTER),
-			(ENTRY, '&Within', None, NEW_UNDER),
+		(ENTRY, '&New node...', None, NEW_AFTER),
+		(CASCADE, '&New node special', (
+			(ENTRY, '&Before...', None, NEW_BEFORE),
+			(ENTRY, '&Within...', None, NEW_UNDER),
 			)),
 		(SEP,),
 		(ENTRY, 'Cu&t', None, CUT),
 		(ENTRY, '&Copy', None, COPY),
-		(CASCADE, '&Paste', (
+		(ENTRY, '&Paste', None, PASTE_AFTER),
+		(CASCADE, '&Paste special', (
 			(ENTRY, '&Before', None, PASTE_BEFORE),
-			(ENTRY, '&After', None, PASTE_AFTER),
 			(ENTRY, '&Within', None, PASTE_UNDER),
 			)),
 		(ENTRY, 'Paste file', None, PASTE_FILE),
@@ -262,12 +258,12 @@ POPUP_CVIEW_BWSTRIP = (
 		)
 
 POPUP_CVIEW_CHANNEL = (
-		(ENTRY, 'Show proper&ties', 'A', ATTRIBUTES),
-		(SEP,),
 		(ENTRY, '&Delete', None, DELETE),
 		(SEP,),
 		(ENTRY, '&Move channel', None, MOVE_CHANNEL),
 		(ENTRY, '&Copy channel', None, COPY_CHANNEL),
+		(SEP,),
+		(ENTRY, '&Properties...', 'A', ATTRIBUTES),
 
 )
 
