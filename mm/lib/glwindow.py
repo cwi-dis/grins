@@ -163,16 +163,16 @@ def del_anchor(button):
 
 # Locked on entry, locked on return.
 def dispatch(dev, val):
-	import windowinterface, events, EVENTS
+	import windowinterface, EVENTS
 	global focuswindow, focuswid
 ##	print 'dispatch:', `dev,val` #DBG
 	if GLLock.gl_lock:
 ##		print 'release'
 		GLLock.gl_lock.release()
 	# Use some undocumented internals of the windowinterface module.
-	windowinterface._event._doevent(dev, val)
-	while callback_mode and events.testevent():
-		window, event, value = events.readevent()
+	windowinterface.event._doevent(dev, val)
+	while callback_mode and windowinterface.testevent():
+		window, event, value = windowinterface.readevent()
 ##		print 'dispatch now:', event #DBG
 ##		global highlight
 		if event == EVENTS.Mouse0Press:
