@@ -394,6 +394,11 @@ class VideoStream:
 				self.__mmstream.run()
 				self.__register_for_timeslices()
 
+	def freezeit(self):
+		if self.__mmstream:
+			self.__mmstream.stop()
+			self.__unregister_for_timeslices()
+
 	def onMediaEnd(self):
 		if not self.__mmstream:
 			return		
