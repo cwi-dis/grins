@@ -166,7 +166,7 @@ class _Boxes:
 		else:
 			constrainy = 0
 		self.display.render()
-		
+
 		if constrainx and constrainy:
 			self.box = win._movebox(b, 0, 0)
 		else:
