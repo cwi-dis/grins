@@ -43,7 +43,7 @@ item: Global
   Variable Default2=c:\winnt
   Variable Flags2=00001000
   Variable Name3=_WISE_
-  Variable Default3=E:\Program Files\Wise InstallBuilder 8.1
+  Variable Default3=C:\Program Files\Wise InstallBuilder 8.1
   Variable Flags3=00001000
   Variable Name4=_ALIASNAME_
   Variable Flags4=00001000
@@ -65,7 +65,7 @@ item: Get Temporary Filename
   Variable=READMEFILE
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\products\smil-20\lllicense.txt
+  Source=..\products\smil-20\lllicense.txt
   Destination=%TEMP%\%READMEFILE%
   Flags=0000000000100010
 end
@@ -1679,122 +1679,122 @@ item: Install File
   Flags=0001001010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\wingdi.pyd
+  Source=..\..\bin\win32\wingdi.pyd
   Destination=%MAINDIR%\wingdi.pyd
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\win32ui.pyd
+  Source=..\..\bin\win32\win32ui.pyd
   Destination=%MAINDIR%\win32ui.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Qt.pyd
+  Source=..\..\bin\win32\Qt.pyd
   Destination=%MAINDIR%\Qt.pyd
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\win32\vcredist\olepro32.dll
+  Source=vcredist\olepro32.dll
   Destination=%SYS32%\olepro32.dll
   Flags=0001000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\win32\vcredist\msvcp60.dll
+  Source=vcredist\msvcp60.dll
   Destination=%SYS32%\msvcp60.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\win32\vcredist\msvcrt.dll
+  Source=vcredist\msvcrt.dll
   Destination=%SYS32%\msvcrt.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\win32\vcredist\msvcrt40.dll
+  Source=vcredist\msvcrt40.dll
   Destination=%SYS32%\msvcrt40.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\win32\vcredist\mfc42.dll
+  Source=vcredist\mfc42.dll
   Destination=%SYS32%\mfc42.dll
   Flags=0001000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\win32\vcredist\msvcirt.dll
+  Source=vcredist\msvcirt.dll
   Destination=%SYS32%\msvcirt.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\win32\vcredist\oleaut32.dll
+  Source=vcredist\oleaut32.dll
   Destination=%SYS32%\oleaut32.dll
   Flags=0001000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\_socket.pyd
+  Source=..\..\bin\win32\_socket.pyd
   Destination=%MAINDIR%\_socket.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\ddraw.pyd
+  Source=..\..\bin\win32\ddraw.pyd
   Destination=%MAINDIR%\ddraw.pyd
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\dshow.pyd
+  Source=..\..\bin\win32\dshow.pyd
   Destination=%MAINDIR%\dshow.pyd
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\dsound.pyd
+  Source=..\..\bin\win32\dsound.pyd
   Destination=%MAINDIR%\dsound.pyd
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Gear32sd.dll
+  Source=..\..\bin\win32\Gear32sd.dll
   Destination=%MAINDIR%\Gear32sd.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\gear32sd.pyd
+  Source=..\..\bin\win32\gear32sd.pyd
   Destination=%MAINDIR%\gear32sd.pyd
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\GRiNSP_SV2.exe
+  Source=..\..\bin\win32\GRiNSP_SV2.exe
   Destination=%MAINDIR%\GRiNSP_SV2.exe
   Flags=0001000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\grinspapi.pyd
+  Source=..\..\bin\win32\grinspapi.pyd
   Destination=%MAINDIR%\grinspapi.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\grinsproxy.dll
+  Source=..\..\bin\win32\grinsproxy.dll
   Destination=%MAINDIR%\grinsproxy.dll
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\GRiNSRes.dll
+  Source=..\..\bin\win32\GRiNSRes.dll
   Destination=%MAINDIR%\GRiNSRes.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\python16.dll
+  Source=..\..\bin\win32\python16.dll
   Destination=%MAINDIR%\python16.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\PyWinTypes.dll
+  Source=..\..\bin\win32\PyWinTypes.dll
   Destination=%MAINDIR%\PyWinTypes.dll
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\rma.pyd
+  Source=..\..\bin\win32\rma.pyd
   Destination=%MAINDIR%\rma.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\win32api.pyd
+  Source=..\..\bin\win32\win32api.pyd
   Destination=%MAINDIR%\win32api.pyd
   Flags=0000000010000010
 end
@@ -1810,12 +1810,12 @@ item: If/While Statement
   Flags=00000001
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\win32\Com\javaclient\bin\grinsp.jar
+  Source=..\..\win32\Com\javaclient\bin\grinsp.jar
   Destination=%JAVA_RUNTIME%\grinsp.jar
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\win32\Com\javaclient\bin\grinsp.dll
+  Source=..\..\win32\Com\javaclient\bin\grinsp.dll
   Destination=%JAVA_RUNTIME%\grinsp.dll
   Flags=0000000010000010
 end
@@ -1883,12 +1883,12 @@ end
 item: End Block
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\license.txt
+  Source=..\products\smil-20\player\license.txt
   Destination=%MAINDIR%\license.txt
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\BugReportForm.txt
+  Source=..\products\smil-20\player\BugReportForm.txt
   Destination=%MAINDIR%\BugReportForm.txt
   Flags=0000000010000010
 end

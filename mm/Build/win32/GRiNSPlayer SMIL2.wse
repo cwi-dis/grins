@@ -43,7 +43,7 @@ item: Global
   Variable Default2=c:\winnt
   Variable Flags2=00001000
   Variable Name3=_WISE_
-  Variable Default3=E:\Program Files\Wise InstallBuilder 8.1
+  Variable Default3=C:\Program Files\Wise InstallBuilder 8.1
   Variable Flags3=00001000
   Variable Name4=_ALIASNAME_
   Variable Flags4=00001000
@@ -65,7 +65,7 @@ item: Get Temporary Filename
   Variable=READMEFILE
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\products\smil-20\lllicense.txt
+  Source=..\products\smil-20\lllicense.txt
   Destination=%TEMP%\%READMEFILE%
   Flags=0000000000100010
 end
@@ -1365,7 +1365,7 @@ item: Check Disk Space
   Component=COMPONENTS
 end
 item: Display Graphic
-  Pathname=D:\ufs\mm\cmif\Build\products\smil-20\player\splash8bit.bmp
+  Pathname=..\products\smil-20\player\splash8bit.bmp
   X Position=32784
   Y Position=16
 end
@@ -1376,7 +1376,7 @@ item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Qt.pyd
+  Source=..\..\bin\win32\Qt.pyd
   Destination=%MAINDIR%\Qt.pyd
   Flags=0000000010000011
 end
@@ -1428,37 +1428,37 @@ item: Set Variable
   Variable=BACKUPDIR
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\win32\vcredist\mfc42.dll
+  Source=vcredist\mfc42.dll
   Destination=%SYS32%\mfc42.dll
   Flags=0001001010000011
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\win32\vcredist\msvcrt40.dll
+  Source=vcredist\msvcrt40.dll
   Destination=%SYS32%\Msvcrt40.dll
   Flags=0000001010000011
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\win32\vcredist\msvcrt.dll
+  Source=vcredist\msvcrt.dll
   Destination=%SYS32%\msvcrt.dll
   Flags=0000001010000011
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\win32\vcredist\msvcp60.dll
+  Source=vcredist\msvcp60.dll
   Destination=%SYS32%\Msvcp60.dll
   Flags=0000001010000011
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\win32\vcredist\olepro32.dll
+  Source=vcredist\olepro32.dll
   Destination=%SYS32%\Olepro32.dll
   Flags=0001001010000011
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\win32\vcredist\oleaut32.dll
+  Source=vcredist\oleaut32.dll
   Destination=%SYS32%\Oleaut32.dll
   Flags=0001001010000011
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\win32\vcredist\msvcirt.dll
+  Source=vcredist\msvcirt.dll
   Destination=%SYS32%\msvcirt.dll
   Flags=0000001010000011
 end
@@ -1475,257 +1475,257 @@ end
 item: End Block
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\_socket.pyd
+  Source=..\..\bin\win32\_socket.pyd
   Destination=%MAINDIR%\_socket.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\ddraw.pyd
+  Source=..\..\bin\win32\ddraw.pyd
   Destination=%MAINDIR%\ddraw.pyd
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\dshow.pyd
+  Source=..\..\bin\win32\dshow.pyd
   Destination=%MAINDIR%\dshow.pyd
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\dsound.pyd
+  Source=..\..\bin\win32\dsound.pyd
   Destination=%MAINDIR%\dsound.pyd
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\Gear32sd.dll
+  Source=..\..\bin\win32\Gear32sd.dll
   Destination=%MAINDIR%\Gear32sd.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\gear32sd.pyd
+  Source=..\..\bin\win32\gear32sd.pyd
   Destination=%MAINDIR%\gear32sd.pyd
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\GRiNSP_SV2.exe
+  Source=..\..\bin\win32\GRiNSP_SV2.exe
   Destination=%MAINDIR%\GRiNSP_SV2.exe
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\grinspapi.pyd
+  Source=..\..\bin\win32\grinspapi.pyd
   Destination=%MAINDIR%\grinspapi.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\grinsproxy.dll
+  Source=..\..\bin\win32\grinsproxy.dll
   Destination=%MAINDIR%\grinsproxy.dll
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\GRiNSRes.dll
+  Source=..\..\bin\win32\GRiNSRes.dll
   Destination=%MAINDIR%\GRiNSRes.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\python16.dll
+  Source=..\..\bin\win32\python16.dll
   Destination=%MAINDIR%\python16.dll
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\PyWinTypes.dll
+  Source=..\..\bin\win32\PyWinTypes.dll
   Destination=%MAINDIR%\PyWinTypes.dll
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\rma.pyd
+  Source=..\..\bin\win32\rma.pyd
   Destination=%MAINDIR%\rma.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\win32api.pyd
+  Source=..\..\bin\win32\win32api.pyd
   Destination=%MAINDIR%\win32api.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\win32ui.pyd
+  Source=..\..\bin\win32\win32ui.pyd
   Destination=%MAINDIR%\win32ui.pyd
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\wingdi.pyd
+  Source=..\..\bin\win32\wingdi.pyd
   Destination=%MAINDIR%\wingdi.pyd
   Flags=0000000010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\cont.htm
+  Source=..\products\smil-20\player\help\html\cont.htm
   Destination=%MAINDIR%\help\html\cont.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\edit.htm
+  Source=..\products\smil-20\player\help\html\edit.htm
   Destination=%MAINDIR%\help\html\edit.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\editmenu.htm
+  Source=..\products\smil-20\player\help\html\editmenu.htm
   Destination=%MAINDIR%\help\html\editmenu.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\file.htm
+  Source=..\products\smil-20\player\help\html\file.htm
   Destination=%MAINDIR%\help\html\file.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\filemenu.htm
+  Source=..\products\smil-20\player\help\html\filemenu.htm
   Destination=%MAINDIR%\help\html\filemenu.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\help.htm
+  Source=..\products\smil-20\player\help\html\help.htm
   Destination=%MAINDIR%\help\html\help.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\helpintro.htm
+  Source=..\products\smil-20\player\help\html\helpintro.htm
   Destination=%MAINDIR%\help\html\helpintro.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\helpmenu.htm
+  Source=..\products\smil-20\player\help\html\helpmenu.htm
   Destination=%MAINDIR%\help\html\helpmenu.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\intro.htm
+  Source=..\products\smil-20\player\help\html\intro.htm
   Destination=%MAINDIR%\help\html\intro.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\main.htm
+  Source=..\products\smil-20\player\help\html\main.htm
   Destination=%MAINDIR%\help\html\main.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\play.htm
+  Source=..\products\smil-20\player\help\html\play.htm
   Destination=%MAINDIR%\help\html\play.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\playermenu.htm
+  Source=..\products\smil-20\player\help\html\playermenu.htm
   Destination=%MAINDIR%\help\html\playermenu.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\playeruse.htm
+  Source=..\products\smil-20\player\help\html\playeruse.htm
   Destination=%MAINDIR%\help\html\playeruse.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\playmenu.htm
+  Source=..\products\smil-20\player\help\html\playmenu.htm
   Destination=%MAINDIR%\help\html\playmenu.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\title.htm
+  Source=..\products\smil-20\player\help\html\title.htm
   Destination=%MAINDIR%\help\html\title.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\use.htm
+  Source=..\products\smil-20\player\help\html\use.htm
   Destination=%MAINDIR%\help\html\use.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\view.htm
+  Source=..\products\smil-20\player\help\html\view.htm
   Destination=%MAINDIR%\help\html\view.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\viewmenu.htm
+  Source=..\products\smil-20\player\help\html\viewmenu.htm
   Destination=%MAINDIR%\help\html\viewmenu.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\window.htm
+  Source=..\products\smil-20\player\help\html\window.htm
   Destination=%MAINDIR%\help\html\window.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\html\windowmenu.htm
+  Source=..\products\smil-20\player\help\html\windowmenu.htm
   Destination=%MAINDIR%\help\html\windowmenu.htm
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\index.html
+  Source=..\products\smil-20\player\help\index.html
   Destination=%MAINDIR%\help\index.html
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\new_GS.css
+  Source=..\products\smil-20\player\help\new_GS.css
   Destination=%MAINDIR%\help\new_GS.css
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\grins-logo-bg.gif
+  Source=..\products\smil-20\player\help\images\grins-logo-bg.gif
   Destination=%MAINDIR%\help\images\grins-logo-bg.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_1.gif
+  Source=..\products\smil-20\player\help\images\p20_1.gif
   Destination=%MAINDIR%\help\images\p20_1.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_10.gif
+  Source=..\products\smil-20\player\help\images\p20_10.gif
   Destination=%MAINDIR%\help\images\p20_10.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_11.gif
+  Source=..\products\smil-20\player\help\images\p20_11.gif
   Destination=%MAINDIR%\help\images\p20_11.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_2.gif
+  Source=..\products\smil-20\player\help\images\p20_2.gif
   Destination=%MAINDIR%\help\images\p20_2.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_3.gif
+  Source=..\products\smil-20\player\help\images\p20_3.gif
   Destination=%MAINDIR%\help\images\p20_3.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_4.gif
+  Source=..\products\smil-20\player\help\images\p20_4.gif
   Destination=%MAINDIR%\help\images\p20_4.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_5.gif
+  Source=..\products\smil-20\player\help\images\p20_5.gif
   Destination=%MAINDIR%\help\images\p20_5.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_6.gif
+  Source=..\products\smil-20\player\help\images\p20_6.gif
   Destination=%MAINDIR%\help\images\p20_6.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_7.gif
+  Source=..\products\smil-20\player\help\images\p20_7.gif
   Destination=%MAINDIR%\help\images\p20_7.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_8.gif
+  Source=..\products\smil-20\player\help\images\p20_8.gif
   Destination=%MAINDIR%\help\images\p20_8.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\help\images\p20_9.gif
+  Source=..\products\smil-20\player\help\images\p20_9.gif
   Destination=%MAINDIR%\help\images\p20_9.gif
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\license.txt
+  Source=..\products\smil-20\player\license.txt
   Destination=%MAINDIR%\license.txt
   Flags=0000000010000010
 end
@@ -1735,17 +1735,17 @@ item: Install File
   Flags=0001001010000011
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\BugReportForm.txt
+  Source=..\products\smil-20\player\BugReportForm.txt
   Destination=%MAINDIR%\BugReportForm.txt
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\win32\readme.txt
+  Source=..\products\smil-20\player\win32\readme.txt
   Destination=%MAINDIR%\readme.txt
   Flags=0000000010000010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Build\products\smil-20\player\win32\relnotes.html
+  Source=..\products\smil-20\player\win32\relnotes.html
   Destination=%MAINDIR%\relnotes.html
   Flags=0000000010000010
 end
