@@ -33,7 +33,6 @@ class SchedulerContext:
 		#self.parent.ui.duration_ind.label = '??:??'
 
 		self.prepare_minidoc(seeknode, end_action)
-		print 'START', self
 		return self
 
 	
@@ -103,6 +102,9 @@ class SchedulerContext:
 			self.prearmlists[ch] = []
 		self.parent.GenAllPrearms(self.playroot, self.prearmlists)
 		self.playroot.EndPruneTree()
+		from Selecter import findminidocument
+		mini = findminidocument(self.playroot)
+		Timing.needtimes(mini)
 		return 1
 	#
 	def startcontextchannels(self):
@@ -136,12 +138,11 @@ class SchedulerContext:
 	# sorted by time
 	#
 	def run_initial_prearms(self):
-		from Selecter import findminidocument
-		mini = findminidocument(self.playroot)
-		Timing.needtimes(mini)
+		# XXXX Code gone to gen_prearms
 		prearmnowlist = []
 		prearmlaterlist = []
 		now = self.playroot.t0
+		parent = self.parent
 		for ch in self.channels:
 			ev = self.getnextprearm(ch)
 			if not ev:
@@ -151,13 +152,11 @@ class SchedulerContext:
 			else:
 				prearmlaterlist.append(ev[1].t0, ev)
 		for ev in prearmnowlist:
-			self.parent.add_runqueue(self, PRIO_PREARM_NOW, ev)
+			parent.add_runqueue(self, PRIO_PREARM_NOW, ev)
 		prearmlaterlist.sort()
 		pll = []
 		for time, ev in prearmlaterlist:
-			self.parent.add_lopriqueue(self, time, ev)
-		#d = int(self.playroot.t1 - self.playroot.t0)
-		#self.parent.ui.duration_ind.label = `d/60`+':'+`d/10%6`+`d%10`
+			parent.add_lopriqueue(self, time, ev)
 	#
 	# FutureWork returns true if we may have something to do at some
 	# time in the future (i.e. if we're not done yet)
@@ -185,17 +184,20 @@ class SchedulerContext:
 		else: # end_action == END_KEEP
 			srlist.append(([(SR.SCHED_DONE, self.playroot)], \
 				  [(SR.SCHED_FINISH, self.playroot)]))
-		self.sractions = []
-		self.srevents = {}
-		for events, actions in srlist:
+		sractions = [None]*len(srlist)
+		srevents = {}
+		for actionpos in range(len(srlist)):
+			events, actions = srlist[actionpos]
 			nevents = len(events)
-			actionpos = len(self.sractions)
-			self.sractions.append((nevents, actions))
+			sractions[actionpos] = (nevents, actions)
 			for ev in events:
-				if self.srevents.has_key(ev):
+				if srevents.has_key(ev):
 					raise 'Scheduler: Duplicate event:', \
 						  SR.ev2string(ev)
-				self.srevents[ev] = actionpos
+				srevents[ev] = actionpos
+		self.sractions = sractions
+		self.srevents = srevents
+
 	#
 	# Start minidoc starts playing what we've prepared
 	#
@@ -670,7 +672,8 @@ def GenAllSR(node, seeknode):
 		nodelist = []
 		for cur_node in cur_nodelist:
 			cur_srlist, children = cur_node.gensr()
-			nodelist = nodelist + children
+			if children:
+				nodelist = nodelist + children
 			srlist = srlist + cur_srlist
 	return srlist
 #

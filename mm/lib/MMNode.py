@@ -325,6 +325,7 @@ class MMNode:
 	def Init(self, type, context, uid):
 		# ASSERT type in alltypes
 		self.type = type
+		self.setgensr()
 		self.context = context
 		self.uid = uid
 		self.attrdict = {}
@@ -668,6 +669,7 @@ class MMNode:
 		if self.children <> []: # TEMP! or self.values <> []:
 			raise CheckError, 'SetType() on non-empty node'
 		self.type = type
+		self.setgensr()
 	#
 	def SetValues(self, values):
 		if self.type <> 'imm':
@@ -852,6 +854,20 @@ class MMNode:
 		self.armedmode = mode
 
 	#
+	# Set the correct method for generating scheduler records.
+	def setgensr(self):
+		type = self.type
+		if type in ('imm', 'ext'):
+			self.gensr = self.gensr_leaf
+		elif type == 'bag':
+			self.gensr = self.gensr_bag
+		elif type == 'seq':
+			self.gensr = self.gensr_seq
+		elif type == 'par':
+			self.gensr = self.gensr_par
+		else:
+			raise 'MMNode: unknown type', self.type
+	#
 	# Methods for building scheduler records. The interface is as follows:
 	# - PruneTree() is called first, with a parameter that specifies the
 	#   node to seek to (where we want to start playing). None means 'play
@@ -866,9 +882,10 @@ class MMNode:
 	#   calling sequence of gensr(). I cannot seem to remember it at
 	#   the moment, though).
 	# - Call EndPruneTree() to clear the garbage.
-	def PruneTree(self, seeknode):
-		if seeknode == self:
-			seeknode = None
+ 	def PruneTree(self, seeknode):
+		if not seeknode or seeknode == self:
+			self._FastPruneTree()
+			return
 		if seeknode and not self.IsAncestorOf(seeknode):
 			raise 'Seeknode not in tree!'
 		self.sync_from = ([],[])
@@ -884,17 +901,27 @@ class MMNode:
 					seeknode = None
 				elif not seeknode:
 					self.wtd_children.append(c)
-					c.PruneTree(None)
+					c._FastPruneTree()
 		elif self.type == 'par':
+			self.wtd_children = self.children[:]
 			for c in self.children:
-				self.wtd_children.append(c)
 				if c.IsAncestorOf(seeknode):
 					c.PruneTree(seeknode)
 				else:
-					c.PruneTree(None)
+					c._FastPruneTree()
 		else:
 			raise 'Cannot PruneTree() on nodes of this type', \
 				  self.type
+	#
+	# PruneTree - The fast lane. Just copy children->wtd_children and
+	# create sync_from and sync_to.
+ 	def _FastPruneTree(self):
+		self.sync_from = ([],[])
+		self.sync_to = ([],[])
+		self.wtd_children = self.children[:]
+		for c in self.children:
+			c._FastPruneTree()
+
 	#
 	def EndPruneTree(self):
 		del self.sync_from
@@ -904,18 +931,18 @@ class MMNode:
 				c.EndPruneTree()
 			del self.wtd_children
 	#
-	def gensr(self):
-		if self.type in ('imm', 'ext'):
-			return self.gensr_leaf(), []
-		elif self.type == 'bag':
-			return self.gensr_bag(), []
-		elif self.type == 'seq':
-			rv = self.gensr_seq(), self.wtd_children
-			return rv
-		elif self.type == 'par':
-			rv = self.gensr_par(), self.wtd_children
-			return rv
-		raise 'Cannot gensr() for nodes of this type', self.type
+#	def gensr(self):
+#		if self.type in ('imm', 'ext'):
+#			return self.gensr_leaf(), []
+#		elif self.type == 'bag':
+#			return self.gensr_bag(), []
+#		elif self.type == 'seq':
+#			rv = self.gensr_seq(), self.wtd_children
+#			return rv
+#		elif self.type == 'par':
+#			rv = self.gensr_par(), self.wtd_children
+#			return rv
+#		raise 'Cannot gensr() for nodes of this type', self.type
 
 	#
 	# Generate schedrecords for leaf nodes.
@@ -928,7 +955,8 @@ class MMNode:
 	# 3. If we have implicit timing we just stop playing immedeately.
 	#
 	def gensr_leaf(self):
-		in0, out0, in1, out1 = self.gensr_arcs()
+		in0, in1 = self.sync_from
+		out0, out1 = self.sync_to
 		arg = self
 		if in1:
 			return [\
@@ -936,13 +964,13 @@ class MMNode:
 			                           [(PLAY, arg)     ]+out0),\
 			  ([(PLAY_DONE, arg) ]+in1,[(SCHED_DONE,arg), \
 			                            (PLAY_STOP, arg)]+out1),\
-			  ([(SCHED_STOP, arg)]    ,[]) ]
+			  ([(SCHED_STOP, arg)]    ,[]) ], []
 		if not MMAttrdefs.getattr(self, 'duration'):
 			return [\
 			  ([(SCHED, arg), (ARM_DONE, arg)]+in0,\
 			                           [(PLAY, arg)     ]+out0),\
 			  ([(PLAY_DONE, arg) ]    ,[(SCHED_DONE,arg)]+out1),\
-			  ([(SCHED_STOP, arg)]    ,[(PLAY_STOP, arg)]) ]
+			  ([(SCHED_STOP, arg)]    ,[(PLAY_STOP, arg)]) ], []
 		else:
 			print 'Duration set to',MMAttrdefs.getattr(self, 'duration') 
 			return [\
@@ -950,42 +978,24 @@ class MMNode:
 			                           [(PLAY, arg)     ]+out0),\
 			  ([(PLAY_DONE, arg) ]    ,[(SCHED_DONE,arg), \
 			                            (PLAY_STOP, arg)]+out1),\
-			  ([(SCHED_STOP, arg)]    ,[]) ]
+			  ([(SCHED_STOP, arg)]    ,[]) ], []
 	#
-#	def gensr_bag(self):
-#		in0, out0, in1, out1 = self.gensr_arcs()
-#		arg = self
-#		if in1:
-#			return [\
-#			  ([(SCHED, arg)]+in0,     [(BAG_START, arg) ]+out0),\
-#			  ([(BAG_DONE, arg) ]+in1, [(SCHED_DONE,arg), \
-#			                            (BAG_STOP, arg)]+out1),\
-#			  ([(SCHED_STOP, arg)]    ,[]) ]
-#		if not MMAttrdefs.getattr(self, 'duration'):
-#			return [\
-#			  ([(SCHED, arg)]+in0,     [(BAG_START, arg)]+out0),\
-#			  ([(BAG_DONE, arg) ]     ,[(SCHED_DONE,arg)]+out1),\
-#			  ([(SCHED_STOP, arg)]    ,[(BAG_STOP, arg)]) ]
-#		else:
-#			return [\
-#			  ([(SCHED, arg)]+in0,     [(BAG_START, arg)]+out0),\
-#			  ([(BAG_DONE, arg) ]     ,[(SCHED_DONE,arg), \
-#			                            (BAG_STOP, arg)]+out1),\
-#			  ([(SCHED_STOP, arg)]    ,[]) ]
 	def gensr_bag(self):
-		in0, out0, in1, out1 = self.gensr_arcs()
+		in0, in1 = self.sync_from
+		out0, out1 = self.sync_to
 		arg = self
 		return [\
 			  ([(SCHED, arg)]+in0,     [(BAG_START, arg)]+out0),\
 			  ([(BAG_DONE, arg) ]     ,[(SCHED_DONE,arg)]+out1),\
-			  ([(SCHED_STOP, arg)]    ,[(BAG_STOP, arg)]) ]
+			  ([(SCHED_STOP, arg)]    ,[(BAG_STOP, arg)]) ], []
 	#
 	# Generate schedrecords for a sequential node
 	def gensr_seq(self):
+		in0, in1 = self.sync_from
+		out0, out1 = self.sync_to
 		n_sr = len(self.wtd_children)+1
 		sr_list = []
 		last_actions = []
-		in0, out0, in1, out1 = self.gensr_arcs()
 		for i in range(n_sr):
 			if i == 0:
 				prereq = [(SCHED, self)] + in0
@@ -1000,10 +1010,11 @@ class MMNode:
 				actions.append((SCHED, self.wtd_children[i]))
 			sr_list.append((prereq, actions))
 		sr_list.append( ([(SCHED_STOP, self)]+in1, last_actions+out1) )
-		return sr_list
+		return sr_list, self.wtd_children
 
 	def gensr_par(self):
-		in0, out0, in1, out1 = self.gensr_arcs()
+		in0, in1 = self.sync_from
+		out0, out1 = self.sync_to
 		if not self.wtd_children:
 			# Empty node needs special code:
 			return [ \
@@ -1019,25 +1030,26 @@ class MMNode:
 			slist.append((SCHED_STOP, arg))
 		return [  ([(SCHED, self) ]+in0, alist+out0), \
 			  ( plist, [(SCHED_DONE, self)]), \
-			  ([(SCHED_STOP, self)]+in1, slist+out1) ]
-	#
-	# gensr_arcs returns 4 lists of sync arc events: incoming head,
-	# outgoing head, incoming tail, outgoing tail.
-	#
-	def gensr_arcs(self):
-		in0 = []
-		out0 = []
-		in1 = []
-		out1 = []
-		for i in self.sync_from[0]:
-			in0.append((SYNC_DONE, i))
-		for i in self.sync_from[1]:
-			in1.append((SYNC_DONE, i))
-		for i in self.sync_to[0]:
-			out0.append((SYNC, i))
-		for i in self.sync_to[1]:
-			out1.append((SYNC, i))
-		return in0, out0, in1, out1
+			  ([(SCHED_STOP, self)]+in1, slist+out1) ], \
+			  self.wtd_children
+# 	#
+#	# gensr_arcs returns 4 lists of sync arc events: incoming head,
+#	# outgoing head, incoming tail, outgoing tail.
+#	#
+#	def gensr_arcs(self):
+#		in0 = []
+#		out0 = []
+#		in1 = []
+#		out1 = []
+#		for i in self.sync_from[0]:
+#			in0.append((SYNC_DONE, i))
+#		for i in self.sync_from[1]:
+#			in1.append((SYNC_DONE, i))
+#		for i in self.sync_to[0]:
+#			out0.append((SYNC, i))
+#		for i in self.sync_to[1]:
+#			out1.append((SYNC, i))
+#		return in0, out0, in1, out1
 			
 	#
 	# Methods to handle sync arcs.
@@ -1045,7 +1057,6 @@ class MMNode:
 	# The GetArcList method recursively gets a list of sync arcs
 	# The sync arcs are returned as (n1, s1, n2, s2, delay) tuples.
 	# Unused sync arcs are not filtered out of the list yet.
-	# As a side effect the members sync_from and sync_to are set empty.
 	#
 	def GetArcList(self):
 		if not self.GetSummary('synctolist'):
@@ -1096,16 +1107,15 @@ class MMNode:
 		
 	#
 	# SetArcSrc sets the source of a sync arc.
-	# XXXX This can be done so that gensr_arcs has nothing more to do.
 	#
 	def SetArcSrc(self, side, delay, aid):
-		self.sync_to[side].append((delay, aid))
+		self.sync_to[side].append((SYNC_DONE, (delay, aid)))
 
 	#
 	# SetArcDst sets the destination of a sync arc.
 	#
 	def SetArcDst(self, side, aid):
-		self.sync_from[side].append(aid)
+		self.sync_from[side].append((SYNC, aid))
 			
 		
 
