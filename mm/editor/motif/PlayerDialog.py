@@ -1,3 +1,5 @@
+__version__ = "$Id"
+
 import windowinterface, X, Xm, Xmd
 
 _BLACK = 0, 0, 0
@@ -82,6 +84,14 @@ class PlayerDialog:
 					  name = 'stopButton',
 					  top = self.__play, left = None,
 					  bottom = None, right = None)
+
+	def close(self):
+		self.__window.close()
+		del self.__window
+		del self.__menu
+		del self.__play
+		del self.__pause
+		del self.__stop
 
 	def __drawplay(self, widget, call_data):
 		if self.__state == STOPPED:
@@ -171,8 +181,5 @@ class PlayerDialog:
 	def getgeometry(self):
 		return self.__window.getgeometry()
 
-	def setwaiting(self):
-		self.__window.setcursor('watch')
-
-	def setready(self):
-		self.__window.setcursor('')
+	def setcursor(self, cursor):
+		self.__window.setcursor(cursor)
