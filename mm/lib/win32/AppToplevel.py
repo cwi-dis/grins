@@ -72,9 +72,10 @@ class _Toplevel:
 		self._running = 0
 		self._pseudo_id_list = []
 		self._cursor = ''
+
 		self._image_size_cache = {}
 		self._image_cache = {}
-
+		self._image_docmap = {None:[],}
 				
 		# timer handling
 		self._timers = []
@@ -99,8 +100,23 @@ class _Toplevel:
 			apply(func, args)
 		for win in self._subwindows[:]:
 			win.close()
+			if hasattr(win,'DestroyWindow'):
+				win.DestroyWindow()
 		self._closecallbacks = []
 		self._subwindows = []
+
+		win32ig.deltemp()
+
+		import Font
+		Font.delfonts()
+
+		import DrawTk
+		del DrawTk.drawTk
+
+		import __main__
+		del __main__.resdll
+
+
 
 	# Registration function for close callbacks
 	def addclosecallback(self, func, args):
@@ -185,6 +201,7 @@ class _Toplevel:
 
 	# Set the application cursor to the cursor with string id
 	def setcursor(self, strid):
+		App=win32ui.GetApp()
 		if strid=='hand':
 			import grinsRC
 			cursor = App.LoadCursor(grinsRC.IDC_POINT_HAND)
@@ -249,8 +266,8 @@ class _Toplevel:
 		win32ui.GetApp().RunLoop(wnd)
 		wnd.DestroyWindow()
 
-		win32ig.deltemp()
 		self.close()
+
 		(win32ui.GetAfx()).PostQuitMessage(0)
 
 	def monitor(self,handler,count):
@@ -353,7 +370,18 @@ class _Toplevel:
 	################################
 	
 	#utility functions
-	
+	def cleardocmap(self,doc):
+		if doc not in self._image_docmap.keys(): return
+		imglist=self._image_docmap[doc]
+		for file in imglist:
+			if file not in self._image_cache.keys():continue
+			img=self._image_cache[file]
+			del self._image_cache[file]
+			del self._image_size_cache[file]
+			win32ig.delete(img)
+		del self._image_docmap[doc]
+
+			
 	# Returns the size of an image	
 	def GetImageSize(self,file):
 		try:
@@ -361,6 +389,7 @@ class _Toplevel:
 		except KeyError:
 			try:
 				img = win32ig.load(file)
+				self._image_docmap[None]=file
 			except img.error, arg:
 				raise error, arg
 			xsize,ysize,depth=win32ig.size(img)
@@ -374,7 +403,7 @@ class _Toplevel:
 		builder=DirectShowSdk.CreateGraphBuilder()
 		width, height=100,100
 		if builder:
-			builder.RenderFile(fn)
+			builder.RenderFile(file)
 			width, height=builder.GetWindowPosition()[2:]
 		return (width, height)
 	
