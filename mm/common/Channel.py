@@ -1565,6 +1565,10 @@ class ChannelWindow(Channel):
 			return
 		self.cleanup_transitions()
 		Channel.stopplay(self, node)
+		fill = MMAttrdefs.getattr(node, 'fill')
+		if self.window and fill == 'transition':
+			# XXX For now we only do transition, fill=hold is somewhat similar
+			self.window.freeze_content('transition')
 		if self.played_display:
 			self.played_display.close()
 			self.played_display = None
