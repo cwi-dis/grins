@@ -1,5 +1,6 @@
 __version__ = "$Id$"
 
+animateInsideMediaSupportted = 0
 
 #
 #	Export interface 
@@ -454,6 +455,34 @@ class SMILHtmlTimeWriter(SMIL):
 
 
 	def writemedianode(self, node, nodeid, attrlist, mtype, regionName, src, transIn, transOut):
+		moveAnimationOutside = 0
+		
+		if not animateInsideMediaSupportted:
+			# if the animate node is not supported inside a media element, put it outside the element
+			# in a par container
+
+			# first check if the node contain some animations node inside the media node
+			for child in node.GetChildren():
+				if child.GetType() == 'animate':
+					moveAnimationOutside = 1
+					break
+
+		if moveAnimationOutside:			
+			# move in the par node all timing attributes which are on the media node
+			# XXX it's a first approximation
+			attrsToMove = []
+			attrlen = len(attrlist)
+			indList = range(attrlen-1)
+			indList.reverse()
+			for ind in indList:
+				attrName, attrValue = attrlist[ind]
+				if attrName in ('begin', 'end', 'dur'):
+					attrsToMove.append((attrName, attrValue))
+					del attrlist[ind]
+
+			self.writetag('t:par', attrsToMove)
+			self.push()
+					
 		if mtype=='video':
 			mtype = 'media'
 
@@ -479,7 +508,7 @@ class SMILHtmlTimeWriter(SMIL):
 				break
 			parents.insert(0, lch)
 			lch = pch
-	
+
 		if parents and mtype != 'audio':
 			lch = parents[0]
 			name = self.ch2name[lch]
@@ -593,11 +622,13 @@ class SMILHtmlTimeWriter(SMIL):
 			self.writetag('t:'+mtype, attrlist)
 		kids = 0
 		for child in node.GetChildren():
-			if child.GetType() != 'anchor':
+			type = child.GetType()
+			if type != 'anchor':
 				if not kids:
 					self.push()
 					kids = 1
-				self.writenode(child)
+				if not moveAnimationOutside or type != 'animate':
+					self.writenode(child)
 		if kids:
 			self.pop()
 
@@ -607,6 +638,14 @@ class SMILHtmlTimeWriter(SMIL):
 			self.pop()
 		
 		if pushed:
+			self.pop()
+
+		if moveAnimationOutside:
+			# write the animate nodes
+			for child in node.GetChildren():
+				if child.GetType() == 'animate':
+					self.writeanimatenode(child, 0, targetElement=nodeid)
+					
 			self.pop()
 
 	def writeAnchors(self, x, name):
@@ -700,9 +739,10 @@ class SMILHtmlTimeWriter(SMIL):
 		for i in range(pushed):
 			self.pop()
 
-	def writeanimatenode(self, node, root):
+	def writeanimatenode(self, node, root, targetElement=None):
 		attrlist = []
-		targetElement = None
+		if targetElement is not None:
+			attrlist.append(('targetElement', targetElement))
 		tag = node.GetAttrDict().get('atag')
 
 		if tag == 'animateMotion':
@@ -721,7 +761,7 @@ class SMILHtmlTimeWriter(SMIL):
 					value = node.GetRawAttrDef("trtype", None)
 				else:
 					value = func(self, node)
-				if name == 'targetElement':
+				if targetElement is None and name == 'targetElement':
 					targetElement = value
 					value = value
 				if tag == 'animateMotion' and not isAdditive:
