@@ -353,27 +353,30 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 
 	def drawPath(self, path, style, tflist, a = 0):
 		self.beginDraw(style, tflist)
-		wingdi.BeginPath(self.hdc)
-		oldtf = wingdi.GetWorldTransform(self.hdc)
-		tm = svgtypes.TM(oldtf)
+
 		prec = path.getPrecision()
 		if prec>=3:
 			scale = 0.001
-			self._saround = self.scale1000AndRound
+			saround = self.scale1000AndRound
 		elif prec==2:
 			scale = 0.01
-			self._saround = self.scale100AndRound
+			saround = self.scale100AndRound
 		elif prec==1:
 			scale = 0.1
-			self._saround = self.scale10AndRound
+			saround = self.scale10AndRound
 		elif prec==0:
 			scale = 1.0
-			self._saround = self.scale1AndRound
+			saround = self.scale1AndRound
+
+		wingdi.BeginPath(self.hdc)
+		oldtf = wingdi.GetWorldTransform(self.hdc)
+		tm = svgtypes.TM(oldtf)
 		tm.scale([scale, scale])
 		wingdi.SetWorldTransform(self.hdc, tm.getElements())
-		self.drawPathSegList(path._pathSegList, self._saround)
+		self.drawPathSegList(path._pathSegList, saround)
 		wingdi.EndPath(self.hdc)
 		wingdi.SetWorldTransform(self.hdc, oldtf)
+
 		self.endDraw(style, tflist)
 		
 	def scale1000AndRound(self, x):
