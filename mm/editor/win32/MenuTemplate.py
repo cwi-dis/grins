@@ -597,6 +597,7 @@ POPUP_REGIONTREE_MEDIA = (
 		(FLAG_PRO, SEP,),
 #		(FLAG_ALL, ENTRY, 'Layout...', None, ATTRIBUTES_LAYOUT),
 #		(FLAG_ALL, ENTRY, 'Anchors...', None, ATTRIBUTES_ANCHORS),
+		(FLAG_ALL, ENTRY, 'Create simple link source', None, CREATEANCHOR),
 		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
 		(FLAG_ALL, ENTRY, '&Edit Content...', 'E', CONTENT),
 )
