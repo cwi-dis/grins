@@ -21,13 +21,13 @@ class URLCache(UserDict):
 urlcache = URLCache()
 
 import MMurl
+import MMmimetypes
 def mimetype(url):
 	cache = urlcache[url]
 	if not cache.has_key('mimetype'):
 		checkext = settings.get('checkext')
 		mtype = None
 		if checkext:
-			import MMmimetypes
 			mtype = MMmimetypes.guess_type(url)[0]
 		if not mtype:
 			try:
@@ -35,10 +35,6 @@ def mimetype(url):
 			except (IOError, OSError):
 				pass
 			else:
-				# On the Mac urllib may guess the mimetype wrong. Correct.
-				if u.headers.type == 'text/plain' and sys.platform == 'mac':
-					import MMmimetypes
-					u.headers.type = MMmimetypes.guess_type(url)[0]
 				mtype = u.headers.type
 		if not mtype and sys.platform == 'mac':
 			# On the mac we do something extra: for local files we attempt to
@@ -60,7 +56,6 @@ def mimetype(url):
 						mtype = 'application/x-grins-project'
 		if not mtype and not checkext:
 			# last resort, try extension if not done so already
-			import MMmimetypes
 			mtype = MMmimetypes.guess_type(url)[0]
 		if not mtype:
 			# failed, don't cache

@@ -5,6 +5,7 @@ guess_type = mimetypes.guess_type
 
 import grins_mimetypes
 mimetypes.types_map.update(grins_mimetypes.mimetypes)
+mimetypes.init()
 
 
 # Platform-specific extensions.
