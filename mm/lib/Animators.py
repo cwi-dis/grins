@@ -23,8 +23,8 @@ splineAnimationModule = 'http://www.w3.org/2000/SMIL20/CR/SplineAnimation'
 timeManipulationsModule = 'http://www.w3.org/2000/SMIL20/CR/TimeManipulations'
 
 basicAnimation	= basicAnimationModule
-splineAnimation = ''
-timeManipulations = ''
+splineAnimation = splineAnimationModule
+timeManipulations = timeManipulationsModule
 
 if hasattr(settings, 'activeFullSmilCss') and not settings.activeFullSmilCss:
 	windowinterface.showmessage('BasicAnimation module is dissabled.\nPlease enable settings.activeFullSmilCss flag')
