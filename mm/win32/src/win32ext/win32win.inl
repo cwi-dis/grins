@@ -112,6 +112,34 @@ ui_window_child_window_from_point(PyObject *self, PyObject *args)
 	return PyCWnd::make( UITypeFromCObject(pChild), pChild )->GetGoodRet();
 }
 
+static PyObject *
+ui_window_validate_rect(PyObject *self, PyObject *args)
+{
+	CWnd *pWnd = GetWndPtr(self);
+	BOOL erase=TRUE;
+
+	if (!pWnd)
+		return NULL;
+	CRect rect(CFrameWnd::rectDefault), *r;
+	// @pyparm (left, top, right, bottom)|rect|(0,0,0,0)|Rectangle to be
+	// updated.  If default param is used, the entire window is validated.
+	if (!PyArg_ParseTuple (args,
+	                      "(iiii):ValidateRect",
+	                      &rect.left, &rect.top,
+	                      &rect.right, &rect.bottom)) {
+		return NULL;
+	}
+	if (rect==CFrameWnd::rectDefault)
+		r = NULL;
+	else
+		r = &rect;
+	GUI_BGN_SAVE;
+	pWnd->ValidateRect(r);
+	// @pyseemfc CWnd|ValidateRect
+	GUI_END_SAVE;
+	RETURN_NONE;
+}
+
 
 /* 
 // @pymethod |PyCWnd|LockWindowUpdate|Disables drawing in the given window
@@ -647,6 +675,31 @@ ui_window_subclass_window(PyObject *self, PyObject *args)
 	return Py_BuildValue( "i", rc);
 }
 
+// @pymethod <o PyCWnd>|win32ui|SubclassDlgItem|“dynamically subclass” a control created from a dialog template and attach it to this CWnd object
+PyObject *
+ui_window_subclass_dlg_item(PyObject *self, PyObject *args)
+{
+	UINT nID;
+	PyObject *obParent;
+	if (!PyArg_ParseTuple(args, "iO:SubclassDlgItem", &nID, &obParent)) 
+		return NULL;
+
+	CWnd *pWnd = GetWndPtr(self);
+	if (!pWnd)
+		return NULL;
+
+	CWnd *pParent = GetWndPtr(obParent);
+	if (pParent==NULL)
+		RETURN_TYPE_ERR("The parent window is not a valid PyWnd");
+	
+	GUI_BGN_SAVE;
+	BOOL rc = pWnd->SubclassDlgItem(nID, pParent);
+	GUI_END_SAVE;
+	return Py_BuildValue( "i", rc);
+}
+
+
+
 // @pymethod <o PyCWnd>|win32ui|ScrollWindow|Scrolls the contents of the client area of the current CWnd object
 PyObject *
 ui_window_scroll_window(PyObject *self, PyObject *args)
@@ -664,6 +717,79 @@ ui_window_scroll_window(PyObject *self, PyObject *args)
 }
 
 
+// @pymethod <o PyCWnd>|win32ui|PrintClient|Draw any window in the specified device context 
+PyObject *
+ui_window_print_client(PyObject *self, PyObject *args)
+{
+	PyObject *obDC = NULL;
+	DWORD dwFlags = PRF_CLIENT;
+	if (!PyArg_ParseTuple(args, "|Oi:PrintClient", &obDC, &dwFlags)) 
+		return NULL;
+	CWnd *pWnd = GetWndPtr(self);
+	if (!pWnd)
+		return NULL;
+	CDC *pDC=NULL;
+	if (obDC && !(pDC=ui_dc_object::GetDC(obDC)))
+		return NULL;
+	GUI_BGN_SAVE;
+	pWnd->PrintClient(pDC, dwFlags);
+	GUI_END_SAVE;
+	RETURN_NONE;
+}
+
+static PyObject *
+ui_window_register_drop_target(PyObject *self, PyObject *args)
+{
+	CHECK_NO_ARGS(args);
+	CWnd *pWnd = GetWndPtr(self);
+	if (!pWnd) return NULL;
+
+	// register drop target
+	//pWnd->m_dropTarget.Register(pWnd);
+	
+	RETURN_NONE;
+}
+static PyObject *
+ui_window_revoke_drop_target(PyObject *self, PyObject *args)
+{
+	CHECK_NO_ARGS(args);
+	CWnd *pWnd = GetWndPtr(self);
+	if (!pWnd) return NULL;
+
+	// register drop target
+	//pWnd->m_dropTarget.Revoke();
+	
+	RETURN_NONE;
+}
+
+static PyObject *
+ui_window_do_drag_drop(PyObject *self, PyObject *args)
+{
+	int cf; // clipboard format 
+	char *pszData;
+	if (!PyArg_ParseTuple(args,"is:DoDragDrop",&cf,&pszData))
+		return NULL;
+	
+	CWnd *pWnd = GetWndPtr(self);
+	if (!pWnd) return NULL;
+
+	CLIPFORMAT cfPrivate=(CLIPFORMAT)cf;
+	DROPEFFECT dropEffect = DROPEFFECT_NONE;
+	HGLOBAL hGlobal=GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE,lstrlen(pszData)+1);
+	LPSTR lpGMem=(LPSTR)GlobalLock(hGlobal);
+	lstrcpy(lpGMem,pszData);
+	GlobalUnlock(hGlobal);
+
+	COleDataSource oleDataSource;
+	COleDataSource::FlushClipboard();
+	oleDataSource.CacheGlobalData(cfPrivate,hGlobal);
+	GUI_BGN_SAVE;
+	dropEffect=oleDataSource.DoDragDrop();
+	GUI_END_SAVE;
+	GlobalFree(hGlobal);
+	return Py_BuildValue("i", dropEffect);
+}
+
 // SubclassDlgItem
 
 ///////////////////////
@@ -679,6 +805,7 @@ ui_window_scroll_window(PyObject *self, PyObject *args)
 // @pymeth KillTimer|Destroys a system timer
 // ...
 // @pymethod (x, y)|PyCWnd|ChildWindowFromPoint|Returns the child window that contains the point and if not found the window asked for
+// @pymethod <o PyCWnd>|win32ui|SubclassDlgItem|“dynamically subclass” a control created from a dialog template and attach it to this CWnd object
 
 #define DEF_NEW_PY_METHODS_PyCWnd \
 	{"IsKindOfMDIChildWnd",ui_window_is_kind_of_mdi_child_wnd,1},\
@@ -686,8 +813,13 @@ ui_window_scroll_window(PyObject *self, PyObject *args)
 	{"SetWindowLong",ui_window_set_window_long,1},\
 	{"ChildWindowFromPoint",ui_window_child_window_from_point,1},\
 	{"SubclassWindow",ui_window_subclass_window,1},\
-	{"ScrollWindow",ui_window_scroll_window,1},
-
+	{"ScrollWindow",ui_window_scroll_window,1},\
+	{"PrintClient",ui_window_print_client,1},\
+	{"ValidateRect",ui_window_validate_rect,1},\
+	{"RegisterDropTarget",ui_window_register_drop_target,1},\
+	{"RevokeDropTarget",ui_window_revoke_drop_target,1},\
+	{"DoDragDrop",ui_window_do_drag_drop,1},\
+	{"SubclassDlgItem",ui_window_subclass_dlg_item,1}, 
 
 
 /*

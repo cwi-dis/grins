@@ -18,6 +18,7 @@ import grinsRC
 import win32mu
 import string
 import features
+import math
 
 [FALSE, TRUE] = range(2)
 error = 'lib.win32.components.error'
@@ -296,6 +297,60 @@ class ListBox(Control):
 				npixels = np
 		npixels = npixels + 8  # plus 8 pixel margin 
 		self.sendmessage(win32con.LB_SETHORIZONTALEXTENT,npixels)
+
+
+class DnDListBox(ListBox):
+	def __init__(self,owner=None,id=-1):
+		ListBox.__init__(self, owner, id)
+		self._dragging = None
+		self.CF_LISTBOX_ITEM = Sdk.RegisterClipboardFormat('ListBoxItem')
+
+	def attach_to_parent(self):
+		ListBox.attach_to_parent(self)
+		wnd = win32ui.CreateWindowFromHandle(self._hwnd)
+		wnd.SubclassDlgItem(self._id, self._parent)
+		wnd.HookMessage(self.onLButtonDown,win32con.WM_LBUTTONDOWN)
+		wnd.HookMessage(self.onLButtonUp,win32con.WM_LBUTTONUP)
+		wnd.HookMessage(self.onMouseMove,win32con.WM_MOUSEMOVE)
+		self._mfcwnd = wnd
+
+	def isPtInRect(self, rc, pt):
+		l, t, r, b = rc
+		x, y = pt
+		return (x >= l and x < r and y >= t and y < b)
+
+	def getItemAt(self, pos):
+		n = self.getcount()
+		for ix in range(n):
+			rc = self.getitemrect(ix)
+			if self.isPtInRect(rc, pos):
+				return ix
+		return -1
+
+	def onLButtonDown(self, params):
+		msg=win32mu.Win32Msg(params)
+		self._dragging = msg.pos()
+		return 1
+
+	def onLButtonUp(self, params):
+		msg=win32mu.Win32Msg(params)
+		if self._dragging: 
+			self._dragging = None
+		return 1
+
+	def onMouseMove(self, params):
+		msg=win32mu.Win32Msg(params)
+		if self._dragging:
+			xp, yp = self._dragging
+			x, y = msg.pos()
+			if math.fabs(xp-x)>4 or math.fabs(yp-y)>4:
+				index = self.getItemAt(self._dragging)
+				str = self.gettext(index)
+				print 'dragging item:', str
+				# start drag and drop
+				self._mfcwnd.DoDragDrop(self.CF_LISTBOX_ITEM, str)
+				self._dragging = None
+		return 1
 
 
 # ComboBox control class
