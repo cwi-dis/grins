@@ -78,7 +78,7 @@ dealers, distributors, agents or employees shall create a warranty or
 in any way increase the scope of this warranty.
 
 6. Exclusive Remedy
-Your exclusive remedy under Section 5 is to return the Software us
+Your exclusive remedy under Section 5 is to return the Software to us
 with a copy of your receipt and a description of the problem. Oratrix
 will supply a new version (if available). Oratrix Development shall
 have no responsibility if the Software has been altered in any way or
