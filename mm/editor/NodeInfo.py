@@ -10,8 +10,6 @@ import MMAttrdefs
 
 from MMNode import alltypes, leaftypes, interiortypes
 
-cwd = os.getcwd()
-
 def shownodeinfo(toplevel, node, new = 0):
 	try:
 		nodeinfo = node.nodeinfo
@@ -302,23 +300,33 @@ class NodeInfo(NodeInfoDialog):
 	# dir from the resulting pathname.
 	#
 	def browser_callback(self):
-		if self.filename == '' or self.filename == '/dev/null':
+		import urllib
+		type, filename = urllib.splittype(self.filename)
+		if type:
+			windowinterface.showmessage('Cannot browse URLs')
+			return
+		if filename == '' or filename == '/dev/null':
 			dir, file = '', ''
 		else:
-			if self.filename[-1] == '/':
-				dir, file = self.filename, '.'
+			if filename[-1] == '/':
+				dir = urllib.url2pathname(filename)
+				file = os.curdir
 			else:
-				dir, file = os.path.split(self.filename)
+				dir, file = os.path.split(urllib.url2pathname(
+					filename))
 		windowinterface.FileDialog('Select file', dir, '*', file,
 					   self.browserfile_callback, None)
 
 	def browserfile_callback(self, pathname):
-		if pathname[-1] == '/':
-			dir, file = pathname, '.'
+		import urllib
+		if os.path.isdir(pathname):
+			dir, file = pathname, os.curdir
 		else:
 			dir, file = os.path.split(pathname)
-		if dir == cwd or dir == '.' or dir == '':
+		if dir == self.toplevel.dirname or \
+		   dir == os.curdir or dir == '':
 			pathname = file
+		pathname = urllib.pathname2url(pathname)
 		self.ch_filename = 1
 		self.changed = 1
 		self.filename = pathname
