@@ -1698,11 +1698,21 @@ class _DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		window = self._window
-		sx, sy = window._convert_coordinates(sx, sy, 0, 0)[:2]
-		dx, dy = window._convert_coordinates(dx, dy, 0, 0)[:2]
+		nsx, nsy = window._convert_coordinates(sx, sy, 0, 0)[:2]
+		ndx, ndy = window._convert_coordinates(dx, dy, 0, 0)[:2]
+		if nsx == ndx and sx != dx:
+			if sx < dx:
+				nsx = nsx - 1
+			else:
+				nsx = nsx + 1
+		if nsy == ndy and sy != dy:
+			if sy < dy:
+				nsy = nsy - 1
+			else:
+				nsy = nsy + 1
 		color = self._window._convert_color(color)
-		lx = dx - sx
-		ly = dy - sy
+		lx = ndx - nsx
+		ly = ndy - nsy
 		if lx == ly == 0:
 			angle = 0.0
 		else:
@@ -1710,12 +1720,12 @@ class _DisplayList:
 		rotation = math.pi + angle
 		cos = math.cos(rotation)
 		sin = math.sin(rotation)
-		points = [(dx, dy)]
-		points.append(roundi(dx + ARR_LENGTH*cos + ARR_HALFWIDTH*sin),
-			      roundi(dy + ARR_LENGTH*sin - ARR_HALFWIDTH*cos))
-		points.append(roundi(dx + ARR_LENGTH*cos - ARR_HALFWIDTH*sin),
-			      roundi(dy + ARR_LENGTH*sin + ARR_HALFWIDTH*cos))
-		self._list.append('arrow', color, sx, sy, dx, dy, points)
+		points = [(ndx, ndy)]
+		points.append(roundi(ndx + ARR_LENGTH*cos + ARR_HALFWIDTH*sin),
+			      roundi(ndy + ARR_LENGTH*sin - ARR_HALFWIDTH*cos))
+		points.append(roundi(ndx + ARR_LENGTH*cos - ARR_HALFWIDTH*sin),
+			      roundi(ndy + ARR_LENGTH*sin + ARR_HALFWIDTH*cos))
+		self._list.append('arrow', color, nsx, nsy, ndx, ndy, points)
 		self._optimize(1)
 
 	#
@@ -3251,6 +3261,14 @@ class _List:
 	def dellistitem(self, pos):
 		del self._itemlist[pos]
 		self._list.ListDeletePos(pos + 1)
+
+	def dellistitems(self, poslist):
+		self._list.ListDeletePositions(map(lambda x: x+1, poslist))
+		list = poslist[:]
+		list.sort()
+		list.reverse()
+		for pos in list:
+			del self._itemlist[pos]
 
 	def replacelistitem(self, pos, newitem):
 		self.replacelistitems(pos, [newitem])
