@@ -73,7 +73,6 @@ class MovieWindow() = ChannelWindow():
 		else:
 			self.w, self.h, self.pf = x
 		self.scale = scale
-		self.lasttime = 0
 	#
 	def nextframe(self):
 		if not self.fp:
@@ -108,9 +107,7 @@ class MovieWindow() = ChannelWindow():
 			x = (xsize-w*zoom)/2
 			y = (ysize-h*zoom)/2
 			gl.lrectwrite(x, y, x+w-1, y+h-1, data)
-		dt = t - self.lasttime
-		self.lasttime = t
-		return max(dt, 0) * 0.001
+		return t * 0.001
 	#
 	def done(self):
 		return self.fp = None
@@ -150,17 +147,19 @@ class MovieChannel() = Channel():
 		filename = self.getfilename(node)
 		scale = MMAttrdefs.getattr(node, 'scale')
 		self.window.setfile(filename, scale)
+		self.starttime = self.player.timefunc()
 		self.poll(callback, arg) # Put on the first image right now
 	#
 	def poll(self, cb_arg):
 		self.qid = None
-		dt = self.window.nextframe()
+		t = self.window.nextframe()
 		if self.window.done(): # Last frame
 			callback, arg = cb_arg
 			callback(arg)
 			return
 		else:
-			self.qid = self.player.enter(dt, 1, self.poll, cb_arg)
+			self.qid = self.player.enterabs(self.starttime + t, \
+				1, self.poll, cb_arg)
 	#
 	def reset(self):
 		self.window.clear()
