@@ -447,8 +447,8 @@ class Scheduler(scheduler):
 				# It is overdue. Make the callback happen
 				# fast.
 				delay = 0.001
-			else:
-				self.ui.showtime()
+##			else:
+##				self.ui.showtime()
 			if debugtimer: print 'updatetimer: timed events' #DBG
 		elif not self.FutureWork():
 			#
@@ -456,7 +456,7 @@ class Scheduler(scheduler):
 			# We're thru.
 			#
 			if debugtimer: print 'updatetimer: no more work' #DBG
-			self.ui.showtime()
+##			self.ui.showtime()
 			self.stop_all()
 			return
 		else:
@@ -464,10 +464,11 @@ class Scheduler(scheduler):
 			# Nothing to do for the moment.
 			# Tick every second, so we see the timer run.
 			#
-			delay = 1
-			self.ui.showtime()
+##			delay = 1
+##			self.ui.showtime()
 			#self.ui.showpauseanchor(1) # Does not work...
 			if debugtimer:  'updatetimer: idle' #DBG
+			return
 		if debugtimer: print 'updatetimer: delay=', delay
 		self.ui.set_timer(delay)
 	#

@@ -151,10 +151,11 @@ def useattrdefs(mapping):
 #
 def getdef(attrname):
 	##_stat('MMAttrdefs.getdef')
-	if attrdefs.has_key(attrname):
+	try:
 		return attrdefs[attrname]
-	# Undefined attribute -- fake something reasonable
-	return (('any', None), None, '', 'default', '',  'normal')
+	except KeyError:
+		# Undefined attribute -- fake something reasonable
+		return (('any', None), None, '', 'default', '',  'normal')
 #
 def getnames():
 	##_stat('MMAttrdefs.getnames')

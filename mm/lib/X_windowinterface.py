@@ -1,4 +1,7 @@
-import Xt, Xm, X, Xmd, Xtdefs, Xcursorfont
+import Xt, Xm, X, Xmd, Xtdefs, Xcursorfont, Xlib
+import img, imgformat, imageop
+import string, tempfile
+import math
 from EVENTS import *
 from types import *
 
@@ -49,7 +52,6 @@ def roundi(x):
 		return roundi(x + 1024) - 1024
 	return int(x + 0.5)
 
-import imgformat
 myxrgb8 = imgformat.xrgb8
 
 def _colormask(mask):
@@ -97,8 +99,8 @@ def _setupimg(rs, rm, gs, gm, bs, bm):
 				lambda d, r, m=cmap: m.map8(d), lossy)
 
 def _setcursor(form, cursor):
-	try:
-		toplevel._win_lock.acquire()
+##	try:
+##		toplevel._win_lock.acquire()
 		if cursor == 'watch':
 			form.DefineCursor(_watchcursor)
 		elif cursor == 'channel':
@@ -111,8 +113,8 @@ def _setcursor(form, cursor):
 			form.UndefineCursor()
 		else:
 			raise error, 'unknown cursor glyph'
-	finally:
-		toplevel._win_lock.release()
+##	finally:
+##		toplevel._win_lock.release()
 
 # three menu utility functions
 def _generic_callback(widget, (func, arg), call_data):
@@ -176,7 +178,7 @@ class _Toplevel:
 		global _stopcursor
 		global _delete_window
 		if debug: print '_TopLevel.__init__() --> '+`self`
-		self._win_lock = _DummyLock()
+##		self._win_lock = _DummyLock()
 		self._toplevel = self
 		import sys
 		Xt.ToolkitInitialize()
@@ -269,14 +271,14 @@ class _Toplevel:
 
 	def close(self):
 		if debug: print 'Toplevel.close()'
-		import posix
+		import os
 		global _image_cache
 		for win in self._subwindows[:]:
 			win.close()
 		for key in _image_cache.keys():
 			try:
-				posix.unlink(_image_cache[key][-1])
-			except posix.error:
+				os.unlink(_image_cache[key][-1])
+			except os.error:
 				pass
 		_image_cache = {}
 
@@ -309,10 +311,10 @@ class _Toplevel:
 
 	def usewindowlock(self, lock):
 		if debug: print 'Toplevel.usewindowlock()'
-		if lock:
-			self._win_lock = lock
-		else:
-			self._win_lock = _DummyLock()
+##		if lock:
+##			self._win_lock = lock
+##		else:
+##			self._win_lock = _DummyLock()
 
 	def mainloop(self):
 		Xt.MainLoop()
@@ -411,7 +413,7 @@ class _Window:
 			 'title': title}
 		if title:
 			attrs['iconName'] = title
-		toplevel._win_lock.acquire()
+##		toplevel._win_lock.acquire()
 		self._shell = parent._toplevel._main.CreatePopupShell(
 			'toplevelShell', Xt.ApplicationShell, attrs)
 		self._title = title
@@ -425,7 +427,7 @@ class _Window:
 		self._shell.Popup(0)
 		self._shell.AddWMProtocolCallback(_delete_window,
 						  self._delete_callback, None)
-		toplevel._win_lock.release()
+##		toplevel._win_lock.release()
 		self._init2(pixmap)
  
 	def __repr__(self):
@@ -483,7 +485,7 @@ class _Window:
 			displist.close()
 		del self._displaylists
 		self.destroy_menu()
-		toplevel._win_lock.acquire()
+##		toplevel._win_lock.acquire()
 		if form:
 			form.DestroyWidget()
 		parent = self._parent_window
@@ -494,7 +496,7 @@ class _Window:
 		del self._parent_window
 		del self._toplevel
 		del self._gc
-		toplevel._win_lock.release()
+##		toplevel._win_lock.release()
 
 	def is_closed(self):
 		return not hasattr(self, '_form')
@@ -540,10 +542,10 @@ class _Window:
 			 'colormap': self._colormap,
 			 'visual': self._visual,
 			 'depth': self._depth}
-		toplevel._win_lock.acquire()
+##		toplevel._win_lock.acquire()
 		self._form = pwin._form.CreateManagedWidget('subwin',
 			Xm.DrawingArea, attrs)
-		toplevel._win_lock.release()
+##		toplevel._win_lock.release()
 		self._do_open_win()
 		if self._menu_title or self._menu_list:
 			self.create_menu(self._menu_title, self._menu_list)
@@ -551,7 +553,7 @@ class _Window:
 
 	def _do_open_win(self):
 		form = self._form
-		toplevel._win_lock.acquire()
+##		toplevel._win_lock.acquire()
 		form.SetValues({'background': self._xbgcolor,
 				'foreground': self._xfgcolor,
 				'borderWidth': 0,
@@ -578,7 +580,7 @@ class _Window:
 		form.AddCallback('exposeCallback', self._expose_callback, None)
 		form.AddCallback('resizeCallback', self._resize_callback, None)
 		form.AddCallback('inputCallback', self._input_callback, None)
-		toplevel._win_lock.release()
+##		toplevel._win_lock.release()
 		self.setcursor(self._cursor)
 
 	def showwindow(self):
@@ -608,10 +610,9 @@ class _Window:
 		if debug: print `self`+'._input_callback()'
 		event = call_data.event
 		if event.type == X.KeyPress:
-			import Xlib
-			toplevel._win_lock.acquire()
+##			toplevel._win_lock.acquire()
 			string = Xlib.LookupString(event)[0]
-			toplevel._win_lock.release()
+##			toplevel._win_lock.release()
 			if self._accelerators.has_key(string):
 				f, a = self._accelerators[string]
 				apply(f, a)
@@ -677,7 +678,7 @@ class _Window:
 			return		# why were we called anyway?
 		if call_data:
 			event = call_data.event
-			toplevel._win_lock.acquire()
+##			toplevel._win_lock.acquire()
 			if hasattr(self, '_pixmap'):
 				self._pixmap.CopyArea(
 					self._form, self._gc, event.x, event.y,
@@ -685,7 +686,7 @@ class _Window:
 					event.x, event.y)
 				return
 			self._gc.FillRectangle(event.x, event.y, event.width, event.height)
-			toplevel._win_lock.release()
+##			toplevel._win_lock.release()
 			if event.count > 0:
 				if debug: print `self`+'._expose_callback() -- count > 0'
 				return
@@ -708,22 +709,22 @@ class _Window:
 				but.highlight()
 		elif not call_data:
 			# clear the window
-			toplevel._win_lock.acquire()
+##			toplevel._win_lock.acquire()
 			self._gc.FillRectangle(0, 0, self._width, self._height)
-			toplevel._win_lock.release()
+##			toplevel._win_lock.release()
 
 	def _do_resize(self):
 		x, y, w, h = self._sizes
 		x, y, w, h = self._parent_window._convert_coordinates(x, y, w, h)
-		toplevel._win_lock.acquire()
+##		toplevel._win_lock.acquire()
 		self._form.SetValues({'width': w, 'height': h, 'x': x, 'y': y})
-		toplevel._win_lock.release()
+##		toplevel._win_lock.release()
 
 	def _resize_callback(self, *rest):
 		if self.is_closed():
 			return
 		if debug: print `self`+'._resize_callback()'
-		toplevel._win_lock.acquire()
+##		toplevel._win_lock.acquire()
 		val = self._form.GetValues(['width', 'height'])
 		self._width = val['width']
 		self._height = val['height']
@@ -734,7 +735,7 @@ class _Window:
 				{'background': self._xbgcolor,
 				 'foreground': self._xbgcolor})
 			self._gc.FillRectangle(0, 0, self._width, self._height)
-		toplevel._win_lock.release()
+##		toplevel._win_lock.release()
 		for displist in self._displaylists[:]:
 			displist.close()
 		for win in self._subwindows:
@@ -791,9 +792,9 @@ class _Window:
 		self._xbgcolor = self._convert_color(self._bgcolor)
 		self._gc.background = self._gc.foreground = self._xbgcolor
 		if not self._active_display_list:
-			toplevel._win_lock.acquire()
+##			toplevel._win_lock.acquire()
 			self._form.SetValues({'background': self._xbgcolor})
-			toplevel._win_lock.release()
+##			toplevel._win_lock.release()
 
 	def setcursor(self, cursor):
 		if not self.is_closed() and self._form:
@@ -817,10 +818,10 @@ class _Window:
 	def settitle(self, title):
 		if self._parent_window != toplevel:
 			raise error, 'can only settitle at top-level'
-		toplevel._win_lock.acquire()
+##		toplevel._win_lock.acquire()
 		self._shell.SetValues({'title': title, 'iconName': title})
 		self._title = title
-		toplevel._win_lock.release()
+##		toplevel._win_lock.release()
 
 	def pop(self):
 # The following statement was commented out because in the GL version
@@ -829,14 +830,14 @@ class _Window:
 # be that the current situation also has undesirable side effects, but
 # I haven't seen them yet.  --sjoerd
 ##		self._parent_window.pop()
-		toplevel._win_lock.acquire()
+##		toplevel._win_lock.acquire()
 		self._form.RaiseWindow()
-		toplevel._win_lock.release()
+##		toplevel._win_lock.release()
 
 	def push(self):
-		toplevel._win_lock.acquire()
+##		toplevel._win_lock.acquire()
 		self._form.LowerWindow()
-		toplevel._win_lock.release()
+##		toplevel._win_lock.release()
 
 	def getgeometry(self):
 		if self.is_closed():
@@ -846,9 +847,9 @@ class _Window:
 		if not self._form:
 			x, y = self._origpos
 			return x, y, self._width * w, self._height * h
-		toplevel._win_lock.acquire()
+##		toplevel._win_lock.acquire()
 		x, y = self._form.TranslateCoords(0, 0)
-		toplevel._win_lock.release()
+##		toplevel._win_lock.release()
 		return float(x) * w, y * h, self._width * w, self._height * h
 
 	def setredrawfunc(self, func):
@@ -927,7 +928,6 @@ class _Window:
 					pass
 			else:
 				return retval[:-1] + (image,)
-		import img, imgformat
 		if self._depth == 8:
 			format = myxrgb8
 			depth = 1
@@ -954,7 +954,6 @@ class _Window:
 			    float(height)/(ysize - top - bottom))
 		width, height = xsize, ysize
 		if scale != 1:
-			import imageop
 			width = int(xsize * scale)
 			height = int(ysize * scale)
 			image = imageop.scale(image, depth, xsize, ysize,
@@ -969,7 +968,6 @@ class _Window:
 		retval = x, y, width - left - right, height - top - bottom, \
 			 left, bottom, width, height, depth, scale, image
 		if not _cache_full:
-			import tempfile
 			filename = tempfile.mktemp()
 			try:
 				f = open(filename, 'wb')
@@ -1233,7 +1231,6 @@ class _Window:
 
 	def hitarrow(self, x, y, sx, sy, dx, dy):
 		# return 1 iff (x,y) is within the arrow head
-		import math
 		if self.is_closed():
 			raise error, 'window already closed'
 		sx, sy = self._convert_coordinates(sx, sy, 0, 0)[:2]
@@ -1261,9 +1258,9 @@ class _Window:
 
 	def destroy_menu(self):
 		if self._menu:
-			toplevel._win_lock.acquire()
+##			toplevel._win_lock.acquire()
 			self._menu.DestroyWidget()
-			toplevel._win_lock.release()
+##			toplevel._win_lock.release()
 		self._menu = None
 		self._menu_title = None
 		self._menu_list = None
@@ -1273,7 +1270,7 @@ class _Window:
 		self.destroy_menu()
 		self._menu_title = title
 		self._menu_list = list
-		toplevel._win_lock.acquire()
+##		toplevel._win_lock.acquire()
 		menu = self._form.CreatePopupMenu('menu',
 				{'colormap': toplevel._default_colormap,
 				 'visual': toplevel._default_visual,
@@ -1287,7 +1284,7 @@ class _Window:
 							 {})
 		self._accelerators = {}
 		_create_menu(menu, list, self._accelerators)
-		toplevel._win_lock.release()
+##		toplevel._win_lock.release()
 		self._menu = menu
 
 class _DisplayList:
@@ -1348,7 +1345,7 @@ class _DisplayList:
 		if window._active_display_list:
 			for but in window._active_display_list._buttonlist:
 				but._highlighted = FALSE
-		toplevel._win_lock.acquire()
+##		toplevel._win_lock.acquire()
 		width, height = window._width, window._height
 		if not self._cloneof or \
 		   self._cloneof is not window._active_display_list or \
@@ -1490,7 +1487,7 @@ class _DisplayList:
 		if hasattr(window, '_pixmap'):
 			window._pixmap.CopyArea(window._form, gc, 0, 0, width, height, 0, 0)
 		window._form.UpdateDisplay()
-		toplevel._win_lock.release()
+##		toplevel._win_lock.release()
 
 	def _optimize(self, ignore = []):
 		if type(ignore) is IntType:
@@ -1596,10 +1593,10 @@ class _DisplayList:
 			  depth, scale, image = \
 				  window._prepare_image_from_file(file,
 					  top, bottom, left, right)
-		toplevel._win_lock.acquire()
+##		toplevel._win_lock.acquire()
 		xim = toplevel._visual.CreateImage(window._depth, X.ZPixmap, 0,
 				image, im_w, im_h, depth * 8, im_w * depth)
-		toplevel._win_lock.release()
+##		toplevel._win_lock.release()
 		self._list.append('image', xim, im_x, im_y, win_x, win_y, win_w, win_h)
 		self._optimize(1)
 		return float(win_x) / window._width, \
@@ -1764,7 +1761,6 @@ class _DisplayList:
 		self._optimize(range(1,5))
 
 	def drawarrow(self, color, sx, sy, dx, dy):
-		import math
 		if debug: print `self`+'.drawarrow'+`color, sx, sy, dx, dy`
 		if self.is_closed():
 			raise error, 'displaylist already closed'
@@ -1827,7 +1823,6 @@ class _DisplayList:
 
 	def fitfont(self, fontname, str, *opt_margin):
 		if debug: print `self`+'.fitfont('+`fontname`+')'
-		import string
 		if self.is_closed():
 			raise error, 'displaylist already closed'
 		if self._rendered:
@@ -1891,7 +1886,6 @@ class _DisplayList:
 		return self._font.pointsize()
 
 	def strsize(self, str):
-		import string
 		if self.is_closed():
 			raise error, 'displaylist already closed'
 		if self._rendered:
@@ -1942,7 +1936,6 @@ class _DisplayList:
 		return self._curpos
 
 	def writestr(self, str):
-		import string
 		if self.is_closed():
 			raise error, 'displaylist already closed'
 		if self._rendered:
@@ -1954,7 +1947,7 @@ class _DisplayList:
 		oldx, oldy = x, y = self._curpos
 		oldy = oldy - self._baseline
 		maxx = oldx
-		toplevel._win_lock.acquire()
+##		toplevel._win_lock.acquire()
 		for str in strlist:
 			x0, y0 = self._window._convert_coordinates(x, y, 0, 0)[:2]
 			self._list.append('text', x0, y0, str)
@@ -1963,7 +1956,7 @@ class _DisplayList:
 			y = y + self._fontheight
 			if self._curpos[0] > maxx:
 				maxx = self._curpos[0]
-		toplevel._win_lock.release()
+##		toplevel._win_lock.release()
 		newx, newy = self._curpos
 		if debug: print `self`+'.writestr('+`str`+') --> '+`oldx,oldy,maxx-oldx,newy-oldy+self._fontheight-self._baseline`
 		return oldx, oldy, maxx - oldx, \
@@ -2043,14 +2036,14 @@ class _Button:
 		if self._color == dispobj._bgcolor and \
 		   self._hicolor == dispobj._bgcolor:
 			return
-		toplevel._win_lock.acquire()
+##		toplevel._win_lock.acquire()
 		gc.background = dispobj._xbgcolor
 		gc.foreground = self._xhicolor
 		gc.line_width = self._hiwidth
 		apply(gc.DrawRectangle, self._coordinates)
 		gc.background = window._xbgcolor
 		gc.foreground = window._xbgcolor
-		toplevel._win_lock.release()
+##		toplevel._win_lock.release()
 		self._highlighted = TRUE
 
 	def unhighlight(self):
@@ -2077,18 +2070,17 @@ class findfont:
 		return not hasattr(self, '_font')
 
 	def strsize(self, str):
-		import string
 		if self.is_closed():
 			raise error, 'font object already closed'
 		strlist = string.splitfields(str, '\n')
 		maxwidth = 0
 		maxheight = len(strlist) * (self._font.ascent + self._font.descent)
-		toplevel._win_lock.acquire()
+##		toplevel._win_lock.acquire()
 		for str in strlist:
 			width = self._font.TextWidth(str)
 			if width > maxwidth:
 				maxwidth = width
-		toplevel._win_lock.release()
+##		toplevel._win_lock.release()
 		if debug: print `self`+'.strsize() --> '+`float(maxwidth)*_mscreenwidth/_screenwidth,float(maxheight)*_mscreenheight/_screenheight`
 		return float(maxwidth) * _mscreenwidth / _screenwidth, \
 			  float(maxheight) * _mscreenheight / _screenheight
@@ -2126,43 +2118,46 @@ _REGISTRY = 13
 _ENCODING = 14
 
 def _parsefontname(fontname):
-	import string
 	list = string.splitfields(fontname, '-')
 	if len(list) != 15:
 		raise error, 'fontname not well-formed'
 	return list
 
 def _makefontname(font):
-	import string
 	return string.joinfields(font, '-')
 
+_fontcache = {}
 def _findfont(fontname, size):
-	import string
 	if not _fontmap.has_key(fontname):
 		raise error, 'Unknown font ' + `fontname`
-	fontname = _fontmap[fontname]
-	parsedfontname = _parsefontname(fontname)
-	fontlist = toplevel._main.ListFonts(fontname)
-	pixelsize = size * _dpi_y / 72.0
-	bestsize = 0
-	psize = size
-	for font in fontlist:
-		parsedfont = _parsefontname(font)
-		if parsedfont[_PIXELS] == '0':
-			# scalable font
-			parsedfont[_PIXELS] = '*'
-			parsedfont[_POINTS] = `int(size * 10)`
-			parsedfont[_RES_X] = `_dpi_x`
-			parsedfont[_RES_Y] = `_dpi_y`
-			parsedfont[_AVG_WIDTH] = '*'
-			thefont = _makefontname(parsedfont)
-			psize = size
-			break
-		p = string.atoi(parsedfont[_PIXELS])
-		if p <= pixelsize and p > bestsize:
-			bestsize = p
-			thefont = font
-			psize = p * 72.0 / _dpi_y
+	key = fontname + `size`
+	try:
+		thefont, psize = _fontcache[key]
+	except KeyError:
+		fontname = _fontmap[fontname]
+		parsedfontname = _parsefontname(fontname)
+		fontlist = toplevel._main.ListFonts(fontname)
+		pixelsize = size * _dpi_y / 72.0
+		bestsize = 0
+		psize = size
+		for font in fontlist:
+			parsedfont = _parsefontname(font)
+			if parsedfont[_PIXELS] == '0':
+				# scalable font
+				parsedfont[_PIXELS] = '*'
+				parsedfont[_POINTS] = `int(size * 10)`
+				parsedfont[_RES_X] = `_dpi_x`
+				parsedfont[_RES_Y] = `_dpi_y`
+				parsedfont[_AVG_WIDTH] = '*'
+				thefont = _makefontname(parsedfont)
+				psize = size
+				break
+			p = string.atoi(parsedfont[_PIXELS])
+			if p <= pixelsize and p > bestsize:
+				bestsize = p
+				thefont = font
+				psize = p * 72.0 / _dpi_y
+		_fontcache[key] = thefont, psize
 	return thefont, psize, toplevel._main.LoadQueryFont(thefont)
 
 _fontmap = {
@@ -2527,7 +2522,7 @@ class _MenuSupport:
 		if self._form.IsSubclass(Xm.Gadget):
 			raise error, 'cannot create popup menus on gadgets'
 		self.destroy_menu()
-		toplevel._win_lock.acquire()
+##		toplevel._win_lock.acquire()
 		menu = self._form.CreatePopupMenu('dialogMenu', {})
 		if title:
 			list = [title, None] + list
@@ -2535,7 +2530,7 @@ class _MenuSupport:
 		self._menu = menu
 		self._form.AddEventHandler(X.ButtonPressMask, FALSE,
 					   self._post_menu, None)
-		toplevel._win_lock.release()
+##		toplevel._win_lock.release()
 
 	def destroy_menu(self):
 		'''Destroy the pop up menu.
@@ -2547,9 +2542,9 @@ class _MenuSupport:
 		menu = self._menu
 		self._menu = None
 		if menu:
-			toplevel._win_lock.acquire()
+##			toplevel._win_lock.acquire()
 			menu.DestroyWidget()
-			toplevel._win_lock.release()
+##			toplevel._win_lock.release()
 
 	# support methods, only used by derived classes
 	def _post_menu(self, w, client_data, call_data):
@@ -3232,7 +3227,6 @@ class TextEdit(_Widget):
 		return '<TextEdit instance at %x>' % id(self)
 
  	def settext(self, text):
-		import string
 		if type(text) is ListType:
 			text = string.joinfields(text, '\n')
 		self._form.TextSetString(text)
@@ -3242,7 +3236,6 @@ class TextEdit(_Widget):
 		return self._form.TextGetString()
 
 	def getlines(self):
-		import string
 		text = self.gettext()
 		text = string.splitfields(text, '\n')
 		if len(text) > 0 and text[-1] == '':

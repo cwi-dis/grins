@@ -4,9 +4,9 @@
 import MMAttrdefs
 
 def get(node):
-	context = node.GetContext()
 	channel = node.GetChannel()
 	if channel and channel.has_key('type'):
+		context = node.GetContext()
 		ctype = channel['type']
 		filename = MMAttrdefs.getattr(node, 'file')
 		filename = context.findfile(filename)

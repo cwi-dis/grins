@@ -14,7 +14,7 @@ from EVENTS import *
 _Accelerator = 1024
 import os
 debug = os.environ.has_key('WINDOWDEBUG')
-import time, select
+import time, select, math
 
 error = 'windowinterface.error'
 Version = 'GL'
@@ -58,7 +58,6 @@ def qread():
 		toplevel._win_lock.release()
 ##		dev, val = 0, 0
 	else:
-		import gl
 		dev, val = gl.qread()
 	_last_forms = None
 	return dev, val
@@ -77,7 +76,6 @@ def qtest():
 			_last_forms = -1
 		toplevel._win_lock.release()
 	else:
-		import gl
 		retval = gl.qtest()
 	return retval
 
@@ -88,19 +86,7 @@ def qdevice(dev):
 		_has_fl = 1
 		fl.qdevice(dev)
 	else:
-		import gl
 		gl.qdevice(dev)
-
-have_cl = have_jpeg = 0
-try:
-	import cl, CL
-	have_cl = 1
-except ImportError:
-	try:
-		import jpeg
-		have_jpeg = 1
-	except ImportError:
-		pass
 
 # Cursors
 _ARROW = 0				# predefined
@@ -185,14 +171,13 @@ class _Toplevel:
 
 	def close(self):
 		if debug: print 'Toplevel.close()'
-		import posix
 		global _image_cache
 		for win in self._subwindows[:]:
 			win.close()
 		for key in _image_cache.keys():
 			try:
-				posix.unlink(_image_cache[key][-1])
-			except posix.error:
+				os.unlink(_image_cache[key][-1])
+			except os.error:
 				pass
 		_image_cache = {}
 
@@ -518,7 +503,6 @@ class _Event:
 		self._readeventtimeout(None)
 
 	def _getevent(self, timeout):
-		import time
 		if debug > 1: print 'Event._getevent('+`timeout`+')'
 		t0 = time.time()
 		if self._queue:
@@ -633,7 +617,6 @@ class _Event:
 			self._queue.append((self._curwin, WindowExit, None))
 			return
 ##		self._queue.append((self._curwin, dev, val))
-		import sys
 		if sys.modules.has_key('glwindow'):
 			import glwindow
 			glwindow.handle_event(dev, val)
@@ -1403,7 +1386,6 @@ class _DisplayList:
 ##		d.append(gl.endclosedline, ())
 
 	def drawarrow(self, color, sx, sy, dx, dy):
-		import math
 		window = self._window
 		if self.is_closed():
 			raise error, 'displaylist already closed'
@@ -2184,7 +2166,6 @@ class _Window:
 				image = open(filename).read()
 			except:		# any error...
 				del _image_cache[cachekey]
-				import os
 				try:
 					os.unlink(filename)
 				except posix.error:
@@ -2235,7 +2216,6 @@ class _Window:
 				f.write(image)
 			except:		# any error...
 				print 'Warning: caching image failed'
-				import os
 				try:
 					os.unlink(filename)
 				except:
@@ -2344,7 +2324,6 @@ class _Window:
 
 	def hitarrow(self, x, y, sx, sy, dx, dy):
 		# return 1 iff (x,y) is within the arrow head
-		import math
 		if self.is_closed():
 			raise error, 'window already closed'
 		sx, sy = self._convert_coordinates(sx, sy, 0, 0)[:2]
