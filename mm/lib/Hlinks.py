@@ -84,9 +84,9 @@ class Hlinks:
 		rv = []
 		if a1 == a2: return rv
 		for l in self.links:
-			if a1==l[ANCHOR1] and (a2==None or a2==l[ANCHOR2]):
+			if a1==l[ANCHOR1] and (a2 is None or a2==l[ANCHOR2]):
 				rv.append(l)
-			elif a1==l[ANCHOR2] and (a2==None or a2==l[ANCHOR1]):
+			elif a1==l[ANCHOR2] and (a2 is None or a2==l[ANCHOR1]):
 				rv.append(self.revlink(l))
 		return rv
 
