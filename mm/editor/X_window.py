@@ -108,6 +108,10 @@ class _Window(X_windowbase._Window):
 			self._rb_start_y = y
 			self._rb_width = w
 			self._rb_height = h
+		else:
+			self._rb_start_x, self._rb_start_y, self._rb_width, \
+					  self._rb_height = self._rect
+
 		# wait until box has been drawn or canceled
 		try:
 			toplevel._setcursor()
