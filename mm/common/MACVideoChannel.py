@@ -14,7 +14,7 @@ QT_AVAILABLE = windowinterface._qtavailable()
 if not QT_AVAILABLE:
 	Qt = None
 
-debug = 1 # os.environ.has_key('CHANNELDEBUG')
+debug = 0 # os.environ.has_key('CHANNELDEBUG')
 
 class VideoChannel(ChannelWindowAsync):
 	_our_attrs = ['fit']
