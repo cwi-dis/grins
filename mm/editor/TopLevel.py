@@ -1171,6 +1171,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			convertfiles = 0
 			progress = None
 			exporttype = None
+			addattrs = 0
 
 		if mimetype == 'application/x-grins-binary-project':
 			import QuickWrite
