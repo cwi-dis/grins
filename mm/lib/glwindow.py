@@ -181,7 +181,10 @@ def report(s):
 # XXX Should use 0 for (h, v) defaults and negative values for offsets
 # XXX from right/top end!
 
-def setgeometry(h, v, width, height):
+def setgeometry(arg):
+	if arg = None:
+		return # Everything default
+	h, v, width, height = arg
 	if h < 0 and v < 0 and width = 0 and height = 0:
 		return # Everything default
 	if width = 0 and height = 0:
