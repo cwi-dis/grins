@@ -194,9 +194,9 @@ def prep1(node):
 			adddep(node, HD, 0, c, HD)
 			adddep(c, TL, 0, node, TL)
 		# Make sure there is *some* path from head to tail
-## XXXX (Jack): this code appears incorrect: the corresponding event is
-## never fired...
-##		adddep(node, HD, MMAttrdefs.getattr(node, 'duration'), node, TL)
+		dur = MMAttrdefs.getattr(node, 'duration')
+		if dur > 0:
+			adddep(node, HD, dur, node, TL)
 	elif type in bagtypes:
 		adddep(node, HD, 0, node, TL)
 	else:
