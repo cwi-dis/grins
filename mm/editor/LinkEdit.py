@@ -106,7 +106,9 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 		self.right.browser_getlist = self.rightgetlist
 
 	def __maketitle(self):
-		return 'Hyperlinks (' + self.toplevel.basename + ')'
+		import MMurl
+		basename = MMurl.unquote(self.toplevel.basename)
+		return 'Hyperlinks (' + basename + ')'
 
 	def fixtitle(self):
 		self.settitle(self.__maketitle())
@@ -380,20 +382,16 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 		# deal with possible node name changes
 		list = str.browser_getlist()
 
-		if len(list)==0:
-			# deal with LinkEditDialog not hidden but destroyed (e.g win32)
-			for i in range(len(str.anchors)):
-				a = str.anchors[i]
-				name = self.makename(a)
-				list.append(name)
-			if	len(list):
-				str.browser_addlistitems(list, -1)
-
+		newlist = []
 		for i in range(len(str.anchors)):
 			a = str.anchors[i]
 			name = self.makename(a)
-			if name != list[i]:
+			if i >= len(list):
+				newlist.append(name)
+			elif name != list[i]:
 				str.browser_replacelistitem(i, name)
+		if newlist:
+			str.browser_addlistitems(newlist, -1)
 
 		if focusvalue:
 			try:
