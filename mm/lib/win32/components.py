@@ -917,6 +917,7 @@ class KeyTimesSlider(window.Wnd):
 		
 		self._markerColor = 0, 0, 0
 		self._selectedMarkerColor = 255, 0, 0
+		self._copingMarkerColor = 255, 150, 150
 
 		dlg.HookMessage(self.OnHScroll, win32con.WM_HSCROLL)
 						
@@ -1008,7 +1009,7 @@ class KeyTimesSlider(window.Wnd):
 			x = int(p*w + 0.5)
 			pts = [(x0+x-dw, b+self.MARKER_HEIGHT), (x0+x, b), (x0+x+dw, b+self.MARKER_HEIGHT)]
 			if self._copyKeyTime is not None and self._copyKeyTime == p:
-				color = self._selectedMarkerColor
+				color = self._copingMarkerColor
 			elif index == self._selected: color = self._selectedMarkerColor
 			else: color = self._markerColor
 			win32mu.FillPolygon(dc, pts, color)
