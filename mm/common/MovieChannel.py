@@ -95,9 +95,10 @@ class MovieWindow(ChannelWindow):
 		try:
 			self.vfile = VFile.VinFile().init(filename)
 			if do_warm:
-				print 'Warming the cache...'
-				self.vfile.warmcache()
-				print 'Done.'
+				try:
+					self.vfile.readcache()
+				except VFile.Error:
+					print filename, ': no caced index'
 		except EOFError:
 			print 'Empty movie file', `filename`
 			return
@@ -204,9 +205,11 @@ class MovieChannel(Channel):
 		self.armed_node = node
 	#
 	def play(self, (node, callback, arg)):
+		self.node = node
+		self.cb = (callback, arg)
 		if not self.is_showing():
-			dummy = \
-			  self.player.enter(node.t1-node.t0, 0, callback, arg)
+			dummy = self.player.enter(node.t1-node.t0, 0, \
+				self.done, None)
 			return
 	        if node <> self.armed_node:
 			print 'MovieChannel: node not armed'
@@ -218,17 +221,16 @@ class MovieChannel(Channel):
 		self.armed_node = None
 		self.starttime = self.player.timefunc()
 		self.played = self.skipped = 0
-		self.poll(callback, arg) # Put on the first image right now
+		self.poll() # Put on the first image right now
 	#
-	def poll(self, cb_arg):
+	def poll(self):
 		self.qid = None
 		if self.window.done(): # Last frame
 			if self.played:
 				print 'Played ', self.played*100/ \
 					  (self.played+self.skipped), \
 					  '% of the frames'
-			callback, arg = cb_arg
-			callback(arg)
+			self.done(None)
 			return
 		else:
 			t = self.window.nextframe(0)
@@ -238,7 +240,7 @@ class MovieChannel(Channel):
 				t = self.window.nextframe(1)
 				self.skipped = self.skipped + 1
 			self.qid = self.player.enterabs(self.starttime + t, \
-				1, self.poll, cb_arg)
+				1, self.poll, ())
 	#
 	def reset(self):
 		self.window.clear()
