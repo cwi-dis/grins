@@ -866,6 +866,8 @@ movie_player(self)
 		switch (windowsystem) {
 #ifdef USE_GL
 		case WIN_GL:
+			dprintf(("movie_player(%lx): window id = %d\n",
+				 (long) self, PRIV->m_wid));
 			scale = PRIV->m_play.m_scale;
 			if (scale == 0) {
 				scale = PRIV->m_width / PRIV->m_play.m_width;
@@ -1078,14 +1080,17 @@ movie_resized(self)
 	case WIN_GL: {
 		long width, height;
 
+		acquire_lock(gl_lock, WAIT_LOCK);
+		winset(PRIV->m_wid);
 		getsize(&width, &height);
 		PRIV->m_width = width;
 		PRIV->m_height = height;
+		dprintf(("movie_resized(%lx): size %d x %d\n", (long) self,
+			 width, height));
 		if (PRIV->m_play.m_frame) {
 			long xorig, yorig;
 			double scale;
 
-			winset(PRIV->m_wid);
 			if (PRIV->m_play.m_bframe == NULL)
 				pixmode(PM_SIZE, 8);
 			if (PRIV->m_play.m_bgindex >= 0) {
@@ -1123,6 +1128,7 @@ movie_resized(self)
 				writemask(0xffffffff);
 			gflush();
 		}
+		release_lock(gl_lock);
 		break;
 	}
 #endif /* USE_GL */
