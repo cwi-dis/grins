@@ -353,7 +353,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		import img, imgformat
 		visual = widget.visual
 		if visual.c_class == X.TrueColor and visual.depth == 8:
-			format = windowinterface.myxrgb8
+			format = windowinterface.toplevel.myxrgb8
 		else:
 			format = imgformat.xcolormap
 		try:
@@ -362,7 +362,7 @@ class HtmlChannel(Channel.ChannelWindow):
 			return
 		if hasattr(reader, 'transparent') and hasattr(reader, 'colormap'):
 			reader.colormap[reader.transparent] = windowinterface.toplevel._colormap.QueryColor(widget.background)[1:4]
-		if format is windowinterface.myxrgb8:
+		if format is windowinterface.toplevel.myxrgb8:
 			colors = map(lambda x: (x, x, x), range(256))
 		else:
 			colors = map(lambda x: x, reader.colormap)
