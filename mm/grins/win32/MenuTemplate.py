@@ -29,48 +29,52 @@ from wndusercmd import *
 # Types of menu entries
 [ENTRY, TOGGLE, SEP, CASCADE, DYNAMICCASCADE] = range(5)
 
+# Some commands are optional, depending on preference settings:
+ALL=''
+CMIF='cmif'
+DEBUG='debug'
 
 MENUBAR=(
 	('&File', (
-		(ENTRY, '&Open...\tCtrl+O', 'O', OPEN),
-		(DYNAMICCASCADE, 'Open recent', OPEN_RECENT),
-		(ENTRY, '&Close Document', None, CLOSE),
-		(SEP,),
-		(ENTRY, '&Preferences...', None, PREFERENCES),
-		(SEP,),
-		(CASCADE, '&Debug', (
-			(ENTRY, 'Dump &scheduler data', None, SCHEDDUMP),
-			(TOGGLE, 'Enable call &tracing', None, TRACE),
-			(ENTRY, 'Enter &debugger', None, DEBUG),
-			(ENTRY, '&Abort', None, CRASH),
-			(TOGGLE, 'Show &log/debug window', None, CONSOLE),
+		(ALL, ENTRY, '&Open...\tCtrl+O', 'O', OPEN),
+		(ALL, DYNAMICCASCADE, 'Open recent', OPEN_RECENT),
+		(ALL, ENTRY, '&Close Document', None, CLOSE),
+		(ALL, SEP,),
+		(ALL, ENTRY, '&Preferences...', None, PREFERENCES),
+		(DEBUG, SEP,),
+		(DEBUG, CASCADE, '&Debug', (
+			(ALL, ENTRY, 'Dump &scheduler data', None, SCHEDDUMP),
+			(ALL, TOGGLE, 'Enable call &tracing', None, TRACE),
+			(ALL, ENTRY, 'Enter &debugger', None, DEBUG),
+			(ALL, ENTRY, '&Abort', None, CRASH),
+			(ALL, TOGGLE, 'Show &log/debug window', None, CONSOLE),
 			)),
-		(SEP,),
-		(ENTRY, 'E&xit', None, EXIT))),
+		(ALL, SEP,),
+		(ALL, ENTRY, 'E&xit', None, EXIT))),
 
 
 	('&View', (
-		(TOGGLE, '&Source', None, SOURCE),)),
+		(ALL, TOGGLE, '&Source', None, SOURCE),)),
 		
 	('&Play', (
-		(ENTRY, '&Play\tCtrl+P', 'P', PLAY),
-		(ENTRY, 'Pa&use\tCtrl+U', 'U', PAUSE),
-		(ENTRY, '&Stop\tCtrl+H', 'H', STOP),
-		(SEP,),
-		(DYNAMICCASCADE, 'User &groups', USERGROUPS),
-		(DYNAMICCASCADE, 'Visible &channels', CHANNELS),
+		(ALL, ENTRY, '&Play\tCtrl+P', 'P', PLAY),
+		(ALL, ENTRY, 'Pa&use\tCtrl+U', 'U', PAUSE),
+		(ALL, ENTRY, '&Stop\tCtrl+H', 'H', STOP),
+		(CMIF, SEP,),
+		(CMIF, DYNAMICCASCADE, 'User &groups', USERGROUPS),
+		(CMIF, DYNAMICCASCADE, 'Visible &channels', CHANNELS),
 		)),
 
 	('&Window', (
-		(ENTRY, 'Cl&ose', None, CLOSE_ACTIVE_WINDOW),)),
+		(ALL, ENTRY, 'Cl&ose', None, CLOSE_ACTIVE_WINDOW),)),
 		
 	('&Help', (
-		(ENTRY, '&Contents', None, HELP_CONTENTS),
-		(ENTRY, 'Context &Help', None, HELP),
-		(SEP,),
-		(ENTRY, 'GRiNS on the &Web', None,GRINS_WEB),
-		(SEP,),
-		(ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
+		(ALL, ENTRY, '&Contents', None, HELP_CONTENTS),
+		(ALL, ENTRY, 'Context &Help', None, HELP),
+		(ALL, SEP,),
+		(ALL, ENTRY, 'GRiNS on the &Web', None,GRINS_WEB),
+		(ALL, SEP,),
+		(ALL, ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
 		
 MAIN_FRAME_POPUP = (
 		(ENTRY, '&Paste document', None, PASTE_DOCUMENT),
