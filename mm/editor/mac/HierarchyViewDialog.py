@@ -39,6 +39,9 @@ class HierarchyViewDialog(ViewDialog):
 		self.window = None
 		self.displist = None
 		self.new_displist = None
+		
+	def getparentwindow(self):
+		return None
 
 	def fixtitle(self):
 		if self.is_showing():
