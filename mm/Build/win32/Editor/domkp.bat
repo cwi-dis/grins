@@ -1,6 +1,6 @@
 rem BEGIN_CUSTOMIZATION
 
-set GRINS_HOME=e:\cmif
+set GRINS_HOME=d:\cmif
 
 set FREEZE_WHAT=editor
 set EXCLUDE_WHAT=grins
@@ -10,9 +10,9 @@ del *.c
 del log.txt
 del FreezeOpts
 
-set PYTHON_EXE=e:\cmif\bin\python.exe
-set PYTHONHOME=e:\python
-call E:\Program Files\Microsoft Visual Studio\VC98\Bin\vcvars32.bat
+set PYTHON_EXE=d:\cmif\bin\python.exe
+set PYTHONHOME=d:\python
+call c:\Program Files\Microsoft Visual Studio\VC98\Bin\vcvars32.bat
 
 rem END_CUSTOMIZATION
 
@@ -46,6 +46,7 @@ set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\lib
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\common
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\pylib
 set PYTHONPATH=%PYTHONPATH%;%GRINS_HOME%\pylib\audio
+
 rem And the standard Python extensions.
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\win32\lib
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\win32\Build
@@ -57,7 +58,7 @@ if exist FreezeOpts del FreezeOpts
 rem The channels...
 echo -x ExternalChannel >> FreezeOpts
 echo -x MACVideoChannel >> FreezeOpts
-echo -x MidiChannel >> FreezeOpts
+rem echo -x MidiChannel >> FreezeOpts
 echo -x MovieChannel >> FreezeOpts
 echo -x mpegchannel >> FreezeOpts
 echo -x MPEGVideoChannel >> FreezeOpts
@@ -87,6 +88,11 @@ echo -x audiosndt >> FreezeOpts
 echo -x audiovoc >> FreezeOpts
 echo -x sunaudiodev >> FreezeOpts
 echo -x SUNAUDIODEV >> FreezeOpts
+echo -x hcom >> FreezeOpts
+echo -x sndr >> FreezeOpts
+echo -x sndt >> FreezeOpts
+echo -x svx8 >> FreezeOpts
+echo -x voc >> FreezeOpts
 
 rem Other platform specific stuff
 echo -x macostools >> FreezeOpts
@@ -117,12 +123,11 @@ echo -x img >> FreezeOpts
 echo -x imgcolormap >> FreezeOpts
 echo -x imgconvert >> FreezeOpts
 echo -x imgformat >> FreezeOpts
-echo -x pwd >> FreezeOpts
 echo -x sitecustomize >> FreezeOpts
 echo -x termios >> FreezeOpts
 
 echo -x readline >> FreezeOpts
-echo -x splash >> FreezeOpts
+echo -x pwd >> FreezeOpts
 
 rem Windows specific stuff we just dont want!!
 echo -x win32ui  >> FreezeOpts
