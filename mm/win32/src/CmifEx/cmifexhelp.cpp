@@ -1,18 +1,19 @@
-#include "cmifex.h"
+#include "StdAfx.h"
+#include "cmifexhelp.h"
 
 static HWND ChildWnds[500];
 
 VOID MyCascadeChildWindows(register HWND hwndParent, int x, int y, int xClient, int yClient)
 {
-	register HWND hwndMove;
+	HWND hwndMove;
 	INT       i;
 	INT       cWindows;
 	RECT      rc;
 	DWORD      wFlags;
 	HANDLE    hDefer;
 	WINDOWPLACEMENT wndpl;
-	float		xfactor, yfactor;
-	BOOL	test;
+	float	xfactor, yfactor;
+	BOOL	bTest;
 
 	cWindows = CountWindows(hwndParent);
 	xfactor = (float)x/(float)xClient;
@@ -32,8 +33,8 @@ VOID MyCascadeChildWindows(register HWND hwndParent, int x, int y, int xClient, 
 		wFlags = 0;
 
 		wndpl.length = sizeof(WINDOWPLACEMENT);
-		test = GetWindowPlacement(ChildWnds[i], &wndpl);
-		if(test==FALSE)
+		bTest = GetWindowPlacement(ChildWnds[i], &wndpl);
+		if(bTest==FALSE)
 			GetErrorMessage();
 
 		rc = wndpl.rcNormalPosition;
@@ -94,3 +95,4 @@ void GetErrorMessage(void)
 
 	// Free the buffer.
 	LocalFree( lpMsgBuf );
+}
