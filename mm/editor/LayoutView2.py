@@ -1835,6 +1835,11 @@ class PreviousWidget(Widget):
 		
 	def removeViewport(self, viewportRef):		
 		del self._nodeRefToNodeTree[viewportRef]
+		if viewportRef is self.currentViewport.getNodeRef():
+			# show the first viewport in the list		
+			currentViewportList = self._context.getViewportRefList()
+			viewportRef = currentViewportList[0]
+			self.displayViewport(viewportRef)
 
 	def selectRegion(self, regionRef):		
 		appendList = []
