@@ -2,7 +2,7 @@
 
 # This displays the list of defined style names.
 # It is possible to add / delete styles, and to edit the attributes
-# of a style.
+# of a style (NOT YET!)
 
 import gl
 import fl
@@ -11,36 +11,22 @@ import glwindow
 from MMExc import *
 import MMAttrdefs
 import AttrEdit
+from Dialog import BasicDialog
+from ViewDialog import ViewDialog
 
-WIDTH, HEIGHT = 300, 320
-
-class StyleEditor():
+class StyleEditor() = ViewDialog(), BasicDialog():
 	#
 	def init(self, root):
+		self = ViewDialog.init(self, 'style_')
 		self.root = root
 		self.context = root.GetContext()
-		self.makeform()
-		return self
+		width, height = MMAttrdefs.getattr(self.root, 'style_winsize')
+		return BasicDialog.init(self, (width, height, 'Style editor'))
 	#
-	def show(self):
-		#
-		# Use the winpos attribute of the root to place the panel
-		#
-		h, v = MMAttrdefs.getattr(self.root, 'style_winpos')
-		glwindow.setgeometry(h, v, WIDTH, HEIGHT)
-		#
-		self.form.show_form(PLACE_SIZE, TRUE, 'Style List Editor')
-	#
-	def hide(self):
-		self.form.hide_form()
-	#
-	def destroy(self):
-		self.hide()
-	#
-	#
-	#
-	def makeform(self):
-		form = fl.make_form(FLAT_BOX, WIDTH, HEIGHT)
+	def make_form(self):
+		self.width, self.height = 300, 320
+		BasicDialog.make_form(self)
+		form = self.form
 		#
 		x, y, w, h = 0, 0, 300, 250
 		self.browser = form.add_browser(HOLD_BROWSER,x,y,w,h,'Styles')
@@ -73,8 +59,6 @@ class StyleEditor():
 		x, y, w, h = 50, 290, 250, 30
 		self.nameinput = form.add_input(NORMAL_INPUT,x,y,w,h, 'Name')
 		self.nameinput.set_call_back(self.name_callback, None)
-		#
-		self.form = form
 	#
 	def browser_callback(self, (obj, arg)):
 		i = obj.get_browser()
