@@ -34,8 +34,7 @@ class PreferencesDialog:
 			'OK':(self.ok_callback, ()),
 			'Cancel':(self.cancel_callback, ()),
 			'Reset':(self.reset_callback, ()),}
-		parent=windowinterface.getmainwnd()
-		self.__window = windowinterface.PreferencesDialog(callbacks,parent)
+		self.__window = windowinterface.PreferencesDialog(callbacks)
 		self.__window.create()
 
 	def close(self):

@@ -27,18 +27,48 @@ class HtmlChannel(ChannelWindow):
 	_window_type = HTM
 
 	def __init__(self, name, attrdict, scheduler, ui):
+		self.played_str = ()
+		self.__errors=[]
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
 		return '<HtmlChannel instance, name=' + `self._name` + '>'
 	
+	def do_hide(self):
+		if self.window and hasattr(self.window,'DestroyHtmlCtrl'):
+			self.window.DestroyHtmlCtrl()
+		ChannelWindow.do_hide(self)
+
+	def do_arm(self, node, same=0):
+		if not same:
+			try:
+				self.armed_str = self.getstring(node)
+			except:
+				self.armed_str = 'Cannot Open: '+self.getfileurl(node)
+				self.__errors.append(node)
+		return 1
+
 	def do_play(self, node):
 		if node.type == 'ext':
 			url=self.getfileurl(node)
 			url=self.toabs(url)
-		else:url='about:blank'
+		else: url='about:'+ self.armed_str
+		if node in self.__errors:
+			url='about:'+ self.armed_str
+
+		# set play state information
+		# for functions related to cmif anchors
+		self.played_url = self.url = self.armed_url
+		self.played_str = self.armed_str
+		self.play_node=node
+		
+		self.window.setanchorcallback(self.cbanchor)
 		self.window.RetrieveUrl(url)
-		self.window.show_browser()
+
+	def stopplay(self, node):
+		if self.window and hasattr(self.window,'DestroyHtmlCtrl'):
+			self.window.DestroyHtmlCtrl()
+		ChannelWindow.stopplay(self, node)
 
 #################################
 	# helpers			
@@ -67,7 +97,7 @@ class HtmlChannel(ChannelWindow):
 				return 1
 			windowinterface.showmessage('Cannot recompute anchorlist (channel busy)')
 			return 1
-		windowinterface.setcursor('watch')
+		windowinterface.setwaiting()
 		context = Channel.AnchorContext()
 		self.startcontext(context)
 		save_syncarm = self.syncarm
@@ -79,7 +109,7 @@ class HtmlChannel(ChannelWindow):
 		self.stopplay(node)
 		self.syncarm = save_syncarm
 		self.syncplay = save_synplay
-		windowinterface.setcursor('')
+		windowinterface.setready()
 		return 1
 			
 	def defanchor(self, node, anchor, cb):
