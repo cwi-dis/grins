@@ -124,7 +124,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.last_geometry = None
 		self.toplevel = toplevel
 		self.root = self.toplevel.root
-		self.focusnode = self.root
+		self.focusnode = self.prevfocusnode = self.root
 		self.editmgr = self.root.context.editmgr
 		self.destroynode = None	# node to be destroyed later
 		self.thumbnails = 1
@@ -156,6 +156,13 @@ class HierarchyView(HierarchyViewDialog):
 				commands = commands + self.pastenotatrootcommands
 		self.setcommands(commands)
 		self.setpopup(popupmenu)
+
+		# make sure focus is visible
+		node = self.focusnode.GetParent()
+		while node is not None:
+			if not hasattr(node, 'expanded'):
+				node.expanded = 1
+			node = node.GetParent()
 
 	def show(self):
 		HierarchyViewDialog.show(self)
@@ -380,6 +387,7 @@ class HierarchyView(HierarchyViewDialog):
 		newnode = node.GetContext().newnode(type)
 		em.addnode(parent, i, newnode)
 		em.addnode(newnode, 0, node)
+		self.prevfocusnode = self.focusnode
 		self.focusnode = newnode
 		self.aftersetfocus()
 		em.commit()
@@ -427,13 +435,15 @@ class HierarchyView(HierarchyViewDialog):
 			node.Destroy()
 			return 0
 		if where == 0:
-			em.addnode(self.focusnode, 0, node)
+			em.addnode(self.focusnode, len(self.focusnode.GetChildren()), node)
+			self.focusnode.expanded = 1
 		else:
 			children = parent.GetChildren()
 			i = children.index(self.focusnode)
 			if where > 0:
 				i = i+1
 			em.addnode(parent, i, node)
+		self.prevfocusnode = self.focusnode
 		self.focusnode = node
 		self.aftersetfocus()
 		em.commit()
@@ -501,6 +511,7 @@ class HierarchyView(HierarchyViewDialog):
 		if obj.node is not self.root and hasattr(obj.node, 'abox'):
 			l, t, r, b = obj.node.abox
 			if l <= x <= r and t <= y <= b:
+				self.prevfocusnode = self.focusnode
 				self.focusnode = obj.node
 				obj.expandcall()
 				return
@@ -529,6 +540,7 @@ class HierarchyView(HierarchyViewDialog):
 	def setfocusobj(self, obj):
 		if self.focusobj:
 			self.focusobj.deselect()
+		self.prevfocusnode = self.focusnode
 		if obj:
 			self.focusnode = obj.node
 			self.focusobj = obj
@@ -547,8 +559,10 @@ class HierarchyView(HierarchyViewDialog):
 		if obj:
 			self.setfocusobj(obj)
 			return
-		# Need to expand some nodes
+		self.prevfocusnode = self.focusnode
 		self.focusnode = node
+		# Need to expand some nodes
+		node = node.GetParent()
 		while node is not None:
 			node.expanded = 1
 			node = node.GetParent()
@@ -608,6 +622,8 @@ class HierarchyView(HierarchyViewDialog):
 
 	def recalcboxes(self):
 		self.focusobj = None
+		prevfocusobj = None
+		rootobj = None
 		rw, rh = self.window.getcanvassize(windowinterface.UNIT_MM)
 		self.canvassize = rw, rh
 		self.titleheight = float(LABSIZE) / rh
@@ -622,10 +638,20 @@ class HierarchyView(HierarchyViewDialog):
 			self.objects.append(obj)
 			if item[0] is self.focusnode:
 				self.focusobj = obj
+			if item[0] is self.prevfocusnode:
+				prevfocusobj = obj
+			if item[0] is self.root:
+				rootobj = obj
 		if self.focusobj is not None:
 			self.focusobj.selected = 1
+		elif prevfocusobj is not None:
+			self.focusnode = self.prevfocusnode
+			self.focusobj = prevfocusobj
+			prevfocusobj.selected = 1
 		else:
-			self.focusnode = None
+			self.focusnode = self.root
+			self.focusobj = rootobj
+			rootobj.selected = 1
 		self.aftersetfocus()
 
 	def recalc(self):
