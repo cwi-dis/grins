@@ -400,6 +400,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			else:
 				return ''
 
+	def get_obj_near(self, (x, y), timemapper = None, timeline = None):
+		return None
+
 	def get_nearest_node_index(a):
 		# This is only for seqs and verticals.
 		return -1
