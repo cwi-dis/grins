@@ -440,6 +440,10 @@ class Channel:
 		# when they are finished playing the node.
 		if debug:
 			print 'Channel.play_1('+`self`+')'
+		# armdone must come before playdone, since playdone
+		# may trigger an autofiring anchor that terminates
+		# this node
+		self.armdone()
 		if not self.syncplay:
 			if self.armed_duration > 0:
 				self._qid = self._scheduler.enter(
@@ -449,7 +453,6 @@ class Channel:
 				self.playdone(0)
 		else:
 			self.playdone(0)
-		self.armdone()
 
 	def playdone(self, outside_induced):
 		# This method should be called by a superclass
@@ -890,8 +893,8 @@ class ChannelWindow(Channel):
 				transparent = 0
 			if transparent:
 				raise windowinterface.Continue
-			if hasattr(self._player, 'editmgr'):
-				self.highlight()
+## 			if hasattr(self._player, 'editmgr'):
+## 				self.highlight()
 		elif len(buttons) == 1:
 			button = buttons[0]
 			button.highlight()
@@ -899,8 +902,8 @@ class ChannelWindow(Channel):
 
 	def mouserelease(self, arg, window, event, value):
 		global _button
-		if hasattr(self._player, 'editmgr'):
-			self.unhighlight()
+## 		if hasattr(self._player, 'editmgr'):
+## 			self.unhighlight()
 		buttons = value[2]
 		if len(buttons) == 0:
 			try:
