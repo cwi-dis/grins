@@ -1119,12 +1119,10 @@ class MMNode:
 		if fill is None or fill == 'default':
 			fill = self.GetInherAttrDef('fillDefault', None)
 		if fill is None or fill == 'default':
-			if self.type in interiortypes:
-				fill = 'remove'
-			elif self.attrdict.get('duration') is None and \
-			     not self.attrdict.get('endlist') and \
-			     self.attrdict.get('repeatdur') is None and \
-			     self.attrdict.get('loop') is None:
+			if not self.attrdict.has_key('duration') and \
+			   not self.attrdict.get('endlist') and \
+			   not self.attrdict.has_key('repeatdur') and \
+			   not self.attrdict.has_key('loop'):
 				fill = 'freeze'
 			else:
 				fill = 'remove'
