@@ -676,7 +676,14 @@ class LayoutView2(LayoutViewDialog2):
 
 	def __appendCommonCommands(self, commandlist):
 		commandlist.append(ZOOMIN(callback = (self.onZoomIn, ())))
+		commandlist.append(ZOOMIN2(callback = (self.onZoomIn, (2,))))
+		commandlist.append(ZOOMIN4(callback = (self.onZoomIn, (4,))))
+		commandlist.append(ZOOMIN8(callback = (self.onZoomIn, (8,))))
 		commandlist.append(ZOOMOUT(callback = (self.onZoomOut, ())))
+		commandlist.append(ZOOMOUT2(callback = (self.onZoomOut, (2,))))
+		commandlist.append(ZOOMOUT4(callback = (self.onZoomOut, (4,))))
+		commandlist.append(ZOOMOUT8(callback = (self.onZoomOut, (8,))))
+		commandlist.append(ZOOMRESET(callback = (self.onZoomReset, ())))
 		commandlist.append(DRAG_REGION())
 			
 	def __appendAlignCommands(self, list):
@@ -1865,11 +1872,14 @@ class LayoutView2(LayoutViewDialog2):
 	#
 	#
 
-	def onZoomIn(self):
-		self.zoomIn()
+	def onZoomIn(self, factor=None):
+		self.zoomIn(factor)
 		
-	def onZoomOut(self):
-		self.zoomOut()
+	def onZoomOut(self, factor=None):
+		self.zoomOut(factor)
+
+	def onZoomReset(self):
+		self.zoomReset()
 
 	def onContent(self):
 		if len(self.currentSelectedNodeList) > 0:
