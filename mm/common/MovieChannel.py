@@ -19,7 +19,7 @@ class MovieChannel(ChannelWindowThread):
 		try:
 			vfile = VFile.RandomVinFile(filename)
 		except (EOFError, IOError, VFile.Error), msg:
-			if type(msg) == type(()):
+			if type(msg) is type(()):
 				msg = msg[1]
 			self.errormsg(node, filename + ':\n' + msg)
 			print 'Error: ' + filename + ': ' + msg

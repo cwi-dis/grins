@@ -29,7 +29,7 @@ class ImageChannel(ChannelWindow):
 		try:
 			self._arm_imbox = self.armed_display.display_image_from_file(f, scale = MMAttrdefs.getattr(node, 'scale'), crop = MMAttrdefs.getattr(node, 'crop'))
 		except (windowinterface.error, IOError), msg:
-			if type(msg) == type(()):
+			if type(msg) is type(()):
 				msg = msg[1]
 			self.errormsg(node, f + ':\n' + msg)
 			return 1

@@ -18,7 +18,7 @@ class MpegChannel(ChannelWindowThread):
 		try:
 			fp = open(filename, 'rb')
 		except IOError, msg:
-			if type(msg) == type(()):
+			if type(msg) is type(()):
 				msg = msg[1]
 			self.errormsg(node, filename + ':\n' + msg)
 			return 1
