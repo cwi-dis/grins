@@ -70,7 +70,7 @@ DROPCOLOR = settings.get('structure_dropcolor')
 SIZEUNIT = windowinterface.UNIT_PXL # units for the following
 MINSIZE = 48 
 MAXSIZE = 128
-TITLESIZE = int(f_title.fontheightPXL()*1.2)
+TITLESIZE = int(f_title.fontheightPXL())
 if TITLESIZE < windowinterface.ICONSIZE_PXL:
 	TITLESIZE = windowinterface.ICONSIZE_PXL
 CHNAMESIZE = 0
