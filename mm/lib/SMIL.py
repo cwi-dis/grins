@@ -67,6 +67,8 @@ class SMIL:
 		'meta': {'content':None,
 			 'id':None,
 			 'name':None},
+		'metadata': {'id':None,
+			     },
 		'layout': {'id':None,
 			   'type':SMIL_BASIC},
 		'root-layout': {'background-color':'transparent',
@@ -239,6 +241,15 @@ class SMIL:
 			 __layout:None,
 			 GRiNSns+' ' 'comment':None,
 			 },
+		'priorityClass': {'abstract':'',
+				  'author':'',
+				  'copyright':'',
+				  'higher':'pause',
+				  'id':None,
+				  'lower':'defer',
+				  'peers':'stop',
+				  'title':None,
+				  },
 		__choice: {GRiNSns+' ' 'abstract':'',
 			   GRiNSns+' ' 'author':'',
 			   GRiNSns+' ' 'choice-index':None,
@@ -306,14 +317,14 @@ class SMIL:
 			'type':None,
 			'uGroup':None,
 			# subregion positioning attributes
-		        'bottom':None,
+			'bottom':None,
 			'left':None,
-		        'right':None,
-		        'top':None,
-		        # registration point
-		        'regPoint':None,
-		        'regAlign':None,
-		        
+			'right':None,
+			'top':None,
+			# registration point
+			'regPoint':None,
+			'regAlign':None,
+
 			__layout:None,
 			GRiNSns+' ' 'bgcolor':None,
 			GRiNSns+' ' 'comment':None,
@@ -370,14 +381,14 @@ class SMIL:
 			  'title':None,
 			  'uGroup':None,
 			  # subregion positioning attributes
-		          'bottom':None,
+			  'bottom':None,
 			  'left':None,
-		          'right':None,
-		          'top':None,
+			  'right':None,
+			  'top':None,
 			  # registration point
-		          'regPoint':None,
-		          'regAlign':None,
-			  
+			  'regPoint':None,
+			  'regAlign':None,
+
 			  __layout:None,
 			  GRiNSns+' ' 'bgcolor':None,
 			  GRiNSns+' ' 'comment':None,
@@ -513,7 +524,8 @@ class SMIL:
 	# no allowed content is default, so we don't specify empty ones here
 	entities = {
 		'smil': ['head', 'body'],
-		'head': ['layout', 'switch', 'meta', 'userAttributes', __layouts, 'transition'],
+		'head': ['layout', 'switch', 'meta', 'metadata',
+			 'userAttributes', __layouts, 'transition'],
 		'userAttributes': ['uGroup'],
 		'layout': ['region', 'root-layout', 'viewport', 'regPoint'],
 		'viewport': ['region'],
@@ -522,7 +534,8 @@ class SMIL:
 		'body': __container_content,
 		'par': __container_content,
 		'seq': __container_content,
-		'excl': __container_content,
+		'excl': __container_content + ['priorityClass'],
+		'priorityClass': __container_content,
 		__choice: __container_content,
 		__bag: __container_content,
 		'switch': ['layout'] + __container_content,
