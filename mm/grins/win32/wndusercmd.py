@@ -29,3 +29,10 @@ class GRINS_WEB(_CommandBase):
 
 class PASTE_DOCUMENT(_CommandBase):
 	help = 'Paste file'
+
+class TB_PLAY(_CommandBase):
+	help = 'Play document'
+class TB_PAUSE(_CommandBase):
+	help = 'Pause playing document'
+class TB_STOP(_CommandBase):
+	help = 'Stop playing document'
