@@ -290,6 +290,10 @@ class AttrEditor:
 		self.new = new
 		self.wrapper = wrapper
 		wrapper.register(self)
+		self.open_dialog()
+
+	def open_dialog(self):
+		wrapper = self.wrapper
 		list = []
 		self.namelist = wrapper.attrnames()
 		self.dialog = windowinterface.Window(
@@ -425,9 +429,6 @@ class AttrEditor:
 		self.wrapper.commit()
 		windowinterface.setcursor('')
 
-	def is_showing(self):
-		return self.dialog is not None
-
 	#
 	# EditMgr interface
 	#
@@ -441,9 +442,8 @@ class AttrEditor:
 			namelist = self.wrapper.attrnames()
 			if namelist != self.namelist:
 				# re-open with possibly different size
-				if self.is_showing():
-					self.hide()
-					self.open()
+				self.dialog.close()
+				self.open_dialog()
 			else:
 ##				self.fixvalues()
 				self.resetall()
