@@ -129,7 +129,7 @@ class AnchorList:
 			self._delete.enable(1)
 			self._link.enable(len(a) == 5)
 			self._type.enable(1)
-			if (atype not in AnchorDefs.WholeAnchors) and aargs[0] == AnchorDefs.A_SHAPETYPE_RECT:
+			if (atype not in AnchorDefs.WholeAnchors) and aargs and aargs[0] == AnchorDefs.A_SHAPETYPE_RECT:
 				# Warning: this statement work for now only for rect shape.
 				# it shouldn't be called for any other shape type
 				
@@ -313,3 +313,5 @@ class AnchorList:
 			    int(float(aargs[1]) * ysize + .5),
 			    int(float(aargs[2]) * xsize + .5),
 			    int(float(aargs[3]) * ysize + .5)]
+
+
