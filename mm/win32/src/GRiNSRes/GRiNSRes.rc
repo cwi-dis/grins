@@ -13,25 +13,6 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Neutral (Default) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
-#ifdef _WIN32
-LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Cursor
-//
-
-IDC_POINT_HAND          CURSOR  DISCARDABLE     "RES\\hand.cur"
-#endif    // Neutral (Default) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
 // English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
@@ -797,6 +778,13 @@ IDR_GRINSED             ICON    DISCARDABLE     "res\\GRiNSed.ico"
 
 IDR_GRINSED ACCELERATORS PRELOAD MOVEABLE PURE 
 BEGIN
+    "1",            IDUC_PLAYER,            VIRTKEY, ALT, NOINVERT
+    "2",            IDUC_HVIEW,             VIRTKEY, ALT, NOINVERT
+    "3",            IDUC_CVIEW,             VIRTKEY, ALT, NOINVERT
+    "4",            IDUC_HLINKS,            VIRTKEY, ALT, NOINVERT
+    "5",            IDUC_LAYOUT,            VIRTKEY, ALT, NOINVERT
+    "6",            IDUC_UGROUPS,           VIRTKEY, ALT, NOINVERT
+    "7",            IDUC_SOURCE,            VIRTKEY, ALT, NOINVERT
     "C",            IDUC_COPY,              VIRTKEY, CONTROL, NOINVERT
     "H",            IDUC_STOP,              VIRTKEY, CONTROL, NOINVERT
     "N",            IDUC_NEW_DOCUMENT,      VIRTKEY, CONTROL, NOINVERT
@@ -934,6 +922,25 @@ END
 
 
 /////////////////////////////////////////////////////////////////////////////
+// Neutral (Default) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUD)
+#ifdef _WIN32
+LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
+#pragma code_page(1253)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_POINT_HAND          CURSOR  DISCARDABLE     "RES\\hand.cur"
+#endif    // Neutral (Default) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
 // Greek resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ELL)
@@ -941,6 +948,52 @@ END
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 #pragma code_page(1253)
 #endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_EDIT_ANCHORS DIALOG DISCARDABLE  0, 0, 232, 107
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LISTBOX         IDC_LIST1,9,7,111,61,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "ID:",IDC_STATIC,9,76,10,8
+    EDITTEXT        IDC_EDIT1,31,74,89,12,ES_AUTOHSCROLL
+    LTEXT           "Type:",IDC_STATIC,7,89,19,8
+    COMBOBOX        IDC_COMBO1,31,89,89,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    PUSHBUTTON      "New",IDUC_NEW,123,7,32,14
+    PUSHBUTTON      "Edit",IDUC_EDIT,123,23,32,14
+    PUSHBUTTON      "Delete",IDUC_DELETE,123,39,32,14
+    PUSHBUTTON      "Export...",IDUC_EXPORT,123,54,32,14
+    LTEXT           "Composite:",IDC_STATIC1,126,76,89,8,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,175,7,50,14
+    PUSHBUTTON      "Restore",IDUC_RESTORE,175,23,50,14
+    PUSHBUTTON      "Apply",IDUC_APPLY,175,39,50,14
+    DEFPUSHBUTTON   "OK",IDOK,175,54,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_EDIT_ANCHORS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 231
+        TOPMARGIN, 7
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
