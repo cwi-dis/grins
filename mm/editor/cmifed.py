@@ -269,10 +269,8 @@ class Main(MainDialog):
 				message = message+': %s' % msg
 			import windowinterface
 			windowinterface.showmessage(message, mtype='error')
-		except UserCancel:
-			return
-		except TopLevel.Error:
-			return
+		except (UserCancel, TopLevel.Error):
+			pass
 		else:
 			self.new_top(top)
 			self._update_recent(url)

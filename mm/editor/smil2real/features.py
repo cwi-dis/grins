@@ -21,6 +21,7 @@ feature_set = [
 	UNIFIED_FOCUS,
 	AUTO_EVALUATE,
 	SHOW_MEDIA_CHILDREN,
+	UNSUPPORTED_ERROR,
 	]
 
 version = 'Real'
