@@ -7,12 +7,14 @@ import Windows
 import Menu
 MenuMODULE=Menu  # Silly name clash with FrameWork.Menu
 from FrameWork import MenuBar, AppleMenu
+from MiniAEFrame import AEServer
 import MacOS
 import sys
 import MenuTemplate
 import Qt
 import Scrap
 import TE
+import AE
 
 #
 # Stuff we need from other mw_ modules
@@ -53,7 +55,7 @@ MINIMAL_TIMEOUT=0	# How long we yield at the very least
 TICKS_PER_SECOND=60.0	# Standard mac thing
 
 
-class _Event:
+class _Event(AEServer):
 	"""This class is only used as a base-class for toplevel.
 	the separation is for clarity only."""
 	
@@ -73,6 +75,7 @@ class _Event:
 		self._draglimit = l+4, t+4+_screen_top_offset, r-4, b-4
 		self.removed_splash = 0
 		self._scrap_to_TE()
+		AEServer.__init__(self)
 
 	def grab(self, dialog):
 		"""A dialog wants to be application-modal"""
@@ -198,6 +201,11 @@ class _Event:
 			self._handle_activate_event(event)
 		elif what == Events.osEvt:
 			self._handle_os_event(event)
+		elif what == Events.kHighLevelEvent:
+			try:
+				AE.AEProcessAppleEvent(event)
+			except AE.Error, err:
+				print 'Error in AppleEvent processing: ', err
 		else:
 			MacOS.HandleEvent(event)
 			
