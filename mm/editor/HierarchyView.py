@@ -476,7 +476,15 @@ class HierarchyView(HierarchyViewDialog):
 			ctx.knownode(node.GetUID(), node)
 			# provide a default for tag attribute
 			if url is not None:
+				import Sizes
 				node.SetAttr('tag', 'fadein')
+				if where:
+					pnode = self.focusnode.GetParent()
+				else:
+					pnode = self.focusnode
+				purl = ctx.findurl(MMAttrdefs.getattr(pnode, 'file'))
+				w,h = Sizes.GetSize(MMurl.basejoin(purl,url))
+				node.SetAttr('subregionwh', (w,h))
 			else:
 				node.SetAttr('tag', 'fill')
 		else:
