@@ -40,6 +40,7 @@ default_settings = {
 	'recent_documents':[],		# Recently used documents
 	'thumbnail_size':10.0,		# Size of thumbnail (mm)
 	'time_scale_factor': 1.0,	# Scale factor for sec to mm
+	'show_links':0,			# Show hyperlink icons
 	'no_initial_dialog': 0,		# Don't show initial dialog if true
 # HierarchyView colors
 	'structure_bgcolor': (150, 150, 150), # Light gray
