@@ -987,43 +987,46 @@ class EditMgr(Clipboard.Clipboard):
 	# Clipboard interface
 	#
 
-	def setclip(self, data, owned=0):
+	def setclip(self, data):
 		# save the old content
 		olddata = Clipboard.Clipboard.getclip(self)
-		oldowned = Clipboard.Clipboard.getowned(self)
-		self.addstep('setclip', olddata, oldowned)
+		self.addstep('setclip', olddata)
 
-		# the clip content is changing. So clear the references
-		# related to the data which is removed from the clipboard
-#		self.clearclip()
+		# the old content is take out from the clipboard, and its content is not
+		# restored into the document. So we can remove the all associated references
+		for node in olddata:
+			self.clearRefs(node)
 
-		Clipboard.Clipboard.setclip(self, data, owned)
+		Clipboard.Clipboard.setclip(self, data)
 		for client in self.clipboard_registry:
 			client.clipboardchanged()
 
-	def undo_setclip(self, olddata, oldowned):
-		self.restoreclip(olddata, oldowned)
+	def undo_setclip(self, olddata):
+		self.restoreclip(olddata)
 
-	def clean_setclip(self, data, owned):
+	def clean_setclip(self, data):
 		for node in data:
 			self.__clean_node(node)		
 	
-	def restoreclip(self, data, owned=0):
+	def restoreclip(self, data):
 		# save the old content
 		olddata = Clipboard.Clipboard.getclip(self)
-		oldowned = Clipboard.Clipboard.getowned(self)
-		self.addstep('restoreclip', olddata, oldowned)
+		self.addstep('restoreclip', olddata)
 
+		# the new content is take out from the clipboard to be restored into the document
+		# the old content is restored into the clipboard
+		# So, we don't have to clear any reference there
+		
 		# change the clipboard content, but don't clear the reference of the
 		# data which is restored into the document
-		Clipboard.Clipboard.setclip(self, data, owned)
+		Clipboard.Clipboard.setclip(self, data)
 		for client in self.clipboard_registry:
 			client.clipboardchanged()
 	
-	def undo_restoreclip(self, olddata, oldowned):
-		self.setclip(olddata, oldowned)
+	def undo_restoreclip(self, olddata):
+		self.setclip(olddata)
 
-	def clean_restoreclip(self, data, owned):
+	def clean_restoreclip(self, data):
 		for node in data:
 			self.__clean_node(node)
 
@@ -1050,6 +1053,9 @@ class EditMgr(Clipboard.Clipboard):
 			for node in data:
 				nodeRef.ClearRefs(data)
 
+			# all root elements of the asset view
+			# XXX todo
+			
 	# before to destroy any node (may be copied in the clipboard and asset view), we want to make sure that the node being destroyed
 	# won't be ever used anymore
 	def __clean_node(self, node):
