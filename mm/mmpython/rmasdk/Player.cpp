@@ -32,6 +32,9 @@ class PlayerObject : public Object
 	static PyObject* SetPyAdviceSink(PyObject *self, PyObject *args);
 	static PyObject* SetPyVideoSurface(PyObject *self, PyObject *args);
 
+	static PyObject* SetOsWindow(PyObject *self, PyObject *args);
+	static PyObject* ShowInNewWindow(PyObject *self, PyObject *args);
+	
 
 	protected:
 	PlayerObject();
@@ -176,6 +179,8 @@ PyObject* PlayerObject::SetPyAdviceSink(PyObject *self, PyObject *args)
 	if(pCC)pCC->m_pClientSink->SetPyAdviceSink(obj);
 	RETURN_NONE;
 	}
+
+// Support removed. 
 PyObject* PlayerObject::SetPyVideoSurface(PyObject *self, PyObject *args)
 	{
 	PyObject *obj;
@@ -184,11 +189,36 @@ PyObject* PlayerObject::SetPyVideoSurface(PyObject *self, PyObject *args)
 	if(pCC)
 		{
 		ExampleSiteSupplier *ss=pCC->m_pSiteSupplier;
-		if(ss)ss->SetPyVideoSurface(obj);
+		//if(ss)ss->SetPyVideoSurface(obj);
 		}
 	RETURN_NONE;
 	}
 
+PyObject* PlayerObject::SetOsWindow(PyObject *self, PyObject *args)
+	{
+	int hwnd;
+	if(!PyArg_ParseTuple(args,"i",&hwnd))return NULL;
+	ExampleClientContext *pCC=((PlayerObject*)self)->pContext;
+	if(pCC)
+		{
+		ExampleSiteSupplier *ss=pCC->m_pSiteSupplier;
+		if(ss)ss->SetOsWindow((void*)hwnd);
+		}
+	RETURN_NONE;
+	}
+
+PyObject* PlayerObject::ShowInNewWindow(PyObject *self, PyObject *args)
+	{
+	int f;
+	if(!PyArg_ParseTuple(args,"i",&f))return NULL;
+	ExampleClientContext *pCC=((PlayerObject*)self)->pContext;
+	if(pCC)
+		{
+		ExampleSiteSupplier *ss=pCC->m_pSiteSupplier;
+		if(ss)ss->ShowInNewWindow(f);
+		}
+	RETURN_NONE;
+	}
 
 
 static struct PyMethodDef PyRMPlayer_methods[] =
@@ -204,6 +234,8 @@ static struct PyMethodDef PyRMPlayer_methods[] =
 	{"SetPyAdviceSink",PlayerObject::SetPyAdviceSink,1},   // formal name
 	{"SetStatusListener",PlayerObject::SetPyAdviceSink,1}, // alias
 	{"SetVideoSurface",PlayerObject::SetPyVideoSurface,1},
+	{"SetOsWindow",PlayerObject::SetOsWindow,1}, // alias
+	{"ShowInNewWindow",PlayerObject::ShowInNewWindow,1}, // alias
 	{NULL, 	NULL}
 	};
 
