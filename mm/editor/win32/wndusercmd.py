@@ -43,6 +43,8 @@ class TOOLBAR_ALIGNMENT(_CommandBase):
 	help = 'Show/Hide the region alignment toolbar'
 class TOOLBAR_LINKING(_CommandBase):
 	help = 'Show the timing/linking toolbar'
+class TOOLBAR_CONTAINERS(_CommandBase):
+	help = 'Show the structure container toolbar'
 
 class ATTRIBUTES_ANCHORS(_CommandBase):
 	help = 'Create anchors'

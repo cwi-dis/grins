@@ -154,7 +154,7 @@ MENUBAR=(
 			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_VIDEO),
 			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_VIDEO),
 		)),
-		(FLAG_ALL, CASCADE, 'SVG node', (
+		(FLAG_ALL, CASCADE, 'SV&G node', (
 			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_SVG),
 			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_SVG),
 			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_SVG),
@@ -181,6 +181,18 @@ MENUBAR=(
 			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_SWITCH),
 			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_SWITCH),
 			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_SWITCH),
+		)),
+		(FLAG_ALL, CASCADE, 'E&xcl node', (
+			(FLAG_ALL, ENTRY, '&Parent', None, NEW_EXCL),
+			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_EXCL),
+			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_EXCL),
+			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_EXCL),
+		)),
+		(FLAG_ALL, CASCADE, 'Priorit&y class node', (
+			(FLAG_ALL, ENTRY, '&Parent', None, NEW_PRIO),
+			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_PRIO),
+			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_PRIO),
+			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_PRIO),
 		)),
 		(FLAG_PRO, ENTRY, '&Before...', None, NEW_BEFORE),
 		(FLAG_PRO, ENTRY, '&Within...', None, NEW_UNDER),
@@ -235,8 +247,9 @@ MENUBAR=(
 		(FLAG_ALL, CASCADE, 'T&oolbars', (
 			(FLAG_ALL, ENTRY, '&General', None, TOOLBAR_GENERAL),
 			(FLAG_ALL, ENTRY, '&Player Controls', None, TOOLBAR_PLAYER),
-			(FLAG_ALL, ENTRY, '&Region alignment', None, TOOLBAR_ALIGNMENT),
+			(FLAG_ALL, ENTRY, '&Containers', None, TOOLBAR_CONTAINERS),
 			(FLAG_ALL, ENTRY, '&Timing and Linking', None, TOOLBAR_LINKING),
+			(FLAG_ALL, ENTRY, '&Region alignment', None, TOOLBAR_ALIGNMENT),
 			)),
 		)
 	 ),

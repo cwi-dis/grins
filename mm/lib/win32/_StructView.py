@@ -192,7 +192,8 @@ class _StructView(DisplayListView):
 			else:
 				cmd = 'copy'
 			#print "DEBUG: dragging node doing a self.onEventEx", DragNode
-			return self.onEventEx(DragNode,(x, y, cmd, xf, yf))
+			return self.onEventEx(DragNode,
+					(x, y, cmd, usercmd.DRAG_NODE, (xf, yf)))
 		#print "DEBUG: dragging node not doing anything."
 		return DropTarget.DROPEFFECT_NONE
 
@@ -223,28 +224,33 @@ class _StructView(DisplayListView):
 			else:
 				cmd = 'move'
 
-			return self.onEventEx(DropNode,(x, y, cmd, xf, yf))
+			return self.onEventEx(DropNode,
+					(x, y, cmd, usercmd.DRAG_NODE, (xf, yf)))
 
 		return DROP_FAILED
 							
 	def dragtool(self, dataobj, kbdstate, x, y):
-		node=dataobj.GetGlobalData(self.CF_TOOL)
-		if node:
+		cmdid=dataobj.GetGlobalData(self.CF_TOOL)
+		if cmdid:
+			ucmd = usercmdui.id2usercmd(eval(cmdid))
 			x, y = self._DPtoLP((x,y))
 			x, y = self._pxl2rel((x, y),self._canvas)
-			return self.onEventEx(DragNode,(x, y, 'copy'))
+			return self.onEventEx(DragNode,
+					(x, y, 'copy', ucmd, None))
 		return DropTarget.DROPEFFECT_NONE
 
 	def droptool(self, dataobj, effect, x, y):
 		DROP_FAILED, DROP_SUCCEEDED = 0, 1
-		tool = dataobj.GetGlobalData(self.CF_TOOL)
-		if tool:
+		cmdid = dataobj.GetGlobalData(self.CF_TOOL)
+		if cmdid:
+			ucmd = usercmdui.id2usercmd(eval(cmdid))
 			x, y = self._DPtoLP((x,y))
 			x, y = self._pxl2rel((x, y),self._canvas)
 
 			# if the operation can not be executed return DROP_FAILED
 			# else return DROP_SUCCEEDED
-
+			return self.onEventEx(DropNode,
+					(x, y, 'copy', ucmd, None))
 			return DROP_SUCCEEDED
 
 		return DROP_FAILED
