@@ -33,6 +33,7 @@ MENUBAR=(
 		(ALL, ENTRY, 'Save As...', None, SAVE_AS),
 		(ALL, CASCADE, 'Export', (
 			(ALL, ENTRY, 'RealSystem G2...', None, EXPORT_SMIL),
+			(ALL, ENTRY, 'Upload RealSystem G2...', None, UPLOAD_SMIL),
 			)),
 		(ALL, ENTRY, 'Restore', None, RESTORE),
 		(ALL, SEP,),
