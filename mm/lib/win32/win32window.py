@@ -642,8 +642,7 @@ class Window:
 
 	# update related coordinates members in a consistent way
 	def __setcoordinates(self, coordinates, units):
-		x, y, w, h = self._parent._convert_coordinates(coordinates,
-					crop = 1, units = units)
+		x, y, w, h = self._parent._convert_coordinates(coordinates, units = units)
 		self._rect = 0, 0, w, h # client area in pixels
 		self._canvas = 0, 0, w, h # client canvas in pixels
 		self._rectb = x, y, w, h  # rect with respect to parent in pixels
