@@ -29,9 +29,6 @@ class RealAudioChannel(Channel.Channel):
 		windowinterface.addclosecallback(self.release_player,())		
 		Channel.Channel.__init__(self, name, attrdict, scheduler, ui)
 
-	def __repr__(self):
-		return '<RealAudioChannel instance, name=' + `self._name` + '>'
-	
 	def do_hide(self):
 		self.release_player()
 		Channel.Channel.do_hide(self)
@@ -41,9 +38,7 @@ class RealAudioChannel(Channel.Channel):
 		Channel.Channel.destroy(self)
 
 	def release_player(self):
-		if self._rmaplayer:
-			del self._rmaplayer
-			self._rmaplayer=None
+		self._rmaplayer = None
 
 	def do_arm(self, node, same=0):
 		if not self._rmaplayer:
@@ -74,17 +69,13 @@ class RealAudioChannel(Channel.Channel):
 			return
 
 		url = MMurl.canonURL(self.getfileurl(node))
-##		url = MMurl.basejoin(MMurl.pathname2url(os.getcwd())+'/',url)
-##		type, url = MMurl.splittype(url)
-##		url = 'file:/'+ url
-
 		if not self._rmaplayer:
 			self._rmaplayer=rma.CreatePlayer()
 		self._rmaplayer.SetStatusListener(self)
 		self._rmaplayer.OpenURL(url)	
 		self._rmaplayer.Begin()
 
-	def OnStop(self):
+	def OnPresentationClosed(self):
 		self.playdone(0)
 
 	# part of stop sequence
@@ -107,5 +98,5 @@ class RealAudioChannel(Channel.Channel):
 		name = MMAttrdefs.getattr(node, 'name')
 		if not name:
 			name = '<unnamed node>'
-		windowinterface.showmessage('No playback support for RealAudio on your system\n'
+		windowinterface.showmessage('No playback support for RealAudio on this system\n'
 					    'node %s on channel %s' % (name, self._name), mtype = 'warning')
