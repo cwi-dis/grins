@@ -1,8 +1,8 @@
 import fl
-import help_form
 import posix
 import string
 import sys
+import flp
 from Dialog import BasicDialog
 from ViewDialog import ViewDialog
 
@@ -35,7 +35,8 @@ class HelpWindow() = ViewDialog(), BasicDialog():
     	self.toplevel.checkviews()
     def make_form(self):
 	# This sets self.topic and self.help:
-	self.form = help_form.mk_form_help_form(self)
+	ftemplate = flp.parse_form('HelpForm', 'form')
+	flp.create_full_form(self, ftemplate)
 	self.button_return.hide_object()
     def givehelp(self, topic):
 	self.inittopics()
