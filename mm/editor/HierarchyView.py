@@ -1483,8 +1483,7 @@ class Object:
 				try:
 					f = MMurl.urlretrieve(url)[0]
 				except IOError, arg:
-					self.set_infoicon('error', 'Cannot load image: %s'%arg)
-			##ih = min(b1-t1, titleheight+chnameheight)
+					self.set_infoicon('error', 'Cannot load image: %s'%`arg`)
 			ih = b1-t1
 			iw = r-l-2*hmargin
 			# XXXX The "0" values below need to be thought about
