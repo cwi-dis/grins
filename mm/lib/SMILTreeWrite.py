@@ -1196,6 +1196,8 @@ def mediatype(x, error=0):
 		mtype = urlcache.mimetype(x.GetContext().findurl(url))
 		if mtype == 'image/vnd.rn-realpix':
 			chtype = 'RealPix'
+		elif mtype == 'application/x-shockwave-flash':
+			return 'animation', 'animation'
 	if smil_mediatype.has_key(chtype):
 		return smil_mediatype[chtype], smil_mediatype[chtype]
 	if error and chtype != 'layout':
