@@ -321,7 +321,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					if res.group('Z') is not None:
 						tzhr = tzmn = 0
 						tzsg = '+'
-					print 'wallclock',yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn
 					list.append(MMNode.MMSyncArc(node, attr, wallclock = (yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn), delay=offset or 0))
 					continue
 				if val[:5] == 'prev.':
