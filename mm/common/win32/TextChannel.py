@@ -5,7 +5,8 @@ import string
 import urllib, MMurl
 import StringStuff
 import MMAttrdefs
-import textex, win32con
+import win32con
+import cmifex
 
 
 [SINGLE, HTM, TEXT] = range(3)
@@ -69,11 +70,11 @@ class TextChannel(ChannelWindow):
 		str1 = self.getstring(node)
 
 		#if not self.str_loaded:
-		#	textex.SetScrollPos(self.window._hWnd, str1)
+		#	cmifex.SetScrollPos(self.window._hWnd, str1)
 		#	self.str_loaded = 1
 		# Get the button list of the anchor
-		self.id, str1 = textex.PrepareText(self.win._hWnd, self.create_anchor_list, self.id, str1, 0, self._facename, self._pointsize,"")
-		#textex.SetScrollPos(self.window._hWnd, "")
+		self.id, str1 = cmifex.PrepareText(self.win._hWnd, self.create_anchor_list, self.id, str1, 0, self._facename, self._pointsize,"")
+		#cmifex.SetScrollPos(self.window._hWnd, "")
 
 		if MMAttrdefs.getattr(node, 'noanchors'):
 		    self.taglist = []
@@ -126,7 +127,7 @@ class TextChannel(ChannelWindow):
 			#str = string.joinfields(node.GetValues(), ' ')
 #			print "Text getString"
 #			print "Fontname: ", self._facename, " PointSize: ", self._pointsize
-			#return textex.PrepareText(self.win._hWnd, self.create_anchor_list, self.id, str1, 0, self._facename, self._pointsize,"")
+			#return cmifex.PrepareText(self.win._hWnd, self.create_anchor_list, self.id, str1, 0, self._facename, self._pointsize,"")
 			return str1
 		elif node.type == 'ext':
 			#if external read the text from the file
@@ -143,7 +144,7 @@ class TextChannel(ChannelWindow):
 			text = fp.read()
 			fp.close()
 			self.filename = filename
-			#return textex.PrepareText(self.win._hWnd, self.create_anchor_list, self.id, filename, 1, self._facename, self._pointsize,"")
+			#return cmifex.PrepareText(self.win._hWnd, self.create_anchor_list, self.id, filename, 1, self._facename, self._pointsize,"")
 			return text
 		else:
 			raise CheckError, \
@@ -163,7 +164,7 @@ class TextChannel(ChannelWindow):
 		ChannelWindow.play(self, node)
 		if self.window != None:
 			if self.window._transparent != 1:
-				textex.SetScrollPos(self.window._hWnd, str1)
+				cmifex.SetScrollPos(self.window._hWnd, str1)
 
 
 	def stopplay(self, node):
@@ -171,7 +172,7 @@ class TextChannel(ChannelWindow):
 		ChannelWindow.stopplay(self, node)
 		if self.window != None:
 			if self.window._transparent != 1:
-				textex.SetScrollPos(self.window._hWnd, "")
+				cmifex.SetScrollPos(self.window._hWnd, "")
 
 	def resize(self, arg, window, event, value):
 		#print "IN TEXT CHANNEL RESIZE"
@@ -183,7 +184,7 @@ class TextChannel(ChannelWindow):
 		#print "str-->", str
 		if self.window != None:
 			if self.window._transparent != 1:
-				textex.SetScrollPos(self.window._hWnd, str1)
+				cmifex.SetScrollPos(self.window._hWnd, str1)
 		ChannelWindow.resize(self, arg, window, event, value)
 		return
 
