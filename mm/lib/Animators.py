@@ -18,6 +18,18 @@ import settings
 debug = 0
 debugParser = 0
 
+basicAnimationModule	= 'http://www.w3.org/2000/SMIL20/CR/BasicAnimation'
+splineAnimationModule = 'http://www.w3.org/2000/SMIL20/CR/SplineAnimation'
+timeManipulationsModule = 'http://www.w3.org/2000/SMIL20/CR/TimeManipulations'
+
+basicAnimation	= basicAnimationModule
+splineAnimation = ''
+timeManipulations = ''
+
+if hasattr(settings, 'activeFullSmilCss') and not settings.activeFullSmilCss:
+	windowinterface.showmessage('BasicAnimation module is dissabled.\nPlease enable settings.activeFullSmilCss flag')
+	basicAnimation = ''
+
 # An Animator represents an animate element at run time.
 # An Animator entity implements interpolation taking into 
 # account the calc mode, the 'accumulate' attr and 
@@ -36,12 +48,10 @@ class Animator:
 		self._additive = additive
 
 		# assertions
-		if len(values)==0: raise AssertionError
-		if len(values)==1 and mode != 'discrete': raise AssertionError
-		if times:
-			if len(times)!=len(values): raise AssertionError
-		if splines and times:
-			if len(splines) != len(times)-1: raise AssertionError
+		assert( len(values) )
+		assert( len(values)!=1 or mode == 'discrete' )
+		assert( not times or len(times)==len(values) )
+		assert( (not times or not splines) or len(splines)==len(times)-1)
 
 		# set calc mode
 		if mode=='discrete': self._inrepol = self._discrete
@@ -587,7 +597,8 @@ class MotionAnimator(Animator):
 # or implement within EffectiveAnimator a proper ordering method
 # 
 class EffectiveAnimator:
-	def __init__(self, targnode, attr, domval):
+	def __init__(self, context, targnode, attr, domval):
+		self.__context = context
 		self.__node = targnode
 		self.__attr = attr
 		self.__domval = domval
@@ -706,6 +717,7 @@ class EffectiveAnimator:
 		regionname = ch.name
 
 		# locate region and its contents (once)
+		# self.__region : layout channel
 		if not self.__region:
 			from Channel import channels
 			for chan in channels:
@@ -718,28 +730,31 @@ class EffectiveAnimator:
 						self.__regionContents.append(chan)
 		mmlchan = self.__region._attrdict
 
-		if attr in ('position','left','top','width','height','right','bottom'):
+		if attr == 'position':
 			region = mmlchan.getCssId()
-			# update coordinates
-			if self.__attr == 'position':
-				region.move(value)
-			else:
-				region.changeRawAttr(attr, value)
+			region.move(value)
 			coords = region.getPxGeom()
 			self.__updatecoordinates(coords)
-		else:
-			if attr=='z':
-				self.__updatezindex(value)
 
-			elif attr=='bgcolor':
-				self.__updatebgcolor(value)
-
-			elif attr=='soundLevel':
-				self.__updatesoundlevel(value)
-
-			else:
-				print 'update',attr,'of region',regionname,'to',value,'(unsupported)'
+		elif attr in ('left','top','width','height','right','bottom'):
+			region = mmlchan.getCssId()
+			region.changeRawAttr(attr, value)
+			coords = region.getPxGeom()
+			self.__updatecoordinates(coords)
+			
+		elif attr=='z':
+			self.__updatezindex(value)
 			mmlchan.SetPresentationAttr(attr, value)
+
+		elif attr=='bgcolor':
+			self.__updatebgcolor(value)
+			mmlchan.SetPresentationAttr(attr, value)
+
+		elif attr=='soundLevel':
+			self.__updatesoundlevel(value)
+			mmlchan.SetPresentationAttr(attr, value)
+		else:
+			print 'update',attr,'of region',regionname,'to',value,'(unsupported)'
 
 		if debug: 
 			print 'update',attr,'of region',regionname,'to',value
@@ -751,11 +766,17 @@ class EffectiveAnimator:
 	def __updatezindex(self, z):
 		if self.__region and self.__region.window:
 			self.__region.window.updatezindex(z)
-
+			
 	def __updatebgcolor(self, color):
 		if self.__region and self.__region.window:
 			self.__region.window.updatebgcolor(color)
-	
+			# update content with inherited backgroundColor
+			for chan in self.__regionContents:
+				# check for inherited attr
+				if chan._attrdict.get('bgcolor') == self.__domval: 
+					if chan.window:
+						chan.window.updatebgcolor(color)
+			
 	def __updatesoundlevel(self, level):
 		for chan in self.__regionContents:
 			if hasattr(chan,'updatesoundlevel'):
@@ -787,24 +808,26 @@ class EffectiveAnimator:
 		mmchan = self.__node.GetChannel()
 		mmlchan = mmchan.GetLayoutChannel()
 
-		if self.__attr in ('position','left','top','width','height','right','bottom'):
-
-			resolver = self.__node.GetContext().cssResolver
-
-			# subregion coordinates
+		if self.__attr == 'position':
+			resolver = self.__context.getCssResolver()
 			region = self.__node.getSubRegCssId()
 			resolver.link(region, mmlchan.getCssId())
-
-
-			# update coordinates
-			if self.__attr == 'position':
-				region.move(value)
-			else:
-				region.changeRawAttr(self.__attr, value)
-			
+			region.move(value)
 			coords = region.getPxGeom()
+			media = self.__node.getMediaCssId()
+			resolver.link(media, region)
+			mediacoords = media.getPxGeom()
+			resolver.unlink(media)
+			resolver.unlink(region)
+			if chan.window:
+				chan.window.updatecoordinates(coords, UNIT_PXL, mediacoords)
 
-			# nedia coordinates
+		elif self.__attr in ('left','top','width','height','right','bottom'):
+			resolver = self.__context.getCssResolver()
+			region = self.__node.getSubRegCssId()
+			resolver.link(region, mmlchan.getCssId())
+			region.changeRawAttr(self.__attr, value)
+			coords = region.getPxGeom()
 			media = self.__node.getMediaCssId()
 			resolver.link(media, region)
 			mediacoords = media.getPxGeom()
@@ -840,16 +863,18 @@ class EffectiveAnimator:
 # and is a document level entity.
 
 class AnimateContext:
-	def __init__(self):
+	def __init__(self, player):
+		self._player = player
 		self._effAnimators = {}
 		self._id2key = {}
+		self._cssResolver = player.context.cssResolver
 
 	def getEffectiveAnimator(self, targnode, targattr, domval):
 		key = "n%d-%s" % (id(targnode), targattr)
 		if self._effAnimators.has_key(key):
 			return self._effAnimators[key]
 		else:
-			ea = EffectiveAnimator(targnode, targattr, domval)
+			ea = EffectiveAnimator(self, targnode, targattr, domval)
 			self._effAnimators[key] = ea
 			self._id2key[id(ea)] = key
 			return ea
@@ -861,7 +886,9 @@ class AnimateContext:
 			if debug: print 'removing eff animator', key
 			del self._effAnimators[key]
 			del self._id2key[eaid]
-
+	
+	def getCssResolver(self):
+		return self._cssResolver
 
 ###########################
 # Gen impl. rem:
@@ -900,6 +927,9 @@ class AnimateElementParser:
 		self.__animtype = 'invalid'	# in animatetypes (see above)
 		self.__isadditive = 0
 			
+		if not basicAnimation:
+			return
+
 		############################
 		# Locate target node
 
@@ -961,7 +991,7 @@ class AnimateElementParser:
 		if self.__animtype == 'invalid':
 			print 'Syntax error: Invalid animation values'
 			print '\t',self
-			
+						
 		# verify
 		if debugParser:
 			print 'animation type: ', self.__animtype
@@ -988,15 +1018,19 @@ class AnimateElementParser:
 		# calcMode has the default value 'paced' for animateMotion
 		# end 'linear' for all the other cases
 		self.__calcMode = MMAttrdefs.getattr(anim, 'calcMode')
+		if not splineAnimation and self.__calcMode == 'spline':
+			print 'Warning: Module ', splineAnimationModule, 'is dissabled'
+			print '\t',self
+			self.__calcMode = None
 		if not self.__calcMode:
 			if self.__elementTag == 'animateMotion':
 				self.__calcMode = 'paced'
 			else:
 				self.__calcMode = 'linear'
+			
 				
 		########################################
 		# Read time manipulation attributes
-
 		# speed="1" is a no-op, and speed="-1" means play backwards
 		# This speed is relative to parent.
 		# The context absolute speed is set elsewhere.  
@@ -1011,6 +1045,14 @@ class AnimateElementParser:
 			self.__accelerate = self.__accelerate/dt
 			self.__decelerate = self.__decelerate/dt
 		self.__autoReverse = MMAttrdefs.getattr(anim, 'autoReverse')
+		
+		if not timeManipulationsModule and \
+			(self.__speed!=1.0 or self.__accelerate or self.__decelerate or self.__autoReverse):
+			print 'Warning: Module ', timeManipulationsModule, 'is dissabled'
+			print '\t',self
+			self.__speed = 1.0
+			self.__accelerate = self.__decelerate = 0
+			self.__autoReverse = 0
 
 	def __repr__(self):
 		import SMILTreeWrite
@@ -1019,6 +1061,9 @@ class AnimateElementParser:
 	# this is the main service method of this class
 	# returns an appropriate animator or None
 	def getAnimator(self):
+		if not basicAnimation:
+			return None
+
 		if not self.__hasValidTarget:
 			return None
 		
@@ -1050,7 +1095,7 @@ class AnimateElementParser:
 			return anim
 
 		# check for keyTimes, keySplines
-		if mode == 'paced':
+		if not splineAnimation or mode == 'paced':
 			# ignore times and splines for 'paced' animation
 			times = splines = ()
 		else:
@@ -1076,7 +1121,9 @@ class AnimateElementParser:
 		################
 		# animateMotion  (or attrtype=='position')
 		if self.__elementTag=='animateMotion' or self.__attrtype=='position':
-			strpath = MMAttrdefs.getattr(self.__anim, 'path')
+			strpath = ''
+			if splineAnimation:
+				strpath = MMAttrdefs.getattr(self.__anim, 'path')
 			path = svgpath.Path()
 			if strpath:
 				path.constructFromSVGPathString(strpath)
@@ -1134,6 +1181,9 @@ class AnimateElementParser:
 
 	# return an animator for the 'set' animate element
 	def __getSetAnimator(self):
+		if not basicAnimation:
+			return None
+
 		if not self.__hasValidTarget:
 			return None
 
