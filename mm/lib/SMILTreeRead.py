@@ -2832,15 +2832,26 @@ class SMILParser(SMIL, xmllib.XMLParser):
 
 			mods = ATTRIBUTES.get(attr)
 			if not ans and mods:
-				for mod in mods:
-					if settings.MODULES.get(mod):
-						break
+				if type(mods) is type({}):
+					for mod, elems in mods.items():
+						if settings.MODULES.get(mod) and (elems is None or tagname in elems):
+							break
+					else:
+						# silently ignore attribute in unsupported module
+						if __debug__:
+							print 'silently ignore attribute',tagname,key
+						del attributes[key]
+						continue
 				else:
-					# silently ignore attribute in unsupported module
-					if __debug__:
-						print 'silently ignore attribute',tagname,key
-					del attributes[key]
-					continue
+					for mod in mods:
+						if settings.MODULES.get(mod):
+							break
+					else:
+						# silently ignore attribute in unsupported module
+						if __debug__:
+							print 'silently ignore attribute',tagname,key
+						del attributes[key]
+						continue
 
 			if attr != key and attributes.has_key(attr):
 				self.syntax_error("duplicate attribute `%s' in different namespaces" % attr)
