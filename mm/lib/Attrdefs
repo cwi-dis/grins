@@ -56,7 +56,7 @@
 	'Name of window in which channelwin is created' raw (cmif))
 
 (base_winoff (tuple (float) (float) (float) (float)) (0.0 0.0 1.0 1.0)
-	'Position and size' default 'Position and size, usually in pixels' channel (g2 qt smil10 cmif))
+	'Position and size' default 'Position and size, usually in pixels' channel (cmif))
 
 (begin (float) 0.0 'Begin time' default
 	'Start delay of node' normal (g2 qt smil10 smil2 cmif snap))
@@ -163,10 +163,10 @@
 	'Hyperlinks within this document (root node only)' raw (g2 qt smil10 smil2 cmif snap))
 
 (layout (name) undefined 'Screen' layoutname
-	'Screen for this node and its descendants. Authoring convenience only, controls channels displayed in menus.' inherited (g2_pro qt_pro smil10 cmif snap))
+	'Screen for this node and its descendants. Authoring convenience only, controls channels displayed in menus.' inherited (cmif))
 
 (layouts (list (enclosed (tuple (name) (list (name))))) () 'List of screens'
-	hidden 'List of layouts within this document (root node only)' raw (g2_pro qt_pro smil10 cmif))
+	hidden 'List of layouts within this document (root node only)' raw (cmif))
 
 (longdesc (string) '' 'Long description URL' default
 	'Link (URL) to a long description of the media object' raw (advanced g2 qt smil10 smil2 cmif snap))
@@ -181,7 +181,7 @@
 	'Whether to obey or ignore intrinsic repeat in media' raw (advanced cmif smil2))
 
 (mimetype (string) '' 'MIME type' default
-	'MIME type of media object' raw (advanced g2_pro qt_pro smil10 cmif))
+	'MIME type of media object' raw (advanced g2_pro qt_pro smil10 smil2 cmif))
 
 (allowedmimetypes (list (name)) () 'Allowed MIME types' reqlist
 	'Allowed MIMEtypes for media object' raw (template g2_pro qt_pro smil10 cmif smil2))
@@ -203,7 +203,7 @@
 
 (project_audiotype (int) 0 'Audio type' audiotype
 	'Audio type, determines quality of audio when converting to RealAudio'
-	raw (g2 snap))
+	raw (advanced g2 snap cmif))
 
 (project_autoroute (bool) 0 'Route media items' default
 	'Dropped media items get automatically sent to children' raw (template smil2))
@@ -242,7 +242,7 @@
 	'This node is read-only' raw (template cmif))
 
 (project_convert (bool) 1 'Convert data' default
-	'Convert data to RealMedia format' raw (advanced g2_pro))
+	'Convert data to RealMedia format' raw (advanced g2_pro cmif))
 
 (project_ftp_host (string) '' 'Webserver' default
 	'FTP hostname to use for webpage upload' raw (smil2 g2 qt snap))
@@ -272,17 +272,17 @@
 	'Buffered playback' raw (advanced g2_pro))
 
 (project_quality (int) 75 'Image quality' quality
-	'Quality of image conversion to JPEG' raw (g2 snap))
+	'Quality of image conversion to JPEG' raw (advanced g2 snap))
 
 (project_smil_url (string) '' 'Mediaserver URL' default
 	'URL of SMIL document on the media server' raw (smil2 g2 qt snap))
 
 (project_targets (int) 3 'Target audience' targets
-	'One or more bandwidths for which this item should be converted' raw (g2 snap))
+	'One or more bandwidths for which this item should be converted' raw (advanced g2 snap))
 
 (project_videotype (int) 0 'Video type' videotype
 	'Video type, determines quality of video when converting to RealVideo'
-	raw (g2 snap))
+	raw (advanced g2 snap))
 
 (queuesize (float) 0 'Queue size' default
 	'Audio playback queue size' channel (cmif))
@@ -385,7 +385,7 @@
 (u_group (list (name)) () 'Custom tests' usergroup
 	'Custom tests that controls rendering of this node' inherited (advanced smil2 cmif))
 
-(units (int) 2 'Units' units
+(units (int) 2 'Units' hidden
 	'What the size/position numbers are measured in' raw (g2_pro qt_pro smil10 cmif))
 
 (usergroups (list (enclosed (tuple (name) (tuple (string) (bool) (name)))))
@@ -402,7 +402,7 @@
 	'Initial window position (x, y)' raw (g2 qt smil10 smil2 cmif))
 
 (winsize (tuple (float) (float)) (0 0) 'Window size' default
-	'Initial window size' raw (g2 qt smil10 cmif))
+	'Initial window size' raw (cmif))
 
 (xmllang (string) '' 'Media language' default
 	'The language of the media item' raw (advanced smil2 cmif))
@@ -454,12 +454,12 @@
 	'Crop image.  Values are x,y coordinates of image area to display' normal (g2))
 
 (imgcropanchor (string) 'top-left' 'Image crop anchor' subregionanchor
-	'Anchor for image crop (x,y) coordinates' normal (g2_pro))
+	'Anchor for image crop (x,y) coordinates' normal (advanced g2_pro))
 
 (fullimage (bool) 1 'Use whole image' default
 	'Use whole image' normal (g2))
 
-(maxfps (int) 0 'Max fps' default 'Transition framerate, 0 for as high as possible' inherited (g2_pro))
+(maxfps (int) 0 'Max fps' default 'Transition framerate, 0 for as high as possible' inherited (advanced g2_pro))
 
 (preroll (float) 0.0 'Preroll time' default
 	'Time for which data should be buffered before presentation starts, see RealPix documentation'
@@ -478,7 +478,7 @@
 	'width and height of destination area within channel' normal (g2))
 
 (subregionanchor (string) 'top-left' 'Destination region anchor' subregionanchor
-	'Anchor for subregion (x,y) coordinates' normal (g2_pro))
+	'Anchor for subregion (x,y) coordinates' normal (advanced g2_pro))
 
 (displayfull (bool) 1 'Fill whole region' default
 	'Use whole region for transition effect' normal (g2))
@@ -513,40 +513,40 @@
 # QuickTime attributes
 
 (autoplay (bool) 0 'Auto play' default 
-	'Presentation automatically starts playback upon instantiation' normal (qt_pro))
+	'Presentation automatically starts playback upon instantiation' normal (advanced qt_pro))
 
 (qtnext (string) '' 'Next presentation' file 
-	'Presentation played after the current presentation is finished' normal (qt_pro))
+	'Presentation played after the current presentation is finished' normal (advanced qt_pro))
 
 (qttimeslider (bool) 0 'Time slider' default 
-	'A time line is displayed as part of the user interface' normal (qt_pro))
+	'A time line is displayed as part of the user interface' normal (advanced qt_pro))
 
 (qtchaptermode (int) 0 'Chapter mode' qtchaptermode 
-	'The way in which chapters is used in the user interface' normal (qt_pro))
+	'The way in which chapters is used in the user interface' normal (advanced qt_pro))
 
 (immediateinstantiation (bool) 0 'Immediate instantiation' default 
-	'The media objects are instantiated immediately' normal (qt_pro))
+	'The media objects are instantiated immediately' normal (advanced qt_pro))
 
 (immediateinstantiationmedia (bool) 0 'Immediate instantiation' bool3 
-	'The media object is instantiated immediately' normal (qt_pro))
+	'The media object is instantiated immediately' normal (advanced qt_pro))
 
 (bitratenecessary (int) 14400 'Bitrate' bitrate3
-	'The bitrate at which the media object would need to be transmitted in order to play back in real time' normal (qt_pro))
+	'The bitrate at which the media object would need to be transmitted in order to play back in real time' normal (advanced qt_pro))
 
 (systemmimetypesupported (string) '' 'System mime type supported' default
-	'Specify the mime type that needs to be supported in order to be able to play back this particular media-object' normal (qt_pro))
+	'Specify the mime type that needs to be supported in order to be able to play back this particular media-object' normal (advanced qt_pro))
 
 (attachtimebase (bool) 1 'Attach time base' default
-	'Slave the timebase of this media to the parent' normal (qt_pro))
+	'Slave the timebase of this media to the parent' normal (advanced qt_pro))
 
 (qtchapter (string) '' 'Chapter' default
-	'Specify a chapter name' normal (qt_pro))
+	'Specify a chapter name' normal (advanced qt_pro))
 
 (anchortarget (string) '' 'Target' default
-	'Specify where the presentation specified by the href attribute in the anchor tag will play' normal (qt_pro))
+	'Specify where the presentation specified by the href attribute in the anchor tag will play' normal (advanced qt_pro))
 
 (qtcompositemode (string) '' 'Composite mode' default
-	'Specifies how to composite a visual media element with other visual media elements behind it' normal (qt_pro))
+	'Specifies how to composite a visual media element with other visual media elements behind it' normal (advanced qt_pro))
 
 
 # animation module
@@ -561,7 +561,7 @@
 	'Animation target attribute name' normal (g2 qt smil10 smil2 cmif))
 
 (attributeType (enum CSS XML auto) XML 'Attribute type' default
-	'Target attribute namespace' normal (g2 qt smil10 smil2 cmif))
+	'Target attribute namespace' normal (advanced g2 qt smil10 smil2 cmif))
 
 (additive (enum replace sum) replace 'Additive' default
 	'Add animation effect' normal (g2 qt smil10 smil2 cmif))
