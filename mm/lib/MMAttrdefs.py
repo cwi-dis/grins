@@ -70,7 +70,7 @@ def readattrdefs(filename):
 			labeltext = parser.getstringvalue(None)
 			displayername = parser.getnamevalue(None)
 			helptext = parser.getstringvalue(None)
-			if parser.peektoken() = ')':
+			if parser.peektoken() == ')':
 				inheritance = 'normal'
 			else:
 				inheritance = parser.getenumvalue( \
@@ -84,14 +84,14 @@ def readattrdefs(filename):
 		parser.reporterror(filename, 'Unexpected EOF', sys.stderr)
 		raise EOFError
 	except SyntaxError, msg:
-		if type(msg) = type(()):
+		if type(msg) == type(()):
 			gotten, expected = msg
 			msg = 'got "'+gotten+'", expected "'+expected+'"'
 		parser.reporterror(filename, \
 				'Syntax error: ' + msg, sys.stderr)
 		raise SyntaxError, msg
 	except TypeError, msg:
-		if type(msg) = type(()):
+		if type(msg) == type(()):
 			gotten, expected = msg
 			msg = 'got "'+gotten+'", expected "'+expected+'"'
 		parser.reporterror(filename, 'Type error: ' + msg, sys.stderr)
@@ -107,9 +107,9 @@ def usetypedef(typedef, mapping):
 	type, rest = typedef
 	func = mapping[type]
 	arg = None
-	if type = 'enum':
+	if type == 'enum':
 		arg = rest
-	elif type = 'tuple':
+	elif type == 'tuple':
 		arg = []
 		for td in rest:
 			arg.append(usetypedef(td, mapping))
@@ -151,30 +151,36 @@ def getnames():
 
 # Get an attribute of a node according to the rules.
 #
+toplevel = None
+#
 def getattr(node, attrname):
 	_stat('MMAttrdefs.getattr')
 	attrdef = getdef(attrname)
 	inheritance = attrdef[5]
 	defaultvalue = attrdef[1]
-	if inheritance = 'raw':
-		return node.GetRawAttrDef(attrname, defaultvalue)
-	elif inheritance = 'normal':
-		return node.GetAttrDef(attrname, defaultvalue)
-	elif inheritance = 'inherited':
-		return node.GetInherAttrDef(attrname, defaultvalue)
-	elif inheritance = 'channel':
+	if inheritance == 'raw':
+		attrvalue = node.GetRawAttrDef(attrname, defaultvalue)
+	elif inheritance == 'normal':
+		attrvalue = node.GetAttrDef(attrname, defaultvalue)
+	elif inheritance == 'inherited':
+		attrvalue = node.GetInherAttrDef(attrname, defaultvalue)
+	elif inheritance == 'channel':
 		try:
-			return node.GetInherAttr(attrname)
+			attrvalue = node.GetInherAttr(attrname)
 		except NoSuchAttrError:
 			try:
 				cname = node.GetInherAttr('channel')
 				attrdict = node.context.channeldict[cname]
-				return attrdict[attrname]
+				attrvalue = attrdict[attrname]
 			except:
-				return defaultvalue
+				attrvalue = defaultvalue
 	else:
 		raise CheckError, 'bad inheritance ' +`inheritance` + \
 				' for attr ' + `attrname`
+	if attrname == 'file' and toplevel:
+		# Incredible hack to patch filenames
+		attrvalue = toplevel.findfile(attrvalue)
+	return attrvalue
 
 
 # Get the default value for a node's attribute, *ignoring* its own value
@@ -184,19 +190,19 @@ def getdefattr(node, attrname):
 	attrdef = getdef(attrname)
 	inheritance = attrdef[5]
 	defaultvalue = attrdef[1]
-	if inheritance = 'raw':
+	if inheritance == 'raw':
 		return defaultvalue
-	elif inheritance = 'normal':
+	elif inheritance == 'normal':
 		try:
 			return node.GetDefAttr(attrname)
 		except NoSuchAttrError:
 			return defaultvalue
-	elif inheritance = 'inherited':
+	elif inheritance == 'inherited':
 		try:
 			return node.GetDefInherAttr(attrname)
 		except NoSuchAttrError:
 			return defaultvalue
-	elif inheritance = 'channel':
+	elif inheritance == 'channel':
 		try:
 			return node.GetDefInherAttr(attrname)
 		except NoSuchAttrError:
