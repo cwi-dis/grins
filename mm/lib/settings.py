@@ -170,15 +170,15 @@ def switch_profile(modulelist):
 	global current_profile
 	from SMIL import SMIL1, SMIL2ns, PSS4ns, PSS5ns
 	if __debug__:
-		if modulelist is SMIL_20_MODULES:
+		if modulelist == SMIL_20_MODULES:
 			name = 'SMIL 2.0 Language Profile'
-		elif modulelist is SMIL_PSS5_MODULES:
+		elif modulelist == SMIL_PSS5_MODULES:
 			name = '3GPP PSS5 Profile'
-		elif modulelist is SMIL_PSS4_MODULES:
+		elif modulelist == SMIL_PSS4_MODULES:
 			name = '3GPP PSS4 Profile'
-		elif modulelist is SMIL_BASIC_MODULES:
+		elif modulelist == SMIL_BASIC_MODULES:
 			name = 'SMIL 2.0 Basic Language Profile'
-		elif modulelist is SMIL_MMS_MODULES:
+		elif modulelist == SMIL_MMS_MODULES:
 			name = 'SMIL MMS Profile'
 		else:
 			name = 'Unknown profile'
@@ -193,11 +193,12 @@ def switch_profile(modulelist):
 		for ns in SMIL2ns:
 			if ns[-1] == '/':
 				extensions[ns + k] = v
-	if modulelist is SMIL_PSS5_MODULES:
-		extensions[PSS4ns] = 1
-		extensions[PSS5ns] = 1
-	elif modulelist is SMIL_PSS4_MODULES:
-		extensions[PSS4ns] = 1
+	for ns, mods in [(PSS4ns, SMIL_PSS4_MODULES), (PSS5ns, SMIL_PSS5_MODULES)]:
+		for mod in mods:
+			if not MODULES[mod]:
+				break
+		else:
+			extensions[ns] = 1
 	current_profile = modulelist
 
 current_profile = None
