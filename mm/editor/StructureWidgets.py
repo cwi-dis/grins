@@ -758,7 +758,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			elif len(mimetypes) == 1 and mimetypes[0] == 'audio':
 				channel_type = 'sound'
 		url = node.GetFile()
-		print 'DBG', node, url
 		if self.mother.thumbnails and channel_type == 'image':
 			if not image:
 				return None
@@ -771,7 +770,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if not url or url == '#':
 			emptyimage = os.path.join(self.mother.datadir, '%s-empty.tiff'%channel_type)
 			if os.path.exists(emptyimage):
-				print 'DBG using', emptyimage
 				return emptyimage
 			if __debug__:
 				print 'Missing empty icon:', emptyimage
