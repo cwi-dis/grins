@@ -81,14 +81,9 @@ class sizes_notime:
 	ARRSIZE = windowinterface.ICONSIZE_PXL	# width of collapse/expand arrow
 	ERRSIZE = windowinterface.ICONSIZE_PXL	# width of error/bandwidth indicator
 
-	if grins_snap:		
-		GAPSIZE = 16;
-		HEDGSIZE = 16;
-		VEDGSIZE = 12 #3						# size of edges		
-	else:
-		GAPSIZE = 2 #2						# size of gap between nodes
-		HEDGSIZE = 3 #3						# size of edges
-		VEDGSIZE = 3 #3						# size of edges
+	GAPSIZE = 2 #2						# size of gap between nodes
+	HEDGSIZE = 3 #3						# size of edges
+	VEDGSIZE = 3 #3						# size of edges
 
 	DROPAREASIZE = 32;		# size of the decoration at the end of a "roll of film"
 	FLATBOX = 0

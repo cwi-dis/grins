@@ -64,6 +64,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.thumbnails = 1
 		self.showplayability = 1
 		self.timescale = 0
+		self.pushbackbars = 1;
 
 		self.sizes = sizes_notime
 		from cmif import findfile

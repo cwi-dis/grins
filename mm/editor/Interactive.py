@@ -204,8 +204,8 @@ class Interactive:
         if t > b:
             print "Interactive: Error: box is upside down."
 
-        assert r <= 1.0 and r >= 0.0 and l <= 1.0 and l >= 0.0
-        assert t >= 0.0 and t <= 1.0 and b >= 0.0 and b <= 1.0
+#        assert r <= 1.0 and r >= 0.0 and l <= 1.0 and l >= 0.0
+#        assert t >= 0.0 and t <= 1.0 and b >= 0.0 and b <= 1.0
         self.pos_rel = newpos
 
     def set_append(self, otherobject, position):
