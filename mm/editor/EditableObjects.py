@@ -34,7 +34,7 @@ def create_MMNode_editable(self, mm):
 		print "TODO: create a MMNode editable."
 
 
-class EditableMMNode():
+class EditableMMNode:
 	# TODO
 	def setup()			# like a constructer, but without parameters.
 	def get_iter();
@@ -43,11 +43,6 @@ class EditableMMNode():
 	def set_
 	def get_
 
-	# Used for the user interface
-	def get_commands()		# returns a list of mapped commands
-	def get_contextmenu()		# returns a context menu that can be used with the windowinterface.
-	def show_propertiesDialog()
-
 	# Editing this node.. some are callbacks for the commands returned by get_commands()
 	def get_cut()			# cuts this node from the tree and returns it.
 					# perhaps this should be part of the iterater.
@@ -55,12 +50,26 @@ class EditableMMNode():
 	def delete()			# deletes self from the tree and destroys self.
 	def clipboard_cut()		# cuts this node and puts it on the system's clipboard
 	def clipboard_copy()		# copies this node and puts it on the system's clipboard
+	def set_child(self, newchild, index):
+		pass
 
 	# Advanced editing
-	def leafnode_to_sequence(self):	# transforms this leafnode to a sequence containing self.
-		pass
-	def leafnode_to_par(self):	# transforms this leafnode to a par containing self.
-		pass
+	# Uncomment only when needed and implemented.
+	#def leafnode_to_sequence(self):	# transforms this leafnode to a sequence containing self.
+	#	pass
+	#def leafnode_to_par(self):	# transforms this leafnode to a par containing self.
+	#	pass
+	#def move_branch_to(self, newparent):
+	#	# Move this whole tree branch (from this node down) to a new location.
+	#	pass
+	#def 
+
+	# Used for the user interface
+	def get_commands()		# returns a list of mapped commands
+	def get_contextmenu()		# returns a context menu that can be used with the windowinterface.
+	def show_propertiesDialog()	# Pops up the attribute editor for this node.
+	def show_content_editor()	# Shows a system-dependant editor for that node.
+	def show_player()		# Pops up the player with this node.
 
 	# Viewing this node. Helper routines for widgets only.
 	def get_thumbnail(self, coords):	# returns an icon.
@@ -69,6 +78,10 @@ class EditableMMNode():
 		pass
 	def GetTimes(self):
 		return self.node.GetTimes() # this is a "callthrough".
+
+	# Traversing the tree
+	def get_children(self):		# Virtual function.
+		return []
 
 
 class EditableLeafMMNode(EditableNode):
@@ -85,16 +98,24 @@ class EditableInternalMMNode(EditableNode):
 	def clipboard_paste(self, index): # pastes from the clipboard to a certain position on this node.
 		pass
 
+	# Traversing the tree
+	def get_children(self):
+		return self.__node.children
 
-class EditableMMNodeIter:
-	# Used to iterate through the EditableMMNode tree.
-	def get_node()
-	def next()
-	def reset_to_root()
+
+#class EditableMMNodeIter:
+#	# Used to iterate through the EditableMMNode tree.
+#	def get_node()
+#	def next()
+#	def reset_to_root()
 	
 
 ######################################################################
 # Editing regions.
+
+create_MMChannel_editable(chan):
+	# Create a editable representation of chan.
+	pass
 
 class EditableRegion:
 	pass
