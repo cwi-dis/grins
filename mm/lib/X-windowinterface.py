@@ -94,8 +94,7 @@ class _Toplevel:
 
 	def newwindow(self, x, y, w, h, title):
 		if debug: print 'Toplevel.newwindow'+`x, y, w, h, title`
-		window = _Window().init(self, x, y, w, h, title)
-		window._parent_window = self
+		window = _Window(1, self, x, y, w, h, title)
 		return window
 
 	def pop(self):
@@ -112,9 +111,11 @@ class _Toplevel:
 		self._win_lock = lock
 
 class _Window:
-	def init(self, parent, x, y, w, h, title):
+	def __init__(self, is_toplevel, parent, x, y, w, h, title):
 		if debug: print '_Window.init() --> '+`self`
 		self._parent_window = parent
+		if not is_toplevel:
+			return
 		x = int(float(x)/_mscreenwidth*_screenwidth+0.5)
 		y = int(float(y)/_mscreenheight*_screenheight+0.5)
 		w = int(float(w)/_mscreenwidth*_screenwidth+0.5)
@@ -141,7 +142,7 @@ class _Window:
 		self._shell.Popup(0)
 		if _toplevel._win_lock:
 			_toplevel._win_lock.release()
-		return self._init2()
+		self._init2()
 
 	def _init2(self):
 		if debug: print `self`+'.init2()'
@@ -177,7 +178,7 @@ class _Window:
 		if _toplevel._win_lock:
 			_toplevel._win_lock.release()
 		self._closecallbacks = []
-		return self
+		return
 
 	def close(self):
 		if debug: print `self`+'.close()'
@@ -333,7 +334,7 @@ class _Window:
 			raise TypeError, 'arg count mismatch'
 		x, y, w, h = coordinates
 		x, y, w, h = self._convert_coordinates(x, y, w, h)
-		newwin = _Window()
+		newwin = _Window(0, self, 0, 0, 0, 0, 0)
 		newwin._sizes = coordinates
 		newwin._parent_window = self
 		if _toplevel._win_lock:
@@ -343,7 +344,8 @@ class _Window:
 			  {'width': w, 'height': h, 'x': x, 'y': y})
 		if _toplevel._win_lock:
 			_toplevel._win_lock.release()
-		return newwin._init2()
+		newwin._init2()
+		return newwin
 
 	def fgcolor(self, *color):
 		if debug: print `self`+'.fgcolor()'
