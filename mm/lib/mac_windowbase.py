@@ -58,6 +58,7 @@ _window_top_offset=18	# XXXX Is this always correct?
 # Assorted constants
 #
 error = 'windowinterface.error'
+Continue = 'Continue'
 FALSE, TRUE = 0, 1
 ReadMask, WriteMask = 1, 2
 
@@ -726,8 +727,12 @@ class _CommonWindow:
 		#
 		for ch in self._subwindows:
 			if Qd.PtInRect(where, ch.qdrect()):
-				ch._contentclick(down, where, event, shifted)
-				return
+				try:
+					ch._contentclick(down, where, event, shifted)
+				except Continue:
+					pass
+				else:
+					return
 		#
 		# It is really in our canvas. Do we have a low-level click handler?
 		#
