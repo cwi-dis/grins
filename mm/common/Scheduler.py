@@ -693,37 +693,6 @@ def GetAllChannels(node):
 	if overlap and node.GetType() == 'par':
 		errnode = (node, overlap)
 	return list, errnode
-# Choose an item from a bag, or None if the bag is empty
-# This is a modal dialog!
-# (Also note the similarity with NodeEdit._showmenu...)
-
-def choosebagitem(node):
-	indexname = MMAttrdefs.getattr(node, 'bag_index')
-	children = node.GetChildren()
-	list = []
-	for child in children:
-		name = MMAttrdefs.getattr(child, 'name')
-		if name == '':
-			name = '???'
-		elif name == indexname:
-			return child
-		type = child.GetType()
-		if type == 'bag':
-			colorindex = 60 # XXX BlockView.BAGCOLOR
-		elif type in leaftypes:
-			colorindex = 61 # XXX BlockView.LEAFCOLOR
-		else:
-			colorindex = None
-		list.append((name, colorindex))
-	list.append('Cancel')
-	prompt = 'Please select an item\nfrom the bag:'
-	import multchoice
-	choice = multchoice.multchoice(prompt, list, len(list) - 1)
-	if 0 <= choice < len(children):
-		return children[choice]
-	else:
-		return None
-
 
 #  Remove all arm_duration attributes (so they will be recalculated)
 
