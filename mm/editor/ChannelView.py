@@ -683,7 +683,19 @@ class ChannelView(ChannelViewDialog):
 		# clear all bandwidth box pointers
 		for obj in self.objects:
 			obj.bandwidthboxes = []
-		# XXXX loop over nodes and create continuous media boxes
+
+		if not self.bwstripobject:
+			return
+		# loop over nodes and create continuous media boxes
+		for obj in self.objects:
+			if not obj.__class__ is NodeBox:
+				continue
+			prearm, bandwidth, tarm, t0, t1 = \
+				obj.getbandwidthdata()
+			bwbox = self.bwstripobject.bwbox(t0, t1, bandwidth)
+			obj.bandwidthboxes = obj.bandwidthboxes + bwbox
+			
+				
 		# XXXX loop over channels/nodes and create prearm boxes
 		# XXXX compute starttime disregarding t0 prearm
 		
@@ -929,6 +941,7 @@ class GO(GOCommand):
 		self.selected = 0
 		self.ok = 0
 		self.is_node_object = 0
+		self.bandwidthboxes = []
 
 		# Submenus listing related mini-documents
 
@@ -1029,6 +1042,8 @@ class GO(GOCommand):
 						  title = baseobject.menutitle)
 			mother.setpopup(baseobject.popupmenu)
 			self.drawfocus()
+		if self.mother.bwstripobject:
+			self.mother.bwstripobject.setstripfocus([])
 
 	def ishit(self, x, y):
 		# Check whether the given mouse coordinates are in this object
@@ -1139,10 +1154,93 @@ class TimeScaleBox(GO):
 		        l, r = self.mother.maptimes(i, i)
 			d.drawline(ANCHORCOLOR, [(l, t), (l, b)])
 
+class BandwidthAccumulator:
+	# Accumulated used bandwidth. The datastructure used is a
+	# list of (starttime, bandwidth) tuples, sorted by _reverse_
+	# starttime.
+	#
+	
+	def __init__(self, max):
+		self.max = max
+		self.used = [(0, 0)]
+
+	def _findslot(self, t0):
+		"""Find the slot in which t0 falls"""
+		if t0 < 0:
+			raise 'Illegal t0', t0
+		#
+		# Search through the slots (ordered backward) until we
+		# find the one in which t0 lies.
+		#
+		for i in range(len(self.used)):
+			if self.used[i][0] <= t0:
+				break
+		return i
+
+	def _find(self, t0, t1):
+		"""Create a slot from t0 to t1, or possibly shorter,
+		return the slot index and the new t1"""
+		i = self._findslot(t0)
+		t_i, bandwidth = self.used[i]
+		# If the slot doesn't start exactly at t0 we split it
+		# in two.
+		if t_i < t0:
+			self.used[i:i] = [(t0, bandwidth)]
+		# Next, if the end time doesn't fit lower it. The higher
+		# layers will handle the trailing end by iterating.
+		if i > 0 and t1 > self.used[i-1][0]:
+			t1 = self.used[i-1][0]
+		# Finally, if the slot continues after t1 we create a new
+		# slot.
+		if i == 0 or t1 < self.used[i-1][0]:
+			self.used[i:i] = [(t1, bandwidth)]
+			i = i + 1
+		# Now slot i points to the (new) t0,t1 range.
+		return i, t1
+		
+	def _findbw(self, t0):
+		"""Return the available bandwidth at t0 and the time
+		t1 at which that value may change"""
+		i = self._findslot(t0)
+		bw = self.max - self.used[i][1]
+		if bw < 0:
+			bw = 0
+		if i == 0:
+			t1 = None
+		else:
+			t1 = self.used[i-1][0]
+		return bw, t1
+
+	def reserve(self, t0, t1, bandwidth):
+		boxes = []
+		print 'RESERVE', t0, t1, bandwidth
+		while 1:
+			i, cur_t1 = self._find(t0, t1)
+			t0_0, oldbw = self.used[i]
+			print 'FOUND', t0, cur_t1, oldbw, oldbw+bandwidth
+			boxes.append((t0, cur_t1, oldbw, oldbw+bandwidth, 1))
+			self.used[i] = (t0, oldbw+bandwidth)
+			t0 = cur_t1
+			if t0 >= t1:
+				break
+		return boxes
+		
 class BandwidthStripBox(GO):
+	BWSCOLORS = [	# Without focus
+			armcolors[ARM_ARMED],
+			armcolors[ARM_WAITSTOP]
+		] , [   # with focus
+			armcolors[ARM_ARMING],
+			armcolors[ARM_PLAYING]
+		]
 
 	def __init__(self, mother):
 		GO.__init__(self, mother, 'bandwidthstrip')
+		self.boxes = []
+		self.focusboxes = []
+		self.bandwidth = 28800
+		self.maxbw = 2*28800
+		self.usedbandwidth = BandwidthAccumulator(self.bandwidth)
 
 	def reshape(self):
 		self.top = self.mother.bandwidthstripborder + \
@@ -1161,12 +1259,8 @@ class BandwidthStripBox(GO):
 ##		f_width = d.strsize('x')[0]
 ##		d.fgcolor(BORDERCOLOR)
 		hmargin = d.strsize('x')[0] / 9
-##		vmargin = d.fontheight() / 4
-		vmargin = 0
 		l = l + hmargin
-		t = t + vmargin
 		r = r - hmargin
-		b = b - vmargin
 		# Draw the axes
 		d.drawline(BORDERCOLOR, [(l, t), (l, b), (r, b)])
 		bwpos = (t+b)/2 # XXXX
@@ -1176,9 +1270,39 @@ class BandwidthStripBox(GO):
 		str = "28k8"
 		d.centerstring(0, bwpos-f_height/2,
 			       self.mother.channelright, bwpos+f_height, str)
+		for box in self.boxes:
+			self._drawbox(box, 0)
+		for box in self.focusboxes:
+			self._drawbox(box, 1)
+			
 			       
 	def setstripfocus(self, focusboxes):
-		print "FOCUSBOXES", focusboxes
+		if self.ok:
+			for box in self.focusboxes:
+				self._drawbox(box, 0)
+		self.focusboxes = focusboxes
+		if self.ok:
+			for box in self.focusboxes:
+				self._drawbox(box, 1)
+
+	def _drawbox(self, (t0, t1, min, max, which), focus):
+		color = self.BWSCOLORS[focus][which]
+		d = self.mother.new_displist
+		l, r = self.mother.maptimes(t0, t1)
+		factor = (self.bottom-self.top)/float(self.maxbw)
+		if max > self.maxbw:
+			max = self.maxbw
+		t = self.bottom - (max*factor)
+		b = self.bottom - (min*factor)
+
+		d.drawfbox(color, (l, t, r-l, b-t))
+		print 'DBG', (l, t, r-l, b-t)
+
+	def bwbox(self, t0, t1, bandwidth):
+##		box = (t0, t1, 0, bandwidth, 1)
+		boxes = self.usedbandwidth.reserve(t0, t1, bandwidth)
+		self.boxes = self.boxes + boxes
+		return boxes
 
 # Class for Channel Objects
 
@@ -1414,7 +1538,6 @@ class NodeBox(GO, NodeBoxCommand):
 		self.menutitle = 'Node %s ops' % self.name
 		NodeBoxCommand.__init__(self, mother, node)
 
-
 	def selsyncarc(self, xnode, xside, delay, yside):
 		ynode = self.node
 		mother = self.mother
@@ -1603,6 +1726,12 @@ class NodeBox(GO, NodeBoxCommand):
 		# Draw the name, centered in the box
 		d.fgcolor(TEXTCOLOR)
 		d.centerstring(l, t, r, b, self.name)
+
+	def getbandwidthdata(self):
+		t0 = self.node.t0
+		t1 = self.node.t1
+		bw = t1*1000
+		return 40000, bw, t0-10, t0, t1  # DBG
 
 	# Menu stuff beyond what GO offers
 
