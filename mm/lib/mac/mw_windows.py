@@ -95,9 +95,12 @@ class _WindowGroup:
 		self._title = title
 		mw_globals.toplevel._changed_group_commands() # XXXX Is this good enough?
 		
-	def close(self):
-		mw_globals.toplevel._close_windowgroup(self)
+	def close(self, closegroup=1):
+		if closegroup:
+			mw_globals.toplevel._close_windowgroup(self)
 		del self._dict
+		del self._cmds_toggled
+		del self._dynamic_list_dict
 		
 	def pop(self):
 		# NOTE: This method should only be called for groups, not windows
@@ -238,6 +241,8 @@ class _CommonWindow:
 		del self._clickfunc
 		del self._wid
 		del self._accelerators
+		del self._menu
+		del self._popupmenu
 		
 	def _set_movie_active(self, isactive):
 		if isactive == self._active_movie:
@@ -450,7 +455,7 @@ class _CommonWindow:
 					r.colormap[i] = 255, 255, 255
 				r.colormap[r.transparent] = 0, 0, 0
 				try:
-					image = reader.read()
+					image = r.read()
 				except:
 					raise error, 'unspecified error reading image'
 				if scale != 1:
@@ -1546,6 +1551,8 @@ class _AdornmentsMixin:
 		del self._cmd_to_cntl
 		del self._cntl_to_cmd
 		del self._cntl_handlers
+		del self._keyboard_shortcuts
+		del self._doubleclick
 
 	def _add_control(self, cntl, callback, trackhandler=None):
 		self._cntl_handlers[cntl] = (callback, trackhandler)
@@ -1685,8 +1692,8 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		_ScrollMixin.close(self)
 		_AdornmentsMixin.close(self)
 		_CommonWindow.close(self)
+		_WindowGroup.close(self, closegroup=0)
 		self.arrowcache = {}
-		# XXXX Not WindowGroup?
 				
 	def settitle(self, title):
 		"""Set window title"""
@@ -1967,7 +1974,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 				data = dragref.GetFlavorData(refnum, 'URLD', datasize, 0)
 				# Data is "url\rdescription"
 				url = string.split(data, '\r')[0]
-				print 'url', url
+##				print 'url', url
 				try:
 					func, arg = self._eventhandlers[DropURL]
 				except KeyError:
@@ -2179,6 +2186,9 @@ class DialogWindow(_Window):
 	def __repr__(self):
 		return '<DialogWindow %s>'%self.title
 	
+##	def __del__(self):
+##		print 'del dialogwindow', self
+
 	def show(self):
 		if self.title:
 			self.settitle(self.title)
@@ -2197,14 +2207,30 @@ class DialogWindow(_Window):
 		return self._is_shown
 		
 	def close(self):
+		# Note: there's something funny here. We should not close the widgets before
+		# we close the window otherwise we get a crash later on in the program.
+		# This is a bit funny, as the documentation and the MacPython implementation
+		# suggests this could happen if we close the widgets _after_ the window.
+		# (This is due to MacOS's ill-thought-out shortcut that a dispose of a window
+		# will auto-dispose all controls in it).
+		# So, the code here appears to work, but there may be a problem lurking here
+		# somewhere.
+		# XXXX Note: apparently the above isn't true, so the code is back to original.
+##		print 'close dialogwin', self, self._parent
 		if not self._parent:
 			return
 		self.hide()
-		for w in self._widgetdict.values():
+		widgets_to_close = self._widgetdict.values()
+		for w in widgets_to_close:
 			w.close()
+		del widgets_to_close
 		del self._widgetdict
 		del self._item_to_cmd
 		del self._itemhandler
+		self._do_defaulthit = None
+		self._do_cancelhit = None
+		self.__default = None
+		self.__cancel = None
 		_Window.close(self)
 
 	def grabdone(self):
