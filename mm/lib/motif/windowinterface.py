@@ -139,21 +139,16 @@ class _Toplevel:
 		return _Window(self, x, y, w, h, title, 1, pixmap, units,
 			       adornments, canvassize, commandlist, resizable)
 
-##	__waiting = 0
+	_waiting = 0
 	def setwaiting(self):
-##		if self.__waiting:
-##			return
-##		self.__waiting = 1
+		self._waiting = 1
 		self.setcursor(_WAITING_CURSOR)
 
 	def setready(self):
-##		if not self.__waiting:
-##			return
-##		self.__waiting = 0
+		self._waiting = 0
 		self.setcursor(_READY_CURSOR)
 
 	def setcursor(self, cursor):
-		if cursor == 'watch' or cursor == '': return # XXXX
 		for win in self._subwindows:
 			win.setcursor(cursor)
 		if cursor != _WAITING_CURSOR and cursor != _READY_CURSOR:
@@ -1152,6 +1147,8 @@ class _Window(_AdornmentSupport):
 		if cursor == '' and self._curpos is not None and \
 		   apply(self._buttonregion.PointInRegion, self._curpos):
 			cursor = 'hand'
+		if toplevel._waiting:
+			cursor = 'watch'
 		_setcursor(self._shell, cursor)
 		self._curcursor = cursor
 
@@ -1835,6 +1832,7 @@ class _Window(_AdornmentSupport):
 				win._shell.SetSensitive(1)
 			elif hasattr(win, '_main'):
 				win._main.SetSensitive(1)
+		toplevel.setcursor('')
 		del self._rb_callback
 		del self._rb_dialog
 		del self._rb_dl
@@ -3125,6 +3123,8 @@ class showmessage:
 			cursor = self._cursor
 		else:
 			self._cursor = cursor
+		if toplevel._waiting:
+			cursor = 'watch'
 		_setcursor(self._main, cursor)
 
 	def is_closed(self):
@@ -3355,6 +3355,8 @@ class FileDialog:
 			cursor = self._cursor
 		else:
 			self._cursor = cursor
+		if toplevel._waiting:
+			cursor = 'watch'
 		_setcursor(self._main, cursor)
 
 	def is_closed(self):
@@ -3470,6 +3472,8 @@ class SelectionDialog:
 			cursor = self._cursor
 		else:
 			self._cursor = cursor
+		if toplevel._waiting:
+			cursor = 'watch'
 		_setcursor(self._main, cursor)
 
 	def is_closed(self):
@@ -3589,6 +3593,8 @@ class InputDialog:
 			cursor = self._cursor
 		else:
 			self._cursor = cursor
+		if toplevel._waiting:
+			cursor = 'watch'
 		_setcursor(self._main, cursor)
 
 	def close(self):
@@ -4971,6 +4977,8 @@ class Window(_WindowHelpers, _MenuSupport, _CommandSupport):
 			cursor = self._cursor
 		else:
 			self._cursor = cursor
+		if toplevel._waiting:
+			cursor = 'watch'
 		_setcursor(self._form, cursor)
 
 	def fix(self):
