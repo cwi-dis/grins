@@ -442,7 +442,7 @@ movie_player(self)
 		scale = PRIV->m_play.m_scale;
 		if (scale == 0) {
 			scale = PRIV->m_width / PRIV->m_play.m_width;
-			if (scale < PRIV->m_height / PRIV->m_play.m_height)
+			if (scale > PRIV->m_height / PRIV->m_play.m_height)
 				scale = PRIV->m_height / PRIV->m_play.m_height;
 			if (scale < 1)
 				scale = 1;
@@ -546,7 +546,7 @@ movie_resized(self)
 		scale = PRIV->m_play.m_scale;
 		if (scale == 0) {
 			scale = PRIV->m_width / PRIV->m_play.m_width;
-			if (scale < PRIV->m_height / PRIV->m_play.m_height)
+			if (scale > PRIV->m_height / PRIV->m_play.m_height)
 				scale = PRIV->m_height / PRIV->m_play.m_height;
 			if (scale < 1)
 				scale = 1;
