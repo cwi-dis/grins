@@ -67,4 +67,4 @@ class HierarchyViewDialog(ViewDialog):
 
 	def helpcall(self):
 		import Help
-		Help.givehelp('hierarchy')
+		Help.givehelp('Hierarchy')
