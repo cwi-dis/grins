@@ -182,6 +182,10 @@ class FINISH_ARC(_CommandBase):
 	help = 'Lock selection, create sync arc to next selected node'
 class THUMBNAIL(_CommandBase):
 	help = 'Toggle between showing and not showing thumbnails'
+class PLAYABLE(_CommandBase):
+	help = 'Toggle between showing and not showing whether nodes\nwill be played using current system attributes'
+class TIMESCALE(_CommandBase):
+	help = 'Toggle duration-dependent structure view'
 
 #
 # Channel view commands

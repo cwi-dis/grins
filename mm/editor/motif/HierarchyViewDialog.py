@@ -69,6 +69,8 @@ class HierarchyViewDialog(ViewDialog):
 				(ALL, 'Synchronize Selection', PUSHFOCUS),
 				(ALL, None),
 				(ALL, 'Image Thumbnails', THUMBNAIL, 't'),
+				(ALL, 'Show Playable', PLAYABLE, 't'),
+				(ALL, 'Show Durations', TIMESCALE, 't'),
 				]),
 			(ALL, 'Help', [
 				(ALL, 'Help...', HELP),

@@ -38,15 +38,13 @@ EXPCOLOR = settings.get('structure_expcolor')
 COLCOLOR = settings.get('structure_colcolor')
 ECBORDERCOLOR = settings.get('structure_ecbordercolor')
 
-def half(x): return x/2
-LEAFCOLOR_NOPLAY = tuple(map(half, LEAFCOLOR))
-RPCOLOR_NOPLAY = tuple(map(half, RPCOLOR))
-SLIDECOLOR_NOPLAY = tuple(map(half, SLIDECOLOR))
-BAGCOLOR_NOPLAY = tuple(map(half, BAGCOLOR))
-ALTCOLOR_NOPLAY = tuple(map(half, ALTCOLOR))
-PARCOLOR_NOPLAY = tuple(map(half, PARCOLOR))
-SEQCOLOR_NOPLAY = tuple(map(half, SEQCOLOR))
-del half
+LEAFCOLOR_NOPLAY = settings.get('structure_darkleaf')
+RPCOLOR_NOPLAY = settings.get('structure_darkrp')
+SLIDECOLOR_NOPLAY = settings.get('structure_darkslide')
+BAGCOLOR_NOPLAY = settings.get('structure_darkbag')
+ALTCOLOR_NOPLAY = settings.get('structure_darkalt')
+PARCOLOR_NOPLAY = settings.get('structure_darkpar')
+SEQCOLOR_NOPLAY = settings.get('structure_darkseq')
 
 # Focus color assignments (from light to dark gray)
 
@@ -103,6 +101,8 @@ class HierarchyView(HierarchyViewDialog):
 			PUSHFOCUS(callback = (self.focuscall, ())),
 
 			THUMBNAIL(callback = (self.thumbnailcall, ())),
+			PLAYABLE(callback = (self.playablecall, ())),
+			TIMESCALE(callback = (self.timescalecall, ())),
 
 			EXPANDALL(callback = (self.expandallcall, (1,))),
 			COLLAPSEALL(callback = (self.expandallcall, (0,))),
@@ -151,6 +151,8 @@ class HierarchyView(HierarchyViewDialog):
 		self.destroynode = None	# node to be destroyed later
 		self.expand_on_show = 1
 		self.thumbnails = 1
+		self.showplayability = 0
+		self.timescale = 0
 		from cmif import findfile
 		self.datadir = findfile('GRiNS-Icons')
 		HierarchyViewDialog.__init__(self)
@@ -845,7 +847,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.cleanup()
 		if root_expanded:
 			expandnode(self.root) # root always expanded
-		width, height = sizeboxes(self.root)
+		width, height = sizeboxes(self.root, self.timescale)
 		cwidth, cheight = window.getcanvassize(SIZEUNIT)
 		mwidth = mheight = 0 # until we have a way to get the min. size
 		if not hierarchy_minimum_sizes and \
@@ -887,6 +889,22 @@ class HierarchyView(HierarchyViewDialog):
 			self.new_displist.close()
 		self.new_displist = self.window.newdisplaylist(BGCOLOR)
 		self.draw()
+
+	def playablecall(self):
+		self.showplayability = not self.showplayability
+		self.settoggle(PLAYABLE, self.showplayability)
+		if self.new_displist:
+			self.new_displist.close()
+		self.new_displist = self.window.newdisplaylist(BGCOLOR)
+		self.draw()
+
+	def timescalecall(self):
+		self.timescale = not self.timescale
+		self.settoggle(TIMESCALE, self.timescale)
+		if self.new_displist:
+			self.new_displist.close()
+		self.new_displist = self.window.newdisplaylist(BGCOLOR)
+		self.recalc()
 
 	def playcall(self):
 		if self.focusobj: self.focusobj.playcall()
@@ -962,10 +980,9 @@ class HierarchyView(HierarchyViewDialog):
 
 
 # Recursive procedure to calculate geometry of boxes.
-def sizeboxes(node):
+def sizeboxes(node, structure_duration):
 	ntype = node.GetType()
 	minsize = MINSIZE
-	structure_duration = 0
 	if structure_duration and ntype in MMNode.leaftypes:
 		import Duration, math
 		dur = Duration.get(node)
@@ -997,7 +1014,7 @@ def sizeboxes(node):
 	width = height = 0
 	horizontal = (ntype in ('par', 'alt')) == DISPLAY_VERTICAL
 	for child in children:
-		w, h = sizeboxes(child)
+		w, h = sizeboxes(child, structure_duration)
 		if horizontal:
 			# children laid out horizontally
 			if h > height:
@@ -1115,7 +1132,7 @@ class Object:
 		l, t, r, b = self.box
 		node = self.node
 		nt = node.GetType()
-		willplay = node.WillPlay()
+		willplay = not self.mother.showplayability or node.WillPlay()
 		if nt in MMNode.leaftypes:
 			if node.GetChannelType() == 'RealPix':
 				if willplay:
