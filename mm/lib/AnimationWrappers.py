@@ -92,21 +92,24 @@ class AnimationDefaultWrapper:
 		# for use re-create animators
 		self.createAnimators(node)
 
-	def getRectAt(self):
+	def getRectAt(self, keyTime):
 		return self._domrect
 	
-	def getColorAt(self):
+	def getColorAt(self, keyTime):
 		self._domcolor
 		
-	def getPosAt(self):
+	def getPosAt(self, keyTime):
 		return self._domrect[:2]
 
-	def getWidthAt(self):
+	def getWidthAt(self, keyTime):
 		return self._domrect[2]
 
-	def getHeightAt(self):
+	def getHeightAt(self, keyTime):
 		return self._domrect[3]
 
+	def getKeyTimeList(self):
+		return [0, 1]
+	
 class AnimationParWrapper(AnimationDefaultWrapper):
 	def __init__(self):
 		self._animateMotion = None
@@ -125,7 +128,7 @@ class AnimationParWrapper(AnimationDefaultWrapper):
 		if debug:
 			print 'Create animator, animvals=',animvals
 		
-		times = []
+		self._times = times = []
 		self._animateMotionValues = animateMotionValues = []
 		self._animateWidthValues = animateWidthValues = []
 		self._animateHeightValues = animateHeightValues = []
@@ -196,7 +199,7 @@ class AnimationParWrapper(AnimationDefaultWrapper):
 			if keyTime >= 1:
 				return self._animateColorValues[-1]
 			return self._animateColor.getValue(keyTime)
-		return AnimationDefaultWrapper.getColorAt(self)
+		return AnimationDefaultWrapper.getColorAt(self, keyTime)
 
 	def getPosAt(self, keyTime):
 		if self._animateMotion is not None and len(self._animateMotionValues) > 0 and keyTime >= 0:
@@ -207,21 +210,24 @@ class AnimationParWrapper(AnimationDefaultWrapper):
 			left = round(int(left))
 			top = round(int(top))
 			return left, top
-		return AnimationDefaultWrapper.getPosAt(self)
+		return AnimationDefaultWrapper.getPosAt(self, keyTime)
 
 	def getWidthAt(self, keyTime):
 		if self._animateWidth is not None and len(self._animateWidthValues) > 0 and keyTime >= 0:
 			if keyTime >= 1:
 				return self._animateWidthValues[-1]
 			return round(int(self._animateWidth.getValue(keyTime)))
-		return AnimationDefaultWrapper.getWidthAt(self)
+		return AnimationDefaultWrapper.getWidthAt(self, keyTime)
 
 	def getHeightAt(self, keyTime):
 		if self._animateHeight is not None and len(self._animateHeightValues) > 0 and keyTime >= 0:
 			if keyTime >= 1:
 				return self._animateHeightValues[-1]
 			return round(int(self._animateHeight.getValue(keyTime)))
-		return AnimationDefaultWrapper.getHeightAt(self)
+		return AnimationDefaultWrapper.getHeightAt(self, keyTime)
+
+	def getKeyTimeList(self):
+		return self._times
 
 def getAnimationWrapper(animnode):
 	type = animnode.GetType()
