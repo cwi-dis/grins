@@ -35,6 +35,7 @@ CHANNELWIDTH = settings.get('temporal_channelwidth')
 NODESTART = settings.get('temporal_nodestart')
 NODEEND = settings.get('temporal_nodeend')
 CHANNELHEIGHT = settings.get('temporal_channelheight')
+CHANNELTREEINDENT = 8
 CCHAN = settings.get('temporal_channelcolor')
 CNODE = settings.get('temporal_nodecolor')
 CPAR = settings.get('temporal_parcolor')
@@ -508,15 +509,16 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 		self.nodewidgets = []		# A list of all node widgets in this channel.
 		self.w_fbox = self.graph.AddWidget(FBox(self.mother))
 		self.w_fbox.set_color((232,193,152))
-		self.w_outerbox = self.graph.AddWidget(Box(self.mother))
+#		self.w_outerbox = self.graph.AddWidget(Box(self.mother))
 		self.w_name = self.graph.AddWidget(Text(self.mother))
+		self.w_name.align('l')
 		self.w_name.set_text(self.name)
 
 	def destroy(self):
 #		for i in self.nodewidgets:
 #			i.destroy()	# nodes is a list of mmwidgets, not MMNodes.
 		self.nodewidgets = None
-		self.graph.DelWidget(self.w_outerbox)
+#		self.graph.DelWidget(self.w_outerbox)
 		self.graph.DelWidget(self.w_name)
 		self.graph.DelWidget(self.w_fbox)
 
@@ -540,9 +542,10 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 
 	def moveto(self, coords):
 		# Take my widgets with me.
+		l,t,r,b = coords
 		Widgets.Widget.moveto(self, coords)
-		self.w_outerbox.moveto(coords)
-		self.w_name.moveto(coords)
+#		self.w_outerbox.moveto(coords)
+		self.w_name.moveto((l+2+CHANNELTREEINDENT*self.depth, t, r, b))
 		self.w_fbox.moveto(coords)
 
 		mx, my, mw, mh = self.get_box()
