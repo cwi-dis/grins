@@ -845,7 +845,7 @@ class HierarchyView(HierarchyViewDialog):
 			if self.fixselection(nodes):
 				for n in nodes:
 					self.editmgr.delnode(n)
-					self.fixsyncarcs(self.root, n)
+				self.fixsyncarcs(self.root, nodes)
 				self.editmgr.commit()
 				if cut:
 					Clipboard.setclip('multinode', nodes)
@@ -854,7 +854,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.toplevel.setwaiting()
 			if self.fixselection([node]):
 				self.editmgr.delnode(node)
-				self.fixsyncarcs(self.root, node) #  TODO: shouldn't this be done in the editmanager? -mjvdg
+				self.fixsyncarcs(self.root, [node]) #  TODO: shouldn't this be done in the editmanager? -mjvdg
 				self.editmgr.commit()
 				if cut:
 					Clipboard.setclip('node', node)
@@ -1072,52 +1072,20 @@ class HierarchyView(HierarchyViewDialog):
 	# delete all syncarcs in the tree rooted at root that refer to node
 	# this works best if node is not part of the tree (so that it is not
 	# returned for "prev" and "syncbase" syncarcs).
-	def fixsyncarcs(self, root, node):
+	def fixsyncarcs(self, root, nodelist):
 		em = self.editmgr
 		beginlist = []
 		changed = 0
 		for arc in MMAttrdefs.getattr(root, 'beginlist'):
-			if arc.refnode() is node:
+			if isinstance(arc.srcnode, MMNode.MMNode) and arc.srcnode.GetRoot() in nodelist:
 				em.delsyncarc(root, 'beginlist', arc)
 		endlist = []
 		changed = 0
 		for arc in MMAttrdefs.getattr(root, 'endlist'):
-			if arc.refnode() is node:
+			if isinstance(arc.srcnode, MMNode.MMNode) and arc.srcnode.GetRoot() in nodelist:
 				em.delsyncarc(root, 'endlist', arc)
 		for c in root.GetChildren():
-			self.fixsyncarcs(c, node)
-
-##	def deletefocus(self, cut):
-##		# Deletes the node with focus.
-##		node = self.focusnode
-##		if not node or node is self.root:
-##			windowinterface.beep()
-##			return
-##		em = self.editmgr
-##		if not em.transaction():
-##			return
-##		self.toplevel.setwaiting()
-##		parent = node.GetParent()
-##		siblings = parent.GetChildren()
-##		nf = siblings.index(node)
-##		if nf < len(siblings)-1:
-##			self.select_node(siblings[nf+1])
-##		elif nf > 0:
-##			self.select_node(siblings[nf-1])
-##		else:
-##			self.select_node(parent)
-		
-##		em.delnode(node)
-##		self.fixsyncarcs(parent.GetRoot(), node)
-		
-##		if cut:
-##			t, n = Clipboard.getclip()
-####			if t == 'node' and node is not None:
-####				self.destroynode = n
-##			Clipboard.setclip('node', node)
-####		else:
-####			self.destroynode = node
-##		em.commit()
+			self.fixsyncarcs(c, nodelist)
 
 	def copyfocus(self):
 		# Copies the node with focus to the clipboard.
