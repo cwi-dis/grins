@@ -307,60 +307,23 @@ class SMILWriter:
 				chtype = 'unknown'
 			mtype = mediatype(chtype)
 
+		attrlist = ['<%s'%mtype]
 		imm_href = None
 		if type == 'imm':
-			if chtype == 'label':
-				sep = '</p>\n<p>'
+			if chtype == 'html':
+				suff = '.html'
 			else:
-				sep = '\n'
-			fname = self.smiltempfile(x)
+				suff = '.txt'
+				if chtype in ('label', 'text'):
+					attrlist.append('type="text/plain"')
+			fname = self.smiltempfile(x, suff)
 			fp = open(fname, 'w')
-			data = string.join(x.GetValues(), sep)
+			data = string.join(x.GetValues(), '\n')
 			if data[-1:] != '\n':
 				data = data + '\n'
-			if chtype == 'text':
-				data = string.join(string.split(data, '\n\n'),
-						   '</p>\n<p>')
-			if chtype in ('text', 'label'):
-				data = '<p>%s</p>\n' % data
 			fp.write(data)
 			fp.close()
 			imm_href = urllib.pathname2url(fname)
-		elif type == 'ext':
-			if chtype == 'label':
-				try:
-					fp = open(MMAttrdefs.getattr(x, 'file'))
-				except IOError:
-					pass
-				else:
-					data = fp.readlines()
-					fp.close()
-					if data and data[-1] == '':
-						del data[-1]
-					fname = self.smiltempfile(x)
-					fp = open(fname, 'w')
-					fp.write('<p>')
-					fp.write(string.join(data, '</p>\n<p>'))
-					fp.write('</p>\n')
-					imm_href = urllib.pathname2url(fname)
-			if chtype == 'text':
-				try:
-					fp = open(MMAttrdefs.getattr(x, 'file'))
-				except IOError:
-					pass
-				else:
-					data = fp.read()
-					fp.close()
-					data = string.join(string.split(data,
-									'\n\n'),
-							   '</p>\n<p>')
-					fname = self.smiltempfile(x)
-					fp = open(fname, 'w')
-					fp.write('<p>')
-					fp.write(data)
-					fp.write('</p>\n')
-					imm_href = urllib.pathname2url(fname)
-		attrlist = ['<%s'%mtype]
 		for name, func in smil_attrs:
 			if name == 'href' and imm_href:
 				value = imm_href
@@ -481,12 +444,12 @@ class SMILWriter:
 		print '** undefined anchor', href, aid
 		return AnchorDefs.ATYPE_DEST, []
 
-	def smiltempfile(self, node):
+	def smiltempfile(self, node, suffix = '.html'):
 		"""Return temporary file name for node"""
 		nodename = self.uid2name[node.GetUID()]
 		if not os.path.exists(self.tmpdirname):
 			os.mkdir(self.tmpdirname)
-		filename = nodename + '.html'
+		filename = nodename + suffix
 		return os.path.join(self.tmpdirname, filename)
 
 

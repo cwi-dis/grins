@@ -61,27 +61,32 @@ class SMILParser(xmllib.XMLParser):
 			yside = TL
 		name, counter, delay = _parsetime(val)
 		if name is None:
-			# relative to parent/previous
-			parent = node.GetParent()
-			ptype = parent.GetType()
-			if ptype == 'seq':
-				xnode = None
-				for n in parent.GetChildren():
-					if n is node:
-						break
-					xnode = n
+			# relative to parent/previous/start
+			if yside == TL:
+				# XXXX wrong if there's also a begin attr
+				xside = HD # rel to start of node
+				xnode = node
+			else:
+				parent = node.GetParent()
+				ptype = parent.GetType()
+				if ptype == 'seq':
+					xnode = None
+					for n in parent.GetChildren():
+						if n is node:
+							break
+						xnode = n
+					else:
+						self.error('node not in parent')
+					if xnode is None:
+						# first, relative to parent
+						xside = HD # rel to start of parent
+						xnode = parent
+					else:
+						# not first, relative to previous
+						xside = TL # rel to end of previous
 				else:
-					self.error('node not in parent')
-				if xnode is None:
-					# first, relative to parent
 					xside = HD # rel to start of parent
 					xnode = parent
-				else:
-					# not first, relative to previous
-					xside = TL # rel to end of previous
-			else:
-				xside = HD # rel to start of parent
-				xnode = parent
 			synctolist.append((xnode.GetUID(), xside, delay, yside))
 		else:
 			# relative to other node
@@ -140,18 +145,20 @@ class SMILParser(xmllib.XMLParser):
 	def NewNode(self, mediatype, attributes):
 		if not self.__container:
 			self.error('node not in container')
+		subtype = None
 		if attributes.has_key('type'):
-			mtype = string.split(attributes['type'], '/')[0]
-			if mediatype is not None and mtype != mediatype:
+			mtype = string.split(attributes['type'], '/')
+			if mediatype is not None and mtype[0] != mediatype:
 				self.warning("type attribute doesn't match element")
-			mediatype = mtype
+			mediatype = mtype[0]
+			subtype = mtype[1]
 		if mediatype is None:
 			self.error('node of unknown type')
 		node = self.__context.newnode('ext')
 		node.attrdict['transparent'] = -1
 		self.AddAttrs(node, attributes, mediatype)
 		self.__container._addchild(node)
-		node.__mediatype = mediatype
+		node.__mediatype = mediatype, subtype
 		try:
 			channel = attributes['loc']
 		except KeyError:
@@ -279,7 +286,7 @@ class SMILParser(xmllib.XMLParser):
 	def FixChannel(self, node):
 		if node.GetType() != 'ext':
 			return
-		mediatype = node.__mediatype
+		mediatype, subtype = node.__mediatype
 		del node.__mediatype
 		try:
 			channel = node.__channel
@@ -293,7 +300,10 @@ class SMILParser(xmllib.XMLParser):
 		elif mediatype == 'video':
 			mtype = 'video'
 		elif mediatype == 'text':
-			mtype = 'html'
+			if subtype == 'plain':
+				mtype = 'text'
+			else:
+				mtype = 'html'
 		elif mediatype == 'cmif_cmif':
 			mtype = 'cmif'
 		elif mediatype == 'cmif_shell':
