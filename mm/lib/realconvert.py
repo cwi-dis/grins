@@ -323,7 +323,12 @@ def _win_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 
 	# prepare filter graph
 	b = dshow.CreateGraphBuilder()
-	b.RenderFile(fin)
+	try:
+		b.RenderFile(fin)
+	except dshow.error, arg:
+		del b
+		return
+
 	renderer=b.FindFilterByName('Video Renderer')
 	enumpins=renderer.EnumPins()
 	pin=enumpins.Next()
