@@ -29,11 +29,11 @@ import win32con, win32api, win32ui
 from Widgets import *
 from Widgets import _Widget,_MenuSupport
 
-from win32modules import cmifex,cmifex2
+from win32modules import cmifex2
 from appcon import *
 import win32mu
 
-toplevel= None
+toplevel= None # set by AppTopLevel
 
 
 ##################################################################
@@ -59,6 +59,7 @@ class _WindowHelpers:
 			     options)
 	def PulldownMenu(self, menulist, **options):
 		return apply(PulldownMenu, (self, menulist), options)
+
 	def Selection(self, listprompt, itemprompt, itemlist, initial, sel_cb,
 		      **options):
 		return apply(Selection,
@@ -150,27 +151,28 @@ class Window(_WindowHelpers,_MenuSupport):
 		_MenuSupport.__init__(self)
 
 		par = None
-		self._par_hWnd = None
+		self._par_wnd = None
 
-		self._hWnd = cmifex2.CreateDialogbox(" ", self._par_hWnd, 0, 0, 400, 400, 0, grab)
-		cmifex2.SetCaption(self._hWnd,self._title)
+		self._wnd = cmifex2.CreateDialogbox(" ", self._par_wnd, 0, 0, 400, 400, 0, grab)
+		cmifex2.SetCaption(self._wnd,self._title)
 		toplevel._subwindows.append(self)
 		self._window_type = SINGLE
 		self._align = ''
-		self._hWnd.HookMessage(self._closeclb, win32con.WM_CLOSE)
+		self._wnd.HookMessage(self._closeclb, win32con.WM_CLOSE)
 		if grab:
-			self._hWnd.HookMessage(self._focusclb, win32con.WM_KILLFOCUS)
+			self._wnd.HookMessage(self._focusclb, win32con.WM_KILLFOCUS)
+		print self._wnd # delay needed but why? 
 
 	def _focusclb(self, params):
 		if params[2] == 0:
 			res = 0
 		else:
-			res = self._hWnd.IsChild(params[2])
+			res = self._wnd.IsChild(params[2])
 		if res != 1:
-			self._hWnd.SetFocus()
+			self._wnd.SetFocus()
 	
 	def _closeclb(self, params):
-			self._hWnd.HookMessage(None, win32con.WM_KILLFOCUS)
+			self._wnd.HookMessage(None, win32con.WM_KILLFOCUS)
 		#global _in_create_box
 		#if _in_create_box==self:
 		#	_in_create_box = None
@@ -211,7 +213,7 @@ class Window(_WindowHelpers,_MenuSupport):
 
 		try:
 			#form = self._form
-			form = self._hWnd
+			form = self._wnd
 		except AttributeError:
 			return
 		try:
@@ -220,7 +222,7 @@ class Window(_WindowHelpers,_MenuSupport):
 			shell = None
 		toplevel._subwindows.remove(self)
 	#	del self._form
-	#	del self._hWnd
+	#	del self._wnd
 	#	form.DestroyWidget()
 	#	del form
 		if shell:
@@ -237,14 +239,14 @@ class Window(_WindowHelpers,_MenuSupport):
 				#cmifex2.DestroyWindow(form)
 		form= None
 		del form
-		del self._hWnd
+		del self._wnd
 
 	def is_closed(self):
 		#return not hasattr(self, '_form')
 		return not self._showing
 
 	def setcursor(self, cursor):
-		win32mu._win_setcursor(self._hWnd, cursor)
+		win32mu.SetCursor(cursor)
 
 	def fix(self):
 		for w in self._fixkids:
@@ -306,7 +308,7 @@ class Window(_WindowHelpers,_MenuSupport):
 			w._form.ShowWindow(win32con.SW_SHOW)
 		self._not_shown = []
 		self._shown = []
-		self._hWnd.ShowWindow(win32con.SW_SHOW)
+		self._wnd.ShowWindow(win32con.SW_SHOW)
 		#for w in self._fixkids:
 		#	if w.is_showing():
 		#		w.show()
@@ -320,8 +322,8 @@ class Window(_WindowHelpers,_MenuSupport):
 		#except AttributeError:
 		#	pass
 		self._showing = FALSE
-		if self._hWnd:
-			self._hWnd.ShowWindow(win32con.SW_HIDE)
+		if self._wnd:
+			self._wnd.ShowWindow(win32con.SW_HIDE)
 
 	def is_showing(self):
 		return self._showing
@@ -334,8 +336,8 @@ class Window(_WindowHelpers,_MenuSupport):
 			#except AttributeError:
 			#	self._form.dialogTitle = title
 			self._title = title
-			self._hWnd.SetWindowText(title)
-			#cmifex2.SetCaption(self._hWnd, title)
+			self._wnd.SetWindowText(title)
+			#cmifex2.SetCaption(self._wnd, title)
 
 	def getgeometry(self):
 		if self.is_closed():
@@ -344,8 +346,8 @@ class Window(_WindowHelpers,_MenuSupport):
 #		val = self._form.GetValues(['width', 'height'])
 #		w = val['width']
 #		h = val['height']
-		x, y, w1, h1 = self._hWnd.GetWindowPlacement()[4]
-		x1, y1, w, h = self._hWnd.GetClientRect()
+		x, y, w1, h1 = self._wnd.GetWindowPlacement()[4]
+		x1, y1, w, h = self._wnd.GetClientRect()
 		return x / toplevel._hmm2pxl, y / toplevel._vmm2pxl, \
 		       w / toplevel._hmm2pxl, h / toplevel._vmm2pxl
 #		return self._sizes
@@ -381,10 +383,10 @@ class _SubWindow(_Widget, _WindowHelpers):
 		
 		#form = parent._form.CreateManagedWidget(name, Xm.Form, attrs)
 		
-		form = cmifex2.CreateContainerbox(parent._hWnd,left,top,width,height)
+		form = cmifex2.CreateContainerbox(parent._wnd,left,top,width,height)
 		
-		if not hasattr(self, '_hWnd'):
-			self._hWnd = form
+		if not hasattr(self, '_wnd'):
+			self._wnd = form
 		
 		_WindowHelpers.__init__(self)
 		_Widget.__init__(self, parent, form)
@@ -419,7 +421,6 @@ class _SubWindow(_Widget, _WindowHelpers):
 ##################################################################
 class _AltSubWindow(_SubWindow):
 	def __init__(self, parent, name, **options):
-		print "windowinterface._AltSubWindow",name
 		self._parent = parent
 		attrib = {}
 		self._attachments(attrib, options)
@@ -455,10 +456,10 @@ class _AlternateSubWindow(_Widget):
 
 		#form = parent._form.CreateManagedWidget(name, Xm.Form, attrs)
 
-		form = cmifex2.CreateContainerbox(parent._hWnd,left,top,width,height)
+		form = cmifex2.CreateContainerbox(parent._wnd,left,top,width,height)
 		
-		if not hasattr(self, '_hWnd'):
-			self._hWnd = form
+		if not hasattr(self, '_wnd'):
+			self._wnd = form
 		
 		self._windows = []
 		_Widget.__init__(self, parent, form)

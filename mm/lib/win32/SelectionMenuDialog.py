@@ -1,7 +1,7 @@
 __version__ = "$Id$"
 
 import win32ui, win32con, win32api
-from win32modules import cmifex, cmifex2
+from win32modules import cmifex2
 
 class SelectionMenuDialog:
 	def __init__(self, listprompt, selectionprompt, itemlist, default, parent=None):
@@ -12,7 +12,6 @@ class SelectionMenuDialog:
 			attrs['listLabelString'] = listprompt
 		if selectionprompt:
 			attrs['selectionLabelString'] = selectionprompt
-		print attrs
 	
 		self._menuselection = None
 

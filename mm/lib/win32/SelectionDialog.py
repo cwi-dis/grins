@@ -1,17 +1,11 @@
 __version__ = "$Id$"
 
 import win32ui, win32con, win32api
-from win32modules import cmifex, cmifex2
+from win32modules import cmifex2
 
 class SelectionDialog:
 	def __init__(self, listprompt, selectionprompt, itemlist, default, parent=None):
 		self._controls = []
-	#	attrs = {'dialogStyle': Xmd.DIALOG_FULL_APPLICATION_MODAL,
-	#		 'colormap': toplevel._default_colormap,
-	#		 'visual': toplevel._default_visual,
-	#		 'depth': toplevel._default_visual.depth,
-	#		 'textString': default,
-	#		 'autoUnmanage': FALSE}
 		attrs = {'textString': default}
 
 		if hasattr(self, 'NomatchCallback'):
@@ -20,21 +14,6 @@ class SelectionDialog:
 			attrs['listLabelString'] = listprompt
 		if selectionprompt:
 			attrs['selectionLabelString'] = selectionprompt
-		print attrs
-	#	form = toplevel._main.CreateSelectionDialog('selectDialog',
-	#						    attrs)
-	#	self._form = form
-	#	form.AddCallback('okCallback', self._ok_callback, None)
-	#	form.AddCallback('cancelCallback', self._cancel_callback, None)
-	#	if hasattr(self, 'NomatchCallback'):
-	#		form.AddCallback('noMatchCallback',
-	#				 self._nomatch_callback, None)
-	#	for b in [Xmd.DIALOG_APPLY_BUTTON, Xmd.DIALOG_HELP_BUTTON]:
-	#		form.SelectionBoxGetChild(b).UnmanageChild()
-	#	list = form.SelectionBoxGetChild(Xmd.DIALOG_LIST)
-	#	list = []
-	#	list.ListAddItems(itemlist, 1)
-	#	form.ManageChild()
 		
 		self._nexty = 0
 
@@ -126,7 +105,6 @@ class SelectionDialog:
 	
 	
 	def _ok_callback(self, params):
-		print params
 		if self.is_closed():
 			return
 		str = cmifex2.GetText(self._combo)

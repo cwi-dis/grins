@@ -35,9 +35,6 @@ class FileDialog:
 		self.cb_ok = cb_ok
 		self.cb_cancel = cb_cancel
 		
-		#print 'PARAMETERS ARE:----------------'
-		print 'prompt-directory-filter-file'
-		print prompt, "  ",  directory, "  ", filter, " ", file
 		
 		self._form = None
 		
@@ -63,13 +60,9 @@ class FileDialog:
 		directory = nturl2path.url2pathname(directory)
 		file = nturl2path.url2pathname(file)
 		if existing == OPEN_FILE:
-			#id, flname, directory, fltr = cmifex2.CreateFileOpenDlg(prompt,file,directory,fltr)
-			print 'GIVEN TO F DIALOG: ', file, '---', filter
-			#id, flname, fltr =  Htmlex.FDlg(prompt, file, filter)
 			win32ui.MessageBox("windowinterface.py OpenFile")
 			id, flname, fltr = cmifex2.CreateFileOpenDlg(prompt,file,filter)
 			directory, name = os.path.split(flname)
-			print id, flname, directory, fltr
 		#if type == SAVE_CMIF:
 		else:
 			id, flname, fltr = cmifex2.CreateFileSaveDlg(prompt,file,filter)
@@ -102,7 +95,6 @@ class FileDialog:
 		return self._form is None
 
 	def _cancel_callback(self):
-		print "Cancel button pressed!!!"
 		self.close()
 
 
@@ -132,7 +124,6 @@ class FileDialog:
 		if (self.cb_ok!=None):
 			ret = self.cb_ok(filename)
 			if ret:
-				print "ret-->", ret;
 				if type(ret) is StringType:
 					win32ui.MessageBox(ret, "Warning !", win32con.MB_OK)
 				return

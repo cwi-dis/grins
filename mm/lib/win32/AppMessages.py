@@ -10,59 +10,15 @@ __version__ = "$Id$"
 
 
 import win32ui, win32con, win32api
-from win32modules import cmifex, cmifex2
+from win32modules import cmifex2
+FALSE, TRUE = 0, 1
 
 _end_loop = '_end_loop'	# exception for ending a loop
 
 class showmessage:
 	def __init__(self, text, mtype = 'message', grab = 1, callback = None,
 		     cancelCallback = None, name = 'information',
-		     title = 'message'):
-		#if grab:
-		#		dialogStyle = Xmd.DIALOG_FULL_APPLICATION_MODAL
-		#		w = grab
-		#		if type(w) is IntType:
-		#			w = toplevel
-		#		while 1:
-		#			if hasattr(w, '_shell'):
-		#				w = w._shell
-		#				break
-		#			if hasattr(w, '_main'):
-		#				w = w._main
-		#				break
-		#			w = w._parent
-		#else:
-		#	dialogStyle = Xmd.DIALOG_MODELESS
-		#	w = toplevel._main
-		#if mtype == 'error':
-		#	func = w.CreateErrorDialog
-		#elif mtype == 'warning':
-		#	func = w.CreateWarningDialog
-		#elif mtype == 'information':
-		#	func = w.CreateInformationDialog
-		#elif mtype == 'question':
-		#	func = w.CreateQuestionDialog
-		#else:
-		#	func = w.CreateMessageDialog
-		self._grab = grab
-		#w = func(name, {'messageString': text,
-		#		'title': title,
-		#		'dialogStyle': dialogStyle,
-		#		'resizePolicy': Xmd.RESIZE_NONE,
-		#		'visual': toplevel._default_visual,
-		#		'depth': toplevel._default_visual.depth,
-		#		'colormap': toplevel._default_colormap})
-		#w.MessageBoxGetChild(Xmd.DIALOG_HELP_BUTTON).UnmanageChild()
-		#if mtype == 'question' or cancelCallback:
-		#	w.AddCallback('cancelCallback',
-		#			  self._callback, cancelCallback)
-		#else:
-		#	w.MessageBoxGetChild(Xmd.DIALOG_CANCEL_BUTTON).UnmanageChild()
-		#w.AddCallback('okCallback', self._callback, callback)
-		#w.AddCallback('destroyCallback', self._destroy, None)
-		#w.ManageChild()
-		#self._widget = w
-		
+		     title = 'message',parent=None):		
 		res = 0
 		style = " "
 		
@@ -87,27 +43,6 @@ class showmessage:
 		if grab:
 			res = cmifex2.MesBox(text,title,style)
 		else:
-			#ls = string.splitfields(text ,'\n')
-			#max = 0;
-			#for line in ls:
-			#	length = len(line)
-			#	if length>max:
-			#		max = length
-			#height = (len(ls)+1)*15
-			#width = max*13
-			
-			#dwidth = width + 2*win32api.GetSystemMetrics(win32con.SM_CXBORDER)
-			#dheight = height + 3*win32api.GetSystemMetrics(win32con.SM_CYBORDER) + win32api.GetSystemMetrics(win32con.SM_CYCAPTION) + 70
-			#dx = (win32api.GetSystemMetrics(win32con.SM_CXSCREEN)-dwidth)/2
-			#dy = (win32api.GetSystemMetrics(win32con.SM_CYSCREEN)-dheight)/2
-
-			#print title
-			#print dx, dy
-			#w = cmifex2.CreateDialogbox(title,0,dx,dy,dwidth,dheight,1)
-			#mes = cmifex2.CreateStatic("",w,0,0,width,height,'center')
-			#cmifex2.SetFont(mes,"Arial",10)
-			#cmifex2.SetCaption(mes,text)
-			
 			if mtype == 'question' or cancelCallback:
 				st = win32con.MB_OKCANCEL
 			else:
@@ -183,7 +118,7 @@ class _Question:
 #def showquestion(text):
 #	return _Question(text).run()
 
-def showquestion(text, parent = None):
+def showquestion(text):
 	return _Question(text).answer
 
 
@@ -227,7 +162,7 @@ class _MultChoice:
 				#	raise _end_loop
 				return
 
-def multchoice(prompt, list, defindex, parent = None):
+def multchoice(prompt, list, defindex):
 	return _MultChoice(prompt, list, defindex).answer
 
 

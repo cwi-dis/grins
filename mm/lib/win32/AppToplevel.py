@@ -1,36 +1,18 @@
 __version__ = "$Id$"
 
 import win32ui, win32con, win32api
-from win32modules import cmifex,cmifex2,timerex
+import sysmetrics
 
-import AppWnds
+import win32mu,AppWnds
 
 toplevel = None
 
 ReadMask, WriteMask = 1, 2
-[SINGLE, HTM, TEXT, MPEG] = range(4)
 FALSE, TRUE = 0, 1
+SINGLE, HTM, TEXT, MPEG = 0, 1, 2, 3
 UNIT_MM, UNIT_SCREEN, UNIT_PXL = 0, 1, 2
 WM_MAINLOOP = 200
-
-#module sysmet:
-
-def GetSystemMetrics():
-	cxframe=win32api.GetSystemMetrics(win32con.SM_CXFRAME)
-	cyframe=win32api.GetSystemMetrics(win32con.SM_CYFRAME)
-	cxborder=win32api.GetSystemMetrics(win32con.SM_CXBORDER)
-	cyborder=win32api.GetSystemMetrics(win32con.SM_CYBORDER)
-	cycaption=win32api.GetSystemMetrics(win32con.SM_CYCAPTION)
-
-def GetDeviceCaps():
-	wnd=GetMainWnd()
-	dc = win32ui.GetDC();
-	width=dc.GetDeviceCaps(win32con.HORZRES)
-	height=dc.GetDeviceCaps(win32con.VERTRES)
-	dpix=dc.GetDeviceCaps(win32con.LOGPIXELSX)
-	dpiy=dc.GetDeviceCaps(win32con.LOGPIXELSY)
-	depth=dc.GetDeviceCaps(win32con.BITSPIXEL)
-	wnd.ReleaseDC(dc);
+ID_MAIN_TIMER=100
 
 
 # The _Toplevel class represents the root of all windows.  It is never
@@ -45,28 +27,27 @@ class _Toplevel:
 			except KeyError:
 				pass
 		raise AttributeError, attr
+
 	def __init__(self):
 		self._initialized = 0
-
-		self.xborder = win32api.GetSystemMetrics(win32con.SM_CXFRAME) + 2*win32api.GetSystemMetrics(win32con.SM_CXBORDER)
-		self.yborder = win32api.GetSystemMetrics(win32con.SM_CYFRAME) + 2*win32api.GetSystemMetrics(win32con.SM_CYBORDER)
-		self.caption = win32api.GetSystemMetrics(win32con.SM_CYCAPTION)
-	
-		self._screenwidth = cmifex.GetScreenWidth()
-		self._screenheight = cmifex.GetScreenHeight()
-		self._dpi_x = cmifex.GetScreenXDPI()
-		self._dpi_y = cmifex.GetScreenYDPI()
+		self.xborder = sysmetrics.cxframe+2*sysmetrics.cxborder
+		self.yborder = sysmetrics.cyframe + 2* sysmetrics.cyborder
+		self.caption = sysmetrics.cycaption
+		self._scr_width_pxl = sysmetrics.scr_width_pxl
+		self._scr_height_pxl = sysmetrics.scr_height_pxl
+		self._dpi_x = sysmetrics.dpi_x
+		self._dpi_y = sysmetrics.dpi_y
 		
-		self._mscreenwidth = (float(self._screenwidth)*25.4) / self._dpi_x
-		self._mscreenheight = (float(self._screenheight)*25.4) / self._dpi_y
-		self._hmm2pxl = float(self._screenwidth) / self._mscreenwidth
-		self._vmm2pxl = float(self._screenheight) / self._mscreenheight
+		self._scr_width_mm = sysmetrics.scr_width_mm
+		self._scr_height_mm = sysmetrics.scr_height_mm
+		self._pixel_per_mm_x = sysmetrics.pixel_per_mm_x
+		self._pixel_per_mm_y = sysmetrics.pixel_per_mm_y
 		self._hfactor = self._vfactor = 1.000
 
-		self._timerWnd = timerex.CreateTimerWindow()
+		self._timerWnd=AppWnds.MfcOsWnd()
+		self._timerWnd.create()
 		self._timerWnd.HookMessage(self._timer_callback, win32con.WM_TIMER)
-		self._timerWnd.HookMessage(self._message_callback, WM_MAINLOOP)
-				
+		self._timerWnd.HookMessage(self._message_callback,WM_MAINLOOP)
 	
 	def _do_init(self):
 		if self._initialized:
@@ -108,42 +89,52 @@ class _Toplevel:
 			w._forcePaint()
 
 	def close(self):
-		self._timerWnd.MessageBox("Toplevel.Close!", "Debug", win32con.MB_OK)
+		from win32modules import imageex
+		imageex.__del__()
 		for func, args in self._closecallbacks:
 			apply(func, args)
 		for win in self._subwindows[:]:
 			win.close()
 		self._closecallbacks = []
 		self._subwindows = []
-		self.__init__()		# clears all lists
 
 	def addclosecallback(self, func, args):
 		self._closecallbacks.append(func, args)
 
-	# in the following calls UNITS are ignored
-	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, units = UNIT_MM, pixmap = 0, menubar = None, canvassize = None):
-		global toplevel
-		if toplevel == None:
-			toplevel = self
-		return	AppWnds.Window(self, x, y, w, h, title, visible_channel, type_channel, 0, pixmap, 0, units, menubar, canvassize)
+	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
+		      type_channel = SINGLE, pixmap = 1, units = UNIT_MM,
+		      menubar = None, canvassize = None):
+		if canvassize==None:
+			return AppWnds._Window(self, x, y, w, h, title,visible_channel,type_channel,
+				pixmap, units, menubar, canvassize)
+		else:
+			return AppWnds._WindowFrm(self, x, y, w, h, title,visible_channel,type_channel,
+				pixmap, units, menubar, canvassize)
 
-
-	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, units = UNIT_MM, pixmap = 0, menubar = None, canvassize = None):
-		pixmap=0 # enforce until problem resolved
-		return AppWnds.Window(self, x, y, w, h, title, visible_channel, type_channel, 1, pixmap, 0, units, menubar, canvassize)
+	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE,
+			type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
+			menubar = None, canvassize = None):
+		if canvassize==None:
+			return AppWnds._Window(self, x, y, w, h, title,visible_channel,type_channel,
+				pixmap, units, menubar, canvassize)
+		else:
+			return AppWnds._WindowFrm(self, x, y, w, h, title,visible_channel,type_channel,
+				pixmap, units, menubar, canvassize)
 
 	def getsize(self):
-		return toplevel._mscreenwidth, toplevel._mscreenheight
+		"""size of the screen in mm"""
+		return toplevel._scr_width_mm, toplevel._scr_height_mm
+
+	def getscreensize(self):
+		"""Return screen size in pixels"""
+		return self._scr_width_pxl, self._scr_height_pxl
+
+	def getscreendepth(self):
+		"""Return screen depth"""
+		return sysmetrics.depth
 
 	def setcursor(self, cursor):
-		for win in self._subwindows:
-			if (win._window_type == HTM):
-				if (cursor ==''):
-					Htmlex.EndWaitCursor(win._hWnd)
-				else:
-					Htmlex.BeginWaitCursor(win._hWnd)
-			else:
-				win.setcursor(cursor)
+		win32mu.SetCursor(cursor)
 		self._cursor = cursor
 
 	def pop(self):
@@ -163,7 +154,6 @@ class _Toplevel:
 		self._inputWnd.MessageBox("Hide Toplevel", "Debug", win32con.MB_OK)
 		for w in self._subwindows:		
 			w.hide()
-
 
 	def usewindowlock(self, lock):
 		pass
@@ -193,18 +183,17 @@ class _Toplevel:
 				if sec <= 0:
 					del self._timers[0]
 					func, args = cb
-					#print 'timer applied'
 					apply(func, args)
 				else:
 					self._timers[0] = sec, cb, tid
 					break
 				ifdlist = self._ifddict.keys()
 				ofdlist = self._ofddict.keys()			
-		self.timerid = timerex.SetTimer(int(0.001 * 1000))
+		self.timerid = self._timerWnd.SetTimer(ID_MAIN_TIMER,int(0.001 * 1000))
 
 	
 	def _timer_callback(self, params):
-		timerex.KillTimer(self.timerid)		
+		self._timerWnd.KillTimer(self.timerid)		
 		self.serve_events()
 		
 
@@ -218,7 +207,6 @@ class _Toplevel:
 
 	# timer interface
 	def settimer(self, sec, cb):
-		#print 'timer set'
 		import time
 		t0 = time.time()
 		if self._timers:
@@ -239,7 +227,6 @@ class _Toplevel:
 		return self._timer_id
 
 	def canceltimer(self, id):
-		#print 'timer canceled'
 		for i in range(len(self._timers)):
 			try:
 				t, cb, tid = self._timers[i]
@@ -255,22 +242,6 @@ class _Toplevel:
 	# file descriptor interface
 	def select_setcallback(self, fd, func, args, mask = ReadMask):
 		pass
-		#if type(fd) is not type(0):
-		#	fd = fd.fileno()
-		#try:
-		#	del self._ifddict[fd]
-		#except KeyError:
-		#	pass
-		#try:
-		#	del self._ofddict[fd]
-		#except KeyError:
-		#	pass
-		#if mask & ReadMask:
-		#	if func:
-		#		self._ifddict[fd] = func, args
-		#if mask & WriteMask:
-		#	if func:
-		#		self._ofddict[fd] = func, args
 
 
 	
@@ -307,8 +278,6 @@ class _Toplevel:
 						color = c
 				color = self._colormap.AllocColor(color[1],
 							color[2], color[3])
-				#print "Warning: colormap full, using 'close' color",
-				#print 'original:',`r,g,b`,'new:',`int(color[1]/65535.0*255.0),int(color[2]/65535.0*255.0),int(color[3]/65535.0*255.0)`
 			# cache the result
 			self._cm_cache[`r,g,b`] = color[0]
 			return color[0]
@@ -320,28 +289,16 @@ class _Toplevel:
 		    (b << self._blue_shift)
 		return c
 
-	def _setcursor(self, cursor = ''):
-		for win in self._subwindows:
-			if (win._window_type == HTM):
-				if (cursor ==''):
-					Htmlex.EndWaitCursor(win._hWnd)
-				else:
-					Htmlex.BeginWaitCursor(win._hWnd)
-			else:
-				win.setcursor(cursor)
 	
-
-	def getscreensize(self):
-		"""Return screen size in pixels"""
-		return self._screenwidth, self._screenheight
-
-	def getscreendepth(self):
-		"""Return screen depth"""
-		return 8 #self._visual.depth
-
 
 toplevel = _Toplevel()
 AppWnds.toplevel=toplevel
 
+import cmifwnd
+cmifwnd.toplevel=toplevel
+
 import AppForms
 AppForms.toplevel=toplevel
+
+import InputDialog
+InputDialog.toplevel= toplevel
