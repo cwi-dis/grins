@@ -14,13 +14,14 @@ class SMILCssResolver:
 		self.nodeGeomChangedList = []
 		self.rawAttributesChangedList = []
 		self.documentContext = documentContext
+		self.mm2css = {} # map: mmobj -> cssobj
 
-	def newRootNode(self):
-		node = RootNode(self)
+	def newRootNode(self, mmobj=None):
+		node = RootNode(self, mmobj)
 		self.rootNode = node
+		self.mm2css[mmobj] = node
 		self.nodeGeomChangedList = []
 		self.rawAttributesChangedList = []
-
 		return node
 
 	def updateAll(self):
@@ -62,9 +63,9 @@ class SMILCssResolver:
 		for listener, attrname, value in self.rawAttributesChangedList:
 			listener(attrname, value)
 
-	def newRegion(self):
-		node = RegionNode(self)
-
+	def newRegion(self, mmobj=None):
+		node = RegionNode(self, mmobj)
+		self.mm2css[mmobj] = node
 		return node
 
 	def link(self, node, container):
@@ -78,9 +79,8 @@ class SMILCssResolver:
 			return
 		node.unlink()
 		
-	def newMedia(self, defaultSizeHandler):
-		node = MediaNode(self, defaultSizeHandler)
-
+	def newMedia(self, defaultSizeHandler, mmobj=None):
+		node = MediaNode(self, defaultSizeHandler, mmobj)
 		return node
 
 	def removeRegion(self, region, container):
@@ -109,23 +109,21 @@ class SMILCssResolver:
 		if node.rawValuesListener != None:
 			self.rawAttributesChangedList.append((node.rawValuesListener, attrname, value))
 
-	def clone(self):
-		# XXX: to be implemented
-		# for the animation mosule we need 
-		# a clone so that we don't change DOM
-		return self
+	def getCssObj(self, mmobj):
+		return self.mm2css.get(mmobj)
 
 # ###############################################################################
 # Region hierarchy
 # ###############################################################################
 
 class Node:
-	def __init__(self, context):
+	def __init__(self, context, mmobj=None):
 		self.children = []
 		self.container = None
 		self.context = context
 		self.pxValuesListener = None
 		self.rawValuesListener = None
+		self.mmobj = mmobj
 
 		self.left = None
 		self.width = None
@@ -258,9 +256,18 @@ class Node:
 		self.pxleft, self.pxwidth, self.pxtop, self.pxheight = self._getMediaSpaceArea()
 		self._onGeomChanged()
 
+	def __dump(self):
+		print self.__class__.__name__, self.mmobj, self.getPxGeom()
+		for child in self.children:
+			child.__dump()
+	
+	def dump(self):
+		print '------------------------------'
+		self.__dump()
+
 class RegionNode(Node):
-	def __init__(self, context):
-		Node.__init__(self, context)
+	def __init__(self, context, mmobj=None):
+		Node.__init__(self, context, mmobj)
 
 	def _initialUpdate(self):
 		self.pxleft, self.pxwidth = self._resolveCSS2Rule(self.left, self.width, self.right, self.container.pxwidth)
@@ -760,10 +767,12 @@ class RegionNode(Node):
 				minHeight = height
 		
 		return minWidth, minHeight
+	
+
 			
 class RootNode(RegionNode):
-	def __init__(self, context):
-		Node.__init__(self, context)
+	def __init__(self, context, mmobj=None):
+		Node.__init__(self, context, mmobj)
 
 	def copyRawAttrs(self, srcNode):
 		self.pxwidth = srcNode.pxwidth
@@ -809,8 +818,8 @@ class RootNode(RegionNode):
 		self.isInit = 1
 		
 class MediaNode(Node):
-	def __init__(self, context, defaultSizeHandler):
-		Node.__init__(self, context)
+	def __init__(self, context, defaultSizeHandler, mmobj=None):
+		Node.__init__(self, context, mmobj)
 		self.alignHandler = None
 		self.intrinsicWidth = None
 		self.intrinsicHeight = None
@@ -1193,3 +1202,4 @@ class MediaNode(Node):
 
 	def _getPxGeom(self):
 		return (self.pxleft, self.pxtop, self.pxwidth, self.pxheight)
+ 
