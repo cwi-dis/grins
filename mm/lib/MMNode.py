@@ -260,6 +260,7 @@ class MMNodeContext:
 		if not 0 <= i <= len(self.channelnames):
 			raise CheckError, 'addchannel: invalid position'
 		c = MMChannel(self, name, type)
+		c._fillChannel()
 		self.channeldict[name] = c
 		self.channelnames.insert(i, name)
 		self.channels.insert(i, c)
@@ -677,6 +678,14 @@ class MMChannel:
 	def __repr__(self):
 		return '<MMChannel instance, name=' + `self.name` + '>'
 
+	def _fillChannel(self):
+		# fill the region with the requiered default attribute values
+		if self.attrdict.get('type') == 'layout':
+			self.attrdict['transparent'] = 1
+			self.attrdict['center'] = 0
+			self.attrdict['drawbox'] = 0
+			self.attrdict['z'] = -1
+		
 	def newCssId(self, isRoot = 0):
 		if not isRoot:
 			self._cssId = self.context.cssResolver.newRegion()
