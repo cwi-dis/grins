@@ -942,6 +942,9 @@ class SMIL:
 								continue
 							for __ns in ATTRIBUTES[__at]:
 								__atd[__sns + __ns+' '+__at] = __vl
+					else:
+						# make sure all attributes are represented in ATTRIBUTES
+						ATTRIBUTES[__at] = []
 					for __ns in ELEMENTS.keys():
 						if ELEMENTS[__ns].has_key(__el) and __at in ELEMENTS[__ns][__el]:
 							for __sns in SMIL2ns:
