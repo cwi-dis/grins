@@ -26,7 +26,6 @@ import features
 import compatibility
 import Widgets
 import StructureWidgets
-import TimeMapper
 import Help
 import Clipboard
 import AttrEdit
@@ -52,7 +51,6 @@ class HierarchyView(HierarchyViewDialog):
 
 		self.thumbnails = settings.get('structure_thumbnails')
 		self.showplayability = 1
-		self.timescale = None
 		self.usetimestripview = 0
 		if features.H_TIMESTRIP in features.feature_set:
 			if self._timestripconform():
@@ -387,13 +385,6 @@ class HierarchyView(HierarchyViewDialog):
 		if self.focusnode.GetParent():
 			self.focusnode.GetParent().ExpandParents()
 
-##		t0, t1, t2, download, begindelay = self.focusnode.GetTimes('bandwidth')
-		# XXX Very expensive...
-		if self.timescale in ('focus', 'cfocus'):
-			self.need_resize = 1
-			self.need_redraw = 1
-##			self.draw()
-		
 
 	##############################################################################
 	#
@@ -472,58 +463,53 @@ class HierarchyView(HierarchyViewDialog):
 	def resize_scene(self):
 		# Set the size of the first widget.
 		self.need_resize = 0
-		# Easiest to create the timemapper always
-		x,y = self.scene_graph.get_minsize()
+		x,y = self.scene_graph.recalc_minsize()
 		self.mcanvassize = x,y
 
 		if x < 1.0 or y < 1.0:
 			print "Error: unconverted relative coordinates found. HierarchyView:497"
-		if self.timescale:
-			if self.timescale == 'global':
-				timeroot = self.scene_graph
-			elif self.focusnode is not None:
-				timeroot = self.focusnode.views['struct_view']
-			else:
-				timeroot = None
-				self.timemapper = None
-			# Remove old timing info
-			self.scene_graph.removedependencies()
-			if timeroot is not None:
-				self.timemapper = TimeMapper.TimeMapper(self.timescale=='cfocus')
-				# Collect the minimal pixel distance for pairs of time values,
-				# and the minimum number of pixels needed to represent single time
-				# values
-				timeroot.adddependencies()
-				timeroot.addcollisions(None, None)
-				# Now put in an extra dependency so the node for which we are going to
-				# display time has enough room to the left of it to cater for the non-timed
-				# nodes to be displayed there
-				timeroot_minpos = timeroot.get_minpos()
-				t0, t1, t2, dummy, dummy = timeroot.node.GetTimes('bandwidth')
-				if t0 == 0:
-					self.timemapper.addcollision(0, timeroot_minpos)
-				else:
-					self.timemapper.adddependency(0, t0, timeroot_minpos)
-				print 'Minpos', t0, timeroot_minpos
-				# Work out the equations
-				self.timemapper.calculate()
-				# Calculate how many extra pixels this has cost us
-				tr_width = self.timemapper.time2pixel(t2, align='right') - \
-						self.timemapper.time2pixel(t0)
-				tr_extrawidth = tr_width - timeroot.get_minsize()[0]
-				print 'Normal', timeroot.get_minsize()[0], 'Timed', tr_width, "Extra", tr_extrawidth
-				if tr_extrawidth > 0:
-					x = x + tr_extrawidth
-				#x = tr_width #DBG
-		else:
-			self.timemapper = None
+##		if self.timescale:
+##			if self.timescale == 'global':
+##				timeroot = self.scene_graph
+##			elif self.focusnode is not None:
+##				timeroot = self.focusnode.views['struct_view']
+##			else:
+##				timeroot = None
+##			# Remove old timing info
+##			self.scene_graph.removedependencies()
+##			if timeroot is not None:
+##				# Collect the minimal pixel distance for pairs of time values,
+##				# and the minimum number of pixels needed to represent single time
+##				# values
+##				timemapper = TimeMapper.TimeMapper()
+
+##				timeroot.adddependencies(timemapper)
+##				timeroot.addcollisions(None, None, timemapper)
+##				# Now put in an extra dependency so the node for which we are going to
+##				# display time has enough room to the left of it to cater for the non-timed
+##				# nodes to be displayed there
+##				timeroot_minpos = timeroot.get_minpos()
+##				t0, t1, t2, dummy, dummy = timeroot.node.GetTimes('bandwidth')
+##				if t0 == 0:
+##					timemapper.addcollision(0, timeroot_minpos)
+##				else:
+##					timemapper.adddependency(0, t0, timeroot_minpos)
+##				print 'Minpos', t0, timeroot_minpos
+##				# Work out the equations
+##				timemapper.calculate(self.timescale == 'cfocus')
+##				# Calculate how many extra pixels this has cost us
+##				tr_width = timemapper.time2pixel(t2, align='right') - \
+##						timemapper.time2pixel(t0)
+##				tr_extrawidth = tr_width - timeroot.get_minsize()[0]
+##				print 'Normal', timeroot.get_minsize()[0], 'Timed', tr_width, "Extra", tr_extrawidth
+##				if tr_extrawidth > 0:
+##					x = x + tr_extrawidth
+##				#x = tr_width #DBG
 
 		self.scene_graph.moveto((0,0,x,y))
 		self.scene_graph.recalc()
 		self.mcanvassize = x,y
 		self.window.setcanvassize((self.sizes.SIZEUNIT, x, y)) # Causes a redraw() event.
-
-		self.timemapper = None
 
 	def draw_scene(self):
 		# Only draw the scene, nothing else.
@@ -1611,29 +1597,21 @@ class HierarchyView(HierarchyViewDialog):
 
 	def timescalecall(self, which):
 		self.toplevel.setwaiting()
-		if self.timescale == which:
-			self.timescale = None
-			self.settoggle(TIMESCALE, 0)
-			self.settoggle(LOCALTIMESCALE, 0)
-			self.settoggle(CORRECTLOCALTIMESCALE, 0)
-		elif which == 'global':
-			self.timescale = 'global'
-			self.settoggle(TIMESCALE, 1)
-			self.settoggle(LOCALTIMESCALE, 0)
-			self.settoggle(CORRECTLOCALTIMESCALE, 0)
+		if which == 'global':
+			which = 'focus'
+			node = self.root
 		elif which == 'focus':
-			self.timescale = 'focus'
-			self.settoggle(TIMESCALE, 0)
-			self.settoggle(LOCALTIMESCALE, 1)
-			self.settoggle(CORRECTLOCALTIMESCALE, 0)
+			node = self.selected_widget.node
 		else:
-			self.timescale = 'cfocus'
-			self.settoggle(TIMESCALE, 0)
-			self.settoggle(LOCALTIMESCALE, 0)
-			self.settoggle(CORRECTLOCALTIMESCALE, 1)
+			node = self.selected_widget.node
+		if node.showtime == which:
+			node.showtime = 0
+		else:
+			node.showtime = which
 		self.refresh_scene_graph()
 		self.need_resize = 1
 		self.need_redraw = 1
+##		import trace; trace.set_trace('StructureWidgets')
 		self.draw()
 
 	def bandwidthcall(self):

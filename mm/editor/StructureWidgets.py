@@ -8,6 +8,7 @@ import MMurl, MMAttrdefs, MMmimetypes, MMNode
 import features
 import os, windowinterface
 import settings
+import TimeMapper
 from AppDefaults import *
 
 TIMELINE_AT_TOP = 1
@@ -80,13 +81,15 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		Widgets.Widget.__init__(self, mother)
 		self.node = node			   # : MMNode
 		assert isinstance(node, MMNode.MMNode)
-		self.name = MMAttrdefs.getattr(self.node, 'name')
-		self.node.set_infoicon = self.set_infoicon
+		self.name = MMAttrdefs.getattr(node, 'name')
+		node.set_infoicon = self.set_infoicon
 		# self.node.views['struct_view'] is initialized in the subclasses,
 		# because not all inheritors of this class should set it
 		assert self.mother is not None
 		self.is_timed = 0
 		self.old_pos = None	# used for recalc optimisations.
+
+		self.timemapper = None
 
 		# Holds little icons..
 		self.iconbox = IconBox(self, self.mother)
@@ -100,6 +103,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			if self.isvisible(): # terribily inefficient
 				node.set_armedmode = self.set_armedmode
 			self.set_armedmode(node.armedmode, redraw = 0)
+		self.timeline = None
 
 	def __repr__(self):
 		return '<%s instance, name="%s", id=%X>' % (self.__class__.__name__, self.name, id(self))
@@ -183,22 +187,25 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if self.iconbox is not None:
 			self.iconbox.destroy()
 			self.iconbox = None
+		if self.timeline is not None:
+			self.timeline.destroy()
+			self.timeline = None
 		if self.node is not None:
 			del self.node.views['struct_view']
 			del self.node.set_infoicon
 			self.node = None
 		self.set_infoicon = None
 
-	def adddependencies(self):
+	def adddependencies(self, timemapper):
 		self.is_timed = 1
 		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
 		w, h = self.get_minsize()
 		if t0 != t1:
-			self.mother.timemapper.adddependency(t0, t1, w)
+			timemapper.adddependency(t0, t1, w)
 		if t2 != t1 and t0 != t2:
-			self.mother.timemapper.adddependency(t0, t2, w)
-		
-	def addcollisions(self, mastert0, mastertend):
+			timemapper.adddependency(t0, t2, w)
+
+	def addcollisions(self, mastert0, mastertend, timemapper):
 		self.is_timed = 1
 		edge = sizes_notime.HEDGSIZE
 		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
@@ -206,7 +213,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if download+begindelay:
 			# Slightly special case. We register a collision on t0, and then continue
 			# computing with t0 minus the delays
-			self.mother.timemapper.addcollision(t0, edge)
+			timemapper.addcollision(t0, edge)
 			t0 = t0 - (download+begindelay)
 		ledge = redge = edge
 		if t0 == tend:
@@ -216,18 +223,48 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			elif t0 == mastertend:
 				redge = redge + w
 			else:
-				self.mother.timemapper.addcollision(t0, w+2*edge)
+				timemapper.addcollision(t0, w+2*edge)
 		if t0 != mastert0:
-			self.mother.timemapper.addcollision(t0, ledge)
+			timemapper.addcollision(t0, ledge)
 			ledge = 0
 		if tend != mastertend:
-			self.mother.timemapper.addcollision(tend, redge)
+			timemapper.addcollision(tend, redge)
 			redge = 0
 		return ledge, redge
-		
+
+	def recalc(self, timemapper = None):
+		Widgets.Widget.recalc(self)
+
 	def removedependencies(self):
 		self.is_timed = 0
-		
+
+	def init_timemapper(self):
+		self.adddependencies()
+		self.addcollisions(None, None)
+
+		# Now put in an extra dependency so the node for which we are going to
+		# display time has enough room to the left of it to cater for the non-timed
+		# nodes to be displayed there
+		timeroot_minpos = self.get_minpos()
+		t0, t1, t2, dummy, dummy = self.node.GetTimes('bandwidth')
+		if t0 == 0:
+			self.timemapper.addcollision(0, timeroot_minpos)
+		else:
+			self.timemapper.adddependency(0, t0, timeroot_minpos)
+		print 'Minpos', t0, timeroot_minpos
+		# Work out the equations
+		self.timemapper.calculate(self.node.showtime == 'cfocus')
+		# Calculate how many extra pixels this has cost us
+		tr_width = self.timemapper.time2pixel(t2, align='right') - \
+				self.timemapper.time2pixel(t0)
+		tr_extrawidth = tr_width - self.get_minsize()[0]
+		print 'Normal', self.get_minsize()[0], 'Timed', tr_width, "Extra", tr_extrawidth
+		if tr_extrawidth > 0:
+			l,t,r,b = self.pos_abs
+			self.moveto((l,t,r+tr_extrawidth,b))
+		#x = tr_width #DBG
+		self.timeline = TimelineWidget(self, self.mother)
+
 	def get_minpos(self):
 		# Returns the leftmost position where this node can be placed
 		pnode = self.node.GetParent()
@@ -239,6 +276,10 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 	def moveto(self, newpos):
 		self.old_pos = self.pos_abs
 		Widgets.Widget.moveto(self, newpos)
+
+	def get_minsize(self):
+		# recalc_minsize must have been called before
+		return self.boxsize
 	#   
 	# These a fillers to make this behave like the old 'Object' class.
 	#
@@ -414,7 +455,7 @@ class MMWidgetDecoration(Widgets.Widget):
 	# actually the MMWidget.
 	def __init__(self, mmwidget, mother):
 		assert isinstance(mmwidget, MMNodeWidget)
-		
+
 		self.mmwidget = mmwidget
 		Widgets.Widget.__init__(self, mother)
 	def destroy(self):
@@ -424,7 +465,9 @@ class MMWidgetDecoration(Widgets.Widget):
 		return self.mmwidget
 	def get_node(self):
 		return self.mmwidget.get_node()
-
+	def get_minsize(self):
+		# recalc_minsize must have been called before
+		return self.boxsize
 
 #
 # The StructureObjWidget represents any node which has children,
@@ -452,17 +495,10 @@ class StructureObjWidget(MMNodeWidget):
 		self.parent_widget = None # This is the parent node. Used for recalcing optimisations.
 		for i in self.node.children:
 			bob = create_MMNode_widget(i, mother)
-			if bob is None:
-				pass
-			else:
+			if bob is not None:
 				bob.parent_widget = self
 				self.children.append(bob)
 		self.node.views['struct_view'] = self 
-		if mother.timescale == 'global' and not node.parent:
-			# If we are showing timescale globally we do it on the root
-			self.timeline = TimelineWidget(self, mother)
-		else:
-			self.timeline = None
 		self.need_recalc = 1	# used to determine if this node or any of it's children need recalculating.
 		self.dont_draw_children = 0
 
@@ -479,22 +515,8 @@ class StructureObjWidget(MMNodeWidget):
 			self.collapsebutton = None
 		if self.parent_widget is not None:
 			self.parent_widget = None
-		if self.timeline is not None:
-			self.timeline.destroy()
-			self.timeline = None
 		MMNodeWidget.destroy(self)
 
-	def select(self):
-		if self.mother.timescale in ('focus', 'cfocus'):
-			self.timeline = TimelineWidget(self, self.mother)
-		MMNodeWidget.select(self)
-		
-	def unselect(self):
-		if self.mother.timescale in ('focus', 'cfocus') and self.timeline:
-			self.timeline.destroy()
-			self.timeline = None
-		MMNodeWidget.unselect(self)
-		
 	def collapse_levels(self, levels):
 		if levels < 1:
 			self.collapse()
@@ -542,7 +564,7 @@ class StructureObjWidget(MMNodeWidget):
 			self.uncollapse()
 		else:
 			self.collapse()
-			
+
 	def iscollapsed(self):
 		return self.node.collapsed
 
@@ -561,7 +583,7 @@ class StructureObjWidget(MMNodeWidget):
 		# Oh, how I love recursive methods :-). Nice. -mjvdg.
 		#if self.collapsebutton and self.collapsebutton.is_hit(pos):
 		#	return self.collapsebutton
-		
+
 		if self.is_hit(pos):
 			if self.iscollapsed():
 				return self
@@ -594,12 +616,14 @@ class StructureObjWidget(MMNodeWidget):
 	def get_collapse_icon(self):
 		return self.collapsebutton
 
-	def recalc(self):
+	def recalc(self, timemapper = None):
 		# One optimisation that could be done is to have a dirty flag
 		# for recalculating the relative sizes of all the nodes.
 		# If the node sizes don't need to be changed, then don't
 		# change them.
-		# For the meanwhile, this is too difficult. 
+		# For the meanwhile, this is too difficult.
+		if self.timemapper is not None:
+			timemapper = self.timemapper
 		self.add_event_icons()
 		l,t,r,b = self.pos_abs
 		if self.collapsebutton is not None:
@@ -652,7 +676,7 @@ class StructureObjWidget(MMNodeWidget):
 			self.iconbox.moveto((l,t+2,r,b))
 			self.iconbox.draw(displist)
 			l = l + self.iconbox.get_minsize()[0]
-		
+
 		#displist.centerstring(l,t,r,b, self.name)
 		displist.centerstring(l,t,r,b, self.name)
 		if self.collapsebutton is not None:
@@ -661,17 +685,12 @@ class StructureObjWidget(MMNodeWidget):
 			self.playicon.draw(displist)
 		if self.timeline is not None:
 			self.timeline.draw(displist)
-			
-		displist.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())			
 
-	def adddependencies(self):
-		MMNodeWidget.adddependencies(self)
-		for ch in self.children:
-			ch.adddependencies()
+		displist.draw3dbox(FOCUSLEFT, FOCUSTOP, FOCUSRIGHT, FOCUSBOTTOM, self.get_box())
 
-	def addcollisions(self, mastert0, mastertend):
+	def addcollisions(self, mastert0, mastertend, timemapper):
 		for ch in self.children:
-			ch.addcollisions(None, None)
+			ch.addcollisions(None, None, timemapper)
 		return 0, 0
 
 	def removedependencies(self):
@@ -714,48 +733,77 @@ class HorizontalWidget(StructureObjWidget):
 				return i
 		return -1
 
-	def get_minsize(self, ignoreboxes=0):
+	def recalc_minsize(self, timemapper = None):
 		# Everything here calculated in pixels.
+		if timemapper is None and self.node.showtime:
+			self.timemapper = timemapper = TimeMapper.TimeMapper()
+			self.timeline = TimelineWidget(self, self.mother)
+		elif self.timeline is not None:
+			self.timeline.destroy()
+			self.timeline = None
+
+		iw, ih = self.iconbox.recalc_minsize()
 		if self.iscollapsed():
 			boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
-			return boxsize, boxsize
-		
+			self.boxsize = boxsize, boxsize
+			if timemapper is not None:
+				self.adddependencies(timemapper)
+				if self.timemapper is not None:
+					self.addcollisions(None, None, timemapper)
+					timemapper.calculate(self.node.showtime == 'cfocus')
+##			print 'recalc_minsize',self.node,self.boxsize
+			return self.boxsize
+
 		xgap = sizes_notime.GAPSIZE
-		
+
 		if not self.children and self.channelbox is None:
 			boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
 			min_width, min_height = boxsize, boxsize
 			if self.dropbox is not None and not ignoreboxes:
-				min_width = min_width  + xgap + self.dropbox.get_minsize()[0]
-			return min_width, min_height
-		
+				min_width = min_width  + xgap + self.dropbox.recalc_minsize()[0]
+			self.boxsize = min_width, min_height
+			if timemapper is not None:
+				self.adddependencies(timemapper)
+				if self.timemapper is not None:
+					self.addcollisions(None, None, timemapper)
+					timemapper.calculate(self.node.showtime == 'cfocus')
+##			print 'recalc_minsize',self.node,self.boxsize
+			return self.boxsize
+
 		mw=0
 		mh=0
 		if self.channelbox is not None and not ignoreboxes:
-			mw, mh = self.channelbox.get_minsize()
+			mw, mh = self.channelbox.recalc_minsize()
 			mw = mw + sizes_notime.GAPSIZE
-			
+
 		for i in self.children:
 			pushover = 0
-			w,h = i.get_minsize()
+			w,h = i.recalc_minsize(timemapper)
 			if h > mh: mh=h
 			mw = mw + w + pushover
-			
+
 		mw = mw + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.HEDGSIZE
-		
+
 		if self.dropbox is not None and not ignoreboxes:
-			mw = mw + self.dropbox.get_minsize()[0] + sizes_notime.GAPSIZE
-			
+			mw = mw + self.dropbox.recalc_minsize()[0] + sizes_notime.GAPSIZE
+
 		mh = mh + 2*sizes_notime.VEDGSIZE
 		# Add the title box.
 		mh = mh + sizes_notime.TITLESIZE
 		if self.timeline is not None:
-			w, h = self.timeline.get_minsize()
+			w, h = self.timeline.recalc_minsize()
 			if w > mw:
 				mw = w
 			mh = mh + h
-		return mw, mh
-		
+		self.boxsize = mw, mh
+		if timemapper is not None:
+			self.adddependencies(timemapper)
+			if self.timemapper is not None:
+				self.addcollisions(None, None, timemapper)
+				timemapper.calculate(self.node.showtime == 'cfocus')
+##		print 'recalc_minsize',self.node,self.boxsize
+		return self.boxsize
+
 	def get_child_relminpos(self, child):
 		minpos = sizes_notime.HEDGSIZE
 		for ch in self.children:
@@ -764,14 +812,16 @@ class HorizontalWidget(StructureObjWidget):
 			minpos = minpos + ch.get_minsize()[0] + sizes_notime.GAPSIZE
 		raise 'Unknown child node'
 
-	def recalc(self):
+	def recalc(self, timemapper = None):
 		# Recalculate the position of all the contained boxes.
 		# Algorithm: Iterate through each of the MMNodes children's views and find their minsizes.
 		# Apportion free space equally, based on the size of self.
 		# TODO: This does not test for maxheight()
-		
+		if self.timemapper is not None:
+			timemapper = self.timemapper
+
 		if self.iscollapsed():
-			StructureObjWidget.recalc(self)
+			StructureObjWidget.recalc(self, timemapper)
 			return
 
 		l, t, r, b = self.pos_abs
@@ -779,32 +829,32 @@ class HorizontalWidget(StructureObjWidget):
 			tl_w, tl_h = self.timeline.get_minsize()
 			b = b - tl_h
 		min_width, min_height = self.get_minsize()
-		
+
 		free_width = ((r-l) - min_width)
-		
+
 		# Add the title	 free
-		
+
 		t = t + sizes_notime.TITLESIZE
 		min_height = min_height - sizes_notime.TITLESIZE
-		
+
 		# Add the timeline, if it is at the top
 		if self.timeline is not None and TIMELINE_AT_TOP:
 			tl_w, tl_h = self.timeline.get_minsize()
-			self.timeline.moveto((l, t, r, t+tl_h))
+			self.timeline.moveto((l, t, r, t+tl_h), timemapper)
 			t = t + tl_h
 			min_height = min_height - tl_h
-			
+
 		# Always set free_width to zero. No way we can do this if a node halfway can
 		# suddenly be timed and therefore take up lots of space.
 		free_width = 0
-		
+
 		# Umm.. Jack.. the free width for each child isn't proportional to their size doing this..
 		freewidth_per_child = free_width / max(1, len(self.children))
-		
+
 		l = l + sizes_notime.HEDGSIZE
 		t = t + sizes_notime.VEDGSIZE
 		b = b - sizes_notime.VEDGSIZE
-		
+
 		if self.channelbox is not None:
 			w, h = self.channelbox.get_minsize()
 			self.channelbox.moveto((l, t, l+w, b))
@@ -820,30 +870,34 @@ class HorizontalWidget(StructureObjWidget):
 			else:
 				nextmedianode = self.children[chindex+1]
 				nt0, nt1, nt2, dummy, dummy = nextmedianode.node.GetTimes('bandwidth')
-				max_r = self.mother.timemapper.time2pixel(nt0)
+				max_r = timemapper.time2pixel(nt0)
 			w,h = medianode.get_minsize()
 			thisnode_free_width = freewidth_per_child
 			# First compute pushback bar position
 			if medianode.is_timed:
+				if timemapper is None:
+					tm = medianode.timemapper
+				else:
+					tm = timemapper
 				t0, t1, t2, download, begindelay = medianode.node.GetTimes('bandwidth')
 				tend = t2
-				lmin = self.mother.timemapper.time2pixel(t0)
+				lmin = tm.time2pixel(t0)
 				if l < lmin:
 					l = lmin
-			r = l + w + thisnode_free_width
-			if medianode.is_timed:
-				rmin = self.mother.timemapper.time2pixel(tend)
+				r = l + w + thisnode_free_width
+				rmin = tm.time2pixel(tend)
 				# tend may be t2, the fill-time, so for fill=hold it may extend past
 				# the begin of the next child. We have to truncate in that
 				# case.
 				if chindex < len(self.children)-1:
 					nextch = self.children[chindex+1]
-					rminmax = self.mother.timemapper.time2pixel(nextch.node.GetTimes('bandwidth')[0])
+					rminmax = tm.time2pixel(nextch.node.GetTimes('bandwidth')[0])
 					if rmin > rminmax:
 						rmin = rminmax
 				if r < rmin:
 					r = rmin
 			else:
+				r = l + w + thisnode_free_width
 				if chindex == len(self.children)-1:
 					# The last child is extended the whole way to the end
 					r = max_r
@@ -852,22 +906,22 @@ class HorizontalWidget(StructureObjWidget):
 			if l > r:
 				l = r
 			medianode.moveto((l,t,r,b))
-			medianode.recalc()
+			medianode.recalc(timemapper)
 			l = r + sizes_notime.GAPSIZE
 
 		if self.dropbox is not None:
 			w,h = self.dropbox.get_minsize()
 			# The dropbox takes up the rest of the free width.
 			r = self.pos_abs[2]-sizes_notime.HEDGSIZE
-			
+
 			self.dropbox.moveto((l,t,r,b))
-		
+
 		if self.timeline is not None and not TIMELINE_AT_TOP:
 			l, t, r, b = self.pos_abs
 			tl_w, tl_h = self.timeline.get_minsize()
-			self.timeline.moveto((l, b-tl_h, r, b))
+			self.timeline.moveto((l, b-tl_h, r, b), timemapper)
 
-		StructureObjWidget.recalc(self)
+		StructureObjWidget.recalc(self, timemapper)
 
 #
 # The Verticalwidget is any vertically-drawn StructureObjWidget.
@@ -875,19 +929,31 @@ class HorizontalWidget(StructureObjWidget):
 class VerticalWidget(StructureObjWidget):
 	# Any node which is drawn vertically
 
-##	def __repr__(self):
-##		return "VerticalWidget, name is: " + self.name
+	def recalc_minsize(self, timemapper = None):
+		if timemapper is None and self.node.showtime:
+			self.timemapper = timemapper = TimeMapper.TimeMapper()
+			self.timeline = TimelineWidget(self, self.mother)
+		elif self.timeline is not None:
+			self.timeline.destroy()
+			self.timeline = None
 
-	def get_minsize(self):
 		mw=0
 		mh=0
-		
+
+		iw, ih = self.iconbox.recalc_minsize()
 		if len(self.children) == 0 or self.iscollapsed():
 			boxsize = sizes_notime.MINSIZE + 2*sizes_notime.HEDGSIZE
-			return boxsize, boxsize
+			self.boxsize = boxsize, boxsize
+			if timemapper is not None:
+				self.adddependencies(timemapper)
+				if self.timemapper is not None:
+					self.addcollisions(None, None, timemapper)
+					timemapper.calculate(self.node.showtime == 'cfocus')
+##			print 'recalc_minsize',self.node,self.boxsize
+			return self.boxsize
 
 		for i in self.children:
-			w,h = i.get_minsize()
+			w,h = i.recalc_minsize(timemapper)
 			if w > mw: mw=w
 			mh=mh+h
 		mh = mh + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.VEDGSIZE
@@ -896,20 +962,27 @@ class VerticalWidget(StructureObjWidget):
 		mh = mh + sizes_notime.TITLESIZE
 		mw = mw + 2*sizes_notime.HEDGSIZE
 		if self.timeline is not None:
-			w, h = self.timeline.get_minsize()
+			w, h = self.timeline.recalc_minsize()
 			if w > mw:
 				mw = w
 			mh = mh + h
-		return mw, mh
+		self.boxsize = mw, mh
+		if timemapper is not None:
+			self.adddependencies(timemapper)
+			if self.timemapper is not None:
+				self.addcollisions(None, None, timemapper)
+				timemapper.calculate(self.node.showtime == 'cfocus')
+##		print 'recalc_minsize',self.node,self.boxsize
+		return self.boxsize
 
 	def get_child_relminpos(self, child):
 		return sizes_notime.HEDGSIZE
-		
+
 	def get_nearest_node_index(self, pos):
 		# Return the index of the node at the specific drop position.
 		if self.iscollapsed():
 			return -1
-		
+
 		assert self.is_hit(pos)
 		x,y = pos
 		# Working from left to right:
@@ -919,17 +992,19 @@ class VerticalWidget(StructureObjWidget):
 				return i
 		return -1
 
-	def recalc(self):
+	def recalc(self, timemapper = None):
 		# Untested.
 		# Recalculate the position of all the contained boxes.
 		# Algorithm: Iterate through each of the MMNodes children's views and find their minsizes.
 		# Apportion free space equally, based on the size of self.
 		# TODO: This does not test for maxheight()
-		
+		if self.timemapper is not None:
+			timemapper = self.timemapper
+
 		if self.iscollapsed():
-			StructureObjWidget.recalc(self)
+			StructureObjWidget.recalc(self, timemapper)
 			return
-		
+
 		l, t, r, b = self.pos_abs
 		# Add the titlesize
 		t = t + sizes_notime.TITLESIZE
@@ -937,23 +1012,23 @@ class VerticalWidget(StructureObjWidget):
 		# Add the timeline, if it is at the top
 		if self.timeline is not None and TIMELINE_AT_TOP:
 			tl_w, tl_h = self.timeline.get_minsize()
-			self.timeline.moveto((l, t, r, t+tl_h))
+			self.timeline.moveto((l, t, r, t+tl_h), timemapper)
 			t = t + tl_h
 
 		min_width, min_height = self.get_minsize()
 		min_height = min_height - sizes_notime.TITLESIZE
-		
+
 		overhead_height = 2*sizes_notime.VEDGSIZE + len(self.children)-1*sizes_notime.GAPSIZE
 		free_height = (b-t) - min_height
-		
-		if free_height < 0: #or free_height > 1.0:
+
+		if free_height < 0:
 			free_height = 0
-		
-		l_par = float(l) + sizes_notime.HEDGSIZE
-		r = float(r) - sizes_notime.HEDGSIZE
-		t = float(t) + sizes_notime.VEDGSIZE
-		
-		
+
+		l_par = l + sizes_notime.HEDGSIZE
+		r = r - sizes_notime.HEDGSIZE
+		t = t + sizes_notime.VEDGSIZE
+
+
 		for medianode in self.children: # for each MMNode:
 			w,h = medianode.get_minsize()
 			l = l_par
@@ -963,36 +1038,40 @@ class VerticalWidget(StructureObjWidget):
 			if free_height == 0:
 				thisnode_free_height = 0
 			else:
-				thisnode_free_height = h/(min_height-overhead_height) * free_height
+				thisnode_free_height = int(h/(min_height-overhead_height) * free_height)
 			# Give the node the free width.
 			b = t + h + thisnode_free_height
 			this_l = l
 			this_r = r
 			if medianode.is_timed:
+				if timemapper is None:
+					tm = medianode.timemapper
+				else:
+					tm = timemapper
 				t0, t1, t2, download, begindelay = medianode.node.GetTimes('bandwidth')
 				tend = t2
-				lmin = self.mother.timemapper.time2pixel(t0)
+				lmin = tm.time2pixel(t0)
 				if this_l < lmin:
 					this_l = lmin
-##				rmin = self.mother.timemapper.time2pixel(tend)
+##				rmin = tm.time2pixel(tend)
 ##				if this_r < rmin:
 ##					this_r = rmin
 ##				else:
-				rmax = self.mother.timemapper.time2pixel(tend, align='right')
+				rmax = tm.time2pixel(tend, align='right')
 				if this_r > rmax:
 					this_r = rmax
 				if this_l > this_r:
 					this_l = this_r
-			
+
 			medianode.moveto((this_l,t,this_r,b))
-			medianode.recalc()
+			medianode.recalc(timemapper)
 			t = b + sizes_notime.GAPSIZE
 		if self.timeline is not None and not TIMELINE_AT_TOP:
 			l, t, r, b = self.pos_abs
 			tl_w, tl_h = self.timeline.get_minsize()
-			self.timeline.moveto((l, b-tl_h, r, b))
+			self.timeline.moveto((l, b-tl_h, r, b), timemapper)
 
-		StructureObjWidget.recalc(self)
+		StructureObjWidget.recalc(self, timemapper)
 
 	def draw(self, displist):
 		if self.iscollapsed():
@@ -1007,14 +1086,14 @@ class VerticalWidget(StructureObjWidget):
 					i = i + step
 		StructureObjWidget.draw(self, displist)
 
-	def addcollisions(self, mastert0, mastertend):
+	def addcollisions(self, mastert0, mastertend, timemapper):
 		self.is_timed = 1
 		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
 		tend = t1
 		maxneededpixel0 = 0
 		maxneededpixel1 = 0
 		for ch in self.children:
-			neededpixel0, neededpixel1 = ch.addcollisions(t0, tend)
+			neededpixel0, neededpixel1 = ch.addcollisions(t0, tend, timemapper)
 			if neededpixel0 > maxneededpixel0:
 				maxneededpixel0 = neededpixel0
 			if neededpixel1 > maxneededpixel1:
@@ -1022,10 +1101,10 @@ class VerticalWidget(StructureObjWidget):
 		maxneededpixel0 = maxneededpixel0 + sizes_notime.HEDGSIZE
 		maxneededpixel1 = maxneededpixel1 + sizes_notime.HEDGSIZE
 		if t0 != mastert0:
-			self.mother.timemapper.addcollision(t0, maxneededpixel0)
+			timemapper.addcollision(t0, maxneededpixel0)
 			maxneededpixel0 = 0
 		if tend != mastertend:
-			self.mother.timemapper.addcollision(tend, maxneededpixel1)
+			timemapper.addcollision(tend, maxneededpixel1)
 			maxneededpixel1 = 0
 		return maxneededpixel0, maxneededpixel1
 
@@ -1094,20 +1173,7 @@ class SeqWidget(HorizontalWidget):
 			self.dropbox.draw(displist)
 		HorizontalWidget.draw(self, displist)
 
-	def adddependencies(self):
-		# Sequence widgets need a special adddependencies, because we want to calculate the
-		# time->pixel mapping without the channelbox and dropbox
-		self.is_timed = 1
-		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
-		w, h = self.get_minsize(ignoreboxes=1)
-		if t0 != t1:
-			self.mother.timemapper.adddependency(t0, t1, w)
-		if t2 != t1 and t0 != t2:
-			self.mother.timemapper.adddependency(t0, t2, w)
-		for ch in self.children:
-			ch.adddependencies()
-		
-	def addcollisions(self, mastert0, mastertend):
+	def addcollisions(self, mastert0, mastertend, timemapper):
 		self.is_timed = 1
 		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
 		tend = t1
@@ -1125,7 +1191,7 @@ class SeqWidget(HorizontalWidget):
 		for ch in self.children:
 			thist0, thist1, thist2, dummy, dummy = self.node.GetTimes('bandwidth')
 			thistend = thist1
-			neededpixel0, neededpixel1 = ch.addcollisions(thist0, thistend)
+			neededpixel0, neededpixel1 = ch.addcollisions(thist0, thistend, timemapper)
 			time_to_collision[thist0] = time_to_collision.get(thist0, 0) + neededpixel0
 			time_to_collision[thistend] = time_to_collision.get(thistend, 0) + neededpixel1
 		maxneededpixel0 = time_to_collision[t0]
@@ -1137,12 +1203,12 @@ class SeqWidget(HorizontalWidget):
 			maxneededpixel1 = 0
 		for time, pixel in time_to_collision.items():
 			if pixel:
-				self.mother.timemapper.addcollision(time, pixel)
+				timemapper.addcollision(time, pixel)
 		if t0 != mastert0:
-			self.mother.timemapper.addcollision(t0, maxneededpixel0)
+			timemapper.addcollision(t0, maxneededpixel0)
 			maxneededpixel0 = 0
 		if tend != mastertend:
-			self.mother.timemapper.addcollision(tend, maxneededpixel1)
+			timemapper.addcollision(tend, maxneededpixel1)
 			maxneededpixel1 = 0
 		return maxneededpixel0, maxneededpixel1
 
@@ -1153,29 +1219,45 @@ class UnseenVerticalWidget(StructureObjWidget):
 	# The top level par that doesn't get drawn.
 	HAS_COLLAPSE_BUTTON = 0
 
-#	def __init__(self, node, mother):
-#		StructureObjWidget.__init__(self, node, mother)
-			
-##	def __repr__(self):
-##		return "UnseenVerticalWidget, name = "+self.name
+	def recalc_minsize(self, timemapper = None):
+		if timemapper is None and self.node.showtime:
+			self.timemapper = timemapper = TimeMapper.TimeMapper()
+			self.timeline = TimelineWidget(self, self.mother)
+		elif self.timeline is not None:
+			self.timeline.destroy()
+			self.timeline = None
 
-	def get_minsize(self):
 		mw=0
 		mh=0
-		
+
+		iw, ih = self.iconbox.recalc_minsize()
 		if len(self.children) == 0 or self.iscollapsed():
-			return sizes_notime.MINSIZE, sizes_notime.MINSIZE+sizes_notime.TITLESIZE
-		
+			self.boxsize = sizes_notime.MINSIZE, sizes_notime.MINSIZE+sizes_notime.TITLESIZE
+			if timemapper is not None:
+				self.adddependencies(timemapper)
+				if self.timemapper is not None:
+					self.addcollisions(None, None, timemapper)
+					timemapper.calculate(self.node.showtime == 'cfocus')
+##			print 'recalc_minsize',self.node,self.boxsize
+			return self.boxsize
+
 		for i in self.children:
-			w,h = i.get_minsize()
+			w,h = i.recalc_minsize(timemapper)
 			if w > mw: mw=w
 			mh=mh+h
 		if self.timeline is not None:
-			w, h = self.timeline.get_minsize()
+			w, h = self.timeline.recalc_minsize()
 			if w > mw:
 				mw = w
 			mh = mh + h
-		return mw, mh
+		self.boxsize = mw, mh
+		if timemapper is not None:
+			self.adddependencies(timemapper)
+			if self.timemapper is not None:
+				self.addcollisions(None, None, timemapper)
+				timemapper.calculate(self.node.showtime == 'cfocus')
+##		print 'recalc_minsize',self.node,self.boxsize
+		return self.boxsize
 
 	def get_child_relminpos(self, child):
 		return 0
@@ -1184,7 +1266,7 @@ class UnseenVerticalWidget(StructureObjWidget):
 		# Return the index of the node at the specific drop position.
 		if self.iscollapsed():
 			return -1
-		
+
 		assert self.is_hit(pos)
 		x,y = pos
 		# Working from left to right:
@@ -1194,33 +1276,35 @@ class UnseenVerticalWidget(StructureObjWidget):
 				return i
 		return -1
 
-	def recalc(self):
+	def recalc(self, timemapper = None):
 		# Recalculate the position of all the contained boxes.
 		# Algorithm: Iterate through each of the MMNodes children's views and find their minsizes.
 		# Apportion free space equally, based on the size of self.
 		# TODO: This does not test for maxheight()
-		
+		if self.timemapper is not None:
+			timemapper = self.timemapper
+
 		if self.iscollapsed():
-			StructureObjWidget.recalc(self)
+			StructureObjWidget.recalc(self, timemapper)
 			return
-		
+
 		l, t, r, b = self.pos_abs
 		my_b = b
-		# Add the titlesize;
+		# Add the titlesize
 		min_width, min_height = self.get_minsize()
-		
+
 		overhead_height = 0
 		free_height = (b-t) - min_height
-			
+
 		if self.timeline and not TIMELINE_AT_TOP:
 			tl_w, tl_h = self.timeline.get_minsize()
-			self.timeline.moveto((l, t, r, t+tl_h))
+			self.timeline.moveto((l, t, r, t+tl_h), timemapper)
 			t = t + tl_h
 			free_height = free_height - tl_h
 
 		if free_height < 0:
 			free_height = 0.0
-		
+
 		for medianode in self.children: # for each MMNode:
 			w,h = medianode.get_minsize()
 			if h > (b-t):			  # If the node needs to be bigger than the available space...
@@ -1229,33 +1313,37 @@ class UnseenVerticalWidget(StructureObjWidget):
 			if free_height == 0.0:
 				thisnode_free_height = 0.0
 			else:
-				thisnode_free_height = (float(h)/(min_height-overhead_height)) * free_height
+				thisnode_free_height = int((float(h)/(min_height-overhead_height)) * free_height)
 			# Give the node the free width.
 			b = t + h + thisnode_free_height 
 			# r = l + w # Wrap the node to it's minimum size.
 			this_l = l
 			this_r = r
 			if medianode.is_timed:
+				if timemapper is None:
+					tm = medianode.timemapper
+				else:
+					tm = timemapper
 				t0, t1, t2, download, begindelay = medianode.node.GetTimes('bandwidth')
 				tend = t2
-				lmin = self.mother.timemapper.time2pixel(t0)
+				lmin = tm.time2pixel(t0)
 				if this_l < lmin:
 					this_l = lmin
-##				rmin = self.mother.timemapper.time2pixel(tend)
+##				rmin = tm.time2pixel(tend)
 ##				if this_r < rmin:
 ##					this_r = rmin
 ##				else:
-				rmax = self.mother.timemapper.time2pixel(tend, align='right')
+				rmax = tm.time2pixel(tend, align='right')
 				if this_r > rmax:
 					this_r = rmax
 				if this_l > this_r:
 					this_l = this_r
 			medianode.moveto((this_l,t,this_r,b))
-			medianode.recalc()
+			medianode.recalc(timemapper)
 			t = b #  + self.get_rely(sizes_notime.GAPSIZE)
 		if self.timeline is not None and not TIMELINE_AT_TOP:
-			self.timeline.moveto((l, t, r, my_b))
-		StructureObjWidget.recalc(self)
+			self.timeline.moveto((l, t, r, my_b), timemapper)
+		StructureObjWidget.recalc(self, timemapper)
 
 	def draw(self, displist):
 		# We want to draw this even if pushback bars are disabled.
@@ -1266,13 +1354,9 @@ class UnseenVerticalWidget(StructureObjWidget):
 		if self.timeline is not None:
 			self.timeline.draw(displist)
 
-	def adddependencies(self):
+	def addcollisions(self, mastert0, mastertend, timemapper):
 		for ch in self.children:
-			ch.adddependencies()
-		
-	def addcollisions(self, mastert0, mastertend):
-		for ch in self.children:
-			ch.addcollisions(None, None)
+			ch.addcollisions(None, None, timemapper)
 
 #
 # A ParWidget represents a Par node.
@@ -1355,7 +1439,7 @@ class MediaWidget(MMNodeWidget):
 
 	# TODO: This class can be broken down into various different node types (img, video)
 	# if the drawing code is different enough to warrent this.
-	
+
 	def __init__(self, node, mother):
 		MMNodeWidget.__init__(self, node, mother)
 		self.transition_in = TransitionWidget(self, mother, 'in')
@@ -1378,9 +1462,6 @@ class MediaWidget(MMNodeWidget):
 		#self.mother.debug_arrow = i1
 
 		self.node.views['struct_view'] = self
-
-##	def __repr__(self):
-##		return "MediaWidget, name: " + self.name
 
 	def destroy(self):
 		# Remove myself from the MMNode view{} dict.
@@ -1406,9 +1487,11 @@ class MediaWidget(MMNodeWidget):
 				(self.pushbackbar and self.pushbackbar.is_hit(pos)) or \
 				MMNodeWidget.is_hit(self, pos)
 		return hit
-		
 
-	def recalc(self):
+
+	def recalc(self, timemapper = None):
+		if self.timemapper is not None:
+			timemapper = self.timemapper
 		l,t,r,b = self.pos_abs
 		w = 0
 		if self.playicon is not None:
@@ -1426,7 +1509,7 @@ class MediaWidget(MMNodeWidget):
 				self.downloadtime_lag_errorfraction = 0
 			else:
 				self.downloadtime_lag_errorfraction = download / (download + begindelay)
-			pbb_left = self.mother.timemapper.time2pixel(t0-(download+begindelay), align='right')
+			pbb_left = timemapper.time2pixel(t0-(download+begindelay), align='right')
 			self.pushbackbar.moveto((pbb_left, t, l, t+12))
 
 		t = t + sizes_notime.TITLESIZE
@@ -1435,14 +1518,28 @@ class MediaWidget(MMNodeWidget):
 		self.transition_in.moveto((l,b-pix16y,l+pix16x, b))
 		self.transition_out.moveto((r-pix16x,b-pix16y,r, b))
 
-		MMNodeWidget.recalc(self) # This is probably not necessary.
+		MMNodeWidget.recalc(self, timemapper) # This is probably not necessary.
 
-	def get_minsize(self):
+	def recalc_minsize(self, timemapper = None):
+		if timemapper is None and self.node.showtime:
+			self.timemapper = timemapper = TimeMapper.TimeMapper()
+			self.timeline = TimelineWidget(self, self.mother)
+		elif self.timeline is not None:
+			self.timeline.destroy()
+			self.timeline = None
+
 		# return the minimum size of this node, in pixels.
-		# Calld to work out the size of the canvas.
-		xsize = sizes_notime.MINSIZE + self.iconbox.get_minsize()[0]
+		# Called to work out the size of the canvas.
+		xsize = sizes_notime.MINSIZE + self.iconbox.recalc_minsize()[0]
 		ysize = sizes_notime.MINSIZE# + sizes_notime.TITLESIZE
-		return (xsize, ysize)
+		self.boxsize = xsize, ysize
+		if timemapper is not None:
+			self.adddependencies(timemapper)
+			if self.timemapper is not None:
+				self.addcollisions(None, None, timemapper)
+				timemapper.calculate(self.node.showtime == 'cfocus')
+##		print 'recalc_minsize',self.node,self.boxsize
+		return self.boxsize
 
 	def get_maxsize(self):
 		return sizes_notime.MAXSIZE, sizes_notime.MAXSIZE
@@ -1473,7 +1570,7 @@ class MediaWidget(MMNodeWidget):
 		x,y,w,h = self.get_box()	 
 		y = y + sizes_notime.TITLESIZE
 		h = h - sizes_notime.TITLESIZE
-		
+
 		ntype = self.node.GetType()
 
 		# Draw the image.
@@ -1530,13 +1627,13 @@ class MediaWidget(MMNodeWidget):
 	def __get_image_filename(self):
 		# I just copied this.. I don't know what it does. -mjvdg.
 		f = None
-		
+
 		url = self.node.GetAttrDef('file', None)
 		if url:
 			media_type = MMmimetypes.guess_type(url)[0]
 		else:
 			return None
-		
+
 		channel_type = self.node.GetChannelType()
 		if url and self.mother.thumbnails and channel_type == 'image':
 			url = self.node.context.findurl(url)
@@ -1581,23 +1678,30 @@ class CommentWidget(MMNodeWidget):
 
 	# TODO: This class can be broken down into various different node types (img, video)
 	# if the drawing code is different enough to warrent this.
-	
+
 	def __init__(self, node, mother):
 		MMNodeWidget.__init__(self, node, mother)
 		self.node.views['struct_view'] = self
 
-	def recalc(self):
+	def recalc(self, timemapper = None):
 		l,t,r,b = self.pos_abs
 
 		self.iconbox.moveto((l+1, t+2,0,0))
-		MMNodeWidget.recalc(self) # This is probably not necessary.
+		MMNodeWidget.recalc(self, timemapper) # This is probably not necessary.
 
-	def get_minsize(self):
+	def recalc_minsize(self, timemapper = None):
 		# return the minimum size of this node, in pixels.
 		# Calld to work out the size of the canvas.
-		xsize = sizes_notime.MINSIZE + self.iconbox.get_minsize()[0]
+		xsize = sizes_notime.MINSIZE + self.iconbox.recalc_minsize()[0]
 		ysize = sizes_notime.MINSIZE# + sizes_notime.TITLESIZE
-		return (xsize, ysize)
+		self.boxsize = xsize, ysize
+		if timemapper is not None:
+			self.adddependencies(timemapper)
+			if self.timemapper is not None:
+				self.addcollisions(None, None, timemapper)
+				timemapper.calculate(self.node.showtime == 'cfocus')
+##		print 'recalc_minsize',self.node,self.boxsize
+		return self.boxsize
 
 	def get_maxsize(self):
 		return sizes_notime.MAXSIZE, sizes_notime.MAXSIZE
@@ -1624,7 +1728,7 @@ class CommentWidget(MMNodeWidget):
 		x,y,w,h = self.get_box()	 
 		y = y + sizes_notime.TITLESIZE
 		h = h - sizes_notime.TITLESIZE
-		
+
 		ntype = self.node.GetType()
 
 		# Draw the image.
@@ -1682,20 +1786,7 @@ class ForeignWidget(HorizontalWidget):
 		displist.drawfbox(color, self.get_box())
 		HorizontalWidget.draw(self, displist)
 
-	def adddependencies(self):
-		# Sequence widgets need a special adddependencies, because we want to calculate the
-		# time->pixel mapping without the channelbox and dropbox
-		self.is_timed = 1
-		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
-		w, h = self.get_minsize(ignoreboxes=1)
-		if t0 != t1:
-			self.mother.timemapper.adddependency(t0, t1, w)
-		if t2 != t1 and t0 != t2:
-			self.mother.timemapper.adddependency(t0, t2, w)
-		for ch in self.children:
-			ch.adddependencies()
-		
-	def addcollisions(self, mastert0, mastertend):
+	def addcollisions(self, mastert0, mastertend, timemapper):
 		self.is_timed = 1
 		t0, t1, t2, download, begindelay = self.node.GetTimes('bandwidth')
 		tend = t1
@@ -1713,7 +1804,7 @@ class ForeignWidget(HorizontalWidget):
 		for ch in self.children:
 			thist0, thist1, thist2, dummy, dummy = self.node.GetTimes('bandwidth')
 			thistend = thist1
-			neededpixel0, neededpixel1 = ch.addcollisions(thist0, thistend)
+			neededpixel0, neededpixel1 = ch.addcollisions(thist0, thistend, timemapper)
 			time_to_collision[thist0] = time_to_collision.get(thist0, 0) + neededpixel0
 			time_to_collision[thistend] = time_to_collision.get(thistend, 0) + neededpixel1
 		maxneededpixel0 = time_to_collision[t0]
@@ -1725,12 +1816,12 @@ class ForeignWidget(HorizontalWidget):
 			maxneededpixel1 = 0
 		for time, pixel in time_to_collision.items():
 			if pixel:
-				self.mother.timemapper.addcollision(time, pixel)
+				timemapper.addcollision(time, pixel)
 		if t0 != mastert0:
-			self.mother.timemapper.addcollision(t0, maxneededpixel0)
+			timemapper.addcollision(t0, maxneededpixel0)
 			maxneededpixel0 = 0
 		if tend != mastertend:
-			self.mother.timemapper.addcollision(tend, maxneededpixel1)
+			timemapper.addcollision(tend, maxneededpixel1)
 			maxneededpixel1 = 0
 		return maxneededpixel0, maxneededpixel1
 
@@ -1851,23 +1942,23 @@ class PushBackBarWidget(MMWidgetDecoration):
 
 class TimelineWidget(MMWidgetDecoration):
 	# A widget showing the timeline
-##	def __repr__(self):
-##		return "TimelineWidget"
-	
-	def get_minsize(self):
-		return f_timescale.strsizePXL(' 000:00 000:00 000:00 ')[0], 2*sizes_notime.TITLESIZE
-		
-	def moveto(self, coords):
+
+	def recalc_minsize(self):
+		self.boxsize = f_timescale.strsizePXL(' 000:00 000:00 000:00 ')[0], 2*sizes_notime.TITLESIZE
+##		print 'recalc_minsize','TimelineWidget',self.boxsize
+		return self.boxsize
+
+	def moveto(self, coords, timemapper):
 		MMWidgetDecoration.moveto(self, coords)
 		t0, t1, t2, download, begindelay = self.get_mmwidget().node.GetTimes('bandwidth')
-		self.time_segments = self.mother.timemapper.gettimesegments(range=(t0, t2))
+		self.time_segments = timemapper.gettimesegments(range=(t0, t2))
 		starttime, dummy, oldright = self.time_segments[0]
 		stoptime, dummy, dummy = self.time_segments[-1]
-		self.ticks = [(starttime, self.mother.timemapper.time2pixel(starttime, align='right'))]
+		self.ticks = [(starttime, timemapper.time2pixel(starttime, align='right'))]
 		for time in range(int(starttime+1), int(stoptime)+1):
-			tick_x = self.mother.timemapper.interptime2pixel(time)
+			tick_x = timemapper.interptime2pixel(time)
 			self.ticks.append((time, tick_x))
-		
+
 	def draw(self, displist):
 		x, y, w, h = self.get_box()
 		if TIMELINE_AT_TOP:
@@ -1911,7 +2002,7 @@ class TimelineWidget(MMWidgetDecoration):
 			else:
 				cur_tick_top = tick_top
 				cur_tick_bot = tick_bot
-			displist.drawline(TEXTCOLOR, [(tick_x, cur_tick_top), (tick_x, cur_tick_bot)])			
+			displist.drawline(TEXTCOLOR, [(tick_x, cur_tick_top), (tick_x, cur_tick_bot)])
 	draw_selected = draw
 
 # A box with icons in it.
@@ -1955,9 +2046,11 @@ class IconBox(MMWidgetDecoration):
 		del self._icons[iconname]
 		self.iconlist.remove(iconname)
 
-	def get_minsize(self):
+	def recalc_minsize(self):
 		# Always the number of icons.
-		return ((len(self._icons) * ICONSIZE), ICONSIZE)
+		self.boxsize = (len(self._icons) * ICONSIZE), ICONSIZE
+##		print 'recalc_minsize','IconBox',self.mmwidget.node,self.boxsize
+		return self.boxsize
 
 	def get_clicked_obj_at(self, coords):
 		x,y = coords
@@ -2000,7 +2093,7 @@ class IconBox(MMWidgetDecoration):
 			icon.mouse0release(coords)
 		else:
 			return
-		
+
 		#if self.callback:
 		#	apply(apply, self.callback)
 
@@ -2015,7 +2108,7 @@ class Icon(MMWidgetDecoration):
 		self.arrowto = []	# a list of other MMWidgets.
 		self.icon = ""
 		self.contextmenu = None
-		
+
 		self.set_properties()
 
 	def destroy(self):
@@ -2150,17 +2243,17 @@ class BrushWidget(MMNodeWidget):
 
 class ImageBoxWidget(MMWidgetDecoration):
 	# Common baseclass for dropbox and channelbox
-	# This is only for images shown as part of the sequence views; This
+	# This is only for images shown as part of the sequence views. This
 	# is not used for any image on screen.
-##	def __repr__(self):
-##		return "ImageBoxWidget"
-	
-	def get_minsize(self):
-		return sizes_notime.MINSIZE, sizes_notime.MINSIZE
+
+	def recalc_minsize(self):
+		self.boxsize = sizes_notime.MINSIZE, sizes_notime.MINSIZE
+##		print 'recalc_minsize','ImageBoxWidget',self.mmwidget.node,self.boxsize
+		return self.boxsize
 
 	def draw(self, displist):
 		x,y,w,h = self.get_box()	 
-		
+
 		# Draw the image.
 		image_filename = self._get_image_filename()
 		if image_filename != None:
@@ -2190,9 +2283,6 @@ class DropBoxWidget(ImageBoxWidget):
 	# This is the stupid drop-box at the end of a sequence. Looks like a
 	# MediaWidget, acts like a MediaWidget, but isn't a MediaWidget.
 
-##	def __repr__(self):
-##		return "DropBoxWidget"
-
 	def _get_image_filename(self):
 		f = os.path.join(self.mother.datadir, 'dropbox.tiff')
 		return f
@@ -2204,9 +2294,6 @@ class ChannelBoxWidget(ImageBoxWidget):
 		Widgets.Widget.__init__(self, mother) 
 		self.node = node
 		self.parent = parent
-
-##	def __repr__(self):
-##		return "ChannelBoxWidget"
 
 	def draw(self, displist):
 		ImageBoxWidget.draw(self, displist)
@@ -2231,9 +2318,11 @@ class ChannelBoxWidget(ImageBoxWidget):
 		displist.fgcolor(CTEXTCOLOR)
 		displist.usefont(f_title)
 		displist.centerstring(x, texty, x+w, texty+texth, label)
-	
-	def get_minsize(self):
-		return sizes_notime.MINSIZE, sizes_notime.MINSIZE + sizes_notime.TITLESIZE
+
+	def recalc_minsize(self):
+		self.boxsize = sizes_notime.MINSIZE, sizes_notime.MINSIZE + sizes_notime.TITLESIZE
+##		print 'recalc_minsize','ChannelBoxWidget',self.mmwidget.node,self.boxsize
+		return self.boxsize
 
 	def _get_image_filename(self):
 		channel_type = MMAttrdefs.getattr(self.node, 'project_default_type')
