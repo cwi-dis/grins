@@ -1,5 +1,6 @@
 import Qd
 import Dlg
+import Controls
 import MacOS
 import string
 import sys
@@ -12,6 +13,7 @@ import os
 # Stuff used from other mw_ modules
 #
 import WMEVENTS
+import mw_globals
 from mw_globals import FALSE, TRUE
 from mw_resources import *
 from mw_windows import DialogWindow
@@ -23,24 +25,10 @@ from mw_windows import DialogWindow
 class MACDialog:
 	def __init__(self, title, resid, allitems=[], default=None, cancel=None):
 		self._itemlist_shown = allitems[:]
-		self._window = DialogWindow(resid)
+		self._window = DialogWindow(resid, title=title, default=default, cancel=cancel)
 		self._dialog = self._window._wid
 		# Override event handler:
 		self._window.do_itemhit = self.do_itemhit
-		self._window._do_defaulthit = self._do_defaulthit
-
-		# Setup default key bindings
-		self._default = default
-		if not self._default is None:
-			self._dialog.SetDialogDefaultItem(default)
-		if not cancel is None:
-			self._dialog.SetDialogCancelItem(cancel)
-
-	def _do_defaulthit(self):
-		if self._default:
-			tp, h, rect = self._dialog.GetDialogItem(self._default)
-			h.as_Control.HiliteControl(Controls.inButton)
-		self.do_itemhit(self._default, None)
 		
 	def _showitemlist(self, itemlist):
 		"""Make sure the items in itemlist are visible and active"""
@@ -271,7 +259,11 @@ class FileDialog:
 class SelectionDialog(DialogWindow):
 	def __init__(self, listprompt, selectionprompt, itemlist, default, fixed=0, hascancel=1):
 		# First create dialogwindow and set static items
-		DialogWindow.__init__(self, ID_SELECT_DIALOG)
+		if hascancel:
+			DialogWindow.__init__(self, ID_SELECT_DIALOG, 
+					default=ITEM_SELECT_OK, cancel=ITEM_SELECT_CANCEL)
+		else:
+			DialogWindow.__init__(self, ID_SELECT_DIALOG, default=ITEM_SELECT_OK)
 		if fixed:
 			# The user cannot modify the items, nor cancel
 			self._wid.HideDialogItem(ITEM_SELECT_SELECTPROMPT)
@@ -283,10 +275,6 @@ class SelectionDialog(DialogWindow):
 		tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_SELECTPROMPT)
 		Dlg.SetDialogItemText(h, selectionprompt)
 		
-		# Set defaults
-		self._wid.SetDialogDefaultItem(ITEM_SELECT_OK)
-		self._wid.SetDialogCancelItem(ITEM_SELECT_CANCEL)
-
 		# Now setup the scrolled list
 		self._itemlist = itemlist
 		self._listwidget = self.ListWidget(ITEM_SELECT_ITEMLIST, itemlist)
@@ -358,10 +346,10 @@ class SingleSelectionDialog(SelectionDialog):
 			self.__done = 1
 			
 	def rungrabbed(self):
-		toplevel.grab(self)
+		mw_globals.toplevel.grab(self)
 		while not self.__done:
-			toplevel._eventloop(100)
-		toplevel.grab(None)
+			mw_globals.toplevel._eventloop(100)
+		mw_globals.toplevel.grab(None)
 			
 class InputDialog(DialogWindow):
 	DIALOG_ID= ID_INPUT_DIALOG
@@ -369,15 +357,14 @@ class InputDialog(DialogWindow):
 	def __init__(self, prompt, default, cb, cancelCallback = None):
 		# First create dialogwindow and set static items
 		print 'prompt=', prompt
-		DialogWindow.__init__(self, self.DIALOG_ID, title=prompt)
+		DialogWindow.__init__(self, self.DIALOG_ID, title=prompt,
+				default=ITEM_INPUT_OK, cancel=ITEM_INPUT_CANCEL)
 ##		# XXXX Use title here?
 ##		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_PROMPT)
 ##		Dlg.SetDialogItemText(h, prompt)
 		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
 		Dlg.SetDialogItemText(h, default)
 		self._wid.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
-		self._wid.SetDialogDefaultItem(ITEM_INPUT_OK)
-		self._wid.SetDialogCancelItem(ITEM_INPUT_CANCEL)
 		self._cb = cb
 		self._cancel = cancelCallback
 		
