@@ -26,7 +26,6 @@ class SoundChannel(Channel.ChannelAsync):
 		self.__mc = None
 		self.__rc = None
 		self.need_armdone = 0
-		self.__playing = None
 		Channel.ChannelAsync.__init__(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
@@ -38,15 +37,7 @@ class SoundChannel(Channel.ChannelAsync):
 		return 1
 
 	def do_hide(self):
-		self.__playing = None
-		if self.__mc:
-			self.__mc.stopit()
-			self.__mc.destroy()
-			self.__mc = None
-		if self.__rc:
-			self.__rc.stopit()
-			self.__rc.destroy()
-			self.__rc = None
+		self.__stopplayer()
 		Channel.ChannelAsync.do_hide(self)
 
 	def do_arm(self, node, same=0):
@@ -84,7 +75,6 @@ class SoundChannel(Channel.ChannelAsync):
 		return 1
 
 	def do_play(self, node):
-		self.__playing = node
 		self.__type = node.__type
 		if not self.__ready:
 			# arming failed, so don't even try playing
@@ -111,13 +101,14 @@ class SoundChannel(Channel.ChannelAsync):
 		self.playdone(1)		
 				
 	def __stopplayer(self):
-		if self.__playing:
-			if self.__type == 'real':
-				if self.__rc:
-					self.__rc.stopit()
-			else:
-				self.__mc.stopit()
-		self.__playing = None
+		if self.__mc:
+			self.__mc.stopit()
+			self.__mc.destroy()
+			self.__mc = None
+		if self.__rc:
+			self.__rc.stopit()
+			self.__rc.destroy()
+			self.__rc = None
 
 	def endoftime(self):
 		self.__stopplayer()
@@ -137,14 +128,9 @@ class SoundChannel(Channel.ChannelAsync):
 			self.need_armdone = 0
 			self.armdone()
 		Channel.ChannelAsync.playdone(self, outside_induced)
-		if not outside_induced:
-			self.__playing = None
 
 	def stopplay(self, node):
-		if self.__mc:
-			self.__mc.stopit()
-		if self.__rc:
-			self.__rc.stopit()
+		self.__stopplayer()
 		Channel.ChannelAsync.stopplay(self, node)
 
 	def updatesoundlevel(self, val):
