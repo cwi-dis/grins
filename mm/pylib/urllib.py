@@ -18,6 +18,7 @@ import string
 import socket
 import regex
 import os
+import sys
 
 
 __version__ = '1.5'
@@ -68,6 +69,8 @@ def urlcleanup():
 # (authorization needed).
 ftpcache = {}
 class URLopener:
+
+	tempcache = None		# So close() in __del__() won't fail
 
 	# Constructor
 	def __init__(self, proxies=None):
@@ -128,9 +131,12 @@ class URLopener:
 		if not hasattr(self, name):
 			return self.open_unknown(fullurl, data)
 		try:
-			return getattr(self, name)(url, data)
+			if data is None:
+				return getattr(self, name)(url)
+			else:
+				return getattr(self, name)(url, data)
 		except socket.error, msg:
-			raise IOError, ('socket error', msg)
+			raise IOError, ('socket error', msg), sys.exc_traceback
 
 	# Overridable interface to open unknown URL type
 	def open_unknown(self, fullurl, data = None):
@@ -201,7 +207,8 @@ class URLopener:
 		h = httplib.HTTP(host)
 		if data is not None:
 			h.putrequest('POST', selector)
-			h.putheader('Content-type', 'application/x-www-form-urlencoded')
+			h.putheader('Content-type',
+				    'application/x-www-form-urlencoded')
 			h.putheader('Content-length', '%d' % len(data))
 		else:
 			h.putrequest('GET', selector)
@@ -303,7 +310,7 @@ class URLopener:
 			return addinfourl(self.ftpcache[key].retrfile(file, type),
 				  noheaders(), self.openedurl)
 		except ftperrors(), msg:
-			raise IOError, ('ftp error', msg)
+			raise IOError, ('ftp error', msg), sys.exc_traceback
 
 
 # Derived class with handlers for errors we can handle (perhaps)
@@ -472,7 +479,8 @@ class ftpwrapper:
 				conn = self.ftp.transfercmd(cmd)
 			except ftplib.error_perm, reason:
 				if reason[:3] != '550':
-					raise IOError, ('ftp error', reason)
+					raise IOError, ('ftp error', reason), \
+					      sys.exc_traceback
 		if not conn:
 			# Try a directory listing
 			if file: cmd = 'LIST ' + file
