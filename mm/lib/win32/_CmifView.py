@@ -470,8 +470,6 @@ class _CmifPlayerView(_CmifView):
 			_CmifView.onMouseEvent(self, point, ev)
 			return
 		
-		return # under construction!
-
 		for w in self._subwindows:
 			if w.IsClientPoint(point):
 				w.onMouseEvent(point, ev)
@@ -488,6 +486,16 @@ class _CmifPlayerView(_CmifView):
 					buttons.append(button)
 		return self.onEvent(ev,(x, y, buttons))
 
+	def onMouseMove(self, params):
+		if not USE_NEWSUBWINDOWSIMPL or self.in_create_box_mode():
+			_CmifView.onMouseMove(self, params)
+		msg=win32mu.Win32Msg(params)
+		point=msg.pos()
+		for w in self._subwindows:
+			if w.IsClientPoint(point):
+				w.setcursor_from_point(point)
+				return
+		self.setcursor_from_point(point, self)
 
 	def OnEraseBkgnd(self,dc):
 		if not USE_NEWSUBWINDOWSIMPL or not self._active_displist:
