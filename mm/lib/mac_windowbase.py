@@ -1,10 +1,12 @@
 import Win
 import Qd
 import Fm
-#import time
+import Dlg
 import Evt
 import Events
 import Windows
+import Menu
+MenuMODULE=Menu  # Silly name clash with FrameWork.Menu
 import MacOS
 import string
 import QuickDraw
@@ -14,11 +16,24 @@ import img
 import imageop
 import sys
 
+# XXXX Or is it better to copy these?
+from FrameWork import Menu, MenuBar, AppleMenu, MenuItem
+class MyMenu(Menu):
+	# We call our callbacks in a simpler way...
+	def dispatch(self, id, item, window, event):
+		title, shortcut, callback, type = self.items[item-1]
+		if callback:
+			apply(callback[0], callback[1])
+
 #
 # The cursors we need
 #
 _arrow = Qd.qd.arrow
 _watch = Qd.GetCursor(4).data
+
+#
+# ID's of resources
+ABOUT_ID=512
 
 #
 # The fontfaces (which are unfortunately not defined in QuickDraw.py)
@@ -39,6 +54,10 @@ _window_left_offset=0
 _window_right_offset=0
 _window_top_offset=0
 _window_bottom_offset=0
+#
+# Top-of-screen
+#
+_screen_top_offset = 21  # XXXX Should be gotten from GetMBarHeight()
 
 #
 # Assorted constants
@@ -91,7 +110,7 @@ class _Event:
 		self._time = Evt.TickCount()/TICKS_PER_SECOND
 		self._idles = []
 		l, t, r, b = Qd.qd.screenBits.bounds
-		self._draglimit = l+4, t+4, r-4, b-4
+		self._draglimit = l+4, t+4+_screen_top_offset, r-4, b-4
 
 	def mainloop(self):
 		while 1:
@@ -151,15 +170,17 @@ class _Event:
 		"""Handle a MacOS mouseDown event"""
 		what, message, when, where, modifiers = event
 		partcode, wid = Win.FindWindow(where)
+		if partcode == Windows.inMenuBar:
+			result = MenuMODULE.MenuSelect(where)
+			id, item = (result>>16) & 0xffff, result & 0xffff
+			self._menubar.dispatch(id, item, None, event)
+			MenuMODULE.HiliteMenu(0)
+			return
 		if not wid:
 			# It is not ours.
 			MacOS.HandleEvent(event)
 			return
-		if partcode == Windows.inMenuBar:
-			# XXXX
-			MacOS.HandleEvent(event)
-			return
-		elif partcode == Windows.inContent:
+		if partcode == Windows.inContent:
 			if wid == Win.FrontWindow():
 				# Frontmost. Handle click.
 				self._handle_contentclick(wid, 1, where, event)
@@ -253,8 +274,30 @@ class _Toplevel(_Event):
 		self._bgcolor = 0xffff, 0xffff, 0xffff # white
 		self._fgcolor =      0,      0,      0 # black
 		self._hfactor = self._vfactor = 1.0
-		MacOS.EnableAppswitch(0)
 
+		self._initmenu()		
+		MacOS.EnableAppswitch(0)
+		
+	def _initmenu(self):
+		self._menubar = MenuBar()
+		AppleMenu(self._menubar, "About CMIF...", self._mselect_about)
+		self._menu_file = MyMenu(self._menubar, "File")
+		self._mitem_quit = MenuItem(self._menu_file, "Quit", "Q", (self._mselect_quit, ()))
+		self._mitem_abort = MenuItem(self._menu_file, "Abort", "", (self._mselect_abort, ()))
+		
+	def _mselect_quit(self):
+		sys.exit(0)
+		
+	def _mselect_abort(self):
+		raise 'User abort'
+
+	def _mselect_about(self, *args):
+		d = Dlg.GetNewDialog(ABOUT_ID, -1)
+		while 1:
+			n = Dlg.ModalDialog(None)
+			if n == 1:
+				return
+		
 	def close(self):
 		for func, args in self._closecallbacks:
 			apply(func, args)
@@ -281,7 +324,7 @@ class _Toplevel(_Event):
 	def _openwindow(self, x, y, w, h, title):
 		"""Internal - Open window given xywh, title. Returns window-id"""
 		x = int(x*_x_pixel_per_mm)
-		y = int(y*_y_pixel_per_mm)
+		y = int(y*_y_pixel_per_mm) + _screen_top_offset
 		w = int(w*_x_pixel_per_mm)
 		h = int(h*_y_pixel_per_mm)
 		rBounds = (x-_window_left_offset, y-_window_top_offset, 
@@ -641,6 +684,12 @@ class _Window(_CommonWindow):
 		if not self._wid:
 			return  # Or raise error?
 		self._Wid.SetWTitle(title)
+		
+	def getgeometry(self):
+		rect = self._wid.GetWindowPort().portRect
+		x, y, w, h = rect[0], rect[1], rect[2]-rect[0], rect[3]-rect[1]
+		return (float(x)/_x_pixel_per_mm, float(y)/_y_pixel_per_mm,
+			float(w)/_x_pixel_per_mm, float(h)/_y_pixel_per_mm) 
 
 	def pop(self):
 		"""Pop window to top of window stack"""
@@ -709,6 +758,9 @@ class _SubWindow(_CommonWindow):
 	def settitle(self, title):
 		"""Set window title"""
 		raise error, 'can only settitle at top-level'
+		
+	def getgeometry(self):
+		return self._sizes
 
 	def pop(self):
 		"""Pop to top of subwindow stack"""
