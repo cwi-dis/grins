@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 2.0//EN"
+                      "http://www.w3.org/TR/REC-smil/2000/SMIL20.dtd">
+<smil xmlns="http://www.w3.org/TR/REC-smil/2000/SMIL20/Language">
+  <head>
+    <meta name="title" content="GRiNS Test Document"/>
+    <meta name="generator" content="GRiNS Pro for SMIL Boston, v2.0 alpha win32 build 0"/>
+    <layout>
+      <viewport id="basewindow" backgroundColor="white" width="400" height="300">
+        <region id="description" left="20" top="220" width="360" height="80"/>
+        <region id="text" left="20" top="10" width="360" height="280"/>
+        <region id="image" left="100" top="60" width="300" height="240"/>
+        <region id="sound" width="400" height="300" fit="meet"/>
+    </viewport>
+    </layout>
+  </head>
+  <body>
+    <par id="test-text">
+      <text region="description" type="text/plain" dur="2s" src="data:,Playing%20a%20text%20node%0a"/>
+      <text region="text" type="text/plain" src="testdata.txt"/>
+    </par>
+    <par id="test-image">
+      <text region="description" type="text/plain" dur="2s" src="data:,Playing%20an%20image%20node%0a"/>
+      <img region="image" src="testdata.jpg"/>
+    </par>
+    <par id="test-audio">
+      <text region="description" type="text/plain" dur="2s" src="data:,Playing%20a%20sound%20node%0a"/>
+      <audio region="sound" src="testdata.aiff"/>
+    </par>
+  </body>
+</smil>
