@@ -15,6 +15,9 @@ import os
 import regsub
 import string
 import htmllib
+import urllib
+import img
+import imgformat
 
 LEFTMARGIN=4
 TOPMARGIN=4
@@ -31,6 +34,7 @@ HTML_SIZE={
 class HTMLWidget:
 	def __init__(self, window, rect, name):
 		init_waste()
+		self.url = ''
 		self.bary = None
 		self.anchor_offsets = []
 		self.anchor_hrefs = []
@@ -242,9 +246,21 @@ class HTMLWidget:
 	def do_char(self, ch, event):
 		pass # Do nothing.				
 		
-	def insert_html(self, data):
+	def insert_html(self, data, url):
 		import htmllib
 		import formatter
+		print 'html widget: ', url
+		
+		Qd.SetPort(self.wid)
+		Qd.RGBBackColor(self.bg_color)
+		
+		if data == '':
+			self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 1)
+			self.ted.WESetSelection(0, 0x3fffffff)
+			self.ted.WEDelete()
+			self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
+			Win.InvalRect(self.rect)
+			return
 		f = formatter.AbstractFormatter(self)
 		
 		# Remember where we are, and don't update
@@ -255,6 +271,7 @@ class HTMLWidget:
 
 		self.html_init()
 		p = MyHTMLParser(f)
+		p.url = url  # Tell it the URL, for relative images
 		p.feed(data)
 		
 		self.anchor_hrefs = p.anchorlist[:]
@@ -377,6 +394,20 @@ class MyHTMLParser(htmllib.HTMLParser):
 	def end_p(self):
 		# It seems most browsers treat </p> as <p>...
 		self.do_p(())
+	
+	def handle_image(self, src, alt, ismap, align, width, height):
+		print 'IMAGE', src, alt, ismap, align, width, height
+		url = urllib.basejoin(self.url, src)
+		print 'URL=', url
+		fname = urllib.urlretrieve(url)[0]
+		print 'filename=', fname
+		image = img.reader(imgformat.macrgb16, fname)
+		data = image.read()
+		print 'size=', image.width, image.height, len(data)
+		handle = _gifkeeper.new(fname, width, height, data)
+		self.handle_data(alt)
+		# self.handle_gif(handle)
+
 
 waste_inited = 0
 
@@ -411,14 +442,44 @@ def freeRuler(*args):
 	return 0
 	
 def newGIF(obj):
-	return 0,0
+	handle = WEGetObjectDataHandle()
+	width, height, pixmap = _gifkeeper.get(handle.data)	
+	return width, height
 	
 def drawGIF((l,t,r,b),obj):
+	handle = WEGetObjectDataHandle()
+	width, height, pixmap = _gifkeeper.get(handle.data)
+	# XXXX paste pixmap on screen
 	return 0
 	
-def freeGIF(*args):
+def freeGIF(obj):
+	handle = WEGetObjectDataHandle()
+	_gifkeeper.delete(handle.data)
 	return 0
 	
+class _Gifkeeper:
+	def __init__(self):
+		self.dict = {}
+		
+	def new(self, name, width, height, data):
+		if self.dict.has_key(name):
+			self.dict[name][0] = self.dict[name][0] + 1
+			return self.dict[name][1]
+		pixmap = mac_image.mkpixmap(width, height, imgformat.macrgb16, data)
+		handle = Res.Resource(name)
+		self.dict[name] = [1, handle, pixmap, data, width, height]
+		return handle
+		
+	def get(self, name):
+		[cnt, handle, pixmap, data, width, height] = self.dict[name]
+		return width, height, pixmap
+		
+	def delete(self, name):
+		self.dict[name][0] = self.dict[name][0] - 1
+		if self.dict[name][0] == 0:
+			del self.dict[name]
 			
+_gifkeeper = _Gifkeeper()
+
 
 	
