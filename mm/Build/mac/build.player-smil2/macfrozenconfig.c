@@ -53,17 +53,14 @@ extern void initstruct();
 #ifndef initimp
 extern void initimp();
 #endif
+#ifndef initimggif
+extern void initimggif();
+#endif
 #ifndef initimgpng
 extern void initimgpng();
 #endif
-#ifndef initimgformat
-extern void initimgformat();
-#endif
-#ifndef initimgpgm
-extern void initimgpgm();
-#endif
-#ifndef initimageop
-extern void initimageop();
+#ifndef initList
+extern void initList();
 #endif
 #ifndef initcStringIO
 extern void initcStringIO();
@@ -77,6 +74,9 @@ extern void initRes();
 #ifndef initrma
 extern void initrma();
 #endif
+#ifndef initimageop
+extern void initimageop();
+#endif
 #ifndef initimgppm
 extern void initimgppm();
 #endif
@@ -86,11 +86,11 @@ extern void initmath();
 #ifndef initmacfs
 extern void initmacfs();
 #endif
+#ifndef initimgjpeg
+extern void initimgjpeg();
+#endif
 #ifndef initApp
 extern void initApp();
-#endif
-#ifndef initIcn
-extern void initIcn();
 #endif
 #ifndef init_sre
 extern void init_sre();
@@ -98,8 +98,17 @@ extern void init_sre();
 #ifndef initimgpbm
 extern void initimgpbm();
 #endif
+#ifndef initoperator
+extern void initoperator();
+#endif
 #ifndef initarray
 extern void initarray();
+#endif
+#ifndef initselect
+extern void initselect();
+#endif
+#ifndef initIcn
+extern void initIcn();
 #endif
 #ifndef initpcre
 extern void initpcre();
@@ -125,11 +134,17 @@ extern void initgestalt();
 #ifndef initwaste
 extern void initwaste();
 #endif
-#ifndef initFm
-extern void initFm();
+#ifndef initimgtiff
+extern void initimgtiff();
 #endif
 #ifndef initEvt
 extern void initEvt();
+#endif
+#ifndef initFm
+extern void initFm();
+#endif
+#ifndef initimgformat
+extern void initimgformat();
 #endif
 #ifndef initMenu
 extern void initMenu();
@@ -137,20 +152,17 @@ extern void initMenu();
 #ifndef initScrap
 extern void initScrap();
 #endif
-#ifndef initimgtiff
-extern void initimgtiff();
-#endif
 #ifndef initNav
 extern void initNav();
+#endif
+#ifndef initimgpgm
+extern void initimgpgm();
 #endif
 #ifndef initSnd
 extern void initSnd();
 #endif
 #ifndef initstrop
 extern void initstrop();
-#endif
-#ifndef initimggif
-extern void initimggif();
 #endif
 #ifndef initTE
 extern void initTE();
@@ -161,9 +173,6 @@ extern void initAE();
 #ifndef initQt
 extern void initQt();
 #endif
-#ifndef initList
-extern void initList();
-#endif
 #ifndef initmac
 extern void initmac();
 #endif
@@ -172,9 +181,6 @@ extern void initQd();
 #endif
 #ifndef initCtl
 extern void initCtl();
-#endif
-#ifndef initimgjpeg
-extern void initimgjpeg();
 #endif
 #ifndef initicglue
 extern void initicglue();
@@ -205,22 +211,25 @@ struct _inittab _PyImport_Inittab[] = {
 	{"audioop", initaudioop},
 	{"struct", initstruct},
 	{"imp", initimp},
+	{"imggif", initimggif},
 	{"imgpng", initimgpng},
-	{"imgformat", initimgformat},
-	{"imgpgm", initimgpgm},
-	{"imageop", initimageop},
+	{"List", initList},
 	{"cStringIO", initcStringIO},
 	{"Dlg", initDlg},
 	{"Res", initRes},
 	{"rma", initrma},
+	{"imageop", initimageop},
 	{"imgppm", initimgppm},
 	{"math", initmath},
 	{"macfs", initmacfs},
+	{"imgjpeg", initimgjpeg},
 	{"App", initApp},
-	{"Icn", initIcn},
 	{"_sre", init_sre},
 	{"imgpbm", initimgpbm},
+	{"operator", initoperator},
 	{"array", initarray},
+	{"select", initselect},
+	{"Icn", initIcn},
 	{"pcre", initpcre},
 	{"errno", initerrno},
 	{"_socket", init_socket},
@@ -229,23 +238,22 @@ struct _inittab _PyImport_Inittab[] = {
 	{"imgop", initimgop},
 	{"gestalt", initgestalt},
 	{"waste", initwaste},
-	{"Fm", initFm},
+	{"imgtiff", initimgtiff},
 	{"Evt", initEvt},
+	{"Fm", initFm},
+	{"imgformat", initimgformat},
 	{"Menu", initMenu},
 	{"Scrap", initScrap},
-	{"imgtiff", initimgtiff},
 	{"Nav", initNav},
+	{"imgpgm", initimgpgm},
 	{"Snd", initSnd},
 	{"strop", initstrop},
-	{"imggif", initimggif},
 	{"TE", initTE},
 	{"AE", initAE},
 	{"Qt", initQt},
-	{"List", initList},
 	{"mac", initmac},
 	{"Qd", initQd},
 	{"Ctl", initCtl},
-	{"imgjpeg", initimgjpeg},
 	{"icglue", initicglue},
 	{"Win", initWin},
 	{"imgcolormap", initimgcolormap},

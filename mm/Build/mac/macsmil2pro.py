@@ -128,6 +128,9 @@ else:
 # macfreeze: exclude NodeInfo
 # macfreeze: exclude AnchorEdit
 # macfreeze: exclude rourl2path
+# macfreeze: exclude win32con
+# macfreeze: exclude RealDuration
+# macfreeze: exclude Tkinter
 
 #
 # And here's the code for non-standalone version of the editor:
