@@ -285,6 +285,15 @@ class NodeInfo(NodeInfoDialog):
 		import AttrEdit
 		AttrEdit.showattreditor(self.toplevel, self.node)
 
+	def chattrs_callback(self):
+		import AttrEdit
+		channel = self.context.channeldict.get(self.channelname)
+		if channel is None:
+			windowinterface.showmessage(
+				'Unknown channel %s' % self.channelname)
+			return
+		AttrEdit.showchannelattreditor(self.toplevel, channel)
+
 	def anchors_callback(self):
 		import AnchorEdit
 		AnchorEdit.showanchoreditor(self.toplevel, self.node)

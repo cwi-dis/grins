@@ -21,7 +21,7 @@ The constant part of the dialog consists of the following items:
   selection, a callback must be called.  Also, it must be possible to
   set the current selection under program control.
 - Buttons, each with their own callback: `Cancel', `Restore', `Apply',
-  `OK', `Node attr...', and `Anchors...'.
+  `OK', `Node attr...', `Channel attr...', and `Anchors...'.
 
 The three variable parts are known as external, immediate, and
 interior.  A description of each follows.
@@ -100,6 +100,7 @@ class NodeInfoDialog:
 			[('Cancel', (self.cancel_callback, ())),
 			 ('Restore', (self.restore_callback, ())),
 			 ('Node attr...', (self.attributes_callback, ())),
+			 ('Channel attr...', (self.chattrs_callback, ())),
 			 ('Anchors...', (self.anchors_callback, ())),
 			 ('Apply', (self.apply_callback, ())),
 			 ('OK', (self.ok_callback, ()))],
@@ -331,6 +332,9 @@ class NodeInfoDialog:
 		pass
 
 	def attributes_callback(self):
+		pass
+
+	def chattrs_callback(self):
 		pass
 
 	def anchors_callback(self):
