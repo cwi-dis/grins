@@ -88,6 +88,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.__ugroup = [USERGROUPVIEW(callback = (self.view_callback, (5,)))]
 		else:
 			self.__ugroup = []
+		if features.compatibility == compatibility.Boston:
+			self.commandlist = self.commandlist + [
+				TRANSITIONVIEW(callback = (self.view_callback, (6, ))),
+				HIDE_TRANSITIONVIEW(callback = (self.hide_view_callback, (6, )))]
+				
 		if hasattr(self, 'do_edit'):
 			self.commandlist.append(EDITSOURCE(callback = (self.edit_callback, ())))
 		#self.__save = None
@@ -177,6 +182,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		import Player
 		self.player = Player.Player(self)
 
+		import TransitionView
+		self.transitionview = TransitionView.TransitionView(self)
+
 		if not features.lightweight:
 			import ChannelView
 			self.channelview = ChannelView.ChannelView(self)
@@ -189,6 +197,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 			import UsergroupView
 			self.ugroupview = UsergroupView.UsergroupView(self)
+			
 		else:
 			import LinkEditLight
 			self.links = LinkEditLight.LinkEditLight(self)
@@ -200,7 +209,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# Views that are destroyed by restore (currently all)
 		self.views = [self.player, self.hierarchyview,
 			      self.channelview, self.links, self.layoutview,
-			      self.ugroupview]
+			      self.ugroupview, self.transitionview]
 
 	def hideviews(self):
 		for v in self.views:
