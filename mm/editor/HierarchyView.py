@@ -1069,7 +1069,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.selected_widget = None
 		self.focusnode = None
 
-		print "TODO: Optimisation in the HierarchyView here: refreshing scene graph on each commit."
+		#print "TODO: Optimisation in the HierarchyView here: refreshing scene graph on each commit."
 		self.refresh_scene_graph()
 		
 		focustype, focusobject = self.editmgr.getglobalfocus()
