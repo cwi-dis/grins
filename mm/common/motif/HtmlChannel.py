@@ -32,9 +32,8 @@ def actionhook(widget, client_data, action, event, plist):
 	if widget.Class() is not Xm.DrawingArea or \
 	   widget.Parent().Class() is not HTML.html:
 		return
-	try:
-		ch = HtmlWidgets[widget.Parent()]
-	except KeyError:
+	ch = HtmlWidgets.get(widget.Parent())
+	if ch is None:
 		return
 	ch.actionhook(client_data, action, event, plist)
 
@@ -304,7 +303,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		aname = href[5:]
 		tp = self.findanchortype(aname)
 		if tp is None:
-			windowinterface.showmessage('Unknown CMIF anchor: '+aname, grab = self.window)
+			windowinterface.showmessage('Unknown CMIF anchor: '+aname, grab = 1, parent = self.window)
 			return
 		if tp == ATYPE_PAUSE:
 			f = self.pause_triggered

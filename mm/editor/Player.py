@@ -11,7 +11,6 @@ from ViewDialog import ViewDialog
 import Timing
 import windowinterface, WMEVENTS
 
-##titles = ['Channels', 'Options', 'Run slots']
 titles = ['Channels', 'Options']
 
 # The Player class normally has only a single instance.
@@ -49,8 +48,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.waiting = 0
 		self.set_timer = toplevel.set_timer
 		self.timer_callback = self.scheduler.timer_callback
-		if len(titles) < 3:
-			self.updateuibaglist = self.dummy_updateuibaglist
+		self.updateuibaglist = self.dummy_updateuibaglist
 
 	def destroy(self):
 		if not hasattr(self, 'toplevel'):
@@ -66,8 +64,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		del self.toplevel
 		del self.set_timer
 		del self.timer_callback
-		if hasattr(self, 'updateuibaglist'):
-			del self.updateuibaglist
+		del self.updateuibaglist
 
 	def fixtitle(self):
 		self.settitle('Player (' + self.toplevel.basename + ')')
@@ -158,8 +155,10 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.hide()
 
 	def channel_callback(self, name):
+		self.toplevel.setwaiting()
 		isvis = self.channels[name].may_show()
 		self.cc_enable_ch(name, (not isvis))
+		self.toplevel.setready()
 
 	def cc_stop(self):
 		self.stop()
@@ -177,6 +176,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.setchannel(name, onoff)
 
 	def option_callback(self, option):
+		self.toplevel.setwaiting()
 		if option == 'Calculate timing':
 			self.measure_armtimes = (not self.measure_armtimes)
 			if self.measure_armtimes:
@@ -198,6 +198,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			self.scheduler.dump()
 		else:
 			print 'Player: Option menu: funny choice', i
+		self.toplevel.setready()
 
 	def slotmenu_callback(self, slot):
 		node = self.runslots[slot][0]
@@ -221,8 +222,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		else:
 			state = STOPPED
 		self.setstate(state)
-
-		self.showtime()
 	#
 	def showpauseanchor(self, pausing):
 		if pausing:
@@ -231,29 +230,9 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			state = PLAYING
 		self.setstate(state)
 
-	def showtime(self):
-		pass
-#		if self.scheduler.getrate():
-#			self.statebutton.lcol = self.statebutton.col2
-#		else:
-#			self.statebutton.lcol = GL.YELLOW
-#		#if self.msec_origin == 0:
-#		#	self.statebutton.label = '--:--'
-#		#	return
-#		now = int(self.scheduler.timefunc())
-#		label = `now/60` + ':' + `now/10%6` + `now % 10`
-#		if self.statebutton.label <> label:
-#			self.statebutton.label = label
-#		#
-        #
 	def makeslotmenu(self, list):
-		if not self.is_showing() or len(titles) < 3:
-			return
-		menu = []
-		for i in range(len(list)):
-			l = list[i]
-			menu.append('', l, (self.slotmenu_callback, (i,)))
-		self.subwin[2].create_menu(menu, title = 'Run slots')
+		pass
+
 	def dummy_updateuibaglist(self):
 		pass
 

@@ -96,14 +96,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.hierarchyview = HierarchyView.HierarchyView(self)
 
 		import ChannelView
-		self.channelview = \
-			ChannelView.ChannelView(self)
+		self.channelview = ChannelView.ChannelView(self)
 
 		import Player
 		self.player = Player.Player(self)
-
-##		import StyleSheet
-##		self.styleview = StyleSheet.StyleSheet(self)
 
 		import LinkEdit
 		self.links = LinkEdit.LinkEdit(self)
@@ -199,23 +195,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		ok = self.save_to_file(file)
 		self.setready()
 
-	def save_player_callback(self):
-		self.save_callback()
-		utype, url = MMurl.splittype(self.filename)
-		host, url = MMurl.splithost(url)
-		if utype or host:
-			# already warned
-			return
-		filename = MMurl.url2pathname(url)
-		self.setwaiting()
-		import MMPlayerTree
-		if filename[-4:] == '.smi':
-			filename = filename[:-4] + '.cmif'
-		elif filename[-5:] == '.smil':
-			filename = filename[:-5] + '.cmif'
-		MMPlayerTree.WriteFile(self.root, filename)
-		self.setready()
-
 	def saveas_okcallback(self, filename):
 		if not filename:
 			return 'no file specified'
@@ -263,22 +242,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			v.fixtitle()
 
 	def save_to_file(self, filename):
-## 		if os.path.isabs(filename):
-## 			cwd = self.dirname
-## 			if not cwd:
-## 				cwd = os.getcwd()
-## 			elif not os.path.isabs(cwd):
-## 				cwd = os.path.join(os.getcwd(), cwd)
-## 			if os.path.isdir(filename):
-## 				windowinterface.showmessage('%s is a directory; please select a file' % filename, mtype = 'error')
-## 				return
-## 			# XXXX maybe should check that dir gets shorter!
-## 			dir, file = os.path.split(filename)
-## 			while len(dir) > len(cwd):
-## 				dir, f = os.path.split(dir)
-## 				file = os.path.join(f, file)
-## 			if dir == cwd:
-## 				filename = file
 		# Get rid of hyperlinks outside the current tree and clipboard
 		# (XXX We shouldn't *save* the links to/from the clipboard,
 		# but we don't want to throw them away either...)
@@ -300,11 +263,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		print 'saving to', filename, '...'
 		try:
 			if filename[-4:] == '.smi' or filename[-5:] == '.smil':
-				import SMILTree
-				SMILTree.WriteFile(self.root, filename)
+				import SMILTreeWrite
+				SMILTreeWrite.WriteFile(self.root, filename)
 			else:
-				import MMTree
-				MMTree.WriteFile(self.root, filename)
+				import MMWrite
+				MMWrite.WriteFile(self.root, filename)
 		except IOError, msg:
 			windowinterface.showmessage('Save operation failed.\n'+
 						    'File: '+filename+'\n'+
@@ -343,48 +306,46 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def read_it(self):
 		self.changed = 0
 		if self.new_file:
-			print 'New file', self.new_file #DBG
 			if type(self.new_file) == type(''):
 				self.do_read_it(self.new_file)
 			else:
-				import MMTree
-				self.root = MMTree.ReadString(EMPTY, self.filename)
+				import MMRead
+				self.root = MMRead.ReadString(EMPTY, self.filename)
 		else:
 			self.do_read_it(self.filename)
-		Timing.changedtimes(self.root)
 		self.context = self.root.GetContext()
 		self.editmgr = EditMgr(self.root)
 		self.context.seteditmgr(self.editmgr)
 		self.editmgr.register(self)
 		
 	def do_read_it(self, filename):
-		import time
+## 		import time
 		import mimetypes
-		print 'parsing', filename, '...'
-		t0 = time.time()
+## 		print 'parsing', filename, '...'
+## 		t0 = time.time()
 		mtype = mimetypes.guess_type(filename)[0]
 		if mtype == 'application/smil':
-			import SMILTree
-			self.root = SMILTree.ReadFile(filename, self.printfunc)
+			import SMILTreeRead
+			self.root = SMILTreeRead.ReadFile(filename, self.printfunc)
 		elif mtype == 'application/x-cmif':
-			import MMTree
-			self.root = MMTree.ReadFile(filename)
+			import MMRead
+			self.root = MMRead.ReadFile(filename)
 		else:
-			import SMILTree
+			import SMILTreeRead
 			if mtype[:6] != 'audio/' and \
 			   mtype[:6] != 'video/':
 				dur = ' dur="indefinite"'
 			else:
 				dur = ''
-			self.root = SMILTree.ReadString('''\
+			self.root = SMILTreeRead.ReadString('''\
 <smil>
   <body>
     <ref%s src="%s"/>
   </body>
 </smil>
 ''' % (dur, filename), filename, self.printfunc)
-		t1 = time.time()
-		print 'done in', round(t1-t0, 3), 'sec.'
+## 		t1 = time.time()
+## 		print 'done in', round(t1-t0, 3), 'sec.'
 
 
 	def printfunc(self, msg):
@@ -510,17 +471,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def is_document(self, url):
 		return self.filename == url
-## 		import os
-
-## 		try:
-## 			fn = self.filename
-## 			if self.dirname:
-## 				fn = os.path.join(self.dirname, self.filename)
-## 			ourdata = os.stat(fn)
-## 			hisdata = os.stat(filename)
-## 		except os.error:
-## 			return 0
-## 		return (ourdata == hisdata)
 
 	def _getlocalexternalanchors(self):
 		fn = self.filename
