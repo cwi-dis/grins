@@ -18,7 +18,7 @@ class BlitterClass:
 					
 	def needtmpbitmap(self):
 		"""Return true if this blitter needs the temporary bitmap."""
-		return 0
+		return 1
 		
 	def _convertrect(self, ltrb):
 		"""Convert an lrtb-style rectangle to the local convention"""
@@ -57,22 +57,28 @@ class R1R2OverlapBlitterClass(BlitterClass):
 		self.copyBits(src1, tmp, rect1, rect1)
 		self.copyBits(tmp, dst, self.ltrb, self.ltrb)
 			
-	def needtmpbitmap(self):
-		return 1
-	
+				
 class RlistR2OverlapBlitterClass(BlitterClass):
 	"""Like R1R2OverlapBlitterClass, but first item is a list of rects"""
-	pass
+	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
+		rectlist, rect2 = parameters
+		self.copyBits(src2, tmp, rect2, rect2)
+		x0, y0, x1, y1 = self.ltrb
+		for rect in rectlist:
+			self.copyBits(src1, tmp, rect, rect)
+		self.copyBits(tmp, dst, self.ltrb, self.ltrb)
+		
 
 class PolyR2OverlapBlitterClass(BlitterClass):
 	"""Like R1R2OverlapBlitterClass, but first item is a polygon (list of points)"""
-	pass
-	
+	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
+		pass			
 	
 class FadeBlitterClass(BlitterClass):
 	"""Parameter is float in range 0..1, use this as blend value"""
-	pass
-	
+	def updatebitmap(self, parameters, src1, src2, tmp, dst, dstrgn):
+		pass
+					
 class PolylistR2OverlapBlitterClass(BlitterClass):
 	pass
 
