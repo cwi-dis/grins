@@ -55,8 +55,6 @@ class AudioDevMAC:
 		return self.__outrate
 
 	def writeframes(self, data):
-		print 'DBG: filled %d, fillable %d, qsize %d, dsize %d'%(self.getfilled(), 
-					self.getfillable(), self.__qsize, len(data))
 		if not self.__format or not self.__outrate:
 			raise Error, 'params not specified'
 		if not self.__chan:
