@@ -155,6 +155,7 @@
 #define IDD_EDITATTR_TRANSITION         384
 #define IDD_EDITATTR_SUBREGION          385
 #define IDD_LAYOUT3                     386
+#define IDD_EDITATTR_COLORSEL           387
 #define IDC_EXPLANATION                 1002
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
@@ -389,6 +390,12 @@
 #define IDC_81                          1264
 #define IDC_LAYOUT_MEDIA_RADIO          1265
 #define IDC_34x                         1267
+#define IDC_CTYPES                      1270
+#define IDC_CTYPET                      1271
+#define IDC_CTYPEI                      1272
+#define IDC_COLORS                      1274
+#define IDC_COLOR_PICK                  1275
+#define IDC_LABEL                       1277
 #define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
@@ -473,7 +480,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        295
 #define _APS_NEXT_COMMAND_VALUE         32865
-#define _APS_NEXT_CONTROL_VALUE         1268
+#define _APS_NEXT_CONTROL_VALUE         1278
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
