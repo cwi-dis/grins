@@ -12,7 +12,7 @@ from AnchorDefs import *
 from MMNode import interiortypes
 
 from Hlinks import ANCHOR1, ANCHOR2, DIR, TYPE, DIR_1TO2, DIR_2TO1, \
-	           DIR_2WAY, TYPE_JUMP
+		   DIR_2WAY, TYPE_JUMP
 typestr = ['JUMP', 'CALL', 'FORK']
 dirstr = ['->', '<-', '<->']
 
@@ -52,7 +52,7 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 		self.linkfocus = None
 		self.interesting = []
 
-		LinkBrowserDialog.__init__(self, self.__maketitle(), 
+		LinkBrowserDialog.__init__(self, self.__maketitle(),
 			[('All', (self.menu_callback, (self.left, M_ALL))),
 			 ('Dangling',
 			  (self.menu_callback, (self.left, M_DANGLING))),
@@ -118,7 +118,6 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 		if self.is_showing():
 			LinkBrowserDialog.show(self)
 		else:
-			self.toplevel.showstate(self, 1)
 			self.updateform()
 			LinkBrowserDialog.show(self)
 			self.toplevel.checkviews()
@@ -126,7 +125,6 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 
 	def hide(self):
 		if self.is_showing():
-			self.toplevel.showstate(self, 0)
 			self.editmgr.unregister(self)
 			LinkBrowserDialog.hide(self)
 			self.toplevel.checkviews()
@@ -381,7 +379,7 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 				str.browser_addlistitems(names, -1)
 		# deal with possible node name changes
 		list = str.browser_getlist()
-		
+
 		if len(list)==0:
 			# deal with LinkEditDialog not hidden but destroyed (e.g win32)
 			for i in range(len(str.anchors)):
@@ -390,7 +388,7 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 				list.append(name)
 			if	len(list):
 				str.browser_addlistitems(list, -1)
-	
+
 		for i in range(len(str.anchors)):
 			a = str.anchors[i]
 			name = self.makename(a)
@@ -681,7 +679,7 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 
 	def kill(self):
 		self.hide()
-		
+
 	def editorshow(self, editlink, isnew):
 		editor = LinkEditEditor(self, "Hyperlink properties", editlink, isnew)
 		editor.run()
@@ -707,7 +705,7 @@ class LinkEditEditor(LinkEditorDialog):
 	def run(self):
 		self.show()
 		return self.editlink
-		
+
 	def linkdir_callback(self):
 		linkdir = self.linkdirgetchoice()
 		l = self.editlink

@@ -39,7 +39,6 @@ class LayoutView(LayoutViewDialog):
 			LayoutViewDialog.show(self)
 			return
 		self.fill()
-		self.toplevel.showstate(self, 1)
 		LayoutViewDialog.show(self)
 		self.editmgr.register(self)
 
@@ -49,7 +48,6 @@ class LayoutView(LayoutViewDialog):
 		self.editmgr.unregister(self)
 		self.toplevel.player.setlayout()
 		LayoutViewDialog.hide(self)
-		self.toplevel.showstate(self, 0)
 
 	def transaction(self):
 		return 1		# It's always OK to start a transaction
