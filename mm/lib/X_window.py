@@ -573,9 +573,7 @@ class _DisplayList(X_windowbase._DisplayList):
 			raise error, 'displaylist already rendered'
 		window = self._window
 		color = self._window._convert_color(color)
-		try:
-			nsx, nsy, ndx, ndy, points = window.arrowcache[(src,dst)]
-		except KeyError:
+		if not window.arrowcache.has_key((src,dst)):
 			sx, sy = src
 			dx, dy = dst
 			nsx, nsy = window._convert_coordinates((sx, sy))
@@ -605,6 +603,7 @@ class _DisplayList(X_windowbase._DisplayList):
 			points.append(roundi(ndx + ARR_LENGTH*cos - ARR_HALFWIDTH*sin),
 				      roundi(ndy + ARR_LENGTH*sin + ARR_HALFWIDTH*cos))
 			window.arrowcache[(src,dst)] = nsx, nsy, ndx, ndy, points
+		nsx, nsy, ndx, ndy, points = window.arrowcache[(src,dst)]
 		self._list.append(('arrow', color, self._linewidth,
 				   (nsx, nsy, ndx, ndy), points))
 		self._optimize((1,))
@@ -1427,13 +1426,14 @@ class Selection(_Widget, _List):
 		list = selection.SelectionBoxGetChild(Xmd.DIALOG_LIST)
 		list.selectionPolicy = Xmd.SINGLE_SELECT
 		list.listSizePolicy = Xmd.CONSTANT
-		try:
+		if options.has_key('enterCallback'):
 			cb = options['enterCallback']
-		except KeyError:
-			pass
-		else:
 			txt = selection.SelectionBoxGetChild(Xmd.DIALOG_TEXT)
 			txt.AddCallback('activateCallback', self._callback, cb)
+		if options.has_key('changeCallback'):
+			cb = options['changeCallback']
+			txt = selection.SelectionBoxGetChild(Xmd.DIALOG_TEXT)
+			txt.AddCallback('valueChangedCallback', self._callback, cb)
 		_List.__init__(self, list, itemlist, initial, sel_cb)
 		_Widget.__init__(self, parent, selection)
 
@@ -1490,10 +1490,8 @@ class List(_Widget, _List):
 				 'bottomAttachment': Xmd.ATTACH_FORM,
 				 'visibleItemCount': rows,
 				 'selectionPolicy': Xmd.SINGLE_SELECT}
-			try:
+			if options.has_key('width'):
 				attrs['width'] = options['width']
-			except KeyError:
-				pass
 			if parent.resizePolicy == Xmd.RESIZE_ANY:
 				attrs['listSizePolicy'] = \
 							Xmd.RESIZE_IF_POSSIBLE
@@ -1511,10 +1509,8 @@ class List(_Widget, _List):
 							Xmd.RESIZE_IF_POSSIBLE
 			else:
 				attrs['listSizePolicy'] = Xmd.CONSTANT
-			try:
+			if options.has_key('width'):
 				attrs['width'] = options['width']
-			except KeyError:
-				pass
 			list = parent._form.CreateScrolledList(name, attrs)
 			widget = list
 			self._text = '<None>'
@@ -1574,15 +1570,11 @@ class TextInput(_Widget):
 		else:
 			form = parent._form
 			widget = None
-		try:
+		if options.has_key('columns'):
 			attrs['columns'] = options['columns']
-		except KeyError:
-			pass
 		attrs['value'] = inittext
-		try:
+		if options.has_key('editable'):
 			attrs['editable'] = options['editable']
-		except KeyError:
-			pass
 		self._text = text = form.CreateTextField(name, attrs)
 		text.ManageChild()
 		if not widget:
@@ -1644,10 +1636,8 @@ class TextEdit(_Widget):
 			 'editable': TRUE,
 			 'rows': 10}
 		for option in ['editable', 'rows', 'columns']:
-			try:
+			if options.has_key(option):
 				attrs[option] = options[option]
-			except KeyError:
-				pass
 		if not attrs['editable']:
 			attrs['cursorPositionVisible'] = FALSE
 		self._attachments(attrs, options)
@@ -2128,11 +2118,8 @@ class Window(_WindowHelpers, _MenuSupport):
 				Xt.ApplicationShell, wattrs)
 			self._form = self._shell.CreateManagedWidget(
 				'windowForm', Xm.Form, attrs)
-			try:
+			if options.has_key('deleteCallback'):
 				deleteCallback = options['deleteCallback']
-			except KeyError:
-				pass
-			else:
 				self._shell.AddWMProtocolCallback(
 					toplevel._delete_window,
 					self._delete_callback,
