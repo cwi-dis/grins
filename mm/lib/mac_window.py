@@ -782,7 +782,7 @@ class _DisplayList(mac_windowbase._DisplayList):
 toplevel = _Toplevel()
 from mac_windowbase import *
 
-class _DialogWindow(_Window):
+class DialogWindow(_Window):
 	def __init__(self, resid):
 		wid = Dlg.GetNewDialog(resid, -1)
 		x0, y0, x1, y1 = wid.GetWindowPort().portRect
@@ -792,8 +792,21 @@ class _DialogWindow(_Window):
 		toplevel._register_wid(wid, self, "a dialog")
 		Qd.SetPort(wid)
 		self._widgetlist = []
+		self._is_shown = 0 # XXXX Is this always true??!?
+		
+	def show(self):
+		self._wid.ShowWindow()
+		self._is_shown = 1
+		
+	def hide(self):
+		self._wid.HideWindow()
+		self._is_shown = 0
+		
+	def is_showing(self):
+		return self._is_shown
 		
 	def close(self):
+		self.hide()
 		self._widgetlist = []
 		_Window.close(self)
 		
@@ -815,6 +828,11 @@ class _DialogWindow(_Window):
 	def _activate(self, onoff):
 		for w in self._widgetlist:
 			w._activate(onoff)
+			
+	def ListWidget(self, rect, content=[]):
+		widget = _ListWidget(self._wid, rect, content)
+		self.addwidget(widget)
+		return widget
 		
 # XXXX Do we need a control-window too?
 
@@ -855,23 +873,76 @@ class FileDialog:
 		return 1
 
 class _ListWidget:
-	def __init__(self, wid, rect, content):
+	def __init__(self, wid, rect, content=[]):
 		# wid is the window (dialog) where our list is going to be in
 		# rect is it's item rectangle (as in dialog item)
 		self.rect = rect
 		rect2 = rect[0]+1, rect[1]+1, rect[2]-16, rect[3]-1
 		self.list = MacList.LNew(rect2, (0, 0, 1, len(content)), (0,0), 0, wid,
 					0, 0, 0, 1)
-		self.setcontent(content)
+		self._data = []
+		self._setcontent(0, len(content), content)
 		self.wid = wid
 		self.list.LSetDrawingMode(1)
-	
-	def setcontent(self, content):
-		for y in range(len(content)):
-			item = content[y]
-			self.list.LSetCell(item, (0, y))
 		Win.InvalRect(self.rect)
-
+		self._redraw() # DBG
+	
+	def _setcontent(self, fr, to, content):
+		for y in range(fr, to):
+			item = content[y-fr]
+			self.list.LSetCell(item, (0, y))
+		self._data[fr:to] = content
+		
+	def _delete(self, fr=None, count=1):
+		if fr is None:
+			self.list.LDelRow(0,0)
+			self._data = []
+		else:
+			self.list.LDelRow(count, fr)
+			del self._data[fr:fr+count]
+			
+	def _insert(self, where=-1, count=1):
+		if where == -1:
+			where = 32766
+			self._data = self._data + [None]*count
+		else:
+			self._data[where:where] = [None]*count
+		return self.list.LAddRow(count, where)
+		
+	def delete(self, fr=None, count=1):
+		self.list.LSetDrawingMode(0)
+		self._delete(fr, count)
+		self.list.LSetDrawingMode(1)
+		Win.InvalRect(self.rect)
+		self._redraw() # DBG
+		
+	def set(self, content):
+		self.list.LSetDrawingMode(0)
+		self._delete()
+		self._insert(count=len(content))
+		self._setcontent(0, len(content), content)
+		self.list.LSetDrawingMode(1)
+		Win.InvalRect(self.rect)
+		self._redraw() # DBG
+		
+	def get(self):
+		return self._data
+		
+	def insert(self, where=-1, content):
+		self.list.LSetDrawingMode(0)
+		where = self._insert(where, len(content))
+		self._setcontent(where, where+len(content), content)
+		self.list.LSetDrawingMode(1)
+		Win.InvalRect(self.rect)
+		self._redraw() # DBG
+		
+	def replace(self, where, what):
+		self.list.LSetDrawingMode(0)
+		self._setcontent(where, where+1, [what])
+		self.list.LSetDrawingMode(1)
+		Win.InvalRect(self.rect)
+		self._redraw() # DBG
+		
 	def deselectall(self):
 		while 1:
 			ok, pt = self.list.LGetSelect(1, (0,0))
@@ -883,6 +954,12 @@ class _ListWidget:
 		if num < 0:
 			return
 		self.list.LSetSelect(1, (0, num))
+		
+	def getselect(self):
+		ok, (x, y) = self.list.LGetSelect(1, (0,0))
+		if not ok:
+			return None
+		return y
 			
 	def click(self, where, modifiers):
 		is_double = self.list.LClick(where, modifiers)
@@ -897,18 +974,19 @@ class _ListWidget:
 		Qd.SetPort(self.wid)
 		Qd.FrameRect(self.rect)
 		
-	def _redraw(self, rgn):
-		rgn = self.wid.GetWindowPort().visRgn
+	def _redraw(self, rgn=None):
+		if rgn == None:
+			rgn = self.wid.GetWindowPort().visRgn
 		self.drawframe()
 		self.list.LUpdate(rgn)
 		
 	def _activate(self, onoff):
 		self.list.LActivate(onoff)
 
-class SelectionDialog(_DialogWindow):
+class SelectionDialog(DialogWindow):
 	def __init__(self, listprompt, selectionprompt, itemlist, default):
 		# First create dialogwindow and set static items
-		_DialogWindow.__init__(self, ID_SELECT_DIALOG)
+		DialogWindow.__init__(self, ID_SELECT_DIALOG)
 		tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_LISTPROMPT)
 		Dlg.SetDialogItemText(h, listprompt)
 		tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_SELECTPROMPT)
@@ -921,8 +999,7 @@ class SelectionDialog(_DialogWindow):
 		# Now setup the scrolled list
 		self._itemlist = itemlist
 		tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_ITEMLIST)
-		self._listwidget = _ListWidget(self._wid, rect, itemlist)
-		self.addwidget(self._listwidget)
+		self._listwidget = self.ListWidget(rect, itemlist)
 		if default in itemlist:
 			num = itemlist.index(default)
 			self._indexlist.select(num)
@@ -930,7 +1007,9 @@ class SelectionDialog(_DialogWindow):
 		# and the default item
 		tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_ITEM)
 		Dlg.SetDialogItemText(h, default)
-		# XXXX Show
+		
+		# And show it
+		self.show()
 	
 	def do_itemhit(self, item, event):
 		is_ok = 0
@@ -960,10 +1039,10 @@ class SelectionDialog(_DialogWindow):
 			self.OkCallback(rv)
 			self.close()
 		
-class InputDialog(_DialogWindow):
+class InputDialog(DialogWindow):
 	def __init__(self, prompt, default, cb):
 		# First create dialogwindow and set static items
-		_DialogWindow.__init__(self, ID_INPUT_DIALOG)
+		DialogWindow.__init__(self, ID_INPUT_DIALOG)
 		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_PROMPT)
 		Dlg.SetDialogItemText(h, prompt)
 		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
