@@ -106,6 +106,7 @@ class AttrEditorDialog(windowinterface.MACDialog):
 			label = a.createwidget()
 			pagenames.append(label)
 		self._pagebrowser = self._window.ListWidget(ITEM_SELECT, pagenames)
+		self._pagebrowser.setkeyboardfocus()
 		try:
 			initpagenum = self._attr_to_pageindex[initattr]
 		except KeyError:
@@ -266,6 +267,22 @@ class MultiTabPage(TabPage):
 		for f in self.fieldlist:
 			f._widgetcreated()
 		return self.TAB_LABEL
+		
+class MultiDictTabPage(MultiTabPage):
+
+	def init_controls(self, item0):
+		rv = MultiTabPage.init_controls(self, item0)
+		# We want the fields as a dictionary, as there are many different
+		# variants of this tab
+		self._attr_to_field = {}
+		for f in self.fieldlist:
+			name = f.getname()
+			self._attr_to_field[name] = f
+		return rv
+		
+	def close(self):
+		del self._attr_to_field
+		MultiTabPage.close(self)
 		
 class SingleTabPage(TabPage):
 	"""A tab-page with a single item plus its description"""
@@ -496,6 +513,17 @@ class ChannelTabPage(OptionTabPage):
 			return 1
 		return OptionTabPage.do_itemhit(self, item, event)
 
+	def _option_click(self):
+		self._fixbutton()
+		
+	def update(self):
+		OptionTabPage.update(self)
+		self._fixbutton()
+		
+	def _fixbutton(self):
+		name = self._option.getselectvalue()
+		self.attreditor._setsensitive([self.item0+self.ITEM_CHATTRS], 
+				self.fieldlist[0].channelexists(name))
 
 class CaptionChannelTabPage(ChannelTabPage):
 	attrs_on_page=['captionchannel']
@@ -541,7 +569,7 @@ class InfoTabPage(MultiStringTabPage):
 		'alt': ITEM_ALT,
 		'longdesc': ITEM_LONGDESC,
 	}
-	attrs_on_page = _attr_to_item.keys()
+	attrs_on_page = ['title', 'author', 'copyright', 'abstract', 'alt', 'longdesc']
 	_items_on_page = _attr_to_item.values()
 	
 class InteriorInfoTabPage(InfoTabPage):
@@ -549,8 +577,8 @@ class InteriorInfoTabPage(InfoTabPage):
 	items_to_hide = [10, 11, 12, 13]
 	attrs_on_page = ['title', 'author', 'copyright', 'abstract']
 
-class InteriorInfoTabPage(InfoTabPage):
-	"""Info page without the alt and longdesc items"""
+class DocumentInfoTabPage(InfoTabPage):
+	"""Info page without the abstract, alt and longdesc items"""
 	items_to_hide = [8, 9, 10, 11, 12, 13]
 	attrs_on_page = ['title', 'author', 'copyright']
 
@@ -568,7 +596,7 @@ class TimingTabPage(MultiStringTabPage):
 		'loop': ITEM_LOOP,
 		'begin': ITEM_BEGIN,
 	}
-	attrs_on_page = _attr_to_item.keys()
+	attrs_on_page = ['duration', 'loop', 'begin']
 	_items_on_page = _attr_to_item.values()
 
 class UploadTabPage(MultiStringTabPage):
@@ -593,7 +621,8 @@ class UploadTabPage(MultiStringTabPage):
 		'project_ftp_user_media': ITEM_MEDIAUSER,
 		'project_ftp_dir_media': ITEM_MEDIADIR,
 	}
-	attrs_on_page = _attr_to_item.keys()
+	attrs_on_page = ['project_ftp_host', 'project_ftp_user', 'project_ftp_dir',
+		'project_ftp_host_media', 'project_ftp_user_media', 'project_ftp_dir_media']
 	_items_on_page = _attr_to_item.values()
 
 class ClipTabPage(MultiStringTabPage):
@@ -608,7 +637,7 @@ class ClipTabPage(MultiStringTabPage):
 		'clipbegin': ITEM_BEGIN,
 		'clipend': ITEM_END,
 	}
-	attrs_on_page = _attr_to_item.keys()
+	attrs_on_page = ['clipbegin', 'clipend']
 	_items_on_page = _attr_to_item.values()
 
 class TargetAudienceTabPage(MultiTabPage):
@@ -665,7 +694,54 @@ class TargetAudienceTabPage(MultiTabPage):
 		print 'save dbg targets', targets
 		field._savevaluefrompage(string.join(targets, ','))
 
-class ConversionTabPage(MultiTabPage):
+class ImageConversionTabPage(MultiTabPage):
+	TAB_LABEL='Conversion'
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_IMAGE_CONVERSION
+	ITEM_GROUP=1
+	ITEM_CONVERT=2
+	ITEM_QUALITY=4
+	N_ITEMS=4
+	attrs_on_page = ['project_convert', 'project_quality']
+	
+	def close(self):
+		self._qualitypopup.delete()
+		MultiTabPage.close(self)
+		
+	def init_controls(self, item0):
+		rv = SingleTabPage.init_controls(self, item0)
+		self._qualitypopup = windowinterface.SelectWidget(self.attreditor._dialog, 
+				self.item0+self.ITEM_QUALITY, [], None)
+		return rv
+
+	def do_itemhit(self, item, event):
+		if item-self.item0 == self.ITEM_CONVERT:
+			self.attreditor._togglebutton(item)
+			return 1
+		elif item-self.item0 == self.ITEM_QUALITY:
+			return 1
+		return 0
+		
+	def update(self):
+		value = self.fieldlist[0]._getvalueforpage()
+		self.attreditor._setbutton(self.item0+self.ITEM_CONVERT, value=='on')
+		self.update_popup(self.fieldlist[1], self._qualitypopup)
+		
+	def update_popup(self, field, popup):
+		value = field._getvalueforpage()
+		list = field.getoptions()
+		popup.setitems(list, value)
+		
+	def save(self):
+		value = self.attreditor._getbutton(self.item0+self.ITEM_CONVERT)
+		self.fieldlist[0]._savevaluefrompage(['off', 'on'][value])
+		self.save_popup(self.fieldlist[1], self._qualitypopup)
+
+	def save_popup(self, field, popup):
+		value = popup.getselectvalue()
+		field._savevaluefrompage(value)
+
+class ConversionTabPage(MultiDictTabPage):
 	TAB_LABEL='Conversion'
 	
 	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_CONVERSION
@@ -703,21 +779,14 @@ class ConversionTabPage(MultiTabPage):
 	_items_on_page = _value_to_item.values() + _attr_to_item.values()
 	
 	def close(self):
-		del self._attr_to_field
 		if self._videopopup:
 			self._videopopup.delete()
 		if self._audiopopup:
 			self._audiopopup.delete()
-		MultiTabPage.close(self)
+		MultiDictTabPage.close(self)
 		
 	def init_controls(self, item0):
-		rv = SingleTabPage.init_controls(self, item0)
-		# We want the fields as a dictionary, as there are many different
-		# variants of this tab
-		self._attr_to_field = {}
-		for f in self.fieldlist:
-			name = f.getname()
-			self._attr_to_field[name] = f
+		rv = MultiDictTabPage.init_controls(self, item0)
 		if self._attr_to_field.has_key('project_videotype'):
 			self._videopopup = windowinterface.SelectWidget(self.attreditor._dialog, 
 				self.item0+self.ITEM_VIDEOTYPE, [], None)
@@ -788,19 +857,19 @@ class ConversionTabPage(MultiTabPage):
 		value = popup.getselectvalue()
 		field._savevaluefrompage(value)
 
-class Conversion1TabPage(MultiTabPage):
+class Conversion1TabPage(ConversionTabPage):
 	# audio: no videotype
 	items_to_hide = [12, 13]
 	attrs_on_page = ['project_convert', 'project_targets', 
 		'project_audiotype', 'project_mobile', 'project_perfect']
 
-class Conversion2TabPage(MultiTabPage):
+class Conversion2TabPage(ConversionTabPage):
 	# Lightweight video: no convert/mobile/perfect buttons
 	items_to_hide = [2, 14, 15]
 	attrs_on_page = ['project_targets', 'project_videotype',
 		'project_audiotype']
 
-class Conversion3TabPage(MultiTabPage):
+class Conversion3TabPage(ConversionTabPage):
 	# Lightweight audio: no convert/mobile/perfect buttons, no video
 	items_to_hide = [2, 12, 13, 14, 15]
 	attrs_on_page = ['project_targets', 'project_audiotype']
@@ -820,7 +889,7 @@ class GeneralTabPage(MultiTabPage):
 		'channel': ITEM_CHANNEL,
 		'.type': ITEM_NODETYPE,
 	}
-	attrs_on_page = _attr_to_item.keys()
+	attrs_on_page = ['name', 'channel', '.type']
 	
 	def init_controls(self, item0):
 		rv = MultiTabPage.init_controls(self, item0)
@@ -839,7 +908,7 @@ class GeneralTabPage(MultiTabPage):
 		if item == self.item0+self.ITEM_NODENAME:
 			return 1
 		elif item == self.item0+self.ITEM_CHANNEL:
-			# popup
+			self._fixbutton()
 			return 1
 		elif item == self.item0+self.ITEM_CHANNELPROPS:
 			self.fieldlist[1].channelprops()
@@ -858,6 +927,7 @@ class GeneralTabPage(MultiTabPage):
 		value = self.fieldlist[2]._getvalueforpage()
 		list = self.fieldlist[2].getoptions()
 		self._typepopup.setitems(list, value)
+		self._fixbutton()
 
 	def save(self):
 		value = self.attreditor._getlabel(self.item0+self.ITEM_NODENAME)
@@ -866,6 +936,12 @@ class GeneralTabPage(MultiTabPage):
 		self.fieldlist[1]._savevaluefrompage(value)
 		value = self._typepopup.getselectvalue()
 		self.fieldlist[2]._savevaluefrompage(value)
+
+		
+	def _fixbutton(self):
+		name = self._channelpopup.getselectvalue()
+		self.attreditor._setsensitive([self.item0+self.ITEM_CHANNELPROPS], 
+				self.fieldlist[1].channelexists(name))
 
 class SystemPropertiesTabPage(MultiTabPage):
 	TAB_LABEL='System properties'
@@ -964,14 +1040,17 @@ class SystemPropertiesTabPage(MultiTabPage):
 		list = self.fieldlist[3].getoptions()
 		self.initradio(self.ILIST_OVERDUB_CAPTION, list, value)
 
-		value = self.fieldlist[4]._getvalueforpage()
-		self.attreditor._setlabel(self.item0+self.ITEM_REQUIRED, value)
+		if len(self.fieldlist) > 4:
+			value = self.fieldlist[4]._getvalueforpage()
+			self.attreditor._setlabel(self.item0+self.ITEM_REQUIRED, value)
 
-		value = self.fieldlist[5]._getvalueforpage()
-		self.attreditor._setlabel(self.item0+self.ITEM_SCREENDEPTH, value)
+		if len(self.fieldlist) > 5:
+			value = self.fieldlist[5]._getvalueforpage()
+			self.attreditor._setlabel(self.item0+self.ITEM_SCREENDEPTH, value)
 
-		value = self.fieldlist[6]._getvalueforpage()
-		self.attreditor._setlabel(self.item0+self.ITEM_SCREENSIZE, value)
+		if len(self.fieldlist) > 6:
+			value = self.fieldlist[6]._getvalueforpage()
+			self.attreditor._setlabel(self.item0+self.ITEM_SCREENSIZE, value)
 
 	def save(self):
 		value = self._bitratepopup.getselectvalue()
@@ -988,16 +1067,34 @@ class SystemPropertiesTabPage(MultiTabPage):
 		value = self.getradio(self.ILIST_OVERDUB_CAPTION, list)
 		self.fieldlist[3]._savevaluefrompage(value)
 		
-		value = self.attreditor._getlabel(self.item0+self.ITEM_REQUIRED)
-		self.fieldlist[4]._savevaluefrompage(value)
+		if len(self.fieldlist) > 4:
+			value = self.attreditor._getlabel(self.item0+self.ITEM_REQUIRED)
+			self.fieldlist[4]._savevaluefrompage(value)
+			
+		if len(self.fieldlist) > 5:
+			value = self.attreditor._getlabel(self.item0+self.ITEM_SCREENDEPTH)
+			self.fieldlist[5]._savevaluefrompage(value)
+			
+		if len(self.fieldlist) > 6:
+			value = self.attreditor._getlabel(self.item0+self.ITEM_SCREENSIZE)
+			self.fieldlist[6]._savevaluefrompage(value)
 		
-		value = self.attreditor._getlabel(self.item0+self.ITEM_SCREENDEPTH)
-		self.fieldlist[5]._savevaluefrompage(value)
-		
-		value = self.attreditor._getlabel(self.item0+self.ITEM_SCREENSIZE)
-		self.fieldlist[6]._savevaluefrompage(value)
-		
-class TransitionTabPage(MultiTabPage):
+class SystemPropertiesPrefTabPage(SystemPropertiesTabPage):
+	items_to_hide = (6, 13, 16, 17, 18, 19, 20, 21)
+	attrs_on_page = [
+		'system_bitrate',
+		'system_captions',
+		'system_language',
+		'system_overdub_or_caption',
+	]
+	ITEM_CAPTION_OFF=SystemPropertiesTabPage.ITEM_CAPTION_OFF
+	ITEM_CAPTION_ON=SystemPropertiesTabPage.ITEM_CAPTION_ON
+	ITEM_OVERDUB_CAPTION_OVERDUB=SystemPropertiesTabPage.ITEM_OVERDUB_CAPTION_OVERDUB
+	ITEM_OVERDUB_CAPTION_CAPTION=SystemPropertiesTabPage.ITEM_OVERDUB_CAPTION_CAPTION
+	ILIST_CAPTION=(ITEM_CAPTION_OFF, ITEM_CAPTION_ON)
+	ILIST_OVERDUB_CAPTION=(ITEM_OVERDUB_CAPTION_OVERDUB, ITEM_OVERDUB_CAPTION_CAPTION)
+
+class TransitionTabPage(MultiDictTabPage):
 	TAB_LABEL='Transition'
 	
 	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_TRANSITION
@@ -1017,18 +1114,11 @@ class TransitionTabPage(MultiTabPage):
 	_items_on_page = _attr_to_item.values()
 	
 	def close(self):
-		del self._attr_to_field
 		self._typepopup.delete()
-		MultiTabPage.close(self)
+		MultiDictTabPage.close(self)
 		
 	def init_controls(self, item0):
-		rv = MultiTabPage.init_controls(self, item0)
-		# We want the fields as a dictionary, as there are many different
-		# variants of this tab
-		self._attr_to_field = {}
-		for f in self.fieldlist:
-			name = f.getname()
-			self._attr_to_field[name] = f
+		rv = MultiDictTabPage.init_controls(self, item0)
 		self._typepopup = windowinterface.SelectWidget(self.attreditor._dialog, 
 				self.item0+self.ITEM_TYPE, [], None)
 		return rv
@@ -1119,7 +1209,7 @@ class WipeTabPage(MultiTabPage):
 		'wipetype': ITEM_TYPE,
 		'direction': ITEM_DIRECTION,
 	}
-	attrs_on_page = _attr_to_item.keys()
+	attrs_on_page = ['wipetype', 'direction']
 	
 	def init_controls(self, item0):
 		rv = MultiTabPage.init_controls(self, item0)
@@ -1156,6 +1246,89 @@ class WipeTabPage(MultiTabPage):
 		value = self._directionpopup.getselectvalue()
 		self.fieldlist[1]._savevaluefrompage(value)
 
+class AreaTabPage(MultiDictTabPage):
+	"""Not useable on its own: subclassed further down"""
+			
+	def do_itemhit(self, item, event):
+		if item-self.item0 in self._checkboxes:
+			self.attreditor._togglebutton(item)
+			return 1
+		elif item-self.item0 in self._textfields:
+			return 1
+		return 0
+		
+	def update(self):
+		for name, item in self._attr_to_checkbox.items():
+			field = self._attr_to_field[name]
+			value = field._getvalueforpage()
+			self.attreditor._setbutton(self.item0+item, value=='on')
+		x, y = self._getpoint(self._xyfield)
+		w, h = self._getpoint(self._whfield)
+		self.attreditor._setlabel(self.item0+self.ITEM_X, `x`)
+		self.attreditor._setlabel(self.item0+self.ITEM_Y, `y`)
+		self.attreditor._setlabel(self.item0+self.ITEM_W, `w`)
+		self.attreditor._setlabel(self.item0+self.ITEM_H, `h`)
+		
+	def _getpoint(self, fieldname):
+		str = self._attr_to_field[fieldname]._getvalueforpage()
+		if not str:
+			return 0, 0
+		[f1, f2] = string.split(str)
+		return string.atoi(f1), string.atoi(f2)
+
+	def save(self):
+		for name, item in self._attr_to_checkbox.items():
+			field = self._attr_to_field[name]
+			value = self.attreditor._getbutton(self.item0+item)
+			field._savevaluefrompage(['off','on'][value])
+		x = self.attreditor._getlabel(self.item0+self.ITEM_X)
+		y = self.attreditor._getlabel(self.item0+self.ITEM_Y)
+		w = self.attreditor._getlabel(self.item0+self.ITEM_W)
+		h = self.attreditor._getlabel(self.item0+self.ITEM_H)
+		self._attr_to_field[self._xyfield]._savevaluefrompage(x+' '+y)
+		self._attr_to_field[self._whfield]._savevaluefrompage(w+' '+h)
+
+class SourceAreaTabPage(AreaTabPage):
+	TAB_LABEL='Source area'
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_SOURCE_AREA
+	ITEM_GROUP=1
+	ITEM_WHOLE=2
+	ITEM_X=5
+	ITEM_Y=7
+	ITEM_W=9
+	ITEM_H=11
+	N_ITEMS=11
+	_attr_to_checkbox = {
+		'fullimage': ITEM_WHOLE,
+	}
+	_xyfield = 'subregionxy'
+	_whfield = 'subregionwh'
+	attrs_on_page = ['fullimage', 'subregionxy', 'subregionwh']
+	_checkboxes = (ITEM_WHOLE, )
+	_textfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H)
+			
+class DestinationAreaTabPage(AreaTabPage):
+	TAB_LABEL='Destination area'
+	
+	ID_DITL=mw_resources.ID_DIALOG_ATTREDIT_DESTINATION_AREA
+	ITEM_GROUP=1
+	ITEM_WHOLE=2
+	ITEM_X=5
+	ITEM_Y=7
+	ITEM_W=9
+	ITEM_H=11
+	ITEM_ASPECT=12
+	N_ITEMS=12
+	_attr_to_checkbox = {
+		'displayfull': ITEM_WHOLE,
+		'aspect': ITEM_ASPECT,
+	}
+	_xyfield = 'imgcropxy'
+	_whfield = 'imgcropwh'
+	attrs_on_page = ['displayfull', 'aspect', 'imgcropxy', 'imgcropwh']
+	_checkboxes = (ITEM_WHOLE, ITEM_ASPECT)
+	_textfields = (ITEM_X, ITEM_Y, ITEM_W, ITEM_H)
 
 #
 # List of classes handling pages with multiple attributes. The order is
@@ -1175,13 +1348,18 @@ MULTI_ATTR_CLASSES = [
 	XXFileTabPage,
 	InfoTabPage,
 	InteriorInfoTabPage,
+	DocumentInfoTabPage,
 	ChannelTabPage,
 	CaptionChannelTabPage,
 	SystemPropertiesTabPage,
+	SystemPropertiesPrefTabPage,
 	ConversionTabPage,
 	Conversion1TabPage,
 	Conversion2TabPage,
 	Conversion3TabPage,
+	ImageConversionTabPage,
+	SourceAreaTabPage,
+	DestinationAreaTabPage,
 	TargetAudienceTabPage,
 	ClipTabPage,
 	UploadTabPage,
@@ -1222,9 +1400,11 @@ def tabpage_multi_match(cl, attrnames):
 def tabpage_multi_getfields(cl, attrfields):
 	"""Return (and remove) attrfields needed for pageclass cl"""
 	rv = []
-	for a in attrfields:
-		if a.getname() in cl.attrs_on_page:
-			rv.append(a)
+	for wtd in cl.attrs_on_page:
+		for a in attrfields:
+			if a.getname() == wtd:
+				rv.append(a)
+				break
 	for a in rv:
 		attrfields.remove(a)
 	return rv
