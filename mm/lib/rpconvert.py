@@ -1,6 +1,7 @@
 __version__ = "$Id$"
 
 import MMurl, realsupport
+import posixpath
 from MMNode import MMSyncArc, MMAnchor
 from AnchorDefs import ATYPE_WHOLE
 from Hlinks import DIR_1TO2, TYPE_FORK, A_SRC_PLAY, A_DEST_PLAY
@@ -134,6 +135,8 @@ def rpconvert(node):
 				em.setnodeattr(newnode, 'fit', 'meet')
 			else:
 				em.setnodeattr(newnode, 'fit', 'fill')
+			base = posixpath.splitext(posixpath.split(tagdict['file'])[1])[0]
+			em.setnodeattr(newnode, 'name', base)
 #		chname = ctx.newChannelName(regionname)
 #		em.addchannel(chname, -1, chtype)
 #		em.setchannelattr(chname, 'base_window', regionname)
