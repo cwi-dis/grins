@@ -1,8 +1,6 @@
 Things To Do, Bugs To Fix
 =========================
 
-On O2, when stopping an MPEG movie, the system freezes.  -sjoerd, 27/1/97
-
 In the CarCrash tutorial, crash.aiff is not audible. The parallel
 sounds are not played really in parallel.  -mariat
 
@@ -45,3 +43,6 @@ redraw.
 Most likely it is a problem of the O2 and not of cmifed (that's what
 sjoerd claims!).
 The same problem does NOT happen in the tutorials.             -mariat 28/1/97
+
+The mpeg channel doesn't properly clear the background.  Also, it
+doesn't redraw at the end of the movie.			-sjoerd 29/1/97
