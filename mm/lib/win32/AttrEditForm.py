@@ -670,12 +670,14 @@ class ElementSelCtrl(AttrCtrl):
 		return self._attr.getcurrent()
 
 	def OnBrowse(self,id,code):
-		print 'ElelementSelCtrl.OnBrowse: to be fixed (targetElement needs to point to UID)'
-		return
 		parent = self._wnd._form
 		mmnode = self._wnd._form._node
 		selected = self._attrval.gettext()
-		dlg = win32dialog.SelectElementDlg(parent, mmnode.GetRoot(), selected)
+		if hasattr(mmnode, 'targetnode'):
+			target = mmnode.targetnode
+		else:
+			target = None
+		dlg = win32dialog.SelectElementDlg(parent, mmnode.GetRoot(), target)
 		if dlg.show():
 			if selected != dlg.gettext():
 				self.setvalue(dlg.gettext())
