@@ -2,10 +2,15 @@
 
 #include <windows.h>
 
+#include "pyinterface.h"
 #include "app_pyinterface.h"
 
 #include "app_wnd.h"
+#include "app_stdout.h"
+
 #include "ttl.h"
+
+#include "app_pyconfig.h"
 
 class AppPyInterface
 	{
@@ -16,10 +21,14 @@ class AppPyInterface
 	private:
 	static PyObject* get_application();
 	static bool set_mainwnd(PyObject *appobj, PyObject *pwnd);
+	static bool set_pysys_stdout(PyObject *pystdout);
+	static void restore_pysys_stdout(PyObject *pystdout);
 	static PyObject *s_pyapp;
+	static PyObject *s_pystdout;
 	};
 
-PyObject* AppPyInterface::s_pyapp;
+PyObject* AppPyInterface::s_pyapp = NULL;
+PyObject* AppPyInterface::s_pystdout = NULL;
 
 bool AppPyInterface::initialize(HWND hWnd)
 	{
@@ -44,12 +53,17 @@ bool AppPyInterface::initialize(HWND hWnd)
 	PyWnd::wnds[hWnd] = pywnd;
 	if(!set_mainwnd(s_pyapp, (PyObject*)pywnd))
 		MessageBox(NULL, TEXT("Failed to set_mainwnd"), GetApplicationName(), MB_OK);
+
+	s_pystdout = CreatePyStdOut(hWnd);
+	set_pysys_stdout(s_pystdout);
 	return true;
 	}
 
 void AppPyInterface::finalize()
 	{
 	AcquireThread at(PyInterface::getPyThreadState());
+	restore_pysys_stdout(s_pystdout);
+	Py_XDECREF(s_pystdout);
 	Py_XDECREF(s_pyapp);
 	s_pyapp = NULL;
 	}
@@ -95,20 +109,33 @@ bool AppPyInterface::set_mainwnd(PyObject *appobj, PyObject *pwnd)
 	return true;
 	}
 
+bool AppPyInterface::set_pysys_stdout(PyObject *pystdout)
+	{
+	AcquireThread at(PyInterface::getPyThreadState());
+	PySys_SetObject("stderr", pystdout);
+	PySys_SetObject("stdout", pystdout);
+	return true;
+	}
+
+void AppPyInterface::restore_pysys_stdout(PyObject *pystdout)
+	{
+	AcquireThread at(PyInterface::getPyThreadState());
+	DetachPyStdOut(pystdout);
+	}
 
 bool InitializePythonInterface(HWND hWnd)
-	{		
+	{	
+	PyInterface::setPythonHome(python_home);
 	if(!PyInterface::initialize(GetApplicationName()))
 		{
 		MessageBox(NULL, TEXT("PyInterface::initialize failed"), GetApplicationName(), MB_OK);
 		return false;
 		}
 
-	TCHAR dir[] = TEXT("\\Windows\\cmif\\bin\\wince");
-	PyInterface::addto_sys_path_dir(dir);
+	PyInterface::addto_sys_path_dir(grins_bin);
 	AppPyInterface::initialize(hWnd);
 
-	PyInterface::run_command(TEXT("import startup\nstartup.main()"));
+	PyInterface::run_command(grins_startup_cmd);
 
 	return true;
 	}

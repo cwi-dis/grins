@@ -2,8 +2,8 @@
 
 #include <windows.h>
 
-#pragma warning(disable: 4284)
 #include "pyinterface.h"
+
 #include "app_wnd.h"
 #include "charconv.h"
 
@@ -19,6 +19,8 @@ std::map<HWND, PyWnd*> PyWnd::wnds;
 
 static PyObject* PyWnd_Detach(PyWnd *self, PyObject *args)
 	{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
 	HWND hWnd = NULL;
 	std::map<HWND, PyWnd*>::iterator wit = PyWnd::wnds.find(self->m_hWnd);
 	if(wit != PyWnd::wnds.end())
@@ -310,9 +312,19 @@ static PyObject* PyWnd_MessageBox(PyWnd *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "ss|i", &text, &caption, &type))
 		return NULL;
 	int res;
+#ifdef UNICODE
+	TCHAR *ttext = newTEXT(text);
+	TCHAR *tcaption = newTEXT(caption);
 	Py_BEGIN_ALLOW_THREADS
-	res = MessageBox(self->m_hWnd,toTEXT(text), toTEXT(caption), type);
+	res = MessageBox(self->m_hWnd, ttext, tcaption, type);
 	Py_END_ALLOW_THREADS
+	delete[] tcaption;
+	delete[] ttext;
+#else
+	Py_BEGIN_ALLOW_THREADS
+	res = MessageBox(self->m_hWnd, text, caption, type);
+	Py_END_ALLOW_THREADS
+#endif
 	return Py_BuildValue("i", res);
 }
 

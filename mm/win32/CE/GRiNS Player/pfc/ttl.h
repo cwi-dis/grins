@@ -17,7 +17,8 @@
 #include <windows.h>
 #endif
 
-#pragma warning(disable: 4786)
+#pragma warning(disable: 4786) // long names trunc (debug)
+#pragma warning(disable: 4018) // signed/unsigned mismatch
 #include <string>
 
 struct ComInitializer

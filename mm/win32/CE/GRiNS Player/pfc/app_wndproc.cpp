@@ -2,7 +2,7 @@
 
 #include <windows.h>
 
-
+#include "pyinterface.h"
 #include "app_wndproc.h"
 #include "app_wnd.h"
 
@@ -48,13 +48,13 @@ LONG APIENTRY PyWnd_WndProc(HWND hWnd, UINT uMsg, UINT wParam, LONG lParam)
 		std::map<UINT, PyObject*>::iterator hit = hooks.find(uMsg);
 		if(hit != hooks.end())
 			{
-			PyCallbackBlock cbblock;
+			//PyCallbackBlock cbblock;
+			AcquireThread at(PyInterface::getPyThreadState());
 			PyObject *method = (*hit).second;
 			PyObject *arglst = Py_BuildValue("((iiiii(ii)))",
 				msg.hwnd,msg.message,msg.wParam,msg.lParam,msg.time,msg.pt.x,msg.pt.y);
 			PyObject *retobj = PyEval_CallObject(method, arglst);
 			Py_DECREF(arglst);
-			
 			// xxx: elaborate on specific messages
 			if (retobj == NULL)
 				{
