@@ -1,0 +1,44 @@
+# This file describes the external editors that the CMIF editor can start
+# (asynchronously) when asked to edit media-specific data.
+
+# When the user issues the 'Edit' command, a menu of available editors
+# for the selected node's type is presented, and the user can select
+# an editor from this menu (or Cancel it).
+# If only a single entry exists for a particular channel type, no menu is
+# presented; the editor is started immediately.
+# (Because I personally don't like the latter behavior, I have defined two
+# or more editors for each channel type.  Note that some "editors" really
+# only display the data.
+
+# File format:
+# - blank lines and lines beginning with a '#' are ignored
+# - other lines must have exactly three colon-separated fields:
+#   = channel type; must be one of the known CMIF channel types
+#   = label for the edit menu; leave blank for the one and only default editor
+#   = command to execute; sh syntax; use $file to reference the data file
+
+# Three files are read, in this order, if they exist:
+#	./.cmif_editors
+#	$HOME/.cmif_editors
+#	/ufs/guido/mm/demo/mm4/.cmif_editors
+# Early entries have preference over later entries with the same channel
+# type and label string.
+# Entries will be placed in the menu in alphabetic order.
+
+text:vi-xterm:xterm -e vi $file
+text:vi-wsh:wsh -C 0,8,3,1 -fScreen-Bold.15 -c vi $file
+text:emacs:emacs $file
+text:emacsclient:emacsclient $file
+
+image:imp:/ufs/guido/bin/sgi/imp $file
+image:imged:imged $file
+image:ipaste:ipaste $file
+
+sound:sounded:/ufs/sjoerd/bin.sgi/sounded $file
+sound:playaiff:playaiff $file
+
+null:emacs:emacs $file
+null:emacsclient:emacsclient $file
+
+movie:video:python /ufs/guido/src/video/video.py $file
+movie:vinfo:python /ufs/guido/src/video/vinfo.py $file
