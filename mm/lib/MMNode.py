@@ -491,21 +491,70 @@ class MMSyncArc:
 
 class MMNode_body:
 	"""Helper for looping nodes"""
+	helpertype = "looping"
+	
 	def __init__(self, parent):
 		self.parent = parent
 
 	def __repr__(self):
-		return "<looping body of %s>"%self.parent.__repr__()
+		return "<%s body of %s>"%(self.helpertype, self.parent.__repr__())
 
 	def __getattr__(self, name):
+		if name == 'attrcache':
+			raise AttributeError, 'Not allowed'
 		return getattr(self.parent, name)
 
 	def GetUID(self):
-		return '%s-looping-%d'%(self.parent.GetUID(), id(self))
+		return '%s-%s-%d'%(self.parent.GetUID(), self.helpertype, id(self))
 
 	def stoplooping(self):
 		pass
+	
+class MMNode_pseudopar_body(MMNode_body):
+	"""Helper for RealPix nodes with captions, common part"""
 
+	def _is_realpix_with_captions(self):
+		return 0
+	
+class MMNode_realpix_body(MMNode_pseudopar_body):
+	"""Helper for RealPix nodes with captions, realpix part"""
+	helpertype = "realpix"
+	
+class MMNode_caption_body(MMNode_pseudopar_body):
+	"""Helper for RealPix nodes with captions, caption part"""
+	helpertype = "caption"
+
+	def GetAttrDict(self):
+		raise 'Unimplemented'
+
+	def GetRawAttr(self, name):
+		if name == 'channel': name = 'captionchannel'
+		return self.parent.GetRawAttr(name)
+
+	def GetRawAttrDef(self, name, default):
+		if name == 'channel': name = 'captionchannel'
+		return self.parent.GetRawAttrDef(name, default)
+
+	def GetAttr(self, name):
+		if name == 'channel': name = 'captionchannel'
+		return self.parent.GetAttr(name)
+
+	def GetAttrDef(self, name, default):
+		if name == 'channel': name = 'captionchannel'
+		return self.parent.GetAttrDef(name, default)
+
+	def GetInherAttr(self, name):
+		if name == 'channel': name = 'captionchannel'
+		return self.parent.GetInherAttr(name)
+
+	def GetDefInherAttr(self, name):
+		if name == 'channel': name = 'captionchannel'
+		return self.parent.GetDefInherAttr(name)
+
+	def GetInherAttrDef(self, name, default):
+		if name == 'channel': name = 'captionchannel'
+		return self.parent.GetInherAttrDef(name, default)
+		
 class MMNode:
 	def __init__(self, type, context, uid):
 		# ASSERT type in alltypes
@@ -524,6 +573,8 @@ class MMNode:
 ##		self.isloopnode = 0
 ##		self.isinfiniteloopnode = 0
 		self.looping_body_self = None
+		self.realpix_body = None
+		self.caption_body = None
 		self.curloopcount = 0
 		self.infoicon = ''
 		self.errormessage = None
@@ -900,6 +951,8 @@ class MMNode:
 		self.wtd_children = None
 ##		self.summaries = None
 		self.looping_body_self = None
+		self.realpix_body = None
+		self.caption_body = None
 
 	def Extract(self):
 		if self.parent is None: raise CheckError, 'Extract() root node'
@@ -1096,6 +1149,9 @@ class MMNode:
 			raise CheckError, 'Seeknode not in tree!'
 		self.sync_from = ([],[])
 		self.sync_to = ([],[])
+		self.looping_body_self = None
+		self.realpix_body = None
+		self.caption_body = None
 		if self.type in playabletypes:
 			return
 		self.wtd_children = []
@@ -1124,6 +1180,9 @@ class MMNode:
 	def _FastPruneTree(self):
 		self.sync_from = ([],[])
 		self.sync_to = ([],[])
+		self.looping_body_self = None
+		self.realpix_body = None
+		self.caption_body = None
 		self.wtd_children = self.children[:]
 		for c in self.children:
 			c._FastPruneTree()
@@ -1153,8 +1212,20 @@ class MMNode:
 
 	#
 	# Generate schedrecords for leaf nodes.
+	# The looping parmeter is only for pseudo-par-nodes implementing RealPix with
+	# captions.
 	#
-	def gensr_leaf(self):
+	def gensr_leaf(self, looping=0, overrideself=None):
+		if overrideself:
+			# overrideself is passed for the interior
+			self = overrideself
+		elif self._is_realpix_with_captions():
+			self.realpix_body = MMNode_realpix_body(self)
+			self.caption_body = MMNode_caption_body(self)
+			return self.gensr_interior(looping)
+		# Clean up realpix stuff: the node may have been a realpix node in the past
+		self.realpix_body = None
+		self.caption_body = None
 		in0, in1 = self.sync_from
 		out0, out1 = self.sync_to
 		arg = self
@@ -1288,8 +1359,12 @@ class MMNode:
 		#
 		if not self.wtd_children:
 			return self.gensr_empty()
+		is_realpix = 0
 		if self.type == 'par':
 			gensr_body = self.gensr_body_par
+		elif self._is_realpix_with_captions():
+			gensr_body = self.gensr_body_realpix
+			is_realpix = 1
 		else:
 			gensr_body = self.gensr_body_seq
 
@@ -1313,8 +1388,11 @@ class MMNode:
 		#
 		in0, in1 = self.sync_from
 		out0, out1 = self.sync_to
-
-		duration = MMAttrdefs.getattr(self, 'duration')
+		
+		if is_realpix:
+			duration = 0
+		else:
+			duration = MMAttrdefs.getattr(self, 'duration')
 		if duration > 0:
 			# Implement duration by adding a syncarc from
 			# head to tail.
@@ -1370,8 +1448,11 @@ class MMNode:
 			# And, for our incoming tail syncarcs and a
 			# TERMINATE for ourselves we abort everything.
 			#
-##			for event in in1+[(TERMINATE, self)]:
-##				srlist.append( ([event], terminate_actions) )
+##		if self._is_realpix_with_captions():	#DBG
+##			print 'NODE', self # DBG
+##			for i in srlist: print i #DBG
+##			print 'NODE END' #DBG
+		
 		return srlist
 
 	def gensr_envelope_nonloop(self, gensr_body, loopcount, sched_actions,
@@ -1613,6 +1694,59 @@ class MMNode:
 
 		return sched_actions, schedstop_actions, srlist
 
+	def gensr_body_realpix(self, sched_actions, scheddone_actions,
+			   terminate_events, self_body=None):
+		srlist = []
+		schedstop_actions = []
+		terminate_actions = []
+		scheddone_events = []
+		if self_body == None:
+			self_body = self
+
+		for child in (self.realpix_body, self.caption_body):
+##			print 'gensr for', child
+##			print 'func is', child._is_realpix_with_captions(), child._is_realpix_with_captions
+
+			srlist = srlist + child.gensr(overrideself=child)
+
+			sched_actions.append( (SCHED, child) )
+			schedstop_actions.append( (SCHED_STOP, child) )
+			terminate_actions.append( (TERMINATE, child) )
+
+			scheddone_events.append( (SCHED_DONE, child) )
+
+		#
+		# Trickery to handle dur and end correctly:
+		# XXX isn't the dur passed on in the files? Check.
+		if terminate_events:
+			# Terminate_events means we have a specified
+			# duration. We obey this, and ignore scheddone
+			# events from our children.
+			# Terminating_children means we have a
+			# terminator attribute that points to a child.
+			# We obey this also and ignore scheddone
+			# events from our other children.
+			srlist.append( (scheddone_events, []) )
+			scheddone_events = []
+
+		if scheddone_events:
+			srlist.append((scheddone_events,
+				       scheddone_actions))
+		else:
+			terminate_actions = terminate_actions + \
+					    scheddone_actions
+
+		for ev in terminate_events+[(TERMINATE, self_body)]:
+			srlist.append( [ev], terminate_actions )
+		return sched_actions, schedstop_actions, srlist
+		
+	def _is_realpix_with_captions(self):
+		if self.type == 'ext' and self.GetChannelType() == 'RealPix':
+			# It is a realpix node. Check whether it has captions
+			captionchannel = MMAttrdefs.getattr(self, 'captionchannel')
+			if captionchannel and captionchannel != 'undefined':
+				return 1
+		return 0
 
 	def GenAllSR(self, seeknode):
 ##		self.SetPlayability()
