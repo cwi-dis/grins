@@ -219,6 +219,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			if x is not node and dangling is None and not links:
 				dangling = self.iconbox.add_icon('danglinganchor')
 				dangling.set_icon('danglinganchor')
+				dangling.set_properties(initattr = '.href')
 			for l in links:
 				# we're the hyperlink source
 				otherwidget = None
@@ -231,7 +232,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				if self.linksrc_icon is None:
 					self.linksrc_icon = self.iconbox.add_icon('linksrc', arrowto = otherwidget, arrowcolor = LINKARROWCOLOR)
 					self.linksrc_icon.set_icon('linksrc')
-					self.linksrc_icon.set_properties(issrc=1)
+					self.linksrc_icon.set_properties(issrc=1, initattr='.href')
 				else:
 					self.linksrc_icon.add_arrow(otherwidget, LINKARROWCOLOR)
 			for l in hlinks.finddstlinks(x):
@@ -246,7 +247,6 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				if self.linkdst_icon is None:
 					self.linkdst_icon = self.iconbox.add_icon('linkdst', arrowto = otherwidget, arrowcolor = LINKARROWCOLOR)
 					self.linkdst_icon.set_icon('linkdst')
-					self.linkdst_icon.set_properties(issrc=0)
 				else:
 					self.linkdst_icon.add_arrow(otherwidget, LINKARROWCOLOR)
 
