@@ -36,6 +36,11 @@ class PlayerDialog:
 		self.__channeldict = {}
 		self.__strid='player'
 		self.__cmdtgt='pview_'
+
+		# show comtrols whether the presentation
+		# will be played in normal or fullscreen mode
+		# show in ('normal',  'fullscreen')
+		self.__show = 'normal'
 		
 	# experimental code for viewport dimentioning
 	#
@@ -232,6 +237,7 @@ class PlayerDialog:
 			'close': [ CLOSE_WINDOW, ],
 			'frame':self.toplevel.window,
 			'view':self.__cmdtgt,
+			'show':self.__show,
 			}
 		return self.inst_adornments
 
