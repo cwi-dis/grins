@@ -1,33 +1,31 @@
 __version__ = "$Id$"
 
 
-"""
-System configuration profiles
-0 Video for dial-up modems or single channel ISDN (28.8 to 56 Kbps)
-1 Video for LAN, cable modem, or xDSL (100 to 768 Kbps)
-2 Video for dial-up modems or LAN (28.8 to 100 Kbps)
-3 Video with voice emphasis for dial-up modems (28.8 Kbps)
-4 Video with audio emphasis for dial-up modems (28.8 Kbps)
-5 Video for Web servers (28.8 Kbps)
-6 Video for Web servers (56 Kbps)
-7 Video for single-channel ISDN (64 Kbps)
-8 Video for e-mail and dual-channel ISDN (128 Kbps)
-9 Video for broadband NTSC (256 Kbps)
-10 Video for broadband NTSC (384 Kbps)
-11 Video for broadband NTSC (768 Kbps)
-12 Video for broadband NTSC (1500 Kbps total)
-13 Video for broadband NTSC (2 Mbps total)
-14 Video for broadband film content (768 Kbps)
-15 Video for broadband film content (1500 Kbps total)
-16 Audio for low bit rate voice-oriented content (6.5 Kbps)
-17 Audio for FM radio quality for dial-up modems (28.8 Kbps mono)
-18 Audio for FM radio quality for dial-up modems (28.8 Kbps stereo)
-19 Audio for dial-up modems (56 Kbps stereo)
-20 Audio for single-channel ISDN (64 Kbps stereo)
-21 Audio for near-CD quality (64 Kbps stereo)
-22 Audio for CD-quality (96 Kbps stereo)
-23 Audio for CD-quality transparency (128 Kbps stereo)
-"""
+# System configuration profiles
+# 0 Video for dial-up modems or single channel ISDN (28.8 to 56 Kbps)
+# 1 Video for LAN, cable modem, or xDSL (100 to 768 Kbps)
+# 2 Video for dial-up modems or LAN (28.8 to 100 Kbps)
+# 3 Video with voice emphasis for dial-up modems (28.8 Kbps)
+# 4 Video with audio emphasis for dial-up modems (28.8 Kbps)
+# 5 Video for Web servers (28.8 Kbps)
+# 6 Video for Web servers (56 Kbps)
+# 7 Video for single-channel ISDN (64 Kbps)
+# 8 Video for e-mail and dual-channel ISDN (128 Kbps)
+# 9 Video for broadband NTSC (256 Kbps)
+# 10 Video for broadband NTSC (384 Kbps)
+# 11 Video for broadband NTSC (768 Kbps)
+# 12 Video for broadband NTSC (1500 Kbps total)
+# 13 Video for broadband NTSC (2 Mbps total)
+# 14 Video for broadband film content (768 Kbps)
+# 15 Video for broadband film content (1500 Kbps total)
+# 16 Audio for low bit rate voice-oriented content (6.5 Kbps)
+# 17 Audio for FM radio quality for dial-up modems (28.8 Kbps mono)
+# 18 Audio for FM radio quality for dial-up modems (28.8 Kbps stereo)
+# 19 Audio for dial-up modems (56 Kbps stereo)
+# 20 Audio for single-channel ISDN (64 Kbps stereo)
+# 21 Audio for near-CD quality (64 Kbps stereo)
+# 22 Audio for CD-quality (96 Kbps stereo)
+# 23 Audio for CD-quality transparency (128 Kbps stereo)
 
 import dshow
 

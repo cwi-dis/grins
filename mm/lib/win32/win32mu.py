@@ -1,17 +1,16 @@
 __version__ = "$Id$"
 
-""" @win32doc|win32mu
-This module contain simple class utilities
-and function utilities that simplify 
-the process of working with win32 structures
-The classes defined here are: 
-	Point: (x,y)
-	Size: (cx,cy)
-	Rect : (left,top,right,bottom)
-	SizeRect: (x,y,width,height)
-	Win32Msg: cracks win32 messages into meaningful parts
-	CreateStruct: simplifies win32 CREATESTRUCT manipulation
-"""
+# @win32doc|win32mu
+# This module contain simple class utilities
+# and function utilities that simplify 
+# the process of working with win32 structures
+# The classes defined here are: 
+# 	Point: (x,y)
+# 	Size: (cx,cy)
+# 	Rect : (left,top,right,bottom)
+# 	SizeRect: (x,y,width,height)
+# 	Win32Msg: cracks win32 messages into meaningful parts
+# 	CreateStruct: simplifies win32 CREATESTRUCT manipulation
 
 import win32ui, win32con, win32api
 Sdk=win32ui.GetWin32Sdk()

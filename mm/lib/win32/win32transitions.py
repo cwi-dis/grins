@@ -120,7 +120,7 @@ class TransitionEngine:
 		wnd.update(wnd.getwindowpos())
 
 	def join(self, window, ismaster, cb):
-		"""Join this (sub or super) window to an existing transition"""
+		# Join this (sub or super) window to an existing transition
 		if ismaster:
 			self.__callback = cb
 			if self.isrunning():

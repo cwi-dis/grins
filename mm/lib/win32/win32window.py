@@ -2226,7 +2226,7 @@ class Region(Window):
 			print 'settransitionvalue without a transition'
 
 	def _windowlevel(self):
-		"""Returns 0 for toplevel windows, 1 for children of toplevel windows, etc"""
+		# Returns 0 for toplevel windows, 1 for children of toplevel windows, etc
 		prev = self
 		count = 0
 		while not prev==prev._topwindow:
