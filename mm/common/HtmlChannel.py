@@ -154,7 +154,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		else:
 			wh = {'width': w, 'height': h, 'x': x, 'y': y}
 		self.htmlw.SetValues(wh)
-		
+
 
 	def do_arm(self, node, same=0):
 	        if not same:
@@ -191,7 +191,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		      ('header4Font', 9.0),
 		      ('header5Font', 7.8),
 		      ('header6Font', 6.5)]
-	
+
 	def do_play(self, node):
 		import Xm
 		htmlw = self.htmlw
