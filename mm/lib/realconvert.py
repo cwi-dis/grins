@@ -497,7 +497,7 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 		ntargets = 1
 		if has_video:
 			ts.SetVideoQuality(producer.ENC_VIDEO_QUALITY_NORMAL)
-		if has_audio
+		if has_audio:
 			ts.SetAudioContent(producer.ENC_AUDIO_CONTENT_VOICE)
 	engine.SetDoMultiRateEncoding(ntargets != 1)
 	cp.SetSelectiveRecord(0)
