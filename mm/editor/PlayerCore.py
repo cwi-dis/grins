@@ -2,10 +2,9 @@
 
 
 import fl
-from Scheduler import Scheduler
-from MMExc import *
-import Timing
+#from MMExc import *
 import MMAttrdefs
+from Selecter import Selecter
 
 
 # The Player class normally has only a single instance.
@@ -13,7 +12,7 @@ import MMAttrdefs
 # It implements a queue using "virtual time" using an invisible timer
 # object in its form.
 
-class PlayerCore():
+class PlayerCore(Selecter):
 	#
 	# Initialization.
 	#
@@ -25,7 +24,7 @@ class PlayerCore():
 		self.context = self.root.GetContext()
 		self.editmgr = self.context.geteditmgr()
 		self.editmgr.register(self)
-		self.scheduler = Scheduler().init(self)
+		self = Selecter.init(self)
 		return self
 	#
 	# EditMgr interface (as dependent client).
@@ -69,22 +68,21 @@ class PlayerCore():
 		self.playroot = self.userplayroot = self.root
 		self.measure_armtimes = 0
 	#
+	# XXXX Should go to Selecter, once softreset is gone.
 	def reset(self):
 		self.scheduler.resettimer()
 ##		self.softresetchannels()
 	#
-	# State transitions.
+	# play_done - Upcall by scheduler to indicate that all is done.
 	#
-	def play(self):
-		self.reset()
-		self.seeking = 0
-		if not self.playing:
-			self.playroot = self.userplayroot
-			if not self.scheduler.start_playing(0):
-				return
-		else:
-			self.scheduler.setpaused(0)
+	def play_done(self):
+		self.playing = 0
+		if self.pausing:
+			self.pause(0)
+		self.stopped()
 		self.showstate()
+		if self.continuous:
+			self.play()
 	#
 	def playsubtree(self, node):
 		self.toplevel.setwaiting()
@@ -113,25 +111,15 @@ class PlayerCore():
 			self.makemenu()
 		return ch.defanchor(node, anchor)
 	#
-	def pause(self):
-		self.seeking = 0
-		if self.playing:
-			if self.scheduler.getpaused(): # Paused: continue
-				self.scheduler.setpaused(0)
-			else:			# Running: pause
-				self.scheduler.setpaused(1)
-				self.setready() # Cancel possible watch cursor
+	def pause(self, wantpause):
+		if self.pausing == wantpause:
+			print 'Funny: pause state already ok...'
+			return
+		self.pausing = wantpause
+		if self.pausing:
+			self.scheduler.setpaused(1)
 		else:
-			dummy = self.scheduler.start_playing(1)
-			self.setready()
-		self.showstate()
-	#
-	def stop(self):
-		self.seeking = 0
-		if self.playing:
-			self.scheduler.stop_playing()
-		else:
-			self.fullreset()
+			self.scheduler.setpaused(0)
 		self.showstate()
 	#
 	#
@@ -228,23 +216,12 @@ class PlayerCore():
 				'channel ' +`name`+ ' has bad type ' +`type`
 		chclass = channelmap[type]
 		ch = chclass().init(name, attrdict, self.scheduler, self)
+		ch.setpaused(self.pausing)
 		if self.waiting:
 			ch.setwaiting()
 		self.channels[name] = ch
 		self.channeltypes[name] = type
 	#
-##	def resetchannels(self):
-##		for cname in self.channelnames:
-##			self.channels[cname].reset()
-	#
-##	def softresetchannels(self):
-##		for cname in self.channelnames:
-##			self.channels[cname].softreset()
-	#
-	def stopchannels(self):
-		for cname in self.channelnames:
-			self.channels[cname].stop()
-
 	def add_anchor(self, button, func, arg):
 		self.toplevel.add_anchor(button, func, arg)
 

@@ -14,7 +14,13 @@ import MMAttrdefs
 from Dialog import BasicDialog
 from ViewDialog import ViewDialog
 import Timing
+import dialogs
 
+MYGREY=8
+MYRED=9
+MYGREEN=GL.GREEN
+MYYELLOW=GL.YELLOW
+MYBLUE=MYGREY
 
 # The Player class normally has only a single instance.
 #
@@ -27,9 +33,8 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 	#
 	def init(self, toplevel):
 		self = ViewDialog.init(self, 'player_')
+		self.playing = self.pausing = self.locked = 0
 		self = PlayerCore.init(self, toplevel)
-		self.scheduler.resettimer()
-		self.playing = self.locked = 0
 		self.channelnames = []
 		self.measure_armtimes = 0
 		self.channels = {}
@@ -42,6 +47,7 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		self.play_all_bags = 0
 		self.pause_minidoc = 1
 		self.sync_cv = 1
+		self.continuous = 0
 		self.toplevel = toplevel
 		title = 'Player (' + toplevel.basename + ')'
 		self = BasicDialog.init(self, 0, 0, title)
@@ -92,7 +98,8 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 	#
 	# FORMS callbacks.
 	#
-	def before_call(self):
+	#
+ 	def before_call(self):
 ##		print 'callback start'
 		self.waslocked = 0
 		if GLLock.gl_lock:
@@ -102,24 +109,50 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 				self.waslocked = 1
 ##			print 'release'
 			GLLock.gl_lock.release()
+	#
 	def after_call(self):
 ##		print 'callback end'
 		if self.waslocked:
 ##			print 're-acquire'
 			GLLock.gl_lock.acquire()
+	#
 	def play_callback(self, obj, arg):
 		self.before_call()
-		self.play()
+		self.playbutton.lcol = MYBLUE
+		if self.playing and self.pausing:
+			# Case 1: user pressed play to cancel pause
+			self.pause(0)
+		elif not self.playing:
+			# Case 2: starting to play from stopped mode
+			self.play()
+		else:
+			# nothing, restore state.
+			self.showstate()
 		self.after_call()
 	#
 	def pause_callback(self, obj, arg):
 		self.before_call()
-		self.pause()
+		self.pausebutton.lcol = MYBLUE
+		if self.playing and self.pausing:
+			# Case 1: press pause to cancel pause
+			self.pause(0)
+		elif self.playing:
+			# Case 2: press pause to pause
+			self.pause(1)
+		else:
+			# Case 3: not playing. Go to paused mode
+			self.pause(1)
+			self.playbutton.lcol = MYBLUE
+			self.play()
 		self.after_call()
 	#
 	def stop_callback(self, obj, arg):
 		self.before_call()
+		self.stopbutton.lcol = MYBLUE
+		self.continuous = 0
 		self.stop()
+		if self.pausing:
+			self.pause(0)
 		self.after_call()
 
 	def timer_callback(self, obj, arg):
@@ -159,9 +192,22 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 			raise 'Crash requested by user'
 		elif i == 8:
 			self.scheduler.dump()
+		elif i == 9:
+			self.continuous = (not self.continuous)
 		else:
 			print 'Player: Option menu: funny choice', i
 		self.makeomenu()
+		self.after_call()
+
+	def slotmenu_callback(self, obj, arg):
+		self.before_call()
+		slot = obj.get_menu()
+		if slot:
+			node = self.runslots[slot-1][0]
+			if node:
+				self.toplevel.channelview.globalsetfocus(node)
+			else:
+				dialogs.showmessage('That slot is not active')
 		self.after_call()
 		
 	def dummy_callback(self, *dummy):
@@ -169,41 +215,49 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 	#
 	#
 	def showstate(self):
-		if not self.playing:
-			self.playbutton.set_button(0)
-			self.pausebutton.set_button(0)
-			self.stopbutton.set_button(1)
+		if self.playing:
+			self.playbutton.lcol = MYGREEN
+			self.stopbutton.lcol = MYGREY
 		else:
-			self.stopbutton.set_button(0)
-			paused = self.scheduler.getpaused()
-			self.playbutton.set_button(not paused)
-			self.pausebutton.set_button(paused)
-		if self.userplayroot is self.root:
-			self.partbutton.label = ''
+			self.playbutton.lcol = MYGREY
+			self.stopbutton.lcol = GL.BLACK
+		if self.pausing:
+			self.pausebutton.lcol = MYYELLOW
 		else:
-			name = MMAttrdefs.getattr(self.userplayroot, 'name')
-			if name == '':
-				label = 'part play'
-			else:
-				label =  name
-			self.partbutton.label = label
+			self.pausebutton.lcol = MYGREY
+		self.playbutton.set_button(self.playing)
+		self.stopbutton.set_button(not self.playing)
+		self.pausebutton.set_button(self.pausing)
+
 		#self.calctimingbutton.set_button(self.measure_armtimes)
 		self.makeomenu()
 		self.showtime()
 	#
-	def showtime(self):
-		if self.scheduler.getpaused():
-			self.statebutton.lcol = GL.YELLOW
+	def showpauseanchor(self, pausing):
+		if pausing:
+			self.pausebutton.lcol = MYYELLOW
 		else:
-			self.statebutton.lcol = self.statebutton.col2
-		#if self.msec_origin == 0:
-		#	self.statebutton.label = '--:--'
-		#	return
-		now = int(self.scheduler.timefunc())
-		label = `now/60` + ':' + `now/10%6` + `now % 10`
-		if self.statebutton.label <> label:
-			self.statebutton.label = label
-		#
+			self.pausebutton.lcol = MYGREY
+		
+	def showtime(self):
+		pass
+#		if self.scheduler.getrate():
+#			self.statebutton.lcol = self.statebutton.col2
+#		else:
+#			self.statebutton.lcol = GL.YELLOW
+#		#if self.msec_origin == 0:
+#		#	self.statebutton.label = '--:--'
+#		#	return
+#		now = int(self.scheduler.timefunc())
+#		label = `now/60` + ':' + `now/10%6` + `now % 10`
+#		if self.statebutton.label <> label:
+#			self.statebutton.label = label
+#		#
+        #
+	def makeslotmenu(self, list):
+		self.slotmenubutton.set_menu('')
+		for l in list:
+			self.slotmenubutton.addto_menu(l)
 	#
 	def makeomenu(self):
 		self.omenubutton.set_menu('')
@@ -233,7 +287,11 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 			self.omenubutton.addto_menu('   autopause minidoc')
 		self.omenubutton.addto_menu('   Crash CMIF')
 		self.omenubutton.addto_menu('   Dump scheduler data')
-
+		if not self.continuous:
+			self.omenubutton.addto_menu('   Continuous play')
+		else:
+			self.omenubutton.addto_menu('\xa4 Continuous play')
+			
 	def makemenu(self):
 		self.cmenubutton.set_menu('')
 		for name in self.channelnames:
@@ -246,7 +304,7 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 			# XXX for version 2.0 (beta), append a '|'.
 	#
 	def setwaiting(self):
-		self.statebutton.lcol = GL.MAGENTA
+##		self.statebutton.lcol = GL.MAGENTA
 		BasicDialog.setwaiting(self)
 		for cname in self.channelnames:
 			self.channels[cname].setwaiting()
