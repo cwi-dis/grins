@@ -35,6 +35,10 @@ def mimetype(url):
 			except (IOError, OSError):
 				pass
 			else:
+				# On the Mac urllib may guess the mimetype wrong. Correct.
+				if u.headers.type == 'text/plain' and sys.platform == 'mac':
+					import MMmimetypes
+					u.headers.type = MMmimetypes.guess_type(url)[0]
 				mtype = u.headers.type
 		if not mtype and sys.platform == 'mac':
 			# On the mac we do something extra: for local files we attempt to
