@@ -69,7 +69,7 @@ class SoundChannel(Channel):
 	node_attrs = ['file', 'arm_duration']
 	#
 	def init(self, (name, attrdict, player)):
-		self = Channel.init(self, (name, attrdict, player))
+		self = Channel.init(self, name, attrdict, player)
 		self.info = self.port = None
 		self.rate = 0.0
 		self.armed_node = None
