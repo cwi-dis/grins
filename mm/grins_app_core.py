@@ -4,6 +4,15 @@ import sys, os
 import win32ui, win32con
 from pywin.framework import app, intpyapp
 import traceback
+import longpath
+
+def fix_argv():
+	# Turn pathnames into their full NT version
+	for i in range(1, len(sys.argv)):
+		if os.path.exists(sys.argv[i]):
+			sys.argv[i] = longpath.short2longpath(sys.argv[i])
+
+
 
 try:
 	os.environ['GRINS_REMOTE_TRACE']
