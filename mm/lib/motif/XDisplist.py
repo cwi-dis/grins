@@ -195,6 +195,13 @@ class _DisplayList:
 			gc.foreground = entry[1]
 			apply(gc.FillRectangle, w._rect)
 		elif cmd == 'image':
+			clip = entry[2]
+			r = region
+			if clip is not None:
+				r = Xlib.CreateRegion()
+				apply(r.UnionRectWithRegion, clip)
+				r.IntersectRegion(region)
+				
 			mask = entry[1]
 			if mask:
 				# mask is clip mask for image
@@ -202,15 +209,15 @@ class _DisplayList:
 				p = w._form.CreatePixmap(width, height, 1)
 				g = p.CreateGC({'foreground': 0})
 				g.FillRectangle(0, 0, width, height)
-				g.SetRegion(region)
+				g.SetRegion(r)
 				g.foreground = 1
 				g.FillRectangle(0, 0, width, height)
-				apply(g.PutImage, (mask,) + entry[3:])
+				apply(g.PutImage, (mask,) + entry[4:])
 				gc.SetClipMask(p)
 			else:
-				gc.SetRegion(region)
-			apply(gc.PutImage, entry[2:])
-			if mask:
+				gc.SetRegion(r)
+			apply(gc.PutImage, entry[3:])
+			if mask or clip:
 				gc.SetRegion(region)
 		elif cmd == 'line':
 			gc.foreground = entry[1]
@@ -230,7 +237,15 @@ class _DisplayList:
 			gc.foreground = entry[1]
 			gc.line_width = entry[2]
 			x,y,w,h = entry[3]
+			clip = entry[4]
+			if clip:
+				r = Xlib.CreateRegion()
+				apply(r.UnionRectWithRegion, clip)
+				r.IntersectRegion(region)
+				gc.SetRegion(r)
 			gc.DrawRectangle(x,y,w-1,h-1)
+			if clip:
+				gc.SetRegion(region)
 		elif cmd == 'fbox':
 			gc.foreground = entry[1]
 			apply(gc.FillRectangle, entry[2])
@@ -339,19 +354,20 @@ class _DisplayList:
 		return _Button(self, coordinates, z)
 
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
-				    center = 1, coordinates = None):
+				    center = 1, coordinates = None,
+				    clip = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
-		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
-		       w._prepare_image(file, crop, scale, center, coordinates)
+		image, mask, src_x, src_y, dest_x, dest_y, width, height, clip = \
+		       w._prepare_image(file, crop, scale, center, coordinates, clip)
 		if mask:
 			self._imagemask = mask, src_x, src_y, dest_x, dest_y, width, height
 		else:
 			r = Xlib.CreateRegion()
 			r.UnionRectWithRegion(dest_x, dest_y, width, height)
 			self._imagemask = r
-		self._list.append(('image', mask, image, src_x, src_y,
+		self._list.append(('image', mask, clip, image, src_x, src_y,
 				   dest_x, dest_y, width, height))
 		self._optimize((2,))
 		x, y, w, h = w._rect
@@ -379,13 +395,16 @@ class _DisplayList:
 				   x0, x1, y))
 		self._optimize((1,))
 
-	def drawbox(self, coordinates, units = UNIT_SCREEN):
+	def drawbox(self, coordinates, clip = None, units = UNIT_SCREEN):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		w = self._window
+		if clip is not None:
+			clip = w._convert_coordinates(clip, units = units)
 		self._list.append(('box', w._convert_color(self._fgcolor),
 				   self._linewidth,
-				   w._convert_coordinates(coordinates, units = units)))
+				   w._convert_coordinates(coordinates, units = units),
+				   clip))
 		self._optimize((1,))
 
 	def drawfbox(self, color, coordinates, units = UNIT_SCREEN):
@@ -570,15 +589,15 @@ class _DisplayList:
 		w = self._window
 		module = _iconmap.get(icon) or _iconmap['']
 		reader = __import__(module)
-		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
-		       w._prepare_image(reader, (0,0,0,0), -2, 1, coordinates)
+		image, mask, src_x, src_y, dest_x, dest_y, width, height, clip = \
+		       w._prepare_image(reader, (0,0,0,0), -2, 1, coordinates, None)
 		if mask:
 			self._imagemask = mask, src_x, src_y, dest_x, dest_y, width, height
 		else:
 			r = Xlib.CreateRegion()
 			r.UnionRectWithRegion(dest_x, dest_y, width, height)
 			self._imagemask = r
-		self._list.append(('image', mask, image, src_x, src_y,
+		self._list.append(('image', mask, None, image, src_x, src_y,
 				   dest_x, dest_y, width, height))
 		self._optimize((2,))
 		

@@ -931,7 +931,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 			toplevel._image_size_cache[file] = xsize, ysize
 		return xsize, ysize
 
-	def _prepare_image(self, file, crop, scale, center, coordinates):
+	def _prepare_image(self, file, crop, scale, center, coordinates, clip):
 		# width, height: width and height of window
 		# xsize, ysize: width and height of unscaled (original) image
 		# w, h: width and height of scaled (final) image
@@ -967,6 +967,8 @@ class _Window(_AdornmentSupport, _RubberBand):
 			x, y, width, height = self._rect
 		else:
 			x, y, width, height = self._convert_coordinates(coordinates)
+		if clip is not None:
+			clip = self._convert_coordinates(clip)
 		if scale == 0:
 			scale = min(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
@@ -997,7 +999,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 			if not reader:
 				# we got the size from the cache, don't believe it
 				del toplevel._image_size_cache[file]
-				return self._prepare_image(file, crop, oscale, center, coordinates)
+				return self._prepare_image(file, crop, oscale, center, coordinates, clip)
 			if hasattr(reader, 'transparent'):
 				if type(file) is type(''):
 					r = img.reader(imgformat.xrgb8, file)
@@ -1086,7 +1088,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 		xim = tw._visual.CreateImage(tw._visual.depth, X.ZPixmap, 0, image,
 					     w, h, format.descr['align'], 0)
 		xim.byte_order = toplevel._byteorder
-		return xim, mask, left, top, x, y, w - left - right, h - top - bottom
+		return xim, mask, left, top, x, y, w - left - right, h - top - bottom, clip
 
 	def _destroy_callback(self, form, client_data, call_data):
 		self._shell = None
