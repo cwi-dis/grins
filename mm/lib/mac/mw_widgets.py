@@ -18,7 +18,7 @@ import mw_menucmd
 
 class _Widget:
 	def __init__(self, wid, item):
-		tp, h, rect = wid.GetDialogItem(item)
+		tp, h, rect = wid.GetDialogItem(item) # XXXX To be fixed
 		wid.SetDialogItem(item, tp,
 		      mw_globals.toplevel._dialog_user_item_handler, rect)
 		
@@ -222,8 +222,6 @@ class SelectWidget:
 		self.itemnum = ctlid
 		self.menu = None
 		self.choice = None
-## 		tp, h, self.rect = self.wid.GetDialogItem(self.itemnum)
-## 		self.control = h.as_Control()
 		self.control = self.wid.GetDialogItemAsControl(self.itemnum)
 		self.setitems(items, default)
 		self.usercallback = callback

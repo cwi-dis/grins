@@ -51,7 +51,7 @@ class MACDialog:
 			if item in self._itemlist_shown:
 				continue
 			self._dialog.ShowDialogItem(item)
-			tp, h, rect = self._dialog.GetDialogItem(item)
+			tp, h, rect = self._dialog.GetDialogItem(item) # XXXX Is this still needed?
 			if tp == 7:		# User control
 				h.as_Control().ShowControl()
 			self._itemlist_shown.append(item)
@@ -70,20 +70,18 @@ class MACDialog:
 	def _setsensitive(self, itemlist, sensitive):
 		"""Set or reset item sensitivity to user input"""
 		for item in itemlist:
-			tp, h, rect = self._dialog.GetDialogItem(item)
-			ctl = h.as_Control()
+			ctl = self._dialog.GetDialogItemAsControl(item)
 			if sensitive:
-				ctl.HiliteControl(0)
+				ctl.ActivateControl()
 			else:
-				ctl.HiliteControl(255)
+				ctl.DeactivateControl()
 		if sensitive:
 			self._showitemlist(itemlist)
 
 	def _setctlvisible(self, itemlist, visible):
 		"""Set or reset item visibility"""
 		for item in itemlist:
-			tp, h, rect = self._dialog.GetDialogItem(item)
-			ctl = h.as_Control()
+			ctl = self._dialog.GetDialogItemAsControl(item)
 			if visible:
 				ctl.ShowControl()
 			else:
@@ -92,7 +90,7 @@ class MACDialog:
 	def _settextsensitive(self, itemlist, sensitive):
 		"""Set or reset item sensitivity to user input"""
 		for item in itemlist:
-			tp, h, rect = self._dialog.GetDialogItem(item)
+			tp, h, rect = self._dialog.GetDialogItem(item) # XXXX How to handle this?
 			if sensitive:
 				tp = tp & ~128
 			else:
@@ -104,12 +102,12 @@ class MACDialog:
 	def _setlabel(self, item, text):
 		"""Set the text of a static text or edit text"""
 		text = _string2dialog(text)
-		tp, h, rect = self._dialog.GetDialogItem(item)
+		h = self._dialog.GetDialogItemAsControl(item)
 		Dlg.SetDialogItemText(h, text)
 
 	def _getlabel(self, item):
 		"""Return the text of a static text or edit text"""
-		tp, h, rect = self._dialog.GetDialogItem(item)
+		h = self._dialog.GetDialogItemAsControl(item)
 		text = Dlg.GetDialogItemText(h)
 		if '\r' in text:
 			text = string.split(text, '\r')
@@ -121,18 +119,15 @@ class MACDialog:
 		self._dialog.SelectDialogItemText(item, 0, 32767)
 		
 	def _setbutton(self, item, value):
-		tp, h, rect = self._dialog.GetDialogItem(item)
-		ctl = h.as_Control()
+		ctl = self._dialog.GetDialogItemAsControl(item)
 		ctl.SetControlValue(value)
 	
 	def _getbutton(self, item):
-		tp, h, rect = self._dialog.GetDialogItem(item)
-		ctl = h.as_Control()
+		ctl = self._dialog.GetDialogItemAsControl(item)
 		return ctl.GetControlValue()
 	
 	def _togglebutton(self, item):
-		tp, h, rect = self._dialog.GetDialogItem(item)
-		ctl = h.as_Control()
+		ctl = self._dialog.GetDialogItemAsControl(item)
 		value = ctl.GetControlValue()
 		ctl.SetControlValue(not value)
 
@@ -211,7 +206,7 @@ def _ModalDialog(title, dialogid, text, okcallback, cancelcallback=None):
 	d.SetDialogDefaultItem(ITEM_QUESTION_OK)
 	if cancelcallback:
 		d.SetDialogCancelItem(ITEM_QUESTION_CANCEL)
-	tp, h, rect = d.GetDialogItem(ITEM_QUESTION_TEXT)
+	h = d.GetDialogItemAsControl(ITEM_QUESTION_TEXT)
 	text = _string2dialog(text)
 	Dlg.SetDialogItemText(h, text)
 	w = d.GetDialogWindow()
@@ -336,9 +331,9 @@ class SelectionDialog(DialogWindow):
 			self._wid.HideDialogItem(ITEM_SELECT_ITEM)
 		if not hascancel:
 			self._wid.HideDialogItem(ITEM_SELECT_CANCEL)
-		tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_LISTPROMPT)
+		h = self._wid.GetDialogItemAsControl(ITEM_SELECT_LISTPROMPT)
 		Dlg.SetDialogItemText(h, _string2dialog(listprompt))
-		tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_SELECTPROMPT)
+		h = self._wid.GetDialogItemAsControl(ITEM_SELECT_SELECTPROMPT)
 		Dlg.SetDialogItemText(h, _string2dialog(selectionprompt))
 		
 		# Now setup the scrolled list
@@ -349,7 +344,7 @@ class SelectionDialog(DialogWindow):
 			self._listwidget.select(num)
 			
 		# and the default item
-		tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_ITEM)
+		h = self._wid.GetDialogItemAsControl(ITEM_SELECT_ITEM)
 		Dlg.SetDialogItemText(h, _string2dialog(default))
 		
 		# And show it
@@ -369,7 +364,7 @@ class SelectionDialog(DialogWindow):
 			item, isdouble = self._listwidget.click(where, modifiers)
 			if item is None:
 				return 1
-			tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_ITEM)
+			h = self._wid.GetDialogItemAsControl(ITEM_SELECT_ITEM)
 			Dlg.SetDialogItemText(h, _string2dialog(self._itemlist[item]))
 			is_ok = isdouble
 		elif item == ITEM_SELECT_ITEM:
@@ -378,7 +373,7 @@ class SelectionDialog(DialogWindow):
 			print 'Unknown item', self, item, event
 		# Done a bit funny, because of double-clicking
 		if is_ok:
-			tp, h, rect = self._wid.GetDialogItem(ITEM_SELECT_ITEM)
+			h = self._wid.GetDialogItemAsControl(ITEM_SELECT_ITEM)
 			rv = Dlg.GetDialogItemText(h)
 			self.OkCallback(rv)
 			self.close()
@@ -424,7 +419,7 @@ class InputDialog(DialogWindow):
 		# First create dialogwindow and set static items
 		DialogWindow.__init__(self, self.DIALOG_ID, title=prompt,
 				default=ITEM_INPUT_OK, cancel=ITEM_INPUT_CANCEL)
-		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
+		h = self._wid.GetDialogItemAsControl(ITEM_INPUT_TEXT)
 		Dlg.SetDialogItemText(h, _string2dialog(default))
 		self._wid.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
 		self._cb = cb
@@ -446,10 +441,9 @@ class InputDialog(DialogWindow):
 		return 1
 			
 	def done(self):
-		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
+		h = self._wid.GetDialogItemAsControl(ITEM_INPUT_TEXT)
 		rv = Dlg.GetDialogItemText(h)
-		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_OK)
-		ctl = h.as_Control()
+		ctl = self._wid.GetDialogItemAsControl(ITEM_INPUT_OK)
 		if self._is_passwd_dialog:
 			# For password dialogs make it disappear quickly
 			ctl.HiliteControl(10)
@@ -473,7 +467,7 @@ class InputURLDialog(InputDialog):
 			if ok:
 				pathname = fss.as_pathname()
 				url = MMurl.pathname2url(pathname)
-				tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
+				h = self._wid.GetDialogItemAsControl(ITEM_INPUT_TEXT)
 				Dlg.SetDialogItemText(h, _string2dialog(url))
 				self._wid.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
 			return 1
@@ -486,10 +480,7 @@ class NewChannelDialog(DialogWindow):
 		# First create dialogwindow and set static items
 		DialogWindow.__init__(self, self.DIALOG_ID, title=prompt,
 				default=ITEM_INPUT_OK, cancel=ITEM_INPUT_CANCEL)
-##		# XXXX Use title here?
-##		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_PROMPT)
-##		Dlg.SetDialogItemText(h, prompt)
-		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
+		h = self._wid.GetDialogItemAsControl(ITEM_INPUT_TEXT)
 		Dlg.SetDialogItemText(h, _string2dialog(default))
 		self._wid.SelectDialogItemText(ITEM_INPUT_TEXT, 0, 32767)
 		self.type_select=mw_widgets.SelectWidget(self._wid, ITEM_NEWCHANNEL_TYPE, types)
@@ -518,11 +509,10 @@ class NewChannelDialog(DialogWindow):
 		return 1
 			
 	def done(self):
-		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_TEXT)
+		h = self._wid.GetDialogItemAsControl(ITEM_INPUT_TEXT)
 		name = Dlg.GetDialogItemText(h)
 		type = self.type_select.getselect()
-		tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_OK)
-		ctl = h.as_Control()
+		ctl = self._wid.GetDialogItemAsControl(ITEM_INPUT_OK)
 		ctl.HiliteControl(10)
 		self._cb(name, type)
 		ctl.HiliteControl(0)
@@ -578,13 +568,11 @@ class TemplateDialog(DialogWindow):
 		
 	def _setbutton(self, item, value):
 		# Silly: this duplicates a method in MACDialog
-		tp, h, rect = self._wid.GetDialogItem(item)
-		ctl = h.as_Control()
+		ctl = self._wid.GetDialogItemAsControl(item)
 		ctl.SetControlValue(value)
 	
 	def _getbutton(self, item):
-		tp, h, rect = self._wid.GetDialogItem(item)
-		ctl = h.as_Control()
+		ctl = self._wid.GetDialogItemAsControl(item)
 		return ctl.GetControlValue()
 		
 	def done(self):
@@ -595,15 +583,14 @@ class TemplateDialog(DialogWindow):
 				cbarg = cbarg + ('external_player.html',)
 			else:
 				cbarg = cbarg + ('embedded_player.html',)
-			tp, h, rect = self._wid.GetDialogItem(ITEM_INPUT_OK)
-			ctl = h.as_Control()
+			ctl = self._wid.GetDialogItemAsControl(ITEM_INPUT_OK)
 			ctl.HiliteControl(10)
 			self._cb(cbarg)
 			ctl.HiliteControl(0)
 		self.close()
 		
 	def _setdialoginfo(self, idx):
-		tp, htext, rect = self._wid.GetDialogItem(ITEM_TEMPLATE_DESCRIPTION)
+		htext = self._wid.GetDialogItemAsControl(ITEM_TEMPLATE_DESCRIPTION)
 		if 0 <= idx < len(self.descriptions):
 			text = self.descriptions[idx][0]
 			image = self.descriptions[idx][1]

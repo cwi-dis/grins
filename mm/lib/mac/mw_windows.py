@@ -1172,13 +1172,13 @@ class _ScrollMixin:
 		#
 		rect = vertleft, verttop, vertright, hortop+1
 		self._bary = Ctl.NewControl(self._wid, rect, "", 1, 0, 0, 0, 16, 0)
-		self._bary.HiliteControl(255)
+##		self._bary.HiliteControl(255)
 		#
 		# Create horizontal scrollbar
 		#
 		rect = horleft, hortop, vertleft+1, horbot
 		self._barx = Ctl.NewControl(self._wid, rect, "", 1, 0, 0, 0, 16, 0)
-		self._barx.HiliteControl(255)
+##		self._barx.HiliteControl(255)
 		#
 		# And install callbacks
 		#
@@ -1295,11 +1295,11 @@ class _ScrollMixin:
 		if not self._barx:
 			return
 		if onoff:
-			hilite = 0
+			self._barx.ActivateControl()
+			self._bary.ActivateControl()
 		else:
-			hilite = 255
-		self._barx.HiliteControl(hilite)
-		self._bary.HiliteControl(hilite)
+			self._barx.DeactivateControl()
+			self._bary.DeactivateControl()
 		self._wid.DrawGrowIcon()
 		
 	def _scrollsizefactors(self):
@@ -1464,7 +1464,7 @@ class _ScrollMixin:
 		if canvassize <= windowsize:
 			bar.SetControlValue(0)
 			bar.SetControlMaximum(0)
-			bar.HiliteControl(255)
+##			bar.HiliteControl(255)
 		else:
 			newmax = canvassize - windowsize
 			oldvalue = bar.GetControlValue()
@@ -1482,7 +1482,7 @@ class _ScrollMixin:
 				newvalue = oldvalue
 			bar.SetControlMaximum(newmax)
 			bar.SetControlValue(newvalue)
-			bar.HiliteControl(0)
+##			bar.HiliteControl(0)
 
 class _AdornmentsMixin:
 	"""Class to handle toolbars and other adornments on toplevel windows"""
@@ -1517,7 +1517,7 @@ class _AdornmentsMixin:
 				cntl = Ctl.GetNewControl(resid, self._wid)
 			except Ctl.Error, arg:
 				print 'CNTL resource %d not found: %s'%(resid, arg)
-			cntl.HiliteControl(255)
+			cntl.HiliteControl(255) # XXXX HOW TO HANDLE THIS ONE?
 			self._cmd_to_cntl[None] = cntl
 			#
 			# Adjust window bounds
@@ -1586,13 +1586,13 @@ class _AdornmentsMixin:
 			cmd = item.__class__
 			if self._cmd_to_cntl.has_key(cmd):
 				cntl = self._cmd_to_cntl[cmd]
-				cntl.HiliteControl(0)
+				cntl.ActivateControl()
 				enabled[cmd] = 1
 		# Second pass: disable the others
 		for cmd in self._cmd_to_cntl.keys():
 			if not enabled.has_key(cmd):
 				cntl = self._cmd_to_cntl[cmd]
-				cntl.HiliteControl(255)
+				cntl.DeactivateControl()
 	
 	def set_toggle(self, cmd, onoff):
 		if self._cmd_to_cntl.has_key(cmd):
@@ -2212,15 +2212,15 @@ class DialogWindow(_Window):
 	# The event handling will then call this when return is pressed.
 	#
 	def _optional_defaulthit(self):
-		tp, h, rect = self._wid.GetDialogItem(self.__default)
-		h.as_Control().HiliteControl(Controls.inButton)
+		ctl = self._wid.GetDialogItemAsControl(self.__default)
+		ctl.HiliteControl(Controls.inButton)
 		self.do_itemhit(self.__default, None)
 	#
 	# Similarly for cancel, which is bound to close window (not to cmd-dot yet)
 	#
 	def _optional_cancelhit(self):
-		tp, h, rect = self._wid.GetDialogItem(self.__cancel)
-		h.as_Control().HiliteControl(Controls.inButton)
+		ctl = self._wid.GetDialogItemAsControl(self.__cancel)
+		ctl.HiliteControl(Controls.inButton)
 		self.do_itemhit(self.__cancel, None)
 		
 	def do_itemdraw(self, item):
@@ -2258,14 +2258,12 @@ class DialogWindow(_Window):
 			cmd = item.__class__
 			if cmd_to_item.has_key(cmd):
 				item = cmd_to_item[cmd]
-				tp, h, rect = self._wid.GetDialogItem(item)
-				cntl = h.as_Control()
-				cntl.HiliteControl(0)
+				cntl = self._wid.GetDialogItemAsControl(item)
+				cntl.ActivateControl()
 				del cmd_to_item[cmd]
 		# Second pass: disable the others
 		for item in cmd_to_item.values():
-			tp, h, rect = self._wid.GetDialogItem(item)
-			cntl = h.as_Control()
-			cntl.HiliteControl(255)
+			cntl = self._wid.GetDialogItemAsControl(item)
+			cntl.DeactivateControl()
 		# And pass the command list on to the Window/Menu stuff
 		_Window.set_commandlist(self, cmdlist)

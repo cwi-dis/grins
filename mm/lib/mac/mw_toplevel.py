@@ -446,13 +446,12 @@ class _Event(AEServer):
 
 	def _handle_keydown(self, event):
 		"""Handle a MacOS keyDown event"""
-		(what, message, when, where, modifiers) = event
-		c = chr(message & Events.charCodeMask)
-		if modifiers & Events.cmdKey:
-				self._handle_menu_key(c, event)
+		if self._handle_menu_event(event):
 				MenuMODULE.HiliteMenu(0)
 				return
-		else:
+		(what, message, when, where, modifiers) = event
+		c = chr(message & Events.charCodeMask)
+		if not modifiers & Events.cmdKey:
 			w = Win.FrontWindow()
 			handled = self._handle_keyboardinput(w, c, where, event)
 			if not handled:
@@ -460,8 +459,8 @@ class _Event(AEServer):
 			return
 		MacOS.HandleEvent(event)
 		
-	def _handle_menu_key(self, c, event):
-		result = MenuMODULE.MenuKey(ord(c))
+	def _handle_menu_event(self, event):
+		result = MenuMODULE.MenuEvent(event)
 		id = (result>>16) & 0xffff	# Hi word
 		item = result & 0xffff		# Lo word
 		if id:
@@ -633,9 +632,9 @@ class _Toplevel(_Event):
 		if not d:
 			return
 		w = d.GetDialogWindow()
-		tp, h, rect = d.GetDialogItem(mw_resources.ABOUT_VERSION_ITEM)
+		htext = d.GetDialogItemAsControl(mw_resources.ABOUT_VERSION_ITEM)
 		import version
-		Dlg.SetDialogItemText(h, 'GRiNS ' + version.version)
+		Dlg.SetDialogItemText(htext, 'GRiNS ' + version.version)
 		w.ShowWindow()
 		d.DrawDialog()
 		while 1:
