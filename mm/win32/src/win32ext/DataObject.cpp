@@ -2,18 +2,6 @@
 
 #include "DataObject.h"
 
-CMap<CString,LPCTSTR, CLIPFORMAT, CLIPFORMAT> ui_data_object::fmtMap;
-CLIPFORMAT ui_data_object::GetClipboardFormat(LPCTSTR pszFmt)
-	{
-	if(!pszFmt) return CF_TEXT;
-	CLIPFORMAT cf=CF_TEXT;
-	if(fmtMap.Lookup(pszFmt,cf))
-		return cf;
-	cf = ::RegisterClipboardFormat(_T(pszFmt));
-	if(!cf) return 0;
-	fmtMap[CString(pszFmt)]=cf;
-	return cf;
-	}
 
 // this returns a pointer that should not be stored.
 COleDataObject *ui_data_object::GetDataObject(PyObject *self)
@@ -58,19 +46,14 @@ PyObject *create_ole_data_object( PyObject *self, PyObject *args )
 static PyObject *
 ui_data_object_is_data_available(PyObject *self, PyObject *args)
 	{
-	char *pszFmt=NULL; 
-	if (!PyArg_ParseTuple(args,"|s:GetGlobalData",&pszFmt))
+	int cf; 
+	if (!PyArg_ParseTuple(args,"i:GetGlobalData",&cf))
 		return NULL;
 
 	COleDataObject* pDO = ui_data_object::GetDataObject(self);
 	if (!pDO)return NULL;
 
-	CLIPFORMAT cfPrivate=CF_TEXT;
-	if(pszFmt)
-		{
-		cfPrivate = ui_data_object::GetClipboardFormat(pszFmt);
-		if(!cfPrivate) RETURN_ERR("RegisterClipboardFormat failed");
-		}
+	CLIPFORMAT cfPrivate=(CLIPFORMAT)cf;
 	BOOL bRes = pDO->IsDataAvailable(cfPrivate);
 
 	return Py_BuildValue("i",bRes);
@@ -80,19 +63,14 @@ ui_data_object_is_data_available(PyObject *self, PyObject *args)
 static PyObject *
 ui_data_object_get_global_data(PyObject *self, PyObject *args)
 	{
-	char *pszFmt=NULL; 
-	if (!PyArg_ParseTuple(args,"|s:GetGlobalData",&pszFmt))
+	int cf; 
+	if (!PyArg_ParseTuple(args,"i:GetGlobalData",&cf))
 		return NULL;
 
 	COleDataObject* pDO = ui_data_object::GetDataObject(self);
 	if (!pDO)return NULL;
 
-	CLIPFORMAT cfPrivate=CF_TEXT;
-	if(pszFmt)
-		{
-		cfPrivate = ui_data_object::GetClipboardFormat(pszFmt);
-		if(!cfPrivate) RETURN_ERR("RegisterClipboardFormat failed");
-		}
+	CLIPFORMAT cfPrivate=(CLIPFORMAT)cf;
 	HGLOBAL hObjDesc = pDO->GetGlobalData(cfPrivate);
 	if(!hObjDesc) RETURN_NONE;
 ;
