@@ -123,14 +123,14 @@ class _Toplevel:
 			w._forcePaint()
 
 	def close(self):
-		self._timerWnd.MessageBox("Toplevel.Close!", "Debug", win32con.MB_OK)
+##		raise 'kaboo kaboo'
+##		self._timerWnd.MessageBox("Toplevel.Close!", "Debug", win32con.MB_OK)
 		for func, args in self._closecallbacks:
 			apply(func, args)
 		for win in self._subwindows[:]:
 			win.close()
 		self._closecallbacks = []
 		self._subwindows = []
-		self.__init__()		# clears all lists
 
 	def addclosecallback(self, func, args):
 		self._closecallbacks.append(func, args)
