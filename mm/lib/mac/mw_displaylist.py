@@ -404,7 +404,8 @@ class _DisplayList:
 			Qd.FrameRect(rect)
 		elif cmd == 'fbox':
 			color = entry[1]
-			rect = self._convert_coordinates(entry[2])
+			units = entry[3]
+			rect = self._convert_coordinates(entry[2], units)
 			if not self._render_overlaprgn(rect):
 				return
 			self._setfgcolor(color)
@@ -548,11 +549,13 @@ class _DisplayList:
 			raise 'Unknown displaylist command', cmd
 		self._dbg_did = self._dbg_did + 1
 
-	def _convert_coordinates(self, coords):
+	def _convert_coordinates(self, coords, units=None):
 		"""Convert coordinates from window xywh style to quickdraw style"""
 		xscrolloffset, yscrolloffset = self._window._scrolloffset()
+		if units is None:
+			units = self.__units
 		if self._need_convert_coordinates:
-			coords = self._window._convert_coordinates(coords, units = self.__units)
+			coords = self._window._convert_coordinates(coords, units = units)
 		x = coords[0] + xscrolloffset
 		y = coords[1] + yscrolloffset
 		if len(coords) == 2:
@@ -640,10 +643,10 @@ class _DisplayList:
 		self._list.append(('box', coordinates))
 		self._optimize()
 
-	def drawfbox(self, color, coordinates):
+	def drawfbox(self, color, coordinates, units=None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		self._list.append(('fbox', self._window._convert_color(color), coordinates))
+		self._list.append(('fbox', self._window._convert_color(color), coordinates, units))
 		self._optimize(1)
 
 	def drawmarker(self, color, coordinates):
