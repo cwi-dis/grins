@@ -112,6 +112,14 @@ attrgrs=(
 		'imgcropanchor',
 		]},
 
+        {'name':'fadeout',
+         'title':'Fadeout',
+         'attrs':['fadeout',
+                  'fadeoutcolor',
+                  'fadeouttime',
+                  'fadeoutduration',
+                  ]},
+
 	)
 
 
