@@ -4,6 +4,28 @@ __version__ = "$Id$"
 # Edit this module to add new classes.
 from sys import platform
 
+# This code is here for freeze only:
+def _freeze_dummy_func():
+	import CmifChannel
+	import ExternalChannel
+	import GraphChannel
+	import HtmlChannel 
+	import ImageChannel
+	import LabelChannel
+	import LayoutChannel
+	import MidiChannel
+	import MovieChannel
+	import NullChannel
+	import PseudoHtmlChannel
+	import PythonChannel
+	import ShellChannel
+	import SocketChannel
+	import SoundChannel
+	import TextChannel
+	import VcrChannel
+	import VideoChannel
+	import WordChannel
+
 class ChannelMap:
 	channelmap = {
 		'null': 	'NullChannel',
