@@ -3,7 +3,8 @@ __version__ = "$Id$"
 import os, posixpath
 import sys
 import windowinterface
-import MMExc, MMAttrdefs, MMTree, MMurl
+import MMAttrdefs, MMurl
+from MMExc import *
 from EditMgr import EditMgr
 import Timing
 from ViewDialog import ViewDialog
@@ -350,6 +351,7 @@ class TopLevel(ViewDialog):
 				import SMILTree
 				SMILTree.WriteFile(self.root, filename)
 			else:
+				import MMTree
 				MMTree.WriteFile(self.root, filename)
 		except IOError, msg:
 			windowinterface.showmessage('Save operation failed.\n'+
@@ -404,6 +406,7 @@ class TopLevel(ViewDialog):
 		import time
 		self.changed = 0
 		if self.new_file:
+			import MMTree
 			self.root = MMTree.ReadString(EMPTY, self.filename)
 		else:
 			import mimetypes
@@ -428,6 +431,7 @@ class TopLevel(ViewDialog):
 				import SMILTree
 				self.root = SMILTree.ReadFile(self.filename)
 			elif mtype == 'application/x-cmif':
+				import MMTree
 				self.root = MMTree.ReadFile(self.filename)
 			else:
 				raise MSyntaxError, 'unknown file type'
