@@ -35,6 +35,8 @@ def usage(msg):
 	print 'file ...   : one or more CMIF files'
 	sys.exit(2)
 
+from version import version
+
 from MainDialog import MainDialog
 
 class Main(MainDialog):
@@ -160,7 +162,7 @@ def main():
 	except ImportError:
 		splash = None
 	else:
-		splash.splash(version = 'cmifed V0.9')
+		splash.splash(version = 'GRiNS ' + version)
 	try:
 		import signal, pdb
 	except ImportError:
