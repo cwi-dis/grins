@@ -1591,7 +1591,11 @@ _fontmap = {
 	  'Times-Roman': '-*-times-medium-r-normal-*-*-*-*-*-*-*-iso8859-1',
 	  'Times-Italic': '-*-times-medium-i-normal-*-*-*-*-*-*-*-iso8859-1',
 	  'Times-Bold': '-*-times-bold-r-normal-*-*-*-*-*-*-*-iso8859-1',
+	  'Utopia': '-*-utopia-medium-r-normal-*-*-*-*-*-*-*-iso8859-1',
+	  'Utopia-Italic': '-*-utopia-medium-i-normal-*-*-*-*-*-*-*-iso8859-1',
 	  'Utopia-Bold': '-*-utopia-bold-r-normal-*-*-*-*-*-*-*-iso8859-1',
+	  'Palatino': '-*-palatino-medium-r-normal-*-*-*-*-*-*-*-iso8859-1',
+	  'Palatino-Italic': '-*-palatino-medium-i-normal-*-*-*-*-*-*-*-iso8859-1',
 	  'Palatino-Bold': '-*-palatino-bold-r-normal-*-*-*-*-*-*-*-iso8859-1',
 	  'Helvetica': '-*-helvetica-medium-r-normal-*-*-*-*-*-*-*-iso8859-1',
 	  'Helvetica-Bold': '-*-helvetica-bold-r-normal-*-*-*-*-*-*-*-iso8859-1',
@@ -1600,11 +1604,11 @@ _fontmap = {
 	  'Courier-Bold': '-*-courier-bold-r-normal-*-*-*-*-*-*-*-iso8859-1',
 	  'Courier-Oblique': '-*-courier-medium-o-normal-*-*-*-*-*-*-*-iso8859-1',
 	  'Courier-Bold-Oblique': '-*-courier-bold-o-normal-*-*-*-*-*-*-*-iso8859-1',
-	  'Greek': ['-*-times new roman-regular-r-*-*-*-*-*-*-p-*-iso8859-7',
+	  'Greek': ['-*-arial-regular-r-*-*-*-*-*-*-p-*-iso8859-7',
 		    '-*-*-medium-r-*--*-*-*-*-*-*-iso8859-7'],
-	  'Greek-Bold': ['-*-times new roman-bold-r-*--*-*-*-*-p-*-iso8859-7',
+	  'Greek-Bold': ['-*-arial-bold-r-*--*-*-*-*-p-*-iso8859-7',
 			 '-*-*-bold-r-*-*-*-*-*-*-*-*-iso8859-7'],
-	  'Greek-Italic': '-*-times new roman-regular-i-*-*-*-*-*-*-p-*-iso8859-7',
+	  'Greek-Italic': '-*-arial-regular-i-*-*-*-*-*-*-p-*-iso8859-7',
 	  }
 fonts = _fontmap.keys()
 
