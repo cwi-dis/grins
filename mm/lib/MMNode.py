@@ -1790,7 +1790,8 @@ class MMNode:
 		seeknode.srevents = {}
 		for key, val in srevents.items():
 			seeknode.srevents[key] = val
-		if self.context.editmgr:
+		if self.context.editmgr and \
+		   not self.context.editmgr.is_registered(seeknode):
 			seeknode.editmgr = self.context.editmgr
 			seeknode.editmgr.register(seeknode)
 		return sractions, srevents
