@@ -98,10 +98,8 @@ def writetuple(value, funcarglist, fp):
 		func(value[i], arg, fp)
 #
 def writelist(value, (func, arg), fp):
-	sep = ''
 	for v in value:
-		fp.write(sep)
-		sep = ' '
+		fp.write(' ')
 		func(v, arg, fp)
 #
 def writedict(value, (func, arg), fp):
@@ -148,7 +146,9 @@ def writetype(value, dummy, fp):
 	type, arg = value
 	fp.write('(' + type)
 	if type = 'enum':
-		for name in arg: fp.write(' ' + name)
+		for name in arg:
+			fp.write(' ')
+			writename(name)
 	elif type = 'tuple':
 		for t in arg:
 			fp.write(' ')
