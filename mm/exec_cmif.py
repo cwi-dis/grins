@@ -59,7 +59,9 @@ def Boot( bEditor = 0 ):
 		dllPath = ""
 
 	try:
+		global dll
 		dll = win32ui.LoadLibrary(os.path.join(dllPath, "GRiNSRes.dll"))
+		print "Loaded", dll, "from", dllPath
 		dll.AttachToMFC()
 	except win32ui.error:
 		win32ui.MessageBox("The application resource DLL 'GRiNSRes.dll' can not be located\r\n\r\nPlease correct this problem, and restart the application")
