@@ -53,7 +53,7 @@ class PathSeg:
 		elif self._type==PathSeg.SVG_PATHSEG_CLOSEPATH:
 			return 'z'
 		elif self._type<=PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL:
-			return commands[self._type]
+			return PathSeg.commands[self._type]
 		else:
 			return ''
 
@@ -61,16 +61,10 @@ class PathSeg:
 		if not letter:
 			self._type = PathSeg.SVG_PATHSEG_UNKNOWN
 			return
-		index = commands.find(letter)
+		index = PathSeg.commands.find(letter)
 		if index<0: self._type = PathSeg.SVG_PATHSEG_UNKNOWN
 		elif letter == 'z' or letter == 'Z': self._type = PathSeg.SVG_PATHSEG_CLOSEPATH
 		else: self._type = index
-
-	def getPointAt(self, t):
-		return complex(0, 0)
-
-	def getLength(self):
-		return 0.0
 
 	def __repr__(self):
 		t = self._type
@@ -110,7 +104,7 @@ class PathSeg:
 		else:
 			return ''
 
-class Path:
+class SVGPath:
 	def __init__(self,  pathstr):
 		self._pathSegList = []
 		self.__constructors = {'z':self.__addClosePath,
@@ -127,10 +121,14 @@ class Path:
 		self.constructPathSegList(pathstr)
 
 	def __repr__(self):
-		s = 'path = "'
+		s = ''
+		first = 1
 		for seq in self._pathSegList:
-			s = s + ' ' + repr(seq)
-		s = s + '"'
+			if first:
+				s = repr(seq)
+				first = 0
+			else:
+				s = s + ' ' + repr(seq)
 		return s
 
 	# main method
@@ -150,14 +148,6 @@ class Path:
 					if st.hasMoreTokens():
 						params = st.nextToken()
 						self.__addCommand(cmd, params)
-
-	# main query method
-	# get point at length t
-	def getPointAt(self, t):
-		return complex(0, 0)
-
-	def getLength(self):
-		return 0.0
 
 	def __addCommand(self, cmd, params):
 		lcmd = cmd.lower()
@@ -399,6 +389,120 @@ class Path:
 				token = token + '0'
 		return token
 
+
+	def createPath(self, path):
+		points = []
+		lastX = 0
+		lastY = 0
+		lastC = None
+		startP = None
+		isstart = 1
+		i = 0
+		n = len(self._pathSegList)
+		while i < n:
+			seg = self._pathSegList[i]
+			if isstart:
+				badCmds = 'HhVvZz'
+				while badCmds.find(seg.getTypeAsLetter())>=0 and i<n:
+					print 'ignoring cmd ', seg.getTypeAsLetter()
+					i = i + 1
+					seg = self._pathSegList[i]
+				if badCmds.find(seg.getTypeAsLetter())<0:
+					if seg._type != PathSeg.SVG_PATHSEG_MOVETO_ABS and \
+						seg._type != PathSeg.SVG_PATHSEG_MOVETO_REL:
+						print 'assuming abs moveto'
+					if seg._type == PathSeg.SVG_PATHSEG_MOVETO_REL:
+						lastX, lastY = lastX + seg._x, lastY + seg._y
+						startP = (lastX, lastY)
+						points.append(startP)
+						path.moveTo(startP)
+					else:
+						lastX, lastY = seg._x, seg._y
+						startP = (lastX, lastY)
+						points.append(startP)
+						path.moveTo(startP)
+				isstart = 0
+			else:
+				if seg._type == PathSeg.SVG_PATHSEG_CLOSEPATH:
+					if startP:
+						lastX, lastY = startP
+						points.append(startP)
+						startP = None
+					lastC = None
+					isstart = 1
+					path.closePath()
+
+				elif seg._type == PathSeg.SVG_PATHSEG_MOVETO_ABS:
+					lastX, lastY = seg._x, seg._y
+					points.append((lastX, lastY))
+					lastC = None
+					path.moveTo((lastX, lastY))
+
+				elif seg._type == PathSeg.SVG_PATHSEG_MOVETO_REL:
+					lastX, lastY = lastX + seg._x, lastY + seg._y
+					points.append((lastX, lastY))
+					lastC = None
+					path.moveTo((lastX, lastY))
+
+				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_ABS:
+					lastX, lastY = seg._x, seg._y
+					points.append((lastX, lastY))
+					lastC = None
+					path.lineTo((lastX, lastY))
+
+				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_REL:
+					lastX, lastY = lastX + seg._x, lastY + seg._y
+					points.append((lastX, lastY))
+					lastC = None
+					path.lineTo((lastX, lastY))
+
+				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_HORIZONTAL_ABS:
+					lastX = seg._x
+					points.append((lastX, lastY))
+					lastC = None
+					path.lineTo((lastX, lastY))
+
+				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_HORIZONTAL_REL:
+					lastX = lastX + seg._x
+					points.append((lastX, lastY))
+					lastC = None
+					path.lineTo((lastX, lastY))
+
+				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_VERTICAL_ABS:
+					lastY = seg._y
+					points.append((lastX, lastY))
+					lastC = None
+					path.lineTo((lastX, lastY))
+
+				elif seg._type == PathSeg.SVG_PATHSEG_LINETO_VERTICAL_REL:
+					lastY = lastY + seg._y
+					points.append((lastX, lastY))
+					lastC = None
+					path.lineTo((lastX, lastY))
+
+				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_ABS:
+					pass
+				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_REL:
+					pass
+				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_SMOOTH_ABS:
+					pass
+				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_SMOOTH_REL:
+					pass
+				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_ABS:
+					pass
+				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_REL:
+					pass
+				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS:
+					pass
+				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL:
+					pass
+				elif seg._type == PathSeg.SVG_PATHSEG_ARC_ABS:
+					pass
+				elif seg._type == PathSeg.SVG_PATHSEG_ARC_REL:
+					pass
+			i = i + 1
+		return points
+										
 class StringTokenizer:
 	def __init__(self, str, delim=' \t\n\r\f'):
 		self.__str = str
@@ -416,4 +520,94 @@ class StringTokenizer:
 		if start == self.__pos and self.__delim.find(self.__str[self.__pos])>=0:
 			self.__pos = self.__pos + 1
 		return self.__str[start:self.__pos]
+
+def tocomplex(pt):
+	return complex(pt[0],pt[1])
+
+class Path:
+	SEG_MOVETO = 0
+	SEG_LINETO = 1
+	SEG_QUADTO = 2
+	SEG_CUBICTO = 3
+	SEG_CLOSE = 4
+
+	def __init__(self,  pathstr):
+		self.__ptTypes = []
+		self.__ptCoords = []
+		self._svgpath = SVGPath(pathstr)
+		self._points = self._svgpath.createPath(self)
+		self.__length = self.__getLength()
+
+	# main query method
+	# get point at length t
+	def getPointAt(self, t):
+		n = len(self.__ptTypes)
+		if n==0: return complex(0, 0)
+		elif n==1: return tocomplex(self.__ptCoords[0])
+		if t<=0: return tocomplex(self.__ptCoords[0])
+		elif t>=self.__length: return tocomplex(self.__ptCoords[n-1])
+
+		d = 0.0
+		xq, yq = self.__ptCoords[0] 
+		for i in range(n):
+			if self.__ptTypes[i] == Path.SEG_MOVETO:
+				xp, yp = 	self.__ptCoords[i]
+			elif self.__ptTypes[i] == Path.SEG_LINETO:
+				x, y = self.__ptCoords[i]
+				dx = x - xp; dy = y - yp
+				ds = math.sqrt(dx*dx+dy*dy)
+				if t>=d and t <= (d + ds):
+					f = (t-d)/ds
+					xq, yq = xp + f*(x-xp), yp + f*(y-yp)	
+					break
+				d = d + ds
+				xp, yp = x, y
+		return complex(xq, yq)
+
+	def getLength(self):
+		return self.__length
+	
+	def __getLength(self):
+		d = 0.0
+		n = len(self.__ptTypes)
+		for i in range(n):
+			if self.__ptTypes[i] == Path.SEG_MOVETO:
+				xp, yp = 	self.__ptCoords[i]
+			elif self.__ptTypes[i] == Path.SEG_LINETO:
+				x, y = self.__ptCoords[i]
+				dx = x - xp; dy = y - yp
+				d = d + math.sqrt(dx*dx+dy*dy)
+				xp, yp = x, y
+		return d
+	
+	def __repr__(self):
+		return 'path = "' + `self._svgpath` + '"'
+	
+	def moveTo(self, pt):
+		n = len(self.__ptTypes)
+		if n>0 and self.__ptTypes[n - 1] == Path.SEG_MOVETO:
+			self.__ptCoords[n - 1] = pt
+		else:
+			self.__ptTypes.append(Path.SEG_MOVETO)
+			self.__ptCoords.append(pt)						
+
+	def lineTo(self, pt):
+		self.__ptTypes.append(Path.SEG_LINETO)
+		self.__ptCoords.append(pt)						
+
+	def curveTo(self, pt1, pt2, pt):
+		pass
+
+	def quadTo(self, pt1, pt2, pt):
+		pass
+
+	def appendArc(self, arc):
+		pass
+
+	def closePath(self):
+		pass
+
+	def getCoords(self, i):
+		return None
+
 
