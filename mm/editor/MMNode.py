@@ -689,7 +689,7 @@ class MMNode(MMNodeBase.MMNode):
 			                           [(PLAY, arg)     ]+out0),\
 			  ([(PLAY_DONE, arg) ]+in1,[(SCHED_DONE,arg), \
 			                            (PLAY_STOP, arg)]+out1),\
-			  ([(SCHED_STOP, arg)]    ,[]) ], []
+			  ([(SCHED_STOP, arg)]    ,[(PLAY_STOP, arg)]) ], []
 		if not MMAttrdefs.getattr(self, 'duration'):
 			return [\
 			  ([(SCHED, arg), (ARM_DONE, arg)]+in0,\
@@ -703,7 +703,7 @@ class MMNode(MMNodeBase.MMNode):
 			                           [(PLAY, arg)     ]+out0),\
 			  ([(PLAY_DONE, arg) ]    ,[(SCHED_DONE,arg), \
 			                            (PLAY_STOP, arg)]+out1),\
-			  ([(SCHED_STOP, arg)]    ,[]) ], []
+			  ([(SCHED_STOP, arg)]    ,[(PLAY_STOP, arg)]) ], []
 
 	def gensr_bag(self):
 		in0, in1 = self.sync_from
