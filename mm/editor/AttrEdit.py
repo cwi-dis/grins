@@ -1411,7 +1411,6 @@ class AttrEditor(AttrEditorDialog):
 		newchannel = None
 		mustChangeChannel = 0
 		checkType = 0
-		ctx = self.wrapper.getcontext()		
 		regionName = None
 		for b in self.attrlist:
 			name = b.getname()
@@ -1453,7 +1452,7 @@ class AttrEditor(AttrEditorDialog):
 					checkType = 1
 				# if the mime type change, we have to change the channel as well
 				if name == 'file':
-					compatChannelTypeList = ctx.compatchtypes(value)
+					compatChannelTypeList = self.wrapper.getcontext().compatchtypes(value)
 					currentChannelType = self.wrapper.node.GetChannelType()
 					if currentChannelType not in compatChannelTypeList:
 						mustChangeChannel = 1
