@@ -1139,6 +1139,7 @@ class NodeBox(GO):
 		if not self.mother.lockednode:
 			windowinterface.beep()
 			return
+		self.mother.window.setcursor('')
 		editmgr = self.mother.editmgr
 		if not editmgr.transaction():
 			return # Not possible at this time
