@@ -79,7 +79,6 @@ def _get_icon(which):
 
 class DisplayList:
 	def __init__(self, window, bgcolor):
-		self.starttime = 0
 		r, g, b = bgcolor
 		self._window = window			
 		window._displists.append(self)
@@ -135,8 +134,6 @@ class DisplayList:
 #====================================== Rendering
 	# Called by any client that wants to activate the display list
 	def render(self):
-		import time
-		self.starttime = time.time()
 		wnd = self._window
 		if not wnd or not hasattr(wnd,'_obj_')or not hasattr(wnd,'RedrawWindow'):
 			return
@@ -387,14 +384,14 @@ class DisplayList:
 	
 	# Set forground color
 	def fgcolor(self, color):
-		self._list.append('fg', color)
+		self._list.append(('fg', color))
 		self._fgcolor = color
 
 	# Define a new button
-	def newbutton(self, coordinates, z = 0, times = None):
+	def newbutton(self, coordinates, z = 0):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		return _Button(self, coordinates, z, times)
+		return _Button(self, coordinates, z)
 
 
 	# display image from file
@@ -405,8 +402,8 @@ class DisplayList:
 			raise error, 'displaylist already rendered'
 		image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep = \
 		       self._window._prepare_image(file, crop, scale, center, coordinates, clip)
-		self._list.append('image', mask, image, src_x, src_y,
-				  dest_x, dest_y, width, height,rcKeep)
+		self._list.append(('image', mask, image, src_x, src_y,
+				   dest_x, dest_y, width, height,rcKeep))
 		self._optimize((2,))
 		self._update_bbox(dest_x, dest_y, dest_x+width, dest_y+height)
 		x, y, w, h = self._canvas
@@ -434,10 +431,10 @@ class DisplayList:
 		yvalues = []
 		for point in points:
 			x, y = self._convert_coordinates(point)
-			p.append(x,y)
+			p.append((x,y))
 			xvalues.append(x)
 			yvalues.append(y)
-		self._list.append('line', color, p)
+		self._list.append(('line', color, p))
 		self._update_bbox(min(xvalues), min(yvalues), max(xvalues), max(yvalues))
 
 	# Draw a horizontal gutter
@@ -449,7 +446,7 @@ class DisplayList:
 		color2 = self._convert_color(color2)
 		x0, y = self._convert_coordinates((x0, y))
 		x1, dummy = self._convert_coordinates((x1, y))
-		self._list.append('3dhline', color1, color2, x0, x1, y)
+		self._list.append(('3dhline', color1, color2, x0, x1, y))
 		self._update_bbox(x0, y, x1, y+1)
 
 	# Insert a command to drawbox
@@ -457,7 +454,7 @@ class DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		x, y, w, h = self._convert_coordinates(coordinates)
-		self._list.append('box',(x, y, x+w, y+h))
+		self._list.append(('box',(x, y, x+w, y+h)))
 		self._optimize()
 		self._update_bbox(x, y, x+w, y+h)
 
@@ -465,7 +462,7 @@ class DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		x, y, w, h = self._convert_coordinates(coordinates)
-		self._list.append('anchor',(x, y, x+w, y+h))
+		self._list.append(('anchor',(x, y, x+w, y+h)))
 		self._optimize()
 		self._update_bbox(x, y, x+w, y+h)
 ##		return x, y, x+w, y+h
@@ -475,8 +472,8 @@ class DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		x, y, w, h = self._convert_coordinates(coordinates)
-		self._list.append('fbox', self._convert_color(color),
-				(x, y, x+w-1, y+h-1))
+		self._list.append(('fbox', self._convert_color(color),
+				   (x, y, x+w-1, y+h-1)))
 		self._optimize((1,))
 		self._update_bbox(x, y, x+w-1, y+h-1)
 ##		return x, y, x+w, y+h
@@ -486,7 +483,7 @@ class DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		x, y, w, h = self._convert_coordinates(coordinates)
-		self._list.append('clear',(x, y, x+w, y+h))
+		self._list.append(('clear',(x, y, x+w, y+h)))
 		self._optimize((1,))
 		self._update_bbox(x, y, x+w, y+h)
 
@@ -499,7 +496,7 @@ class DisplayList:
 		p = []
 		for point in points:
 			p.append(self._convert_coordinates(point))
-		self._list.append('fpolygon', color, p)
+		self._list.append(('fpolygon', color, p))
 		self._optimize((1,))
 
 	# Insert a command to draw a 3d box
@@ -512,7 +509,7 @@ class DisplayList:
 		ct = self._convert_color(ct)
 		cr = self._convert_color(cr)
 		cb = self._convert_color(cb)
-		self._list.append('3dbox', (cl, ct, cr, cb), coordinates)
+		self._list.append(('3dbox', (cl, ct, cr, cb), coordinates))
 		self._optimize((1,))
 		x, y, w, h = coordinates
 		self._update_bbox(x, y, x+w, y+h)
@@ -522,7 +519,7 @@ class DisplayList:
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		coordinates = self._convert_coordinates(coordinates)
-		self._list.append('diamond', coordinates)
+		self._list.append(('diamond', coordinates))
 		self._optimize()
 		x, y, w, h = coordinates
 		self._update_bbox(x, y, x+w, y+h)
@@ -539,7 +536,7 @@ class DisplayList:
 			y, h = y + h, -h
 		coordinates = self._convert_coordinates((x, y, w, h))
 		color = self._convert_color(color)
-		self._list.append('fdiamond', color, coordinates)
+		self._list.append(('fdiamond', color, coordinates))
 		self._optimize((1,))
 		x, y, w, h = coordinates
 		self._update_bbox(x, y, x+w, y+h)
@@ -555,7 +552,7 @@ class DisplayList:
 		cr = self._convert_color(cr)
 		cb = self._convert_color(cb)
 		coordinates = self._convert_coordinates(coordinates)
-		self._list.append('3ddiamond', (cl, ct, cr, cb), coordinates)
+		self._list.append(('3ddiamond', (cl, ct, cr, cb), coordinates))
 		self._optimize((1,))
 		x, y, w, h = coordinates
 		self._update_bbox(x, y, x+w, y+h)
@@ -574,7 +571,7 @@ class DisplayList:
 		if yextra > 0:
 			y = y + yextra/2
 		data = _get_icon(icon)
-		self._list.append('icon', (x, y, size, size), data)
+		self._list.append(('icon', (x, y, size, size), data))
 		self._optimize((2,))
 		
 	# Insert a command to draw an arrow
@@ -612,17 +609,17 @@ class DisplayList:
 			cos = math.cos(rotation)
 			sin = math.sin(rotation)
 			points = [(ndx, ndy)]
-			points.append(roundi(ndx + ARR_LENGTH*cos + ARR_HALFWIDTH*sin),
-				      roundi(ndy + ARR_LENGTH*sin - ARR_HALFWIDTH*cos))
-			points.append(roundi(ndx + ARR_LENGTH*cos - ARR_HALFWIDTH*sin),
-				      roundi(ndy + ARR_LENGTH*sin + ARR_HALFWIDTH*cos))
+			points.append((roundi(ndx + ARR_LENGTH*cos + ARR_HALFWIDTH*sin),
+				       roundi(ndy + ARR_LENGTH*sin - ARR_HALFWIDTH*cos)))
+			points.append((roundi(ndx + ARR_LENGTH*cos - ARR_HALFWIDTH*sin),
+				       roundi(ndy + ARR_LENGTH*sin + ARR_HALFWIDTH*cos)))
 			window.arrowcache[(nsrc,ndst)] = nsx, nsy, ndx, ndy, points
-		self._list.append('arrow', color, (nsx, nsy, ndx, ndy), points)
+		self._list.append(('arrow', color, (nsx, nsy, ndx, ndy), points))
 		self._optimize((1,))
 		self._update_bbox(nsx, nsy, ndx, ndy)
 
 	def drawvideo(self,cbf):
-		self._list.append('video',cbf)
+		self._list.append(('video',cbf))
 		
 	def get3dbordersize(self):
 		# This is the same "1" as in 3dbox bordersize
@@ -688,7 +685,7 @@ class DisplayList:
 		maxx = oldx
 		for str in strlist:
 			x0, y0 = self._convert_coordinates((x, y))
-			list.append('text', self._convert_color(self._fgcolor),f, x0, y0, str)
+			list.append(('text', self._convert_color(self._fgcolor),f, x0, y0, str))
 			self._optimize((1,))
 			width=self._canvas[2]-self._canvas[0]
 			if width==0:width=1 
@@ -741,7 +738,7 @@ class DisplayList:
 			minx, maxx = maxx, minx
 		if miny > maxy:
 			miny, maxy = maxy, miny
-		self._clonebboxes.append(minx, miny, maxx, maxy)
+		self._clonebboxes.append((minx, miny, maxx, maxy))
 		if not self._win32rgn:
 			self._win32rgn=win32ui.CreateRgn()
 			self._win32rgn.CreateRectRgn((minx, miny, maxx, maxy))
@@ -799,7 +796,7 @@ class DisplayList:
 		self.AddObj(obj)
 	# Insert an obj in the list
 	def AddObj(self,obj):
-		self._list.append('obj',obj)
+		self._list.append(('obj',obj))
 		l,t,r,b=obj.getbbox()
 		self._update_bbox(l,t,r,b)
 
@@ -807,11 +804,10 @@ class DisplayList:
 ####################################################
 
 class _Button:
-	def __init__(self, dispobj, coordinates, z=0, times=None):
+	def __init__(self, dispobj, coordinates, z=0):
 		self._coordinates = coordinates
 		self._dispobj = dispobj
 		self._z = z
-		self._times = times
 		buttons = dispobj._buttons
 		for i in range(len(buttons)):
 			if buttons[i]._z <= z:
@@ -858,14 +854,5 @@ class _Button:
 	# Returns true if the point is inside the box	
 	def _inside(self, x, y):
 		bx, by, bw, bh = self._coordinates
-		if (bx <= x < bx+bw and by <= y < by+bh):
-			if self._times:
-				import time
-				curtime = time.time() - self._dispobj.starttime
-				t0, t1 = self._times
-				if (not t0 or t0 <= curtime) and \
-				   (not t1 or curtime < t1):
-					return 1
-				return 0
-			return 1
-		return 0
+		return (bx <= x < bx+bw and by <= y < by+bh)
+
