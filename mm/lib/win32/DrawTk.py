@@ -448,10 +448,11 @@ class DrawRect(DrawObj):
 		#if self._is_selected:
 		#	self.drawTracker(dc,DrawObj.selected)
 
-#		drawTk.RestoreFont(dc)
+		# restore dc by selecting old pen and brush
+		drawTk.RestoreFont(dc)
 		dc.SelectObjectFromHandle(oldpen)
 		Sdk.DeleteObject(pen)
-		# restore dc by selecting old pen and brush
+
 	def GetRelCoord_X(self):
 		rc_client=Rect(self._context._views[0].GetClientRect())
 		x,y,w,h= drawTk.ToRelCoord(self._position,rc_client)
