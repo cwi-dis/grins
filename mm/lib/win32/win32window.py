@@ -1788,9 +1788,10 @@ class Region(Window):
 
 		if self._active_displist:
 			entry = self._active_displist._list[0]
+			bgcolor = None
 			if entry[0] == 'clear' and entry[1]:
 				bgcolor = entry[1]
-			else:
+			elif not self._transparent:
 				bgcolor = self._bgcolor
 			if bgcolor:
 				r, g, b = bgcolor
