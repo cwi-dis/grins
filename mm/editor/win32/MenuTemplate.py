@@ -45,7 +45,7 @@ MENUBAR=(
 		(LIGHT, SEP,),
 		(LIGHT, ENTRY, '&Save\tCtrl+S', 'S', SAVE),
 		(LIGHT, ENTRY, 'Save &as...', None, SAVE_AS),
-		(LIGHT, CASCADE, '&Export', (
+		(LIGHT, CASCADE, '&Generate', (
 			(LIGHT, ENTRY, '&RealSystem G2...', None, EXPORT_SMIL),
 			(LIGHT, ENTRY, '&Upload RealSystem G2...', None, UPLOAD_SMIL),
 			)),
@@ -77,10 +77,35 @@ MENUBAR=(
 			)),
 		(LIGHT, ENTRY, '&Delete\tCtrl+Del', None, DELETE),
 		(LIGHT, SEP,),
-		(LIGHT, ENTRY, '&New node...', None, NEW_AFTER),
+		(SMIL, ENTRY, '&New node...', None, NEW_AFTER),
 		(LIGHT, CASCADE, 'Ne&w node special', (
-			(LIGHT, ENTRY, '&Before...', None, NEW_BEFORE),
-			(LIGHT, ENTRY, '&Within...', None, NEW_UNDER),
+			(LIGHT, CASCADE, '&Image node', (
+				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_IMAGE),
+				(LIGHT, ENTRY, '&After', None, NEW_AFTER_IMAGE),
+				(LIGHT, ENTRY, '&Within', None, NEW_UNDER_IMAGE),
+			)),
+			(LIGHT, CASCADE, '&Slideshow node', (
+				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_SLIDESHOW),
+				(LIGHT, ENTRY, '&After', None, NEW_AFTER_SLIDESHOW),
+				(LIGHT, ENTRY, '&Within', None, NEW_UNDER_SLIDESHOW),
+			)),
+			(LIGHT, CASCADE, '&Text node', (
+				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_TEXT),
+				(LIGHT, ENTRY, '&After', None, NEW_AFTER_TEXT),
+				(LIGHT, ENTRY, '&Within', None, NEW_UNDER_TEXT),
+			)),
+			(LIGHT, CASCADE, 'S&ound node', (
+				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_SOUND),
+				(LIGHT, ENTRY, '&After', None, NEW_AFTER_SOUND),
+				(LIGHT, ENTRY, '&Within', None, NEW_UNDER_SOUND),
+			)),
+			(LIGHT, CASCADE, '&Video node', (
+				(LIGHT, ENTRY, '&Before', None, NEW_BEFORE_VIDEO),
+				(LIGHT, ENTRY, '&After', None, NEW_AFTER_VIDEO),
+				(LIGHT, ENTRY, '&Within', None, NEW_UNDER_VIDEO),
+			)),
+			(SMIL, ENTRY, '&Before...', None, NEW_BEFORE),
+			(SMIL, ENTRY, '&Within...', None, NEW_UNDER),
 			(LIGHT, ENTRY, '&Par parent', None, NEW_PAR),
 			(LIGHT, ENTRY, '&Seq parent', None, NEW_SEQ),
 			(LIGHT, ENTRY, 'Sw&itch parent', None, NEW_ALT),
@@ -189,9 +214,11 @@ MENUBAR=(
 # Popup menus for various states
 #
 POPUP_HVIEW_LEAF = (
-		(LIGHT, ENTRY, '&New node...', None, NEW_AFTER),
-		(LIGHT, ENTRY, 'New node &before...', None, NEW_BEFORE),
-		(LIGHT, SEP,),
+		# XXXX Need to ad the "new xxx node" commands for the
+		# light version
+		(SMIL, ENTRY, '&New node...', None, NEW_AFTER),
+		(SMIL, ENTRY, 'New node &before...', None, NEW_BEFORE),
+		(SMIL, SEP,),
 		(LIGHT, ENTRY, 'Cu&t', None, CUT),
 		(LIGHT, ENTRY, '&Copy', None, COPY),
 		(LIGHT, ENTRY, '&Paste', None, PASTE_AFTER),
@@ -213,12 +240,12 @@ POPUP_HVIEW_LEAF = (
 )
 
 POPUP_HVIEW_STRUCTURE = (
-		(LIGHT, ENTRY, '&New node...', None, NEW_AFTER),
-		(LIGHT, CASCADE, '&New node special', (
-			(LIGHT, ENTRY, '&Before...', None, NEW_BEFORE),
-			(LIGHT, ENTRY, '&Within...', None, NEW_UNDER),
+		(SMIL, ENTRY, '&New node...', None, NEW_AFTER),
+		(SMIL, CASCADE, '&New node special', (
+			(SMIL, ENTRY, '&Before...', None, NEW_BEFORE),
+			(SMIL, ENTRY, '&Within...', None, NEW_UNDER),
 			)),
-		(LIGHT, SEP,),
+		(SMIL, SEP,),
 		(LIGHT, ENTRY, 'Cu&t', None, CUT),
 		(LIGHT, ENTRY, '&Copy', None, COPY),
 		(LIGHT, ENTRY, '&Paste', None, PASTE_AFTER),
