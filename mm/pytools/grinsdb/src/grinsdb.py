@@ -7,7 +7,10 @@ import os
 import time
 import string
 
-DATABASE="/ufs/mm/clients"
+if os.environ.has_key('GRINS_DATABASE'):
+	DATABASE=os.environ['GRINS_DATABASE']
+else:
+	DATABASE="/ufs/mm/clients"
 
 try:
         USER=os.environ['USER']
@@ -24,8 +27,15 @@ class GrinsDmdbObject(maildb.DmdbObject):
 		self['Last-Modified-User'] = USER
 		maildb.DmdbObject.saveto(self, fp)
 
-def Database(dir=DATABASE):
-	return maildb.MdbDatabase(dir, GrinsDmdbObject)
+def Database(dir=DATABASE, indexed=1):
+	if indexed:
+		return maildb.IndexedMdbDatabase(dir, GrinsDmdbObject)
+	else:
+		return maildb.MdbDatabase(dir, GrinsDmdbObject)
+
+def Index(dir=DATABASE, keys=[]):
+	indexname = os.path.join(dir, '.index')
+	return maildb.Index(indexname, 'nf', keys)
 
 def uniqueid():
 	"""This function assumses everything is correct: the id file
