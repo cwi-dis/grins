@@ -868,6 +868,8 @@ class FileAttrEditorField(StringAttrEditorField):
 		self.setvalue(url)
 		if self.wrapper.__class__ is SlideWrapper and url:
 			import HierarchyView
+			node = self.wrapper.node
+			pnode = node.GetParent()
 			start, minstart = HierarchyView.slidestart(pnode, url, pnode.children.index(node))
 			for b in self.attreditor.attrlist:
 				if b.getname() == 'start':
