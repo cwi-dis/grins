@@ -114,7 +114,7 @@ attrgrs=(
 		]},
 
 	{'name':'preferences2',
-	'title': 'Previewer settings',
+	'title': 'Previewer switch settings',
 	'attrs':[
 		'system_bitrate',
 		'system_captions',
@@ -131,6 +131,16 @@ attrgrs=(
 		'system_captions',
 		'system_language',
 		'system_overdub_or_caption',
+		]},
+
+	{'name':'preferencesPro',
+	'title': 'GRiNS preferences',
+	'attrs':[
+		'default_sync_behavior_locked',
+		'default_sync_tolerance',
+		'enable_template',
+		'saveopenviews',
+		'initial_dialog',
 		]},
 
 	{'name':'snapsystem',

@@ -769,6 +769,10 @@
 	'Show hidden custom tests' raw (smil2))
 (enable_template (bool) 0 'Template builder' default
 	'Enable features specific to building template documents' raw (smil2))
+(default_sync_behavior_locked (bool) 0 'Synchronous playback' default
+	'Playback will be fully synchronized by default' raw (smil2))
+(default_sync_tolerance (float) 0.1 'Tolerance' default
+	'Maximum media clock drift for synchronized playback' raw (smil2))
 
 # RTIPA start
 (RTIPA_server (string) '' 'RTIPA server' default
