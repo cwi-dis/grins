@@ -1,3 +1,21 @@
+//============================================================================
+//
+//  Microsoft Windows Media Technology
+//  Copyright (C) Microsoft Corporation, 1999 - 2001.  All Rights Reserved.
+//
+//  File:        wmdm.idl
+//
+//  Description: 
+//
+//============================================================================
+
+cpp_quote( "//=========================================================================" )
+cpp_quote( "//" )
+cpp_quote( "// Microsoft Windows Media Technologies" )
+cpp_quote( "// Copyright (C) Microsoft Corporation, 1999 - 2001.  All Rights Reserved." )
+cpp_quote( "//" )
+cpp_quote( "//=========================================================================" )
+
 import "unknwn.idl";
 import "objidl.idl";
 import "wtypes.idl";
@@ -71,6 +89,8 @@ cpp_quote("#define WMDM_E_BUFFERTOOSMALL                   0x80045008L")
 cpp_quote("#define WMDM_E_MOREDATA                         0x80045009L")
 cpp_quote("#define WMDM_E_MAC_CHECK_FAILED                 0x8004500AL")
 cpp_quote("#define WMDM_E_USER_CANCELLED                   0x8004500BL")
+cpp_quote("#define WMDM_E_SDMI_TRIGGER                     0x8004500CL")
+cpp_quote("#define WMDM_E_SDMI_NOMORECOPIES                0x8004500DL")
 
 cpp_quote("// MDMRIGHTS Flags")
 cpp_quote("#define WMDM_RIGHTS_PLAYBACKCOUNT               0x00000001")
