@@ -1150,6 +1150,9 @@ class MMChannelTree:
 		if root:
 			for node in root.children:
 				self.__appendCssNodes(resolver, node)
+		for top in self.top_levels:
+			csstop = resolver.getCssObj(top)
+			csstop.updateAll()
 		return resolver
 
 	def __appendCssRegions(self, resolver, regarg, cssregarg):
@@ -1170,7 +1173,7 @@ class MMChannelTree:
 				csssubreg.copyRawAttrs(blackhole.getCssObj(node))
 				csssubreg.media = resolver.newMedia(node.GetDefaultMediaSize, node)
 				csssubreg.media.copyRawAttrs(blackhole.getCssObj(node).media)
-				mmchan = self.GetChannel()
+				mmchan = node.GetChannel()
 				if mmchan:
 					reg = mmchan.GetLayoutChannel()
 					csssubreg.link(resolver.getCssObj(reg))
