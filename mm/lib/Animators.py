@@ -607,7 +607,7 @@ class EffectiveAnimator:
 		self.__currvalue = None
 
 		# keep tag for exceptions
-		self.__tag = tag = MMAttrdefs.getattr(targnode, 'tag')
+		self.__tag = tag = MMAttrdefs.getattr(targnode, 'atag')
 			
 		# we need a temporary instance of the
 		# last animator removed from self.__animators
@@ -914,7 +914,7 @@ animatetypes = ['invalid', 'values', 'from-to', 'from-by', 'to', 'by']
 class AnimateElementParser:
 	def __init__(self, anim):
 		self.__anim = anim			# the animate element node
-		self.__elementTag = anim.attrdict['tag']
+		self.__elementTag = anim.attrdict['atag']
 		self.__attrname = ''		# target attribute name
 		self.__attrtype = ''		# in alltypes (see above)
 		self.__domval = None		# document attribute value
@@ -1770,7 +1770,7 @@ class AnimateElementParser:
 				newnode = EditableObjects.EditableMMNode('imm', ctx, ctx.newuid())
 				newnode.attrdict = targchan.attrdict.copy()
 				newnode.attrdict['channel'] = te
-				newnode.attrdict['tag'] = 'region'
+				newnode.attrdict['atag'] = 'region'
 				newnode._type = 'region'
 				newnode._region = targchan
 				targchan._vnode = newnode
@@ -1783,7 +1783,7 @@ class AnimateElementParser:
 			newnode = EditableObjects.EditableMMNode('imm', ctx, ctx.newuid())
 			newnode.attrdict = tr.copy()
 			newnode.attrdict['channel'] = te
-			newnode.attrdict['tag'] = 'transition'
+			newnode.attrdict['atag'] = 'transition'
 			newnode._type = 'transition'
 			anim.targetnode = newnode
 		else:
@@ -1799,7 +1799,7 @@ class AnimateElementParser:
 					#mjvdg- newnode = MMNode.MMNode('imm', ctx, ctx.newuid())
 					newnode = EditableObjects.EditableMMNode('imm', ctx, ctx.newuid())
 					newnode.attrdict = parent.attrdict.copy()
-					newnode.attrdict['tag'] = 'area'
+					newnode.attrdict['atag'] = 'area'
 					newnode.attrdict['coords'] = a.aargs
 					newnode.attrdict['name'] = a.aid
 					newnode.attrdict['parent'] = parent

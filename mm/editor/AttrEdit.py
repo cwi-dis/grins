@@ -638,7 +638,7 @@ class NodeWrapper(Wrapper):
 class SlideWrapper(NodeWrapper):
 	def attrnames(self):
 		import realsupport
-		tag = self.node.GetAttrDict()['tag']
+		tag = self.node.GetAttr('tag')
 		if tag == 'fill':
 			namelist = ['color', 'displayfull', 'subregionxy',
 				    'subregionwh', 'start']
@@ -713,7 +713,7 @@ class AnimationWrapper(NodeWrapper):
 			cclass = ChannelMap.internalchannelmap[ctype]
 			# Add the class's declaration of attributes
 			namelist = namelist + cclass.node_attrs
-		tag = self.node.GetAttrDict()['tag']
+		tag = self.node.GetAttr('atag')
 		rmlist = []
 		if tag == 'animateMotion':
 			rmlist.append('attributeName')
@@ -745,7 +745,7 @@ class AnimationWrapper(NodeWrapper):
 
 	def maketitle(self):
 		name = MMAttrdefs.getattr(self.node, 'name')
-		tag = MMAttrdefs.getattr(self.node, 'tag')
+		tag = MMAttrdefs.getattr(self.node, 'atag')
 		return 'Properties of %s node ' % tag + name
 
 	def getdef(self, name):

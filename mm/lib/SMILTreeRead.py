@@ -206,7 +206,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__topregion = {}
 		self.__elementindex = 0
 		self.__ids = {}		# collect all id's here
-		self.__nodemap = {}
+		self.__nodemap = {}	# mapping from ID to MMNode instance
 		self.__idmap = {}
 		self.__anchormap = {}
 		self.__links = []
@@ -1617,11 +1617,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__container = self.__container.GetParent()
 
 	def NewAnimateNode(self, tagname, attributes):
-		# mimetype -- the MIME type of the node as specified in attr
-		# mediatype, subtype -- mtype split into parts
-		# tagname -- the tag name in the SMIL file (None for "ref")
-		# nodetype -- the CMIF node type (imm/ext/...)
-
 		self.__fix_attributes(attributes)
 		id = self.__checkid(attributes)
 
@@ -1665,7 +1660,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		else:
 			self.__container._addchild(node)
 
-		node.attrdict['tag'] = tagname
+		node.attrdict['atag'] = tagname
 		node.attrdict['mimetype'] = 'animate/%s' % tagname
 
 		# synthesize a name for the channel
@@ -4648,6 +4643,8 @@ def ReadFile(url, printfunc = None, new_file = 0, check_compatibility = 0):
 	return rv
 
 def ReadFileContext(url, context, printfunc = None, new_file = 0, check_compatibility = 0):
+	from time import time
+	t0 = time()
 	p = SMILParser(context, printfunc, new_file, check_compatibility)
 	u = MMurl.urlopen(url)
 	if not new_file:
@@ -4666,6 +4663,8 @@ def ReadFileContext(url, context, printfunc = None, new_file = 0, check_compatib
 	data = string.join(string.split(data, '\r'), '\n')
 	p.feed(data)
 	p.close()
+	t1 = time()
+##	print 'parsed in %g' % (t1-t0)
 	root = p.GetRoot()
 	root.source = data
 	return root
