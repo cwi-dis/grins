@@ -297,7 +297,7 @@ class FileDialog:
 class ProgressDialog:
 	# Placeholder
 	
-	def __init__(self, title, cancelcallback=None):
+	def __init__(self, title, cancelcallback=None, parent=None):
 		import EasyDialogs
 		self.cancelcallback = cancelcallback
 		self.progressbar = EasyDialogs.ProgressBar(title)
@@ -418,7 +418,7 @@ class InputDialog(DialogWindow):
 	DIALOG_ID= ID_INPUT_DIALOG
 	
 	def __init__(self, prompt, default, cb, cancelCallback = None,
-			passwd=0):
+			passwd=0, parent=None):
 		# XXXX passwd parameter to be implemted
 		self._is_passwd_dialog = passwd
 		# First create dialogwindow and set static items
@@ -482,7 +482,7 @@ class InputURLDialog(InputDialog):
 class NewChannelDialog(DialogWindow):
 	DIALOG_ID= ID_NEWCHANNEL_DIALOG
 	
-	def __init__(self, prompt, default, types, cb, cancelCallback = None):
+	def __init__(self, prompt, default, types, cb, cancelCallback = None, parent=None):
 		# First create dialogwindow and set static items
 		DialogWindow.__init__(self, self.DIALOG_ID, title=prompt,
 				default=ITEM_INPUT_OK, cancel=ITEM_INPUT_CANCEL)
@@ -531,7 +531,7 @@ class NewChannelDialog(DialogWindow):
 class TemplateDialog(DialogWindow):
 	DIALOG_ID= ID_TEMPLATE_DIALOG
 	
-	def __init__(self, names, descriptions, cb, cancelCallback = None):
+	def __init__(self, names, descriptions, cb, cancelCallback = None, parent=None):
 		# names: list of template names
 		# descriptions: list of (text, image, ...) parallel to names
 		#
@@ -662,7 +662,7 @@ def multchoice(prompt, list, defindex, parent = None):
 	return 1
 
 class BandwidthComputeDialog:
-	def __init__(self, title):
+	def __init__(self, title, parent=None):
 		self.title = title
 		self.mustwait = 0
 
