@@ -308,6 +308,13 @@ class FileDialog:
 		if existing:
 			fss, ok = macfs.PromptGetFile(prompt)
 		else:
+			if filter and not file:
+				# Guess a filename with correct extension
+				if type(filter) == type([]) or type(filter) == type(()):
+					filter = filter[0]
+				import MMmimetypes
+				ext = MMmimetypes.guess_extension(filter)
+				file = 'Untitled' + ext
 			fss, ok = macfs.StandardPutFile(prompt, file)
 		if ok:
 			filename = fss.as_pathname()
