@@ -25,6 +25,14 @@ JNIEXPORT void JNICALL Java_grins_GRiNSPlayerMonitor_initializeThreadContext
 
 /*
  * Class:     grins_GRiNSPlayerMonitor
+ * Method:    uninitializeThreadContext
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_grins_GRiNSPlayerMonitor_uninitializeThreadContext
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     grins_GRiNSPlayerMonitor
  * Method:    nconnect
  * Signature: (I)I
  */
@@ -70,14 +78,6 @@ JNIEXPORT jint JNICALL Java_grins_GRiNSPlayerMonitor_ngetTopLayoutCount
  */
 JNIEXPORT jint JNICALL Java_grins_GRiNSPlayerMonitor_ngetTopLayoutState
   (JNIEnv *, jobject, jint, jint);
-
-/*
- * Class:     grins_GRiNSPlayerMonitor
- * Method:    uninitializeThreadContext
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_grins_GRiNSPlayerMonitor_uninitializeThreadContext
-  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }
