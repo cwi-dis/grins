@@ -15,6 +15,7 @@
  */
 
 #include "os.h"
+#include <CodeFragments.h>
 
 int 
 stricmp(const char *first, const char *last)
