@@ -1152,19 +1152,17 @@ import DrawTk
 #   works with reference the full screen instead of the parent layout
 
 class LayoutPage(AttrPage,cmifwnd._CmifWnd):
-	def __init__(self,form,layoutcontext=None):
+	def __init__(self,form):
 		AttrPage.__init__(self,form)
 		cmifwnd._CmifWnd.__init__(self)
-		if not layoutcontext:
-			self._layoutcontext=ScreenLayoutContext(self._form._winsize)
-		else:
-			self._layoutcontext=layoutcontext
+		self._layoutcontext=ScreenLayoutContext(self._form._winsize)
 
 		DrawTk.drawTk.SetLayoutMode(0)
 		lc=self._layoutcontext
 		DrawTk.drawTk.SetScale(lc.getxscale(),lc.getyscale())
 		#w,h=self._form._winsize
 		# rc=(0,0,w,h)
+
 		x,y,w,h=self._form.GetBBox()
 		rc=(x,y,x+w,y+h)
 		rc=self._layoutcontext.tolayout(rc)
@@ -1262,8 +1260,8 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 
 
 class PosSizeLayoutPage(LayoutPage):
-	def __init__(self,form,layoutcontext=None):
-		LayoutPage.__init__(self,form,layoutcontext)
+	def __init__(self,form):
+		LayoutPage.__init__(self,form)
 		self._xy=None
 		self._wh=None
 
@@ -1664,7 +1662,6 @@ class AttrEditFormNew(GenFormView):
 		self._channels_rc={}
 		for ch in channels:
 			self._channels[ch.name]=ch
-#			print ch.attrdict
 			units=ch.attrdict.get('units',0)
 			if ch.attrdict.has_key('winsize'):
 				w,h=ch.attrdict['winsize']
@@ -1672,9 +1669,6 @@ class AttrEditFormNew(GenFormView):
 				self._channels_rc[ch.name]=((0,0,w,h),units)
 			elif ch.attrdict.has_key('base_winoff'):
 				self._channels_rc[ch.name]=(ch.attrdict['base_winoff'],units)
-#		print 'channel sizes:'
-#		for chname in self._channels_rc.keys():
-#			print '\t',chname,self._channels_rc[chname]
 
 		if hasattr(a.wrapper,'node'):
 			self._node=a.wrapper.node
@@ -1689,11 +1683,13 @@ class AttrEditFormNew(GenFormView):
 
 		if hasattr(a.wrapper,'channel'):
 			self._channel=a.wrapper.channel
-
-		#print self._node,self._channel
 	
 	def GetBBox(self):
 		if not self._channel:
+			if self._node.parent:
+				# RealPix interior nodes
+				chname=self._node.parent.attrdict['channel']
+				return self._channels_rc[chname][0]
 			w,h=self._winsize
 			return (0,0,w,h)
 		else:
