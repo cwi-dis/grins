@@ -3,21 +3,25 @@
 
 // Cpp framework 
 // for modules that export PyObjects
-// for modules that need a mechanism to call back 
-// methods of cpp objects overridden in Python
 
 // For rapid-dev we borrow win32ui's core mechanisms
 // we 'll revisit this module
 
 // Using Std C++ (not MFC or other lib)
 
+// Associations (a central win32ui mechanism) has been removed
+// If the need arises, reimplement them in a cleaner not intrusive way
+
+
 #ifndef Py_PYTHON_H
 #include "Python.h"
 #endif
 
+// class SyncObject and CEnterLeavePython
 #ifndef INC_MT
 #include "mt.h"
 #endif
+
 
 inline void Trace(const char*, ...){}
 #define TRACE Trace
@@ -30,6 +34,11 @@ inline void Trace(const char*, ...){}
 #endif
 #define PY_API extern "C" DLL_API
 
+
+////////////////////////////////////////////////
+////////////////////////////////////////////////
+// Helper Macros
+
 #define MAKE_PY_CTOR(classname) static Object * classname::PyObConstruct()\
 	{Object* ret = new classname;return ret;}
 #define GET_PY_CTOR(classname) classname::PyObConstruct
@@ -37,12 +46,7 @@ inline void Trace(const char*, ...){}
 #define BGN_SAVE PyThreadState *_save = PyEval_SaveThread()
 #define END_SAVE PyEval_RestoreThread(_save)
 #define BLOCK_THREADS Py_BLOCK_THREADS
-class CEnterLeavePython
-	{
-	public:
-	CEnterLeavePython(){}
-	~CEnterLeavePython(){}
-	};
+
 #define GET_THREAD_AND_DECREF(object) \
 	if ((object) && (object)->ob_refcnt==1) { \
 		CEnterLeavePython elp;Py_XDECREF((object)); \
@@ -62,7 +66,11 @@ class CEnterLeavePython
 
 extern DLL_API PyObject *module_error;
 
-// helper PyTypeObject class.
+
+////////////////////////////////////////////////
+////////////////////////////////////////////////
+// TypeObject
+
 class Object;
 class DLL_API TypeObject : public PyTypeObject 
 	{
@@ -76,7 +84,11 @@ class DLL_API TypeObject : public PyTypeObject
 	Object *(*ctor)();
 	};
 
-// helper PyObject class.
+
+////////////////////////////////////////////////
+////////////////////////////////////////////////
+// Object
+
 class DLL_API Object : public PyObject 
 	{
 	public:
@@ -108,88 +120,25 @@ class DLL_API Object : public PyObject
 	static PyObject* GetMethodByType(PyObject *self,PyObject *args);
 	};
 
-/////////////////////////////////////////
-/////////////////////////////////////////
-/////////////////////////////////////////
-// MECHANISM TO SUPPORT PYTHON OVERRIDES OF CPP OBJECTS
-
-class AssocObject;
-
-class DLL_API AssocManager 
-	{
-	public:
-	AssocManager();
-	~AssocManager();
-	void Assoc(void *assoc, AssocObject *PyObject, void *oldAssoc=NULL);
-	AssocObject *GetAssocObject(const void * handle);
-	void cleanup(void);	
-
-	private:
-
-	typedef pair<void*,AssocObject*> ObjectPair;
-	typedef map<void*,AssocObject*> ObjectMap;
-	ObjectMap objectMap;
-	const void  *lastLookup;
-	AssocObject *lastObject;
-	SyncObject m_sync;
-	};
-
-class DLL_API AssocObject : public Object
-	{
-	public:	
-	PyObject *GetGoodRet();
-	static AssocObject *make(TypeObject &makeType,void* search);
-
-	// Given a C++ object, return a PyObject associated (map lookup)
-	static AssocObject *GetPyObject(void *search);
-
-	// Return the C++ object associated with this Python object.
-	// Do as much type checking as possible.
-	// Static version may have "self" pointer changed if it does
-	// auto conversion from Instance to Object.
-	static void *GetGoodCppObject(PyObject *&self, TypeObject *Type_check);
-	virtual void *GetGoodCppObject(TypeObject *Type_check=NULL) const;
-
-	// Call this when the C++ object dies, or otherwise becomes invalid.
-	void KillAssoc();	// maps to a virtual with some protection wrapping.
-
-	// virtuals for Python support
-	virtual string repr();
-
-	// methods
-	static PyObject *AttachObject(PyObject *self, PyObject *args);
-
-	PyObject *virtualInst;
-
-	static TypeObject type;
-	static AssocManager assocMgr;
-
-	protected:
-	// Does the actual killing.
-	virtual void DoKillAssoc(BOOL bDestructing = FALSE); // does the actual work.
-	// Called during KillAssoc - normally zeroes association.
-	// Override to keep handle after destruction (eg, the association
-	// with a dialog is valid after the Window's window has closed).
-	virtual void SetAssocInvalid(){assoc = 0;}
-
-	AssocObject(); 
-	virtual ~AssocObject();
-	void *assoc;
-	};
 
 ////////////////////////////////////////////////
-// A helper class for calling "virtual methods" - ie, given a C++ object
-// call a Python method of that name on the attached Python object.
-class DLL_API VirtualHelper
+////////////////////////////////////////////////
+// CallerHelper
+
+// Helper to call a method of a Python object.
+
+class DLL_API CallerHelper
 	{
 	public:
-	VirtualHelper(const char *iname, const void *iassoc);
-	~VirtualHelper();
+	CallerHelper(const char *iname,PyObject *inst);
+	~CallerHelper();
 
 	BOOL HaveHandler() {return handler!=NULL;}
+	void print_error();
 	// All the "call" functions return FALSE if the call failed, or no handler exists.
 	BOOL call();
 	BOOL call(int);
+	BOOL call(int, int);
 	BOOL call(int, int, int);
 	BOOL call(long);
 	BOOL call(const char *);
