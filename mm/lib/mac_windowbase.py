@@ -202,7 +202,7 @@ class _Event:
 		if partcode == Windows.inContent:
 			if wid == Win.FrontWindow():
 				# Frontmost. Handle click.
-				self._handle_contentclick(wid, 1, where, event)
+				self._handle_contentclick(wid, 1, where, event, (modifiers & Events.shiftKey))
 			else:
 				# Not frontmost. Activate.
 				wid.SelectWindow()
@@ -231,7 +231,7 @@ class _Event:
 		if partcode == Windows.inContent:
 			if wid == Win.FrontWindow():
 				# Frontmost. Handle click.
-				self._handle_contentclick(wid, 0, where, event)
+				self._handle_contentclick(wid, 0, where, event, (modifiers & Events.shiftKey))
 
 	def _handle_keydown(self, event):
 		"""Handle a MacOS keyDown event"""
@@ -417,12 +417,12 @@ class _Toplevel(_Event):
 			return self._wid_to_window[wid]
 		return None
 		
-	def _handle_contentclick(self, wid, down, where, event):
+	def _handle_contentclick(self, wid, down, where, event, shifted):
 		"""A mouse-click inside a window, dispatch to the correct window"""
 		window = self._find_wid(wid)
 		if not window:
 			return
-		window._contentclick(down, where, event)
+		window._contentclick(down, where, event, shifted)
 		
 	def _handle_goaway(self, wid):
 		"""User asked to close a window. Dispatch to correct window"""
@@ -700,7 +700,7 @@ class _CommonWindow:
 			return
 		func(arg, self, (0, 0, 0))
 		
-	def _contentclick(self, down, where, event):
+	def _contentclick(self, down, where, event, shifted):
 		"""A click in our content-region. Note: this method is extended
 		for top-level windows (to do global-to-local coordinate transforms)"""
 		#
@@ -708,7 +708,7 @@ class _CommonWindow:
 		#
 		for ch in self._subwindows:
 			if Qd.PtInRect(where, ch.qdrect()):
-				ch._contentclick(down, where, event)
+				ch._contentclick(down, where, event, shifted)
 				return
 		#
 		# It is really in our canvas. Do we have a low-level click handler?
@@ -719,10 +719,16 @@ class _CommonWindow:
 		#
 		# Convert to our type of event and call the appropriate handler.
 		#
-		if down:
-			evttype = Mouse0Press
+		if not shifted:
+			if down:
+				evttype = Mouse0Press
+			else:
+				evttype = Mouse0Release
 		else:
-			evttype = Mouse0Release
+			if down:
+				evttype = Mouse2Press
+			else:
+				evttype = Mouse2Release
 
 		try:
 			func, arg = self._eventhandlers[evttype]
@@ -820,11 +826,11 @@ class _Window(_CommonWindow):
 			return
 		self._wid.SendBehind(0)
 		
-	def _contentclick(self, down, where, event):
+	def _contentclick(self, down, where, event, shifted):
 		"""A mouse click in our data-region"""
 		Qd.SetPort(self._wid)
 		where = Qd.GlobalToLocal(where)
-		_CommonWindow._contentclick(self, down, where, event)
+		_CommonWindow._contentclick(self, down, where, event, shifted)
 
 	def _mkclip(self):
 		if not self._wid or not self._parent:
@@ -975,6 +981,7 @@ class _DisplayList:
 		# On the mac, we can only render after a full setup.
 		# Hence, we schedule a redraw only
 		#
+		self._window._active_displist = self
 		Win.InvalRect(self._window.qdrect())
 		
 	def _render(self):
