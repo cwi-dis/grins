@@ -3,6 +3,8 @@
 Error = 'TimeMapper.Error'
 import features
 
+CONSISTENT_TIME_MAPPING=1
+
 class TimeMapper:
 	def __init__(self):
 		self.collecting = 1
@@ -40,21 +42,35 @@ class TimeMapper:
 			oldpixels = self.collisiondict[time]
 			if pixels > oldpixels:
 				self.collisiondict[time] = pixels
-##		# XXX is this correct, or should we have added those to the collisions?
-##		for t1, t0, pixels in self.dependencies:
-##			if t0 == t1:
-##				self.collisiondict[t0] = self.collisiondict[t0] + pixels
 		self.times = self.collisiondict.keys()
 		self.times.sort()
+		if CONSISTENT_TIME_MAPPING:
+			min_pixels_per_second = 0
+			for t1, t0, pixels in self.dependencies:
+				if t1 != t0 and pixels/(t1-t0) > min_pixels_per_second:
+					min_pixels_per_second = pixels/(t1-t0)
+			min_pixels_per_second = int(min_pixels_per_second+0.5)
+		else:
+			min_pixels_per_second = 2
 		minpos = 0
+		prev_t = self.times[0]
 		for t in self.times:
+			self.dependencies.append((t, prev_t, (t-prev_t)*min_pixels_per_second))
+##			minpos = minpos + (t-prev_t) * min_pixels_per_second
 			self.minpos[t] = minpos
 			minpos = minpos + self.collisiondict[t] + 1
+			prev_t = t
+		pushover = {}
 		for t1, t0, pixels in self.dependencies:
 			t0maxpos = self.minpos[t0] + self.collisiondict[t0]
 			t1minpos = t0maxpos + pixels
-			if t1minpos > self.minpos[t1]:
-				self.minpos[t1] = t1minpos
+			if t1minpos > self.minpos[t1] + pushover.get(t1, 0):
+				pushover[t1] = t1minpos - self.minpos[t1]
+		curpush = 0
+		for time in self.times:
+			curpush = curpush + pushover.get(time, 0)
+			self.minpos[time] = self.minpos[time] + curpush
+		
 		print 'RANGES'
 		for t in self.times:
 			print t, self.minpos[t], self.minpos[t] + self.collisiondict[t]
@@ -66,6 +82,8 @@ class TimeMapper:
 		return 0
 		
 	def time2pixel(self, time, align='left'):
+		# Return either the leftmost or rightmost pixel for a given
+		# time, which must be known
 		if self.collecting:
 			raise Error, 'time2pixel called while still collecting data'
 		if not self.minpos.has_key(time):
@@ -74,3 +92,31 @@ class TimeMapper:
 		if align == 'right':
 			pos = pos + self.collisiondict[time]
 		return pos
+		
+	def interptime2pixel(self, time):
+		# Return a pixel position for any time value, possibly interpolating
+		if self.collecting:
+			raise Error, 'time2pixel called while still collecting data'
+		if self.minpos.has_key(time):
+			return self.minpos[time]
+		if time < self.times[0]:
+			return self.minpos[self.times[0]]
+		if time > self.times[-1]:
+			return self.minpos[self.times[-1]]
+		i = 1
+		while self.times[i] < time:
+			i = i + 1
+		beforetime = self.times[i-1]
+		aftertime = self.times[i]
+		factor = (float(time)-beforetime) / (aftertime-beforetime)
+		beforepos = self.minpos[beforetime] + self.collisiondict[beforetime]
+		afterpos = self.minpos[aftertime]
+		width = afterpos - beforepos
+		return int(beforepos + factor*width + 0.5)
+		
+	def gettimesegments(self):
+		# Return a list of (time, leftpixel, rightpixel) tuples
+		rv = []
+		for t in self.times:
+			rv.append((t, self.minpos[t], self.minpos[t] + self.collisiondict[t]))
+		return rv

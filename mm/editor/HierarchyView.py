@@ -85,7 +85,8 @@ class HierarchyView(HierarchyViewDialog):
 		HierarchyViewDialog.__init__(self)		
 
 		self.create_scene_graph() # A hierarchy of displayable objects for the screen.
-		self.scene_graph.collapse_levels(3); # Collapse all nodes less than 3 levels down.
+		if not self.usetimestripview:
+			self.scene_graph.collapse_levels(3) # Collapse all nodes less than 3 levels down.
 
 	def __add_commands(self):
 		# Add the user-interface commands that are used for this window.
@@ -490,7 +491,6 @@ class HierarchyView(HierarchyViewDialog):
 			self.need_resize = 0
 			# Easiest to create the timemapper always
 			self.timemapper = TimeMapper.TimeMapper()
-
 			x,y = self.scene_graph.get_minsize_abs()
 			self.mcanvassize = x,y
 
@@ -512,7 +512,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.window.setcanvassize((self.sizes.SIZEUNIT, x, y)) # Causes a redraw() event.
 
 			self.timemapper = None
-
+		
 	def draw_scene(self):
 		# Only draw the scene, nothing else.
 		if self.redrawing:
