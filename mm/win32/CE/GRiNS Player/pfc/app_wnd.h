@@ -28,7 +28,9 @@ struct PyWnd
 	static std::map<HWND, PyWnd*> wnds;
 	static PyWnd *createInstance()
 		{
+#ifdef WITH_THREAD
 		AcquireThread at(PyInterface::getPyThreadState());
+#endif
 		PyWnd *instance = PyObject_NEW(PyWnd, &type);
 		if (instance == NULL) return NULL;
 		instance->m_hWnd = NULL;
