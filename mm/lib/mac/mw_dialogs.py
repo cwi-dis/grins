@@ -169,7 +169,7 @@ class _ModelessDialog(MACDialog):
 		
 	def do_itemhit(self, item, event):
 		if item == ITEM_QUESTION_OK:
-			self.close()
+##			self.close()
 			if self.okcallback:
 				func, arglist = self.okcallback
 				apply(func, arglist)

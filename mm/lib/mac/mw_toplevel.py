@@ -186,7 +186,12 @@ class _Event:
 		if what == Events.mouseDown:
 			self._handle_mousedown(event)
 		elif what == Events.mouseUp:
-			self._handle_mouseup(event)
+			# If there is a mouse tracker pass the event there in stead of
+			# to the normal handler.
+			if self._mouse_tracker:
+				self._mouse_tracker(event)
+			else:
+				self._handle_mouseup(event)
 		elif what == Events.keyDown:
 			self._handle_keydown(event)
 		elif what == Events.updateEvt:
