@@ -63,19 +63,17 @@ class _LayoutView2(GenFormView):
 		# set this to 0 to suppress region names
 		self._showRegionNames = 1
 
-		# region name : list index
-		self._region2ix = {}
-
 		# set to true while updating controls due to darwing
 		self._mouse_update = 0
 
-		# by default, not handler defined for previous control
+		# layout component
 		self._previousHandler = None
-
+		self._layout = LayoutManager()
+		
 	# special initialization because previous control is not managed like any another component
 	# allow to have a handle on previous component from an external module
 	def getPreviousComponent(self):
-		return self
+		return self._layout
 
 	# for now avoid to have one handler by dialog ctrl
 	def getDialogComponent(self):
@@ -84,62 +82,6 @@ class _LayoutView2(GenFormView):
 	# define a handler for callbacks fnc
 	def setDialogHandler(self, handler):
 		self._dialogHandler = handler
-
-	# define a handler for callbacks fnc
-	def setPreviousHandler(self, handler):
-		self._previousHandler = handler
-		
-	#
-	# interface implementation  of 'external class' --> previous control
-	#
-	
-	# viewport management
-	def newViewport(self):
-		print 'newViewport: not implemented yet'
-
-	def selectViewport(self):
-#		self._selectViewport()
-		print 'selectViewport: not implemented yet'
-
-	def unselectViewport(self):
-		print 'unselectViewport: not implemented yet'
-	
-	def setViewportGeom(self):
-		print 'setViewportGeom: not implemented yet'
-
-	# regions management	
-	def addRegion(self, parentHandle, geom):
-		print 'addRegion: not implemented yet'
-
-	def removeRegion(self, handle):
-		print 'removeRegion: not implemented yet'
-
-	def selectRegion(self, handle):
-		self._selectRegion(handle)
-
-	def unselectRegion(self,handle):
-		print 'unselectRegion: not implemented yet'
-
-	def setRegionGeom(self, handle, geom):
-		print 'setRegionGeom: not implemented yet'
-
-	def setZIndex(self, handle, geom):
-		print 'setZIndex: not implemented yet'
-
-	# bg management
-	def setBgColor(self, handle, bgColor):
-		print 'setBgColor: not implemented yet'
-
-	# image management
-	def setImage(self, handle, image, fit):
-		print 'setImage: not implemented yet'
-
-	#
-	# end implementation of interface 'external class' --> previous control
-	#
-		
-	def setContext(self, ctx):
-		self._mmcontext = ctx
 
 	def OnInitialUpdate(self):
 		GenFormView.OnInitialUpdate(self)
@@ -154,25 +96,35 @@ class _LayoutView2(GenFormView):
 		l2,t2,r2,b2 = preview.getwindowrect()
 		rc = l2-l1, t2-t1, r2-l2, b2-t2
 		bgcolor = (255, 255, 255)
-		self._layout = LayoutManager(self, rc, bgcolor)
-		self._layout.setMMNodeContext(self._mmcontext)
+		self._layout.onInitialUpdate(self, rc, bgcolor)
 		
-		# fill combos
-		vpList = self._layout.getViewports()
-		for vpname in vpList:
-			self['ViewportSel'].addstring(vpname)
-		if vpList:
-			self['ViewportSel'].setcursel(0)
-			self._selectViewport(vpList[0])
-#			self['ViewportSel'].callcb()
-
-		# update show names check box 
-		self['ShowNames'].setcheck(self._showRegionNames)
-
 		# we have to notify layout if has capture
 		self.HookMessage(self.onMouse,win32con.WM_LBUTTONDOWN)
 		self.HookMessage(self.onMouse,win32con.WM_LBUTTONUP)
 		self.HookMessage(self.onMouse,win32con.WM_MOUSEMOVE)
+
+	#
+	# setup the dialog control values
+	#
+	
+	def fillViewportSelCtrl(self, vpList):
+		# fill combos
+		if vpList:
+			for vpname in vpList:
+				self['ViewportSel'].addstring(vpname)
+			self['ViewportSel'].setcursel(0)
+
+	def setViewportSelCtrl(self, iSel):
+		# update show names check box 
+		self['ViewportSel'].setcursel(iSel)
+
+	def setShowNamesCtrl(self, bValue):
+		# update show names check box 
+		self['ShowNames'].setcheck(bValue)
+
+	#
+	# end setup the dialog control values
+	#
 
 	def onMouse(self, params):
 		if self._layout.hasCapture():
@@ -262,9 +214,8 @@ class _LayoutView2(GenFormView):
 		self._dialogHandler.onRegionSelCtrl(rgnname)
 
 	def onShowRegionNames(self):
-		self._showRegionNames = self['ShowNames'].getcheck()
-		self._layout._viewport.showNames(self._showRegionNames)
-		self._layout.update()
+		showRegionNames = self['ShowNames'].getcheck()
+		self._dialogHandler.onRegionNamesChCtrl(showRegionNames)
 
 	def onEditCoordinates(self):
 		name = self['RegionSel'].getvalue()
@@ -318,84 +269,46 @@ class _LayoutView2(GenFormView):
 	#
 	# Helpers for user input responses
 	# 
-	def _selectViewport(self, name):
-		self._layout.setViewport(name)
-		rgnList = self._layout.getRegions(name)
-		self['RegionSel'].resetcontent()
-		i = 0
-		for reg in rgnList:
-			self['RegionSel'].addstring(reg)
-			self._region2ix[reg] = i
-			i = i + 1
-		if rgnList:
-			self['RegionSel'].setcursel(0)
-			self._selectRegion(rgnList[0])
+#	def _selectViewport(self, name):
+#		self._layout.setViewport(name)
+#		rgnList = self._layout.getRegions(name)
+#		self['RegionSel'].resetcontent()
+#		i = 0
+#		for reg in rgnList:
+#			self['RegionSel'].addstring(reg)
+#			self._region2ix[reg] = i
+#			i = i + 1
+#		if rgnList:
+#			self['RegionSel'].setcursel(0)
+#			self._selectRegion(rgnList[0])
 #			self['RegionSel'].callcb()
 				
-	def _selectRegion(self, name):
-		region = self._layout.getRegion(name)
-		if region:
-			self._layout.selectRegion(name)
-			self.onShapeChange(region)
+#	def _selectRegion(self, name):
+#		region = self._layout.getRegion(name)
+#		if region:
+#			self._layout.selectRegion(name)
+#			self.onShapeChange(region)
 			
-	#
-	# win32window.DrawContext listener interface
-	# 
-	def onShapeChange(self, shape):
-		if shape is None:
-			for name in ('RegionX','RegionY','RegionW','RegionH'):
-				self[name].settext('')
-			self._mouse_update = 1
-			self['RegionZ'].settext('')
-			self['RegionSel'].setcursel(-1)
-			self['BgColor'].enable(0)
-			self._mouse_update = 0
-			return
-		rc = shape._rectb
-		i = 0
-		self._mouse_update = 1
-		for name in ('RegionX','RegionY','RegionW','RegionH'):
-			self[name].settext('%d' % rc[i])
-			i = i +1
-		self['RegionZ'].settext('%d' % shape._z)
-		if id(shape)!=id(self._layout._viewport):
-			self['RegionSel'].setcursel(self._region2ix[shape._name])
-		else:
-			self['RegionSel'].setcursel(-1)
-		self['BgColor'].enable(1)
-		self._mouse_update = 0
-
-	def onProperties(self, shape):
-		if not shape: return
-		r, g, b = shape._bgcolor or (255, 255, 255)
-		dlg = win32ui.CreateColorDialog(win32api.RGB(r,g,b),win32con.CC_ANYCOLOR,self)
-		if dlg.DoModal() == win32con.IDOK:
-			newcol = dlg.GetColor()
-			rgb = win32ui.GetWin32Sdk().GetRGBValues(newcol)
-			shape.updatebgcolor(rgb)
-			self._layout.update()
-
-###########################
-# helper class to build tree from list
-class Node:
-	def __init__(self, name, dict):
-		self._name = name
-		self._attrdict = dict
-		self._parent = None
-		self._children = []
-
-	def _do_init(self, parent):
-		self._parent = parent
-		parent._children.append(self)
+#	def onProperties(self, shape):
+#		if not shape: return
+#		r, g, b = shape._bgcolor or (255, 255, 255)
+#		dlg = win32ui.CreateColorDialog(win32api.RGB(r,g,b),win32con.CC_ANYCOLOR,self)
+#		if dlg.DoModal() == win32con.IDOK:
+#			newcol = dlg.GetColor()
+#			rgb = win32ui.GetWin32Sdk().GetRGBValues(newcol)
+#			shape.updatebgcolor(rgb)
+#			self._layout.update()
 
 ###########################
 class LayoutManager(window.Wnd, win32window.DrawContext):
-	def __init__(self, parent, rc, bgcolor):
+	def __init__(self):
 		window.Wnd.__init__(self, win32ui.CreateWnd())
 		win32window.DrawContext.__init__(self)
-		
+
+	# allow to create a LayoutManager instance before the onInitialUpdate of dialog box
+	def onInitialUpdate(self, parent, rc, bgcolor):
 		# register dialog as listener
-		win32window.DrawContext.addListener(self, parent) 
+		win32window.DrawContext.addListener(self, self) 
 
 		self._parent = parent
 		self._bgcolor = bgcolor
@@ -420,6 +333,13 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		self.ShowWindow(win32con.SW_SHOW)
 		self.UpdateWindow()
 
+		self.__initState()
+
+	def __initState(self):
+		# allow to know the last state about shape (selected, moving, resizing)
+		self._selectedShape = None
+		self._isGeomChanging = None
+	
 	def OnCreate(self, params):
 		self.HookMessage(self.onLButtonDown,win32con.WM_LBUTTONDOWN)
 		self.HookMessage(self.onLButtonUp,win32con.WM_LBUTTONUP)
@@ -430,6 +350,83 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		if self.__hsmallfont:
 			Sdk.DeleteObject(self.__hsmallfont)
 
+
+	#
+	# win32window.DrawContext listener interface
+	# 
+	def onShapeChange(self, shape):
+		if shape is None:
+			# update user events
+			if self._selectedShape != None:
+				self._mouse_update = 1
+				self._selectedShape.onUnselected()
+				
+			self._selectedShape = None
+			self._isGeomChanging = 0
+						
+#			for name in ('RegionX','RegionY','RegionW','RegionH'):
+#				self[name].settext('')
+#			self._mouse_update = 1
+#			self['RegionZ'].settext('')
+#			self['RegionSel'].setcursel(-1)
+#			self['BgColor'].enable(0)
+			self._mouse_update = 0
+			return
+
+		self._mouse_update = 1
+		self._selectedShape = shape
+		rc = shape._rectb		
+		if shape._rc != rc:
+			shape.onGeomChanging(rc)
+			self._isGeomChanging = 1
+			shape._rc = rc
+		else:
+			shape.onSelected()
+			self._isGeomChanging = 0
+						
+#		i = 0
+#		self._mouse_update = 1
+#		for name in ('RegionX','RegionY','RegionW','RegionH'):
+#			self[name].settext('%d' % rc[i])
+#			i = i +1
+#		self['RegionZ'].settext('%d' % shape._z)
+#		if id(shape)!=id(self._layout._viewport):
+#			self['RegionSel'].setcursel(self._region2ix[shape._name])
+#		else:
+#			self['RegionSel'].setcursel(-1)
+#		self['BgColor'].enable(1)
+		self._mouse_update = 0
+
+	def onProperties(self, shape):
+		if not shape: return
+
+		shape.onProperties()
+
+	# 
+	# interface implementation: function called from an external module
+	#
+
+
+	# define a handler for the layout component
+	def setHandler(self, handler):
+		self._Handler = handler
+			
+	# create a new viewport
+	def newViewport(self, attrdict, name):
+		w, h = attrdict.get('winsize')
+				
+		self._device2logical = self.findDeviceToLogicalScale(w,h)
+		self._parent.showScale(self._device2logical)
+		self.__initState()
+		self._viewport = Viewport(name, self, attrdict, self._device2logical)
+		win32window.DrawContext.reset(self)
+
+		return self._viewport
+			
+	#
+	# end implementation interface 
+	#
+		
 	def onLButtonDown(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
@@ -441,6 +438,11 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		point, flags = msg.pos(), msg._wParam
 		point = self.DPtoLP(point)
 		win32window.DrawContext.onLButtonUp(self, flags, point)
+
+		# update user events
+		if self._selectedShape:
+			if self._isGeomChanging:
+					self._selectedShape.onGeomChanged(self._selectedShape._rc)
 	
 	def onMouseMove(self, params):
 		msg=win32mu.Win32Msg(params)
@@ -473,53 +475,6 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		Sdk.DeleteObject(br)
 
 		self.EndPaint(paintStruct)
-	
-	def setMMNodeContext(self, mmctx):
-		self._channeldict = mmctx.channeldict
-		self._viewportsRegions = {}
-		self._viewports = {}		
-		id2parentid = {}
-		for chan in mmctx.channels:
-			if chan.attrdict.get('type')=='layout':
-				if chan.attrdict.has_key('base_window'):
-					id2parentid[chan.name] = chan.attrdict['base_window']
-				else:
-					self._viewportsRegions[chan.name] = []
-					self._viewports[chan.name] = Node(chan.name,chan.attrdict)
-
-		nodes = self._viewports.copy()
-		for id in id2parentid.keys():
-			chan = mmctx.channeldict[id]
-			nodes[id] = Node(id, chan.attrdict)
-
-		for id, parentid in id2parentid.items():
-			idit = id
-			while id2parentid.has_key(idit):
-				idit = id2parentid[idit]
-			viewportid = idit
-			self._viewportsRegions[viewportid].append(id)
-			nodes[id]._do_init(nodes[parentid])
-	
-	def getViewports(self):
-		return self._viewportsRegions.keys()
-
-	def getRegions(self, vpname):
-		return self._viewportsRegions[vpname]
-
-	def getRegion(self, name):
-		if self._viewport:
-			return self._viewport.getRegion(name)
-		return None
-
-	def selectRegion(self, name):
-		if self._viewport:
-			self._selected = self._viewport.getRegion(name)
-		else:
-			self._selected = None
-		self.InvalidateRect(self.GetClientRect())
-					
-	def getChannel(self, name):
-		return self._channeldict[name]
 
 	def findDeviceToLogicalScale(self, wl, hl):
 		wd, hd = self.GetClientRect()[2:]
@@ -530,15 +485,6 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		else: sc = ysc
 		if sc<1.0: sc = 1
 		return sc
-
-	def setViewport(self, name):
-		mmchan = self.getChannel(name)
-		w, h = mmchan.attrdict.get('winsize')
-		self._device2logical = self.findDeviceToLogicalScale(w,h)
-		self._parent.showScale(self._device2logical)
-		self._viewport = Viewport(name, self, mmchan.attrdict, self._device2logical)
-		win32window.DrawContext.reset(self)
-		self.InvalidateRect(self.GetClientRect())
 
 	def getMouseTarget(self, point):
 		if self._viewport:
@@ -595,6 +541,10 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		dcc.DeleteDC() # needed?
 		del bmp
 
+	def selectRequest(self, node):
+		self._selected = node
+		self.update()
+		
 	def drawTracker(self, dc):
 		if not self._selected: return
 		wnd = self._selected
@@ -630,36 +580,113 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		return int(sc*x+0.5), int(sc*y+0.5), int(sc*w+0.5), int(sc*h+0.5)
 
 
+# for now manage only on listener in the same time
+# it should be enough
+class UserEventMng:
+	def __init__(self):
+		self.listener = None
+
+	def addListener(self, listener):
+		self.listener = listener
+
+	def onSelected(self):
+		if self.listener != None:
+			self.listener.onSelected()
+
+	def onUnselected(self):
+		if self.listener != None:
+			self.listener.onUnselected()
+
+	def onGeomChanging(self, geom):
+		if self.listener != None:
+			self.listener.onGeomChanging(geom)		
+
+	def onGeomChanged(self, geom):
+		if self.listener != None:
+			self.listener.onGeomChanged(geom)		
+
+	def onProperties(self):
+			self.listener.onProperties()
+			
 ###########################
 
-class Viewport(win32window.Window):
-	def __init__(self, name, context, dict, scale):
+class Viewport(win32window.Window, UserEventMng):
+	def __init__(self, name, context, attrdict, scale):
+		self._attrdict = attrdict
 		self._name = name
 		self._ctx = context
 		win32window.Window.__init__(self)
+		UserEventMng.__init__(self)
 		self.setDeviceToLogicalScale(scale)
 
-		w, h = dict.get('winsize')
-		rc = (8, 8, w, h)
-		units = dict.get('units')
+		w, h = attrdict.get('winsize')
+		self._rc = (8, 8, w, h)
+		units = attrdict.get('units')
 		z = 0
-		transparent = dict.get('transparent')
-		bgcolor = dict.get('bgcolor')
-		self.create(None, rc, units, z, transparent, bgcolor)
+		transparent = attrdict.get('transparent')
+		bgcolor = attrdict.get('bgcolor')
+		self.create(None, self._rc, units, z, transparent, bgcolor)
 
 		# adjust some variables
 		self._topwindow = self
 
 		self._showname = 1
+		self._scale  = scale
 
+	# 
+	# interface implementation: function called from an external module
+	#
+
+	# add a sub region	
+	def addRegion(self, attrdict, name):
+		rgn = Region(self, name, self._ctx, attrdict, self._scale)
+		return rgn
+
+	# remove a sub region
+	def removeRegion(self, region):
+		print 'removeRegion: not implemented yet'
+
+	def select(self):
+		self._ctx.select(self)
+
+	def unselect(self):
+		self._ctx.unselect(self)
+	
+	def setAttrdict(self, attrdict):
+		newBgcolor = attrdict.get('bgcolor')
+		oldBgcolor = self._attrdict.get('bgcolor')
+		newGeom = attrdict.get('winsize')
+		oldGeom = self._attrdict.get('winsize')
+		newZ = attrdict.get('z')
+		oldZ = self._attrdict.get('z')
+		self._attrdict = attrdict
+
+		if oldGeom != newGeom:
+			self.updatecoordinates(newGeom, units=UNIT_PXL)			
+		if newBgcolor != oldBgcolor:
+			self.updatebgcolor(newBgcolor)
+		if newZ != oldZ:
+			self.updatezindex(newZ)
+
+		self.ctx.update()
+
+	# shape content. may be replaced by displaylist ???
+	def showName(self, bv):
+		self._showname = bv
+		self._ctx.update()
+		
+	def setImage(self, handle, image, fit):
+		print 'setImage: not implemented yet'
+
+	#
+	#  end interface implementation
+	#
+ 	
+#	def createRegions(self):
 		# create the regions of this viewport
-		self._regions = {}
-		parentNode = context._viewports[name]
-		self.__createRegions(self, parentNode, scale)
+#		parentNode = self._ctx._viewports
+#		self.__createRegions(self, parentNode, self._scale)
 
-	def getRegion(self, name):
-		return self._regions.get(name)
-			
 	def getwindowpos(self, rel=None):
 		return self._rectb
 
@@ -668,11 +695,6 @@ class Viewport(win32window.Window):
 
 	def pop(self, poptop=1):
 		pass
-
-	def showNames(self, bv):
-		for w in self._subwindows:
-			w.showNames(bv)
-		self._showname = bv
 		
 	def getMouseTarget(self, point):
 		for w in self._subwindows:
@@ -712,34 +734,38 @@ class Viewport(win32window.Window):
 			c1, c2 = c1-15, c2-15
 			l, t, r, b = l+1, t+1, r-1, b-1
 
-	def __createRegions(self, parentRgn, parentNode, scale):
-		for node in parentNode._children:
-			rgn = Region(parentRgn, node._name, node._attrdict, scale)
-			self._regions[node._name] =  rgn
-			self.__createRegions(rgn, node, scale)
-		
 				
 ###########################
 
-class Region(win32window.Window):
-	def __init__(self, parent, name, dict, scale):
+class Region(win32window.Window, UserEventMng):
+	def __init__(self, parent, name, context, attrdict, scale):
 		self._name = name
-		self._dict = dict
+		self._attrdict = attrdict
 		self._showname = 1
+		self._ctx = context		
+		self._scale  = scale
+
 		win32window.Window.__init__(self)
+		UserEventMng.__init__(self)
 		self.setDeviceToLogicalScale(scale)
 
-		rc = x, y, w, h = dict.get('base_winoff')
-		units = dict.get('units')
-		z = dict.get('z')
-		transparent = dict.get('transparent')
-		bgcolor = dict.get('bgcolor')
-		self.create(parent, rc, units, z, transparent, bgcolor)
+		self._rc = x, y, w, h = attrdict.get('base_winoff')
+		units = attrdict.get('units')
+		z = attrdict.get('z')
+		transparent = attrdict.get('transparent')
+		bgcolor = attrdict.get('bgcolor')
+		self.create(parent, self._rc, units, z, transparent, bgcolor)
 		
 		# disp list of this window
 		# use shortcut instead of render 
 		self._active_displist = self.newdisplaylist(bgcolor)
 
+		# allow to determinate if the region is moving
+		self._isMoving = 0
+		
+		# allow to determinate if the region is resizing
+		self._isResizing = 0
+	
 	def paintOn(self, dc, rc=None):
 		ltrb = l, t, r, b = self.ltrb(self.LRtoDR(self.getwindowpos()))
 
@@ -778,9 +804,53 @@ class Region(win32window.Window):
 		prgn.DeleteObject()
 		return rgn
 
-	def showNames(self, bv):
-		for w in self._subwindows:
-			w.showNames(bv)
+	# 
+	# interface implementation: function called from an external module
+	#
+
+	# add a sub region
+	def addRegion(self, attrdict, name):
+		rgn = Region(self, name, self._ctx, attrdict, self._scale)
+		return rgn
+
+	# remove a sub region
+	def removeRegion(self, region):
+		print 'removeRegion: not implemented yet'
+
+	def select(self):
+		self._ctx.selectRequest()
+
+	def unselect(self):
+		self._ctx.unselectRequest()
+
+	def setAttrdict(self, attrdict):
+		newBgcolor = attrdict.get('bgcolor')
+		oldBgcolor = self._attrdict.get('bgcolor')
+		newGeom = attrdict.get('winsize')
+		oldGeom = self._attrdict.get('winsize')
+		newZ = attrdict.get('z')
+		oldZ = self._attrdict.get('z')
+		self._attrdict = attrdict
+
+		if oldGeom != newGeom:
+			self.updatecoordinates(newGeom, units=UNIT_PXL)			
+		if newBgcolor != oldBgcolor:
+			self.updatebgcolor(newBgcolor)
+		if newZ != oldZ:
+			self.updatezindex(newZ)
+
+		self.ctx.update()
+
+	# shape content. may be replaced by displaylist ???
+	def showName(self, bv):
 		self._showname = bv
+		self._ctx.update()
+
+	def setImage(self, handle, image, fit):
+		print 'setImage: not implemented yet'
+
+	# 
+	# end interface implementation
+	#
 
 

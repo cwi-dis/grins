@@ -23,14 +23,12 @@ class LayoutViewDialog2:
 #		self.__regionSelCtrl.setcb((self._regionSelCb, ()))
 
 		self.previousCtrl=w.getPreviousComponent()
-		self.previousCtrl.setPreviousHandler(self)
+		self.previousCtrl.setHandler(self)
 
 		# for now, avoid to define one handler by ctrl	
 		self.dialogCtrl=w.getDialogComponent()
 		self.dialogCtrl.setDialogHandler(self)
 		
-		w.setContext(self.context)
-
 		self.__window = w
 
 	def destroy(self):
