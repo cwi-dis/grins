@@ -264,6 +264,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			import LinkEditLight
 			self.links = LinkEditLight.LinkEditLight(self)
 
+		if features.TEMPORAL_VIEW in features.feature_set:
+			import TemporalView
+			self.temporalview = TemporalView.TemporalView(self)
+
 		# Views that are destroyed by restore (currently all)
 		# Notice that these must follow a certain order.
 		self.views = [self.player, self.hierarchyview,
@@ -316,6 +320,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		view = self.views[viewno]
 		if view is not None:
 			view.show()
+		else:
+			windowinterface.showmessage('View does not exist!', mtype = 'error', parent = self.window)
 ##		if view.is_showing():
 ##			view.hide()
 ##		else:
