@@ -4,6 +4,11 @@
 import MMAttrdefs
 
 def get(node):
+	# If node has "fduration" attribute, use that.  This attribute
+	# is set in mkcmifcache and nowhere else, so is only available
+	# in the player.
+	if hasattr(node.attrdict, 'fduration'):
+		return node.attrdict['fduration']
 	channel = node.GetChannel()
 	if channel is not None and channel.has_key('type'):
 		context = node.GetContext()
