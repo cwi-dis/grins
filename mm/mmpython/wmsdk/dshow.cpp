@@ -1937,13 +1937,11 @@ static PyTypeObject RealConverterType = {
 static char WMConverter_SetWMWriter__doc__[] =
 ""
 ;
-
 static PyObject *
 WMConverter_SetWMWriter(WMConverterObject *self, PyObject *args)
 {
 	UnknownObject *obj;
-	BOOL callBeginEnd=FALSE;
-	if (!PyArg_ParseTuple(args, "O|i",&obj))
+	if (!PyArg_ParseTuple(args, "O",&obj))
 		return NULL;
 	Py_BEGIN_ALLOW_THREADS
 	self->pWMConverter->SetWMWriter(obj->pI);
@@ -1952,9 +1950,30 @@ WMConverter_SetWMWriter(WMConverterObject *self, PyObject *args)
 	return Py_None;
 }
 
+static char WMConverter_SetAdviceSink__doc__[] =
+""
+;
+static PyObject *
+WMConverter_SetAdviceSink(WMConverterObject *self, PyObject *args)
+{
+	PyRenderingListenerObject *obj;
+	if (!PyArg_ParseTuple(args, "O!",&PyRenderingListenerType,&obj))
+		return NULL;
+	IRendererAdviceSink *pI=NULL;
+	HRESULT hr = obj->pI->QueryInterface(IID_IRendererAdviceSink,(void**)&pI);
+	if (FAILED(hr)) {
+		seterror("WMConverter_SetAdviceSink", hr);
+		return NULL;
+	}	
+	self->pWMConverter->SetRendererAdviceSink(pI);
+	pI->Release();
+	Py_INCREF(Py_None);
+	return Py_None;
+}
 
 static struct PyMethodDef WMConverter_methods[] = {
 	{"SetWMWriter", (PyCFunction)WMConverter_SetWMWriter, METH_VARARGS, WMConverter_SetWMWriter__doc__},
+	{"SetAdviceSink", (PyCFunction)WMConverter_SetAdviceSink, METH_VARARGS, WMConverter_SetAdviceSink__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
