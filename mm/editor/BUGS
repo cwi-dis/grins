@@ -1,9 +1,12 @@
 *******************************************************************
 *** Don't delete entries that have been dealt with -- move them ***
-*** to the "FIXED" section at the end of this file!             ***
+*** to the "FIXED" section at the end of this file!  ***
 *******************************************************************
 
 ------------------------------ BUGS -------------------------------
+
+image channel: bad image file (e.g. /dev/null) causes exit(0)
+
 Timing: (opt)calctimes isn't a very meaningful name.
 
 MovieChannel: center the image.
@@ -26,7 +29,7 @@ channel view: resize behavior is weird
 
 block view: open/close must be done different; opening something that
 had a red button before zooming should open all of it, not keep it
-closed... 
+closed...
 
 block view: resize behavior is weird
 
@@ -53,6 +56,9 @@ form loader: parsing .fd files takes ages
 general: need to use CVS for project management
 
 ------------------------------ FEATURES ---------------------------
+channel view: open info window on new sync arc
+
+arc edit: larger delay range
 
 player: "keep" attribute (default 1)
 
@@ -65,6 +71,9 @@ block & channel view: want to show other view's focus
 block & channel view: use channel colors instead of default gray / yellow
 
 ------------------------------ NITS -------------------------------
+block view: get rid of dialog on wrong character
+
+channel view: get rid of dialog on wrong character
 
 general: need a template for a simple e-mail document
 
@@ -154,4 +163,8 @@ channel view: can't create channels once the last channel is deleted...
 
 text channel: after a while the font manager fails with
 "ValidateFont: fmfntread failed."
-(Not much we can do about this -- "fixed in IRIX 4.0.1")
+("fixed in IRIX 4.0.1" --- indeed)
+
+time chart: when the player is stopped, active or armed nodes aren't reset.
+
+top level: should close help window on "Restore"
