@@ -221,7 +221,8 @@ def prep2(node, root):
 		except NoSuchUIDError:
 			# Skip sync arc from non-existing node
 			continue
-		if root.IsAncestorOf(xnode):
+		# skip out-of-minidocument sync arcs
+		if xnode.FindMiniDocument() is node.FindMiniDocument():
 			adddep(xnode, xside, delay, node, yside)
 	#
 	if node.GetType() in real_interiortypes:
