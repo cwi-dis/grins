@@ -95,7 +95,8 @@ _SourceView=_SourceView
 _HierarchyView=_StructView
 _ChannelView=_StructView
 _LinkView=_LinkView
-_LayoutView=_LayoutView2
+_LayoutView=_LayoutView
+_LayoutView2=_LayoutView2
 
 # player document views
 if IsPlayer:
@@ -118,6 +119,7 @@ appview={
 	5:{'cmd':usercmd.HIDE_USERGROUPVIEW,'title':'User groups','id':'ugview_','class':_UsergroupView,'freezesize':1},
 	6:{'cmd':usercmd.HIDE_TRANSITIONVIEW,'title':'Transitions','id':'trview_','class':_TransitionView,'freezesize':1},
 	7:{'cmd':usercmd.HIDE_SOURCE,'title':'Source','id':'sview_','class':_SourceView,'hosted':0},
+	8:{'cmd':usercmd.HIDE_LAYOUTVIEW2,'title':'Source','id':'lview2_','class':_LayoutView2,'hosted':0},
 }
 
 

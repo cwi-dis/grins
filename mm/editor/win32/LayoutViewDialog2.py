@@ -12,7 +12,7 @@ class LayoutViewDialog2:
 		f=self.toplevel.window
 
 		# create an new view : return an instance of _LayoutView
-		w=f.newviewobj('lview_')
+		w=f.newviewobj('lview2_')
 
 		# get a handle for each control created from _LayoutView class and associate a callback 
 		# note: if you modify the key names, you also have to modify them in _LayoutView class
@@ -22,6 +22,9 @@ class LayoutViewDialog2:
 		self.__regionSelCtrl=w['RegionSel']
 		self.__regionSelCtrl.setcb((self.__regionSelCb, ()))
 
+		self.__previousCtrl=w.getPreviousComponent()
+		self.__previousCtrl.setHandler(self)
+		
 		w.setContext(self.context)
 
 		self.__window = w
@@ -58,23 +61,11 @@ class LayoutViewDialog2:
 		if self.__window.GetSafeHwnd()==0:
 			f=self.toplevel.window
 			if IMPL_AS_FORM: # form
-				f.showview(self.__window,'lview_')
+				f.showview(self.__window,'lview2_')
 				self.__window.show()
 			else:# dlgbar
 				self.__window.create(f)
 				f.set_toggle(LAYOUTVIEW,1)
-
-	def setViewportList(self, layouts, cur):
-		# the core should be corected but 
-		# in order to proceed let fill the hole here
-		self.assertwndcreated()
-		print 'to do'
-
-	def setRegionList(self, channels, cur):
-		# the core should be corected but 
-		# in order to proceed let fill the hole here
-		self.assertwndcreated()
-		print 'to do'
 
 	def __viewportSelCb(self):
 		print 'viewport select callback not implemented yet'
@@ -91,12 +82,4 @@ class LayoutViewDialog2:
 	def setcommandlist(self, commandlist):
 		if self.__window:
 			self.__window.set_commandlist(commandlist)
-
-	# core required interface
-	def setlayoutlist(self, layouts, cur):
-		pass
-	def setchannellist(self, channels, cur):
-		pass
-	def setotherlist(self, channels, cur):
-		pass
 

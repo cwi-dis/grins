@@ -69,6 +69,66 @@ class _LayoutView2(GenFormView):
 		# set to true while updating controls due to darwing
 		self._mouse_update = 0
 
+		# by default, not handler defined for previous control
+		self._previousHandler = None
+
+	# special initialization because previous control is not managed like any another component
+	# allow to have a handle on previous component from an external module
+	def getPreviousComponent(self):
+		return self
+
+	#
+	# interface implementation  of 'external class' --> previous control
+	#
+	
+	# viewport management
+	def newViewport(self):
+		print 'newViewport: not implemented yet'
+
+	def selectViewport(self):
+		print 'selectViewport: not implemented yet'
+
+	def unselectViewport(self):
+		print 'unselectViewport: not implemented yet'
+	
+	def setViewportGeom(self):
+		print 'setViewportGeom: not implemented yet'
+
+	# regions management	
+	def addRegion(parentHandle, geom):
+		print 'addRegion: not implemented yet'
+
+	def removeRegion(handle):
+		print 'removeRegion: not implemented yet'
+
+	def selectRegion(handle):
+		print 'selectRegion: not implemented yet'
+
+	def unselectRegion(handle):
+		print 'unselectRegion: not implemented yet'
+
+	def setRegionGeom(handle, geom):
+		print 'setRegionGeom: not implemented yet'
+
+	def setZIndex(handle, geom):
+		print 'setZIndex: not implemented yet'
+
+	# bg management
+	def setBgColor(handle, bgColor):
+		print 'setBgColor: not implemented yet'
+
+	# image management
+	def setImage(handle, image, fit):
+		print 'setImage: not implemented yet'
+
+	# define a handler for callbacks fnc
+	def setHandler(self, handler):
+		self._previousHandler = handler
+
+	#
+	# end implementation of interface 'external class' --> previous control
+	#
+		
 	def setContext(self, ctx):
 		self._mmcontext = ctx
 
@@ -87,7 +147,7 @@ class _LayoutView2(GenFormView):
 		bgcolor = (255, 255, 255)
 		self._layout = LayoutManager(self, rc, bgcolor)
 		self._layout.setMMNodeContext(self._mmcontext)
-
+		
 		# fill combos
 		vpList = self._layout.getViewports()
 		for vpname in vpList:

@@ -37,7 +37,6 @@ import win32window
 	
 # mixins
 import DropTarget
-import rbtk
 import DrawTk
 
 class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTarget, DrawTk.DrawLayer):
