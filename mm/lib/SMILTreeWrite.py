@@ -1371,6 +1371,20 @@ class SMILWriter(SMIL):
 		if self.uses_qt_namespace:
 			attrlist.append((xmlnsQT, QTns))
 			self.writeQTAttributeOnSmilElement(attrlist)
+		# test attributes are not allowed on the body element,
+		# but they are allowed on the smil element, so that's
+		# where they get moved
+		sysreq = self.root.GetRawAttrDef('system_required', [])
+		if sysreq:
+			for i in range(len(sysreq)):
+				attrlist.append(('xmlns:ext%d' % i, sysreq[i]))
+		for name, func in smil_attrs:
+			if name[:6] != 'system':
+				continue
+			value = func(self, self.root)
+			if value is None:
+				continue
+			attrlist.append((name, value))
 		self.writetag('smil', attrlist)
 		self.push()
 		self.writetag('head')
@@ -2056,6 +2070,8 @@ class SMILWriter(SMIL):
 				xtype = mtype = 'switch'
 			elif type == 'prio':
 				xtype = mtype = 'priorityClass'
+			elif type == 'seq' and root and self.smilboston:
+				xtype = mtype = 'body'
 			else:
 				xtype = mtype = type
 		else:
@@ -2082,10 +2098,12 @@ class SMILWriter(SMIL):
 			attrs = prio_attrs
 		else:
 			attrs = smil_attrs
-			# special case for systemRequired
-			sysreq = x.GetRawAttrDef('system_required', [])
-			for i in range(len(sysreq)):
-				attrlist.append(('ext%d' % i, sysreq[i]))
+			if xtype != 'body':
+				# special case for systemRequired
+				sysreq = x.GetRawAttrDef('system_required', [])
+				for i in range(len(sysreq)):
+					attrlist.append(('xmlns:ext%d' % i, sysreq[i]))
+				
 		for name, func in attrs:
 			value = func(self, x)
 			# gname is the attribute name as recorded in attributes
