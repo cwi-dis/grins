@@ -26,7 +26,7 @@ def get(node, ignoreloop=0, wanterror=0):
 		if node.GetChannelType() == 'RealPix' and hasattr(node, 'slideshow'):
 			import base64, realnode
 			node.SetAttr('file', 'dummy.rp')
-			data = realnode.writenode(node, tostring = 1)
+			data = realnode.writenode(node, tostring = 1, silent = 1)
 			node.DelAttr('file')
 			if url:
 				node.SetAttr('file', url)
