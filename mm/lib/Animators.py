@@ -713,7 +713,7 @@ class EffectiveAnimator:
 		self.__node = targnode
 		self.__attr = attr
 		self.__domval = domval
-
+		
 		self.__animators = []
 
 		self.__chan = None
@@ -1119,6 +1119,7 @@ class AnimateElementParser:
 		self.__attrname = ''		# target attribute name
 		self.__attrtype = ''		# in alltypes (see above)
 		self.__domval = None		# document attribute value
+		self.__refval = None		# attribute reference value for percent
 		self.__target = None		# target node
 		self.__hasValidTarget = 0	# valid target node and attribute
 
@@ -1792,32 +1793,52 @@ class AnimateElementParser:
 		if self.__attrname in ('left', 'top', 'width', 'height','right','bottom'):
 			attr = self.__grinsattrname = self.__attrname
 			self.__attrtype = 'int'
-			rc = None
+			rc = rcref = None
 			if self.__target._type == 'mmnode':
 				try:
 					rc = self.__target.getPxGeom()
 				except:
 					rc = None
+				try:
+					channel = self.__target.GetChannel()
+					region = channel.GetLayoutChannel()
+					rcref = region.getPxGeom()
+				except:
+					rcref = rc
 			elif self.__target._type == 'region':
 				ch = self.__target._region
 				try:
 					rc = ch.getPxGeom()
 				except:
 					rc = None
+				try:
+					rcref = ch.GetParent().getPxGeom()
+					if rcref and len(rcref) == 2:
+						w, h = rcref
+						rcref = 0, 0, w, h
+				except:
+					rcref = rc
 			if rc:
 				if attr == 'left':
 					v = rc[0]
+					vref = rcref[0]
 				elif attr=='top':
 					v = rc[1]
+					vref = rcref[1]
 				elif attr == 'right':
 					v = rc[0] + rc[2]
+					vref = rcref[0] + rcref[2]
 				elif attr == 'bottom':
 					v = rc[1] + rc[3]
+					vref = rcref[1] + rcref[3]
 				elif attr == 'width':
 					v = rc[2]
+					vref = rcref[2]
 				elif attr == 'height':
 					v = rc[3]
+					vref = rcref[3]
 				self.__domval = v
+				self.__refval = vref
 				return 1
 			return 0
 
@@ -1855,6 +1876,7 @@ class AnimateElementParser:
 			if self.__target._type == 'region':
 				ch = self.__target._region
 				self.__domval = ch.get('soundLevel', 1.0)
+				self.__refval = 1.0
 				return 1
 			return 0
 
@@ -2255,7 +2277,9 @@ class AnimateElementParser:
 				anim.targetnode = newnode
 	
 	def safeatof(self, s):
-		if s[-1]=='%':
+		if s and s[-1]=='%':
+			if self.__refval and (type(self.__refval) == type(1.0) or type(self.__refval) == type(1)):
+				return self.__refval*0.01*string.atof(s[:-1])
 			return 0.01*string.atof(s[:-1])
 		else:
 			return string.atof(s)
