@@ -6,7 +6,7 @@ import Widgets
 import Bandwidth
 import MMurl, MMAttrdefs, MMmimetypes, MMNode
 import features
-import os
+import os, windowinterface
 import settings
 from AppDefaults import *
 
@@ -57,8 +57,8 @@ class MMNodeWidget(Widgets.Widget):     # Aka the old 'HierarchyView.Object', an
         Widgets.Widget.__init__(self, root)
         self.node = node               # : MMNode
         assert isinstance(node, MMNode.MMNode)
-        self.node.views['struct_view'] = self
         self.name = MMAttrdefs.getattr(self.node, 'name')
+        self.node.set_infoicon = self.set_infoicon
 
     def collapse_levels(self, level):
         # Place holder for a recursive function.
@@ -75,6 +75,7 @@ class MMNodeWidget(Widgets.Widget):     # Aka the old 'HierarchyView.Object', an
         Widgets.Widget.destroy(self)
         if self.node:
             del self.node.views['struct_view']
+            del self.node.set_infoicon
             self.node = None
 #        else:
 #            print "DEBUG: I don't have a node to clean up!: ", self
@@ -97,8 +98,10 @@ class MMNodeWidget(Widgets.Widget):     # Aka the old 'HierarchyView.Object', an
     def set_infoicon(self, icon, msg=None):
         # Sets the information icon to this icon.
         # icon is a string, msg is a string.
+        print "DEBUG: set_infoicon called!"
         self.node.infoicon = icon
         self.node.errormessage = msg
+        self.root.draw()                # Show the icons
 
     def getlinkicon(self):
         # Returns the icon to show for incoming and outgiong hyperlinks.
@@ -157,11 +160,6 @@ class MMNodeWidget(Widgets.Widget):     # Aka the old 'HierarchyView.Object', an
         self.root.toplevel.setwaiting()
         import AttrEdit
         AttrEdit.showattreditor(self.root.toplevel, self.node)
-
-    def infocall(self):
-        self.root.toplevel.setwaiting()
-        import NodeInfo
-        NodeInfo.shownodeinfo(self.root.toplevel, self.node)
 
     def editcall(self):
         self.root.toplevel.setwaiting()
@@ -238,6 +236,8 @@ class MMNodeWidget(Widgets.Widget):     # Aka the old 'HierarchyView.Object', an
         self.root.paste(-1)
 
     def pasteaftercall(self):
+        import traceback
+        traceback.print_stack()
         self.root.paste(1)
 
     def pasteundercall(self):
@@ -262,6 +262,7 @@ class StructureObjWidget(MMNodeWidget):
                 print "TODO: you haven't written all the code yet, have you Mike?"
             else:
                 self.children.append(bob)
+        self.node.views['struct_view'] = self 
 
     def destroy(self):
         MMNodeWidget.destroy(self)
@@ -363,6 +364,20 @@ class SeqWidget(StructureObjWidget):
             for i in self.children:
                 if isinstance(i, MediaWidget):
                     i.pushbackbar.draw(display_list)
+
+        # Draw those stupid vertical lines.
+        if self.iscollapsed():
+            l,t,r,b = self.pos_rel
+            i = l + self.get_relx(sizes_notime.HEDGSIZE)
+            t = t + self.get_rely(sizes_notime.VEDGSIZE + sizes_notime.TITLESIZE)
+            b = b - self.get_rely(sizes_notime.VEDGSIZE)
+            step = self.get_relx(8)
+            if r > l:
+                while (i < r): #{
+                    display_list.drawline(TEXTCOLOR, [(i, t),(i, b)]);
+                    i = i + step;
+                #}
+
 
         StructureObjWidget.draw(self, display_list)
         if self.dropbox and not self.iscollapsed():
@@ -849,6 +864,17 @@ class VerticalWidget(StructureObjWidget):
                     i.pushbackbar.draw(display_list);
         StructureObjWidget.draw(self, display_list);
 
+        # Draw those stupid horizontal lines.
+        if self.iscollapsed():
+            l,t,r,b = self.pos_rel
+            i = t + self.get_rely(sizes_notime.VEDGSIZE + sizes_notime.TITLESIZE)
+            l = l + self.get_relx(sizes_notime.HEDGSIZE)
+            r = r - self.get_relx(sizes_notime.HEDGSIZE)
+            step = self.get_rely(8)
+            if r > l:
+                while i < b:
+                    display_list.drawline(TEXTCOLOR, [(l, i),(r, i)])
+                    i = i + step
 
 class ParWidget(VerticalWidget):
     # Parallel node
@@ -921,6 +947,9 @@ class MediaWidget(MMNodeWidget):
         self.downloadtime = 0.0;        # Distance to draw - MEASURED IN PIXELS
         self.downloadtime_lag = 0.0;    # Distance to push this node to the right - MEASURED IN PIXELS.
         self.compute_download_time();
+        self.infoicon = Icon(None, self, self.node, self.root)
+        self.infoicon.set_callback(self.show_mesg);
+        self.node.views['struct_view'] = self         
         
     def destroy(self):
         # Remove myself from the MMNode view{} dict.
@@ -946,7 +975,7 @@ class MediaWidget(MMNodeWidget):
                 # we use that, otherwise we divide evenly
                 if bwfraction < 0:
                     bwfraction = 1.0 / len(ancestor.children)
-                availbw = availbw * bwfraction
+                    availbw = availbw * bwfraction
             bwfraction = MMAttrdefs.getattr(ancestor, 'project_bandwidth_fraction')
             ancestor = ancestor.parent
         
@@ -978,8 +1007,15 @@ class MediaWidget(MMNodeWidget):
         self.downloadtime = 0
         self.downloadtime_lag = lagwidth
 
+    def show_mesg(self):
+        if self.node.errormessage:
+            windowinterface.showmessage(self.node.errormessage, parent=self.root.window)
+
     def recalc(self):
         l,t,r,b = self.pos_rel
+
+        self.infoicon.moveto((l+self.get_relx(1), t+self.get_rely(2)))
+
         lag = self.get_relx(self.downloadtime_lag)
         if lag < 0:
             print "ERROR! Lag is below 0 - node can play before it is loaded. Cool!"
@@ -995,6 +1031,7 @@ class MediaWidget(MMNodeWidget):
         self.transition_in.moveto((l,b-pix16y,l+pix16x, b))
         self.transition_out.moveto((r-pix16x,b-pix16y,r, b))
 #        dt = self.get_relx(self.downloadtime)
+
         MMNodeWidget.recalc(self) # This is probably not necessary.
 
     def get_minsize(self):
@@ -1062,11 +1099,8 @@ class MediaWidget(MMNodeWidget):
         displist.centerstring(l,t,r,b,self.name)
 
         # Draw the icon before the name.
-        l,t,r,b = self.pos_rel
-        if self.node.infoicon:
-            displist.drawicon((l,t,iconsizex, iconsizey), self.node.infoicon)
-        elif self.root.show_links:
-            displist.drawicon((l,t,iconsizex, iconsizey), self.getlinkicon())                             
+        self.infoicon.icon = self.node.infoicon
+        self.infoicon.draw(displist)
 
         # Draw the silly transitions.
         if self.root.transboxes:
@@ -1107,6 +1141,8 @@ class MediaWidget(MMNodeWidget):
                 return self.transition_in
             elif self.transition_out.is_hit(pos):
                 return self.transition_out
+            elif self.infoicon.is_hit(pos):
+                return self.infoicon
             else:
                 return self
         else:
@@ -1200,8 +1236,8 @@ class CollapseButtonWidget(Widgets.Widget):
         l,t,w,h = self.parent.get_box();
         l=l+self.get_relx(1)            # Trial-and-error numbers.
         t = t+self.get_rely(2)
-        r = l + self.get_relx(10);      # This is pretty bad code..
-        b = t+self.get_rely(10);
+        r = l + self.get_relx(16);      # This is pretty bad code..
+        b = t+self.get_rely(16);
         self.moveto((l,t,r,b));
             
     def draw(self, displist):
@@ -1210,3 +1246,37 @@ class CollapseButtonWidget(Widgets.Widget):
         else:
             displist.drawicon(self.get_box(), 'open')
         
+
+class Icon(MMNodeWidget):
+    # Display an icon which can be clicked on. This can be used for
+    # any icon on screen.
+    # This inherits from MMNodeWidget because of the get_obj_at() mechanism and click handling.
+    def __init__(self, icon, parent, node, root):
+        MMNodeWidget.__init__(self, node, root)
+        self.parent = parent
+        self.icon = icon
+
+    def set_callback(self, callback, args=()):
+        self.callback = callback, args
+
+    def select(self):
+        if self.callback and self.icon:
+            apply(apply, self.callback)
+
+    def moveto(self, pos):
+        x,y = pos
+        iconsizex = self.get_relx(sizes_notime.ERRSIZE)
+        iconsizey = self.get_rely(sizes_notime.ERRSIZE)
+        MMNodeWidget.moveto(self, (x, y, x+iconsizex, y+iconsizey))
+
+##    def recalc(self):
+##        l,t,w,h = self.parent.get_box();
+##        l=l+self.get_relx(1)            # Trial-and-error numbers.
+##        t = t+self.get_rely(2)
+##        r = l + self.get_relx(16);      # This is pretty bad code..
+##        b = t+self.get_rely(16);
+##        self.moveto((l,t,r,b));
+
+    def draw(self, displist):
+        if self.icon is not None:
+            displist.drawicon(self.get_box(), self.icon)

@@ -61,7 +61,8 @@ class Player(PlayerCore, PlayerDialog):
 			stop,
 			]
 		self.alllist = self.pauselist
-
+		self._exporter = None # Bad, bad hack.
+	
 	def destroy(self):
 		if not hasattr(self, 'toplevel'):
 			# already destroyed
