@@ -1239,6 +1239,9 @@ class _ChannelThread:
 	def callback(self, dummy1, dummy2, event, value):
 		if debug:
 			print 'ChannelThread.callback'+`self,dummy1,dummy2,event,value`
+		if not hasattr(self, '_name'):
+			# already destroyed
+			return
 		import mm
 		if value == mm.playdone:
 			if self._playstate == PLAYING:
