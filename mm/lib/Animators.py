@@ -1085,12 +1085,21 @@ class AnimateElementParser:
 		################
 		# to-only animation for additive attributes
 		if self.__animtype == 'to' and self.__isadditive and self.__calcMode!='discrete':
-			v = self.getTo()
-			v = string.atof(v)
+			v = string.atof(self.getTo())
 			anim = EffValueAnimator(attr, domval, v, dur)
 			if self.__attrtype == 'int':
 				anim.setRetunedValuesConverter(_round)
 			return anim
+
+		################
+		# by-only animation for additive attributes
+		if self.__animtype == 'by' and self.__isadditive:
+			values = self.__getNumInterpolationValues()
+			anim = Animator(attr, domval, values, dur, mode=mode, accumulate=accumulate, additive='sum')
+			if self.__attrtype == 'int':
+				anim.setRetunedValuesConverter(_round)
+			return anim
+			
 
 		# check for keyTimes, keySplines
 		if not splineAnimation or mode == 'paced':
@@ -1446,19 +1455,22 @@ class AnimateElementParser:
 		dv = self.getBy()
 		
 		# if we don't have 'values' then 'to' or 'by' must be given
-		if v2==None and dv==None:
+		if not v2 and not dv:
 			return 'invalid'
 
-		if v1!=None:
-			if v2!=None:			
+		if v1:
+			if v2:			
 				return 'from-to'
-			else:
+			elif dv:
 				return 'from-by'
 		else:
-			if v2!=None:			
+			if v2:			
 				return 'to'
-			else:
+			elif dv:
 				return 'by'
+		
+		return 'invalid'
+		
 				
 	# return list of interpolation values
 	def __getNumInterpolationValues(self):	
@@ -1469,26 +1481,18 @@ class AnimateElementParser:
 				return tuple(map(self.safeatof, string.split(values,';')))
 			except ValueError:
 				return ()
-							
-		# 'from' is optional
-		# use 'zero' value if missing
-		v1 = self.getFrom()
-		if not v1:
-			v1 = 0
-		if type(v1) == type(''): 
-			v1 = self.safeatof(v1)
-
-		# we must have a 'to' value (expl or through 'by')
-		v2 = self.getTo()
-		dv = self.getBy()
-		if v2:
-			v2 = self.safeatof(v2)
-		elif dv:
-			dv = self.safeatof(dv)
-			v2 = v1 + dv
-		else:
-			return ()
-		return v1, v2
+		
+		if self.__animtype == 'from-to':
+			return self.safeatof(self.getFrom()), self.safeatof(self.getTo())
+		elif self.__animtype == 'from-by':
+			v1 = self.safeatof(self.getFrom())
+			dv = self.safeatof(self.getBy())
+			return v1, v1+dv
+		elif self.__animtype == 'to':
+			return 	self.safeatof(self.getTo())
+		elif self.__animtype == 'by':
+			return 0, self.safeatof(self.getBy())
+		return ()	
 
 	def __getNumPair(self, v):
 		if not v: return None
