@@ -85,7 +85,8 @@ ClientContext::QueryInterface(
 		if(m_aInterfaces[i]->QueryInterface(riid, ppvObject) == PNR_OK)
 			return PNR_OK;
 		}
-	return E_NOINTERFACE;
+    *ppvObject = NULL;	
+	return PNR_NOINTERFACE;
 	}
 
 STDMETHODIMP_(UINT32)

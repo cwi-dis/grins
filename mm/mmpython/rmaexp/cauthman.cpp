@@ -70,7 +70,20 @@ AuthenticationManager::QueryInterface(
     REFIID riid,
     void **ppvObject)
 	{
-	return E_NOINTERFACE;
+    if (IsEqualIID(riid,IID_IUnknown))
+		{
+		AddRef();
+		*ppvObject = this;
+		return PNR_OK;
+		}
+	else if(IsEqualIID(riid,IID_IRMAAuthenticationManager))
+		{
+		AddRef();
+		*ppvObject = this;
+		return PNR_OK;
+		}
+    *ppvObject = NULL;	
+	return PNR_NOINTERFACE;
 	}
 
 STDMETHODIMP_(UINT32)
