@@ -1,6 +1,7 @@
 __version__ = "$Id$"
 
 import os
+import sys
 import windowinterface
 import MMExc, MMAttrdefs, MMTree
 from EditMgr import EditMgr
