@@ -1,7 +1,6 @@
 # Text channel
 
 import string
-import strop # String operations in C
 import regex
 
 from MMExc import *
@@ -11,6 +10,8 @@ import gl
 import fl
 import DEVICE
 import fm
+
+import FontStuff
 
 from Channel import Channel
 from ChannelWindow import ChannelWindow
@@ -224,7 +225,8 @@ class TextWindow(ChannelWindow):
 		self.arm_curwidth = width
 		width = width - 2*margin
 		self.arm_curlines, self.arm_partoline, self.arm_linetopar = \
-			calclines(self.arm_parlist, font.getstrwidth, width)
+			FontStff.calclines( \
+			  self.arm_parlist, font.getstrwidth, width)
 	#
 	# like settext but use pre-arm results
 	def settext_arm(self, node):
@@ -274,7 +276,8 @@ class TextWindow(ChannelWindow):
 			self.curwidth = width
 			width = width - 2*self.margin
 			self.curlines, self.partoline, self.linetopar = \
-			  calclines(self.parlist, self.font.getstrwidth, width)
+				FontStuff.calclines( \
+				  self.parlist, self.font.getstrwidth, width)
 		#
 		# Clear the window in the background color
 		gl.RGBcolor(self.bgcolor)
@@ -372,7 +375,7 @@ class TextWindow(ChannelWindow):
 # Blank lines and lines starting with whitespace separate paragraphs.
 
 def extract_paragraphs(text):
-	lines = strop.splitfields(text, '\n')
+	lines = string.splitfields(text, '\n')
 	parlist = []
 	par = []
 	for line in lines:
@@ -387,65 +390,6 @@ def extract_paragraphs(text):
 			par.append(line)
 	if par: parlist.append(string.join(par))
 	return parlist
-
-
-# Calculate a set of lines from a set of paragraphs, given a font and
-# a maximum line width.  Also return mappings between paragraphs and
-# line numbers and back: (1) a list containing for each paragraph a
-# list of triples (lineno, start, end) where start and end are the
-# offset into the paragraph, and (2) a list containing for each line a
-# triple (parno, start, end)
-
-def calclines(parlist, sizefunc, limit):
-	partoline = []
-	linetopar = []
-	curlines = []
-	for parno in range(len(parlist)):
-		par = parlist[parno]
-		sublist = []
-		partoline.append(sublist) # It will grow while in there
-		start = 0
-		while 1:
-			i = fitwords(par, sizefunc, limit)
-			n = len(par)
-			while i < n and par[i] == ' ': i = i+1
-			sublist.append(len(curlines), start, start+i)
-			curlines.append(par[:i])
-			linetopar.append((parno, start, start+i))
-			par = par[i:]
-			start = start + i
-			if not par: break
-	return curlines, partoline, linetopar
-
-
-# Find last occurence of space in string such that the size (according
-# to some size calculating function) of the initial substring is
-# smaller than a given number.  If there is no such substrings the
-# first space in the string is returned (if any) otherwise the length
-# of the string. Assume sizefunc() is additive:
-# sizefunc(s + t) == sizefunc(s) + sizefunc(t)
-
-def fitwords(s, sizefunc, limit):
-	words = strop.splitfields(s, ' ')
-	spw = sizefunc(' ')
-	okcount = -1
-	totsize = 0
-	totcount = 0
-	for w in words:
-		if w:
-			addsize = sizefunc(w)
-			if totsize > 0 and totsize + addsize > limit:
-				break
-			totsize = totsize + addsize
-			totcount = totcount + len(w)
-			okcount = totcount
-		# The space after the word
-		totsize = totsize + spw
-		totcount = totcount + 1
-	if okcount < 0:
-		return totcount
-	else:
-		return okcount
 
 
 # Extract anchor tags from a list of paragraphs.

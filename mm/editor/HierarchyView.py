@@ -35,6 +35,7 @@ BAGCOLOR = fix(152, 174, 200)		# Light blue
 PARCOLOR = fix(150, 150, 150)		# Gray
 SEQCOLOR = fix(150, 150, 150)		# Gray
 TEXTCOLOR = fix(0, 0, 0)		# Black
+CTEXTCOLOR = fix(50, 50, 50)		# Very dark gray
 
 
 # Focus color assignments (from light to dark gray)
@@ -71,7 +72,7 @@ class HierarchyView(ViewDialog, GLDialog):
 		self.toplevel = toplevel
 		self.root = self.toplevel.root
 		self.viewroot = self.root
-		self.focusnode = None
+		self.focusnode = self.root
 		self.editmgr = self.root.context.editmgr
 		title = 'Hierarchy View (' + toplevel.basename + ')'
 		self = ViewDialog.init(self, 'hview_')
@@ -79,10 +80,6 @@ class HierarchyView(ViewDialog, GLDialog):
 
 	def __repr__(self):
 		return '<HierarchyView instance, root=' + `self.root` + '>'
-
-	def setwin(self):
-		GLDialog.setwin(self)
-		FontStuff.setfont()
 
 	def show(self):
 		if self.is_showing():
@@ -117,21 +114,7 @@ class HierarchyView(ViewDialog, GLDialog):
 	def globalsetfocus(self, node):
 		if not self.root.IsAncestorOf(node):
 			raise RuntimeError, 'bad node passed to globalsetfocus'
-		self.focusnode = node
-		if self.focusnode.IsAncestorOf(self.viewroot):
-			self.viewroot = self.focusnode
-		self.recalc()
-		if self.focusnode <> node and self.viewroot <> self.focusnode:
-			# Need to zoom around
-			path = node.GetPath()
-			for vr in path:
-				self.viewroot = vr
-				self.focusnode = node
-				self.recalc()
-				if self.focusnode is node:
-					break
-		self.setwin()
-		self.draw()
+		self.setfocusnode(node)
 
 	#################################################
 	# Event handlers (called by GLDialog)           #
@@ -149,6 +132,8 @@ class HierarchyView(ViewDialog, GLDialog):
 		# 'dev' is MOUSE[123].  'val' is 1 for down, 0 for up.
 		# First translate (x, y) to world coordinates
 		# (This assumes world coord's are X-like)
+		if val == 0:
+			return # ignore up clicks
 		x = gl.getvaluator(DEVICE.MOUSEX)
 		y = gl.getvaluator(DEVICE.MOUSEY)
 		x0, y0 = gl.getorigin()
@@ -157,12 +142,10 @@ class HierarchyView(ViewDialog, GLDialog):
 		y = height - (y - y0)
 		#
 		if dev == DEVICE.LEFTMOUSE:
-			if val == 0: # up
-				self.select(x, y)
+			self.select(x, y)
 		elif dev == DEVICE.RIGHTMOUSE:
-			if val == 1: # down
-				if self.focusobj:
-					self.focusobj.popupmenu(x, y)
+			if self.focusobj:
+				self.focusobj.popupmenu(x, y)
 
 	def keybd(self, val):
 		# KEYBD event.
@@ -170,6 +153,21 @@ class HierarchyView(ViewDialog, GLDialog):
 		c = chr(val)
 		if self.focusobj:
 			self.focusobj.shortcut(c)
+
+	def rawkey(self, dev, val):
+		# raw key event (0-255)
+		# 'val' is the key code as defined in DEVICE or <device.h>
+		if val == 0: return # up
+		if dev in (DEVICE.LEFTARROWKEY, DEVICE.PAD4):
+			self.tosibling(-1)
+		if dev in (DEVICE.RIGHTARROWKEY, DEVICE.PAD6):
+			self.tosibling(1)
+		if dev in (DEVICE.UPARROWKEY, DEVICE.PAD8):
+			self.toparent()
+		if dev in (DEVICE.DOWNARROWKEY, DEVICE.PAD2):
+			self.tochild(0)
+		if dev in (DEVICE.PAD5, DEVICE.PADPERIOD):
+			self.zoomhere()
 
 	#################################################
 	# Edit manager interface (as dependent client)  #
@@ -244,6 +242,29 @@ class HierarchyView(ViewDialog, GLDialog):
 			import NodeInfo
 			NodeInfo.shownodeinfo(self.toplevel, node)
 
+	def insertparent(self, type):
+		node = self.focusnode
+		if node is None:
+			fl.show_message('There is no focus to insert at','','')
+			return
+		parent = node.GetParent()
+		if parent is None:
+			fl.show_message('Can\'t insert above the root','','')
+			return
+		em = self.editmgr
+		if not em.transaction():
+			return
+		siblings = parent.GetChildren()
+		i = siblings.index(node)
+		em.delnode(node)
+		newnode = node.GetContext().newnode(type)
+		em.addnode(parent, i, newnode)
+		em.addnode(newnode, 0, node)
+		self.focusnode = newnode
+		em.commit()
+		import NodeInfo
+		NodeInfo.shownodeinfo(self.toplevel, newnode)
+
 	def paste(self, where):
 		import Clipboard
 		type, node = Clipboard.getclip()
@@ -304,6 +325,13 @@ class HierarchyView(ViewDialog, GLDialog):
 		self.recalc()
 		self.draw()
 
+	def zoomhere(self):
+		if self.viewroot is self.focusnode or not self.focusnode:
+			return
+		self.viewroot = self.focusnode
+		self.recalc()
+		self.draw()
+
 	#################################################
 	# Internal subroutines                          #
 	#################################################
@@ -333,6 +361,16 @@ class HierarchyView(ViewDialog, GLDialog):
 		fl.qdevice(DEVICE.MIDDLEMOUSE)
 		fl.qdevice(DEVICE.RIGHTMOUSE)
 		fl.qdevice(DEVICE.KEYBD)
+		fl.qdevice(DEVICE.LEFTARROWKEY)
+		fl.qdevice(DEVICE.RIGHTARROWKEY)
+		fl.qdevice(DEVICE.UPARROWKEY)
+		fl.qdevice(DEVICE.DOWNARROWKEY)
+		fl.qdevice(DEVICE.PAD2)
+		fl.qdevice(DEVICE.PAD4)
+		fl.qdevice(DEVICE.PAD5)
+		fl.qdevice(DEVICE.PAD6)
+		fl.qdevice(DEVICE.PAD8)
+		fl.qdevice(DEVICE.PADPERIOD)
 
 	# Make sure the view root and focus make sense (after a tree update)
 	def fixviewroot(self):
@@ -341,6 +379,8 @@ class HierarchyView(ViewDialog, GLDialog):
 		if self.focusnode and \
 			  not self.root.IsAncestorOf(self.focusnode):
 			self.focusnode = None
+		if self.focusnode is None:
+			self.focusnode = self.viewroot
 
 	# Clear the list of objects
 	def cleanup(self):
@@ -348,29 +388,113 @@ class HierarchyView(ViewDialog, GLDialog):
 			obj.cleanup()
 		self.objects = []
 
-	# Select the object at (x, y)
-	def select(self, x, y):
-		hitobj = None
-		for obj in self.objects:
-			if obj.ishit(x, y):
-				hitobj = obj
-		if not hitobj:
+	# Navigation functions
+
+	def tosibling(self, direction):
+		if not self.focusnode:
 			gl.ringbell()
 			return
-		if hitobj.node is self.focusnode:
+		parent = self.focusnode.GetParent()
+		if not parent:
+			gl.ringbell()
+			return
+		siblings = parent.GetChildren()
+		i = siblings.index(self.focusnode) + direction
+		if not 0 <= i < len(siblings):
+			# XXX Could go to parent instead?
+			gl.ringbell()
+			return
+		self.setfocusnode(siblings[i])
+
+	def toparent(self):
+		if not self.focusnode:
+			gl.ringbell()
+			return
+		parent = self.focusnode.GetParent()
+		if not parent:
+			gl.ringbell()
+			return
+		self.setfocusnode(parent)
+
+	def tochild(self, i):
+		if not self.focusnode:
+			gl.ringbell()
+			return
+		if self.focusnode.GetType() not in MMNode.interiortypes:
+			gl.ringbell()
+			return
+		children = self.focusnode.GetChildren()
+		if i < 0: i = i + len(children)
+		if not 0 <= i < len(children):
+			gl.ringbell()
+			return
+		self.setfocusnode(children[i])
+
+	# Handle a selection click at (x, y)
+	def select(self, x, y):
+		obj = self.whichhit(x, y)
+		if not obj:
+			gl.ringbell()
+			return
+		if obj.node is self.focusnode:
 			# Double click -- zoom in or out
 			if self.viewroot is not self.focusnode:
 				self.viewroot = self.focusnode
 				self.recalc()
 				self.draw()
 			return
+		self.setfocusobj(obj)
+
+	# Find the smallest object containing (x, y)
+	def whichhit(self, x, y):
+		hitobj = None
+		for obj in self.objects:
+			if obj.ishit(x, y):
+				hitobj = obj
+		return hitobj
+
+	# Find the object corresponding to the node
+	def whichobj(self, node):
+		for obj in self.objects:
+			if obj.node is node:
+				return obj
+		return None
+
+	# Select the given object, deselecting the previous focus
+	def setfocusobj(self, obj):
+		self.setwin()
 		gl.frontbuffer(1)
 		if self.focusobj:
 			self.focusobj.deselect()
-		self.focusnode = hitobj.node
-		self.focusobj = hitobj
-		self.focusobj.select()
+		if obj:
+			self.focusnode = obj.node
+			self.focusobj = obj
+			self.focusobj.select()
+		else:
+			self.focusnode = None
+			self.focusobj = None
 		gl.frontbuffer(0)
+
+	# Select the given node as focus, possibly zooming around
+	def setfocusnode(self, node):
+		if not node:
+			self.setfocusobj(None)
+			return
+		obj = self.whichobj(node)
+		if obj:
+			self.setfocusobj(obj)
+			return
+		# Need to zoom around
+		# XXX should zoom out less in some cases
+		path = node.GetPath()
+		for vr in path:
+			self.viewroot = vr
+			self.focusnode = node
+			self.recalc()
+			if self.focusnode is node:
+				break
+		self.setwin()
+		self.draw()
 
 	# Recalculate the set of objects
 	def recalc(self):
@@ -417,6 +541,7 @@ class HierarchyView(ViewDialog, GLDialog):
 	def draw(self):
 		gl.RGBcolor(BGCOLOR)
 		gl.clear()
+		f_title.setfont() # Save some calls to setfont...
 		for obj in self.objects:
 			obj.draw()
 		gl.swapbuffers()
@@ -487,6 +612,10 @@ def makeboxes(list, node, left, top, right, bottom):
 def makeobject(mother, item):
 	return Object().init(mother, item)
 
+# Fonts used below
+f_title = FontStuff.FontObject().init('Helvetica', 10)
+f_channel = FontStuff.FontObject().init('Helvetica', 8)
+
 # (Graphical) object class
 class Object:
 
@@ -501,16 +630,14 @@ class Object:
 
 	# Handle a right button mouse click in the object
 	def popupmenu(self, x, y):
-		i = gl.dopup(self.__class__.menu)
-		if 0 < i <= len(self.__class__.menuprocs):
-			self.__class__.menuprocs[i-1](self)
+		func = self.__class__.menu.popup(x, y)
+		if func: func(self)
 
 	# Handle a shortcut in the object
 	def shortcut(self, c):
-		if self.__class__.keymap.has_key(c):
-			self.__class__.keymap[c](self)
-		else:
-			gl.ringbell()
+		func = self.__class__.menu.shortcut(c)
+		if func: func(self)
+		else: gl.ringbell()
 
 	# Make this object the focus
 	def select(self):
@@ -557,14 +684,17 @@ class Object:
 		gl.endpolygon()
 		self.drawfocus()
 		# Draw the name, centered in the box
-		if self.boxtype == INNERBOX or \
-			  self.boxtype == LEAFBOX and \
-			    self.node.GetType() in MMNode.interiortypes:
-			b1 = min(b, t + TITLEHEIGHT + MARGIN)
-		else:
+		if self.node.GetType() in MMNode.leaftypes:
 			b1 = b
+			# Leave space for the channel if at all possible
+			if b1-t-6 >= 2*TITLEHEIGHT:
+				b1 = b1 - TITLEHEIGHT
+				# And draw it now
+				self.drawchannelname(l+3, b1, r-3, b-3)
+		else:
+			b1 = min(b, t + TITLEHEIGHT + MARGIN)
 		gl.RGBcolor(TEXTCOLOR)
-		FontStuff.centerstring(l+3, t+3, r-3, b1-3, self.name)
+		f_title.centerstring(l+3, t+3, r-3, b1-3, self.name)
 		# If this is a node with suppressed detail,
 		# draw some lines
 		if self.boxtype == LEAFBOX and \
@@ -588,6 +718,25 @@ class Object:
 						gl.v2i(l1, y)
 						gl.v2i(r1, y)
 						gl.endline()
+
+	def drawchannelname(self, l, t, r, b):
+		ctype = ''
+		cname = MMAttrdefs.getattr(self.node, 'channel')
+		cdict = self.node.GetContext().channeldict
+		if cdict.has_key(cname):
+			cattrs = cdict[cname]
+			if cattrs.has_key('type'):
+				ctype = cattrs['type']
+		map = {'sound': 'S', 'image': 'I', 'movie': 'M', \
+			  'text': 'T', 'python': 'P', 'shell': '!'}
+		if map.has_key(ctype):
+			C = map[ctype]
+		else:
+			C = '?'
+		gl.RGBcolor(CTEXTCOLOR)
+		f_channel.setfont()
+		f_channel.centerstring(l, t, r, b, C + ': ' + cname)
+		f_title.setfont()
 
 	def drawfocus(self):
 		l, t, r, b = self.box
@@ -675,6 +824,9 @@ class Object:
 	def zoomincall(self):
 		self.mother.zoomin()
 
+	def zoomherecall(self):
+		self.mother.zoomhere()
+
 	def deletecall(self):
 		self.mother.deletefocus(0)
 
@@ -693,6 +845,15 @@ class Object:
 	def createundercall(self):
 		self.mother.create(0)
 
+	def createseqcall(self):
+		self.mother.insertparent('seq')
+
+	def createparcall(self):
+		self.mother.insertparent('par')
+
+	def createbagcall(self):
+		self.mother.insertparent('bag')
+
 	def pastebeforecall(self):
 		self.mother.paste(-1)
 
@@ -710,6 +871,11 @@ class Object:
 			(None, 'Before focus', createbeforecall), \
 			(None, 'After focus', createaftercall), \
 			(None, 'Under focus', createundercall), \
+			(None, 'Above focus', [ \
+				(None, 'Sequential', createseqcall), \
+				(None, 'Parallel', createparcall), \
+				(None, 'Bag', createbagcall), \
+				]), \
 			]), \
 		('d', 'Delete focus%l', deletecall), \
 		('x', 'Cut focus', cutcall), \
@@ -719,14 +885,15 @@ class Object:
 			(None, 'After focus', pasteaftercall), \
 			(None, 'Under focus', pasteundercall), \
 			]), \
-		('f', 'Push focus', focuscall), \
 		('p', 'Play node...', playcall), \
 		('i', 'Node info...', infocall), \
 		('a', 'Node attr...', attrcall), \
 		('e', 'Edit contents...', editcall), \
 		('t', 'Edit anchors...%l', anchorcall), \
+		('f', 'Push focus', focuscall), \
 		('z', 'Zoom out', zoomoutcall), \
+		('.', 'Zoom here', zoomherecall), \
 		('Z', 'Zoom in%l', zoomincall), \
 		('h', 'Help...', helpcall), \
 		]
-	menu, menuprocs, keymap = MenuMaker.makemenu('', commandlist)
+	menu = MenuMaker.MenuObject().init('', commandlist)

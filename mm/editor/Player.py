@@ -41,7 +41,7 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		self.ignore_delays = 0
 		self.ignore_pauses = 0
 		self.play_all_bags = 0
-		self.sync_cv = 0
+		self.sync_cv = 1
 		self.toplevel = toplevel
 		title = 'Player (' + toplevel.basename + ')'
 		return BasicDialog.init(self, 0, 0, title)

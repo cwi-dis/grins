@@ -76,8 +76,9 @@ ARR_LENGTH = 18
 ARR_HALFWIDTH = 5
 ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
 
-# Font parameter we use
-from FontStuff import f_fontheight
+# Font we use
+f_title = FontStuff.FontObject().init('Helvetica', 10)
+f_fontheight = f_title.fontheight
 
 
 # Channel view class
@@ -123,7 +124,7 @@ class ChannelView(ViewDialog, GLDialog):
 
 	def setwin(self):
 		GLDialog.setwin(self)
-		FontStuff.setfont()
+		f_title.setfont()
 
 	def show(self):
 		if self.is_showing():
@@ -541,16 +542,17 @@ class GO:
 
 	# Methods to handle interaction events
 
-	def popupmenu(self, x, y):
-		i = gl.dopup(self.__class__.menu)
-		if 0 < i <= len(self.__class__.menuprocs):
-			self.__class__.menuprocs[i-1](self)
 
+	# Handle a right button mouse click in the object
+	def popupmenu(self, x, y):
+		func = self.__class__.menu.popup(x, y)
+		if func: func(self)
+
+	# Handle a shortcut in the object
 	def shortcut(self, c):
-		if self.__class__.keymap.has_key(c):
-			self.__class__.keymap[c](self)
-		else:
-			gl.ringbell()
+		func = self.__class__.menu.shortcut(c)
+		if func: func(self)
+		else: gl.ringbell()
 
 	# Methods corresponding to the menu entries
 
@@ -605,7 +607,7 @@ class GO:
 	c.append('c', 'New channel...',  newchannelcall)
 	c.append('N', 'Next mini-document', nextminicall)
 	c.append('P', 'Previous mini-document', prevminicall)
-	menu, menuprocs, keymap = MenuMaker.makemenu('Base ops', commandlist)
+	menu = MenuMaker.MenuObject().init('Base ops', commandlist)
 
 
 # Class for Channel Objects
@@ -733,7 +735,7 @@ class ChannelBox(GO):
 
 		# Draw the name
 		gl.RGBcolor(TEXTCOLOR)
-		FontStuff.centerstring(self.left, self.top, \
+		f_title.centerstring(self.left, self.top, \
 			  self.right, self.bottom, self.name)
 
 	def drawline(self):
@@ -774,8 +776,7 @@ class ChannelBox(GO):
 	c.append('i', '', attrcall)
 	c.append('a', 'Channel attr...', attrcall)
 	c.append('d', 'Delete channel',  delcall)
-	menu, menuprocs, keymap = \
-		  MenuMaker.makemenu('Channel ops', commandlist)
+	menu = MenuMaker.MenuObject().init('Channel ops', commandlist)
 
 
 class NodeBox(GO):
@@ -964,7 +965,7 @@ class NodeBox(GO):
 
 		# Draw the name, centered in the box
 		gl.RGBcolor(TEXTCOLOR)
-		FontStuff.centerstring(l, t, r, b, self.name)
+		f_title.centerstring(l, t, r, b, self.name)
 
 	# Menu stuff beyond what GO offers
 
@@ -1028,7 +1029,7 @@ class NodeBox(GO):
 	c.append('l', 'Lock node', lockcall)
 	c.append('u', 'Unlock node', unlockcall)
 	c.append('s', 'New sync arc...', newsyncarccall)
-	menu, menuprocs, keymap = MenuMaker.makemenu('Node ops', commandlist)
+	menu = MenuMaker.MenuObject().init('Node ops', commandlist)
 
 
 class ArcBox(GO):
@@ -1121,5 +1122,4 @@ class ArcBox(GO):
 	c[-1] = char, text + '%l', proc
 	c.append('i', 'Sync arc info...', infocall)
 	c.append('d', 'Delete sync arc',  delcall)
-	menu, menuprocs, keymap = \
-		  MenuMaker.makemenu('Sync arc ops', commandlist)
+	menu = MenuMaker.MenuObject().init('Sync arc ops', commandlist)
