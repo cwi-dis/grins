@@ -162,8 +162,8 @@ class HtmlChannel(Channel.ChannelWindow):
 			self.htmlw.insert_html('', '')
 			
 	def getstring(self, node):
+		self.armed_url = ''
 		if node.type == 'imm':
-			self.armed_url = ''
 			return string.joinfields(node.GetValues(), '\n')
 		elif node.type == 'ext':
 			filename = self.getfileurl(node)
