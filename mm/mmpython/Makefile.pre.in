@@ -30,7 +30,7 @@
 # === Variables that you just *have* to customize manually ===
 
 # The prefix used by "make inclinstall libainstall" of core python
-installdir=	../python/irix4/tmp
+installdir=	../python/irix5/tmp
 
 # The exec_prefix used by the same
 exec_installdir=$(installdir)
