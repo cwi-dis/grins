@@ -125,6 +125,8 @@ else:
 # macfreeze: exclude dshow
 # macfreeze: exclude win32ui
 # macfreeze: exclude linuxaudiodev
+# macfreeze: exclude NodeInfo
+# macfreeze: exclude AnchorEdit
 
 #
 # And here's the code for non-standalone version of the editor:
