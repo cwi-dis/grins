@@ -17,7 +17,6 @@ default_settings = {
 	'system_captions': 0,		# Don't show captions
 	'system_language': 'en',	# English
 	'system_overdub_or_caption': 'caption', # Captions preferred over overdub
-	'system_overdub_or_subtitle':'subtitle', # Subtitles preferred over overdub
 ## Special case, see get() routine
 ##	'system_screen_size': windowinterface.getscreensize(), # Size of screen
 ##	'system_screen_depth': windowinterface.getscreendepth(), # Depth of screen
@@ -109,7 +108,7 @@ user_settings = {}
 
 # Which of these should match exactly:
 EXACT=['system_captions', 'system_overdub_or_captions',
-       'system_audiodesc', 'system_overdub_or_subtitle']
+       'system_audiodesc']
 LANGUAGE=['system_language']
 ALL=['system_bitrate', 'system_captions', 'system_language',
      'system_overdub_or_caption', 'system_screen_size',
@@ -120,9 +119,6 @@ NEEDS_RESTART=['cmif', 'vertical_structure', 'no_canvas_resize', 'root_expanded'
 
 extensions = {
 	# SMIL 2.0 Language Profile Modules
-# one of CoordinatedTransitions and MultiElementTransitions should be removed
-# TransitionModifiers is missing from Modules document
-# MediaAccessibility is missing from Modules document
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/AccessKeyTiming': 0,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/AudioLayout': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/BasicAnimation': 1,
@@ -134,7 +130,6 @@ extensions = {
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/BasicTimeContainers': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/BasicTransistions': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/BrushMedia': 1,
-	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/CoordinatedTransitions': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/CustomTestAttributes': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/EventTiming': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/ExclTimeContainers': 1,
@@ -145,6 +140,7 @@ extensions = {
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MediaAccessibility': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MediaClipMarkers': 0,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MediaClipping': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MediaDescriptions': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MediaMarkerTiming': 0,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/MediaParam': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/Metainformation': 1,
@@ -155,11 +151,11 @@ extensions = {
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/ObjectLinking': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/PrefetchControl': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/PrevTiming': 1,
+	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/RepeatTiming': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/RestartDefault': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/RestartTiming': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/SkipContentControl': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/SplineAnimation': 0,
-	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/StreamingMedia': 0,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/Structure': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/SyncbaseTiming': 1,
 	'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/SyncBehavior': 1,
