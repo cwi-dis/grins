@@ -982,6 +982,8 @@ class _Window:
 
 	def fgcolor(self, *color):
 		if debug: print `self`+'.fgcolor()'
+		if self.is_closed():
+			raise error, 'window already closed'
 		if len(color) == 1 and type(color[0]) == type(()):
 			color = color[0]
 		if len(color) != 3:
@@ -990,6 +992,8 @@ class _Window:
 
 	def bgcolor(self, *color):
 		if debug: print `self`+'.bgcolor()'
+		if self.is_closed():
+			raise error, 'window already closed'
 		if len(color) == 1 and type(color[0]) == type(()):
 			color = color[0]
 		if len(color) != 3:
@@ -1005,6 +1009,8 @@ class _Window:
 				_toplevel._win_lock.release()
 
 	def settitle(self, title):
+		if self.is_closed():
+			raise error, 'window already closed'
 		if self._parent_window != _toplevel:
 			raise error, 'can only settitle at top-level'
 		if _toplevel._win_lock:
@@ -1015,6 +1021,8 @@ class _Window:
 			_toplevel._win_lock.release()
 
 	def newdisplaylist(self, *bgcolor):
+		if self.is_closed():
+			raise error, 'window already closed'
 		list = _DisplayList(self)
 		if len(bgcolor) == 1 and type(bgcolor[0]) == type(()):
 			bgcolor = bgcolor[0]
@@ -1025,6 +1033,8 @@ class _Window:
 		return list
 
 	def sizebox(self, (x, y, w, h), constrainx, constrainy):
+		if self.is_closed():
+			raise error, 'window already closed'
 		if constrainx and constrainy:
 			raise error, 'can\'t constrain both X and Y directions'
 		gl.winset(self._window_id)
@@ -1092,6 +1102,8 @@ class _Window:
 		return x, y, w, h
 
 	def movebox(self, (x, y, w, h), constrainx, constrainy):
+		if self.is_closed():
+			raise error, 'window already closed'
 		if constrainx and constrainy:
 			raise error, 'can\'t constrain both X and Y directions'
 		gl.winset(self._window_id)
@@ -1165,6 +1177,8 @@ class _Window:
 		return x, y, w, h
 
 	def pop(self):
+		if self.is_closed():
+			raise error, 'window already closed'
 		self._parent_window.pop()
 		if _toplevel._win_lock:
 			_toplevel._win_lock.acquire()
@@ -1174,6 +1188,8 @@ class _Window:
 			_toplevel._win_lock.release()
 
 	def getgeometry(self):
+		if self.is_closed():
+			raise error, 'window already closed'
 		if _toplevel._win_lock:
 			_toplevel._win_lock.acquire()
 		gl.winset(self._window_id)
