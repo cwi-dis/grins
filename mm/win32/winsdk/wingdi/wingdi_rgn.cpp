@@ -60,6 +60,7 @@ PyObject* Wingdi_CreateRectRgn(PyObject *self, PyObject *args)
 	return (PyObject*)PyRgn::createInstance(hrgn);
 	}
 
+#ifndef _WIN32_WCE
 PyObject* Wingdi_CreatePolygonRgn(PyObject *self, PyObject *args)
 	{
 	PyObject *pyptlist;
@@ -80,7 +81,9 @@ PyObject* Wingdi_CreatePolygonRgn(PyObject *self, PyObject *args)
 		}
 	return (PyObject*)PyRgn::createInstance(hrgn);
 	}
+#endif
 
+#ifndef _WIN32_WCE
 PyObject* Wingdi_PathToRegion(PyObject *self, PyObject *args)
 {
 	HDC hdc;
@@ -93,6 +96,7 @@ PyObject* Wingdi_PathToRegion(PyObject *self, PyObject *args)
 		}
 	return (PyObject*)PyRgn::createInstance(hrgn);
 }
+#endif
 
 PyObject* Wingdi_CombineRgn(PyObject *self, PyObject *args)
 	{
