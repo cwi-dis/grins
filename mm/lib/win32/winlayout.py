@@ -7,6 +7,8 @@ Afx=win32ui.GetAfx()
 
 import win32window
 
+from appcon import *
+
 # selection modes
 [SM_NONE, SM_MOVE, SM_SIZE, SM_NET] = range(4)
 
@@ -21,10 +23,15 @@ import win32window
 # 	def onDSelResize(self, selection): pass
 #	def onDSelProperties(self, shape): pass
 
+# shape containers should implement the interface
+#class ShapeContainer:
+#	def getMouseTarget(self, point): pass
+
 # shape factories should implement the interface
 #class ShapeFactory:
-#	def createObjectAt(self, point, strid): return None
+#	def newObjectAt(self, point, strid): return None
 #	def removeObject(self, obj): pass
+#	def onNewObject(self, obj): pass
 
 class DrawContext:
 	def __init__(self):
@@ -50,6 +57,9 @@ class DrawContext:
 		# use  MultiSelectDrawContext instead 
 		self._muliselect = 0
 
+		#
+		self._shapeContainer = None
+
 		# and object responsible to create new shapes
 		self._shapeFactory = None
 
@@ -61,6 +71,14 @@ class DrawContext:
 		self._capture = None
 		self._curtool = self._seltool
 	
+	def selectTool(self, strid):
+		if strid=='shape':
+			self._curtool = self._shapetool
+		elif strid=='select':
+			self._curtool = self._seltool
+		else:
+			self._curtool = self._seltool
+
 	def setCapture(self):
 		self._capture = self
 
@@ -78,11 +96,18 @@ class DrawContext:
 		Sdk.SetCursor(cursor)
 			
 	def getMouseTarget(self, point):
+		if self._shapeContainer:
+			return self._shapeContainer.getMouseTarget(point)
 		return None
 	
 	def update(self, rc=None):
 		pass
 	
+	# the entity registered through this method 
+	# will be asked for the mouse target 
+	def setShapeContainer(self, entity):
+		self._shapeContainer = entity
+
 	# the entity registered through this method 
 	# will receive update notifications 
 	def addListener(self, entity):
@@ -124,16 +149,20 @@ class DrawContext:
 	# Mouse input
 	#
 	def onLButtonDown(self, flags, point):
-		self._curtool.onLButtonDown(flags, point)
+		if self._curtool:
+			self._curtool.onLButtonDown(flags, point)
 
 	def onLButtonUp(self, flags, point):
-		self._curtool.onLButtonUp(flags, point)
+		if self._curtool:
+			self._curtool.onLButtonUp(flags, point)
 
 	def onMouseMove(self, flags, point):
-		self._curtool.onMouseMove(flags, point)
+		if self._curtool:
+			self._curtool.onMouseMove(flags, point)
 	
 	def onLButtonDblClk(self, flags, point):
-		self._curtool.onLButtonDblClk(flags, point)
+		if self._curtool:
+			self._curtool.onLButtonDblClk(flags, point)
 
 	def onNCButton(self):
 		self._moveRefPt = 0, 0
@@ -161,8 +190,7 @@ class DrawContext:
 		# at self._downPt with zero dimensions
 		newobj = None
 		if self._shapeFactory:
-			newobj = self._shapeFactory.createObjectAt(self._downPt, strid)
-		self._curtool = self._seltool
+			newobj = self._shapeFactory.newObjectAt(self._downPt, strid)
 		return newobj
 
 	def removeObject(self, obj):
@@ -171,7 +199,14 @@ class DrawContext:
 		# with zero dimensions
 		if self._shapeFactory:
 			self._shapeFactory.removeObject(obj)
+		assert obj == self._selected, 'target object not selected'
+		self._selected = None
 
+	def onNewObject(self, obj):
+		self._curtool = self._seltool
+		assert obj == self._selected, 'new object not selected'
+		if self._shapeFactory:
+			self._shapeFactory.onNewObject(obj)
 
 #########################	
 # For multi-selections use MSDrawContext instead of DrawContext
@@ -403,7 +438,6 @@ class DrawTool:
 	def onLButtonDblClk(self, flags, point):
 		pass
 
-
 # the selection tool										
 class SelectTool(DrawTool):
 	def __init__(self, ctx):
@@ -491,7 +525,7 @@ class SelectTool(DrawTool):
 
 		ctx._moveRefPt = point
 
-		if ctx._selmode == SM_SIZE and ctx.inSelectMode():
+		if ctx._selmode == SM_SIZE: # and ctx.inSelectMode():
 			ctx._lastPt = point
 			if shape.isResizeable():
 				ctx.setcursor(shape.getDragHandleCursor(ctx._ixDragHandle))
@@ -523,13 +557,18 @@ class ShapeTool(DrawTool):
 			if ctx._selected:
 				ctx.removeObject(ctx._selected)
 				ctx._selected = None
-			ctx._seltool.onLButtonDown(self, flags, point)
-		ctx._seltool.onLButtonDown(self, flags, point)
+				ctx.setcursor('cross')
+				return
+		ctx._seltool.onLButtonUp(flags, point)
+		if ctx._selected:
+			ctx.onNewObject(ctx._selected)
 
 	def onMouseMove(self, flags, point):
 		ctx = self._ctx
-		ctx.setcursor('cross')
-
+		if not ctx._selected:
+			ctx.setcursor('cross')
+		else:
+			ctx._seltool.onMouseMove(flags, point)
 
 ################################
 
@@ -538,21 +577,25 @@ from pywinlib.mfc import window, docview
 
 import win32mu
 
-class LayoutWndContext:
-	def __init__(self, base):
-		self._drawContextBase = base
+class LayoutWnd:
+	def __init__(self, drawContext):
+		self._drawContext = drawContext
 		self._bgcolor = None
 		self._canvas = None
 
 		self._device2logical = 1
 		self._autoscale = 0
+		self._cancroll = 0
 
 		fd = {'name':'Arial','height':10,'weight':700}
 		self._hsmallfont = Sdk.CreateFontIndirect(fd)		
-			
+					
 	def setAutoScale(self, autoscale):
 		self._autoscale = autoscale
 	
+	def selectTool(self, strid):
+		self._drawContext.selectTool(strid)
+
 	def setCanvasSize(self, w, h):
 		if self._cancroll:
 			x1, y1, w1, h1 = self._canvas
@@ -600,7 +643,6 @@ class LayoutWndContext:
 		self.HookMessage(self.onLButtonUp,win32con.WM_LBUTTONUP)
 		self.HookMessage(self.onMouseMove,win32con.WM_MOUSEMOVE)
 		self.HookMessage(self.onLButtonDblClk,win32con.WM_LBUTTONDBLCLK)
-		self.HookMessage(self.onKeyDown, win32con.WM_KEYDOWN)
 		
 	def onKeyDown(self, params):
 		key = params[2]
@@ -610,7 +652,7 @@ class LayoutWndContext:
 		elif key == win32con.VK_RIGHT: dx = 1
 		elif key == win32con.VK_LEFT: dx = -1
 		if dx or dy:
-			self._drawContextBase.moveSelectionBy(self, dx, dy)
+			self._drawContext.moveSelectionBy(dx, dy)
 		return 1
 	
 	def OnDestroy(self, params):
@@ -642,28 +684,28 @@ class LayoutWndContext:
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
 		point = self.DPtoLSP(point)
-		self._drawContextBase.onLButtonDown(self, flags, point)
+		self._drawContext.onLButtonDown(flags, point)
 
 	def onLButtonUp(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
 		point = self.DPtoLSP(point)
-		self._drawContextBase.onLButtonUp(self, flags, point)
+		self._drawContext.onLButtonUp(flags, point)
 	
 	def onMouseMove(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
 		point = self.DPtoLSP(point)
-		self._drawContextBase.onMouseMove(self, flags, point)
+		self._drawContext.onMouseMove(flags, point)
 
 	def onLButtonDblClk(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
 		point = self.DPtoLSP(point)
-		self._drawContextBase.onLButtonDblClk(self, flags, point)
+		self._drawContext.onLButtonDblClk(flags, point)
 
 	def onNCLButton(self, params):
-		self._drawContextBase.onNCButton(self)
+		self._drawContext.onNCButton()
 
 	#
 	# Painting
@@ -801,35 +843,173 @@ class LayoutWndContext:
 #########################
 # Final concrete classes 
 
-class LayoutOsWnd(window.Wnd, LayoutWndContext, DrawContext):
-	def __init__(self):
+class LayoutOsWnd(window.Wnd, LayoutWnd):
+	def __init__(self, drawContext):
 		window.Wnd.__init__(self, win32ui.CreateWnd())
-		DrawContext.__init__(self)
-		LayoutWndContext.__init__(self, DrawContext)
+		LayoutWnd.__init__(self, drawContext)
 
-		DrawContext.addListener(self, self) 
-		self._cancroll = 0
-
-class LayoutScrollOsWnd(docview.ScrollView, LayoutWndContext, DrawContext):
-	def __init__(self):
+class LayoutScrollOsWnd(docview.ScrollView, LayoutWnd):
+	def __init__(self, drawContext):
 		doc = docview.Document(docview.DocTemplate())
 		docview.ScrollView.__init__(self, doc)
-		DrawContext.__init__(self)
-		LayoutWndContext.__init__(self, DrawContext)
-
-		DrawContext.addListener(self, self) 
+		LayoutWnd.__init__(self, drawContext)
 		self._cancroll = 1
 
-class MSLayoutScrollOsWnd(docview.ScrollView, LayoutWndContext, MSDrawContext):
-	def __init__(self):
-		doc = docview.Document(docview.DocTemplate())
-		docview.ScrollView.__init__(self, doc)
-		MSDrawContext.__init__(self)
-		LayoutWndContext.__init__(self, MSDrawContext)
+#########################
+# Utility classes 
 
-		MSDrawContext.addListener(self, self) 
-		self._cancroll = 1
+# 1. minimal concrete win32window.Window
+
+class Region(win32window.Window):
+	def __init__(self, parent, rc, scale, bgcolor):
+		win32window.Window.__init__(self)
+		self.create(parent, rc, UNIT_PXL, z=0, transparent=0, bgcolor=bgcolor)
+		self.setDeviceToLogicalScale(scale)
+		self._active_displist = self.newdisplaylist()
+
+	# overide the default newdisplaylist method defined in win32window
+	def newdisplaylist(self, bgcolor = None):
+		if bgcolor is None:
+			if not self._transparent:
+				bgcolor = self._bgcolor
+		return win32window._ResizeableDisplayList(self, bgcolor)
+	
+	def paintOn(self, dc, rc=None):
+		ltrb = l, t, r, b = self.ltrb(self.LRtoDR(self.getwindowpos()))
+
+		rgn = self.getClipRgn()
+
+		dc.SelectClipRgn(rgn)
+
+		x0, y0 = dc.SetWindowOrg((-l,-t))
+		if self._active_displist:
+			self._active_displist._render(dc, None)
+		dc.SetWindowOrg((x0,y0))
+
+		L = self._subwindows[:]
+		L.reverse()
+		for w in L:
+			w.paintOn(dc)
+
+		dc.SelectClipRgn(rgn)
+		br=Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
+		dc.FrameRectFromHandle(ltrb,br)
+		Sdk.DeleteObject(br)
+
+	def getClipRgn(self, rel=None):
+		x, y, w, h = self.LRtoDR(self.getwindowpos())
+		rgn = win32ui.CreateRgn()
+		rgn.CreateRectRgn((x,y,x+w,y+h))
+		if rel==self: return rgn
+		prgn = self._parent.getClipRgn(rel)
+		rgn.CombineRgn(rgn,prgn,win32con.RGN_AND)
+		prgn.DeleteObject()
+		return rgn
+
+	def getMouseTarget(self, point):
+		for w in self._subwindows:
+			target = w.getMouseTarget(point)
+			if target:
+				return target
+		if self.inside(point):
+			return self
+		return None
 
 
+class LayoutOsWndCtrl(LayoutOsWnd, win32window.Window):
+	def __init__(self, host, scale, drawContext = None):
+		if not drawContext: drawContext = DrawContext()
+		LayoutOsWnd.__init__(self, drawContext)
+		
+		win32window.Window.__init__(self)
+		self._topwindow = self
+
+		self._host = host
+		self._device2logical = scale
+		self._region = None
+		self._updatehost = 0
+
+		self._drawContext.addListener(self) 
+		self._drawContext.setShapeContainer(self)
+		self._drawContext.setShapeFactory(self)
+		
+	def newObjectAt(self, point, strid):
+		x, y = point
+		self._region = Region(self, (x, y, 1, 1), self._device2logical, (255,0,0))
+		# prepare a resize
+		self._drawContext._ixDragHandle = 5
+		self._updatehost = 0
+		return self._region
+
+	def removeObject(self, obj):
+		assert obj == self._region, 'LayoutCtrl logic error'
+		self._region = None
+		self.selectTool('shape')
+		self.update()
+
+	def setObject(self, rc, strid):
+		self._drawContext.reset()
+		if self._region:
+			self._region.updatecoordinates(rc)
+		else:
+			self._region = Region(self, rc, self._device2logical, (255,0,0))
+		self.update()
+		self._updatehost = 1
+		return self._region
+	
+	def onNewObject(self, obj):
+		self.selectTool('select')
+		x, y, w, h = obj.getwindowpos()
+		self._host.updateBox(x, y, w, h)
+		self._updatehost = 1
+				 
+	def getMouseTarget(self, point):
+		if not self._region:
+			return None
+		if self._region.inside(point):
+			return self._region
+		return None
+
+	def onDSelMove(self, selection):
+		x, y, w, h = selection.getwindowpos()
+		if self._updatehost:
+			self._host.updateBox(x, y, w, h)
+		self.update()
+			
+	def onDSelResize(self, selection):
+		x, y, w, h = selection.getwindowpos()
+		if self._updatehost:
+			self._host.updateBox(x, y, w, h)
+		self.update()
+
+	def update(self, rc=None):
+		if rc:
+			x, y, w, h = rc
+			rc = x, y, x+w, y+h
+			rc = self.LRtoDR(rc)
+		self.InvalidateRect(rc or self.GetClientRect())
+
+	def getwindowpos(self, rel=None):
+		return self._rect
+
+	def paintOn(self, dc):
+		l, t, w, h = self._canvas
+		r, b = l+w, t+h
+		rgn = self.getClipRgn()
+		dc.FillSolidRect((l, t, r, b),win32mu.RGB(self._bgcolor or (255,255,255)))
+		if self._region:
+			self._region.paintOn(dc)
+			dc.SelectClipRgn(rgn)
+			self.drawTracker(dc)
+		rgn.DeleteObject()
+
+	def drawTracker(self, dc):
+		rgn = self._region.getClipRgn()
+		dc.SelectClipRgn(rgn)
+		nHandles = self._region.getDragHandleCount()					
+		for ix in range(1,nHandles+1):
+			x, y, w, h = self._region.getDragHandleRect(ix)
+			dc.PatBlt((x, y), (w, h), win32con.DSTINVERT);
 
 
+ 
