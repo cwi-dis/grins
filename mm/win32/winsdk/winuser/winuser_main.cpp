@@ -5,10 +5,13 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
                         All Rights Reserved
 
 /*************************************************************************/
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
 #include "winuser_main.h"
 
 #include "utils.h"
+#include <shellapi.h>
 
 PyObject* Winuser_MessageLoop(PyObject *self, PyObject *args)
 {

@@ -5,6 +5,12 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
                         All Rights Reserved
 
 /*************************************************************************/
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
+#include "Python.h"
+
+PyObject *ErrorObject;
 
 #include "winuser_main.h"
 #include "winuser_wnd.h"
@@ -13,7 +19,6 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "mtpycall.h"
 
-PyObject *ErrorObject;
 
 PyInterpreterState*
 PyCallbackBlock::s_interpreterState = NULL;
@@ -29,7 +34,10 @@ static struct PyMethodDef winuser_methods[] = {
 	{"LoadCursor", (PyCFunction)Winuser_LoadCursor, METH_VARARGS, ""},
 	{"ShellExecute", (PyCFunction)Winuser_ShellExecute, METH_VARARGS, ""},
 
+#ifndef _WIN32_WCE
 	{"RegisterClassEx", (PyCFunction)Winuser_RegisterClassEx, METH_VARARGS, ""},
+#endif
+	{"RegisterClass", (PyCFunction)Winuser_RegisterClass, METH_VARARGS, ""},
 
 	{"CreateWindowEx", (PyCFunction)Winuser_CreateWindowEx, METH_VARARGS, ""},
 	{"CreateWindowFromHandle", (PyCFunction)Winuser_CreateWindowFromHandle, METH_VARARGS, ""},
@@ -39,10 +47,14 @@ static struct PyMethodDef winuser_methods[] = {
 	{"CreatePopupMenu", (PyCFunction)Winuser_CreatePopupMenu, METH_VARARGS, ""},
 	{"CreateMenuFromHandle", (PyCFunction)Winuser_CreateMenuFromHandle, METH_VARARGS, ""},
 
+#ifndef _WIN32_WCE
 	{"CreateFileDialog", (PyCFunction)Winuser_CreateFileDialog, METH_VARARGS, ""},
-
+#endif
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 	};
+
+extern "C" __declspec(dllimport) 
+void testDLLExport();
 
 extern "C" __declspec(dllexport) 
 void initwinuser()
@@ -50,6 +62,8 @@ void initwinuser()
 	PyObject *m, *d;
 	bool bPyErrOccurred = false;
 	
+
+
 	PyCallbackBlock::init();	
 
 	// Create the module and add the functions
