@@ -18,6 +18,8 @@ f_timescale = f_channel
 FONTTWEAK = 2				# potentially system-dependant vertical tweak of fonts
 					# this is used to vertically center text
 
+TICKDIST = settings.get('structure_tickdistance')
+
 # Color assignments (RGB)
 BGCOLOR = settings.get('structure_bgcolor')
 LEAFCOLOR = settings.get('structure_leafcolor')

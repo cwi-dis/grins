@@ -2676,7 +2676,7 @@ class TimelineWidget(MMWidgetDecoration):
 			qf = qf * 10
 			quantum = quantum / 10
 		prev = qf, qr, quantum
-		while qf * quantum >= 3 * qr * (ub-lb) / length:
+		while qf * quantum >= TICKDIST * qr * (ub-lb) / length:
 			prev = qf, qr, quantum
 			if quantum == 5:
 				quantum = 2
