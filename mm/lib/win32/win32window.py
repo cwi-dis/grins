@@ -2612,11 +2612,6 @@ class DrawContext:
 #	def onDSelProperties(self, selection): pass
 # where selections is the list of selected objects
 
-# Please note that currently a client/notification listener will
-# receive the same callbacks through onShapeChange(self, shape) 
-# In this case shape can be interpreted as the focus.
-# Resize and move should work through this 
-
 # You can set the selections by calling 
 # MSDrawContext.selectShapes(self, shapeList)
 
@@ -3008,4 +3003,4 @@ class _ResizeableDisplayList(_DisplayList):
  
  
  
- 
+ 
