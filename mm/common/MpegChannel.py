@@ -41,7 +41,6 @@ class MpegChannel(ChannelWindowThread):
 
 		try:
 			alist = node.GetRawAttr('anchorlist')
-			modanchorlist(alist)
 		except NoSuchAttrError:
 			alist = []
 		self.armed_display.fgcolor(self.getbucolor(node))

@@ -74,7 +74,6 @@ class GraphChannel(ChannelWindow):
 
 		try:
 			alist = node.GetRawAttr('anchorlist')
-			modanchorlist(alist)
 		except NoSuchAttrError:
 			alist = []
 		for a in alist:

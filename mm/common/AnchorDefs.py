@@ -23,17 +23,3 @@ ATYPE_WHOLE  = 6	# Whole-node source anchor
 # whole-node (destination only) anchors types
 WholeAnchors = (ATYPE_DEST, ATYPE_AUTO, ATYPE_COMP, ATYPE_WHOLE)
 DestOnlyAnchors = (ATYPE_DEST, ATYPE_COMP)
-
-#
-# This is a (temporary) routine to modify anchor lists so all anchor id's
-# are strings.
-def modanchorlist(list):
-	didwork = 0
-	for i in range(len(list)):
-		id, tp, args = list[i]
-		if type(id) is not type(''):
-			id = `id`
-			list[i] = (id, tp, args)
-			didwork = 1
-	if didwork:
-		print 'modanchorlist: modified anchors'
