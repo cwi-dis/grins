@@ -49,15 +49,15 @@ class EventStruct:
 		# TODO: action is not a good name.. 
 		self.cause = None
 		self.clear_vars()
+		self._node = node
 		if not syncarc:
 			if action == 'endlist':
 				a = 'end'
 			else: # if action is None, for example.
 				a = 'begin'
 			self._syncarc = MMNode.MMSyncArc(node, a)
-			self.set_cause('node')
-			self.set_event('activateEvent')
-			self.set_offset('0')
+			self.set_cause('delay')
+			self.set_offset(0)
 		else:
 			self._syncarc = syncarc
 			self.__init__set_vars()
@@ -77,29 +77,30 @@ class EventStruct:
 
 		c = self.get_cause()
 		if c == 'indefinite':
-			s.__init__(s.dstnode, action, delay=None)
+			s.__init__(self._node, action, delay=None)
 			return s
 		elif c == 'node':# and self._setnode:
 			# The problem here is that I don't know how to map a name of a node to it's instance.
-			print "TODO: don't know how to set node."
-			s.__init__(s.dstnode, action, srcnode = s.srcnode, event=self.get_event(), delay=self.get_offset_number())
+			if not s.srcnode:
+				print "TODO: No node!! (EventEditor)"
+			s.__init__(self._node, action, srcnode = s.srcnode, event=self.get_event(), delay=self.get_offset())
 		elif c == 'region' and self._setregion:
 			print "TODO: don't know how to set region."
 		elif c == 'accesskey' and self._setkey:
-			s.__init__(s.dstnode, action, accesskey=self._setkey, event=self.get_event(), delay=self.get_offset_number())
+			s.__init__(self._node, action, accesskey=self._setkey, event=self.get_event(), delay=self.get_offset())
 		elif c == 'marker' and self._setmarker:
-			s.__init__(s.dstnode, action, marker=self._setmarker)
+			s.__init__(self._node, action, marker=self._setmarker)
 		elif c == 'delay':
-			s.__init__(s.dstnode, action, srcnode='syncbase', delay=self.get_offset_number())
+			s.__init__(self._node, action, srcnode='syncbase', delay=self.get_offset())
 		elif c == 'wallclock':
 			print "TODO: editing wallclock attributes."
-			#s.__init__(s.dstnode, action,
+			#s.__init__(self._node, action,
 		return self._syncarc
 
-		if self._setevent:
-			s.event = self._setevent
-		if self._setoffset:
-			s.delay = set.get_offset_number()
+##		if self._setevent:
+##			s.event = self._setevent
+##		if self._setoffset:
+##			s.delay = set.get_offset()
 
 
 	def __init__set_vars(self):
@@ -128,8 +129,10 @@ class EventStruct:
 			self.cause = 'node'
 			if isinstance(x.srcnode, MMNode.MMNode):
 				self.thing = x.srcnode.GetName()
-			else:
+			elif x.srcnode == 'syncbase':
 				self.cause = 'delay'
+			else:
+				print "DEBUG: EventEditor.__init_set_vars got strange looking event.", x.srcnode
 		# The event.
 		if self.cause == 'node' or self.cause == 'region':
 			self.event = x.event
@@ -212,15 +215,11 @@ class EventStruct:
 				r = 'accesskey(?)'
 		elif c == 'delay':
 			d = self.get_offset()
-			if d:
-				return "Delay of " + d
-			else:
-				print "Got strange looking event: ", self._syncarc
-				return "Error: strange event."
+			return "Delay of " + `d`
 		else:
 			print "ERROR: Unknown cause: ", c
 		d = self.get_offset()
-		if d == "0" or d is None:
+		if d == 0:
 			return r
 		elif not d.startswith('-'):
 			d = "+"+d
@@ -233,6 +232,12 @@ class EventStruct:
 			return self.cause
 	def set_cause(self, newcause):
 		assert newcause in CAUSES
+		if newcause in ['node', 'marker'] and not isinstance(self._syncarc.srcnode, MMNode.MMNode):
+			# Then a node is required
+			return
+		if newcause in ['node', 'delay', 'accesskey']:
+			# Then time information is required.
+			self.set_offset(0)
 		self.clear_vars()
 		self._setcause = newcause
 	def get_event(self):
@@ -282,7 +287,7 @@ class EventStruct:
 			name = "Node:"
 			if self._setnode:
 				thing = self._setnode
-			elif isinstance(self._syncarc, MMNode.MMSyncArc) and self._syncarc.srcnode:
+			elif isinstance(self._syncarc, MMNode.MMSyncArc) and isinstance(self._syncarc.srcnode, MMNode.MMNode):
 				thing = self._syncarc.srcnode.GetName()
 			else:
 				thing = "SomeNode"
@@ -341,19 +346,10 @@ class EventStruct:
 	def get_offset(self):
 		if self._setoffset:
 			return self._setoffset
-		if self._syncarc and self.get_cause() in ['node', 'accesskey', 'delay']: # TODO: check these.
-			return `self._syncarc.delay`
-		else:
-			return None
-	def get_offset_number(self):
-		a = self.get_offset()
-		if a:
-			return float(a)
+		if self._syncarc and self._syncarc.delay and self.get_cause() in ['node', 'accesskey', 'delay']: # TODO: check these.
+			return self._syncarc.delay
 		else:
 			return 0
 	def set_offset(self, newoffset):
-		if newoffset.isdigit():
-			self._setoffset = newoffset
-			return 1
-		else:
-			return 0
+		self._setoffset = newoffset
+
