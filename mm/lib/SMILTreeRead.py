@@ -2823,6 +2823,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				lcd['width'] = coords[2]
 				lcd['height'] = coords[3]
 				lcd['showBackground'] = 'whenActive'
+				settings.setScreenSize(coords[2], coords[3])
 				ctx.cssResolver.setRawAttrs(lcd.getCssId(), [('left', coords[0]), ('top', coords[1]), ('width', coords[2]), ('height', coords[3])])
 			else:
 				a = ctx.newnode('anchor')
