@@ -89,7 +89,7 @@ class GenFormView(docview.FormView,components.ControlsDict):
 		nmsg=msg.getnmsg()
 		for k in self.keys():
 			if self[k]._id==id:
-				if k in self._cbdict.keys():
+				if self._cbdict.has_key(k):
 					apply(apply,self._cbdict[k])
 				return	
 

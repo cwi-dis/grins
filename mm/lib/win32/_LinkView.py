@@ -211,7 +211,7 @@ class _LinkView(docview.FormView,components.ControlsDict):
 
 	# Helper function that given the string id of the control calls the callback
 	def call(self,strcmd):
-		if strcmd in self._callbacks.keys():
+		if self._callbacks.has_key(strcmd):
 			apply(apply,self._callbacks[strcmd])
 
 	# Reponse to the WM_COMMAND message
@@ -219,7 +219,7 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		msg=win32mu.Win32Msg(params)
 		id=msg.cmdid()
 		nmsg=msg.getnmsg()
-		if id in self._mcb.keys():
+		if self._mcb.has_key(id):
 			self.menu_callback(id,0)
 			return
 		for key in self.keys():
@@ -236,7 +236,7 @@ class _LinkView(docview.FormView,components.ControlsDict):
 			win32con.TPM_LEFTALIGN|win32con.TPM_LEFTBUTTON,self) 
 	# Callback for commands from the popup menu
 	def menu_callback(self,id,code):
-		if id in self._mcb.keys(): 
+		if self._mcb.has_key(id): 
 			apply(apply,self._mcb[id])
 
 	# Called directly from cmif-core to close window
