@@ -168,7 +168,7 @@ class Channel:
 	def done(self, dummy):
 		self.node.setarmedmode(ARM_NONE)
 		self.qid = None
-		if self.haspauseanchor:
+		if self.haspauseanchor and not self.player.ignore_pauses:
 			return
 		callback, arg = self.cb
 		callback(arg)

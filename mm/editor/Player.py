@@ -38,6 +38,10 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 		self.seeking = 0
 		self.seek_node = None
 		self.seek_nodelist = []
+		self.ignore_delays = 0
+		self.ignore_pauses = 0
+		self.play_all_bags = 0
+		self.sync_cv = 0
 		return BasicDialog.init(self, 0, 0, 'Player')
 	#
 	def __repr__(self):
@@ -75,6 +79,7 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 	def make_form(self):
 		ftemplate = flp.parse_form('PlayerForm', 'form')
 		flp.create_full_form(self, ftemplate)
+		self.makeomenu()
 		
 	#
 	# FORMS callbacks.
@@ -88,8 +93,8 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 	def stop_callback(self, (obj, arg)):
 		self.stop()
 	#
-	def menu_callback(self, (obj, arg)):
-		i = self.menubutton.get_menu() - 1
+	def cmenu_callback(self, (obj, arg)):
+		i = self.cmenubutton.get_menu() - 1
 		if 0 <= i < len(self.channelnames):
 			name = self.channelnames[i]
 			#if self.channels[name].is_showing():
@@ -99,13 +104,32 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 			self.channels[name].flip_visible()
 			self.makemenu()
 	#
-	def calctiming_callback(self, (obj, arg)):
-		if obj.get_button() or 1:
-			del_timing(self.root)
-			Timing.changedtimes(self.root)
-			self.measure_armtimes = 1
-			obj.set_button(1)
+	#def calctiming_callback(self, (obj, arg)):
+	#	if obj.get_button() or 1:
+	#		del_timing(self.root)
+	#		Timing.changedtimes(self.root)
+	#		self.measure_armtimes = 1
+	#		obj.set_button(1)
 	#
+	def omenu_callback(self, (obj, arg)):
+		i = self.omenubutton.get_menu()
+		if i == 1:
+			self.measure_armtimes = (not self.measure_armtimes)
+			if self.measure_armtimes:
+				del_timing(self.root)
+				Timing.changedtimes(self.root)
+		elif i == 2:
+			self.play_all_bags = (not self.play_all_bags)
+		elif i == 3:
+			self.ignore_delays = (not self.ignore_delays)
+		elif i == 4:
+			self.ignore_pauses = (not self.ignore_pauses)
+		elif i == 5:
+			self.sync_cv = (not self.sync_cv)
+		else:
+			print 'Player: Option menu: funny choice', i
+		self.makeomenu()
+		
 	def dummy_callback(self, dummy):
 		pass
 	#
@@ -156,7 +180,8 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 			else:
 				label =  name
 			self.partbutton.label = label
-		self.calctimingbutton.set_button(self.measure_armtimes)
+		#self.calctimingbutton.set_button(self.measure_armtimes)
+		self.makeomenu()
 		self.showtime()
 	#
 	def showtime(self):
@@ -173,14 +198,37 @@ class Player(ViewDialog, BasicDialog, PlayerCore):
 			self.statebutton.label = label
 		#
 	#
+	def makeomenu(self):
+		self.omenubutton.set_menu('')
+		if self.measure_armtimes:
+			self.omenubutton.addto_menu('\xa4 Calculate timing')
+		else:
+			self.omenubutton.addto_menu('   Calculate timing')
+		if self.play_all_bags:
+			self.omenubutton.addto_menu('\xa4 Play all bags')
+		else:
+			self.omenubutton.addto_menu('   Play all bags')
+		if self.ignore_delays:
+			self.omenubutton.addto_menu('\xa4 Ignore delays')
+		else:
+			self.omenubutton.addto_menu('   Ignore delays')
+		if self.ignore_pauses:
+			self.omenubutton.addto_menu('\xa4 Ignore pauses')
+		else:
+			self.omenubutton.addto_menu('   Ignore pauses')
+		if self.sync_cv:
+			self.omenubutton.addto_menu('\xa4 Keep Timechart in sync')
+		else:
+			self.omenubutton.addto_menu('   Keep Timechart in sync')
+
 	def makemenu(self):
-		self.menubutton.set_menu('')
+		self.cmenubutton.set_menu('')
 		for name in self.channelnames:
 			if self.channels[name].is_showing():
 				onoff = ''
 			else:
 				onoff = ' (off)'
-			self.menubutton.addto_menu(name + onoff)
+			self.cmenubutton.addto_menu(name + onoff)
 			# XXX This is for FORMS version 2.0b;
 			# XXX for version 2.0 (beta), append a '|'.
 	#

@@ -46,6 +46,10 @@ class Scheduler(scheduler):
 		now = self.origin + t*self.rate
 		return now
 	#
+	def addtotimer(self, delay):
+		if self.rate:
+			self.origin = self.origin + delay
+	#
 	def resettimer(self):
 		self.origin = 0.0	# Current time
 		self.rate = 0.0		# Initially the clock is frozen
@@ -63,9 +67,9 @@ class Scheduler(scheduler):
 	#
 	def unfreeze(self):
 	        self.frozen = self.frozen - 1
-		if self.frozen <= 0:
-			if self.frozen < 0:
-				print 'Player: self.frozen < 0!'
+		if self.frozen < 0:
+			print 'Player: self.frozen < 0!'
+			raise 'Kaboo!'
 	#
 	# XXXX Can be a lot simpler, because rate can only be 1 or 0
 	def setrate(self, rate):
@@ -109,6 +113,9 @@ class Scheduler(scheduler):
 			if delay == 0.0 or rtime < delay:
 				delay = 0.001
 		#print 'Player: Next timer: ', delay
+		if self.ignore_delays:
+			self.addtotimer(delay)
+			delay = 0.001
 		self.timerobject.set_timer(delay)
 	#
 	# Playing algorithm.
@@ -116,12 +123,18 @@ class Scheduler(scheduler):
 	def start_playing(self, rate):
 		if not self.maystart():
 			return 0
-		while self.playroot.GetType() == 'bag':
-			self.showstate()
-			node = choosebagitem(self.playroot)
-			if not node:
-				return 0
-			self.playroot = node
+		if self.play_all_bags:
+			self.playroot = self.playroot.FirstMiniDocument()
+		else:
+			while self.playroot.GetType() == 'bag':
+				self.showstate()
+				node = choosebagitem(self.playroot)
+				if not node:
+					return 0
+				self.playroot = node
+		return self.start_2_playing(rate)
+	#
+	def start_2_playing(self, rate):
 		arm_events = self.resume_1_playing(rate)
 		for pn in arm_events:
 			d = pn.GetRawAttr('arm_duration')
@@ -137,13 +150,29 @@ class Scheduler(scheduler):
 		self.resume_2_playing()
 		return 1
 	#
+	def continue_next_bag(self):
+		if not self.play_all_bags:
+			return 0
+		if self.playroot == self.root.LastMiniDocument():
+			return 0
+		self.suspend_playing()
+		self.playroot = self.playroot.NextMiniDocument()
+		if self.sync_cv:
+			self.toplevel.channelview.globalsetfocus(self.playroot)
+		return self.start_2_playing(1)
+	#
 	def resume_1_playing(self,rate):
 		self.setwaiting()
+		if self.sync_cv:
+			self.toplevel.channelview.globalsetfocus(self.playroot)
 		self.playing = 1
 		self.reset()
 		self.setrate(rate)
 		self.showstate() # Give the anxious user a clue...
-		mini = findminidocument(self.playroot)
+		if self.play_all_bags:
+			mini = self.playroot
+		else:
+			mini = findminidocument(self.playroot)
 		Timing.needtimes(mini)
 		if mini == self.playroot:
 			arm_events = Timing.getinitial(mini)
@@ -299,7 +328,17 @@ class Scheduler(scheduler):
 			# The whole mini-document is finished -- stop playing.
 			if self.setcurrenttime_callback:
 				self.setcurrenttime_callback(node.t1)
-			self.stop()
+			if self.play_all_bags:
+				# Hack: we don't now how recursive we are, so
+				# we remember self.frozen and fix it up later.
+				kf = self.frozen
+				if not self.continue_next_bag():
+					print 'No next bag!'
+					self.stop()
+				print 'Ok, there we go!', self.frozen
+				self.frozen = kf
+			else:
+				self.stop()
 		self.unfreeze()
 	#
 	# opt_prearm allows channels to schedule a pre-arm of the next node on
@@ -377,10 +416,13 @@ class Scheduler(scheduler):
 		except NoSuchUIDError:
 			fl.show_message('Dangling hyperlink selected', '', '')
 			return 0
-		while seek_node.GetType() == 'bag':
-			seek_node = choosebagitem(seek_node)
-			if seek_node == None:
-				return 0
+		if self.play_all_bags:
+			seek_node = seek_node.FirstMiniDocument()
+		else:
+			while seek_node.GetType() == 'bag':
+				seek_node = choosebagitem(seek_node)
+				if seek_node == None:
+					return 0
 		playroot = findminidocument(seek_node)
 		self.suspend_playing()
 		self.seek_node = seek_node
