@@ -101,7 +101,7 @@ class MainDialog:
 			return
 		import windowinterface
 		f=windowinterface.getmainwnd()
-		filetypes = ['application/x-grins-project', 'application/smil']
+		filetypes = ['/SMIL presentation', 'application/x-grins-project', 'application/smil']
 ##		import features
 ##		if not features.lightweight:
 ##			filetypes.append('application/x-grins-cmif')
