@@ -172,7 +172,7 @@ class Region(Node):
 		self._ctx.onPreviousSelectRegion(self)
 
 	def onUnselected(self):
-		print 'region unselected : ',self._name
+		pass
 		
 	def onGeomChanging(self, geom):
 		# update only the geom field on dialog box
@@ -271,7 +271,7 @@ class MediaRegion(Region):
 			self._graphicCtrl.setImage(f, fit)
 		
 	def onUnselected(self):
-		print 'media unselected : ',self._name
+		pass
 		
 	def onGeomChanging(self, geom):
 		self._ctx.updateMediaGeomOnDialogBox(geom)
@@ -342,7 +342,7 @@ class Viewport(Node):
 		self._ctx.onPreviousSelectViewport(self)
 
 	def onUnselected(self):
-		print 'viewport unselected',self._name
+		pass
 		
 	def onGeomChanging(self, geom):
 		# update only the geom field on dialog box
@@ -434,7 +434,7 @@ class LayoutView2(LayoutViewDialog2):
 	def globalfocuschanged(self, focustype, focusobject):
 		from MMNode import MMNode
 
-		# insure that last media node selected will be removed
+		# ensure that the last media selected node will be removed
 		self.unSetMediaNode()
 		
 		from MMTypes import leaftypes
@@ -445,6 +445,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.fillMediaListOnDialogBox()
 		if len(self.currentMediaRegionList) > 0:
 			firstMediaRegion, parentRegion = self.currentMediaRegionList[0]
+			self.currentNodeSelected = firstMediaRegion
 			firstMediaRegion.select()
 			self.enableMediaListOnDialogBox()
 			self.updateMediaOnDialogBox(firstMediaRegion)
@@ -515,6 +516,7 @@ class LayoutView2(LayoutViewDialog2):
 				# if the media region was selected, select its parent
 				if mediaRegion == self.currentNodeSelected:
 					parentRegion.select()
+					self.updateRegionOnDialogBox(parentRegion)					
 				mediaRegion.hide()
 				# remove from region tree
 				parentRegion.removeNode(mediaRegion)
@@ -709,8 +711,8 @@ class LayoutView2(LayoutViewDialog2):
 			
 			x,y,w,h = value
 			self.editmgr.setnodeattr(media.mmnode, 'scale', scale)			
-			if x != 0: self.editmgr.setnodeattr(media.mmnode, 'left', x)
-			if y != 0: self.editmgr.setnodeattr(media.mmnode, 'top' , y)
+			self.editmgr.setnodeattr(media.mmnode, 'left', x)
+			self.editmgr.setnodeattr(media.mmnode, 'top' , y)
 
 			mw = media.media_width
 			mh = media.media_height
@@ -718,9 +720,9 @@ class LayoutView2(LayoutViewDialog2):
 			parent = media.getParent()
 			px, py, pw, ph = parent.getGeom()
 			right = pw-(x+w)
-			if right != 0: self.editmgr.setnodeattr(media.mmnode, 'right', right)
+			self.editmgr.setnodeattr(media.mmnode, 'right', right)
 			bottom = ph-(y+h)
-			if bottom != 0: self.editmgr.setnodeattr(media.mmnode, 'bottom' , bottom)
+			self.editmgr.setnodeattr(media.mmnode, 'bottom' , bottom)
 			
 			# todo: some ajustements for take into account all fit values
 			self.editmgr.commit()
@@ -837,20 +839,24 @@ class LayoutView2(LayoutViewDialog2):
 	def updateMediaOnDialogBox(self, media):
 		mmnode = media.mmnode
 		mediaName = mmnode.attrdict.get('name')
-		# update the selecter
+		# update the media selecter
 		if self.currentMediaNameList != None:
-			try:
-				index = self.currentMediaNameList.index(mediaName)
-				if index >= 0:
-					self.dialogCtrl.setSelecterCtrl('MediaSel',index)
-			except:
-				pass
+			index = self.currentMediaNameList.index(mediaName)
+			if index >= 0:
+				self.dialogCtrl.setSelecterCtrl('MediaSel',index)
+			
+		# update the region selecter
+		region = media.getParent()
+		regionName = region.getName()
+		if self.currentRegionNameList != None:
+			index = self.currentRegionNameList.index(regionName)
+			if index >= 0:
+				self.dialogCtrl.setSelecterCtrl('RegionSel',index)
 		
 		# get the current geom value: todo
 		geom = media.getGeom()
 		
 		# clear and disable not valid fields
-		self.dialogCtrl.setSelecterCtrl('RegionSel',-1)
 		self.dialogCtrl.enable('SendBack',0)
 		self.dialogCtrl.enable('BringFront',0)
 		self.dialogCtrl.enable('ShowRbg',0)
@@ -897,7 +903,17 @@ class LayoutView2(LayoutViewDialog2):
 		self.applyGeomOnRegion(self.currentNodeSelected, (x,y,w,h))
 
 	def __updateGeomOnMedia(self, ctrlName, value):
-		print '__updateGeomOnMedia: todo'
+		geom = self.currentNodeSelected._curattrdict['wingeom']
+		x,y,w,h = geom
+		if ctrlName == 'RegionX':
+			x = value
+		elif ctrlName == 'RegionY':
+			y = value			
+		elif ctrlName == 'RegionW':
+			w = value
+		elif ctrlName == 'RegionH':
+			h = value			
+		self.applyGeomOnMedia(self.currentNodeSelected, (x,y,w,h))
 		
 	def __updateGeom(self, ctrlName, value):
 		if self.currentNodeSelected != None:
@@ -908,8 +924,6 @@ class LayoutView2(LayoutViewDialog2):
 			elif self.currentNodeSelected.getNodeType() == TYPE_MEDIA:
 				self.__updateGeomOnMedia(ctrlName, value)
 				
-				
-
 	def __selectBgColor(self):
 		if self.currentNodeSelected != None:
 			self.selectBgColor(self.currentNodeSelected)
@@ -995,7 +1009,7 @@ class LayoutView2(LayoutViewDialog2):
 		elif ctrlName == 'BringFront':
 			self.__bringFront()
 		elif ctrlName == 'ShowRbg':
-			print 'ShowRbg pressed'
+			print 'ShowRbg not implemented yet'
 
 
 # ################################################################################################
