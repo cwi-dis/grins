@@ -5,7 +5,7 @@
   <head>
     <meta name="title" content=" slideshow "/>
     <meta name="generator" content="GRiNS editor 0.4 Unix/motif patchlevel 0"/>
-    <meta name="template_name" content="Slideshow (obsolete)"/>
+    <meta name="template_name" content="(Obsolete) Slideshow"/>
     <meta name="template_description" content="A minimal slideshow (obsolete, use the Slideshow template)"/>
     <layout>
       <root-layout id="slideshow-" title=" slideshow " width="320" height="320"/>
