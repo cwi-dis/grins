@@ -31,6 +31,7 @@ from usercmd import *
 from wndusercmd import *
 import WMEVENTS
 import features
+import version
 
 class MainDialog:
 	adornments = {}
@@ -79,7 +80,7 @@ class MainDialog:
 				never_again = self.never_again
 			else:
 				never_again = None
-			windowinterface.OpenAppDialog(self.new_callback, 
+			windowinterface.OpenAppDialog(version.title, self.new_callback, 
 				self.openfile_callback, never_again,
 				doclist, self.openURL_callback, parent=f)
 		
