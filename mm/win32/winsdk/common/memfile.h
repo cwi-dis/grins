@@ -14,8 +14,8 @@ class memfile
 	// file-mem and mem-file transfer
 	bool open(LPCTSTR szFileName);
 
-	bool read(DWORD nRead);
-	bool readAll();
+	bool fillBuffer(DWORD nRead);
+	bool fill();
 
 	BYTE* data() const { return m_begin;}
 	DWORD size() const { return m_end - m_begin;}
@@ -75,8 +75,6 @@ class memfile
 	HANDLE get_handle() const { return m_hf;}
 	HANDLE reset_file_pointer() 
 		{ SetFilePointer(m_hf, 0, NULL, FILE_BEGIN);}
-	
-		;
 
 	FILE* get_as_cfile()
 		{
@@ -189,7 +187,7 @@ inline bool memfile::open(LPCTSTR szFileName)
 	return true;
 	}
 
-inline bool memfile::read(DWORD nRead)
+inline bool memfile::fillBuffer(DWORD nRead)
 	{
 	DWORD bytesRead = 0;
 	if(!ReadFile(m_hf, m_pnext, nRead, &bytesRead, 0)) 
@@ -198,7 +196,7 @@ inline bool memfile::read(DWORD nRead)
 	return nRead == bytesRead;
 	}
 
-inline bool memfile::readAll()
+inline bool memfile::fill()
 	{
 	DWORD nRead = m_end - m_pnext;
 	DWORD bytesRead = 0;

@@ -79,27 +79,27 @@ PyObject* Wingdi_CreateDIBSurface(PyObject *self, PyObject *args)
 static ImgDecoder* CreateImgDecoder(memfile& mf, HDC hDC)
 	{
 	ImgDecoder *decoder = NULL;
-	
-	// bmp
-	decoder= new BmpDecoder(mf, hDC, seterror);
-	if(decoder->can_decode())
-		return decoder;
-	delete decoder;
-
-	// gif
-	decoder = new GifDecoder(mf, hDC, seterror);
-	if(decoder->can_decode())
-		return decoder;
-	delete decoder;
 
 	// jpg
 	decoder = new JpgDecoder(mf, hDC, seterror);
 	if(decoder->can_decode())
 		return decoder;
 	delete decoder;
+	
+	// gif
+	decoder = new GifDecoder(mf, hDC, seterror);
+	if(decoder->can_decode())
+		return decoder;
+	delete decoder;
 
 	// png
 	decoder = new PngDecoder(mf, hDC, seterror);
+	if(decoder->can_decode())
+		return decoder;
+	delete decoder;
+
+	// bmp
+	decoder= new BmpDecoder(mf, hDC, seterror);
 	if(decoder->can_decode())
 		return decoder;
 	delete decoder;
@@ -117,7 +117,7 @@ PyObject* Wingdi_CreateDIBSurfaceFromFile(PyObject *self, PyObject *args)
 	
 	memfile mf;
 	mf.open(TextPtr(filename));
-	mf.read(16);
+	mf.fillBuffer(16);
 	ImgDecoder *decoder = CreateImgDecoder(mf, hDC);
 	if(decoder == NULL)
 		{
