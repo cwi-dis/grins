@@ -108,20 +108,22 @@ def _do_mac_edit(filename):
 				mtype='warning')
 				
 # showeditor - Show the editor (or selector) for a given node
-def showeditor(node):
+def showeditor(node, url=None):
 ##	if len(channeleditors) == 0:
 ##		InitEditors()
-	if node.GetType() == 'imm':
-		dummy = _Convert(node)
-		return
-	if node.GetType() <> 'ext':
-		windowinterface.showmessage(
-			'Only extern nodes can be edited',
-			mtype = 'error')
-		return
-	import MMAttrdefs, MMurl, urlparse
-	url = MMAttrdefs.getattr(node,'file')
+	if not url:
+		if node.GetType() == 'imm':
+			dummy = _Convert(node)
+			return
+		if node.GetType() <> 'ext':
+			windowinterface.showmessage(
+				'Only extern nodes can be edited',
+				mtype = 'error')
+			return
+		import MMAttrdefs
+		url = MMAttrdefs.getattr(node,'file')
 	url = node.context.findurl(url)
+	import MMurl, urlparse
 	utype, host, path, params, query, fragment = urlparse.urlparse(url)
 	if (utype and utype != 'file') or (host and host != 'localhost'):
 		windowinterface.showmessage(
