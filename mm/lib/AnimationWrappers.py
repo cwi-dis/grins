@@ -167,15 +167,25 @@ class AnimationParWrapper(AnimationDefaultWrapper):
 		dur = 1.0
 
 		# animateMotion
-		path = svgpath.Path()
-		path.constructFromPoints(animateMotionValues)
-		domval = complex(self._domrect[0],self._domrect[1])
-		self._animateMotion = Animators.MotionAnimator('position', domval, path, dur, mode='linear', times=times)
-		
+		if len(animateMotionValues) >= 2:
+			path = svgpath.Path()
+			path.constructFromPoints(animateMotionValues)
+			domval = complex(self._domrect[0],self._domrect[1])
+			self._animateMotion = Animators.MotionAnimator('position', domval, path, dur, mode='linear', times=times)
+		else:
+			self._animateMotion = None
+			
 		# animate width and height
-		self._animateWidth = Animators.Animator('width', self._domrect[2], animateWidthValues, dur, mode='linear', times=times)
-		self._animateHeight = Animators.Animator('height', self._domrect[3], animateHeightValues, dur, mode='linear', times=times)
-
+		if len(animateWidthValues) >= 2:
+			self._animateWidth = Animators.Animator('width', self._domrect[2], animateWidthValues, dur, mode='linear', times=times)
+		else:
+			self._animateWidth = None
+			
+		if len(animateHeightValues) >= 2:
+			self._animateHeight = Animators.Animator('height', self._domrect[3], animateHeightValues, dur, mode='linear', times=times)
+		else:
+			self._animateHeight = None
+			
 		# animate color
 		try:
 			self._animateColor = Animators.ColorAnimator('backgroundColor', self._domcolor, animateColorValues, dur, mode='linear', times=times)
