@@ -20,7 +20,7 @@ import time
 
 import Animators
 
-debug=0
+debug = 1
 	
 
 class AnimateChannel(Channel.ChannelAsync):
@@ -39,6 +39,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__animator = None
 		self.__targetchan = None
 		self.__isattrsupported = 0
+		self.__lastvalue = None
 
 	def __repr__(self):
 		return '<AnimateChannel instance, name=' + `self._name` + '>'
@@ -54,8 +55,9 @@ class AnimateChannel(Channel.ChannelAsync):
 		Channel.ChannelAsync.do_hide(self)
 
 	def do_arm(self, node, same=0):
-		print 'AnimateChannel.do_arm',node.attrdict
-		print 'target node:',node.targetnode.attrdict
+		if debug:
+			print 'AnimateChannel.do_arm',node.attrdict
+			print 'target node:',node.targetnode.attrdict
 		parser = Animators.AnimateElementParser(node, node.targetnode)
 		self.__animator = parser.getAnimator()
 		if self.__animator:
@@ -71,7 +73,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		return 1
 
 	def do_play(self, node):
-		print 'AnimateChannel.do_play'
+		if debug: print 'AnimateChannel.do_play'
 		
 		if not self.__animator or not self.__targetchan or not self.__isattrsupported:
 			# arming failed, so don't even try playing
@@ -87,7 +89,7 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__startAnimate()
 
 	def stopplay(self, node):
-		print 'AnimateChannel.stopplay'
+		if debug: print 'AnimateChannel.stopplay'
 		if self.__animating is node and node is not None:
 			self.__stopAnimate()
 		self.__animating = None
@@ -108,12 +110,12 @@ class AnimateChannel(Channel.ChannelAsync):
 		if not self.__animating or not self.__animator:
 			return
 		# restore dom value
-		node = self.__animating
+		node = self.__animating.targetnode
 		attr = self.__animator.getAttrName()
 		val = self.__animator.getDOMValue()
 		if self.__targetchan:
 			self.__targetchan.updateattr(node, attr, val)
-		print 'stop animation, restoring dom value', self.__animator.getDOMValue()
+		if debug: print 'stop animation, restoring dom value', self.__animator.getDOMValue()
 
 	def __pauseAnimate(self, paused):
 		if self.__animating:
@@ -124,14 +126,16 @@ class AnimateChannel(Channel.ChannelAsync):
 
 	def __animate(self):
 		dt = time.time()-self.__start
-		node = self.__animating
+		node = self.__animating.targetnode
 		attr = self.__animator.getAttrName()
 		val = self.__animator.getValue(dt)
 		if node and self.__targetchan:
-			self.__targetchan.updateattr(node, attr, val)
-
-		msg = 'animating %s =' % self.__animator.getAttrName()
-		print msg, self.__animator.getValue(dt)
+			if self.__lastvalue != val:
+				self.__targetchan.updateattr(node, attr, val)
+				self.__lastvalue =val
+		if debug:
+			msg = 'animating %s =' % self.__animator.getAttrName()
+			print msg, self.__animator.getValue(dt)
 
 	def __onAnimateDur(self):
 		if not self.__animating:
