@@ -63,9 +63,9 @@ class _LayoutView2(GenFormView):
 		self[n[12]]=components.Button(self,grinsRC.IDC_LAYOUT_SENDBACK)
 		self[n[13]]=components.Button(self,grinsRC.IDC_LAYOUT_BRINGFRONT)
 		self[n[14]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_MEDIA_SEL)
-		self[n[15]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_VIEWPORT_CHECK)
-		self[n[16]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_REGION_CHECK)
-		self[n[17]]=components.ComboBox(self,grinsRC.IDC_LAYOUT_MEDIA_CHECK)
+		self[n[15]]=components.RadioButton(self,grinsRC.IDC_LAYOUT_VIEWPORT_RADIO)
+		self[n[16]]=components.RadioButton(self,grinsRC.IDC_LAYOUT_REGION_RADIO)
+		self[n[17]]=components.RadioButton(self,grinsRC.IDC_LAYOUT_MEDIA_RADIO)
 		
 		# Initialize control objects whose command are activable as well from menu bar
 		self[ATTRIBUTES]=components.Button(self,grinsRC.IDCMD_ATTRIBUTES)
