@@ -482,7 +482,7 @@ class SeqWidget(StructureObjWidget):
 #            print "Warning! free_width is less than 0.0!:", free_width
             free_width = 0.0
 
-        freewidth_per_child = free_width / len(self.children)      
+        freewidth_per_child = free_width / max(1, len(self.children))
 
         l = float(l) + self.get_relx(sizes_notime.HEDGSIZE) #+ self.get_relx(sizes_notime.HANDLESIZE);
         t = float(t) + self.get_rely(sizes_notime.VEDGSIZE)
@@ -577,8 +577,9 @@ class ImageBoxWidget(Widgets.Widget):
                     )
             except windowinterface.error:
                 pass
-            displist.fgcolor(TEXTCOLOR)
-            displist.drawbox(box)
+            else:
+                displist.fgcolor(TEXTCOLOR)
+                displist.drawbox(box)
     
 class DropBoxWidget(ImageBoxWidget):
     # This is the stupid drop-box at the end of a sequence. Looks like a
@@ -1037,17 +1038,17 @@ class MediaWidget(MMNodeWidget):
         if image_filename != None:
             try:
                 box = displist.display_image_from_file(
-                    self.__get_image_filename(),
+                    image_filename,
                     center = 1,
                     # The coordinates should all be floating point numbers.
                     coordinates = (x+w/12, y+h/6, 5*(w/6), 4*(h/6)),
                     scale = -2
                     )
             except windowinterface.error:
-                pass;                   # Shouldn't I use another icon or something?
-
-            displist.fgcolor(TEXTCOLOR)
-            displist.drawbox(box)
+                pass                    # Shouldn't I use another icon or something?
+            else:
+                displist.fgcolor(TEXTCOLOR)
+                displist.drawbox(box)
 
         # Draw the name
         iconsizex = self.get_relx(16)
