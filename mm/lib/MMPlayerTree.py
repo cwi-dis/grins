@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import os
 import MMNode
 from ChannelMap import channelmap

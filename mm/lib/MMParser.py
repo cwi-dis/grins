@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Parser for CWI Multimedia Interchange Files (CMIF, extension .cmif)
 
 
