@@ -34,7 +34,7 @@ import grinsRC
 from DisplayList import DisplayList
 
 import win32mu
-import usercmd,wndusercmd,usercmdui
+import usercmd, usercmdui, wndusercmd
 
 # constants to select web browser control
 [IE_CONTROL, WEBSTER_CONTROL]=0, 1
@@ -527,16 +527,16 @@ class _CmifStructView(_CmifView):
 	# Response to left button double click
 	def onLButtonDblClk(self, params):
 		import usercmd, usercmdui
-		#self._parent.PostMessage(win32con.WM_COMMAND,usercmdui.INFO_UI.id)
+		#self._parent.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.INFO].id)
 		callAttr=0
 		for cmd in self._commandlist:
 			if cmd.__class__==usercmd.INFO:
-				self._parent.PostMessage(win32con.WM_COMMAND,usercmdui.INFO_UI.id)
+				self._parent.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.INFO].id)
 				return
 			if cmd.__class__==usercmd.ATTRIBUTES:
 				callAttr=1
 		if callAttr:
-			self._parent.PostMessage(win32con.WM_COMMAND,usercmdui.ATTRIBUTES_UI.id)
+			self._parent.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.ATTRIBUTES].id)
 
 
 	# Response to left button down
@@ -544,7 +544,7 @@ class _CmifStructView(_CmifView):
 		_CmifView.onLButtonDown(self, params)
 		if self._enableNodeDragDrop:
 			msgpos=win32mu.Win32Msg(params).pos()
-			self._parent.SendMessage(win32con.WM_COMMAND,usercmdui.COPY_UI.id)
+			self._parent.SendMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.COPY].id)
 			self.checkDragDrop(msgpos)
 		self._button_down=1
 	
@@ -584,9 +584,9 @@ class _CmifStructView(_CmifView):
 	def getpastecmd(self,kbdstate,pos):
 		# Ctrl key pressed
 		if kbdstate==9 or kbdstate==8:
-			return usercmdui.PASTE_BEFORE_UI
+			return usercmdui.class2ui[usercmd.PASTE_BEFORE]
 		else:
-			return usercmdui.PASTE_AFTER_UI
+			return usercmdui.class2ui[usercmd.PASTE_AFTER]
 							
 
 				
