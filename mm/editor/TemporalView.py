@@ -26,7 +26,6 @@ class TemporalView(TemporalViewDialog):
 
 		self.geodl = GeoWidget(self) # This is the basic graph of geometric primitives.
 		self.scene = None	# This is the collection of widgets which define the behaviour of the geo privs.
-		self.init_scene()
 
 	def destroy(self):
 		pass;
@@ -41,6 +40,7 @@ class TemporalView(TemporalViewDialog):
 			TemporalViewDialog.show(self)
 			return
 		self.showing = 1
+		self.init_scene()
 		title = 'Channel View (' + self.toplevel.basename + ')'
 		TemporalViewDialog.show(self)
 		self.recalc()
@@ -50,6 +50,8 @@ class TemporalView(TemporalViewDialog):
 		return self.showing
 
 	def init_scene(self):
+		if self.scene is not None:
+			self.scene.destroy()
 		self.scene = TimeCanvas(self.root, self)
 		self.scene.setup()
 		self.scene.set_display(self.geodl)
