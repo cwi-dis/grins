@@ -38,7 +38,9 @@ def create_MMNode_widget(node, root):
         print "Node appears to be a ", ntype
         return None
 
-class MMNodeWidget(Widgets.Widget):
+##############################################################################
+
+class MMNodeWidget(Widgets.Widget):     # Aka the old 'HierarchyView.Object', and the base class for a MMNode view.
     # View of a Node within the Hierarchy view
     def __init__(self, node, root):
         Widgets.Widget.__init__(self, root)
@@ -50,8 +52,50 @@ class MMNodeWidget(Widgets.Widget):
     def destroy(self):
         # Prevent cyclic dependancies.
         Widgets.Widget.destroy(self)
-        del self.node.views['struct_view']
-        self.node = None
+        if self.node:
+            del self.node.views['struct_view']
+            self.node = None
+#        else:
+#            print "DEBUG: I don't have a node to clean up!: ", self
+
+    #   
+    # These a fillers to make this behave like the old 'Object' class.
+    #
+    def select(self):
+        Widgets.Widget.select(self)
+
+    def deselect(self):
+        self.unselect()
+
+    def ishit(self, pos):
+        return self.is_hit(pos)
+
+    def cleanup(self):
+        self.destroy()
+
+    def set_infoicon(self, icon, msg=None):
+        # Sets the information icon to this icon.
+        # icon is a string, msg is a string.
+        self.node.infoicon = icon
+        self.node.errormessage = msg
+        self.root.draw()                # Should this be here?
+
+
+    def getlinkicon(self):
+        # Returns the icon to show for incoming and outgiong hyperlinks.
+ 		links = self.node.context.hyperlinks
+ 		is_src, is_dst = links.findnodelinks(self.node)
+ 		if is_src:
+ 			if is_dst:
+ 				return 'linksrcdst'
+ 			else:
+ 				return 'linksrc'
+ 		else:
+ 			if is_dst:
+ 				return 'linkdst'
+ 			else:
+ 				return ''
+
         
     #
     # Menu handling functions, aka callbacks.
@@ -61,8 +105,6 @@ class MMNodeWidget(Widgets.Widget):
 ##      import Help
 ##      Help.givehelp('Hierarchy_view')
 
-    def select(self):
-        Widgets.Widget.select(self)
 
     def expandcall(self):
         # 'Expand' the view of this node.
@@ -761,12 +803,22 @@ class MediaWidget(MMNodeWidget):
             displist.drawbox(box)
 
         # Draw the name
+        iconsizex = self.get_relx(16)
+        iconsizey = self.get_rely(16)
         displist.fgcolor(CTEXTCOLOR)
         displist.usefont(f_title)
         l,t,r,b = self.pos_rel
         b = t+self.get_rely(sizes_notime.TITLESIZE) + self.get_rely(sizes_notime.VEDGSIZE)
-#        l = l + self.get_relx(16)       # Maybe have an icon there soon.
+        if self.node.infoicon:
+            l = l + iconsizex       # Maybe have an icon there soon.
         displist.centerstring(l,t,r,b,self.name)
+
+        # Draw the icon before the name.
+        l,t,r,b = self.pos_rel
+        if self.node.infoicon:
+            displist.drawicon((l,t,iconsizex, iconsizey), self.node.infoicon)
+        elif self.root.show_links:
+            displist.drawicon((l,t,iconsizex, iconsizey), self.getlinkicon())                             
 
         # Draw the silly transitions.
         if self.root.transboxes:
@@ -796,6 +848,7 @@ class MediaWidget(MMNodeWidget):
                 f = MMurl.urlretrieve(url)[0]
             except IOError, arg:
 #                print "DEBUG: Could not load image!"
+                assert 0;               # where is this being called from?
                 self.root.set_infoicon('error', 'Cannot load image: %s'%`arg`)
         else:
             f = os.path.join(self.root.datadir, '%s.tiff'%channel_type)

@@ -64,6 +64,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.pushbackbars = features.H_VBANDWIDTH in features.feature_set 	# display download times as pushback bars on MediaWidgets.
 		self.dropbox = features.H_DROPBOX in features.feature_set	# display a drop area at the end of every node.
 		self.transboxes = features.H_TRANSITIONS in features.feature_set # display transitions
+		self.show_links = 1;	# Show HTML links??? I think.. -mjvdg.
 		self.sizes = sizes_notime
 		from cmif import findfile
 		self.datadir = findfile('GRiNS-Icons')
@@ -701,8 +702,6 @@ class HierarchyView(HierarchyViewDialog):
 
 	def copyfocus(self):
 		# Copies the node with focus to the clipboard.
-		import traceback
-		traceback.print_stack()
 		node = self.focusnode
 		if not node:
 			windowinterface.beep()
@@ -973,9 +972,6 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Copy node at position src to position dst
 	def copynode(self, dst, src):
-		import traceback
-		traceback.print_stack()
-		
 		xd, yd = dst
 		xs, ys = src
 		# Problem: dstobj will be an internal node.
@@ -1016,7 +1012,7 @@ class HierarchyView(HierarchyViewDialog):
 				if self.focusnode is srcnode: # The same node.
 					return;
 			else:
-				if destnode.children[-1] is srcnode:
+				if len(destnode.children)>0 and destnode.children[-1] is srcnode:
 					# The same node.
 					return
 
@@ -1044,9 +1040,10 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Clear the list of objects
    	def cleanup(self):
+		self.scene_graph.destroy()
+		self.focusobj = None
 		return
 	
-##	 	assert(0)
 ##		for obj in self.objects:
 ##			obj.cleanup()
 ##		self.objects = []
@@ -1180,7 +1177,8 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Find the object corresponding to the node
 	def whichobj(self, node):
-		assert 0		
+		print "DEBUG: you shouldn't call this function."
+		return node.views['struct_view']
 ##		for obj in self.objects:
 ##			if obj.node is node:
 ##				return obj
@@ -1188,7 +1186,10 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Select the given object, deselecting the previous focus
 	def setfocusobj(self, obj):
-		assert 0
+		print "DEBUG: you shouldn't call this function."
+		select_widget(obj)
+		return;
+
 ##		assert isinstance(obj, Widgets.Widget)
 
 ##		self.init_display()
@@ -1234,8 +1235,8 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Recursively position the boxes. Minimum sizes are already set, we may only have
 	# to extend them.
-	def makeboxes(self, list, node, box):
-		assert 0
+#	def makeboxes(self, list, node, box):
+#		assert 0
 
 ##		ntype = node.GetType()
 ##		left, top, right, bottom = box
