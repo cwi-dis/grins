@@ -1146,10 +1146,19 @@ CreateGraphBuilder(PyObject *self, PyObject *args)
 	return (PyObject *) obj;
 }
 
-static IBaseFilter* CreateDirectShowFilter(LPCTSTR strFilter)
+static IBaseFilter* CreateDirectShowFilter(LPCTSTR strFilter,LPCTSTR strCat)
 	{
 	static const GUID CLSID_ActiveMovieFilterClassManager =
 		{0x083863F1,0x70DE,0x11d0,{0xBD,0x40,0x00,0xA0,0xC9,0x11,0xCE,0x86}};
+
+	static const GUID CLSID_AudioRendererCategory =
+		{0xe0f158e1, 0xcb04, 0x11d0, {0xbd, 0x4e, 0x0, 0xa0, 0xc9, 0x11, 0xce, 0x86}};
+
+	const GUID *pGUID;
+	if(strCat && strCat[0] && strcmpi(strCat,"AudioRenderer")==0)
+		pGUID=&CLSID_AudioRendererCategory;
+	else
+		pGUID=&CLSID_ActiveMovieFilterClassManager;
 
 	HRESULT hr;
     ICreateDevEnum *pCreateDevEnum;
@@ -1165,7 +1174,7 @@ static IBaseFilter* CreateDirectShowFilter(LPCTSTR strFilter)
 
 
     IEnumMoniker *pEnMk;
-    hr = pCreateDevEnum->CreateClassEnumerator(CLSID_ActiveMovieFilterClassManager,&pEnMk,0);
+    hr = pCreateDevEnum->CreateClassEnumerator(*pGUID,&pEnMk,0);
     pCreateDevEnum->Release();
     if (hr != S_OK)
 		{
@@ -1233,7 +1242,7 @@ CreateFilter(PyObject *self, PyObject *args)
 	obj = newBaseFilterObject();
 	if (obj == NULL)
 		return NULL;
-	IBaseFilter *pFilter=CreateDirectShowFilter(psz);
+	IBaseFilter *pFilter=CreateDirectShowFilter(psz,"ActiveMovieFilter");
 	if (!pFilter) {
 		Py_DECREF(obj);
 		seterror("CreateFilter", S_OK);
