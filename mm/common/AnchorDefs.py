@@ -22,4 +22,5 @@ ATYPE_WHOLE  = 6	# Whole-node source anchor
 
 # whole-node (destination only) anchors types
 WholeAnchors = (ATYPE_DEST, ATYPE_AUTO, ATYPE_COMP, ATYPE_WHOLE)
-DestOnlyAnchors = (ATYPE_DEST, ATYPE_COMP)
+SourceAnchors = ATYPE_AUTO, ATYPE_NORMAL, ATYPE_PAUSE, ATYPE_ARGS, ATYPE_WHOLE
+DestinationAnchors = ATYPE_DEST, ATYPE_NORMAL, ATYPE_COMP, ATYPE_ARGS, ATYPE_WHOLE
