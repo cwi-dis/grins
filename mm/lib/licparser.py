@@ -157,9 +157,9 @@ def _decodelicense(str):
 	check = all[-1]
 	all = all[:-1]
 	if not len(all) in (4,5) or all[0] != 'A':
-		raise Error, "Invalid license"
+		raise Error, "This does not look like a license"
 	if _codecheckvalue(all) != _decodeint(check):
-		raise Error, "Invalid license"
+		raise Error, "Invalid license, possibly a typing error"
 	uniqid = _decodeint(all[1])
 	date = _decodedate(all[2])
 	features = _decodeint(all[3])
