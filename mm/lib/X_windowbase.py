@@ -130,31 +130,19 @@ class _Toplevel:
 		func, args = cb
 		if not callable(func):
 			raise error, 'callback function not callable'
-		id = Xt.AddTimeOut(int(sec * 1000), self._timer_callback, cb)
-## 		if sec <= 0.001:
-## 			self._immediate.append(id, cb)
+		id = _Timer()
+		tid = Xt.AddTimeOut(int(sec * 1000), id.cb, cb)
+		id.set(tid)
 		return id
 
 	def canceltimer(self, id):
 		if id is not None:
-			Xt.RemoveTimeOut(id)
-## 			for i in range(len(self._immediate)):
-## 				if self._immediate[i][0] == id:
-## 					del self._immediate[i]
-## 					break
-
-	def _timer_callback(self, client_data, id):
-		func, args = client_data
-## 		try:
-## 			self._immediate.remove(id, client_data)
-## 		except ValueError:
-## 			pass
-		apply(func, args)
-## 		while self._immediate:
-## 			id, (func, args) = self._immediate[0]
-## 			del self._immediate[0]
-## 			Xt.RemoveTimeOut(id)
-## 			apply(func, args)
+			tid = id.get()
+			if tid is not None:
+				Xt.RemoveTimeOut(tid)
+			else:
+				print 'canceltimer of bad timer'
+			id.destroy()
 
 	# file descriptor interface
 	def select_setcallback(self, fd, func, args, mask = ReadMask):
@@ -225,6 +213,21 @@ class _Toplevel:
 		    (g << self._green_shift) | \
 		    (b << self._blue_shift)
 		return c
+
+class _Timer:
+	def set(self, id):
+		self.__id = id
+
+	def get(self):
+		return self.__id
+
+	def destroy(self):
+		self.__id = None
+
+	def cb(self, client_data, id):
+		func, args = client_data
+		self.__id = None
+		apply(func, args)
 
 class _Window:
 	# Instances of this class represent top-level windows.  This
