@@ -10,7 +10,6 @@ class TopLevelDialog:
 			(FLAG_ALL, 'Play', PLAY),
 			(FLAG_ALL, 'Player', PLAYERVIEW),
 			(FLAG_ALL, 'Structure View', HIERARCHYVIEW),
-			(FLAG_PRO, 'Timeline View', CHANNELVIEW),
 			(FLAG_PRO, 'Layout View', LAYOUTVIEW),
 			(FLAG_PRO, 'Hyperlinks', LINKVIEW),
 			(FLAG_BOSTON, 'Custom tests', USERGROUPVIEW),

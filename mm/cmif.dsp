@@ -363,10 +363,6 @@ SOURCE=.\editor\win32\AttrEditDialog.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\editor\win32\ChannelViewDialog.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\editor\win32\HierarchyViewDialog.py
 # End Source File
 # Begin Source File
@@ -451,10 +447,6 @@ SOURCE=.\editor\mac\AttrEditDialog.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\editor\mac\ChannelViewDialog.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\editor\mac\HierarchyViewDialog.py
 # End Source File
 # Begin Source File
@@ -524,10 +516,6 @@ SOURCE=.\editor\motif\bandwidthbad.py
 # Begin Source File
 
 SOURCE=.\editor\motif\bandwidthgood.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\editor\motif\ChannelViewDialog.py
 # End Source File
 # Begin Source File
 
@@ -673,10 +661,6 @@ SOURCE=.\editor\AttrEdit.py
 # Begin Source File
 
 SOURCE=.\editor\BandwidthCompute.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\editor\ChannelView.py
 # End Source File
 # Begin Source File
 

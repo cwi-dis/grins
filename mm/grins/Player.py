@@ -29,7 +29,6 @@ class Player(PlayerCore, PlayerDialog):
 		self.channelnames = []
 		self.channels = {}
 		self.channeltypes = {}
-		self.sync_cv = 0
 		self.toplevel = toplevel
 		self.set_timer = toplevel.set_timer
 		self.timer_callback = self.scheduler.timer_callback

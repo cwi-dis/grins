@@ -1227,8 +1227,6 @@ class ChannelWindow(Channel):
 			top = self._player.toplevel
 			if top.hierarchyview is not None:
 				top.hierarchyview.globalsetfocus(node)
-			if top.channelview is not None:
-				top.channelview.globalsetfocus(node)
 		else:
 			windowinterface.showmessage('No node currently playing on %s'%self._name, mtype = 'warning', grab = 1, parent = self.window)
 

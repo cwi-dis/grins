@@ -72,7 +72,6 @@ class PlayerDialog:
 
 		if self.__ugroups:self.setusergroups()
 		if self.__channels:self.setchannels()
-		self.__window.set_toggle(SYNCCV, self.sync_cv)
 
 	def hide(self):
 		"""Hide the control panel."""

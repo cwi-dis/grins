@@ -198,7 +198,6 @@ MENUBAR=(
 			(FLAG_ALL, TOGGLE, 'Selection Only, Fixed', None, CORRECTLOCALTIMESCALE),
 			)),
 		(FLAG_CMIF, SEP,),
-		(FLAG_CMIF, TOGGLE, 'Timeline view follows player', None, SYNCCV),
 		)),
 
 	(FLAG_ALL, CASCADE, 'Windows', (
@@ -206,7 +205,6 @@ MENUBAR=(
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Player', '5', PLAYERVIEW),
 		(FLAG_ALL, ENTRY, 'Structure View', '6', HIERARCHYVIEW),
-		(FLAG_PRO, ENTRY, 'Timeline View', '7', CHANNELVIEW),
 		(FLAG_PRO, ENTRY, 'Layout View', '8', LAYOUTVIEW),
 		(FLAG_PRO, ENTRY, 'Hyperlinks', '9', LINKVIEW),
 		(FLAG_BOSTON, ENTRY, 'Custom Tests', '0', USERGROUPVIEW),

@@ -154,13 +154,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		
 		if not features.lightweight and not self.context.disableviews:
 			self.commandlist = self.commandlist + [
-				CHANNELVIEW(callback = (self.view_callback, (2,))),
 				LINKVIEW(callback = (self.view_callback, (3,))),
 				LAYOUTVIEW(callback = (self.view_callback, (4,))),
 				LAYOUTVIEW2(callback = (self.view_callback, (7, ))),
 				ASSETSVIEW(callback = (self.view_callback, (9, ))),
 				HIDE_LAYOUTVIEW2(callback = (self.hide_view_callback, (7, ))),
-				HIDE_CHANNELVIEW(callback = (self.hide_view_callback, (2,))),
 				HIDE_LINKVIEW(callback = (self.hide_view_callback, (3,))),
 				HIDE_LAYOUTVIEW(callback = (self.hide_view_callback, (4,))),
 				HIDE_USERGROUPVIEW(callback = (self.hide_view_callback, (5,))),
@@ -274,8 +272,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.hierarchyview.show()
 		if 'player' in defaultviews and self.player is not None:
 			self.player.show()
-		if 'channel' in defaultviews and self.channelview is not None:
-			self.channelview.show()
 		if 'transition' in defaultviews and self.transitionview is not None:
 			self.transitionview.show()
 		if 'layout' in defaultviews and self.layoutview is not None:
@@ -327,7 +323,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	#
 	def makeviews(self):
 		# Reads settings from features.py and loads whichever views are needed..
-		self.channelview = None
+		self.channelview = None	# XXX to be removed eventually
 		self.layoutview = None
 		self.ugroupview = None
 		self.player = None
@@ -365,10 +361,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					self.layoutview2 = LayoutView2.LayoutView2(self)
 			else:
 				self.layoutview2 = None
-
-		if features.CHANNEL_VIEW in features.feature_set:
-			import ChannelView
-			self.channelview = ChannelView.ChannelView(self)
 
 		if features.HYPERLINKS_VIEW in features.feature_set:
 			import LinkEdit

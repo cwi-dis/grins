@@ -45,7 +45,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.ignore_delays = 0
 		self.ignore_pauses = 0
 		self.pause_minidoc = 1
-		self.sync_cv = 1
 		self.toplevel = toplevel
 		self.curlayout = None
 		self.savecurlayout = None
@@ -63,7 +62,6 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			USERGROUPS(callback = self.usergroup_callback),
 			CHANNELS(callback = self.channel_callback),
 			SCHEDDUMP(callback = (self.scheduler.dump, ())),
-			SYNCCV(callback = (self.synccv_callback, ())),
 			MAGIC_PLAY(callback = (self.magic_play, ())),
 			]
 		play = PLAY(callback = (self.play_callback, ()))
@@ -343,12 +341,7 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			windowinterface.showmessage('No such channel: '+name)
 			return
 		ch.set_visible(onoff)
-		if self.toplevel.channelview is not None:
-			self.toplevel.channelview.channels_changed()
 		self.setchannel(name, onoff)
-
-	def synccv_callback(self):
-		self.sync_cv = (not self.sync_cv)
 
 	def showstate(self):
 		if not self.is_showing():

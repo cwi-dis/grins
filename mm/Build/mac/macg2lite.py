@@ -65,7 +65,6 @@ else:
 # xxxx macfreeze: path :::mmpython:producer:mac:bin
 #
 # Modules we specifically don't want for the light version:
-# macfreeze: exclude ChannelView
 # macfreeze: exclude LayoutView
 # macfreeze: exclude UsergroupView
 # macfreeze: exclude LinkEdit

@@ -23,7 +23,6 @@ class Struct: pass
 M_ALL = 1
 M_DANGLING = 2
 M_INTERESTING = 3
-M_TCFOCUS = 4
 M_BVFOCUS = 5
 M_RELATION = 6
 M_NONE = 7
@@ -56,16 +55,12 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 			[('All internal', (self.menu_callback, (self.left, M_ALL))),
 			 ('Dangling',
 			  (self.menu_callback, (self.left, M_DANGLING))),
-			 ('From Timeline view selection',
-			  (self.menu_callback, (self.left, M_TCFOCUS))),
 			 ('From Structure view selection',
 			  (self.menu_callback, (self.left, M_BVFOCUS))),
 			 ], self.left,
 			[('All internal', (self.menu_callback, (self.right, M_ALL))),
 			  ('Dangling',
 			   (self.menu_callback, (self.right, M_DANGLING))),
-			  ('From Timeline view selection',
-			   (self.menu_callback, (self.right, M_TCFOCUS))),
 			  ('From Structure view selection',
 			   (self.menu_callback, (self.right, M_BVFOCUS))),
 			  ('All related anchors',
@@ -505,8 +500,6 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 		top.setwaiting()
 		if top.hierarchyview is not None:
 			top.hierarchyview.globalsetfocus(node)
-		if top.channelview is not None:
-			top.channelview.globalsetfocus(node)
 
 	def menu_callback(self, str, ind):
 		self.addexternalsetsensitive(0)
@@ -520,12 +513,6 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 		elif ind == M_INTERESTING:
 			str.node = None
 			str.fillfunc = self.fill_interesting
-		elif ind == M_TCFOCUS:
-			str.node = self.GetChannelViewFocus()
-			if str.node is None:
-				str.fillfunc = self.fill_none
-			else:
-				str.fillfunc = self.fill_node
 		elif ind == M_BVFOCUS:
 			str.node = self.GetHierarchyViewFocus()
 			if str.node is None:
@@ -638,11 +625,6 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 		AttrEdit.showattreditor(self.toplevel, node, '.anchorlist')
 ##		import AnchorEdit
 ##		AnchorEdit.showanchoreditor(self.toplevel, node)
-
-	def GetChannelViewFocus(self):
-		if self.toplevel.channelview is None:
-			return None
-		return self.toplevel.channelview.getfocus()
 
 	def GetHierarchyViewFocus(self):
 		if self.toplevel.hierarchyview is None:

@@ -91,34 +91,6 @@ default_settings = {
 	'structure_focusright': (40, 40, 40),
 	'structure_focusbottom': (40, 40, 40),
 	'structure_dropcolor': (0, 0, 0),
-# ChannelView colors
-	'timeline_bgcolor': (150, 150, 150), # Light gray
-	'timeline_guttertop': (80, 80, 80),
-	'timeline_gutterbottom': (175, 175, 175),
-	'timeline_bordercolor': (75, 75, 75), # Dark gray
-	'timeline_channelcolor': (240, 240, 240), # Very light gray
-	'timeline_channeloffcolor': (160, 160, 160), # Darker gray
-	'timeline_nodecolor': (255,255,222),
-	'timeline_altnodecolor': (208, 182, 160),
-	'timeline_nodeoffcolor': (200, 200, 200), # CHANNELOFFCOLOR
-	'timeline_altnodeoffcolor': (160, 160, 160), # BGCOLOR
-	'timeline_arrowcolor': (0, 0, 255), # Blue
-	'timeline_textcolor': (0, 0, 0), # Black
-	'timeline_focuscolor': (255, 0, 0), # Red (for sync arcs only now)
-	'timeline_lockedcolor': (200, 255, 0), # Yellowish green
-	'timeline_anchorcolor': (255, 127, 0), # Orange/pinkish
-	# Focus color assignments (from light to dark gray)
-	'timeline_focusleft': (200, 200, 200),
-	'timeline_focustop': (200, 200, 200),
-	'timeline_focusright': (40, 40, 40),
-	'timeline_focusbottom': (40, 40, 40),
-	# Arm colors
-	'timeline_armactivecolor': (255, 255, 0),
-	'timeline_arminactivecolor': (255, 200, 0),
-	'timeline_armerrorcolor': (255, 0, 0),
-	'timeline_playactivecolor': (0, 255, 0),
-	'timeline_playinactivecolor': (0, 127, 0),
-	'timeline_playerrorcolor': (255, 0, 0),
 	# Locations on the net
 	'templatedir_url': 'http://www.oratrix.com/indir/images',
 	'defaultviews' : ['hierarchy'],	# Default views to open

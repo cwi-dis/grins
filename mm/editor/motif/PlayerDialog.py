@@ -33,7 +33,6 @@ class PlayerDialog(PlayerDialogBase):
 			(FLAG_BOSTON, 'Custom tests', USERGROUPS),
 			(FLAG_CMIF, 'Channels', CHANNELS),
 			(FLAG_ALL|FLAG_DBG, 'View', [
-				(FLAG_CMIF, 'Timeline view follows player', SYNCCV, 't'),
 				(FLAG_ALL|FLAG_DBG, 'Dump scheduler data', SCHEDDUMP),
 				]),
 			],
@@ -53,7 +52,6 @@ class PlayerDialog(PlayerDialogBase):
 
 	def show(self, subwindowof=None):
 		PlayerDialogBase.show(self, subwindowof)
-		self._window.set_toggle(SYNCCV, self.sync_cv)
 
 	def get_adornments(self, channel):
 		self.adornments2['flags'] = curflags()

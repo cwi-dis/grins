@@ -130,7 +130,6 @@ CommandUI(CLOSE,IDUC_CLOSE)
 #
 CommandUI(PLAYERVIEW, IDUC_PLAYER)
 CommandUI(HIERARCHYVIEW, IDUC_HVIEW)
-CommandUI(CHANNELVIEW, IDUC_CVIEW)
 CommandUI(LAYOUTVIEW, IDUC_LAYOUT)
 
 
@@ -203,5 +202,3 @@ def addui(cmdmod):
 import usercmd, wndusercmd
 addui(usercmd)
 addui(wndusercmd)
-
- 
