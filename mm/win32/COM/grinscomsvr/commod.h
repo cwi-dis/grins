@@ -64,7 +64,8 @@ class GRiNSPlayerComModule
 		{GRiNSPlayerAutoAdviceClosePeerWnd(docid, wndid);}
 	void adviceSetCursor(int id, char *cursor){GRiNSPlayerAutoAdviceSetCursor(id, cursor);}
 	void adviceSetDur(int id, double dur){GRiNSPlayerAutoAdviceSetDur(id, dur);}
-	
+	void adviceSetFrameRate(int id, int fr){GRiNSPlayerAutoAdviceSetFrameRate(id, fr);}
+
 	private:
 	IClassFactory *m_pIFactory;
 	DWORD m_dwRegID;	
