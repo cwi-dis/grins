@@ -19,6 +19,7 @@ class rtpool:
 
 	def enter(self, ev):
 		bisect.insort(self.pool, ev)
+		return ev
 
 	# The original version of the code: sorts by duration only
 	def XXX_enter(self, ev):
