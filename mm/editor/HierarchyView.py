@@ -249,13 +249,13 @@ class HierarchyView(ViewDialog):
 		if node is None:
 			windowinterface.showmessage(
 				'There is no focus to insert to',
-				type = 'error')
+				mtype = 'error')
 			return
 		parent = node.GetParent()
 		if parent is None and where <> 0:
 			windowinterface.showmessage(
 				"Can't insert before/after the root",
-				type = 'error')
+				mtype = 'error')
 			return
 		self.toplevel.setwaiting()
 		type = node.GetType()
@@ -274,13 +274,13 @@ class HierarchyView(ViewDialog):
 		if node is None:
 			windowinterface.showmessage(
 				'There is no focus to insert at',
-				type = 'error')
+				mtype = 'error')
 			return
 		parent = node.GetParent()
 		if parent is None:
 			windowinterface.showmessage(
 				"Can't insert above the root",
-				type = 'error')
+				mtype = 'error')
 			return
 		em = self.editmgr
 		if not em.transaction():
@@ -304,12 +304,12 @@ class HierarchyView(ViewDialog):
 		if type <> 'node' or node is None:
 			windowinterface.showmessage(
 			    'The clipboard does not contain a node to paste',
-			    type = 'error')
+			    mtype = 'error')
 			return
 		if self.focusnode is None:
 			windowinterface.showmessage(
 				'There is no focus to paste to',
-				type = 'error')
+				mtype = 'error')
 			return
 		self.toplevel.setwaiting()
 		if node.context is not self.root.context:
@@ -326,13 +326,13 @@ class HierarchyView(ViewDialog):
 			if parent is None:
 				windowinterface.showmessage(
 					"Can't insert before/after the root",
-					type = 'error')
+					mtype = 'error')
 				node.Destroy()
 				return 0
 		elif where == 0:
 		    if self.focusnode.GetType() not in MMNode.interiortypes:
 			windowinterface.showmessage('Focus is a leaf node!',
-						    type = 'error')
+						    mtype = 'error')
 			node.Destroy()
 			return 0
 		em = self.editmgr
