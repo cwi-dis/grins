@@ -928,6 +928,7 @@ class AttrEditor(AttrEditorDialog):
 	def __open_dialog(self, initattr):
 		import settings
 		import compatibility
+		import flags
 		wrapper = self.wrapper
 		list = []
 		allnamelist = wrapper.attrnames()
@@ -937,17 +938,12 @@ class AttrEditor(AttrEditorDialog):
 			cmif = settings.get('cmif')
 		else:
 			cmif = 0
+		curflags = flags.curflags()
 		for name in allnamelist:
-			from flags import curflags
 			fl = wrapper.getdef(name)[6]
-			if fl & curflags() == 0:
-				continue
-#			if flags != 'light':
-#				if lightweight or \
-#				   (not cmif and flags == 'cmif'):
-#					continue
-			namelist.append(name)
-			
+			if fl & curflags:
+				namelist.append(name)
+
 		self.__namelist = namelist
 		initattrinst = None
 		for i in range(len(namelist)):
