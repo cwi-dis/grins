@@ -236,7 +236,7 @@ class EventStruct:
 			return self.cause
 	def set_cause(self, newcause):
 		assert newcause in CAUSES
-		if newcause == 'node' and not isinstance(self._syncarc.srcnode, MMNode.MMNode):
+		if newcause == 'node' and not self.has_node():
 			# Then a node is required
 			return
 		elif newcause in ['node', 'delay', 'accesskey']:
@@ -249,6 +249,11 @@ class EventStruct:
 			self.set_event('topLayoutOpenEvent')
 			self.set_offset(0)
 		self._setcause = newcause
+	def has_node(self):
+		if isinstance(self._syncarc.srcnode, MMNode.MMNode):
+			return 1
+		else:
+			return 0
 	def get_event(self):
 		# Only return the element which is in EVENTS_whatever list.
 		if self._setevent:
@@ -415,6 +420,8 @@ class EventStruct:
 		if self._setnode:
 			return self._setnode
 		else:
+			if not self._syncarc.srcnode:
+				return None
 			n = self._syncarc.srcnode.name
 			return n
 
