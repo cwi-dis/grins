@@ -75,7 +75,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.errormsg(node, '%s: Not a movie' % file)
 			return 1
 		try:
-			self.armed_movie = movie = mv.OpenFile(f, mv.MV_MPEG1_PRESCAN_OFF)
+			self.armed_movie = movie = mv.OpenFile(f, 0)
 		except mv.error, msg:
 			self.errormsg(node, '%s: %s' % (file, msg))
 			return 1
