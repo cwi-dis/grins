@@ -9,6 +9,7 @@ import sys
 import windowinterface
 import urllib, MMurl
 import Htmlex, win32con, win32api, cmifex
+import os
 #from TextChannel import getfont, mapfont
 
 
@@ -71,7 +72,7 @@ class HtmlChannel(Channel.ChannelWindow):
 
 	def _stop(self, params):
 		print 'Entering stop handler..'
-		CMIFDIR = os.environ["CMIFPATH"]
+		CMIFDIR = os.environ["CMIF"]
 		Htmlex.RetrieveUrl(self.window._hWnd, CMIFDIR+'\\tmp.htm')
 
 	def do_arm(self, node, same=0):
@@ -128,7 +129,7 @@ class HtmlChannel(Channel.ChannelWindow):
 
 	def getstring(self, node):
 		if node.type == 'imm':
-			DIR = win32api.RegQueryValue(win32con.HKEY_LOCAL_MACHINE, "Software\\Chameleon\\CmifPath")
+			DIR = os.environ['CMIF']
 			fp = open(DIR+"\\imm.htm"+`self._name`, 'wb')
 			str1 = string.joinfields(node.GetValues(), '\n')
 			fp.write(str1)
