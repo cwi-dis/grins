@@ -129,6 +129,7 @@
 #define IDCMD_DELETE_GROUP              1105
 #define IDCMD_CLOSE_USERGROUPVIEW       1106
 #define IDC_CHECK3                      1107
+#define IDC_CHECK4                      1108
 #define IDC_EDIT                        1110
 #define IDC_CUSTOM1                     1113
 #define ID_FILE_NEW_GRINS               32771
@@ -176,7 +177,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        239
 #define _APS_NEXT_COMMAND_VALUE         32827
-#define _APS_NEXT_CONTROL_VALUE         1114
+#define _APS_NEXT_CONTROL_VALUE         1117
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
