@@ -77,9 +77,16 @@ PlayerObject::~PlayerObject()
 		pContext->m_pClientSink->SetPyAdviceSink(NULL);
 		pContext->m_pErrorSink->SetPyErrorSink(NULL);
 		}
+
+#ifdef _WIN32
+	Py_BEGIN_ALLOW_THREADS
+#endif
 	if (pPlayer)
 		pPlayer->Stop();
 	ReleaseObjects();
+#ifdef _WIN32
+	Py_END_ALLOW_THREADS
+#endif
 }
 
 PyObject *PlayerObject::CreateInstance(PyObject *engine, PyObject *args)
