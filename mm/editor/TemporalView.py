@@ -77,6 +77,10 @@ class TemporalView(TemporalViewDialog):
 	def recalc(self):
 		self.scene.recalc()
 
+	def get_geometry(self):
+		# (?!) called when this window is saved.
+		self.last_geometry = self.geodl.getgeometry()
+
 ######################################################################
 		# Selection management.
 
