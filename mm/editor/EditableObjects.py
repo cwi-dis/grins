@@ -376,14 +376,43 @@ class EditableMMNode(MMNode.MMNode):
 		
 	def copypropertiescall(self):
 		if not hasattr(windowinterface, 'mmultchoice'):
+			windowinterface.beep()
 			return
-		attrlist = ['foo', 'bar', 'bletch']
-		defattrlist = ['foo', 'bletch']
+		attrlist = self.getattrnames()
+		defattrlist = attrlist[:]
+		# Remove ones we don't normally copy
+		if 'name' in defattrlist:
+			defattrlist.remove('name')
 		copylist = windowinterface.mmultchoice('Select properties to copy', attrlist, defattrlist)
-		print copylist
+		if not copylist: return
+		dict = {}
+		for k in copylist:
+			dict[k] = self.attrdict[k]
+		# XXXX Clear clip
+		self.context.editmgr.setclip('properties', dict)
 
-	def pasteproperties(self):
-		return
+	def pastepropertiescall(self):
+		em = self.context.editmgr
+		tp, clipvalue = em.getclip()
+		if tp != 'properties':
+			windowinterface.beep()
+			return
+		allowedlist = self.getallattrnames()
+		allowed = {}
+		for k in allowedlist:
+			allowed[k] = 1
+		prop = {}
+		for k, v in clipvalue.items():
+			if allowed.has_key(k):
+				prop[k] = v
+		if not prop:
+			windowinterface.beep()
+			return
+		if not em.transaction():
+			return
+		for k, v in prop.items():
+			em.setnodeattr(self, k, v)
+		em.commit()
 		
 	def take(self, othernode, index):
 		print "DEBUG: take"
