@@ -1,0 +1,34 @@
+=================================================================
+             ImageGear DLL Release Notes
+=================================================================
+
+Welcome to ImageGear DLL 6.0's Release Notes!
+
+=================================================================
+THE FOLLOWING FEATURES ARE NEW TO THIS RELEASE OF IMAGEGEAR:
+=================================================================
+SAMPLES:
+========
+3 MFC Samples (ProGold platform only)
+
+FUNCTIONS:
+==========
+IG_IP_arithmetic
+IG_IP_color_combine
+IG_IP_color_separate
+IG_IP_merge
+IG_IP_pseudocolor_limits
+IG_IP_pseudocolor_small_grads
+
+NEW FUNCTION CALLING SEQUENCES:
+===============================
+none
+
+FUNCTION THAT HAVE CHANGED:
+===========================
+none
+
+FORMAT-INFO DOS EXECUTABLES:
+==============================
+none
+
