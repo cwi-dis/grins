@@ -3,6 +3,8 @@ __version__ = "$Id$"
 # Features for GRiNS for SMIL 1.0, pro version
 
 from compatibility import *
+from FeatureSet import *
+feature_set = [];
 
 #
 version = ""                            # I'm not sure here - mjvdg.

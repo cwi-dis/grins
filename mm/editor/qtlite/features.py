@@ -3,6 +3,7 @@ __version__ = "$Id$"
 # Features for GRiNS for QT, lite version
 
 from compatibility import *
+from FeatureSet import *
 import sys
 
 #
