@@ -262,25 +262,55 @@ class AnimationData:
 		animateMotionValues, animateWidthValues,\
 		animateHeightValues, animateColorValues = self._dataToValues()
 		
+		dur = 1.0
+		accumulate = 'none'
+		additive = 'replace'
+		times = self._times
+
 		# animateMotion
 		path = svgpath.Path()
 		coords = animateMotionValues
 		path.constructFromPoints(coords)
 		attr = 'position'
 		domval = complex(self._domrect[0],self._domrect[1])
-		dur = 1
-		mode = 'linear'
-		times = self._times
+		mode = 'paced'
 		splines = None
-		accumulate = 'none'
-		additive = 'none'
 		self._animateMotion = Animators.MotionAnimator(attr, domval, path, dur, mode, times, splines, accumulate, additive)
+		
+		# animate width and height
+		self._animateWidth = Animators.Animator('width', self._domrect[2], animateWidthValues, dur, mode='linear', times=times)
+		self._animateHeight = Animators.Animator('height', self._domrect[3], animateHeightValues, dur, mode='linear', times=times)
+
+		# animate color
+		try:
+			self._animateColor = Animators.ColorAnimator('backgroundColor', self._domcolor, animateColorValues, dur, mode='linear', times=times)
+		except:
+			self._animateColor = None
+
+	def getRectAt(self, keyTime):
+		x, y = self.getPosAt(keyTime)
+		return x, y, self.getWidthAt(keyTime), self.getHeightAt(keyTime)
+
+	def getColorAt(self, keyTime):
+		if self._animateColor is not None:
+			return self._animateColor.getValue(keyTime)
+		return self._domcolor
 
 	def getPosAt(self, keyTime):
 		if self._animateMotion is not None:
 			z = self._animateMotion.getValue(keyTime)
 			return self._animateMotion.convert(z)
 		return self._domrect[:2]
+
+	def getWidthAt(self, keyTime):
+		if self._animateWidth is not None:
+			return self._animateWidth.getValue(keyTime)
+		return self._domrect[2]
+
+	def getHeightAt(self, keyTime):
+		if self._animateHeight is not None:
+			return self._animateHeight.getValue(keyTime)
+		return self._domrect[3]
 
 	#
 	#  private
