@@ -612,7 +612,10 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 	# Response to resizing		
 	def onSize(self,params):
 		msg=win32mu.Win32Msg(params)
-		if msg.minimized(): return
+		if msg.minimized():
+			self.setMDIChildWndsMinimizedFlag(1)
+			return
+		self.setMDIChildWndsMinimizedFlag(0)
 		self.RecalcLayout()
 		self._rect=self._canvas=0,0,msg.width(),msg.height()
 		MDIFrameWnd.wndismax=msg.maximized()
@@ -630,7 +633,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		x, y, w, h = coords
 		x,y,w,h = sysmetrics.to_pixels(x,y,w,h,units)
 		rc = x, y, x+w, y+h
-		#l,t,r,b=self.CalcWindowRect(rc,0)
+		#l,t,r,b = self.CalcWindowRect(rc, 0)
 		#w=r-l+2*cxframe+4
 		#h=b-t+3*cycaption+16+4
 		self.RecalcLayout()
@@ -1074,6 +1077,18 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 			else: break
 		return count
 
+	def setMDIChildWndsMinimizedFlag(self, flag):
+		currentChild=None
+		while 1:
+			currentChild = self.getNextMDIChildWnd(currentChild)
+			if currentChild:
+				if hasattr(currentChild, 'SetMinimizedFlag'):
+					currentChild.SetMinimizedFlag(flag)
+				else:
+					currentChild._isminimized = flag
+			else: 
+				break
+
 	# Returns the next child
 	def getNextMDIChildWnd(self,currentChild=None):
 		client=self.GetMDIClient()
@@ -1320,6 +1335,10 @@ class ChildFrame(window.MDIChildWnd):
 	def OnUpdateCmdDissable(self,cmdui):
 		cmdui.Enable(0)
 
+	def SetMinimizedFlag(self, flag):
+		self._isminimized = flag
+		if self._view:
+			self._view._isminimized = flag
 
 #########################
 from GenView import GenView
@@ -1365,3 +1384,8 @@ class SplitterBrowserChildFrame(ChildFrame):
 			self._view.OnClose()
 		else:
 			self.DestroyWindow()
+
+	def SetMinimizedFlag(self, flag):
+		self._isminimized = flag
+		if self._view:
+			self._view._isminimized = flag

@@ -38,8 +38,9 @@ class _StructView(DisplayListView):
 			self._dropmap['Tool']=(self.dragtool, self.droptool)
 			self._dropmap['NodeUID']=(self.dragnodeuid, self.dropnodeuid)
 			self._dragging = None
-
+		self._bmp = None
 		self._tooltip = None
+		self._isminimized = 0
 
 	def OnCreate(self,params):
 		DisplayListView.OnCreate(self,params)
@@ -49,6 +50,7 @@ class _StructView(DisplayListView):
 		frame=self.GetParent().GetMDIFrame()
 		frame.HookCommand(self.OnPasteFile,id)
 		frame.HookCommandUpdate(self.OnUpdateEditPaste,id)
+		self.GetParent().HookMessage(self.onParentSize, win32con.WM_SIZE)
 
 ##		import components
 ##		tooltip = components.Tooltip(parent = self, id = 0)
@@ -61,23 +63,47 @@ class _StructView(DisplayListView):
 		if self._tooltip is not None:
 			self._tooltip.destroy()
 			self._tooltip = None
+		if self._bmp is not None:
+			self._bmp.DeleteObject()
+			self._bmp = None
+
+	def onParentSize(self, params):
+		msg = win32mu.Win32Msg(params)
+		if msg.minimized():
+			self._isminimized = 1
+			return
+		self._isminimized = 0
+		if self._bmp is not None:
+			self._bmp.DeleteObject()
+			self._bmp = None
+		self._bmp = win32ui.CreateBitmap()
+		try:
+			dc = self.GetDC()
+			self._bmp.CreateCompatibleBitmap(dc, msg.width(),msg.height())
+			dc.DeleteDC()
+		except:
+			pass
 
 	def PaintOn(self,dc):
+		if self._isminimized:
+			return
+
 		# only paint the rect that needs repainting
 		rect=win32mu.Rect(dc.GetClipBox())
 
 		# draw to offscreen bitmap for fast looking repaints
-		dcc=dc.CreateCompatibleDC()
+		dcc = dc.CreateCompatibleDC()
 
-		bmp=win32ui.CreateBitmap()
-		bmp.CreateCompatibleBitmap(dc,rect.width(),rect.height())
+		if self._bmp is None:
+			self._bmp = win32ui.CreateBitmap()
+			self._bmp.CreateCompatibleBitmap(dc, rect.width(), rect.height())
 		
 		# called by win32ui
 		#self.OnPrepareDC(dcc)
 		
 		# offset origin more because bitmap is just piece of the whole drawing
 		dcc.OffsetViewportOrg((-rect.left, -rect.top))
-		oldBitmap = dcc.SelectObject(bmp)
+		oldBitmap = dcc.SelectObject(self._bmp)
 		dcc.SetBrushOrg((rect.left % 8, rect.top % 8))
 		dcc.IntersectClipRect(rect.ltrb_tuple())
 
@@ -99,7 +125,6 @@ class _StructView(DisplayListView):
 		# clean up
 		dcc.SelectObject(oldBitmap)
 		dcc.DeleteDC()
-		del bmp
 
 	def OnEraseBkgnd(self,dc):
 		return 1

@@ -34,6 +34,7 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 
 		self._viewport = None
 		self._ddmsgs = 0
+		self._isminimized = 0
 
 	def init(self, rc, title='View', units= UNIT_MM, adornments=None, canvassize=None, commandlist=None, bgcolor=None):
 		DisplayListView.init(self, rc, title=title, units=units, adornments=adornments, canvassize=canvassize,
@@ -53,6 +54,7 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 
 	def OnCreate(self,params):
 		DisplayListView.OnCreate(self, params)
+		self.GetParent().HookMessage(self.onParentSize, win32con.WM_SIZE)
 
 	def OnDestroy(self, msg):		
 		if self._usesLightSubWindows:
@@ -75,10 +77,20 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		if self._canclose:
 			DisplayListView.close(self)
 	
+	def onParentSize(self, params):
+		msg=win32mu.Win32Msg(params)
+		if msg.minimized(): 
+			self._isminimized = 1
+			return
+		self._isminimized = 0
+		
 	# The response of the view for the WM_SIZE (Resize) message						
 	def onSize(self,params):
 		msg=win32mu.Win32Msg(params)
-		if msg.minimized(): return
+		if msg.minimized(): 
+			self._isminimized = 1
+			return
+		self._isminimized = 0
 
 		# This historic function does not need to be
 		# called since the channels are now destroyed
@@ -144,6 +156,8 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		self._viewport.onMouseMove(flags, point)
 
 	def OnEraseBkgnd(self,dc):
+		if self._isminimized:
+			return
 		if not self._usesLightSubWindows or not self._active_displist:
 			return DisplayListView.OnEraseBkgnd(self,dc)
 		win32mu.DrawRectangle(dc, self.GetClientRect(), self._bgcolor or (255, 255, 255))
@@ -157,6 +171,9 @@ class _PlayerView(DisplayListView, win32window.DDWndLayer):
 		return 0, 0, 0, 0
 		
 	def update(self, rc=None, exclwnd=None):
+		if self._isminimized:
+			return
+
 		if not self._ddraw or not self._frontBuffer or not self._backBuffer:
 			return
 		if not self.IsWindowVisible():
