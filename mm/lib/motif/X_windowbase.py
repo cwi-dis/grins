@@ -506,6 +506,7 @@ class _Window:
 		self._fgcolor = parent._fgcolor
 		self._cursor = parent._cursor
 		self._curcursor = ''
+		self._curpos = None
 		self._buttonregion = Xlib.CreateRegion()
 		self._callbacks = {}
 		self._accelerators = {}
@@ -661,7 +662,11 @@ class _Window:
 
 	def setcursor(self, cursor):
 		self._cursor = cursor
+		if cursor == '' and self._curpos is not None and \
+		   apply(self._buttonregion.PointInRegion, self._curpos):
+			cursor = 'hand'
 		_setcursor(self._form, cursor)
+		self._curcursor = cursor
 
 	def newdisplaylist(self, bgcolor = None):
 		if bgcolor is None:
@@ -1143,7 +1148,8 @@ class _Window:
 			func(arg, self, ResizeWindow, None)
 
 	def _motion_handler(self, form, client_data, event):
-		if self._buttonregion.PointInRegion(event.x, event.y):
+		x, y = self._curpos = event.x, event.y
+		if self._buttonregion.PointInRegion(x, y):
 			cursor = 'hand'
 		else:
 			cursor = self._cursor
