@@ -1,7 +1,7 @@
 #ifndef INC_WMPYRCB
 #define INC_WMPYRCB
 
-interface IWMPyReaderCallback: public IWMReaderCallback
+interface IWMPyReaderCallback: public IUnknown
 {
 	virtual HRESULT STDMETHODCALLTYPE SetListener( 
             /* [in] */		PyObject *pyobj) = 0;
@@ -14,6 +14,7 @@ interface IWMPyReaderCallback: public IWMReaderCallback
 };
 
 HRESULT STDMETHODCALLTYPE WMCreatePyReaderCallback(PyObject *pyobj, IWMPyReaderCallback **ppI);
+HRESULT STDMETHODCALLTYPE WMCreatePyReaderCallbackAdvanced(PyObject *pyobj, IWMPyReaderCallback **ppI);
 
 
 #endif  //INC_WMPYRCB
