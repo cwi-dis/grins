@@ -206,6 +206,7 @@ class Animator:
 			self._curvalue = self._accValue
 		else:
 			self._curvalue = v
+		return self._curvalue
 
 	# reset
 	def restart(self):
