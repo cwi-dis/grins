@@ -31,48 +31,50 @@ import WMEVENTS
 def ITEMrange(fr, to): return range(fr, to+1)
 # Dialog info
 from mw_resources import ID_DIALOG_NODEATTR
-if 1:
-	# Use the old dialog with the list on the left
-	DIALOG_USES_LIST=1
-else:
-	# Use the alternate dialog with the popup group
-	ID_DIALOG_NODEATTR = ID_DIALOG_NODEATTR + 1
-	DIALOG_USES_LIST=0
 
-ITEM_SELECT=1
-ITEM_INFO_DEFAULT_LABEL=2
-ITEM_INFO_L2=3
-ITEM_INFO_DEFAULT=4
-ITEM_INFO_HELP=5
-ITEM_RESET=6
+# Common items:
+ITEM_OK=1
+ITEM_CANCEL=2
+ITEM_APPLY=3
+ITEM_SELECT=4
 
-ITEM_CANCEL=7
-ITEM_RESTORE=8
-ITEM_APPLY=9
-ITEM_OK=10
+# Main group on righthandside
+ITEM_TABGROUP=5
+ITEM_HELPGROUP=6
+ITEM_HELP=7
+ITEM_DEFAULTGROUP=8
+ITEM_DEFAULT=9
+
+# Per-type items
+ITEM_1_GROUP=10			# String
+ITEM_1_STRING=11
+
+ITEM_2_GROUP=12			# Filename
+ITEM_2_STRING=13
+ITEM_2_BROWSE=14
+
+ITEM_3_GROUP=15			# Color
+ITEM_3_STRING=16
+ITEM_3_PICK=17
+
+ITEM_4_GROUP=18			# Option
+ITEM_4_MENU=19
+
 
 ITEM_BALLOONHELP=15
 
-ITEMLIST_COMMON=ITEMrange(ITEM_SELECT, ITEM_OK)+[ITEM_BALLOONHELP]
 
 # Variant items
-ITEM_STRING=11
-
-ITEM_FILE_BROWSE=12
-
-ITEM_OPTION=13
-
 ITEM_COLOR_SELECT=14
 
-ITEMLIST_NOTCOMMON=ITEMrange(ITEM_STRING, ITEM_COLOR_SELECT)
-ITEMLIST_STRING=[ITEM_STRING]
-ITEMLISTNOT_STRING=[ITEM_FILE_BROWSE, ITEM_OPTION, ITEM_COLOR_SELECT]
-ITEMLIST_OPTION=[ITEM_OPTION]
-ITEMLISTNOT_OPTION=[ITEM_FILE_BROWSE, ITEM_STRING, ITEM_COLOR_SELECT]
-ITEMLIST_FILE=[ITEM_STRING, ITEM_FILE_BROWSE]
-ITEMLISTNOT_FILE=[ITEM_OPTION, ITEM_COLOR_SELECT]
-ITEMLIST_COLOR=[ITEM_STRING, ITEM_COLOR_SELECT]
-ITEMLISTNOT_COLOR=[ITEM_OPTION, ITEM_FILE_BROWSE]
+ITEMLIST_STRING=[ITEM_1_GROUP]
+ITEMLISTNOT_STRING=[ITEM_2_GROUP, ITEM_3_GROUP, ITEM_4_GROUP]
+ITEMLIST_FILE=[ITEM_2_GROUP]
+ITEMLISTNOT_FILE=[ITEM_1_GROUP, ITEM_3_GROUP, ITEM_4_GROUP]
+ITEMLIST_COLOR=[ITEM_3_GROUP]
+ITEMLISTNOT_COLOR=[ITEM_1_GROUP, ITEM_2_GROUP, ITEM_4_GROUP]
+ITEMLIST_OPTION=[ITEM_4_GROUP]
+ITEMLISTNOT_OPTION=[ITEM_1_GROUP, ITEM_2_GROUP, ITEM_3_GROUP]
 
 ITEMLIST_ALL=ITEMrange(ITEM_SELECT, ITEM_BALLOONHELP)
 
@@ -92,221 +94,173 @@ class AttrEditorDialog(windowinterface.MACDialog):
 		windowinterface.MACDialog.__init__(self, title, ID_DIALOG_NODEATTR,
 				ITEMLIST_ALL, default=ITEM_OK, cancel=ITEM_CANCEL)
 
-		self._option = windowinterface.SelectWidget(self._dialog, ITEM_OPTION,
+		# XXXX This should go elsewhere
+		self._option = windowinterface.SelectWidget(self._dialog, ITEM_4_MENU,
 				[], None)
-
-		self._attrfields = attriblist[:]
-		self._cur_attrfield = None
-		browser_values = []
-		for a in self._attrfields:
-			label = a._createwidget(self)
-			browser_values.append(label)
-		if DIALOG_USES_LIST:
-			self._attrbrowser = self._window.ListWidget(ITEM_SELECT, browser_values)
-		else:
-			self._attrbrowser = windowinterface.SelectWidget(self._dialog,
-				ITEM_SELECT, browser_values)
-		if initattr:
-			num = self._attrfields.index(initattr)
-			self._selectattr(num)
-		else:
-			self._selectattr(0)
-			self._attrbrowser.setkeyboardfocus()
-
+		#
+		# Create the pages with the attributes, and the datastructures linking
+		# attributes and pages together
+		#
+		initpagenum = 0
+		self._attr_to_pageindex = {}
+		self._pages = []
+		for a in attriblist:
+			page = TabPage([a])
+			if a is initattr:
+				initpagenum = len(self._pages)
+			self._attr_to_pageindex[a] = len(self._pages)
+			self._pages.append(page)
+		self._cur_page = None
+		#
+		# Create the page browser data and select the initial page
+		#
+		pagenames = []
+		for a in self._pages:
+			label = a.createwidget(self)
+			pagenames.append(label)
+		self._pagebrowser = self._window.ListWidget(ITEM_SELECT, pagenames)
+		self._selectpage(initpagenum)
 
 		self.show()
-##		w = windowinterface.Window(title, resizable = 1,
-##				deleteCallback = (self.cancel_callback, ()))
-##		self.__window = w
-##		buttons = w.ButtonRow(
-##			[('Cancel', (self.cancel_callback, ())),
-##			 ('Restore', (self.restore_callback, ())),
-##			 ('Apply', (self.apply_callback, ())),
-##			 ('OK', (self.ok_callback, ())),
-##			 ],
-##			left = None, right = None, bottom = None, vertical = 0)
-##		sep = w.Separator(left = None, right = None, bottom = buttons)
-##		form = w.SubWindow(left = None, right = None, top = None,
-##				   bottom = sep)
-##		height = 1.0 / len(attriblist)
-##		helpb = rstb = wdg = None # "upstairs neighbors"
-##		self.__buttons = []
-##		for i in range(len(attriblist)):
-##			a = attriblist[i]
-##			bottom = (i + 1) *  height
-##			helpb = form.Button(a.getlabel(),
-##					    (a.help_callback, ()),
-##					    left = None, top = helpb,
-##					    right = 0.5, bottom = bottom)
-##			rstb = form.Button('Reset',
-##					   (a.reset_callback, ()),
-##					   right = None, top = rstb,
-##					   bottom = bottom)
-##			wdg = a._createwidget(self, form,
-##					      left = helpb, right = rstb,
-##					      top = wdg, bottom = bottom)
-##		w.show()
 
 	def close(self):
+		for p in self._pages:
+			p.close()
 		self._option.delete()
-		del self._attrbrowser
-		del self._attrfields
+		del self._pagebrowser
+		del self._pages
 		windowinterface.MACDialog.close(self)
 
 	def getcurattr(self):
-		return None
+		if not self._cur_page:
+			return None
+		return self._cur_page.getcurattr()
 
 	def setcurattr(self, attr):
-		pass
+		try:
+			num = self._attr_to_pageindex[attr]
+		except KeyError:
+			pass
+		self._selectpage(num)
 
 	def do_itemhit(self, item, event):
 		if item == ITEM_SELECT:
-			item = self._attrbrowser.getselect()
-			self._selectattr(item)
+			item = self._pagebrowser.getselect()
+			self._selectpage(item)
 			# We steal back the keyboard focus
-			self._attrbrowser.setkeyboardfocus()
-		elif item == ITEM_RESET:
-			if self._cur_attrfield:
-				self._cur_attrfield.reset_callback()
-		elif item == ITEM_STRING:
+			self._pagebrowser.setkeyboardfocus()
+##		elif item == ITEM_RESET:
+##			if self._cur_page:
+##				self._cur_page.reset_callback()
+		elif item in (ITEM_1_STRING, ITEM_2_STRING, ITEM_3_STRING):
 			pass
-		elif item == ITEM_FILE_BROWSE:
-			if self._cur_attrfield:
-				self._cur_attrfield.browser_callback()
-		elif item == ITEM_OPTION:
-			if self._cur_attrfield:
-				self._cur_attrfield._option_click()
-		elif item == ITEM_COLOR_SELECT:
-			if self._cur_attrfield:
-				self._cur_attrfield._select_color()
+		elif item == ITEM_2_BROWSE:
+			if self._cur_page:
+				self._cur_page.browser_callback()
+		elif item == ITEM_4_MENU:
+			if self._cur_page:
+				self._cur_page._option_click()
+		elif item == ITEM_3_PICK:
+			if self._cur_page:
+				self._cur_page._select_color()
 		elif item == ITEM_CANCEL:
 			self.cancel_callback()
 		elif item == ITEM_OK:
 			self.ok_callback()
-		elif item == ITEM_RESTORE:
-			self.restore_callback()
+##		elif item == ITEM_RESTORE:
+##			self.restore_callback()
 		elif item == ITEM_APPLY:
 			self.apply_callback()
 		else:
 			print 'Unknown NodeAttrDialog item', item, 'event', event
 		return 1
 
-	def _selectattr(self, item):
-		if self._cur_attrfield:
-			if item and self._cur_attrfield == self._attrfields[item]:
+	def _selectpage(self, item):
+		if self._cur_page:
+			if item and self._cur_page == self._pages[item]:
 				return
-			self._cur_attrfield._save()
+			self._cur_page.hide()
 		else:
 			if item == None:
 				return
-		self._cur_attrfield = None
+		self._cur_page = None
 
 		if item != None:
-			self._cur_attrfield = self._attrfields[item] # XXXX?
-			self._cur_attrfield._show()
-			self._attrbrowser.select(item)
+			self._cur_page = self._pages[item] # XXXX?
+			self._cur_page.show()
+			self._pagebrowser.select(item)
 
 
-	def _is_current(self, attrfield):
-		return (attrfield is self._cur_attrfield)
+	def _is_shown(self, attrfield):
+		"""Return true if this attr is currently being displayed"""
+		if not self._cur_page:
+			return 0
+		num = self._attr_to_pageindex[attrfield]
+		return (self._pages[num] is self._cur_page)
 
 	def showmessage(self, *args, **kw):
 		apply(windowinterface.showmessage, args, kw)
 
-	# Callback functions.  These functions should be supplied by
-	# the user of this class (i.e., the class that inherits from
-	# this class).
-	def cancel_callback(self):
-		pass
-
-	def restore_callback(self):
-		pass
-
-	def apply_callback(self):
-		pass
-
-	def ok_callback(self):
-		pass
+class TabPage:
+	"""The internal representation of a tab-page"""
+	def __init__(self, fieldlist):
+		self.fieldlist = fieldlist
+		
+	def close(self):
+		del self.fieldlist
+		
+	def createwidget(self, dialog):
+		for f in self.fieldlist:
+			name = f._createwidget(dialog)
+		return name 
+		
+	def show(self):
+		"""Called by the dialog when the page is shown. Show all
+		controls and update their values"""
+		for f in self.fieldlist:
+			f._show()
+			
+	def hide(self):
+		"""Called by the dialog when the page is hidden. Save values
+		and hide controls"""
+		for f in self.fieldlist:
+			f._save()
+			
+	def getcurattr(self):
+		"""Return our first attr, so it can be reshown after an apply"""
+		return self.fieldlist[0]
 
 class AttrEditorDialogField:
-	__type = None
+	
+##	def __init__(self):
+##		pass
 
 	def _createwidget(self, parent):
 		self.__parent = parent
-		t = self.gettype()
-		self.__type = t
 		label = self.getlabel()
 		self.__value = self.getcurrent()
 		return '%s' % label
 
-##	def _createwidget(self, parent, form, left, right, top, bottom):
-##		"""Create the widgets for this attribute.  (internal method)
-##
-##		Arguments (no defaults):
-##		parent -- instance of AttrEditorDialog
-##		form -- X_window widget of which we create a child widget
-##		left, right, bottom, top -- neighbors
-##		"""
-##		t = self.gettype()
-##		self.__type = t
-##		self.__parent = parent
-##		if t == 'option':
-##			# attribute value is one of a list of choices (option menu)
-##			list = self.getoptions()
-##			val = self.getcurrent()
-##			if val not in list:
-##				val = list[0]
-##			self.__list = list
-##			if len(list) > 30:
-##				# list too long for option menu
-##				self.__type = 'option-button'
-##				w = form.Button(val,
-##						(self.__option_callback, ()),
-##						left = left, right = right,
-##						bottom = bottom, top = top)
-##				self.__label = val
-##			else:
-##				self.__type = 'option-menu'
-##				w = form.OptionMenu(None, list,
-##						    list.index(val), None,
-##						    top = top, bottom = bottom,
-##						    left = left, right = right)
-##		elif t == 'file':
-##			w = form.SubWindow(top = top, bottom = bottom,
-##					   left = left, right = right)
-##			brwsr = w.Button('Browser...',
-##					 (self.browser_callback, ()),
-##					 top = None, bottom = None,
-##					 right = None)
-##			txt = w.TextInput(None, self.getcurrent(), None, None,
-##					  top = None, bottom = None,
-##					  left = None, right = brwsr)
-##			self.__text = txt
-##		else:
-##			w = form.TextInput(None, self.getcurrent(), None, None,
-##					   top = top, bottom = bottom,
-##					   left = left, right = right)
-##		self.__widget = w
-##		return w
-
 	def _save(self):
-		t = self.__type
-		if t == 'option':
+		if self.type == 'option':
 			self.__value = self.__parent._option.getselectvalue()
+		elif self.type == 'color':
+			self.__value =  self.__parent._getlabel(ITEM_3_STRING)
+		elif self.type == 'file':
+			self.__value =  self.__parent._getlabel(ITEM_2_STRING)
 		else:
-			self.__value =  self.__parent._getlabel(ITEM_STRING)
+			self.__value =  self.__parent._getlabel(ITEM_1_STRING)
 
 	def _show(self):
-		t = self.gettype()
 		value = self.__value
 		attrname, default, help = self.gethelpdata()
-		if t == 'file':
+		if self.type == 'file':
 			toshow=ITEMLIST_FILE
 			tohide=ITEMLISTNOT_FILE
-		elif t == 'color':
+		elif self.type == 'color':
 			toshow=ITEMLIST_COLOR
 			tohide=ITEMLISTNOT_COLOR
-		elif t == 'option':
+		elif self.type == 'option':
 			list = self.getoptions()
 			toshow=ITEMLIST_OPTION
 			tohide=ITEMLISTNOT_OPTION
@@ -314,33 +268,24 @@ class AttrEditorDialogField:
 			toshow=ITEMLIST_STRING
 			tohide=ITEMLISTNOT_STRING
 		if default is None:
-			tohide = tohide + [ITEM_INFO_DEFAULT, ITEM_INFO_DEFAULT_LABEL]
+			tohide = tohide + [ITEM_DEFAULTGROUP]
 		else:
-			toshow = toshow + [ITEM_INFO_DEFAULT, ITEM_INFO_DEFAULT_LABEL]
+			toshow = toshow + [ITEM_DEFAULTGROUP]
 		self.__parent._hideitemlist(tohide)
 		# It appears input fields have to be shown before
 		# values are inserted??!?
-		if ITEM_STRING in toshow:
-			self.__parent._showitemlist([ITEM_STRING])
-		if t == 'option':
-			list = self.getoptions()
-			if value in list:
-				value = list.index(value)
-			else:
-				value = None
-			self.__parent._option.setitems(list, value)
-		else:
-			self.__parent._setlabel(ITEM_STRING, value)
-			self.__parent._selectinputfield(ITEM_STRING)
-		if not default is None:
-			self.__parent._setlabel(ITEM_INFO_DEFAULT, default)
-		self.__parent._setlabel(ITEM_INFO_HELP, help)
+##		if ITEM_STRING in toshow:
+##			self.__parent._showitemlist([ITEM_STRING])
 		self.__parent._showitemlist(toshow)
+		self._dosetvalue(initialize=1)
+		if not default is None:
+			self.__parent._setlabel(ITEM_DEFAULT, default)
+		self.__parent._setlabel(ITEM_HELP, help)
+##		self.__parent._showitemlist(toshow)
 
 	def close(self):
 		"""Close the instance and free all resources."""
 		del self.__parent
-		del self.__type
 		del self.__value
 
 	def _option_click(self):
@@ -348,7 +293,7 @@ class AttrEditorDialogField:
 
 	def _select_color(self):
 		import ColorPicker
-		value = self.__parent._getlabel(ITEM_STRING)
+		value = self.__parent._getlabel(ITEM_3_STRING)
 		import string
 		rgb = string.split(string.strip(value))
 		if len(rgb) == 3:
@@ -371,18 +316,18 @@ class AttrEditorDialogField:
 		if ok:
 			r, g, b = color
 			value = "%d %d %d"%((r>>8), (g>>8), (b>>8))
-			self.__parent._setlabel(ITEM_STRING, value)
-			self.__parent._selectinputfield(ITEM_STRING)
+			self.__parent._setlabel(ITEM_3_STRING, value)
+			self.__parent._selectinputfield(ITEM_3_STRING)
 
 	def getvalue(self):
 		"""Return the current value of the attribute.
 
 		The return value is a string giving the current value.
 		"""
-		if self.__type is None:
+		if self.type is None:
 			return self.getcurrent()
-		if self.__parent._is_current(self):
-			self._save()
+		if self.__parent._is_shown(self):
+			self._save() # XXXX via parent
 		return self.__value
 
 	def setvalue(self, value):
@@ -392,23 +337,33 @@ class AttrEditorDialogField:
 		value -- string giving the new value
 		"""
 		self.__value = value
-		if not self.__parent._is_current(self):
-			return
-		t = self.__type
-		if t == 'option':
-			if not value:
-				value = self.__list[0]
-			self.__parent._option.select(value)
+		if self.__parent._is_shown(self):
+			self._dosetvalue() # XXXX via parent
+			
+	def _dosetvalue(self, initialize=0):
+		"""Update controls to self.__value"""
+		value = self.__value
+		if self.type == 'option':
+			if initialize:
+				list = self.getoptions()
+				self.__parent._option.setitems(list, value)
+			else:
+				self.__parent._option.select(value)
 		else:
-			print 'DBG setvalue', `value`
-			self.__parent._setlabel(ITEM_STRING, value)
-			self.__parent._selectinputfield(ITEM_STRING)
+			if self.type == 'color':
+				item = ITEM_3_STRING
+			elif self.type == 'file':
+				item = ITEM_2_STRING
+			else:
+				item = ITEM_1_STRING
+			self.__parent._setlabel(item, value)
+			self.__parent._selectinputfield(item)
 
 	def recalcoptions(self):
 		"""Recalculate the list of options and set the value."""
-		if not self.__parent._is_current(self):
+		if not self.__parent._is_shown(self):
 			return
-		if self.__type == 'option':
+		if self.type == 'option':
 			val = self.getcurrent()
 			list = self.getoptions()
 			self.__parent._option.setitems(list, val)
@@ -418,42 +373,3 @@ class AttrEditorDialogField:
 					    default,
 					    self.newchan_callback,
 					    cancelCallback = (self.newchan_callback, ()))
-
-	# Methods to be overridden by the sub class.
-	def gettype(self):
-		"""Return the type of the attribute as a string.
-
-		Valid types are:
-		option -- attribute value is one of a fixed set of
-			values
-		file -- attribute is a file name (an interface to a
-			file dialog is a good idea)
-		string -- attribute is a string
-		int -- attribute is a string representing an integer
-		float -- attribute is a string representing a float
-
-		`option' and `file' must be handled differently from
-		the others, the others can all be handled as a string.
-		An attribute field of type `option' must have a
-		getoptions method that returns a list of strings
-		giving all the possible values.
-		An attribute field of type `file' may invoke a
-		callback browser_callback that pops up a file browser.
-		"""
-		return 'type'
-
-	def getlabel(self):
-		"""Return the label for the attribute field."""
-		return 'Button Label'
-
-	def getcurrent(self):
-		"""Return the current value of the attribute as a string."""
-		return 'current value'
-
-	def reset_callback(self):
-		"""Callback called when the `Reset' button is pressed."""
-		pass
-
-	def help_callback(self):
-		"""Callback called when help is requested."""
-		pass
