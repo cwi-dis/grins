@@ -25,7 +25,10 @@ def ReadFileContext(filename, context):
 		return root
 	# no cache file, parse the file and create the cache (if possible)
 	root = ReadOpenFileContext(open(filename, 'r'), filename, context)
+	import MMWrite
+	MMWrite.fixroot(root)
 	MMCache.dumpcache(root, filename)
+	MMWrite.unfixroot(root)
 	return root
 
 
