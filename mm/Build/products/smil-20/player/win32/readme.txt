@@ -1,7 +1,7 @@
-GRiNS Player 2.0 Readme
+GRiNS Player 2.1 Readme
 =======================
 
-GRiNS Player 2.0 is a SMiL 2.0 player for the Macintosh and Windows
+GRiNS Player 2.1 is a SMIL 2.0 player for the Macintosh and Windows
 platforms.
 
 System Requirements
@@ -13,6 +13,9 @@ multiple audio channels so you may experience problems.
 
 This player will playback RealMedia items in your SMIL 2.0 presentation
 if you have also installed RealPlayer on your system.
+
+This player will also have full support for QuickTime media items in your
+presentation if you have also installed QuickTime.
 
 General Information
 -------------------
