@@ -6,6 +6,7 @@ import VCR
 import dialogs
 import VcrIndex
 import MMAttrdefs
+from AnchorDefs import *
 
 [V_NONE, V_SPR, V_SB, V_READY, V_PLAYING, V_ERROR] = range(6)
 
