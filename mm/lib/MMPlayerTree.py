@@ -8,6 +8,7 @@ import marshal
 from MMTypes import *
 from MMExc import *
 import MMAttrdefs
+import MMurl
 import Timing
 import Duration
 import SR
@@ -24,7 +25,7 @@ def ReadFile(filename):
 	except os.error:
 		raise error, 'cannot stat ' + filename
 	context = MMNode.MMNodeContext(MMNode.MMNode)
-	context.setdirname(os.path.dirname(filename))
+	context.setdirname(MMurl.pathname2url(os.path.dirname(filename)))
 	base = os.path.basename(filename)
 	cache = cachename(filename, cmpok=1)
 	try:
