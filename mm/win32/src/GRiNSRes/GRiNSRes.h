@@ -123,6 +123,7 @@
 #define IDC_APPLY                       1104
 #define IDCMD_DELETE_GROUP              1105
 #define IDCMD_CLOSE_USERGROUPVIEW       1106
+#define IDC_CHECK3                      1107
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -168,7 +169,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        232
 #define _APS_NEXT_COMMAND_VALUE         32826
-#define _APS_NEXT_CONTROL_VALUE         1107
+#define _APS_NEXT_CONTROL_VALUE         1108
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
