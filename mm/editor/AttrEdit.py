@@ -1044,7 +1044,7 @@ class RMTargetsAttrEditorField(PopupAttrEditorField):
 	# that here
 	__values = ['28k8 modem', '56k modem', 
 		'Single ISDN', 'Double ISDN', 'Cable modem', 'LAN']
-	__valuesmap = [0, 1, 2, 3, 4, 5]
+	__valuesmap = [1, 2, 4, 8, 16, 32]
 
 	# Choose from a list of unit types
 	def getoptions(self):
@@ -1053,13 +1053,18 @@ class RMTargetsAttrEditorField(PopupAttrEditorField):
 
 	def parsevalue(self, str):
 		if str == 'Default':
-			return None
+			return self.__valuesmap[0]
 		return self.__valuesmap[self.__values.index(str)]
 
 	def valuerepr(self, value):
 		if value is None:
 			return 'Default'
-		return self.__values[self.__valuesmap.index(value)]
+		str = self.__values[0]	# XXX use lowest as default
+		# XXX just the last one for now
+		for i in range(len(self.__valuesmap)):
+			if value & self.__valuesmap[i]:
+				str = self.__values[i]
+		return str
 
 class RMAudioAttrEditorField(PopupAttrEditorField):
 	__values = ['Voice', 'Voice and background music', 'Music (mono)', 'Music (stereo)']
