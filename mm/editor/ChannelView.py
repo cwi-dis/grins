@@ -2050,6 +2050,30 @@ class NodeBox(GO, NodeBoxCommand):
 					d.fgcolor((0,0,0))
 					d.drawbox(box)
 ##					print 'box', box
+		elif self.mother.thumbnails and \
+		     settings.get('RPthumbnails') and \
+		     thumb_w > 0 and thumb_h > 0 and \
+		     self.node.GetChannelType() == 'RealPix' and \
+		     hasattr(self.node, 'slideshow'):
+			import MMurl
+			start = 0
+			for attrs in self.node.slideshow.rp.tags:
+				start = start + attrs.get('start', 0)
+				if attrs.get('tag', 'fill') in ('fadein', 'crossfade', 'wipe') and attrs.get('file'):
+					x = self.mother.maptimes(self.node.t0+start, 0)[0]
+					try:
+						f = MMurl.urlretrieve(self.node.context.findurl(attrs.get('file')))[0]
+					except IOError:
+						pass
+					else:
+						clip = (l+xindent, t+yindent, r-l-2*xindent, b-t-2*yindent)
+						try:
+							box = d.display_image_from_file(f, center = 0, coordinates = (x+xindent, thumb_t, thumb_w, thumb_h), clip = clip)
+						except windowinterface.error:
+							pass
+						else:
+							d.fgcolor((0,0,0))
+							d.drawbox(box, clip = clip)
 
 		# Draw the name, centered in the box
 		d.fgcolor(TEXTCOLOR)
