@@ -8,7 +8,6 @@ import MMExc
 import TopLevel
 import SoundChannel
 import getopt
-import image
 
 def main():
 	playnow = 0
@@ -40,34 +39,10 @@ def main():
 		try:
 			SoundChannel.restore()
 		finally:
-			image.zapcache()
+			pass
 	#
 	if stats:
 		import MMNode
 		MMNode._prstats()
 
-
-# Special hack to enter an interactive debugger.
-# This only works if you use a special Python binary
-# (~guido/bin/sgi/python).
-#
-idebug = 0
-try:
-	1/0
-except ZeroDivisionError:
-	if sys.__dict__.has_key('exc_traceback'):
-		idebug = 1
-		import tb
-
-if not idebug:
-	main()
-else:
-	try:
-		main()
-	except:
-		if idebug:
-			msg = sys.exc_type + ': ' + `sys.exc_value`
-			print 'Exception:', msg
-			tb.printtb(sys.exc_traceback)
-			print 'Exception: ', msg
-			tb.browser(sys.exc_traceback)
+main()
