@@ -1478,3 +1478,5 @@ class FindDialog(ResDialog):
 		self.CreateWindow(self._parent)
 		self.ShowWindow(win32con.SW_SHOW)
 
+	def hide(self):
+		self.DestroyWindow()
