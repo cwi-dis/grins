@@ -580,6 +580,8 @@ class HierarchyView(HierarchyViewDialog):
 					node.SetAttr('start', minstart - start)
 			else:
 				node.SetAttr('tag', 'fill')
+			# and provide a default caption
+			node.SetAttr('caption', '<clear/>')
 		else:
 			node = self.root.context.newnode(type)
 		if url is not None:
