@@ -153,6 +153,12 @@ def convertimagefile(u, srcurl, dstdir, file, node):
 		# special-case code for JPEG images so that we don't loose info
 		rdr = imgjpeg.reader(f)
 		wt.copy(rdr)
+		if os.name == 'mac':
+			import macfs
+			import macostools
+			fss = macfs.FSSpec(fullpath)
+			fss.SetCreatorType('ogle', 'JPEG')
+			macostools.touched(fss)
 		return file
 	if sys.platform == 'win32':
 		import __main__
@@ -182,6 +188,12 @@ def convertimagefile(u, srcurl, dstdir, file, node):
 	wt.width = width
 	wt.height = height
 	wt.write(data)
+	if os.name == 'mac':
+		import macfs
+		import macostools
+		fss = macfs.FSSpec(fullpath)
+		fss.SetCreatorType('ogle', 'JPEG')
+		macostools.touched(fss)
 	return file
 
 def converttextfile(u, dstdir, file, node):
@@ -225,10 +237,14 @@ def converttextfile(u, dstdir, file, node):
 	return file
 
 
-def convertvideofile(u, srcurl, dstdir, file, node, progress = None):
-	import MMAttrdefs, MMurl
+def _win_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	global engine
+	import MMAttrdefs, MMurl
 	u.close()
+	try:
+		import dshow
+	except ImportError:
+		return
 	fin = MMurl.urlretrieve(srcurl)[0]
 	# ignore suggested extension and make our own
 	file = os.path.splitext(file)[0] + '.rm'
@@ -281,10 +297,6 @@ def convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 	cp.SetOutputFilename(fullpath)
 
 	# prepare filter graph
-	try:
-		import dshow
-	except ImportError:
-		return file
 	b = dshow.CreateGraphBuilder()
 	b.RenderFile(fin)
 	renderer=b.FindFilterByName('Video Renderer')
@@ -400,8 +412,22 @@ def convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 		mc.Stop()
 	
 	del b
-				
+		
+def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
+	u.close()
+	return
+	if os.name == 'mac':
+		import macfs
+		import macostools
+		fss = macfs.FSSpec(fullpath)
+		fss.SetCreatorType('PNst', 'PNRA')
+		macostools.touched(fss)
 	return file
+
+if sys.platform == 'win32':
+	convertvideofile = _win_convertvideofile
+else:
+	convertvideofile = _other_convertvideofile
 
 if producer is None:
 	# dummies if we can't import producer

@@ -1460,6 +1460,11 @@ class SMILWriter(SMIL):
 			if cfile:
 				self.files_generated[cfile] = 'b'
 				return cfile
+			msg = "Warning: cannot convert to RealAudio:\n%s\n\nUsing source material unconverted."%srcurl
+			if node:
+				node.set_infoicon('error', msg)
+			import windowinterface
+			windowinterface.showmessage(msg)
 			u = MMurl.urlopen(srcurl)
 		if u.headers.maintype == 'video' and \
 		   string.find(u.headers.subtype, 'real') < 0:
@@ -1475,6 +1480,11 @@ class SMILWriter(SMIL):
 			if cfile:
 				self.files_generated[cfile] = 'b'
 				return cfile
+			msg = "Warning: cannot convert to RealVideo:\n%s\n\nUsing source material unconverted."%srcurl
+			if node:
+				node.set_infoicon('error', msg)
+			import windowinterface
+			windowinterface.showmessage(msg)
 			u = MMurl.urlopen(srcurl)
 		if u.headers.maintype == 'image':
 			from realconvert import convertimagefile
@@ -1486,6 +1496,11 @@ class SMILWriter(SMIL):
 			if cfile:
 				self.files_generated[cfile] = 'b'
 				return cfile
+			msg = "Warning: cannot convert to Real JPEG:\n%s\n\nUsing source material unconverted."%srcurl
+			if node:
+				node.set_infoicon('error', msg)
+			import windowinterface
+			windowinterface.showmessage(msg)
 			u = MMurl.urlopen(srcurl)
 		if u.headers.maintype == 'text' and \
 		   string.find(u.headers.subtype, 'real') < 0:
@@ -1504,7 +1519,9 @@ class SMILWriter(SMIL):
 		self.files_generated[file] = binary
 		if self.progress:
 			self.progress("Copying %s"%os.path.split(file)[1], None, None, None, None)
-		f = open(os.path.join(dstdir, file), 'w'+binary)
+		dstfile = os.path.join(dstdir, file)
+		print 'DBG verbatim copy', dstfile
+		f = open(dstfile, 'w'+binary)
 		while 1:
 			data = u.read(10240)
 			if not data:
@@ -1512,6 +1529,24 @@ class SMILWriter(SMIL):
 			f.write(data)
 		f.close()
 		u.close()
+		if os.name == 'mac':
+			import ic, macfs, macostools
+			try:
+				icinfo = ic.mapfile(dstfile)
+			except ic.error:
+				if binary:
+					tp = '????'
+					cr = '????'
+				else:
+					tp = 'TEXT'
+					cr = 'ttxt'
+			else:
+				tp = icinfo[1]
+				cr = icinfo[2]
+			fss = macfs.FSSpec(dstfile)
+			fss.SetCreatorType(cr, tp)
+			macostools.touched(fss)
+				
 		return file
 		
 	def getcopyinfo(self):
