@@ -7,8 +7,8 @@ __version__ = "$Id$"
 from Channel import ChannelWindow, error, CMIF_MODE
 from AnchorDefs import *
 import string
-from TextChannel import extract_paragraphs, extract_taglist, fix_anchorlist
-from StringStuff import calclines, fitwords
+from TextChannel import extract_paragraphs, extract_taglist, fix_anchorlist, mapfont
+from StringStuff import calclines
 
 class HtmlChannel(ChannelWindow):
 	if CMIF_MODE:
@@ -149,22 +149,3 @@ def getfont(node):
 def getpointsize(node):
 	import MMAttrdefs
 	return MMAttrdefs.getattr(node, 'pointsize')
-
-# Map a possibly symbolic font name to a real font name and default point size
-
-fontmap = { \
-	'':		('Times-Roman', 12), \
-	'default':	('Times-Roman', 12), \
-	'plain':	('Times-Roman', 12), \
-	'italic':	('Times-Italic', 12), \
-	'bold':		('Times-Bold', 12), \
-	'courier':	('Courier', 12), \
-	'bigbold':	('Times-Bold', 14), \
-	'title':	('Times-Bold', 24), \
-	  }
-
-def mapfont(fontname):
-	if fontmap.has_key(fontname):
-		return fontmap[fontname]
-	else:
-		return fontname, 12
