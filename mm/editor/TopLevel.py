@@ -199,13 +199,19 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def checkviews(self):
 		pass
-
+	
 	#
 	# Callbacks.
 	#
 	def play_callback(self):
-		self.setwaiting()
-		self.player.show((self.player.playsubtree, (self.root,)))
+#		self.player.show((self.player.playsubtree, (self.root,)))
+		self.player.play_entry()
+
+	def pause_callback(self):
+		self.player.pause_entry()
+
+	def stop_callback(self):
+		self.player.stop_entry()
 
 	def source_callback(self):
 		import SMILTreeWrite
@@ -837,6 +843,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def setwaiting(self):
 		windowinterface.setwaiting()
+		pass
 
 	def prefschanged(self):
 		# HACK: we don't want to set the file changed bit (in the

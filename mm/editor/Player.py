@@ -67,17 +67,20 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		play = PLAY(callback = (self.play_callback, ()))
 		pause = PAUSE(callback = (self.pause_callback, ()))
 		stop = STOP(callback = (self.stop_callback, ()))
+		self.stoplist = self.commandlist
 		self.stoplist = self.commandlist + [
 			# when stopped, we can play and pause
 			play,
 			pause,
 			stop,
 			]
+		self.playlist = self.commandlist
 		self.playlist = self.commandlist + [
 			# when playing, we can pause and stop
 			pause,
 			stop,
 			]
+		self.pauselist = self.commandlist
 		self.pauselist = self.commandlist + [
 			# when pausing, we can continue (play or
 			# pause) and stop
@@ -215,12 +218,12 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 						# get a color that is different
 						# than the background
 						bgcolor = ch._attrdict.get('bgcolor')
-						if bgcolor:
-							import colorsys
-							hsv = colorsys.rgb_to_hsv(bgcolor[0]/255.,bgcolor[1]/255.,bgcolor[2]/255.)
-							color = colorsys.hsv_to_rgb((hsv[0]+0.25)%1.0,hsv[1],(hsv[2]+0.5)%1.0)
-							color = int(color[0]*255+.5),int(color[2]*255+.5),int(color[2]*255+.5)
-							ch.highlight(color)
+						pch = ch
+						while bgcolor is None:
+							pch = pch.pchan
+							bgcolor = pch._attrdict.get('bgcolor')
+						color = bgcolor[0],(bgcolor[1]+128)%256,bgcolor[2]
+						ch.highlight(color)
 					ch.sensitive((selectchannelcb, (chname,)))
 			elif not ch._attrdict.has_key('base_window'):
 				ch.show()
@@ -247,7 +250,16 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 	# FORMS callbacks.
 	#
 	def play_callback(self):
+		self.play_entry()
+	def pause_callback(self):
+		self.pause_entry()
+	def stop_callback(self):
+		self.stop_entry()
+		
+	def play_entry(self):
 		self.toplevel.setwaiting()
+		if not self.showing:
+			self.show()
 		if self.playing and self.pausing:
 			# Case 1: user pressed play to cancel pause
 			self.pause(0)
@@ -259,30 +271,32 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 			# nothing, restore state.
 			self.showstate()
 
-	def pause_callback(self):
-		self.toplevel.setwaiting()
-		if self.playing and self.pausing:
-			# Case 1: press pause to cancel pause
-			self.pause(0)
-		elif self.playing:
-			# Case 2: press pause to pause
-			self.pause(1)
-		else:
-			# Case 3: not playing. Go to paused mode
-			self.pause(1)
-			self.play()
+	def pause_entry(self):
+		if self.showing:			
+			self.toplevel.setwaiting()
+			if self.playing and self.pausing:
+				# Case 1: press pause to cancel pause
+				self.pause(0)
+			elif self.playing:
+				# Case 2: press pause to pause
+				self.pause(1)
+			else:
+				# Case 3: not playing. Go to paused mode
+				self.pause(1)
+				self.play()
 
-	def stop_callback(self):
-		self.toplevel.setwaiting()
-		self.cc_stop()
+	def stop_entry(self):
+		if self.showing:			
+			self.toplevel.setwaiting()
+			self.cc_stop()
 
 	def magic_play(self):
 		if self.playing:
 			# toggle pause if playing
-			self.pause_callback()
+			self.pause()
 		else:
 			# start playing if stopped
-			self.play_callback()
+			self.play()
 
 	def close_callback(self):
 		self.hide()
@@ -291,17 +305,13 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.toplevel.setwaiting()
 		title, u_state, override = self.context.usergroups[name]
 		if override == 'allowed':
-			em = self.context.editmgr
-			if not em.transaction():
-				return
 			if u_state == 'RENDERED':
 				u_state = 'NOT_RENDERED'
 			else:
 				u_state = 'RENDERED'
-			em.delusergroup(name)
-			em.addusergroup(name, (title, u_state, override))
-			em.commit()
+			self.context.usergroups[name] = title, u_state, override
 		self.setusergroup(name, u_state == 'RENDERED')
+		self.root.ResetPlayability()
 
 	def channel_callback(self, name):
 		import settings
