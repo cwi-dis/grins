@@ -52,11 +52,11 @@ class PrefetchChannel(Channel.ChannelAsync):
 		Channel.ChannelAsync.setpaused(self, paused)
 		self.__pauseFetch(paused)
 
-	def stopplay(self, node, no_extend = 0):
+	def stopplay(self, node):
 		if self.__fetching:
 			self.__stopFetch()
 			self.__fetching = None
-		Channel.ChannelAsync.stopplay(self, node, no_extend)
+		Channel.ChannelAsync.stopplay(self, node)
 
 	#
 	# Fetch engine
