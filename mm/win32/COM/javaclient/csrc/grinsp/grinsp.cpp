@@ -58,7 +58,7 @@ JNIEXPORT jint JNICALL Java_GRiNSPlayer_nconnect__(JNIEnv *env, jobject player)
 	}
 
 /*
- * Class:     GRiNSCanvas
+ * Class:     GRiNSPlayer
  * Method:    connect
  * Signature: (Ljava/awt/Graphics;)V
  */
@@ -121,7 +121,7 @@ JNIEXPORT jint JNICALL Java_GRiNSPlayer_nconnect__Ljava_awt_Component_2(JNIEnv *
 	}
 
 /*
- * Class:     GRiNSCanvas
+ * Class:     GRiNSPlayer
  * Method:    disconnect
  * Signature: ()V
  */
@@ -137,7 +137,7 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_ndisconnect(JNIEnv *env, jobject player,
 	}
 
 /*
- * Class:     GRiNSCanvas
+ * Class:     GRiNSPlayer
  * Method:    open
  * Signature: (Ljava/lang/String;)V
  */
@@ -157,7 +157,7 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_nopen(JNIEnv *env, jobject player, jint 
 	}
 
 /*
- * Class:     GRiNSCanvas
+ * Class:     GRiNSPlayer
  * Method:    close
  * Signature: ()V
  */
@@ -188,7 +188,7 @@ JNIEXPORT jobject JNICALL Java_GRiNSPlayer_ngetPreferredSize(JNIEnv *env, jobjec
 	}
 
 /*
- * Class:     GRiNSCanvas
+ * Class:     GRiNSPlayer
  * Method:    play
  * Signature: ()V
  */
@@ -204,7 +204,7 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_nplay(JNIEnv *env, jobject player, jint 
 	}
 
 /*
- * Class:     GRiNSCanvas
+ * Class:     GRiNSPlayer
  * Method:    paint
  * Signature: (Ljava/awt/Graphics;)V
  */
@@ -215,7 +215,7 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_nupdate(JNIEnv *env, jobject player, jin
 	}
 
 /*
- * Class:     GRiNSCanvas
+ * Class:     GRiNSPlayer
  * Method:    pause
  * Signature: ()V
  */
@@ -232,7 +232,7 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_npause(JNIEnv *env, jobject player, jint
 
 
 /*
- * Class:     GRiNSCanvas
+ * Class:     GRiNSPlayer
  * Method:    stop
  * Signature: ()V
  */
@@ -352,6 +352,39 @@ JNIEXPORT void JNICALL Java_GRiNSPlayer_nsetTime(JNIEnv *env, jobject player, ji
 		}
 	}
 
+/*
+ * Class:     GRiNSPlayer
+ * Method:    nmouseClicked
+ * Signature: (III)V
+ */
+JNIEXPORT void JNICALL Java_GRiNSPlayer_nmouseClicked(JNIEnv *env, jobject player, jint hgrins, jint x, jint y)
+	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	if(pIGRiNSPlayer)
+		{
+		HRESULT hr = pIGRiNSPlayer->mouseClicked(int(x), int(y));	
+		if(FAILED(hr))
+			ThrowCOMException(env, "mouseClicked", hr);
+		}
+	}
+
+/*
+ * Class:     GRiNSPlayer
+ * Method:    nmouseMoved
+ * Signature: (III)Z
+ */
+JNIEXPORT jboolean JNICALL Java_GRiNSPlayer_nmouseMoved(JNIEnv *env, jobject player, jint hgrins, jint x, jint y)
+	{
+	IGRiNSPlayerAuto *pIGRiNSPlayer = GetIGRiNSPlayer(hgrins);
+	BOOL bIsHot = FALSE;
+	if(pIGRiNSPlayer)
+		{
+		HRESULT hr = pIGRiNSPlayer->mouseMoved(int(x), int(y), &bIsHot);	
+		if(FAILED(hr))
+			ThrowCOMException(env, "mouseMoved", hr);
+		}
+	return bIsHot?jboolean(JNI_TRUE):jboolean(JNI_FALSE);
+	}
 
 } //extern "C"
 
