@@ -1,5 +1,5 @@
-#ifndef INC_WINGDI_REG
-#define INC_WINGDI_REG
+#ifndef INC_WINGDI_RGN
+#define INC_WINGDI_RGN
 
 #ifndef Py_PYTHON_H
 #include "Python.h"
