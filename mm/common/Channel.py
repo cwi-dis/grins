@@ -34,6 +34,22 @@ def isin(elem, list):
 			return 1
 	return 0
 
+import re
+clipre = re.compile('^(?:'
+		    '(?:(?P<npt>npt)=(?P<nptclip>.+))|'
+		    '(?:(?P<smpte>smpte(?:-30-drop|-25)?)=(?P<smpteclip>.+))'
+		    ')$')
+clock_val = re.compile(r'(?:(?P<use_clock>' # hours:mins:secs[.fraction]
+		       r'(?:(?P<hours>\d{2}):)?'
+		       r'(?P<minutes>\d{2}):'
+		       r'(?P<seconds>\d{2})'
+		       r'(?P<fraction>\.\d+)?'
+		       r')|(?P<use_timecount>' # timecount[.fraction]unit
+		       r'(?P<timecount>\d+)'
+		       r'(?P<units>\.\d+)?'
+		       r'(?P<scale>h|min|s|ms)?)'
+		       r')$')
+
 class Channel:
 	#
 	# The following methods can be called by higher levels.
@@ -495,8 +511,8 @@ class Channel:
 		self._playstate = PLAYED
 
 	def _try_auto_anchors(self):
-	        node = self._played_node
-	        anchorlist = MMAttrdefs.getattr(node, 'anchorlist')
+		node = self._played_node
+		anchorlist = MMAttrdefs.getattr(node, 'anchorlist')
 		list = []
 		for (name, type, args) in anchorlist:
 			if type == ATYPE_AUTO:
@@ -507,9 +523,9 @@ class Channel:
 		didfire = self._playcontext.anchorfired(node, list, None)
 		if didfire and self._playstate == PLAYING and \
 		   self._played_node is node:
-		    if not self.syncplay:
-			self._playcontext.play_done(node)
-		    self._playstate = PLAYED
+			if not self.syncplay:
+				self._playcontext.play_done(node)
+			self._playstate = PLAYED
 		return didfire
 
 	def playstop(self):
@@ -787,6 +803,91 @@ class Channel:
 
 	def getloop(self, node):
 		return MMAttrdefs.getattr(node, 'loop')
+
+	def parsecount(self, val, node, attr):
+		res = clock_val.match(val)
+		if res is None:
+			self.errormsg(node, 'bad clock value in %s' % attr)
+			return 0
+		if res.group('use_clock'):
+			h, m, s, f = res.group('hours', 'minutes',
+					       'seconds', 'fraction')
+			offset = 0
+			if h is not None:
+				offset = offset + string.atoi(h) * 3600
+			m = string.atoi(m)
+			if m >= 60:
+				self.syntax_error('minutes out of range')
+			s = string.atoi(s)
+			if s >= 60:
+				self.syntax_error('seconds out of range')
+			offset = offset + m * 60 + s
+			if f is not None:
+				offset = offset + string.atof(f + '0')
+		elif res.group('use_timecount'):
+			tc, f, sc = res.group('timecount', 'units', 'scale')
+			offset = string.atoi(tc)
+			if f is not None:
+				offset = offset + string.atof(f)
+			if sc == 'h':
+				offset = offset * 3600
+			elif sc == 'min':
+				offset = offset * 60
+			elif sc == 'ms':
+				offset = offset / 1000.0
+			# else already in seconds
+		else:
+			raise error, 'internal error'
+		return offset
+
+	def getclipval(self, node, attr, units):
+		import smpte
+		val = MMAttrdefs.getattr(node, attr)
+		if not val:
+			return 0
+		res = clipre.match(val)
+		if res is None:
+			self.errormsg(node, 'invalid %s attribute' % attr)
+			return 0
+		if res.group('npt'):
+			val = res.group('nptclip')
+			val = float(self.parsecount(val, node, attr))
+		else:
+			smpteval = res.group('smpte')
+			if smpteval == 'smpte':
+				cl = smpte.Smpte30
+			elif smpteval == 'smpte-25':
+				cl = smpte.Smpte25
+			elif smpteval == 'smpte-30-drop':
+				cl = smpte.Smpte30Drop
+			else:
+				raise error, 'internal error'
+			val = res.group('smpteclip')
+			try:
+				val = cl(val)
+			except ValueError:
+				self.errormsg(node, 'invalid %s attribute' % attr)
+				return 0
+		if units == 'smpte-25':
+			return smpte.Smpte25(val).GetFrame()
+		elif units == 'smpte-30':
+			return smpte.Smpte30(val).GetFrame()
+		elif units == 'smpte-24':
+			return smpte.Smpte24(val).GetFrame()
+		elif units == 'smpte-30-drop':
+			return smpte.Smpte30Drop(val).GetFrame()
+		elif units == 'sec':
+			if type(val) is not type(0.0):
+				val = val.GetTime()
+			return val
+		else:
+			raise error, 'internal error'
+
+	def getclipbegin(self, node, units):
+		return self.getclipval(node, 'clipbegin', units)
+
+	def getclipend(self, node, units):
+		return self.getclipval(node, 'clipend', units)
 
 	def defanchor(self, node, anchor, cb):
 		# This method is called when the user defines a new anchor. It

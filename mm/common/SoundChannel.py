@@ -16,7 +16,8 @@ debug = os.environ.has_key('CHANNELDEBUG')
 SECONDS_TO_BUFFER=4
 
 class SoundChannel(ChannelAsync):
-	node_attrs = ChannelAsync.node_attrs + ['duration', 'loop']
+	node_attrs = ChannelAsync.node_attrs + ['duration', 'loop',
+						'clipbegin', 'clipend']
 
 	# shared between all instances
 	__playing = 0			# # of active channels
@@ -51,6 +52,12 @@ class SoundChannel(ChannelAsync):
 			return 1
 		self.armed_loop = self.getloop(node)
 		self.armed_duration = MMAttrdefs.getattr(node, 'duration')
+		rate = self.arm_fp.getframerate()
+		begin = int(self.getclipbegin(node, 'sec') * rate + .5)
+		end = int(self.getclipend(node, 'sec') * rate + .5)
+		if begin or end:
+			import audioselect
+			self.arm_fp = audioselect.select(self.arm_fp, [(begin, end)])
 		return 1
 		
 	def do_play(self, node):

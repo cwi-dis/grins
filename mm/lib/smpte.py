@@ -17,7 +17,7 @@ This timecode can be specified in several ways:
 - as a float: the argument is the time in seconds;
 - as a tuple: the timecode is of the form (hours, minutes, seconds, frames),
   where the initial values are optional;
-- as a string of the form hh:mm:ss:ff where the initial values are
+- as a string of the form hh:mm:ss.ff where all but the ss are
   optional;
 - as an instance of one of the 4 classes defined in this module.  In
   this case the frame number of the initializer is converted to a time 
@@ -32,7 +32,7 @@ Instances have the following methods:
 from types import *
 import string
 import re
-hmsf = re.compile('(?:(?:(?:(?P<h>\\d{1,2})\\D)?(?P<m>\\d{1,2})\\D)?(?P<s>\\d{1,2})\\D)?(?P<f>\\d{1,2})$')
+hmsf = re.compile(r'(?:(?:(?P<h>\d{2}):)?(?P<m>\d{2}):)?(?P<s>\d{2})(?P<f>\.\d{2})?$')
 
 class _SMPTE:
 	__timesep = ':'

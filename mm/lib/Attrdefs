@@ -69,6 +69,19 @@
 (channel (name) undefined 'Channel' channelname
 	'Name of channel used to render this node/subtree' inherited)
 
+(channellist (list (enclosed (tuple (name) (attrdict)))) ()
+	'Channel List' hidden
+	'Channels used in this document (root node only)')
+
+(clipbegin (string) '' 'Clip begin' default
+	'Start of range of frames to be played' channel)
+
+(clipend (string) '' 'Clip end' default
+	'End of range of frames to be played' channel)
+
+(comment (string) '' 'Comment' default
+	 'An arbitrary comment string, not interpreted' raw)
+
 (crop (tuple (float) (float) (float) (float)) (0 0 0 0) 'Image crop' default
     'Crop image.  Values are fractions to crop from top, bottom, left, right.'
 	channel)
@@ -78,13 +91,6 @@
 
 (cview_winsize  (tuple (float) (float)) (115.234375 115.234375) 'Time chart winsize' hidden
 	 'Window size for Time chart view' raw)
-
-(channellist (list (enclosed (tuple (name) (attrdict)))) ()
-	'Channel List' hidden
-	'Channels used in this document (root node only)')
-
-(comment (string) '' 'Comment' default
-	 'An arbitrary comment string, not interpreted' raw)
 
 (duration (float) 0.0 'Duration' default
 	'Duration of a node/subtree (in seconds)' normal)
@@ -163,9 +169,6 @@
 
 (queuesize (float) 0 'Queue size' default
 	'Audio playback queue size' channel)
-
-(range (tuple (int) (int)) (0 0) 'Range' default
-	'Range of frames to be played' channel)
 
 (scale (float) 0.0 'Scale factor' default
 	'Image magnification (0.0 means fit in window)' channel)
