@@ -1178,6 +1178,28 @@ class HierarchyView(HierarchyViewDialog):
 		# 'interior' is true if the type of node is in ['seq', 'par', 'excl'...]
 		# in other words, interior is false if this is a leaf node (TODO: confirm -mjvdg)
 		if interior:
+			# First we check whether the node is collapsed
+			# and autorouting. In that case we route the object
+			# to the correct child.
+			if obj.iscollapsed() and \
+					MMAttrdefs.getattr(obj.node, 'project_autoroute'):
+				mimetype = MMmimetypes.guess_type(url)[0]
+				if '/' in mimetype:
+					mimetype = string.split(mimetype, '/')[0]
+				dnode = obj.node.findMimetypeAcceptor(mimetype)
+				if dnode:
+					em = self.editmgr
+					if not em.transaction():
+						self.draw()
+						return
+					em.setnodeattr(dnode, 'file', url)
+					em.commit()
+					return
+				else:
+					# This "shouldn't happen": the drag code
+					# should have disallowed the drop here.
+					print "Autorouting structure node did not accept:", mimetype
+					# We fall through and create a new node.
 			# if node is expanded, determine where in the node
 			# the file is dropped, else create at end
 			i = obj.get_nearest_node_index((x,y))
@@ -1319,6 +1341,7 @@ class HierarchyView(HierarchyViewDialog):
 			layout = MMAttrdefs.getattr(node, 'layout')
 
 		newnode = None
+		cnode = None
 		if dropped:
 			# If this is a drag/drop operation we have to
 			# check whether this parent has a forced child
@@ -1328,10 +1351,20 @@ class HierarchyView(HierarchyViewDialog):
 				if '/' in mimetype:
 					mimetype = string.split(mimetype, '/')[0]
 				cnode = template.DeepCopy()
+				# set the autoroute option
+				cnode.SetAttr('project_autoroute', 1)
 				newnode = cnode.findMimetypeAcceptor(mimetype)
 		if newnode:
 			node = newnode
 		else:
+			if cnode:
+				# Can happen if we had a forced child,
+				# but the forced child did not accept the
+				# media type after all. I think this "should
+				# not happen" because the drag handler will
+				# forestall this, but better be sure than sorry
+				print "forced child did not accept media type:", mimetype
+				cnode.Destroy()
 			node = node.GetContext().newnode(type) # Create a new node
 			cnode = node # This is the node we'll insert into the tree
 
