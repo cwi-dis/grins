@@ -794,7 +794,7 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 		if not rc_child:rc=win32mu.Rect(self.GetWindowRect())
 		else: rc=rc_child
 		rcParent=win32mu.Rect(self._parent.GetWindowRect())
-		return self._pxl2rel(rc.tuple_ps(),rcParent.tuple_ps())
+		return self._pxl2rel(rc.xywh_tuple(),rcParent.xywh_tuple())
 
 	#
 	# Image section overrides
