@@ -127,7 +127,7 @@ all:		python
 
 sharedmods:	$(SHAREDMODS)
 
-python:		$(ADDOBJS) lib.a $(PYTHONLIBS) Makefile
+python:		$(ADDOBJS) lib.a $(PYTHONLIBS) Makefile $(BASELIB)
 		$(CC) $(ADDOBJS) lib.a $(PYTHONLIBS) \
 		 $(LINKPATH) $(BASELIB) $(MODLIBS) $(LIBS) $(SYSLIBS) -o python
 
