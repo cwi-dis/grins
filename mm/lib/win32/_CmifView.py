@@ -545,6 +545,9 @@ class _CmifPlayerView(_CmifView):
 		self._clipper = self._ddraw.CreateClipper(self.GetSafeHwnd())
 		self._frontBuffer.SetClipper(self._clipper)
 		self._pxlfmt = self._frontBuffer.GetPixelFormat()
+		
+		# temp: uninitialized win32window.Window members
+		self._convcolor = None
 
 	def __delDD(self):
 		del self._frontBuffer
@@ -576,12 +579,13 @@ class _CmifPlayerView(_CmifView):
 			_CmifView.update(self)
 
 	def clear(self):
-		sd = self._backBuffer.GetSurfaceDesc()
+		dds = self._backBuffer
+		sd = dds.GetSurfaceDesc()
 		w, h = sd.GetSize()
-		dc = self.GetDDDC()
-		if not dc: return
-		dc.PatBlt((0, 0), (w, h), win32con.BLACKNESS)
-		self.ReleaseDDDC(dc)
+		if self._convcolor == None:
+			r, g, b = self._bgcolor
+			self._convcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
+		dds.BltFill((0, 0, w, h), self._convcolor)
 
 	def paint(self):
 		self.clear()
