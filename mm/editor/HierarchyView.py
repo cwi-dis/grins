@@ -1351,7 +1351,8 @@ class HierarchyView(HierarchyViewDialog):
 				if '/' in mimetype:
 					mimetype = string.split(mimetype, '/')[0]
 				cnode = template.DeepCopy()
-				# set the autoroute option
+				# set collapsed and autoroute option
+				cnode.collapsed = 1
 				cnode.SetAttr('project_autoroute', 1)
 				newnode = cnode.findMimetypeAcceptor(mimetype)
 		if newnode:
