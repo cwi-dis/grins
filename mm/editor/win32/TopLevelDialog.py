@@ -28,16 +28,8 @@ class TopLevelDialog:
 	def show(self):
 		if self.window is not None:
 			return
-
-		# for win32 should be:
-		#self.window=windowinterface.getframewnd()
-		#windowinterface.newdocument(self.basename, adornments = self.adornments,
-		#		commandlist = self.commandlist)
-
-		# it is:
-		self.window = w = windowinterface.newcmwindow(None, None, 0, 0,
-				self.basename, adornments = self.adornments,
-				commandlist = self.commandlist, context='document')
+		self.window = w = windowinterface.newdocument(self.basename, 
+			adornments = self.adornments,commandlist = self.commandlist)
 
 	def hide(self):
 		if self.window is None:
@@ -49,15 +41,24 @@ class TopLevelDialog:
 		self.window.set_toggle(command, showing)
 
 	def showsource(self, source):
-		if self.source is not None and not self.source.is_closed():
-			self.source.show()
-			return
-		self.source = windowinterface.textwindow(self.root.source)
-
-	def mayclose(self):
+		if self.source:
+			self.source.close()
+			self.source=None
+			windowinterface.getmainwnd().set_toggle(SOURCE,0)
+		else:
+			self.source = windowinterface.textwindow(self.root.source)
+			windowinterface.getmainwnd().set_toggle(SOURCE,1)
+	def mayclose_X(self):
 		prompt = 'You haven\'t saved your changes yet;\n' + \
 			 'do you want to save them before closing?'
 		b1 = 'Save'
 		b2 = "Don't save"
 		b3 = 'Cancel'
 		return windowinterface.multchoice(prompt, [b1, b2, b3], -1)
+
+	def mayclose(self):
+		prompt = 'You haven\'t saved your changes yet;\n' + \
+			 'do you want to save them before closing?'
+		return windowinterface.GetYesNoCancel(prompt,self.window)
+
+

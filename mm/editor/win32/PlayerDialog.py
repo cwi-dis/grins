@@ -31,7 +31,7 @@ class PlayerDialog:
 				]),
 			('Channels', CHANNELS),
 			('Options', [
-				('Calculate timing', CALCTIMING),
+				#('Calculate timing', CALCTIMING),
 				('Keep Channel View in sync', SYNCCV),
 				('Dump scheduler data', SCHEDDUMP),
 				]),
@@ -80,10 +80,10 @@ class PlayerDialog:
 		x, y, w, h = self.__coords
 		if subwindowof is not None:
 			raise 'kaboo kaboo'
-		self.__window = windowinterface.newwindow(
-			x, y, 0, 0, self.__title, resizable = 0,
+		self.__window = windowinterface.newview(
+			x, y, w, h, self.__title,
 			adornments = self.adornments,
-			commandlist = self.stoplist,context='view')
+			commandlist = self.stoplist,context='pview_')
 		if self.__channels:
 			self.setchannels(self.__channels)
 

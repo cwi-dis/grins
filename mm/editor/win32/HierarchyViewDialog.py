@@ -94,24 +94,19 @@ class HierarchyViewDialog(ViewDialog):
 	def show(self):
 		if self.is_showing():
 			return
-
 		self.toplevel.showstate(self, 1)
 		title = 'Hierarchy View (%s)' % self.toplevel.basename
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
-
-		# as it is now returns the frame instead of the view
-		self.window = windowinterface.newcmwindow(x, y, w, h, title,
-				pixmap = 1, adornments = self.adornments,
+		self.window = windowinterface.newview(x, y, w, h, title,
+				adornments = self.adornments,
 				canvassize = (w, h),
-				commandlist = self.commands,context='view')
+				commandlist = self.commands,context='hview_')
 		self.window.set_toggle(THUMBNAIL, self.thumbnails)
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
 		self.window.register(WMEVENTS.ResizeWindow, self.redraw, None)
 
 	def hide(self, *rest):
-		if not self.window:
-			return
 		self.save_geometry()
 		self.window.close()
 		self.window = None
