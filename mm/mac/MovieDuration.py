@@ -6,7 +6,10 @@ import Qt
 import QuickTime
 
 def getduration(filename):
-	filename = urllib.url2pathname(filename)
+	try:
+		filename = urllib.urlretrieve(filename)[0]
+	except IOError:
+		return 0
 	try:
 		movieResRef = Qt.OpenMovieFile(filename, 1)
 	except Qt.Error, arg:
