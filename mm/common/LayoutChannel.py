@@ -76,8 +76,7 @@ class LayoutChannel(ChannelWindow):
 ##					     (self.focuscall, ())))
 		if self._attrdict.has_key('bgcolor'):
 			self.window.bgcolor(self._attrdict['bgcolor'])
-			self.window.updatebgcolor(self._attrdict['bgcolor'])
-		if self._attrdict.has_key('fgcolor'):
+ 		if self._attrdict.has_key('fgcolor'):
 			self.window.fgcolor(self._attrdict['fgcolor'])
 		self._curvals['bgcolor'] = self._attrdict.get('bgcolor'), None
 		self._curvals['fgcolor'] = self._attrdict.get('fgcolor'), None
