@@ -22,25 +22,27 @@ ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
 
 class _Toplevel(X_windowbase._Toplevel):
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
-		      type_channel = SINGLE, pixmap = None, units = UNIT_MM):
+		      type_channel = SINGLE, pixmap = None, units = UNIT_MM,
+		      menubar = None):
 ## 		if pixmap is None:
 ## 			pixmap = toplevel._depth <= 8
-		return _Window(self, x, y, w, h, title, 0, pixmap, units)
+		return _Window(self, x, y, w, h, title, 0, pixmap, units, menubar)
 
 	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE,
-			type_channel = SINGLE, pixmap = None, units = UNIT_MM):
+			type_channel = SINGLE, pixmap = None, units = UNIT_MM,
+			menubar = None):
 ## 		if pixmap is None:
 ## 			pixmap = toplevel._depth <= 8
-		return _Window(self, x, y, w, h, title, 1, pixmap, units)
+		return _Window(self, x, y, w, h, title, 1, pixmap, units, menubar)
 
 	def getsize(self):
 		return toplevel._mscreenwidth, toplevel._mscreenheight
 
 class _Window(X_windowbase._Window):
 	def __init__(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0,
-		     units = UNIT_MM):
+		     units = UNIT_MM, menubar = None):
 		X_windowbase._Window.__init__(self, parent, x, y, w, h, title,
-					      defcmap, pixmap, units)
+					      defcmap, pixmap, units, menubar)
 		self.arrowcache = {}
 		self._next_create_box = []
 
@@ -1742,7 +1744,8 @@ class ButtonRow(_Widget):
 			 'traversalOn': FALSE}
 		if not vertical:
 			attrs['orientation'] = Xmd.HORIZONTAL
-##			attrs['packing'] = Xmd.PACK_COLUMN
+		if options.get('tight', 0):
+			attrs['packing'] = Xmd.PACK_COLUMN
 		self._cb = callback
 		if useGadget:
 			separator = Xm.SeparatorGadget
