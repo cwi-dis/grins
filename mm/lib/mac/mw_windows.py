@@ -1108,6 +1108,10 @@ class _ScrollMixin:
 		elif part == Controls.inPageDown:
 			value = value + page
 		bar.SetControlValue(value)
+		self._scrollupdate(old_x, old_y)
+		
+	def _scrollupdate(self, old_x, old_y):
+		"""Update after a scroll from old_x, old_y"""
 		new_x = self._barx.GetControlValue()
 		new_y = self._bary.GetControlValue()
 		Qd.SetPort(self._wid)
@@ -1196,7 +1200,30 @@ class _ScrollMixin:
 		return self._canvassize
 		
 	def scrollvisible(self, coordinates, units = UNIT_MM):
-		pass
+		"""Try to make the area in coordinates visible. If it doesn't fit make
+		at least the topleft corner visible"""
+		if not self._barx:
+			return
+		box = self._convert_coordinates(coordinates, units)
+		old_x, old_y = self._canvaspos
+		w, h = self._rect[2:]
+		x, y = box[:2]
+		if len(box) > 2:
+			w, h = box[2:]
+			x1, y1 = x+w, y+h
+			self._scrollto(self._barx, x1, w)
+			self._scrollto(self._bary, y1, h)
+		self._scrollto(self._barx, x, w)
+		self._scrollto(self._bary, y, h)
+		self._scrollupdate(old_x, old_y)
+		
+	def _scrollto(self, bar, pos, visiblesize):
+		"""If pos isn't visible scroll there (minimum distance), without update"""
+		cur = bar.GetControlValue()
+		if pos < cur:
+			bar.SetControlValue(pos)
+		elif pos > cur+visiblesize:
+			bar.SetControlValue(pos-visiblesize)
 
 	def getcanvassize(self, units = UNIT_MM):
 		if self._canvassize is None:
