@@ -10,7 +10,8 @@ try:
 except:
 	pass
 
-if os.name != 'mac':
+if os.name != 'mac' or not sys.modules.has_key('__main__') or \
+   sys.modules['__main__'].__file__ != '<frozen>':
 	import fastimp
 	fastimp.install()
 
