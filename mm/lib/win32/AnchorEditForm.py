@@ -70,7 +70,6 @@ class AnchorEditForm(GenFormView):
 	# Called by the framework after the OS window has been created
 	def OnInitialUpdate(self):
 		GenFormView.OnInitialUpdate(self)
-		self.GetParent().freezeSize()
 		self.EnableCmd('New',1)
 		self.EnableCmd('Anchor',1)
 
