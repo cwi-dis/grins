@@ -825,7 +825,7 @@ class Window:
 	#
 	# Animations interface
 	#
-	def updatecoordinates(self, coordinates, units=UNIT_SCREEN):
+	def updatecoordinates(self, coordinates, units=UNIT_PXL, mediacoords=None):
 		# first convert any coordinates to pixel
 		if units != UNIT_PXL:
 			coordinates = self._convert_coordinates(coordinates,units=units)
@@ -1815,7 +1815,7 @@ class Region(Window):
 	#
 	# Animations interface
 	#
-	def updatecoordinates(self, coordinates, units=UNIT_SCREEN, scale=1):
+	def updatecoordinates(self, coordinates, units=UNIT_PXL, mediacoords=None):
 		# first convert any coordinates to pixel
 		if units != UNIT_PXL:
 			coordinates = self._convert_coordinates(coordinates,units=units)
@@ -1828,13 +1828,12 @@ class Region(Window):
 		# keep old pos
 		x0, y0, w0, h0 = self._rectb
 		x1, y1, w1, h1 = self.getwindowpos()
-		
 
 		# sense a size change/restore
 		if not self._resizing:
 			if w!=w0 or h!=h0:
 				self._resizing = 1
-				self._scale = scale
+				self._scale = 1
 				self._orgrect = self._rect
 		elif w==w0 and h==h0:	
 			self._resizing = 0
