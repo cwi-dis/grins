@@ -1421,7 +1421,6 @@ class SMILWriter(SMIL):
 					       ('content', ctx.baseurl)])
 		self.writetag('meta', [('name', 'generator'),
 				       ('content','GRiNS %s'%version.version)])
-		print ctx.color_list
 		if ctx.color_list:
 			colors = []
 			last = 0
