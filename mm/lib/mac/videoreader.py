@@ -61,7 +61,7 @@ class _Reader:
 			self.videomedia = self.videotrack.GetTrackMedia()
 		except Qt.Error:
 			self.videotrack = self.videomedia = self.videotimescale = None
-		else:
+		if self.videotrack:
 			handle = Res.Handle('')
 			self.videomedia.GetMediaSampleDescription(1, handle)
 			print 'video', len(handle.data)
