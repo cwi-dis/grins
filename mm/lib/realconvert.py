@@ -228,7 +228,7 @@ def convertimagefile(u, srcurl, dstdir, file, node):
 
 def converttextfile(u, dstdir, file, node):
 	import MMAttrdefs, windowinterface
-	from colors import colors
+	import colors
 	# ignore suggested extension and make our own
 	file = os.path.splitext(file)[0] + '.rt'
 	fullpath = os.path.join(dstdir, file)
@@ -243,10 +243,8 @@ def converttextfile(u, dstdir, file, node):
 		ch = node.GetChannel()
 		color = ch.get('bgcolor', (0,0,0))
 		if color != (255,255,255):
-			for name, val in colors.items():
-				if color == val:
-					color = name
-					break
+			if colors.rcolors.has_key(val):
+				color = colors.rcolors[val]
 			else:
 				color = '#%02x%02x%02x' % color
 			f.write(' bgcolor="%s"' % color)
