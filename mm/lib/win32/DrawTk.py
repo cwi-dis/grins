@@ -486,7 +486,12 @@ class DrawTk:
 		self._limit_rect=1 # for cmif app
 		self._capture=None
 
-	def __del__():
+	def __del__(self):
+		if self._hsmallfont:
+			Sdk.DeleteObject(self._hsmallfont)
+			self._hsmallfont = 0
+
+	def release(self):
 		if self._hsmallfont:
 			Sdk.DeleteObject(self._hsmallfont)
 			self._hsmallfont = 0
