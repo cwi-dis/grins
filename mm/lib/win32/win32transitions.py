@@ -12,13 +12,15 @@ import ddraw
 import win32api
 
 class TransitionEngine:
-	def __init__(self, window, outtrans, runit, dict):
+	def __init__(self, window, outtrans, runit, dict, cb):
 		self.__windows = [window,]
 		self.__outtrans = outtrans
 		
 		self.__duration = dict.get('dur', 1)
 		self.__multiElement = dict.get('multiElement')
 		self.__childrenClip = dict.get('childrenClip')
+
+		self.__callback = cb
 
 		trtype = dict.get('trtype', 'fade')
 		subtype = dict.get('subtype')
@@ -54,6 +56,10 @@ class TransitionEngine:
 	def endtransition(self):
 		if not self.__transitiontype: return
 		self.__unregister_for_timeslices()
+		self.settransitionvalue(1.0)
+		if self.__callback:
+			apply(apply, self.__callback)
+			self.__callback = None
 		self.__transitiontype = None
 		wnd = self.__windows[0]
 		if wnd.is_closed():
@@ -62,21 +68,6 @@ class TransitionEngine:
 		for win in self.__windows:
 			win._transition = None
 			win._drawsurf = None
-			if win._frozen  == 'transition':
-				win._passive = None
-				win._frozen = None
-		self.__clrfrozen(wnd.getwindowpos(), topwindow)
-		topwindow.update()
-
-	def __clrfrozen(self, (X,Y,W,H), window):
-		for win in window._subwindows:
-			x,y,w,h = win.getwindowpos()
-			if x < X+W and X < x+w and y < Y+H and Y < y+h:
-				# overlap
-				if win._frozen == 'transition':
-					win._passive = None
-					win._frozen = None
-				self.__clrfrozen((Y,Y,W,H), win)
 
 	def settransitionvalue(self, value):
 		if value<0.0 or value>1.0:
