@@ -80,6 +80,7 @@ class FullPopupMenu:
 					if char and not accelerators is None:
 						accelerators[char] = callback
 						# We abuse the mark position for the shortcut (sigh...)
+						# XXXX Can be done differently with Appearance
 						m.setmark(ord(char))
 					if is_toggle_item:
 						self.toggle_entries.append(m)
