@@ -41,7 +41,7 @@ class Exporter:
 			self.aborted = 1
 		stoptime = windowinterface.getcurtime()
 		windowinterface.settimevirtual(0)
-		windowinterface.showmessage("Finished, aborted=%d"%self.aborted)
+		# windowinterface.showmessage("Finished, aborted=%d"%self.aborted)
 		
 	def cancel_callback(self):
 		self.aborted = 1
