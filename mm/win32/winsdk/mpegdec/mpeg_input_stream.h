@@ -1,3 +1,11 @@
+
+/*************************************************************************
+Copyright 1991-2002 by Oratrix Development BV, Amsterdam, The Netherlands.
+
+                        All Rights Reserved
+
+/*************************************************************************/
+
 #ifndef INC_MPEG_INPUT_STREAM
 #define INC_MPEG_INPUT_STREAM
 
@@ -17,6 +25,7 @@ class mpeg_input_stream
 	virtual size_t tell() const = 0;
 	virtual bool is_eof() const = 0;
 	virtual bool is_bof() const = 0;
+	virtual const TCHAR *get_pathname() const = 0;
 
 	virtual size_t read(unsigned char *buffer, size_t bytes) = 0;
 	virtual unsigned int read_char() = 0;
