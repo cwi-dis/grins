@@ -1,4 +1,7 @@
 """Test ArcInfoDialog, editor specifics"""
+
+__version__ = "$Id$"
+
 import sys
 import os
 
