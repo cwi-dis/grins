@@ -42,6 +42,8 @@ def givehelp(topic):
 
 def showhelpwindow():
 	import win32api, win32con, win32ui
+	win32ui.MessageBox("Cannot find help file")
+	return # for now...
 	fixhelpdir()
 	win32api.WinHelp(win32ui.GetActiveWindow().GetSafeHwnd(), helpfile,
 			 win32con.HELP_CONTENTS, 0)
