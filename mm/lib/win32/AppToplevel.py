@@ -424,6 +424,16 @@ class _Toplevel:
 			builder.RenderFile(file)
 			width, height=builder.GetWindowPosition()[2:]
 		return (width, height)
+
+	# Returns the duration of the media file in secs	
+	def GetMediaDuration(self,file):
+		DirectShowSdk=win32ui.GetDS()
+		builder=DirectShowSdk.CreateGraphBuilder()
+		duration=1000.0
+		if builder:
+			builder.RenderFile(file)
+			duration=builder.GetDuration()
+		return float(duration/1000.0)
 	
 	# Returns the length of a string in pixels	
 	def GetStringLength(wnd,str):
