@@ -9,6 +9,7 @@ from usercmd import *
 from TemporalWidgets import *
 from GeometricPrimitives import *
 import Clipboard
+import EditableObjects
 
 class TemporalView(TemporalViewDialog):
 	def __init__(self, toplevel):
@@ -16,7 +17,7 @@ class TemporalView(TemporalViewDialog):
 		self.toplevel = toplevel
 		self.root = toplevel.root
 		self.window = None	# I still don't know where the window comes from.
-		
+					# It just kind of magically appears here at some stage.
 		# Oooh yes, let's do some really cool selection code.
 		# Of course, I'll write it _later_.
 		self.selected_regions = []
