@@ -16,6 +16,7 @@ import os
 import urlparse, MMurl
 import Timing
 from math import ceil
+import string
 
 
 import settings
@@ -524,10 +525,13 @@ class HierarchyView(HierarchyViewDialog):
 				self.render()
 				windowinterface.showmessage("file not compatible with channel type `%s'" % obj.node.GetChannelType(), mtype = 'error', parent = self.window)
 				return
-			if t == 'slide' and (guess_type(url)[0] or '')[:5] != 'image':
-				self.render()
-				windowinterface.showmessage("only images allowed in RealPix node", mtype = 'error', parent = self.window)
-				return
+			if t == 'slide':
+				ftype = guess_type(url)[0] or ''
+				if ftype[:5] != 'image' or \
+				   string.find(ftype, 'real') >= 0:
+					self.render()
+					windowinterface.showmessage("only images allowed in RealPix node", mtype = 'error', parent = self.window)
+					return
 			em = self.editmgr
 			if not em.transaction():
 				self.render()
