@@ -65,7 +65,7 @@ MODULES = {
 	'TransitionModifiers': 1,
 	'WallclockTiming': 1,
 
-	# SMIL 2.0 Psuedo Modules
+	# SMIL 2.0 Pseudo Modules
 	'NestedTimeContainers': 1,
 	'DeprecatedFeatures': 1,
 
@@ -122,7 +122,7 @@ MODULES = {
 ##	'TransitionModifiers': 0,
 ##	'WallclockTiming': 0,
 
-##	# SMIL 2.0 Psuedo Modules
+##	# SMIL 2.0 Pseudo Modules
 ##	'NestedTimeContainers': 0,
 ##	'DeprecatedFeatures': 1,
 
