@@ -263,6 +263,7 @@ class TreeCtrl(window.Wnd):
 		if flags & commctrl.TVHT_ONITEM:
 			if self._dragdropListener:
 				for key, value in self.dropMap.items():
+					# XXXX Needs to use DropTarget.DecodeDragData
 					objectId = dataobj.GetGlobalData(value)
 					if objectId != None:
 						ret = self._dragdropListener.OnDragOver(item, key, objectId)
@@ -290,6 +291,7 @@ class TreeCtrl(window.Wnd):
 		if flags & commctrl.TVHT_ONITEM:
 			if self._dragdropListener:
 				for key, value in self.dropMap.items():
+					# XXXX Needs to use DropTarget.DecodeDragData
 					objectId = dataobj.GetGlobalData(value)
 					if objectId != None:
 						return self._dragdropListener.OnDrop(item, key, objectId)
@@ -320,6 +322,7 @@ class TreeCtrl(window.Wnd):
 
 	# object id have to be a string
 	def beginDrag(self, type, objectId):
+		# XXXX Should use DropTarget.EncodeDragData
 		cf = self.dropMap.get(type)
 		if cf != None:
 			self.DoDragDrop(cf, objectId)

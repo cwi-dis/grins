@@ -184,15 +184,9 @@ class _AssetsView(GenView.GenView, docview.ListView, DropTarget.DropTargetListen
 			return 0
 		return cb(cursel)
 
-	def doDragDrop(self, type, value):
-		if type == 'URL':
-			rv = self.listCtrl.DoDragDrop(DropTarget.CF_URL, value)
-		elif type == 'node':
-			value = string.join(value, ',')
-			rv = self.listCtrl.DoDragDrop(DropTarget.CF_NODEUID, value)
-		else:
-			print 'Unknown assetview dragtype', type
-			rv = None
+	def doDragDrop(self, flavor, value):
+		flavorid, str = DropTarget.EncodeDragData(flavor, value)
+		rv = self.listCtrl.DoDragDrop(flavorid, str)
 		return rv
 
 	#
@@ -203,8 +197,8 @@ class _AssetsView(GenView.GenView, docview.ListView, DropTarget.DropTargetListen
 		cb = self._cmddict.get('dragurl')
 		if not cb:
 			return 0
-		filename=dataobj.GetGlobalData(DropTarget.CF_FILE)
-		filename=longpath.short2longpath(filename)
+		flavor, filename = DropTarget.DecodeDragData(dataobj)
+		assert flavor == 'FileName'
 		if not filename:
 			return 0
 		url = MMurl.pathname2url(filename)
@@ -216,8 +210,8 @@ class _AssetsView(GenView.GenView, docview.ListView, DropTarget.DropTargetListen
 		cb = self._cmddict.get('dropurl')
 		if not cb:
 			return 0
-		filename=dataobj.GetGlobalData(DropTarget.CF_FILE)
-		filename=longpath.short2longpath(filename)
+		flavor, filename = DropTarget.DecodeDragData(dataobj)
+		assert flavor == 'FileName'
 		if not filename:
 			return 0
 		url = MMurl.pathname2url(filename)
@@ -228,7 +222,8 @@ class _AssetsView(GenView.GenView, docview.ListView, DropTarget.DropTargetListen
 		cb = self._cmddict.get('dragurl')
 		if not cb:
 			return 0
-		url = dataobj.GetGlobalData(DropTarget.CF_URL)
+		flavor, url = DropTarget.DecodeDragData(dataobj)
+		assert flavor == 'URL'
 		if not url:
 			return 0
 		rv = cb(x, y, url)
@@ -238,7 +233,8 @@ class _AssetsView(GenView.GenView, docview.ListView, DropTarget.DropTargetListen
 		cb = self._cmddict.get('dropurl')
 		if not cb:
 			return 0
-		url = dataobj.GetGlobalData(DropTarget.CF_URL)
+		flavor, url = DropTarget.DecodeDragData(dataobj)
+		assert flavor == 'URL'
 		if not url:
 			return 0
 		rv = cb(x, y, url)
