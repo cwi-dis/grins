@@ -124,7 +124,15 @@ class Line(GeoClientWidget):
 		self.displist.drawline(self.color, [(x,y), (x+w, y+h)])
 
 class HLine3D(GeoClientWidget):
-	print "TODO: 3d line"
+	# Horizontal lines only.
+	color = (0,0,0)
+	color2 = (128,128,128)
+	def set_color(self, color1, color2):
+		self.color = color1
+		self.color2 = color2
+	def redraw(self):
+		x,y,w,h = self.get_box()
+		self.displist.draw3dhline(self.color, self.color2, x, x+w, y)
 
 class Box(GeoClientWidget):
 	color = (0,0,0)
@@ -152,10 +160,11 @@ class Marker(GeoClientWidget):
 	print "TODO"
 
 class Text(GeoClientWidget):
+	# TODO: support different fonts and stuff.
 	def __init__(self, mother):
 		GeoClientWidget.__init__(self, mother)
 		self.textalign = 'c'
-		self.text = "Error - no text set."
+		self.text = "--"
 	def set_text(self, text):
 		if text != self.text:
 			self.text = text
@@ -177,15 +186,19 @@ class Text(GeoClientWidget):
 			self.parent.change_objects.append(self)
 
 	def get_height(self):
-		print "TODO: Text.get_height()"
 		return 12;
 
 class FPolygon(GeoClientWidget):
 	pass;
 
-#class Box3D(GeoClientWidget):
-#	pass;
-Box3D=Box
+class Box3D(GeoClientWidget):
+	def set_color(self, color1, color2, color3, color4):
+		self.color1 = color1
+		self.color2 = color2
+		self.color3 = color3
+		self.color4 = color4
+	def redraw(self):
+		self.displist.draw3dbox(self.color1, self.color2, self.color3, self.color4, self.get_box())
 
 class Diamond(GeoClientWidget):
 	pass;
@@ -197,6 +210,8 @@ class Diamond3D(GeoClientWidget):
 	pass;
 
 class Arrow(GeoClientWidget):
-	pass;
+	def redraw(self):
+		x,y,w,h = self.get_box()
+		self.displist.drawarrow(self.color, (x,y), (x+w,y+h))
 
 
