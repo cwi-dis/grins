@@ -473,8 +473,10 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 		cp.SetCopyright(MMAttrdefs.getattr(node, 'copyright'))
 		cp.SetPerfectPlay(MMAttrdefs.getattr(node, 'project_perfect'))
 		cp.SetMobilePlay(MMAttrdefs.getattr(node, 'project_mobile'))
-		ts.SetVideoQuality(MMAttrdefs.getattr(node, 'project_videotype'))
-		ts.SetAudioContent(MMAttrdefs.getattr(node, 'project_audiotype'))
+		if has_video:
+			ts.SetVideoQuality(MMAttrdefs.getattr(node, 'project_videotype'))
+		if has_audio:
+			ts.SetAudioContent(MMAttrdefs.getattr(node, 'project_audiotype'))
 		target = MMAttrdefs.getattr(node, 'project_targets')
 		ntargets = 0
 		for i in range(6):
@@ -493,7 +495,10 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 		cp.SetMobilePlay(0)
 		ts.AddTargetAudience(producer.ENC_TARGET_28_MODEM)
 		ntargets = 1
-		ts.SetVideoQuality(producer.ENC_VIDEO_QUALITY_NORMAL)
+		if has_video:
+			ts.SetVideoQuality(producer.ENC_VIDEO_QUALITY_NORMAL)
+		if has_audio
+			ts.SetAudioContent(producer.ENC_AUDIO_CONTENT_VOICE)
 	engine.SetDoMultiRateEncoding(ntargets != 1)
 	cp.SetSelectiveRecord(0)
 	cp.SetDoOutputServer(0)
