@@ -3,6 +3,7 @@
 import MMExc
 import MMAttrdefs
 
+import posix
 import gl
 
 import image
@@ -10,7 +11,7 @@ import image
 from Channel import Channel
 from ChannelWindow import ChannelWindow
 
-class ImageWindow() = ChannelWindow():
+class ImageWindow(ChannelWindow):
 	#
 	# Initialization function.
 	#
@@ -25,7 +26,7 @@ class ImageWindow() = ChannelWindow():
 		self.render()
 	#
 	def redraw(self):
-		if self.wid = 0: return
+		if self.wid == 0: return
 		gl.reshapeviewport()
 		self.render()
 	#
@@ -49,7 +50,7 @@ class ImageWindow() = ChannelWindow():
 		self.parray = None
 		try:
 			self.xsize, self.ysize = image.imgsize(filename)
-		except:
+		except (IOError, posix.error):
 			print 'Cannot get size of image file', `filename`
 			return
 		self.node = node
@@ -78,7 +79,7 @@ class ImageWindow() = ChannelWindow():
 
 # XXX Make the image channel class a derived class from ImageWindow?!
 
-class ImageChannel() = Channel():
+class ImageChannel(Channel):
 	#
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
@@ -133,9 +134,5 @@ class ImageChannel() = Channel():
 		self.window.setimage(self.getfilename(node), node)
 	#
 	def getfilename(self, node):
-		# XXX Doesn't use self...
-		if node.type = 'imm':
-			return string.join(node.GetValues())
-		elif node.type = 'ext':
-			return MMAttrdefs.getattr(node, 'file')
+		return MMAttrdefs.getattr(node, 'file')
 	#
