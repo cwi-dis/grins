@@ -47,7 +47,8 @@ class Channel:
 	# The following methods can be called by higher levels.
 	#
 	chan_attrs = ['visible', 'base_window']
-	node_attrs = ['file', 'mimetype', 'project_convert']
+	node_attrs = ['file', 'mimetype', 'project_convert', 'duration',
+		      'repeatdur', 'loop']
 	_visible = FALSE
 
 	def __init__(self, name, attrdict, scheduler, ui):
@@ -79,7 +80,7 @@ class Channel:
 		self._highlighted = None
 		self._in_modeless_resize = 0
 		self.nopop = 0
-		self.syncarm = 0
+		self.syncarm = settings.noprearm
 		self.syncplay = 0
 		self.is_layout_channel = 0
 		self.seekargs = None
@@ -404,7 +405,11 @@ class Channel:
 			return 1
 		self._armed_node = node
 		self._armed_anchors = []
-		self.armed_duration = self.getduration(node)
+		duration = node.GetAttrDef('duration', None)
+		repeatdur = node.GetAttrDef('repeatdur', None)
+		if repeatdur is not None:
+			duration = repeatdur
+		self.armed_duration = duration
 		return 0
 
 	def arm_1(self):
@@ -479,20 +484,45 @@ class Channel:
 		if debug:
 			print 'Channel.play_0('+`self`+','+`node`+')'
 		if self._armed_node is not node:
-			raise error, 'node was not the armed node '+`self,node`
+			if settings.noprearm:
+				self.arm(node)
+				if not self._armcontext:
+					# aborted
+					return
+			else:
+				raise error, 'node was not the armed node '+`self,node`
 		if self._playstate != PIDLE:
 			raise error, 'play not idle on '+self._name
 		if self._armstate != ARMED:
-			raise error, 'arm not ready'
+			if settings.noprearm:
+				self.arm(node)
+			else:
+				raise error, 'arm not ready'
 		self._playcontext = self._armcontext
 		self._playstate = PLAYING
 		self._played_node = node
 		self._anchors = {}
 		self._played_anchors = self._armed_anchors[:]
-		durationattr = MMAttrdefs.getattr(node, 'duration')
-		self._has_pause = (durationattr < 0)
+		durationattr = node.GetAttrDef('duration', None)
+		repeatdur = node.GetAttrDef('repeatdur', None)
+		loop = node.GetAttrDef('loop', None)
+		if loop is not None and loop > 0 and \
+		   durationattr is not None and durationattr >= 0:
+			self._has_pause = 0
+		elif repeatdur is not None and repeatdur < 0:
+			self._has_pause = 1
+		elif repeatdur is not None:
+			self._has_pause = 0
+		elif durationattr is not None and durationattr < 0:
+			self._has_pause = 1
+		elif MMAttrdefs.getattr(node, 'endlist'):
+			self._has_pause = 1
+		else:
+			self._has_pause = 0
 		for (name, type, button, times) in self._played_anchors:
-			if type == ATYPE_PAUSE:
+			if name is None and type is None:
+				f = self.onclick
+			elif type == ATYPE_PAUSE:
 ##				print 'found pause anchor'
 				f = self.pause_triggered
 				self._has_pause = 1
@@ -500,6 +530,9 @@ class Channel:
 				f = self._playcontext.anchorfired
 			self._anchors[button] = f, (node, [(name, type)], None)
 		self._qid = None
+
+	def onclick(self, *unused):
+		self._scheduler.sched_arcs(self._playcontext, self._played_node, 'click')
 
 	def play_1(self):
 		# This does the final part of playing a node.  This
@@ -515,12 +548,12 @@ class Channel:
 		# this node
 		self.armdone()
 		if not self.syncplay:
-			if self.armed_duration > 0:
+			if not self.armed_duration:
+				self.playdone(0)
+			elif self.armed_duration > 0:
 				self._qid = self._scheduler.enter(
 					  self.armed_duration, 0,
 					  self.playdone, (0,))
-			else:
-				self.playdone(0)
 		else:
 			self.playdone(0)
 
@@ -670,6 +703,8 @@ class Channel:
 		if debug:
 			print 'Channel.play('+`self`+','+`node`+')'
 		self.play_0(node)
+		if not self._armcontext:
+			return
 		if self._is_shown and node.ShouldPlay():
 			# XXXX This depends on node playability not changing,
 			# otherwise we may have to re-arm.
@@ -717,7 +752,8 @@ class Channel:
 			self.syncarm = 1
 			self.stoparm()
 			self.syncarm = save_syncarm
-			self._armcontext.arm_ready(self)
+			if not self.syncarm:
+				self._armcontext.arm_ready(self)
 		if self._playstate != PIDLE and self._played_node is node:
 			# hack to not generate play_done event
 			save_syncplay = self.syncplay
@@ -1002,7 +1038,7 @@ _button = None				# the currently highlighted button
 
 class ChannelWindow(Channel):
 	chan_attrs = Channel.chan_attrs + ['base_winoff', 'transparent', 'units', 'popup', 'z', 'bgimg']
-	node_attrs = Channel.node_attrs + ['duration', 'drawbox']
+	node_attrs = Channel.node_attrs + ['drawbox']
 	if CMIF_MODE:
 		node_attrs.append('bgcolor')
 	else:
@@ -1392,6 +1428,12 @@ class ChannelWindow(Channel):
 			self.armed_display.close()
 		bgcolor = self.getbgcolor(node)
 		self.armed_display = self.window.newdisplaylist(bgcolor)
+		for arc in node.sched_children:
+			if arc.event == 'click':
+				self.armed_display.fgcolor(bgcolor)
+				b = self.armed_display.newbutton((0,0,1,1), z = -1)
+				self.setanchor(None, None, b, None)
+				break
 		fgcolor = self.getfgcolor(node)
 		self.armed_display.fgcolor(fgcolor)
 		alist = node.GetRawAttrDef('anchorlist', [])
@@ -1408,7 +1450,7 @@ class ChannelWindow(Channel):
 				self.armed_display.fgcolor(self.getbucolor(node))
 			else:
 				self.armed_display.fgcolor(bgcolor)
-			b = self.armed_display.newbutton((0.0, 0.0, 1.0, 1.0))
+			b = self.armed_display.newbutton((0.0, 0.0, 1.0, 1.0), times = armed_anchor[A_TIMES])
 			b.hiwidth(3)
 			b.hicolor(self.gethicolor(node))
 			self.armed_display.fgcolor(fgcolor)
@@ -1421,6 +1463,8 @@ class ChannelWindow(Channel):
 		if debug:
 			print 'ChannelWindow.play('+`self`+','+`node`+')'
 		self.play_0(node)
+		if not self._armcontext:
+			return
 		if self._is_shown and node.ShouldPlay() and self.window:
 			try:
 				winoff = self.winoff
@@ -1504,6 +1548,8 @@ class ChannelAsync(Channel):
 		if debug:
 			print 'ChannelAsync.play('+`self`+','+`node`+')'
 		self.play_0(node)
+		if not self._armcontext:
+			return
 		if not self._is_shown or not node.ShouldPlay() \
 		   or self.syncplay:
 			self.play_1()
@@ -1517,6 +1563,8 @@ class ChannelWindowAsync(ChannelWindow):
 		if debug:
 			print 'ChannelWindowAsync.play('+`self`+','+`node`+')'
 		self.play_0(node)
+		if not self._armcontext:
+			return
 		if self._is_shown and node.ShouldPlay() \
 		   and self.window and not self.syncplay:
 ##			try:
