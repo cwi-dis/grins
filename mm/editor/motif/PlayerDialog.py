@@ -29,7 +29,7 @@ class PlayerDialog(PlayerDialogBase):
 				(LIGHT, 'Pause', PAUSE, 't'),
 				(LIGHT, 'Stop', STOP, 't'),
 				]),
-			(CMIF, 'User Groups', USERGROUPS),
+			(SMIL, 'User Groups', USERGROUPS),
 			(CMIF, 'Channels', CHANNELS),
 			(LIGHT|DBG, 'View', [
 				(CMIF, 'Timeline view follows player', SYNCCV, 't'),
