@@ -575,25 +575,15 @@ class SMILHtmlTimeWriter(SMIL):
 			lch = lch.__parent
 		
 		pushed = 0
-		if viewport and self.__currViewport!=viewport:
-			if self.__currViewport:
-				self.pop()
-			name = self.ch2name[viewport]
-			self.ids_written[name] = 1
-			self.writetag('div', [('id',name), ('style', self.ch2style[viewport]),])
-			self.push()
-			self.__currViewport = viewport
-
-		for lch in parents:
-			divlist = []
-			if self.ch2style.has_key(lch):
-				name = self.ch2name[lch]
-				divlist.append(('id', name))
-				divlist.append(('style', self.ch2style[lch]))
-				self.writetag('div', divlist)
-				self.ids_written[name] = 1
-				self.push()
-				pushed = pushed + 1
+		lch = parents[0]
+		name = self.ch2name[lch]
+		divlist = []
+		divlist.append(('id', name))
+		divlist.append(('class', 'reg'+regionName))
+		self.writetag('div', divlist)
+		self.push()
+		self.ids_written[name] = 1
+		pushed = pushed + 1
 
 		for i in range(pushed):
 			self.pop()
