@@ -1334,7 +1334,7 @@ class MediaWidget(MMNodeWidget):
 			displist.drawbox((x+w/12, y+h/6, 5*(w/6), 4*(h/6)))
 		else:
 			image_filename = self.__get_image_filename()
-			if image_filename != None:
+			if image_filename != None and w > 0 and h > 0:
 				try:
 					box = displist.display_image_from_file(
 						image_filename,
