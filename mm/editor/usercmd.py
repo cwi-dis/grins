@@ -347,7 +347,19 @@ class FIND_EVENT_SOURCE(_CommandBase):
 	help = 'Find the source of this event'
 class ZOOMIN(_CommandBase):
 	help = 'Zoom in'
+class ZOOMIN2(_CommandBase):
+	help = 'Zoom in'
+class ZOOMIN4(_CommandBase):
+	help = 'Zoom in'
+class ZOOMIN8(_CommandBase):
+	help = 'Zoom in'
 class ZOOMOUT(_CommandBase):
+	help = 'Zoom out'
+class ZOOMOUT2(_CommandBase):
+	help = 'Zoom out'
+class ZOOMOUT4(_CommandBase):
+	help = 'Zoom out'
+class ZOOMOUT8(_CommandBase):
 	help = 'Zoom out'
 class ZOOMRESET(_CommandBase):
 	help = 'Reset zoom factor'
