@@ -113,9 +113,6 @@ class NodeInfoDialog:
 		fs.showform(w,formid)
 		self.__window=w
 
-		w.setdata()
-		w.enable_cbs()
-
 	def close(self):
 		"""Close the dialog and free resources."""
 		self.__window.close()
