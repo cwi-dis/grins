@@ -4310,8 +4310,19 @@ def MergeLists(l1, l2):
 # parse the external marker file
 # this function can raise an IOError if the file is not found
 # this function can raise a ValueError if the file can't be parsed
+required = [
+	'// The format of this file is solely for SMIL 2.0 Interop testing.',
+	'// It must not be supported in publicly-released software.',
+	]
 def parsemarkerfile(url):
 	u = MMurl.urlopen(url)		# can raise IOError
+	if required:
+		line = u.readline()
+		if not line or string.rstrip(line) != required[0]:
+			return {}
+		line = u.readline()
+		if not line or string.rstrip(line) != required[1]:
+			return {}
 	markers = {}
 	while 1:
 		line = u.readline()
@@ -4321,7 +4332,7 @@ def parsemarkerfile(url):
 		if not line:
 			# empty line
 			continue
-		if line[0] == '#':
+		if line[:2] == '//':
 			# comment line
 			continue
 		vals = string.split(line, None, 3)
