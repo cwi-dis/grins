@@ -1958,7 +1958,7 @@ class MMNode(MMTreeElement):
 		self.type = type	# see MMTypes.py
 		self.attrdict = {}	# Attributes of this MMNode
 		self.d_attrdict = {}	# Dynamic (changing) attrs of this MMNode
-		self.values = []
+		self.values = []	# A list of strings when this is an immediate node.
 		self.willplay = None	# Used for colours in the editor
 		self.shouldplay = None
 		self.canplay = None
