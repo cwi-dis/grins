@@ -55,7 +55,7 @@ DWORD VideoThread::Run()
 	if(wres == WAIT_OBJECT_0) return 0;
 
 	double rate = m_decoder.get_frame_rate();
-	DWORD msecs = (DWORD)floor(0.5+1000.0/rate);
+	long msecs = (long)floor(0.5+1000.0/rate);
 
 	m_decoder.reset_framenum();
 	

@@ -47,7 +47,8 @@ class MpegDisplay
 	void init_display(int chroma, int width, int height);
 	void conv422to444(uchar_t *src, uchar_t *dst);
 	void conv420to422(uchar_t *src, uchar_t *dst);
-	
+	void copy_surf();
+
 	const display_info& m_di;
 	uchar_t *u422, *v422, *u444, *v444;
 	surface<color_repr_t> *m_surf;

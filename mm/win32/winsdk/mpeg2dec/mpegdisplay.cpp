@@ -20,6 +20,10 @@ GXDisplayProperties GXDP;
 extern "C" int Inverse_Table_6_9[8][4];
 extern "C"  unsigned char *Clip;
 
+unsigned short r_t[256];
+unsigned short g_t[256];
+unsigned short b_t[256];
+
 MpegDisplay::MpegDisplay(const display_info& di)
 :	u422(0), v422(0), u444(0), v444(0),
 	m_di(di), 
@@ -29,6 +33,12 @@ MpegDisplay::MpegDisplay(const display_info& di)
 	{
 #ifdef USE_GAPI
 	GXDP = GXGetDisplayProperties();
+	for(unsigned short i = 0; i<256; i++)
+		{
+		r_t[i] = (i & 0xf8) << 8;
+		g_t[i] = (i & 0xfc) << 3;
+		b_t[i] = (i >> 3);
+		}
 #endif
 
 	if(m_di.chroma_format != CHROMA444)
@@ -87,51 +97,49 @@ void MpegDisplay::update_surface(unsigned char *src[], int frame, int offset,int
 	int cgv = Inverse_Table_6_9[m_di.matrix_coefficients][3];
   
 	m_cs.enter();
-
-// XXX: when scaling is needed
-// 1. Use GDI to StretchBlt 
-// 2. Copy bits to GX screen
-// OR for faster results implement a stretch algorithm
-
-	// XXX: NO SCALING/CLIPPING WITH GAPI YET
-#ifdef USE_GAPI
-	unsigned short *pDest = (unsigned short*)GXBeginDraw();
-    int cxPitch = GXDP.cbxPitch / 2; 
-	int cyPitch = GXDP.cbyPitch / 2;
-	pDest += m_dx * cxPitch + m_dy * cyPitch;
-#endif
-
 	for (int yi=0; yi<vsteps; yi++)
 		{
 		unsigned char *py = src[0] + offset + incr*yi;
 		unsigned char *pu = u444 + offset + incr*yi;
 		unsigned char *pv = v444 + offset + incr*yi;
-#ifdef USE_GAPI
-		unsigned short *d = pDest + yi * cyPitch;
-#endif
 		color_repr_t *pcr = m_surf->get_row(yi);
-		for (int xi=0; xi<m_di.horizontal_size; xi++)
+		for (int xi=0; xi<m_di.horizontal_size; xi++, pcr++)
 			{
 			int u = *pu++ - 128;
 			int v = *pv++ - 128;
 			int y = 76309 * (*py++ - 16); // (255/219)*65536 
-			int r = Clip[(y + crv*v + 32768)>>16];
-			int g = Clip[(y - cgu*u - cgv*v + 32768)>>16];
-			int b = Clip[(y + cbu*u + 32786)>>16];
-#ifdef USE_GAPI
-			unsigned short us = b >> 3; 
-			us |= (g & 0xfc) << 3; 
-			us |= (r & 0xf8) << 8; 
-			*d = us;
-			d += cxPitch;
-#endif 
-			*pcr++ = color_repr_t(r, g, b);
+			pcr->r = Clip[(y + crv*v + 32768)>>16];
+			pcr->g = Clip[(y - cgu*u - cgv*v + 32768)>>16];
+			pcr->b = Clip[(y + cbu*u + 32786)>>16];
 			}
 		}
-#ifdef USE_GAPI
-	GXEndDraw();	
-#endif
 	m_cs.leave();
+	copy_surf();
+	}
+
+void MpegDisplay::copy_surf()
+	{
+	const int menu_height = 26;
+	int w = m_surf->get_width();
+	int h = m_surf->get_height();
+	// no scaling yet
+#ifdef USE_GAPI
+	typedef unsigned short ushort_t;
+	ushort_t *screen = (ushort_t*)GXBeginDraw();
+    int cxPitch = GXDP.cbxPitch / 2; 
+	int cyPitch = GXDP.cbyPitch / 2;
+	screen += m_dx * cxPitch + m_dy * cyPitch;
+	m_dw = min(m_dw, int(GXDP.cxWidth) - m_dx);
+	m_dh = min(m_dh, int(GXDP.cyHeight) - menu_height - m_dy);
+	for (int y=0; y<h && y<m_dh; y++)
+		{
+		color_repr_t *pcr = m_surf->get_row(y);
+		ushort_t *sp = screen + y * cyPitch;
+		for (int x=0; x<w && x<m_dw; x++, sp+=cxPitch, pcr++)
+			*sp = b_t[pcr->b] |  g_t[pcr->g] | r_t[pcr->r]; 
+		}
+	GXEndDraw();	
+#endif  // ifdef USE_GAPI
 	}
 
 /* horizontal 1:2 interpolation filter */
