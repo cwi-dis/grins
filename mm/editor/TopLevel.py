@@ -800,11 +800,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			if mtype == 'application/smil':
 				progress = windowinterface.ProgressDialog("Import")
 				progress.set("Importing SMIL document...")
-			self.root = SMILTreeRead.ReadFile(filename, self.printfunc, self.new_file)
-##			# For the lightweight version we set SMIL files as being "new"
-##			if light and mtype == 'application/smil':
-##				# XXXX Not sure about this, this may mess up code in read_it
-##				self.new_file = 1
+			check_compatibility = mtype == 'application/x-grins-project'
+			self.root = SMILTreeRead.ReadFile(filename, self.printfunc, self.new_file, check_compatibility)
+##				# For the lightweight version we set SMIL files as being "new"
+##				if light and mtype == 'application/smil':
+##					# XXXX Not sure about this, this may mess up code in read_it
+##					self.new_file = 1
+
 		elif mtype == 'application/x-grins-cmif':
 			if features.lightweight:
 				windowinterface.showmessage('cannot read CMIF files in this version', mtype = 'error')
@@ -834,6 +836,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
   </body>
 </smil>
 ''' % (dur, filename), filename, self.printfunc)
+
 ##		t1 = time.time()
 ##		print 'done in', round(t1-t0, 3), 'sec.'
 
