@@ -1301,6 +1301,9 @@ class FileAttrEditorField(StringAttrEditorField):
 				if minstart - start > value:
 					b.setvalue(b.valuerepr(minstart-start))
 
+	def setpathname(self, pathname):
+		self.__ok_cb(pathname)
+
 class TextAttrEditorField(AttrEditorField):
 	type = 'text'
 
