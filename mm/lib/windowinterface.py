@@ -125,6 +125,7 @@ class _Event:
 		self._savex = None
 		self._fdlist = []
 		self._winfd = gl.qgetfd()
+		self._nestingdepth = 0
 
 	def _qdevice(self):
 		if debug: print 'Event.qdevice()'
@@ -151,23 +152,32 @@ class _Event:
 		self._readeventtimeout(None)
 
 	def _readeventtimeout(self, timeout):
-		import select
-		if debug: print 'Event._readeventtimeout('+`timeout`+')'
-		if timeout != None and timeout > 0 and not mayblock():
-			raise error, 'won\'t block in _readeventtimeout()'
-		fdlist = [self._winfd] + self._fdlist
-		if timeout == None:
-			ifdlist, ofdlist, efdlist = select.select(fdlist,
-				  [], [])
-		else:
-			ifdlist, ofdlist, efdlist = select.select(fdlist,
-				  [], [], timeout)
-		for fd in ifdlist:
-			if fd in self._fdlist:
-				self.entereventunique(None, FileEvent, fd)
-		while fl_or_gl.qtest():
-			dev, val = fl_or_gl.qread()
-			self._dispatch(dev, val)
+		if timeout == 0:
+			if self._nestingdepth > 0:
+				return
+		self._nestingdepth = self._nestingdepth + 1
+		try:
+			import select
+			if debug:
+				print 'Event._readeventtimeout('+`timeout`+')'
+			if timeout != None and timeout > 0 and not mayblock():
+				raise error, 'won\'t block in _readeventtimeout()'
+			fdlist = [self._winfd] + self._fdlist
+			if timeout == None:
+				ifdlist, ofdlist, efdlist = select.select(
+					  fdlist, [], [])
+			else:
+				ifdlist, ofdlist, efdlist = select.select(
+					  fdlist, [], [], timeout)
+			for fd in ifdlist:
+				if fd in self._fdlist:
+					self.entereventunique(None, FileEvent,
+						  fd)
+			while fl_or_gl.qtest():
+				dev, val = fl_or_gl.qread()
+				self._dispatch(dev, val)
+		finally:
+			self._nestingdepth = self._nestingdepth - 1
 
 	def _getevent(self, timeout):
 		import time
