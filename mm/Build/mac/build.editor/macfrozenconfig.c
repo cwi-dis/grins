@@ -62,14 +62,14 @@ extern void initicglue();
 #ifndef initCtl
 extern void initCtl();
 #endif
-#ifndef initList
-extern void initList();
-#endif
 #ifndef initQd
 extern void initQd();
 #endif
 #ifndef initmac
 extern void initmac();
+#endif
+#ifndef initList
+extern void initList();
 #endif
 #ifndef initQt
 extern void initQt();
@@ -128,6 +128,9 @@ extern void initDrag();
 #ifndef initbinascii
 extern void initbinascii();
 #endif
+#ifndef initColorPicker
+extern void initColorPicker();
+#endif
 #ifndef initpcre
 extern void initpcre();
 #endif
@@ -139,9 +142,6 @@ extern void initarray();
 #endif
 #ifndef initimgpbm
 extern void initimgpbm();
-#endif
-#ifndef initColorPicker
-extern void initColorPicker();
 #endif
 #ifndef initimgjpeg
 extern void initimgjpeg();
@@ -208,9 +208,9 @@ struct _inittab _PyImport_Inittab[] = {
 	{"Win", initWin},
 	{"icglue", initicglue},
 	{"Ctl", initCtl},
-	{"List", initList},
 	{"Qd", initQd},
 	{"mac", initmac},
+	{"List", initList},
 	{"Qt", initQt},
 	{"AE", initAE},
 	{"TE", initTE},
@@ -230,11 +230,11 @@ struct _inittab _PyImport_Inittab[] = {
 	{"imgop", initimgop},
 	{"Drag", initDrag},
 	{"binascii", initbinascii},
+	{"ColorPicker", initColorPicker},
 	{"pcre", initpcre},
 	{"regex", initregex},
 	{"array", initarray},
 	{"imgpbm", initimgpbm},
-	{"ColorPicker", initColorPicker},
 	{"imgjpeg", initimgjpeg},
 	{"time", inittime},
 	{"App", initApp},

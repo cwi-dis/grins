@@ -39,3 +39,9 @@
 #ifndef WITH_RMA_SUPPORT
 #define initrma	0
 #endif
+#ifdef WITH_REALPRODUCER_SUPPORT
+#define _MACINTOSH 1
+#define _MACPPC
+#else
+#define initproducer 0
+#endif /* WITH_REALPRODUCER_SUPPORT */
