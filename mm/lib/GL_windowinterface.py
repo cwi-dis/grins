@@ -118,6 +118,8 @@ class _Toplevel:
 		dummy = testevent()
 		return window
 
+	newcmwindow = newwindow
+
 	def pop(self):
 		pass
 
@@ -1159,6 +1161,8 @@ class _Window:
 		dummy = testevent()
 		return new_window
 
+	newcmwindow = newwindow
+
 	def close(self):
 		if debug: print `self`+'.close()'
 		if not _window_list.has_key(self._window_id):
@@ -1728,6 +1732,8 @@ event = _Event()
 # Interface routines for the top level.
 def newwindow(x, y, w, h, title):
 	return toplevel.newwindow(x, y, w, h, title)
+
+newcmwindow = newwindow
 
 def close():
 	toplevel.close()

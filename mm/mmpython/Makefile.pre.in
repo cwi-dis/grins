@@ -30,7 +30,7 @@
 # === Variables that you just *have* to customize manually ===
 
 # The prefix used by "make inclinstall libainstall" of core python
-installdir=	../python/build.sgi/tmp
+installdir=	../python/irix4/tmp
 
 # The exec_prefix used by the same
 exec_installdir=$(installdir)
@@ -45,7 +45,7 @@ VPATH=		.
 # === Variables that you may want to customize ===
 
 # Add possible -L options here
-LINKPATH=	
+LINKPATH=	-L/ufs/jack/src/dl
 
 # You may want to change this to -O
 OPT=		-g
