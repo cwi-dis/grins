@@ -3,7 +3,6 @@ import win32ui, win32con, win32api
 import MainDialogRC
 import string
 
-from windowinterface import *
 from types import *
 
 Continue = 'Continue'
@@ -2032,7 +2031,8 @@ class _DisplayList:
 		height = int((bottom - top)*heig)
 		curlines = [str]
 		if height >= 2*fontheight:
-			curlines = calclines([str], self.strsize, right - left)[0]
+			import StringStuff
+			curlines = StringStuff.calclines([str], self.strsize, right - left)[0]
 		nlines = len(curlines)
 		needed = nlines * fontheight
 		if nlines > 1 and needed > height:
@@ -2058,31 +2058,31 @@ class _DisplayList:
 			#self.writestr(str)
 			self.writeText(self._font._fontname, self._font._pointsize, -1, str, dstx, dsty)
 
-		def _optimize(self, ignore = []):
-			if type(ignore) is IntType:
-				ignore = [ignore]
-			entry = self._list[-1]
-			x = []
-			for i in range(len(entry)):
-				if i not in ignore:
-					z = entry[i]
-					if type(z) is ListType:
-						z = tuple(z)
-					x.append(z)
-			x = tuple(x)
-			try:
-				i = self._optimdict[x]
-			except KeyError:
-				pass
-			else:
-				del self._list[i]
-				del self._optimdict[x]
-				if i < self._clonestart:
-					self._clonestart = self._clonestart - 1
-				for key, val in self._optimdict.items():
-					if val > i:
-						self._optimdict[key] = val - 1
-			self._optimdict[x] = len(self._list) - 1
+	def _optimize(self, ignore = []):
+		if type(ignore) is IntType:
+			ignore = [ignore]
+		entry = self._list[-1]
+		x = []
+		for i in range(len(entry)):
+			if i not in ignore:
+				z = entry[i]
+				if type(z) is ListType:
+					z = tuple(z)
+				x.append(z)
+		x = tuple(x)
+		try:
+			i = self._optimdict[x]
+		except KeyError:
+			pass
+		else:
+			del self._list[i]
+			del self._optimdict[x]
+			if i < self._clonestart:
+				self._clonestart = self._clonestart - 1
+			for key, val in self._optimdict.items():
+				if val > i:
+					self._optimdict[key] = val - 1
+		self._optimdict[x] = len(self._list) - 1
 
 
 class _Button:
@@ -2508,8 +2508,11 @@ class Dialog:
 
 		if del_Callback == None :
 			del_Callback = (self.close, ())
+			
+		import windowinterface
 
-		self.window = w = Window(title,
+
+		self.window = w = windowinterface.Window(title,
 				deleteCallback = del_Callback, havpar = 0)
 		constant = 3*win32api.GetSystemMetrics(win32con.SM_CXBORDER)+win32api.GetSystemMetrics(win32con.SM_CYCAPTION)+5
 		constant2 = 2*win32api.GetSystemMetrics(win32con.SM_CYBORDER)+5
