@@ -14,14 +14,21 @@ ITEM_EVAL=5
 ITEM_ENTERKEY=6
 ITEM_QUIT=7
 ITEM_NOTE=8
-ITEM_BALLOONHELP=8 # NOT YET
+ITEMLIST_LICENSE_ALL=ITEMrange(ITEM_SPLASH, ITEM_NOTE)
 
-ITEMLIST_ALL=ITEMrange(ITEM_SPLASH, ITEM_BALLOONHELP)
+ID_DIALOG_ENTERKEY=631
+ITEM_OK=1
+ITEM_CANCEL=2
+ITEM_NAME=3
+ITEM_ORGANIZATION=4
+ITEM_KEY=5
+ITEMLIST_ENTERKEY_ALL=ITEMrange(ITEM_OK, ITEM_KEY)
+
 
 class LicenseDialog(windowinterface.MACDialog):
 	def __init__(self):
 		windowinterface.MACDialog.__init__(self, "License", ID_DIALOG_LICENSE,
-				ITEMLIST_ALL, cancel=ITEM_QUIT)
+				ITEMLIST_LICENSE_ALL, cancel=ITEM_QUIT)
 				
 	def close(self):
 		windowinterface.MACDialog.close(self)
@@ -52,3 +59,32 @@ class LicenseDialog(windowinterface.MACDialog):
 			ctl.HiliteControl(0)
 		else:
 			ctl.HiliteControl(255)
+
+class EnterkeyDialog(windowinterface.MACDialog):
+	def __init__(self, ok_callback):
+		windowinterface.MACDialog.__init__(self, "License", ID_DIALOG_ENTERKEY,
+				ITEMLIST_ENTERKEY_ALL, cancel=ITEM_CANCEL, default=ITEM_OK)
+		self.ok_callback = ok_callback
+		self.setdialoginfo()
+		self.show()
+				
+	def close(self):
+		del self.ok_callback
+		windowinterface.MACDialog.close(self)
+			
+	def setdialoginfo(self):
+		nameok = self._getlabel(ITEM_NAME) or self._getlabel(ITEM_ORGANIZATION)
+		keyok = self._getlabel(ITEM_KEY)
+		self._setsensitive([ITEM_OK], (nameok and keyok))
+		
+	def do_itemhit(self, n, event):
+		if n == ITEM_OK:
+			name = self._getlabel(ITEM_NAME)
+			org = self._getlabel(ITEM_ORGANIZATION)
+			key = self._getlabel(ITEM_KEY)
+			self.ok_callback(key, name, org)
+			self.close()
+		elif n == ITEM_CANCEL:
+			self.close()
+		elif n in (ITEM_NAME, ITEM_ORGANIZATION, ITEM_KEY):
+			self.setdialoginfo()
