@@ -953,6 +953,10 @@ SOURCE=.\M_SMIL.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_SMILCssResolver.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_SMILTreeRead.c
 # End Source File
 # Begin Source File
