@@ -112,6 +112,8 @@ class HierarchyView(ViewDialog, GLDialog):
 		return self.focusnode
 
 	def globalsetfocus(self, node):
+		if not self.is_showing():
+			return
 		if not self.root.IsAncestorOf(node):
 			raise RuntimeError, 'bad node passed to globalsetfocus'
 		self.setfocusnode(node)
