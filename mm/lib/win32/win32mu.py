@@ -243,9 +243,9 @@ def roundi(x):
 		return roundi(x + 1024) - 1024
 	return int(x + 0.5)
 
-def UInt16ToInt16(x):
+def UInt16ToInt(x):
 	if x & 0x8000:
-		return -(~(x | 0xffff0000)+1)
+		return x | 0xffff0000
 	else:
 		return x
 	
