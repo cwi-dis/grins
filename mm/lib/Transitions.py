@@ -1124,7 +1124,7 @@ TRANSITIONDICT = {
 	("pushWipe", None) : PushWipeTransition,
 	("slideWipe", "fromLeft") : SlideWipeTransition,
 	("slideWipe", None) : SlideWipeTransition,
-	("fade", "crossFade") : FadeTransition,
+	("fade", "crossfade") : FadeTransition,
 	("fade", None) : FadeTransition,
 }
 
