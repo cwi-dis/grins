@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # Player module -- mostly defines the Player class.
 
 
