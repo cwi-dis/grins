@@ -1444,6 +1444,8 @@ class MMNode:
 		return self.parent
 
 	def GetSchedParent(self, check_playability = 1):
+		if hasattr(self, 'fakeparent'):
+			return self.fakeparent
 		parent = self.parent
 		while parent is not None and (parent.type == 'prio' or (check_playability and parent.type == 'alt')):
 			parent = parent.parent
@@ -3426,6 +3428,22 @@ class MMNode:
 		self.canplay = self.willplay = self.shouldplay = None
 		for child in self.children:
 			child.ResetPlayability()
+
+class FakeRootNode(MMNode):
+	def __init__(self, root):
+		self.__root = root	# the real root
+		MMNode.__init__(self, 'seq', root.context, '0')
+		self.children = [root]
+		root.fakeparent = self
+
+	def GetSchedParent(self):
+		return None
+
+	def resetall(self, sched):
+		MMNode.resetall(self, sched)
+		del self.__root.fakeparent
+		del self.__root
+		del self.children
 
 # Make a "deep copy" of an arbitrary value
 #

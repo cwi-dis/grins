@@ -6,6 +6,7 @@ import time
 from sched import scheduler
 from MMExc import *
 import MMAttrdefs
+import MMNode
 from MMTypes import *
 from ArmStates import *
 from HDTL import HD, TL
@@ -34,7 +35,7 @@ class SchedulerContext:
 		if not settings.noprearm:
 			self.unexpected_armdone = {}
 			self.prearmlists = {}
-		self.playroot = node
+		self.playroot = MMNode.FakeRootNode(node)
 		#self.parent.ui.duration_ind.label = '??:??'
 
 		self.prepare_minidoc(seeknode)
