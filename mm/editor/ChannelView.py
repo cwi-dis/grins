@@ -1136,11 +1136,10 @@ class ChannelBox(GO):
 class NodeBox(GO):
 
 	def __init__(self, mother, node):
+		import Duration
 		self.node = node
-		duration = MMAttrdefs.getattr(node, 'duration')
-		self.pausenode = duration < 0 or \
-				 (duration == 0 and \
-				  MMAttrdefs.getattr(node, 'loop') == 0)
+		duration = Duration.get(node)
+		self.pausenode = duration < 0
 		self.hasanchors = self.haspause = 0
 		try:
 			alist = self.node.GetRawAttr('anchorlist')
@@ -1276,7 +1275,22 @@ class NodeBox(GO):
 	def reshape(self):
 		# Compute ideal box coordinates
 		channel = self.node.GetChannel()
-		left, right = self.mother.maptimes(self.node.t0, self.node.t1)
+		if self.pausenode:
+			parent = self.node.GetParent()
+			if parent.GetType() == 'seq':
+				siblings = parent.GetChildren()
+				index = siblings.index(self.node)
+				if len(siblings) > index+1:
+					t1 = siblings[index+1].t0
+				else:
+					t1 = parent.t1
+			else:
+				t1 = parent.t1
+			if t1 == self.node.t0:
+				t1 = self.node.t1
+		else:
+			t1 = self.node.t1
+		left, right = self.mother.maptimes(self.node.t0, t1)
 		top, bottom = self.mother.mapchannel(channel)
 		if self.node.timing_discont:
 		    self.mother.discontinuities.append(
