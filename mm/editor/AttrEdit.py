@@ -1517,6 +1517,7 @@ class AttrEditor(AttrEditorDialog):
 				
 	def showall_callback(self):
 		if not self.pagechange_allowed():
+			self.fixbuttonstate()
 			return
 		self.show_all_attributes = not self.show_all_attributes
 		import settings
@@ -1527,6 +1528,7 @@ class AttrEditor(AttrEditorDialog):
 
 	def followselection_callback(self):
 		if not self.pagechange_allowed():
+			self.fixbuttonstate()
 			return
 		self.follow_selection = not self.follow_selection
 		self.wrapper.link_to_selection(self.follow_selection, self)
