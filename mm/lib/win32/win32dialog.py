@@ -1159,8 +1159,23 @@ class CreateBoxBar(DlgBar):
 		if self._cancelCallback:
 			apply(apply,self._cancelCallback)
 
+MONTHS = [
+	'January',
+	'February',
+	'March',
+	'April',
+	'May',
+	'June',
+	'July',
+	'August',
+	'September',
+	'October',
+	'November',
+	'December'
+	]
 
 class WallclockDialog(ResDialog):
+	parent=ResDialog
 	resource=grinsRC.IDD_WALLCLOCKPOPUP
 	def __init__(self, parent=None):
 		ResDialog.__init__(self, self.resource, parent)
@@ -1189,35 +1204,49 @@ class WallclockDialog(ResDialog):
 
 		self.w_cbdate.hookcommand(self, self.w_cbdate_callback)
 		self.w_cbtz.hookcommand(self, self.w_cbtz_callback)
-		self.w_cbdate.setcheck(0)
 		self.w_cbtz.setcheck(0)
 
-		print "DEBUG: self.value is: ", self.value
 		yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn = self.value
 		self.__setwidget_asnum(self.w_yr, yr)
-		print "DEBUG: mt is: ", mt
-		#self.__setwidget_asnum(self.w_mt, mt)
+		self.w_mt.setoptions(MONTHS)
+		self.w_mt.setcursel(mt)
 		self.__setwidget_asnum(self.w_dy, dy)
 		self.__setwidget_asnum(self.w_hr, hr)
 		self.__setwidget_asnum(self.w_mn, mn)
 		self.__setwidget_asnum(self.w_sc, sc)
-		print "DEBUG: tzsg is: ", tzsg
-		#self.__setwidget_asnum(self.w_tzsg, tzsg)
+		self.w_tzsg.setoptions(['East', 'West'])
+		print "TODO: verify correctness with the timezone."
+		if tzsg == '+':
+			self.w_tzsg.setcursel(0) # east
+		else:
+			self.w_tzsg.setcursel(1) # west
 		self.__setwidget_asnum(self.w_tzhr, tzhr)
 		self.__setwidget_asnum(self.w_tzmn, tzmn)
+		if yr is None and mt is None and dy is None:
+			self.w_cbdate.setcheck(0)
+			self.disable_date()
+		else:
+			self.w_cbdate.setcheck(1) # doesn't this cause a callback?
+			self.enable_date()
+		if tzsg is None and tzhr is None and tzmn is None:
+			self.w_cbdate.setcheck(0)
+			self.disable_tz()
+		else:
+			self.w_cbdate.setcheck(1)
+			self.enable_tz()
 
 	def __setwidget_asnum(self, widget, number):
 		# widget is a edit box that we are setting to number.
 		if number is not None:
-			widget.setreadonly(0)
+			widget.enable(1)
 			widget.settext(`number`)
 		else:
 			widget.settext('')
-			widget.setreadonly(1)
+			widget.enable(0)
 
 	def __getwidget_asnum(self, widget):
 		# returns whatever number that widget has.
-		n = widget.getvalue()
+		n = widget.gettext()
 		try:
 			return int(n)
 		except ValueError:
@@ -1226,9 +1255,9 @@ class WallclockDialog(ResDialog):
 	def show(self):
 		return self.DoModal()
 
-##	def OnOK(self):
-##		self.DestroyWindow()
-##		self.return_value = 1
+	def OnOK(self):
+		self.value = self.get_value_from_widgets()
+		return self.parent.OnOK(self)
 		
 ##	def OnCancel(self):
 ##		self.DestroyWindow()
@@ -1238,13 +1267,15 @@ class WallclockDialog(ResDialog):
 		if isinstance(value, type(())):
 			self.value = value
 
-	def getvalue(self, value):
+	def getvalue(self):
+		return self.value
+
+	def get_value_from_widgets(self):
 		#self.yr,self.mt,self.dy,self.hr,self.mn,self.sc,self.tzsg,self.tzhr,self.tzmn = None
 		if self.w_cbdate.getcheck():
 			yr = self.__getwidget_asnum(self.w_yr)
-			#mt = int(self.__getwidget_asnum(self.w_mt)) # careful.. it's a combobox.
-			mt = None
-			print "TODO: mt"
+			mt = self.w_mt.getcursel()
+			assert mt >= 0 and mt < 12
 			dy = self.__getwidget_asnum(self.w_dy)
 		else:
 			yr = None
@@ -1253,13 +1284,18 @@ class WallclockDialog(ResDialog):
 		hr = self.__getwidget_asnum(self.w_hr)
 		mn = self.__getwidget_asnum(self.w_mn)
 		sc = self.__getwidget_asnum(self.w_sc)
+		if sc == None:
+			sc = 0.0
 		if self.w_cbtz.getcheck():
-			#tzsg = self.w_tzsg.getvalue() # it's a combobox.
-			tzsg = None
-			print "TODO: tzsg"
+			tzsg = self.w_tzsg.getcursel() # it's a combobox.
+			if tzsg == 0:
+				tzsg = '+' # East - forwards towards china
+			else:
+				tzsg = '-' # West - backwards to Tonga.
 			tzhr = self.__getwidget_asnum(self.w_tzhr)
 			tzmn = self.__getwidget_asnum(self.w_tzmn)
 		else:
+			tzsg = None
 			tzhr = None
 			tzmn = None
 		return (yr, mt, dy, hr, mn, sc, tzsg, tzhr, tzmn)
@@ -1279,21 +1315,21 @@ class WallclockDialog(ResDialog):
 			self.disable_tz()
 
 	def enable_date(self):
-		self.w_yr.setreadonly(0)
-		#self.w_mt.setreadonly(0) # is a combo box.
-		self.w_dy.setreadonly(0)
+		self.w_yr.enable(1)
+		self.w_mt.enable(1) # is a combo box.
+		self.w_dy.enable(1)
 
 	def disable_date(self):
-		self.w_yr.setreadonly(1)
-		#self.w_mt.setreadonly(1) # is a combo box.
-		self.w_dy.setreadonly(1)
+		self.w_yr.enable(0)
+		self.w_mt.enable(0) # is a combo box.
+		self.w_dy.enable(0)
 
 	def enable_tz(self):
-		# combo box - self.w_tzsg.setreadonly(0)
-		self.w_tzhr.setreadonly(0)
-		self.w_tzmn.setreadonly(0)
+		self.w_tzsg.enable(1)	# combo box
+		self.w_tzhr.enable(1)
+		self.w_tzmn.enable(1)
 
 	def disable_tz(self):
-		# combo box - self.w_tzsg.setreadonly(1)
-		self.w_tzhr.setreadonly(1)
-		self.w_tzmn.setreadonly(1)
+		self.w_tzsg.enable(0)	# combo box
+		self.w_tzhr.enable(0)
+		self.w_tzmn.enable(0)
