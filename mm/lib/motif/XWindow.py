@@ -76,11 +76,13 @@ class _Window(_AdornmentSupport, _RubberBand):
 		     canvassize = None, commandlist = None, resizable = 1):
 		_AdornmentSupport.__init__(self)
 		menubar = toolbar = shortcuts = None
+		flags = 0xffff
 		if adornments is not None:
 			shortcuts = adornments.get('shortcuts')
 			menubar = adornments.get('menubar')
 			toolbar = adornments.get('toolbar')
 			toolbarvertical = adornments.get('toolbarvertical', 0)
+			flags = adornments.get('flags', flags)
 			close = adornments.get('close', [])
 			if close:
 				self._set_deletecommands(close)
@@ -186,7 +188,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 			mb.ManageChild()
 			attrs['topAttachment'] = Xmd.ATTACH_WIDGET
 			attrs['topWidget'] = mb
-			self._create_menu(mb, menubar)
+			self._create_menu(mb, menubar, flags)
 			self._menubar = mb
 		self._toolbar = None
 		if toolbar is not None:
@@ -241,7 +243,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 			void = fr.CreateManagedWidget('toolframe', Xm.Frame,
 						      frattrs)
 			self._toolbar = tb
-			self._create_toolbar(tb, toolbar, toolbarvertical)
+			self._create_toolbar(tb, toolbar, toolbarvertical, flags)
 		if canvassize is not None and \
 		   (menubar is None or (w > 0 and h > 0)):
 			form = form.CreateScrolledWindow('scrolledWindow',
@@ -701,6 +703,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 				self._form.DropSiteUnregister()
 
 	def __handle_drop(self, w, client_data, drop_data):
+##		print drop_data.dragContext.exportTargets
 		if drop_data.dropAction != Xmd.DROP or \
 		   drop_data.operation != Xmd.DROP_COPY:
 			args = {'transferStatus': Xmd.TRANSFER_FAILURE}
@@ -760,7 +763,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 				if key:
 					self._menuaccel.append(key)
 		self._menu = menu
-		
+
 	def hitarrow(self, point, src, dst):
 		# return 1 iff (x,y) is within the arrow head
 		sx, sy = self._convert_coordinates(src)
