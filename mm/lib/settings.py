@@ -344,6 +344,7 @@ elif sys.platform == 'wince':
 	default_settings['system_cpu'] = 'arm'
 	default_settings['system_operating_system'] = 'wince'
 	default_settings['savedir'] = r'\My Documents'
+	default_settings['askskin'] = 1
 elif sys.platform == 'mac':
 	default_settings['system_cpu'] = 'ppc'
 	default_settings['system_operating_system'] = 'macos'
