@@ -524,7 +524,7 @@ def _doInsertNode (bv, after, cb) :
 	bv.changing_node = None
 	if not cb:
 		import NodeInfo
-		NodeInfo.shownodeinfo(newnode)
+		NodeInfo.shownodeinfo(bv.toplevel, newnode)
 
 def InsertBeforeNode(bv):
 	_doInsertNode(bv, 0, 0)
@@ -563,7 +563,7 @@ def _InsertChildNode (bv,cb) :
 	bv.changing_node = None
 	if not cb:
 		import NodeInfo
-		NodeInfo.shownodeinfo(newnode)
+		NodeInfo.shownodeinfo(bv.toplevel, newnode)
 
 def InsertChildNode(bv):
 	_InsertChildNode(bv,0)
