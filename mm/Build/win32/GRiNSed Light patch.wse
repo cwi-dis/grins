@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Holding B.V.
   Distribute Type=2
   Step View=All
-  File Checksum=2648551474
+  File Checksum=643196156
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1580,14 +1580,6 @@ item: Install File
   Flags=0000000010000010
   Patch Existing=%MAINDIR%\producer.pyd
   Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2L\producer.pyd
-  Patch Previous=
-end
-item: Install File
-  Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
-  Destination=%MAINDIR%\WebPro32.ocx
-  Flags=0001001010000011
-  Patch Existing=%MAINDIR%\WebPro32.ocx
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2L\WebPro32.ocx
   Patch Previous=
 end
 item: Install File

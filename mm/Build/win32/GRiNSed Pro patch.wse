@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Holding B.V.
   Distribute Type=2
   Step View=All
-  File Checksum=3787117649
+  File Checksum=3178661486
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1591,14 +1591,6 @@ item: Install File
   Patch Previous=
 end
 item: Install File
-  Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
-  Destination=%MAINDIR%\WebPro32.ocx
-  Flags=0001001010000011
-  Patch Existing=%MAINDIR%\WebPro32.ocx
-  Patch Previous=E:\External Program Files\Oratrix\GRiNS_G2P\WebPro32.ocx
-  Patch Previous=
-end
-item: Install File
   Source=c:\Winnt\system32\Msvcp60.dll
   Destination=%SYS32%\Msvcp60.dll
   Flags=0000001010000011
@@ -1985,7 +1977,7 @@ item: Edit Registry
   end
   item: Key
     Key=SMILfile\DefaultIcon
-    New Value=%MAINDIR%\GRiNS_G2L.exe,2
+    New Value=%MAINDIR%\GRiNS_G2P.exe,2
     Root=32
   end
 end
@@ -2000,25 +1992,20 @@ item: Edit Registry
   Total Keys=3
   item: Key
     Key=SMILfile\shell\edit
-    New Value=Edit with GRiNS Lite for G2
+    New Value=Edit with GRiNS Pro for G2
   end
   item: Key
     Key=SMILfile\shell\edit\command
-    New Value=%MAINDIR%\GRiNS_G2L.exe "%%1"
+    New Value=%MAINDIR%\GRiNS_G2P.exe "%%1"
   end
   item: Key
     Key=SMILfile\shell\open
-    New Value=Edit with GRiNS Lite for G2
+    New Value=Edit with GRiNS Pro for G2
     Root=32
   end
 end
 item: Edit Registry
-  Total Keys=8
-  item: Key
-    Key=SMILfile\shell\open\command
-    New Value=%MAINDIR%\GRiNS_G2L.exe "%%1"
-    Root=32
-  end
+  Total Keys=6
   item: Key
     Key=.grins
     New Value=GRiNSProject
@@ -2034,20 +2021,35 @@ item: Edit Registry
   end
   item: Key
     Key=GRiNSProject\DefaultIcon
-    New Value=%MAINDIR%\GRiNS_G2L.exe,2
+    New Value=%MAINDIR%\GRiNS_G2P.exe,2
   end
   item: Key
     Key=GRiNSProject\shell\open
-    New Value=Edit with GRiNS Lite for G2
-  end
-  item: Key
-    Key=GRiNSProject\shell\open\command
-    New Value=%MAINDIR%\GRiNS_G2L.exe "%%1"
+    New Value=Edit with GRiNS Pro for G2
   end
   item: Key
     Key=MIME\Database\Content Type\application/x-grins-project
     New Value=.grins
     Value Name=Extension
+  end
+end
+item: Edit Registry
+  Total Keys=4
+  item: Key
+    Key=GRiNSProject\shell\open\command
+    New Value=%MAINDIR%\GRiNS_G2P.exe "%%1"
+  end
+  item: Key
+    Key=GRiNSProject\shell\edit
+    New Value=Edit with GRiNS Pro for G2
+  end
+  item: Key
+    Key=GRiNSProject\shell\edit\command
+    New Value=%MAINDIR%\GRiNS_G2P.exe "%%1"
+  end
+  item: Key
+    Key=SMILfile\shell\open\command
+    New Value=%MAINDIR%\GRiNS_G2P.exe "%%1"
   end
 end
 item: Self-Register OCXs/DLLs
