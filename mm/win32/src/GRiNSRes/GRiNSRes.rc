@@ -431,7 +431,7 @@ BEGIN
     PUSHBUTTON      "Apply",IDC_APPLY,186,44,50,14
 END
 
-IDD_LINKS DIALOG DISCARDABLE  0, 0, 350, 199
+IDD_LINKS DIALOG 0, 0, 308, 171
 STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -452,30 +452,12 @@ BEGIN
     PUSHBUTTON      "Delete",IDC_DELETE_LINK,125,148,61,14
     PUSHBUTTON      "Push focus",IDC_PUSH_FOCUS2,200,132,102,14
     PUSHBUTTON      "Anchor editor...",IDC_ANCHOR_EDITOR2,200,148,102,14
-    GROUPBOX        "Current/new link Direction",IDC_LINK_D,45,170,108,24,
-                    WS_GROUP
-    CONTROL         "-->",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON | 
-                    WS_TABSTOP,51,180,24,10
-    CONTROL         "<--",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,87,180,24,
-                    10
-    CONTROL         "<-->",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON,119,180,28,
-                    10
-    GROUPBOX        "Current/new link Type",IDC_LINK_T,159,170,108,24,
-                    WS_GROUP
-    CONTROL         "Jump",IDC_RADIO4,"Button",BS_AUTORADIOBUTTON,165,179,33,
-                    10
-    CONTROL         "Call",IDC_RADIO5,"Button",BS_AUTORADIOBUTTON,201,179,27,
-                    10
-    CONTROL         "Fork",IDC_RADIO6,"Button",BS_AUTORADIOBUTTON,233,179,30,
-                    10
     PUSHBUTTON      ">",IDC_LEFT_MENU,93,17,16,12
     PUSHBUTTON      ">",IDC_RIGHT_MENU,286,17,16,12
     LTEXT           "All",IDC_STATIC_LEFT,7,17,86,12,SS_SUNKEN,
                     WS_EX_DLGMODALFRAME
     LTEXT           "All",IDC_STATIC_RIGHT,200,17,86,12,SS_SUNKEN,
                     WS_EX_DLGMODALFRAME
-    PUSHBUTTON      "Cancel",IDCANCEL,311,132,35,14,NOT WS_TABSTOP
-    DEFPUSHBUTTON   "OK",IDOK,311,148,35,14
     LISTBOX         IDC_LIST_LINKS,126,32,61,80,LBS_SORT | 
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
 END
@@ -497,26 +479,26 @@ BEGIN
                     0,111,2
 END
 
-IDD_LINK_PROPERTY DIALOG DISCARDABLE  0, 0, 186, 76
+IDD_LINK_PROPERTY DIALOG DISCARDABLE  0, 0, 122, 81
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Select Direction and Type"
+CAPTION "Link properties"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,129,47,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,129,18,50,14
-    GROUPBOX        "Current/new link Direction",IDC_LINK_D,7,7,108,24,
+    DEFPUSHBUTTON   "OK",IDOK,66,60,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,10,60,50,14
+    GROUPBOX        "Current/new link Direction",IDC_LINK_D,7,30,108,24,
                     WS_GROUP
     CONTROL         "-->",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON | 
-                    WS_TABSTOP,13,17,24,10
-    CONTROL         "<--",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,49,17,24,10
-    CONTROL         "<-->",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON,79,17,28,
+                    WS_TABSTOP,13,41,24,10
+    CONTROL         "<--",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,49,41,24,10
+    CONTROL         "<-->",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON,81,41,28,
                     10
-    GROUPBOX        "Current/new link Type",IDC_LINK_T,7,38,108,24,WS_GROUP
-    CONTROL         "Jump",IDC_RADIO4,"Button",BS_AUTORADIOBUTTON,14,48,33,
+    GROUPBOX        "Current/new link Type",IDC_LINK_T,5,5,108,24,WS_GROUP
+    CONTROL         "Jump",IDC_RADIO4,"Button",BS_AUTORADIOBUTTON,11,14,33,
                     10
-    CONTROL         "Call",IDC_RADIO5,"Button",BS_AUTORADIOBUTTON,48,48,27,
+    CONTROL         "Call",IDC_RADIO5,"Button",BS_AUTORADIOBUTTON,47,14,27,
                     10
-    CONTROL         "Fork",IDC_RADIO6,"Button",BS_AUTORADIOBUTTON,81,47,30,
+    CONTROL         "Fork",IDC_RADIO6,"Button",BS_AUTORADIOBUTTON,79,14,30,
                     10
 END
 
@@ -725,9 +707,9 @@ BEGIN
     IDD_LINK_PROPERTY, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 179
+        RIGHTMARGIN, 115
         TOPMARGIN, 7
-        BOTTOMMARGIN, 69
+        BOTTOMMARGIN, 74
     END
 END
 #endif    // APSTUDIO_INVOKED

@@ -66,7 +66,8 @@
 #define IDD_EDIT_USERGROUP              227
 #define IDD_USERGROUP                   228
 #define IDR_GRINS                       228
-#define IDD_LINK_PROPERTY               229
+#define IDD_LINKEDIT                    230
+#define IDD_LINK_PROPERTY               230
 #define IDC_STOP                        1000
 #define IDC_PLAY                        1001
 #define IDC_PAUSE                       1002
@@ -205,7 +206,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        230
+#define _APS_NEXT_RESOURCE_VALUE        231
 #define _APS_NEXT_COMMAND_VALUE         32819
 #define _APS_NEXT_CONTROL_VALUE         1107
 #define _APS_NEXT_SYMED_VALUE           104
