@@ -28,8 +28,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,1,0,0
- PRODUCTVERSION 2,1,0,0
+ FILEVERSION 2,2,0,0
+ PRODUCTVERSION 2,2,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -47,14 +47,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "Oratrix\0"
             VALUE "FileDescription", "dshow dynamic library\0"
-            VALUE "FileVersion", "2.1\0"
+            VALUE "FileVersion", "2.2\0"
             VALUE "InternalName", "dshow\0"
-            VALUE "LegalCopyright", "Copyright © 2001 Oratrix\0"
+            VALUE "LegalCopyright", "Copyright © 2001,2002 Oratrix\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "dshow.pyd\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "GRiNS Application\0"
-            VALUE "ProductVersion", "2.1\0"
+            VALUE "ProductVersion", "2.2\0"
             VALUE "SpecialBuild", "\0"
         END
     END
