@@ -25,6 +25,7 @@ DIR="/usr/local/www.cwi.nl/GRiNS/player"
 PASSWD=os.path.join(DIR, ".htpasswd")
 
 RESPONSE_MESSAGE=os.path.join(grinsdb.DATABASE, ".mailresponse")
+RESPONSE_MESSAGE_DUP=os.path.join(grinsdb.DATABASE, ".mailresponse-dup")
 RESPONSE_SENDER="grins-request@oratrix.com"
 RESPONSE_URL="http://www.oratrix.com/GRiNS/Download/down-sw1.html"
 LICENSE=os.path.join(grinsdb.DATABASE, ".evallicense")
@@ -76,12 +77,13 @@ def register(file, filename):
 	if ':' in user or ' ' in user or not '@' in user:
 		print "Invalid email:", user
 		raise Error
-	prevtime = find_duplicate(dbase, obj)
-	if prevtime and prevtime > time.time() - 3*24*3600:
-		print "Warning: %s: not added, recent duplicate"%filename
-		return
+	prevtime, oldobj = find_duplicate(dbase, obj)
 	if prevtime:
-		print "Duplicate, not added:", filename
+		print "Duplicate not added.", filename
+		if oldobj:
+			print "But password sent."
+			clear = oldobj['password']
+			mail(user, clear, "", dup=1)
 		raise Error
 
 	grpasswd.addpasswd(obj)
@@ -105,17 +107,17 @@ def find_duplicate(dbase, obj):
 	user = obj['email']
 	list = dbase.search('email', user)
 	if not list:
-		return 0
+		return 0, None
 	if len(list) > 1:
 		print "Multiple duplicates!"
-		return -1
+		return -1, None
 	oldobj = dbase.open(list[0])
 	for k, v in obj.items():
 		if not oldobj.has_key(k) or oldobj[k] != v:
 			print "Different duplicate!"
-			return -1
+			return -1, oldobj
 	print 'Possible duplicate:', list[0]
-	return string.atoi(oldobj['Last-Modified-Date'])
+	return string.atoi(oldobj['Last-Modified-Date']), oldobj
 
 def crypt_passwd(clear):
 	salt = grpasswd.invent_passwd(2)
@@ -129,9 +131,12 @@ def add_passwd(filename, user, passwd):
 		print "ADDPASSWD: Exit status", sts
 		raise Error
 
-def mail(user, passwd, license=""):
+def mail(user, passwd, license="", dup=0):
 	ofp = os.popen(SENDMAIL, 'w')
-	ifp = open(RESPONSE_MESSAGE, 'r')
+	if dup:
+		ifp = open(RESPONSE_MESSAGE_DUP, 'r')
+	else:
+		ifp = open(RESPONSE_MESSAGE, 'r')
 	data = ifp.read()
 	dict = {
 		"user": user,
