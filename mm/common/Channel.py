@@ -291,10 +291,8 @@ class Channel:
 		self.do_hide()
 		self._curvals = {}
 		for chan in channels:
-			try:
+			if self in chan._subchannels:
 				chan._subchannels.remove(self)
-			except ValueError:
-				pass
 		self._subchannels = subchannels
 		if self._armstate == ARMING:
 			self.arm_1()
@@ -1134,7 +1132,7 @@ class ChannelWindow(Channel):
 			self.window.create_menu(menu, title = self._name)
 
 	def _destroy_callback(self, *rest):
-		self._player.cmenu_callback(self._name)
+		self._player.channel_callback(self._name)
 
 	def resize_window(self, pchan):
 		if not self._player.editmgr.transaction():
