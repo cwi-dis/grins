@@ -481,6 +481,7 @@ POPUP_CVIEW_BWSTRIP = (
 		)
 
 POPUP_CVIEW_CHANNEL = (
+		(FLAG_PRO, ENTRY, '&New', None, NEW_CHANNEL),
 		(FLAG_ALL, ENTRY, '&Delete', None, DELETE),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, '&Move channel', None, MOVE_CHANNEL),

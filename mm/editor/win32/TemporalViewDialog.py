@@ -4,7 +4,7 @@ from ViewDialog import ViewDialog
 import WMEVENTS, windowinterface
 import MMAttrdefs
 from usercmd import *
-from MenuTemplate import POPUP_HVIEW_LEAF, POPUP_HVIEW_STRUCTURE, POPUP_HVIEW_NONE
+from MenuTemplate import *
 
 class TemporalViewDialog(ViewDialog):
 	adornments = {}
@@ -13,9 +13,16 @@ class TemporalViewDialog(ViewDialog):
 		ViewDialog.__init__(self, 'tview_')
 
 		# Sjoerd won't mind if I borrow these.
-		self.no_popupmenu = POPUP_HVIEW_NONE
-		self.interior_popupmenu = POPUP_HVIEW_STRUCTURE	
-		self.leaf_popupmenu = POPUP_HVIEW_LEAF
+		# Node popup menus.
+		self.menu_no_nodes = POPUP_HVIEW_NONE
+		self.menu_interior_nodes = POPUP_HVIEW_STRUCTURE	
+		self.menu_leaf_nodes = POPUP_HVIEW_LEAF
+		self.menu_multiple_nodes = None
+		# Channel popup menus.
+		self.menu_no_channel = POPUP_CVIEW_NONE
+		self.menu_viewport = POPUP_CVIEW_CHANNEL
+		self.menu_channel = POPUP_CVIEW_CHANNEL
+		self.menu_multiple_channels = None
 
 	def show(self):
 		if self.is_showing() and self.window:
@@ -48,10 +55,10 @@ class TemporalViewDialog(ViewDialog):
 ##		self.window.register(WMEVENTS.WindowExit, self.ev_exit, None)
 		
 		self.window.register(WMEVENTS.PasteFile, self.ev_pastefile, None)
-		self.window.register(WMEVENTS.DragFile, self.ev_dragfile, None)
-		self.window.register(WMEVENTS.DropFile, self.ev_dropfile, None)
-		self.window.register(WMEVENTS.DragNode, self.ev_dragnode, None)
-		self.window.register(WMEVENTS.DropNode, self.ev_dropnode, None)
+#		self.window.register(WMEVENTS.DragFile, self.ev_dragfile, None)
+#		self.window.register(WMEVENTS.DropFile, self.ev_dropfile, None)
+#		self.window.register(WMEVENTS.DragNode, self.ev_dragnode, None)
+#		self.window.register(WMEVENTS.DropNode, self.ev_dropnode, None)
 
 	def setcommands(self, commandlist):
 		print 'DEBUG: setcommands',commandlist

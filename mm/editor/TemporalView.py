@@ -18,7 +18,7 @@ class TemporalView(TemporalViewDialog):
 		
 		# Oooh yes, let's do some really cool selection code.
 		# Of course, I'll write it _later_.
-		self.selected_channels = []
+		self.selected_regions = []
 		self.selected_nodes = []
 		self.just_selected = None	# prevents the callback from the editmanager from doing too much work.
 		
@@ -33,12 +33,20 @@ class TemporalView(TemporalViewDialog):
 		self.editmgr = self.root.context.editmgr
 		self.recurse_lock = 0	# a lock to prevent recursion.
 
+
 	def destroy(self):
 		pass;
 
 	def __add_commands(self):
 		self.commands = [
 			CLOSE_WINDOW(callback = (self.hide, ())),
+			COPY(callback = (self.copycall, ())),
+			ATTRIBUTES(callback = (self.attrcall, ())),
+			CONTENT(callback = (self.editcall, ())),
+			#THUMBNAIL(callback = (self.thumbnailcall, ())),
+			EXPANDALL(callback = (self.expandallcall, (1,))),
+			COLLAPSEALL(callback = (self.expandallcall, (0,))),
+
 			]
 		self.navigatecommands = [
 			TOPARENT(callback = (self.toparent, ())),
@@ -47,6 +55,48 @@ class TemporalView(TemporalViewDialog):
 			PREVSIBLING(callback = (self.tosibling, (-1,))),
 			]
 
+		self.interiorcommands = [
+			EXPAND(callback = (self.expandcall, ())),
+			NEW_UNDER(callback = (self.createundercall, ())),
+			NEW_UNDER_SEQ(callback = (self.createunderintcall, ('seq',))),
+			NEW_UNDER_PAR(callback = (self.createunderintcall, ('par',))),
+			NEW_UNDER_ALT(callback = (self.createunderintcall, ('alt',))),
+			NEW_UNDER_EXCL(callback = (self.createunderintcall, ('excl',))),
+			NEW_UNDER_IMAGE(callback = (self.createundercall, ('image',))),
+			NEW_UNDER_SOUND(callback = (self.createundercall, ('sound',))),
+			NEW_UNDER_VIDEO(callback = (self.createundercall, ('video',))),
+			NEW_UNDER_TEXT(callback = (self.createundercall, ('text',))),
+			NEW_UNDER_HTML(callback = (self.createundercall, ('html',))),
+			]
+
+		self.pasteinteriorcommands = [
+				PASTE_UNDER(callback = (self.pasteundercall, ())),
+				]
+
+		self.pastenotatrootcommands = [
+				PASTE_BEFORE(callback = (self.pastebeforecall, ())),
+				PASTE_AFTER(callback = (self.pasteaftercall, ())),
+				]
+		self.notatrootcommands = [
+				NEW_SEQ(callback = (self.createseqcall, ())),
+				NEW_PAR(callback = (self.createparcall, ())),
+				NEW_CHOICE(callback = (self.createbagcall, ())),
+				NEW_ALT(callback = (self.createaltcall, ())),
+				DELETE(callback = (self.deletecall, ())),
+				CUT(callback = (self.cutcall, ())),
+				]			
+		self.structure_commands = [
+				NEW_BEFORE(callback = (self.createbeforecall, ())),
+				NEW_BEFORE_SEQ(callback = (self.createbeforeintcall, ('seq',))),
+				NEW_BEFORE_PAR(callback = (self.createbeforeintcall, ('par',))),
+				NEW_BEFORE_CHOICE(callback = (self.createbeforeintcall, ('bag',))),
+				NEW_BEFORE_ALT(callback = (self.createbeforeintcall, ('alt',))),
+				NEW_AFTER(callback = (self.createaftercall, ())),
+				NEW_AFTER_SEQ(callback = (self.createafterintcall, ('seq',))),
+				NEW_AFTER_PAR(callback = (self.createafterintcall, ('par',))),
+				NEW_AFTER_CHOICE(callback = (self.createafterintcall, ('bag',))),
+				NEW_AFTER_ALT(callback = (self.createafterintcall, ('alt',))),
+				]
 
 	def show(self):
 		if self.is_showing():
@@ -57,6 +107,7 @@ class TemporalView(TemporalViewDialog):
 		self.editmgr.register(self, 1)
 		title = 'Channel View (' + self.toplevel.basename + ')'
 		TemporalViewDialog.show(self)
+		self.select_node(self.scene.mainnode)
 		self.recalc()
 		self.draw()
 
@@ -117,20 +168,37 @@ class TemporalView(TemporalViewDialog):
 			self.last_geometry = (0,0,0,0) # guessing the data type
 			
 
-	def update_popupmenu(self):
+	def update_popupmenu_node(self):
+		# Sets the popup menu to channel mode.
 		commands = self.commands
-		popupmenu = [self.no_popupmenu]	# there needs to be a default.
+		popupmenu = [self.menu_no_nodes]	# there needs to be a default.
 		print "DEBUG: selected nodes: ", self.selected_nodes, len(self.selected_nodes)
 		if len(self.selected_nodes) != 1:
 			print "Warning: Multiple selection pop-ups not thought about yet."
 		else:
 			n = self.selected_nodes[0].node
 			if n.GetType() in MMNode.interiortypes:
-				popupmenu = self.interior_popupmenu
+				popupmenu = self.menu_interior_nodes
+				commands = commands + self.interiorcommands \
+					   + self.pasteinteriorcommands \
+					   + self.structure_commands
 				if n.children:
-					commands = commands + self.navigatecommands[1:2]
+					commands = commands + self.navigatecommands
+				if n is not self.root:
+					commands = commands + self.notatrootcommands
 			else:
-				popupmenu = self.leaf_popupmenu
+				popupmenu = self.menu_leaf_nodes
+		self.setcommands(commands)
+		self.setpopup(popupmenu)
+
+	def update_popupmenu_channel(self):
+		# Sets the popup menu to node mode.
+		commands = self.commands
+		popupmenu = self.menu_no_channel
+		if len(self.selected_regions) != 1:
+			print "Warning: Multiple channel selection not thought about yet."
+		else:
+			popupmenu = self.menu_channel
 		self.setcommands(commands)
 		self.setpopup(popupmenu)
 
@@ -139,25 +207,32 @@ class TemporalView(TemporalViewDialog):
 		# Selection management.
 
 	def select_channel(self, channel):
-		self.selected_channels.append(channel)
+		self.selected_regions.append(channel)
 		self.just_selected = channel
+		self.focusobj = channel.channel
+		self.update_popupmenu_channel()
 
 	def unselect_channels(self):
-		for i in self.selected_channels:
+		for i in self.selected_regions:
 			i.unselect()
-		self.selected_channels = []
+		self.selected_regions = []
+		self.focusobj = None
+		self.update_popupmenu_channel()
 
 	def select_node(self, node):
 		# Called back from the scene
 		self.just_selected = node
 		self.selected_nodes.append(node)
-		self.update_popupmenu()
+		self.focusobj = node
+		self.update_popupmenu_node()
 
 	def unselect_nodes(self):
 		# Called back from the scene
 		for i in self.selected_nodes:
 			i.unselect()
 		self.selected_nodes = []
+		self.focusobj = None
+		self.update_popupmenu_node()
 
 ######################################################################
 		# Edit manager interface
@@ -222,13 +297,15 @@ class TemporalView(TemporalViewDialog):
 #		print "DEBUG: Calling edit manager..", time.time()-before
 
 	def ev_mouse0release(self, dummy, window, event, params):
-		print "mouse released! :-( "
+		#print "mouse released! :-( "
+		pass
 
 	def ev_mouse2press(self, dummy, window, event, params):
-		print "right mouse pressed! :-)"
+		self.ev_mouse0press(self, dummy, window, event, params)
 
 	def ev_mouse2release(self, dummy, window, event, params):
-		print "rigth mouse released! :-)"
+		#print "rigth mouse released! :-)"
+		pass
 
 	def ev_exit(self, dummy, window, event, params):
 		print "I should kill myself (the window, that is :-) )"
@@ -252,3 +329,131 @@ class TemporalView(TemporalViewDialog):
 	def ev_dropnode(self, dummy, window, event, params):
 		print "Dropped a node!"
 		return 0
+
+######################################################################
+	# Commands from the menus.
+
+	def helpcall(self):
+		if self.focusobj: self.focusobj.helpcall()
+
+	def expandcall(self):
+		if self.focusobj: self.focusobj.expandcall()
+		self.draw()
+
+	def expandallcall(self, expand):
+		if self.focusobj: self.focusobj.expandallcall(expand)
+		self.draw()
+
+	def playablecall(self):
+		self.toplevel.setwaiting()
+		self.showplayability = not self.showplayability
+		self.settoggle(PLAYABLE, self.showplayability)
+		self.draw()
+
+	def bandwidthcall(self):
+		print "TODO: bandwidth compute."
+##		self.toplevel.setwaiting()
+##		bandwidth = settings.get('system_bitrate')
+##		if bandwidth > 1000000:
+##			bwname = "%dMbps"%(bandwidth/1000000)
+##		elif bandwidth % 1000 == 0:
+##			bwname = "%dkbps"%(bandwidth/1000)
+##		else:
+##			bwname = "%dbps"%bandwidth
+##		msg = 'Computing bandwidth usage at %s...'%bwname
+##		dialog = windowinterface.BandwidthComputeDialog(msg, parent=self.getparentwindow())
+##		bandwidth, prerolltime, delaycount, errorseconds, errorcount = \
+##			BandwidthCompute.compute_bandwidth(self.root)
+##		dialog.setinfo(prerolltime, errorseconds, delaycount, errorcount)
+##		dialog.done()
+
+	def playcall(self):
+		if self.focusobj: self.focusobj.playcall()
+
+	def playfromcall(self):
+		if self.focusobj: self.focusobj.playfromcall()
+
+	def attrcall(self):
+		if isinstance(self.focusobj, MMNode.MMChannel):
+			import AttrEdit
+			AttrEdit.showchannelattreditor(self.toplevel, self.focusobj)
+		else:
+			if self.focusobj: self.focusobj.attrcall()
+
+	def infocall(self):
+		if self.focusobj: self.focusobj.infocall()
+
+	def editcall(self):
+		if self.focusobj: self.focusobj.editcall()
+
+	# win32++
+	def _editcall(self):
+		if self.focusobj: self.focusobj._editcall()
+	def _opencall(self):
+		if self.focusobj: self.focusobj._opencall()
+
+	def anchorcall(self):
+		if self.focusobj: self.focusobj.anchorcall()
+
+	def createanchorcall(self):
+		if self.focusobj: self.focusobj.createanchorcall()
+
+	def hyperlinkcall(self):
+		if self.focusobj: self.focusobj.hyperlinkcall()
+
+	def focuscall(self):
+		if self.focusobj: self.focusobj.focuscall()
+
+	def rpconvertcall(self):
+		if self.focusobj: self.focusobj.rpconvertcall()
+
+	def deletecall(self):
+		if self.focusobj: self.focusobj.deletecall()
+
+	def cutcall(self):
+		if self.focusobj: self.focusobj.cutcall()
+
+	def copycall(self):
+		if self.focusobj: self.focusobj.copycall()
+
+	def createbeforecall(self, chtype=None):
+		if self.focusobj: self.focusobj.createbeforecall(chtype)
+
+	def createbeforeintcall(self, ntype):
+		if self.focusobj: self.focusobj.createbeforeintcall(ntype)
+
+	def createaftercall(self, chtype=None):
+		if self.focusobj: self.focusobj.createaftercall(chtype)
+
+	def createafterintcall(self, ntype):
+		if self.focusobj: self.focusobj.createafterintcall(ntype)
+
+	def createundercall(self, chtype=None):
+		if self.focusobj: self.focusobj.createundercall(chtype)
+
+	def createunderintcall(self, ntype=None):
+		if self.focusobj: self.focusobj.createunderintcall(ntype)
+
+	def createseqcall(self):
+		if self.focusobj: self.focusobj.createseqcall()
+
+	def createparcall(self):
+		if self.focusobj: self.focusobj.createparcall()
+
+	def createexclcall(self):
+		if self.focusobj: self.focusobj.createexclcall()
+
+	def createbagcall(self):
+		if self.focusobj: self.focusobj.createbagcall()
+
+	def createaltcall(self):
+		if self.focusobj: self.focusobj.createaltcall()
+
+	def pastebeforecall(self):
+		if self.focusobj: self.focusobj.pastebeforecall()
+
+	def pasteaftercall(self):
+		if self.focusobj: self.focusobj.pasteaftercall()
+
+	def pasteundercall(self):
+		if self.focusobj: self.focusobj.pasteundercall()

@@ -669,9 +669,15 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 
 	def select(self):
 		Widgets.Widget.select(self)
+		self.w_fbox.need_redraw()
+		self.w_filltimebox.need_redraw()
+		self.w_text.need_redraw()
 		self.w_outerbox.set_color((255,255,255))
 	def unselect(self):
 		Widgets.Widget.unselect(self)
+		self.w_fbox.need_redraw()
+		self.w_filltimebox.need_redraw()
+		self.w_text.need_redraw()
 		self.w_outerbox.set_color((0,0,0))
 
 #	def select(self):
@@ -740,10 +746,14 @@ class MultiMMWidget(TimeWidget):
 		print "DEBUG: I've been selected! ", self
 		self.w_startbar.set_color((255,255,255))
 		self.w_endbar.set_color((255,255,255))
+		self.w_startbar_b.need_redraw()
+		self.w_endbar_b.need_redraw()	       
 
 	def unselect(self):
 		self.w_startbar.set_color(self.color)
 		self.w_endbar.set_color(self.color)
+		self.w_startbar_b.need_redraw()
+		self.w_endbar_b.need_redraw()		
 
 	def collapse(self):
 		self.leafnode = 1
