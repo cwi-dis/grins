@@ -147,22 +147,22 @@ class Main(MainDialog):
 		files = os.listdir(self.templatedir)
 		files.sort()
 		for file in files:
-			url = MMurl.pathname2url(file)
 			pathname = os.path.join(self.templatedir, file)
 			if not os.path.isfile(pathname):
 				continue
+			url = MMurl.pathname2url(pathname)
 			if MMmimetypes.guess_type(url)[0] != 'application/x-grins-project':
 				continue
-			pathname = os.path.join(self.templatedir, file)
 			try:
 				attrs = SMILTreeRead.ReadMetaData(pathname)
 			except IOError:
 				windowinterface.showmessage('Error in template: %s'%file)
 			name = attrs.get('template_name', file)
 			description = attrs.get('template_description', '')
-			image = attrs.get('template_snapshot', None)
+			image = attrs.get('template_snapshot')
 			if image:
-				image = os.path.join(self.templatedir, image)
+				image = MMurl.basejoin(url, image)
+				image = MMurl.url2pathname(image)
 			names.append(name)
 			descriptions.append((description, image, pathname))
 		self.template_info = (names, descriptions)
