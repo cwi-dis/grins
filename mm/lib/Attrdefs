@@ -99,6 +99,9 @@
 (style_winpos (tuple (int) (int)) (-1 -1) 'Style editor winpos' default
 	 'Window position for style editor' raw)
 
+(style_winsize (tuple (int) (int)) (300 320) 'Style editor winsize' default
+	 'Window size for style editor' raw)
+
 (styledict (namedict (attrdict)) () 'Style Dictionary' default
 	'Styles used in this document (root node only)')
 
