@@ -56,13 +56,24 @@ class TransitionEngine:
 		self.__unregister_for_timeslices()
 		self.__transitiontype = None
 		topwindow = self.__windows[0]._topwindow
-		for w in self.__windows:
-			w._transition = None
-			w._drawsurf = None
-			if w._frozen  == 'transition':
-				w._passive = None
-				w._frozen = None
+		for win in self.__windows:
+			win._transition = None
+			win._drawsurf = None
+			if win._frozen  == 'transition':
+				win._passive = None
+				win._frozen = None
+		self.__clrfrozen(self.__windows[0].getwindowpos(), topwindow)
 		topwindow.update()
+
+	def __clrfrozen(self, (X,Y,W,H), window):
+		for win in window._subwindows:
+			x,y,w,h = win.getwindowpos()
+			if x < X+W and X < x+w and y < Y+H and Y < y+h:
+				# overlap
+				if win._frozen == 'transition':
+					win._passive = None
+					win._frozen = None
+				self.__clrfrozen((Y,Y,W,H), win)
 
 	def settransitionvalue(self, value):
 		if value<0.0 or value>1.0:

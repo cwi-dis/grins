@@ -191,6 +191,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__regions = {}	# mapping from region id to chan. attrs
 		self.__regionnames = {}	# mapping from regionName to list of id
 		self.__region2channel = {} # mapping from region to channels
+		self.__channoreuse = {}	# channels that shouldn't be reused
 		self.__region = None	# keep track of nested regions
 		self.__regionlist = []
 		self.__childregions = {}
@@ -2148,6 +2149,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		# this node's region
 		name = None
 		for ch in self.__region2channel.get(region, []):
+			if self.__channoreuse.has_key(ch.name):
+				continue
 			if ch['type'] == mtype:
 				# found existing channel of correct type
 				name = ch.name
@@ -2163,10 +2166,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 							name = None
 							break
 						elif ptype == 'excl':
-							# potential conflict
-							name = None
-							break
-						elif ptype == 'seq' and node.GetFill() == 'hold':
 							# potential conflict
 							name = None
 							break
@@ -2239,6 +2238,11 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			ch['base_winoff'] = 0, 0, w, h
 
 			# end new
+
+		if (node.GetSchedParent().GetType() == 'seq' and
+		    node.GetFill() == 'hold') or \
+		   node.GetFill() == 'transition':
+			self.__channoreuse[name] = 0
 
 		node.attrdict['channel'] = name
 
