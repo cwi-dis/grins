@@ -1367,9 +1367,9 @@ class MMNode:
 		self.collapsed = 0;	# Whether this node is collapsed in the structure view.
 		self.timing_info_dict = {}
 
-		if settings.activeFullSmilCss:	
-			self._subRegCssId = None
-			self._mediaCssId = None
+		if settings.activeFullSmilCss:
+			self._subRegCssId = self.newSubRegCssId()
+			self._mediaCssId = self.newMediaCssId()
 
 	#
 	# Return string representation of self
@@ -1429,14 +1429,17 @@ class MMNode:
 		cssResolver = self.context.cssResolver
 
 		if self._subRegCssId == None or self._mediaCssId == None:
+			print 'Error: MMNode, linkCssId: subregcssid or mediacssid equal None'
 			return
 		
 		# for sub region
 		channel = self.GetChannel()
 		if channel == None:
+			print 'Error: MMNode, linkCssId: no channel'
 			return
 		region = channel.GetLayoutChannel()
 		if region == None:
+			print 'Error: MMNode, linkCssId: no layout channel'
 			return
 		cssResolver.link(self._subRegCssId, region._cssId)
 		
