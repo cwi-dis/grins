@@ -34,6 +34,9 @@ class ImageLib:
 	# 3. use cash for gif conversion
 	def load(self,filename):
 		filename=self.toabs(filename)
+		if self.islibexcept(filename):
+			from windowinterface import error
+			raise error, 'Not an image'
 ## BEGIN_INCLUDE_GIF
 		img,gif_trans,trans_rgb=self.lib.load_gif(filename)
 		if img>=0:
@@ -116,6 +119,16 @@ class ImageLib:
 				filename=os.path.join(os.getcwd(),filename)
 				filename=ntpath.normpath(filename)	
 		return filename
+
+	# Accusoft gets grazy when it sees the following sig(s)
+	# (enters an infinite loop consuming all available sys memory)
+	def islibexcept(self,filename):
+		file = open(filename, 'rb')
+		formdata = file.read(4)
+		file.close()
+		if formdata == '.RMF':
+			return 1
+		return 0
 
 
 win32ig=ImageLib()
