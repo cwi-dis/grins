@@ -2,6 +2,7 @@ __version__ = "$Id$"
 
 import MMurl
 import winmm
+import windowinterface
 
 def get(url):
 	import urlcache
@@ -17,6 +18,7 @@ def get(url):
 				dur = 10
 			else:	
 				try:
+					windowinterface.setwaiting()
 					dur = winmm.GetVideoDuration(fn)
 				except winmm.error, msg:
 					print msg
