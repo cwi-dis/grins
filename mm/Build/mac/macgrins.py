@@ -100,11 +100,12 @@ else:
 # macfreeze: exclude NTVideoChannel
 # macfreeze: exclude MPEGVideoChannel
 # macfreeze: exclude audio.hcom
-# macfreeze: exclude audio.8svx
+# macfreeze: exclude audio.svx8
 # macfreeze: exclude audio.sdnr
 # macfreeze: exclude audio.sndt
 # macfreeze: exclude audio.sndr
 # macfreeze: exclude audio.voc
+# macfreeze: exclude audio.Error
 # macfreeze: exclude imgpng
 # macfreeze: exclude msvcrt
 # macfreeze: exclude termios

@@ -5,14 +5,14 @@ from audio import Error
 
 # This dummy function is there to make freeze import the right modules
 def _dummy_freeze_func():
-	import aifc
-	import au
-	import hcom
-	import voc
-	import wav
-	import svx8
-	import sndt
-	import sndr
+	import audio.aifc
+	import audio.au
+	import audio.hcom
+	import audio.voc
+	import audio.wav
+	import audio.svx8
+	import audio.sndt
+	import audio.sndr
 	
 class _FileDict:
 	__fmtdict = {
