@@ -153,16 +153,20 @@ class Channel:
 		if self._playstate in (PLAYING, PLAYED):
 			node = self._played_node
 			self._armstate = AIDLE
+			save_syncarm = self.syncarm
 			self.syncarm = 1
 			self.arm(node)
+			self.syncarm = save_syncarm
 			playstate = self._playstate
 			if playstate in (PLAYING, PLAYED):
 				# if still in one of these states...
 				self._playstate = PIDLE
 				self.armed_duration = 0
+				save_syncplay = self.syncplay
 				self.syncplay = 1
 				self.nopop = 1
 				self.play(node)
+				self.syncplay = save_syncplay
 				self.nopop = 0
 				self._playstate = playstate
 			self._armstate = AIDLE
@@ -181,13 +185,13 @@ class Channel:
 ##			self._armstate = AIDLE
 		if armstate == ARMED:
 			self._armstate = AIDLE
+			save_syncarm = self.syncarm
 			self.syncarm = 1
 			self.arm(armed_node)
+			self.syncarm = save_syncarm
 		if self._armstate != armstate:
 			# maybe we should do something, but what?
 			raise error, 'don\'t know if this can happen'
-		self.syncarm = 0
-		self.syncplay = 0
 		# now that we are visible, see if any other channels
 		# can become visible
 		for chan in self._subchannels[:]:
@@ -1014,25 +1018,30 @@ class ChannelWindow(Channel):
 		if self._playstate in (PLAYING, PLAYED):
 			node = self._played_node
 			self._armstate = AIDLE
+			save_syncarm = self.syncarm
 			self.syncarm = 1
 			self.arm(node)
+			self.syncarm = save_syncarm
 			playstate = self._playstate
 			if playstate in (PLAYING, PLAYED):
 				# if still in one of these states...
 				self._playstate = PIDLE
 				self.armed_duration = 0
+				save_syncplay = self.syncplay
+				save_nopop = self.nopop
 				self.syncplay = 1
 				self.nopop = 1
 				self.play(node)
-				self.nopop = 0
+				self.syncplay = save_syncplay
+				self.nopop = save_nopop
 				self._playstate = playstate
 			self._armstate = AIDLE
 		if armstate == ARMED:
 			self._armstate = AIDLE
+			save_syncarm = self.syncarm
 			self.syncarm = 1
 			self.arm(armed_node)
-		self.syncarm = 0
-		self.syncplay = 0
+			self.syncarm = save_syncarm
 		windowinterface.setcursor('')
 
 	def arm_0(self, node):

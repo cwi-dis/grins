@@ -98,13 +98,15 @@ class ImageChannel(ChannelWindow):
 		windowinterface.setcursor('watch')
 		self._anchor_context = AnchorContext()
 		self.startcontext(self._anchor_context)
+		save_syncarm = self.syncarm
 		self.syncarm = 1
 		self.arm(node)
+		save_syncplay = self.syncplay
 		self.syncplay = 1
 		self.play(node)
 		self._playstate = PLAYED
-		self.syncarm = 0
-		self.syncplay = 0
+		self.syncarm = save_syncarm
+		self.syncplay = save_syncplay
 		self._anchor = anchor
 		box = anchor[2]
 		windowinterface.setcursor('')
