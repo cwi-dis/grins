@@ -245,13 +245,17 @@ class NodeWrapper(Wrapper):
 		hlinks = self.context.hyperlinks
 		linkview = self.toplevel.links
 		editmgr = self.editmgr
-		anchorlist = []
+		anchorlist = MMAttrdefs.getattr(node, 'anchorlist')[:]
 		newlinks = []
 		oldanchors = self.__findanchors()
 		oldanchonames = oldanchors.keys()
 		dstlinks = []
 		for aid in oldanchors.keys():
 			anchor = uid, aid
+			for i in range(len(anchorlist)):
+				if anchorlist[i][A_ID] == aid:
+					del anchorlist[i]
+					break
 			for link in hlinks.findsrclinks(anchor):
 				editmgr.dellink(link)
 			if anchor in linkview.interesting:
