@@ -210,7 +210,7 @@ class MediaRegion(Region):
 	def importAttrdict(self):
 		Node.importAttrdict(self)
 		self._curattrdict['bgcolor'] = self._defattrdict.get('bgcolor')
-		self._curattrdict['transparent'] = 1
+		self._curattrdict['transparent'] = 1		
 		
 		# get wingeom according to the subregion positionning
 		# note this step is not done during the parsing in order to maintains all constraint information
@@ -350,7 +350,8 @@ class Viewport(Node):
 		for child in self._children:
 			child.updateAllAsOutLines(value)
 		# for now refresh all
-		self.showAllNodes()
+		self.updateAllAttrdict()
+#		self.showAllNodes()
 
 	#
 	# end update visualization mothods
