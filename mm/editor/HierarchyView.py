@@ -257,6 +257,8 @@ class HierarchyView(HierarchyViewDialog):
 			rv.append(NEW_UNDER_VIDEO(callback = (self.createundercall, ('video',))))
 		if not slide and (heavy or ctx.compatchannels(chtype='text')):
 			rv.append(NEW_UNDER_TEXT(callback = (self.createundercall, ('text',))))
+		if not slide and (heavy or ctx.compatchannels(chtype='html')):
+			rv.append(NEW_UNDER_HTML(callback = (self.createundercall, ('html',))))
 		if compatibility.G2 == features.compatibility:
 			if not slide and (heavy or ctx.compatchannels(chtype='RealPix')):
 				rv.append(NEW_UNDER_SLIDESHOW(callback = (self.createundercall, ('RealPix',))))
@@ -288,6 +290,8 @@ class HierarchyView(HierarchyViewDialog):
 			rv.append(NEW_BEFORE_VIDEO(callback = (self.createbeforecall, ('video',))))
 		if not slide and (heavy or ctx.compatchannels(chtype='text')):
 			rv.append(NEW_BEFORE_TEXT(callback = (self.createbeforecall, ('text',))))
+		if not slide and (heavy or ctx.compatchannels(chtype='html')):
+			rv.append(NEW_BEFORE_HTML(callback = (self.createbeforecall, ('html',))))
 		if compatibility.G2 == features.compatibility:
 			if not slide and (heavy or ctx.compatchannels(chtype='RealPix')):
 				rv.append(NEW_BEFORE_SLIDESHOW(callback = (self.createbeforecall, ('RealPix',))))
@@ -299,6 +303,8 @@ class HierarchyView(HierarchyViewDialog):
 			rv.append(NEW_AFTER_VIDEO(callback = (self.createaftercall, ('video',))))
 		if not slide and (heavy or ctx.compatchannels(chtype='text')):
 			rv.append(NEW_AFTER_TEXT(callback = (self.createaftercall, ('text',))))
+		if not slide and (heavy or ctx.compatchannels(chtype='html')):
+			rv.append(NEW_AFTER_HTML(callback = (self.createaftercall, ('html',))))
 		if compatibility.G2 == features.compatibility:
 			if not slide and (heavy or ctx.compatchannels(chtype='RealPix')):
 				rv.append(NEW_AFTER_SLIDESHOW(callback = (self.createaftercall, ('RealPix',))))
