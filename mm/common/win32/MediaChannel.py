@@ -154,7 +154,7 @@ class MediaChannel:
 		self.__playdone=0
 		self.__paused=0
 		self.__playBuilder.Run()
-		self.register_for_timeslices()
+		self.__register_for_timeslices()
 		if repeatdur > 0:
 			self.__qid = self.__channel._scheduler.enter(repeatdur, 0, self.__channel.playdone, (0,))
 		elif self.play_loop == 0 and repeatdur == 0:
@@ -179,6 +179,7 @@ class MediaChannel:
 			self.__playBuilder.SetVisible(1)
 
 	def destroy(self):
+		self.__unregister_for_timeslices()
 		self.release_player()
 
 	def setsoundlevel(self, lev):
@@ -346,7 +347,6 @@ class VideoStream:
 	def destroy(self):
 		if self.__window:
 			self.__window.removevideo()
-		self.__unregister_for_timeslices()
 		del self.__mmstream
 		self.__mmstream = None
 
