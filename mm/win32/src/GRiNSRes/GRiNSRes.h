@@ -56,8 +56,9 @@
 #define IDD_EDITRECTATTR                257
 #define IDD_EDITRECTATTR1               257
 #define IDD_EDITSTRINGATTR2             327
-#define IDD_EDITSTRINGATTR3             328
-#define IDD_EDITSTRINGATTR4             329
+#define IDD_EDITATTR_S7                 327
+#define IDD_EDITATTR_S5                 328
+#define IDD_EDITATTR_S2                 329
 #define IDD_EDITRECTATTR2               330
 #define IDD_EDITRECTATTR3               331
 #define IDC_LIST2                       1018
