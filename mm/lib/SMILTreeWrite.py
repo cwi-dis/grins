@@ -1362,6 +1362,16 @@ class SMILWriter(SMIL):
 			file = convertaudiofile(u, dstdir, file, node)
 			self.files_generated[file] = 'b'
 			return file
+		if u.headers.maintype == 'video' and \
+		   string.find(u.headers.subtype, 'real') < 0:
+			from realconvert import convertvideofile
+			# XXXX This is a hack. convertvideofile may change the filename (and
+			# will, currently, to '.rm').
+			if self.progress:
+				self.progress("Converting %s"%os.path.split(file)[1], None, None, None, None)
+			file = convertvideofile(u, srcurl, dstdir, file, node)
+			self.files_generated[file] = 'b'
+			return file
 		if u.headers.maintype == 'image':
 			from realconvert import convertimagefile
 			# XXXX This is a hack. convertimagefile may change the filename (and
