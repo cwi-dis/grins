@@ -6,10 +6,10 @@ import windowinterface
 import time
 
 class TransitionEngine:
-	def __init__(self, window, inout, runit, dict):
+	def __init__(self, window, outtrans, runit, dict):
 		self.window = window
 		self.duration = dict.get('dur', 1)
-		self.outtransition = inout
+		self.outtransition = outtrans
 
 		trtype = dict['trtype']
 		subtype = dict.get('subtype')
@@ -81,12 +81,9 @@ class TransitionEngine:
 		else:
 			self.settransitionvalue(t_sec/self.__transperiod)
 	
-	def isCallable(self):
-		return self.transitiontype != None
-
 	def __register_for_timeslices(self):
 		if not self.__fiber_id:
-			self.__fiber_id=windowinterface.register((self.isCallable,()),(self.onIdle,()))
+			self.__fiber_id=windowinterface.register( (self.onIdle,()) )
 
 	def __unregister_for_timeslices(self):
 		if self.__fiber_id:

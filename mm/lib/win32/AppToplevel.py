@@ -393,9 +393,9 @@ class _Toplevel:
 	_registry={}
 	_fiber_id=0
 	# Register for receiving timeslices
-	def register(self,cb,check=None):
+	def register(self, cb):
 		self._fiber_id = self._fiber_id + 1
-		self._registry[self._fiber_id]=(cb, check)
+		self._registry[self._fiber_id]= cb
 		return self._fiber_id
 	# Register for receiving timeslices
 	def unregister(self,id):
@@ -403,9 +403,8 @@ class _Toplevel:
 			del self._registry[id]
 	# Dispatch timeslices
 	def serve_timeslices(self):
-		for call, check in self._registry.values():
-			if check==None or apply(apply,check):
-				apply(apply,call)
+		for call in self._registry.values():
+			apply(apply,call)
 
 	################################
 		
