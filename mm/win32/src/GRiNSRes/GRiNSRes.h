@@ -141,6 +141,7 @@
 #define IDD_EDITATTR_QTMEDIAPREF        374
 #define IDD_EDITATTR_S3R2               376
 #define IDD_EDITATTR_O1S2               378
+#define IDD_PREFERENCES2                379
 #define IDC_EXPLANATION                 1002
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
