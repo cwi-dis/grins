@@ -119,7 +119,24 @@ class Node:
 	def _get_nodeName(self): return self._get_name()
 	def _get_nodeValue(self): return self._get_value()
 	def _get_nodeType(self): return type
-
+        def _get_parentNode(self) : return None
+	def _get_childNodes(self): return NodeList()
+	def _get_firstChild(self) :
+		children = self._get_childNodes()
+		len = children._get_length()
+		if len > 0:
+			return self._get_childNodes().item(0)
+		else:
+			return None
+	def _get_lastChild(self) :
+		children = self._get_childNodes()
+		len = children._get_length()
+		if len > 0:
+			return children.item(int(len)-1)
+		else:
+			return None
+	def _get_previousSibling(self): return None
+	def _get_nextSibling(self): return None
 	
 	def _get_attributes(self):
 		nnm = NamedNodeMap()
@@ -128,14 +145,20 @@ class Node:
 				attr = Attr(a[0],str(a[1]))
 				nnm.setNamedItem(attr)
 		return nnm
-	def _get_childNodes(self): return NodeList()
-	def _get_previousSibling(self): return None
-	def _get_nextSibling(self): return None
+	def _get_ownerDocument(self): return None	
 	def insertBefore(self, newChild, refChild): 
 		return None
 	def replaceChild(self, newChild, oldChild): return None
 	def removeChild(self, oldChild): return None
-	def appendChild(self, newChild): return None
+	def appendChild(self, newChild):
+		return self.insertBefore(newChild, None)
+        def hasChildNodes(self):
+		len = self._get_childNodes()._get_length()
+                if len:
+                        return 1
+                else:
+                        return 0
+        def cloneNode(self): return None
 	
 
 class Element(Node):
@@ -148,9 +171,9 @@ class Element(Node):
 	# Element interface:
 	def _get_tagName(self):
 		return self.__name or self._get_nodeName()
-
 	def getAttribute(self, name):
-		return self._get_attributes().getNamedItem(name)._get_value()
+		node = self.getAttributeNode(name)
+		return node._get_value()
 	def getAttributeNode(self, name):
 		print 'get attribute ', name, value
 		return self._get_attributes().getNamedItem(name)
@@ -159,11 +182,6 @@ class Element(Node):
 		self.attrdict[name] = value
 	def removeAttribute(self, name):
 		raise self.ex
-	def getAttributeNode(self, name):
-		if attrdict.has_key(name):
-			return self.attrdict[name]
-		else:
-			return None
 	def setAttributeNode(self, attr):
 		raise self.ex
 	def removeAttributeNode(self, attr):
