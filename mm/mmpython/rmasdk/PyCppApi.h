@@ -39,7 +39,7 @@ inline void Trace(const char*, ...){}
 ////////////////////////////////////////////////
 // Helper Macros
 
-#define MAKE_PY_CTOR(classname) static Object * classname::PyObConstruct()\
+#define MAKE_PY_CTOR(classname) static Object * PyObConstruct()\
 	{Object* ret = new classname;return ret;}
 #define GET_PY_CTOR(classname) classname::PyObConstruct
 
@@ -99,8 +99,9 @@ class DLL_API Object : public PyObject
 	virtual PyObject *getattr(char *name);
 	virtual int setattr(char *name, PyObject *v);
 	virtual void cleanup();
-
+#ifdef MS_WIN32
 	static struct PyMethodDef Object::empty_methods[];
+#endif
 	static TypeObject type;	
 
 	protected:
