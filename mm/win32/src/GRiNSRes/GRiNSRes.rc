@@ -696,6 +696,7 @@ BEGIN
     "7",            IDUC_SOURCE,            VIRTKEY, ALT, NOINVERT
     "C",            IDUC_COPY,              VIRTKEY, CONTROL, NOINVERT
     "H",            IDUC_STOP,              VIRTKEY, CONTROL, NOINVERT
+    "L",            IDUC_OPENURL,           VIRTKEY, CONTROL, NOINVERT
     "N",            IDUC_NEW_DOCUMENT,      VIRTKEY, CONTROL, NOINVERT
     "O",            IDUC_OPEN,              VIRTKEY, CONTROL, NOINVERT
     "P",            IDUC_PLAY,              VIRTKEY, CONTROL, NOINVERT
@@ -718,6 +719,7 @@ END
 IDR_GRINS ACCELERATORS DISCARDABLE 
 BEGIN
     "H",            IDUC_STOP,              VIRTKEY, CONTROL, NOINVERT
+    "L",            IDUC_OPENURL,           VIRTKEY, CONTROL, NOINVERT
     "O",            IDUC_OPEN,              VIRTKEY, CONTROL, NOINVERT
     "P",            IDUC_PLAY,              VIRTKEY, CONTROL, NOINVERT
     "U",            IDUC_PAUSE,             VIRTKEY, CONTROL, NOINVERT
