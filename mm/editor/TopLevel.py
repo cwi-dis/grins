@@ -1710,4 +1710,5 @@ if os.name == 'posix':
 		return filename + '~'
 else:
 	def make_backup_filename(filename):
-		return filename + '.BAK'
+		filename, ext = os.path.splitext(filename)
+		return filename + '.BAK' + ext
