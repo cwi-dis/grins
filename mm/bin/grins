@@ -16,6 +16,7 @@ esac
 case `uname -sr` in
 IRIX\ 6.2)	ARCH=irix62;;
 IRIX\ 6.*)	ARCH=irix6;;
+IRIX64\ 6.*)	ARCH=irix6;;
 IRIX\ 5.*)	ARCH=irix5;;
 SunOS\ 5.*)	ARCH=sunos5;;
 *)		echo "$0: unknown architecture" >&2; exit 1;;
