@@ -3265,6 +3265,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			elif name in ('borderColor', 'fadeColor'):
 				# XXXX Need support for blend
 				value = self.__convert_color(value)
+			elif name == 'skip-content':
+				continue
 			else:
 				try:
 					value = parseattrval(name, value, self.__context)
