@@ -61,6 +61,7 @@
 #define IDD_EDITRECTATTR                257
 #define IDD_EDITRECTATTR1               257
 #define IDD_EDITATTR_LS1                257
+#define IDD_PASSWD_DIALOG               259
 #define IDD_EDITSTRINGATTR2             327
 #define IDD_EDITATTR_S7                 327
 #define IDD_EDITATTR_S5                 328
@@ -217,6 +218,7 @@
 #define IDC_15                          1178
 #define IDC_17                          1179
 #define IDC_SCALE1                      1180
+#define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -267,7 +269,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        254
+#define _APS_NEXT_RESOURCE_VALUE        260
 #define _APS_NEXT_COMMAND_VALUE         32833
 #define _APS_NEXT_CONTROL_VALUE         1181
 #define _APS_NEXT_SYMED_VALUE           104
