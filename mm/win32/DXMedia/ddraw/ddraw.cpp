@@ -1536,14 +1536,43 @@ DirectDrawSurface_Blt_RGB24_On_RGB8(DirectDrawSurfaceObject *self, PyObject *arg
 	return Py_None;	
 	}
 
-__inline void YCrCb2RGB(int Y, int Cr, int Cb, BYTE& r, BYTE& g, BYTE& b){
+__inline void YCrCb2RGB1(int Y, int Cr, int Cb, BYTE& r, BYTE& g, BYTE& b){
 	int yf = 1164*(Y - 16);
 	int rf = yf + 1596*(Cr - 128);
 	int gf = yf - 813*(Cr - 128) - 391*(Cb - 128);
 	int bf = yf + 2018*(Cb - 128);
-	r = BYTE( (rf<0)?0:(rf>255000?255000:rf)/1000 );
-	g = BYTE( (gf<0)?0:(gf>255000?255000:gf)/1000 );
-	b = BYTE( (bf<0)?0:(bf>255000?255000:bf)/1000 );
+	r = BYTE( ((rf<=0)?0:(rf>=255000?255000:rf))/1000 );
+	g = BYTE( ((gf<=0)?0:(gf>=255000?255000:gf))/1000 );
+	b = BYTE( ((bf<=0)?0:(bf>=255000?255000:bf))/1000 );
+}
+
+
+// optimized implementation of YCrCb2RGB
+static int y1164[256];
+static int cr1596[256];
+static int cr813[256];
+static int cb391[256];
+static int cb2018[256];
+
+static void buildYUV420Tables(){
+	for(int i=0;i<256;i++){
+		y1164[i] = 1164*(i - 16);
+		cr1596[i] = 1596*(i - 128);
+		cr813[i] = 813*(i - 128);
+		cb391[i] = 391*(i - 128);
+		cb2018[i] = 2018*(i - 128);
+	}
+}
+
+__inline void YCrCb2RGB(int Y, int Cr, int Cb, BYTE& r, BYTE& g, BYTE& b){
+	int rf, gf, bf;
+	rf=gf=bf=y1164[Y];
+	rf += cr1596[Cr];
+	gf -= cr813[Cr] + cb391[Cb];
+	bf += cb2018[Cb];
+	r = BYTE( ((rf<=0)?0:(rf>=255000?255000:rf))/1000 );
+	g = BYTE( ((gf<=0)?0:(gf>=255000?255000:gf))/1000 );
+	b = BYTE( ((bf<=0)?0:(bf>=255000?255000:bf))/1000 );
 }
 
 static char DirectDrawSurface_Blt_YUV420_On_RGB32__doc__[] =
@@ -2588,6 +2617,8 @@ void initddraw()
 		ddraw_module_documentation,
 		(PyObject*)NULL,PYTHON_API_VERSION);
 
+	buildYUV420Tables();
+	
 	// add 'error'
 	d = PyModule_GetDict(m);
 	ErrorObject = PyString_FromString("ddraw.error");
