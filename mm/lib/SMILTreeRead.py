@@ -251,6 +251,8 @@ class SMILParser(xmllib.XMLParser):
 		# connect to channel
 		if attributes.has_key('channel'):
 			channel = attributes['channel']
+			if not self.__channels.has_key(channel):
+				self.syntax_error('unknown channel')
 		else:
 			self.warning('node without channel attribute')
 			channel = '<unnamed %d>'
@@ -258,9 +260,6 @@ class SMILParser(xmllib.XMLParser):
 			while self.__channels.has_key(channel % i):
 				i = i + 1
 			channel = channel % i
-		else:
-			if not self.__channels.has_key(channel):
-				self.syntax_error('unknown channel')
 		node.__channel = channel
 		if mediatype in ('image', 'video'):
 			ch = self.__channels.get(channel)
