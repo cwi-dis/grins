@@ -30,7 +30,7 @@ static void
 seterror(const char *funcname, HRESULT hr)
 {
 	char* pszmsg;
-	::FormatMessage( 
+	FormatMessage( 
 		 FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
 		 NULL,
 		 hr,
@@ -76,6 +76,7 @@ typedef struct {
 	PyObject_HEAD
 	/* XXXX Add your own stuff here */
 	IDirectDrawSurface* pI;
+	bool releaseI;
 } DirectDrawSurfaceObject;
 
 staticforward PyTypeObject DirectDrawSurfaceType;
@@ -89,6 +90,7 @@ newDirectDrawSurfaceObject()
 	if (self == NULL)
 		return NULL;
 	self->pI = NULL;
+	self->releaseI = true;
 	/* XXXX Add your own initializers here */
 	return self;
 }
@@ -162,6 +164,29 @@ newDDSURFACEDESCObject()
 	return self;
 }
 
+//
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	DDBLTFX bltfx;
+} DDBLTFXObject;
+
+staticforward PyTypeObject DDBLTFXType;
+
+static DDBLTFXObject *
+newDDBLTFXObject()
+{
+	DDBLTFXObject *self;
+
+	self = PyObject_NEW(DDBLTFXObject, &DDBLTFXType);
+	if (self == NULL)
+		return NULL;
+	memset(&self->bltfx, 0, sizeof(self->bltfx));
+	self->bltfx.dwSize = sizeof(self->bltfx);
+	/* XXXX Add your own initializers here */
+	return self;
+}
+
 ///////////////////////////////////////////
 ///////////////////////////////////////////
 // Objects definitions
@@ -185,6 +210,42 @@ DirectDraw_SetCooperativeLevel(DirectDrawObject *self, PyObject *args)
 	hr = self->pI->SetCooperativeLevel(hWnd, dwFlags);
 	if (FAILED(hr)){
 		seterror("DirectDraw_SetCooperativeLevel", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char DirectDraw_SetDisplayMode__doc__[] =
+""
+;
+static PyObject *
+DirectDraw_SetDisplayMode(DirectDrawObject *self, PyObject *args)
+{
+	DWORD dwWidth, dwHeight, dwBPP;
+  	if (!PyArg_ParseTuple(args, "iii",&dwWidth, &dwHeight, &dwBPP))
+		return NULL;	
+	HRESULT hr;
+	hr = self->pI->SetDisplayMode(dwWidth, dwHeight, dwBPP);
+	if (FAILED(hr)){
+		seterror("DirectDraw_SetDisplayMode", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+static char DirectDraw_RestoreDisplayMode__doc__[] =
+""
+;
+static PyObject *
+DirectDraw_RestoreDisplayMode(DirectDrawObject *self, PyObject *args)
+{
+  	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	HRESULT hr;
+	hr = self->pI->RestoreDisplayMode();
+	if (FAILED(hr)){
+		seterror("DirectDraw_RestoreDisplayMode", hr);
 		return NULL;
 	}
 	Py_INCREF(Py_None);
@@ -264,7 +325,7 @@ DirectDraw_CreatePalette(DirectDrawObject *self, PyObject *args)
 		return NULL;	
 	HRESULT hr;
 	PALETTEENTRY colorTable[256];
-	HDC hdc = ::GetDC(NULL);
+	HDC hdc = GetDC(NULL);
 	GetSystemPaletteEntries(hdc, 0, 256, colorTable);
 	ReleaseDC(NULL, hdc);
 	for(int i=0;i<256;i++) colorTable[i].peFlags = PC_RESERVED;
@@ -280,6 +341,8 @@ DirectDraw_CreatePalette(DirectDrawObject *self, PyObject *args)
 
 static struct PyMethodDef DirectDraw_methods[] = {
 	{"SetCooperativeLevel", (PyCFunction)DirectDraw_SetCooperativeLevel, METH_VARARGS, DirectDraw_SetCooperativeLevel__doc__},
+	{"SetDisplayMode", (PyCFunction)DirectDraw_SetDisplayMode, METH_VARARGS, DirectDraw_SetDisplayMode__doc__},
+	{"RestoreDisplayMode", (PyCFunction)DirectDraw_RestoreDisplayMode, METH_VARARGS, DirectDraw_RestoreDisplayMode__doc__},
 	{"CreateSurface", (PyCFunction)DirectDraw_CreateSurface, METH_VARARGS, DirectDraw_CreateSurface__doc__},
 	{"CreateClipper", (PyCFunction)DirectDraw_CreateClipper, METH_VARARGS, DirectDraw_CreateClipper__doc__},
 	{"CreatePalette", (PyCFunction)DirectDraw_CreatePalette, METH_VARARGS, DirectDraw_CreatePalette__doc__},
@@ -333,7 +396,6 @@ static PyTypeObject DirectDrawType = {
 // End of code for DirectDraw object 
 ////////////////////////////////////////////
 
-
 ////////////////////////////////////////////
 // DirectDrawSurface object 
 
@@ -356,10 +418,202 @@ DirectDrawSurface_GetSurfaceDesc(DirectDrawSurfaceObject *self, PyObject *args)
 	return (PyObject *)obj;
 }
 
+static char DirectDrawSurface_GetAttachedSurface__doc__[] =
+""
+;
+static PyObject *
+DirectDrawSurface_GetAttachedSurface(DirectDrawSurfaceObject *self, PyObject *args)
+{
+	DWORD dwCaps;
+	if (!PyArg_ParseTuple(args, "i",&dwCaps))
+		return NULL;	
+	HRESULT hr;
+	DDSCAPS caps; caps.dwCaps = dwCaps;
+	DirectDrawSurfaceObject *obj = newDirectDrawSurfaceObject();	
+	obj->releaseI = false;
+	hr = self->pI->GetAttachedSurface(&caps, &obj->pI);
+	if (FAILED(hr)){
+		Py_DECREF(obj);
+		seterror("DirectDrawSurface_GetAttachedSurface", hr);
+		return NULL;
+	}
+	return (PyObject *)obj;
+}
 
+static char DirectDrawSurface_AddAttachedSurface__doc__[] =
+""
+;
+static PyObject *
+DirectDrawSurface_AddAttachedSurface(DirectDrawSurfaceObject *self, PyObject *args)
+{
+	DirectDrawSurfaceObject *obj;
+	if (!PyArg_ParseTuple(args, "!O",&DirectDrawSurfaceType,&obj))
+		return NULL;	
+	HRESULT hr;
+	hr = self->pI->AddAttachedSurface(obj->pI);
+	if (FAILED(hr)){
+		seterror("DirectDrawSurface_AddAttachedSurface", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char DirectDrawSurface_SetClipper__doc__[] =
+""
+;
+static PyObject *
+DirectDrawSurface_SetClipper(DirectDrawSurfaceObject *self, PyObject *args)
+{
+	DirectDrawClipperObject *obj;
+	if (!PyArg_ParseTuple(args, "!O",&DirectDrawClipperType,&obj))
+		return NULL;	
+	HRESULT hr;
+	hr = self->pI->SetClipper(obj->pI);
+	if (FAILED(hr)){
+		seterror("DirectDrawSurface_SetClipper", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char DirectDrawSurface_SetPalette__doc__[] =
+""
+;
+static PyObject *
+DirectDrawSurface_SetPalette(DirectDrawSurfaceObject *self, PyObject *args)
+{
+	DirectDrawPaletteObject *obj;
+	if (!PyArg_ParseTuple(args, "!O",&DirectDrawPaletteType,&obj))
+		return NULL;	
+	HRESULT hr;
+	hr = self->pI->SetPalette(obj->pI);
+	if (FAILED(hr)){
+		seterror("DirectDrawSurface_SetPalette", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char DirectDrawSurface_Blt__doc__[] =
+""
+;
+static PyObject *
+DirectDrawSurface_Blt(DirectDrawSurfaceObject *self, PyObject *args)
+{
+	RECT rcTo;
+	DirectDrawSurfaceObject *ddsFrom;
+	RECT rcFrom;
+	DWORD dwFlags = DDBLT_WAIT;	
+	DDBLTFXObject *pbltfx = NULL;
+	if (!PyArg_ParseTuple(args, "(iiii)!O(iiii)|i!O",
+			&rcTo.left,&rcTo.top,&rcTo.right,&rcTo.bottom, 
+			&DirectDrawSurfaceType,&ddsFrom,
+			&rcFrom.left,&rcFrom.top,&rcFrom.right,&rcFrom.bottom, 
+			&dwFlags,
+			&DDBLTFXType,&pbltfx
+			))
+		return NULL;	
+	HRESULT hr;
+	hr = self->pI->Blt(&rcTo,ddsFrom->pI,&rcFrom,dwFlags,NULL);
+	if (FAILED(hr)){
+		seterror("DirectDrawSurface_Blt", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char DirectDrawSurface_Flip__doc__[] =
+""
+;
+static PyObject *
+DirectDrawSurface_Flip(DirectDrawSurfaceObject *self, PyObject *args)
+{
+	DWORD dwFlags = DDFLIP_WAIT;	
+	if (!PyArg_ParseTuple(args, "|i",&dwFlags))
+		return NULL;	
+	HRESULT hr;
+	hr = self->pI->Flip(NULL,dwFlags);
+	if (FAILED(hr)){
+		seterror("DirectDrawSurface_Flip", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char DirectDrawSurface_GetDC__doc__[] =
+""
+;
+static PyObject *
+DirectDrawSurface_GetDC(DirectDrawSurfaceObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	HRESULT hr;
+	HDC hdc;
+	hr = self->pI->GetDC(&hdc);
+	if (FAILED(hr)){
+		seterror("DirectDrawSurface_GetDC", hr);
+		return NULL;
+	}
+	return Py_BuildValue("i",hdc);
+}
+
+static char DirectDrawSurface_ReleaseDC__doc__[] =
+""
+;
+static PyObject *
+DirectDrawSurface_ReleaseDC(DirectDrawSurfaceObject *self, PyObject *args)
+{
+	HDC hdc;
+	if (!PyArg_ParseTuple(args, "i",&hdc))
+		return NULL;	
+	HRESULT hr;
+	hr = self->pI->ReleaseDC(hdc);
+	if (FAILED(hr)){
+		seterror("DirectDrawSurface_ReleaseDC", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char DirectDrawSurface_SetColorKey__doc__[] =
+""
+;
+static PyObject *
+DirectDrawSurface_SetColorKey(DirectDrawSurfaceObject *self, PyObject *args)
+{
+	DWORD dwFlags = DDCKEY_SRCBLT;
+	DWORD dwLow =0, dwHigh=0; // black
+	if (!PyArg_ParseTuple(args, "|i(ii)",&dwFlags,&dwLow,&dwHigh))
+		return NULL;	
+	HRESULT hr;
+	DDCOLORKEY ck = {dwLow, dwHigh};
+	hr = self->pI->SetColorKey(dwFlags,&ck);
+	if (FAILED(hr)){
+		seterror("DirectDrawSurface_SetColorKey", hr);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
 
 static struct PyMethodDef DirectDrawSurface_methods[] = {
 	{"GetSurfaceDesc", (PyCFunction)DirectDrawSurface_GetSurfaceDesc, METH_VARARGS, DirectDrawSurface_GetSurfaceDesc__doc__},
+	{"GetAttachedSurface", (PyCFunction)DirectDrawSurface_GetAttachedSurface, METH_VARARGS, DirectDrawSurface_GetAttachedSurface__doc__},
+	{"AddAttachedSurface", (PyCFunction)DirectDrawSurface_AddAttachedSurface, METH_VARARGS, DirectDrawSurface_AddAttachedSurface__doc__},
+	{"SetClipper", (PyCFunction)DirectDrawSurface_SetClipper, METH_VARARGS, DirectDrawSurface_SetClipper__doc__},
+	{"SetPalette", (PyCFunction)DirectDrawSurface_SetPalette, METH_VARARGS, DirectDrawSurface_SetPalette__doc__},
+	{"Blt", (PyCFunction)DirectDrawSurface_Blt, METH_VARARGS, DirectDrawSurface_Blt__doc__},
+	{"Flip", (PyCFunction)DirectDrawSurface_Flip, METH_VARARGS, DirectDrawSurface_Flip__doc__},
+	{"GetDC", (PyCFunction)DirectDrawSurface_GetDC, METH_VARARGS, DirectDrawSurface_GetDC__doc__},
+	{"ReleaseDC", (PyCFunction)DirectDrawSurface_ReleaseDC, METH_VARARGS, DirectDrawSurface_ReleaseDC__doc__},
+	{"SetColorKey", (PyCFunction)DirectDrawSurface_SetColorKey, METH_VARARGS, DirectDrawSurface_SetColorKey__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -367,7 +621,7 @@ static void
 DirectDrawSurface_dealloc(DirectDrawSurfaceObject *self)
 {
 	/* XXXX Add your own cleanup code here */
-	RELEASE(self->pI);
+	if(self->releaseI && self->pI) self->pI->Release();
 	PyMem_DEL(self);
 }
 
@@ -467,20 +721,23 @@ static PyTypeObject DirectDrawClipperType = {
 ////////////////////////////////////////////
 // DirectDrawPalette object 
 
-static char DirectDrawPalette_Empty__doc__[] =
+static char DirectDrawPalette_GetEntries__doc__[] =
 ""
 ;
 static PyObject *
-DirectDrawPalette_Empty(DirectDrawPaletteObject *self, PyObject *args)
+DirectDrawPalette_GetEntries(DirectDrawPaletteObject *self, PyObject *args)
 {
-	if (!PyArg_ParseTuple(args, ""))
+	DWORD start=0, count=256;
+	if (!PyArg_ParseTuple(args, "|ii",&start,&count))
 		return NULL;	
 	HRESULT hr = S_OK;
-	//hr = self->pI->Empty();
+	PALETTEENTRY colorTable[256];
+	hr = self->pI->GetEntries(0, start, count, (PALETTEENTRY*)colorTable);
 	if (FAILED(hr)){
-		seterror("DirectDrawPalette_Empty", hr);
+		seterror("DirectDrawPalette_GetEntries", hr);
 		return NULL;
 	}
+	// return colorTable
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -488,7 +745,7 @@ DirectDrawPalette_Empty(DirectDrawPaletteObject *self, PyObject *args)
 
 
 static struct PyMethodDef DirectDrawPalette_methods[] = {
-	{"Empty", (PyCFunction)DirectDrawPalette_Empty, METH_VARARGS, DirectDrawPalette_Empty__doc__},
+	{"GetEntries", (PyCFunction)DirectDrawPalette_GetEntries, METH_VARARGS, DirectDrawPalette_GetEntries__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -539,6 +796,7 @@ static PyTypeObject DirectDrawPaletteType = {
 // End of code for DirectDrawPalette object 
 ////////////////////////////////////////////
 
+
 ////////////////////////////////////////////
 // DDSURFACEDESC object 
 
@@ -569,6 +827,16 @@ DDSURFACEDESC_SetFlags(DDSURFACEDESCObject *self, PyObject *args)
 	Py_INCREF(Py_None);
 	return Py_None;
 }
+static char DDSURFACEDESC_GetFlags__doc__[] =
+""
+;
+static PyObject*
+DDSURFACEDESC_GetFlags(DDSURFACEDESCObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	return Py_BuildValue("i",self->sd.dwFlags);
+}
 
 static char DDSURFACEDESC_SetCaps__doc__[] =
 ""
@@ -582,6 +850,16 @@ DDSURFACEDESC_SetCaps(DDSURFACEDESCObject *self, PyObject *args)
 	self->sd.ddsCaps.dwCaps = dwCaps;
 	Py_INCREF(Py_None);
 	return Py_None;
+}
+static char DDSURFACEDESC_GetCaps__doc__[] =
+""
+;
+static PyObject*
+DDSURFACEDESC_GetCaps(DDSURFACEDESCObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	return Py_BuildValue("i",self->sd.ddsCaps.dwCaps);
 }
 
 static char DDSURFACEDESC_SetSize__doc__[] =
@@ -599,11 +877,60 @@ DDSURFACEDESC_SetSize(DDSURFACEDESCObject *self, PyObject *args)
 	return Py_None;
 }
 
+static char DDSURFACEDESC_GetSize__doc__[] =
+""
+;
+static PyObject*
+DDSURFACEDESC_GetSize(DDSURFACEDESCObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	return Py_BuildValue("(ii)",self->sd.dwWidth,self->sd.dwHeight);
+}
+
+
+static char DDSURFACEDESC_GetRGBBitCount__doc__[] =
+""
+;
+static PyObject*
+DDSURFACEDESC_GetRGBBitCount(DDSURFACEDESCObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	if (!(self->sd.ddpfPixelFormat.dwFlags & DDPF_RGB)){
+		seterror("GetRGBBitCount failed. Format is not RGB.");
+		return NULL;
+	}
+	return Py_BuildValue("i",self->sd.ddpfPixelFormat.dwRGBBitCount);
+}
+
+static char DDSURFACEDESC_GetRGBMasks__doc__[] =
+""
+;
+static PyObject*
+DDSURFACEDESC_GetRGBMasks(DDSURFACEDESCObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	if (!(self->sd.ddpfPixelFormat.dwFlags & DDPF_RGB)){
+		seterror("GetRGBMasks failed. Format is not RGB.");
+		return NULL;
+	}
+	return Py_BuildValue("(iii)",self->sd.ddpfPixelFormat.dwRBitMask,
+			self->sd.ddpfPixelFormat.dwGBitMask, 
+			self->sd.ddpfPixelFormat.dwBBitMask);
+}
+
 static struct PyMethodDef DDSURFACEDESC_methods[] = {
 	{"Clear", (PyCFunction)DDSURFACEDESC_Clear, METH_VARARGS, DDSURFACEDESC_Clear__doc__},
 	{"SetFlags", (PyCFunction)DDSURFACEDESC_SetFlags, METH_VARARGS, DDSURFACEDESC_SetFlags__doc__},
+	{"GetFlags", (PyCFunction)DDSURFACEDESC_GetFlags, METH_VARARGS, DDSURFACEDESC_GetFlags__doc__},
 	{"SetCaps", (PyCFunction)DDSURFACEDESC_SetCaps, METH_VARARGS, DDSURFACEDESC_SetCaps__doc__},
+	{"GetCaps", (PyCFunction)DDSURFACEDESC_GetCaps, METH_VARARGS, DDSURFACEDESC_GetCaps__doc__},
 	{"SetSize", (PyCFunction)DDSURFACEDESC_SetSize, METH_VARARGS, DDSURFACEDESC_SetSize__doc__},
+	{"GetSize", (PyCFunction)DDSURFACEDESC_GetSize, METH_VARARGS, DDSURFACEDESC_GetSize__doc__},
+	{"GetRGBBitCount", (PyCFunction)DDSURFACEDESC_GetRGBBitCount, METH_VARARGS, DDSURFACEDESC_GetRGBBitCount__doc__},
+	{"GetRGBMasks", (PyCFunction)DDSURFACEDESC_GetRGBMasks, METH_VARARGS, DDSURFACEDESC_GetRGBMasks__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -653,6 +980,89 @@ static PyTypeObject DDSURFACEDESCType = {
 // End of code for DDSURFACEDESC object 
 ////////////////////////////////////////////
 
+////////////////////////////////////////////
+// DDBLTFX struct object 
+
+static char DDBLTFX_Clear__doc__[] =
+"Clear DDBLTFX struct for reuse"
+;
+static PyObject *
+DDBLTFX_Clear(DDBLTFXObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;	
+	memset(&self->bltfx, 0, sizeof(self->bltfx));
+	self->bltfx.dwSize = sizeof(self->bltfx);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char DDBLTFX_SetDDFX__doc__[] =
+""
+;
+static PyObject*
+DDBLTFX_SetDDFX(DDBLTFXObject *self, PyObject *args)
+{
+	DWORD dwDDFX;
+	if (!PyArg_ParseTuple(args, "i",&dwDDFX))
+		return NULL;
+	self->bltfx.dwDDFX = dwDDFX;
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+
+static struct PyMethodDef DDBLTFX_methods[] = {
+	{"Clear", (PyCFunction)DDBLTFX_Clear, METH_VARARGS, DDBLTFX_Clear__doc__},
+	{"SetDDFX", (PyCFunction)DDBLTFX_SetDDFX, METH_VARARGS, DDBLTFX_SetDDFX__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+DDBLTFX_dealloc(DDBLTFXObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	PyMem_DEL(self);
+}
+
+static PyObject *
+DDBLTFX_getattr(DDBLTFXObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(DDBLTFX_methods, (PyObject *)self, name);
+}
+
+static char DDBLTFXType__doc__[] =
+""
+;
+
+static PyTypeObject DDBLTFXType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"DDBLTFX",			/*tp_name*/
+	sizeof(DDBLTFXObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)DDBLTFX_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)DDBLTFX_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	DDBLTFXType__doc__ /* Documentation string */
+};
+
+// End of code for DDBLTFX object 
+////////////////////////////////////////////
 
 
 ///////////////////////////////////////////
@@ -699,6 +1109,22 @@ CreateDDSURFACEDESC(PyObject *self, PyObject *args)
 	return (PyObject*)obj;
 }
 
+
+//
+static char CreateDDBLTFX__doc__[] =
+"create a DDBLTFX structure"
+;
+static PyObject *
+CreateDDBLTFX(PyObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	DDBLTFXObject *obj = newDDBLTFXObject();
+	if (obj == NULL)
+		return NULL;
+	return (PyObject*)obj;
+}
+
 // std com stuff for independance
 static char CoInitialize__doc__[] =
 ""
@@ -730,6 +1156,7 @@ CoUninitialize(PyObject *self, PyObject *args)
 static struct PyMethodDef ddraw_methods[] = {
 	{"CreateDirectDraw", (PyCFunction)CreateDirectDraw, METH_VARARGS, CreateDirectDraw__doc__},
 	{"CreateDDSURFACEDESC", (PyCFunction)CreateDDSURFACEDESC, METH_VARARGS, CreateDDSURFACEDESC__doc__},
+	{"CreateDDBLTFX", (PyCFunction)CreateDDBLTFX, METH_VARARGS, CreateDDBLTFX__doc__},
 	{"CoInitialize", (PyCFunction)CoInitialize, METH_VARARGS, CoInitialize__doc__},
 	{"CoUninitialize", (PyCFunction)CoUninitialize, METH_VARARGS, CoUninitialize__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
@@ -867,6 +1294,15 @@ static struct constentry _ddgbs[] ={
 	{NULL,0}
 	};
 
+static struct constentry _ddckey[] ={
+	{"DDCKEY_COLORSPACE",},
+	{"DDCKEY_DESTBLT",},
+	{"DDCKEY_DESTOVERLAY",},
+	{"DDCKEY_SRCBLT",},
+	{"DDCKEY_SRCOVERLAY",},
+	{NULL,0}
+	};
+
 
 // add symbolic constants of enum
 static int 
@@ -914,6 +1350,7 @@ void initddraw()
 	FATAL_ERROR_IF(SetItemEnum(d,_ddflip)<0)
 	FATAL_ERROR_IF(SetItemEnum(d,_ddlock)<0)
 	FATAL_ERROR_IF(SetItemEnum(d,_ddgbs)<0)
+	FATAL_ERROR_IF(SetItemEnum(d,_ddckey)<0)
 
 	// Check for errors
 	if (PyErr_Occurred())
