@@ -14,19 +14,16 @@ CF_TOOL = Sdk.RegisterClipboardFormat('Tool')
 CF_NODEUID = Sdk.RegisterClipboardFormat('NodeUID')
 CF_REGION = Sdk.RegisterClipboardFormat('Region')
 CF_MEDIA = Sdk.RegisterClipboardFormat('Media')
+CF_URL = Sdk.RegisterClipboardFormat('URL')
 
 class DropTarget:
-	cfmap={'FileName':CF_FILE}
+	cfmap = {'FileName':CF_FILE}
 	def __init__(self):
 		self._isregistered=0
 		self._dropmap={
 			'FileName':(self.dragfile,self.dropfile),
 			'URL': (self.dragurl, self.dropurl),
 		}
-		
-		# shortcut
-		self.CF_FILE=self.getClipboardFormat('FileName')
-		self.CF_URL = self.getClipboardFormat('URL')
 
 	def registerDropTarget(self):
 		if not self._isregistered:
@@ -74,7 +71,7 @@ class DropTarget:
 		return (kbdstate & win32con.MK_ALT)!=0
 
 	def dragfile(self,dataobj,kbdstate,x,y):
-		filename=dataobj.GetGlobalData(self.CF_FILE)
+		filename=dataobj.GetGlobalData(CF_FILE)
 		if filename:
 			x,y=self._DPtoLP((x,y))
 			x,y = self._pxl2rel((x, y),self._canvas)
@@ -82,7 +79,7 @@ class DropTarget:
 		return 0
 
 	def dropfile(self,dataobj,effect,x,y):
-		filename=dataobj.GetGlobalData(self.CF_FILE)
+		filename=dataobj.GetGlobalData(CF_FILE)
 		if filename:
 			import longpath
 			filename=longpath.short2longpath(filename)
@@ -93,7 +90,7 @@ class DropTarget:
 		return 0
 
 	def dragurl(self,dataobj,kbdstate,x,y):
-		url=dataobj.GetGlobalData(self.CF_URL)
+		url=dataobj.GetGlobalData(CF_URL)
 		if url:
 			x,y=self._DPtoLP((x,y))
 			x,y = self._pxl2rel((x, y),self._canvas)
@@ -101,7 +98,7 @@ class DropTarget:
 		return 0
 
 	def dropurl(self,dataobj,effect,x,y):
-		url=dataobj.GetGlobalData(self.CF_URL)
+		url=dataobj.GetGlobalData(CF_URL)
 		if url:
 			x,y=self._DPtoLP((x,y))
 			x,y = self._pxl2rel((x, y),self._canvas)

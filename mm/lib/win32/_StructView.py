@@ -30,11 +30,6 @@ class _StructView(DisplayListView):
 	def __init__(self, doc, bgcolor=None):
 		DisplayListView.__init__(self,doc)
 
-		# shortcut for GRiNS private clipboard format
-		self.CF_NODE = self.getClipboardFormat('Node')
-		self.CF_TOOL = self.getClipboardFormat('Tool')
-		self.CF_NODEUID = self.getClipboardFormat('NodeUID')
-
 		# enable or disable node drag and drop
 		self._enableNodeDragDrop = 1
 			
@@ -169,7 +164,7 @@ class _StructView(DisplayListView):
 				# python/Extensions/Pythonwin/win32view.cpp.
 				# The returned value is whether the drop result was successful or not.
 				# ***** DoDragDrop only needs to be called ONCE ***********
-				res = self.DoDragDrop(self.CF_NODE, str)
+				res = self.DoDragDrop(DropTarget.CF_NODE, str)
 				self._dragging = None
 				if not res:
 					self.onEvent(DragEnd, point)
@@ -185,7 +180,7 @@ class _StructView(DisplayListView):
 		#print "DEBUG: dragging."
 		#import traceback
 		#traceback.print_stack()
-		node=dataobj.GetGlobalData(self.CF_NODE)
+		node=dataobj.GetGlobalData(DropTarget.CF_NODE)
 		if node and self._dragging:
 			x, y = self._DPtoLP((x,y))
 			x, y = self._pxl2rel((x, y),self._canvas)
@@ -204,7 +199,7 @@ class _StructView(DisplayListView):
 
 	def dropnode(self, dataobj, effect, x, y):
 		#print "DEBUG: dropped."
-		node = dataobj.GetGlobalData(self.CF_NODE) 
+		node = dataobj.GetGlobalData(DropTarget.CF_NODE) 
 		if node and self._dragging:
 			
 			# the drag and drop cmd is:
@@ -231,7 +226,7 @@ class _StructView(DisplayListView):
 		return DropTarget.DROPEFFECT_NONE
 							
 	def dragtool(self, dataobj, kbdstate, x, y):
-		cmdid=dataobj.GetGlobalData(self.CF_TOOL)
+		cmdid=dataobj.GetGlobalData(DropTarget.CF_TOOL)
 		if cmdid:
 			ucmd = usercmdui.id2usercmd(eval(cmdid))
 			x, y = self._DPtoLP((x,y))
@@ -241,7 +236,7 @@ class _StructView(DisplayListView):
 		return DropTarget.DROPEFFECT_NONE
 
 	def droptool(self, dataobj, effect, x, y):
-		cmdid = dataobj.GetGlobalData(self.CF_TOOL)
+		cmdid = dataobj.GetGlobalData(DropTarget.CF_TOOL)
 		if cmdid:
 			ucmd = usercmdui.id2usercmd(eval(cmdid))
 			x, y = self._DPtoLP((x,y))
@@ -252,7 +247,7 @@ class _StructView(DisplayListView):
 		return DropTarget.DROPEFFECT_NONE
 
 	def dragnodeuid(self, dataobj, kbdstate, x, y):
-		data = dataobj.GetGlobalData(self.CF_NODEUID)
+		data = dataobj.GetGlobalData(DropTarget.CF_NODEUID)
 		if data:
 			contextid, nodeuid = string.split(data, ',')
 			contextid = string.strip(contextid)
@@ -269,7 +264,7 @@ class _StructView(DisplayListView):
 		return DropTarget.DROPEFFECT_NONE
 
 	def dropnodeuid(self, dataobj, effect, x, y):
-		data = dataobj.GetGlobalData(self.CF_NODEUID)
+		data = dataobj.GetGlobalData(DropTarget.CF_NODEUID)
 		if data:
 			contextid, nodeuid = string.split(data, ',')
 			contextid = string.strip(contextid)
