@@ -570,6 +570,8 @@ class AnimateContext:
 # * implement specialization: EffValueAnimator
 
 ###########################
+smil2grins = {'src':'file', 'backgroundColor':'bgcolor',}
+
 # Animation semantics parser
 class AnimateElementParser:
 	# args anim and target are MMNode objects
@@ -579,6 +581,7 @@ class AnimateElementParser:
 		self.__target = target
 
 		self.__attrname = ''
+		self.__grinsattrname = ''
 		self.__domval = None
 		self.__enable = 0
 		self.__grinsext = 0
@@ -589,7 +592,7 @@ class AnimateElementParser:
 
 		self.__hasValidTarget = self.__checkTarget()
 		if self.__hasValidTarget and not self.__grinsext:
-			self.__attrtype = MMAttrdefs.getattrtype(self.__attrname)
+			self.__attrtype = MMAttrdefs.getattrtype(self.__grinsattrname)
 
 		self.__additive = MMAttrdefs.getattr(self.__anim, 'additive')
 		self.__calcMode = MMAttrdefs.getattr(self.__anim, 'calcMode')
@@ -613,6 +616,9 @@ class AnimateElementParser:
 
 
 	def getAnimator(self):
+		attr = self.__grinsattrname
+		domval = self.__domval
+
 		# set elements
 		if self.__elementTag=='set':
 			return self.__getSetAnimator()
@@ -621,14 +627,12 @@ class AnimateElementParser:
 		if self.__isToOnly() and self.__canBeAdditive() and self.__calcMode!='discrete':
 			v = self.getTo()
 			v = string.atof(v)
-			anim = EffValueAnimator(self.__attrname, self.__domval, v, self.getDuration())
+			anim = EffValueAnimator(attr, domval, v, self.getDuration())
 			if self.__attrtype=='int':
 				anim.setRetunedValuesConverter(_round)
 			return anim
 
 		# 1. Read animation attributes
-		attr = self.__attrname
-		domval = self.__domval
 		dur = self.getDuration()
 		mode = self.__calcMode 
 		times = self.__getInterpolationKeyTimes() 
@@ -779,6 +783,7 @@ class AnimateElementParser:
 			if d.has_key('base_winoff'):
 				base_winoff = d['base_winoff']
 				self.__attrname = 'region.position'
+				self.__grinsattrname = self.__attrname
 				self.__domval = complex(base_winoff[0], base_winoff[1])
 				return 1
 
@@ -787,14 +792,17 @@ class AnimateElementParser:
 			print 'failed to get attributeName', self.__anim
 			return 0
 
-		self.__domval = MMAttrdefs.getattr(self.__target, self.__attrname)
+		if smil2grins.has_key(self.__attrname):
+			self.__grinsattrname = smil2grins[self.__attrname]
+		else:
+			self.__grinsattrname = self.__attrname
+		self.__domval = MMAttrdefs.getattr(self.__target, self.__grinsattrname)
 
 		# check extensions
 		if not self.__domval:
 			d = self.__target.GetChannel().attrdict
-			if self.__attrname=='backgroundColor': self.__attrname = 'bgcolor'
-			if not self.__domval and d.has_key(self.__attrname):
-				self.__domval = d[self.__attrname]
+			if not self.__domval and d.has_key(self.__grinsattrname):
+				self.__domval = d[self.__grinsattrname]
 		if not self.__domval:
 			self.__checkExtensions()
 			
@@ -1101,6 +1109,7 @@ class AnimateElementParser:
 			elif self.__attrname == 'region.height':
 				self.__domval = base_winoff[3]
 		if self.__attrname:
+			self.__grinsattrname = self.__attrname
 			self.__attrtype = 'int'
 
 	# temp
