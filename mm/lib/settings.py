@@ -6,10 +6,6 @@ import os
 
 # some constants
 
-# allow to manage all SMIL CSS constraints
-# temporary constant: this constant will be remove as soon as it will be reliable
-activeFullSmilCss = 1
-
 # enable or dissable language extensions
 profileExtensions = {
 	'AccessKeyTiming': 0,
