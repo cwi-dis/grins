@@ -57,10 +57,10 @@ class TreeHelper:
 		from MMTypes import leaftypes
 		if not node.type in leaftypes:
 			return 0
-		import ChannelMap
 		chtype = node.GetChannelType()
-		# XXX svg should be include in visiblechannel list
-		return chtype == 'svg' or ChannelMap.isvisiblechannel(chtype)
+		if chtype == None or chtype == 'null':
+			return 0
+		return 1
 
 	# check the media node references and update the internal structure
 	def __checkMediaNodeList(self, nodeRef):
@@ -2494,6 +2494,12 @@ class PreviousWidget(Widget):
 
 	# ensure that the media is in showing state
 	def __showMedia(self, mediaRef):
+		# show only visible medias in the preview area
+		chtype = mediaRef.GetChannelType()
+		import ChannelMap
+		if not ChannelMap.isvisiblechannel(chtype):
+			return
+		
 		appendList = []
 		if mediaRef not in self.currentMediaRefListM:
 			appendList.append(mediaRef)
