@@ -29,6 +29,7 @@ OPEN_URL=CommandID()
 OPEN_FILE=CommandID()
 TRACE=CommandID()
 DEBUG=CommandID()
+CONSOLE=CommandID()
 EXIT=CommandID()
 SAVE=CommandID()
 SAVE_AS=CommandID()
@@ -99,8 +100,10 @@ MENUBAR=(
 		(ENTRY, 'Restore', None, RESTORE),
 		(ENTRY, 'Close document', None, CLOSE),
 		(SEP,),
-		(TOGGLE, 'Trace', None, TRACE),
-		(ENTRY, 'Debug', None, DEBUG),
+		(CASCADE, 'Debug', (
+			(TOGGLE, 'Enable call tracing', None, TRACE),
+			(ENTRY, 'Enter debugger', None, DEBUG),
+			(ENTRY, 'Show log/debug window', None, CONSOLE))),
 		(SEP,),
 		(ENTRY, 'Quit', 'Q', EXIT))),
 
