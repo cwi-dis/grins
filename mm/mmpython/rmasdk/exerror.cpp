@@ -20,6 +20,7 @@
 
 #include "os.h"
 #include "exerror.h"
+#include "mtpycall.h"
 
 extern char *geterrorstring(PN_RESULT res, char *pszBuffer);
 
@@ -63,8 +64,7 @@ ExampleErrorSink::~ExampleErrorSink()
 void ExampleErrorSink::SetPyErrorSink(PyObject *obj)
 	{
 	Py_XDECREF(m_pyErrorSink);
-	if(obj==Py_None)m_pyErrorSink=NULL;
-	else m_pyErrorSink=obj;
+	m_pyErrorSink=obj;
 	Py_XINCREF(m_pyErrorSink);
 	}
 
@@ -138,8 +138,12 @@ ExampleErrorSink::ErrorOccurred(const UINT8	unSeverity,
 #endif
 	if(m_pyErrorSink)
 		{
-		CallerHelper helper("ErrorOccurred",m_pyErrorSink);
-		if(helper.HaveHandler())helper.call(msg);
+		CallbackHelper helper("ErrorOccurred",m_pyErrorSink);
+		if(helper.cancall())
+			{
+			PyObject *arg = Py_BuildValue("(s)", msg);
+			helper.call(arg);
+			}
 		}
 	else
 		MessageLog(msg);
@@ -194,7 +198,6 @@ const char* ExampleErrorSink::ConvertErrorTypeToString(int type)
 STDMETHODIMP_(ULONG32)
 ExampleErrorSink::AddRef()
 {
-	Py_XINCREF(m_pyErrorSink);
     return InterlockedIncrement(&m_lRefCount);
 }
 
@@ -209,13 +212,6 @@ ExampleErrorSink::AddRef()
 STDMETHODIMP_(ULONG32)
 ExampleErrorSink::Release()
 {
-	if(m_pyErrorSink && m_pyErrorSink->ob_refcnt==1)
-		{
-		Py_XDECREF(m_pyErrorSink);
-		m_pyErrorSink=NULL;
-		}
-	else Py_XDECREF(m_pyErrorSink);
-
     if (InterlockedDecrement(&m_lRefCount) > 0)
     {
         return m_lRefCount;
