@@ -4327,6 +4327,8 @@ class Layout2Group(AttrGroup):
 		
 		a = self.getattr('soundLevel')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_SOUNDLEVELL, grinsRC.IDC_SOUNDLEVELV))
+		a = self.getattr('showBackground')
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_SHOWBACKGROUNDL, grinsRC.IDC_SHOWBACKGROUNDV1, grinsRC.IDC_SHOWBACKGROUNDV2))
 						   
 		return cd
 

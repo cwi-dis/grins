@@ -491,6 +491,7 @@ attrgrs=(
 		'top', 'height', 'bottom',
 		'fit','z',
 		'soundLevel',
+		'showBackground',
 		]},
 
 	{'name':'CssBackgroundColor',
