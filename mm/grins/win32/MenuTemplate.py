@@ -36,7 +36,8 @@ DEBUG='debug'
 
 MENUBAR=(
 	('&File', (
-		(ALL, ENTRY, '&Open...\tCtrl+O', 'O', OPEN),
+		(ALL, ENTRY, '&Open...\tCtrl+O', 'O', OPENFILE),
+		(ALL, ENTRY, '&Open URL...\tCtrl+L', 'O', OPEN),
 		(ALL, DYNAMICCASCADE, 'Open recent', OPEN_RECENT),
 		(ALL, ENTRY, '&Close Document', None, CLOSE),
 		(ALL, SEP,),
