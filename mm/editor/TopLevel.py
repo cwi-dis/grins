@@ -6,7 +6,7 @@ import Timing
 from ViewDialog import ViewDialog
 
 # an empty document
-EMPTY = "(seq '1' ((channellist) (hyperlinks) (styledict)))"
+EMPTY = "(seq '1' ((channellist) (hyperlinks)))"
 
 # List of currently open toplevel windows
 opentops = []

@@ -23,7 +23,7 @@ class MMNodeContext:
 		self.nodeclass = nodeclass
 		self.nextuid = 1
 		self.uidmap = {}
-		self.styledict = {}
+##		self.styledict = {}
 		self.channelnames = []
 		self.channels = []
 		self.channeldict = {}
@@ -92,11 +92,11 @@ class MMNodeContext:
 		##_stat('forgetnode')
 		del self.uidmap[uid]
 	#
-	def addstyles(self, dict):
-		##_stat('addstyles')
-		# XXX How to handle duplicates?
-		for key in dict.keys():
-			self.styledict[key] = dict[key]
+##	def addstyles(self, dict):
+##		##_stat('addstyles')
+##		# XXX How to handle duplicates?
+##		for key in dict.keys():
+##			self.styledict[key] = dict[key]
 	#
 	# Channel administration
 	#
@@ -194,12 +194,12 @@ class MMNodeContext:
 					n.SetAttr('channel', newname)
 			except NoSuchAttrError:
 				pass
-		# Patch references to this channel in styles
-		for stylename in self.styledict.keys():
-			s = self.styledict[stylename]
-			if s.has_key('channel'):
-				if s['channel'] == oldname:
-					s['channel'] = newname
+##		# Patch references to this channel in styles
+##		for stylename in self.styledict.keys():
+##			s = self.styledict[stylename]
+##			if s.has_key('channel'):
+##				if s['channel'] == oldname:
+##					s['channel'] = newname
 	#
 	# Hyperlink administration
 	#
@@ -222,30 +222,30 @@ class MMNodeContext:
 	def geteditmgr(self):
 		##_stat('geteditmgr')
 		return self.editmgr
-	#
-	# Look for an attribute in the style definitions.
-	# Raise NoSuchAttrError if the attribute is undefined.
-	# This will cause a stack overflow if there are recursive style
-	# definitions, and raise an unexpected exception if there are
-	# undefined styles.
-	#
-	# XXX The recursion may be optimized out by expanding definitions;
-	# XXX this should also fix the stack overflows...
-	#
-	def lookinstyles(self, name, styles):
-		##_stat('lookinstyles')
-		for style in styles:
-			attrdict = self.styledict[style]
-			if attrdict.has_key(name):
-				return attrdict[name]
-			if attrdict.has_key('style'):
-				try:
-					##_stat('lookinstyles recursive call')
-					return self.lookinstyles(name, \
-						attrdict['style'])
-				except NoSuchAttrError:
-					pass
-		raise NoSuchAttrError, 'in lookinstyles()'
+##	#
+##	# Look for an attribute in the style definitions.
+##	# Raise NoSuchAttrError if the attribute is undefined.
+##	# This will cause a stack overflow if there are recursive style
+##	# definitions, and raise an unexpected exception if there are
+##	# undefined styles.
+##	#
+##	# XXX The recursion may be optimized out by expanding definitions;
+##	# XXX this should also fix the stack overflows...
+##	#
+##	def lookinstyles(self, name, styles):
+##		##_stat('lookinstyles')
+##		for style in styles:
+##			attrdict = self.styledict[style]
+##			if attrdict.has_key(name):
+##				return attrdict[name]
+##			if attrdict.has_key('style'):
+##				try:
+##					##_stat('lookinstyles recursive call')
+##					return self.lookinstyles(name, \
+##						attrdict['style'])
+##				except NoSuchAttrError:
+##					pass
+##		raise NoSuchAttrError, 'in lookinstyles()'
 	#
 	# Remove all hyperlinks that aren't contained in the given trees
 	# (note that the argument is a *list* of root nodes)
@@ -506,24 +506,25 @@ class MMNode:
 		except NoSuchAttrError:
 			return default
 	#
-	def GetStyleDict(self):
-		##_stat('GetStyleDict')
-		return self.context.styledict
+##	def GetStyleDict(self):
+##		##_stat('GetStyleDict')
+##		return self.context.styledict
 	#
 	def GetAttr(self, name):
 		##_stat('GetAttr.' + name)
 		try:
 			return self.attrdict[name]
 		except KeyError:
-			return self.GetDefAttr(name)
+			raise NoSuchAttrError, 'in GetAttr'
+##			return self.GetDefAttr(name)
 	#
-	def GetDefAttr(self, name):
-		##_stat('GetDefAttr.' + name)
-		try:
-			styles = self.attrdict['style']
-		except KeyError:
-			raise NoSuchAttrError, 'in GetDefAttr()'
-		return self.context.lookinstyles(name, styles)
+##	def GetDefAttr(self, name):
+##		##_stat('GetDefAttr.' + name)
+##		try:
+##			styles = self.attrdict['style']
+##		except KeyError:
+##			raise NoSuchAttrError, 'in GetDefAttr()'
+##		return self.context.lookinstyles(name, styles)
 	#
 	def GetAttrDef(self, name, default):
 		##_stat('GetAttrDef.' + name)
@@ -546,10 +547,10 @@ class MMNode:
 	#
 	def GetDefInherAttr(self, name):
 		##_stat('GetInherDefAttr.' + name)
-		try:
-			return self.GetDefAttr(name)
-		except NoSuchAttrError:
-			pass
+##		try:
+##			return self.GetDefAttr(name)
+##		except NoSuchAttrError:
+##			pass
 		x = self.parent
 		while x:
 			if x.attrdict:
