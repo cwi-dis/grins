@@ -201,3 +201,5 @@ clobber:	clean
 
 distclean:	clobber
 		-rm -f Makefile Setup
+
+.PRECIOUS:	Makefile
