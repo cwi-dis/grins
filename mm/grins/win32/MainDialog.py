@@ -32,11 +32,15 @@ class MainDialog:
 		Arguments (no defaults):
 		title -- string to be displayed as window title
 		"""
+		if __debug__:
+			import usercmd
+			self.commandlist.append(
+					usercmd.CONSOLE(callback=(self.console_callback, ())))
 
 		import windowinterface
-		self.__window = windowinterface.createmainwnd(None, None, 0, 0,
-				title, adornments = None,
-				commandlist = self.commandlist)
+		windowinterface.createmainwnd(title,
+			adornments = None,
+			commandlist = self.commandlist)
 
 	def open_callback(self):
 		callbacks={
@@ -45,7 +49,8 @@ class MainDialog:
 			'Cancel':(self.__ccallback, ()),
 			}
 		import windowinterface
-		self.__owindow=windowinterface.OpenLocationDlg(callbacks,self.__window)
+		f=windowinterface.getmainwnd()
+		self.__owindow=windowinterface.OpenLocationDlg(callbacks,f)
 		self.__text=self.__owindow._text
 		self.__owindow.show()
 
@@ -63,9 +68,10 @@ class MainDialog:
 
 	def __openfile_callback(self):
 		import windowinterface
+		f=windowinterface.getmainwnd()
 		windowinterface.FileDialog('Open file', '.', '*.smil', '',
 					   self.__filecvt, None, 1,
-					   parent = self.__owindow)
+					   parent = f)
 
 	def __filecvt(self, filename):
 		import os, MMurl
@@ -83,3 +89,13 @@ class MainDialog:
 				filename = file
 		self.__text.settext(MMurl.pathname2url(filename))
 
+
+	def console_callback(self):
+		import win32ui,win32con
+		cwnd=win32ui.GetAfx().GetMainWnd()
+		if cwnd.IsWindowVisible():
+			cwnd.ShowWindow(win32con.SW_HIDE)
+		else:
+			cwnd.ShowWindow(win32con.SW_RESTORE)
+			cwnd.ShowWindow(win32con.SW_SHOW)
+			cwnd.BringWindowToTop()

@@ -1,3 +1,3 @@
 __version__ = "$Id$"
 
-patchlevel = '1'
+patchlevel = 'win32 patchlevel 1'
