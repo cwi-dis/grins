@@ -71,6 +71,12 @@ def showchannelattreditor(context, name):
 		dict = context.channelattreditors = {}
 	except AttributeError: # new style exceptions
 		dict = context.channelattreditors = {}
+	if dict.has_key(name):
+		editor = dict[name]
+		wrapper = editor.wrapper
+		if wrapper.name <> name:
+			editor.hide()
+			del dict[name]
 	if not dict.has_key(name):
 		dict[name] = \
 			AttrEditor().init(ChannelWrapper().init(context, name))
