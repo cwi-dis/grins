@@ -84,7 +84,8 @@ class SchedulerContext:
 				  '\nchannels:'+(`echan`[1:-1])+ \
 				  '\nparent node:'+ename)
 			return 0
-			
+		# First make a pass to check channels are free
+		todo = []
 		for cn in self.channelnames:
 			ch = self.parent.ui.getchannelbyname(cn)
 			if ch in self.parent.channels_in_use:
@@ -92,6 +93,9 @@ class SchedulerContext:
 				windowinterface.showmessage('Channel already in use: '\
 					  + cn)
 				return 0
+			todo.append(ch)
+		# Next, actually set them to be in use.
+		for ch in todo:
 			self.parent.channels_in_use.append(ch)
 			self.channels.append(ch)
 		#
