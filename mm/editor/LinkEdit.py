@@ -317,7 +317,7 @@ class LinkEdit(ViewDialog):
 
 	# This functions re-loads one of the anchor browsers.
 
-	def reloadanchors(self, str):
+	def reloadanchors(self, str, scroll):
 		if str.hidden:
 			str.browser.hide()
 			str.node_show.hide()
@@ -409,7 +409,7 @@ class LinkEdit(ViewDialog):
 			self.linkedit = 0
 		if str.focus <> None:
 			str.browser.selectitem(str.focus)
-			if not str.browser.is_visible(str.focus):
+			if scroll and not str.browser.is_visible(str.focus):
 				str.browser.scrolllist(str.focus,
 						       windowinterface.CENTER)
 			str.browser.show()
@@ -484,10 +484,8 @@ class LinkEdit(ViewDialog):
 
 	# Reload/redisplay all data
 	def updateform(self, str = None):
-		if str is None or str is self.left:
-			self.reloadanchors(self.left)
-		if str is None or str is self.right:
-			self.reloadanchors(self.right)
+		self.reloadanchors(self.left, str is None or str is self.left)
+		self.reloadanchors(self.right, str is None or str is self.right)
 		self.reloadlinks()
 
 	# Start editing a link
