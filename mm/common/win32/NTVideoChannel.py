@@ -59,6 +59,8 @@ DirectShowSdk=win32ui.GetDS()
 
 # private graph notification message
 WM_GRPAPHNOTIFY=win32con.WM_USER+101
+# private message to redraw video after resize
+WM_REDRAW=win32con.WM_USER+102
 
 # channel types
 [SINGLE, HTM, TEXT, MPEG] = range(4)
@@ -90,7 +92,7 @@ class VideoChannel(ChannelWindow):
 		# keep last frame support
 		self._bmp=None
 
-		# until we clarify why destroy is not called
+		# release any resources on exit
 		import windowinterface
 		windowinterface.addclosecallback(self.release_res,())
 
@@ -102,6 +104,8 @@ class VideoChannel(ChannelWindow):
 			return 0
 		for b in self._builders.values():
 			b.SetWindow(self.window,WM_GRPAPHNOTIFY)
+		if self.window:
+			self.window.RedrawWindow()
 		return 1
 
 	# the current ChannelWindow.do_hide implementation 
@@ -167,10 +171,20 @@ class VideoChannel(ChannelWindow):
 				self.do_play(node)
 				self.armdone()
 			else: # replaynode call, due to resize or other reason
+				if not self._playBuilder:
+					if node in self._builders.keys():
+						self._playBuilder=self._builders[node]
+				if not self._playBuilder:
+					self.play_1()
+					return	
 				self._playBuilder.SetWindow(self.window,WM_GRPAPHNOTIFY)
-				self._playBuilder.SetVisible(1)	
+				self._playBuilder.SetVisible(1)
 				self.__freeze()
 				self.play_1()
+
+				# redraw video after resizing
+				self.window.PostMessage(WM_REDRAW)
+
 
 	def do_play(self, node):
 		if debug:print 'VideoChannel.do_play('+`self`+','+`node`+')'
@@ -201,14 +215,17 @@ class VideoChannel(ChannelWindow):
 		if self.window and self.window.IsWindow():
 			self._playBuilder.SetWindow(self.window,WM_GRPAPHNOTIFY)
 			self.window.HookMessage(self.OnGraphNotify,WM_GRPAPHNOTIFY)
+			self.window.HookMessage(self.redraw,WM_REDRAW)
 		self._playBuilder.Run()
 		self._playBuilder.SetVisible(1)
 		self.register_for_timeslices()
 		self.__playdone=0
+		self.window.PostMessage(WM_REDRAW)
 
-		if self.play_loop == 0 and duration == 0:
-			self.__playdone=1
-			self.playdone(0)
+
+#		if self.play_loop == 0 and duration == 0:
+#			self.__playdone=1
+#			self.playdone(0)
 
 
 	def arm_display(self,node):
@@ -241,9 +258,10 @@ class VideoChannel(ChannelWindow):
 			self.played_display.close()
 		self.played_display = self.armed_display
 		self.armed_display = None
-
+	
 	# Make a copy of frame and keep it until stopplay is called
 	def __freeze(self):
+		return # bmp not used
 		import win32mu,win32api
 		if self.window and self.window.IsWindow():
 			if self._bmp: 
@@ -255,8 +273,13 @@ class VideoChannel(ChannelWindow):
 	def update(self,dc):
 		import win32mu
 		if self._playBuilder and (self.__playdone or self._paused):
-			if self._bmp:
+			self.window.RedrawWindow()
+			if self._bmp: 
 				win32mu.BitBltBmp(dc,self._bmp,self.window.GetClientRect())
+
+	def redraw(self,params):
+		if self.window:
+			self.window.RedrawWindow()
 
 	# scheduler callback, at end of duration
 	def _stopplay(self):
@@ -273,10 +296,20 @@ class VideoChannel(ChannelWindow):
 		if self._playBuilder:
 			self._playBuilder.Stop()
 			self._playBuilder.SetVisible(0)
+			self._playBuilder.SetWindowNull()
+			for n in self._builders.keys():
+				if self._builders[n]==self._playBuilder:
+					del self._builders[n]
+					break
+			self._playBuilder.Release()
 			self._playBuilder=None
 		if self._bmp:self._bmp=None
-		if self.window:self.window.update()
 		ChannelWindow.stopplay(self, node)
+
+	def playstop(self):
+		ChannelWindow.playstop(self)
+		if self.window:
+			self.window.RedrawWindow()
 
 	# toggles between pause and run
 	def setpaused(self, paused):
