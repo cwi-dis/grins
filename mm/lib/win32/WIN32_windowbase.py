@@ -1,6 +1,5 @@
-import cmifex, timerex, imageex, textex, Htmlex, cmifex2
+import cmifex, timerex, imageex, Htmlex, cmifex2
 import win32ui, win32con, win32api
-import MainDialogRC
 import string
 
 from types import *
@@ -472,7 +471,7 @@ class _Window:
 			self._hWnd = Htmlex.CreateWindow(title, x, y, w, h, 0)
 		elif (type_channel == TEXT) :
 			#print "Text Window"
-			self._hWnd = textex.CreateWindow(title, x, y, w, h, 0)
+			self._hWnd = cmifex.CreateWindow(title, x, y, w, h, 0)
 			#self._hWnd = cmifex.CreateWindow(title, x, y, w, h, 0)
 		else :
 			print 'UnKnown window type - SINGLE USED AS BACKUP'
@@ -972,11 +971,11 @@ class _Window:
 
 		#if _in_create_box != None:
 		#	cmifex.SetFlag(1)
-		#	textex.SetFlag(1)
+		#	cmifex.SetFlag(1)
 		#	Htmlex.SetFlag(1)
 		#else:
 		#	cmifex.SetFlag(0)
-		#	textex.SetFlag(0)
+		#	cmifex.SetFlag(0)
 		#	Htmlex.SetFlag(0)
 			try:
 				func, arg = self._callbacks[WindowExit]
@@ -1262,7 +1261,7 @@ class _BareSubWindow:
 			self._hWnd = Htmlex.CreateChildWindow(self._title, parent._hWnd, px, py, pw, ph)
 			print 'HTM clild created'
 		elif (type_channel == TEXT) :
-			self._hWnd = textex.CreateChildWindow(self._title, parent._hWnd, px, py, pw, ph)
+			self._hWnd = cmifex.CreateChildWindow(self._title, parent._hWnd, px, py, pw, ph)
 			#self._hWnd = cmifex.CreateChildWindow(self._title, parent._hWnd, px, py, pw, ph)
 		else :
 			print 'UnKnown window type - SINGLE USED AS BACKUP'
@@ -1304,11 +1303,11 @@ class _BareSubWindow:
 
 		#if _in_create_box != None:
 		#	cmifex.SetFlag(1)
-		#	textex.SetFlag(1)
+		#	cmifex.SetFlag(1)
 		#	Htmlex.SetFlag(1)
 		#else:
 		#	cmifex.SetFlag(0)
-		#	textex.SetFlag(0)
+		#	cmifex.SetFlag(0)
 		#	Htmlex.SetFlag(0)
 			try:
 				func, arg = self._callbacks[WindowExit]
@@ -1785,8 +1784,8 @@ class _DisplayList:
 			#print 'Parameters: ', str, fontname, pointsize, TRANSPARENT, self._bgcolor, fontColor,w._align,(x,y)
 			if (str == None or str==''):
 				str =' '
-			textex.PutText(id, w._hWnd, str, fontname, pointsize, TRANSPARENT, self._bgcolor, fontColor,w._align,(x,y))
-			#textex.PutText(id, w._hWnd, str, fontname, pointsize, TRANSPARENT, self._bgcolor, fontColor)
+			#print "Calling PutText with", w._hWnd
+			cmifex.PutText(id, w._hWnd, str, fontname, pointsize, TRANSPARENT, self._bgcolor, fontColor,w._align,(x,y))
 			self.update_boxes(w._hWnd)
 			pass
 		elif cmd == 'linewidth':
@@ -1802,12 +1801,12 @@ class _DisplayList:
 	def update_boxes(self, hWnd):
 		#print "in update_boxes"
 		if self._window._window_type == TEXT:
-			ydif = textex.GetScrollPos(hWnd)
+			ydif = cmifex.GetScrollPos(hWnd)
 		else:
 			ydif = 0
 		if ydif == 0:
 			return
-		textex.ClearXY(hWnd)
+		cmifex.ClearXY(hWnd)
 		print "ydif-->", ydif
 		#dif = oldscrollpos-scrollpos
 		#print "self._buttons[0]->>>", self._buttons[0]
