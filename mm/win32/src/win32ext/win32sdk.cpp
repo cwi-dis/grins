@@ -352,6 +352,29 @@ sdk_send_message_rs(PyObject *self, PyObject *args)
 	return strobj;
 	}
 
+// @pymethod |PyWin32Sdk|SendMessageRA|Sends a message to a window. A special version for Python
+// Return Values: A tuple (result, wParam, lParam)
+PyObject *
+sdk_send_message_ra(PyObject *self, PyObject *args)
+	{
+	HWND hwnd;
+	UINT message;
+	WPARAM wParam=0;
+	LPARAM lParam=0;
+	if (!PyArg_ParseTuple(args, "ii|ii:SendMessageRA",
+			  &hwnd,    // @pyparm handle|handle of destination window 
+		      &message, // @pyparm int|idMessage||The ID of the message to send.
+	          &wParam,  // @pyparm int|wParam||The wParam for the message
+	          &lParam)) // @pyparm int|lParam||The lParam for the message
+		return NULL;
+	
+	GUI_BGN_SAVE;
+	// @pyseesdk Win32Sdk|SendMessage
+	LPARAM rc = ::SendMessage(hwnd,message,(WPARAM)&wParam,(LPARAM)&lParam);
+	GUI_END_SAVE;
+	return Py_BuildValue("iii",rc,wParam,lParam);
+	}
+
 // @pymethod |PyWin32Sdk|SendMessageGL|A special version of send message for Python that returns a string from an edit control 
 static PyObject *
 sdk_send_message_gl(PyObject *self, PyObject *args)
@@ -933,6 +956,7 @@ sdk_map_virtual_key(PyObject *self, PyObject *args)
 	return Py_BuildValue("i",ret);
 	}
 
+
  // @object PyWin32Sdk|A module wrapper object.  It is a general utility object, and is not associated with an MFC object.
 BEGIN_PYMETHODDEF(Win32Sdk)
 	{"CreatePen",sdk_create_pen,	1},		// @pymeth CreatePen|Creates a pen and returns its handle
@@ -950,6 +974,7 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"SendMessage",sdk_send_message,1}, // @pymeth SendMessage|Sends a message to a window.	
 	{"SendMessageLS",sdk_send_message_ls,1}, // @pymeth SendMessage|Sends a message to a window. The LPARAM is a string	
 	{"SendMessageRS",sdk_send_message_rs,1}, // @pymeth SendMessage|Sends a message to a window. The return value is a string	
+	{"SendMessageRA",sdk_send_message_ra,1}, // @pymeth SendMessage|Sends a message to a window. The return value is a tuple	
 	{"SendMessageGL",sdk_send_message_gl,1}, // @pymeth SendMessageGL|Sends a message to an edit control. The return value is a string	
 	{"SetCursor",sdk_set_cursor,1}, // @pymeth SetCursor|Establishes a cursor shape.	
 	{"LoadStandardCursor",sdk_load_standard_cursor,1}, // @pymeth LoadStdCursor|Loads the specified predefined cursor resource.	
