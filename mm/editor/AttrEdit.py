@@ -298,7 +298,9 @@ class NodeWrapper(Wrapper):
 			self.editmgr.setnodetype(self.node, value)
 			return
 		if name == '.values':
-			self.editmgr.setnodevalues(self.node, value)
+			# ignore value if not immediate node
+			if self.node.GetType() == 'imm':
+				self.editmgr.setnodevalues(self.node, value)
 			return
 		if name == '.anchorlist':
 			self.__setanchors(value)
@@ -1041,6 +1043,11 @@ class AttrEditor(AttrEditorDialog):
 		self.wrapper.setwaiting()
 		if newchannel:
 			self.newchannel(newchannel)
+		# update node type first
+		if dict.has_key('.type'):
+			value = dict['.type']
+			del dict['.type']
+			self.wrapper.setattr('.type', value)
 		for name, value in dict.items():
 			if value is None:
 				self.wrapper.delattr(name)
