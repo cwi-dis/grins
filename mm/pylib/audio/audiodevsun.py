@@ -4,12 +4,35 @@ from audioformat import *
 import sunaudiodev, SUNAUDIODEV
 
 class AudioDevSUN:
+	# default supported formats and frame rates
 	__formats = (ulaw_mono,
 		     ulaw_stereo,
 		     linear_16_mono_big,
 		     linear_16_stereo_big)
-
 	__rates = (8000, 11025, 16000, 22050, 32000, 44100, 48000)
+
+	# see if we can determine whether we have to restrict ourselves
+	try:
+		__port = sunaudiodev.open('w')
+	except sunaudiodev.error:
+		# can't open device, so keep the default
+		pass
+	else:
+		# try if hardware supports CD quality
+		__info = __port.getinfo()
+		__info.o_sample_rate = 44100
+		__info.o_channels = 2
+		__info.o_encoding = SUNAUDIODEV.ENCODING_LINEAR
+		__info.o_precission = 16
+		try:
+			__port.setinfo(__info)
+		except sunaudiodev.error:
+			# CD quality not supported, use phone quality
+			__formats = (ulaw_mono,)
+			__rates = (8000,)
+		# cleanup
+		__port.close()
+		del __port, __info
 
 	def __init__(self, fmt = None, qsize = None):
 		self.__format = None
@@ -32,10 +55,16 @@ class AudioDevSUN:
 			raise Error, 'bad format'
 		self.__format = fmt
 
+	def getformat(self):
+		return self.__format
+
 	def setframerate(self, rate):
 		if rate not in self.__rates:
 			raise Error, 'bad output rate'
 		self.__framerate = rate
+
+	def getframerate(self):
+		return self.__framerate
 
 	def writeframes(self, data):
 		if not self.__format or not self.__framerate:
@@ -52,7 +81,12 @@ class AudioDevSUN:
 			else:
 				info.o_precission = (fmt.getbps() + 7) & ~7
 				info.o_encoding = SUNAUDIODEV.ENCODING_LINEAR
-			self.__port.setinfo(info)
+			try:
+				self.__port.setinfo(info)
+			except sunaudiodev.error:
+				if fmt.getencoding() != 'u-law' or \
+				   self.__framerate != 8000:
+					raise Error, 'unsupported format'
 		self.__port.write(data)
 
 	def wait(self):
