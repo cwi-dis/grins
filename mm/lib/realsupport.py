@@ -659,8 +659,8 @@ def writecoords(f, str, full, xy, wh, anchor):
 
 def _writeFadeout(f, start, attrs, bgcolor):
 	color = attrs.get('fadeoutcolor', bgcolor)
-	if colors.rcolors.has_key(val):
-		color = colors.rcolors[val]
+	if colors.rcolors.has_key(color):
+		color = colors.rcolors[color]
 	else:
 		color = '#%02x%02x%02x' % color
 	duration = attrs.get('fadeoutduration',0)
@@ -803,8 +803,8 @@ def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0, baseurl = None, sile
 			duration = 0
 		if tag in ('fill', 'fadeout'):
 			color = attrs.get('color', bgcolor)
-			if colors.rcolors.has_key(val):
-				color = colors.rcolors[val]
+			if colors.rcolors.has_key(color):
+				color = colors.rcolors[color]
 			else:
 				color = '#%02x%02x%02x' % color
 			f.write(' color="%s"' % color)
@@ -847,8 +847,8 @@ def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0, baseurl = None, sile
 			f.write(' fadeouttime="%g"' % attrs.get('fadeouttime',0))
 			f.write(' fadeoutduration="%g"' % attrs.get('fadeoutduration',0))
 			color = attrs.get('fadeoutcolor', bgcolor)
-			if colors.rcolors.has_key(val):
-				color = colors.rcolors[val]
+			if colors.rcolors.has_key(color):
+				color = colors.rcolors[color]
 			else:
 				color = '#%02x%02x%02x' % color
 			f.write(' fadeoutcolor="%s"' % color)
@@ -895,8 +895,8 @@ def writeRT(file, rp, node):
 	ch = node.GetChannel(attrname='captionchannel')
 	color = ch.get('bgcolor', (0,0,0))
 	if color != (255,255,255):
-		if colors.rcolors.has_key(val):
-			color = colors.rcolors[val]
+		if colors.rcolors.has_key(color):
+			color = colors.rcolors[color]
 		else:
 			color = '#%02x%02x%02x' % color
 		f.write(' bgcolor="%s"' % color)
