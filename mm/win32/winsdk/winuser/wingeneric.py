@@ -2,12 +2,6 @@ __version__ = "$Id$"
 
 import sys
 
-# for win32con
-sys.path.insert(0, r'd:\ufs\mm\python\Extensions\win32\lib')
-
-# for winuser, wingdi
-sys.path.insert(0, r'd:\ufs\mm\cmif\bin\win32')
-
 import winuser, wingdi, win32con
 
 class GenericWnd:

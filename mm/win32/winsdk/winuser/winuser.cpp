@@ -10,9 +10,11 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include <windows.h>
 
-#include "winuser_globals.h"
-
 #include "mtpycall.h"
+
+#include "winuser_main.h"
+#include "winuser_wnd.h"
+#include "winuser_menu.h"
 
 PyObject *ErrorObject;
 
@@ -23,6 +25,9 @@ static struct PyMethodDef winuser_methods[] = {
 	{"MessageLoop", (PyCFunction)Winuser_MessageLoop, METH_VARARGS, ""},
 	{"PostQuitMessage", (PyCFunction)Winuser_PostQuitMessage, METH_VARARGS, ""},
 	{"MessageBox", (PyCFunction)Winuser_MessageBox, METH_VARARGS, ""},
+	{"GetSystemMetrics", (PyCFunction)Winuser_GetSystemMetrics, METH_VARARGS, ""},
+	{"GetSysColor", (PyCFunction)Winuser_GetSysColor, METH_VARARGS, ""},
+	{"GetDC", (PyCFunction)Winuser_GetDC, METH_VARARGS, ""},
 
 	{"RegisterClassEx", (PyCFunction)Winuser_RegisterClassEx, METH_VARARGS, ""},
 
