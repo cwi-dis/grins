@@ -19,7 +19,7 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_1.5.exe
+  EXE Filename=D:\ufs\mm\cmif\bin\win32\grins_win_1.0.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
@@ -30,15 +30,14 @@ item: Global
   Version Description=GRiNS/SMIL 1.0
   Version Copyright=Copyright 2000 Oratrix Holding B.V.
   Version Company=Oratrix Holding B.V.
-  Distribute Path=D:\File Grins installation
-  Distribute Type=1
+  Distribute Type=2
   Step View=All
-  File Checksum=3548204639
+  File Checksum=3317485624
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
   Variable Name2=_WISE_
-  Variable Default2=E:\PROGRA~1\WISEIN~1
+  Variable Default2=C:\PROGRA~1\WISEIN~1
   Variable Flags2=00001000
   Variable Name3=_ALIASNAME_
   Variable Flags3=00001000
@@ -1130,17 +1129,17 @@ item: Include Script
   Pathname=%_WISE_%\INCLUDE\uninstal.wse
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\products\smil-10\win32\relnotes.html
+  Source=d:\ufs\mm\cmif\Build\win32\relnotes.html
   Destination=%MAINDIR%\relnotes.html
   Flags=0000000010000010
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\products\smil-10\win32\license.txt
+  Source=d:\ufs\mm\cmif\Build\products\g2-15\pro\license.txt
   Destination=%MAINDIR%\license.txt
   Flags=0000000010000010
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\products\smil-10\win32\readme.txt
+  Source=d:\ufs\mm\cmif\Build\win32\readme.txt
   Destination=%MAINDIR%\readme.txt
   Flags=0000000010000010
 end
@@ -1380,7 +1379,7 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Build\products\smil-10\QuickStart.pdf
+  Source=d:\ufs\mm\cmif\Build\products\g2-15\QuickStart.pdf
   Destination=%MAINDIR%\QuickStart.pdf
   Flags=0000000010000010
 end
@@ -1402,7 +1401,7 @@ end
 item: End Block
 end
 item: Install File
-  Source=E:\Program Files\Wise InstallMaker\Unwise.exe
+  Source=C:\Program Files\Wise InstallMaker\Unwise.exe
   Destination=%MAINDIR%\Unwise.exe
   Flags=0000000010000010
 end
@@ -1412,42 +1411,7 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
-  Source=d:\ufs\mm\cmif\Templates\adaptive_show.bmp
-  Destination=%MAINDIR%\Templates\adaptive_show.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\A4_adaptive_show.grins
-  Destination=%MAINDIR%\Templates\A4_adaptive_show.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=D:\ufs\mm\cmif\Templates\media\adaptive_sample.html
-  Destination=%MAINDIR%\Templates\media\adaptive_sample.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=D:\ufs\mm\cmif\Templates\media\sample_doc.html
-  Destination=%MAINDIR%\Templates\media\sample_doc.html
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\bin\win32\GRiNS.exe
-  Destination=%MAINDIR%\GRiNS.exe
-  Flags=0000000010000011
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\A2-SMIL-talking-book.grins
-  Destination=%MAINDIR%\Templates\A2-SMIL-talking-book.grins
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\talkingbook.bmp
-  Destination=%MAINDIR%\Templates\talkingbook.bmp
-  Flags=0000000010000010
-end
-item: Install File
-  Source=e:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
+  Source=c:\Program Files\Hpsw\WebsterPro\WebPro32.ocx
   Destination=%MAINDIR%\WebPro32.ocx
   Flags=0001001010000011
 end
@@ -1494,6 +1458,11 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\GRiNS-Icons\RealAudio.tiff
   Destination=%MAINDIR%\GRiNS-Icons\RealAudio.tiff
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\realtext-template.rt
+  Destination=%MAINDIR%\Templates\media\realtext-template.rt
   Flags=0000000010000010
 end
 item: Install File
@@ -1567,6 +1536,11 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\Templates\A4_adaptive_content.grins
+  Destination=%MAINDIR%\Templates\A4_adaptive_content.grins
+  Flags=0000000010000010
+end
+item: Install File
   Source=d:\ufs\mm\cmif\Templates\A3_videoshow-bkaudio-img.grins
   Destination=%MAINDIR%\Templates\A3_videoshow-bkaudio-img.grins
   Flags=0000000010000010
@@ -1587,8 +1561,33 @@ item: Install File
   Flags=0000000010000010
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\Templates\adaptive.bmp
+  Destination=%MAINDIR%\Templates\adaptive.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\freeplayer_g2.gif
+  Destination=%MAINDIR%\Templates\freeplayer_g2.gif
+  Flags=0000000010000010
+end
+item: Install File
   Source=d:\ufs\mm\cmif\Templates\GetGRiNS.gif
   Destination=%MAINDIR%\Templates\GetGRiNS.gif
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\realpix-template.rp
+  Destination=%MAINDIR%\Templates\media\realpix-template.rp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\embedded_player.html
+  Destination=%MAINDIR%\Templates\embedded_player.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\external_player.html
+  Destination=%MAINDIR%\Templates\external_player.html
   Flags=0000000010000010
 end
 item: Install File
@@ -1619,6 +1618,11 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\Templates\media\slide-1.jpg
   Destination=%MAINDIR%\Templates\media\slide-1.jpg
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\media\simple.rp
+  Destination=%MAINDIR%\Templates\media\simple.rp
   Flags=0000000010000010
 end
 item: Install File
@@ -1687,7 +1691,7 @@ item: Install File
   Flags=0000001010000011
 end
 item: Install File
-  Source=D:\ufs\mm\cmif\Msvcrt40.dll
+  Source=c:\Winnt\system32\Msvcrt40.dll
   Destination=%SYS32%\Msvcrt40.dll
   Flags=0000001010000011
 end
@@ -1826,67 +1830,7 @@ item: Create Shortcut
 end
 item: End Block
 end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Create Shortcut
-  Source=%MAINDIR%\GRiNS.exe
-  Destination=%CGROUPDIR%\%CGROUP_SAVE%\GRiNS Player for SMIL 1.0, v1.5.lnk
-  Icon Number=0
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Create Shortcut
-  Source=%MAINDIR%\GRiNS.exe
-  Destination=%CDESKTOPDIR%\GRiNS Player for SMIL 1.0, v1.5.lnk
-  Icon Number=0
-end
-item: End Block
-end
 item: Else Statement
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS for SMIL 1.0 v1.5
-  Command Line=%MAINDIR%\GRiNS_SV1.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL 1.0, v1.5
-  Command Line=%MAINDIR%\GRiNS.exe
-end
-item: End Block
-end
-item: If/While Statement
-  Variable=COMPONENTS
-  Value=A
-  Flags=00001010
-end
-item: Add ProgMan Icon
-  Group=%GROUP%
-  Icon Name=GRiNS Player for SMIL 1.0, v1.5
-  Command Line=%MAINDIR%\GRiNS.exe
-end
-item: End Block
 end
 item: If/While Statement
   Variable=COMPONENTS

@@ -176,7 +176,23 @@ SOURCE=.\M_ArmStates.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_ASXParser.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_Attrdefs.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_AttrEditForm.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_Attrgrs.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_Bandwidth.c
 # End Source File
 # Begin Source File
 
@@ -232,19 +248,11 @@ SOURCE=.\M_commctrl.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_compatibility.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_components.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\M_copy.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_DefCompatibilityCheck.c
 # End Source File
 # Begin Source File
 
@@ -272,10 +280,6 @@ SOURCE=.\M_exec_cmif.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\M_features.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\M_FileCache.c
 # End Source File
 # Begin Source File
@@ -285,6 +289,14 @@ SOURCE=.\M_flags.c
 # Begin Source File
 
 SOURCE=.\M_Font.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_FormServer.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_fsm.c
 # End Source File
 # Begin Source File
 
@@ -360,6 +372,10 @@ SOURCE=.\M_ImageChannel.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_InputValidator.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_keyword.c
 # End Source File
 # Begin Source File
@@ -421,10 +437,6 @@ SOURCE=.\M_MMCache.c
 # Begin Source File
 
 SOURCE=.\M_MMExc.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_MMmimetypes.c
 # End Source File
 # Begin Source File
 
@@ -692,6 +704,10 @@ SOURCE=.\M_RealChannel.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_realconvert.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_realnode.c
 # End Source File
 # Begin Source File
@@ -781,10 +797,6 @@ SOURCE=.\M_SoundDuration.c
 # Begin Source File
 
 SOURCE=.\M_splash.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_splashbmp.c
 # End Source File
 # Begin Source File
 
@@ -896,19 +908,19 @@ SOURCE=.\M_VideoDuration.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_ViewServer.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\M_wc.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_whrandom.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\M_win32con.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_win32dialog.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\M_win32dxm.c
 # End Source File
 # Begin Source File
 
