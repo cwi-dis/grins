@@ -619,6 +619,8 @@ class Channel:
 		return didfire
 
 	def freeze(self, node):
+		# Called by the Scheduler to stop playing and start freezing.
+		# The node is passed for consistency checking.
 		if self._played_node is not node or self._playstate != PLAYING:
 			return
 		self.playstop()
