@@ -2658,7 +2658,9 @@ class TimelineWidget(MMWidgetDecoration):
 		displist.drawline(TEXTCOLOR, [(mn, line_y), (mx, line_y)])
 		length = mx - mn	# length of real timeline
 		displist.usefont(f_timescale)
-		for time, left, right in timemapper.gettimesegments(range=(t0, t2)):
+		for time, left, right in segments:
+			left = max(mn, left)
+			right = min(mx, right)
 			if left != right:
 				stalltime, stalltype = timemapper.getstall(time)
 				if stalltime:
