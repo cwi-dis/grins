@@ -314,7 +314,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 	def initVideoRenderer(self):
 		self.__rmdds = None
 		self.__rmrender = None
-
+		
 	def cleanVideoRenderer(self):
 		if self.window:
 			self.window.removevideo()
@@ -356,7 +356,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			blt, w, h = self.__rmrender
 			blt(data, w, h)
 			if self.window:
-				self.window.update()
+				self.window.update(self.window.getwindowpos())
 
 	def EndBlt(self):
 		# do not remove video yet 
