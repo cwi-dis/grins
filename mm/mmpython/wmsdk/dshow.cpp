@@ -211,6 +211,29 @@ newVideoWindowObject()
 	/* XXXX Add your own initializers here */
 	return self;
 }
+//
+
+typedef struct {
+	PyObject_HEAD
+	/* XXXX Add your own stuff here */
+	IMediaEventEx* pI;
+} MediaEventExObject;
+
+staticforward PyTypeObject MediaEventExType;
+
+
+static MediaEventExObject *
+newMediaEventExObject()
+{
+	MediaEventExObject *self;
+
+	self = PyObject_NEW(MediaEventExObject, &MediaEventExType);
+	if (self == NULL)
+		return NULL;
+	self->pI = NULL;
+	/* XXXX Add your own initializers here */
+	return self;
+}
 
 //
 typedef struct {
@@ -449,6 +472,29 @@ GraphBuilder_QueryIVideoWindow(GraphBuilderObject *self, PyObject *args)
 }
 
 
+static char GraphBuilder_QueryIMediaEventEx__doc__[] =
+""
+;
+static PyObject *
+GraphBuilder_QueryIMediaEventEx(GraphBuilderObject *self, PyObject *args)
+{
+	HRESULT res;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	MediaEventExObject *obj = newMediaEventExObject();
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pGraphBuilder->QueryInterface(IID_IMediaEventEx, (void **) &obj->pI);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)) {
+		seterror("GraphBuilder_QueryIMediaEventEx", res);
+		obj->pI=NULL;
+		Py_DECREF(obj);
+		return NULL;
+	}
+	return (PyObject *) obj;
+}
+	
+	
 static char GraphBuilder_WaitForCompletion__doc__[] =
 ""
 ;
@@ -611,6 +657,23 @@ GraphBuilder_RemoveFilter(GraphBuilderObject *self, PyObject *args)
 	return Py_None;
 }
 
+static char GraphBuilder_Release__doc__[] =
+""
+;
+
+static PyObject *
+GraphBuilder_Release(GraphBuilderObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	Py_BEGIN_ALLOW_THREADS
+	self->pGraphBuilder->Release();
+	Py_END_ALLOW_THREADS
+	self->pGraphBuilder=NULL;
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 static struct PyMethodDef GraphBuilder_methods[] = {
 	{"AddSourceFilter", (PyCFunction)GraphBuilder_AddSourceFilter, METH_VARARGS, GraphBuilder_AddSourceFilter__doc__},
 	{"AddFilter", (PyCFunction)GraphBuilder_AddFilter, METH_VARARGS, GraphBuilder_AddFilter__doc__},
@@ -622,7 +685,9 @@ static struct PyMethodDef GraphBuilder_methods[] = {
 	{"RemoveFilter", (PyCFunction)GraphBuilder_RemoveFilter, METH_VARARGS, GraphBuilder_RemoveFilter__doc__},
 	{"QueryIMediaPosition", (PyCFunction)GraphBuilder_QueryIMediaPosition, METH_VARARGS, GraphBuilder_QueryIMediaPosition__doc__},
 	{"QueryIVideoWindow", (PyCFunction)GraphBuilder_QueryIVideoWindow, METH_VARARGS, GraphBuilder_QueryIVideoWindow__doc__},
+	{"QueryIMediaEventEx", (PyCFunction)GraphBuilder_QueryIMediaEventEx, METH_VARARGS, GraphBuilder_QueryIMediaEventEx__doc__},
 	{"Connect", (PyCFunction)GraphBuilder_Connect, METH_VARARGS, GraphBuilder_Connect__doc__},
+	{"Release", (PyCFunction)GraphBuilder_Release, METH_VARARGS, GraphBuilder_Release__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -1197,12 +1262,12 @@ static PyTypeObject EnumPinsType = {
 // VideoWindow
 
 
-static char VideoWindow_put_Owner__doc__[] =
+static char VideoWindow_SetOwner__doc__[] =
 ""
 ;
 
 static PyObject *
-VideoWindow_put_Owner(VideoWindowObject *self, PyObject *args)
+VideoWindow_SetOwner(VideoWindowObject *self, PyObject *args)
 {
 	HRESULT res;
 	HWND hWnd;
@@ -1217,7 +1282,7 @@ VideoWindow_put_Owner(VideoWindowObject *self, PyObject *args)
 	res = self->pI->SetWindowForeground(OAFALSE);
 	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
-		seterror("VideoWindow_put_Owner", res);
+		seterror("VideoWindow_SetOwner", res);
 		return NULL;
 	}
 	Py_INCREF(Py_None);
@@ -1274,23 +1339,23 @@ VideoWindow_GetWindowPosition(VideoWindowObject *self, PyObject *args)
 
 
 
-static char VideoWindow_put_Visible__doc__[] =
+static char VideoWindow_SetVisible__doc__[] =
 ""
 ;
 
 static PyObject *
-VideoWindow_put_Visible(VideoWindowObject *self, PyObject *args)
+VideoWindow_SetVisible(VideoWindowObject *self, PyObject *args)
 {
 	HRESULT res;
 	int flag; 
-	if(!PyArg_ParseTuple(args,"i:SetVisible",&flag))
+	if(!PyArg_ParseTuple(args,"i",&flag))
 		return NULL;
 	long visible=flag?-1:0; // OATRUE (-1),OAFALSE (0)	
 	Py_BEGIN_ALLOW_THREADS
 	res = self->pI->put_Visible(visible);
 	Py_END_ALLOW_THREADS
 	if (FAILED(res)) {
-		seterror("VideoWindow_put_Visible", res);
+		seterror("VideoWindow_SetVisible", res);
 		return NULL;
 	}
 	Py_INCREF(Py_None);
@@ -1298,10 +1363,10 @@ VideoWindow_put_Visible(VideoWindowObject *self, PyObject *args)
 }
 
 static struct PyMethodDef VideoWindow_methods[] = {
-	{"put_Owner", (PyCFunction)VideoWindow_put_Owner, METH_VARARGS, VideoWindow_put_Owner__doc__},
+	{"SetOwner", (PyCFunction)VideoWindow_SetOwner, METH_VARARGS, VideoWindow_SetOwner__doc__},
 	{"SetWindowPosition", (PyCFunction)VideoWindow_SetWindowPosition, METH_VARARGS, VideoWindow_SetWindowPosition__doc__},
 	{"GetWindowPosition", (PyCFunction)VideoWindow_GetWindowPosition, METH_VARARGS, VideoWindow_GetWindowPosition__doc__},
-	{"put_Visible", (PyCFunction)VideoWindow_put_Visible, METH_VARARGS, VideoWindow_put_Visible__doc__},
+	{"SetVisible", (PyCFunction)VideoWindow_SetVisible, METH_VARARGS, VideoWindow_SetVisible__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
@@ -1350,6 +1415,86 @@ static PyTypeObject VideoWindowType = {
 };
 
 // End of VideoWindow
+////////////////////////////////////////////
+
+/////////////////////////////////////////////
+// MediaEventEx
+
+static char MediaEventEx_SetNotifyWindow__doc__[] =
+""
+;
+
+static PyObject *
+MediaEventEx_SetNotifyWindow(MediaEventExObject *self, PyObject *args)
+{
+	HRESULT res;
+	HWND hWnd;
+	int msgid;
+	if (!PyArg_ParseTuple(args, "ii",&hWnd,&msgid))
+		return NULL;
+	Py_BEGIN_ALLOW_THREADS
+	res=self->pI->SetNotifyWindow((OAHWND)hWnd,msgid,0);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)) {
+		seterror("MediaEventEx_SetOwner", res);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+
+
+static struct PyMethodDef MediaEventEx_methods[] = {
+	{"SetNotifyWindow", (PyCFunction)MediaEventEx_SetNotifyWindow, METH_VARARGS, MediaEventEx_SetNotifyWindow__doc__},
+	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
+};
+
+static void
+MediaEventEx_dealloc(MediaEventExObject *self)
+{
+	/* XXXX Add your own cleanup code here */
+	RELEASE(self->pI);
+	PyMem_DEL(self);
+}
+
+static PyObject *
+MediaEventEx_getattr(MediaEventExObject *self, char *name)
+{
+	/* XXXX Add your own getattr code here */
+	return Py_FindMethod(MediaEventEx_methods, (PyObject *)self, name);
+}
+
+static char MediaEventExType__doc__[] =
+""
+;
+
+static PyTypeObject MediaEventExType = {
+	PyObject_HEAD_INIT(&PyType_Type)
+	0,				/*ob_size*/
+	"MediaEventEx",			/*tp_name*/
+	sizeof(MediaEventExObject),		/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	/* methods */
+	(destructor)MediaEventEx_dealloc,	/*tp_dealloc*/
+	(printfunc)0,		/*tp_print*/
+	(getattrfunc)MediaEventEx_getattr,	/*tp_getattr*/
+	(setattrfunc)0,	/*tp_setattr*/
+	(cmpfunc)0,		/*tp_compare*/
+	(reprfunc)0,		/*tp_repr*/
+	0,			/*tp_as_number*/
+	0,		/*tp_as_sequence*/
+	0,		/*tp_as_mapping*/
+	(hashfunc)0,		/*tp_hash*/
+	(ternaryfunc)0,		/*tp_call*/
+	(reprfunc)0,		/*tp_str*/
+
+	/* Space for future expansion */
+	0L,0L,0L,0L,
+	MediaEventExType__doc__ /* Documentation string */
+};
+
+// End of MediaEventEx
 ////////////////////////////////////////////
 
 ////////////////////////////////////////////
@@ -1517,7 +1662,7 @@ MediaPosition_GetCurrentPosition(MediaPositionObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
 	HRESULT res ;
-    REFTIME tLength; // double in secs
+    REFTIME tLength=0; // double in secs
 	Py_BEGIN_ALLOW_THREADS
 	res = self->pI->get_CurrentPosition(&tLength);
 	Py_END_ALLOW_THREADS
@@ -1528,9 +1673,79 @@ MediaPosition_GetCurrentPosition(MediaPositionObject *self, PyObject *args)
 	return Py_BuildValue("d",tLength); // in sec
 }
 
+
+static char MediaPosition_SetCurrentPosition__doc__[] =
+""
+;
+
+static PyObject *
+MediaPosition_SetCurrentPosition(MediaPositionObject *self, PyObject *args)
+{
+	double tPos; // in sec
+	if(!PyArg_ParseTuple(args,"d",&tPos))
+		return NULL;
+	HRESULT res ;
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pI->put_CurrentPosition((REFTIME)tPos);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)) {
+		seterror("MediaPosition_SetCurrentPosition", res);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static char MediaPosition_GetStopTime__doc__[] =
+""
+;
+
+static PyObject *
+MediaPosition_GetStopTime(MediaPositionObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	HRESULT res ;
+    REFTIME tStop; // double in secs
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pI->get_StopTime(&tStop);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)) {
+		seterror("MediaPosition_GetStopTime", res);
+		return NULL;
+	}
+	return Py_BuildValue("d",tStop); // in sec
+}
+
+
+static char MediaPosition_SetStopTime__doc__[] =
+""
+;
+
+static PyObject *
+MediaPosition_SetStopTime(MediaPositionObject *self, PyObject *args)
+{
+	double tPos; // in sec
+	if(!PyArg_ParseTuple(args,"d",&tPos))
+		return NULL;
+	HRESULT res ;
+	Py_BEGIN_ALLOW_THREADS
+	res = self->pI->put_StopTime((REFTIME)tPos);
+	Py_END_ALLOW_THREADS
+	if (FAILED(res)) {
+		seterror("MediaPosition_SetStopTime", res);
+		return NULL;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
 static struct PyMethodDef MediaPosition_methods[] = {
 	{"GetDuration", (PyCFunction)MediaPosition_GetDuration, METH_VARARGS, MediaPosition_GetDuration__doc__},
 	{"GetCurrentPosition", (PyCFunction)MediaPosition_GetCurrentPosition, METH_VARARGS, MediaPosition_GetCurrentPosition__doc__},
+	{"SetCurrentPosition", (PyCFunction)MediaPosition_SetCurrentPosition, METH_VARARGS, MediaPosition_SetCurrentPosition__doc__},
+	{"GetStopTime", (PyCFunction)MediaPosition_GetStopTime, METH_VARARGS, MediaPosition_GetStopTime__doc__},
+	{"SetStopTime", (PyCFunction)MediaPosition_SetStopTime, METH_VARARGS, MediaPosition_SetStopTime__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
