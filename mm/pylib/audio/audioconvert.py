@@ -245,6 +245,25 @@ class cvrate(audio_filter):
 			return nframes
 		return (nframes * self.__outrate + self.__inrate - 1) / self.__inrate
 
+class looper(audio_filter):
+	def __init__(self, rdr, count):
+		audio_filter.__init__(self, rdr, rdr.getformat())
+		self.__count = count
+
+	def readframes(self, nframes = -1):
+		data, gotframes = self._rdr.readframes(nframes)
+		if not gotframes:
+			if self.__count is None or self.__count > 1:
+				if not self.__count is None:
+					self.__count = self.__count - 1
+				self._rdr.rewind()
+				data, gotframes = self._rdr.readframes(nframes)
+		return data, gotframes
+
+## This one is incorrect, really:
+##	def getnframes(self):
+##		return self._rdr.getnframes()
+
 # table of conversions.
 # tuples are (src_formats, dst_formats, converter, lossiness)
 # lossiness is one of:
@@ -405,7 +424,7 @@ _converters = [
 	 swap,
 	 SHUFFLE)]
 
-def convert(rdr, dstfmts = None, rates = None):
+def convert(rdr, dstfmts = None, rates = None, loop=1):
 	if dstfmts is not None:
 		try:
 			dummy = dstfmts[0]
@@ -446,6 +465,9 @@ def convert(rdr, dstfmts = None, rates = None):
 	if dstfmts is not None:
 		rdr = _convert(rdr, dstfmts)
 
+	# Do the looping
+	if loop != 1:
+		rdr = looper(rdr, loop)
 	# return the result of our efforts
 	return rdr
 

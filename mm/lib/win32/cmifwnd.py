@@ -11,7 +11,7 @@ from DisplayList import DisplayList
 Sdk = win32ui.GetWin32Sdk()
 
 # utilities
-import win32mu,AppMenu
+import win32mu,win32menu
 
 # constants
 from appcon import *
@@ -20,23 +20,22 @@ from WMEVENTS import *
 # globals 
 toplevel=None # set by AppTopLevel
 
+import  rbtk
+import DrawTk
 
-class _CmifWnd:
-	def __init__(self, parent):
-		self._parent = parent
+class _CmifWnd(rbtk._rbtk,DrawTk.DrawLayer):
+	def __init__(self):
+		rbtk._rbtk.__init__(self)
+		DrawTk.DrawLayer.__init__(self)
 		self._subwindows = []
 		self._displists = []
 		self._active_displist = None
-		self._bgcolor = parent._bgcolor
-		self._fgcolor = parent._fgcolor
-		self._cursor = parent._cursor
 		self._curcursor = ''
 		self._curpos = None
 		self._callbacks = {}
 		self._accelerators = {}
 		self._menu = None
 		self._transparent = 0
-		self._showing = 0
 		self._redrawfunc = None
 		self._title = None
 		self._topwindow = None
@@ -50,13 +49,34 @@ class _CmifWnd:
 		self._resize_flag = 0
 		self._render_flag = 0		
 		self._sizes = None
-
 		self._canvas=None
 		self._canscroll = 0
 
+		self._parent = None
+		self._bgcolor = toplevel._bgcolor
+		self._fgcolor = toplevel._fgcolor
+		self._cursor = ''
+
+		# frame wnd indicator if not None
+		# contains the color of the frame
+		self._showing = None
+
+		# default z-order
+		self._z=0
+
+		# an alias
+		self._relative_coordinates=self._inverse_coordinates
 		# temp sigs
 		self._wnd = None
 		self._hWnd = 0
+
+
+	def _do_init(self,parent):
+		self._parent = parent
+		self._bgcolor = parent._bgcolor
+		self._fgcolor = parent._fgcolor
+		self._cursor = parent._cursor
+
 	
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE):
 		raise error, 'overwrite newwindow'
@@ -83,7 +103,10 @@ class _CmifWnd:
 		if self._obj_ is None:
 			return 
 		else:
-			self.ShowWindow(win32con.SW_SHOW)
+			if self.IsWindowVisible():
+				self.InvalidateRect()
+			else:
+				self.ShowWindow(win32con.SW_SHOW)
 			self.pop()
 
 	def hide(self):
@@ -92,10 +115,64 @@ class _CmifWnd:
 		else:
 			self.ShowWindow(win32con.SW_HIDE)
 
+	# response to channel highlight
+	def showwindow(self,color=(255,0,0)):
+		self._showing = color
+		dc=self.GetDC()
+		win32mu.FrameRect(dc,self.GetClientRect(),self._showing)
+		if self._topwindow != self:
+			self._display_info(dc)
+		self.ReleaseDC(dc)
+
+	def showwindow_on(self,dc):
+		win32mu.FrameRect(dc,self.GetClientRect(),self._showing)
+		self._display_info(dc)
+
+	# response to channel unhighlight
+	def dontshowwindow(self):
+		self.showwindow(self._bgcolor)
+		self._showing=None
+		self._filled=None
 	def is_showing(self):
-		if self_obj_:
-			return self.IsWindowVisible()
-		return 0
+		return self._showing
+	
+	def _display_info(self,dc):
+		rc=win32mu.Rect(self.GetClientRect())	
+		if not hasattr(self,'_filled'):
+			self._filled=None
+		if self._filled:
+			dc.FillSolidRect(rc.tuple(),win32mu.RGB(self._filled))
+		DrawTk.drawTk.SetSmallFont(dc)
+		if self._showing:
+			old=dc.SetTextColor(win32mu.RGB(self._showing))
+		if hasattr(self,'_z'):
+			s = '%s (z=%d t=%d)'%(self._title,self._z,self._transparent)
+		else:
+			s = '%s: z undefined'%self._title
+		rc.inflateRect(-2,-2)
+		dc.DrawText(s,rc.tuple(),win32con.DT_SINGLELINE|win32con.DT_TOP|win32con.DT_CENTER)
+		if self._showing:
+			old=dc.SetTextColor(old)
+		DrawTk.drawTk.RestoreFont(dc)
+
+	def showwindowf(self,color,f):
+		if f:self._filled=color
+		else:self._filled=None
+		self.update()
+#		rgn=win32ui.CreateRgn()
+#		rgn.CreateRectRgn(self.GetClientRect())
+#		dc=self.GetDCEx(rgn,win32con.DCX_CACHE)
+#		self.PaintOn(dc)
+#		self.ReleaseDC(dc)
+#		rgn.DeleteObject()
+#		del rgn
+
+	def update(self):
+		self.RedrawWindow()
+		self.UpdateWindow()
+		if self._transparent==0 or (self._transparent==-1 and self._active_displist):
+			return # not transparent
+		self.PaintUnderTrasparentSiblings(self.GetClientRect())
 
 	def close(self):
 		self.arrowcache = {}
@@ -118,12 +195,10 @@ class _CmifWnd:
 		return self._parent is None
 
 	def pop(self):
-		self.SetWindowPos(win32con.HWND_TOP,(0,0,0,0),
-			win32con.SWP_NOMOVE|win32con.SWP_NOSIZE)
+		print 'overwrite pop for',self
 
 	def push(self):
-		self.SetWindowPos( win32con.HWND_BOTTOM,(0,0,0,0), 
-			win32con.SWP_NOMOVE|win32con.SWP_NOSIZE)
+		print 'overwrite push for',self
 
 	def setredrawfunc(self, func):
 		if func is None or callable(func):
@@ -152,25 +227,50 @@ class _CmifWnd:
 		self._menu = None
 		self._accelerators = {}
 
+	def append_menu_entry(self,entry=None):
+		if not self._menu:return
+		if not entry:
+			self._menu.AppendMenu(win32con.MF_SEPARATOR)
+		else:
+			acc,label,cbt=entry
+			id=self._menu.GetMenuItemCount()+1
+			flags=win32con.MF_STRING|win32con.MF_ENABLED
+			self._menu.AppendMenu(flags, id, label)
+			self._cbld[id]=cbt
+
+	# cb_entry: (ACCELERATOR,NAME,callback_tuple) | None
+	# callback_tuple: (callback,(arg,))
+	# arg list is a list of cb_entry
 	def create_menu(self, list, title = None):
+		self._title=title #+ '-' + self._title
+		istr = '%s (z=%d t=%d)'%(self._title,self._z,self._transparent)
+
+		self.SetWindowText(title)
+		#list.append(None)
+		#list.append(('','fill red',(self.showwindowf,((255,0,0),1))))
+		#list.append(('','fill green',(self.showwindowf,((0,255,0),1))))
+		#list.append(('','fill blue',(self.showwindowf,((0,0,255),1))))
+		#list.append(('','clear',(self.showwindowf,((0,0,0),0))))
+
 		self.destroy_menu()
-		menu = AppMenu.CreateMenu()
-		float = AppMenu.CreateMenu()
-		AppMenu.PopupAppendMenu(menu,float,"menu")
+		menu = win32ui.CreateMenu()
+		float = win32ui.CreateMenu()
+		win32menu.PopupAppendMenu(menu,float,"menu")
 		
 		if title:
-			list = [title, None] + list
+			list = [istr, None] + list
 		
 		if not hasattr(self,'_cbld'):
 			self._cbld = {}
 		
-		#self._accelerators = {}
+		self._accelerators = {}
 		if hasattr(self,'_cbld'):
-			AppMenu._create_menu(float, list, 1, self._cbld,
+			win32menu._create_menu(float, list, 1, self._cbld,
 					self._accelerators)
 
 		self.HookAllKeyStrokes(self._char_callback)
 		self._menu = menu
+
 
 	def fgcolor(self, color):
 		r, g, b = color
@@ -184,6 +284,20 @@ class _CmifWnd:
 			return
 		win32mu.SetCursor(cursor)
 		self._cursor = cursor
+
+	# box in pixels
+	def getsizes(self,rc_child=None):
+		if not rc_child:rc=win32mu.Rect(self.GetWindowRect())
+		else: rc=rc_child
+		rcParent=win32mu.Rect(self._parent.GetWindowRect())
+		return self._relative_coordinates(rc.tuple_ps(),rcParent.tuple_ps())
+	def getsizes100(self):
+		ps=self.getsizes()
+		return float(int(100.0*ps[0])/100.0),float(int(100.0*ps[1])/100.0),float(int(100.0*ps[2])/100.0),float(int(100.0*ps[3])/100.0)
+	# box in relative
+	def getsizes_pix(self,box):
+		rcwnd=win32mu.Rect(self.GetClientRect())
+		return  self._convert_coordinates(box,rcwnd.tuple_ps())
 
 	def getgeometry(self, units = UNIT_MM):
 		if self._obj_==None or self.IsWindow()==0:return
@@ -253,10 +367,12 @@ class _CmifWnd:
 		self.onEvent(ev,(x, y, buttons))
 
 	def onLButtonDown(self, params):
+		self.notifyListener('onLButtonDown',params)
 		msg=win32mu.Win32Msg(params)
 		self.onMouseEvent(msg.pos(),Mouse0Press)
 
 	def onLButtonUp(self, params):
+		self.notifyListener('onLButtonUp',params)
 		msg=win32mu.Win32Msg(params)
 		self.onMouseEvent(msg.pos(),Mouse0Release)
 
@@ -264,7 +380,7 @@ class _CmifWnd:
 		msg=win32mu.Win32Msg(params)
 		xpos,ypos=msg.pos()
 		if self._menu:
-			id = AppMenu.FloatMenu(self,self._menu, xpos, ypos)
+			id = win32menu.FloatMenu(self,self._menu, xpos, ypos)
 			if self._cbld.has_key(id) :
 				callback = self._cbld[id]
 				apply(callback[0], callback[1])
@@ -276,7 +392,8 @@ class _CmifWnd:
 		self.onMouseEvent(pt,Mouse0Press)
 
 	def onMouseMove(self, params):
-		if self._cursor!='': return
+		self.notifyListener('onMouseMove',params)
+		#if self._cursor!='': return
 		if not self._active_displist: return
 		buttons = []
 		msg=win32mu.Win32Msg(params)
@@ -285,6 +402,18 @@ class _CmifWnd:
 			if button._inside(x,y):
 				self.setcursor('hand')
 				break
+
+	def notifyListener(self,key,params):
+		if rbtk._in_create_box==None: return
+		if key=='onLButtonDown':DrawTk.DrawLayer.onLButtonDown(self,params)
+		elif key=='onLButtonUp':DrawTk.DrawLayer.onLButtonUp(self,params)
+		elif key=='onMouseMove':DrawTk.DrawLayer.onMouseMove(self,params)
+		elif key=='OnDraw':DrawTk.DrawLayer.OnDraw(self,params)
+	def in_create_box(self):
+		return rbtk._in_create_box
+	def GetContext(self): 
+		""" Temporal method for rbMode dev"""
+		return self._active_displist
 
 	def hitarrow(self, point, src, dst):
 		# return 1 iff (x,y) is within the arrow head
@@ -322,9 +451,6 @@ class _CmifWnd:
 					apply(func,arg)
 
 
-#====================================== Destroy
-	def onClose(self, params):
-		self.onEvent(WindowExit)
 
 #====================================== Paint
 
@@ -353,17 +479,6 @@ class _CmifWnd:
 		self.ReleaseDC(dc)
 		
 
-	# response to channel highlight
-	def showwindow(self):
-		self._showing = 1
-		win32mu.DrawWndRectangle(self, self.GetClientRect(), (255,0,0), " ")
-
-	#	response to channel unhighlight
-	def dontshowwindow(self):
-		if self._showing:
-			self._showing = 0
-			win32mu.DrawWndRectangle(self,self.GetClientRect(),self._bgcolor, " ")
-
 	def setcanvassize(self, how):
 		x,y,w,h=self._canvas
 		if how == DOUBLE_WIDTH:
@@ -374,34 +489,37 @@ class _CmifWnd:
 			w = w * 2
 			h = h * 2
 		else: # RESET_CANVAS
-			w, h = self._canvas_reset[2:]
+			w, h = self._rect[2],self._rect[3]
 		self._canvas = (x,y,w,h)
 
-		self._scroll()
+		self._scroll(how)
 		self._destroy_displists_tree()
 		self._create_displists_tree()
 
-	def _scroll(self):
+	def _scroll(self,how):
 		if self._canscroll:
 			print 'You must overwrite _scroll for ',self
 		else:
 			print 'Scroll called for the unscrollable ',self
+	
+	def setScrollMode(self,f):
+		self._topwindow.setScrollMode(f)
 				
 #====================================== Resize
 	
 	# it resizes all childs with this wnd as top level
 	# defined for the benefit of the top level windows
 	# that are not scrollable	
-	def _do_resize(self,new_width,new_height):
-		
+	def _do_resize(self,new_width=None,new_height=None):
 		if self._topwindow != self:
 			print '_do_resize called from the non-toplevel wnd',self
 		self._destroy_displists_tree()
-
-		rc=win32mu.Rect(self._canvas)# rem: self has not been resized yet
+		rc=win32mu.Rect(self._rect)# rem: self has not been resized yet
 		old_width,old_height=rc.width(),rc.height()
 		self._rect=self._canvas=0,0,new_width,new_height
 
+		if old_width<=0:old_width=1 # raise error
+		if old_height<=0:old_height=1
 		xf = float(new_width)/old_width;
 		yf = float(new_height)/old_height;
 		hdwp = Sdk.BeginDeferWindowPos(8);
@@ -413,6 +531,7 @@ class _CmifWnd:
 		for w in self._subwindows:
 			w._resize_controls()
 		self.UnlockWindowUpdate()
+
 		
 
 
@@ -443,16 +562,36 @@ class _CmifWnd:
 		w = int(float(rc.width())*xf+0.5)
 		h = int(float(rc.height())*yf+0.5)
 		self._rect=self._canvas=(0,0,w,h)
-		flags = win32con.SWP_NOZORDER
+		flags=win32con.SWP_NOACTIVATE|win32con.SWP_NOZORDER
 		hdwp=Sdk.DeferWindowPos(hdwp,self.GetSafeHwnd(),0,\
 			(l,t,w,h),flags)
 		for w in self._subwindows:
 			hdwp=w._resize_wnds_tree(hdwp,xf,yf)
 		return hdwp
 	
-		
 	def _resize_controls(self):
 		pass
+
+	def _z_order(self):
+		hdwp = Sdk.BeginDeferWindowPos(8)
+		wa=self._subwindows[0]
+		hdwp=wa._z_order_wnds_tree(hdwp,win32con.HWND_TOP)
+		for w in self._subwindows[1:]:
+			hdwp=w._z_order_wnds_tree(hdwp,wa.GetSafeHwnd())
+		Sdk.EndDeferWindowPos(hdwp)
+
+	# reorder self wnd and iteratively 
+	# all its childs, and for the childs all of their childs, etc
+	def _z_order_wnds_tree(self,hdwp,ha):
+		(flags,showCmd,ptMinPosition,ptMaxPosition,rcNormalPosition)=\
+			self.GetWindowPlacement()
+		flags=win32con.SWP_NOMOVE|win32con.SWP_NOSIZE|win32con.SWP_NOACTIVATE
+		hdwp=Sdk.DeferWindowPos(hdwp,self.GetSafeHwnd(),ha,\
+			rcNormalPosition,flags)
+#		wa=self._subwindows[0]
+#		for w in self._subwindows:
+#			hdwp=w._z_order_wnds_tree(hdwp)
+		return hdwp
 
 #=========================================================
 #======= Conversions between relative and pixel coordinates
@@ -468,8 +607,10 @@ class _CmifWnd:
 		else:
 			w, h = 0, 0
 		
-		if ref_rect:rx, ry, rw, rh = ref_rect
-		else: rx, ry, rw, rh = self._rect
+		if ref_rect:
+			rx, ry, rw, rh = ref_rect
+		else: 
+			rx, ry, rw, rh = self._rect
 			
 		px = int((rw - 1) * x + 0.5) + rx
 		py = int((rh - 1) * y + 0.5) + ry

@@ -1,0 +1,3 @@
+# AppGlobals
+
+toplevel = None

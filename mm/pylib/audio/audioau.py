@@ -69,9 +69,9 @@ class reader:
 			self.__nframes = data_size / nchannels
 		elif encoding == _AUDIO_FILE_ENCODING_LINEAR_8:
 			if nchannels == 1:
-				self.__format = linear_8_mono_excess
+				self.__format = linear_8_mono_signed
 			else:
-				self.__format = linear_8_stereo_excess
+				self.__format = linear_8_stereo_signed
 			self.__nframes = data_size / nchannels
 		elif encoding == _AUDIO_FILE_ENCODING_LINEAR_16:
 			if nchannels == 1:

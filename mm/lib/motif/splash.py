@@ -50,10 +50,17 @@ resources = [
 'GRiNS*background: #999999',
 	]
 
-def _roundi(x):
+def roundi(x):
 	if x < 0:
-		return _roundi(x + 1024) - 1024
+		return roundi(x + 1024) - 1024
 	return int(x + 0.5)
+
+try:
+	int(0x100000000L)
+except OverflowError:
+	_64bitint = 0
+else:
+	_64bitint = 1
 
 def _colormask(mask):
 	shift = 0
@@ -61,12 +68,10 @@ def _colormask(mask):
 		shift = shift + 1
 		mask = mask >> 1
 	if mask < 0:
-		try:
-			i = int(0x100000000L)
-		except OverflowError:
-			width = 32 - shift
-		else:
+		if _64bitint:
 			width = 64 - shift
+		else:
+			width = 32 - shift
 	else:
 		width = 0
 		while mask != 0:
@@ -200,13 +205,12 @@ class _Splash:
 			xbs, xbm = b[0], (1 << b[1]) - 1
 			c = []
 			if (red_mask,green_mask,blue_mask) != (xrm,xgm,xbm):
-				# too many locals to use map()
 				for n in range(256):
-					r = _roundi(((n>>xrs) & xrm) /
+					r = roundi(((n>>xrs) & xrm) /
 						    float(xrm) * red_mask)
-					g = _roundi(((n>>xgs) & xgm) /
+					g = roundi(((n>>xgs) & xgm) /
 						    float(xgm) * green_mask)
-					b = _roundi(((n>>xbs) & xbm) /
+					b = roundi(((n>>xbs) & xbm) /
 						    float(xbm) * blue_mask)
 					c.append((r << red_shift) |
 						 (g << green_shift) |
@@ -282,7 +286,8 @@ class _Splash:
 						  'colormap': cmap,
 						  'mappedWhenManaged': X.FALSE,
 						  'input': X.TRUE,
-						  'x': 500, 'y': 500})
+						  'x': 500, 'y': 500,
+						  'width':1, 'height':1})
 		main.RealizeWidget()
 		self.main = main
 		self.watchcursor = dpy.CreateFontCursor(Xcursorfont.watch)

@@ -3,7 +3,7 @@ __version__ = "$Id$"
 import win32ui, win32con, win32api
 import sysmetrics
 
-import win32mu,AppWnds
+import win32mu,MainFrame,GenWnd
 
 toplevel = None
 
@@ -44,11 +44,14 @@ class _Toplevel:
 		self._pixel_per_mm_y = sysmetrics.pixel_per_mm_y
 		self._hfactor = self._vfactor = 1.000
 
-		self._timerWnd=AppWnds.MfcOsWnd()
+		self._timerWnd=GenWnd.GenWnd()
 		self._timerWnd.create()
 		self._timerWnd.HookMessage(self._timer_callback, win32con.WM_TIMER)
 		self._timerWnd.HookMessage(self._message_callback,WM_MAINLOOP)
 	
+		self._mainwnd=None
+		self.genericwnd=GenWnd.GenWnd
+
 	def _do_init(self):
 		if self._initialized:
 			raise error, 'can only initialize once'
@@ -81,6 +84,8 @@ class _Toplevel:
 		self._inputs = []
 		self.MainDialog = None
 
+		self._viewcounter=0
+
 		#indicates wheather sr-events are being served by the timer interface
 		self.serving = 0     
 
@@ -102,25 +107,75 @@ class _Toplevel:
 		self._closecallbacks.append(func, args)
 
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
-		      type_channel = SINGLE, pixmap = 1, units = UNIT_MM,
-		      menubar = None, canvassize = None):
-		if canvassize==None:
-			return AppWnds._Window(self, x, y, w, h, title,visible_channel,type_channel,
-				pixmap, units, menubar, canvassize)
-		else:
-			return AppWnds._WindowFrm(self, x, y, w, h, title,visible_channel,type_channel,
-				pixmap, units, menubar, canvassize)
+		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
+		      adornments = None, canvassize = None,
+		      commandlist = None, resizable = 1):
+		return self._mainwnd.newwindow(self, x, y, w, h, title, 0, pixmap, units,
+			       adornments, canvassize, commandlist, resizable)
 
 	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE,
 			type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
-			menubar = None, canvassize = None):
-		if canvassize==None:
-			return AppWnds._Window(self, x, y, w, h, title,visible_channel,type_channel,
-				pixmap, units, menubar, canvassize)
-		else:
-			return AppWnds._WindowFrm(self, x, y, w, h, title,visible_channel,type_channel,
-				pixmap, units, menubar, canvassize)
+			adornments = None, canvassize = None,
+			commandlist = None, resizable = 1):
+		return self._mainwnd._newwindow(self, x, y, w, h, title, 1, pixmap, units,
+			       adornments, canvassize, commandlist, resizable)
 
+	############ SDI/MDI Model Support
+	def createmainwnd(self, x, y, w, h, title,
+		      units = UNIT_MM,adornments = None, commandlist = None):
+		if self._mainwnd==None:
+			self._mainwnd= MainFrame.MDIFrameWnd()
+			self._mainwnd.create(title)
+			self._mainwnd.init_cmif(x, y, w, h, title,
+				units, adornments,commandlist)
+		return self._mainwnd
+		
+	def getmainwnd(self):
+		return self._mainwnd
+	def getformserver(self):
+		return self._mainwnd._formServer
+				
+	def newdocument(self,title,adornments=None,commandlist=None):
+		return self._mainwnd.newdocument(title,adornments,commandlist)
+
+	def newview(self, x, y, w, h, title, units = UNIT_MM,
+		      adornments = None, canvassize = None,
+		      commandlist = None, context='view'):
+		return self._mainwnd.newview(x, y, w, h, title,
+				units, adornments, canvassize,commandlist,context)
+
+	def newviewobj(self,context='view'):
+		return self._mainwnd.newviewobj(context)
+
+	def showview(self,view,context='view'):
+		self._mainwnd.showview(view,context)
+
+	def createview(self,strid):
+		return self._mainwnd.createview(strid)
+
+	def getviewframe(self,strid):
+		if not self._mainwnd:return None
+		frame=self._mainwnd.getviewframe(strid)
+		if not frame: return self._mainwnd
+		return frame
+
+	############ /SDI-MDI Model Support	
+
+	def textwindow(self,text):
+		sv=self.newviewobj('sview_')
+		sv.settext(text)
+		self.showview(sv,'sview_')
+		import appcon
+		if appcon.IsEditor: sv.set_close_commandlist()
+		return sv
+
+	def setwaiting(self):
+		if self._mainwnd:
+			self._mainwnd.setwaiting()
+	def setready(self):
+		if self._mainwnd:
+			self._mainwnd.setready()
+	
 	def getsize(self):
 		"""size of the screen in mm"""
 		return toplevel._scr_width_mm, toplevel._scr_height_mm
@@ -172,7 +227,7 @@ class _Toplevel:
 		if self.MainDialog <> None : 
 			self.MainDialog.show()
 
-	def serve_events(self):		
+	def serve_events(self):	
 		if (self.serving == 0): return
 		import time, select
 		while self._timers:
@@ -289,16 +344,90 @@ class _Toplevel:
 		    (b << self._blue_shift)
 		return c
 
-	
+	def GetImageSize(self,file):
+		from win32modules import imageex
+		try:
+			xsize, ysize = self._image_size_cache[file]
+		except KeyError:
+			try:
+				img = imageex.load(file)
+			except img.error, arg:
+				raise error, arg
+			xsize,ysize,depth=imageex.size(img)
+			self._image_size_cache[file] = xsize, ysize
+			self._image_cache[file] = img
+		return xsize, ysize
+
+	def GetVideoSize(self,file):
+		from win32modules import mpegex
+		w=GenWnd.GenWnd()
+		w.create()
+		width, height = mpegex.SizeOfImage(w,file)
+		w.DestroyWindow()
+		return (width, height)
 
 toplevel = _Toplevel()
-AppWnds.toplevel=toplevel
+MainFrame.toplevel=toplevel
 
 import cmifwnd
 cmifwnd.toplevel=toplevel
 
-import AppForms
-AppForms.toplevel=toplevel
 
-import InputDialog
-InputDialog.toplevel= toplevel
+#######################################################
+# FileDialog
+#
+#
+# Note:
+# expected args from win32ui function CreateFileDialog:
+# "i|zzizO",
+#bFileOpen, // @pyparm int|bFileOpen||A flag indicating if the Dialog is a FileOpen or FileSave dialog.
+#szDefExt,  // @pyparm string|defExt|None|The default file extension for saved files. If None, no extension is supplied.
+#szFileName, // @pyparm string|fileName|None|The initial filename that appears in the filename edit box. If None, no filename initially appears.
+#flags,     // @pyparm int|flags|win32con.OFN_HIDEREADONLY\|win32con.OFN_OVERWRITEPROMPT|The flags for the dialog.  See the API documentation for full details.
+#szFilter, // @pyparm string|filter|None|A series of string pairs that specify filters you can apply to the file. 
+#	                        // If you specify file filters, only selected files will appear 
+#	                        // in the Files list box. The first string in the string pair describes 
+#	                        // the filter; the second string indicates the file extension to use. 
+#	                        // Multiple extensions may be specified using ';' as the delimiter. 
+#	                        // The string ends with two '\|' characters.  May be None.
+#obParent  // @pyparm <o PyCWnd>|parent|None|The parent or owner window of the dialog.
+
+class FileDialog:
+	def __init__(self, prompt,directory,filter,file, cb_ok, cb_cancel,existing = 0,parent=None):
+		
+		if existing: 
+			flags=win32con.OFN_HIDEREADONLY|win32con.OFN_FILEMUSTEXIST
+		else:
+			flags=win32con.OFN_OVERWRITEPROMPT
+		if not parent:
+			parent=toplevel._mainwnd
+
+		if not filter or filter=='*':
+			filter = 'All files (*.*)|*.*||'
+		else:
+			filter = 'smil files (*.smi;*.smil)|*.smi;*.smil|cmif files (*.cmif)|*.cmif|All files *.*|*.*||'
+			
+		self._dlg =dlg= win32ui.CreateFileDialog(existing,None,file,flags,filter,parent)
+		dlg.SetOFNTitle(prompt)
+
+		if dlg.DoModal()==win32con.IDOK:
+			if cb_ok: cb_ok(dlg.GetPathName())
+		else:
+			if cb_cancel: cb_cancel()
+	def GetPathName(self):
+		return self._dlg.GetPathName()
+
+#######################################
+#################################################
+# useful functions
+# some are defined here to import only windowinterface and not pyds 
+
+
+def GetStringLength(wnd,str):
+	dc = wnd.GetDC();
+	cx,cy=dc.GetTextExtent(str)
+	wnd.ReleaseDC(dc)
+	return cx
+
+
+
