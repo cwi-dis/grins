@@ -275,7 +275,7 @@ class LayoutView2(LayoutViewDialog2):
 		LayoutViewDialog2.__init__(self)
 
 		# current state
-		self.currentNodeRefSelected = None
+		self.currentSelectedNodeList = None
 		self.currentFocus = None
 		self.currentFocusType = None
 		# allow to identify if the focus has been fixed by this view
@@ -518,6 +518,8 @@ class LayoutView2(LayoutViewDialog2):
 		elif nodeType == TYPE_VIEWPORT:
 			self.setcommandlist(self.commandViewportList)
 
+		self.currentSelectedNodeList = [focusobject]
+		
 		# update widgets
 		for id, widget in self.widgetList.items():
 			widget.selectNodeList([focusobject])
@@ -526,6 +528,8 @@ class LayoutView2(LayoutViewDialog2):
 		# update command list
 		self.setcommandlist(self.commandMediaList)
 					
+		self.currentSelectedNodeList = [focusobject]
+		
 		# update widgets
 		for id, widget in self.widgetList.items():
 			widget.selectNodeList([focusobject])
@@ -534,7 +538,9 @@ class LayoutView2(LayoutViewDialog2):
 		# update command list
 
 		areSibling = 1
-		
+
+		# build a list of valid objects which are the focus
+		# and determinates if all the object list are sibling
 		list = []
 		previousObject = None
 		for type, object in focusobject:
@@ -548,6 +554,8 @@ class LayoutView2(LayoutViewDialog2):
 			self.setcommandlist(self.commandMultiSiblingSItemList)
 		else:
 			self.setcommandlist(self.commandMultiSItemList)
+
+		self.currentSelectedNodeList = list
 		
 		# update widgets
 		for id, widget in self.widgetList.items():
@@ -645,7 +653,6 @@ class LayoutView2(LayoutViewDialog2):
 			return
 		self.myfocus = None
 
-		self.currentNodeRefSelected = focusobject
 		self.updateFocus()
 		
 	def setglobalfocus(self, list):
@@ -677,7 +684,7 @@ class LayoutView2(LayoutViewDialog2):
 			self.myfocus = focusobject
 			self.editmgr.setglobalfocus('List', focusobject)
 			
-		self.currentNodeRefSelected = focusobject
+		self.currentSelectedNodeList = focusobject
 		
 	def playerstatechanged(self, type, parameters):
 		pass
@@ -855,44 +862,32 @@ class LayoutView2(LayoutViewDialog2):
 		self.geomFieldWidget = widgetList['GeomFieldWidget'] = GeomFieldWidget(self)
 		widgetList['ZFieldWidget'] = ZFieldWidget(self)
 				
-	def applyGeomOnViewport(self, viewportRef, geom):
-		# apply new size
-		# pass by edit manager
-		
-		# test if possible at this time
-		if self.editmgr.transaction('REGION_GEOM'):
-			w,h =  geom
-			self.editmgr.setchannelattr(viewportRef.name, 'width', geom[0])
-			self.editmgr.setchannelattr(viewportRef.name, 'height', geom[1])
-			self.editmgr.commit('REGION_GEOM')
+	def applyGeom(self, nodeRef, geom):
+		# make a list of attr top apply according the geometry
+		list = []
+		transactionType = None
+		nodeType = self.getNodeType(nodeRef)
+		if nodeType in (TYPE_VIEWPORT, TYPE_REGION):
+			transactionType = 'REGION_GEOM'
+		elif nodeType == TYPE_MEDIA:
+			transactionType = 'MEDIA_GEOM'
+				
+		self.__makeAttrListToApplyFromGeom(nodeRef, geom, list)
+		self.applyAttrList(list)		
 
-	def applyGeomOnRegion(self, regionRef, geom):
-		# apply new size
-		# pass by edit manager
-		
-		# test if possible 
-		if self.editmgr.transaction('REGION_GEOM'):
+	def __makeAttrListToApplyFromGeom(self, nodeRef, geom, list):
+		if self.getNodeType(nodeRef) == TYPE_VIEWPORT:
+			w,h = geom
+			list.append((nodeRef, 'width', w))
+			list.append((nodeRef, 'height', h))
+		else:
 			x,y,w,h = geom
-			self.editmgr.setchannelattr(regionRef.name, 'left', x)
-			self.editmgr.setchannelattr(regionRef.name, 'top', y)
-			self.editmgr.setchannelattr(regionRef.name, 'width', w)
-			self.editmgr.setchannelattr(regionRef.name, 'height', h)
-			self.editmgr.setchannelattr(regionRef.name, 'right', None)
-			self.editmgr.setchannelattr(regionRef.name, 'bottom', None)
-			self.editmgr.commit('REGION_GEOM')
-
-	def applyGeomOnMedia(self, mediaRef, geom):
-		if self.editmgr.transaction('MEDIA_GEOM'):			
-			x,y,w,h = geom
-			self.editmgr.setnodeattr(mediaRef, 'left', x)
-			self.editmgr.setnodeattr(mediaRef, 'top', y)
-			self.editmgr.setnodeattr(mediaRef, 'width', w)
-			self.editmgr.setnodeattr(mediaRef, 'height', h)
-			self.editmgr.setnodeattr(mediaRef, 'right', None)
-			self.editmgr.setnodeattr(mediaRef, 'bottom', None)
-							
-			# todo: some ajustements for take into account all fit values
-			self.editmgr.commit('MEDIA_GEOM')
+			list.append((nodeRef, 'left', x))
+			list.append((nodeRef, 'top', y))
+			list.append((nodeRef, 'width', w))
+			list.append((nodeRef, 'height', h))
+			list.append((nodeRef, 'right', None))
+			list.append((nodeRef, 'bottom', None))
 		
 	def applyBgColor(self, nodeRef, bgcolor, transparent):
 		# test if possible 
@@ -953,59 +948,209 @@ class LayoutView2(LayoutViewDialog2):
 		if self.editmgr.transaction():
 			self.editmgr.delchannel(viewportRef.name)
 			self.editmgr.commit('REGION_TREE')
+
+	def applyAttrList(self, nodeRefAndValueList):
+		if self.editmgr.transaction():
+			for nodeRef, attrName, attrValue in nodeRefAndValueList:
+				nodeType = self.getNodeType(nodeRef)
+				if nodeType in (TYPE_VIEWPORT, TYPE_REGION):					
+					self.editmgr.setchannelattr(nodeRef.name, attrName, attrValue)
+				elif nodeType == TYPE_MEDIA:
+					self.editmgr.setnodeattr(nodeRef, attrName, attrValue)
+			self.editmgr.commit()
 		
 	#
 	# Alignment/Distribute commands
 	#
 	
 	def onAlignLeft(self):
-		pass		
+		if len(self.currentSelectedNodeList) <= 1:
+			return
 
+		# get the node the most on the left
+		referenceValue = None
+		for node in self.currentSelectedNodeList:
+			l,t,w,h = node.getPxGeom()
+			if referenceValue == None or l < referenceValue:
+				referenceNode = node
+				referenceValue = l
+
+		# make a list of node/attr to change
+		list = []
+		for nodeRef in self.currentSelectedNodeList:
+			if not nodeRef is referenceNode:
+				l,t,w,h = nodeRef.getPxGeom()
+				l = referenceValue
+				# make the new geom
+				self.__makeAttrListToApplyFromGeom(nodeRef, (l,t,w,h), list)
+		self.applyAttrList(list)
+				
 	def onAlignCenter(self):
-		pass		
+		if len(self.currentSelectedNodeList) <= 1:
+			return
+
+		# get the node the most on the left
+		referenceValue = None
+		for node in self.currentSelectedNodeList:
+			l,t,w,h = node.getPxGeom()
+			if referenceValue == None or l < referenceValue:
+				referenceNode = node
+				referenceValue = l
+
+		# for the reference object, determinate the center
+		l,t,w,h = node.getPxGeom()
+		referenceValue = int(referenceValue+w/2)
+		
+		# make a list of node/attr to change
+		list = []
+		for nodeRef in self.currentSelectedNodeList:
+			if not nodeRef is referenceNode:
+				l,t,w,h = nodeRef.getPxGeom()
+				center = int(l+w/2)
+				diff = center-referenceValue
+				l = l-diff
+				# make the new geom
+				self.__makeAttrListToApplyFromGeom(nodeRef, (l,t,w,h), list)
+		self.applyAttrList(list)
 
 	def onAlignRight(self):
-		pass		
+		if len(self.currentSelectedNodeList) <= 1:
+			return
+
+		# get the node the most on the left
+		referenceValue = None
+		for node in self.currentSelectedNodeList:
+			l,t,w,h = node.getPxGeom()
+			if referenceValue == None or l < referenceValue:
+				referenceNode = node
+				referenceValue = l
+
+		# for the reference object, determinate the right border
+		l,t,w,h = node.getPxGeom()
+		referenceValue = int(referenceValue+w/2)
+		referenceValue = l+w
+
+		# make a list of node/attr to change
+		list = []
+		for nodeRef in self.currentSelectedNodeList:
+			if not nodeRef is referenceNode:
+				l,t,w,h = nodeRef.getPxGeom()
+				diff = l+w-referenceValue
+				l = l-diff
+				# make the new geom
+				self.__makeAttrListToApplyFromGeom(nodeRef, (l,t,w,h), list)
+		self.applyAttrList(list)
 
 	def onAlignTop(self):
-		pass		
+		if len(self.currentSelectedNodeList) <= 1:
+			return
+
+		# get the node the most on the left
+		referenceValue = None
+		for node in self.currentSelectedNodeList:
+			l,t,w,h = node.getPxGeom()
+			if referenceValue == None or t < referenceValue:
+				referenceNode = node
+				referenceValue = t
+
+		# make a list of node/attr to change
+		list = []
+		for nodeRef in self.currentSelectedNodeList:
+			if not nodeRef is referenceNode:
+				l,t,w,h = nodeRef.getPxGeom()
+				t = referenceValue
+				# make the new geom
+				self.__makeAttrListToApplyFromGeom(nodeRef, (l,t,w,h), list)
+		self.applyAttrList(list)
 
 	def onAlignMiddle(self):
-		pass		
+		if len(self.currentSelectedNodeList) <= 1:
+			return
+
+		# get the node the most on the left
+		referenceValue = None
+		for node in self.currentSelectedNodeList:
+			l,t,w,h = node.getPxGeom()
+			if referenceValue == None or l < referenceValue:
+				referenceNode = node
+				referenceValue = t
+
+		# for the reference object, determinate the center
+		l,t,w,h = node.getPxGeom()
+		referenceValue = int(referenceValue+h/2)
+		
+		# make a list of node/attr to change
+		list = []
+		for nodeRef in self.currentSelectedNodeList:
+			if not nodeRef is referenceNode:
+				l,t,w,h = nodeRef.getPxGeom()
+				center = int(t+h/2)
+				diff = center-referenceValue
+				t = t-diff
+				# make the new geom
+				self.__makeAttrListToApplyFromGeom(nodeRef, (l,t,w,h), list)
+		self.applyAttrList(list)
 
 	def onAlignBottom(self):
-		pass		
+		if len(self.currentSelectedNodeList) <= 1:
+			return
+
+		# get the node the most on the left
+		referenceValue = None
+		for node in self.currentSelectedNodeList:
+			l,t,w,h = node.getPxGeom()
+			if referenceValue == None or l < referenceValue:
+				referenceNode = node
+				referenceValue = t
+
+		# for the reference object, determinate the right border
+		l,t,w,h = node.getPxGeom()
+		referenceValue = int(referenceValue+w/2)
+		referenceValue = t+h
+
+		# make a list of node/attr to change
+		list = []
+		for nodeRef in self.currentSelectedNodeList:
+			if not nodeRef is referenceNode:
+				l,t,w,h = nodeRef.getPxGeom()
+				diff = t+h-referenceValue
+				t = t-diff
+				# make the new geom
+				self.__makeAttrListToApplyFromGeom(nodeRef, (l,t,w,h), list)
+		self.applyAttrList(list)
 
 	def onDistributeHorizontally(self):
-		pass
+		if len(self.currentSelectedNodeList) <= 1:
+			return
 
 	def onDistributeVertically(self):
-		pass
+		if len(self.currentSelectedNodeList) <= 1:
+			return
 	
 	#
 	#
 	#
 	
 	def onEditProperties(self):
-		if self.currentNodeRefSelected != None:
-			self.editProperties(self.currentNodeRefSelected)
+		if self.currentSelectedNodeList != None:
+			self.editProperties(self.currentSelectedNodeList[0])
 						
 	def onSelectBgColor(self):
-		if self.currentNodeRefSelected != None:
-			self.selectBgColor(self.currentNodeRefSelected)
+		if self.currentSelectedNodeList != None:
+			self.selectBgColor(self.currentSelectedNodeList[0])
 
 	def onSendBack(self):
-		if self.currentNodeRefSelected != None:
-			self.sendBack(self.currentNodeRefSelected)
+		if self.currentSelectedNodeList != None:
+			self.sendBack(self.currentSelectedNodeList[0])
 
 	def onBringFront(self):
-		if self.currentNodeRefSelected != None:
-			self.bringFront(self.currentNodeRefSelected)
+		if self.currentSelectedNodeList != None:
+			self.bringFront(self.currentSelectedNodeList[0])
 
 	def onShowEditBackground(self, value):
-		if self.currentNodeRefSelected != None:
-			nodeRef = self.currentNodeRefSelected
-			nodeType = self.getNodeType(self.currentNodeRefSelected)
+		if self.currentSelectedNodeList != None:
+			nodeRef = self.currentSelectedNodeList
+			nodeType = self.getNodeType(self.currentSelectedNodeList[0])
 			if nodeType in (TYPE_REGION, TYPE_VIEWPORT):
 				list = []
 				if not value:
@@ -1019,16 +1164,16 @@ class LayoutView2(LayoutViewDialog2):
 				self.applyEditorPreference(nodeRef, list)
 
 	def onDelNode(self):
-		if self.currentNodeRefSelected != None:
-			nodeType = self.getNodeType(self.currentNodeRefSelected)
+		if self.currentSelectedNodeList != None:
+			nodeType = self.getNodeType(self.currentSelectedNodeList[0])
 			if nodeType == TYPE_VIEWPORT:
-				self.delViewport(self.currentNodeRefSelected)
+				self.delViewport(self.currentSelectedNodeList[0])
 			elif nodeType == TYPE_REGION:
-				self.delRegion(self.currentNodeRefSelected)
+				self.delRegion(self.currentSelectedNodeList[0])
 
 	def onNewRegion(self):
-		if self.currentNodeRefSelected != None:
-			self.newRegion(self.currentNodeRefSelected)
+		if self.currentSelectedNodeList != None:
+			self.newRegion(self.currentSelectedNodeList[0])
 
 	def onNewViewport(self):
 		self.newViewport()
@@ -1206,8 +1351,8 @@ class ZFieldWidget(LightWidget):
 			self.__onZOrderChanged(value)
 
 	def __onZOrderChanged(self, value):
-		if self._context.currentNodeRefSelected != None:
-			nodeRef = self._context.currentNodeRefSelected
+		if self._context.currentSelectedNodeList != None:
+			nodeRef = self._context.currentSelectedNodeList[0]
 			nodeType = self._context.getNodeType(nodeRef)
 			if nodeType == TYPE_REGION:
 				self._context.applyZOrderOnRegion(nodeRef, value)
@@ -1320,7 +1465,7 @@ class GeomFieldWidget(LightWidget):
 			except:
 				value = None
 
-			selectedNode = self._context.currentNodeRefSelected
+			selectedNode = self._context.currentSelectedNodeList[0]
 			if selectedNode != None:
 				nodeType = self._context.getNodeType(selectedNode)
 				if nodeType == TYPE_VIEWPORT:
@@ -1331,18 +1476,18 @@ class GeomFieldWidget(LightWidget):
 					self.__onGeomOnMediaChanged(ctrlName, value)
 
 	def __onGeomOnViewportChanged(self, ctrlName, value):
-		if self._context.currentNodeRefSelected != None:
-			nodeRef = self._context.currentNodeRefSelected
+		if self._context.currentSelectedNodeList != None:
+			nodeRef = self._context.currentSelectedNodeList[0]
 			w,h = nodeRef.getPxGeom()
 			if ctrlName == 'RegionW':
 				w = value
 			elif ctrlName == 'RegionH':
 				h = value
-			self._context.applyGeomOnViewport(nodeRef, (w,h))
+			self._context.applyGeom(nodeRef, (w,h))
 
 	def __onGeomOnRegionChanged(self, ctrlName, value):
-		if self._context.currentNodeRefSelected != None:		
-			nodeRef = self._context.currentNodeRefSelected
+		if self._context.currentSelectedNodeList != None:		
+			nodeRef = self._context.currentSelectedNodeList[0]
 			x,y,w,h = nodeRef.getPxGeom()
 			if ctrlName == 'RegionX':
 				x = value
@@ -1352,11 +1497,11 @@ class GeomFieldWidget(LightWidget):
 				w = value
 			elif ctrlName == 'RegionH':
 				h = value			
-			self._context.applyGeomOnRegion(nodeRef, (x,y,w,h))
+			self._context.applyGeom(nodeRef, (x,y,w,h))
 
 	def __onGeomOnMediaChanged(self, ctrlName, value):
-		if self._context.currentNodeRefSelected != None:
-			nodeRef = self._context.currentNodeRefSelected
+		if self._context.currentSelectedNodeList != None:
+			nodeRef = self._context.currentSelectedNodeList[0]
 			x,y,w,h = nodeRef.getPxGeom()
 			if ctrlName == 'RegionX':
 				x = value
@@ -1366,7 +1511,7 @@ class GeomFieldWidget(LightWidget):
 				w = value
 			elif ctrlName == 'RegionH':
 				h = value
-			self._context.applyGeomOnMedia(nodeRef, (x,y,w,h))
+			self._context.applyGeom(nodeRef, (x,y,w,h))
 
 #
 # tree widget management
@@ -1923,7 +2068,7 @@ class Region(Node):
 	def onGeomChanged(self, geom):
 		# apply the new value
 		self._ctx.localSelect = 1 # temporare
-		self._ctx._context.applyGeomOnRegion(self.getNodeRef(), geom)
+		self._ctx._context.applyGeom(self.getNodeRef(), geom)
 
 	def onProperties(self):
 		self._ctx.localSelect = 1 # temporare
@@ -2037,7 +2182,7 @@ class MediaRegion(Region):
 	def onGeomChanged(self, geom):
 		# apply the new value
 		self._ctx.localSelect = 1 # temporare
-		self._ctx._context.applyGeomOnMedia(self.getNodeRef(), geom)
+		self._ctx._context.applyGeom(self.getNodeRef(), geom)
 
 	def onProperties(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
@@ -2122,7 +2267,7 @@ class Viewport(Node):
 		# apply the new value
 		self.currentX = geom[0]
 		self.currentY = geom[1]
-		self._ctx._context.applyGeomOnViewport(self._nodeRef, geom[2:])
+		self._ctx._context.applyGeom(self._nodeRef, geom[2:])
 
 	def onProperties(self):
 		self._ctx.localSelect = 1 # temporare
