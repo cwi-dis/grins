@@ -181,6 +181,9 @@
 	'Audio type, determines quality of audio when converting to RealAudio'
 	raw (g2 snap))
 
+(project_autoroute (bool) 0 'Route media items' default
+	'Dropped media items get automatically sent to children' raw (smil2))
+
 (project_boston (bool) 0 'SMIL 2' default
 	'Document conforms to SMIL 2' raw (smil2))
 
