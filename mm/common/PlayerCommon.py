@@ -68,6 +68,7 @@ class PlayerCommon:
 		# XXX store in reference document to keep working the player !
 		# very bad, but the only way if we don't want change the setlayout method and break something
 		ctx.channels.append(chan)
+		ctx.channelnames.append(chname)
 		ctx.channeldict[chname] = chan
 		#
 
@@ -85,9 +86,10 @@ class PlayerCommon:
 		if debug: print 'PlayerCore, killRenderer ',name
 		# XXX remove channel from reference document
 		ctx = self.context
-		chan = ctx.channeldict[name]
+		i = ctx.channelnames.index(name)
+		del ctx.channels[i]
+		del ctx.channelnames[i]
 		del ctx.channeldict[name]
-		self.context.channels.remove(chan)
 		#
 		
 		self.killchannel(name)
