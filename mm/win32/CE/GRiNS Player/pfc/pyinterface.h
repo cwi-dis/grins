@@ -9,9 +9,8 @@
 #include <windows.h>
 #endif
 
-#pragma warning(disable: 4786)
-#pragma warning(disable: 4284)
-#pragma warning(disable: 4018)
+#pragma warning(disable: 4786) // long names trunc (debug)
+#pragma warning(disable: 4018) // signed/unsigned mismatch
 #include <list>
 #include <string>
 #include <algorithm>
@@ -35,13 +34,12 @@ class PyInterface
 	static bool run_command(const TCHAR *command);
 	static bool run_file(const TCHAR *filename);
 
-	static TCHAR* getTracebackMsg();
+	static std::basic_string<TCHAR> get_copyright();
 
 	static PyThreadState* getPyThreadState() { return s_tstate;}
 	static PyObject* getErrorObject() { return s_errorObject;}
 
 	private:
-	static char* getTraceback(PyObject *traceback);
 	static PyThreadState *s_tstate;
 	static char s_python_home[MAX_PATH];
 	static PyObject *s_errorObject;
@@ -107,14 +105,61 @@ struct PyExcInfo
 	PyExcInfo()
 		{
 		PyErr_Fetch(&type, &value, &traceback);
+		PyErr_NormalizeException(&type, &value, &traceback);
 		}
 	~PyExcInfo()
 		{
 		Py_XDECREF(type);
 		Py_XDECREF(value);
 		Py_XDECREF(traceback);
+		PyErr_Restore(type, value, traceback);
 		}
+	std::basic_string<TCHAR> getShortMsg();
+	std::basic_string<TCHAR> getMsg();
+	std::basic_string<TCHAR> getTraceback();
 	};
+
+struct PyObjectWrapper
+	{
+	typedef PyObject* PyObjectPtr;
+	PyObject *m_obj;
+
+	PyObjectWrapper(PyObject *obj = NULL) : m_obj(obj) {}
+
+	PyObjectWrapper(const char *name) 
+	:	m_obj(PyImport_ImportModule(const_cast<char*>(name))) {}
+
+	~PyObjectWrapper() { Py_XDECREF(m_obj);}
+
+	PyObject* GetAttr(const char *name)
+		{
+		return PyObjectWrapper(PyObject_GetAttrString(m_obj, const_cast<char*>(name)));
+		}
+	
+	PyObject* Call(PyObject *args = NULL)
+		{
+		return PyObject_CallObject(m_obj, args);
+		}
+
+	const PyObjectWrapper& operator=(PyObject* obj)
+		{
+		Py_XDECREF(obj);
+		m_obj = obj;
+		return *this;
+		}
+
+	std::basic_string<TCHAR> toString();
+
+	operator void const*() const {return (m_obj==NULL)?0:this;}
+
+	PyObject& operator*() const { return *m_obj;}
+
+	PyObjectPtr operator->() const  {return m_obj;}
+
+	operator PyObjectPtr() {return m_obj;}
+	};
+
+inline void PyErr_Show() { PyErr_Print();}
 
 inline PyObject* none() {Py_INCREF(Py_None); return Py_None;}
 
@@ -142,16 +187,5 @@ inline void seterror(const char *funcname, DWORD err)
 	LocalFree(pszmsg);
 	}
 
-#ifdef _CONSOLE
-inline void PyErr_Show() { PyErr_Print();}
-#else // _CONSOLE
-inline void PyErr_MessageBox() { 
-	TCHAR *pmsg = PyInterface::getTracebackMsg();
-	MessageBox(NULL, pmsg, TEXT("Python Error"), MB_OK);
-	delete[] pmsg;
-	}
-extern void PyErr_Display();
-inline void PyErr_Show() { PyErr_MessageBox();}
-#endif // _CONSOLE 
 
 #endif // INC_PYINTERFACE

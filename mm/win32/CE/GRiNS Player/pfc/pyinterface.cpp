@@ -102,6 +102,16 @@ void PyInterface::finalize()
 		}
 	}
 
+std::basic_string<TCHAR> PyInterface::get_copyright()
+	{
+	std::basic_string<TCHAR> tstr(TEXT("Python "));
+	tstr += toTEXT(Py_GetVersion());
+	tstr += TEXT("\r\n");
+	tstr += toTEXT(Py_GetCopyright());
+	tstr += TEXT("\r\n");
+	return tstr;
+	}
+
 bool PyInterface::get_sys_path(std::list< std::basic_string<TCHAR> >& path)
 	{
 	AcquireThread at(s_tstate);
@@ -186,7 +196,6 @@ bool PyInterface::run_command(const TCHAR *command)
 	if(v == NULL)
 		{
 		PyErr_Show();
-		PyErr_Clear();
 		return false;
 		}
 	Py_XDECREF(v);
@@ -208,114 +217,93 @@ bool PyInterface::run_file(const TCHAR *filename)
 	return ret;
 	}
 
-////////////////////////////////////
-
-// the following is borrowed from Python\PC\ce
-
-char* PyInterface::getTraceback(PyObject *exc_tb)
-{
-	char *result = NULL;
-	char *errMsg = NULL;
-	PyObject *modStringIO = NULL;
-	PyObject *modTB = NULL;
-	PyObject *obFuncStringIO = NULL;
-	PyObject *obStringIO = NULL;
-	PyObject *obFuncTB = NULL;
-	PyObject *argsTB = NULL;
-	PyObject *obResult = NULL;
-
-	// Import the modules we need - cStringIO and traceback
-	modStringIO = PyImport_ImportModule("cStringIO");
-	if (modStringIO==NULL) 
-		result = "cant import cStringIO\n";
-
-	if (errMsg==NULL) {
-		modTB = PyImport_ImportModule("traceback");
-		if (modTB==NULL)
-			errMsg = "cant import traceback\n";
-	}
-	// Construct a cStringIO object
-	if (errMsg == NULL) {
-		obFuncStringIO = PyObject_GetAttrString(modStringIO, "StringIO");
-		if (obFuncStringIO==NULL)
-			errMsg = "cant find cStringIO.StringIO\n";
-	}
-	if (errMsg == NULL) {
-		obStringIO = PyObject_CallObject(obFuncStringIO, NULL);
-		if (obStringIO==NULL) 
-			errMsg = "cStringIO.StringIO() failed\n";
-	}
-	// Get the traceback.print_exception function, and call it
-	if (errMsg == NULL) {
-		obFuncTB = PyObject_GetAttrString(modTB, "print_tb");
-		if (obFuncTB==NULL) 
-			errMsg = "cant find traceback.print_tb\n";
-	}
-	if (errMsg == NULL) {
-		argsTB = Py_BuildValue("OOO", 
-				exc_tb  ? exc_tb  : Py_None,
-				Py_None, 
-				obStringIO);
-		if (argsTB==NULL) 
-			errMsg = "cant make print_tb arguments\n";
-	}
-	if (errMsg == NULL) {
-		obResult = PyObject_CallObject(obFuncTB, argsTB);
-		if (obResult==NULL) 
-			errMsg = "traceback.print_tb() failed\n";
-	}
-	// Now call the getvalue() method in the StringIO instance
-	Py_XDECREF(obFuncStringIO);
-	obFuncStringIO = NULL;
-	if (errMsg == NULL) {
-		obFuncStringIO = PyObject_GetAttrString(obStringIO, "getvalue");
-		if (obFuncStringIO==NULL) 
-			errMsg = "cant find getvalue function\n";
-	}
-	Py_XDECREF(obResult);
-	obResult = NULL;
-	if (errMsg == NULL) {
-		obResult = PyObject_CallObject(obFuncStringIO, NULL);
-		if (obResult==NULL) 
-			errMsg = "getvalue() failed.\n";
-	}
-	// And it should be a string all ready to go - duplicate it.
-	if (errMsg == NULL) {
-		if (!PyString_Check(obResult))
-			errMsg = "getvalue() did not return a string\n";
-		else {
-			char *tempResult = PyString_AsString(obResult);
-			result = PyMem_Malloc(strlen(tempResult)+1);
-			strcpy(result, tempResult);
-		}
-	}
-	// All finished - first see if we encountered an error
-	if (result==NULL && errMsg != NULL) {
-		result = new char(strlen(errMsg)+1);
-		strcpy(result, errMsg);
-	}
-
-	Py_XDECREF(modStringIO);
-	Py_XDECREF(modTB);
-	Py_XDECREF(obFuncStringIO);
-	Py_XDECREF(obStringIO);
-	Py_XDECREF(obFuncTB);
-	Py_XDECREF(argsTB);
-	Py_XDECREF(obResult);
-	return result;
-}
-
-TCHAR* PyInterface::getTracebackMsg()
+std::basic_string<TCHAR> PyObjectWrapper::toString()
 	{
-	PyExcInfo exc;
-	char *szPrefix = "Traceback (innermost last):\n";
-	char *pszTraceback = getTraceback(exc.traceback);
-	char *szExcType = PyString_AsString(PyObject_Str(exc.type));
-	char *szExcValue = PyString_AsString(PyObject_Str(exc.value));
-	int buf_size = sizeof(TCHAR) * (8 + strlen(szPrefix) + strlen(pszTraceback) + strlen(szExcType) + strlen(szExcValue));
-	TCHAR *buf = new TCHAR[buf_size];
-	wsprintf(buf, TEXT("%hs%hs%hs: %hs"), szPrefix, pszTraceback, szExcType, szExcValue);
-	delete[] pszTraceback;
-	return buf;
+	if(m_obj == NULL)
+		return TEXT("NULL");
+	std::string str = PyString_AsString(PyObject_Str(m_obj));
+#ifdef UNICODE
+	int n = str.length()+1;
+	std::basic_string<WCHAR> wstr(n, 0);
+	WCHAR* wsz = const_cast<WCHAR*>(wstr.data());
+	MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, wsz, n);
+	return wstr;
+#else
+	return str;
+#endif
 	}
 
+std::basic_string<TCHAR> PyExcInfo::getShortMsg()
+	{
+	std::string str = PyString_AsString(PyObject_Str(type));
+	str += "\r\n";
+	str += PyString_AsString(PyObject_Str(value));
+#ifdef UNICODE
+	int n = str.length()+1;
+	std::basic_string<WCHAR> wstr(n, 0);
+	WCHAR* wsz = const_cast<WCHAR*>(wstr.data());
+	MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, wsz, n);
+	return wstr;
+#else
+	return str;
+#endif
+	}
+
+std::basic_string<TCHAR> PyExcInfo::getMsg()
+	{
+	std::basic_string<TCHAR> sm = getShortMsg();
+	if(traceback != NULL)
+		{
+		std::basic_string<TCHAR> tstr = TEXT("Traceback (innermost last):\r\n");
+		tstr += getTraceback();
+		tstr += TEXT("\r\n");
+		tstr += sm;
+		return tstr;
+		}
+	return sm;
+	}
+
+// uses python/lib/traceback.py and cStringIO module 
+std::basic_string<TCHAR> PyExcInfo::getTraceback()
+	{
+	PyObjectWrapper tracebackMod("traceback");
+	if(!tracebackMod) return TEXT("cant import traceback");
+	
+	PyObjectWrapper print_tb = tracebackMod.GetAttr("print_tb");
+	if(!print_tb) return TEXT("cant find traceback.print_tb");
+
+	PyObjectWrapper cStringIOMod("cStringIO");
+	if(!cStringIOMod) return TEXT("cant import StringIO");
+	
+	PyObjectWrapper StringIO = cStringIOMod.GetAttr("StringIO");
+	if(!StringIO) return TEXT("cant find cStringIO.StringIO");
+	
+	PyObjectWrapper strout = StringIO.Call();
+	if(!strout) return TEXT("StringIO.StringIO() failed");
+
+	PyObjectWrapper tb_args = Py_BuildValue("OOO", traceback, Py_None, (PyObject*)strout);
+
+	PyObjectWrapper result = print_tb.Call(tb_args);
+	if(!result) return TEXT("traceback.print_tb() failed");
+
+	PyObjectWrapper getvalue = strout.GetAttr("getvalue");
+	if(!getvalue) return TEXT("cant find strout.getvalue()");
+
+	result = getvalue.Call();
+	if(!result) {PyErr_Clear();return TEXT("strout.getvalue() call failed");}
+
+	if(!PyString_Check(result))
+		return TEXT("strout.getvalue() did not return a string");
+	
+	char *p = PyString_AsString(result);
+
+#ifdef UNICODE
+	int n = strlen(p)+1;
+	std::basic_string<WCHAR> wstr(n, 0);
+	WCHAR* wsz = const_cast<WCHAR*>(wstr.data());
+	MultiByteToWideChar(CP_ACP, 0, p, -1, wsz, n);
+	return wstr;
+#else
+	return p;
+#endif
+	}

@@ -1,7 +1,7 @@
 #ifndef INC_CHARCONV
 
-#pragma warning(disable: 4786)
-#pragma warning(disable: 4284)
+#pragma warning(disable: 4786) // long names trunc (debug)
+#pragma warning(disable: 4018) // signed/unsigned mismatch
 #include <string>
 #include <vector>
 
@@ -15,6 +15,13 @@ inline WCHAR* toTEXT(const char *p)
 inline const WCHAR* toTEXT(const WCHAR *p)
 	{
 	return p;
+	}
+inline WCHAR* newTEXT(char *p)
+	{
+	int n = strlen(p)+1;
+	WCHAR *wsz = new WCHAR[n];
+	MultiByteToWideChar(CP_ACP, 0, p, -1, wsz, n);
+	return wsz;
 	}
 #define text_strchr wcschr
 #define text_strrchr wcsrchr
@@ -49,19 +56,38 @@ class StrRec : public std::vector<TCHAR*>
 	{
 	public:
     StrRec(const TCHAR* pString,const TCHAR* pDelims)
-	:	apBuf(new TCHAR[lstrlen(pString)+1])
+	:	buf(new TCHAR[lstrlen(pString)+1])
 		{
-		TCHAR *pBuf = apBuf.get();
-		lstrcpy(pBuf,pString);
-		TCHAR *pLook = text_strtok(pBuf,pDelims);
+		lstrcpy(buf, pString);
+		TCHAR *pLook = text_strtok(buf, pDelims);
 		while(pLook)
 			{
 			push_back(pLook);
-			pLook = text_strtok(NULL,pDelims);
+			pLook = text_strtok(NULL, pDelims);
 			}
 		}
+    ~StrRec() {delete[] buf;}
 	private:
-	std::auto_ptr<TCHAR> apBuf;
+	TCHAR* buf;
 	};
+
+
+inline std::string fixendl(const char *psz)
+	{
+	std::string str;
+	const char *p = psz;
+	while(*p)
+		{
+		if(*p == '\r' && *(p+1) != '\n')
+			str += "\r\n";
+		else if(*p == '\n' && (p==psz || *(p-1) != '\r'))
+			str += "\r\n";
+		else
+			str += *p;
+		p++;
+		}
+	return str;
+	}
+
 
 #endif // INC_CHARCONV
