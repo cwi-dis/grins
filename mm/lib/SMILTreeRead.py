@@ -331,7 +331,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				attrdict['title'] = val
 			elif attr not in smil_node_attrs:
 				# catch all
-				attrdict[attr] = parseattrval(attr, val, self.__context)
+				try:
+					attrdict[attr] = parseattrval(attr, val, self.__context)
+				except:
+					pass
 
 	def NewNode(self, tagname, attributes):
 		# mimetype -- the MIME type of the node as specified in attr
