@@ -1072,7 +1072,7 @@ class HtmlTemplateCtrl(StringOptionsCtrl):
 		import features
 		# for instance, only embedded_player is supported in QuickTime version
 		if compatibility.QT == features.compatibility:
-			options=['embedded_player.html']
+			options=['external_player_qt.html', 'embedded_player_qt.html']
 		else:
 			options=['external_player.html','embedded_player.html']
 		StringOptionsCtrl.__init__(self,wnd,attr,resid,options)
