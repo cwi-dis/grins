@@ -89,6 +89,10 @@ class PanelMixin:
 		if self._pbar:
 			self._pbar.eraseClose() 
 
+	def updatePanelCmdUI(self):
+		if self._pbar:
+			self._pbar.UpdateCmdUI()
+
 # null player panel mixin
 class NullPanelMixin:
 	def __init__(self):
@@ -102,6 +106,8 @@ class NullPanelMixin:
 	def update(self):
 		pass
 	def assertPanelVisible(self):
+		pass
+	def updatePanelCmdUI(self):
 		pass
 
 # do not use player panel for player yet

@@ -839,6 +839,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 			self.HookCommandUpdate(self.OnUpdateCmdDissableAndUncheck,id_pause)
 			self.HookCommandUpdate(self.OnUpdateCmdDissableAndUncheck,id_play)
 			self.HookCommandUpdate(self.OnUpdateCmdDissableAndUncheck,id_stop)
+		self.updatePanelCmdUI()
 
 	# Return the commandlist for the context
 	def get_commandlist(self,context):
