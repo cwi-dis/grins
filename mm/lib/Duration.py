@@ -53,6 +53,15 @@ def getintrinsicduration(node, wanterror):
 		import realsupport
 		info = realsupport.getinfo(url)
 		dur = info.get('duration', 0)
+		if not dur and platform == 'win32':
+			import RealDuration
+			try:
+				dur = RealDuration.get(url)
+			except IOError, msg:
+				if wanterror:
+					raise IOError, msg
+				print url, msg
+				return 0
 	elif maintype == 'video':
 		import VideoDuration
 		try:
