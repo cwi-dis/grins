@@ -20,7 +20,8 @@ class Exporter:
 		self.topwindow = None
 		self.completed = 0
 
-		self.progress = windowinterface.ProgressDialog("Exporting", self.cancel_callback, None, 0, 1)
+		self.parent = windowinterface.getmainwnd()
+		self.progress = windowinterface.ProgressDialog("Exporting", self.cancel_callback, self.parent, 0, 1)
 		self.progress.set('Exporting document to WMP...')
 		
 		self.timefunc = self.player.scheduler.timefunc
@@ -80,14 +81,14 @@ class Exporter:
 			del self.progress
 			self.progress = None
 		self.player.stop()
-		windowinterface.showmessage('Export interrupted.')
+		windowinterface.showmessage('Export interrupted.', parent=self.parent)
 
 	def fail_callback(self):
 		if self.progress:
 			del self.progress
 			self.progress = None
 		self.player.stop()
-		windowinterface.showmessage('Export failed.')
+		windowinterface.showmessage('Export failed.', parent=self.parent)
 
 	def _getNodesOfType(self, ntype, node, urls):
 		if node.GetType()=='ext':
