@@ -188,6 +188,12 @@ class HierarchyView(HierarchyViewDialog):
 			PLAYNODE(callback = (self.playcall, ())),
 			PLAYFROM(callback = (self.playfromcall, ())),
 			]
+		self.navigatecommands = [
+			TOPARENT(callback = (self.toparent, ())),
+			TOCHILD(callback = (self.tochild, (0,))),
+			NEXTSIBLING(callback = (self.tosibling, (1,))),
+			PREVSIBLING(callback = (self.tosibling, (-1,))),
+			]
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
 			self.commands.append(HELP(callback=(self.helpcall,())))
@@ -220,6 +226,8 @@ class HierarchyView(HierarchyViewDialog):
 		is_realpix = fntype == 'ext' and fnode.GetChannelType() == 'RealPix'
 		if fntype in MMNode.interiortypes or is_realpix:
 			popupmenu = self.interior_popupmenu
+			if fnode.children:
+				commands = commands + self.navigatecommands[1:2]
 		else:
 			popupmenu = self.leaf_popupmenu
 		if fnode.__class__ is not SlideMMNode:
@@ -229,7 +237,13 @@ class HierarchyView(HierarchyViewDialog):
 				commands = commands + self.interiorcommands
 		if fnode is not self.root:
 			# can't do certain things to the root
-			commands = commands + self.notatrootcommands
+			commands = commands + self.notatrootcommands + self.navigatecommands[0:1]
+			pchildren = fnode.GetParent().GetChildren()
+			findex = pchildren.index(fnode)
+			if findex > 0:
+				commands = commands + self.navigatecommands[3:4]
+			if findex < len(pchildren) - 1:
+				commands = commands + self.navigatecommands[2:3]
 		t, n = Clipboard.getclip()
 		if t == 'node' and n is not None:
 			# can only paste if there's something to paste
@@ -317,11 +331,7 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		if not self.root.IsAncestorOf(node):
 			raise RuntimeError, 'bad node passed to globalsetfocus'
-		self.init_display()
 		self.setfocusnode(node)
-		if self.new_displist:
-			# setfocusnode may have drawn already
-			self.render()
 
 	#################################################
 	# Event handlers                                #
@@ -361,7 +371,6 @@ class HierarchyView(HierarchyViewDialog):
 			if not obj:
 				windowinterface.beep()
 				return
-		self.init_display()
 		self.setfocusobj(obj)
 		if event == WMEVENTS.DropFile:
 			url = MMurl.pathname2url(filename)
@@ -746,7 +755,6 @@ class HierarchyView(HierarchyViewDialog):
 				return
 		if obj.node is self.focusnode:
 			return
-		self.init_display()
 		self.setfocusobj(obj)
 		self.render()
 
@@ -767,6 +775,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Select the given object, deselecting the previous focus
 	def setfocusobj(self, obj):
+		self.init_display()
 		if self.focusobj:
 			self.focusobj.deselect()
 		self.prevfocusnode = self.focusnode
@@ -783,12 +792,14 @@ class HierarchyView(HierarchyViewDialog):
 	def setfocusnode(self, node):
 		if not node:
 			self.setfocusobj(None)
+			self.render()
 			return
 		obj = self.whichobj(node)
 		if obj:
 			self.setfocusobj(obj)
 			x1,y1,x2,y2 = obj.box
 			self.window.scrollvisible((x1,y1,x2-x1,y2-y1))
+			self.render()
 			return
 		self.prevfocusnode = self.focusnode
 		self.focusnode = node

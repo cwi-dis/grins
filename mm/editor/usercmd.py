@@ -154,6 +154,14 @@ class EXPANDALL(_CommandBase):
 	help = 'Expand selected node and all nodes below'
 class COLLAPSEALL(_CommandBase):
 	help = 'Collapse selected node and all nodes below'
+class TOPARENT(_CommandBase):
+	help = 'Go to parent node'
+class TOCHILD(_CommandBase):
+	help = 'Go to first child node'
+class NEXTSIBLING(_CommandBase):
+	help = 'Go to next sibling'
+class PREVSIBLING(_CommandBase):
+	help = 'Go to previous sibling'
 
 #
 # Command to hierarchy/channel view

@@ -274,6 +274,10 @@
 #define ID_ACCEL32830                   32830
 #define IDUC_INFO                       32831
 #define IDUC_ATTRIBUTES                 32832
+#define IDUC_TOPARENT                   32833
+#define IDUC_PREVSIBLING                32834
+#define IDUC_NEXTSIBLING                32836
+#define IDUC_TOCHILD                    32837
 #define IDC_GROUP1                      65535
 #define ID_GROUP1                       65535
 
@@ -282,7 +286,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        261
-#define _APS_NEXT_COMMAND_VALUE         32833
+#define _APS_NEXT_COMMAND_VALUE         32838
 #define _APS_NEXT_CONTROL_VALUE         1187
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
