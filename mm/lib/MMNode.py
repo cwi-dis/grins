@@ -1324,56 +1324,76 @@ class MMNode:
 		self.durarcs = []
 		self.time_list = []
 
-	# this method return the sub region positioning in pixel values.
-	# it should be use only in some rare cases (HTML+TIME export), ...
-	# if we need to use often this method, we should optimize it
-	def getPxGeomSubReg(self):
+	# dynamic link to the smil css resolver
+	# allow to get different positioning values
+	def __linkToCssResolver(self):
 		cssResolver = self.context.cssResolver
-		# a dynamic link should be enough for this method
-		# it avoid to keep a synchonization with the css resolver
 		cssRegId = cssResolver.newRegion()
 		cssResolver.setRawAttrPos(cssRegId,
-			child.GetAttrDef('left',None), child.GetAttrDef('width',None),
-			child.GetAttrDef('right',None), child.GetAttrDef('top',None),
-			child.GetAttrDef('height',None), child.GetAttrDef('bottom',None))
+			self.GetAttrDef('left',None), self.GetAttrDef('width',None),
+			self.GetAttrDef('right',None), self.GetAttrDef('top',None),
+			self.GetAttrDef('height',None), self.GetAttrDef('bottom',None))
 
 		channel = self.GetChannel()
-		region = channel.getLayoutChannel()
-		cssResolver.link(cssRegId, region.cssId)				
-		geom = cssResolver.getPxGeom(cssRegId)
-		cssResolver.unlink(cssRegId)
-		
-		return geom
-
-	# this method return the media positioning in pixel values.
-	# it should be use only in some rare cases (HTML+TIME export), ...
-	# if we need to use often this method, we should optimize it
-	def getPxGeomMedia(self):
-		cssResolver = self.context.cssResolver
-		# a dynamic link should be enough for this method
-		# it avoid to keep a synchonization with the css resolver
-		cssRegId = cssResolver.newRegion()
-		cssResolver.setRawAttrPos(cssRegId,
-			child.GetAttrDef('left',None), child.GetAttrDef('width',None),
-			child.GetAttrDef('right',None), child.GetAttrDef('top',None),
-			child.GetAttrDef('height',None), child.GetAttrDef('bottom',None))
-
-		channel = self.GetChannel()
-		region = channel.getLayoutChannel()
-		resolver.link(cssRegId, region.cssId)
+		if channel == None:
+			return None,None
+		region = channel.GetLayoutChannel()
+		if region == None:
+			return None, None
+		cssResolver.link(cssRegId, region.cssId)
 		
 		# for media
 		cssMediaId = cssResolver.newMedia()
-		cssResolver.setAlignAttr(cssMediaId, 'regPoint', child.GetAttrDef('regPoint',None))
-		cssResolver.setAlignAttr(cssMediaId, 'regAlign', child.GetAttrDef('regAlign',None))
-		cssResolver.setAlignAttr(cssMediaId, 'scale', child.GetAttrDef('scale',None))
+		mwidth, mheight = self.GetDefaultMediaSize(None, None)
+		cssResolver.setIntrinsicSize(cssMediaId, mwidth, mheight)
+		cssResolver.setAlignAttr(cssMediaId, 'regPoint', self.GetAttrDef('regPoint',None))
+		cssResolver.setAlignAttr(cssMediaId, 'regAlign', self.GetAttrDef('regAlign',None))
+		cssResolver.setAlignAttr(cssMediaId, 'scale', self.GetAttrDef('scale',None))
 		cssResolver.link(cssMediaId, cssRegId)	
+
+		return cssRegId, cssMediaId
 		
-		geom = cssResolver.getPxGeom(cssMediaId)
+	# this method return the media positioning (subregiongeom+mediageom) in pixel values.
+	# All values are relative to the parent region/subregion
+	# it should be use only in some rare cases 
+	# if we need to use often this method, we should optimize it
+	def getPxGeomMedia(self):
+		
+		# a dynamic link should be enough for this method
+		# it avoid to keep a synchonization with the css resolver
+		cssRegId, cssMediaId = self.__linkToCssResolver()
+		if cssRegId == None:
+			return None
+		cssResolver = self.context.cssResolver
+		subRegGeom = cssResolver.getPxGeom(cssRegId)
+		mediaGeom = cssResolver.getPxGeom(cssMediaId)
+
+		# no need anymore of this link		
 		cssResolver.unlink(cssMediaId)
 		cssResolver.unlink(cssRegId)
 		
-		return geom
+		return subRegGeom, mediaGeom
+
+	# this method return the media positioning (subregiongeom+mediageom) in pixel values
+	# All values are relative to the viewport.
+	# it should be use only in some rare cases (HTML+TIME export), ...
+	# if we need to use often this method, we should optimize it
+	def getPxAbsGeomMedia(self):
+		# a dynamic link should be enough for this method
+		# it avoid to keep a synchonization with the css resolver
+		cssRegId, cssMediaId = self.__linkToCssResolver()
+		if cssRegId == None:
+			return None
+
+		cssResolver = self.context.cssResolver
+		subRegGeom = cssResolver.getPxAbsGeom(cssRegId)
+		mediaGeom = cssResolver.getPxAbsGeom(cssMediaId)
+
+		# no need anymore of this link		
+		cssResolver.unlink(cssMediaId)
+		cssResolver.unlink(cssRegId)
+		
+		return subRegGeom, mediaGeom
 
 	def startplay(self, sctx, timestamp):
 		if debug: print 'startplay',`self`,timestamp,self.fullduration
