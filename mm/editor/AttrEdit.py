@@ -552,6 +552,7 @@ class NodeWrapper(Wrapper):
 				namelist.append('system_audiodesc')
 				namelist.append('system_cpu')
 				namelist.append('system_operating_system')
+				namelist.append('system_component')
 				namelist.append('restart')
 				namelist.append('restartDefault')
 				namelist.append('fillDefault')
