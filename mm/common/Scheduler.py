@@ -284,16 +284,17 @@ class SchedulerContext:
 		srlist = self.getsrlist(ev)
 		self.queuesrlist(srlist, timestamp)
 
-	def trigger(self, arc, late = 0):
+	def trigger(self, arc):
 		node = arc.dstnode
 		timestamp = arc.resolvedtime(self.parent.timefunc)
 		arc.qid = None
+		arc.triggered = 1
 		if arc.isstart:
 			if node.parent:
 				node.parent.scheduled_children = node.parent.scheduled_children - 1
 			else:
 				self.scheduled_children = self.scheduled_children - 1
-		if debugevents: print 'trigger', `arc`, late
+		if debugevents: print 'trigger', `arc`, timestamp
 		if not arc.isstart:
 			if node.playing != MMStates.PLAYING:
 				# ignore end event if not playing
@@ -334,8 +335,9 @@ class SchedulerContext:
 				self.parent.event(self, (SR.SCHED_DONE, node), timestamp)
 				return
 		# if node is playing (or not stopped), must terminate it first
-		if debugevents: print 'terminating node'
-		self.parent.do_terminate(self, node, timestamp)
+		if node.playing in (MMStates.PLAYING, MMStates.PLAYED):
+			if debugevents: print 'terminating node'
+			self.parent.do_terminate(self, node, timestamp)
 		if pnode.type == 'excl' or pnode.type == 'seq':
 			# parent is excl, must terminate running child first
 			# XXX must implement pause
@@ -737,15 +739,17 @@ class Scheduler(scheduler):
 				if arc.isstart:
 					dev = 'begin'
 					arc.dstnode.start_time = timestamp+arc.delay
-					if arc.dstnode.parent:
-						arc.dstnode.parent.scheduled_children = arc.dstnode.parent.scheduled_children + 1
-					else:
-						# root node
-						sctx.scheduled_children = sctx.scheduled_children + 1
 				else:
 					dev = 'end'
 					arc.dstnode.end_time = timestamp+arc.delay
-				arc.qid = self.enterabs(timestamp+arc.delay, 0, sctx.trigger, (arc,))
+				if arc.qid is None and not arc.triggered:
+					if arc.isstart:
+						if arc.dstnode.parent:
+							arc.dstnode.parent.scheduled_children = arc.dstnode.parent.scheduled_children + 1
+						else:
+							# root node
+							sctx.scheduled_children = sctx.scheduled_children + 1
+					arc.qid = self.enterabs(timestamp+arc.delay, 0, sctx.trigger, (arc,))
 				self.sched_arcs(sctx, arc.dstnode, dev, timestamp=timestamp+arc.delay)
 
 	def runone(self, (sctx, todo, dummy), timestamp = None):
@@ -793,7 +797,7 @@ class Scheduler(scheduler):
 				for ch in arg.children:
 					ch.reset()
 				if arg.fullduration is None:
-					self.sched_arcs(sctx, arg, 'end', timestamp=timestamp+arg.fullduration)
+					self.sched_arcs(sctx, arg, 'end', timestamp=timestamp)
 			elif action == SR.SCHED_START:
 				arg.startplay(sctx)
 				self.sched_arcs(sctx, arg, 'begin', timestamp=timestamp)
@@ -874,7 +878,7 @@ class Scheduler(scheduler):
 					num = numsrlist[0]
 					num = num - 1
 					if num == 0:
-						if ev[0] == SR.SCHED_STOPPING:
+						if ev[0] == SR.SCHED_DONE:
 							sctx.queuesrlist(numsrlist[1], timestamp)
 						numsrlist[:] = []
 					else:

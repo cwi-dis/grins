@@ -640,6 +640,7 @@ class MMSyncArc:
 		self.wallclock = wallclock
 		self.delay = delay
 		self.qid = None
+		self.triggered = 0
 
 	def __repr__(self):
 		if self.wallclock is not None:
@@ -904,6 +905,7 @@ class MMNode:
 		self.happenings = {}
 		self.playing = MMStates.IDLE
 		self.sctx = None
+		self.start_time = self.end_time = None
 
 	def startplay(self, sctx):
 		self.playing = MMStates.PLAYING
@@ -937,10 +939,10 @@ class MMNode:
 				# of par/excl, so event is begin
 				key = 'event', 'begin'
 			if self.happenings.has_key(key):
-				time = self.sctx.parent.timefunc()
-				t = self.happenings[key]
+##				time = self.sctx.parent.timefunc()
+##				t = self.happenings[key]
 				if arc.delay <= time - t:
-					self.sctx.trigger(arc, time - t)
+					self.sctx.trigger(arc)
 
 	def event(self, time, event):
 		self.happenings[('event', event)] = time
@@ -2220,6 +2222,7 @@ class MMNode:
 					if arc.qid is not None:
 						self.cancel(arc.qid)
 						arc.qid = None
+					arc.triggered = 0
 			for arc in MMAttrdefs.getattr(child, 'endlist'):
 				#print 'deleting arc',`arc`
 				refnode = child.__find_refnode(arc)
@@ -2227,6 +2230,7 @@ class MMNode:
 				if arc.qid is not None:
 					self.cancel(arc.qid)
 					arc.qid = None
+				arc.triggered = 0
 
 	def gensr_body_parexcl(self, sched_actions, scheddone_actions,
 			       terminate_events, self_body=None):
@@ -2447,9 +2451,11 @@ class MMNode:
 		duration = self.attrdict.get('duration')
 		repeatDur = self.attrdict.get('repeatDur')
 		repeatCount = self.attrdict.get('loop')
-		if duration is None:
+		if duration is None and self.type in leaftypes:
 			import Duration
 			duration = Duration.get(self, ignoreloop=1)
+		if repeatDur is not None and duration is None:
+			duration = -1
 		if repeatDur is not None and \
 		   repeatCount is not None:
 			if duration > 0 and repeatCount > 0 and repeatDur >= 0:
