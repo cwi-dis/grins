@@ -217,14 +217,14 @@ class AssetsView(AssetsViewDialog):
 			else:
 				url = ''
 			name = MMAttrdefs.getattr(node, 'name')
+			icon = node.getIconName(wantmedia=1)
 			if tp == 'ext' and url and not name:
-				mimetype = node.GetComputedMimeType()
-				mimetype = string.split(mimetype, '/')[0]
 				pathname = urlparse.urlparse(url)[2]
-				shortname = posixpath.split(pathname)[1]
-				assetlist.append((mimetype, mimetype, shortname, mimetype, url))
+				name = posixpath.split(pathname)[1]
+				node = icon # XXXX dirty trick: string first elt flags url.
 			else:
-				assetlist.append((node, tp, name, tp, ''))
+				pathname = ''
+			assetlist.append((node, icon, name, icon, url))
 		return assetlist
 
 	def getallassets(self):
@@ -250,8 +250,7 @@ class AssetsView(AssetsViewDialog):
 		if tp == 'ext':
 			url = node.GetRawAttrDef('file','')
 			if url:
-				mimetype = node.GetComputedMimeType()
-				mimetype = string.split(mimetype, '/')[0]
+				mimetype = node.getIconName(wantmedia=1)
 				if intree:
 					if dict.has_key(url):
 						mimetype, nodelist = dict[url]
@@ -272,17 +271,14 @@ class AssetsView(AssetsViewDialog):
 		rv = []
 		for n in data:
 			className = n.getClassName()
+			iconname = n.getIconName(wantmedia=1)
 			if className == 'MMNode':
-				ntype = n.GetType()
 				name = MMAttrdefs.getattr(n, 'name')
-				rv.append((None, ntype, name, ntype))
 			elif className in ('Region','Viewport'):
-				if className == 'Region':
-					rv.append((None, 'region', n.name, 'region'))
-				elif className == 'Viewport':
-					rv.append((None, 'viewport', n.name, 'viewport'))
+				name = n.name
 			else:
-				rv.append((None, className, '', className))
+				name = ''
+			rv.append((None, iconname, name, iconname))
 
 		return rv
 
