@@ -3,7 +3,8 @@ import windowinterface
 import WMEVENTS
 import MMAttrdefs
 from usercmd import *
-from MenuTemplate import POPUP_CVIEW_NONE, POPUP_CVIEW_CHANNEL, POPUP_CVIEW_NODE, POPUP_CVIEW_SYNCARC
+from MenuTemplate import POPUP_CVIEW_NONE, POPUP_CVIEW_CHANNEL, POPUP_CVIEW_NODE, \
+	POPUP_CVIEW_BWSTRIP, POPUP_CVIEW_SYNCARC
 
 begend = ('begin', 'end')
 
