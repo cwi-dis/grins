@@ -43,6 +43,11 @@ class TopLevelDialog:
 		if hasattr(self, 'window') and self.window:
 			self.window.setplayerstate(state)
 			
+	def setusergroupsmenu(self, menu):
+		w = self.window
+		if w is not None:
+			w.set_dynamiclist(USERGROUPS, menu)
+			
 	def __close_source(self):
 		if self.source is not None:
 			self.source.close()
