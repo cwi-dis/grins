@@ -177,6 +177,10 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 	def get_submenu(self,strid):
 		return self._mainmenu._submenus_dict.get(strid)
 
+	def onTimer(self, id):
+		import windowinterface
+		windowinterface.toplevel.systemtimer_callback()
+	
 	# Called after the window has been created for further initialization
 	# Called after CWnd::OnCreate
 	def OnCreate(self, createStruct):
@@ -185,7 +189,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		self.HookMessage(self.onKey,win32con.WM_KEYDOWN)
 		self.HookMessage(self.onInitMenu,win32con.WM_INITMENU)
 		self.HookMessage(self.onActivate,win32con.WM_ACTIVATE)
-
+		self.HookMessage(self.onTimer,win32con.WM_TIMER)
+		
 		# the view is responsible for user input
 		# so do not hook other messages
 
@@ -499,12 +504,13 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 	# Set the waiting cursor
 	def setwaiting(self):
-		#self.BeginWaitCursor();
-		pass
+#		self.BeginWaitCursor();
+		windowinterface.toplevel.setwaiting()
 		
 	# Remove waiting cursor
 	def setready(self):
-		self.EndWaitCursor();
+#		self.EndWaitCursor();
+		windowinterface.toplevel.setready()
 		self.ActivateFrame()
 
 	# Close the opened document
@@ -626,6 +632,46 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		(self.GetMenu()).CheckMenuItem(id,flags)
 		self.PostMessage(WM_KICKIDLE)
 
+	# Set item menu and toolbar relative to player in a specific state
+	def setplayerstate(self, state):
+		import Player
+
+		tb_id_play=usercmdui.class2ui[wndusercmd.TB_PLAY].id
+		tb_id_pause=usercmdui.class2ui[wndusercmd.TB_PAUSE].id
+		tb_id_stop=usercmdui.class2ui[wndusercmd.TB_STOP].id
+			
+		id_play=usercmdui.class2ui[usercmd.PLAY].id
+		id_pause=usercmdui.class2ui[usercmd.PAUSE].id
+		id_stop=usercmdui.class2ui[usercmd.STOP].id
+
+		if state == Player.PLAYING:
+			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_pause)
+			self.HookCommandUpdate(self.OnUpdateCmdEnableAndCheck,id_play)
+			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_stop)
+
+			self.HookCommandUpdate(self.OnUpdateCmdEnable,tb_id_pause)
+			self.HookCommandUpdate(self.OnUpdateCmdEnableAndCheck,tb_id_play)
+			self.HookCommandUpdate(self.OnUpdateCmdEnable,tb_id_stop)
+		
+		if state == Player.PAUSING:
+			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_play)
+			self.HookCommandUpdate(self.OnUpdateCmdEnableAndCheck,id_pause)
+			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_stop)
+			
+			self.HookCommandUpdate(self.OnUpdateCmdEnable,tb_id_play)
+			self.HookCommandUpdate(self.OnUpdateCmdEnableAndCheck,tb_id_pause)
+			self.HookCommandUpdate(self.OnUpdateCmdEnable,tb_id_stop)
+		
+		if state == Player.STOPPED:
+			self.HookCommandUpdate(self.OnUpdateCmdEnable,id_play)
+			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_stop)
+			self.HookCommandUpdate(self.OnUpdateCmdDissable,id_pause)
+
+			self.HookCommandUpdate(self.OnUpdateCmdEnable,tb_id_play)
+			self.HookCommandUpdate(self.OnUpdateCmdDissable,tb_id_stop)
+			self.HookCommandUpdate(self.OnUpdateCmdDissable,tb_id_pause)
+
+
 	# Return the commandlist for the context
 	def get_commandlist(self,context):
 		if self._activecmds.has_key(context):
@@ -634,12 +680,16 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 	# Target for commands that are enabled
 	def OnUpdateCmdEnable(self,cmdui):
+		cmdui.SetCheck(0)
 		cmdui.Enable(1)
 
-	# Target for commands that are dissabled
 	def OnUpdateCmdDissable(self,cmdui):
 		cmdui.SetCheck(0)
 		cmdui.Enable(0)
+
+	def OnUpdateCmdEnableAndCheck(self,cmdui):
+		cmdui.SetCheck(1)
+		cmdui.Enable(1)
 
 	# Response to a user command (menu selection)
 	def OnUserCmd(self,id,code):
@@ -845,7 +895,7 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 			pt=self.ClientToScreen(pt);
 			menu.TrackPopupMenu(pt,win32con.TPM_RIGHTBUTTON|win32con.TPM_LEFTBUTTON,
 				self)
-
+	
 	# Set the editor toolbar to the state without a document
 	def setEditorFrameToolbar(self):
 		self._wndToolBar.SetButtons(4)
@@ -891,13 +941,13 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 		self._wndToolBar.SetButtonInfo(7,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6);
 
-		id=usercmdui.class2ui[usercmd.PLAY].id
+		id=usercmdui.class2ui[wndusercmd.TB_PLAY].id
 		self._wndToolBar.SetButtonInfo(8,id,afxexttb.TBBS_BUTTON, 9)
 
-		id=usercmdui.class2ui[usercmd.PAUSE].id
+		id=usercmdui.class2ui[wndusercmd.TB_PAUSE].id
 		self._wndToolBar.SetButtonInfo(9,id,afxexttb.TBBS_BUTTON, 10)
 
-		id=usercmdui.class2ui[usercmd.STOP].id
+		id=usercmdui.class2ui[wndusercmd.TB_STOP].id
 		self._wndToolBar.SetButtonInfo(10,id,afxexttb.TBBS_BUTTON, 11)
 
 		self._wndToolBar.SetButtonInfo(11,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12);
@@ -928,13 +978,13 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 
 		self._wndToolBar.SetButtonInfo(3,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6);
 
-		id=usercmdui.class2ui[usercmd.PLAY].id
+		id=usercmdui.class2ui[wndusercmd.TB_PLAY].id
 		self._wndToolBar.SetButtonInfo(4,id,afxexttb.TBBS_BUTTON, 9)
 
-		id=usercmdui.class2ui[usercmd.PAUSE].id
+		id=usercmdui.class2ui[wndusercmd.TB_PAUSE].id
 		self._wndToolBar.SetButtonInfo(5,id,afxexttb.TBBS_BUTTON, 10)
 
-		id=usercmdui.class2ui[usercmd.STOP].id
+		id=usercmdui.class2ui[wndusercmd.TB_STOP].id
 		self._wndToolBar.SetButtonInfo(6,id,afxexttb.TBBS_BUTTON, 11)
 	
 		self._wndToolBar.SetButtonInfo(7,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6);
