@@ -299,30 +299,53 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		if x < CHANNELWIDTH:	# A channel was selected.
 			self.select_channel(self.channeltree.get_obj_at(coords))
 		else:
-			print "Selecting node.."
+			node = self.get_node_at(coords)
+			self.select_node(node)
+
+	def get_node_at(self, coords):
+		# Check the structure nodes.
+		for i in self.structnodes:
+			if i.is_hit(coords):
+				return i
+
+		# Check the leaf nodes.
+		channel = self.channeltree.get_obj_at(coords)
+		channelname = channel.get_name()
+		for n in self.node_channel_mapping[channelname]:
+			if n.is_hit(coords):
+				return n
 
 	def select_channel(self, w_channel):
 		# Note that the channel given in the parameters is a widget, not a MMChannel.
 		# You get the MMChannel by calling the "get_channel" method.
+		print "DEBUG: selecting channel: ", w_channel
 		self.mother.unselect_channels()
 		if isinstance(w_channel, ChannelWidget):
-			self.mother.select_channel(w_channel)
 			w_channel.select()
+			self.mother.select_channel(w_channel)
 			self.editmgr.setglobalfocus('MMChannel', w_channel.get_channel())
 
 	def select_node(self, mmwidget):
 		# TODO: also structure nodes.
+		print "DEBUG: selecting node: ", mmwidget
 		self.mother.unselect_nodes()
-		if isinstance(mmwidget, MMWidget):
+		if isinstance(mmwidget, MMWidget) or isinstance(mmwidget, MultiMMWidget):
 			self.mother.select_node(mmwidget)
 			mmwidget.select()
 			self.editmgr.setglobalfocus('MMNode', mmwidget.node)
 			# Also, set the node's channel.
 
-# delete me
-#	def dragging_node(self, tgtcoords, srccoords, mode):
-#		print "DEBUG: dragging node; ", tgtcoords, srccoords, mode
-#		return windowinterface.DROPEFFECT_NONE
+	def dragging_node(self, tgtcoords, srccoords, mode):
+		print "DEBUG: dragging node; ", tgtcoords, srccoords, mode
+		return windowinterface.DROPEFFECT_NONE
+
+#	def get_node_at(self, coords):
+		# return whichever node is at the coords, could be a structure node or a leaf node.
+#		for i in self.structnodes:
+#			if i.is_hit(coords):
+#				return i;
+#		return self.mainnode.get_node_at(coords)
+
 
 
 ######################################################################
@@ -402,7 +425,6 @@ class TemporalWidgetFactory:
 
 	def set_mother(self, mother):
 		self.mother = mother
-		print "DEBUG: mother is a ", mother
 		self.editmgr = mother.editmgr
 
 	def setup(self):
@@ -447,7 +469,6 @@ class ChannelTree(Widgets.Widget, GeoDisplayWidget):
 
 	def recalc(self):
 		# Add lines to show where the tree is.
-		print "DEBUG: ChannelTree.recalc() called."
 		currentindent = 0
 		currentvline = None	# I wish you could define variables in Python.
 		x,y,w,h = self.get_box()
@@ -473,7 +494,6 @@ class ChannelTree(Widgets.Widget, GeoDisplayWidget):
 						top,
 						leftpos,
 						ty+th-CHANNELHEIGHT/2))
-				print "DEBUG: added line widget ", bob.get_box()
 			elif indent > currentindent:
 				# The current line gets promoted to a parent.
 				# Every parent has a vertical line on it.
@@ -541,6 +561,7 @@ class LRChannelTreeIter:
 			assert 0
 			# If the channel doesn't exist, that means that no nodes have that channel.
 
+
 class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 	# A widget representing a certain channel.
 	def setup(self):
@@ -583,7 +604,7 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 
 	def select(self):
 		Widgets.Widget.select(self)
-		self.w_fbox.set_color((200,200,200))
+		self.w_fbox.set_color((250,230,230))
 
 	def unselect(self):
 		Widgets.Widget.unselect(self)
@@ -598,6 +619,7 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 		self.w_fbox.moveto(coords)
 
 		mx, my, mw, mh = self.get_box()
+		print "DEBUG: MMChannel.moveto: children are: ", self.nodewidgets
 		for i in self.nodewidgets:
 			i.set_y(my, my+mh)
 
@@ -622,19 +644,18 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 		else:
 			return 0
 
-	def get_node_at(self, coords):
-		# My parent node has asked me to handle this click. Very well then.
-		for n in self.nodewidgets:
-			if n.is_hit(coords):
-				return n
-		bob.root = self.mother
+#	def get_node_at(self, coords):
+#		# My parent node has asked me to handle this click. Very well then.
+#		for n in self.nodewidgets:
+#			if n.is_hit(coords):
+#				return n
+#		bob.root = self.mother
 
 	def get_draggable(self, coords):
 		print "TODO: dragging channels around."
 		return []
 
 	def get_name(self):
-		print "DEBUG: channel widget returning name: ", self.name
 		return self.name
 
 
@@ -730,6 +751,17 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 
 	def recalc(self):
 		pass
+
+	def is_hit(self, coords):
+		return self.w_fbox.is_hit(coords)
+
+	def get_node_at(self, foobar):
+		return 0
+
+	def select(self):
+		self.w_fbox.set_color((230,230,230))
+	def unselect(self):
+		self.w_fbox.set_color(CNODE)
 
 # delete me.
 ##class SyncBarWidget(TimeWidget, GeoDisplayWidget):
@@ -871,12 +903,37 @@ class MultiMMWidget(TimeWidget):
 	def destroy(self):
 		for i in self.subwidgets:
 			i.destroy()
+	def is_hit(self, coords):
+		if self.w_startbar.is_hit(coords) or self.w_endbar.is_hit(coords):
+			return 1
+		else:
+			return 0
+	def get_node_at(self, coords):
+		if self.is_hit(coords):
+			return self
+		else:
+			for i in self.subwidgets:
+				if i.is_hit(coords):
+					return i
+				else:
+					return i.get_node_at(coords)
+
+	def select(self):
+		print "DEBUG: I've been selected! ", self
+		self.w_startbar.set_color((255,255,255))
+		self.w_endbar.set_color((255,255,255))
+
+	def unselect(self):
+		self.w_startbar.set_color(self.color)
+		self.w_endbar.set_color(self.color)
+
 
 
 class SeqMMWidget(MultiMMWidget):
 	# Represents a seq widget on the screen
 
 	def setup(self):
+		self.color = CSEQ
 		MultiMMWidget.setup(self)
 		self.y_start_cached = None
 		self.y_end_cached = None
@@ -884,8 +941,8 @@ class SeqMMWidget(MultiMMWidget):
 		self.w_startbar_b = self.graph.AddWidget(Box(self.mother))
 		self.w_endbar = self.graph.AddWidget(FBox(self.mother))
 		self.w_endbar_b = self.graph.AddWidget(Box(self.mother))
-		self.w_startbar.set_color(CSEQ)
-		self.w_endbar.set_color(CSEQ)
+		self.w_startbar.set_color(self.color)
+		self.w_endbar.set_color(self.color)
 		self.w_lines = []
 		self.w_endline = self.graph.AddWidget(Line(self.mother))
 		self.w_endline.color=(255,255,255)
@@ -991,10 +1048,10 @@ class BarMMWidget(MultiMMWidget):
 	def setup(self):
 		MultiMMWidget.setup(self)
 		self.w_startbar = self.graph.AddWidget(FBox(self.mother))
-		self.w_startbar.set_color(CPAR)
+		self.w_startbar.set_color(self.color)
 		self.w_startbar_b = self.graph.AddWidget(Box(self.mother))
 		self.w_endbar = self.graph.AddWidget(FBox(self.mother))
-		self.w_endbar.set_color(CPAR)
+		self.w_endbar.set_color(self.color)
 		self.w_endbar_b = self.graph.AddWidget(Box(self.mother))
 		self.y_start_cached = None
 		self.y_end_cached = None
@@ -1110,28 +1167,32 @@ class BarMMWidget(MultiMMWidget):
 class ParMMWidget(BarMMWidget):
 	# Represents a par node on the screen
 	def setup(self):
+		self.color = CPAR
 		BarMMWidget.setup(self)
-		self.w_startbar.set_color(CPAR)
-		self.w_endbar.set_color(CPAR)
+#		self.w_startbar.set_color(CPAR)
+#		self.w_endbar.set_color(CPAR)
 
 class SwitchMMWidget(BarMMWidget):
 	# Represents a switch widget on the screen
 	def setup(self):
+		self.color = CSWITCH
 		BarMMWidget.setup(self)
-		self.w_startbar.set_color(CSWITCH)
-		self.w_endbar.set_color(CSWITCH)
+#		self.w_startbar.set_color(CSWITCH)
+#		self.w_endbar.set_color(CSWITCH)
 
 class PrioMMWidget(BarMMWidget):
 	# represents a priority class.
 	def setup(self):
+		self.color = CPRIO
 		BarMMWidget.setup(self)
-		self.w_startbar.set_color(CPRIO)
-		self.w_endbar.set_color(CPRIO)
+#		self.w_startbar.set_color(CPRIO)
+#		self.w_endbar.set_color(CPRIO)
 
 class ExclMMWidget(BarMMWidget):
 	# Represents an excl on the screen
 	def setup(self):
+		self.color = CEXCL
 		BarMMWidget.setup(self)
-		self.w_startbar.set_color(CEXCL)
-		self.w_endbar.set_color(CEXCL)
+#		self.w_startbar.set_color(CEXCL)
+#		self.w_endbar.set_color(CEXCL)
 

@@ -73,7 +73,7 @@ class GeoClientWidget(Widget):
 
 class Image(GeoClientWidget):
 	def redraw(self):
-		print "TODO"
+		print "TODO: Image geoprim"
 
 class Line(GeoClientWidget):
 	color=(0,0,0)
@@ -82,7 +82,7 @@ class Line(GeoClientWidget):
 		self.displist.drawline(self.color, [(x,y), (x+w, y+h)])
 
 class HLine3D(GeoClientWidget):
-	print "TODO"
+	print "TODO: 3d line"
 
 class Box(GeoClientWidget):
 	color = (0,0,0)
@@ -120,7 +120,6 @@ class Text(GeoClientWidget):
 		if self.textalign == 'c':
 			self.displist.centerstring(l,t,l+w,t+h,self.text)
 		elif self.textalign == 'l':
-			print 'DEBUG: Writing left-aligned text.'
 			self.displist.setpos(l, t+h)
 			self.displist.writestr(self.text)
 
