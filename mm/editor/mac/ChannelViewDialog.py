@@ -20,7 +20,9 @@ class ChannelViewDialog(ViewDialog):
 			return
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
-		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1, canvassize = (w, h))
+		adornments = {'doubleclick': ATTRIBUTES}
+		self.window = windowinterface.newcmwindow(x, y, w, h, title, pixmap=1, 
+			canvassize = (w, h), adornments=adornments)
 		self.window.set_toggle(THUMBNAIL, self.thumbnails)
 		self.window.set_toggle(TOGGLE_UNUSED, self.showall)
 		self.window.set_toggle(TOGGLE_ARCS, self.showarcs)
