@@ -564,7 +564,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				MMWrite.WriteFile(self.root, filename, evallicense=evallicense)
 			else:
 				import SMILTreeWrite
-				if cleanSMIL and 0:
+				if cleanSMIL:
 					# XXX enabling this currently crashes the application on Windows during video conversion
 					progress = windowinterface.ProgressDialog("Exporting")
 					progress.set('Exporting document...')
