@@ -139,24 +139,16 @@ class MediaChannel:
 		self.play_loop = self.__channel.getloop(node)
 
 		# get duration in secs (float)
-		duration = node.GetAttrDef('duration', None)
-		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
-		if repeatdur and self.play_loop == 1:
-			self.play_loop = 0
+		duration = MMAttrdefs.getattr(node, 'duration')
 		clip_begin = self.__channel.getclipbegin(node,'sec')
 		clip_end = self.__channel.getclipend(node,'sec')
 		self.__playBuilder.SetPosition(clip_begin)
 		self.__playBegin = clip_begin
-		if duration is not None and duration >= 0:
-			if not clip_end:
-				clip_end = clip_begin + duration
-			else:
-				clip_end = min(clip_end, clip_begin + duration)
 		if clip_end:
 			self.__playBuilder.SetStopTime(clip_end)
 			self.__playEnd = clip_end
 		else:
-			self.__playEnd = self.__playBuilder.GetDuration()
+			self.__playEnd=self.__playBuilder.GetDuration()
 
 		if window:
 			self.adjustMediaWnd(node,window,self.__playBuilder)
@@ -171,9 +163,9 @@ class MediaChannel:
 		self.__paused=0
 		self.__playBuilder.Run()
 		self.register_for_timeslices()
-		if repeatdur > 0:
-			self.__qid = self.__channel._scheduler.enter(repeatdur, 0, self.__channel.playdone, (0,))
-		elif self.play_loop == 0 and repeatdur == 0:
+		if duration > 0:
+			self.__qid = self.__channel._scheduler.enter(duration, 0, self.__channel.endoftime, ())
+		elif self.play_loop == 0:
 			self.__channel.playdone(0)
 		return 1
 
