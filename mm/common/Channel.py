@@ -868,11 +868,11 @@ class Channel:
 		else:
 			arg = 1
 		if node is self._played_node:
-			self.setpaused(arg)
+			self.setpaused(action)
 
 	def resume(self, node):
 		if node is self._played_node:
-			self.setpaused(0)
+			self.setpaused(None)
 		
 	#
 	# Methods used by derived classes.
@@ -1269,7 +1269,7 @@ class ChannelWindow(Channel):
 		if len(buttons) == 0:
 			if self._attrdict.get('transparent', 0):
 				raise windowinterface.Continue
-		else:
+		elif self._paused not in ('hide', 'disable'):
 			button = buttons[0]
 			if _button is button:
 				try:
@@ -1767,12 +1767,12 @@ class ChannelWindow(Channel):
 	def setpaused(self, paused):
 		if debug:
 			print 'ChannelWindow.setpaused('+`self`+','+`paused`+')'
-		if paused < 0 and self.played_display:
-			# we need a unrender() method
+		if paused == 'hide' and self.played_display:
+			# we need an unrender() method here...
 			d = self.played_display.clone()
 			self.played_display.close()
 			self.played_display = d
-		elif not paused and self._paused < 0 and self.played_display:
+		elif not paused and self._paused == 'hide' and self.played_display:
 			self.played_display.render()
 		Channel.setpaused(self, paused)
 
