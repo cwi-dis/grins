@@ -4156,6 +4156,8 @@ class Layout2Group(AttrGroup):
 
 		a = self.getattr('fit')
 		cd[a] = OptionsCtrl(wnd,a,(grinsRC.IDC_FITL, grinsRC.IDC_FITV))
+		a = self.getattr('z')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_ZL, grinsRC.IDC_ZV))
 						   
 		return cd
 

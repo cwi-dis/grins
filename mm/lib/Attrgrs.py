@@ -445,7 +445,7 @@ attrgrs=(
 		'left', 'width', 'right',
 		'top', 'height', 'bottom',
 		'regPoint','regAlign',
-		'fit',
+		'fit','z',
 		]},
 
 	{'name':'CssBackgroundColor',
