@@ -63,6 +63,10 @@
 
 (bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
 	'Color used for background of window' region (g2 qt smil10 smil2 cmif snap))
+
+(cssbgcolor (tuple (name) (tuple (int) (int) (int))) (transparent 0 0 0) 'Background color' csscolor
+	'Color used for background of window' region (smil2 snap))
+
 #(bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
 #	'Color used for background of window. Overriden by "transparent".' channel (g2 qt smil10 smil2 cmif))
 
@@ -389,7 +393,7 @@
 	'Names of transition at end of item' raw (smil2 snap))
 	
 (transparent (int) 0 'Transparent' transparency
-	'Determines transparency of window, overrides background color' region (g2_pro smil10 cmif snap))
+	'Determines transparency of window, overrides background color' region (g2_pro smil10 cmif))
 
 (type (name) null 'Channel type' channeltype
 	'Type of media this channel will be used for' raw (g2 qt smil10 smil2 cmif snap))
