@@ -1991,9 +1991,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			if self.__tops[top]['height'] == 0:
 				self.__tops[top]['height'] = 480
 		else:
-			if self.__tops[top]['width'] == 0:
+			if self.__tops[top].get('width') == 0:
 				self.__tops[top]['width'] = None
-			if self.__tops[top]['height'] == 0:
+			if self.__tops[top].get('height') == 0:
 				self.__tops[top]['height'] = None
 
 		# default values
@@ -2022,8 +2022,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					pass
 				
 		if settings.activeFullSmilCss:
-			layout['width'] = self.__tops[top]['width']
-			layout['height'] = self.__tops[top]['height']
+			layout['width'] = self.__tops[top].get('width')
+			layout['height'] = self.__tops[top].get('height')
 		else:
 			layout['winsize'] = width, height
 			layout['units'] = UNIT_PXL

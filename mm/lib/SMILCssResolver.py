@@ -164,7 +164,7 @@ class Node:
 		self.isInit = 0
 		for child in self.children:
 			if child.isInitState():
-				child.toUnInitState()
+				child._toUnInitState()
 		
 	def _toInitState(self):
 		if self.isInit:
