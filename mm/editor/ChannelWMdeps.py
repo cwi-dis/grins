@@ -57,7 +57,6 @@ class _ChannelThreadWM:
 			  self._playdone, None)
 		glwindow.devregister(`self._deviceno`+':'+`mm.armdone`, \
 			  self._armdone, None)
-		return 1
 
 	def _playdone(self, dummy):
 		if self._playstate == PLAYING:
