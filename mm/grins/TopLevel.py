@@ -159,15 +159,32 @@ class TopLevel:
 
 	def read_it(self):
 		import time
+		import mimetypes
 		self.changed = 0
 		print 'parsing', self.filename, '...'
 		t0 = time.time()
-		if self.filename[-4:] == '.smi' or \
-		   self.filename[-5:] == '.smil':
+		mtype = mimetypes.guess_type(self.filename)[0]
+		if mtype is None or mtype == 'text/html':
+			import SMILTree
+			self.root = SMILTree.ReadString('''\
+<smil>
+  <head>
+    <layout>
+      <channel id="html"/>
+    </layout>
+  </head>
+  <body>
+    <text src="%s" channel="html"/>
+  </body>
+</smil>
+''' % self.filename, self.filename)
+		elif mtype == 'application/smil':
 			import SMILTree
 			self.root = SMILTree.ReadFile(self.filename)
-		else:
+		elif mtype == 'applicatin/x-cmif':
 			self.root = MMTree.ReadFile(self.filename)
+		else:
+			raise MSyntaxError, 'unknown file type'
 		t1 = time.time()
 		print 'done in', round(t1-t0, 3), 'sec.'
 		Timing.changedtimes(self.root)
