@@ -101,8 +101,9 @@ class AttrCtrl:
 
 	def OnInitCtrl(self):
 		for ctrl in self._ctrlToHide:
-			ctrl.attach_to_parent()
-			ctrl.hide()
+			if not self._attr.mustshow():			
+				ctrl.attach_to_parent()
+				ctrl.hide()
 			
 	def gethelp(self):
 		try:
@@ -4541,10 +4542,7 @@ class BeginList2Group(BeginListGroup):
 	def createctrls(self,wnd):
 		cd = BeginListGroup.createctrls(self, wnd)
 		a = self.getattr('restart')
-		residToHide = ()
-		if not a.mustshow():
-			residToHide = (grinsRC.IDC_EVENTLASSOO2,)		
-		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_RESTARTNODEL,grinsRC.IDC_RESTARTNODEV), residToHide)
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_RESTARTNODEL,grinsRC.IDC_RESTARTNODEV), (grinsRC.IDC_EVENTLASSOO2,))
 		a = self.getattr('restartDefault')
 		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_RESTARTDEFAULTL,grinsRC.IDC_RESTARTDEFAULTV))
 		return cd
@@ -4968,10 +4966,7 @@ class Layout1Group(AttrGroup):
 		a = self.getattr('z')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_ZL, grinsRC.IDC_ZV))
 		a = self.getattr('regPoint')
-		residToHide = ()
-		if not a.mustshow():
-			residToHide = (grinsRC.IDC_LABEL2,)
-		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_REGPOINTL, grinsRC.IDC_REGPOINTV), residToHide)
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_REGPOINTL, grinsRC.IDC_REGPOINTV), (grinsRC.IDC_LABEL2,))
 		a = self.getattr('regAlign')
 		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_REGALIGNL, grinsRC.IDC_REGALIGNV))
 		a = self.getattr('channel')
@@ -4994,10 +4989,7 @@ class Layout3Group(AttrGroup):
 									grinsRC.IDC_CTYPES, grinsRC.IDC_CTYPET,
 									grinsRC.IDC_CTYPEI))
 		a = self.getattr('width')
-		residToHide = ()
-		if not a.mustshow():
-			residToHide = (grinsRC.IDC_GROUP1,)
-		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_WIDTHL, grinsRC.IDC_WIDTHV, grinsRC.IDC_WIDTHU), residToHide)
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_WIDTHL, grinsRC.IDC_WIDTHV, grinsRC.IDC_WIDTHU), (grinsRC.IDC_GROUP1,))
 		a = self.getattr('height')
 		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_HEIGHTL, grinsRC.IDC_HEIGHTV, grinsRC.IDC_HEIGHTU))
 
