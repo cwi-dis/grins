@@ -407,11 +407,9 @@ class SlideShow:
 		
 	def asksavechanges(self):
 		if self.url:
-			return windowinterface.multchoice('Save changes to %s?' % self.url, 
-						['Yes', 'No', 'Cancel'], 2)
+			return windowinterface.GetYesNoCancel('Save changes to %s?' % self.url)
 		# User wants to save, but we have no url.
-		answer = windowinterface.multchoice('Discard old contents of RealPix node?',
-			['OK', 'Cancel'], 1)
+		answer = windowinterface.GetOKCancel('Discard old contents of RealPix node?')
 		if answer == 0:
 			# Discard, return as "don't save"
 			return 1
