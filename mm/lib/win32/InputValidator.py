@@ -15,33 +15,9 @@ class InputValidator:
 	# Return 0 to refuse it
 	# vk: the new input char as a virual key
 	# val: the string already in the edit box
+	# pos: the position where the char will be inserted
 	def onKey(self, vk, val, pos):
 		return 1
-
-	def isdigit(self,str,sep=''):
-		for ch in str:
-			code=ord(ch)
-			if code not in range(ord('0'),ord('9')+1) and \
-				(not sep or string.find(sep, ch)<0):
-				return 0
-		return 1
-		
-	def isalpha_en(self,str,sep=''):
-		for ch in str:
-			code=ord(ch)
-			if code not in range(ord('a'),ord('z')+1) and \
-				code not in range(ord('A'),ord('Z')+1) and \
-				(not sep or string.find(sep, ch)<0):
-				return 0
-		return 1
-
-	def isvk_alpha_en(self,vk):
-		code = Sdk.MapVirtualKey(vk,2)
-		if code in range(ord('a'),ord('z')+1):
-			return 1
-		elif code in range(ord('A'),ord('Z')+1):
-			return 1
-		return 0
 
 	def beep(self):
 		if not self._silent:
@@ -195,7 +171,7 @@ class DictValidator(InputValidator):
 		# names should be lower
 		self._names=names
 
-	# brude force search
+	# brute force search
 	# should be a tree of letters or something like that
 	def isdictprefix(self,str):
 		str=string.lower(str)
