@@ -254,8 +254,8 @@ class OpenLocationDlg(ResDialog):
 
 	def OnInitDialog(self):	
 		self.attach_handles_to_subwindows()	
-		self._bopen.enable(0)
-		self._text.hookcommand(self,self.OnEditChange)
+		#self._bopen.enable(0)
+		#self._text.hookcommand(self,self.OnEditChange)
 		self._bbrowse.hookcommand(self,self.OnBrowse)
 		self.set_recentfiles()
 		return ResDialog.OnInitDialog(self)
@@ -286,17 +286,20 @@ class OpenLocationDlg(ResDialog):
 	def OnBrowse(self,id,code):
 		self.onevent('Browse')
 
-	def OnEditChange(self,id,code):
-		if self._text.hasid(id):
-			if code == win32con.CBN_EDITCHANGE:
-				l=self._text.getedittextlength()
-				self._bopen.enable(l)
-			elif code == win32con.CBN_SELCHANGE:
-				self._bopen.enable(1)
+##	def OnEditChange(self,id,code):
+##		if self._text.hasid(id):
+##			if code == win32con.CBN_EDITCHANGE:
+##				l=self._text.getedittextlength()
+##				self._bopen.enable(l)
+##			elif code == win32con.CBN_SELCHANGE:
+##				self._bopen.enable(1)
 
 	def gettext(self):
 		# Returns whatever is in the combo box.
 		return self._text.getedittext()
+
+	def settext(self, text):
+		self._text.settext(text)
 
 ##############################
 
