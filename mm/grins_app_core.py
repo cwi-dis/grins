@@ -37,16 +37,14 @@ def SafeCallbackCaller(fn, args):
 win32ui.InstallCallbackCaller(SafeCallbackCaller)
 
 
-# The Main Frame of the application.
+# GRiNS Debugging Terminal frame
 class MainFrame(window.MDIFrameWnd):
-	sectionPos = "Main Window"
 	statusBarIndicators = ( afxres.ID_SEPARATOR, #// status line indicator
 	                        afxres.ID_INDICATOR_CAPS,
 	                        afxres.ID_INDICATOR_NUM,
 	                        afxres.ID_INDICATOR_SCRL,
 	                        win32ui.ID_INDICATOR_LINENUM,
 	                        win32ui.ID_INDICATOR_COLNUM )
-
 	def OnCreate(self, cs):
 		self._CreateStatusBar()
 		return 0
@@ -104,7 +102,7 @@ class GrinsApp(thread.WinApp):
 		self.frame = self.CreateMainFrame()
 		self.SetMainFrame(self.frame)
 		self.frame.LoadFrame(win32ui.IDR_MAINFRAME, win32con.WS_OVERLAPPEDWINDOW)
-		self.frame.DragAcceptFiles()	# we can accept these.
+		#self.frame.DragAcceptFiles()	# we can accept these.
 
 #		self.frame.ShowWindow(win32ui.GetInitialStateRequest());
 #		self.frame.UpdateWindow();
@@ -139,10 +137,7 @@ class GrinsApp(thread.WinApp):
 		import __main__
 		if hasattr(__main__,'resdll'):
 			del __main__.resdll
-		return self.ExitInstanceBase(self)
 
-	def ExitInstanceBase(self):
-		" Called as the app dies - too late to prevent it here! "
 		win32ui.OutputDebug("Application shutdown\n")
 		# Restore the callback manager, if any.
 		try:
@@ -151,7 +146,6 @@ class GrinsApp(thread.WinApp):
 			pass
 		if self.oldCallbackCaller:
 			del self.oldCallbackCaller
-		self.frame=None	# clean Python references to the now destroyed window object.
 		self.idleHandlers = []
 		# Attempt cleanup if not already done!
 		if self._obj_: self._obj_.AttachObject(None)
@@ -161,10 +155,10 @@ class GrinsApp(thread.WinApp):
 	def BootGrins(self):
 		raise RuntimeError, "You must subclass this object"
 
-	#
-	#
-	#
 
+	#
+	#  Idle processing
+	#
 	def HaveIdleHandler(self, handler):
 		return handler in self.idleHandlers
 	def AddIdleHandler(self, handler):
@@ -189,14 +183,10 @@ class GrinsApp(thread.WinApp):
 		except KeyboardInterrupt:
 			pass
 
+	#
+	#  Commands
+	#
 	def HookCommands(self):
-		self.frame.HookMessage(self.OnDropFiles,win32con.WM_DROPFILES)
-		self.HookCommand(self.HandleOnFileOpen,win32ui.ID_FILE_OPEN)
-		self.HookCommand(self.HandleOnFileNew,win32ui.ID_FILE_NEW)
-		self.HookCommand(self.OnFileMRU,win32ui.ID_FILE_MRU_FILE1)
-		self.HookCommand(self.OnHelpAbout,win32ui.ID_APP_ABOUT)
-		#self.HookCommand(self.OnHelp, win32ui.ID_HELP_PYTHON)
-		#self.HookCommand(self.OnHelp, win32ui.ID_HELP_GUI_REF)
 		# Hook for the right-click menu.
 		self.frame.GetWindow(win32con.GW_CHILD).HookMessage(self.OnRClick,win32con.WM_RBUTTONDOWN)
 
@@ -206,54 +196,6 @@ class GrinsApp(thread.WinApp):
 		menu = win32ui.LoadMenu(win32ui.IDR_TEXTTYPE).GetSubMenu(0)
 		menu.TrackPopupMenu(params[5]) # track at mouse position.
 		return 0
-
-	def OnDropFiles(self,msg):
-		" Handle a file being dropped from file manager "
-		hDropInfo = msg[2]
-		self.frame.SetActiveWindow()	# active us
-		nFiles = win32api.DragQueryFile(hDropInfo)
-		try:
-			for iFile in range(0,nFiles):
-				fileName = win32api.DragQueryFile(hDropInfo, iFile)
-				win32ui.GetApp().OpenDocumentFile( fileName )
-		finally:
-			win32api.DragFinish(hDropInfo);
-
-		return 0
-
-	# Command handlers.
-	def OnFileMRU( self, id, code ):
-		" Called when a File 1-n message is recieved "
-		fileName = win32ui.GetRecentFileList()[id - win32ui.ID_FILE_MRU_FILE1]
-		win32ui.GetApp().OpenDocumentFile(fileName)
-
-	def HandleOnFileOpen( self, id, code ):
-		" Called when FileOpen message is received "
-		win32ui.GetApp().OnFileOpen()
-
-	def HandleOnFileNew( self, id, code ):
-		" Called when FileNew message is received "
-		win32ui.GetApp().OnFileNew()
-
-	def OnHelpAbout( self, id, code ):
-		" Called when HelpAbout message is received.  Displays the About dialog. "
-		dlg=AboutBox()
-		dlg.DoModal()
-
-# The About Box
-class AboutBox(dialog.Dialog):
-	def __init__(self, idd=win32ui.IDD_ABOUTBOX):
-		dialog.Dialog.__init__(self, idd)
-	def OnInitDialog(self):
-		self.SetDlgItemText(win32ui.IDC_ABOUT_COPYRIGHT_GUI, win32ui.copyright)
-		self.SetDlgItemText(win32ui.IDC_ABOUT_COPYRIGHT, sys.copyright)
-		# Get the build number
-		try:
-			ver = win32api.RegQueryValue(win32con.HKEY_LOCAL_MACHINE, "SOFTWARE\\Python\\Pythonwin\\Build")
-			ver = "Pythonwin build " + ver
-		except:
-			ver = "Unknown build number"
-		self.SetDlgItemText(win32ui.IDC_ABOUT_VERSION, ver)
 
 
 def BootApplication(appClass):
