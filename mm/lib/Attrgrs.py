@@ -706,4 +706,10 @@ attrgrs=(
 		  ],
 	 },
 
+	{'name':'foreign',
+	 'title':'Foreign object',
+	 'attrs':['elemname',
+		  'namespace',
+		  ],
+	 },
 	)

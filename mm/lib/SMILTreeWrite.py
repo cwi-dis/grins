@@ -2076,13 +2076,12 @@ class SMILWriter(SMIL):
 			elif type == 'seq' and root and self.smilboston:
 				xtype = mtype = 'body'
 			elif type == 'foreign':
-				tag = x.GetRawAttrDef('tag', None)
-				if ' ' in tag:
-					ns, tag = string.split(tag, ' ', 1)
+				ns = x.GetRawAttrDef('namespace', '')
+				tag = x.GetRawAttrDef('elemname', None)
+				if ns:
 					xtype = mtype = 'foreign:%s' % tag
 					attrlist.append(('xmlns:foreign', ns))
 				else:
-					ns = ''
 					xtype = mtype = tag
 			elif self.prune and type == 'switch':
 				# special case: only at most one of the children will actually get written
@@ -2110,7 +2109,7 @@ class SMILWriter(SMIL):
 			attrs = []
 			extensions = {ns: 'foreign'}
 			for attr, val in x.attrdict.items():
-				if attr == 'tag':
+				if attr == 'namespace' or attr == 'elemname':
 					continue
 				if ' ' in attr:
 					ans, attr = string.split(attr, ' ', 1)

@@ -5068,6 +5068,9 @@ class MachineGroup(StringGroupNoTitle):
 		self.resizelabels(wnd, labels, edits, dwpx)
 		return StringGroupNoTitle.oninitdialog(self, wnd)
 
+class ForeignGroup(StringGroup):
+	data = attrgrsdict['foreign']
+
 ############################
 # platform dependent association
 # what we have implemented, anything else goes as singleton
@@ -5156,6 +5159,8 @@ groupsui={
 	'transitionTiming':TransitionTimingGroup,
 
 	'machine':MachineGroup,
+
+	'foreign':ForeignGroup,
 	}
 
 ###########################
