@@ -452,7 +452,7 @@ class _DisplayList:
 		self._fgcolor = color
 
 
-	def newbutton(self, coordinates, z = 0, times = None):
+	def newbutton(self, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		return _Button(self, coordinates)
@@ -678,6 +678,10 @@ class _DisplayList:
 		return self._window._pxl2rel((0,0,SIZE_3DBORDER,SIZE_3DBORDER))[2:4]
 		
 	def usefont(self, fontobj):
+		if fontobj is None:
+			# should only happen during cloning
+			self._font = fontobj
+			return None
 		if fontobj != self._font:
 			self._font = fontobj
 			self._font._initparams(self._window._wid)
