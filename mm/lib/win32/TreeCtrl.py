@@ -63,7 +63,11 @@ class TreeCtrl(window.Wnd):
 	def __clearMultiSelect(self, hititem):
 		for item in self._selections:
 			if item != hititem:
-				self.SetItemState(item, 0, commctrl.TVIS_SELECTED)
+				try:
+					self.SetItemState(item, 0, commctrl.TVIS_SELECTED)
+				except:
+					# the item may already be removed
+					pass
 
 		self._selections = [hititem]
 		self.SetItemState(hititem, commctrl.TVIS_SELECTED, commctrl.TVIS_SELECTED)
@@ -233,8 +237,12 @@ class TreeCtrl(window.Wnd):
 		for cItem in self._selections:
 			if cItem not in list:
 				itemToRemove.append(cItem)
-		for cItem in itemToRemove:				
-			self.SetItemState(cItem, 0, commctrl.TVIS_SELECTED)
+		for cItem in itemToRemove:	
+			try:			
+				self.SetItemState(cItem, 0, commctrl.TVIS_SELECTED)
+			except:
+				# the node may be already removed
+				pass
 			self.removeSelection(cItem)
 
 		if len(list) > 0:				
@@ -311,6 +319,16 @@ class TreeCtrl(window.Wnd):
 		if listener in self._multiSelListeners:
 			self._multiSelListeners.remove(listener)
 
+	def DeleteItem(self, item):
+		state = self.GetItemState(item, commctrl.TVIS_SELECTED)
+		# if this item is already selected, unselect it, and remove from selected list
+		if state & commctrl.TVIS_SELECTED:
+			self.SetItemState(item, 0, commctrl.TVIS_SELECTED)
+		if item in self._selections:
+			self._selections.remove(item)
+		
+		self._obj_.DeleteItem(item)
+		
 	def appendSelection(self, item):
 		if item not in self._selections:
 			self._selections.append(item)
