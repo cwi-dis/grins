@@ -368,7 +368,6 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 		lastC = None
 		isstart = 1
 		for seg in pathSegList:
-##			seg = seg.topxl()
 			if isstart:
 				badCmds = 'HhVvZz'
 				if badCmds.find(seg.getTypeAsLetter())>=0:
@@ -524,7 +523,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 							oldtf = wingdi.GetWorldTransform(self.hdc)
 							tm = self.ctm.copy()
 							tm.applyTfList([('translate',[cx, cy]), ('rotate',[angle,]),])
-							wingdi.SetWorldTransform(self.hdc, map(round, tm.getElements()))
+							wingdi.SetWorldTransform(self.hdc, tm.getElements())
 							rc = -r1, -r2, r1, r2
 							wingdi.Arc(self.hdc, rc, (x1, y1), (x2, y2))
 							wingdi.SetWorldTransform(self.hdc, oldtf)
@@ -569,7 +568,7 @@ class SVGWinGraphics(svggraphics.SVGGraphics):
 							oldtf = wingdi.GetWorldTransform(self.hdc)
 							tm = self.ctm.copy()
 							tm.applyTfList([('translate',[cx, cy]), ('rotate',[angle,]),])
-							wingdi.SetWorldTransform(self.hdc, map(round, tm.getElements()))
+							wingdi.SetWorldTransform(self.hdc, tm.getElements())
 							rc = -r1, -r2, r1, r2
 							wingdi.Arc(self.hdc, rc, (round(x1), round(y1)), (round(x2), round(y2)))
 							wingdi.SetWorldTransform(self.hdc, oldtf)
