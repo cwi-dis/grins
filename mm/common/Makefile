@@ -1,4 +1,4 @@
-GUIDO =	/ufs/guido
+GUIDO =	/ufs/sjoerd
 GSRC = $(GUIDO)/src
 PYTHON = $(GSRC)/python
 BUILD = $(PYTHON)/build.sgi
