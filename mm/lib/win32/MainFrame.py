@@ -255,7 +255,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 
 	# override DropTarget.OnDragOver to protect childs
 	def OnDragOver(self,dataobj,kbdstate,x,y):
-		filename=dataobj.GetGlobalData(self.CF_FILE)
+		filename=dataobj.GetGlobalData(DropTarget.CF_FILE)
 		if not filename:return DROPEFFECT_NONE
 
 		client=self.GetMDIClient()
