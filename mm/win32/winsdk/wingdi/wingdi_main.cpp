@@ -6,13 +6,9 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 /*************************************************************************/
 
-#include "Python.h"
-
-#include <windows.h>
+#include "wingdi_main.h"
 
 #include "utils.h"
-
-#include "wingdi_main.h"
 
 PyObject* Wingdi_DeleteObject(PyObject *self, PyObject *args)
 {
@@ -39,6 +35,86 @@ PyObject* Wingdi_GetStockObject(PyObject *self, PyObject *args)
 		return NULL;
 		}
 	return Py_BuildValue("i", hgdiobj);
+}
+
+
+PyObject* Wingdi_ExtCreatePen(PyObject *self, PyObject *args)
+{
+	DWORD dwPenStyle = PS_GEOMETRIC | PS_SOLID | PS_ENDCAP_FLAT | PS_JOIN_MITER;
+	DWORD dwWidth;
+	LOGBRUSH lb = {BS_SOLID, 0, 0};
+	DWORD dwStyleCount = 0;    // length of custom style array
+	DWORD *lpStyle =NULL;  // custom style array
+
+	int r, g, b;
+	if (!PyArg_ParseTuple(args, "i(iii)", &dwWidth, &r,&g,&b))
+		return NULL;
+	lb.lbColor = RGB(r, g, b);
+	HPEN hpen = ExtCreatePen(dwPenStyle, dwWidth, &lb, dwStyleCount, lpStyle);
+	if(hpen==0){
+		seterror("ExtCreatePen", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue("i", hpen);
+}
+
+PyObject* Wingdi_CreateSolidBrush(PyObject *self, PyObject *args)
+{
+	int r, g, b;
+	if (!PyArg_ParseTuple(args, "(iii)", &r,&g,&b))
+		return NULL;
+	COLORREF crColor = RGB(r, g, b);
+	HBRUSH hbrush = CreateSolidBrush(crColor);
+	if(!hbrush){
+		seterror("CreateSolidBrush", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue("i", hbrush);
+}
+
+PyObject* Wingdi_CreateBrushIndirect(PyObject *self, PyObject *args)
+{
+	LOGBRUSH lb = {BS_SOLID, 0, 0};
+	int r, g, b;
+	if (!PyArg_ParseTuple(args, "(iii)", &r,&g,&b))
+		return NULL;
+	lb.lbColor = RGB(r, g, b);
+	HBRUSH hbrush = CreateBrushIndirect(&lb);
+	if(hbrush==0){
+		seterror("CreateBrushIndirect", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue("i", hbrush);
+}
+
+PyObject* Wingdi_CreateFontIndirect(PyObject *self, PyObject *args)
+{
+	PyObject *pydict;
+	if (!PyArg_ParseTuple(args, "O", &pydict))
+		return NULL;
+	PyDictParser p(pydict);
+	LOGFONT s;
+	memset(&s, 0, sizeof(LOGFONT));
+	s.lfHeight = -p.getIntAttr("height"); 
+	s.lfWidth = p.getIntAttr("width");
+	s.lfEscapement = p.getIntAttr("escapement");
+	s.lfOrientation = p.getIntAttr("orientation"); 
+	s.lfWeight = p.getIntAttr("weight");
+	s.lfItalic = (BYTE)p.getIntAttr("italic"); 
+	s.lfUnderline = (BYTE)p.getIntAttr("underline");
+	s.lfStrikeOut = (BYTE)p.getIntAttr("strikeout"); 
+	s.lfCharSet = (BYTE)p.getIntAttr("charset", DEFAULT_CHARSET);
+	s.lfOutPrecision = (BYTE)p.getIntAttr("outprecision", OUT_DEFAULT_PRECIS); 
+	s.lfClipPrecision =(BYTE) p.getIntAttr("clipprecision", CLIP_DEFAULT_PRECIS);
+	s.lfQuality = (BYTE)p.getIntAttr("quality", PROOF_QUALITY);
+	s.lfPitchAndFamily = (BYTE)p.getIntAttr("pitch and family", DEFAULT_PITCH | FF_DONTCARE); // naming compatibility
+	p.getStrAttr("name", s.lfFaceName, LF_FACESIZE, "Arial");  //  naming compatibility
+	HFONT hfont = CreateFontIndirect(&s);
+	if(hfont==0){
+		seterror("CreateFontIndirect", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue("i", hfont);
 }
 
 PyObject* Wingdi_IntersectRect(PyObject *self, PyObject *args)
