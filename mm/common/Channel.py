@@ -14,6 +14,7 @@ from windowinterface import TRUE, FALSE
 import string
 import MMurl
 error = 'Channel.error'
+from usercmd import *
 
 channel_device = 1
 channels = []				# list of channels
@@ -71,6 +72,7 @@ class Channel:
 		self._paused = 0
 		self._subchannels = []
 		self._want_shown = 0
+		self._highlighted = None
 		self.nopop = 0
 		self.syncarm = 0
 		self.syncplay = 0
@@ -118,8 +120,11 @@ class Channel:
 		if self._is_shown:
 			for key, (val, default) in self._curvals.items():
 				if self._attrdict.get(key, default) != val:
+					highlighted = self._highlighted
 					self.hide()
 					self.show()
+					if highlighted:
+						self.highlight(highlighted)
 					break
 
 	def transaction(self):
@@ -265,6 +270,7 @@ class Channel:
 		if debug:
 			print 'Channel.hide('+`self`+')'
 		self._want_shown = 0
+		self._highlighted = None
 		if not self._is_shown:
 			return
 		self._is_shown = 0
@@ -276,6 +282,7 @@ class Channel:
 			chan._want_shown = want_shown
 		self.do_hide()
 		self._curvals = {}
+		self.hideimg()
 		for chan in channels:
 			if self in chan._subchannels:
 				chan._subchannels.remove(self)
@@ -285,13 +292,19 @@ class Channel:
 ##		if self._playstate == PLAYING:
 ##			self.playstop()
 
-	def highlight(self):
+	def highlight(self, color = (255, 0, 0)):
 		# highlight the channel instance (dummy for channels
 		# without windows)
 		pass
 
 	def unhighlight(self):
 		# stop highlighting the channel instance
+		pass
+
+	def showimg(self):
+		pass
+
+	def hideimg(self):
 		pass
 
 	def popup(self):
@@ -309,12 +322,6 @@ class Channel:
 		pass
 
 	def save_geometry(self):
-		pass
-
-	def setwaiting(self):
-		pass
-
-	def setready(self):
 		pass
 
 	def getaltvalue(self, node):
@@ -943,7 +950,7 @@ class Channel:
 _button = None				# the currently highlighted button
 
 class ChannelWindow(Channel):
-	chan_attrs = Channel.chan_attrs + ['base_winoff', 'transparent', 'units', 'popup', 'z']
+	chan_attrs = Channel.chan_attrs + ['base_winoff', 'transparent', 'units', 'popup', 'z', 'bgimg']
 	node_attrs = Channel.node_attrs + ['duration', 'drawbox', 'bgcolor']
 	_visible = TRUE
 	_window_type = SINGLE
@@ -955,24 +962,57 @@ class ChannelWindow(Channel):
 		self._player.ChannelWinDict[self._name] = self
 		self.window = None
 		self.armed_display = self.played_display = None
-		self._is_waiting = 1
 		self.want_default_colormap = 0
+		self._bgimg = None
+		self.commandlist = [
+			CLOSE_WINDOW(callback = (ui.channel_callback, (self._name,))),
+			PLAY(callback = (ui.play_callback, ())),
+			PAUSE(callback = (ui.pause_callback, ())),
+			STOP(callback = (ui.stop_callback, ())),
+			MAGIC_PLAY(callback = (ui.magic_play, ())),
+			]
 
 	def destroy(self):
 		del self._player.ChannelWinDict[self._name]
 		Channel.destroy(self)
-		del self.window
+		self.window = None
 		del self.armed_display
 		del self.played_display
 
-	def highlight(self):
+	def highlight(self, color = (255,0,0)):
 		if self._is_shown and self.window:
+			self._highlighted = color
 			self.window.pop()
-			self.window.showwindow()
+			self.window.showwindow(color = color)
 
 	def unhighlight(self):
 		if self._is_shown and self.window:
+			self._highlighted = None
 			self.window.dontshowwindow()
+
+	def showimg(self):
+		self._showimg = 1
+		img = self._attrdict.get('bgimg')
+		self._curvals['bgimg'] = (img, None)
+		if img:
+			img = self._player.context.findurl(img)
+			try:
+				img = MMurl.urlretrieve(img)[0]
+			except IOError:
+				pass
+			try:
+				d = self.window.newdisplaylist()
+				box = d.display_image_from_file(img, center=0)
+				d.render()
+				self._bgimg = d
+			except (windowinterface.error, IOError), msg:
+				pass
+
+	def hideimg(self):
+		self._showimg = 0
+		if self._bgimg:
+			self._bgimg.close()
+			self._bgimg = None
 
 	def popup(self):
 		if self._is_shown and self.window:
@@ -1005,16 +1045,6 @@ class ChannelWindow(Channel):
 			x, y, w, h = self.window.getgeometry(units = units)
 			self._attrdict['winpos'] = x, y
 			self._attrdict['winsize'] = w, h
-
-	def setwaiting(self):
-		self._is_waiting = 1
-		if self._is_shown and self.window:
-			self.window.setcursor('watch')
-
-	def setready(self):
-		self._is_waiting = 0
-		if self._is_shown and self.window:
-			self.window.setcursor('')
 
 	def mousepress(self, arg, window, event, value):
 		global _button
@@ -1053,8 +1083,6 @@ class ChannelWindow(Channel):
 					a = self.setanchorargs(a, button, value)
 					self._player.toplevel.setwaiting()
 					dummy = apply(f, a) # may close channel
-					if hasattr(self, '_player'):
-						self._player.toplevel.setready()
 		if _button and not _button.is_closed():
 			_button.unhighlight()
 		_button = None
@@ -1099,6 +1127,7 @@ class ChannelWindow(Channel):
 					    (self.resize_window, (pchan,)))
 		else:
 			# no basewindow, create a top-level window
+			adornments = self._player.get_adornments(self)
 			units = self._attrdict.get('units',
 						   windowinterface.UNIT_MM)
 			width, height = self._attrdict.get('winsize', (50, 50))
@@ -1108,20 +1137,18 @@ class ChannelWindow(Channel):
 					width, height, self._name,
 					visible_channel = self._visible,
 					type_channel = self._window_type,
-					units = units)
+					units = units, adornments = adornments,
+					commandlist = self.commandlist)
 			else:
 				self.window = windowinterface.newwindow(x, y,
 					width, height, self._name,
 					visible_channel = self._visible,
 					type_channel = self._window_type,
-					units = units)
-			self.window.register(WMEVENTS.WindowExit,
-					     self._destroy_callback, None)
+					units = units, adornments = adornments,
+					commandlist = self.commandlist)
 			if hasattr(self._player, 'editmgr'):
 				menu.append('', 'push focus',
 					    (self.focuscall, ()))
-		if self._is_waiting:
-			self.window.setcursor('watch')
 		if self._attrdict.has_key('bgcolor'):
 			self.window.bgcolor(self._attrdict['bgcolor'])
 		if self._attrdict.has_key('fgcolor'):
@@ -1135,12 +1162,10 @@ class ChannelWindow(Channel):
 		if menu:
 			self.window.create_menu(menu, title = self._name)
 
-	def _destroy_callback(self, *rest):
-		self._player.channel_callback(self._name)
-
 	def resize_window(self, pchan):
 		if not self._player.editmgr.transaction():
 			return
+		self._player.toplevel.setwaiting()
 		# we now know for sure we're not playing
 		pchan.window.create_box(
 			'Resize window for channel ' + self._name,
@@ -1219,9 +1244,8 @@ class ChannelWindow(Channel):
 	def resize(self, arg, window, event, value):
 		if debug:
 			print 'ChannelWindow.resize'+`self,arg,window,event,value`
-		windowinterface.setcursor('watch')
+		self._player.toplevel.setwaiting()
 		self.replaynode()
-		windowinterface.setcursor('')
 
 	def arm_0(self, node):
 		same = Channel.arm_0(self, node)
