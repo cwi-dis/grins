@@ -2372,9 +2372,9 @@ class Node:
 			self._ctx.previousCtrl.update()
 
 	def hideAllNodes(self):
-		self.hide()
 		for child in self._children:
 			child.hideAllNodes()
+		self.hide()
 
 	def updateAttrdict(self):
 		self.importAttrdict()
@@ -2450,6 +2450,11 @@ class Region(Node):
 	
 	def show(self):
 		if debug: print 'Region.show : ',self.getName()
+
+		if self.isShowed():
+			# hide this node and its sub-nodes
+			self.hideAllNodes()
+			
 		if self._wantToShow and self._parent._graphicCtrl != None:
 			self._graphicCtrl = self._parent._graphicCtrl.addRegion(self._curattrdict, self._name)
 			self._graphicCtrl.showName(self.getShowName())		
@@ -2564,8 +2569,9 @@ class MediaRegion(Region):
 			return
 
 		if self.isShowed():
-			self.hide()
-			
+			# hide this node and its sub-nodes
+			self.hideAllNodes()
+
 		self._graphicCtrl = self._parent._graphicCtrl.addRegion(self._curattrdict, self._name)
 		self._graphicCtrl.showName(0)		
 		self._graphicCtrl.setListener(self)
