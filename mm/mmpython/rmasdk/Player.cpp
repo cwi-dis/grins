@@ -176,9 +176,9 @@ PlayerObject::Stop(PyObject *self, PyObject *args)
 {
 	PN_RESULT res;
 	CHECK_NO_ARGS(args);
-	Py_BEGIN_ALLOW_THREADS
+//	Py_BEGIN_ALLOW_THREADS
 	res=((PlayerObject*)self)->pPlayer->Stop();
-	Py_END_ALLOW_THREADS
+//	Py_END_ALLOW_THREADS
 	return Py_BuildValue("i",res);
 }
 
