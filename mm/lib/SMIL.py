@@ -35,9 +35,12 @@ class SMIL:
 	__socket = GRiNSns + ' ' 'socket'
 
 	# abbreviations for collections of attributes
-	__Core = {'id':None,
+	__Core = {'alt':None,
 		  'class':None,
-		  'title':None,}
+		  'id':None,
+		  'longdesc':None,
+		  'title':None,
+		  'xml:base':None,}
 	__I18n = {'xml:lang':None,}
 	__Test = {'system-bitrate':None,
 		  'system-captions':None,
@@ -221,7 +224,6 @@ class SMIL:
 			   __layout:None,
 			   },
 		'ref': {'abstract':'',
-			'alt':None,
 			'author':'',
 			'clip-begin':None,
 			'clip-end':None,
@@ -231,7 +233,6 @@ class SMIL:
 			'customTest':None,
 			'erase':None,
 			'fill':None,
-			'longdesc':None,
 			'mediaRepeat':None,
 			'readIndex':None,
 			'region':None,
@@ -273,14 +274,12 @@ class SMIL:
 			QTns+' ' 'composite-mode':None,
 			},
 		'brush': {'abstract':'',
-			  'alt':None,
 			  'author':'',
 			  'color':None,
 			  'copyright':'',
 			  'customTest':None,
 			  'erase':None,
 			  'fill':None,
-##			  'longdesc':None,
 			  'readIndex':None,
 			  'region':None,
 			  'skip-content':'true',
@@ -331,7 +330,6 @@ class SMIL:
 		      },
 		'area': {'accesskey':None,
 			 'actuate':None,
-			 'alt':None,
 			 'coords':None,
 			 'customTest':None,
 			 'destinationLevel':None,
