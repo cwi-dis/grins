@@ -141,9 +141,9 @@ class UsergroupEditDialog(win32dialog.ResDialog,components.ControlsDict):
 		self.HookCommand(self.OnApply,self['Apply']._id)
 
 	def do_init(self, ugroup, title, ustate, override, cbdict):
-		ls=['NOT RENDERED', 'RENDERED']	
+		ls=['NOT RENDERED', 'RENDERED']
 		self['State'].initoptions(ls)
-		lo=['not allowed', 'allowed']
+		lo=['not-allowed', 'allowed', 'uid-only']
 		self['Override'].initoptions(lo)
 		self.setstate(ugroup, title, ustate, override)
 		self._cbdict=cbdict
@@ -174,12 +174,22 @@ class UsergroupEditDialog(win32dialog.ResDialog,components.ControlsDict):
 		ugroup -- string name of the user group
 		title -- string title of the user group
 		ustate -- string 'RENDERED' or 'NOT RENDERED'
-		override -- string 'allowed' or 'not allowed'
+		override -- string 'allowed', 'not-allowed' or 'uid-only'
 		"""
 		self['Name'].settext(ugroup)
 		self['Title'].settext(title)
-		self['State'].setpos(ustate == 'RENDERED')
-		self['Override'].setpos(override == 'allowed')
+		if ustate == 'RENDERED':
+			upos = 1
+		else:
+			upos = 0
+		self['State'].setpos(upos)
+		if override == 'allowed':
+			opos = 1
+		elif override == 'uid-only':
+			opos = 2
+		else:
+			opos = 0
+		self['Override'].setpos(opos)
 
 	def getstate(self):
 		"""Return the current values in the dialog."""

@@ -1848,6 +1848,8 @@ class SMILWriter(SMIL):
 				attrlist.append(('defaultState', 'true'))
 			if override == 'allowed':
 				attrlist.append(('override', 'allowed'))
+			elif override == 'uid-only':
+				attrlist.append(('override', 'uid-only'))
 			if uid:
 				attrlist.append(('uid', uid))
 			self.writetag('customTest', attrlist)
