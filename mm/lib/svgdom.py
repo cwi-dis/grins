@@ -378,18 +378,15 @@ class SvgSvg(SvgElement):
 	def getSize(self):
 		w, h = self.get('width'), self.get('height')
 		if not w or not h:
-			if self != self.getRoot():
-				return self.getParent().getSize()
+			# suppose a viewport meet in screen
+			viewBox = self.get('viewBox')
+			if viewBox is not None:
+				vx, vy, vw, vh = viewBox
+				xs, ys = 800.0/float(vw), 600.0/float(vh)
+				scale = min(xs, ys)
+				w, h = int(scale*vw+0.5), int(scale*vh+0.5)
 			else:
-				# suppose a viewport meet in screen
-				viewBox = self.get('viewBox')
-				if viewBox is not None:
-					vx, vy, vw, vh = viewBox
-					xs, ys = 640.0/float(vw), 480.0/float(vh)
-					scale = min(xs, ys)
-					w, h = int(scale*vw+0.5), int(scale*vh+0.5)
-				else:
-					w, h = 640, 480
+				w, h = 800, 600
 		return w, h
 
 class SvgStyle(SvgElement):
