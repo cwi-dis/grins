@@ -404,8 +404,8 @@ int mpeg2audio_read_raw(mpeg2audio_t *audio, unsigned char *output, long *size, 
 	}
 
 // Channel is 0 to channels - 1
-int mpeg2audio_decode_audio(mpeg2audio_t *audio, float *output_f, short *output_i, 
-		int channel, long start_position, long len)
+bool mpeg2audio_decode_audio(mpeg2audio_t *audio, float *output_f, short *output_i, 
+		int channel, long start_position, long len, long *pwritelen)
 	{
 	long allocation_needed = len + MPEG2AUDIO_PADDING;
 	long i, j, result = 0;
@@ -484,10 +484,8 @@ int mpeg2audio_decode_audio(mpeg2audio_t *audio, float *output_f, short *output_
 			{
 			output_f[i] = audio->pcm_sample[j];
 			}
-		for( ; i < len; i++)
-			{
-			output_f[i] = 0;
-			}
+		*pwritelen = i;
+		//for( ; i < len; i++) { output_f[i] = 0;}
 		}
 	else if(output_i)
 		{
@@ -498,21 +496,17 @@ int mpeg2audio_decode_audio(mpeg2audio_t *audio, float *output_f, short *output_
 			{
 			sample = (int)(audio->pcm_sample[j] * 32767);
 			if(sample > 32767) sample = 32767;
-			else 
-			if(sample < -32768) sample = -32768;
-			
+			else  if(sample < -32768) sample = -32768;
 			output_i[i] = sample;
 			}
-		for( ; i < len; i++)
-			{
-			output_i[i] = 0;
-			}
+		*pwritelen = i;
+		//for( ; i < len; i++){ output_i[i] = 0;}
 		}
 
 	if(audio->pcm_point > 0)
-		return 0;
+		return true;
 	else
-		return result;
+		return result == 0;
 	}
 
 

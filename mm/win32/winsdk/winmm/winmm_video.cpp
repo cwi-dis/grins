@@ -14,7 +14,8 @@ Copyright 1991-2002 by Oratrix Development BV, Amsterdam, The Netherlands.
 #include "../common/platform.h"
 
 // native video decoders/players
-#include "../mpeg2dec/mpeg_player.h"
+#include "mpeg_player.h"
+#include "wnds_mpeg_input_stream.h"
 
 #ifdef USE_GAPI
 #include "../../CE/gx/inc/gx.h"
@@ -62,8 +63,8 @@ PyObject* Winmm_CreateVideoPlayerFromFile(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "s", &filename))
 		return NULL;
 	
-	int handle = platform::open(TextPtr(filename));
-	if(handle == -1)
+	wnds_mpeg_input_stream *instream = new wnds_mpeg_input_stream(TextPtr(filename));
+	if(instream == NULL)
 		{
 		char sz[MAX_PATH+32];
 		sprintf(sz, "cant find file %s", filename);
@@ -74,13 +75,12 @@ PyObject* Winmm_CreateVideoPlayerFromFile(PyObject *self, PyObject *args)
 	VideoPlayer *player = 0;
 
 	// find/create decoder/player for given file
-	player = new MpegPlayer();
-	if(player->can_decode(handle))
+	player = new mpeg_player();
+	if(player->set_input_stream(instream))
 		return (PyObject*)PyVideoPlayer::createInstance(player);
-	else
-		delete player;
 
-	platform::close(handle);
+	delete player;
+	delete instream;
 	seterror("CreateVideoPlayerFromFile", "cant find decoder for video format");
 	return NULL;
 	}
@@ -91,8 +91,8 @@ PyObject* Winmm_GetVideoDuration(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "s", &filename))
 		return NULL;
 	
-	int handle = platform::open(TextPtr(filename));
-	if(handle == -1)
+	wnds_mpeg_input_stream *instream = new wnds_mpeg_input_stream(TextPtr(filename));
+	if(instream ==NULL)
 		{
 		char sz[MAX_PATH+32];
 		sprintf(sz, "cant find file %s", filename);
@@ -103,17 +103,16 @@ PyObject* Winmm_GetVideoDuration(PyObject *self, PyObject *args)
 	VideoPlayer *player = 0;
 
 	// find/create decoder/player for given file
-	player = new MpegPlayer();
-	if(player->can_decode(handle))
+	player = new mpeg_player();
+	if(player->set_input_stream(instream))
 		{
 		double dur = player->get_duration();
 		delete player;
 		return Py_BuildValue("f", dur); 
 		}
-	else
-		delete player;
 
-	platform::close(handle);
+	delete player;
+	delete instream;
 	seterror("GetVideoDuration", "cant find decoder for video format");
 	return NULL;
 	}
