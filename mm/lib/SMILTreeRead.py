@@ -634,7 +634,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 	def FixRoot(self):
 		root = self.__root
 		if len(root.children) != 1 or root.attrdict or \
-		   root.__syncarcs or root.__anchorlist:
+		   root.__syncarcs or root.__anchorlist or \
+		   root.children[0].GetType() in leaftypes:
 			return
 		child = root.children[0]
 		# copy stuff over from child to root
