@@ -6,6 +6,15 @@ import win32ui
 import win32mu
 import commctrl
 
+# Default list of state iconnames.
+STATEICONNAME_TO_RESID={
+	'reserved': grinsRC.IDI_ICON_ASSET_BLANK, # don't change this one (special case)
+	
+	'hidden': grinsRC.IDI_CLOSEDEYE,
+	'showed': grinsRC.IDI_OPENEDEYE,
+	'locked': grinsRC.IDI_OPENEDEYEKEY,	
+}
+
 # Default list of iconnames.
 ICONNAME_TO_RESID={
 	None: grinsRC.IDI_ICON_ASSET_BLANK,
@@ -81,7 +90,7 @@ ICONNAME_TO_RESID={
 # This mixin is for the control, it creates the image lists
 # and binds them to the control
 class CtrlMixin:
-	def setIconLists(self, normalList, normalSize, smallList, smallSize):
+	def setIconLists(self, normalList, normalSize, normalType, smallList, smallSize, smallType):
 		app = win32ui.GetApp()
 		mask = 0
 
@@ -107,9 +116,9 @@ class CtrlMixin:
 
 		# finally set image list
 		if normalList:
-			self.SetImageList(normalImageList, commctrl.LVSIL_NORMAL)
+			self.SetImageList(normalImageList, normalType)
 		if smallList:
-			self.SetImageList(smallImageList, commctrl.LVSIL_SMALL)
+			self.SetImageList(smallImageList, smallType)
 
 # This mixin is for the view. It fills the name->id dictionary
 # and returns the values to be passed to the control
@@ -129,13 +138,51 @@ class ViewMixin:
 				self.__iconlist_small.append(v)
 			self.__iconname_to_index[k] = self.__iconlist_small.index(v)
 
-	def seticonlist(self, ctrl):
+	def initstateicons(self, icon2resid=None):
+		if icon2resid is None:
+			icon2resid = STATEICONNAME_TO_RESID
+		self.__stateiconlist_small = []
+		self.__stateiconname_to_index = {}
+		
+		# special case for the first index, see windows api
+		for k, v in icon2resid.items():
+			if k == 'reserved':
+				self.__stateiconlist_small.append(v)
+				self.__stateiconname_to_index[k] = self.__stateiconlist_small.index(v)
+				break
+		for k, v in icon2resid.items():
+			if k == 'reserved':
+				continue
+			if v is None:
+				self.__stateiconname_to_index[k] = None
+				continue
+			elif not v in self.__stateiconlist_small:
+				self.__stateiconlist_small.append(v)
+			self.__stateiconname_to_index[k] = self.__stateiconlist_small.index(v)
+
+	def seticonlist(self, ctrl, icontype_normal=commctrl.LVSIL_NORMAL, icontype_small=commctrl.LVSIL_SMALL):
 		# For now we set the 16x16 icons for both small and large
 		# this needs to be rethought at some point.
-		ctrl.setIconLists(self.__iconlist_small, 16, self.__iconlist_small, 16)
+		ctrl.setIconLists(self.__iconlist_small, 16, icontype_normal, self.__iconlist_small, 16, icontype_small)
+
+	def setstateiconlist(self, ctrl, icontype_normal=commctrl.TVSIL_STATE):
+		# For the tree control, you can also specify a separated state icon list
+		ctrl.setIconLists(self.__stateiconlist_small, 16, icontype_normal, None, 0, 0)
 
 	def geticonid(self, name):
 		rv = self.__iconname_to_index.get(name)
 		if rv is None:
 			rv = self.__iconname_to_index[None]
 		return rv
+
+	def getstateiconid(self, name):
+		rv = self.__stateiconname_to_index.get(name)
+		if rv is None:
+			rv = self.__stateiconname_to_index[None]
+		return rv
+
+	def getstateiconname(self, index):
+		for iconname, id in self.__stateiconname_to_index.items():
+			if id == index:
+				return iconname
+		return None
