@@ -1,8 +1,7 @@
 __version__ = "$Id$"
 
-from Channel import ChannelWindowThread
+from ChannelThread import ChannelWindowThread
 import MMurl
-import windowinterface
 from MMExc import *			# exceptions
 from AnchorDefs import *
 
@@ -105,5 +104,6 @@ class VideoChannel(ChannelWindowThread):
 		ChannelWindowThread.playdone(self, dummy)
 
 	def defanchor(self, node, anchor, cb):
+		import windowinterface
 		windowinterface.showmessage('The whole window will be hot.')
 		cb((anchor[0], anchor[1], [0,0,1,1]))
