@@ -140,15 +140,27 @@ class QtPlayer:
 			self._movie.SetMovieActive(flag)
 
 
-	def getTracksInfo(self):
+	def getVideoTracksInfo(self):
 		if not self._movie or (self._videotrack and self._videomedia): 
 			return
 		try:
 			self._videotrack = self._movie.GetMovieIndTrackType(1, winqtcon.VisualMediaCharacteristic, winqtcon.movieTrackCharacteristic)
 			self._videomedia = self._videotrack.GetTrackMedia()
-		except Qt.Error:
+		except Qt.Error, arg:
+			print 'getVideoTracksInfo', msg
 			self._videomedia = None
 			self._videotrack = None
+	
+	def getAudioTracksInfo(self):
+		if not self._movie or (self._audiotrack and self._audiomedia): 
+			return
+		try:
+			self._audiotrack = self._movie.GetMovieIndTrackType(1, winqtcon.AudioMediaCharacteristic, winqtcon.movieTrackCharacteristic)
+			self._audiomedia = self._audiotrack.GetTrackMedia()
+		except Qt.Error, arg:
+			print 'getAudioTracksInfo', msg
+			self._audiomedia = None
+			self._audiotrack = None
 		
 	def getFrameRate(self):
 		magic_frame_rate = 20
@@ -157,7 +169,7 @@ class QtPlayer:
 		dur = self.getDuration()
 		if not dur: 
 			return magic_frame_rate
-		self.getTracksInfo()
+		self.getVideoTracksInfo()
 		if self._videomedia:
 			samples = self._videomedia.GetMediaSampleCount()
 			import math
@@ -224,3 +236,42 @@ class QtPlayer:
 			msecs = self._movie.GetMovieTime()[0]
 			return msecs/1000.0
 		return 0
+
+	def getDataAsRGB24(self):
+		if self._dds is not None:
+			return self._dds.GetDataAsRGB24()
+		return None
+
+	def hasVideo(self):
+		self.getVideoTracksInfo()
+		return self._videomedia is not None
+
+	def hasAudio(self):
+		self.getAudioTracksInfo()
+		return self._audiomedia is not None
+
+	def openForEncoding(self, filename, ddobj):
+		if not self.open(filename):
+			return None
+		self.createVideoDDS(ddobj)
+		self.getVideoTracksInfo()
+		if self._videomedia is None:
+			return None
+		#self.getAudioTracksInfo()
+		framerate = self.getFrameRate()
+		width, height = self.getMovieRect()[2:]
+		self._movie.SetMoviePlayHints(winqtcon.hintsHighQuality, winqtcon.hintsHighQuality)
+		self._movie.SetMovieTimeValue(0)
+		self._movie.SetMovieActive(1)
+		self._movie.MoviesTask(0)
+		self._movie.UpdateMovie()
+		return width, height, framerate
+
+	def nextVideoData(self, sampletime):
+		if sampletime is None: sampletime = 0
+		flags = winqtcon.nextTimeMediaSample | winqtcon.nextTimeStep    
+		sampletime, dur = self._videomedia.GetMediaNextInterestingTime(flags, sampletime, 1.0)
+		self._movie.SetMovieTimeValue(sampletime)
+		self._movie.MoviesTask(0)
+		self._movie.UpdateMovie()
+		return sampletime
