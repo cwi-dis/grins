@@ -670,6 +670,8 @@ class RegionNode(Node):
 					extent = minsize
 				return start + extent
 			elif type(end) is type(0.0):
+				if end == 1.0:
+					return minsize				
 				# no extent, end is fraction
 				return int((start + minsize) / (1 - end) + 0.5)
 			elif type(end) is type(0):
@@ -682,7 +684,8 @@ class RegionNode(Node):
 		elif type(start) is type(0.0):
 			# start is fraction
 			if start == 1:
-				raise error, 'region with impossible size'
+				# region with impossible size
+				return minsize
 			if type(extent) is type(0):
 				# extent is pixel value
 				if extent == 0:
@@ -698,6 +701,8 @@ class RegionNode(Node):
 				return int ((minsize + end) / (1 - start) + 0.5)
 			elif type(end) is type(0.0):
 				# no extent, end is fraction
+				if (start+end) == 1.0:
+					return minsize
 				return int(minsize / (1 - start - end) + 0.5)
 			else:
 				# no extent and no end
@@ -876,7 +881,8 @@ class MediaNode(Node):
 		newsize = minsize
 		if type(wR1) is type (0.0):
 			if wR1 == 1.0:
-				raise error, 'regpoint with impossible alignment'
+				# regpoint with impossible alignment, return minsize
+				return minsize
 			wN = int (wM2 / (1-wR1) + 0.5)
 			if wN > newsize:
 				newsize = wN
@@ -906,7 +912,8 @@ class MediaNode(Node):
 		# second constraint
 		if type(wR2) is type (0.0):
 			if wR2 == 1.0:
-				raise error, 'regpoint with impossible alignment'
+				# regpoint with impossible alignment, return minsize
+				return minsize
 			wN = int(wM1 / (1.0-wR2) + 0.5)
 			if wN > newsize:
 				newsize = wN
@@ -938,8 +945,10 @@ class MediaNode(Node):
 	def setRawAttrs(self, attrList):
 		for name, value in attrList:
 			if name == 'width':
+				if value <= 0: value = 1
 				self.intrinsicWidth = value
 			elif name == 'height':
+				if value <= 0: value = 1
 				self.intrinsicHeight = value
 			else:
 				Node._setRawAttr(self, name, value)
