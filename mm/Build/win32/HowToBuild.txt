@@ -17,11 +17,11 @@ are in your library files
 
 Note: there are other ways to have the same effect.
 
-3. Check that the absolute directories for GRiNSRes project
+3. Check that the absolute directories for GRiNSRes anw win32ui projects
 Project Setting|Custom Build (tab)
-are the correct for your configuratio. 
+are the correct for your configuration. 
 (the absolute folders shouldn't be there but they are)
-  
+
 3. Build all
 set active configuration to: 'All cmif extensions-Win32 Release'
 and then select Rebuild All
