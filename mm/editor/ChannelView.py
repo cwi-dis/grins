@@ -110,7 +110,7 @@ class ChannelView(ChannelViewDialog):
 		self.curlayout = None
 		title = 'Timeline View (' + self.toplevel.basename + ')'
 		from cmif import findfile
-		self.datadir = findfile('Data')
+		self.datadir = findfile('GRiNS-Icons')
 		ChannelViewDialog.__init__(self)
 		self.delayed_drawarcs_id = None
 
