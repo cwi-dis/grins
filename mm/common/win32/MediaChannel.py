@@ -75,7 +75,7 @@ class MediaChannel:
 		if self.__armBuilder:
 			self.__armBuilder.Stop()
 			self.__armBuilder=None
-	
+
 	def release_res(self):
 		self.release_armed_player()
 		self.release_player()
@@ -266,17 +266,11 @@ class MediaChannel:
 #		rcMediaWnd=(x, y, width,height)
 		builder.SetWindowPosition(self._rcMediaWnd)
 
-	# XXX: Is it needed?
 	def paint(self):
-		return 
-		if hasattr(self.__channel,'window') and self.__channel.window and self.__playFileHasBeenRendered:
-			self.__channel.window.UpdateWindow()
-
-	# XXX: Is it needed?
-	def update(self,dc=None):
-		return
-		if self.__playBuilder and self.__playFileHasBeenRendered and (self.__playdone or self.__paused):
-			self.__channel.window.RedrawWindow()
+		if not hasattr(self.__channel,'window'): return
+		window = self.__channel.window
+		if window and self.__playFileHasBeenRendered:
+			window.paint()
 	
 	# capture end of media
 	def OnGraphNotify(self,params):
