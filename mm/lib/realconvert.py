@@ -562,8 +562,11 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 		xxxvideotime, video_data = reader.ReadVideo()
 	if not video_data:
 		video_done = 1
+	if progress:
+		dur = max(reader.GetVideoDuration(), reader.GetAudioDuration())
+		now = 0
 	while not audio_done or not video_done:
-		print 'audio', audio_done, xxxaudiotime, 'video', video_done, xxxvideotime
+##		print 'audio', audio_done, xxxaudiotime, 'video', video_done, xxxvideotime
 		if not audio_done:
 			xxxaudiotime, next_audio_data = reader.ReadAudio(audio_inputsize_frames)
 			if not next_audio_data:
@@ -573,15 +576,22 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 			audiopin.Encode(audio_sample)
 			audio_time = audio_time + audio_frame_millisecs
 			audio_data = next_audio_data
+			if audio_time > now:
+				now = audio_time
 		if not video_done:
-			xxxvideotime, next_video_data = reader.ReadVideo()
+			next_video_time, next_video_data = reader.ReadVideo()
 			if not next_video_data:
 				video_done = 1
 				video_flags = producer.MEDIA_SAMPLE_END_OF_STREAM
 			video_sample.SetBuffer(video_data, video_time, video_flags)
 			videopin.Encode(video_sample)
-			video_time = video_time + video_frame_millisecs
+##			video_time = video_time + video_frame_millisecs
+			video_time = next_video_time
 			video_data = next_video_data
+			if video_time > now:
+				now = video_time
+		if progress:
+			apply(progress[0], progress[1] + (now, dur))
 	engine.DoneEncoding()
 		
 	
