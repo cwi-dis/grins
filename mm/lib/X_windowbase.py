@@ -604,7 +604,7 @@ class _Window:
 			xsize, ysize = toplevel._image_size_cache[file]
 		except KeyError:
 			try:
-				reader = img.reader(format, file)
+				reader = img.reader(None, file)
 			except img.error, arg:
 				raise error, arg
 			xsize = reader.width
