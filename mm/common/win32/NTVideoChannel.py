@@ -116,16 +116,25 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			if self.__mc is None:
 				if not self.__windowless_wm_rendering:
 					self.__mc = MediaChannel.MediaChannel(self)
+					try:
+						self.__mc.prepare_player(node, self.window)
+						self.__ready = 1
+					except MediaChannel.error, msg:
+						self.errormsg(node, msg)
 				else:	
 					self.__mc = MediaChannel.VideoStream(self)
-			try:
-				self.__mc.prepare_player(node, self.window)
-				self.__ready = 1
-			except MediaChannel.error, msg:
-				self.errormsg(node, msg)
-
+					try:
+						self.__mc.prepare_player(node, self.window)
+						self.__ready = 1
+					except MediaChannel.error, msg:
+						self.__windowless_wm_rendering = 0
+						self.__mc = MediaChannel.MediaChannel(self)
+						try:
+							self.__mc.prepare_player(node, self.window)
+							self.__ready = 1
+						except MediaChannel.error, msg:
+							self.errormsg(node, msg)
 		self.prepare_armed_display(node)
-		
 		return 1
 
 	def do_play(self, node):
