@@ -31,14 +31,17 @@ class EditableMMNode(MMNode.MMNode):
 		self.showtime = 0
 
 	def GetName(self):
+		# I'm used by the event editor dialog.
+		# print "DEBUG: GetName"
 		try:
 			return self.GetAttr('name')
 		except MMExc.NoSuchAttrError:
 			return "not_yet_defined"
 	#def GetType(self) - defined in MMNode.py
-
+	
 	# Used for the user interface
 	def GetCommands(self):		# returns a list of mapped commands
+		print "DEBUG: GetCommands"
 		commands = self.__get_commands()
 		if not self.IsLeafNode():
 			commands = commands + self.__get_interiorcommands() + self.__get_structurecommands()
@@ -47,12 +50,14 @@ class EditableMMNode(MMNode.MMNode):
 		return commands
 
 	def IsLeafNode(self):
+		print "DEBUG: IsLeafNode"
 		if self.type in MMNode.interiortypes:
 			return 0
 		else:
 			return 1
 
 	def __get_commands(self):
+		print "DEBUG: _get_commands"
 		# Non-specific standard commands.
 		return [
 			COPY(callback = (self.copycall, ())),
@@ -62,6 +67,7 @@ class EditableMMNode(MMNode.MMNode):
 			PLAYFROM(callback = (self.playfromcall, ())),
 			]
 	def __get_interiorcommands(self):
+		print "DEBUG: _get_interiorcommands"
 		return [
 			NEW_UNDER(callback = (self.createundercall, ())),
 			NEW_UNDER_SEQ(callback = (self.createunderintcall, ('seq',))),
@@ -110,9 +116,11 @@ class EditableMMNode(MMNode.MMNode):
 
 	# Viewing this node. Helper routines for widgets only.
 	def GetThumbnailFile(self):	# returns a thumbnail.
+		print "DEBUG: GetThumbNailFile"
 		pass
 		
 	def GetTypeIconFile(self):	# returns a filename for an icon representing the type of node that this is.
+		print "DEBUG: GetTypeIconFile"
 		channel_type = self.GetChannelType()
 		if not channel_type:
 			return None
@@ -121,9 +129,11 @@ class EditableMMNode(MMNode.MMNode):
 		return f
 		
 	def GetColor(self):		# returns a default "color" for this type of node.
+		print "DEBUG: GetColor"
 		pass
 
 	def SetURL(self, url):
+		print "DEBUG: SetURL"
 		if self.IsLeafNode():
 			em = self.context.editmgr
 			if not em.transaction():
@@ -139,6 +149,7 @@ class EditableMMNode(MMNode.MMNode):
 			# I need a channel also.
 
 	def _insertnode(self, node, index):
+		print "DEBUG: _insertnode"
 		# insert a node at position index.
 		em = self.context.editmgr
 		if node is None:
@@ -155,6 +166,7 @@ class EditableMMNode(MMNode.MMNode):
 
 #	def _newleafnode(self, name=None, url=None, region=None):
 	def _newleafnode(self, url):
+		print "DEBUG: _newleafnode"
 		# returns a new node with this particular name, url and region
 		node = self.context.newnode('ext')
 		if url:
@@ -169,6 +181,7 @@ class EditableMMNode(MMNode.MMNode):
 
 #	def NewLeafNode(self, name='', url='', index = -1, region = ''):
 	def NewLeafNode(self, url, channel):
+		print "DEBUG: NewLeafNode"
 		em = self.context.editmgr
 		if not em.transaction():
 			return
@@ -179,6 +192,8 @@ class EditableMMNode(MMNode.MMNode):
 		em.commit()
 
 	def NewBeginEvent(self, othernode, event):
+		# I'm called from the HierarchyView
+		#print "DEBUG: NewBeginEvent"
 		em = self.context.editmgr
 		if not em.transaction():
 			return
@@ -187,6 +202,8 @@ class EditableMMNode(MMNode.MMNode):
 		em.commit()
 
 	def GetCollapsedParent(self):
+		# I'm used by the event editor.
+		#print "DEBUG: GetCollapsedParent"
 		i = self.parent		# Don't return self if I'm collapsed.
 		while i is not None:
 			if i.collapsed == 1:
@@ -201,12 +218,15 @@ class EditableMMNode(MMNode.MMNode):
 	# are essentually macro-level commands that use the methods above. -mjvdg.
 
 	def playcall(self):
+		print "DEBUG: playcall"
 		self.context.toplevel.player.playsubtree(self)
 
 	def playfromcall(self):
+		print "DEBUG: playfromcall"
 		self.context.toplevel.player.playfrom(self)
 
 	def attrcall(self):
+		print "DEBUG: attrcall"
 		windowinterface.setwaiting()
 		import AttrEdit
 		AttrEdit.showattreditor(self.context.toplevel, self)
@@ -248,6 +268,7 @@ class EditableMMNode(MMNode.MMNode):
 		#em.commit()
 
 	def copycall(self):
+		print "DEBUG: copycall"
 		windowinterface.setwaiting()
 		em = self.context.editmgr
 		t,n = em.getclip()
@@ -256,43 +277,44 @@ class EditableMMNode(MMNode.MMNode):
 		copyme = self.DeepCopy()
 		em.setclip('node', copyme)
 
-	def createbeforecall(self, chtype=None):
-		assert 0
+##	def createbeforecall(self, chtype=None):
+##		assert 0
 
-	def createbeforeintcall(self, ntype):
-		assert 0
-		if self.focusobj: self.focusobj.createbeforeintcall(ntype)
+##	def createbeforeintcall(self, ntype):
+##		assert 0
+##		if self.focusobj: self.focusobj.createbeforeintcall(ntype)
 
-	def createaftercall(self, chtype=None):
-		assert 0
-		if self.focusobj: self.focusobj.createaftercall(chtype)
+##	def createaftercall(self, chtype=None):
+##		assert 0
+##		if self.focusobj: self.focusobj.createaftercall(chtype)
 
-	def createafterintcall(self, ntype):
-		assert 0
-		if self.focusobj: self.focusobj.createafterintcall(ntype)
+##	def createafterintcall(self, ntype):
+##		assert 0
+##		if self.focusobj: self.focusobj.createafterintcall(ntype)
 
-	def createundercall(self, chtype=None):
-		assert 0
-		if self.focusobj: self.focusobj.createundercall(chtype)
+##	def createundercall(self, chtype=None):
+##		assert 0
+##		if self.focusobj: self.focusobj.createundercall(chtype)
 
-	def createunderintcall(self, ntype=None):
-		assert 0
-		if self.focusobj: self.focusobj.createunderintcall(ntype)
+##	def createunderintcall(self, ntype=None):
+##		assert 0
+##		if self.focusobj: self.focusobj.createunderintcall(ntype)
 
-	def createseqcall(self):
-		assert 0
-		if self.focusobj: self.focusobj.createseqcall()
+##	def createseqcall(self):
+##		assert 0
+##		if self.focusobj: self.focusobj.createseqcall()
 
-	def createparcall(self):
-		assert 0
-		if self.focusobj: self.focusobj.createparcall()
+##	def createparcall(self):
+##		assert 0
+##		if self.focusobj: self.focusobj.createparcall()
 
-	def createexclcall(self):
-		assert 0
-		if self.focusobj: self.focusobj.createexclcall()
+##	def createexclcall(self):
+##		assert 0
+##		if self.focusobj: self.focusobj.createexclcall()
 
 	def pastebeforecall(self):
 		# Paste before a node.
+		print "DEBUG: pastebeforecall"
 		if self.parent is None:
 			windowinterface.showmessage("You can't paste before the root!")
 			return
@@ -312,6 +334,7 @@ class EditableMMNode(MMNode.MMNode):
 		em.commit()
 
 	def pasteaftercall(self):
+		print "DEBUG: pasteaftercall"
 		# Paste after a node
 		if self.parent is None:
 			windowinterface.showmessage("You can't paste after the root!")
@@ -331,6 +354,7 @@ class EditableMMNode(MMNode.MMNode):
 		em.commit()
 		
 	def pasteundercall(self, index):
+		print "DEBUG: pasteundercall"
 		# Index is the index of this node.
 		if self.IsLeafNode():
 			windowinteface.beep()
@@ -349,6 +373,7 @@ class EditableMMNode(MMNode.MMNode):
 			em.commit()
 
 	def take(self, othernode, index):
+		print "DEBUG: take"
 		# othernode is a leafnode or sub-tree that I'm going to grab and put under me.
 		# index is which of my children it will be.
 		em = self.context.editmgr
