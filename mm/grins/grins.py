@@ -101,13 +101,13 @@ class Main(MainDialog):
 		MainDialog.__init__(self, 'GRiNS')
 		# first open all files
 		for file in files:
-			self.openURL_callback(MMurl.guessurl(file))
+			self.openURL_callback(MMurl.guessurl(file), 0)
 		self._update_recent(None)
 		# then play them
 		for top in self.tops:
 			top.player.playsubtree(top.root)
 
-	def openURL_callback(self, url):
+	def openURL_callback(self, url, startplay = 1):
 		import windowinterface
 		windowinterface.setwaiting()
 		from MMExc import MSyntaxError
@@ -126,10 +126,12 @@ class Main(MainDialog):
 			top.show()
 			top.player.show()
 			self._update_recent(url)
+			if startplay:
+				top.player.playsubtree(top.root)
 
 	def open_recent_callback(self, url):
 		self.openURL_callback(url)
-		
+
 	def _update_recent(self, url):
 		if url:
 			self.add_recent_file(url)
