@@ -1862,7 +1862,7 @@ class MMNode:
 		srdict = child.gensr()
 		body = self.looping_body_self or self
 		termtype = MMAttrdefs.getattr(self, 'terminator')
-		if termtype == 'LAST' or (termtype == 'ALL' and child.playing != MMStates.IDLE):
+		if termtype in ('LAST', 'ALL') and not self.srdict.has_key((SCHED_DONE, child)):
 			# add child to list of children to wait for
 			ev = SCHED_STOPPING, body
 			for key, val in self.srdict.items():
