@@ -43,7 +43,10 @@ def get(url):
 		info = realsupport.getinfo(url)
 		dur = info.get('duration', 0)
 	if not dur:
-		rmadur = RMDuration(url)
-		rmadur.calcDur()
-		dur = rmadur.getDur()
+		try:
+			rmadur = RMDuration(url)
+			rmadur.calcDur()
+			dur = rmadur.getDur()
+		except rma.error:
+			return 0
 	return dur
