@@ -317,7 +317,7 @@
 # SMIL system test attributes
 (system_bitrate (int) 0 'System bitrate' default
 	'Play node only if bitrate >= value here' raw light)
-(system_captions (bool) 0 'System captions' default
+(system_captions (bool) 0 'System captions' bool3
 	'Play node only if end-user wants captions' raw light)
 (system_language (string) '' 'System language' default
 	'Play node only if end-user prefers this language' raw light)
