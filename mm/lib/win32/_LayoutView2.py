@@ -151,7 +151,6 @@ class _LayoutView2(GenFormView):
 		#frame.LoadAccelTable(grinsRC.IDR_SOURCE_EDIT)
 
 	def OnDelete(self):
-		print 'OnDelete'
 		splitter = self.GetParent()
 		mainframe = splitter.GetParent().GetMDIFrame()
 		mainframe.PostMessage(win32con.WM_COMMAND, usercmd2id(DELETE))
@@ -505,6 +504,7 @@ class TreeManager:
 	def destroy(self):
 		self.treeCtrl.removeExpandListener(self)
 		self.treeCtrl.removeMultiSelListener(self)
+		self.treeCtrl.removeDragdropListener(self)
 		self.treeCtrl = None
 		self.__imageList = None
 		self.bitmapNameToId = None
@@ -525,6 +525,7 @@ class TreeManager:
 		self.treeCtrl = TreeCtrl.TreeCtrl(parent, grinsRC.IDC_TREE1, ctrl)
 		self.treeCtrl.addMultiSelListener(self)
 		self.treeCtrl.addExpandListener(self)
+		self.treeCtrl.setDragdropListener(self)
 
 		# init the image list used in the tree
 		self.__initImageList()
@@ -624,7 +625,27 @@ class TreeManager:
 	def OnExpandChanged(self, item, isExpanded):
 		if self._listener != None:
 			self._listener.onExpandTreeNodeCtrl(item, isExpanded)
-						 
+
+	#
+	#  drag and drop support methods
+	#
+
+	def OnBeginDrag(self, item):
+		if self._listener != None:
+			self._listener.onBeginDrag(item)
+
+	def beginDrag(self, type, objectId):
+		self.treeCtrl.beginDrag(type, objectId)
+
+
+	def OnDragOver(self, item, type, objectId):
+		if self._listener != None:
+			return self._listener.onDragOver(item, type, objectId)
+
+	def OnDrop(self, item, type, objectId):
+		if self._listener != None:
+			return self._listener.onDrop(item, type, objectId)
+				
 ###########################
 debugPreview = 0
 
