@@ -1352,10 +1352,6 @@ class SingleAttrPage(AttrPage):
 			(grinsRC.IDD_EDITATTR_R3,
 			 OptionsRadioNocolonCtrl,
 			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4)),
-		'drawbox':		# Three radio buttons
-			(grinsRC.IDD_EDITATTR_R3,
-			 OptionsRadioNocolonCtrl,
-			 (grinsRC.IDC_1,grinsRC.IDC_2,grinsRC.IDC_3,grinsRC.IDC_4)),
 		'popup':		# Three radio buttons
 			(grinsRC.IDD_EDITATTR_R3,
 			 OptionsRadioNocolonCtrl,
@@ -2743,7 +2739,6 @@ class AttrGroup:
 		'system_overdub_or_caption':OptionsRadioCtrl,
 		'layout':OptionsRadioCtrl,
 		'visible':OptionsRadioCtrl,
-		'drawbox':OptionsRadioCtrl,
 		}
 
 	def getctrlclass(self,a):

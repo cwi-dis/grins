@@ -1766,7 +1766,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				ch['title'] = title
 			del attrdict['title']
 
-		ch['drawbox'] = 0
 		bg = attrdict['backgroundColor']
 		del attrdict['backgroundColor']
 		if features.compatibility == features.G2:

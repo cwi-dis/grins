@@ -1029,7 +1029,7 @@ cmif_node_prio_attrs_ignore = {
 cmif_chan_attrs_ignore = {
 	'id':0, 'title':0, 'base_window':0, 'base_winoff':0, 'z':0, 'scale':0,
 	'transparent':0, 'bgcolor':0, 'winpos':0, 'winsize':0, 'rect':0,
-	'center':0, 'drawbox':0, 'units':0,
+	'center':0, 'units':0,
 	# new 03-07-2000
 	# we can't save the chan type inside a region since a node may be associate to several nodes
 	# the channel type is determinate according to the node type
@@ -1790,8 +1790,6 @@ class SMILWriter(SMIL):
 					
 			if ch.get('center', 1):
 				attrlist.append(('%s:center' % NSGRiNSprefix, '1'))
-			if ch.get('drawbox', 1):
-				attrlist.append(('%s:drawbox' % NSGRiNSprefix, '1'))
 			
 			# we save the showBackground attribute only if it's not the default value
 			showBackground = ch.get('showBackground', 'always')
