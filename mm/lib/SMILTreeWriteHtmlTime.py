@@ -15,9 +15,9 @@ def WriteFileAsHtmlTime(root, filename, cleanSMIL = 0, grinsExt = 1, copyFiles =
 	writer.writeAsHtmlTime()
 
 
-not_xhtml_time_elements = ('brush', 'prefetch', 'text', 'textstream', )
+not_xhtml_time_elements = ('brush', 'prefetch', )
 
-not_xhtml_time_attrs = ('min', 'max', 'endsync', 'customTest', 'fillDefault', 
+not_xhtml_time_attrs = ('min', 'max',  'customTest', 'fillDefault', 
 	'restartDefault', 'syncBehaviorDefault','syncToleranceDefault', 'repeat',
 	'regPoint', 'regAlign',
 	'close', 'open', 'pauseDisplay',
@@ -341,7 +341,16 @@ class SMILHtmlTimeWriter(SMIL):
 					self.showunsupported(name)
 				for v in not_xhtml_time_attrs_values:
 					if string.find(value, v)>=0:
-						self.showunsupported(v)
+						if v == '.activateEvent':
+							value = string.split(value, '.')[0] + '.click'
+						else:
+							self.showunsupported(v)
+				
+				# endsync translation
+				if name == 'endsync':
+					if value[:3] == 'id(':
+						name = 'end'
+						value = value[3:-1] + '.end'
 				if interior:
 					attrlist.append((name, value))
 				else:	
@@ -766,7 +775,14 @@ class SMILHtmlTimeWriter(SMIL):
 				href = href + '#' + tag
 		else:
 			href = a2
-		attrs.append(('href', href))
+
+		if href[:1] == '#':
+			attrs.append(('href', href))
+			action = href[1:]
+			action = action + '.beginElement()'
+			attrs.append(('onClick', action))
+		else:
+			attrs.append(('href', href))
 
 		if accesskey is not None:
 			attrs.append(('accesskey', accesskey))
