@@ -10,11 +10,11 @@ class select:
 		for begin, end in rangelist:
 			if begin is None:
 				begin = 0
-			if (end and begin >= end) or \
-			   begin < lastend:
-				raise audio.Error, 'rangelist must be non-overlapping and sorted'
 			if end is None or end == 0:
 				end = rdr.getnframes()
+			if begin >= end or \
+			   begin < lastend:
+				raise audio.Error, 'rangelist must be non-overlapping and sorted'
 			lastbegin, lastend = begin, end
 		self.__rdr = rdr
 		self.__rangelist = rangelist
