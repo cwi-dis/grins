@@ -2,8 +2,9 @@ __version__ = "$Id$"
 
 
 """ @win32doc|_CmifView
-This module exports two important classes.
-The _CmifView or (_Window) and the _SubWindow.
+This module exports three important classes.
+The _CmifView or (_Window), _SubWindow.
+and _CmifStructView a specialization of _CmifView for smooth drawing		
 
 The _CmifView is used for toplevel childs of
 the MainFrame that have a display list.
@@ -306,7 +307,53 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		else: color=self._bgcolor
 		dc.FillSolidRect(rc,win32mu.RGB(color))
 		return 1
+
+# Specialization of _CmifView for smooth drawing		
+class _CmifStructView(_CmifView):
+	# Class contructor. initializes base classes
+	def __init__(self,doc):
+		_CmifView.__init__(self,doc)
+
+	def PaintOn(self,dc):
+		# only paint the rect that needs repainting
+		rect=win32mu.Rect(dc.GetClipBox())
+
+		# draw to offscreen bitmap for fast looking repaints
+		dcc=win32ui.CreateDC()
+		dcc.CreateCompatibleDC(dc)
+
+		bmp=win32ui.CreateBitmap()
+		bmp.CreateCompatibleBitmap(dc,rect.width(),rect.height())
 		
+		# called by win32ui
+		#self.OnPrepareDC(dcc)
+		
+		# offset origin more because bitmap is just piece of the whole drawing
+		dcc.OffsetViewportOrg((-rect.left, -rect.top))
+		oldBitmap = dcc.SelectObject(bmp)
+		dcc.SetBrushOrg((rect.left % 8, rect.top % 8))
+		dcc.IntersectClipRect(rect.tuple())
+
+		# background decoration on dcc
+		dcc.FillSolidRect(rect.tuple(),win32mu.RGB(self._active_displist._bgcolor))
+
+		# draw objects on dcc
+		if self._active_displist:
+			self._active_displist._render(dcc,rect.tuple())
+
+		# copy bitmap
+		dcc.SetViewportOrg((0, 0))
+		dcc.SetWindowOrg((0,0))
+		dcc.SetMapMode(win32con.MM_TEXT)
+		dc.BitBlt(rect.pos(),rect.size(),dcc,(0, 0), win32con.SRCCOPY)
+
+		# clean up (revisit this)
+		dcc.SelectObject(oldBitmap)
+		dcc.DeleteDC() # needed?
+		del bmp
+
+	def OnEraseBkgnd(self,dc):
+		return 1
 
 
 class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
