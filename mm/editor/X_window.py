@@ -1,5 +1,5 @@
 import X_windowbase
-from X_windowbase import TRUE, FALSE, SINGLE
+from X_windowbase import TRUE, FALSE, SINGLE, UNIT_MM
 
 from types import *
 import math
@@ -19,22 +19,26 @@ ARR_HALFWIDTH = 5
 ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
 
 class _Toplevel(X_windowbase._Toplevel):
-	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = None):
+	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
+		      type_channel = SINGLE, pixmap = None, units = UNIT_MM):
 ## 		if pixmap is None:
 ## 			pixmap = toplevel._depth <= 8
-		return _Window(self, x, y, w, h, title, 0, pixmap)
+		return _Window(self, x, y, w, h, title, 0, pixmap, units)
 
-	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = None):
+	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE,
+			type_channel = SINGLE, pixmap = None, units = UNIT_MM):
 ## 		if pixmap is None:
 ## 			pixmap = toplevel._depth <= 8
-		return _Window(self, x, y, w, h, title, 1, pixmap)
+		return _Window(self, x, y, w, h, title, 1, pixmap, units)
 
 	def getsize(self):
 		return toplevel._mscreenwidth, toplevel._mscreenheight
 
 class _Window(X_windowbase._Window):
-	def __init__(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0):
-		X_windowbase._Window.__init__(self, parent, x, y, w, h, title, defcmap, pixmap)
+	def __init__(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0,
+		     units = UNIT_MM):
+		X_windowbase._Window.__init__(self, parent, x, y, w, h, title,
+					      defcmap, pixmap, units)
 		self.arrowcache = {}
 
 	def close(self):

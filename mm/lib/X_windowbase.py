@@ -10,6 +10,8 @@ FALSE, TRUE = 0, 1
 ReadMask, WriteMask = 1, 2
 SINGLE, HTM, TEXT, MPEG = 0, 1, 2, 3
 
+UNIT_MM, UNIT_SCREEN, UNIT_PXL = 0, 1, 2
+
 Version = 'X'
 
 toplevel = None
@@ -101,11 +103,11 @@ class _Toplevel:
 	def addclosecallback(self, func, args):
 		self._closecallbacks.append(func, args)
 
-	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0):
-		return _Window(self, x, y, w, h, title, 0, pixmap)
+	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0, units = UNIT_MM):
+		return _Window(self, x, y, w, h, title, 0, pixmap, units)
 
-	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0):
-		return _Window(self, x, y, w, h, title, 1, pixmap)
+	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0, units = UNIT_MM):
+		return _Window(self, x, y, w, h, title, 1, pixmap, units)
 
 	def setcursor(self, cursor):
 		for win in self._subwindows:
@@ -285,7 +287,8 @@ class _Window:
 	#	window
 	# _exp_reg: a region in which the exposed area is built up
 	#	(top-level window only)
-	def __init__(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0):
+	def __init__(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0,
+		     units = UNIT_MM):
 		self._title = title
 		self._do_init(parent)
 		self._topwindow = self
@@ -300,11 +303,21 @@ class _Window:
 			self._colormap = parent._colormap
 			self._visual = parent._visual
 		self._depth = self._visual.depth
-		# convert mm to pixels
-		x = int(float(x) * toplevel._hmm2pxl + 0.5)
-		y = int(float(y) * toplevel._vmm2pxl + 0.5)
-		w = int(float(w) * toplevel._hmm2pxl + 0.5)
-		h = int(float(h) * toplevel._vmm2pxl + 0.5)
+		# convert to pixels
+		if units == UNIT_MM:
+			x = int(float(x) * toplevel._hmm2pxl + 0.5)
+			y = int(float(y) * toplevel._vmm2pxl + 0.5)
+			w = int(float(w) * toplevel._hmm2pxl + 0.5)
+			h = int(float(h) * toplevel._vmm2pxl + 0.5)
+		elif units == UNIT_SCREEN:
+			x = int(float(x) * toplevel._screenwidth + 0.5)
+			y = int(float(y) * toplevel._screenheight + 0.5)
+			w = int(float(w) * toplevel._screenwidth + 0.5)
+			h = int(float(h) * toplevel._screenheight + 0.5)
+		elif units == UNIT_PXL:
+			pass
+		else:
+			raise error, 'bad units specified'
 		# XXX--somehow set the position
 		geometry = '+%d+%d' % (x, y)
 		if not title:
@@ -452,11 +465,23 @@ class _Window:
 				self._pixmap.CopyArea(self._form, self._gc,
 						      x, y, w, h, x, y)
 
-	def getgeometry(self):
+	def getgeometry(self, units = UNIT_MM):
 		x, y = self._form.TranslateCoords(0, 0)
 		w, h = self._rect[2:]
-		return float(x) / toplevel._hmm2pxl, y / toplevel._vmm2pxl, \
-		       w / toplevel._hmm2pxl, h / toplevel._vmm2pxl
+		if units == UNIT_MM:
+			return float(x) / toplevel._hmm2pxl, \
+			       float(y) / toplevel._vmm2pxl, \
+			       float(w) / toplevel._hmm2pxl, \
+			       float(h) / toplevel._vmm2pxl
+		elif units == UNIT_SCREEN:
+			return float(x) / toplevel._screenwidth, \
+			       float(y) / toplevel._screenheight, \
+			       float(w) / toplevel._screenwidth, \
+			       float(h) / toplevel._screenheight
+		elif units == UNIT_PXL:
+			return x, y, w, h
+		else:
+			raise error, 'bad units specified'
 
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, type_channel = SINGLE):
 		return _SubWindow(self, coordinates, 0, pixmap, transparent)
