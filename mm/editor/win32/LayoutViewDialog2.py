@@ -51,6 +51,10 @@ class LayoutViewDialog2(ViewDialog.ViewDialog):
 		self.load_geometry()
 		self.assertwndcreated()	
 		self.__window.show()
+		
+		# key time slider
+		self.keyTimeSliderCtrl = self.__window.getKeyTimeSlider()
+		
 
 	def is_showing(self):
 		if self.__window is None:
