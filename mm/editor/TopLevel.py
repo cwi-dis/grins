@@ -82,21 +82,21 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				CHANNELVIEW(callback = (self.view_callback, (2,))),
 				LINKVIEW(callback = (self.view_callback, (3,))),
 				LAYOUTVIEW(callback = (self.view_callback, (4,))),
+				LAYOUTVIEW2(callback = (self.view_callback, (7, ))),
+				HIDE_LAYOUTVIEW2(callback = (self.hide_view_callback, (7, ))),
 				HIDE_CHANNELVIEW(callback = (self.hide_view_callback, (2,))),
 				HIDE_LINKVIEW(callback = (self.hide_view_callback, (3,))),
 				HIDE_LAYOUTVIEW(callback = (self.hide_view_callback, (4,))),
 				HIDE_USERGROUPVIEW(callback = (self.hide_view_callback, (5,))),
 				]
-			self.__ugroup = [USERGROUPVIEW(callback = (self.view_callback, (5,)))]
-		else:
-			self.__ugroup = []
-		if features.compatibility == compatibility.Boston:
-			self.commandlist = self.commandlist + [
+			self.__ugroup = [
+				USERGROUPVIEW(callback = (self.view_callback, (5,))),
 				TRANSITIONVIEW(callback = (self.view_callback, (6, ))),
 				HIDE_TRANSITIONVIEW(callback = (self.hide_view_callback, (6, ))),
-				LAYOUTVIEW2(callback = (self.view_callback, (7, ))),
-				HIDE_LAYOUTVIEW2(callback = (self.hide_view_callback, (7, )))]
+				]
 				
+		else:
+			self.__ugroup = []
 		if hasattr(self, 'do_edit'):
 			self.commandlist.append(EDITSOURCE(callback = (self.edit_callback, ())))
 		if self.main.cansave():
@@ -160,6 +160,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.transitionview.show()
 		if 'layout' in defaultviews and self.layoutview is not None:
 			self.layoutview.show()
+		if 'layout2' in defaultviews and self.layoutview2 is not None:
+			self.layoutview2.show()
 		if 'ugroup' in defaultviews and self.ugroupview is not None:
 			self.ugroupview.show()
 		if 'link' in defaultviews and self.links is not None:
