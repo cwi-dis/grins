@@ -61,7 +61,7 @@ class Hlinks:
 		try:
 			self.links.remove(link)
 		except ValueError:
-			print 'dellink: try reverse link'
+## 			print 'dellink: try reverse link'
 			self.links.remove(self.revlink(link))
 
 	# Add a list of links
