@@ -198,12 +198,14 @@ class ToolbarMixin:
 
 class GRiNSToolbar(window.Wnd):
 	def __init__(self, parent, name, resid, enabledrag):
-		style = win32con.WS_CHILD |\
-			win32con.WS_VISIBLE |\
-			afxres.CBRS_TOP |\
-			afxres.CBRS_TOOLTIPS|\
-			afxres.CBRS_FLYBY|\
-			afxres.CBRS_SIZE_DYNAMIC
+		CBRS_GRIPPER = 0x00400000   # Missing from afxres.py
+		style = (win32con.WS_CHILD |
+			win32con.WS_VISIBLE |
+			afxres.CBRS_TOP |
+			afxres.CBRS_TOOLTIPS|
+			afxres.CBRS_FLYBY|
+			afxres.CBRS_SIZE_DYNAMIC|
+			CBRS_GRIPPER)
 		wndToolBar = win32ui.CreateToolBar(parent,style,afxres.AFX_IDW_TOOLBAR)
 		wndToolBar.LoadToolBar(resid)
 		wndToolBar.EnableDocking(afxres.CBRS_ALIGN_ANY)
