@@ -2727,8 +2727,10 @@ class BandWidthWidget(MMWidgetDecoration):
 		MMWidgetDecoration.moveto(self, coords)
 		self.okboxes = []
 		self.notokboxes = []
+		self.maybeokboxes = []
 		self.okfocusboxes = []
 		self.notokfocusboxes = []
+		self.maybeokfocusboxes = []
 		self._addallbandwidthinfo(node, timemapper)
 
 	def _addallbandwidthinfo(self, node, timemapper):
@@ -2749,11 +2751,16 @@ class BandWidthWidget(MMWidgetDecoration):
 		for box in boxes:
 			t0, t1, bwlo, bwhi, status = box
 			x0 = timemapper.interptime2pixel(t0, align='right')
-			x1 = timemapper.interptime2pixel(t1, align='left')
+			if t1 > 0:
+				x1 = timemapper.interptime2pixel(t1, align='left')
+			else:
+				x1 = timemapper.interptime2pixel(t1, align='right')
 			y0 = my_b - int(bwfactor*bwhi)
 			y1 = my_b - int(bwfactor*bwlo)
 			box = (x0, y0, x1-x0, y1-y0)
-			if status:
+			if status == 'preroll':
+				self.maybeokboxes.append((node, box))
+			elif status:
 				self.notokboxes.append((node, box))
 			else:
 				self.okboxes.append((node, box))
@@ -2801,8 +2808,10 @@ class BandWidthWidget(MMWidgetDecoration):
 		displist.drawfbox(BANDWIDTH_FREE_COLOR, (x, y, w, h))
 		self._drawboxes(displist, BANDWIDTH_OK_COLOR, self.okboxes)
 		self._drawboxes(displist, BANDWIDTH_NOTOK_COLOR, self.notokboxes)
+		self._drawboxes(displist, BANDWIDTH_MAYBEOK_COLOR, self.maybeokboxes)
 		self._drawboxes(displist, BANDWIDTH_OKFOCUS_COLOR, self.okfocusboxes)
 		self._drawboxes(displist, BANDWIDTH_NOTOKFOCUS_COLOR, self.notokfocusboxes)
+		self._drawboxes(displist, BANDWIDTH_MAYBEOKFOCUS_COLOR, self.maybeokfocusboxes)
 
 	def _drawboxes(self, displist, color, boxes):
 		for node, box in boxes:
@@ -2818,8 +2827,10 @@ class BandWidthWidget(MMWidgetDecoration):
 		# to let us redraw. It should be done distributed.
 		took = []
 		tonotok = []
+		tomaybeok = []
 		tookfocus = []
 		tonotokfocus = []
+		tomaybeokfocus = []
 		redrawareas = []
 		for n, box in self.okboxes:
 			if n in focusnodes:
@@ -2833,6 +2844,12 @@ class BandWidthWidget(MMWidgetDecoration):
 				redrawareas.append((box[0], box[0]+box[2]))
 		for nb in tonotokfocus:
 			self.notokboxes.remove(nb)
+		for n, box in self.maybeokboxes:
+			if n in focusnodes:
+				tomaybeokfocus.append((n, box))
+				redrawareas.append((box[0], box[0]+box[2]))
+		for nb in tomaybeokfocus:
+			self.maybeokboxes.remove(nb)
 		for n, box in self.okfocusboxes:
 			if not n in focusnodes:
 				took.append((n, box))
@@ -2845,19 +2862,31 @@ class BandWidthWidget(MMWidgetDecoration):
 				redrawareas.append((box[0], box[0]+box[2]))
 		for nb in tonotok:
 			self.notokfocusboxes.remove(nb)
+		for n, box in self.maybeokfocusboxes:
+			if not n in focusnodes:
+				tomaybeok.append((n, box))
+				redrawareas.append((box[0], box[0]+box[2]))
+		for nb in tomaybeok:
+			self.maybeokfocusboxes.remove(nb)
 		for nb in took:
 			self.okboxes.append(nb)
 		for nb in tonotok:
 			self.notokboxes.append(nb)
+		for nb in tomaybeok:
+			self.maybeokboxes.append(nb)
 		for nb in tookfocus:
 			self.okfocusboxes.append(nb)
 		for nb in tonotokfocus:
 			self.notokfocusboxes.append(nb)
+		for nb in tomaybeokfocus:
+			self.maybeokfocusboxes.append(nb)
 		displist.fgcolor(TEXTCOLOR)
 		self._drawboxes(displist, BANDWIDTH_OK_COLOR, took)
 		self._drawboxes(displist, BANDWIDTH_NOTOK_COLOR, tonotok)
+		self._drawboxes(displist, BANDWIDTH_MAYBEOK_COLOR, tomaybeok)
 		self._drawboxes(displist, BANDWIDTH_OKFOCUS_COLOR, tookfocus)
 		self._drawboxes(displist, BANDWIDTH_NOTOKFOCUS_COLOR, tonotokfocus)
+		self._drawboxes(displist, BANDWIDTH_MAYBEOKFOCUS_COLOR, tomaybeokfocus)
 		if self.mmwidget.greyout:
 			for left, right in redrawareas:
 				self.mmwidget.greyout.redraw_partial(displist, left, right)
