@@ -32,7 +32,7 @@ from DrawTk import DrawLayer, DrawRect
 from win32mu import Point, Rect
 
 # base classes
-from pywin.mfc import docview
+from pywinlib.mfc import docview
 import win32window
 	
 # mixins

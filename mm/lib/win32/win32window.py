@@ -1259,7 +1259,7 @@ class Region(Window):
 	def CreateOSWindow(self, rect=None, html=0):
 		if self._oswnd:
 			return self._oswnd
-		from pywin.mfc import window
+		from pywinlib.mfc import window
 		Afx=win32ui.GetAfx()
 		Sdk=win32ui.GetWin32Sdk()
 
