@@ -350,6 +350,14 @@ class XMLParser:
 	rawdata = self.rawdata
 	# Now parse the data between k and j into a tag and attrs
 	attrdict = {}
+	try:
+	    # convert attributes list to dictionary
+	    d = {}
+	    for a in attributes:
+		d[a] = None
+	    attributes = d
+	except TypeError:
+	    pass
 	while k < j:
 	    res = attrfind.match(rawdata, k)
 	    if not res: break
