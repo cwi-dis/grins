@@ -36,26 +36,38 @@ Main Menu: contains application level commands,
 Dynamic Toolbar with states: Player,Editor no doc,Editor with doc
 """
 
-import win32ui, win32con, win32api
-Afx=win32ui.GetAfx()
-Sdk=win32ui.GetWin32Sdk()
-import os
 
+# win32 libs
+import win32ui, win32con, win32api 
+Sdk = win32ui.GetWin32Sdk()
+Afx = win32ui.GetAfx()
+from win32ig import win32ig
+
+# constants
 from types import *
-from WMEVENTS import *
 from appcon import *
-from sysmetrics import *
-import grinsRC
+from WMEVENTS import *
 import afxexttb
-
-import win32mu
-import usercmd, usercmdui, wndusercmd
+import grinsRC
 import sysmetrics
+import afxres, commctrl
 
+# utilities
+import win32mu
+import math
+
+# commands
+import usercmd, wndusercmd, usercmdui
+
+# globals 
+import __main__
+
+# menus
+import win32menu, MenuTemplate
+
+# dialogs
 import win32dialog
 
-import win32menu, MenuTemplate
-import __main__
 
 import settings
 if settings.user_settings.get('use_nodoc_menubar'):
@@ -64,14 +76,6 @@ else:
 	USE_NODOC_MENUBAR = 0
 import features
 
-
-###########################################################
-# import window core stuff
-from pywin.mfc import window,object,docview,dialog
-import afxres,commctrl
-import cmifwnd	
-
-
 ###########################################################
 
 # views types
@@ -79,19 +83,17 @@ from _LayoutView import _LayoutView
 from _UsergroupView import _UsergroupView
 from _TransitionView import _TransitionView
 from _LinkView import _LinkView
-from _CmifView import _CmifView, _CmifStructView
+from _StructView import _StructView
 from _SourceView import _SourceView
 from _LayoutView2 import _LayoutView2
 
 #  Player views
-# from _CmifView import _CmifPlayerView
-# _PlayerView= _CmifPlayerView
 from _PlayerView import _PlayerView  
 _SourceView=_SourceView
 
 # editor document views
-_HierarchyView=_CmifStructView
-_ChannelView=_CmifStructView
+_HierarchyView=_StructView
+_ChannelView=_StructView
 _LinkView=_LinkView
 _LayoutView=_LayoutView
 _LayoutView2=_LayoutView2
@@ -117,7 +119,7 @@ appview={
 	5:{'cmd':usercmd.HIDE_USERGROUPVIEW,'title':'User groups','id':'ugview_','class':_UsergroupView,'freezesize':1},
 	6:{'cmd':usercmd.HIDE_TRANSITIONVIEW,'title':'Transitions','id':'trview_','class':_TransitionView,'freezesize':1},
 	7:{'cmd':usercmd.HIDE_SOURCE,'title':'Source','id':'sview_','class':_SourceView,'hosted':0},
-	8:{'cmd':-1,'title':'','id':'cmifview_','class':_CmifView,'hosted':0},
+#	8:{'cmd':-1,'title':'','id':'cmifview_','class':_CmifView,'hosted':0},
 	9:{'cmd':usercmd.HIDE_LAYOUTVIEW2,'title':'Layout view 2','id':'lview2_','class':_LayoutView2,'freezesize':1},
 }
 
@@ -148,8 +150,9 @@ if not features.lightweight:
 NO_MINIMIZEBOX = 0
 
 
-
 ###########################################################
+from pywin.mfc import window, docview
+
 class GRiNSToolbar(window.Wnd):
 	def __init__(self, parent):
 		style = win32con.WS_CHILD |\
@@ -167,19 +170,40 @@ class GRiNSToolbar(window.Wnd):
 
 
 ###########################################################
-class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
+
+# mixins
+import win32window
+import DropTarget
+
+class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget):
 	wndpos=None
 	wndsize=None
 	wndismax=0
 	def __init__(self):
 		window.MDIFrameWnd.__init__(self)
-		cmifwnd._CmifWnd.__init__(self)
-		self._do_init(__main__.toplevel)
+		win32window.Window.__init__(self)
+		DropTarget.DropTarget.__init__(self)
+
+		# menu support
+		self._menu = None		# Dynamically created rightmousemenu
+		self._popupmenu = None	# Statically created rightmousemenu (for views)
+		self._popup_point =(0,0)
+		self._cbld = {}
+		
+		# window title
+		self._title = None
+
+		# scroll indicator
+		self._canscroll = 0
+
+		# player state
 		self.__playerstate = wndusercmd.TB_STOP
+
+		# full screen player
 		self.__fsPlayer = None
-	
+
 	# Create the OS window and set the toolbar	
-	def create(self,title):
+	def createOsWnd(self,title):
 		strclass=self.registerwndclass()		
 		self._obj_.Create(strclass,title)
 
@@ -212,17 +236,19 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 
 		# Set sizes (balance forces)
 		if not MDIFrameWnd.wndsize or MDIFrameWnd.wndismax:
-			MDIFrameWnd.wndsize=win32mu.Point(((3*scr_width_pxl/4),(3*scr_height_pxl/4)))
+			MDIFrameWnd.wndsize=win32mu.Point(((3*sysmetrics.scr_width_pxl/4),(3*sysmetrics.scr_height_pxl/4)))
 		cs.cx,cs.cy=MDIFrameWnd.wndsize.tuple()
-		cxmax=3*scr_width_pxl/4
-		cymax=3*scr_height_pxl/4
+		cxmax=3*sysmetrics.scr_width_pxl/4
+		cymax=3*sysmetrics.scr_height_pxl/4
 		if cs.cx>cxmax:cs.cx=cxmax
 		if cs.cy>cymax:cs.cy=cymax
+
+		#win32window.Window.create(self, None, (0, 0, cs.cx, cs.cy), UNIT_PXL)
 
 		# Set pos (balance forces)
 		# if it is the first then center else leave the system to select
 		if not MDIFrameWnd.wndpos:
-			MDIFrameWnd.wndpos=win32mu.Point((scr_width_pxl/8,scr_height_pxl/8))
+			MDIFrameWnd.wndpos=win32mu.Point((sysmetrics.scr_width_pxl/8,sysmetrics.scr_height_pxl/8))
 			cs.x,cs.y=MDIFrameWnd.wndpos.tuple()
 		else:
 			cs.x=win32con.CW_USEDEFAULT
@@ -239,17 +265,6 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 		cs.hMenu=self._mainmenu.GetHandle()
 		return cs.to_csd()
 
-	# return commnds class id
-	def get_cmdclass_id(self,cmdcl):
-		if usercmdui.class2ui.has_key(cmdcl):
-			return usercmdui.class2ui[cmdcl].id
-		else: 
-			print 'CmdClass not found',cmdcl
-			return -1
-
-	# Returns a submenu from its string id (e.g 'File','Edit',etc)
-	def get_submenu(self,strid):
-		return self._mainmenu._submenus_dict.get(strid)
 
 	# Called after the window has been created for further initialization
 	# Called after CWnd::OnCreate
@@ -347,6 +362,26 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 			self.onEvent(DropFile,(0, 0, filename))
 		win32api.DragFinish(hDrop)
 
+	def onDropEvent(self, event, (x, y, filename)):
+		x,y = self._pxl2rel((x, y),self._canvas)
+		self.onEvent(event, (x, y, filename))
+	
+	# copy/paste files support
+	# to enable paste file for a wnd: 
+	#	1. enable command mechanism
+	#	2. register event 'PasteFile'
+	def OnPasteFile(self,id,code):
+		filename=Sdk.GetClipboardFileData()
+		if filename:
+			import longpath
+			filename=longpath.short2longpath(filename)
+			x,y=self._DPtoLP(self._popup_point)
+			x,y = self._pxl2rel((x, y),self._canvas)
+			self.onEvent(PasteFile,(x, y, filename))
+
+	def OnUpdateEditPaste(self,cmdui):
+		cmdui.Enable(Sdk.IsClipboardFileDataAvailable())
+
 	def onInitMenu(self,params):
 		if Sdk.IsClipboardFormatAvailable(win32con.CF_TEXT):
 			pass # enable paste file
@@ -394,8 +429,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 
 	# Displays the about dialog
 	def OnAbout(self,id,code):
-		if self.in_modal_create_box_mode(): return
-		self.assert_not_in_create_box()
+		#if self.in_modal_create_box_mode(): return
+		#self.assert_not_in_create_box()
 		from version import version
 		dlg=win32dialog.AboutDlg(arg=0,version = 'GRiNS ' + version,parent=self)
 		dlg.DoModal()
@@ -411,8 +446,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 
 	# Response to windows arrangement commands
 	def OnWndUserCmd(self,id,code):
-		if self.in_modal_create_box_mode(): return
-		self.assert_not_in_create_box()
+		#if self.in_modal_create_box_mode(): return
+		#self.assert_not_in_create_box()
 		client=self.GetMDIClient()
 		if id==afxres.ID_WINDOW_TILE_HORZ:
 			client.SendMessage(win32con.WM_MDITILE,win32con.MDITILE_HORIZONTAL)			
@@ -438,11 +473,11 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 	def init_cmif(self, x, y, w, h, title,units = UNIT_MM,
 		      adornments = None,commandlist = None):	
 		if not w or w==0:
-			w=(3*scr_width_mm/4)
+			w=(3*sysmetrics.scr_width_mm/4)
 		if not h or h==0:
-			h=(3*scr_height_mm/4)
-		if not x: x=scr_width_mm/8
-		if not y: y=scr_height_mm/8
+			h=(3*sysmetrics.scr_height_mm/4)
+		if not x: x=sysmetrics.scr_width_mm/8
+		if not y: y=sysmetrics.scr_height_mm/8
 
 		self.newcmwindow=self.newwindow #alias
 		self._canscroll = 0
@@ -452,10 +487,10 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 		self._sizes = 0, 0, 1, 1
 		# we must check since we reuse
 		if self not in __main__.toplevel._subwindows:
-			self._parent._subwindows.insert(0, self)
-		xp,yp,wp,hp = to_pixels(x,y,w,h,units)
+			__main__.toplevel._subwindows.insert(0, self)
+		xp,yp,wp,hp = sysmetrics.to_pixels(x,y,w,h,units)
 		self._rectb= xp,yp,wp,hp
-		self._sizes = (float(xp)/scr_width_pxl,float(yp)/scr_height_pxl,float(wp)/scr_width_pxl,float(hp)/scr_height_pxl)
+		self._sizes = (float(xp)/sysmetrics.scr_width_pxl,float(yp)/sysmetrics.scr_height_pxl,float(wp)/sysmetrics.scr_width_pxl,float(hp)/sysmetrics.scr_height_pxl)
 		self._depth = __main__.toplevel.getscreendepth()
 		
 		# all, are historic alias but useful to markup externals
@@ -664,6 +699,112 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 		client.SendMessage(win32con.WM_MDIMAXIMIZE,child.GetSafeHwnd())
 
 
+	###############################################
+	#
+	# Popup menu
+	#
+
+	# Destroy popup menu
+	def destroy_menu(self):
+		if self._menu:
+			self._menu.DestroyMenu()
+			del self._menu 
+		self._menu = None
+
+	# appent an entry to popup menu
+	def append_menu_entry(self,entry=None):
+		if not self._menu:return
+		if not entry:
+			self._menu.AppendMenu(win32con.MF_SEPARATOR)
+		else:
+			acc,label,cbt=entry
+			id=self._menu.GetMenuItemCount()+1
+			flags=win32con.MF_STRING|win32con.MF_ENABLED
+			self._menu.AppendMenu(flags, id, label)
+			self._cbld[id]=cbt
+
+	def setpopupmenu(self, menutemplate):
+		# Menutemplate is a MenuTemplate-style menu template.
+		# It should be turned into an win32menu-style menu and put
+		# into self._popupmenu.
+		self._destroy_popupmenu()
+		self._popupmenu = win32menu.Menu('popup')
+		self._popupmenu.create_popup_from_menubar_spec_list(menutemplate,self.get_cmdclass_id)
+		
+	def _destroy_popupmenu(self):
+		# Free resources held by self._popupmenu and set it to None
+		if self._popupmenu:self._popupmenu.DestroyMenu()
+		self._popupmenu = None		
+
+
+	#
+	# win32window.Window overrides
+	#
+	# Returns true if the point is inside the window
+	def inside(self,pt):
+		rc=win32mu.Rect(self.GetClientRect())
+		return rc.isPtInRect(win32mu.Point(pt))
+
+	def getwindowpos(self, rel=None):
+		return self.GetClientRect()
+
+	# Override win32window.Window method
+	def update(self):
+		pass
+
+	# Returns the grins document
+	def getgrinsdoc(self):
+		return self._cmifdoc
+
+	# Returns the grins frame
+	def getgrinsframe(self):
+		return self
+
+	def _convert_color(self, color):
+		return color 
+
+	#
+	# Image management section
+	#
+	# Returns the size of the image
+	def _image_size(self, file):
+		toplevel=__main__.toplevel
+		try:
+			xsize, ysize = toplevel._image_size_cache[file]
+		except KeyError:
+			img = win32ig.load(file)
+			xsize,ysize,depth=win32ig.size(img)
+			toplevel._image_size_cache[file] = xsize, ysize
+			toplevel._image_cache[file] = img
+		self.imgAddDocRef(file)
+		return xsize, ysize
+
+	def _image_handle(self, file):
+		return __main__.toplevel._image_cache[file]
+
+	# XXX: to be removed
+	def imgAddDocRef(self,file):
+		toplevel=__main__.toplevel
+		doc=self.getgrinsdoc()
+		if doc==None: doc="__Unknown"
+		if toplevel._image_docmap.has_key(doc):
+			if file not in toplevel._image_docmap[doc]:
+				toplevel._image_docmap[doc].append(file)
+		else:
+			toplevel._image_docmap[doc]=[file,]
+
+
+	# return commnds class id
+	def get_cmdclass_id(self,cmdcl):
+		if usercmdui.class2ui.has_key(cmdcl):
+			return usercmdui.class2ui[cmdcl].id
+		else: 
+			print 'CmdClass not found',cmdcl
+			return -1
+
+	# Returns a submenu from its string id (e.g 'File','Edit',etc)
+	def get_submenu(self,strid):
+		return self._mainmenu._submenus_dict.get(strid)
 
 	###############################################
 	# BEGIN CMD LIST SECTION
@@ -780,8 +921,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 
 	# Response to a user command (menu selection)
 	def OnUserCmd(self,id,code):
-		if self.in_modal_create_box_mode(): return
-		self.assert_not_in_create_box()
+		#if self.in_modal_create_box_mode(): return
+		#self.assert_not_in_create_box()
 		cmd=None
 			
 		# look first self._active_child cmds
@@ -868,8 +1009,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 	
 	# Response to dynamic menus commands	
 	def OnUserDynCmd(self,id,code):
-		if self.in_modal_create_box_mode(): return
-		self.assert_not_in_create_box()
+		#if self.in_modal_create_box_mode(): return
+		#self.assert_not_in_create_box()
 		for cbd in self._dyncmds.values():
 			if cbd.has_key(id):
 				if not cbd[id]:return
@@ -983,6 +1124,17 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd):
 			menu.TrackPopupMenu(pt,win32con.TPM_RIGHTBUTTON|win32con.TPM_LEFTBUTTON,
 				self)
 	
+	# Response to left button down
+	def onLButtonDown(self, params):
+		msg=win32mu.Win32Msg(params)
+		self.onMouseEvent(msg.pos(),Mouse0Press)
+
+	# Response to left button up
+	def onLButtonUp(self, params):
+		msg=win32mu.Win32Msg(params)
+		self.onMouseEvent(msg.pos(),Mouse0Release)
+
+
 	# Set the editor toolbar to the state without a document
 	def setEditorFrameToolbar(self):
 		self._wndToolBar.SetButtons(4)
