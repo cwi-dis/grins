@@ -610,7 +610,10 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		else:  raise "undefined view request"
 		if strid=='pview_':
 			exporting = adornments.get('exporting')
-			if exporting:
+			toplevel = __main__.toplevel
+			if toplevel.is_embedded():
+				return self.newEmbedded(x, y, w, h, title, units, adornments, canvassize, commandlist, strid, bgcolor)
+			elif exporting:
 				return self.newExport(x, y, w, h, title, units, adornments,canvassize, commandlist,strid, bgcolor)
 			elif adornments.has_key('show') and adornments['show']=='fullscreen':
 				if not self.__fsPlayer:
@@ -635,6 +638,12 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 
 	def newExport(self, x, y, w, h, title, units = UNIT_MM, adornments=None, canvassize=None, commandlist=None, strid='cmifview_', bgcolor=None):
 		return win32window.ViewportContext(self, w, h, units, bgcolor)
+
+	def newEmbedded(self, x, y, w, h, title, units = UNIT_MM, adornments=None, canvassize=None, commandlist=None, strid='cmifview_', bgcolor=None):
+		self.ShowWindow(win32con.SW_HIDE)
+		hwnd =  __main__.toplevel.get_embedded_hwnd()
+		import embedding
+		return embedding.EmbeddedWnd(self, w, h, units, bgcolor, hwnd, title)
 
 	# Return the framework document object associated with this frame
 	def getdoc(self):
