@@ -35,6 +35,7 @@ mimetypes = {
 
 descriptions = {
 	'application/smil': 'SMIL presentations',
+	'application/smil+xml': 'SMIL presentations',
 	'application/x-grins-cmif': 'CMIF presentations',
 	'application/x-grins-project': 'GRiNS Project files',
 	'application/x-grins-binary-project': 'GRiNS Binary Project files',
