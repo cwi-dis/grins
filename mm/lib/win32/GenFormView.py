@@ -8,6 +8,8 @@ import components
 # mfc docview stuff
 from pywinlib.mfc import window,object,docview
 
+import usercmdui
+
 class GenFormView(docview.FormView,components.ControlsDict):
 	# Class constructor. Initializes base class and associates controls to ids
 	def __init__(self,doc,idd,freezesize=1):
@@ -93,13 +95,6 @@ class GenFormView(docview.FormView,components.ControlsDict):
 	# Returns true if the OS window exists
 	def is_oswindow(self):
 		return (hasattr(self,'GetSafeHwnd') and self.GetSafeHwnd())
-
-
-	# Return the user cmd from the command class
-	def GetUserCmdId(self,cmdcl):
-		if hasattr(self,'GetParent'):
-			return self.GetParent().GetUserCmdId(cmdcl)
-		return -1
 
 	# Adjust dimensions to fit resource template
 	def fittemplate(self):

@@ -1592,22 +1592,31 @@ class Region(Window):
 	#
 	# Returns the size of the image
 	def _image_size(self, file):
-		toplevel=__main__.toplevel
+		toplevel = __main__.toplevel
 		try:
 			xsize, ysize = toplevel._image_size_cache[file]
 		except KeyError:
 			img = win32ig.load(file)
-			xsize,ysize,depth=win32ig.size(img)
-			toplevel._image_size_cache[file] = xsize, ysize
-			toplevel._image_cache[file] = img
-		self._topwindow.imgAddDocRef(file)
+			xsize, ysize, depth = win32ig.size(img)
+			toplevel.cacheimage(self.getgrinsdoc(), file, img, (xsize, ysize))
 		return xsize, ysize
 
 	# Returns handle of the image
 	def _image_handle(self, file):
-		return  __main__.toplevel._image_cache[file]
+		try:
+			return  __main__.toplevel._image_cache[file]
+		except:
+			img = win32ig.load(file)
+			xsize, ysize, depth = win32ig.size(img)
+			toplevel.cacheimage(self.getgrinsdoc(), file, img, (xsize, ysize))
+			return img
 
-
+	def getgrinsdoc(self):
+		if self != self._toplevel:
+			return self._toplevel.getgrinsdoc()
+		else:
+			print 'toplevel should override getgrinsdoc'
+	
 	#
 	# Box creation section
 	#
@@ -2253,8 +2262,8 @@ class Viewport(Region):
 	def updateMouseCursor(self):
 		self._ctx.updateMouseCursor()
 
-	def imgAddDocRef(self, file):
-		self._ctx.imgAddDocRef(file)
+	def getgrinsdoc(self):
+		return self._ctx.getgrinsdoc(file)
 
 	def onMouseEvent(self, point, event, params=None):
 		import WMEVENTS
@@ -2382,8 +2391,8 @@ class ViewportContext:
 	def updateMouseCursor(self):
 		pass
 
-	def imgAddDocRef(self, file):
-		self._wnd.imgAddDocRef(file)
+	def getgrinsdoc(self):
+		return self._wnd.getgrinsdoc(file)
 
 	def CreateSurface(self, w, h):
 		ddsd = ddraw.CreateDDSURFACEDESC()

@@ -26,7 +26,7 @@ import win32mu
 from appcon import *
 from WMEVENTS import *
 
-import usercmd
+import usercmd, usercmdui
 
 # generic wnd class
 from pywinlib.mfc import window
@@ -143,10 +143,10 @@ class _FSPlayerView(window.Wnd, win32window.DDWndLayer):
 	def onKeyDown(self, params):
 		msg = win32mu.Win32Msg(params)
 		if msg._wParam==win32con.VK_F1:
-			self._frame.PostMessage(win32con.WM_COMMAND, self._frame.GetUserCmdId(usercmd.PLAY))
+			self._frame.PostMessage(win32con.WM_COMMAND, usercmdui.usercmd2id(usercmd.PLAY))
 		if msg._wParam==win32con.VK_ESCAPE:
 			self._frame.PostMessage(win32con.WM_COMMAND, 
-				self._frame.GetUserCmdId(usercmd.HIDE_PLAYERVIEW))
+				usercmdui.usercmd2id(usercmd.HIDE_PLAYERVIEW))
 			self._frame.delFSPlayer()
 			self.PostMessage(win32con.WM_CLOSE)				
 		
@@ -194,7 +194,7 @@ class _FSPlayerView(window.Wnd, win32window.DDWndLayer):
 		msg = win32mu.Win32Msg(params)
 		flags = 0
 		pt=msg.pos()
-		self._frame.PostMessage(win32con.WM_COMMAND, self._frame.GetUserCmdId(usercmd.PLAY))
+		self._frame.PostMessage(win32con.WM_COMMAND, usercmdui.usercmd2id(usercmd.PLAY))
 
 	def newviewport(self, x, y, w, h, title, units = UNIT_MM, adornments=None, canvassize=None, commandlist=None, strid='cmifview_', bgcolor=None):
 		return ViewportWnd(self, (x, y, w, h), title, bgcolor)

@@ -530,17 +530,13 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 			self._menu.AppendMenu(flags, id, label)
 			self._cbld[id]=cbt
 
-	# return commnds class id
-	def get_cmdclass_id(self, cmdcl):
-		return usercmdui.usercmd2id(cmdcl)
-
 	def setpopupmenu(self, menutemplate):
 		# Menutemplate is a MenuTemplate-style menu template.
 		# It should be turned into an win32menu-style menu and put
 		# into self._popupmenu.
 		self._destroy_popupmenu()
 		self._popupmenu = win32menu.Menu('popup')
-		self._popupmenu.create_popup_from_menubar_spec_list(menutemplate,self.get_cmdclass_id)
+		self._popupmenu.create_popup_from_menubar_spec_list(menutemplate, usercmdui.usercmd2id)
 		
 	def _destroy_popupmenu(self):
 		# Free resources held by self._popupmenu and set it to None
@@ -774,11 +770,9 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 		rcParent=win32mu.Rect(self._parent.GetWindowRect())
 		return self._pxl2rel(rc.tuple_ps(),rcParent.tuple_ps())
 
-
 	#
 	# Image section overrides
 	#
-
 	# Returns the size of the image
 	def _image_size(self, file):
 		toplevel=__main__.toplevel
@@ -786,25 +780,12 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 			xsize, ysize = toplevel._image_size_cache[file]
 		except KeyError:
 			img = win32ig.load(file)
-			xsize,ysize,depth=win32ig.size(img)
-			toplevel._image_size_cache[file] = xsize, ysize
-			toplevel._image_cache[file] = img
-		self.imgAddDocRef(file)
+			xsize, ysize, depth = win32ig.size(img)
+			toplevel.cacheimage(self.getgrinsdoc(), file, img, (xsize, ysize))
 		return xsize, ysize
 
 	def _image_handle(self, file):
 		return __main__.toplevel._image_cache[file]
-
-	# XXX: to be removed
-	def imgAddDocRef(self,file):
-		toplevel=__main__.toplevel
-		doc=self.getgrinsdoc()
-		if doc==None: doc="__Unknown"
-		if toplevel._image_docmap.has_key(doc):
-			if file not in toplevel._image_docmap[doc]:
-				toplevel._image_docmap[doc].append(file)
-		else:
-			toplevel._image_docmap[doc]=[file,]
 
 
 			

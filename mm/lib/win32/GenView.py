@@ -75,12 +75,6 @@ class GenView:
 	def is_oswindow(self):
 		return (hasattr(self,'GetSafeHwnd') and self.GetSafeHwnd())
 
-	# Return the user cmd from the command class
-	def GetUserCmdId(self,cmdcl):
-		if hasattr(self,'GetParent'):
-			return self.GetParent().GetUserCmdId(cmdcl)
-		return -1
-
 	# Helper function that given the string id of the control calls the callback
 	def call(self,strcmd):
 		if self._cbdict.has_key(strcmd):
