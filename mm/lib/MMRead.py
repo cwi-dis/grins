@@ -13,24 +13,36 @@ import MMCache
 import sys
 
 
-# Read a CMF file, given by filename
+# Read a CMF file, given by url
 #
-def ReadFile(filename):
-	return ReadFileContext(filename, _newctx())
+def ReadFile(url):
+	return ReadFileContext(url, _newctx())
 
-def ReadFileContext(filename, context):
-	import os
-	context.setdirname(os.path.dirname(filename))
-	root = MMCache.loadcache(filename, context)
+def ReadFileContext(url, context):
+	import os, MMurl, posixpath
+	type, str = MMurl.splittype(url)
+	host, path = MMurl.splithost(str)
+	dir = posixpath.dirname(path)
+	if host:
+		dir = '//%s%s' % (host, dir)
+	if type:
+		dir = '%s:%s' % (type, dir)
+	context.setdirname(dir)
+	if not type and not host:
+		root = MMCache.loadcache(MMurl.url2pathname(url), context)
+	else:
+		root = None
 	if root:
 		_fixcontext(root)
 		return root
 	# no cache file, parse the file and create the cache (if possible)
-	root = ReadOpenFileContext(open(filename, 'r'), filename, context)
-	import MMWrite
-	MMWrite.fixroot(root)
-	MMCache.dumpcache(root, filename)
-	MMWrite.unfixroot(root)
+	u = MMurl.urlopen(url)
+	root = ReadOpenFileContext(u, url, context)
+	if not type and not host:
+		import MMWrite
+		MMWrite.fixroot(root)
+		MMCache.dumpcache(root, MMurl.url2pathname(url))
+		MMWrite.unfixroot(root)
 	return root
 
 
