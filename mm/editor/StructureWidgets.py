@@ -923,9 +923,7 @@ class VerticalWidget(StructureObjWidget):
 		
 
 		for medianode in self.children: # for each MMNode:
-			w,h = medianode.get_minsize(		import traceback; traceback.print_stack()
-
-)
+			w,h = medianode.get_minsize()
 			if self.root.pushbackbars and isinstance(medianode, MediaWidget):
 				pushover = self.get_relx(medianode.downloadtime_lag)
 			else:
