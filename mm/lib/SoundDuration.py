@@ -2,8 +2,15 @@
 
 import FileCache
 
+try:
+	from urlopen import urlretrieve
+except ImportError:
+	def urlretrieve(file):
+		return file, None
+
 # Used to get full info
 def getfullinfo(filename):
+	filename = urlretrieve(filename)[0]
 	f = open(filename, 'r')
 	import aifc
 	try:
