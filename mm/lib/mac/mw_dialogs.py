@@ -399,7 +399,9 @@ class _SelectionDialog(DialogWindow):
 		
 		# And the default value and ok button
 		ctl = self._dlg.GetDialogItemAsControl(ITEM_SELECT_OK)
-		if default is None:
+		if multi:
+			ctl.ActivateControl()
+		elif default is None:
 			ctl.DeactivateControl()
 		else:
 			ctl.ActivateControl()
