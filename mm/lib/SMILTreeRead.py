@@ -256,7 +256,8 @@ class SMILParser(xmllib.XMLParser):
 			# media objects to figure out the size to use.
 			if w > 0 and h > 0 and \
 			   type(w) == type(h) == type(0) and \
-			   (x == y == 0 or type(x) == type(y) == type(0)):
+			   (x == y == 0 or type(x) == type(y) == type(0)) and \
+			   ch['scale'] != 'visible':
 				# size and position is given in pixels
 				pass
 			else:
@@ -287,6 +288,13 @@ class SMILParser(xmllib.XMLParser):
 						ch['minwidth'] = width
 					if ch['minheight'] < height:
 						ch['minheight'] = height
+					if ch['scale'] == 'visible':
+						w = ch['width']
+						if type(w) is type(0) and w < width:
+							ch['width'] = width
+						h = ch['height']
+						if type(h) is type(0) and h < height:
+							ch['height'] = height
 		elif not self.__channels.has_key(channel):
 			self.__channels[channel] = {'left':0, 'top':0,
 						    'z-index':0, 'width':0,
@@ -488,19 +496,21 @@ class SMILParser(xmllib.XMLParser):
 				ch['base_window'] = self.__title
 				ch['transparent'] = -1
 				ch['z'] = attrdict['z-index']
-				scale = attrdict['scale']
-				if scale == 'meet':
-					ch['scale'] = 0
-				elif scale == 'visible':
-					ch['scale'] = 1
-				elif scale == 'slice':
-					ch['scale'] = -1
-				ch['center'] = 0
-				# other scale options not implemented
 				x = attrdict['left']
 				y = attrdict['top']
 				w = attrdict['width']
 				h = attrdict['height']
+				scale = attrdict['scale']
+				if scale == 'meet':
+					ch['scale'] = 0
+				elif scale == 'hidden':
+					ch['scale'] = 1
+				elif scale == 'slice':
+					ch['scale'] = -1
+				elif scale == 'visible':
+					ch['scale'] = 1
+				ch['center'] = 0
+				# other scale options not implemented
 				if type(x) is type(0):
 					x = float(x) / self.__width
 				if type(w) is type(0):
