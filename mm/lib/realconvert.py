@@ -254,6 +254,7 @@ def convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 		cp.SetAuthor(MMAttrdefs.getattr(node, 'author'))
 		cp.SetCopyright(MMAttrdefs.getattr(node, 'copyright'))
 		ts.SetVideoQuality(MMAttrdefs.getattr(node, 'project_videotype'))
+		ts.SetAudioContent(MMAttrdefs.getattr(node, 'project_audiotype'))
 		target = MMAttrdefs.getattr(node, 'project_targets')
 		ntargets = 0
 		for i in range(6):
