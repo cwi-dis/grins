@@ -74,7 +74,7 @@ class Channel:
 		self._playstate = PIDLE
 		self._qid = None
 		self._scheduler = scheduler
-		self._paused = 0
+		self._paused = None
 		self._subchannels = []
 		self._want_shown = 0
 		self._highlighted = None
@@ -1750,7 +1750,7 @@ class ChannelWindow(Channel):
 			b = d.newbutton([A_SHAPETYPE_RECT, 0.0, 0.0, 1.0, 1.0], z = -1)
 		self.setanchor(arc.srcanchor, None, b, None, arming = 0)
 		self._anchors[b] = self.onclick, (node, [(None, None)], arc)
-		if self._paused >= 0:
+		if not self._paused or self._paused != 'hide'::
 			# don't render when paused and hidden
 			d.render()
 		self.played_display.close()
