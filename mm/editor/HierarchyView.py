@@ -1375,7 +1375,7 @@ class HierarchyView(HierarchyViewDialog):
 			node.SetAttr('file', url)
 			# if node has no intrinsic duration, set a default duration
 			if Duration.getintrinsicduration(node, 0) == 0:
-				node.SetAttr('duration', 3)
+				node.SetAttr('duration', MMAttrdefs.getattr(cnode, 'project_default_duration'))
 			# figure out a reasonable default name for the new node
 			# the name is the basename of the URL
 			# figure out file name part

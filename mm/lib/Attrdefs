@@ -202,6 +202,9 @@
 (project_boston (bool) 0 'SMIL 2' default
 	'Document conforms to SMIL 2' raw (smil2))
 
+(project_default_duration (float) 3.0 'Default duration' default
+	'Default duration for new nodes with no intrinsic duration' inherited (cmif smil2))
+
 (project_default_region (name) undefined 'Default region' channelname
 	'Default region for descendants of this node' inherited (cmif))
 
