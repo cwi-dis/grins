@@ -159,6 +159,7 @@ class HierarchyViewDialog(ViewDialog):
 		self.window.set_toggle(THUMBNAIL, self.thumbnails)
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
 		self.window.register(WMEVENTS.ResizeWindow, self.redraw, None)
+		self.window.register(WMEVENTS.DropFile, self.dropfile, None)
 
 	def hide(self, *rest):
 		self.save_geometry()
