@@ -1240,6 +1240,97 @@ BEGIN
     PUSHBUTTON      "Pick color...",IDC_33,239,61,46,12
 END
 
+IDD_ENTER_KEY DIALOG DISCARDABLE  0, 0, 212, 90
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Enter license key"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_NAME,54,8,152,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ORGANIZATION,54,26,152,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_KEY,54,44,152,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "OK",IDOK,156,70,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,7,70,50,14
+    LTEXT           "Name:",IDC_STATIC,8,11,22,8
+    LTEXT           "Organization:",IDC_STATIC,8,29,42,8
+    LTEXT           "Key:",IDC_STATIC,8,47,15,8
+END
+
+IDD_PROGRESS DIALOG DISCARDABLE  0, 0, 186, 62
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Progress..."
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Cancel",IDCANCEL,129,41,50,14
+    LTEXT           "Static",IDC_MESSAGE,7,7,172,8
+    CONTROL         "Progress1",IDC_PROGRESS1,"msctls_progress32",PBS_SMOOTH | 
+                    WS_DISABLED | WS_BORDER,7,22,172,11
+END
+
+IDD_INIT_DIALOG DIALOG DISCARDABLE  0, 0, 186, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "GRiNS"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Create a new presentation",IDC_INIT_NEW,"Button",
+                    BS_AUTORADIOBUTTON,39,15,130,10
+    CONTROL         "Open existing presentation",IDC_INIT_OPEN,"Button",
+                    BS_AUTORADIOBUTTON,39,29,99,10
+    CONTROL         "Do nothing",IDC_INIT_NOTHING,"Button",
+                    BS_AUTORADIOBUTTON,39,42,110,10
+    CONTROL         "Don't show this dialog again",IDC_INIT_NEVER_AGAIN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,78,107,10
+    DEFPUSHBUTTON   "OK",IDOK,129,74,50,14
+    ICON            IDR_GRINSED,IDC_STATIC,7,7,20,20
+END
+
+IDD_BANDWIDTH_DIALOG DIALOG DISCARDABLE  0, 0, 190, 146
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Bandwidth computation"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,133,125,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDC_CANCEL,7,125,50,14,NOT WS_VISIBLE | 
+                    WS_DISABLED
+    LTEXT           "Static",IDC_MESSAGE,7,7,176,8
+    LTEXT           "Preroll time needed:",IDC_STATIC,8,25,97,8
+    LTEXT           "Stall time during presentation:",IDC_STATIC,8,40,97,8
+    LTEXT           "Number of items causing stalls:",IDC_STATIC,8,54,97,8
+    LTEXT           "Computing...",IDC_PREROLL,107,25,72,8
+    LTEXT           "Computing...",IDC_STALLTIME,107,40,72,8
+    LTEXT           "Computing...",IDC_STALLCOUNT,107,54,72,8
+    PUSHBUTTON      "Help",IDHELP,133,104,50,14
+    LTEXT           "Number of items with errors:",IDC_STATIC,8,68,97,8
+    LTEXT           "Computing...",IDC_ERRORCOUNT,107,68,72,8
+    LTEXT           "",IDC_MESSAGE2,7,86,176,8
+END
+
+IDD_EDITATTR_DR3 DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "scale 1:1",IDC_SCALE1,12,4,62,8
+    PUSHBUTTON      "Preview Area",IDC_PREVIEW,11,15,156,110,BS_FLAT | NOT 
+                    WS_VISIBLE | NOT WS_TABSTOP
+    GROUPBOX        "Fill whole region",IDC_21,174,11,121,27
+    CONTROL         "off",IDC_22,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY | 
+                    WS_TABSTOP,181,22,24,10
+    CONTROL         "on",IDC_23,"Button",BS_AUTORADIOBUTTON | BS_NOTIFY,220,
+                    22,24,10
+    GROUPBOX        "Destination rendering",IDC_11,173,41,121,44
+    LTEXT           "x",IDC_GROUP1,179,49,8,8
+    EDITTEXT        IDC_12,178,58,27,14,ES_AUTOHSCROLL
+    LTEXT           "y",IDC_GROUP1,207,49,8,8
+    EDITTEXT        IDC_13,206,58,27,14,ES_AUTOHSCROLL
+    LTEXT           "w",IDC_GROUP1,235,49,8,8
+    EDITTEXT        IDC_14,234,58,27,14,ES_AUTOHSCROLL
+    LTEXT           "h",IDC_GROUP1,263,49,8,8
+    EDITTEXT        IDC_15,262,58,27,14,ES_AUTOHSCROLL
+    GROUPBOX        "Destination rendering anchor",IDC_31,173,91,121,34
+    COMBOBOX        IDC_32,179,102,110,52,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "",IDC_ATTR_INFO,6,132,288,18,SS_SUNKEN
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1467,6 +1558,43 @@ BEGIN
     END
 
     IDD_EDITATTR_LS1O3b, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_ENTER_KEY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 206
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 84
+    END
+
+    IDD_PROGRESS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 55
+    END
+
+    IDD_INIT_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
+    END
+
+    IDD_BANDWIDTH_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 183
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 139
+    END
+
+    IDD_EDITATTR_DR3, DIALOG
     BEGIN
         BOTTOMMARGIN, 163
     END
@@ -1721,119 +1849,6 @@ END
 LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
 #pragma code_page(1252)
 #endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
-
-IDD_ENTER_KEY DIALOG DISCARDABLE  0, 0, 212, 90
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Enter license key"
-FONT 8, "MS Sans Serif"
-BEGIN
-    EDITTEXT        IDC_NAME,54,8,152,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_ORGANIZATION,54,26,152,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_KEY,54,44,152,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "OK",IDOK,156,70,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,7,70,50,14
-    LTEXT           "Name:",IDC_STATIC,8,11,22,8
-    LTEXT           "Organization:",IDC_STATIC,8,29,42,8
-    LTEXT           "Key:",IDC_STATIC,8,47,15,8
-END
-
-IDD_PROGRESS DIALOG DISCARDABLE  0, 0, 186, 62
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Progress..."
-FONT 8, "MS Sans Serif"
-BEGIN
-    PUSHBUTTON      "Cancel",IDCANCEL,129,41,50,14
-    LTEXT           "Static",IDC_MESSAGE,7,7,172,8
-    CONTROL         "Progress1",IDC_PROGRESS1,"msctls_progress32",PBS_SMOOTH | 
-                    WS_DISABLED | WS_BORDER,7,22,172,11
-END
-
-IDD_INIT_DIALOG DIALOG DISCARDABLE  0, 0, 186, 95
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "GRiNS"
-FONT 8, "MS Sans Serif"
-BEGIN
-    CONTROL         "Create a new presentation",IDC_INIT_NEW,"Button",
-                    BS_AUTORADIOBUTTON,39,15,130,10
-    CONTROL         "Open existing presentation",IDC_INIT_OPEN,"Button",
-                    BS_AUTORADIOBUTTON,39,29,99,10
-    CONTROL         "Do nothing",IDC_INIT_NOTHING,"Button",
-                    BS_AUTORADIOBUTTON,39,42,110,10
-    CONTROL         "Don't show this dialog again",IDC_INIT_NEVER_AGAIN,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,78,107,10
-    DEFPUSHBUTTON   "OK",IDOK,129,74,50,14
-    ICON            IDR_GRINSED,IDC_STATIC,7,7,20,20
-END
-
-IDD_BANDWIDTH_DIALOG DIALOG DISCARDABLE  0, 0, 190, 146
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Bandwidth computation"
-FONT 8, "MS Sans Serif"
-BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,133,125,50,14,WS_DISABLED
-    PUSHBUTTON      "Cancel",IDC_CANCEL,7,125,50,14,NOT WS_VISIBLE | 
-                    WS_DISABLED
-    LTEXT           "Static",IDC_MESSAGE,7,7,176,8
-    LTEXT           "Preroll time needed:",IDC_STATIC,8,25,97,8
-    LTEXT           "Stall time during presentation:",IDC_STATIC,8,40,97,8
-    LTEXT           "Number of items causing stalls:",IDC_STATIC,8,54,97,8
-    LTEXT           "Computing...",IDC_PREROLL,107,25,72,8
-    LTEXT           "Computing...",IDC_STALLTIME,107,40,72,8
-    LTEXT           "Computing...",IDC_STALLCOUNT,107,54,72,8
-    PUSHBUTTON      "Help",IDHELP,133,104,50,14
-    LTEXT           "Number of items with errors:",IDC_STATIC,8,68,97,8
-    LTEXT           "Computing...",IDC_ERRORCOUNT,107,68,72,8
-    LTEXT           "",IDC_MESSAGE2,7,86,176,8
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
-BEGIN
-    IDD_ENTER_KEY, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 206
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 84
-    END
-
-    IDD_PROGRESS, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 179
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 55
-    END
-
-    IDD_INIT_DIALOG, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 179
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 88
-    END
-
-    IDD_BANDWIDTH_DIALOG, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 183
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 139
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
 
 /////////////////////////////////////////////////////////////////////////////
 //

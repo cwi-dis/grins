@@ -119,6 +119,7 @@
 #define IDD_EDITATTR_LS1O3b             360
 #define IDD_EDITATTR_T4                 361
 #define IDD_EDITATTR_T3C                362
+#define IDD_EDITATTR_DR3                363
 #define IDC_EXPLANATION                 1002
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
