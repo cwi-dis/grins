@@ -1282,8 +1282,8 @@ class SubWindow(Window):
 			self._paint_5()
 			return
 
-		if self._transition and self._transition.isrunning() and\
-				self._transition.ismaster(self):
+		if self._transition and self._transition._isrunning() and\
+				self._transition._ismaster(self):
 			if self._multiElement:
 				if self._childrenClip:
 					self._paint_3()
@@ -1299,22 +1299,10 @@ class SubWindow(Window):
 
 		self._paint_0()
 		
-
-
-	def createDDS(self, w=0, h=0, erase=0):
+	def createDDS(self, w=0, h=0):
 		if w==0 or h==0:
 			x, y, w, h = self._rect
-		dds = self._topwindow.CreateSurface(w,h)
-		if erase:
-			if self._transparent == 0:
-				r, g, b = self._bgcolor
-				convbgcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
-			else:
-				r, g, b = self._topwindow._bgcolor
-				convbgcolor = dds.GetColorMatch(win32api.RGB(r,g,b))
-			dds.BltFill((0, 0, w, h), convbgcolor)
-
-		return dds
+		return self._topwindow.CreateSurface(w,h)
 
 	def setvideo(self, dds, rcDst, rcSrc):
 		self._video = dds, rcDst, rcSrc
@@ -1400,6 +1388,22 @@ class SubWindow(Window):
 			self._transition.endtransition()
 			self._transition = None
 			self.update()
+	
+	def freeze_content(self, how):
+		# Freeze the contents of the window, depending on how:
+		# how='transition' until the next transition,
+		# how='hold' forever,
+		# how=None clears a previous how='hold'. This basically means the next
+		# close() of a display list does not do an erase.
+		#print 'freeze_content', how, self
+		if how:
+			self._topwindow.update()
+			self._passive = self.getBackDDS()
+			self._frozen = how
+		elif self._frozen:
+			self._passive = None
+			self._frozen = None
+			self.update()
 
 	def jointransition(self, window):
 		# Join the transition already created on "window".
@@ -1417,22 +1421,6 @@ class SubWindow(Window):
 			self._transition.settransitionvalue(value)
 		else:
 			print 'settransitionvalue without a transition'
-	
-	def freeze_content(self, how):
-		# Freeze the contents of the window, depending on how:
-		# how='transition' until the next transition,
-		# how='hold' forever,
-		# how=None clears a previous how='hold'. This basically means the next
-		# close() of a display list does not do an erase.
-		#print 'freeze_content', how, self
-		if how:
-			self._topwindow.update()
-			self._passive = self.getBackDDS()
-			self._frozen = how
-		elif self._frozen:
-			self._passive = None
-			self._frozen = None
-			self.update()
 
 	def __prepare_transition(self):
 		"""Check that begintransition() is allowed, create the offscreen bitmap"""
