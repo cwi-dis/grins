@@ -35,58 +35,72 @@ import afxres,commctrl
 
 
 class LinkPropDlg(components.ResDialog):
-	def __init__(self,cb_ok,cancelCallback=None,parent=None):
+	def __init__(self,cbd,dir,type,parent=None):
 		components.ResDialog.__init__(self,grinsRC.IDD_LINK_PROPERTY,parent)
 
-		self._D0=components.RadioButton(self,grinsRC.IDC_RADIO1)
-		self._D1=components.RadioButton(self,grinsRC.IDC_RADIO2)
-		self._D2=components.RadioButton(self,grinsRC.IDC_RADIO3)
+		d0=components.RadioButton(self,grinsRC.IDC_RADIO1)
+		d1=components.RadioButton(self,grinsRC.IDC_RADIO2)
+		d2=components.RadioButton(self,grinsRC.IDC_RADIO3)
+		self._dir_buttons = (d0, d1, d2)
 
-		self._T0=components.RadioButton(self,grinsRC.IDC_RADIO4)
-		self._T1=components.RadioButton(self,grinsRC.IDC_RADIO5)
-		self._T2=components.RadioButton(self,grinsRC.IDC_RADIO6)
+		t0=components.RadioButton(self,grinsRC.IDC_RADIO4)
+		t1=components.RadioButton(self,grinsRC.IDC_RADIO5)
+		t2=components.RadioButton(self,grinsRC.IDC_RADIO6)
+		self._type_buttons = (t0, t1, t2)
 
-		self._cb_ok=cb_ok
-		self._cbd_cancel=cancelCallback
+		self._cbd = cbd
+		self._dir = dir
+		self._type = type
 
 	def OnInitDialog(self):
 		self.attach_handles_to_subwindows()
 		# set initial data to dialog
 		# ...
-		self._D0.setcheck(1)
-		self._T0.setcheck(1)
+		self.linkdirsetchoice(self._dir)
+		self.linktypesetchoice(self._type)
 		return components.ResDialog.OnInitDialog(self)
 
 	def show(self):
 		self.DoModal()
 
-	def OnOK(self):
-		# 1. read data
-		if self._D0.getcheck()==1:
-			pass
-		elif self._D1.getcheck()==1:
-			pass
-		else:
-			pass
+	def linkdirsetchoice(self, dir):
+		for i in range(3):
+			self._dir_buttons[i].setcheck(i==dir)
 
-		if self._T0.getcheck()==1:
-			pass
-		elif self._T1.getcheck()==1:
-			pass
-		else:
-			pass
+	def linktypesetchoice(self, type):
+		for i in range(3):
+			self._type_buttons[i].setcheck(i==type)
+
+	def linkdirgetchoice(self):
+		for i in range(3):
+			if self._dir_buttons[i].getcheck():
+				return i
+		raise 'No dir button set!'
+
+	def linktypegetchoice(self):
+		for i in range(3):
+			if self._type_buttons[i].getcheck():
+				return i
+		raise 'No type button set'
+
+	def OnOK(self):
+		# 1. Tell upper layer to come and collect data
+		self.callcallback('LinkDir')
+		self.callcallback('LinkType')
 
 		# 2. close dlg
 		self._obj_.OnOK()
 
-		# 3. apply callback with data as arg
-		if self._cb_ok:
-			pass
+		# 3. Tell upper layers we've done so
+		self.callcallback('OK')
 
 	def OnCancel(self):
 		self._obj_.OnCancel()
-		if self._cbd_cancel:
-			apply(apply,self._cbd_cancel)
+		self.callcallback('Cancel')
+
+	def callcallback(self, which):
+		func, arg = self._cbd[which]
+		apply(func, arg)
 
 
 # This class implements the LinkView required by the core system
@@ -114,26 +128,12 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		self['LeftLabel']=components.Static(self,grinsRC.IDC_STATIC_LEFT)
 		self['RightLabel']=components.Static(self,grinsRC.IDC_STATIC_RIGHT)
 
-		self['D_GROUP']=components.Static(self,grinsRC.IDC_LINK_D)
-		self['D0']=components.RadioButton(self,grinsRC.IDC_RADIO1)
-		self['D1']=components.RadioButton(self,grinsRC.IDC_RADIO2)
-		self['D2']=components.RadioButton(self,grinsRC.IDC_RADIO3)
-
-		self['T_GROUP']=components.Static(self,grinsRC.IDC_LINK_T)
-		self['T0']=components.RadioButton(self,grinsRC.IDC_RADIO4)
-		self['T1']=components.RadioButton(self,grinsRC.IDC_RADIO5)
-		self['T2']=components.RadioButton(self,grinsRC.IDC_RADIO6)
-	
 		self['LeftMenu']=components.Button(self,grinsRC.IDC_LEFT_MENU)
 		self['RightMenu']=components.Button(self,grinsRC.IDC_RIGHT_MENU)
 	
 		# cash lists  
 		self._lists_ids=(self['LeftList']._id,self['RightList']._id,self['LinkList']._id)
-		self._dirs=(self['D0']._id,self['D1']._id,self['D2']._id)
-		self._types=(self['T0']._id,self['T1']._id,self['T2']._id)
 
-		self['OK']=components.Button(self,win32con.IDOK)
-		self['Cancel']=components.Button(self,win32con.IDCANCEL)
 
 	# Creates the actual OS window
 	def createWindow(self,parent):
@@ -163,7 +163,6 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		
 		self.EnableCmd('LeftMenu',1)
 		self.EnableCmd('RightMenu',1)
-		self.EnableCmd('Cancel',1)
 		self.EnableCmd('LeftLabel',1)
 		self.EnableCmd('RightLabel',1)
 
@@ -227,10 +226,6 @@ class _LinkView(docview.FormView,components.ControlsDict):
 			if id==self[key]._id:
 				if id in self._lists_ids:
 					if nmsg==win32con.LBN_SELCHANGE:self.call(key)
-				elif id in self._dirs:
-					self.call('LinkDir')
-				elif id in self._types:
-					self.call('LinkType')
 				else:
 					self.call(key)
 				break
@@ -274,7 +269,7 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		
 	#########################################
 	# The actual initialization from the core system
-	def do_init(self, title, dirstr, typestr, menu1, cbarg1, menu2, cbarg2, adornments):
+	def do_init(self, title, menu1, cbarg1, menu2, cbarg2, adornments):
 		self._title=title
 
 		# hard res-coded values
@@ -573,120 +568,3 @@ class _LinkView(docview.FormView,components.ControlsDict):
 		"""
 		self.EnableCmd('DeleteLink',sensitive) 
 
-
-	# Interface to the edit group.
-	def editgrouphide(self):
-		"""Hide the edit group."""
-		self.EnableCmd('D_GROUP',0)
-		self.EnableCmd('T_GROUP',0)
-		for i in range(3):
-			self.EnableCmd('D%d'%i,0)
-			self.EnableCmd('T%d'%i,0)
-		return
-
-		self['D_GROUP'].hide()
-		self['T_GROUP'].hide()
-		for i in range(3):
-			self['D%d'%i].hide()
-			self['T%d'%i].hide()
-
-	def editgroupshow(self):
-		"""Show the edit group."""
-		self.EnableCmd('D_GROUP',1)
-		self.EnableCmd('T_GROUP',1)
-		for i in range(3):
-			self.EnableCmd('D%d'%i,1)
-			self.EnableCmd('T%d'%i,1)
-
-		return
-		self['D_GROUP'].show()
-		self['T_GROUP'].show()
-		for i in range(3):
-			self['D%d'%i].show()
-			self['T%d'%i].show()
-
-	def oksetsensitive(self, sensitive):
-		"""Make the OK button (in)sensitive.
-
-		Arguments (no defaults):
-		sensitive -- boolean indicating whether to make
-			sensitive or insensitive
-		"""
-		self.EnableCmd('OK',sensitive) 
-
-
-	def cancelsetsensitive(self, sensitive):
-		"""Make the Cancel button (in)sensitive.
-
-		Arguments (no defaults):
-		sensitive -- boolean indicating whether to make
-			sensitive or insensitive
-		"""
-		self.EnableCmd('Cancel',sensitive) 
-
-	def linkdirsetsensitive(self, pos, sensitive):
-		"""Make an entry in the link dir menu (in)sensitive.
-
-		Arguments (no defaults):
-		pos -- the index of the entry to be made (in)sensitve
-		sensitive -- boolean indicating whether to make
-			sensitive or insensitive
-		"""
-		name='D%d'%pos
-		self.EnableCmd(name,sensitive)
-
-
-	def linkdirsetchoice(self, choice):
-		"""Set the current choice of the link dir list.
-
-		Arguments (no defaults):
-		choice -- index of the new choice
-		"""
-		for i in range(3):
-			name='D%d'%i
-			if i == choice:
-				self[name].setcheck(1)
-			else:
-				self[name].setcheck(0)
-
-	def linkdirgetchoice(self):
-		"""Return the current choice in the link dir list."""
-		for i in range(3):
-			name='D%d'%i
-			if self[name].getcheck()==1:
-				return i
-		raise 'No direction set?'
-
-	def linktypesetsensitive(self, pos, sensitive):
-		"""Make an entry in the link type menu (in)sensitive.
-
-		Arguments (no defaults):
-		pos -- the index of the entry to be made (in)sensitve
-		sensitive -- boolean indicating whether to make
-			sensitive or insensitive
-		"""
-		name='T%d'%i
-		self.EnableCmd(name)
-
-
-	def linktypesetchoice(self, choice):
-		"""Set the current choice of the link type list.
-
-		Arguments (no defaults):
-		choice -- index of the new choice
-		"""
-		for i in range(3):
-			name='T%d'%i
-			if i == choice:
-				self[name].setcheck(1)
-			else:
-				self[name].setcheck(0)
-
-
-	def linktypegetchoice(self):
-		"""Return the current choice in the link type list."""
-		for i in range(3):
-			name='T%d'%i
-			if self[name].getcheck()==1:
-				return i
-		raise 'No direction set?'
