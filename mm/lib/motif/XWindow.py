@@ -17,6 +17,9 @@ from WMEVENTS import *
 import settings
 no_canvas_resize = settings.get('no_canvas_resize')
 
+import re
+dtre = re.compile(r'LPATH=(?P<lpathstart>\d+)-(?P<lpathend>\d+):(?P<value>.*)')
+
 class _Window(_AdornmentSupport, _RubberBand):
 	# Instances of this class represent top-level windows.  This
 	# class is also used as base class for subwindows, but then
@@ -680,12 +683,14 @@ class _Window(_AdornmentSupport, _RubberBand):
 		elif event in (DropFile, DropURL):
 			if not self._callbacks.has_key(DropFile) and \
 			   not self._callbacks.has_key(DropURL):
-				self._form.DropSiteRegister({
-					'importTargets':
+				args = {'importTargets':
 						[toplevel._compound_text,
 						 toplevel._netscape_url],
 					'dropSiteOperations': Xmd.DROP_COPY,
-					'dropProc': self.__handle_drop})
+					'dropProc': self.__handle_drop}
+				if hasattr(toplevel, '_dt_netfile'):
+					args['importTargets'].append(toplevel._dt_netfile)
+				self._form.DropSiteRegister(args)
 			self._callbacks[event] = func, arg
 		else:
 			raise error, 'Internal error'
@@ -718,6 +723,11 @@ class _Window(_AdornmentSupport, _RubberBand):
 				t = toplevel._netscape_url
 				if not self._callbacks.has_key(DropURL):
 					args = {'transferStatus': Xmd.TRANSFER_FAILURE}
+			elif hasattr(toplevel, '_dt_netfile') and \
+			     toplevel._dt_netfile in drop_data.dragContext.exportTargets:
+				t = toplevel._dt_netfile
+				if not self._callbacks.has_key(DropFile):
+					args = {'transferStatus': Xmd.TRANSFER_FAILURE}
 			else:
 				t = toplevel._compound_text
 				if not self._callbacks.has_key(DropFile):
@@ -726,10 +736,22 @@ class _Window(_AdornmentSupport, _RubberBand):
 		drop_data.dragContext.DropTransferStart(args)
 
 	def __handle_transfer(self, w, (x,y), seltype, type, value, length, format):
+##		print type,value,length
 		if type == toplevel._compound_text and \
 		   self._callbacks.has_key(DropFile):
 			func, arg = self._callbacks[DropFile]
 			func(arg, self, DropFile, (x, y, value))
+		elif type == toplevel._string and \
+		     self._callbacks.has_key(DropFile):
+			func, arg = self._callbacks[DropFile]
+			res = dtre.search(value)
+			if res is not None:
+				import string
+				start, end, value = res.group('lpathstart','lpathend','value')
+				start = string.atoi(start)
+				end = string.atoi(end)
+				filename = value[start:end+1]
+				func(arg, self, DropFile, (x, y, filename))
 		elif type == toplevel._netscape_url and \
 		     self._callbacks.has_key(DropURL):
 			func, arg = self._callbacks[DropURL]
