@@ -121,7 +121,7 @@ MENUBAR=(
 		(CASCADE, '&Level of detail', (
 			(ENTRY, 'More &horizontal detail', None, CANVAS_WIDTH),
 			(ENTRY, 'More &vertical detail', None, CANVAS_HEIGHT),
-			(ENTRY, '&Fit in window', None, CANVAS_RESET),
+			(ENTRY, 'Fit in &window', None, CANVAS_RESET),
 			)),
 		(SEP,),
 		(ENTRY, 'Send &focus to other views', None, PUSHFOCUS),
@@ -130,6 +130,7 @@ MENUBAR=(
 		(TOGGLE, 'Display unused &channels', None, TOGGLE_UNUSED),
 		(TOGGLE, 'Display sync &arcs', None, TOGGLE_ARCS),
 		(TOGGLE, 'Display image thum&bnails', None, THUMBNAIL),
+		(TOGGLE, 'Display bandwidth &usage strip', None, TOGGLE_BWSTRIP),
 		(SEP,),
 		(TOGGLE, '&Timeline view follows player', None, SYNCCV),
 		(ENTRY, '&Highlight channel in player', None, HIGHLIGHT),
