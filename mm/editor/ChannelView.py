@@ -186,7 +186,7 @@ class ChannelView(ChannelViewDialog):
 		elif self.focus.__class__ is NodeBox:
 			focus = 'n', self.focus.node
 		elif self.focus.__class__ is ArcBox:
-			focus = 'a', None
+			focus = 'a', self.focus.arcid
 		else:
 			focus = '', None
 		self.cleanup()
@@ -211,7 +211,7 @@ class ChannelView(ChannelViewDialog):
 		elif self.focus.__class__ is NodeBox:
 			focus = 'n', self.focus.node
 		elif self.focus.__class__ is ArcBox:
-			focus = 'a', None
+			focus = 'a', self.focus.arcid
 		else:
 			focus = '', None
 		self.recalc(focus)
@@ -374,6 +374,17 @@ class ChannelView(ChannelViewDialog):
 		self.initchannels(focus)
 		self.initnodes(focus)
 		self.initarcs(focus)
+
+		# enable Next and Prev Minidoc commands if there are minidocs
+		if self.baseobject.descendants or \
+		   self.baseobject.ancestors or \
+		   self.baseobject.siblings:
+			for obj in self.objects:
+				obj.commandlist = obj.commandlist + [
+					NEXT_MINIDOC(callback = (obj.nextminicall, ())),
+					PREV_MINIDOC(callback = (obj.prevminicall, ())),
+					]
+
 		focus = self.focus
 		self.baseobject.select()
 		if focus is not None:
@@ -516,7 +527,8 @@ class ChannelView(ChannelViewDialog):
 				channel.used = 1
 				obj = NodeBox(self, node)
 				self.objects.append(obj)
-				if focus[0] == 'n' and focus[1] is node:
+				if (focus[0] == 'n' and focus[1] is node) or \
+				   (focus[0] == 'a' and focus[1][3] is node):
 					obj.select()
 		elif t in bagtypes:
 			self.scandescendants(node)
@@ -576,12 +588,12 @@ class ChannelView(ChannelViewDialog):
 	def scanarcs(self, node, focus, arcs):
 		type = node.GetType()
 		if type in leaftypes and node.GetChannel():
-			self.addarcs(node, arcs)
+			self.addarcs(node, arcs, focus)
 		elif type not in bagtypes:
 			for c in node.GetChildren():
 				self.scanarcs(c, focus, arcs)
 
-	def addarcs(self, ynode, arcs):
+	def addarcs(self, ynode, arcs, focus):
 		for arc in MMAttrdefs.getattr(ynode, 'synctolist'):
 			xuid, xside, delay, yside = arc
 			try:
@@ -593,6 +605,9 @@ class ChannelView(ChannelViewDialog):
 				obj = ArcBox(self,
 					     xnode, xside, delay, ynode, yside)
 				arcs.append(obj)
+				if focus[0] == 'a' and \
+				   focus[1] == (xnode, xside, delay, ynode, yside):
+					obj.select()
 
 	# Focus stuff (see also recalc)
 
@@ -854,8 +869,6 @@ class GO(GOCommand):
 			CANVAS_RESET(callback = (self.canvascall,
 					(windowinterface.RESET_CANVAS,))),
 			NEW_CHANNEL(callback = (self.newchannelcall, ())),
-			NEXT_MINIDOC(callback = (self.nextminicall, ())),
-			PREV_MINIDOC(callback = (self.prevminicall, ())),
 			ANCESTORS(callback = mother.setviewrootcb),
 			SIBLINGS(callback = mother.setviewrootcb),
 			DESCENDANTS(callback = mother.setviewrootcb),
@@ -1536,6 +1549,7 @@ class INodeBox(GO):
 class ArcBox(GO, ArcBoxCommand):
 
 	def __init__(self, mother, snode, sside, delay, dnode, dside):
+		self.arcid = snode, sside, delay, dnode, dside
 		self.snode, self.sside, self.delay, self.dnode, self.dside = \
 			snode, sside, delay, dnode, dside
 		GO.__init__(self, mother, 'arc')
