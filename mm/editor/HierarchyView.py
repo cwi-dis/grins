@@ -1011,12 +1011,17 @@ class HierarchyView(HierarchyViewDialog):
 			return 0
 		# it is permissable to copy to the root node, so that does not need to be checked.
 
+		if not self.editmgr.transaction():
+			return 0
+
 		copyme = []
 		for i in nodes:
 			copyme.append(i.DeepCopy())
 
 		self.editmgr.setclip(copyme, owned = 1)
 
+		self.editmgr.commit()
+		
 		self.aftersetfocus()
 
 	######################################################################
@@ -1038,9 +1043,15 @@ class HierarchyView(HierarchyViewDialog):
 		if not copylist: return
 		newnode = context.newattrcontainer()
 		dict = self._copyattrdict(node, newnode, copylist)
+
+		if not self.editmgr.transaction():
+			return 0
+		
 		# XXXX Clear clip
 		context.editmgr.setclip([newnode], owned=1)
 
+		self.editmgr.commit()
+		
 	def pastepropertiescall(self):
 		nodes = self.get_selected_nodes()
 		assert(nodes)
@@ -1489,9 +1500,11 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		self.toplevel.setwaiting()
 
-		nodeList = self.editmgr.getclipcopy()
 		if not self.editmgr.transaction():
 			return
+
+		nodeList = self.editmgr.getclipcopy()
+
 		focus = fnode
 		for node in nodeList:
 			if node.context is not self.root.context:
