@@ -93,6 +93,10 @@ def register(file, filename):
 		elr = time.strftime("%d-%h-%Y", now)
 		obj['Eval-License-Req'] = elr
 		license = open(LICENSE).read()
+		try:
+			obj['Eval-License'] = string.split(license)[1]
+		except:
+			pass
 	else:
 		license = ""
 
@@ -100,7 +104,7 @@ def register(file, filename):
 
 	clear = obj['password']
 	crypted = crypt_passwd(clear)
-	add_passwd(PASSWD, user, crypted)
+##	add_passwd(PASSWD, user, crypted)
 	mail(user, clear, license)
 	print "%s: added (%s)"%(user, filename)
 
