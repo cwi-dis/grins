@@ -537,7 +537,7 @@ The verb can be one of 'open','edit','print'
 # url parsing
 import MMurl, ntpath, urlparse
 
-def shell_execute(url,verb='open'):
+def shell_execute(url,verb='open', showmsg=1):
 	utype, host, path, params, query, fragment = urlparse.urlparse(url)
 	islocal = (not utype or utype == 'file') and (not host or host == 'localhost')
 	if islocal:
@@ -546,13 +546,17 @@ def shell_execute(url,verb='open'):
 			if not os.path.isabs(filename):
 				filename=os.path.join(os.getcwd(),filename)
 				filename=ntpath.normpath(filename)
-		else: 
-			win32ui.MessageBox(filename+'\nnot found')
-			return
+		else:
+			if showmsg:
+				win32ui.MessageBox(filename+'\nnot found')
+			return -1
 		url=filename
 	rc,msg=Sdk.ShellExecute(0,verb,url,None,"", win32con.SW_SHOW)
-	if rc<=32:win32ui.MessageBox('Cannot '+ verb +' '+url+'\n'+msg,'GRiNS')
-
+	if rc<=32:
+		if showmsg:
+			win32ui.MessageBox('Explorer cannot '+ verb +' '+url+':\n'+msg,'GRiNS')
+		return rc
+	return 0
 
 """ @win32doc|htmlwindow
 Class htmlwindow just calls the shell to open the given file
