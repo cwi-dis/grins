@@ -31,8 +31,8 @@ class PlayerDialog(PlayerDialogBase):
 			('User groups', USERGROUPS),
 			('Channels', CHANNELS),
 			('Options', [
-				('Keep Channel View in sync', SYNCCV, 't'),
-				('Dump scheduler data', SCHEDDUMP),
+				('Timeline view follows player', SYNCCV, 't'),
+##				('Dump scheduler data', SCHEDDUMP),
 				]),
 			],
 		'toolbar': PlayerDialogBase.adornments['toolbar'],
