@@ -815,56 +815,40 @@ class HierarchyView(HierarchyViewDialog):
 					self.opt_render()
 					windowinterface.showmessage('Incompatible file', mtype = 'error', parent = self.window)
 					return
-			if dftchannel is not None and dftchtype != 'undefined':
-				i = 0
-				while ctx.channeldict.has_key('%s %d' % (dftchannel, i)):
-					i = i + 1
-				chname = '%s %d' % (dftchannel, i)
-				em = self.editmgr
-				if not em.transaction():
-					return
-				start_transaction = 0
-#				em.addchannel(chname, len(ctx.channelnames), dftchtype)
-				chlist = [chname]
-				bch = ctx.getchannel(dftchannel)
-#				if not settings.activeFullSmilCss:
-#					if bch.has_key('base_window'):
-#						w, h = bch['base_winoff'][2:]
-#					else:
-#						w, h = bch['winsize']
-#					em.setchannelattr(chname, 'units', windowinterface.UNIT_PXL)
-#					em.setchannelattr(chname, 'base_window', dftchannel)
-#					em.setchannelattr(chname, 'base_winoff', (0,0,w,h))
+#			if dftchannel is not None and dftchtype != 'undefined':
+#				em = self.editmgr
+#				if not em.transaction():
+#					return
+#				start_transaction = 0
+#				chlist = [chname]
+#			else:
+#				chlist = ctx.compatchannels(url, chtype)
+#				if dftchannel:
+#					nchlist = []
+#					for chname in chlist:
+#						if ctx.getchannel(chname).GetLayoutChannel().name == dftchannel:
+#							nchlist.append(chname)
+#					chlist = nchlist
+#			if chlist:
+#				if len(chlist) > 1:
+#					i = windowinterface.multchoice('Choose a channel for this file', chlist, 0, parent = self.window)
+#					if i < 0:
+#						self.opt_render()
+#						# Cancel
+#						return
+#					chname = chlist[i]
 #				else:
-#					em.setchannelattr(chname, 'base_window', dftchannel)					
-			else:
-				chlist = ctx.compatchannels(url, chtype)
-				if dftchannel:
-					nchlist = []
-					for chname in chlist:
-						if ctx.getchannel(chname).GetLayoutChannel().name == dftchannel:
-							nchlist.append(chname)
-					chlist = nchlist
-			if chlist:
-				if len(chlist) > 1:
-					i = windowinterface.multchoice('Choose a channel for this file', chlist, 0, parent = self.window)
-					if i < 0:
-						self.opt_render()
-						# Cancel
-						return
-					chname = chlist[i]
-				else:
-					chname = chlist[0]
-				chtype = None
-			elif lightweight and \
-			     (url is not None or chtype is not None):
-				self.opt_render()
-				windowinterface.showmessage(
-					'There are no channels for this mediatype in the presentation',
-					mtype = 'error', parent = self.window)
-				return
-		else:
-			chtype = None
+#					chname = chlist[0]
+#				chtype = None
+#			elif lightweight and \
+#			     (url is not None or chtype is not None):
+#				self.opt_render()
+#				windowinterface.showmessage(
+#					'There are no channels for this mediatype in the presentation',
+#					mtype = 'error', parent = self.window)
+#				return
+#		else:
+#			chtype = None
 		self.toplevel.setwaiting()
 		if where <> 0:
 			layout = MMAttrdefs.getattr(parent, 'layout')
@@ -872,10 +856,9 @@ class HierarchyView(HierarchyViewDialog):
 			layout = MMAttrdefs.getattr(node, 'layout')
 		node = ctx.newnode(type) # Create a new node
 
-		# XXXX Pass by edit mng			
 		if url is not None:
 			node.SetAttr('file', url)
-		if chname:
+		if dftchannel:
 			node.SetAttr('channel', dftchannel)
 		if layout == 'undefined' and \
 		   self.toplevel.layoutview is not None and \
