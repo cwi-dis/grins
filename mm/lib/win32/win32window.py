@@ -949,19 +949,22 @@ class SubWindow(Window):
 	# Rendering section
 	#
 
-	def getClipRgn(self):
-		x, y, w, h = self.getwindowpos();
+	def getClipRgn(self, rel=None):
+		x, y, w, h = self.getwindowpos(rel);
 		rgn = win32ui.CreateRgn()
 		rgn.CreateRectRgn((x,y,x+w,y+h))
-		rgn.CombineRgn(rgn,self._parent.getClipRgn(),win32con.RGN_AND)
+		rgn.CombineRgn(rgn,self._parent.getClipRgn(rel),win32con.RGN_AND)
 		return rgn
+
+	def clipRect(self, rc):
+		return rc
 
 	def __paintOnDDS(self, dds, rel=None):
 		x, y, w, h = self.getwindowpos(rel)
 		if self._active_displist:
 			hdc = dds.GetDC()
 			dc = win32ui.CreateDCFromHandle(hdc)
-			rgn = self.getClipRgn()
+			rgn = self.getClipRgn(rel)
 			dc.SelectClipRgn(rgn)
 			rgn.DeleteObject()
 			x0, y0 = dc.SetWindowOrg((-x,-y))

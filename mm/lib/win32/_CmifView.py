@@ -200,8 +200,8 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 		self.ReleaseDC(dc)
 		return pt
 
-	def getClipRgn(self):
-		x, y, w, h = self._canvas;
+	def getClipRgn(self, rel=None):
+		x, y, w, h = self._canvas
 		rgn = win32ui.CreateRgn()
 		rgn.CreateRectRgn((x,y,x+w,y+h))
 		return rgn
