@@ -43,7 +43,10 @@ class ImageChannel(ChannelWindow):
 				msg = msg[1]
 			self.errormsg(node, f + ':\n' + msg)
 			return 1
-		self.armed_display.fgcolor(self.getbucolor(node))
+		if MMAttrdefs.getattr(node, 'drawbox'):
+			self.armed_display.fgcolor(self.getbucolor(node))
+		else:
+			self.armed_display.fgcolor(self.getbgcolor(node))
 		hicolor = self.gethicolor(node)
 		for a in node.GetRawAttrDef('anchorlist', []):
 			args = a[A_ARGS]
