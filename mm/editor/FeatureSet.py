@@ -31,7 +31,6 @@ __version__ = "$Id$";
 	LAYOUT_VIEW,
 	HYPERLINKS_VIEW,
 	ASSETS_VIEW,
-	CHANNEL_VIEW,
 	SOURCE_VIEW,			# show the source view for editing smil source.
 	SOURCE_VIEW_EDIT,		# allow editing of the source in the source view
 	USER_GROUPS,
@@ -61,4 +60,4 @@ __version__ = "$Id$";
 	H_TIMESTRIP,			# Show snap!-like documents with correct toplevel par/seq
 	H_PLAYABLE,			# Toggle showing of playability of nodes
 	H_THUMBNAILS,			# Toggle showing of image thumbnails
-] = range(38)				# don't forget to update this range!
+] = range(37)				# don't forget to update this range!
