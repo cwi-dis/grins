@@ -1771,7 +1771,7 @@ class EventCtrl(AttrCtrl):
 		t = self._offsetwidget.gettext()
 		if t:
 			try:
-				self._eventstruct.set_offset(parseutil.parsecounter(self._offsetwidget.gettext(), withsign = 1))
+				self._eventstruct.set_offset(parseutil.parsecounter(t, withsign = 1))
 			except parseutil.error, msg:
 ##				win32dialog.showmessage(msg, parent=self._wnd._form)
 				return
