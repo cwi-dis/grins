@@ -757,7 +757,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		return os.path.join(self.mother.datadir, '%s.tiff'%channel_type)
 
 	# used by MediaWidget and CommentWidget
-	def do_draw_image(self, image_filename, name, (x,y,w,h), displist, forcetext = 0, drawbox = 1, align = 'bottomleft'):
+	def do_draw_image(self, image_filename, name, (x,y,w,h), displist, forcetext = 0, drawbox = 1, align = 'bottomleft', repeat = 1):
 		if w <= 0 or h <= 0:
 			return
 		r = x + w
@@ -796,6 +796,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 					if nx + displist.strsizePXL(name[:i]+'...')[0] <= r:
 						box2 = displist.writestr(name[:i]+'...')
 						break
+		if not repeat:
+			return
 		# calculate number of copies that'll fit in the remaining space
 		n = (w-box[2]-box2[2]-HEDGSIZE-HEDGSIZE)/(box[2]+box2[2]+NAMEDISTANCE)
 		if n <= 0:
@@ -1500,6 +1502,14 @@ class StructureObjWidget(MMNodeWidget):
 				this_l = my_l
 				this_t = this_b + GAPSIZE
 
+		# reposition drop box so that it uses the rest of the available space
+		if self.dropbox is not None:
+			my_l, my_t, my_r, my_b = self.dropbox.get_pos_abs()
+			if self.HORIZONTAL:
+				self.dropbox.moveto((this_l, my_t, my_r, my_b))
+			else:
+				self.dropbox.moveto((my_l, this_t, my_r, my_b))
+
 	def draw_selected(self, displist):
 		# Called from self.draw or from the mother when selection is changed.
 		displist.draw3dbox(FOCUSRIGHT, FOCUSBOTTOM, FOCUSLEFT, FOCUSTOP, self.get_box())
@@ -1640,7 +1650,7 @@ class StructureObjWidget(MMNodeWidget):
 		if color is not None:
 			displist.drawfbox(color, (l,t,r-l,b-t))
 		if icon or text:
-			self.do_draw_image(icon, text, (l,t,r-l,b-t), displist, 1)
+			self.do_draw_image(icon, text, (l,t,r-l,b-t), displist, forcetext = 1, drawbox = 0)
 
 	def get_popupmenu(self):
 		return self.mother.interior_popupmenu
@@ -3181,7 +3191,11 @@ class NonEmptyWidget(MMWidgetDecoration):
 		if color is not None:
 			displist.drawfbox(color, (l,t,r-l,b-t))
 		if icon or text:
-			self.mmwidget.do_draw_image(icon, text, (l,t,r-l,b-t), displist, forcetext=1, drawbox=0, align='center')
+			if self.mmwidget.HORIZONTAL:
+				align = 'centerleft'
+			else:
+				align = 'topcenter'
+			self.mmwidget.do_draw_image(icon, text, (l,t,r-l,b-t), displist, forcetext=1, drawbox=0, align=align, repeat=0)
 
 class DropIconWidget(MMWidgetDecoration):
 	def recalc_minsize(self):
