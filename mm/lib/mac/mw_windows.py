@@ -125,6 +125,9 @@ class _WindowGroup:
 		
 	def _set_cmd_dict(self, dict):
 		self._dict = dict
+		if __debug__:
+			for i in dict.items():
+				fun, arglist = i
 		mw_globals.toplevel._changed_group_commands()
 		
 	def set_commandlist(self, list):
@@ -2303,6 +2306,11 @@ class DialogWindow(_Window):
 		
 	def SelectWidget(self, item, items=[], default=None, callback=None):
 		widget = mw_widgets._SelectWidget(self._wid, item, items, default, callback)
+		self.addwidget(item, widget)
+		return widget
+		
+	def AreaWidget(self, item):
+		widget = mw_widgets._AreaWidget(self._wid, item)
 		self.addwidget(item, widget)
 		return widget
 	

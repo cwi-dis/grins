@@ -6,6 +6,7 @@ import Lists
 import Ctl
 import Controls
 import ControlAccessor
+import App
 
 import img
 import imgformat
@@ -26,7 +27,17 @@ class _Widget:
 	def close(self):
 		pass
 		
-class _ListWidget:
+class _ControlWidget:
+	def close(self):
+		pass	
+
+	def _activate(self, onoff):
+		pass # Handled by dialog mgr
+		
+	def _redraw(self, rgn):
+		pass # Handled by dialog mgr
+				
+class _ListWidget(_ControlWidget):
 	def __init__(self, wid, item, content=[], multi=0):
 		self.control = wid.GetDialogItemAsControl(item)
 ##		d1, d2, self.rect = wid.GetDialogItem(item)
@@ -61,12 +72,6 @@ class _ListWidget:
 
 ##	def __del__(self):
 ##		print 'del', self
-		
-	def _activate(self, onoff):
-		pass # Handled by dialog mgr
-		
-	def _redraw(self, rgn):
-		pass # Handled by dialog mgr
 		
 	def _setcontent(self, fr, to, content):
 		for y in range(fr, to):
@@ -151,6 +156,80 @@ class _ListWidget:
 	def setkeyboardfocus(self):
 		Ctl.SetKeyboardFocus(self.wid, self.control, Controls.kControlListBoxPart)
 
+class _AreaWidget(_ControlWidget):
+	def __init__(self, wid, item):
+		self.wid = wid
+		self.control = wid.GetDialogItemAsControl(item)
+		self.rect = self.control.GetControlRect()
+		self.control.SetControlDataCallback(0, Controls.kControlUserPaneDrawProcTag, self.redraw)
+		self.image = None
+		self.outerrect = (0, 0, 1, 1)
+		self.otherrects = []
+		self.ourrect = (0, 0, 1, 1)
+		self.recalc()
+		
+	def close(self):
+		del self.wid
+		del self.control
+		
+	def redraw(self, ctl, part):
+		try:
+			Qd.SetPort(self.wid)
+##			App.DrawThemeGenericWell(self.rect, 1)
+			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
+			Qd.EraseRect(self.rect)
+			self._showrect(self.outerrect, (0, 0, 0))
+			for r in self.otherrects:
+				self._showrect(r, (0x7fff, 0x7fff, 0x7fff))
+			self._showrect(self.ourrect, (0xffff, 0, 0))
+		except:
+			import traceback, sys
+			exc_type, exc_value, exc_traceback = sys.exc_info()
+			traceback.print_exception(exc_type, exc_value, None)
+			traceback.print_tb(exc_traceback)
+
+	def _showrect(self, rect, color):
+		print rect, color, self.scale
+		x, y, w, h = rect
+		x = x / self.scale
+		y = y / self.scale
+		w = w / self.scale
+		h = h / self.scale
+		x = x + self.rect[0]
+		y = y + self.rect[1]
+		Qd.RGBForeColor(color)
+		Qd.FrameRect((x, y, x+w, y+h))
+		
+	def setinfo(self, outerrect, image=None, otherrects=[]):
+		self.outerrect = outerrect
+		self.image = image
+		self.otherrects = otherrects
+		self.recalc()
+		
+	def recalc(self):
+		scale = 1
+		x, y, w, h = self.outerrect
+		x0, y0, x1, y1 = self.control.GetControlRect()
+		print 'outer', x, y, w, h
+		print 'ctl', x0, y0, x1, y1
+		if x0 >= x1 or y0 >= y1:
+			return
+		while scale*(x1-x0) < w:
+			scale = scale*2
+		while scale*(y1-y0) < h:
+			scale = scale*2
+		w_extra = (x1-x0) - w/scale
+		h_extra = (y1-y0) - h/scale
+		self.rect = (x0+w_extra/2, y0+h_extra/2, x1-w_extra/2, y1-h_extra/2)
+		self.scale = scale
+		print 'self.rect', self.rect
+		print 'scale', self.scale
+		
+	def set(self, rect):
+		self.ourrect = rect
+		
+	def get(self):
+		return self.ourrect
 					
 class _ImageWidget(_Widget):
 	def __init__(self, wid, item, image=None):
@@ -224,7 +303,7 @@ class _ImageWidget(_Widget):
 	def _activate(self, onoff):
 		pass
 				
-class _SelectWidget:
+class _SelectWidget(_ControlWidget):
 	def __init__(self, wid, ctlid, items=[], default=None, callback=None):
 		self.wid = wid
 		self.itemnum = ctlid
@@ -247,12 +326,6 @@ class _SelectWidget:
 		
 ##	def __del__(self):
 ##		print 'del', self
-		
-	def _activate(self, onoff):
-		pass # Handled by dialog mgr
-		
-	def _redraw(self, rgn):
-		pass # Handled by dialog mgr
 		
 	def delete(self):
 ##		print 'DBG: delete (obsolete)', self
