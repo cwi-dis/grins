@@ -895,9 +895,11 @@ class StructureObjWidget(MMNodeWidget):
 		self.dont_draw_children = 0
 		if parent is None:
 			self.add_event_icons()
+		self.previewchild = None
+		if MMAttrdefs.getattr(self.node, 'project_autoroute'):
+			self._setpreviewandsubicons()
 		if self.node.children and self.node.GetAttrDef('empty_nonempty', 0):
 			self.dropbox = EmptyWidget(self, mother)
-
 
 	def destroy(self):
 		if self.children:
@@ -906,7 +908,39 @@ class StructureObjWidget(MMNodeWidget):
 		self.children = None
 		self.collapsebutton = None
 		self.parent_widget = None
+		self.previewchild = None
 		MMNodeWidget.destroy(self)
+
+	def _setpreviewandsubicons(self):
+		# Set preview node and icons for other children iff
+		# this is an autorouting node.
+		for ch in self.node.children:
+			tp = ch.GetType()
+			# Skip all non-media types
+			if tp not in MMTypes.mediatypes:
+				continue
+			# Brushes are fine
+			if tp == 'brush':
+				if not self.previewchild:
+					self.previewchild = ch
+				continue
+			# Skip all empty items
+			if tp == 'imm' and not ch.GetValues():
+				continue
+			if tp == 'ext' and not MMAttrdefs.getattr(ch, 'file'):
+				continue
+			# If we have no preview node yet this may be a
+			# candidate
+			mimetypes = MMAttrdefs.getattr(ch, 'allowedmimetypes')
+			if not self.previewchild:
+				# XXXX Is this the correct test??
+				if  'image' in mimetypes or 'video' in mimetypes: # XXXX Maybe more?
+					self.previewchild = ch
+					continue
+			# If we get here this node has information and it
+			# isn't used as the preview node. We post an icon.
+			iconname = ch.getIconName(wantmedia=1)
+			self.iconbox.add_icon(iconname)
 
 	def add_event_icons(self):
 		MMNodeWidget.add_event_icons(self)
@@ -1247,8 +1281,10 @@ class StructureObjWidget(MMNodeWidget):
 				icon = self.node.context.findurl(icon)
 				icon = MMurl.urlretrieve(icon)[0]
 				self.do_draw_image(icon, self.name, (l,t,r-l,b-t), displist)
-			elif self.DRAWCOLLAPSEDMEDIACHILD and children and children[0].GetType() in MMTypes.mediatypes:
-				self.drawnodecontent(displist, (l,t,r-l,b-t), children[0])
+##			elif self.DRAWCOLLAPSEDMEDIACHILD and children and children[0].GetType() in MMTypes.mediatypes:
+##				self.drawnodecontent(displist, (l,t,r-l,b-t), children[0])
+			elif self.previewchild:
+				self.drawnodecontent(displist, (l,t,r-l,b-t), self.previewchild)
 			elif self.HORIZONTAL:
 				# draw vertical lines
 				while l < r:
