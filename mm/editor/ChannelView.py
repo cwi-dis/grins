@@ -350,15 +350,15 @@ class ChannelView(ViewDialog, GLDialog):
 	# View root stuff
 
 	def nextviewroot(self):
-		node = nextminidocument(self.viewroot)
+		node = self.viewroot.NextMiniDocument()
 		if node == None:
-			node = firstminidocument(self.root)
+			node = self.root.FirstMiniDocument()
 		self.setviewroot(node)
 
 	def prevviewroot(self):
-		node = prevminidocument(self.viewroot)
+		node = self.viewroot.PrevMiniDocument()
 		if node == None:
-			node = lastminidocument(self.root)
+			node = self.root.LastMiniDocument()
 		self.setviewroot(node)
 
 	# Make sure the view root is set to *something*, and fix the title
@@ -366,10 +366,10 @@ class ChannelView(ViewDialog, GLDialog):
 		node = self.viewroot
 		if node <> None and node.GetRoot() <> self.root:
 			node = None
-		if node <> None and not isminidocument(node):
+		if node <> None and not node.IsMiniDocument():
 			node = None
 		if node == None:
-			node = firstminidocument(self.root)
+			node = self.root.FirstMiniDocument()
 		if node == None:
 			node = self.root
 		self.viewroot = node
@@ -461,7 +461,7 @@ class ChannelView(ViewDialog, GLDialog):
 			return
 		# May have to switch view root
 		mini = node
-		while not isminidocument(mini):
+		while not mini.IsMiniDocument():
 			mini = mini.GetParent()
 			if mini == None:
 				return
@@ -474,74 +474,6 @@ class ChannelView(ViewDialog, GLDialog):
 		self.deselect()
 		obj.select()
 		self.drawarcs()
-
-
-# Check whether a node is the top of a mini-document
-
-def isminidocument(node):
-	if node.GetType() == 'bag':
-		return 0
-	parent = node.GetParent()
-	return parent == None or parent.GetType() == 'bag'
-
-# Find the first mini-document in a tree
-
-def firstminidocument(node):
-	if node.GetType() <> 'bag':
-		return node
-	for child in node.GetChildren():
-		mini = firstminidocument(child)
-		if mini <> None:
-			return mini
-	return None
-
-# Find the last mini-document in a tree
-
-def lastminidocument(node):
-	if node.GetType() <> 'bag':
-		return node
-	res = None
-	for child in node.GetChildren():
-		mini = lastminidocument(child)
-		if mini <> None:
-			res = mini
-	return res
-
-# Find the next mini-document in a tree after the given one
-# Return None if this is the last one
-
-def nextminidocument(node):
-	while 1:
-		parent = node.GetParent()
-		if not parent:
-			break
-		siblings = parent.GetChildren()
-		index = siblings.index(node) # Cannot fail
-		while index+1 < len(siblings):
-			index = index+1
-			mini = firstminidocument(siblings[index])
-			if mini <> None:
-				return mini
-		node = parent
-	return None
-
-# Find the previous mini-document in a tree after the given one
-# Return None if this is the first one
-
-def prevminidocument(node):
-	while 1:
-		parent = node.GetParent()
-		if not parent:
-			break
-		siblings = parent.GetChildren()
-		index = siblings.index(node) # Cannot fail
-		while index > 0:
-			index = index-1
-			mini = lastminidocument(siblings[index])
-			if mini <> None:
-				return mini
-		node = parent
-	return None
 
 
 # Base class for Graphical Objects.
