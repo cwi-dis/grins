@@ -641,6 +641,8 @@ class LayoutView2(LayoutViewDialog2):
 				CREATEANCHOREXTENDED(callback = (self.onNewAnchor, (1,))),
 				CREATEANCHOR_CONTEXT(callback = (self.onNewAnchor, (2,))),
 				CREATEANCHOR_BROWSER(callback = (self.onNewAnchor, (3,))),
+				PLAYNODE(callback = (self.playcall, ())),
+				PLAYFROM(callback = (self.playfromcall, ())),
 				]
 		else:
 			self.commandMediaList = []
@@ -2047,6 +2049,20 @@ class LayoutView2(LayoutViewDialog2):
 		
 		if len(self.currentSelectedNodeList) == 1:
 			self.newAnchor(self.currentSelectedNodeList[0], extended)
+
+	def playcall(self):
+		if len(self.currentSelectedNodeList) == 1:
+			node = self.currentSelectedNodeList[0]
+			top = self.toplevel
+			top.setwaiting()
+			top.player.playsubtree(node)
+
+	def playfromcall(self):
+		if len(self.currentSelectedNodeList) == 1:
+			node = self.currentSelectedNodeList[0]
+			top = self.toplevel
+			top.setwaiting()
+			top.player.playfrom(node)
 
 	# make a list of node that are not relationship
 	def makeListWithoutRelationShip(self, nodeList):
