@@ -15,11 +15,12 @@ DONE	Audio doesn't pause at beginning of webnews
 DONE	Large color (fgcolor) gives crash. (Actual reason: InvalRect without setport)
 DONE	Layout view: show "all channels" by default, enable "new channel" (->Sjoerd)
 DONE	Video doesn't loop
-19-10	New channels sometimes show up as main window (->Sjoerd, appears problem with SMIL reading)
+DONE	Multiple selections in Layout view.
+DONE	New channels sometimes show up as main window (->Sjoerd, appears problem with SMIL reading)
 19-10	Anchor editor: "edit" always enabled (->Sjoerd)
-19-10	Timeline: syncarc focus is lost on canvas resize (->Sjoerd)
-19-10	timeline: next/prev minidocument should be disabled if inappropriate (->Sjoerd)
-19-10	Hierarchy: zoomin on stacked node gives crash (->Sjoerd)
+DONE	Timeline: syncarc focus is lost on canvas resize (->Sjoerd)
+DONE	timeline: next/prev minidocument should be disabled if inappropriate (->Sjoerd)
+DONE	Hierarchy: zoomin on stacked node gives crash (->Sjoerd)
 15-10	CR/LF probleem? Alleen in CMIF documents?
 15-10	View source
 15-10	Help window
@@ -32,5 +33,6 @@ DONE	Video doesn't loop
 19-10	Select channel in layout view doesn't highlight it
 19-10	Hyperlinks: close box doesn't work
 19-10	Allow defaults for which views to open on document open
-19-10	Multiple selections in Layout view.
 19-10	rubberbox: Wat doet hij op unix met directe OK?
+20-10	List selection with keyboard, list focus
+20-10	Default folder for StandardGetFile
