@@ -34,6 +34,8 @@ PyObject *GraphBuilderCreator::Create(PyObject *self, PyObject *args)
                           IID_IGraphBuilder,
                           (void **)&pIGraph);
 	GUI_END_SAVE;
+
+	// Missing DirectShow infrastructure
 	if (FAILED(hr)) RETURN_NONE;
 
 	GraphBuilder* pGraph=new GraphBuilder(pIGraph);
@@ -391,13 +393,13 @@ static PyObject* py_get_window_position(PyObject *self, PyObject *args)
 
 
 	GraphBuilder *pGraphBuilder=(GraphBuilder*)((PyClass<GraphBuilder,GraphBuilderCreator> *)self)->GetObject();
-	if(!pGraphBuilder)return NULL;
+	if(!pGraphBuilder) return NULL;
 	IGraphBuilder* pGraph=pGraphBuilder->m_pI;
 
 	IVideoWindow  *pivw  = NULL;
     HRESULT hr=pGraph->QueryInterface(IID_IVideoWindow,(void **)&pivw);
-	long x,y,w,h;
-    if(SUCCEEDED(hr) )
+	long x=0,y=0,w=0,h=0;
+    if(SUCCEEDED(hr))
 		{
 		GUI_BGN_SAVE;
 		pivw->GetWindowPosition(&x, &y, &w, &h);
@@ -407,7 +409,7 @@ static PyObject* py_get_window_position(PyObject *self, PyObject *args)
 	// Temp fix. We must find a better way
 	long dh=GetSystemMetrics(SM_CYCAPTION)+2*GetSystemMetrics(SM_CYFRAME);
 	long dw=2*GetSystemMetrics(SM_CXFRAME);
-	return Py_BuildValue("(llll)",x,y,w-dw,h-dh);
+	return Py_BuildValue("(llll)",x,y,(w>0?w-dw:0),(h>0?h-dh:0);
 	}
 
 
