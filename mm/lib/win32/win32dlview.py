@@ -531,12 +531,8 @@ class DisplayListView(docview.ScrollView, win32window.Window, DropTarget.DropTar
 			self._cbld[id]=cbt
 
 	# return commnds class id
-	def get_cmdclass_id(self,cmdcl):
-		if usercmdui.class2ui.has_key(cmdcl):
-			return usercmdui.class2ui[cmdcl].id
-		else: 
-			print 'CmdClass not found',cmdcl
-			return -1
+	def get_cmdclass_id(self, cmdcl):
+		return usercmdui.usercmd2id(cmdcl)
 
 	def setpopupmenu(self, menutemplate):
 		# Menutemplate is a MenuTemplate-style menu template.
