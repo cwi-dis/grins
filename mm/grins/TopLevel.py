@@ -187,6 +187,9 @@ class TopLevel(TopLevelDialog):
 	def setwaiting(self):
 		windowinterface.setwaiting()
 
+	def prefschanged(self):
+		self.root.ResetPlayability()
+
 	#
 	# Global hyperjump interface
 	#
