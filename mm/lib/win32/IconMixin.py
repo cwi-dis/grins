@@ -83,6 +83,7 @@ ICONNAME_TO_RESID={
 	'repeat' : grinsRC.IDI_REPEAT,
 	'spaceman': grinsRC.IDI_SPACEMAN,
 	'wallclock': grinsRC.IDI_WALLCLOCK,
+	'pausing': grinsRC.IDI_PAUSING,
 	'playing': grinsRC.IDI_PLAYING,
 	'waitstop': grinsRC.IDI_WAITSTOP,
 	'idle': grinsRC.IDI_IDLE,

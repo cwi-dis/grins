@@ -260,6 +260,7 @@
 #define IDI_OPENEDEYEKEY                460
 #define IDI_CLOSEDEYE                   462
 #define IDD_REGISTER                    463
+#define IDI_PAUSING                     463
 #define IDD_EDITATTR_GEOMETRY           464
 #define IDB_SPLASHREALONE               464
 #define IDD_EDITATTR_LAYOUT2REAL        465
