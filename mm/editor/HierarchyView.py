@@ -670,19 +670,7 @@ class HierarchyView(HierarchyViewDialog):
 		size = 0
 		horizontal = (t in ('par', 'alt')) == DISPLAY_VERTICAL
 		for child in children:
-			if not hasattr(child, 'expanded') or \
-			   not child.GetChildren():
-				if not horizontal:
-					size = size + MINSIZE + LABSIZE
-				elif structure_name_size:
-					name = MMAttrdefs.getattr(child, 'name')
-					namewidth = (name and f_title.strsize(name)[0]) or 0
-					minwidth = min(MAXSIZE, max(MINSIZE, namewidth))
-					size = size + minwidth + HOREXTRASIZE
-				else:
-					size = size + MINSIZE + HOREXTRASIZE
-			else:
-				size = size + child.expanded[not horizontal]
+			size = size + child.boxsize[not horizontal]
 		# size is minimum size required for children in mm
 		if horizontal:
 			gapsize = self.horgap
@@ -695,20 +683,7 @@ class HierarchyView(HierarchyViewDialog):
 		maxr = 0
 		maxb = 0
 		for child in children:
-			if not hasattr(child, 'expanded') or \
-			   not child.GetChildren():
-				size = MINSIZE
-				if not horizontal:
-					size = size + LABSIZE
-				elif structure_name_size:
-					name = MMAttrdefs.getattr(child, 'name')
-					namewidth = (name and f_title.strsize(name)[0]) or 0
-					minwidth = min(MAXSIZE, max(MINSIZE, namewidth))
-					size = minwidth + HOREXTRASIZE
-				else:
-					size = size + HOREXTRASIZE
-			else:
-				size = child.expanded[not horizontal]
+			size = child.boxsize[not horizontal]
 			if horizontal:
 				right = left + size * factor
 			else:
@@ -903,7 +878,8 @@ def sizeboxes(node):
 			minwidth = min(MAXSIZE, max(MINSIZE, namewidth))
 		else:
 			minwidth = MINSIZE
-		return minwidth + HOREXTRASIZE, MINSIZE + LABSIZE
+		node.boxsize = minwidth + HOREXTRASIZE, MINSIZE + LABSIZE
+		return node.boxsize
 	nchildren = len(children)
 	width = height = 0
 	horizontal = (node.GetType() in ('par', 'alt')) == DISPLAY_VERTICAL
@@ -925,8 +901,8 @@ def sizeboxes(node):
 		height = height - GAPSIZE
 	width = width + 2 * EDGSIZE
 	height = height + EDGSIZE + LABSIZE
-	node.expanded = (width, height)
-	return width, height
+	node.boxsize = width, height
+	return node.boxsize
 
 def do_expand(node, expand, nlevels=None):
 	if nlevels == 0:
