@@ -49,36 +49,12 @@ class TransitionEngine:
 	def begintransition(self):
 		self.__createSurfaces()
 		self.__running = 1	
-		self.__start = time.time()
+		self.__start = winkernel.GetTickCount() #time.time()
 		self.settransitionvalue(self.__startprogress)
 		if self.__duration<=0.0:
 			self.settransitionvalue(self.__endprogress)
 		else:	
-			#self.__register_for_timeslices()
-			self.thread_proc()
-
-
-	def thread_proc(self):
-		if self.windows[0].is_closed():
-			self.endtransition()
-			return
-		tbegin = winkernel.GetTickCount()
-		while 1:
-			t_sec = 0.001*(winkernel.GetTickCount() - tbegin)
-			if t_sec>=self.__duration:
-				try:
-					self.settransitionvalue(self.__endprogress)
-					self.endtransition()
-				except wingdi.error, arg:
-					print arg
-				break			
-			else:
-				try:
-					value = self.__startprogress + self.__transperiod * t_sec
-					self.settransitionvalue(value)
-				except wingdi.error, arg:
-					print arg
-					break			
+			self.__register_for_timeslices()
 			
 	def endtransition(self):
 		if not self.__transitiontype: return
@@ -181,7 +157,8 @@ class TransitionEngine:
 		if self.windows[0].is_closed():
 			self.endtransition()
 			return
-		t_sec = time.time() - self.__start
+		#t_sec = time.time() - self.__start
+		t_sec = 0.001*(winkernel.GetTickCount() - self.__start)
 		if t_sec>=self.__duration:
 			try:
 				self.settransitionvalue(self.__endprogress)
