@@ -172,9 +172,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			if drawbox:
 				b.hicolor(hicolor)
 			self.setanchor(a[A_ID], a[A_TYPE], b, a[A_TIMES])
-		if node.__type != 'real':
-			self.armed_display.drawvideo(self.__mc.update)
-
 
 	def _getoswindow(self):
 		return self.window.GetSafeHwnd()
