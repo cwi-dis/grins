@@ -1204,18 +1204,18 @@ class WallclockDialog(ResDialog):
 
 		self.w_cbdate.hookcommand(self, self.w_cbdate_callback)
 		self.w_cbtz.hookcommand(self, self.w_cbtz_callback)
-		self.w_cbtz.setcheck(0)
 
 		yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn = self.value
 		self.__setwidget_asnum(self.w_yr, yr)
 		self.w_mt.setoptions(MONTHS)
-		self.w_mt.setcursel(mt)
+		if mt:
+			mt = mt - 1
+			self.w_mt.setcursel(mt)
 		self.__setwidget_asnum(self.w_dy, dy)
 		self.__setwidget_asnum(self.w_hr, hr)
 		self.__setwidget_asnum(self.w_mn, mn)
 		self.__setwidget_asnum(self.w_sc, sc)
 		self.w_tzsg.setoptions(['East', 'West'])
-		print "TODO: verify correctness with the timezone."
 		if tzsg == '+':
 			self.w_tzsg.setcursel(0) # east
 		else:
@@ -1229,10 +1229,10 @@ class WallclockDialog(ResDialog):
 			self.w_cbdate.setcheck(1) # doesn't this cause a callback?
 			self.enable_date()
 		if tzsg is None and tzhr is None and tzmn is None:
-			self.w_cbdate.setcheck(0)
+			self.w_cbtz.setcheck(0)
 			self.disable_tz()
 		else:
-			self.w_cbdate.setcheck(1)
+			self.w_cbtz.setcheck(1)
 			self.enable_tz()
 
 	def __setwidget_asnum(self, widget, number):
@@ -1274,7 +1274,7 @@ class WallclockDialog(ResDialog):
 		#self.yr,self.mt,self.dy,self.hr,self.mn,self.sc,self.tzsg,self.tzhr,self.tzmn = None
 		if self.w_cbdate.getcheck():
 			yr = self.__getwidget_asnum(self.w_yr)
-			mt = self.w_mt.getcursel()
+			mt = self.w_mt.getcursel()+1
 			assert mt >= 0 and mt < 12
 			dy = self.__getwidget_asnum(self.w_dy)
 		else:

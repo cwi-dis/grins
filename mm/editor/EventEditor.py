@@ -178,7 +178,6 @@ class EventStruct:
 			return "marker('"+marker+"')"
 		elif c == 'wallclock':
 			wc = self.get_wallclock()
-			print "DEBUG: wc is: ", wc
 			return SMILTreeWrite.wallclock2string(wc)
 			
 ##			if s is None and self._setwallclock:
@@ -386,5 +385,4 @@ class EventStruct:
 		else:
 			return (None, None, None, 12, 0, 0.0, None, None, None)
 	def set_wallclock(self, value):
-		print "DEBUG: setting wallclock to: ", value
 		self._setwallclock = value
