@@ -511,9 +511,25 @@ static PyObject* PyWnd_GetMenuHandle(PyWnd *self, PyObject *args)
 	{
 	if(!PyArg_ParseTuple(args,""))
 		return NULL;
+	if (!hwndCB) {
+		seterror("GetMenuHandle", "No menu available");
+		return NULL;
+	}
 	HMENU hMenu = (HMENU)SendMessage(hwndCB, SHCMBM_GETMENU, (WPARAM)0, (LPARAM)0);
  	return Py_BuildValue("i", hMenu);
 	}
+
+static PyObject *PyWnd_HideMenuBar(PyWnd *self, PyObject *args)
+{
+	if(!PyArg_ParseTuple(args,""))
+		return NULL;
+	if (!hwndCB) {
+		seterror("GetMenuHandle", "No menu available");
+		return NULL;
+	}
+	CommandBar_Show(hwndCB, 0);
+	return none();
+}
 
 #endif
 
@@ -549,6 +565,7 @@ PyMethodDef PyWnd::methods[] = {
 #ifdef _WIN32_WCE
 	{"SHCreateMenuBar", (PyCFunction)PyWnd_SHCreateMenuBar, METH_VARARGS, ""},
 	{"GetMenuHandle", (PyCFunction)PyWnd_GetMenuHandle, METH_VARARGS, ""},
+	{"HideMenuBar", (PyCFunction)PyWnd_HideMenuBar, METH_VARARGS, ""},
 #endif
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 };

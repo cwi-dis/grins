@@ -162,12 +162,11 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow, HWND *phWnd)
 	//When the main window is created using CW_USEDEFAULT the height of the menubar (if one
 	// is created is not taken into account). So we resize the window after creating it
 	// if a menubar is present
-	{
+	if (hwndCB) {
 		RECT rc;
 		GetWindowRect(hWnd, &rc);
 		rc.bottom -= MENU_HEIGHT;
-		if (hwndCB)
-			MoveWindow(hWnd, rc.left, rc.top, rc.right, rc.bottom, FALSE);
+		MoveWindow(hWnd, rc.left, rc.top, rc.right, rc.bottom, FALSE);
 	}
 
 
