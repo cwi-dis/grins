@@ -976,9 +976,7 @@ class SMILHtmlTimeWriter(SMIL):
 					self.__subchans[pch] = []
 				self.__subchans[pch].append(ch)
 			if not ch.has_key('base_window') and \
-			   ch['type'] not in ('sound', 'shell', 'python',
-					      'null', 'vcr', 'socket', 'cmif',
-					      'midi', 'external'):
+			   ch['type'] not in ('sound', 'null'):
 				# top-level channel with window
 				self.top_levels.append(ch)
 				if not self.__subchans.has_key(ch.name):
@@ -1014,9 +1012,7 @@ class SMILHtmlTimeWriter(SMIL):
 				self.ids_used[name] = 0
 				self.ch2name[ch] = name
 			if not ch.has_key('base_window') and \
-			   ch['type'] in ('sound', 'shell', 'python',
-					  'null', 'vcr', 'socket', 'cmif',
-					  'midi', 'external') and top0:
+			   ch['type'] in ('sound', 'null') and top0:
 				self.__subchans[top0].append(ch)
 			# check for SMIL 2.0 feature: hierarchical regions
 			if not self.smilboston and \

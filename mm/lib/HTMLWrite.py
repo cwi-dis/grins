@@ -33,10 +33,7 @@ visible_channel_types={
 	'text':1,
 	'image':1,
 	'video': 1,
-	'movie':1,
-	'mpeg':1,
 	'html':1,
-	'label':1,
 	'RealPix':1,
 	'RealText':1,
 	'RealVideo':1,
@@ -354,9 +351,7 @@ class HTMLWriter:
 			else:
 				raise Error, "Duplicate region name"
 			if not ch.has_key('base_window') and \
-			   ch['type'] not in ('sound', 'shell', 'python',
-					      'null', 'vcr', 'socket', 'cmif',
-					      'midi', 'external'):
+			   ch['type'] not in ('sound', 'null'):
 				# top-level channel with window
 				self.top_levels.append(ch)
 				if not self.__title:
