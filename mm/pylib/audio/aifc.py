@@ -38,7 +38,6 @@ def _read_string(file):
 _HUGE_VAL = 1.79769313486231e+308 # See <limits.h>
 
 def _read_float(f): # 10 bytes
-	import math
 	expon = _read_short(f) # 2 bytes
 	sign = 1
 	if expon < 0:
@@ -52,7 +51,17 @@ def _read_float(f): # 10 bytes
 		f = _HUGE_VAL
 	else:
 		expon = expon - 16383
-		f = (himant * 0x100000000L + lomant) * pow(2.0, expon - 63)
+		shift = expon - 63
+##		f = (himant * 0x100000000L + lomant) * pow(2.0, expon - 63)
+		mant = himant * 0x100000000L + lomant
+		if shift < 0:
+			shift = -shift
+			f = float(mant >> shift)
+			rest = mant & ((1L << shift) - 1)
+			if rest:
+				f = f + float(rest) / float(1L << shift)
+		else:
+			f = float(mant << shift)
 	return sign * f
 
 def _write_short(f, x):
