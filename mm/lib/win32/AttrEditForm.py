@@ -2966,15 +2966,26 @@ class AudioRenderer(MediaRenderer):
 
 #################################
 import winqt
+import ddraw
 
 class QtMediaRenderer(Renderer):
 	def __init__(self,wnd,rc,baseURL=''):
 		Renderer.__init__(self,wnd,rc,baseURL)
 		self._player = None
-	
+		
+		import __main__
+		self._ostimer = __main__.toplevel
+		self._timeresolution = 0.01
+		self._timerid = None
+
+		self._ddraw = None
+
 	def __del__(self):
 		self.release()
-		
+		self._clipper = None
+		self._frontBuffer = None
+		self._ddraw = None
+
 	def isstatic(self):
 		return 0
 
@@ -2983,7 +2994,9 @@ class QtMediaRenderer(Renderer):
 			
 	def release(self):
 		if self._player:
+			self.cancelTimer()
 			self._player.stop()
+			del self._player
 			self._player = None
 
 	def load(self,rurl):
@@ -3000,41 +3013,104 @@ class QtMediaRenderer(Renderer):
 			fn = MMurl.urlretrieve(url)[0]
 		except Exception, arg:
 			print arg
+			self._player = None
 			if self.needswindow():
 				self.update()
 			return
 
 		if not self._player.open(fn, asaudio = not self.needswindow()):
+			self._player = None
 			if self.needswindow():
 				self.update()
 			return
 
 		if self.needswindow():
-			left,top,width,height = self._player.getMovieRect()
-			src_x, src_y, dest_x, dest_y, width, height,rcKeep=\
-				self.adjustSize((width,height))
-			#self._player.SetWindowPosition((dest_x, dest_y, width, height))
-			#self._player.SetWindow(self._wnd, win32con.WM_USER+101)
-			self.update()
+			if self._ddraw is None:
+				hwnd = self._wnd._form.GetSafeHwnd()
+				self._ddraw = ddraw.CreateDirectDraw()
+				self._ddraw.SetCooperativeLevel(hwnd, ddraw.DDSCL_NORMAL)
+		
+				ddsd = ddraw.CreateDDSURFACEDESC()
+				ddsd.SetFlags(ddraw.DDSD_CAPS)
+				ddsd.SetCaps(ddraw.DDSCAPS_PRIMARYSURFACE)
+				self._frontBuffer = self._ddraw.CreateSurface(ddsd)
+
+				self._clipper = self._ddraw.CreateClipper(hwnd)
+				self._frontBuffer.SetClipper(self._clipper)
+				self._pxlfmt = self._frontBuffer.GetPixelFormat()
+
+			videosize = self._player.getMovieRect()
+			src_x, src_y, dest_x, dest_y, width, height,rcKeep = self.adjustSize(videosize[2:])
+			self._player.setMovieRect((0, 0, width, height))
+			self._player.createVideoDDS(self._ddraw)
+			self._rc = dest_x, dest_y, width, height
 	
+	def update(self):
+		self._wnd.InvalidateRect(self.inflaterc(self._rc))
+
+	def render(self, dc):
+		if not self._player: 
+			return
+		if self.needswindow():
+			x, y, w, h = self._rc
+			if self._player._dds:
+				dds = self._player._dds
+				try:
+					framehdc = dds.GetDC()
+				except:
+					print 'failed to get direct draw surface DC'
+				else:
+					framedc = win32ui.CreateDCFromHandle(framehdc)
+					dc.BitBlt((x, y),(w, h), framedc, (0, 0), win32con.SRCCOPY)
+					framedc.Detach()
+					dds.ReleaseDC(framehdc)
+			else:			
+				br = Sdk.CreateBrush(win32con.BS_SOLID,0,0)	
+				dc.FrameRectFromHandle((x, y, x + w, y + h), br)
+				Sdk.DeleteObject(br)
+
 	def play(self):
 		if not self._player: return
+		self.startTimer()
 		self._player.run()
 
 	def pause(self):
 		if not self._player: return
+		self.cancelTimer()
 		self._player.stop()
 
 	def stop(self):
 		if not self._player: return
-		self._player.seek(0)
+		self.cancelTimer()
 		self._player.stop()
+		self._player.seek(0)
 
 	def ismediaend(self):
 		d = self._player.getDuration()
 		t = self._player.getTime()
 		return t>=d
 
+	def startTimer(self):
+		if self._timerid is None:
+			self._timerid = self._ostimer.settimer(self._timeresolution, (self.timerCallback, ()))
+
+	def cancelTimer(self):
+		if self._timerid is not None:
+			self._ostimer.canceltimer(self._timerid)
+			self._timerid = None
+		
+	def timerCallback(self):
+		assert self._timerid is not None, 'timer protocol violation'
+		self._timerid = None
+		if self._player:
+			running = self._player.update()
+			if not running:
+				self._player.stop()
+			else:
+				dc = self._wnd.GetDC()
+				self.render(dc)
+				self._wnd.ReleaseDC(dc)
+				self._timerid = self._ostimer.settimer(self._timeresolution, (self.timerCallback, ()))
 
 class QtVideoRenderer(QtMediaRenderer):
 	def __init__(self,wnd,rc,baseURL=''):
