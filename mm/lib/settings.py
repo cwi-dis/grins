@@ -117,11 +117,11 @@ default_settings = {
 	'temporal_channelcolor': (232, 193,152),	# Color of the channels
 	'temporal_channelheight': 16,	# Height of the channels
 	'temporal_nodecolor': (205,207,194),		# the color of each node
-	'temporal_parcolor': (74,158,132),
-	'temporal_seqcolor': (200,154,189),
-	'temporal_exclcolor': (255,106,106),
-	'temporal_priocolor': (255,60,60),
-	'temporal_switchcolor': (100,207,33),
+	'temporal_parcolor': (79,156,130),
+	'temporal_seqcolor': (116,154,189),
+	'temporal_exclcolor': (148,117,166),
+	'temporal_priocolor': (166,61,126),
+	'temporal_switchcolor': (148,117,166),
 }
 
 user_settings = {}
