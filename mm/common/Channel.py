@@ -181,10 +181,8 @@ class Channel:
 		# Deal with being a subchannel.
 		for chan in channels:
 			# Remove us from all subchannel lists.
-			try:
+			if self in chan._subchannels:
 				chan._subchannels.remove(self)
-			except ValueError:
-				pass
 		# First, check that there is a base_window attribute
 		# and that it isn't "undefined".
 		pname = self._attrdict.get('base_window', 'undefined')
@@ -294,6 +292,14 @@ class Channel:
 
 	def setready(self):
 		pass
+
+	def getaltvalue(self, node):
+		# Return a value between 0 and 1 which gives "desirability"
+		# of playing this node if there are alternatives. Should
+		# return 0 for unplayable, 1 for no problems at all.
+		# Intermedeate values may be returned depending on bandwidth,
+		# quality, etc.
+		return 1.0
 
 	#
 	# Methods used internally and by superclasses.
