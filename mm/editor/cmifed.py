@@ -179,10 +179,10 @@ class Main(MainDialog):
 			doclist.append( (base, (url,)))
 		self.set_recent_list(doclist)
 
-	def close_callback(self):
+	def close_callback(self, exitcallback=None):
 		import windowinterface
 		windowinterface.setwaiting()
-		self.do_exit()
+		self.do_exit(exitcallback)
 
 	def crash_callback(self):
 		raise 'Crash requested by user'
@@ -213,7 +213,7 @@ class Main(MainDialog):
 		top.checkviews()
 		self.tops.append(top)
 
-	def do_exit(self):
+	def do_exit(self, exitcallback=None):
 		import Preferences
 		Preferences.showpreferences(0)
 		ok = 1
@@ -229,7 +229,11 @@ class Main(MainDialog):
 			for top in toclose:
 				top.close()
 			return
-		raise SystemExit, 0
+		if exitcallback:
+			rtn, arg = exitcallback
+			apply(rtn, arg)
+		else:
+			raise SystemExit, 0
 
 	def run(self):
 		import windowinterface
