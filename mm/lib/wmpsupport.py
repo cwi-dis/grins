@@ -40,7 +40,7 @@ class Exporter:
 		
 	def getWriter(self):
 		return self.writer
-
+			
 	def changed(self, topchannel, window, event, timestamp):
 		"""Callback from the player: the bits in the window have changed"""
 		if self.topwindow:
@@ -50,12 +50,14 @@ class Exporter:
 				dt = self.timefunc()
 				self.writer.update(dt)
 				if self.progress:
-					self.progress.set('Exporting document to WMP...', int(dt*100)%100, 100, int(dt*100)%100, 100)
+					p = self._getprogress(dt)
+					self.progress.set('Exporting document to WMP...', p, 100, p, 100)
 
 	def audiofragment(self, af):
 		dt = self.timefunc()
 		if self.progress:
-			self.progress.set('Exporting document to WMP...', int(dt*100)%100, 100, int(dt*100)%100, 100)
+			p = self._getprogress(dt)
+			self.progress.set('Exporting document to WMP...', p, 100, p, 100)
 		
 	def finished(self):
 		if self.progress:
@@ -93,10 +95,30 @@ class Exporter:
 				urls.append(chan.getfileurl(node))
 		for child in node.GetSchedChildren():
 			self._getNodesOfType(ntype, child, urls)
-					
+	
 	def _setAudioFormat(self):
 		urls = []
 		self._getNodesOfType('sound', self.player.userplayroot, urls)
 		if urls:
 			self.writer.setAudioFormatFromFile(urls[0])
+
+	# temp: document duration estimation
+	def _getdocdurestimate(self):
+		return 30
+
+	# temp: get progess based on doc duration estimation
+	def _getprogress(self, dt):
+		d = 0.5*self._getdocdurestimate()
+		i = 1
+		p = 0
+		while 1:
+			f = 100.0/pow(2.0,i)
+			if dt<d*i:
+				return int(p + f*((dt-d*(i-1))/d))
+			else:
+				p = p + f
+			i = i + 1
+					
+
+
 
