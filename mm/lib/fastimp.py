@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # fastimp.py
 import sys, imp, os
 

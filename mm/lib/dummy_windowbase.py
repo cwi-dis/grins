@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 error = 'windowinterface.error'
 FALSE, TRUE = 0, 1
 ReadMask, WriteMask = 1, 2
