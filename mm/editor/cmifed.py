@@ -33,16 +33,27 @@ from MainDialog import MainDialog
 class Main(MainDialog):
 	def __init__(self, opts, files):
 		import MMurl
+		import license
+		import windowinterface
 		self._tracing = 0
 		self.tops = []
 		self._mm_callbacks = {}
 		self._untitled_counter = 1
+		self._license = license.License()
+		if self._license.have('save'):
+			can_edit = 1
+		elif self._license.have('editdemo'):
+			windowinterface.showmessage('This is a demo version. You will not be able to save your changes')
+			can_edit = 1
+		else:
+			windowinterface.showmessage('Sorry, you have no license for this program')
+			can_edit = 0 # XXXX or sys.exit?
+			files = []
 		try:
 			import mm, posix, fcntl, FCNTL
 		except ImportError:
 			pass
 		else:
-			import windowinterface
 			pipe_r, pipe_w = posix.pipe()
 			mm.setsyncfd(pipe_w)
 			self._mmfd = pipe_r
@@ -51,10 +62,13 @@ class Main(MainDialog):
 						(posix.read, fcntl.fcntl, FCNTL))
 		from usercmd import *
 		self.commandlist = [
+			EXIT(callback = (self.close_callback, ())),
+			]
+		if can_edit:
+			self.commandlist = self.commandlist + [
 			NEW_DOCUMENT(callback = (self.new_callback, ())),
 			OPEN(callback = (self.open_callback, ())),
-			PREFERENCES(callback = (self.preferences_callback, ())),
-			EXIT(callback = (self.close_callback, ())),
+			PREFERENCES(callback=(self.preferences_callback, ())),
 			]
 		if __debug__:
 			self.commandlist = self.commandlist + [
@@ -194,6 +208,19 @@ class Main(MainDialog):
 			top.new_file = 0
 			ok = top.save_callback()
 			top.new_file = nf
+
+	def cansave(self):
+		return self._license.have('save')
+	
+	def wanttosave(self):
+		import license
+		import windowinterface
+		try:
+			features = self._license.need('save')
+		except license.Error, arg:
+			print "No license:", arg
+			return None
+		return features
 
 def main():
 	os.environ['CMIF_USE_X'] = '1'
