@@ -383,14 +383,7 @@ def choosebagitem(node, interactive):
 			name = '???'
 		elif name == indexname:
 			return child
-		type = child.GetType()
-		if type == 'bag':
-			colorindex = 60 # XXX BlockView.BAGCOLOR
-		elif type in leaftypes:
-			colorindex = 61 # XXX BlockView.LEAFCOLOR
-		else:
-			colorindex = None
-		list.append((name, colorindex))
+		list.append(name)
 	if not interactive:
 		return None
 	list.append('Cancel')
