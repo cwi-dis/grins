@@ -941,7 +941,7 @@ class PreferenceWrapper(Wrapper):
 ##		'system_overdub_or_subtitle': 'Overdub or subtitles',
 		}
 	if features.EDIT_COMPONENTS in features.feature_set:
-		__specprefs['components'] = 'URLs of components file'
+		__specprefs['skin'] = 'URL of skin and components file'
 
 	def __init__(self):
 		self.toplevel = None
@@ -1003,7 +1003,7 @@ class PreferenceWrapper(Wrapper):
 			return (('bool', None), self.getdefault(name),
 				defs[2] or name, 'captionoverdub',
 				self.__specprefs[name], 'raw', flags.FLAG_ALL)
-		elif name == 'components':
+		elif name == 'skin':
 			return (('string', None), self.getdefault(name),
 				defs[2] or name, 'file',
 				self.__specprefs[name], 'raw', flags.FLAG_ALL)
