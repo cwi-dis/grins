@@ -86,7 +86,7 @@ MENUBAR=(
 		)),
 
 	(FLAG_ALL, CASCADE, 'Insert', (
-		(FLAG_ALL, CASCADE, 'Image node', (
+		(FLAG_ALL, CASCADE, 'Media', (
 			(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_IMAGE),
 			(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_IMAGE),
 			(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_IMAGE),
@@ -96,26 +96,17 @@ MENUBAR=(
 			(FLAG_G2, ENTRY, 'After', None, NEW_AFTER_SLIDESHOW),
 			(FLAG_G2, ENTRY, 'Within', None, NEW_UNDER_SLIDESHOW),
 		)),
-		(FLAG_ALL, CASCADE, 'Text node', (
+		(FLAG_ALL, CASCADE, 'Immediate Text', (
 			(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_TEXT),
 			(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_TEXT),
 			(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_TEXT),
 		)),
-		(FLAG_SMIL_1_0, CASCADE, 'HTML node', (
-			(FLAG_SMIL_1_0, ENTRY, 'Before', None, NEW_BEFORE_HTML),
-			(FLAG_SMIL_1_0, ENTRY, 'After', None, NEW_AFTER_HTML),
-			(FLAG_SMIL_1_0, ENTRY, 'Within', None, NEW_UNDER_HTML),
-			)),
-		(FLAG_ALL, CASCADE, 'Sound node', (
-			(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_SOUND),
-			(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_SOUND),
-			(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_SOUND),
+		(FLAG_ALL, CASCADE, 'Brush', (
+			(FLAG_BOSTON, ENTRY, 'Before', None, NEW_BEFORE_BRUSH),
+			(FLAG_BOSTON, ENTRY, 'After', None, NEW_AFTER_BRUSH),
+			(FLAG_BOSTON, ENTRY, 'Within', None, NEW_UNDER_BRUSH),
 		)),
-		(FLAG_ALL, CASCADE, 'Video node', (
-			(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_VIDEO),
-			(FLAG_ALL, ENTRY, 'After', None, NEW_AFTER_VIDEO),
-			(FLAG_ALL, ENTRY, 'Within', None, NEW_UNDER_VIDEO),
-		)),
+		(FLAG_ALL, SEP,),
 		(FLAG_ALL, CASCADE, 'Parallel node', (
 			(FLAG_ALL, ENTRY, 'Parent', None, NEW_PAR),
 			(FLAG_ALL, ENTRY, 'Before', None, NEW_BEFORE_PAR),

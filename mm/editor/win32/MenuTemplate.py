@@ -105,7 +105,7 @@ MENUBAR=(
 
 	# this whole section removed in Snap! below
 	('&Insert', (
-		(FLAG_ALL, CASCADE, '&Image node', (
+		(FLAG_ALL, CASCADE, '&Media', (
 			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_IMAGE),
 			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_IMAGE),
 			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_IMAGE),
@@ -115,36 +115,22 @@ MENUBAR=(
 			(FLAG_G2, ENTRY, '&After', None, NEW_AFTER_SLIDESHOW),
 			(FLAG_G2, ENTRY, '&Within', None, NEW_UNDER_SLIDESHOW),
 		)),
-		(FLAG_ALL, CASCADE, '&Text node', (
+		(FLAG_ALL, CASCADE, '&Immediate Text', (
 			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_TEXT),
 			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_TEXT),
 			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_TEXT),
 		)),
-		(FLAG_SMIL_1_0, CASCADE, '&HTML node', (
-			(FLAG_SMIL_1_0, ENTRY, '&Before', None, NEW_BEFORE_HTML),
-			(FLAG_SMIL_1_0, ENTRY, '&After', None, NEW_AFTER_HTML),
-			(FLAG_SMIL_1_0, ENTRY, '&Within', None, NEW_UNDER_HTML),
-			)),
-		(FLAG_ALL, CASCADE, 'S&ound node', (
-			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_SOUND),
-			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_SOUND),
-			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_SOUND),
+		(FLAG_ALL, CASCADE, '&Brush', (
+			(FLAG_BOSTON, ENTRY, '&Before', None, NEW_BEFORE_BRUSH),
+			(FLAG_BOSTON, ENTRY, '&After', None, NEW_AFTER_BRUSH),
+			(FLAG_BOSTON, ENTRY, '&Within', None, NEW_UNDER_BRUSH),
 		)),
-		(FLAG_ALL, CASCADE, '&Video node', (
-			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_VIDEO),
-			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_VIDEO),
-			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_VIDEO),
-		)),
-		(FLAG_ALL, CASCADE, 'SV&G node', (
-			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_SVG),
-			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_SVG),
-			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_SVG),
-		)),
-		(FLAG_ALL, CASCADE, 'Animation node', (
+		(FLAG_ALL, CASCADE, '&Animation', (
 			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_ANIMATION),
 			(FLAG_ALL, ENTRY, '&After', None, NEW_AFTER_ANIMATION),
 			(FLAG_ALL, ENTRY, '&Within', None, NEW_UNDER_ANIMATION),
 		)),
+		(FLAG_PRO, SEP,),
 		(FLAG_ALL, CASCADE, '&Parallel node', (
 			(FLAG_ALL, ENTRY, '&Parent', None, NEW_PAR),
 			(FLAG_ALL, ENTRY, '&Before', None, NEW_BEFORE_PAR),
@@ -181,7 +167,7 @@ MENUBAR=(
 			(FLAG_PRO, ENTRY, '&Within', None, NEW_REGION),
 		)),
 		(FLAG_BOSTON, ENTRY, '&TopLayout', 'T', NEW_TOPLAYOUT),
-		(FLAG_PRO, SEP,),
+#		(FLAG_PRO, SEP,),
 
 ## Windows dialogs apparently do not use usercmd commands.
 ##		(FLAG_PRO, ENTRY, 'New &layout', None, NEW_LAYOUT),
@@ -190,8 +176,8 @@ MENUBAR=(
 #		(FLAG_PRO, ENTRY, 'C&opy region', None, COPY_REGION),
 #		(FLAG_CMIF, ENTRY, 'To&ggle channel state', None, TOGGLE_ONOFF),
 ##		(FLAG_PRO, ENTRY, 'Edit Source...', None, EDITSOURCE),
-		(FLAG_PRO, ENTRY, '&Before...', None, NEW_BEFORE),
-		(FLAG_PRO, ENTRY, '&Within...', None, NEW_UNDER),
+#		(FLAG_PRO, ENTRY, '&Before...', None, NEW_BEFORE),
+#		(FLAG_PRO, ENTRY, '&Within...', None, NEW_UNDER),
 		)),
 	('&Play', (
 		(FLAG_ALL, ENTRY, '&Play\tCtrl+P', 'P', PLAY),
