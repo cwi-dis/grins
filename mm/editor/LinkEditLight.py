@@ -70,7 +70,7 @@ class LinkEditLight:
 					if a[A_TYPE] not in SourceAnchors or \
 					   hlinks.findsrclinks((nid, aid)):
 						# exists, but wrong type or has link
-						dlist.append((nide, aid))
+						dlist.append((nid, aid))
 					break
 			else:
 				dlist.append((nid,aid))
