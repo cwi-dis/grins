@@ -1,0 +1,189 @@
+
+// Microsoft PowerPoint File Format Record Identifiers
+// Based on PowerPoint BIFF.doc (PowerPoint 97)
+
+#ifndef INC_PPCON
+#define INC_PPCON
+
+// Record types
+const int PST_Unknown = 0;
+const int PST_SubContainerCompleted = 1;
+const int PST_IRRAtom = 2;
+const int PST_PSS = 3;
+const int PST_SubContainerException = 4;
+const int PST_ClientSignal1 = 6;
+const int PST_ClientSignal2 = 7;
+const int PST_PowerPointStateInfoAtom = 10;
+const int PST_Document = 1000;
+const int PST_DocumentAtom = 1001;
+const int PST_EndDocument = 1002;
+const int PST_SlidePersist = 1003;
+const int PST_SlideBase = 1004;
+const int PST_SlideBaseAtom = 1005;
+const int PST_Slide	= 1006;
+const int PST_SlideAtom = 1007;
+const int PST_Notes = 1008;
+const int PST_NotesAtom = 1009;
+const int PST_Environment = 1010;
+const int PST_SlidePersistAtom = 1011;
+const int PST_Scheme = 1012;
+const int PST_SchemeAtom = 1013;
+const int PST_DocViewInfo = 1014;
+const int PST_SSlideLayoutAtom = 1015;
+const int PST_MainMaster = 1016;
+const int PST_SSSlideInfoAtom = 1017;
+const int PST_SlideViewInfo = 1018;
+const int PST_GuideAtom = 1019;
+const int PST_ViewInfo = 1020;
+const int PST_ViewInfoAtom = 1021;
+const int PST_SlideViewInfoAtom = 1022;
+const int PST_VBAInfo = 1023;
+const int PST_VBAInfoAtom = 1024;
+const int PST_SSDocInfoAtom = 1025;
+const int PST_Summary = 1026;
+const int PST_Texture = 1027;
+const int PST_VBASlideInfo = 1028;
+const int PST_VBASlideInfoAtom = 1029;
+const int PST_DocRoutingSlip = 1030;
+const int PST_OutlineViewInfo = 1031;
+const int PST_SorterViewInfo = 1032;
+const int PST_ExObjList = 1033;
+const int PST_ExObjListAtom = 1034;
+const int PST_PPDrawingGroup = 1035;
+const int PST_PPDrawing = 1036;
+const int PST_NamedShows = 1040;
+const int PST_NamedShow = 1041;
+const int PST_NamedShowSlides = 1042;
+const int PST_List = 2000;
+const int PST_FontCollection = 2005;
+const int PST_ListPlaceholder = 2017;
+const int PST_BookmarkCollection = 2019;
+const int PST_SoundCollection = 2020;
+const int PST_SoundCollAtom = 2021;
+const int PST_Sound = 2022;
+const int PST_SoundData = 2023;
+const int PST_BookmarkSeedAtom = 2025;
+const int PST_GuideList = 2026;
+const int PST_RunArray = 2028;
+const int PST_RunArrayAtom = 2029;
+const int PST_ArrayElementAtom = 2030;
+const int PST_Int4ArrayAtom = 2031;
+const int PST_ColorSchemeAtom = 2032;
+const int PST_OEShape = 3008;
+const int PST_ExObjRefAtom = 3009;
+const int PST_OEPlaceholderAtom = 3011;
+const int PST_GrColor = 3020;
+const int PST_GrectAtom = 3025;
+const int PST_GratioAtom = 3031;
+const int PST_Gscaling = 3032;
+const int PST_GpointAtom = 3034;
+const int PST_OEShapeAtom = 3035;
+const int PST_OutlineTextRefAtom = 3998;
+const int PST_TextHeaderAtom = 3999;
+const int PST_TextCharsAtom = 4000;
+const int PST_StyleTextPropAtom = 4001;
+const int PST_BaseTextPropAtom = 4002;
+const int PST_TxMasterStyleAtom = 4003;
+const int PST_TxCFStyleAtom = 4004;
+const int PST_TxPFStyleAtom = 4005;
+const int PST_TextRulerAtom = 4006;
+const int PST_TextBookmarkAtom = 4007;
+const int PST_TextBytesAtom = 4008;
+const int PST_TxSIStyleAtom = 4009;
+const int PST_TextSpecInfoAtom = 4010;
+const int PST_DefaultRulerAtom = 4011;
+const int PST_FontEntityAtom = 4023;
+const int PST_FontEmbedData = 4024;
+const int PST_TypeFace = 4025;
+const int PST_CString = 4026;
+const int PST_ExternalObject = 4027;
+const int PST_MetaFile = 4033;
+const int PST_ExOleObj = 4034;
+const int PST_ExOleObjAtom = 4035;
+const int PST_ExPlainLinkAtom = 4036;
+const int PST_CorePict = 4037;
+const int PST_CorePictAtom = 4038;
+const int PST_ExPlainAtom = 4039;
+const int PST_SrKinsoku = 4040;
+const int PST_Handout = 4041;
+const int PST_ExEmbed = 4044;
+const int PST_ExEmbedAtom = 4045;
+const int PST_ExLink = 4046;
+const int PST_ExLinkAtom_old = 4047;
+const int PST_BookmarkEntityAtom = 4048;
+const int PST_ExLinkAtom = 4049;
+const int PST_SrKinsokuAtom = 4050;
+const int PST_ExHyperlinkAtom = 4051;
+const int PST_ExPlain = 4053;
+const int PST_ExPlainLink = 4054;
+const int PST_ExHyperlink = 4055;
+const int PST_SlideNumberMCAtom = 4056;
+const int PST_HeadersFooters = 4057;
+const int PST_HeadersFootersAtom = 4058;
+const int PST_RecolorEntryAtom = 4062;
+const int PST_TxInteractiveInfoAtom = 4063;
+const int PST_EmFormatAtom = 4065;
+const int PST_CharFormatAtom = 4066;
+const int PST_ParaFormatAtom = 4067;
+const int PST_MasterText = 4068;
+const int PST_RecolorInfoAtom = 4071;
+const int PST_ExQuickTime = 4073;
+const int PST_ExQuickTimeMovie = 4074;
+const int PST_ExQuickTimeMovieData = 4075;
+const int PST_ExSubscription = 4076;
+const int PST_ExSubscriptionSection = 4077;
+const int PST_ExControl = 4078;
+const int PST_ExControlAtom = 4091;
+const int PST_SlideListWithText = 4080;
+const int PST_AnimationInfoAtom = 4081;
+const int PST_InteractiveInfo = 4082;
+const int PST_InteractiveInfoAtom = 4083;
+const int PST_SlideList = 4084;
+const int PST_UserEditAtom = 4085;
+const int PST_CurrentUserAtom = 4086;
+const int PST_DateTimeMCAtom = 4087;
+const int PST_GenericDateMCAtom = 4088;
+const int PST_HeaderMCAtom = 4089;
+const int PST_FooterMCAtom = 4090;
+const int PST_ExMediaAtom = 4100;
+const int PST_ExVideo = 4101;
+const int PST_ExAviMovie = 4102;
+const int PST_ExMCIMovie = 4103;
+const int PST_ExMIDIAudio = 4109;
+const int PST_ExCDAudio = 4110;
+const int PST_ExWAVAudioEmbedded = 4111;
+const int PST_ExWAVAudioLink = 4112;
+const int PST_ExOleObjStg = 4113;
+const int PST_ExCDAudioAtom = 4114;
+const int PST_ExWAVAudioEmbeddedAtom = 4115;
+const int PST_AnimationInfo = 4116;
+const int PST_RTFDateTimeMCAtom = 4117;
+const int PST_ProgTags = 5000;
+const int PST_ProgStringTag = 5001;
+const int PST_ProgBinaryTag = 5002;
+const int PST_BinaryTagData = 5003;
+const int PST_PrintOptions = 6000;
+const int PST_PersistPtrFullBlock = 6001;
+const int PST_PersistPtrIncrementalBlock = 6002;
+const int PST_RulerIndentAtom = 10000;
+const int PST_GscalingAtom = 10001;
+const int PST_GrColorAtom = 10002;
+const int PST_GLPointAtom = 10003;
+const int PST_GlineAtom = 10004;
+
+// Mandatory streams
+const wchar_t CURRENT_USER_STREAM[] = L"Current User";
+const wchar_t DOCUMENT_STREAM[] = L"PowerPoint Document";
+
+// Optional streams
+const wchar_t PICTURES_STREAM[] = L"Pictures";
+const wchar_t SUMMARY_STREAM[] = L"SummaryInformation";
+const wchar_t DOCUMENT_SUMMARY_STREAM[] = L"DocumentSummaryInformation";
+
+// Magic numners
+const int HEADER_MAGIC_NUM = -476987297;
+const unsigned short PSFLAG_CONTAINER = 0xFF;
+
+#endif
+
+
