@@ -1,0 +1,89 @@
+
+import win32con
+import win32api
+
+class RegKey:
+	def __init__(self, key, strSubKey, accessMask = win32con.KEY_READ):
+		try:
+			self._key = win32api.RegOpenKeyEx(key, strSubKey, 0, accessMask)
+		except:
+			self._key = None
+
+	def __del__(self):
+		if self._key:
+			win32api.RegCloseKey(self._key)
+	
+	def getStrEntry(self, strEntry=''):
+		try:
+			valobj, type = win32api.RegQueryValueEx(self._key, strEntry)
+		except:
+			return None
+		if type == win32con.REG_SZ or type == win32con.REG_EXPAND_SZ:
+			strret = valobj
+		else:
+			strret = None
+		return strret
+
+
+		
+# if the file ext exists in the registry db and has an entry 'Content Type'
+# then this function returns content type registry value as a string 
+# else returns None
+def getContentType(ext):
+	regKey = RegKey(win32con.HKEY_CLASSES_ROOT,ext)
+	if regKey._key:
+		contenttype = regKey.getStrEntry('Content Type')
+	else:
+		contenttype = None
+	return contenttype
+
+
+# on windows for some extensions we have
+# only the file type registered not the content
+# file_types_map purpose is to fill this gap
+# But maybe in such cases would be better
+# to use mimetypes.py or search for something even better
+file_types_map = {
+	'jpegfile': 'image/jpeg',
+	'pngfile': 'image/png',
+	'giffile': 'image/gif',
+	}
+
+def getType(ext):
+	regKey = RegKey(win32con.HKEY_CLASSES_ROOT,ext)
+	if regKey._key:
+		contenttype = regKey.getStrEntry('Content Type')
+		filetype = regKey.getStrEntry('')
+		if not contenttype and filetype and file_types_map.has_key(filetype):
+			contenttype = file_types_map[filetype]
+	else:
+		contenttype = None
+		filetype = None
+	return contenttype, filetype
+
+
+if __name__ == '__main__':
+	print getType('.smi')	
+	print getType('.smil')	
+	print getType('.asx')
+		
+	print getType('.bmp')	
+	print getType('.gif')	
+	print getType('.png')
+	print getType('.jpg')
+	print getType('.jpeg')
+
+	print getType('.au')	
+	print getType('.aiff')
+	print getType('.au')	
+	print getType('.wav')
+	print getType('.avi')
+	print getType('.wma')
+
+	print getType('.mov')
+	print getType('.mpg')
+	print getType('.asf')
+	print getType('.wmv')
+
+
+
