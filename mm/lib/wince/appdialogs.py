@@ -57,6 +57,14 @@ class showmessage:
 def showquestion(text, parent = None):
 	return showmessage(text, mtype = 'yesno', parent = parent)
 
+def ShowMenuBar():
+	from __main__ import toplevel
+	toplevel.getmainwnd().ShowMenuBar()
+
+def HideMenuBar():
+	from __main__ import toplevel
+	toplevel.getmainwnd().HideMenuBar()
+
 class ProgressDialog:
 	def __init__(self, title = '', cancelcallback=None, parent=None, delaycancel=1, percent=0):
 		self._title = title

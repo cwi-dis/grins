@@ -12,6 +12,7 @@ import MMStates
 import Hlinks
 import windowinterface
 import SR
+import sys
 
 class Selecter:
 	def __init__(self):
@@ -23,6 +24,12 @@ class Selecter:
 	def play(self, starttime = 0):
 		if self.playing:
 			raise 'Already playing'
+		if sys.platform == 'wince':
+			import settings
+			if settings.get('skin'):
+				windowinterface.HideMenuBar()
+			else:
+				windowinterface.ShowMenuBar()
 		self.reset(starttime)
 		self.sctx = self.scheduler.play(self.userplayroot, None, None, None, timestamp = 0)
 		if not self.sctx:
@@ -39,6 +46,8 @@ class Selecter:
 			self.scheduler.stop_all(self.scheduler.timefunc())
 		else:
 			self.fullreset()
+		if sys.platform == 'wince':
+			windowinterface.ShowMenuBar()
 
 	def stopped(self):
 		self.playing = 0
