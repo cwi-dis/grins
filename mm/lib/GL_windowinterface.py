@@ -1285,7 +1285,7 @@ class _Window:
 			self._closecallbacks.append(func)
 
 	def is_closed(self):
-		return not _window_list.has_key(self._window_id)
+		return not hasattr(self, '_displaylists')
 
 	def showwindow(self):
 		self._drawbox = 1
