@@ -138,9 +138,7 @@ class Animator:
 		self._effectiveAnimator = None
 
 		# transitionFilter
-		self._trtype = None
-		self._trsubtype = None
-		self._trmode = None
+		self._trdict = None
 
 	def getDOMValue(self):
 		return self._domval
@@ -315,10 +313,8 @@ class Animator:
 	def setEffectiveAnimator(self, ea):
 		self._effectiveAnimator = ea
 
-	def setTransition(self, trtype, trsubtype, trmode):
-		self._trtype = trtype
-		self._trsubtype = trsubtype
-		self._trmode = trmode
+	def setTransition(self, dict):
+		self._trdict = dict
 
 	def _setAutoReverse(self,f):
 		if f: self._autoReverse = 1
@@ -1006,7 +1002,7 @@ class EffectiveAnimator:
 	
 	def __begintransition(self, anim):
 		if self.__chan and self.__chan.window:
-			self.__chan.window.begininlinetransition(anim._trtype, anim._trsubtype, anim._trmode)
+			self.__chan.window.begintransition(anim._trdict['mode']=='out', 0, anim._trdict, None)
 		if debug: print 'begintransition', animator._trtype, animator._trsubtype
 
 	def __endtransition(self):
@@ -1562,7 +1558,8 @@ class AnimateElementParser:
 		anim = Animator(attr, self.__domval, values, dur, calcmode, times, splines, accumulate, additive)
 		self.__setTimeManipulators(anim)
 
-		anim.setTransition(trtype, trsubtype, trmode)
+		dict = {'trtype':trtype, 'subtype':trsubtype, 'mode':trmode}
+		anim.setTransition(dict)
 
 		return anim
 
@@ -2282,3 +2279,4 @@ class AnimateElementParser:
 				i = i+1
 		l.append(str[end:])
 		return l
+ 
