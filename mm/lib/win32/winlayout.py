@@ -1027,9 +1027,6 @@ class LayoutWnd:
 		if self._bmp is not None:
 			self._bmp.DeleteObject()
 			self._bmp = None
-		if self._bmp is not None:
-			self._bmp.DeleteObject()
-			self._bmp = None
 
 	#
 	#  DrawContext listener interface
@@ -1137,20 +1134,34 @@ class LayoutWnd:
 		self._drawContext.onNCButton()
 
 	def onSize(self, params):
-		if self._bmp is not None:
-			self._bmp.DeleteObject()
-			self._bmp = None
 		msg = win32mu.Win32Msg(params)
 		if msg.minimized(): 
 			return
-		self._bmp = win32ui.CreateBitmap()
-		try:
-			dc = self.GetDC()
-			self._bmp.CreateCompatibleBitmap(dc, msg.width(), msg.height())
-			dc.DeleteDC()
-		except:
-			pass
+		self.assertBmpHasMinSize(msg.width(), msg.height())
 
+	def createBmp(self, width, height, dc = None):
+		bmp = win32ui.CreateBitmap()
+		try:
+			if dc is not None:
+				bmp.CreateCompatibleBitmap(dc, width, height)
+			else:	
+				dc = self.GetDC()
+				bmp.CreateCompatibleBitmap(dc, width, height)
+				dc.DeleteDC()
+		except:
+			bmp.DeleteObject()
+			return None
+		return bmp
+
+	def assertBmpHasMinSize(self, width, height, dc = None):
+		if self._bmp is None:
+			self._bmp = self.createBmp(width, height, dc)
+		else:
+			w, h = self._bmp.GetSize()
+			if w < width or h < height:
+				self._bmp.DeleteObject()
+				del self._bmp
+				self._bmp = self.createBmp(width, height, dc)		
 	#
 	# Painting
 	#
@@ -1204,14 +1215,11 @@ class LayoutWnd:
 
 		dcc = dc.CreateCompatibleDC(dc)
 
+		self.assertBmpHasMinSize(wc, hc, dc)
 		if self._bmp is None:
-			self._bmp = win32ui.CreateBitmap()
-			try:
-				self._bmp.CreateCompatibleBitmap(dc, wc, hc)
-			except:
-				dc.FillSolidRect((lc, tc, rc, bc), win32mu.RGB(self._bgcolor or (255,255,255)))
-				print 'Create offscreen bitmap %d x %d failed' % (wc, hc)
-				return 
+			dc.FillSolidRect((lc, tc, rc, bc), win32mu.RGB(self._bgcolor or (255,255,255)))
+			print 'Create offscreen bitmap %d x %d failed' % (wc, hc)
+			return 
 
 		# called by win32ui
 		#self.OnPrepareDC(dcc)
