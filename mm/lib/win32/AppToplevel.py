@@ -1,5 +1,16 @@
 __version__ = "$Id$"
 
+""" @win32doc|AppTopLevel
+An instance of the _Toplevel class defined in this module
+represents the platform dependent part of the application.
+(The other part is platform independent and is an instance of Main)
+It contains the main message loop of the application which beyond dispatching messages
+it serves a delta timer (see tcp process) and tasks registered for timeslices.
+This class is also the main interface between the core part of the system
+that is platform independent with the part of the system that is 
+platform dependent. This interface is exposed to the core system through
+a module (windowinterface.py) which contains mainly alias to members of this class
+"""
 import win32ui, win32con, win32api
 Sdk=win32ui.GetWin32Sdk()
 
@@ -8,13 +19,13 @@ import sysmetrics
 import MainFrame
 
 from appcon import *
-from win32modules import imageex
+from win32ig import win32ig
 
 
-# The AppObj class represents the root of all windows.  It is never
+# The _Toplevel class represents the root of all windows.  It is never
 # accessed directly by any user code.
 class _Toplevel:
-	# we actually need it.
+	# Trap use in order to initialize the class properly
 	def __getattr__(self, attr):
 		if not self._initialized: # had better exist...
 			self._do_init()
@@ -24,6 +35,7 @@ class _Toplevel:
 				pass
 		raise AttributeError, attr
 
+	# Class constructor. Initalizes class members
 	def __init__(self):
 		self._initialized = 0
 		self.xborder = sysmetrics.cxframe+2*sysmetrics.cxborder
@@ -47,6 +59,7 @@ class _Toplevel:
 		self._in_create_box=None
 		self._do_init()
 
+	# Part of the constructor initialization
 	def _do_init(self):
 		if self._initialized:
 			raise error, 'can only initialize once'
@@ -74,13 +87,13 @@ class _Toplevel:
 		self._appadornments=None
 		self._appcommandlist=None
 
-
+	# Paint all the windows now
 	def forcePaint(self):
 		for w in self._subwindows:
 			w._forcePaint()
 
+	# Call by the core to close the application
 	def close(self):
-		imageex.__del__()
 		for func, args in self._closecallbacks:
 			apply(func, args)
 		for win in self._subwindows[:]:
@@ -88,9 +101,11 @@ class _Toplevel:
 		self._closecallbacks = []
 		self._subwindows = []
 
+	# Registration function for close callbacks
 	def addclosecallback(self, func, args):
 		self._closecallbacks.append(func, args)
 
+	# Called by the core to create a window
 	def newwindow(self, x, y, w, h, title, visible_channel = TRUE,
 		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
 		      adornments = None, canvassize = None,
@@ -105,6 +120,7 @@ class _Toplevel:
 
 
 	############ SDI/MDI Model Support
+	# Called by win32 modules to create the main frame
 	def createmainwnd(self,title = None, adornments = None, commandlist = None):
 #		if title:
 #			self._apptitle=title
@@ -121,11 +137,12 @@ class _Toplevel:
 				UNIT_MM, self._appadornments,self._appcommandlist)
 		return self._subwindows[0]
 
+	# Called by win32 modules for every open document
 	def newdocument(self,cmifdoc,adornments=None,commandlist=None):
-		for w in self._subwindows:
-			if not w._cmifdoc:
-				w.setdocument(cmifdoc,adornments,commandlist)
-				return w
+		for frame in self._subwindows:
+			if not frame._cmifdoc:
+				frame.setdocument(cmifdoc,adornments,commandlist)
+				return frame
 		frame = MainFrame.MDIFrameWnd()
 		frame.create(self._apptitle)
 		frame.init_cmif(None, None, 0, 0,self._apptitle,
@@ -133,7 +150,7 @@ class _Toplevel:
 		frame.setdocument(cmifdoc,adornments,commandlist)
 		return frame
 	
-	# returns the active mainwnd
+	# Returns the active mainwnd
 	def getmainwnd(self):
 		if len(self._subwindows)==0:
 			self.createmainwnd()
@@ -141,6 +158,7 @@ class _Toplevel:
 		
 	############ /SDI-MDI Model Support	
 
+	# Displays a text viewer
 	def textwindow(self,text):
 		print 'you must request textwindow from a frame'
 		sv=self.newviewobj('sview_')
@@ -148,19 +166,23 @@ class _Toplevel:
 		self.showview(sv,'sview_')
 		if IsEditor: sv.set_close_commandlist()
 		return sv
-	
+
+	# Returns screen size in mm	
 	def getsize(self):
 		"""size of the screen in mm"""
 		return self._scr_width_mm, self._scr_height_mm
 
+	# Returns screen size in pixel
 	def getscreensize(self):
 		"""Return screen size in pixels"""
 		return self._scr_width_pxl, self._scr_height_pxl
 
+	# Returns screen depth
 	def getscreendepth(self):
 		"""Return screen depth"""
 		return sysmetrics.depth
 
+	# Set the application cursor to the cursor with string id
 	def setcursor(self, strid):
 		if strid=='hand':
 			import grinsRC
@@ -170,37 +192,51 @@ class _Toplevel:
 		(win32ui.GetWin32Sdk()).SetCursor(cursor);
 		self._cursor = strid
 
-
+	# To support the same interface as windows
 	def pop(self):
 		pass
 
+	# To support the same interface as windows
 	def push(self):
 		pass
 
+	# To support the same interface as windows
+	# It calls show for each window in the list
 	def show(self):
 		for w in self._subwindows:
 			w.show()
 				
+	# To support the same interface as windows
+	# It calls hide for each window in the list
 	def hide(self):
 		for w in self._subwindows:		
 			w.hide()
-
+	
+	# To support the same interface as windows (does nothing)
 	def _convert_color(self, color, defcm):
 		return color
 
+	# To support the same interface as windows
+	# returns desktop size
 	def GetWindowRect(self):
 		return (0,0,sysmetrics.scr_width_pxl,sysmetrics.scr_height_pxl)
 
+	# To support the same interface as windows
+	# returns desktop size
 	def GetClientRect(self):
 		return (0,0,sysmetrics.scr_width_pxl,sysmetrics.scr_height_pxl)
 
+	# To support the same interface as windows
+	# returns desktop size in relative coordinates
 	def getsizes(self):
 		return (0,0,1,1)
 
+	# Part of the interface. Does nothing on win32. 
 	def usewindowlock(self, lock):
 		pass
 
 	#########################################
+	# Main message loop of the applicatio
 	def mainloop(self):
 		if len(self._subwindows) == 1:self.show()
 		self.serve_events(())
@@ -211,13 +247,13 @@ class _Toplevel:
 		wnd.HookMessage(self.serve_events,win32con.WM_USER+999)
 		win32ui.GetApp().RunLoop(wnd)
 		wnd.DestroyWindow()
+		win32ig.deltemp()
 		(win32ui.GetAfx()).PostQuitMessage(0)
 
-	def monitor(self,handler,count):
-		return 0
+	#def monitor(self,handler,count):
+	#	return 0
 
-	# actualy part of the main loop	
-	# and part of a delta timer 
+	# It is actualy part of the main loop and part of a delta timer 
 	def serve_events(self,params):	
 		if self._waiting:self.setready()				
 		while self._timers:
@@ -234,15 +270,14 @@ class _Toplevel:
 		self._time=float(Sdk.GetTickCount())/TICKS_PER_SECOND
 		self.serve_timeslices()
 
+	# Called by the core sustem to set the waiting cursor
 	_waiting=0
 	def setwaiting(self,f=0):
-		""" added flag to control win32 instance
-		the core calls it to often while it is apropriate
-		for long waiting times"""
 		if not self._waiting and f:
 			win32ui.GetApp().BeginWaitCursor()
 		self._waiting = 1
 
+	# Called by the core sustem to remove the waiting cursor
 	def setready(self,f=0):
 		if self._waiting and f:
 			win32ui.GetApp().EndWaitCursor()
@@ -251,6 +286,7 @@ class _Toplevel:
 	#
 	# delta timer interface
 	#
+	# Register a timer even
 	def settimer(self, sec, cb):
 		self._timer_id = self._timer_id + 1
 		t0 = float(Sdk.GetTickCount())/TICKS_PER_SECOND
@@ -272,6 +308,7 @@ class _Toplevel:
 		return self._timer_id
 
 
+	# Unregister a timer even
 	def canceltimer(self, id):
 		if id == None: return
 		for i in range(len(self._timers)):
@@ -287,13 +324,16 @@ class _Toplevel:
 	# Monitoring Fibers	registration
 	_registry={}
 	_fiber_id=0
+	# Register for receiving timeslices
 	def register(self,check,cb):
 		self._fiber_id = self._fiber_id + 1
 		self._registry[self._fiber_id]=(check,cb)
 		return self._fiber_id
+	# Register for receiving timeslices
 	def unregister(self,id):
 		if id in self._registry.keys():
 			del self._registry[id]
+	# Dispatch timeslices
 	def serve_timeslices(self):
 		for check,call in self._registry.values():
 			if apply(apply,check):apply(apply,call)
@@ -308,20 +348,22 @@ class _Toplevel:
 	################################
 	
 	#utility functions
-		
+	
+	# Returns the size of an image	
 	def GetImageSize(self,file):
 		try:
 			xsize, ysize = self._image_size_cache[file]
 		except KeyError:
 			try:
-				img = imageex.load(file)
+				img = win32ig.load(file)
 			except img.error, arg:
 				raise error, arg
-			xsize,ysize,depth=imageex.size(img)
+			xsize,ysize,depth=win32ig.size(img)
 			self._image_size_cache[file] = xsize, ysize
 			self._image_cache[file] = img
 		return xsize, ysize
 
+	# Returns the size of a video	
 	def GetVideoSize(self,file):
 		DirectShowSdk=win32ui.GetDS()
 		builder=DirectShowSdk.CreateGraphBuilder()
@@ -331,6 +373,7 @@ class _Toplevel:
 			width, height=builder.GetWindowPosition()[2:]
 		return (width, height)
 	
+	# Returns the length of a string in pixels	
 	def GetStringLength(wnd,str):
 		dc = wnd.GetDC();
 		cx,cy=dc.GetTextExtent(str)
@@ -358,7 +401,9 @@ class _Toplevel:
 #	                        // The string ends with two '\|' characters.  May be None.
 #obParent  // @pyparm <o PyCWnd>|parent|None|The parent or owner window of the dialog.
 
+# Implementation of the FileDialog 
 class FileDialog:
+	# Class constructor. Creates abd displays a std FileDialog
 	def __init__(self, prompt,directory,filter,file, cb_ok, cb_cancel,existing = 0,parent=None):
 		
 		if existing: 
@@ -381,13 +426,11 @@ class FileDialog:
 			if cb_ok: cb_ok(dlg.GetPathName())
 		else:
 			if cb_cancel: cb_cancel()
+	# Returns the filename selected. Must be called after the dialog dismised.
 	def GetPathName(self):
 		return self._dlg.GetPathName()
 
 #######################################
-#################################################
-# useful functions
-# some are defined here to import only windowinterface and not pyds 
 
 
 

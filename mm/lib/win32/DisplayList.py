@@ -1,5 +1,29 @@
 __version__ = "$Id$"
 
+""" @win32doc|DisplayList
+The DisplayList contains an execution list of drawing commands
+The DisplayList implements the basic drawing mechanism of the application.
+It provides a standard interface to core modules that want something to be
+painted in a window. A module that wants something to be painted in a window
+follows the protocol:
+1) Request a new display list from the window (specifing bgd)
+2) Insert drawing objects (draw commands) using the std interface provided by the DisplayList
+3) Call render() method of the newly created list in order to be painted
+
+Most parts of this class are platform independent,
+but the crusial mechanism is platform depended.
+To do the actual painting is platform dependent but it is
+easy to implement.
+The important platform dependencie here is the update mechanism.
+While the display list is active and when any part of the drawing region
+has been erased for any reason a context sensitive update mechanism must be fired
+to redraw the region.
+
+
+class _Button:
+
+"""
+
 # Public Objects:
 # class DisplayList
 
@@ -9,7 +33,7 @@ __version__ = "$Id$"
 import math,string
 
 import win32ui, win32con, win32api
-from win32modules import imageex
+from win32ig import win32ig
 
 from types import *		
 from appcon import *	# draw contants
@@ -56,6 +80,7 @@ class DisplayList:
 		self._clonebboxes = []
 		self._clonergn=None
 
+	# Clones this display list
 	def clone(self):
 		w = self._window
 		new = DisplayList(w, self._bgcolor)
@@ -72,15 +97,25 @@ class DisplayList:
 			new._optimdict[key] = val
 		return new
 
+	def __repr__(self):
+		str=''
+		if self._rendered:str = str+ 'rendered '
+		if not hasattr(self,'_list'):return str+'closed'
+		for i in range(self._clonestart, len(self._list)):
+			str = str + self._list[i][0]+','
+		return '<' + str +'>'
+
 
 #====================================== Rendering
+	# Called by any client that wants to activate the display list
 	def render(self):
 		wnd = self._window
 		if not wnd or not hasattr(wnd,'_obj_')or not hasattr(wnd,'RedrawWindow'):
 			return
 		for b in self._buttons:
-			b._highlighted = 0	
+			b._highlighted = 0 	
 		wnd._active_displist = self
+		#print 'Rendering dl',self,'for',wnd._title,'z=',wnd._z
 
 		# we set to not transparent in order to 
 		# accomodate windows bug
@@ -90,28 +125,55 @@ class DisplayList:
 		wnd.pop()
 		wnd.update()
 
-		
-	def _render(self, dc, region, show):
+
+	# Render the display list on dc within the region	
+	def _render(self, dc, region):
 		self._rendered = 1
 		w = self._window
 		clonestart = self._clonestart
 		if not self._cloneof or self._cloneof is not w._active_displist:
 			clonestart = 0
-		if w._active_displist and self is not w._active_displist and clonestart == 0:
-			w._active_displist = None
-		if clonestart > 0:
-			fg, font = self._clonedata			
-		w._active_displist = self
-		if show==1:
-			for i in range(clonestart, len(self._list)):
-				self._do_render(self._list[i], dc, region)
-			self._curfg = self._window._fgcolor
-			if w.is_showing():
-				w.showwindow()
+		for i in range(clonestart, len(self._list)):
+			self._do_render(self._list[i],dc, region)
 		for b in self._buttons:
 			if b._highlighted:
 				b._do_highlight()
 
+	# Close this display list and destroy its resources
+	def close(self):
+		#print 'closing dl',self
+		if self._window is None:
+			return
+		win = self._window
+		for b in self._buttons[:]:
+			b.close()
+		if self in win._displists:
+			win._displists.remove(self)
+		for d in win._displists:
+			if d._cloneof is self:
+				d._cloneof = None
+		if win._active_displist is self:
+			win._active_displist = None
+			if win._transparent in (1,-1):
+				win.setWndTransparent()
+			win.update()
+			win.push()
+		self._window = None
+		if self._win32rgn:
+			self._win32rgn.DeleteObject()
+			del self._win32rgn
+			self._win32rgn=None
+		del self._cloneof
+		try:
+			del self._clonedata
+		except AttributeError:
+			pass
+		del self._optimdict
+		del self._list
+		del self._buttons
+		del self._font
+
+	# Render the entry draw command
 	def _do_render(self, entry, dc, region):
 		cmd = entry[0]
 		w = self._window
@@ -121,8 +183,11 @@ class DisplayList:
 			self._curfg = entry[1]
 		elif cmd == 'image':
 			mask, image, src_x, src_y,dest_x, dest_y, width, height,rcKeep=entry[1:]			
-			imageex.render(dc.GetSafeHdc(),self._bgcolor,
+			win32ig.render(dc.GetSafeHdc(),self._bgcolor,
 				mask, image, src_x, src_y,dest_x, dest_y, width, height,rcKeep)
+		elif cmd == 'video':
+			func=entry[1]
+			apply(func,(dc,))
 		elif cmd== 'obj':
 			entry[1].draw(dc)
 		elif cmd == 'line':
@@ -133,7 +198,10 @@ class DisplayList:
 				DrawLine(dc,(x0, y0, x, y),fg)
 				x0, y0 = x, y
 		elif cmd == 'box':
-			DrawRectangle(dc,entry[1], self._curfg, " ")
+			DrawRectangle(dc,entry[1],self._curfg)
+		elif cmd == 'anchor':
+			DrawRectangle(dc,entry[1],self._curfg)
+			# debug: DrawRectangle(dc,entry[1],(255,0,0))
 		elif cmd == 'fbox':
 			dc.FillSolidRect(entry[2],RGB(entry[1]))
 		elif cmd == 'font':
@@ -141,11 +209,7 @@ class DisplayList:
 			pass
 		elif cmd == 'linewidth':
 			#gc.line_width = entry[1]
-			pass
-		elif cmd == 'video':
-			func = entry[2]
-			apply(func,(entry[1],))
-			
+			pass			
 		elif cmd == 'fpolygon':
 			fg = entry[1] 
 			FillPolygon(dc,entry[2], fg)
@@ -255,60 +319,34 @@ class DisplayList:
 			dc.SetTextColor(clr_org)
 			dc.SelectObjectFromHandle(horg)
 
-	def close(self):
-		if self._window is None:
-			return
-		win = self._window
-		for b in self._buttons[:]:
-			b.close()
-		if self in win._displists:
-			win._displists.remove(self)
-		for d in win._displists:
-			if d._cloneof is self:
-				d._cloneof = None
-		if win._active_displist is self:
-			win._active_displist = None
-			if win._transparent in (1,-1):
-				win.setWndTransparent()
-			win.update()
-			win.push()
-		self._window = None
-		if self._win32rgn:
-			self._win32rgn.DeleteObject()
-			del self._win32rgn
-			self._win32rgn=None
-		del self._cloneof
-		try:
-			del self._clonedata
-		except AttributeError:
-			pass
-		del self._optimdict
-		del self._list
-		del self._buttons
-		del self._font
 
+	# Returns true if this is closed
 	def is_closed(self):
 		return self._window is None
 
+	# Alias for render
 	def render_now(self):
 		self.render()	
 	
+	# Set forground color
 	def fgcolor(self, color):
 		self._list.append('fg', color)
 		self._fgcolor = color
 
-	def newbutton(self, coordinates):
-		x, y, w, h = self._convert_coordinates(coordinates)
-		self._update_bbox(x, y, x+w, y+h)
-		return _Button(self, coordinates)
+	# Define a new button
+	def newbutton(self, coordinates, z = 0):
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		return _Button(self, coordinates, z)
 
+
+	# display image from file
 	def display_image_from_file(self, file, crop = (0,0,0,0), scale = 0,
 				    center = 1, coordinates = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-		w = self._window
 		image, mask, src_x, src_y, dest_x, dest_y, width, height,rcKeep = \
-		       w._prepare_image(file, crop, scale, center, coordinates)
+		       self._window._prepare_image(file, crop, scale, center, coordinates)
 		self._list.append('image', mask, image, src_x, src_y,
 				  dest_x, dest_y, width, height,rcKeep)
 		self._optimize((2,))
@@ -317,7 +355,7 @@ class DisplayList:
 		return float(dest_x - x) / w, float(dest_y - y) / h, \
 		       float(width) / w, float(height) / h
 
-
+	# Resize image buttons
 	def _resize_image_buttons(self):
 		type = self._list[1]
 		if type[0]!='image':
@@ -327,6 +365,7 @@ class DisplayList:
 	#############################################
 	# draw primitives
 
+	# Insert a command to drawline
 	def drawline(self, color, points):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
@@ -344,17 +383,25 @@ class DisplayList:
 		self._update_bbox(min(xvalues), min(yvalues), max(xvalues), max(yvalues))
 
 
-	def drawbox(self, coordinates, do_draw=1):
+	# Insert a command to drawbox
+	def drawbox(self,coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		x, y, w, h = self._convert_coordinates(coordinates)
-		if do_draw:
-			self._list.append('box',(x, y, x+w, y+h))
-			self._optimize()
-			self._update_bbox(x, y, x+w, y+h)
+		self._list.append('box',(x, y, x+w, y+h))
+		self._optimize()
+		self._update_bbox(x, y, x+w, y+h)
+
+	def drawboxanchor(self, coordinates):
+		if self._rendered:
+			raise error, 'displaylist already rendered'
+		x, y, w, h = self._convert_coordinates(coordinates)
+		self._list.append('anchor',(x, y, x+w, y+h))
+		self._optimize()
+		self._update_bbox(x, y, x+w, y+h)
 		return x, y, x+w, y+h
 
-
+	# Insert a command to draw a filled box
 	def drawfbox(self, color, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
@@ -365,6 +412,7 @@ class DisplayList:
 		self._update_bbox(x, y, x+w, y+h)
 		return x, y, x+w, y+h
 
+	# Insert a command to clear box
 	def clear(self,coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
@@ -373,6 +421,7 @@ class DisplayList:
 		self._optimize((1,))
 		self._update_bbox(x, y, x+w, y+h)
 
+	# Insert a command to draw a filled polygon
 	def drawfpolygon(self, color, points):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
@@ -384,6 +433,7 @@ class DisplayList:
 		self._list.append('fpolygon', color, p)
 		self._optimize((1,))
 
+	# Insert a command to draw a 3d box
 	def draw3dbox(self, cl, ct, cr, cb, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
@@ -398,6 +448,7 @@ class DisplayList:
 		x, y, w, h = coordinates
 		self._update_bbox(x, y, x+w, y+h)
 
+	# Insert a command to draw a diamond
 	def drawdiamond(self, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
@@ -407,6 +458,7 @@ class DisplayList:
 		x, y, w, h = coordinates
 		self._update_bbox(x, y, x+w, y+h)
 
+	# Insert a command to draw a filled diamond
 	def drawfdiamond(self, color, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
@@ -424,6 +476,7 @@ class DisplayList:
 		self._update_bbox(x, y, x+w, y+h)
 
 		
+	# Insert a command to draw a 3d diamond
 	def draw3ddiamond(self, cl, ct, cr, cb, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
@@ -438,6 +491,7 @@ class DisplayList:
 		x, y, w, h = coordinates
 		self._update_bbox(x, y, x+w, y+h)
 
+	# Insert a command to draw an arrow
 	def drawarrow(self, color, src, dst):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
@@ -481,39 +535,51 @@ class DisplayList:
 		self._optimize((1,))
 		self._update_bbox(nsx, nsy, ndx, ndy)
 
+	def drawvideo(self,cbf):
+		self._list.append('video',cbf)
+		
+	# Returns font attributes
 	def usefont(self, fontobj):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		self._font = fontobj
 		return self.baseline(), self.fontheight(), self.pointsize()
 
+	# Returns font attributes
 	def setfont(self, font, size):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		return self.usefont(findfont(font, size))
 
+	# Returns font attributes
 	def fitfont(self, fontname, str, margin = 0):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
 		return self.usefont(findfont(fontname, 10))
 
+	# Returns font's  baseline
 	def baseline(self):
 		return self._font.baseline() * self._vfactor
 
+	# Returns font's  height
 	def fontheight(self):
 		return self._font.fontheight() * self._vfactor
 
+	# Returns font's  pointsize
 	def pointsize(self):
 		return self._font.pointsize()
 
+	# Returns string's  size
 	def strsize(self, str):
 		width, height = self._font.strsize(str)
 		return width*self._hfactor,height*self._vfactor
 
+	# Set the current position
 	def setpos(self, x, y):
 		self._curpos = x, y
 		self._xpos = x
 
+	# Insert a write string command
 	def writestr(self, str):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
@@ -544,7 +610,7 @@ class DisplayList:
 		newx, newy = self._curpos
 		return oldx, oldy, maxx - oldx, newy - oldy + height - base
 
-	# Draw a string centered in a box, breaking lines if necessary
+	# Insert a draw string centered command in a box, breaking lines if necessary
 	def centerstring(self, left, top, right, bottom, str):
 		fontheight = self.fontheight()
 		baseline = self.baseline()
@@ -594,6 +660,7 @@ class DisplayList:
 			addrgn.DeleteObject()
 			del addrgn
 
+	# List optimizer
 	def _optimize(self, ignore = ()):
 		entry = self._list[-1]
 		x = []
@@ -629,13 +696,13 @@ class DisplayList:
 		
 		rx, ry, rw, rh = self._canvas
 			
-		px = int((rw - 1) * x + 0.5) + rx
-		py = int((rh - 1) * y + 0.5) + ry
+		px = int((rw-1) * x + 0.5) + rx
+		py = int((rh-1) * y + 0.5) + ry
 		if len(coordinates) == 2:
 			return px, py
 
-		pw = int((rw - 1) * w + 0.5) 
-		ph = int((rh - 1) * h + 0.5)
+		pw = int((rw-1) * w + 0.5) 
+		ph = int((rh-1) * h + 0.5)
 		return px, py, pw, ph
 
 	# convert (owner wnd) pixel coordinates to relative coordinates
@@ -657,13 +724,16 @@ class DisplayList:
 		ph = float(h)/rh
 		return px, py, pw, ph
 
+	# Conver color (does nothing for win32)
 	def _convert_color(self, color):
 		return color 
 
 		
 	# Object support
+	# Insert an obj in the list
 	def drawobj(self,obj):
 		self.AddObj(obj)
+	# Insert an obj in the list
 	def AddObj(self,obj):
 		self._list.append('obj',obj)
 		l,t,r,b=obj.getbbox()
@@ -671,6 +741,7 @@ class DisplayList:
 
 
 ####################################################
+
 class _Button:
 	def __init__(self, dispobj, coordinates, z=0):
 		self._coordinates = coordinates
@@ -687,29 +758,39 @@ class _Button:
 		self._width = self._hiwidth = dispobj._linewidth
 		if self._color == dispobj._bgcolor:
 			return
-		self._dispobj.drawbox(coordinates)
+		self._dispobj.drawboxanchor(coordinates)
 
+	# Destroy button
 	def close(self):
 		if self._dispobj is None:
 			return
 		self._dispobj._buttons.remove(self)
 		self._dispobj = None
 
+	# Returns true if it is closed
 	def is_closed(self):
 		return self._dispobj is None
 
+	# Increment height
 	def hiwidth(self, width):
 		pass
 
+	# Set highlight color
 	def hicolor(self, color):
 		self._hicolor = color
 
+	# Highlight box
 	def highlight(self):
 		pass
 
+	# Unhighlight box
 	def unhighlight(self):
 		pass
 		
+	def _do_highlight(self):
+		pass
+		
+	# Returns true if the point is inside the box	
 	def _inside(self, x, y):
 		bx, by, bw, bh = self._coordinates
 		return (bx <= x <= bx+bw and by <= y <= by+bh)

@@ -1,5 +1,12 @@
 __version__ = "$Id$"
 
+""" @win32doc|Font
+It is a utility module with a standard interface
+offering fonts support to other modules
+The class _Font is a wrapper class for the platform
+font along with a standard query interface
+"""
+
 import string
 import win32ui
 Afx=win32ui.GetAfx()
@@ -31,18 +38,20 @@ _fontmap = {
 
 fonts = _fontmap.keys()
 
-
+# Parse a font name
 def _parsefontname(fontname):
 	list = string.splitfields(fontname, '-')
 	if len(list) != 15:
 		raise error, 'fontname not well-formed'
 	return list
 
+# Compose font name
 def _makefontname(font):
 	return string.joinfields(font, '-')
 
 _fontcache = {}
 
+# Find a font with font name at point size
 def findfont(fontname, pointsize):
 	if type(pointsize)==type(''):
 		pointsize=string.atoi(pointsize)
@@ -78,46 +87,54 @@ def findfont(fontname, pointsize):
 #	pointsize() -> pointsize
 #		Return the point size actually used in points.
 
-
+# The Font is a wrapper class for an OS font
 class _Font:
 	def __init__(self, fontname, pointsize):
 		if type(pointsize)==type(''):
 			pointsize=string.atoi(pointsize)
 		pointsize=int(pointsize)
-		pointsize=pointsize*dpi_y/72 # screen correction
+		pointsize=(pointsize*dpi_y+36)/72 # screen correction
 		self._fd={'name':fontname,'height':-pointsize,'weight':540}
 		global user_charset
 		self._hfont=Sdk.CreateFontIndirect(self._fd,user_charset)		
 		self._tm=self.gettextmetrics()
 
+	# Delete the associated OS font
 	def __del__(self):
 		if self._hfont != None:
 			self.close()
-
+	# Returns the handle to this font
 	def handle(self):
 		return self._hfont
 
+	# Close this object and release resources
 	def close(self):
 		Sdk.DeleteObject(self._hfont)
 		self._hfont = 0
 
+	# Returns true if this is closed
 	def is_closed(self):
 		return self._hfont is 0
 
+	# Returns this font name
 	def fontname(self):
 		return self._fd['name']	
 			
+	# Returns this font baseline
 	def baseline(self):
 		return pxl2mm_y(self._tm['tmAscent']+self._tm['tmDescent'])
 
+	# Returns this font height
 	def fontheight(self):
 		return pxl2mm_y(self._tm['tmHeight'])
 
+	# Returns this font pointsize
 	def pointsize(self):
 		ps=self._fd['height']
 		if ps<0:ps=-ps
 		return ps
-		
+	
+	# Returns the string size in mm	
 	def strsize(self,str):
 		strlist = string.splitfields(str, '\n')
 		wnd=Afx.GetMainWnd()
@@ -133,7 +150,7 @@ class _Font:
 		wnd.ReleaseDC(dc)
 		return pxl2mm_x(maxwidth),pxl2mm_y(maxheight)
 
-
+	# Returns the text metrics structure
 	def gettextmetrics(self):
 		wnd=Afx.GetMainWnd()
 		dc=wnd.GetDC()
@@ -146,6 +163,7 @@ class _Font:
 		return tm
 	
 		
+	# Returns the string size in pixel	
 	def gettextextent(self,str):
 		wnd=Afx.GetMainWnd()
 		dc=wnd.GetDC()
@@ -157,8 +175,10 @@ class _Font:
 		wnd.ReleaseDC(dc)
 		return (cx,cy)
 
+	# Returns the string width in pixel	
 	def TextWidth(self, str):
 		return self.gettextextent(str)[1]
+	# Returns the string size in pixel	
 	def TextSize(self, str):
 		return self.gettextextent(str)
 
@@ -230,6 +250,7 @@ win32_charsets= {
 
 user_charset=DEFAULT_CHARSET
 
+# set current windows char set
 def set_win32_charset(strid):
 	global user_charset
 	if strid in win32_charsets.keys():
@@ -237,6 +258,7 @@ def set_win32_charset(strid):
 		user_charset=win32_charsets[strid]
 		_fontcache.clear()
 		
+# get current windows char set
 def get_win32_charset(strid):
 	global user_charset
 	return user_charset

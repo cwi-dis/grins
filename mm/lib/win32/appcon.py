@@ -1,5 +1,12 @@
 __version__ = "$Id$"
 
+""" @win32doc|appcon
+This module contains all the win32 constants peculiar to
+the cmif application
+The more general win32 constants are mainly in win32con.py
+and of mfc in afxres.py
+"""
+
 [UNIT_MM, UNIT_SCREEN, UNIT_PXL] = 0, 1, 2
 [PAINT, SIZE, LBUTTONDOWN, MM_MCI_NOTIFY, SET_CURSOR, WIN_DESTROY, LBUTTONUP] = range(7)
 [OPAQUE, TRANSPARENT] = range(2)
