@@ -343,12 +343,12 @@ class CONVERTRP(_CommandBase):
 	help = 'Convert seq node to RealPix file'
 class FIND_EVENT_SOURCE(_CommandBase):
 	help = 'Find the source of this event'
-class TIMELINEZOOMIN(_CommandBase):
-	help = 'Zoom timeline in'
-class TIMELINEZOOMOUT(_CommandBase):
-	help = 'Zoom timeline out'
-class TIMELINEZOOMRESET(_CommandBase):
-	help = 'Reset timeline zoom factor'
+class ZOOMIN(_CommandBase):
+	help = 'Zoom in'
+class ZOOMOUT(_CommandBase):
+	help = 'Zoom out'
+class ZOOMRESET(_CommandBase):
+	help = 'Reset zoom factor'
 
 # Pseudo-commands for drag/drop
 class DRAG_NODE(_CommandBase): pass
@@ -373,10 +373,6 @@ class CANVAS_HEIGHT(_CommandBase):
 	help = 'Double the height of the canvas, adding scrollbars if necessary'
 class CANVAS_RESET(_CommandBase):
 	help = 'Reset the canvas size to fit in the window'
-class CANVAS_ZOOM_IN(_CommandBase):
-	help = 'Zoom in'
-class CANVAS_ZOOM_OUT(_CommandBase):
-	help = 'Zoom out'
 class INFO(_CommandBase):
 	help = 'Display the Info editor for the selected object'
 class ATTRIBUTES(_CommandBase):

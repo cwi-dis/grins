@@ -633,8 +633,8 @@ class LayoutView2(LayoutViewDialog2):
 		self.__appendCommonCommands(self.commandMultiSiblingSItemList)
 
 	def __appendCommonCommands(self, commandlist):
-		commandlist.append(CANVAS_ZOOM_IN(callback = (self.onZoomIn, ())))
-		commandlist.append(CANVAS_ZOOM_OUT(callback = (self.onZoomOut, ())))
+		commandlist.append(ZOOMIN(callback = (self.onZoomIn, ())))
+		commandlist.append(ZOOMOUT(callback = (self.onZoomOut, ())))
 		commandlist.append(DRAG_TOPLAYOUT())
 		commandlist.append(DRAG_REGION())
 			

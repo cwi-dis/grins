@@ -244,9 +244,9 @@ MENUBAR=(
 		(FLAG_ALL, ENTRY, 'E&xpand all', None, EXPANDALL),
 		(FLAG_ALL, ENTRY, '&Collapse all', None, COLLAPSEALL),
 		(FLAG_PRO, SEP,),
-		(FLAG_PRO, ENTRY, '&Zoom in', None, CANVAS_ZOOM_IN),
-		(FLAG_PRO, ENTRY, '&Zoom out', None, CANVAS_ZOOM_OUT),
-		(FLAG_PRO, ENTRY, '&Fit in Window', None, CANVAS_RESET),
+		(FLAG_PRO, ENTRY, '&Zoom in', None, ZOOMIN),
+		(FLAG_PRO, ENTRY, '&Zoom out', None, ZOOMOUT),
+		(FLAG_PRO, ENTRY, '&Fit in Window', None, ZOOMRESET),
 		(FLAG_ALL, SEP,),
 #		(FLAG_PRO, TOGGLE, 'Show/Hide unused c&hannels', None, TOGGLE_UNUSED),
 #		(FLAG_PRO, TOGGLE, 'Sync &arcs', None, TOGGLE_ARCS),
@@ -254,9 +254,6 @@ MENUBAR=(
 		(FLAG_PRO, TOGGLE, 'Show &Playable', None, PLAYABLE),
 		(FLAG_ALL, TOGGLE, 'Sho&w Time in Structure', None, CORRECTLOCALTIMESCALE),
 		(FLAG_ALL, TOGGLE, 'Show &Bandwidth Usage', None, TOGGLE_BWSTRIP),
-		(FLAG_ALL, ENTRY, 'Zoom in timeline', None, TIMELINEZOOMIN),
-		(FLAG_ALL, ENTRY, 'Zoom out timeline', None, TIMELINEZOOMOUT),
-		(FLAG_ALL, ENTRY, 'Reset timeline zoom', None, TIMELINEZOOMRESET),
 ##		(FLAG_ALL, CASCADE, 'Sho&w Time in Structure', (
 ##			(FLAG_ALL, TOGGLE, '&Whole Document, Adaptive', None, TIMESCALE),
 ##			(FLAG_ALL, TOGGLE, '&Selection Only, Adaptive', None, LOCALTIMESCALE),
@@ -509,9 +506,6 @@ POPUP_HVIEW_STRUCTURE = (
 		(FLAG_ALL, ENTRY, 'E&xpand all', None, EXPANDALL),
 		(FLAG_ALL, ENTRY, 'C&ollapse all', None, COLLAPSEALL),
 		(FLAG_ALL, TOGGLE, 'S&how Time in Structure', None, CORRECTLOCALTIMESCALE),
-##		(FLAG_ALL, ENTRY, 'Zoom in timeline', None, TIMELINEZOOMIN),
-##		(FLAG_ALL, ENTRY, 'Zoom out timeline', None, TIMELINEZOOMOUT),
-##		(FLAG_ALL, ENTRY, 'Reset timeline zoom', None, TIMELINEZOOMRESET),
 		(FLAG_ALL, SEP,),
 		(FLAG_ALL, ENTRY, 'Use as event &source', None, CREATE_EVENT_SOURCE),
 		(FLAG_ALL, ENTRY, 'Create &begin event', None, CREATE_BEGIN_EVENT),
@@ -593,8 +587,8 @@ POPUP_REGIONPREVIEW_TOPLAYOUT = (
 #		(FLAG_ALL, ENTRY, 'Layout...', None, ATTRIBUTES_LAYOUT),
 		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
 		(FLAG_PRO, SEP,),
-		(FLAG_PRO, ENTRY, '&Zoom in', None, CANVAS_ZOOM_IN),
-		(FLAG_PRO, ENTRY, '&Zoom out', None, CANVAS_ZOOM_OUT),
+		(FLAG_PRO, ENTRY, '&Zoom in', None, ZOOMIN),
+		(FLAG_PRO, ENTRY, '&Zoom out', None, ZOOMOUT),
 )
 
 POPUP_REGIONPREVIEW_REGION = (
@@ -608,8 +602,8 @@ POPUP_REGIONPREVIEW_REGION = (
 #		(FLAG_ALL, ENTRY, 'Layout...', None, ATTRIBUTES_LAYOUT),
 		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
 		(FLAG_PRO, SEP,),
-		(FLAG_PRO, ENTRY, '&Zoom in', None, CANVAS_ZOOM_IN),
-		(FLAG_PRO, ENTRY, '&Zoom out', None, CANVAS_ZOOM_OUT),
+		(FLAG_PRO, ENTRY, '&Zoom in', None, ZOOMIN),
+		(FLAG_PRO, ENTRY, '&Zoom out', None, ZOOMOUT),
 )
 
 POPUP_REGIONPREVIEW_MEDIA = (
@@ -620,8 +614,8 @@ POPUP_REGIONPREVIEW_MEDIA = (
 		(FLAG_PRO, ENTRY, '&Properties...', None, ATTRIBUTES),
 		(FLAG_ALL, ENTRY, '&Edit Content...', 'E', CONTENT),
 		(FLAG_PRO, SEP,),
-		(FLAG_PRO, ENTRY, '&Zoom in', None, CANVAS_ZOOM_IN),
-		(FLAG_PRO, ENTRY, '&Zoom out', None, CANVAS_ZOOM_OUT),
+		(FLAG_PRO, ENTRY, '&Zoom in', None, ZOOMIN),
+		(FLAG_PRO, ENTRY, '&Zoom out', None, ZOOMOUT),
 )
 
 MAIN_FRAME_POPUP = (
