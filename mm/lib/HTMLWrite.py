@@ -15,6 +15,8 @@ import MMurl
 import regsub
 import re
 from cmif import findfile
+import windowinterface
+import MMurl
 
 
 def nameencode(value):
@@ -59,21 +61,33 @@ Error = 'Error'
 
 def WriteFile(root, filename, smilurl, oldfilename='', evallicense = 0):
 	# XXXX If oldfilename set we should use that as a template
+	#
+	# This is a bit of a hack. G2 appears to want its URLs without
+	# %-style quoting.
+	#
+	smilurl = MMurl.unquote(smilurl)
 	fp = open(filename, 'w')
-	# XXXX this is wrong
-	ramurl = smilurl
+	ramfile = ramfilename(filename)
+	try:
+		open(ramfile, 'w').write(smilurl+'\n')
+	except IOError, arg:
+		showmessage('I/O Error writing %s: %s'%(ramfile, arg), mtype = 'error')
+		return
+	ramurl = MMurl.pathname2url(ramfile)
 	try:
 		writer = HTMLWriter(root, fp, filename, ramurl, oldfilename, evallicense)
 		writer.write()
 	except Error, msg:
-		from windowinterface import showmessage
-		showmessage(msg, mtype = 'error')
+		windowinterface.showmessage(msg, mtype = 'error')
 		return
 	if os.name == 'mac':
 		import macfs
 		import macostools
 		fss = macfs.FSSpec(filename)
 		fss.SetCreatorType('MOSS', 'TEXT')
+		macostools.touched(fss)
+		fss = macfs.FSSpec(ramfile)
+		fss.SetCreatorType('PNst', 'PNRA')
 		macostools.touched(fss)
 
 import FtpWriter
@@ -90,14 +104,21 @@ def WriteFTP(root, filename, smilurl, ftpparams, oldfilename='', evallicense = 0
 			writer = HTMLWriter(root, fp, filename, ramurl, oldfilename, evallicense)
 			writer.write()
 		except Error, msg:
-			from windowinterface import showmessage
-			showmessage(msg, mtype = 'error')
+			windowinterface.showmessage(msg, mtype = 'error')
 			return
 	except FtpWriter.all_errors, msg:
-		from windowinterface import showmessage
-		showmessage('FTP upload failed:\n' + msg, mtype = 'error')
+		windowinterface.showmessage('FTP upload failed:\n' + msg, mtype = 'error')
 		return
 
+def ramfilename(htmlfilename):
+	if htmlfilename[-4:] == '.htm':
+		ramfilename = htmlfilename[:-4] + '.ram'
+	elif htmlfilename[-5:] == '.html':
+		ramfilename = htmlfilename[:-5] + '.ram'
+	else:
+		ramfilename = htmlfilename + '.ram'
+	return ramfilename
+	
 class HTMLWriter:
 	def __init__(self, node, fp, filename, ramurl, oldfilename='', evallicense = 0):
 		self.evallicense = evallicense
@@ -151,14 +172,12 @@ class HTMLWriter:
 		#
 		outdict = {}
 
-		if self.evallicense:
-			outdict['evallicense'] = EVALcomment + '\n'
-		else:
-			outdict['evallicense'] = ''
-
 		outdict['title'] = self.__title
 		outdict['generator'] = '<meta name="generator" content="GRiNS %s">'%version.version
+		if self.evallicense:
+			outdict['generator'] = outdict['generator'] + '\n' + EVALcomment
 		outdict['ramurl'] = self.ramurl
+		outdict['unquotedramurl'] = MMurl.unquote(self.ramurl)
 		
 		playername = 'clip_1'
 		
@@ -178,7 +197,7 @@ class HTMLWriter:
 				('console', playername),
 				('autostart', 'false'),
 				('region', region),
-				('src', self.ramurl)])
+				('src', MMurl.unquote(self.ramurl))])
 				
 			out = out + '</div>\n'
 		out = out + '<!-- END-GRINS-GENERATED-CODE multiregion -->\n'
@@ -199,7 +218,7 @@ class HTMLWriter:
 				('controls', 'ImageWindow'),
 				('console', playername),
 				('autostart', 'false'),
-				('src', self.ramurl)])
+				('src', MMurl.unquote(self.ramurl))])
 				
 			out = out + '</div>\n'
 			
