@@ -28,73 +28,21 @@ import afxres,commctrl
 # GRiNS resource ids
 import grinsRC
 
-# Base dialog bar class
-class DlgBar(window.Wnd,components.ControlsDict):
-	AFX_IDW_DIALOGBAR=0xE805
-	# Class constructor. Calls base constructors
-	def __init__(self):
-		AFX_IDW_DIALOGBAR=0xE805
-		window.Wnd.__init__(self,win32ui.CreateDialogBar())
-		components.ControlsDict.__init__(self)
-	# Creates the OS window
-	def create(self,frame,resid,align=afxres.CBRS_ALIGN_BOTTOM):
-		self._obj_.CreateWindow(frame,resid,
-			align,self.AFX_IDW_DIALOGBAR)
+from GenFormView import GenFormView
 
-# Implementation of the ArcInfoDialog needed by the core system.
-# It is implemented as a dialog bar
-class ArcInfoForm(DlgBar):
-	# Class constructor. Calls base class constructor and associates controls to ids
-	def __init__(self):
-		DlgBar.__init__(self)
-		self['Title']=components.Static(self,grinsRC.IDC_STATIC1)	
+class ArcInfoForm(GenFormView):
+	# Class constructor. Calls base class constructor and initializes members
+	def __init__(self,doc):
+		GenFormView.__init__(self,doc,grinsRC.IDD_ARC_INFO_FORM)	
 		self['From']=components.ComboBox(self,grinsRC.IDC_COMBO1)
 		self['To']=components.ComboBox(self,grinsRC.IDC_COMBO2)
 		self['Delay']=components.Edit(self,grinsRC.IDC_EDIT1)
-		self['Cancel']=components.Button(self,grinsRC.IDC_CANCEL)
+		self['Cancel']=components.Button(self,win32con.IDCANCEL)
 		self['Restore']=components.Button(self,grinsRC.IDUC_RESTORE)
 		self['Apply']=components.Button(self,grinsRC.IDUC_APPLY)
-		self['OK']=components.Button(self,grinsRC.IDC_OK)
+		self['OK']=components.Button(self,win32con.IDOK)
 
-	# Create the OS window and hooks commands
-	def create(self,frame):
-		DlgBar.create(self,frame,grinsRC.IDD_ARC_INFO_BAR,afxres.CBRS_ALIGN_TOP)
-		for i in self.keys():
-			frame.HookCommand(self.onCmd,self[i]._id)
-			self[i].attach_to_parent()
-		self.setparams()
-		frame.RecalcLayout()
-
-	# Response to commands
-	def onCmd(self,id,code):
-		for i in self.keys():
-			if id==self[i]._id:
-				self[i].callcb()
-				break
-
-	#########################################################
-	# cmif specific interface
-	# Called by the core to close this window
-	def close(self):
-		if not hasattr(self,'GetParent'): return
-		frame=self.GetParent()
-		self.DestroyWindow()
-		frame.RecalcLayout()
-
-	# Called by the core to show this window
-	def show(self):
-		self.pop() # for now
-
-	# Called by the core to bring to front this window
-	def pop(self):
-		frame=self.GetParent()
-		frame.MDIActivate()
-
-	# Called by the core to hide this window
-	def hide(self):
-		self.ShowWindow(win32con.SW_HIDE)
-
-	# Sets the parameters from the core system 
+	# Part of init: sets the parameters from the core system 
 	def do_init(self, title, srclist, srcinit, dstlist, dstinit, delay, adornments=None):
 		self._title=title
 		self._srclist=srclist
@@ -102,23 +50,41 @@ class ArcInfoForm(DlgBar):
 		self._dstlist=dstlist
 		self._dstinit=dstinit
 		self._delay=delay
-		self._adornments=adornments
-
-		cbdict=adornments['callbacks']
+		cbd=adornments['callbacks']
+		self._idcbdict={}
 		for k in self.keys():
-			if k in cbdict.keys():
-				self[k].setcb(cbdict[k])
+			if k in cbd.keys():
+				self._idcbdict[self[k]._id]=cbd[k]
 
-	# initialize controls
+	# Called by the framework after the OS window has been created
+	def OnInitialUpdate(self):
+		GenFormView.OnInitialUpdate(self)
+		self.setparams()
+		for k in self.keys():
+			self.EnableCmd(k,1)
+
+	# set values to controls
 	def setparams(self,params=None):
-		self['Title'].settext(self._title)
+		self.settitle(self._title)
 		self['From'].initoptions(self._srclist,self._srcinit)
 		self['To'].initoptions(self._dstlist,self._dstinit)
 		self['Delay'].settext('%d' % self._delay)
+
+	# Reponse to message WM_COMMAND
+	def OnCmd(self,params):
+		# crack message
+		msg=win32mu.Win32Msg(params)
+		id=msg.cmdid()
+		nmsg=msg.getnmsg()
+		if id in self._idcbdict.keys():
+			apply(apply,self._idcbdict[id])
 	
-	# Set title control text			
-	def settitle(self, title):
-		self['Title'].settext(self._title)
+	# Called by the core to set the title of this view
+	def settitle(self,title):
+		self._title=title
+		if hasattr(self,'GetParent'):
+			if self.GetParent().GetSafeHwnd():
+				self.GetParent().SetWindowText(title)
 
 	# Interface to the source list.
 	# Set 'from' position
