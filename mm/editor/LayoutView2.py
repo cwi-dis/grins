@@ -101,6 +101,7 @@ class Node:
 			if self._parent != None:
 				if self._parent._graphicCtrl != None:
 					self._parent._graphicCtrl.removeRegion(self._graphicCtrl)
+				self._graphicCtrl.removeListener(self)
 			self._graphicCtrl = None
 			self._ctx.previousCtrl.update()
 
@@ -291,7 +292,10 @@ class MediaRegion(Region):
 
 		if self._parent._graphicCtrl == None:
 			return
-						
+
+		if self.isShowed():
+			self.hide()
+			
 		self._graphicCtrl = self._parent._graphicCtrl.addRegion(self._curattrdict, self._name)
 		self._graphicCtrl.showName(0)		
 		self._graphicCtrl.addListener(self)
@@ -780,7 +784,7 @@ class LayoutView2(LayoutViewDialog2):
 
 		# change the focus to the viewport
 #		self.myfocus = self.currentViewport
-#		self.editmgr.setglobalfocus('MMChannel',self.currentViewport)
+#		self.setglobalfocus('MMChannel',self.currentViewport)
 		self.select(self.currentViewport)
 
 	def isSelectedRegion(self, regionName):
@@ -790,13 +794,10 @@ class LayoutView2(LayoutViewDialog2):
 		return regionName in self.currentSelectedRegionList
 		
 	def globalfocuschanged(self, focustype, focusobject):
-		# skip the focus if already exist
-#		if self.currentFocus == focusobject:
-#			return
-#		if self.myfocus != None and focusobject == self.myfocus:
-#			self.myfocus = None
-#			return
-#		self.myfocus = None
+		if self.myfocus is not None and focusobject is self.myfocus:
+			self.myfocus = None
+			return
+		self.myfocus = None
 		self.currentFocus = focusobject
 		self.currentFocusType = focustype
 		
@@ -807,6 +808,10 @@ class LayoutView2(LayoutViewDialog2):
 		else:
 			# to do : manage this case
 			pass
+
+	def setglobalfocus(self, focustype, focusobject):
+		self.myfocus = focusobject
+		self.editmgr.setglobalfocus(focustype, focusobject)
 		
 	def playerstatechanged(self, type, parameters):
 		if type == 'paused':
@@ -1547,7 +1552,7 @@ class LayoutView2(LayoutViewDialog2):
 			self.displayViewport(viewport.getName())
 			self.select(viewport)
 			focus = self.context.getchannel(viewport.getName())
-			self.editmgr.setglobalfocus('MMChannel',focus)
+			self.setglobalfocus('MMChannel',focus)
 
 	def __selectRegion(self, name=None):
 		if name == None:
@@ -1565,7 +1570,7 @@ class LayoutView2(LayoutViewDialog2):
 
 			self.select(self.getRegion(name))
 #			self.myfocus = self.context.getchannel(name)
-			self.editmgr.setglobalfocus('MMChannel',regionRef)
+			self.setglobalfocus('MMChannel',regionRef)
 
 	def __nameToUid(self, name):
 		for uid in self.context.uidmap.keys():
@@ -1606,7 +1611,7 @@ class LayoutView2(LayoutViewDialog2):
 					self.currentNodeListShowed.append(n)
 
 			self.select(self.getMedia(name))
-			self.editmgr.setglobalfocus('MMNode',mediaRef)
+			self.setglobalfocus('MMNode',mediaRef)
 
 	def __showEditBackground(self, value):
 		if self.currentNodeSelected != None:
@@ -1741,7 +1746,7 @@ class LayoutView2(LayoutViewDialog2):
 			self.select(parent)
 			
 			# update focus
-			self.editmgr.setglobalfocus('MMChannel', self.getRegionRef(parent.getName()))
+			self.setglobalfocus('MMChannel', self.getRegionRef(parent.getName()))
 			
 	def __hideMedia(self):
 		if self.currentNodeSelected != None:
@@ -1755,7 +1760,7 @@ class LayoutView2(LayoutViewDialog2):
 			self.select(parent)
 
 			# update focus
-			self.editmgr.setglobalfocus('MMChannel', self.getRegionRef(parent.getName()))
+			self.setglobalfocus('MMChannel', self.getRegionRef(parent.getName()))
 		
 	#
 	# interface implementation of 'previous tree node' 
@@ -1767,7 +1772,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.fillMediaListOnDialogBox()
 		self.updateViewportOnDialogBox(viewport)
 		focus = self.context.getchannel(viewport.getName())
-		self.editmgr.setglobalfocus('MMChannel',focus)
+		self.setglobalfocus('MMChannel',focus)
 		self.lastViewportNameSelected = viewport.getName()
 		self.lastRegionNameSelected = None
 		self.lastMediaNameSelected = None
@@ -1778,7 +1783,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.fillMediaListOnDialogBox()
 		self.updateRegionOnDialogBox(region)
 		focus = self.context.getchannel(region.getName())
-		self.editmgr.setglobalfocus('MMChannel',focus)
+		self.setglobalfocus('MMChannel',focus)
 		self.lastRegionNameSelected = region.getName()
 		self.lastMediaNameSelected = None
 				
@@ -1787,8 +1792,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.fillRegionListOnDialogBox(media.getViewport())
 		self.fillMediaListOnDialogBox(media.getParent())
 		self.updateMediaOnDialogBox(media)
-		self.myfocus = media.mmnode
-		self.editmgr.setglobalfocus('MMNode',media.mmnode)
+		self.setglobalfocus('MMNode',media.mmnode)
 		self.lastMediaNameSelected = media.getName()
 
 	#

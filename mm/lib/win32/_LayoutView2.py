@@ -393,7 +393,7 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 	def __init__(self):
 		window.Wnd.__init__(self, win32ui.CreateWnd())
 		win32window.DrawContext.__init__(self)
-
+		
 	# allow to create a LayoutManager instance before the onInitialUpdate of dialog box
 	def onInitialUpdate(self, parent, rc, bgcolor):
 		# register dialog as listener
@@ -426,8 +426,10 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 
 	def __initState(self):
 		# allow to know the last state about shape (selected, moving, resizing)
-		self._selectedShape = None
-		self._isGeomChanging = None
+		self._selected = None
+		self._isGeomChanging = 0
+		self._wantDown = 0
+		self._oldSelected = None
 	
 	def OnCreate(self, params):
 		self.HookMessage(self.onLButtonDown,win32con.WM_LBUTTONDOWN)
@@ -446,44 +448,28 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 	def onShapeChange(self, shape):
 		if shape is None:
 			# update user events
-			if self._selectedShape != None:
+			if self._selected != None:
 				self._mouse_update = 1
-				self._selectedShape.onUnselected()
+				self._selected.onUnselected()
 				
-			self._selectedShape = None
+			self._selected = None
 			self._isGeomChanging = 0
 						
-#			for name in ('RegionX','RegionY','RegionW','RegionH'):
-#				self[name].settext('')
-#			self._mouse_update = 1
-#			self['RegionZ'].settext('')
-#			self['RegionSel'].setcursel(-1)
-#			self['BgColor'].enable(0)
 			self._mouse_update = 0
 			return
 
 		self._mouse_update = 1
-		self._selectedShape = shape
 		rc = shape._rectb		
 		if shape._rc != rc:
-			shape.onGeomChanging(rc)
 			self._isGeomChanging = 1
+			shape.onGeomChanging(rc)
 			shape._rc = rc
 		elif not self._isGeomChanging:
-			shape.onSelected()
-			self._isGeomChanging = 0
+			if self._oldSelected != shape:
+				self._oldSelected = shape
+				shape.onSelected()
 						
-#		i = 0
-#		self._mouse_update = 1
-#		for name in ('RegionX','RegionY','RegionW','RegionH'):
-#			self[name].settext('%d' % rc[i])
-#			i = i +1
-#		self['RegionZ'].settext('%d' % shape._z)
-#		if id(shape)!=id(self._layout._viewport):
-#			self['RegionSel'].setcursel(self._region2ix[shape._name])
-#		else:
-#			self['RegionSel'].setcursel(-1)
-#		self['BgColor'].enable(1)
+		self._selected = shape
 		self._mouse_update = 0
 
 	def onProperties(self, shape):
@@ -520,23 +506,41 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
 		point = self.DPtoLP(point)
-		win32window.DrawContext.onLButtonDown(self, flags, point)
+		self._wantDown = 1
+		self._sflags = flags
+		self._spoint = point
+		self._oldSelected = self._selected
+		if self._selected != None:
+			if not self._selected.inside(point):
+				self._wantDown = 0
+				win32window.DrawContext.onLButtonDown(self, flags, point)
 
 	def onLButtonUp(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
 		point = self.DPtoLP(point)
+		if self._wantDown:
+			if not self._isGeomChanging:
+				win32window.DrawContext.onLButtonDown(self, self._sflags, self._spoint)
+				self._wantDown = 0
 		win32window.DrawContext.onLButtonUp(self, flags, point)
 
 		# update user events
-		if self._selectedShape:
+		if self._selected:
 			if self._isGeomChanging:
-					self._selectedShape.onGeomChanged(self._selectedShape._rectb)
+					self._selected.onGeomChanged(self._selected._rectb)
+					
+		self._isGeomChanging = 0
 	
 	def onMouseMove(self, params):
 		msg=win32mu.Win32Msg(params)
 		point, flags = msg.pos(), msg._wParam
 		point = self.DPtoLP(point)
+		if self._wantDown:
+			if not self._isGeomChanging:
+				self._isGeomChanging = 1
+				win32window.DrawContext.onLButtonDown(self, self._sflags, self._spoint)
+				self._wantDown = 0
 		win32window.DrawContext.onMouseMove(self, flags, point)
 
 	def onLButtonDblClk(self, params):
@@ -577,7 +581,14 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 
 	def getMouseTarget(self, point):
 		if self._viewport:
-			return self._viewport.getMouseTarget(point)
+			if not self._isGeomChanging:
+				return self._viewport.getMouseTarget(point)
+			else:
+				if self._selected != None:
+					if self._selected.inside(point):
+						return self._selected
+					
+				self._viewport.getMouseTarget(point)
 		return None
 
 	def update(self, rc=None):
@@ -637,6 +648,10 @@ class LayoutManager(window.Wnd, win32window.DrawContext):
 	def selectRequest(self, node):
 		self._selected = node
 		self.update()
+
+	def unselectRequest(self, node):
+		self._selected = None
+		self.update()
 		
 	def drawTracker(self, dc):
 		if not self._selected: return
@@ -682,6 +697,9 @@ class UserEventMng:
 	def addListener(self, listener):
 		self.listener = listener
 
+	def removeListener(self, listener):
+		self.listener = None
+		
 	def onSelected(self):
 		if self.listener != None:
 			self.listener.onSelected()
@@ -743,7 +761,8 @@ class Viewport(win32window.Window, UserEventMng):
 
 	# remove a sub region
 	def removeRegion(self, region):
-		# I'm not sure it's enough
+		if self._ctx._selected is region:
+			region.unselect()
 		ind = 0
 		for w in self._subwindows:
 			if w == region:
@@ -754,8 +773,9 @@ class Viewport(win32window.Window, UserEventMng):
 	def select(self):
 		self._ctx.select(self)
 
+
 	def unselect(self):
-		self._ctx.unselect(self)
+		self._ctx.unselectRequest(self)
 	
 	def setAttrdict(self, attrdict):
 		# print 'setAttrdict', attrdict
@@ -964,7 +984,8 @@ class Region(win32window.Window, UserEventMng):
 
 	# remove a sub region
 	def removeRegion(self, region):
-		# I'm not sure it's enough
+		if self._ctx._selected is region:
+			region.unselect()
 		ind = 0
 		for w in self._subwindows:
 			if w == region:
