@@ -855,8 +855,6 @@ class _CmifStructView(_CmifView):
 		if self._enableNodeDragDrop:
 			msgpos=win32mu.Win32Msg(params).pos()
 			self._dragging = msgpos
-			#self._parent.SendMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.COPY].id)
-			#self.checkDragDrop(msgpos)
 
 	def onLButtonUp(self, params):
 		_CmifView.onLButtonUp(self, params)
@@ -886,7 +884,7 @@ class _CmifStructView(_CmifView):
 
 	def dropnode(self, dataobj, effect, x, y):
 		DROP_FAILED, DROP_SUCCEEDED = 0, 1
-		node=dataobj.GetGlobalData(self.CF_NODE)		
+		node = dataobj.GetGlobalData(self.CF_NODE)
 		if node and self._dragging:
 			
 			# the drag and drop cmd is:
