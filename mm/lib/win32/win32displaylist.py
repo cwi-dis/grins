@@ -105,6 +105,12 @@ class _DisplayList:
 		self.__cmddict = {}
 		self.__butdict = {}
 
+		# transparent pixel support struct: self.__transparent
+		# if not None then media has transparent regions
+		# and this will be a tuple of info sufficient to deside
+		# at run time whether a pixel is transparent or not
+		self.__transparent = None
+
 		# sense direct draw
 		self._directdraw = 0
 		self._issimple = 0
@@ -172,6 +178,7 @@ class _DisplayList:
 			if b._highlighted:b._do_highlight()
 	
 	# Optimized rendering for simple display lists on a direct draw surface	
+	# we should and we can implement here what we need for player rendering  
 	def _ddsrender(self, dds, dst, rgn, clear=1, mediadisplayrect=None, fit=1):
 		self._rendered = 1
 		clonestart = self._clonestart
@@ -561,6 +568,7 @@ class _DisplayList:
 		if trans_rgb:
 			convbgcolor = dds.GetColorMatch(trans_rgb)
 			dds.BltFill((0, 0, w, h), convbgcolor)
+			self.__transparent = (dds, convbgcolor, (dest_x, dest_y, width, height))
 		try:
 			imghdc = dds.GetDC()
 		except:
@@ -580,6 +588,35 @@ class _DisplayList:
 				return 0
 		return 1
 
+	# point x, y coordinates are in px relative to owner wnd
+	# point is inside owner wnd
+	# sensitivity when not 'opaque' should be set before calling this query method	
+	def isTransparent(self, point):
+		if self._alphaSensitivity is None or self._alphaSensitivity == 'opaque':
+			return 0
+		elif self._alphaSensitivity == 'transparent':
+			return 1
+		elif self._alphaSensitivity == 'alpha':
+			x, y = point
+			xp, yp = self._window._pxl2rel(point)
+			# if not in media box then its transparent
+			if not self._insideMedia(xp,yp):
+				return 1
+			# point is inside media
+			# can be a transparent point?
+			if  self.__transparent is None:
+				return 0
+			# yes, it can.
+			# check pixel color
+			# offset x, y to media box
+			dds, ddcolor, ltrb = self.__transparent
+			lm, tm = ltrb[:2]
+			pxcolor = dds.GetPixelColor((x-lm, y-tm))
+			if pxcolor == ddcolor:
+				return 1
+			return 0
+		assert 0, 'invalid sensitivity value %s ' % self._alphaSensitivity
+		 
 	#############################################
 	# draw primitives
 
@@ -1193,4 +1230,5 @@ class _Button:
 	# End of animation experimental methods
 	##########################################
 
+ 
  
