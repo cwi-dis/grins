@@ -138,9 +138,9 @@ class _Toplevel:
 		      type_channel = SINGLE, pixmap = 0, units = UNIT_MM,
 		      adornments = None, canvassize = None,
 		      commandlist = None, resizable = 1):
-		if 'frame' not in adornments.keys():
+		frame = adornments.get('frame')
+		if frame is None:
 			raise 'error', 'newwindow without frame specification'
-		frame=adornments['frame']
 		return frame.newwindow(x, y, w, h, title, visible_channel,
 		      type_channel, pixmap, units,
 		      adornments, canvassize,
