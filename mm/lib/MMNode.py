@@ -3460,8 +3460,12 @@ class MMNode(MMTreeElement):
 				delay = None
 			else:
 				delay = duration
-			if delay is not None and delay > 0 and MMAttrdefs.getattr(self, 'autoReverse'):
-				delay = delay * 2
+			if delay is not None and delay > 0:
+				if MMAttrdefs.getattr(self, 'autoReverse'):
+					delay = delay * 2
+				speed = MMAttrdefs.getattr(self, 'speed')
+				if speed > 0:
+					delay = delay / float(speed)
 			arc = MMSyncArc(self_body, 'dur', srcnode=self_body, event='begin', delay=delay)
 			self_body.durarcs.append(arc)
 ##			self_body.arcs.append((self_body, arc))
@@ -3915,7 +3919,7 @@ class MMNode(MMTreeElement):
 		if duration is not None and duration > 0:
 			speed = self.attrdict.get('speed')
 			if speed:
-				duration = duration / speed
+				duration = duration / float(speed)
 			if MMAttrdefs.getattr(self, 'autoReverse'):
 				duration = 2.0 * duration
 
