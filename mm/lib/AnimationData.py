@@ -6,6 +6,8 @@ import MMAttrdefs
 
 from fmtfloat import fmtfloat, round
 
+import tokenizer
+
 import colors
 
 # AnimationData pattern:
@@ -69,6 +71,11 @@ class AnimationTarget:
 		for c in self._animparent.GetChildren():
 			if c.GetType() == 'animate':
 				children.append(c)
+
+		# experimental: 
+		# append all nodes targeting this, not only self._animparent children
+		# self.__getSelfAnimations(self._root, children)
+
 		return children
 
 	# write animation nodes under
@@ -79,6 +86,20 @@ class AnimationTarget:
 	def _isRegion(self):
 		return self._mmobj.getClassName() in ('Region', 'Viewport')
 
+	def __getSelfAnimations(self, parent, children):
+		uid = self.getUID()
+		for node in parent.GetChildren():
+			ntype = node.GetType()
+			if ntype == 'animate':
+				if hasattr(node, 'targetnode') and node.targetnode == self._mmobj:
+					children.append(node)
+				elif node.GetParent() == self._mmobj:
+					children.append(node)
+				else:
+					te = MMAttrdefs.getattr(node, 'targetElement')
+					if te and te == uid:
+						children.append(node)
+			self.__getSelfAnimations(node, children)
 
 
 # AnimationData arguments:
@@ -147,6 +168,12 @@ class AnimationData:
 		for anim in animations:
 			tag = anim.attrdict.get('atag')
 			str = MMAttrdefs.getattr(anim, 'values')
+			if not str:
+				str1 = MMAttrdefs.getattr(anim, 'from')
+				str2 = MMAttrdefs.getattr(anim, 'to')
+				if str1 and str2:
+					str = str1 + ';' + str2
+				print str
 			if str:
 				if tag == 'animateMotion':
 					animateMotionValues = self._strToPosList(str)
@@ -470,7 +497,7 @@ class AnimationData:
 	def _getNumPair(self, str):
 		if not str: return None
 		str = string.strip(str)
-		sl = string.split(str)
+		sl = tokenizer.splitlist(str, delims=' ,')
 		if len(sl)==2:
 			x, y = sl
 			return string.atoi(x), string.atoi(y)
