@@ -133,18 +133,17 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if not mtype:
 			import urlcache
 			mtype = urlcache.mimetype(url)
-		import string
-		if mtype and (string.find(mtype, 'real') >= 0 or string.find(mtype, 'flash') >= 0 or string.find(mtype, 'image') >= 0):
+		if mtype and (mtype.find('real') >= 0 or mtype.find('flash') >= 0 or mtype.find('image') >= 0):
 			node.__type = 'real'
 			if mtype not in ('image/vnd.rn-realpix', 'text/vnd.rn-realtext'):
 				self.__windowless_real_rendering = 0	
-			if string.find(mtype, 'flash') >= 0:
+			if mtype.find('flash') >= 0:
 				node.__subtype = 'flash'
-		elif mtype and string.find(mtype, 'quicktime') >= 0:
+		elif mtype and mtype.find('quicktime') >= 0:
 			node.__type = 'qt'
 		else:
 			node.__type = 'wm'
-			if mtype and string.find(mtype, 'x-ms-asf')>=0:
+			if mtype and mtype.find('x-ms-asf') >= 0:
 				node.__subtype = 'asf'
 				if not self._exporter:
 					self.__windowless_wm_rendering = 0
@@ -319,6 +318,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			return
 		self.need_armdone = 1
 		self.play_0(node, curtime)
+		if not self._armcontext:
+			return
 		if self._is_shown and node.ShouldPlay() \
 		   and self.window and not self.syncplay:
 			self.check_popup()
