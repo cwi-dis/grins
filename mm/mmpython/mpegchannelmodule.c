@@ -17,6 +17,7 @@
 
 #include <video.h>
 #include <mpeg.h>
+extern unsigned long wpixel[];
 
 #ifdef MM_DEBUG
 static int mpegchannel_debug = 0;
@@ -231,6 +232,9 @@ mpeg_arm(self, file, delay, duration, attrdict, anchorlist)
 	case 1:
 		SetMPEGOption(&PRIV->arm.imagedesc, MPEG_DITHER, (int) &MBOrderedDitherInfo);
 		break;
+	case 2:
+		SetMPEGOption(&PRIV->arm.imagedesc, MPEG_DITHER, (int) &FullColor16DitherInfo);
+		break;
 	case 4:
 		SetMPEGOption(&PRIV->arm.imagedesc, MPEG_DITHER, (int) &FullColor32DitherInfo);
 		break;
@@ -424,8 +428,14 @@ init_colortab(vptr)
 	int i;
 	double fred, fgreen, fblue;
 
-	if (vptr->depth != 8)
+	if (vptr->depth != 8) {
+		/* we need to fill in 3 wpixel values since they are misused
+                   by the MPEG library to transmit the RGB color masks */
+		wpixel[0] = vptr->red_mask;
+		wpixel[1] = vptr->green_mask;
+		wpixel[2] = vptr->blue_mask;
 		return;
+	}
 	if (vptr->class == PseudoColor) {
 		/* we know the colormap is set up like this */
 		vptr->red_mask = 0xE0;
@@ -527,6 +537,10 @@ mpeg_init(self)
 		switch (PRIV->planes) {
 		case 8:
 			PRIV->depth = 1;
+			break;
+		case 15:
+		case 16:
+			PRIV->depth = 2;
 			break;
 		case 24:
 		case 32:
