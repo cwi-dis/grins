@@ -563,6 +563,8 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		if not IsPlayer and len(__main__.toplevel._subwindows)==1:
 			self.setEditorFrameToolbar()
 			self.setEditorDocumentMenu(0)
+		# and document's views
+		self.close_all_views()
 
 		if hasattr(self,'_wndDlgBar'):
 			self._wndDlgBar.DestroyWindow()
@@ -572,7 +574,6 @@ class MDIFrameWnd(window.MDIFrameWnd,cmifwnd._CmifWnd,ViewServer):
 		# we should close self frame
 		if len(__main__.toplevel._subwindows)>1:
 			__main__.toplevel._subwindows.remove(self)
-			self. close_all_views()
 			self.DestroyWindow()	
 		else:
 			# clean image cache
