@@ -66,6 +66,11 @@
 #define IDD_PROGRESS                    262
 #define IDD_INIT_DIALOG                 263
 #define IDD_EDITATTR_R6                 265
+#define IDI_ICON_OPEN                   266
+#define IDI_ICON_CLOSED                 267
+#define IDI_ICON_BANDWIDTHBAD           268
+#define IDI_ICON_BANDWIDTHGOOD          269
+#define IDI_ICON_ERROR                  270
 #define IDD_EDITSTRINGATTR2             327
 #define IDD_EDITATTR_S7                 327
 #define IDD_EDITATTR_S5                 328
@@ -295,7 +300,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        266
+#define _APS_NEXT_RESOURCE_VALUE        271
 #define _APS_NEXT_COMMAND_VALUE         32838
 #define _APS_NEXT_CONTROL_VALUE         1193
 #define _APS_NEXT_SYMED_VALUE           104
