@@ -131,7 +131,15 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			self.errormsg(node, 'No URL set on node.')
 			return 1
 		import MMmimetypes, string
-		mtype = MMmimetypes.guess_type(url)[0]
+		mtype = node.GetAttrDef('type', None)
+		if mtype is None:
+			# not allowed to look at extension...
+			mtype = MMmimetypes.guess_type(url)[0]
+			if mtype is None:
+				import MMurl
+				u = MMurl.urlopen(url)
+				mtype = u.headers.type
+				u.close()
 		if mtype and (string.find(mtype, 'real') >= 0 or string.find(mtype, 'flash') >= 0 or string.find(mtype, 'image') >= 0):
 			node.__type = 'real'
 			if string.find(mtype, 'flash') >= 0:
@@ -140,7 +148,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			node.__type = 'qt'
 		else:
 			node.__type = 'wm'
-			if string.find(mtype, 'x-ms-asf')>=0:
+			if mtype and string.find(mtype, 'x-ms-asf')>=0:
 				node.__subtype = 'asf'
 				if not self._exporter:
 					self.__windowless_wm_rendering = 0
