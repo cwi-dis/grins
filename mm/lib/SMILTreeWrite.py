@@ -747,6 +747,13 @@ def getattributename(writer, node):
 	attr = MMAttrdefs.getattr(node, 'attributeName')
 	return attr
 
+def getrestart(writer, node):
+	if writer.smilboston:
+		restart = getcmifattr(writer, node, 'restart')
+		if restart != 'always':
+			return restart
+	return None
+
 #
 # Mapping from SMIL attrs to functions to get them. Strings can be
 # used as a shortcut for node.GetAttr
@@ -778,7 +785,7 @@ smil_attrs=[
 	("repeat", lambda writer, node:(not writer.smilboston and getrepeat(writer, node)) or None),
 	("repeatCount", lambda writer, node:(writer.smilboston and getrepeat(writer, node)) or None),
 	("repeatDur", lambda writer, node:getduration(writer, node, "repeatdur")),
-	("restart", lambda writer, node: (writer.smilboston and getcmifattr(writer, node, 'restart')) or None),
+	("restart", getrestart),
 	("speed", lambda writer, node:getspeed(writer, node, "speed")),
 	("accelerate", lambda writer, node:getproportion(writer, node, "accelerate")),
 	("decelerate", lambda writer, node:getproportion(writer, node, "decelerate")),
