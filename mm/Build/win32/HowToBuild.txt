@@ -3,11 +3,12 @@ the value is
 	oratrix.oratrix.nl:/ufs/mm/CVSPRIVATE
 Other possibilities are values of the type
 	:pserver:USERNAME@oratrix.oratrix.nl:/ufs/mm/CVSPRIVATE
-where USERNAME has to be replaced by the actual value.
+where USERNAME has to be replaced by the actual value.  In this case
+you need to login first (once).
 
 Prerequisites
 
-WinCvs (we use version 1.1b6) from http://www.wincvs.org/
+WinCvs (we use version 1.1b7) from http://www.wincvs.org/
 Visual C++ 6.0 (we use Service Pack 3).
 
 Getting the Sources
