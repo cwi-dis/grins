@@ -370,18 +370,6 @@ class SMIL:
 			      'skip-content':'true',
 			      'customTest':None,
 			      },
-##		'transitionFilter': {'borderWidth':None,
-##				     'clipBoundary':None,
-##				     'color':None,
-##				     'coordinated':None,
-##				     'customTest':None,
-##				     'horzRepeat':None,
-##				     'percentDone':None,
-##				     'skip-content':'true',
-##				     'subtype':None,
-##				     'type':None,
-##				     'vertRepeat':None,
-##				     },
 		'prefetch': {'bandwidth':'100%',
 			     'clip-begin':None,
 			     'clip-end':None,
@@ -441,16 +429,22 @@ class SMIL:
 		    'autoReverse': 'false',
 		    }
 
-	from settings import profileExtensions
+	__transitionFilter_extra = {'type':None,
+			      'subtype':None,
+				  'mode':'in',
+			      'fadeColor':None,
+			}
 
+	from settings import profileExtensions
+	
 	if profileExtensions.get('SplineAnimation'):
 		__animate_attrs_extra['keySplines'] = None
 		__animate_attrs_extra['keyTimes'] = None
+	if profileExtensions.get('InlineTransitions'):
+		__animate_elements.append('transitionFilter')
 
 	attributes['animateMotion'] = __animate_attrs_core.copy()
 	attributes['animateMotion'].update(__animate_attrs_extra)
-	del attributes['animateMotion']['attributeName']
-	del attributes['animateMotion']['attributeType']
 	attributes['animateMotion']['calcMode'] = 'paced'
 	if profileExtensions.get('SplineAnimation'):
 		attributes['animateMotion']['path'] = None
@@ -464,11 +458,18 @@ class SMIL:
 
 	attributes['set'] = __animate_attrs_core.copy()
 
+	if profileExtensions.get('InlineTransitions'):
+		attributes['transitionFilter'] = __animate_attrs_core.copy()
+		attributes['transitionFilter'].update(__animate_attrs_extra)
+		attributes['transitionFilter'].update(__transitionFilter_extra)
+		del attributes['transitionFilter']['attributeName']
+		del attributes['transitionFilter']['attributeType']
+
 	del __animate_attrs_core, __animate_attrs_extra
 
 	if profileExtensions.get('TimeManipulations'):
 		# add TimeManipulations to certain elements
-		for __el in ('animate', 'set', 'animateMotion', 'animateColor',):
+		for __el in __animate_elements:
 			attributes[__el].update(__timeManipulations)
 
 	# Abbreviations for collections of elements
@@ -477,6 +478,7 @@ class SMIL:
 	__ContentControl = ['switch', 'prefetch']
 	__LinkAnchor = ['a', 'area', 'anchor']
 	__Animation = ['animate', 'set', 'animateMotion', 'animateColor']
+	if profileExtensions.get('InlineTransitions'):__Animation.append('transitionFilter')
 
 	__schedule = ['par', 'seq', 'excl'] + __media_object
 	__container_content = __schedule + ['switch', 'a'] + __animate_elements
@@ -502,9 +504,10 @@ class SMIL:
 	for __el in ('a', 'animate', 'set',
 		     'animateMotion', 'animateColor',
 		     'area', 'anchor', 'transition',
-##		     'transitionFilter',
 		     ):
 		attributes[__el].update(__basicTiming)
+	if profileExtensions.get('InlineTransitions'):
+		attributes['transitionFilter'].update(__basicTiming)
 
 	# add Timing to certain other elements
 	for __el in ('text', 'img', 'audio', 'animation', 'video', 'ref',
