@@ -975,7 +975,7 @@ class ChannelWindow(Channel):
 	def destroy(self):
 		del self._player.ChannelWinDict[self._name]
 		Channel.destroy(self)
-		del self.window
+		self.window = None
 		del self.armed_display
 		del self.played_display
 
