@@ -1,12 +1,24 @@
 __version__ = "$Id$"
 
-def what(filename):
-	f = open(filename, 'rb')
-	h = f.read(512)
-	for tf in tests:
-		res = tf(h, f)
-		if res:
-			return res
+def what(file):
+	if type(file) == type(''):
+		pos = -1
+		file = open(filename, 'rb')
+		h = file.read(512)
+	else:
+		# assume it's a file object
+		pos = file.tell()
+		h = file.read(512)
+	try:
+		for tf in tests:
+			res = tf(h, file)
+			if res:
+				return res
+	finally:
+		if pos >= 0:
+			file.seek(pos)
+		else:
+			file.close()
 	return None
 
 tests = []
