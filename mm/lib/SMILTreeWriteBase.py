@@ -992,9 +992,6 @@ def getsrc(writer, node, attr = None):
 		val = node.GetAttrDef(attr, None)
 		if not val:
 			return None
-	if val[:5] == 'data:':
-		# don't convert data: URLs to text files
-		return val
 	if not val:
 		if writer.copydir:
 			# Exporting without a URL is an error
@@ -1008,6 +1005,9 @@ def getsrc(writer, node, attr = None):
 		else:
 			# If not exporting we insert a placeholder
 			val = '#'
+		return val
+	if val[:5] == 'data:':
+		# don't convert data: URLs to text files
 		return val
 	if not writer.copydir:
 		return writer.fixurl(val)
