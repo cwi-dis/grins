@@ -168,7 +168,6 @@ class Region(Node):
 	
 	def show(self):
 		if self.canShow and self._parent._graphicCtrl != None:
-			print self._curattrdict
 			self._graphicCtrl = self._parent._graphicCtrl.addRegion(self._curattrdict, self._name)
 			self._graphicCtrl.showName(self.getShowName())		
 			self._graphicCtrl.addListener(self)
