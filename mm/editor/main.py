@@ -1,14 +1,17 @@
 # Main program for the CMIF editor.
 
-import sys
-import getopt
-import os
-
 def main():
-	playnow = 0
-	stats = 0
+	import sys
+	import getopt
 	#
-	opts, args = getopt.getopt(sys.argv[1:], 'psnh:THPSL')
+	usage = '[-psnTHPSL] [-h helpdir] [file.cmif]'
+	#
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], 'psnh:THPSL')
+	except getopt.error, msg:
+		sys.stderr.write(msg + '\n')
+		sys.stderr.write('usage: cmifed ' + usage + '\n')
+		sys.exit(2)
 	#
 	if args:
 		if len(args) > 1:
@@ -28,17 +31,16 @@ def main():
 	# patch the module search path
 	# so we are less dependent on where we are called
 	#
-	if os.environ.has_key('CMIF'):
-		CMIF = os.environ['CMIF']
-	else:
-		CMIF = '/ufs/guido/mm/demo'
-	sys.path.append(os.path.join(CMIF, 'mm4'))
-	sys.path.append(os.path.join(CMIF, 'lib'))
+	sys.path.append(findfile('mm4'))
+	sys.path.append(findfile('lib'))
+	sys.path.append(findfile('video'))
 	#
-	import MMExc
 	import TopLevel
 	import SoundChannel
 	import Channel
+	#
+	playnow = 0
+	stats = 0
 	#
 	for opt, arg in opts:
 		if opt == '-p':
@@ -59,12 +61,14 @@ def main():
 			top.channelview.show()
 		elif opt == '-H':
 			top.blockview.show()
-		elif opt == '-P':
+		elif opt in ('-P', '-p'):
 			top.player.show()
 		elif opt == '-S':
 			top.styleview.show()
 		elif opt == '-L':
 			top.links.show()
+	#
+	top.checkviews()
 	#
 	try:
 		try:
@@ -83,5 +87,13 @@ def main():
 		if stats:
 			import MMNode
 			MMNode._prstats()
+
+def findfile(name):
+	import os
+	if os.environ.has_key('CMIF'):
+		CMIF = os.environ['CMIF']
+	else:
+		CMIF = '/ufs/guido/mm/demo' # Traditional default
+	return os.path.join(CMIF, name)
 
 main()

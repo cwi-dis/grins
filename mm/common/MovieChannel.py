@@ -14,7 +14,6 @@
 # An EOF indicates the end of the file; 
 
 import sys
-sys.path.append('/ufs/guido/src/video')	# For VFile
 
 import os
 from stat import *

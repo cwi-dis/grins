@@ -21,9 +21,9 @@ except AttributeError:
 
 if forms_v20:
     del dummy
-    print 'using FORMS 2.0'
+##  print 'using FORMS 2.0'
 else:
-    print 'no FORMS 2.0'
+    print 'BlockView: no FORMS 2.0 -- will this still work?'
 
 
 # Parametrization of the lay-out
@@ -38,6 +38,13 @@ MENUH = 20	# Height of menu bar
 ZOOMW = 20	# Width of zoo buttons
 
 
+# Special color assignments
+BAGCOLOR = 60
+LEAFCOLOR = 61
+fl.mapcolor(BAGCOLOR, 152, 174, 200)
+fl.mapcolor(LEAFCOLOR, 200, 174, 152)
+
+
 class BlockView(ViewDialog, BasicDialog):
     #
     # init() method compatible with the other views.
@@ -47,22 +54,28 @@ class BlockView(ViewDialog, BasicDialog):
 	self.toplevel = toplevel
 	self.root = self.toplevel.root
 	self.editmgr = self.root.context.editmgr
-	width, height = \
-		MMAttrdefs.getattr(self.root, 'blockview_winsize')
+	width, height = MMAttrdefs.getattr(self.root, 'blockview_winsize')
 	self = BasicDialog.init(self, width, height, 'Hierarchy')
 	self.changing_node = None
 	return self.new(width, height, self.root)
+
     def show(self):
-	if self.showing: return
+	if self.is_showing():
+	    self.pop()
+	    return
 	self.editmgr.register(self)
 	BasicDialog.show(self)
+
     def hide(self):
-	if not self.showing: return
+	if not self.is_showing():
+	    return
 	self.editmgr.unregister(self)
 	BasicDialog.hide(self)
 	self.toplevel.checkviews()
+
     def transaction(self):
 	return 1
+
     def commit(self):
 	modnode = self.rootview
 	self.form.freeze_form()
@@ -72,14 +85,16 @@ class BlockView(ViewDialog, BasicDialog):
 	self.presentlabels(modnode)
 	self.setfocus(self.focus)
 	self.form.unfreeze_form()
+
     def rollback(self):
 	pass
+
     def kill(self):
 	self.destroy()
     #
     # new makes an object of type 'blockview'
     #
-    # if does:
+    # it does:
     #	0. initializes some state
     #	1. makes the form
     #	2. initializes the command dict / command callbak
@@ -140,8 +155,8 @@ class BlockView(ViewDialog, BasicDialog):
 	cmdmap = 'MNUDC'
 	clipboard_menu.set_call_back(self._menu_callback, cmdmap);
 	operation_menu = f.add_menu(PUSH_MENU, x+2*w/3, y, w/3, h, 'Operation')
-	operation_menu.set_menu('h Help...|p Play node...|Z Zoom in|z Zoom out%l|i Node info...|a Node attr...|e Edit contents...|t Edit anchors...')
-	cmdmap = 'hpZziaet'
+	operation_menu.set_menu('h Help...|p Play node...|Z Zoom in|z Zoom out%l|i Node info...|a Node attr...|e Edit contents...|t Edit anchors...%l|f Push focus')
+	cmdmap = 'hpZziaetf'
 	operation_menu.set_call_back(self._menu_callback, cmdmap);
     #
     # submit a number to default commands.
@@ -172,6 +187,7 @@ class BlockView(ViewDialog, BasicDialog):
 	self.addtocommand('a', attreditfunc)
 	self.addtocommand('e', conteditfunc)
 	self.addtocommand('t', anchorfunc)
+	self.addtocommand('f', focusfunc)
     #
 
     # blockview gets a region in the form where it recursively
@@ -181,9 +197,13 @@ class BlockView(ViewDialog, BasicDialog):
 	type = node.GetType()
 
 	obj = self.form.add_box(FRAME_BOX, x, y, w, h, '')
+	if type in leaftypes:
+	    obj.col1 = LEAFCOLOR
+	elif type == 'bag':
+	    obj.col1 = BAGCOLOR
 
-	node.bv_form 	= self.form
-	node.bv_obj	= obj
+	node.bv_form = self.form
+	node.bv_obj = obj
 
 	kids = node.GetChildren()
 	if type in interiortypes:
@@ -215,8 +235,7 @@ class BlockView(ViewDialog, BasicDialog):
 		else: # parallel node
 		    w = w / len(kids)
 		    dx, dy = w, 0
-		toosmall = ((h < TMARG+BMARG+BH) or \
-			    (w < LMARG+RMARG+BW))
+		toosmall = ((h < TMARG+BMARG+BH) or  (w < LMARG+RMARG+BW))
 		if toosmall:
 		    node.bv_openclose.col1 = GL.RED
 		    node.bv_toosmall = 1
@@ -249,13 +268,13 @@ class BlockView(ViewDialog, BasicDialog):
 	    del node.bv_openclose
 	    node.bv_labeltext.delete_object()
 	    del node.bv_labeltext
-	except NameError:
-	    pass
-	except AttributeError: # new style exceptions
+	except AttributeError:
 	    pass
 	for child in node.GetChildren():
 	    self.rmBlockview(child)
+    #
     # getfocus - Called by other modules to get our focus
+    #
     def getfocus(self):
 	return self.focus
     #
@@ -282,8 +301,6 @@ class BlockView(ViewDialog, BasicDialog):
 	    node.bv_obj.label = MMAttrdefs.getattr(node, 'name')
 	    return
 	label = MMAttrdefs.getattr(node, 'name')
-	if type == 'bag':
-	    label = '[[[ ' + label + ' ]]]' # XXX quick hack to show bags
 	node.bv_labeltext.label = label
 	node.bv_obj.label = ''
 	num = 1
@@ -305,12 +322,17 @@ class BlockView(ViewDialog, BasicDialog):
 	self.globalsetfocus(node)
     #
     def globalsetfocus(self, node):
-	# XXX Quick hack: don't set focus if it is invisible.
-	try:
-	    void = node.bv_obj.boxtype
-	except:
+	if not self.is_showing():
+	    return # Silently
+	while node:
+	    try:
+		void = node.bv_obj.boxtype
+		break
+	    except AttributeError:
+		node = node.GetParent()
+	else:
 	    gl.ringbell()
-	    print 'BlockView: sorry, cannot set focus'
+	    print 'BlockViewglobalsetfocus: sorry, cannot set focus'
 	    return
 	self.form.freeze_form()
 	gl.winset(self.form.window)
@@ -404,6 +426,7 @@ class BlockView(ViewDialog, BasicDialog):
 	    return None
 	Clipboard.setclip(type, data.DeepCopy())
 	return data
+
     def toclipboard(self, node):
 	if node == None:
 	    type, data = '', None
@@ -501,14 +524,19 @@ def CDeleteNode(bv):
     _DeleteNode(bv, 1)
 
 
-# Insert a node before/after the focus. The node will be sequential without
-# children, by default. Use Node Info to change this.
+# Insert a node before/after the focus.
+# The node is created with the same type as the focus.
+# Use Node Info to change this.
 
 def _doInsertNode(bv, after, cb):
     node = bv.focus
     parent = node.GetParent()
     if parent == None:
 	fl.show_message('You can\'t insert before/after the root', '', '')
+	return
+    if node == bv.rootview:
+	# This would crash
+	fl.show_message('Please zoom out first', '', '')
 	return
 
     em = bv.editmgr
@@ -550,7 +578,12 @@ def _doInsertParent(bv, type):
     node = bv.focus
     parent = node.GetParent()
     if parent == None:
-	fl.show_message('sorry, cannot insert above root', '', '')
+	# This should really be allowed, but it's too hard
+	fl.show_message('You can\'t insert above the root', '', '')
+	return
+    if node == bv.rootview:
+	# The new node would be invisible at first
+	fl.show_message('Please zoom out first', '', '')
 	return
 
     em = bv.editmgr
@@ -563,7 +596,14 @@ def _doInsertParent(bv, type):
     em.addnode(parent, index, newnode)
     em.addnode(newnode, 0, node)
 
+    bv.focus = newnode
+
+    bv.changing_node = parent
     em.commit()
+    bv.changing_node = None
+
+    import NodeInfo
+    NodeInfo.shownodeinfo(bv.toplevel, newnode)
 
 def InsertSeqParent(bv):
     _doInsertParent(bv, 'seq')
@@ -661,6 +701,9 @@ def anchorfunc(bv):
     node = bv.focus
     import AnchorEdit
     AnchorEdit.showanchoreditor(bv.toplevel, node)
+
+def focusfunc(bv):
+    bv.toplevel.channelview.globalsetfocus(bv.focus)
 
 
 # This is mostly Jack's code, so...

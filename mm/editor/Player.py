@@ -504,50 +504,6 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		for cname in self.channelnames:
 			self.channels[cname].stop()
 	#
-	# Bag playing code.
-	# This is a modal dialog (for now)!
-	# (Also note the similarity with NodeEdit._showmenu...)
-	#
-	def playbag(self, node):
-		indexname = MMAttrdefs.getattr(node, 'bag_index')
-		children = node.GetChildren()
-		names = []
-		for child in children:
-			name = MMAttrdefs.getattr(child, 'name')
-			if name == '':
-				name = '???'
-			elif name == indexname:
-				return child
-			names.append(name)
-		names.reverse() # They are added from bottom to top
-		n = len(names) + 1
-		width = 200
-		butheight = 30
-		height = n*butheight + 10
-		form = fl.make_form(UP_BOX, width, height)
-		cancel = form.add_button(RETURN_BUTTON, \
-			5, 5, width-10, butheight, 'Cancel')
-		pos = butheight + 5
-		buttons = []
-		for name in names:
-			obj = form.add_button(NORMAL_BUTTON, \
-				5, pos, width-10, butheight, name)
-			buttons.append(obj)
-			pos = pos + butheight
-		buttons.reverse()
-		fl.deactivate_all_forms()
-		form.show_form(PLACE_MOUSE, TRUE, 'Choose subdocument')
-		choice = fl.do_forms() # Must be one of our buttons
-		form.hide_form()
-		fl.activate_all_forms()
-		if choice is cancel:
-			return None
-		if choice in buttons:
-			i = buttons.index(choice)
-			return children[i]
-		print 'Weird -- not one of our objects was selected:', choice
-		return None
-	#
 	# Playing algorithm.
 	#
 	def start_playing(self, rate):
@@ -555,7 +511,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			return 0
 		while self.playroot.GetType() == 'bag':
 			self.showstate()
-			node = self.playbag(self.playroot)
+			node = choosebagitem(self.playroot)
 			if not node:
 				return 0
 			self.playroot = node
@@ -799,27 +755,87 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		if not destlist:
 			if pause_anchor:
 				return 0
-			fl.show_message('No hyperlink sourced at this anchor' \
-				  , '', '')
+			fl.show_message( \
+				'No hyperlink source at this anchor', '', '')
 			return 0
 		if len(destlist) > 1:
-			fl.show_message('Sorry, multiple links not supported' \
-				  , '', '')
+			fl.show_message( \
+				'Sorry, multiple links not supported', '', '')
 			return 0
 		dest = destlist[0][1]
 		if destlist[0][0] <> 0:
 			fl.show_message('Sorry, will JUMP anyway', '', '')
 		try:
-			self.seek_node = self.context.mapuid(dest[0])
+			seek_node = self.context.mapuid(dest[0])
 		except NoSuchUIDError:
 			fl.show_message('Dangling hyperlink selected', '', '')
 			return 0
+		while seek_node.GetType() == 'bag':
+			seek_node = choosebagitem(seek_node)
+			if seek_node == None:
+				return 0
+		playroot = findminidocument(seek_node)
 		self.suspend_playing()
-		self.playroot = findminidocument(self.seek_node)
-		self.seeking = (self.playroot <> self.seek_node)
+		self.seek_node = seek_node
+		self.playroot = playroot
+		self.seeking = (playroot <> seek_node)
 		dummy = self.resume_1_playing(1.0)
 		self.resume_2_playing()
 		return 1
+
+
+# Choose an item from a bag, or None if the bag is empty
+# This is a modal dialog!
+# (Also note the similarity with NodeEdit._showmenu...)
+
+def choosebagitem(node):
+	indexname = MMAttrdefs.getattr(node, 'bag_index')
+	children = node.GetChildren()
+	list = []
+	for child in children:
+		name = MMAttrdefs.getattr(child, 'name')
+		if name == '':
+			name = '???'
+		elif name == indexname:
+			return child
+		list.append(child, name)
+	list.reverse() # They are added from bottom to top
+	n = len(list) + 3
+	width = 200
+	butheight = 30
+	height = n*butheight + 10
+	form = fl.make_form(UP_BOX, width, height)
+	cancel = form.add_button(RETURN_BUTTON, \
+		5, 5, width-10, butheight, 'Cancel')
+	cancel.boxtype = FRAME_BOX
+	pos = butheight + 5
+	buttons = []
+	for child, name in list:
+		obj = form.add_button(NORMAL_BUTTON, \
+			5, pos, width-10, butheight, name)
+		obj.boxtype = FRAME_BOX
+		type = child.GetType()
+		if type == 'bag':
+			obj.col1 = 60 # XXX BlockView.BAGCOLOR
+		elif type in leaftypes:
+			obj.col1 = 61 # XXX BlockView.LEAFCOLOR
+		buttons.append(obj)
+		pos = pos + butheight
+	buttons.reverse()
+	prompt = 'Please select an item\nfrom the bag:'
+	obj = form.add_text(NO_BOX, 5, pos, width-10, 2*butheight, prompt)
+	fl.deactivate_all_forms()
+	form.show_form(PLACE_MOUSE, TRUE, 'Choose bag item')
+	choice = fl.do_forms() # Must be one of our buttons
+	form.hide_form()
+	fl.activate_all_forms()
+	if choice is cancel:
+		return None
+	if choice in buttons:
+		i = buttons.index(choice)
+		return children[i]
+	print 'Weird -- not one of our objects was selected:', choice
+	return None
 
 
 # Find the root of a node's mini-document
@@ -832,7 +848,7 @@ def findminidocument(node):
 	if 0 <= i < len(path):
 		return path[i]
 	else:
-		print 'Weird: findminidocroot of bag node'
+		print 'Weird: findminidocument of bag node'
 		return node
 
 
