@@ -756,8 +756,8 @@ class _DisplayList:
 			nlines = max(1, int(height / fontheight))
 			curlines = curlines[:nlines]
 			curlines[-1] = curlines[-1] + '...'
-		x0 = (left + right) / 2	# x center of box
-		y0 = (top + bottom) / 2	# y center of box
+		x0 = left + width / 2	# x center of box
+		y0 = top + height / 2	# y center of box
 		y = y0 - nlines * fontheight / 2
 		for i in range(nlines):
 			str = string.strip(curlines[i])
