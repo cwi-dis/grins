@@ -253,7 +253,7 @@ class Window:
 			if buttons:
 				wnd.setcursor('hand')
 			else:
-				wnd.setcursor('arrow')
+				wnd.setcursor(wnd._cursor)
 			# we handled it
 			return 1
 		return rv
