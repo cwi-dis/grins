@@ -160,6 +160,8 @@ class AudioPlayer:
 			self._wavhdrs.append(hdr)
 
 	def read_more_basic_audio(self):
+		if self._waveout is None:
+			return
 		fmt = self._rdr.getformat()
 		bytesperframe = fmt.getblocksize() / fmt.getfpb()
 		frames = AudioPlayer.wavehdr_size/bytesperframe
@@ -232,6 +234,8 @@ class AudioPlayer:
 		self._rest = data		
 
 	def read_more_mp3_audio(self):
+		if self._waveout is None:
+			return
 		# size of buffer holding encoded data
 		decode_buf_size = AudioPlayer.decode_buf_size	
 
@@ -279,7 +283,11 @@ class AudioPlayer:
 	def stop(self):
 		if self._waveout:
 			self._waveout.Reset()
+			for hdr in self._wavhdrs:
+				hdr.UnprepareHeader(self._waveout)
+			self._wavhdrs = []
 			self._waveout.Close()
+			self._waveout = None
 		if self._u:
 			self._u.close()
 			self._u = None
@@ -300,7 +308,9 @@ class AudioPlayer:
 		if len(self._wavhdrs):
 			hdr = self._wavhdrs[0]
 			del self._wavhdrs[0]
-			hdr.UnprepareHeader(wParam)
+			waveout = winmm.WaveOutFromHandle(wParam)
+			hdr.UnprepareHeader(waveout)
+			waveout.Detach()
 		if len(self._wavhdrs) < AudioPlayer.buffers_low and self._u is not None:
 			self.read_more()
 
