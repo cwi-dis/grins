@@ -941,7 +941,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 	def create_box(self,box):
 		# call create box against layout control but be modeless and cool!
 		self._layoutctrl.assert_not_in_create_box()
-		if box[0]==box[2] or box[1]==box[3]:box=None	
+		if box[2]==0 or box[3]==0:box=None	
 		modeless=1;cool=1
 		self._layoutctrl.create_box('',self.update,box,self._units,modeless,cool)
 		
@@ -1036,7 +1036,6 @@ class PosSizeLayoutPage(LayoutPage):
 		swh=self._wh.getcurrent()
 		if not swh:swh='0 0'
 		val = sxy + ' ' + swh
-		print val
 		box=self.a2tuple(val)
 		box=self.tolayout(box)
 		self.create_box(box)
@@ -1057,7 +1056,6 @@ class PosSizeLayoutPage(LayoutPage):
 		swh=self._wh.getvalue()
 		if not swh:swh='0 0'
 		val= sxy + ' ' + swh
-		print val
 		box=self.a2tuple(val)
 		box=self.tolayout(box)
 		self.create_box(box)
