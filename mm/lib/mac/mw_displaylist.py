@@ -61,6 +61,8 @@ class _DisplayList:
 				d._cloneof = None
 		if win._active_displist is self:
 			win._active_displist = None
+			if self._buttons:
+				win._buttonschanged()
 			if win._transparent == -1 and win._parent:
 				win._parent._clipchanged()
 			if win._wid:
@@ -93,6 +95,14 @@ class _DisplayList:
 		for key, val in self._optimdict.items():
 			new._optimdict[key] = val
 		return new
+		
+	def _get_button_region(self):
+		rgn = Qd.NewRgn()
+		for b in self._buttons:
+			brgn = b._get_button_region()
+			Qd.UnionRgn(rgn, brgn, rgn)
+			Qd.DisposeRgn(brgn)
+		return rgn
 
 	def render(self):
 		#
@@ -106,6 +116,8 @@ class _DisplayList:
 		if window._transparent == -1:
 			window._parent._clipchanged()
 		window._active_displist = self
+		if self._buttons:
+			window._buttonschanged()
 		#
 		# We make one optimization here: if we are a clone
 		# and our parent is the current display list and
@@ -681,3 +693,16 @@ class _Button:
 	def _inside(self, x, y):
 		bx, by, bw, bh = self._coordinates
 		return (bx <= x <= bx+bw and by <= y <= by+bh)
+		
+	def _get_button_region(self):
+		"""Return our region, in global coordinates"""
+		x0, y0, w, h = self._dispobj._window._convert_coordinates(self._coordinates)
+		x1, y1 = x0+w, y0+h
+		x0, y0 = Qd.LocalToGlobal((x0, y0))
+		x1, y1 = Qd.LocalToGlobal((x1, y1))
+		box = x0, y0, x1, y1
+		print 'DBG button', box
+		rgn = Qd.NewRgn()
+		Qd.RectRgn(rgn, box)
+		return rgn
+		

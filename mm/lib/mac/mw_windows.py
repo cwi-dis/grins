@@ -127,6 +127,7 @@ class _CommonWindow:
 		self._bgcolor = parent._bgcolor
 		self._fgcolor = parent._fgcolor
 		self._clip = None
+		self._button_region = None
 		self._active_displist = None
 		self._eventhandlers = {}
 		self._redrawfunc = None
@@ -150,6 +151,14 @@ class _CommonWindow:
 			win.close()
 		for dl in self._displists[:]:
 			dl.close()
+
+		if self._clip:
+			Qd.DisposeRgn(self._clip)
+		del self._clip
+		
+		if self._button_region:
+			Qd.DisposeRgn(self._button_region)
+		del self._button_region
 		
 		del self._subwindows
 		del self._displists
@@ -182,6 +191,14 @@ class _CommonWindow:
 		# And inform our children...
 		for ch in self._subwindows:
 			ch._clipchanged()
+			
+	def _buttonschanged(self):
+		if not self._parent or not self._wid:
+			return
+		if self._button_region:
+			Qd.DisposeRgn(self._button_region)
+		# And inform our parent...
+		self._parent._buttonschanged()
 			
 	def is_closed(self):
 		"""Return true if window is closed"""
@@ -410,27 +427,41 @@ class _CommonWindow:
 			return
 		func(arg, self, (0, 0, 0))
 		
-	def _mouse_over_button(self, where):
-		for ch in self._subwindows:
-			if Qd.PtInRect(where, ch.qdrect()):
-				try:
-					return ch._mouse_over_button(where)
-				except Continue:
-					pass
-		
-		# XXXX Need to cater for html windows and such
-		
-		wx, wy, ww, wh = self._rect
-		x, y = where
-		x = float(x-wx)/ww
-		y = float(y-wy)/wh
+##	def _mouse_over_button(self, where):
+##		for ch in self._subwindows:
+##			if Qd.PtInRect(where, ch.qdrect()):
+##				try:
+##					return ch._mouse_over_button(where)
+##				except Continue:
+##					pass
+##		
+##		# XXXX Need to cater for html windows and such
+##		
+##		wx, wy, ww, wh = self._rect
+##		x, y = where
+##		x = float(x-wx)/ww
+##		y = float(y-wy)/wh
+##
+##		if self._active_displist:
+##			for b in self._active_displist._buttons:
+##				if b._inside(x, y):
+##					return 1
+##		return 0
 
-		if self._active_displist:
-			for b in self._active_displist._buttons:
-				if b._inside(x, y):
-					return 1
-		return 0
-		
+	def _get_button_region(self):
+		"""Return the region that contains all buttons, in global coordinates"""
+		if not self._button_region:
+			self._button_region = Qd.NewRgn()
+			for ch in self._subwindows:
+				rgn = ch._get_button_region()
+				Qd.UnionRgn(self._button_region, rgn, self._button_region)
+			if self._active_displist:
+				rgn = self._active_displist._get_button_region()
+				# XXXX Should we AND with clip?
+				Qd.UnionRgn(self._button_region, rgn, self._button_region)
+				Qd.DisposeRgn(rgn)
+		return self._button_region
+				
 	def _contentclick(self, down, where, event, shifted):
 		"""A click in our content-region. Note: this method is extended
 		for top-level windows (to do global-to-local coordinate
@@ -453,6 +484,7 @@ class _CommonWindow:
 		if shifted and self._popupmenu:
 			# Convert coordinates back to global
 			Qd.SetPort(self._wid)
+			# XXXX Is this correct? y, x??
 			y, x = Qd.LocalToGlobal(where)
 			self._popupmenu.popup(x, y, event, window=self)
 			return
@@ -587,6 +619,15 @@ class _CommonWindow:
 		"""Start drawing (by upper layer) in this window"""
 		Qd.SetPort(self._wid)
 		
+def calc_extra_size(adornments, canvassize):
+	"""Return the number of pixels needed for toolbar and scrollbars"""
+	extraw = 0
+	extrah = 0
+	if adornments and adornments.has_key('toolbar'):
+		resid, height = MenuTemplate.TOOLBAR
+		extrah = extrah + height
+	# XXXX Add scrollbar size if applicable
+	return extraw, extrah
 		
 class _ScrollMixin:
 	"""Mixin class for scrollable/resizable toplevel windows"""
@@ -648,10 +689,6 @@ class _AdornmentsMixin:
 	def _add_addornments(self, adornments):
 		if not adornments:
 			return
-		if 0:
-			x, y, w, h = self._rect
-			xo, yo, wo, ho = adornments['offset']
-			self._rect = x+xo, y+yo, w+wo, h+ho
 		if adornments.has_key('toolbar'):
 			#
 			# Create the buttons
@@ -673,6 +710,11 @@ class _AdornmentsMixin:
 				print 'CNTL resource %d not found: %s'%(resid, arg)
 			cntl.HiliteControl(255)
 			self._cmd_to_cntl[None] = cntl
+			#
+			# Adjust window bounds
+			#
+			x, y, w, h = self._rect
+			self._rect = x, y+height, w, h-height
 				
 	def close(self):
 		del self._cmd_to_cntl
@@ -782,6 +824,7 @@ class _Window(_CommonWindow, _WindowGroup, _ScrollMixin, _AdornmentsMixin):
 		if not self._wid or not self._parent:
 			return
 		self._wid.SelectWindow()
+		self._parent._buttonschanged()
 
 	def push(self):
 		"""Push window to bottom of window stack"""
@@ -829,7 +872,7 @@ class _Window(_CommonWindow, _WindowGroup, _ScrollMixin, _AdornmentsMixin):
 				Qd.RectRgn(r, w.qdrect())
 				Qd.DiffRgn(self._clip, r, self._clip)
 				Qd.DisposeRgn(r)
-
+				
 	def _redraw(self, rgn=None):
 		_CommonWindow._redraw(self, rgn)
 		if rgn is None:
