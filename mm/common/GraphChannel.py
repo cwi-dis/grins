@@ -62,11 +62,11 @@ class GraphChannel(ChannelWindow):
 				else:
 					d[:0] = d2
 		self.ranges = (0, length-1, miny, maxy)
-		if axis_x > 0:
-			self.do_xaxis(axis_x)
-		if axis_y > 0:
-			self.do_yaxis(axis_y)
 		tp = MMAttrdefs.getattr(node, 'gtype')
+		if axis_x >= 0:
+			self.do_xaxis(axis_x, (tp in ('bar', 'hline')))
+		if axis_y >= 0:
+			self.do_yaxis(axis_y)
 		if tp == 'line':
 			self.do_line(node)
 		elif tp == 'hline':
@@ -77,15 +77,15 @@ class GraphChannel(ChannelWindow):
 			self.errormsg('Unknown graphtype '+tp)
 		return 1
 
-	def do_xaxis(self, step):
+	def do_xaxis(self, step, isbar):
 		minx, maxx, miny, maxy = self.ranges
-		xstepsize = XRANGE / (maxx-minx)
+		xstepsize = XRANGE / (maxx-minx+isbar)
 		ystepsize = YRANGE / (maxy-miny)
 		y = maxy*ystepsize
 		y = y+YOFF
 		self.armed_display.drawline((0,0,0), [(XOFF, y),
 						      (1.0-XOFF, y)])
-		i = minx
+		i = int(minx/step)*step
 		while i <= maxx:
 			self.armed_display.drawline((0,0,0),
 				[(i*xstepsize+XOFF, y),
@@ -98,11 +98,11 @@ class GraphChannel(ChannelWindow):
 		ystepsize = YRANGE / (maxy-miny)
 		x = XOFF
 		self.armed_display.drawline((0,0,0),[(x, YOFF), (x, 1.0-YOFF)])
-		i = miny
+		i = int(miny/step)*step
 		while i <= maxy:
 			self.armed_display.drawline((0,0,0),
-				[(x, i*ystepsize+YOFF),
-				 (x-0.025, i*ystepsize+YOFF)])
+				[(x, (maxy-i)*ystepsize+YOFF),
+				 (x-0.025, (maxy-i)*ystepsize+YOFF)])
 			i = i + step
 
 	def do_line(self, node):
@@ -141,7 +141,7 @@ class GraphChannel(ChannelWindow):
 			for yorg in d:
 				if yorg <> None:
 					ytop = YOFF+(maxy-yorg)*ystepsize
-					ysize = (yorg-miny)*ystepsize
+					ysize = yorg*ystepsize
 					self.armed_display.drawfbox(c,
 						  (x, ytop, xsmallstep, ysize))
 				x = x + xstepsize
