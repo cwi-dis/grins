@@ -1,3 +1,9 @@
+# XXXX Movie disposal
+# XXXX Resizing
+# XXXX Stop play
+# XXXX Pause play
+# XXXX ExitMovies?
+#
 from Channel import ChannelWindow
 import windowinterface
 import time
@@ -6,7 +12,7 @@ import os
 import Qt
 import QuickTime
 
-debug = os.environ.has_key('CHANNELDEBUG')
+debug = 1 # os.environ.has_key('CHANNELDEBUG')
 
 class MovieChannel(ChannelWindow):
 	def __repr__(self):
@@ -18,6 +24,7 @@ class MovieChannel(ChannelWindow):
 		self.arm_movie = None
 		self.play_movie = None
 		self.has_callback = 0
+		self.idleprocactive = 0
 		Qt.EnterMovies()
 
 	def do_arm(self, node, same=0):
@@ -31,7 +38,6 @@ class MovieChannel(ChannelWindow):
 
 		movieResRef = Qt.OpenMovieFile(fn, 1)
 		self.arm_movie, dummy = Qt.NewMovieFromFile(movieResRef, QuickTime.newMovieActive)
-
 		return 1
 		
 	def _playsome(self, *dummy):
@@ -60,9 +66,9 @@ class MovieChannel(ChannelWindow):
 		self.window._macsetwin()
 		screenBox = self.window.qdrect()
 		movieBox = self.play_movie.GetMovieBox()
-		print 'SCREEN', screenBox, 'MOVIE', movieBox
+##		print 'SCREEN', screenBox, 'MOVIE', movieBox
 		movieBox = self._scalerect(screenBox, movieBox)
-		print 'SET', movieBox
+##		print 'SET', movieBox
 		self.play_movie.SetMovieBox(movieBox)
 		self.play_movie.GoToBeginningOfMovie()
 		self.play_movie.MoviesTask(0)
@@ -101,6 +107,13 @@ class MovieChannel(ChannelWindow):
 		self.do_play(node)
 		self.armdone()
 
+	def resize(self, arg, window, event, value):
+		print 'MovieChannel: Resized, this will go wrong....'
+		ChannelWindow.resize(self, arg, window, event, value)
+
+	def do_hide(self):
+		self.arm_movie = None
+		
 	def playstop(self):
 		if debug: print 'MovieChannel: playstop'
 		pass # XXXX Stop playing
