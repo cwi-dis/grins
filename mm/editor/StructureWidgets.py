@@ -16,8 +16,6 @@ TIMELINE_IN_FOCUS = 1
 ICONSIZE = windowinterface.ICONSIZE_PXL
 ARROWCOLOR = (0,255,0)
 
-print "TODO: remove circular references here."
-
 ######################################################################
 # Create new widgets
 
@@ -73,7 +71,6 @@ def create_MMNode_widget(node, mother):
 class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and the base class for a MMNode view.
 	# View of every MMNode within the Hierarchy view
 	def __init__(self, node, mother):
-		#print "DEBUG: MMNodeWidget created:", self
 		Widgets.Widget.__init__(self, mother)
 		self.node = node			   # : MMNode
 		assert isinstance(node, MMNode.MMNode)
@@ -105,6 +102,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			del self.node.views['struct_view']
 			del self.node.set_infoicon
 			self.node = None
+		self.set_infoicon = None
 
 	def adddependencies(self):
 		self.is_timed = 1
@@ -324,6 +322,7 @@ class MMWidgetDecoration(Widgets.Widget):
 		Widgets.Widget.__init__(self, mother)
 	def destroy(self):
 		self.mmwidget = None
+		Widgets.Widget.destroy(self)
 	def get_mmwidget(self):
 		return self.mmwidget
 
@@ -372,8 +371,16 @@ class StructureObjWidget(MMNodeWidget):
 #		return "Abstract class StructureObjWidget, name = " + self.name
 
 	def destroy(self):
-		MMNodeWidget.destroy(self)
+		if self.children:
+			for i in self.children:
+				i.destroy()
 		self.children = None
+		if self.collapsebutton: self.collapsebutton.destroy()
+		self.collapsebutton = None
+		if self.parent_widget: self.parent_widget = None
+		if self.timeline: self.timeline.destroy()
+		self.timeline = None
+		MMNodeWidget.destroy(self)
 
 	def select(self):
 		if self.mother.timescale in ('focus', 'cfocus'):
@@ -910,7 +917,6 @@ class SeqWidget(HorizontalWidget):
 	# Any sequence node.
 	HAS_CHANNEL_BOX = 0
 	def __init__(self, node, mother):
-		mother.debug_arrow = self # debug: TODO: remove.
 		HorizontalWidget.__init__(self, node, mother)
 		has_drop_box = not MMAttrdefs.getattr(node, 'project_readonly')
 		if mother.usetimestripview and has_drop_box:
@@ -924,6 +930,13 @@ class SeqWidget(HorizontalWidget):
 
 #	def __repr__(self):
 #		return "Seq, name = " + self.name
+
+	def destroy(self):
+		HorizontalWidget.destroy(self)
+		if self.dropbox: self.dropbox.destroy()
+		self.dropbox = None
+		if self.channelbox: self.channelbox.destroy()
+		self.channelbox = None
 
 	def get_obj_at(self, pos):
 		if self.channelbox is not None and self.channelbox.is_hit(pos):
@@ -1018,8 +1031,8 @@ class UnseenVerticalWidget(StructureObjWidget):
 	# The top level par that doesn't get drawn.
 	HAS_COLLAPSE_BUTTON = 0
 
-	def __init__(self, node, mother):
-		StructureObjWidget.__init__(self, node, mother)
+#	def __init__(self, node, mother):
+#		StructureObjWidget.__init__(self, node, mother)
 			
 ##	def __repr__(self):
 ##		return "UnseenVerticalWidget, name = "+self.name
@@ -1242,10 +1255,10 @@ class MediaWidget(MMNodeWidget):
 		self.iconbox.setup()
 
 		# DEBUG:
-		i1 = self.iconbox.add_icon('linksrc').set_properties(arrowable = 1,selectable=1)
-		self.iconbox.add_icon('linksrcdst').add_arrow(i1).set_properties(arrowable = 1,selectable=1)
-		(self.iconbox.add_icon('transout')).add_arrow(self.mother.debug_arrow).set_properties(arrowable=1,selectable=1)
-		self.mother.debug_arrow = i1
+		#i1 = self.iconbox.add_icon('linksrc').set_properties(arrowable = 1,selectable=1)
+		#self.iconbox.add_icon('linksrcdst').add_arrow(i1).set_properties(arrowable = 1,selectable=1)
+		#(self.iconbox.add_icon('transout')).add_arrow(self.mother.debug_arrow).set_properties(arrowable=1,selectable=1)
+		#self.mother.debug_arrow = i1
 
 		self.node.views['struct_view'] = self
 
@@ -1255,6 +1268,12 @@ class MediaWidget(MMNodeWidget):
 	def destroy(self):
 		# Remove myself from the MMNode view{} dict.
 		MMNodeWidget.destroy(self)
+		if self.iconbox: self.iconbox.destroy()
+		self.iconbox = None
+		if self.transition_in: self.transition_in.destroy()
+		self.transistion_in = None
+		if self.transition_out: self.transition_out.destroy()
+		self.transition_out = None
 
 	def is_hit(self, pos):
 		hit = self.transition_in.is_hit(pos) or \
@@ -1426,6 +1445,10 @@ class TransitionWidget(MMWidgetDecoration):
 		self.in_or_out = inorout
 		self.parent = parent
 
+	def destroy(self):
+		self.parent = None
+		MMWidgetDecoration.destroy(self)
+
 	def select(self):
 		# XXXX Note: this code assumes the select() is done on mousedown, and
 		# that we can still post a menu at this time.
@@ -1530,11 +1553,18 @@ class Icon(MMWidgetDecoration):
 	def setup(self):
 		self.callback = None
 		self.arrowto = None	# another MMWidget.
+		self.icon = ""
 		
 		# Enable / disable.
 		self.callbackable = 1
 		self.selectable = 1
 		self.arrowable = 0
+
+	def destroy(self):
+		MMWidgetDecoration.destroy(self)
+		self.callback = None
+		self.arrowto = None
+
 	def set_icon(self, iconname):
 		self.icon = iconname
 		return self
@@ -1671,6 +1701,13 @@ class IconBox(MMWidgetDecoration):
 		self.iconlist = []	# a list of icon names, the order is kept.
 		self.remember_click = (0,0)
 		self.selected_iconname = None
+
+	def destroy(self):
+		for iconname in self.iconlist:
+			self._icons[iconname].destroy()
+		self._icons = None
+		MMWidgetDecoration.destroy(self)
+
 	def add_icon(self, iconname, callback=None, contextmenu=None, arrowto=None):
 		# iconname - name of an icon, decides which icon to use.
 		# callback - function to call when icon is clicked on.
