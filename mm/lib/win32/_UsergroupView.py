@@ -22,7 +22,7 @@ the run time GRiNSRes.dll
 import win32ui,win32con,win32api
 
 # win32 lib modules
-import win32mu,components
+import win32mu, components, win32dialog
 
 # std mfc windows stuf
 from pywin.mfc import window,object,docview,dialog
@@ -122,9 +122,9 @@ class _UsergroupView(GenFormView):
 
 
 
-class UsergroupEditDialog(components.ResDialog,components.ControlsDict):
+class UsergroupEditDialog(win32dialog.ResDialog,components.ControlsDict):
 	def __init__(self,parent=None):
-		components.ResDialog.__init__(self,grinsRC.IDD_EDIT_USERGROUP,parent)
+		win32dialog.ResDialog.__init__(self,grinsRC.IDD_EDIT_USERGROUP,parent)
 		components.ControlsDict.__init__(self)
 		self['Name']=components.Edit(self,grinsRC.IDC_EDIT1)
 		self['Title']=components.Edit(self,grinsRC.IDC_EDIT2)
