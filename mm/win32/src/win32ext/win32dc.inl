@@ -96,6 +96,39 @@ ui_dc_exclude_clip_rect(PyObject *self, PyObject *args)
 	return Py_BuildValue("i",r);
 	}
 
+// @pymethod object|PyCDC|SelectStockObject|Selects a CGdiObject object that corresponds to one of the predefined stock pens, brushes, or fonts.<nl>
+static PyObject *
+ui_dc_select_stock_object(PyObject *self, PyObject *args)
+{
+	CDC *pDC = ui_dc_object::GetDC(self);
+	if (!pDC) return NULL;
+  
+	int index;
+	if (!PyArg_ParseTuple (args, "i", &index))
+		return NULL;
+
+	if(index == BLACK_PEN || index == NULL_PEN || index == WHITE_PEN)
+		{
+		GUI_BGN_SAVE;
+		CGdiObject* pPen = pDC->SelectStockObject(index);
+		GUI_END_SAVE;
+		ui_pen_object *ret = (ui_pen_object *)ui_assoc_object::make (ui_pen_object::type, pPen);
+		if (ret) ret->m_deleteObject = FALSE;
+		return ret;
+		}
+	else if(index == BLACK_BRUSH || index == DKGRAY_BRUSH || index == GRAY_BRUSH || index == HOLLOW_BRUSH
+		|| index == LTGRAY_BRUSH || NULL_BRUSH || WHITE_BRUSH)
+		{
+		GUI_BGN_SAVE;
+		CGdiObject* pBrush = pDC->SelectStockObject(index);
+		GUI_END_SAVE;
+		PyCBrush *ret = (PyCBrush *)ui_assoc_object::make (PyCBrush::type, pBrush);
+		if (ret) ret->m_deleteObject = FALSE;
+		return ret;
+		}
+	RETURN_ERR ("Attempt to select unsupported stock object type.");
+}
+
 
 /*
 // @mfcproto virtual int IntersectClipRect( LPCRECT lpRect );
@@ -358,6 +391,7 @@ ui_dc_stretch_blt (PyObject *self, PyObject *args)
 }
 */
 
+
 // @pymeth FrameRectFromHandle|Draws a border around the rectangle specified by rect
 // @pymeth SelectObjectFromHandle|Selects an object into the DC from its handle.
 // @pymeth SetPolyFillMode|Sets the polygon-filling mode.
@@ -366,9 +400,11 @@ ui_dc_stretch_blt (PyObject *self, PyObject *args)
 // @pymeth SelectClipRgn|Selects the given region as the current clipping region for the device context
 // @pymeth Rectangle|Draws a rectangle using the current pen. The interior of the rectangle is filled using the current brush. 
 // @pymeth DrawText|Formats text in the given rectangle
+// @pymethod SelectStockObject|Selects a CGdiObject object that corresponds to one of the predefined stock pens, brushes, or fonts.<nl>
 #define DEF_NEW_PY_METHODS \
 	{"FrameRectFromHandle", ui_dc_framerect_from_handle, 1},\
 	{"SelectObjectFromHandle",	ui_dc_select_object_from_handle,1},\
+	{"SelectStockObject",ui_dc_select_stock_object,1},\
 	{"PaintRgn",ui_dc_paint_rgn,1},\
 	{"ExcludeClipRect", ui_dc_exclude_clip_rect,1},\
 	{"Detach",	ui_dc_detach,1},
@@ -381,6 +417,7 @@ ui_dc_stretch_blt (PyObject *self, PyObject *args)
 	{"Rectangle",ui_dc_rectangle,1},\
 	{"IntersectClipRect",ui_dc_intersect_clip_rect,1},\
 	{"StretchBlt",ui_dc_stretch_blt,1},\
-	{"DrawText",ui_dc_draw_text,1},*/
+	{"DrawText",ui_dc_draw_text,1},
+*/
 
 
