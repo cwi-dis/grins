@@ -28,6 +28,7 @@ class CHtmlWnd: public CWnd
 		CCreateContext* pContext = NULL);
 	BOOL CreateHtmlCtrl();
 	void DestroyHtmlCtrl();
+	void FitHtmlCtrl();
 
 	public:
 	// Events
@@ -54,14 +55,16 @@ class CHtmlWnd: public CWnd
 		DWORD dwPostDataLen = 0);
 
 	public:
-	CHtmlWnd():m_pBrowser(NULL){}
+	CHtmlWnd():m_pBrowser(NULL),m_isclient(false){}
 	virtual ~CHtmlWnd(){RELEASE(m_pBrowser);}
 	CWnd m_wndBrowser;
 	IWebBrowser* m_pBrowser;
+	bool m_isclient;
 
 	// custom support
 	CString m_foreignUrl;
 	LPCTSTR GetForeignUrl(){return m_foreignUrl;}
+	void SetClient(bool b){m_isclient=b;}
 
 	// Generated message map functions
 	protected:
@@ -99,17 +102,7 @@ void CHtmlWnd::OnDestroy()
 void CHtmlWnd::OnSize(UINT nType, int cx, int cy)
 	{
 	CWnd::OnSize(nType, cx, cy);
-
-	if (::IsWindow(m_wndBrowser.m_hWnd))
-		{
-		// need to push non-client borders out of the client area
-		CRect rect;
-		GetClientRect(rect);
-		::AdjustWindowRectEx(rect,
-			m_wndBrowser.GetStyle(), FALSE, WS_EX_CLIENTEDGE);
-		m_wndBrowser.SetWindowPos(NULL, rect.left, rect.top,
-			rect.Width(), rect.Height(), SWP_NOACTIVATE | SWP_NOZORDER);
-		}
+	FitHtmlCtrl();
 	}
 
 void CHtmlWnd::OnPaint()
@@ -240,6 +233,25 @@ void CHtmlWnd::DestroyHtmlCtrl()
 		}
 	}
 
+
+void CHtmlWnd::FitHtmlCtrl()
+	{
+	if (::IsWindow(m_wndBrowser.m_hWnd))
+		{
+		// need to push non-client borders out of the client area
+		CRect rect;
+		GetClientRect(rect);
+		::AdjustWindowRectEx(rect,
+			m_wndBrowser.GetStyle(), FALSE, WS_EX_CLIENTEDGE);
+		if(m_isclient)
+			m_wndBrowser.SetWindowPos(NULL, rect.left, rect.top,
+				rect.Width(), rect.Height(), SWP_NOACTIVATE | SWP_NOZORDER);
+		else
+			m_wndBrowser.SetWindowPos(NULL, rect.left+2, rect.top+2,
+				rect.Width()-4, rect.Height()-4, SWP_NOACTIVATE | SWP_NOZORDER);
+		}
+	}
+
 void CHtmlWnd::Navigate(LPCTSTR lpszURL, DWORD dwFlags /* = 0 */,
 	LPCTSTR lpszTargetFrameName /* = NULL */ ,
 	LPCTSTR lpszHeaders /* = NULL */, LPVOID lpvPostData /* = NULL */,
@@ -278,15 +290,8 @@ class PYW_EXPORT PyCHtmlWnd : public PyCWnd
 	static ui_type_CObject type;
 	};
 
-///////////////////////////////////////////////////////////
-//////////// PYTHON MODULE
-// Purpose: This module exports a window capable to host an Html control and
-// receive notifications from it.  
 
 // static mapping helper between c++ obj and python obj
-// internal function that returns a pointer to a CHtmlWnd fron a Python pointer to a PyCHtmlWnd
-// Arguments: a PyCHtmlWnd object
-// Return Values: the coresponding CHtmlWnd object
 CHtmlWnd* PyCHtmlWnd::GetHtmlWndPtr(PyObject *self)
 	{
 	return (CHtmlWnd *)PyCWnd::GetPythonGenericWnd(self, &PyCHtmlWnd::type);
@@ -295,10 +300,6 @@ CHtmlWnd* PyCHtmlWnd::GetHtmlWndPtr(PyObject *self)
 //////////////////////////////////////////////////////
 // dublet creation function: c++/mfc and Python respective object
 // @pymethod <o PyCHtmlWnd>|win32ui|CreateHtmlWnd
-
-// Create the CHtmlWnd object
-// Arguments: No
-// Return Values: a PyCHtmlWnd object
 PyObject *
 py_create_html_wnd(PyObject *self, PyObject *args)
 	{
@@ -311,8 +312,6 @@ py_create_html_wnd(PyObject *self, PyObject *args)
 //////////////////////////////////////////////////////
 // Python object methods implemented by delegating to the coresponding c++/mfc object
 // @pymethod |PyCHtmlWnd|CreateWindow|Creates the actual window
-// Arguments: std creation parameters
-// Return Values: None
 static PyObject *
 py_create_window(PyObject *self, PyObject *args)
 	{
@@ -361,8 +360,6 @@ py_create_window(PyObject *self, PyObject *args)
 	}
 
 // @pymethod |PyCHtmlWnd|Navigate|Navigate to url
-// Arguments: the url to navigate to
-// Return Values: None
 static PyObject *
 py_navigate(PyObject *self, PyObject *args)
 	{
@@ -386,10 +383,41 @@ py_navigate(PyObject *self, PyObject *args)
 
 	RETURN_NONE;
 	}
+// @pymethod |PyCHtmlWnd|Refresh|Refresh 
+static PyObject *
+py_refresh(PyObject *self, PyObject *args)
+	{
+	CHtmlWnd *pHtmlWnd=PyCHtmlWnd::GetHtmlWndPtr(self);
+	if(pHtmlWnd==NULL) return NULL;
 
-// @pymethod |PyCHtmlWnd|GetForeignUrl|Returns the foreign Url
-// Arguments: No
-// Return Values: The foreign Url
+
+	GUI_BGN_SAVE;
+	if(pHtmlWnd->m_pBrowser!=NULL)
+		pHtmlWnd->m_pBrowser->Refresh();
+	GUI_END_SAVE;
+	RETURN_NONE;
+	}
+
+
+// @pymethod |PyCHtmlWnd|SetClient|Sets a flag used for proper resizing
+static PyObject *
+py_set_client(PyObject *self, PyObject *args)
+	{
+	int isclient;
+	if(!PyArg_ParseTuple(args, "i", &isclient))
+		return NULL;
+
+	CHtmlWnd *pHtmlWnd=PyCHtmlWnd::GetHtmlWndPtr(self);
+	if(pHtmlWnd==NULL) return NULL;
+
+
+	GUI_BGN_SAVE;
+	pHtmlWnd->SetClient((isclient!=0));
+	GUI_END_SAVE;
+	RETURN_NONE;
+	}
+
+// @pymethod |PyCHtmlWnd|GetForeignUrl|
 static PyObject *
 py_get_foreign_url(PyObject *self, PyObject *args)
 	{
@@ -399,9 +427,7 @@ py_get_foreign_url(PyObject *self, PyObject *args)
 	return Py_BuildValue("s",pHtmlWnd->GetForeignUrl());
 	}
 
-// @pymethod |PyCHtmlWnd|CreateHtmlCtrl|Create the Html control
-// Arguments: No
-// Return Values: None
+// @pymethod |PyCHtmlWnd|CreateHtmlCtrl|
 static PyObject *
 py_create_html_ctrl(PyObject *self, PyObject *args)
 	{
@@ -419,9 +445,7 @@ py_create_html_ctrl(PyObject *self, PyObject *args)
 	RETURN_NONE;
 	}
 
-// @pymethod |PyCHtmlWnd|DestroyHtmlCtrl|Destroy the Html control
-// Arguments: No
-// Return Values: None
+// @pymethod |PyCHtmlWnd|DestroyHtmlCtrl|
 static PyObject *
 py_destroy_html_ctrl(PyObject *self, PyObject *args)
 	{
@@ -436,14 +460,33 @@ py_destroy_html_ctrl(PyObject *self, PyObject *args)
 	RETURN_NONE;
 	}
 
+// @pymethod |PyCHtmlWnd|FitHtmlCtrl|
+static PyObject *
+py_fit_html_ctrl(PyObject *self, PyObject *args)
+	{
+	CHECK_NO_ARGS(args);
+	CHtmlWnd *pHtmlWnd=PyCHtmlWnd::GetHtmlWndPtr(self);
+	if(pHtmlWnd==NULL) return NULL;
+
+	GUI_BGN_SAVE;
+	pHtmlWnd->FitHtmlCtrl();
+	GUI_END_SAVE;
+
+	RETURN_NONE;
+	}
+
+//	{"CreateWindow",py_create_window,1}, // @pymeth CreateWindow|Create the underlying window object
 
 //////////////////////////////////////////////////////
 // @object PyCHtmlWnd|
 static struct PyMethodDef PyCHtmlWnd_methods[] = {
 	{"Navigate",py_navigate,1},
+	{"Refresh",py_refresh,1},
+	{"SetClient",py_set_client,1},
 	{"GetForeignUrl",py_get_foreign_url,1},
 	{"CreateHtmlCtrl",py_create_html_ctrl,1},
 	{"DestroyHtmlCtrl",py_destroy_html_ctrl,1},
+	{"FitHtmlCtrl",py_fit_html_ctrl,1},
 	{NULL,NULL,1}		
 };
 
