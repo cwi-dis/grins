@@ -64,9 +64,7 @@ class PlayerCore(Selecter, PlayerCommon):
 			if self.playing:
 				return
 
-		# remove temporary
-		# playability is not inherited by new renderers
-		#self.mustCheckRenderer = 1
+		self.mustCheckRenderer = 1
 		
 		self.checkchannels()
 		if self.showing:
@@ -248,12 +246,7 @@ class PlayerCore(Selecter, PlayerCommon):
 					continue
 				self.newchannel(name, attrdict)
 				i = self.context.channelnames.index(name)
-				self.channelnames.insert(i, name)
-		
-	def checkRendererChannels(self):
-		self.clearRendererChannels()
-		self.makeRendererChannels()
-		
+				self.channelnames.insert(i, name)			
 			
 	#
 	def checkchannels(self):
