@@ -234,7 +234,7 @@ def getinfo(filename):
 		return f, 1, 0, 1, 8000, 'error'
 	return a.getfp(), a.getnchannels(), a.getnframes(), a.getsampwidth(), a.getframerate(), 'AIFF'
 
-def prepare(f, nchannels, nsampframes, sampwidth, samprate, format):
+def prepare((f, nchannels, nsampframes, sampwidth, samprate, format)):
 	pass
 
 

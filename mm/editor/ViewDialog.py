@@ -33,3 +33,10 @@ class ViewDialog:
 			self.root.SetAttr(name + 'winsize', (width, height))
 		MMAttrdefs.flushcache(self.root)
 	#
+	def getfocus(self):
+		# views can override this to return their focus node
+		return None
+	#
+	def globalsetfocus(self, node):
+		# views can override this to allow their focus to be 'pushed'
+		pass

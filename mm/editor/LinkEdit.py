@@ -311,7 +311,7 @@ class LinkEdit(ViewDialog, BasicDialog):
 		except NoSuchUIDError:
 			print 'LinkEdit: anchor with unknown node UID!'
 			return
-		self.toplevel.blockview.globalsetfocus(node)
+		self.toplevel.hierarchyview.globalsetfocus(node)
 		self.toplevel.channelview.globalsetfocus(node)
 	#
 	def menu_callback(self, menu, str):
@@ -328,7 +328,7 @@ class LinkEdit(ViewDialog, BasicDialog):
 			else:
 				str.fillfunc = self.fill_node
 		elif ind == M_BVFOCUS:
-			str.node = self.GetBlockViewFocus()
+			str.node = self.GetHierarchyViewFocus()
 			if str.node == None:
 				str.fillfunc = self.fill_none
 			else:
@@ -409,8 +409,8 @@ class LinkEdit(ViewDialog, BasicDialog):
 	def GetTimeChartFocus(self):
 		return self.toplevel.channelview.getfocus()
 
-	def GetBlockViewFocus(self):
-		return self.toplevel.blockview.getfocus()
+	def GetHierarchyViewFocus(self):
+		return self.toplevel.hierarchyview.getfocus()
 
 #
 # General functions
