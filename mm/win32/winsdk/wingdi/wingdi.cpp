@@ -12,39 +12,11 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "utils.h"
 
-static PyObject *ErrorObject;
+#include "wingdi_main.h"
+#include "wingdi_dc.h"
+#include "wingdi_rgn.h"
 
-static void seterror(const char *msg){PyErr_SetString(ErrorObject, msg);}
-static void seterror(const char *funcname, const char *msg)
-	{
-	PyErr_Format(ErrorObject, "%s failed, %s", funcname, msg);
-	PyErr_SetString(ErrorObject, msg);
-	}
-static void seterror(const char *funcname, DWORD err)
-{
-	char* pszmsg;
-	FormatMessage( 
-		 FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		 NULL,
-		 err,
-		 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-		 (LPTSTR) &pszmsg,
-		 0,
-		 NULL 
-		);
-	PyErr_Format(ErrorObject, "%s failed, error = %x, %s", funcname, err, pszmsg);
-	LocalFree(pszmsg);
-}
-
-////////////////////////////////////////
-struct EnhMetaFileObject
-	{
-	PyObject_HEAD
-	HENHMETAFILE ob_itself;
-	static void InitInstance(EnhMetaFileObject *p){p->ob_itself = NULL;}
-	void Release(){if(ob_itself!=NULL) DeleteEnhMetaFile(ob_itself);}
-	};
-staticforward python_type_object<EnhMetaFileObject> EnhMetaFileType;
+PyObject *ErrorObject;
 
 ////////////////////////////////////////
 static char SetWorldTransform__doc__[] =
@@ -1091,40 +1063,6 @@ CreateFontIndirect(PyObject *self, PyObject *args)
 	return Py_BuildValue("i", hfont);
 }
 
-static char CreateRectRgn__doc__[] =
-"creates a rectangular region"
-;
-static PyObject*
-CreateRectRgn(PyObject *self, PyObject *args)
-{
-	RECT rc;
-	if (!PyArg_ParseTuple(args, "(iiii)", &rc.left, &rc.top, &rc.right, &rc.bottom))
-		return NULL;
-	HRGN hrgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
-	if(hrgn==0){
-		seterror("CreateRectRgn", GetLastError());
-		return NULL;
-		}
-	return Py_BuildValue("i", hrgn);
-}
-
-static char PathToRegion__doc__[] =
-"creates a region from the path that is selected into the specified device context"
-;
-static PyObject*
-PathToRegion(PyObject *self, PyObject *args)
-{
-	HDC hdc;
-	if (!PyArg_ParseTuple(args, "i", &hdc))
-		return NULL;
-	HRGN hrgn = PathToRegion(hdc);
-	if(hrgn==0){
-		seterror("PathToRegion", GetLastError());
-		return NULL;
-		}
-	return Py_BuildValue("i", hrgn);
-}
-
 static char SelectClipRgn__doc__[] =
 "selects a region as the current clipping region"
 ;
@@ -1132,10 +1070,10 @@ static PyObject*
 SelectClipRgn(PyObject *self, PyObject *args)
 {
 	HDC hdc;
-	HRGN hrgn;
-	if (!PyArg_ParseTuple(args, "ii", &hdc, &hrgn))
+	PyObject *rgn;
+	if (!PyArg_ParseTuple(args, "iO", &hdc, &rgn))
 		return NULL;
-	int res = SelectClipRgn(hdc, hrgn);
+	int res = SelectClipRgn(hdc, GetHandleFromPyRgn(rgn));
 	return Py_BuildValue("i", res);
 }
 
@@ -1146,10 +1084,10 @@ static PyObject*
 PaintRgn(PyObject *self, PyObject *args)
 {
 	HDC hdc;
-	HRGN hrgn;
-	if (!PyArg_ParseTuple(args, "ii", &hdc, &hrgn))
+	PyObject *rgn;
+	if (!PyArg_ParseTuple(args, "iO", &hdc, &rgn))
 		return NULL;
-	BOOL res = PaintRgn(hdc, hrgn);
+	BOOL res = PaintRgn(hdc, GetHandleFromPyRgn(rgn));
 	if(!res){
 		seterror("PaintRgn", GetLastError());
 		return NULL;
@@ -1158,70 +1096,12 @@ PaintRgn(PyObject *self, PyObject *args)
 	return Py_None;
 }
 
-static char PtInRegion__doc__[] =
-"determines whether the specified point is inside the region"
-;
-static PyObject*
-PtInRegion(PyObject *self, PyObject *args)
-{
-	HRGN hrgn;
-	int x, y;
-	if (!PyArg_ParseTuple(args, "i(ii)", &hrgn, &x, &y))
-		return NULL;
-	BOOL res = PtInRegion(hrgn, x, y);
-	return Py_BuildValue("i", res);
-}
-
-//////////////////////////////////////////////
-// EnhMetaFile
-
-static char GetEnhMetaFile__doc__[] =
-"opens an enhanced metafile"
-;
-static PyObject*
-GetEnhMetaFile(PyObject *self, PyObject *args)
-{
-	char *filename;
-	if (!PyArg_ParseTuple(args, "s", &filename))
-		return NULL;
-	EnhMetaFileObject *obj = EnhMetaFileType.CreateInstance();
-	if(obj == NULL) return NULL;
-	obj->ob_itself = GetEnhMetaFile(filename);
-	if(obj->ob_itself == NULL){
-		seterror("GetEnhMetaFile", GetLastError());
-		return NULL;
-		}
-	return (PyObject*)obj;
-}
-
-static char EnhMetaFile_Play__doc__[] =
-"displays the picture stored in the enhanced-format metafile"
-;
-static PyObject* EnhMetaFile_Play(EnhMetaFileObject *self, PyObject *args)
-{
-	HDC hdc;
-	RECT rc;
-	if (!PyArg_ParseTuple(args, "i(iiii)", &hdc, &rc.left, &rc.top, &rc.right, &rc.bottom))
-		return NULL;
-	BOOL res = PlayEnhMetaFile(hdc, self->ob_itself, &rc); 
-	if(!res){
-		seterror("PlayEnhMetaFile", GetLastError());
-		return NULL;
-		}
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-
-static struct PyMethodDef EnhMetaFile_methods[] = {
-	{"Play", (PyCFunction)EnhMetaFile_Play, METH_VARARGS, EnhMetaFile_Play__doc__},
-	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
-};
-static python_type_object<EnhMetaFileObject> 
-EnhMetaFileType("PyEnhMetaFile", EnhMetaFile_methods, "Python Enhanced-Format Metafile");
-
 //////////////////////////////////////////////
 
 static struct PyMethodDef wingdi_methods[] = {
+	{"CreateDCFromHandle", (PyCFunction)Wingdi_CreateDCFromHandle, METH_VARARGS, SetWorldTransform__doc__},
+
+	// temp
 	{"SetWorldTransform", (PyCFunction)SetWorldTransform, METH_VARARGS, SetWorldTransform__doc__},
 	{"GetWorldTransform", (PyCFunction)GetWorldTransform, METH_VARARGS, GetWorldTransform__doc__},
 	{"SaveDC", (PyCFunction)SaveDC, METH_VARARGS, SaveDC__doc__},
@@ -1279,14 +1159,19 @@ static struct PyMethodDef wingdi_methods[] = {
 	{"CreateBrushIndirect", (PyCFunction)CreateBrushIndirect, METH_VARARGS, CreateBrushIndirect__doc__},
 	{"CreateFontIndirect", (PyCFunction)CreateFontIndirect, METH_VARARGS, CreateFontIndirect__doc__},
 
-	{"CreateRectRgn", (PyCFunction)CreateRectRgn, METH_VARARGS, CreateRectRgn__doc__},
-	{"PathToRegion", (PyCFunction)PathToRegion, METH_VARARGS, PathToRegion__doc__},
+	{"CreateRectRgn", (PyCFunction)Wingdi_CreateRectRgn, METH_VARARGS, ""},
+	{"CreatePolygonRgn", (PyCFunction)Wingdi_CreatePolygonRgn, METH_VARARGS, ""},
+	{"PathToRegion", (PyCFunction)Wingdi_PathToRegion, METH_VARARGS, ""},
+	{"CombineRgn", (PyCFunction)Wingdi_CombineRgn, METH_VARARGS, ""},
+	
 	{"SelectClipRgn", (PyCFunction)SelectClipRgn, METH_VARARGS, SelectClipRgn__doc__},
 	{"PaintRgn", (PyCFunction)PaintRgn, METH_VARARGS, PaintRgn__doc__},
-	{"PtInRegion", (PyCFunction)PtInRegion, METH_VARARGS, PtInRegion__doc__},
 
-	{"GetEnhMetaFile", (PyCFunction)GetEnhMetaFile, METH_VARARGS, GetEnhMetaFile__doc__},
+	{"IntersectRect", (PyCFunction)Wingdi_IntersectRect, METH_VARARGS, ""},
+	{"UnionRect", (PyCFunction)Wingdi_UnionRect, METH_VARARGS, ""},
 
+	{"GetRGBValues", (PyCFunction)Wingdi_GetRGBValues, METH_VARARGS, ""},
+	
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
