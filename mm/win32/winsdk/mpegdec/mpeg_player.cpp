@@ -98,6 +98,7 @@ DWORD video_thread::Run()
 	}
 
 //////////////////////////////
+
 class audio_thread : public Thread
 	{
 	public:
@@ -153,6 +154,7 @@ class audio_thread : public Thread
 
 void audio_thread::write_audio_chunks(mpeg_container& mpeg2)
 	{
+#ifdef USE_AUDIO_STREAM
 	while(!m_data_read && m_pwavout->get_audio_data_size()<buffers_hi)
 		{
 		char *audio_data = 0;
@@ -166,6 +168,7 @@ void audio_thread::write_audio_chunks(mpeg_container& mpeg2)
 		if(!m_pwavout->write_audio_chunk(audio_data, nr))
 			break;
 		}
+#endif
 	}
 
 DWORD audio_thread::Run()
@@ -337,13 +340,15 @@ void mpeg_player::prepare_playback(surface<color_repr_t> *psurf)
 		decoder->set_display(surf_display);
 		surf_display->set_surface(psurf);
 		display = surf_display;
-
+		
+		/*
 		if(pAudioThread == 0)
 			{
 			pAudioThread = new audio_thread(pinstream->get_pathname());
 			pAudioThread->Start();
 			pAudioThread->wait_ready();
 			}
+		*/
 
 		pVideoThread = new video_thread(*decoder);
 		pVideoThread->Start();
