@@ -19,6 +19,8 @@ debugtimer = 0
 N_PRIO = 5
 [PRIO_PREARM_NOW, PRIO_INTERN, PRIO_STOP, PRIO_START, PRIO_LO] = range(N_PRIO)
 
+error = 'Scheduler.error'
+
 class SchedulerContext:
 	def __init__(self, parent, node, seeknode):
 		self.active = 1
@@ -57,8 +59,14 @@ class SchedulerContext:
 		print '--------- actions:'
 		for i in range(len(self.sractions)):
 			if self.sractions[i]:
-				ac, list = self.sractions[i]
-				print i,'\t',ac, '\t', SR.evlist2string(list)
+				if len(self.sractions[i]) == 2:
+					ac, list = self.sractions[i]
+					first = []
+				else:
+					ac, list, first = self.sractions[i]
+				print '%d\t%d\t%s' % (i, ac, SR.evlist2string(list))
+				if first:
+					print '\t\t%s' % SR.evlist2string(first)
 		print '------------ #prearms outstanding:'
 		for i in self.channels:
 			print i, '\t', len(self.prearmlists[i])
@@ -231,7 +239,7 @@ class SchedulerContext:
 	#
 	def arm_ready(self, chan):
 		if not self.prearmlists.has_key(chan):
-			raise 'Arm_ready event for unknown channel', chan
+			raise error, 'Arm_ready event for unknown channel %s' % chan
 		pev = self.getnextprearm(chan)
 		if pev:
 			self.parent.add_lopriqueue(self, pev[1].t0, pev)
@@ -254,10 +262,10 @@ class SchedulerContext:
 			actionpos = self.srevents[ev]
 			del self.srevents[ev]
 		except KeyError:
-			raise 'Scheduler: Unknown event:', SR.ev2string(ev)
+			raise error, 'Scheduler: Unknown event: %s' % SR.ev2string(ev)
 		srlist = self.sractions[actionpos]
 		if srlist is None:
-			raise 'Scheduler: actions already sched for ev:', ev
+			raise error, 'Scheduler: actions already sched for ev: %s' % ev
 		if len(srlist) == 2:
 			num, srlist = srlist
 			firstactions = []
@@ -269,7 +277,7 @@ class SchedulerContext:
 			num, srlist, firstactions = srlist
 		num = num - 1
 		if num < 0:
-			raise 'Scheduler: waitcount<0:', (num, srlist)
+			raise error, 'Scheduler: waitcount<0: %s' % (num, srlist)
 		elif num == 0:
 			self.sractions[actionpos] = None
 		else:
@@ -302,7 +310,7 @@ class Scheduler(scheduler):
 	def play(self, node, seek_node, anchor_id, anchor_arg):
 		# XXXX Is the following true for alt nodes too?
 		if node.GetType() == 'bag':
-			raise 'Cannot play choice node'
+			raise error, 'Cannot play choice node'
 		# XXXX This statement should move to an intermedeate level.
 		if self.ui.sync_cv:
 			self.toplevel.channelview.globalsetfocus(node)
@@ -495,7 +503,7 @@ class Scheduler(scheduler):
 ##			if sctx.arm_ready(chan):
 ##				print 'prearm:', cname, sctx
 ##				return
-##		raise 'arm_ready: unused channel', chan
+##		raise error, 'arm_ready: unused channel %s' % chan
 	#
 	# Add the given SR to one of the runqueues.
 	#
@@ -544,7 +552,7 @@ class Scheduler(scheduler):
 
 	def runone(self, (sctx, todo, dummy)):
 		if not sctx.active:
-			raise 'Scheduler: running from finished context'
+			raise error, 'Scheduler: running from finished context'
 		#DBG print 'exec: ', SR.ev2string(todo)
 		action, arg = todo
 		if action == SR.PLAY:
@@ -555,8 +563,6 @@ class Scheduler(scheduler):
 			self.do_sync(sctx, arg)
 		elif action == SR.PLAY_ARM:
 			self.do_play_arm(sctx, arg)
-		elif action == SR.SCHED_FINISH:
-			self.stop_playing()
 		elif action in (SR.BAG_START, SR.BAG_STOP):
 			self.ui.bag_event(sctx, todo)
 		else:
