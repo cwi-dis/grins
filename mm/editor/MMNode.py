@@ -397,7 +397,6 @@ class MMNode(MMNodeBase.MMNode):
 ##		self._updsummaries([name])
 
 	def Destroy(self):
-		print 'Destroy', self
 		if self.parent: raise CheckError, 'Destroy() non-root node'
 
 		# delete hyperlinks referring to anchors here
