@@ -57,6 +57,10 @@ ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
 SIZE_3DBORDER=2
 
 #
+# The size (in pixels) of an icon
+ICONSIZE_PXL=16
+
+#
 # The single _Toplevel instance. Note that modules should not
 # use import from for this one: it is set when all mw_ modules
 # have been imported.
