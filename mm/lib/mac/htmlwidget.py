@@ -70,7 +70,7 @@ class HTMLWidget:
 		Qd.TextSize(9)
 		flags = WASTEconst.weDoAutoScroll | WASTEconst.weDoOutlineHilite
 		self.ted = waste.WENew(dr, vr, flags)
-		self.createscrollbars()
+		self._createscrollbars()
 		self.do_activate()
 		
 	def close(self):
@@ -110,7 +110,7 @@ class HTMLWidget:
 		if any and recalc:
 			self.new_font(self.html_font)
 		
-	def createscrollbars(self, reset=0):
+	def _createscrollbars(self, reset=0):
 		#
 		# See if we need them.
 		#
@@ -135,13 +135,13 @@ class HTMLWidget:
 			vr = self.ted.WEGetViewRect()
 			dr = self.ted.WEGetDestRect()
 			rect = r-(SCROLLBARWIDTH-1), t-1, r+1, b+1
-			vy = self.getybarvalue()
+			vy = self._getybarvalue()
 			self.bary = Ctl.NewControl(self.wid, rect, "", 1, vy, 0, dr[3]-dr[1]-(vr[3]-vr[1]), 16, 0)
 			if not self.activated: self.bary.DeactivateControl()
-			self.updatedocview()
+			self._updatedocview()
 			if self.controlhandler:
 				self.controlhandler._add_control(self.bary, 
-						self.scrollbar_callback, self.scrollbar_callback)
+						self._createscrollbars, self._createscrollbars)
 		else:
 			vr = l+LEFTMARGIN, t+TOPMARGIN, r-RIGHTMARGIN, b-BOTTOMMARGIN
 			dr = dr[0], dr[1], dr[0]+vr[2]-vr[0], dr[3]
@@ -150,29 +150,29 @@ class HTMLWidget:
 			self.ted.WECalText()
 			self.ted.WEScroll(vr[0]-dr[0], vr[1]-dr[1]) # Test....
 		
-	def getybarvalue(self):
+	def _getybarvalue(self):
 		vr = self.ted.WEGetViewRect()
 		dr = self.ted.WEGetDestRect()
 		return vr[1]-dr[1]
 
-	def updatescrollbars(self):
+	def _updatescrollbars(self):
 		"""Update scrollbars to reflect current state of document"""
 		if not self.bary or not self.activated:
 			return 0
-		vy = self.getybarvalue()
+		vy = self._getybarvalue()
 		self.bary.SetControlValue(vy)
 		max = self.bary.GetControlMaximum()
 		if vy > max:
-			self.updatedocview()
+			self._updatedocview()
 			
-	def updatedocview(self):
+	def _updatedocview(self):
 		"""Update document view to reflect state of scrollbars"""
 		vr = self.ted.WEGetViewRect()
 		dr = self.ted.WEGetDestRect()
 		value = self.bary.GetControlValue()
 		self.ted.WEScroll(vr[0]-dr[0], vr[1]-dr[1]-value)
 		
-	def scrollbar_callback(self, which, where):
+	def _createscrollbars(self, which, where):
 		if which != self.bary:
 			print 'funny control', which, 'not', self.bary
 			return 0
@@ -215,7 +215,7 @@ class HTMLWidget:
 		elif where == Controls.inPageDown:
 			value = value + pageheight
 		self.bary.SetControlValue(value)
-		self.updatedocview()
+		self._updatedocview()
 		return 1
 		
 	def do_activate(self):
@@ -234,7 +234,7 @@ class HTMLWidget:
 		
 	def do_update(self):
 		if self.must_clear:
-			self.clear_html()
+			self._clear_html()
 		visregion = self.wid.GetWindowPort().visRgn
 		myregion = Qd.NewRgn()
 		Qd.RectRgn(myregion, self.rect) # or is it self.ted.WEGetViewRect() ?
@@ -249,7 +249,7 @@ class HTMLWidget:
 		Qd.RGBForeColor((0, 0xffff, 0)) # DBG
 		Qd.EraseRgn(visregion)
 		self.ted.WEUpdate(myregion)
-##		self.updatescrollbars()
+##		self._updatescrollbars()
 		
 	def do_moveresize(self, rect):
 		l, t, r, b = rect
@@ -259,7 +259,7 @@ class HTMLWidget:
 		vr = l+LEFTMARGIN, t+TOPMARGIN, r-RIGHTMARGIN, b-BOTTOMMARGIN
 		self.ted.WESetViewRect(vr)
 		Win.InvalRect(self.rect)
-		self.createscrollbars()
+		self._createscrollbars()
 		
 	def do_click(self, down, local, evt):
 		(what, message, when, where, modifiers) = evt
@@ -270,11 +270,11 @@ class HTMLWidget:
 			ptype, ctl = Ctl.FindControl(local, self.wid)
 			if ptype and ctl:
 				if ptype in TRACKED_PARTS:
-					dummy = ctl.TrackControl(local, self.scrollbar_callback)
+					dummy = ctl.TrackControl(local, self._createscrollbars)
 				else:
 					part = ctl.TrackControl(local)
 					if part:
-						self.scrollbar_callback(ctl, part)
+						self._createscrollbars(ctl, part)
 				return
 			# Remember, so we react to mouse-up next time
 			self.last_mouse_was_down = 1
@@ -299,7 +299,7 @@ class HTMLWidget:
 	def do_char(self, ch, event):
 		pass # Do nothing.
 		
-	def clear_html(self):
+	def _clear_html(self):
 		Qd.SetPort(self.wid)
 		Qd.RGBBackColor(self.bg_color)
 		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 1)
@@ -307,7 +307,7 @@ class HTMLWidget:
 		self.ted.WEDelete()
 		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
 		Win.InvalRect(self.rect)
-		self.createscrollbars(reset=1)
+		self._createscrollbars(reset=1)
 		self.anchor_offsets = []
 		self.current_data_loaded = None
 		self.must_clear = 0
@@ -323,7 +323,7 @@ class HTMLWidget:
 		Qd.SetPort(self.wid)
 		Qd.RGBBackColor(self.bg_color)
 		if data == self.current_data_loaded:
-			self.position_html(tag)
+			self._position_html(tag)
 			return
 		self.current_data_loaded = data
 		f = MyFormatter(self)
@@ -355,7 +355,7 @@ class HTMLWidget:
 		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
 		Win.InvalRect(self.rect)
 
-		self.createscrollbars(reset=1)
+		self._createscrollbars(reset=1)
 
 	def insert_plaintext(self, data):		
 		if data == '':
@@ -387,9 +387,9 @@ class HTMLWidget:
 		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
 		Win.InvalRect(self.rect)
 
-		self.createscrollbars(reset=1)
+		self._createscrollbars(reset=1)
 		
-	def position_html(self, tag=None):
+	def _position_html(self, tag=None):
 		Qd.SetPort(self.wid)
 		# Restore updating, recalc, set focus
 		if tag and self.tag_positions.has_key(tag):
@@ -401,13 +401,8 @@ class HTMLWidget:
 			pos = 0
 		self.ted.WESetSelection(pos, pos)
 		self.ted.WESelView()
-		self.updatescrollbars()
+		self._updatescrollbars()
 				
-	def mysetstyle(self, which, how):
-		self.ted.WESelView()
-		self.ted.WESetStyle(which, how)
-		self.parent.updatemenubar()
-		
 	#
 	# Methods for getting at the anchors
 	#
