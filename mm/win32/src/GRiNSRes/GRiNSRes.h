@@ -292,6 +292,7 @@
 #define IDD_EDITATTR_TEMPLATE1          483
 #define IDD_EDITATTR_TEMPLATE0          484
 #define IDD_EDITATTR_TEMPLATE2          485
+#define IDD_EDITATTR_PREFPRO            486
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -841,6 +842,8 @@
 #define IDC_STATIC9                     1559
 #define IDC_STATIC6                     1560
 #define IDC_COMBO5                      1561
+#define IDC_TOLLABEL                    1562
+#define IDC_TOLVALUE                    1563
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -951,9 +954,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        467
+#define _APS_NEXT_RESOURCE_VALUE        487
 #define _APS_NEXT_COMMAND_VALUE         32905
-#define _APS_NEXT_CONTROL_VALUE         1562
+#define _APS_NEXT_CONTROL_VALUE         1564
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

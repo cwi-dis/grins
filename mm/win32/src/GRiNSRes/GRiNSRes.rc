@@ -3194,6 +3194,24 @@ BEGIN
     EDITTEXT        IDC_EDIT3,89,86,40,14,ES_AUTOHSCROLL
 END
 
+IDD_EDITATTR_PREFPRO DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "",IDC_GROUP1,6,10,287,113
+    LTEXT           "",IDC_ATTR_INFO,6,132,287,18,SS_SUNKEN
+    CONTROL         "Check1",IDC_1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,
+                    24,169,10
+    CONTROL         "Check2",IDC_2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,
+                    39,169,10
+    CONTROL         "Check3",IDC_3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,
+                    54,169,10
+    CONTROL         "Check4",IDC_4,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,
+                    68,169,10
+    EDITTEXT        IDC_TOLVALUE,230,23,40,14,ES_AUTOHSCROLL
+    LTEXT           "Tolerance:",IDC_TOLLABEL,186,25,36,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3647,6 +3665,11 @@ BEGIN
     END
 
     IDD_EDITATTR_REALEXTENSION2, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_EDITATTR_PREFPRO, DIALOG
     BEGIN
         BOTTOMMARGIN, 163
     END
