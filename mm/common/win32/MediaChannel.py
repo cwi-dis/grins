@@ -10,11 +10,6 @@ Any media type supported by Windows Media Player
 is also supported by this module:
 (.avi,.asf,.rmi,.wav,.mpg,.mpeg,.m1v,.mp2,.mpa, 
 .mpe,.mid,.rmi,.qt,.aif,.aifc,.aiff,.mov,.au,.snd)
----	Exception: asx files can be played directly 
-	by MediaPlayer or the MediaPlayer control.
-	This module can be used to play the asf streams 
-	referenced in the asx files and can also play some
-	simple asx files.Asx parsing is done by ASXParser.
 
 Note that DirectShow builds a graph of filters
 appropriate to parse-render each media type from those filters
@@ -67,9 +62,6 @@ class MediaChannel:
 		# notification mechanism for not window channels
 		self.__notifyWindow = None
 		self.__window = None
-
-		# asx support
-		self.initASX()
 		
 	def release_player(self):
 		if self.__playBuilder:
@@ -108,11 +100,6 @@ class MediaChannel:
 		url=self.__channel.getfileurl(node)
 		if not url:
 			raise error, 'No URL on node'
-		self.__armIsAsx=0
-		if self.isASX(url):
-			self.__armIsAsx=1
-			self.prepareASX(node)
-			return 1
 		
 		url = MMurl.canonURL(url)
 		url=urllib.unquote(url)
@@ -135,7 +122,6 @@ class MediaChannel:
 			self.__playFileHasBeenRendered=0
 			return 0
 		self.__playFileHasBeenRendered=1
-		self.arm2playASX()		
 		self.play_loop = self.__channel.getloop(node)
 
 		# get duration in secs (float)
@@ -246,7 +232,7 @@ class MediaChannel:
 				self.__playBuilder.SetPosition(self.__playBegin)
 				self.__playBuilder.Run()
 				return
-			# no more loops but check for ASX playlist
+			# no more loops
 			self.__playdone=1
 			self.__channel.playdone(0)
 			return
@@ -254,44 +240,6 @@ class MediaChannel:
 		self.__playBuilder.SetPosition(0)
 		self.__playBuilder.Run()
 
-	################## AFX support
-	def initASX(self):
-		self.__armIsAsx=0
-		self.__armAsxPlayList=[]
-		self.__armAsxIndex=0
-		self.__playIsAsx=0
-		self.__playAsxPlayList=[]
-		self.__playAsxIndex=0
-
-	def arm2playASX(self):
-		self.__playIsAsx=self.__armIsAsx
-		self.__playAsxPlayList=self.__armAsxPlayList
-		self.__playAsxIndex=self.__armAsxIndex
-
-	def isASX(self,url):
-		import posixpath
-		base, ext = posixpath.splitext(url)
-		return ext=='.asx'
-	
-	def prepareASX(self,node):
-		import ASXParser
-		x=ASXParser.ASXParser()
-		url=self.__channel.getfileurl(node)
-		x.read(url)
-		
-		# set ASX armed info
-		self.__armAsxPlayList=x._playlist
-		self.__armAsxIndex=0
-
-		self.armNextAsf()
-
-	def armNextAsf(self):
-		if self.__armAsxIndex >= len(self.__armAsxPlayList):
-			raise error, 'internal error in armNextAsf'
-		asf_url=self.__armAsxPlayList[self.__armAsxIndex]
-		self.__armAsxIndex=self.__armAsxIndex+1
-		if not self.__armBuilder.RenderFile(asf_url):
-			raise error, 'Failed to render '+asf_url
 		
 	############################################################## 
 	# ui delays management:
