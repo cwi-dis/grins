@@ -355,11 +355,39 @@ SOURCE=.\common\WordChannel.py
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\editor\win32\AnchorEditDialog.py
+SOURCE=.\editor\win32\_AssetsView.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\editor\win32\ArcInfoDialog.py
+SOURCE=.\editor\win32\_ErrorsView.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\win32\_LayoutView.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\win32\_LayoutView2.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\win32\_LinkView.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\win32\_PreferencesDialog.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\win32\_StructView.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\win32\_TransitionView.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\win32\_UsergroupView.py
 # End Source File
 # Begin Source File
 
@@ -368,6 +396,10 @@ SOURCE=.\editor\win32\AssetsViewDialog.py
 # Begin Source File
 
 SOURCE=.\editor\win32\AttrEditDialog.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\win32\AttrEditForm.py
 # End Source File
 # Begin Source File
 
@@ -395,15 +427,15 @@ SOURCE=.\editor\win32\MainDialog.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\editor\win32\MainFrameSpecific.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\editor\win32\MenuTemplate.py
 # End Source File
 # Begin Source File
 
 SOURCE=.\editor\win32\NodeEdit.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\editor\win32\NodeInfoDialog.py
 # End Source File
 # Begin Source File
 
@@ -416,6 +448,14 @@ SOURCE=.\editor\win32\PlayerDialog.py
 # Begin Source File
 
 SOURCE=.\editor\win32\SourceViewDialog.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\win32\TemporalViewDialog.py
+# End Source File
+# Begin Source File
+
+SOURCE=.\editor\win32\ToolbarState.py
 # End Source File
 # Begin Source File
 
@@ -432,10 +472,6 @@ SOURCE=.\editor\win32\TransitionViewDialog.py
 # Begin Source File
 
 SOURCE=.\editor\win32\usercmdui.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\editor\win32\usercmduiHold.py
 # End Source File
 # Begin Source File
 
@@ -811,23 +847,7 @@ SOURCE=.\editor\ViewDialog.py
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\lib\win32\_AssetsView.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\lib\win32\_FSPlayerView.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\win32\_LayoutView.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\win32\_LayoutView2.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\win32\_LinkView.py
 # End Source File
 # Begin Source File
 
@@ -835,23 +855,7 @@ SOURCE=.\lib\win32\_PlayerView.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\lib\win32\_PreferencesDialog.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\lib\win32\_SourceView.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\win32\_StructView.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\win32\_TransitionView.py
-# End Source File
-# Begin Source File
-
-SOURCE=.\lib\win32\_UsergroupView.py
 # End Source File
 # Begin Source File
 
