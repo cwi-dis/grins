@@ -369,13 +369,13 @@
 #define IDC_SUBREG_Y                    1257
 #define IDC_LAYOUT_MEDIA_SEL            1257
 #define IDC_SUBREG_W                    1258
-#define IDC_LAYOUT_VIEWPORT_CHECK       1258
 #define IDC_SUBREG_H                    1259
-#define IDC_LAYOUT_REGION_CHECK         1259
 #define IDC_SUBREG_SHONLYREG            1260
-#define IDC_LAYOUT_MEDIA_CHECK          1260
 #define IDC_SUBREG_FIT                  1261
 #define IDC_LAYOUT_REGIONLIST           1262
+#define IDC_LAYOUT_VIEWPORT_RADIO       1263
+#define IDC_LAYOUT_REGION_RADIO         1264
+#define IDC_LAYOUT_MEDIA_RADIO          1265
 #define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
@@ -454,7 +454,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        295
 #define _APS_NEXT_COMMAND_VALUE         32860
-#define _APS_NEXT_CONTROL_VALUE         1263
+#define _APS_NEXT_CONTROL_VALUE         1264
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
