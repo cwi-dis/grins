@@ -53,6 +53,7 @@ def getduration(filename, bufsiz = 10240):
 			if len(data) <= 2:
 				break
 			i = find(data, '\000\000\001')
+	fp.close()
 	try:
 		rate = VidRateNum[rate]
 	except IndexError:
