@@ -14,7 +14,6 @@ Copyright 1991-2001 by Oratrix Development BV, Amsterdam, The Netherlands.
 
 #include "mtpycall.h"
 
-
 #pragma warning(disable: 4786)
 #include <map>
 
@@ -150,7 +149,8 @@ PyObject* Winuser_RegisterClass(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "s|i", &className, &hMenu))
 		return NULL;
 	WNDCLASS wc = PyWnd::GetWndClass();
-	wc.lpszClassName = toTEXT(className);
+	TextPtr tclassname(className); 
+	wc.lpszClassName = (TCHAR*)tclassname;
 #ifndef _WIN32_WCE
 	wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
 	wc.hCursor = LoadCursor(NULL, IDI_APPLICATION);
@@ -171,7 +171,8 @@ PyObject* Winuser_RegisterClassEx(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "s|i", &className, &hMenu))
 		return NULL;
 	WNDCLASSEX wcx = PyWnd::GetWndClassEx();
-	wcx.lpszClassName = toTEXT(className);
+	TextPtr tclassname(className); 
+	wcx.lpszClassName = (TCHAR*)tclassname;
 	wcx.hIcon = LoadIcon(NULL, IDI_APPLICATION);
 	wcx.hCursor = LoadCursor(NULL, IDI_APPLICATION);
 	ATOM atom = RegisterClassEx(&wcx);
@@ -198,7 +199,7 @@ PyObject* Winuser_CreateWindowEx(PyObject *self, PyObject *args)
 		&pt.x, &pt.y, &size.cx, &size.cy, &PyWnd::type, &parent, &nID))
 		return NULL;
 #ifdef _WIN32_WCE
-	HWND hWnd = CreateWindow(toTEXT(pstrWndClass), toTEXT(szWindowName), WS_VISIBLE,
+	HWND hWnd = CreateWindow(TextPtr(pstrWndClass), TextPtr(szWindowName), WS_VISIBLE,
 		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, GetAppHinstance(), NULL);
 	if(hWnd){
 		RECT rc;
@@ -207,7 +208,7 @@ PyObject* Winuser_CreateWindowEx(PyObject *self, PyObject *args)
 		MoveWindow(hWnd, rc.left, rc.top, rc.right, rc.bottom, FALSE);
 		}
 #else
-	HWND hWnd = ::CreateWindowEx(dwExStyle, toTEXT(pstrWndClass), toTEXT(szWindowName),
+	HWND hWnd = ::CreateWindowEx(dwExStyle, TextPtr(pstrWndClass), TextPtr(szWindowName),
 			dwStyle, pt.x,pt.y, size.cx,
 			size.cx, ((parent!=NULL)?parent->m_hWnd:NULL), (HMENU)nID,
 			GetAppHinstance(), lpCreateParam);
@@ -519,19 +520,9 @@ static PyObject* PyWnd_MessageBox(PyWnd *self, PyObject *args)
 	if(!PyArg_ParseTuple(args, "s|si", &text, &caption, &type))
 		return NULL;
 	int res;
-#ifdef UNICODE
-	TCHAR *ttext = newTEXT(text);
-	TCHAR *tcaption = newTEXT(caption);
 	Py_BEGIN_ALLOW_THREADS
-	res = MessageBox(self->m_hWnd, ttext, tcaption, type);
+	res = MessageBox(self->m_hWnd, TextPtr(text), TextPtr(caption), type);
 	Py_END_ALLOW_THREADS
-	delete[] tcaption;
-	delete[] ttext;
-#else
-	Py_BEGIN_ALLOW_THREADS
-	res = MessageBox(self->m_hWnd, text, caption, type);
-	Py_END_ALLOW_THREADS
-#endif
 	return Py_BuildValue("i", res);
 }
 
