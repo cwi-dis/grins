@@ -109,6 +109,12 @@
 (cview_winsize  (tuple (float) (float)) (115.234375 115.234375) 'Time chart winsize' hidden
 	 'Window size for Time chart view' raw (g2_pro qt_pro smil10 cmif))
 
+(tview_winpos  (tuple (float) (float)) (-1 -1) 'Time chart winpos' hidden
+	 'Window position for Time chart view' raw (g2_pro qt_pro smil10 cmif))
+
+(tview_winsize  (tuple (float) (float)) (115.234375 115.234375) 'Time chart winsize' hidden
+	 'Window size for Time chart view' raw (g2_pro qt_pro smil10 cmif))
+
 (drawbox (bool) 1 'Draw anchor boxes' default
 	'Draw anchors as boxes' channel (cmif))
 
