@@ -865,6 +865,10 @@ class _Window(_AdornmentSupport):
 		while self._rb_looping:
 			Xt.DispatchEvent(Xt.NextEvent())
 
+	def cancel_create_box(self):
+		"""Cancel a modeless create_box call"""
+		pass
+		
 	def hitarrow(self, point, src, dst):
 		# return 1 iff (x,y) is within the arrow head
 		sx, sy = self._convert_coordinates(src)

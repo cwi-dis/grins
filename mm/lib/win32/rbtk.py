@@ -140,6 +140,10 @@ class _rbtk:
 		for win, msg, cb, box, units in next_create_box:
 			win.create_box(msg, cb, box, units)
 
+	def cancel_create_box(self):
+		"""Cancel a modeless create_box"""
+		pass
+		
 	# Notify the toolkit about mouse and paint messages
 	def notifyListener(self,key,params):
 		if not self.in_create_box_mode(): return 0
