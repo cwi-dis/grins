@@ -375,14 +375,19 @@ class _CmifPlayerView(_CmifView):
 
 
 #################################################
-# Specialization of _CmifView for smooth drawing		
+# Specialization of _CmifView for smooth drawing	
 class _CmifStructView(_CmifView):
 	# Class contructor. initializes base classes
 	def __init__(self,doc):
 		_CmifView.__init__(self,doc)
 		self._button_down=0
 		self._drag_cmd_send=0
-		self._dropmap['Node']=(self.dragnode,self.dropnode)
+
+		# enable or dissable node drag and drop
+		self._enableNodeDragDrop=1
+			
+		if self._enableNodeDragDrop:
+			self._dropmap['Node']=(self.dragnode,self.dropnode)
 
 	def OnCreate(self,params):
 		_CmifView.OnCreate(self,params)
@@ -464,8 +469,9 @@ class _CmifStructView(_CmifView):
 		_CmifView.onLButtonDown(self, params)
 		msg=win32mu.Win32Msg(params)
 		self.onMouseEvent(msg.pos(),Mouse0Press)
-		self._parent.SendMessage(win32con.WM_COMMAND,usercmdui.COPY_UI.id)
-		self.checkDragDrop(msg.pos())
+		if self._enableNodeDragDrop:
+			self._parent.SendMessage(win32con.WM_COMMAND,usercmdui.COPY_UI.id)
+			self.checkDragDrop(msg.pos())
 		self._button_down=1
 	
 	def checkDragDrop(self,pos):
