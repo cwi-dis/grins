@@ -120,7 +120,7 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 		if self.editmgr.transaction('source'):
 			text = self.get_text()
 
-			root = self.toplevel.change_source(text)
+			root = self.toplevel.load_source(text)
 			root = self.toplevel.checkParseErrors(root)
 			context = root.GetContext()
 			parseErrors = context.getParseErrors()

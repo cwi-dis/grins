@@ -493,7 +493,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 ##		else:
 ##			view.show()
 
-	def change_source(self, text):		
+	# load a source file without affect the current root
+	# return the new root
+	def load_source(self, text):		
 		# init progress bar dialog
 		self.progress = windowinterface.ProgressDialog("Reloading")
 		self.progressMessage = "Reloading SMIL document from source view..."
