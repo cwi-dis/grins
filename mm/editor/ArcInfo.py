@@ -22,6 +22,18 @@ import MMAttrdefs
 
 from ArcInfoDialog import ArcInfoDialog
 
+arcinfodialogs = []
+
+def showarcinfo(cview, root, snode, sside, delay, dnode, dside, new = 0):
+	for ai in arcinfodialogs:
+		if ai.snode == snode and \
+		   ai.sside == sside and \
+		   ai.delay == delay and \
+		   ai.dnode == dnode and \
+		   ai.dside == dside:
+			return ai
+	return ArcInfo(cview, root, snode, sside, delay, dnode, dside, new)
+
 class ArcInfo(ArcInfoDialog):
 
 	def __init__(self, cview, root, snode, sside, delay, dnode, dside, new = 0):
@@ -44,6 +56,7 @@ class ArcInfo(ArcInfoDialog):
 		ArcInfoDialog.__init__(self, title, self.src_options, src_init,
 				       self.dst_options, dst_init, self.delay)
 		self.context.editmgr.register(self)
+		arcinfodialogs.append(self)
 
 	def __repr__(self):
 		return '<ArcInfo instance for ' + \
@@ -55,6 +68,12 @@ class ArcInfo(ArcInfoDialog):
 		return 'Sync arc from "' + sname + '" to "' + dname + '"'
 
 	def close(self):
+		try:
+			# this shouldn't fail, but just in case we put it
+			# inside a try/except 
+			arcinfodialogs.remove(self)
+		except:
+			pass
 		editmgr = self.context.editmgr
 		editmgr.unregister(self)
 		ArcInfoDialog.close(self)
@@ -182,5 +201,3 @@ class ArcInfo(ArcInfoDialog):
 		top.setwaiting()
 		top.channelview.globalsetfocus(self.dnode)
 		top.hierarchyview.globalsetfocus(self.dnode)
-
-showarcinfo = ArcInfo
