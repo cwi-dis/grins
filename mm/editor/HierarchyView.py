@@ -64,7 +64,6 @@ class HierarchyView(HierarchyViewDialog):
 				self.usetimestripview = 1
 			else:
 				windowinterface.showmessage("Warning: document structure cannot be displayed as timestrip.  Using structured view.", parent=self.window)
-		self.pushbackbars = features.H_VBANDWIDTH in features.feature_set 	# display download times as pushback bars on MediaWidgets.
 		self.dropbox = features.H_DROPBOX in features.feature_set	# display a drop area at the end of every node.
 		self.transboxes = features.H_TRANSITIONS in features.feature_set # display transitions
 		self.translist = []	# dynamic transition menu

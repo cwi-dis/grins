@@ -84,7 +84,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.filename = url
 		self.window = None	# Created in TopLevelDialog.py
 
-		# we create only one edit manager by toplevel window.		
+		self.create_commandlist()
+
+		# we create only one edit manager per toplevel window.
 		self.editmgr = EditMgr(self)
 		self.editmgr.register(self)
 		settings.register(self)
@@ -105,8 +107,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if not self.context.isValidDocument():
 			self.context.disableviews = 1
 		
-		self.set_commandlist()
-
 		TopLevelDialog.__init__(self)
 		self.makeviews()
 
@@ -120,7 +120,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def __checkInitialErrors(self, allowCancel = 1):
 		context = self.root.GetContext()
 		parseErrors = context.getParseErrors()
-		if parseErrors != None:
+		if parseErrors is not None:
 			if parseErrors.getType() == 'fatal':
 				message = 'The source document contains an unrecoverable error\n\n' + \
 					  parseErrors.getFormatedErrorsMessage(5) + \
@@ -171,25 +171,26 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			newcontext.setParseErrors(parseErrors)
 		return root
 		
-	def set_commandlist(self):
+	def create_commandlist(self):
 		self.commandlist = [
 			RESTORE(callback = (self.restore_callback, ())),
 			CLOSE(callback = (self.close_callback, ())),
+			SOURCEVIEW(callback = (self.view_callback, (8, ))),
+			HIDE_SOURCEVIEW(callback = (self.hide_view_callback, (8, ))),
 			]
-			
-		if not self.context.disableviews:
-			self.commandlist = self.commandlist + [
-				PLAY(callback = (self.play_callback, ())),
-				PLAYERVIEW(callback = (self.view_callback, (0,))),
-				HIERARCHYVIEW(callback = (self.view_callback, (1,))),
-				PROPERTIES(callback = (self.prop_callback, ())),
 
-				HIDE_PLAYERVIEW(callback = (self.hide_view_callback, (0,))),
-				HIDE_HIERARCHYVIEW(callback = (self.hide_view_callback, (1,))),
-				]
+		self.viewcommandlist = [
+			PLAY(callback = (self.play_callback, ())),
+			PLAYERVIEW(callback = (self.view_callback, (0,))),
+			HIERARCHYVIEW(callback = (self.view_callback, (1,))),
+			PROPERTIES(callback = (self.prop_callback, ())),
+
+			HIDE_PLAYERVIEW(callback = (self.hide_view_callback, (0,))),
+			HIDE_HIERARCHYVIEW(callback = (self.hide_view_callback, (1,))),
+			]
 		
-		if not features.lightweight and not self.context.disableviews:
-			self.commandlist = self.commandlist + [
+		if not features.lightweight:
+			self.viewcommandlist = self.viewcommandlist + [
 				LINKVIEW(callback = (self.view_callback, (3,))),
 				LAYOUTVIEW(callback = (self.view_callback, (4,))),
 				LAYOUTVIEW2(callback = (self.view_callback, (7, ))),
@@ -209,15 +210,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		else:
 			self.__ugroup = []
 
-		# the source view command is all the time valid
-		self.commandlist.append(SOURCEVIEW(callback = (self.view_callback, (8, ))))
-		self.commandlist.append(HIDE_SOURCEVIEW(callback = (self.hide_view_callback, (8, ))))
 
-		if not self.context.isValidDocument():
-			# the error view command is showed only when errors
-			self.commandlist.append(ERRORSVIEW(callback = (self.view_callback, (10, ))))
-			self.commandlist.append(HIDE_ERRORSVIEW(callback = (self.hide_view_callback, (10, ))))
-			
+		# the error view command is showed only when errors
+		self.errorscommandlist = [
+			ERRORSVIEW(callback = (self.view_callback, (10, ))),
+			HIDE_ERRORSVIEW(callback = (self.hide_view_callback, (10, ))),
+			]
+
 		self.undocommandlist = [
 			UNDO(callback = (self.undo_callback, ())),
 			REDO(callback = (self.redo_callback, ())),
@@ -228,32 +227,39 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if hasattr(self, 'do_edit'):
 			self.commandlist.append(EDITSOURCE(callback = (self.edit_callback, ())))
 		if self.main.cansave():
-			self.commandlist = self.commandlist + [
-				SAVE_AS(callback = (self.saveas_callback, ())),
-				]
 			self.savecommandlist = [
 				SAVE(callback = (self.save_callback, ())),
 				]
-			if self.context.isValidDocument():
-				self.commandlist_g2 = self.commandlist + [
-					EXPORT_G2(callback = (self.bandwidth_callback, (self.export_G2_callback, ))),
-					UPLOAD_G2(callback = (self.bandwidth_callback, (self.upload_G2_callback, ))),
-					]
-				self.commandlist = self.commandlist + [
+			self.publishcommandlist = [
+				SAVE_AS(callback = (self.saveas_callback, ())),
+				]
+			self.saveg2commandlist = [
+				EXPORT_G2(callback = (self.bandwidth_callback, (self.export_G2_callback, ))),
+				UPLOAD_G2(callback = (self.bandwidth_callback, (self.upload_G2_callback, ))),
+				]
+			if features.EXPORT_QT in features.feature_set:
+				self.publishcommandlist = self.publishcommandlist + [
 					EXPORT_QT(callback = (self.bandwidth_callback, (self.export_QT_callback,))),
 					UPLOAD_QT(callback = (self.bandwidth_callback, (self.upload_QT_callback,))),
 					]
 
-#				print "TODO: make this version dependant. TopLevel.py:__init__()"
-				self.commandlist = self.commandlist + [
+			if features.EXPORT_WMP in features.feature_set:
+				self.publishcommandlist = self.publishcommandlist + [
 ##					EXPORT_WMP(callback = (self.bandwidth_callback, (self.export_WMP_callback,))),
 					EXPORT_WMP(callback = (self.export_WMP_callback,())),
 					UPLOAD_WMP(callback = (self.bandwidth_callback, (self.upload_WMP_callback,))),
+					]
+			if features.EXPORT_HTML_TIME in features.feature_set:
+				self.publishcommandlist = self.publishcommandlist + [
 					EXPORT_HTML_TIME(callback = (self.export_HTML_TIME_callback,())),
-					EXPORT_SMIL(callback = (self.bandwidth_callback, (self.export_SMIL_callback,))),
-					UPLOAD_SMIL(callback = (self.bandwidth_callback, (self.upload_SMIL_callback,))),
-					EXPORT_PRUNE(callback = (self.saveas_callback, (1,))),
-					]								
+					]
+			self.publishcommandlist = self.publishcommandlist + [
+				EXPORT_SMIL(callback = (self.bandwidth_callback, (self.export_SMIL_callback,))),
+				UPLOAD_SMIL(callback = (self.bandwidth_callback, (self.upload_SMIL_callback,))),
+				EXPORT_PRUNE(callback = (self.saveas_callback, (1,))),
+				]
+		else:
+			self.savecommandlist = self.publishcommandlist = self.saveg2commandlist = []
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
 			self.commandlist.append(
@@ -263,30 +269,40 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		TopLevelDialog.set_commandlist(self)
 			
 	def update_undocommandlist(self):
-		undocommandlist = []
-		if self.editmgr.history:
-			undocommandlist = undocommandlist + self.undocommandlist[:1]
-		if self.editmgr.future:
-			undocommandlist = undocommandlist + self.undocommandlist[1:]
-		savecommandlist = []
-		if self.changed:
-			savecommandlist = self.savecommandlist
-		if self.context.attributes.get('project_boston', 0):
-			self.setcommands(self.commandlist + self.__ugroup + undocommandlist + savecommandlist)
+		print 'update_undocommandlist'
+		commandlist = self.commandlist
+		if not self.context.disableviews:
+			print 'a'
+			commandlist = commandlist + self.viewcommandlist
+			if self.context.attributes.get('project_boston', 0):
+				print 'b'
+				commandlist = commandlist + self.__ugroup
+		if self.context.isValidDocument():
+			print 'c'
+			if self.changed:
+				print 'd'
+				commandlist = commandlist + self.savecommandlist
+			if not self.context.attributes.get('project_boston', 0):
+				print 'e'
+				commandlist = commandlist + self.publishg2commandlist
+			commandlist = commandlist + self.publishcommandlist
 		else:
-			self.setcommands(self.commandlist + self.commandlist_g2 + undocommandlist + savecommandlist)
+			print 'f'
+			commandlist = commandlist + self.errorscommandlist
+		if self.editmgr.history:
+			print 'g'
+			commandlist = commandlist + self.undocommandlist[:1]
+		if self.editmgr.future:
+			print 'h'
+			commandlist = commandlist + self.undocommandlist[1:]
+
+		self.setcommands(commandlist)
 
 	def updateCommandlistOnErrors(self):
-		# recompute all command list
-		self.set_commandlist()
 		self.update_undocommandlist()
 		
 	def show(self):
 		TopLevelDialog.show(self)
-		if self.context.attributes.get('project_boston', 0):
-			self.setcommands(self.commandlist + self.__ugroup)
-		else:
-			self.setcommands(self.commandlist + self.commandlist_g2)
 
 		# This flag allow to know if the current views are disabled.
 		# It's use the following raison: if you fix all errors after the initial state, you can easily known that
@@ -297,6 +313,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# A new file we immedeately save
 		if self.new_file:
 			self.saveas_callback()
+
+		self.update_undocommandlist()
 		
 	def showdefaultviews(self):
 		viewinfo = self.root.context.getviewinfo()
@@ -505,6 +523,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.showviews(showing)
 		
 		self.changed = 1
+		self.update_undocommandlist()
 		
 	def view_callback(self, viewno):
 		self.setwaiting()
@@ -785,9 +804,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.upload(compatibility.SMIL10)
 
 	def upload_WMP_callback(self):
-		windowinterface.showmessage("Please purchase the full version of GRiNS today!");
-		self.upload(compatibility.WMP);
-		return;
+		windowinterface.showmessage("Please purchase the full version of GRiNS today!")
+		self.upload(compatibility.WMP)
+		return
 
 	def upload(self, exporttype):
 		self.exporttype = exporttype
@@ -979,6 +998,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.showviews(showing)
 
 		self.changed = 1
+		self.update_undocommandlist()
 
 	#
 	#
@@ -1116,10 +1136,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.main._update_recent(MMurl.pathname2url(filename))
 			self.changed = 0
 			self.new_file = 0
-		if self.context.attributes.get('project_boston', 0):
-			self.setcommands(self.commandlist + self.__ugroup)
-		else:
-			self.setcommands(self.commandlist + self.commandlist_g2)
+		self.update_undocommandlist()
 		return 1
 		
 	def save_to_ftp(self, filename, smilurl, w_ftpparams, m_ftpparams):
@@ -1178,10 +1195,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				windowinterface.showmessage('Upload interrupted.')
 				return 0
 		# Is this needed?? (Jack)
-		if self.context.attributes.get('project_boston', 0):
-			self.setcommands(self.commandlist + self.__ugroup)
-		else:
-			self.setcommands(self.commandlist + self.commandlist_g2)
+		self.update_undocommandlist()
 		return 1
 		
 	def cancel_upload(self):
@@ -1270,9 +1284,6 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.context.disableviews = 1
 			
 		# update command list, re-make the views, and show the views prviously showed		
-		self.set_commandlist()
-		
-		# update the undo/redo 
 		self.update_undocommandlist()
 		
 		self.makeviews()
@@ -1442,15 +1453,15 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def updateViewsOnErrors(self):
 		if not self.context.isValidDocument():
 			# the document source contains some errors, force the source and error views to show
-			if self.sourceview != None and not self.sourceview.is_showing():
+			if self.sourceview is not None and not self.sourceview.is_showing():
 				self.sourceview.show()
-			if self.errorsview != None:
+			if self.errorsview is not None:
 				self.errorsview.show()
 				# pop up the errors view
 				self.errorsview.pop()
 		else:
 			# the document doesn't contains any error, force the error view to hide
-			if self.errorsview != None and self.errorsview.is_showing():
+			if self.errorsview is not None and self.errorsview.is_showing():
 				self.errorsview.hide()
 			
 	def changeRoot(self, root, text=None):
@@ -1473,18 +1484,15 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.makeviews()
 		self.showviews(showing)
 		
-		# re-build the command list. If the document contains some parse errors,
-		# we some command are disactivate. In addition, the available views may not
-		# be the sames
-		self.set_commandlist()
-		
-		# update the undo/redo 
-		self.update_undocommandlist()
-
 		# mark the document as changed
 		# XXX if the document is restored to a initial state, this flag should be cleared
 		self.changed = 1
 		
+		# re-build the command list. If the document contains some parse errors,
+		# we some command are disactivate. In addition, the available views may not
+		# be the sames
+		self.update_undocommandlist()
+
 	def do_read_it_from_string(self, text):
 		import SMILTreeRead
 
@@ -1525,7 +1533,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.destroy()
 
 	def close_ok(self):
-		sourceModified = self.sourceview != None and self.sourceview.is_changed()
+		sourceModified = self.sourceview is not None and self.sourceview.is_changed()
 
 		# if no change, and source not modified, can close
 		if not self.changed and not sourceModified:
