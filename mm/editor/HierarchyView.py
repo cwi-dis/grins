@@ -810,7 +810,7 @@ class Object:
 	def attrcall(self):
 		self.mother.toplevel.setwaiting()
 		import AttrEdit
-		AttrEdit.showattreditor(self.node)
+		AttrEdit.showattreditor(self.mother.toplevel, self.node)
 		self.mother.toplevel.setready()
 
 	def infocall(self):

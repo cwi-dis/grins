@@ -273,7 +273,7 @@ class NodeInfo(NodeInfoDialog):
 
 	def attributes_callback(self):
 		import AttrEdit
-		AttrEdit.showattreditor(self.node)
+		AttrEdit.showattreditor(self.toplevel, self.node)
 
 	def anchors_callback(self):
 		import AnchorEdit
@@ -318,14 +318,21 @@ class NodeInfo(NodeInfoDialog):
 					   self.browserfile_callback, None)
 
 	def browserfile_callback(self, pathname):
-		import urllib
-		if os.path.isdir(pathname):
-			dir, file = pathname, os.curdir
-		else:
-			dir, file = os.path.split(pathname)
-		if dir == self.toplevel.dirname or \
-		   dir == os.curdir or dir == '':
-			pathname = file
+		import urllib, os
+		if os.path.isabs(pathname):
+			cwd = self.wrapper.toplevel.dirname
+			if not cwd:
+				cwd = os.getcwd()
+			if os.path.isdir(pathname):
+				dir, file = pathname, os.curdir
+			else:
+				dir, file = os.path.split(pathname)
+			# XXXX maybe should check that dir gets shorter!
+			while len(dir) > len(cwd):
+				dir, f = os.path.split(dir)
+				file = os.path.join(f, file)
+			if dir == cwd:
+				pathname = file
 		pathname = urllib.pathname2url(pathname)
 		self.ch_filename = 1
 		self.changed = 1

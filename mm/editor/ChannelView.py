@@ -746,7 +746,8 @@ class ChannelView(ViewDialog):
 		editmgr.commit()
 		if placement_type in (PLACING_NEW, PLACING_COPY):
 			import AttrEdit
-			AttrEdit.showchannelattreditor(channel, new = 1)
+			AttrEdit.showchannelattreditor(self.toplevel,
+						       channel, new = 1)
 		self.toplevel.setready()
 
 	# Window stuff
@@ -1087,7 +1088,8 @@ class ChannelBox(GO):
 	def attrcall(self):
 		self.mother.toplevel.setwaiting()
 		import AttrEdit
-		AttrEdit.showchannelattreditor(self.channel)
+		AttrEdit.showchannelattreditor(self.mother.toplevel,
+					       self.channel)
 		self.mother.toplevel.setready()
 
 	def delcall(self):
@@ -1378,7 +1380,7 @@ class NodeBox(GO):
 	def attrcall(self):
 		self.mother.toplevel.setwaiting()
 		import AttrEdit
-		AttrEdit.showattreditor(self.node)
+		AttrEdit.showattreditor(self.mother.toplevel, self.node)
 		self.mother.toplevel.setready()
 
 	def infocall(self):
