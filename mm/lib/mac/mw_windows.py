@@ -755,15 +755,12 @@ class _CommonWindow:
 			return # Not wanted
 			
 		x, y = self._convert_qdcoords(where)
-##		print 'self, rect, where, x/y', self, self._rect, where, x, y
 		
 		buttons = []
 		if self._active_displist:
 			for b in self._active_displist._buttons:
 				if b._inside(x, y):
 					buttons.append(b)
-##			print 'active buttons', len(self._active_displist._buttons)
-##		print 'buttons', buttons
 		try:
 			func(arg, self, evttype, (x, y, buttons))
 		except Continue:
@@ -817,6 +814,8 @@ class _CommonWindow:
 			return 1
 		
 	def _do_resize2(self):
+		if self._transition:
+			self._transition.move_resize()
 		for w in self._subwindows:
 			w._do_resize2()
 		try:
@@ -1256,7 +1255,6 @@ class _CommonWindow:
 
 	# Experimental transition interface
 	def begintransition(self, inout, runit, dict):
-##		print 'Transition', dict['trtype']
 		rect = self.qdrect()
 		if self._transition:
 			print 'Multiple Transitions!'
@@ -1274,7 +1272,6 @@ class _CommonWindow:
 			del updrgn
 			
 			self._mac_create_gworld(BM_PASSIVE, 1, rect)
-##		print 'transition creating active source', self
 		self._mac_create_gworld(BM_DRAWING, 0, rect)
 		#
 		# Tell upper layers, if they are interested (VideoChannels and such may have to
@@ -1291,10 +1288,16 @@ class _CommonWindow:
 		
 	def jointransition(self, window):
 		# Join the transition already created on "window".
-		pass
+		if self._transition:
+			print 'Joining with another transition active'
+			return
+		self._transition = window._transition
+		if not self._transition:
+			print 'Joining without a transition'
+			return
+		self._transition.join(self)
 
 	def endtransition(self):
-##		print 'EndTransition', self._transition
 		if not self._transition:
 			return
 		has_tmp = self._transition.need_tmp_wid()
@@ -1318,6 +1321,8 @@ class _CommonWindow:
 	def settransitionvalue(self, value):
 		if self._transition:
 			self._transition.settransitionvalue(value)
+		else:
+			print 'settransitionvalue without a transition'
 			
 	def freeze_content(self, how):
 		"""Freeze the contents of the window, depending on how:
@@ -1325,17 +1330,15 @@ class _CommonWindow:
 		how='hold' forever,
 		how=None clears a previous how='hold'. This basically means the next
 		close() of a display list does not do an erase."""
-##		print 'DBG: freeze', how, self
 		if how:
-			print 'freeze_content creating passive source'
 			if self._frozen:
 				# Dispose possible old frozen bitmap
 				self._mac_dispose_gworld(BM_PASSIVE)
 			self._mac_create_gworld(BM_PASSIVE, 1, self.qdrect())
-			self._frozen = 1
+			self._frozen = how
 		elif self._frozen:
 			self._mac_dispose_gworld(BM_PASSIVE)
-			self._frozen = 0
+			self._frozen = None
 			self._mac_invalwin()
 		
 	def _dump_bits(self, which):
@@ -1424,7 +1427,6 @@ class _OffscreenMixin:
 		else:
 			Qd.RGBBackColor(self._bgcolor)
 			Qd.EraseRect(area)
-##			print 'Erase offscreen', cur_rect
 		Qdoffs.SetGWorld(cur_port, cur_dev)
 		
 	def _mac_dispose_gworld(self, which):
@@ -1449,7 +1451,6 @@ class _OffscreenMixin:
 			which = self._mac_getdrawingbitmapindex()
 		if which == BM_DRAWING and self.__wids[BM_DRAWING] == None:
 			which = BM_ONSCREEN
-##		print 'DBG setport', which
 		if which == BM_ONSCREEN:
 			rv = Qd.GetPort()
 			Qd.SetPort(self._onscreen_wid)
@@ -1760,9 +1761,6 @@ class _ScrollMixin:
 		if not self.no_canvas_resize:
 			if new_wf < 1: new_wf = 1
 			if new_hf < 1: new_hf = 1
-##		print 'OLD WINDOW SIZE', old_w, old_h
-##		print 'OLD FACTORS', old_wf, old_hf
-##		print 'OLD VIRTUAL SIZE', old_virtual_w, old_virtual_h
 		self.arrowcache = {}
 		self._canvassize = new_wf, new_hf
 		#
@@ -1772,9 +1770,6 @@ class _ScrollMixin:
 		self._adjust_scrollbar_max()
 		new_wf, new_hf = self._canvassize
 		new_virtual_w , new_virtual_h = int(new_w*new_wf+0.5), int(new_h*new_hf+0.5)
-##		print 'NEW WIDTH HEIGHT', new_w, new_h
-##		print 'NEW VIRTUAL SIZE', new_virtual_w, new_virtual_h
-##		print 'NEW FACTORS', new_wf, new_hf
 		if (old_virtual_w, old_virtual_h) != (new_virtual_w, new_virtual_h):
 			return 1
 		return 0
@@ -1916,7 +1911,6 @@ class _AdornmentsMixin:
 		return 0
 		
 	def _toolbar_callback(self, ctl, part):
-##		print 'DBG controlhit', ctl, part, self._cntl_to_cmd[ctl]
 		cmd = self._cntl_to_cmd[ctl]
 		self.call_command(cmd)
 		
@@ -2213,13 +2207,10 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 		self._drop_enabled = onoff
 		
 	def _trackhandler(self, message, dragref, wid):
-##		print 'TRACK', message, dragref, wid
 		if not message in (Dragconst.kDragTrackingEnterWindow, 
 				Dragconst.kDragTrackingLeaveWindow,
 				Dragconst.kDragTrackingInWindow):
-##			print 'skip message', message
 			return
-##		print 'DOIT', message, dragref, wid
 		rect = None
 		oldport = Qd.GetPort()
 		Qd.SetPort(self._onscreen_wid)
@@ -2257,7 +2248,6 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 				dragref.HideDragHilite()
 			Qd.DisposeRgn(rgn)
 		Qd.SetPort(oldport)
-##		print x, y, 'rect', rect, (message==Dragconst.kDragTrackingEnterWindow)
 					
 		
 	def _receivehandler(self, dragref, wid):
@@ -2265,7 +2255,6 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 		Qd.SetPort(self._onscreen_wid)
 		where = Qd.GlobalToLocal(where)
 		x, y = self._convert_qdcoords(where)
-##		print 'MOUSE', x, y
 		n = dragref.CountDragItems()
 		for i in range(1, n+1):
 			#
@@ -2308,7 +2297,6 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _OffscreenMixin, _WindowGroup, _Co
 				data = dragref.GetFlavorData(refnum, 'URLD', datasize, 0)
 				# Data is "url\rdescription"
 				url = string.split(data, '\r')[0]
-##				print 'url', url
 				try:
 					func, arg = self._eventhandlers[DropURL]
 				except KeyError:
@@ -2522,9 +2510,6 @@ class DialogWindow(_Window):
 	def __repr__(self):
 		return '<DialogWindow %s>'%self.title
 	
-##	def __del__(self):
-##		print 'del dialogwindow', self
-
 	def show(self):
 		if self.title:
 			self.settitle(self.title)
@@ -2552,7 +2537,6 @@ class DialogWindow(_Window):
 		# So, the code here appears to work, but there may be a problem lurking here
 		# somewhere.
 		# XXXX Note: apparently the above isn't true, so the code is back to original.
-##		print 'close dialogwin', self, self._parent
 		if not self._parent:
 			return
 		self.hide()
