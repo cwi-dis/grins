@@ -1269,7 +1269,7 @@ class PosSizeLayoutPage(LayoutPage):
 			if not box:
 				self._xy.setvalue('')
 				self._wh.setvalue('')
-			else:	
+			else:
 				box=self._scale.orgbox(box,self._units)
 				x, y = self._boxoff
 				box = box[0]-x, box[1]-y, box[2], box[3]
@@ -1280,6 +1280,9 @@ class PosSizeLayoutPage(LayoutPage):
 				awh=fttoa(box[2:],2,prec)
 				self._xy.setvalue(axy)
 				self._wh.setvalue(awh)
+				grp = self._group
+				a = grp.getattr(grp._attrnames['full'])
+				a.setvalue('off')
 
 class SubImgLayoutPage(PosSizeLayoutPage):
 	def __init__(self, form):
