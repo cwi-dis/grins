@@ -872,6 +872,8 @@ class _MenuSupport:
 		menu = self._menu
 		self._menu = None
 		if menu:
+			self._form.RemoveEventHandler(X.ButtonPressMask, FALSE,
+						      self._post_menu, None)
 			menu.DestroyWidget()
 
 	# support methods, only used by derived classes
@@ -1101,6 +1103,8 @@ class OptionMenu(_Widget):
 
 	def setpos(self, pos):
 		'''Set the currently selected option to the index given by POS.'''
+		if pos == self._value:
+			return
 		self._form.menuHistory = self._buttons[pos]
 		self._value = pos
 
@@ -1113,12 +1117,32 @@ class OptionMenu(_Widget):
 
 		OPTIONLIST and STARTPOS are as in the __init__ method.'''
 
-		omenu = self._omenu
-		initbut = self._do_setoptions(self._parent._form, optionlist,
-					      startpos)
-		self._form.subMenuId = self._omenu
-		self._form.menuHistory = initbut
-		omenu.DestroyWidget()
+		if optionlist != self._optionlist:
+			if self._useGadget:
+				createfunc = self._omenu.CreatePushButtonGadget
+			else:
+				createfunc = self._omenu.CreatePushButton
+			# reuse old menu entries or create new ones
+			for i in range(len(optionlist)):
+				item = optionlist[i]
+				if i == len(self._buttons):
+					button = createfunc(
+						'windowOptionButton',
+						{'labelString': item})
+					button.AddCallback('activateCallback',
+							   self._cb, i)
+					button.ManageChild()
+					self._buttons.append(button)
+				else:
+					button = self._buttons[i]
+					button.labelString = item
+			# delete superfluous menu entries
+			n = len(optionlist)
+			while len(self._buttons) > n:
+				self._buttons[n].DestroyWidget()
+				del self._buttons[n]
+		# set the start position
+		self.setpos(startpos)
 
 	def _do_setoptions(self, form, optionlist, startpos):
 		if 0 <= startpos < len(optionlist):
