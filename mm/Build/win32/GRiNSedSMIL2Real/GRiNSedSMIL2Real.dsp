@@ -1125,6 +1125,10 @@ SOURCE=.\M_SMILTreeWrite.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_SMILTreeWriteBase.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_smpte.c
 # End Source File
 # Begin Source File
