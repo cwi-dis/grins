@@ -228,6 +228,10 @@
 (project_targets (int) 3 'Target audience' default
 	'Set of target bandwidths' raw light)
 
+(project_videotype (int) 0 'Video type' default
+	'Video type (determines quality of video when converting to RealVideo)'
+	raw light)
+
 (queuesize (float) 0 'Queue size' default
 	'Audio playback queue size' channel cmif)
 
