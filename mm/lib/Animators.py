@@ -736,7 +736,7 @@ class EffectiveAnimator:
 		from Channel import channels
 		for chan in channels:
 			chtype = chan._attrdict.get('type')
-			if chtype == 'layout':
+			if type == 'layout':
 				base_window = chan._attrdict.get('base_window')
 				if base_window == region._name:
 					childs.append(chan)
@@ -762,8 +762,13 @@ class EffectiveAnimator:
 			cssregion.move(value)
 			cssregion.update()
 			coords = cssregion.getPxGeom()
+			scale = cssregion.getScale()
+			mediacoords = None
+			if cssregion.media:
+				cssregion.media.update()
+				mediacoords = cssregion.media.getPxGeom()
 			if self.__layout.window:
-				self.__layout.window.updatecoordinates(coords, UNIT_PXL, cssregion.getScale(), None)
+				self.__layout.window.updatecoordinates(coords, UNIT_PXL, scale, mediacoords)
 			for subch in self.__subChannels:
 				cssreg = self.getCssObj(subch._attrdict)
 				mediacoords = None
@@ -778,6 +783,11 @@ class EffectiveAnimator:
 			cssregion.changeRawAttr(attr, value)
 			cssregion.update()
 			coords = cssregion.getPxGeom()
+			scale = cssregion.getScale()
+			mediacoords = None
+			if cssregion.media:
+				cssregion.media.update()
+				mediacoords = cssregion.media.getPxGeom()
 			if self.__layout.window:
 				self.__layout.window.updatecoordinates(coords, UNIT_PXL, cssregion.getScale(), None)
 			for subch in self.__subChannels:
@@ -1879,8 +1889,5 @@ class AnimateElementParser:
 
 
 
-
-
- 
  
  
