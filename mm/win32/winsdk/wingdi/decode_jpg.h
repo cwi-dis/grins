@@ -101,9 +101,12 @@ inline JpgDecoder::JpgDecoder(memfile& mf, HDC hDC, ERROR_FUNCT ef)
 
 inline JpgDecoder::~JpgDecoder()
 	{
-	for(JDIMENSION i=0;i<m_dbuffer_height;i++)
-		delete[] m_dbuffer[i];
-	delete[] m_dbuffer;
+	if(m_dbuffer != NULL)
+		{
+		for(JDIMENSION i=0;i<m_dbuffer_height;i++)
+			delete[] m_dbuffer[i];
+		delete[] m_dbuffer;
+		}
 	}
 
 inline bool JpgDecoder::can_decode()
