@@ -72,7 +72,7 @@ inline mpeg_video_bitstream::mpeg_video_bitstream(mpeg_input_stream *istream)
 :	m_istream(istream), 
 	m_Rdbfr(new uchar_t[buffer_size]),
 	m_is_system_stream(false),
-	m_save_stream(true),
+	m_save_stream(false),
 	m_curpos(0)
 	{
 	m_is_valid = validate_stream();
@@ -81,7 +81,11 @@ inline mpeg_video_bitstream::mpeg_video_bitstream(mpeg_input_stream *istream)
 inline size_t mpeg_video_bitstream::read(unsigned char *buffer, size_t bytes)
 	{
 	if(!m_save_stream)
-		return m_istream->read(buffer, bytes);
+		{
+		int nread = m_istream->read(buffer, bytes);
+		m_curpos += nread;
+		return nread;
+		}
 	size_t pos = m_istream->tell();
 	m_istream->seek(m_curpos);
 	int nread = m_istream->read(buffer, bytes);

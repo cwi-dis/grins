@@ -177,7 +177,7 @@ void mpeg_video::picture_header()
   int pos;
   int Extra_Information_Byte_Count;
 
-  /* unless later overwritten by picture_spatial_scalable_extension() */
+  // unless later overwritten by picture_spatial_scalable_extension()
   m_pld->pict_scal = 0; 
   
   pos = m_bitstream->m_Bitcnt;
@@ -217,18 +217,18 @@ void mpeg_video::picture_header()
       }
     }
   }
-#endif /* VERBOSE */
+#endif // VERBOSE
 
 #ifdef VERIFY
   verify_picture_header++;
-#endif /* VERIFY */
+#endif // VERIFY
 
   Extra_Information_Byte_Count = 
     extra_bit_information();
   
   extension_and_user_data();
 
-  /* update tracking information used to assist spatial scalability */
+  // update tracking information used to assist spatial scalability
   Update_Temporal_Reference_Tacking_Data();
 }
 

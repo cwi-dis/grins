@@ -104,6 +104,8 @@ class mpeg_video
 	// spatscal
 	void spatial_prediction();
 
+	size_t get_stream_pos();
+
   private:
 	void error(const char *text);
 	void write_frame(unsigned char *src[], int frame);
@@ -178,6 +180,7 @@ class mpeg_video
 		int lx, int lys, int lyd, int m, int n, int j0, int dj);
 	void subsample_horizontal (short *s, unsigned char *d,
 		int x0, int lx, int lxs, int lxd, int ly, int m, int n);
+
 
   protected:
 	/////////////
