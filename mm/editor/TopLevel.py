@@ -1000,9 +1000,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# (XXX We shouldn't *save* the links to/from the clipboard,
 		# but we don't want to throw them away either...)
 		roots = [self.root]
-		type, data = self.root.context.editmgr.getclip()
-		if type == 'node' and data is not None:
-			roots.append(data)
+		data = self.root.context.editmgr.getclip()
+		for node in data:
+			if node.getClassName() == 'MMNode':
+				roots.append(node)
 		self.context.sanitize_hyperlinks(roots)
 		# Get all windows to save their current geometry.
 		for v in self.views:
