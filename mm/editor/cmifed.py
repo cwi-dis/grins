@@ -10,7 +10,7 @@ try:
 except:
 	pass
 
-if os.name != 'mac' and __file__ != '<frozen>':
+if os.name == 'posix' and __file__ != '<frozen>':
 	import fastimp
 	fastimp.install()
 
@@ -79,7 +79,7 @@ class Main(MainDialog):
 			windowinterface.showmessage('parsing URL %s failed' % url)
 		else:
 			self.new_top(top)
-		
+
 	def close_callback(self):
 		self.do_exit()
 
@@ -95,6 +95,7 @@ class Main(MainDialog):
 		else:
 			self._tracing = 1
 			trace.set_trace()
+		self.setbutton('Trace', self.tracing)
 
 	def new_top(self, top):
 		top.setwaiting()
@@ -248,6 +249,10 @@ def main():
 				print 'Exit', sts
 			sys.last_traceback = None
 			sys.exc_traceback = None
+## 			if os.name in ('nt', 'win'):
+## 				import win32ui
+## 				h1 = win32ui.GetMainFrame()
+## 				h1.DestroyWindow()
 			sys.exit(sts)
 		except:
 			sys.stdout = sys.stderr
@@ -265,11 +270,12 @@ def main():
 			print
 			pdb.post_mortem(exc_traceback)
 	finally:
-		import windowinterface
-		windowinterface.close()
-		if stats:
-			import MMNode
-			MMNode._prstats()
+		if sys.platform != 'nt':
+			import windowinterface
+			windowinterface.close()
+			if stats:
+				import MMNode
+				MMNode._prstats()
 
 
 # A copy of cmif.findfile().  It is copied here rather than imported
