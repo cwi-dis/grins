@@ -255,12 +255,19 @@ class Selecter:
 				gototime = seek_node.time_list[0][0]
 			else:
 				gototime = seek_node.start_time
+			self.scheduler.settime(gototime)
 			self.root.sctx.gototime(self.root, gototime, timestamp)
 			self.scheduler.setpaused(0)
 			return 1	# succeeded
 
 		# XXX
 		# need to implement "fast forward"
+		gototime = seek_node.isresolved()
+		if gototime is not None:
+			self.root.sctx.gototime(self.root, gototime, timestamp)
+			self.scheduler.setpaused(0)
+			return 1	# succeeded
+
 		x = seek_node
 		path = [x]
 		while x.playing == MMStates.IDLE:

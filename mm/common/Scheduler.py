@@ -19,8 +19,8 @@ debugtimer = 0
 debugevents = 0
 
 # Priorities for the various events:
-N_PRIO = 6
-[PRIO_PREARM_NOW, PRIO_TERMINATE, PRIO_INTERN, PRIO_STOP, PRIO_START, PRIO_LO] = range(N_PRIO)
+N_PRIO = 5
+[PRIO_PREARM_NOW, PRIO_INTERN, PRIO_STOP, PRIO_START, PRIO_LO] = range(N_PRIO)
 
 error = 'Scheduler.error'
 
@@ -338,7 +338,7 @@ class SchedulerContext:
 						if a.dstnode.parent:
 							srdict = a.dstnode.parent.gensr_child(a.dstnode, runchild = 0)
 							self.srdict.update(srdict)
-	##						a.dstnode.parent.scheduled_children = a.dstnode.parent.scheduled_children - 1
+##							a.dstnode.parent.scheduled_children = a.dstnode.parent.scheduled_children - 1
 						else:
 							# root node
 							self.scheduled_children = self.scheduled_children - 1
@@ -555,6 +555,7 @@ class SchedulerContext:
 			self.parent.event(self, (SR.SCHED_DONE, node), timestamp)
 
 	def gototime(self, node, gototime, timestamp):
+		# XXX trigger syncarcs that should go off after gototime?
 		if debugevents: print 'gototime',`node`,gototime,timestamp
 		# timestamp is "current" time
 		# gototime is time where we want to start
@@ -576,9 +577,8 @@ class SchedulerContext:
 						return
 				# start interior node not yet playing or
 				# start any leaf node
-				node.start_time = timestamp - gototime + node.start_time
-				self.trigger(None, node, timestamp)
-				self.sched_arcs(node, 'begin', timestamp = timestamp)
+				self.trigger(None, node, start)
+				self.sched_arcs(node, 'begin', timestamp = start)
 				return
 		# no valid intervals, so node should not play
 		if node.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
@@ -718,8 +718,6 @@ class SchedulerContext:
 				prio = PRIO_START
 			elif sr[0] == SR.PLAY_STOP:
 				prio = PRIO_STOP
-			elif sr[0] == SR.TERMINATE:
-				prio = PRIO_TERMINATE
 			else:
 				prio = PRIO_INTERN
 			self.parent.add_runqueue(self, prio, sr, timestamp)
@@ -754,9 +752,7 @@ class SchedulerContext:
 			srdict = self.srdict[ev]
 			del self.srdict[ev]
 		except KeyError:
-			if ev[0] == SR.TERMINATE:
-				return []
-			elif not settings.noprearm and ev[0] == SR.ARM_DONE:
+			if not settings.noprearm and ev[0] == SR.ARM_DONE:
 				self.unexpected_armdone[ev] = 1
 				return []
 			elif ev[0] == SR.SCHED_STOPPING:
@@ -877,14 +873,6 @@ class Scheduler(scheduler):
 		self.ui.play_done()
 		self.toplevel.set_timer(0)
 
-##	#
-##	# XXXX This routine is temporary. Eventually the channels should
-##	# also indicate the sctx when an anchor fires.
-##	def find_sctx(self, node):
-##		channel = self.ui.getchannelbynode(node)
-##		for sctx in self.sctx_list:
-##			if sctx.contains_channel(channel):
-##				return sctx
 	#
 	# The timer callback routine, called via a forms timer object.
 	# This is what makes SR's being executed.
@@ -1002,16 +990,6 @@ class Scheduler(scheduler):
 				ev[1].set_armedmode(ARM_ARMED)
 			sctx.event(ev, timestamp)
 		self.updatetimer()
-##	#
-##	# opt_prearm should be turned into a normal event at some point.
-##	# It signals that the channel is ready for the next arm
-##	def arm_ready(self, chan):
-##		#XXXX Wrong for multi-context (have to find correct sctx)
-##		for sctx in self.sctx_list:
-##			if sctx.arm_ready(chan):
-##				print 'prearm:', cname, sctx
-##				return
-##		raise error, 'arm_ready: unused channel %s' % chan
 	#
 	# Add the given SR to one of the runqueues.
 	#
@@ -1071,7 +1049,6 @@ class Scheduler(scheduler):
 		if action == SR.PLAY:
 			self.do_play(sctx, arg, timestamp)
 		elif action == SR.PLAY_STOP:
-## 			self.remove_terminate(sctx, arg)
 			self.do_play_stop(sctx, arg, timestamp)
 		elif action == SR.SYNC:
 			self.do_sync(sctx, arg, timestamp)
@@ -1082,8 +1059,6 @@ class Scheduler(scheduler):
 		elif action in (SR.BAG_START, SR.BAG_STOP):
 			raise RuntimeError('BAG')
 ##			self.ui.bag_event(sctx, todo)
-		elif action == SR.TERMINATE:
-			sctx.do_terminate(arg, timestamp)
 		elif action == SR.LOOPSTART:
 			self.do_loopstart(sctx, arg, timestamp)
 			arg.startplay(sctx, timestamp)
@@ -1106,9 +1081,6 @@ class Scheduler(scheduler):
 				   arg.attrdict.get('end') is not None:
 					if debugevents: print 'not stopping (dur/end)',`arg`
 					return
-##				if arg.GetType() in interiortypes or \
-##				   arg.realpix_body or arg.caption_body:
-##					self.remove_terminate(sctx, arg)
 				sctx.freeze_play(arg)
 				for ch in arg.GetSchedChildren():
 					ch.reset()
@@ -1126,30 +1098,6 @@ class Scheduler(scheduler):
 				arg.cleanup_sched(self)
 			sctx.event((action, arg), timestamp)
 
-	def remove_terminate(self, sctx, node):
-		ev = SR.TERMINATE, node
-##		for ev in [(SR.TERMINATE, node), (SR.TERMINATE, node.looping_body_self)]:
-		if 1: # Simple test
-			if sctx.srdict.has_key(ev):
-				srdict = sctx.srdict[ev]
-				del sctx.srdict[ev]
-				numsrlist = srdict[ev]
-				del srdict[ev]
-				num = numsrlist[0]
-				num = num - 1
-				if num == 0:
-					numsrlist[:] = []
-				else:
-					numsrlist[0] = num
-		if not node.moreloops():
-			for ev, srdict in sctx.srdict.items():
-				ac = srdict[ev]
-				if not ac:
-					continue
-				num, srlist = ac
-				for i in range(len(srlist)-1,-1,-1):
-					if srlist[i] == ev:
-						del srlist[i]
 	#
 	# Execute a PLAY SR.
 	#
@@ -1274,20 +1222,19 @@ class Scheduler(scheduler):
 	def getpaused(self):
 		return self.paused
 
-	def setpaused(self, paused, timestamp = None):
+	def settime(self, timestamp):
+		self.time_origin = self.time_pause - timestamp
+
+	def setpaused(self, paused):
 		if self.paused == paused:
 			return
 
-		# Subtract time paused
 		if not paused:
-			if timestamp is None:
-				# normal case
-				self.time_origin = self.time_origin + \
-						   (time.time()-self.time_pause)
-			else:
-				# unpause and set clock to timestamp
-				self.time_origin = time.time() - timestamp
+			# subtract time paused
+			self.time_origin = self.time_origin + \
+					   (time.time()-self.time_pause)
 		else:
+			# remember time paused
 			self.time_pause = time.time()
 		self.paused = paused
 		for sctx in self.sctx_list:
