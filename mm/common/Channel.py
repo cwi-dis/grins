@@ -1830,9 +1830,9 @@ class ChannelWindow(Channel):
 			# test if xCoordinates or yCoordinates
 			if n%2 == 0:
 				# convert coordinates from image to window size
-				rArgs.append(a*box[2] + box[0])
+				rArgs.append(float(a*box[2] + box[0]) / box[2])
 			else:
-				rArgs.append(a*box[3] + box[1])
+				rArgs.append(float(a*box[3] + box[1]) / box[3])
 			n = n+1
 
 		return rArgs
