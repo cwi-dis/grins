@@ -101,7 +101,8 @@ class SMILHtmlTimeWriter(SMILWriter):
 		if self._viewportClass:
 			self.pop()
 
-		self.pop() # </body>
+		try : self.pop() # </body>
+		except: pass
 
 		write('</html>\n')
 
@@ -136,13 +137,20 @@ class SMILHtmlTimeWriter(SMILWriter):
 			SMILWriter.writetag(self, tag, attrs)
 			return
 
+		if tag in ('area', 'anchor'):
+			SMILWriter.writetag(self, tag, attrs)
+			return
+
 		# media items in div
 		attrscpy = attrs[:]
 		classval = None
 		idval = None
 		styleval = ''
 		attrs = []
-		attrs.append(('class', 'time'))
+		if tag=='video':
+			tag = 'media'
+		tag = 't:'+tag
+		#attrs.append(('class', 'time'))
 		for attr, val in attrscpy:
 			if attr == 'region':
 				classval = val
