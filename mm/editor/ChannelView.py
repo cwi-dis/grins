@@ -1498,6 +1498,8 @@ class BandwidthStripBox(GO):
 	def bwbox(self, t0, t1, bandwidth, node):
 		"""Reserve bandwidth from t0 until t1. Return list of boxes
 		depicting the bandwidth"""
+		if bandwidth == 0:
+			return []
 ##		box = (t0, t1, 0, bandwidth, 1)
 		boxes = self.usedbandwidth.reserve(t0, t1, bandwidth)
 		self.boxes = self.boxes + boxes
@@ -1508,6 +1510,8 @@ class BandwidthStripBox(GO):
 		"""Reserve bandwidth for prearming prearmsize, starting after
 		t_arm and ending before t0. Return a list of boxes"""
 		xt0, xt1, boxes = self.usedbandwidth.prearmreserve(t_arm, t0, prearmsize)
+		if prearmsize == 0:
+			return []
 		self.boxes = self.boxes + boxes
 		if not (xt0 is None or xt1 is None):
 			self.time_to_panodes.append(xt0, xt1, node)
