@@ -13,9 +13,6 @@ from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
 # an empty document
 EMPTY = "(seq '1' ((channellist) (hyperlinks)))"
 
-# List of currently open toplevel windows
-opentops = []
-
 class TopLevel(ViewDialog):
 	def __init__(self, main, filename, new_file):
 		self.waiting = 0
@@ -56,7 +53,6 @@ class TopLevel(ViewDialog):
 		self.read_it()
 		self.makeviews()
 		self.window = None
-		opentops.append(self)
 
 	def __repr__(self):
 		return '<TopLevel instance, url=' + `self.filename` + '>'
@@ -471,8 +467,6 @@ class TopLevel(ViewDialog):
 		ok = self.close_ok()
 		if ok:
 			self.destroy()
-## 			if len(opentops) == 0:
-## 				raise SystemExit, 0
 
 	def close_ok(self):
 		if not self.changed:
@@ -562,7 +556,7 @@ class TopLevel(ViewDialog):
 			url = '//%s%s' % (host, url)
 		if utype:
 			url = '%s:%s' % (utype, url)
-		for top in opentops:
+		for top in self.main.tops:
 			if top is not self and top.is_document(url):
 				break
 		else:
@@ -620,7 +614,7 @@ class TopLevel(ViewDialog):
 
 	def getallexternalanchors(self):
 		rv = []
-		for top in opentops:
+		for top in self.main.tops:
 			if top is not self:
 				rv = rv + top._getlocalexternalanchors()
 		return rv
