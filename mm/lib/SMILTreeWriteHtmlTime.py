@@ -14,6 +14,34 @@ def WriteFileAsHtmlTime(root, filename, cleanSMIL = 0, grinsExt = 1, copyFiles =
 		return
 	writer.writeAsHtmlTime()
 
+class _Node:
+	def __init__(self, name, dict):
+		self._name = name
+		self._attrdict = dict
+
+		self._parent = None
+		self._children = []
+
+	def _do_init(self, parent):
+		self._parent = parent
+		parent._children.append(self)
+
+	def findNode(self, name):
+		if self._name == name:
+			return self
+		ret = None
+		for node in self._children:
+			fn = node.findNode(name)
+			if fn : 
+				ret = fn
+				break
+		return ret
+
+	def dump(self):
+		print self._name, self._attrdict
+		for node in self._children:
+			node.dump()
+
 
 class SMILHtmlTimeWriter(SMILWriter):
 	def __init__(self, node, fp, filename, cleanSMIL = 0, grinsExt = 1, copyFiles = 0,
@@ -23,12 +51,12 @@ class SMILHtmlTimeWriter(SMILWriter):
 		     evallicense, tmpcopy, progress,
 		     convertURLs )
 		ctx = node.GetContext()
-
 		self.__title = ctx.gettitle()
 		self.__cleanSMIL = cleanSMIL
 		self.__subchans = self.getsubchans()
-
 		self._viewportClass = ''
+		self.__viewports = {}
+		self.__buildLayoutTree(ctx)
 		
 	def writeAsHtmlTime(self):
 		write = self.fp.write
@@ -79,7 +107,6 @@ class SMILHtmlTimeWriter(SMILWriter):
 
 		self.close()
 
-
 	def basewritetag(self, tag, attrs = None):
 		SMILWriter.writetag(self, tag, attrs)
 
@@ -121,24 +148,37 @@ class SMILHtmlTimeWriter(SMILWriter):
 				classval = val
 			elif attr == 'id':
 				idval = val
-			elif attr in ('top','left','width','height','right','bottom'):
+			elif attr in ('top','left','width','height','right','bottom', 'backgroundColor'):
 				if not styleval:
 					styleval = 'position=absolute; '
+				if attr == 'backgroundColor':
+					attr = 'background'
 				styleval = styleval + attr + "=" + val + "; "
 			else:
 				attrs.append((attr, val))
 		if styleval:
 			attrs.append(('style', styleval))
 
-		if idval:
-			SMILWriter.writetag(self, "div", [('class', classval),('id', idval),])
+		self.writeMediaLayout(classval, idval, tag, attrs)
+
+
+	def writeMediaLayout(self, region, id, tag, attrs):
+		parrgn = self.__getParentRegion(self._viewportClass, region)
+		if parrgn:
+			SMILWriter.writetag(self, "div", [('class', parrgn._name),])
+			self.push()
+			
+		if id:
+			SMILWriter.writetag(self, "div", [('class', region),('id', id),])
 		else:
-			SMILWriter.writetag(self, "div", [('class', classval),])
+			SMILWriter.writetag(self, "div", [('class', region),])
 		self.push()
 
 		SMILWriter.writetag(self, tag, attrs)
 		self.pop()
-
+		
+		if parrgn:
+			self.pop()
 
 	def writelayout(self):
 		"""Write the layout section"""
@@ -402,5 +442,41 @@ class SMILHtmlTimeWriter(SMILWriter):
 				self.fp.write('%s:%s; ' % (attr, val))	
 		self.fp.write(' }\n')	
 		return idval		
+
+	def __buildLayoutTree(self, context):	
+		# create viewports and build map id2parentid
+		id2parentid = {}
+		for chan in context.channels:
+			if chan.attrdict.get('type')=='layout':
+				if chan.attrdict.has_key('base_window'):
+					# region
+					id2parentid[chan.name] = chan.attrdict['base_window']
+				else:
+					# viewport
+					vp = self.__viewports[chan.name] = _Node(chan.name, chan.attrdict)
+					name = self.ch2name[chan]
+					if name != chan.name:
+						self.__viewports[self.ch2name[chan]] = vp
+
+		# create all nodes
+		nodes = self.__viewports.copy()
+		for name in id2parentid.keys():
+			chan = context.channeldict[name]
+			nodes[name] = _Node(chan.name, chan.attrdict)
+
+		# associate regions with their parent
+		for id, parentid in id2parentid.items():
+			nodes[id]._do_init(nodes[parentid])
+		
+	def __getParentRegion(self, vpname, rgnname):
+		if not self.__viewports.has_key(vpname):
+			print 'Warning: missing viewport', vpname
+			return None
+		viewport = self.__viewports[vpname]
+		region = viewport.findNode(rgnname)
+		if region and region._parent!=viewport:
+			return region._parent
+		return None
+
 
 		
