@@ -362,10 +362,10 @@ class HtmlChannel(Channel.ChannelWindow):
 			return
 		if hasattr(reader, 'transparent') and hasattr(reader, 'colormap'):
 			reader.colormap[reader.transparent] = windowinterface.toplevel._colormap.QueryColor(widget.background)[1:4]
-		if format is windowinterface.toplevel.myxrgb8:
-			colors = map(lambda x: (x, x, x), range(256))
-		else:
+		if format is imgformat.xcolormap:
 			colors = map(lambda x: x, reader.colormap)
+		else:
+			colors = map(lambda x: (x, x, x), range(256))
 		dict = {'width': reader.width, 'height': reader.height,
 			'image_data': reader.read(), 'colors': colors}
 		image_cache[src] = dict
