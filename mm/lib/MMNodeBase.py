@@ -8,6 +8,7 @@ from Hlinks import Hlinks
 import MMAttrdefs
 import os
 import MMurl
+import settings
 
 from SR import *
 
@@ -180,6 +181,7 @@ class MMNode:
 		self.uid = uid
 		self.attrdict = {}
 		self.values = []
+		self.playable = 1
 	#
 	# Return string representation of self
 	#
@@ -272,3 +274,26 @@ class MMNode:
 			return c['type']
 		else:
 			return ''
+
+	#
+	# Playability depending on system/environment parameters
+	#
+	def SetPlayability(self, playable=1):
+		if playable:
+			playable = self._compute_playable()
+		self.playable = playable
+		for ch in self.children:
+			ch.SetPlayability(playable)
+
+	def IsPlayable(self):
+		return self.playable
+
+	def _compute_playable(self):
+		all = settings.getsettings()
+		for setting in all:
+			if self.attrdict.has_key(setting):
+				ok = settings.match(setting,
+						    self.attrdict[setting])
+				if not ok:
+					return 0
+		return 1
