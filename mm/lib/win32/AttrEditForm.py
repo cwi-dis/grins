@@ -3044,6 +3044,7 @@ class QtMediaRenderer(Renderer):
 			self._player.setMovieRect((0, 0, width, height))
 			self._player.createVideoDDS(self._ddraw)
 			self._rc = dest_x, dest_y, width, height
+			self._wnd.InvalidateRect(self._wnd.GetClientRect())
 	
 	def update(self):
 		self._wnd.InvalidateRect(self.inflaterc(self._rc))
