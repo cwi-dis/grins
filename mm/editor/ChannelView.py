@@ -122,7 +122,9 @@ class ChannelView(ViewDialog, GLDialog):
 		self.toplevel.checkviews()
 		# Compute objects to draw and where to draw them, then draw
 		self.fixviewroot()
-		self.recalc(('b', None))
+		focus = self.focus
+		if not focus: focus = ('b', None)
+		self.recalc(focus)
 		self.getshape()
 		self.reshape()
 		self.draw()
@@ -546,14 +548,16 @@ class ChannelView(ViewDialog, GLDialog):
 			return None
 
 	def globalsetfocus(self, node):
-		if not self.is_showing():
-			return
 		# May have to switch view root
 		mini = node
 		while not mini.IsMiniDocument():
 			mini = mini.GetParent()
 			if mini == None:
 				return
+		if not self.is_showing():
+			self.viewroot = mini
+			self.focus = ('n', node)
+			return
 		self.setviewroot(mini) # No-op if already there
 		if not hasattr(node, 'cv_obj'):
 			return
