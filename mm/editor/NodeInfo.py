@@ -342,7 +342,9 @@ class NodeInfo() = Dialog():
 		self.styles_browser.delete_browser_line(i)
 		del self.styles_list[i-1]
 		self.styles_browser.select_browser_line(1)
-	def attributes_callback(self, (obj,dummy)): pass
+	def attributes_callback(self, (obj,dummy)):
+		import AttrEdit
+		AttrEdit.showattreditor(self.node)
 	#
 	# Callbacks for 'imm' type nodes
 	#
