@@ -1,13 +1,19 @@
 import WIN32_windowbase
-from WIN32_windowbase import TRUE, FALSE, SINGLE, win32Cursors, cmifexPath
+from WIN32_windowbase import TRUE, FALSE, SINGLE, win32Cursors
 
 import win32con, win32api, win32ui, cmifex, cmifex2
-import CloseDialogRC, WMEVENTS
-from pywin.mfc import dialog
-
-dll = win32api.GetModuleHandle(cmifexPath)
+import CloseDialogRC, dialog, WMEVENTS
 
 WM_MAINLOOP = 200
+
+#PydPath = win32api.RegQueryValue(win32con.HKEY_LOCAL_MACHINE, "Software\\Python\\PythonCore\\1.4.0\\PythonPath\\PyDLLs")
+PydPath = win32api.RegQueryValue(win32con.HKEY_LOCAL_MACHINE, "Software\\Chameleon\\PyDLLs")
+cmifexPath = PydPath + "\\cmifex.pyd"
+
+try:
+	dll=win32ui.LoadLibrary(cmifexPath)
+except win32ui:
+	print "Could not Locate CmifEx.Pyd"	
 
 from types import *
 import math
@@ -134,15 +140,15 @@ class _Window(WIN32_windowbase._Window):
 		#		win._transparent = 1
 		#		d.drawfbox(win._bgcolor, win._sizes)
 				#apply(r.UnionRectWithRegion, win._rect)
-		#ls = []
-		#top_w, c_name  = self.find_topwin_channel(box)
+		ls = []
+		top_w, c_name  = self.find_topwin_channel(box)
 		#print top_w, c_name
-		#self.find_channels(top_w.hierarchyview.root,ls,c_name)
+		self.find_channels(top_w.hierarchyview.root,ls,c_name)
 		#print ls
-		#tmp = []
-		#tmp = self.find_windows(top_w,ls)
-		#if tmp == []:
-		tmp = self._subwindows
+		tmp = []
+		tmp = self.find_windows(top_w,ls)
+		if tmp == []:
+			tmp = self._subwindows
 		#print tmp
 		
 		#for win in self._subwindows:

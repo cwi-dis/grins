@@ -88,10 +88,10 @@ class MainDialog:
 	
 	def about_callback(self):
 		import windowinterface
-		windowinterface.showmessage('Copyright © 1995-98 Epsilon Software S.A. & C.W.I.\
-							 \nWebster Pro Control Copyright © 1995-1998 Home Page Software Inc.\
-						   	 \nAccusoft Corp.   		',\
-							 'message',1,None,None,'information','About')
+		windowinterface.showmessage('Copyright © 1995-98 \n\nEpsilon Software S.A.\
+							\nC.W.I.\
+							\n\nWebster Pro Control Copyright © 1995-1998 Home Page Software Inc.\
+						   	 \nAccusoft Corp.   		')
 
 	def open_callback(self, url):
 		pass

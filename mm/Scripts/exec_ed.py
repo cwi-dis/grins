@@ -16,7 +16,6 @@
 import os
 import sys
 import string
-import addpack
 import win32api, win32con
 from win32con import *
 

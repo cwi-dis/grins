@@ -1,0 +1,520 @@
+The window system interface consists of a number of functions.  Some
+of these functions return an object with a number of methods.
+
+All sizes and coordinates are in fractions of the width and height of
+the containing window.  On the top level, sizes and coordinates are in
+mm.  The origin is always at the top-left corner.
+
+Colors are always given as a tuple consisting of three values in the
+range 0-255.  The values are respectively the red, green, and blue
+components.
+
+All objects have a method is_closed() which is the only method that
+can be called once an object is closed.  This method returns 1 if the
+object is closed and 0 otherwise.
+
+Unless otherwise specified, callbacks are given as tuples of two
+elements.  The first is a callable object, the second is a tuple
+giving the arguments with which the object should be called.
+
+The functions are:
+	close()
+		Close all top-level windows and, recursively, all
+		their subwindows.
+
+	addclosecallback(func, args)
+		Register a callback function that is to be called when
+		the toplevel close() function is called.  The function
+		is called using apply(func, args), i.e., args must be
+		a tuple.
+
+	mainloop()
+		Main loop of the application.  This function gets
+		events from the window system and handles them,
+		calling callback functions as appropriate.  This
+		function does not return.
+
+	usewindowlock(lock)
+		Use the specified lock to lock out concurrent access
+		to the window system.  This method should be used when
+		there are multiple threads of control in the
+		application that use window system calls.  The lock
+		should have methods acquire() and release().
+		[ non-essential if single-threaded ]
+
+	newwindow(x, y, width, height, title, pixmap = 0) -> toplevel_window_object
+		This function creates a top-level window with
+		dimensions width x height at position (x, y).  The
+		title of the window is set from the title argument.
+		The methods of the window_object are described below.
+		The pixmap argument is a hint to the windowinterface
+		that it may be a good idea to use a backing store for
+		the window.  The pixmap argument is optional and
+		defaults to 0.
+
+	newcmwindow(x, y, width, height, title, pixmap = 0) -> toplevel_window_object
+		This function is the same as newwindow, except that
+		the window does not have to be a RGB (8 or 24 bit
+		deep) window.
+
+	setcursor(cursor)
+		Set the cursor glyph for all windows.  The value of
+		the argument is a string with a symbolic name for the
+		cursor.  Currently the names 'watch', 'channel',
+		'link', and 'stop' are defined.  The empty string ''
+		sets the cursor back to the default arrow cursor.
+
+	findfont(font, size) -> font_object
+		This function returns a font object.  The font is a
+		symbolic name for the font, the size is the size in
+		points.  The actual point size chosen may be smaller
+		if the desired size is not available.  This function
+		returns a font object, the methods of which are
+		described below.
+
+	settimer(sec, callback) -> timer_id
+		Set a timer to go off in sec seconds.  The return
+		value can be used to cancel the timer with the
+		canceltimer function.
+		When the timer expires the provided callback is
+		called.
+
+	canceltimer(timer_id)
+		Cancel the timer with the given timer_id.
+
+	select_setcallback(fd, func, args, mask = ReadMask)
+		Monitor the file descriptor given by fd for
+		readability or writability, and if the file descriptor
+		becomes readable/writable, call the given callback as
+		follows:  apply(func, args).  Mask can be the bitwise
+		OR of ReadMask and WriteMask.  If ReadMask is set, the
+		file descriptor is monitored for readability, and if
+		WriteMask is set, the file descriptor is monitored for
+		writability.  If no mask argument is given, it
+		defaults to ReadMask.
+		If func is None, monitoring of the file descriptor is
+		stopped.
+		ReadMask and WriteMask are defined in windowinterface.
+		[ non-essential--only used by some channels and when
+		multi-threaded. ]
+
+	beep()
+		Ring the bell.
+		[ non-essential ]
+
+	showmessage(text, type = 'message', grab = 1, callback = None,
+		    cancelCallback = None) -> object
+		Display the given text in a popup window.  Type is the
+		type of popup, used to determine the style of the
+		popup window.  Possible values are 'message',
+		'warning', 'error', 'information', and 'question'.  If
+		grab is set, the window must be closed (by pressing
+		the Ok button) before any other interaction can take
+		place (this does not mean that showmessage isn't
+		allowed to return immediately, just no other
+		interactions are allowed).  Callback is a callback
+		function to be called when the Ok button is pressed.
+		If cancelCallback is given, a Cancel button is
+		present, and if it is pressed, the cancelCallback
+		callback will be called.  Messages of type 'question'
+		always have a Cancel button.
+		The object returned only has a close() method with
+		which the window can be closed.
+
+	Dialog(list, list, title = None, prompt = None, grab = 1,
+	       vertical = 1) -> dialog_object
+		Display a window consisting of the given prompt, and a
+		row of buttons, one for each element of the list.  The
+		list is a list of tuples.  The tuples consist of a
+		string which is used as the label for the button, and
+		a callback.  Grab has the same meaning as in
+		showmessage.  If vertical is set, the row of buttons
+		is displayed vertically.  Title is the window title.
+
+	MainDialog(list, list, title = None, prompt = None, grab = 1,
+		   vertical = 1) -> dialog_object
+		Like Dialog.  Only one MainDialog is allowed in the
+		application, and grab should be 0.  The MainDialog is
+		the main dialog of the application, and can be
+		implemented as the application menu in the system
+		menubar.
+		[ can be the same as Dialog ]
+
+	multchoice(prompt, list, defindex) -> index
+		Display a window with the given prompt and a row of
+		buttons.  The list provides a list of labels for the
+		buttons.  When one of the buttons is pressed, the
+		function returns the index of the button.  Defindex is
+		returned when a RETURN is types in the window.  Note
+		that this function is necessarily synchronous.
+
+The methods of the font_object are:
+	close()
+		Close the font object and free its resources.
+
+	strsize(text) -> width, height
+		Return the dimensions in mm of the box that the given
+		text would occupy if displayed in the font the font
+		object represents.
+
+	baseline() -> baseline
+		Return the height of the baseline in mm.
+
+	fontheight() -> fontheight
+		Return the height of the font in mm.
+
+	pointsize() -> pointsize
+		Return the point size actually used in points.
+
+The methods of the window_object are:
+	newwindow(x, y, width, height, pixmap = 0, transparent = 0) -> subwindow_object
+		Create a subwindow of the current window with
+		dimensions width by height at position (x, y).  The
+		methods of the subwindow_object are the same as the
+		methods of a toplevel_window_object.
+		The value of pixmap is purely a hint to the
+		windowinterface.  If it is set, the window may be
+		implemented using an off-screen pixmap.  This value
+		should be set in windows which expect to have long
+		displaylists.
+		If transparent is set, the window should be
+		transparent.  When a window is transparent, the
+		background is not drawn, so underlying windows shine
+		through.  If a window is transparent, all its
+		subwindows will be transparent as well.  A toplevel
+		window cannot be transparent.
+		[ pixmap and transparent are non-essential ]
+
+	newcmwindow(x, y, width, height, pixmap = 0, transparent = 0) -> subwindow_object
+		This method is the same as newwindow, except that
+		the window does not have to be a RGB (8 or 24 bit
+		deep) window.
+		The difference between newwindow and newcmwindow is
+		that in the former images can be displayed more easily
+		since all colors are preallocated.
+		[ can be identical to newwindow ]
+		[ pixmap and transparent are non-essential ]
+
+	close()
+		Close the current window, all its subwindows, and all
+		display lists of these windows.
+
+	showwindow()
+		Show an outline of the window.
+		[ non-essential ]
+
+	dontshowwindow()
+		Remove the outline of the window.
+		[ non-essential ]
+
+	getgeometry(units = UNIT_MM) -> x, y, width, height
+		Return the current size of the window.  For a toplevel
+		window, this returns the size in mm (or whatever units
+		are specified), for a subwindow, this returns the size
+		in fractions.
+		[ can return original sizes ]
+
+	fgcolor(color)
+		Set the default foreground color.  The color is
+		inherited by the displaylist objects and by subwindows
+		when they are created.
+
+	bgcolor(color)
+		Set the default background color.  The color is
+		inherited by the displaylist objects and by subwindows
+		when they are created.  At creation time of the
+		displaylist object, it is possible to override the
+		default background color.
+
+	settitle(title)
+		Set the window title to title.  This method is only
+		effective for top-level windows.
+
+	newdisplaylist([bgcolor]) -> display_object
+		Create a new displaylist object.  The displaylist
+		object is used to draw in.  At some point the
+		displaylist object can be rendered after which it
+		becomes the current displaylist object.  When a redraw
+		is requested from the system, the current displaylist
+		object is redrawn.  A subwindow may have more than one
+		displaylist object.  The methods of the displaylist
+		object are described below.  The bgcolor is an
+		optional argument.  If it is present, it sets the
+		background color for the new displaylist object to the
+		given color, otherwise the background color is
+		inherited from the window.
+
+	pop()
+		Pop the window to the top of the window stack.  The
+		system maintains a window stack, which determines
+		which windows lie on top of which other windows.  By
+		using this method, the application can order the
+		subwindows in a top-level window.  By applying this
+		method to a top-level window, the application can
+		request the system to put the window on top of all
+		other windows on the display.  Whether or not this
+		request is fulfilled depends on such external factors
+		as the window system and the window manager being
+		used.
+
+	push()
+		Push the window to the bottom of the window stack.
+		For more information see the description of the pop
+		method.
+		[ non-essential ]
+
+	setcursor(cursor)
+		Set the cursor glyph for the window and all its
+		subwindows.  The value of the argument is compatible
+		with the argument to the top-level setcursor function.
+		[ non-essential ]
+
+	setredrawfunc(func)
+		Register a function that is to be called when the
+		window needs to be redrawn.  The argument is a
+		callable object that is called without arguments.
+		[ non-essential ]
+
+	register(event, func, arg)
+		Register func to be called when event happens.  Event
+		can be one of Mouse0Press, Mouse0Release, Mouse1Press,
+		Mouse1Release, Mouse2Press, Mouse2Release,
+		KeyboardInput, ResizeWindow, WindowExit--see module
+		WMEVENTS.  The function is called as func(arg, window,
+		event, call_data) where arg is the argument supplied
+		to register, window is the window that received the
+		event, event is one of the above mentioned event
+		types, and call_data depends on the type of event.
+		The call_data depends on the event in the following
+		way:
+		Mouse press and release events: (x, y, buttonlist),
+		where buttonlist is a, possibly empty, list of button
+		objects.
+		KeyboardInput: the character typed
+		ResizeWindow: None
+		WindowExit: None
+
+	unregister(event)
+		Remove the registration for the given event.
+
+	create_menu(list, title = None)
+		Create a popup menu for the window.  The list
+		describes the items in the menu.  The title, if given,
+		is the title of the menu.  Elements of the list are
+		either None, to get a separator between menu entries,
+		a string for dummy menu entries (entries without an
+		associated action), or a tuple.  The tuple consists of
+		three elements, the first is a string of length 0 or 1.
+		If 1, the character is an accelarator for the menu
+		entry.  The second element is a string which is the
+		label in the menu.  The third element is either a
+		callback function or a definition of a cascading menu.
+		A cascading menu has the exact same syntax as the main
+		menu.
+		[ non-essential ]
+
+	destroy_menu()
+		Destroy the popup menu.
+
+The display object has the following methods:
+	close()
+		Close the display object and free its resources.  This
+		method is called automatically when the window is
+		resized or closed.  When the display object is being
+		rendered, the window is cleared as a result of calling
+		this method.  When the display object is not currently
+		rendered, nothing happens to the window.
+
+	render()
+		Render the display list onto its window.  The display
+		list becomes the window's current display list and is
+		automatically redrawn when the system requires a
+		redraw of the window.  Only after this call, the
+		actual window contents changes.
+		After a display object has been rendered, no more
+		changes can be made to it.
+
+	clone() -> new_display_object
+		Create a new display object which is a copy of the
+		display object.  This method can be called at any time
+		during the lifetime of the display object.  The new
+		display object is not considered rendered and thus can
+		still be changed.
+
+	fgcolor(color)
+		Set the foreground color of the window to the given
+		color.  The default foreground color is inherited from
+		the window at the time of creation of the display
+		object.
+
+	linewidth(width)
+		Set the default line width for boxes and buttons.  The
+		width is specified in pixels until a better unit is
+		found.  [XXX--what *is* a better unit?]
+
+	display_image_from_file(file, crop = (0,0,0,0), scale = 0) -> x, y, width, height
+
+		Display the image in the specified file on the window.
+		If scale equals 0, the image is scaled to fit in the
+		window, but the aspect ratio of the image is kept the
+		same.  If scale is not equal to 0, the image is scaled
+		by the given factor.  Crop is a tuple that gives the
+		fraction of the top, bottom, left, and right that
+		should be cropped off (removed from) the image.  The
+		image is centered in the window.  The remaining part
+		of the window is unaffected.  The file can contain
+		anything that the img module recognizes.  The value
+		returned are the coordinates of the displayed image.
+		[ crop and scale non-essential, file may be restricted
+		  to one or a few image formats ]
+
+	drawline(color, points)
+		Draw a polyline (segmented line) in the given color.
+		Points is a list of coordinates.  The coordinates are
+		(x, y) pairs.
+
+	drawbox(coordinates)
+		Draw a box in the current foreground color.
+		Coordinates is a tuple consisting of (x, y, width,
+		height).  The box is positioned at (x, y) and has
+		dimensions width by height.
+
+	drawfbox(color, coordinates)
+		Draw a filled box in the specified color.  Coordinates
+		is a tuple consisting of (x, y, width, height).  The
+		box is positioned at (x, y) and has dimensions width
+		by height.
+
+	newbutton(coordinates) -> button_object
+		Draw a button (box) in the current foreground color.
+		Coordinates is a tuple consisting of (x, y, width,
+		height).  The box is positioned at (x, y) and has
+		dimensions width by height.  The returned value is an
+		instance of a button object.  If the mouse is clicked
+		within a button, it is returned as part of the
+		call_data argument in the appropriate callback
+		function.  The methods of the button object are
+		described below.
+
+	usefont(font_object) -> font_params
+		Set the current font of the display object.  The
+		font_object is the value returned by the findfont
+		function.  This method returns a tuple containing the
+		following information: the position of the baseline
+		relative to the height of the font, the height of the
+		font, and the actual point size used.
+
+	setfont(font, size) -> font_params
+		Set the current font of the display object.  The font
+		is a symbolic name for the font, the size is the size
+		in points.  The actual point size chosen may be
+		smaller if the desired size is not available.  The
+		return value is the same as that of usefont.
+		[ this is in fact just self.usefont(findfont(font,
+		size)) ]
+
+	fitfont(font, text, margin = 0) -> font_params
+		Set the current font to a font in the family indicated
+		by font.  The chosen point size is the largest
+		available point size which allows the given text to be
+		completely displayed inside the window.  Margin is the
+		horizontal margin of the window to be kept free.  It
+		defaults to 0.  The text may contain newlines.  This
+		method does not break lines in order to fit more text
+		into the window.  The method returns a tuple
+		containing the same information as the usefont method.
+		[ non-essential ]
+
+	strsize(text) -> size
+		This method returns a tuple with the width and height
+		that the given text would occupy in the window when
+		displayed with the current font.  The sizes are
+		measured in fractions of the width and height of the
+		window.  The text may contain newlines.  The width
+		returned is the width of the widest line, the height
+		returned is the number of lines times the font height.
+		The number of lines is one more than the number of
+		newlines in the text.
+
+	setpos(x, y)
+		Set the current position for displaying text.
+
+	writestr(text) -> x, y, width, height
+		Write the text into the window, starting at the
+		current position.  The current position is updated so
+		that consecutive calls to this method result in text
+		being displayed consecutively.  The text may contain
+		newlines.  Text after a newline is displayed one
+		fontheight under the current line, starting at the
+		x offset that was given in the last setpos call.  The
+		return value is a tuple with the coordinates of a box
+		which fits around the written text.  These coordinates
+		can be given unchanged to drawbox or newbutton.
+
+	baseline() -> baseline
+		Return the baseline of the current font.  This is one
+		of the values returned by usefont/setfont/fitfont.
+
+	fontheight() -> fontheight
+		Return the font height of the current font.  This is
+		one of the values returned by usefont/setfont/fitfont.
+
+	pointsize() -> pointsize
+		Return the pointsize of the current font.  This is one
+		of the values returned by usefont/setfont/fitfont.
+
+A display object has four different states:
+	1	After the display object was created but before it was
+		rendered for the first time.
+	2	The display object is the currently active rendered
+		display object.
+	3	The display object has been rendered but another
+		display object is currently active.
+	4	The display object is closed.
+
+In state 4, only the close() and is_closed() methods can be used.  All
+other methods will generate an exception.
+The clone() and render() method can be called in states 1, 2, and 3.
+Calling the render() method while in any of these states moves the
+display object to state 2 and the currently active object (if any)
+from state 2 to state 3.
+Calling the close() method in any of the states moves the display
+object to state 4.  If it was the currently active object, the window
+is cleared to the window's current background color, otherwise nothing
+happens to the window.
+All other methods can only be called in state 1.
+
+The button object has the following methods.
+	close()
+		Close the button object and free its resources.
+
+	hicolor(color)
+		Set the highlight color of the button.  The highlight
+		color is used to highlight the button.
+
+	hiwidth(width)
+		Set the line width for highlighted buttons.  When the
+		line widths of highlighted and unhighlighted buttons
+		differ, it may not be possible to properly display the
+		narrower version after the wider version was
+		displayed.  Therefore this method should only be used
+		with a different width than the unhighlighted box when
+		another display object is rendered after a button is
+		highlighted.
+
+	highlight()
+		Highlight the button, using the highlight color and
+		highlight width.  The display object from which this
+		button was created must be active (i.e. rendered).
+
+	unhighlight()
+		Revert the button to its unhighlighted form.  The
+		display object from which this button was created must
+		be active (i.e. rendered).
+
+The application will never get redraw events, but it may get resize
+events.  When a resize event is generated, all windows have to be
+redrawn since the display lists have all been closed.  Since the
+subwindows were created relative to their parent windows, they can be
+resized by the library.  The application only needs to fill in the
+window.

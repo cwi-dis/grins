@@ -1,0 +1,139 @@
+The module events.py does event handling, integrated with the
+windowinterface module.
+
+The events module defines an _Events class.  There should be one
+instance of this class in a program.  This instance is created
+automatically when the module is first imported.  A reference to the
+instance can be gotten by calling the function Events().
+
+The Events object instance can be used to register callbacks that are
+called when certain events happen or it can be used to poll for and
+read events.  If a callback is registered for an event, it is never
+returned when events are being polled or read.  It is also possible to
+enter events in the event queue and to set timers.
+
+Events consist of three parts.  The first part is the window in which
+the event happened (or None if there is no associated window).  The
+second part is the event type.  These event types are defined in the
+module EVENTS.  The third part is the value of the event.  The value
+depends on the event type.
+
+The following event types have been defined.
+
+	KeyboardInput
+		A character was typed on the keyboard.  The character
+		is returned as the value, the (sub)window in which the
+		character was typed is returned as the window part of
+		the event.
+
+	Mouse0Press
+	Mouse0Release
+	Mouse1Press
+	Mouse1Release
+	Mouse2Press
+	Mouse2Release
+		A mouse button was pressed or released.  The mouse
+		buttons are numbered starting from 0.  Mouse button 0
+		is the left mouse button.  The value of the event is a
+		tuple consisting of three elements.  The first and
+		second element are the X and Y coordinates of the
+		mouse cursor within the window in which the event
+		occurred (upper left is (0, 0), lower right is (1, 1)),
+		the third element is a (possibly empty) list of button
+		objects in which the event occurred.
+
+	ResizeWindow
+		The window was resized.  Subwindows are resized
+		automatically, but they must be filled in by the
+		application.  A ResizeWindow event is generated for
+		all windows that are affected.
+
+	WindowExit
+		The user has selected a window manager function to
+		exit the application.  The window is the top-level
+		window which was selected, the value is None.
+
+	TimerEvent
+		A timer expired.  The window is None, the value is
+		whatever the user specified in the settimer method
+		(see below).
+
+The functions defined in the events module are as follows.  The Events
+object instance has methods with the same names and parameters which
+can be called instead of the functions.
+
+	settimer(sec, arg)
+		Set a timer for sec seconds into the future.  Sec can
+		be a floating point number for sub-second precision.
+		After sec seconds have elapsed, a TimerEvent is
+		generated.  The value for the event is the specified
+		arg.
+
+	enterevent(window, event, value)
+		Enter an event into the event queue.  Using this
+		method, the user can enter any event in any window
+		into the queue.  All three arguments are arbitrary and
+		need not follow the description of the event types
+		given above.
+
+	pollevent()
+		Poll for an event.  If there is an event pending, it
+		is returned, otherwise None is returned.  Events for
+		which there are callbacks are never returned, but the
+		callback is called instead.
+
+	testevent()
+		Return 1 if there is an event pending, return 0
+		otherwise.  Events for which there are callbacks are
+		not considered.  If any such event is pending, the
+		callback is called instead.
+
+	readevent()
+		Wait for an event and return it.  Events for which
+		there are callback are never returnde, but the
+		callback is called instead.
+
+	setcallback(eventtype, func, arg)
+		Set a callback on events with type eventtype.  If any
+		event occurs with the specified type, the function
+		func is called.  When func is None, the callback is
+		removed.  The function is called with four arguments.
+		The first argument is the given arg, the following
+		arguments are the window, event type, and event value.
+
+	register(window, eventtype, func, arg)
+		Register a callback function, or remove a callback
+		function if func is None.  If removing a callback, an
+		error is raised when there was no registered callback
+		for the specified window, eventtype combination.
+
+		When an event of type eventtype in a window occurs,
+		the registered callbacks are searched to see if one
+		must be called.  The way in which the search happens
+		is as follows.  A list is made of the window, its
+		parent window, its parent's parent, and so on to a
+		top-level window.  For each of these windows, a check
+		is made to see whether a callback was registered for
+		that window in combination with the event that
+		happened, or for the combination of the window with
+		the generic event None.  If so, the callback is called
+		and the search is terminated.  If no callback was
+		found in this way, the combination of generic window
+		None and the event is tried, and finally the
+		combination of generic window None and generic event
+		None is tried.  If still no callback could be found,
+		no callback is called and the event is returned by
+		pollevent() or readevent() and testevent() indicates
+		that an event occurred.
+
+	unregister(window, eventtype)
+		Remove a registered callback for the window, eventtype
+		combination.  If no callback was registered for the
+		specified combination, no error is raised.
+
+	select_setcallback(fd, func, arg)
+		Register a callback function, or remove a callback
+		function if func is None.  The callback is called with
+		argument arg when input is available (as indicated by
+		a call to select) on file descriptor fd.  The callback
+		is supposed to remove the input available condition.
