@@ -146,6 +146,7 @@ default_settings = {
 	# RTIPA start
 	'RTIPA_config': '',	# URL where RTIPA config file is to be found
 	'RTIPA_QoS': {'AF': 1000000, 'EF': 115200,}, # mapping from QoS class to bitrate
+	'RTIPA_add_params': 0,		# add query params with widht/height/class to SMIL file URL
 	# RTIPA end
 }
 
@@ -369,7 +370,7 @@ def commit(auto=0):
 #
 
 # mapping from host (IP address converted with socket.inet_aton) to bitrate
-RTIPA_bitrates = {}
+RTIPA_classes = {}
 
 def match_bitrate_RTIPA(wanted_value, host):
 	if not host:
@@ -381,11 +382,13 @@ def match_bitrate_RTIPA(wanted_value, host):
 	except socket.error:
 		# host unknown, so don't play
 		return 0
+	RTIPA_QoS = get('RTIPA_QoS')
 	ip = socket.inet_aton(ip) # normalize
-	real_value = RTIPA_bitrates.get(ip)
-	if real_value is None:
-		# host unknown defaults to normal processing
+	qos = RTIPA_classes.get(ip)
+	if qos is None or not RTIPA_QoS.has_key(qos):
+		# host or class unknown defaults to normal processing
 		return match('system_bitrate', wanted_value)
+	real_value = RTIPA_QoS[qos]
 	return real_value >= wanted_value
 
 # regular expression to match interesting lines from RTIPA config file
@@ -405,7 +408,7 @@ RTIPA_re = re.compile('^[^/]*'		# router name
 
 def read_RTIPA():
 	import socket, MMurl
-	RTIPA_bitrates.clear()
+	RTIPA_classes.clear()
 	url = get('RTIPA_config')
 	if not url:
 		return
@@ -413,7 +416,6 @@ def read_RTIPA():
 		u = MMurl.urlopen(url)
 	except:
 		return
-	RTIPA_QoS = get('RTIPA_QoS')
 	while 1:
 		line = u.readline()
 		if not line:
@@ -424,8 +426,7 @@ def read_RTIPA():
 			continue
 		ip, qos = res.group('IP', 'class')
 		ip = socket.inet_aton(ip) # normalize
-		if RTIPA_QoS.has_key(qos):
-			RTIPA_bitrates[ip] = RTIPA_QoS[qos]
+		RTIPA_classes[ip] = qos
 
 #
 # RTIPA end

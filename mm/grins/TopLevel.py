@@ -6,7 +6,6 @@ import MMAttrdefs, MMurl
 from urlparse import urlparse, urlunparse
 from MMExc import *
 from Hlinks import *
-from AnchorDefs import *
 from usercmd import *
 
 from TopLevelDialog import TopLevelDialog
@@ -29,6 +28,23 @@ class TopLevel(TopLevelDialog):
 		else:
 			# remote file
 			self.dirname = ''
+			# RTIPA start
+			# add a query string with width/height/class parameters to URL
+			if hasattr(features, 'RTIPA') and features.RTIPA and settings.get('RTIPA_add_params'):
+				import socket
+				width, height = windowinterface.getscreensize()
+				query = 'width=%d&height=%d' % (width, height)
+				try:
+					ip = socket.gethostbyname(host)
+				except socket.error:
+					# host unknown
+					pass
+				else:
+					ip = socket.inet_aton(ip)
+					qos = settings.get('RTIPA_QoS').get(ip)
+					if qos is not None:
+						query = query + '&class=' + qos
+			# RTIPA end
 ##		if base[-5:] == '.cmif':
 ##			self.basename = base[:-5]
 		if base[-4:] == '.smi':
