@@ -76,6 +76,12 @@ _watch.reverse()			# Turn it upside-down
 gl.defcursor(_WATCH, _watch*8)
 gl.curorigin(_WATCH, 8, 8)
 
+class _DummyLock:
+	def acquire(self):
+		pass
+	def release(self):
+		pass
+
 class _Toplevel:
 	def __init__(self):
 		if debug: print 'TopLevel.init('+`self`+')'
@@ -84,7 +90,7 @@ class _Toplevel:
 		self._fgcolor = _DEF_FGCOLOR
 		self._bgcolor = _DEF_BGCOLOR
 		self._cursor = ''
-		self._win_lock = None
+		self._win_lock = _DummyLock()
 
 	def close(self):
 		if debug: print 'Toplevel.close()'
@@ -121,7 +127,10 @@ class _Toplevel:
 
 	def usewindowlock(self, lock):
 		if debug: print `self`+'.usewindowlock()'
-		self._win_lock = lock
+		if lock:
+			self._win_lock = lock
+		else:
+			self._win_lock = _DummyLock()
 		uselock(lock)
 
 	def getmouse(self):
@@ -152,8 +161,7 @@ class _Event:
 
 	def _qdevice(self):
 		if debug: print 'Event.qdevice()'
-##		if toplevel._win_lock:
-##			toplevel._win_lock.acquire()
+##		toplevel._win_lock.acquire()
 		fl_or_gl.qdevice(DEVICE.REDRAW)
 		fl_or_gl.qdevice(DEVICE.INPUTCHANGE)
 		fl_or_gl.qdevice(DEVICE.WINQUIT)
@@ -165,8 +173,7 @@ class _Event:
 		gl.tie(DEVICE.LEFTMOUSE, DEVICE.MOUSEX, DEVICE.MOUSEY)
 		gl.tie(DEVICE.MIDDLEMOUSE, DEVICE.MOUSEX, DEVICE.MOUSEY)
 		gl.tie(DEVICE.RIGHTMOUSE, DEVICE.MOUSEX, DEVICE.MOUSEY)
-##		if toplevel._win_lock:
-##			toplevel._win_lock.release()
+##		toplevel._win_lock.release()
 
 	def _checktime(self):
 		timenow = time.time()
@@ -306,12 +313,10 @@ class _Event:
 				win = _window_list[val]
 				win._must_redraw = 1
 				if win._parent_window == toplevel:
-					if toplevel._win_lock:
-						toplevel._win_lock.acquire()
+					toplevel._win_lock.acquire()
 					gl.winset(win._window_id)
 					w, h = gl.getsize()
-					if toplevel._win_lock:
-						toplevel._win_lock.release()
+					toplevel._win_lock.release()
 					if (w, h) != (win._width, win._height):
 						win._resize()
 						return
@@ -341,12 +346,10 @@ class _Event:
 			y = val
 			dev, val = self._savemouse
 			x = self._savex
-			if toplevel._win_lock:
-				toplevel._win_lock.acquire()
+			toplevel._win_lock.acquire()
 			gl.winset(self._curwin._window_id)
 			x0, y0 = gl.getorigin()
-			if toplevel._win_lock:
-				toplevel._win_lock.release()
+			toplevel._win_lock.release()
 			x = float(x - x0) / self._curwin._width
 			y = 1.0 - float(y - y0) / self._curwin._height
 			if x < 0 or x > 1 or y < 0 or y > 1:
@@ -663,14 +666,12 @@ class _Button:
 		dispobj = self._dispobj
 		if dispobj._window._active_display_list != dispobj:
 			raise error, 'can only highlight rendered button'
-		if toplevel._win_lock:
-			toplevel._win_lock.acquire()
+		toplevel._win_lock.acquire()
 		gl.winset(self._dispobj._window._window_id)
 		gl.RGBcolor(self._hicolor)
 		gl.linewidth(self._hiwidth)
 		gl.recti(self._coordinates)
-		if toplevel._win_lock:
-			toplevel._win_lock.release()
+		toplevel._win_lock.release()
 		self._highlighted = 1
 
 	def unhighlight(self):
@@ -683,14 +684,12 @@ class _Button:
 		if self._hiwidth > self._linewidth:
 			dispobj.render()
 		else:
-			if toplevel._win_lock:
-				toplevel._win_lock.acquire()
+			toplevel._win_lock.acquire()
 			gl.winset(self._dispobj._window._window_id)
 			gl.RGBcolor(self._color)
 			gl.linewidth(self._linewidth)
 			gl.recti(self._coordinates)
-			if toplevel._win_lock:
-				toplevel._win_lock.release()
+			toplevel._win_lock.release()
 
 	def _inside(self, x, y):
 		# return 1 iff the given coordinates fall within the button
@@ -758,8 +757,7 @@ class _DisplayList:
 			for but in window._active_display_list._buttonlist:
 				but._highlighted = 0
 		window._active_display_list = self
-		if toplevel._win_lock:
-			toplevel._win_lock.acquire()
+		toplevel._win_lock.acquire()
 		gl.winset(window._window_id)
 		gl.RGBcolor(self._bgcolor)
 		gl.clear()
@@ -770,8 +768,7 @@ class _DisplayList:
 			else:
 				funcargs()
 		gl.gflush()
-		if toplevel._win_lock:
-			toplevel._win_lock.release()
+		toplevel._win_lock.release()
 		self._rendered = 1
 
 	def clone(self):
@@ -1068,8 +1065,7 @@ class _Window:
 		self._parent_window = parent
 		if not is_toplevel:
 			return
-		if toplevel._win_lock:
-			toplevel._win_lock.acquire()
+		toplevel._win_lock.acquire()
 		try:
 			import calcwmcorr
 			wmcorr_x, wmcorr_y = calcwmcorr.calcwmcorr()
@@ -1120,8 +1116,7 @@ class _Window:
 		gl.reshapeviewport()
 		self._width, self._height = gl.getsize()
 		gl.ortho2(-0.5, self._width-0.5, -0.5, self._height-0.5)
-		if toplevel._win_lock:
-			toplevel._win_lock.release()
+		toplevel._win_lock.release()
 		self._bgcolor = self._parent_window._bgcolor
 		self._fgcolor = self._parent_window._fgcolor
 		self._subwindows = []
@@ -1146,8 +1141,7 @@ class _Window:
 			raise TypeError, 'arg count mismatch'
 		x, y, w, h = coordinates
 		x0, y0, x1, y1 = self._convert_coordinates(x, y, w, h)
-		if toplevel._win_lock:
-			toplevel._win_lock.acquire()
+		toplevel._win_lock.acquire()
 		gl.winset(self._toplevel._window_id)
 		tx, ty = gl.getorigin()
 		gl.winset(self._window_id)
@@ -1223,25 +1217,21 @@ class _Window:
 			raise TypeError, 'arg count mismatch'
 		self._bgcolor = color
 		if not self._active_display_list:
-			if toplevel._win_lock:
-				toplevel._win_lock.acquire()
+			toplevel._win_lock.acquire()
 			gl.winset(self._window_id)
 			gl.RGBcolor(self._bgcolor)
 			gl.clear()
-			if toplevel._win_lock:
-				toplevel._win_lock.release()
+			toplevel._win_lock.release()
 
 	def settitle(self, title):
 		if self.is_closed():
 			raise error, 'window already closed'
 		if self._parent_window != toplevel:
 			raise error, 'can only settitle at top-level'
-		if toplevel._win_lock:
-			toplevel._win_lock.acquire()
+		toplevel._win_lock.acquire()
 		gl.winset(self._window_id)
 		gl.wintitle(title)
-		if toplevel._win_lock:
-			toplevel._win_lock.release()
+		toplevel._win_lock.release()
 
 	def newdisplaylist(self, *bgcolor):
 		if self.is_closed():
@@ -1260,11 +1250,12 @@ class _Window:
 			raise error, 'window already closed'
 		if constrainx and constrainy:
 			raise error, 'can\'t constrain both X and Y directions'
-		gl.winset(self._window_id)
 		# we must invert y0 and y1 here because convert_coordinates
 		# inverts them also and here it is important which coordinate
 		# comes first but not which coordinate is the higher
 		x0, y1, x1, y0 = self._convert_coordinates(x, y, w, h)
+		toplevel._win_lock.acquire()
+		gl.winset(self._window_id)
 		if gl.getplanes() < 12:
 			gl.drawmode(GL.PUPDRAW)
 			gl.mapcolor(GL.RED, 255, 0, 0)
@@ -1277,6 +1268,7 @@ class _Window:
 		screenx0, screeny0 = gl.getorigin()
 		mx, my = x1, y1
 		width, height = gl.getsize()
+		toplevel._win_lock.release()
 		while 1:
 			while testevent() == 0:
 				if not constrainx:
@@ -1294,17 +1286,23 @@ class _Window:
 					if my >= height:
 						my = height - 1
 				if mx != x1 or my != y1:
+					toplevel._win_lock.acquire()
+					gl.winset(self._window_id)
 					gl.color(0)
 					gl.clear()
 					x1, y1 = mx, my
 					gl.color(GL.RED)
 					gl.recti(x0, y0, x1, y1)
+					toplevel._win_lock.release()
 			w, e, v = readevent()
 			if e == Mouse0Release:
 				break
+		toplevel._win_lock.acquire()
+		gl.winset(self._window_id)
 		gl.color(0)
 		gl.clear()
 		gl.drawmode(GL.NORMALDRAW)
+		toplevel._win_lock.release()
 		if x1 < x0:
 			x0, x1 = x1, x0
 		if y1 < y0:
@@ -1329,8 +1327,9 @@ class _Window:
 			raise error, 'window already closed'
 		if constrainx and constrainy:
 			raise error, 'can\'t constrain both X and Y directions'
-		gl.winset(self._window_id)
 		x0, y0, x1, y1 = self._convert_coordinates(x, y, w, h)
+		toplevel._win_lock.acquire()
+		gl.winset(self._window_id)
 		if gl.getplanes() < 12:
 			gl.drawmode(GL.PUPDRAW)
 			gl.mapcolor(GL.RED, 255, 0, 0)
@@ -1344,6 +1343,7 @@ class _Window:
 		omx = gl.getvaluator(DEVICE.MOUSEX) - screenx0
 		omy = gl.getvaluator(DEVICE.MOUSEY) - screeny0
 		width, height = gl.getsize()
+		toplevel._win_lock.release()
 		while 1:
 			while testevent() == 0:
 				if not constrainx:
@@ -1353,6 +1353,8 @@ class _Window:
 				if mx != omx or my != omy:
 					dx = mx - omx
 					dy = my - omy
+					toplevel._win_lock.acquire()
+					gl.winset(self._window_id)
 					gl.color(0)
 					gl.clear()
 					x0 = x0 + dx
@@ -1374,12 +1376,16 @@ class _Window:
 					gl.color(GL.RED)
 					gl.recti(x0, y0, x1, y1)
 					omx, omy = mx, my
+					toplevel._win_lock.release()
 			w, e, v = readevent()
 			if e == Mouse0Release:
 				break
+		toplevel._win_lock.acquire()
+		gl.winset(self._window_id)
 		gl.color(0)
 		gl.clear()
 		gl.drawmode(GL.NORMALDRAW)
+		toplevel._win_lock.release()
 		if x1 < x0:
 			x0, x1 = x1, x0
 		if y1 < y0:
@@ -1409,22 +1415,18 @@ class _Window:
 # that the current situation also has undesirable side effects, but I
 # haven't seen them yet.  --sjoerd
 ##		self._parent_window.pop()
-		if toplevel._win_lock:
-			toplevel._win_lock.acquire()
+		toplevel._win_lock.acquire()
 		gl.winset(self._window_id)
 		gl.winpop()
-		if toplevel._win_lock:
-			toplevel._win_lock.release()
+		toplevel._win_lock.release()
 
 	def getgeometry(self):
 		if self.is_closed():
 			raise error, 'window already closed'
-		if toplevel._win_lock:
-			toplevel._win_lock.acquire()
+		toplevel._win_lock.acquire()
 		gl.winset(self._window_id)
 		x, y = gl.getorigin()
-		if toplevel._win_lock:
-			toplevel._win_lock.release()
+		toplevel._win_lock.release()
 		h = float(_mscreenheight) / _screenheight
 		w = float(_mscreenwidth) / _screenwidth
 		return float(x) * w, (_screenheight - y - self._height) * h, \
@@ -1437,8 +1439,7 @@ class _Window:
 			self._redraw_func = None
 
 	def _resize(self):
-		if toplevel._win_lock:
-			toplevel._win_lock.acquire()
+		toplevel._win_lock.acquire()
 		if self._parent_window != toplevel:
 			x, y, w, h = self._sizes
 			x0, y0, x1, y1 = \
@@ -1450,8 +1451,7 @@ class _Window:
 		gl.reshapeviewport()
 		self._width, self._height = gl.getsize()
 		gl.ortho2(-0.5, self._width-0.5, -0.5, self._height-0.5)
-		if toplevel._win_lock:
-			toplevel._win_lock.release()
+		toplevel._win_lock.release()
 		# close all display objects after a resize
 		for displist in self._displaylists[:]:
 			displist.close()
@@ -1472,30 +1472,26 @@ class _Window:
 			for but in buttons:
 				but.highlight()
 		else:
-			if toplevel._win_lock:
-				toplevel._win_lock.acquire()
+			toplevel._win_lock.acquire()
 			gl.winset(self._window_id)
 			gl.RGBcolor(self._bgcolor)
 			gl.clear()
-			if toplevel._win_lock:
-				toplevel._win_lock.release()
+			toplevel._win_lock.release()
 		self._must_redraw = 0
 
 	def setcursor(self, cursor):
 		for win in self._subwindows:
 			win.setcursor(cursor)
-		if toplevel._win_lock:
+		try:
 			toplevel._win_lock.acquire()
-		gl.winset(self._window_id)
-		if cursor == 'watch':
-			gl.setcursor(_WATCH, 0, 0)
-		elif cursor == '':	# default is arrow cursor
-			gl.setcursor(_ARROW, 0, 0)
-		else:
-			if toplevel._win_lock:
-				toplevel._win_lock.release()
-			raise error, 'unknown cursor glyph'
-		if toplevel._win_lock:
+			gl.winset(self._window_id)
+			if cursor == 'watch':
+				gl.setcursor(_WATCH, 0, 0)
+			elif cursor == '':	# default is arrow cursor
+				gl.setcursor(_ARROW, 0, 0)
+			else:
+				raise error, 'unknown cursor glyph'
+		finally:
 			toplevel._win_lock.release()
 		self._cursor = cursor
 

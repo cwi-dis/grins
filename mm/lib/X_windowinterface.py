@@ -409,7 +409,12 @@ class _Window:
 			toplevel._win_lock.release()
 
 	def pop(self):
-		self._parent_window.pop()
+# The following statement was commented out because in the GL version
+# it had the undesirable effect that when the second of two subwindows
+# was popped, the first disappeared under its parent window.  It may
+# be that the current situation also has undesirable side effects, but
+# I haven't seen them yet.  --sjoerd
+##		self._parent_window.pop()
 		if toplevel._win_lock:
 			toplevel._win_lock.acquire()
 		self._form.RaiseWindow()
@@ -989,7 +994,7 @@ class _DisplayList:
 		x, y, w, h = window._convert_coordinates(x, y, w, h)
 		if toplevel._win_lock:
 			toplevel._win_lock.acquire()
-		color = self._window._convert_color()
+		color = self._window._convert_color(color)
 		self._gc.foreground = color
 		self._gc.FillRectangle(x, y, w, h)
 		self._gc.foreground = self._xfgcolor
