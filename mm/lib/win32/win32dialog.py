@@ -756,6 +756,8 @@ class OpenAppDialog(ResDialog):
 		for i in range(len(self._recentlist)):
 			self._c_recent.insertstring(i, self._recentlist[i][0])
 		self._b_never_again.setcheck(0)
+		if self._cb_never_again is None:
+			self._b_never_again.hide()
 		return ResDialog.OnInitDialog(self)
 
 	def show(self):
