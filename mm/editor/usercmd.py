@@ -184,8 +184,6 @@ class MAGIC_PLAY(_CommandBase):
 	help = 'Continue when paused, pause when playing, play when stopped'
 class USERGROUPS(_DynamicCascade):
 	help = 'Custom tests'
-class SHOWHIDDEN(_CommandBase):
-	help = 'Show hidden custom tests'
 class CHANNELS(_DynamicCascade):
 	help = 'Toggle channels on/off'
 class CRASH(_CommandBase):
