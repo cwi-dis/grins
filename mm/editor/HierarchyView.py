@@ -71,6 +71,7 @@ class HierarchyView(ViewDialog):
 	def show(self):
 		if self.is_showing():
 			return
+		self.toplevel.showstate(self, 1)
 		title = 'Hierarchy View (' + self.toplevel.basename + ')'
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
@@ -92,6 +93,7 @@ class HierarchyView(ViewDialog):
 	def hide(self):
 		if not self.is_showing():
 			return
+		self.toplevel.showstate(self, 0)
 		self.save_geometry()
 		self.window.close()
 		self.window = None

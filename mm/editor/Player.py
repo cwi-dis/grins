@@ -80,6 +80,7 @@ class Player(ViewDialog, PlayerCore):
 		if self.is_showing():
 			self.window.pop()
 			return
+		self.toplevel.showstate(self, 1)
 		title = 'Player (' + self.toplevel.basename + ')'
 		self.makechannels()
 		self.fullreset()
@@ -180,6 +181,7 @@ class Player(ViewDialog, PlayerCore):
 	def hide(self):
 		if not self.showing: return
 		self.showing = 0
+		self.toplevel.showstate(self, 0)
 		self.toplevel.setwaiting()
 		self.stop()
 		self.fullreset()

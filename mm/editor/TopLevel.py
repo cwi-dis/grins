@@ -99,6 +99,11 @@ class TopLevel(ViewDialog):
 		self.window = None
 		self.showing = 0
 
+	def showstate(self, view, showing):
+		for i in range(len(self.views)):
+			if view is self.views[i]:
+				self.window.buttons.setbutton(i+1, showing)
+
 	def destroy(self):
 		self.hide()
 		self.destroyviews()
@@ -161,7 +166,7 @@ class TopLevel(ViewDialog):
 	#
 	def play_callback(self):
 		self.setwaiting()
-		self.window.buttons.setbutton(1, 1)
+##		self.window.buttons.setbutton(1, 1)
 		self.player.show()
 		self.player.playsubtree(self.root)
 		self.setready()
