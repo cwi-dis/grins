@@ -148,7 +148,7 @@ default_settings = {
 user_settings = {}
 
 # Which of these should match exactly:
-EXACT=['system_captions', 'system_overdub_or_captions',
+EXACT=['system_captions', 'system_overdub_or_caption',
        'system_audiodesc']
 LANGUAGE=['system_language']
 ALL=['system_bitrate', 'system_captions', 'system_language',
