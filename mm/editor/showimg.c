@@ -50,7 +50,7 @@ char **argv;
 	    int xorg, yorg;
 	    xorg = atoi(argv[2]);
 	    yorg = atoi(argv[3]);
-	    prefposition(xorg, xorg + xsize, yorg, yorg + ysize);
+	    prefposition(xorg, xorg + xsize - 1, yorg, yorg + ysize - 1);
     }
     else
 	    prefsize(xsize,ysize);
