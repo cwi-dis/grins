@@ -57,6 +57,7 @@ default_settings = {
 	'RPthumbnails': 0,		# RealPix thumbnails in timeline view
 	'cascade': 0,			# Cascade regions when no <layout>
 	'no_image_cache': 0,		# Don't cache images (or info about them)
+	'noskip': 0,			# Don't skip initial part of continuous media
 # HierarchyView colors
 	'structure_bgcolor': (150, 150, 150), # Light gray
 	'structure_leafcolor': (255,255,222),

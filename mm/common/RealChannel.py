@@ -20,6 +20,8 @@ error = 'RealChannel.error'
 
 realenginedebug=0
 
+import settings
+
 class RealEngine:
 	# This class holds the RMA engine and a useage counter. This counter is
 	# needed because on the mac (and maybe on unix) whenever any player is active
@@ -166,7 +168,7 @@ class RealChannel:
 		if not self.__spark: return
 		node = self._playargs[0]
 		t0 = self.__channel._scheduler.timefunc()
-		if t0 > self._playargs[5]:
+		if t0 > self._playargs[5] and not settings.get('noskip'):
 			if not __debug__:
 				print 'RealChannel: skipping',node.get_start_time(),t0,t0-node.start_time
 			try:
