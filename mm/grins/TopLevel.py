@@ -55,6 +55,9 @@ class TopLevel(TopLevelDialog):
 		   hasattr(windowinterface, 'textwindow'):
 			self.commandlist.append(
 				SOURCE(callback = (self.source_callback, ())))
+			import settings
+			if settings.get('showsource'):
+				self.source_callback()
 
 	def __repr__(self):
 		return '<TopLevel instance, url=' + `self.filename` + '>'
