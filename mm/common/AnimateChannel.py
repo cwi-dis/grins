@@ -12,7 +12,6 @@ __version__ = "$Id$"
 # The special thing with this one is that it has no effect by itself.
 # Its effect comes from the script's target channel.
 # It acts on its target channel by changing its attributes.
-# It can play only when its target channel is playing.
 # The strong relation with its target channel and the fact 
 # that is an async channel is what makes it special.
 
@@ -21,6 +20,7 @@ import MMAttrdefs
 import time
 import Animators
 
+# for timer support
 import windowinterface
 
 debug = 0
@@ -40,7 +40,6 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__playdone = 0
 		self.__animator = None
 		self.__effAnimator = None
-		self.__targetchan = None
 		self.__lastvalue = None
 		if not hasattr(self._player,'_animateContext'):
 			self._player._animateContext = Animators.AnimateContext()
@@ -59,27 +58,28 @@ class AnimateChannel(Channel.ChannelAsync):
 		Channel.ChannelAsync.do_hide(self)
 
 	def do_arm(self, node, same=0):
-		parser = Animators.AnimateElementParser(node, node.targetnode)
+		parser = Animators.AnimateElementParser(node)
 		self.__animator = parser.getAnimator()
-		targetchname = MMAttrdefs.getattr(node.targetnode, 'channel') 
-		self.__targetchan = self._player.getchannelbyname(targetchname)
-		if self.__targetchan and self.__animator:
+		if self.__animator:
 			context = self._player._animateContext
-			self.__effAnimator = context.getEffectiveAnimator(node.targetnode, 
-				self.__animator.getAttrName(), 
-				self.__animator.getDOMValue())
+			self.__effAnimator = context.getEffectiveAnimator(
+				parser.getTargetNode(), 
+				parser.getAttrName(), 
+				parser.getDOMValue())
 		return 1
 
 	def do_play(self, node):
 		if debug: print 'AnimateChannel.do_play'
 		
-		if not self.__animator or not self.__targetchan:
+		if not self.__animator or not self.__effAnimator:
 			# arming failed, so don't even try playing
 			self.playdone(0)
 			return
 
-		# get timing
+		# the playing node
 		self.__animating = node
+
+		# get timing
 		self.play_loop = self.getloop(node)
 
 		# get duration in secs (float)
@@ -89,7 +89,6 @@ class AnimateChannel(Channel.ChannelAsync):
 		self.__startAnimate()
 
 	def stopplay(self, node):
-		if debug: print 'AnimateChannel.stopplay'
 		if self.__animating is node and node is not None:
 			self.__stopAnimate()
 		self.__animating = None
@@ -100,12 +99,12 @@ class AnimateChannel(Channel.ChannelAsync):
 		Channel.ChannelAsync.setpaused(self, paused)
 
 	def __startAnimate(self):
-		if debug and self.__animator:
-			print 'start animation, initial value', self.__animator.getValue(0)
 		self.__start = time.time()
-
-		targnode = self.__animating.targetnode
-		self.__effAnimator.onAnimateBegin(self.__targetchan, targnode, self.__animator)
+			
+		targnode = self.__effAnimator.getTargetNode()
+		chname =  MMAttrdefs.getattr(targnode, 'channel') 
+		targetchan = self._player.getchannelbyname(chname)
+		self.__effAnimator.onAnimateBegin(targetchan, self.__animator)
 
 		self.__animate()
 		self.__register_for_timeslices()
@@ -125,16 +124,11 @@ class AnimateChannel(Channel.ChannelAsync):
 
 	def __animate(self):
 		dt = time.time()-self.__start
-		node = self.__animating.targetnode
-		attr = self.__animator.getAttrName()
 		val = self.__animator.getValue(dt)
-		if node and self.__targetchan:
+		if self.__effAnimator:
 			if self.__lastvalue != val:
 				self.__effAnimator.update()
 				self.__lastvalue = val
-		if debug:
-			msg = 'animating %s =' % attr
-			print msg, self.__animator.getValue(dt)
 
 	def __onAnimateDur(self):
 		if not self.__animating:
