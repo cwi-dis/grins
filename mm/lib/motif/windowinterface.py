@@ -281,27 +281,24 @@ class _Timer:
 		toplevel.setready()
 
 class _ToolTip:
-	__popupwidget = None
-
 	def __init__(self):
 		self.__tid = None
 		self.__tooltips = {}
+		self.__popupwidget = None
 
-	def close(self):
-		self.__rmtt()
-		del self.__tooltips
-
-	def _addtthandler(self, widget, tooltip):
-		self._deltthandler(widget)
+	def addtthandler(self, widget, tooltip):
+		# add a tooltip handler for the given widget
+		self.deltthandler(widget)
 		widget.AddEventHandler(X.EnterWindowMask|X.LeaveWindowMask, 0,
 				       self.__tooltipeh, tooltip)
 		self.__tooltips[widget] = tooltip
 		for w in widget.children or []:
 			if not w.IsSubclass(Xm.Gadget):
-				self._addtthandler(w, tooltip)
+				self.addtthandler(w, tooltip)
 
-	def _deltthandler(self, widget):
-		self.__rmtt(widget)
+	def deltthandler(self, widget):
+		# remove the tooltip handler for the given widget, if any
+		self.rmtt(widget)
 		tt = self.__tooltips.get(widget)
 		if tt is None:
 			return
@@ -309,19 +306,25 @@ class _ToolTip:
 		widget.RemoveEventHandler(X.EnterWindowMask|X.LeaveWindowMask,
 					  0, self.__tooltipeh, tt)
 
-	def __rmtt(self, widget = None):
-		if _ToolTip.__popupwidget is not None:
-			popup, w = _ToolTip.__popupwidget
+	def rmtt(self, widget = None):
+		# remove the current tooltip, if any
+		if self.__popupwidget is not None:
+			popup, w = self.__popupwidget
 			if widget is None or w is widget:
-				_ToolTip.__popupwidget = None
+				self.__popupwidget = None
 				popup.Popdown()
 				popup.DestroyWidget()
+
+	def __ttdestroy(self, widget, client_data, call_data):
+		if self.__popupwidget is not None and \
+		   widget is self.__popupwidget[0]:
+			self.__popupwidget = None
 
 	def __tooltipeh(self, widget, tooltip, event):
 		if self.__tid is not None:
 			Xt.RemoveTimeOut(self.__tid)
 			self.__tid = None
-		self.__rmtt()
+		self.rmtt()
 		if event.type == X.EnterNotify:
 			self.__tid = Xt.AddTimeOut(500, self.__tooltipto,
 						   (tooltip, widget))
@@ -345,7 +348,8 @@ class _ToolTip:
 				{'visual': toplevel._default_visual,
 				 'colormap': toplevel._default_colormap,
 				 'depth': toplevel._default_visual.depth})
-		_ToolTip.__popupwidget = popup, widget
+		self.__popupwidget = popup, widget
+		popup.AddCallback('destroyCallback', self.__ttdestroy, None)
 		label = popup.CreateManagedWidget('help_label', Xm.Label,
 						  {'labelString': tooltip})
 		# figure out placement
@@ -368,7 +372,9 @@ class _ToolTip:
 		popup.SetValues({'x': x, 'y': y})
 		popup.Popup(0)
 
-class _CommandSupport(_ToolTip):
+_tooltip = _ToolTip()
+
+class _CommandSupport:
 	def __init__(self):
 		self.__commandlist = []	# list of currently valid command insts
 		self.__commanddict = {}	# mapping of command class to instance
@@ -376,7 +382,6 @@ class _CommandSupport(_ToolTip):
 		self.__accelmap = {}	# mapping of command to list of keys
 		self.__togglelables = {}
 		self.__delete_commands = []
-		_ToolTip.__init__(self)
 
 	def close(self):
 		del self.__commandlist
@@ -385,7 +390,6 @@ class _CommandSupport(_ToolTip):
 		del self.__accelmap
 		del self.__togglelables
 		del self.__delete_commands
-		_ToolTip.close(self)
 
 	def set_commandlist(self, list):
 		oldlist = self.__commandlist
@@ -403,7 +407,7 @@ class _CommandSupport(_ToolTip):
 				if not newdict.has_key(c):
 					for w in self.__widgetmap.get(c, []):
 						w.SetSensitive(0)
-						self._deltthandler(w)
+						_tooltip.deltthandler(w)
 			# then add new commands
 			for cmd in list:
 				c = cmd.__class__
@@ -411,7 +415,7 @@ class _CommandSupport(_ToolTip):
 					for w in self.__widgetmap.get(c, []):
 						w.SetSensitive(1)
 						if cmd.help:
-							self._addtthandler(w, cmd.help)
+							_tooltip.addtthandler(w, cmd.help)
 		# reassign callbacks for accelerators
 		for c in oldlist:
 			for key in self.__accelmap.get(c, []):
@@ -431,6 +435,7 @@ class _CommandSupport(_ToolTip):
 					widget.labelString = label[onoff]
 
 	def __callback(self, widget, callback, call_data):
+		_tooltip.rmtt()
 		if type(callback) is ClassType:
 			callback = self.__commanddict.get(callback)
 			if callback is not None:
@@ -1588,6 +1593,7 @@ class _Window(_AdornmentSupport):
 		self.close()
 
 	def _delete_callback(self, form, client_data, call_data):
+		_tooltip.rmtt()
 		self._arrowcache = {}
 		w = _in_create_box
 		if w:
@@ -1609,6 +1615,7 @@ class _Window(_AdornmentSupport):
 		toplevel.setready()
 
 	def _input_callback(self, form, client_data, call_data):
+		_tooltip.rmtt()
 		if self._parent is None:
 			return		# already closed
 		if _in_create_box:
@@ -1756,6 +1763,7 @@ class _Window(_AdornmentSupport):
 			self.showwindow(self._showing)
 
 	def _scr_resize_callback(self, w, form, call_data):
+		_tooltip.rmtt()
 		if self.is_closed():
 			return
 		width = max(self._form.width, w.width)
@@ -1763,6 +1771,7 @@ class _Window(_AdornmentSupport):
 		self._form.SetValues({'width': width, 'height': height})
 
 	def _resize_callback(self, form, client_data, call_data):
+		_tooltip.rmtt()
 		val = self._form.GetValues(['width', 'height'])
 		x, y = self._rect[:2]
 		width, height = val['width'], val['height']
@@ -3161,6 +3170,7 @@ class showmessage:
 		return self._main is None
 
 	def _callback(self, widget, callback, call_data):
+		_tooltip.rmtt()
 		if not self._main:
 			return
 		if _in_create_box and _in_create_box._rb_dialog is not self:
@@ -3393,6 +3403,7 @@ class FileDialog:
 		return self._main is None
 
 	def _cancel_callback(self, *rest):
+		_tooltip.rmtt()
 		if _in_create_box or self.is_closed():
 			return
 		must_close = TRUE
@@ -3410,6 +3421,7 @@ class FileDialog:
 			toplevel.setready()
 
 	def _ok_callback(self, widget, existing, call_data):
+		_tooltip.rmtt()
 		if _in_create_box or self.is_closed():
 			return
 		self._do_ok_callback(widget, existing, call_data)
@@ -3517,6 +3529,7 @@ class SelectionDialog:
 			self._main = None
 
 	def _nomatch_callback(self, widget, client_data, call_data):
+		_tooltip.rmtt()
 		if _in_create_box or self.is_closed():
 			return
 		ret = self.NomatchCallback(call_data.value)
@@ -3525,6 +3538,7 @@ class SelectionDialog:
 		toplevel.setready()
 
 	def _ok_callback(self, widget, client_data, call_data):
+		_tooltip.rmtt()
 		if _in_create_box or self.is_closed():
 			return
 		try:
@@ -3543,6 +3557,7 @@ class SelectionDialog:
 		toplevel.setready()
 
 	def _cancel_callback(self, widget, client_data, call_data):
+		_tooltip.rmtt()
 		if _in_create_box or self.is_closed():
 			return
 		try:
@@ -3600,6 +3615,7 @@ class InputDialog:
 		self.setcursor(_WAITING_CURSOR)
 
 	def _ok(self, w, client_data, call_data):
+		_tooltip.rmtt()
 		if _in_create_box or self.is_closed():
 			return
 		value = call_data.value
@@ -3609,6 +3625,7 @@ class InputDialog:
 			toplevel.setready()
 
 	def _cancel(self, w, client_data, call_data):
+		_tooltip.rmtt()
 		if _in_create_box or self.is_closed():
 			return
 		self.close()
@@ -3706,7 +3723,7 @@ class _MenuSupport:
 	def _destroy(self):
 		self._menu = None
 
-class _Widget(_MenuSupport, _ToolTip):
+class _Widget(_MenuSupport):
 	'''Support methods for all window objects.'''
 	def __init__(self, parent, widget, tooltip = None):
 		self._parent = parent
@@ -3716,9 +3733,8 @@ class _Widget(_MenuSupport, _ToolTip):
 		widget.ManageChild()
 		_MenuSupport.__init__(self)
 		self._form.AddCallback('destroyCallback', self._destroy, None)
-		_ToolTip.__init__(self)
 		if tooltip is not None:
-			self._addtthandler(widget, tooltip)
+			_tooltip.addtthandler(widget, tooltip)
 
 	def __repr__(self):
 		return '<_Widget instance at %x>' % id(self)
@@ -3731,6 +3747,7 @@ class _Widget(_MenuSupport, _ToolTip):
 			pass
 		else:
 			del self._form
+			_tooltip.deltthandler(form)
 			_MenuSupport.close(self)
 			form.DestroyWidget()
 		if self._parent:
@@ -3740,6 +3757,14 @@ class _Widget(_MenuSupport, _ToolTip):
 	def is_closed(self):
 		'''Returns true if the window is already closed.'''
 		return not hasattr(self, '_form')
+
+	def _callback(self, widget, callback, call_data):
+		'''Generic callback.'''
+		_tooltip.rmtt()
+		if _in_create_box or self.is_closed():
+			return
+		apply(apply, callback)
+		toplevel.setready()
 
 	def _get_acceleratortext(self, callback):
 		return self._parent._get_acceleratortext(callback)
@@ -3855,7 +3880,7 @@ class Button(_Widget):
 		button = parent._form.CreateManagedWidget(name, button, attrs)
 		if callback:
 			button.AddCallback('activateCallback',
-					   self.__callback, callback)
+					   self._callback, callback)
 		_Widget.__init__(self, parent, button, tooltip)
 
 	def __repr__(self):
@@ -3867,12 +3892,6 @@ class Button(_Widget):
 
 	def setsensitive(self, sensitive):
 		self._form.sensitive = sensitive
-
-	def __callback(self, widget, callback, call_data):
-		if _in_create_box or self.is_closed():
-			return
-		apply(apply, callback)
-		toplevel.setready()
 
 class OptionMenu(_Widget):
 	'''Option menu window object.'''
@@ -4011,6 +4030,7 @@ class OptionMenu(_Widget):
 		self.setpos(startpos)
 
 	def _cb(self, widget, value, call_data):
+		_tooltip.rmtt()
 		if _in_create_box or self.is_closed():
 			return
 		self._value = value
@@ -4209,13 +4229,6 @@ class _List:
 			self._list.ListSetPos(toppos)
 		else:
 			raise error, 'bad argument for scrolllist'
-
-
-	def _callback(self, w, callback, call_data):
-		if _in_create_box or self.is_closed():
-			return
-		apply(apply, callback)
-		toplevel.setready()
 
 	def _destroy(self):
 		del self._itemlist
@@ -4444,12 +4457,6 @@ class TextInput(_Widget):
 	def setfocus(self):
 		self._text.ProcessTraversal(Xmd.TRAVERSE_CURRENT)
 
-	def _callback(self, w, callback, call_data):
-		if _in_create_box or self.is_closed():
-			return
-		apply(apply, callback)
-		toplevel.setready()
-
 	def _modifyCB(self, w, func, call_data):
 		if _in_create_box:
 			return
@@ -4544,12 +4551,6 @@ class TextEdit(_Widget):
 			line = len(self._linecache) - 1
 		pos = self._linecache[line]
 		self._form.TextSetSelection(pos + start, pos + end, 0)
-
-	def _callback(self, w, callback, call_data):
-		if _in_create_box or self.is_closed():
-			return
-		apply(apply, callback)
-		toplevel.setready()
 
 	def _destroy(self, widget, value, call_data):
 		_Widget._destroy(self, widget, value, call_data)
@@ -4711,12 +4712,6 @@ class Slider(_Widget):
 
 	def getrange(self):
 		return self._minimum, self._maximum
-
-	def _callback(self, widget, callback, call_data):
-		if _in_create_box or self.is_closed():
-			return
-		apply(apply, callback)
-		toplevel.setready()
 
 	def _calcrange(self, minimum, initial, maximum):
 		self._minimum, self._maximum = minimum, maximum
