@@ -485,7 +485,7 @@ EOF
 	;;
 esac &&
 cd $depth &&
-CMIF=$CHAMELEON/mm PYTHONPATH=$CHAMELEON/mm/lib:$CHAMELEON/python/Lib:$CHAMELEON/python/Lib/test:$CHAMELEON/python/Lib/plat-$ARCH $python -c 'import MMAttrdefs'
+CMIF=$CHAMELEON/mm PYTHONPATH=$CHAMELEON/mm/lib:$CHAMELEON/mm/common:$CHAMELEON/mm/editor/smil10:$CHAMELEON/python/Lib:$CHAMELEON/python/Lib/test:$CHAMELEON/python/Lib/plat-$ARCH $python -c 'import MMAttrdefs'
 ) &&
 {
 [ "$nomake" ] || (
