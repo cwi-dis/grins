@@ -149,15 +149,19 @@ class ProgressDialog:
 		
 from imgimagesize import GetImageSize
 def GetVideoSize(file):
-	import mv
+	try:
+		import mv		# SGI?
+	except ImportError:
+		import MPEGVideoSize
+		return MPEGVideoSize.getsize(file)
 	try:
 		movie = mv.OpenFile(file, mv.MV_MPEG1_PRESCAN_OFF)
 		track = movie.FindTrackByMedium(mv.DM_IMAGE)
-		width = track.GetImageWidth()
-		height = track.GetImageHeight()
+		return track.GetImageWidth(), track.GetImageHeight()
 	except:
-		width = height = 0
-	return width, height
+		pass
+	import MPEGVideoSize
+	return MPEGVideoSize.getsize(file)
 
 def setidleproc(f):
 	return Xt.AddWorkProc(f, 0)
