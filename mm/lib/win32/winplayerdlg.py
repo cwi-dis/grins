@@ -244,8 +244,17 @@ class PlayerDlgBar(window.Wnd):
 				optionlist.append(initoption)
 			ctrl.initoptions(optionlist, optionlist.index(initoption))
 			ctrl.setcb(info[1])
+		elif isinstance(ctrl, components.CheckButton):
+			initoption = info[2]
+			ctrl.setcb(info[1])
+			if initoption == 'on':
+				ctrl.setcheck(1)
+			elif initoption == 'off':
+				ctrl.setcheck(0)
+			else:
+				print 'Unexpected value for "%s": "%s"'%(name, initoption)
 		else:
-			print 'Cannot do yet', name, ctrl
+			print 'Unexpected control:', name, ctrl
 
 	def _recreateDialog(self, optionsdict):
 		attrs = []
@@ -264,16 +273,19 @@ class PlayerDlgBar(window.Wnd):
 				self._parent.HookCommand(self.onCheck, ctrl.getId())
 			elif isinstance(ctrl, components.Button):
 				self._parent.HookCommand(self.onButton, ctrl.getId())
+			else:
+				print 'Unexpected control for hookCommands', ctrl
 
 	def onCombo(self, id, code):
 		if code == win32con.CBN_SELCHANGE:
 			for ctrl in self._ctrls.values():
 				if ctrl._id == id:
 					if ctrl._cb:
+						arg = ctrl.getvalue()
 						if type(ctrl._cb) == type(()):
-							apply(ctrl._cb[0], (ctrl._cb[1], ctrl.getvalue()))
+							apply(ctrl._cb[0], (ctrl._cb[1], arg))
 						else:
-							ctrl._cb(ctrl.getvalue())
+							ctrl._cb(arg)
 					break
 				
 	def onCheck(self, id, code):
@@ -281,10 +293,11 @@ class PlayerDlgBar(window.Wnd):
 			for ctrl in self._ctrls.values():
 				if ctrl._id == id:
 					if ctrl._cb:
-						ctrl._cb(ctrl.getcheck())
-					# verify setAttributes method
-					# ATTRIBUTES = [ ('option','Bitrate'),('option', 'Language'),]
-					# self.setAttributes(ATTRIBUTES)
+						arg = ['off', 'on'][ctrl.getcheck()]
+						if type(ctrl._cb) == type(()):
+							apply(ctrl._cb[0], (ctrl._cb[1], arg))
+						else:
+							ctrl._cb(arg)
 					break
 
 	def onButton(self, id, code):
