@@ -206,6 +206,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	def redraw(self, *rest):
 		# RESIZE event.
+		self.toplevel.setwaiting()
 		self.recalc()
 		self.draw()
 
