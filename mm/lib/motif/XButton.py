@@ -83,7 +83,7 @@ class _ButtonRect(_Button):
 		h = coordinates[4] - y
 		x, y, w, h = dispobj._window._convert_coordinates((x, y, w, h))
 		dispobj._buttonregion.UnionRectWithRegion(x, y, w, h)
-		if self._color == dispobj._bgcolor:
+		if self._color == dispobj._bgcolor or self._color is None:
 			return
 		dispobj.drawbox((coordinates[1], coordinates[2],
 				 coordinates[3]-coordinates[1],
@@ -99,6 +99,8 @@ class _ButtonRect(_Button):
 		# if button color and highlight color are all equal to
 		# the background color then don't draw the box (and
 		# don't highlight).
+		if self._hicolor is None:
+			return
 		if self._color == dispobj._bgcolor and \
 		   self._hicolor == dispobj._bgcolor:
 			return

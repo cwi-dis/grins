@@ -468,6 +468,8 @@ class _DisplayList:
 	def drawbox(self, coordinates, clip = None, units = UNIT_SCREEN):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if self._fgcolor is None:
+			raise error, 'no fgcolor'
 		self._list.append(('box', self._fgcolor, self._linewidth,
 				   coordinates, clip, units))
 		self._optimize((1,))
@@ -531,6 +533,8 @@ class _DisplayList:
 	def writestr(self, str):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if self._fgcolor is None:
+			raise error, 'no fgcolor'
 		w = self._window
 		list = self._list
 		f = self._font._font
@@ -608,6 +612,8 @@ class _DisplayList:
 	def drawdiamond(self, coordinates):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
+		if self._fgcolor is None:
+			raise error, 'no fgcolor'
 		self._list.append(('diamond',
 				   self._fgcolor,
 				   self._linewidth, coordinates))
