@@ -101,6 +101,9 @@ class TransitionEngine:
 			
 	def ismaster(self, window):
 		return window == self.windows[0]
+		
+	def isouttransition(self):
+		return self.outtransition
 				
 	def _idleproc(self):
 		"""Called in the event loop to optionally do a recompute"""
