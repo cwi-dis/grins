@@ -59,6 +59,7 @@ pascal long main(short variation, ControlHandle theControl, short message, long 
 int hasColor(Rect);
 void drawIt(ControlHandle control,short variation);
 long testIt(ControlHandle control, Point myPoint);
+static int NextControlValue(ControlHandle theControl);
 
 
 /* ----------------------------------------------------------------------
@@ -70,6 +71,11 @@ pascal long main(short variation, ControlHandle theControl, short message, long 
 	char	state = HGetState((Handle)theControl);
 	Str255	copyright = "\pCopyright © 1993-1996 Celestin Company, Inc.";
 
+	/*
+	** We want to use the upper bit of controlvalue for our magic.
+	*/
+	if ( GetControlMaximum(theControl) & 0x8000 )
+		/*XXXX*/;
 	switch(message)
 	{
 		case drawCntl:
@@ -83,7 +89,7 @@ pascal long main(short variation, ControlHandle theControl, short message, long 
 		case dispCntl:
 			break;
 		case posCntl:
-			break;
+			break; // SetControlValue(theControl,NextControlValue(theControl));
 		case thumbCntl:
 			break;
 		case dragCntl:
@@ -103,6 +109,14 @@ pascal long main(short variation, ControlHandle theControl, short message, long 
 	return(returnValue);				/* tell them what happened */
 }
 
+static int
+NextControlValue(ControlHandle theControl)
+{
+			if (GetControlValue(theControl) >= GetControlMaximum(theControl))
+				return GetControlMinimum(theControl);
+			else
+				return GetControlValue(theControl) + 1;
+}
 
 /* ----------------------------------------------------------------------
 hasColor
@@ -145,7 +159,7 @@ void drawIt(ControlHandle control, short variation)
 	GrafPtr				thePort;
 	PicHandle			myPicture;
 	Str255				myTitle;
-
+	
 	GetPort(&thePort);							/* save off the current port */
 
 	if (!(*control)->contrlVis)					/* if not visible, do nothing */
@@ -163,6 +177,7 @@ void drawIt(ControlHandle control, short variation)
 	if ((*control)->contrlHilite == 255) {
 		resid = GetControlMaximum(control)+1;
 	} else {
+#if 0
 		if ((*control)->contrlHilite == kControlButtonPart)
 		{
 			hilited = HILITED_OFFSET;					/* invert while tracking */
@@ -180,6 +195,12 @@ void drawIt(ControlHandle control, short variation)
 			}
 		}
 		resid = GetControlValue(control) + hilited;
+#else
+		if ((*control)->contrlHilite == kControlButtonPart)
+			resid = NextControlValue(control);
+		else
+			resid = GetControlValue(control);
+#endif
 	}
 
 	myPicture = (PicHandle)GetResource('PICT', (resid + useBW));
