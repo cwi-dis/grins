@@ -227,7 +227,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.destroynode = None	# node to be destroyed later
 		self.expand_on_show = 1
 		self.thumbnails = 1
-		self.showplayability = 0
+		self.showplayability = 1
 		self.timescale = 0
 		from cmif import findfile
 		self.datadir = findfile('GRiNS-Icons')
