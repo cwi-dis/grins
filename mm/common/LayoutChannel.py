@@ -10,7 +10,7 @@ class LayoutChannel(ChannelWindow):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 		self.is_layout_channel = 1
 
-	def do_arm(self, node):
-	        print 'LayoutChannel: cannot play nodes on a layout channel'
+	def do_arm(self, node, same=0):
+		print 'LayoutChannel: cannot play nodes on a layout channel'
 		return 1
 
