@@ -1457,22 +1457,9 @@ class ChannelWindow(Channel):
 			print 'ChannelWindow.do_show('+`self`+')'
 			
 		if self._wingeom == None:
-			######################### WARNING ###########################
-			############ for now we shouldn't pass here #################
-			#### this lines doesn't work for sub region pos #############
-			# these lines avoid just to avoid a crash
-			
-			# when it'll be possible to resizing on all plateform a channel
-			# we'll be able to change this
-			
-			# by default channel area is the same as LayoutChannel area
-			if pchan != None:
-				left, top, width, height = pchan._attrdict['base_winoff']
-				self._wingeom = 0, 0, width, height
-			else:
-				self._wingeom = 0, 0, 100, 100				
-			#############################################################
-				
+			# shouldn't happen
+			return 0
+		
 		self._curvals['base_winoff'] = self._wingeom, None
 
 		# the window size is determinate from arm method. self._wingeom is all the time 
