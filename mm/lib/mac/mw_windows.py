@@ -1195,6 +1195,9 @@ class _ScrollMixin:
 			return 1, 1
 		return self._canvassize
 		
+	def scrollvisible(self, coordinates, units = UNIT_MM):
+		pass
+
 	def getcanvassize(self, units = UNIT_MM):
 		if self._canvassize is None:
 			raise error, 'setcanvassize call for non-resizable window!'
