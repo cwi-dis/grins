@@ -15,7 +15,8 @@ __version__ = "$Id$"
 # manager - the only place the routines in the edit manager need to
 # be called from is here.
 
-import MMNode, MMExc, MMTypes
+import MMNode, MMExc
+from MMTypes import *
 import windowinterface
 import features
 from usercmd import *
@@ -53,7 +54,8 @@ class EditableMMNode(MMNode.MMNode):
 			more = grandchild.getAllowedMimeTypes()
 			if more is None:
 				# A grandchild accepts anything. So do we.
-				print 'accepting all', grandchild
+				if __debug__:
+					print 'accepting all', grandchild
 				return None
 			all = all + more # Gives dups, but who cares...
 		return all
@@ -236,12 +238,12 @@ class EditableMMNode(MMNode.MMNode):
 			return namelist
 
 		ctype = self.GetChannelType()
-		if ntype in MMTypes.mediatypes:
+		if ntype in mediatypes:
 			namelist.append('channel')
 		if ntype != 'switch':
 			namelist.extend(self.__timing)
 		if withspecials:
-			if ntype in MMTypes.interiortypes:
+			if ntype in interiortypes:
 				namelist.extend(['thumbnail_icon',
 						 'dropicon',
 						 'empty_icon',
@@ -265,7 +267,7 @@ class EditableMMNode(MMNode.MMNode):
 ##						 'project_default_duration_text',
 ##						 'project_default_duration_image',
 						 ])
-		if ntype in MMTypes.mediatypes:
+		if ntype in mediatypes:
 			if ntype != 'brush':
 				namelist.extend(['file',
 						 'mimetype',
@@ -325,7 +327,7 @@ class EditableMMNode(MMNode.MMNode):
 			namelist.append('fgcolor')
 		if withspecials and ntype == 'imm':
 			namelist.append('.values')
-		if ntype in MMTypes.termtypes:
+		if ntype in termtypes:
 			namelist.append('terminator')
 		if self.context.layouts:
 			# no sense bothering the user with an attribute that
