@@ -912,6 +912,11 @@ class LayoutManager(LayoutManagerBase):
 		for shape in self._selectedList:
 			if shape.getDragHandleAt(point)>=0:
 				return shape
+
+		# if click in already a selected shape, don't change the selection
+		for shape in self._selectedList:
+			if shape.inside(point):
+				return shape
 		
 		if self._viewport:
 			shape = self._viewport.getMouseTarget(point)
