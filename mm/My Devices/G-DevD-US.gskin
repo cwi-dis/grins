@@ -10,7 +10,7 @@ image G-DevD.gif
 #display area for skin:
 
 display 83 39 540 340
-centerskin 1
+centerskin = 1
 
 #basic control buttons:
 
