@@ -26,7 +26,7 @@ def getduration(filename):
 try:
 	import mv
 except ImportError:
-	from MpegDuration import *
+	from MPEGVideoDuration import *
 else:
 	duration_cache = FileCache.FileCache(getduration)
 	get = duration_cache.get
