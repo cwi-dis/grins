@@ -88,8 +88,8 @@ class sizes_time:
 	MINSIZE = 48 
 	MAXSIZE = 128
 	TITLESIZE = int(f_title.fontheightPXL()*1.2)
-	if TITLESIZE < 2*windowinterface.ICONSIZE_PXL:
-		TITLESIZE = 2*windowinterface.ICONSIZE_PXL
+	if TITLESIZE < windowinterface.ICONSIZE_PXL:
+		TITLESIZE = windowinterface.ICONSIZE_PXL
 	CHNAMESIZE = int(f_channel.fontheightPXL()*1.2) #0
 	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
 	HOREXTRASIZE = f_title.strsizePXL('XX')[0]
@@ -106,8 +106,8 @@ class sizes_notime:
 	MINSIZE = 48 
 	MAXSIZE = 128
 	TITLESIZE = int(f_title.fontheightPXL()*1.2)
-	if TITLESIZE < 2*windowinterface.ICONSIZE_PXL:
-		TITLESIZE = 2*windowinterface.ICONSIZE_PXL
+	if TITLESIZE < windowinterface.ICONSIZE_PXL:
+		TITLESIZE = windowinterface.ICONSIZE_PXL
 	CHNAMESIZE = 0
 	LABSIZE = TITLESIZE+CHNAMESIZE		# height of labels
 	HOREXTRASIZE = f_title.strsizePXL('XX')[0]
