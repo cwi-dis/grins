@@ -3427,6 +3427,22 @@ class DurationParGroup(AttrGroup):
 		ctrl.settext(self._data['title'])
 	def getpageresid(self):
 		return grinsRC.IDD_EDITATTR_P4
+
+class SynchronizationGroup(AttrGroup):
+	data=attrgrsdict['synchronization']
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_SYNCHRONIZATION
+
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('syncBehavior')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_11, grinsRC.IDC_12))
+		a = self.getattr('syncBehaviorDefault')
+		cd[a] = OptionsNolabelCtrl(wnd,a,(grinsRC.IDC_21, grinsRC.IDC_22))
+		return cd
 	
 # base_winoff
 class LayoutGroup(AttrGroup):
@@ -4257,6 +4273,7 @@ groupsui={
 	'timing3':Duration3Group,
 	'timing3c':Duration3cGroup,
 	'timing4':Duration4Group,
+	'synchronization':SynchronizationGroup,
 	'timingfadeout':TimingFadeoutGroup,
 	'timingpar':DurationParGroup,
 	'webserver':WebserverGroup,
