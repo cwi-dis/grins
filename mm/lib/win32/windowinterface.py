@@ -90,3 +90,6 @@ def serve_events():
 	win32ui.PumpWaitingMessages(win32con.WM_MOUSEFIRST,win32con.WM_MOUSELAST)
 	from __main__ import toplevel
 	toplevel.serve_events()
+
+def sleep(t):
+	win32api.Sleep(int(t*1000.0+0.5))
