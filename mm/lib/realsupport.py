@@ -1,4 +1,27 @@
-import xmllib, string
+import xmllib, string, re
+
+colors = {
+	# color values taken from HTML 4.0 spec
+	'aqua': (0x00, 0xFF, 0xFF),
+	'black': (0x00, 0x00, 0x00),
+	'blue': (0x00, 0x00, 0xFF),
+	'fuchsia': (0xFF, 0x00, 0xFF),
+	'gray': (0x80, 0x80, 0x80),
+	'green': (0x00, 0x80, 0x00),
+	'lime': (0x00, 0xFF, 0x00),
+	'maroon': (0x80, 0x00, 0x00),
+	'navy': (0x00, 0x00, 0x80),
+	'olive': (0x80, 0x80, 0x00),
+	'purple': (0x80, 0x00, 0x80),
+	'red': (0xFF, 0x00, 0x00),
+	'silver': (0xC0, 0xC0, 0xC0),
+	'teal': (0x00, 0x80, 0x80),
+	'white': (0xFF, 0xFF, 0xFF),
+	'yellow': (0xFF, 0xFF, 0x00),
+	}
+# see SMILTreeRead for a more elaborate version
+color = re.compile('#(?P<hex>[0-9a-fA-F]{3}|'		# #f00
+		   '[0-9a-fA-F]{6})$')			# #ff0000
 
 class RTParser(xmllib.XMLParser):
 	topelement = 'window'
@@ -85,7 +108,7 @@ class RTParser(xmllib.XMLParser):
 			duration = 60
 		else:
 			try:
-				duration = decode_duration(duration)
+				duration = decode_time(duration)
 			except ValueError:
 				self.syntax_error('badly formatted duration attribute')
 				duration = 60
@@ -143,7 +166,7 @@ class RPParser(xmllib.XMLParser):
 			 'height':None,
 			 'maxfps':None,
 			 'preroll':None,
-			 'timeformat':None,
+			 'timeformat':'milliseconds',
 			 'title':'',
 			 'url':None,
 			 'width':None,},
@@ -236,18 +259,40 @@ class RPParser(xmllib.XMLParser):
 	def __init__(self, file = None):
 		self.elements = {
 			'head': (self.start_head, None),
+			'image': (self.start_image, None),
+			'fill': (self.start_fill, None),
+			'fadein': (self.start_fadein, None),
+			'fadeout': (self.start_fadeout, None),
+			'crossfade': (self.start_crossfade, None),
+			'wipe': (self.start_wipe, None),
+			'viewchange': (self.start_viewchange, None),
 			}
+		self.tags = []
+		self.__images = {}
 		self.__file = file or '<unknown file>'
 		xmllib.XMLParser.__init__(self, accept_utf8 = 1)
 
+	def close(self):
+		xmllib.XMLParser.close(self)
+		self.tags.sort(self.__tagsort)
+		prevstart = 0
+		for tag in self.tags:
+			start = tag['start']
+			tag['start'] = start - prevstart
+			prevstart = start
+
+	def __tagsort(self, tag1, tag2):
+		return cmp(tag1['start'], tag2['start'])
+
 	def start_head(self, attributes):
+		self.timeformat = attributes['timeformat']
 		duration = attributes.get('duration')
 		if duration is None:
 			self.syntax_error('required attribute duration missing in head element')
 			duration = 0
 		else:
 			try:
-				duration = decode_duration(duration)
+				duration = decode_time(duration, self.timeformat)
 			except ValueError:
 				self.syntax_error('badly formatted duration attribute')
 				duration = 0
@@ -285,6 +330,160 @@ class RPParser(xmllib.XMLParser):
 		self.width = width
 		self.height = height
 		self.bitrate = bitrate
+		self.aspect = string.lower(attributes['aspect'])
+		self.author = attributes.get('author')
+		self.copyright = attributes.get('copyright')
+		maxfps = attributes.get('maxfps')
+		if maxfps is not None:
+			try:
+				self.maxfps = string.atoi(maxfps)
+			except string.atoi_error:
+				self.syntax_error('badly formatted maxfps attribute')
+				self.maxfps = None
+		else:
+			self.maxfps = None
+		preroll = attributes.get('preroll')
+		if preroll is not None:
+			try:
+				self.preroll = string.atof(preroll)
+			except string.atof_error:
+				self.syntax_error('badly formatted preroll attribute')
+				self.preroll = None
+		else:
+			self.preroll = None
+		self.title = attributes.get('title')
+		self.url = attributes.get('url')
+
+	def start_image(self, attributes):
+		handle = attributes.get('handle')
+		name = attributes.get('name')
+		if handle is None or name is None:
+			self.syntax_error("required attribute `name' and/or `handle' missing")
+			return
+		if self.__images.has_key(handle):
+			self.syntax_error("image `handle' not unique")
+			return
+		self.__images[handle] = name
+
+	def start_fill(self, attributes):
+		destrect = self.__rect('dst', attributes)
+		color = self.__color(attributes)
+		start = self.__time('start', attributes)
+		self.tags.append({'tag': 'fill', 'color': color, 'subregion': destrect, 'start': start})
+
+	def start_fadein(self, attributes):
+		self.__fadein_or_crossfade_or_wipe('fadein', attributes)
+
+	def start_fadeout(self, attributes):
+		destrect = self.__rect('dst', attributes)
+		color = self.__color(attributes)
+		start = self.__time('start', attributes)
+		duration = self.__time('duration', attributes)
+		maxfps = attributes.get('maxfps', self.maxfps)
+		self.tags.append({'tag': 'fadeout', 'color': color, 'subregion': destrect, 'start': start, 'duration': duration, 'maxfps': maxfps})
+
+	def start_crossfade(self, attributes):
+		self.__fadein_or_crossfade_or_wipe('crossfade', attributes)
+
+	def start_wipe(self, attributes):
+		self.__fadein_or_crossfade_or_wipe('wipe', attributes)
+
+	def start_viewchange(self, attributes):
+		destrect = self.__rect('dst', attributes)
+		duration = self.__time('duration', attributes)
+		maxfps = attributes.get('maxfps', self.maxfps)
+		srcrect = self.__rect('src', attributes)
+		start = self.__time('start', attributes)
+		self.tags.append({'tag': 'viewchange', 'imgcrop': srcrect, 'subregion': dstrect, 'start': start, 'duration': duration, 'maxfps': maxfps})
+
+	def __fadein_or_crossfade_or_wipe(self, tag, attributes):
+		aspect = (attributes.get('aspect', self.aspect) == 'true')
+		dstrect = self.__rect('dst', attributes)
+		duration = self.__time('duration', attributes)
+		maxfps = attributes.get('maxfps', self.maxfps)
+		srcrect = self.__rect('src', attributes)
+		start = self.__time('start', attributes)
+		target = attributes.get('target')
+		if target is None:
+			self.syntax_error("require attribute `target' missing")
+		elif not self.__images.has_key(target):
+			self.syntax_error("unknown `target' attribute")
+		url = attributes.get('url')
+		attrs = {'tag': tag, 'file': self.__images.get(target), 'imgcrop': srcrect, 'subregion': dstrect, 'aspect': aspect, 'start': start, 'duration': duration, 'maxfps': maxfps, 'href': url}
+		if tag == 'wipe':
+			type = attributes.get('type')
+			if type is None:
+				self.syntax_error("required attributes `type' missing")
+			elif type not in ('push', 'normal'):
+				self.syntax_error("unknown `type' attribute")
+				type = None
+			if type is None: # provide default
+				type = 'normal'
+			attrs['wipetype'] = type
+		self.tags.append(attrs)
+
+	def __rect(self, str, attributes):
+		x = attributes.get(str+'x', '0')
+		y = attributes.get(str+'y', '0')
+		h = attributes.get(str+'h', '0')
+		w = attributes.get(str+'w', '0')
+		try:
+			x = string.atoi(x)
+		except string.atoi_error:
+			self.syntax_error("attribute `%sx' is not an integer" % str)
+			x = 0
+		try:
+			y = string.atoi(y)
+		except string.atoi_error:
+			self.syntax_error("attribute `%sy' is not an integer" % str)
+			y = 0
+		try:
+			w = string.atoi(w)
+		except string.atoi_error:
+			self.syntax_error("attribute `%sw' is not an integer" % str)
+			w = 0
+		try:
+			h = string.atoi(h)
+		except string.atoi_error:
+			self.syntax_error("attribute `%sh' is not an integer" % str)
+			h = 0
+		return x, y, w, h
+
+	# see SMILTreeRead.SMILParser.__convert_color for a more
+	# elaborate version
+	def __color(self, attributes):
+		val = attributes.get('color')
+		if val is None:
+			return
+		if colors.has_key(val):
+			return colors[val]
+		res = color.match(val)
+		if res is None:
+			self.syntax_error('bad color specification')
+			return
+		else:
+			hex = res.group('hex')
+			if len(hex) == 3:
+				r = string.atoi(hex[0]*2, 16)
+				g = string.atoi(hex[1]*2, 16)
+				b = string.atoi(hex[2]*2, 16)
+			else:
+				r = string.atoi(hex[0:2], 16)
+				g = string.atoi(hex[2:4], 16)
+				b = string.atoi(hex[4:6], 16)
+		return r, g, b
+
+	def __time(self, attr, attributes):
+		time = attributes.get(attr)
+		if time is None:
+			self.syntax_error("required attributes `%s' missing" % attr)
+			return 0
+		try:
+			time = decode_time(time, self.timeformat)
+		except ValueError, msg:
+			self.syntax_error(msg)
+			return 0
+		return time
 
 	def syntax_error(self, msg):
 		print 'Warning: syntax error in file %s, line %d: %s' % (self.__file, self.lineno, msg)
@@ -300,10 +499,107 @@ class RPParser(xmllib.XMLParser):
 			self.syntax_error('outermost element must be "%s"' % self.topelement)
 		xmllib.XMLParser.finish_starttag(self, tagname, attrdict, method)
 
+from SMILTreeWrite import nameencode
+
+coordnames = 'x','y','w','h'
+def writecoords(f, str, coords):
+	if not coords:
+		return
+	for i in range(4):
+		c = coords[i]
+		if c != 0:
+			f.write(' %s%s="%d"' % (str, coordnames[i], c))
+
+def writeRP(file, rp):
+	f = open(file, 'w')
+	f.write('<imfl>\n')
+	f.write('  <head')
+	sep = ' '
+	if rp.title is not None:
+		f.write(sep+'title=%s' % nameencode(rp.title))
+		sep = '\n        '
+	if rp.author is not None:
+		f.write(sep+'author=%s' % nameencode(rp.author))
+		sep = '\n        '
+	if rp.copyright is not None:
+		f.write(sep+'copyright=%s' % nameencode(rp.copyright))
+		sep = '\n        '
+	f.write(sep+'timeformat="dd:hh:mm:ss.xyz"')
+	sep = '\n        '
+	f.write(sep+'duration="%g"' % rp.duration)
+	f.write(sep+'bitrate="%d"' % rp.bitrate)
+	f.write(sep+'width="%d"' % rp.width)
+	f.write(sep+'height="%d"' % rp.height)
+	defaspect = (rp.aspect == 'true')
+	if not defaspect:
+		f.write(sep+'aspect="false"')
+	if rp.preroll is not None:
+		f.write(sep+'preroll="%g"' % rp.preroll)
+	if rp.url:
+		f.write(sep+'url=%s' % nameencode(rp.url))
+	if rp.maxfps is not None:
+		f.write(sep+'maxfps="%d"' % rp.maxfps)
+	f.write('/>\n')
+	images = {}
+	handle = 0
+	for attrs in rp.tags:
+		if attrs.get('tag', 'fill') in ('fadein', 'crossfade', 'wipe'):
+			file = attrs.get('file')
+			if file and not images.has_key(file):
+				handle = handle + 1
+				images[file] = handle
+	for name, handle in images.items():
+		f.write('  <image handle="%d" name=%s/>\n' % (handle, nameencode(name)))
+	start = 0
+	for attrs in rp.tags:
+		tag = attrs.get('tag', 'fill')
+		f.write('  <%s' % tag)
+		start = start + attrs.get('start', 0)
+		f.write(' start="%g"' % start)
+		if tag != 'fill':
+			f.write(' duration="%g"' % attrs.get('duration', 0))
+		if tag in ('fill', 'fadeout'):
+			color = attrs.get('color', (0,0,0))
+			for name, val in colors.items():
+				if color == val:
+					color = name
+					break
+			else:
+				color = '#%02x%02x%02x' % color
+			f.write(' color="%s"' % color)
+		else:
+			if tag != 'viewchange':
+				file = attrs.get('file')
+				if file:
+					f.write(' target="%d"' % images[file])
+##				else:
+##					# file attribute missing
+				aspect = attrs.get('aspect', defaspect)
+				if aspect != defaspect:
+					f.write(' aspect="%s"' % ['false','true'][aspect])
+				url = attrs.get('href')
+				if url:
+					f.write(' url=%s' % nameencode(url))
+			writecoords(f, 'src', attrs.get('imgcrop'))
+		writecoords(f, 'dst', attrs.get('subregion'))
+		if tag != 'fill':
+			maxfps = attrs.get('maxfps')
+			if maxfps is not None:
+				f.write(' maxfps="%d"' % maxfps)
+		f.write('/>\n')
+	f.write('</imfl>\n')
+	f.close()
+
 import re
 durre = re.compile(r'\s*(?:(?P<days>\d+):(?:(?P<hours>\d+):(?:(?P<minutes>\d+):)?)?)?(?P<seconds>\d+(\.\d+)?)\s*')
 
-def decode_duration(str):
+def decode_time(str, fmt = 'dd:hh:mm:ss.xyz'):
+	if fmt == 'milliseconds':
+		try:
+			ms = string.atoi(str)
+		except string.atoi_error:
+			raise ValueError('badly formatted duration string')
+		return ms / 1000.0	# convert milliseconds to seconds
 	res = durre.match(str)
 	if res is None:
 		raise ValueError('badly formatted duration string')

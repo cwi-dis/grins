@@ -38,6 +38,9 @@
 (arm_duration (float) -1.0 'Arm duration' hidden
 	'Time needed to arm this event before displaying' raw)
 
+(aspect (bool) 1 'Keep aspect ratio' default
+	'Keep aspect ratio of image' inherited)
+
 (author (string) '' 'Author' default 'Author (documentary)' raw)
 
 (axis (tuple (float) (float)) (-1.0 -1.0) 'Axis' CMIFdefault
@@ -55,20 +58,20 @@
 (base_winoff (tuple (float) (float) (float) (float)) (0.0 0.0 1.0 1.0)
 	'Position and size' default 'Position and size. See also "units"' channel)
 
-(transparent (int) 0 'Transparent' transparency
-	'Determines transparency of window. Overrides background color.' raw)
-
 (bgcolor (tuple (int) (int) (int)) (255 255 255) 'Background color' color
 	'Color used for background of window. Overriden by "transparent".' channel)
 
 (bgimg (string) '' 'Background image' CMIFfile
 	'Background image for window' channel)
 
-(textalign (string) 'center' 'Alignment' CMIFdefault
-	'Alignment of text in window' channel)
+(bitrate (int) 0 'Peak bitrate' default
+	'Peak bitrate of document in bits per second.' raw)
 
 (border (int) 1 'Channel border' CMIFdefault
 	'Determines whether channel window has a border (1=yes)' raw)
+
+(bucolor (tuple (int) (int) (int)) (255 0 0) 'Anchor color' CMIFcolor
+	'Color used for anchors in window' channel)
 
 (center (bool) 1 'Center image' CMIFdefault
 	'Determines whether image is centered' channel)
@@ -85,6 +88,9 @@
 
 (clipend (string) '' 'Clip end' default
 	'End of range of frames to be played. Simplest form is "npt=3s".' channel)
+
+(color (tuple (int) (int) (int)) (0 0 0) 'Effect color' color
+       'Color for transition effect.' normal)
 
 (comment (string) '' 'Comment' default
 	 'A comment (authoring convenience only)' raw)
@@ -110,7 +116,7 @@
 (fgcolor (tuple (int) (int) (int)) (0 0 0) 'Foreground color' CMIFcolor
 	'Color used for text/images in window' channel)
 
-(file (string) '' 'File' file
+(file (string) '' 'URL' file
 	'URL for the data of this node' channel)
 
 (font (string) 'Times-Roman' 'Font' CMIFfont
@@ -122,8 +128,8 @@
 (hicolor (tuple (int) (int) (int)) (255 0 0) 'Highlight color' CMIFcolor
 	'Color used for highlighted anchors in window' channel)
 
-(bucolor (tuple (int) (int) (int)) (255 0 0) 'Anchor color' CMIFcolor
-	'Color used for anchors in window' channel)
+(href (string) '' 'Hyperlink destination' default
+	'Destination URL of hyperlink from image.' inherited)
 
 (hview_winpos (tuple (float) (float)) (-1 -1) 'Hierarchy winpos' hidden
 	 'Window position for hierarchy view' raw)
@@ -136,6 +142,9 @@
 				   (int) (int)))) ()
 	'Hyperlink list' hidden
 	'Hyperlinks within this document (root node only)' raw)
+
+(imgcrop (tuple (int) (int) (int) (int)) (0 0 0 0) 'Image crop' default
+	'Crop image.  Values are x,y,w,h of image region to display.' normal)
 
 (layout (name) undefined 'Screen' layoutname
 	'Screen for this node and its descendants. Authoring convenience only, controls channels displayed in menus.' inherited)
@@ -154,6 +163,8 @@
 
 (macprog (string) '' 'Mac program signature' CMIFdefault
 	'4-byte application signature (mac only)' channel)
+
+(maxfps (int) 0 'Max fps' default 'Maximum frames per second.' inherited)
 
 (mcgroup (string) '' 'Multicast group' CMIFdefault
 	'IP Multicast group address to listen to' raw)
@@ -188,6 +199,10 @@
 (popup (bool) 1 'Popup on play' CMIFdefault
 	'Determines whether channel pops up upon playing a node' raw)
 
+(preroll (float) 0.0 'Preroll time' default
+	'Time for which data should be buffered before presentation starts.'
+	raw)
+
 (queuesize (float) 0 'Queue size' CMIFdefault
 	'Audio playback queue size' channel)
 
@@ -196,6 +211,12 @@
 
 (scalefilter (name) '' 'Scaling filter' CMIFdefault
 	'Name of filter used after image scaling' channel)
+
+(size (tuple (int) (int)) (0 0) 'Image size' default
+	'Size of image in pixels (width, height).' normal)
+
+(start (float) 0.0 'Start time' default
+	'Start time of transition effect relative to previous transition start (in seconds).' normal)
 
 (style (list (name)) () 'Style(s)' CMIFdefault
 	'List of style names that apply to this node/subtree' raw)
@@ -209,13 +230,22 @@
 (styledict (namedict (attrdict)) () 'Style Dictionary' hidden
 	'Styles used in this document (root node only)')
 
+(subregion (tuple (int) (int) (int) (int)) (0 0 0 0) 'Destination region' normal
+	'Destination region for transition effect (x,y,w,h).' normal)
+
 # This is the real sync arc data structure, on the destination!!!
 (synctolist (list (enclosed (tuple (uid) (bool) (float) (bool))))
 	() 'SyncTo list' hidden
 	'List of sync arcs ending at this node' raw)
 
+(tag (string) 'fill' 'Transition type' transition
+	'Type of transition effect.' normal)
+
 (terminator (name) 'LAST' 'Terminator child' CMIFtermnodename
 	'Name of child that terminates parallel node' normal)
+
+(textalign (string) 'center' 'Alignment' CMIFdefault
+	'Alignment of text in window' channel)
 
 (title (string) '' 'Title' default
 	 'The title of this object (documentary)' raw)
@@ -225,6 +255,9 @@
 
 (toplevel_winsize (tuple (float) (float)) (31.689453125 72.021484375) 'Top level winsize' hidden
 	 'Window size for top level menu' raw)
+
+(transparent (int) 0 'Transparent' transparency
+	'Determines transparency of window. Overrides background color.' raw)
 
 (type (name) null 'Channel type' channeltype
 	'Type of media this channel will be used for' raw)

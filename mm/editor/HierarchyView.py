@@ -12,6 +12,7 @@ import MMNode
 from HierarchyViewDialog import HierarchyViewDialog
 from usercmd import *
 import os
+import urlparse, MMurl
 
 
 import settings
@@ -24,6 +25,7 @@ root_expanded = settings.get('root_expanded')
 
 BGCOLOR = settings.get('structure_bgcolor')
 LEAFCOLOR = settings.get('structure_leafcolor')
+SLIDECOLOR = settings.get('structure_slidecolor')
 BAGCOLOR = settings.get('structure_bagcolor')
 ALTCOLOR = settings.get('structure_altcolor')
 PARCOLOR = settings.get('structure_parcolor')
@@ -69,18 +71,10 @@ class HierarchyView(HierarchyViewDialog):
 		self.commands = [
 			CLOSE_WINDOW(callback = (self.hide, ())),
 
-			NEW_UNDER(callback = (self.createundercall, ())),
-
 			COPY(callback = (self.copycall, ())),
 
-			PLAYNODE(callback = (self.playcall, ())),
-			PLAYFROM(callback = (self.playfromcall, ())),
-			INFO(callback = (self.infocall, ())),
 			ATTRIBUTES(callback = (self.attrcall, ())),
 			CONTENT(callback = (self.editcall, ())),
-			ANCHORS(callback = (self.anchorcall, ())),
-			CREATEANCHOR(callback = (self.createanchorcall, ())),
-			FINISH_LINK(callback = (self.hyperlinkcall, ())),
 
 			PUSHFOCUS(callback = (self.focuscall, ())),
 
@@ -88,6 +82,9 @@ class HierarchyView(HierarchyViewDialog):
 
 			EXPANDALL(callback = (self.expandallcall, (1,))),
 			COLLAPSEALL(callback = (self.expandallcall, (0,))),
+			]
+		self.interiorcommands = [
+			NEW_UNDER(callback = (self.createundercall, ())),
 			]
 		self.pasteinteriorcommands = [
 			PASTE_UNDER(callback = (self.pasteundercall, ())),
@@ -106,6 +103,14 @@ class HierarchyView(HierarchyViewDialog):
 			DELETE(callback = (self.deletecall, ())),
 			CUT(callback = (self.cutcall, ())),
 			EXPAND(callback = (self.expandcall, ())),
+			]
+		self.noslidecommands = [
+			INFO(callback = (self.infocall, ())),
+			FINISH_LINK(callback = (self.hyperlinkcall, ())),
+			ANCHORS(callback = (self.anchorcall, ())),
+			CREATEANCHOR(callback = (self.createanchorcall, ())),
+			PLAYNODE(callback = (self.playcall, ())),
+			PLAYFROM(callback = (self.playfromcall, ())),
 			]
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
@@ -131,30 +136,47 @@ class HierarchyView(HierarchyViewDialog):
 	def aftersetfocus(self):
 		import Clipboard
 		commands = self.commands
-		if self.focusnode.GetType() in MMNode.interiortypes:
+		fnode = self.focusnode
+		fntype = fnode.GetType()
+		if fntype in MMNode.interiortypes or \
+		   (fntype == 'ext' and
+		    fnode.GetChannelType() == 'RealPix'):
 			popupmenu = self.interior_popupmenu
 		else:
 			popupmenu = self.leaf_popupmenu
-		if self.focusnode is not self.root:
+		if fnode.__class__ is not SlideMMNode:
+			commands = commands + self.noslidecommands
+			if fntype in MMNode.interiortypes or \
+			   (fntype == 'ext' and
+			    fnode.GetChannelType() == 'RealPix'):
+				commands = commands + self.interiorcommands
+		if fnode is not self.root:
 			# can't do certain things to the root
 			commands = commands + self.notatrootcommands
 		t, n = Clipboard.getclip()
 		if t == 'node' and n is not None:
 			# can only paste if there's something to paste
-			if self.focusnode.GetType() in MMNode.interiortypes:
-				# can only paste inside interior nodes
-				commands = commands + self.pasteinteriorcommands
-			if self.focusnode is not self.root:
-				# can't paste before/after root node
-				commands = commands + self.pastenotatrootcommands
+			if n.__class__ is SlideMMNode:
+				# Slide can only go in RealPix node
+				if fntype == 'ext' and fnode.GetChannelType() == 'RealPix':
+					commands = commands + self.pasteinteriorcommands
+				elif fntype == 'slide':
+					commands = commands + self.pastenotatrootcommands
+			else:
+				if fntype in MMNode.interiortypes:
+					# can only paste inside interior nodes
+					commands = commands + self.pasteinteriorcommands
+				if fnode is not self.root and fntype != 'slide':
+					# can't paste before/after root node
+					commands = commands + self.pastenotatrootcommands
 		self.setcommands(commands)
 		self.setpopup(popupmenu)
 
 		# make sure focus is visible
-		node = self.focusnode.GetParent()
+		node = fnode.GetParent()
 		while node is not None:
 			if not hasattr(node, 'expanded'):
-				node.expanded = 1
+				expandnode(node)
 			node = node.GetParent()
 
 	def show(self):
@@ -165,7 +187,7 @@ class HierarchyView(HierarchyViewDialog):
 		# Other administratrivia
 		self.editmgr.register(self)
 		self.toplevel.checkviews()
-		self.root.expanded = 1
+		expandnode(self.root)
 		self.recalc()
 
 	def hide(self, *rest):
@@ -236,7 +258,6 @@ class HierarchyView(HierarchyViewDialog):
 		self.select(x, y)
 
 	def dropfile(self, dummy, window, event, params):
-		import MMurl
 		x, y, filename = params
 		obj = self.whichhit(x, y)
 		if not obj:
@@ -248,25 +269,32 @@ class HierarchyView(HierarchyViewDialog):
 			url = MMurl.pathname2url(filename)
 		else:
 			url = filename
-		if obj.node.GetType() in MMNode.leaftypes:
+		if obj.node.GetType() == 'ext' and \
+		   obj.node.GetChannelType() == 'RealPix':
+			from mimetypes import guess_type
+			mtype = guess_type(url)[0]
+			interior = (mtype != 'image/vnd.rn-realpix')
+		else:
+			interior = (obj.node.GetType() in MMNode.interiortypes)
+		if interior:
+			self.create(0, url)
+		else:
 			em = self.editmgr
 			if not em.transaction():
 				self.render()
 				return
 			obj.node.SetAttr('file', url)
 			em.commit()
-		else:
-			self.create(0, url)
 
 	def dragfile(self, dummy, window, event, params):
 		x, y = params
 		obj = self.whichhit(x, y)
 		if not obj:
 			windowinterface.setdragcursor('dragnot')
-		elif obj.node.GetType() in MMNode.leaftypes:
-			windowinterface.setdragcursor('dragset')
-		else:
+		elif obj.node.GetType() in MMNode.interiortypes:
 			windowinterface.setdragcursor('dragadd')
+		else:
+			windowinterface.setdragcursor('dragset')
 
 	#################################################
 	# Edit manager interface (as dependent client)  #
@@ -349,7 +377,12 @@ class HierarchyView(HierarchyViewDialog):
 				mtype = 'error')
 			return
 		self.toplevel.setwaiting()
-		if url is None:
+		type = node.GetType()
+		if (where == 0 and type == 'ext' and
+		    node.GetChannelType() == 'RealPix') or \
+		   (where != 0 and type == 'slide'):
+			type = 'slide'
+		elif url is None:
 			type = node.GetType()
 			if where == 0:
 				children = node.GetChildren()
@@ -361,15 +394,29 @@ class HierarchyView(HierarchyViewDialog):
 			layout = MMAttrdefs.getattr(parent, 'layout')
 		else:
 			layout = MMAttrdefs.getattr(node, 'layout')
-		node = self.root.context.newnode(type)
+		if type == 'slide':
+			ctx = node.GetContext()
+			node = SlideMMNode('slide', ctx, ctx.newuid())
+			ctx.knownode(node.GetUID(), node)
+			# provide a default for tag attribute
+			if url is not None:
+				node.SetAttr('tag', 'fadein')
+			else:
+				node.SetAttr('tag', 'fill')
+		else:
+			node = self.root.context.newnode(type)
 		if url is not None:
 			node.SetAttr('file', url)
-		if layout == 'undefined' and \
+		if type != 'slide' and layout == 'undefined' and \
 		   self.toplevel.layoutview.curlayout is not None:
 			node.SetAttr('layout', self.toplevel.layoutview.curlayout)
 		if self.insertnode(node, where):
-			import NodeInfo
-			NodeInfo.shownodeinfo(self.toplevel, node, new = 1)
+			if type == 'slide':
+				import AttrEdit
+				AttrEdit.showattreditor(self.toplevel, node)
+			else:
+				import NodeInfo
+				NodeInfo.shownodeinfo(self.toplevel, node, new = 1)
 
 	def insertparent(self, type):
 		node = self.focusnode
@@ -432,18 +479,22 @@ class HierarchyView(HierarchyViewDialog):
 				node.Destroy()
 				return 0
 		elif where == 0:
-		    if self.focusnode.GetType() not in MMNode.interiortypes:
-			windowinterface.showmessage('Focus is a leaf node!',
-						    mtype = 'error')
-			node.Destroy()
-			return 0
+			ntype = self.focusnode.GetType()
+			if ntype not in MMNode.interiortypes and \
+			   (ntype != 'ext' or
+			    self.focusnode.GetChannelType() != 'RealPix' or
+			    node.__class__ is not SlideMMNode):
+				windowinterface.showmessage('Focus is a leaf node!',
+							    mtype = 'error')
+				node.Destroy()
+				return 0
 		em = self.editmgr
 		if not em.transaction():
 			node.Destroy()
 			return 0
 		if where == 0:
 			em.addnode(self.focusnode, len(self.focusnode.GetChildren()), node)
-			self.focusnode.expanded = 1
+			expandnode(self.focusnode)
 		else:
 			children = parent.GetChildren()
 			i = children.index(self.focusnode)
@@ -574,7 +625,7 @@ class HierarchyView(HierarchyViewDialog):
 		# Need to expand some nodes
 		node = node.GetParent()
 		while node is not None:
-			node.expanded = 1
+			expandnode(node)
 			node = node.GetParent()
 		self.recalc()
 
@@ -582,11 +633,12 @@ class HierarchyView(HierarchyViewDialog):
 	def makeboxes(self, list, node, box):
 		t = node.GetType()
 		left, top, right, bottom = box
-		if t in MMNode.leaftypes or \
-		   not hasattr(node, 'expanded') or \
+		if not hasattr(node, 'expanded') or \
 		   not node.GetChildren():
 			if hierarchy_minimum_sizes:
 				right = left + self.horsize
+##				if node.__class__ is SlideMMNode:
+##					right = right + self.horsize
 				bottom = top + self.versize
 			list.append((node, LEAFBOX, (left, top, right, bottom)))
 			return left, top, right, bottom
@@ -600,8 +652,8 @@ class HierarchyView(HierarchyViewDialog):
 		size = 0
 		horizontal = (t in ('par', 'alt')) == DISPLAY_VERTICAL
 		for child in children:
-			cht = child.GetType()
-			if cht in MMNode.leaftypes or not hasattr(child, 'expanded'):
+			if not hasattr(child, 'expanded') or \
+			   not child.GetChildren():
 				size = size + MINSIZE
 				if not horizontal:
 					size = size + LABSIZE
@@ -619,8 +671,8 @@ class HierarchyView(HierarchyViewDialog):
 		maxr = 0
 		maxb = 0
 		for child in children:
-			cht = child.GetType()
-			if cht in MMNode.leaftypes or not hasattr(child, 'expanded'):
+			if not hasattr(child, 'expanded') or \
+			   not child.GetChildren():
 				size = MINSIZE
 				if not horizontal:
 					size = size + LABSIZE
@@ -690,7 +742,7 @@ class HierarchyView(HierarchyViewDialog):
 		window = self.window
 		self.cleanup()
 		if root_expanded:
-			self.root.expanded = 1	# root always expanded
+			expandnode(self.root) # root always expanded
 		width, height = sizeboxes(self.root)
 		cwidth, cheight = window.getcanvassize(UNIT_MM)
 		mwidth = mheight = 0 # until we have a way to get the min. size
@@ -809,50 +861,45 @@ class HierarchyView(HierarchyViewDialog):
 
 # Recursive procedure to calculate geometry of boxes.
 def sizeboxes(node):
-	t = node.GetType()
-	if t in MMNode.leaftypes or not hasattr(node, 'expanded'):
-		return MINSIZE, MINSIZE + LABSIZE
 	children = node.GetChildren()
+	if not hasattr(node, 'expanded') or not children:
+##		if node.__class__ is SlideMMNode:
+##			return 2*MINSIZE, MINSIZE + LABSIZE
+		return MINSIZE, MINSIZE + LABSIZE
 	nchildren = len(children)
 	width = height = 0
-	horizontal = (t in ('par', 'alt')) == DISPLAY_VERTICAL
-	if children:
-		for child in children:
-			w, h = sizeboxes(child)
-			if horizontal:
-				# children laid out horizontally
-				if h > height:
-					height = h
-				width = width + w + GAPSIZE
-			else:
-				# children laid out vertically
-				if w > width:
-					width = w
-				height = height + h + GAPSIZE
+	horizontal = (node.GetType() in ('par', 'alt')) == DISPLAY_VERTICAL
+	for child in children:
+		w, h = sizeboxes(child)
 		if horizontal:
-			width = width - GAPSIZE
+			# children laid out horizontally
+			if h > height:
+				height = h
+			width = width + w + GAPSIZE
 		else:
-			height = height - GAPSIZE
-		width = width + 2 * EDGSIZE
-		height = height + EDGSIZE
+			# children laid out vertically
+			if w > width:
+				width = w
+			height = height + h + GAPSIZE
+	if horizontal:
+		width = width - GAPSIZE
 	else:
-		# minimum size if no children
-		width = height = MINSIZE
-	height = height + LABSIZE
+		height = height - GAPSIZE
+	width = width + 2 * EDGSIZE
+	height = height + EDGSIZE + LABSIZE
 	node.expanded = (width, height)
 	return width, height
 
 def do_expand(node, expand):
-	t = node.GetType()
-	if t in MMNode.leaftypes:
+	if node.GetType() not in MMNode.interiortypes:
 		return 0
 	changed = 0
 	if expand:
 		if not hasattr(node, 'expanded'):
-			node.expanded = 1
+			expandnode(node)
 			changed = 1
 	elif hasattr(node, 'expanded'):
-		del node.expanded
+		collapsenode(node)
 		changed = 1
 	for child in node.GetChildren():
 		if do_expand(child, expand):
@@ -867,10 +914,16 @@ class Object:
 	# Initialize an instance
 	def __init__(self, mother, item):
 		self.mother = mother
-		self.node, self.boxtype, self.box = item
-		self.name = MMAttrdefs.getattr(self.node, 'name')
+		node, self.boxtype, self.box = item
+		self.node = node
+		self.name = MMAttrdefs.getattr(node, 'name')
 		self.selected = 0
 		self.ok = 1
+		if node.GetType() == 'ext' and \
+		   node.GetChannelType() == 'RealPix':
+			if not hasattr(node, 'slideshow'):
+				node.slideshow = SlideShow(node)
+##				node.GetContext().editmgr.register(node.slideshow)
 
 	# Make this object the focus
 	def select(self):
@@ -895,6 +948,7 @@ class Object:
 
 	def cleanup(self):
 		self.mother = None
+		node = self.node
 
 	def draw(self):
 		d = self.mother.new_displist
@@ -916,31 +970,45 @@ class Object:
 			color = BAGCOLOR
 		elif nt == 'alt':
 			color = ALTCOLOR
+		elif nt == 'slide':
+			color = SLIDECOLOR
 		else:
 			color = 255, 0, 0 # Red -- error indicator
 		d.drawfbox(color, (l, t, r - l, b - t))
 		self.drawfocus()
 		t1 = min(b, t + titleheight + vmargin)
-		if node.GetType() in MMNode.leaftypes and \
+		if node.GetType() not in MMNode.interiortypes and \
+		   not hasattr(node, 'expanded') and \
 		   b-t-vmargin >= 2*titleheight:
 			b1 = b - titleheight
 			# draw channel name along bottom of box
-			self.drawchannelname(l+hmargin/2, b1,
-					     r-hmargin/2, b-vmargin/2)
+			if node.__class__ is not SlideMMNode:
+				self.drawchannelname(l+hmargin/2, b1,
+						     r-hmargin/2, b-vmargin/2)
 			# draw thumbnail/icon if enough space
 ##			if b1-t1 >= titleheight and \
 ##			   r-l >= hmargin * 2.5:
 			ctype = node.GetChannelType()
 			f = os.path.join(self.mother.datadir, '%s.tiff' % ctype)
-			if ctype == 'image' and self.mother.thumbnails:
-				import MMurl
+			url = node.GetAttrDef('file', None)
+			if url and self.mother.thumbnails and \
+			   (ctype == 'image' or node.__class__ is SlideMMNode):
+				if node.__class__ is SlideMMNode:
+					url = MMurl.basejoin(MMAttrdefs.getattr(node.parent, 'file'), url)
+				url = node.context.findurl(url)
 				try:
-					f = MMurl.urlretrieve(node.context.findurl(MMAttrdefs.getattr(node, 'file')))[0]
+					f = MMurl.urlretrieve(url)[0]
 				except IOError:
 					# f not reassigned!
 					pass
-			if f is not None:
-				ih = min(b1-t1, 2*titleheight)
+			ih = min(b1-t1, 2*titleheight)
+			if self.mother.thumbnails and \
+			   node.__class__ is SlideMMNode and \
+			   MMAttrdefs.getattr(node, 'tag') in ('fill','fadeout'):
+				d.drawfbox(MMAttrdefs.getattr(node, 'color'), (l+hmargin, (t1+b1-ih)/2, r-l-2*hmargin, ih))
+				d.fgcolor(TEXTCOLOR)
+				d.drawbox((l+hmargin, (t1+b1-ih)/2, r-l-2*hmargin, ih))
+			elif f is not None:
 				try:
 					box = d.display_image_from_file(f, center = 1, coordinates = (l+hmargin, (t1+b1-ih)/2, r-l-2*hmargin, ih))
 				except windowinterface.error:
@@ -949,7 +1017,9 @@ class Object:
 					d.fgcolor(TEXTCOLOR)
 					d.drawbox(box)
 		# draw a little triangle to indicate expanded/collapsed state
-		if node.GetType() in MMNode.interiortypes:
+		if node.GetType() in MMNode.interiortypes or \
+		   (node.GetType() == 'ext' and
+		    node.GetChannelType() == 'RealPix'):
 			awidth = LABSIZE/rw - 2*hmargin
 			aheight = titleheight - 2*vmargin
 			node.abox = l+hmargin, t+vmargin, l+hmargin+awidth, t+vmargin+aheight
@@ -975,8 +1045,8 @@ class Object:
 		# If this is a node with suppressed detail,
 		# draw some lines
 		if self.boxtype == LEAFBOX and \
-			  node.GetType() in MMNode.interiortypes and \
-			  len(node.GetChildren()) > 0:
+		   node.GetType() in MMNode.interiortypes and \
+		   len(node.GetChildren()) > 0:
 			l1 = l + hmargin*2
 			t1 = t + titleheight + vmargin
 			r1 = r - hmargin*2
@@ -1023,9 +1093,9 @@ class Object:
 	def expandcall(self):
 		self.mother.toplevel.setwaiting()
 		if hasattr(self.node, 'expanded'):
-			del self.node.expanded
+			collapsenode(self.node)
 		else:
-			self.node.expanded = 1
+			expandnode(self.node)
 		self.mother.recalc()
 
 	def expandallcall(self, expand):
@@ -1134,3 +1204,259 @@ class Object:
 
 	def pasteundercall(self):
 		self.mother.paste(0)
+
+class SlideMMNode(MMNode.MMNode):
+	def GetChannel(self):
+		return None
+
+	def GetChannelName(self):
+		return 'undefined'
+
+	def setgensr(self):
+		self.gensr = self.gensr_leaf
+
+class DummyRP:
+	# used when parsing the RealPix file failed for some reason
+	aspect = 'true'
+	author = None
+	bitrate = 0
+	width = height = 0
+	duration = 0
+	copyright = None
+	maxfps = None
+	preroll = None
+	title = None
+	url = None
+	tags = []
+
+class SlideShow:
+	def __init__(self, node):
+		if node.GetType() != 'ext' or \
+		   node.GetChannelType() != 'RealPix':
+			raise RuntimeError("shouldn't happen")
+		self.node = node
+		import realsupport
+		ctx = node.GetContext()
+		url = ctx.findurl(MMAttrdefs.getattr(node, 'file'))
+		self.url = url
+		utype, host, path, params, query, tag = urlparse.urlparse(url)
+		url = urlparse.urlunparse((utype, host, path, params, query, ''))
+		try:
+			fn, hdr = MMurl.urlretrieve(url)
+			fp = open(fn)
+			rp = realsupport.RPParser(fn)
+			rp.feed(fp.read())
+			rp.close()
+		except:
+			rp = DummyRP()
+		self.rp = rp
+		attrdict = node.GetAttrDict()
+		attrdict['bitrate'] = rp.bitrate
+		attrdict['size'] = rp.width, rp.height
+		attrdict['duration'] = rp.duration
+		if rp.aspect != 'true':
+			attrdict['aspect'] = 0
+		if rp.author is not None:
+			attrdict['author'] = rp.author
+		if rp.copyright is not None:
+			attrdict['copyright'] = rp.copyright
+		if rp.maxfps is not None:
+			attrdict['maxfps'] = rp.maxfps
+		if rp.preroll is not None:
+			attrdict['preroll'] = rp.preroll
+		if rp.title is not None:
+			attrdict['title'] = rp.title
+		if rp.url is not None:
+			attrdict['href'] = rp.url
+		ctx.editmgr.register(self)
+
+	def destroy(self):
+		del self.node
+		del self.rp
+
+	def transaction(self):
+		return 1
+
+	def rollback(self):
+		pass
+
+	def commit(self):
+		self.update()
+
+	def update(self):
+		node = self.node
+		if node.GetType() != 'ext' or \
+		   node.GetChannelType() != 'RealPix':
+			# not a RealPix node anymore
+			node.GetContext().editmgr.unregister(self)
+			collapsenode(node)
+			del node.slideshow
+			self.destroy()
+			# XXX what to do with node.tempfile?
+			if hasattr(node, 'tmpfile'):
+				try:
+					os.unlink(node.tmpfile)
+				except:
+					pass
+				del node.tmpfile
+			return
+		if self.rp is None:
+			return
+		ctx = node.GetContext()
+		url = ctx.findurl(MMAttrdefs.getattr(node, 'file'))
+		if url != self.url:
+			try:
+				fn, hdr = MMurl.urlretrieve(url)
+				fp = open(fn)
+				rp = realsupport.RPParser(fn)
+				rp.feed(fp.read())
+				rp.close()
+			except:
+				rp = DummyRP()
+			self.rp = rp
+			self.url = url
+			if hasattr(node, 'tmpfile'):
+				try:
+					os.unlink(node.tmpfile)
+				except:
+					pass
+				del node.tmpfile
+		rp = self.rp
+		attrdict = node.GetAttrDict()
+		changed = 0
+		if attrdict['bitrate'] != rp.bitrate:
+			rp.bitrate = attrdict['bitrate']
+			changed = 1
+		if attrdict.get('size') != (rp.width, rp.height):
+			rp.width, rp.height = attrdict['size']
+			changed = 1
+		if attrdict['duration'] != rp.duration:
+			rp.duration = attrdict['duration']
+			changed = 1
+		aspect = attrdict.get('aspect', 1)
+		if (rp.aspect == 'true') != aspect:
+			rp.aspect = ['false','true'][aspect]
+			changed = 1
+		if attrdict.get('author') != rp.author:
+			rp.author = attrdict.get('author')
+			changed = 1
+		if attrdict.get('copyright') != rp.copyright:
+			rp.copyright = attrdict.get('copyright')
+			changed = 1
+		if attrdict.get('title') != rp.title:
+			rp.title = attrdict.get('title')
+			changed = 1
+		if attrdict.get('href') != rp.url:
+			rp.url = attrdict.get('href')
+			changed = 1
+		if attrdict.get('maxfps') != rp.maxfps:
+			rp.maxfps = attrdict.get('maxfps')
+			changed = 1
+		if attrdict.get('preroll') != rp.preroll:
+			rp.preroll = attrdict.get('preroll')
+			changed = 1
+		if hasattr(node, 'expanded'):
+			i = 0
+			children = node.children
+			nchildren = len(children)
+			taglist = rp.tags
+			ntags = len(taglist)
+			rp.tags = []
+			nnodes = max(ntags, nchildren)
+			while i < nnodes:
+				if i < nchildren:
+					childattrs = children[i].attrdict
+					rp.tags.append(childattrs.copy())
+				else:
+					changed = 1
+					childattrs = None
+				if i < ntags:
+					attrs = taglist[i]
+				else:
+					changed = 1
+					attrs = None
+				if childattrs != attrs:
+					changed = 1
+				i = i + 1
+		if changed:
+			if not hasattr(node, 'tmpfile'):
+				url = MMAttrdefs.getattr(node, 'file')
+				if not url:
+					url = node.context.baseurl
+				else:
+					url = MMurl.basejoin(node.context.baseurl, url)
+				if not url:
+					windowinterface.showmessage('specify a location for this node')
+					return
+				utype, host, path, params, query, fragment = urlparse.urlparse(url)
+				if (utype and utype != 'file') or \
+				   (host and host != 'localhost'):
+					windowinterface.showmessage('cannot do this for now')
+					return
+				import tempfile
+				pre = tempfile.gettempprefix()
+				dir = os.path.dirname(MMurl.url2pathname(path))
+				while 1:
+					tempfile.counter = tempfile.counter + 1
+					file = os.path.join(dir, pre+`tempfile.counter`+'.rp')
+					if not os.path.exists(file):
+						break
+				node.tmpfile = file
+			import realsupport
+			realsupport.writeRP(node.tmpfile, rp)
+
+	def kill(self):
+		pass
+
+def expandnode(node):
+	if hasattr(node, 'expanded'):
+		# already expanded
+		return
+	node.expanded = 1
+	if node.GetType() != 'ext' or node.GetChannelType() != 'RealPix':
+		return
+	ctx = node.GetContext()
+	for attrs in node.slideshow.rp.tags:
+		child = SlideMMNode('slide', ctx, ctx.newuid())
+		ctx.knownode(child.GetUID(), child)
+		child.parent = node
+		node.children.append(child)
+		child.attrdict.update(attrs)
+
+def collapsenode(node):
+	if hasattr(node, 'expanded'):
+		del node.expanded
+	# only remove children if they are of type SlideMMNode
+	children = node.GetChildren()
+	if not children or children[0].__class__ is not SlideMMNode:
+		return
+	ctx = node.GetContext()
+	for child in children:
+		child.parent = None
+		ctx.forgetnode(child.GetUID())
+	node.children = []
+
+def writenodes(node):
+	if node.GetType() in MMNode.interiortypes:
+		for child in node.children:
+			writenodes(child)
+	elif hasattr(node, 'tmpfile'):
+		url = MMAttrdefs.getattr(node, 'file')
+		if not url:
+			# XXX
+			url = 'realpix.rp'
+		url = node.GetContext().findurl(url)
+		utype, host, path, params, query, tag = urlparse.urlparse(url)
+		if (not utype or utype == 'file') and \
+		   (not host or host == 'localhost'):
+			try:
+				f = open(MMurl.url2pathname(path), 'w')
+				f.write(open(node.tmpfile).read())
+				f.close()
+			except:
+				print 'cannot write file for node',node
+			else:
+				del node.tmpfile
+		else:
+			# XXX complain
+			print 'cannot write file for node',node
