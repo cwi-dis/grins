@@ -32,7 +32,7 @@ bool Main::open_file(const TCHAR *pfilename)
 
 bool Main::open_url(const TCHAR *purl)
 	{
-	return true;
+	return false;
 	}
 
 void Main::close()

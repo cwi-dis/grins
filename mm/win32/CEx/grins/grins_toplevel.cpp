@@ -4,8 +4,6 @@
 
 #include "grins_main.h"
 
-#include <windows.h>
-
 #include "charconv.h"
 #include "memfile.h"
 
@@ -47,7 +45,7 @@ bool TopLevel::read_it()
 	memfile mf;
 	if(!mf.open(m_url.c_str()))
 		{
-		showmessage(TEXT("memfile::open() failed"));
+		windowinterface::showmessage(TEXT("memfile::open() failed"));
 		return false;
 		}
 	mf.fill();
@@ -58,7 +56,7 @@ bool TopLevel::read_it()
 	// parse source
 	if(!xml_parser.parse((const char*)mf.data(), mf.size(), true))
 		{
-		showmessage(TEXT("parse() failed"));
+		windowinterface::showmessage(TEXT("parse() failed"));
 		return false;
 		}
 	
