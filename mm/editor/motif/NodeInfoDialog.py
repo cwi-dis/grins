@@ -96,14 +96,16 @@ class NodeInfoDialog:
 		self.__name_field = top.TextInput('Name:', name, None, None,
 						left = None, top = None,
 						right = self.__type_select)
-		butt = w.ButtonRow(
-			[('Cancel', (self.cancel_callback, ())),
-			 ('Restore', (self.restore_callback, ())),
-			 ('Node properties...', (self.attributes_callback, ())),
-			 ('Channel properties...', (self.chattrs_callback, ())),
-			 ('Anchors...', (self.anchors_callback, ())),
-			 ('Apply', (self.apply_callback, ())),
-			 ('OK', (self.ok_callback, ()))],
+		buttons = [('Cancel', (self.cancel_callback, ())),
+			   ('Restore', (self.restore_callback, ())),
+			   ('Node properties...', (self.attributes_callback, ())),
+			   ('Channel properties...', (self.chattrs_callback, ())),
+			   ('Anchors...', (self.anchors_callback, ())),
+			   ('Apply', (self.apply_callback, ())),
+			   ('OK', (self.ok_callback, ()))]
+		if settings.get('lightweight'):
+			del buttons[4]	# no Anchors... command
+		butt = w.ButtonRow(buttons,
 			bottom = None, left = None, right = None, vertical = 0)
 
 		midd = w.SubWindow(top = top, bottom = butt, left = None,

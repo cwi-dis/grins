@@ -119,7 +119,7 @@ MENUBAR=(
 	('&Linking', (
 		(LIGHT, ENTRY, 'C&reate simple anchor', None, CREATEANCHOR),
 		(LIGHT, ENTRY, '&Finish hyperlink to selection', None, FINISH_LINK),
-		(LIGHT, ENTRY, '&Anchors...', 'T', ANCHORS),
+		(SMIL, ENTRY, '&Anchors...', 'T', ANCHORS),
 		(SMIL, SEP,),
 		(SMIL, ENTRY, 'Create s&ync arc from selection...', None, FINISH_ARC),
 		(SMIL, DYNAMICCASCADE, 'Select &sync arc', SYNCARCS),
@@ -169,7 +169,7 @@ MENUBAR=(
 		(SMIL, ENTRY, '&Timeline view\tF7', '4', CHANNELVIEW),
 		(SMIL, ENTRY, '&Layout view\tF8', '2', LAYOUTVIEW),
 ##		(LIGHT, SEP,),
-		(LIGHT, ENTRY, 'H&yperlinks', '5', LINKVIEW),
+		(SMIL, ENTRY, 'H&yperlinks', '5', LINKVIEW),
 		(CMIF, ENTRY, 'User &groups', '6', USERGROUPVIEW),
 ##		(LIGHT, SEP,),
 		(LIGHT, ENTRY, 'Sourc&e', '7', SOURCE),
@@ -207,7 +207,7 @@ POPUP_HVIEW_LEAF = (
 		(LIGHT, SEP,),
 		(LIGHT, ENTRY, '&Info...', None, INFO),
 		(LIGHT, ENTRY, 'P&roperties...', None, ATTRIBUTES),
-		(LIGHT, ENTRY, '&Anchors...', None, ANCHORS),
+		(SMIL, ENTRY, '&Anchors...', None, ANCHORS),
 		(LIGHT, ENTRY, '&Edit content', None, CONTENT),
 )
 
@@ -241,7 +241,7 @@ POPUP_HVIEW_STRUCTURE = (
 		(LIGHT, SEP,),
 		(LIGHT, ENTRY, '&Info...', None, INFO),
 		(LIGHT, ENTRY, 'P&roperties...', None, ATTRIBUTES),
-		(LIGHT, ENTRY, '&Anchors...', None, ANCHORS),
+		(SMIL, ENTRY, '&Anchors...', None, ANCHORS),
 )
 
 POPUP_CVIEW_NONE = (
@@ -278,7 +278,7 @@ POPUP_CVIEW_NODE = (
 		(LIGHT, SEP,),
 		(LIGHT, ENTRY, '&Info...', 'I', INFO),
 		(LIGHT, ENTRY, 'P&roperties...', 'A', ATTRIBUTES),
-		(LIGHT, ENTRY, '&Anchors...', 'T', ANCHORS),
+		(SMIL, ENTRY, '&Anchors...', 'T', ANCHORS),
 		(LIGHT, ENTRY, '&Edit content', 'E', CONTENT),
 )
 

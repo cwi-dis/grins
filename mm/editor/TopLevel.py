@@ -155,25 +155,26 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		import HierarchyView
 		self.hierarchyview = HierarchyView.HierarchyView(self)
 
-		if not settings.get('lightweight'):
-			import ChannelView
-			self.channelview = ChannelView.ChannelView(self)
-		else:
-			self.channelview = None
-
 		import Player
 		self.player = Player.Player(self)
 
-		import LinkEdit
-		self.links = LinkEdit.LinkEdit(self)
-
 		if not settings.get('lightweight'):
+			import ChannelView
+			self.channelview = ChannelView.ChannelView(self)
+
+			import LinkEdit
+			self.links = LinkEdit.LinkEdit(self)
+
 			import LayoutView
 			self.layoutview = LayoutView.LayoutView(self)
 
 			import UsergroupView
 			self.ugroupview = UsergroupView.UsergroupView(self)
 		else:
+			import LinkEditLight
+			self.links = LinkEditLight.LinkEditLight(self)
+
+			self.channelview = None
 			self.layoutview = None
 			self.ugroupview = None
 
@@ -897,6 +898,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			if top is not self:
 				rv = rv + top._getlocalexternalanchors()
 		return rv
+
 
 if os.name == 'posix':
 	def make_backup_filename(filename):
