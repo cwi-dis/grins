@@ -1656,12 +1656,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		from windowinterface import UNIT_PXL
 		bg = None
 		name = None
+		collapsed = None
 		if attrs is not None:
 			bg = attrs.get('backgroundColor')
 			if bg is None:
 				bg = attrs['background-color']
 			bg = self.__convert_color(bg)
 			name = attrs.get('id')
+
+			collapsed = attrs.get('collapsed')
 		top = name
 		if not name:
 			name = layout_name # only for anonymous root-layout
@@ -1679,6 +1682,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		else:
 			layout['bgcolor'] = 0,0,0
 		layout['transparent'] = 0
+
+		if collapsed == 'true':
+			layout.collapsed = 1
+		elif collapsed == 'false':
+			layout.collapsed = 0
+		else:
+			# not defined: default behavior which depend of node
+			layout.collapsed = None
 			
 		if isroot:
 			top = None
@@ -1713,6 +1724,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				except:
 					self.syntax_error("couldn't parse `%s' value" % attr)
 					pass
+
+		if layout.has_key('collapsed'):
+			# special case: collapsed is not stored as a GRiNS attribute
+			del layout['collapsed']
 			
 		layout['width'] = self.__tops[top].get('width')
 		layout['height'] = self.__tops[top].get('height')
@@ -1770,6 +1785,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if attrdict.has_key('regionName'):
 			ch['regionName'] = attrdict['regionName']
 
+		# special case: the collapse information is GRiNS specific and
+		# not stored as attribute
+		if attrdict.has_key('collapsed'):
+			ch.collapsed = attrdict['collapsed']
+			del attrdict['collapsed']
+		else:
+			# if no attribute, default behavior. (the collapsed is not yet defined). In this case
+			# it depends of the node
+			ch.collapsed = None
+			
 		# deal with channel with window
 		if attrdict.has_key('id'): del attrdict['id']
 		title = attrdict.get('title')
@@ -2569,6 +2594,13 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			        # because, it may be defined after in layout section. So currently, the checking
 			        # is done whithin __fillchannel
 				attrdict[attr] = val
+			elif attr == 'collapsed':
+				if val == 'true':
+					attrdict[attr] = 1
+				elif val == 'false':
+					attrdict[attr] = 0
+				else:
+					self.syntax_error('bad %s attribute' % attr)
 			else:
 				# catch all
 				attrdict[attr] = val

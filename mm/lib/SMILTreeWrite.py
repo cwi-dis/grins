@@ -1538,7 +1538,7 @@ class SMILWriter(SMIL):
 				attrlist.append(('backgroundColor', bgcolor))
 			else:
 				attrlist.append(('background-color', bgcolor))
-				
+
 			if self.smilboston:
 				# write only not default value
 				if ch.has_key('open'):
@@ -1557,6 +1557,15 @@ class SMILWriter(SMIL):
 				elif type(value) == type(0):
 					attrlist.append((name, '%d' % value))
 
+			# special case: collapse information
+			if ch.collapsed == 1:
+				attrlist.append(('%s:collapsed' % NSGRiNSprefix, 'true'))
+			elif ch.collapsed == 0:
+				attrlist.append(('%s:collapsed' % NSGRiNSprefix, 'false'))
+			else:
+				# default behavior. depend of the node
+				pass
+
 			if self.smilboston:
 				for key, val in ch.items():
 					if not cmif_chan_attrs_ignore.has_key(key):
@@ -1569,6 +1578,7 @@ class SMILWriter(SMIL):
 				# not smilboston implies one top-level
 				self.writetag('root-layout', attrlist, ch)
 				self.writeregion(ch)
+												
 		self.pop()
 
 	def writeregion(self, ch):
@@ -1587,7 +1597,7 @@ class SMILWriter(SMIL):
 			attrlist.append(('title', title))
 		elif self.ch2name[ch] != ch.name:
 			attrlist.append(('title', ch.name))
-			
+	
 		for name in ['left', 'width', 'right', 'top', 'height', 'bottom']:
 			value = ch.getCssRawAttr(name)
 			# write only no auto values
@@ -1720,12 +1730,21 @@ class SMILWriter(SMIL):
 		if subtype != None:
 			attrlist.append(('%s:type' % NSGRiNSprefix, subtype))
 
+		# special case: collapse information
+		if ch.collapsed == 1:
+			attrlist.append(('%s:collapsed' % NSGRiNSprefix, 'true'))
+		elif ch.collapsed == 0:
+			attrlist.append(('%s:collapsed' % NSGRiNSprefix, 'false'))
+		else:
+			# default behavior. depend of the node
+			pass
+													
 		for key, val in ch.items():
 			if not cmif_chan_attrs_ignore.has_key(key):
 				attrlist.append(('%s:%s' % (NSGRiNSprefix, key), MMAttrdefs.valuerepr(key, val)))
 		self.writetag('region', attrlist, ch)
 		subchans = ch.GetChildren()
-		
+
 		# new 03-07-2000
 		# cnt sub layoutchannel number --> to allow to close the tag if no element inside
 		lcNumber = 0
