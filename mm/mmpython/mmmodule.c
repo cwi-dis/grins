@@ -199,9 +199,17 @@ mm_arm(self, args)
 		return NULL;
 	}
 	self->mm_flags |= ARMING;
+	self->mm_flags &= ~ARMED;
 	up_sema(self->mm_flagsema);
-	if (!(*self->mm_chanobj->chan_funcs->arm)(self, file, delay, duration, attrlist, anchorlist))
+	if (!(*self->mm_chanobj->chan_funcs->arm)(self, file, delay, duration, attrlist, anchorlist)) {
+		down_sema(self->mm_flagsema);
+		self->mm_flags &= ~ARMING;
+		up_sema(self->mm_flagsema);
 		return NULL;
+	}
+	down_sema(self->mm_flagsema);
+	self->mm_flags |= ARMED;
+	up_sema(self->mm_flagsema);
 	up_sema(self->mm_armsema);
 	/*DEBUG*/down_sema(self->mm_waitarm);
 	INCREF(None);
@@ -229,10 +237,20 @@ mm_play(self, args)
 		err_setstr(MmError, "already playing");
 		return NULL;
 	}
+	if (!(self->mm_flags & ARMED)) {
+		up_sema(self->mm_flagsema);
+		dprintf(("mm_play(%lx): node not armed\n", (long) self));
+		err_setstr(MmError, "not armed");
+		return NULL;
+	}
 	self->mm_flags |= PLAYING;
 	up_sema(self->mm_flagsema);
-	if (!(*self->mm_chanobj->chan_funcs->play)(self))
+	if (!(*self->mm_chanobj->chan_funcs->play)(self)) {
+		down_sema(self->mm_flagsema);
+		self->mm_flags &= ~PLAYING;
+		up_sema(self->mm_flagsema);
 		return NULL;
+	}
 	up_sema(self->mm_playsema);
 	INCREF(None);
 	return None;

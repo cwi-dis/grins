@@ -203,7 +203,7 @@ class MovieChannel(Channel):
 	def play(self, node, callback, arg):
 		self.node = node
 		self.cb = (callback, arg)
-		if not self.is_showing():
+		if not self.is_showing() or not self.window.vfile:
 			import Duration
 			duration = Duration.get(node)
 			dummy = self.player.enter(duration, 0, \
@@ -222,8 +222,7 @@ class MovieChannel(Channel):
 		glwindow.devregister(`self.deviceno`+':'+`mm.stopped`, \
 			  stopped, 0)
 		self.window.cleared = 0
-		if self.window.vfile:
-			self.threads.play()
+		self.threads.play()
 		self.player.arm_ready(self.name)
 	#
 	#DEBUG: remove dummy entry from queue and call proper done method
