@@ -162,7 +162,6 @@ class _ImageWidget(_Widget):
 		Win.InvalRect(self.rect)
 			
 	def setfromfile(self, image):
-		print "Image file", image
 		Win.InvalRect(self.rect)
 		self.image_data = None
 
@@ -199,7 +198,6 @@ class _ImageWidget(_Widget):
 				
 			srcrect = 0, 0, w, h
 			dstrect = dl, dt, dr, db
-			print dstrect
 			fgcolor = self.wid.GetWindowPort().rgbFgColor
 			bgcolor = self.wid.GetWindowPort().rgbBkColor
 			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
