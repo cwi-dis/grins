@@ -329,7 +329,7 @@ class TemporalWidgetFactory:
 			bob.nodewidgets = self.timecanvas.node_channel_mapping[c.name]
 		except Exception:
 			bob.nodewidgets = []
-			print "Warning: channel has no widgets mapped to it:", c.name
+##			print "Warning: channel has no widgets mapped to it:", c.name
 		bob.setup()
 		return bob
 
