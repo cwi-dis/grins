@@ -703,7 +703,7 @@ mpeg_fill_inbuffer(bufhdl, fd)
     int fd;
 {
     void *databuf;
-    int wrap, n;
+    int wrap, n, first = 1;
     
     while (1) {
 	n = clQueryFree(bufhdl, 0, &databuf, &wrap);
@@ -713,10 +713,11 @@ mpeg_fill_inbuffer(bufhdl, fd)
 	n = read(fd, databuf, n);
 	if ( n > 0 ) {
 	    clUpdateHead(bufhdl, n);
+	    first = 0;
 	} else {
 	    dprintf(("mpeg_fill_inbuffer: eof\n"));
 	    clDoneUpdatingHead(bufhdl);
-	    return 1;
+	    return first;
 	}
     }
 }
