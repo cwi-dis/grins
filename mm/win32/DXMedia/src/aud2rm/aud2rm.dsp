@@ -93,37 +93,37 @@ LINK32=link.exe
 
 SOURCE=.\aud2rm.cpp
 DEP_CPP_AUD2R=\
+	"..\..\classes\base\amextra.h"\
+	"..\..\classes\base\amfilter.h"\
+	"..\..\classes\base\cache.h"\
+	"..\..\classes\base\combase.h"\
+	"..\..\classes\base\cprop.h"\
+	"..\..\classes\base\ctlutil.h"\
+	"..\..\classes\base\dllsetup.h"\
+	"..\..\classes\base\fourcc.h"\
+	"..\..\classes\base\measure.h"\
+	"..\..\classes\base\msgthrd.h"\
+	"..\..\classes\base\mtype.h"\
+	"..\..\classes\base\outputq.h"\
+	"..\..\classes\base\pstream.h"\
+	"..\..\classes\base\refclock.h"\
+	"..\..\classes\base\reftime.h"\
+	"..\..\classes\base\renbase.h"\
+	"..\..\classes\base\Schedule.h"\
+	"..\..\classes\base\source.h"\
+	"..\..\classes\base\streams.h"\
+	"..\..\classes\base\strmctl.h"\
+	"..\..\classes\base\sysclock.h"\
+	"..\..\classes\base\transfrm.h"\
+	"..\..\classes\base\transip.h"\
+	"..\..\classes\base\videoctl.h"\
+	"..\..\classes\base\vtrans.h"\
+	"..\..\classes\base\winctrl.h"\
+	"..\..\classes\base\winutil.h"\
+	"..\..\classes\base\wxdebug.h"\
+	"..\..\classes\base\wxlist.h"\
+	"..\..\classes\base\wxutil.h"\
 	".\aud2rm.h"\
-	{$(INCLUDE)}"amextra.h"\
-	{$(INCLUDE)}"amfilter.h"\
-	{$(INCLUDE)}"cache.h"\
-	{$(INCLUDE)}"combase.h"\
-	{$(INCLUDE)}"cprop.h"\
-	{$(INCLUDE)}"ctlutil.h"\
-	{$(INCLUDE)}"dllsetup.h"\
-	{$(INCLUDE)}"fourcc.h"\
-	{$(INCLUDE)}"measure.h"\
-	{$(INCLUDE)}"msgthrd.h"\
-	{$(INCLUDE)}"mtype.h"\
-	{$(INCLUDE)}"outputq.h"\
-	{$(INCLUDE)}"pstream.h"\
-	{$(INCLUDE)}"refclock.h"\
-	{$(INCLUDE)}"reftime.h"\
-	{$(INCLUDE)}"renbase.h"\
-	{$(INCLUDE)}"Schedule.h"\
-	{$(INCLUDE)}"source.h"\
-	{$(INCLUDE)}"streams.h"\
-	{$(INCLUDE)}"strmctl.h"\
-	{$(INCLUDE)}"sysclock.h"\
-	{$(INCLUDE)}"transfrm.h"\
-	{$(INCLUDE)}"transip.h"\
-	{$(INCLUDE)}"videoctl.h"\
-	{$(INCLUDE)}"vtrans.h"\
-	{$(INCLUDE)}"winctrl.h"\
-	{$(INCLUDE)}"winutil.h"\
-	{$(INCLUDE)}"wxdebug.h"\
-	{$(INCLUDE)}"wxlist.h"\
-	{$(INCLUDE)}"wxutil.h"\
 	
 # End Source File
 # Begin Source File
@@ -136,7 +136,31 @@ SOURCE=.\aud2rm.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\mmpython\wmsdk\aud2rm.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\aud2rm.rc
+# End Source File
+# Begin Source File
+
+SOURCE=.\rprod.cpp
+DEP_CPP_RPROD=\
+	"..\..\..\..\mmpython\producer\include\engcodec.h"\
+	"..\..\..\..\mmpython\producer\include\engtargs.h"\
+	"..\..\..\..\mmpython\producer\include\engtypes.h"\
+	"..\..\..\..\mmpython\producer\include\pncom.h"\
+	"..\..\..\..\mmpython\producer\include\pnwintyp.h"\
+	"..\..\..\..\mmpython\producer\include\progsink.h"\
+	"..\..\..\..\mmpython\producer\include\rmaenum.h"\
+	"..\..\..\..\mmpython\producer\include\rmapckts.h"\
+	"..\..\..\..\mmpython\producer\include\rmbldeng.h"\
+	"..\..\..\..\mmpython\producer\include\rmmetain.h"\
+	{$(INCLUDE)}"pnbastsd.h"\
+	{$(INCLUDE)}"pnresult.h"\
+	{$(INCLUDE)}"pntypes.h"\
+	{$(INCLUDE)}"rmavalue.h"\
+	
 # End Source File
 # End Target
 # End Project
