@@ -200,11 +200,8 @@ def main():
 ## 	sys.path.append(findfile('lib'))
 ## 	sys.path.append(findfile('video'))
 
-	import mimetypes
-	mimetypes.types_map['.smi'] = mimetypes.types_map['.smil'] = \
-				      'application/smil'
-	mimetypes.types_map['.cmif'] = 'application/x-cmif'
-	mimetypes.types_map['.cmi'] = 'application/x-cmif'
+	import mimetypes, grins_mimetypes
+	mimetypes.types_map.update(grins_mimetypes.mimetypes)
 
 	import Channel
 	import GLLock
