@@ -21,7 +21,7 @@ item: Global
   Patch Flags=0000000000001001
   Patch Threshold=85
   Patch Memory=4000
-  EXE Filename=..\..\bin\win32\grinsp2.0.114.exe
+  EXE Filename=..\..\bin\win32\grinsp2.0.115.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
   Upload Name=sjoerd
