@@ -68,7 +68,7 @@ f_channel = windowinterface.findfont('Helvetica', 8)
 MINSIZE = 10.0				# minimum size for a node
 LABSIZE = f_title.fontheight() * 1.5	# height of label
 GAPSIZE = 1.0				# size of gap between nodes
-EDGSIZE = 0.5				# size of edges
+EDGSIZE = 1.0				# size of edges
 
 
 class HierarchyView(HierarchyViewDialog):
