@@ -69,7 +69,7 @@ class Channel:
 		channels.append(self)
 
 	def __repr__(self):
-		return '<Channel instance, name=' + `self._name` + '>'
+		return '<%s instance, name=%s>' % (self.__class__.__name__, self._name)
 
 	def destroy(self):
 		# Destroy this instance of a Channel object.  This
@@ -706,9 +706,6 @@ class ChannelWindow(Channel):
 		self._is_waiting = 0
 		self.want_default_colormap = 0
 
-	def __repr__(self):
-		return '<ChannelWindow instance, name=' + `self._name` + '>'
-
 	def destroy(self):
 		del self._player.ChannelWinDict[self._name]
 		Channel.destroy(self)
@@ -1247,9 +1244,6 @@ class ChannelThread(_ChannelThread, Channel):
 		Channel.__init__(self, name, attrdict, scheduler, ui)
 		_ChannelThread.__init__(self)
 
-	def __repr__(self):
-		return '<ChannelThread instance, name=' + `self._name` + '>'
-
 	def destroy(self):
 		Channel.destroy(self)
 		_ChannelThread.destroy(self)
@@ -1276,9 +1270,6 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		windowinterface.usewindowlock(GLLock.gl_lock)
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 		_ChannelThread.__init__(self)
-
-	def __repr__(self):
-		return '<ChannelWindowThread instance, name=' + `self._name` + '>'
 
 	def destroy(self):
 		ChannelWindow.destroy(self)
