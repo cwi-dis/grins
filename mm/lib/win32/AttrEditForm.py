@@ -2758,6 +2758,9 @@ class WebserverGroup(StringGroup):
 class MediaserverGroup(StringGroup):
 	data=attrgrsdict['mediaserver']
 
+class MediaserverGroup2(StringGroup):
+	data=attrgrsdict['mediaserver2']
+
 class DurationGroup(StringGroup):
 	data=attrgrsdict['timing1']
 
@@ -3379,6 +3382,7 @@ groupsui={
 	'timingpar':DurationParGroup,
 	'webserver':WebserverGroup,
 	'mediaserver':MediaserverGroup,
+	'mediaserver2':MediaserverGroup2,
 	'file':FileGroup,
 	'wipe':WipeGroup,
 	'clip':ClipGroup,

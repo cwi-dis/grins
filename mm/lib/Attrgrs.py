@@ -190,6 +190,14 @@ attrgrs=(
 		'project_smil_url',
 		]},
 
+  	{'name':'mediaserver2',
+	'title':'Mediaserver',
+	'attrs':[
+		'project_ftp_host_media',
+		'project_ftp_dir_media',
+		'project_ftp_user_media',
+		]},
+
 	{'name':'file',
 	'title':'URL',
 	'attrs':[
