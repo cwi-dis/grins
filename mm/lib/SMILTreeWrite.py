@@ -1177,6 +1177,11 @@ class SMILWriter(SMIL):
 				attrlist.append(('%s:%s' % (NSprefix, key),
 						 MMAttrdefs.valuerepr(key, val)))
 		if interior:
+			if type == 'seq' and self.copydir and not x.GetChildren():
+				# Warn the user for a bug in G2
+				import windowinterface
+				windowinterface.showmessage('Warning: some G2 versions crash on empty sequence nodes')
+				x.set_infoicon('error', 'Warning: some G2 versions crash on empty sequence nodes')
 			if root and (attrlist or type != 'seq'):
 				root = 0
 			if not root:
