@@ -58,21 +58,8 @@ Kaboo!: None
 hyperjump) on the soundchannel sets it to play_done (according to the
 channelview color).
 
-(editor only:) The movie window has a funny little sub-window in the
-lower-right corner. At least, it has when playing the coffee demo.
-
-(editor only:) The movie window doesn't clear to the correct color.
-
-Pressing "PLAY" while already playing a movie, makes the movie red...
-
 "Keep time chart in sync" doesn't work if the time chart is brought up
 after the player has started (or similar vague sort of circumstances)
-
-ImageChannel: anchors are drawn at the wrong place when the file isn't
-found (also the window isn't popped in this case -- it probably should).
-
-ImageChannel: anchor editing doesn't scale the anchor we're editing
-right (once you edit it comes at the right place though)
 
 Player: "Ignore delays" option makes the time run like mad
 
@@ -95,13 +82,6 @@ after editing an anchor, the anchors of a node aren't always redrawn
 correctly
 
 Auto-firing anchors on interior nodes don't work
-
-When starting a document with the pause button: (a) no images or texts
-appear; and (b) the cursor stays a watch.
-
-Player: playing multiple nodes in parallel on the same channel causes
-crashes or generally weird behaviour (each channel class should protect
-itself against this!)
 
 Timing: sometimes the cached timings are bogus and save + restore is
 needed to fix them.  E.g. after changing a bag node to a seq node...
@@ -672,3 +652,33 @@ rewrite the scheduler [Jack]
 
 Text anchors are sometimes drawn wrong when highlighted... [I *think*
 this has been fixed.]
+
+--- 20 Jul 1993 ---
+
+(editor only:) The movie window has a funny little sub-window in the
+lower-right corner. At least, it has when playing the coffee demo.
+[This doesn't seem to happen anymore, I don't know why--Sjoerd]
+
+(editor only:) The movie window doesn't clear to the correct color.
+[Fixed by playing movies in RGB mode--Sjoerd]
+
+Pressing "PLAY" while already playing a movie, makes the movie red...
+[Fixed by playing movies in RGB mode--Sjoerd]
+
+ImageChannel: anchors are drawn at the wrong place when the file isn't
+found (also the window isn't popped in this case -- it probably should).
+[Fixed through a complete rewrite of the channel code.  Anchors are
+not drawn when the file isn't found--Sjoerd]
+
+ImageChannel: anchor editing doesn't scale the anchor we're editing
+right (once you edit it comes at the right place though)
+[Fixed through a complete rewrite of the channel code--Sjoerd]
+
+When starting a document with the pause button: (a) no images or texts
+appear; and (b) the cursor stays a watch.
+[Doesn't happen in new channels--Sjoerd]
+
+Player: playing multiple nodes in parallel on the same channel causes
+crashes or generally weird behaviour (each channel class should protect
+itself against this!)
+[Doesn't happen in new channels--Sjoerd]
