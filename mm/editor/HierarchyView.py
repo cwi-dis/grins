@@ -1,4 +1,4 @@
-__version__ = "$Id$"
+_version__ = "$Id$"
 
 # New hierarchy view implementation.
 
@@ -48,9 +48,11 @@ class HierarchyView(HierarchyViewDialog):
 		self.last_geometry = None
 
 		self.root = self.toplevel.root # : MMNode - the root of the MMNode heirachy
-		self.objects = []	# A list of objects that are displayed on the screen.
+#		self.objects = []	# A list of objects that are displayed on the screen.
 		self.scene_graph = None # The next generation list of objects that are displayed on the screen
 					# of type EditWindow.
+		self.drawing = 0	# A lock to prevent recursion in the draw() method of self.
+		self.dirty = 1		# Whether the scene graph needs redrawing.
 		self.selected_widget = None
 		self.focusobj = None	# Old Object() code - remove this when no longer used. TODO
 		self.focusnode = self.prevfocusnode = self.root	# : MMNode - remove when no longer used.
@@ -427,8 +429,14 @@ class HierarchyView(HierarchyViewDialog):
 	def create_scene_graph(self):
 		# Iterate through the MMNode structure (starting from self.root)
 		# and create a scene graph from it.
+		# As such, any old references into the old scene graph need to be reinitialised.
 		Timing.needtimes(self.root)  # For bandwidth bars
+		self.selected_widget = None
+		self.focusobj = None
 		self.scene_graph = create_MMNode_widget(self.root, self)
+		self.dirty = 1
+		if self.window and self.focusnode:
+			self.select_node(self.focusnode)
 
 	def refresh_scene_graph(self):
 		if self.scene_graph:
@@ -462,22 +470,32 @@ class HierarchyView(HierarchyViewDialog):
 		#self.scene_graph.uncollapse()
 		self.refresh_scene_graph()
 		self.draw()
-		
+
 	def draw(self):
 		# Recalculate the size of all boxes and draw on screen.
 		#self.toplevel.setwaiting()
-
-		x,y = self.scene_graph.get_minsize_abs()
-		self.mcanvassize = x,y
-		self.window.setcanvassize((self.sizes.SIZEUNIT, x, y))
-
-		# Known bug: this will actually cause a Hierarchyview.redraw() event.
-		self.displist = self.window.newdisplaylist(BGCOLOR)
-
-		self.scene_graph.recalc()
-		self.scene_graph.draw(self.displist)
-
+		#import traceback
+		#traceback.print_stack()
+		#print "-------------------- Don't panic, it's just a traceback."
+		if self.drawing == 1:
+			return
+		self.drawing = 1
+		
+		while self.dirty:
+			#print "DEBUG: drawing"
+			self.dirty = 0
+			x,y = self.scene_graph.get_minsize_abs()
+			self.mcanvassize = x,y
+			self.window.setcanvassize((self.sizes.SIZEUNIT, x, y))
+			
+			# Known bug: this will actually cause a Hierarchyview.redraw() event.
+			self.displist = self.window.newdisplaylist(BGCOLOR)
+			
+			self.scene_graph.recalc()
+			self.scene_graph.draw(self.displist)
+			
 		self.displist.render()
+		self.drawing = 0
 
 	def hide(self, *rest):
 		if not self.is_showing():
@@ -531,7 +549,7 @@ class HierarchyView(HierarchyViewDialog):
 		return self.focusnode
 
 	def globalsetfocus(self, node):
-		print "DEBUG: HierarchyView received globalsetfocus with ", node
+		#print "DEBUG: HierarchyView received globalsetfocus with ", node
 		if not self.is_showing():
 			return
 		if not self.root.IsAncestorOf(node):
@@ -540,7 +558,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	def globalfocuschanged(self, focustype, focusobject):
 		# Callback from the editmanager to set the focus to a specific node.
-		print "DEBUG: HierarchyView received globalsetfocus with ", focustype, focusobject
+		#print "DEBUG: HierarchyView received globalsetfocus with ", focustype, focusobject
 		if focusobject and focusobject is not self.focusnode:
 			self.select_node(focusobject);
 			self.aftersetfocus();
@@ -567,6 +585,16 @@ class HierarchyView(HierarchyViewDialog):
 		self.toplevel.setwaiting()
 		x, y = params[0:2]
 		self.select(x, y)
+		self.draw()
+
+	def mouse0release(self, dummy, window, event, params):
+		self.toplevel.setwaiting()
+		x,y = params[0:2]
+
+		obj = self.scene_graph.get_obj_at((x,y))
+		if obj is self.selected_widget:
+			obj.mouse0release()
+		self.draw()
 
 	def cvdrop(self, node, window, event, params):
 		em = self.editmgr
@@ -664,7 +692,6 @@ class HierarchyView(HierarchyViewDialog):
 
 			em.commit()
 
-
 	def dragfile(self, dummy, window, event, params):
 		x, y = params
 		obj = self.whichhit(x, y)
@@ -713,13 +740,14 @@ class HierarchyView(HierarchyViewDialog):
 		siblings = parent.GetChildren()
 		nf = siblings.index(node)
 		if nf < len(siblings)-1:
-			self.focusnode = siblings[nf+1]
+			self.select_node(siblings[nf+1])
 		elif nf > 0:
-			self.focusnode = siblings[nf-1]
+			self.select_node(siblings[nf-1])
 		else:
-			self.focusnode = parent
-		self.aftersetfocus()
+			self.select_node(parent)
+		
 		em.delnode(node)
+		
 		if cut:
 			import Clipboard
 			t, n = Clipboard.getclip()
@@ -1175,7 +1203,7 @@ class HierarchyView(HierarchyViewDialog):
 		# Make the widget the current selection.
 		if isinstance(self.selected_widget, Widgets.Widget):
 			self.selected_widget.unselect()
-		self.selected_widget = widget		
+		self.selected_widget = widget
 		self.focusobj = widget	# Used for callbacks.
 		self.prevfocusnode = self.focusnode
 		if widget == None:

@@ -77,314 +77,323 @@ LEFT, RIGHT, TOP, BOTTOM, LEFTBOTTOM, RIGHTBOTTOM, LEFTTOP, RIGHTTOP = range(8)
 
 ##############################################################################
 
-#                  ABSTRACT BASE CLASS INTERACTIVE
+#				  ABSTRACT BASE CLASS INTERACTIVE
 
 ##############################################################################
 
 class Widget:
 
-    # Functionality:
-    # * draw
-    # * click, double-click, right-click
-    # * select, unselect
-    # * move, drag, resize, append (to another Widget, relative pos)
-    # * create, copy, cut, delete
-    # * show, hide (why hide???) - discuss further.
+	# Functionality:
+	# * draw
+	# * click, double-click, right-click
+	# * select, unselect
+	# * move, drag, resize, append (to another Widget, relative pos)
+	# * create, copy, cut, delete
+	# * show, hide (why hide???) - discuss further.
 
-    # Positions are either absolute (pixels ~ integers) or relative (floating point 0.0 <= n <= 1.0)
-    # and are always tuples of (left, top, right, bottom).
-    # At some stage, a better drawing scheme could be developed which prevents drawing out of an
-    # Widget's area and only has relative coordinates, perhaps by having each Widget in
-    # it's own window.
+	# Positions are either absolute (pixels ~ integers) or relative (floating point 0.0 <= n <= 1.0)
+	# and are always tuples of (left, top, right, bottom).
+	# At some stage, a better drawing scheme could be developed which prevents drawing out of an
+	# Widget's area and only has relative coordinates, perhaps by having each Widget in
+	# it's own window.
 
-    def __init__(self, root):
-        # Root is the Hierarchy view window.
-        assert root != None
-        self.root = root
+	def __init__(self, root):
+		# Root is the Hierarchy view window.
+		assert root != None
+		self.root = root
 
-        # Mutable attributes
-        self.pos_rel = (0.0, 0.0, 1.0, 1.0) # relative position (0.0 <= n <= 1.0)
-        self.pos_z = 0                 # Z value - order on screen. 
-        self.minsize = (0.0, 0.0)      # Minimum size that this is likely to be.
-        self.maxsize = (1.0, 1.0)      # Maximum size that this is likely to be.
-        # The relative window size is always (1.0, 1.0, 1.0, 1.0).
+		# Mutable attributes
+		self.pos_rel = (0.0, 0.0, 1.0, 1.0) # relative position (0.0 <= n <= 1.0)
+		self.pos_z = 0		# Z value - order on screen. 
+		self.minsize = (0.0, 0.0) # Minimum size that this is likely to be.
+		self.maxsize = (1.0, 1.0) # Maximum size that this is likely to be.
+		# The relative window size is always (1.0, 1.0, 1.0, 1.0).
 
-        self.selected = 0              # TRUE or FALSE
+		self.selected = 0	# TRUE or FALSE
 
-        # The next block of functionality will probably never be implemented.
-        self.visable = 1               # TRUE or FALSE, I'm not sure about the usefullness of this..
-        self.appended_to = None        # Object that this will be appended to.
-        self.appended_to_loc = None    # The manner which it is appended to another object.
-        self.appended_to_pos = (0.0, 0.0, 0.0, 0,0) # Relative coordinates from the certain position on the appended thingy.
-        
-        # pseudo-immutable attributes
-        self.clickable = 1             # whether this will accept events
-        self.movable = 1               # whether this can be moved or resized.
-        self.drag_dropable = 1         # whether this does the D&D thing.
-        self.context_menu = None       # Pops up when right-clicked (not used)
+		# The next block of functionality will probably never be implemented.
+		self.visable = 1	# TRUE or FALSE, I'm not sure about the usefullness of this..
+		self.appended_to = None	# Object that this will be appended to.
+		self.appended_to_loc = None # The manner which it is appended to another object.
+		self.appended_to_pos = (0.0, 0.0, 0.0, 0,0) # Relative coordinates from the certain position on the appended thingy.
+		
+		# pseudo-immutable attributes
+		self.clickable = 1	# whether this will accept events
+		self.movable = 1	# whether this can be moved or resized.
+		self.drag_dropable = 1	# whether this does the D&D thing.
+		self.context_menu = None # Pops up when right-clicked (not used)
 
-        self.parent = None             # Sometimes nodes have parents.
+		self.parent = None	# Sometimes nodes have parents.
+		self.dirty = 1		# Do I need re-drawing?
 
-    def draw(self, displist):
-        # For the base Widget, nothing will be drawn.
-        self.recalc()
+	def draw(self, displist):
+		# For the base Widget, nothing will be drawn.
+		self.recalc()
 
-        if self.pos_rel == (0,0,0,0):
-            print "Warning! Widget drawn with null coords."
-            return 0
+		if self.pos_rel == (0,0,0,0):
+			print "Warning! Widget drawn with null coords."
+			return 0
 
-        l, t, r, b = self.pos_rel
-        width = r-l
-        height = b-t
+		l, t, r, b = self.pos_rel
+		width = r-l
+		height = b-t
 
-        # Check that this widget is on the screen.
-        if l<0.0 or t<0.0 or r>1.0 or b>1.0:
-            print "Warning! Widget drawn off window."
-            return 0
+		# Check that this widget is on the screen.
+		if l<0.0 or t<0.0 or r>1.0 or b>1.0:
+			print "Warning! Widget drawn off window."
+			return 0
 
-        print "DEBUG: drawing a grey box."
-        # DEBUG: draw a grey, outlined box.
-        print l, t, width, height
-        if self.selected:
-            displist.drawfbox(BGCOLOR, (l, t, width, height) )
-        else:
-            displist.drawfbox(LEAFCOLOR, (l, t, width, height) )
-        displist.drawbox((l, t, width, height))
-        return 1
-    
-    def recalc(self):
-        # Calculate the position if this is relative to another widget.
-        pass
+		print "DEBUG: drawing a grey box."
+		# DEBUG: draw a grey, outlined box.
+		print l, t, width, height
+		if self.selected:
+			displist.drawfbox(BGCOLOR, (l, t, width, height) )
+		else:
+			displist.drawfbox(LEAFCOLOR, (l, t, width, height) )
+		displist.drawbox((l, t, width, height))
+		return 1
+	
+	def recalc(self):
+		# Calculate the position if this is relative to another widget.
+		pass
 
-    def highlight(self, color):
-        # Make the color a bit brighter
-        # This could be used to highlight a selected node.
-        # TODO: should this be a global function?
-        r, g, b = color
-        return min(float(r)*1.25, 255), min(float(g)*1.25, 255), min(float(b)*1.25, 255)
+	def highlight(self, color):
+		# Make the color a bit brighter
+		# This could be used to highlight a selected node.
+		# TODO: should this be a global function?
+		r, g, b = color
+		return min(float(r)*1.25, 255), min(float(g)*1.25, 255), min(float(b)*1.25, 255)
 
-    def dim_to_z_index(self):
-        # Adjust the color depending on the distance from the user
-        # and the maximum z-index used.
-        assert 0
+	def dim_to_z_index(self):
+		# Adjust the color depending on the distance from the user
+		# and the maximum z-index used.
+		assert 0
 
-    def get_pos_abs(self):
-        x, y = self.root.get_window_size_abs()
-        lr, tr, rr, br = self.pos_rel
-        l = float(lr) * x
-        t = float(tr) * y
-        r = float(rr) * x
-        b = float(br) * y
-        return (l,t,r,b)
+	def get_pos_abs(self):
+		x, y = self.root.get_window_size_abs()
+		lr, tr, rr, br = self.pos_rel
+		l = float(lr) * x
+		t = float(tr) * y
+		r = float(rr) * x
+		b = float(br) * y
+		return (l,t,r,b)
 
-    def click(self, pos):
-        self.select()
+	def click(self):
+		self.select()
 
-    def double_click(self, pos):
-        print "TODO: Widget.double_click()"
+	def double_click(self):
+		print "TODO: Widget.double_click()"
 
-    def right_click(self, pos):
-        print "TODO: Widget.right_click()"
+	def right_click(self):
+		print "TODO: Widget.right_click()"
 
-    def moveto(self, newpos):
-        # Also handles resizing - new size is in newpos as well.
-        l,t,r,b = newpos
-#        print "DEBUG: moveto Received sizes: ", l, t, r, b
-#        print "DEBUG: moveto self.get_minsize is: ", self.get_minsize()
-#        print "DEBUG: moveto self.get_maxsize is: ", self.get_maxsize()
+	def mouse0press(self):
+		pass
+
+	def mouse0release(self):
+		pass
+
+	def moveto(self, newpos):
+		# Also handles resizing - new size is in newpos as well.
+		l,t,r,b = newpos
+#		print "DEBUG: moveto Received sizes: ", l, t, r, b
+#		print "DEBUG: moveto self.get_minsize is: ", self.get_minsize()
+#		print "DEBUG: moveto self.get_maxsize is: ", self.get_maxsize()
 
 # TODO: put this back.
-#        lw, lh = self.get_minsize()
-#        mw, mh = self.get_maxsize()
-#        assert (r-l) > lw and (b-t) > lh
-#        assert (r-l) < mw and (b-t) < mh
+#		lw, lh = self.get_minsize()
+#		mw, mh = self.get_maxsize()
+#		assert (r-l) > lw and (b-t) > lh
+#		assert (r-l) < mw and (b-t) < mh
 
-        if r < l:
-            print "Widget: Error: box is right-to-left", self
-        if t > b:
-            print "Widget: Error: box is upside down.", self
+		if r < l:
+			print "Widget: Error: box is right-to-left", self
+		if t > b:
+			print "Widget: Error: box is upside down.", self
 
-#        assert r <= 1.0 and r >= 0.0 and l <= 1.0 and l >= 0.0
-#        assert t >= 0.0 and t <= 1.0 and b >= 0.0 and b <= 1.0
-        self.pos_rel = newpos
+#		assert r <= 1.0 and r >= 0.0 and l <= 1.0 and l >= 0.0
+#		assert t >= 0.0 and t <= 1.0 and b >= 0.0 and b <= 1.0
+		self.pos_rel = newpos
 
-    def set_append(self, otherobject, position):
-        # Used to make the position of this object relative to another.
-        # Warning! Don't start doing traversals using this!
-        # Make a container that inherits from EditWindow instead.
-        print "TODO: Widget.append()"
+	def set_append(self, otherobject, position):
+		# Used to make the position of this object relative to another.
+		# Warning! Don't start doing traversals using this!
+		# Make a container that inherits from EditWindow instead.
+		print "TODO: Widget.append()"
 
-    def select(self):
-        self.selected = 1
+	def select(self):
+		self.selected = 1
+		self.root.dirty = 1
 
-    def unselect(self):
-        self.selected = 0
+	def unselect(self):
+		self.selected = 0
+		self.root.dirty = 1
 
-    def get_minsize(self):
-        # Return the least size that this widget is likely to be.
-        return self.minsize
+	def get_minsize(self):
+		# Return the least size that this widget is likely to be.
+		return self.minsize
 
-    def get_maxsize(self):
-        # Return the maximum size that this widget is likely to be. 
-        return self.maxsize
+	def get_maxsize(self):
+		# Return the maximum size that this widget is likely to be. 
+		return self.maxsize
 
-    # TODO: def deepcopy?? And other methods here.
+	# TODO: def deepcopy?? And other methods here.
 
-    def get_box(self):
-        l,t,r,b = self.pos_rel
-        return l,t,r-l,b-t
+	def get_box(self):
+		l,t,r,b = self.pos_rel
+		return l,t,r-l,b-t
 
-    def get_relx(self, xvalue):
-        return float(xvalue)/ self.root.get_window_size_abs()[0]
+	def get_relx(self, xvalue):
+		return float(xvalue)/ self.root.get_window_size_abs()[0]
 
-    def get_rely(self, yvalue):
-        return float(yvalue) / self.root.get_window_size_abs()[1]
+	def get_rely(self, yvalue):
+		return float(yvalue) / self.root.get_window_size_abs()[1]
 
-    def is_hit(self, (x, y)):
-        l,t,r,b = self.pos_rel
-        if l < x <= r and t < y < b:
-            return 1
-        else:
-            return 0
+	def is_hit(self, (x, y)):
+		l,t,r,b = self.pos_rel
+		if l < x <= r and t < y < b:
+			return 1
+		else:
+			return 0
 
-    def destroy(self):
-        # Python garbage collection is prone to circular references.
-        # Remove the self.esteem from this object.
-        todestroy = []
-        for name in dir(self):
-            w = getattr(self, name)
-            if isinstance(w, Widget) and w is not self:
-                todestroy.append(w)
-            elif type(w) is type([]):
-                for c in w:
-                    if isinstance(c, Widget) and c is not self:
-                        todestroy.append(c)
-            setattr(self, name, None)
-        for w in todestroy:
-            w.destroy()
-
-##############################################################################
-
-#                    ABSTRACT BASE CLASS EDITWINDOW
+	def destroy(self):
+		# Python garbage collection is prone to circular references.
+		# Remove the self.esteem from this object.
+		todestroy = []
+		for name in dir(self):
+			w = getattr(self, name)
+			if isinstance(w, Widget) and w is not self:
+				todestroy.append(w)
+			elif type(w) is type([]):
+				for c in w:
+					if isinstance(c, Widget) and c is not self:
+						todestroy.append(c)
+			setattr(self, name, None)
+		for w in todestroy:
+			w.destroy()
 
 ##############################################################################
-    
+
+#					ABSTRACT BASE CLASS EDITWINDOW
+
+##############################################################################
+	
 class MultiWidget(Widget):
-    # An MultiWidget is a container for Widget objects.
-    # This is a nestable container, so you can add and remove objects from it.
-    # The idea of this class is to have a container of objects which have
-    # their own position and z-index - objects float infront of and behind each
-    # other.
+	# An MultiWidget is a container for Widget objects.
+	# This is a nestable container, so you can add and remove objects from it.
+	# The idea of this class is to have a container of objects which have
+	# their own position and z-index - objects float infront of and behind each
+	# other.
 
 
-    # This object behaves like a collection - you can add and remove Widgets from
-    # it. 
+	# This object behaves like a collection - you can add and remove Widgets from
+	# it. 
 
-    def __init__(self, root):
-        Widget.__init__(self, root)
-        self.widgets = []
-        
-    def draw(self, displist):
-        # Draw widgets, starting with the furthest (z-index = 0)
-        for i in self.widgets:
-            i.draw(displist)            
+	def __init__(self, root):
+		Widget.__init__(self, root)
+		self.widgets = []
+		
+	def draw(self, displist):
+		# Draw widgets, starting with the furthest (z-index = 0)
+		for i in self.widgets:
+			i.draw(displist)			
 
-    def click(self, pos):
-        # Find the closest widget (z-index is greatest)
-        # if it is one of my sub-children:
-        for i in range(len(self.widgets)-1, -1, -1):
-            if self.widgets[i].is_hit(pos):
-                self.widgets[i].click(pos)
-                return
-        # else: 
-        self.select()
-        
+	def click(self, pos):
+		# Find the closest widget (z-index is greatest)
+		# if it is one of my sub-children:
+		for i in range(len(self.widgets)-1, -1, -1):
+			if self.widgets[i].is_hit(pos):
+				self.widgets[i].click(pos)
+				return
+		# else: 
+		self.select()
+		
 
-    def double_click(self, pos):
-        # Find the closest widget (z-index is greatest)
-        for i in range(len(self.widgets)-1, -1, -1):
-            if self.widgets[i].is_hit(pos):
-                self.widgets[i].double_click(pos)
-                return
+	def double_click(self, pos):
+		# Find the closest widget (z-index is greatest)
+		for i in range(len(self.widgets)-1, -1, -1):
+			if self.widgets[i].is_hit(pos):
+				self.widgets[i].double_click(pos)
+				return
 
-    def right_click(self, pos):
-        # Find the closest widget (z-index is greatest)
-        for i in range(len(self.widgets)-1, -1, -1):
-            if self.widgets[i].is_hit(pos):
-                self.widgets[i].right_click(pos)
-                return
+	def right_click(self, pos):
+		# Find the closest widget (z-index is greatest)
+		for i in range(len(self.widgets)-1, -1, -1):
+			if self.widgets[i].is_hit(pos):
+				self.widgets[i].right_click(pos)
+				return
 
-    ## List handling functions
-    
-    def __len__(self):
-        return len(self.widgets)
+	## List handling functions
+	
+	def __len__(self):
+		return len(self.widgets)
 
-    def __getitem__(self, key):
-        return self.widgets[key]
+	def __getitem__(self, key):
+		return self.widgets[key]
 
-    def __setitem__(self, key, value):
-        self.insert(value)
+	def __setitem__(self, key, value):
+		self.insert(value)
 
-    def __delitem__(self, key): # incorrect arguments
-        del self.widgets[key]
+	def __delitem__(self, key): # incorrect arguments
+		del self.widgets[key]
 
-    def __add__(self):                  # incorrect arguments.
-        assert 0 # not useful.
+	def __add__(self):				  # incorrect arguments.
+		assert 0 # not useful.
 
-    def append(self, node):
-        assert isinstance(node, Widget)
-        node.parent = self
-        node.pos_z = self.pos_z + 1
-        self.insert(node)
+	def append(self, node):
+		assert isinstance(node, Widget)
+		node.parent = self
+		node.pos_z = self.pos_z + 1
+		self.insert(node)
 
-    def count(self):
-        assert 0 # not useful.
+	def count(self):
+		assert 0 # not useful.
 
 
-    ## Maintaining the z-index:
+	## Maintaining the z-index:
 
-    def insert(self, intact):
-        # Keep the Widgets ordered by z-index.
-        # intact is the Widget widget to insert by z-index.
-        self.widgets.append(intact)
-        self.resort()
+	def insert(self, intact):
+		# Keep the Widgets ordered by z-index.
+		# intact is the Widget widget to insert by z-index.
+		self.widgets.append(intact)
+		self.resort()
 
-    # alternatively (untested):
-#     def insert(self, intact):
-#         element = 0
-#         for i in range(len(self.widgets)):
-#             if self.widgets[i].pos_z = intact.pos_z:
-#                 element = i
-#                 break
-#         head = self.widgets[:i]
-#         tail = self.widgets[i:]
-#         self.widgets = head + intact + tail
+	# alternatively (untested):
+#	 def insert(self, intact):
+#		 element = 0
+#		 for i in range(len(self.widgets)):
+#			 if self.widgets[i].pos_z = intact.pos_z:
+#				 element = i
+#				 break
+#		 head = self.widgets[:i]
+#		 tail = self.widgets[i:]
+#		 self.widgets = head + intact + tail
 
-    def resort(self):
-        # Ensure that the list is sorted by z-index.
-        # Using the python built-in sort function..
-        # Sjoerd reckons this is faster..
-        tuple_list = []
-        for i in self.widgets:
-            tuple_list.append((i.pos_z, i))
-        tuple_list.sort()
-        
-        new_widgetlist = []
-        for k,v in tuple_list:
-            new_widgetlist.append(v)
+	def resort(self):
+		# Ensure that the list is sorted by z-index.
+		# Using the python built-in sort function..
+		# Sjoerd reckons this is faster..
+		tuple_list = []
+		for i in self.widgets:
+			tuple_list.append((i.pos_z, i))
+		tuple_list.sort()
+		
+		new_widgetlist = []
+		for k,v in tuple_list:
+			new_widgetlist.append(v)
 
-        self.widgets = new_widgetlist
+		self.widgets = new_widgetlist
 
-##    def destroy(self):
-##        Widget.destroy(self)
-##        for i in self.widgets:
-##            i.destroy()
-##        self.widgets = []
-    
-#    def get_minsize(self):
-#        # The minimum size of a container is the sum of all of it's children.
-#        print "TODO"
+##	def destroy(self):
+##		Widget.destroy(self)
+##		for i in self.widgets:
+##			i.destroy()
+##		self.widgets = []
+	
+#	def get_minsize(self):
+#		# The minimum size of a container is the sum of all of it's children.
+#		print "TODO"
 
-#    def get_maxsize(self):
-#        # the maximum size of a container is the sum of all of it's children.
- #       print "TODO"
+#	def get_maxsize(self):
+#		# the maximum size of a container is the sum of all of it's children.
+ #	   print "TODO"

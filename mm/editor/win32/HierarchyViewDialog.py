@@ -43,6 +43,7 @@ class HierarchyViewDialog(ViewDialog):
 				commandlist = self.commands,strid='hview_')
 
 		self.window.register(WMEVENTS.Mouse0Press, self.mouse, None)
+		self.window.register(WMEVENTS.Mouse0Release, self.mouse0release, None)
 		self.window.register(WMEVENTS.ResizeWindow, self.redraw, None)
 		self.window.register(WMEVENTS.PasteFile, self.pastefile, None)
 		self.window.register(WMEVENTS.DragFile, self.dropeffect, None)

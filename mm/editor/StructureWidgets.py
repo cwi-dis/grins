@@ -85,9 +85,11 @@ class MMNodeWidget(Widgets.Widget):	 # Aka the old 'HierarchyView.Object', and t
 	#
 	def select(self):
 		Widgets.Widget.select(self)
-
+		self.root.dirty = 1
+		
 	def deselect(self):
 		self.unselect()
+		self.root.dirty = 1
 
 	def ishit(self, pos):
 		return self.is_hit(pos)
@@ -101,7 +103,7 @@ class MMNodeWidget(Widgets.Widget):	 # Aka the old 'HierarchyView.Object', and t
 		print "DEBUG: set_infoicon called!"
 		self.node.infoicon = icon
 		self.node.errormessage = msg
-		self.root.draw()				# Show the icons
+		self.root.dirty = 1	# The root needs redrawing
 
 	def getlinkicon(self):
 		# Returns the icon to show for incoming and outgiong hyperlinks.
@@ -135,7 +137,7 @@ class MMNodeWidget(Widgets.Widget):	 # Aka the old 'HierarchyView.Object', and t
 			self.uncollapse()
 		else:
 			self.collapse()
-		self.root.draw()
+		self.root.dirty = 1
 
 	def expandallcall(self, expand):
 		# Expand the view of this node and all kids.
@@ -144,7 +146,7 @@ class MMNodeWidget(Widgets.Widget):	 # Aka the old 'HierarchyView.Object', and t
 			self.uncollapse_all()
 		else:
 			self.collapse_all()
-		self.root.draw()
+		self.root.dirty = 1
 
 	def playcall(self):
 		top = self.root.toplevel
@@ -253,9 +255,10 @@ class StructureObjWidget(MMNodeWidget):
 		# Create more nodes under me if there are any.
 		self.children = []
 		if self.HAS_COLLAPSE_BUTTON:
-			self.collapsebutton = CollapseButtonWidget(self, root)
+			self.collapsebutton = Icon('closed', self, self.node, self.root)
+			self.collapsebutton.set_callback(self.toggle_collapsed)
 		else:
-			self.collapsebutton = None  
+			self.collapsebutton = None 
 		for i in self.node.children:
 			bob = create_MMNode_widget(i, root)
 			if bob == None:
@@ -273,13 +276,25 @@ class StructureObjWidget(MMNodeWidget):
 			self.collapse()
 		for i in self.children:
 			i.collapse_levels(levels-1)
+		self.root.dirty = 1
 
 	def collapse(self):
 		self.node.collapsed = 1;
+		if self.collapsebutton:
+			self.collapsebutton.icon = 'closed'
+		self.root.dirty = 1
+
 	def uncollapse(self):
 		self.node.collapsed = 0;
+		if self.collapsebutton:
+			self.collapsebutton.icon = 'open'
+		self.root.dirty = 1
+
 	def toggle_collapsed(self):
-		self.node.collapsed = not self.node.collapsed
+		if self.iscollapsed():
+			self.uncollapse()
+		else:
+			self.collapse()
 	def iscollapsed(self):
 		return self.node.collapsed
 
@@ -297,9 +312,7 @@ class StructureObjWidget(MMNodeWidget):
 		# Return the MMNode widget at position x,y
 		# Oh, how I love recursive methods :-). Nice. -mjvdg.
 		if self.collapsebutton and self.collapsebutton.is_hit(pos):
-			self.toggle_collapsed()
-			self.root.draw()
-			return self
+			return self.collapsebutton
 
 		if self.is_hit(pos):
 			if self.iscollapsed():
@@ -314,7 +327,10 @@ class StructureObjWidget(MMNodeWidget):
 
 	def recalc(self):
 		if self.collapsebutton:
-			self.collapsebutton.recalc()
+			l,t,r,b = self.pos_rel
+			l = l + self.get_relx(1)
+			t = t + self.get_rely(2)
+			self.collapsebutton.moveto((l,t))
 
 	def draw(self, displist):
 		# This is a base class for other classes.. this code only gets
@@ -1021,7 +1037,7 @@ class MediaWidget(MMNodeWidget):
 
 	def show_mesg(self):
 		if self.node.errormessage:
-			windowinterface.showmessage(self.node.errormessage) # Don't make the root window the parent.. it doesn't work well.
+			windowinterface.showmessage(self.node.errormessage, parent=self.root.window)
 
 	def recalc(self):
 		l,t,r,b = self.pos_rel
@@ -1172,6 +1188,7 @@ class TransitionWidget(MMNodeWidget):
 		# XXXX Note: this code assumes the select() is done on mousedown, and
 		# that we can still post a menu at this time.
 		self.parent.select()
+		self.root.dirty = 1
 
 	def unselect(self):
 		self.parent.unselect()
@@ -1254,9 +1271,9 @@ class CollapseButtonWidget(Widgets.Widget):
 			
 	def draw(self, displist):
 		if self.parent and self.parent.iscollapsed():
-			displist.drawicon(self.get_box(), 'closed')
-		else:
 			displist.drawicon(self.get_box(), 'open')
+		else:
+			displist.drawicon(self.get_box(), 'closed')
 		
 
 class Icon(MMNodeWidget):
@@ -1271,8 +1288,9 @@ class Icon(MMNodeWidget):
 	def set_callback(self, callback, args=()):
 		self.callback = callback, args
 
-	def select(self):
-		if self.callback and self.icon:
+	def mouse0release(self):
+		if self.callback and self.icon and self.selected:
+			# Freaky code that Sjoerd showed me: -mjvdg
 			apply(apply, self.callback)
 
 	def moveto(self, pos):
