@@ -425,28 +425,21 @@ class TopLevel(ViewDialog):
 			print 'parsing', self.filename, '...'
 			t0 = time.time()
 			mtype = mimetypes.guess_type(self.filename)[0]
-			if mtype is None or mtype == 'text/html':
-				import SMILTree
-				self.root = SMILTree.ReadString('''\
-<smil>
-  <head>
-    <layout>
-      <region id="html"/>
-    </layout>
-  </head>
-  <body>
-    <text dur="indefinite" src="%s" region="html"/>
-  </body>
-</smil>
-''' % self.filename, self.filename)
-			elif mtype == 'application/smil':
+			if mtype == 'application/smil':
 				import SMILTree
 				self.root = SMILTree.ReadFile(self.filename)
 			elif mtype == 'application/x-cmif':
 				import MMTree
 				self.root = MMTree.ReadFile(self.filename)
 			else:
-				raise MSyntaxError, 'unknown file type'
+				import SMILTree
+				self.root = SMILTree.ReadString('''\
+<smil>
+  <body>
+    <ref dur="indefinite" src="%s"/>
+  </body>
+</smil>
+''' % self.filename, self.filename)
 			t1 = time.time()
 			print 'done in', round(t1-t0, 3), 'sec.'
 		Timing.changedtimes(self.root)
