@@ -155,9 +155,12 @@ class AudioFormatSetter:
 		# this call will set indirectly self._writer format
 		fg = self.__createFilterGraph(filename)
 
-	def __createFilterGraph(self, filename):
+	def __createFilterGraph(self, url):
 		fg = dshow.CreateGraphBuilder()
-		fg.RenderFile(filename)
+		import MMurl
+		url = MMurl.canonURL(url)
+		url = MMurl.unquote(url)
+		fg.RenderFile(url)
 		
 		# find renderer
 		try:
@@ -260,9 +263,12 @@ class WMVideoConverter:
 				self._videopinprops = pinprop
 				print 'video', i
 
-	def createFilterGraph(self, filename):
+	def createFilterGraph(self, url):
 		fg = dshow.CreateGraphBuilder()
-		fg.RenderFile(filename)
+		import MMurl
+		url = MMurl.canonURL(url)
+		url = MMurl.unquote(url)
+		fg.RenderFile(url)
 		
 		# find video renderer filter and remove it
 		renderer=fg.FindFilterByName('Video Renderer')
@@ -401,9 +407,12 @@ class WMAudioConverter:
 				break
 		return audiopinix, audiopinprops
 
-	def createFilterGraph(self, filename):
+	def createFilterGraph(self, url):
 		fg = dshow.CreateGraphBuilder()
-		fg.RenderFile(filename)
+		import MMurl
+		url = MMurl.canonURL(url)
+		url = MMurl.unquote(url)
+		fg.RenderFile(url)
 		
 		# find renderer
 		try:

@@ -15,7 +15,7 @@ else:
 
 engine=None
 
-def convertvideofile(infile, dstdir, file, node):
+def convertvideofile(url, dstdir, file, node):
 	import producer
 	global engine
 	# ignore suggested extension and make our own
@@ -66,9 +66,11 @@ def convertvideofile(infile, dstdir, file, node):
 	cp.SetDoOutputFile(1)
 	cp.SetOutputFilename(fullpath)
 
-	import dshow
+	import dshow, MMurl
 	b = dshow.CreateGraphBuilder()
-	b.RenderFile(infile)
+	url = MMurl.canonURL(url)
+	url = MMurl.unquote(url)
+	b.RenderFile(url)
 	renderer=b.FindFilterByName('Video Renderer')
 	enumpins=renderer.EnumPins()
 	pin=enumpins.Next()

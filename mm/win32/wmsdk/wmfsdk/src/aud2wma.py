@@ -57,9 +57,12 @@ class WMAudioConverter:
 				break
 		return audiopinix, audiopinprops
 
-	def createFilterGraph(self, filename):
+	def createFilterGraph(self, url):
+		import MMurl
 		fg = dshow.CreateGraphBuilder()
-		fg.RenderFile(filename)
+		url = MMurl.canonURL(url)
+		url = MMurl.unquote(url)
+		fg.RenderFile(url)
 		
 		# find renderer
 		try:
