@@ -91,7 +91,7 @@ class Main:
 	def _mmcallback(self):
 		import posix, fcntl, FCNTL
 		# set in non-blocking mode
-		dummy = fcntl.fcntl(self._mmfd, FCNTL.F_SETFL, FCNTL.FNDELAY)
+		dummy = fcntl.fcntl(self._mmfd, FCNTL.F_SETFL, FCNTL.O_NDELAY)
 		# read a byte
 		devval = posix.read(self._mmfd, 1)
 		# set in blocking mode
