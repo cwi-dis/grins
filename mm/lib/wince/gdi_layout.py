@@ -13,6 +13,8 @@ import base_transitions
 #
 import base_window
 
+import settings
+
 class Region(base_window.Window):
 	def __init__(self, parent, coordinates, transparent, z, units, bgcolor):
 		base_window.Window.__init__(self)
@@ -429,7 +431,10 @@ class Viewport(Region):
 		#start = winkernel.GetTickCount()
 		ltrb = dc.GetClipBox()
 		rgb = winstruct.RGB(self._bgcolor)
-		dc.FillSolidRect(ltrb, rgb)
+		if settings.get('skin'):
+			self._ctx.paintSplash(dc)
+		else:
+			dc.FillSolidRect(ltrb, rgb)
 				
 		L = self._subwindows[:]
 		L.reverse()
