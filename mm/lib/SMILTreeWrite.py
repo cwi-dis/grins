@@ -261,10 +261,13 @@ def getsrc(writer, node):
 			if val[:len(writer.convertURLs)] == writer.convertURLs:
 				val = val[len(writer.convertURLs):]
 		return val
-	url = ctx.findurl(val)
+	url, tag = MMurl.splittag(val)
+	url = ctx.findurl(url)
 	if writer.copycache.has_key(url):
 		# already seen and copied
 		val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(writer.copycache[url]))
+		if tag:
+			val = val + '#' + tag
 		if features.compatibility == features.G2:
 			val = MMurl.unquote(val)
 		return val
@@ -303,6 +306,8 @@ def getsrc(writer, node):
 		rp.tags = ntags
 		file = writer.newfile(url)
 		val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
+		if tag:
+			val = val + '#' + tag
 		ofile = MMAttrdefs.getattr(node, 'file')
 		node.SetAttr('file', val)
 		realsupport.writeRP(os.path.join(writer.copydir, file), rp, node)
@@ -322,6 +327,8 @@ def getsrc(writer, node):
 			return val
 	writer.copycache[url] = file
 	val = MMurl.basejoin(writer.copydirurl, MMurl.pathname2url(file))
+	if tag:
+		val = val + '#' + tag
 	if features.compatibility == features.G2:
 		val = MMurl.unquote(val)
 	return val
