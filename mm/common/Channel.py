@@ -1369,7 +1369,7 @@ class ChannelWindowThread(_ChannelThread, ChannelWindow):
 		w = self.window
 		w._gc.SetRegion(w._clip)
 		w._gc.foreground = w._convert_color(w._bgcolor)
-		apply(self.threads.resized, self._rect)
+		apply(self.threads.resized, w._rect)
 		
 class ChannelAsync(Channel):
 
