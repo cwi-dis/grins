@@ -4,18 +4,25 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-import java.util.Hashtable;
-import java.util.Enumeration;
+import java.util.Vector;
 
 import grins.*;
 
 public class GRiNSPlayerApplet extends JApplet
 implements SMILListener, TimerListener
 {
+    class InternalFrame extends JInternalFrame {
+        public InternalFrame(String title, int id){
+            super(title, false, true, false, false); 
+            this.id = id;
+        }
+        int getID(){return id;}
+        private int id;
+    };
     
     private SMILDocument smil;
     private SMILController player;
-	private Hashtable viewports = new Hashtable();
+    private Vector viewports = new Vector();
     
     private JDesktopPane desktop;
     
@@ -24,6 +31,7 @@ implements SMILListener, TimerListener
     private int iframedh = 0;
     private int nextx = 4;
     private int nexty = 8;
+    
     
 	public void init()
 	{
@@ -178,41 +186,30 @@ implements SMILListener, TimerListener
             }
         }
         
-	public void newViewport(int index){
-        Scheduler sc = new Scheduler(50, ""+index);
+	public void updateViewports(){
+        Scheduler sc = new Scheduler(500, "updateViewports");
 	    sc.addTimerListener(this);
 	    }
 	
 	public void timeElapsed(TimerEvent evt){
-	    int n = smil.getViewportCount();
-	    for(int i =0; i<n; i++){
-	        Integer iobj = new Integer(i);
-	        JInternalFrame jif = (JInternalFrame)viewports.get(iobj);
-	        boolean isopen = smil.isViewportOpen(i);
-	        message("viewport " + i + " " + isopen );
-	        if(jif!=null){
-	            if(!isopen) {
-                    try {jif.setClosed(true);} catch(java.beans.PropertyVetoException e){}
-                    jif.dispose();
-	                viewports.remove(iobj);
-	                }
-	            continue;
-	            }
-	        else if(isopen)
-	            {
-	            Dimension d = smil.getViewportSize(i);
-	            String title = smil.getViewportTitle(i);
-	    
-	            SMILCanvas  canvas = createTopLayout(i, d.width, d.height, title);
+	    int nv = smil.getViewportCount();
+	    int n = viewports.size();
+	    if(n<nv) 
+	        {
+	        for(int i=n;i<nv;i++) createViewport(i);
+	        }
 	        
-	            // set SMIL canvas
-	            if(canvas!=null){
-	                try {smil.getRenderer().setCanvas(i, canvas);}
-	                catch(Exception e){System.out.println(""+e);}
-	                }
+	    // update viewports 
+	    for(int i=0;i<nv;i++){
+	        InternalFrame jif = (InternalFrame)viewports.elementAt(i);
+	        int id = jif.getID();
+	        if(!jif.isClosed() && !smil.isViewportOpen(id)){
+	            //message("closing viewport "+ id);
+                try {jif.setClosed(true);} catch(java.beans.PropertyVetoException e){}
+                jif.dispose();
 	            }
-	        }   
-	}
+	        }
+	    }
 	
     private void open(String filename){
         
@@ -228,30 +225,40 @@ implements SMILListener, TimerListener
 	        JTextFieldStatus.setText(str + (int)(dur+0.5) + " secs)");
 	    
 	    int n = smil.getViewportCount();
-	    for(int i =0; i<n; i++){
-	        Dimension d = smil.getViewportSize(i);
-	        String title = smil.getViewportTitle(i);
-	    
-	        SMILCanvas  canvas = createTopLayout(i, d.width, d.height, title);
-	        
-	        // set SMIL canvas
-	        if(canvas!=null){
-	            try {smil.getRenderer().setCanvas(i, canvas);}
-	            catch(Exception e){System.out.println(""+e);}
-	            }
-	        }   
+	    for(int i =0; i<n; i++) createViewport(i);
 	    
 	    // get controller
         player = smil.getController();
         player.addListener(this);
     }
 	
-	private SMILCanvas createTopLayout(int index, int w, int h, String title){
-	    JInternalFrame jif = (JInternalFrame)viewports.get(new Integer(index));
-	    if(jif!=null) return null;
-		jif = new JInternalFrame(title, false, true, false, false);
-	    viewports.put(new Integer(index), jif);
+	private InternalFrame getInternalFrame(int id) {
+	    int n = viewports.size();
+	    for(int i=0;i<n;i++){
+	        InternalFrame jif = (InternalFrame)viewports.elementAt(i);
+	        if(jif.getID()==id) return jif;
+	        }
+	    return null;
+	    }
+	
+	private void createViewport(int id){
+	    if(getInternalFrame(id)!=null) return;
 	    
+	    //message("creating viewport " + id);
+	    Dimension d = smil.getViewportSize(id);
+	    String title = smil.getViewportTitle(id);
+	    SMILCanvas  canvas = createTopLayout(id, d.width, d.height, title);
+	    try {smil.getRenderer().setCanvas(id, canvas);}
+	    catch(Exception e){System.out.println(""+e);}
+	    }
+	    
+	private SMILCanvas createTopLayout(int id, int w, int h, String title){
+		InternalFrame jif = new InternalFrame(title, id);
+	    viewports.addElement(jif);
+	    
+	    if(id%2==0) nextx = 4;
+        if((nextx+w+16)>800) nextx = 800-w-16;
+        
 	    jif.getContentPane().setLayout(null);
 	    desktop.add(jif);  
 	    jif.setBounds(nextx, nexty, w+iframedw, h+iframedh);
@@ -269,18 +276,10 @@ implements SMILListener, TimerListener
 	        jif.reshape(nextx, nexty, w+iframedw, h+iframedh);
 	        canvas.setBounds(jif.getContentPane().getBounds());
 	        }
-	        
-	    //message("canvas rc "+ canvas.getBounds());
-	    
 	    jif.show();
 	    
-	    if(viewports.size()>=2)
-	        {
-            nextx = 4;
-            nexty = 8;
-	        }
-	    else
-	        nextx += w+iframedw+4;
+	    nextx += w + iframedw + 4;
+	   
 	    return canvas;
 	}
 	        
@@ -336,11 +335,14 @@ implements SMILListener, TimerListener
 	    if(smil!=null) smil.close();
         smil=null;
         
-        Enumeration en = viewports.elements();
-        while(en.hasMoreElements()){
-            JInternalFrame jif = (JInternalFrame)en.nextElement();
-            try {jif.setClosed(true);} catch(java.beans.PropertyVetoException e){}
-            jif.dispose();
+        int n = viewports.size();
+        for(int i=0;i<n;i++){
+            InternalFrame jif = (InternalFrame)viewports.elementAt(i);
+            if(!jif.isClosed())
+                {
+                try {jif.setClosed(true);} catch(java.beans.PropertyVetoException e){}
+                jif.dispose();
+                }
             }
         viewports.clear();
         
