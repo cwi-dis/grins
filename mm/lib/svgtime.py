@@ -6,89 +6,224 @@ import math
 ###################
 # dur arithmetic rules
 
-def isdefinite(v):
-	return v != 'unresolved' and v!= 'indefinite'
+# a time value can be 'unspecified', 'unresolved', 'indefinite', 'definite'
 
-def durmul(v1, v2):
-	if v1 == 'unresolved' or v2 == 'unresolved':
-		return 'unresolved'
+# time constants
+unspecified = None
+unresolved = 'unresolved'
+indefinite = 'indefinite'
+mediadur = 'media'
+
+infinity = 'infinity'
+minusinfinity = '-infinity'
+
+class Time:
+	def __init__(self, t):
+		assert t is not None, 'time cannot be unspecified'
+		self.t = t
+	
+	def isdefinite(self):
+		return self.t is not unresolved and self.t is not indefinite
+
+	def isunresolved(self):
+		return self.t is unresolved
+
+	def isindefinite(self):
+		return self.t is indefinite
+
+	def mul(self, other):
+		if self.isunresolved() or other.isunresolved():
+			self.t = unresolved
+		elif v1==0 or v2==0:
+			self.t = 0
+		elif self.isindefinite() or other.isindefinite():
+			self.t = indefinite
+		else:
+			self.t = self.t*other.t
+
+	def div(self, a):
+		if self.isdefinite():
+			self.t = self.t/float(a)
+
+	def plus(self, other):
+		if self.isunresolved() or other.isunresolved():
+			self.t = unresolved
+		elif self.isindefinite() or other.isindefinite():
+			self.t = indefinite
+		else:
+			self.t = self.t + other.t
+
+	def minus(self, other):
+		if self.isunresolved() or other.isunresolved():
+			self.t = unresolved
+		elif self.isindefinite() or other.isindefinite():
+			self.t = indefinite
+		else:
+			self.t = self.t - other.t
+
+	def min(self, v1, v2):
+		if v1.t == 0 or v2.t == 0:
+			return Time(0)
+		elif v1.t is indefinite and v2.t>0:
+			return v2
+		elif v2.t is indefinite and v1.t>0:
+			return v1
+		elif v1.t is unresolved and v2.t>0:
+			return v2
+		elif v2.t is unresolved and v1.t>0:
+			return v1
+		elif v1.t is unresolved and v2.t is indefinite:
+			return Time(indefinite)
+		elif v2.t is unresolved and v1.t is indefinite:
+			return Time(ndefinite)
+		return Time(min(v1.t, v2.t))
+
+	def max(self, v1, v2):
+		if v1.isdefinite() and v2.isdefinite():
+			return Time(max(v1.t, v2.t))
+		elif (v1.isdefinite() and v2.isindefinite()) or (v1.isdefinite() and v1.isindefinite()):
+			return Time(indefinite)
+		elif v1.isunresolved() or v2.isunresolved():
+			return Time(unresolved)
+
+	def LT(self, other):
+		if self.isindefinite() and other.isindefinite():
+			return 0
+		elif self.isdefinite() and other.isindefinite():
+			return 1
+		elif other.isdefinite() and self.isindefinite():
+			return 0
+		elif self.isunresolved() or other.isunresolved():
+			return 0
+		return self.t < other.t
+
+	def LE(self, other):
+		if self.isindefinite() and other.isindefinite():
+			return 0
+		elif self.isdefinite() and other.isindefinite():
+			return 1
+		elif other.isdefinite() and self.isindefinite():
+			return 0
+		elif self.isunresolved() or other.isunresolved():
+			return 0
+		return self.t <= other.t
+
+	def GT(self, other):
+		return not self.LE(other)
+
+	def GE(self, other):
+		return not self.LT(other)
+
+	def EQ(self, other):
+		return self.t == other.t
+
+
+def isdefinite(v):
+	return v is not unresolved and v is not indefinite
+
+def isunresolved(v):
+	return v == unresolved
+
+def isindefinite(v):
+	return v == indefinite
+
+def timemul(v1, v2):
+	assert v1 is not None and v2 is not None, 'unspecified values'
+	if v1 is unresolved or v2 is unresolved:
+		return unresolved
 	elif v1==0 or v2==0:
 		return 0
-	elif v1=='indefinite' or v2=='indefinite':
-		return 'indefinite'
+	elif v1 is indefinite or v2 is indefinite:
+		return indefinite
 	else:
 		return v1*v2
 
-def durdiv(v, a):
-	if v == 'unresolved':
-		return 'unresolved'
-	elif v=='indefinite':
-		return 'indefinite'
+def timediv(v, a):
+	assert v is not None, 'unspecified value'
+	if v is unresolved:
+		return unresolved
+	elif v is indefinite:
+		return indefinite
 	else:
 		return v/a
 
-def duradd(v1, v2):
-	if v1 == 'unresolved' or v2 == 'unresolved':
-		return 'unresolved'
-	elif v1=='indefinite' or v2=='indefinite':
-		return 'indefinite'
+def timeadd(v1, v2):
+	assert v1 is not None and v2 is not None, 'unspecified values'
+	if v1 is unresolved or v2 is unresolved:
+		return unresolved
+	elif v1 is indefinite or v2 is indefinite:
+		return indefinite
 	else:
 		return v1 + v2
 
-def dursub(v1, v2):
-	if v1 == 'unresolved' or v2 == 'unresolved':
-		return 'unresolved'
-	elif v1=='indefinite' or v2=='indefinite':
-		return 'indefinite'
+def timesub(v1, v2):
+	assert v1 is not None and v2 is not None, 'unspecified values'
+	if v1 is unresolved or v2 is unresolved:
+		return unresolved
+	elif v1 is indefinite or v2 is indefinite:
+		return indefinite
 	else:
 		return v1 - v2
 
-def durmin(v1, v2):
+def timemin(v1, v2):
+	assert v1 is not None and v2 is not None, 'unspecified values'
 	if v1 == 0 or v2 == 0:
 		return 0
-	elif v1=='indefinite' and v2>0:
+	elif v1 is indefinite and v2>0:
 		return v2
-	elif v2=='indefinite' and v1>0:
+	elif v2 is indefinite and v1>0:
 		return v1
-	elif v1=='unresolved' and v2>0:
+	elif v1 is unresolved and v2>0:
 		return v2
-	elif v2=='unresolved' and v1>0:
+	elif v2 is unresolved and v1>0:
 		return v1
-	elif v1 == 'unresolved' and v2 == 'indefinite':
-		return 'indefinite'
-	elif v2 == 'unresolved' and v1 == 'indefinite':
-		return 'indefinite'
+	elif v1 is unresolved and v2 is indefinite:
+		return indefinite
+	elif v2 is unresolved and v1 is indefinite:
+		return indefinite
 	return min(v1, v2)
 
-def durmax(v1, v2):
+def timemax(v1, v2):
+	assert v1 is not None and v2 is not None, 'unspecified values'
 	if isdefinite(v1) and isdefinite(v2):
 		return max(v1, v2)
-	elif (isdefinite(v1) and v2=='indefinite') or (isdefinite(v1) and v1=='indefinite'):
-		return 'indefinite'
-	elif v1 == 'unresolved' or v2 == 'unresolved':
-		return 'unresolved'
+	elif (isdefinite(v1) and v2 is indefinite) or (isdefinite(v1) and v1 is indefinite):
+		return indefinite
+	elif v1 is unresolved or v2 is unresolved:
+		return unresolved
 
-def durlt(v1, v2):
-	if v1 == 'indefinite' and v2 == 'indefinite':
-		return 'unresolved'
-	elif isdefinite(v1) and v2 == 'indefinite':
-		return 1
-	elif isdefinite(v2) and v1 == 'indefinite':
+def timeLT(v1, v2):
+	assert v1 is not None and v2 is not None, 'unspecified values'
+	if v1 is indefinite and v2 is indefinite:
 		return 0
-	elif v1 == 'unresolved' or v2 == 'unresolved':
-		return 'unresolved'
+	elif isdefinite(v1) and v2 is indefinite:
+		return 1
+	elif isdefinite(v2) and v1 is indefinite:
+		return 0
+	elif v1 is unresolved or v2 is unresolved:
+		return 0
 	return v1<v2
 
-def durle(v1, v2):
-	if v1 == 'indefinite' and v2 == 'indefinite':
-		return 'unresolved'
-	elif isdefinite(v1) and v2 == 'indefinite':
-		return 1
-	elif isdefinite(v2) and v1 == 'indefinite':
+def timeLE(v1, v2):
+	assert v1 is not None and v2 is not None, 'unspecified values'
+	if v1 is indefinite and v2 is indefinite:
 		return 0
-	elif v1 == 'unresolved' or v2 == 'unresolved':
-		return 'unresolved'
-	return v1<=v2
+	elif isdefinite(v1) and v2 is indefinite:
+		return 1
+	elif isdefinite(v2) and v1 is indefinite:
+		return 0
+	elif v1 is unresolved or v2 is unresolved:
+		return 0
+	return v1 <= v2
+
+def timeGT(v1, v2):
+	return not timeLE(v1, v2)
+
+def timeGE(v1, v2):
+	return not timeLT(v1, v2)
+
+def timeEQ(v1, v2):
+	return v1 == v2
 
 ###################
 # simple local time state keeper
@@ -96,12 +231,12 @@ def durle(v1, v2):
 class Timer:
 	def __init__(self):
 		self._ticking = 0
-		self._localTime = 0
+		self._localTime = 0.0
 		self._lastTime = None
 
 	def resetTimer(self):
 		self._ticking = 0
-		self._localTime = 0
+		self._localTime = 0.0
 		self._lastTime = None
 
 	def isTicking(self):
@@ -122,10 +257,15 @@ class Timer:
 			self._localTime = t
 
 	def setTime(self, t):
-		self._localTime = t
+		self._localTime = float(t)
 		if self._ticking:
 			self._lastTime = time.time()
 
+	def incTime(self, dt):
+		self._localTime = self._localTime + float(dt)
+		if self._ticking:
+			self._lastTime = time.time()
+		
 	def getTime(self):
 		if self._ticking:
 			self._updateTime()
@@ -156,11 +296,11 @@ class DeltaQueue:
 			self._queue[0] = t, obj
 		self._lasttime = tnow
 
-		if when == 'indefinite':
-			self._indqueue.append(('indefinite', what))
+		if when == indefinite:
+			self._indqueue.append((indefinite, what))
 			return
 
-		t = 0
+		t = 0.0
 		for i in range(len(self._queue)):
 			time0, dummy = self._queue[i]
 			if t + time0 > when:
@@ -198,7 +338,7 @@ class DeltaQueue:
 		if self._queue:
 			return self._queue[0][0]
 		elif self._indqueue:
-			return 'indefinite'
+			return indefinite
 		return None
 
 	def cancel(self, what):
@@ -216,70 +356,6 @@ class DeltaQueue:
 				del self._queue[i]
 				return
 
-
-###################
-# SVG Sync Arcs
-
-class SvgSyncArc:
-	def __init__(self, srcnode, srcevent, dstnode, dstevent, attrobj):
-		self.srcnode = srcnode
-		self.srcevent = srcevent
-		self.dstnode = dstnode
-		self.dstevent = dstevent
-		self.attrobj = attrobj
-
-	def updateSyncVariant(self, tval, params=None):
-		self.attrobj.setSyncBaseValue(tval, params)
-
-class SvgActionArc:
-	def __init__(self, src, dst, delay, action):
-		self.src = src
-		self.dst = dst
-		self.delay = delay
-		if action == 'begin':
-			self.execute = self.begin
-		elif action == 'freeze':
-			self.execute = self.freeze
-		elif action == 'remove':
-			self.execute = self.remove
-		elif action == 'dur':
-			self.execute = self.dur
-		else:
-			assert 0, 'invalid ActionArc action'
-
-	def getDelay(self):
-		assert self.dst.getTimeParent() == self.src, 'invalid arc'
-		seek = self.src.getTime()
-		if durle(seek, self.delay):
-			delay = dursub(self.delay, seek)
-		else:
-			delay = 0
-		return delay
-
-	def begin(self):
-		assert self.dst.getTimeParent() == self.src, 'invalid begin arc'
-		seek = self.src.getTime()
-		if durle(seek, self.delay):
-			advance = dursub(self.delay, seek)
-		else:
-			advance = dursub(seek, self.delay)
-		self.dst.seekElement(advance)
-		self.dst.beginElement()
-
-	def freeze(self):
-		self.dst.stopTimer(self.dst.getActiveDur())
-		self.dst.endElement()
-
-	def remove(self):
-		self.dst.endElement()
-		self.dst.removeElement()
-
-	def dur(self):
-		self.dst.endElement()
-		self.dst.removeElement()
-
-	def reread(self):
-		self.delay = self.dst.get('begin') or 0
 
 ###################
 # mixin for svg time hierarchy
@@ -301,11 +377,28 @@ class TimeNode:
 	def getTimeParent(self):
 		return self.tparent
 
+	def getTimeParentOrRoot(self):
+		if self.tparent is not None:
+			return self.tparent
+		return self.timeroot
+
 	def getFirstTimeChild(self):
 		return self.tfirstchild
 
 	def getNextTimeSibling(self):
 		return self.tnextsibling
+
+	def getPrevTimeSibling(self):
+		if self.tparent is None:
+			return None
+		prev = None
+		next = self.tparent.tfirstchild
+		while next:
+			if next == self:
+				return prev
+			prev = next
+			next = next.tnextsibling
+		assert 0, 'logic error in TimeNode.getPrevTimeSibling'
 
 	def getTimeChildren(self):
 		L = []
@@ -339,387 +432,682 @@ class TimeNode:
 			tlastchild.tnextsibling = node
 		node.tparent = self
 
+	def getTimePath(self):
+		tpath = [self,]
+		tparent = self.tparent
+		while tparent is not None:
+			tpath.insert(0, parent)
+			tparent = tparent.tparent
+		return tpath
+		
+	def getCommonAncestor(self, n1, n2):
+		p1 = n1.getTimePath()
+		p2 = n2.getTimePath()
+		n = min(len(p1), len(p2))
+		prev = p1[0]
+		for i in range(1,n):
+			if p1[i]!=p2[i]:
+				return prev
+			prev = p1[i]
+				
 ###################
 # mixin for svg time elements
 
 class TimeElement(TimeNode, Timer):
+	states = [None, 'waitbegin', 'active', 'postactive']
+	WAITBEGIN, ACTIVE, POSTACTIVE = range(1,4)
 	def __init__(self, ttype, timeroot):
 		TimeNode.__init__(self, ttype, timeroot)
-		Timer.__init__(self)		
-		self._dur = 'indefinite'
-		self._ad = 'indefinite'
-		self._active = 0
-		self._alive = 0
-		self._repeatindex = 0
-		self._syncnotify = 1
-
+		Timer.__init__(self)
 		self.beginSyncArcs = []
 		self.endSyncArcs = []
 		self.repeatSyncArcs = []
 		self.eventSyncArcs = []
+		self._restart = self.get('restart') or 'always'
+
+		self._state = None
+		self._dur = None
+		self._isfilled = 0
+		self._syncnotify = 1
+		self._repeatindex = 0
+		self._repeattime = 0
+		self._interval = None
+		self._ad = None
+		self._begincount = 0
+		self._ostimer = None
+		self._timerid = None
+		self._queue = None
+
+	def setOsTimer(self, ostimer):
+		self._ostimer = ostimer
 
 	def addSyncArc(self, arc):
-		if arc.srcevent == 'begin':
+		srcevent = arc.getSrcEvent()
+		if srcevent == 'begin':
 			self.beginSyncArcs.append(arc)
-		elif arc.srcevent == 'end':
+		elif srcevent == 'end':
 			self.endSyncArcs.append(arc)
-		elif arc.srcevent == 'repeat':
+		elif srcevent == 'repeat':
 			self.repeatSyncArcs.append(arc)
-		elif arc.srcevent == 'event':
+		elif srcevent == 'event':
 			self.eventSyncArcs.append(arc)
+	
+	#
+	#  element life-cycle: none, startup, (waitbegin, active, endinterval)*, postactive, none
+	#  excluding transition conceptual states and none: 
+	#		the states are: waitbegin, active, postactive
+	#
 
-	def calcBasicTiming(self):
+	# while in none state make possibly a transition to waiting
+	def startupTransition(self, complete=1):
+		assert self._state is None, 'invalid transition'
 		self._dur = self.calcDur()
-		self._ad = self.calcActiveDur()
+		self._interval = self.getNextInterval()
+		if complete: self.completeStartupState()
+	def completeStartupTransition(self):
+		if self._interval is not None:
+			self.enterWaitBeginState()
+
+	def enterWaitBeginState(self):
+		assert self._state is None and self._interval is not None, 'invalid transition'
+		self._state = self.WAITBEGIN
+		bt, et = self._interval
+		self._ad = timesub(et,bt)
+		if bt <= 0:
+			self.setTime(-bt)
+			self.enterActiveState()
+		else:
+			self.schedule(bt, self.enterActiveState)
+			
+	def enterActiveState(self):
+		assert self._state == self.WAITBEGIN and self._interval is not None, 'invalid transition'
+		self._state = self.ACTIVE
+		self._isfilled = 1
+		self._begincount = self._begincount + 1
+		bt, et = self._interval
+
+		# schedule a repeat check
+		# update repeatindex and repeat time
+		now = self.getParentTime()
+		if isdefinite(self._dur):
+			self._repeatindex = 0
+			self._repeattime = 0.0
+			t = bt + self._dur
+			while t<now:
+				t = t + self._dur
+				self._repeatindex = self._repeatindex + 1
+				self._repeattime = self._repeattime + self._dur
+			if timeLE(t,et):
+				self.schedule(t-now, self.onCheckRepeat)
+
+		# schedule end
+		self.schedule(self._ad, self.endOfIntervalTransition)
 		
+		# start local timer
+		self.startTimer()
+
+		# update begin dependants
+		for arc in self.beginSyncArcs:
+			arc.addInstanceTime(bt)
+		parent = self.getTimeParent()
+		if parent: parent.onChildBegin(self)
+
+	def onCheckRepeat(self):
+		if self._state != self.ACTIVE:
+			return
+		t = self.getTime()
+		if timeGE(t, self._ad):
+			return
+		insttime = t - 	self._repeattime
+		if insttime >= self._dur:
+			self.doRepeat()
+			t = self._dur -(insttime - self._dur)
+			self.schedule(t, self.onCheckRepeat)
+		else:
+			self.schedule(self._dur - insttime, self.onCheckRepeat)
+
+	def doRepeat(self):
+		self._repeatindex = self._repeatindex + 1
+		self._repeattime = self._repeattime + self._dur
+		for arc in self.repeatSyncArcs:
+			arc.addInstanceTime(self.getParentTime(), self._repeatindex)
+		parent = self.getTimeParent()
+		if parent: parent.onChildRepeat(self, self._repeatindex)
+
+		# self-similar mechanism
+		for el in self.getTimeChildren():
+			el.resetElement()
+			el.startupTransition()
+
+	# while executing this the element is postactive 
+	# can transition to waiting or remain in postactive
+	def endOfIntervalTransition(self):
+		assert self._state == self.ACTIVE, 'invalid transition'
+		self._state = self.POSTACTIVE
+		self.stopTimer()
+		self.resetSchedule()
+
+		fill = self.get('fill')
+		if fill != 'freeze':
+			self.removeElement()
+
+		bt, et = self._interval
+		for arc in self.endSyncArcs:
+			arc.addInstanceTime(self.getParentTime())
+		parent = self.getTimeParent()
+		if parent: parent.onChildEnd(self)
+
+		# search for next interval
+		nextinterval = self.getNextInterval(et)
+		if nextinterval is not None:
+			self._interval = nextinterval
+			self.enterWaitBeginState()
+		else:
+			self.enterPostActiveState()
+
+	def forceEndOfIntervalTransition(self):
+		assert self._state == self.ACTIVE, 'invalid transition'
+		self.stopTimer()
+		self.resetSchedule()
+		self.removeElement()
+		for arc in self.endSyncArcs:
+			arc.addInstanceTime(self.getParentTime())
+
+	def freezeTransition(self):
+		for el in self.getTimeChildren():
+			el.freezeTransition()
+		self.stopTimer()
+		self.resetSchedule()
+		if self.isWaiting() or self.isActive():
+			self.enterPostActiveState()
+
+	def enterPostActiveState(self):
+		self._state = self.POSTACTIVE
+									
+	# same as resetElement
+	def enterNoneState(self):
+		self.resetElement()
+
 	#
 	#  DOM interface implementation
-	#  life-cycle: (reset, seek? , begin, (pause, resume)*, seek*, end,	remove)
+	#  typical scenario: reset, seek? , begin, (pause, resume)*, seek*, end,	remove
 	#
 	def beginElement(self):
 		if self.isActive():
 			return 0
-		self._active = 1
-		self._alive = 1
-		shed = self.getScheduler()
-		if shed: shed.onBegin(self)
 		self.startTimer()
 		return 1
 
 	def endElement(self):
-		if not self.isActive():
-			return 0
-		self._active = 0
-		shed = self.getScheduler()
-		if shed: shed.onEnd(self)
 		self.stopTimer()
+		self.resetSchedule()
 		return 1
 
 	def pauseElement(self):
 		if self.isTicking():
 			self.stopTimer()
+			self.pauseSchedule()
 
 	def resumeElement(self):
 		if not self.isTicking() and self.isActive():
 			self.startTimer()
+			self.resumeSchedule()
 
 	def seekElement(self, seekTo):
 		self.setTime(seekTo)
 
-	def repeatElement(self, iter):
-		self._repeatindex = iter
-		shed = self.getScheduler()
-		if shed: shed.onRepeat(self, iter)
-
 	def removeElement(self):
-		assert not self._active, 'call endElement before removeElement'
-		if not self.isAlive():
+		if not self.isFilled():
 			return
-		self._alive = 0
+		for el in self.getTimeChildren():
+			el.resetElement()
+		self._isfilled = 0
 
 	def resetElement(self):
+		if self.isActive():
+			self.forceEndOfIntervalTransition()
+		if self.isFilled():
+			self.removeElement()
 		self.resetTimer()
-		self._dur = 'indefinite'
-		self._ad = 'indefinite'
-		self._active = 0
-		self._alive = 0
-		self._repeatindex = 0
+		self.resetSchedule()
+		self._state = None
+		self._dur = None
+		self._isfilled = 0
 		self._syncnotify = 1
+		self._repeatindex = 0
+		self._repeattime = 0
+		self._interval = None
+		self._ad = None
+		self._begincount = 0
+		self._timerid = None
+		beginList = self.getXMLAttr('begin')
+		beginList.reset()
+		endList = self.getXMLAttr('end')
+		endList.reset()
 		
 	def enableSyncNotify(self, f):
-		self._syncnotify = f
+		self._syncnotify = f			
 
 	#
 	# basic queries
 	#
-	def isActive(self):
-		return self._active
+	def getState(self):
+		return self._state
 
-	def isAlive(self):
-		return self._alive
+	def isActive(self):
+		return self._state == self.ACTIVE
+
+	def isPostActive(self):
+		return self._state == self.POSTACTIVE
+
+	def isWaiting(self):
+		return self._state == self.WAITBEGIN
+
+	def isFilled(self):
+		return self._isfilled
 
 	def isFrozen(self):
-		return self._alive and not self._active
+		return self._begincount > 0 and self._state in (self.WAITBEGIN, self.POSTACTIVE) and self._isfilled
 
 	def getDur(self):
 		return self._dur
 
-	def getActiveDur(self):
-		return self._ad
+	def getBeginCount(self):
+		return self._begincount
 
-	def getScheduler(self):
-		if self.timeroot != self and self._syncnotify:
-			return self.getTimeParent()
-		return None
+	def getInterval(self):
+		return self._interval
 
-	def clipToAD(self, t):
-		if not durlt(t, self._ad):
-			return dursub(self._ad, 0.001)	 
-		return t
+	def getSimpleTime(self):
+		t = self.getTime()
+		if self._dur is indefinite or self == self.getTimeRoot():
+			return t
+		tb, te = self._interval
+		ad = timesub(te,tb)
+		if timeLT(ad, t):
+			if self._state == self.ACTIVE:
+				self.endOfIntervalTransition()
+			self.setTime(ad)
+			return self.getSimpleTime()
+		insttime = t - self._repeattime
+		if insttime > self._dur:
+			self.onCheckRepeat()
+			return self.getSimpleTime()
+		if self.isFrozen() and insttime == 0.0:
+			return self._dur
+		return insttime
 
-	def clipToDur(self, t):
-		if not durlt(t, self._dur):
-			return dursub(self._dur, 0.001)	 
-		if not durlt(t, 0):
-			return 0	 
-		return t
-
-	def getDurInstanceTime(self):
-		assert self._dur!=0, 'invalid time element call'
-		repdur = self.clipToAD(self.getTime())
-		if self._dur == 'indefinite':
-			return 0, repdur
-		repcount = repdur/float(self._dur)
-		iter = math.floor(repcount)
-		durinst = repdur - iter*self._dur
-		if iter>0 and durinst==0.0 and self.isFrozen():
-			return iter-1, self._dur
-		if iter != self._repeatindex:
-			self._repeatindex = iter
-			self.repeatElement(iter)
-		return iter, durinst
-	
-	# always resolved
+	def getParentTime(self):
+		parent = self.getTimeParent() or self.getTimeRoot()
+		return parent.getSimpleTime()
+	#
+	#  calc simple duration
+	#
 	def calcDur(self):
+		endList = self.getXMLAttr('end')
 		dur = self.get('dur')
 		repeatDur = self.get('repeatDur')
 		repeatCount = self.get('repeatCount')
-		end = self.get('end')
-		if dur is None:
-			if end is not None:
-				return 'indefinite'
+		if dur is None and repeatDur is None and repeatCount is None and endList.isExplicit():
+			return indefinite
+		elif dur is not None:
+			if dur is not indefinite:
+				return float(dur)
 			else:
-				return self.calcImplicitDur()
-		return dur
+				return indefinite
+		elif dur is None:
+			return self.calcImplicitDur()
+		elif dur is mediadur:
+			return self.calcImplicitDur()
+		return unresolved
 
-	# calculate AD using dur, repeatDur, repeatCount
-	# dur is always resolved and thus AD is also always resolved
-	# XXX: definition of durxxx has changed thus this needs fix
-	def calcActiveDur(self):
+	def calcImplicitDur(self):
+		return 0.0
+
+
+	#
+	#  calc active duration
+	#
+	def calcActiveDur(self, begin, end):
 		dur = self._dur
 		repeatDur = self.get('repeatDur')
 		repeatCount = self.get('repeatCount')
-		if dur == 'indefinite':
-			repeatCount = None
-		elif dur == 0:
-			repeatDur = repeatCount = None
-		ad = dur
-		if repeatDur is not None and repeatCount is not None:
-			ad = durmin(durmul(repeatCount, dur), repeatDur)
-		elif repeatDur is not None:
-			ad = repeatDur
-		elif repeatCount is not None:
-			ad = durmul(repeatCount, dur)
+
+		ad = None
+		if dur is indefinite and repeatDur is None and repeatCount is None and end is not None:
+			if isdefinite(end):
+				ad = timesub(end, begin)
+			else:
+				ad = end
+		elif end is None or end is indefinite:
+			ad = self.calcIntermActiveDur(dur, repeatCount, repeatDur)
+		else:
+			assert end is not indefinite, 'end is not indefinite'
+			assert dur is not None or repeatDur is not None or repeatCount is not None, 'none of dur, repeatDur, repeatCount specified'
+			ad = timemin(self.calcIntermActiveDur(dur, repeatCount, repeatDur), timesub(end, begin))
+		assert ad is not None, 'active dur algorithm error'
+		
 		ad = self.applyMinMax(ad)
 		ad = self.applyTimeManipulations(ad)
+		return ad 
+
+	def calcActiveEnd(self, begin, end):
+		ad = self.calcActiveDur(begin, end)
+		return timeadd(begin, ad)
+
+	def calcIntermActiveDur(self, dur, repeatCount, repeatDur):
+		if dur == 0.0:
+			iad = 0.0
+		elif repeatCount is None and repeatDur is None:
+			iad = dur
+		elif repeatDur is not None and repeatCount is None:
+			iad = repeatDur
+		elif repeatCount is not None:
+			if repeatCount is indefinite:
+				ed = indefinite
+			else:
+				if self.isActive() and isdefinite(dur):
+					# make a prediction
+					insttime = self.getTime() - self._repeattime
+					remaining = repeatCount - (self._repeatindex + insttime/dur)
+					ed = self.getTime() + remaining * dur
+				else:
+					ed = timemul(repeatCount, dur)
+			iad = ed
+			if repeatDur is not None:
+				iad = timemin(repeatDur, ied)
+		return iad
+
+	def applyMinMax(self, ad):
+		mintime = self.get('min')
+		if mintime is not None and mintime>0:
+			ad = timemax(ad, mintime)
+		maxtime =self.get('max')
+		if maxtime is not None and maxtime>0:
+			ad = timemin(ad, maxtime)
 		return ad
 
 	def applyTimeManipulations(self, ad):
 		speed = self.get('speed')
 		if speed:
-			ad = durdiv(ad, speed)	
+			ad = timediv(ad, speed)	
 		if self.get('autoReverse')=='true':
-			ad = durmul(ad, 2.0)
+			ad = timemul(ad, 2.0)
 		return ad
 
-	def applyMinMax(self, ad):
-		mintime = self.get('min')
-		if mintime is not None and mintime>0:
-			ad = durmax(ad, mintime)
-		maxtime =self.get('max')
-		if maxtime is not None and maxtime>0:
-			ad = durmin(ad, maxtime)
-		return ad
+	def calcBegin(self):
+		if self.isActive():
+			parent = self.getTimeParent()
+			if not parent:
+				return 0
+			return parent.getTime() - self.getTime()
+		else:
+			bt = self.get('begin')
+			if bt is not None:
+				return bt
+			else:
+				parent = self.getTimeParent()
+				if not parent:
+					return 0
+				if isinstance(parent, SvgPar):
+					return 0
+				else:
+					# child of seq or excl
+					return unresolved
+	
+	def getNextInterval(self, beginAfter = minusinfinity):
+		beginList = self.getXMLAttr('begin')
+		endList = self.getXMLAttr('end')
+		beginList.beginIteration()
+		endList.beginIteration()
+		while 1:
+			tempBegin = beginList.getNextGE(beginAfter)
+			if tempBegin is None:
+				return None
+			if not endList.isExplicit():
+				tempEnd = self.calcActiveEnd(tempBegin, None)
+			else:
+				tempEnd = endList.getNextGE(tempBegin)
+				if tempEnd == tempBegin:
+					tempEnd = endList.getNextGT(tempEnd)
+				if tempEnd is None:
+					if endList.hasPendingEvents():
+						tempEnd = unresolved
+					else:
+						return None
+				tempEnd = self.calcActiveEnd(tempBegin, tempEnd)
+			if tempEnd > 0:
+				return tempBegin, tempEnd
+			elif self._restart == 'never':
+				return None
+			else:
+				beginAfter = tempEnd
 
-	def calcImplicitDur(self):
-		return 0
+	# resolve a begin or end time on an element but not both 
+	def getEventSensitivity(self):
+		if not self.getTimeParentOrRoot().isActive():
+			return None
+		if not self.isActive():
+			return 'begin'
+		else:
+			if self._restart == 'always':
+				return 'begin'
+			elif self._restart in ('never', 'whenNotActive'):
+				return 'end'
+
+	#
+	#  delta schedule interface
+	#	
+	def schedule(self, delay, cb):
+		if self._queue is None:
+			self._queue = DeltaQueue(self.getTimeParentOrRoot().getTime)		
+		self._queue.schedule(delay, cb)
+		if self._timerid is None:
+			self._execSchedule()
+
+	def pauseSchedule(self):
+		if self._timerid is not None:
+			timer = self.timeroot._ostimer
+			timer.canceltimer(self._timerid)
+			self._timerid = None
+
+	def resumeSchedule(self):
+		self._execSchedule()
+
+	def resetSchedule(self):
+		self.pauseSchedule()
+		if self._queue:
+			self._queue.clear()		
+
+	def _sleep(self, delay):
+		if delay is None:
+			self._timerid = None
+		elif delay == indefinite:
+			self._timerid = None
+		else:
+			timer = self.timeroot._ostimer
+			self._timerid = timer.settimer(delay, (self._execSchedule, ()))
+
+	def _execSchedule(self):
+		self._timerid = None
+		execList = self._queue.getExecList()
+		for cmd in execList:
+			cmd()
+		delay = self._queue.getDelay()
+		self._sleep(delay)
+
+
+	#
+	# time conversion
+	#
+	def simple2ancestor(self, t, ancestor):
+		if not isdefinite(t) or ancestor == self:
+			return t			
+		c = self
+		cs = t
+		while c.tparent and c != ancestor:
+			if c._interval is None:
+				return unresolved
+			ca = cs + c._repeattime
+			ps = ca + c._interval[0]
+			c = c.tparent
+			cs = ps
+		return cs
+
+	def ancestor2simple(self, t, ancestor):
+		if not isdefinite(t) or ancestor == self:
+			return t	
+		path = self.getTimePath()
+		i = 0
+		for c in path:
+			i = i + 1
+			if c == ancestor:
+				break
+		ps = t
+		for c in path[i:]:
+			if c._interval is None:
+				return unresolved
+			ca = ps - c._interval[0]
+			cs = ca - c._repeattime
+			ps = cs
+		return ps
+
+	def simple2document(self, t):
+		return self.simple2ancestor(t, self.getTimeRoot())
+
+	def document2simple(self, t):
+		return self.ancestor2simple(t, self.getTimeRoot())
+
+	def active2document(self, t):
+		return self.simple2document(t - self._repeattime)
+
+	def document2active(self, t):
+		return self._repeattime + self.document2simple(t)
 
 ####################
-# SVG time container
+# time container
 
-class SvgTimeContainer(TimeElement):
+class TimeContainer(TimeElement):
 	def __init__(self, ttype, timeroot):
 		TimeElement.__init__(self, ttype, timeroot)
-		self._ostimer = None
-		self._timerid = None
 
-	def setOsTimer(self, ostimer):
-		self._ostimer = ostimer
+####################
+# par container
+
+class Par(TimeContainer):
+	def __init__(self, ttype, timeroot):
+		TimeContainer.__init__(self, ttype, timeroot)
 		
+	def startupTransition(self, complete=1):
+		assert self._state is None, 'invalid transition'
+		for arc in self.beginSyncArcs:
+			arc.addInstanceTime(0.0)
+		for el in self.getTimeChildren():
+			el.startupTransition(0)
+		TimeElement.startupTransition(self, 0)
+		if complete: self.completeStartupTransition()
+	def completeStartupTransition(self):
+		TimeElement.completeStartupTransition(self)
+		for el in self.getTimeChildren():
+			el.completeStartupTransition()
+			
+	def calcImplicitDur(self):
+		dur = 0
+		for el in self.getTimeChildren():
+			interval = el.getInterval()
+			if interval is not None:
+				bt, et = interval
+				dur = timemax(dur, et)
+		return dur
+
 	#
 	#  DOM interface implementation
-	#  life-cycle: reset, seek? , begin, (pause, resume)*, seek*, end,	remove
+	#  typical scenario: reset, seek? , begin, (pause, resume)*, seek*, end,	remove
 	#
 	def beginElement(self):
-		if self.isActive():
-			return 0
-		TimeElement.beginElement(self)
-		for el in self.getTimeChildren():
-			el.resetElement()
-			el.calcBasicTiming()
-		self.prepareScheduler()
-		self.schedule()
+		self.resetElement()
+		beginList = self.getXMLAttr('begin')
+		arc = beginList.addSync(self, 'begin')
+		arc.addInstanceTime(0)
+		self.startupTransition()
 		return 1
 
 	def endElement(self):
-		if not self.isActive():
-			return 0
-		for el in self.getTimeChildren():
-			if el.isActive():
-				el.endElement()
 		TimeElement.endElement(self)
-		self.cancelSchedule()
+		for el in self.getTimeChildren():
+			el.endElement()
 		return 1
 
 	def pauseElement(self):
 		for el in self.getTimeChildren():
 			el.pauseElement()
 		TimeElement.pauseElement(self)
-		self.cancelSchedule()
 
 	def resumeElement(self):
 		TimeElement.resumeElement(self)
 		for el in self.getTimeChildren():
 			el.resumeElement()
-		self.schedule()
 
 	def seekElement(self, seekTo):
 		TimeElement.seekElement(self, seekTo)
 		# seek children
 		# ...
-		if self.isActive():
-			self.reschedule()
 
 	def removeElement(self):
-		assert not self.isActive(), 'end should be called before remove'
-		if not self.isAlive():
-			return
 		for el in self.getTimeChildren():
 			el.removeElement()
 		TimeElement.removeElement(self)
-		self.cleanupScheduler()
 
 	def resetElement(self):
+		for el in self.getTimeChildren():
+			el.resetElement()
 		TimeElement.resetElement(self)
+
+	def matchesEndSyncRule(self, rule, id=None):
+		now = self.getTime()
+		if rule == 'first':
+			result = 0
+		else:
+			result = 1
+		for c in self.getTimeChildren():
+			if rule == 'first':
+				if c.getBeginCount()>0 and not c.isActive():
+					return 1
+
+			elif rule == 'id':
+				if id == c.get('id'):
+					return c.getBeginCount()>0 and not c.isActive()
+
+			elif rule == 'last':
+				if c.isActive() or c.getNextInterval(now) is not None:
+					return 0
+
+			elif rule == 'all':
+				if c.isActive() or not c.getBeginCount()>0 or c.getNextInterval(now) is not None:
+					return 0
+		return result
 
 	#
 	#  event interface
 	#
-	def onBegin(self, node):
+	def onChildBegin(self, node):
 		pass
 
-	def onEnd(self, node):
-		pass
+	def onChildEnd(self, node):
+		matches = self.matchesEndSyncRule('last')
+		if self.getTimeRoot() == self and matches:
+			self.freezeTransition()
+		elif self.get('dur') is None and matches:
+			self.endOfIntervalTransition()
 
-	def onRepeat(self, node, index):
+	def onChildRepeat(self, node, index):
 		pass
 	
-	def onEvent(self, node, params):
-		pass
-
-	#
-	#  schedule interface
-	#
-	def reschedule(self):
-		self.cancelSchedule()
-		self.schedule()
-			
-	def cancelSchedule(self):
-		if self._timerid is not None:
-			timer = self.timeroot._ostimer
-			timer.canceltimer(self._timerid)
-			self._timerid = None
-
-	def sleep(self, delay):
-		if delay is None:
-			self._timerid = None
-			self.stopTimer()
-		elif delay == 'indefinite':
-			self._timerid = None
-		else:
-			timer = self.timeroot._ostimer
-			self._timerid = timer.settimer(delay, (self.schedule, ()))
-
-	def prepareScheduler(self):
-		pass
-
-	def cleanupScheduler(self):
-		pass
-
-	def schedule(self):
+	def onChildEvent(self, node, params):
 		pass
 
 
-####################
-# SVG par container
 
-class SvgPar(SvgTimeContainer):
-	def __init__(self, ttype, timeroot):
-		SvgTimeContainer.__init__(self, ttype, timeroot)
 
-	#
-	#  schedule interface
-	#
-	def prepareScheduler(self):
-		self._queue = DeltaQueue(self.getTime)
-		arcs = self.buildActionArcs()
-		for arc in arcs:
-			delay = arc.getDelay()
-			if delay != 'unresolved':
-				self._queue.schedule(delay, arc)
 
-	def cleanupScheduler(self):
-		del self._queue
-
-	def schedule(self):
-		execList = self._queue.getExecList()
-		for cmd in execList:
-			cmd.execute()
-		delay = self._queue.getDelay()
-		self.sleep(delay)
-
-	def buildActionArcs(self):
-		arcs = []
-		for el in self.getTimeChildren():
-			bt = el.get('begin') or 0 # media container
-			arc = SvgActionArc(self, el, bt, 'begin')
-			arcs.append(arc)
-
-			delay =  duradd(bt, el.getActiveDur())
-			fill = el.get('fill')
-			if fill == 'freeze':
-				arc = SvgActionArc(self, el, delay, 'freeze')
-			else:
-				arc = SvgActionArc(self, el, delay, 'remove')
-			arcs.append(arc)
-		return arcs
-
-	def calcImplicitDur(self):
-		dur = 0
-		for el in self.getTimeChildren():
-			tb = el.get('begin') or 0
-			t = duradd(tb, el._ad)
-			dur = durmax(dur, t)
-		return dur
-
-	#
-	#	event interface (not implemented yet)
-	#   use a rule based decision system for the effect of each event 
-	#   (the effect may be none, a sync variant update and possibly a schedule)
-	#
-	def onBegin(self, node):
-		for arc in node.beginSyncArcs:
-			arc.updateSyncVariant(self.getTime())
-
-	def onEnd(self, node):
-		for arc in node.endSyncArcs:
-			arc.updateSyncVariant(self.getTime())
-
-	def onRepeat(self, node, index):
-		for arc in node.repeatSyncArcs:
-			arc.updateSyncVariant(self.getTime(), index)
-	
-	def onEvent(self, node, params):
-		for arc in node.eventSyncArcs:
-			arc.updateSyncVariant(self.getTime(), params)
 
