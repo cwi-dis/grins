@@ -1008,8 +1008,6 @@ class SMILParser(SMIL, xmllib.XMLParser):
 						attrdict['keyTimes'] = val
 			elif attr == 'attributeName':
 				attrdict['attributeName'] = val
-				if val == 'soundLevel':
-					self.__context.updateSoundLevelInfo('anim', 1)
 			elif attr == 'attributeType':
 				if val in ('CSS', 'XML', 'auto'):
 					attrdict['attributeType'] = val
@@ -1634,6 +1632,33 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.__container._addchild(node)
 		self.__container = node
 		self.AddAttrs(node, attributes)
+		
+		an = node.attrdict.get('attributeName')
+		if an == 'soundLevel':
+			minval = maxval = 1.0
+			values = []
+			s = node.attrdict.get('from')
+			if s: 
+				values.append(s)
+			s = node.attrdict.get('to')
+			if s: 
+				values.append(s)
+			sl = node.attrdict.get('values')
+			if sl: 
+				sl = string.split(sl,';')
+				for s in sl:
+					values.append(s)
+			for s in values:
+				if s:
+					if s[-1]=='%':
+						val = 0.01*string.atof(s[:-1])
+					else:
+						val = string.atof(s)
+					minval = min(minval, val)
+					maxval = max(maxval, val)
+			self.__context.updateSoundLevelInfo('anim', 1)
+			self.__context.updateSoundLevelInfo('min', minval)
+			self.__context.updateSoundLevelInfo('max', maxval)
 
 		node.attrdict['atag'] = tagname
 		node.attrdict['mimetype'] = 'animate/%s' % tagname
