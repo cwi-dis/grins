@@ -2329,7 +2329,10 @@ MultiMediaStream_OpenFile(MultiMediaStreamObject *self, PyObject *args)
 	ConvToWindowsMediaUrl(buf);
 	WCHAR wsz[MAX_PATH];
 	MultiByteToWideChar(CP_ACP,0,buf,-1,wsz,MAX_PATH);
-	HRESULT hr = self->pI->OpenFile(wsz,0);
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS		
+	hr = self->pI->OpenFile(wsz,0);
+	Py_END_ALLOW_THREADS		
 	if (FAILED(hr)) {
 		char sz[MAX_PATH+80]="MultiMediaStream_OpenFile ";
 		strcat(sz,psz);
@@ -2385,7 +2388,10 @@ MultiMediaStream_SetState(MultiMediaStreamObject *self, PyObject *args)
 	int state;
 	if (!PyArg_ParseTuple(args, "i", &state))
 		return NULL;
-	HRESULT hr = self->pI->SetState(state?STREAMSTATE_RUN:STREAMSTATE_STOP);
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS		
+	hr = self->pI->SetState(state?STREAMSTATE_RUN:STREAMSTATE_STOP);
+	Py_END_ALLOW_THREADS		
 	if (FAILED(hr)) {
 		seterror("MultiMediaStream_SetState", hr);
 		return NULL;
@@ -2403,7 +2409,10 @@ MultiMediaStream_GetState(MultiMediaStreamObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
 	STREAM_STATE currentState;
-	HRESULT hr = self->pI->GetState(&currentState);
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS		
+	hr = self->pI->GetState(&currentState);
+	Py_END_ALLOW_THREADS		
 	if (FAILED(hr)) {
 		seterror("MultiMediaStream_GetState", hr);
 		return NULL;
@@ -2420,7 +2429,10 @@ MultiMediaStream_GetDuration(MultiMediaStreamObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
 	STREAM_TIME duration;
-	HRESULT hr = self->pI->GetDuration(&duration);
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS		
+	hr = self->pI->GetDuration(&duration);
+	Py_END_ALLOW_THREADS		
 	if (FAILED(hr)) {
 		seterror("MultiMediaStream_GetDuration", hr);
 		return NULL;
@@ -2438,7 +2450,10 @@ MultiMediaStream_GetTime(MultiMediaStreamObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
 	STREAM_TIME currentTime;
-	HRESULT hr = self->pI->GetTime(&currentTime);
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS		
+	hr = self->pI->GetTime(&currentTime);
+	Py_END_ALLOW_THREADS		
 	if (FAILED(hr)) {
 		seterror("MultiMediaStream_GetTime", hr);
 		return NULL;
@@ -2456,7 +2471,10 @@ MultiMediaStream_Seek(MultiMediaStreamObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args,"O",&liobj))
 		return NULL;
 	STREAM_TIME seekTime = liobj->ob_ival;
-	HRESULT hr = self->pI->Seek(seekTime);
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS		
+	hr = self->pI->Seek(seekTime);
+	Py_END_ALLOW_THREADS		
 	if (FAILED(hr)) {
 		seterror("MultiMediaStream_Seek", hr);
 		return NULL;
@@ -2730,7 +2748,10 @@ DirectDrawStreamSample_Update(DirectDrawStreamSampleObject *self, PyObject *args
 {
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
-	HRESULT hr = self->pI->Update(0,NULL,NULL,0);
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->Update(0,NULL,NULL,0);
+	Py_END_ALLOW_THREADS
 	if (FAILED(hr)) {
 		seterror("DirectDrawStreamSample_Update", hr);
 		return NULL;
