@@ -318,6 +318,7 @@ def compute_bandwidth(root, seticons=1, storetiming=None):
 					else:
 						overflow = '%d bps'%overflow
 					msg = 'Uses %s more bandwidth than available.'%overflow
+					node.set_infoicon('bandwidthbad', msg)
 				else:
 					from fmtfloat import fmtfloat
 					bwdelay = accum.overflowdelay(t1, overflow, minbps, maxbps)
@@ -325,8 +326,8 @@ def compute_bandwidth(root, seticons=1, storetiming=None):
 						ss = ""
 					else:
 						ss = "s"
-					msg = 'Needs %s second%s longer to load.'%(fmtfloat(bwdelay, prec = 1), ss)
-				node.set_infoicon('bandwidthbad', msg)
+					msg = 'Needs %s second%s longer to load.\nShall I add an extra begin delay?'%(fmtfloat(bwdelay, prec = 1), ss)
+					node.set_infoicon('bandwidthbad', msg, fixcallback=(node.fixdelay_callback, (bwdelay,)))
 				errornodes[node] = 1
 				delaycount = delaycount + 1
 
