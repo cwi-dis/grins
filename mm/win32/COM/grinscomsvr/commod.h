@@ -58,7 +58,10 @@ class GRiNSPlayerComModule
 	void setPyListener(PyObject *obj) {m_pyobj=obj;Py_XINCREF(m_pyobj);}
 	PyObject *getPyListener() {return m_pyobj;}
 
-	void adviceSetSize(int id, int w, int h){GRiNSPlayerAutoAdviceSetSize(id, w, h);}
+	void adviceNewPeerWnd(int docid, int wndid, int w, int h, const char *title)
+		{GRiNSPlayerAutoAdviceNewPeerWnd(docid, wndid, w, h, title);}
+	void adviceClosePeerWnd(int docid, int wndid)
+		{GRiNSPlayerAutoAdviceClosePeerWnd(docid, wndid);}
 	void adviceSetCursor(int id, char *cursor){GRiNSPlayerAutoAdviceSetCursor(id, cursor);}
 	void adviceSetDur(int id, double dur){GRiNSPlayerAutoAdviceSetDur(id, dur);}
 	

@@ -7,6 +7,8 @@ Afx=win32ui.GetAfx()
 import GenWnd
 import usercmd, usercmdui	
 from WMEVENTS import *
+
+import string
 	
 WM_USER_OPEN = win32con.WM_USER+1
 WM_USER_CLOSE = win32con.WM_USER+2
@@ -20,7 +22,7 @@ WM_USER_MOUSE_CLICKED  = win32con.WM_USER+9
 WM_USER_MOUSE_MOVED  = win32con.WM_USER+10
 WM_USER_SETPOS = win32con.WM_USER+11
 WM_USER_SETSPEED = win32con.WM_USER+12
-WM_USER_GETPOS = win32con.WM_USER+13
+WM_USER_SELWND = win32con.WM_USER+13
 
 STOPPED, PAUSING, PLAYING = range(3)
 UNKNOWN = -1
@@ -33,6 +35,7 @@ class ListenerWnd(GenWnd.GenWnd):
 		self.create()
 		self._docmap = {}
 		self._slidermap = {}
+		self._focuswnd = None
 		from __main__ import commodule
 		commodule.SetPyListener(self)
 
@@ -47,6 +50,7 @@ class ListenerWnd(GenWnd.GenWnd):
 		self.HookMessage(self.OnMouseMoved, WM_USER_MOUSE_MOVED)
 		self.HookMessage(self.OnSetPos, WM_USER_SETPOS)
 		self.HookMessage(self.OnSetSpeed, WM_USER_SETSPEED)
+		self.HookMessage(self.OnSelWnd, WM_USER_SELWND)
 
 	def OnDestroy(self, params):
 		if self.__timerid:
@@ -69,7 +73,8 @@ class ListenerWnd(GenWnd.GenWnd):
 	def OnClose(self, params):
 		id = params[2]
 		frame = self._docmap.get(id)
-		if frame: frame.SendMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.CLOSE].id)
+		if frame: 
+			frame.PostMessage(win32con.WM_COMMAND,usercmdui.class2ui[usercmd.CLOSE].id)
 		del self._docmap[id]
 		del self._slidermap[id]
 
@@ -87,30 +92,37 @@ class ListenerWnd(GenWnd.GenWnd):
 
 	def OnSetWindow(self, params):
 		frame = self._docmap.get(params[2])
-		if frame: frame.setEmbeddedHwnd(params[3])
+		data = Sdk.GetWMString(params[3])
+		data = string.split(data, ' ')
+		if len(data)!=2: return
+		wndid = string.atoi(data[0])
+		hwnd = string.atoi(data[1])
+		if frame: frame.setEmbeddedHwnd(wndid, hwnd)
 
 	def OnUpdate(self, params):
 		frame = self._docmap.get(params[2])
-		if frame: 
-			wnd = frame.getEmbeddedWnd()
-			if wnd: wnd.update()
+		if frame:
+			for wnd in frame._peerviewports.values():
+				wnd.update()
 
+	def OnSelWnd(self, params):
+		frame = self._docmap.get(params[2])
+		wndid = params[3]
+		if frame: 
+			self._focuswnd = frame.getEmbeddedWnd(wndid)
+	
 	def OnMouseClicked(self, params):
 		frame = self._docmap.get(params[2])
-		if frame: 
-			wnd = frame.getEmbeddedWnd()
-			if wnd:
-				x, y = win32api.LOWORD(params[3]),win32api.HIWORD(params[3])
-				wnd.onMouseEvent((x,y),Mouse0Press)
-				wnd.onMouseEvent((x,y),Mouse0Release)
+		if frame and self._focuswnd: 
+			x, y = win32api.LOWORD(params[3]),win32api.HIWORD(params[3])
+			self._focuswnd.onMouseEvent((x,y),Mouse0Press)
+			self._focuswnd.onMouseEvent((x,y),Mouse0Release)
 
 	def OnMouseMoved(self, params):
 		frame = self._docmap.get(params[2])
-		if frame: 
-			wnd = frame.getEmbeddedWnd()
-			if wnd:
-				x, y = win32api.LOWORD(params[3]),win32api.HIWORD(params[3])
-				wnd.onMouseMoveEvent((x,y))
+		if frame and self._focuswnd: 
+			x, y = win32api.LOWORD(params[3]),win32api.HIWORD(params[3])
+			self._focuswnd.onMouseMoveEvent((x,y))
 
 	def OnSetPos(self, params):
 		pos = 0.001*params[3]
@@ -118,8 +130,9 @@ class ListenerWnd(GenWnd.GenWnd):
 
 	def OnSetSpeed(self, params):
 		frame = self._docmap.get(params[2])
-		speed = 0.001*params[3]
-		self._slidermap[params[2]].setSpeed(speed)
+		if frame: 
+			speed = 0.001*params[3]
+			self._slidermap[params[2]].setSpeed(speed)
 
 	def GetPos(self, id):
 		return int(1000*self._slidermap[id].getPos())
@@ -179,28 +192,30 @@ import win32mu
 import grinsRC
 
 class EmbeddedWnd(win32window.DDWndLayer):
-	def __init__(self, wnd, w, h, units, bgcolor, title='', id=0):
+	def __init__(self, wnd, w, h, units, bgcolor, title='', peerdocid=0):
 		self._cmdframe = wnd
 		self._peerwnd = wnd
 		self._smildoc = wnd.getgrinsdoc()
 		self._rect = 0, 0, w, h
 		self._title = title
-		self._peerdocid = id
+		self._peerdocid = peerdocid
 		try:
 			from __main__ import commodule
-			if id: commodule.AdviceSetSize(id, w, h)
+			if peerdocid: 
+				commodule.AdviceNewPeerWnd(peerdocid, id(self), w, h, title)
 		except: pass
 		self._viewport = win32window.Viewport(self, 0, 0, w, h, bgcolor)
 		win32window.DDWndLayer.__init__(self, self, bgcolor)
 		self.createBackDDLayer(w, h, wnd.GetSafeHwnd())
 		self.settitle(title)
 
-	def setPeerDocID(self, id):
-		self._peerdocid = id
+	def setPeerDocID(self, peerdocid):
+		self._peerdocid = peerdocid
 		x, y, w, h = self._rect
 		try:
 			from __main__ import commodule
-			if id: commodule.AdviceSetSize(id, w, h)
+			if peerdocid: 
+				commodule.AdviceNewPeerWnd(peerdocid, id(self), w, h, self._title)
 		except: pass
 
 	def setPeerWindow(self, hwnd):
@@ -210,13 +225,10 @@ class EmbeddedWnd(win32window.DDWndLayer):
 			self.settitle(self._title)
 
 	def settitle(self,title):
+		if not title: return
 		import urllib
 		title=urllib.unquote(title)
 		self._title=title
-		if self._peerwnd:
-			parent = self._peerwnd.GetParent()
-			if parent:
-				parent.SetWindowText(title)
 
 	#
 	# paint
@@ -293,6 +305,13 @@ class EmbeddedWnd(win32window.DDWndLayer):
 		return self._viewport._rect
 
 	def closeViewport(self, viewport):
+#		self._peerdocid = peerdocid
+#		try:
+#			from __main__ import commodule
+#			if peerdocid: 
+#				commodule.AdviceClosePeerWnd(peerdocid, id(self))
+#		except: pass
+		self._viewport = None
 		del viewport
 		self.destroyDDLayer()
 
