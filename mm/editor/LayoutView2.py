@@ -754,6 +754,16 @@ class LayoutView2(LayoutViewDialog2):
 		self.makeSelectedNodeList(focusobject)	
 		localSelList = self.currentSelectedNodeList
 
+		# animation support
+		# if the node is animated, compute the animation data according to the MMNode tree
+		self.isAnimatedMode = 0
+		if len(localSelList) == 1:
+			nodeRef = localSelList[0]
+			if hasattr(nodeRef,'computeAnimationData'):
+				animationData = nodeRef.computeAnimationData()
+				if len(animationData) > 0:
+					self.isAnimateMode = 1
+								
 		# update widgets
 		for id, widget in self.widgetList.items():
 			widget.selectNodeList(localSelList, keepShowedNodes)
@@ -1078,6 +1088,12 @@ class LayoutView2(LayoutViewDialog2):
 			self.editmgr.setchannelattr(name, 'width', 400)
 			self.editmgr.setchannelattr(name, 'height', 400)
 			self.editmgr.commit('REGION_TREE')
+
+	def applyAnimationData(self, nodeRef):
+		# animation support
+		# if the node is animated, compute the animation data according to the MMNode tree
+		if hasattr(nodeRef,'applyAnimationData'):
+			self.applyAnimationData(self.editmgr)
 
 	def __makeRegionListToDel(self, nodeRef, list):
 		# remove the children before removing the node
