@@ -118,6 +118,8 @@ class EditableMMNode(MMNode.MMNode):
 		
 	def GetTypeIconFile(self):	# returns a filename for an icon representing the type of node that this is.
 		channel_type = self.GetChannelType()
+		if not channel_type:
+			return None
 		import os, cmif
 		f = os.path.join(cmif.findfile('GRiNS-Icons'), '%s.tiff'%channel_type)
 		return f
@@ -125,9 +127,26 @@ class EditableMMNode(MMNode.MMNode):
 	def GetColor(self):		# returns a default "color" for this type of node.
 		pass
 
+	def SetURL(self, url):
+		if self.IsLeafNode():
+			em = self.context.editmgr
+			if not em.transaction():
+				return
+			self.SetAttr('file',url)
+			em.commit()
+		else:
+			# Add a new node here. This is a structure node.
+			em = self.context.editmgr
+			#f not em.transaction():
+			#	return
+			# WORKING HERE.
+			# I need a channel also.
+
 	def _insertnode(self, node, index):
 		# insert a node at position index.
 		em = self.context.editmgr
+		if node is None:
+			assert 0
 		if len(self.children) < 1:
 			em.addnode(self, 0, node)
 			return
@@ -137,6 +156,27 @@ class EditableMMNode(MMNode.MMNode):
 			return
 		else:
 			em.addnode(self, index, node)
+
+#	def _newleafnode(self, name=None, url=None, region=None):
+	def _newleafnode(self, url):
+		# returns a new node with this particular name, url and region
+		node = self.context.newnode('ext')
+		print "DEBUG: URL is: ", url
+		#if url:
+		#	node.SetAttr('file', url)
+		#if region:
+		#	assert isinstance(region, type(""))
+		#	node.SetAttr('channel', region)
+		#if name:
+		# Set the name for this node. I don't know how.
+		return node
+
+	def NewLeafNode(self, name='', url='', index = -1, region = ''):
+		em = self.context.editmgr
+		if not em.transaction():
+			return
+		self._insertnode(self._newleafnode(url), index)
+		em.commit()
 
 ######################################################################
 	# Commands from the menus.

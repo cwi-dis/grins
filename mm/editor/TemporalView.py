@@ -307,7 +307,14 @@ class TemporalView(TemporalViewDialog):
 		return windowinterface.DROPEFFECT_MOVE
 
 	def ev_dropfile(self, dummy, window, event, params):
-		return windowinterface.DROPEFFECT_MOVE
+		x,y,filename = params[0:5]
+		x,y = self.rel2abs((x,y))
+		if event == WMEVENTS.DropFile:
+			url = MMurl.pathname2url(filename)
+		else:
+			url = filename
+		self.ev_mouse0press(dummy,window,event,params)
+		self.scene.dropfile((x,y),url)
 
 	def ev_dragnode(self, dummy, window, event, params):
 		return windowinterface.DROPEFFECT_MOVE
