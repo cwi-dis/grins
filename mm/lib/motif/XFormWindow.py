@@ -382,6 +382,7 @@ class OptionMenu(_Widget):
 				self._buttons.append(button)
 			self._optionlist = optionlist
 		# set the start position
+		self._value = -1
 		self.setpos(startpos)
 
 	def _cb(self, widget, value, call_data):
