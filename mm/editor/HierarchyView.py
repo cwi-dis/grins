@@ -753,7 +753,16 @@ class HierarchyView(HierarchyViewDialog):
 		left, top, right, bottom = box
 		if not hasattr(node, 'expanded') or \
 		   not node.GetChildren():
-			if not self.timescale and hierarchy_minimum_sizes:
+			if self.timescale:
+				cw, ch = self.canvassize
+				w, h, b = node.boxsize
+				if DISPLAY_VERTICAL:
+					top = top + b / ch
+					bottom = top + h / ch
+				else:
+					left = left + b / cw
+					right = left + w / cw
+			elif hierarchy_minimum_sizes:
 				right = left + self.horsize
 ##				if node.__class__ is SlideMMNode:
 ##					right = right + self.horsize
@@ -771,6 +780,8 @@ class HierarchyView(HierarchyViewDialog):
 		horizontal = (t in ('par', 'alt')) == DISPLAY_VERTICAL
 		for child in children:
 			size = size + child.boxsize[not horizontal]
+			if DISPLAY_VERTICAL != horizontal:
+				size = size + child.boxsize[2]
 		# size is minimum size required for children in mm
 		if horizontal:
 			gapsize = self.horgap
@@ -784,6 +795,8 @@ class HierarchyView(HierarchyViewDialog):
 		maxb = 0
 		for child in children:
 			size = child.boxsize[not horizontal]
+			if DISPLAY_VERTICAL != horizontal:
+				size = size + child.boxsize[2]
 			if horizontal:
 				right = left + size * factor
 			else:
@@ -850,7 +863,11 @@ class HierarchyView(HierarchyViewDialog):
 		self.cleanup()
 		if root_expanded:
 			expandnode(self.root) # root always expanded
-		width, height = sizeboxes(self.root, self.timescale)
+		width, height, begin = sizeboxes(self.root, self.timescale)
+		if DISPLAY_VERTICAL:
+			height = height + begin
+		else:
+			width = width + begin
 		cwidth, cheight = window.getcanvassize(SIZEUNIT)
 		mwidth = mheight = 0 # until we have a way to get the min. size
 		if not hierarchy_minimum_sizes and \
@@ -986,9 +1003,13 @@ class HierarchyView(HierarchyViewDialog):
 def sizeboxes(node, structure_duration):
 	ntype = node.GetType()
 	minsize = MINSIZE
+	if structure_duration:
+		begin = MMAttrdefs.getattr(node, 'begin') * settings.get('time_scale_factor')
+	else:
+		begin = 0
 	if structure_duration and ntype in MMNode.leaftypes:
 		import Duration, math
-		dur = Duration.get(node)
+		dur = Duration.get(node) * settings.get('time_scale_factor')
 		if dur < 0:
 			dur = 0
 		elif dur > 1000:
@@ -1013,13 +1034,13 @@ def sizeboxes(node, structure_duration):
 		minwidth = minwidth + HOREXTRASIZE
 	children = node.GetChildren()
 	if not hasattr(node, 'expanded') or not children:
-		node.boxsize = minwidth, minheight + LABSIZE
+		node.boxsize = minwidth, minheight + LABSIZE, begin
 		return node.boxsize
 	nchildren = len(children)
 	width = height = 0
 	horizontal = (ntype in ('par', 'alt')) == DISPLAY_VERTICAL
 	for child in children:
-		w, h = sizeboxes(child, structure_duration)
+		w, h, b = sizeboxes(child, structure_duration)
 		if horizontal:
 			# children laid out horizontally
 			if h > height:
@@ -1030,13 +1051,17 @@ def sizeboxes(node, structure_duration):
 			if w > width:
 				width = w
 			height = height + h + GAPSIZE
+		if DISPLAY_VERTICAL:
+			height = height + b
+		else:
+			width = width + b
 	if horizontal:
 		width = width - GAPSIZE
 	else:
 		height = height - GAPSIZE
 	width = max(width + 2 * EDGSIZE, minwidth)
 	height = height + EDGSIZE + LABSIZE
-	node.boxsize = width, height
+	node.boxsize = width, height, begin
 	return node.boxsize
 
 def do_expand(node, expand, nlevels=None):
