@@ -277,6 +277,10 @@ SOURCE=.\M_audio__what.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_AutoLicense.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_Bandwidth.c
 # End Source File
 # Begin Source File
