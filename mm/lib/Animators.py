@@ -585,14 +585,14 @@ class AnimateContext:
 def getregionattr(node, attr):
 	v = None
 	d = node.GetChannel().attrdict
-	if attr in ('left', 'top', 'width', 'height'):
+	if attr in ('position', 'size', 'left', 'top', 'width', 'height'):
 		if d.has_key('base_winoff'):
 			r = d['base_winoff']
 			if attr == 'position':
 				v = r[0], r[1]
 			elif attr == 'size':
 				v = r[2], r[3]
-			if attr == 'left':
+			elif attr == 'left':
 				v = r[0]
 			elif pos=='top':
 				v = r[1]
@@ -659,7 +659,6 @@ class AnimateElementParser:
 						newnode.attrdict = targchan.attrdict.copy()
 						newnode.attrdict['channel'] = te
 						anim.targetnode = newnode
-						print newnode.attrdict
 			else:
 				anim.targetnode = anim.GetParent()
 			
