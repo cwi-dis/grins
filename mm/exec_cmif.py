@@ -18,11 +18,9 @@ def Boot( bEditor = 0 ):
 	# TEMP TEST FOLDER
 	if bEditor:
 		specificPath = "editor"
-		registryname = "Editor 2.0"
 		os.environ['GRiNSApp']='GRiNSed'
 	else:
 		specificPath = "grins"
-		registryname = "Player 2.0"
 		os.environ['GRiNSApp']='GRiNS'
 
 	CMIFPATH = [
@@ -60,12 +58,12 @@ def Boot( bEditor = 0 ):
 		# For now just continue!?!?!
 
 	# set app registry root to GRiNS
+	from version import registrykey, registryname
 	win32ui.SetAppName(registryname)
-	win32ui.SetRegistryKey("Oratrix GRiNS")
+	win32ui.SetRegistryKey(registrykey)
 
 	# run the given cmif file
 	if bEditor:
 		import cmifed
 	else:
 		import grins
-
