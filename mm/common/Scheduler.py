@@ -715,6 +715,9 @@ def GenAllPrearms(ui, node, prearmlists):
 		return
 	for child in node.GetWtdChildren():
 		GenAllPrearms(ui, child, prearmlists)
+		# XXXX hack to only play first child in alt nodes
+		if nodetype == 'alt':
+			return
 
 #  Remove all arm_duration attributes (so they will be recalculated)
 
