@@ -3,7 +3,7 @@ __version__ = "$Id$"
 import Xt
 from types import IntType
 from XConstants import TRUE, FALSE, UNIT_MM, SINGLE, ReadMask, WriteMask, \
-     _WAITING_CURSOR, _READY_CURSOR
+     _WAITING_CURSOR, _READY_CURSOR, error
 
 class _Timer:
 	def set(self, id):
@@ -155,10 +155,11 @@ class _Toplevel:
 
 	# timer interface
 	def settimer(self, sec, cb):
-		# sanity check
-		func, args = cb
-		if not callable(func):
-			raise error, 'callback function not callable'
+		if __debug__:
+			# sanity check
+			func, args = cb
+			if not callable(func):
+				raise error, 'callback function not callable'
 		id = _Timer()
 		tid = Xt.AddTimeOut(int(sec * 1000), id.cb, cb)
 		id.set(tid)
