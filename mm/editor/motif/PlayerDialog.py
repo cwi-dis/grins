@@ -21,13 +21,13 @@ class PlayerDialog(PlayerDialogBase):
 			's': STOP,
 			},
 		'menubar': [
-			(ALL, 'Close', [
-				(ALL, 'Close', CLOSE_WINDOW),
+			(LIGHT, 'Close', [
+				(LIGHT, 'Close', CLOSE_WINDOW),
 				]),
-			(ALL, 'Play', [
-				(ALL, 'Play', PLAY, 't'),
-				(ALL, 'Pause', PAUSE, 't'),
-				(ALL, 'Stop', STOP, 't'),
+			(LIGHT, 'Play', [
+				(LIGHT, 'Play', PLAY, 't'),
+				(LIGHT, 'Pause', PAUSE, 't'),
+				(LIGHT, 'Stop', STOP, 't'),
 				]),
 			(CMIF, 'User Groups', USERGROUPS),
 			(CMIF, 'Channels', CHANNELS),
@@ -38,7 +38,7 @@ class PlayerDialog(PlayerDialogBase):
 			],
 		'toolbar': PlayerDialogBase.adornments['toolbar'],
 		'close': [ CLOSE_WINDOW, ],
-		'flags': SMIL,
+		'flags': curflags(),
 		}
 	adornments2 = {
 		'close': [ CLOSE_WINDOW, ],
