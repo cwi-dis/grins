@@ -616,6 +616,12 @@ class _DisplayList(X_windowbase._DisplayList):
 				   (nsx, nsy, ndx, ndy), points))
 		self._optimize((1,))
 
+class showmessage(X_windowbase.showmessage):
+	def _callback(self, widget, callback, call_data):
+		if _in_create_box and _in_create_box._rb_dialog is not self:
+			return
+		X_windowbase.showmessage._callback(self, widget, callback, call_data)
+
 toplevel = _Toplevel()
 from X_windowbase import *
 
@@ -690,7 +696,7 @@ class FileDialog:
 		return self._form is None
 
 	def _cancel_callback(self, *rest):
-		if self.is_closed():
+		if _in_create_box or self.is_closed():
 			return
 		must_close = TRUE
 		try:
@@ -706,7 +712,7 @@ class FileDialog:
 				self.close()
 
 	def _ok_callback(self, widget, client_data, call_data):
-		if self.is_closed():
+		if _in_create_box or self.is_closed():
 			return
 		import os
 		filename = call_data.value
@@ -769,14 +775,14 @@ class SelectionDialog:
 			self._form = None
 
 	def _nomatch_callback(self, widget, client_data, call_data):
-		if self.is_closed():
+		if _in_create_box or self.is_closed():
 			return
 		ret = self.NomatchCallback(call_data.value)
 		if ret and type(ret) is StringType:
 			showmessage(ret, mtype = 'error')
 
 	def _ok_callback(self, widget, client_data, call_data):
-		if self.is_closed():
+		if _in_create_box or self.is_closed():
 			return
 		try:
 			func = self.OkCallback
@@ -791,7 +797,7 @@ class SelectionDialog:
 		self.close()
 
 	def _cancel_callback(self, widget, client_data, call_data):
-		if self.is_closed():
+		if _in_create_box or self.is_closed():
 			return
 		try:
 			func = self.CancelCallback
@@ -827,7 +833,7 @@ class InputDialog:
 		toplevel._subwindows.append(self)
 
 	def _ok(self, w, client_data, call_data):
-		if self.is_closed():
+		if _in_create_box or self.is_closed():
 			return
 		value = call_data.value
 		self.close()
@@ -835,7 +841,7 @@ class InputDialog:
 			client_data(value)
 
 	def _cancel(self, w, client_data, call_data):
-		if self.is_closed():
+		if _in_create_box or self.is_closed():
 			return
 		self.close()
 
@@ -912,7 +918,7 @@ class _MenuSupport:
 
 	# support methods, only used by derived classes
 	def _post_menu(self, w, client_data, call_data):
-		if not self._menu:
+		if _in_create_box or not self._menu:
 			return
 		if call_data.button == X.Button3:
 			self._menu.MenuPosition(call_data)
@@ -1071,7 +1077,7 @@ class Button(_Widget):
 		self._form.sensitive = sensitive
 
 	def __callback(self, widget, callback, call_data):
-		if self.is_closed():
+		if _in_create_box or self.is_closed():
 			return
 		apply(apply, callback)
 
@@ -1216,7 +1222,7 @@ class OptionMenu(_Widget):
 		return initbut
 
 	def _cb(self, widget, value, call_data):
-		if self.is_closed():
+		if _in_create_box or self.is_closed():
 			return
 		self._value = value
 		if self._callback:
@@ -1423,7 +1429,7 @@ class _List:
 			
 
 	def _callback(self, w, (func, arg), call_data):
-		if self.is_closed():
+		if _in_create_box or self.is_closed():
 			return
 		apply(func, arg)
 
@@ -1643,11 +1649,13 @@ class TextInput(_Widget):
 		self._text.ProcessTraversal(Xmd.TRAVERSE_CURRENT)
 
 	def _callback(self, w, (func, arg), call_data):
-		if self.is_closed():
+		if _in_create_box or self.is_closed():
 			return
 		apply(func, arg)
 
 	def _modifyCB(self, w, func, call_data):
+		if _in_create_box:
+			return
 		text = func(call_data.text)
 		if text is not None:
 			call_data.text = text
@@ -1740,7 +1748,7 @@ class TextEdit(_Widget):
 		self._form.TextSetSelection(pos + start, pos + end, 0)
 
 	def _callback(self, w, (func, arg), call_data):
-		if self.is_closed():
+		if _in_create_box or self.is_closed():
 			return
 		apply(func, arg)
 
@@ -1892,7 +1900,7 @@ class ButtonRow(_Widget):
 		self._buttons[button].sensitive = sensitive
 
 	def _callback(self, widget, callback, call_data):
-		if self.is_closed():
+		if _in_create_box or self.is_closed():
 			return
 		if self._cb:
 			apply(apply, self._cb)
@@ -1962,7 +1970,7 @@ class Slider(_Widget):
 		return self._minimum, self._maximum
 
 	def _callback(self, widget, callback, call_data):
-		if self.is_closed():
+		if _in_create_box or self.is_closed():
 			return
 		apply(apply, callback)
 
@@ -2354,6 +2362,8 @@ class _Question:
 		return self.answer
 
 	def callback(self, answer):
+		if _in_create_box:
+			return
 		self.answer = answer
 		if self.looping:
 			raise _end_loop
@@ -2381,6 +2391,8 @@ class _MultChoice:
 		return self.answer
 
 	def callback(self, msg):
+		if _in_create_box:
+			return
 		for i in range(len(self.msg_list)):
 			if msg == self.msg_list[i]:
 				self.answer = i
