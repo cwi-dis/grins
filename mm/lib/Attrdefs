@@ -87,6 +87,9 @@
 (player_winpos (tuple (int) (int)) (-1 -1) 'Player winpos' default
 	 'Window position for player control panel' raw)
 
+(player_winsize (tuple (int) (int)) (300 100) 'Player winsize' default
+	 'Window size for player control panel' raw)
+
 (pointsize (float) 0 'Point size' default
 	'Point size of text displayed in window' channel)
 
@@ -118,6 +121,9 @@
 
 (toplevel_winpos (tuple (int) (int)) (-1 -1) 'Top level winpos' default
 	 'Window position for top level menu' raw)
+
+(toplevel_winsize (tuple (int) (int)) (120 280) 'Top level winsize' default
+	 'Window size for top level menu' raw)
 
 (type (name) undefined 'Channel type' default
 	'Channel type (channel dictionary only)' raw)
