@@ -376,8 +376,8 @@ class SMIL:
 			attributes[__el] = attributes['ref']
 	del __el, __at
 	
-	__animate = ['animate',  'animateMotion', 'animateColor', 'set',]
-	__animateAttrs ={'begin':None,
+	__animate_elements = ['animate',  'animateMotion', 'animateColor', 'set',]
+	__animate_attrs ={'begin':None,
 		'dur':None,
 		'end':None,
 		'fill':None,
@@ -400,19 +400,19 @@ class SMIL:
 		'by':None,
 		'path':None, 
 		'origin':None,}
-	attributes['animateMotion'] = __animateAttrs.copy()
-	del __animateAttrs['path'], __animateAttrs['origin']
-	attributes['animate'] = __animateAttrs.copy()
+	attributes['animateMotion'] = __animate_attrs.copy()
+	del __animate_attrs['path'], __animate_attrs['origin']
+	attributes['animate'] = __animate_attrs.copy()
 	attributes['animateColor'] = attributes['animate']
-	del __animateAttrs['calcMode'], __animateAttrs['values'],
-	del	__animateAttrs['keyTimes'], __animateAttrs['keySplines']
-	del	__animateAttrs['from'], __animateAttrs['to'],
-	attributes['set'] = __animateAttrs.copy()
-	del __animateAttrs
+	del __animate_attrs['calcMode'], __animate_attrs['values'],
+	del	__animate_attrs['keyTimes'], __animate_attrs['keySplines']
+	del	__animate_attrs['from'], __animate_attrs['to'],
+	attributes['set'] = __animate_attrs.copy()
+	del __animate_attrs
 
 	__schedule = ['par', 'seq', 'excl', __choice, __bag] + __media_object
-	__container_content = __schedule + ['switch', 'a'] + __animate
-	__assoc_link = ['anchor', 'area']
+	__container_content = __schedule + ['switch', 'a'] + __animate_elements
+	__assoc_link = ['anchor', 'area'] + __animate_elements
 
 	# all entities with their allowed content
 	# no allowed content is default, so we don't specify empty ones here
@@ -450,4 +450,4 @@ class SMIL:
 	del __media_object, __schedule, __container_content,
 	del __assoc_link
 	del __layouts, __layout
-	del __animate
+	del __animate_elements
