@@ -62,8 +62,8 @@ def get(node):
 
 	if ctype in CONTINUOUS_CHANNELS:
 		duration = Duration.get(node, ignoreloop=1)
-		if duration == 0:
-##			print "DBG: Bandwidth.get: zero-time file", filename
+		if duration <= 0:
+			print "Duration.Get: cannot obtain duration:", filename
 			return 0, 0
 ##		print 'DBG: Bandwidth.get: continuous',filename, filesize, float(filesize)*8/duration
 		return 0, float(filesize)*8/duration
