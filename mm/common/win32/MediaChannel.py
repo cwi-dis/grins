@@ -65,6 +65,7 @@ WM_REDRAW=win32con.WM_USER+102
 # use: addclosecallback, genericwnd, register, unregister
 import windowinterface
 
+error = 'MediaChannel.error'
 
 class MediaChannel:
 	def __init__(self, channel):
@@ -129,24 +130,22 @@ class MediaChannel:
 			self.__armBuilder=None
 
 		if not self.__armBuilder:
-			print 'failed to create GraphBuilder'
-			return 0
+			raise error, 'failed to create GraphBuilder'
 
 		url=self.__channel.getfileurl(node)
 		if not url:
-			print 'No URL on node'
-			return -1
+			raise error, 'No URL on node'
 		self.__armIsAsx=0
 		if self.isASX(url):
 			self.__armIsAsx=1
-			return self.prepareASX(node)
+			self.prepareASX(node)
+			return 1
 		
 		url = MMurl.canonURL(url)
 		url=urllib.unquote(url)
 		if not self.__armBuilder.RenderFile(url):
 			self.__armFileHasBeenRendered=0
-			print 'Failed to render',url
-			return -1
+			raise error, 'Failed to render '+url
 
 		self.__armFileHasBeenRendered=1
 		return 1
@@ -311,19 +310,15 @@ class MediaChannel:
 		self.__armAsxPlayList=x._playlist
 		self.__armAsxIndex=0
 
-		if not self.armNextAsf():
-			return -1
-		return 1
+		self.armNextAsf()
 
 	def armNextAsf(self):
 		if self.__armAsxIndex >= len(self.__armAsxPlayList):
-			return 0
+			raise error, 'internal error in armNextAsf'
 		asf_url=self.__armAsxPlayList[self.__armAsxIndex]
 		self.__armAsxIndex=self.__armAsxIndex+1
 		if not self.__armBuilder.RenderFile(asf_url):
-			print 'Failed to render',asf_url
-			return 0
-		return 1
+			raise error, 'Failed to render '+asf_url
 		
 	############################################################## 
 	# ui delays management:
