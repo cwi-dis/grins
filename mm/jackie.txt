@@ -198,6 +198,10 @@ Debugging Window.
 	Sjoerd: The windowinterface.multchoice function hasn't been
 	implemented.
 	Kleanthis: Bug corrected. (patchlevel>=5)
+	Sjoerd: After the above procedure, click on Cancel to cancel
+	finishing the hyperlink creation.  Now this results in a
+	crash, presumably because multchoice doesn't return 0 for
+	cancel.
 
 15. Choosing `Edit contents...' from the Tools menu gives a Dialog
 Titled `Choose' I think there's some text missing it should read
