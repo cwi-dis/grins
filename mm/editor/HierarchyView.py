@@ -1585,7 +1585,8 @@ class Object:
 ##			   r-l >= hmargin * 2.5:
 			url = node.GetAttrDef('file', None)
 			if url:
-				mtype = MMmimetypes.guess_type(url)[0]
+				tmpurl, dummy = MMurl.splittag(url)
+				mtype = MMmimetypes.guess_type(tmpurl)[0]
 			else:
 				mtype = None
 			ctype = node.GetChannelType()
