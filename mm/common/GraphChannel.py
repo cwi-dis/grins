@@ -47,13 +47,13 @@ class GraphChannel(ChannelWindow):
 			mind, maxd = min(d), max(d)
 			miny = min(miny, mind)
 			maxy = max(maxy, maxd)
-		if miny == maxy:
-			miny = miny - 0.5
-			maxy = maxy + 0.5
 		leftalign = (MMAttrdefs.getattr(node, 'align') == 'left')
 		axis_x, axis_y = MMAttrdefs.getattr(node, 'axis')
 		if axis_y >= 0:
 			miny, maxy = min(miny, 0), max(maxy, 0)
+		if miny == maxy:
+			miny = miny - 0.5
+			maxy = maxy + 0.5
 		for d in self.datapoints:
 			if len(d) < length:
 				d2 = [None]*(length-len(d))
@@ -85,6 +85,7 @@ class GraphChannel(ChannelWindow):
 		y = y+YOFF
 		self.armed_display.drawline((0,0,0), [(XOFF, y),
 						      (1.0-XOFF, y)])
+		if not step: return
 		i = int(minx/step)*step
 		while i <= maxx:
 			self.armed_display.drawline((0,0,0),
@@ -98,6 +99,7 @@ class GraphChannel(ChannelWindow):
 		ystepsize = YRANGE / (maxy-miny)
 		x = XOFF
 		self.armed_display.drawline((0,0,0),[(x, YOFF), (x, 1.0-YOFF)])
+		if not step: return
 		i = int(miny/step)*step
 		while i <= maxy:
 			self.armed_display.drawline((0,0,0),
