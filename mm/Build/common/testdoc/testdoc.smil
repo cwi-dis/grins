@@ -38,7 +38,7 @@
     </par>
     <par id="test-video">
       <text region="description" src="data:,Playing%20a%20video%20node" type="text/plain" dur="2s"/>
-      <video region="video" src="testdata.mpg"/>
+      <video region="video" src="testdatampg.mpg"/>
     </par>
     <par id="test-realaudio">
       <text region="description" src="data:,Playing%20a%20RealAudio%20node" type="text/plain" dur="2s"/>
