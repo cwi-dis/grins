@@ -17,12 +17,6 @@ class MpegDisplay;
 class MpegDecoder
 	{
 	public:
-#ifdef UNICODE
-	typedef wchar_t char_t;
-#else
-	typedef char char_t;
-#endif
-
 	MpegDecoder();
 
 	~MpegDecoder();
