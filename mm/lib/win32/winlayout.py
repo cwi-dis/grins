@@ -786,10 +786,24 @@ class LayoutWnd:
 		pass
 
 	def onDSelMove(self, selection):
-		pass
+		if self._lbuttondown is not None and self._tipwnd:
+			sel = None
+			argtype = type(selection)
+			if argtype == type([1,]) or argtype == type((1,)):
+				if len(selection)==1:
+					sel = selection[0]
+			else:
+				sel = selection
+			if sel:
+				x, y, w, h = sel._rectb
+				xs, ys = self.ClientToScreen(self._lbuttondown)
+				self._tipwnd.moveTo((xs+8, ys), '%d, %d, %d, %d' % (x, y, w, h))
 			
 	def onDSelResize(self, selection):
-		pass
+		if self._lbuttondown is not None:
+			x, y, w, h = selection._rectb
+			xs, ys = self.ClientToScreen(self._lbuttondown)
+			self._tipwnd.moveTo((xs+8, ys), '%d, %d, %d, %d' % (x, y, w, h))
 
 	def onDSelMoved(self, selection):
 		pass
@@ -1203,20 +1217,16 @@ class LayoutOsWndCtrl(LayoutOsWnd, win32window.Window):
 	#  Listener interface overrides
 	#	
 	def onDSelMove(self, selection):
+		LayoutOsWnd.onDSelMove(self, selection)
 		x, y, w, h = selection.getwindowpos()
 		if self._updatehost:
 			self._host.updateBox(x, y, w, h)
-		if self._lbuttondown is not None:
-			xs, ys = self.ClientToScreen(self._lbuttondown)
-			self._tipwnd.moveTo((xs+8, ys), '%d, %d, %d, %d' % (x, y, w, h))
 
 	def onDSelResize(self, selection):
+		LayoutOsWnd.onDSelResize(self, selection)
 		x, y, w, h = selection.getwindowpos()
 		if self._updatehost:
 			self._host.updateBox(x, y, w, h)
-		if self._lbuttondown is not None:
-			xs, ys = self.ClientToScreen(self._lbuttondown)
-			self._tipwnd.moveTo((xs, ys), '%d, %d, %d, %d' % (x, y, w, h))
 				 
 	#
 	#  Called by hosting environment to set an object 
