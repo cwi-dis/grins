@@ -60,7 +60,7 @@ class Window:
 
 		# animation support
 		self._mediadisplayrect = None
-		self._fit = 1
+		self._fit = 'hidden'
 
 		# scroll support
 		self._canscroll = 0
@@ -121,7 +121,7 @@ class Window:
 			return
 		wd, hd = self._rect[2:]
 		ws, hs = self._mediadisplayrect[2:]
-		if self._fit==-4 and (ws>wd or hs>hd):
+		if self._fit=='scroll' and (ws>wd or hs>hd):
 			self._canscroll = 1	
 			self.setdefaultcursor('draghand')
 
@@ -586,25 +586,25 @@ class Window:
 	#					including regPoint/Align and fit (here is assumed correct)
 	# fit: 'hidden':1, 'meet':0, 'slice':-1, ('meed_hidden'=-2,) 'fill':-3', 'scroll':-4
 	# returns: source rect for blit operation
-	def _getmediacliprect(self, mediasize, mediadisplayrect, fit=1):
+	def _getmediacliprect(self, mediasize, mediadisplayrect, fit='hidden'):
 		wm, hm = mediasize
 		x, y, w, h = mediadisplayrect
 
-		if fit == 1: # hidden
+		if fit == 'hidden':
 			return 0, 0, min(w, wm), min(h, hm)
 
-		elif fit == 0: # meet
+		elif fit == 'meet':
 			return 0, 0, wm, hm
 
-		elif fit == -1: # slice
+		elif fit == 'slice':
 			# we assume that mediadisplayrect is also correct here
 			# i.e. is greater or equal to region rc
 			return 0, 0, wm, hm
 
-		elif fit == -3: # fill
+		elif fit == 'fill':
 			return 0, 0, wm, hm
 
-		elif fit == -4: # scroll
+		elif fit == 'scroll':
 			return 0, 0, min(w, wm), min(h, hm)
 		
 		return 0, 0, min(w, wm), min(h, hm)
@@ -630,16 +630,14 @@ class Window:
 		
 		return lsc, tsc, rsc, bsc
 
-	# Prepare an image for display (load,crop,scale, etc)
+	# Prepare an image for display (load,crop,fit, etc)
 	# Arguments:
 	# 1. crop is a tuple of proportions (see computations)
-	# 2. scale is a hint for scaling and can be 0, -1, -2, -3 or None (see computations)
+	# 2. fit is one of the fit attribute values
 	# 3. if center then do the obvious
 	# 4. coordinates specify placement rect
 	# 5. clip specifies the src rect
-	# scale  should be in agreement with fit
-	# fit: 'hidden':1, 'meet':0, 'slice':-1, 'meed_hidden'=-2, 'fill':-3', scroll':-4
-	def _prepare_image(self, file, crop, scale, center, coordinates, clip, units):
+	def _prepare_image(self, file, crop, fit, center, coordinates, clip, units):
 		
 		# get image size. If it can't be found in the cash read it.
 		xsize, ysize = self._image_size(file)
@@ -664,34 +662,34 @@ class Window:
 			x, y, width, height = self._convert_coordinates(coordinates, self._canvas, units=units)
 
 		# compute scale taking into account the hint (0,-1,-2)
-		if scale == 0:
+		if fit == 'meet':
 			xscale = yscale = min(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
-		elif scale == -1:
+		elif fit == 'slice':
 			xscale = yscale = max(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
-		elif scale == -2:
+		elif fit == 'icon':
 			# a mix of meet and hidden
-			# like scale = 0 (meet)  if scale <= 1
-			# like scale = 1 (hidden)  if scale > 1
+			# like meet  if scale <= 1
+			# like hidden  if scale > 1
 			xscale = yscale = min(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
 			if xscale > 1:
 				xscale = yscale = 1
-		elif scale == -3:
+		elif fit == 'fill':
 			xscale = float(width)/(xsize - left - right)
 			yscale = float(height)/(ysize - top - bottom)
-		elif scale == -4:
+		elif fit == 'scroll':
 			xscale = yscale = 1
 		else:
 			# default rule
-			xscale = yscale = scale
+			xscale = yscale = 1
 
 		# scale crop sizes
-		top = int(top * scale + .5)
-		bottom = int(bottom * scale + .5)
-		left = int(left * scale + .5)
-		right = int(right * scale + .5)
+		top = int(top * yscale + .5)
+		bottom = int(bottom * yscale + .5)
+		left = int(left * xscale + .5)
+		right = int(right * xscale + .5)
 
 		image = self._image_handle(file)
 		mask=None
@@ -939,7 +937,7 @@ class Window:
 	#
 	# Animations interface
 	#
-	def updatecoordinates(self, coordinates, units=UNIT_PXL, scale=None, mediacoords=None):
+	def updatecoordinates(self, coordinates, units=UNIT_PXL, fit=None, mediacoords=None):
 		# first convert any coordinates to pixel
 		if units != UNIT_PXL:
 			coordinates = self._convert_coordinates(coordinates,units=units)
@@ -2085,7 +2083,7 @@ class Region(Window):
 	#
 	# Animations interface
 	#
-	def updatecoordinates(self, coordinates, units=UNIT_PXL, scale=None, mediacoords=None):
+	def updatecoordinates(self, coordinates, units=UNIT_PXL, fit=None, mediacoords=None):
 		# first convert any coordinates to pixel
 		if units != UNIT_PXL:
 			coordinates = self._convert_coordinates(coordinates, units=units)
@@ -2531,15 +2529,9 @@ class _ResizeableDisplayList(_DisplayList):
 		else:
 			_DisplayList._do_render(self, entry, dc, region)
 
-	scale2fit = {1:'hidden',0:'meet',-1:'slice',-2:'meed_hidden',-3:'fill', -4:'scroll'}
 	def newimage(self, filename, fit='hidden', mediadisplayrect = None):
 		if self._rendered:
 			raise error, 'displaylist already rendered'
-
-		if type(fit) != type('') and _ResizeableDisplayList.scale2fit.has_key(fit):
-			fit = _ResizeableDisplayList.scale2fit[fit]
-		if fit not in _ResizeableDisplayList.scale2fit.values():
-			raise error, 'invalid fit attribute'
 
 		if self._imgid is not None:
 			win32ig.delete(self._imgid)	

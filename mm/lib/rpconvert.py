@@ -130,9 +130,9 @@ def rpconvert(node):
 			em.addnode(node, -1, newnode)
 			em.setnodeattr(newnode, 'file', MMurl.basejoin(furl, tagdict['file']))
 			if tagdict.get('aspect', rp.aspect == 'true'):
-				em.setnodeattr(newnode, 'scale', 0)
+				em.setnodeattr(newnode, 'fit', 'meet')
 			else:
-				em.setnodeattr(newnode, 'scale', -3)
+				em.setnodeattr(newnode, 'fit', 'fill')
 #		chname = ctx.newChannelName(regionname)
 #		em.addchannel(chname, -1, chtype)
 #		em.setchannelattr(chname, 'base_window', regionname)

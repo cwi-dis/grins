@@ -2392,9 +2392,9 @@ class Renderer:
 		self._wnd.InvalidateRect(self.inflaterc(self._rc))
 
 	# borrow cmifwnd's _prepare_image but make some adjustments
-	def adjustSize(self, size, crop = (0,0,0,0), scale = 0, center = 1):
+	def adjustSize(self, size):
 		rc=win32mu.Rect(self._rc)
-		return rc.adjustSize(size,crop,scale,center)
+		return rc.adjustSize(size)
 
 	def inflaterc(self,rc,dl=1,dt=1,dr=1,db=1):
 		l,t,r,b=rc

@@ -24,7 +24,7 @@ windowinterface.select_setcallback(mv.GetEventFD(), _selcb, ())
 mv.SetSelectEvents(mv.MV_EVENT_MASK_STOP)
 
 class VideoChannel(Channel.ChannelWindowAsync):
-	_our_attrs = ['scale']
+	_our_attrs = ['fit']
 	node_attrs = Channel.ChannelWindowAsync.node_attrs + [
 		'clipbegin', 'clipend',
 		'project_audiotype', 'project_videotype', 'project_targets',
@@ -132,16 +132,16 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			return 1
 		_mvmap[movie] = self
 		movie.SetPlaySpeed(1)
-		scale = MMAttrdefs.getattr(node, 'scale')
-		self.armed_scale = scale
+		fit = MMAttrdefs.getattr(node, 'fit')
+		self.armed_fit = fit
 		x, y, w, h = self.window._rect
 		track = movie.FindTrackByMedium(mv.DM_IMAGE)
-		if scale > 0:
+		if fit is None or fit == 'hidden':
 			width = track.GetImageWidth()
 			height = track.GetImageHeight()
 			self.armed_size = width, height
-			width = min(width * scale, w)
-			height = min(height * scale, h)
+			width = min(width, w)
+			height = min(height, h)
 			movie.SetViewSize(width, height)
 			width, height = movie.QueryViewSize(width, height)
 			imbox = 0, 0, float(width)/w, float(height)/h
@@ -177,7 +177,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if movie is None:
 			self.playdone(0, start_time)
 			return
-		self.played_scale = self.armed_scale
+		self.played_fit = self.armed_fit
 		self.played_size = self.armed_size
 		self.played_bg = self.armed_bg
 		self.played_flag = self.armed_flag
@@ -264,11 +264,11 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		movie = self.played_movie
 		if not movie:
 			return
-		scale = self.played_scale
-		if scale > 0:
+		fit = self.played_fit
+		if fit is None or fit == 'hidden':
 			width, height = self.played_size
-			width = min(width * scale, w)
-			height = min(height * scale, h)
+			width = min(width, w)
+			height = min(height, h)
 			movie.SetViewSize(width, height)
 			width, height = movie.QueryViewSize(width, height)
 			movie.SetViewOffset(x + (w - width) / 2,

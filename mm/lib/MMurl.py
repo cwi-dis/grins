@@ -229,7 +229,7 @@ class FancyURLopener(_OriginalFancyURLopener):
 	def _retrieved(self, url):
 		if self.tempcache.has_key(url):
 			return 1
-		return self.__prefetchtempfiles.has_key(url) and\
+		return self.__prefetchtempfiles.has_key(url) and \
 			not self.__prefetchcache.has_key(url)
 
 _urlopener = None

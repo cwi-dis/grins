@@ -872,7 +872,7 @@ smil_attrs=[
 	("top", lambda writer, node:getsubregionatt(writer, node, 'top')),
 	("bottom", lambda writer, node:getsubregionatt(writer, node, 'bottom')),
 	("height", lambda writer, node:getsubregionatt(writer, node, 'height')),
-	("fit", lambda writer, node:getfitatt(writer, node, 'scale')),
+	("fit", lambda writer, node:getcmifattr(writer, node, 'fit', 'hidden')),
 	# registration points
 	("regPoint", lambda writer, node:getcmifattr(writer, node, "regPoint", 'topLeft')),
 	("regAlign", lambda writer, node:getcmifattr(writer, node, "regAlign", 'topLeft')),
@@ -931,7 +931,7 @@ cmif_node_attrs_ignore = {
 	'fillDefault':0, 'syncBehavior':0, 'syncBehaviorDefault':0,
 	'repeatdur':0, 'beginlist':0, 'endlist':0, 'restart':0,
 	'restartDefault':0,
-	'left':0,'right':0,'top':0,'bottom':0,'scale':0,'units':0,
+	'left':0,'right':0,'top':0,'bottom':0,'fit':0,'units':0,
 	'regPoint':0, 'regAlign':0,
 	'bgcolor':0, 'transparent':0,
 	'transIn':0, 'transOut':0,
@@ -945,7 +945,7 @@ cmif_node_prio_attrs_ignore = {
 	'name':0, 'title':0, 'abstract':0, 'copyright':0, 'author':0,
 	}
 cmif_chan_attrs_ignore = {
-	'id':0, 'title':0, 'base_window':0, 'base_winoff':0, 'z':0, 'scale':0,
+	'id':0, 'title':0, 'base_window':0, 'base_winoff':0, 'z':0, 'fit':0,
 	'transparent':0, 'bgcolor':0, 'winpos':0, 'winsize':0, 'rect':0,
 	'units':0,
 	# new 03-07-2000
@@ -1654,20 +1654,10 @@ class SMILWriter(SMIL):
 			z = ch.get('z', 0)
 			if z > 0:
 				attrlist.append(('z-index', "%d" % z))
-			scale = ch.getCssRawAttr('scale',1)
-			if scale == 0:
-				fit = 'meet'
-			elif scale == -1:
-				fit = 'slice'
-			elif scale == 1:
-				fit = 'hidden'
-			elif scale == -3:
-				fit = 'fill'
-			elif scale == -4:
-				fit = 'scroll'
-			else:
+			fit = ch.getCssRawAttr('fit','hidden')
+			if fit not in ('meet','slice','hidden','fill','scroll'):
 				fit = None
-				print '** Channel uses unsupported scale value', name
+				print '** Channel uses unsupported fit value', name
 			if fit is not None and fit != 'hidden':
 				attrlist.append(('fit', fit))
 

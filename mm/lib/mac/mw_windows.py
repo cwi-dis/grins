@@ -439,12 +439,11 @@ class _CommonWindow:
 		_size_cache[file] = width, height
 		return width, height
 
-	def _prepare_image(self, file, crop, scale, center, coordinates, units):
+	def _prepare_image(self, file, crop, fit, center, coordinates, units):
 		# width, height: width and height of window
 		# xsize, ysize: width and height of unscaled (original) image
 		# w, h: width and height of scaled (final) image
 		# depth: depth of window (and image) in bytes
-		oscale = scale
 		format = PIXELFORMAT
 		depth = format.descr['size'] / 8
 		reader = None
@@ -471,18 +470,18 @@ class _CommonWindow:
 		else:
 			x, y, width, height = self._convert_coordinates(coordinates, units=units)
 		
-		if scale == 0:
+		if fit == 'meet':
 			scale = min(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
-		elif scale == -1:
+		elif fit == 'slice':
 			scale = max(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
-		elif scale == -2:
+		elif fit == 'icon':
 			scale = min(float(width)/(xsize - left - right),
 				    float(height)/(ysize - top - bottom))
 			if scale > 1:
 				scale = 1
-		elif scale < 0:
+		else:
 			# value not reconized. set scale to 1
 			scale = 1
 				    
@@ -1399,7 +1398,7 @@ class _CommonWindow:
 			self._rb_movebox(where, 0)
 
 	# Experimental animation interface
-	def updatecoordinates(self, coordinates, units=UNIT_SCREEN, scale=None, mediacoords=None):
+	def updatecoordinates(self, coordinates, units=UNIT_SCREEN, fit=None, mediacoords=None):
 		# first convert any coordinates to pixel
 		coordinates = self._parent._convert_coordinates(coordinates,units=units)
 ##		print 'window.updatecoordinates',coordinates, units

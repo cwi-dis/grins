@@ -2530,16 +2530,7 @@ class MediaRegion(Region):
 		wingeom = self._nodeRef.getPxGeom()
 
 		# determinate the real fit attribute		
-		scale = self._nodeRef.GetInherAttrDef(self._nodeRef,'scale')
-		if scale == 1:
-			fit = 'hidden'
-		elif scale == 0:
-			fit = 'meet'
-		elif scale == -1:
-			fit = 'slice'
-		else:
-			fit = 'fill'
-		self.fit = fit
+		self.fit = fit = self._nodeRef.GetInherAttrDef(self._nodeRef,'fit')
 
 		# ajust the internal geom for edition. If no constraint neither on right nor botton,
 		# with fit==hidden: chg the internal region size.

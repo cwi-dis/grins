@@ -1664,7 +1664,7 @@ class MediaWidget(MMNodeWidget):
 						image_filename,
 						center = CENTER,
 						coordinates = coordinates,
-						scale = -2)
+						fit = 'icon')
 				except windowinterface.error:
 					pass					# Shouldn't I use another icon or something?
 				else:
@@ -1787,7 +1787,7 @@ class CommentWidget(MMNodeWidget):
 					image_filename,
 					center = CENTER,
 					coordinates = coordinates,
-					scale = -2)
+					fit = 'icon')
 			except windowinterface.error:
 				pass					# Shouldn't I use another icon or something?
 			else:
@@ -2272,7 +2272,7 @@ class ImageBoxWidget(MMWidgetDecoration):
 					# Wrong - now they are pixels -mjvdg.
 					#coordinates = (float(x+w)/12, float(y+h)/6, 5*(float(w)/6), 4*(float(h)/6)),
 					coordinates = (cx - sx/2, cy - sy/2, sx, sy),
-					scale = -2
+					fit = 'icon'
 					)
 #				print "TODO: fix those 32x32 hard-coded sizes."
 			except windowinterface.error:
