@@ -33,6 +33,7 @@ from wndusercmd import *
 MENUBAR=(
 	('&File', (
 		(ENTRY, '&Open...\tCtrl+O', 'O', OPEN),
+		(DYNAMICCASCADE, 'Open recent', OPEN_RECENT),
 		(ENTRY, '&Close Document', None, CLOSE),
 		(SEP,),
 		(ENTRY, '&Preferences...', None, PREFERENCES),
