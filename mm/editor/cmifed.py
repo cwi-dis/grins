@@ -124,6 +124,9 @@ class Main(MainDialog):
 		files.sort()
 		for file in files:
 			url = MMurl.pathname2url(file)
+			pathname = os.path.join(self.templatedir, file)
+			if not os.path.isfile(pathname):
+				continue
 			if MMmimetypes.guess_type(url)[0] != 'application/x-grins-project':
 				continue
 			pathname = os.path.join(self.templatedir, file)
