@@ -68,11 +68,11 @@ class glwindow():
 		# 'val' is the new mouse y value.
 		pass
 	#
-	def enter(self):
+	def enterwindow(self):
 		# INPUTCHANGE event with val <> 0: mouse enters the window.
 		pass
 	#
-	def leave(self):
+	def leavewindow(self):
 		# INPUTCHANGE event with val = 0: mouse leaves the window.
 		pass
 	#
@@ -138,18 +138,16 @@ def dispatch(dev, val):
 	elif dev = INPUTCHANGE:
 		if state.focuswindow:
 			gl.winset(state.focuswid)
-			state.focuswindow.leave()
+			state.focuswindow.leavewindow()
 			state.focuswindow = None
 			state.focuswid = None
-		if val = 0:
-			pass
-		else:
+		if val <> 0:
 			key = `val`
 			if windowmap.has_key(key):
 				state.focuswindow = windowmap[key]
 				state.focuswid = val
 				gl.winset(val)
-				state.focuswindow.enter()
+				state.focuswindow.enterwindow()
 			else:
 				report('INPUTCHANGE for unregistered window')
 	elif dev = WINSHUT:
