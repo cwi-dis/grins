@@ -1260,7 +1260,7 @@ class PulldownMenu(_Widget):
 
 # super class for Selection and List
 class _List:
-	def __init__(self, list, itemlist, sel_cb):
+	def __init__(self, list, itemlist, initial, sel_cb):
 		self._list = list
 		list.ListAddItems(itemlist, 1)
 		self._itemlist = itemlist
@@ -1274,6 +1274,8 @@ class _List:
 		elif sel_cb:
 			list.AddCallback('singleSelectionCallback',
 					 self._callback, sel_cb)
+		if itemlist:
+			self.selectitem(initial)
 
 	def close(self):
 		self._itemlist = None
@@ -1328,6 +1330,9 @@ class _List:
 		self._list.ListDeleteAllItems()
 
 	def selectitem(self, pos):
+		if pos is None:
+			self._list.ListDeselectAllItems()
+			return
 		if pos < 0:
 			pos = len(self._itemlist) - 1
 		self._list.ListSelectPos(pos + 1, TRUE)
@@ -1368,8 +1373,8 @@ class _List:
 		del self._list
 
 class Selection(_Widget, _List):
-	def __init__(self, parent, listprompt, itemprompt, itemlist, sel_cb,
-		     name = 'windowSelection', **options):
+	def __init__(self, parent, listprompt, itemprompt, itemlist, initial,
+		     sel_cb, name = 'windowSelection', **options):
 		attrs = {}
 		self._attachments(attrs, options)
 		selection = parent._form.CreateSelectionBox(name, attrs)
@@ -1400,7 +1405,7 @@ class Selection(_Widget, _List):
 		else:
 			txt = selection.SelectionBoxGetChild(Xmd.DIALOG_TEXT)
 			txt.AddCallback('activateCallback', self._callback, cb)
-		_List.__init__(self, list, itemlist, sel_cb)
+		_List.__init__(self, list, itemlist, initial, sel_cb)
 		_Widget.__init__(self, parent, selection)
 
 	def __repr__(self):
@@ -1420,6 +1425,10 @@ class Selection(_Widget, _List):
 			return text.TextFieldGetString()
 		else:
 			return text.TextGetString()
+
+	def seteditable(self, editable):
+		text = self._form.SelectionBoxGetChild(Xmd.DIALOG_TEXT)
+		text.editable = editable
 
 	def _destroy(self, widget, value, call_data):
 		_Widget._destroy(self, widget, value, call_data)
@@ -1480,7 +1489,7 @@ class List(_Widget, _List):
 			list = parent._form.CreateScrolledList(name, attrs)
 			widget = list
 			self._text = '<None>'
-		_List.__init__(self, list, itemlist, sel_cb)
+		_List.__init__(self, list, itemlist, 0, sel_cb)
 		_Widget.__init__(self, parent, widget)
 
 	def __repr__(self):
@@ -1940,10 +1949,11 @@ class _WindowHelpers:
 			     options)
 	def PulldownMenu(self, menulist, **options):
 		return apply(PulldownMenu, (self, menulist), options)
-	def Selection(self, listprompt, itemprompt, itemlist, sel_cb,
+	def Selection(self, listprompt, itemprompt, itemlist, initial, sel_cb,
 		      **options):
 		return apply(Selection,
-			     (self, listprompt, itemprompt, itemlist, sel_cb),
+			     (self, listprompt, itemprompt, itemlist, initial,
+			      sel_cb),
 			     options)
 	def List(self, listprompt, itemlist, sel_cb, **options):
 		return apply(List,
@@ -2223,7 +2233,10 @@ class Window(_WindowHelpers, _MenuSupport):
 		       w / toplevel._hmm2pxl, h / toplevel._vmm2pxl
 
 	def pop(self):
-		pass
+		try:
+			self._shell.Popup(0)
+		except AttributeError:
+			pass
 
 	def _delete_callback(self, widget, client_data, call_data):
 		if type(client_data) is StringType:

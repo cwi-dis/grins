@@ -1,8 +1,6 @@
 # Arc info window (modeless dialog)
 
 
-import windowinterface
-
 import MMExc
 import MMAttrdefs
 
@@ -20,7 +18,9 @@ import MMAttrdefs
 ##	arcinfos[key].open()
 
 
-class ArcInfo:
+from ArcInfoDialog import ArcInfoDialog
+
+class ArcInfo(ArcInfoDialog):
 
 	def __init__(self, root, snode, sside, delay, dnode, dside, new = 0):
 		self.new = new
@@ -31,61 +31,30 @@ class ArcInfo:
 		self.delay = delay
 		self.dnode = dnode
 		self.dside = dside
+		self.setchoices()
+		if self.sside: src_init = len(self.src_markers) + 1
+		else: src_init = 0
+		if self.dside: dst_init = len(self.dst_markers) + 1
+		else: dst_init = 0
 
 		title = self.maketitle()
-		self.window = windowinterface.Window(title, resizable = 1,
-					deleteCallback = (self.close, ()))
-		self.src_choice = self.window.OptionMenu('From:',
-					['dummy name'],
-					0, None, top = None, left = None)
-		self.dst_choice = self.window.OptionMenu('To:',
-					['dummy name'],
-					0, None, top = None,
-					left = self.src_choice, right = None)
-		self.delay_slider = self.window.Slider(None, 0, 0, 10, None,
-					top = self.src_choice, left = None)
-		self.range_choice = self.window.OptionMenu(None,
-					['0-1 sec', '0-10 sec', '0-100 sec'],
-					0, (self.range_callback, ()),
-					top = self.dst_choice,
-					left = self.delay_slider, right = None)
-		buttons = self.window.ButtonRow(
-			[('Cancel', (self.close, ())),
-			 ('Restore', (self.getvalues, ())),
-			 ('Apply', (self.setvalues, ())),
-			 ('OK', (self.ok_callback, ()))],
-			left = None, top = self.delay_slider, vertical = 0)
-
-		self.setchoices()
-		self.getvalues()
-		self.window.show()
+		ArcInfoDialog.__init__(self, title, self.src_options, src_init,
+				       self.dst_options, dst_init, self.delay)
 		self.context.editmgr.register(self)
 
 	def __repr__(self):
 		return '<ArcInfo instance for ' + \
 	`(self.snode, self.sside, self.delay, self.dnode, self.dside)` + '>'
 
-	def settitle(self, title):
-		self.window.settitle(title)
-
 	def maketitle(self):
 		sname = MMAttrdefs.getattr(self.snode, 'name')
 		dname = MMAttrdefs.getattr(self.dnode, 'name')
 		return 'Sync arc from "' + sname + '" to "' + dname + '"'
 
-	def open(self):
-		if self.window.is_showing():
-			self.window.show()
-		else:
-			self.setchoices()
-			self.window.show()
-			self.context.editmgr.register(self)
-			self.getvalues()
-
 	def close(self):
 		editmgr = self.context.editmgr
 		editmgr.unregister(self)
-		self.window.close()
+		ArcInfoDialog.close(self)
 		if self.new:
 			if not editmgr.transaction():
 				return
@@ -95,14 +64,13 @@ class ArcInfo:
 			editmgr.commit()
 
 	def setchoices(self):
-		self.src_markers = self.setchoice(self.src_choice, self.snode)
-		self.dst_markers = self.setchoice(self.dst_choice, self.dnode)
+		self.src_options, self.src_markers = self.setchoice(self.snode)
+		self.dst_options, self.dst_markers = self.setchoice(self.dnode)
 
-	def setchoice(self, choice, node):
+	def setchoice(self, node):
 		options = ['*Begin*', '*End*']
 		if node.GetChannelType() <> 'sound':
-			choice.setoptions(options, 0)
-			return []
+			return options, []
 		# XXX Need to do this more general (i.e. also for video)
 		import SoundDuration
 		import SoundChannel # XXX hack! for aiffcache only
@@ -121,13 +89,7 @@ class ArcInfo:
 		for id, pos, name in markers:
 			options.append('  %s (%.2g)' % (name, pos))
 		options.append('*End* (%.2g)' % duration)
-		choice.setoptions(options, 0)
-		return markers
-
-	# Override event handler
-
-	def winshut(self):
-		self.close()
+		return options, markers
 
 	# Edit manager interface (as dependent client)
 
@@ -145,56 +107,63 @@ class ArcInfo:
 
 	def stillvalid(self):
 		if self.snode.GetRoot() is not self.root or \
-			self.dnode.GetRoot() is not self.root:
+		   self.dnode.GetRoot() is not self.root:
 			return 0
 		arc = self.snode.GetUID(), self.sside, self.delay, self.dside
 		return arc in MMAttrdefs.getattr(self.dnode, 'synctolist')
+
+	# dialog callbacks
 
 	def ok_callback(self):
 		self.setvalues()
 		self.close()
 
-	def range_callback(self):
-		i = self.range_choice.getpos()
-		range = float(pow(10, i))
-		delay = min(range, self.delay_slider.getvalue())
-		self.delay_slider.setvalue(delay)
-		self.delay_slider.setrange(0.0, range)
+	def apply_callback(self):
+		self.setvalues()
+
+	def cancel_callback(self):
+		self.close()
+
+	def restore_callback(self):
+		self.getvalues()
 
 	# Get/set values (get: from object to form; set: from form to object)
 
 	def getvalues(self):
-		if self.delay > 10.0:
-			self.range_choice.setpos(2)
-		elif self.delay > 1.0:
-			self.range_choice.setpos(1)
-		else:
-			self.range_choice.setpos(0)
-		self.range_callback()
-		self.delay_slider.setvalue(self.delay)
+		self.delay_setvalue(self.delay)
 		if self.sside: i = len(self.src_markers) + 1
 		else: i = 0
-		self.src_choice.setpos(i)
+		self.src_setpos(i)
 		if self.dside: i = len(self.dst_markers) + 1
 		else: i = 0
-		self.dst_choice.setpos(i)
+		self.dst_setpos(i)
 
 	def setvalues(self):
-		self.new = 0
+		changed = 0
 		editmgr = self.context.editmgr
-		if not editmgr.transaction():
-			return # Not possible at this time
-		editmgr.delsyncarc(self.snode, self.sside, self.delay, \
-			self.dnode, self.dside)
-		d = self.delay_slider.getvalue()
-		p = 100.0 / self.delay_slider.getrange()[1]
-		self.delay = int(d*p + 0.5) / p
-		self.delay_slider.setvalue(self.delay)
+		delay = self.delay_getvalue()
+		if delay != self.delay:
+			changed = 1
+		self.delay_setvalue(self.delay)
 		# XXX For now, clip sides to [0, 1]
-		self.sside = min(self.src_choice.getpos(), 1)
-		self.dside = min(self.dst_choice.getpos(), 1)
-		editmgr.addsyncarc(self.snode, self.sside, self.delay, \
-			self.dnode, self.dside)
-		editmgr.commit()
+		sside = min(self.src_getpos(), 1)
+		if sside != self.sside:
+			changed = 1
+		self.sside = sside
+		dside = min(self.dst_getpos(), 1)
+		if dside != self.dside:
+			changed = 1
+		if changed or self.new:
+			self.new = 0
+			if not editmgr.transaction():
+				return # Not possible at this time
+			editmgr.delsyncarc(self.snode, self.sside, self.delay,
+					   self.dnode, self.dside)
+			self.delay = delay
+			self.sside = sside
+			self.dside = dside
+			editmgr.addsyncarc(self.snode, self.sside, self.delay,
+					   self.dnode, self.dside)
+			editmgr.commit()
 
 showarcinfo = ArcInfo

@@ -19,9 +19,10 @@ from MMNode import alltypes, leaftypes, interiortypes
 from AnchorDefs import *
 
 TypeValues = [ ATYPE_WHOLE, ATYPE_NORMAL, ATYPE_PAUSE, ATYPE_AUTO, ATYPE_COMP,
-	  ATYPE_ARGS]
-TypeLabels = [ 'dest only', 'normal', 'pausing (obsolete)', 'auto-firing', 'composite',
-	  'with arguments']
+	       ATYPE_ARGS]
+TypeLabels = [ 'dest only', 'normal', 'pausing', 'auto-firing', 'composite',
+	       'with arguments']
+WholeAnchors = (ATYPE_WHOLE, ATYPE_AUTO, ) # whole-node anchors types
 
 FALSE, TRUE = 0, 1
 
@@ -33,14 +34,8 @@ def showanchoreditor(toplevel, node):
 	except AttributeError:
 		anchoreditor = AnchorEditor(toplevel, node)
 		node.anchoreditor = anchoreditor
-	anchoreditor.open()
-
-def hideanchoreditor(node):
-	try:
-		anchoreditor = node.anchoreditor
-	except AttributeError:
-		return # No anchor editor for this node
-	anchoreditor.close()
+	else:
+		anchoreditor.pop()
 
 
 # Class used to implement an achor editing dialog.
@@ -55,7 +50,9 @@ def hideanchoreditor(node):
 # (2) -> (3): when (1) -> (2) is done or when data is changed (e.g. Add / Del)
 # (2) <- (3): by callback functions or just before [OK] / [Accept]
 
-class AnchorEditor:
+from AnchorEditDialog import AnchorEditorDialog
+
+class AnchorEditor(AnchorEditorDialog):
 
 	def __init__(self, toplevel, node):
 		self.node = node
@@ -67,70 +64,26 @@ class AnchorEditor:
 		self.focus = None # None or 0...len(self.anchorlist)-1
 		self.changed = 0
 		self.editable = 1
+		self.getvalues(TRUE)
+		names = self.makelist()
 
-		title = self.maketitle()
+		AnchorEditorDialog.__init__(self, self.maketitle(), TypeLabels,
+					    names, self.focus)
 
-		self.window = w = windowinterface.Window(title, resizable = 1,
-				deleteCallback = (self.cancel_callback, ()))
-
-		buttons = w.ButtonRow(
-			[('Cancel', (self.cancel_callback, ())),
-			 ('Restore', (self.restore_callback, ())),
-			 ('Apply', (self.apply_callback, ())),
-			 ('OK', (self.ok_callback, ()))],
-			bottom = None, left = None, right = None, vertical = 0)
-		self.composite = w.Label('Composite:', useGadget = 0,
-					 bottom = buttons, left = None,
-					 right = None)
-		self.type_choice = w.OptionMenu('Type:', TypeLabels, 0,
-						(self.type_callback, ()),
-						bottom = self.composite,
-						left = None, right = None)
-		self.buttons = w.ButtonRow(
-			[('New', (self.add_callback, ())),
-			 ('Edit...', (self.edit_callback, ())),
-			 ('Delete', (self.delete_callback, ())),
-			 ('Export...', (self.export_callback, ()))],
-			top = None, right = None)
-		self.anchor_browser = w.Selection(None, 'Id:', [],
-						  (self.anchor_callback, ()),
-						  top = None, left = None,
-						  right = self.buttons,
-						  bottom = self.type_choice,
-						  enterCallback = (self.id_callback, ()))
-		w.fix()
+		self.show_focus()
+		self.editmgr.register(self)
 
 	def __repr__(self):
 		return '<AnchorEditor instance, node=' + `self.node` + '>'
 
-	def show(self):
-		self.window.show()
-
-	def hide(self):
-		self.window.hide()
-
-	def is_showing(self):
-		return self.window.is_showing()
-
-	def settitle(self, title):
-		self.window.settitle(title)
-
-	def transaction(self):
-		return 1
-
 	def getcontext(self):
 		return self.context
 
-	def register(self, object):
-		if self.editmgr is not None:   # DEBUG
-			self.editmgr.register(object)
-
-	def unregister(self, object):
-		if self.editmgr is not None:   # DEBUG
-			self.editmgr.unregister(object)
-
 	def stillvalid(self):
 		return self.node.GetRoot() is self.root
+
+	def transaction(self):
+		return 1
 
 	def commit(self):
 		if not self.stillvalid():
@@ -138,25 +91,11 @@ class AnchorEditor:
 		else:
 			self.settitle(self.maketitle())
 			self.getvalues(FALSE)
+			self.selection_seteditable(self.editable)
 			self.updateform()
 
 	def rollback(self):
 		pass
-
-	def kill(self):
-		self.close()
-		self.destroy()
-
-	def open(self):
-		if self.is_showing():
-			self.window.show()
-			return
-		self.close()
-		self.settitle(self.maketitle())
-		self.getvalues(TRUE)
-		self.updateform()
-		self.register(self)
-		self.show()
 
 	def getvalues(self, force):
 		# If 'force' is false, don't get the values if the
@@ -175,7 +114,7 @@ class AnchorEditor:
 			for a in anchorlist:
 				if not a in self.anchorlist:
 					aid = (self.uid, a[A_ID])
-					self.toplevel.links.set_interesting(\
+					self.toplevel.links.set_interesting(
 						  aid)
 			self.anchorlist = anchorlist[:]
 			if self.anchorlist:
@@ -210,34 +149,29 @@ class AnchorEditor:
 
 	# Fill form from local data.  Clear the form beforehand.
 	#
-	def updateform(self):
+	def makelist(self):
 		names = []
 		for i in self.anchorlist:
 			id = i[A_ID]
-			if type(id) is not type(''): id = `id`
+## 			if type(id) is not type(''): id = `id`
 			#name = '#' + self.name + '.' + id
 			names.append(id)
-		self.anchor_browser.delalllistitems()
-		self.anchor_browser.addlistitems(names, -1)
+		return names
+
+	def updateform(self):
+		names = self.makelist()
+		self.selection_setlist(names, self.focus)
 		self.show_focus()
 
 	def show_focus(self):
-##		self.anchor_browser.deselect_browser()
-		if self.focus and self.editable:
-			self.buttons.setsensitive(1, 0)
-		else:
-			self.buttons.setsensitive(1, 0)
 		if self.focus is None:
-			self.buttons.setsensitive(2, 0)
-			self.type_choice.hide()
-##			self.group.hide_object()
-			self.composite.hide()
-##			self.id_input.hide_object()
+			self.edit_setsensitive(0)
+			self.delete_setsensitive(0)
+			self.selection_seteditable(0)
+			self.export_setsensitive(0)
+			self.type_choice_hide()
+			self.composite_hide()
 		else:
-			self.anchor_browser.selectitem(self.focus)
-			self.buttons.setsensitive(2, 1)
-			self.type_choice.show()
-##			self.group.show_object()
 			self.show_type()
 
 	def show_type(self):
@@ -247,22 +181,41 @@ class AnchorEditor:
 		a = self.anchorlist[self.focus]
 		loc = a[A_ARGS]
 		type = a[A_TYPE]
+		editable = self.editable or type in WholeAnchors
+		self.edit_setsensitive(editable)
+		self.delete_setsensitive(editable)
+		self.selection_setselection(self.focus)
+		self.selection_seteditable(editable)
+		self.export_setsensitive(1)
+		for i in range(len(TypeValues)):
+			if TypeValues[i] in WholeAnchors:
+				self.type_choice_setsensitive(i, self.editable or type in WholeAnchors)
+			else:
+				# can choose this type if node is
+				# editable, or if the current value is
+				# a non-editable type (i.e., the
+				# anchor must already exist in the
+				# data).
+				self.type_choice_setsensitive(i, self.editable or type not in WholeAnchors)
+		self.type_choice_show()
 		if type == ATYPE_COMP:
-			self.composite.show()
-			self.type_choice.hide()
-			self.buttons.setsensitive(1, 0)
-			self.composite.setlabel('Composite: ' + `loc`)
+			self.composite_show()
+			self.type_choice_hide()
+			self.edit_setsensitive(0)
+			self.selection_seteditable(0)
+			self.composite_setlabel('Composite: ' + `loc`)
 			return
-		self.type_choice.show()
-		self.composite.hide()
+		self.type_choice_show()
+		self.composite_hide()
 		for i in range(len(TypeValues)):
 			if type == TypeValues[i]:
-				self.type_choice.setpos(i)
-		if type in (ATYPE_NORMAL, ATYPE_PAUSE, ATYPE_ARGS) \
-			  and self.editable:
-			self.buttons.setsensitive(1, 1)
+				self.type_choice_setchoice(i)
+		if self.focus is not None:
+			self.edit_setsensitive(self.editable)
+			self.selection_seteditable(self.editable or self.anchorlist[self.focus][A_TYPE] in WholeAnchors)
 		else:
-			self.buttons.setsensitive(1, 0)
+			self.edit_setsensitive(0)
+			self.selection_seteditable(0)
 
 	def set_type(self, type):
 		if self.focus is None:
@@ -271,7 +224,7 @@ class AnchorEditor:
 		old = new = self.anchorlist[self.focus]
 		if type is None:
 			type = new[A_TYPE]
-		if type in (ATYPE_AUTO, ATYPE_WHOLE):
+		if type in WholeAnchors:
 			new = (new[0], type, [])
 		else:
 			new = (new[0], type, new[2])
@@ -291,9 +244,16 @@ class AnchorEditor:
 		self.show_type()
 
 	def close(self):
-		if self.is_showing():
-			self.unregister(self)
-			self.hide()
+		self.editmgr.unregister(self)
+		AnchorEditorDialog.close(self)
+		del self.node.anchoreditor
+		del self.node
+		del self.toplevel
+		del self.context
+		del self.editmgr
+		del self.root
+		del self.anchorlist
+
 	#
 	# Standard callbacks
 	#
@@ -302,6 +262,7 @@ class AnchorEditor:
 
 	def restore_callback(self):
 		self.getvalues(TRUE)
+		self.selection_seteditable(self.editable)
 		self.updateform()
 
 	def apply_callback(self):
@@ -316,7 +277,7 @@ class AnchorEditor:
 	# Private callbacks
 	#
 	def anchor_callback(self):
-		focus = self.anchor_browser.getselected()
+		focus = self.selection_getselection()
 		if focus != self.focus:
 			self.focus = focus
 			self.show_focus()
@@ -335,7 +296,7 @@ class AnchorEditor:
 		#name = '#' + self.name + '.' + id
 		name = id
 		self.anchorlist.append((id, ATYPE_WHOLE, []))
-		self.anchor_browser.addlistitem(name, -1)
+		self.selection_append(name)
 		self.focus = len(self.anchorlist)-1
 		self.show_focus()
 
@@ -346,16 +307,16 @@ class AnchorEditor:
 			return
 		self.changed = 1
 		anchor = self.anchorlist[self.focus]
-		id = self.anchor_browser.getselection()
+		id = self.selection_gettext()
 		anchor = (id, anchor[1], anchor[2])
 		self.anchorlist[self.focus] = anchor
-		self.anchor_browser.replacelistitem(self.focus, id)
+		self.selection_replaceitem(self.focus, id)
 		self.show_focus()
 
 	def delete_callback(self):
 		# XXXX Does not work for non-whole-node anchors if
 		# self.editable is false
-		if self.focus != self.anchor_browser.getselected():
+		if self.focus != self.selection_getselection():
 			print 'AnchorEdit: wrong focus in delete!'
 			self.focus = None
 			self.show_focus()
@@ -366,7 +327,7 @@ class AnchorEditor:
 		id, atype, arg = self.anchorlist[self.focus]
 		self.changed = 1
 		del self.anchorlist[self.focus]
-		self.anchor_browser.dellistitem(self.focus)
+		self.selection_deleteitem(self.focus)
 		if self.focus >= len(self.anchorlist):
 			self.focus = self.focus - 1
 			if self.focus < 0:
@@ -377,7 +338,7 @@ class AnchorEditor:
 		if self.focus is None:
 			print 'AnchorEdit: no focus in setloc!'
 			return
-		i = self.type_choice.getpos()
+		i = self.type_choice_getchoice()
 		self.set_type(TypeValues[i])
 
 
@@ -408,41 +369,3 @@ class AnchorEditor:
 		if not em.transaction(): return 0
 		em.setnodeattr(self.root, 'anchorlist', rootanchors[:])
 		em.commit()
-
-
-# Routine to close all attribute editors in a node and its context.
-
-def hideall(root):
-	hidenode(root)
-
-
-# Recursively close the attribute editor for this node and its subtree.
-
-def hidenode(node):
-	hideanchoreditor(node)
-	if node.GetType() in interiortypes:
-		for child in node.GetChildren():
-			hidenode(child)
-
-
-# Test program -- edit anchors of the root node
-
-def test():
-	import sys, MMTree
-	if sys.argv[1:]:
-		filename = sys.argv[1]
-	else:
-		filename = 'demo.cmif'
-
-	print 'parsing', filename, '...'
-	root = MMTree.ReadFile(filename)
-
-	print 'quit button ...'
-	quitform = windowinterface.Window('Quit')
-	b = quitform.ButtonRow([('QUIT', (sys.exit, (0,)))], vertical = 0)
-
-	print 'showanchoreditor ...'
-	showanchoreditor(root)
-
-	print 'go ...'
-	windowinterface.mainloop()
