@@ -128,6 +128,12 @@ class Player(PlayerCore, PlayerDialog):
 	#
 	def play_callback(self):
 		self.toplevel.setwaiting()
+		# RTIPA start
+		import features
+		if hasattr(features, 'RTIPA') and features.RTIPA:
+			import settings
+			settings.read_RTIPA()
+		# RTIPA end
 		if self.playing and self.pausing:
 			# Case 1: user pressed play to cancel pause
 			self.pause(0)

@@ -9,3 +9,6 @@ compatibility_short = 'SMIL'
 cmif = 0
 lightweight = 0
 editor = 0
+# RTIPA start
+RTIPA = 1
+# RTIPA end
