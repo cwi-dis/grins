@@ -1488,7 +1488,7 @@ class MMNode:
 
 
 	def GenAllSR(self, seeknode):
-		self.SetPlayability()
+##		self.SetPlayability()
 		if not seeknode:
 			seeknode = self
 ## Commented out for now: this cache messes up Scheduler.GenAllPrearms()
