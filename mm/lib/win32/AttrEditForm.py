@@ -1197,6 +1197,9 @@ import appcon, sysmetrics
 import string
 import DrawTk
 
+DIALOG_WINDOW_WIDTH = 240
+DIALOG_WINDOW_HEIGHT = DIALOG_WINDOW_WIDTH * 3 / 4
+
 class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 	def __init__(self,form):
 		AttrPage.__init__(self,form)
@@ -1262,25 +1265,15 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		else:
 			sw,sh=sysmetrics.scr_width_pxl,sysmetrics.scr_height_pxl
 		
-		DW=240
-		DH=3*DW/4
-
 		# try first an int scale
-		n=1
-		while not self.isvalidscale(sw,sh,n):
-			n=n+1
+		n = max(1, (sw+DIALOG_WINDOW_WIDTH-1)/DIALOG_WINDOW_WIDTH, (sh+DIALOG_WINDOW_HEIGHT-1)/DIALOG_WINDOW_HEIGHT)
 		scale=float(n)
 		self._xmax=int(sw/scale+0.5)
 		self._ymax=int(sh/scale+0.5)
 		self._isintscale=1
-		if n!=1 and (self._xmax<3*DW/4 or self._ymax<3*DH/4):
+		if n!=1 and (self._xmax<3*DIALOG_WINDOW_WIDTH/4 or self._ymax<3*DIALOG_WINDOW_HEIGHT/4):
 			# try to find a better scale
-			wscale=float(sw)/DW
-			hscale=float(sh)/DH
-			if wscale<hscale:
-				scale=wscale
-			else:
-				scale=hscale
+			scale = max(1, float(sw)/DIALOG_WINDOW_WIDTH, float(sh)/DIALOG_WINDOW_HEIGHT)
 			self._xmax=int(sw/scale+0.5)
 			self._ymax=int(sh/scale+0.5)
 			self._isintscale=0
@@ -1289,15 +1282,6 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		self._xscale=float(sw)/self._xmax
 		self._yscale=float(sh)/self._ymax
 	
-	def isvalidscale(self,sw,sh,n):
-		DW=240.0
-		DH=3.0*DW/4.0
-		sw=float(sw)/n
-		sh=float(sw)/n
-		if sw<=DW and sh<=DH:
-			return 1
-		return 0		
-
 	def getboundingbox(self):
 		return (0,0,self._xmax,self._ymax)
 
