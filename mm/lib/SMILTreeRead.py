@@ -810,12 +810,15 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('%s attribute not compatible with SMIL 1.0 in media object' % attr)
 				self.__context.attributes['project_boston'] = 1
 				bg = self.__convert_color(val)
-				if bg != 'transparent' and bg is not None:
+				if bg == 'transparent':
+					attrdict['transparent'] = 1
+					attrdict['bgcolor'] = 0,0,0
+				elif bg != 'inherit':
 					attrdict['transparent'] = 0
 					attrdict['bgcolor'] = bg
 				else:
-					attrdict['transparent'] = 1
-					attrdict['bgcolor'] = 0,0,0
+					# for inherit value, we assume there is no transparent and bgcolor attribute
+					pass
 			elif attr == 'speed':
 				if self.__context.attributes.get('project_boston') == 0:
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
@@ -2169,17 +2172,23 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		elif compatibility.QT == features.compatibility:
 			ch['transparent'] = 1
 			ch['fgcolor'] = 255,255,255
-
+		elif self.__context.attributes.get('project_boston'):
+			if bg == 'transparent':
+				ch['transparent'] = 1
+				ch['bgcolor'] = 0,0,0
+			elif bg != 'inherit':
+				ch['transparent'] = 0
+				ch['bgcolor'] = bg
+			else:
+				# for inherit value, we assume there is no transparent and bgcolor attribute
+				pass
 		elif bg == 'transparent':
 			ch['transparent'] = 1
 		else:
-			if self.__context.attributes.get('project_boston'):
-				ch['transparent'] = 0
-			else:
-				# since we have suppressed the behavior transparent when empty
-				# it's not possible any more to set transparent to -1
-				ch['transparent'] = 1
-#				ch['transparent'] = -1
+			# since we have suppressed the behavior transparent when empty
+			# it's not possible any more to set transparent to -1
+			ch['transparent'] = 1
+#			ch['transparent'] = -1
 			ch['bgcolor'] = bg
 
 		ch['z'] = attrdict['z-index']
