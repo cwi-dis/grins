@@ -4,8 +4,8 @@
 #include "timerex.h"
 
 static PyObject *timerexError;
-char cmifClass[100]="";
-char dbgmess[100]="";
+static char cmifClass[100]="";
+static char dbgmess[100]="";
 
 #ifdef __cplusplus
 extern "C" {
