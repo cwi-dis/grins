@@ -223,12 +223,12 @@ class SMILWriter:
 
 		self.ids_used = {}
 
-		self.uid2name = {}
-		self.calcnames1(node)
-
 		self.ch2name = {}
 		self.bases_used = {}
 		self.calcchnames1(node)
+
+		self.uid2name = {}
+		self.calcnames1(node)
 
 		# second pass
 		self.calcnames2(node)
@@ -258,7 +258,7 @@ class SMILWriter:
 		self.fp.write('</head>\n')
 		self.fp.write('<body>\n')
 		self.fp.push()
-		self.writenode(self.root)
+		self.writenode(self.root, root = 1)
 		self.fp.pop()
 		self.fp.write('</body>\n')
 		self.fp.pop()
@@ -486,9 +486,9 @@ class SMILWriter:
 				value = nameencode(value)
 				attrlist.append('%s=%s'%(name, value))
 		if interior:
-			attrlist = string.join(attrlist, ' ')
-			if not root or len(attrlist) > 1:
+			if root and (len(attrlist) > 1 or type != 'seq'):
 				root = 0
+			attrlist = string.join(attrlist, ' ')
 			if not root:
 				self.fp.write(attrlist+'>\n')
 				self.fp.push()
@@ -640,8 +640,8 @@ def identify(name):
 		if ch in namechars:
 			rv.append(ch)
 		else:
-			if rv and rv[-1] != '_':
-				rv.append('_')
+			if rv and rv[-1] != '-':
+				rv.append('-')
 	# the first character must not be a digit
 	if rv and rv[0] in string.digits:
 		rv.insert(0, '_')
