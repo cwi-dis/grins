@@ -10,23 +10,35 @@ def create_MMNode_view(node, root):
     assert root != None;
     ntype = node.GetType();
     if ntype == 'seq':
-        return SeqView(node, root);
+        return SeqWidget(node, root);
     elif ntype == 'par':
-        return ParView(node, root);
-    elif ntype == 'excl':
-        return ExclView(node, root);
+        return ParWidget(node, root);
+    elif ntype == 'alt':
+        return ExclWidget(node, root);
     elif ntype == 'ext':
-        return MediaView(node, root);
+        return MediaWidget(node, root);
     # TODO: test for a realmedia MMslide node.
     elif ntype == 'imm':
 #        print "TODO: Got an imm node.";
-        return MediaView(node, root);
+        return MediaWidget(node, root);
     else:
         print "DEBUG: Error! I am not sure what sort of node this is!! StructureViews.py:12";
         print "Node appears to be a ", ntype;
         return None;
 
-class MMNodeView:
+class MMNodeWidget(Interactive.Interactive):
+    # View of a Node within the Hierarchy view
+    def __init__(self, node, root):
+        Interactive.Interactive.__init__(self, root);
+        self.node = node;               # : MMNode
+        self.node.views['struct_view'] = self;
+        
+    def destroy(self):
+        # Prevent cyclic dependancies.
+        Interactive.Interactive.destroy(self);
+        del self.node.views['struct_view'];
+        self.node = None;
+        
     #
     # Menu handling functions, aka callbacks.
     #
@@ -155,41 +167,29 @@ class MMNodeView:
         self.root.paste(0)
 
 
-
-
-class StructureObjView(Interactive.EditWindow, MMNodeView):
+class StructureObjWidget(MMNodeWidget):
     # TODO: make this inherit only from Interactive.Interactive and aggregate a list.
     # A view of a seq, par, excl or something else that might exist.
     def __init__(self, node, root):
-        Interactive.EditWindow.__init__(self, root);
-        self.node = node;
-        node.views['struct_view'] = self;
+        MMNodeWidget.__init__(self, node, root);
         # Create more nodes under me if there are any.
-        for i in node.children:
+        self.children = [];
+        for i in self.node.children:
             bob = create_MMNode_view(i, root);
             if bob == None:
                 print "TODO: you haven't written all the code yet, have you Mike?";
             else:
-                self.append(bob);
+                self.children.append(bob);
 
-    def destroy(self):                      # todo: this is the construcutor
-        pass;
-        # Remove all circular dependancies.
-        # For the object that this is a view of, remove myself from that.
-        # Remove myself from the scene graph - if this has not already been done.
+    def destroy(self):
+        MMNodeWidget.destroy(self);
+        self.children = None;
 
-    def select(self):
-        # Select this node, and de-select the previously selected node.
-        if self.root.selected_widget != self:
-            self.selected = 1;
-            self.root.select_widget(self);   # deselects the previous selection.
-            self.root.redraw();
-            
     def get_obj_at(self, pos):
         # Return the MMNode widget at position x,y
         # Oh, how I love recursive methods :-). Nice. -mjvdg.
         if self.is_hit(pos):
-            for i in self:
+            for i in self.children:
                 ob = i.get_obj_at(pos)
                 if ob != None:
                     return ob;
@@ -197,7 +197,15 @@ class StructureObjView(Interactive.EditWindow, MMNodeView):
         else:
             return None;
 
-class SeqView(StructureObjView):
+    def draw(self, displist):
+        # This is a base class for other classes.. this code only gets
+        # called once the aggregating node has been called.
+        # Draw only the children.
+        print "DEBUG: draw: length of children: ", len(self.children);
+        for i in self.children:
+            i.draw(displist);
+
+class SeqWidget(StructureObjWidget):
     def draw(self, display_list):
         if self.selected: 
             display_list.drawfbox(self.highlight(SEQCOLOR), self.get_box())
@@ -206,13 +214,15 @@ class SeqView(StructureObjView):
 
         display_list.fgcolor(TEXTCOLOR);
         display_list.drawbox(self.get_box());
-        StructureObjView.draw(self, display_list);
+        StructureObjWidget.draw(self, display_list);
 
     def get_minsize(self):
         # Return the minimum size that I can be.
-        min_width = 0; min_height = 0;
+        min_width = 0.0; min_height = 0.0;
 
-        for i in self:
+        print "DEBUG: get_minsize: length of children is: ", len(self.children), self;
+
+        for i in self.children:
             w, h = i.get_minsize();
             assert w < 1.0 and w > 0.0;
             assert h < 1.0 and h > 0.0;
@@ -225,10 +235,23 @@ class SeqView(StructureObjView):
         assert min_height < 1.0;
 
         #             current +   gaps between nodes  +  gaps at either end      
-        min_width = min_width + xgap*( len(self) - 1) + 2*self.get_relx(sizes_notime.HEDGSIZE);
+        min_width = min_width + xgap*( len(self.children) - 1) + 2*self.get_relx(sizes_notime.HEDGSIZE);
         min_height = min_height + 2 *self.get_rely(sizes_notime.VEDGSIZE);
         return min_width, min_height;
 
+    def get_minsize_abs(self):
+        # Everything here calculated in pixels.
+        mw=0; mh=0;
+        print "DEBUG: get_minsize_abs: length of children is: ", len(self.children)
+        for i in self.children:
+            assert isinstance(i, MMNodeWidget);
+            w,h = i.get_minsize_abs();
+            if h > mh: mh=h;
+            mw = mw + w;
+        mw = mw + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.HEDGSIZE;
+        mh = mh + 2*sizes_notime.VEDGSIZE;
+        return mw, mh;
+        
     def recalc(self):
         # Untested.
         # Recalculate the position of all the contained boxes.
@@ -249,8 +272,7 @@ class SeqView(StructureObjView):
 
         b = float(b) - self.get_rely(sizes_notime.VEDGSIZE);
 
-        for i in self.node.children:    # for each MMNode:
-            medianode = i.views['struct_view'];
+        for medianode in self.children:    # for each MMNode:
             w,h = medianode.get_minsize();
             if h > (b-t):               # If the node needs to be bigger than the available space...
                 print "Error: Node is too big!";
@@ -281,7 +303,7 @@ class SeqView(StructureObjView):
             l = r + self.get_relx(sizes_notime.GAPSIZE);
         
         
-class ParView(StructureObjView):
+class ParWidget(StructureObjWidget):
     def draw(self, display_list):
         if self.selected:
             display_list.drawfbox(self.highlight(PARCOLOR), self.get_box());
@@ -289,13 +311,13 @@ class ParView(StructureObjView):
             display_list.drawfbox(PARCOLOR, self.get_box());
         display_list.fgcolor(TEXTCOLOR);
         display_list.drawbox(self.get_box());
-        StructureObjView.draw(self, display_list);
+        StructureObjWidget.draw(self, display_list);
 
     def get_minsize(self):
         # Return the minimum size that I can be.
         min_width = 0; min_height = 0;
 
-        for i in self:
+        for i in self.children:
             w, h = i.get_minsize();
             assert w < 1.0 and w > 0.0;
             assert h < 1.0 and h > 0.0;
@@ -309,13 +331,23 @@ class ParView(StructureObjView):
         assert min_height < 1.0;
 
         min_width = min_width + 2*self.get_relx(sizes_notime.HEDGSIZE);
-        min_height = min_height + ygap*(len(self)-1) + 2*self.get_rely(sizes_notime.VEDGSIZE);
+        min_height = min_height + ygap*(len(self.children)-1) + 2.0*self.get_rely(sizes_notime.VEDGSIZE);
 
         assert min_width < 1.0 and min_width > 0.0;
         assert min_height < 1.0 and min_height > 0.0;
 
         return min_width, min_height;
 
+    def get_minsize_abs(self):
+        mw=0; mh=0;
+
+        for i in self.children:
+            w,h = i.get_minsize_abs();
+            if w > mw: mw=w;
+            mh=mh+h;
+        mh = mh + sizes_notime.GAPSIZE*(len(self.children)-1) + 2*sizes_notime.VEDGSIZE;
+        mw = mw + 2*sizes_notime.VEDGSIZE;
+        return mw, mh;
 
     def recalc(self):
         # Untested.
@@ -336,8 +368,7 @@ class ParView(StructureObjView):
         t = float(t) + self.get_rely(sizes_notime.VEDGSIZE);
         
 
-        for i in self.node.children:    # for each MMNode:
-            medianode = i.views['struct_view'];
+        for medianode in self.children:    # for each MMNode:
             w,h = medianode.get_minsize();
             if h > (b-t):               # If the node needs to be bigger than the available space...
                 pass;                   # TODO!!!!!
@@ -370,14 +401,14 @@ class ParView(StructureObjView):
             t = b + self.get_rely(sizes_notime.GAPSIZE);
 
 
-class ExclView(StructureObjView):
+class ExclWidget(StructureObjWidget):
     pass;
 
 
 ##############################################################################
 # The Media objects (images, videos etc) in the Structure view.
 
-class MediaView(Interactive.Interactive, MMNodeView):
+class MediaWidget(MMNodeWidget):
     # A view of an object which is a playable media type.
     # NOT the structure nodes.
 
@@ -388,28 +419,20 @@ class MediaView(Interactive.Interactive, MMNodeView):
     # if the drawing code is different enough to warrent this.
     
     def __init__(self, node, root):
-        self.node = node;
-        node.views['struct_view'] = self;
-        Interactive.Interactive.__init__(self, root);
+        MMNodeWidget.__init__(self, node, root);
         self.transition_in = TransitionWidget(root, 'in');
         self.transition_out = TransitionWidget(root, 'out');
 
     def destroy(self):
         # Remove myself from the MMNode view{} dict.
-        pass;
+        MMNodeWidget.destroy(self);
 
     def recalc(self):
         l,t,r,b = self.pos_rel;
         self.transition_in.moveto((l,b-(1.0/6.0)*(b-t),l+(r-l)*(1.0/6.0),b));
         self.transition_out.moveto((l+(5.0/6.0)*(r-l),b-(1.0/6.0)*(b-t),r,b));
-        Interactive.EditWindow.recalc(self); # This is probably not necessary.
+        MMNodeWidget.recalc(self); # This is probably not necessary.
 
-    def select(self):
-        if self.root.selected_widget != self:
-            self.selected = 1;
-            self.root.select_widget(self);
-            self.root.redraw();
-        
     def get_minsize(self):
         return self.get_relx(sizes_notime.MINSIZE), self.get_rely(sizes_notime.MINSIZE);
 
@@ -417,7 +440,8 @@ class MediaView(Interactive.Interactive, MMNodeView):
         return self.get_relx(sizes_notime.MAXSIZE), self.get_rely(sizes_notime.MAXSIZE);
 
     def draw(self, displist):
-        x,y,w,h = self.get_box();       # 
+        print "MediaWidget.draw selected=", self.selected;
+        x,y,w,h = self.get_box();     
         
         willplay = self.root.showplayability or self.node.WillPlay();
         ntype = self.node.GetType();
@@ -483,9 +507,13 @@ class MediaView(Interactive.Interactive, MMNodeView):
         else:
             return None;
 
+    def get_minsize_abs(self):
+        # return the minimum size of this node, in pixels.
+        # Calld to work out the size of the canvas.
+        return (sizes_notime.MINSIZE, sizes_notime.MINSIZE);
     
 
-class TransitionWidget(Interactive.Interactive, MMNodeView):
+class TransitionWidget(Interactive.Interactive):
     # TODO: implement and use the append functionality of the Interactive class.
 
     def __init__(self, root, inorout):

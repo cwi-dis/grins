@@ -110,11 +110,11 @@ class HierarchyView(HierarchyViewDialog):
 			self.pasteinteriorcommands = [
 				PASTE_UNDER(callback = (self.pasteundercall, ())),
 				]
-			self.pastenotatrootcommands = [
+		self.pastenotatrootcommands = [
 				PASTE_BEFORE(callback = (self.pastebeforecall, ())),
 				PASTE_AFTER(callback = (self.pasteaftercall, ())),
 				]
-			self.notatrootcommands = [
+		self.notatrootcommands = [
 				NEW_SEQ(callback = (self.createseqcall, ())),
 				NEW_PAR(callback = (self.createparcall, ())),
 				NEW_CHOICE(callback = (self.createbagcall, ())),
@@ -122,7 +122,7 @@ class HierarchyView(HierarchyViewDialog):
 				DELETE(callback = (self.deletecall, ())),
 				CUT(callback = (self.cutcall, ())),
 				]			
-			self.structure_commands = [
+		self.structure_commands = [
 				NEW_BEFORE(callback = (self.createbeforecall, ())),
 				NEW_BEFORE_SEQ(callback = (self.createbeforeintcall, ('seq',))),
 				NEW_BEFORE_PAR(callback = (self.createbeforeintcall, ('par',))),
@@ -134,10 +134,10 @@ class HierarchyView(HierarchyViewDialog):
 				NEW_AFTER_CHOICE(callback = (self.createafterintcall, ('bag',))),
 				NEW_AFTER_ALT(callback = (self.createafterintcall, ('alt',))),
 				]
-			self.mediacommands = self.mediacommands + self.structure_commands;
-			if self.toplevel.root.context.attributes.get('project_boston', 0):
-				self.structure_commands.append(NEW_AFTER_EXCL(callback = (self.createafterintcall, ('excl',))))
-				self.structure_commands.append(NEW_BEFORE_EXCL(callback = (self.createbeforeintcall, ('excl',))))
+		self.mediacommands = self.mediacommands + self.structure_commands;
+		if self.toplevel.root.context.attributes.get('project_boston', 0):
+			self.structure_commands.append(NEW_AFTER_EXCL(callback = (self.createafterintcall, ('excl',))))
+			self.structure_commands.append(NEW_BEFORE_EXCL(callback = (self.createbeforeintcall, ('excl',))))
 
 			
 		else:			# TODO: clean this up. This should be later.
@@ -345,9 +345,6 @@ class HierarchyView(HierarchyViewDialog):
 					# can't paste before/after root node
 					commands = commands + self.pastenotatrootcommands
 
-		print "DEBUG: Setting commands to ", commands;
-		print "DEBUG: Setting popupmenu to ", popupmenu;
-		
 		self.setcommands(commands)
 		self.setpopup(popupmenu)
 		self.setstate()
@@ -358,6 +355,12 @@ class HierarchyView(HierarchyViewDialog):
 			if not hasattr(node, 'expanded'):
 				expandnode(node)
 			node = node.GetParent()
+
+	##############################################################################
+			
+	# Drawing code
+	
+	##############################################################################
 
 	def create_scene_graph(self):
 		# Iterate through the MMNode structure (starting from self.root)
@@ -375,7 +378,7 @@ class HierarchyView(HierarchyViewDialog):
 		HierarchyViewDialog.show(self)
 		self.aftersetfocus()
 		self.window.bgcolor(BGCOLOR)
-		self.objects = []
+##		self.objects = []
 		# Other administratrivia
 		self.editmgr.register(self)
 		self.toplevel.checkviews()
@@ -385,7 +388,22 @@ class HierarchyView(HierarchyViewDialog):
 			levels = countlevels(self.root, NODES_WANTED_OPEN)
 			do_expand(self.root, 1, levels)
 		expandnode(self.root)
-		self.recalc()
+		self.draw();
+		
+	def draw(self):
+		# Recalculate the size of all boxes and draw on screen.
+		#self.toplevel.setwaiting()
+
+		x,y = self.scene_graph.get_minsize_abs();
+		self.window.setcanvassize((self.sizes.SIZEUNIT, x, y));
+
+		# Known bug: this will actually cause a Hierarchyview.redraw() event.
+		self.displist = self.window.newdisplaylist(BGCOLOR)
+
+		self.scene_graph.recalc();
+		self.scene_graph.draw(self.displist);
+
+		self.displist.render();
 
 	def hide(self, *rest):
 		if not self.is_showing():
@@ -445,30 +463,23 @@ class HierarchyView(HierarchyViewDialog):
 	#################################################
 	# Event handlers                                #
 	#################################################
-
 	def redraw(self, *rest):
-		# TODO: make this faster.
-		# RESIZE event. (the routine is misnamed)
-		self.toplevel.setwaiting()
-		self.new_displist = self.window.newdisplaylist(BGCOLOR)
-		self.displist = None
-		# Wrong, because canvas_size will be relative values.
-		# canvas_size = self.scene_graph.get_minsize_abs();
-		# self.window.setcanvassize((self.sizes.SIZEUNIT, canvas_size[0], canvas_size[1]));
-		self.recalcboxes()
-		self.draw()
+		# React to the redraw request / event thingy. (Don't resize the canvas here!)
+		# This should not be called explicitely from widgets.
+
+		# Er.. Now I am thoughrally confused. The program works fine without this
+		# function...!!!!?????
+
+		return;
+	        # This is wrong anyway:
+		##if self.displist:
+##			bob = self.displist.clone();
+##			bob.render();
 
 	def mouse(self, dummy, window, event, params):
 		self.toplevel.setwaiting()
 		x, y = params[0:2]
-
-		# TODO: remove this to make things work again. -mjvdg
-		self.scene_graph.click((x,y))
-		
-		return;
-	
-		# TODO: use this to make things work again.
-		#self.select(x, y)
+		self.select(x, y)
 
 	def cvdrop(self, node, window, event, params):
 		em = self.editmgr
@@ -494,15 +505,15 @@ class HierarchyView(HierarchyViewDialog):
 				return
 			self.setfocusobj(obj) # give the focus to the object which was dropped on.
 			
-		if grins_snap:	# mjvdg 28-sept-2000
+		#if grins_snap:	# mjvdg 28-sept-2000
 			# update: 2-October - Nodes should never be empty, so this bit is pointless.
 			# The dropped object will be put into the left-most free node.
 			# Now, obj is the object which had a file dropped on it.
 			prev = obj.GetPrevious();
-			while prev != None and prev.HasNoURL(): # While this object has no URL
-				obj = prev;
-				prev = obj.GetPrevious();
-			prev = None;	
+		#	while prev != None and prev.HasNoURL(): # While this object has no URL
+		#		obj = prev;
+		#		prev = obj.GetPrevious();
+		#	prev = None;	
 
 
 		if event == WMEVENTS.DropFile:
@@ -605,15 +616,16 @@ class HierarchyView(HierarchyViewDialog):
 		if self.destroynode:
 			self.destroynode.Destroy()
 		self.destroynode = None
-		self.cleanup()
+		self.scene_graph.destroy();
+		self.create_scene_graph();
 		if self.is_showing():
-			self.recalc()
+			self.recalcboxes()
 
 	def kill(self):
 		self.destroy()
 
 	#################################################
-	# Upcalls from objects                          #
+	# Upcalls from widgets                          #
 	#################################################
 
 	def deletefocus(self, cut):
@@ -949,10 +961,10 @@ class HierarchyView(HierarchyViewDialog):
 		return;
 	
 ##	 	assert(0);
-		for obj in self.objects:
-			obj.cleanup()
-		self.objects = []
-		self.focusobj = None
+##		for obj in self.objects:
+##			obj.cleanup()
+##		self.objects = []
+##		self.focusobj = None
 
 	# Navigation functions
 
@@ -1000,9 +1012,32 @@ class HierarchyView(HierarchyViewDialog):
 			return
 		self.setfocusnode(children[i])
 
+	def select_widget(self, widget):
+		# Make the widget the current selection.
+		if isinstance(self.selected_widget, Interactive.Interactive):
+			self.selected_widget.unselect();
+		print "DEBUG: Selecting widget ", widget;
+		self.selected_widget = widget;		
+		self.focusobj = widget;	# Used for callbacks.
+		self.prevfocusnode = self.focusnode;
+		if widget == None:
+			self.focusnode = None;
+		else: 
+			self.focusnode = widget.node;
+			widget.select();
+		self.window.scrollvisible(widget.get_box());
+
 	# Handle a selection click at (x, y)
 	def select(self, x, y):
-		assert 0;
+		widget = self.scene_graph.get_obj_at((x,y));
+		if widget == self.selected_widget:
+			return;
+		else:
+			self.select_widget(widget);
+
+		self.aftersetfocus();
+		self.draw();
+
 ##		obj = self.whichhit(x, y)
 ##		if not obj:
 ##			windowinterface.beep()
@@ -1036,6 +1071,7 @@ class HierarchyView(HierarchyViewDialog):
 		# Now a bad hack.
 		# Return the scene object which is at position x,y.
 		# Used for dragging and dropping objects.
+		print "TODO: better to call self.scene_graph.get_obj_at.. directly..";
 		return self.scene_graph.get_obj_at((x,y));
 		
 ##		hitobj = None
@@ -1047,10 +1083,10 @@ class HierarchyView(HierarchyViewDialog):
 	# Find the object corresponding to the node
 	def whichobj(self, node):
 		assert 0;		
-		for obj in self.objects:
-			if obj.node is node:
-				return obj
-		return None
+##		for obj in self.objects:
+##			if obj.node is node:
+##				return obj
+##		return None
 
 	# Select the given object, deselecting the previous focus
 	def setfocusobj(self, obj):
@@ -1093,111 +1129,101 @@ class HierarchyView(HierarchyViewDialog):
 ##			node = node.GetParent()
 ##		self.recalc()
 
-	def select_widget(self, widget):
-		# Make the widget the current selection.
-		if isinstance(self.selected_widget, Interactive.Interactive):
-			self.selected_widget.unselect();
-		print "DEBUG: Selecting widget ", widget;
-		self.selected_widget = widget;		
-		self.focusobj = widget;	# Used for callbacks.
-		self.prevfocusnode = self.focusnode;
-		if widget == None:
-			self.focusnode = None;
-		else: 
-			self.focusnode = widget.node;
-		self.window.scrollvisible(widget.get_box());
-
 	# Recursively position the boxes. Minimum sizes are already set, we may only have
 	# to extend them.
 	def makeboxes(self, list, node, box):
-		ntype = node.GetType()
-		left, top, right, bottom = box
-		if self.timescale:
-			cw, ch = self.canvassize # pixels (from self.sizes.SIZEUNITS)
-			w, h, t0 = node.boxsize
-			left = t0 / cw
-			right = left + w / cw
-		if not hasattr(node, 'expanded') or \
-		   not node.GetChildren():
-			if hierarchy_minimum_sizes:
-				if not self.timescale:
-					right = left + self.horsize
-				bottom = top + self.versize
-			list.append((node, LEAFBOX, (left, top, right, bottom)))
-			return left, top, right, bottom
-		listindex = len(list)
-		list.append((node, INNERBOX, box))
-		top = top + self.titleheight # coords are fractions of total window size.
-		left = left + self.horedge
-		bottom = bottom - self.veredge
-		right = (right - self.horedge) 
-		children = node.GetChildren()
-		size = 0
-		horizontal = (ntype not in ('par', 'alt', 'excl', 'prio'))
-		# animate++
-		if ntype in MMNode.leaftypes and node.GetChildren() and \
-		   (ntype != 'ext' or node.GetChannelType() != 'RealPix'):
-			horizontal = 0
-		for child in children:
-			size = size + child.boxsize[not horizontal]
-			if horizontal:
-				size = size + child.boxsize[2]
-		# size is minimum size required for children in mm
-# use this to make drop area also proportional to available size
+		assert 0;
+
+##		ntype = node.GetType()
+##		left, top, right, bottom = box
+##		if self.timescale:
+##			cw, ch = self.canvassize # pixels (from self.sizes.SIZEUNITS)
+##			w, h, t0 = node.boxsize
+##			left = t0 / cw
+##			right = left + w / cw
+##		if not hasattr(node, 'expanded') or \
+##		   not node.GetChildren():
+##			if hierarchy_minimum_sizes:
+##				if not self.timescale:
+##					right = left + self.horsize
+##				bottom = top + self.versize
+##			list.append((node, LEAFBOX, (left, top, right, bottom)))
+##			return left, top, right, bottom
+##		listindex = len(list)
+##		list.append((node, INNERBOX, box))
+##		top = top + self.titleheight # coords are fractions of total window size.
+##		left = left + self.horedge
+##		bottom = bottom - self.veredge
+##		right = (right - self.horedge) 
+##		children = node.GetChildren()
+##		size = 0
+##		horizontal = (ntype not in ('par', 'alt', 'excl', 'prio'))
+##		# animate++
+##		if ntype in MMNode.leaftypes and node.GetChildren() and \
+##		   (ntype != 'ext' or node.GetChannelType() != 'RealPix'):
+##			horizontal = 0
+##		for child in children:
+##			size = size + child.boxsize[not horizontal]
+##			if horizontal:
+##				size = size + child.boxsize[2]
+##		# size is minimum size required for children in mm
+### use this to make drop area also proportional to available size
+####		if ntype == 'seq' and grins_snap:
+####			size = size + self.sizes.DROPAREA
+##		if horizontal:
+##			gapsize = self.horgap
+##			totsize = right - left
+##		else:
+##			gapsize = self.vergap
+##			totsize = bottom - top
+### use this to have a fixed size drop area
 ##		if ntype == 'seq' and grins_snap:
-##			size = size + self.sizes.DROPAREA
-		if horizontal:
-			gapsize = self.horgap
-			totsize = right - left
-		else:
-			gapsize = self.vergap
-			totsize = bottom - top
-# use this to have a fixed size drop area
-		if ntype == 'seq' and grins_snap:
-			totsize = totsize - self.droparea;
-		# totsize is total available size for all children with inter-child gap
-		factor = (totsize - (len(children) - 1) * gapsize) / size
-		maxr = 0
-		maxb = 0
-		for child in children:
-			size = child.boxsize[not horizontal]
-			if horizontal:
-				size = size + child.boxsize[2]
-			if horizontal:
-				right = left + size * factor
-			else:
-				bottom = top + size * factor
-			l,t,r,b = self.makeboxes(list, child, (left, top, right, bottom))
-			if horizontal:
-				left = r + gapsize
-				if b > maxb: maxb = b
-			else:
-				top = b + gapsize
-				if r > maxr: maxr = r
-		if ntype == 'seq' and grins_snap:
-			if horizontal:
-##				left = left + self.sizes.DROPAREA * factor
-				left = left + self.droparea + gapsize
-##			else:		# not used? mjvdg.
-##				right = right + self.sizes.DROPAREA * factor
-##				right = right + self.droparea + gapsize
-		if horizontal:
-			maxr = left - gapsize + self.horedge
-			#if ntype == 'seq': maxr = maxr + sizes_notime.DROPAREASIZE * factor
-			maxb = maxb + self.veredge
-		else:
-			maxb = top - gapsize + self.veredge
-			maxr = maxr + self.horedge
-		box = box[0], box[1], maxr, maxb
-		list[listindex] = node, INNERBOX, box
-		return box
+##			totsize = totsize - self.droparea;
+##		# totsize is total available size for all children with inter-child gap
+##		factor = (totsize - (len(children) - 1) * gapsize) / size
+##		maxr = 0
+##		maxb = 0
+##		for child in children:
+##			size = child.boxsize[not horizontal]
+##			if horizontal:
+##				size = size + child.boxsize[2]
+##			if horizontal:
+##				right = left + size * factor
+##			else:
+##				bottom = top + size * factor
+##			l,t,r,b = self.makeboxes(list, child, (left, top, right, bottom))
+##			if horizontal:
+##				left = r + gapsize
+##				if b > maxb: maxb = b
+##			else:
+##				top = b + gapsize
+##				if r > maxr: maxr = r
+##		if ntype == 'seq' and grins_snap:
+##			if horizontal:
+####				left = left + self.sizes.DROPAREA * factor
+##				left = left + self.droparea + gapsize
+####			else:		# not used? mjvdg.
+####				right = right + self.sizes.DROPAREA * factor
+####				right = right + self.droparea + gapsize
+##		if horizontal:
+##			maxr = left - gapsize + self.horedge
+##			#if ntype == 'seq': maxr = maxr + sizes_notime.DROPAREASIZE * factor
+##			maxb = maxb + self.veredge
+##		else:
+##			maxb = top - gapsize + self.veredge
+##			maxr = maxr + self.horedge
+##		box = box[0], box[1], maxr, maxb
+##		list[listindex] = node, INNERBOX, box
+##		return box
 
 	# Intermedeate step in the recomputation of boxes. At this point the minimum
 	# sizes are already set. We only have to compute gapsizes (based on current w/h),
 	# call makeboxes to position the boxes and create the objects.
-	def recalcboxes(self):
-		self.scene_graph.recalc();
-		return;
+#	def recalcboxes(self):
+#		x,y = self.scene_graph.get_minsize_abs();
+#		print "DEBUG: Recalcboxes: recalculating the scene graph.";
+#		self.scene_graph.recalc();
+#		return;
 		
 	# TODO: Remove this code -mjvdg
 ##		self.focusobj = None
@@ -1266,113 +1292,112 @@ class HierarchyView(HierarchyViewDialog):
 	# computes minimum sizes of all nodes, and does either a redraw (if everything still
 	# fits in the window) or a setcanvassize (which results in a resize, and hence
 	# a redraw)
-	def recalc(self):
-		window = self.window
-#		self.cleanup()
-		if root_expanded:
-			expandnode(self.root) # root always expanded
-#		if self.timescale:
-#			Timing.needtimes(self.root)
-#			self.timescalefactor = settings.get('time_scale_factor')
-		width, height, begin = self.sizeboxes(self.root)
-		width = width + begin
-		cwidth, cheight = window.getcanvassize(self.sizes.SIZEUNIT)
-		mwidth = mheight = 0 # until we have a way to get the min. size
-		if not hierarchy_minimum_sizes and \
-		   (width <= cwidth <= width * 1.1 or width < cwidth <= mwidth) and \
-		   (height <= cheight <= height * 1.1 or height < cheight <= mheight):
-			# size change not big enough, just redraw
-			self.redraw()
-		else:
-			# this call causes a ResizeWindow event
-			window.setcanvassize((self.sizes.SIZEUNIT, width, height))
+#	def recalc(self):
+#		window = self.window
+##		self.cleanup()
+##		if root_expanded:
+##			expandnode(self.root) # root always expanded
+##		if self.timescale:
+##			Timing.needtimes(self.root)
+##			self.timescalefactor = settings.get('time_scale_factor')
+#		width, height, begin = self.sizeboxes(self.root)
+#		width = width + begin
+##		cwidth, cheight = window.getcanvassize(self.sizes.SIZEUNIT)
+##		mwidth = mheight = 0 # until we have a way to get the min. size
+##		if not hierarchy_minimum_sizes and \
+##		   (width <= cwidth <= width * 1.1 or width < cwidth <= mwidth) and \
+##		   (height <= cheight <= height * 1.1 or height < cheight <= mheight):
+##			# size change not big enough, just redraw
+##			self.redraw()
+##		else:
+##			# this call causes a ResizeWindow event
+#		self.window.setcanvassize((self.sizes.SIZEUNIT, width, height))
 
 	# Draw the window, assuming the object shapes are all right. This is the final
 	# step in the redraw code (and the only step needed if we only enable
 	# thumbnails, or do a similar action that does not affect box coordinates).
-	def draw(self):
-		displist = self.new_displist
-		dummy = displist.usefont(f_title)
+##	def draw(self):
+##		print "DEBUG: drawing.";
+##		displist = self.new_displist
+##		dummy = displist.usefont(f_title)
 
-		#for obj in self.objects:
-		#	obj.draw()
-		#if self.timescale:
-		#	self.drawtimescale()
+##		#for obj in self.objects:
+##		#	obj.draw()
+##		#if self.timescale:
+##		#	self.drawtimescale()
 
-		# Render the scene graph. Ooooh yess..
-		# I'll be a happy man when this works.. -mjvdg.
-		self.scene_graph.draw(displist);
+##		self.scene_graph.draw(displist);
 
-		self.new_displist = None
-		displist.render()
-		if self.displist:
-			self.displist.close()
-		self.displist = displist
+##		self.new_displist = None
+##		displist.render()
+##		if self.displist:
+##			self.displist.close()
+##		self.displist = displist
 
-		self.new_displist = None
+##		self.new_displist = None
 
-	def drawtimescale(self):
-		displist = self.new_displist
-		t0 = self.root.t0
-		t1 = self.root.t1
-		l, t, r, b = self.timescalebox
-		m = (t+b)/2
-		displist.usefont(f_timescale)
-		linecolor = TEXTCOLOR
-		f_width = displist.strsize('x')[0]
-		# Draw rectangle around boxes
-##		hmargin = f_width / 9
-##		vmargin = displist.fontheight() / 4
-		displist.drawline(linecolor, [(l, m), (r, m)])
-		# Compute the number of ticks. Don't put them too close
-		# together.
-		dt = t1 - t0
-		tickstep = 1
-		while 1:
-			n = int(ceil(dt/tickstep))
-			if n*f_width < (r-l):
-				break
-			tickstep = tickstep * 10
-		# Compute distance between numeric indicators
-		div = 1
-		i = 0
-		maxlabelsize = len(str(ceil(dt)))
-		while (n/div) * (maxlabelsize+0.5) * f_width >= (r-l):
-			if i%3 == 0:
-				div = div*2
-			elif i%3 == 1:
-				div = div/2*5
-			else:
-				div = div/5*10
-			i = i+1
-		# Draw division boxes and numeric indicators
-		# This gives MemoryError: for i in range(n):
-		# This code should be looked into.
-		i = -1
-		displist.fgcolor(TEXTCOLOR)
-		while i < n:
-			i = i + 1
-			#
-			it0 = t0 + i*tickstep
-			pos = l + (r-l)*float(i)/n
-			if i%div == 0:
-				displist.drawline(linecolor, [(pos, m), (pos, b)])
-			else:
-				displist.drawline(linecolor, [(pos, m), (pos, (m+b)/2)])
-			if i%div <> 0:
-				continue
-			if tickstep < 1:
-				ticklabel = `i*tickstep`
-			else:
-				ts_value = int(i*tickstep)
-				ticklabel = '%3d:%02.2d'%(ts_value/60, ts_value%60)
-			if 0 < i < n-1:
-				width = displist.strsize(ticklabel)[0]
-				displist.centerstring(pos-width/2, t, pos+width/2, m, ticklabel)
-		# And show total duration
-		ticklabel = '%ds '%int(t1)
-		width = displist.strsize(ticklabel)[0]
-		displist.centerstring(r-width, t, r, m, ticklabel)
+##	def drawtimescale(self):
+##		displist = self.new_displist
+##		t0 = self.root.t0
+##		t1 = self.root.t1
+##		l, t, r, b = self.timescalebox
+##		m = (t+b)/2
+##		displist.usefont(f_timescale)
+##		linecolor = TEXTCOLOR
+##		f_width = displist.strsize('x')[0]
+##		# Draw rectangle around boxes
+####		hmargin = f_width / 9
+####		vmargin = displist.fontheight() / 4
+##		displist.drawline(linecolor, [(l, m), (r, m)])
+##		# Compute the number of ticks. Don't put them too close
+##		# together.
+##		dt = t1 - t0
+##		tickstep = 1
+##		while 1:
+##			n = int(ceil(dt/tickstep))
+##			if n*f_width < (r-l):
+##				break
+##			tickstep = tickstep * 10
+##		# Compute distance between numeric indicators
+##		div = 1
+##		i = 0
+##		maxlabelsize = len(str(ceil(dt)))
+##		while (n/div) * (maxlabelsize+0.5) * f_width >= (r-l):
+##			if i%3 == 0:
+##				div = div*2
+##			elif i%3 == 1:
+##				div = div/2*5
+##			else:
+##				div = div/5*10
+##			i = i+1
+##		# Draw division boxes and numeric indicators
+##		# This gives MemoryError: for i in range(n):
+##		# This code should be looked into.
+##		i = -1
+##		displist.fgcolor(TEXTCOLOR)
+##		while i < n:
+##			i = i + 1
+##			#
+##			it0 = t0 + i*tickstep
+##			pos = l + (r-l)*float(i)/n
+##			if i%div == 0:
+##				displist.drawline(linecolor, [(pos, m), (pos, b)])
+##			else:
+##				displist.drawline(linecolor, [(pos, m), (pos, (m+b)/2)])
+##			if i%div <> 0:
+##				continue
+##			if tickstep < 1:
+##				ticklabel = `i*tickstep`
+##			else:
+##				ts_value = int(i*tickstep)
+##				ticklabel = '%3d:%02.2d'%(ts_value/60, ts_value%60)
+##			if 0 < i < n-1:
+##				width = displist.strsize(ticklabel)[0]
+##				displist.centerstring(pos-width/2, t, pos+width/2, m, ticklabel)
+##		# And show total duration
+##		ticklabel = '%ds '%int(t1)
+##		width = displist.strsize(ticklabel)[0]
+##		displist.centerstring(r-width, t, r, m, ticklabel)
 
 	##############################################################################
 	# Menu handling functions - Callbacks.
@@ -1526,88 +1551,89 @@ class HierarchyView(HierarchyViewDialog):
 	def sizeboxes(self, node):
 		# Helper for first step in size recomputation: compute minimum sizes of
 		# all node boxes.
-		ntype = node.GetType()
-		minsize = self.sizes.MINSIZE
-		if self.timescale:
-			if node.__class__ is SlideMMNode:
-				pnode = node.GetParent()
-				pchildren = pnode.GetChildren()
-				i = pchildren.index(node)
-				dur = (pnode.t1 - pnode.t0) / len(pchildren)
-				t0 = pnode.t0 + i * dur
-				t1 = t0 + dur
-			else:
-				t0 = node.t0
-				t1 = node.t1
-			begin = t0 * self.timescalefactor
-			dur = (t1 - t0) * self.timescalefactor
-			if dur < 0:
-				dur = 0
-			minsize = dur
-		else:
-			begin = 0
-		minwidth = minsize
-		minheight = self.sizes.MINSIZE
-		if self.timescale:
-			pass # Don't mess with the size, it is important
-		elif structure_name_size:
-			name = MMAttrdefs.getattr(node, 'name')
-			if self.sizes.SIZEUNIT == windowinterface.UNIT_MM:
-				namewidth = (name and f_title.strsize(name)[0]) or 0
-			else:
-				namewidth = (name and f_title.strsizePXL(name)[0]) or 0
-##			if ntype in MMNode.interiortypes or \
-##			   (ntype == 'ext' and node.GetChannelType() == 'RealPix'):
-##				namewidth = namewidth + self.sizes.ARRSIZE
-			namewidth = namewidth + self.sizes.ARRSIZE + self.sizes.ERRSIZE # Always
-			minwidth = max(min(self.sizes.MAXSIZE, namewidth), minwidth) + self.sizes.HOREXTRASIZE
-		else:
-			minwidth = minwidth + self.sizes.HOREXTRASIZE
-		children = node.GetChildren()
-		# if this is an empty root...
-		if node == self.root and not children and ntype in ('seq', 'par', 'alt', 'excl', 'prio'):
-			print "DEBUG: this is the root node without any children.";
-			width = minwidth + 2*self.sizes.HOREXTRASIZE;
-			height = minheight + 2*self.sizes.GAPSIZE + self.sizes.LABSIZE;	# Bah. It's sort of the same size. Who'll notice?
-			node.boxsize = width, height, begin
-			return node.boxsize;
-		if not hasattr(node, 'expanded') or not children:
-			node.boxsize = minwidth, minheight + self.sizes.LABSIZE, begin
-			return node.boxsize
+		assert 0;
+##		ntype = node.GetType()
+##		minsize = self.sizes.MINSIZE
+##		if self.timescale:
+##			if node.__class__ is SlideMMNode:
+##				pnode = node.GetParent()
+##				pchildren = pnode.GetChildren()
+##				i = pchildren.index(node)
+##				dur = (pnode.t1 - pnode.t0) / len(pchildren)
+##				t0 = pnode.t0 + i * dur
+##				t1 = t0 + dur
+##			else:
+##				t0 = node.t0
+##				t1 = node.t1
+##			begin = t0 * self.timescalefactor
+##			dur = (t1 - t0) * self.timescalefactor
+##			if dur < 0:
+##				dur = 0
+##			minsize = dur
+##		else:
+##			begin = 0
+##		minwidth = minsize
+##		minheight = self.sizes.MINSIZE
+##		if self.timescale:
+##			pass # Don't mess with the size, it is important
+##		elif structure_name_size:
+##			name = MMAttrdefs.getattr(node, 'name')
+##			if self.sizes.SIZEUNIT == windowinterface.UNIT_MM:
+##				namewidth = (name and f_title.strsize(name)[0]) or 0
+##			else:
+##				namewidth = (name and f_title.strsizePXL(name)[0]) or 0
+####			if ntype in MMNode.interiortypes or \
+####			   (ntype == 'ext' and node.GetChannelType() == 'RealPix'):
+####				namewidth = namewidth + self.sizes.ARRSIZE
+##			namewidth = namewidth + self.sizes.ARRSIZE + self.sizes.ERRSIZE # Always
+##			minwidth = max(min(self.sizes.MAXSIZE, namewidth), minwidth) + self.sizes.HOREXTRASIZE
+##		else:
+##			minwidth = minwidth + self.sizes.HOREXTRASIZE
+##		children = node.GetChildren()
+##		# if this is an empty root...
+##		if node == self.root and not children and ntype in ('seq', 'par', 'alt', 'excl', 'prio'):
+##			print "DEBUG: this is the root node without any children.";
+##			width = minwidth + 2*self.sizes.HOREXTRASIZE;
+##			height = minheight + 2*self.sizes.GAPSIZE + self.sizes.LABSIZE;	# Bah. It's sort of the same size. Who'll notice?
+##			node.boxsize = width, height, begin
+##			return node.boxsize;
+##		if not hasattr(node, 'expanded') or not children:
+##			node.boxsize = minwidth, minheight + self.sizes.LABSIZE, begin
+##			return node.boxsize
 			
-		nchildren = len(children)
-		width = height = 0
-		horizontal = (ntype not in ('par', 'alt', 'excl', 'prio'))
-		for child in children:
-			w, h, b = self.sizeboxes(child)
-			if horizontal:
-				# children laid out horizontally
-				if h > height:
-					height = h
-				width = width + w + self.sizes.GAPSIZE
-			else:
-				# children laid out vertically
-				if w > width:
-					width = w
-				height = height + h + self.sizes.GAPSIZE
-			width = width + b
-		if ntype == 'seq' and grins_snap:
-			if horizontal:
-				width = width + self.sizes.DROPAREA
-			else:
-				height = height + self.sizes.DROPAREA
-		if horizontal:
-			width = width - self.sizes.GAPSIZE
-		else:
-			height = height - self.sizes.GAPSIZE
-		if self.timescale:
-			# Again, for timescale mode we happily ignore all these computations
-			width = minwidth
-		else:
-			width = max(width + 2 * self.sizes.HEDGSIZE, minwidth)
-		height = height + self.sizes.VEDGSIZE + self.sizes.LABSIZE
-		node.boxsize = width, height, begin
-		return node.boxsize
+##		nchildren = len(children)
+##		width = height = 0
+##		horizontal = (ntype not in ('par', 'alt', 'excl', 'prio'))
+##		for child in children:
+##			w, h, b = self.sizeboxes(child)
+##			if horizontal:
+##				# children laid out horizontally
+##				if h > height:
+##					height = h
+##				width = width + w + self.sizes.GAPSIZE
+##			else:
+##				# children laid out vertically
+##				if w > width:
+##					width = w
+##				height = height + h + self.sizes.GAPSIZE
+##			width = width + b
+##		if ntype == 'seq' and grins_snap:
+##			if horizontal:
+##				width = width + self.sizes.DROPAREA
+##			else:
+##				height = height + self.sizes.DROPAREA
+##		if horizontal:
+##			width = width - self.sizes.GAPSIZE
+##		else:
+##			height = height - self.sizes.GAPSIZE
+##		if self.timescale:
+##			# Again, for timescale mode we happily ignore all these computations
+##			width = minwidth
+##		else:
+##			width = max(width + 2 * self.sizes.HEDGSIZE, minwidth)
+##		height = height + self.sizes.VEDGSIZE + self.sizes.LABSIZE
+##		node.boxsize = width, height, begin
+##		return node.boxsize
 
 def do_expand(node, expand, nlevels=None, expleaftypes=0):
 	if nlevels == 0:

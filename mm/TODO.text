@@ -7,7 +7,7 @@ What am I doing:
 * Trying to add things to the Hierarchy view and test the 
 	new Interactive() code.
 
-* Context menus.
+* Really, really annoying bug - widgets don't have enough room.
 
 * Get Jack to make a routine to find download times for nodes.
 
@@ -28,14 +28,10 @@ Priority top-to-bottom.
 
 * Create templates for Snap! (slideshow)
 
-
 * Enable Quicktime support
 
 * Traverse through the files and use the options
 	in features.py.
-
-* Make the Interactive resize it's own window.
-
 
 Incoming
 --------
