@@ -324,7 +324,7 @@ class reader:
 		data = self.__ssnd_chunk.read(nbytes)
 		nframes = len(data) * fmt.getfpb() / fmt.getblocksize()
 		self.__framesread = self.__framesread + nframes
-		return data
+		return data, nframes
 
 	def rewind(self):
 		chunk = self.__ssnd_chunk
