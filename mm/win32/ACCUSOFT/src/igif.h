@@ -20,6 +20,7 @@ class GifConverter
 
 	void SaveGif();
 	String m_tempFile;
+	String m_errorMsg;
 
 	private:
 	BYTE *m_buf;

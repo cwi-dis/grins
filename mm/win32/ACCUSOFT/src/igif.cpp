@@ -46,7 +46,7 @@ bool GifConverter::LoadGif(LPCTSTR fileName)
 						&m_height);
 	if (m_buf==NULL) 
 		{
-		//AfxMessageBox(theGif.m_GIFErrorText);
+		m_errorMsg = theGif.m_GIFErrorText;
 		return false;
 		}
 
