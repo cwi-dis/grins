@@ -47,6 +47,7 @@ import os
 from stat import ST_MTIME
 import marshal
 
+verbose = 1
 
 # Parse a file containing attribute definitions.
 #
@@ -57,13 +58,15 @@ def readattrdefs(fp, filename):
 		sf = os.stat(filename)
 		sfc = os.stat(filename_com)
 		if sf[ST_MTIME] < sfc[ST_MTIME]:
+		    if verbose:
 			print 'Using compiled attributes file', filename_com
-			return marshal.load(fpc)
+		    return marshal.load(fpc)
 		print 'Compiled attributes file', filename_com, 'out of date'
 	except (os.error, IOError), msg:
 		print '(No compiled attribute file', filename_com + ')'
 		print msg
-	print 'Reading attributes from', filename, '...'
+	if verbose:
+	    print 'Reading attributes from', filename, '...'
 	parser = MMParser.MMParser(fp, None)	# Note -- no context!
 	dict = {}
 	#
@@ -89,6 +92,7 @@ def readattrdefs(fp, filename):
 				    ['raw', 'normal', 'inherited', 'channel'])
 			parser.close()
 			if dict.has_key(attrname):
+			    if verbose:
 				print 'Warning: duplicate attr def', attrname
 			dict[attrname] = typedef, defaultvalue, labeltext, \
 				displayername, helptext, inheritance
@@ -111,13 +115,15 @@ def readattrdefs(fp, filename):
 	#
 	try:
 		fpc = open(filename_com, 'wb')
-		print 'Writing compiled attributes to', filename_com
+		if verbose:
+		    print 'Writing compiled attributes to', filename_com
 		marshal.dump(dict, fpc)
 		fpc.close()
 	except IOError, msg:
 		print 'Can\'t write compiled attributes to', filename_com
 		print msg
-	print 'Done.'
+	if verbose:
+	    print 'Done.'
 	return dict
 
 
