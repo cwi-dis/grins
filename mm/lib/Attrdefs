@@ -119,7 +119,7 @@
 (hicolor (tuple (int) (int) (int)) (255 0 0) 'Highlight color' CMIFcolor
 	'Color used for highlighted anchors in window' channel)
 
-(bucolor (tuple (int) (int) (int)) (255 0 0) 'Button color' CMIFcolor
+(bucolor (tuple (int) (int) (int)) (255 0 0) 'Anchor color' CMIFcolor
 	'Color used for anchors in window' channel)
 
 (hview_winpos (tuple (float) (float)) (-1 -1) 'Hierarchy winpos' hidden
