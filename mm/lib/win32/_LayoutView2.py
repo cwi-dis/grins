@@ -485,7 +485,11 @@ class _LayoutView2(GenFormView):
 		self._bplay.seticon(self._iconplay)
 		self._bplay.enable(1)
 		self.__playing = 0
-		
+
+	def stop(self):
+		if self.__playing:
+			self._stop()
+			
 	def OnPlay(self, id, params):
 		if self._slider and self._slider.isEnabled():
 			if not self.__playing:
