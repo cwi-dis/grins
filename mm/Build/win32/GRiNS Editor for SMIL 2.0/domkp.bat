@@ -169,6 +169,10 @@ echo -x win32api >> FreezeOpts
 echo -x win32trace >> FreezeOpts
 echo -x win32ui >> FreezeOpts
 echo -x wmfapi >> FreezeOpts
+echo -x dsound >> FreezeOpts
+echo -x wingdi >> FreezeOpts
+echo -x winkernel >> FreezeOpts
+echo -x winuser >> FreezeOpts
 
 rem EXCLUDE_WHAT
 echo -x %EXCLUDE_WHAT% >> FreezeOpts
