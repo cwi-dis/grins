@@ -202,14 +202,6 @@ class AssetsView(AssetsViewDialog):
 		print 'Unknown self.whichview', self.whichview
 		return None, None
 
-	def finishdrag_callback(self, how):
-		if how == 'copy':
-			print "AssetView: Object was copied"
-		elif how == 'move':
-			print "AssetView: Object was moved, we have to delete"
-		else:
-			print "AssetView: nothing to do", how
-
 	def gettemplateassets(self):
 		assetlist = []
 		for node in self.context.getassets():
@@ -292,7 +284,6 @@ class AssetsView(AssetsViewDialog):
 
 	# Callbacks from the UI
 	def setview_callback(self, which):
-		print 'setview', which
 		self.setview(which)
 
 	def select_callback(self, number):
@@ -300,3 +291,23 @@ class AssetsView(AssetsViewDialog):
 
 	def sort_callback(self, column):
 		print 'sort', column
+
+	# drag/drop destination callbacks
+	def dragurl(self, x, y, url):
+		if self.whichview != 'template':
+			return None
+		return 'link'
+
+	def dropurl(self, x, y, url):
+		if self.whichview != 'template':
+			return None
+		url = self.context.relativeurl(url)
+		node = self.context.newnode('ext')
+		node.SetAttr('file', url)
+		if not self.editmgr.transaction():
+			print 'No transaction'
+			node.Destroy()
+			return None
+		self.editmgr.addasset(node)
+		self.editmgr.commit()
+		return 'link'
