@@ -45,6 +45,14 @@ class Boolean(ResItem):
 	def __init__(self, name, width=Preferences.CTRL_WIDTH, height=12):
 		ResItem.__init__(self, name, width, height)
 
+class Button(ResItem):
+	classid = 0x0080
+	style = win32con.WS_CHILD | win32con.WS_VISIBLE
+	def __init__(self, name, width=None, height=12):
+		if width is None:
+			width = 4*(len(name)+2)
+		ResItem.__init__(self, name, width, height)
+
 class PlayerDlgBar(window.Wnd):
 	iconplay = win32ui.GetApp().LoadIcon(grinsRC.IDI_PLAY)
 	iconpause = win32ui.GetApp().LoadIcon(grinsRC.IDI_PAUSE)
@@ -153,6 +161,8 @@ class PlayerDlgBar(window.Wnd):
 				resitem = Option(name)
 			elif attrtype == 'boolean':
 				resitem = Boolean(name)
+			elif attrtype == 'button':
+				resitem = Button(name)
 			if resitem:
 				resitem.id = id
 				self._resitems.append(resitem)
@@ -201,6 +211,8 @@ class PlayerDlgBar(window.Wnd):
 				self._ctrls[item.name] = components.ComboBox(self, item.id)
 			elif isinstance(item, Boolean):
 				self._ctrls[item.name] = components.CheckButton(self, item.id)
+			elif isinstance(item, Button):
+				self._ctrls[item.name] = components.Button(self, item.id)
 		for ctrl in self._ctrls.values():
 			ctrl.attach_to_parent()
 
@@ -260,3 +272,21 @@ class PlayerDlgBar(window.Wnd):
 					# ATTRIBUTES = [ ('option','Bitrate'),('option', 'Language'),]
 					# self.setAttributes(ATTRIBUTES)
 					break
+
+	def onButton(self, id, code):
+		if code==win32con.BN_CLICKED:
+			for ctrl in self._ctrls.values():
+				if ctrl._id == id:
+					button = ctrl.gettext()
+					if button == 'Less':
+						ATTRIBUTES = [ ('option','Bitrate'),('option', 'Language'),('button', 'More')]
+						self.setAttributes(ATTRIBUTES)
+					elif button == 'More':
+						ATTRIBUTES = [ ('option','Bitrate'),
+							('option', 'Language'),
+							('boolean', 'boolean attribute 1'),
+							('boolean', 'boolean attribute 2'), ('button', 'Less')]
+						self.setAttributes(ATTRIBUTES)
+					break
+
+
