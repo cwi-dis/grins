@@ -533,6 +533,10 @@ SOURCE=.\M_httplib.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_IconMixin.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_ImageChannel.c
 # End Source File
 # Begin Source File
