@@ -137,15 +137,15 @@ class FileDialog:
 		# since the rest of GRiNS doesn't expect that we save/restore
 		# it,
 		#
-		curdir = os.getcwd()
+		curdir = '' #os.getcwd()
 		default_dir = directory in ('.', '')
 		if default_dir and FileDialog.last_location:
 			directory = FileDialog.last_location
 		dlg.SetOFNInitialDir(directory)
-		result=dlg.DoModal()
+		result = dlg.DoModal()
 		if default_dir:
-			FileDialog.last_location = os.getcwd()
-		os.chdir(curdir)
+			FileDialog.last_location = '' # os.getcwd()
+		#os.chdir(curdir)
 		if result==wincon.IDOK:
 			if cb_ok: cb_ok(dlg.GetPathName())
 		else:
