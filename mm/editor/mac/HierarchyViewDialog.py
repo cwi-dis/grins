@@ -6,12 +6,13 @@ from ViewDialog import ViewDialog
 from usercmd import *
 import windowinterface
 import WMEVENTS
-from MenuTemplate import POPUP_HVIEW_LEAF, POPUP_HVIEW_STRUCTURE
+from MenuTemplate import POPUP_HVIEW_LEAF, POPUP_HVIEW_STRUCTURE, POPUP_HVIEW_SLIDE
 
 class HierarchyViewDialog(ViewDialog):
 
 	interior_popupmenu = POPUP_HVIEW_STRUCTURE
 	leaf_popupmenu = POPUP_HVIEW_LEAF
+	slide_popupmenu = POPUP_HVIEW_SLIDE
 
 	def __init__(self):
 		ViewDialog.__init__(self, 'hview_')
