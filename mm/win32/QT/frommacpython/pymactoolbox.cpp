@@ -198,7 +198,16 @@ extern int MenuObj_Convert(PyObject *, MenuHandle *) {return 0;}
 ** sort of a drawing surface (can be onscreen and offscreen on the mac) */
 
 extern PyObject *GrafObj_New(GrafPtr) {return 0;}
-extern int GrafObj_Convert(PyObject *, GrafPtr *) {return 0;}
+
+int GrafObj_Convert(PyObject *obj, GrafPtr *gp) 
+	{
+	int ptr;
+	if (!PyArg_ParseTuple(obj, "i", &ptr))
+		return 0;
+	gp = (GrafPtr*)ptr;
+	return 1;
+	}
+
 //extern PyObject *BMObj_New(BitMapPtr) {return 0;}
 //extern int BMObj_Convert(PyObject *, BitMapPtr *) {return 0;}
 /* QTWINPORT XXXX -These are simple RGB values. Treat like point/rect, I guess, just use Windows
@@ -219,7 +228,7 @@ extern int GWorldObj_Convert(PyObject *, GWorldPtr *) {return 0;}
 extern PyObject *ResObj_New(Handle) {return 0;}
 extern int ResObj_Convert(PyObject *, Handle *) {return 0;}
 extern PyObject *OptResObj_New(Handle) {return 0;}
-extern int OptResObj_Convert(PyObject *, Handle *) {return 0;}
+extern int OptResObj_Convert(PyObject *, Handle *ph) {ph=NULL;return 1;}
 
 /* TE exports */
 //extern PyObject *TEObj_New(TEHandle) {return 0;}
