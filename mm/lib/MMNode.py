@@ -1836,8 +1836,8 @@ class MMNode_body:
 	def cleanup_sched(self, sched):
 		self.parent.cleanup_sched(sched, self)
 
-	def add_arc(self, arc, sctx):
-		self.parent.add_arc(arc, sctx, self)
+	def add_arc(self, arc, curtime, sctx):
+		self.parent.add_arc(arc, sctx, curtime, self)
 
 	def set_start_time(self, timestamp, include_pseudo = 1):
 		self.start_time = timestamp
@@ -2280,7 +2280,7 @@ class MMNode(MMTreeElement):
 ##		for c in self.GetSchedChildren():
 ##			c.resetall(self.sctx.parent)
 
-	def add_arc(self, arc, sctx, body = None):
+	def add_arc(self, arc, curtime, sctx, body = None):
 		if debug: print 'add_arc', `self`, `body`, `arc`
 		if body is None:
 			body = self
@@ -2298,7 +2298,7 @@ class MMNode(MMTreeElement):
 		if self.playing != MMStates.IDLE and arc.delay is not None:
 			# if arc's event has already occurred, trigger it
 			if arc.wallclock is not None:
-				sctx.sched_arc(self, arc, event = 'begin', timestamp = arc.resolvedtime(sctx))
+				sctx.sched_arc(self, arc, curtime, event = 'begin', timestamp = arc.resolvedtime(sctx))
 				return
 			event = arc.getevent()
 			if event in ('begin', 'end'):
@@ -2319,7 +2319,7 @@ class MMNode(MMTreeElement):
 				key = 'event', 'begin'
 			if debug: print 'add_arc: key =',`key`,self.happenings.get(key)
 ##			if self.happenings.has_key(key):
-##				sctx.sched_arc(self, arc, event=event, marker=arc.marker, timestamp=self.happenings[key])
+##				sctx.sched_arc(self, arc, curtime, event=event, marker=arc.marker, timestamp=self.happenings[key])
 
 	def event(self, time, event, anchorname = None):
 		if anchorname is None:
@@ -3413,7 +3413,7 @@ class MMNode(MMTreeElement):
 	# - actions to be taken upon SCHED_STOP
 	# - a list of all (event, action) tuples to be generated
 	#
-	def gensr(self, looping=0, path=None, sctx=None):
+	def gensr(self, curtime, looping=0, path=None, sctx=None):
 		#
 		# Select the generator for the body of the node.
 		#
@@ -3466,7 +3466,7 @@ class MMNode(MMTreeElement):
 		scheddone_actions_arg = [(SCHED_STOPPING, self)]
 
 		sched_actions, schedstop_actions,  \
-			       srdict = gensr_envelope(gensr_body, repeatCount,
+			       srdict = gensr_envelope(curtime, gensr_body, repeatCount,
 						       sched_actions_arg,
 						       scheddone_actions_arg,
 						       path, sctx)
@@ -3505,19 +3505,19 @@ class MMNode(MMTreeElement):
 		if debuggensr: self.__dump_srdict('gensr', srdict)
 		return srdict
 
-	def gensr_envelope_nonloop(self, gensr_body, repeatCount, sched_actions,
+	def gensr_envelope_nonloop(self, curtime, gensr_body, repeatCount, sched_actions,
 				   scheddone_actions, path, sctx):
 		if repeatCount != 1:
 			raise 'Looping nonlooping node!'
 		self.curloopcount = 0
 
 		sched_actions, schedstop_actions, srdict = \
-			       gensr_body(sched_actions, scheddone_actions, path=path, sctx=sctx)
+			       gensr_body(curtime, sched_actions, scheddone_actions, path=path, sctx=sctx)
 		if debuggensr:
 			self.__dump_srdict('gensr_envelope_nonloop', srdict)
 		return sched_actions, schedstop_actions, srdict
 
-	def gensr_envelope_firstloop(self, gensr_body, repeatCount,
+	def gensr_envelope_firstloop(self, curtime, gensr_body, repeatCount,
 				     sched_actions, scheddone_actions,
 				     path, sctx):
 		srlist = []
@@ -3550,7 +3550,8 @@ class MMNode(MMTreeElement):
 		body_sched_actions = []
 		body_scheddone_actions = [(SCHED_STOPPING, self.looping_body_self)]
 		body_sched_actions, body_schedstop_actions, srdict = \
-				    gensr_body(body_sched_actions,
+				    gensr_body(curtime,
+					       body_sched_actions,
 					       body_scheddone_actions,
 					       self.looping_body_self,
 					       path=path,
@@ -3585,7 +3586,7 @@ class MMNode(MMTreeElement):
 		return sched_actions, terminate_actions, srdict
 
 
-	def gensr_envelope_laterloop(self, gensr_body, repeatCount,
+	def gensr_envelope_laterloop(self, curtime, gensr_body, repeatCount,
 				     sched_actions, scheddone_actions,
 				     path, sctx):
 		srlist = []
@@ -3593,7 +3594,8 @@ class MMNode(MMTreeElement):
 		body_sched_actions = []
 		body_scheddone_actions = [(SCHED_STOPPING, self.looping_body_self)]
 		body_sched_actions, body_schedstop_actions, srdict = \
-				    gensr_body(body_sched_actions,
+				    gensr_body(curtime,
+					       body_sched_actions,
 					       body_scheddone_actions,
 					       self.looping_body_self,
 					       path=path,
@@ -3687,7 +3689,7 @@ class MMNode(MMTreeElement):
 					arc.qid = None
 ##				arc.timestamp = None
 
-	def gensr_body_interior(self, sched_actions, scheddone_actions,
+	def gensr_body_interior(self, curtime, sched_actions, scheddone_actions,
 				self_body=None, path=None, sctx=None):
 		srdict = {}
 		srlist = []
@@ -3750,7 +3752,7 @@ class MMNode(MMTreeElement):
 			arc = MMSyncArc(self_body, 'dur', srcnode=self_body, event='begin', delay=delay)
 			self_body.durarcs.append(arc)
 ##			self_body.arcs.append((self_body, arc))
-			self_body.add_arc(arc, sctx)
+			self_body.add_arc(arc, sctx, curtime)
 
 		for child in wtd_children:
 			chname = MMAttrdefs.getattr(child, 'name')
@@ -3760,7 +3762,7 @@ class MMNode(MMTreeElement):
 			if path and path[0] is child:
 				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = sctx.parent.timefunc() - self.start_time)
 				self_body.arcs.append((srcnode, arc))
-				srcnode.add_arc(arc, sctx)
+				srcnode.add_arc(arc, sctx, curtime)
 				schedule = 1
 				subpath = path[1:]
 				arc.path = subpath
@@ -3769,13 +3771,13 @@ class MMNode(MMTreeElement):
 					child.set_infoicon('error', 'node cannot start')
 				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = defbegin)
 				self_body.arcs.append((srcnode, arc))
-				srcnode.add_arc(arc, sctx)
+				srcnode.add_arc(arc, sctx, curtime)
 				schedule = defbegin is not None
 			else:
 				schedule = 0
 				for arc in beginlist:
 					refnode = arc.refnode()
-					refnode.add_arc(arc, sctx)
+					refnode.add_arc(arc, sctx, curtime)
 					if arc.getevent() == 'begin' and \
 					   refnode is self_body and \
 					   arc.marker is None and \
@@ -3788,7 +3790,7 @@ class MMNode(MMTreeElement):
 ##			    (schedule or termtype == 'ALL')):
 				arc = MMSyncArc(self_body, 'dur', srcnode=child, event='end', delay=0)
 				self_body.arcs.append((child, arc))
-				child.add_arc(arc, sctx)
+				child.add_arc(arc, sctx, curtime)
 				# we need this in case all children
 				# (or the relevant child) has an
 				# unresolved end and we have a min
@@ -3799,7 +3801,7 @@ class MMNode(MMTreeElement):
 				scheddone_events.append((SCHED_DONE, child))
 			for arc in self.FilterArcList(child.GetEndList()):
 				refnode = arc.refnode()
-				refnode.add_arc(arc, sctx)
+				refnode.add_arc(arc, sctx, curtime)
 			cdur = child.calcfullduration(sctx, ignoremin = 1)
 			if cdur is not None and (child.fullduration is not None or child.attrdict.has_key('duration') or child.type in leaftypes):
 				if cdur < 0:
@@ -3809,19 +3811,19 @@ class MMNode(MMTreeElement):
 				arc = MMSyncArc(child, 'dur', srcnode=child, event='begin', delay=delay)
 				child.durarcs.append(arc)
 ##				self_body.arcs.append((child, arc))
-				child.add_arc(arc, sctx)
+				child.add_arc(arc, sctx, curtime)
 			min, max = child.GetMinMax()
 			if min > 0:
 				arc = MMSyncArc(child, 'min', srcnode=child, event='begin', delay=min)
 				child.has_min = min
 				child.durarcs.append(arc)
-				child.add_arc(arc, sctx)
+				child.add_arc(arc, sctx, curtime)
 			else:
 				child.has_min = 0
 			if max >= 0:
 				arc = MMSyncArc(child, 'end', srcnode=child, event='begin', delay=max)
 				child.durarcs.append(arc)
-				child.add_arc(arc, sctx)
+				child.add_arc(arc, sctx, curtime)
 			if self.type == 'seq':
 				srcnode = child
 				event = 'end'
@@ -3834,7 +3836,7 @@ class MMNode(MMTreeElement):
 			# which the node should end (dur/end attr)
 			arc = MMSyncArc(self_body, 'end', srcnode=srcnode, event=event, delay=0)
 			self_body.arcs.append((srcnode, arc))
-			srcnode.add_arc(arc, sctx)
+			srcnode.add_arc(arc, sctx, curtime)
 		#
 		# Trickery to handle dur and end correctly:
 		#
@@ -3860,7 +3862,7 @@ class MMNode(MMTreeElement):
 			self.__dump_srdict('gensr_body_interior', srdict)
 		return sched_actions, schedstop_actions, srdict
 
-	def gensr_body_realpix(self, sched_actions, scheddone_actions,
+	def gensr_body_realpix(self, curtime, sched_actions, scheddone_actions,
 			       self_body=None, path=None, sctx=None):
 		srdict = {}
 		srlist = []
@@ -3874,7 +3876,7 @@ class MMNode(MMTreeElement):
 ##			print 'gensr for', child
 ##			print 'func is', child._is_realpix_with_captions(), child._is_realpix_with_captions
 
-			srdict.update(child.gensr(overrideself=child, sctx=sctx))
+			srdict.update(child.gensr(curtime, overrideself=child, sctx=sctx))
 
 			sched_actions.append( (SCHED, child) )
 			schedstop_actions.append( (SCHED_STOP, child) )
@@ -3900,10 +3902,10 @@ class MMNode(MMTreeElement):
 			self.__dump_srdict('gensr_body_realpix', srdict)
 		return sched_actions, schedstop_actions, srdict
 
-	def gensr_child(self, child, runchild = 1, path = None, sctx = None):
+	def gensr_child(self, curtime, child, runchild = 1, path = None, sctx = None):
 		if debug: print 'gensr_child',`self`,`child`,runchild
 		if runchild:
-			srdict = child.gensr(path=path, sctx=sctx)
+			srdict = child.gensr(curtime, path=path, sctx=sctx)
 		else:
 			srdict = {}
 		body = self.looping_body_self or self
@@ -4258,7 +4260,7 @@ class MMNode(MMTreeElement):
 				return 1
 		return 0
 
-	def GenAllSR(self, seeknode, sctx = None):
+	def GenAllSR(self, curtime, seeknode, sctx = None):
 		self.cleanup()
 ##		self.SetPlayability()
 		if not seeknode:
@@ -4271,7 +4273,7 @@ class MMNode(MMTreeElement):
 		#
 		# Now run through the tree
 		#
-		srdict = self.gensr(sctx=sctx)
+		srdict = self.gensr(curtime, sctx=sctx)
 		event, actions = (SCHED_DONE, self), [(SCHED_STOP, self)]
 		self.srdict[event] = [1, actions]
 		srdict[event] = self.srdict # or just self?
@@ -4316,10 +4318,10 @@ class MMNode(MMTreeElement):
 	# Re-generate SR actions/events for a loop. Called for the
 	# second and subsequent times through the loop.
 	#
-	def GenLoopSR(self, sctx):
+	def GenLoopSR(self, curtime, sctx):
 		# XXXX Try by Jack:
 		self.PruneTree(None, 0)
-		return self.gensr(looping=1, sctx=sctx)
+		return self.gensr(curtime, looping=1, sctx=sctx)
 	#
 	# Check whether the current loop has reached completion.
 	#
