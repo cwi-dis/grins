@@ -13,6 +13,7 @@ import sys
 import MenuTemplate
 import gestalt
 import Qt
+import QuickTime
 import Scrap
 import TE
 import AE
@@ -26,7 +27,25 @@ def _qtavailable():
 	
 if not _qtavailable():
 	Qt = None
-
+	
+def GetVideoSize(filename):
+	if not Qt:
+		return 0,0
+	Qt.EnterMovies()
+	try:
+		movieResRef = Qt.OpenMovieFile(filename, 1)
+	except (ValueError, Qt.Error), arg:
+		print 'Cannot open QT movie:',filename, arg
+		return 0, 0
+	try:
+		movie, d1, d2 = Qt.NewMovieFromFile(movieResRef, 0,
+			QuickTime.newMovieDontResolveDataRefs)
+	except (ValueError, Qt.Error), arg:
+		print 'Cannot read QT movie:',filename, arg
+		return 0, 0
+	l, t, r, b = movie.GetMovieBox()
+	return r-l, b-t
+	
 #
 # Stuff we need from other mw_ modules
 #
