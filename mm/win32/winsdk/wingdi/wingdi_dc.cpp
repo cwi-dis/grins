@@ -48,6 +48,13 @@ PyObject* Wingdi_CreateDCFromHandle(PyObject *self, PyObject *args)
 	return (PyObject*)PyDC::createInstance(hDC);
 	}
 
+PyObject* Wingdi_GetDesktopDC(PyObject *self, PyObject *args)
+	{
+	if(!PyArg_ParseTuple(args, ""))
+		return NULL;
+	return (PyObject*)PyDC::createInstance(GetDC(NULL));
+	}
+
 ///////////////////////////////
 // module
 
