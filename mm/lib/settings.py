@@ -23,6 +23,8 @@ default_settings = {
 ##	'system_screen_depth': windowinterface.getscreendepth(), # Depth of screen
 	'system_required': (),		# Needs special handling in match...
 	'system_audiodesc': 0,		# No audio description
+	'system_operating_system': 'UNKNOWN',
+	'system_cpu': 'UNKNOWN',
 	'license': '',
 	'license_user' : '',
 	'license_organization' : '',
@@ -110,7 +112,7 @@ LANGUAGE=['system_language']
 ALL=['system_bitrate', 'system_captions', 'system_language',
      'system_overdub_or_caption', 'system_screen_size',
      'system_screen_depth', 'system_required', 'system_audiodesc',
-     'system_overdub_or_subtitle']
+     'system_operating_system', 'system_cpu']
 
 NEEDS_RESTART=['cmif', 'vertical_structure', 'no_canvas_resize', 'root_expanded']
 
@@ -168,6 +170,14 @@ def get(name):
 	return real_value
 
 def match(name, wanted_value):
+	if name == 'system_operating_system':
+		import opsys, string
+		wanted_value = string.upper(wanted_value)
+		return opsys.opsys.has_key(wanted_value) and opsys.opsys[wanted_value]
+	if name == 'system_cpu':
+		import opsys, string
+		wanted_value = string.upper(wanted_value)
+		return opsys.cpu.has_key(wanted_value) and opsys.cpu[wanted_value]
 	real_value = get(name)
 	if name in EXACT:
 		return (real_value == wanted_value)
