@@ -81,6 +81,7 @@ class Channel:
 		self.armBox = (0.0, 0.0, 1.0, 1.0) # by default all window area
 		self.playBox = (0.0, 0.0, 1.0, 1.0) # by default all window area
 		self.nopop = 0
+		self.need_reshow = 0
 		self.syncarm = 1	# was: settings.noprearm (always 1)
 		self.syncplay = 0
 		self.is_layout_channel = 0
@@ -149,16 +150,15 @@ class Channel:
 			if self._is_shown:
 				reshow = 0
 				for key, (val, default) in self._curvals.items():
-					if self._attrdict.get(key, default) != val:
+					if key == 'winsize':
+						curval = self.cssResolver.getPxGeom(self._attrdict._cssId)
+					else:
+						curval = self._attrdict.get(key, default)
+					if curval != val:
 						reshow = 1
 						break
 				if self.mustreshow() or reshow:
-					highlighted = self._highlighted
-					self.cancel_modeless_resize()
-					self.hide()
-					self.show()
-					if highlighted:
-						self.highlight(highlighted)
+					self.need_reshow = 1
 		except:
 			# may be already destroyed
 			pass
@@ -261,6 +261,10 @@ class Channel:
 	def show(self, force = 0):
 		if debug: print 'Channel.show'+`self,force`
 			
+		if self.need_reshow:
+			self.need_reshow = 0
+			self.hide()
+
 		# If we were still waiting for a hide we cancel that
 		self._hide_pending = 0
 
@@ -364,6 +368,7 @@ class Channel:
 		# Indicate that the channel must enter the HIDDEN state.
 		if debug: print 'Channel.hide('+`self`+')'
 
+		self.need_reshow = 0
 		# force equal 0 is used only in internal. By default the channel is hide
 		# only when showBackground attribute equal whenActive
 		if not force:
