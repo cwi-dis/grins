@@ -852,7 +852,7 @@ class BandwidthComputeDialog(ResDialog):
 		self._errorcount = Static(self, grinsRC.IDC_ERRORCOUNT)
 		self._message2 = Static(self, grinsRC.IDC_MESSAGE2)
 		self._ok = Button(self, win32con.IDOK)
-		self._cancel = Button(self, win32con.IDCANCEL)
+		self._cancel = Button(self, grinsRC.IDC_CANCEL)
 		self._help = Button(self, win32con.IDHELP)
 		self.mustwait = 0
 		self.CreateWindow()
@@ -869,6 +869,7 @@ class BandwidthComputeDialog(ResDialog):
 		self._message2.settext('')
 		self._ok.settext('OK')
 		self._help.hookcommand(self,self.OnHelp)
+		self._cancel.hookcommand(self,self.onCancel)
 		self.init_subwindows()
 		return ResDialog.OnInitDialog(self)
 
@@ -916,6 +917,7 @@ class BandwidthComputeDialog(ResDialog):
 		self._ok.enable(1)
 		if cancancel:
 			self._ok.settext('Proceed...')
+			self._cancel.show()
 			self._cancel.enable(1)
 
 	def close(self):
@@ -927,6 +929,8 @@ class BandwidthComputeDialog(ResDialog):
 			self.callback()
 
 	def OnCancel(self):
+		self.close()
+	def onCancel(self,id,code):
 		self.close()
 
 	def OnHelp(self, id, code):
