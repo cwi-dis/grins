@@ -407,7 +407,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.currentMediaRegionList = []
 		self.lastMediaNameSelected = None
 		
-		# init state of differents dialog controls
+		# init state of different dialog controls
 		self.showName = 1
 		self.asOutLine = 0
 		self.showBgcolor = 1
@@ -435,8 +435,12 @@ class LayoutView2(LayoutViewDialog2):
 		self.buildRegionTree(self.context)
 		self.initDialogBox()		
 		self.displayViewport(self._first)
-		self.editmgr.register(self, 1)
+		self.editmgr.registerfirst(self, 1)
 
+		# get the initial focus		
+		type,focus = self.editmgr.getglobalfocus()
+		if focus != None:
+			self.globalfocuschanged(type, focus)
 		#		
 		# simulate the focus for test
 		#
