@@ -983,7 +983,7 @@ class EffectiveAnimator:
 		
 		elif self.__attr=='bgcolor':
 			if chan.window:
-				chan.window.updatebgcolor(color)
+				chan.window.updatebgcolor(value)
 
 		elif self.__attr=='z':
 			if chan.window:
@@ -2270,4 +2270,3 @@ class AnimateElementParser:
 				i = i+1
 		l.append(str[end:])
 		return l
- 
