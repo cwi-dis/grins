@@ -1,7 +1,7 @@
 __version__ = "$Id$"
 
 import what, string
-from audio import Error
+import audio
 
 # This dummy function is there to make freeze import the right modules
 def _dummy_freeze_func():
@@ -41,7 +41,7 @@ class _FileDict:
 		try:
 			exec 'import %s' % module
 		except ImportError:
-			raise Error, 'No support for audio file type: '+key
+			raise audio.Error, 'No support for audio file type: '+key
 		module = eval(module)
 		self.__cache[key] = module
 		return module
@@ -52,8 +52,8 @@ def reader(filename):
 	filetype = what.what(file)
 	if not filetype:
 		file.close()
-		raise Error, 'Unknown audio file type (bad magic number)'
+		raise audio.Error, 'Unknown audio file type (bad magic number)'
 	if not _filedict.has_key(filetype):
 		file.close()
-		raise Error, 'No support for audio file type: '+filetype[0]
+		raise audio.Error, 'No support for audio file type: '+filetype[0]
 	return _filedict[filetype].reader(file)
