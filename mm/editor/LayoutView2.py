@@ -2663,14 +2663,17 @@ class FitWidget(LightWidget):
 	def __unselect(self):
 		self.dialogCtrl.enable('Fit',0)
 		self.dialogCtrl.setSelecterCtrl('Fit',-1)
+		self.dialogCtrl.setLabel('FitLabel','Fit')
 
 	# update the dialog box on valid selection
 	def __update(self, nodeRef, nodeType):
 		if nodeType == TYPE_REGION:
+			self.dialogCtrl.setLabel('FitLabel','Default fit')
 			fit = nodeRef.GetAttrDef('fit', 'hidden')
 			self.__currentShowedValues = self.showedValues
 			index = self.fitValues.index(fit)
 		elif nodeType == TYPE_MEDIA:
+			self.dialogCtrl.setLabel('FitLabel','Fit')
 			fit = nodeRef.GetAttrDef('fit', None)
 			region = self._context.getParentNodeRef(nodeRef)
 			defaultFit = region.GetAttrDef('fit', 'hidden')
