@@ -75,7 +75,7 @@ class _rbtk:
 				if win._showing:
 					d.fgcolor(win._showing)
 				d.drawbox(b)
-		if not self._topwindow._usesOSSubWindows:
+		if not self._topwindow._usesLightSubWindows:
 			self._topwindow.ShowWindows(win32con.SW_HIDE)
 
 		if box:
@@ -124,7 +124,7 @@ class _rbtk:
 			self.getgrinsframe().showChilds(1)
 
 		# 2. restore wnds state
-		if not self._topwindow._usesOSSubWindows:
+		if not self._topwindow._usesLightSubWindows:
 			self._topwindow.ShowWindows(win32con.SW_SHOW)
 
 		# 3. restore display list
