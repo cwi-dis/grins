@@ -617,7 +617,11 @@ class SchedulerContext:
 			for c in pnode.GetSchedChildren():
 				# don't have to terminate it again
 				if c is not node and c.playing in (MMStates.PLAYING, MMStates.PAUSED, MMStates.FROZEN):
-					self.do_terminate(c, timestamp, cancelarcs = arc is None)
+					# if fill="hold", freeze child, otherwise kill
+					fill = c.GetFill()
+					if fill != 'hold':
+						fill = 'remove'
+					self.do_terminate(c, timestamp, fill = fill, cancelarcs = arc is None)
 					if not parent.playing:
 						return
 					# there can be only one active child

@@ -208,9 +208,12 @@ def prep1(node):
 
 
 def prep2(node, root):
-##	if not node.GetSummary('synctolist'): return
-	arcs = MMAttrdefs.getattr(node, 'synctolist')
-	delay = node.GetAttrDef('begin', 0.0)
+	# XXX we only deal with a single offset syncarc; all others are ignored
+	arcs = MMAttrdefs.getattr(node, 'beginlist')
+	delay = 0.0
+	for arc in arcs:
+		if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
+			delay = arc.delay
 	parent = node.GetSchedParent()
 	if delay > 0 and parent is not None:
 		if parent.GetType() == 'seq':
@@ -227,20 +230,21 @@ def prep2(node, root):
 		else:
 			xnode = parent
 			xside = HD
-		# don't modify the list!!
-		arcs = [(xnode.GetUID(), xside, delay, HD)] + arcs
-	for arc in arcs:
-		xuid, xside, delay, yside = arc
-		try:
-			xnode = node.MapUID(xuid)
-		except NoSuchUIDError:
-			# Skip sync arc from non-existing node
-			continue
-		if xside not in (HD, TL):
-			xside = HD	# XYZZY
-		# skip out-of-minidocument sync arcs
-		if xnode.FindMiniDocument() is node.FindMiniDocument():
-			adddep(xnode, xside, delay, node, yside)
+		adddep(xnode, xside, delay, node, HD)
+##		# don't modify the list!!
+##		arcs = [(xnode.GetUID(), xside, delay, HD)] + arcs
+##	for arc in arcs:
+##		xuid, xside, delay, yside = arc
+##		try:
+##			xnode = node.MapUID(xuid)
+##		except NoSuchUIDError:
+##			# Skip sync arc from non-existing node
+##			continue
+##		if xside not in (HD, TL):
+##			xside = HD	# XYZZY
+##		# skip out-of-minidocument sync arcs
+##		if xnode.FindMiniDocument() is node.FindMiniDocument():
+##			adddep(xnode, xside, delay, node, yside)
 	#
 	if node.GetType() in real_interiortypes:
 		for c in node.GetSchedChildren(0): prep2(c, root)
@@ -265,13 +269,21 @@ def propdown(node, stoptime, dftstarttime=0):
 		children = node.GetChildren()
 		if not children:
 			return
-		lastchild = children[-1]
-		children = children[:-1]
 		nextstart = node.t0
-		for c in children:
-			propdown(c, c.t1, nextstart)
+		for i in range(len(children)):
+			c = children[i]
+			fill = c.GetFill()
+			if fill == 'freeze':
+				if i == len(children)-1:
+					s = node.t1
+				else:
+					s = children[i+1].t0
+			elif fill == 'hold':
+				s = node.t1
+			else:
+				s = c.t1
+			propdown(c, s, nextstart)
 			nextstart = c.t1
-		propdown(lastchild, stoptime, nextstart)
 	elif node.t0t1_inherited:
 		node.t1 = stoptime
 
@@ -297,13 +309,10 @@ def decrement(q, delay, node, side):
 	elif side == TL:
 		node.t1 = q.timefunc()
 	node.node_to_arm = None
-	if node.GetType() in interiortypes:
-		node.t0t1_inherited = 1
-	elif side == HD:
+	node.t0t1_inherited = node.GetFill() in ('freeze', 'hold')
+	if node.GetType() not in interiortypes and side == HD:
 		t0 = time.time()
 		dt = getduration(node)
-		node.t0t1_inherited = (dt == 0 and len(node.deps[TL]) <= 1)
-			# Don't mess if it has timing deps
 		t1 = time.time()
 		global getd_times
 		getd_times = getd_times + (t1-t0)
