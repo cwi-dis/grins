@@ -209,7 +209,7 @@ class NodeWrapper() = Wrapper():
 	# in an order that makes sense to the user.
 	#
 	def attrnames(self):
-		namelist = ['name', 'channel']
+		namelist = ['name', 'channel', 'closed']
 		try:
 			# Get the channel class (should be a subroutine!)
 			cname = MMAttrdefs.getattr(self.node, 'channel')
