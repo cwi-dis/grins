@@ -110,6 +110,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 IDC_DRAG_HAND           CURSOR  DISCARDABLE     "RES\\draghand.cur"
+IDC_DARROW              CURSOR  DISCARDABLE     "res\\darrow.cur"
+IDC_DARROWHIT           CURSOR  DISCARDABLE     "res\\darrowhi.cur"
 
 /////////////////////////////////////////////////////////////////////////////
 //

@@ -266,8 +266,10 @@
 #define IDI_ICON_BROWSER                464
 #define IDD_EDITATTR_LAYOUT2REAL        465
 #define IDI_ICON_CONTEXT                465
+#define IDC_DARROW                      465
 #define IDD_EDITATTR_REALEXTENSION      466
 #define IDI_ICON_MEDIACLOSED            466
+#define IDC_DARROWHIT                   466
 #define IDD_EDITATTR_S7F                467
 #define IDI_ICON_MEDIAOPEN              467
 #define IDD_EDITATTR_SERVER             468
@@ -949,7 +951,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        465
+#define _APS_NEXT_RESOURCE_VALUE        467
 #define _APS_NEXT_COMMAND_VALUE         32905
 #define _APS_NEXT_CONTROL_VALUE         1562
 #define _APS_NEXT_SYMED_VALUE           104
