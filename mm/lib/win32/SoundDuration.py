@@ -10,7 +10,7 @@ import MMmimetypes
 def getfullinfo(url):
 	duration = 0
 	mtype = MMmimetypes.guess_type(url)[0]
-	if mtype and (mtype.find('x-aiff') >= 0 or mtype.find('quicktime')):
+	if mtype and (mtype.find('x-aiff') >= 0 or mtype.find('quicktime') >= 0):
 		import winqt
 		if winqt.HasQtSupport():
 			try:

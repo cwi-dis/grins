@@ -65,7 +65,7 @@ class SoundChannel(Channel.ChannelAsync):
 			if self.__rc:
 				if self.__rc.prepare_player(node):
 					self.__ready = 1
-		elif mtype and (mtype.find('x-aiff')>=0 or mtype.find('quicktime')) and MediaChannel.HasQtSupport():
+		elif mtype and (mtype.find('x-aiff') >= 0 or mtype.find('quicktime') >= 0) and MediaChannel.HasQtSupport():
 			node.__type = 'qt'
 			self.__qc = MediaChannel.QtChannel(self)
 			try:
