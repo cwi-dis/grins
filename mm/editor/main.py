@@ -9,8 +9,9 @@ try:
 except:
 	pass
 
-import fastimp
-fastimp.install()
+if __file__ != '<frozen>':
+	import fastimp
+	fastimp.install()
 
 import getopt
 
