@@ -13,6 +13,8 @@ import sys
 
 error = 'windowinterface.error'
 ReadMask, WriteMask = 1, 2
+SINGLE, HTM, TEXT, MPEG = 0, 1, 2, 3
+
 Version = 'GL'
 
 [_X, _Y, _WIDTH, _HEIGHT] = range(4)
@@ -156,7 +158,7 @@ class _Toplevel:
 			win.setcursor(cursor)
 		self._cursor = cursor
 
-	def newwindow(self, x, y, w, h, title):
+	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE):
 		if debug: print 'Toplevel.newwindow'+`x, y, w, h, title`
 		window = _Window(1, self, x, y, w, h, title)
 		event._qdevice()
@@ -1262,7 +1264,7 @@ class _Window:
 		       self._rect[_WIDTH] * w, \
 		       self._rect[_HEIGHT] * h
 
-	def newwindow(self, coordinates, **options):
+	def newwindow(self, coordinates, type_channel = SINGLE, **options):
 		if debug: print `self`+'.newwindow'+`coordinates`
 		x, y, w, h = coordinates
 		x0, y0, x1, y1 = self._convert_coordinates(x, y, w, h)

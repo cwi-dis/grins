@@ -1,4 +1,5 @@
 import X_windowbase
+from X_windowbase import TRUE, FALSE, SINGLE
 
 from types import *
 import math
@@ -18,12 +19,12 @@ ARR_HALFWIDTH = 5
 ARR_SLANT = float(ARR_HALFWIDTH) / float(ARR_LENGTH)
 
 class _Toplevel(X_windowbase._Toplevel):
-	def newwindow(self, x, y, w, h, title, pixmap = None):
+	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = None):
 ## 		if pixmap is None:
 ## 			pixmap = toplevel._depth <= 8
 		return _Window(self, x, y, w, h, title, 0, pixmap)
 
-	def newcmwindow(self, x, y, w, h, title, pixmap = None):
+	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = None):
 ## 		if pixmap is None:
 ## 			pixmap = toplevel._depth <= 8
 		return _Window(self, x, y, w, h, title, 1, pixmap)
@@ -156,10 +157,10 @@ class _Window(X_windowbase._Window):
 			return FALSE
 		return TRUE
 
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0):
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, type_channel = SINGLE):
 		return _SubWindow(self, coordinates, 0, pixmap, transparent)
 
-	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0):
+	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, type_channel = SINGLE):
 		return _SubWindow(self, coordinates, 1, pixmap, transparent)
 
 	# have to override these for create_box

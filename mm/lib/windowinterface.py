@@ -4,6 +4,8 @@ if os.environ.has_key('CMIF_USE_DUMMY'):
 	from dummy_window import *
 elif os.name == 'mac':
 	from mac_window import *
+elif os.environ.has_key('CMIF_USE_WIN32'):
+	from WIN32_window import *
 elif os.environ.has_key('CMIF_USE_GL'):
 	from GL_window import *
 else:

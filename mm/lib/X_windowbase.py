@@ -8,6 +8,7 @@ Continue = 'Continue'
 
 FALSE, TRUE = 0, 1
 ReadMask, WriteMask = 1, 2
+SINGLE, HTM, TEXT, MPEG = 0, 1, 2, 3
 
 Version = 'X'
 
@@ -100,10 +101,10 @@ class _Toplevel:
 	def addclosecallback(self, func, args):
 		self._closecallbacks.append(func, args)
 
-	def newwindow(self, x, y, w, h, title, pixmap = 0):
+	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0):
 		return _Window(self, x, y, w, h, title, 0, pixmap)
 
-	def newcmwindow(self, x, y, w, h, title, pixmap = 0):
+	def newcmwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE, pixmap = 0):
 		return _Window(self, x, y, w, h, title, 1, pixmap)
 
 	def setcursor(self, cursor):
@@ -457,10 +458,10 @@ class _Window:
 		return float(x) / toplevel._hmm2pxl, y / toplevel._vmm2pxl, \
 		       w / toplevel._hmm2pxl, h / toplevel._vmm2pxl
 
-	def newwindow(self, coordinates, pixmap = 0, transparent = 0):
+	def newwindow(self, coordinates, pixmap = 0, transparent = 0, type_channel = SINGLE):
 		return _SubWindow(self, coordinates, 0, pixmap, transparent)
 
-	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0):
+	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, type_channel = SINGLE):
 		return _SubWindow(self, coordinates, 1, pixmap, transparent)
 
 	def fgcolor(self, color):

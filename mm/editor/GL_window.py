@@ -50,7 +50,7 @@ GL_windowbase.qtest = qtest
 GL_windowbase.qdevice = qdevice
 
 class _Toplevel(GL_windowbase._Toplevel):
-	def newwindow(self, x, y, w, h, title):
+	def newwindow(self, x, y, w, h, title, visible_channel = TRUE, type_channel = SINGLE):
 		if debug: print 'Toplevel.newwindow'+`x, y, w, h, title`
 		window = _Window(1, self, x, y, w, h, title)
 		event._qdevice()
@@ -471,7 +471,7 @@ class _DisplayList(GL_windowbase._DisplayList):
 		d.append(gl.popmatrix)
 
 class _Window(GL_windowbase._Window):
-	def newwindow(self, coordinates, **options):
+	def newwindow(self, coordinates, type_channel = SINGLE, **options):
 		if debug: print `self`+'.newwindow'+`coordinates`
 		x, y, w, h = coordinates
 		x0, y0, x1, y1 = self._convert_coordinates(x, y, w, h)
