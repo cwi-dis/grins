@@ -231,6 +231,57 @@ static PyObject* py_set_position(PyObject *self, PyObject *args)
         }
 	RETURN_NONE;
 	}
+// Get the end position (in msec) within the stream
+// Arguments: No
+// Return Values: position within the stream in msecs
+static PyObject* py_get_stoptime(PyObject *self, PyObject *args)
+	{
+	CHECK_NO_ARGS2(args,GetStopTime);
+
+	GraphBuilder *pGraphBuilder=(GraphBuilder*)((PyClass<GraphBuilder,GraphBuilderCreator> *)self)->GetObject();
+	if(!pGraphBuilder)return NULL;
+	IGraphBuilder* pGraph=pGraphBuilder->m_pI;
+
+	HRESULT hr=S_OK;
+	if(!pGraphBuilder->m_pIMP)
+		hr = pGraph->QueryInterface(IID_IMediaPosition, (void**)&(pGraphBuilder->m_pIMP));
+    if(SUCCEEDED(hr))
+		{
+        REFTIME tStop; // double in secs
+		GUI_BGN_SAVE;
+        hr = pGraphBuilder->m_pIMP->get_StopTime(&tStop);
+		GUI_END_SAVE;
+		if (SUCCEEDED(hr))
+			return Py_BuildValue("i", int(tStop*1000)); // in msec
+        }
+	RETURN_ERR("GetStopTime failed");
+	}
+
+// Set end position (in msec) within the stream
+// Arguments: position in msec
+// Return Values: None
+static PyObject* py_set_stoptime(PyObject *self, PyObject *args)
+	{
+	int pos; // in msec
+	if(!PyArg_ParseTuple(args,"i:SetStopTime",&pos))
+		return NULL;
+
+	GraphBuilder *pGraphBuilder=(GraphBuilder*)((PyClass<GraphBuilder,GraphBuilderCreator> *)self)->GetObject();
+	if(!pGraphBuilder)return NULL;
+	IGraphBuilder* pGraph=pGraphBuilder->m_pI;
+
+	HRESULT hr=S_OK;
+	if(!pGraphBuilder->m_pIMP)
+		hr = pGraph->QueryInterface(IID_IMediaPosition, (void**)&(pGraphBuilder->m_pIMP));
+    if(SUCCEEDED(hr))
+		{
+		GUI_BGN_SAVE;
+        REFTIME tPos=double(pos)/1000.0; // double in secs
+        hr = pGraphBuilder->m_pIMP->put_StopTime(tPos);
+		GUI_END_SAVE;
+        }
+	RETURN_NONE;
+	}
 
 // Set the visible property to the value passed as argument (only for video)
 // Arguments: visible flag 
@@ -447,6 +498,8 @@ static struct PyMethodDef PyGraphBuilder_methods[] = {
 	{"GetDuration",py_get_duration,1}, 
 	{"GetPosition",py_get_position,1}, 
 	{"SetPosition",py_set_position,1},
+	{"GetStopTime",py_get_stoptime,1}, 
+	{"SetStopTime",py_set_stoptime,1},
 	
 	{"SetWindow",py_set_window,1}, 
 	{"SetWindowNull",py_set_window_null,1}, 
