@@ -47,6 +47,7 @@ FALSE, TRUE = 0, 1
 ReadMask, WriteMask = 1, 2
 
 EVENTMASK=0xffff
+MINIMAL_TIMEOUT=1	# How long we yield at the very least
 
 _X=0
 _Y=1
@@ -86,6 +87,7 @@ class _Event:
 		self._timer_id = 0
 		self._timerfunc = None
 		self._time = time.time()
+		self._idles = []
 
 	def mainloop(self):
 		while 1:
@@ -103,7 +105,9 @@ class _Event:
 				else:
 					self._timers[0] = sec, cb, tid
 					break
-			if self._timers:
+			if self._idles:
+				timeout = MINIMAL_TIMEOUT
+			elif self._timers:
 				timeout = self._timers[0][0]
 			else:
 				timeout = 100000
@@ -111,6 +115,9 @@ class _Event:
 			if gotone:
 				self._handle_event(event)
 				what, message, when, where, modifiers = event
+			else:
+				for rtn in self._idles:
+					rtn()
 				
 	def _handle_event(self, event):
 		"""Handle a single MacOS event"""
@@ -208,6 +215,14 @@ class _Event:
 					tt, cb, tid = self._timers[i]
 					self._timers[i] = (tt + t, cb, tid)
 				return
+				
+	def setidleproc(self, cb):
+		"""Adds an idle-loop callback"""
+		self._idles.append(cb)
+		
+	def cancelidleproc(self, cb):
+		"""Remove an idle-loop callback"""
+		self._idles.remove(cb)
 
 	# file descriptor interface
 	def select_setcallback(self, fd, func, args, mask = ReadMask):
@@ -468,7 +483,7 @@ class _CommonWindow:
 		x, y = x + (width - (w - left - right)) / 2, \
 		       y + (height - (h - top - bottom)) / 2
 		xim = mac_image.mkpixmap(w, h, format, image)
-		return xim, mask, left, top, x, y, w - left - right, h - top - bottom
+		return (xim, image), mask, left, top, x, y, w - left - right, h - top - bottom
 
 	def _convert_coordinates(self, coordinates):
 		"""Convert fractional xywh in our space to pixel-xywh
@@ -494,7 +509,7 @@ class _CommonWindow:
 		return r*0x101, g*0x101, b*0x101
 
 
-	def _qdrect(self):
+	def qdrect(self):
 		"""return our xywh rect (in pixels) as quickdraw ltrb style"""
 		return self._rect[0], self._rect[1], self._rect[0]+self._rect[2], \
 			self._rect[1]+self._rect[3]
@@ -516,12 +531,12 @@ class _CommonWindow:
 					
 	def _do_redraw(self):
 		"""Do actual redraw"""
-##		Qd.EraseRect(self._qdrect())
+##		Qd.EraseRect(self.qdrect())
 		if self._active_displist:
 			self._active_displist._render()
 		else:
-			Qd.EraseRect(self._qdrect())
-			print 'Erased', self._qdrect(),'to', self._wid.GetWindowPort().rgbBkColor
+			Qd.EraseRect(self.qdrect())
+			print 'Erased', self.qdrect(),'to', self._wid.GetWindowPort().rgbBkColor
 			
 	def _testclip(self, color):
 		"""Test clipping region"""
@@ -533,7 +548,7 @@ class _CommonWindow:
 		Qd.SetClip(self._clip)
 		Qd.RGBBackColor(color)
 		Qd.RGBForeColor(self._fgcolor)
-		Qd.EraseRect(self._qdrect())
+		Qd.EraseRect(self.qdrect())
 		Qd.SetClip(saveclip)
 		Qd.DisposeRgn(saveclip)
 
@@ -583,12 +598,12 @@ class _Window(_CommonWindow):
 ##			print '*** Already had one!'
 			Qd.DisposeRgn(self._clip)
 		self._clip = Qd.NewRgn()
-		Qd.RectRgn(self._clip, self._qdrect())
+		Qd.RectRgn(self._clip, self.qdrect())
 		# subtract all subwindows
 		for w in self._subwindows:
 			if not w._transparent:
 				r = Qd.NewRgn()
-				Qd.RectRgn(r, w._qdrect())
+				Qd.RectRgn(r, w.qdrect())
 				Qd.DiffRgn(self._clip, r, self._clip)
 				Qd.DisposeRgn(r)
 			w._mkclip()
@@ -657,12 +672,12 @@ class _SubWindow(_Window):
 ##			print '*** Already had one!'
 			Qd.DisposeRgn(self._clip)
 		self._clip = Qd.NewRgn()
-		Qd.RectRgn(self._clip, self._qdrect())
+		Qd.RectRgn(self._clip, self.qdrect())
 		# subtract all our subsubwindows
 		for w in self._subwindows:
 			if not w._transparent:
 				r = Qd.NewRgn()
-				Qd.RectRgn(r, w._qdrect())
+				Qd.RectRgn(r, w.qdrect())
 				Qd.DiffRgn(self._clip, r, self._clip)
 				Qd.DisposeRgn(r)
 			w._mkclip() # XXXX Needed??
@@ -673,7 +688,7 @@ class _SubWindow(_Window):
 				break
 			if not w._transparent:
 				r = Qd.NewRgn()
-				Qd.RectRgn(r, w._qdrect())
+				Qd.RectRgn(r, w.qdrect())
 				Qd.DiffRgn(self._clip, r, self._clip)
 				Qd.DisposeRgn(r)
 
@@ -724,10 +739,10 @@ class _DisplayList:
 		window = self._window
 		wid = window._wid
 		
-		print 'RENDER', cmd, entry[1:]
+##		print 'RENDER', cmd, entry[1:]
 		if cmd == 'clear':
-			Qd.EraseRect(window._qdrect())
-			print 'Erased', window._qdrect(),'to', wid.GetWindowPort().rgbBkColor
+			Qd.EraseRect(window.qdrect())
+			print 'Erased', window.qdrect(),'to', wid.GetWindowPort().rgbBkColor
 		elif cmd == 'text':
 			Qd.MoveTo(entry[1], entry[2])
 			Qd.DrawString(entry[3]) # XXXX Incorrect for long strings
@@ -739,8 +754,9 @@ class _DisplayList:
 				raise 'kaboo kaboo'
 			srcrect = srcx, srcy, srcx+w, srcy+h
 			dstrect = dstx, dsty, dstx+w, dsty+h
-			Qd.CopyBits(image, wid.GetWindowPort().portBits, srcrect, dstrect,
-				QuickDraw.srcCopy, None)
+			print 'IMAGE', image[0], srcrect, dstrect
+			Qd.CopyBits(image[0], wid.GetWindowPort().portBits, srcrect, dstrect,
+				QuickDraw.srcCopy+QuickDraw.ditherCopy, None)
 			
 	def fgcolor(self, color):
 		if self._rendered:
@@ -770,6 +786,7 @@ class _DisplayList:
 			pass
 		self._list.append('image', mask, image, src_x, src_y,
 				  dest_x, dest_y, width, height)
+		print 'ADDED IMAGE', src_x, src_y, dest_x, dest_y, width, height
 		x, y, w, h = w._rect
 		return float(dest_x - x) / w, float(dest_y - y) / h, \
 		       float(width) / w, float(height) / h
