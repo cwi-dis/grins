@@ -478,7 +478,9 @@ class RPParser(xmllib.XMLParser):
 		start = self.__time('start', attributes)
 		target = attributes.get('target')
 		if target is None:
-			self.syntax_error("required attribute `target' missing")
+			# allow missing target for data: URLs
+			if self.__file[:5] != 'data:':
+				self.syntax_error("required attribute `target' missing")
 		elif not self.__images.has_key(target):
 			self.syntax_error("unknown `target' attribute")
 		url = attributes.get('url')
@@ -686,7 +688,7 @@ def _calcdur(tags):
 			endtime = start + duration
 	return endtime
 
-def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0, baseurl = None):
+def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0, baseurl = None, silent = 0):
 	from SMILTreeWrite import nameencode
 	import MMAttrdefs
 
@@ -720,9 +722,10 @@ def writeRP(rpfile, rp, node, savecaptions=0, tostring = 0, baseurl = None):
 	f.write(sep+'timeformat="dd:hh:mm:ss.xyz"')
 	sep = '\n        '
 	endtime = _calcdur(rp.tags)
-	if rp.duration and rp.duration < endtime:
+	if rp.duration and rp.duration < endtime and not silent:
 		import windowinterface
 		windowinterface.showmessage('Duration for RealPix node %s on channel %s too short to accomodate all transitions\n(duration = %g, required: %g)' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName(), rp.duration, endtime), mtype = 'warning')
+		node.set_infoicon('error', 'Duration too short to accomodate all transitions\n(duration = %g, required: %g)' % (rp.duration, endtime))
 	f.write(sep+'duration="%g"' % (rp.duration or endtime))
 	f.write(sep+'bitrate="%d"' % rp.bitrate)
 	f.write(sep+'width="%d"' % rp.width)
