@@ -7,14 +7,14 @@ import MMAttrdefs
 import ChannelMap
 from sys import platform
 import urlcache
+import string
 
 def get(node, ignoreloop=0):
 	duration = MMAttrdefs.getattr(node, 'duration')
 	if hasattr(node, 'slideshow') and \
 	   node.slideshow.rp.duration == duration:
 		duration = 0
-	ctype = node.GetChannelType()
-	if duration == 0 and ctype:
+	if duration == 0:
 		if ignoreloop:
 			loop = 1
 		else:
@@ -22,38 +22,46 @@ def get(node, ignoreloop=0):
 			if loop == 0:
 				return 0
 		context = node.GetContext()
-		filename = MMAttrdefs.getattr(node, 'file')
-		filename = context.findurl(filename)
-		dur = urlcache.urlcache[filename].get('duration')
+		url = MMAttrdefs.getattr(node, 'file')
+		url = context.findurl(url)
+		cache = urlcache.urlcache[url]
+		dur = cache.get('duration')
 		if dur is not None:
 			return loop * dur
-		if ctype in ('video', 'mpeg') or (platform == 'mac' and ctype == 'movie'):
+		if cache.has_key('mimetype'):
+			maintype, subtype = cache['mimetype']
+		else:
+			import MMurl
+			try:
+				u = MMurl.urlopen(url)
+			except IOError:
+				# don't cache non-existing file
+				return 0
+			maintype = u.headers.getmaintype()
+			subtype = u.headers.getsubtype()
+			cache['mimetype'] = maintype, subtype
+			u.close()
+			del u
+		if string.find(subtype, 'real') >= 0:
+			import realsupport
+			info = realsupport.getinfo(url)
+			dur = info.get('duration', 0)
+		elif maintype == 'video':
 			import VideoDuration
 			try:
-				dur = VideoDuration.get(filename)
+				dur = VideoDuration.get(url)
 			except IOError, msg:
-				print filename, msg
-		elif ctype == 'movie':
-			import MovieDuration
-			try:
-				dur = MovieDuration.get(filename)
-			except IOError, msg:
-				print filename, msg
-		elif ctype == 'sound':
+				print url, msg
+		elif maintype == 'audio':
 			import SoundDuration
 			try:
-				dur = SoundDuration.get(filename)
+				dur = SoundDuration.get(url)
 			except IOError, msg:
-				print filename, msg
-		elif ctype[:4] == 'Real':
-			import realsupport
-			info = realsupport.getinfo(filename)
-			dur = info.get('duration', 0)
-		elif ctype not in ChannelMap.channelhierarchy['text'] and \
-		     ctype not in ChannelMap.channelhierarchy['image']:
+				print url, msg
+		elif maintype in ('image', 'text'):
 			# give them a duration
 			return 5
 		if dur is not None:
-			urlcache.urlcache[filename]['duration'] = dur
+			cache['duration'] = dur
 			return loop * dur
 	return duration
