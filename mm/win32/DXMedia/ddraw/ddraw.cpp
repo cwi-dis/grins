@@ -1102,6 +1102,45 @@ DirectDrawSurface_BltFill(DirectDrawSurfaceObject *self, PyObject *args)
 	return Py_None;
 	}
 
+static char DirectDrawSurface_IsLost__doc__[] =
+""
+;
+static PyObject *
+DirectDrawSurface_IsLost(DirectDrawSurfaceObject *self, PyObject *args)
+	{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr=self->pI->IsLost();
+	Py_END_ALLOW_THREADS
+
+	if(hr!=DD_OK || hr!=DDERR_SURFACELOST){
+		seterror("DirectDrawSurface_IsLost", hr);
+		return NULL;
+	}
+	int ret = (hr==DDERR_SURFACELOST)?1:0;
+	return Py_BuildValue("i",ret);
+	}
+
+static char DirectDrawSurface_Restore__doc__[] =
+""
+;
+static PyObject *
+DirectDrawSurface_Restore(DirectDrawSurfaceObject *self, PyObject *args)
+	{
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr=self->pI->Restore();
+	Py_END_ALLOW_THREADS
+	int ret = (hr==DD_OK)?1:0;
+	return Py_BuildValue("i",ret);
+	}
+
+
+
 static struct PyMethodDef DirectDrawSurface_methods[] = {
 	{"GetSurfaceDesc", (PyCFunction)DirectDrawSurface_GetSurfaceDesc, METH_VARARGS, DirectDrawSurface_GetSurfaceDesc__doc__},
 	{"GetAttachedSurface", (PyCFunction)DirectDrawSurface_GetAttachedSurface, METH_VARARGS, DirectDrawSurface_GetAttachedSurface__doc__},
@@ -1116,7 +1155,8 @@ static struct PyMethodDef DirectDrawSurface_methods[] = {
 	{"GetColorMatch", (PyCFunction)DirectDrawSurface_GetColorMatch, METH_VARARGS, DirectDrawSurface_GetColorMatch__doc__},
 	{"GetPixelFormat", (PyCFunction)DirectDrawSurface_GetPixelFormat, METH_VARARGS, DirectDrawSurface_GetPixelFormat__doc__},
 	{"BltBlend", (PyCFunction)DirectDrawSurface_BltBlend, METH_VARARGS, DirectDrawSurface_BltBlend__doc__},
-	{"BltFill", (PyCFunction)DirectDrawSurface_BltFill, METH_VARARGS, DirectDrawSurface_BltFill__doc__},
+	{"IsLost", (PyCFunction)DirectDrawSurface_IsLost, METH_VARARGS, DirectDrawSurface_IsLost__doc__},
+	{"Restore", (PyCFunction)DirectDrawSurface_Restore, METH_VARARGS, DirectDrawSurface_Restore__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
