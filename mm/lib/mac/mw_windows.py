@@ -416,13 +416,16 @@ class _CommonWindow:
 	def _convert_coordinates(self, coordinates):
 		"""Convert fractional xywh in our space to pixel-xywh
 		in toplevel-window relative pixels"""
-		
+
+		xf, yf = self._scrollsizefactors()		
 		x, y = coordinates[:2]
+		x, y = x*xf, y*yf
 		px = int(self._rect[_WIDTH] * x)  + self._rect[_X]
 		py = int(self._rect[_HEIGHT] * y)  + self._rect[_Y]
 		if len(coordinates) == 2:
 			return px, py
 		w, h = coordinates[2:]
+		w, h = w*xf, h*yf
 		pw = int(self._rect[_WIDTH] * w)
 		ph = int(self._rect[_HEIGHT] * h)
 		return px, py, pw, ph
@@ -432,11 +435,17 @@ class _CommonWindow:
 		values"""
 		return 0, 0
 		
+	def _scrollsizefactors(self):
+		"""Return the factor with which to multiply x/y sizes before returning
+		them to upper layers, i.e. 1 divided by the amount of the window visible"""
+		return 1, 1
+		
 	def _convert_qdcoords(self, coordinates):
 		"""Convert QD coordinates to fractional xy or xywh coordinates"""
 		x0, y0 = coordinates[:2]
 		wx, wy, ww, wh = self._convert_coordinates((0,0,1,1))
 		xscrolloff, yscrolloff = self._scrolloffset()
+		# XXXXSCROLL scrollsizefactors!
 		wx, wy = wx+xscrolloff, wy+yscrolloff
 		x, y = x0-wx, y0-wy
 		if len(coordinates) == 2:
@@ -1012,6 +1021,11 @@ class _ScrollMixin:
 		self._bary.HiliteControl(hilite)
 		self._wid.DrawGrowIcon()
 		
+	def _scrollsizefactors(self):
+		if self._canvassize is None:
+			return 1, 1
+		return self._canvassize
+		
 	def setcanvassize(self, how):
 		if self._canvassize is None:
 			print 'setcanvassize call for non-resizable window!'
@@ -1028,6 +1042,7 @@ class _ScrollMixin:
 		print 'DBG: new canvassize', self._canvassize
 		# XXXX set _rect
 		# XXXX do the resize callback
+		self._do_resize0()
 
 class _AdornmentsMixin:
 	"""Class to handle toolbars and other adornments on toplevel windows"""
@@ -1149,13 +1164,21 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		#
 		self._rect = 0, 0, w, h
 		_AdornmentsMixin.__init__(self, adornments)
-		_ScrollMixin.__init__(self, canvassize)
+		#
+		# Note: currently canvassize is always either None or (w, h). The (w,h)
+		# is a bad choice (to be fixed), so we work around it.
+		#
+		if canvassize:
+			_ScrollMixin.__init__(self, (1,1))
+		else:
+			_ScrollMixin.__init__(self, None)
 
 		_x_pixel_per_mm, _y_pixel_per_mm = \
 				 mw_globals.toplevel._getmmfactors()
 
-		self._hfactor = parent._hfactor / (float(w) / _x_pixel_per_mm)
-		self._vfactor = parent._vfactor / (float(h) / _y_pixel_per_mm)
+		hf, vf = self._scrollsizefactors()
+		self._hfactor = parent._hfactor / (hf*float(w) / _x_pixel_per_mm)
+		self._vfactor = parent._vfactor / (vf*float(h) / _y_pixel_per_mm)
 		_WindowGroup.__init__(self, title, commandlist)
 
 		self.arrowcache = {}
@@ -1301,24 +1324,29 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		self._rect = x, y, width, height
 		_AdornmentsMixin._resized(self)
 		_ScrollMixin._resized(self)
+		self._do_resize0()
+		if mycreatebox:
+			mycreatebox._rb_end()
+			raise _rb_done
+		
+	def _do_resize0(self):
+		"""Common code for resize and double width/height"""
 		x, y, width, height = self._rect
 
 		# convert pixels to mm
 		parent = self._parent
 		_x_pixel_per_mm, _y_pixel_per_mm = \
 				 mw_globals.toplevel._getmmfactors()
-		self._hfactor = parent._hfactor / (float(width)
+		hf, vf = self._scrollsizefactors()
+		self._hfactor = parent._hfactor / (hf*float(width)
 						   / _x_pixel_per_mm)
-		self._vfactor = parent._vfactor / (float(height) /
+		self._vfactor = parent._vfactor / (vf*float(height) /
 						   _y_pixel_per_mm)
 
 		for w in self._subwindows:
 			w._do_resize1()
 		# call resize callbacks
 		self._do_resize2()
-		if mycreatebox:
-			mycreatebox._rb_end()
-			raise _rb_done
 
 	def hitarrow(self, point, src, dst):
 		# return 1 iff (x,y) is within the arrow head
@@ -1364,8 +1392,9 @@ class _SubWindow(_CommonWindow):
 			raise 'Empty subwindow', coordinates
 		self._sizes = coordinates
 		
-		self._hfactor = parent._hfactor / self._sizes[_WIDTH]
-		self._vfactor = parent._vfactor / self._sizes[_HEIGHT]
+		hf, vf = self._scrollsizefactors()
+		self._hfactor = parent._hfactor / (hf*self._sizes[_WIDTH])
+		self._vfactor = parent._vfactor / (vf*self._sizes[_HEIGHT])
 		
 		if parent._transparent:
 			self._transparent = parent._transparent
@@ -1465,7 +1494,6 @@ class _SubWindow(_CommonWindow):
 	def _do_resize1(self):
 		# calculate new size of subwindow after resize
 		# close all display lists
-		# XXXXSCROLL
 		parent = self._parent
 		## XXXX Should have crop=1?
 		x, y, w, h = parent._convert_coordinates(self._sizes)
@@ -1477,8 +1505,9 @@ class _SubWindow(_CommonWindow):
 			w = float(self._rect[_WIDTH]) / parent._rect[_WIDTH]
 		if h == 0:
 			h = float(self._rect[_HEIGHT]) / parent._rect[_HEIGHT]
-		self._hfactor = parent._hfactor / w
-		self._vfactor = parent._vfactor / h
+		hf, vf = self._scrollsizefactors()
+		self._hfactor = parent._hfactor / (hf*w)
+		self._vfactor = parent._vfactor / (vf*h)
 		# We don't have to clear _clip, our parent did that.
 		self._active_displist = None
 		for d in self._displists[:]:
