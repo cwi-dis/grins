@@ -2661,6 +2661,121 @@ END
 
 
 /////////////////////////////////////////////////////////////////////////////
+// English (U.K.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_WALLCLOCKPOPUP DIALOG DISCARDABLE  0, 0, 201, 215
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Wallclock event"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Include Date:",IDC_CBDATE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,12,59,10
+    EDITTEXT        IDC_DY,27,39,40,14,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_YR,130,39,40,14,ES_RIGHT | ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    EDITTEXT        IDC_HR,37,86,40,14,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_MN,78,86,40,14,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_SC,119,86,40,14,ES_RIGHT | ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    CONTROL         "Include Timezone:",IDC_CBTZ,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,119,74,10
+    EDITTEXT        IDC_TZHR,69,146,40,14,ES_RIGHT | ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    EDITTEXT        IDC_TZMN,111,146,41,14,ES_RIGHT | ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    DEFPUSHBUTTON   "OK",IDOK,37,194,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,101,194,50,14
+    LTEXT           "Year",IDC_STATIC,132,28,16,8
+    LTEXT           "Month",IDC_STATIC,71,28,21,8
+    LTEXT           "Day",IDC_STATIC,32,28,14,8
+    LTEXT           "Hours",IDC_STATIC,43,76,40,8
+    LTEXT           "Minutes",IDC_STATIC,84,76,40,8
+    LTEXT           "Seconds",IDC_STATIC,123,76,40,8
+    EDITTEXT        IDC_RESULT,7,174,186,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Hours",IDC_STATIC,74,135,28,8
+    LTEXT           "Minutes",IDC_STATIC,116,135,26,8
+    GROUPBOX        "",IDC_STATIC,7,20,186,36
+    GROUPBOX        "",IDC_STATIC,7,127,186,38
+    COMBOBOX        IDC_TZSG,37,146,31,44,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_MT,67,39,61,88,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_WALLCLOCKPOPUP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 193
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 208
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+IDD_WALLCLOCKPOPUP DLGINIT
+BEGIN
+    IDC_TZSG, 0x403, 5, 0
+0x6145, 0x7473, "\000" 
+    IDC_TZSG, 0x403, 5, 0
+0x6557, 0x7473, "\000" 
+    IDC_MT, 0x403, 8, 0
+0x614a, 0x756e, 0x7261, 0x0079, 
+    IDC_MT, 0x403, 9, 0
+0x6546, 0x7262, 0x6175, 0x7972, "\000" 
+    IDC_MT, 0x403, 6, 0
+0x614d, 0x6372, 0x0068, 
+    IDC_MT, 0x403, 6, 0
+0x7041, 0x6972, 0x006c, 
+    IDC_MT, 0x403, 4, 0
+0x614d, 0x0079, 
+    IDC_MT, 0x403, 5, 0
+0x754a, 0x656e, "\000" 
+    IDC_MT, 0x403, 5, 0
+0x754a, 0x796c, "\000" 
+    IDC_MT, 0x403, 7, 0
+0x7541, 0x7567, 0x7473, "\000" 
+    IDC_MT, 0x403, 10, 0
+0x6553, 0x7470, 0x6d65, 0x6562, 0x0072, 
+    IDC_MT, 0x403, 8, 0
+0x634f, 0x6f74, 0x6562, 0x0072, 
+    IDC_MT, 0x403, 9, 0
+0x6f4e, 0x6576, 0x626d, 0x7265, "\000" 
+    IDC_MT, 0x403, 9, 0
+0x6544, 0x6563, 0x626d, 0x7265, "\000" 
+    0
+END
+
+#endif    // English (U.K.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
 // Greek resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ELL)

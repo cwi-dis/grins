@@ -563,6 +563,36 @@ def escape_name(name, quote_initial = 1):
 		name = '\\' + name
 	return name
 
+def wallclock2string(wallclock):
+	# This code is used also in the EventEditor.
+	yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn = wallclock
+	if yr is not None:
+		date = '%04d-%02d-%02dT' % (yr, mt, dy)
+	else:
+		date = ''
+	# time is optional if there is a date
+	if date and hr == mn == sc == 0:
+		time = ''
+		date = date[:-1] # remove T at end
+	elif sc == 0:
+		# seconds are optional
+		time = '%02d:%02d' % (hr, mn)
+	elif int(sc) == sc:
+		# fraction of seconds is optional
+		time = '%02d:%02d:%02d' % (hr, mn, int(sc))
+	else:
+		time = '%02d:%02d:%05.2f' % (hr, mn, sc)
+	if tzhr is not None:
+		if tzsg == '+' and tzhr == tzmn == 0:
+			# UTC/GMT can be abbreviated to just "Z"
+			tz = 'Z'
+		else:
+			tz = '%s%02d:%02d' % (tzsg, tzhr, tzmn)
+	else:
+		tz = ''
+	return 'wallclock(%s%s%s)' % (date, time, tz)
+
+				
 def getsyncarc(writer, node, isend):
 	if isend:
 		attr = 'endlist'
@@ -577,32 +607,7 @@ def getsyncarc(writer, node, isend):
 		elif arc.srcnode is None and arc.event is None and arc.marker is None and arc.wallclock is None and arc.accesskey is None:
 			list.append(fmtfloat(arc.delay, 's'))
 		elif arc.wallclock is not None:
-			yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn = arc.wallclock
-			if yr is not None:
-				date = '%04d-%02d-%02dT' % (yr, mt, dy)
-			else:
-				date = ''
-			# time is optional if there is a date
-			if date and hr == mn == sc == 0:
-				time = ''
-				date = date[:-1] # remove T at end
-			elif sc == 0:
-				# seconds are optional
-				time = '%02d:%02d' % (hr, mn)
-			elif int(sc) == sc:
-				# fraction of seconds is optional
-				time = '%02d:%02d:%02d' % (hr, mn, int(sc))
-			else:
-				time = '%02d:%02d:%05.2f' % (hr, mn, sc)
-			if tzhr is not None:
-				if tzsg == '+' and tzhr == tzmn == 0:
-					# UTC/GMT can be abbreviated to just "Z"
-					tz = 'Z'
-				else:
-					tz = '%s%02d:%02d' % (tzsg, tzhr, tzmn)
-			else:
-				tz = ''
-			list.append('wallclock(%s%s%s)' % (date, time, tz))
+			list.append(wallclock2string(arc.wallclock))
 		elif arc.accesskey is not None:
 			key = 'accesskey(%s)' % arc.accesskey
 			if arc.delay:

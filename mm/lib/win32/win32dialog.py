@@ -1159,3 +1159,141 @@ class CreateBoxBar(DlgBar):
 		if self._cancelCallback:
 			apply(apply,self._cancelCallback)
 
+
+class WallclockDialog(ResDialog):
+	resource=grinsRC.IDD_WALLCLOCKPOPUP
+	def __init__(self, parent=None):
+		ResDialog.__init__(self, self.resource, parent)
+		self.value = None
+		self.return_value = 0
+
+		# The widgets.
+		self.w_yr = Edit(self, grinsRC.IDC_YR)
+		self.w_mt = ComboBox(self, grinsRC.IDC_MT)
+		self.w_dy = Edit(self, grinsRC.IDC_DY)
+		self.w_hr = Edit(self, grinsRC.IDC_HR)
+		self.w_mn = Edit(self, grinsRC.IDC_MN)
+		self.w_sc = Edit(self, grinsRC.IDC_SC)
+		self.w_tzsg = ComboBox(self, grinsRC.IDC_TZSG)
+		self.w_tzhr = Edit(self, grinsRC.IDC_TZHR)
+		self.w_tzmn = Edit(self, grinsRC.IDC_TZMN)
+		self.w_cbdate = CheckButton(self, grinsRC.IDC_CBDATE) # checkbox to check date
+		self.w_cbtz = CheckButton(self, grinsRC.IDC_CBTZ) # checkbox to check time.
+		self.widgets = [self.w_yr, self.w_mt, self.w_dy, self.w_hr, self.w_mn, self.w_sc, self.w_tzsg, self.w_tzhr, self.w_tzmn, self.w_cbdate, self.w_cbtz]
+
+	def OnInitDialog(self):
+		for i in self.widgets:
+			i.attach_to_parent()
+		
+		self.attach_handles_to_subwindows()
+
+		self.w_cbdate.hookcommand(self, self.w_cbdate_callback)
+		self.w_cbtz.hookcommand(self, self.w_cbtz_callback)
+		self.w_cbdate.setcheck(0)
+		self.w_cbtz.setcheck(0)
+
+		print "DEBUG: self.value is: ", self.value
+		yr,mt,dy,hr,mn,sc,tzsg,tzhr,tzmn = self.value
+		self.__setwidget_asnum(self.w_yr, yr)
+		print "DEBUG: mt is: ", mt
+		#self.__setwidget_asnum(self.w_mt, mt)
+		self.__setwidget_asnum(self.w_dy, dy)
+		self.__setwidget_asnum(self.w_hr, hr)
+		self.__setwidget_asnum(self.w_mn, mn)
+		self.__setwidget_asnum(self.w_sc, sc)
+		print "DEBUG: tzsg is: ", tzsg
+		#self.__setwidget_asnum(self.w_tzsg, tzsg)
+		self.__setwidget_asnum(self.w_tzhr, tzhr)
+		self.__setwidget_asnum(self.w_tzmn, tzmn)
+
+	def __setwidget_asnum(self, widget, number):
+		# widget is a edit box that we are setting to number.
+		if number is not None:
+			widget.setreadonly(0)
+			widget.settext(`number`)
+		else:
+			widget.settext('')
+			widget.setreadonly(1)
+
+	def __getwidget_asnum(self, widget):
+		# returns whatever number that widget has.
+		n = widget.getvalue()
+		try:
+			return int(n)
+		except ValueError:
+			return None
+
+	def show(self):
+		return self.DoModal()
+
+##	def OnOK(self):
+##		self.DestroyWindow()
+##		self.return_value = 1
+		
+##	def OnCancel(self):
+##		self.DestroyWindow()
+##		self.return
+
+	def setvalue(self, value):
+		if isinstance(value, type(())):
+			self.value = value
+
+	def getvalue(self, value):
+		#self.yr,self.mt,self.dy,self.hr,self.mn,self.sc,self.tzsg,self.tzhr,self.tzmn = None
+		if self.w_cbdate.getcheck():
+			yr = self.__getwidget_asnum(self.w_yr)
+			#mt = int(self.__getwidget_asnum(self.w_mt)) # careful.. it's a combobox.
+			mt = None
+			print "TODO: mt"
+			dy = self.__getwidget_asnum(self.w_dy)
+		else:
+			yr = None
+			mt = None
+			dy = None
+		hr = self.__getwidget_asnum(self.w_hr)
+		mn = self.__getwidget_asnum(self.w_mn)
+		sc = self.__getwidget_asnum(self.w_sc)
+		if self.w_cbtz.getcheck():
+			#tzsg = self.w_tzsg.getvalue() # it's a combobox.
+			tzsg = None
+			print "TODO: tzsg"
+			tzhr = self.__getwidget_asnum(self.w_tzhr)
+			tzmn = self.__getwidget_asnum(self.w_tzmn)
+		else:
+			tzhr = None
+			tzmn = None
+		return (yr, mt, dy, hr, mn, sc, tzsg, tzhr, tzmn)
+			
+	def w_cbdate_callback(self, id, value):
+		c = self.w_cbdate.getcheck()
+		if c:
+			self.enable_date()
+		else:
+			self.disable_date()
+
+	def w_cbtz_callback(self, id, value):
+		c = self.w_cbtz.getcheck()
+		if c:
+			self.enable_tz()
+		else:
+			self.disable_tz()
+
+	def enable_date(self):
+		self.w_yr.setreadonly(0)
+		#self.w_mt.setreadonly(0) # is a combo box.
+		self.w_dy.setreadonly(0)
+
+	def disable_date(self):
+		self.w_yr.setreadonly(1)
+		#self.w_mt.setreadonly(1) # is a combo box.
+		self.w_dy.setreadonly(1)
+
+	def enable_tz(self):
+		# combo box - self.w_tzsg.setreadonly(0)
+		self.w_tzhr.setreadonly(0)
+		self.w_tzmn.setreadonly(0)
+
+	def disable_tz(self):
+		# combo box - self.w_tzsg.setreadonly(1)
+		self.w_tzhr.setreadonly(1)
+		self.w_tzmn.setreadonly(1)

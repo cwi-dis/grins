@@ -1134,6 +1134,7 @@ class EventCtrl(AttrCtrl):
 
 		self._eventwidget = components.ComboBox(self._wnd, grinsRC.IDC_EVENTTYPE)
 		self._textwidget = components.Edit(self._wnd, grinsRC.IDC_THINGVALUE)
+		self._thingbutton = components.Edit(self._wnd, grinsRC.IDC_THINGBUTTON)
 		self._thingnamewidget = components.Edit(self._wnd, grinsRC.IDC_THINGNAME) # static text box.
 		self._resultwidget = components.Edit(self._wnd, grinsRC.IDC_EVENTLASSOO)
 		self._offsetwidget = components.Edit(self._wnd, grinsRC.IDC_EDITOFFSET)
@@ -1180,6 +1181,7 @@ class EventCtrl(AttrCtrl):
 		self._textwidget.hookcommand(self._wnd, self._textwidgetcallback)
 		self._offsetwidget.hookcommand(self._wnd, self._offsetwidgetcallback)
 		self._repeatwidget.hookcommand(self._wnd, self._repeatwidgetcallback)
+		self._thingbutton.hookcommand(self._wnd, self._thingbuttoncallback)
 
 		bob = self._attr.getcurrent()
 		self.setvalue(bob)
@@ -1403,6 +1405,14 @@ class EventCtrl(AttrCtrl):
 			else:
 				print "TODO: media marker."
 			self.update()
+
+	def _thingbuttoncallback(self, id, code):
+		if code == win32con.BN_CLICKED:
+			# TODO: more than just the wallclock.
+			dialog = win32dialog.WallclockDialog(parent=self._wnd._form)
+			dialog.setvalue(self._eventstruct.get_wallclock())
+			dialog.show()
+			
 				
 ##################################
 # StringOptionsCtrl can be used as a StringCtrl but the user 
