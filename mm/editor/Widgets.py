@@ -2,7 +2,7 @@ __version__ = "$Id$"
 
 # Status: all code not run yet. Just written. Bug-free. Yea, right.
 
-# The Interactive class provides a framework for having multiple editable
+# The Widget class provides a framework for having multiple editable
 # objects ('widgets', if you must) on the screen. Event handling, selection,
 # drawing and so forth will be done on a per-object basis.
 # -mjvdg 13-oct-2000
@@ -71,8 +71,8 @@ __version__ = "$Id$"
 import windowinterface, WMEVENTS
 from AppDefaults import *
 
-# Appendability: (used in Interactive.appended_to_loc to determine where this is appended
-# to another Interactive).
+# Appendability: (used in Widget.appended_to_loc to determine where this is appended
+# to another Widget).
 LEFT, RIGHT, TOP, BOTTOM, LEFTBOTTOM, RIGHTBOTTOM, LEFTTOP, RIGHTTOP = range(8)
 
 ##############################################################################
@@ -81,20 +81,20 @@ LEFT, RIGHT, TOP, BOTTOM, LEFTBOTTOM, RIGHTBOTTOM, LEFTTOP, RIGHTTOP = range(8)
 
 ##############################################################################
 
-class Interactive:
+class Widget:
 
     # Functionality:
     # * draw
     # * click, double-click, right-click
     # * select, unselect
-    # * move, drag, resize, append (to another Interactive, relative pos)
+    # * move, drag, resize, append (to another Widget, relative pos)
     # * create, copy, cut, delete
     # * show, hide (why hide???) - discuss further.
 
     # Positions are either absolute (pixels ~ integers) or relative (floating point 0.0 <= n <= 1.0)
     # and are always tuples of (left, top, right, bottom).
     # At some stage, a better drawing scheme could be developed which prevents drawing out of an
-    # Interactive's area and only has relative coordinates, perhaps by having each Interactive in
+    # Widget's area and only has relative coordinates, perhaps by having each Widget in
     # it's own window.
 
     def __init__(self, root):
@@ -126,11 +126,11 @@ class Interactive:
         self.parent = None             # Sometimes nodes have parents.
 
     def draw(self, displist):
-        # For the base Interactive, nothing will be drawn.
+        # For the base Widget, nothing will be drawn.
         self.recalc()
 
         if self.pos_rel == (0,0,0,0):
-            print "Warning! Interactive drawn with null coords."
+            print "Warning! Widget drawn with null coords."
             return 0
 
         l, t, r, b = self.pos_rel
@@ -181,10 +181,10 @@ class Interactive:
         self.select()
 
     def double_click(self, pos):
-        print "TODO: Interactive.double_click()"
+        print "TODO: Widget.double_click()"
 
     def right_click(self, pos):
-        print "TODO: Interactive.right_click()"
+        print "TODO: Widget.right_click()"
 
     def moveto(self, newpos):
         # Also handles resizing - new size is in newpos as well.
@@ -200,9 +200,9 @@ class Interactive:
 #        assert (r-l) < mw and (b-t) < mh
 
         if r < l:
-            print "Interactive: Error: box is right-to-left"
+            print "Widget: Error: box is right-to-left"
         if t > b:
-            print "Interactive: Error: box is upside down."
+            print "Widget: Error: box is upside down."
 
 #        assert r <= 1.0 and r >= 0.0 and l <= 1.0 and l >= 0.0
 #        assert t >= 0.0 and t <= 1.0 and b >= 0.0 and b <= 1.0
@@ -212,7 +212,7 @@ class Interactive:
         # Used to make the position of this object relative to another.
         # Warning! Don't start doing traversals using this!
         # Make a container that inherits from EditWindow instead.
-        print "TODO: Interactive.append()"
+        print "TODO: Widget.append()"
 
     def select(self):
         self.selected = 1
@@ -261,19 +261,19 @@ class Interactive:
 
 ##############################################################################
     
-class EditWindow(Interactive):
-    # An EditWindow is a container for Interactive objects.
+class MultiWidget(Widget):
+    # An MultiWidget is a container for Widget objects.
     # This is a nestable container, so you can add and remove objects from it.
     # The idea of this class is to have a container of objects which have
     # their own position and z-index - objects float infront of and behind each
     # other.
 
 
-    # This object behaves like a collection - you can add and remove Interactives from
+    # This object behaves like a collection - you can add and remove Widgets from
     # it. 
 
     def __init__(self, root):
-        Interactive.__init__(self, root)
+        Widget.__init__(self, root)
         self.widgets = []
         
     def draw(self, displist):
@@ -324,7 +324,7 @@ class EditWindow(Interactive):
         assert 0 # not useful.
 
     def append(self, node):
-        assert isinstance(node, Interactive)
+        assert isinstance(node, Widget)
         node.parent = self
         node.pos_z = self.pos_z + 1
         self.insert(node)
@@ -336,8 +336,8 @@ class EditWindow(Interactive):
     ## Maintaining the z-index:
 
     def insert(self, intact):
-        # Keep the Interactives ordered by z-index.
-        # intact is the Interactive widget to insert by z-index.
+        # Keep the Widgets ordered by z-index.
+        # intact is the Widget widget to insert by z-index.
         self.widgets.append(intact)
         self.resort()
 
@@ -368,7 +368,7 @@ class EditWindow(Interactive):
         self.widgets = new_widgetlist
 
     def destroy(self):
-        Interactive.destroy(self)
+        Widget.destroy(self)
         for i in self.widgets:
             i.destroy()
         self.widgets = []

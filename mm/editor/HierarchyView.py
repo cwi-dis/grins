@@ -25,8 +25,8 @@ import string
 import MMmimetypes
 import features
 import compatibility
-import Interactive			# mjvdg 13-oct-2000.
-from StructureViews import *
+import Widgets
+from StructureWidgets import *
 
 import settings
 
@@ -283,7 +283,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	def __compute_commands(self, commands):
 		# Compute the commands for the current selected object.
-		# TODO: Make context menu setting within the StructureViews menu instead.
+		# TODO: Make context menu setting within the StructureWidgets menu instead.
 		fnode = self.focusnode
 		fntype = fnode.GetType()	
 		is_realpix = fntype == 'ext' and fnode.GetChannelType() == 'RealPix'
@@ -388,7 +388,7 @@ class HierarchyView(HierarchyViewDialog):
 	def create_scene_graph(self):
 		# Iterate through the MMNode structure (starting from self.root)
 		# and create a scene graph from it.
-		self.scene_graph = create_MMNode_view(self.root, self)
+		self.scene_graph = create_MMNode_widget(self.root, self)
 
 	def refresh_scene_graph(self):
 		if self.scene_graph:
@@ -396,7 +396,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.create_scene_graph();
 		self.draw();
 
-	# Callbacks for the Interactive classes.
+	# Callbacks for the Widget classes.
 	def get_window_size_abs(self):
 		return self.window.getcanvassize(self.sizes.SIZEUNIT)
 
@@ -1054,7 +1054,7 @@ class HierarchyView(HierarchyViewDialog):
 	def select_widget(self, widget):
 		# Set the focus to a specific widget on the user interface.
 		# Make the widget the current selection.
-		if isinstance(self.selected_widget, Interactive.Interactive):
+		if isinstance(self.selected_widget, Widgets.Widget):
 			self.selected_widget.unselect()
 		self.selected_widget = widget		
 		self.focusobj = widget	# Used for callbacks.
@@ -1142,7 +1142,7 @@ class HierarchyView(HierarchyViewDialog):
 	# Select the given object, deselecting the previous focus
 	def setfocusobj(self, obj):
 		assert 0
-##		assert isinstance(obj, Interactive.Interactive)
+##		assert isinstance(obj, Widgets.Widget)
 
 ##		self.init_display()
 ##		if self.focusobj:
@@ -2224,7 +2224,7 @@ def countlevels(node, numwanted):
 # 		self.mother.paste(0)
 
 
-# class Nipple(Interactive.Interactive):
+# class Nipple(Widgets.Widget):
 # 	# The Nipples of an object are a graphical representation of the transitions
 # 	# between the MMNodes that the object refers to.
 
