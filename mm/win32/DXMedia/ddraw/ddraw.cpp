@@ -850,7 +850,7 @@ DirectDrawSurface_Blt(DirectDrawSurfaceObject *self, PyObject *args)
 		}
 	
 	Py_BEGIN_ALLOW_THREADS
-	hr = self->pI->Blt(&rcToFinal,ddsFrom->pI,&rcFromFinal,dwFlags,NULL);
+	hr = self->pI->Blt(&rcToFinal,ddsFrom->pI,&rcFromFinal,dwFlags | DDBLT_WAIT,NULL);
 	Py_END_ALLOW_THREADS
 
 	if (FAILED(hr)){
