@@ -7,6 +7,9 @@ import math
 import svgpath
 import re
 
+# units, messages
+import windowinterface
+
 debug = 1
 
 # An Animator represents an animate element at run time.
@@ -667,7 +670,10 @@ class EffectiveAnimator:
 		elif self.__tag == 'area':
 			self.__updatearea(displayValue)
 			return
-
+		elif self.__attr in ('top','left','width','height'):
+			self.__updatesubregion(displayValue)
+			return
+			
 		# normal proccessing
 		self.__node.SetPresentationAttr(self.__attr, displayValue)
 
@@ -771,6 +777,32 @@ class EffectiveAnimator:
 		elif debug:
 			name = MMAttrdefs.getattr(self.__node, 'name')
 			print 'update area',self.__attr,'of node',name,'to',value		
+	
+	def __updatesubregion(self, value):
+		if not self.__chan:
+			return # channel not ready yet
+		attr = self.__attr
+		chan = self.__chan
+		mmchan = chan._attrdict		
+		coordinates = mmchan.GetPresentationAttr('base_winoff')
+		if coordinates and attr in ('position','left','top','width','height','right','bottom'):
+			x, y, w, h = coordinates
+			units = mmchan.get('units')
+			if attr=='position':
+				x, y = value
+				newcoordinates = x, y, w, h
+			elif attr=='left': newcoordinates = value, y, w, h
+			elif attr=='top': newcoordinates = x, value, w, h
+			elif attr=='width': newcoordinates = x, y, value, h
+			elif attr=='height': newcoordinates = x, y, w, value
+			elif attr=='right': newcoordinates = value-w, y, w, h
+			elif attr=='bottom': newcoordinates = x, value-h, w, h
+			if chan.window:
+				chan.window.updatecoordinates(newcoordinates, units)
+		
+		mmchan.SetPresentationAttr(attr, value)
+		if debug:
+			print 'update',self.__attr,'of channel',self.__chan._name,'to',value
 			
 	def getcurrentbasevalue(self, animator=None):
 		cv = self.__domval
@@ -809,7 +841,7 @@ class AnimateContext:
 		eaid = id(ea)
 		if self._id2key.has_key(eaid):
 			key = self._id2key[eaid]
-			print 'removing eff animator', key
+			if debug: print 'removing eff animator', key
 			del self._effAnimators[key]
 			del self._id2key[eaid]
 
@@ -916,7 +948,7 @@ class AnimateElementParser:
 		self.__anim = anim			# the animate element node
 		self.__elementTag = anim.attrdict['tag']
 		self.__attrname = ''		# target attribute name
-		self.__attrtype = ''		# in ('string','int','float','color','position','inttuple','floattuple', 'stringtuple')
+		self.__attrtype = ''		# in alltypes (see above)
 		self.__domval = None		# document attribute value
 		self.__target = None		# target node
 		self.__hasValidTarget = 0	# valid target node and attribute
@@ -1046,7 +1078,7 @@ class AnimateElementParser:
 				return None
 
 		# 4. Return an animator based on the attr type
-		print 'Guessing animator for attribute',`self.__attrname`,'(', self.__attrtype,')'
+		if debug: print 'Guessing animator for attribute',`self.__attrname`,'(', self.__attrtype,')'
 		anim = None
 		if self.__attrtype == 'int':
 			values = self.__getNumInterpolationValues()
@@ -1552,7 +1584,7 @@ class AnimateElementParser:
 			anim.targetnode = newnode
 		elif ctx.transitions.has_key(te):
 			# transition
-			# XXX fix: crate one virtual node per transition
+			# XXX fix: create one virtual node per transition
 			tr = ctx.transitions[te]
 			newnode = MMNode('imm',ctx,ctx.newuid())
 			newnode.attrdict = tr.copy()
