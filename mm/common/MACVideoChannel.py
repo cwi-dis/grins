@@ -147,7 +147,7 @@ class VideoChannel(ChannelWindowAsync):
 		else:
 			# This happens during a resize: we don't know scale/center anymore.
 			scale = 1
-			center = 1
+			center = 0
 		# Compute real scale for scale-to-fit
 		if scale <= 0:
 			sl, st, sr, sb = screenBox
