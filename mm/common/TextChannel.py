@@ -25,7 +25,7 @@ def fitstring(s, sizefunc, length):
 	# would prefer a built-in index function to find the first occurrence
 	# of a space character
 	for i in range(l):
-		if s[i] = ' ':
+		if s[i] == ' ':
 			if sizefunc(s[:i]) <= length:
 				p = i
 			else:
@@ -44,7 +44,7 @@ def mustfitstring(s, sizefunc, length):
 
 MASK = 20
 
-class TextWindow() = ChannelWindow():
+class TextWindow(ChannelWindow):
 	#
 	def init(self, (title, attrdict)):
 		self = ChannelWindow.init(self, (title, attrdict))
@@ -73,7 +73,7 @@ class TextWindow() = ChannelWindow():
 	#
 	def resetfont(self):
 		# Get the default colors
-		if self.node = None:
+		if self.node == None:
 			self.setcolors()
 		else:
 			self.bgcolor = MMAttrdefs.getattr(self.node, 'bgcolor')
@@ -96,7 +96,7 @@ class TextWindow() = ChannelWindow():
 		if ps <> 0: self.pointsize = ps
 		try:
 			self.font1 = fm.findfont(self.fontname) # At 1 point...
-		except:
+		except RuntimeError: # That's what fm raises...
 			print 'Bad fontname', `self.fontname`,
 			print '; using default', `mapfont('default')[0]`
 			self.font1 = fm.findfont(mapfont('default')[0])
@@ -135,7 +135,7 @@ class TextWindow() = ChannelWindow():
 	# a hack.  currently redraw recalculates everything.  when window size
 	# is not changed it should only calculate possibly added text.
 	def redraw(self):
-		if self.wid = 0: return
+		if self.wid == 0: return
 		gl.winset(self.wid)
 		gl.reshapeviewport()
 		x0, x1, y0, y1 = gl.getviewport()
@@ -183,20 +183,20 @@ def preptext(text):
 	result = []
 	current = ''
 	for line in lines:
-		if line = '':
-			if current = '': current = ' '
+		if line == '':
+			if current == '': current = ' '
 			result.append(current)
 			current = ''
 		if current: current = current + ' '
 		current = current + line
-	if current = '': current = ' '
+	if current == '': current = ' '
 	result.append(current)
 	return result
 
 
 # XXX Make the text channel class a derived class from TextWindow?!
 
-class TextChannel() = Channel():
+class TextChannel(Channel):
 	#
 	# Declaration of attributes that are relevant to this channel,
 	# respectively to nodes belonging to this channel.
@@ -254,18 +254,18 @@ class TextChannel() = Channel():
 		self.window.settext(self.getstring(node), node)
 	#
 	def getstring(self, node):
-		# XXX Doesn't use self...
-		if node.type = 'imm':
+		if node.type == 'imm':
 			return string.join(node.GetValues())
-		elif node.type = 'ext':
-			file = MMAttrdefs.getattr(node, 'file')
+		elif node.type == 'ext':
+			filename = MMAttrdefs.getattr(node, 'file')
 			try:
-				fp = open(file, 'r')
-			except:
-				print 'Cannot open text file', `file`
+				fp = open(filename, 'r')
+			except IOError:
+				print 'Cannot open text file', `filename`
 				return ''
 			text = fp.read()
-			if text[-1:] = '\n':
+			fp.close()
+			if text[-1:] == '\n':
 				text = text[:-1]
 			return text
 		else:
