@@ -152,45 +152,72 @@ class _Event(AEServer):
 		memory_warned = 0
 		self._initcommands()
 		while 1:
-			while self._timers:
-				t = Evt.TickCount()/TICKS_PER_SECOND
-				sec, cb, tid = self._timers[0]
-				sec = sec - (t - self._time)
-				self._time = t
-				# if sec <= 0:
-				if sec <= 0.002:
-					del self._timers[0]
-					func, args = cb
-					apply(func, args)
+			try:
+				while self._timers:
+					t = Evt.TickCount()/TICKS_PER_SECOND
+					sec, cb, tid = self._timers[0]
+					sec = sec - (t - self._time)
+					self._time = t
+					# if sec <= 0:
+					if sec <= 0.002:
+						del self._timers[0]
+						func, args = cb
+						apply(func, args)
+					else:
+						self._timers[0] = sec, cb, tid
+						break
+						
+				if self._idles or self._active_movies or self._mouse_tracker:
+					timeout = MINIMAL_TIMEOUT
+				elif self._timers:
+					timeout = int(self._timers[0][0]*TICKS_PER_SECOND)
 				else:
-					self._timers[0] = sec, cb, tid
-					break
+					timeout = MAXIMAL_TIMEOUT
 					
-			if self._idles or self._active_movies or self._mouse_tracker:
-				timeout = MINIMAL_TIMEOUT
-			elif self._timers:
-				timeout = int(self._timers[0][0]*TICKS_PER_SECOND)
-			else:
-				timeout = MAXIMAL_TIMEOUT
-				
-			if self.needmenubarredraw:
-				MenuMODULE.DrawMenuBar()
-				self.needmenubarredraw = 0
-				
-			# Clean up any stacktraces
-			sys.exc_traceback = None
-			sys.last_traceback = None
-			
-			if not self._eventloop(timeout):
-				for rtn in self._idles:
-					rtn()
-				if not memory_warned and \
-						Evt.TickCount() > last_memory_check+MEMORY_CHECK_INTERVAL*TICKS_PER_SECOND:
-					last_memory_check = Evt.TickCount()
-					if MacOS.MaxBlock() < MEMORY_WARN:
-						Dlg.CautionAlert(MEMORY_ALERT_ID, None)
-						memory_warned = 1
+				if self.needmenubarredraw:
+					MenuMODULE.DrawMenuBar()
+					self.needmenubarredraw = 0
 					
+				# Clean up any stacktraces
+				sys.exc_traceback = None
+				sys.last_traceback = None
+				
+				if not self._eventloop(timeout):
+					for rtn in self._idles:
+						rtn()
+					if not memory_warned and \
+							Evt.TickCount() > last_memory_check+MEMORY_CHECK_INTERVAL*TICKS_PER_SECOND:
+						last_memory_check = Evt.TickCount()
+						if MacOS.MaxBlock() < MEMORY_WARN:
+							Dlg.CautionAlert(MEMORY_ALERT_ID, None)
+							memory_warned = 1
+			except SystemExit:
+				raise
+			except:
+				import quietconsole
+				quietconsole.revert()
+				if hasattr(sys, 'exc_info'):
+					exc_type, exc_value, exc_traceback = sys.exc_info()
+				else:
+					exc_type, exc_value, exc_traceback = sys.exc_type, sys.exc_value, sys.exc_traceback
+				import traceback, pdb, settings, version
+				print
+				print '\t-------------------------------------------------'
+				print '\t| Fatal error - Please mail this output to      |'
+				print '\t| grins-support@oratrix.com with a description  |'
+				print '\t| of the circumstances.                         |'
+				print '\t-------------------------------------------------'
+				print '\tVersion:', version.version
+				print
+				traceback.print_exception(exc_type, exc_value, None)
+				traceback.print_tb(exc_traceback)
+				print
+				msg = "A serious error has ocurred, see the log window for details.\nPlease save your work and exit GRiNS."
+				if settings.get('debug'):
+					msg = msg + '\nDo you want to enter the debugger?'
+					showmessage(msg, mtype='question', callback=(pdb.post_mortem, (exc_traceback,)))
+				else:
+					showmessage(msg)
 								
 	def _eventloop(self, timeout):
 		"""Do the eventloop once with timeout. If this returns
