@@ -1973,7 +1973,7 @@ class ChannelWindow(Channel):
 		if otherwindow:
 			self.window.jointransition(otherwindow)
 		else:
-			self.window.begintransition(0, 1, out_trans)
+			self.window.begintransition(1, 1, out_trans)
 
 	def cleanup_transitions(self):
 		if self.__out_trans_qid:
