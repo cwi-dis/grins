@@ -43,6 +43,7 @@ class CmifChannel(Channel):
 	def play(self, node):
 		if debug:
 			print 'CmifChannel.play('+`self`+','+`node`+')'
+		self.stopped = 0
 		self.play_0(node)
 		self.do_play(node)
 		if not self.stopped:
