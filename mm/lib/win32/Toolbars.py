@@ -91,7 +91,7 @@ class ToolbarMixin:
 
 	def DestroyToolbars(self):
 		for bar in self._bars.values():
-			if bar.IsWindow():
+			if hasattr(bar,'DestroyWindow'):
 				bar.DestroyWindow()
 		self._bars = {}
 		self._pulldowndict = {}
