@@ -22,8 +22,8 @@ item: Global
   EXE Filename=D:\ufs\mm\cmif\bin\win32\grins-win-full-101alpha.exe
   FTP Cluster Size=20
   Upload Host=oratrix.oratrix.nl
-  Upload Name=sjoerd
-  Upload Directory=/ufs/sjoerd/tmp
+  Upload Name=jack
+  Upload Directory=/ufs/jack/tmp
   Per-User Version ID=1
   Dialogs Version=7
   Version File=1.0.1alpha
@@ -32,7 +32,7 @@ item: Global
   Version Company=Oratrix Development BV
   Distribute Type=2
   Step View=All
-  File Checksum=507898517
+  File Checksum=1160979765
   Variable Name1=_SYS_
   Variable Default1=C:\WINNT\System32
   Variable Flags1=00001000
@@ -1391,6 +1391,66 @@ item: If/While Statement
   Flags=00001010
 end
 item: Install File
+  Source=d:\ufs\mm\cmif\Templates\slideshow.smil
+  Destination=%MAINDIR%\Templates\slideshow.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\external_player.html
+  Destination=%MAINDIR%\Templates\external_player.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\Extended-Slideshow.smil
+  Destination=%MAINDIR%\Templates\Extended-Slideshow.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\Extended-Slideshow.bmp
+  Destination=%MAINDIR%\Templates\Extended-Slideshow.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\empty.smil
+  Destination=%MAINDIR%\Templates\empty.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\empty.cmc
+  Destination=%MAINDIR%\Templates\empty.cmc
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\embedded_player.html
+  Destination=%MAINDIR%\Templates\embedded_player.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\embedded_htmllayout_player.html
+  Destination=%MAINDIR%\Templates\embedded_htmllayout_player.html
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\captions.smil
+  Destination=%MAINDIR%\Templates\captions.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\captions.bmp
+  Destination=%MAINDIR%\Templates\captions.bmp
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\Basic-Slideshow.smil
+  Destination=%MAINDIR%\Templates\Basic-Slideshow.smil
+  Flags=0000000010000010
+end
+item: Install File
+  Source=d:\ufs\mm\cmif\Templates\Basic-Slideshow.bmp
+  Destination=%MAINDIR%\Templates\Basic-Slideshow.bmp
+  Flags=0000000010000010
+end
+item: Install File
   Source=d:\ufs\mm\cmif\GRiNS-Icons\RealVideo.tiff
   Destination=%MAINDIR%\GRiNS-Icons\RealVideo.tiff
   Flags=0000000010000010
@@ -1408,31 +1468,6 @@ end
 item: Install File
   Source=d:\ufs\mm\cmif\GRiNS-Icons\RealAudio.tiff
   Destination=%MAINDIR%\GRiNS-Icons\RealAudio.tiff
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\slideshow.smil
-  Destination=%MAINDIR%\Templates\slideshow.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\captions.smil
-  Destination=%MAINDIR%\Templates\captions.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\Extended-Slideshow.smil
-  Destination=%MAINDIR%\Templates\Extended-Slideshow.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\empty.smil
-  Destination=%MAINDIR%\Templates\empty.smil
-  Flags=0000000010000010
-end
-item: Install File
-  Source=d:\ufs\mm\cmif\Templates\Basic-Slideshow.smil
-  Destination=%MAINDIR%\Templates\Basic-Slideshow.smil
   Flags=0000000010000010
 end
 item: Install File
