@@ -205,7 +205,7 @@ class Selecter:
 			if not self.gotoanchor(dest, arg):
 				return 0
 		if arg:
-			dialogs.showmessage('Args:'+`arg`)
+			windowinterface.showmessage('Args:'+`arg`)
 		return 1
 
 	def gotoanchor(self, (anchor1, anchor2, dir, type), arg):

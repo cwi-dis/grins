@@ -118,7 +118,7 @@ class _Toplevel:
 		if debug: print 'Toplevel.newwindow'+`x, y, w, h, title`
 		window = _Window(1, self, x, y, w, h, title)
 		event._qdevice()
-		dummy = testevent()
+		dummy = event.testevent()
 		return window
 
 	newcmwindow = newwindow
@@ -162,7 +162,7 @@ class _Event:
 		self._select_dict = {}
 		self._timenow = time.time()
 		self._timerid = 0
-		self._modal = 0
+		self._modal = []
 
 	def _qdevice(self):
 		if debug: print 'Event.qdevice()'
@@ -401,9 +401,13 @@ class _Event:
 		if not self._queue:
 			raise error, 'internal error: event expected'
 		window, event, value = self._queue[0]
-		if self._modal:
-			if event != ResizeWindow:
-				return 0
+		if self._modal and event != ResizeWindow:
+			if type(self._modal[-1]) in (type(()), type([])):
+				if window not in self._modal[-1]:
+					return 0
+			else:
+				if window is not self._modal[-1]:
+					return 0
 		if event == FileEvent:
 			if self._select_dict.has_key(value):
 				del self._queue[0]
@@ -570,11 +574,11 @@ class _Event:
 		self._select_dict[fd] = (cb, arg)
 		self.setfd(fd)
 
-	def startmodal(self):
-		self._modal = 1
+	def startmodal(self, window):
+		self._modal.append(window)
 
 	def endmodal(self):
-		self._modal = 0
+		del self._modal[-1]
 
 	def mainloop(self):
 		while 1:
@@ -851,8 +855,7 @@ class _DisplayList:
 		if len(coordinates) != 4:
 			raise TypeError, 'arg count mismatch'
 		x, y, w, h = coordinates
-		button = _Button(self, x, y, w, h)
-		return button
+		return _Button(self, x, y, w, h)
 
 	def drawbox(self, *coordinates):
 		window = self._window
@@ -1204,7 +1207,7 @@ class _Window:
 		new_window._sizes = x, y, w, h
 		new_window._toplevel = self._toplevel
 		new_window._init2()
-		dummy = testevent()
+		dummy = event.testevent()
 		return new_window
 
 	newcmwindow = newwindow
@@ -1234,7 +1237,7 @@ class _Window:
 		self._parent_window = None
 		self._toplevel = None
 		# let our parent window inherit events meant for us
-		dummy = testevent()	# read all pending events
+		dummy = event.testevent()	# read all pending events
 		q = []
 		for (win, ev, val) in event._queue:
 			if win == self:
@@ -1384,7 +1387,7 @@ class _Window:
 		width, height = gl.getsize()
 		toplevel._win_lock.release()
 		while 1:
-			while testevent() == 0:
+			while event.testevent() == 0:
 				if not constrainx:
 					mx = gl.getvaluator(DEVICE.MOUSEX) - \
 						  screenx0
@@ -1460,7 +1463,7 @@ class _Window:
 		width, height = gl.getsize()
 		toplevel._win_lock.release()
 		while 1:
-			while testevent() == 0:
+			while event.testevent() == 0:
 				if not constrainx:
 					mx = gl.getvaluator(DEVICE.MOUSEX) - screenx0
 				if not constrainy:
@@ -2015,8 +2018,8 @@ def clean_callbacks():
 def select_setcallback(fd, cb, arg):
 	event.select_setcallback(fd, cb, arg)
 
-def startmodal():
-	event.startmodal()
+def startmodal(window):
+	event.startmodal(window)
 
 def endmodal():
 	event.endmodal()
@@ -2027,14 +2030,426 @@ def mainloop():
 def canceltimer(id):
 	event.canceltimer(id)
 
+#	showdialog(message, buttons...) -> button_text
+#		Show a dialog window with the specified message (may
+#		contain newlines) and buttons with the specified
+#		texts.  The window stays up until one of the buttons
+#		is clicked.  The value of the button is then returned.
+#		One button may start with '!'.  This button is the
+#		default answer and is returned when the user types a
+#		RETURN.
+#
+#	showmessage(message)
+#		Show a dialog box with the given message and a Done
+#		button.  The function does not return a value.
+#
+#	showquestion(question)
+#		Show a dialog box with the given question and Yes and
+#		No buttons.  The value returned is 1 if the Yes
+#		buttons was pressed and 0 if the No button was
+#		pressed.
+#
+#	multchoice(message, buttonlist, defindex)
+#		Show a dialog box with the given message and list of
+#		buttons.  Defindex is the index in the list of the
+#		default button.  The value returned is the index of
+#		the button which was pressed.
+#
+# The presentation can be changed by setting any of the variables in
+# the configuration section.  See the comments near the variables.
+
+# some configuration variables
+BGCOLOR = 255, 255, 0			# background color of window: yellow
+FGCOLOR = 0, 0, 0			# foreground color of window: black
+HICOLOR = 255, 0, 0			# highlight color of window: red
+INTERBUTTONGAP = '   '			# space between buttons
+BUTTONFILLER = ' '			# extra space added before and
+					# after button text
+FONT = 'Times-Roman'			# font used for texts
+POINTSIZE = 14				# point size used for texts
+WINDOWTITLE = None			# title of pop-up window
+DEFLINEWIDTH = 3			# linewidth round default button
+WINDOWMARGIN = 1			# margin around text and buttons
+CENTERLINES = 0				# whether to center all lines
+DONEMSG = ' Done '			# text in button of showmessage
+YESMSG = ' Yes '			# text of "Yes" answer of showquestion
+NOMSG = ' No '				# text of "No" answer of showquestion
+# changing any of the following changes the interface to the user/programmer
+DEFBUTTON = '!'				# indicates this is default button
+DEFANSWER = '\r', '\n'			# keys that trigger default answer
+
+_break_loop = '_break_loop'
+
+class Dialog:
+	def __init__(self, prompt, grab, list):
+		if len(list) == 0:
+			raise TypeError, 'arg count mismatch'
+		# self.events is used to remember events that we are
+		# not interested in but that may be important for
+		# whoever calls us.
+		self.events = []
+		self.message = prompt
+		self.buttons = []
+		self._callbacks = {}
+		self._accelerators = {}
+		self._grab = grab
+		self._looping = 0
+		self._finish = None
+		font = findfont(FONT, POINTSIZE)
+		if type(prompt) == type(''):
+			width, height = font.strsize(prompt)
+			height = height + font.fontheight()
+		elif prompt == None:
+			width, height = 0, 0
+		else:
+			raise TypeError, 'message must be text or `None\''
+		mw = 0
+		mh = 0
+		self.defstr = None
+		for entry in list:	# loops at least once
+			if type(entry) == type(()):
+				accelerator, label, callback = entry
+			else:
+				accelerator, label, callback = '', entry, None
+			if callback and type(callback) is not type(()):
+				callback = (callback, (label,))
+			self._callbacks[label] = callback
+			self.buttons.append(label)
+			if accelerator:
+				self._accelerators[accelerator] = callback
+			butstrs = string.splitfields(label, '\n')
+			for bt in butstrs:	# loops at least once
+				txt = BUTTONFILLER + bt + BUTTONFILLER
+				bw, bh = font.strsize(txt)
+				if bw > mw:
+					mw = bw
+					self.widest_button = txt
+			if len(butstrs) > mh:
+				mh = len(butstrs)
+		self.buttonlines = mh
+		buttonwidth = len(self.buttons) * mw
+		buttonheight = self.buttonlines * bh
+		sw, sh = font.strsize(INTERBUTTONGAP)
+		font.close()
+		buttonwidth = buttonwidth + (len(self.buttons) - 1) * sw
+		if buttonwidth > width:
+			width = buttonwidth
+		height = height + buttonheight
+		winwidth = width + WINDOWMARGIN * 2
+		winheight = height + WINDOWMARGIN * 2
+		scrwidth, scrheight = getsize()
+		buttonwidth = float(buttonwidth) / width
+		buttonheight = float(buttonheight) / height
+		mw = float(mw) / width
+		sw = float(sw) / width
+		mx, my = getmouse()
+		mx = mx - winwidth / 2
+		if mx < 0:
+			mx = 0
+		if mx + winwidth > scrwidth:
+			mx = scrwidth - winwidth
+		my = my - winheight / 2
+		if my < 0:
+			my = 0
+		if my + winheight > scrheight:
+			my = scrwidth - winheight
+		self.window = newwindow(mx, my,
+			  winwidth, winheight, WINDOWTITLE)
+		self.window.bgcolor(BGCOLOR)
+		# remember these settings since we may need them later
+		self.INTERBUTTONGAP = INTERBUTTONGAP
+		self.CENTERLINES = CENTERLINES
+		self.DEFBUTTON = DEFBUTTON
+		self.DEFLINEWIDTH = DEFLINEWIDTH
+		self.DEFANSWER = DEFANSWER
+		self.HICOLOR = HICOLOR
+		self.FGCOLOR = FGCOLOR
+		self.FONT = FONT
+		self.draw_window()
+		self.window.register(Mouse0Press, self._mpress, None)
+		self.window.register(Mouse0Release, self._mrelease, None)
+		self.window.register(KeyboardInput, self._kboard, None)
+		self.window.register(ResizeWindow, self.draw_window, None)
+		if grab:
+			self.window.register(None, self._ignore, None)
+
+	def __del__(self):
+		self.close()
+
+	def draw_window(self, *rest):
+		d = self.window.newdisplaylist()
+		d.fgcolor(self.FGCOLOR)
+		d.drawbox(0,0,1,1)
+		bm = (self.widest_button + self.INTERBUTTONGAP) * (len(self.buttons) - 1) + self.widest_button
+		if type(self.message) == type(''):
+			m = self.message + '\n' + '\n' * self.buttonlines + bm
+		else:
+			m = '\n' * (self.buttonlines - 1) + bm
+		bl, fh, ps = d.fitfont(self.FONT, m, 0.10)
+		if type(self.message) == type(''):
+			w, h = d.strsize(self.message)
+			yorig = 0.05 + bl
+			if self.CENTERLINES:
+				for str in string.splitfields(self.message, '\n'):
+					dx, dy = d.strsize(str)
+					d.setpos((1.0 - dx) / 2, yorig)
+					x, y, dx, dy = d.writestr(str)
+					yorig = yorig + dy
+			else:
+				d.setpos((1.0 - w) / 2, yorig)
+				x, y, dx, dy = d.writestr(self.message)
+		mw, h = d.strsize(self.widest_button)
+		mh = h * self.buttonlines	# height of the buttons
+		sw, h = d.strsize(self.INTERBUTTONGAP)
+		w, h = d.strsize(bm)
+		xbase = (1.0 - w) / 2
+		if type(self.message) == type(''):
+			ybase = 1.0 - 0.05 - mh
+		else:
+			ybase = (1.0 - mh) / 2
+		self.buttonboxes = []
+		for entry in self.buttons:
+			if type(entry) == type(()):
+				accelerator, butstr, callback = entry
+			else:
+				accelerator, butstr = '', entry
+			if accelerator == '\n':
+				d.linewidth(self.DEFLINEWIDTH)
+			else:
+				d.linewidth(1)
+			w, h = d.strsize(butstr)
+			ypos = ybase + float(mh - h) / 2 + bl
+			if self.CENTERLINES:
+				for bt in string.splitfields(butstr, '\n'):
+					w, h = d.strsize(bt)
+					d.setpos(xbase + (mw - w) / 2, ypos)
+					box = d.writestr(bt)
+					ypos = ypos + fh
+			else:
+				d.setpos(xbase + (mw - w) / 2, ypos)
+				box = d.writestr(butstr)
+			buttonbox = d.newbutton(xbase, ybase, mw, mh)
+			buttonbox.hicolor(self.HICOLOR)
+			self.buttonboxes.append(buttonbox)
+			xbase = xbase + mw + sw
+		d.render()
+		self.highlighted = []
+
+	# On mouse press, highlight the button, but don't do anything.
+	# On mouse release, execute the callback (but only if we're
+	# still in the button, of course) and de-highlight the button.
+	def _mpress(self, dummy, win, ev, val):
+		for but in val[2]:
+			try:
+				i = self.buttonboxes.index(but)
+			except:
+				beep()
+			else:
+				but.highlight()
+				self.highlighted.append(but)
+
+	def _mrelease(self, dummy, win, ev, val):
+		for but in val[2]:
+			if but in self.highlighted:
+				try:
+					i = self.buttonboxes.index(but)
+				except:
+					pass
+				else:
+					callback = self._callbacks[self.buttons[i]]
+					if callback:
+						apply(callback)
+				if self._finish is None:
+					self._finish = 1
+		for but in self.highlighted:
+			if not but.is_closed():
+				but.unhighlight()
+		self.highlighted = []
+		if self._looping and self._finish is not None:
+			raise _break_loop
+
+	def _kboard(self, dummy, win, ev, val):
+		if self._accelerators.has_key(val):
+			if self._finish is None:
+				self._finish = 1
+			callback = self._accelerators[val]
+			if callback:
+				apply(callback)
+			if self._looping:
+				raise _break_loop
+		
+	def _resize(self, *rest):
+		self.draw_window()
+
+	def _ignore(self, *rest):
+		pass
+
+	def _loop(self):
+		startmonitormode()
+		event.startmodal(self.window)
+		self._finish = None
+		self._looping = 1
+		try:
+			try:
+				while self._finish is None:
+					win, ev, val = readevent()
+			except _break_loop:
+				pass
+		finally:
+			self.window.close()
+			self._looping = 0
+			endmonitormode()
+			event.endmodal()
+
+	def create_menu(self, title, list):
+		self.window.create_menu(title, list)
+
+	def close(self):
+		self.window.close()
+
 def showmessage(text):
-	import dialogs
-	dialogs.showmessage(text)
+	d = Dialog(text, 1, [('\r', 'Done', None)])
+	d._loop()
+
+class _Question(Dialog):
+	def __init__(self, text):
+		self._finish = None
+		Dialog.__init__(self, text, 1,
+				[('y', 'Yes', (self._ok_callback, ())),
+				 ('n', 'No', (self._cancel_callback, ()))])
+
+	def run(self):
+		self._loop()
+		return self._finish
+
+	def _ok_callback(self):
+		self._finish = 1
+
+	def _cancel_callback(self):
+		self._finish = 0
 
 def showquestion(text):
-	import dialogs
-	return dialogs.showquestion(text)
+	d = _Question(text)
+	return d.run()
+
+class _MultChoice(Dialog):
+	def __init__(self, prompt, msg_list, defindex):
+		self._finish = None
+		self.msg_list = msg_list
+		list = []
+		for i in range(len(msg_list)):
+			msg = msg_list[i]
+			if i == defindex:
+				acc = '\r'
+			else:
+				acc = ''
+			list.append(acc, msg, (self._callback, (msg,)))
+		Dialog.__init__(self, prompt, 1, list)
+
+	def run(self):
+		self._loop()
+		return self._finish
+
+	def _callback(self, msg):
+		for i in range(len(self.msg_list)):
+			if msg is self.msg_list[i]:
+				self._finish = i
+				return
 
 def multchoice(prompt, list, defindex):
-	import dialogs
-	return dialogs.multchoice(prompt, list, defindex)
+	d = _MultChoice(prompt, list, defindex)
+	return d.run()
+		
+def getstring(prompt):
+	fg = 0, 0, 0
+	bg = 255, 255, 255
+	w = newwindow(0,0,50,10,'DIALOG')
+	event.startmodal(w)
+	d = w.newdisplaylist()
+	bl, fh, ps = d.setfont('Times-Roman', 10)
+	d.setpos(0, bl)
+	dummy = d.writestr(prompt)
+	cursor = d.writestr(' ')
+	sw = w.newwindow(cursor)
+	sw.bgcolor(fg)
+	sw.fgcolor(bg)
+	sd = sw.newdisplaylist()
+	bl, fh, ps = sd.setfont('Times-Roman', 10)
+	sd.setpos(0, bl)
+	dummy = sd.writestr(' ')
+	d.render()
+	sd.render()
+	str = ''
+	redraw = 0
+	curpos = 0
+	while 1:
+		win, ev, val = readevent()
+		if ev == WindowExit:
+			w.close()
+			event.endmodal()
+			return None
+		elif ev == ResizeWindow:
+			redraw = 1
+		elif ev == KeyboardInput:
+			if val == '\b':
+				if len(str) >= 0 and curpos > 0:
+					str = str[:curpos-1] + str[curpos:]
+					redraw = 1
+					curpos = curpos - 1
+			elif val in ('\033', '\n', '\r'):
+				w.close()
+				modal.endmodal()
+				return str
+			elif ' ' <= val <= '~':
+				str = str[:curpos] + val + str[curpos:]
+				curpos = curpos + 1
+				redraw = 1
+			elif val == '\001':		# ^A
+				if curpos != 0:
+					redraw = 1
+				curpos = 0
+			elif val == '\005':		# ^E		
+				if curpos != len(str):
+					redraw = 1
+				curpos = len(str)
+			elif val == '\002':		# ^B
+				if curpos > 0:
+					curpos = curpos - 1
+					redraw = 1
+			elif val == '\006':		# ^F
+				if curpos < len(str):
+					curpos = curpos + 1
+					redraw = 1
+			elif val == '\013':		# ^K
+				if len(str) > curpos:
+					str = str[:curpos]
+					redraw = 1
+			elif val == '\004':		# ^D
+				if len(str) > curpos:
+					str = str[:curpos] + str[curpos+1:]
+					redraw = 1
+		if redraw:
+			sw.close()
+			nd = w.newdisplaylist()
+			bl, fh, ps = nd.setfont('Times-Roman', 10)
+			nd.setpos(0, bl)
+			dummy = nd.writestr(prompt + str[:curpos])
+			if curpos >= len(str):
+				c = ' '
+				cursor = nd.writestr(c)
+			else:
+				c = str[curpos]
+				cursor = nd.writestr(c)
+				dummy = nd.writestr(str[curpos+1:])
+			sw = w.newwindow(cursor)
+			sw.bgcolor(fg)
+			sw.fgcolor(bg)
+			sd = sw.newdisplaylist()
+			bl, fh, ps = sd.setfont('Times-Roman', 10)
+			sd.setpos(0, bl)
+			dummy = sd.writestr(c)
+			nd.render()
+			d.close()
+			d = nd
+			sd.render()
+			redraw = 0

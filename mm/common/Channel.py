@@ -621,8 +621,8 @@ class Channel:
 		# to edit an anchor.
 		return 0
 
-# dictionary with channels that have windows
-ChannelWinDict = {}
+### dictionary with channels that have windows
+##ChannelWinDict = {}
 
 class ChannelWindow(Channel):
 	chan_attrs = Channel.chan_attrs + ['base_window', 'base_winoff']
@@ -630,7 +630,9 @@ class ChannelWindow(Channel):
 
 	def init(self, name, attrdict, scheduler, ui):
 		self = Channel.init(self, name, attrdict, scheduler, ui)
-		ChannelWinDict[self._name] = self
+		if not hasattr(self._player, 'ChannelWinDict'):
+			self._player.ChannelWinDict = {}
+		self._player.ChannelWinDict[self._name] = self
 		self.window = None
 		self.armed_display = self.played_display = None
 		self.nopop = 0
@@ -642,7 +644,7 @@ class ChannelWindow(Channel):
 		return '<ChannelWindow instance, name=' + `self._name` + '>'
 
 	def destroy(self):
-		del ChannelWinDict[self._name]
+		del self._player.ChannelWinDict[self._name]
 		Channel.destroy(self)
 		del self.window
 		del self.armed_display
@@ -696,11 +698,10 @@ class ChannelWindow(Channel):
 		self.unhighlight()
 
 	def create_window(self, pchan, pgeom):
-		menu = [
-			('', 'highlight', (self.highlight, ())),
-			('', 'unhighlight', (self.unhighlight, ()))
-			]
+		menu = []
 		if pchan:
+			menu.append('', 'highlight', (self.highlight, ()))
+			menu.append('', 'unhighlight', (self.unhighlight, ()))
 			if self.want_default_colormap:
 				self.window = pchan.window.newcmwindow(pgeom)
 			else:
@@ -735,7 +736,8 @@ class ChannelWindow(Channel):
 		self.window.register(EVENTS.Mouse0Press, self.mousepress, None)
 		self.window.register(EVENTS.Mouse0Release, self.mouserelease,
 				     None)
-		self.window.create_menu('', menu)
+		if menu:
+			self.window.create_menu('', menu)
 
 	def resize_window(self, pchan):
 		import boxes
@@ -772,8 +774,8 @@ class ChannelWindow(Channel):
 			#
 			# Next, check that the base window channel exists.
 			#
-			if ChannelWinDict.has_key(pname):
-				pchan = ChannelWinDict[pname]
+			if self._player.ChannelWinDict.has_key(pname):
+				pchan = self._player.ChannelWinDict[pname]
 			else:
 				pchan = None
 				windowinterface.showmessage(
