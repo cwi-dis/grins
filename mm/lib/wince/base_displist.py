@@ -64,17 +64,17 @@ class DisplayList:
 	def is_closed(self):
 		return self._window is None
 
-	def _render(self, params):
+	def _render(self, dc, ltrb = None, start = 0):
 		self._rendered = 1
 
-		for i in range(len(self._list)):
-			self._do_render(self._list[i], params)
+		for i in range(start, len(self._list)):
+			self._do_render(self._list[i], dc, ltrb)
 
 		for b in self._buttons:
 			if b._highlighted:b._do_highlight()
 
-	def _do_render(self, entry, params):
-		pass
+	def _do_render(self, entry, dc, ltrb):
+		cmd = entry[0]
 
 	# Define a new button. Coordinates are in window relatives
 	def newbutton(self, coordinates, z = 0, sensitive = 1):
@@ -90,6 +90,7 @@ class DisplayList:
 	def display_image_from_file(self, file, crop = (0,0,0,0), fit = 'meet',
 				    center = 1, coordinates = None, clip = None, align = None,
 				    units = None):
+		self._list.append(('image', file, coordinates, fit))
 		return 0, 0, 100, 100
 
 	def isTransparent(self, point):

@@ -933,11 +933,8 @@ class Window:
 		self._transparent = transparent
 
 	# redraw this window and its childs
-	def update(self, rc=None):
-		if self._topwindow != self:
-			self._topwindow.update(rc)
-		else:
-			print 'you must override update for a top window'
+	def update(self, rc = None):
+		print 'update', self.getwindowpos()
 
 	# return all ancestors of self including topwindow
 	def getAncestors(self):
@@ -956,28 +953,20 @@ class Window:
 	def updatecoordinates(self, coordinates, units=UNIT_PXL, fit=None, mediacoords=None):
 		# first convert any coordinates to pixel
 		if units != UNIT_PXL:
-			coordinates = self._convert_coordinates(coordinates,units=units)
+			coordinates = self._convert_coordinates(coordinates, units=units)
 		
-		if coordinates==self._rectb:
-			return
-		
-		x, y, w, h = coordinates
-
 		# keep old pos
-		x0, y0, w0, h0 = self._rectb
 		x1, y1, w1, h1 = self.getwindowpos()
-		
-							
+
+		x, y, w, h = coordinates
+		self.setmediadisplayrect(mediacoords)
+
 		# resize/move
 		self._rect = 0, 0, w, h # client area in pixels
 		self._canvas = 0, 0, w, h # client canvas in pixels
 		self._rectb = x, y, w, h  # rect with respect to parent in pixels
-		if self._parent:
-			self._sizes = self._parent._pxl2rel(self._rectb) # rect relative to parent
-		else:
-			self._sizes = 0, 0, 1, 1
-
-
+		self._sizes = self._parent._pxl2rel(self._rectb) # rect relative to parent
+		
 	def updatezindex(self, z):
 		self._z = z
 		parent = self._parent
@@ -988,10 +977,10 @@ class Window:
 				break
 		else:
 			parent._subwindows.append(self)
+		self._parent.update()
 	
 	def updatebgcolor(self, color):
-		r, g, b = color
-		self._bgcolor = r, g, b
+		self.bgcolor(color)
 		if self._active_displist:
 			self._active_displist.updatebgcolor(color)
 		self.update()
