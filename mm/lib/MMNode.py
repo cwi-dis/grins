@@ -896,23 +896,37 @@ class MMNode:
 	def GetAttrDict(self):
 		return self.attrdict
 
-	def GetRawAttr(self, name):
+	def GetRawAttr(self, name, animated=0):
+		if animated and self.d_attrdict.has_key(name):
+			return self.attrdict[name]
 		if self.attrdict.has_key(name):
 			return self.attrdict[name]
 		raise NoSuchAttrError, 'in GetRawAttr()'
 
-	def GetRawAttrDef(self, name, default):
+	def GetRawAttrDef(self, name, default, animated=0):
+		if animated and self.d_attrdict.has_key(name):
+			return self.attrdict[name]
 		return self.attrdict.get(name, default)
 
-	def GetAttr(self, name):
+	def GetAttr(self, name, animated=0):
+		if animated and self.d_attrdict.has_key(name):
+			return self.attrdict[name]
 		if self.attrdict.has_key(name):
 			return self.attrdict[name]
 		raise NoSuchAttrError, 'in GetAttr'
 
-	def GetAttrDef(self, name, default):
+	def GetAttrDef(self, name, default, animated=0):
+		if animated and self.d_attrdict.has_key(name):
+			return self.attrdict[name]
 		return self.attrdict.get(name, default)
 
-	def GetInherAttr(self, name):
+	def GetInherAttr(self, name, animated=0):
+		if animated:
+			x = self
+			while x is not None:
+				if x.d_attrdict and x.d_attrdict.has_key(name):
+					return x.d_attrdict[name]
+				x = x.parent	
 		x = self
 		while x is not None:
 			if x.attrdict and x.attrdict.has_key(name):
@@ -920,7 +934,13 @@ class MMNode:
 			x = x.parent
 		raise NoSuchAttrError, 'in GetInherAttr()'
 
-	def GetDefInherAttr(self, name):
+	def GetDefInherAttr(self, name, d=0):
+		if animated:
+			x = self
+			while x is not None:
+				if x.d_attrdict and x.d_attrdict.has_key(name):
+					return x.d_attrdict[name]
+				x = x.parent	
 		x = self.parent
 		while x is not None:
 			if x.attrdict and x.attrdict.has_key(name):
@@ -928,7 +948,13 @@ class MMNode:
 			x = x.parent
 		raise NoSuchAttrError, 'in GetInherDefAttr()'
 
-	def GetInherAttrDef(self, name, default):
+	def GetInherAttrDef(self, name, default, animated=0):
+		if animated:
+			x = self
+			while x is not None:
+				if x.d_attrdict and x.d_attrdict.has_key(name):
+					return x.d_attrdict[name]
+				x = x.parent	
 ##		try:
 ##			return self.GetInherAttr(name)
 ##		except NoSuchAttrError:
@@ -1010,6 +1036,7 @@ class MMNode:
 			elif name == 'size':
 				w, h = value
 				d[n] = x, y, w, h
+	
 			
 	#
 	# Channel management
