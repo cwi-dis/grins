@@ -1,0 +1,177 @@
+This is a first cut at documenting the MM module.  This document isn't
+finished yet.
+
+Interface.
+==========
+
+The mm module can be used to create threads for CMIF channels.  Each
+object that is created by using the init() function represents two
+extra threads.  One thread is used for arming a CMIF channel, the
+other thread is used for playing the channel.  Below is a list of the
+functions and methods that are implemented by the mm module.
+
+Apart from the mm module, a specific channel module is also needed.
+The (opaque) object that is got from the init() function in the
+channel module must be given to the mm.init() function as first
+argument.  Using this object, the mm module knows which functions to
+call for channel-specific tasks.
+
+Functions and Methods of MM.
+============================
+
+init() is the function which creates a new mm object.
+
+obj = init(chanobj, wid, ev, attrlist)
+	Initialization routine.  Chanobj is a channel object which
+	identifies the channel.   Wid is the window-id of the GL
+	window 	to render in.  It is ignored in channels that don't
+	have a GL window (such as the sound channel).  Ev is an event
+	number.  Whenever something 'interesting' happens the raw
+	channel deposits an event of this type into the gl event queue
+	to signal this fact to the main thread.  The value of the event
+	will be one of the following:
+	ARMDONE - when the current arm is done
+	PLAYDONE - when the current file has finished playing
+	STOPPED - A stop command has been processed. This is needed to
+		synchronize on the stop command (because there might still be
+		old events in the event queue).
+
+	Attrlist is a list of (attributename, value) pairs specifying
+	things like background color, etc.
+	
+	The reason for letting the main program specify the event
+	number is that this allows the main program to use a different
+	event number for each instantiation of a raw channel.
+
+
+The following functions are methods of the object returned by init().
+
+done()
+	Stops the channel, closes the window.
+	Note 1: disabling a channel is done through this mechanism as
+	  well. The python wrapper will have to take care of timing
+	  dependencies.
+
+resized()
+	Called when the main loop notices that the window has changed
+	size.
+
+arm(file, delay, duration, attrlist, anchorlist)
+	Prepare to play file 'file' next, and try to have it done
+	within 'delay seconds. 'duration' is an estimate of how long
+	the arm operation will take. These parameters are only used to
+	influence scheduling decisions. An arm may be scheduled before
+	the previous play is finished. Attrlist is again a list of
+	(name, value) pairs like in the init call. Anchorlist is a
+	list of tuples where each tuple describes (in a channel
+	dependent way) how and where to show an anchor.
+
+armtime = play()
+	Start playing the armed node. The actual time needed for the
+	arm is returned. Calling play before the ARMDONE event is
+	received is an error, to help in detecting programming errors.
+
+pause()
+	Pause playing, resume by calling play().
+
+stop()
+	Stop playing and arming. A STOPPED event is generated to help
+	resynchronising. 
+
+setrate(rate)
+	Set the playing rate to the given value. Takes effect
+	immedeately.
+
+Functions and Methods of the Channel Module.
+============================================
+
+The channel module should implement one function, init(), which takes
+no argument and which returns an object which can be given to
+mm.init().  There are no other python-callable functions.
+
+Interface between MM and Channel Module.
+========================================
+
+The object which is returned by the channel module must have the type
+"channelobject" (see include file mmmodule.h).  This object contains a
+pointer "chan_funcs" which should point to a (static) structure with
+the type "struct mmfuncs".  The name of the object ("tp_name" in the
+variable with type "typeobject") should start with the string
+"channel:".  This string is used by mm to check the type of the object
+which was passed to it.
+
+The mmfuncs structure consists of pointers to functions.  These
+pointers should be filled in by the channel module.  The pointers
+point to the functions that do the actual channel-specific work.
+
+As a template, use the file "nullchannelmodule.c".  A somewhat more
+complicated example can be found in "soundchannelmodule.c".
+
+Implementation.
+===============
+
+Programming several co-operating threads is always complicated.  There
+are many places where the threads have to synchronize or where threads
+must have exclusive access to certain variables.  This is no different
+in the mm module.
+
+This module starts up two new threads per object.  One thread is the
+"arm" thread, the other is the "play" thread.  The "arm" thread runs
+the routine mm_armer() while the "play" thread runs the routine
+mm_player().  All other routines in mmmodule.c are only called by the
+main thread.  When nothing is being armed or played, both threads are
+waiting trying to acquire a lock (mm_armlock and mm_playlock
+respectively).  These locks are held by the main thread, but they are
+released when arming or playing must take place, thus enabling the arm
+or play threads to acquire the lock.
+
+The interface between the mm module and the channel-specific module is
+through a structure containg pointers to functions.  The interface
+functions correspond to the list of functions mentioned above.
+
+The mmobject structure.
+
+The mmobject structure consists of the following fields.
+mm_wid		The window ID for channels that have a GL window.
+mm_ev		The event number which is used to enter certain events
+		into the GL event queue.  This value is not
+		interpreted by the mm module.
+mm_flags	Flag values for the mm module.  The following flags
+		are defined.
+		ARMING		The arm thread is running.
+		PLAYING		The play thread is running.
+		PAUSING		The play thread is pausing (not
+				implemented yet).
+		EXIT		The arm and play threads should exit.
+				This is used when the object is being
+				deallocated.
+mm_flaglock	This is a lock that is used to serialize access to
+		mm_flags.  Since the arm and play threads must look at
+		mm_flags, and may even have to change mm_flags, a
+		mechanism is needed to prevent race conditions.
+mm_attrlist	A python list which contains channel-specific
+		attributes.  This is used by the channel-specific
+		code.
+mm_armlock	This lock is acquired by the main thread before the
+		arm thread is started.  When the arm thread is
+		started, it tries to acquire the lock, but since it is
+		already held, the arm thread will hang waiting for the
+		lock to be released.  When mm_arm() is called to arm
+		the channel, it releases the lock.  The arm thread can
+		then acquire it.  When the arm thread is done, it
+		tries again to acquire the lock without first
+		releasing it.  Since the lock is already held, the arm
+		thread will hang until some other thread releases the
+		lock.
+mm_playlock	This lock does for the play thread what mm_armlock
+		does for the arm thread.
+mm_exitsema	When the mm object is being deallocated, the main
+		thread signals the other threads that they have to
+		exit.  It then does two downs on this semaphore.  The
+		arm and play threads perform ups on the semaphore just
+		before finally exiting.  After both ups, the main
+		thread can continue and free all memory that belongs
+		to the mm object.
+mm_private	A pointer to channel-specific data.  The pointed-to
+		memory must be allocated by the channel-specific
+		initialization routine.
