@@ -13,6 +13,8 @@ from XDialog import showmessage
 from XHelpers import _create_menu, _setcursor
 import ToolTip
 from WMEVENTS import *
+import settings
+no_canvas_resize = settings.get('no_canvas_resize')
 
 _rb_message = """\
 Use left mouse button to draw a box.
@@ -258,13 +260,14 @@ class _Window(_AdornmentSupport):
 				 'topWidget': attrs.get('topWidget',0)})
 			form.ManageChild()
 			self._scrwin = form
-			for w in form.children:
-				if w.Class() == Xm.DrawingArea:
-					w.AddCallback('resizeCallback',
-						self._scr_resize_callback,
-						form)
-					self._clipcanvas = w
-					break
+			if not no_canvas_resize:
+				for w in form.children:
+					if w.Class() == Xm.DrawingArea:
+						w.AddCallback('resizeCallback',
+							self._scr_resize_callback,
+							form)
+						self._clipcanvas = w
+						break
 			width, height = canvassize
 			# convert to pixels
 			if units == UNIT_MM:
@@ -500,10 +503,11 @@ class _Window(_AdornmentSupport):
 			elif units == UNIT_PXL:
 				width = int(width)
 				height = int(height)
-			if width < swidth - hmargin:
-				width = swidth - hmargin
-			if height < sheight - vmargin:
-				height = sheight - vmargin
+			if not no_canvas_resize:
+				if width < swidth - hmargin:
+					width = swidth - hmargin
+				if height < sheight - vmargin:
+					height = sheight - vmargin
 			attrs = {'width': width, 'height': height}
 			if width == fwidth and height == fheight:
 				forceevent = 1
