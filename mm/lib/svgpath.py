@@ -637,12 +637,33 @@ class Path:
 		pass
 
 	def closePath(self):
-		pass
+		if len(self.__ptCoords)>0:
+			self.lineTo(self.__ptCoords[0])
 
 	def getCoords(self, i):
 		return None
 
-	def findCubicPoints(self, pt1, pt2, pt3, pt4, niters=3):
+	def findCubicPoints(self, pt1, pt2, pt3, pt4, npoints=16):
+		z1 = complex(pt1[0],pt1[1])
+		z2 = complex(pt2[0],pt2[1])
+		z3 = complex(pt3[0],pt3[1])
+		z4 = complex(pt4[0],pt4[1])
+		points = [pt1,]
+		dt = 1.0/float(npoints-1.0)
+		t = dt
+		for i in range(1,npoints-1):
+			t2 = t*t
+			t3 = t2*t
+			tc = 1.0 - t
+			tc2 = tc*tc
+			tc3 = tc2*tc
+			z = tc3*z1+3*tc2*t*z2+3*tc*t2*z3+t3*z4
+			points.append((z.real,z.imag))
+			t = t + dt
+		points.append(pt4)
+		return points
+
+	def findCubicPointsBySubdivision(self, pt1, pt2, pt3, pt4, niters=3):
 		z1 = complex(pt1[0],pt1[1])
 		z2 = complex(pt2[0],pt2[1])
 		z3 = complex(pt3[0],pt3[1])
