@@ -192,7 +192,15 @@ class _StructView(DisplayListView):
 		msg = win32mu.Win32Msg(params)
 		point = msg.pos()
 		point = self._DPtoLP(point)
-		self.onEvent(MouseMove, point)
+		# Find modifier keys. Code gleaned from the way Michael did this in the
+		# HierarchyView, I'm pretty sure there must be a better way to do this.
+		keystatus = params[2] # is a bunch of boolean flags for each key.
+		ctrlstatus = keystatus & win32con.MK_CONTROL # i.e. 0x8 or 0x0
+		if ctrlstatus:
+			modifiers = 'add'
+		else:
+			modifiers = None
+		self.onEvent(MouseMove, (point[0], point[1], None, modifiers))
 		if self._enableNodeDragDrop and self._dragging:
 			xp, yp = self._dragging
 			x, y = win32mu.Win32Msg(params).pos()
