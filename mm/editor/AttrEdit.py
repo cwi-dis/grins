@@ -31,7 +31,10 @@ def showattreditor(toplevel, node, initattr = None, chtype = None):
 		attreditor = node.attreditor
 	except AttributeError:
 		if node.__class__ is MMNode.MMNode:
-			wrapperclass = NodeWrapper
+			if node.GetChannelType() == 'animate' :
+				wrapperclass = AnimationWrapper
+			else:	
+				wrapperclass = NodeWrapper
 			if node.GetType() == 'ext' and \
 			   node.GetChannelType() == 'RealPix' and \
 			   not hasattr(node, 'slideshow'):
@@ -543,6 +546,52 @@ class SlideWrapper(NodeWrapper):
 				if attrdict.get('fullimage', 1):
 					attrdict['imgcropwh'] = w, h
 		NodeWrapper.commit(self)
+
+class AnimationWrapper(NodeWrapper):
+	animateElements = ['animate', 'set', 'animateMotion', 'animateColor']
+	def __init__(self, toplevel, node):
+		NodeWrapper.__init__(self, toplevel, node)
+
+	def attrnames(self):
+		namelist = ['name',
+			'begin', 'duration', 'loop', 'repeatdur', 'restart', 
+			'speed', 'accelerate', 'decelerate', 'autoReverse',
+			]
+		ctype = 'animate'
+		if ChannelMap.internalchannelmap.has_key(ctype):
+			cclass = ChannelMap.internalchannelmap[ctype]
+			# Add the class's declaration of attributes
+			namelist = namelist + cclass.node_attrs
+		tag = self.node.GetAttrDict()['tag']
+		if tag == 'animateMotion':
+			namelist.remove('attributeName')
+		elif tag == 'animate':
+			namelist.remove('path')
+			namelist.remove('origin')
+		elif tag == 'animateColor':
+			namelist.remove('path')
+			namelist.remove('origin')
+		elif tag == 'set':
+			namelist.remove('path')
+			namelist.remove('origin')
+			namelist.remove('calcMode')
+			namelist.remove('values')
+			namelist.remove('keyTimes')
+			namelist.remove('keySplines')
+			namelist.remove('from')
+			namelist.remove('by')
+		parent = self.node.GetParent()
+		if parent.GetType() in leaftypes:
+			namelist.remove('targetElement')
+		return namelist
+
+	def maketitle(self):
+		name = MMAttrdefs.getattr(self.node, 'name')
+		tag = MMAttrdefs.getattr(self.node, 'tag')
+		return 'Properties of %s node ' % tag + name
+
+	def getdef(self, name):
+		return NodeWrapper.getdef(self, name)
 
 
 class ChannelWrapper(Wrapper):
