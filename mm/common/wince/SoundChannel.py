@@ -283,6 +283,10 @@ class AudioPlayer:
 		if self._waveout:
 			self._waveout.Reset()
 			self._waveout.Close()
+			self._waveout = None
+		if self._u:
+			self._u.close()
+			self._u = None
 
 	def hook_callbacks(self, wnd):
 		wnd.HookMessage(self.OnOpen, MM_WOM_OPEN)
