@@ -92,8 +92,6 @@ class RealChannel:
 			except:
 				RealChannel.__has_rma_support = 0
 				raise error, "Cannot initialize RealPlayer G2 playback. G2 installation problem?"
-##		# release any resources on exit
-##		windowinterface.addclosecallback(self.release_player,())
 		
 	def destroy(self):
 		if self.__qid:
@@ -124,8 +122,6 @@ class RealChannel:
 		self.__winpos = window, winpossize, windowless
 		if not self.__createplayer(node):
 			return 0
-		if windowless:
-			self.__rmaplayer.SetPyVideoRenderer(self.__channel.getRealVideoRenderer())
 		self.__loop = self.__channel.getloop(node)
 		duration = self.__channel.getduration(node)
 		if url is None:
@@ -144,6 +140,8 @@ class RealChannel:
 ##			del u
 		self.__url = url
 		self.__rmaplayer.SetStatusListener(self)
+		if windowless:
+			self.__rmaplayer.SetPyVideoRenderer(self.__channel.getRealVideoRenderer())
 		if duration > 0:
 			self.__qid = self.__channel._scheduler.enter(duration, 0,
 							   self.__stop, ())
@@ -157,18 +155,19 @@ class RealChannel:
 		
 		t0 = self.__channel._scheduler.timefunc()
 		if t0 > node.start_time:
-			if windowless:
-				self.__spark = 0
-				self.__rmaplayer.Begin()
-			else:
-				# event driven begin
-				self.__spark = 1
+			self.__spark = 1
 		else:
 			self.__spark = 0
 			self.__rmaplayer.Begin()
 		self.__engine.startusing()
 		self.__using_engine = 1
 		return 1
+
+	def __doBegin(self):
+		node, window, winpossize, url, windowless = self._playargs
+		if windowless:
+			self.__channel.onRealChannelBegin()
+		self.__rmaplayer.Begin()
 
 	def OnPresentationOpened(self):
 		if not self.__spark: return
@@ -181,12 +180,12 @@ class RealChannel:
 			except rma.error, arg:
 				print arg
 		else:
-			windowinterface.settimer(0.1,(self.__rmaplayer.Begin,()))
+			windowinterface.settimer(0.1,(self.__doBegin,()))
 			self.__spark = 0
 
 	def OnPostSeek(self, oldTime, newTime):
 		if self.__spark:
-			windowinterface.settimer(0.1,(self.__rmaplayer.Begin,()))
+			windowinterface.settimer(0.1,(self.__doBegin,()))
 			self.__spark = 0
 
 	def replay(self):
