@@ -19,26 +19,26 @@ default_settings = {
 	'debug': 0,			# Show debug commands
 	'checkext': 1,			# Guess Mime type based on extension
 	'vertical_structure': 1,	# Orientation of Structure View
-	'no_canvas_resize': 1, 	 # Don't resize canvas after window resize (X)
-	'hierarchy_minimum_sizes': 0,	# Leaf nodes drawn using min. size
-	'structure_name_size': 0,
-	'root_expanded': 1,		# Root node always expanded
+	'no_canvas_resize': 1,	 # Don't resize canvas after window resize (X)
+	'hierarchy_minimum_sizes': 1,	# Leaf nodes drawn using min. size
+	'structure_name_size': 1,
+	'root_expanded': 0,		# Root node always expanded
 	'recent_documents':[],		# Recently used documents
 	'thumbnail_size':10.0,		# Size of thumbnail (mm)
 # HierarchyView colors
 	'structure_bgcolor': (150, 150, 150), # Light gray
-	'structure_leafcolor': (208, 182, 160),	# Pale pinkish, match channel view
-	'structure_rpcolor': (208, 182, 160),	# Pale pinkish, match channel view
-	'structure_slidecolor': (208, 182, 160),
-	'structure_bagcolor': (152, 174, 200), # Light blue
-	'structure_altcolor': (152, 200, 174), # Light green
-	'structure_parcolor': (150, 150, 150), # Gray
-	'structure_seqcolor': (150, 150, 150), # Gray
+	'structure_leafcolor': (255,255,222),
+	'structure_rpcolor': (196,159,127),
+	'structure_slidecolor': (222,255,255),
+	'structure_bagcolor': (148,117,166),
+	'structure_altcolor': (184,95,95),
+	'structure_parcolor': (79,156,130),
+	'structure_seqcolor': (116,154,189),
 	'structure_textcolor': (0, 0, 0), # Black
 	'structure_ctextcolor': (50, 50, 50),	# Very dark gray
 	'structure_expcolor': (200, 200, 200), # Open disclosure triangle
 	'structure_colcolor': (200, 200, 200), # Closed disclosure triangle
-	'structure_ecbordercolor': (80, 80, 80), # triangle border
+	'structure_ecbordercolor': (40, 40, 40), # triangle border
 	'structure_focusleft': (200, 200, 200),
 	'structure_focustop': (200, 200, 200),
 	'structure_focusright': (40, 40, 40),
@@ -50,8 +50,8 @@ default_settings = {
 	'timeline_bordercolor': (75, 75, 75), # Dark gray
 	'timeline_channelcolor': (240, 240, 240), # Very light gray
 	'timeline_channeloffcolor': (160, 160, 160), # Darker gray
-	'timeline_nodecolor': (208, 182, 160), # Pale pinkish, match hierarchy view
-	'timeline_altnodecolor': (255, 224, 200), # Same but brighter
+	'timeline_nodecolor': (255,255,222),
+	'timeline_altnodecolor': (208, 182, 160),
 	'timeline_nodeoffcolor': (160, 160, 160), # CHANNELOFFCOLOR
 	'timeline_altnodeoffcolor': (200, 200, 200), # BGCOLOR
 	'timeline_arrowcolor': (0, 0, 255), # Blue
@@ -148,7 +148,7 @@ def save():
 	except IOError:
 		return 0
 	for name, value in user_settings.items():
-		fp.write('%s = %s\n'%(name, `value`))
+		if value != default_settings[name]:
+			fp.write('%s = %s\n'%(name, `value`))
 	fp.close()
 	return 1
-
