@@ -22,6 +22,7 @@ _def_useGadget = 1
 
 
 # Resource IDs
+ID_ABOUT_DIALOG=512
 ID_SELECT_DIALOG=516
 ITEM_SELECT_OK=1
 ITEM_SELECT_CANCEL=2
@@ -46,10 +47,10 @@ ITEM_QUESTION_CANCEL=3
 
 # XXXX Debugging code: assure the resource file is available
 try:
-	Res.GetResource('DLOG', ID_SELECT_DIALOG)
+	Res.GetResource('DLOG', ID_ABOUT_DIALOG)
 except:
 	Res.OpenResFile('::mac:maccmifed.rsrc')
-Res.GetResource('DLOG', ID_SELECT_DIALOG)
+Res.GetResource('DLOG', ID_ABOUT_DIALOG)
 
 _rb_message = """\
 Use left mouse button to draw a box.
@@ -1115,7 +1116,8 @@ class FileDialog:
 		if ok:
 			filename = fss.as_pathname()
 			try:
-				ret = cb_ok(filename)
+				if cb_ok:
+					ret = cb_ok(filename)
 			except 'xxx':
 				showmessage("Internal error:\nexception %s"%`sys.exc_info()`)
 				ret = None
@@ -1124,7 +1126,8 @@ class FileDialog:
 					showmessage(ret)
 		else:
 			try:
-				ret = cb_cancel()
+				if cb_cancel:
+					ret = cb_cancel()
 			except:
 				showmessage("Internal error:\nexception %s"%`sys.exc_info()`)
 				ret = None
@@ -1448,14 +1451,13 @@ class _Question:
 	def __init__(self, text):
 		self.looping = FALSE
 		self.answer = None
-		showmessage(text, mtype = 'question',
-			    callback = (self.callback, (TRUE,)),
-			    cancelCallback = (self.callback, (FALSE,)))
+		self.text = text
 
 	def run(self):
 		try:
-			self.looping = TRUE
-			Xt.MainLoop()
+			showmessage(self.text, mtype = 'question',
+			    callback = (self.callback, (TRUE,)),
+			    cancelCallback = (self.callback, (FALSE,)))
 		except _end_loop:
 			pass
 		return self.answer
@@ -1470,6 +1472,7 @@ def showquestion(text):
 
 class _MultChoice:
 	def __init__(self, prompt, msg_list, defindex):
+		raise 'MultChoice called!'
 		self.looping = FALSE
 		self.answer = None
 		self.msg_list = msg_list
