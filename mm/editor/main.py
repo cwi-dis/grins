@@ -115,6 +115,8 @@ def handler(sig, frame):
 	pdb.set_trace()
 
 def main():
+	import os
+	os.environ['CMIF_USE_X'] = '1'
 	try:
 		opts, files = getopt.getopt(sys.argv[1:], 'qpj:snh:CHPSL')
 	except getopt.error, msg:
