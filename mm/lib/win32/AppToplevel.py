@@ -109,6 +109,10 @@ class _Toplevel:
 		self._embeddedcallbacks = {}
 		self._most_recent_docframe = None
 
+		# os timer
+		self._os_timer_id = 0
+		self._os_timer_wnd = None
+
 	# set/get active doc frame (MDIFrameWnd)
 	def setActiveDocFrame(self,frame):
 		self._activeDocFrame=frame
@@ -327,12 +331,11 @@ class _Toplevel:
 	#########################################
 	# Main message loop of the application
 	def mainloop(self):
-		if len(self._subwindows) == 1:self.show()
-		self.serve_events(())
-		wnd=self.genericwnd()
-		wnd.create()
-		wnd.HookMessage(self.OnTimer, win32con.WM_TIMER)
-		id=wnd.SetTimer(1,10)
+		if len(self._subwindows) == 1:
+			self.show()
+		self._os_timer_wnd = self.genericwnd()
+		self._os_timer_wnd.create()
+		self._os_timer_wnd.HookMessage(self.OnTimer, win32con.WM_TIMER)
 		
 		# com automation support
 		self.enableCOMAutomation()
@@ -341,8 +344,18 @@ class _Toplevel:
 		win32ui.GetApp().RunLoop()
 
 		# cleanup
-		wnd.KillTimer(id)
-		wnd.DestroyWindow()
+		self.StopTimer()
+		self._os_timer_wnd.DestroyWindow()
+		self._os_timer_wnd = None
+
+	def StartTimer(self):
+		if self._os_timer_id == 0 and self._os_timer_wnd is not None:
+			self._os_timer_id = self._os_timer_wnd.SetTimer(1,10)
+
+	def StopTimer(self):
+		if self._os_timer_id != 0 and self._os_timer_wnd is not None:
+			self._os_timer_wnd.KillTimer(self._os_timer_id)
+			self._os_timer_id = 0
 
 	def OnTimer(self, params):
 		self.serve_events()
@@ -363,6 +376,8 @@ class _Toplevel:
 				break
 		self._time=float(Sdk.GetTickCount())/TICKS_PER_SECOND
 		self.serve_timeslices()
+		if not self._timers and not self._idles:
+			self.StopTimer()
 		if self._waiting:self.setready()				
 
 	# Called by the core sustem to set the waiting cursor
@@ -401,7 +416,7 @@ class _Toplevel:
 			t = t + time0
 		self._timers.append((sec - t, cb, self._timer_id))
 		#print 'new event:',self._timer_id,sec - t,cb
-		Afx.GetMainWnd().PostMessage(WM_KICKIDLE)
+		self.StartTimer()
 		return self._timer_id
 
 
@@ -415,6 +430,8 @@ class _Toplevel:
 				if i < len(self._timers):
 					tt, cb, tid = self._timers[i]
 					self._timers[i] = (tt + t, cb, tid)
+				if not self._timers and not self._idles:
+					self.StopTimer()
 				return
 		raise 'unknown timer', id
 	
@@ -429,11 +446,14 @@ class _Toplevel:
 		id = self.__idleid
 		self.__idleid = self.__idleid + 1
 		self._idles[id] = cb
+		self.StartTimer()
 		return id
 
 	# Register for receiving timeslices
 	def cancelidleproc(self, id):
 		del self._idles[id]
+		if not self._timers and not self._idles:
+			self.StopTimer()
 
 	# Dispatch timeslices
 	def serve_timeslices(self):
