@@ -1745,14 +1745,17 @@ DirectDrawSurface_GetBuffer(DirectDrawSurfaceObject *self, PyObject *args)
 	DDSURFACEDESC desc;
 	ZeroMemory(&desc, sizeof(desc));
 	desc.dwSize=sizeof(desc);
-	HRESULT hr=self->pI->Lock(0,&desc, DDLOCK_WAIT, 0);
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr = self->pI->Lock(0,&desc, DDLOCK_WAIT, 0);
+	Py_END_ALLOW_THREADS	
 	if (FAILED(hr)){
 		seterror("DirectDrawSurface_GetBuffer", hr);
 		return NULL;
 	}	
 
 	BYTE* surfpixel=(BYTE*)desc.lpSurface;
-	return Py_BuildValue("i",int(surfpixel));
+	return Py_BuildValue("iii",int(surfpixel),desc.lPitch, desc.dwHeight);
 }
 
 static char DirectDrawSurface_ReleaseBuffer__doc__[] =
@@ -1761,7 +1764,7 @@ static char DirectDrawSurface_ReleaseBuffer__doc__[] =
 static PyObject *
 DirectDrawSurface_ReleaseBuffer(DirectDrawSurfaceObject *self, PyObject *args)
 {
-	if (!PyArg_ParseTuple(args, ""))
+	if(!PyArg_ParseTuple(args,"")) 
 		return NULL;
 	self->pI->Unlock(0);
 	Py_INCREF(Py_None);
