@@ -1,0 +1,34 @@
+# Attribute definitions
+# ---------------------
+#
+# Each definition is a 6-tuple enclosed in parenthes:
+# (attrname, typedef, defaultvalue, labeltext, displayername, helptext)
+#
+# The typedef is used to determine how to parse the default value,
+# with the provision that tuples, lists and dictionaries must
+# be surrounded by an extra pair of parentheses.
+#
+# A definition need not be wholly contained in a single input line;
+# blank lines and comments may be inserted freely.
+
+
+(styledict (namedict (attrdict)) () 'Style Dictionary' default '')
+
+(channeldict (namedict (attrdict)) () 'Channel Dictionary' default '')
+
+(style (list (name)) () 'Style(s) used' default '')
+
+(channel (name) undefined 'Channel name' default '')
+
+(type (name) undefined 'Channel type' default '')
+
+(scrollbars (tuple (bool) (bool)) (0 0) 'Scrollbars (hor, ver)' default '')
+
+(winsize (tuple (int) (int)) (0 0) 'Window size (width, height)' default '')
+
+(winpos (tuple (int) (int)) (0 0) 'Window position (x, y)' default '')
+
+(font (string) 'default' 'Font' default '')
+
+(synctolist (list (enclosed (tuple (uid) (bool) (float) (bool))))
+	() 'Sync arcs ending here' default '')
