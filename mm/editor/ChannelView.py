@@ -286,7 +286,7 @@ class ChannelView(ViewDialog, GLDialog):
 		gl.ortho2(-MASK-0.5, width+MASK-0.5, \
 			  height+MASK-0.5, -MASK-0.5)
 		self.channelbottom = 4 * f_fontheight
-		self.nodetop = 5 * f_fontheight
+		self.nodetop = 6 * f_fontheight
 
 	# Recompute the locations where the objects should be drawn
 
@@ -614,6 +614,16 @@ class GO:
 
 class ChannelBox(GO):
 
+	def init(self, mother, name):
+		self = GO.init(self, mother, name)
+		self.ctype = '???'
+		cdict = self.mother.context.channeldict
+		if cdict.has_key(name):
+			cattrs = cdict[name]
+			if cattrs.has_key('type'):
+				self.ctype = cattrs['type']
+		return self
+
 	def __repr__(self):
 		return '<ChannelBox instance, name=' + `self.name` + '>'
 
@@ -737,6 +747,11 @@ class ChannelBox(GO):
 		gl.RGBcolor(TEXTCOLOR)
 		f_title.centerstring(self.left, self.top, \
 			  self.right, self.bottom, self.name)
+
+		# Draw the channel type
+		ctype = '(' + self.ctype + ')'
+		f_title.centerstring(self.left, self.bottom, \
+			  self.right, self.bottom + f_fontheight, ctype)
 
 	def drawline(self):
 		# Draw a gray and a white vertical line
