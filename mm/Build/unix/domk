@@ -12,6 +12,7 @@ case `uname -sr` in
 SunOS\ 5.*) ARCH=sunos5;;
 IRIX\ 5.*) ARCH=irix5;;
 IRIX\ 6.2) ARCH=irix62;;
+IRIX\ 6.5) ARCH=irix65;;
 IRIX\ 6.*) ARCH=irix6;;
 *) echo 'unknown architecture' >&2; exit 1;;
 esac
@@ -151,7 +152,6 @@ done
 
 set ${1+"$@"} CHAMELEON=$CHAMELEON
 
-python0=$CHAMELEON/python/build.$ARCH/python
 python=$CHAMELEON/mm/mmpython/$ARCH/python
 PYTHONPATH=$CHAMELEON/python/Lib; export PYTHONPATH
 compdir() {
@@ -190,6 +190,12 @@ compdir() {
 OPT=-O; export OPT
 [ "$nomake" ] || (
 set -x
+if [ ! -d python/build.$ARCH ]
+then
+	mkdir python/build.$ARCH
+else
+	:
+fi &&
 cd python/build.$ARCH &&
 if [ ! -f Makefile ]
 then
@@ -197,17 +203,112 @@ then
 	then
 		./config.status
 	else
-		../configure --with-gcc=no `[ -f /usr/include/dmedia/moviefile.h ] || echo --with-thread`
+		../configure --without-gcc `[ -f /usr/include/dmedia/moviefile.h ] || echo --with-thread`
 	fi
+else
+	:
+fi &&
+if [ ! -f Modules/Setup ]
+then
+	$make Makefiles &&
+	ex - Modules/Setup <<\EOF &&
+/^#audioop/s/#//
+/^#imageop/s/#//
+w
+q
+EOF
+	case $ARCH in
+	irix*)
+		ex - Modules/Setup <<\EOF
+/^#al/s/#//
+/^#cl/s/#//
+w
+q
+EOF
+		;;
+	sunos*)
+		ex - Modules/Setup <<\EOF
+/^sunaudio/s/#//
+w
+q
+EOF
+		;;
+	esac
 else
 	:
 fi &&
 $make ${1+"$@"} Makefiles &&
 $make ${1+"$@"} all &&
+VERSION=`./python -c "import sys; print sys.version[:3]"` &&
+if [ ! -d install ]
+then
+	mkdir install &&
+	mkdir install/include &&
+	mkdir install/include/python$VERSION &&
+	cd install/include/python$VERSION &&
+	ln -s ../../../../Include/*.h . &&
+	ln -s ../../../config.h . &&
+	cd ../.. &&
+	mkdir lib &&
+	mkdir lib/python$VERSION &&
+	mkdir lib/python$VERSION/config &&
+	cd lib/python$VERSION/config &&
+	H=../../../.. &&
+	ln -s $H/Modules/Makefile $H/Modules/Setup $H/Modules/Setup.local $H/Modules/Setup.thread $H/Modules/config.c $H/../Modules/config.c.in $H/config.h $H/libpython$VERSION.a $H/../Modules/makesetup $H/Modules/python.o . &&
+	cd $H
+else
+	:
+fi &&
+if [ ! -d ../Extensions/X11/build.$ARCH ]
+then
+	mkdir ../Extensions/X11/build.$ARCH
+else
+	:
+fi &&
 cd ../Extensions/X11/build.$ARCH &&
+if [ ! -f Setup ]
+then
+	if [ -d /usr/dt ]
+	then
+		MOTIF=yes
+		echo 'MOTIF = /usr/dt' >> Setup
+	else
+		:
+	fi &&
+	if [ -d /usr/openwin ]
+	then
+		OPENWIN=yes
+		echo 'OPENWIN = /usr/openwin' >> Setup
+	else
+		:
+	fi &&
+	if [ -f /usr/include/dmedia/moviefile.h ]
+	then
+		echo 'mv mvmodule.o -lmovieplay -lmoviefile -ldmedia' >> Setup
+	else
+		:
+	fi &&
+	echo >> Setup "\
+CHAMELEON=../../../..
+LIBHTMLW=\$(CHAMELEON)/lib/$ARCH/libhtmlw
+HTML HTMLmodule.o htmlevent.o -I\$(LIBHTMLW) ${MOTIF:+-I\$(MOTIF)/include} ${OPENWIN:+-I\$(OPENWIN)/include} \$(LIBHTMLW)/libhtmlw.a" &&
+	if [ -f /usr/include/GL/glx.h ]
+	then
+		echo 'glX glXmodule.o -lGLw -lGL' >> Setup
+	else
+		:
+	fi &&
+	echo >> Setup "\
+Mrm Mrmmodule.o mrmhierarchyobject.o ${MOTIF:+-I\$(MOTIF)/include -L\$(MOTIF)/lib -R\$(MOTIF)/lib} ${OPENWIN:+-I\$(OPENWIN)/include} -lMrm
+Xm Xmmodule.o Xmsupport.o xmevent.o ${MOTIF:+-I\$(MOTIF)/include -L\$(MOTIF)/lib -R\$(MOTIF)/lib} ${OPENWIN:+-I\$(OPENWIN)/include} -lXm -lXmu -lXext
+Xrm Xrmmodule.o ${OPENWIN:+-I\$(OPENWIN)/include}
+Xlib Xlibmodule.o regionobject.o ${OPENWIN:+-I\$(OPENWIN)/include}
+Xt Xtmodule.o XColor.o Xttypes.o Fontobject.o GCobject.o Pixmapobject.o wclassobject.o widgetobject.o display.o translations.o event.o -lXext -lXmu -lXt -lX11 -DUSE_EDITRES ${OPENWIN:+-I\$(OPENWIN)/include}"
+else
+	:
+fi &&
 if [ ! -f Makefile ]
 then
-	VERSION=`$python0 -c "import sys; print sys.version[:3]"`
 	$make -f ../Makefile.pre.in srcdir=.. VPATH=.. \
 		VERSION=$VERSION \
 		installdir=../../../build.$ARCH/install Makefile
@@ -215,10 +316,58 @@ else
 	$make ${1+"$@"} Makefile
 fi &&
 $make ${1+"$@"} lib.a &&
+if [ ! -d ../../img/build.$ARCH ]
+then
+	mkdir ../../img/build.$ARCH
+else
+	:
+fi &&
 cd ../../img/build.$ARCH  &&
+if [ ! -f Setup ]
+then
+	if [ ! -f /usr/include/cl.h ]
+	then
+		nocl=yes
+	else
+		:
+	fi &&
+	cat >> Setup <<EOF
+CHAMELEON=../../../..
+X11DIR=../../X11
+BASELIB=\$(X11DIR)/build.$ARCH/lib.a
+BASESETUP=\$(X11DIR)/build.$ARCH/Setup
+PBMINC=\$(CHAMELEON)/lib/$ARCH/netpbm
+PBMLIB=\$(CHAMELEON)/lib/$ARCH/netpbm
+TIFFINC=\$(PBMINC)/libtiff
+TIFFLIB=\$(PBMLIB)/libtiff
+JPEGINC=\$(CHAMELEON)/lib/$ARCH/jpeg
+JPEGLIB=\$(CHAMELEON)/lib/$ARCH/jpeg
+PBMLIBS=-L\$(PBMLIB) -lppm -lpgm -lpbm
+TIFFLIBS=\$(TIFFLIB)/libtiff.a
+JPEGLIBS=-L\$(JPEGLIB) -ljpeg
+PNGLIB=\$(CHAMELEON)/lib/$ARCH/libpng
+PNGINC=\$(CHAMELEON)/lib/$ARCH/libpng
+ZLIBDIR=\$(CHAMELEON)/lib/$ARCH/zlib
+ZLIBINC=\$(CHAMELEON)/lib/$ARCH/zlib
+PNGLIBS=\$(PNGLIB)/libpng.a
+ZLIBS=\$(ZLIBDIR)/libz.a
+imgformat imgformatmodule.o \$(SYSFLAGS)
+imgppm imgppmmodule.o -I\$(PBMINC) \$(SYSFLAGS) \$(PBMLIBS)
+imgpgm imgpgmmodule.o -I\$(PBMINC) \$(SYSFLAGS) \$(PBMLIBS)
+imgpbm imgpbmmodule.o -I\$(PBMINC) \$(SYSFLAGS) \$(PBMLIBS)
+imgtiff imgtiffmodule.o tif_stdio.o -I\$(TIFFINC) \$(SYSFLAGS) \$(TIFFLIBS)
+imgcolormap imgcolormapmodule.o dither.o genmap.o mppm3.o \$(SYSFLAGS)
+imggif imggifmodule.o \$(SYSFLAGS)
+imgsgi imgsgimodule.o \$(SYSFLAGS)
+imgop imgopmodule.o \$(SYSFLAGS)
+${nocl:+imgjpeg imgjpegmodule.o -I\$(JPEGINC) -I\$(JPEGLIB) \$(SYSFLAGS) \$(JPEGLIBS)}
+imgpng imgpngmodule.o -I\$(PNGINC) -I\$(ZLIBINC) \$(SYSFLAGS) \$(PNGLIBS) \$(ZLIBS)
+EOF
+else
+	:
+fi &&
 if [ ! -f Makefile ]
 then
-	VERSION=`$python0 -c "import sys; print sys.version[:3]"`
 	$make -f ../Makefile.pre.in srcdir=.. VPATH=.. \
 		VERSION=$VERSION \
 		installdir=../../../build.$ARCH/install Makefile
@@ -228,10 +377,28 @@ fi &&
 $make ${1+"$@"} lib.a &&
 if [ -f /usr/include/midi.h -a $ARCH =~ 'irix*' ]
 then
+	if [ ! -d ../../midi/build.$ARCH ]
+	then
+		mkdir ../../midi/build.$ARCH
+	else
+		:
+	fi &&
 	cd ../../midi/build.$ARCH &&
+	if [ ! -f Setup ]
+	then
+		cat > Setup <<EOF
+X11DIR=../../X11
+IMGDIR=../../img
+BASELIB=\$(X11DIR)/build.$ARCH/lib.a \$(IMGDIR)/build.$ARCH/lib.a
+BASESETUP=\$(X11DIR)/build.$ARCH/Setup \$(IMGDIR)/build.$ARCH/Setup
+MIDILIB=-lmidi
+sgimidi sgimidimodule.o \$(SYSFLAGS) \$(MIDILIB)
+EOF
+	else
+		:
+	fi &&
 	if [ ! -f Makefile ]
 	then
-		VERSION=`$python0 -c "import sys; print sys.version[:3]"`
 		$make -f ../Makefile.pre.in srcdir=.. VPATH=.. \
 			VERSION=$VERSION \
 			installdir=../../../build.$ARCH/install Makefile
@@ -242,13 +409,17 @@ then
 else
 	:
 fi &&
+if [ ! -d ../../../../mm/mmpython/$ARCH ]
+then
+	mkdir ../../../../mm/mmpython/$ARCH
+else
+	:
+fi &&
 if [ ! -f /usr/include/dmedia/moviefile.h ]
 then
 	cd ../../../../mm/mmpython/$ARCH &&
 	if [ ! -f Makefile ]
 	then
-		VERSION=`$python0 -c "import sys; print sys.version[:3]"`
-
 		$make -f ../Makefile.pre.in srcdir=.. VPATH=.. \
 			VERSION=$VERSION \
 			installdir=../../../python/build.$ARCH/install Makefile
@@ -259,6 +430,22 @@ else
 	:
 fi &&
 $make ${1+"$@"} python &&
+if [ -f /usr/include/dmedia/moviefile.h -a ! -f ../../../../mm/mmpython/$ARCH/python ]
+then
+	d1=`pwd`
+	cd ../../../../mm/mmpython/$ARCH
+	d2=`pwd`
+	while [ ${d1%%/*} = ${d2%%/*} ]
+	do
+		d1=${d1#*/}
+		d2=${d2#*/}
+	done
+	d1=`echo $d2 | sed 's;[^/][^/]*;..;g'`/$d1
+	ln -s $d1/python . &&
+	cd $d1
+else
+	:
+fi &&
 cd $depth &&
 CMIF=$CHAMELEON/mm PYTHONPATH=$CHAMELEON/mm/lib:$CHAMELEON/python/Lib:$CHAMELEON/python/Lib/test:$CHAMELEON/python/Lib/plat-$ARCH $python -c 'import MMAttrdefs'
 ) &&
@@ -291,8 +478,13 @@ no)	;;
 	GLexcl='-x GL_window -x gl -x fm -x GL -x GET'
 	allexcl='-x pdb -x trace -x os2 -x audio.svx8'
 	case $ARCH in
-	irix*)	extend="-e $CHAMELEON/python/Extensions/midi/build.$ARCH"
-		extpath=":$CHAMELEON/python/Extensions/midi/build.$ARCH"
+	irix*)	if [ -d $CHAMELEON/python/Extensions/midi/build.$ARCH ]
+		then	extend="-e $CHAMELEON/python/Extensions/midi/build.$ARCH"
+			extpath=":$CHAMELEON/python/Extensions/midi/build.$ARCH"
+		else
+			extend=
+			extpath=
+		fi
 		exclthread='-x mm -x thread -x MPEGVideoChannel
 			-x MPEGVideoDuration -x MovieChannel -x MpegDuration'
 		exclude="$GLexcl $exclthread -x FCNTL
