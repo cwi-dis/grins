@@ -789,22 +789,22 @@ class _Window:
 		return x, y, w, h
 
 	def _prepare_image_from_file(self, file, top, bottom, left, right):
-##		global _cache_full
-##		cachekey = `file`+':'+`self._width`+'x'+`self._height`
-##		if _image_cache.has_key(cachekey):
-##			retval = _image_cache[cachekey]
-##			filename = retval[-1]
-##			try:
-##				import rgbimg
-##				image = rgbimg.longimagedata(filename)
-##				return retval[:-1] + (image,)
-##			except:		# any error...
-##				del _image_cache[cachekey]
-##				import posix
-##				try:
-##					posix.unlink(filename)
-##				except posix.error:
-##					pass
+		global _cache_full
+		cachekey = `file`+':'+`self._width`+'x'+`self._height`
+		if _image_cache.has_key(cachekey):
+			retval = _image_cache[cachekey]
+			filename = retval[-1]
+			try:
+				image = open(filename).read()
+			except:		# any error...
+				del _image_cache[cachekey]
+				import os
+				try:
+					os.unlink(filename)
+				except:
+					pass
+			else:
+				return retval[:-1] + (image,)
 		import img, imgformat
 		if self._depth == 8:
 			format = myxrgb8
@@ -813,15 +813,15 @@ class _Window:
 			format = imgformat.rgb
 			depth = 4
 		try:
-		    reader = img.reader(format, file)
+			reader = img.reader(format, file)
 		except img.error, arg:
-		    raise error, arg
+			raise error, arg
 		xsize = reader.width
 		ysize = reader.height
 		try:
-		    image = reader.read()
+			image = reader.read()
 		except: # XXXX This is lousy
-		    raise error, 'Unspecified error reading image'
+			raise error, 'Unspecified error reading image'
 		_image_size_cache[file] = (xsize, ysize)
 		top = int(top * ysize + 0.5)
 		bottom = int(bottom * ysize + 0.5)
@@ -844,9 +844,25 @@ class _Window:
 			scale = 1.0
 		x, y = (self._width-(width-left-right))/2, \
 			  (self._height-(height-top-bottom))/2
-		return x, y, width - left - right, height - top - bottom, \
-			  left, bottom, width, height, depth, scale, \
-			  image
+		retval = x, y, width - left - right, height - top - bottom, \
+			 left, bottom, width, height, depth, scale, image
+		if not _cache_full:
+			import tempfile
+			filename = tempfile.mktemp()
+			try:
+				f = open(filename, 'wb')
+				f.write(image)
+			except:
+				print 'Warning: caching image failed'
+				import os
+				try:
+					os.unlink(filename)
+				except:
+					pass
+				_cache_full = TRUE
+			else:
+				_image_cache[cachekey] = retval[:-1] + (filename,)
+		return retval
 
 	def _image_size(self, file):
 		# XXX--assume that images was displayed at least once
@@ -1208,6 +1224,7 @@ class _DisplayList:
 		w._active_display_list = self
 		toplevel._win_lock.acquire()
 		self._pixmap.CopyArea(w._form, self._gc, 0, 0, w._width, w._height, 0, 0)
+		w._form.UpdateDisplay()
 		toplevel._win_lock.release()
 
 	def clone(self):
