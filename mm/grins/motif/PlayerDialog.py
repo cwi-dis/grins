@@ -31,8 +31,10 @@ class PlayerDialog:
 				]),
 			('Channels', CHANNELS),
 			('Options', [
-				('Calculate timing', CALCTIMING),
 				('Dump scheduler data', SCHEDDUMP),
+				]),
+			('Help', [
+				('Help', HELP),
 				]),
 			],
 		'toolbar': [
@@ -107,7 +109,7 @@ class PlayerDialog:
 			x, y, 0, 0, self.__title, resizable = 0,
 			adornments = self.adornments)
 		if self.__channels:
-			window.setchannels(self.__channels)
+			self.setchannels(self.__channels)
 
 	def show(self):
 		if self.__menu_created is None:
