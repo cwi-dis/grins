@@ -8,9 +8,6 @@ sdk = win32ui.GetWin32Sdk()
 colors = {
 }
 
-rcolors = {
-}
-
 def __add_color(name, sysindex):
 	rgb = None
 	# make sure it doesn't crash if there is a problem
@@ -54,8 +51,4 @@ def init_colors():
 	__add_color('windowframe', win32con.COLOR_WINDOWFRAME)
 	__add_color('windowtext', win32con.COLOR_WINDOWTEXT)
 	
-	# initialize the reverse table	
-	for name, color in colors.items():
-		rcolors[color] = name
-
 init_colors()
