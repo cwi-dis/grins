@@ -745,8 +745,8 @@ ui_create_miniframe(PyObject *self, PyObject *args)
 PyObject *
 ui_mini_frame_window_create_window(PyObject *self, PyObject *args)
 {
-	CPythonMiniFrame *pWnd = 
-		(CPythonMiniFrame *)PyCWnd::GetPythonGenericWnd(self, &PyCFrameWnd::type);
+	CPythonMiniFrameWnd *pWnd = 
+		(CPythonMiniFrameWnd *)PyCWnd::GetPythonGenericWnd(self, &PyCFrameWnd::type);
 
 	if (!pWnd)
 		return NULL;
