@@ -70,10 +70,35 @@ PyDataObject_GetGlobalData(PyDataObject *self, PyObject *args)
 	return Py_BuildValue("s",str);
 	}
 
+static PyObject *
+PyDataObject_GetFileNames(PyDataObject *self, PyObject *args)
+	{
+	if (!PyArg_ParseTuple(args,""))
+		return NULL;
+	
+	STGMEDIUM stgMedium = {TYMED_HGLOBAL,{0},0};
+	if(!self->m_pOleDataObject->GetData(CF_HDROP, &stgMedium))
+		RETURN_ERR("COleDataObject::GetData() failed");
+	
+	char szFileName[_MAX_PATH];
+	HDROP hDropInfo = (HDROP)stgMedium.hGlobal;
+	UINT nFiles = ::DragQueryFile(hDropInfo, 0xFFFFFFFF, NULL, 0);
+	PyObject *tuple_obj = PyTuple_New(nFiles);
+	for (UINT i=0;i<nFiles;i++)
+		{
+		::DragQueryFile(hDropInfo, i, szFileName, _MAX_PATH);
+		PyTuple_SET_ITEM(tuple_obj, i, PyString_FromString(szFileName));
+		}
+	::DragFinish(hDropInfo);
+	if(stgMedium.pUnkForRelease != NULL)
+		stgMedium.pUnkForRelease->Release();
+	return tuple_obj;
+	}
 
 PyMethodDef PyDataObject::methods[] = {
 	{"IsDataAvailable", (PyCFunction)PyDataObject_IsDataAvailable, 1},
 	{"GetGlobalData", (PyCFunction)PyDataObject_GetGlobalData, 1},
+	{"GetFileNames", (PyCFunction)PyDataObject_GetFileNames, 1},
 	{NULL, (PyCFunction)NULL, 0}		// sentinel
 };
 
