@@ -71,8 +71,9 @@ __version__ = "$Id$"
 import windowinterface, WMEVENTS
 from ColorScheme import *
 
-# Appendability:
-
+# Appendability: (used in Interactive.appended_to_loc to determine where this is appended
+# to another Interactive).
+LEFT, RIGHT, TOP, BOTTOM, LEFTBOTTOM, RIGHTBOTTOM, LEFTTOP, RIGHTTOP = range(8);
 
 ##############################################################################
 
@@ -98,18 +99,23 @@ class Interactive:
 
     def __init__(self, parent):
         # parent is the container that this widget resides in.
+        self.parent = parent;
+
+        Interactive.__init__(self);
         
         # Mutable attributes
         self.pos_rel = (0.0, 0.0, 0.0, 0.0); # relative position (0.0 <= n <= 1.0);
         self.pos_z = 0;                 # Z value - order on screen. 
         self.window_size_abs = (0,0,0,0); # absolute window size
+        self.minsize = (0.0, 0.0);      # Minimum size that this is likely to be.
+        self.maxsize = (1.0, 1.0);      # Maximum size that this is likely to be.
         # The relative window size is always (1.0, 1.0, 1.0, 1.0).
 
         self.selected = 0;              # TRUE or FALSE
         self.visable = 1;               # TRUE or FALSE, I'm not sure about the usefullness of this..
         self.appended_to = None;        # Object that this will be appended to.
         self.appended_to_loc = None;    # The manner which it is appended to another object.
-        self.appended_to_pos = (0.0, 0.0, 0.0, 0,0) # 
+        self.appended_to_pos = (0.0, 0.0, 0.0, 0,0) # Relative coordinates from the certain position on the appended thingy.
         
         # pseudo-immutable attributes
         self.clickable = 1;             # whether this will accept events
@@ -126,6 +132,8 @@ class Interactive:
 
     def draw(self, displist):
         # For the base Interactive, nothing will be drawn.
+        self.recalc();
+
         if self.pos_rel == (0,0,0,0):
             print "Warning! Interactive drawn with null coords.";
             return 0;
@@ -148,6 +156,7 @@ class Interactive:
     
     def recalc(self):
         # Calculate the absolute sizes from the relative sizes.
+        # Also calculate the position if this is relative to another widget.
         print "TODO: Interactive.recalc()";
 
     def highlight(self, color):
@@ -176,6 +185,9 @@ class Interactive:
         # Also handles resizing - new size is in newpos as well.
 
     def append(self, otherobject, position):
+        # Used to make the position of this object relative to another.
+        # Warning! Don't start doing traversals using this!
+        # Make a container that inherits from EditWindow instead.
         print "TODO: Interactive.append()";
 
     def select(self):
@@ -184,8 +196,19 @@ class Interactive:
     def unselect(self):
         print "TODO: Interactive.deselect()";
 
+    def get_minsize(self):
+        # Return the least size that this widget is likely to be.
+        return self.minsize;
+
+    def get_maxsize(self):
+        # Return the maximum size that this widget is likely to be. 
+        return self.maxsize;
+
     # TODO: def deepcopy?? And other methods here.
 
+    def assign_size(self, size):
+        # Must be between get_minsize and get_maxsize.
+        print "TODO: assign_size.";
 
 ##############################################################################
 
@@ -193,18 +216,18 @@ class Interactive:
 
 ##############################################################################
     
-class EditWindow:
-    # An EditWindow is a container for Interactive objects. It occupies a window
-    # on the screen, but the displaylist that it uses must come from an external
-    # source.
+class EditWindow(Interactive):
+    # An EditWindow is a container for Interactive objects.
+    # This is a nestable container, so you can add and remove objects from it.
 
     # This object behaves like a collection - you can add and remove Interactives from
     # it. 
 
-    def __init__(self):
+    def __init__(self, size):
         # Self.widgets is a list of strictly widgets, sorted by z-index.
         self.widgets = [];
-
+        self.size_abs = size;           # absolute coordinates.
+        
     def draw(self, displist):
         # Draw widgets, starting with the furthest (z-index = 0)
         for i in self.widgets:
@@ -249,6 +272,7 @@ class EditWindow:
         assert 0; # not useful.
 
     def append(self, value):
+        value.parent = self;
         self.insert(value);
 
     def count(self):
@@ -289,4 +313,10 @@ class EditWindow:
 
         self.widgets = new_widgetlist;
     
-        
+    def get_minsize(self):
+        # The minimum size of a container is the sum of all of it's children.
+        print "TODO";
+
+    def get_maxsize(self):
+        # the maximum size of a container is the sum of all of it's children.
+        print "TODO";
