@@ -1638,8 +1638,7 @@ class LayoutView2(LayoutViewDialog2):
 			type = 'region'
 		elif className == 'Viewport':
 			type = 'viewport'
-		# XXX for now, set owned to 0, channel are not destroyed correctly !			
-		self.editmgr.setclip(type, node, owned = 0)
+		self.editmgr.setclip(type, node, owned = 1)
 		
 		self.editmgr.commit()
 		
