@@ -2449,6 +2449,13 @@ import gear32sd
 class _ResizeableDisplayList(_DisplayList):
 	def __init__(self, window, bgcolor):
 		_DisplayList.__init__(self, window, bgcolor, UNIT_SCREEN)
+		self._imgid = None
+
+	def close(self):
+		_DisplayList.close(self)
+		if self._imgid is not None:
+			win32ig.delete(self._imgid)	
+			self._imgid = None
 
 	def _do_render(self, entry, dc, region):
 		cmd = entry[0]
@@ -2502,11 +2509,16 @@ class _ResizeableDisplayList(_DisplayList):
 		if fit not in _ResizeableDisplayList.scale2fit.values():
 			raise error, 'invalid fit attribute'
 
+		if self._imgid is not None:
+			win32ig.delete(self._imgid)	
+			self._imgid = None
+
 		try:
 			imgid = win32ig.load(filename)
 		except:
 			print 'failed to load', filename
 			return
+		self._imgid = imgid
 		if mediadisplayrect is None:
 			mediadisplayrect = self._window._rect
 		self._list.append(('image', imgid, fit, mediadisplayrect))
