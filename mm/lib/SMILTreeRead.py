@@ -18,6 +18,7 @@ import features
 import compatibility
 import ChannelMap
 import EditableObjects
+import SystemColors
 
 error = 'SMILTreeRead.error'
 
@@ -3934,6 +3935,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			return colors[val]
 		if val in ('transparent', 'inherit'):
 			return val
+		if SystemColors.colors.has_key(val):
+			return SystemColors.colors[val]
 		res = color.match(val)
 		if res is None:
 			self.syntax_error('bad color specification')
