@@ -1786,11 +1786,6 @@ class InfoGroup(StringGroup):
 	def __init__(self):
 		StringGroup.__init__(self,InfoGroup.data)
 
-class UploadGroup(StringGroup):
-	data=attrgrsdict['upload_info']
-	def __init__(self):
-		StringGroup.__init__(self,UploadGroup.data)
-
 class WebserverGroup(StringGroup):
 	data=attrgrsdict['webserver']
 	def __init__(self):
@@ -1997,7 +1992,6 @@ groupsui={
 	'.cname':CNameGroup,
 
 	'duration_and_loop':DurationGroup,
-	'upload_info':UploadGroup,
 	'webserver':WebserverGroup,
 	'mediaserver':MediaserverGroup,
 	'file':FileGroup,
