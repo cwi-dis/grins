@@ -58,7 +58,8 @@ class _Toplevel:
 		self._pixel_per_mm_y = sysmetrics.pixel_per_mm_y
 	
 		self._waiting=0
-		
+		self._idles = []
+
 		# generic wnd class
 		import GenWnd
 		self.genericwnd=GenWnd.GenWnd
@@ -389,22 +390,18 @@ class _Toplevel:
 				return
 		raise 'unknown timer', id
 
-	# Monitoring Fibers	registration
-	_registry={}
-	_fiber_id=0
 	# Register for receiving timeslices
-	def register(self, cb):
-		self._fiber_id = self._fiber_id + 1
-		self._registry[self._fiber_id]= cb
-		return self._fiber_id
+	def setidleproc(self, cb):
+		self._idles.append(cb)
+
 	# Register for receiving timeslices
-	def unregister(self,id):
-		if self._registry.has_key(id):
-			del self._registry[id]
+	def cancelidleproc(self,id):
+		self._idles.remove(cb)
+
 	# Dispatch timeslices
 	def serve_timeslices(self):
-		for call in self._registry.values():
-			apply(apply,call)
+		for cb in self._idles:
+			apply(apply,cb)
 
 	################################
 		

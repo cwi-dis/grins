@@ -39,8 +39,8 @@ canceltimer = toplevel.canceltimer
 setready=toplevel.setready
 setwaiting=toplevel.setwaiting
 
-register=toplevel.register
-unregister=toplevel.unregister
+register=toplevel.setidleproc
+unregister=toplevel.setidleproc
 register_event=toplevel.register_event
 
 genericwnd=toplevel.genericwnd
