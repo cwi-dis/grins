@@ -47,20 +47,33 @@
 #define IDD_INTERNAL                    250
 #define IDR_STRUCT_EDIT                 251
 #define IDD_FORM1                       251
+#define IDD_EDITATTR_SHEET              251
 #define IDD_EDITCOLORATTR1              252
+#define IDD_EDITATTR_C1                 252
 #define IDD_EDITCOLORATTR2              253
 #define IDD_DIALOG1                     253
 #define IDD_EDITFILEATTR1               254
+#define IDD_EDITATTR_F1                 254
 #define IDD_EDITOPTIONSATTR1            255
+#define IDD_EDITATTR_O1                 255
 #define IDD_EDITSTRINGATTR1             256
+#define IDD_EDITATTR_S1                 256
 #define IDD_EDITRECTATTR                257
 #define IDD_EDITRECTATTR1               257
+#define IDD_EDITATTR_LS1                257
 #define IDD_EDITSTRINGATTR2             327
 #define IDD_EDITATTR_S7                 327
 #define IDD_EDITATTR_S5                 328
 #define IDD_EDITATTR_S2                 329
-#define IDD_EDITRECTATTR2               330
-#define IDD_EDITRECTATTR3               331
+#define IDD_EDITATTR_LS2                330
+#define IDD_EDITATTR_LS1O1              331
+#define IDD_EDITATTR_S1O1S5             332
+#define IDD_EDITATTR_S1O1               333
+#define IDD_EDITATTR_O1_R2              334
+#define IDD_EDITATTR_O1_R3              335
+#define IDD_EDITATTR_S1O1S5_R3          336
+#define IDD_EDITATTR_O1_R4              337
+#define IDD_EDITATTR_LS1O2              338
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
 #define IDC_EDIT_LOCATION               1020
@@ -166,6 +179,40 @@
 #define IDC_EDIT10                      1142
 #define IDC_EDIT14                      1143
 #define IDC_EDIT15                      1144
+#define IDC_1                           1145
+#define IDC_2                           1146
+#define IDC_3                           1147
+#define IDC_4                           1148
+#define IDC_5                           1149
+#define IDC_6                           1150
+#define IDC_21                          1151
+#define IDC_22                          1152
+#define IDC_23                          1153
+#define IDC_11                          1154
+#define IDC_12                          1155
+#define IDC_13                          1156
+#define IDC_31                          1157
+#define IDC_32                          1158
+#define IDC_33                          1159
+#define IDC_41                          1160
+#define IDC_42                          1161
+#define IDC_43                          1162
+#define IDC_51                          1163
+#define IDC_52                          1164
+#define IDC_53                          1165
+#define IDC_61                          1166
+#define IDC_62                          1167
+#define IDC_63                          1168
+#define IDC_71                          1169
+#define IDC_72                          1170
+#define IDC_73                          1171
+#define IDC_27                          1172
+#define IDC_24                          1173
+#define IDC_25                          1174
+#define IDC_16                          1176
+#define IDC_14                          1177
+#define IDC_15                          1178
+#define IDC_17                          1179
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
 #define ID_FILE_SAVE_GRINS              32773
@@ -209,6 +256,8 @@
 #define ID_ACCEL32830                   32830
 #define IDUC_INFO                       32831
 #define IDUC_ATTRIBUTES                 32832
+#define IDC_GROUP1                      65535
+#define ID_GROUP1                       65535
 
 // Next default values for new objects
 // 
@@ -216,7 +265,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        254
 #define _APS_NEXT_COMMAND_VALUE         32833
-#define _APS_NEXT_CONTROL_VALUE         1145
+#define _APS_NEXT_CONTROL_VALUE         1179
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
