@@ -19,6 +19,7 @@ call c:\Program Files\Microsoft Visual Studio\VC98\Bin\vcvars32.bat
 rem END_CUSTOMIZATION
 
 
+del log.txt
 
 rem The rest of the script assumes that the folder tree  
 rem has the same structure as CWI's CVS root 
@@ -84,6 +85,8 @@ rem It is  imported by NTVideoDuration
 rem echo -x MPEGVideoDuration >> FreezeOpts
 rem ****************************
 
+echo -x HierarchyView >> FreezeOpts
+
 rem Audio stuff not supported on this platform
 echo -x audio.convert >> FreezeOpts
 echo -x audio.devsun >> FreezeOpts
@@ -107,8 +110,11 @@ echo -x svx8 >> FreezeOpts
 echo -x voc >> FreezeOpts
 
 rem Other platform specific stuff
+echo -x ce >> FreezeOpts
+echo -x MacOS >> FreezeOpts
 echo -x macostools >> FreezeOpts
 echo -x EasyDialogs >> FreezeOpts
+echo -x Evt >> FreezeOpts
 echo -x mm >> FreezeOpts
 echo -x mv >> FreezeOpts
 echo -x SOCKS >> FreezeOpts
