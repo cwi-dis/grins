@@ -49,7 +49,8 @@ void
 CloseEngine()
 {   
 	if (EngineObject::pEngine) {
-		EngineObject::fpCloseEngine(EngineObject::pEngine);
+		if ( EngineObject::fpCloseEngine )
+			EngineObject::fpCloseEngine(EngineObject::pEngine);
 		EngineObject::pEngine = NULL;
 	}
 	if (EngineObject::hDll) {
@@ -172,8 +173,7 @@ CreateEngine()
 	EngineObject::fpCreateEngine = (FPRMCREATEENGINE) GetProcAddress(EngineObject::hDll, "CreateEngine");
 	EngineObject::fpCloseEngine  = (FPRMCLOSEENGINE)  GetProcAddress(EngineObject::hDll, "CloseEngine");
  
-	if (EngineObject::fpCreateEngine == NULL ||
-	    EngineObject::fpCloseEngine == NULL) {
+	if (EngineObject::fpCreateEngine == NULL) {
 		return cleanup();
 	}
 
