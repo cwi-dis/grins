@@ -56,8 +56,7 @@ class SMIL:
 			 'repeatCount':None,
 			 'repeatDur':None,
 			 }
-	__Timing = {'fill':None,
-		    'fillDefault':None,
+	__Timing = {'fillDefault':None,
 		    'restart':None,
 		    'restartDefault':None,
 		    'syncBehavior':None,
@@ -80,7 +79,7 @@ class SMIL:
 		'body': {'abstract':'',
 			 'author':'',
 			 'copyright':'',
-			 'customTest':None,
+			 'fill':None,
 			 __layout:None,
 			 GRiNSns+' ' 'comment':None,
 			 },
@@ -90,7 +89,8 @@ class SMIL:
 			 },
 		'metadata': {'skip-content':'true',
 			     },
-		'layout': {'type':SMIL_BASIC,
+		'layout': {'customTest':None,
+			   'type':SMIL_BASIC,
 			   },
 		'root-layout': {'background-color':'transparent',
 				'backgroundColor':None,
@@ -117,6 +117,7 @@ class SMIL:
 			   'left':None,
 			   'regAlign':None,
 			   'regPoint':None,
+			   'regionName': None,
 			   'right':None,
 			   'showBackground':None,
 			   'skip-content':'true',
@@ -124,7 +125,6 @@ class SMIL:
 			   'top':None,
 			   'width':None,
 			   'z-index':'0',
-			   'regionName': None,
 			   GRiNSns+' ' 'border':None,
 			   GRiNSns+' ' 'bucolor':None,
 			   GRiNSns+' ' 'center':None,
@@ -155,29 +155,38 @@ class SMIL:
 			'copyright':'',
 			'customTest':None,
 			'endsync':None,
+			'fill':None,
 			'region':None,
 			__layout:None,
 			GRiNSns+' ' 'comment':None,
 			},
-##		'seq': {'abstract':'',
-##			'author':'',
-##			'copyright':'',
-##			'customTest':None,
-##			__layout:None,
-##			GRiNSns+' ' 'comment':None,
-##			},
-		'switch': {__layout:None},
+		'seq': {'abstract':'',
+			'author':'',
+			'copyright':'',
+			'customTest':None,
+			'fill':None,
+			'region':None,
+			__layout:None,
+			GRiNSns+' ' 'comment':None,
+			},
+		'switch': {'customTest':None,
+			   __layout:None},
 		'excl': {'abstract':'',
 			 'author':'',
 			 'copyright':'',
 			 'customTest':None,
 			 'endsync':None,
+			 'fill':None,
 			 'region':None,
 			 'skip-content':'true',
 			 __layout:None,
 			 GRiNSns+' ' 'comment':None,
 			 },
-		'priorityClass': {'higher':'pause',
+		'priorityClass': {'abstract':'',
+				  'author':'',
+				  'copyright':'',
+				  'customTest':None,
+				  'higher':'pause',
 				  'lower':'defer',
 				  'pauseDisplay':None,
 				  'peers':'stop',
@@ -246,17 +255,13 @@ class SMIL:
 		'brush': {'abstract':'',
 			  'alt':None,
 			  'author':'',
-##			  'clip-begin':None,
-##			  'clip-end':None,
-##			  'clipBegin':None,
-##			  'clipEnd':None,
 			  'color':None,
 			  'copyright':'',
 			  'customTest':None,
 			  'erase':None,
 			  'fill':None,
-			  'longdesc':None,
-##			  'mediaRepeat':None,
+##			  'longdesc':None,
+			  'readIndex':None,
 			  'region':None,
 			  'skip-content':'true',
 			  'tabindex':None,
@@ -285,8 +290,15 @@ class SMIL:
 			  QTns+' ' 'chapter':None,
 			  QTns+' ' 'composite-mode':None,
 			  },
+		'param': {'customTest':None,
+			  'name':None,
+			  'type':None,
+			  'value':None,
+			  'valuetype':None,
+			  },
 		'a': {'accesskey':None,
 		      'actuate':None,
+		      'customTest':None,
 		      'destinationLevel':None,
 		      'destinationPlaystate':None,
 		      'external':None,
@@ -301,7 +313,9 @@ class SMIL:
 			 'actuate':None,
 			 'alt':None,
 			 'coords':None,
+			 'customTest':None,
 			 'destinationLevel':None,
+			 'destinationPlaystate':None,
 			 'external':None,
 			 'fragment':None,
 			 'href':None,
@@ -313,7 +327,6 @@ class SMIL:
 			 'sourcePlaystate':None,
 			 'tabindex':None,
 			 'target':None,
-			 'destinationPlaystate':None,
 			 },
 		'customAttributes': {'skip-content':'true',
 				     },
@@ -336,30 +349,33 @@ class SMIL:
 			      'coordinated':'false',
 			      'clipBoundary':'children',
 			      'skip-content':'true',
+			      'customTest':None,
 			      },
-		'transitionFilter': {'borderWidth':None,
-				     'childrenClip':None,
-				     'color':None,
-				     'coordinated':None,
-				     'customTest':None,
-				     'horzRepeat':None,
-				     'percentDone':None,
-				     'skip-content':'true',
-				     'subtype':None,
-				     'type':None,
-				     'vertRepeat':None,
-				     },
-		'prefetch': {'clip-begin':None,
+##		'transitionFilter': {'borderWidth':None,
+##				     'childrenClip':None,
+##				     'color':None,
+##				     'coordinated':None,
+##				     'customTest':None,
+##				     'horzRepeat':None,
+##				     'percentDone':None,
+##				     'skip-content':'true',
+##				     'subtype':None,
+##				     'type':None,
+##				     'vertRepeat':None,
+##				     },
+		'prefetch': {'bandwidth':'100%',
+			     'clip-begin':None,
 			     'clip-end':None,
-			     'src':None,
+			     'clipBegin':None,
+			     'clipEnd':None,
+			     'customTest':None,
 			     'mediaSize':'100%',
 			     'mediaTime':'100%',
-			     'bandwidth':'100%',
 			     'skip-content':'true',
+			     'src':None,
 			     },
 		}
 
-	attributes['seq'] = attributes['body']
 	attributes[__bag] = attributes[__choice]
 	attributes['anchor'] = attributes['area']
 
@@ -407,7 +423,7 @@ class SMIL:
 	del attributes['animateMotion']['attributeName']
 	del attributes['animateMotion']['attributeType']
 	attributes['animateMotion']['calcMode'] = 'paced'
-	attributes['animateMotion']['path'] = None
+##	attributes['animateMotion']['path'] = None
 	attributes['animateMotion']['origin'] = None
 
 	attributes['animate'] = __animate_attrs_core.copy()
@@ -436,20 +452,23 @@ class SMIL:
 					attributes[__el][GRiNSns+' '+__key] = __val
 		else:
 			attributes[__el].update(__Core)
-			attributes[__el].update(__Test)
+			if __el not in ('smil', 'head', 'meta', 'metadata',
+					'body', 'customTest'):
+				attributes[__el].update(__Test)
 		attributes[__el].update(__I18n)
 
 	# add basicTiming to certain elements
-	for __el in ('animate', 'set',
+	for __el in ('a', 'animate', 'set',
 		     'animateMotion', 'animateColor',
 		     'area', 'anchor', 'transition',
-		     'transitionFilter', 'prefetch'):
+##		     'transitionFilter',
+		     ):
 		attributes[__el].update(__basicTiming)
 
 	# add Timing to certain other elements
 	for __el in ('text', 'img', 'audio', 'animation', 'video', 'ref',
 		     'textstream', 'brush', 'body', 'par', 'seq',
-		     'excl', __choice):
+		     'excl', 'prefetch', __choice):
 		if __el[:len(GRiNSns)+1] == GRiNSns+' ':
 			for __key, __val in __Timing.items():
 				if ' ' in __key:
