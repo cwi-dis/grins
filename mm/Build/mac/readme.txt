@@ -26,9 +26,9 @@ version. You have to enter this key when you first start GRiNS.
 
 The document QuickStart.pdf contains information on how to use the
 editor.  You need Adobe Acrobat Reader (http://www.adobe.com/) to read 
-the Quick Start Guide.  There are also tutorials on the ORATRiX web
-site. Release notes are available in the file relnotes.html in the same folder
-as the application.
+the Quick Start Guide.  The Tutorials.pdf document contains more elaborate tutorials
+that will show you most of the features in GRiNS. Release notes are available in the 
+file relnotes.html in the same folder as the application.
 
 RealNetworks suggest having at least 32Mb of real memory and 64Mb of
 virtual memory. We strongly suggest you follow these guidelines, as
