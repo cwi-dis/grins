@@ -175,7 +175,7 @@ class AnchorEditor(AnchorEditorDialog):
 
 	def maketitle(self):
 		name = MMAttrdefs.getattr(self.node, 'name')
-		return 'Anchors for node: ' + name
+		return 'Anchors for node ' + name
 
 	# Fill form from local data.  Clear the form beforehand.
 	#
@@ -382,7 +382,7 @@ class AnchorEditor(AnchorEditorDialog):
 			print 'AnchorEdit: no focus in export_callback'
 			return
 		dummy = windowinterface.InputDialog(
-			'External name for anchor:', '', self.do_export)
+			'External name for anchor', '', self.do_export)
 
 	def do_export(self, name):
 		if not name:
