@@ -14,6 +14,8 @@
 
 import gl, GL, DEVICE
 import fl, FL
+import windowinterface, EVENTS
+import GLLock
 
 
 # List of windows, indexed by window id converted to string.
@@ -135,8 +137,48 @@ def undevregister(devval):
 from DEVICE import REDRAW, KEYBD, MOUSE3, MOUSE2, MOUSE1, INPUTCHANGE
 from DEVICE import WINSHUT, WINQUIT, MOUSEX, MOUSEY
 
+anchors = {}				# dictionary of anchors
+highlight = None			# highlighted button
+
+def add_anchor(button, func, arg):
+	anchors[button] = (func, arg)
+
+def del_anchor(button):
+	if anchors.has_key(button):
+		del anchors[button]
+
 def dispatch(dev, val):
 	global focuswindow, focuswid
+##	print `dev,val`
+	waslocked = 0
+	if GLLock.gl_lock:
+##		print 'try acquire'
+		if not GLLock.gl_lock.acquire(0):
+##			print 'acquire failed'
+			waslocked = 1
+##		print 'release'
+		GLLock.gl_lock.release()
+	event = windowinterface._event._doevent(dev, val)
+	if event:
+		global highlight
+		window, event, value = event
+		if event == EVENTS.Mouse0Press:
+			buttons = value[2]
+			if len(buttons) == 1 and not buttons[0].is_closed():
+				but = buttons[0]
+				but.highlight()
+				highlight = but
+				if anchors.has_key(but):
+					f, a = anchors[but]
+					dummy = apply(f, a)
+		elif event == EVENTS.Mouse0Release:
+			if highlight and not highlight.is_closed():
+				highlight.unhighlight()
+			highlight = None
+	if waslocked:
+##		print 're-acquire'
+		GLLock.gl_lock.acquire()
+##	print `dummy`
 	if dev == REDRAW:
 		# Ignore events for unregistered windows
 		key = `val`
@@ -144,32 +186,32 @@ def dispatch(dev, val):
 			window = windowmap[key]
 			window.setwin()
 			window.redraw()
-		else:
-			report('REDRAW event for unregistered window')
+##		else:
+##			report('REDRAW event for unregistered window')
 	elif dev == KEYBD:
 		if focuswindow:
 			focuswindow.setwin()
 			focuswindow.keybd(val)
-		else:
-			report('KEYBD event with no focus window')
+##		else:
+##			report('KEYBD event with no focus window')
 	elif dev in (MOUSE3, MOUSE2, MOUSE1): # In left-to-right order
 		if focuswindow:
 			focuswindow.setwin()
 			focuswindow.mouse(dev, val)
-		else:
-			report('MOUSE event with no focus window')
+##		else:
+##			report('MOUSE event with no focus window')
 	elif dev == MOUSEX:
 		if focuswindow:
 			focuswindow.setwin()
 			focuswindow.mousex(val)
-		else:
-			report('MOUSEX event with no focus window')
+##		else:
+##			report('MOUSEX event with no focus window')
 	elif dev == MOUSEY:
 		if focuswindow:
 			focuswindow.setwin()
 			focuswindow.mousey(val)
-		else:
-			report('MOUSEY event with no focus window')
+##		else:
+##			report('MOUSEY event with no focus window')
 	elif dev == INPUTCHANGE:
 		if focuswindow:
 			focuswindow.setwin()
@@ -183,16 +225,16 @@ def dispatch(dev, val):
 				focuswid = val
 				focuswindow.setwin()
 				focuswindow.enterwindow()
-			else:
-				report('INPUTCHANGE for unregistered window')
+##			else:
+##				report('INPUTCHANGE for unregistered window')
 	elif dev == WINSHUT:
 		key = `val`
 		if windowmap.has_key(key):
 			window = windowmap[key]
 			window.setwin()
 			window.winshut()
-		else:
-			report('WINSHUT for unregistered window')
+##		else:
+##			report('WINSHUT for unregistered window')
 	elif dev == WINQUIT:
 		report('WINQUIT')
 		key = `val`
@@ -200,14 +242,14 @@ def dispatch(dev, val):
 			window = windowmap[key]
 			window.setwin()
 			window.winquit()
-		else:
-			report('WINQUIT for unregistered window')
+##		else:
+##			report('WINQUIT for unregistered window')
 	elif 0 <= dev <= 255:
 		if focuswindow:
 			focuswindow.setwin()
 			focuswindow.rawkey(dev, val)
-		else:
-			report('raw key event with no focus window')
+##		else:
+##			report('raw key event with no focus window')
 	elif dispmap.has_key(`dev`+':'+`val`):
 		callback, arg = dispmap[`dev`+':'+`val`]
 		callback(arg)
