@@ -257,103 +257,103 @@ oTR-zin-diagonalWipe.smi
 oTR-zinmv-diagonalWipe.smi
 oTR-zout-diagonalWipe.smi
 ora-jumpback-with-par.smil
-ora-jumpback.smil
-ora-jumpforw-with-par.smil
-ora-jumpforw.smil
-ora-layout-bg-md-ov.smil
-ora-layout-bg-md.smil
-ora-layout-bg-rg-ov2.smil
-ora-layout-bg-rg.smil
-ora-layout-bg-vp-def.smil
-ora-layout-bg-vp.smil
-ora-layout-close.smil
-ora-layout-fit-fill-regp-.smil
-ora-layout-fit-fill.smil
-ora-layout-fit-hidden.smil
-ora-layout-fit-media.smil
-ora-layout-fit-meet-regp-.smil
-ora-layout-fit-meet.smil
-ora-layout-fit-meet2-regp.smil
-ora-layout-fit-ov-.smil
-ora-layout-fit-scroll.smil
-ora-layout-fit-slice-regp-.smil
-ora-layout-fit-slice.smil
-ora-layout-fit-slice2-regp.smil
-ora-layout-fit-subreg-regp.smil
-ora-layout-hierarc-clip.smil
-ora-layout-hierarc1.smil
-ora-layout-md-without-rg.smil
-ora-layout-open-close.smil
-ora-layout-open.smil
-ora-layout-reg-bottom-pc.smil
-ora-layout-reg-bottom.smil
-ora-layout-reg-left-pc.smil
-ora-layout-reg-left.smil
-ora-layout-reg-right-pc.smil
-ora-layout-reg-right.smil
-ora-layout-reg-top-pc.smil
-ora-layout-reg-top.smil
-ora-layout-rega-bottomLeft.smil
-ora-layout-rega-bottomMid.smil
-ora-layout-rega-center.smil
-ora-layout-rega-midLeft.smil
-ora-layout-rega-midRight.smil
-ora-layout-rega-topLeft.smil
-ora-layout-rega-topMid.smil
-ora-layout-rega-topRight.smil
-ora-layout-regp-bottomLeft.smil
-ora-layout-regp-bottomMid.smil
-ora-layout-regp-bottomMid2.smil
-ora-layout-regp-center.smil
-ora-layout-regp-fit-mpeg.smil
-ora-layout-regp-fit-mpeg2.smil
-ora-layout-regp-fit-mpeg3.smil
-ora-layout-regp-fit-qt2.smil
-ora-layout-regp-fit-qt3.smil
-ora-layout-regp-fit-rv.smil
-ora-layout-regp-html.smil
-ora-layout-regp-midLeft.smil
-ora-layout-regp-midRight.smil
-ora-layout-regp-midRight2.smil
-ora-layout-regp-mpeg.smil
-ora-layout-regp-ra.smil
+ora-jumpback.smil				Works (Alain, 12-Sep)
+ora-jumpforw-with-par.smil		Does not work: the anchor is active on video (Alain, 12-Sep)
+ora-jumpforw.smil				Works (Alain, 12-Sep)
+ora-layout-bg-md-ov.smil		Works (Alain, 12-Sep)
+ora-layout-bg-md.smil			Works (Alain, 12-Sep)
+ora-layout-bg-rg-ov2.smil		Works (Alain, 12-Sep)
+ora-layout-bg-rg.smil			Works (Alain, 12-Sep)
+ora-layout-bg-vp-def.smil		Works (Alain, 12-Sep)
+ora-layout-bg-vp.smil			Works (Alain, 12-Sep)
+ora-layout-close.smil			Works (Alain, 12-Sep)
+ora-layout-fit-fill-regp-.smil	Works (Alain, 12-Sep)
+ora-layout-fit-fill.smil		Works (Alain, 12-Sep)
+ora-layout-fit-hidden.smil		Works (Alain, 12-Sep)
+ora-layout-fit-media.smil		Works (Alain, 12-Sep)
+ora-layout-fit-meet-regp-.smil	Works (Alain, 12-Sep)
+ora-layout-fit-meet.smil		Works (Alain, 12-Sep)
+ora-layout-fit-meet2-regp.smil	Works (Alain, 12-Sep)
+ora-layout-fit-ov-.smil			Works (Alain, 12-Sep)
+ora-layout-fit-scroll.smil		Does not work: not implemented, obtain a message (Alain, 12-Sep)
+ora-layout-fit-slice-regp-.smil	Works (Alain, 12-Sep)
+ora-layout-fit-slice.smil		Works (Alain, 12-Sep)
+ora-layout-fit-slice2-regp.smil	Works (Alain, 12-Sep)
+ora-layout-fit-subreg-regp.smil	Works (Alain, 12-Sep)
+ora-layout-hierarc-clip.smil		Works (Alain, 12-Sep)
+ora-layout-hierarc1.smil		Works (Alain, 12-Sep)
+ora-layout-md-without-rg.smil		Works (Alain, 12-Sep)
+ora-layout-open-close.smil		Works (Alain, 12-Sep)
+ora-layout-open.smil			Works (Alain, 12-Sep)
+ora-layout-reg-bottom-pc.smil		Works (Alain, 12-Sep)
+ora-layout-reg-bottom.smil		Works (Alain, 12-Sep)
+ora-layout-reg-left-pc.smil		Works (Alain, 12-Sep)
+ora-layout-reg-left.smil		Works (Alain, 12-Sep)
+ora-layout-reg-right-pc.smil		Works (Alain, 12-Sep)
+ora-layout-reg-right.smil		Works (Alain, 12-Sep)
+ora-layout-reg-top-pc.smil		Works (Alain, 12-Sep)
+ora-layout-reg-top.smil			Works (Alain, 12-Sep)
+ora-layout-rega-bottomLeft.smil	Works (Alain, 12-Sep)
+ora-layout-rega-bottomMid.smil	Works (Alain, 12-Sep)
+ora-layout-rega-center.smil		Works (Alain, 12-Sep)
+ora-layout-rega-midLeft.smil		Works (Alain, 12-Sep)
+ora-layout-rega-midRight.smil		Works (Alain, 12-Sep)
+ora-layout-rega-topLeft.smil		Works (Alain, 12-Sep)
+ora-layout-rega-topMid.smil		Works (Alain, 12-Sep)
+ora-layout-rega-topRight.smil		Works (Alain, 12-Sep)
+ora-layout-regp-bottomLeft.smil	Works (Alain, 12-Sep)
+ora-layout-regp-bottomMid.smil	Works (Alain, 12-Sep)
+ora-layout-regp-bottomMid2.smil	Works (Alain, 12-Sep)
+ora-layout-regp-center.smil		Works (Alain, 12-Sep)
+ora-layout-regp-fit-mpeg.smil		Works (Alain, 12-Sep)
+ora-layout-regp-fit-mpeg2.smil	Works (Alain, 12-Sep)
+ora-layout-regp-fit-mpeg3.smil	Works (Alain, 12-Sep)
+ora-layout-regp-fit-qt2.smil		Works (Alain, 12-Sep)
+ora-layout-regp-fit-qt3.smil		Works (Alain, 12-Sep)
+ora-layout-regp-fit-rv.smil		Does not work: scale!=1 for real medias doesn't work (Alain, 12-Sep)
+ora-layout-regp-html.smil		Does not work: the html file is not interpreted. Instead, we look the source file (Alain, 12-Sep)
+ora-layout-regp-midLeft.smil		Works (Alain, 12-Sep)	
+ora-layout-regp-midRight.smil		Works (Alain, 12-Sep)
+ora-layout-regp-midRight2.smil	Works (Alain, 12-Sep)
+ora-layout-regp-mpeg.smil		Works (Alain, 12-Sep)
+ora-layout-regp-ra.smil			Works (Alain, 12-Sep)
 ora-layout-regp-rp.smil
-ora-layout-regp-rt.smil
-ora-layout-regp-rv.smil
-ora-layout-regp-text.smil
-ora-layout-regp-topLeft.smil
-ora-layout-regp-topMid.smil
-ora-layout-regp-topRight.smil
-ora-layout-regp-topRight2.smil
-ora-layout-regp-udef-def.smil
-ora-layout-regp-udef-left.smil
-ora-layout-regp-udef-rega.smil
-ora-layout-regp-udef-right.smil
-ora-layout-regp-udef-top.smil
-ora-layout-shbg-al-al.smil
-ora-layout-shbg-al-wa.smil
-ora-layout-shbg-sp.smil
-ora-layout-shbg-wa-al.smil
-ora-layout-shbg-wa-sw.smil
-ora-layout-shbg-wa-wa.smil
-ora-layout-shbg-wa.smil
-ora-layout-subreg-bottom.smil
-ora-layout-subreg-left-pc.smil
-ora-layout-subreg-left.smil
-ora-layout-subreg-right-pc.smil
-ora-layout-subreg-right.smil
-ora-layout-subreg-top-pc.smil
-ora-layout-subreg-top.smil
-ora-layout-without-layout.smil
-ora-layout-without-vp.smil
-ora-layout-z-cp-video1.smil
-ora-layout-z-cp1.smil
-ora-layout-z-nsib.smil
-ora-layout-z-same-dto.smil
-ora-layout-z-same-tpo.smil
-ora-layout-z-sp1.smil
-ora-layout-z-sp2.smil
-ora-link-ext-dps-pause.smil
+ora-layout-regp-rt.smil			Works (Alain, 12-Sep)
+ora-layout-regp-rv.smil			Works (Alain, 12-Sep)
+ora-layout-regp-text.smil		Works, but not center in region --> not defined in SMIL2 for media with no intrinsic size (Alain, 12-Sep)
+ora-layout-regp-topLeft.smil		Works (Alain, 12-Sep)
+ora-layout-regp-topMid.smil		Works (Alain, 12-Sep)
+ora-layout-regp-topRight.smil		Works (Alain, 12-Sep)
+ora-layout-regp-topRight2.smil	Works (Alain, 12-Sep)
+ora-layout-regp-udef-def.smil		Works (Alain, 12-Sep)
+ora-layout-regp-udef-left.smil	Works (Alain, 12-Sep)
+ora-layout-regp-udef-rega.smil	Works (Alain, 12-Sep)
+ora-layout-regp-udef-right.smil	Works (Alain, 12-Sep)
+ora-layout-regp-udef-top.smil		Works (Alain, 12-Sep)
+ora-layout-shbg-al-al.smil		Works (Alain, 12-Sep)
+ora-layout-shbg-al-wa.smil		Works (Alain, 12-Sep)
+ora-layout-shbg-sp.smil			Works (Alain, 12-Sep)
+ora-layout-shbg-wa-al.smil		Works (Alain, 12-Sep)
+ora-layout-shbg-wa-sw.smil		Works (Alain, 12-Sep)
+ora-layout-shbg-wa-wa.smil		Works (Alain, 12-Sep)
+ora-layout-shbg-wa.smil			Works (Alain, 12-Sep)
+ora-layout-subreg-bottom.smil		Works (Alain, 12-Sep)
+ora-layout-subreg-left-pc.smil	Works (Alain, 12-Sep)
+ora-layout-subreg-left.smil		Works (Alain, 12-Sep)
+ora-layout-subreg-right-pc.smil	Works (Alain, 12-Sep)
+ora-layout-subreg-right.smil		Works (Alain, 12-Sep)
+ora-layout-subreg-top-pc.smil		Works (Alain, 12-Sep)
+ora-layout-subreg-top.smil		Works (Alain, 12-Sep)
+ora-layout-without-layout.smil	Works (Alain, 12-Sep)
+ora-layout-without-vp.smil		Works (Alain, 12-Sep)
+ora-layout-z-cp-video1.smil		Works (Alain, 12-Sep)
+ora-layout-z-cp1.smil			Works (Alain, 12-Sep)
+ora-layout-z-nsib.smil			Works (Alain, 12-Sep)
+ora-layout-z-same-dto.smil		Does not work (Alain, 12-Sep)
+ora-layout-z-same-tpo.smil		Does not work (Alain, 12-Sep)
+ora-layout-z-sp1.smil			Works (Alain, 12-Sep)
+ora-layout-z-sp2.smil			Works (Alain, 12-Sep)
+ora-link-ext-dps-pause.smil		
 ora-link-ext-dps-play.smil
 ora-link-ext-show-def.smil
 ora-link-ext-show-new.smil
@@ -364,33 +364,33 @@ ora-link-ext-sps-play.smil
 ora-link-ext-sps-stop.smil
 ora-link-int-show-def.smil
 ora-link-int-show-pause.smil
-ora-link-shape-circle-fit.smil
-ora-link-shape-circle-fit2.smil
-ora-link-shape-circle-fit3.smil
-ora-link-shape-circle-fit4.smil
-ora-link-shape-circle.smil
-ora-link-shape-circle2.smil
-ora-link-shape-circle3.smil
-ora-link-shape-default.smil
-ora-link-shape-fit.smil
-ora-link-shape-mix.smil
-ora-link-shape-poly-fit.smil
-ora-link-shape-poly-fit2.smil
-ora-link-shape-poly-fit3.smil
-ora-link-shape-poly.smil
-ora-link-shape-poly2.smil
-ora-link-shape-poly3.smil
-ora-link-shape-pourcent.smil
-ora-link-shape-rect-fit.smil
-ora-link-shape-rect-fit2.smil
-ora-link-shape-rect-fit3.smil
-ora-link-shape-rect.smil
-ora-link-shape-rect2.smil
-ora-link-shape-rect3.smil
-ora-link-shape-video.smil
-ora-link-zorder-sp1.smil
-ora-link-zorder-trans.smil
-ora-link-zorder-trans2.smil
+ora-link-shape-circle-fit.smil	Works (Alain, 12-Sep)
+ora-link-shape-circle-fit2.smil	Works (Alain, 12-Sep)
+ora-link-shape-circle-fit3.smil	Works (Alain, 12-Sep)
+ora-link-shape-circle-fit4.smil	Works (Alain, 12-Sep)
+ora-link-shape-circle.smil		Works (Alain, 12-Sep)
+ora-link-shape-circle2.smil		Works (Alain, 12-Sep)
+ora-link-shape-circle3.smil		Works (Alain, 12-Sep)
+ora-link-shape-default.smil		Works (Alain, 12-Sep)
+ora-link-shape-fit.smil			Works (Alain, 12-Sep)
+ora-link-shape-mix.smil			Works (Alain, 12-Sep)
+ora-link-shape-poly-fit.smil		Works (Alain, 12-Sep)
+ora-link-shape-poly-fit2.smil		Works (Alain, 12-Sep)
+ora-link-shape-poly-fit3.smil		Works (Alain, 12-Sep)
+ora-link-shape-poly.smil		Works (Alain, 12-Sep)
+ora-link-shape-poly2.smil		Works (Alain, 12-Sep)
+ora-link-shape-poly3.smil		Works (Alain, 12-Sep)
+ora-link-shape-pourcent.smil		Works (Alain, 12-Sep)
+ora-link-shape-rect-fit.smil		Works (Alain, 12-Sep)
+ora-link-shape-rect-fit2.smil		Works (Alain, 12-Sep)
+ora-link-shape-rect-fit3.smil		Works (Alain, 12-Sep)
+ora-link-shape-rect.smil		Works (Alain, 12-Sep)
+ora-link-shape-rect2.smil		Works (Alain, 12-Sep)
+ora-link-shape-rect3.smil		Works (Alain, 12-Sep)
+ora-link-shape-video.smil		Works (Alain, 12-Sep)
+ora-link-zorder-sp1.smil		Works (Alain, 12-Sep)
+ora-link-zorder-trans.smil		Works (Alain, 12-Sep)
+ora-link-zorder-trans2.smil		Works (Alain, 12-Sep)
 prev_begin_in_a_par1.smil
 prev_begin_in_a_par2.smil
 prev_begin_in_a_par3.smil
