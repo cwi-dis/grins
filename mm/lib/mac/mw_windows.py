@@ -103,9 +103,6 @@ class _WindowGroup:
 		# NOTE: This method should only be called for groups, not windows
 		mw_globals.toplevel._install_group_commands(self)
 		
-	def create_menu(self, menu, title):
-		pass
-		
 	def set_dynamiclist(self, cmd, list):
 		self._dynamic_list_dict[cmd] = list
 		mw_globals.toplevel._changed_group_commands()
@@ -375,11 +372,6 @@ class _CommonWindow:
 		self._accelerators = {}
 		self._menu = None
 		pass
-
-	def create_menu(self, list, title = None):
-		self._accelerators = {}
-		self._menu = mw_menucmd.FullPopupMenu(list, title,
-						self._accelerators)
 
 	def _image_size(self, file):
 		"""Backward compatability: return wh of image given filename"""
