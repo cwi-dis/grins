@@ -88,23 +88,25 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				LINKVIEW(callback = (self.view_callback, (3,))),
 				LAYOUTVIEW(callback = (self.view_callback, (4,))),
 				LAYOUTVIEW2(callback = (self.view_callback, (7, ))),
+				SOURCEVIEW(callback = (self.view_callback, (8, ))),
 				HIDE_LAYOUTVIEW2(callback = (self.hide_view_callback, (7, ))),
 				HIDE_CHANNELVIEW(callback = (self.hide_view_callback, (2,))),
 				HIDE_LINKVIEW(callback = (self.hide_view_callback, (3,))),
 				HIDE_LAYOUTVIEW(callback = (self.hide_view_callback, (4,))),
 				HIDE_USERGROUPVIEW(callback = (self.hide_view_callback, (5,))),
+				HIDE_SOURCEVIEW(callback = (self.hide_view_callback, (8, ))),
 				]
 			self.__ugroup = [
 				USERGROUPVIEW(callback = (self.view_callback, (5,))),
 				TRANSITIONVIEW(callback = (self.view_callback, (6, ))),
 				HIDE_TRANSITIONVIEW(callback = (self.hide_view_callback, (6, ))),
 				]
-			if features.TEMPORAL_VIEW in features.feature_set:
-				self.commandlist = self.commandlist + [
-					TEMPORALVIEW(callback = (self.view_callback, (8, ))),
-					HIDE_TEMPORALVIEW(callback = (self.hide_view_callback, (8,))),
-					]
-				
+			#if features.TEMPORAL_VIEW in features.feature_set:
+			#	self.commandlist = self.commandlist + [
+			#		TEMPORALVIEW(callback = (self.view_callback, (8, ))),
+			#		HIDE_TEMPORALVIEW(callback = (self.hide_view_callback, (8,))),
+			#		]
+			#	
 		else:
 			self.__ugroup = []
 		if hasattr(self, 'do_edit'):
@@ -137,12 +139,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if hasattr(Help, 'hashelp') and Help.hashelp():
 			self.commandlist.append(
 				HELP(callback = (self.help_callback, ())))
-		if hasattr(self.root, 'source') and \
-		   hasattr(windowinterface, 'textwindow'):
-			self.commandlist = self.commandlist + [
-				SOURCE(callback = (self.source_callback, ())),
-				HIDE_SOURCE(callback = (self.hide_source_callback, ())),
-				]
+##		if hasattr(self.root, 'source') and \
+##		   hasattr(windowinterface, 'textwindow'):
+##			self.commandlist = self.commandlist + [
+##				SOURCE(callback = (self.source_callback, ())),
+##				HIDE_SOURCE(callback = (self.hide_source_callback, ())),
+##				]
 
 		TopLevelDialog.__init__(self)
 		self.makeviews()
@@ -157,7 +159,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		else:
 			self.setcommands(self.commandlist + self.commandlist_g2)
 		self.showdefaultviews()
-		
+
 	def showdefaultviews(self):
 		import settings
 		defaultviews = settings.get('defaultviews')
@@ -177,8 +179,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.ugroupview.show()
 		if 'link' in defaultviews and self.links is not None:
 			self.links.show()
-		if 'source' in defaultviews:
-			self.source_callback()
+		if 'source' in defaultviews and self.sourceview is not None:
+			self.sourceview.show()
 
 	def destroy(self):
 		self.set_timer(0)
@@ -226,6 +228,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self.layoutview2 = None
 		self.transitionview = None
 #		self.temporalview = None
+		self.sourceview = None
 
 		if features.STRUCTURE_VIEW in features.feature_set:
 			import HierarchyView
@@ -278,11 +281,16 @@ class TopLevel(TopLevelDialog, ViewDialog):
 #			import TemporalView
 #			self.temporalview = TemporalView.TemporalView(self)
 
+		if features.SOURCE_VIEW in features.feature_set:
+			import SourceView
+			self.sourceview = SourceView.SourceView(self)
+
 		# Views that are destroyed by restore (currently all)
 		# Notice that these must follow a certain order.
 		self.views = [self.player, self.hierarchyview,
 			      self.channelview, self.links, self.layoutview,
 			      self.ugroupview, self.transitionview, self.layoutview2,
+			      self.sourceview
 			      ]
 #			      self.temporalview]
 
@@ -290,7 +298,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		for v in self.views:
 			if v is not None:
 				v.hide()
-		self.hide_source_callback()
+##		self.hide_source_callback()
 
 	def destroyviews(self):
 		for v in self.views:
@@ -334,7 +342,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			return
 		evallicense= (license < 0)
 		import SMILTreeWrite
-		self.showsource(SMILTreeWrite.WriteString(self.root, evallicense=evallicense))
+		self.showsource(SMILTreeWrite.WriteString(self.root, evallicense=evallicense), readonly = 0)
 
 	def hide_source_callback(self):
 		if self.source:

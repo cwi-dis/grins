@@ -229,8 +229,8 @@ MENUBAR=(
 		(FLAG_PRO, ENTRY, 'H&yperlinks', '5', LINKVIEW),
 		(FLAG_BOSTON, ENTRY, 'User &groups', '6', USERGROUPVIEW),
 		(FLAG_BOSTON, ENTRY, 'Transitions', None, TRANSITIONVIEW),
-		(FLAG_ALL, SEP,),
-		(FLAG_ALL, ENTRY, 'SMIL Sourc&e...', '7', SOURCE),
+##		(FLAG_ALL, SEP,),
+		(FLAG_ALL, ENTRY, 'SMIL Sourc&e...', '7', SOURCEVIEW),
 		)),
 
 	('&Help', (
