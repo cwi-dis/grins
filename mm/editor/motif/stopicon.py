@@ -1,16 +1,23 @@
 __version__ = "$Id$"
 
 import imgformat
+import struct
+
+_bigendian = struct.pack('i', 1)[0] == '\0'
 
 class reader:
 	def __init__(self):
 		self.width = 16
 		self.height = 16
-		self.format = imgformat.colormap
-		self.format_choices = (self.format,)
+		format = imgformat.colormap
+		self.format = format
+		self.format_choices = (format,)
 		import imgcolormap
+	if _bigendian:
 		self.colormap = imgcolormap.new('''\
 \0\0\0\0\0\5\363\374\0\377\0\0\0\0\0\0''')
+	else:		self.colormap = imgcolormap.new('''\
+\0\0\0\0\374\363\5\0\0\0\377\0\0\0\0\0''')
 		self.transparent = 2
 		self.top = 0
 		self.left = 0
