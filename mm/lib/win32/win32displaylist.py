@@ -140,7 +140,7 @@ class _DisplayList:
 		for b in self._buttons:
 			b._highlighted = 0 
 		wnd._active_displist = self
-		x, y, w, h = wnd._recta
+		x, y, w, h = wnd.getwindowpos()
 		wnd._topwindow.InvalidateRect((x,y,x+w,y+h))
 
 	# Render the display list on dc within the region	
@@ -170,7 +170,7 @@ class _DisplayList:
 				d._cloneof = None
 		if wnd._active_displist is self:
 			wnd._active_displist = None
-			x, y, w, h = wnd._recta
+			x, y, w, h = wnd.getwindowpos()
 			wnd._topwindow.InvalidateRect((x,y,x+w,y+h))
 		del self._optimdict
 		del self._list
