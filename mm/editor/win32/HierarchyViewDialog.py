@@ -28,7 +28,6 @@ class HierarchyViewDialog(ViewDialog):
 		if self.is_showing():
 			self.window.pop(poptop=1)
 			return
-		self.toplevel.showstate(self, 1)
 		title = 'Structure View (%s)' % self.toplevel.basename
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
