@@ -64,9 +64,9 @@ MENUBAR=(
 #
 PLAYER_ADORNMENTS = {
 	'toolbar': (
-		(TOGGLE, 1000, STOP),
-		(TOGGLE, 1500, PLAY),
-		(TOGGLE, 2000, PAUSE),
+		(TOGGLE, 1001, STOP),
+		(TOGGLE, 1501, PLAY),
+		(TOGGLE, 2001, PAUSE),
 		),
 	'shortcuts': {
 		' ': MAGIC_PLAY
@@ -80,4 +80,4 @@ CHANNEL_ADORNMENTS = {
 
 #
 # CNTL resource for the toolbar and its height
-TOOLBAR=(2500, 62, 22)
+TOOLBAR=(None, 64, 24)
