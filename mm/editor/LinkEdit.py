@@ -8,6 +8,7 @@ import AttrEdit
 from ViewDialog import ViewDialog
 import windowinterface
 from AnchorDefs import *
+from MMTypes import *
 
 from MMNode import interiortypes
 
@@ -127,6 +128,11 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 			self.left.fillfunc = self.fill_node
 			self.left.focus = None
 			self.reloadanchors(self.left, 0)
+			if aid is None:
+				for anchor in self.left.anchors:
+					if self.findanchor(anchor)[A_TYPE] == ATYPE_DEST:
+						aid = anchor[1]
+						break
 			if aid is not None:
 				for i in range(len(self.left.anchors)):
 					if self.left.anchors[i][1] == aid:
@@ -236,17 +242,6 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 			if a in allanchors:
 				str.anchors.append(a)
 
-	def makename(self, anchor):
-		if type(anchor) is not type(()):
-			return anchor
-		uid, aid = anchor
-		if '/' in uid:
-			return aid + ' in ' + uid
-		node = self.context.mapuid(uid)
-		nodename = node.GetRawAttrDef('name', '#' + uid)
-		if type(aid) is not type(''): aid = `aid`
-		return nodename + '.' + aid
-
 	# This functions re-loads one of the anchor browsers.
 
 	def reloadanchors(self, str, scroll):
@@ -355,7 +350,9 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 			if scroll:
 				str.browser_makevisible(str.focus)
 			str.browser_show()
-			str.buttons_setsensitive(1)
+			anchor = str.anchors[str.focus]
+			node = self.context.mapuid(anchor[0])
+			str.buttons_setsensitive(1, node.GetType() in leaftypes and self.findanchor(anchor)[A_TYPE] != ATYPE_DEST)
 		else:
 			str.buttons_setsensitive(0)
 		if str.node:
@@ -414,8 +411,8 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 			lfocus = link[ANCHOR1]
 			rfocus = link[ANCHOR2]
 		lnode = rnode = None
-		lanchor = self.__findanchor(lfocus)
-		ranchor = self.__findanchor(rfocus)
+		lanchor = self.findanchor(lfocus)
+		ranchor = self.findanchor(rfocus)
 		if lanchor is None or ranchor is None or \
 		   ((lanchor[A_TYPE] not in SourceAnchors or
 		     ranchor[A_TYPE] not in DestinationAnchors) and \
@@ -449,8 +446,8 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 			if n1 == n2:
 				windowinterface.beep()
 				return
-			a1 = self.__findanchor(n1)
-			a2 = self.__findanchor(n2)
+			a1 = self.findanchor(n1)
+			a2 = self.findanchor(n2)
 			if a1 is None or a2 is None:
 				print 'LinkEdit: cannot find anchors!'
 				return
@@ -464,21 +461,6 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 				dir = DIR_1TO2
 			editlink = (n1, n2, dir, TYPE_JUMP)
 		self.editorshow(editlink, not fromfocus)
-
-	def __findanchor(self, anchor):
-		if anchor is not None:
-			if type(anchor) is not type(()):
-				return (anchor, ATYPE_DEST, ())
-			uid, aid = anchor
-			if '/' in uid:
-				# external anchor
-				return (aid, ATYPE_DEST, ())
-			node = self.context.mapuid(uid)
-			for a in MMAttrdefs.getattr(node, 'anchorlist'):
-				if a[A_ID] == aid:
-					return a
-		return None
-
 
 	# Callback functions
 	def anchor_browser_callback(self, str):
@@ -581,6 +563,15 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 		em = self.editmgr
 		if not em.transaction(): return
 		em.dellink(l)
+		# maybe add anchors of old link to interesting
+		a = self.findanchor(l[ANCHOR1])
+		if a[A_TYPE] in SourceAnchors and \
+		   not self.context.hyperlinks.findsrclinks(l[ANCHOR1]):
+			self.set_interesting(l[ANCHOR1])
+		a = self.findanchor(l[ANCHOR2])
+		if a[A_TYPE] in SourceAnchors and \
+		   not self.context.hyperlinks.findsrclinks(l[ANCHOR2]):
+			self.set_interesting(l[ANCHOR2])
 		em.commit()
 		self.updateform()
 
@@ -644,7 +635,21 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 		if self.linkfocus is not None:
 			l = self.links[self.linkfocus]
 			em.dellink(l)
+			# maybe add anchors of old link to interesting
+			a = self.findanchor(l[ANCHOR1])
+			if a[A_TYPE] in SourceAnchors and \
+			   not self.context.hyperlinks.findsrclinks(l[ANCHOR1]):
+				self.set_interesting(l[ANCHOR1])
+			a = self.findanchor(l[ANCHOR2])
+			if a[A_TYPE] in SourceAnchors and \
+			   not self.context.hyperlinks.findsrclinks(l[ANCHOR2]):
+				self.set_interesting(l[ANCHOR2])
 		em.addlink(editlink)
+		# remove anchors involved in this link from interesting
+		if editlink[ANCHOR1] in self.interesting:
+			self.interesting.remove(editlink[ANCHOR1])
+		if editlink[ANCHOR2] in self.interesting:
+			self.interesting.remove(editlink[ANCHOR2])
 		em.commit()
 
 class LinkEditEditor(LinkEditorDialog):
