@@ -409,7 +409,7 @@ class NodeWrapper(Wrapper):
 			('clipbegin',), ('clipend',),	# More time stuff
 			('fill',), ('fillDefault',), ('erase',),
 			('syncBehavior',), ('syncBehaviorDefault',),
-			'title', 'abstract', ('alt',), ('longdesc',), 'author',
+			'title', 'abstract', ('alt',), ('longdesc',), ('readIndex',), 'author',
 			'copyright', 'comment',
 			'layout', 'u_group',
 			('fgcolor',),
@@ -434,6 +434,7 @@ class NodeWrapper(Wrapper):
 			namelist.append('syncBehaviorDefault')
 			namelist.append('min')
 			namelist.append('max')
+			namelist.append('readIndex')
 			if ntype in leaftypes:
 				namelist.append('erase')
 		if ntype == 'bag':

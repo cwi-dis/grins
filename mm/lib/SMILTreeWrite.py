@@ -909,6 +909,7 @@ smil_attrs=[
 	("abstract", lambda writer, node:getcmifattr(writer, node, "abstract")),
 	("alt", lambda writer, node: getdescr(writer, node, 'alt')),
 	("longdesc", lambda writer, node: getdescr(writer, node, 'longdesc')),
+	("readIndex", lambda writer, node:getcmifattr(writer, node, "readIndex", 0)),
 	("begin", lambda writer, node: getsyncarc(writer, node, 0)),
 	("dur", getduration),
 	("min", getmin),
