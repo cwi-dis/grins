@@ -16,7 +16,7 @@ class LinkEditLight:
 	def hide(self):
 		pass
 
-	def show(self):
+	def show(self, node = None, aid = None):
 		pass
 
 	def is_showing(self):
