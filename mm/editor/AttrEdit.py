@@ -1,14 +1,11 @@
 # Attribute editor using the FORMS library (fl, FL)
 
+# MODIFIED VERSION WHICH CAN EDIT CHANNEL ATTRIBUTE LISTS AS WELL!
+
 # XXX This assumes we can create and destroy as many forms as we want.
 # That's not actually true: forms never die, they just become inaccessible.
 # But there is still hope that we can fix the forms library rather than
 # caching old forms here...
-
-# XXX The interface should be improved so that we can also bring up an
-# attribute editor for a channel, rather than for a node.  This means
-# we must parametrize AttrEditor instances with functions that get/set
-# the attributes (and also know where to get defaults).
 
 
 import fl
@@ -38,8 +35,7 @@ def showattreditor(node):
 	except NameError:
 		pass
 	#
-	namelist = listattrnames(node)
-	attreditor = AttrEditor().init(node, namelist)
+	attreditor = AttrEditor().init(NodeWrapper().init(node))
 
 
 def hideattreditor(node):
@@ -62,39 +58,150 @@ def hasattreditor(node):
 		return 0
 
 
-# List the attribute names that make sense for this node,
-# in an order that makes sense to the user.
-# XXX Should depend on the channel; currently all known names are returned
-# in alphabetical order.
+def makechannelattreditor(context, name):
+	return AttrEditor().init(ChannelWrapper().init(context, name))
 
-def listattrnames(node):
-	namelist = MMAttrdefs.getnames()
-	if 'styledict' in namelist:
-		namelist.remove('styledict')
-	if 'channellist' in namelist:
-		namelist.remove('channellist')
-	# Merge in any unknown attributes that the node might have
-	for name in node.attrdict.keys():
-		if name not in namelist:
-			namelist.append(name)
-	namelist.sort()
-	return namelist
+
+def killchannelattreditor(attreditor):
+	attreditor.close()
+
+
+class NodeWrapper():
+	def init(self, node):
+		self.node = node
+		return self
+	#
+	def link(self, attreditor):
+		self.node.attreditor = attreditor
+	#
+	def unlink(self):
+		del self.node.attreditor
+	#
+	def getcontext(self):
+		return self.node.GetContext()
+	#
+	def getattr(self, name): # Return the attribute or a default
+		return MMAttrdefs.getattr(self.node, name)
+	#
+	def getvalue(self, name): # Return the raw attribute or None
+		return self.node.GetRawAttrDef(name, None)
+	#
+	def getdefault(self, name):
+		try:
+			return self.node.GetDefAttr(name)
+		except NoSuchAttrError:
+			pass
+		p = self.node.GetParent()
+		if p = None:
+			default = None
+		else:
+			default = p.GetInherAttrDef(name, None)
+		if default = None:
+			default = MMAttrdefs.getdef(name)[1]
+		return default
+	#
+	def setattr(self, (name, value)):
+		self.node.SetAttr(name, value)
+	#
+	def delattr(self, name):
+		try:
+			self.node.DelAttr(name)
+		except NoSuchAttrError:
+			pass
+	#
+	# List the attribute names that make sense for this node,
+	# in an order that makes sense to the user.
+	# XXX Should depend on the channel type;
+	# XXX currently all known names are returned in alphabetical order.
+	#
+	def listattrnames(self):
+		namelist = MMAttrdefs.getnames()
+		if 'styledict' in namelist:
+			namelist.remove('styledict')
+		if 'channellist' in namelist:
+			namelist.remove('channellist')
+		# Merge in any nonstandard attributes that the node might have
+		for name in self.node.GetAttrDict().keys():
+			if name not in namelist:
+				namelist.append(name)
+		namelist.sort()
+		return namelist
+	#
+
+
+class ChannelWrapper():
+	#
+	def init(self, (context, name)):
+		self.context = context
+		self.name = name
+		self.attrdict = self.context.channeldict[name]
+		return self
+	#
+	def link(self, attreditor):
+		pass
+	#
+	def unlink(self):
+		pass
+	#
+	def getcontext(self):
+		return self.context
+	#
+	def getattr(self, name):
+		if self.attrdict.has_key(name):
+			return self.attrdict[name]
+		else:
+			return MMAttrdefs.getdef(name)[1]
+	#
+	def getvalue(self, name): # Return the raw attribute or None
+		if self.attrdict.has_key(name):
+			return self.attrdict[name]
+		else:
+			return None
+	#
+	def getdefault(self, name):
+		return MMAttrdefs.getdef(name)[1]
+	#
+	def setattr(self, (name, value)):
+		self.attrdict[name] = value
+	#
+	def delattr(self, name):
+		if self.attrdict.has_key(name):
+			del self.attrdict[name]
+	#
+	# List the attribute names that make sense for this channel,
+	# in an order that makes sense to the user.
+	# XXX Should depend on the channel type;
+	# XXX currently all known names are returned in alphabetical order.
+	#
+	def listattrnames(self):
+		namelist = MMAttrdefs.getnames()
+		if 'styledict' in namelist:
+			namelist.remove('styledict')
+		if 'channellist' in namelist:
+			namelist.remove('channellist')
+		# Merge in any nonstandard attributes
+		for name in self.attrdict.keys():
+			if name not in namelist:
+				namelist.append(name)
+		namelist.sort()
+		return namelist
+	#
 
 
 # Attribute editor class.
 
 class AttrEditor():
 	#
-	def init(self, (node, namelist)):
+	def init(self, wrapper):
 		#
-		self.node = node
-		self.namelist = namelist
+		self.wrapper = wrapper
+		self.namelist = wrapper.listattrnames()
 		#
 		itemwidth = 450
 		itemheight = 25
 		#
 		formwidth = itemwidth
-		formheight = len(namelist) * itemheight + 30
+		formheight = len(self.namelist) * itemheight + 30
 		#
 		itemw3 = 50
 		itemw2 = itemwidth/2
@@ -109,9 +216,9 @@ class AttrEditor():
 		#
 		self.blist = []
 		#
-		for i in range(len(namelist)):
+		for i in range(len(self.namelist)):
 			itemy = formheight - (i+1)*itemheight
-			name = namelist[i]
+			name = self.namelist[i]
 			b = ButtonRow().init(self, name)
 			b.makelabeltext(itemx1, itemy, itemw1, itemheight)
 			b.makehelpbutton(itemx1, itemy, itemw1, itemheight)
@@ -126,7 +233,7 @@ class AttrEditor():
 		form.show_form(PLACE_SIZE, TRUE, 'Attribute Editor')
 		# XXX Should have a more meaningful title
 		#
-		node.attreditor = self
+		self.wrapper.link(self)
 		#
 		return self
 	#
@@ -177,7 +284,7 @@ class AttrEditor():
 	#
 	def close(self):
 		self.form.hide_form()
-		del self.node.attreditor
+		self.wrapper.unlink()
 		# XXX break circular links...
 		# Leave the rest to garbage collection
 	#
@@ -203,7 +310,7 @@ class ButtonRow():
 	def init(b, (attreditor, name)):
 		b.attreditor = attreditor
 		b.name = name
-		b.node = attreditor.node
+		b.wrapper = attreditor.wrapper
 		b.form = attreditor.form
 		return b
 	#
@@ -227,19 +334,8 @@ class ButtonRow():
 		b.reset.set_call_back(b.resetcallback, None)
 	#
 	def getvalue(b):
-		value = b.node.GetRawAttrDef(b.name, None)
-		try:
-			default = b.node.GetDefAttr(b.name)
-		except NoSuchAttrError:
-			default = None
-		if default = None:
-			p = b.node.GetParent()
-			if p = None:
-				default = None
-			else:
-				default = p.GetInherAttrDef(b.name, None)
-		if default = None:
-			default = MMAttrdefs.getdef(b.name)[1]
+		value = b.wrapper.getvalue(b.name)
+		default = b.wrapper.getdefault(b.name)
 		b.defaultvalue = default
 		if value = None:
 			b.currentvalue = default
@@ -256,12 +352,9 @@ class ButtonRow():
 			b.valuecallback(b.value, None)
 		if b.changed:
 			if b.isdefault:
-				try:
-					b.node.DelAttr(b.name)
-				except NoSuchAttrError:
-					pass
+				b.wrapper.delattr(b.name)
 			else:
-				b.node.SetAttr(b.name, b.currentvalue)
+				b.wrapper.setattr(b.name, b.currentvalue)
 		b.getvalue()
 	#
 	def helpcallback(b, dummy):
@@ -314,7 +407,7 @@ class ButtonRow():
 		attrdef = MMAttrdefs.getdef(b.name)
 		typedef = ('enclosed', attrdef[0])
 		return MMParser.parsevalue \
-			('('+string+')', typedef, b.node.context)
+			('('+string+')', typedef, b.wrapper.getcontext())
 	#
 
 
