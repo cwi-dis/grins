@@ -259,8 +259,8 @@ MediaType_GetType(MediaTypeObject *self, PyObject *args)
 		return Py_BuildValue("s", "text");
 	else if(*pMajorType == MEDIATYPE_Midi)
 		return Py_BuildValue("s", "midi");
-	else if(*pMajorType == MEDIATYPE_Stream)
-		return Py_BuildValue("s", "stream");
+	//else if(*pMajorType == MEDIATYPE_Stream)
+	//	return Py_BuildValue("s", "stream");
 	else if(*pMajorType == MEDIATYPE_Interleaved)
 		return Py_BuildValue("s", "interleaved");
 	else if(*pMajorType == MEDIATYPE_ScriptCommand)
@@ -287,8 +287,8 @@ MediaType_GetSubtype(MediaTypeObject *self, PyObject *args)
 	// XXX: Not a complete list 
 	if(*pSubtype == MEDIASUBTYPE_Avi)
 		return Py_BuildValue("s", "avi");
-	else if(*pSubtype == MEDIASUBTYPE_Asf)
-		return Py_BuildValue("s", "asf");
+//	else if(*pSubtype == MEDIASUBTYPE_Asf)
+//		return Py_BuildValue("s", "asf");
 	else if(*pSubtype == MEDIASUBTYPE_QTMovie)
 		return Py_BuildValue("s", "qtmovie");
 	else if(*pSubtype == MEDIASUBTYPE_RGB1)
