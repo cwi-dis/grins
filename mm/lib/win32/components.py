@@ -474,7 +474,7 @@ class COMBOBOX(WndClass):
 	def __init__(self,style=0,exstyle=0):
 		WndClass.__init__(self,
 			classid='COMBOBOX',
-			style=win32con.WS_CHILD | win32con.WS_VISIBLE | win32con.CBS_DROPDOWNLIST | win32con.CBS_SORT | win32con.WS_VSCROLL | style,
+			style=win32con.WS_CHILD | win32con.WS_VISIBLE | win32con.CBS_DROPDOWNLIST | win32con.WS_VSCROLL | style,
 			exstyle=exstyle)
 	
 # Create a window from its control class

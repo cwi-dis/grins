@@ -149,6 +149,12 @@ if not features.lightweight:
 NO_MINIMIZEBOX = 0
 
 
+# temporary:
+SHOW_TOOLBAR_COMBO = 1
+ID_TOOLBAR_COMBO = grinsRC._APS_NEXT_COMMAND_VALUE + 1000
+TOOLBAR_COMBO_WIDTH = 96
+TOOLBAR_COMBO_HEIGHT = 10*18 # drop down height
+
 ###########################################################
 from pywin.mfc import window, docview
 
@@ -1218,7 +1224,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		id=usercmdui.class2ui[usercmd.CLOSE].id
 		self._wndToolBar.SetButtonInfo(6,id,afxexttb.TBBS_BUTTON, 7)
 
-		self._wndToolBar.SetButtonInfo(7,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6);
+		self._wndToolBar.SetButtonInfo(7,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6)
 
 		id=usercmdui.class2ui[wndusercmd.TB_PLAY].id
 		self._wndToolBar.SetButtonInfo(8,id,afxexttb.TBBS_BUTTON, 9)
@@ -1229,15 +1235,30 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		id=usercmdui.class2ui[wndusercmd.TB_STOP].id
 		self._wndToolBar.SetButtonInfo(10,id,afxexttb.TBBS_BUTTON, 11)
 
-		self._wndToolBar.SetButtonInfo(11,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12);
+		self._wndToolBar.SetButtonInfo(11,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
 	
 		id=usercmdui.class2ui[wndusercmd.CLOSE_ACTIVE_WINDOW].id
 		self._wndToolBar.SetButtonInfo(12,id,afxexttb.TBBS_BUTTON, 14)
 
-		self._wndToolBar.SetButtonInfo(13,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12);
+		self._wndToolBar.SetButtonInfo(13,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
 
 		id=usercmdui.class2ui[usercmd.HELP].id
 		self._wndToolBar.SetButtonInfo(14,id,afxexttb.TBBS_BUTTON, 12)
+
+		if SHOW_TOOLBAR_COMBO:
+			self._wndToolBar.SetButtonInfo(15,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
+			# the return object is a components.ComboBox
+			self._toolbarCombo = cb = self.createToolBarCombo(16, ID_TOOLBAR_COMBO, TOOLBAR_COMBO_WIDTH, TOOLBAR_COMBO_HEIGHT, self.onToolbarCombo)
+			cb.addstring('28 kbps')
+			cb.addstring('32 kbps')
+			cb.addstring('56 kbps')
+			cb.addstring('64 kbps')
+			cb.addstring('96 kbps')
+			cb.addstring('100 kbps')
+			cb.addstring('128 kbps')
+			cb.addstring('250 kbps')
+			cb.addstring('512 kbps')
+			cb.setcursel(0)
 
 		self.ShowControlBar(self._wndToolBar,1,0)
 
@@ -1250,12 +1271,12 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		self._wndToolBar.SetButtonInfo(0,id,afxexttb.TBBS_BUTTON, 1)
 
 		# Play Toolbar
-		self._wndToolBar.SetButtonInfo(1,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6);
+		self._wndToolBar.SetButtonInfo(1,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6)
 
 		id=usercmdui.class2ui[usercmd.CLOSE].id
 		self._wndToolBar.SetButtonInfo(2,id,afxexttb.TBBS_BUTTON, 7)
 
-		self._wndToolBar.SetButtonInfo(3,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6);
+		self._wndToolBar.SetButtonInfo(3,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6)
 
 		id=usercmdui.class2ui[wndusercmd.TB_PLAY].id
 		self._wndToolBar.SetButtonInfo(4,id,afxexttb.TBBS_BUTTON, 9)
@@ -1266,12 +1287,13 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		id=usercmdui.class2ui[wndusercmd.TB_STOP].id
 		self._wndToolBar.SetButtonInfo(6,id,afxexttb.TBBS_BUTTON, 11)
 	
-		self._wndToolBar.SetButtonInfo(7,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6);
+		self._wndToolBar.SetButtonInfo(7,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,6)
 
 		id=usercmdui.class2ui[usercmd.HELP].id
 		self._wndToolBar.SetButtonInfo(8,id,afxexttb.TBBS_BUTTON, 12)
 	
 		self.ShowControlBar(self._wndToolBar,1,0)
+
 
 	def createToolBarCombo(self, index, ctrlid, width, ddheight, responseCb=None):
 		self._wndToolBar.SetButtonInfo(index, ctrlid, afxexttb.TBBS_SEPARATOR, width)
@@ -1284,6 +1306,10 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		if responseCb:
 			self.HookCommand(responseCb,ctrlid)
 		return ctrl
+
+	def onToolbarCombo(self, id, code):
+		if code==win32con.CBN_SELCHANGE:
+			print self._toolbarCombo.getvalue()
 
 	def isplayer(self,f):
 		if not hasattr(f,'_view'): return 0
