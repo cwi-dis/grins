@@ -88,3 +88,13 @@ if sys.platform == 'mac':
 			# it may be an empty string, turn into None
 			mimetype = None
 		return mimetype, None
+
+_guess_type = guess_type
+import urlcache
+def guess_type(url):
+	cache = urlcache.urlcache[url]
+	if cache.has_key('mimetype'):
+		# returned cached value
+		return '%s/%s' % cache['mimetype'], None
+	# don't cache guessed value
+	return _guess_type(url)
