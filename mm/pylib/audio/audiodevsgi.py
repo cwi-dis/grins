@@ -41,9 +41,9 @@ class AudioDevSGI:
 		self.__config = al.newconfig()
 		if fmt:
 			self.setformat(fmt)
-		if qsize:
-			c = self.__config
-			c.setqueuesize(qsize)
+		if qsize and hasattr(al, 'OpenPort'):
+			# only set queuesize on modern systems :-(
+			self.__config.setqueuesize(qsize)
 
 	def __del__(self):
 		self.stop()
