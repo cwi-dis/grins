@@ -153,6 +153,10 @@ SOURCE=.\RES\Nodrop.cur
 # End Source File
 # Begin Source File
 
+SOURCE=.\RES\play.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\player8bit.bmp
 # End Source File
 # Begin Source File
@@ -162,6 +166,10 @@ SOURCE=.\RES\splashimg.bmp
 # Begin Source File
 
 SOURCE=.\RES\Stop.cur
+# End Source File
+# Begin Source File
+
+SOURCE=.\RES\stop.ico
 # End Source File
 # End Target
 # End Project
