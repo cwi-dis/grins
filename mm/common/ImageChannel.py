@@ -15,68 +15,47 @@ class ImageWindow() = ChannelWindow():
 	# Initialization function.
 	#
 	def init(self, (title, attrdict)):
-		self.process = None # Initially, no process
-		self.filename = None # Nor a filename
+		self.parray = None
+		self.xsize = self.ysize = 0
 		return ChannelWindow.init(self, (title, attrdict))
 	#
 	def show(self):
 		if self.wid <> 0: return
 		ChannelWindow.show(self)
-		# Draw (clear) it immediately (looks better)
 		self.render()
-		# If there is a file, show it
-		if self.filename <> None:
-			self.showimage()
-	#
-	def hide(self):
-		if self.wid <> 0:
-			ChannelWindow.hide(self)
-		if self.process <> None:
-			self.process.kill()
-			self.process = None
-	#
-	def clear(self):
-		self.filename = None
-		self.hideimage()
 	#
 	def redraw(self):
 		if self.wid = 0: return
-		old_geometry = self.last_geometry
 		gl.reshapeviewport()
 		self.render()
-		self.get_geometry()
-		if self.last_geometry <> old_geometry:
-			self.moveimage()
 	#
-	def render(self):
+	def clear(self):
+		self.parray = None
+		self.xsize = self.ysize = 0
+		gl.winset(self.wid)
 		gl.RGBcolor(255, 255, 255)
 		gl.clear()
 	#
 	def setimage(self, filename):
-		self.clear()
-		self.filename = filename
-		if self.filename <> None and self.wid <> 0:
-			self.showimage()
+		self.parray = None
+		self.xsize, self.ysize = image.imgsize(filename)
+		tempfile = image.cachefile(filename)
+		f = open(tempfile, 'r')
+		f.seek(8192)
+		self.parray = f.read()
+		if self.wid:
+			gl.winset(self.wid)
+			self.render()
 	#
-	def moveimage(self):
-		if self.filename <> None:
-			self.hideimage()
-			if self.wid <> 0:
-				self.showimage()
-	#
-	def showimage(self):
-		gl.winset(self.wid)
-		(xorg, yorg), (xsize, ysize) = gl.getorigin(), gl.getsize()
-		width, height = image.imgsize(self.filename)
-		x = xorg + (xsize-width)/2
-		y = yorg + (ysize-height)/2
-		self.process = image.showimg(self.filename, (x, y))
-	#
-	def hideimage(self):
-		if self.process <> None:
-			self.process.kill()
-			self.process = None
-			# The redraw will come automatically...
+	def render(self):
+		gl.RGBcolor(255, 255, 255)
+		gl.clear()
+		if self.parray:
+			width, height = gl.getsize()
+			x = (width - self.xsize) / 2
+			y = (height - self.ysize) / 2
+			gl.lrectwrite(x, y, x+self.xsize-1, y+self.ysize-1, \
+					self.parray)
 	#
 
 
@@ -132,10 +111,6 @@ class ImageChannel() = Channel():
 	#
 	def reset(self):
 		self.window.clear()
-	#
-	def done(self, (callback, arg)):
-		self.reset()
-		Channel.done(self, (callback, arg))
 	#
 	def showimage(self, node):
 		self.window.setimage(self.getfilename(node))
