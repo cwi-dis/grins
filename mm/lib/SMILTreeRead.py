@@ -451,8 +451,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				   (offsetvalue.match(val) is None or
 				    val[0] == '-'):
 					self.syntax_error('bad begin attribute for child of seq node')
-				else:
-					node.__syncarcs.append((attr, val, self.lineno))
+				node.__syncarcs.append((attr, val, self.lineno))
 			elif attr == 'dur':
 				if val == 'indefinite':
 					attrdict['duration'] = -1
@@ -3248,6 +3247,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		id = self.__checkid(attributes)
 
 	def end_custom_attributes(self):
+		if not self.__custom_tests:
+			self.syntax_error('customAttributes element must contain customTest elements')
 		self.__context.addusergroups(self.__custom_tests.items())
 
 	def start_custom_test(self, attributes):
@@ -3387,7 +3388,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		self.start_parexcl('excl', attributes)
 
 	def end_excl(self):
+		node = self.__container
 		self.end_parexcl('excl')
+		has_prio = has_nonprio = 0
+		for c in node.children:
+			if c.type == 'prio':
+				has_prio = 1
+			else:
+				has_nonprio = 1
+		if has_prio and has_nonprio:
+			self.syntax_error('cannot mix priorityClass and other children in excl element')
 
 	__prioattrs = {'higher': ('stop', 'pause'),
 		       'peers': ('stop', 'pause', 'defer', 'never'),
