@@ -486,7 +486,10 @@ class Channel:
 		if self._playstate != PIDLE:
 			raise error, 'play not idle on '+self._name
 		if self._armstate != ARMED:
-			raise error, 'arm not ready'
+			if settings.noprearm:
+				self.arm(node)
+			else:
+				raise error, 'arm not ready'
 		self._playcontext = self._armcontext
 		self._playstate = PLAYING
 		self._played_node = node
