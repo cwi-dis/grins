@@ -1523,8 +1523,11 @@ class ReplaceDialog(FindDialog):
 		
 	def _onReplace(self, id, value):
 		if self._replaceCallback != None:
-			text = self._replaceWith.gettext()
-			self._replaceCallback(text)
+			options = (self._matchWhole.getcheck(),
+					   self._matchCase.getcheck())
+			text = self._findWhat.gettext()
+			replaceText = self._replaceWith.gettext()
+			self._replaceCallback(text, options, replaceText)
 
 	def _onReplaceAll(self, id, value):
 		if self._replaceAllCallback != None:
