@@ -179,6 +179,9 @@ extern void initimgtiff();
 #ifndef initimgpgm
 extern void initimgpgm();
 #endif
+#ifndef initimgpng
+extern void initimgpng();
+#endif
 #ifndef initstruct
 extern void initstruct();
 #endif
@@ -244,6 +247,7 @@ struct _inittab _PyImport_Inittab[] = {
 	{"cStringIO", initcStringIO},
 	{"imgtiff", initimgtiff},
 	{"imgpgm", initimgpgm},
+	{"imgpng", initimgpng},
 	{"struct", initstruct},
 	{"audioop", initaudioop},
 	{"producer", initproducer},
