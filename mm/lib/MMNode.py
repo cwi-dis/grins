@@ -1800,6 +1800,7 @@ class MMNode(MMTreeElement):
 		self.has_min = 0
 ##		self.delayed_arcs = []
 		self.delayed_end = 0
+		self.delayed_play_done = 0
 		self.__calcendtimecalled = 0
 		self.views = {}		# Map {string -> Interactive} - that is, a list of views
 					# looking at this object.
