@@ -196,3 +196,7 @@ inline void seterror(const char *funcname, DWORD err)
 
 
 #endif // INC_PYINTERFACE
+
+// Local Variables:
+// tab-width:4
+// End:

@@ -162,3 +162,7 @@ inline HWND MainWndClass<charT>::createWindow(const WndTraits<charT>& traits)
 	}
 
 #endif // INC_TTL
+
+// Local Variables:
+// tab-width:4
+// End:
