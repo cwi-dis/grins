@@ -3,7 +3,6 @@ __version__ = "$Id$"
 # Cache durations of mpeg files
 
 import MMurl
-import string
 
 def getsize(url, bufsiz = 10240):
 	# sanity check
@@ -15,11 +14,10 @@ def getsize(url, bufsiz = 10240):
 	nframes = 0
 
 	# for efficiency, cache attribute lookups
-	find = string.find
 	read = fp.read
 
 	data = read(bufsiz)
-	i = find(data, '\000\000\001')
+	i = data.find('\000\000\001')
 	while i >= 0:
 		i = i + 3
 		try:
@@ -46,11 +44,11 @@ def getsize(url, bufsiz = 10240):
 		elif w == '\267':
 			# SEQ_END_CODE
 			break
-		i = find(data, '\000\000\001', i+1)
+		i = data.find('\000\000\001', i+1)
 		while i < 0:
 			data = data[-2:] + read(bufsiz)
 			if len(data) <= 2:
 				break
-			i = find(data, '\000\000\001')
+			i = data.find('\000\000\001')
 	fp.close()
 	return 0, 0
