@@ -391,8 +391,8 @@ def convertrp(node, errorfunc = None):
 				tagdict['tduration'] = 0
 
 		subRegGeom, mediaGeom = c.getPxGeomMedia()
-		effSubRegGeom = intersect((0, 0, rp.width, rp.height), subRegGeom)
-		effMediaGeom = intersect(effSubRegGeom, mediaGeom)
+		effSubRegGeom = _intersect((0, 0, rp.width, rp.height), subRegGeom)
+		effMediaGeom = _intersect(effSubRegGeom, mediaGeom)
 		tagdict['displayfull'] = 0
 		tagdict['subregionxy'] = effMediaGeom[:2]
 		tagdict['subregionwh'] = effMediaGeom[2:]
@@ -445,20 +445,28 @@ def convertrp(node, errorfunc = None):
 		# need to update start of out transition
 		rp.tags[-1]['start'] = start - rp.tags[-1]['tduration']
 		start = rp.tags[-1]['tduration']
-	em = ctx.editmgr
+	import windowinterface
+	windowinterface.FileDialog('File name for RealPix:', '.', ['image/vnd.rn-realpix'], '', lambda file,rp=rp,node=node,regionname=region.name:_convertrpfinish(file,rp,node,regionname), None)
+
+def _convertrpfinish(filename, rp, node, regionname):
+	if not filename:
+		return
+	em = node.GetContext().editmgr
+	url = MMurl.pathname2url(filename)
 	if not em.transaction():
 		# not allowed to do it at this point
 		return
 	for c in node.GetChildren()[:]:
 		em.delnode(c)
 	em.setnodetype(node, 'ext')
-	em.setnodeattr(node, 'channel', region.name)
-	import base64
-	em.setnodeattr(node, 'file', 'data:image/vnd.rn-realpix;base64,' +
-		       ''.join(base64.encodestring(realsupport.writeRP('rp.rp', rp, node, tostring = 1)).split('\n')))
+	em.setnodeattr(node, 'channel', regionname)
+	em.setnodeattr(node, 'file', url)
+	realsupport.writeRP(filename, rp, node)
+##	import base64
+##	'data:image/vnd.rn-realpix;base64,' + ''.join(base64.encodestring(realsupport.writeRP('rp.rp', rp, node, tostring = 1)).split('\n'))
 	em.commit()
 
-def intersect((left, top, width, height), (x,y,w,h)):
+def _intersect((left, top, width, height), (x,y,w,h)):
 	# calculate the intersection of a parent region (width,height)
 	# with a child region (x,y,w,h)
 	if x < 0:
