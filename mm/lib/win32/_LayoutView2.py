@@ -605,7 +605,11 @@ class LayoutManager(window.Wnd, win32window.MSDrawContext):
 		win32window.MSDrawContext.reset(self)
 
 		return self._viewport
-			
+
+	# selection of a list of nodes
+	def selectNodeList(self, shapeList):
+		self.selectShapes(shapeList)			
+	
 	#
 	# end implementation interface 
 	#
