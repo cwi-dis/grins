@@ -232,6 +232,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if self.main.cansave():
 			self.commandlist = self.commandlist + [
 				SAVE_AS(callback = (self.saveas_callback, ())),
+				]
+			self.savecommandlist = [
 				SAVE(callback = (self.save_callback, ())),
 				]
 			if self.context.isValidDocument():
@@ -274,10 +276,13 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			undocommandlist = undocommandlist + self.undocommandlist[:1]
 		if self.editmgr.future:
 			undocommandlist = undocommandlist + self.undocommandlist[1:]
+		savecommandlist = []
+		if self.changed:
+			savecommandlist = self.savecommandlist
 		if self.context.attributes.get('project_boston', 0):
-			self.setcommands(self.commandlist + self.__ugroup + undocommandlist)
+			self.setcommands(self.commandlist + self.__ugroup + undocommandlist + savecommandlist)
 		else:
-			self.setcommands(self.commandlist + self.commandlist_g2 + undocommandlist)
+			self.setcommands(self.commandlist + self.commandlist_g2 + undocommandlist + savecommandlist)
 
 	def updateCommandlistOnErrors(self):
 		# recompute all command list
