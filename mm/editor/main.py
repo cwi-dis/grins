@@ -35,6 +35,7 @@ def usage(msg):
 class Main:
 	def __init__(self, opts, files):
 		import TopLevel, windowinterface
+		from MMExc import MSyntaxError
 		self.tops = []
 		self._mm_callbacks = {}
 		try:
@@ -54,8 +55,8 @@ class Main:
 		for fn in files:
 			try:
 				top = TopLevel.TopLevel(self, fn, new_file)
-			except:
-				print 'parsing file %s failed' % fn
+			except MSyntaxError, msg:
+				print 'parsing file %s failed: %s' % (fn, msg)
 				continue
 			top.setwaiting()
 			top.show()
@@ -78,6 +79,10 @@ class Main:
 					top.links.show()
 			top.checkviews()
 			self.tops.append(top)
+		if not self.tops:
+			# no toplevels made, so exit
+			# error message has already been printed
+			sys.exit(2)
 
 		for top in self.tops:
 			top.setready()
