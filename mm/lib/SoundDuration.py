@@ -17,17 +17,14 @@ def getfullinfo(url):
 		return 0, 8000, []
 	return nframes, framerate, markers
 
-import FileCache
-allinfo_cache = FileCache.FileCache(getfullinfo)
-
 def get(url):
-	nframes, framerate, markers = allinfo_cache.get(url)
+	nframes, framerate, markers = getfullinfo(url)
 	if nframes == 0: nframes = framerate
 	duration = float(nframes) / framerate
 	return duration
 
 def getmarkers(url):
-	nframes, framerate, markers = allinfo_cache.get(url)
+	nframes, framerate, markers = getfullinfo(url)
 	if not markers:
 		return []
 	xmarkers = []
