@@ -1668,9 +1668,10 @@ class _OffscreenMixin:
 		#
 		if copybits:
 			Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
-			Qd.RGBForeColor((0,0,0))			
-			portBits = self._onscreen_wid.GetWindowPort().portBits
-			Qd.CopyBits(portBits, bitmap, area, area, QuickDraw.srcCopy, None)
+			Qd.RGBForeColor((0,0,0))
+			port = self._onscreen_wid.GetWindowPort()
+			Qd.QDFlushPortBuffer(port, None)
+			Qd.CopyBits(port.portBits, bitmap, area, area, QuickDraw.srcCopy, None)
 ## XXX Not sure whether this is correct: the whole offscreen bitmap has been cleared during
 ## creation (above), but should I re-clear here if I reuse it?
 ##		else:
@@ -2757,6 +2758,10 @@ class DialogWindow(_Window):
 				cmdbuttons=None):
 		dlg = Dlg.GetNewDialog(resid, -1)
 		wid = dlg.GetDialogWindow()
+		wid2 = dlg.GetDialogWindow() #DBG
+		print 'DIALOG', dlg, hex(id(dlg)), hex(hash(dlg)) #DBG
+		print 'WINDOW', wid, hex(id(wid)), hex(hash(wid)) #DBG
+		print 'AGAIN', wid2, hex(id(wid2)), hex(hash(wid2)) #DBG
 		self._dlg = dlg
 		if cmdbuttons:
 			self._item_to_cmd = cmdbuttons

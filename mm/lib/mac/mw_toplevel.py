@@ -342,8 +342,9 @@ class _Event(AEServer):
 					else:
 						defaultcb()
 						return 1
-		gotone, wid, item = Dlg.DialogSelect(event)
+		gotone, dlg, item = Dlg.DialogSelect(event)
 		if gotone:
+			wid = dlg.GetDialogWindow()
 			if self._wid_to_window.has_key(wid):
 				self._wid_to_window[wid].do_itemhit(item, event)
 			else:
