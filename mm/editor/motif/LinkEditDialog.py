@@ -478,7 +478,7 @@ class LinkEditorDialog:
 		"""Create the LinkEditor dialog.
 		"""
 
-		w = windowinterface.Window(title, resizable = 1,
+		w = windowinterface.Window(title, resizable = 1, grab=1,
 				deleteCallback = (self.cancel_callback, ()))
 		self.__window = w
 

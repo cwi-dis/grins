@@ -658,9 +658,7 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 		
 	def editorshow(self, editlink, isnew):
 		editor = LinkEditEditor(self, "Hyperlink properties", editlink, isnew)
-		editlink = editor.run()
-		if editlink:
-			self.editsave(editlink)
+		editor.run()
 
 	def editsave(self, editlink):
 		em = self.editmgr
@@ -684,9 +682,6 @@ class LinkEditEditor(LinkEditorDialog):
 		self.show()
 		return self.editlink
 		
-	def close(self):
-		pass
-
 	def linkdir_callback(self):
 		linkdir = self.linkdirgetchoice()
 		l = self.editlink
@@ -708,10 +703,11 @@ class LinkEditEditor(LinkEditorDialog):
 			self.oksetsensitive(self.changed)
 
 	def ok_callback(self):
-		pass
+		self.parent.editsave(self.editlink)
+		self.close()
 
 	def cancel_callback(self):
-		self.editlink = None
+		self.close()
 #
 # General functions
 #
