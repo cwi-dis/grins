@@ -4,7 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-import java.util.Vector;
+import java.util.Hashtable;
+import java.util.Enumeration;
 
 import grins.*;
 
@@ -14,7 +15,7 @@ implements SMILListener, TimerListener
     
     private SMILDocument smil;
     private SMILController player;
-    private Vector viewports = new Vector();
+	private Hashtable viewports = new Hashtable();
     
     private JDesktopPane desktop;
     
@@ -178,23 +179,39 @@ implements SMILListener, TimerListener
         }
         
 	public void newViewport(int index){
-	    Scheduler sc = new Scheduler(50, ""+index);
+        Scheduler sc = new Scheduler(50, ""+index);
 	    sc.addTimerListener(this);
 	    }
 	
 	public void timeElapsed(TimerEvent evt){
-	    int index = 0;
-	    try{index = Integer.parseInt(evt.getName());}
-	    catch(NumberFormatException e){return;}
+	    int n = smil.getViewportCount();
+	    for(int i =0; i<n; i++){
+	        Integer iobj = new Integer(i);
+	        JInternalFrame jif = (JInternalFrame)viewports.get(iobj);
+	        boolean isopen = smil.isViewportOpen(i);
+	        message("viewport " + i + " " + isopen );
+	        if(jif!=null){
+	            if(!isopen) {
+                    try {jif.setClosed(true);} catch(java.beans.PropertyVetoException e){}
+                    jif.dispose();
+	                viewports.remove(iobj);
+	                }
+	            continue;
+	            }
+	        else if(isopen)
+	            {
+	            Dimension d = smil.getViewportSize(i);
+	            String title = smil.getViewportTitle(i);
 	    
-	    Dimension d = smil.getViewportSize(index);
-	    String title = smil.getViewportTitle(index);
-	    
-	    SMILCanvas  canvas = createTopLayout(d.width, d.height, title);
+	            SMILCanvas  canvas = createTopLayout(i, d.width, d.height, title);
 	        
-	    // set SMIL canvas
-	    try {smil.getRenderer().setCanvas(index, canvas);}
-	    catch(Exception e){System.out.println(""+e);}
+	            // set SMIL canvas
+	            if(canvas!=null){
+	                try {smil.getRenderer().setCanvas(i, canvas);}
+	                catch(Exception e){System.out.println(""+e);}
+	                }
+	            }
+	        }   
 	}
 	
     private void open(String filename){
@@ -215,21 +232,26 @@ implements SMILListener, TimerListener
 	        Dimension d = smil.getViewportSize(i);
 	        String title = smil.getViewportTitle(i);
 	    
-	        SMILCanvas  canvas = createTopLayout(d.width, d.height, title);
+	        SMILCanvas  canvas = createTopLayout(i, d.width, d.height, title);
 	        
 	        // set SMIL canvas
-	        try {smil.getRenderer().setCanvas(i, canvas);}
-	        catch(Exception e){System.out.println(""+e);}
+	        if(canvas!=null){
+	            try {smil.getRenderer().setCanvas(i, canvas);}
+	            catch(Exception e){System.out.println(""+e);}
+	            }
 	        }   
-	    
 	    
 	    // get controller
         player = smil.getController();
         player.addListener(this);
     }
 	
-	SMILCanvas createTopLayout(int w, int h, String title){
-		JInternalFrame jif = new JInternalFrame(title, false, true, false, false);
+	private SMILCanvas createTopLayout(int index, int w, int h, String title){
+	    JInternalFrame jif = (JInternalFrame)viewports.get(new Integer(index));
+	    if(jif!=null) return null;
+		jif = new JInternalFrame(title, false, true, false, false);
+	    viewports.put(new Integer(index), jif);
+	    
 	    jif.getContentPane().setLayout(null);
 	    desktop.add(jif);  
 	    jif.setBounds(nextx, nexty, w+iframedw, h+iframedh);
@@ -237,7 +259,7 @@ implements SMILListener, TimerListener
 	    //Canvas canvas = new Canvas();
 	    SMILCanvas canvas =  new SMILCanvas();
 	    jif.getContentPane().add(canvas);
-	    canvas.setBackground(new java.awt.Color(255,0,0));
+	    canvas.setBackground(new java.awt.Color(0,0,0));
 	    Rectangle rc = jif.getContentPane().getBounds();
 	    canvas.setBounds(rc);
 	    
@@ -252,9 +274,13 @@ implements SMILListener, TimerListener
 	    
 	    jif.show();
 	    
-	    nextx += w+iframedw+4;
-	    
-	    viewports.add(jif);
+	    if(viewports.size()>=2)
+	        {
+            nextx = 4;
+            nexty = 8;
+	        }
+	    else
+	        nextx += w+iframedw+4;
 	    return canvas;
 	}
 	        
@@ -310,23 +336,22 @@ implements SMILListener, TimerListener
 	    if(smil!=null) smil.close();
         smil=null;
         
-        int n = viewports.size();
-        for(int i = 0;i<n;i++){
-            JInternalFrame jif = (JInternalFrame)viewports.elementAt(i);
+        Enumeration en = viewports.elements();
+        while(en.hasMoreElements()){
+            JInternalFrame jif = (JInternalFrame)en.nextElement();
             try {jif.setClosed(true);} catch(java.beans.PropertyVetoException e){}
             jif.dispose();
-        }
-        viewports.removeAllElements();
+            }
+        viewports.clear();
         
         nextx = 4;
         nexty = 8;
-        
-	     JButtonOpen.setEnabled(true);
-	     JButtonClose.setEnabled(false);
-	     JButtonPlay.setEnabled(false);
-	     JButtonPause.setEnabled(false);
-	     JButtonStop.setEnabled(false);
-         JTextFieldStatus.setText(" ");
+        JButtonOpen.setEnabled(true);
+	    JButtonClose.setEnabled(false);
+	    JButtonPlay.setEnabled(false);
+	    JButtonPause.setEnabled(false);
+	    JButtonStop.setEnabled(false);
+        JTextFieldStatus.setText(" ");
 	}
 
 	void JButtonPlay_actionPerformed(java.awt.event.ActionEvent event)
