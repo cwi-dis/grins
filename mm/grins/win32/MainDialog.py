@@ -33,6 +33,7 @@ open documents
 __version__ = "$Id$"
 
 from usercmd import *
+from wndusercmd import *
 
 class MainDialog:
 	def __init__(self, title):
@@ -49,6 +50,12 @@ class MainDialog:
 			import usercmd
 			self.commandlist.append(
 					usercmd.CONSOLE(callback=(self.console_callback, ())))
+		import Help
+		if hasattr(Help, 'hashelp') and Help.hashelp():
+			self.commandlist.append(
+				HELP_CONTENTS(callback = (self.help_contents_callback, ())))
+			self.commandlist.append(
+				GRINS_WEB(callback = (self.grins_web_callback, ('http://www.cwi.nl/GRiNS/index.html',))))
 
 		import windowinterface
 		windowinterface.createmainwnd(title,
@@ -112,3 +119,11 @@ class MainDialog:
 			cwnd.ShowWindow(win32con.SW_RESTORE)
 			cwnd.ShowWindow(win32con.SW_SHOW)
 			cwnd.BringWindowToTop()
+
+	def help_contents_callback(self, params=None):
+		import Help
+		Help.showhelpwindow()
+
+	def grins_web_callback(self, url):
+		import windowinterface
+		helpwindow = windowinterface.shell_execute(url,'open')

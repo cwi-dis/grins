@@ -64,8 +64,10 @@ MENUBAR=(
 		(ENTRY, 'Close', 'o', CLOSE_ACTIVE_WINDOW),)),
 		
 	('&Help', (
-		(ENTRY, 'Help...', None, HELP),
+		(ENTRY, '&Contents', None, HELP_CONTENTS),
+		(ENTRY, 'Context &Help', None, HELP),
 		(SEP,),
-		(ENTRY, 'About...', None, ABOUT_GRINS))))
-			
+		(ENTRY, 'GRiNS on the &Web', None,GRINS_WEB),
+		(SEP,),
+		(ENTRY, '&About GRiNS...', None, ABOUT_GRINS))))
 		
