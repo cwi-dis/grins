@@ -72,13 +72,18 @@
 #define IDD_EDITATTR_S1O1S5             332
 #define IDD_EDITATTR_S1O1               333
 #define IDD_EDITATTR_O1_R2              334
+#define IDD_EDITATTR_R2                 334
 #define IDD_EDITATTR_O1_R3              335
+#define IDD_EDITATTR_R3                 335
 #define IDD_EDITATTR_S1O1S5_R3          336
+#define IDD_EDITATTR_S1R3S5             336
 #define IDD_EDITATTR_O1_R4              337
+#define IDD_EDITATTR_R4                 337
 #define IDD_EDITATTR_LS1O2              338
 #define IDD_EDITATTR_S6                 339
 #define IDD_EDITATTR_S4                 340
 #define IDD_EDITATTR_S3                 341
+#define IDD_EDITATTR_PF1                343
 #define IDC_EXPLANATION                 1002
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
@@ -224,6 +229,7 @@
 #define IDC_PICTURE                     1182
 #define IDC_TARGET_EXTERN               1183
 #define IDC_TARGET_EMBEDDED             1184
+#define IDC_BUTTON1                     1186
 #define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
@@ -277,7 +283,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        261
 #define _APS_NEXT_COMMAND_VALUE         32833
-#define _APS_NEXT_CONTROL_VALUE         1185
+#define _APS_NEXT_CONTROL_VALUE         1187
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
