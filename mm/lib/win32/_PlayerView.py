@@ -101,7 +101,7 @@ class _PlayerView(_CmifView, win32window.DDWndLayer):
 		if not self._usesLightSubWindows:
 			_CmifView.OnDraw(self,dc)
 		else:
-			self.paintOn(dc)
+			self.update()
 
 	def onMouseEvent(self, point, ev):
 		cont, stop = 0, 1	
@@ -135,21 +135,26 @@ class _PlayerView(_CmifView, win32window.DDWndLayer):
 		if not self._usesLightSubWindows or not self._active_displist:
 			return _CmifView.OnEraseBkgnd(self,dc)
 		return 1
-
-	def paintOn(self, dc):
-		self.update()
 		
 	def update(self):
-		if self._usesLightSubWindows:
-			self.paint()
-			self.flip()
-		else:
-			_CmifView.update(self)
-
-	def getDrawBuffer(self):
+		if not self._ddraw or not self._frontBuffer or not self._backBuffer:
+			return
+		if self._frontBuffer.IsLost():
+			if not self._frontBuffer.Restore():
+				# we can't do anything for this
+				# system is busy with video memory
+				return 
 		if self._backBuffer.IsLost():
 			if not self._backBuffer.Restore():
-				return None
+				# and for this either
+				# system should be out of memory
+				return
+		self.paint()
+		rcBack = self._wnd.GetClientRect()
+		rcFront = self._wnd.ClientToScreen(rcBack)
+		self._frontBuffer.Blt(rcFront, self._backBuffer, rcBack)
+
+	def getDrawBuffer(self):
 		return self._backBuffer
 
 	def getContextOsWnd(self):
@@ -159,19 +164,13 @@ class _PlayerView(_CmifView, win32window.DDWndLayer):
 		return self._rect
 
 	def paint(self):
-		if self._backBuffer.IsLost():
-			if not self._backBuffer.Restore():
-				return
-
 		# hack to avoid displaying random bits 
 		# when the window has been resized
 		# (site effect of current implementation)
 		rc = self.GetClientRect()
-		if rc[2]!=self._canvas[2] or rc[3]!=self._canvas[3]:
-			if self._convbgcolor == None:
-				r, g, b = self._bgcolor
-				self._convbgcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255, 255, 255) )
-			self._backBuffer.BltFill(rc, self._convbgcolor)
+		if self._convbgcolor == None:
+			self._convbgcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255, 255, 255) )
+		self._backBuffer.BltFill(rc, self._convbgcolor)
 		
 		if self._viewport:	
 			self._viewport.paint()

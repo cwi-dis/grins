@@ -684,7 +684,7 @@ class Window:
 
 	# redraw this window and its childs
 	def update(self):
-		pass
+		self._topwindow.update()
 
 	#
 	# Animations interface
@@ -956,9 +956,6 @@ class Region(Window):
 	def GetClientRect(self):
 		x, y, w, h = self._rect
 		return x, y, x+w, y+h
-
-	def update(self):
-		self._topwindow.update()
 
 	def HookMessage(self, f, m):
 		if self._oswnd: wnd = self._oswnd
@@ -1298,7 +1295,7 @@ class Region(Window):
 				convbgcolor = dds.GetColorMatch((r,g,b))
 				dds.BltFill((xc, yc, xc+wc, yc+hc), convbgcolor)
 
-			if self._video:
+			if self._video and not self._video[0].IsLost():
 				# get video info
 				vdds, vrcDst, vrcSrc = self._video
 				xd, yd, wd, hd = vrcDst
@@ -1402,7 +1399,6 @@ class Region(Window):
 		dst = self.getwindowpos(self._topwindow)
 		rgn = self.getClipRgn(self._topwindow)
 		buf = self._topwindow.getDrawBuffer()
-		if not buf: return
 		self._paintOnDDS(buf, dst, rgn)
 		rgn.DeleteObject()
 
@@ -1728,8 +1724,6 @@ class Viewport(Region):
 			dl.close()
 		del self._topwindow
 
-	def is_closed(self):
-		return self._ctx is None
 
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
 		return Region(self, coordinates, transparent, z, units, bgcolor)
@@ -1737,21 +1731,19 @@ class Viewport(Region):
 	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None, bgcolor=None):
 		return newwindow(coordinates, pixmap, transparent, z, type_channel, units, bgcolor)	
 
+	# 
+	# Query section
+	# 
+	def is_closed(self):
+		return self._ctx is None
+
 	def getClipRgn(self, rel=None):
 		x, y, w, h = self._canvas
 		rgn = win32ui.CreateRgn()
 		rgn.CreateRectRgn((x,y,x+w,y+h))
 		return rgn
 
-	def update(self):
-		self.paint()
-		self.flip()
-		self._ctx.flip()
-
 	def getDrawBuffer(self):
-		if self.__drawBuffer.IsLost():
-			if not self.__drawBuffer.Restore():
-				return None
 		return self.__drawBuffer
 
 	def getDirectDraw(self):
@@ -1760,28 +1752,31 @@ class Viewport(Region):
 	def getRGBBitCount(self):
 		return self._ctx.getRGBBitCount()
 
+	# 
+	# Painting section
+	# 
+	def update(self):
+		self._ctx.update()
+
 	def paint(self):
-		dds = self.getDrawBuffer()
-		if not dds: return
-			
+		if self.__drawBuffer.IsLost():
+			if not self.__drawBuffer.Restore():
+				return
+
 		# first paint self
-		self._paintOnDDS(dds, self._rect)
+		self._paintOnDDS(self.__drawBuffer, self._rect)
 
 		# then paint children bottom up
 		L = self._subwindows[:]
 		L.reverse()
 		for w in L:
 			w.paint()
-
-	def flip(self):
-		ctxDrawBuffer = self._ctx.getDrawBuffer()
-		if not ctxDrawBuffer: return
-
-		dds = self.getDrawBuffer()
-		if not dds: return
-
-		ctxDrawBuffer.Blt(self.ltrb(self._rectb), dds, self.ltrb(self._rect))
-
+		
+		ltrb = self.ltrb(self._rect)
+		self._ctx.getDrawBuffer().Blt(ltrb, self.__drawBuffer, ltrb, ddraw.DDBLT_WAIT)
+	# 
+	# Mouse section
+	# 
 	def updateMouseCursor(self):
 		self._ctx.updateMouseCursor()
 
