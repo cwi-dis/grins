@@ -104,6 +104,7 @@ class Chunk:
 
 class reader:
 	def __init__(self, filename):
+		self.__filename = filename # only needed for __repr__
 		self.__file = file = open(filename, 'rb')
 		# initialization
 		self.__version = None
@@ -166,6 +167,9 @@ class reader:
 			chunk = self.__ssnd_chunk
 			chunk.rewind()
 			dummy = chunk.read(8 + self.__ssnd_offset)
+
+	def __repr__(self):
+		return '<AIFCreader instance, file=%s, format=%s, framerate=%d>' % (self.__filename, `self.__format`, self.__framerate)
 
 	def __read_comm_chunk(self, chunk):
 		nchannels = _read_short(chunk)
