@@ -70,15 +70,10 @@ class MediaChannel:
 
 		# asx support
 		self.initASX()
-
-		# release any resources on exit
-		import windowinterface
-		windowinterface.addclosecallback(self.release_res,())
 		
 	def release_player(self):
 		if self.__playBuilder:
 			self.__playBuilder.Stop()
-			self.__playBuilder.Release()
 			self.__playBuilder=None
 		if self.__notifyWindow and self.__notifyWindow.IsWindow():
 			self.__notifyWindow.DestroyWindow()
@@ -87,14 +82,12 @@ class MediaChannel:
 	def release_armed_player(self):
 		if self.__armBuilder:
 			self.__armBuilder.Stop()
-			self.__armBuilder.Release()
 			self.__armBuilder=None
 	
 	def release_res(self):
 		self.release_armed_player()
 		self.release_player()
 		self.__channel = None
-		windowinterface.removeclosecallback(self.release_res,())
 
 	# We must start downloading here,
 	# show a message on the media subwindow
