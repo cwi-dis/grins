@@ -30,6 +30,9 @@ class _Button:
 # Private Objects
 # class _Button
 
+# Tuneable: width of 3d border
+SIZE_3DBORDER = 2
+
 import math,string
 
 import win32ui, win32con, win32api
@@ -219,12 +222,12 @@ class DisplayList:
 		elif cmd == '3dbox':
 			cl, ct, cr, cb = entry[1]
 			l, t, w, h = entry[2]
-			r, b = l + w, t + h
+			r, b = l + w , t + h 
 			# l, r, t, b are the corners
-			l1 = l + 1
-			t1 = t + 1
-			r1 = r - 1
-			b1 = b - 1
+			l1 = l + SIZE_3DBORDER
+			t1 = t + SIZE_3DBORDER
+			r1 = r - SIZE_3DBORDER
+			b1 = b - SIZE_3DBORDER
 			# draw left side
 			FillPolygon(dc, [(l,t), (l1,t1), (l1,b1), (l,b)], cl)
 			# draw top side
@@ -426,7 +429,7 @@ class DisplayList:
 		self._list.append('anchor',(x, y, x+w, y+h))
 		self._optimize()
 		self._update_bbox(x, y, x+w, y+h)
-		return x, y, x+w, y+h
+##		return x, y, x+w, y+h
 
 	# Insert a command to draw a filled box
 	def drawfbox(self, color, coordinates):
@@ -434,10 +437,10 @@ class DisplayList:
 			raise error, 'displaylist already rendered'
 		x, y, w, h = self._convert_coordinates(coordinates)
 		self._list.append('fbox', self._convert_color(color),
-				(x, y, x+w, y+h))
+				(x, y, x+w-1, y+h-1))
 		self._optimize((1,))
-		self._update_bbox(x, y, x+w, y+h)
-		return x, y, x+w, y+h
+		self._update_bbox(x, y, x+w-1, y+h-1)
+##		return x, y, x+w, y+h
 
 	# Insert a command to clear box
 	def clear(self,coordinates):
@@ -567,7 +570,7 @@ class DisplayList:
 		
 	def get3dbordersize(self):
 		# This is the same "1" as in 3dbox bordersize
-		return self._window._inverse_coordinates((0,0,1,1))[2:4]
+		return self._window._inverse_coordinates((0,0,SIZE_3DBORDER, SIZE_3DBORDER))[2:4]
 		
 	# Returns font attributes
 	def usefont(self, fontobj):
