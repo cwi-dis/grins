@@ -778,7 +778,7 @@ class _DisplayList:
 		module = _iconmap.get(icon) or _iconmap['']
 		reader = __import__(module)
 		image, mask, src_x, src_y, dest_x, dest_y, width, height = \
-		       w._prepare_image(reader, (0,0,0,0), -2, 1, coordinates, units)
+		       w._prepare_image(reader, (0,0,0,0), 'icon', 1, coordinates, 'center', units)
 		if mask:
 			self._imagemask = mask, src_x, src_y, dest_x, dest_y, width, height
 		else:
