@@ -50,6 +50,8 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 		self.root.GetContext().geteditmgr().register(self)
 		self.setcurrenttime_callback = None
 		self.playing = self.locked = 0
+		self.channelnames = []
+		self.channels = {}
 		return BasicDialog.init(self, (0, 0, 'Player'))
 	#
 	# EditMgr interface (as dependent client).
@@ -356,9 +358,6 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 	# Channels.
 	#
 	def makechannels(self):
-		#
-		self.channelnames = []
-		self.channels = {}
 		for name in self.root.context.channelnames:
 			attrdict = self.root.context.channeldict[name]
 			self.channelnames.append(name)
