@@ -605,6 +605,49 @@ DirectDrawSurface_SetColorKey(DirectDrawSurfaceObject *self, PyObject *args)
 	return Py_None;
 }
 
+static char DirectDrawSurface_GetColorMatch__doc__[] =
+""
+;
+static PyObject *
+DirectDrawSurface_GetColorMatch(DirectDrawSurfaceObject *self, PyObject *args)
+{
+	COLORREF rgb;
+	if (!PyArg_ParseTuple(args, "i",&rgb))
+		return NULL;
+	COLORREF rgbT;
+    HDC hdc;
+    DWORD dw = CLR_INVALID;
+    DDSURFACEDESC ddsd;
+    HRESULT hres;
+    ZeroMemory(&ddsd, sizeof(ddsd));
+    //  use GDI SetPixel to color match for us
+    if (rgb != CLR_INVALID && self->pI->GetDC(&hdc) == DD_OK)
+		{
+        rgbT = GetPixel(hdc, 0, 0);             // save current pixel value
+        SetPixel(hdc, 0, 0, rgb);               // set our value
+        self->pI->ReleaseDC(hdc);
+		}
+
+    // now lock the surface so we can read back the converted color
+    ddsd.dwSize = sizeof(ddsd);
+    while ((hres = self->pI->Lock(NULL, &ddsd, 0, NULL)) == DDERR_WASSTILLDRAWING);
+    if (hres == DD_OK)
+		{
+        dw  = *(DWORD *)ddsd.lpSurface;                     // get DWORD
+        dw &= (1 << ddsd.ddpfPixelFormat.dwRGBBitCount)-1;  // mask it to bpp
+        self->pI->Unlock(NULL);
+		}
+
+    //  now put the color that was there back.
+    if (rgb != CLR_INVALID && self->pI->GetDC(&hdc) == DD_OK)
+		{
+        SetPixel(hdc, 0, 0, rgbT);
+        self->pI->ReleaseDC(hdc);
+		}	
+	return Py_BuildValue("i",dw);
+}
+
+
 static struct PyMethodDef DirectDrawSurface_methods[] = {
 	{"GetSurfaceDesc", (PyCFunction)DirectDrawSurface_GetSurfaceDesc, METH_VARARGS, DirectDrawSurface_GetSurfaceDesc__doc__},
 	{"GetAttachedSurface", (PyCFunction)DirectDrawSurface_GetAttachedSurface, METH_VARARGS, DirectDrawSurface_GetAttachedSurface__doc__},
@@ -616,6 +659,7 @@ static struct PyMethodDef DirectDrawSurface_methods[] = {
 	{"GetDC", (PyCFunction)DirectDrawSurface_GetDC, METH_VARARGS, DirectDrawSurface_GetDC__doc__},
 	{"ReleaseDC", (PyCFunction)DirectDrawSurface_ReleaseDC, METH_VARARGS, DirectDrawSurface_ReleaseDC__doc__},
 	{"SetColorKey", (PyCFunction)DirectDrawSurface_SetColorKey, METH_VARARGS, DirectDrawSurface_SetColorKey__doc__},
+	{"GetColorMatch", (PyCFunction)DirectDrawSurface_GetColorMatch, METH_VARARGS, DirectDrawSurface_GetColorMatch__doc__},
 	{NULL, (PyCFunction)NULL, 0, NULL}		/* sentinel */
 };
 
