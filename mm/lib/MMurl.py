@@ -118,3 +118,16 @@ def urlcleanup():
 import urlparse
 basejoin = urlparse.urljoin # urljoin works better...
 del urlparse
+
+def guessurl(filename):
+	import os
+	# convert filename to URL
+	utype, url = splittype(filename)
+	if utype is not None and utype in ('http', 'file', 'ftp', 'rtsp'):
+		# definitely a URL
+		return filename
+	if os.sep in filename:
+		# probably a file name
+		return pathname2url(filename)
+	# possibly a relative URL
+	return filename
