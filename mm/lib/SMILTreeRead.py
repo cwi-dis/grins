@@ -1,6 +1,7 @@
 __version__ = "$Id$"
 
 import xmllib
+import mimetypes
 import MMNode, MMAttrdefs
 from MMExc import *
 import MMurl
@@ -87,10 +88,9 @@ class SMILParser(xmllib.XMLParser):
 		return self.__root
 
 	def SyncArc(self, node, attr, val):
-		try:
-			synctolist = node.attrdict['synctolist']
-		except KeyError:
-			node.attrdict['synctolist'] = synctolist = []
+		synctolist = node.attrdict.get('synctolist', [])
+		if not synctolist:
+			node.attrdict['synctolist'] = synctolist
 		if attr == 'begin':
 			yside = HD
 		else:
@@ -135,9 +135,9 @@ class SMILParser(xmllib.XMLParser):
 					break
 			else:
 				print 'warning: out of scope sync arc'
-				try:
+				if self.__nodemap.has_key(name):
 					xnode = self.__nodemap[name]
-				except KeyError:
+				else:
 					print 'warning: ignoring unknown node in syncarc'
 					return
 			if counter == -1:
@@ -208,18 +208,21 @@ class SMILParser(xmllib.XMLParser):
 		if not attributes.has_key('src'):
 			self.syntax_error('node without src attribute')
 			return
+		url = attributes['src']
+		url = self.__context.findurl(url)
+
+		# find out type of file
 		subtype = None
 		mtype = attributes.get('type')
+		if mtype is None:
+			# guess the type from the file extension
+			mtype = mimetypes.guess_type(url)[0]
 		if mtype is None and mediatype is None:
 			# last resort: get file and see what type it is
-			# maybe we should do this always if no type
-			# attr present
-			file = attributes['src']
-			file = self.__context.findurl(file)
 			try:
-				u = MMurl.urlopen(file)
+				u = MMurl.urlopen(url)
 			except:
-				self.warning('cannot open file %s' % file)
+				self.warning('cannot open file %s' % url)
 				# we have no idea what type the file is
 				mtype = 'text/plain'
 			else:
@@ -228,9 +231,11 @@ class SMILParser(xmllib.XMLParser):
 		if mtype is not None:
 			mtype = string.split(mtype, '/')
 			if mediatype is not None and mtype[0] != mediatype:
-				self.warning("type attribute doesn't match element")
+				self.warning("file type doesn't match element")
 			mediatype = mtype[0]
 			subtype = mtype[1]
+
+		# create the node
 		if not self.__root:
 			node = self.MakeRoot('ext')
 		elif not self.__container:
@@ -242,9 +247,11 @@ class SMILParser(xmllib.XMLParser):
 		self.__node = node
 		self.AddAttrs(node, attributes, mediatype)
 		node.__mediatype = mediatype, subtype
-		try:
+
+		# connect to channel
+		if attributes.has_key('channel'):
 			channel = attributes['channel']
-		except KeyError:
+		else:
 			self.warning('node without channel attribute')
 			channel = '<unnamed %d>'
 			i = 0
@@ -274,12 +281,10 @@ class SMILParser(xmllib.XMLParser):
 				# size and position is given in pixels
 				pass
 			else:
-				file = attributes['src']
-				file = self.__context.findurl(file)
 				try:
 					if mediatype == 'image':
 						import img
-						file = MMurl.urlretrieve(file)[0]
+						file = MMurl.urlretrieve(url)[0]
 						rdr = img.reader(None, file)
 						width = rdr.width
 						height = rdr.height
@@ -288,7 +293,7 @@ class SMILParser(xmllib.XMLParser):
 						import mv
 						# can't use urlopen + OpenFD:
 						# mv.error: Illegal seek.
-						file = MMurl.urlretrieve(file)[0]
+						file = MMurl.urlretrieve(url)[0]
 						movie = mv.OpenFile(file,
 								    mv.MV_MPEG1_PRESCAN_OFF)
 						track = movie.FindTrackByMedium(mv.DM_IMAGE)
@@ -315,44 +320,43 @@ class SMILParser(xmllib.XMLParser):
 						    'z-index':0, 'width':0,
 						    'height':0,
 						    'scale':'meet'}
-		if mediatype == 'video':
-			range = attributes.get('range')
-			if range is not None:
+
+		# range attribute for video
+		range = attributes.get('range')
+		if mediatype == 'video' and range is not None:
+			try:
+				start, end = self.__parserange(range)
+			except error, msg:
+				self.syntax_error(msg)
+			else:
+				import mv
 				try:
-					start, end = self.__parserange(range)
-				except error, msg:
-					self.syntax_error(msg)
+					file = MMurl.urlretrieve(url)[0]
+					movie = mv.OpenFile(file, mv.MV_MPEG1_PRESCAN_OFF)
+					track = movie.FindTrackByMedium(mv.DM_IMAGE)
+					rate = track.GetImageRate()
+					del movie, track
+				except:
+					pass
 				else:
-					import mv
-					file = attributes['src']
-					file = self.__context.findurl(file)
-					try:
-						file = MMurl.urlretrieve(file)[0]
-						movie = mv.OpenFile(file, mv.MV_MPEG1_PRESCAN_OFF)
-						track = movie.FindTrackByMedium(mv.DM_IMAGE)
-						rate = track.GetImageRate()
-						del movie, track
-					except:
-						pass
+					import smpte
+					if rate == 30:
+						cl = smpte.Smpte30
+					elif rate == 25:
+						cl = smpte.Smpte25
+					elif rate == 24:
+						cl = smpte.Smpte24
 					else:
-						import smpte
-						if rate == 30:
-							cl = smpte.Smpte30
-						elif rate == 25:
-							cl = smpte.Smpte25
-						elif rate == 24:
-							cl = smpte.Smpte24
-						else:
-							cl = smpte.Smpte30Drop
-						if start:
-							start = cl(start).GetFrame()
-						else:
-							start = 0
-						if end:
-							end = cl(end).GetFrame()
-						else:
-							end = 0
-						node.attrdict['range'] = start, end
+						cl = smpte.Smpte30Drop
+					if start:
+						start = cl(start).GetFrame()
+					else:
+						start = 0
+					if end:
+						end = cl(end).GetFrame()
+					else:
+						end = 0
+					node.attrdict['range'] = start, end
 		if self.__in_a:
 			# deal with hyperlink
 			href, ltype, id = self.__in_a[:3]
@@ -504,12 +508,14 @@ class SMILParser(xmllib.XMLParser):
 						self.__width = 640
 					if self.__height == 0:
 						self.__height = 480
-					layout['winpos'] = 0, 0
 					layout['winsize'] = \
 						self.__width, self.__height
 					layout['units'] = UNIT_PXL
 				ch['base_window'] = self.__title
-				ch['transparent'] = -1
+				if mediatype == 'text':
+					ch['transparent'] = -1
+				else:
+					ch['transparent'] = 1
 				ch['z'] = attrdict['z-index']
 				x = attrdict['left']
 				y = attrdict['top']
@@ -575,12 +581,12 @@ class SMILParser(xmllib.XMLParser):
 				aid, atype, args = aid
 			src = node, aid
 			if href[:1] == '#':
-				try:
+				if self.__anchormap.has_key(href[1:):
 					dst = self.__anchormap[href[1:]]
-				except KeyError:
-					try:
+				else:
+					if self.__nodemap.has_key(href[1:]):
 						dst = self.__nodemap[href[1:]]
-					except KeyError:
+					else:
 						print 'warning: unknown node id',href[1:]
 						continue
 					else:
@@ -645,14 +651,14 @@ class SMILParser(xmllib.XMLParser):
 			self.syntax_error('nested meta elements')
 			return
 		self.__in_meta = 1
-		try:
+		if attributes.has_key('name'):
 			name = attributes['name']
-		except KeyError:
+		else:
 			self.syntax_error('required attribute name missing in meta element')
 			return
-		try:
+		if attributes.has_key('content'):
 			content = attributes['content']
-		except KeyError:
+		else:
 			self.syntax_error('required attribute content missing in meta element')
 			return
 		if name == 'sync':
@@ -896,9 +902,9 @@ class SMILParser(xmllib.XMLParser):
 	def start_a(self, attributes):
 		if self.__in_a:
 			self.syntax_error('nested a elements')
-		try:
+		if attributes.has_key('href'):
 			href = attributes['href']
-		except KeyError:
+		else:
 			self.syntax_error('anchor without HREF')
 			return
 		show = attributes['show']
@@ -911,10 +917,7 @@ class SMILParser(xmllib.XMLParser):
 		else:
 			self.syntax_error('unknown show attribute value')
 			ltype = TYPE_JUMP
-		try:
-			id = attributes['id']
-		except KeyError:
-			id = None
+		id = attributes.get('id')
 		self.__in_a = href, ltype, id, self.__in_a
 
 	def end_a(self):
@@ -928,9 +931,9 @@ class SMILParser(xmllib.XMLParser):
 		if self.__node is None:
 			self.syntax_error('anchor not in media object')
 			return
-		try:
+		if attributes.has_key('href'):
 			href = attributes['href']
-		except KeyError:
+		else:
 			#XXXX is this a document error?
 ## 			self.warning('required attribute href missing')
 			href = None	# destination-only anchor
@@ -1035,13 +1038,22 @@ class SMILParser(xmllib.XMLParser):
 	def handle_proc(self, name, data):
 		self.warning('ignoring processing instruction %s' % name)
 
+	# Example -- handle cdata, could be overridden
+	def handle_cdata(self, data):
+		self.warning('ignoring CDATA')
+
+	# Example -- handle special instructions, could be overridden
+	def handle_special(self, data):
+		name = string.split(data)[0]
+		self.warning('ignoring <!%s> tag' % name)
+
 	# catch all
 
 	def unknown_starttag(self, tag, attrs):
 		self.warning('ignoring unknown start tag %s' % tag)
 
 	def unknown_endtag(self, tag):
-		pass
+		self.warning('ignoring unknown end tag %s' % tag or '')
 
 	def unknown_charref(self, ref):
 		self.warning('ignoring unknown char ref %s' % ref)
