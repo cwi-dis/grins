@@ -125,6 +125,46 @@ class Channel:
 			self.save_geometry()
 			self.hide()
 
+	def replaynode(self):
+		self.wait_for_arm()
+		# Now we should replay the node that was played when
+		# we were hidden.  This means that we must arm the
+		# node first.  This in turn means that we must save
+		# the information about the node that is armed
+		# currently.
+		armstate = self._armstate
+		armed_node = self._armed_node
+		if self._playstate in (PLAYING, PLAYED):
+			node = self._played_node
+			self._armstate = AIDLE
+			save_syncarm = self.syncarm
+			self.syncarm = 1
+			self.arm(node)
+			playstate = self._playstate
+			if playstate in (PLAYING, PLAYED):
+				# if still in one of these states...
+				self._playstate = PIDLE
+				self.armed_duration = 0
+				save_syncplay = self.syncplay
+				self.syncplay = 1
+				save_nopop = self.nopop
+				self.nopop = 1
+				self.play(node)
+				self.syncplay = save_syncplay
+				self.nopop = save_nopop
+				self._playstate = playstate
+			self.syncarm = save_syncarm
+			self._armstate = AIDLE
+		if armstate == ARMED:
+			self._armstate = AIDLE
+			save_syncarm = self.syncarm
+			self.syncarm = 1
+			self.arm(armed_node)
+			self.syncarm = save_syncarm
+		if self._armstate != armstate:
+			# maybe we should do something, but what?
+			raise error, 'don\'t know if this can happen'
+
 	def show(self):
 		if debug:
 			print 'Channel.show('+`self`+')'
@@ -180,56 +220,7 @@ class Channel:
 		# again in accordance with what the scheduler thinks.
 		# First wait for any outstanding arms so that the
 		# armedstate is either AIDLE or ARMED but not ARMING.
-		self.wait_for_arm()
-		# Now we should replay the node that was played when
-		# we were hidden.  This means that we must arm the
-		# node first.  This in turn means that we must save
-		# the information about the node that is armed
-		# currently.
-		armstate = self._armstate
-		armed_node = self._armed_node
-		if self._playstate in (PLAYING, PLAYED):
-			node = self._played_node
-			self._armstate = AIDLE
-			save_syncarm = self.syncarm
-			self.syncarm = 1
-			self.arm(node)
-			self.syncarm = save_syncarm
-			playstate = self._playstate
-			if playstate in (PLAYING, PLAYED):
-				# if still in one of these states...
-				self._playstate = PIDLE
-				self.armed_duration = 0
-				save_syncplay = self.syncplay
-				self.syncplay = 1
-				self.nopop = 1
-				self.play(node)
-				self.syncplay = save_syncplay
-				self.nopop = 0
-				self._playstate = playstate
-			self._armstate = AIDLE
-##		# Don't do anything if the channel is PLAYING.  That
-##		# will change in due time and it is too hard to do
-##		# something about it here.
-##		if self._playstate == PLAYED:
-##			node = self._played_node
-##			self._armstate = AIDLE
-##			self.syncarm = 1
-##			self.arm(node)
-##			self._playstate = PIDLE
-##			self.armed_duration = 0
-##			self.syncplay = 1
-##			self.play(node)
-##			self._armstate = AIDLE
-		if armstate == ARMED:
-			self._armstate = AIDLE
-			save_syncarm = self.syncarm
-			self.syncarm = 1
-			self.arm(armed_node)
-			self.syncarm = save_syncarm
-		if self._armstate != armstate:
-			# maybe we should do something, but what?
-			raise error, 'don\'t know if this can happen'
+		self.replaynode()
 		# now that we are visible, see if any other channels
 		# can become visible
 		for chan in self._subchannels[:]:
@@ -999,36 +990,7 @@ class ChannelWindow(Channel):
 			apply(self.threads.resized, window._rect)
 			windowinterface.setcursor('')
 			return
-		self.wait_for_arm()
-		armstate = self._armstate
-		armed_node = self._armed_node
-		if self._playstate in (PLAYING, PLAYED):
-			node = self._played_node
-			self._armstate = AIDLE
-			save_syncarm = self.syncarm
-			self.syncarm = 1
-			self.arm(node)
-			self.syncarm = save_syncarm
-			playstate = self._playstate
-			if playstate in (PLAYING, PLAYED):
-				# if still in one of these states...
-				self._playstate = PIDLE
-				self.armed_duration = 0
-				save_syncplay = self.syncplay
-				save_nopop = self.nopop
-				self.syncplay = 1
-				self.nopop = 1
-				self.play(node)
-				self.syncplay = save_syncplay
-				self.nopop = save_nopop
-				self._playstate = playstate
-			self._armstate = AIDLE
-		if armstate == ARMED:
-			self._armstate = AIDLE
-			save_syncarm = self.syncarm
-			self.syncarm = 1
-			self.arm(armed_node)
-			self.syncarm = save_syncarm
+		self.replaynode()
 		windowinterface.setcursor('')
 
 	def arm_0(self, node):
