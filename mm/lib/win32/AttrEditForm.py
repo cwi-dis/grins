@@ -839,6 +839,7 @@ class CssColorCtrl(ColorCtrl):
 		self._radioTransparent = components.RadioButton(wnd,resid[4])
 		self._radioInherit = components.RadioButton(wnd,resid[5])
 		self.currentValue = self._attr.getcurrent()
+		self.__setting = 0
 
 	def OnInitCtrl(self):
 		self._initctrl=self
@@ -872,21 +873,29 @@ class CssColorCtrl(ColorCtrl):
 			self._radioInherit.hide()
 
 	def setvalue(self, val):
+		self.__setting = 1
 		self.currentValue = val
 		if self._initctrl:
 			if val == 'transparent':			
 				self.enable(0)
 				self._radioTransparent.setcheck(1)
+				self._radioInherit.setcheck(0)
+				self._radioColor.setcheck(0)
 				self._attrval.settext('')
 			elif val == 'inherit':
 				self.enable(0)
 				self._radioInherit.setcheck(1)
+				self._radioTransparent.setcheck(0)
+				self._radioColor.setcheck(0)
 				self._attrval.settext('')
 			else:
 				self.enable(1)
 				self._radioColor.setcheck(1)
+				self._radioTransparent.setcheck(0)
+				self._radioInherit.setcheck(0)
 				self._attrval.settext(val)
 				self.invalidateInd()
+		self.__setting = 0
 
 	def getvalue(self):
 		return self.currentValue
@@ -895,9 +904,10 @@ class CssColorCtrl(ColorCtrl):
 		if code==win32con.EN_SETFOCUS:
 			self.sethelp()
 		elif code==win32con.EN_CHANGE:
-			self.invalidateInd()
-			self.currentValue = self._attrval.gettext()
-			self.enableApply()
+			if not self.__setting:
+				self.invalidateInd()
+				self.currentValue = self._attrval.gettext()
+				self.enableApply()
 			
 	def OnBrowse(self,id,code):
 		if not self._initctrl: return
