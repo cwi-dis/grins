@@ -845,6 +845,8 @@ class AttrEditor(AttrEditorDialog):
 				C = Bool3AttrEditorField
 			elif displayername == 'captionoverdub':
 				C = CaptionOverdubAttrEditorField
+			elif displayername == 'captionoverdub3':
+				C = CaptionOverdub3AttrEditorField
 			elif type == 'bool':
 				C = BoolAttrEditorField
 			elif type == 'name':
@@ -1288,6 +1290,23 @@ class CaptionOverdubAttrEditorField(PopupAttrEditorField):
 
 	def getoptions(self):
 		return self.__values
+
+class CaptionOverdub3AttrEditorField(PopupAttrEditorField):
+	__values = ['caption', 'overdub']
+	default = 'Not set'
+
+	def parsevalue(self, str):
+		if str == self.default:
+			return None
+		return str
+
+	def valuerepr(self, value):
+		if value is None:
+			return self.default
+		return value
+
+	def getoptions(self):
+		return [self.default] + self.__values
 
 class TransitionAttrEditorField(PopupAttrEditorField):
 	__values = ['fill', 'fadein', 'fadeout', 'crossfade', 'wipe', 'viewchange']
