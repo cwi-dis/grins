@@ -1168,7 +1168,7 @@ class MMNode:
 
 	def GetSchedParent(self):
 		parent = self.parent
-		while parent is not None and parent.type == 'prio':
+		while parent is not None and (parent.type == 'prio' or parent.type == 'alt'):
 			parent = parent.parent
 		return parent
 
@@ -1244,6 +1244,10 @@ class MMNode:
 		for c in self.children:
 			if c.type == 'prio':
 				children = children + c.GetSchedChildren()
+			elif c.type == 'alt':
+				c = c.ChosenSwitchChild()
+				if c is not None:
+					children.append(c)
 			else:
 				children.append(c)
 		return children
@@ -2840,7 +2844,7 @@ class MMNode:
 		return self.canplay
 
 	def ShouldPlay(self):
-		if not self.shouldplay is None:
+		if self.shouldplay is not None:
 			return self.shouldplay
 		self.shouldplay = 0
 		# If any of the system test attributes don't match
