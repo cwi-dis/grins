@@ -575,16 +575,21 @@ def getsyncarc(writer, node, isend):
 				tz = ''
 			list.append('wallclock(%s%s%s)' % (date, time, tz))
 		elif arc.marker is None:
-			if arc.srcnode is None:
+			if arc.srcanchor:
+				aid = (arc.srcnode.GetUID(), arc.srcanchor)
+				name = writer.aid2name[aid]
+			elif arc.srcnode is None:
 				# huh?
 				pass
 			elif arc.srcnode == 'prev':
-				name = 'prev.'
+				name = 'prev'
 			elif arc.srcnode is node:
 				name = ''
 			else:
-				name = escape_name(writer.uid2name[arc.srcnode.GetUID()]) + '.'
+				name = escape_name(writer.uid2name[arc.srcnode.GetUID()])
 			if arc.event is not None:
+				if name:
+					name = name + '.'
 				name = name + escape_name(arc.event, 0)
 			if arc.delay:
 				name = name + fmtfloat(arc.delay, withsign = 1)
@@ -2194,7 +2199,10 @@ class SMILWriter(SMIL):
 			attrlist.append(('begin', fmtfloat(begin, 's')))
 		if end:
 			attrlist.append(('end', fmtfloat(end, 's')))
-		self.writetag('anchor', attrlist)
+		if self.smilboston:
+			self.writetag('area', attrlist)
+		else:
+			self.writetag('anchor', attrlist)
 
 	def newfile(self, srcurl):
 		import posixpath, urlparse

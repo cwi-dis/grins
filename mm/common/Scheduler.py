@@ -353,6 +353,12 @@ class SchedulerContext:
 			if skip:
 				continue
 			if arc.qid is None:
+				atimes = (0, 0)
+				if arc.srcanchor is not None:
+					for id, type, args, times in node.attrdict.get('anchorlist', []):
+						if id == self.srcanchor:
+							atimes = times
+							break
 				if arc.isstart:
 					if arc.dstnode.GetSchedParent():
 						srdict = arc.dstnode.GetSchedParent().gensr_child(arc.dstnode, runchild = 0, curtime = self.parent.timefunc())
@@ -555,6 +561,10 @@ class SchedulerContext:
 						srdict = pnode.gensr_child(node, curtime = parent.timefunc())
 						self.srdict.update(srdict)
 						node.start_time = timestamp
+						p = node.parent
+						while p and p.type == 'alt':
+							p.start_time = timestamp
+							p = p.parent
 						if node.looping_body_self:
 							node.looping_body_self.start_time = node.start_time
 						if node.realpix_body:
@@ -612,6 +622,10 @@ class SchedulerContext:
 		self.srdict.update(srdict)
 		if debugdump: self.dump()
 		node.start_time = timestamp
+		p = node.parent
+		while p and p.type == 'alt':
+			p.start_time = timestamp
+			p = p.parent
 		if node.looping_body_self:
 			node.looping_body_self.start_time = node.start_time
 		if node.realpix_body:
@@ -641,6 +655,10 @@ class SchedulerContext:
 			path = None
 		elif node is path[0]:
 			del path[0]
+		if path:
+			path0 = path[0]
+			if path0.type == 'alt':
+				path0 = path0.ChosenSwitchChild()
 		for start, end in node.time_list:
 			if start > gototime:
 				# no more valid intervals
@@ -655,7 +673,7 @@ class SchedulerContext:
 						# interior node that should be playing
 						# is already playing.  Recurse
 						for c in node.GetSchedChildren():
-							if path and c is path[0]:
+							if path and c is path0:
 								self.gototime(c, gototime, timestamp, path)
 							else:
 								self.gototime(c, gototime, timestamp)
@@ -663,10 +681,10 @@ class SchedulerContext:
 							return
 					if node.type in ('seq', 'excl'):
 						if path:
-							if path[0] in node.GetSchedChildren():
-								self.gototime(path[0], gototime, timestamp, path)
+							if path0 in node.GetSchedChildren():
+								self.gototime(path0, gototime, timestamp, path)
 								return
-							raise error, 'internal error'
+##							raise error, 'internal error'
 						for c in node.GetSchedChildren():
 							for s, e in c.time_list:
 								if s > gototime:
@@ -854,6 +872,10 @@ class SchedulerContext:
 		ev = (SR.SCHED, node)
 		if self.srdict.has_key(ev):
 			node.start_time = timestamp
+			p = node.parent
+			while p and p.type == 'alt':
+				p.start_time = timestamp
+				p = p.parent
 			self.parent.event(self, ev, timestamp)
 		else:
 			self.resume_play(node, timestamp)

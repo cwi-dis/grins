@@ -291,8 +291,9 @@ class MMNodeContext:
 		self.hyperlinks.addlink(link)
 
 	def sanitize_hyperlinks(self, roots):
-		"""Remove all hyperlinks that aren't contained in the given trees
-		   (note that the argument is a *list* of root nodes)"""
+		# Remove all hyperlinks that aren't contained in the
+		# given trees (note that the argument is a *list* of
+		# root nodes)
 		self._roots = roots
 		badlinks = self.hyperlinks.selectlinks(self._isbadlink)
 		del self._roots
@@ -300,8 +301,8 @@ class MMNodeContext:
 			self.hyperlinks.dellink(link)
 
 	def get_hyperlinks(self, root):
-		"""Return all hyperlinks pertaining to the given tree
-		   (note that the argument is a *single* root node)"""
+		# Return all hyperlinks pertaining to the given tree
+		# (note that the argument is a *single* root node)
 		self._roots = [root]
 		links = self.hyperlinks.selectlinks(self._isgoodlink)
 		del self._roots
@@ -701,7 +702,7 @@ class MMChannel:
 # The Sync Arc class
 #
 class MMSyncArc:
-	def __init__(self, dstnode, action, srcnode=None, event=None, marker=None, wallclock=None, delay=None):
+	def __init__(self, dstnode, action, srcnode=None, srcanchor=None, event=None, marker=None, wallclock=None, delay=None):
 		self.__isresolvedcalled = 0
 		if __debug__:
 			if event is None and marker is None:
@@ -716,6 +717,7 @@ class MMSyncArc:
 		self.isstart = action == 'begin'
 		self.ismin = action == 'min'
 		self.srcnode = srcnode	# None if syncbase; "prev" if previous; else MMNode instance
+		self.srcanchor = srcanchor
 		self.event = event
 		self.marker = marker
 		self.wallclock = wallclock
@@ -749,6 +751,8 @@ class MMSyncArc:
 			src = 'prev'
 		else:
 			src = `self.srcnode`
+		if self.srcanchor is not None:
+			src = src + '#' + self.srcanchor
 		if self.event is not None:
 			src = src + '.' + self.event
 		if self.marker is not None:
@@ -896,12 +900,18 @@ class MMSyncArc:
 			return t + t1 - t0 + self.delay
 				
 		refnode = self.refnode()
+		atimes = (0, 0)
+		if self.srcanchor is not None:
+			for id, type, args, times in refnode.attrdict.get('anchorlist', []):
+				if id == self.srcanchor:
+					atimes = times
+					break
 		event = self.event
 		if event is None and self.marker is None:
 			# syncbase-relative offset
 			pnode = self.dstnode.GetSchedParent()
 			if pnode is None:
-				return 1
+				return atimes[0]
 			if pnode.type == 'seq':
 				if refnode is pnode:
 					event = 'begin'
@@ -913,31 +923,23 @@ class MMSyncArc:
 			t = refnode.isresolved()
 			if event == 'begin':
 				if refnode.start_time is not None:
-					self.timestamp = t + self.delay
-				return t + self.delay
+					self.timestamp = t + atimes[0] + self.delay
+				return t + atimes[0] + self.delay
 			if event == 'end':
+				if self.srcanchor is not None and atimes[1] > 0:
+					if refnode.start_time is not None:
+						self.timestamp = t + atimes[1] + self.delay
+					return t + atimes[1] + self.delay
 				if refnode.playing == MMStates.PLAYED:
-					return refnode.happenings[('event', event)] + self.delay
+					return refnode.happenings[('event', event)] + atimes[1] + self.delay
 				d = refnode.calcfullduration()
 				if refnode.start_time is not None and \
 				   refnode.fullduration is not None:
 					self.timestamp = t + d + self.delay
-				return t + d + self.delay
-			return refnode.happenings[('event', event)] + self.delay
-		if self.marker is not None:
-			return refnode.happenings[('marker', self.marker)] + self.delay
-		pnode = self.dstnode.GetSchedParent()
-		if pnode.type == 'seq' and refnode is not pnode:
-			# self is previous child in seq, so
-			# event is end
-			event = 'end'
-		else:
-			# self is first child of seq, or child
-			# of par/excl, so event is begin
-			if refnode.start_time is None:
-				return refnode.isresolved() + self.delay
-			return refnode.start_time + self.delay
-		return refnode.happenings[('event', event)] + self.delay
+				return t + d + atimes[1] + self.delay
+			return refnode.happenings[('event', event)] + atimes[1] + self.delay
+		# self.marker is not None:
+		return refnode.happenings[('marker', self.marker)] + atimes[0] + self.delay
 
 	def cancel(self, sched):
 		sched.cancel(self.qid)
@@ -1094,6 +1096,9 @@ class MMNode:
 		self.sctx = None
 		self.start_time = None
 		if debug: print 'MMNode.reset', `self`
+		if self.parent and self.parent.type == 'alt':
+			self.parent.reset()
+			
 
 	def resetall(self, sched):
 		if debug: print 'resetall', `self`
@@ -1134,11 +1139,15 @@ class MMNode:
 		else:
 			endtime = None
 		self.time_list.append((timestamp, endtime))
+		if self.parent and self.parent.type == 'alt':
+			self.parent.startplay(sctx, timestamp)
 
 	def stopplay(self, timestamp):
 		if debug: print 'stopplay',`self`,timestamp
 		self.playing = MMStates.PLAYED
 		self.time_list[-1] = self.time_list[-1][0], timestamp
+		if self.parent and self.parent.type == 'alt':
+			self.parent.stopplay(timestamp)
 ##		for c in self.GetSchedChildren():
 ##			c.resetall(self.sctx.parent)
 
@@ -1996,6 +2005,10 @@ class MMNode:
 	def isresolved(self):
 		if self.start_time is not None:
 			return self.start_time
+		if self.type == 'alt':
+			child = self.ChosenSwitchChild()
+			if child:
+				return child.isresolved()
 		pnode = self.GetSchedParent()
 		if pnode is None:
 			presolved = 0
@@ -2009,16 +2022,28 @@ class MMNode:
 			# unless parent is excl, we're resolved if parent is
 			if pnode is None:
 				self.start_time = 0
+				parent = self.parent
+				while parent and parent.type == 'alt':
+					parent.start_time = 0
+					parent = parent.parent
 				return 0
 			if pnode.type == 'excl':
 				return None
 			if pnode.type == 'seq':
 				val = presolved
 				maybecached = pnode.start_time is not None
-				for c in pnode.GetSchedChildren():
-					if c is self:
+				pchildren = pnode.GetSchedChildren()
+				if self not in pchildren:
+					# can happen when self.type=='alt'
+					pchildren = pnode.GetChildren()
+				for c in pchildren:
+					if c.IsAncestorOf(self):
 						if maybecached:
 							self.start_time = val
+							parent = self.parent
+							while parent and parent.type == 'alt':
+								parent.start_time = val
+								parent = parent.parent
 						return val
 					e, MBcached = c.__calcendtime(val)
 					if e is None or e < 0:
@@ -2029,6 +2054,10 @@ class MMNode:
 				raise RuntimeError('cannot happen')
 			if pnode.start_time is not None:
 				self.start_time = presolved
+				parent = self.parent
+				while parent and parent.type == 'alt':
+					parent.start_time = presolved
+					parent = parent.parent
 			return presolved
 		min = None
 		if self.sctx is not None:
@@ -2048,6 +2077,10 @@ class MMNode:
 			return None
 		if maybecached:
 			self.start_time = presolved + min
+			parent = self.parent
+			while parent and parent.type == 'alt':
+				parent.start_time = presolved + min
+				parent = parent.parent
 		# return earliest resolved time
 		return presolved + min
 
@@ -3070,9 +3103,13 @@ class MMNode:
 			childrentopickfrom = self.GetSchedChildren()
 		for ch in childrentopickfrom:
 			if ch.force_switch_choice:
+				if ch.type == 'alt':
+					return ch.ChosenSwitchChild()
 				return ch
 		for ch in childrentopickfrom:
 			if ch._CanPlay():
+				if ch.type == 'alt':
+					return ch.ChosenSwitchChild()
 				return ch
 		return None
 

@@ -1026,16 +1026,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		# XXXX and, if so, should jump that instance of the
 		# XXXX document.
 		import MMurl
-		if type(anchor) is type(()):
-			uid, aid = anchor
-			if '/' not in uid:
-				url = self.filename
-			elif uid[-2:] == '/1':
-				url = uid[:-2]
-			else:
-				url = uid
-		else:
-			url, aid = MMurl.splittag(anchor)
+		url, aid = MMurl.splittag(anchor)
 			
 		# by default, the document target will be handled by GRiNS
 		# note: this varib allow to manage correctly the sourcePlaystate attribute
@@ -1076,20 +1067,18 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if grinsTarget:
 			top.show()
 			node = top.root
-			if type(anchor) is type (()) and  '/' not in uid:
-				try:
-					node = top.root.context.mapuid(uid)
-				except NoSuchUIDError:
-					print 'uid not found in document'
-			elif hasattr(node, 'SMILidmap') and node.SMILidmap.has_key(aid):
-				node = node.context.mapuid(node.SMILidmap[aid])
+			if hasattr(node, 'SMILidmap') and node.SMILidmap.has_key(aid):
+				val = node.SMILidmap[aid]
+				if type(val) is type(()):
+					uid, aid = val
+				else:
+					uid, aid = val, None
+				node = node.context.mapuid(uid)
 			if dtype == A_DEST_PLAY:
 				top.player.show()
-##				top.player.play()
 				top.player.playfromanchor(node, aid)
 			elif dtype == A_DEST_PAUSE:
 				top.player.show()
-##				top.player.play()
 				top.player.playfromanchor(node, aid)
 				top.player.pause(1)
 			else:
