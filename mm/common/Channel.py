@@ -788,7 +788,10 @@ class Channel:
 			for arg, val in self.seekargs[2]:
 				if arg == name:
 					return node.context.findurl(val)
-		return node.context.findurl(MMAttrdefs.getattr(node, 'file'))
+		url = MMAttrdefs.getattr(node, 'file')
+		if not url:
+			return ''
+		return node.context.findurl(url)
 
 	def getstring(self, node):
 		if node.type == 'imm':
@@ -796,6 +799,8 @@ class Channel:
 			return string.join(node.GetValues(), '\n')
 		elif node.type == 'ext':
 			url = self.getfileurl(node)
+			if not url:
+				raise error, 'No URL set on node'
 			self.armed_url = url
 			utype, host, path, params, query, tag = urlparse.urlparse(url)
 			url = urlparse.urlunparse((utype, host, path, params, query, ''))
