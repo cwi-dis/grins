@@ -1,14 +1,5 @@
 # Timing arc stuff
 
-# First a simple timing arc definition:
-class arc():
-	def init(self, (node, frompos, delay, topos)):
-		self.frompos = frompos
-		self.delay = delay
-		self.topos = topos
-		self.dest = node
-		return self
-
 import FL
 import fl
 
@@ -23,12 +14,12 @@ HS = FL.HOR_SLIDER
 # and destination of the timing arc and a slide that indicates the delay.
 #
 class ArcEditor():
-	def init(self, arc):
-		arc.arceditor = self
-		self.arc = arc
-		frompos = arc.frompos
-		delay = arc.delay
-		topos = arc.topos
+	def init(self, arrow):
+		arrow.arceditor = self
+		self.arrow = arrow
+		self.view, self.dst, self.arcinfo = arrow.arc
+		uid, frompos, delay, topos = self.arcinfo
+		self.uid = uid
 		self.frompos = frompos
 		self.delay = delay
 		self.topos = topos
@@ -100,9 +91,11 @@ class ArcEditor():
 
 	def restorecallback(self, dummy):
 		self.f.freeze_form()
-		self.frompos = self.arc.frompos
-		self.delay = self.arc.delay
-		self.topos = self.arc.topos
+		uid, frompos, delay, topos = self.arcinfo
+		self.uid = uid
+		self.frompos = frompos
+		self.delay = delay
+		self.topos = topos
 		self.setbuttons()
 		self.f.unfreeze_form()
 
@@ -114,33 +107,31 @@ class ArcEditor():
 		self.close()
 
 	def setvalues(self):
-		self.arc.frompos = self.frompos
-		self.arc.delay = self.delay
-		self.arc.topos = self.topos
+		self.view.setarcvalues(self.view, (self.arrow, (self.uid, self.frompos, self.delay, self.topos)))
 
 	def close(self):
 		self.f.hide_form()
-		del self.arc.arceditor
+		del self.arrow.arceditor
 
-def showarceditor(arc):
+def showarceditor(arrow):
 	try:
-		arceditor = arc.arceditor
+		arceditor = arrow.arceditor
 		return # Arc editor form is already active
 	except NameError:
 		pass
 	#
-	arceditor = ArcEditor().init(arc)
+	arceditor = ArcEditor().init(arrow)
 
 
-def hidearceditor(arc):
+def hidearceditor(arrow):
 	try:
-		arceditor = arc.arceditor
+		arceditor = arrow.arceditor
 	except NameError:
 		return # No arc editor active
 
-def hasarceditor(arc):
+def hasarceditor(arrow):
 	try:
-		arceditor = arc.arceditor
+		arceditor = arrow.arceditor
 		return 1
 	except NameError:
 		return 0
