@@ -28,6 +28,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		self._menu_height = 26
 		self._splash = None
 		self._splash_pos = 0, 0
+		self._ready = 0
 		self._status_msg = 'Looading modules ...'
 
 	def __getattr__(self, attr):
@@ -44,7 +45,6 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 			winuser.MessageBox('failed to attach to main wnd')
 			return
 		self.__dict__['_obj_'] = wnd
-		self._timer = self.SetTimer(1, 20)
 		self.HookMessage(self.OnClose, wincon.WM_CLOSE)
 		self.HookMessage(self.OnPaint, wincon.WM_PAINT)
 		self.HookMessage(self.OnTimer, wincon.WM_TIMER)
@@ -53,6 +53,7 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		self.HookMessage(self.OnLButtonUp, wincon.WM_LBUTTONUP)
 		self.HookMessage(self.OnLButtonDblClk, wincon.WM_LBUTTONDBLCLK)
 		self.HookMessage(self.OnMouseMove, wincon.WM_MOUSEMOVE)
+		self._timer = self.SetTimer(1, 20)
 		self.InvalidateRect()
 
 	# application exit hook
@@ -78,6 +79,9 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		if cmd:
 			if cmd == usercmd.EXIT:
 				self.OnClose(params)
+			elif cmd == usercmd.OPEN or cmd == usercmd.OPENFILE:
+				if self._ready:
+					self.execute_cmd(cmd)
 			else:
 				self.execute_cmd(cmd)
 			return 
@@ -276,3 +280,6 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		self._status_msg = msg
 		rc = self.getStatusRect()
 		self.InvalidateRect(rc)
+
+	def setReady(self):
+		self._ready = 1

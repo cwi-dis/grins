@@ -59,6 +59,7 @@ class Toplevel:
 			preload_list = preload_list[1:]
 		elif preload_list_msg == 0:
 			self._mainwnd.setStatusMsg('')
+			self._mainwnd.setReady()
 			preload_list_msg = 1
 
 		while self._timers:
