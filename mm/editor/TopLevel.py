@@ -118,21 +118,20 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	# if it's a fatal error, then load an empty document to keep GRiNS in a stable state
 	def checkParseErrors(self, root):
 		parseErrors = root.GetContext().getParseErrors()
-		if parseErrors != None:
-			if parseErrors.getType() == 'fatal':
-				# XXX for now, if there is any fatal error, we load an empty document. In this case, we
-				# even be able to edit the source view. 
-				import SMILTreeRead
-				root = SMILTreeRead.ReadString(EMPTY, self.filename)
-				# check that the 'EMPTY' document don't generate as well a fatal error
-				# note: it shouldn't happen
-				iParseErrors = root.GetContext().getParseErrors()
-				if iParseErrors != None and iParseErrors.getType() == 'fatal':
-					# re-raise
-					raise MSyntaxError
+		if parseErrors is not None and parseErrors.getType() == 'fatal':
+			# XXX for now, if there is any fatal error, we load an empty document. In this case, we
+			# even be able to edit the source view. 
+			import SMILTreeRead
+			root = SMILTreeRead.ReadString(EMPTY, self.filename)
+			# check that the 'EMPTY' document don't generate as well a fatal error
+			# note: it shouldn't happen
+			iParseErrors = root.GetContext().getParseErrors()
+			if iParseErrors != None and iParseErrors.getType() == 'fatal':
+				# re-raise
+				raise MSyntaxError
 
-				# if we reload the empty document we have to re-set the previous error
-				root.GetContext().setParseErrors(parseErrors)
+			# if we reload the empty document we have to re-set the previous error
+			root.GetContext().setParseErrors(parseErrors)
 		return root
 		
 	def set_commandlist(self):
@@ -1244,6 +1243,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			else:
 				import SMILTreeRead
 				self.root = SMILTreeRead.ReadString(EMPTY, self.filename)
+			user = settings.get('license_user')
+			if user:
+				self.root.GetContext().attributes['author'] = user
 		else:
 			self.do_read_it(self.filename)
 		self.root = self.checkParseErrors(self.root)
