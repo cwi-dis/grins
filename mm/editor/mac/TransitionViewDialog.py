@@ -105,5 +105,5 @@ class TransitionViewDialog(windowinterface.MACDialog):
 			self.edit_callback()
 		elif item == ITEM_B_DELETE:
 			self.delete_callback()
-			print 'Unknown UsergroupViewDialog item', item, 'event', event
+			print 'Unknown TransitionViewDialog item', item, 'event', event
 		return 1

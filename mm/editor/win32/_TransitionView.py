@@ -1,6 +1,6 @@
 __version__ = "$Id$"
 
-# @win32doc|_UsergroupView
+# @win32doc|TransitionView
 # This module contains the ui implementation of the TransitionView.
 # It is implemented as a Form view.
 # The MFC CFormView is essentially a view that contains controls. 
@@ -8,7 +8,7 @@ __version__ = "$Id$"
 # similar to a dialog box.
 # Objects of this class are exported to Python through the win32ui pyd
 # as objects of type PyCFormView.
-# The _UsergroupView extends the GenFormView which is an extension to PyCFormView.
+# The _TransitionView extends the GenFormView which is an extension to PyCFormView.
 
 # The _TransitionView is created using the resource dialog template with identifier IDD_USERGROUP.
 # To edit this template, open it using the resource editor. 

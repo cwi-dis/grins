@@ -49,8 +49,6 @@ class PlayerDialog:
 		self.__title = title
 		self.__coords = coords
 		self.__state = -1
-		self.__ugroups = []
-		self.__ugroupdict = {}
 		self.__channels = []
 		self.__options = []
 		self.__windowgroup = None
@@ -66,8 +64,6 @@ class PlayerDialog:
 			self.__window.close()
 		self.__window = None
 		self.__windowgroup = None
-		del self.__ugroups
-		del self.__ugroupdict
 		del self.__channels
 		del self.__options
 
@@ -99,27 +95,6 @@ class PlayerDialog:
 		self.__title = title
 		if self.__window is not None:
 			self.__window.settitle(title)
-
-	def setusergroups(self, ugroups):
-		self.__ugroups = ugroups
-		self.__ugroupdict = {}
-		menu = []
-		for i in range(len(ugroups)):
-			name, title, onoff = ugroups[i]
-			self.__ugroupdict[name] = i
-			menu.append((title, (name,), 't', onoff))
-		w = self.__window
-		if w is not None:
-			w.set_dynamiclist(usercmd.USERGROUPS, menu)
-
-	def setusergroup(self, ugroup, onoff):
-		i = self.__ugroupdict.get(ugroup)
-		if i is None:
-			raise RuntimeError, 'unknown user group'
-		if self.__ugroups[i][2] == onoff:
-			return
-		self.__ugroups[i] = self.__ugroups[i][:2] + (onoff,)
-		self.setusergroups(self.__ugroups)
 
 	def setchannels(self, channels):
 		self.__channels = channels
@@ -187,7 +162,6 @@ class PlayerDialog:
 				] + self.alllist
 			w.set_commandlist(commandlist)
 			self.setchannels(self.__channels)
-			self.setusergroups(self.__ugroups)
 			if 1 or state != ostate: # XXXX
 				w.set_toggle(usercmd.PLAY, state != STOPPED)
 				w.set_toggle(usercmd.PAUSE, state == PAUSING)
