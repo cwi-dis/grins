@@ -10,6 +10,9 @@ import MMAttrdefs
 import windowinterface, WMEVENTS
 from windowinterface import SINGLE, TEXT, HTM, MPEG
 from windowinterface import TRUE, FALSE
+import string
+import urllib
+import regsub
 error = 'Channel.error'
 
 channel_device = 1
@@ -688,6 +691,46 @@ class Channel:
 				if arg == name:
 					return node.context.findurl(val)
 		return node.context.findurl(MMAttrdefs.getattr(node, 'file'))
+
+	def getstring(self, node, urlopen=urllib.urlopen):
+		if node.type == 'imm':
+			self.armed_url = ''
+			return string.joinfields(node.GetValues(), '\n')
+		elif node.type == 'ext':
+			filename = self.getfileurl(node)
+			self.armed_url = filename
+			try:
+				fp = urlopen(filename)
+			except IOError:
+				raise error, 'Cannot open %s: %s, %s'%(filename, sys.exc_type, sys.exc_value)
+			self.armed_url = fp.geturl()
+			# use undocumented feature so we can cleanup
+			if urllib._urlopener.tempcache is None:
+				urllib._urlopener.tempcache = {}
+				# cleanup temporary files when we finish
+				windowinterface.addclosecallback(
+					urlcleanup, ())
+			text = fp.read()
+			fp.close()
+			#
+			# Convert dos/mac newlines to ours
+			#
+			text = regsub.gsub('\r\n', '\n', text)
+			text = regsub.gsub('\r', '\n', text)
+			#
+			# For the mac convert ISO encoding to Mac encoding.
+			# This *ONLY* works for Greek (and, hence, is a hack)
+			#
+			if os.name == 'mac':
+				import greekconv
+				text = string.translate(text, greekconv.iso_8859_7_to_mac)
+				
+			if text[-1:] == '\n':
+				text = text[:-1]
+			return text
+		else:
+			raise CheckError, \
+				'gettext on wrong node type: ' +`node.type`
 
 	def getduration(self, node):
 		import Duration
@@ -1415,3 +1458,8 @@ class AnchorContext:
 
 	def play_done(self, node):
 		raise error, 'AnchorContext.play_done() called'
+
+# Cleanup routine for retrieved documents
+def urlcleanup():
+	if urllib._urlopener:
+		urllib._urlopener.cleanup()
