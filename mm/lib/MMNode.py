@@ -173,7 +173,7 @@ class MMNodeContext:
 		del node.t0
 		del node.t1
 		del node.t2
-		for child in node.children:
+		for child in node.GetSchedChildren():
 			self._movetimestoobj(child, which)
 
 	def changedtimes(self):

@@ -229,7 +229,10 @@ class ChannelView(ChannelViewDialog):
 			if not self.is_showing():
 				self.focus = ({'MMNode':'n','MMChannel':'c'}[focustype], focusobject)
 				return
-			obj = focusobject.cv_obj
+			if hasattr(focusobject, 'cv_obj'):
+				obj = focusobject.cv_obj
+			else:
+				return
 			if self.focus is obj:
 				return
 			self.init_display()
@@ -655,7 +658,7 @@ class ChannelView(ChannelViewDialog):
 			# channelless leaf node or interior node
 			obj = INodeBox(self, node)
 			self.objects.append(obj)
-		for c in node.GetChildren():
+		for c in node.GetSchedChildren(0):
 			self.scantree(c, focus)
 
 	# Arc stuff
@@ -1810,12 +1813,12 @@ class NodeBox(GO, NodeBoxCommand):
 		if channel:
 			channel = channel.GetLayoutChannel()
 		if self.pausenode:
-			parent = self.node.GetParent()
+			parent = self.node.GetSchedParent()
 			dummy, dummy, parent_t2, dummy, dummy = parent.GetTimes()
 			if parent is None:
 				t1 = node_t2
 			elif parent.GetType() == 'seq':
-				siblings = parent.GetChildren()
+				siblings = parent.GetSchedChildren()
 				index = siblings.index(self.node)
 				if len(siblings) > index+1:
 					t1 = siblings[index+1].GetTimes()[0]

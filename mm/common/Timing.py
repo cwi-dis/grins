@@ -187,10 +187,10 @@ def propdown(node, stoptime, dftstarttime=0):
 	node.t2 = stoptime
 
 	if tp in ('par', 'switch', 'excl', 'prio') or tp in leaftypes:
-		for c in node.GetChildren():
+		for c in node.GetSchedChildren(0):
 			propdown(c, stoptime, node.t0)
 	elif tp == 'seq': # XXX not right!
-		children = node.GetChildren()
+		children = node.GetSchedChildren(0)
 		if not children:
 			return
 		nextstart = node.t0
