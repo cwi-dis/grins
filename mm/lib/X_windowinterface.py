@@ -1351,6 +1351,8 @@ class _Event:
 
 	def setfd(self, fd):
 		if debug: print 'setfd',`fd`
+		if type(fd) <> type(1):
+			fd = fd.fileno()
 		self._fdlist[fd] = Xt.AddInput(fd, Xtdefs.XtInputReadMask,
 			  self._input_callback, None)
 
