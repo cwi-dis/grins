@@ -1140,6 +1140,9 @@ class _Window:
 		if noborder:
 			gl.noborder()
 		gl.winconstraints()
+		# to enable antialiasing of lines, enable next two lines
+		#gl.linesmooth(GL.SML_ON)
+		#gl.blendfunction(GL.BF_SA, GL.BF_MSA)
 		self._init2()
 
 	def __repr__(self):

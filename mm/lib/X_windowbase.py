@@ -126,10 +126,10 @@ class _Toplevel:
 			Xt.RemoveTimeOut(id)
 
 	def _timer_callback(self, client_data, id):
-		toplevel._setcursor('watch')
+		self._setcursor('watch')
 		func, args = client_data
 		apply(func, args)
-		toplevel._setcursor()
+		self._setcursor()
 
 	# file descriptor interface
 	def select_setcallback(self, fd, func, args, mask = ReadMask):
@@ -298,14 +298,14 @@ class _Toplevel:
 	def _setcursor(self, cursor = ''):
 		for win in self._subwindows:
 			win._setcursor(cursor)
-##		self._main.UpdateDisplay()
+		self._main.Display().Flush()
 
 class _Window:
 	def __init__(self, parent, x, y, w, h, title, defcmap = 0, pixmap = 0):
 		self._title = title
 		self._do_init(parent)
 		self._topwindow = self
-		self._exp_reg = None
+		self._exp_reg = Xlib.CreateRegion()
 
 		if parent._visual.c_class == X.TrueColor:
 			defcmap = FALSE
@@ -789,15 +789,12 @@ class _Window:
 		if not self._parent:
 			return		# already closed
 		e = call_data.event
-		if not self._exp_reg:
-			# first of a series
-			self._exp_reg = Xlib.CreateRegion()
 		# collect redraw regions
 		self._exp_reg.UnionRectWithRegion(e.x, e.y, e.width, e.height)
 		if e.count == 0:
 			# last of a series, do the redraw
 			r = self._exp_reg
-			self._exp_reg = None
+			self._exp_reg = Xlib.CreateRegion()
 			try:
 				pm = self._pixmap
 			except AttributeError:
