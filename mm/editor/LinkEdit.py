@@ -41,8 +41,8 @@ class LinkEdit(ViewDialog, LinkBrowserDialog):
 		title = self.__maketitle()
 		self.left = Struct()
 		self.right = Struct()
-		self.left.fillfunc = self.fill_none
-		self.right.fillfunc = self.fill_none
+		self.left.fillfunc = self.fill_all
+		self.right.fillfunc = self.fill_relation
 		self.left.node = None
 		self.right.node = None
 		self.left.focus = None
