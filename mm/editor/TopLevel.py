@@ -4,6 +4,7 @@ import os, posixpath
 import sys
 import windowinterface
 import MMAttrdefs, MMurl
+from urlparse import urlparse, urlunparse
 from MMExc import *
 from EditMgr import EditMgr
 import Timing
@@ -24,10 +25,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		self._last_timer_id = None
 		self.main = main
 		self.new_file = new_file
-		utype, url = MMurl.splittype(url)
-		host, url = MMurl.splithost(url)
-		dir, base = posixpath.split(url)
-		if not utype and not host:
+		utype, host, path, params, query, fragment = urlparse(url)
+		dir, base = posixpath.split(path)
+		if (not utype or utype == 'file') and \
+		   (not host or host == 'localhost'):
 			# local file
 			self.dirname = dir
 		else:
@@ -41,10 +42,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.basename = base[:-5]
 		else:
 			self.basename = base
-		if host:
-			url = '//%s%s' % (host, url)
-		if utype:
-			url = '%s:%s' % (utype, url)
+		url = urlunparse((utype, host, path, params, query, fragment))
 		self.filename = url
 		self.window = None
 		self.source = None
@@ -193,13 +191,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 		if self.new_file:
 			self.saveas_callback()
 			return
-		utype, url = MMurl.splittype(self.filename)
-		host, url = MMurl.splithost(url)
-		if (utype and utype != 'file') or host:
+		utype, host, path, params, query, fragment = urlparse(self.filename)
+		if (utype and utype != 'file') or (host and host != 'localhost'):
 			windowinterface.showmessage('Cannot save to remote URL',
 						    mtype = 'warning')
 			return
-		file = MMurl.url2pathname(url)
+		file = MMurl.url2pathname(path)
 		self.setwaiting()
 		ok = self.save_to_file(file)
 
@@ -225,10 +222,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					   '', self.saveas_okcallback, None)
 
 	def fixtitle(self):
-		utype, url = MMurl.splittype(self.filename)
-		host, url = MMurl.splithost(url)
-		dir, base = posixpath.split(url)
-		if not utype and not host:
+		utype, host, path, params, query, fragment = urlparse(self.filename)
+		dir, base = posixpath.split(path)
+		if (not utype or utype == 'file') and \
+		   (not host or host == 'localhost'):
 			# local file
 			self.dirname = dir
 		else:
@@ -383,13 +380,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			return 0
 		if reply == 1:
 			return 1
-		utype, url = MMurl.splittype(self.filename)
-		host, url = MMurl.splithost(url)
-		if (utype and utype != 'file') or host:
+		utype, host, path, params, query, fragment = urlparse(self.filename)
+		if (utype and utype != 'file') or (host and host != 'localhost'):
 			windowinterface.showmessage('Cannot save to URL',
 						    mtype = 'warning')
 			return 0
-		file = MMurl.url2pathname(url)
+		file = MMurl.url2pathname(path)
 		return self.save_to_file(file)
 
 	def help_callback(self, params=None):
