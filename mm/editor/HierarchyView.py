@@ -1330,9 +1330,10 @@ class HierarchyView(HierarchyViewDialog):
 		dftchannel = None
 		# try to find out the default channel following two rules (evaluated in the right order):
 		# 1) according to the GRiNS project_default_region_xxx attributes
-		# 2) if at this stage, no default channel found, XXX (to do)
+		# 2) if at this stage, no default channel found, take the first media found which has a region from the parent nodes
 		computedType = node.GetChannelType()
 
+		# stage 1:
 		# find the project_default_region_xxx attribute to look at according to the channel type
 		attributeName = None
 		if computedType in ('video', 'RealPix'):
@@ -1347,7 +1348,12 @@ class HierarchyView(HierarchyViewDialog):
 		# the default channel is stored in the container nodes
 		if attributeName and pnode:
 			dftchannel = pnode.GetInherAttrDef(attributeName, None)
-						
+
+		# stage 2:
+		# look at the region defined for the sibling nodes
+		if not dftchannel:
+			dftchannel = self.__searchRegion1(pnode, node)
+				
 		if dftchannel:
 			node.SetAttr('channel', dftchannel)
 			
@@ -1365,6 +1371,42 @@ class HierarchyView(HierarchyViewDialog):
 				if not dftchannel:
 					AttrEdit.showattreditor(self.toplevel, node, 'channel')
 
+	# search a default region in looking at the children of the parent,
+	# and recursivly until the root element
+	def __searchRegion1(self, pnode, childToExclude):
+		if pnode == None:
+			# no parent
+			return None
+		# look at in children
+		dftchannel = self.__searchRegion2(pnode, childToExclude)
+		if dftchannel != None:
+			# region found. return this one
+			return dftchannel
+
+		# no region in any child found, look at into the parent
+		return self.__searchRegion1(pnode.GetParent(), pnode)
+
+	# search a default region in looking the children,
+	# and recursively until the leaf elements
+	def __searchRegion2(self, pnode, childToExclude=None):
+		children = pnode.GetChildren()
+		if children != None:
+			for child in children:
+				if child is not childToExclude:
+					type = child.GetType()
+					import MMTypes
+					if type in MMTypes.mediatypes:
+						# media node
+						dftchannel = child.GetChannelName()
+						if dftchannel != 'undefined' and child.GetChannel() != None:
+							# the region exist, return this one
+							return dftchannel
+					else:
+						# container node, recursive search
+						self.__searchRegion2(child)
+		# no valid region found
+		return None
+	
 	def insertparent(self, type):
 		# Inserts a parent node before this one.
 		# XXX TODO: rewrite me.
