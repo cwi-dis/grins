@@ -10,7 +10,7 @@ class RMDuration:
 	def __init__(self, url):
 		self.dur = 0
 		url = MMurl.canonURL(url)
-		url = urllib.unquote(url)
+		url = MMurl.unquote(url)
 		self._engine = rma.CreateEngine()
 		self._player = self._engine.CreatePlayer(-1,((-1,-1), (-1,-1)), 1)
 		self._player.SetStatusListener(self)
