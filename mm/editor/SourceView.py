@@ -295,5 +295,7 @@ class SourceView(SourceViewDialog.SourceViewDialog):
 	# methods called from the errorsview to update the error
 	#
 	
-	def onSelectError(self, errorNumber):
+	def onSelectError(self, errorNumber, pop=0):
 		self.showError(errorNumber)
+		if pop:
+			self.pop()
