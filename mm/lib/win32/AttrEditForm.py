@@ -1442,15 +1442,16 @@ class LayoutScale:
 
 ##################################
 # LayoutPage
-import cmifwnd, _CmifView
+import win32window
+import _PlayerView
 import appcon, sysmetrics
 import string
 import DrawTk
 
-class LayoutPage(AttrPage,cmifwnd._CmifWnd):
+class LayoutPage(AttrPage,win32window.Window):
 	def __init__(self,form):
 		AttrPage.__init__(self,form)
-		cmifwnd._CmifWnd.__init__(self)
+		win32window.Window.__init__(self)
 		self._units=self._form.getunits()
 		self._layoutctrl=None
 		self._isintscale=1
@@ -1501,7 +1502,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 			self._layoutctrl.exit_create_box()
 
 	def createLayoutCtrl(self):
-		v=_CmifView._CmifPlayerView(docview.Document(docview.DocTemplate()))
+		v=_PlayerView._PlayerView(docview.Document(docview.DocTemplate()))
 		v.createWindow(self)
 		x,y,w,h=self.getboundingbox()
 		dw=2*win32api.GetSystemMetrics(win32con.SM_CXEDGE)
