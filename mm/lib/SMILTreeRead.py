@@ -50,9 +50,9 @@ clock = re.compile(r'(?P<name>local|remote):'
 		   r'(?P<fraction>\.\d+)?'
 		   r'(?:Z(?P<sign>[-+])(?P<ohours>\d{2}):(?P<omin>\d{2}))?$')
 screen_size = re.compile(r'(?P<x>\d+)X(?P<y>\d+)$')
-range_re = re.compile('^(?:'
-		   '(?:(?P<npt>npt)=(?P<nptstart>[^-]*)-(?P<nptend>[^-]*))|'
-		   '(?:(?P<smpte>smpte(?:-30-drop|-25)?)=(?P<smptestart>[^-]*)-(?P<smpteend>[^-]*))'
+clip = re.compile('^(?:'
+		   '(?:(?P<npt>npt)=(?P<nptclip>[^-]*))|'
+		   '(?:(?P<smpte>smpte(?:-30-drop|-25)?)=(?P<smpteclip>[^-]*))'
 		   ')$')
 smpte_time = re.compile(r'(?:(?:\d{2}:)?\d{2}:)?\d{2}(?P<f>\.\d{2})?$')
 namedecode = re.compile(r'(?P<name>.*)-\d+$')
@@ -449,42 +449,20 @@ class SMILParser(xmllib.XMLParser):
 			if ch['height'] == 0:
 				ch['minheight'] = 100
 
-		# range attribute for video
-		range_at = attributes.get('range')
-		if mediatype == 'video' and range_at is not None:
-			try:
-				start, end = self.__parserange(range_at)
-			except error, msg:
-				self.syntax_error(msg)
+		# clip-* attributes for video
+		clip_begin = attributes.get('clip-begin')
+		if clip_begin:
+			if clip.match(clip_begin):
+				node.attrdict['clipbegin'] = clip_begin
 			else:
-				import mv
-				try:
-					file = MMurl.urlretrieve(url)[0]
-					movie = mv.OpenFile(file, mv.MV_MPEG1_PRESCAN_OFF)
-					track = movie.FindTrackByMedium(mv.DM_IMAGE)
-					rate = track.GetImageRate()
-					del movie, track
-				except:
-					pass
-				else:
-					import smpte
-					if rate == 30:
-						cl = smpte.Smpte30
-					elif rate == 25:
-						cl = smpte.Smpte25
-					elif rate == 24:
-						cl = smpte.Smpte24
-					else:
-						cl = smpte.Smpte30Drop
-					if start:
-						start = cl(start).GetFrame()
-					else:
-						start = 0
-					if end:
-						end = cl(end).GetFrame()
-					else:
-						end = 0
-					node.attrdict['range'] = start, end
+				self.syntax_error('invalid clip-begin attribute')
+		clip_end = attributes.get('clip-end')
+		if clip_end:
+			if clip.match(clip_end):
+				node.attrdict['clipend'] = clip_end
+			else:
+				self.syntax_error('invalid clip-end attribute')
+
 		if self.__in_a:
 			# deal with hyperlink
 			href, ltype, id = self.__in_a[:3]
@@ -1384,20 +1362,16 @@ class SMILParser(xmllib.XMLParser):
 			delay = 0
 		return name, counter, delay
 
-	def __parserange(self, val):
-		res = range_re.match(val)
+	def __parseclip(self, val):
+		res = clip.match(val)
 		if res is None:
-			raise error, 'bogus range parameter'
+			raise error, 'bogus clip parameter'
 		if res.group('npt'):
-			start, end = res.group('nptstart', 'nptend')
-			if start:
-				start = float(self.__parsecounter(start, 0))
+			val = res.group('nptclip')
+			if val:
+				val = float(self.__parsecounter(val, 0))
 			else:
 				start = None
-			if end:
-				end = float(self.__parsecounter(end, 0))
-			else:
-				end = None
 		else:
 			import smpte
 			smpteval = res.group('smpte')
@@ -1408,30 +1382,21 @@ class SMILParser(xmllib.XMLParser):
 			elif smpteval == 'smpte-30-drop':
 				cl = smpte.Smpte30Drop
 			else:
-				raise error, 'bogus range parameter'
-			start, end = res.group('smptestart', 'smpteend')
-			if start:
-				res1 = smpte_time.match(start)
-				if res1 is None:
-					raise error, 'bogus range parameter'
-				if not res1.group('f'):
+				raise error, 'bogus clip parameter'
+			val = res.group('smpteclip')
+			if val:
+				res = smpte_time.match(val)
+				if res is None:
+					raise error, 'bogus clip parameter'
+				if not res.group('f'):
 					# smpte and we have different
 					# ideas of which parts are
 					# optional
-					start = start + '.00'
-				start = cl(start)
+					val = val + '.00'
+				val = cl(val)
 			else:
-				start = None
-			if end:
-				res2 = smpte_time.match(end)
-				if res2 is None:
-					raise error, 'bogus range parameter'
-				if not res1.group('f'):
-					end = end + '.00'
-				end = cl(end)
-			else:
-				end = None
-		return start, end
+				val = None
+		return val
 
 	def __wholenodeanchor(self, node):
 		try:

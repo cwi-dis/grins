@@ -10,7 +10,8 @@ import Xlib
 
 class VideoChannel(Channel.ChannelWindowAsync):
 	node_attrs = Channel.ChannelWindowAsync.node_attrs + \
-		     ['bucolor', 'hicolor', 'scale', 'center', 'loop', 'range']
+		     ['bucolor', 'hicolor', 'scale', 'center', 'loop',
+		      'clipbegin', 'clipend']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
@@ -89,8 +90,8 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		self.armed_scale = scale
 		center = MMAttrdefs.getattr(node, 'center')
 		x, y, w, h = self.window._rect
+		track = movie.FindTrackByMedium(mv.DM_IMAGE)
 		if scale > 0:
-			track = movie.FindTrackByMedium(mv.DM_IMAGE)
 			width = track.GetImageWidth()
 			height = track.GetImageHeight()
 			self.armed_size = width, height
@@ -111,6 +112,17 @@ class VideoChannel(Channel.ChannelWindowAsync):
 					    self.window._form.height - y - h,
 					    mv.DM_TRUE)
 			self.armed_size = None
+		rate = track.GetImageRate()
+		if rate == 30:
+			units = 'smpte-30'
+		elif rate == 25:
+			units = 'smpte-25'
+		elif rate == 24:
+			units = 'smpte-24'
+		else:
+			units = 'smpte-30-drop'
+		self.__begin = self.getclipbegin(node, units)
+		self.__end = self.getclipend(node, units)
 		bg = self.getbgcolor(node)
 		movie.SetViewBackground(bg)
 		self.armed_bg = self.window._convert_color(bg)
@@ -151,12 +163,6 @@ class VideoChannel(Channel.ChannelWindowAsync):
 				mtype = 'warning')
 			self.playdone(0)
 			return
-		range = MMAttrdefs.getattr(node, 'range')
-		if range[0]:
-			movie.SetStartFrame(range[0])
-			movie.SetCurrentFrame(range[0])
-		if range[1]:
-			movie.SetEndFrame(range[1])
 		loop = self.armed_loop
 		self.played_loop = loop
 		if loop == 0:
@@ -165,6 +171,11 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			movie.SetPlayLoopLimit(loop)
 		if loop != 1:
 			movie.SetPlayLoopMode(mv.MV_LOOP_CONTINUOUSLY)
+		if self.__begin:
+			movie.SetStartFrame(self.__begin)
+			movie.SetCurrentFrame(self.__begin)
+		if self.__end:
+			movie.SetEndFrame(self.__end)
 		if self.armed_duration:
 			self.__qid = self._scheduler.enter(
 				self.armed_duration, 0, self.__stopplay, ())
