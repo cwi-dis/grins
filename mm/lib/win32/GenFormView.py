@@ -79,8 +79,8 @@ class GenFormView(docview.FormView,components.ControlsDict):
 	
 	# Helper function that given the string id of the control calls the callback
 	def call(self,strcmd):
-		if strcmd in self._callbacks.keys():
-			apply(apply,self._callbacks[strcmd])
+		if self._cbdict.has_key(strcmd):
+			apply(apply,self._cbdict[strcmd])
 
 	# Reponse to message WM_COMMAND
 	def OnCmd(self,params):
@@ -89,8 +89,8 @@ class GenFormView(docview.FormView,components.ControlsDict):
 		nmsg=msg.getnmsg()
 		for k in self.keys():
 			if self[k]._id==id:
-				if k in self._cmddict.keys():
-					apply(apply,self._cmddict[k])
+				if k in self._cbdict.keys():
+					apply(apply,self._cbdict[k])
 				return	
 
 	# Called directly from cmif-core to close window
@@ -118,3 +118,10 @@ class GenFormView(docview.FormView,components.ControlsDict):
 	def hide(self):
 		self.close()
 
+	# Bring window in front of peers
+	def pop(self):
+		if not hasattr(self,'GetParent'):return
+		childframe=self.GetParent()
+		childframe.ShowWindow(win32con.SW_SHOW)
+		frame=childframe.GetMDIFrame()
+		frame.MDIActivate(childframe)
