@@ -226,9 +226,9 @@ def match(name, wanted_value):
 		return opsys.cpu.has_key(wanted_value) and opsys.cpu[wanted_value]
 	if name == 'system_required':
 		for v in wanted_value:
-			if not extensions.get(wanted_value, 0):
+			if not extensions.get(v, 0):
 				return 0
-			return 1
+		return 1
 	real_value = get(name)
 	if name in EXACT:
 		return (real_value == wanted_value)
