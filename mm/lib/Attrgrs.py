@@ -149,6 +149,29 @@ attrgrs=(
 		'comment'
 		]},
 
+	# active duration group with endsync
+	{'name':'activeduration1',
+	'title':'Active duration',
+	'attrs':[
+		'fill', 'fillDefault',
+		'duration',
+		'min', 'max',
+		'loop', # repeatcount
+		'repeatdur',
+		'terminator',
+		]},
+
+	# active duration group without endsync
+	{'name':'activeduration2',
+	'title':'Active duration',
+	'attrs':[
+		'fill', 'fillDefault',
+		'duration',
+		'min', 'max',
+		'loop', # repeatcount
+		'repeatdur',
+		]},
+	
 	{'name':'timingsb',
 	'title':'Timing',
 	'attrs':[
