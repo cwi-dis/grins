@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 # XXXX Still needs some work, esp. in the callback time calc section
 #
 from Channel import ChannelAsync

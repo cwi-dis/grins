@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 from Channel import *
 import string
 import sys
