@@ -299,6 +299,10 @@ class SchedulerContext:
 			list = MMAttrdefs.getattr(arc.dstnode, 'beginlist')
 			list = []
 		else:
+			if event is not None and event not in ('begin', 'end'):
+				# a real event, only does something when node is active
+				if arc.dstnode.playing in (MMStates.IDLE, MMStates.PLAYED):
+					return
 			dev = 'end'
 			list = MMAttrdefs.getattr(arc.dstnode, 'endlist')
 			list = list + arc.dstnode.durarcs
@@ -561,7 +565,10 @@ class SchedulerContext:
 		if endlist:
 			found = 0
 			for a in endlist:
-				if not a.isresolved(parent.timefunc):
+				if a.event is not None and a.event not in ('begin', 'end'):
+					# events can happen again and again
+					found = 1
+				elif not a.isresolved(parent.timefunc):
 					# any unresolved time is after any resolved time
 					found = 1
 				else:
