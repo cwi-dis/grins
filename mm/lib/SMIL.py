@@ -33,6 +33,7 @@ SMIL2DTDs = [SMILBostonDtd,
 ##	     'http://www.w3.org/TR/REC-smil/2000/SMIL20/SMIL20.dtd',
 	     ]
 GRiNSns = 'http://www.oratrix.com/'
+RP9ns = 'http://features.real.com/2001/SMIL20/Extensions'
 QTns = 'http://www.apple.com/quicktime/resources/smilextensions'
 
 # list elements here that are not valid in all namespaces with the
