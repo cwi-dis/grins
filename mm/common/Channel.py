@@ -982,7 +982,7 @@ class Channel:
 			val = res.group('nptclip')
 			val = float(self.parsecount(val, node, attr))
 		elif res.group('clock'):
-			self.errormsg(node, 'invalid %s attribute; should be "npt=<time>"' % attr)
+##			self.errormsg(node, 'invalid %s attribute; should be "npt=<time>"' % attr)
 			val = res.group('clock')
 			val = float(self.parsecount(val, node, attr))
 		else:
