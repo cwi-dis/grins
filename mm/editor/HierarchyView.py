@@ -105,6 +105,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.commands.append(PUSHFOCUS(callback = (self.focuscall, ())))
 			self.commands.append(TIMESCALE(callback = (self.timescalecall, ('global',))))
 			self.commands.append(LOCALTIMESCALE(callback = (self.timescalecall, ('focus',))))
+			self.commands.append(CORRECTLOCALTIMESCALE(callback = (self.timescalecall, ('cfocus',))))
 			self.commands.append(PLAYABLE(callback = (self.playablecall, ())))
 
 		self.interiorcommands = self._getmediaundercommands(self.toplevel.root.context) + [
@@ -355,7 +356,7 @@ class HierarchyView(HierarchyViewDialog):
 		t0, t1, t2, download, begindelay = self.focusnode.GetTimes('bandwidth')
 		print 't0,t1,t2=', t0, t1, t2 #DBG
 		# XXX Very expensive...
-		if self.timescale == 'focus':
+		if self.timescale in ('focus', 'cfocus'):
 			self.need_resize = 1
 			self.dirty = 1
 ##			self.draw()
@@ -427,7 +428,7 @@ class HierarchyView(HierarchyViewDialog):
 			if x < 1.0 or y < 1.0:
 				print "Error: unconverted relative coordinates found. HierarchyView:497"
 			if self.timescale:
-				self.timemapper = TimeMapper.TimeMapper()
+				self.timemapper = TimeMapper.TimeMapper(self.timescale=='cfocus')
 				if self.timescale == 'global':
 					timeroot = self.scene_graph
 				else:
@@ -1210,14 +1211,22 @@ class HierarchyView(HierarchyViewDialog):
 			self.timescale = None
 			self.settoggle(TIMESCALE, 0)
 			self.settoggle(LOCALTIMESCALE, 0)
+			self.settoggle(CORRECTLOCALTIMESCALE, 0)
 		elif which == 'global':
 			self.timescale = 'global'
 			self.settoggle(TIMESCALE, 1)
 			self.settoggle(LOCALTIMESCALE, 0)
-		else:
+			self.settoggle(CORRECTLOCALTIMESCALE, 0)
+		elif which == 'focus':
 			self.timescale = 'focus'
 			self.settoggle(TIMESCALE, 0)
 			self.settoggle(LOCALTIMESCALE, 1)
+			self.settoggle(CORRECTLOCALTIMESCALE, 0)
+		else:
+			self.timescale = 'cfocus'
+			self.settoggle(TIMESCALE, 0)
+			self.settoggle(LOCALTIMESCALE, 0)
+			self.settoggle(CORRECTLOCALTIMESCALE, 1)
 		self.refresh_scene_graph()
 		self.need_resize = 1
 		self.dirty = 1

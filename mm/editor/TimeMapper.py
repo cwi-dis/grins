@@ -4,15 +4,16 @@ Error = 'TimeMapper.Error'
 import features
 
 CONSISTENT_TIME_MAPPING=0
-DEBUG=1
+DEBUG=0
 
 class TimeMapper:
-	def __init__(self):
+	def __init__(self, realtime=0):
 		self.collecting = 1
 		self.dependencies = []
 		self.collisions = []
 		self.collisiondict = {}
 		self.minpos = {}
+		self.consistent_time = realtime
 		
 	def adddependency(self, t0, t1, minpixeldistance):
 		if not self.collecting:
@@ -46,7 +47,7 @@ class TimeMapper:
 				self.collisiondict[time] = pixels
 		self.times = self.collisiondict.keys()
 		self.times.sort()
-		if CONSISTENT_TIME_MAPPING:
+		if self.consistent_time:
 			min_pixels_per_second = 0
 			for t1, t0, pixels in self.dependencies:
 				if t1 != t0 and pixels/(t1-t0) > min_pixels_per_second:
@@ -58,8 +59,10 @@ class TimeMapper:
 		prev_t = self.times[0]
 		for t in self.times:
 			if t != prev_t: # for times[0] don't add the dependency
-##				self.dependencies.append((t, prev_t, (t-prev_t)*min_pixels_per_second))
-				self.dependencies.append((t, prev_t, min_pixels_per_second))
+				if self.consistent_time:
+					self.dependencies.append((t, prev_t, (t-prev_t)*min_pixels_per_second))
+				else:
+					self.dependencies.append((t, prev_t, min_pixels_per_second))
 ##			minpos = minpos + (t-prev_t) * min_pixels_per_second
 			self.minpos[t] = minpos
 			minpos = minpos + self.collisiondict[t] + 1

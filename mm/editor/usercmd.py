@@ -312,7 +312,9 @@ class PLAYABLE(_CommandBase):
 class TIMESCALE(_CommandBase):
 	help = 'Toggle duration-dependent structure view'
 class LOCALTIMESCALE(_CommandBase):
-	help = 'Toggle duration-dependent structure view on focus node'
+	help = 'Show durations on focus node in structure view'
+class CORRECTLOCALTIMESCALE(_CommandBase):
+	help = 'Show consistent durations on focus node in structure view'
 
 #
 # Channel view commands
