@@ -673,8 +673,10 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 			self._enable_content_dragging = 1
 			self._dxmax = max(0,dw)
 			self._dymax = max(0,dh)
+			self._cursor = 'draghand'
 		else:
 			self._enable_content_dragging = 0
+			self._cursor = ''
 			
 	# Called by the core system to create a child window to the subwindow
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
@@ -1014,7 +1016,8 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 				if ws[i].inside(ptOffset):
 					f=ws[i].setcursor_from_point(ptOffset,self)
 				if f: break
-		if not f:self.setcursor('arrow')
+		if not f:
+			self.setcursor(self._cursor)
 			
 
 	# RM support
