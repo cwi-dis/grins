@@ -57,7 +57,7 @@ class IndentedFile:
 		self.level = self.level - 2
 
 	def write(self, data):
-		lines = string.split(data, '\n')
+		lines = data.split('\n')
 		if not lines:
 			return self.charpos, self.charpos
 		start = self.charpos
@@ -89,7 +89,7 @@ class IndentedFile:
 		self.write(data)
 
 	def writelines(self, data):
-		self.write(string.join(data, '\n'))
+		self.write('\n'.join(data))
 
 	def close(self):
 		self.fp.close()
@@ -588,8 +588,8 @@ def getsensitivity(writer, node):
 		return '%d%%' % sensitivity
 
 def escape_name(name, quote_initial = 1):
-	name = string.join(string.split(name, '.'), '\\.')
-	name = string.join(string.split(name, '-'), '\\-')
+	name = '\\.'.join(name.split('.'))
+	name = '\\-'.join(name.split('-'))
 	if quote_initial and name in ['prev', 'wallclock', ]:
 		name = '\\' + name
 	return name
@@ -746,7 +746,7 @@ def getsyncarc(writer, node, isend):
 	if not writer.smilboston and len(list) > 1:
 		writer.warning('Lost information about multiple %s times' % ['begin','end'][isend])
 		return list[0]		# just return the first
-	return string.join(list, ';')
+	return ';'.join(list)
 
 def getterm(writer, node):
 	if node.type in ('seq', 'prio', 'switch'):
@@ -805,13 +805,13 @@ def getboolean(writer, node, attr, truefalse = 0, default = None):
 def getsysreq(writer, node, attr):
 	sysreq = node.GetRawAttrDef('system_required', [])
 	if sysreq:
-		return string.join(map(lambda i: 'ext%d' % i, range(len(sysreq))), ' + ')
+		return ' + '.join(map(lambda i: 'ext%d' % i, range(len(sysreq))))
 	return None
 
 def getsyscomp(writer, node, attr):
 	syscomp = node.GetRawAttrDef('system_component', [])
 	if syscomp:
-		return string.join(syscomp)
+		return ' '.join(syscomp)
 	return None
 
 def getscreensize(writer, node):
@@ -832,7 +832,7 @@ def getugroup(writer, node):
 			print '** Attempt to write unknown usergroup', u_group
 	if not names:
 		return
-	return string.join(names, ' + ')
+	return ' + '.join(names)
 
 def getlayout(writer, node):
 	if not writer.context.layouts:
@@ -859,7 +859,7 @@ def gettransition(writer, node, which):
 		except KeyError:
 			print '** Attempt to write unknown transition', tr
 			list.append(tr)
-	return string.join(list, ';')
+	return ';'.join(list)
 
 
 def getautoreverse(writer, node):
@@ -921,9 +921,9 @@ def getpath(writer, node):
 	# strange but IE manages only spaces
 	# grins both spaces and commas
 	# so use spaces at least for now
-	attr = string.join(string.split(attr,','),' ')
+	attr = ' '.join(attr.split(','))
 	# collapse multiple spaces to one
-	attr = string.join(string.split(attr))
+	attr = ' '.join(attr.split())
 	return attr
 
 def getcollapsed(writer, node):
@@ -1213,123 +1213,12 @@ def mediatype(x, error=0):
 		print '** Unimplemented channel type', chtype
 	return '%s:%s' % (NSGRiNSprefix, chtype), '%s %s' % (GRiNSns, chtype)
 
-class SMILWriter(SMIL):
-	def __init__(self, node, fp, filename, grinsExt = 1,
-		     rpExt = features.EXPORT_REAL in features.feature_set,
-		     qtExt = features.EXPORT_QT in features.feature_set,
-		     copyFiles = 0, evallicense = 0, tmpcopy = 0, progress = None,
-		     convertURLs = 0, convertfiles = 1, set_char_pos = 0, prune = 0,
-		     smil_one = 0, weburl = None):
-		self.messages = []
-
-		# remember params
-		self.set_char_pos = set_char_pos
-		self.grinsExt = grinsExt
-		self.qtExt = qtExt
-		self.rpExt = rpExt
-		self.evallicense = evallicense
-		self.prune = prune
-		self.progress = progress
-		self.convert = convertfiles # we only convert if we have to copy
-		self.root = node
-
-		self.__ignoring = 0	# whether we're ignoring a tag (see writetag())
-
-		# some abbreviations
-		self.context = ctx = node.GetContext()
-		self.hyperlinks = ctx.hyperlinks
-
-		if convertURLs:
-			url = MMurl.canonURL(MMurl.pathname2url(filename))
-			i = string.rfind(url, '/')
-			if i >= 0: url = url[:i+1]
-			else: url = ''
-			self.convertURLs = url
-		else:
-			self.convertURLs = None
-
-		self.__generate_number = 0
-		if filename == '<string>':
-			self.__generate_basename = 'grinstmp'
-		else:
-			self.__generate_basename = os.path.splitext(os.path.basename(filename))[0]
-		self.files_generated = {}
-		self.webfiles_generated = {}
-		self.bases_used = {}
-		if copyFiles:
-			dir, base = os.path.split(filename)
-			base, ext = os.path.splitext(base)
-			if tmpcopy:
-				newdir = base + '.tmpdata'
-				self.copydir = os.path.join(dir, newdir)
-				self.copydirurl = MMurl.pathname2url(base+'.data') + '/'
-				self.copydirname = base + '.data'
-			else:
-				newdir = base + '.data'
-				self.copydir = os.path.join(dir, newdir)
-				self.copydirurl = MMurl.pathname2url(newdir) + '/'
-				self.copydirname = newdir
-			self.webcopydirurl = MMurl.basejoin(weburl or '', self.copydirurl)
-			self.copycache = {}
-			self.webcopycache = {}
-			try:
-				os.mkdir(self.copydir)
-			except:
-				# raise Error, 'Cannot create subdirectory for assets; document not saved'
-				pass # Incorrect: may be because of failed permissions
-		else:
-			self.copydir = self.copydirurl = self.copydirname = None
-
-		self.__isopen = 0
-		self.__stack = []
-
-		self.uses_grins_namespace = grinsExt
-		self.uses_qt_namespace = self.qtExt and self.checkQTattrs()
-		self.uses_rp_namespace = self.rpExt
-		self.force_smil_1 = smil_one
-		if smil_one:
-			self.smilboston = 0
-		else:
-			self.smilboston = ctx.attributes.get('project_boston', 0)
-
-		self.__title = ctx.gettitle()
-		assets = ctx.getassets()
-
-		self.ids_used = {}
-
-		self.ugr2name = {}
-		self.calcugrnames()
-
-		self.layout2name = {}
-		self.calclayoutnames()
-
-		self.transition2name = {}
-		self.calctransitionnames()
-
-		self.ch2name = {}
-		self.calcchnames1()
-
-		self.uid2name = {}
-		self.calcnames1(node)
-		if assets:
-			for anode in assets:
-				self.calcnames1(anode)
-
-		# second pass
-		self.calcnames2(node)
-		if assets:
-			for anode in assets:
-				self.calcnames2(anode)
-		self.calcchnames2()
-
-		self.syncidscheck(node)
-
-		if fp is None:
-			fp = open(filename, 'w')
+class BaseSMILWriter:
+	def __init__(self, fp):
 		self.fp = IndentedFile(fp)
-
-	def warning(self, msg):
-		self.messages.append(msg)
+		self.__isopen = 0
+		self.__ignoring = 0	# whether we're ignoring a tag (see writetag())
+		self.__stack = []
 
 	def push(self):
 		if self.__ignoring > 0:
@@ -1372,14 +1261,8 @@ class SMILWriter(SMIL):
 		while self.__stack:
 			self.pop()
 		fp.close()
-		if self.messages:
-			import windowinterface
-			windowinterface.showmessage('\n'.join(self.messages))
 
-	def cancelwrite(self):
-		raise cancel, 'user requested cancellation'
-
-	def writecomment(self, x):
+	def writecomment(self, comment, x = None):
 		write = self.fp.write
 		if self.__isopen:
 			start, end = write('/>\n')
@@ -1388,12 +1271,14 @@ class SMILWriter(SMIL):
 				n.char_positions = n.char_positions[0], end
 			self.__isopen = 0
 			del self.__stack[-1]
-		comment = string.join(x.values, '\n')
 		# -- not allowed in comment, so convert to - -
-		comment = string.join(string.split(comment, '--'), '- -')
+		comment = '- -'.join(comment.split('--'))
 		start, end = write('<!--%s-->\n' % comment)
 		if self.set_char_pos and x is not None:
 			x.char_positions = start, end
+
+	def writestring(self, str):
+		self.fp.write(str)
 
 	def writetag(self, tag, attrs = None, x = None):
 		if self.__ignoring > 1:
@@ -1467,6 +1352,128 @@ class SMILWriter(SMIL):
 		self.__isopen = 1
 		self.__stack.append((tag, x, hasGRiNSprefix, hasQTprefix, hasRP9prefix))
 
+class SMILWriter(SMIL, BaseSMILWriter):
+	def __init__(self, node, fp, filename, grinsExt = 1,
+		     rpExt = features.EXPORT_REAL in features.feature_set,
+		     qtExt = features.EXPORT_QT in features.feature_set,
+		     copyFiles = 0, evallicense = 0, tmpcopy = 0, progress = None,
+		     convertURLs = 0, convertfiles = 1, set_char_pos = 0, prune = 0,
+		     smil_one = 0, weburl = None):
+		self.messages = []
+
+		# remember params
+		self.set_char_pos = set_char_pos
+		self.grinsExt = grinsExt
+		self.qtExt = qtExt
+		self.rpExt = rpExt
+		self.evallicense = evallicense
+		self.prune = prune
+		self.progress = progress
+		self.convert = convertfiles # we only convert if we have to copy
+		self.root = node
+
+		# some abbreviations
+		self.context = ctx = node.GetContext()
+		self.hyperlinks = ctx.hyperlinks
+
+		if convertURLs:
+			url = MMurl.canonURL(MMurl.pathname2url(filename))
+			i = url.rfind('/')
+			if i >= 0: url = url[:i+1]
+			else: url = ''
+			self.convertURLs = url
+		else:
+			self.convertURLs = None
+
+		self.__generate_number = 0
+		if filename == '<string>':
+			self.__generate_basename = 'grinstmp'
+		else:
+			self.__generate_basename = os.path.splitext(os.path.basename(filename))[0]
+		self.files_generated = {}
+		self.webfiles_generated = {}
+		self.bases_used = {}
+		if copyFiles:
+			dir, base = os.path.split(filename)
+			base, ext = os.path.splitext(base)
+			if tmpcopy:
+				newdir = base + '.tmpdata'
+				self.copydir = os.path.join(dir, newdir)
+				self.copydirurl = MMurl.pathname2url(base+'.data') + '/'
+				self.copydirname = base + '.data'
+			else:
+				newdir = base + '.data'
+				self.copydir = os.path.join(dir, newdir)
+				self.copydirurl = MMurl.pathname2url(newdir) + '/'
+				self.copydirname = newdir
+			self.webcopydirurl = MMurl.basejoin(weburl or '', self.copydirurl)
+			self.copycache = {}
+			self.webcopycache = {}
+			try:
+				os.mkdir(self.copydir)
+			except:
+				# raise Error, 'Cannot create subdirectory for assets; document not saved'
+				pass # Incorrect: may be because of failed permissions
+		else:
+			self.copydir = self.copydirurl = self.copydirname = None
+
+		self.uses_grins_namespace = grinsExt
+		self.uses_qt_namespace = self.qtExt and self.checkQTattrs()
+		self.uses_rp_namespace = self.rpExt
+		self.force_smil_1 = smil_one
+		if smil_one:
+			self.smilboston = 0
+		else:
+			self.smilboston = ctx.attributes.get('project_boston', 0)
+
+		self.__title = ctx.gettitle()
+		assets = ctx.getassets()
+
+		self.ids_used = {}
+
+		self.ugr2name = {}
+		self.calcugrnames()
+
+		self.layout2name = {}
+		self.calclayoutnames()
+
+		self.transition2name = {}
+		self.calctransitionnames()
+
+		self.ch2name = {}
+		self.calcchnames1()
+
+		self.uid2name = {}
+		self.calcnames1(node)
+		if assets:
+			for anode in assets:
+				self.calcnames1(anode)
+
+		# second pass
+		self.calcnames2(node)
+		if assets:
+			for anode in assets:
+				self.calcnames2(anode)
+		self.calcchnames2()
+
+		self.syncidscheck(node)
+
+		if fp is None:
+			fp = open(filename, 'w')
+		BaseSMILWriter.__init__(self, fp)
+
+	def close(self):
+		BaseSMILWriter.close(self)
+		if self.messages:
+			import windowinterface
+			windowinterface.showmessage('\n'.join(self.messages))
+
+	def warning(self, msg):
+		self.messages.append(msg)
+
+	def cancelwrite(self):
+		raise cancel, 'user requested cancellation'
+
 	def checkQTattrs(self):
 		attributes = self.context.attributes
 		for key in qt_context_attrs.keys():
@@ -1502,28 +1509,27 @@ class SMILWriter(SMIL):
 	def write(self):
 		import version
 		ctx = self.context
-		fp = self.fp
 
 		# if the document is not valid, just write the raw source code
 		# XXX this code should move to another location. I don't know where ?
 		parseErrors = ctx.getParseErrors()
 		if parseErrors != None:
 			source = parseErrors.getSource()
-			fp.write(source)
-			fp.close()
+			self.fp.write(source)
+			self.fp.close()
 			return
 
-		fp.write(SMILdecl)	# MUST come first
+		self.writestring(SMILdecl) # MUST come first
 		if self.evallicense:
-			fp.write('<!--%s-->\n' % EVALcomment)
+			self.writecomment(EVALcomment)
 		# write DOCTYPE only if no namespaces
 		if not self.uses_grins_namespace and not self.uses_rp_namespace and not self.uses_qt_namespace:
 			if self.smilboston:
-				fp.write(doctype2)
+				self.writestring(doctype2)
 			else:
-				fp.write(doctype)
+				self.writestring(doctype)
 		if ctx.comment:
-			fp.write('<!--%s-->\n' % ctx.comment)
+			self.writecomment(ctx.comment)
 		attrlist = []
 		if self.smilboston:
 			attrlist.append(('xmlns', SMIL2ns[0]))
@@ -1560,7 +1566,7 @@ class SMILWriter(SMIL):
 			if ctx.metadata:
 				self.writetag('metadata', [])
 				self.push()
-				self.fp.write(ctx.metadata)
+				self.writestring(ctx.metadata)
 				self.pop()
 
 		if self.__title:
@@ -1597,8 +1603,8 @@ class SMILWriter(SMIL):
 		if self.grinsExt and ctx.externalanchors:
 			links = []
 			for link in ctx.externalanchors:
-				links.append(string.join(string.split(link, ' '), '%20'))
-			self.writetag('meta', [('name', 'project_links'), ('content', string.join(links))])
+				links.append('%20'.join(link.split(' ')))
+			self.writetag('meta', [('name', 'project_links'), ('content', ' '.join(links))])
 		self.writelayout()
 		if self.smilboston:
 			self.writetransitions()
@@ -2140,7 +2146,7 @@ class SMILWriter(SMIL):
 				channames.append(self.ch2name[ch])
 			self.writetag('%s:layout' % NSGRiNSprefix,
 				      [('id', self.layout2name[name]),
-				       ('regions', string.join(channames))])
+				       ('regions', ' '.join(channames))])
 		self.pop()
 
 	def writeviewinfo(self):
@@ -2188,7 +2194,7 @@ class SMILWriter(SMIL):
 			self.writeanchor(x)
 			return
 		elif type == 'comment':
-			self.writecomment(x)
+			self.writecomment('\n'.join(x.values), x)
 			return
 		
 		attrlist = []
@@ -2236,7 +2242,7 @@ class SMILWriter(SMIL):
 				if attr == 'namespace' or attr == 'elemname':
 					continue
 				if ' ' in attr:
-					ans, attr = string.split(attr, ' ', 1)
+					ans, attr = attr.split(' ', 1)
 					if not extensions.has_key(ans):
 						extensions[ans] = 'x%s' % len(extensions)
 						attrlist.append(('xmlns:%s' % extensions[ans], ans))
@@ -2711,7 +2717,7 @@ class SMILWriter(SMIL):
 			convert = 0
 
 		if convert and u.headers.maintype == 'audio' and \
-		   string.find(u.headers.subtype, 'real') < 0:
+		   u.headers.subtype.find('real') < 0:
 			from realconvert import convertaudiofile
 			# XXXX This is a hack. convertaudiofile may change the filename (and
 			# will, currently, to '.ra').
@@ -2735,7 +2741,7 @@ class SMILWriter(SMIL):
 			windowinterface.showmessage(msg)
 			u = MMurl.urlopen(srcurl)
 		if convert and u.headers.maintype == 'video' and \
-		   string.find(u.headers.subtype, 'real') < 0:
+		   u.headers.subtype.find('real') < 0:
 			from realconvert import convertvideofile
 			# XXXX This is a hack. convertvideofile may change the filename (and
 			# will, currently, to '.rm').
@@ -2759,7 +2765,7 @@ class SMILWriter(SMIL):
 			u = MMurl.urlopen(srcurl)
 		if convert and u.headers.maintype == 'image' and \
 		   u.headers.subtype != 'svg-xml' and \
-		   string.find(u.headers.subtype, 'real') < 0:
+		   u.headers.subtype.find('real') < 0:
 			from realconvert import convertimagefile
 			# XXXX This is a hack. convertimagefile may change the filename (and
 			# will, currently, to '.jpg').
@@ -2782,7 +2788,7 @@ class SMILWriter(SMIL):
 			u = MMurl.urlopen(srcurl)
 ##		if convert and u.headers.maintype == 'text' and \
 ##		   u.headers.subtype != 'html' and \
-##		   string.find(u.headers.subtype, 'real') < 0:
+##		   u.headers.subtype.find('real') < 0:
 ##			from realconvert import converttextfile
 ##			# XXXX This is a hack. converttextfile may change the filename (and
 ##			# will, currently, to '.rt').
@@ -2791,7 +2797,7 @@ class SMILWriter(SMIL):
 ##			file = converttextfile(u, dstdir, file, node)
 ##			files_generated[file] = ''
 ##			return file
-		if u.headers.maintype == 'text' or string.find(u.headers.subtype, 'xml') >= 0:
+		if u.headers.maintype == 'text' or u.headers.subtype.find('xml') >= 0:
 			binary = ''
 		else:
 			binary = 'b'
@@ -2866,7 +2872,7 @@ def identify(name, html = 0):
 	# the first character must not be a digit
 	if rv and rv[0] in string.digits:
 		rv.insert(0, '_')
-	name = string.join(rv, '')
+	name = ''.join(rv)
 	if html:
 		# certain names should not be used in XHTML+SMIL
 		if ATTRIBUTES.has_key(name):
