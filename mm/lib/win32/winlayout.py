@@ -696,9 +696,9 @@ class Polyline:
 		projpt, index = self.projection(pt)
 		x0, y0 = self._wnd.getwindowpos()[:2]
 		if projpt is not None:
+			projpt = self.DPtoLP(projpt)
 			x, y = projpt
-			projpt = self.DPtoLP((x - x0, y - y0))
-			self._points.insert(index, projpt)
+			self._points.insert(index, (x - x0, y - y0))
 			self.update()
 			d1 = self.__dist(index-1, index)
 			d2 = self.__dist(index-1, index+1)
