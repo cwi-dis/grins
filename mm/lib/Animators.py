@@ -1773,9 +1773,9 @@ class AnimateElementParser:
 			
 		tt = tuple(map(string.atof, tl))
 
+		last = tt[len(tt)-1]
 		if self.__calcMode !='discrete':
 			# normalize keyTimes		
-			last = tt[len(tt)-1]
 			if last<=0.0:
 				print 'invalid keyTimes'
 				return ()
@@ -1784,6 +1784,15 @@ class AnimateElementParser:
 				for i in range(len(tt)):
 					tl.append(tt[i]/last)
 				tt = tuple(tl)
+		
+		# hieuristics to cover proportions in 'discrete' mode
+		dur = self.getDuration()
+		if self.__calcMode =='discrete' and last<1.0:
+			# unnormalize
+			tl = []
+			for i in range(len(tt)):
+				tl.append(tt[i]*dur)
+			tt = tuple(tl)
 
 		# check boundary constraints
 		first = tt[0]
