@@ -316,7 +316,7 @@ class SMILWriter:
 			fname = self.smiltempfile(x)
 			fp = open(fname, 'w')
 			data = string.join(x.GetValues(), sep)
-			if data[-1] != '\n':
+			if data[-1:] != '\n':
 				data = data + '\n'
 			if chtype == 'text':
 				data = string.join(string.split(data, '\n\n'),
