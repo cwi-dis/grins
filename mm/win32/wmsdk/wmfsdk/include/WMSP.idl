@@ -1,20 +1,7 @@
-//============================================================================
 //
-//  Microsoft Windows Media Technology
-//  Copyright (C) Microsoft Corporation, 1999 - 2001.  All Rights Reserved.
+//  Microsoft Windows Media Technologies
+//  Copyright (C) Microsoft Corporation, 1999 - 2001. All rights reserved.
 //
-//  File:        wmsp.idl
-//
-//  Description: 
-//
-//============================================================================
-
-cpp_quote( "//=========================================================================" )
-cpp_quote( "//" )
-cpp_quote( "// Microsoft Windows Media Technologies" )
-cpp_quote( "// Copyright (C) Microsoft Corporation, 1999 - 2001.  All Rights Reserved." )
-cpp_quote( "//" )
-cpp_quote( "//=========================================================================" )
 
 cpp_quote("// Open Mode Flags")
 cpp_quote("#define MDSP_READ                               0x00000001")
