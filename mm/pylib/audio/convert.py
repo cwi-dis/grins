@@ -171,12 +171,10 @@ class unsigned2linear8(audio_filter):
 		audio_filter.__init__(self, rdr, fmt)
 		if not unsigned2linear8.__translation:
 			# initialize class variable __translation
-			import string
-			unsigned2linear8.__translation = string.joinfields(
+			unsigned2linear8.__translation = string.join(
 				map(chr, range(128, 256) + range(0, 128)), '')
 
 	def readframes(self, nframes = -1):
-		import string
 		data, nframes = self._rdr.readframes(nframes)
 		return string.translate(data, self.__translation), nframes
 
@@ -660,7 +658,6 @@ def _find_converter(srcfmt, dstfmt):
 
 def _enumerate_converters(srcfmt):
 	cvs = {}
-	formats = [srcfmt]
 	steps = 0
 	while 1:
 		workdone = 0
@@ -711,5 +708,5 @@ def _enumerate_converters(srcfmt):
 			print _converters
 			print 'RESULTS:'
 			print cvs
-			raise error, 'Internal error - loop'
+			raise audio.Error, 'Internal error - loop'
 	return cvs
