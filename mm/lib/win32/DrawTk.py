@@ -565,8 +565,9 @@ class DrawTk:
 	def ToScaledCoord(self,rc):
 		l=int(self._xscale*rc.left+0.5)
 		t=int(self._yscale*rc.top+0.5)
-		r=int(self._xscale*rc.right+0.5)
-		b=int(self._yscale*rc.bottom+0.5)
+		w=int(self._xscale*rc.width()+0.5)
+		h=int(self._yscale*rc.height()+0.5)
+		r=l+w;b=t+h
 		return Rect((l,t,r,b))
 
 	def	RestoreState(self):
