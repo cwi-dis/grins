@@ -50,6 +50,7 @@ default_settings = {
 	'no_canvas_resize': 1,	 # Don't resize canvas after window resize (X)
 	'hierarchy_minimum_sizes': 0,	# Leaf nodes drawn using min. size
 	'structure_name_size': 1,
+	'structure_thumbnails': 1,	# Display image thumbnails by default
 	'root_expanded': 0,		# Root node always expanded
 	'recent_documents':[],		# Recently used documents
 	'thumbnail_size':10.0,		# Size of thumbnail (mm)
