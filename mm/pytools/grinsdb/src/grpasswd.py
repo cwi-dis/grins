@@ -26,6 +26,7 @@ def main():
 		if passwd == '-':
 			passwd = invent_passwd()
 		addfield(dbase, user, 'Password', passwd, override=1)
+	dbase.close()
 
 def addpasswd(obj, passwd='-'):
 	"""Helper for register: add password to a record"""
