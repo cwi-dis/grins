@@ -230,6 +230,9 @@ class NodeWrapper(Wrapper):
 		hlinks = self.context.hyperlinks
 		for aid, atype, aargs in alist:
 			links = []
+			if atype == ATYPE_DEST:
+				# don't show destination-only anchors
+				continue
 			for a1, a2, ldir, ltype in hlinks.findsrclinks((uid, aid)):
 				links.append((a2, ldir, ltype))
 			links.sort()
@@ -240,19 +243,29 @@ class NodeWrapper(Wrapper):
 		node = self.node
 		uid = node.GetUID()
 		hlinks = self.context.hyperlinks
+		linkview = self.toplevel.links
 		editmgr = self.editmgr
 		anchorlist = []
 		newlinks = []
 		oldanchors = self.__findanchors()
 		oldanchonames = oldanchors.keys()
 		for aid in oldanchors.keys():
-			for link in hlinks.findsrclinks((uid, aid)):
+			anchor = uid, aid
+			for link in hlinks.findsrclinks(anchor):
 				editmgr.dellink(link)
+			if anchor in linkview.interesting:
+				linkview.interesting.remove(anchor)
 		for aid in newanchors.keys():
+			anchor = uid, aid
 			atype, aargs, links = newanchors[aid]
 			anchorlist.append((aid, atype, aargs))
-			for link in links:
-				editmgr.addlink(((uid, aid),) + link)
+			if links:
+				if anchor in linkview.interesting:
+					linkview.interesting.remove(anchor)
+				for link in links:
+					editmgr.addlink((anchor,) + link)
+			else:
+				linkview.set_interesting(anchor)
 		editmgr.setnodeattr(node, 'anchorlist', anchorlist or None)
 
 	def getattr(self, name): # Return the attribute or a default
@@ -352,7 +365,7 @@ class NodeWrapper(Wrapper):
 			]
 		ntype = self.node.GetType()
 		ctype = self.node.GetChannelType()
-		if ntype in ('ext', 'imm') or not settings.get('lightweight'):
+		if ntype in leaftypes or not settings.get('lightweight'):
 			namelist[1:1] = ['channel']
 		if ntype == 'bag':
 			namelist.append('bag_index')
@@ -360,7 +373,7 @@ class NodeWrapper(Wrapper):
 			namelist.append('terminator')
 		if ntype in ('par', 'seq'):
 			namelist.append('duration')
-		if ntype in ('ext', 'imm'):
+		if ntype in leaftypes:
 			namelist.append('alt')
 			namelist.append('longdesc')
 			if lightweight and ChannelMap.isvisiblechannel(ctype):
@@ -399,7 +412,8 @@ class NodeWrapper(Wrapper):
 					pass
 			else:
 				retlist.append(name)
-		if not lightweight and sys.platform == 'win32':	# XXX until implemented on other platforms
+		if not lightweight and ntype in leaftypes \
+		   and sys.platform == 'win32': # XXX until implemented on other platforms
 			retlist.append('.anchorlist')
 		return retlist
 
@@ -810,7 +824,7 @@ class PreferenceWrapper(Wrapper):
 	def attrnames(self):
 		import settings
 		attrs = self.__strprefs.keys() + self.__intprefs.keys() + self.__boolprefs.keys() + self.__specprefs.keys()
-		if settings.get('lightweight'):
+		if settings.get('compatibitity') != settings.G2:
 			attrs.remove('cmif')
 			attrs.remove('html_control')
 		elif os.name in ('posix', 'mac'):
