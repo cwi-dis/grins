@@ -288,23 +288,32 @@ class ImageChannel(Channel):
 	#
 
 
-def makergbfile(filename):
-	import FileCache
-	import imghdr
-	type = imghdr.what(filename)
-##	print 'Type of', filename, 'is', type
-	if type == 'pnm':
-		return conv('fromppm $1 $2', filename)
-	if type == 'gif':
-		return conv('fromgif $1 $2', filename)
-	if type == 'tiff':
-		return conv('fromppm $1 $2', \
-			conv('tifftopnm <$1 >$2', filename))
-	if type == 'rast':
-		return conv('fromsun $1 $2', filename)
-	return filename
-
 temps = []
+
+def makergbfile(filename):
+	import imghdr
+	import os
+	uncompressed = None
+	if filename[-2:] == '.Z':
+		filename = uncompressed = conv('zcat <$1 >$2', filename)
+	type = imghdr.what(filename)
+	if type == 'pnm':
+		res = conv('fromppm $1 $2', filename)
+	elif type == 'gif':
+		res = conv('fromgif $1 $2', filename)
+	elif type == 'tiff':
+		tempname = conv('tifftopnm <$1 >$2', filename)
+		res = conv('fromppm $1 $2', tempname)
+		os.unlink(tempname)
+		temps.remove(tempname)
+	elif type == 'rast':
+		res = conv('fromsun $1 $2', filename)
+	else:
+		res = filename
+	if None <> uncompressed <> res:
+		os.unlink(uncompressed)
+		temps.remove(uncompressed)
+	return res
 
 def conv(cmd, filename):
 	import os
@@ -312,6 +321,7 @@ def conv(cmd, filename):
 	tempname = tempfile.mktemp()
 	temps.append(tempname)
 	cmd = 'set ' + filename + ' ' + tempname + '; ' + cmd
+	print 'Executing:', cmd
 	sts = os.system(cmd)
 	if sts:
 		print cmd
@@ -320,10 +330,12 @@ def conv(cmd, filename):
 
 def cleanup():
 	import os
+	rgbcache.flushall()
 	for tempname in temps:
 		try:
 			os.unlink(tempname)
-		except os.error, IOError:
+		except (os.error, IOError):
 			pass
+	temps[:] = []
 
 rgbcache = FileCache.FileCache().init(makergbfile)
