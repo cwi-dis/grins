@@ -843,7 +843,7 @@ class LayoutView2(LayoutViewDialog2):
 		# some other commands to update
 		if len(self.currentSelectedNodeList) == 1:
 			selectedNode = self.currentSelectedNodeList[0]
-			if not (self.getNodeType(selectedNode) == TYPE_REGION and not selectedNode.isDefault()):
+			if not (self.getNodeType(selectedNode) == TYPE_REGION and selectedNode.isDefault()):
 				commandlist.append(ATTRIBUTES(callback = (self.onEditProperties, ())))
 
 		if len(self.currentSelectedNodeList) >= 1:
