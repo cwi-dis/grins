@@ -2315,6 +2315,8 @@ class AttrEditForm(GenFormView):
 	#      or the attrdict.get calls in Channel.py and LayoutView.py and here
 	def getunits(self,ch=None):
 		if not ch:
+			if not self._channel:
+				return appcon.UNIT_SCREEN
 			return self._channel.attrdict.get('units',appcon.UNIT_SCREEN)
 		else:
 			return ch.attrdict.get('units',appcon.UNIT_SCREEN)
@@ -2347,7 +2349,7 @@ class AttrEditForm(GenFormView):
 		if hasattr(a.wrapper,'node'):
 			self._node=a.wrapper.node
 			chname=self.getchannel(self._node)
-			self._channel=self._channels[chname]
+			self._channel=self._channels.get(chname)
 		else:
 			self._node=None		
 
@@ -2356,15 +2358,12 @@ class AttrEditForm(GenFormView):
 
 	
 	def getchannel(self,node):
-		if node.attrdict.has_key('channel'):
-			return node.attrdict['channel']
-		while node.parent:
-			node=node.parent
-			if node.attrdict.has_key('channel'):
-				return node.attrdict['channel']
-		return self._layoutch.name
+		import MMAttrdefs
+		return MMAttrdefs.getattr(node, 'channel')
 
 	def GetBBox(self):
+		if not self._channel:
+			return ((0,0,0,0),0) # XXX ?
 		if self._node:
 			return self._channels_rc[self._channel.name]
 		else:
@@ -2372,6 +2371,8 @@ class AttrEditForm(GenFormView):
 			return self._channels_rc[bw]
 
 	def GetCBox(self):
+		if not self._channel:
+			return ((0,0,0,0),0) # XXX ?
 		bw=self._channel.attrdict['base_window']
 		return self._channels_rc[bw]
 					
