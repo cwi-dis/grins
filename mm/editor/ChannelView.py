@@ -868,6 +868,8 @@ class GO(GOCommand):
 					(windowinterface.DOUBLE_WIDTH,))),
 			CANVAS_RESET(callback = (self.canvascall,
 					(windowinterface.RESET_CANVAS,))),
+			CANVAS_FIT(callback = (self.canvascall,
+					(windowinterface.FIT_WINDOW,))),
 			NEW_CHANNEL(callback = (self.newchannelcall, ())),
 			ANCESTORS(callback = mother.setviewrootcb),
 			SIBLINGS(callback = mother.setviewrootcb),
@@ -1252,6 +1254,15 @@ class NodeBox(GO, NodeBoxCommand):
 			ANCHORS(callback = (self.anchorcall, ())),
 			SYNCARCS(callback = self.selsyncarc),
 			]
+
+		# win32++
+		import sys
+		if sys.platform == 'win32':
+			self.commandlist = self.commandlist + [
+				CONTENT_EDIT_REG(callback = (self._editcall, ())),
+				CONTENT_OPEN_REG(callback = (self._opencall, ())),
+				]
+
 		self.arcmenu = arcmenu = []
 		if mother.showarcs:
 			for arc in MMAttrdefs.getattr(node, 'synctolist'):
@@ -1373,7 +1384,7 @@ class NodeBox(GO, NodeBoxCommand):
 			t1 = self.node.t1
 		left, right = self.mother.maptimes(self.node.t0, t1)
 		top, bottom = self.mother.mapchannel(channel)
-		if self.node.timing_discont:
+		if hasattr(self.node,'timing_discont') and self.node.timing_discont:
 		    self.mother.discontinuities.append(
 			self.node.t0+self.node.timing_discont)
 
@@ -1500,6 +1511,15 @@ class NodeBox(GO, NodeBoxCommand):
 		import NodeEdit
 		NodeEdit.showeditor(self.node)
 
+	def _editcall(self):
+		self.mother.toplevel.setwaiting()
+		import NodeEdit
+		NodeEdit._showeditor(self.node)
+	def _opencall(self):
+		self.mother.toplevel.setwaiting()
+		import NodeEdit
+		NodeEdit._showviewer(self.node)
+
 	def anchorcall(self):
 		self.mother.toplevel.setwaiting()
 		import AnchorEdit
@@ -1547,6 +1567,7 @@ class INodeBox(GO):
 
 
 class ArcBox(GO, ArcBoxCommand):
+	arc_info=None # Win32:enforce one instance
 
 	def __init__(self, mother, snode, sside, delay, dnode, dside):
 		self.arcid = snode, sside, delay, dnode, dside
@@ -1602,9 +1623,14 @@ class ArcBox(GO, ArcBoxCommand):
 	# Menu stuff beyond what GO offers
 
 	def infocall(self):
+		import sys
+		if sys.platform=='win32':
+			a=ArcBox.arc_info
+			if a and self.mother.editmgr.is_registered(a):
+				return
 		self.mother.toplevel.setwaiting()
 		import ArcInfo
-		ArcInfo.showarcinfo(self.mother, self.mother.root,
+		ArcBox.arc_info=ArcInfo.showarcinfo(self.mother, self.mother.root,
 				    self.snode, self.sside, self.delay,
 				    self.dnode, self.dside)
 
