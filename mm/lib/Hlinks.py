@@ -107,3 +107,10 @@ class Hlinks:
 		elif dir == DIR_2TO1:
 			dir = DIR_1TO2
 		return (a2, a1, dir, type)
+
+	def findnondanglinganchordict(self):
+		dict = {}
+		for a1, a2, dir, type in self.links:
+			dict[a1] = 1
+			dict[a2] = 1
+		return dict
