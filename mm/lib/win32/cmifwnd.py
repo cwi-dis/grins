@@ -626,11 +626,10 @@ class _CmifWnd(DropTarget, rbtk._rbtk,DrawTk.DrawLayer):
 				callback = self._cbld[id]
 				apply(callback[0], callback[1])
 		elif self._topwindow==self:
+			menu=None
 			if self._popupmenu:
 				self.onLButtonDown(params)
 				menu = self._popupmenu
-			else:
-				menu=self._parent.get_submenu('&Tools')
 			if not menu:return
 			pt=(xpos,ypos)
 			self._popup_point=pt;
