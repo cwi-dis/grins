@@ -2772,7 +2772,7 @@ class SMILWriter(SMIL):
 ##		   u.headers.subtype != 'html' and \
 ##		   string.find(u.headers.subtype, 'real') < 0:
 ##			from realconvert import converttextfile
-##			# XXXX This is a hack. convertaudiofile may change the filename (and
+##			# XXXX This is a hack. converttextfile may change the filename (and
 ##			# will, currently, to '.rt').
 ##			if self.progress:
 ##				self.progress("Converting %s"%os.path.split(file)[1], None, None, None, None)
