@@ -7,6 +7,8 @@ import os
 
 # Defaults:
 default_settings = {
+	'lightweight': 0,		# Lightweight version
+
 	'system_bitrate': 14400,	# Slow modem
 	'system_captions': 0,		# Don't show captions
 	'system_language': '',		# No language preference
