@@ -661,9 +661,8 @@ class FileDialog:
 		dialog.AddCallback('okCallback', self._ok_callback, existing)
 		dialog.AddCallback('cancelCallback', self._cancel_callback,
 				       None)
-		dialog.Parent().AddWMProtocolCallback(toplevel._delete_window,
-						      self._cancel_callback,
-						      None)
+		self._form.Parent().AddWMProtocolCallback(
+			toplevel._delete_window, self._cancel_callback, None)
 		helpb = dialog.FileSelectionBoxGetChild(
 						    Xmd.DIALOG_HELP_BUTTON)
 		helpb.UnmanageChild()
