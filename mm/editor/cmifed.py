@@ -179,10 +179,6 @@ class Main(MainDialog):
 			ok = top.save_callback()
 			top.new_file = nf
 
-def handler(sig, frame):
-	import pdb
-	pdb.set_trace()
-
 def main():
 	os.environ['CMIF_USE_X'] = '1'
 	try:
@@ -195,15 +191,17 @@ def main():
 		splash = None
 	else:
 		splash.splash(version = 'GRiNS ' + version)
-	try:
-		import signal, pdb
-	except ImportError:
-		pass
-	else:
-		signal.signal(signal.SIGINT, handler)
 
 	if ('-q', '') in opts:
 		sys.stdout = open('/dev/null', 'w')
+	elif __debug__:
+		try:
+			import signal, pdb
+		except ImportError:
+			pass
+		else:
+			signal.signal(signal.SIGINT,
+				      lambda s, f, pdb=pdb: pdb.set_trace())
 
 	if sys.argv[0] and sys.argv[0][0] == '-':
 		sys.argv[0] = 'cmifed'
