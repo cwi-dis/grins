@@ -222,6 +222,8 @@
 #define IDC_SCALE1                      1180
 #define IDC_TEMPLATECOMBO               1181
 #define IDC_PICTURE                     1182
+#define IDC_TARGET_EXTERN               1183
+#define IDC_TARGET_EMBEDDED             1184
 #define IDC_PROMPT1                     15014
 #define ID_FILE_NEW_GRINS               32771
 #define ID_FILE_OPEN_GRINS              32772
@@ -275,7 +277,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        261
 #define _APS_NEXT_COMMAND_VALUE         32833
-#define _APS_NEXT_CONTROL_VALUE         1183
+#define _APS_NEXT_CONTROL_VALUE         1185
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
