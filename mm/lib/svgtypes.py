@@ -313,8 +313,8 @@ class SVGNumberList(SVGAttr):
 				self._value.append(string.atof(s))
 
 	def __repr__(self):
-		# string.join(map(fmtfloat, self._values), ' ')
-		return ' '.join(map(fmtfloat, self._values))
+		# string.join(map(fmtfloat, self._value), ' ')
+		return ' '.join(map(fmtfloat, self._value))
 
 	def getValue(self):
 		if self._value is not None:
@@ -380,13 +380,14 @@ class SVGLength(SVGAttr):
 		else:	
 			return fmtfloat(self._value, suffix = self._units)
 
-	def getValue(self, units='px', parent = None):
+	def getValue(self, units='px'):
 		if self._value is not None:
 			if self._units=='%':
-				if parent is not None:
-					f1 = parent / 100.0
+				parent = self._node.getParent()
+				if parent is not None and parent.getType()!='#document':
+					f1 = parent.getXMLAttr(self._attr).getValue() / 100.0
 				else:
-					f1 = 0 # XXX find parent size
+					f1 = 0
 			else:
 				f1 = self.unitstopx.get(self._units or 'px')
 			pixels = f1*self._value
