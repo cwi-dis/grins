@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"
+                      "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
+<smil>
+
+
+  <body>
+    <par id="HERENGRACHT">
+
+      <seq id="HERENGRACHT_map">
+
+
+        <seq id="HERENGRACHT_stroll">
+          <img id="map" src="map.gif" dur="3s"/>
+          <img id="herengracht_168" src="h168.gif" dur="3s"/>
+          <img id="herengracht_218" src="h218.gif" dur="3s"/>
+          <img id="herengracht_284" src="h284.gif" dur="3s"/>
+          <text type="text/plain" id="Credits" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam" dur="indefinite"/>
+
+
+        </seq>
+      </seq>
+    </par>
+  </body>
+</smil>

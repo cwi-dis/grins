@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"
+                      "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
+<smil>
+  <head>
+    <meta name="title" content="  A'DAM FACADES - HERENGRACHT "/>
+    <layout>
+      <root-layout id="A-DAM-FACADES--HERENGRACHT-" title="  A'DAM FACADES - HERENGRACHT " width="500" height="400"/>
+      <region id="Acknowledgements1" title="Acknowledgements1" left="5%" top="95%" z-index="3"/>
+      <region id="image1" title="image1" left="20%" top="10%" width="65%" height="80%"/>
+      <region id="image2" title="image2" left="41%" top="10%" width="46%" height="80%"/>
+      <region id="image3" title="image3" left="35%" top="25%" width="38%" height="80%" fit="meet"/>
+      <region id="image4" title="image4" left="25" top="1%" width="450" height="25"/>
+      <region id="adress" title="adress" left="5%" top="80%" width="30%" height="5%" z-index="3"/>
+      <region id="year" title="year" left="74%" top="80%" width="20%" height="5%" z-index="3"/>
+      <region id="style" title="style" left="5%" top="88%" width="80%" height="10%" z-index="3"/>
+      <region id="style1" title="style1" left="5%" top="88%" width="96%" height="10%" z-index="3"/>
+      <region id="sound" title="sound"/>
+    </layout>
+  </head>
+  <body>
+    <par id="HERENGRACHT">
+      <text type="text/plain" id="Credits" region="Acknowledgements1" src="data:,Thanks%20to%20the%20Amsterdam%20Heritage%20Site%3a%20www.amsterdam.nl/bmz/adam"/>
+        <img id="stroll" region="image4" src="stroll.gif"/>
+
+
+
+        <seq id="HERENGRACHT_stroll">
+
+        <img id="map" region="image1" src="map.gif" dur="5s"/>
+
+         <par id="herengracht_168">      
+          <img id="herengracht_168-image" region="image2" src="h168.gif"/>
+          <text type="text/plain" id="herengracht_168-adress" region="adress" src="data:,HERENGRACHT%20168" dur="5.521s"/>
+          <text type="text/plain" id="herengracht_168-year" region="year" src="data:,ANNO%201638" dur="5.521s"/>
+          <audio id="herengracht_168-sound" region="sound" src="168.au"/>
+          <text type="text/plain" id="herengracht_168-style" region="style" src="data:,AN%20EXAMPLE%20OF%20DUTCH%20CLASSICISM" dur="2.816s" begin="id(herengracht_168-sound)(2.8)"/>
+         </par>
+
+         <par id="herengracht_218">
+
+          <img id="herengracht_218-image" region="image3" src="h218.gif"/>
+          <text type="text/plain" id="herengracht_218-adress" region="adress" src="data:,HERENGRACHT%20218" dur="8.613s"/>
+          <text type="text/plain" id="herengracht_218-year" region="year" src="data:,ANNO%201616" dur="8.613s"/>
+          <audio id="herengracht_218-sound" region="sound" src="218.au"/>
+          <text type="text/plain" id="herengracht_218-style" region="style1" src="data:,THE%20BAROQUE%20AND%20THE%20SOBER%20AMSTERDAM%20RENAISSANCE" dur="5.113s" begin="id(herengracht_218-sound)(3.5)"/>
+         </par>
+
+         <par id="herengracht_284">
+          <img id="herengracht_284-image" region="image2" src="h284.gif"/>
+          <text type="text/plain" id="herengracht_284-adress" region="adress" src="data:,HERENGRACHT%20284" dur="5.604s"/>
+          <text type="text/plain" id="herengracht_284-year" region="year" src="data:,ANNO%201728" dur="5.604s"/>
+          <audio id="herengracht_284-sound" region="sound" src="284.au"/>
+          <text type="text/plain" id="herengracht_284-style" region="style" src="data:,AN%20EXAMPLE%20OF%20THE%20REGENCE%20STYLE" dur="2.804s" begin="id(herengracht_284-sound)(2.8)"/>
+         </par>
+        </seq>
+    </par>
+  </body>
+</smil>
