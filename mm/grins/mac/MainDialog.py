@@ -49,7 +49,7 @@ class MainDialog:
 
 	def __openfile_callback(self):
 		import windowinterface
-		windowinterface.FileDialog('Open file', os.curdir, '*.smil', '',
+		windowinterface.FileDialog('Open file', '', '*.smil', '',
 					   self.__filecvt, None, 1)
 
 	def __filecvt(self, filename):
