@@ -80,6 +80,10 @@ class PlayerDlgBar(window.Wnd):
 		l, t, r, b = self._parent.GetWindowRect()
 		self._parent.FloatControlBar(self, (l+100, (t+b)/2) )
 
+	def hide(self):
+		self._parent.DockControlBar(self)
+		self.ShowWindow(win32con.SW_HIDE)
+
 	def createResourceItems(self, attributes):
 		id = 1
 		for attr in attributes:
