@@ -24,7 +24,8 @@ digits = '0123456789'
 # After initializing the parser once, it is possible to
 # use it to get multiple objects from an input source
 # by calling the reset() method in between calls to getnode()
-# or other get*() methods.
+# or other get*() methods.  (This resets the scanner except for the
+# current line number.)
 
 class MMParser():
 	#
@@ -65,6 +66,7 @@ class MMParser():
 	def reset(self):
 		self.nextline = ''
 		self.pos = 0
+		self.tokstart = 0
 		self.eofseen = 0
 		self.pushback = ''
 	#
@@ -176,7 +178,7 @@ class MMParser():
 			self.open()
 			key = self.getstringvalue(None)
 			if dict.has_key(key):
-				raise TypeError, (t, 'duplicate key string')
+				raise TypeError, (key, 'duplicate key string')
 			dict[key] = func(self, arg)
 			self.close()
 		return dict
@@ -187,7 +189,7 @@ class MMParser():
 			self.open()
 			key = self.getnamevalue(None)
 			if dict.has_key(key):
-				raise TypeError, (t, 'duplicate key name')
+				raise TypeError, (key, 'duplicate key name')
 			dict[key] = func(self, arg)
 			self.close()
 		return dict
@@ -197,7 +199,7 @@ class MMParser():
 		while self.more():
 			key, val = self.getattr()
 			if dict.has_key(key):
-				raise TypeError, (t, 'duplicate attr name')
+				raise TypeError, (key, 'duplicate attr name')
 			dict[key] = val
 		return dict
 	#
@@ -284,7 +286,7 @@ class MMParser():
 			pass
 		# XXX union?
 		else:
-			raise TypeError, (t, 'type name')
+			raise TypeError, (type, 'type name')
 		self.close()
 		return type, arg
 	#
@@ -367,7 +369,7 @@ class MMParser():
 	#
 	def ungettoken(self, token):
 		if self.pushback:
-			raise RuntimeError, 'more than one ungettoken'
+			raise AssertError, 'more than one ungettoken'
 		# print 'pushback:', token
 		self.pushback = token
 	#
@@ -376,6 +378,7 @@ class MMParser():
 	# the parser is too slow.
 	#
 	def getnexttoken(self):
+		self.tokstart = self.pos
 		#
 		# Look for the start of a token (returns '' if EOF hit)
 		#
@@ -388,7 +391,7 @@ class MMParser():
 					self.nextline = ''
 				else:
 					self.nextline = self.input.readline()
-				self.pos = 0
+				self.pos = self.tokstart = 0
 				if not self.nextline:
 					if self.eofseen:
 						raise EOFError
@@ -424,6 +427,7 @@ class MMParser():
 		line = self.nextline
 		i, n = self.pos, len(line)
 		c = line[i]
+		self.tokstart = i
 		if c = '\'':
 			i = i+1
 			while i < n:
@@ -468,12 +472,12 @@ class MMParser():
 		fp.write(line)
 		if line[-1:] <> '\n':
 			fp.write('\n')
-		arrowpos = max(0, self.pos-1)
 		for i in range(len(line)):
-			if i >= arrowpos:
-				fp.write('^')
+			if i >= self.tokstart:
+				n = max(1, self.pos - i)
+				fp.write('^'*n)
 				break
-			if line[i] = '\t':
+			elif line[i] = '\t':
 				fp.write('\t')
 			elif ' ' <= line[i] < '\177':
 				fp.write(' ')
@@ -481,14 +485,26 @@ class MMParser():
 	#
 
 
-#
 # Create a table of attribute parsers using the given parser class.
 # In the future this will be done based upon a description of the
 # attributes read from a file.
-#
+
 def makeattrparsers(cl):
 	import MMAttrdefs
 	return MMAttrdefs.useattrdefs(cl.basicparsers)
+
+
+# Parse a value from a string using a given typedef
+
+def parsevalue(string, typedef, context):
+	import MMAttrdefs
+	fp = StringInput().init(string)
+	parser = MMParser().init(fp, context)
+	parserdef = MMAttrdefs.usetypedef(typedef, MMParser.basicparsers)
+	value = parser.getgenericvalue(parserdef)
+	if parser.peektoken() <> '':
+		raise SyntaxError, 'excess input'
+	return value
 
 
 # A class to parse from a string
