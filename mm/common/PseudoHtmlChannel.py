@@ -98,7 +98,7 @@ class HtmlChannel(ChannelWindow):
 ##			print 'buttons:',`buttons`
 		self.armed_display.fgcolor(self.gethicolor(node))
 		for (name, box, type, times) in buttons:
-			button = self.armed_display.newbutton(box, times = times)
+			button = self.armed_display.newbutton(box)
 			button.hiwidth(3)
 ##			button.hicolor(self.getfgcolor(node))
 			self.setanchor(name, type, button, times)
@@ -279,7 +279,7 @@ def calclines(parlist, sizefunc, limit):
 			i = fitwords(par, sizefunc, limit)
 			n = len(par)
 			while i < n and par[i] == ' ': i = i+1
-			sublist.append(len(curlines), start, start+i)
+			sublist.append((len(curlines), start, start+i))
 			curlines.append(par[:i])
 			linetopar.append((parno, start, start+i))
 			par = par[i:]
