@@ -1018,7 +1018,7 @@ class HierarchyView(HierarchyViewDialog):
 		for i in nodes:
 			copyme.append(i.DeepCopy())
 
-		self.editmgr.setclip(copyme, owned = 1)
+		self.editmgr.setclip(copyme)
 
 		self.editmgr.commit()
 		
@@ -1048,7 +1048,7 @@ class HierarchyView(HierarchyViewDialog):
 			return 0
 		
 		# XXXX Clear clip
-		context.editmgr.setclip([newnode], owned=1)
+		context.editmgr.setclip([newnode])
 
 		self.editmgr.commit()
 		

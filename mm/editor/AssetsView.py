@@ -114,7 +114,7 @@ class AssetsView(AssetsViewDialog):
 			return
 		self.editmgr.delasset(item)
 		self.editmgr.commit()
-		self.editmgr.setclip('node', item)
+		self.editmgr.setclip([item])
 
 	def callback_paste(self):
 		data = self.editmgr.getclip()
