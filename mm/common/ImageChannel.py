@@ -63,6 +63,9 @@ class ImageChannel(ChannelWindow):
 			if atype == ATYPE_WHOLE:
 				# whole node already done
 				continue
+			anchor = node.GetUID(), a[A_ID]
+			if not self._player.context.hyperlinks.findsrclinks(anchor):
+				continue
 			if len(args) == 0:
 				args = [0,0,1,1]
 			elif len(args) == 4:
