@@ -700,6 +700,31 @@ class HierarchyView(HierarchyViewDialog):
 	# Upcalls from widgets                          #
 	#################################################
 
+	# delete all syncarcs in the tree rooted at root that refer to node
+	# this works best if node is not part of the tree (so that it is not
+	# returned for "prev" and "syncbase" syncarcs).
+	def fixsyncarcs(self, root, node):
+		beginlist = []
+		changed = 0
+		for arc in MMAttrdefs.getattr(root, 'beginlist'):
+			if arc.refnode() is not node:
+				beginlist.append(arc)
+			else:
+				changed = 1
+		if changed:
+			self.editmgr.setnodeattr(root, 'beginlist', beginlist or None)
+		endlist = []
+		changed = 0
+		for arc in MMAttrdefs.getattr(root, 'endlist'):
+			if arc.refnode() is not node:
+				endlist.append(arc)
+			else:
+				changed = 1
+		if changed:
+			self.editmgr.setnodeattr(root, 'endlist', endlist or None)
+		for c in root.GetChildren():
+			self.fixsyncarcs(c, node)
+
 	def deletefocus(self, cut):
 		# Deletes the node with focus.
 		node = self.focusnode
@@ -721,6 +746,7 @@ class HierarchyView(HierarchyViewDialog):
 			self.select_node(parent)
 		
 		em.delnode(node)
+		self.fixsyncarcs(parent.GetRoot(), node)
 		
 		if cut:
 			t, n = Clipboard.getclip()
@@ -980,6 +1006,7 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Copy node at position src to position dst
 	def copynode(self, dst, src):
+		self.toplevel.setwaiting()
 		xd, yd = dst
 		xs, ys = src
 		# Problem: dstobj will be an internal node.
@@ -987,7 +1014,6 @@ class HierarchyView(HierarchyViewDialog):
 		srcobj = self.whichhit(xs, ys)
 
 		srcnode = srcobj.node.DeepCopy()
-		self.toplevel.setwaiting()
 		if srcnode.context is not self.root.context:
 			srcnode = srcnode.CopyIntoContext(self.root.context)
 		self.focusnode = dstobj.node
