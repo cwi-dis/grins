@@ -16,6 +16,10 @@ FEATURES={
 	"smil2real": 0x1000,
 	"ALLPRODUCTS": 0x1f07,
 
+	# Special bit that signifies that this license
+	# was registered when generated.
+	"preregistered": 0x2000,
+
 	# platform bits. The names are sys.platform values.
 	# Multiple names mapping to 1 bit is ok.
 	"win32": 0x08,
