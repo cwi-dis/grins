@@ -1699,6 +1699,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		bg = None
 		name = None
 		collapsed = None
+		editBackground = None
 		if attrs is not None:
 			bg = attrs.get('backgroundColor')
 			if bg is None:
@@ -1707,6 +1708,8 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			name = attrs.get('id')
 
 			collapsed = attrs.get('collapsed')
+			traceImage = attrs.get('traceImage')
+
 		top = name
 		if not name:
 			name = layout_name # only for anonymous root-layout
@@ -1770,12 +1773,14 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		if layout.has_key('collapsed'):
 			# special case: collapsed is not stored as a GRiNS attribute
 			del layout['collapsed']
-			
+
 		layout['width'] = self.__tops[top].get('width')
 		layout['height'] = self.__tops[top].get('height')
 			
 		layout['close'] = close
 		layout['open'] = open
+		if traceImage != None:
+			layout['traceImage'] = traceImage
 
 	def FixBaseWindow(self):
 		if not self.__topchans:
