@@ -318,8 +318,11 @@ class VideoStream:
 		if not url:
 			raise error, 'No URL on node'
 		
-		url = MMurl.canonURL(url)
-		url = urllib.unquote(url)
+		if MMurl.urlretrieved(url):
+			url = MMurl.urlretrieve(url)[0]
+		else:
+			url = MMurl.canonURL(url)
+			url = urllib.unquote(url)
 		if not self.__mmstream.open(url):
 			raise error, 'Failed to render %s'% url
 		return 1
