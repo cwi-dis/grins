@@ -1279,6 +1279,9 @@ class Viewport(win32window.Window, UserEventMng):
 	# return the current geometry
 	def getGeom(self):
 		x, y, w, h = self._rectb
+		if w<1: w=1
+		if h<1: h=1
+		self._rectb = x,y,w,h
 		return 0, 0, int(w+0.5), int(h+0.5)
 
 	# add a sub region	
@@ -1536,6 +1539,9 @@ class Region(win32window.Window, UserEventMng):
 	# return the current geometry
 	def getGeom(self):
 		x, y, w, h = self._rectb
+		if w<1: w=1
+		if h<1: h=1
+		self._rectb = x,y,w,h
 		if x < 0: x = x-0.5
 		else: x = x+0.5
 		if y < 0: y = y-0.5
