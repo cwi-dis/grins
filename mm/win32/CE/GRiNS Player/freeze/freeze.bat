@@ -7,6 +7,7 @@ set FREEZE_WHAT=grins
 set EXCLUDE_WHAT=editor
 set PRODUCT=smil20
 set EMBEDDED=no
+set OPT=-OO
 
 set main_script=.\startup.py
 
@@ -184,9 +185,9 @@ rem make sure Attrdefs.py is up to date
 rem do not use python -O for this
 %PYTHON_EXE% -c "import MMAttrdefs" >> log.txt
 
-%PYTHON_EXE% -OO %COMPILE% >> log.txt
+%PYTHON_EXE% %OPT% %COMPILE% >> log.txt
 
-%PYTHON_EXE% -OO %FREEZE% -s com_dll -i FreezeOpts -e %GRINS_HOME%\win32\grins_extensions.ini %main_script% -m encodings encodings.ascii encodings.latin_1 encodings.utf_16 encodings.utf_16_be encodings.utf_16_le encodings.utf_8 >> log.txt
+%PYTHON_EXE% %OPT% %FREEZE% -s com_dll -i FreezeOpts -e %GRINS_HOME%\win32\grins_extensions.ini %main_script% -m encodings encodings.ascii encodings.latin_1 encodings.utf_16 encodings.utf_16_be encodings.utf_16_le encodings.utf_8 >> log.txt
 
 : Make the target
 rem echo Executing NMAKE
