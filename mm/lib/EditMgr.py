@@ -980,7 +980,7 @@ class EditMgr(Clipboard.Clipboard):
 
 		asset.removeOwner(OWNER_ASSET)
 
-		self.context.delasset(asset)
+		self.context.delasset(asset, self.toplevel.root)
 		self.next_focus = []	# This object cannot have focus (yet)
 
 	def undo_addasset(self, asset):
