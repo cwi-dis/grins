@@ -330,7 +330,7 @@ class _Splash:
 			return
 		self.shell.DestroyWidget()
 		del self.shell
-		self.main = None
+##		self.main = None
 
 _splash = _Splash()
 
