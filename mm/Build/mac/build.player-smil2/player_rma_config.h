@@ -9,6 +9,7 @@
 #if defined(USE_GUSI1) || defined(USE_GUSI2)
 #define USE_GUSI
 #endif
+#define WITHOUT_FRAMEWORKS	/* Use Universal Header styl includes */
 #define USE_MSL			/* Use Mw Standard Library (as opposed to Plaugher C libraries) */
 #define USE_TOOLBOX		/* Include toolbox modules in core Python */
 #define USE_QT			/* Include quicktime modules in core Python */
