@@ -737,6 +737,8 @@ class MMSyncArc:
 			dst = dst + '.begin'
 		else:
 			dst = dst + '.end'
+			if self.ismin:
+				dst = dst + '(min)'
 		if self.timestamp is not None:
 			ts = ', timestamp = %g' % self.timestamp
 		else:
@@ -2355,9 +2357,12 @@ class MMNode:
 					   arc.delay is not None:
 						schedule = 1
 			if termtype in ('FIRST', chname):
-				terminating_children.append(child)
-				srlist.append(([(SCHED_DONE, child)],
-					       [(TERMINATE, self_body)]))
+				arc = MMSyncArc(self_body, 'end', srcnode=child, event='end', delay=0)
+				self_body.arcs.append((self_body, arc))
+				self_body.add_arc(arc)
+##				terminating_children.append(child)
+##				srlist.append(([(SCHED_DONE, child)],
+##					       [(TERMINATE, self_body)]))
 			elif schedule or termtype == 'ALL':
 				scheddone_events.append((SCHED_DONE, child))
 			for arc in MMAttrdefs.getattr(child, 'endlist'):

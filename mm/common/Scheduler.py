@@ -364,7 +364,8 @@ class SchedulerContext:
 					arc.dstnode.scheduled_children = arc.dstnode.scheduled_children + 1
 				arc.timestamp = timestamp+arc.delay
 				arc.qid = self.parent.enterabs(arc.timestamp, 0, self.trigger, (arc,))
-			self.sched_arcs(arc.dstnode, dev, timestamp=timestamp+arc.delay)
+			if arc.dstnode is not node or dev != event:
+				self.sched_arcs(arc.dstnode, dev, timestamp=timestamp+arc.delay)
 
 	def trigger(self, arc):
 		queue = self.parent.selectqueue()
@@ -395,6 +396,8 @@ class SchedulerContext:
 			if node.has_min:
 				# must delay this arc
 				node.delayed_arcs.append(arc)
+				for c in node.children:
+					c.freeze_play()
 				return
 			if debugevents: print 'scheduled_children-1',`node`
 			if node.scheduled_children > 0:
@@ -1004,7 +1007,8 @@ class Scheduler(scheduler):
 					self.cancel(arc.qid)
 					arc.qid = None
 					arc.dstnode.scheduled_children = arc.dstnode.scheduled_children - 1
-			arc.dstnode.scheduled_children = arc.dstnode.scheduled_children - len(node.delayed_arcs)
+			for arc in node.delayed_arcs:
+				arc.dstnode.scheduled_children = arc.dstnode.scheduled_children - 1
 			node.delayed_arcs = []
 			getchannelfunc = node.context.getchannelbynode
 			if node.type in leaftypes and getchannelfunc:
