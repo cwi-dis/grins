@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 from stat import *
 import os
 
