@@ -1888,7 +1888,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			bg = attrdict['backgroundColor']
 			del attrdict['backgroundColor']
 			if features.compatibility == features.G2:
-				ch['transparent'] = -1
+				ch['transparent'] = 1
 				if bg != 'transparent':
 					ch['bgcolor'] = bg
 					ch['transparent'] = 0
@@ -1906,7 +1906,10 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				if self.__context.attributes.get('project_boston'):
 					ch['transparent'] = 0
 				else:
-					ch['transparent'] = -1
+					# since we have suppressed the behavior transparent when empty
+					# it's not possible any more to set transparent to -1
+					ch['transparent'] = 1
+#					ch['transparent'] = -1
 				ch['bgcolor'] = bg
 
 			ch['z'] = attrdict['z-index']
