@@ -1118,7 +1118,10 @@ class NodeBox(GO):
 
 	def __init__(self, mother, node):
 		self.node = node
-		self.pausenode = (MMAttrdefs.getattr(node, 'duration') < 0)
+		duration = MMAttrdefs.getattr(node, 'duration')
+		self.pausenode = duration < 0 or \
+				 (duration == 0 and \
+				  MMAttrdefs.getattr(node, 'loop') == 0)
 		self.hasanchors = self.haspause = 0
 		try:
 			alist = self.node.GetRawAttr('anchorlist')
