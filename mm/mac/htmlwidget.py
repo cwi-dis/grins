@@ -27,6 +27,7 @@ TOPMARGIN=4
 RIGHTMARGIN=2
 BOTTOMMARGIN=0
 SCROLLBARWIDTH=16
+IMAGEBORDER=2
 
 # Sizes for HTML tag types
 HTML_SIZE={
@@ -62,7 +63,7 @@ class HTMLWidget:
 		self.do_activate()
 		
 	def close(self):
-##		del self.barx
+		Qd.SetPort(self.wid) # XXXX Needed?
 		if self.bary:
 			self.bary.DisposeControl()
 		del self.bary
@@ -259,6 +260,7 @@ class HTMLWidget:
 			self.ted.WEDelete()
 			self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
 			Win.InvalRect(self.rect)
+			self.createscrollbars(reset=1)
 			return
 		f = MyFormatter(self)
 		
@@ -429,7 +431,7 @@ def init_waste():
 	waste.WEInstallObjectHandler('GIF ', 'free', freeGIF)
 	
 def newRuler(obj):
-	"""Insert a new ruler. Make it as wide as the window minus 2 pxls"""
+	"""Insert a new ruler. Make it as wide as the window minus 2 pixels"""
 	ted = obj.WEGetObjectOwner()
 	l, t, r, b = ted.WEGetDestRect()
 	return r-l, 4
@@ -446,13 +448,13 @@ def freeRuler(*args):
 def newGIF(obj):
 	handle = obj.WEGetObjectDataHandle()
 	width, height, pixmap = _gifkeeper.get(handle.data)
-	return width, height
+	return width+2*IMAGEBORDER, height+2*IMAGEBORDER
 	
 def drawGIF((l,t,r,b),obj):
 	handle = obj.WEGetObjectDataHandle()
 	width, height, pixmap = _gifkeeper.get(handle.data)
-	srcrect = 0, 0, r-l, b-t
-	dstrect = l, t, r, b
+	srcrect = 0, 0, r-l-2*IMAGEBORDER, b-t-2*IMAGEBORDER
+	dstrect = l+IMAGEBORDER, t+IMAGEBORDER, r-IMAGEBORDER, b-IMAGEBORDER
 	port = Qd.GetPort()
 	bg = port.rgbBkColor
 	Qd.RGBBackColor((0xffff, 0xffff, 0xffff))
