@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 image_cache = {}
 
 def resolveImage(widget, src, noload = 0):
