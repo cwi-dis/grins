@@ -5,6 +5,8 @@ import Dlg
 import Ctl
 import Controls
 import Events
+import Drag
+# import Dragconst
 import MacOS
 import mac_image
 import imgformat
@@ -14,6 +16,8 @@ import sys
 import math
 import MenuTemplate
 import usercmd
+import struct
+import macfs
 
 #
 # Stuff we use from other mw_ modules
@@ -329,11 +333,15 @@ class _CommonWindow:
 	def register(self, event, func, arg):
 		if func is None or callable(func):
 			self._eventhandlers[event] = (func, arg)
+			if event == DropFile:
+				self._enable_drop(1)
 		else:
 			raise error, 'invalid function'
 
 	def unregister(self, event):
 		del self._eventhandlers[event]
+		if event == DropFile:
+			self._enable_drop(0)
 
 	def destroy_menu(self):
 		self._accelerators = {}
@@ -1400,6 +1408,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		
 		self._istoplevel = 1
 		self._resizable = resizable
+		self._drop_enabled = 0
 		_CommonWindow.__init__(self, parent, wid)
 		
 		self._transparent = 0
@@ -1436,6 +1445,7 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		return '<Window %s>'%self._title
 	
 	def close(self):
+		self._enable_drop(0)
 		_ScrollMixin.close(self)
 		_AdornmentsMixin.close(self)
 		_CommonWindow.close(self)
@@ -1628,7 +1638,43 @@ class _Window(_ScrollMixin, _AdornmentsMixin, _WindowGroup, _CommonWindow):
 		if nx > -ARR_SLANT * ny or nx < ARR_SLANT * ny:
 			return FALSE
 		return TRUE
+		
+	def _enable_drop(self, onoff):
+		if onoff == self._drop_enabled:
+			return
+		if onoff:
+			Drag.InstallTrackingHandler(self._trackhandler, self._wid)
+			Drag.InstallReceiveHandler(self._receivehandler, self._wid)
+		else:
+			Drag.RemoveTrackingHandler(self._wid)
+			Drag.RemoveReceiveHandler(self._wid)
+		self._drop_enabled = onoff
+		
+	def _trackhandler(self, message, dragref, wid):
+		pass #print 'TRACK', message, dragref, wid
+		
+	def _receivehandler(self, dragref, wid):
+		n = dragref.CountDragItems()
+		for i in range(1, n+1):
+			refnum = dragref.GetDragItemReferenceNumber(i)
+			try:
+				fflags = dragref.GetFlavorFlags(refnum, 'hfs ')
+			except Drag.Error:
+				print 'Wrong type...', i, dragref.GetFlavorType(refnum, 1)
+				MacOS.SysBeep()
+				return
+			print 'hfs', fflags
+			datasize = dragref.GetFlavorDataSize(refnum, 'hfs ')
+			data = dragref.GetFlavorData(refnum, 'hfs ', datasize, 0)
+			print '        ->', self._decode_hfs_dropdata(data)
 
+	def _decode_hfs_dropdata(self, data):
+		tp = data[0:4]
+		cr = data[4:8]
+		flags = struct.unpack("h", data[8:10])
+		fss = macfs.RawFSSpec(data[10:])
+		return tp, cr, flags, fss
+	
 class _SubWindow(_CommonWindow):
 	"""Window "living in" with a toplevel window"""
 
@@ -1779,6 +1825,9 @@ class _SubWindow(_CommonWindow):
 		"""Return true if this window or any of its ancestors is scrollable"""
 		return self._parent._canscroll()
 
+	def _enable_drop(self, onoff):
+		raise 'Attempt to enable drop on subwindow'
+		
 class DialogWindow(_Window):
 	def __init__(self, resid, title='Dialog', default=None, cancel=None,
 				cmdbuttons=None):
