@@ -1114,7 +1114,6 @@ class ChannelWindow(Channel):
 			PAUSE(callback = (ui.pause_callback, ())),
 			STOP(callback = (ui.stop_callback, ())),
 			MAGIC_PLAY(callback = (ui.magic_play, ())),
-			USERGROUPS(callback = ui.usergroup_callback),
 			CHANNELS(callback = ui.channel_callback),
 			SCHEDDUMP(callback = (ui.scheduler.dump, ())),
 			]
