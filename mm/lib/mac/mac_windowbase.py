@@ -679,6 +679,9 @@ class _Toplevel(_Event):
 			# We don't remove the group when the window decativates, is this correct?
 			if window:
 				group = window.window_group
+				if __debug__:
+					if not group:
+						raise 'Window without a group?'
 				self._install_group_commands(group)
 			self.needmenubarrecalc = 1
 		
@@ -2296,6 +2299,9 @@ class CommandHandler:
 		if self.all_cmd_groups[number] == group:
 			self.install_cmd(number, None)
 			return 1
+		if __debug__:
+			if group in self.all_cmd_groups:
+				raise 'Oops, group in wrong position!'
 		return 0
 			
 	def makemenu(self, menu, content):
