@@ -579,11 +579,11 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 		if str.focus is None:
 			print 'LinkEdit: anchoredit without a focus!'
 			return
+		anchor = str.anchors[str.focus]
 		if type(anchor) is not type(()):
 			# external anchor
 			print 'LinkEdit: anchor with unknown node UID!'
 			return
-		anchor = str.anchors[str.focus]
 		uid = anchor[0]
 		try:
 			node = self.context.mapuid(uid)
