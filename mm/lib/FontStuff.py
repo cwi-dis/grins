@@ -1,17 +1,10 @@
 # Font stuff.
 # Interface:
-#	setfont()
-#	centerstring(left, top, right, bottom, str)
+#  f = FontOject().init(fontname, fontsize)
+#  f.setfont()
+#  f.centerstring(left, top, right, bottom, str)
+# This writes in the current GL window
 
-
-import string
-import gl
-import fm
-
-
-# Tuning constants (set to match FORMS default)
-FONTNAME = 'Helvetica'
-FONTSIZE = 11
 
 # Some technical terms
 #.......................+.............+.............+..................#
@@ -26,63 +19,80 @@ FONTSIZE = 11
 #          p               |yorig     |                                #
 #..........p...............+..........+................................#
 
-# Create a font object
-f_font = fm.findfont(FONTNAME)		# The font at point size 1
-f_font = f_font.scalefont(FONTSIZE)	# Scale it to the desired size
 
-# Extract the font parameters from it
-(f_printermatched, f_fixed_width, f_xorig, f_yorig, f_xsize, f_ysize, \
-	f_fontheight, f_nglyphs) = f_font.getfontinfo()
-
-# Calculate the baseline
-f_baseline = f_fontheight - f_yorig
-
-# In theory 'ysize' should exclude the leading, but in practice it is
-# usually the same as 'fontheight'; we guess that the leading is the
-# same as 'yorig'.
-f_leading = f_yorig # Hack -- there's no parameter specifying this!
-
-# Print some essential parameters
-##print 'yorig =', f_yorig, 'ysize =', f_ysize, 'fontheight =', f_fontheight,
-##print 'baseline =', f_baseline
-###expected output: yorig = 4 ysize = 20 fontheight = 20 baseline = 16
+import string
+import gl
+import fm
 
 
-# Select our font
+class FontObject:
 
-def setfont():
-	f_font.setfont()
+	# Create a new font object
+	def init(self, fontname, fontsize):
+		self.fontname = fontname
+		self.fontsize = fontsize
 
+		# Create a font object
+		font1 = fm.findfont(self.fontname)
+			# The font at point size 1
+		self.font = font1.scalefont(self.fontsize)
+			# Scale it to the desired size
 
-# Subroutine to draw a string centered in a box, breaking lines if necessary
+		# Extract the font parameters from it
+		(self.printermatched, self.fixed_width, self.xorig, \
+		 self.yorig, self.xsize, self.ysize, self.fontheight, \
+		 self.nglyphs) = self.font.getfontinfo()
 
-def centerstring(left, top, right, bottom, str):
-	# This assumes f_font.setfont() has been called already
-	width = right - left
-	height = bottom - top
-	curlines = [str]
-	if height >= 2*f_fontheight:
-		curlines = calclines([str], f_font.getstrwidth, width)[0]
-	nlines = len(curlines)
-	needed = nlines * f_fontheight
-	if nlines > 1 and needed > height:
-		nlines = max(1, height / f_fontheight)
-		curlines = curlines[:nlines]
-		curlines[-1] = curlines[-1] + '...'
-	x0 = (left + right) * 0.5	# x center of box
-	y0 = (top + bottom) * 0.5	# y center of box
-	y = y0 - nlines * f_fontheight * 0.5 - f_leading
-	for i in range(nlines):
-		str = string.strip(curlines[i])
-		# Get font parameters:
-		w = f_font.getstrwidth(str)	# Width of string
-		while str and w > width:
-			str = str[:-1]
-			w = f_font.getstrwidth(str)
-		x = x0 - 0.5*w
-		y = y + f_fontheight
-		gl.cmov2(x, y)
-		fm.prstr(str)
+		# Calculate the baseline
+		self.baseline = self.fontheight - self.yorig
+
+		# In theory 'ysize' should exclude the leading, but in
+		# practice it is usually the same as 'fontheight'; we
+		# guess that the leading is the same as 'yorig'.
+		self.leading = self.yorig
+			# Hack -- there's no parameter specifying this!
+
+		# Print some essential parameters
+		##print 'yorig =', self.yorig, 'ysize =', self.ysize,
+		##print 'fontheight =', self.fontheight,
+		##print 'baseline =', self.baseline
+		##expected output:
+		##yorig = 4 ysize = 20 fontheight = 20 baseline = 16
+
+		return self
+
+	# Select our font
+	def setfont(self):
+		self.font.setfont()
+
+	# Draw a string centered in a box, breaking lines if necessary
+	def centerstring(self, left, top, right, bottom, str):
+		# This assumes self.setfont() has been called already
+		width = right - left
+		height = bottom - top
+		curlines = [str]
+		if height >= 2*self.fontheight:
+		   curlines = calclines([str], self.font.getstrwidth, width)[0]
+		nlines = len(curlines)
+		needed = nlines * self.fontheight
+		if nlines > 1 and needed > height:
+			nlines = max(1, height / self.fontheight)
+			curlines = curlines[:nlines]
+			curlines[-1] = curlines[-1] + '...'
+		x0 = (left + right) * 0.5	# x center of box
+		y0 = (top + bottom) * 0.5	# y center of box
+		y = y0 - nlines * self.fontheight * 0.5 - self.leading
+		for i in range(nlines):
+			str = string.strip(curlines[i])
+			# Get font parameters:
+			w = self.font.getstrwidth(str)	# Width of string
+			while str and w > width:
+				str = str[:-1]
+				w = self.font.getstrwidth(str)
+			x = x0 - 0.5*w
+			y = y + self.fontheight
+			gl.cmov2(x, y)
+			fm.prstr(str)
 
 
 # Calculate a set of lines from a set of paragraphs, given a font and
@@ -142,3 +152,11 @@ def fitwords(s, sizefunc, limit):
 		return totcount
 	else:
 		return okcount
+
+
+# --- Backward compatibility ---
+
+f_forms = FontObject().init('Helvetica', 10)
+f_fontheight = f_forms.fontheight
+setfont = f_forms.setfont
+centerstring = f_forms.centerstring

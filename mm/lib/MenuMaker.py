@@ -1,36 +1,59 @@
-# Module to build SGI style hierarchical menus from a command list.
-# A command list is a list of (shortcut, itemtext, procedure) tuples,
-# where procedure can be either a function object or a command list
+# A class to build SGI style hierarchical menus.
+# A command list is a list of (shortcut, itemtext, function) tuples,
+# where function can be either a function object or a command list
 # (in the latter case defining a submenu).
-
-# XXX This should be made more object-oriented.
+# Interface:
+#  m = MenuObject().init(title, commandlist)
+#  func = m.popup(x, y)
+#  func = m.shortcut(c)
+# Note that the function isn't called here, it is only returned!
 
 import gl
 
-# Make a menu, a list of menuprocs, and a keymap.
-def makemenu(title, commandlist):
-	menuprocs = []
-	keymap = {}
-	if title:
-		commandlist = commandlist[:]
-		commandlist.insert(0, (None, title + '%t', None))
-	menu = makesubmenu(commandlist, menuprocs, keymap)
-	return menu, menuprocs, keymap
 
-# Make a (sub)menu (subroutine for makemenu)
-def makesubmenu(commandlist, menuprocs, keymap):
-	menu = gl.newpup()
-	for char, text, proc in commandlist:
-		if char: keymap[char] = proc
-		else: char = '  '
-		if not text: continue
-		text = char + ' ' + text
-		if proc is None:
-			gl.addtopup(menu, text, 0)
-		elif type(proc) is type([]):
-			submenu = makesubmenu(proc, menuprocs, keymap)
-			gl.addtopup(menu, text + '%m', submenu)
+class MenuObject:
+
+	# Initialize the object
+	def init(self, title, commandlist):
+		self.menuprocs = []
+		self.keymap = {}
+		self.menu = self.makesubmenu(title, commandlist)
+		return self
+
+	# Do mouse interaction.  X and y are the mouse coordinates
+	# (as returned by the mouse event).  Return a function or None.
+	def popup(self, x, y):
+		i = gl.dopup(self.menu)
+		if 0 < i <= len(self.menuprocs):
+			return self.menuprocs[i-1]
 		else:
-			gl.addtopup(menu, text + '%x' + `1+len(menuprocs)`, 0)
-			menuprocs.append(proc)
-	return menu
+			return None
+
+	# Look up a keyboard shortcut and return the corresponding
+	# function, or None if the shortcut is undefined.
+	def shortcut(self, c):
+		if self.keymap.has_key(c):
+			return self.keymap[c]
+		else:
+			return None
+
+	# Internal function to make a (sub)menu
+	def makesubmenu(self, title, commandlist):
+		menu = gl.newpup()
+		if title:
+			gl.addtopup(menu, title + '%t', 0)
+		for char, text, proc in commandlist:
+			if char: self.keymap[char] = proc
+			else: char = '  '
+			if not text: continue
+			text = char + ' ' + text
+			if proc is None:
+				gl.addtopup(menu, text, 0)
+			elif type(proc) is type([]):
+				submenu = self.makesubmenu('', proc)
+				gl.addtopup(menu, text + '%m', submenu)
+			else:
+				text = text + '%x' + `1+len(self.menuprocs)`
+				gl.addtopup(menu, text, 0)
+				self.menuprocs.append(proc)
+		return menu
