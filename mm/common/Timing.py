@@ -12,32 +12,6 @@ from HDTL import HD, TL
 real_interiortypes = ('par', 'seq', 'alt', 'excl')
 
 
-# The routine 'changedtimes' signifies that the timing might have changed
-# (but is not needed at the moment), and the routine 'needtimes' signifies
-# that somebody needs correct timing (possibly resulting in a recalc).
-# Finally, 'do_times' does the actual calculation.
-# As an option, 'hastimes' can be used to check whether the timings
-# are correct (this is used to set the 'calculate times' button).
-
-def changedtimes(node):
-	if hasattr(node, 'initial_arms'):
-		del node.initial_arms
-	for child in node.GetChildren():
-		changedtimes(child)
-
-def hastimes(node):
-	if hasattr(node, 'initial_arms'):
-		if node.initial_arms is not None:
-			return 1
-	return 0
-
-def needtimes(node):
-	if hasattr(node, 'initial_arms'):
-		if node.initial_arms is not None:
-			return # The cached value is valid
-	do_times(node)
-
-
 # Calculate the nominal times for each node in the given subtree.
 # When the function is done, each node has two instance variables
 # 't0' and 't1' that give the begin and end time of the node.
@@ -50,16 +24,7 @@ def needtimes(node):
 # Any circularities in the sync arcs are detected and "reported"
 # as exceptions.
 
-def do_times(node):
-	# These globals are used only while in do_times();
-	# they are changed by decrememt()
-
-	global last_node # Keeps track of the last node played per channel
-	last_node = {}
-
-	global initial_arms # Keeps track of the first node played per channel
-	initial_arms = []
-
+def needtimes(node):
 	node.t1 = 0
 	del node.t1
 
@@ -74,11 +39,9 @@ def do_times(node):
 ##			  '(ignoring sync arcs and trying again)')
 ##		prep1(node)
 ##		_do_times_work(node)
+		print 'No endtime for', node
 		node.t1 = node.t0 + 10.0
-		node.timing_discont = 9.9
 	propdown(node, node.t1, node.t0)
-
-	node.initial_arms = initial_arms
 
 def _do_times_work(node):
 	pt = pseudotime(0.0)
@@ -86,13 +49,6 @@ def _do_times_work(node):
 	node.counter[HD] = 1
 	decrement(q, 0, node, HD)
 	q.run()
-
-# Interface to get the "initial arms" nodes of a tree.
-# Call only after needtimes has calculated them.
-
-def getinitial(node):
-	return node.initial_arms # AttributeError here if called at wrong time
-
 
 # Interface to the prep1() and prep2() functions; these are also used
 # by the player (which uses a different version of decrement()).
@@ -137,7 +93,6 @@ def getduration(node):
 ##		return 0
 	import Duration
 	d = Duration.get(node)
-	node.timing_discont = 0
 	if d > 0:
 		return d
 	# Check for pausing anchor
@@ -148,8 +103,8 @@ def getduration(node):
 ##				is_warned = 1
 ##			break
 	if d < 0:
-		node.timing_discont = 9.9
-		return 10
+		print 'Duration < 0 for', node
+		return 0
 	return 0
 
 
@@ -182,10 +137,6 @@ def prep1(node):
 	elif type in bagtypes:
 		adddep(node, HD, 0, node, TL)
 	else:
-		# Special case -- delay -1 means execute leaf node
-		# of leaf node when playing
-		if hasattr(node, 'prearm_event'):
-			del node.prearm_event
 		adddep(node, HD, -1, node, TL)
 
 
@@ -243,9 +194,8 @@ def propdown(node, stoptime, dftstarttime=0):
 		node.t0 = dftstarttime
 	if not hasattr(node, 't1'):
 		node.t1 = stoptime
-		node.timing_discont = node.t1 - node.t0 - 0.1
 
-	if not hasattr(node, 't0t1_inherited') or not node.t0t1_inherited:
+	if node.GetFill() == 'remove':
 		stoptime = node.t1
 
 	node.t2 = stoptime
@@ -298,16 +248,6 @@ def decrement(q, delay, node, side):
 	if node.GetType() not in interiortypes and side == HD:
 		dt = getduration(node)
 		id = q.enter(dt, 0, decrement, (q, 0, node, TL))
-		if node.GetChannel():
-			cname = node.GetChannelName()
-			if node.GetRawAttrDef('arm_duration', -1) >= 0:
-				if last_node.has_key(cname):
-					ln = last_node[cname]
-					ln.node_to_arm = node
-				else:
-					global initial_arms
-					initial_arms.append(node)
-			last_node[cname] = node
 	for d, n, s in node.deps[side]:
 		decrement(q, d, n, s)
 
