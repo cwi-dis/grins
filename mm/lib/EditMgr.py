@@ -356,6 +356,8 @@ class EditMgr(Clipboard.Clipboard):
 		pass
 
 	def setnodevalues(self, node, values):
+		# The node values are for immediate nodes where the data (instead of a url)
+		# is stored in MMNode.values[]
 		self.addstep('setnodevalues', node, node.GetValues())
 		node.SetValues(values)
 
