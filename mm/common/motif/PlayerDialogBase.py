@@ -76,7 +76,10 @@ class PlayerDialogBase:
 			self._window.pop()
 			return
 		self.__state = -1
-		x, y, w, h = self.__coords
+		if self.__coords:
+			x, y = self.__coords[:2]
+		else:
+			x = y = None
 		if subwindowof is not None:
 			raise 'kaboo kaboo'
 		self.adornments['flags'] = curflags()
