@@ -149,7 +149,11 @@ class Main(MainDialog):
 	def _new_ok_callback(self, info):
 		if not info:
 			return
-		d1, d2, filename = info
+		if len(info) == 3:
+			d1, d2, filename = info
+			htmltemplate = None
+		else:
+			d1, d2, filename, htmltemplate = info
 		import windowinterface
 		windowinterface.setwaiting()
 		import TopLevel
@@ -157,6 +161,8 @@ class Main(MainDialog):
 		template_url = MMurl.pathname2url(filename)
 		top = TopLevel.TopLevel(self, self.getnewdocumentname(filename), template_url)
 		self.new_top(top)
+		if htmltemplate:
+			top.context.attributes['project_html_page'] = htmltemplate
 		
 	def getnewdocumentname(self, templatename):
 		name = 'Untitled%d'%self._untitled_counter
