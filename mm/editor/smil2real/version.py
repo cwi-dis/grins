@@ -4,10 +4,10 @@ import sys
 from patchlevel import patchlevel
 import features
 
-shortversion = 'grins2real-%s-2.1'%sys.platform
-version = ('Editor for RealONE, Version 2.1 %s' % patchlevel).strip()
-macpreffilename = 'GRiNS-%s-2.0 Prefs' % features.compatibility_short
-title = 'GRiNS Editor for RealONE'
+shortversion = 'grins2real-%s-2.2'%sys.platform
+version = ('Editor for RealONE, Version 2.2 %s' % patchlevel).strip()
+macpreffilename = 'GRiNS-%s-2.2 Prefs' % features.compatibility_short
+title = 'GRiNS Editor for RealOne'
 registrykey = 'Oratrix GRiNS'
 registryname = 'RealONE'
 
