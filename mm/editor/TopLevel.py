@@ -112,7 +112,12 @@ class TopLevel(TopLevelDialog, ViewDialog):
 				self.commandlist = self.commandlist + [
 					EXPORT_QT(callback = (self.bandwidth_callback, (self.export_QT_callback,))),
 					UPLOAD_QT(callback = (self.bandwidth_callback, (self.upload_QT_callback,))),
-				]								
+				]
+				
+			print "TODO: make this version dependant. TopLevel.py:__init__()"
+			self.commandlist.append(EXPORT_WMP(callback = (self.bandwidth_callback, (self.export_WMP_callback,))));
+			self.commandlist.append(UPLOAD_WMP(callback = (self.bandwidth_callback, (self.upload_WMP_callback,))));
+			
 			if compatibility.SMIL10 == features.compatibility:
 				self.commandlist = self.commandlist + [
 					EXPORT_SMIL(callback = (self.bandwidth_callback, (self.export_SMIL_callback,))),
@@ -377,6 +382,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			windowinterface.showmessage('HTML export failed:\n%s'%(msg,))
 
 	def bandwidth_callback(self, do_export_callback):
+		# Calculates the bandwidth for ...something? Uses a dialog? Unsure -mjvdg		
 		import settings
 		import BandwidthCompute
 		bandwidth = settings.get('system_bitrate')
@@ -402,11 +408,21 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def export_SMIL_callback(self):
 		self.export(compatibility.SMIL10)
 
+	def export_WMP_callback(self):	# mjvdg 11-oct-2000
+		# Actually... this isn't implemented yet!
+		print "DEBUG: WMP not implemented yet.";
+		windowinterface.showmessage("Please purchase the full version of GRiNS today!");
+		return;		       		    
+		self.export(compatibility.WMP);
+
 	def export(self, exporttype):
 		if exporttype != features.compatibility:
 			# For now...
 			raise 'Incompatible export type'
 		ask = self.new_file
+
+		# TODO: this also has to handle WMP -mjvdg.
+
 		if not ask:
 			if MMmimetypes.guess_type(self.filename)[0] != 'application/x-grins-project':
 				# We don't have a project file name. Ask for filename.
@@ -442,7 +458,15 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def upload_SMIL_callback(self):
 		self.upload(compatibility.SMIL10)
 
+	def upload_WMP_callback(self):
+		print "DEBUG: WMP not implemented yet.";
+		windowinterface.showmessage("Please purchase the full version of GRiNS today!");
+		self.upload(compatibility.WMP);
+		return;
+
 	def upload(self, exporttype):
+		# TODO: this also has to handle WMP.
+		
 		if exporttype != features.compatibility:
 			# For now...
 			raise 'Incompatible export type'

@@ -27,6 +27,7 @@ import features
 import compatibility
 
 # mjvdg: Enable or disable the slideshow view (make the heirachy flat!)
+# TODO: replace this code.
 try:
 	if features.grins_snap:
 		grins_snap = 1;
@@ -234,8 +235,10 @@ class HierarchyView(HierarchyViewDialog):
 ##				INFO(callback = (self.infocall, ())),
 				ANCHORS(callback = (self.anchorcall, ())),
 				]
-		self.slidecommands = self._getmediacommands(toplevel.root.context, slide = 1) + self.notatrootcommands[4:6]
-		self.rpcommands = self._getmediaundercommands(toplevel.root.context, slide = 1)
+
+		if features.H_MODIFY_STRUCTURE in features.feature_set:
+			self.slidecommands = self._getmediacommands(toplevel.root.context, slide = 1) + self.notatrootcommands[4:6]
+			self.rpcommands = self._getmediaundercommands(toplevel.root.context, slide = 1)
 		self.finishlinkcommands = [
 			FINISH_LINK(callback = (self.hyperlinkcall, ())),
 			]
