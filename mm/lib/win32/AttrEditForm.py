@@ -673,14 +673,29 @@ class ElementSelCtrl(AttrCtrl):
 		parent = self._wnd._form
 		mmnode = self._wnd._form._node
 		selected = self._attrval.gettext()
-		if hasattr(mmnode, 'targetnode'):
-			target = mmnode.targetnode
-		else:
-			target = None
+		target = self.locateTarget(mmnode, selected)
 		dlg = win32dialog.SelectElementDlg(parent, mmnode.GetRoot(), target)
 		if dlg.show():
-			if selected != dlg.gettext():
-				self.setvalue(dlg.gettext())
+			id = self.getUID(dlg.getmmobject())
+			self.setvalue(id)
+
+	def locateTarget(self, node, te):
+		if hasattr(node, 'targetnode'):
+			return node.targetnode
+		ctx = node.GetContext()
+		if ctx.channeldict.has_key(te):
+			targchan = ctx.getchannel(te)
+			return targchan
+		return None
+
+	def getUID(self, node):
+		if node is None:
+			name = ''
+		elif node.getClassName() in ('Region', 'Viewport'):
+			name = node.GetUID()
+		else:
+			name = node.GetRawAttrDef('name', '')
+		return name or ''
 
 	def OnEdit(self,id,code):
 		if code==win32con.EN_SETFOCUS:
