@@ -1,43 +1,159 @@
-from Channel import *
+# XXXX Still needs some work, esp. in the callback time calc section
+#
+from Channel import ChannelAsync
+import windowinterface
+import time
+import audiodev
+import audiofile
 import urllib
+import os
 
+debug = os.environ.has_key('CHANNELDEBUG')
 
-class SoundChannel(ChannelThread):
-	chan_attrs = ChannelThread.chan_attrs + ['queuesize']
+class SoundChannel(ChannelAsync):
+	# shared between all instances
+	__port = None			# the audio device
+	__maxbytes = 0			# queue size in bytes
+	__playing = 0			# # of active channels
 
 	def __repr__(self):
-		return '<SoundChannel instance, name=' + `self._name` + '>'
+		return '<NonThreadedSoundChannel instance, name=' + `self._name` + '>'
 
-	def threadstart(self):
-		import soundchannel
-		return soundchannel.init()
+	def __init__(self, name, attrdict, scheduler, ui):
+		ChannelAsync.__init__(self, name, attrdict, scheduler, ui)
+		if debug: print 'SoundChannel: init', name
+		self.arm_fp = None
+		self.play_fp = None
+		self._timer_id = None
+		self.maxbytes = 0
+		self.play_data = ''
+
+	def _openport(self):
+		if debug: print 'SoundChannel: openport'
+		if self.__port == 'no-audio':
+			print 'Error: No audio available'
+			return 0
+		if self.__port:
+			return 1
+		try:
+			SoundChannel.__port = audiodev.AudioDev(qsize=400000)
+		except audiodev.error, arg:
+			print 'Error: No audio available:', arg
+			SoundChannel.__port = 'no-audio'
+			return 0
+		# initialize to known state to find out queuesize in bytes
+		self.__port.setsampwidth(2)
+		self.__port.setnchannels(2)
+		SoundChannel.__maxbytes = self.__port.getfillable() * 4
+		return 1
 
 	def do_arm(self, node, same=0):
+		if not self._openport():
+			return 1
 		if node.type != 'ext':
 			self.errormsg(node, 'Node must be external')
 			return 1
-		filename = self.getfileurl(node)
+		if debug: print 'SoundChannel: arm', node
+		fn = self.getfileurl(node)
+		fn = urllib.urlretrieve(fn)[0]
+
 		try:
-			filename = urllib.urlretrieve(filename)[0]
+			self.arm_fp = audiofile.open(fn, 'r')
 		except IOError:
-			self.errormsg(node, 'Cannot open ' + filename)
+			print 'Cannot open audio file', fn
+			self.arm_fp = None
+			self.armed_duration = 0
 			return 1
-		import SoundDuration
-		try:
-			f, nchannels, nsampframes, sampwidth, samprate, format = \
-				  SoundDuration.getinfo(filename)
-		except IOError:
-			self.errormsg(node, 'Error reading ' + filename)
+		except audiofile.Error:
+			print 'Unknown audio file type', fn
+			self.arm_fp = None
+			self.armed_duration = 0
 			return 1
-		if format in ('eof', 'error'):
-			self.errormsg(node, 'Format error in ' + filename)
-			return 1
-		self.threads.arm(f, 0, 0, \
-			  {'nchannels': int(nchannels), \
-			   'nsampframes': int(nsampframes), \
-			   'sampwidth': int(sampwidth), \
-			   'samprate': int(samprate), \
-			   'format': format, \
-			   'offset': int(f.tell())}, \
-			  None, self.syncarm)
-		return self.syncarm
+		self.arm_framerate = self.arm_fp.getframerate()
+		self.arm_sampwidth = self.arm_fp.getsampwidth()
+		self.arm_nchannels = self.arm_fp.getnchannels()
+		self.arm_bps = self.arm_nchannels*self.arm_sampwidth
+		self.arm_readsize = self.arm_framerate	# XXXX 1 second, tied to timer!!
+		if self.arm_readsize*self.arm_bps*2 > self.__maxbytes:
+			# The audio output queue is too small to fit
+			# our readsize. Lower it.
+			self.arm_readsize = self.__maxbytes / self.arm_bps / 2
+			print 'AudioChannel: Warning: reading', \
+			      self.arm_readsize, 'samples per cycle'
+		self.arm_time = float(self.arm_readsize/self.arm_bps)/self.arm_framerate/2
+		self.arm_data = self.arm_fp.readframes(self.arm_readsize)
+		if debug:
+			print 'Audio arm: framerate', self.arm_framerate
+			print 'Audio arm: sampwidth', self.arm_sampwidth
+			print 'Audio arm: nchannels', self.arm_nchannels
+			print 'Audio arm: bps', self.arm_bps
+			print 'Audio arm: readsize', self.arm_readsize
+			print 'Audio arm: len(data)', len(self.arm_data)
+			print 'Audio arm: timer', self.arm_time
+		return 1
+		
+	def _playsome(self, *dummy):
+		if self._paused or not self.play_fp or not self.__port:
+			if debug:
+				print 'not playing some...', self._paused, \
+				      self.play_fp, self.__port
+			return
+		in_buffer = len(self.play_data)/self.play_bps
+		if debug:
+			print 'SoundChannel: playsome', in_buffer, \
+			      self.__port.getfillable()
+		while self.__port.getfillable() >= in_buffer and \
+		      self.play_data:
+			self.__port.writeframes(self.play_data)
+			self.play_data = self.play_fp.readframes(self.play_readsize)
+		if self.play_data:
+			self._timer_id = windowinterface.settimer(self.arm_time, (self._playsome, ()))
+		else:
+			samples_left = self.__port.getfilled()
+			time_left = samples_left/float(self.play_framerate)
+			self._timer_id = windowinterface.settimer(time_left, (self.myplaydone, (0,)))
+			
+	def myplaydone(self, arg):
+		self._timer_id = None
+		self.__port.wait()
+		SoundChannel.__playing = SoundChannel.__playing - 1
+		self.playdone(arg)
+			
+	def do_play(self, node):
+		if not self.arm_fp or not self.__port:
+			self.play_fp = None
+			self.playdone(0)
+			return
+			
+		if debug: print 'SoundChannel: play', node
+		SoundChannel.__playing = SoundChannel.__playing + 1
+		if self.__playing > 1:
+			print 'Warning: %d sound channels active' % SoundChannel.__playing
+		self.play_fp = self.arm_fp
+		self.play_readsize = self.arm_readsize
+		self.play_framerate = self.arm_framerate
+		self.play_bps = self.arm_bps
+		self.play_data = self.arm_data
+		self.arm_fp = None
+		self.arm_data = None
+		self.__port.setoutrate(self.arm_framerate)
+		self.__port.setsampwidth(self.arm_sampwidth)
+		self.__port.setnchannels(self.arm_nchannels)
+		self._playsome()
+		
+	def playstop(self):
+		if not self.__port:
+			return
+		if debug: print 'SoundChannel: playstop'
+		self.__port.stop()
+		SoundChannel.__playing = SoundChannel.__playing - 1
+		if self._timer_id:
+			windowinterface.canceltimer(self._timer_id)
+		self.playdone(1)
+
+	def setpaused(self, paused):
+		if debug:
+			print 'setpaused', paused, self.play_data
+		self._paused = paused
+		if not self._paused and self.play_data:
+			self._playsome()
