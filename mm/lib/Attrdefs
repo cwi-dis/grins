@@ -121,6 +121,9 @@
 (file (string) '' 'URL' file
 	'URL for the data of this node' normal light)
 
+(fill (string) '' 'Fill' fill
+	'Whether data should be retained on screen after playing' normal cmif)
+
 (font (string) 'Times-Roman' 'Font' font
 	'Font used to display text' channel cmif)
 

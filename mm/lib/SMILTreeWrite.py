@@ -353,8 +353,8 @@ def getchname(writer, node):
 		return None
 	return writer.ch2name[ch]
 
-def getduration(writer, node, attr):
-	duration = MMAttrdefs.getattr(node, attr)
+def getduration(writer, node):
+	duration = MMAttrdefs.getattr(node, 'duration')
 	if not duration:		# 0 or None
 		return None
 	if duration < 0:		# infinite duration...
@@ -364,6 +364,15 @@ def getduration(writer, node, attr):
 		if duration[-4:] == '.000':
 			duration = duration[:-4]
 		return duration + 's'
+
+def getfill(writer, node):
+	if node.GetType() not in leaftypes:
+		return
+	duration = getduration(writer, node)
+	if duration:
+		return
+	if node.GetChannelType() in ('image', 'text'):
+		return 'freeze'
 
 def getsyncarc(writer, node, isend):
 	allarcs = node.GetRawAttrDef('synctolist', [])
@@ -561,9 +570,10 @@ smil_attrs=[
 	("abstract", lambda writer, node:getcmifattr(writer, node, "abstract")),
 	("alt", lambda writer, node: getdescr(writer, node, 'alt')),
 	("longdesc", lambda writer, node: getdescr(writer, node, 'longdesc')),
-	("dur", lambda writer, node: getduration(writer, node, 'duration')),
+	("dur", getduration),
 	("begin", lambda writer, node: getsyncarc(writer, node, 0)),
 	("end", lambda writer, node: getsyncarc(writer, node, 1)),
+	("fill", getfill),
 	("clip-begin", lambda writer, node: getcmifattr(writer, node, 'clipbegin')),
 	("clip-end", lambda writer, node: getcmifattr(writer, node, 'clipend')),
 	("endsync", getterm),
@@ -579,24 +589,28 @@ smil_attrs=[
 	("u-group", getugroup),
 	("layout", getlayout),
 ]
-cmif_node_attrs_ignore = [
-	'arm_duration', 'styledict', 'name', 'bag_index', 'anchorlist',
-	'channel', 'file', 'duration', 'system_bitrate', 'system_captions',
-	'system_language', 'system_overdub_or_captions', 'system_required',
-	'system_screen_size', 'system_screen_depth', 'layout',
-	'clipbegin', 'clipend', 'u_group', 'loop', 'synctolist',
-	'author', 'copyright', 'abstract', 'alt', 'longdesc', 'title',
-	'mimetype', 'terminator', 'begin',
-	]
-cmif_node_realpix_attrs_ignore = [
-	'bitrate', 'size', 'duration', 'aspect', 'author', 'copyright',
-	'maxfps', 'preroll', 'title', 'href',
-	]
-cmif_chan_attrs_ignore = [
-	'id', 'title', 'base_window', 'base_winoff', 'z', 'scale',
-	'transparent', 'bgcolor', 'winpos', 'winsize', 'rect', 'center',
-	'drawbox', 'units',
-	]
+
+# attributes that we know about and so don't write into the SMIL file using
+# our namespace extension
+cmif_node_attrs_ignore = {
+	'arm_duration':0, 'styledict':0, 'name':0, 'bag_index':0,
+	'anchorlist':0, 'channel':0, 'file':0, 'duration':0,
+	'system_bitrate':0, 'system_captions':0, 'system_language':0,
+	'system_overdub_or_captions':0, 'system_required':0,
+	'system_screen_size':0, 'system_screen_depth':0, 'layout':0,
+	'clipbegin':0, 'clipend':0, 'u_group':0, 'loop':0, 'synctolist':0,
+	'author':0, 'copyright':0, 'abstract':0, 'alt':0, 'longdesc':0,
+	'title':0, 'mimetype':0, 'terminator':0, 'begin':0, 'fill':0,
+	}
+cmif_node_realpix_attrs_ignore = {
+	'bitrate':0, 'size':0, 'duration':0, 'aspect':0, 'author':0,
+	'copyright':0, 'maxfps':0, 'preroll':0, 'title':0, 'href':0,
+	}
+cmif_chan_attrs_ignore = {
+	'id':0, 'title':0, 'base_window':0, 'base_winoff':0, 'z':0, 'scale':0,
+	'transparent':0, 'bgcolor':0, 'winpos':0, 'winsize':0, 'rect':0,
+	'center':0, 'drawbox':0, 'units':0,
+	}
 
 # Mapping from CMIF channel types to smil media types
 smil_mediatype={
@@ -1126,7 +1140,7 @@ class SMILWriter(SMIL):
 					attrlist.append(('%s:drawbox' % NSprefix, '1'))
 
 			for key, val in ch.items():
-				if key not in cmif_chan_attrs_ignore:
+				if not cmif_chan_attrs_ignore.has_key(key):
 					attrlist.append(('%s:%s' % (NSprefix, key), MMAttrdefs.valuerepr(key, val)))
 			self.writetag('region', attrlist)
 		self.pop()
@@ -1221,9 +1235,9 @@ class SMILWriter(SMIL):
 		for key, val in x.GetAttrDict().items():
 			if key[-7:] != '_winpos' and \
 			   key[-8:] != '_winsize' and \
-			   key not in cmif_node_attrs_ignore and \
+			   not cmif_node_attrs_ignore.has_key(key) and \
 			   (not is_realpix or
-			    key not in cmif_node_realpix_attrs_ignore):
+			    not cmif_node_realpix_attrs_ignore.has_key(key)):
 				attrlist.append(('%s:%s' % (NSprefix, key),
 						 MMAttrdefs.valuerepr(key, val)))
 		if interior:
