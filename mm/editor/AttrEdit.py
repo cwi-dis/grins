@@ -1329,7 +1329,11 @@ class AttrEditorField(AttrEditorDialogField):
 ##			       self.__attrdef[4])
 
 	def gethelpdata(self):
-		return self.__name, self.getdefault(), self.__attrdef[4]
+		helptext = self.__attrdef[4]
+		if features.compatibility == features.SMIL10 and self.__name == 'project_ftp_host_media':
+			# WARNING: GROSS HACK
+			helptext = 'FTP hostname to use for media file upload'
+		return self.__name, self.getdefault(), helptext
 
 	def getcurrent(self):
 		return self.valuerepr(self.wrapper.getvalue(self.__name))
