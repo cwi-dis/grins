@@ -81,9 +81,19 @@ class LinkEditLight:
 
 	# Method to return a whole-node anchor for a node, or optionally
 	# create one.
+	# If an anchor of type ATYPE_DEST is requested, we may return one
+	# of type ATYPE_WHOLE, since that can serve as a destination anchor.
+	# If an anchor of type ATYPE_WHOLE is requested, we may upgrade an
+	# anchor of ATYPE_DEST to ATYPE_WHOLE.
 	def wholenodeanchor(self, node, type=ATYPE_WHOLE, notransaction = 0, create = 1):
 		alist = MMAttrdefs.getattr(node, 'anchorlist')[:]
-		for a in alist:
+		dest = whole = None
+		for i in range(len(alist)):
+			a = alist[i]
+			if a[A_TYPE] == ATYPE_DEST:
+				dest = i
+			elif a[A_TYPE] == ATYPE_WHOLE:
+				whole = i
 			if type == a[A_TYPE]:
 				if type == ATYPE_DEST or not create:
 					return (node.GetUID(), a[A_ID])
@@ -92,15 +102,22 @@ class LinkEditLight:
 					return None
 		if not create:
 			return None
+		if type == ATYPE_DEST and whole is not None:
+			# return whole-node anchor for destination anchor
+			return (node.GetUID(), alist[whole][A_ID])
 		em = self.editmgr
 		if not notransaction and not em.transaction():
 			return None
-		a = ('0', type, [])
-		alist.append(a)
+		if type == ATYPE_WHOLE and dest is not None:
+			# we can upgrade the destination-only anchor
+			alist[i] = a = (alist[i][0], ATYPE_WHOLE, alist[i][2])
+		else:
+			a = ('0', type, [])
+			alist.append(a)
 		em.setnodeattr(node, 'anchorlist', alist[:])
 		if not notransaction:
 			em.commit()
-		rv = (node.GetUID(), '0')
+		rv = (node.GetUID(), a[A_ID])
 		self.interesting.append(rv)
 		return rv
 
