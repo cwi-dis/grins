@@ -358,15 +358,12 @@ class SelectionDialog(DialogWindow):
 		elif item == ITEM_SELECT_OK:
 			is_ok = 1
 		elif item == ITEM_SELECT_ITEMLIST:
-			(what, message, when, where, modifiers) = event
-			Qd.SetPort(self._wid)
-			where = Qd.GlobalToLocal(where)
-			item, isdouble = self._listwidget.click(where, modifiers)
+			item = self._listwidget.getselect()
 			if item is None:
 				return 1
 			h = self._wid.GetDialogItemAsControl(ITEM_SELECT_ITEM)
 			Dlg.SetDialogItemText(h, _string2dialog(self._itemlist[item]))
-			is_ok = isdouble
+			# XXXX is_ok = isdouble
 		elif item == ITEM_SELECT_ITEM:
 			pass
 		else:
