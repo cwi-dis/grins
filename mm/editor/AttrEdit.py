@@ -538,7 +538,8 @@ class FileAttrEditorField(StringAttrEditorField):
 			else:
 				dir, file = os.path.split(file)
 		windowinterface.FileDialog('Choose File for ' + self.label,
-					   dir, '*', file, self.__ok_cb, None)
+					   dir, '*', file, self.__ok_cb, None,
+					   existing=1)
 
 	def __ok_cb(self, pathname):
 		import MMurl, os

@@ -333,7 +333,8 @@ class NodeInfo(NodeInfoDialog):
 			else:
 				dir, file = os.path.split(file)
 		windowinterface.FileDialog('Select file', dir, '*', file,
-					   self.browserfile_callback, None)
+					   self.browserfile_callback, None,
+					   existing=1)
 
 	def browserfile_callback(self, pathname):
 		import MMurl

@@ -26,7 +26,16 @@ def cb_cancel():
 	
 print "First we will ask you to select a Python source in the current dir"
 fd = window.FileDialog("Select Python source", ".", "*.py", "",
-		cb_ok, cb_cancel)
+		cb_ok, cb_cancel, existing=1)
+try:
+	window.mainloop()
+except done:
+	fd.close()
+	del fd
+
+print "Next we will ask you to give a name for a new .py file"
+fd = window.FileDialog("Select Python output file", ".", "*.py", "",
+		cb_ok, cb_cancel, existing=0)
 try:
 	window.mainloop()
 except done:

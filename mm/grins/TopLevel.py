@@ -178,7 +178,8 @@ class TopLevel:
 		else:
 			cwd = os.getcwd()
 		windowinterface.FileDialog('Open CMIF file:', cwd, '*.cmif',
-					   '', self.open_okcallback, None)
+					   '', self.open_okcallback, None,
+					   existing=1)
 
 	def read_it(self):
 		import time
