@@ -86,6 +86,15 @@ class PreferencesDialog:
 	def getintnames(self):
 		return self.__window.getintnames()
 		
+	def setfloatitem(self, item, value):
+		self.__window.setfloatitem(item, value)
+		
+	def getfloatitem(self, item):
+		return self.__window.getfloatitem(item)
+
+	def getfloatnames(self):
+		return self.__window.getfloatnames()
+		
 	def setboolitem(self, item, value):
 		self.__window.setboolitem(item, value)
 
