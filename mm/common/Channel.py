@@ -214,9 +214,14 @@ class Channel:
 			if not pchan._is_shown:
 				# parent channel not shown, so cannot show self
 				return
-		if not self.do_show(pchan):
+		# register that a channel wants to be shown
+		self._player.before_chan_show(self)
+		self._is_shown = self.do_show(pchan)
+		if not self._is_shown:
 			return
-		self._is_shown = 1
+		self.after_show()
+
+	def after_show(self):
 		# Since the calls to arm() and play() lied to the
 		# scheduler when the channel was hidden, we must do a
 		# few things so that the real state of things is once
@@ -229,6 +234,7 @@ class Channel:
 		for chan in self._subchannels[:]:
 			if chan._want_shown:
 				chan.show()
+		self._player.after_chan_show(self)
 
 	def hide(self):
 		# Indicate that the channel must enter the HIDDEN state.
@@ -947,6 +953,7 @@ class ChannelWindow(Channel):
 	def resize_window(self, pchan):
 		if not self._player.editmgr.transaction():
 			return
+		# we now know for sure we're not playing
 		pchan.window.create_box(
 			'Resize window for channel ' + self._name,
 			self._resize_callback,
@@ -980,13 +987,21 @@ class ChannelWindow(Channel):
 				except KeyError:
 					pass
 			if pgeom:
-				pass
+				self.winoff = pgeom
 			elif self._attrdict.has_key('base_winoff'):
-				pgeom = self._attrdict['base_winoff']
+				self.winoff = pgeom = self._attrdict['base_winoff']
+			elif self._player.playing:
+				windowinterface.showmessage(
+					'No geometry for subchannel %s known' % self._name,
+					mtype = 'error', grab = 1)
+				pchan._subchannels.remove(self)
+				pchan = None
 			else:
-				pchan.window.create_box('Draw a subwindow for ' + self._name + ' in ' + pchan._name, self._box_callback)
-				return 1
-			self.winoff = pgeom
+				pchan.window.create_box(
+					'Draw a subwindow for %s in %s' %
+						(self._name, pchan._name),
+					self._box_callback)
+				return None
 		self.create_window(pchan, pgeom)
 		return 1
 
@@ -1000,6 +1015,8 @@ class ChannelWindow(Channel):
 			pchan._subchannels.remove(self)
 			pchan = None
 		self.create_window(pchan, pgeom)
+		self._is_shown = 1
+		self.after_show()
 
 	def do_hide(self):
 		if debug:
