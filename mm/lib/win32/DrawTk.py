@@ -428,19 +428,19 @@ class DrawRect(DrawObj):
 		win32mu.FrameRect(dc,self._position.tuple(),(255,0,0))
 		# write dimensions
 		#s='(%d,%d,%d,%d)' % self._position.tuple() #pixels
-		if drawTk._rel_coord_ref:
-			s='(%.2f,%.2f,%.2f,%.2f)' % drawTk._rel_coord_ref.get_relative_coords100(self._position.tuple_ps())
-		else:
-			s='(%d,%d,%d,%d)' % self._position.tuple_ps()
-		drawTk.SetSmallFont(dc)
-		dc.SetBkMode(win32con.TRANSPARENT)
-		dc.DrawText(s,self._position.tuple(),win32con.DT_SINGLELINE|win32con.DT_CENTER|win32con.DT_VCENTER)
+#		if drawTk._rel_coord_ref:
+#			s='(%.2f,%.2f,%.2f,%.2f)' % drawTk._rel_coord_ref.get_relative_coords100(self._position.tuple_ps())
+#		else:
+#			s='(%d,%d,%d,%d)' % self._position.tuple_ps()
+#		drawTk.SetSmallFont(dc)
+#		dc.SetBkMode(win32con.TRANSPARENT)
+#		dc.DrawText(s,self._position.tuple(),win32con.DT_SINGLELINE|win32con.DT_CENTER|win32con.DT_VCENTER)
 		
 		# if it is selected draw tracker
 		#if self._is_selected:
 		#	self.drawTracker(dc,DrawObj.selected)
 
-		drawTk.RestoreFont(dc)
+#		drawTk.RestoreFont(dc)
 		dc.SelectObjectFromHandle(oldpen)
 		Sdk.DeleteObject(pen)
 		# restore dc by selecting old pen and brush
