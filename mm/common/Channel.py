@@ -916,7 +916,8 @@ class Channel:
 			clipre = re.compile(
 				'^(?:'
 				'(?:(?P<npt>npt)=(?P<nptclip>.+))|'
-				'(?:(?P<smpte>smpte(?:-30-drop|-25)?)=(?P<smpteclip>.+))'
+				'(?:(?P<smpte>smpte(?:-30-drop|-25)?)=(?P<smpteclip>.+))|'
+				'(?P<clock>[0-9].*)'
 				')$')
 		res = clipre.match(val)
 		if res is None:
@@ -924,6 +925,10 @@ class Channel:
 			return 0
 		if res.group('npt'):
 			val = res.group('nptclip')
+			val = float(self.parsecount(val, node, attr))
+		elif res.group('clock'):
+			self.errormsg(node, 'invalid %s attribute; should be "npt=<time>"' % attr)
+			val = res.group('clock')
 			val = float(self.parsecount(val, node, attr))
 		else:
 			smpteval = res.group('smpte')
