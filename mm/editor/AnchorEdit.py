@@ -168,10 +168,6 @@ class AnchorEditor:
 		self.name = self.node.GetRawAttrDef('name', self.uid)
 		hasfixed = self.toplevel.player.updatefixedanchors(self.node)
 		self.editable = (not hasfixed)
-		self.type_choice.setsensitive(1, self.editable)
-		self.type_choice.setsensitive(2, self.editable)
-		self.type_choice.setsensitive(4, self.editable)
-		self.type_choice.setsensitive(5, self.editable)
 		anchorlist = MMAttrdefs.getattr(self.node, 'anchorlist')
 		modanchorlist(anchorlist)
 		if anchorlist <> self.anchorlist:
