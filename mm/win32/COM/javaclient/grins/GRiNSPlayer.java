@@ -7,6 +7,10 @@ import java.util.Vector;
 class GRiNSPlayer 
 implements SMILDocument, SMILController, SMILRenderer
     {
+    private int STOPPED = 0;
+    private int PAUSING = 1;
+    private int PLAYING = 2;
+        
     GRiNSPlayer(String filename)
         {
         open(filename);
@@ -24,15 +28,15 @@ implements SMILDocument, SMILController, SMILRenderer
     
     public void addListener(SMILListener listener){
         this.listener = listener;
-    }
+        }
     
     public void removeListener(SMILListener listener){
         this.listener = null;
-    }
+        }
     
     public int getViewportCount(){
         return ngetTopLayoutCount(hgrins);
-    }
+        }
     
     public Dimension getViewportSize(int index)
         {
@@ -118,25 +122,59 @@ implements SMILDocument, SMILController, SMILRenderer
         
     public void play()
         {
-        if(hgrins!=0) nplay(hgrins);
+        if(hgrins != 0) {
+            if(curstate == STOPPED) {
+                nsetTime(hgrins, curpos);
+                nplay(hgrins);
+                }
+            else if(curstate == PAUSING)
+                npause(hgrins);
+            }
         }    
-        
-    public void stop()
-        {
-        if(hgrins!=0) nstop(hgrins);
-        }  
         
     public void pause()
         {
-        if(hgrins!=0) npause(hgrins);
+        if(hgrins!=0 && curstate == PLAYING)
+            npause(hgrins);
         } 
-               
-    public int getState(){
-        return curstate;
-    }
+        
+    public void stop()
+        {
+        if(hgrins!=0) 
+            nstop(hgrins);
+        }  
+                       
+    public void setTime(double t)
+        {
+        if(hgrins!=0) {
+            curpos = t;
+            blockupdate = true;
+            if(curstate == PAUSING)
+                {
+                nsetTime(hgrins, t);
+                relax(50);
+                npause(hgrins);
+                relax(100);
+                npause(hgrins);
+                }
+            else if(curstate == PLAYING)
+                {
+                nsetTime(hgrins, t);
+                relax(50);
+                npause(hgrins);
+                }
+            blockupdate = false;
+            }
+        }
+        
+    public int getState() { return curstate;}
+    
+    public double getTime() {return curpos;}
              
     public double getDuration() {return dur;}
+    
     public int getFrameRate() {return frameRate;}
+    
     public int getMediaFrameRate(String fileOrUrlStr) throws GRiNSException
         {
         int mfr = 0;
@@ -147,19 +185,9 @@ implements SMILDocument, SMILController, SMILRenderer
         return mfr;
         }
     
-    public void setTime(double t)
-        {
-        if(hgrins!=0) nsetTime(hgrins, t);   
-        }
+    public void setSpeed(double v) { curspeed = v;}
     
-    public double getTime() {
-        return curpos;
-        }
-    
-    public void setSpeed(double v) {}
-    
-    public double getSpeed() {return 1.0;}
-       
+    public double getSpeed() {return curspeed;}
        
     // Friend methods
     int getCookie()
@@ -170,14 +198,27 @@ implements SMILDocument, SMILController, SMILRenderer
         
     void updatePosition(double pos)
         {
-        curpos = pos;
-        if(listener!=null) listener.setPos(pos);
+        if(curstate == PLAYING) 
+            {
+            if(listener!=null && pos>=curpos && !blockupdate) 
+                {
+                curpos = pos;
+                listener.setPos(pos);
+                }
+            }
         }
         
     void updateState(int state)
         {
-        curstate = state;
-        if(listener!=null) listener.setState(state);
+        if(state != curstate && !blockupdate)
+            {
+            curstate = state;
+            if(listener!=null) listener.setState(state);
+            if(state == STOPPED) {
+                curpos = 0;
+                listener.setPos(0);
+                }
+            }
         }
      
     void updateViewports(){
@@ -186,22 +227,29 @@ implements SMILDocument, SMILController, SMILRenderer
     
     private void resetParams(){
         hgrins = 0;
-        curstate = 0;
+        curstate = STOPPED;
         curpos = 0;
+        curspeed = 1;
         dur = 0;
         frameRate = 0;
         }
         
+    private void relax(int interval){
+        try {Thread.sleep(interval);}
+        catch(InterruptedException e) {}
+        }
     private Dimension viewportSize;
     private double dur;
     private double curpos;
-    private int curstate;
+    private boolean blockupdate = false;
+    private int curstate = STOPPED;
+    private double curspeed = 1.0;
     private int frameRate;
     private SMILListener listener;
     private GRiNSPlayerMonitor monitor;
 	private Canvas canvas; 
 	
-	private int hgrins=0;
+	private int hgrins = 0;
 	
     private native void initializeThreadContext();
     private native void uninitializeThreadContext();
