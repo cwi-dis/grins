@@ -130,7 +130,7 @@ class HtmlChannel(Channel.ChannelWindow):
 	
 	def do_play(self, node):
 		htmlw = self.htmlw
-		self.url = self.armed_url
+		self.played_url = self.url = self.armed_url
 		self.played_str = self.armed_str
 
 		fontspec = getfont(node)
@@ -159,7 +159,6 @@ class HtmlChannel(Channel.ChannelWindow):
 			return string.joinfields(node.GetValues(), '\n')
 		elif node.type == 'ext':
 			filename = self.getfileurl(node)
-			self.armed_url = filename
 			try:
 				fp = urllib.urlopen(filename)
 			except IOError:
@@ -167,6 +166,7 @@ class HtmlChannel(Channel.ChannelWindow):
 					  'Cannot open '+filename+':<P>'+ \
 					  `(sys.exc_type, sys.exc_value)`+ \
 					  '<P>\n'
+			self.armed_url = fp.geturl()
 			# use undocumented feature so we can cleanup
 			if urllib._urlopener.tempcache is None:
 				urllib._urlopener.tempcache = {}
@@ -264,7 +264,8 @@ class HtmlChannel(Channel.ChannelWindow):
 			return
 		if href:
 			if href == 'XXXX:play/node':
-				self.htmlw.insert_html(self.played_str, self.url)
+				self.htmlw.insert_html(self.played_str, self.played_url)
+				self.url = self.played_url
 				return
 			href = urllib.basejoin(self.url, href)
 		else:
