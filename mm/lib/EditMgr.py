@@ -112,7 +112,8 @@ class EditMgr():
 		oldvalue = node.GetRawAttrDef(name, None)
 		self.addstep('setnodeattr', node, name, oldvalue, value)
 		if value = None:
-			node.DelAttr(name)
+			if oldvalue <> None:
+				node.DelAttr(name)
 		else:
 			node.SetAttr(name, value)
 	#
