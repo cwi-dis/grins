@@ -13,7 +13,18 @@ from Hlinks import TYPE_JUMP, TYPE_CALL, TYPE_FORK
 from usercmd import *
 
 # an empty document
-EMPTY = "(seq '1' ((channellist ('root-layout' (type layout) (units 2) (winsize  640 480))) (hyperlinks)))"
+EMPTY = """
+<smil>
+  <head>
+    <meta name="title" content="root-layout"/>
+    <layout>
+      <root-layout id="root-layout" title="root-layout" width="640" height="480"/>
+    </layout>
+  </head>
+  <body>
+  </body>
+</smil>
+"""
 
 from TopLevelDialog import TopLevelDialog
 
@@ -438,8 +449,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			if type(self.new_file) == type(''):
 				self.do_read_it(self.new_file)
 			else:
-				import MMRead
-				self.root = MMRead.ReadString(EMPTY, self.filename)
+				import SMILTreeRead
+				self.root = SMILTreeRead.ReadString(EMPTY, self.filename)
 		else:
 			self.do_read_it(self.filename)
 		self.context = self.root.GetContext()
