@@ -50,6 +50,7 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 	def __init__(self,doc):
 		cmifwnd._CmifWnd.__init__(self)
 		docview.ScrollView.__init__(self,doc)
+		self._usesOSSubWindows = 0
 
 	# Initialization after the OS window has been created
 	# The window is attached to its parent list
@@ -201,11 +202,15 @@ class _CmifView(cmifwnd._CmifWnd,docview.ScrollView):
 
 	# It is called by the core system when it wants to create a child window
 	def newwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
-		return _SubWindow(self, coordinates, transparent, type_channel, 0, pixmap, z, units)
+		if self._usesOSSubWindows:
+			SubWindowClass = _LightSubWindow
+		else:
+			SubWindowClass = _OSSubWindow	
+		return SubWindowClass(self, coordinates, transparent, type_channel, 0, pixmap, z, units)
 
 	# It is called by the core system when it wants to create a child window
 	def newcmwindow(self, coordinates, pixmap = 0, transparent = 0, z = 0, type_channel = SINGLE, units = None):
-		return _SubWindow(self, coordinates, transparent, type_channel, 1, pixmap, z, units)	
+		return newwindow(coordinates, pixmap, transparent, z, type_channel, units)	
 
 	# Sets the dynamic commands by delegating to its parent
 	def set_dynamiclist(self, cmd, list):
@@ -404,6 +409,7 @@ class _CmifPlayerView(_CmifView):
 	# Class contructor. initializes base classes
 	def __init__(self,doc):
 		_CmifView.__init__(self,doc)
+		self._usesOSSubWindows = 1
 		self._canclose=1
 		self._tid=None
 
@@ -413,12 +419,12 @@ class _CmifPlayerView(_CmifView):
 		self._clipper = None
 
 	def OnCreate(self,params):
-		if USE_NEWSUBWINDOWSIMPL: 
+		if self._usesOSSubWindows: 
 			self.__initDD()
 		_CmifView.OnCreate(self,params)
 
 	def OnDestroy(self, msg):		
-		if USE_NEWSUBWINDOWSIMPL: 
+		if self._usesOSSubWindows: 
 			self.__delDD()
 		_CmifView.OnDestroy(self, msg)
 
@@ -467,7 +473,7 @@ class _CmifPlayerView(_CmifView):
 	def onPostResize(self,params=None):
 		self._tid=None
 		self._canclose=0
-		if not USE_NEWSUBWINDOWSIMPL: 
+		if not self._usesOSSubWindows: 
 			self._resize_tree()
 		self._canclose=1
 
@@ -475,13 +481,13 @@ class _CmifPlayerView(_CmifView):
 		if self.in_create_box_mode() and self.get_box_modal_wnd()==self:
 			self.notifyListener('OnDraw',dc)
 			return
-		if not USE_NEWSUBWINDOWSIMPL:
+		if not self._usesOSSubWindows:
 			_CmifView.OnDraw(self,dc)
 		else:
 			self.paintOn(dc)
 
 	def onMouseEvent(self, point, ev):
-		if not USE_NEWSUBWINDOWSIMPL:
+		if not self._usesOSSubWindows:
 			_CmifView.onMouseEvent(self, point, ev)
 			return
 		
@@ -502,7 +508,7 @@ class _CmifPlayerView(_CmifView):
 		return self.onEvent(ev,(x, y, buttons))
 
 	def onMouseMove(self, params):
-		if not USE_NEWSUBWINDOWSIMPL or self.in_create_box_mode():
+		if not self._usesOSSubWindows or self.in_create_box_mode():
 			_CmifView.onMouseMove(self, params)
 		msg=win32mu.Win32Msg(params)
 		point=msg.pos()
@@ -513,7 +519,7 @@ class _CmifPlayerView(_CmifView):
 		self.setcursor_from_point(point, self)
 
 	def OnEraseBkgnd(self,dc):
-		if not USE_NEWSUBWINDOWSIMPL or not self._active_displist:
+		if not self._usesOSSubWindows or not self._active_displist:
 			return _CmifView.OnEraseBkgnd(self,dc)
 		return 1
 
@@ -563,7 +569,7 @@ class _CmifPlayerView(_CmifView):
 		self._islocked = 0
 
 	def update(self):
-		if USE_NEWSUBWINDOWSIMPL:
+		if self._usesOSSubWindows:
 			self.paint()
 			self.flip()
 		else:
@@ -737,7 +743,7 @@ class _CmifStructView(_CmifView):
 							
 				
 #################################################
-class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
+class _OSSubWindow(cmifwnd._CmifWnd,window.Wnd):
 
 	# Class contructor. Initializes the class and creates the OS window
 	def __init__(self, parent, rel_coordinates, transparent, type_channel, defcmap, pixmap, z=0, units=None):
@@ -1185,12 +1191,9 @@ class _SubWindow(cmifwnd._CmifWnd,window.Wnd):
 
 
 #################################################
-USE_NEWSUBWINDOWSIMPL = 1
 
-def _NewSubWindow(parent, rel_coordinates, transparent, type_channel, 
+def _LightSubWindow(parent, rel_coordinates, transparent, type_channel, 
 	defcmap, pixmap, z=0, units=None):
 	import win32window
 	return win32window.SubWindow(parent, rel_coordinates, transparent, z, units)
-
-if USE_NEWSUBWINDOWSIMPL:
-	_SubWindow = _NewSubWindow
+	
