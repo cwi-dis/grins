@@ -86,7 +86,7 @@ class DisplayList:
 
 		# clip to parent only rect
 		x, y, w, h = dst_xywh
-
+		
 		if cmd == 'clear':
 			rgb = winstruct.RGB(entry[1])
 			dc.FillSolidRect(wnd.ltrb(rcc), rgb)
@@ -120,6 +120,10 @@ class DisplayList:
 			if wnd._canscroll: 	
 				dx, dy = wnd._scrollpos
 				lsc, tsc, rsc, bsc = lsc+dx, tsc+dy, rsc+dx, bsc+dy
+			
+			if rdc <= ldc or bdc <= tdc or rsc <= lsc or bsc <= tsc:
+				# inage clipped out. Nothing to paint
+				return
 
 			rc_dest = ldc, tdc, rdc - ldc, bdc - tdc
 			rc_src = lsc, tsc, rsc - lsc, bsc - tsc
