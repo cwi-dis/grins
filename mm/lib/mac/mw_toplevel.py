@@ -362,6 +362,10 @@ class _Event:
 				self._mouseregionschanged()
 		elif partcode == Windows.inDrag:
 			wid.DragWindow(where, self._draglimit)
+			# Fixup for dragging non-grabbed windows:
+			if self._grabbed_wids and not wid in self._grabbed_wids:
+				wid = self._grabbed_wids[0]
+				wid.SelectWindow()
 			window = self._find_wid(wid)
 			if window:
 				window._zapregions()
