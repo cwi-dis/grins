@@ -15,6 +15,8 @@ import win32con
 
 import win32transitions
 
+import winstruct
+
 import base_window
 
 class Region(base_window.Window):
@@ -92,19 +94,19 @@ class Region(base_window.Window):
 		self.HookMessage(self.onOsWndMouseMove,win32con.WM_MOUSEMOVE)
 	
 	def onOsWndLButtonDown(self, params):
-		xr, yr = Win32Msg(params).pos()
+		xr, yr = winstruct.Win32Msg(params).pos()
 		x, y, w, h = self.getwindowpos()
 		if self._topwindow:
 			self._topwindow.onMouseEvent((x+xr, y+yr), Mouse0Press)
 
 	def onOsWndLButtonUp(self, params):
-		xr, yr = Win32Msg(params).pos()
+		xr, yr = winstruct.Win32Msg(params).pos()
 		x, y, w, h = self.getwindowpos()
 		if self._topwindow:
 			self._topwindow.onMouseEvent((x+xr, y+yr), Mouse0Release)
 
 	def onOsWndMouseMove(self, params):
-		xr, yr = Win32Msg(params).pos()
+		xr, yr = winstruct.Win32Msg(params).pos()
 		x, y, w, h = self.getwindowpos()
 		if self._topwindow:
 			self._topwindow.onMouseMove(0, (x+xr, y+yr))
@@ -904,14 +906,14 @@ class Viewport(Region):
 
 
 ##########################
-class ViewportContext:
+class DesktopViewportContext:
 	def __init__(self, wnd, w, h, units, bgcolor):
 		
 		self._viewport = Viewport(self, 0, 0, w, h, bgcolor)
 		self._rect = 0, 0, w, h
 
 		self._wnd = wnd
-		self._bgcolor = (0, 0, 0) # should be always black for WMP
+		self._bgcolor = bgcolor or (0, 0, 0) 
 		
 		import winuser
 		desktop = winuser.GetDesktopWindow()
@@ -1036,22 +1038,147 @@ class ViewportContext:
 		except ddraw.error, arg:
 			print 'PlayerView.update', arg
 
+##############
+
+class ViewportContext:
+	def __init__(self, wnd, w, h, units, bgcolor):
+		
+		self._viewport = Viewport(self, 0, 0, w, h, bgcolor)
+		self._rect = 0, 0, w, h
+
+		self._wnd = wnd
+		self._bgcolor = bgcolor or (0, 0, 0) 
+		
+		self._ddraw = ddraw.CreateDirectDraw()
+		self._ddraw.SetCooperativeLevel(wnd.GetSafeHwnd(), ddraw.DDSCL_NORMAL)
+
+		ddsd = ddraw.CreateDDSURFACEDESC()
+		ddsd.SetFlags(ddraw.DDSD_CAPS)
+		ddsd.SetCaps(ddraw.DDSCAPS_PRIMARYSURFACE)
+		self._frontBuffer = self._ddraw.CreateSurface(ddsd)
+		self._pxlfmt = self._frontBuffer.GetPixelFormat()
+
+		ddsd = ddraw.CreateDDSURFACEDESC()
+		ddsd.SetFlags(ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT | ddraw.DDSD_CAPS)
+		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
+		ddsd.SetSize(w, h)
+		self._backBuffer = self._ddraw.CreateSurface(ddsd)
+
+		self._clipper = self._ddraw.CreateClipper(wnd.GetSafeHwnd())
+		self._frontBuffer.SetClipper(self._clipper)
+
+		self._ddbgcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255,255,255))
+		self._backBuffer.BltFill((0, 0, w, h), self._ddbgcolor)
+
+		self._wnd.HookMessage(self.OnPaint, win32con.WM_PAINT)
+
+	def OnPaint(self, params):
+		ps = self._wnd.BeginPaint()
+		self._wnd.EndPaint(ps)
+		self.update()
+		
+	def destroyDDLayer(self):
+		if self._ddraw:
+			del self._frontBuffer
+			del self._backBuffer
+			del self._clipper
+			del self._ddraw
+			self._ddraw = None
+
+	def update(self, rc=None, exclwnd=None):
+		if self._backBuffer.IsLost():
+			if not self._backBuffer.Restore():
+				return
+		
+		# do we have anything to update?
+		if rc and (rc[2]==0 or rc[3]==0): 
+			return 
+
+		if rc is None:
+			x, y, w, h = self._viewport._rectb
+			rcPaint = x, y, x+w, y+h
+		else:
+			rcPaint = rc[0], rc[1], rc[0]+rc[2], rc[1]+rc[3] 
+		try:
+			self._backBuffer.BltFill(rcPaint, self._ddbgcolor)
+		except ddraw.error, arg:
+			print arg
+			return
+
+		if self._viewport:
+			self._viewport.paint(rc, exclwnd)
+		
+		self.update_screen()
+
+	def setcursor(self, strid):
+		pass
+
+	def getRGBBitCount(self):
+		return self._pxlfmt[0]
+
+	def getPixelFormat(self):
+		returnself._pxlfmt
+
+	def getDirectDraw(self):
+		return self._ddraw
+
+	def getContextOsWnd(self):
+		return self._wnd
+
+	def pop(self, poptop=1):
+		pass
+
+	def getwindowpos(self):
+		return self._viewport._rect
+
+	def closeViewport(self, viewport):
+		del viewport
+		self.destroyDDLayer()
+
+	def getDrawBuffer(self):
+		return self._backBuffer
+
+	def updateMouseCursor(self):
+		pass
+
+	def getgrinsdoc(self):
+		return None
+
+	def CreateSurface(self, w, h):
+		ddsd = ddraw.CreateDDSURFACEDESC()
+		ddsd.SetFlags(ddraw.DDSD_WIDTH | ddraw.DDSD_HEIGHT | ddraw.DDSD_CAPS)
+		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
+		ddsd.SetSize(w,h)
+		dds = self._ddraw.CreateSurface(ddsd)
+		dds.BltFill((0, 0, w, h), self._ddbgcolor)
+		return dds
+
+	def update_screen(self):
+		import winkernel
+		if not self._ddraw or not self._frontBuffer or not self._backBuffer:
+			return
+		if self._frontBuffer.IsLost():
+			winkernel.Sleep(0)
+			if not self._frontBuffer.Restore():
+				# we can't do anything for this
+				# system is busy with video memory
+				return
+		if self._backBuffer.IsLost():
+			winkernel.Sleep(0)
+			if not self._backBuffer.Restore():
+				# and for this either
+				# system should be out of memory
+				return
+
+		rcBack = self._rect
+		rcFront = self._wnd.ClientToScreen(rcBack)
+		try:
+			self._frontBuffer.Blt(rcFront, self._backBuffer, rcBack)
+		except ddraw.error, arg:
+			print 'ViewportContext.update', arg
+
 #########################
 # helpers
-
-def loword(v):
-	return v & 0xFFFF
-
-def hiword(v):
-	return (v >> 16) & 0xFFFF
-
-class Win32Msg:
-	def __init__(self,params):
-		self._hwnd,self._message,self._wParam,self._lParam,self._time,self._pt=params
-	def pos(self):
-		return loword(self._lParam), hiword(self._lParam)
-	def id(self):
-		return loword(self._wParam); 
 
 import grinsRC
 import winuser
