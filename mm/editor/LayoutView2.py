@@ -24,7 +24,7 @@ COPY_PASTE_MEDIAS = 1
 # XXX we should use the same variable as the variable defined from component
 DELTA_KEYTIME = 0.01
 
-TYPE_UNKNOWN, TYPE_REGION, TYPE_MEDIA, TYPE_VIEWPORT, TYPE_ANIMATE = range(5)
+TYPE_UNKNOWN, TYPE_REGION, TYPE_MEDIA, TYPE_VIEWPORT, TYPE_ANIMATE, TYPE_ANCHOR = range(6)
 CHILD_TYPE = (TYPE_ANIMATE,)
 
 ###########################
@@ -53,9 +53,9 @@ class TreeHelper:
 		self.__rootList = {}
 		from MMTypes import mediatypes
 		if features.SPEPARATE_ANIMATE_NODE in features.feature_set:
-			self.__mmnodetypes = mediatypes+['animpar','animate']
+			self.__mmnodetypes = mediatypes+['animpar', 'animate', 'anchor']
 		else:
-			self.__mmnodetypes = mediatypes
+			self.__mmnodetypes = mediatypes+['anchor']
 			
 	def destroy(self):
 		self.__channelTreeRef = None
@@ -76,6 +76,8 @@ class TreeHelper:
 			if node.attrdict.get('internal'):
 				return None
 			return TYPE_ANIMATE
+		if node.type == 'anchor':
+			return TYPE_ANCHOR
 		chtype = node.GetChannelType()
 		if chtype == None:
 			return None
@@ -102,7 +104,11 @@ class TreeHelper:
 				parentType = self._getMMNodeType(parentRef)
 				if parentType in (TYPE_MEDIA, TYPE_REGION):
 					self.__checkNode(parentRef, nodeRef, position, TYPE_VIEWPORT, parentType, TYPE_ANIMATE)
-
+		elif type == TYPE_ANCHOR:
+			parentRef = self.getParent(nodeRef, TYPE_ANCHOR)
+			if not parentRef is None:
+				self.__checkNode(parentRef, nodeRef, position, TYPE_VIEWPORT, TYPE_MEDIA, TYPE_ANCHOR)
+		
 		childPosition = 0			
 		for child in nodeRef.GetChildren():
 			self.__checkMediaNodeList(child, childPosition)
@@ -450,6 +456,8 @@ class TreeHelper:
 			if targetNode is None:
 				targetNode = nodeRef.GetParent()
 			return targetNode
+		elif nodeType == TYPE_ANCHOR:
+			return nodeRef.GetParent()
 
 		# no layout parent			
 		return None
@@ -572,6 +580,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.mknositemcommandlist()
 		self.mkmultisitemcommandlist()
 		self.mkmultisiblingsitemcommandlist()
+		self.mkanchorcommandlist()
 		
 		# dictionary of widgets used in this view
 		# basicly, this view is composed of 
@@ -593,6 +602,7 @@ class LayoutView2(LayoutViewDialog2):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandViewportList = [
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
+				NEW_REGION(callback = (self.onNewRegion, ())),
 				]
 		else:
 			self.commandViewportList = [
@@ -603,12 +613,19 @@ class LayoutView2(LayoutViewDialog2):
 		if features.CUSTOM_REGIONS in features.feature_set:
 			self.commandRegionList = [
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
+				NEW_REGION(callback = (self.onNewRegion, ())),
 #				ENABLE_ANIMATION(callback = (self.onEnableAnimation, ())),
 				]
 		else:
 			self.commandRegionList = [
 				]
 		self.__appendCommonCommands(self.commandRegionList)
+
+	def mkanchorcommandlist(self):
+		self.commandAnchorList = [
+				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
+				]
+		self.__appendCommonCommands(self.commandAnchorList)
 
 	def mkmediacommandlist(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
@@ -826,14 +843,15 @@ class LayoutView2(LayoutViewDialog2):
 		# some other commands to update
 		if len(self.currentSelectedNodeList) == 1:
 			selectedNode = self.currentSelectedNodeList[0]
-			if not self.getNodeType(selectedNode) == TYPE_REGION or not selectedNode.isDefault():
+			if not (self.getNodeType(selectedNode) == TYPE_REGION and not selectedNode.isDefault()):
 				commandlist.append(ATTRIBUTES(callback = (self.onEditProperties, ())))
-				commandlist.append(NEW_REGION(callback = (self.onNewRegion, ())))
 
 		if len(self.currentSelectedNodeList) >= 1:
 			active = 1
 			for node in self.currentSelectedNodeList:
-				if self.getNodeType(node) == TYPE_REGION and node.isDefault():
+				nodeType = self.getNodeType(node)
+				if (nodeType == TYPE_REGION and node.isDefault()) or \
+					nodeType in (TYPE_ANIMATE, TYPE_ANCHOR):
 					active = 0
 					break
 			if active:
@@ -909,6 +927,8 @@ class LayoutView2(LayoutViewDialog2):
 				self.updateCommandList(self.commandRegionList)
 			elif nodeType == TYPE_VIEWPORT:
 				self.updateCommandList(self.commandViewportList)
+			elif nodeType == TYPE_ANCHOR:
+				self.updateCommandList(self.commandAnchorList)
 			else:
 				self.updateCommandList(self.commandMediaList)
 		elif areSibling:
@@ -1078,7 +1098,7 @@ class LayoutView2(LayoutViewDialog2):
 		if nodeType == None:
 			nodeType = self.getNodeType(nodeRef)
 			
-		if nodeType in (TYPE_MEDIA, TYPE_ANIMATE):
+		if nodeType in (TYPE_MEDIA, TYPE_ANIMATE, TYPE_ANCHOR):
 			name = nodeRef.attrdict.get('name')
 		elif nodeType == TYPE_REGION:
 			# show first the region name
@@ -1126,6 +1146,8 @@ class LayoutView2(LayoutViewDialog2):
 		elif nodeType == TYPE_MEDIA:
 			# allow to choice attributes
 			AttrEdit.showattreditor(self.toplevel, nodeRef, initattr = 'cssbgcolor')
+		elif nodeType == TYPE_ANCHOR:
+			AttrEdit.showattreditor(self.toplevel, nodeRef)			
 		
 	def sendBack(self, regionRef):
 		currentZ = regionRef.GetAttrDef('z',0)
@@ -1239,11 +1261,12 @@ class LayoutView2(LayoutViewDialog2):
 		self.applyAttrList(list)
 
 	def __makeAttrListToApplyFromGeom(self, nodeRef, geom, list):
-		if self.getNodeType(nodeRef) == TYPE_VIEWPORT:
+		nodeType = self.getNodeType(nodeRef)
+		if nodeType == TYPE_VIEWPORT:
 			x,y,w,h = geom
 			list.append((nodeRef, 'width', w))
 			list.append((nodeRef, 'height', h))
-		else:
+		elif nodeType in (TYPE_REGION, TYPE_MEDIA, TYPE_ANIMATE):
 			x,y,w,h = geom
 			list.append((nodeRef, 'left', x))
 			list.append((nodeRef, 'top', y))
@@ -1251,7 +1274,33 @@ class LayoutView2(LayoutViewDialog2):
 			list.append((nodeRef, 'height', h))
 			list.append((nodeRef, 'right', None))
 			list.append((nodeRef, 'bottom', None))
-		
+		elif nodeType == TYPE_ANCHOR:
+			x,y,w,h = geom
+			parentRef = self.getParentNodeRef(nodeRef)
+			if parentRef is None or self.getNodeType(parentRef) != TYPE_MEDIA:
+				return
+			pX, pY, pW, pH = self.previousWidget.getMediaPxGeom(parentRef)
+			# remember whether it's specify in pixel or percent
+			currentCoords = nodeRef.GetAttrDef('acoords', None)
+			lInPixel=tInPixel=rInPixel=bInPixel = 1
+			if currentCoords is not None and len(currentCoords) == 4:
+				cL, cT, cR, cB = currentCoords
+				if type(cL) == type(1.0): lInPixel = 0
+				if type(cT) == type(1.0): tInPixel = 0
+				if type(cR) == type(1.0): rInPixel = 0
+				if type(cB) == type(1.0): bInPixel = 0
+			l = x
+			r = l+w
+			t = y
+			b = t+h
+			if not lInPixel: l = float(l)/pW
+			if not tInPixel: t = float(t)/pH
+			if not rInPixel: r = float(r)/pW
+			if not bInPixel: b = float(b)/pH
+			coords = [l, t, r, b]
+			list.append((nodeRef, 'acoords',coords))								
+			list.append((nodeRef, 'ashape','rect'))								
+			
 	def applyBgColor(self, nodeRef, bgcolor, transparent):
 		# test if possible 
 		if self.editmgr.transaction():
@@ -1359,7 +1408,7 @@ class LayoutView2(LayoutViewDialog2):
 			if not animated or (currentTimeValue == 0 and nodeType != TYPE_ANIMATE):
 				if nodeType in (TYPE_VIEWPORT, TYPE_REGION):					
 					self.editmgr.setchannelattr(nodeRef.name, attrName, attrValue)
-				elif nodeType == TYPE_MEDIA:
+				elif nodeType in (TYPE_MEDIA, TYPE_ANCHOR):
 					self.editmgr.setnodeattr(nodeRef, attrName, attrValue)
 				
 		self.editmgr.commit()
@@ -2212,6 +2261,8 @@ class LayoutView2(LayoutViewDialog2):
 			elif nodeType == TYPE_MEDIA:
 				if error < 3:
 					error = 3
+			else:
+				error = 5
 
 		if error == 4:
 			# show in priority that error
@@ -2232,7 +2283,7 @@ class LayoutView2(LayoutViewDialog2):
 		nodeType = self.getNodeType(nodeRef)
 		if nodeType == TYPE_VIEWPORT:
 			self.geomFieldWidget.updateViewportGeom(geom)
-		elif nodeType == TYPE_REGION:
+		elif nodeType in (TYPE_REGION, TYPE_ANCHOR):
 			self.geomFieldWidget.updateRegionGeom(geom)
 		elif nodeType in (TYPE_MEDIA, TYPE_ANIMATE):
 			self.geomFieldWidget.updateMediaGeom(geom)
@@ -2525,7 +2576,13 @@ class GeomFieldWidget(LightWidget):
 		elif nodeType == TYPE_REGION:
 			self._eLeft, self._eTop, self._eWidth, self._eHeight = 1, 1, 1, 1
 			self.__updateSelection()
-			self.__updateRegion(nodeRef)
+			self.__updateRegion(nodeRef)			
+		elif nodeType == TYPE_ANCHOR:
+			shape = nodeRef.GetAttrDef('ashape', None)
+			if shape in (None, 'rect'):
+				self._eLeft, self._eTop, self._eWidth, self._eHeight = 1, 1, 1, 1				
+				self.__updateRegion(nodeRef)			
+			self.__updateSelection()
 		elif nodeType == TYPE_MEDIA:
 			aLeft, aTop, aWidth, aHeight = self.getVisibleAnimatedAttrList(nodeRef, ['left', 'top', 'width', 'height'])
 			self._eLeft, self._eTop, self._eWidth, self._eHeight = not aLeft, not aTop, not aWidth, not aHeight
@@ -2616,7 +2673,7 @@ class GeomFieldWidget(LightWidget):
 					self.__onGeomOnViewportChanged(ctrlName, value)
 				elif nodeType == TYPE_REGION:
 					self.__onGeomOnRegionChanged(ctrlName, value)
-				elif nodeType in (TYPE_MEDIA, TYPE_ANIMATE):
+				elif nodeType in (TYPE_MEDIA, TYPE_ANIMATE, TYPE_ANCHOR):
 					self.__onGeomOnRegionChanged(ctrlName, value)
 
 	def __onGeomOnViewportChanged(self, ctrlName, value):
@@ -2959,6 +3016,8 @@ class TreeWidget(Widget):
 				self.treeCtrl.setpopup(MenuTemplate.POPUP_REGIONTREE_REGION)
 			elif nodeType == TYPE_MEDIA:
 				self.treeCtrl.setpopup(MenuTemplate.POPUP_REGIONTREE_MEDIA)
+			elif nodeType == TYPE_ANCHOR:
+				self.treeCtrl.setpopup(MenuTemplate.POPUP_REGIONTREE_ANCHOR)
 			else:
 				self.treeCtrl.setpopup(None)
 		else:
@@ -3031,12 +3090,11 @@ class TreeWidget(Widget):
 		nodeRef = self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
 		if nodeRef:
 			nodeType = self._context.getNodeType(nodeRef)
-			if nodeType != TYPE_MEDIA:
-				# XXX for now store information without commit or other mechanism
-				if not isExpanded:
-					nodeRef.collapsed = 1
-				else:
-					nodeRef.collapsed = 0
+			# XXX for now store information without commit or other mechanism
+			if not isExpanded:
+				nodeRef.collapsed = 1
+			else:
+				nodeRef.collapsed = 0
 		
 	def expandNodes(self, nodeRef, expandMediaNode):
 		hasNotOnlyMedia = 0
@@ -3077,9 +3135,9 @@ class TreeWidget(Widget):
 			type = 'Region'
 			# XXX the GetUID seems bugged, so we use directly the region Id as global id for now
 			objectId = nodeRef.name
-		elif nodeType == TYPE_ANIMATE:
-			type = 'Animate'
-			objectId = nodeRef.GetUID()
+		elif nodeType in (TYPE_ANIMATE, TYPE_ANCHOR):
+			# not supported
+			return
 		self.treeCtrl.beginDrag(type, objectId)
 
 	def __dragObjectIdToNodeRef(self, type, objectId):
@@ -3184,6 +3242,8 @@ class PreviousWidget(Widget):
 					self.__showMedia(nodeRef)
 				elif nodeType == TYPE_ANIMATE:
 					self.__showAnimate(nodeRef)
+				elif nodeType == TYPE_ANCHOR:
+					self.__showAnchor(nodeRef)
 			else:
 				if nodeType == TYPE_REGION:
 					self.__hideRegion(nodeRef)
@@ -3191,6 +3251,8 @@ class PreviousWidget(Widget):
 					self.__hideMedia(nodeRef)
 				elif nodeType == TYPE_ANIMATE:
 					self.__hideAnimate(nodeRef)
+				elif nodeType == TYPE_ANCHOR:
+					self.__hideAnchor(nodeRef)
 
 	# update animation wrapper to be able to get interpolation values
 	def updateAnimationWrapper(self, animateNode):
@@ -3259,6 +3321,8 @@ class PreviousWidget(Widget):
 				self.previousCtrl.setpopup(MenuTemplate.POPUP_REGIONPREVIEW_REGION)
 			elif nodeType == TYPE_MEDIA:
 				self.previousCtrl.setpopup(MenuTemplate.POPUP_REGIONPREVIEW_MEDIA)
+			elif nodeType == TYPE_ANCHOR:
+				self.previousCtrl.setpopup(MenuTemplate.POPUP_REGIONPREVIEW_ANCHOR)
 		else:
 			self.previousCtrl.setpopup(None)
 				
@@ -3355,6 +3419,8 @@ class PreviousWidget(Widget):
 			self.__hideMedia(nodeRef)
 		elif nodeType == TYPE_ANIMATE:
 			self.__hideAnimate(nodeRef)
+		elif nodeType == TYPE_ANCHOR:
+			self.__hideAnchor(nodeRef)
 				   
 	# ensure that the viewport is in showing state
 	def __showViewport(self, viewportRef):
@@ -3402,6 +3468,31 @@ class PreviousWidget(Widget):
 			
 		self.__mustBeUpdated = 1
 
+	def __showAnchor(self, nodeRef):
+		shape = nodeRef.GetAttrDef('ashape', None)
+		if shape not in (None, 'rect'):
+			# not supported shape
+			self.__hideAnchor(nodeRef)
+			return
+		
+		if self._nodeRefToNodeTree.has_key(nodeRef):
+			# already showed
+			return
+
+		parentRef = self._context.getParentNodeRef(nodeRef)
+		parentNode = self._nodeRefToNodeTree.get(parentRef)
+		if parentNode is None:
+			self.updateVisibility([parentRef], 1)
+
+		self._nodeRefToNodeTree[nodeRef] = newNode = AnchorRegion(nodeRef, self)
+		parentNode = self.getNode(parentRef)
+		if parentNode is not None:
+			parentNode.addNode(newNode)
+
+		newNode.toShowedState()
+			
+		self.__mustBeUpdated = 1
+	
 	def __showAnimate(self, nodeRef):
 		targetAnimateNodeRef = self._context.getParentNodeRef(nodeRef)
 		targetAnimateNode = self._nodeRefToNodeTree.get(targetAnimateNodeRef)
@@ -3453,7 +3544,22 @@ class PreviousWidget(Widget):
 		if targetAnimateNode:
 			targetAnimateNode.setAnimateNode(None)
 		self.__mustBeUpdated = 1
-									
+
+	def __hideAnchor(self, nodeRef):
+		if not self._nodeRefToNodeTree.has_key(nodeRef):
+			# already hidden
+			return
+
+		node = self.getNode(nodeRef)
+		node.toHiddenState()
+		parentNode = node.getParent()
+		# remove from region tree
+		if parentNode is not None:
+			parentNode.removeNode(node)
+
+		del self._nodeRefToNodeTree[nodeRef]
+		self.__mustBeUpdated = 1
+	
 	def onSelectChanged(self, objectList):
 		# prevent against infinite loop
 		if self.__selecting:
@@ -3519,7 +3625,7 @@ class PreviousWidget(Widget):
 					nodeRef = animateNode			
 			for obj in objectList:
 				if nodeTree._graphicCtrl is obj:
-					self._context.onFastGeomUpdate(nodeRef, obj.getGeom())
+					self._context.onFastGeomUpdate(nodeRef, nodeTree.getEditedGeom())
 					break
 
 	def onGeomChanged(self, objectList):		
@@ -3532,7 +3638,7 @@ class PreviousWidget(Widget):
 					nodeRef = animateNode
 			for obj in objectList:
 				if nodeTree._graphicCtrl is obj:
-					applyList.append((nodeRef, obj.getGeom()))
+					applyList.append((nodeRef, nodeTree.getEditedGeom()))
 					break
 
 		self._context.applyGeomList(applyList)
@@ -3559,6 +3665,15 @@ class PreviousWidget(Widget):
 			# return the current value (dom or current animate value according to an eventual visible animate node)
 			return node.getWinGeom()
 
+	# return the media geom (which is different from the sub-region geom)
+	def getMediaPxGeom(self, nodeRef):
+		node = self._nodeRefToNodeTree.get(nodeRef)
+		if node is None:
+			# failed. Shouldn't happen
+			return (0, 0, 100, 100)
+		# return the current value (dom or current animate value)
+		return node.getMediaWinGeom()
+		
 	def isShowed(self, nodeRef):
 		node = self._nodeRefToNodeTree.get(nodeRef)
 		if node is None:
@@ -3807,6 +3922,11 @@ class Node:
 	def getWinGeom(self):
 		return self._cssResolver.getPxGeom(self._cssNode)
 
+	# get the geom that has been edited and not applied yet in the document
+	# note that for anchor this method is overided since there is a conversion to do
+	def getEditedGeom(self):
+		return self._graphicCtrl.getGeom()
+	
 	def setAnimateNode(self, animateNode):
 		self._animateNode = animateNode
 
@@ -4142,6 +4262,109 @@ class MediaRegion(Region):
 		# XXX To check if really need it
 		self._mediaCssNode.defaultSizeHandler = None
 		Node._cleanup(self)
+		
+	def onProperties(self):
+		if features.CUSTOM_REGIONS in features.feature_set:
+			self._ctx._context.editProperties(self.getNodeRef())
+
+	def getMediaWinGeom(self):
+		return self._cssResolver.getPxGeom(self._mediaCssNode)
+
+class AnchorRegion(Region):
+	def __init__(self, node, ctx):
+		nodeRef = node
+		Region.__init__(self, nodeRef, ctx)
+		self._nodeType = TYPE_ANCHOR
+		self._wantToShow = 1
+
+	# the returned value is relative to the media (not to the sub-region)
+	def getWinGeom(self):
+		nodeRef = self._nodeRef
+		parentGeom  = self._parent.getMediaWinGeom()
+		pL, pT, pW, pH = parentGeom
+		coords = nodeRef.attrdict.get('acoords')
+		if coords is None or len(coords) != 4:
+			return (0, 0, pW, pH)
+		l, t, r, b = coords
+		# convert percent values
+		if type(l) == type(0.0):
+			l = int(pW*l)
+		if type(t) == type(0.0):
+			t = int(pH*t)
+		if type(r) == type(0.0):
+			r = int(pW*r)
+		if type(b) == type(0.0):
+			b = int(pH*b)
+		w = r-l
+		h = b-t
+		return (l, t, w, h)
+
+	def importAttrdict(self):
+		Node.importAttrdict(self)
+				
+		showMode = self._ctx._context.getShowEditBackgroundMode(self._nodeRef)
+		self._curattrdict['transparent'] = 1
+
+		parentGeom  = self._parent.getMediaWinGeom()
+		wingeom = self.getWinGeom()
+		# that value is relative to the media. To show it, it has to be relative to the media
+		if wingeom is None or parentGeom is None:
+			return
+		x, y, w, h = wingeom
+		pX, pY, pW, pH = parentGeom
+			
+		self._curattrdict['wingeom'] = (pX+x, pY+y, w, h)
+		self._z = self._nodeRef.GetAttrDef('z', 0)
+		self._curattrdict['z'] = self._z
+
+	def updateShowName(self,value):
+		# no name showed
+		pass
+
+	def show(self):
+		if self._parent._graphicCtrl == None:
+			print 'Anchor.show : no parent'
+			return
+
+		if self.isShowed():
+			# hide this node and its sub-nodes
+			self.hideAllNodes()
+			
+		parent = self._parent
+
+		self.importAttrdict()
+
+		if self._curattrdict.get('wingeom') is None:
+			# it means we edit an shape we don't support yet (circle, poly, ...)
+			return
+		
+		self._graphicCtrl = parent._graphicCtrl.addRegion(self._curattrdict, self.getName())
+		self._graphicCtrl.showName(0)		
+		self._graphicCtrl.setListener(self)
+
+	def getEditedGeom(self):
+		x, y, w, h = self._graphicCtrl.getGeom()
+
+		# that value is relative to the sub-region. We have to return a value relative to the media
+		parentGeom  = self._parent.getMediaWinGeom()
+		if parentGeom is None:
+			# failed. Shouldn't happen
+			return (0, 0, 100, 100)
+		pX, pY, pW, pH = parentGeom
+		return (x-pX, y-pY, w, h)
+		
+	def fastUpdateAttrdict(self):
+		# XXX for now, just recreat the anchor. Should be optimized
+		if self._graphicCtrl is not None:
+			isSelected = self._graphicCtrl.isSelected
+		self.hide()
+		self.show()
+		if isSelected and self._graphicCtrl:
+			self._ctx.previousCtrl.appendSelection([self._graphicCtrl])
+			
+	def hide(self):
+		if self.isShowed():
+			Node.hide(self)
 		
 	def onProperties(self):
 		if features.CUSTOM_REGIONS in features.feature_set:
