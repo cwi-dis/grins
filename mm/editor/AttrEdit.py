@@ -774,16 +774,16 @@ class AnchorWrapper(NodeWrapper):
 			return 1
 		if shape == 'rect':
 			if len(coords) != 4 and len(coords) != 0:
-				attreditor.showmessage('There should be 0 or 4 coordinates for rect', mtype = 'error')
+				attreditor.showmessage('Rectangle anchors need 4 coordinates (or none).', mtype = 'error')
 				return 0
 		elif shape == 'circle':
 			if len(coords) != 3:
-				attreditor.showmessage('There should be 3 coordinates for circle', mtype = 'error')
+				attreditor.showmessage('Circle anchors need 3 coordinates.', mtype = 'error')
 				return 0
 		else:
 			# shape == 'poly'
 			if len(coords) % 2 != 0:
-				attreditor.showmessage('There should be an even number of coordinates for poly', mtype = 'error')
+				attreditor.showmessage('Polygon anchors need an even number of coordinates.', mtype = 'error')
 				return 0
 		return 1
 
@@ -851,7 +851,7 @@ class ChannelWrapper(Wrapper):
 		if name == '.cname':
 			if self.channel.name != value and \
 			   self.editmgr.context.getchannel(value):
-				self.channel.attreditor.showmessage('Duplicate channel name (not changed)')
+				self.channel.attreditor.showmessage('Duplicate channel name (not changed).')
 				return
 			self.editmgr.setchannelname(self.channel.name, value)
 		else:
@@ -1136,7 +1136,7 @@ class TransitionWrapper(Wrapper):
 				return
 			if self.context.transitions.has_key(value):
 				import windowinterface
-				windowinterface.showmessage('Duplicate transition name: %s (not changed)'%value)
+				windowinterface.showmessage('Duplicate transition name: %s (not changed).'%value)
 				return
 			self.editmgr.settransitionname(self.__trname, value)
 			self.__trname = value
@@ -1412,7 +1412,7 @@ class AttrEditor(AttrEditorDialog):
 		# as well if followselection is activated, or have a mechanism which allow to
 		# check if the selection is possible before selecting (like 'transaction'), etc ...
 		# answer = windowinterface.GetYesNoCancel("Save modified properties?")
-		answer = windowinterface.GetYesNo("Save modified properties?")
+		answer = windowinterface.GetYesNo("This property dialog has unsaved changes.\nSave these changes?")
 		if answer == 0:
 			self.apply_callback()
 			return 1
@@ -1509,7 +1509,7 @@ class AttrEditor(AttrEditorDialog):
 						n = ''
 					if name == 'duration' or name == 'loop':
 						exp = exp + " or `indefinite'"
-					self.showmessage('%s: value should be a%s %s' % (b.getlabel(), n, exp), mtype = 'error')
+					self.showmessage('%s: value should be a%s %s.' % (b.getlabel(), n, exp), mtype = 'error')
 					return 1
 				# if we change any of this attribute, we have to check the consistence,
 				# and re, compute the computedMimeType, channel type, ...
@@ -1871,7 +1871,7 @@ class KeyTimesAttrEditorField(StringAttrEditorField):
 				if values and v <= values[-1]:
 					raise 'x'
 			except:
-				raise MParsingError, 'keyTimes should be a semicolon (;) separated list of monotonically increasing floating point values in the range 0.0 - 1.0'
+				raise MParsingError, 'keyTimes should be a semicolon (;) separated list of monotonically increasing floating point values in the range 0.0 - 1.0.'
 			values.append(v)
 		return values
 
@@ -1931,9 +1931,9 @@ class FileAttrEditorField(StringAttrEditorField):
 		else:
 			url = MMurl.pathname2url(pathname)
 			url = self.wrapper.context.relativeurl(url)
-		if not self.attreditor.checkurl(url):
-			self.attreditor.showmessage('file not compatible with channel', mtype = 'error')
-			return
+##		if not self.attreditor.checkurl(url):
+##			self.attreditor.showmessage('file not compatible with channel', mtype = 'error')
+##			return
 		self.setvalue(url)
 		if self.wrapper.__class__ is SlideWrapper and url:
 			import HierarchyView
@@ -1999,7 +1999,7 @@ class ScreenSizeAttrEditorField(TupleAttrEditorField):
 		return tuplevalue
 
 	def __error(self):
-		raise MParsingError, 'The screen height and width values have to be pixel values and both greater than 0,\n or leave the field empty if not set'
+		raise MParsingError, 'The screen height and width values have to be pixel values and both greater than 0,\n or leave the field empty if not set.'
 
 class ScreenDepthAttrEditorField(IntAttrEditorField):
 	def valuerepr(self, value):
@@ -2023,7 +2023,7 @@ class ScreenDepthAttrEditorField(IntAttrEditorField):
 		return 'Depth' , 'Not set', self.attrdef[4]
 
 	def __error(self):
-		raise MParsingError, 'The depth have to be greater or equal than 0,\n or leave the field empty if not set'
+		raise MParsingError, 'The depth has to be greater or equal than 0,\n or leave the field empty if not set.'
 		
 import EventEditor
 
@@ -2535,7 +2535,7 @@ class TransitionAttrEditorField(PopupAttrEditorField):
 	def valuerepr(self, value):
 		if type(value) in (type([]), type(())) and len(value):
 			if len(value) > 1:
-				windowinterface.showmessage("Warning: multiple transitions not supported yet")
+				windowinterface.showmessage("Multiple transitions not supported.")
 			return value[0]
 		return value
 
@@ -3093,7 +3093,7 @@ class AnchorCoordsAttrEditorField(AttrEditorField):
 				else:
 					v = int(s)
 			except ValueError:
-				raise MParsingError, 'Coordinates should be a list of integers or percentage values'
+				raise MParsingError, 'Coordinates should be a list of integers or percentage values.'
 			else:
 				if type(v) is type(0.0):
 					# convert percentage

@@ -300,7 +300,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		try:
 			node = self.play_node.GetContext().mapuid(uid)
 		except:
-			windowinterface.showmessage('Unknown CMIF anchor: '+uid, grab = 1, parent = self.window)
+			self.errormsg(self.play_node, 'Unknown anchor: '+uid)
 			return
 		# XXX we're losing the list arg here
 		self.onclick(node)

@@ -18,18 +18,18 @@ class ImageChannel(ChannelWindow):
 		if same and self.armed_display:
 			return 1
 		if node.type != 'ext':
-			self.errormsg(node, 'Node must be external')
+			self.errormsg(node, 'Node must be external.')
 			return 1
 		f = self.getfileurl(node)
 		if not f:
-			self.errormsg(node, 'No URL set on node')
+			self.errormsg(node, 'No URL set on node.')
 			return 1
 		try:
 			f = urlretrieve(f)[0]
 		except IOError, arg:
 			if type(arg) is type(self):
 				arg = arg.strerror
-			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (f, arg))
+			self.errormsg(node, 'Cannot open: %s\n\n%s.' % (f, arg))
 			return 1
 		# remember coordinates for anchor editing (and only for that!)
 		fit = MMAttrdefs.getattr(node, 'fit')
@@ -43,7 +43,7 @@ class ImageChannel(ChannelWindow):
 				msg = msg.strerror
 			elif type(msg) is type(()):
 				msg = msg[1]
-			self.errormsg(node, f + ':\n' + msg)
+			self.errormsg(node, 'Cannot display: %s\n\n%s.' %(f, msg))
 			return 1
 			
 		self.setArmBox(imbox)
@@ -147,14 +147,14 @@ class ImageChannel(ChannelWindow):
 		if not f: return
 
 		if not f:
-			self.errormsg(node, 'No URL set on node')
+			self.errormsg(node, 'No URL set on node.')
 			return 1
 		try:
 			f = urlretrieve(f)[0]
 		except IOError, arg:
 			if type(arg) is type(self):
 				arg = arg.strerror
-			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (f, arg))
+			self.errormsg(node, 'Cannot open: %s\n\n%s.' % (f, arg))
 			return 1
 		fit = MMAttrdefs.getattr(node, 'fit', animated)
 		try:
@@ -166,7 +166,7 @@ class ImageChannel(ChannelWindow):
 				msg = msg.strerror
 			elif type(msg) is type(()):
 				msg = msg[1]
-			self.errormsg(node, f + ':\n' + msg)
+			self.errormsg(node, 'Cannot display: %s\n\n%s.' %(f, msg))
 			return 1
 		self.update_display.fgcolor(self.getbgcolor(node, animated))
 

@@ -96,11 +96,11 @@ class MediaChannel:
 			self.__armBuilder=None
 
 		if not self.__armBuilder:
-			raise error, 'failed to create GraphBuilder'
+			raise error, 'Cannot create GraphBuilder to render item.'
 
 		url=self.__channel.getfileurl(node)
 		if not url:
-			raise error, 'No URL on node'
+			raise error, 'No URL on node.'
 		
 		if MMurl.urlretrieved(url):
 			url = MMurl.urlretrieve(url)[0]
@@ -110,7 +110,7 @@ class MediaChannel:
 
 		if not self.__armBuilder.RenderFile(url, self.__channel._exporter):
 			self.__armFileHasBeenRendered=0
-			raise error, 'Failed to render '+url
+			raise error, 'Cannot render: '+url
 		
 		self.__armFileHasBeenRendered=1
 		return 1
@@ -268,13 +268,13 @@ class VideoStream:
 
 	def prepare_player(self, node, window):
 		if not window:
-			raise error, 'not a window'
+			raise error, 'No window to render in.'
 		ddobj = window._topwindow.getDirectDraw()
 		self.__mmstream = win32dxm.MMStream(ddobj)
 
 		url=self.__channel.getfileurl(node)
 		if not url:
-			raise error, 'No URL on node'
+			raise error, 'No URL on node.'
 		
 		if MMurl.urlretrieved(url):
 			url = MMurl.urlretrieve(url)[0]
@@ -283,7 +283,7 @@ class VideoStream:
 			url = urllib.unquote(url)
 
 		if not self.__mmstream.open(url, self.__channel._exporter):
-			raise error, 'Failed to render %s'% url
+			raise error, 'Cannot render: %s'% url
 
 		return 1
 
@@ -430,17 +430,17 @@ class QtChannel:
 
 		url = self.__channel.getfileurl(node)
 		if not url:
-			raise error, 'No URL on node'
+			raise error, 'No URL on node.'
 		
 		try:
 			fn = MMurl.urlretrieve(url)[0]
 		except IOError, arg:
 			if type(arg) == type(()):
 				arg = arg[-1]
-			raise error, 'Failed to retrieve %s'% url
+			raise error, 'Cannot open: %s\n\n%s.'% (url, arg)
 
 		if not self.__qtplayer.open(fn, exporter = self.__channel._exporter, asaudio = window is None):
-			raise error, 'Failed to render %s'% url
+			raise error, 'Cannot render: %s'% url
 		if window:
 			ddobj = window._topwindow.getDirectDraw()
 			self.__qtplayer.createVideoDDS(ddobj)
@@ -610,15 +610,16 @@ class DSPlayer:
 	def prepare_player(self, node):
 		f = self.__channel.getfileurl(node)
 		if not f:
-			self.__channel.errormsg(node, 'No URL set on node')
-			raise error, 'No URL set on node'
+			self.__channel.errormsg(node, 'No URL set on node.')
+			raise error, 'No URL set on node.'
 			return 0
 		try:
 			f = MMurl.urlretrieve(f)[0]
 		except IOError, arg:
 			if type(arg) is type(self):
+				# XXXX This does not look correct...
 				arg = arg.strerror
-			raise error, 'Cannot resolve URL "%s": %s' % (f, arg)
+			raise error, 'Cannot open: %s\n\n%s.' % (f, arg)
 			return 0
 		self._sound = DSPlayer.directSound.createBufferFromFile(f)
 		return 1

@@ -129,8 +129,8 @@ class HtmlChannel(Channel.ChannelWindow):
 				try:
 					self.window.CreateHtmlCtrl(which = self.__which_control)
 				except:
-					msg = "Failed to create Browser control.\nCheck that the browser control you have selected is installed"
-					windowinterface.showmessage(msg)
+					msg = "Could not create HTML Browser control.\nCheck that the browser control you have selected is installed."
+					self.errormsg(None, msg)
 				else:
 					self.__arm(node)
 		return 1
@@ -211,7 +211,7 @@ class HtmlChannel(Channel.ChannelWindow):
 		try:
 			node = self.play_node.GetContext().mapuid(uid)
 		except:
-			windowinterface.showmessage('Unknown CMIF anchor: '+uid, grab = 1, parent = self.window)
+			self.errormsg(self.play_node, 'Unknown anchor: '+uid)
 			return
 		# XXX we're losing the list arg here
 		self.onclick(node)

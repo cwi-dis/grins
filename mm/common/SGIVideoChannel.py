@@ -97,22 +97,22 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if same and self.armed_display:
 			return 1
 		if node.type != 'ext':
-			self.errormsg(node, 'Node must be external')
+			self.errormsg(node, 'Node must be external.')
 			return 1
 		url = self.getfileurl(node)
 		if not url:
-			self.errormsg(node, 'No URL set on this node')
+			self.errormsg(node, 'No URL set on node.')
 			return 1
 		try:
 			f, hdr = MMurl.urlretrieve(url)
 		except IOError, arg:
-			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (url, arg[1]))
+			self.errormsg(node, 'Cannot open: %s\n\n%s.' % (url, arg[1]))
 			return 1
 		if string.find(hdr.subtype, 'real') >= 0:
-			self.errormsg(node, 'No playback support for RealVideo in this version')
+			self.errormsg(node, 'No playback support for RealVideo in this version.')
 			return 1
 		if not mv.IsMovieFile(f):
-			self.errormsg(node, '%s: Not a movie' % url)
+			self.errormsg(node, 'Not a movie: %s' % url)
 			return 1
 		if MMAttrdefs.getattr(node, 'clipbegin') or \
 		   MMAttrdefs.getattr(node, 'clipend'):
@@ -124,7 +124,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		try:
 			self.armed_movie = movie = mv.OpenFile(f, flag)
 		except mv.error, msg:
-			self.errormsg(node, '%s: %s' % (url, msg))
+			self.errormsg(node, 'Cannot open: %s\n\n%s.' % (url, msg))
 			return 1
 		_mvmap[movie] = self
 		movie.SetPlaySpeed(1)
@@ -197,10 +197,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			name = MMAttrdefs.getattr(node, 'name')
 			if not name:
 				name = '<unnamed node>'
-			windowinterface.showmessage(
-				'Cannot play movie node %s on channel %s:\n%s'%
-					(name, self._name, msg),
-				mtype = 'warning')
+			self.errormsg(node, 'Cannot play movie.')
 			self.playdone(0, curtime)
 			return
 		movie.Play()

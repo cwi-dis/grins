@@ -45,11 +45,11 @@ class SoundChannel(Channel.ChannelAsync):
 		node.__type = ''
 		self.__maxsoundlevel = 1.0
 		if node.type != 'ext':
-			self.errormsg(node, 'Node must be external')
+			self.errormsg(node, 'Node must be external.')
 			return 1
 		url = self.getfileurl(node)
 		if not url:
-			self.errormsg(node, 'No URL set on node')
+			self.errormsg(node, 'No URL set on node.')
 			return 1
 		import MMmimetypes
 		mtype = MMmimetypes.guess_type(url)[0]	
@@ -104,20 +104,15 @@ class SoundChannel(Channel.ChannelAsync):
 			if not self.__rc:
 				self.playdone(0, curtime)
 			elif not self.__rc.playit(node, start_time=start_time):
-				import windowinterface, MMAttrdefs
-				name = MMAttrdefs.getattr(node, 'name')
-				if not name:
-					name = '<unnamed node>'
-				chtype = self.__class__.__name__[:-7] # minus "Channel"
-				windowinterface.showmessage('No playback support for %s on this system\n'
-							    'node %s on channel %s' % (chtype, name, self._name), mtype = 'warning')
+				self.errormsg(node, 
+					'No playback support for %s on this system.'%chtype)
 				self.playdone(0, curtime)
 		elif self.__type == 'qt' and MediaChannel.HasQtSupport():
 			if not self.__qc.playit(node, curtime, start_time=start_time):
-				self.errormsg(node,'Can not play')
+				self.errormsg(node,'Could not play QuickTime movie.')
 				self.playdone(0, curtime)
 		elif not self.__mc.playit(node, curtime, start_time=start_time):
-			self.errormsg(node,'Can not play')
+			self.errormsg(node,'Could not play Windows Media file.')
 			self.playdone(0, curtime)
 
 	def playstop(self, curtime):

@@ -86,7 +86,7 @@ class LinkEditLight:
 				continue
 			if not create:
 				return c
-			windowinterface.showmessage("Such an anchor already exists on this node")
+			windowinterface.showmessage("Such an anchor already exists on this node.")
 			return None
 
 		if not create:
@@ -108,7 +108,7 @@ class LinkEditLight:
 	def finish_link(self, node, notransaction = 0):
 		self.fixinteresting()
 		if not self.interesting:
-			windowinterface.showmessage('No reasonable sources for link')
+			windowinterface.showmessage('No reasonable sources for link.')
 			return
 		if len(self.interesting) == 1:
 			srcanchor = self.interesting[0]

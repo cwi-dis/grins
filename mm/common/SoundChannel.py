@@ -72,12 +72,12 @@ class SoundChannel(ChannelAsync):
 		self.__ready = 0
 		node.__type = ''
 		if node.type != 'ext':
-			self.errormsg(node, 'Node must be external')
+			self.errormsg(node, 'Node must be external.')
 			return 1
 		if debug: print 'SoundChannel: arm', node
 		fn = self.getfileurl(node)
 		if not fn:
-			self.errormsg(node, 'No URL set on this node')
+			self.errormsg(node, 'No URL set on node.')
 			return 1
 		import MMmimetypes
 		mtype = MMmimetypes.guess_type(fn)[0]
@@ -102,17 +102,17 @@ class SoundChannel(ChannelAsync):
 			self.arm_fp = audio.reader(fn)
 			rate = self.arm_fp.getframerate()
 		except IOError:
-			self.errormsg(node, '%s: Cannot open audio file' % fn)
+			self.errormsg(node, 'Cannot open audio file: %s' % fn)
 			self.arm_fp = None
 			self.armed_duration = 0
 			return 1
 		except EOFError:
-			self.errormsg(node, '%s: Unexpected EOF' % fn)
+			self.errormsg(node, 'Unexpected EOF in audio file: %s' % fn)
 			self.arm_fp = None
 			self.armed_duration = 0
 			return 1
 		except audio.Error, msg:
-			self.errormsg(node, '%s: %s' % (fn, msg))
+			self.errormsg(node, 'Error in audio file: %s\n\n%s.' % (fn, msg))
 			self.arm_fp = None
 			self.armed_duration = 0
 			return 1
