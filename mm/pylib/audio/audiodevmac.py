@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 from audiodev import Error
 from audioformat import *
 import Snd
