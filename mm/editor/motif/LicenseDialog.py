@@ -12,27 +12,14 @@ class LicenseDialog:
 		global _dialog_widget
 		fg = windowinterface.toplevel._convert_color((0,0,0), 0)
 		bg = windowinterface.toplevel._convert_color((0x99,0x99,0x99), 0)
-		w = windowinterface.toplevel._main.CreateTemplateDialog('license', {'autoUnmanage': 0, 'foreground': fg, 'background': bg})
-		_dialog_widget = w
-		tryb = w.CreatePushButton('try', {'labelString': 'Try', 'foreground': fg, 'background': bg})
-		tryb.ManageChild()
-		tryb.AddCallback('activateCallback', self.__callback, (self.cb_try, ()))
-		self.__try = tryb
-		eval = w.CreatePushButton('eval', {'labelString': 'Evaluate...', 'foreground': fg, 'background': bg})
-		eval.ManageChild()
-		eval.AddCallback('activateCallback', self.__callback, (self.cb_eval, ()))
-		self.__eval = eval
-		buy = w.CreatePushButton('buy', {'labelString': 'Buy now...', 'foreground': fg, 'background': bg})
-		buy.ManageChild()
-		buy.AddCallback('activateCallback', self.__callback, (self.cb_buy, ()))
-		key = w.CreatePushButton('key', {'labelString': 'Enter key...', 'foreground': fg, 'background': bg})
-		key.ManageChild()
-		key.AddCallback('activateCallback', self.__callback, (self.cb_enterkey, ()))
-		self.__key = key
-		quit = w.CreatePushButton('quit', {'labelString': 'Quit', 'foreground': fg, 'background': bg})
-		quit.ManageChild()
-		quit.AddCallback('activateCallback', self.__callback, (self.cb_quit, ()))
 		visual = windowinterface.toplevel._visual
+		w = windowinterface.toplevel._main.CreateFormDialog(
+			'license',
+			{'autoUnmanage': 0, 'foreground': fg, 'background': bg,
+			 'visual': visual, 'depth': visual.depth,
+			 'colormap': windowinterface.toplevel._colormap,
+			 'horizontalSpacing': 10,
+			 'verticalSpacing': 10})
 		fmt = windowinterface.toplevel._imgformat
 		rdr = imgconvert.stackreader(fmt, splashimg.reader())
 		self.__imgsize = rdr.width, rdr.height
@@ -41,15 +28,90 @@ class LicenseDialog:
 		xim = visual.CreateImage(visual.depth, X.ZPixmap, 0, data,
 					 rdr.width, rdr.height, depth * 8,
 					 rdr.width * depth)
-		img = w.CreateDrawingArea('splash', {'width': rdr.width,
-						     'height': rdr.height, 'foreground': fg, 'background': bg})
-		self.__gc = None
+		img = w.CreateDrawingArea('splash',
+					  {'width': rdr.width,
+					   'height': rdr.height,
+##					   'foreground': fg, 'background': bg,
+					   'topAttachment': Xmd.ATTACH_FORM,
+					   'leftAttachment': Xmd.ATTACH_FORM,
+					   'rightAttachment': Xmd.ATTACH_FORM})
 		img.AddCallback('exposeCallback', self.__expose,
 				(xim, rdr.width, rdr.height))
-		img.ManageChild()
+		sep = w.CreateSeparator('separator',
+					{'leftAttachment': Xmd.ATTACH_FORM,
+					 'rightAttachment': Xmd.ATTACH_FORM,
+					 'topAttachment': Xmd.ATTACH_WIDGET,
+					 'topWidget': img,
+					 'orientation': Xmd.HORIZONTAL})
+		tryb = w.CreatePushButton('try',
+					  {'labelString': 'Try',
+					   'foreground': fg, 'background': bg,
+					   'topAttachment': Xmd.ATTACH_WIDGET,
+					   'topWidget': sep,
+					   'leftAttachment': Xmd.ATTACH_FORM})
+		tryb.AddCallback('activateCallback', self.__callback,
+				 (self.cb_try, ()))
+		self.__try = tryb
+		eval = w.CreatePushButton('eval',
+					  {'labelString': 'Get Evaluation License...',
+					   'foreground': fg, 'background': bg,
+					   'topAttachment': Xmd.ATTACH_WIDGET,
+					   'topWidget': sep,
+					   'leftAttachment': Xmd.ATTACH_WIDGET,
+					   'leftWidget': tryb})
+		eval.AddCallback('activateCallback', self.__callback,
+				 (self.cb_eval, ()))
+		self.__eval = eval
+		buy = w.CreatePushButton('buy',
+					 {'labelString': 'Buy now...',
+					  'foreground': fg, 'background': bg,
+					  'topAttachment': Xmd.ATTACH_WIDGET,
+					  'topWidget': sep,
+					  'leftAttachment': Xmd.ATTACH_WIDGET,
+					  'leftWidget': eval})
+		buy.AddCallback('activateCallback', self.__callback,
+				(self.cb_buy, ()))
+		key = w.CreatePushButton('key',
+					 {'labelString': 'Enter key...',
+					  'foreground': fg, 'background': bg,
+					  'topAttachment': Xmd.ATTACH_WIDGET,
+					  'topWidget': sep,
+					  'leftAttachment': Xmd.ATTACH_WIDGET,
+					  'leftWidget': buy})
+		key.AddCallback('activateCallback', self.__callback,
+				(self.cb_enterkey, ()))
+		self.__key = key
+		quit = w.CreatePushButton('quit',
+					  {'labelString': 'Quit',
+					   'foreground': fg, 'background': bg,
+					   'topAttachment': Xmd.ATTACH_WIDGET,
+					   'topWidget': tryb,
+					   'leftAttachment': Xmd.ATTACH_FORM,
+					   'bottomAttachment': Xmd.ATTACH_FORM})
+		quit.AddCallback('activateCallback', self.__callback,
+				 (self.cb_quit, ()))
+		label = w.CreateLabel('label',
+				      {'labelString': 'Or see http://www.oratrix.com/ for more information',
+				       'foreground': fg, 'background': bg,
+				       'topAttachment': Xmd.ATTACH_WIDGET,
+				       'topWidget': eval,
+				       'leftAttachment': Xmd.ATTACH_WIDGET,
+				       'leftWidget': quit,
+				       'rightAttachment': Xmd.ATTACH_FORM,
+				       'bottomAttachment': Xmd.ATTACH_FORM})
+		label.ManageChild()
+		self.__gc = None
 		self.__img = img
 		self.__msg = None
 		self.__window = w
+		_dialog_widget = w
+		img.ManageChild()
+		sep.ManageChild()
+		tryb.ManageChild()
+		eval.ManageChild()
+		buy.ManageChild()
+		key.ManageChild()
+		quit.ManageChild()
 
 	def __expose(self, widget, (xim, width, height), call_data):
 		if self.__gc is None:
@@ -57,8 +119,9 @@ class LicenseDialog:
 		self.__gc.PutImage(xim, 0, 0, 0, 0, width, height)
 
 	def show(self):
+		self.__window.RealizeWidget()
 		self.__window.ManageChild()
-		
+
 	def close(self):
 		global _dialog_widget
 		_dialog_widget = None
@@ -70,30 +133,30 @@ class LicenseDialog:
 		del self.__eval
 		del self.__img
 		del self.__msg
-			
+
 	def setdialoginfo(self):
 		if self.can_try:
-			self.__try.ManageChild()
+			self.__try.showAsDefault = 1
 			self.__window.defaultButton = self.__try
 		else:
-			self.__try.UnmanageChild()
+			self.__key.showAsDefault = 1
 			self.__window.defaultButton = self.__key
-		if self.can_eval:
-			self.__eval.ManageChild()
-		else:
-			self.__eval.UnmanageChild()
-##		self.__try.SetSensitive(self.can_try)
-##		self.__eval.SetSensitive(self.can_eval)
+		self.__try.SetSensitive(self.can_try)
+		self.__eval.SetSensitive(self.can_eval)
 		width, height = self.__imgsize
-		if self.__msg is not None:
+		if self.__msg is None:
+			# first time, find colors
+			self.__fg = windowinterface.toplevel._convert_color((0x06,0x14,0x40), 0)
+			self.__bg = windowinterface.toplevel._convert_color((255,255,255), 0)
+		else:
 			self.__msg.DestroyWidget
 		attrs = {'labelString': self.msg,
 			 'alignment': Xmd.ALIGNMENT_CENTER,
 			 'x': 10,
 			 'y': height - 26,
 			 'width': width - 20,
-			 'background': windowinterface.toplevel._convert_color((255,255,255), 0),
-			 'foreground': windowinterface.toplevel._convert_color((0x06,0x14,0x40), 0)}
+			 'background': self.__bg,
+			 'foreground': self.__fg}
 		try:
 			import splash
 			self.__img.LoadQueryFont(splash.splashfont)
@@ -117,7 +180,7 @@ class EnterkeyDialog:
 		w = parent.CreateTemplateDialog('license',
 			{'cancelLabelString': 'Cancel',
 			 'okLabelString': 'OK',
-			 'resizePolicy': Xmd.RESIZE_NONE,
+##			 'resizePolicy': Xmd.RESIZE_NONE,
 			 'noResize': 1,
 			 'dialogStyle': Xmd.DIALOG_FULL_APPLICATION_MODAL})
 		w.AddCallback('cancelCallback', self.__cancel, None)
