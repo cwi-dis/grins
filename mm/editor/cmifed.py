@@ -383,11 +383,14 @@ def main():
 				exc_type, exc_value, exc_traceback = sys.exc_type, sys.exc_value, sys.exc_traceback
 			import traceback, pdb
 			print
-			print '\t--------------------------------------------'
-			print '\t| Entering debugger -- call Sjoerd or Jack |'
-			print '\t--------------------------------------------'
+			print '\t-------------------------------------------------'
+			print '\t| Fatal error - Please mail this output to      |'
+			print '\t| grins-support@oratrix.com with a description  |'
+			print '\t| of the circumstances.                         |'
+			print '\t-------------------------------------------------'
 			print
 			traceback.print_exception(exc_type, exc_value, None)
+			traceback.print_tb(exc_traceback)
 			print
 			pdb.post_mortem(exc_traceback)
 	finally:
