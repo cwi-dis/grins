@@ -52,7 +52,12 @@ if os.name == 'posix':
 			print 'fork:', msg[1]
 			return None
 		if pid == 0: # Child
-			os.execvp(arglist[0], arglist)
+			try:
+				os.execvp(arglist[0], arglist)
+			except os.error, msg:
+				import sys
+				print 'exec: %s: %s' % (arglist[0], msg[1])
+				sys.exit(1)
 			
 elif os.name == 'mac':
 	
