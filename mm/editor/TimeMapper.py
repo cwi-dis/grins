@@ -64,12 +64,12 @@ class TimeMapper:
 				self.collisiondict[time] = pixels
 		self.times = self.collisiondict.keys()
 		self.times.sort()
-		if realtime:
+		if realtime and min_pixels_per_second == 0:
 			for t1, t0, pixels in self.dependencies:
 				if t1 > t0 and pixels/(t1-t0) > min_pixels_per_second:
 					min_pixels_per_second = pixels/(t1-t0)
 ##			min_pixels_per_second = int(min_pixels_per_second+0.5)
-		else:
+		elif min_pixels_per_second == 0:
 			min_pixels_per_second = 2
 		for time, (stalltime, stalltype) in self.stalldict.items():
 			stallpixels = stalltime * min_pixels_per_second
