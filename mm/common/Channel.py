@@ -891,11 +891,19 @@ class ChannelWindow(Channel):
 			#
 			# Find the base window offsets, or ask for them.
 			#
-			if self._attrdict.has_key('base_winoff'):
+			if self._played_node:
+				try:
+					pgeom = MMAttrdefs.getattr(self._played_node, 'base_winoff')
+				except KeyError:
+					pass
+			if pgeom:
+				pass
+			elif self._attrdict.has_key('base_winoff'):
 				pgeom = self._attrdict['base_winoff']
 			else:
 				pchan.window.create_box('Draw a subwindow for ' + self._name + ' in ' + pchan._name, self._box_callback)
 				return 1
+			self.winoff = pgeom
 		self.create_window(pchan, pgeom)
 		return 1
 
@@ -978,6 +986,14 @@ class ChannelWindow(Channel):
 			print 'ChannelWindow.play('+`self`+','+`node`+')'
 		self.play_0(node)
 		if self._is_shown and self.window:
+			try:
+				winoff = MMAttrdefs.getattr(node, 'base_winoff')
+			except KeyError:
+				pass
+			else:
+				if winoff != self.winoff:
+					self.hide()
+					self.show()
 			if not self.nopop:
 				self.window.pop()
 			if self.armed_display.is_closed():
