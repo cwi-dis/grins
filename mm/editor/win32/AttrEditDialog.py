@@ -29,6 +29,7 @@ class and its implementation AttrEditorForm in lib/win32/AttrEditorForm.py which
 implements the actual dialog.
 
 """
+import windowinterface
 
 class AttrEditorDialog:
 	def __init__(self, title, attriblist):
