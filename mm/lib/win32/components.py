@@ -882,7 +882,7 @@ class ControlsDict:
 
 ##############################
 class KeyTimesSlider(window.Wnd):
-	TICKS_OFFSET = 9
+	TICKS_OFFSET = 12
 	DELTA = 0.05
 	def __init__(self, dlg, id):
 		self._parent = dlg
