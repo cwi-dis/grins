@@ -14,34 +14,34 @@ class PlayerDialog(PlayerDialogBase):
 			' ': MAGIC_PLAY,
 			},
 		'menubar': [
-			(ALL, 'File', [
-				(ALL, 'Open...', OPEN),
-				(ALL, 'Close Document', CLOSE),
-				(ALL, None),
-				(ALL, 'Preferences...', PREFERENCES),
-				(DBG, None),
-				(DBG, 'Debug', [
-					(DBG, 'Trace', TRACE, 't'),
-					(DBG, 'Debug', DEBUG),
-					(DBG, 'Crash CMIF', CRASH),
-					(DBG, 'Dump Scheduler Data', SCHEDDUMP),
+			(LIGHT, 'File', [
+				(LIGHT, 'Open...', OPEN),
+				(LIGHT, 'Close Document', CLOSE),
+				(LIGHT, None),
+				(LIGHT, 'Preferences...', PREFERENCES),
+				(LIGHT|DBG, None),
+				(LIGHT|DBG, 'Debug', [
+					(LIGHT|DBG, 'Trace', TRACE, 't'),
+					(LIGHT|DBG, 'Debug', DEBUG),
+					(LIGHT|DBG, 'Crash CMIF', CRASH),
+					(LIGHT|DBG, 'Dump Scheduler Data', SCHEDDUMP),
 					]),
-				(ALL, None),
-				(ALL, 'Quit', EXIT),
+				(LIGHT, None),
+				(LIGHT, 'Quit', EXIT),
 				]),
-			(ALL, 'View', [
-				(ALL, 'View Source...', SOURCE),
+			(LIGHT, 'View', [
+				(LIGHT, 'View Source...', SOURCE),
 				]),
-			(ALL, 'Play', [
-				(ALL, 'Play', PLAY, 't'),
-				(ALL, 'Pause', PAUSE, 't'),
-				(ALL, 'Stop', STOP, 't'),
+			(LIGHT, 'Play', [
+				(LIGHT, 'Play', PLAY, 't'),
+				(LIGHT, 'Pause', PAUSE, 't'),
+				(LIGHT, 'Stop', STOP, 't'),
 				(CMIF, None),
 				(CMIF, 'User Groups', USERGROUPS),
 				(CMIF, 'Channels', CHANNELS),
 				]),
-			(ALL, 'Help', [
-				(ALL, 'Help', HELP),
+			(LIGHT, 'Help', [
+				(LIGHT, 'Help', HELP),
 				]),
 			],
 		'toolbar': PlayerDialogBase.adornments['toolbar'],
