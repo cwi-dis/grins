@@ -34,12 +34,16 @@ class ImageLib:
 	# 3. use cash for gif conversion
 	def load(self,filename):
 		filename=self.toabs(filename)
-##		img,gif_trans,trans_rgb=self.lib.load_gif(filename)
-##		if img>=0:
-##			if gif_trans>=0:
-##				self._transpdict[img]=trans_rgb
-##		else:
-		img = self.lib.load_file(filename)
+## BEGIN_INCLUDE_GIF
+		img,gif_trans,trans_rgb=self.lib.load_gif(filename)
+		if img>=0:
+			if gif_trans>=0:
+				self._transpdict[img]=trans_rgb
+		else:
+			img = self.lib.load_file(filename)
+## BEGIN_NOT_INCLUDE_GIF
+##		img = self.lib.load_file(filename)
+## END_INCLUDE_GIF
 		if img < 0:
 			errcodes = []
 			for i in range(self.lib.error_check()):
