@@ -17,7 +17,7 @@ import MMStates
 import Bandwidth
 
 debuggensr = 0
-debug = 1
+debug = 0
 
 class MMNodeContext:
 	"Adds context information about each MMNode" # -mjvdg. TODO: elaborate.
