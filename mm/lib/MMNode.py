@@ -9,6 +9,7 @@ import Duration
 from Hlinks import Hlinks
 import MMurl
 import settings
+import features
 from HDTL import HD, TL
 import string
 import MMStates
@@ -99,8 +100,8 @@ class MMNodeContext:
 		# return a list of channels compatible with the given URL
 		if url:
 			# ignore chtype if url is set
-			import mimetypes, ChannelMime
-			mtype = mimetypes.guess_type(url)[0]
+			import MMmimetypes, ChannelMime
+			mtype = MMmimetypes.guess_type(url)[0]
 			if not mtype:
 				return []
 			if mtype == 'application/vnd.rn-realmedia':
@@ -157,7 +158,7 @@ class MMNodeContext:
 				c['center'] = 0
 				c['drawbox'] = 0
 				c['scale'] = 1
-			if settings.get('compatibility') == settings.G2:
+			if features.compatibility == features.G2:
 				# specialized settings for G2-compatibility
 				from windowinterface import UNIT_PXL
 				c['units'] = UNIT_PXL

@@ -13,6 +13,7 @@ import re
 import os, sys
 from SMIL import *
 import settings
+import features
 
 error = 'SMILTreeRead.error'
 
@@ -622,9 +623,9 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			mtype = mimetype
 # not allowed to look at extension...
 		if mtype is None and url is not None and settings.get('checkext'):
- 			import mimetypes
+ 			import MMmimetypes
  			# guess the type from the file extension
- 			mtype = mimetypes.guess_type(url)[0]
+ 			mtype = MMmimetypes.guess_type(url)[0]
 		if url is not None and mtype is None and \
 		   (tagname is None or tagname == 'text'):
 			# last resort: get file and see what type it is
@@ -1189,7 +1190,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				del attrdict['title']
 			bg = attrdict['backgroundColor']
 			del attrdict['backgroundColor']
-			if settings.get('compatibility') == settings.G2:
+			if features.compatibility == features.G2:
 				ch['transparent'] = -1
 				if bg != 'transparent':
 					ch['bgcolor'] = bg
