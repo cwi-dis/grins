@@ -11,9 +11,6 @@ import win32ui
 midiex=win32ui.GetMidiex()
 mpegex=win32ui.GetMpegex()
 
-# NOTE: the following namespaces
-# will be removed (they are already only partialy used)
-cmifex2=win32ui.GetCmifex2()
 
 # REMOVED
 # cmifex=win32ui.GetCmifex()
@@ -21,6 +18,7 @@ cmifex2=win32ui.GetCmifex2()
 # timerex=win32ui.GetTimerex()
 # imageex=win32ui.GetImageex()
 # soundex=win32ui.GetSoundex()
+# cmifex2=win32ui.GetCmifex2()
 	
 # resources
 import grinsRC
@@ -39,12 +37,14 @@ class ImageLib:
 			self.lib.image_delete(img)
 
 	def load(self,filename):
+		filename=self.toabs(filename)
 		self._isgif=0
 		self._isgif,gif_tras=self.giflib.IsGif(filename)
 		tras=0
 		ldfilename=filename
 		if self._isgif:
 			ldfilename = filename + ".bmp"
+			self.assertGifMediaWriteable(ldfilename)
 			self.giflib.Gif2Bmp(filename,ldfilename)
 			tras=gif_tras
 		img= self.lib.load_file(ldfilename)
@@ -68,14 +68,29 @@ class ImageLib:
 			clr=win32ui.GetWin32Sdk().GetRGBValues(trans)
 			clr=self.lib.palette_entry_get(img,trans)
 			self.lib.display_transparent_set(img,clr,1)
-
-		#self.lib.display_transparent_set(img,bgcolor,1)
+			
 		self.lib.device_rect_set(img,rc)
 		self.lib.display_desktop_pattern_set(img,0)
 		self.lib.display_image(img,hdc)
 
 	def destroy(self,img):
 		self.lib.image_delete(img)
+
+	def toabs(self,filename):
+		import os,ntpath
+		if os.path.isfile(filename):
+			if not os.path.isabs(filename):
+				filename=os.path.join(os.getcwd(),filename)
+				filename=ntpath.normpath(filename)	
+		return filename
+
+	def assertGifMediaWriteable(self,filename):
+		try:
+			tfp = open(filename, 'wb')
+			tfp.close()
+		except IOError:
+			msg='GIF format has limited (demo) support for the current version.\nIt is not supported for local read-only media.\nTry testing your application on a writable media'
+			win32ui.MessageBox(msg)
 
 imageex=ImageLib()
 
