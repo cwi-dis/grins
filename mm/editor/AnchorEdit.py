@@ -222,13 +222,13 @@ class AnchorEditor(Dialog):
 			type = new[A_TYPE]
 		if type in (ATYPE_AUTO, ATYPE_WHOLE):
 			new = (new[0], type, [])
-		elif self.editable:
-			new = (new[0], type, new[2])
-			new = self.toplevel.player.defanchor(self.node, new)
-			if new == None:
-				new = old
 		else:
-			new = (new[0], ATYPE_WHOLE, [])
+			new = (new[0], type, new[2])
+			if self.editable:
+				new = self.toplevel.player.defanchor(\
+					  self.node, new)
+				if new == None:
+					new = old
 		if new <> old:
 			self.anchorlist[self.focus] = new
 			self.changed = 1
