@@ -1,0 +1,552 @@
+# Microsoft eMbedded Visual Tools Project File - Name="swinmm" - Package Owner=<4>
+# Microsoft eMbedded Visual Tools Generated Build File, Format Version 6.02
+# ** DO NOT EDIT **
+
+# TARGTYPE "Win32 (WCE x86em) Static Library" 0x7f04
+# TARGTYPE "Win32 (WCE ARM) Static Library" 0x8504
+
+CFG=swinmm - Win32 (WCE ARM) Debug
+!MESSAGE This is not a valid makefile. To build this project using NMAKE,
+!MESSAGE use the Export Makefile command and run
+!MESSAGE 
+!MESSAGE NMAKE /f "swinmm.vcn".
+!MESSAGE 
+!MESSAGE You can specify a configuration when running NMAKE
+!MESSAGE by defining the macro CFG on the command line. For example:
+!MESSAGE 
+!MESSAGE NMAKE /f "swinmm.vcn" CFG="swinmm - Win32 (WCE ARM) Debug"
+!MESSAGE 
+!MESSAGE Possible choices for configuration are:
+!MESSAGE 
+!MESSAGE "swinmm - Win32 (WCE ARM) Release" (based on "Win32 (WCE ARM) Static Library")
+!MESSAGE "swinmm - Win32 (WCE ARM) Debug" (based on "Win32 (WCE ARM) Static Library")
+!MESSAGE "swinmm - Win32 (WCE x86em) Release" (based on "Win32 (WCE x86em) Static Library")
+!MESSAGE "swinmm - Win32 (WCE x86em) Debug" (based on "Win32 (WCE x86em) Static Library")
+!MESSAGE 
+
+# Begin Project
+# PROP AllowPerConfigDependencies 0
+# PROP Scc_ProjName ""
+# PROP Scc_LocalPath ""
+# PROP ATL_Project 2
+
+!IF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "ARMRel"
+# PROP BASE Intermediate_Dir "ARMRel"
+# PROP BASE CPU_ID "{D6518FFC-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "ARMRelS"
+# PROP Intermediate_Dir "ARMRelS"
+# PROP CPU_ID "{D6518FFC-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+CPP=clarm.exe
+# ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "NDEBUG" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /YX /Oxs /M$(CECrtMT) /c
+# ADD CPP /nologo /W3 /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /D "NDEBUG" /D "ARM" /D "_ARM_" /D "MS_NO_COREDLL" /D ErrorObject=ErrorObjectWinMM /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /YX /Oxs /M$(CECrtMT) /c
+LIB32=link.exe -lib
+# ADD BASE LIB32 /nologo
+# ADD LIB32 /nologo
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "ARMDbg"
+# PROP BASE Intermediate_Dir "ARMDbg"
+# PROP BASE CPU_ID "{D6518FFC-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "ARMDbgS"
+# PROP Intermediate_Dir "ARMDbgS"
+# PROP CPU_ID "{D6518FFC-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+CPP=clarm.exe
+# ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /YX /M$(CECrtMTDebug) /c
+# ADD CPP /nologo /W3 /Zi /Od /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /D "DEBUG" /D "ARM" /D "_ARM_" /D "MS_NO_COREDLL" /D ErrorObject=ErrorObjectWinMM /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /YX /M$(CECrtMTDebug) /c
+LIB32=link.exe -lib
+# ADD BASE LIB32 /nologo
+# ADD LIB32 /nologo
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "X86EMRel"
+# PROP BASE Intermediate_Dir "X86EMRel"
+# PROP BASE CPU_ID "{D6518FF4-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "X86EMRelS"
+# PROP Intermediate_Dir "X86EMRelS"
+# PROP CPU_ID "{D6518FF4-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+CPP=cl.exe
+# ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "i486" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "NDEBUG" /D "_LIB" /YX /Oxs /Gz /c
+# ADD CPP /nologo /W3 /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "i486" /D "_X86_" /D "x86" /D "NDEBUG" /D "MS_NO_COREDLL" /D ErrorObject=ErrorObjectWinMM /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /YX /Oxs /Gz /c
+LIB32=link.exe -lib
+# ADD BASE LIB32 /nologo
+# ADD LIB32 /nologo
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "X86EMDbg"
+# PROP BASE Intermediate_Dir "X86EMDbg"
+# PROP BASE CPU_ID "{D6518FF4-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "X86EMDbgS"
+# PROP Intermediate_Dir "X86EMDbgS"
+# PROP CPU_ID "{D6518FF4-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+CPP=cl.exe
+# ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D _WIN32_WCE=$(CEVersion) /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "$(CePlatform)" /D "i486" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "_LIB" /YX /Gz /c
+# ADD CPP /nologo /W3 /Zi /Od /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /D "_DEBUG" /D "DEBUG" /D "WIN32" /D "STRICT" /D "_WIN32_WCE_EMULATION" /D "INTERNATIONAL" /D "USA" /D "INTLMSG_CODEPAGE" /D "i486" /D "_X86_" /D "x86" /D "MS_NO_COREDLL" /D ErrorObject=ErrorObjectWinMM /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "_LIB" /YX /Gz /c
+LIB32=link.exe -lib
+# ADD BASE LIB32 /nologo
+# ADD LIB32 /nologo
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+
+!ENDIF 
+
+# Begin Target
+
+# Name "swinmm - Win32 (WCE ARM) Release"
+# Name "swinmm - Win32 (WCE ARM) Debug"
+# Name "swinmm - Win32 (WCE x86em) Release"
+# Name "swinmm - Win32 (WCE x86em) Debug"
+# Begin Group "Source Files"
+
+# PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
+# Begin Source File
+
+SOURCE=.\winmm.cpp
+
+!IF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_WINMM=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\common\charconv.h"\
+	".\utils.h"\
+	".\winmm_waveout.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_WINMM=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\common\charconv.h"\
+	".\utils.h"\
+	".\winmm_waveout.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_WINMM=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\common\charconv.h"\
+	".\utils.h"\
+	".\winmm_waveout.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_WINMM=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\common\charconv.h"\
+	".\utils.h"\
+	".\winmm_waveout.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\winmm.def
+# End Source File
+# Begin Source File
+
+SOURCE=.\winmm_d.def
+# End Source File
+# Begin Source File
+
+SOURCE=.\winmm_waveout.cpp
+
+!IF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Release"
+
+DEP_CPP_WINMM_=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\common\charconv.h"\
+	".\utils.h"\
+	".\winmm_waveout.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE ARM) Debug"
+
+DEP_CPP_WINMM_=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\common\charconv.h"\
+	".\utils.h"\
+	".\winmm_waveout.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Release"
+
+DEP_CPP_WINMM_=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\common\charconv.h"\
+	".\utils.h"\
+	".\winmm_waveout.h"\
+	
+
+!ELSEIF  "$(CFG)" == "swinmm - Win32 (WCE x86em) Debug"
+
+DEP_CPP_WINMM_=\
+	"..\..\..\..\PYTHON_CE\Include\abstract.h"\
+	"..\..\..\..\PYTHON_CE\Include\bufferobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\ceval.h"\
+	"..\..\..\..\PYTHON_CE\Include\classobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\cobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\complexobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\dictobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\fileobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\floatobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\funcobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\import.h"\
+	"..\..\..\..\PYTHON_CE\Include\intobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\intrcheck.h"\
+	"..\..\..\..\PYTHON_CE\Include\listobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\longobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\methodobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\modsupport.h"\
+	"..\..\..\..\PYTHON_CE\Include\moduleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\mymalloc.h"\
+	"..\..\..\..\PYTHON_CE\Include\myproto.h"\
+	"..\..\..\..\PYTHON_CE\Include\object.h"\
+	"..\..\..\..\PYTHON_CE\Include\objimpl.h"\
+	"..\..\..\..\PYTHON_CE\Include\patchlevel.h"\
+	"..\..\..\..\PYTHON_CE\Include\pydebug.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyerrors.h"\
+	"..\..\..\..\PYTHON_CE\Include\pyfpe.h"\
+	"..\..\..\..\PYTHON_CE\Include\pystate.h"\
+	"..\..\..\..\PYTHON_CE\Include\Python.h"\
+	"..\..\..\..\PYTHON_CE\Include\pythonrun.h"\
+	"..\..\..\..\PYTHON_CE\Include\rangeobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sliceobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\stringobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\sysmodule.h"\
+	"..\..\..\..\PYTHON_CE\Include\traceback.h"\
+	"..\..\..\..\PYTHON_CE\Include\tupleobject.h"\
+	"..\..\..\..\PYTHON_CE\Include\unicodeobject.h"\
+	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
+	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
+	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\common\charconv.h"\
+	".\utils.h"\
+	".\winmm_waveout.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# End Group
+# Begin Group "Header Files"
+
+# PROP Default_Filter "h;hpp;hxx;hm;inl"
+# End Group
+# End Target
+# End Project
