@@ -527,7 +527,9 @@ DirectDrawSurface_Blt(DirectDrawSurfaceObject *self, PyObject *args)
 			))
 		return NULL;	
 	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
 	hr = self->pI->Blt(&rcTo,ddsFrom->pI,&rcFrom,dwFlags,NULL);
+	Py_END_ALLOW_THREADS
 	if (FAILED(hr)){
 		seterror("DirectDrawSurface_Blt", hr);
 		return NULL;
@@ -546,7 +548,9 @@ DirectDrawSurface_Flip(DirectDrawSurfaceObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "|i",&dwFlags))
 		return NULL;	
 	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
 	hr = self->pI->Flip(NULL,dwFlags);
+	Py_END_ALLOW_THREADS
 	if (FAILED(hr)){
 		seterror("DirectDrawSurface_Flip", hr);
 		return NULL;
@@ -565,7 +569,9 @@ DirectDrawSurface_GetDC(DirectDrawSurfaceObject *self, PyObject *args)
 		return NULL;	
 	HRESULT hr;
 	HDC hdc;
+	Py_BEGIN_ALLOW_THREADS
 	hr = self->pI->GetDC(&hdc);
+	Py_END_ALLOW_THREADS
 	if (FAILED(hr)){
 		seterror("DirectDrawSurface_GetDC", hr);
 		return NULL;
@@ -583,7 +589,9 @@ DirectDrawSurface_ReleaseDC(DirectDrawSurfaceObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "i",&hdc))
 		return NULL;	
 	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
 	hr = self->pI->ReleaseDC(hdc);
+	Py_END_ALLOW_THREADS
 	if (FAILED(hr)){
 		seterror("DirectDrawSurface_ReleaseDC", hr);
 		return NULL;
@@ -606,7 +614,9 @@ DirectDrawSurface_SetColorKey(DirectDrawSurfaceObject *self, PyObject *args)
 	DDCOLORKEY ck;
 	ck.dwColorSpaceLowValue = dwLow;
 	ck.dwColorSpaceHighValue = dwHigh;
+	Py_BEGIN_ALLOW_THREADS	
 	hr = self->pI->SetColorKey(dwFlags,&ck);
+	Py_END_ALLOW_THREADS	
 	if (FAILED(hr)){
 		seterror("DirectDrawSurface_SetColorKey", hr);
 		return NULL;
@@ -629,6 +639,8 @@ DirectDrawSurface_GetColorMatch(DirectDrawSurfaceObject *self, PyObject *args)
     DWORD dw = CLR_INVALID;
     DDSURFACEDESC ddsd;
     HRESULT hres;
+
+	Py_BEGIN_ALLOW_THREADS
     ZeroMemory(&ddsd, sizeof(ddsd));
     //  use GDI SetPixel to color match for us
     if (rgb != CLR_INVALID && self->pI->GetDC(&hdc) == DD_OK)
@@ -639,7 +651,7 @@ DirectDrawSurface_GetColorMatch(DirectDrawSurfaceObject *self, PyObject *args)
 		}
 
     // now lock the surface so we can read back the converted color
-    ddsd.dwSize = sizeof(ddsd);
+	ddsd.dwSize = sizeof(ddsd);
     while ((hres = self->pI->Lock(NULL, &ddsd, 0, NULL)) == DDERR_WASSTILLDRAWING);
     if (hres == DD_OK)
 		{
@@ -654,6 +666,8 @@ DirectDrawSurface_GetColorMatch(DirectDrawSurfaceObject *self, PyObject *args)
         SetPixel(hdc, 0, 0, rgbT);
         self->pI->ReleaseDC(hdc);
 		}	
+	Py_END_ALLOW_THREADS
+
 	return Py_BuildValue("i",dw);
 }
 
@@ -716,12 +730,14 @@ DirectDrawSurface_GetPixelFormat(DirectDrawSurfaceObject *self, PyObject *args)
 	WORD hiBLUEbit  = HighBitPos( format.dwBBitMask );
 	numBLUEbits=(WORD)(hiBLUEbit-loBLUEbit+1);
 
+	Py_BEGIN_ALLOW_THREADS	
 	if(format.dwRGBBitCount==8)
 		{
 		HDC hdc = GetDC(NULL);
 		GetSystemPaletteEntries(hdc, 0, 256, paletteEntry);
 		ReleaseDC(NULL, hdc);
 		}
+	Py_END_ALLOW_THREADS	
 	return Py_BuildValue("iii",numREDbits, numGREENbits, numBLUEbits);
 	}
 
@@ -1024,6 +1040,8 @@ DirectDrawSurface_BltBlend(DirectDrawSurfaceObject *self, PyObject *args)
 	DWORD depth  = desc.ddpfPixelFormat.dwRGBBitCount;
 
 	HRESULT hr;
+	
+	Py_BEGIN_ALLOW_THREADS
 	if (depth==8)
 		hr=BltBlend8(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
 	else if (depth==16)
@@ -1032,8 +1050,10 @@ DirectDrawSurface_BltBlend(DirectDrawSurfaceObject *self, PyObject *args)
 		hr=BltBlend24(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
 	else if (depth==32)
 		hr=BltBlend32(self->pI, ddsFrom->pI, ddsTo->pI, prop, width, height);
+	Py_END_ALLOW_THREADS
+		
 	if (FAILED(hr)){
-		seterror("DirectDrawSurface_ApplyTransform", hr);
+		seterror("DirectDrawSurface_BltBlend", hr);
 		return NULL;
 	}		
 	Py_INCREF(Py_None);
@@ -1055,7 +1075,10 @@ DirectDrawSurface_BltFill(DirectDrawSurfaceObject *self, PyObject *args)
 	ZeroMemory(&bltfx,sizeof(bltfx));
 	bltfx.dwSize = sizeof(bltfx);
 	bltfx.dwFillColor = ddcolor;
-	HRESULT hr=self->pI->Blt(&rect,0,0,DDBLT_COLORFILL | DDBLT_WAIT,&bltfx);
+	HRESULT hr;
+	Py_BEGIN_ALLOW_THREADS
+	hr=self->pI->Blt(&rect,0,0,DDBLT_COLORFILL | DDBLT_WAIT,&bltfx);
+	Py_END_ALLOW_THREADS
 	Py_INCREF(Py_None);
 	return Py_None;
 	}
@@ -1082,7 +1105,9 @@ static void
 DirectDrawSurface_dealloc(DirectDrawSurfaceObject *self)
 {
 	/* XXXX Add your own cleanup code here */
+	Py_BEGIN_ALLOW_THREADS
 	if(self->releaseI && self->pI) self->pI->Release();
+	Py_END_ALLOW_THREADS
 	PyMem_DEL(self);
 }
 
