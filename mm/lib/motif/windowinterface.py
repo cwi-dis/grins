@@ -88,6 +88,12 @@ class _MultChoice:
 def multchoice(prompt, list, defindex, parent = None):
 	return _MultChoice(prompt, list, defindex, parent = parent).run()
 
+def GetYesNoCancel(prompt, parent = None):
+	return multchoice(prompt, ["Yes", "No", "Cancel"], 0)
+	
+def GetOKCancel(prompt, parent = None):
+	return multchoice(prompt, ["OK", "Cancel"], 0)
+
 def textwindow(text):
 	w = Window('Source', resizable = 1, deleteCallback = 'hide')
 	b = w.ButtonRow([('Close', (w.hide, ()))],
