@@ -267,7 +267,7 @@ for d in $CHAMELEON/mm/common/motif $CHAMELEON/mm/common \
 	 $CHAMELEON/mm/editor/motif $CHAMELEON/mm/editor \
 	 $CHAMELEON/mm/grins/motif $CHAMELEON/mm/grins \
 	 $CHAMELEON/mm/lib/motif $CHAMELEON/mm/lib \
-	 $CHAMELEON/mm/pylib \
+	 $CHAMELEON/mm/pylib $CHAMELEON/mm/pylib/audio \
 	 $CHAMELEON/mm/video $CHAMELEON/python/Extensions/X11/Lib \
 	 $CHAMELEON/python/Extensions/img/Lib \
 	 $CHAMELEON/python/Extensions/midi/Lib \
@@ -284,8 +284,8 @@ done
 case $freeze in
 no)	;;
 *)
-	macexcl='-x mac_window -x macpath -x macurl2path -x MACVideoChannel -x MACVideoDuration -x audiodevmac'
-	ntexcl='-x ntpath -x nturl2path -x dospath -x NTVideoChannel -x NTVideoDuration -x audiodevwin'
+	macexcl='-x mac_window -x macpath -x macurl2path -x MACVideoChannel -x MACVideoDuration -x audio.devmac'
+	ntexcl='-x ntpath -x nturl2path -x dospath -x NTVideoChannel -x NTVideoDuration -x audio.devwin'
 	allexcl='-x pdb -x trace'
 	case $ARCH in
 	irix*)	extend="-e $CHAMELEON/python/Extensions/midi/build.$ARCH"
@@ -294,15 +294,15 @@ no)	;;
 		exclthread='-x mm -x thread -x MPEGVideoChannel
 			-x MPEGVideoDuration -x MovieChannel -x MpegDuration'
 		exclude="$exclGL $exclthread -x FCNTL
-			-x PseudoHtmlChannel -x audiodevsun"
+			-x PseudoHtmlChannel -x audio.devsun"
 		;;
-	sunos*)	exclude='-x audiodevsgi'
+	sunos*)	exclude='-x audio.devsgi'
 		extend="-e $CHAMELEON/mm/mmpython/$ARCH"
 		extpath=''
 		;;
 	esac &&
 	set -x &&
-	PYTHONPATH=$CHAMELEON/mm/$freeze/motif:$CHAMELEON/mm/$freeze:$CHAMELEON/mm/common/motif:$CHAMELEON/mm/common:$CHAMELEON/mm/lib/motif:$CHAMELEON/mm/lib:$CHAMELEON/mm/video:$CHAMELEON/mm/pylib:$CHAMELEON/mm/pylib/audio:$CHAMELEON/python/Lib:$CHAMELEON/python/Lib/test:$CHAMELEON/python/Lib/plat-$ARCH:$CHAMELEON/python/Extensions/X11/Lib:$CHAMELEON/python/Extensions/img/Lib:$CHAMELEON/python/Extensions/midi/Lib:$CHAMELEON/python/Extensions/X11/build.$ARCH:$CHAMELEON/python/Extensions/img/build.$ARCH$extpath &&
+	PYTHONPATH=$CHAMELEON/mm/$freeze/motif:$CHAMELEON/mm/$freeze:$CHAMELEON/mm/common/motif:$CHAMELEON/mm/common:$CHAMELEON/mm/lib/motif:$CHAMELEON/mm/lib:$CHAMELEON/mm/video:$CHAMELEON/mm/pylib:$CHAMELEON/python/Lib:$CHAMELEON/python/Lib/test:$CHAMELEON/python/Lib/plat-$ARCH:$CHAMELEON/python/Extensions/X11/Lib:$CHAMELEON/python/Extensions/img/Lib:$CHAMELEON/python/Extensions/midi/Lib:$CHAMELEON/python/Extensions/X11/build.$ARCH:$CHAMELEON/python/Extensions/img/build.$ARCH$extpath &&
 	export PYTHONPATH &&
 	if [ -d frozen.$freeze.$ARCH ]
 	then	rm -f frozen.$freeze.$ARCH/$main.py
@@ -321,8 +321,8 @@ no)	;;
 		$ntexcl \
 		-x fastimp -x pprint -x jpeg \
 		-x Tkinter \
-		-x audiohcom -x audiovoc -x audio8svx \
-		-x audiosndt -x audiosndr \
+		-x audio.hcom -x audio.voc -x audio.8svx \
+		-x audio.sndt -x audio.sndr \
 		frozen.$freeze.$ARCH/$main.py \
 		-m imgsgi imggif imgpgm imgppm imgpbm imgtiff imgjpeg imgbmp \
 		imgxbm imgpng &&
