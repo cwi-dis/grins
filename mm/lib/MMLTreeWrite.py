@@ -134,19 +134,32 @@ def getsyncarc(writer, node, isend):
 	if delay:
 		rv = rv + sign + '(%s)'%delay
 	return rv
-			
-	
+
+def getterm(writer, node):
+	terminator = node.GetRawAttrDef('terminator', 'LAST')
+	if terminator == 'LAST':
+		return
+	if terminator == 'FIRST':
+		return 'first'
+	for child in node.children:
+		if child.GetRawAttrDef('name', '') == terminator:
+			return 'id(%s)' % writer.uid2name[child.GetUID()]
+	print '** Terminator attribute refers to unknown child in', \
+	      node.GetRawAttrDef('name', '<unnamed>'),\
+	      node.GetUID()
+
 #
 # Mapping from MML attrs to functions to get them. Strings can be
 # used as a shortcut for node.GetAttr
 #
 mml_attrs=[
-	("id", lambda writer, node:getid(writer, node)),
-	("loc", lambda writer, node:getchname(writer, node)),
+	("id", getid),
+	("loc", getchname),
 	("href", lambda writer, node:getcmifattr(writer, node, "file")),
 	("dur", lambda writer, node: getduration(writer, node, 'duration')),
-	("begin",  lambda writer, node: getsyncarc(writer, node, 0)),
-	("end",  lambda writer, node: getsyncarc(writer, node, 1)),
+	("begin", lambda writer, node: getsyncarc(writer, node, 0)),
+	("end", lambda writer, node: getsyncarc(writer, node, 1)),
+	("endsync", getterm),
 ]
 
 # Mapping from CMIF channel types to mml media types
@@ -154,6 +167,7 @@ mml_mediatype={
 	'text':'text',
 	'sound':'audio',
 	'image':'img',
+	'video': 'video',
 	'movie':'video',
 	'mpeg':'video',
 	'html':'text',
@@ -187,7 +201,6 @@ class MMLWriter:
 		self.tmpdirname = filename + '.data'
 
 	def write(self):
-		self.fp.write('<!doctype mml system>\n')
 		self.fp.write('<mml lipsync="false">\n')
 		self.fp.push()
 		self.fp.write('<head>\n')
@@ -195,8 +208,12 @@ class MMLWriter:
 		self.writelayout()
 		self.fp.pop()
 		self.fp.write('</head>\n')
+		self.fp.write('<body>\n')
+		self.fp.push()
 		self.writenode(self.root)
 		self.writelinks()
+		self.fp.pop()
+		self.fp.write('</body>\n')
 		self.fp.pop()
 		self.fp.write('</mml>\n')
 
