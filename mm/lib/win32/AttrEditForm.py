@@ -2015,10 +2015,14 @@ class PreviewPage(AttrPage):
 		del self._renderer
 
 	def OnSetActive(self):
-		if self._initdialog:
-			c = self.getctrl(self._aname)
-			rurl = string.strip(c.getvalue())
-			self._renderer.load(rurl)
+		if self._initdialog and not self._armed:
+			if self._renderer.isstatic():
+				if self._renderer.needswindow():
+					self.setRendererRc()
+				c=self.getctrl(self._aname)
+				rurl=string.strip(c.getvalue())
+				self._renderer.load(rurl)
+				self._armed=1
 		return self._obj_.OnSetActive()
 
 	def OnKillActive(self):
@@ -2038,8 +2042,16 @@ class PreviewPage(AttrPage):
 		if attr.getname()==self._aname:
 			self._renderer.load(string.strip(val))
 
-##	def onAttrChange(self):
-##		if not self._initdialog: return
+	def onAttrChange(self):
+		if not self._initdialog: return
+		if not self._renderer.isstatic() and self._armed:
+			self.canceltimer()
+			self._renderer.stop()
+			self._playing=0
+			c=self.getctrl(self._aname)
+			c.setstate('stop')
+			self._renderer.release()
+		self._armed = 0
 ##		c=self.getctrl(self._aname)
 ##		rurl=string.strip(c.getvalue())
 ##		self._renderer.load(rurl)
