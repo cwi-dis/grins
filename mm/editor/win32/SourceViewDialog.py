@@ -9,9 +9,9 @@ class SourceViewDialog:
 		self.__setCommonCommandList()
 
 		self._findReplaceDlg = None
-		self._findText = None
+		self._findText = ''
 		self._replaceText = None
-		self._findOptions = None
+		self._findOptions = (0,0)
 		
 	def __setCommonCommandList(self):
 		self._commonCommandList = [SELECTNODE_FROM_SOURCE(callback = (self.onRetrieveNode, ())),
@@ -191,7 +191,7 @@ class SourceViewDialog:
 			# not found, search from the begining
 			ret = self.__textwindow.findNext(0, text, options)
 			if ret == None:
-				windowinterface.showmessage("Text not found", mtype = 'error')
+				windowinterface.showmessage("GRiNS has finished searching the document", mtype = 'error')
 			else:
 				found = 1
 		else:
@@ -208,8 +208,25 @@ class SourceViewDialog:
 			# seek on the next occurrence found			
 			self.onFindNext()
 
-	def doReplaceAll(self, replaceText):
-		pass
-			
+	def doReplaceAll(self, text, options, replaceText):
+		if not self.__textwindow:
+			return
 
+		# save the text and options for the next time
+		self._findText = text
+		self._findOptions = options
+			
+		begin = 0
+		nocc = 0
+		lastPos = None
+		pos = self.__textwindow.findNext(begin, self._findText, self._findOptions)
+		while pos != None and lastPos != pos:
+			lastPos = pos
+			self.__textwindow.replaceSel(replaceText)
+			begin = self.getCurrentCharIndex()
+			nocc = nocc + 1
+			pos = self.__textwindow.findNext(begin, self._findText, self._findOptions)
+
+		windowinterface.showmessage("replaced "+`nocc`+' occurrences')
+		
 	
