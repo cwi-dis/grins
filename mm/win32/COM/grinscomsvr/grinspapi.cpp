@@ -166,7 +166,6 @@ static PyObject *
 ComModule_AdviceClosePeerWnd(ComModuleObject *self, PyObject *args)
 {
 	int docid, wndid;
-	char *pszTitle;
 	if(!PyArg_ParseTuple(args, "ii", &docid, &wndid))
 		return NULL;
 	self->pModule->adviceClosePeerWnd(docid, wndid);

@@ -7,6 +7,7 @@
 
 #include "comlib/comstl.h"
 #include "comlib/comreg.h"
+#include "comlib/comutil.h"
 
 #include "idl/IGRiNSPlayerAuto.h"
 
@@ -155,10 +156,11 @@ class GRiNSPlayerAuto : public IGRiNSPlayerAuto
 	void adviceSetCursor(char *cursor){memcpy(m_cursor, cursor, strlen(cursor)+1);}
 	void adviceSetDur(double dur){m_dur=dur;}
 	
+	static CSimpleMap<int, GRiNSPlayerAuto*> s_documents;
+
 	private:
 	long m_cRef;
 	GRiNSPlayerComModule *m_pModule;
-
 	enum {STOPPED, PAUSING, PLAYING};
 	
 	HWND m_hWnd;
@@ -231,52 +233,41 @@ HRESULT GetGRiNSPlayerMonikerClassObject(IClassFactory** ppv, GRiNSPlayerComModu
 
 void GRiNSPlayerAutoAdviceNewPeerWnd(int docid, int wndid, int w, int h, const char *title)
 	{
-	// temp: use com module map
-	if(docid!=0)
-		{
-		GRiNSPlayerAuto *p = (GRiNSPlayerAuto*)docid;
-		p->adviceNewPeerWnd(wndid, w, h, title);
-		}
+	GRiNSPlayerAuto *p = GRiNSPlayerAuto::s_documents.Lookup(docid);
+	if(p) p->adviceNewPeerWnd(wndid, w, h, title);
 	}
 void GRiNSPlayerAutoAdviceClosePeerWnd(int docid, int wndid)
 	{
-	// temp: use com module map
-	if(docid!=0)
-		{
-		GRiNSPlayerAuto *p = (GRiNSPlayerAuto*)docid;
-		p->adviceClosePeerWnd(wndid);
-		}
+	GRiNSPlayerAuto *p = GRiNSPlayerAuto::s_documents.Lookup(docid);
+	if(p) p->adviceClosePeerWnd(wndid);
 	}
 
-void GRiNSPlayerAutoAdviceSetCursor(int id, char *cursor)
+void GRiNSPlayerAutoAdviceSetCursor(int docid, char *cursor)
 	{
-	// temp: use com module map
-	if(id!=0)
-		{
-		GRiNSPlayerAuto *p = (GRiNSPlayerAuto*)id;
-		p->adviceSetCursor(cursor);
-		}
+	GRiNSPlayerAuto *p = GRiNSPlayerAuto::s_documents.Lookup(docid);
+	if(p) p->adviceSetCursor(cursor);
 	}
-void GRiNSPlayerAutoAdviceSetDur(int id, double dur)
+void GRiNSPlayerAutoAdviceSetDur(int docid, double dur)
 	{
-	// temp: use com module map
-	if(id!=0)
-		{
-		GRiNSPlayerAuto *p = (GRiNSPlayerAuto*)id;
-		p->adviceSetDur(dur);
-		}
+	GRiNSPlayerAuto *p = GRiNSPlayerAuto::s_documents.Lookup(docid);
+	if(p) p->adviceSetDur(dur);
 	}
+
+// static
+CSimpleMap<int, GRiNSPlayerAuto*> GRiNSPlayerAuto::s_documents;
 
 GRiNSPlayerAuto::GRiNSPlayerAuto(GRiNSPlayerComModule *pModule)
 :	m_cRef(1), m_pModule(pModule), m_hWnd(0), m_nViewports(0),
 	m_dur(0), m_focuswndid(0)
 	{
+	s_documents.Add(int(this), this);
 	adviceSetCursor("arrow");
 	m_pModule->lock();
 	}
 
 GRiNSPlayerAuto::~GRiNSPlayerAuto()
 	{
+	s_documents.Remove(int(this));
 	clearViewports();
 	m_pModule->unlock();
 	}
