@@ -383,7 +383,7 @@ def writenode(node, evallicense = 0):
 	if not hasattr(node, 'tmpfile'):
 		return
 	import realsupport
-	realsupport.writeRP(node.tmpfile, node.slideshow.rp, node)
+	realsupport.writeRP(node.tmpfile, node.slideshow.rp, node, savecaptions=1)
 	url = MMAttrdefs.getattr(node, 'file')
 	url = node.GetContext().findurl(url)
 	utype, host, path, params, query, tag = urlparse.urlparse(url)
