@@ -440,7 +440,7 @@ class SMIL:
 	__animate_attrs_extra = {'accumulate':'none',
 				 'additive':'replace',
 				 'by':None,
-				 'calcMode':'linear',
+				 'calcMode':None,
 				 'from':None,
 ##				 'keySplines':None,
 ##				 'keyTimes':None,
