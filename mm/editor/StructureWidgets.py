@@ -342,6 +342,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				for c in self.children:
 					c.node.showtime = showtime
 			else:
+				print "DBG: re-initialize timemapper"
 				timemapper = TimeMapper.TimeMapper()
 				if self.timeline is None:
 					self.timeline = TimelineWidget(self, self.mother)
@@ -362,6 +363,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				self.bwstrip = BandWidthWidget(self, self.mother)
 				maxbandwidth, prerolltime, delaycount, errorseconds, errorcount, stalls = \
 					BandwidthCompute.compute_bandwidth(self.node)
+				print 'DBG: Computed bandwidths'
 				if timemapper:
 					for stalltime, stallduration in stalls:
 						timemapper.addstalltime(stalltime, stallduration)
@@ -745,6 +747,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		if self.infoicon is None:
 			# create a new info icon
 			self.infoicon = self.iconbox.add_icon(icon, callback = self.show_mesg)
+			print 'infoicon redraw', icon, self.node
 			self.mother.need_resize = 1
 			self.mother.draw()
 			return
@@ -753,6 +756,7 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 			self.iconbox.del_icon(self.infoicon)
 			self.infoicon.destroy()
 			self.infoicon = None
+			print 'infoicon clear redraw', self.node
 			self.mother.need_resize = 1
 			self.mother.draw()
 			return
@@ -1224,6 +1228,7 @@ class StructureObjWidget(MMNodeWidget):
 			else:
 				self.bwstrip.moveto((my_l, my_b - bw_h, my_r, my_b))
 				my_b = my_b - bw_h
+			self.bwstrip.addallbandwidthinfo(self.node, timemapper)
 				
 		if timemapper is None:
 			self.need_draghandles = None
@@ -1534,7 +1539,7 @@ class HorizontalWidget(StructureObjWidget):
 				mw = w
 			mh = mh + h
 		if self.bwstrip is not None:
-			w, h = self.bwstrip.recalc_minsize()
+			w, h = self.bwstrip.recalc_minsize(self.node, timemapper)
 			if w > mw:
 				mw = w
 			mh = mh + h
@@ -1649,7 +1654,7 @@ class VerticalWidget(StructureObjWidget):
 				mw = w
 			mh = mh + h
 		if self.bwstrip is not None:
-			w, h = self.bwstrip.recalc_minsize()
+			w, h = self.bwstrip.recalc_minsize(self.node, timemapper)
 			if w > mw:
 				mw = w
 			mh = mh + h
@@ -1815,7 +1820,7 @@ class UnseenVerticalWidget(StructureObjWidget):
 				mw = w
 			mh = mh + h
 		if self.bwstrip is not None:
-			w, h = self.bwstrip.recalc_minsize()
+			w, h = self.bwstrip.recalc_minsize(self.node, timemapper)
 			if w > mw:
 				mw = w
 			mh = mh + h
@@ -2037,8 +2042,8 @@ class MediaWidget(MMNodeWidget):
 		if self.bwstrip:
 			bwstrip = self.bwstrip
 			
-		if bwstrip:
-			bwstrip.addbandwidthinfo(self.node, self.node.get_bandwidthboxes(), self.selected, timemapper)
+##		if bwstrip:
+##			bwstrip.addbandwidthinfo(self.node, self.node.get_bandwidthboxes(), self.selected, timemapper)
 			
 		if not self.node.WillPlay():
 			timemapper = None
@@ -2614,16 +2619,19 @@ class BandWidthWidget(MMWidgetDecoration):
 	def __init__(self, mmwidget, mother):
 		MMWidgetDecoration.__init__(self, mmwidget, mother)
 		self.minwidth = 0
+		print 'DBG initbw', self
 		self.okboxes = []
 		self.notokboxes = []
 		self.okfocusboxes = []
 		self.notokfocusboxes = []
+		self.collected = 0
 		import settings
 		self.maxbandwidth = settings.get('system_bitrate')
 
 
-	def recalc_minsize(self):
+	def recalc_minsize(self, node, timemapper):
 		import settings
+		print 'DBG lengths', len(self.okboxes), len(self.notokboxes)
 		self.maxbandwidth = settings.get('system_bitrate')
 		minheight = 2*TITLESIZE
 		self.boxsize = self.minwidth, minheight
@@ -2632,8 +2640,19 @@ class BandWidthWidget(MMWidgetDecoration):
 	def setminwidth(self, width):
 		self.minwidth = width
 		
-	def addbandwidthinfo(self, node, boxes, hasfocus, timemapper):
+	def addallbandwidthinfo(self, node, timemapper):
+		# Should look at self.collected here.
+		self._addallbandwidthinfo(node, timemapper)
+
+	def _addallbandwidthinfo(self, node, timemapper):
+		self._addbandwidthinfo(node, timemapper)
+		for ch in node.GetChildren():
+			self._addallbandwidthinfo(ch, timemapper)
+
+	def _addbandwidthinfo(self, node, timemapper):
 		# For now we ignore node
+		boxes = node.get_bandwidthboxes()
+		print 'dbg', node, boxes
 		if not boxes:
 			return
 		my_x, my_y, my_w, my_h = self.get_box()
@@ -2649,15 +2668,9 @@ class BandWidthWidget(MMWidgetDecoration):
 			y1 = my_b - int(bwfactor*bwlo)
 			box = (x0, y0, x1-x0, y1-y0)
 			if status:
-				if hasfocus:
-					self.notokfocusboxes.append(box)
-				else:
-					self.notokboxes.append(box)
+				self.notokboxes.append(box)
 			else:
-				if hasfocus:
-					self.okfocusboxes.append(box)
-				else:
-					self.okboxes.append(box)
+				self.okboxes.append(box)
 
 ##	def moveto(self, coords):
 ##		return # XXXX
@@ -2694,7 +2707,6 @@ class BandWidthWidget(MMWidgetDecoration):
 ##		self.params = line_y, tick_top, tick_bot, longtick_top, longtick_bot, midtick_top, midtick_bot, endtick_top, endtick_bot, label_top, label_bot
 
 	def draw(self, displist):
-		# this method is way too complex.
 		x, y, w, h = self.get_box()
 		y = y + 3
 		h = h - 6
@@ -2703,8 +2715,8 @@ class BandWidthWidget(MMWidgetDecoration):
 		displist.drawfbox(BANDWIDTH_FREE_COLOR, (x, y, w, h))
 		self._drawboxes(displist, BANDWIDTH_OK_COLOR, self.okboxes)
 		self._drawboxes(displist, BANDWIDTH_NOTOK_COLOR, self.notokboxes)
-		self._drawboxes(displist, BANDWIDTH_OKFOCUS_COLOR, self.okfocusboxes)
-		self._drawboxes(displist, BANDWIDTH_NOTOKFOCUS_COLOR, self.notokfocusboxes)
+##		self._drawboxes(displist, BANDWIDTH_OKFOCUS_COLOR, self.okfocusboxes)
+##		self._drawboxes(displist, BANDWIDTH_NOTOKFOCUS_COLOR, self.notokfocusboxes)
 
 	def _drawboxes(self, displist, color, boxes):
 		for box in boxes:
