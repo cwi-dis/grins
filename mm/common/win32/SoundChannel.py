@@ -26,6 +26,7 @@ class SoundChannel(Channel.ChannelAsync):
 		self.__mc = None
 		self.__rc = None
 		self.need_armdone = 0
+		self.__playing = None
 		Channel.ChannelAsync.__init__(self, name, attrdict, scheduler, ui)
 
 	def __repr__(self):
@@ -38,6 +39,7 @@ class SoundChannel(Channel.ChannelAsync):
 		return 1
 
 	def do_hide(self):
+		self.__playing = None
 		self.__mc.unregister_for_timeslices()
 		self.__mc.release_res()
 		self.__mc = None
@@ -80,6 +82,7 @@ class SoundChannel(Channel.ChannelAsync):
 		return 1
 
 	def do_play(self, node):
+		self.__playing = node
 		self.__type = node.__type
 		if not self.__ready:
 			# arming failed, so don't even try playing
@@ -103,11 +106,13 @@ class SoundChannel(Channel.ChannelAsync):
 
 	# part of stop sequence
 	def stopplay(self, node):
-		if self.__type == 'real':
-			if self.__rc:
-				self.__rc.stopit()
-		else:
-			self.__mc.stopit()
+		if self.__playing is node:
+			if self.__type == 'real':
+				if self.__rc:
+					self.__rc.stopit()
+			else:
+				self.__mc.stopit()
+		self.__playing = None
 		Channel.ChannelAsync.stopplay(self, node)
 
 	# toggles between pause and run
@@ -119,10 +124,11 @@ class SoundChannel(Channel.ChannelAsync):
 		Channel.ChannelAsync.setpaused(self, paused)
 
 	def play(self, node):
-		self.need_armdone = 1
 		self.play_0(node)
+		self.need_armdone = 1
 		if not self._is_shown or not node.ShouldPlay() \
 		   or self.syncplay:
+			self.need_armdone = 0 # play_1 does it, so we shouldn't
 			self.play_1()
 			return
 		if self._is_shown:
@@ -132,6 +138,7 @@ class SoundChannel(Channel.ChannelAsync):
 			self.armdone()
 
 	def playdone(self, dummy):
+		self.__playing = None
 		if self.need_armdone:
 			self.need_armdone = 0
 			self.armdone()
