@@ -96,6 +96,7 @@
 #define IDD_EDITATTR_PF1                343
 #define IDD_EDITATTR_E1                 344
 #define IDD_EDITATTR_S1O1C              345
+#define IDD_EDITATTR_FO1                346
 #define IDC_EXPLANATION                 1002
 #define IDC_LIST2                       1018
 #define IDC_BUTTON_BROWSE               1019
@@ -311,7 +312,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        272
 #define _APS_NEXT_COMMAND_VALUE         32838
-#define _APS_NEXT_CONTROL_VALUE         1199
+#define _APS_NEXT_CONTROL_VALUE         1200
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -1591,6 +1591,32 @@ class FileGroup(AttrGroup):
 		else:
 			raise error,'see AttrEditForm.FileGroup'
 
+class FadeoutGroup(AttrGroup):
+	data=attrgrsdict['fadeout']
+
+	def __init__(self):
+		AttrGroup.__init__(self,self.data)
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_FO1
+
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('fadeout')
+		cd[a] = OptionsRadioCtrl(wnd,a,(grinsRC.IDC_11,grinsRC.IDC_12,grinsRC.IDC_13,grinsRC.IDC_14))
+		a = self.getattr('fadeoutcolor')
+		cd[a] = ColorCtrl(wnd,a,(grinsRC.IDC_21,grinsRC.IDC_22,grinsRC.IDC_23,grinsRC.IDC_24))
+		a = self.getattr('fadeouttime')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_31,grinsRC.IDC_32,grinsRC.IDC_33))
+		a = self.getattr('fadeoutduration')
+		cd[a] = StringCtrl(wnd,a,(grinsRC.IDC_41,grinsRC.IDC_42,grinsRC.IDC_43))
+		return cd
+
+##	def oninitdialog(self,wnd):
+##		ctrl=components.Control(wnd,grinsRC.IDC_GROUP1)
+##		ctrl.attach_to_parent()
+##		ctrl.settext(self._data['title'])
+
 ############################
 # platform dependent association
 # what we have implemented, anything else goes as singleton
@@ -1610,6 +1636,7 @@ groupsui={
 	'webserver':WebserverGroup,
 	'mediaserver':MediaserverGroup,
 	'file':FileGroup,
+	'fadeout':FadeoutGroup,
 	}
 
 

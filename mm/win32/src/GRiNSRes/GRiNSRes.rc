@@ -1136,6 +1136,32 @@ BEGIN
     PUSHBUTTON      "Channel Properties...",IDC_24,176,54,75,14
 END
 
+IDD_EDITATTR_FO1 DIALOG DISCARDABLE  0, 0, 300, 200
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Fadeout",IDC_GROUP1,6,10,287,115
+    LTEXT           "Fadeout",IDC_11,12,24,73,8
+    PUSHBUTTON      "Reset",IDC_14,255,22,33,12,NOT WS_TABSTOP
+    LTEXT           "Fadeout Color",IDC_21,13,72,73,8
+    EDITTEXT        IDC_22,87,70,110,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Reset",IDC_24,255,70,33,12,NOT WS_TABSTOP
+    LTEXT           "",IDC_31,13,40,73,8
+    EDITTEXT        IDC_32,87,38,165,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Reset",IDC_33,255,38,33,12,NOT WS_TABSTOP
+    LTEXT           "",IDC_41,13,56,73,8
+    EDITTEXT        IDC_42,87,54,165,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Reset",IDC_43,255,54,33,12,NOT WS_TABSTOP
+    LTEXT           "",IDC_ATTR_INFO,6,147,287,18,SS_SUNKEN
+    DEFPUSHBUTTON   "OK",IDOK,243,170,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,185,170,50,14
+    PUSHBUTTON      "&Restore",IDUC_RESTORE,63,170,50,14
+    PUSHBUTTON      "&Apply",IDUC_APPLY,6,170,50,14
+    CONTROL         "off",IDC_12,"Button",BS_AUTORADIOBUTTON,86,22,24,10
+    CONTROL         "on",IDC_13,"Button",BS_AUTORADIOBUTTON,134,23,24,10
+    PUSHBUTTON      "Pick Color...",IDC_23,203,70,50,12
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
