@@ -75,14 +75,14 @@ def readattrdefs(fp, filename):
 			helptext = parser.getstringvalue(None)
 			inheritance = parser.getenumvalue(
 				['raw', 'normal', 'inherited', 'channel'])
-			xtypedef = 'enclosed', ('list', ('enum', ['g2_light', 'g2_pro','qt_light','qt_pro', 'g2', 'smil_1.0','cmif', 'all']))
+			xtypedef = 'enclosed', ('list', ('enum', ['g2_light', 'g2_pro','qt_light','qt_pro', 'g2', 'smil10','cmif', 'all']))
 			flags = parser.getgenericvalue(
 				usetypedef(xtypedef,
 				        MMParser.MMParser.basicparsers))
 #			flags = parser.getgenericvalue(
 #			usetypedef(xtypedef,
 #					   MMParser.MMParser.basicparsers))
-#				['g2_light', 'g2_pro','qt_light','qt_pro', 'g2', 'smil_1.0','cmif', 'all'])
+#				['g2_light', 'g2_pro','qt_light','qt_pro', 'g2', 'smil10','cmif', 'all'])
 #			print flags
 			parser.close()
 			if dict.has_key(attrname):
@@ -108,7 +108,7 @@ def readattrdefs(fp, filename):
 					binary_flags = binary_flags | FLAG_QT_LIGHT
 				elif fl == 'qt_pro':
 					binary_flags = binary_flags | FLAG_QT_PRO
-				elif fl == 'smil1.0':
+				elif fl == 'smil10':
 					binary_flags = binary_flags | FLAG_SMIL_1_0
 				elif fl == 'cmif':
 					binary_flags = binary_flags | FLAG_CMIF
