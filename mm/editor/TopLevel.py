@@ -93,8 +93,8 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			self.commandlist = self.commandlist + [
 				SAVE_AS(callback = (self.saveas_callback, ())),
 				SAVE(callback = (self.save_callback, ())),
-				EXPORT_SMIL(callback = (self.export_callback, ())),
-				UPLOAD_SMIL(callback = (self.upload_callback, ())),
+				EXPORT_SMIL(callback = (self.bandwidth_callback, (self.export_callback,))),
+				UPLOAD_SMIL(callback = (self.bandwidth_callback, (self.upload_callback,))),
 				]
 			#self.__save = SAVE(callback = (self.save_callback, ()))
 		import Help
@@ -301,6 +301,23 @@ class TopLevel(TopLevelDialog, ViewDialog):
 						    'File: '+htmlfilename+'\n'+
 						    'Error: '+msg[1])
 
+	def bandwidth_callback(self, do_export_callback):
+		import settings
+		import BandwidthCompute
+		bandwidth = settings.get('system_bitrate')
+		if bandwidth > 1000000:
+			bwname = "%dMbps"%(bandwidth/1000000)
+		elif bandwidth % 1000 == 0:
+			bwname = "%dkbps"%(bandwidth/1000)
+		else:
+			bwname = "%dbps"%bandwidth
+		msg = 'Computing bandwidth usage at %s...'%bwname
+		dialog = windowinterface.BandwidthComputeDialog(msg)
+		bandwidth, prerolltime, errorcount, errorseconds = \
+			BandwidthCompute.compute_bandwidth(self.root)
+		dialog.setinfo(prerolltime, errorseconds, errorcount)
+		dialog.done(do_export_callback, cancancel=1)
+
 	def export_callback(self):
 		cwd = self.dirname
 		if cwd:
@@ -311,9 +328,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			cwd = os.getcwd()
 		windowinterface.FileDialog('Save SMIL file:', cwd, '*.smil',
 					   '', self.export_okcallback, None)
-					   
-
-					   
+	   
 	def upload_callback(self):
 		# XXXX The filename business confuses project file name and resulting SMIL file
 		# XXXX name. To be fixed.
