@@ -220,6 +220,19 @@ class GraphChannel(ChannelWindow):
 	def defanchor(self, node, anchor, cb):
 		apply(cb, (anchor,))
 
+	def setanchorargs(self, (node, nametypelist, args), button, value):
+		# Called when an anchor is pressed, supply arguments
+		# to the hyperjump.
+		x, y, buttonlist = value
+
+		# Convert back to dataspace coordinates
+		minx, maxx, miny, maxy = self.ranges
+		xstepsize = XRANGE / (maxx-minx)
+		ystepsize = YRANGE / (maxy-miny)
+		x = (x - XOFF)/xstepsize+minx
+		y = -((y - YOFF)/ystepsize-maxy)
+		return (node, nametypelist, (('x', x), ('y', y)))
+		
 	def getstring(self, node):
 		if node.type == 'imm':
 			return string.joinfields(node.GetValues(), '\n')
