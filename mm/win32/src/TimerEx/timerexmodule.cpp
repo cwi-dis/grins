@@ -7,8 +7,6 @@ static PyObject *timerexError;
 char cmifClass[100]="";
 char dbgmess[100]="";
 
-PyIMPORT CWnd *GetWndPtr(PyObject *);
-
 #ifdef __cplusplus
 extern "C" {
 #endif
