@@ -4,7 +4,6 @@
 import os
 import windowinterface
 
-import MMExc
 import MMAttrdefs
 
 from MMNode import alltypes, leaftypes, interiortypes

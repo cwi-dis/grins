@@ -1,6 +1,7 @@
 import windowinterface
 import MMAttrdefs
 from ChannelMap import channelmap
+from MMExc import *			# exceptions
 
 # There are two basic calls into this module (but see below for more):
 # showattreditor(node) creates an attribute editor form for a node
@@ -681,7 +682,7 @@ class ChildnodenameButtonRow(PopupButtonRow):
 		for child in self.wrapper.node.GetChildren():
 			try:
 				list.append(child.GetAttr('name'))
-			except MMExc.NoSuchAttrError:
+			except NoSuchAttrError:
 				pass
 		return list
 
