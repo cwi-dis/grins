@@ -53,7 +53,7 @@ class ArcInfoForm(GenFormView):
 		cbd=adornments['callbacks']
 		self._idcbdict={}
 		for k in self.keys():
-			if k in cbd.keys():
+			if cbd.has_key(k):
 				self._idcbdict[self[k]._id]=cbd[k]
 
 	# Called by the framework after the OS window has been created
@@ -76,7 +76,7 @@ class ArcInfoForm(GenFormView):
 		msg=win32mu.Win32Msg(params)
 		id=msg.cmdid()
 		nmsg=msg.getnmsg()
-		if id in self._idcbdict.keys():
+		if self._idcbdict.has_key(id):
 			apply(apply,self._idcbdict[id])
 	
 	# Called by the core to set the title of this view

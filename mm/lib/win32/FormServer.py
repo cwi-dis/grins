@@ -139,7 +139,7 @@ class FormServer:
 	# Returns a new form object
 	def newformobj(self,strid):
 		formno=self.getformno(strid)
-		if 'hosted' in appform[formno].keys() and appform[formno]['hosted']:
+		if appform[formno].has_key('hosted') and appform[formno]['hosted']:
 			formclass=appform[formno]['class']
 			return formclass()
 		else:
@@ -173,9 +173,7 @@ class FormServer:
 	
 	# Create a ChildFrame to host this view
 	def frameform(self,form,formno):
-		freezeSize=0
-		if 'freezesize' in appform[formno].keys():
-			freezeSize=appform[formno]['freezesize']
+		freezeSize=appform[formno].get('freezesize', 0)
 		f=ChildFrame(form,freezeSize)
 		rc=self._context.getPrefRect()
 		f.Create(form._title,rc,self._context,0)
