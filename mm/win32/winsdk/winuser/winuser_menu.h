@@ -9,5 +9,8 @@ PyObject* Winuser_CreateMenu(PyObject *self, PyObject *args);
 PyObject* Winuser_CreatePopupMenu(PyObject *self, PyObject *args);
 PyObject* Winuser_CreateMenuFromHandle(PyObject *self, PyObject *args);
 
+PyObject* CreatePyMenuFromHandle(HMENU hMenu);
+HMENU GetHandleFromPyMenu(PyObject *self);
+
 #endif
 

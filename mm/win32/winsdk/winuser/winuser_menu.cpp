@@ -22,11 +22,11 @@ struct PyMenu
 	static PyTypeObject type;
 	static PyMethodDef methods[];
 
-	static PyMenu *createInstance()
+	static PyMenu *createInstance(HMENU hMenu = NULL)
 		{
 		PyMenu *instance = PyObject_NEW(PyMenu, &type);
 		if (instance == NULL) return NULL;
-		instance->m_hMenu = NULL;
+		instance->m_hMenu = hMenu;
 		return instance;
 		}
 
@@ -66,12 +66,19 @@ PyObject* Winuser_CreateMenuFromHandle(PyObject *self, PyObject *args)
 	HMENU hMenu;
 	if (!PyArg_ParseTuple(args, "i", &hMenu))
 		return NULL;
-	PyMenu *pymenu = PyMenu::createInstance();
-	if(pymenu==NULL) return NULL;
-	pymenu->m_hMenu = hMenu;
-	return (PyObject*)pymenu;
+	return (PyObject*)PyMenu::createInstance(hMenu);
 }
 
+PyObject* CreatePyMenuFromHandle(HMENU hMenu)
+{
+	return (PyObject*)PyMenu::createInstance(hMenu);
+}
+
+HMENU GetHandleFromPyMenu(PyObject *self)
+	{
+	PyMenu *p = (PyMenu *)self;
+	return p->m_hMenu;
+	}
 ///////////////////////////////////////////
 // module
 
@@ -154,6 +161,29 @@ static PyObject* PyMenu_DestroyMenu(PyMenu *self, PyObject *args)
 	return none();
 }
 
+static PyObject* PyMenu_CheckMenuItem(PyMenu *self, PyObject *args)
+{
+	UINT uIDCheckItem;
+	UINT uCheck;
+	if (!PyArg_ParseTuple(args,"ii", &uIDCheckItem, &uCheck))
+		return NULL;
+	DWORD nCheck = CheckMenuItem(self->m_hMenu, uIDCheckItem, uCheck);
+	return Py_BuildValue("i", nCheck);
+}
+
+static PyObject* PyMenu_GetMenuItemCount(PyMenu *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args,""))
+		return NULL;
+	int count = GetMenuItemCount(self->m_hMenu);
+	if(count < 0)
+		{
+		seterror("GetMenuItemCount", GetLastError());
+		return NULL;
+		}
+	return Py_BuildValue("i", count);
+}
+
 static PyObject* PyMenu_Detach(PyMenu *self, PyObject *args)
 	{
 	if(!PyArg_ParseTuple(args,""))
@@ -170,8 +200,6 @@ static PyObject* PyMenu_GetHandle(PyMenu *self, PyObject *args)
 	return Py_BuildValue("i", self->m_hMenu);
 	}
 
-
-
 PyMethodDef PyMenu::methods[] = {
 	{"InsertMenu", (PyCFunction)PyMenu_InsertMenu, METH_VARARGS, ""},
 	{"AppendMenu", (PyCFunction)PyMenu_AppendMenu, METH_VARARGS, ""},
@@ -179,6 +207,8 @@ PyMethodDef PyMenu::methods[] = {
 	{"EnableMenuItem", (PyCFunction)PyMenu_EnableMenuItem, METH_VARARGS, ""},
 	{"GetSubMenu", (PyCFunction)PyMenu_GetSubMenu, METH_VARARGS, ""},
 	{"DestroyMenu", (PyCFunction)PyMenu_DestroyMenu, METH_VARARGS, ""},
+	{"CheckMenuItem", (PyCFunction)PyMenu_CheckMenuItem, METH_VARARGS, ""},
+	{"GetMenuItemCount", (PyCFunction)PyMenu_GetMenuItemCount, METH_VARARGS, ""},
 	{"Detach", (PyCFunction)PyMenu_Detach, METH_VARARGS, ""},
 	{"GetHandle", (PyCFunction)PyMenu_GetHandle, METH_VARARGS, ""},
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
