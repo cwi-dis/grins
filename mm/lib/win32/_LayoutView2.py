@@ -680,7 +680,10 @@ class Region(win32window.Window):
 
 		x0, y0 = dc.SetWindowOrg((-l,-t))
 		if self._active_displist:
-			self._active_displist._render(dc)
+			entry = self._active_displist._list[0]
+			if entry[0] == 'clear' and entry[1]:
+				dc.FillSolidRect((0,0,r-l,b-t),win32mu.RGB(entry[1]))
+			self._active_displist._render(dc, None, clear=0)
 		dc.SetWindowOrg((x0,y0))
 
 		L = self._subwindows[:]
