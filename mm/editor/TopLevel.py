@@ -735,7 +735,7 @@ class TopLevel(TopLevelDialog, ViewDialog):
 						mtype = 'application/smil'
 		if mtype == 'application/smil':
 			import SMILTreeRead
-			self.root = SMILTreeRead.ReadFile(filename, self.printfunc)
+			self.root = SMILTreeRead.ReadFile(filename, self.printfunc, self.new_file)
 		elif mtype == 'application/x-grins-cmif':
 			import settings
 			if settings.get('lightweight'):
