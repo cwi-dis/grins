@@ -84,7 +84,11 @@ public:
 				  REF(RMA_COMPRESSION_TYPE) /*OUT*/ ulType);
 
 	// Python support
-	void SetPyVideoRenderer(PyObject *obj);
+	void SetPyVideoRenderer(PyObject *obj){
+		Py_XDECREF(m_pPyVideoRenderer);
+		m_pPyVideoRenderer = obj;
+		Py_XINCREF(m_pPyVideoRenderer);			
+	}
 	PyObject *m_pPyVideoRenderer;
 
 };
