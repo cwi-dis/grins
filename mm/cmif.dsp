@@ -1136,10 +1136,6 @@ SOURCE=.\lib\MPEGVideoDuration.py
 # End Source File
 # Begin Source File
 
-SOURCE=.\lib\NTVideoDuration.py
-# End Source File
-# Begin Source File
-
 SOURCE=.\lib\README
 # End Source File
 # Begin Source File
