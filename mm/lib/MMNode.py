@@ -1750,7 +1750,7 @@ class MMNode:
 		self.reset()
 		for c in self.children:
 			c.resetall(sched)
-		for arc in self.FilterArcList(MMAttrdefs.getattr(self, 'beginlist') + MMAttrdefs.getattr(self, 'endlist')) + self.durarcs:
+		for arc in self.FilterArcList(self.GetBeginList() + self.GetEndList()) + self.durarcs:
 			refnode = arc.refnode()
 			if arc in refnode.sched_children:
 				refnode.sched_children.remove(arc)
@@ -2051,7 +2051,7 @@ class MMNode:
 		if fill == 'inherit' or fill == 'auto' or \
 		   (fill == 'transition' and self.type in interiortypes):
 			if not self.attrdict.has_key('duration') and \
-			   not self.FilterArcList(self.attrdict.get('endlist',[])) and \
+			   not self.FilterArcList(self.GetEndList()) and \
 			   not self.attrdict.has_key('repeatdur') and \
 			   not self.attrdict.has_key('loop'):
 				fill = 'freeze'
@@ -2104,6 +2104,14 @@ class MMNode:
 
 	def GetMax(self):
 		return self.GetMinMax()[1]
+
+	def GetBeginList(self):
+		if hasattr(self, 'fakeparent') and self.parent is not None:
+			return []
+		return self.attrdict.get('beginlist', [])
+
+	def GetEndList(self):
+		return self.attrdict.get('endlist', [])
 
 	def GetTerminator(self):
 		terminator = self.attrdict.get('terminator')
@@ -2531,11 +2539,9 @@ class MMNode:
 			self.context.needtimes(which)
 		t0, t1, t2, downloadlag = self.timing_info_dict[which].GetTimes()
 		begindelay = 0.0
-		if self.attrdict.has_key('beginlist'):
-			arcs = self.attrdict['beginlist']
-			for arc in arcs:
-				if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
-					begindelay = arc.delay
+		for arc in self.GetBeginList():
+			if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
+				begindelay = arc.delay
 		return t0, t1, t2, downloadlag, begindelay
 
 	def GetTimesObject(self, which='virtual'):
@@ -2551,11 +2557,9 @@ class MMNode:
 		# not recompute anything; in fact this method is there only for the t0/t1 recomputation
 		# in the Timing module.
 		begindelay = 0.0
-		if self.attrdict.has_key('beginlist'):
-			arcs = self.attrdict['beginlist']
-			for arc in arcs:
-				if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
-					begindelay = arc.delay
+		for arc in self.GetBeginList():
+			if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
+				begindelay = arc.delay
 		downloadlag = 0.0
 		if self.timing_info_dict.has_key(which):
 			dummy, dummy, dummy, downloadlag = self.timing_info_dict[which].GetTimes()
@@ -3028,7 +3032,7 @@ class MMNode:
 			if presolved is None:
 				# if parent not resolved, we're not resolved
 				return None
-		beginlist = self.attrdict.get('beginlist', [])
+		beginlist = self.GetBeginList()
 		beginlist = self.FilterArcList(beginlist)
 		if not beginlist:
 			# unless parent is excl, we're resolved if parent is
@@ -3340,7 +3344,7 @@ class MMNode:
 				arc.qid = None
 		body.durarcs = []
 		for child in self.wtd_children:
-			beginlist = MMAttrdefs.getattr(child, 'beginlist')
+			beginlist = child.GetBeginList()
 			beginlist = self.FilterArcList(beginlist)
 			for arc in beginlist:
 				#print 'deleting arc',`arc`
@@ -3356,7 +3360,7 @@ class MMNode:
 						pass
 					arc.qid = None
 ##				arc.timestamp = None
-			for arc in self.FilterArcList(MMAttrdefs.getattr(child, 'endlist')):
+			for arc in self.FilterArcList(child.GetEndList()):
 				#print 'deleting arc',`arc`
 				refnode = arc.refnode()
 				try:
@@ -3450,7 +3454,7 @@ class MMNode:
 
 		for child in wtd_children:
 			chname = MMAttrdefs.getattr(child, 'name')
-			beginlist = MMAttrdefs.getattr(child, 'beginlist')
+			beginlist = child.GetBeginList()
 			beginlist = self.FilterArcList(beginlist)
 			if not beginlist:
 				if self.type == 'bag':
@@ -3492,7 +3496,7 @@ class MMNode:
 					       scheddone_actions))
 			elif schedule or termtype == 'ALL':
 				scheddone_events.append((SCHED_DONE, child))
-			for arc in self.FilterArcList(MMAttrdefs.getattr(child, 'endlist')):
+			for arc in self.FilterArcList(child.GetEndList()):
 				refnode = arc.refnode()
 				refnode.add_arc(arc, sctx)
 			cdur = child.calcfullduration(sctx, ignoremin = 1)
@@ -3522,7 +3526,7 @@ class MMNode:
 				event = 'end'
 
 		if duration is None and (self.type == 'seq' or not wtd_children) and \
-		   not self.FilterArcList(MMAttrdefs.getattr(self, 'endlist')):
+		   not self.FilterArcList(self.GetEndList()):
 			# connect last child's end to parent's end
 			# if no children, this would connects seq's begin to end
 			# but only do this if there is no other way in
@@ -3674,7 +3678,7 @@ class MMNode:
 			print '__calcendtime: breaking recursion'
 			return None, 0	# break recursion
 		start = None
-		beginlist = MMAttrdefs.getattr(self, 'beginlist')
+		beginlist = self.GetBeginList()
 		beginlist = self.FilterArcList(beginlist)
 		pnode = self.GetSchedParent()
 		if not beginlist:
@@ -3825,9 +3829,9 @@ class MMNode:
 					duration = Duration.get(self, ignoreloop=1)
 			repeatDur = self.attrdict.get('repeatdur')
 			repeatCount = self.attrdict.get('loop')
-			endlist = self.attrdict.get('endlist', [])
+			endlist = self.GetEndList()
 			endlist = self.FilterArcList(endlist)
-			beginlist = self.attrdict.get('beginlist', [])
+			beginlist = self.GetBeginList()
 			beginlist = self.FilterArcList(beginlist)
 			if len(beginlist) > 1 and self.GetRestart() == 'always':
 				maybecached = 0

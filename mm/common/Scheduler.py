@@ -169,7 +169,7 @@ class SchedulerContext:
 			list = []
 		elif arc.isstart:
 			dev = 'begin'
-			list = MMAttrdefs.getattr(arc.dstnode, 'beginlist')
+			list = arc.dstnode.GetBeginList()
 			list = []
 		else:
 			if event is not None and event not in ('begin', 'end'):
@@ -177,7 +177,7 @@ class SchedulerContext:
 				if arc.dstnode.playing in (MMStates.IDLE, MMStates.PLAYED):
 					return
 			dev = 'end'
-			list = MMAttrdefs.getattr(arc.dstnode, 'endlist')
+			list = arc.dstnode.GetEndList()
 			list = list + arc.dstnode.durarcs
 		if arc.timestamp is not None and arc.timestamp != timestamp+arc.delay:
 			if arc.qid is not None:
@@ -385,7 +385,7 @@ class SchedulerContext:
 					path = arc.path
 					arc.path = None
 					# zap all other paths
-					for a in MMAttrdefs.getattr(arc.dstnode, 'beginlist'):
+					for a in arc.dstnode.GetBeginList():
 						a.path = None
 			else:
 				if node.has_min:
@@ -437,7 +437,7 @@ class SchedulerContext:
 			self.cancelarc(arc, timestamp)
 			parent.updatetimer()
 			return
-		endlist = MMAttrdefs.getattr(node, 'endlist')
+		endlist = node.GetEndList()
 		equal = 0
 		if endlist:
 			found = 0
@@ -741,7 +741,7 @@ class SchedulerContext:
 		if fill != 'remove' and node.GetSchedParent() is None:
 			fill = 'remove'
 		self.cancel_gensr(node)
-		for arc in node.durarcs + MMAttrdefs.getattr(node, 'endlist'):
+		for arc in node.durarcs + node.GetEndList():
 			if arc.qid is not None:
 				if debugevents: print 'cancel',`arc`,parent.timefunc()
 				self.cancelarc(arc, timestamp, not cancelarcs)
@@ -955,7 +955,7 @@ class SchedulerContext:
 		node.set_armedmode(ARM_WAITSTOP)
 		if node.GetTerminator() == 'MEDIA' and \
 		   not node.attrdict.has_key('duration') and \
-		   not node.FilterArcList(node.attrdict.get('endlist',[])):
+		   not node.FilterArcList(node.GetEndList()):
 			self.parent.event(self, (SR.SCHED_STOPPING, node.looping_body_self or node), timestamp)
 
 	#
