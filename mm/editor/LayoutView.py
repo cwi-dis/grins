@@ -36,6 +36,7 @@ class LayoutView(LayoutViewDialog):
 
 	def show(self):
 		if self.is_showing():
+			LayoutViewDialog.show(self)
 			return
 		self.fill()
 		self.toplevel.showstate(self, 1)
