@@ -566,11 +566,13 @@ class EffectiveAnimator:
 		tag = MMAttrdefs.getattr(targnode, 'tag')
 		if tag in ('region', 'transition'):
 			self.__isgrinsnode = 0
-					
+		
 		self.__haschannel  = 1
-		if tag in ('transition',):
+		from MMTypes import interiortypes		
+		if tag in ('transition',) or \
+			(self.__isgrinsnode and targnode.GetType() in interiortypes):
 			self.__haschannel = 0
-
+			
 		# we neeed a temporary instance of the
 		# last animator removed from self.__animators
 		self.__lastanimator = None
@@ -703,7 +705,10 @@ class AnimateContext:
 
 def getregionattr(node, attr):
 	v = None
-	d = node.GetChannel().attrdict
+	if node.GetChannel():
+		d = node.GetChannel().attrdict
+	else:
+		d = node.attrdict
 	if attr in ('position', 'size', 'left', 'top', 'width', 'height','right','bottom'):
 		if d.has_key('base_winoff'):
 			r = d['base_winoff']
@@ -734,7 +739,7 @@ def gettransitionattr(node, attr):
 	return None, attr, ''
 
 def getrenamed(node, attr):
-	return MMAttrdefs.getattr(nodr, attr), attr, MMAttrdefs.getattrtype(attr) 
+	return MMAttrdefs.getattr(node, attr), attr, MMAttrdefs.getattrtype(attr) 
 
 smil_attrs = {'left':(lambda node:getregionattr(node,'left')),
 	'top':(lambda node:getregionattr(node,'top')),
