@@ -39,8 +39,6 @@ class DELETE(_CommandBase):
 #
 class OPEN(_CommandBase):
 	help = 'Open existing document'
-class OPEN_LOCAL_FILE(_CommandBase): # XXXX Temporary, Mac only
-	help = 'Open existing local document'
 class TRACE(_CommandBase):
 	help = 'DEBUG: toggle trace flag'
 class DEBUG(_CommandBase):

@@ -32,46 +32,20 @@ class MainDialog:
 		"""
 
 		import windowinterface
-		# XXXX For now. This is already mostly done by grins.py
-		cmdlist = [
-			usercmd.OPEN(callback=(self.__openURL_callback, ())),
-			usercmd.OPEN_LOCAL_FILE(callback=(self.__openfile_callback, ())),
-			usercmd.TRACE(callback=(self.trace_callback, ())),
-			usercmd.DEBUG(callback=(self.debug_callback, ())),
-			usercmd.CONSOLE(callback=(self.console_callback, ())),
-			usercmd.EXIT(callback=(self.close_callback, ()))]
-		self.__window = w = windowinterface.windowgroup(title, cmdlist, globalgroup=1)
+		if __debug__:
+			self.commandlist.append(
+					usercmd.CONSOLE(callback=(self.console_callback, ())))
+		self.__window = w = windowinterface.windowgroup(title, self.commandlist, globalgroup=1)
 
-	def __openURL_callback(self):
+	def open_callback(self):
 		import windowinterface
 		windowinterface.InputURLDialog('Open location', '',
 					    self.openURL_callback)
 
-	def __openfile_callback(self):
-		import windowinterface
-		windowinterface.FileDialog('Open file', '', '*.smil', '',
-					   self.__filecvt, None, 1)
-
-	def __filecvt(self, filename):
-		import os, MMurl
-		if os.path.isabs(filename):
-			cwd = os.getcwd()
-			if os.path.isdir(filename):
-				dir, file = filename, os.curdir
-			else:
-				dir, file = os.path.split(filename)
-			# XXXX maybe should check that dir gets shorter!
-			while len(dir) > len(cwd):
-				dir, f = os.path.split(dir)
-				file = os.path.join(f, file)
-			if dir == cwd:
-				filename = file
-		self.openURL_callback('file:'+MMurl.pathname2url(filename))
-
 	# Callback functions.  These functions should be supplied by
 	# the user of this class (i.e., the class that inherits from
 	# this class).
-	def open_callback(self, url):
+	def openURL_callback(self, url):
 		pass
 
 	def close_callback(self):

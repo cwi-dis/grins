@@ -15,8 +15,7 @@ UNUSED_COMMANDS=()
 #
 MENUBAR=(
 	('File', (
-		(ENTRY, 'Open URL...', 'U', OPEN),
-		(ENTRY, 'Open...', 'O', OPEN_LOCAL_FILE),
+		(ENTRY, 'Open...', 'O', OPEN),
 		(ENTRY, 'Close Window', 'W', CLOSE_WINDOW),
 		(ENTRY, 'Close Document', None, CLOSE),
 		(SEP,),
@@ -29,9 +28,11 @@ MENUBAR=(
 
 	('Edit', (
 		(ENTRY, 'Undo', 'Z', UNDO),
+		(SEP,),
 		(ENTRY, 'Cut', 'X', CUT),
 		(ENTRY, 'Copy', 'C', COPY),
-		(ENTRY, 'Paste', 'V', PASTE))),
+		(ENTRY, 'Paste', 'V', PASTE),
+		(ENTRY, 'Clear', None, DELETE))),
 		
 	('Play', (
 		(TOGGLE, 'Play', 'P', PLAY),
