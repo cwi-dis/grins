@@ -196,6 +196,7 @@ class DisplayList:
 				DrawLine(dc,(x0, y0, x, y),fg)
 				x0, y0 = x, y
 		elif cmd == 'box':
+			# XXXX should we subtract 1 from right and bottom edges
 			DrawRectangle(dc,entry[1],self._curfg)
 		elif cmd == 'anchor':
 			DrawRectangle(dc,entry[1],self._curfg)
@@ -215,30 +216,43 @@ class DisplayList:
 			cl, ct, cr, cb = entry[1]
 			l, t, w, h = entry[2]
 			r, b = l + w, t + h
-			l = l+1
-			t = t+1
-			r = r-1
-			b = b-1
-			l1 = l - 1
-			t1 = t - 1
-			r1 = r
-			b1 = b
-			ll = l + 2
-			tt = t + 2
-			rr = r - 2
-			bb = b - 3
-			fg = cl 
-			ls = [(l1,t1),(ll,tt),(ll,bb),(l1,b1)]
-			FillPolygon(dc,ls, fg)
-			fg = ct
-			ls = [(l1,t1),(r1,t1),(rr,tt),(ll,tt)]
-			FillPolygon(dc,ls, fg)
-			fg = cr
-			ls = [(r1,t1),(r1,b1),(rr,bb),(rr,tt)]
-			FillPolygon(dc,ls, fg)
-			fg = cb
-			ls = [(l1,b1),(ll,bb),(rr,bb),(r1,b1)]
-			FillPolygon(dc,ls, fg)
+			# l, r, t, b are the corners
+			l3 = l+3
+			t3 = t + 3
+			r3 = r - 3
+			b3 = b - 3
+			# draw left side
+			FillPolygon(dc, [(l,t), (l3,t3), (l3,b3), (l,b)], cl)
+			# draw top side
+			FillPolygon(dc, [(l,t), (r,t), (r3,t3), (l3,t3)], ct)
+			# draw right side
+			FillPolygon(dc, [(r3,t3), (r,t), (r,b), (r3,b3)], cr)
+			# draw bottom side
+			FillPolygon(dc, [(l3,b3), (r3,b3), (r,b), (l,b)], cb)
+##			l = l+1
+##			t = t+1
+##			r = r-1
+##			b = b-1
+##			l1 = l - 1
+##			t1 = t - 1
+##			r1 = r
+##			b1 = b
+##			ll = l + 2
+##			tt = t + 2
+##			rr = r - 2
+##			bb = b - 3
+##			fg = cl 
+##			ls = [(l1,t1),(ll,tt),(ll,bb),(l1,b1)]
+##			FillPolygon(dc,ls, fg)
+##			fg = ct
+##			ls = [(l1,t1),(r1,t1),(rr,tt),(ll,tt)]
+##			FillPolygon(dc,ls, fg)
+##			fg = cr
+##			ls = [(r1,t1),(r1,b1),(rr,bb),(rr,tt)]
+##			FillPolygon(dc,ls, fg)
+##			fg = cb
+##			ls = [(l1,b1),(ll,bb),(rr,bb),(r1,b1)]
+##			FillPolygon(dc,ls, fg)
 		elif cmd == 'diamond':
 			fg = self._fgcolor
 			x, y, w, h = entry[1]
@@ -765,5 +779,5 @@ class _Button:
 	# Returns true if the point is inside the box	
 	def _inside(self, x, y):
 		bx, by, bw, bh = self._coordinates
-		return (bx <= x <= bx+bw and by <= y <= by+bh)
+		return (bx <= x < bx+bw and by <= y < by+bh)
 
