@@ -892,7 +892,9 @@ class MMSyncArc:
 		if self.wallclock is not None or self.channel is not None or self.accesskey is not None:
 			return node.GetRoot()
 
-		assert self.srcnode is not None
+		if self.srcnode is None:
+			# indefinite
+			return node.GetRoot()
 
 		if self.srcnode == 'prev' or \
 		     (self.srcnode == 'syncbase' and
