@@ -1074,6 +1074,10 @@ SOURCE=.\M_SystemColors.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\M_systemtestnames.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\M_tempfile.c
 # End Source File
 # Begin Source File
