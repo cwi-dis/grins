@@ -16,7 +16,8 @@ Priority top-to-bottom.
 	- Add little arrows to those icons.
 
 --> Source editor view.
-	- 
+	- Make it work properly in the player.
+	- Handle import errors well.
 
 Results:
 * Structure view - add small icon capability, arrows and events.

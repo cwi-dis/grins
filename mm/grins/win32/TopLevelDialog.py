@@ -37,7 +37,7 @@ class TopLevelDialog:
 			self.source = None
 			self.window.set_toggle(SOURCEVIEW,0)
 		else:
-			self.source = self.window.textwindow(source)
+			self.source = self.window.textwindow(source, readonly = 1)
 			self.window.set_toggle(SOURCEVIEW,1)
 			
 	def __set_close_sensitive(self, sensitive):

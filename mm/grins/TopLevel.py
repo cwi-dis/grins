@@ -109,6 +109,7 @@ class TopLevel(TopLevelDialog):
 	#
 	def source_callback(self):
 		self.showsource(self.root.source)
+		self.source.setmother(self)
 
 	def open_okcallback(self, filename):
 		if os.path.isabs(filename):

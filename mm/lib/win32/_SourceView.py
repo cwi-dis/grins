@@ -50,6 +50,8 @@ class _SourceView(docview.EditView):
 	def OnClose(self):
 		if self.mother:
 			self.mother.close_callback()
+		else:
+			print "ERROR: You need to call _SourceView.setmother(self)"
 		#if self._closecmdid>0:
 		#	self.GetParent().GetMDIFrame().PostMessage(win32con.WM_COMMAND,self._closecmdid)
 		#else:
