@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- Created with an evaluation copy of GRiNS -->
+<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"
+                      "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
+<smil>
+  <head>
+    <meta name="title" content="root-layout"/>
+    <meta name="generator" content="GRiNS editor 1.0Beta win32 patchlevel 1"/>
+    <layout>
+      <root-layout id="root-layout" width="640" height="480"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="RP-Window-1" title="RP Window 1" width="400" height="400" GRiNS:type="RealPix"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="Audio" width="100" height="100" GRiNS:type="RealAudio"/>
+    </layout>
+  </head>
+  <body>
+    <seq id="Main-Node">
+      <par id="Slideshow">
+        <img id="RealPix-Node" region="RP-Window-1" src="file:///C|/Program%20Files/Oratrix/GRiNS%201.0beta/RPobject2.rp" dur="35s"/>
+        <audio id="Background" region="Audio" src="Assets/Pmusic.ra"/>
+      </par>
+    </seq>
+  </body>
+</smil>
