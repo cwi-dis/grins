@@ -20,7 +20,7 @@ default_settings = {
 	'checkext': 1,			# Guess Mime type based on extension
 	'vertical_structure': 1,	# Orientation of Structure View
 	'no_canvas_resize': 1,	 # Don't resize canvas after window resize (X)
-	'hierarchy_minimum_sizes': 1,	# Leaf nodes drawn using min. size
+	'hierarchy_minimum_sizes': 0,	# Leaf nodes drawn using min. size
 	'structure_name_size': 1,
 	'root_expanded': 0,		# Root node always expanded
 	'recent_documents':[],		# Recently used documents
@@ -52,8 +52,8 @@ default_settings = {
 	'timeline_channeloffcolor': (160, 160, 160), # Darker gray
 	'timeline_nodecolor': (255,255,222),
 	'timeline_altnodecolor': (208, 182, 160),
-	'timeline_nodeoffcolor': (160, 160, 160), # CHANNELOFFCOLOR
-	'timeline_altnodeoffcolor': (200, 200, 200), # BGCOLOR
+	'timeline_nodeoffcolor': (200, 200, 200), # CHANNELOFFCOLOR
+	'timeline_altnodeoffcolor': (160, 160, 160), # BGCOLOR
 	'timeline_arrowcolor': (0, 0, 255), # Blue
 	'timeline_textcolor': (0, 0, 0), # Black
 	'timeline_focuscolor': (255, 0, 0), # Red (for sync arcs only now)
