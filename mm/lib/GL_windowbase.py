@@ -463,7 +463,7 @@ class _Event:
 			win = _window_list[winkey]
 			if win._must_redraw:
 				win._redraw()
-		
+
 	def _trycallback(self):
 		if not self._queue:
 			raise error, 'internal error: event expected'
@@ -534,7 +534,7 @@ class _Event:
 			return event
 		else:
 			return None
-		
+
 	def waitevent(self, timeout = None):
 		if debug: print 'Event.waitevent()'
 		dummy = self._getevent(timeout)
@@ -869,7 +869,7 @@ class _DisplayList:
 		gl.gflush()
 		toplevel._win_lock.release()
 		self._rendered = 1
-		
+
 	#
 	# Color handling
 	#
@@ -2152,7 +2152,7 @@ def showmessage(text, mtype = 'message', grab = 1, callback = None,
 
 class MainDialog(Dialog):
 	pass	# The same, for gl
-	
+
 class _MultChoice(Dialog):
 	def __init__(self, prompt, msg_list, defindex):
 		self._finish = None

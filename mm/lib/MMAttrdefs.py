@@ -302,7 +302,7 @@ def initattrdefs():
 			pass
 		else:
 			return marshal.loads(atcres.data)
-			
+
 	import cmif
 	filename = cmif.findfile(os.path.join('lib', 'Attrdefs'))
 	try:
