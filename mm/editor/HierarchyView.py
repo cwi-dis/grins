@@ -72,8 +72,6 @@ class HierarchyView(HierarchyViewDialog):
 			FINISH_LINK(callback = (self.hyperlinkcall, ())),
 
 			PUSHFOCUS(callback = (self.focuscall, ())),
-			ZOOMHERE(callback = (self.zoomherecall, ())),
-			ZOOMIN(callback = (self.zoomincall, ())),
 
 			CANVAS_HEIGHT(callback = (self.canvascall,
 					(windowinterface.DOUBLE_HEIGHT,))),
@@ -82,6 +80,13 @@ class HierarchyView(HierarchyViewDialog):
 			CANVAS_RESET(callback = (self.canvascall,
 					(windowinterface.RESET_CANVAS,))),
 			THUMBNAIL(callback = (self.thumbnailcall, ())),
+			]
+		self.zoomincommands = [
+			ZOOMIN(callback = (self.zoomincall, ())),
+			ZOOMHERE(callback = (self.zoomherecall, ())),
+			]
+		self.zoomoutcommand = [
+			ZOOMOUT(callback = (self.zoomoutcall, ())),
 			]
 		self.pasteinteriorcommands = [
 			PASTE_UNDER(callback = (self.pasteundercall, ())),
@@ -99,7 +104,6 @@ class HierarchyView(HierarchyViewDialog):
 			NEW_ALT(callback = (self.createaltcall, ())),
 			DELETE(callback = (self.deletecall, ())),
 			CUT(callback = (self.cutcall, ())),
-			ZOOMOUT(callback = (self.zoomoutcall, ())),
 			]
 		import Help
 		if hasattr(Help, 'hashelp') and Help.hashelp():
@@ -124,19 +128,24 @@ class HierarchyView(HierarchyViewDialog):
 	def aftersetfocus(self):
 		import Clipboard
 		commands = self.commands
-		if self.focusnode:	# probably always true...
-			if self.focusnode != self.root:
-				# can't do certain things to the root
-				commands = commands + self.notatrootcommands
-			t, n = Clipboard.getclip()
-			if t == 'node' and n is not None:
-				# can only paste if there's something to paste
-				if self.focusnode.GetType() in MMNode.interiortypes:
-					# can only paste inside interior nodes
-					commands = commands + self.pasteinteriorcommands
-				if self.focusnode != self.root:
-					# can't paste before/after root node
-					commands = commands + self.pastenotatrootcommands
+		if self.focusnode is not self.root:
+			# can't do certain things to the root
+			commands = commands + self.notatrootcommands
+		if self.viewroot is not self.focusnode:
+			# can only zoom in if focus is different from viewroot
+			commands = commands + self.zoomincommands
+		if self.viewroot is not self.root:
+			# can only zoom out if we're not already viewing root
+			commands = commands + self.zoomoutcommand
+		t, n = Clipboard.getclip()
+		if t == 'node' and n is not None:
+			# can only paste if there's something to paste
+			if self.focusnode.GetType() in MMNode.interiortypes:
+				# can only paste inside interior nodes
+				commands = commands + self.pasteinteriorcommands
+			if self.focusnode is not self.root:
+				# can't paste before/after root node
+				commands = commands + self.pastenotatrootcommands
 		self.setcommands(commands)
 
 	def show(self):
@@ -425,8 +434,13 @@ class HierarchyView(HierarchyViewDialog):
 			windowinterface.beep()
 			return
 		path = self.focusnode.GetPath()
-		i = path.index(self.viewroot)
-		self.viewroot = path[i+1]
+		try:
+			i = path.index(self.viewroot)
+		except ValueError:
+			# the focus is on one of the stacked (folded) nodes
+			self.viewroot = self.focusnode
+		else:
+			self.viewroot = path[i+1]
 		self.recalc()
 		self.draw()
 
