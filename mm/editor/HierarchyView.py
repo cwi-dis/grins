@@ -354,7 +354,6 @@ class HierarchyView(HierarchyViewDialog):
 			self.focusnode.GetParent().ExpandParents()
 
 		t0, t1, t2, download, begindelay = self.focusnode.GetTimes('bandwidth')
-		print 't0,t1,t2=', t0, t1, t2 #DBG
 		# XXX Very expensive...
 		if self.timescale in ('focus', 'cfocus'):
 			self.need_resize = 1
@@ -1119,7 +1118,6 @@ class HierarchyView(HierarchyViewDialog):
 			self.focusnode = None
 		else: 
 			self.focusnode = widget.node
-			print "DEBUG: focusnode is a ", self.focusnode 
 			widget.select()
 			self.window.scrollvisible(widget.get_box(), windowinterface.UNIT_PXL)
 		self.aftersetfocus()
@@ -1142,7 +1140,8 @@ class HierarchyView(HierarchyViewDialog):
 	def select(self, x, y):
 		widget = self.scene_graph.get_obj_at((x,y))
 		if widget == None:
-			print "No widget under the mouse."
+			#print "DEBUG: No widget under the mouse."
+			pass
 		if widget==None or widget==self.selected_widget:
 			return
 		else:
@@ -1163,12 +1162,12 @@ class HierarchyView(HierarchyViewDialog):
 
 	# Find the object corresponding to the node
 	def whichobj(self, node):
-		print "DEBUG: you shouldn't call this function."
+		#print "DEBUG: you shouldn't call this function."
 		return node.views['struct_view']
 
 	# Select the given object, deselecting the previous focus
 	def setfocusobj(self, obj):
-		print "DEBUG: you shouldn't call this function."
+		#print "DEBUG: you shouldn't call this function."
 		select_widget(obj)
 		return
 

@@ -91,7 +91,6 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 			self.channeltree = global_factory.createminimalchanneltree(node)
 		else:
 			self.channeltree = global_factory.createchanneltree(node)
-		print "DEBUG: channeltree is: ", self.channeltree
 		self.editmgr = node.context.editmgr
 		self.timescale = TIMESCALE
 
@@ -175,7 +174,6 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 		MMNodeWidget.moveto(self, (l,t,r,b))
 
 	def recalc(self, zoom=1):
-		print "DEBUG: zoom is: ", zoom
 		t = 2
 		l = 2
 		r = 2 + CHANNELWIDTH
@@ -236,7 +234,7 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 					if n.is_hit(coords):
 						return n
 			except KeyError:
-				print "DEBUG: KeyError. Continuing anyway."
+				pass
 		return None
 
 	def select_channel(self, w_channel):
@@ -261,13 +259,11 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 			mmwidget.select()
 
 	def dragging_node(self, tgtcoords, srccoords, mode):
-		print "DEBUG: dragging node; ", tgtcoords, srccoords, mode
 		return windowinterface.DROPEFFECT_NONE
 
 	def dropnode(self, srccoords, tgtcoords):
 		sx,sy = srccoords
 		tx, ty = tgtcoords
-		print "DEBUG: srccoords:", srccoords, "tgt: " , tgtcoords
 
 		# Find the source.
 		if sx < CHANNELWIDTH:	# The source is a channel.
@@ -276,7 +272,6 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 			source = self.get_node_at(srccoords)
 
 		if source is None:
-			print "DEBUG: Er.. nothing was dragged."
 			return 0
 
 		# Find the target.
@@ -291,7 +286,7 @@ class TimeCanvas(MMNodeWidget, GeoDisplayWidget):
 			self.happily_receive_dropped_object(source)
 
 	def happily_receive_dropped_object(self, obj):
-		print "DEBUG: What is a TimeCanvas going to do with a ", obj
+		pass
 
 
 ######################################################################
@@ -487,7 +482,6 @@ class ChannelTree(Widgets.Widget, GeoDisplayWidget):
 		# This is a recursive function that adds not only this channel ,but
 		# also all of it's children.
 		# treedepth is the depth into the channel tree, thus it is proportional to the x coordinate.
-		print "DEBUG: adding channel: ", channel
 		bob = global_factory.createchannel(channel)
 		self.channeltree.append(bob)
 		bob.set_depth(treedepth)
@@ -509,7 +503,6 @@ class ChannelTree(Widgets.Widget, GeoDisplayWidget):
 
 class MinimalChannelTree(ChannelTree):
 	def setup(self):
-		print "Minimal channel tree is chosen."
 		self.mapping = self.timecanvas.node_channel_mapping
 		ChannelTree.setup(self)
 
@@ -645,7 +638,6 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 			return 0
 
 	def get_draggable(self, coords):
-		print "TODO: dragging channels around."
 		return []
 
 	def get_name(self):
@@ -677,7 +669,6 @@ class ChannelWidget(Widgets.Widget, GeoDisplayWidget):
 			return max
 
 	def happily_receive_dropped_object(self, obj):
-		print "DEBUG: Channel recieved an object: ", obj
 		if isinstance(obj, TimeWidget):
 			# It's a node.
 			obj.change_channel(self.name)
@@ -721,7 +712,6 @@ class TimeWidget(MMNodeWidget, GeoDisplayWidget):
 
 	def get_width(self, timescale):
 		times = self.node.GetTimes()
-		#print "DEBUG: Node times are: ", times
 		return (times[1] - times[0])*timescale
 
 	def guess_num_bars(self):
@@ -741,7 +731,6 @@ class TimeWidget(MMNodeWidget, GeoDisplayWidget):
 			self.unselect()
 
 	def happily_receive_dropped_object(self, obj):
-		print "DEBUG: TimeWidget received a dropped object.", obj
 		if isinstance(obj, ChannelWidget):
 			windowinterface.beep()
 		elif isinstance(obj, TimeWidget):
@@ -749,7 +738,7 @@ class TimeWidget(MMNodeWidget, GeoDisplayWidget):
 				windowinterface.beep()
 			else:
 				# Append that object to the end of this one.
-				print "TODO: append objects"
+				pass
 		else:
 			windowinterface.beep()
 
@@ -811,7 +800,6 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 
 
 	def hide(self):
-		print "TODO: hide a node."
 		return
 		# for all of my widgets, call w.hide()
 		self.hidden = 1
@@ -865,7 +853,6 @@ class MMWidget(TimeWidget, GeoDisplayWidget):
 	get_y_end = get_y_start
 
 	def GetChannelName(self):
-		print "TODO: deprecated api used."
 		return self.get_channel()
 
 	def recalc(self):
@@ -922,7 +909,6 @@ class MultiMMWidget(TimeWidget):
 					return i.get_node_at(coords)
 
 	def select(self):
-		print "DEBUG: I've been selected! ", self
 		TimeWidget.select(self)
 		r,g,b = self.color
 		highlight = (r*1.5, g*1.5, b*1.5)

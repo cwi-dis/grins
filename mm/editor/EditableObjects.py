@@ -40,12 +40,12 @@ class EditableMMNode(MMNode.MMNode):
 
 	# Used for the user interface
 	def GetCommands(self):		# returns a list of mapped commands
-		print "TODO: make the command handling a bit more advanced! Returning all possible commands."
-		return self.__get_commands() \
-			+ self.__get_interiorcommands() \
-			+ self.__get_pastenotatrootcommands() \
-			+ self.__get_notatrootcommands() \
-			+ self.__get_structurecommands()
+		commands = self.__get_commands()
+		if not self.IsLeafNode():
+			commands = commands + self.__get_interiorcommands() + self.__get_structurecommands()
+		if not self is self.context.root:
+			commands = commands + self.__get_pastenotatrootcommands() + self.__get_notatrootcommands()
+		return commands
 
 	def IsLeafNode(self):
 		if self.type in MMNode.interiortypes:
@@ -75,11 +75,6 @@ class EditableMMNode(MMNode.MMNode):
 			NEW_UNDER_TEXT(callback = (self.createundercall, ('text',))),
 			NEW_UNDER_HTML(callback = (self.createundercall, ('html',))),
 			]
-	# Requires a position - handle this particular event in the view.
-	#def __get_pasteinteriorcommands(self):
-	#	return [
-	#		PASTE_UNDER(callback = (self.pasteundercall, ())),
-	#		]
 	def __get_pastenotatrootcommands(self):
 		return [
 			PASTE_BEFORE(callback = (self.pastebeforecall, ())),
@@ -142,10 +137,6 @@ class EditableMMNode(MMNode.MMNode):
 		else:
 			em.addnode(self, index, node)
 
-	def _sever_from_parent(self):
-		# Remove self from parent.
-		pass
-
 ######################################################################
 	# Commands from the menus.
 	# Note that the commands should control the EditMgr - they
@@ -193,7 +184,6 @@ class EditableMMNode(MMNode.MMNode):
 		if t == 'node' and n is not None:
 			n.Destroy()
 		Clipboard.setclip('node', self)
-		self._sever_from_parent()
 		em.delnode(self)
 		em.commit()
 
@@ -202,9 +192,7 @@ class EditableMMNode(MMNode.MMNode):
 		t,n = Clipboard.getclip()
 		if t == 'node' and n is not None:
 			n.Destroy()	# Wha ha ha ha. <evil grin>
-		print "DEBUG: Yes, you are copying a node properly."
 		copyme = self.DeepCopy()
-		copyme._sever_from_parent()
 		Clipboard.setclip('node', copyme)
 
 	def createbeforecall(self, chtype=None):
@@ -303,14 +291,12 @@ class EditableMMNode(MMNode.MMNode):
 		# othernode is a leafnode or sub-tree that I'm going to grab and put under me.
 		# index is which of my children it will be.
 		em = self.context.editmgr
-		print "DEBUG: Hang on.."
 		if isinstance(othernode, EditableMMNode) \
 		   and not self.IsAncestorOf(othernode) \
 		   and othernode is not self.context.root \
 		   and othernode not in self.children \
 		   and index < len(self.children) \
 		   and em.transaction():
-			print "DEBUG: Passed. Adding node."
 			em.delnode(othernode)
 			em.addnode(self, index, othernode)
 			em.commit()

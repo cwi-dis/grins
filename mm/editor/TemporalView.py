@@ -1,7 +1,5 @@
 __version__ = "$Id$"
 
-print "DEBUG: using the temporal view."
-
 import windowinterface, WMEVENTS
 import MMNode
 from TemporalViewDialog import TemporalViewDialog
@@ -75,7 +73,6 @@ class TemporalView(TemporalViewDialog):
 		self.draw()
 
 	def hide(self):
-		print "DEBUG: self.hide() called."
 		if not self.is_showing():
 			print "Error: window is not actually showing."
 			return
@@ -112,7 +109,6 @@ class TemporalView(TemporalViewDialog):
 		return self.showing
 
 	def init_scene(self):
-		print "DEBUG: Initting channel view.", self.minimal_channels
 		if self.scene is not None:
 			self.scene.destroy()
 		self.scene = TimeCanvas(self.root, self, minimal_channels = self.minimal_channels)
@@ -147,7 +143,6 @@ class TemporalView(TemporalViewDialog):
 		# (?!) called when this window is saved.
 		if self.window:
 			self.last_geometry = self.geodl.getgeometry()
-			print "DEBUG: last geo is:" , self.last_geometry
 		else:
 			self.last_geometry = (0,0,0,0) # guessing the data type
 			
@@ -196,7 +191,6 @@ class TemporalView(TemporalViewDialog):
 		# Selection management.
 
 	def select_channel(self, channel):
-		print "Channel is: ", channel
 		self.selected_regions.append(channel)
 		self.just_selected = channel
 		self.focusobj = channel.channel
@@ -210,7 +204,6 @@ class TemporalView(TemporalViewDialog):
 
 	def select_node(self, node):
 		# Called back from the scene
-		print "DEBUG: selected node is: " , node
 		assert isinstance(node, MMNodeWidget)
 		self.just_selected = node
 		self.selected_nodes.append(node)
@@ -245,13 +238,10 @@ class TemporalView(TemporalViewDialog):
 		self.destroy()
 
 	def globalfocuschanged(self, focustype, focusobject):
-		print "DEBUG: TemporalView recieved global focus change: ", focustype, focusobject
 		if self.just_selected:
-			print "DEBUG: Just selected that channel."
 			self.just_selected = None
 			return
 		if self.recurse_lock:
-			print "DEBUG: Got a recurse lock."
 			return
 		self.recurse_lock = 1
 		if self.scene:
@@ -265,7 +255,6 @@ class TemporalView(TemporalViewDialog):
 			elif focustype == 'MMChannel':
 				self.scene.select_mmchannel(focusobject)
 				self.just_selected = None
-		print "DEBUG: redrawing.."
 		self.draw()
 		self.recurse_lock = 0
 
@@ -309,21 +298,18 @@ class TemporalView(TemporalViewDialog):
 		pass
 
 	def ev_exit(self, dummy, window, event, params):
-		print "TODO: Exit event."
+		return
 
 	def ev_pastefile(self, dummy, window, event, params):
-		print "Pasting a file!"
+		print "TODO: Pasting a file!"
 
 	def ev_dragfile(self, dummy, window, event, params):
-		print "Drag file!"
 		return windowinterface.DROPEFFECT_MOVE
 
 	def ev_dropfile(self, dummy, window, event, params):
-		print "Dropping a file!"
 		return windowinterface.DROPEFFECT_MOVE
 
 	def ev_dragnode(self, dummy, window, event, params):
-		print '*',
 		return windowinterface.DROPEFFECT_MOVE
 		#x,y,mode, xf, yf= params[0:5]
 		#x,y = self.rel2abs((x,y))
@@ -332,7 +318,6 @@ class TemporalView(TemporalViewDialog):
 		
 
 	def ev_dropnode(self, dummy, window, event, params):
-		print "DEBUG: Splash!"
 		x,y,mode,xf,yf = params[0:5]
 		x,y = self.rel2abs((x,y))
 		xf,yf = self.rel2abs((xf,yf))
@@ -358,5 +343,3 @@ class TemporalView(TemporalViewDialog):
 		elif isinstance(self.selected_nodes[0], TimeWidget) \
 		     and isinstance(self.selected_nodes[0].node, EditableObjects.EditableMMNode):
 			self.selected_nodes[0].node.pasteundercall(-1) # paste at the end ("-1")
-		else:
-			print "DEBUG: selected object is a ", self.selected_nodes[0]
