@@ -481,9 +481,17 @@ class SVGPath:
 					path.lineTo((lastX, lastY))
 
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_ABS:
-					pass
+					path.curveTo((seg._x1,seg._y1),(seg._x2,seg._y2),(seg._x,seg._y))
+					lastC = seg._x2,seg._y2
+					lastX, lastY = seg._x, seg._y
+					points.append((lastX, lastY))
+
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_REL:
-					pass
+					path.curveTo((lastX + seg._x1,lastY + seg._y1),(lastX + seg._x2,lastY + seg._y2),(lastX + seg._x,lastY + seg._y))
+					lastC = lastX + seg._x2,lastY + seg._y2
+					lastX, lastY = lastX + seg._x,lastY + seg._y
+					points.append((lastX, lastY))
+
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_SMOOTH_ABS:
 					pass
 				elif seg._type == PathSeg.SVG_PATHSEG_CURVETO_CUBIC_SMOOTH_REL:
@@ -613,7 +621,14 @@ class Path:
 		self.__ptCoords.append(pt)						
 
 	def curveTo(self, pt1, pt2, pt):
-		pass
+		n = len(self.__ptTypes)
+		pt0 = self.__ptCoords[n - 1]
+		points = self.findCubicPoints(pt0, pt1, pt2, pt)
+		n = len(points)
+		if n==0: return
+		self.moveTo(points[0])
+		for i in range(1,n):
+			self.lineTo(points[i])
 
 	def quadTo(self, pt1, pt2, pt):
 		pass
@@ -626,5 +641,40 @@ class Path:
 
 	def getCoords(self, i):
 		return None
+
+	def findCubicPoints(self, pt1, pt2, pt3, pt4, niters=3):
+		z1 = complex(pt1[0],pt1[1])
+		z2 = complex(pt2[0],pt2[1])
+		z3 = complex(pt3[0],pt3[1])
+		z4 = complex(pt4[0],pt4[1])
+		segs = [(z1, z2, z3, z4),]
+		for i in range(niters):
+			segsp = segs[:]
+			segs = []
+			for e in segsp:
+				if type(e)==type((1,)):
+					lc, pt, rc  = self.subdivide(e)
+					segs.append(lc)
+					segs.append(pt)
+					segs.append(rc)
+				else:
+					segs.append(e)
+		points = [pt1,]
+		n = len(segs)
+		for e in segs:
+			if type(e)!=type((1,)):
+				points.append((e.real,e.imag)) 	
+		points.append(pt4)
+		return points
+
+	def subdivide(self, c):
+		z1,z2,z3,z4 = c
+		z12 = 0.5*(z1 + z2)
+		z23 = 0.5*(z2 + z3)
+		z34 = 0.5*(z3 + z4)
+		z123 = 0.5*(z12 + z23)
+		z234 = 0.5*(z23 + z34)
+		z1234 = 0.5*(z123 + z234)
+		return (z1, z12, z123,z1234),z1234,(z1234,z234,z34,z4)
 
 
