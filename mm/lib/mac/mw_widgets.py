@@ -235,6 +235,9 @@ class SelectWidget:
 	def select(self, item):
 		if item in self.data:
 			item = self.data.index(item)
+		elif type(item) != type(0):
+			print "SelectWidget: select impossible value:", item #DBG
+			item = 0
 		self.control.SetControlValue(item+1)
 		
 ##	def click(self, event=None):
