@@ -33,10 +33,12 @@ error = 'parseskin.error'
 import string				# for whitespace
 def parsegskin(file):
 	dict = {}
+	lineno = 0
 	while 1:
 		line = file.readline()
 		if not line:
 			break
+		lineno = lineno + 1
 
 		# ignore comments and empty lines
 		# and strip off white space
@@ -48,9 +50,9 @@ def parsegskin(file):
 			continue
 
 		# first part is GRiNS command
-		line = line.split(' ', 1)
+		line = line.split(None, 1)
 		if len(line) == 1:
-			raise error, 'syntax error in skin'
+			raise error, 'syntax error in skin on line %d' % lineno
 		cmd, rest = line
 		if cmd == 'image':
 			dict[cmd] = rest.strip()
@@ -81,14 +83,14 @@ def parsegskin(file):
 								else:
 									key = c
 							else:
-								raise error, 'syntax error in skin: only single character allowed for key'
+								raise error, 'syntax error in skin on line %d: only single character allowed for key' % lineno
 							backslash = 0
 						elif c == '\\':
 							backslash = 1
 						elif key is None:
 							key = c
 						else:
-							raise error, 'syntax error in skin: only single character allowed for key'
+							raise error, 'syntax error in skin on line %d: only single character allowed for key' % lineno
 					elif c == '"' or c == "'":
 						quote = c
 					elif c in string.whitespace:
@@ -109,18 +111,18 @@ def parsegskin(file):
 							else:
 								key = c
 						else:
-							raise error, 'syntax error in skin: only single character allowed for key'
+							raise error, 'syntax error in skin on line %d: only single character allowed for key' % lineno
 						backslash = 0
 					elif c == '\\':
 						backslash = 1
 					elif key is None:
 						key = c
 					else:
-						raise error, 'syntax error in skin: only single character allowed for key'
+						raise error, 'syntax error in skin on line %d: only single character allowed for key' % lineno
 				if key is None:
-					raise error, 'syntax error in skin: no key specified'
+					raise error, 'syntax error in skin on line %d: no key specified' % lineno
 				rest = ''.join(rest) # reassemble string
-			coords = rest.split(' ')
+			coords = rest.split()
 			if cmd == 'display':
 				# display area is always rectangular
 				shape = 'rect'
@@ -130,13 +132,13 @@ def parsegskin(file):
 			try:
 				coords = map(lambda v: int(v, 0), coords)
 			except ValueError:
-				raise error, 'syntax error in skin'
+				raise error, 'syntax error in skin on line %d' % lineno
 			if shape == 'poly' and coords[:2] == coords[-2:]:
 				del coords[-2:]
 			if (shape != 'rect' or len(coords) != 4) and \
 			   (shape != 'circle' or len(coords) != 3) and \
 			   (shape != 'poly' or len(coords) < 6 or len(coords) % 2 != 0):
-				raise error, 'syntax error in skin'
+				raise error, 'syntax error in skin on line %d' % lineno
 			if cmd == 'key':
 				dict[cmd] = shape, coords, key
 			else:
