@@ -296,6 +296,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.mkregioncommandlist()
 		self.mkviewportcommandlist()
 		self.mknositemcommandlist()
+		self.mkmultisitemcommandlist()
 		
 		# dictionary of widgets used in this view
 		# basicly, this view is composed of 
@@ -358,7 +359,16 @@ class LayoutView2(LayoutViewDialog2):
 				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
 				]
 		else:
-			self.commandMediaList = []
+			self.commandNoSItemList = []
+
+	# available command when several items are selected
+	def mkmultisitemcommandlist(self):
+		if features.CUSTOM_REGIONS in features.feature_set:
+			self.commandMultiSItemList = [
+				NEW_TOPLAYOUT(callback = (self.onNewViewport, ())),
+				]
+		else:
+			self.commandMultiSItemList = []		
 		
 	def show(self):
 		if self.is_showing():
@@ -500,6 +510,18 @@ class LayoutView2(LayoutViewDialog2):
 		for id, widget in self.widgetList.items():
 			widget.selectNodeList([focusobject])
 
+	def focusOnList(self, focusobject):
+		# update command list
+		self.setcommandlist(self.commandMultiSItemList)
+
+		list = []
+		for type, object in focusobject.items():
+			list.append(object)
+			
+		# update widgets
+		for id, widget in self.widgetList.items():
+			widget.selectNodeList(list)
+		
 	def focusOnUnknown(self, focusobject):
 		# update command list
 		self.setcommandlist(self.commandNoSItemList)
@@ -566,6 +588,9 @@ class LayoutView2(LayoutViewDialog2):
 		elif self.currentFocusType == 'MMChannel':
 			if debug: print 'LayoutView.updateFocus: focus on MMChannel'
 			self.focusOnMMChannel(self.currentFocus)
+		elif self.currentFocusType == 'List':
+			if debug: print 'LayoutView.updateFocus: focus on List'
+			self.focusOnList(self.currentFocus)
 		else:
 			if debug: print 'LayoutView.updateFocus: unknow focus type'
 			self.focusOnUnknown(self.currentFocus)
@@ -595,10 +620,33 @@ class LayoutView2(LayoutViewDialog2):
 		self.currentNodeRefSelected = focusobject
 		self.updateFocus()
 		
-	def setglobalfocus(self, focustype, focusobject):
-		if debug: print 'LayoutView.globalfocuschanged focustype=',focustype,' focusobject=',focusobject
+	def setglobalfocus(self, list):
+		if debug: print 'LayoutView.setglobalfocus list=',list
+		
+		focusobject = None
+		if len(list) == 0:
+			# no item selected
+			self.editmgr.setglobalfocus(None, None)
+		elif len(list) == 1:
+			# simple selection
+			focusobject = nodeRef = list[0]
+			nodeType = self.getNodeType(nodeRef)
+			if nodeType in (TYPE_VIEWPORT, TYPE_REGION):
+				self.editmgr.setglobalfocus('MMChannel', nodeRef)
+			elif nodeType  == TYPE_MEDIA:
+				self.editmgr.setglobalfocus('MMNode', nodeRef)
+		else:
+			# multi-selection, make a list compatible with the global focus
+			focusobject = []
+			for nodeRef in list.items():
+				nodeType = self.getNodeType(nodeRef)
+				if nodeType in (TYPE_VIEWPORT, TYPE_REGION):
+					focusobject.append(('MMChannel', nodeRef))
+				elif nodeType  == TYPE_MEDIA:
+					focusobject.append(('MMNode', nodeRef))
+			self.editmgr.setglobalfocus('List', focusobject)
+			
 		self.myfocus = focusobject
-		self.editmgr.setglobalfocus(focustype, focusobject)
 		
 	def playerstatechanged(self, type, parameters):
 		pass
@@ -934,7 +982,7 @@ class LayoutView2(LayoutViewDialog2):
 
 	def __regionNamedCallback(self, name):
 		self.applyNewRegion(self.__parentRef, name)
-		self.setglobalfocus('MMChannel', self.nameToNodeRef(name))
+		self.setglobalfocus([self.nameToNodeRef(name)])
 		self.updateFocus()
 
 	def newViewport(self):
@@ -951,7 +999,7 @@ class LayoutView2(LayoutViewDialog2):
 
 	def __viewportNamedCallback(self, name):
 		self.applyNewViewport(name)
-		self.setglobalfocus('MMChannel', self.nameToNodeRef(name))
+		self.setglobalfocus([self.nameToNodeRef(name)])
 		self.updateFocus()
 
 	def delRegion(self, regionRef):
@@ -962,7 +1010,7 @@ class LayoutView2(LayoutViewDialog2):
 #			return
 		
 		parentRef = self.getParentNodeRef(regionRef, TYPE_REGION)
-		self.setglobalfocus('MMChannel',parentRef)
+		self.setglobalfocus([parentRef])
 		self.applyDelRegion(regionRef)
 
 	# checking if the region/viewport node contains any sub-region or media
@@ -992,7 +1040,7 @@ class LayoutView2(LayoutViewDialog2):
 		currentViewportList = self.getViewportRefList()
 		for viewportRef in currentViewportList:
 			if viewportRef != nodeRef:
-				self.setglobalfocus('MMChannel', viewportRef)
+				self.setglobalfocus([viewportRef])
 				break
 		
 		self.applyDelViewport(nodeRef)
@@ -1008,18 +1056,18 @@ class LayoutView2(LayoutViewDialog2):
 	
 	def onSelect(self, nodeRefList):
 		if len(nodeRefList) == 0:
-			self.setglobalfocus(None,None)
+			self.setglobalfocus([])
 		else:		
 			nodeRef = nodeRefList[0]
 			self.currentNodeRefSelected = nodeRef
 			nodeType = self.getNodeType(nodeRef)
 
 			if nodeType == TYPE_VIEWPORT:
-				self.setglobalfocus('MMChannel',nodeRef)
+				self.setglobalfocus([nodeRef])
 			elif nodeType == TYPE_REGION:
-				self.setglobalfocus('MMChannel',nodeRef)
+				self.setglobalfocus([nodeRef])
 			else:
-				self.setglobalfocus('MMNode',nodeRef)
+				self.setglobalfocus([nodeRef])
 
 		self.updateFocus()	
 #
