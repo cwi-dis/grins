@@ -1937,6 +1937,13 @@ BEGIN
                     ES_WANTRETURN | ES_NUMBER
 END
 
+IDD_EDITATTR_EMPTY DIALOG DISCARDABLE  0, 0, 300, 164
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "No properties to display",IDC_STATIC,85,78,130,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

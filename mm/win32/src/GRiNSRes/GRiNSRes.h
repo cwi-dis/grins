@@ -189,6 +189,7 @@
 #define IDD_LAYOUT_T2                   393
 #define IDI_ZOOMIN                      393
 #define IDI_ZOOMOUT                     394
+#define IDD_EDITATTR_EMPTY              394
 #define IDC_SPLASH                      1001
 #define IDC_EXPLANATION                 1002
 #define IDC_LAYOUT_CHANNELS             1003
@@ -551,7 +552,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        394
+#define _APS_NEXT_RESOURCE_VALUE        395
 #define _APS_NEXT_COMMAND_VALUE         32877
 #define _APS_NEXT_CONTROL_VALUE         1328
 #define _APS_NEXT_SYMED_VALUE           104
