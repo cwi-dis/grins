@@ -7,7 +7,8 @@ from types import *
 import math
 
 [_X, _Y, _WIDTH, _HEIGHT] = range(4)
-_def_useGadget = 1
+
+_def_useGadget = X_windowbase._def_useGadget
 
 _rb_message = """\
 Use left mouse button to draw a box.
@@ -1247,6 +1248,7 @@ class PulldownMenu(_Widget):
 			cascade = Xm.CascadeButton
 		menubar = parent._form.CreateMenuBar(name, attrs)
 		buttons = []
+		widgets = []
 		for item, list in menulist:
 			menu = menubar.CreatePulldownMenu('windowMenu',
 				{'colormap': toplevel._default_colormap,
@@ -1256,12 +1258,15 @@ class PulldownMenu(_Widget):
 				'windowMenuButton', cascade,
 				{'labelString': item,
 				 'subMenuId': menu})
+			widgets.append({})
 			X_windowbase._create_menu(menu, list,
 						  toplevel._default_visual,
-						  toplevel._default_colormap)
+						  toplevel._default_colormap,
+						  widgets = widgets[-1])
 			buttons.append(button)
 		_Widget.__init__(self, parent, menubar)
 		self._buttons = buttons
+		self._widgets = widgets
 
 	def __repr__(self):
 		return '<PulldownMenu instance at %x>' % id(self)
@@ -1278,13 +1283,32 @@ class PulldownMenu(_Widget):
 				{'colormap': toplevel._default_colormap,
 				 'visual': toplevel._default_visual,
 				 'depth': toplevel._default_visual.depth})
+		widgets = {}
 		X_windowbase._create_menu(menu, list,
 					  toplevel._default_visual,
-					  toplevel._default_colormap)
+					  toplevel._default_colormap,
+					  widgets = widgets)
+		self._widgets[pos] = widgets
 		omenu = button.subMenuId
 		button.subMenuId = menu
 		omenu.DestroyWidget()
 
+	def setmenuentry(self, pos, path, onoff = None, sensitive = None):
+		if not 0 <= pos < len(self._buttons):
+			raise error, 'position out of range'
+		dict = self._widgets[pos]
+		for p in path:
+			w = dict.get(p, (None, None))[0]
+			while w is None:
+				dict = dict.get('More', (None, None))[1]
+				if dict is None:
+					raise error, 'unknown menu entry'
+				w = dict.get(p, (None, None))[0]
+		if onoff is not None:
+			w.set = onoff
+		if sensitive is not None:
+			w.sensitive = sensitive
+		
 	def _destroy(self, widget, value, call_data):
 		_Widget._destroy(self, widget, value, call_data)
 		del self._buttons
@@ -1771,10 +1795,13 @@ class ButtonRow(_Widget):
 					'buttonSeparator', separator, attrs)
 				continue
 			btype = buttontype
+			initial = 0
 			if type(entry) is TupleType:
 				label, callback = entry[:2]
 				if len(entry) > 2:
 					btype = entry[2]
+					if len(entry) > 3:
+						initial = entry[3]
 			else:
 				label, callback = entry, None
 			if type(callback) is ListType:
@@ -1801,11 +1828,13 @@ class ButtonRow(_Widget):
 				callbackname = 'activateCallback'
 			elif btype[0] == 't': # toggle button
 				gadget = togglebutton
-				battrs = {'indicatorType': Xmd.N_OF_MANY}
+				battrs = {'indicatorType': Xmd.N_OF_MANY,
+					  'set': initial}
 				callbackname = 'valueChangedCallback'
 			elif btype[0] == 'r': # radio button
 				gadget = togglebutton
-				battrs = {'indicatorType': Xmd.ONE_OF_MANY}
+				battrs = {'indicatorType': Xmd.ONE_OF_MANY,
+					  'set': initial}
 				callbackname = 'valueChangedCallback'
 			else:
 				raise error, 'bad button type'
