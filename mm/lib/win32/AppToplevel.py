@@ -30,7 +30,7 @@ def beep():
 
 ################
 # temporary test
-ENABLE_CML_AUTOMATION = 1
+ENABLE_CML_AUTOMATION = 0
 
 import usercmd, usercmdui
 
