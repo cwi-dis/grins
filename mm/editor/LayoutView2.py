@@ -752,7 +752,28 @@ class LayoutView2(LayoutViewDialog2):
 			region = self.__channelTreeRef.getparent(nodeRef)
 			return region
 		return None
-					
+
+	# return the name showed to the user according to the node 
+	def getShowedName(self, nodeRef, nodeType=None):
+		if nodeType == None:
+			nodeType = self.getNodeType(nodeRef)
+			
+		if nodeType == TYPE_MEDIA:
+			name = nodeRef.attrdict.get('name')
+		elif nodeType == TYPE_REGION:
+			# show first the region name
+			# if the region name doesn't exist, the the id
+			name = nodeRef.GetAttrDef('regionName',None)
+			if name == None:
+				name = nodeRef.name
+		elif nodeType == TYPE_VIEWPORT:
+			name = nodeRef.name
+		else:
+			# unknown type
+			name = ''
+			
+		return name
+			
 	def selectBgColor(self, nodeRef):
 		nodeType = self.getNodeType(nodeRef)
 		if nodeType != TYPE_MEDIA:
@@ -1668,20 +1689,20 @@ class TreeWidget(Widget):
 	
 	def appendMedia(self, pNodeRef, nodeRef):
 		mediaType = nodeRef.GetChannelType()
-		name = nodeRef.attrdict.get('name')
-		if name == None:
-			name=''
+		name = self._context.getShowedName(nodeRef, TYPE_MEDIA)
 		ret = self.treeCtrl.insertNode(self.nodeRefToNodeTreeCtrlId[pNodeRef], name, mediaType, mediaType)
 		self.nodeRefToNodeTreeCtrlId[nodeRef] = ret
 		self.nodeTreeCtrlIdToNodeRef[ret] = nodeRef
 
 	def appendViewport(self, nodeRef):
-		ret = self.treeCtrl.insertNode(0, nodeRef.name, 'viewport', 'viewport')
+		name = self._context.getShowedName(nodeRef, TYPE_VIEWPORT)
+		ret = self.treeCtrl.insertNode(0, name, 'viewport', 'viewport')
 		self.nodeRefToNodeTreeCtrlId[nodeRef] = ret
 		self.nodeTreeCtrlIdToNodeRef[ret] = nodeRef
 			
 	def appendRegion(self, pNodeRef, nodeRef):
-		ret = self.treeCtrl.insertNode(self.nodeRefToNodeTreeCtrlId[pNodeRef], nodeRef.name, 'region', 'region')
+		name = self._context.getShowedName(nodeRef, TYPE_REGION)
+		ret = self.treeCtrl.insertNode(self.nodeRefToNodeTreeCtrlId[pNodeRef], name, 'region', 'region')
 		self.nodeRefToNodeTreeCtrlId[nodeRef] = ret
 		self.nodeTreeCtrlIdToNodeRef[ret] = nodeRef
 
@@ -1689,13 +1710,13 @@ class TreeWidget(Widget):
 		nodeType = self._context.getNodeType(nodeRef)
 		if nodeType == TYPE_MEDIA:
 			type = nodeRef.GetChannelType()
-			name = nodeRef.attrdict.get('name')
+			name = self._context.getShowedName(nodeRef, TYPE_MEDIA)
 		elif nodeType == TYPE_REGION:
 			type = 'region'
-			name = nodeRef.name
+			name = self._context.getShowedName(nodeRef, TYPE_REGION)
 		else:
 			type = 'viewport'
-			name = nodeRef.name
+			name = self._context.getShowedName(nodeRef, TYPE_VIEWPORT)
 		if name == None:
 			name=''
 		self.treeCtrl.updateNode(self.nodeRefToNodeTreeCtrlId[nodeRef], name, type, type)
@@ -1807,7 +1828,8 @@ class PreviousWidget(Widget):
 
 	def addRegion(self, parentRef, regionRef):
 		pNode = self.getNode(parentRef)
-		self._nodeRefToNodeTree[regionRef] = regionNode = Region(regionRef.name, regionRef, self)
+		name = self._context.getShowedName(regionRef)
+		self._nodeRefToNodeTree[regionRef] = regionNode = Region(name, regionRef, self)
 		pNode.addNode(regionNode)
 
 		if self._context.showAllRegions:
@@ -1818,7 +1840,8 @@ class PreviousWidget(Widget):
 			self.appendRegionNodeList([regionRef])
 
 	def addViewport(self, viewportRef):
-		viewportNode = Viewport(viewportRef.name, viewportRef, self)
+		name = self._context.getShowedName(viewportRef)
+		viewportNode = Viewport(name, viewportRef, self)
 		self._nodeRefToNodeTree[viewportRef] = viewportNode
 
 	def removeRegion(self, regionRef):
