@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<smil xmlns="http://www.w3.org/2000/SMIL20/CR/Language" xmlns:GRiNS="http://www.oratrix.com/" xmlns:rn="http://features.real.com/2001/SMIL20/Extensions">
+  <head>
+    <meta name="title" content=" SMIL "/>
+    <meta name="generator" content="GRiNS Pro for SMIL 2.0, v2.0 alpha win32 build 87"/>
+    <layout>
+      <root-layout id="SMIL-" title=" SMIL " backgroundColor="black" width="200" height="240" GRiNS:collapsed="false"/>
+      <region id="unnamed-region" title="unnamed region" left="0" width="200" top="0" height="240" GRiNS:collapsed="true"/>
+    </layout>
+    <transition id="Push" type="pushWipe"/>
+    <GRiNS:viewinfo view="structure" top="0" left="0" width="640" height="512"/>
+    <GRiNS:viewinfo view="transitions" top="22" left="22" width="179" height="205"/>
+  </head>
+  <body>
+    <video region="unnamed-region" src="Sample.mov" transIn="Push"/>
+  </body>
+</smil>
