@@ -52,21 +52,9 @@ verbose = 1
 # Parse a file containing attribute definitions.
 #
 def readattrdefs(fp, filename):
-	filename_com = filename + '.atc'
-	try:
-		fpc = open(filename_com, 'rb')
-		sf = os.stat(filename)
-		sfc = os.fstat(fpc.fileno())
-		if sf[ST_MTIME] < sfc[ST_MTIME]:
-		    if verbose:
-			print 'Using compiled attributes file', filename_com
-		    return marshal.load(fpc)
-		print 'Compiled attributes file', filename_com, 'out of date'
-	except (os.error, IOError), msg:
-		print '(No compiled attribute file', filename_com + ')'
-		print msg
+	filename_py = filename + '.py'
 	if verbose:
-	    print 'Reading attributes from', filename, '...'
+		print 'Reading attributes from', filename, '...'
 	parser = MMParser.MMParser(fp, None)	# Note -- no context!
 	dict = {}
 	#
@@ -114,10 +102,14 @@ def readattrdefs(fp, filename):
 		raise MTypeError, msg
 	#
 	try:
-		fpc = open(filename_com, 'wb')
+		sf = os.stat(filename)
+		fpc = open(filename_py, 'w')
+		import pprint
 		if verbose:
-		    print 'Writing compiled attributes to', filename_com
-		marshal.dump(dict, fpc)
+		    print 'Writing compiled attributes to', filename_py
+		fpc.write('mtime = %d\nAttrdefs = ' % sf[ST_MTIME])
+		fpc.write(pprint.pformat(dict))
+		fpc.write('\n')
 		fpc.close()
 	except IOError, msg:
 		print 'Can\'t write compiled attributes to', filename_com
@@ -312,13 +304,21 @@ def initattrdefs():
 			return marshal.loads(atcres.data)
 			
 	filename = 'Attrdefs'
+	import cmif
+	filename = cmif.findfile(os.path.join('lib', filename))
 	try:
 		fp = open(filename, 'r')
-		print '(Using local Attrdefs file)'
 	except IOError:
-		import cmif
-		filename = cmif.findfile(os.path.join('lib', 'Attrdefs'))
-		fp = open(filename, 'r')
+		fp = None
+	try:
+		import Attrdefs
+		if fp is None:
+			return Attrdefs.Attrdefs
+		sf = os.stat(filename)
+		if Attrdefs.mtime == sf[ST_MTIME]:
+			return Attrdefs.Attrdefs
+	except ImportError:
+		pass
 	attrdefs = readattrdefs(fp, filename)
 	fp.close()
 	return attrdefs
