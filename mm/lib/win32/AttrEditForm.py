@@ -603,100 +603,16 @@ class AttrCtrl:
 	def getcurrent(self):
 		return self._attr.getcurrent()
 
-	# temp stuff not safe
-	def atoit(self,str):
-		if not str: return ()
-		l=string.split(str, ' ')
-		n=[]
-		for e in l:
-			if e: n.append(string.atoi(e))
-		if len(n)==1:
-			return (n[0],)
-		elif len(n)==2:
-			return (n[0],n[1])
-		elif len(n)==3:
-			return (n[0],n[1],n[2])
-		elif len(n)==4:
-			return (n[0],n[1],n[2],n[3])
-		return ()
+# temp stuff not safe
+def atoft(str):
+	# convert string into tuple of floats
+	return tuple(map(string.atof, string.split(str)))
 
-	def atoft(self,str):
-		if not str: return ()
-		l=string.split(str, ' ')
-		n=[]
-		for e in l:
-			if e: n.append(string.atof(e))
-		if len(n)==1:
-			return (n[0],)
-		elif len(n)==2:
-			return (n[0],n[1])
-		elif len(n)==3:
-			return (n[0],n[1],n[2])
-		elif len(n)==4:
-			return (n[0],n[1],n[2],n[3])
-		return ()
-
-	def emptytuple(self,n):
-		if n==1:
-			return ('',)
-		elif n==2:
-			return ('','')
-		elif n==3:
-			return ('','','')
-		elif n==4:
-			return ('','','','')
-		else:
-			return ()
-
-	def ittoat(self,t,n):
-		if not t:
-			return self.emptytuple(n)
-		if len(t)==1 and n==1:
-			return '%d' % t[0]
-		elif len(t)==2 and n==2:
-			return '%d' % t[0],'%d' % t[1]
-		elif len(t)==3 and n==3:
-			return '%d' % t[0],'%d' % t[1],'%d' % t[2]
-		elif len(t)==4 and n==4:
-			return '%d' % t[0],'%d' % t[1],'%d' % t[2],'%d' % t[3]
-		return self.emptytuple(n)
-
-	def rs(self,f,prec=-1):
-		if prec<0:
-			cf=int(100.0*f+0.5)
-			cfr=cf%100
-			if cfr==0: prec=0
-			else: prec=2
-		sf='%' + ('.%df' % prec)
-		s=sf % f
-		return s
-			
-	def fttoat(self,t,n,prec=-1):	
-		if not t:
-			return self.emptytuple(n)
-		if len(t)==1 and n==1:
-			return self.rs(t[0],prec)
-		elif len(t)==2 and n==2:
-			return self.rs(t[0],prec),self.rs(t[1],prec)
-		elif len(t)==3 and n==3:
-			return self.rs(t[0],prec),self.rs(t[1],prec),self.rs(t[2],prec)
-		elif len(t)==4 and n==4:
-			return self.rs(t[0],prec),self.rs(t[1],prec),self.rs(t[2],prec),self.rs(t[3],prec)
-		return self.emptytuple(n)
-
-	def fttoa(self,t,n,prec=-1):
-		if not t:
-			return ''
-		if len(t)==1 and n==1:
-			return self.rs(t[0],prec)
-		elif len(t)==2 and n==2:
-			return self.rs(t[0],prec)+ ' ' + self.rs(t[1],prec)
-		elif len(t)==3 and n==3:
-			return self.rs(t[0],prec)+ ' ' +self.rs(t[1],prec)+ ' ' +self.rs(t[2],prec)
-		elif len(t)==4 and n==4:
-			return self.rs(t[0],prec)+ ' ' +self.rs(t[1],prec)+ ' ' +self.rs(t[2],prec)+ ' ' +self.rs(t[3],prec)
+def fttoa(t,n,prec):
+	if not t or len(t) != n:
 		return ''
-		
+	return ((' %%.%df' % prec) * n) % t
+
 ##################################
 class OptionsCtrl(AttrCtrl):
 	def __init__(self,wnd,attr,resid):
@@ -977,18 +893,35 @@ class TupleCtrl(AttrCtrl):
 class IntTupleCtrl(TupleCtrl):
 	def setvalue(self, val):
 		if self._initctrl:
-			t=self.atoit(val)
-			st=self.ittoat(t,self._nedit)
+			st = string.split(val)
+			# XXX could check that len(st) == self._nedit
 			for i in range(self._nedit):
-				self._attrval[i].settext(st[i])
+				# this checks that the strings are all ints
+				s = '%d' % string.atoi(st[i])
+				self._attrval[i].settext(s)
 
 class FloatTupleCtrl(TupleCtrl):
 	def setvalue(self, val):
 		if self._initctrl:
-			t=self.atoft(val)
-			st=self.fttoat(t,self._nedit)
+			st = string.split(val)
+			if len(st) != self._nedit:
+				st = ('',) * self._nedit
+			# XXX could check that len(st) == self._nedit
 			for i in range(self._nedit):
-				self._attrval[i].settext(st[i])
+				# this checks that the strings are all floats
+				# and also normalizes them
+				if st[i]:
+					try:
+						s = '%.2f' % string.atof(st[i])
+					except string.atof_error:
+						s = ''
+					else:
+						if s[-3:] == '.00':
+							# remove trailing .00
+							s = s[:-3]
+				else:
+					s = st[i]
+				self._attrval[i].settext(s)
 	
 ##################################
 class AttrPage(dialog.PropertyPage):
@@ -1120,10 +1053,11 @@ class SingleAttrPage(AttrPage):
 
 ##################################
 class LayoutScale:
-	def __init__(self, wnd, xs, ys):
+	def __init__(self, wnd, xs, ys, offset = (0,0)):
 		self._wnd=wnd
 		self._xscale=xs
 		self._yscale=ys
+		self._offset = offset
 		
 	# rc is a win32mu.Rect in pixels
 	# return coord string in units
@@ -1131,7 +1065,11 @@ class LayoutScale:
 		str_units=''
 		if units == UNIT_PXL:
 			scaledrc=self.scaleCoord(rc)
-			s='(%.0f,%.0f,%.0f,%.0f)' %  scaledrc.tuple_ps()
+			box = scaledrc.tuple_ps()
+			box = box[0]-self._offset[0], \
+			      box[1]-self._offset[1], \
+			      box[2], box[3]
+			s='(%.0f,%.0f,%.0f,%.0f)' %  box
 		elif units == UNIT_SCREEN:
 			s='(%.2f,%.2f,%.2f,%.2f)' %  self._wnd.inverse_coordinates(rc.tuple_ps(),units=units)
 		else:
@@ -1208,6 +1146,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 		self._units=self._form.getunits()
 		self._layoutctrl=None
 		self._isintscale=1
+		self._boxoff = 0, 0
 			
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
@@ -1244,7 +1183,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 	
 	def init_tk(self, v):
 		v.drawTk.SetLayoutMode(0)
-		self._scale=LayoutScale(v,self._xscale,self._yscale)
+		self._scale=LayoutScale(v,self._xscale,self._yscale,self._boxoff)
 		v.drawTk.SetScale(self._scale)
 
 		(x,y,w,h),bunits=self._form.GetBBox()
@@ -1335,7 +1274,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 			box=None
 		else:
 			lc=self.getctrl('base_winoff')
-			box=lc.atoft(val)
+			box=atoft(val)
 		return box
 		
 	def islayoutattr(self,attr):
@@ -1356,7 +1295,7 @@ class LayoutPage(AttrPage,cmifwnd._CmifWnd):
 				if self._units==UNIT_PXL:prec=0
 				elif self._units==UNIT_SCREEN:prec=1
 				else: prec=2
-				a=lc.fttoa(box,4,prec)
+				a=fttoa(box,4,prec)
 				lc.setvalue(a)
 
 
@@ -1365,6 +1304,9 @@ class PosSizeLayoutPage(LayoutPage):
 		LayoutPage.__init__(self,form)
 		self._xy=None
 		self._wh=None
+		ch = form._node.parent.GetChannel()
+		if ch.has_key('base_window'):
+			self._boxoff = ch.get('base_winoff', (0,0,0,0))[:2]
 
 	def getcurrentbox(self):
 		self._xy=self.getctrl('subregionxy')
@@ -1374,7 +1316,8 @@ class PosSizeLayoutPage(LayoutPage):
 		swh=self._wh.getcurrent()
 		if not swh:swh='0 0'
 		val = sxy + ' ' + swh
-		box=self._xy.atoft(val)
+		box=atoft(val)
+		box = box[0]+self._boxoff[0], box[1]+self._boxoff[1], box[2], box[3]
 		box=self._scale.layoutbox(box,self._units)
 		return box
 
@@ -1384,7 +1327,9 @@ class PosSizeLayoutPage(LayoutPage):
 		swh=self._wh.getvalue()
 		if not swh:swh='0 0'
 		val= sxy + ' ' + swh
-		box=self._xy.atoft(val)
+		box=atoft(val)
+		x, y = self._boxoff
+		box = box[0]+x, box[1]+y, box[2], box[3]
 		box=self._scale.layoutbox(box,self._units)
 		self.create_box(box)
 
@@ -1398,11 +1343,13 @@ class PosSizeLayoutPage(LayoutPage):
 				self._wh.setvalue('')
 			else:	
 				box=self._scale.orgbox(box,self._units)
+				x, y = self._boxoff
+				box = box[0]-x, box[1]-y, box[2], box[3]
 				if self._units==UNIT_PXL:prec=0
 				elif self._units==UNIT_SCREEN:prec=1
 				else: prec=2
-				axy=self._xy.fttoa(box[:2],2,prec)
-				awh=self._wh.fttoa(box[2:],2,prec)
+				axy=fttoa(box[:2],2,prec)
+				awh=fttoa(box[2:],2,prec)
 				self._xy.setvalue(axy)
 				self._wh.setvalue(awh)
 
