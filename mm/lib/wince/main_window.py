@@ -27,6 +27,8 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		# wince menubar height
 		self._menu_height = 26
 		self._splash = None
+		self._splash_pos = 0, 0
+		self._status_msg = 'Looading modules ...'
 
 	def __getattr__(self, attr):
 		if attr != '__dict__':
@@ -218,6 +220,10 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 			#l, t, r, b = self.GetClientRect()
 			#rc = l, t, r, b - self._menu_height
 			#dc.DrawText('Oratrix GRiNS Player', rc)
+			if self._status_msg:
+				rc = self.getStatusRect()
+				dc.DrawText(self._status_msg, rc)
+				
 		else:
 			# blit offscreen bmp
 			buf = self._viewport.getBackBuffer()
@@ -266,3 +272,13 @@ class MainWnd(usercmdinterface.UserCmdInterface):
 		dc.BitBlt(self._splash_pos, self._splash.GetSize(), dcc, (0, 0), wincon.SRCCOPY)
 		dcc.SelectObject(bmp)
 		dcc.DeleteDC()
+	
+	def getStatusRect(self):
+		l, t, r, b = self.GetClientRect()
+		y = self._splash_pos[1] + self._splash.GetSize()[1] + 16
+		return l, y, r, y+24
+		
+	def setStatusMsg(self, msg):
+		self._status_msg = msg
+		rc = self.getStatusRect()
+		self.InvalidateRect(rc)
