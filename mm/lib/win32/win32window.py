@@ -1682,7 +1682,7 @@ class Region(Window):
 				# find src clip ltrb given the destination clip
 				lsc, tsc, rsc, bsc =  self._getsrcclip((ld, td, rd, bd), (ls, ts, rs, bs), (ldc, tdc, rdc, bdc))
 
-				if fit == -4:
+				if self._fit == -4:
 					if ws>w: 
 						wnd.setdefaultcursor('draghand')
 					if hs>h: 
