@@ -1106,18 +1106,22 @@ class NodeBox(GO):
 
 	def lock(self):
 		if not self.locked:
+			self.mother.init_display()
 			self.deselect()
 			if self.mother.lockednode:
 				self.mother.lockednode.unlock()
 			self.locked = 1
 			self.mother.lockednode = self
 			self.drawfocus()
+			self.mother.render()
 
 	def unlock(self):
 		if self.locked:
+			self.mother.initdisplay()
 			self.locked = 0
 			self.mother.lockednode = None
 			self.drawfocus()
+			self.mother.render()
 
 	def select(self):
 		self.unlock()
