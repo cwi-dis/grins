@@ -278,12 +278,26 @@ class HierarchyView(HierarchyViewDialog):
 		x, y = params[0:2]
 		self.select(x, y)
 
-	def dropfile(self, dummy, window, event, params):
-		x, y, filename = params
-		obj = self.whichhit(x, y)
-		if not obj:
-			windowinterface.beep()
+	def cvdrop(self, obj, window, event, params):
+		em = self.editmgr
+		if not em.transaction():
 			return
+		node = obj.node
+		em.setnodevalues(node, [])
+		em.setnodetype(node, 'ext')
+		em.commit()
+		# try again, now with an ext node as destination
+		self.dropfile(obj, window, event, params)
+
+	def dropfile(self, maybeobj, window, event, params):
+		x, y, filename = params
+		if maybeobj is not None:
+			obj = maybeobj
+		else:
+			obj = self.whichhit(x, y)
+			if not obj:
+				windowinterface.beep()
+				return
 		self.init_display()
 		self.setfocusobj(obj)
 		if event == WMEVENTS.DropFile:
@@ -292,6 +306,10 @@ class HierarchyView(HierarchyViewDialog):
 		else:
 			url = filename
 		t = obj.node.GetType()
+		if t == 'imm':
+			self.render()
+			windowinterface.showmessage('destination node is an immediate node, change to external?', mtype = 'question', callback = (self.cvdrop, (obj, window, event, params)))
+			return
 		if t == 'ext' and \
 		   obj.node.GetChannelType() == 'RealPix':
 			from mimetypes import guess_type
