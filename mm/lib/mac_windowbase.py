@@ -46,18 +46,12 @@ _qd_italic = 2
 _x_pixel_per_inch, _y_pixel_per_inch = Qd.ScreenRes()
 _x_pixel_per_mm = _x_pixel_per_inch / 25.4
 _y_pixel_per_mm = _y_pixel_per_inch / 25.4
+
 #
-# Conversion from inner-window coordinates (as in cmif) to outer
-# XXXX Not correct
+# Height of menu bar and height of window title
 #
-_window_left_offset=0
-_window_right_offset=0
-_window_top_offset=0
-_window_bottom_offset=0
-#
-# Top-of-screen
-#
-_screen_top_offset = 21  # XXXX Should be gotten from GetMBarHeight()
+_screen_top_offset = 21	# XXXX Should be gotten from GetMBarHeight()
+_window_top_offset=18	# XXXX Is this always correct?
 
 #
 # Assorted constants
@@ -193,7 +187,6 @@ class _Event:
 			else:
 				# Not frontmost. Activate.
 				wid.SelectWindow()
-				return
 		elif partcode == Windows.inDrag:
 			wid.DragWindow(where, self._draglimit)
 		elif partcode == Windows.inGrow:
@@ -201,7 +194,7 @@ class _Event:
 		elif partcode == Windows.inGoAway:
 			if not wid.TrackGoAway(where):
 				return
-			sys.exit(0) # XXXX, incorrect
+			self._handle_goaway(wid)
 		elif partcode == Windows.inZoomIn:
 			pass # XXXX
 		elif partcode == Windows.inZoomOut:
@@ -297,6 +290,7 @@ class _Toplevel(_Event):
 		self._bgcolor = 0xffff, 0xffff, 0xffff # white
 		self._fgcolor =      0,      0,      0 # black
 		self._hfactor = self._vfactor = 1.0
+		self._titles = []
 
 		self._initmenu()		
 		MacOS.EnableAppswitch(0)
@@ -336,6 +330,7 @@ class _Toplevel(_Event):
 		MacOS.EnableAppswitch(1)
 
 	def addclosecallback(self, func, args):
+		print 'ADDCLOSECALLBACK', self, func, args
 		self._closecallbacks.append(func, args)
 
 	def newwindow(self, x, y, w, h, title, pixmap = 0, transparent = 0):
@@ -353,13 +348,46 @@ class _Toplevel(_Event):
 	def _openwindow(self, x, y, w, h, title):
 		"""Internal - Open window given xywh, title. Returns window-id"""
 		print 'TOPLEVEL WINDOW', x, y, w, h, title
+		if w <= 0 or h <= 0:
+			raise 'Illegal window size'
 		x = int(x*_x_pixel_per_mm)
 		y = int(y*_y_pixel_per_mm) + _screen_top_offset
 		w = int(w*_x_pixel_per_mm)
 		h = int(h*_y_pixel_per_mm)
-		rBounds = (x-_window_left_offset, y-_window_top_offset, 
-				x+w+_window_right_offset, y+h+_window_bottom_offset)
-		wid = Win.NewCWindow(rBounds, title, 1, 0, -1, 1, 0 )
+		x1, y1 = x+w, y+h
+		#
+		# Check that it all fits
+		#
+		print 'WIN WANTED', x, y, x1, y1
+		l, t, r, b = Qd.qd.screenBits.bounds
+		if w >= (r-l)-8:
+			w = (r-l)-8
+		if h >= (b-t)-(_screen_top_offset + _window_top_offset + 4):
+			h = (b-t)-(_screen_top_offset + _window_top_offset + 4)
+
+		#
+		# And force it on-screen.
+		#
+		x1, y1 = x+w, y+h
+
+		if x < 4:
+			diff = 4-x
+			x, x1 = x + diff, x1 + diff
+		if y < _screen_top_offset + _window_top_offset:
+			diff = (_screen_top_offset + _window_top_offset) - y
+			y, y1 = y+diff, y1+diff
+		if x1 > r-4:
+			diff = (r-4)-x1
+			x, x1 = x+diff, x1+diff
+		if y1 > b-4:
+			diff = (b-4)-y1
+			y, y1 = y+diff, y1+diff
+			
+		print 'WIN GOT', x, y, x1, y1
+		wid = Win.NewCWindow((x, y, x1, y1), title, 1, 0, -1, 1, 0 )
+		
+		# Remember title, for Window menu
+		self._titles.append(title)
 		return wid, w, h
 		
 	def _close_wid(self, wid):
@@ -378,6 +406,14 @@ class _Toplevel(_Event):
 		if not window:
 			return
 		window._contentclick(down, where, event)
+		
+	def _handle_goaway(self, wid):
+		"""User asked to close a window. Dispatch to correct window"""
+		window = self._find_wid(wid)
+		if not window:
+			return 0
+		window._goaway()
+		return 1
 
 	def setcursor(self, cursor):
 		if cursor == 'watch':
@@ -614,6 +650,14 @@ class _CommonWindow:
 		"""return our xywh rect (in pixels) as quickdraw ltrb style"""
 		return self._rect[0], self._rect[1], self._rect[0]+self._rect[2], \
 			self._rect[1]+self._rect[3]
+			
+	def _goaway(self):
+		"""User asked us to go away. Tell upper layers (but don't go yet)"""
+		try:
+			func, arg = self._eventhandlers[WindowExit]
+		except KeyError:
+			return
+		func(arg, self, WindowExit, (0, 0, 0))
 		
 	def _contentclick(self, down, where, event):
 		"""A click in our content-region. Note: this method is extended
@@ -689,6 +733,10 @@ class _CommonWindow:
 		Qd.EraseRect(self.qdrect())
 		Qd.SetClip(saveclip)
 		Qd.DisposeRgn(saveclip)
+		
+	def _macsetwin(self):
+		"""Start drawing (by upper layer) in this window"""
+		Qd.SetPort(self._wid)
 
 class _Window(_CommonWindow):
 	"""Toplevel window"""
@@ -717,9 +765,13 @@ class _Window(_CommonWindow):
 		
 	def getgeometry(self):
 		rect = self._wid.GetWindowPort().portRect
-		x, y, w, h = rect[0], rect[1], rect[2]-rect[0], rect[3]-rect[1]
-		return (float(x)/_x_pixel_per_mm, float(y)/_y_pixel_per_mm,
-			float(w)/_x_pixel_per_mm, float(h)/_y_pixel_per_mm) 
+		Qd.SetPort(self._wid)
+		x, y = Qd.LocalToGlobal((0,0))
+		w, h = rect[2]-rect[0], rect[3]-rect[1]
+		rv = (float(x)/_x_pixel_per_mm, float(y)/_y_pixel_per_mm,
+			float(w)/_x_pixel_per_mm, float(h)/_y_pixel_per_mm)
+		print 'GETGEOM', rv
+		return rv
 
 	def pop(self):
 		"""Pop window to top of window stack"""
@@ -1187,17 +1239,23 @@ class showmessage:
 class Dialog:
 	def __init__(self, *args):
 		raise 'Dialogs not implemented for mac'
-		
+
+#
+# Note: this class knows very well how it will be used.
+# Especially, the way it handles the create_menu stuff is tied
+# to the way the player creates it's menu.
+#		
 class MainDialog:
 	def __init__(self, list, title = None, prompt = None, grab = 1,
 		     vertical = 1):
 ##		print 'DIALOG', self, list, title, prompt, grab, vertical
 		self.items = []
-		self._othermenu = None
+		self._channelmenu = None
+		self._windowmenu = None
 		self.menu = toplevel._addmenu('Control')
 		self._createmenu(self.menu, list)
 		
-	def _createmenu(self, menu, list):
+	def _createmenu(self, menu, list, ischannel=0):
 		for item in list:
 			if not item:
 				menu.addseparator()
@@ -1205,11 +1263,17 @@ class MainDialog:
 			else:
 				title, callback = item[:2]
 				shortcut = ''
-				if type(callback) == type(()):
-					m = MenuItem(menu, title, shortcut, callback)
-				else:
-					m = SubMenu(menu, title, title)
-					self._createmenu(m, callback)
+##				if type(callback) == type(()):
+##					m = MenuItem(menu, title, shortcut, callback)
+##				else:
+##					m = SubMenu(menu, title, title)
+##					self._createmenu(m, callback)
+				off = title[-6:] == ' (off)'
+				if off:
+					title = title[:-6]
+				m = MenuItem(menu, title, shortcut, callback)
+				if ischannel:
+					m.check(not off)
 				self.items.append(m)
 
 	def close(self):
@@ -1217,18 +1281,42 @@ class MainDialog:
 		pass
 
 	def destroy_menu(self):
-		if self._othermenu:
-			self._othermenu.delete()
-			self._othermenu = None
+		if self._windowmenu:
+			self._windowmenu.delete()
+			self._windowmenu = None
+		if self._channelmenu:
+			self._channelmenu.delete()
+			self._channelmenu = None
 
+	def _flatten_menu(self, list):
+		"""Flatten the menu (it is created with popups which we don't want)"""
+		nlist = []
+		for item in list:
+			if type(item[1]) == type(()):
+				nlist.append(item)
+			else:
+				nlist = nlist + self._flatten_menu(item[1])
+		return nlist
+		
 	def create_menu(self, list, title = None):
 ##		print 'CREATE MENU', self, list, title
-		if self._othermenu:
-			self.destroy_menu()
-		if not title:
-			title = 'Menu'
-		self._othermenu = toplevel._addmenu(title)
-		self._createmenu(self._othermenu, list)
+		self.destroy_menu()
+			
+		channellist = self._flatten_menu(list)
+		windowlist = []
+		for item in channellist:
+			name = item[0]
+			if name[-6:] == ' (off)':
+				name = name[:-6]
+			if name in toplevel._titles:
+				windowlist.append(item)
+				
+
+		self._windowmenu = toplevel._addmenu('Windows')
+		self._createmenu(self._windowmenu, windowlist, 1)
+
+		self._channelmenu = toplevel._addmenu('Channels')
+		self._createmenu(self._channelmenu, channellist, 1)
 
 	def getbutton(self, button):
 		raise 'getbutton called'
