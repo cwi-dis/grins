@@ -34,6 +34,7 @@ def fmtfloat(val, suffix = '', withsign = 0, prec = -1):
 		if str[-1] == '.':
 			str = str[:-1]
 	if prec >= 0 and '.' in str:
+		import string
 		str1, str2 = string.split(str, '.')
 		if prec == 0:
 			str = str1
