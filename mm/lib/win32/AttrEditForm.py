@@ -2350,15 +2350,22 @@ class RealWndCtrl(components.WndCtrl):
 		self.HookMessage(self.onFocus,win32con.WM_SETFOCUS)
 		l,t,r,b=self.GetWindowRect()
 		lr,tr,rr,br=self.GetParent().GetWindowRect()
-		self._rcref=win32mu.Rect((l-lr,t-tr,r-lr,b-tr))
-		self._box=None
+		self._rectb = l-lr, t-tr, r-l, b-t
+		self._box = None
 
 	def onSize(self,params):
 		if not self._box:
-			msg=win32mu.Win32Msg(params)		
-			src_x, src_y, dest_x, dest_y, width, height,rcKeep=\
-				self._rcref.adjustSize((msg.width(),msg.height()))
-			self._box=(dest_x, dest_y, width, height)
+			x, y, w, h = self._rectb
+			msg=win32mu.Win32Msg(params)
+			wm, hm = msg.width(),msg.height()
+			if w>W or h>H:
+				scalex = W/float(wm)
+				scaley = H/float(hm)
+				if scalex < scaley: scale = scalex
+				else: scale = scaley
+				wm, hm = int(scale*wm+0.5), int(scale*hm+0.5)
+			xm, ym = x + (w-wm)/2, y + (h-hm)/2
+			self._box = xm, ym, wm, hm
 		self.SetWindowPos(self.GetSafeHwnd(),self._box,
 			win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER)
 
