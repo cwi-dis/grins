@@ -754,6 +754,9 @@ class SMILParser(xmllib.XMLParser):
 			self.error('more than 1 smil tag')
 		self.__seen_smil = 1
 		self.__in_smil = 1
+		# fill in defaults for seq
+		attributes['repeat'] = '1'
+		self.NewContainer('seq', attributes)
 
 	def end_smil(self):
 		self.__in_smil = 0
@@ -782,9 +785,6 @@ class SMILParser(xmllib.XMLParser):
 			self.error('multiple body tags')
 		self.__seen_body = 1
 		self.__in_body = 1
-		# fill in defaults for seq
-		attributes['repeat'] = '1'
-		self.NewContainer('seq', attributes)
 
 	def end_body(self):
 		self.__in_body = 0
