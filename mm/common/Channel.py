@@ -22,8 +22,6 @@ PIDLE = 1
 PLAYING = 2
 PLAYED = 3
 
-[ FALSE, TRUE ] = range(2)
-
 def isin(elem, list):
 	# faster than "elem in list"
 	for x in list:
