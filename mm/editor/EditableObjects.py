@@ -29,6 +29,7 @@ class EditableMMNode(MMNode.MMNode):
 	def __init__(self, type, context, uid):
 		MMNode.MMNode.__init__(self, type, context, uid)
 		self.showtime = 0
+		self.__markers = []
 
 	def GetName(self):
 		# I'm used by the event editor dialog.
@@ -376,6 +377,23 @@ class EditableMMNode(MMNode.MMNode):
 			for c in self.children:
 				anchors.extend(c.getanchors(recursive))
 		return anchors
+
+	def addMarker(self, time):
+		if not time in self.__markers:
+			self.__markers.append(time)
+
+	def getMarkers(self):
+		return self.__markers
+
+	def clearMarkers(self):
+		need_redraw = 0
+		if self.__markers:
+			need_redraw = 1
+		self.__markers = []
+		for ch in self.children:
+			if ch.clearMarkers():
+				need_redraw = 1
+		return need_redraw
 
 ######################################################################
 	# Commands from the menus.

@@ -133,6 +133,7 @@ class HierarchyView(HierarchyViewDialog):
 			TIMESCALE(callback = (self.timescalecall, ('global',))),
 			TOGGLE_BWSTRIP(callback = (self.timescalecall, ('bwstrip',))),
 			TOGGLE_TIMESCALE(callback = (self.timescalecall, ('toggle',))),
+			CLEARMARKS(callback = (self.clearmarkerscall, ())),
 			]
 		self.anyfocuscommands = [
 			COPY(callback = (self.copycall, ())),
@@ -713,6 +714,9 @@ class HierarchyView(HierarchyViewDialog):
 
 	def opt_init_display(self):
 		self.draw()
+
+	def can_mark(self):
+		return self.is_showing() and self.root.showtime
 
 	#################################################
 	# Outside interface (inherited from ViewDialog) #
@@ -2115,6 +2119,11 @@ class HierarchyView(HierarchyViewDialog):
 		self.need_redraw = 1
 		self.draw()
 
+	def clearmarkerscall(self):
+		if self.root.clearMarkers():
+			self.need_redraw = 1
+			self.draw()
+
 	def timescalecall(self, which):
 		self.toplevel.setwaiting()
 		if which == 'toggle':
@@ -2203,10 +2212,12 @@ class HierarchyView(HierarchyViewDialog):
 		if self.get_selected_widget(): self.get_selected_widget().transition_callback(which, transition)
 
 	def playcall(self):
-		if self.get_selected_widget(): self.get_selected_widget().playcall()
+		if self.get_selected_widget():
+			self.get_selected_widget().playcall()
 
 	def playfromcall(self):
-		if self.get_selected_widget(): self.get_selected_widget().playfromcall()
+		if self.get_selected_widget():
+			self.get_selected_widget().playfromcall()
 
 	def createanchorcall(self, extended = 0):
 		node = self.get_selected_node()
@@ -2261,6 +2272,49 @@ class HierarchyView(HierarchyViewDialog):
 
 	def createaltcall(self):
 		if self.get_selected_widget(): self.get_selected_widget().createaltcall()
+
+	def mark_callback(self):
+		if not self.toplevel.player:
+			print "Mark: no player"
+			return
+		node, time = self.toplevel.player.get_mark_info()
+		if not node:
+			print "Mark: no node"
+			return
+		obj = node.views['struct_view']
+		if not obj:
+			print "Mark: no object"
+			return
+##		timemapper = obj.get_timemapper()
+##		if not timemapper:
+##			print "Mark: no timemapper"
+##			return
+		timeline = obj.get_timeline()
+		if not timeline:
+			print "Mark: no timeline"
+			return
+		timemapper = timeline.get_timemapper()
+		if not timemapper:
+			print "Mark: no timemapper"
+			return
+		marknode = timeline.get_node()
+		if not marknode:
+			print "Mark: no timeline node"
+			return
+		# XXXX time is object-relative, convert to global!
+		# Convert back-and-forth to pixel value.
+		px = obj.time2pixel(time, 'left', timemapper, 'left')
+		time, is_exact = obj.pixel2time(px, 'left', timemapper)
+		marknode.addMarker(time)
+		timemapper.addmarker(time)
+		timeline.addmarker(time)
+		ntime, is_exact = obj.pixel2time(px, 'left', timemapper)
+		if not is_exact: #DBG
+			print "Warning: marker moved", time, ntime #DBG
+##		print 'MARK', time, 'at', px
+##		print 'MAPPER', timemapper
+##		print 'LINE', timeline
+##		print 'MARKNODE', marknode
 
 	def set_event_source(self):
 		if len(self.multi_selected_widgets) > 0:

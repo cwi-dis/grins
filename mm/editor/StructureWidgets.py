@@ -206,6 +206,28 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 		assert self.node is not None
 		return self.node
 
+##	def get_timemapper(self):
+##		if self.timemapper:
+##			return self.timemapper
+##		pnode = self.node.GetParent()
+##		if not pnode:
+##			return None
+##		pobj = pnode.views.get('struct_view', None)
+##		if not pobj:
+##			return None
+##		return pobj.get_timemapper()
+
+	def get_timeline(self):
+		if self.timeline:
+			return self.timeline
+		pnode = self.node.GetParent()
+		if not pnode:
+			return None
+		pobj = pnode.views.get('struct_view', None)
+		if not pobj:
+			return None
+		return pobj.get_timeline()
+
 	def add_link_icons(self):
 		node = self.node
 		dangling = None
@@ -368,6 +390,8 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				except AttributeError:
 					pass
 				timemapper = TimeMapper.TimeMapper(min_pxl_per_sec)
+				for mtime in self.node.getMarkers():
+					timemapper.addmarker(mtime)
 				# Hack by Jack - if we already have a timemapper
 				# we copy the stalls. This is probably not a good
 				# idea, but I don't know why we reallocate a timemapper
@@ -2417,6 +2441,27 @@ class TimelineWidget(MMWidgetDecoration):
 ##		self.minwidth = width
 		pass
 
+	def get_timemapper(self):
+		return self.__timemapper
+
+	def addmarker(self, time):
+		if self.mother.extra_displist is not None:
+			d = self.mother.extra_displist.clone()
+		else:
+			d = self.mother.base_display_list.clone()
+		line_y, tick_top, tick_bot, longtick_top, longtick_bot, midtick_top, midtick_bot, endtick_top, endtick_bot, label_top, label_bot = self.params
+		tickwidth = abs(tick_top - tick_bot)
+		px = self.__timemapper.time2pixel(time, 'left')
+		d.drawfpolygon(TEXTCOLOR, 
+				[(px, tick_top), 
+				 (px+tickwidth/2, longtick_top), 
+				 (px-tickwidth/2, longtick_top)])
+		d.render()
+		if self.mother.extra_displist is not None:
+			self.mother.extra_displist.close()
+		self.mother.extra_displist = d
+
+
 	def moveto(self, coords, timemapper):
 		MMWidgetDecoration.moveto(self, coords)
 		self.__timemapper = timemapper
@@ -2592,6 +2637,15 @@ class TimelineWidget(MMWidgetDecoration):
 # to also draw a horizontal line between the tips of the two ticks, use the following instead
 ##				displist.drawline(COLCOLOR, [(tick_x, cur_tick_top), (tick_x2, cur_tick_top), (tick_x2, cur_tick_bot), (tick_x, cur_tick_bot)])
 		displist.fgcolor((255, 0, 0))
+		tickwidth = abs(tick_top - tick_bot)
+		for t in self.get_node().getMarkers():
+			px = self.__timemapper.time2pixel(t, 'left')
+			print 'TimelineWidget.addmarker', px
+			displist.drawfpolygon(TEXTCOLOR, 
+				[(px, tick_top), 
+				 (px+tickwidth/2, longtick_top), 
+				 (px-tickwidth/2, longtick_top)])
+
 	draw_selected = draw
 
 class BandWidthWidget(MMWidgetDecoration):

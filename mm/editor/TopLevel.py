@@ -220,7 +220,10 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			HIDE_PLAYERVIEW(callback = (self.hide_view_callback, (0,))),
 			HIDE_HIERARCHYVIEW(callback = (self.hide_view_callback, (1,))),
 			]
-		
+		self.markcommandlist = [
+			MARK(callback = (self.mark_callback, ())),
+		]
+
 		if not features.lightweight:
 			self.viewcommandlist = self.viewcommandlist + [
 				LINKVIEW(callback = (self.view_callback, (3,))),
@@ -330,6 +333,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 			commandlist = commandlist + self.undocommandlist[:1]
 		if self.editmgr.future:
 			commandlist = commandlist + self.undocommandlist[1:]
+		if self.player and self.hierarchyview and self.player.can_mark() and \
+				self.hierarchyview.can_mark():
+			commandlist = commandlist + self.markcommandlist
 
 		self.setcommands(commandlist)
 
@@ -522,6 +528,9 @@ class TopLevel(TopLevelDialog, ViewDialog):
 
 	def stop_callback(self):
 		self.player.stop_callback()
+
+	def mark_callback(self):
+		self.hierarchyview.mark_callback()
 
 	def save_source_callback(self, text):
 		# This is a function that is called from the source view when the user decides to save.
