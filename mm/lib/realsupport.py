@@ -609,16 +609,17 @@ def writecoords(f, str, full, xy, wh, anchor):
 			f.write(' %s%s="%d"' % (str, coordnames[i], c))
 
 
-def _writeFadeout(f, start, attrs):
-	color = attrs.get('fadeoutcolor', (0,0,0))
+def _writeFadeout(f, start, attrs, bgcolor):
+	color = attrs.get('fadeoutcolor', bgcolor)
 	for name, val in colors.items():
 		if color == val:
 			color = name
 			break
 	else:
 		color = '#%02x%02x%02x' % color
+	duration = attrs.get('fadeoutduration',0)
 	f.write('  <fadeout start="%g" duration="%g" color="%s"' %
-		(start, attrs.get('fadeoutduration',0), color))
+		(start, duration, color))
 	writecoords(f, 'dst', attrs.get('displayfull', 1),
 		    attrs.get('subregionxy', (0,0)),
 		    attrs.get('subregionwh', (0,0)),
@@ -628,8 +629,31 @@ def _writeFadeout(f, start, attrs):
 		f.write(' maxfps="%d"' % maxfps)
 	f.write('/>\n')
 
+def _calcdur(tags):
+	start = 0
+	duration = 0
+	endtime = 0
+	for attrs in tags:
+		start = start + attrs.get('start', 0)
+		tag = attrs.get('tag', 'fill')
+		if tag != 'fill':
+			duration = attrs.get('duration', 0)
+		else:
+			duration = 0
+		if tag == 'fadein' and attrs.get('fadeout', 0):
+			t = start + duration + attrs.get('fadeouttime', 0)
+			d = attrs.get('fadeoutduration', 0)
+			if t + d > endtime:
+				endtime = t + d
+		if start + duration > endtime:
+			endtime = start + duration
+	return endtime
+
 def writeRP(file, rp, node):
 	from SMILTreeWrite import nameencode
+	import MMAttrdefs
+
+	bgcolor = MMAttrdefs.getattr(node, 'bgcolor')
 
 	f = open(file, 'w')
 	f.write('<imfl>\n')
@@ -646,7 +670,11 @@ def writeRP(file, rp, node):
 		sep = '\n        '
 	f.write(sep+'timeformat="dd:hh:mm:ss.xyz"')
 	sep = '\n        '
-	f.write(sep+'duration="%g"' % rp.duration)
+	endtime = _calcdur(rp.tags)
+	if rp.duration and rp.duration < endtime:
+		import windowinterface
+		windowinterface.showmessage('Duration for RealPix node %s on channel %s too short to accomodate all transitions\n(duration = %g, required: %g)' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName(), rp.duration, start + duration), mtype = 'warning')
+	f.write(sep+'duration="%g"' % (rp.duration or endtime))
 	f.write(sep+'bitrate="%d"' % rp.bitrate)
 	f.write(sep+'width="%d"' % rp.width)
 	f.write(sep+'height="%d"' % rp.height)
@@ -680,7 +708,7 @@ def writeRP(file, rp, node):
 			if t > start:
 				break
 			del fadeouts[0]
-			_writeFadeout(f, t, a)
+			_writeFadeout(f, t, a, bgcolor)
 		tag = attrs.get('tag', 'fill')
 		f.write('  <%s' % tag)
 		f.write(' start="%g"' % start)
@@ -690,7 +718,7 @@ def writeRP(file, rp, node):
 		else:
 			duration = 0
 		if tag in ('fill', 'fadeout'):
-			color = attrs.get('color', (0,0,0))
+			color = attrs.get('color', bgcolor)
 			for name, val in colors.items():
 				if color == val:
 					color = name
@@ -738,12 +766,9 @@ def writeRP(file, rp, node):
 			else:
 				fadeouts.append((t, attrs))
 	for start, a in fadeouts:
-		_writeFadeout(f, start, a)
+		_writeFadeout(f, start, a, bgcolor)
 	f.write('</imfl>\n')
 	f.close()
-	if rp.duration < start + duration:
-		import windowinterface, MMAttrdefs
-		windowinterface.showmessage('Duration for RealPix node %s on channel %s too short to accomodate all transitions\n(duration = %g, required: %g)' % (MMAttrdefs.getattr(node, 'name') or '<unnamed>', node.GetChannelName(), rp.duration, start + duration), mtype = 'warning')
 
 import re
 durre = re.compile(r'\s*(?:(?P<days>\d+):(?:(?P<hours>\d+):(?:(?P<minutes>\d+):)?)?)?(?P<seconds>\d+(\.\d+)?)\s*')
