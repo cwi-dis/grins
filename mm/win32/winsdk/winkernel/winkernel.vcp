@@ -221,6 +221,7 @@ DEP_CPP_WINKE=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\common\charconv.h"\
 	".\utils.h"\
 	
 
@@ -362,10 +363,6 @@ DEP_CPP_WINKE=\
 
 !ENDIF 
 
-# End Source File
-# Begin Source File
-
-SOURCE=.\winkernel.def
 # End Source File
 # End Group
 # Begin Group "Header Files"
