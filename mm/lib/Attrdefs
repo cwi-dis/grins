@@ -161,6 +161,9 @@
 (queuesize (float) 0 'Queue size' default
 	'Audio playback queue size' channel)
 
+(range (tuple (int) (int)) (0 0) 'Range' default
+	'Range of frames to be played' channel)
+
 (scale (float) 0.0 'Scale factor' default
 	'Image magnification (0.0 means fit in window)' channel)
 
