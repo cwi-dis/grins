@@ -906,6 +906,10 @@ class _Toplevel(_Event):
 		channel = Qd.GetCursor(513).data
 		link = Qd.GetCursor(514).data
 		
+		dragset = Qd.GetCursor(516).data
+		dragadd = Qd.GetCursor(517).data
+		dragnot = Qd.GetCursor(518).data
+		
 		#
 		# These funny names are the X names for the cursors, used by the
 		# rest of the code
@@ -918,7 +922,11 @@ class _Toplevel(_Event):
 			'_arrow': arrow_cursor,
 			'_hand': hand_cursor,
 			'_resize': resize_cursor,
-			'_watch': watch_cursor
+			'_watch': watch_cursor,
+		# These are for drag and drop only
+			'dragadd': dragadd,
+			'dragset': dragset,
+			'dragnot': dragnot,
 		}
 		
 		self._waiting = 0
@@ -947,6 +955,10 @@ class _Toplevel(_Event):
 		for win in self._subwindows:
 			win.setcursor(cursor)
 		# No need to update cursor, happens in next event loop passage
+		
+	def setdragcursor(self, cursor):
+		"""Set cursor for the duration of a drag"""
+		self._installcursor(cursor)
 
 	def _installcursor(self, cursor):
 		"""Low-level cursor change: set the cursor if different from what it is"""
