@@ -452,8 +452,8 @@ class MyHTMLParser(htmllib.HTMLParser):
 		url = urllib.basejoin(self.url, src)
 		try:
 			handle = _gifkeeper.new(url)
-		except (IOError, img.error): # XXXX Work out which ones should really be catched
-			print 'Html: failed to get image', url
+		except (IOError, img.error), arg: # XXXX Work out which ones should really be catched
+			print 'Html: failed to get image', url, arg
 			self.formatter.add_flowing_data(alt)
 			return
 		self.formatter.my_add_image(handle)
