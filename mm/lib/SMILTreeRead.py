@@ -147,6 +147,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 		'mode': ['in', 'out'],
 		'origin': ['parent', 'element'],
 		'override': ['visible', 'hidden'],
+		'reliable': __truefalse,
 		'resizeBehavior': ['percentOnly', 'zoom'],
 		'sendTo': {'_rpcontextwin':'rpcontextwin', '_rpbrowser':'rpbrowser', 'osdefaultbrowser':'osdefaultbrowser', 'rpengine':'rpengine'},
 		'shape': ['rect', 'poly', 'circle'],
@@ -4402,7 +4403,18 @@ class SMILParser(SMIL, xmllib.XMLParser):
 			fg = self.__convert_color(value)
 			if fg is not None:
 				self.__node.attrdict[name] = fg
-		pass			# XXX needs to be implemented
+		# Real extensions
+		if name == 'bitrate':
+			try:
+				bitrate = int(value)
+			except:
+				self.syntax_error('bad value for bitrate param value')
+			else:
+				self.__node.attrdict['strbitrate'] = bitrate
+		if name == 'reliable':
+			reliable = self.parseEnumValue(name, value)
+			if reliable is not None:
+				self.__node.attrdict['reliable'] = reliable
 
 	def end_param(self):
 		if __debug__:
