@@ -191,6 +191,8 @@ class SMILHtmlTimeWriter(SMIL):
 		self.push()
 		
 		# head contents
+		self.writetag('meta', [('http-equiv', 'content-type'), 
+			('content', 'text/html; charset=ISO-8859-1')])
 		if self.__title:
 			self.writetag('meta', [('name', 'title'),
 					       ('content', self.__title)])
@@ -230,6 +232,7 @@ class SMILHtmlTimeWriter(SMIL):
 		
 		# body contents
 		# viewports
+		self.__currViewport = None
 		if len(self.top_levels)==1:
 			self.__currViewport = ch = self.top_levels[0]
 			name = self.ch2name[ch]
@@ -391,9 +394,6 @@ class SMILHtmlTimeWriter(SMIL):
 				pass # self.showunsupported(mtype)
 
 			if not root:
-				if self.__currRegion!=None:
-					self.pop()
-					self.__currRegion=None
 				self.writetag('t:'+mtype, attrlist)
 				self.push()
 			for child in x.GetChildren():
@@ -459,9 +459,9 @@ class SMILHtmlTimeWriter(SMIL):
 
 					
 		transitions = self.root.GetContext().transitions
+		if not nodeid:
+			nodeid = 'm' + x.GetUID()
 		if transIn or transOut:
-			if not nodeid:
-				nodeid = 'm' + x.GetUID()
 			subregid = nodeid + '_subReg'
 
 		subRegGeom, mediaGeom = None, None
@@ -478,10 +478,15 @@ class SMILHtmlTimeWriter(SMIL):
 				style = style + 'filter:'
 			
 			if transIn:
-				td = transitions[transIn]
-				trtype = td.get('trtype')
-				subtype = td.get('subtype')
-				dur = td.get('dur')
+				td = transitions.get(transIn)
+				if not td:
+					trtype = 'barWipe'
+					subtype = None
+					dur = 1
+				else:
+					trtype = td.get('trtype')
+					subtype = td.get('subtype')
+					dur = td.get('dur')
 				if not dur: dur = 1
 				transInName, properties = TransitionFactory(trtype, subtype)
 				if properties:
@@ -491,10 +496,15 @@ class SMILHtmlTimeWriter(SMIL):
 				style = style + trans
 
 			if transOut:
-				td = transitions[transOut]
-				trtype = td.get('trtype')
-				subtype = td.get('subtype')
-				transOutDur = td.get('dur')
+				td = transitions.get(transOut)
+				if not td:
+					trtype = 'barWipe'
+					subtype = None
+					transOutDur = 1
+				else:
+					trtype = td.get('trtype')
+					subtype = td.get('subtype')
+					transOutDur = td.get('dur')
 				if not transOutDur: transOutDur = 1
 				transOutName, properties = TransitionFactory(trtype, subtype)
 				if properties:
@@ -692,7 +702,7 @@ class SMILHtmlTimeWriter(SMIL):
 	def writelink(self, x, a):
 		attrlist = []
 		aid = (x.GetUID(), a.aid)
-		attrlist.append(('id', scriptid(self.aid2name[aid])))
+		attrlist.append(('id', self.aid2name[aid]))
 
 		links = x.GetContext().hyperlinks.findsrclinks(aid)
 		if links:
