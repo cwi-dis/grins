@@ -233,14 +233,19 @@ class SMILHtmlTimeWriter(SMIL):
 		
 		# body contents
 		# viewports
-		if 1: #len(self.top_levels)==1:
+		if len(self.top_levels)==1:
 			self.__currViewport = ch = self.top_levels[0]
 			name = self.ch2name[ch]
-			self.writetag('div', [('id',name), ('style', self.ch2style[ch]),])
+			self.writetag('div', [('id',name), ('class', 'reg'+name),])
 			self.push()
 			self.writenode(self.root, root = 1)
 			self.pop()
 		else:
+			for viewport in self.top_levels:
+				name = self.ch2name[viewport]
+				self.writetag('div', [('id',name), ('class', 'reg'+name),])
+				self.push()
+				self.pop()
 			self.writenode(self.root, root = 1)
 			
 		self.close()
@@ -425,6 +430,7 @@ class SMILHtmlTimeWriter(SMIL):
 		parents = []
 		viewport = None
 		pushed = 0
+		vpushed = 0
 	
 		lch = self.root.GetContext().getchannel(regionName)
 
@@ -436,26 +442,18 @@ class SMILHtmlTimeWriter(SMIL):
 				break
 			parents.insert(0, lch)
 			lch = lch.__parent
-		
-		if viewport and self.__currViewport!=viewport:
-#			if self.__currViewport:
-#				self.pop()
-			name = self.ch2name[viewport]
-			self.writetag('div', [('id',name), ('style', self.ch2style[viewport]),])
-			self.push()
-			self.__currViewport = viewport
 
-		for lch in parents:
-			divlist = []
-			if self.ch2style.has_key(lch):
-				name = self.ch2name[lch]
-				divlist.append(('id', name))
-				divlist.append(('style', self.ch2style[lch]))
-				self.writetag('div', divlist)
-				self.push()
-				self.ids_written[name] = 1
-				pushed = pushed + 1
-				
+		lch = parents[0]
+		name = self.ch2name[lch]
+		divlist = []
+		divlist.append(('id', name))
+		divlist.append(('class', 'reg'+regionName))
+		self.writetag('div', divlist)
+		self.push()
+		self.ids_written[name] = 1
+		pushed = pushed + 1
+
+					
 		transitions = self.root.GetContext().transitions
 		if transIn or transOut:
 			if not nodeid:
@@ -541,7 +539,8 @@ class SMILHtmlTimeWriter(SMIL):
 		
 		for i in range(pushed):
 			self.pop()
-
+		if vpushed:
+			self.pop()
 
 	def writeAnchors(self, x):
 		alist = MMAttrdefs.getattr(x, 'anchorlist')
@@ -634,20 +633,22 @@ class SMILHtmlTimeWriter(SMIL):
 				bgcolor = '#%02x%02x%02x' % bgcolor
 			style = 'position:absolute;overflow:hidden;left=%d;top=%d;width=%d;height=%d;background-color=%s;' % (x, y, w, h, bgcolor)
 			self.ch2style[ch] = style
-			#self.fp.write('.'+name + ' {' + style + '}\n')
+			self.fp.write('.reg'+name + ' {' + style + '}\n')
 
 			if self.__subchans.has_key(ch.name):
 				for sch in self.__subchans[ch.name]:
-					self.writeregion(sch)
+					self.writeregion(sch, x, y)
 
 			x = x + w + xmargin
 
-	def writeregion(self, ch):
+	def writeregion(self, ch, dx, dy):
 		if ch['type'] != 'layout':
 			return
+		if len(self.top_levels)==1:
+			dx=dy=0
 
 		x, y, w, h = ch.getPxGeom()
-		style = 'position:absolute;overflow:hidden;left=%d;top=%d;width=%d;height=%d;' % (x, y, w, h)
+		style = 'position:absolute;overflow:hidden;left=%d;top=%d;width=%d;height=%d;' % (dx+x, dy+y, w, h)
 		
 		if ch.has_key('bgcolor'):
 			bgcolor = ch['bgcolor']
@@ -665,11 +666,11 @@ class SMILHtmlTimeWriter(SMIL):
 		self.ch2style[ch] = style
 
 		name = self.ch2name[ch]
-		#self.fp.write('.'+name + ' {' + style + '}\n')
+		self.fp.write('.reg'+name + ' {' + style + '}\n')
 		
 		if self.__subchans.has_key(ch.name):
 			for sch in self.__subchans[ch.name]:
-				self.writeregion(sch)
+				self.writeregion(sch, x+dx, y+dy)
 		
 	def rc2style(self, rc):
 		x, y, w, h = rc
