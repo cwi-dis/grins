@@ -995,6 +995,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 
 	# Called by the framework when the user closes the window
 	def OnClose(self):
+		Toolbars.ToolbarMixin.OnClose(self)
 		if len(__main__.toplevel._subwindows)>1:
 			self.PostMessage(win32con.WM_COMMAND, usercmdui.usercmd2id(usercmd.CLOSE))
 		else:
