@@ -67,7 +67,7 @@ class Selecter:
 			newnode = choosebagitem(node, 1)
 			if newnode is None:
 				return None
-			list.append(newnode, None, node, node)
+			list.append((newnode, None, node, node))
 			node = newnode
 		list.reverse()
 		return list
@@ -92,7 +92,7 @@ class Selecter:
 				parent = bag.FindMiniDocument()
 			else:
 				parent = None
-			list.append(mini, None, bag, parent)
+			list.append((mini, None, bag, parent))
 		return list
 	#
 	# killconflictingbags - Take a bag list, kill conflicting minidocs
@@ -267,7 +267,7 @@ class Selecter:
 		if not new_sctx:
 			dummy = self.killconflictingbags(baglist)
 			return 0
-		self.runslots.append(mini, new_sctx, bag, parent)
+		self.runslots.append((mini, new_sctx, bag, parent))
 		self.updateuibaglist()
 ##		print 'AFTER APPEND FOR', seek_node #DBG
 ##		self.dumpbaglist() ##DBG
@@ -310,7 +310,7 @@ class Selecter:
 				self.scheduler.event(sctx, (SR.BAG_DONE, bag))
 			else:
 				self.bags_needing_done_ev.append(bag)
-			self.runslots.append(node, new_sctx, bag, parent)
+			self.runslots.append((node, new_sctx, bag, parent))
 		elif event == SR.BAG_STOP:
 			slot = self.findslotbybag(bag)
 			if slot is None:
@@ -327,7 +327,7 @@ class Selecter:
 		slot = self.findslotbysctx(sctx)
 		self.runslots.remove(slot)
 		d1, d2, bag, parent = slot
-		self.runslots.append(None, None, bag, parent)
+		self.runslots.append((None, None, bag, parent))
 		sctx.stop()
 		parent_slot = self.findslotbynode(parent)
 		if not parent_slot:
