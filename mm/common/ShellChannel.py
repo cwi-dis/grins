@@ -9,9 +9,6 @@ class ShellChannel(Channel):
 		self.pid = None
 		Channel.__init__(self, name, attrdict, scheduler, ui)
 
-	def __repr__(self):
-		return '<ShellChannel instance, name=' + `self._name` + '>'
-
 	def do_play(self, node):
 		self.pid = None
 		type = node.GetType()

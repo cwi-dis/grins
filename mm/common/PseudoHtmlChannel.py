@@ -15,9 +15,6 @@ class HtmlChannel(ChannelWindow):
 	def __init__(self, name, attrdict, scheduler, ui):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 
-	def __repr__(self):
-		return '<HtmlChannel instance, name=' + `self._name` + '>'
-
 	def updatefixedanchors(self, node):
 		str = self.getstring(node)
 		parlist = extract_paragraphs(str)
