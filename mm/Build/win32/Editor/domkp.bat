@@ -13,7 +13,7 @@ set PYTHON_EXE=..\..\..\..\python\PCbuild\python.exe
 
 set PYTHONHOME=..\..\..\..\python
 
-call c:\Program Files\Microsoft Visual Studio\VC98\Bin\vcvars32.bat
+call c:\"Program Files"\"Microsoft Visual Studio"\VC98\Bin\vcvars32.bat
 
 rem END_CUSTOMIZATION
 
@@ -63,6 +63,9 @@ set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\win32\lib
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\win32\Build
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\Pythonwin
 set PYTHONPATH=%PYTHONPATH%;%PYTHONEX%\Pythonwin\Build
+
+rem Path for old standard python librairie
+set PYTHONPATH=%PYTHONPATH%;%PYTHONHOME%\Lib\lib-old
 
 : Do the freeze
 if exist FreezeOpts del FreezeOpts
