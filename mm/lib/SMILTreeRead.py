@@ -2838,7 +2838,7 @@ class SMILParser(SMIL, xmllib.XMLParser):
 				elif key in ('stop', 'toggle'):
 					arc = MMNode.MMSyncArc(self.__root, 'end', srcnode = a, event = 'activateEvent', delay = 0)
 					endlist.append(arc)
-				elif key in ('pause', 'open', 'exit', 'tab', 'activate'):
+				elif key in ('pause', 'open', 'exit', 'tab', 'activate', 'skin'):
 					self.__links.append((a, 'grins:%s()' % key))
 				elif key == 'key':
 					keys.append((val[2], a))

@@ -63,6 +63,8 @@ class CONSOLE(_CommandBase):
 	help = "DEBUG: Show debug/log output window"
 class CHECKVERSION(_CommandBase):
 	help = 'Check for newer versions of the software'
+class CHOOSESKIN(_CommandBase):
+	help = 'Choose a skin descriptor file'
 
 #
 # Player view commands

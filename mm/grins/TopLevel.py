@@ -446,4 +446,7 @@ class TopLevel(TopLevelDialog):
 		if command == 'activate()':
 			self.player.activate()
 			return 1
+		if command == 'skin()':
+			self.main.skin_callback()
+			return 1
 		return 0
