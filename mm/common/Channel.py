@@ -218,7 +218,7 @@ class Channel:
 		self._player.before_chan_show(self)
 		self._is_shown = self.do_show(pchan)
 		if not self._is_shown:
-			if self._is_show == 0:
+			if self._is_shown == 0:
 				self._player.after_chan_show(self)
 			return
 		self.after_show()
