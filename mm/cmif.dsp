@@ -536,6 +536,10 @@ SOURCE=.\editor\AttrEdit.py
 # End Source File
 # Begin Source File
 
+SOURCE=.\editor\BandwidthCompute.py
+# End Source File
+# Begin Source File
+
 SOURCE=.\editor\ChannelView.py
 # End Source File
 # Begin Source File
