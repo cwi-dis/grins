@@ -1758,7 +1758,7 @@ class AttrEditorField(AttrEditorDialogField):
 		return 0
 
 	def valuerepr(self, value):
-		"""Return string representation of value."""
+		# Return string representation of value.
 		if value is None:
 			if self.nodefault:
 				return self.getdefault()
@@ -1766,7 +1766,7 @@ class AttrEditorField(AttrEditorDialogField):
 		return self.wrapper.valuerepr(self.__name, value)
 
 	def parsevalue(self, str):
-		"""Return internal representation of string."""
+		# Return internal representation of string.
 		if str == '':
 			return None
 		return self.wrapper.parsevalue(self.__name, str)
@@ -1815,7 +1815,7 @@ class PercentAttrEditorField(AttrEditorField):
 
 class StringAttrEditorField(AttrEditorField):
 	def valuerepr(self, value):
-		"""Return string representation of value."""
+		# Return string representation of value.
 		if value is None:
 			if self.nodefault:
 				return self.getdefault()
@@ -1823,7 +1823,7 @@ class StringAttrEditorField(AttrEditorField):
 		return value
 
 	def parsevalue(self, str):
-		"""Return internal representation of string."""
+		# Return internal representation of string.
 		if str == '':
 			return None
 		return str
@@ -1927,7 +1927,7 @@ class TextAttrEditorField(AttrEditorField):
 	type = 'text'
 
 	def valuerepr(self, value):
-		"""Return string representation of value."""
+		# Return string representation of value.
 		if value is None:
 			if self.nodefault:
 				return self.getdefault()
@@ -1935,7 +1935,7 @@ class TextAttrEditorField(AttrEditorField):
 		return string.join(value, '\n')
 
 	def parsevalue(self, str):
-		"""Return internal representation of string."""
+		# Return internal representation of string.
 		if str == '':
 			return None
 		return string.split(str, '\n')
@@ -1959,7 +1959,7 @@ class ScreenSizeAttrEditorField(TupleAttrEditorField):
 		return AttrEditorField.valuerepr(self, tuplevalue)
 
 	def parsevalue(self, str):
-		"""Return internal representation of string."""
+		# Return internal representation of string.
 		if str == '':
 			return None
 		try:
@@ -1981,7 +1981,7 @@ class ScreenDepthAttrEditorField(IntAttrEditorField):
 		return AttrEditorField.valuerepr(self, value)
 
 	def parsevalue(self, str):
-		"""Return internal representation of string."""
+		# Return internal representation of string.
 		if str == '':
 			return None
 		try:

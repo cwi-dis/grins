@@ -1,33 +1,30 @@
-"""Dialog for the Main window.
+# Dialog for the Main window.
 
-This is a very simple dialog, it consists of four choices and three
-callback functions.
+# This is a very simple dialog, it consists of four choices and three
+# callback functions.
 
-The choices are labeled `New', `Open Location...', `Open File...', and
-`Exit'.  If either of the Open choices is selected, a dialog window
-asks for a URL or a file name respectively, and if one is selected,
-the callback self.open_callback is called with the selected location
- (always passed in the form of a URL).
+# The choices are labeled `New', `Open Location...', `Open File...', and
+# `Exit'.  If either of the Open choices is selected, a dialog window
+# asks for a URL or a file name respectively, and if one is selected,
+# the callback self.open_callback is called with the selected location
+#  (always passed in the form of a URL).
 
-If the New choice is selected, the callback self.new_callback is
-called without arguments.  If the Exit choice is selected, the
-callback self.close_callback is called without arguments.  Also, if
-the dialog window is closed in some other way, the callback
-self.close_callback is also called.
+# If the New choice is selected, the callback self.new_callback is
+# called without arguments.  If the Exit choice is selected, the
+# callback self.close_callback is called without arguments.  Also, if
+# the dialog window is closed in some other way, the callback
+# self.close_callback is also called.
 
-"""
-
-"""@win32doc|MainDialog
-There is only one instance of the MainDialog class per application.
-The MainDialog constructor creates an MDIFraneWnd with a toolbar
-and menu. The application level commands Open and Exit
-are enabled. When there are documents open there is a one to one
-correspondance between an MDIFrameWnd and a document. The MDIFrameWnd
-created is reused by the first document that will be opened.
-The only case that the 1:1 corespondance between an MDIFrameWnd
-and a document is not valid is when the application has no
-open documents 
-"""
+# @win32doc|MainDialog
+# There is only one instance of the MainDialog class per application.
+# The MainDialog constructor creates an MDIFraneWnd with a toolbar
+# and menu. The application level commands Open and Exit
+# are enabled. When there are documents open there is a one to one
+# correspondance between an MDIFrameWnd and a document. The MDIFrameWnd
+# created is reused by the first document that will be opened.
+# The only case that the 1:1 corespondance between an MDIFrameWnd
+# and a document is not valid is when the application has no
+# open documents 
 
 __version__ = "$Id$"
 
@@ -40,15 +37,14 @@ import MMurl
 
 class MainDialog:
 	def __init__(self, title):
-		"""Create the Main dialog.
+		# Create the Main dialog.
 
-		Create the dialog window (non-modal, so does not grab
-		the cursor) and pop it up (i.e. display it on the
-		screen).
+		# Create the dialog window (non-modal, so does not grab
+		# the cursor) and pop it up (i.e. display it on the
+		# screen).
 
-		Arguments (no defaults):
-		title -- string to be displayed as window title
-		"""
+		# Arguments (no defaults):
+		# title -- string to be displayed as window title
 		if __debug__:
 			import usercmd
 			self.commandlist.append(
@@ -102,7 +98,7 @@ class MainDialog:
 			windowinterface.showmessage('Only GRiNS or SMIL files can be dropped.')
 
 	def openfile_callback(self):
-		"""Callback for OPENFILE menu command"""
+		# Callback for OPENFILE menu command
 		import windowinterface
 		f=windowinterface.getmainwnd()
 		if features.compatibility == Boston:
@@ -117,7 +113,7 @@ class MainDialog:
 					   parent = f)
 
 	def __openfile_done(self, filename):
-		"""End of OPENFILE menu command. Open the file (as url)"""
+		# End of OPENFILE menu command. Open the file (as url)
 		url = self.__path2url(filename)
 		if url:
 			self.openURL_callback(url)
