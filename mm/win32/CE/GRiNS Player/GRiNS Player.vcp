@@ -52,7 +52,7 @@ RSC=rc.exe
 # ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /r
 CPP=clarm.exe
 # ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /Oxs /M$(CECrtMT) /c
-# ADD CPP /nologo /W3 /I "." /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /I "..\..\winsdk\common" /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /Oxs /M$(CECrtMT) /c
+# ADD CPP /nologo /W3 /I "." /I "..\..\..\..\python_ce\Include" /I "..\..\..\..\python_ce\Parser" /I "..\..\..\..\python_ce\PC\ce" /I "..\..\..\..\python_ce\PC" /I "..\..\Parser" /I "..\..\CE\stl" /I "..\..\winsdk\common" /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "ARM" /D "_ARM_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /FR /YX /Oxs /M$(CECrtMT) /c
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
@@ -253,10 +253,8 @@ DEP_CPP_GRINS=\
 	".\pfc\app_wndproc.h"\
 	".\pfc\ttl.h"\
 	".\StdAfx.h"\
-	
-NODEP_CPP_GRINS=\
-	".\ipapi.h"\
-	".\ygshell.h"\
+	{$(INCLUDE)}"Aygshell.h"\
+	{$(INCLUDE)}"sipapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
@@ -281,8 +279,10 @@ DEP_CPP_GRINS=\
 	".\pfc\app_wndproc.h"\
 	".\pfc\ttl.h"\
 	".\StdAfx.h"\
-	{$(INCLUDE)}"Aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_GRINS=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Debug"
@@ -293,10 +293,8 @@ DEP_CPP_GRINS=\
 	".\pfc\app_wndproc.h"\
 	".\pfc\ttl.h"\
 	".\StdAfx.h"\
-	
-NODEP_CPP_GRINS=\
-	".\ipapi.h"\
-	".\ygshell.h"\
+	{$(INCLUDE)}"Aygshell.h"\
+	{$(INCLUDE)}"sipapi.h"\
 	
 
 !ENDIF 
@@ -614,9 +612,10 @@ DEP_CPP_APP_S=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\..\winsdk\common\charconv.h"\
+	"..\..\winsdk\common\strutil.h"\
 	".\pfc\app_stdout.h"\
 	".\pfc\app_wnd.h"\
-	".\pfc\charconv.h"\
 	".\pfc\pyinterface.h"\
 	".\pfc\ttl.h"\
 	
@@ -665,9 +664,11 @@ DEP_CPP_APP_S=\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	".\pfc\app_stdout.h"\
 	".\pfc\app_wnd.h"\
-	".\pfc\charconv.h"\
 	".\pfc\pyinterface.h"\
 	".\pfc\ttl.h"\
+	
+NODEP_CPP_APP_S=\
+	".\pfc\charconv.h"\
 	
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Release"
@@ -762,14 +763,12 @@ DEP_CPP_APP_S=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\..\winsdk\common\charconv.h"\
+	"..\..\winsdk\common\strutil.h"\
 	".\pfc\app_stdout.h"\
 	".\pfc\app_wnd.h"\
-	".\pfc\charconv.h"\
 	".\pfc\pyinterface.h"\
 	".\pfc\ttl.h"\
-	
-NODEP_CPP_APP_S=\
-	".\pfc\resource.h"\
 	
 
 !ENDIF 
@@ -825,13 +824,11 @@ DEP_CPP_APP_W=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\..\winsdk\common\charconv.h"\
 	".\pfc\app_wnd.h"\
-	".\pfc\charconv.h"\
 	".\pfc\pyinterface.h"\
-	
-NODEP_CPP_APP_W=\
-	".\ipapi.h"\
-	".\ygshell.h"\
+	{$(INCLUDE)}"Aygshell.h"\
+	{$(INCLUDE)}"sipapi.h"\
 	
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE ARM) Debug"
@@ -877,11 +874,11 @@ DEP_CPP_APP_W=\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
 	".\pfc\app_wnd.h"\
-	".\pfc\charconv.h"\
 	".\pfc\pyinterface.h"\
 	
 NODEP_CPP_APP_W=\
 	".\ipapi.h"\
+	".\pfc\charconv.h"\
 	".\ygshell.h"\
 	
 
@@ -930,8 +927,10 @@ DEP_CPP_APP_W=\
 	"..\..\winsdk\common\charconv.h"\
 	".\pfc\app_wnd.h"\
 	".\pfc\pyinterface.h"\
-	{$(INCLUDE)}"Aygshell.h"\
-	{$(INCLUDE)}"sipapi.h"\
+	
+NODEP_CPP_APP_W=\
+	".\ipapi.h"\
+	".\ygshell.h"\
 	
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Debug"
@@ -976,13 +975,11 @@ DEP_CPP_APP_W=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
+	"..\..\winsdk\common\charconv.h"\
 	".\pfc\app_wnd.h"\
-	".\pfc\charconv.h"\
 	".\pfc\pyinterface.h"\
-	
-NODEP_CPP_APP_W=\
-	".\ipapi.h"\
-	".\ygshell.h"\
+	{$(INCLUDE)}"Aygshell.h"\
+	{$(INCLUDE)}"sipapi.h"\
 	
 
 !ENDIF 
@@ -1241,7 +1238,8 @@ DEP_CPP_PYINT=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
-	".\pfc\charconv.h"\
+	"..\..\winsdk\common\charconv.h"\
+	"..\..\winsdk\common\strutil.h"\
 	".\pfc\pyinterface.h"\
 	
 
@@ -1287,8 +1285,10 @@ DEP_CPP_PYINT=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
-	".\pfc\charconv.h"\
 	".\pfc\pyinterface.h"\
+	
+NODEP_CPP_PYINT=\
+	".\pfc\charconv.h"\
 	
 
 !ELSEIF  "$(CFG)" == "GRiNS Player - Win32 (WCE x86em) Release"
@@ -1380,7 +1380,8 @@ DEP_CPP_PYINT=\
 	"..\..\..\..\PYTHON_CE\pc\ce\crtapi.h"\
 	"..\..\..\..\PYTHON_CE\PC\ce\unistd.h"\
 	"..\..\..\..\PYTHON_CE\pc\config.h"\
-	".\pfc\charconv.h"\
+	"..\..\winsdk\common\charconv.h"\
+	"..\..\winsdk\common\strutil.h"\
 	".\pfc\pyinterface.h"\
 	
 
