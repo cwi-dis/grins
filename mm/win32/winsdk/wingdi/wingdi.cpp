@@ -19,6 +19,7 @@ PyObject *ErrorObject;
 
 static struct PyMethodDef wingdi_methods[] = {
 	{"CreateDCFromHandle", (PyCFunction)Wingdi_CreateDCFromHandle, METH_VARARGS, ""},
+	{"GetDesktopDC", (PyCFunction)Wingdi_GetDesktopDC, METH_VARARGS, ""},
 	
 	{"DeleteObject", (PyCFunction)Wingdi_DeleteObject, METH_VARARGS, ""},
 	{"GetStockObject", (PyCFunction)Wingdi_GetStockObject, METH_VARARGS, ""},
