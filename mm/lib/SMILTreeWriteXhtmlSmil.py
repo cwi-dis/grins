@@ -708,9 +708,8 @@ class SMILXhtmlSmilWriter(SMIL):
 		# Plus transfer intrinsic media duration to div/par container 
 		parent = node.GetParent()
 		if pardur is None and timing_spec < 2:
-			parentDur = getduration(self, parent)
-
-			if parent.GetType() == 'par' and parentDur is not None and parentDur>0 and fill is None and mtype!='audio':
+			parentDur = parent.GetRawAttrDef('duration', None)
+			if parent.GetType() == 'par' and parentDur is not None and fill is None and mtype!='audio':
 				# force smil default behavior in such cases
 				divlist.append(('fill', 'freeze'))
 
