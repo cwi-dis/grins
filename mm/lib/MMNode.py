@@ -833,6 +833,9 @@ class MMRegPoint:
 	def getClassName(self):
 		return 'MMRegPoint'
 
+	def getIconName(self, wantmedia=0):
+		return 'unknown'
+
 	def __repr__(self):
 		return '<%s instance, name=%s>' % (self.__class__.__name__, `self.name`)
 
@@ -1147,6 +1150,9 @@ class MMAttrContainer(MMTreeElement):
 
 	def getClassName(self):
 		return 'Properties'
+
+	def getIconName(self, wantmedia=0):
+		return 'unknown'
 	
 class MMChannel(MMTreeElement):
 	def __init__(self, context, name, type='undefined'):
@@ -1226,6 +1232,9 @@ class MMChannel(MMTreeElement):
 	def getClassName(self):
 		# by default, it's a viewport
 		return 'Region'
+
+	def getIconName(self, wantmedia=0):
+		return 'region'
 
 	def __repr__(self):
 		return '<%s instance, name=%s>' % (self.__class__.__name__, `self.name`)
@@ -1573,6 +1582,9 @@ class MMViewport(MMChannel):
 	# note: this method should be implemented for all basic classes of the document
 	def getClassName(self):
 		return 'Viewport'
+
+	def getIconName(self, wantmedia=0):
+		return 'viewport'
 	
 class MMRegionAssociation(Owner):
 	def __init__(self, mediaNode):
@@ -1581,6 +1593,9 @@ class MMRegionAssociation(Owner):
 
 	def getClassName(self):
 		return 'RegionAssociation'
+
+	def getIconName(self, wantmedia=0):
+		return 'unknown'
 
 	def getMediaNode(self):
 		return self.mediaNode
@@ -1661,6 +1676,9 @@ class MMAnchor:
 	# note: this method should be implemented for all basic classes of the document
 	def getClassName(self):
 		return 'MMAnchor'
+
+	def getIconName(self, wantmedia=0):
+		return 'linksrc'
 
 	def copy(self):
 		return MMAnchor(self.aid, self.atype, self.aargs, self.atimes, self.aaccess)
@@ -1753,6 +1771,9 @@ class MMSyncArc:
 	# note: this method should be implemented for all basic classes of the document
 	def getClassName(self):
 		return 'MMSyncArc'
+
+	def geticonname(self, wantmedia=0):
+		return 'unknown'
 
 	def __repr__(self):
 		if self.path:
@@ -2321,7 +2342,18 @@ class MMNode(MMTreeElement):
 	def getClassName(self):
 		return 'MMNode'
 
-			
+	def getIconName(self, wantmedia=0):
+		if self.type == 'ext' and wantmedia:
+			# We try to deduce the mediatype icon
+			url = self.GetRawAttrDef('file', '')
+			if url:
+				mimetype = self.GetComputedMimeType()
+				if mimetype:
+					mimetype = string.split(mimetype, '/')[0]
+				if mimetype:
+					return mimetype
+		return self.type
+
 	#
 	# Return string representation of self
 	#
