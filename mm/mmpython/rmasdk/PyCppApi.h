@@ -140,6 +140,9 @@ class DLL_API CallerHelper
 	BOOL call(int);
 	BOOL call(int, int);
 	BOOL call(int, int, int);
+	BOOL call(int, int, int, int);
+	BOOL call(int, int, int, const char *);
+	BOOL call(int val1, int val2, int val3, const char *val4, void* data);
 	BOOL call(long);
 	BOOL call(const char *);
 	BOOL call(const char *, int);
