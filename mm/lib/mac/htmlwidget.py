@@ -257,7 +257,7 @@ class HTMLWidget:
 		Qd.RGBBackColor(self.bg_color)
 		vr = l+LEFTMARGIN, t+TOPMARGIN, r-RIGHTMARGIN, b-BOTTOMMARGIN
 		self.ted.WESetViewRect(vr)
-		Win.InvalRect(self.rect)
+		self.wid.InvalWindowRect(self.rect)
 		self._createscrollbars()
 		
 	def do_click(self, down, local, evt):
@@ -305,7 +305,7 @@ class HTMLWidget:
 		self.ted.WESetSelection(0, 0x3fffffff)
 		self.ted.WEDelete()
 		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
-		Win.InvalRect(self.rect)
+		self.wid.InvalWindowRect(self.rect)
 		self._createscrollbars(reset=1)
 		self.anchor_offsets = []
 		self.current_data_loaded = None
@@ -314,8 +314,7 @@ class HTMLWidget:
 	def insert_html(self, data, url, tag=None):		
 		if data == '':
 			self.must_clear = 1
-			Qd.SetPort(self.wid)
-			Win.InvalRect(self.rect)
+			self.wid.InvalWindowRect(self.rect)
 			return
 
 		self.must_clear = 0
@@ -352,15 +351,14 @@ class HTMLWidget:
 		self.ted.WESetSelection(pos, pos)
 ##		self.ted.WESetSelection(0, 0)
 		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
-		Win.InvalRect(self.rect)
+		self.wid.InvalWindowRect(self.rect)
 
 		self._createscrollbars(reset=1)
 
 	def insert_plaintext(self, data):		
 		if data == '':
 			self.must_clear = 1
-			Qd.SetPort(self.wid)
-			Win.InvalRect(self.rect)
+			self.wid.InvalWindowRect(self.rect)
 			return
 
 		self.must_clear = 0
@@ -384,7 +382,7 @@ class HTMLWidget:
 		self.ted.WESetSelection(pos, pos)
 ##		self.ted.WESetSelection(0, 0)
 		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
-		Win.InvalRect(self.rect)
+		self.wid.InvalWindowRect(self.rect)
 
 		self._createscrollbars(reset=1)
 		

@@ -263,7 +263,7 @@ class HTMLWidget:
 		self.rect = rect
 		Qd.SetPort(self.wid)
 		self.widget.HRSetRenderingRect(rect)
-		Win.InvalRect(self.rect)
+		self.wid.InvalWindowRect(self.rect)
 ##		self._createscrollbars()
 		
 	def do_click(self, down, local, evt):
@@ -317,7 +317,7 @@ class HTMLWidget:
 ##		self.ted.WESetSelection(0, 0x3fffffff)
 ##		self.ted.WEDelete()
 ##		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
-##		Win.InvalRect(self.rect)
+##		self.wid.InvalWindowRect(self.rect)
 ##		self._createscrollbars(reset=1)
 ##		self.anchor_offsets = []
 		self.current_data_loaded = None
@@ -326,8 +326,7 @@ class HTMLWidget:
 	def insert_html(self, data, url, tag=None):		
 		if data == '':
 			self.must_clear = 1
-			Qd.SetPort(self.wid)
-			Win.InvalRect(self.rect)
+			self.wid.InvalWindowRect(self.rect)
 			return
 
 		self.must_clear = 0
@@ -338,8 +337,7 @@ class HTMLWidget:
 			return
 		self.current_data_loaded = data
 		self.widget.HRGoToPtr(data, 0, 0)
-		Qd.SetPort(self.wid)
-		Win.InvalRect(self.rect)
+		self.wid.InvalWindowRect(self.rect)
 ##		f = MyFormatter(self)
 ##		
 ##		# Remember where we are, and don't update
@@ -374,8 +372,7 @@ class HTMLWidget:
 		self.insert_html('<pre>'+data+'</pre>', '')	
 ##		if data == '':
 ##			self.must_clear = 1
-##			Qd.SetPort(self.wid)
-##			Win.InvalRect(self.rect)
+##			self.wid.InvalWindowRect(self.rect)
 ##			return
 ##
 ##		self.must_clear = 0
@@ -399,7 +396,7 @@ class HTMLWidget:
 ##		self.ted.WESetSelection(pos, pos)
 ####		self.ted.WESetSelection(0, 0)
 ##		self.ted.WEFeatureFlag(WASTEconst.weFInhibitRecal, 0)
-##		Win.InvalRect(self.rect)
+##		self.wid.InvalWindowRect(self.rect)
 ##
 ##		self._createscrollbars(reset=1)
 		

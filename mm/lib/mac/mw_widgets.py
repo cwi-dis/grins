@@ -137,16 +137,14 @@ class _ListWidget(_ControlWidget):
 		
 	def delete(self, fr=None, count=1):
 		self._delete(fr, count)
-		Qd.SetPort(self.wid)
-		Win.InvalRect(self.rect)
+		self.wid.InvalWindowRect(self.rect)
 		
 	def setitems(self, content=[], select=None):
 		self._delete()
 		self._insert(count=len(content))
 		self._setcontent(0, len(content), content)
 		self.select(select)
-		Qd.SetPort(self.wid)
-		Win.InvalRect(self.rect)
+		self.wid.InvalWindowRect(self.rect)
 		
 	def get(self):
 		return self._data
@@ -157,13 +155,11 @@ class _ListWidget(_ControlWidget):
 	def insert(self, where=-1, content=[]):
 		where = self._insert(where, len(content))
 		self._setcontent(where, where+len(content), content)
-		Qd.SetPort(self.wid)
-		Win.InvalRect(self.rect)
+		self.wid.InvalWindowRect(self.rect)
 		
 	def replace(self, where, what):
 		self._setcontent(where, where+1, [what])
-		Qd.SetPort(self.wid)
-		Win.InvalRect(self.rect)
+		self.wid.InvalWindowRect(self.rect)
 		
 	def _deselectall(self):
 		while 1:
@@ -362,8 +358,7 @@ class _AreaWidget(_ControlWidget, _ImageMixin):
 		self.scale = scale
 ##		print 'self.rect', self.rect
 ##		print 'scale', self.scale
-		Qd.SetPort(self.wid)
-		Win.InvalRect(fullrect)
+		self.wid.InvalWindowRect(fullrect)
 		if self.scaleitem != None:
 			if self.scale == 1:
 				text = ''
@@ -403,8 +398,7 @@ class _AreaWidget(_ControlWidget, _ImageMixin):
 			self.ourrect = self.rect2screen(rect)
 		self.recalclurven()
 		fullrect = self.control.GetControlRect()
-		Qd.SetPort(self.wid)
-		Win.InvalRect(fullrect)
+		self.wid.InvalWindowRect(fullrect)
 		
 	def get(self):
 		if self.ourrect is None:
@@ -431,7 +425,7 @@ class _ImageWidget(_Widget, _ImageMixin):
 		self.image = image
 		self.dlg = dlg
 		self.wid = dlg.GetDialogWindow()
-		Win.InvalRect(self.rect)
+		self.wid.InvalWindowRect(self.rect)
 		
 	def close(self):
 ##		print 'DBG: close', self
@@ -442,8 +436,8 @@ class _ImageWidget(_Widget, _ImageMixin):
 		del self.image_data
 			
 	def setfromfile(self, image):
-		Qd.SetPort(self.wid)
-		Win.InvalRect(self.rect)
+##		Qd.SetPort(self.wid)
+		self.wid.InvalWindowRect(self.rect)
 		self.image_data = self._loadimagefromfile(image)
 				
 	def _redraw(self, rgn=None):
