@@ -121,6 +121,8 @@ class AttrEditorDialogField:
 			# attribute value is one of a list of choices (option menu)
 			list = self.getoptions()
 			val = self.getcurrent()
+			if val not in list:
+				val = list[0]
 			self.__list = list
 			if len(list) > 30:
 				# list too long for option menu
