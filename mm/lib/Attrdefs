@@ -315,7 +315,7 @@
 	'Stacking order for channels, higher numbers are on top' normal light)
 
 # SMIL system test attributes
-(system_bitrate (int) 0 'System bitrate' default
+(system_bitrate (int) 0 'System bitrate' bitrate3
 	'Play node only if bitrate >= value here' raw light)
 (system_captions (bool) 0 'System captions' bool3
 	'Play node only if end-user wants captions' raw light)
