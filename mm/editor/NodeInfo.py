@@ -2,6 +2,8 @@
 
 
 import path
+import posix
+import string
 import fl
 import gl
 from FL import *
@@ -24,6 +26,12 @@ from Dialog import Dialog
 FORMWIDTH=535
 FORMHEIGHT=255
 
+class Struct(): pass
+_global = Struct()
+
+_global.cwd = posix.getcwd()+'/'
+_global.dir = ''
+
 
 # There are two basic calls into this module (but see below for more):
 # shownodeinfo(node) creates an node info form for a node
@@ -35,14 +43,17 @@ FORMHEIGHT=255
 # user what should be done about this -- this part of the interface
 # hasn't been completely thought out yet.
 
-def shownodeinfo(node):
+def _shownodeinfo(node,new):
 	try:
 		nodeinfo = node.nodeinfo
 	except NameError:
 		nodeinfo = NodeInfo().init(node)
 		node.nodeinfo = nodeinfo
-	nodeinfo.open()
+	nodeinfo.open(new)
 
+def shownodeinfo(node): _shownodeinfo(node,0)
+
+def shownewnodeinfo(node): _shownodeinfo(node,1)
 
 def hidenodeinfo(node):
 	try:
@@ -136,7 +147,7 @@ class NodeInfo() = Dialog():
 	def rollback(self):
 		pass
 	#
-	def open(self):
+	def open(self,new):
 		self.close()
 		self.title = self.maketitle()
 		self.getvalues(TRUE)
@@ -432,9 +443,27 @@ class NodeInfo() = Dialog():
 		self.ch_filename = 1
 		self.changed = 1
 		self.filename = filename
+	#
+	# File browser callback.
+	# There's a bit of hacky code ahead to try and get
+	# both reasonable pathnames in the cmif file and reasonable
+	# defaults. If the filename is empty we select the same
+	# directory as last time, and we try to remove the current
+	# dir from the resulting pathname.
 	def browser_callback(self, (obj,dummy)):
 	    dir, file = path.split(self.filename)
+	    if file = '' or self.filename = '/dev/null': # YUCK!
+		dir = _global.dir
+		file = ''
 	    result = fl.file_selector('Select file', dir, '*', file)
+	    if result:
+		try:
+		    if string.index(result,_global.cwd) = 0:
+			result = result[len(_global.cwd):]
+		except string.index_error:
+		    pass
+		dir, file = path.split(result)
+		_global.dir = dir
 	    if result and result <> self.filename:
 		self.ch_filename = 1
 		self.changed = 1
