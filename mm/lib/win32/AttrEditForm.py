@@ -58,7 +58,10 @@ class AttrCtrl:
 		pass
 
 	def enableApply(self,flag=1):
-		self._wnd._form._prsht.enableApply(flag)
+		if self._wnd._form._prsht:
+			self._wnd._form._prsht.enableApply(flag)
+		else:
+			print '_prsht is None!'
 
 # temp stuff not safe
 def atoft(str):
@@ -129,6 +132,7 @@ class ChannelCtrl(OptionsCtrl):
 		self._wnd.HookCommand(self.OnChannel,self._resid[2])
 
 	def OnChannel(self,id,code):
+		print 'OnChannel'
 		if self._attr:
 			self._attr.channelprops()
 
@@ -1274,9 +1278,17 @@ class PreviewPage(AttrPage):
 
 	def OnInitDialog(self):
 		AttrPage.OnInitDialog(self)
+		self.setRendererRc()
 		c=self.getctrl(self._aname)
 		rurl=string.strip(c.getvalue())
 		self._renderer.load(rurl)
+
+	def setRendererRc(self):
+		preview=components.Control(self,grinsRC.IDC_PREVIEW)
+		preview.attach_to_parent()
+		l1,t1,r1,b1=self.GetWindowRect()
+		l2,t2,r2,b2=preview.getwindowrect()
+		self._renderer._rc=(l2-l1,t2-t1,r2-l1,b2-t1)
 
 	def OnDestroy(self,params):
 		del self._renderer
