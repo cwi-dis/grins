@@ -77,7 +77,8 @@ def parsecounter(value, maybe_relative = 0, withsign = 0, syntax_error = _syntax
 				offset = offset / 1000.0
 			# else already in seconds
 		else:
-			raise error, 'internal error'
+			# the r.e. also matches the empty string
+			raise error, "value `%s' is not a clock value" % value
 		if sign and sign == '-':
 			offset = -offset
 		return offset
