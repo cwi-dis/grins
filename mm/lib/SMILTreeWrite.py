@@ -596,8 +596,8 @@ def getrepeat(writer, node):
 	else:
 		return `value`
 
-def getcaptions(writer, node):
-	value = node.GetRawAttrDef('system_captions', None)
+def getboolean(writer, node, attr):
+	value = node.GetRawAttrDef(attr, None)
 	if value is not None:
 		if value:
 			return 'on'
@@ -667,17 +667,19 @@ smil_attrs=[
 	("accelerate", lambda writer, node:getproportion(writer, node, "accelerate")),
 	("decelerate", lambda writer, node:getproportion(writer, node, "decelerate")),
 	("system-bitrate", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_bitrate")) or None),
-	("system-captions", lambda writer, node:(not writer.smilboston and getcaptions(writer, node)) or None),
+	("system-captions", lambda writer, node:(not writer.smilboston and getboolean(writer, node, 'system_captions')) or None),
 	("system-language", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_language")) or None),
 	("system-overdub-or-caption", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_overdub_or_caption")) or None),
 	("system-required", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_required")) or None),
 	("system-screen-size", lambda writer, node:(not writer.smilboston and getscreensize(writer, node)) or None),
 	("system-screen-depth", lambda writer, node:(not writer.smilboston and getrawcmifattr(writer, node, "system_screen_depth")) or None),
+	("systemAudioDesc", lambda writer, node:(writer.smilboston and getboolean(writer, node, 'system_audiodesc')) or None),
 	("systemBitrate", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_bitrate")) or None),
-	("systemCaptions", lambda writer, node:(writer.smilboston and getcaptions(writer, node)) or None),
+	("systemCaptions", lambda writer, node:(writer.smilboston and getboolean(writer, node, 'system_captions')) or None),
+	("systemCPU", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_cpu")) or None),
 	("systemLanguage", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_language")) or None),
-	("systemOverdubOrCaption", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_overdub_or_caption")) or None),
-	("systemOverdubOrSubtitle", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_overdub_or_subtitle")) or None),
+	("systemOperatingSystem", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_operating_system")) or None),
+	("systemOverdubOrSubtitle", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_overdub_or_caption")) or None),
 	("systemRequired", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_required")) or None),
 	("systemScreenSize", lambda writer, node:(writer.smilboston and getscreensize(writer, node)) or None),
 	("systemScreenDepth", lambda writer, node:(writer.smilboston and getrawcmifattr(writer, node, "system_screen_depth")) or None),
@@ -694,7 +696,8 @@ cmif_node_attrs_ignore = {
 	'anchorlist':0, 'channel':0, 'file':0, 'duration':0,
 	'system_bitrate':0, 'system_captions':0, 'system_language':0,
 	'system_overdub_or_caption':0, 'system_overdub_or_subtitle':0,
-	'system_required':0,
+	'system_required':0, 'system_audiodesc':0, 'system_operating_system':0,
+	'system_cpu':0,
 	'system_screen_size':0, 'system_screen_depth':0, 'layout':0,
 	'clipbegin':0, 'clipend':0, 'u_group':0, 'loop':0, 'synctolist':0,
 	'author':0, 'copyright':0, 'abstract':0, 'alt':0, 'longdesc':0,

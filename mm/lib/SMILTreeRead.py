@@ -523,6 +523,16 @@ class SMILParser(SMIL, xmllib.XMLParser):
 					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
 				self.__context.attributes['project_boston'] = 1
 				attrdict['system_language'] = val
+			elif attr == 'systemCPU':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				attrdict['system_cpu'] = string.lower(val)
+			elif attr == 'systemOperatingSystem':
+				if self.__context.attributes.get('project_boston') == 0:
+					self.syntax_error('%s attribute not compatible with SMIL 1.0' % attr)
+				self.__context.attributes['project_boston'] = 1
+				attrdict['system_operating_system'] = string.lower(val)
 			elif attr == 'system-overdub-or-caption':
 				if val in ('caption', 'overdub'):
 					if not attrdict.has_key('system_overdub_or_caption'):
