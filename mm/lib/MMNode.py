@@ -4544,6 +4544,23 @@ class MMErrors:
 
 	def getSource(self):
 		return self.source
+
+	def getErrorNumber(self):
+		return len(self.list)
+	
+	def getFormatedErrorsMessage(self, maxErrors):
+		errorsMessage = ''
+		errorList = self.getErrorList()
+		number = 0
+		for message, line in errorList:
+			# format only the required lines number
+			if number < maxErrors:
+				errorsMessage = errorsMessage+message+'.\n'
+			else:
+				errorsMessage = errorsMessage+'. . .'+'\n'
+				break
+			number = number+1
+		return errorsMessage						
 	
 # Make a "deep copy" of an arbitrary value
 #
