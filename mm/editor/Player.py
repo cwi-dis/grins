@@ -105,18 +105,14 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.toplevel.checkviews()
 		self.showchannels()
 		self.showstate()
-		self.init_timer_prof()
 	#
 	def hide(self):
 		if not self.showing: return
-		self.done_timer_prof()
 		self.stop()
 		self.fullreset()
 		BasicDialog.hide(self)
 		self.toplevel.checkviews()
 		self.destroychannels()
-##		MMAttrdefs.showstats() # XXX Timing
-##		MMAttrdefs.stopstats() # XXX Timing
 	#
 	def destroy(self):
 		self.rtpool = None
@@ -247,7 +243,6 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	# FORMS callbacks.
 	#
 	def play_callback(self, (obj, arg)):
-##		MMAttrdefs.startstats() # XXX Timing
 		self.play()
 	#
 	def pause_callback(self, (obj, arg)):
@@ -291,23 +286,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	def dummy_callback(self, dummy):
 		pass
 	#
-	def init_timer_prof(self):
-		print 'INIT_TIMER_PROF'
-		import profile
-		self.prof = profile.Profile().init()
-		self.profenv = {'dotcb':self.do_timer_callback}
-
-	def done_timer_prof(self):
-		print 'DONE_TIMER_PROF'
-		self.prof.print_stats()
-		del self.prof
-		del self.profenv
-		
 	def timer_callback(self, (obj, arg)):
-		self.prof.runctx('dotcb()\n', self.profenv, self.profenv)
-		#self.do_timer_callback()
-
-	def do_timer_callback(self):
 		gap = None
 		while self.queue:
 			when, prio, action, argument = self.queue[0]
@@ -574,7 +553,6 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		return 1
 	#
 	def resume_1_playing(self,rate):
-		#MMAttrdefs.startstats()
 		self.setwaiting()
 		self.playing = 1
 		self.reset()
@@ -613,8 +591,6 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		self.playing = 0
 		self.measure_armtimes = 0
 		self.suspend_playing()
-		#a = MMAttrdefs.stopstats()
-		#MMAttrdefs.showstats(a)
 	#
 	def seek_done(self):
 		for node in self.seek_nodelist:
