@@ -522,6 +522,7 @@ class _Toplevel(_Event):
 		self._cur_cursor = None		# The currently active cursor
 		self._wtd_cursor = ''		# The wanted cursor
 		self._menubar = None
+		self._globalgroup = None
 		
 	def _initcommands(self):
 		for cmd in MenuTemplate.UNUSED_COMMANDS:
@@ -534,10 +535,11 @@ class _Toplevel(_Event):
 			apply(func, args)
 		for win in self._subwindows[:]:
 			win.close()
-		self._command_handler.uninstall_cmd(CMDSET_GLOBAL,
-						    self._globalgroup)
-		self._globalgroup.close()
-		del self._globalgroup
+		if self._globalgroup:
+			self._command_handler.uninstall_cmd(CMDSET_GLOBAL,
+							    self._globalgroup)
+			self._globalgroup.close()
+			self._globalgroup = None
 		for group in self._windowgroups[:]:
 			group.close()
 		if self._command_handler:
@@ -651,9 +653,9 @@ class _Toplevel(_Event):
 			# decativates, is this correct?
 			if window:
 				group = window.window_group
-				if __debug__:
-					if not group:
-						raise 'Window without a group?'
+##				if __debug__:
+##					if not group:
+##						raise 'Window without a group?'
 				self._install_group_commands(group)
 			self.needmenubarrecalc = 1
 		
