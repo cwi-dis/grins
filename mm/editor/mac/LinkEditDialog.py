@@ -51,7 +51,7 @@ ITEM_LEFT_NODESELECT=3
 ITEM_LEFT_ALIST=4
 ITEM_LEFT_PUSH=5
 ITEM_LEFT_AEDIT=6
-ITEMLIST_LEFT=ITEMrange(ITEM_LEFT_ATITLE, ITEM_LEFT_AEDIT)
+ITEMLIST_LEFT=ITEMrange(ITEM_LEFT_ALIST, ITEM_LEFT_AEDIT)
 ITEMLIST_LEFT_BUTTONS=ITEMrange(ITEM_LEFT_PUSH, ITEM_LEFT_AEDIT)
 
 ITEM_RIGHT_ATITLE=7
@@ -60,7 +60,7 @@ ITEM_RIGHT_NODESELECT=9
 ITEM_RIGHT_ALIST=10
 ITEM_RIGHT_PUSH=11
 ITEM_RIGHT_AEDIT=12
-ITEMLIST_RIGHT=ITEMrange(ITEM_RIGHT_ATITLE, ITEM_RIGHT_AEDIT)
+ITEMLIST_RIGHT=ITEMrange(ITEM_RIGHT_ALIST, ITEM_RIGHT_AEDIT)
 ITEMLIST_RIGHT_BUTTONS=ITEMrange(ITEM_RIGHT_PUSH, ITEM_RIGHT_AEDIT)
 
 ITEM_LINKS_TITLE=13
@@ -464,13 +464,16 @@ class LinkBrowserDialog(windowinterface.MACDialog):
 ##XXXX
 
 class LinkEditorDialog(windowinterface.MACDialog):
-	def __init__(self, title, dirstr, typestr, dir, type):
+	def __init__(self, title, dirstr, typestr, dir, type, dirsens):
 		"""Create the LinkEditor dialog.
 		"""
 		windowinterface.MACDialog.__init__(self, title, ID_DIALOG_LINKEDIT,
 				ITEMLIST_EDITOR_ALL, default=ITEM_OK, cancel=ITEM_CANCEL)
 		self.linkdirsetchoice(dir)
 		self.linktypesetchoice(type)
+		for i in range(len(dirsens)):
+			if not dirsens[i]:
+				self._setsensitive([ITEM_DIR_RIGHT+i], 0) 
 		
 	def show(self):
 		windowinterface.MACDialog.show(self)
