@@ -2200,28 +2200,27 @@ class TreeWidget(Widget):
 		# clear the list		
 		self.__nodeRefListToExpand = []
 
-	def appendMedia(self, pNodeRef, nodeRef):
-		mediaType = nodeRef.GetChannelType()
-		name = self._context.getShowedName(nodeRef, TYPE_MEDIA)
-		ret = self.treeCtrl.insertNode(self.nodeRefToNodeTreeCtrlId[pNodeRef], name, mediaType, mediaType)
+	def _appendItem(self, pNodeRef, nodeRef, tp):
+		iconname = nodeRef.getIconName(wantmedia=1)
+		name = self._context.getShowedName(nodeRef, tp)
+		if pNodeRef is None:
+			idx = 0
+		else:
+			idx = self.nodeRefToNodeTreeCtrlId[pNodeRef]
+		ret = self.treeCtrl.insertNode(idx, name, iconname, iconname)
 		self.nodeRefToNodeTreeCtrlId[nodeRef] = ret
 		self.nodeTreeCtrlIdToNodeRef[ret] = nodeRef
+
+	def appendMedia(self, pNodeRef, nodeRef):
+		self._appendItem(pNodeRef, nodeRef, TYPE_MEDIA)
 
 	def appendViewport(self, nodeRef):
-		name = self._context.getShowedName(nodeRef, TYPE_VIEWPORT)
-		ret = self.treeCtrl.insertNode(0, name, 'viewport', 'viewport')
-		self.nodeRefToNodeTreeCtrlId[nodeRef] = ret
-		self.nodeTreeCtrlIdToNodeRef[ret] = nodeRef
-
+		self._appendItem(None, nodeRef, TYPE_VIEWPORT)
 		# save the new node for expand. The expand operation can't be done here
 		self.__nodeRefListToExpand.append(nodeRef)
 			
 	def appendRegion(self, pNodeRef, nodeRef):
-		name = self._context.getShowedName(nodeRef, TYPE_REGION)
-		ret = self.treeCtrl.insertNode(self.nodeRefToNodeTreeCtrlId[pNodeRef], name, 'region', 'region')
-		self.nodeRefToNodeTreeCtrlId[nodeRef] = ret
-		self.nodeTreeCtrlIdToNodeRef[ret] = nodeRef
-
+		self._appendItem(pNodeRef, nodeRef, TYPE_REGION)
 		# save the new node for expand. The expand operation can't be done here
 		self.__nodeRefListToExpand.append(nodeRef)
 
