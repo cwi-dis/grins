@@ -1158,6 +1158,40 @@ RMBE_CreateCodecInfoManager(RMBEobject *self, PyObject *args)
 	return (PyObject *) val;
 }
 
+
+static char RMBE_CreateTargetAudienceManager__doc__[] =
+""
+;
+
+static PyObject *
+RMBE_CreateTargetAudienceManager(RMBEobject *self, PyObject *args)
+{
+	PN_RESULT res;
+	IRMABuildClassFactory *clfac;
+	RMTAMobject *val;
+
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	res = self->buildEngine->QueryInterface(IID_IRMABuildClassFactory, (void**) &clfac);
+	if (!SUCCEEDED(res)) {
+		seterror("QueryInterface", res);
+		return NULL;
+	}
+	val = newRMTAMobject();
+	if (val == NULL)
+		return NULL;
+	res = clfac->CreateInstance(CLSID_IRMATargetAudienceManager, NULL, IID_IRMATargetAudienceManager, (void **) &val->targetAudienceManager);
+	PN_RELEASE(clfac);
+	if (!SUCCEEDED(res)) {
+		seterror("CreateInstance", res);
+		val->targetAudienceManager = NULL;
+		Py_DECREF(val);
+		return NULL;
+	}
+	return (PyObject *) val;
+}
+
+
 static char RMBE_QueryInterfaceUnknown__doc__[] =
 ""
 ;
@@ -1199,6 +1233,7 @@ static struct PyMethodDef RMBE_methods[] = {
 	{"CancelEncoding", (PyCFunction)RMBE_CancelEncoding, METH_VARARGS, RMBE_CancelEncoding__doc__},
 	{"CreateMediaSample", (PyCFunction)RMBE_CreateMediaSample, METH_VARARGS, RMBE_CreateMediaSample__doc__},
 	{"CreateCodecInfoManager", (PyCFunction)RMBE_CreateCodecInfoManager, METH_VARARGS, RMBE_CreateCodecInfoManager__doc__},
+	{"CreateTargetAudienceManager", (PyCFunction)RMBE_CreateTargetAudienceManager, METH_VARARGS, RMBE_CreateTargetAudienceManager__doc__},
 	{"QueryInterfaceUnknown", (PyCFunction)RMBE_QueryInterfaceUnknown, METH_VARARGS, RMBE_QueryInterfaceUnknown__doc__},
 
 	{NULL, 	NULL}		/* sentinel */
@@ -3243,6 +3278,7 @@ RMTAM_GetTargetAudienceInfo(RMTAMobject *self, PyObject *args)
 }
 
 
+#if 0
 static char RMTAM_DisplayTargetAudienceSettings__doc__[] =
 ""
 ;
@@ -3250,7 +3286,6 @@ static char RMTAM_DisplayTargetAudienceSettings__doc__[] =
 static PyObject *
 RMTAM_DisplayTargetAudienceSettings(RMTAMobject *self, PyObject *args)
 {
-#if 0
 	PN_RESULT res;
 	long descr, parent;
 	RMTSobject *settings;
@@ -3263,10 +3298,10 @@ RMTAM_DisplayTargetAudienceSettings(RMTAMobject *self, PyObject *args)
 		seterror("DisplayTargetAudienceSettings", res);
 		return NULL;
 	}
-#endif
 	Py_INCREF(Py_None);
 	return Py_None;
 }
+#endif
 
 
 static char RMTAM_RestoreDefaults__doc__[] =
@@ -3282,7 +3317,9 @@ RMTAM_RestoreDefaults(RMTAMobject *self, PyObject *args)
 
 static struct PyMethodDef RMTAM_methods[] = {
 	{"GetTargetAudienceInfo", (PyCFunction)RMTAM_GetTargetAudienceInfo, METH_VARARGS, RMTAM_GetTargetAudienceInfo__doc__},
+#if 0
 	{"DisplayTargetAudienceSettings", (PyCFunction)RMTAM_DisplayTargetAudienceSettings, METH_VARARGS, RMTAM_DisplayTargetAudienceSettings__doc__},
+#endif
 	{"RestoreDefaults", (PyCFunction)RMTAM_RestoreDefaults, METH_VARARGS, RMTAM_RestoreDefaults__doc__},
 
 	{NULL, 	NULL}		/* sentinel */
