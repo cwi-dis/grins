@@ -281,7 +281,7 @@ class HTMLWriter:
 			('width', `width`),
 			('height', `height`)])
 		for arg, val in arglist:
-			out = out + self.outtag('param', [(arg, val)])
+			out = out + self.outtag('param', [('name', arg), ('value', val)])
 		# Trick: if the browser understands the object tag but not the embed
 		# tag (inside it) it will quietly skip it.
 		arglist = arglist[:]
