@@ -3873,6 +3873,19 @@ class PreferencesGroup(SnapSystemGroup):
 		cd[a] = OptionsRadioNolabelCtrl(wnd,a,resids)
 		return cd
 
+class Preferences2Group(PreferencesGroup):
+	data=attrgrsdict['preferences2']
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_S1R3S7
+
+	def createctrls(self,wnd):
+		cd = PreferencesGroup.createctrls(self, wnd)
+		a = self.getattr('system_audiodesc')
+		resids = (grinsRC.IDC_SAUDIODESCL,grinsRC.IDC_SAUDIODESCV1,grinsRC.IDC_SAUDIODESCV2)
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,resids)
+		return cd
+
 class SystemGroup(PreferencesGroup):
 	data=attrgrsdict['system']
 	nodefault = 0
@@ -4113,6 +4126,26 @@ class MediaGroup(FileGroup):
 		if not self.canpreview() or self.isStaticMedia(self._mtypesig):
 			self.__clipbegin.enable(0)
 			self.__clipend.enable(0)
+
+class BrushGroup(AttrGroup):
+	data=attrgrsdict['brush']
+	def __init__(self):
+		AttrGroup.__init__(self,BrushGroup.data)
+
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_BRUSH
+
+	def createctrls(self,wnd):
+		cd = {}
+		a = self.getattr('fgcolor')
+		cd[a] = ColorNolabelCtrl(wnd,a,(grinsRC.IDC_LABEL, grinsRC.IDC_COLORS, grinsRC.IDC_COLOR_PICK))
+		a = self.getattr('readIndex')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_READINDEXL, grinsRC.IDC_READINDEXV))
+		a = self.getattr('sensitivity')
+		cd[a] = StringNolabelCtrl(wnd,a,(grinsRC.IDC_EVENTSENSITIVITYL, grinsRC.IDC_EVENTSENSITIVITYV))
+		a = self.getattr('erase')
+		cd[a] = OptionsRadioNolabelCtrl(wnd,a,(grinsRC.IDC_ERASEL, grinsRC.IDC_ERASEV2, grinsRC.IDC_ERASEV1))
+		return cd
 		
 class TimingFadeoutGroup(AttrGroup):
 	data=attrgrsdict['timingfadeout']
@@ -4602,6 +4635,7 @@ groupsui={
 	'system':SystemGroup,
 	'system2':SystemGroup2,
 	'preferences':PreferencesGroup,
+	'preferences2':Preferences2Group,
 	'name':NameGroup,
 	'.cname':CNameGroup,
 	'intname':INameGroup,
@@ -4621,6 +4655,7 @@ groupsui={
 	'mediaserver':MediaserverGroup,
 	'file':FileGroup,
 	'media':MediaGroup,
+	'brush':BrushGroup,
 	'wipe':WipeGroup,
 	'clip':ClipGroup,
 	'bandwidth':BandwidthGroup,

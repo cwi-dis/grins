@@ -107,6 +107,16 @@ attrgrs=(
 		'system_screen_size',
 		]},
 
+	{'name':'preferences2',
+	'title': 'Previer properties',
+	'attrs':[
+		'system_bitrate',
+		'system_captions',
+		'system_language',
+		'system_overdub_or_caption',
+		'system_audiodesc',
+		]},
+
 	{'name':'preferences',
 	'title': 'GRiNS preferences',
 	'attrs':[
@@ -281,6 +291,15 @@ attrgrs=(
 		'project_ftp_dir_media',
 		'project_ftp_user_media',
 		'project_smil_url',
+		]},
+
+	{'name':'brush',
+	'title':'Media',
+	'attrs':[
+		'fgcolor',
+		'readIndex',
+		'sensitivity',
+		'erase',
 		]},
 
 	{'name':'media',

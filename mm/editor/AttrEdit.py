@@ -596,8 +596,9 @@ class NodeWrapper(Wrapper):
 			namelist.append('alt')
 			if not snap:
 				namelist.append('longdesc')
-				namelist.append('clipbegin')
-				namelist.append('clipend')
+				if ctype != 'brush':
+					namelist.append('clipbegin')
+					namelist.append('clipend')
 			if lightweight and ChannelMap.isvisiblechannel(ctype):
 				namelist.append('.hyperlink')
 			if boston:
@@ -614,7 +615,9 @@ class NodeWrapper(Wrapper):
 						namelist.append('regAlign')
 						namelist.append('z')
 					namelist.append('sensitivity')
-					
+				if ctype == 'brush':
+					namelist.append('fgcolor')
+
 			# specific time preference
 			namelist.append('immediateinstantiationmedia')
 			namelist.append('bitratenecessary')
@@ -669,6 +672,10 @@ class NodeWrapper(Wrapper):
 			# cssbgcolor is used instead
 			if 'bgcolor' in retlist: retlist.remove('bgcolor')
 			if 'transparent' in retlist: retlist.remove('transparent')
+			if ctype == 'brush':
+				if 'file' in retlist:
+					retlist.remove('file')
+			
 		return retlist
 
 	def getdef(self, name):
@@ -1324,7 +1331,8 @@ class PreferenceWrapper(Wrapper):
 		return 1
 
 	def maketitle(self):
-		return 'GRiNS Preferences'
+		return 'Previer properties'
+#		return 'GRiNS Preferences'
 
 	def getattr(self, name):	# Return the attribute or a default
 		import settings
