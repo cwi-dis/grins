@@ -1211,7 +1211,8 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 
 	# Set the editor toolbar to the state with a document
 	def setEditorDocumentToolbar(self, adornments):
-		self._wndToolBar.SetButtons(15)
+		num_buttons = 18
+		self._wndToolBar.SetButtons(num_buttons)
 
 		id=usercmdui.class2ui[usercmd.NEW_DOCUMENT].id
 		self._wndToolBar.SetButtonInfo(0,id,afxexttb.TBBS_BUTTON,0)
@@ -1252,17 +1253,18 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		self._wndToolBar.SetButtonInfo(13,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
 
 		id = usercmdui.class2ui[usercmd.CANVAS_ZOOM_IN].id
-		self._wndToolBar.SetButtonInfo(15,id,afxexttb.TBBS_BUTTON,15)
+		self._wndToolBar.SetButtonInfo(14,id,afxexttb.TBBS_BUTTON,15)
 		id = usercmdui.class2ui[usercmd.CANVAS_ZOOM_OUT].id
-		self._wndToolBar.SetButtonInfo(16,id,afxexttb.TBBS_BUTTON,16)
+		self._wndToolBar.SetButtonInfo(15,id,afxexttb.TBBS_BUTTON,16)
+		print "DEBUG: added buttons."
 
-		self._wndToolBar.SetButtonInfo(13,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
+		self._wndToolBar.SetButtonInfo(16,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
 
 		id=usercmdui.class2ui[usercmd.HELP].id
-		self._wndToolBar.SetButtonInfo(14,id,afxexttb.TBBS_BUTTON, 12)
+		self._wndToolBar.SetButtonInfo(17,id,afxexttb.TBBS_BUTTON, 12)
 
 		if adornments.has_key('pulldown'):
-			index = 15
+			index = num_buttons
 			for list, cb, init in adornments['pulldown']:
 				self._wndToolBar.SetButtonInfo(index,afxexttb.ID_SEPARATOR,afxexttb.TBBS_SEPARATOR,12)
 				index = index + 1
@@ -1405,7 +1407,7 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window, DropTarget.DropTarget)
 		owner=currentChild.GetWindow(win32con.GW_OWNER)
 		if not owner:
 			if currentChild.IsKindOfMDIChildWnd():
-	            # MDIChildWnd or a derived class.
+				# MDIChildWnd or a derived class.
 				return currentChild
 			else:
 				# Window is foreign to the MFC framework.
