@@ -662,8 +662,12 @@ class MMNode(domcore.Element):
 
 	def insertBefore(self, newChild, refChild = None) :
 		if newChild in self.children :
-			self._editMgrAddNode(i, newChild) 
-			return self.insertBefore(newChild, refChild)
+		 	self._editMgrRemoveNode(newChild)	# remove childnode 
+			if refChild in self.children:		# determine position
+				i = self.children.index(refChild)
+			else:
+				i = len(self.children)
+			self._editMgrAddNode(i, newChild) 	# insert childnode
 		elif refChild==None :
 			i = len(self.children)
 			self._editMgrAddNode(i, newChild) 
