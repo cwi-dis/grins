@@ -6,9 +6,6 @@ from AnchorDefs import *
 
 
 class MpegChannel(ChannelWindowThread):
-	def __repr__(self):
-		return '<MpegChannel instance, name=' + `self._name` + '>'
-
 	def threadstart(self):
 		import mpegchannel
 		return mpegchannel.init()
