@@ -961,7 +961,7 @@ class ChannelWrapper(Wrapper):
 	# in an order that makes sense to the user.
 	#
 	def attrnames(self):
-		namelist = ['.cname', 'type', 'title', 'comment', 'alt', 'longdesc']
+		namelist = ['.cname', 'type', 'title', 'comment']
 		ctype = self.channel.get('type', 'unknown')
 		if ChannelMap.channelmap.has_key(ctype):
 			cclass = ChannelMap.channelmap[ctype]
