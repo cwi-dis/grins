@@ -120,7 +120,7 @@ SMIL_PSS5_MODULES = SMIL_PSS4_MODULES + [
 
 # All modules that are part of the SMIL 2.0 Language Profile.
 # This contains everything from the 3GPP PSS4 Profile, and then some
-SMIL_20_MODULES = SMIL_PSS4_MODULES + [
+SMIL_20_MODULES = SMIL_PSS5_MODULES + [
 	'AccessKeyTiming',
 	'AudioLayout',
 	'BasicAnimation',
@@ -157,6 +157,18 @@ SMIL_20_MODULES = SMIL_PSS4_MODULES + [
 ]
 
 def switch_profile(modulelist):
+	if __debug__:
+		if modulelist is SMIL_20_MODULES:
+			name = 'SMIL 2.0 Language Profile'
+		elif modulelist is SMIL_PSS5_MODULES:
+			name = '3GPP PSS5 Profile'
+		elif modulelist is SMIL_PSS4_MODULES:
+			name = '3GPP PSS4 Profile'
+		elif modulelist is SMIL_BASIC_MODULES:
+			name = 'SMIL 2.0 Basic Language Profile'
+		else:
+			name = 'Unknown profile'
+		print 'switching profile',name
 	for mod in MODULES.keys():
 		MODULES[mod] = 0
 	for mod in modulelist:
