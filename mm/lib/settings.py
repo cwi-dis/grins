@@ -105,7 +105,8 @@ default_settings = {
 	'timeline_playerrorcolor': (255, 0, 0),
 	# Locations on the net
 	'templatedir_url': 'http://www.oratrix.com/indir/images',
-	'defaultviews' : ['hierarchy']	# Default views to open
+	'defaultviews' : ['hierarchy'],	# Default views to open
+	'showsource' : 0,	# Hidden preference to show source window in the player
 }
 
 user_settings = {}
