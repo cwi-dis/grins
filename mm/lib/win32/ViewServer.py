@@ -160,8 +160,8 @@ class ViewServer:
 	# Create and initialize a new view object 
 	# Keep instance of player
 	def newview(self,x, y, w, h, title, units = appcon.UNIT_MM, adornments=None,canvassize=None, commandlist=None, strid='cmifview_'):
-		print 'newview',strid
 		if strid=='pview_' and self._player:
+			print 'channel module call: new player view on resize'
 			return self._player
 		viewno=self.getviewno(strid)
 		viewclass=appview[viewno]['class'] 
