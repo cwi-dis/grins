@@ -1,23 +1,24 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<smil xmlns:GRiNS="http://www.oratrix.com/">
+<!DOCTYPE smil PUBLIC "-//W3C//DTD SMIL 1.0//EN"
+                      "http://www.w3.org/TR/REC-smil/SMIL10.dtd">
+<smil>
   <head>
     <meta name="title" content=" basewindow "/>
-    <meta name="generator" content="GRiNS for SMIL 1.0, v1.5.1 "/>
     <layout>
-      <root-layout id="basewindow-" background-color="#ffffff" width="636" height="476"/>
-      <region id="Bot-R" left="329" top="169" width="300" height="300" z-index="2" GRiNS:type="image"/>
-      <region id="Mid" left="229" top="108" width="167" height="300" z-index="1" GRiNS:type="image"/>
-      <region id="Top-L" width="300" height="300" GRiNS:type="image"/>
-      <region id="Audio" GRiNS:type="sound"/>
+      <root-layout id="basewindow-" width="636" height="476"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="Bot-R" left="329" top="169" width="300" height="300" z-index="2" GRiNS:type="image"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="Mid" left="229" top="108" width="167" height="300" z-index="1" GRiNS:type="image"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="Audio" GRiNS:type="sound"/>
+      <region xmlns:GRiNS="http://www.oratrix.com/" id="Top-L" width="300" height="300" GRiNS:type="image"/>
     </layout>
   </head>
   <body>
     <seq id="City-Walk">
       <par id="Audio-Visual-Show">
         <seq id="Images">
-          <img id="Map" region="Top-L" src="Assets/mapc.jpg" dur="5s"/>
-          <img id="HG-168" region="Mid" src="Assets/h168c.jpg" dur="5s"/>
-          <img id="HG-218" region="Bot-R" src="Assets/h218c.jpg" dur="5s"/>
+          <img id="Picture_1" region="Top-L" dur="5s" src="#"/>
+          <img id="Picture_2" region="Mid" dur="5s" src="#"/>
+          <img id="Picture_3" region="Bot-R" dur="5s" src="#"/>
         </seq>
       </par>
     </seq>
