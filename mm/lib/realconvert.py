@@ -453,181 +453,185 @@ def _other_convertvideofile(u, srcurl, dstdir, file, node, progress = None):
 		import videoreader
 	except ImportError:
 		return
-	fin = MMurl.urlretrieve(srcurl)[0]
-	reader = videoreader.reader(srcurl)
-	if not reader:
-		return
-	# ignore suggested extension and make our own
-	file = os.path.splitext(file)[0] + '.rm'
-	fullpath = os.path.join(dstdir, file)
-	if engine is None:
-		engine = producer.CreateRMBuildEngine()
-	videopin = None
-	audiopin = None
-	has_video = reader.HasVideo()
-	has_audio = reader.HasAudio()
-	if not has_video:
-		import windowinterface
-		windowinterface.showmessage("Warning: no video track found in %s"%srcurl)
-	for pin in engine.GetPins():
-		if pin.GetOutputMimeType() == producer.MIME_REALVIDEO:
-			videopin = pin
-		elif pin.GetOutputMimeType() == producer.MIME_REALAUDIO:
-			audiopin = pin
-	warning = ''
-	if has_video and not videopin: 
-		has_video = 0
-		warning = 'Video conversion support appears to be missing!\n'
-	if has_audio and not audiopin: 
-		warning = 'Audio conversion support appears to be missing!\n'
-		has_audio = 0
-	if warning:
-		import windowinterface
-		windowinterface.showmessage('Warning:\n'+warning)
-	if not (has_audio or has_video):
-		return
-	engine.SetDoOutputMimeType(producer.MIME_REALAUDIO, has_audio)
-	engine.SetDoOutputMimeType(producer.MIME_REALVIDEO, has_video)
-	engine.SetDoOutputMimeType(producer.MIME_REALEVENT, 0)
-	engine.SetDoOutputMimeType(producer.MIME_REALIMAGEMAP, 0)
-	engine.SetDoOutputMimeType(producer.MIME_REALPIX, 0)
-	engine.SetRealTimeEncoding(0)
-	cp = engine.GetClipProperties()
-	ts = engine.GetTargetSettings()
-	ts.RemoveAllTargetAudiences()
-	if node is not None:
-		cp.SetTitle(MMAttrdefs.getattr(node, 'title'))
-		cp.SetAuthor(MMAttrdefs.getattr(node, 'author'))
-		cp.SetCopyright(MMAttrdefs.getattr(node, 'copyright'))
-		cp.SetPerfectPlay(MMAttrdefs.getattr(node, 'project_perfect'))
-		cp.SetMobilePlay(MMAttrdefs.getattr(node, 'project_mobile'))
-		if has_video:
-			ts.SetVideoQuality(MMAttrdefs.getattr(node, 'project_videotype'))
-		if has_audio:
-			ts.SetAudioContent(MMAttrdefs.getattr(node, 'project_audiotype'))
-		target = MMAttrdefs.getattr(node, 'project_targets')
-		ntargets = 0
-		for i in range(6):
-			if (1 << i) & target:
-				ts.AddTargetAudience(i)
-				ntargets = ntargets + 1
-		if ntargets == 0:
-			ts.AddTargetAudience(producer.ENC_TARGET_28_MODEM)
-			ntargets = ntargets + 1
-	else:
-		# we don't know nothin' about the node so use some defaults
-		cp.SetTitle('')
-		cp.SetAuthor('')
-		cp.SetCopyright('')
-		cp.SetPerfectPlay(1)
-		cp.SetMobilePlay(0)
-		ts.AddTargetAudience(producer.ENC_TARGET_28_MODEM)
-		ntargets = 1
-		if has_video:
-			ts.SetVideoQuality(producer.ENC_VIDEO_QUALITY_NORMAL)
-		if has_audio:
-			ts.SetAudioContent(producer.ENC_AUDIO_CONTENT_VOICE)
-	engine.SetDoMultiRateEncoding(ntargets != 1)
-	cp.SetSelectiveRecord(0)
-	cp.SetDoOutputServer(0)
-	cp.SetDoOutputFile(1)
-	cp.SetOutputFilename(fullpath)
-	
-	if has_video:
-		import imgformat
-		video_props = videopin.GetPinProperties()
-		video_props.SetFrameRate(reader.GetVideoFrameRate())
-		video_fmt = reader.GetVideoFormat()
-		# XXXX To be done better
-		if video_fmt.getformat() == imgformat.macrgb:
-			prod_format = producer.ENC_VIDEO_FORMAT_BGR32_NONINVERTED
-		else:
-			raise 'Unsupported video source format', video_fmt.getformat()
-		w, h = video_fmt.getsize()
-		video_props.SetVideoSize(w, h)
-		video_props.SetVideoFormat(prod_format)
-		video_props.SetCroppingEnabled(0)
-
-		video_sample = engine.CreateMediaSample()
-		
-		video_frame_millisecs = int(1000.0 / reader.GetVideoFrameRate())
-		
-	if has_audio:
-		audio_fmt = reader.GetAudioFormat()
-		encoding = audio_fmt.getencoding()
-		if not encoding in ('linear-excess', 'linear-signed'):
-			has_audio = 0
-			engine.SetDoOutputMimeType(producer.MIME_REALAUDIO, 0)
-			import windowinterface
-			windowinterface.showmessage('Converting video only: cannot handle %s audio\n(linear audio only)'%encoding)
-	if has_audio:
-		audio_props = audiopin.GetPinProperties()
-		audio_props.SetSampleRate(reader.GetAudioFrameRate())
-		audio_props.SetNumChannels(audio_fmt.getnchannels())
-		audio_props.SetSampleSize(audio_fmt.getbps())
-
-		audio_sample = engine.CreateMediaSample()
-		
-	engine.PrepareToEncode()
-	# Put the rest inside a try/finally, so a KeyboardInterrupt will cleanup
-	# the engine.
 	try:
-		if has_audio:
-			nbytes = audiopin.GetSuggestedInputSize()
-			nbpf = audio_fmt.getblocksize() / audio_fmt.getfpb()
-			audio_inputsize_frames = nbytes / nbpf
-			
-			audio_frame_millisecs = int(1000.0 * audio_inputsize_frames / reader.GetAudioFrameRate())
-
-		audio_done = video_done = 0
-		audio_flags = video_flags = 0
-		audio_time = video_time = 0
-		audio_data = video_data = None
-		if has_audio:
-			audio_time, audio_data = reader.ReadAudio(audio_inputsize_frames)
-		if not audio_data:
-			audio_done = 1
+		fin = MMurl.urlretrieve(srcurl)[0]
+		reader = videoreader.reader(srcurl)
+		if not reader:
+			return
+		# ignore suggested extension and make our own
+		file = os.path.splitext(file)[0] + '.rm'
+		fullpath = os.path.join(dstdir, file)
+		if engine is None:
+			engine = producer.CreateRMBuildEngine()
+		videopin = None
+		audiopin = None
+		has_video = reader.HasVideo()
+		has_audio = reader.HasAudio()
+		if not has_video:
+			import windowinterface
+			windowinterface.showmessage("Warning: no video track found in %s"%srcurl)
+		for pin in engine.GetPins():
+			if pin.GetOutputMimeType() == producer.MIME_REALVIDEO:
+				videopin = pin
+			elif pin.GetOutputMimeType() == producer.MIME_REALAUDIO:
+				audiopin = pin
+		warning = ''
+		if has_video and not videopin: 
+			has_video = 0
+			warning = 'Video conversion support appears to be missing!\n'
+		if has_audio and not audiopin: 
+			warning = 'Audio conversion support appears to be missing!\n'
+			has_audio = 0
+		if warning:
+			import windowinterface
+			windowinterface.showmessage('Warning:\n'+warning)
+		if not (has_audio or has_video):
+			return
+		engine.SetDoOutputMimeType(producer.MIME_REALAUDIO, has_audio)
+		engine.SetDoOutputMimeType(producer.MIME_REALVIDEO, has_video)
+		engine.SetDoOutputMimeType(producer.MIME_REALEVENT, 0)
+		engine.SetDoOutputMimeType(producer.MIME_REALIMAGEMAP, 0)
+		engine.SetDoOutputMimeType(producer.MIME_REALPIX, 0)
+		engine.SetRealTimeEncoding(0)
+		cp = engine.GetClipProperties()
+		ts = engine.GetTargetSettings()
+		ts.RemoveAllTargetAudiences()
+		if node is not None:
+			cp.SetTitle(MMAttrdefs.getattr(node, 'title'))
+			cp.SetAuthor(MMAttrdefs.getattr(node, 'author'))
+			cp.SetCopyright(MMAttrdefs.getattr(node, 'copyright'))
+			cp.SetPerfectPlay(MMAttrdefs.getattr(node, 'project_perfect'))
+			cp.SetMobilePlay(MMAttrdefs.getattr(node, 'project_mobile'))
+			if has_video:
+				ts.SetVideoQuality(MMAttrdefs.getattr(node, 'project_videotype'))
+			if has_audio:
+				ts.SetAudioContent(MMAttrdefs.getattr(node, 'project_audiotype'))
+			target = MMAttrdefs.getattr(node, 'project_targets')
+			ntargets = 0
+			for i in range(6):
+				if (1 << i) & target:
+					ts.AddTargetAudience(i)
+					ntargets = ntargets + 1
+			if ntargets == 0:
+				ts.AddTargetAudience(producer.ENC_TARGET_28_MODEM)
+				ntargets = ntargets + 1
+		else:
+			# we don't know nothin' about the node so use some defaults
+			cp.SetTitle('')
+			cp.SetAuthor('')
+			cp.SetCopyright('')
+			cp.SetPerfectPlay(1)
+			cp.SetMobilePlay(0)
+			ts.AddTargetAudience(producer.ENC_TARGET_28_MODEM)
+			ntargets = 1
+			if has_video:
+				ts.SetVideoQuality(producer.ENC_VIDEO_QUALITY_NORMAL)
+			if has_audio:
+				ts.SetAudioContent(producer.ENC_AUDIO_CONTENT_VOICE)
+		engine.SetDoMultiRateEncoding(ntargets != 1)
+		cp.SetSelectiveRecord(0)
+		cp.SetDoOutputServer(0)
+		cp.SetDoOutputFile(1)
+		cp.SetOutputFilename(fullpath)
+		
 		if has_video:
-			video_time, video_data = reader.ReadVideo()
-		if not video_data:
-			video_done = 1
-		if progress:
-			dur = max(reader.GetVideoDuration(), reader.GetAudioDuration())
-			now = 0
-		while not audio_done or not video_done:
-			if not audio_done:
-				next_audio_time, next_audio_data = reader.ReadAudio(audio_inputsize_frames)
-				if not next_audio_data:
-					audio_done = 1
-					audio_flags = producer.MEDIA_SAMPLE_END_OF_STREAM
-				audio_sample.SetBuffer(audio_data, audio_time, audio_flags)
-				audiopin.Encode(audio_sample)
-				audio_time = next_audio_time
-				audio_data = next_audio_data
-				if audio_time > now:
-					now = audio_time
-			if not video_done:
-				next_video_time, next_video_data = reader.ReadVideo()
-				if not next_video_data:
-					video_done = 1
-					video_flags = producer.MEDIA_SAMPLE_END_OF_STREAM
-				video_sample.SetBuffer(video_data, video_time, video_flags)
-				videopin.Encode(video_sample)
-				video_time = next_video_time
-				video_data = next_video_data
-				if video_time > now:
-					now = video_time
+			import imgformat
+			video_props = videopin.GetPinProperties()
+			video_props.SetFrameRate(reader.GetVideoFrameRate())
+			video_fmt = reader.GetVideoFormat()
+			# XXXX To be done better
+			if video_fmt.getformat() == imgformat.macrgb:
+				prod_format = producer.ENC_VIDEO_FORMAT_BGR32_NONINVERTED
+			else:
+				raise 'Unsupported video source format', video_fmt.getformat()
+			w, h = video_fmt.getsize()
+			video_props.SetVideoSize(w, h)
+			video_props.SetVideoFormat(prod_format)
+			video_props.SetCroppingEnabled(0)
+	
+			video_sample = engine.CreateMediaSample()
+			
+			video_frame_millisecs = int(1000.0 / reader.GetVideoFrameRate())
+			
+		if has_audio:
+			audio_fmt = reader.GetAudioFormat()
+			encoding = audio_fmt.getencoding()
+			if not encoding in ('linear-excess', 'linear-signed'):
+				has_audio = 0
+				engine.SetDoOutputMimeType(producer.MIME_REALAUDIO, 0)
+				import windowinterface
+				windowinterface.showmessage('Converting video only: cannot handle %s audio\n(linear audio only)'%encoding)
+		if has_audio:
+			audio_props = audiopin.GetPinProperties()
+			audio_props.SetSampleRate(reader.GetAudioFrameRate())
+			audio_props.SetNumChannels(audio_fmt.getnchannels())
+			audio_props.SetSampleSize(audio_fmt.getbps())
+	
+			audio_sample = engine.CreateMediaSample()
+			
+		engine.PrepareToEncode()
+		# Put the rest inside a try/finally, so a KeyboardInterrupt will cleanup
+		# the engine.
+		try:
+			if has_audio:
+				nbytes = audiopin.GetSuggestedInputSize()
+				nbpf = audio_fmt.getblocksize() / audio_fmt.getfpb()
+				audio_inputsize_frames = nbytes / nbpf
+				
+				audio_frame_millisecs = int(1000.0 * audio_inputsize_frames / reader.GetAudioFrameRate())
+	
+			audio_done = video_done = 0
+			audio_flags = video_flags = 0
+			audio_time = video_time = 0
+			audio_data = video_data = None
+			if has_audio:
+				audio_time, audio_data = reader.ReadAudio(audio_inputsize_frames)
+			if not audio_data:
+				audio_done = 1
+			if has_video:
+				video_time, video_data = reader.ReadVideo()
+			if not video_data:
+				video_done = 1
 			if progress:
-				apply(progress[0], progress[1] + (now, dur))
-	finally:
-		engine.DoneEncoding()
-	if os.name == 'mac':
-		import macfs
-		import macostools
-		fss = macfs.FSSpec(fullpath)
-		fss.SetCreatorType('PNst', 'PNRA')
-		macostools.touched(fss)
-	return file
+				dur = max(reader.GetVideoDuration(), reader.GetAudioDuration())
+				now = 0
+			while not audio_done or not video_done:
+				if not audio_done:
+					next_audio_time, next_audio_data = reader.ReadAudio(audio_inputsize_frames)
+					if not next_audio_data:
+						audio_done = 1
+						audio_flags = producer.MEDIA_SAMPLE_END_OF_STREAM
+					audio_sample.SetBuffer(audio_data, audio_time, audio_flags)
+					audiopin.Encode(audio_sample)
+					audio_time = next_audio_time
+					audio_data = next_audio_data
+					if audio_time > now:
+						now = audio_time
+				if not video_done:
+					next_video_time, next_video_data = reader.ReadVideo()
+					if not next_video_data:
+						video_done = 1
+						video_flags = producer.MEDIA_SAMPLE_END_OF_STREAM
+					video_sample.SetBuffer(video_data, video_time, video_flags)
+					videopin.Encode(video_sample)
+					video_time = next_video_time
+					video_data = next_video_data
+					if video_time > now:
+						now = video_time
+				if progress:
+					apply(progress[0], progress[1] + (now, dur))
+		finally:
+			engine.DoneEncoding()
+		if os.name == 'mac':
+			import macfs
+			import macostools
+			fss = macfs.FSSpec(fullpath)
+			fss.SetCreatorType('PNst', 'PNRA')
+			macostools.touched(fss)
+		return file
+	except producer.error, arg:
+		import windowinterface
+		windowinterface.showmessage("RealEncoder error: %s"%(arg,))
 
 if sys.platform == 'win32':
 	convertvideofile = _win_convertvideofile
