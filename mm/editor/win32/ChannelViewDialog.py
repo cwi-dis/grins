@@ -23,6 +23,9 @@ class ChannelViewDialog(ViewDialog):
 	def show(self, title):
 		# change view name from Channel to Timeline
 		title = 'Timeline View (' + self.toplevel.basename + ')'
+		if self.window:
+			self.window.pop(poptop=1)
+			return
 		self.load_geometry()
 		x, y, w, h = self.last_geometry
 		toplevel_window=self.toplevel.window
