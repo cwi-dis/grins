@@ -1882,10 +1882,10 @@ class ChannelWindow(Channel):
 		# print 'sub region height =',subreg_height
 		# print 'sub region width = ',subreg_width
 
-		# allow only no null value
-		if subreg_height == 0:
+		# allow only no null or negative value
+		if subreg_height <= 0:
 			subreg_height = 1
-		if subreg_width == 0:
+		if subreg_width <= 0:
 			subreg_width = 1
 
 		node.__subreg_height = subreg_height
