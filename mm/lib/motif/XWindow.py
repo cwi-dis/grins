@@ -740,6 +740,7 @@ class _Window(_AdornmentSupport):
 		# upper-left corner of the window
 		# if crop is set, constrain the coordinates to the
 		# area of the window
+		# NOTE: does not work for millimeters, only pixels/relative
 		x, y = coordinates[:2]
 		if len(coordinates) > 2:
 			w, h = coordinates[2:]
