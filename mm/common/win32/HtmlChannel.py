@@ -94,7 +94,6 @@ class HtmlChannel(Channel.ChannelWindow):
 		return 1
 
 	def do_play(self, node):
-
 		# set play state information
 		# for functions related to cmif anchors
 		self.played_url = self.url = self.armed_url
@@ -114,7 +113,9 @@ class HtmlChannel(Channel.ChannelWindow):
 ##			url = MMurl.basejoin('file:'+MMurl.pathname2url(os.getcwd())+'/',url)
 			if not settings.get('html_control'):
 				url=urllib.unquote(url)
-			self.window.RetrieveUrl(url)	
+			self.window.RetrieveUrl(url)
+		if not self.window.HasHtmlCtrl():
+			print 'Warning: Failed to create Html control'
 		self.window.setredrawfunc(self.redraw)
 
 	def redraw(self):
