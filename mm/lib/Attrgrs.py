@@ -438,6 +438,16 @@ attrgrs=(
 		'system_cpu',
 		]},
 
+	{'name':'Layout1',
+	'title':'Layout',
+	'attrs':[
+		'cssbgcolor',
+		'left', 'width', 'right',
+		'top', 'height', 'bottom',
+		'regPoint','regAlign',
+		'fit',
+		]},
+
 	{'name':'CssBackgroundColor',
 	'title':'Background color',
 	'attrs':[
