@@ -18,6 +18,7 @@ class SVGChannel(Channel.ChannelWindow):
 		Channel.ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
 		self.svgdstrect = None
 		self.svgsrcrect = None
+		self.svgorgsize = None
 		self.svgdds = None
 		self.svgplayer = None
 		 
@@ -60,9 +61,9 @@ class SVGChannel(Channel.ChannelWindow):
 		if self.window and svgdoc:
 			coordinates = self.getmediageom(node)
 			self.svgdstrect = left, top, width, height = self.window._convert_coordinates(coordinates)
-			w, h = svgdom.GetSvgDocSize(svgdoc)
-			self.svgsrcrect = 0, 0, w, h
-			self.svgdds = self.window.createDDS(w, h)
+			self.svgorgsize = svgdom.GetSvgDocSize(svgdoc)
+			self.svgsrcrect = 0, 0, width, height # promise for svg scaling
+			self.svgdds = self.window.createDDS(width, height)
 			self.renderOn(self.svgdds, svgdoc, update=0)
 			if svgdoc.hasTiming():
 				rendercb = (self.renderOn, (self.svgdds, svgdoc))
@@ -99,6 +100,10 @@ class SVGChannel(Channel.ChannelWindow):
 	def renderOn(self, dds, svgdoc, update = 1):
 		import svgrender, svgwin
 		svggraphics = svgwin.SVGWinGraphics()
+		sw, sh = self.svgorgsize
+		dw, dh = self.svgdstrect[2:]
+		sx, sy = dw/float(sw), dh/float(sh)
+		svggraphics.applyTfList([('scale',[sx, sy]),])
 		ddshdc = dds.GetDC()
 		svggraphics.tkStartup(ddshdc)
 		renderer = svgrender.SVGRenderer(svgdoc, svggraphics)
@@ -106,7 +111,7 @@ class SVGChannel(Channel.ChannelWindow):
 		svggraphics.tkShutdown()
 		dds.ReleaseDC(ddshdc)
 		if update:
-			self.window.update(self.svgdstrect)
+			self.window.update(self.window.getwindowpos())
 
 ###################################
 # SVG channel alt using an OS window and Adobe's SVG viewer
