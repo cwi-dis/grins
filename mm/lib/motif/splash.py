@@ -81,6 +81,109 @@ def _colormask(mask):
 			mask = mask >> 1
 	return shift, (1 << width) - 1
 
+def findformat(visual):
+	import imgformat
+	if visual.c_class == X.PseudoColor:
+		r, g, b = imgformat.xrgb8.descr['comp'][:3]
+		red_shift,   red_mask   = r[0], (1 << r[1]) - 1
+		green_shift, green_mask = g[0], (1 << g[1]) - 1
+		blue_shift,  blue_mask  = b[0], (1 << b[1]) - 1
+		(plane_masks, pixels) = cmap.AllocColorCells(1, 8, 1)
+		xcolors = []
+		for n in range(256):
+			# The colormap is set up so that the colormap
+			# index has the meaning: rrrbbggg (same as
+			# imgformat.xrgb8).
+			xcolors.append(
+				(n+pixels[0],
+				 int(float((n >> red_shift) & red_mask) / red_mask * 65535. + .5),
+				 int(float((n >> green_shift) & green_mask) / green_mask * 65535. + .5),
+				 int(float((n >> blue_shift) & blue_mask) / blue_mask * 65535. + .5),
+				  X.DoRed|X.DoGreen|X.DoBlue))
+		cmap.StoreColors(xcolors)
+	else:
+		red_shift, red_mask = _colormask(visual.red_mask)
+		green_shift, green_mask = _colormask(visual.green_mask)
+		blue_shift, blue_mask = _colormask(visual.blue_mask)
+	if visual.depth == 8:
+		import imgcolormap, imgconvert
+		imgconvert.setquality(0)
+		r, g, b = imgformat.xrgb8.descr['comp'][:3]
+		xrs, xrm = r[0], (1 << r[1]) - 1
+		xgs, xgm = g[0], (1 << g[1]) - 1
+		xbs, xbm = b[0], (1 << b[1]) - 1
+		c = []
+		if (red_mask,green_mask,blue_mask) != (xrm,xgm,xbm):
+			for n in range(256):
+				r = roundi(((n>>xrs) & xrm) /
+					    float(xrm) * red_mask)
+				g = roundi(((n>>xgs) & xgm) /
+					    float(xgm) * green_mask)
+				b = roundi(((n>>xbs) & xbm) /
+					    float(xbm) * blue_mask)
+				c.append((r << red_shift) |
+					 (g << green_shift) |
+					 (b << blue_shift))
+			lossy = 2
+		elif (red_shift,green_shift,blue_shift)==(xrs,xgs,xbs):
+			# no need for extra conversion
+			myxrgb8 = imgformat.xrgb8
+		else:
+			# too many locals to use map()
+			for n in range(256):
+				r = (n >> xrs) & xrm
+				g = (n >> xgs) & xgm
+				b = (n >> xbs) & xbm
+				c.append((r << red_shift) |
+					 (g << green_shift) |
+					 (b << blue_shift))
+			lossy = 0
+		if c:
+			myxrgb8 = imgformat.new('myxrgb8',
+				'X 3:3:2 RGB top-to-bottom',
+				{'type': 'rgb',
+				 'b2t': 0,
+				 'size': 8,
+				 'align': 8,
+				 # the 3,3,2 below are not
+				 # necessarily correct, but they
+				 # are not used anyway
+				 'comp': ((red_shift, 3),
+					  (green_shift, 3),
+					  (blue_shift, 2))})
+			cm = imgcolormap.new(
+				reduce(lambda x, y: x + '000' + chr(y),
+				       c, ''))
+			imgconvert.addconverter(
+				imgformat.xrgb8,
+				imgformat.myxrgb8,
+				lambda d, r, src, dst, m=cm: m.map8(d),
+				lossy)
+		format = myxrgb8
+	else:
+		# find an imgformat that corresponds with our visual
+		if visual.depth <= 16:
+			depth = 16
+		else:
+			depth = 32
+		for name, format in imgformat.__dict__.items():
+			if type(format) is not type(imgformat.rgb):
+				continue
+			descr = format.descr
+			if descr['type'] != 'rgb' or \
+			   descr['size'] != depth or \
+			   descr['align'] != depth or \
+			   descr['b2t'] != 0:
+				continue
+			r, g, b = descr['comp'][:3]
+			if visual.red_mask   == ((1<<r[1])-1) << r[0] and \
+			   visual.green_mask == ((1<<g[1])-1) << g[0] and \
+			   visual.blue_mask  == ((1<<b[1])-1) << b[0]:
+				break
+		else:
+			raise error, 'no proper imgformat available'
+	return format, red_shift, red_mask, green_shift, green_mask, blue_shift, blue_mask
+
 class _Splash:
 	def __init__(self):
 		self.main = None
@@ -158,7 +261,6 @@ class _Splash:
 	def wininit(self):
 		if self.__initialized:
 			return
-		import imgformat
 		self.__initialized = 1
 		Xt.ToolkitInitialize()
 		Xt.SetFallbackResources(resources)
@@ -186,112 +288,7 @@ class _Splash:
 				raise error, 'no proper visuals available'
 		self.visual = visual = visuals[0]
 		self.colormap = cmap = visual.CreateColormap(X.AllocNone)
-		if visual.c_class == X.PseudoColor:
-			r, g, b = imgformat.xrgb8.descr['comp'][:3]
-			red_shift,   red_mask   = r[0], (1 << r[1]) - 1
-			green_shift, green_mask = g[0], (1 << g[1]) - 1
-			blue_shift,  blue_mask  = b[0], (1 << b[1]) - 1
-			(plane_masks, pixels) = cmap.AllocColorCells(1, 8, 1)
-			xcolors = []
-			for n in range(256):
-				# The colormap is set up so that the colormap
-				# index has the meaning: rrrbbggg (same as
-				# imgformat.xrgb8).
-				xcolors.append(
-					(n+pixels[0],
-					 int(float((n >> red_shift) & red_mask) / red_mask * 65535. + .5),
-					 int(float((n >> green_shift) & green_mask) / green_mask * 65535. + .5),
-					 int(float((n >> blue_shift) & blue_mask) / blue_mask * 65535. + .5),
-					  X.DoRed|X.DoGreen|X.DoBlue))
-			cmap.StoreColors(xcolors)
-		else:
-			red_shift, red_mask = _colormask(visual.red_mask)
-			green_shift, green_mask = _colormask(visual.green_mask)
-			blue_shift, blue_mask = _colormask(visual.blue_mask)
-		if visual.depth == 8:
-			import imgcolormap, imgconvert
-			imgconvert.setquality(0)
-			r, g, b = imgformat.xrgb8.descr['comp'][:3]
-			xrs, xrm = r[0], (1 << r[1]) - 1
-			xgs, xgm = g[0], (1 << g[1]) - 1
-			xbs, xbm = b[0], (1 << b[1]) - 1
-			c = []
-			if (red_mask,green_mask,blue_mask) != (xrm,xgm,xbm):
-				for n in range(256):
-					r = roundi(((n>>xrs) & xrm) /
-						    float(xrm) * red_mask)
-					g = roundi(((n>>xgs) & xgm) /
-						    float(xgm) * green_mask)
-					b = roundi(((n>>xbs) & xbm) /
-						    float(xbm) * blue_mask)
-					c.append((r << red_shift) |
-						 (g << green_shift) |
-						 (b << blue_shift))
-				lossy = 2
-			elif (red_shift,green_shift,blue_shift)==(xrs,xgs,xbs):
-				# no need for extra conversion
-				myxrgb8 = imgformat.xrgb8
-			else:
-				# too many locals to use map()
-				for n in range(256):
-					r = (n >> xrs) & xrm
-					g = (n >> xgs) & xgm
-					b = (n >> xbs) & xbm
-					c.append((r << red_shift) |
-						 (g << green_shift) |
-						 (b << blue_shift))
-				lossy = 0
-			if c:
-				myxrgb8 = imgformat.new('myxrgb8',
-					'X 3:3:2 RGB top-to-bottom',
-					{'type': 'rgb',
-					 'b2t': 0,
-					 'size': 8,
-					 'align': 8,
-					 # the 3,3,2 below are not
-					 # necessarily correct, but they
-					 # are not used anyway
-					 'comp': ((red_shift, 3),
-						  (green_shift, 3),
-						  (blue_shift, 2))})
-				cm = imgcolormap.new(
-					reduce(lambda x, y: x + '000' + chr(y),
-					       c, ''))
-				imgconvert.addconverter(
-					imgformat.xrgb8,
-					imgformat.myxrgb8,
-					lambda d, r, src, dst, m=cm: m.map8(d),
-					lossy)
-			self.imgformat = myxrgb8
-		else:
-			# find an imgformat that corresponds with our visual
-			if visual.depth <= 16:
-				depth = 16
-			else:
-				depth = 32
-			for name, format in imgformat.__dict__.items():
-				if type(format) is not type(imgformat.rgb):
-					continue
-				descr = format.descr
-				if descr['type'] != 'rgb' or \
-				   descr['size'] != depth or \
-				   descr['align'] != depth or \
-				   descr['b2t'] != 0:
-					continue
-				r, g, b = descr['comp'][:3]
-				if visual.red_mask   == ((1<<r[1])-1) << r[0] and \
-				   visual.green_mask == ((1<<g[1])-1) << g[0] and \
-				   visual.blue_mask  == ((1<<b[1])-1) << b[0]:
-					break
-			else:
-				raise error, 'no proper imgformat available'
-			self.imgformat = format
-		self.red_shift = red_shift
-		self.red_mask = red_mask
-		self.green_shift = green_shift
-		self.green_mask = green_mask
-		self.blue_shift = blue_shift
-		self.blue_mask = blue_mask
+		self.imgformat, self.red_shift, self.red_mask, self.green_shift, self.green_mask, self.blue_shift, self.blue_mask = findformat(visual)
 		main = Xt.CreateApplicationShell('splash', Xt.ApplicationShell,
 						 {'visual': visual,
 						  'depth': visual.depth,
