@@ -176,6 +176,15 @@ class Dialog() = BasicDialog():
 	def ok_callback(self, (obj, arg)):
 		self.hide()
 	#
+	# A standard way of changing the appearance of the
+	# Restore, Apply and Cancel buttons.
+	#
+	def activate_buttons(self, active):
+		if active: bt = UP_BOX
+		else: bt = FRAME_BOX
+		for b in self.ok_button,self.apply_button,self.restore_button:
+			b.boxtype = bt
+	#
 
 
 class GLDialog() = (glwindow.glwindow)():
