@@ -1981,6 +1981,12 @@ class Viewport(Region):
 	def getRGBBitCount(self):
 		return self._ctx.getRGBBitCount()
 
+	def beginExport(self):
+		self._ctx.beginExport()
+
+	def endExport(self):
+		self._ctx.endExport()
+
 	# 
 	# Painting section
 	# 
