@@ -2790,20 +2790,6 @@ class MMNode(MMTreeElement):
 	def ClearTimesObjects(self):
 		self.timing_info_dict = {}
 
-	def GetDelays(self, which):
-		# Returns begin delay and download lag delay for timing of type 'which'. Does
-		# not recompute anything; in fact this method is there only for the t0/t1 recomputation
-		# in the Timing module.
-		begindelay = 0.0
-		for arc in self.GetAttrDef('beginlist', []):
-			if arc.srcnode == 'syncbase' and arc.event is None and arc.marker is None and arc.channel is None:
-				begindelay = arc.delay
-		downloadlag = 0.0
-		if self.timing_info_dict.has_key(which):
-			dummy, dummy, dummy, downloadlag = self.timing_info_dict[which].GetTimes()
-##		print 'GetDelays', which, begindelay, downloadlag, self
-		return begindelay, downloadlag
-
 	#
 	# set/get animated attribute
 	#
@@ -3728,7 +3714,7 @@ class MMNode(MMTreeElement):
 			beginlist = self.FilterArcList(beginlist)
 			subpath = None
 			if path and path[0] is child:
-				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = sctx.parent.timefunc() - self.start_time)
+				arc = MMSyncArc(child, 'begin', srcnode = 'syncbase', delay = sctx.parent.timefunc() - self.start_time)
 				self_body.arcs.append((srcnode, arc))
 				srcnode.add_arc(arc, sctx)
 				schedule = 1
@@ -3737,7 +3723,7 @@ class MMNode(MMTreeElement):
 			elif not beginlist:
 				if defbegin is None:
 					child.set_infoicon('error', 'node cannot start')
-				arc = MMSyncArc(child, 'begin', srcnode = srcnode, event = event, delay = defbegin)
+				arc = MMSyncArc(child, 'begin', srcnode = 'syncbase', delay = defbegin)
 				self_body.arcs.append((srcnode, arc))
 				srcnode.add_arc(arc, sctx)
 				schedule = defbegin is not None
