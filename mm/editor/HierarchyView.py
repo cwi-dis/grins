@@ -239,8 +239,9 @@ class HierarchyView(HierarchyViewDialog):
 			NEXTSIBLING(callback = (self.tosibling, (1,))),
 			PREVSIBLING(callback = (self.tosibling, (-1,))),
 			]
+		self.helpcommands = []
 		if hasattr(Help, 'hashelp') and Help.hashelp():
-			self.commands.append(HELP(callback=(self.helpcall,())))
+			self.helpcommands.append(HELP(callback=(self.helpcall,())))
 		self.transitioncommands = [
 			TRANSITION(callback = self.transition_callback),
 			]
@@ -351,6 +352,8 @@ class HierarchyView(HierarchyViewDialog):
 		fnode = self.get_selected_node()
 		fntype = fnode.GetType()
 
+		if hasattr(self.get_selected_widget(), 'helpcall'):
+			commands = commands + self.helpcommands
 		if fnode.WillPlay():
 			commands = commands + self.noslidecommands
 		else:
@@ -2027,18 +2030,22 @@ class HierarchyView(HierarchyViewDialog):
 	def helpcall(self):
 		# I'm uncertain whether this gets ever called - mjvdg
 		# There is no helpcall in selected_widget
-		if self.get_selected_widget(): self.get_selected_widget().helpcall()
+		widget = self.get_selected_widget()
+		if widget:
+			widget.helpcall()
 
 	def expandcall(self):
-		if self.get_selected_widget():
+		widget = self.get_selected_widget()
+		if widget:
 			self.toplevel.setwaiting()
-			self.get_selected_widget().expandcall()
+			widget.expandcall()
 			self.draw()
 
 	def expandallcall(self, expand):
-		if self.get_selected_widget():
+		widget = self.get_selected_widget()
+		if widget:
 			self.toplevel.setwaiting()
-			self.get_selected_widget().expandallcall(expand)
+			widget.expandallcall(expand)
 			self.draw()
 
 	def thumbnailcall(self):
