@@ -94,7 +94,11 @@ class TopLevel(TopLevelDialog, ViewDialog):
 					windowinterface.showmessage('Adding query string "%s"' % query)
 			# RTIPA end
 		url = urlunparse((utype, host, path, params, query, None))
-		mtype = urlcache.mimetype(url)
+		if new_file:
+			import MMmimetypes
+			mtype = MMmimetypes.guess_type(url)[0]
+		else:
+			mtype = urlcache.mimetype(url)
 		if mtype in ('application/x-grins-project', 'application/smil'):
 			self.basename = posixpath.splitext(base)[0]
 		else:
