@@ -984,7 +984,7 @@ class AnimateElementParser:
 		# find animation type i.e. one of 
 		# ['invalid', 'values', 'from-to', 'from-by', 'to', 'by']
 
-		self.__animtype = self.getAnimationType()
+		self.__animtype = self.__getAnimationType()
 		if self.__animtype == 'invalid':
 			print 'Syntax error: Invalid animation values'
 			print '\t',self
@@ -1263,7 +1263,46 @@ class AnimateElementParser:
 
 	def getTargetNode(self):
 		return self.__target
-			
+		
+	def isPositionAnimation(self):
+		return self.__elementTag=='animateMotion' or self.__attrtype=='position'
+		
+	def getAnimationType(self):
+		return self.__animtype
+
+	def getPath(self):
+		strpath = ''
+		if splineAnimation:
+			strpath = MMAttrdefs.getattr(self.__anim, 'path')
+		path = svgpath.Path()
+		if strpath:
+			path.constructFromSVGPathString(strpath)
+		else:
+			coords = self.__getNumPairInterpolationValues()
+			path.constructFromPoints(coords)
+		return path
+
+	def translatePosAttr(self, attr):
+		val = MMAttrdefs.getattr(self.__anim, attr)
+		if not val: return val
+		x, y = map(string.atoi, string.split(val,','))
+		dx, dy = self.__domval.real, self.__domval.imag
+		x = x - dx
+		y = y - dy
+		return '%d, %d' % (x, y)
+
+	def translatePosValues(self):
+		val = MMAttrdefs.getattr(self.__anim, 'values')
+		if not val: return val
+		# ...
+		return val
+
+	def translatePath(self):
+		val = MMAttrdefs.getattr(self.__anim, 'path')
+		if not val: return val
+		# ...
+		return val
+
 	# set time manipulators to the animator
 	def __setTimeManipulators(self, anim):
 		if self.__autoReverse:
@@ -1392,8 +1431,8 @@ class AnimateElementParser:
 
 		return 1
 
-	def getAnimationType(self):
-		if self.getValues()!=None or self.getPath()!=None:
+	def __getAnimationType(self):
+		if self.getValues() or self.getPath():
 			return 'values'
 
 		v1 = self.getFrom()
@@ -1796,7 +1835,7 @@ class AnimateElementParser:
 		return l
 
 
-		
+
 
 
  
