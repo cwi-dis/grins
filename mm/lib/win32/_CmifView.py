@@ -871,6 +871,9 @@ class _CmifStructView(_CmifView):
 				str='%d %d' % (xp, yp)
 				self.DoDragDrop(self.CF_NODE, str)
 
+	def OnDragLeave(self):
+		self._dragging = None
+
 	# we must return DROPEFFECT_NONE
 	# when paste at x, y is not allowed
 	def dragnode(self, dataobj, kbdstate, x, y):
