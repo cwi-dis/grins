@@ -3492,8 +3492,10 @@ class CalcModeGroup(AttrGroup):
 
 
 #
-class TransitionTypeGroup(StringGroupNoTitle):
+class TransitionTypeGroup(NameGroup):
 	data=attrgrsdict['transitionType']
+	def getpageresid(self):
+		return grinsRC.IDD_EDITATTR_S1O1
 
 #
 class TransitionRepeatGroup(StringGroupNoTitle):
