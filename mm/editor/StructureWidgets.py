@@ -2438,7 +2438,7 @@ class TimelineWidget(MMWidgetDecoration):
 				displist.drawline(color, [(left, line_y), (right, line_y)])
 				length = length - (right - left)
 		displist.fgcolor(TEXTCOLOR)
-		if t0 == t2:
+		if t0 >= t2:
 			if t0 < 60:
 				label = fmtfloat(t0)
 			else:
