@@ -1,3 +1,5 @@
+__version__ = "$Id$"
+
 import cmifex, timerex, imageex, textex, Htmlex
 import win32ui, win32con, win32api
 import dialog, MainDialogRC
