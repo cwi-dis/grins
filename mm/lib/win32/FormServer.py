@@ -19,7 +19,7 @@ from NodeInfoForm import NodeInfoForm
 from ArcInfoForm import ArcInfoForm
 
 appform={
-	0:{'cmd':-1,'hosted':0,'title':'Attribute Editor','id':'attr_edit','obj':None,'class':AttrEditForm,'maximize':1},
+	0:{'cmd':-1,'hosted':0,'title':'Property Editor','id':'attr_edit','obj':None,'class':AttrEditForm,'maximize':1},
 	1:{'cmd':-1,'hosted':0,'title':'Anchor Editor','id':'anchor_edit','obj':None,'class':AnchorEditForm},
 	2:{'cmd':-1,'hosted':0,'title':'NodeInfo Editor','id':'node_info','obj':None,'class':NodeInfoForm},
 	3:{'cmd':-1,'hosted':1,'title':'ArcInfo Editor','id':'arc_info','obj':None,'class':ArcInfoForm},
