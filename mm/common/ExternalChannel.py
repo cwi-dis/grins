@@ -29,7 +29,7 @@ class ExternalChannel(Channel):
 		self.pid = None
 		progname = MMAttrdefs.getattr(node, ProgramAttrname)
 		if not progname:
-			self.errormsg('No application specified')
+			self.errormsg(node, 'No application specified')
 			return
 		type = node.GetType()
 		if type != 'ext':
@@ -41,7 +41,7 @@ class ExternalChannel(Channel):
 			try:
 				argument = MMurl.urlretrieve(argument)[0]
 			except IOError, msg:
-				self.errormsg('reading file %s failed: %s' %
+				self.errormsg(node, 'reading file %s failed: %s' %
 					      (argument, msg[1]))
 				return
 		startprog(progname, argument, wanturl)

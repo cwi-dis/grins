@@ -11,10 +11,16 @@ import Channel, RealChannel
 
 class RealWindowChannel(Channel.ChannelWindowAsync):
 	def __init__(self, name, attrdict, scheduler, ui):
-		self.__rc = RealChannel.RealChannel(self)
+		try:
+			self.__rc = RealChannel.RealChannel(self)
+		except:
+			self.__rc = None
 		Channel.ChannelWindowAsync.__init__(self, name, attrdict, scheduler, ui)
 
 	def do_arm(self, node, same = 0):
+		if self.__rc is None:
+			self.errormsg(node, 'No playback support for Real Media in this version')
+			return 1
 		if not self.__rc.prepare_player(node):
 			import MMAttrdefs
 			name = MMAttrdefs.getattr(node, 'name')
@@ -31,22 +37,26 @@ class RealWindowChannel(Channel.ChannelWindowAsync):
 		return 1
 
 	def do_hide(self):
-		self.__rc.stopit()
+		if self.__rc is not None:
+			self.__rc.stopit()
+			self.__rc.destroy()
+			self.__rc = None
 		Channel.ChannelWindowAsync.do_hide(self)
-		self.__rc.destroy()
-		del self.__rc
 		
 	def do_play(self, node):
-		if not self.__rc.playit(node, self._getoswindow(), self._getoswinpos() ):
+		if self.__rc is None or \
+		   not self.__rc.playit(node, self._getoswindow(), self._getoswinpos() ):
 			self.playdone(0)
 
 	# toggles between pause and run
 	def setpaused(self, paused):
 		Channel.ChannelWindowAsync.setpaused(self, paused)
-		self.__rc.pauseit(paused)
+		if self.__rc is not None:
+			self.__rc.pauseit(paused)
 
 	def stopplay(self, node):
-		self.__rc.stopit()
+		if self.__rc is not None:
+			self.__rc.stopit()
 		Channel.ChannelWindowAsync.stopplay(self, node)
 
 	def _getoswindow(self):

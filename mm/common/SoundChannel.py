@@ -33,7 +33,7 @@ class SoundChannel(ChannelAsync):
 		self.__rc = None
 
 	def do_show(self, pchan):
-		if not Channel.ChannelAsync.do_show(self, pchan):
+		if not ChannelAsync.do_show(self, pchan):
 			return 0
 		try:
 			from RealChannel import RealChannel
@@ -74,7 +74,7 @@ class SoundChannel(ChannelAsync):
 		if string.find(mtype, 'real') >= 0:
 			node.__type = 'real'
 			if self.__rc is None:
-				self.errormsg('No playback support for RealAudio in this version')
+				self.errormsg(node, 'No playback support for RealAudio in this version')
 			else:
 				self.__rc.prepare_player(node)
 			return 1
@@ -226,7 +226,7 @@ class SoundChannel(ChannelAsync):
 			self.__rc.stopit()
 			self.__rc.destroy()
 			self.__rc = None
-		Channel.ChannelAsync.do_hide(self)
+		ChannelAsync.do_hide(self)
 
 class Player:
 	def __init__(self):

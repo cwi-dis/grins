@@ -25,7 +25,7 @@ class ShellChannel(Channel):
 			try:
 				prog = MMurl.urlretrieve(prog)[0]
 			except IOError, msg:
-				self.errormsg('reading file %s failed: %s' %
+				self.errormsg(node, 'reading file %s failed: %s' %
 					      (prog, msg[1]))
 				return
 			argv = [prog]
