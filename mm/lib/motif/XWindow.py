@@ -1057,10 +1057,10 @@ class _Window(_AdornmentSupport, _RubberBand):
 				w = int(xsize * scale + .5)
 				h = int(ysize * scale + .5)
 				descr = reader.format.descr
-				align = descr['align'] / 8
+				imalign = descr['align'] / 8
 				size = descr['size'] / 8
 				rowlen = xsize*size
-				rowlenpad = ((rowlen+align-1)/align)*align
+				rowlenpad = ((rowlen+imalign-1)/imalign)*imalign
 				if rowlen != rowlenpad:
 					# imageop.scale doesn't like padding
 					nimage = []
@@ -1071,7 +1071,7 @@ class _Window(_AdornmentSupport, _RubberBand):
 				image = imageop.scale(image, reader.format.descr['size'] / 8,
 						      xsize, ysize, w, h)
 				rowlen = w*size
-				rowlenpad = ((rowlen+align-1)/align)*align
+				rowlenpad = ((rowlen+imalign-1)/imalign)*imalign
 				if rowlen != rowlenpad:
 					# put padding back but using new size
 					nimage = []
