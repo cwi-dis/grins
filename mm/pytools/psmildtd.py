@@ -1,4 +1,6 @@
-import fxmllib, urllib
+import fxmllib, urllib, re
+
+namere = re.compile(fxmllib._Name)
 
 toc = 0				# produce Table of Contents in HTML table
 
@@ -69,6 +71,18 @@ def prdtdtable(x, dtd):
 			content = content.encode('latin-1')
 		content = ' | '.join(content.split('|'))
 		content = ', '.join(content.split(','))
+		pos = 0
+		while 1:
+			res = namere.search(content, pos)
+			if res is None:
+				break
+			name = res.group(0)
+			if x.elems.has_key(name):
+				a = '<a href="#%s">%s</a>' % (name, name)
+				content = content[:res.start(0)] + a + content[res.end(0):]
+				pos = res.start(0) + len(a)
+			else:
+				pos = res.end(0)
 		attrnames = attrs.keys()
 		attrnames.sort()
 		print '<tr>'
