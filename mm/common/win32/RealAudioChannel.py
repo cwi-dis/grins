@@ -52,12 +52,12 @@ class RealAudioChannel(Channel.Channel):
 			except:
 				self._has_rma_support=0
 				self.show_rm_message(node)
+				return 0
 		return 1
 
 	# Async Channel play
 	def play(self, node):
 		if not self._has_rma_support:
-			Channel.Channel.play(self,node)
 			return
 		self.play_0(node)
 		if not self._is_shown or not node.IsPlayable() \
@@ -103,5 +103,5 @@ class RealAudioChannel(Channel.Channel):
 		name = MMAttrdefs.getattr(node, 'name')
 		if not name:
 			name = '<unnamed node>'
-		windowinterface.showmessage('No playback support for RealAudio in this version\n'
+		windowinterface.showmessage('No playback support for RealAudio on your system\n'
 					    'node %s on channel %s' % (name, self._name), mtype = 'warning')
