@@ -23,8 +23,12 @@ def mk_form_help_form (mod):
 	help.set_call_back(mod.cb_help, 0)
 	mod.help = help
 	#
-	obj = help_form.add_text(NORMAL_TEXT,10.0,650.0,180.0,90.0,'Click on a topic\nto get help')
+	obj = help_form.add_text(NORMAL_TEXT,10.0,700.0,180.0,40.0,'Click on a topic\nto get help')
 	obj.align = ALIGN_CENTER
+	#
+	button_return = help_form.add_button(NORMAL_BUTTON,10.0,650.0,180.0,40.0,'Return to previous')
+	button_return.set_call_back(mod.cb_return, 0)
+	mod.button_return = button_return
 	#
 	return help_form
 
