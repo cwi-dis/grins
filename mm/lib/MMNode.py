@@ -103,32 +103,34 @@ class MMNodeContext:
 			return None
 
 	def addchannel(self, name, i, type):
+		import ChannelMap
 		if name in self.channelnames:
 			raise CheckError, 'addchannel: existing name'
 		if not 0 <= i <= len(self.channelnames):
 			raise CheckError, 'addchannel: invalid position'
 		c = MMChannel(self, name)
 		c['type'] = type
-		if not settings.get('cmif'):
-			# some defaults for SMIL mode differ from CMIF defaults
-			from windowinterface import UNIT_PXL
-			c['units'] = UNIT_PXL
-			c['transparent'] = 1
-			c['center'] = 0
-			c['drawbox'] = 0
-			c['scale'] = 1
-		if settings.get('compatibility') == settings.G2:
-			# specialized settings for G2-compatibility
-			from windowinterface import UNIT_PXL
-			c['units'] = UNIT_PXL
-			c['transparent'] = -1
-			c['center'] = 0
-			c['drawbox'] = 0
-			c['scale'] = 1
-			if type == 'text':
-				c['bgcolor'] = 255,255,255
-			else:
-				c['bgcolor'] = 0,0,0
+		if ChannelMap.isvisiblechannel(type):
+			if not settings.get('cmif'):
+				# some defaults for SMIL mode differ from CMIF defaults
+				from windowinterface import UNIT_PXL
+				c['units'] = UNIT_PXL
+				c['transparent'] = 1
+				c['center'] = 0
+				c['drawbox'] = 0
+				c['scale'] = 1
+			if settings.get('compatibility') == settings.G2:
+				# specialized settings for G2-compatibility
+				from windowinterface import UNIT_PXL
+				c['units'] = UNIT_PXL
+				c['transparent'] = -1
+				c['center'] = 0
+				c['drawbox'] = 0
+				c['scale'] = 1
+				if type == 'text':
+					c['bgcolor'] = 255,255,255
+				else:
+					c['bgcolor'] = 0,0,0
 		self.channeldict[name] = c
 		self.channelnames.insert(i, name)
 		self.channels.insert(i, c)
