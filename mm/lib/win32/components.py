@@ -1042,7 +1042,7 @@ class KeyTimesSlider(window.Wnd):
 			x = int(p*w + 0.5)
 			rect = win32mu.Rect((x0+x-dw, b, x0+x+dw, b+self.MARKER_HEIGHT))
 			if rect.isPtInRect(point):
-				return index, rect.tuple()
+				return index, rect.ltrb_tuple()
 			index = index + 1
 		return -1, None
 
