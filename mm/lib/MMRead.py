@@ -40,6 +40,9 @@ def ReadFileContext(url, context):
 	else:
 		root = None
 	if root:
+		# Enable cmif-specific code
+		import settings
+		settings.set('cmif', 1)
 		_fixcontext(root)
 		return root
 	# no cache file, parse the file and create the cache (if possible)
@@ -80,6 +83,9 @@ def _newctx():
 	return MMNode.MMNodeContext(MMNode.MMNode)
 
 def _readparser(p, filename):
+	# Enable cmif-specific code
+	import settings
+	settings.set('cmif', 1)
 	#
 	# Read a single node (this is a whole tree!) from the file.
 	# If an error occurs, format a nice error message, and
