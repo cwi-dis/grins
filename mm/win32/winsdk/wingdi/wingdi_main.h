@@ -7,5 +7,6 @@
 
 PyObject* Wingdi_IntersectRect(PyObject *self, PyObject *args);
 PyObject* Wingdi_UnionRect(PyObject *self, PyObject *args);
+PyObject* Wingdi_GetRGBValues(PyObject *self, PyObject *args);
 
 #endif

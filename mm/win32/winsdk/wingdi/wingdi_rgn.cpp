@@ -183,7 +183,7 @@ static PyObject* PyRgn_CopyRgn(PyRgn *self, PyObject *args)
 		return NULL;
 	HRGN hrgnDest = PyRgn::newHRGN();
 	int res = CombineRgn(hrgnDest, self->m_hRgn, NULL, RGN_COPY);
-	if(res == ERROR || hrgnDest==0)
+	if(res == ERROR)
 		{
 		seterror("CopyRgn", GetLastError());
 		return NULL;
@@ -240,7 +240,7 @@ PyMethodDef PyRgn::methods[] = {
 	{"GetRgnBox", (PyCFunction)PyRgn_GetRgnBox, METH_VARARGS, ""},
 	{"DeleteObject", (PyCFunction)PyRgn_DeleteObject, METH_VARARGS, ""},
 	{"Detach", (PyCFunction)PyRgn_Detach, METH_VARARGS, ""},
-	{"GetHandle", (PyCFunction)PyRgn_GetSafeHandle, METH_VARARGS, ""},
+	{"GetSafeHandle", (PyCFunction)PyRgn_GetSafeHandle, METH_VARARGS, ""},
 	{NULL, (PyCFunction)NULL, 0, NULL}		// sentinel
 };
 
