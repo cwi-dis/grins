@@ -15,6 +15,7 @@ from ViewDialog import ViewDialog
 import Timing
 import rtpool
 from MMNode import alltypes, leaftypes, interiortypes
+from ArmStates import *
 
 
 # The player algorithm treats the head and tail (begin and end) sides
@@ -96,7 +97,6 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	#
 	def show(self):
 		if self.showing: return
-		self.abcontrol = ()
 		self.makechannels()
 		self.fullreset()
 		BasicDialog.show(self)
@@ -494,6 +494,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		for pn in arm_events:
 			d = pn.GetRawAttr('arm_duration')
 			c = self.getchannel(pn)
+			self.setarmedmode(pn, ARM_SCHEDULED)
 			pn.prearm_event = self.rtpool.enter(pn.t0, d, \
 				  c.arm_only, pn)
 		self.resume_2_playing()
@@ -550,7 +551,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 		    if node:
 			dummy = self.enter(0.0, -1, \
 				  ch.arm_and_measure, node)
-			self.setarmedmode(node, 3)
+			self.setarmedmode(node, ARM_PLAYING)
 			dummy = self.enter(0.0, 0, ch.play, \
 				  (node, self.decrement, (0, node, TL)))
 			if self.setcurrenttime_callback:
@@ -562,12 +563,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	def decrement(self, (delay, node, side)):
 		print 'DEC', delay, node, side, ' of ', node.counter[side]
 	        self.freeze()
-		if self.abcontrol:
-			a, b = self.abcontrol
-			doit = (a <= node.t0 <= b)
-		else:
-			doit = 1
-		if delay > 0 and doit: # Sync arc contains delay
+		if delay > 0: # Sync arc contains delay
 			id = self.enter(delay, 0, self.decrement, \
 						(0, node, side))
 			self.unfreeze()
@@ -594,6 +590,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			# See if this is the correct node.
 			if node == self.seek_node:
 			        self.seek_done()
+		doit = 1
 		if node.GetType() not in interiortypes:
 		    if side == HD:
 			if doit:
@@ -605,7 +602,8 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			    chan.playerseek_lastnode = node
 			    d = chan.getduration(node)
 			    print 'Skip node duration=', d
-			    dummy = self.enter(d, 0, self.decrement, (0, node, TL))
+			    dummy = self.enter(d, 0, self.decrement, \
+				(0, node, TL))
 			elif doit:
 			    if self.ff:
 				self.ff = 0
@@ -613,38 +611,40 @@ class Player(ViewDialog, scheduler, BasicDialog):
 			    #
 			    # Begin tricky code section. First we have to find
 			    # out wether the event has already been armed or
-			    # not. if prearm_event doesn't exist we do it self,
-			    # if it exists and is None it is all done, otherwise
-			    # it hasn't fired yet, so (again) we do it ourselves.
+			    # not. if prearm_event doesn't exist we do it
+			    # ourselves, if it exists and is None it
+			    # is all done, otherwise it hasn't fired
+			    # yet, so (again) we do it ourselves. 
 			    # If we do the arm ourselves we use prio -1, so
 			    # we do the arm before the play.
 			    #
 			    must_arm = 1
 			    print 'Node ', MMAttrdefs.getattr(node, 'name')
 			    try:
-				    if node.prearm_event == None:
-					    must_arm = 0
-				    else:
-					    # The pre-arm event didn't happen
-					    self.rtpool.cancel(node.prearm_event)
-				    del node.prearm_event
+				if node.prearm_event == None:
+				    must_arm = 0
+				else:
+				    # The pre-arm event didn't happen
+				    self.rtpool.cancel(node.prearm_event)
+				del node.prearm_event
 			    except AttributeError:
-				    pass
+				pass
 			    if must_arm:
-				    print 'Node not pre-armed on', \
-					    MMAttrdefs.getattr(node, 'channel')
-				    dummy = self.enter(0.0, -1, \
-					      chan.arm_and_measure, node)
-			    self.setarmedmode(node, 3)
+				print 'Node not pre-armed on', \
+				    MMAttrdefs.getattr(node, 'channel')
+				dummy = self.enter(0.0, -1, \
+				    chan.arm_and_measure, node)
+			    self.setarmedmode(node, ARM_PLAYING)
 			    dummy = self.enter(0.0, 0, chan.play, \
-				      (node, self.decrement, (0, node, TL)))
+				(node, self.decrement, (0, node, TL)))
 			    if self.setcurrenttime_callback:
 				self.setcurrenttime_callback(node.t0)
 			else:
 			    dummy = self.enter(0.0, 0, \
-						self.decrement, (0, node, TL))
-		    else:	# Side is Tail, so...
-			self.setarmedmode(node, 0)
+				self.decrement, (0, node, TL))
+		    else:
+			# Side is Tail, so...
+			self.setarmedmode(node, ARM_DONE)
 			self.opt_prearm(node)
 		for arg in node.deps[side]:
 			self.decrement(arg)
@@ -671,9 +671,9 @@ class Player(ViewDialog, scheduler, BasicDialog):
 				pass
 			d = pn.GetRawAttr('arm_duration')
 			c = self.getchannel(pn)
+			self.setarmedmode(pn, ARM_SCHEDULED)
 			pn.prearm_event = self.rtpool.enter(pn.t0, d, \
-				  c.arm_only, pn)
-			
+				c.arm_only, pn)
 	#
 	# Channel access utilities.
 	#
@@ -687,9 +687,7 @@ class Player(ViewDialog, scheduler, BasicDialog):
 	# Routine to do prearm feedback
 	#
 	def setarmedmode(self, node, mode):
-		chv = self.toplevel.channelview
-		chv.setarmedmode(node, mode)
-
+		self.toplevel.channelview.setarmedmode(node, mode)
 	#
 	# Callback for anchor activations
 	#
