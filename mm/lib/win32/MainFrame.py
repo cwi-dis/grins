@@ -122,6 +122,9 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		# player state
 		self.__playerstate = None
 
+		#
+		self._registry = {}
+
 		# full screen player
 		self.__fsPlayer = None
 
@@ -1147,6 +1150,10 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 	# Keep instance of player
 	def newview(self,x, y, w, h, title, units = UNIT_MM, adornments=None,canvassize=None, commandlist=None, strid='cmifview_', bgcolor=None):		
 		viewclass = appview[strid]['class'] 
+		
+		viewid = strid+title
+		if self._registry.has_key(viewid):
+			x, y = self._registry[viewid]
 
 		# viewclass is a class that is initialised here now.
 		# For example, it is a _StructView (from _StructView.py) for the HierarchyView.
@@ -1212,6 +1219,14 @@ class MDIFrameWnd(window.MDIFrameWnd, win32window.Window,
 		viewobj._title = appview[strid]['title']
 		cmd =  appview[strid]['cmd']
 		viewobj._closecmdid = usercmdui.usercmd2id(cmd)
+
+	def registerPos(self, view):
+		cframe = view.GetParent()
+		mdilient = self.GetMDIClient()
+		viewid = view._strid + cframe.GetWindowText()
+		l, t, r, b = cframe.GetWindowRect()
+		l, t = mdilient.ScreenToClient((l,t))
+		self._registry[viewid] = l, t
 
 	###########################################
 	# Experimental view creation notification interface
