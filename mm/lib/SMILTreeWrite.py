@@ -584,6 +584,8 @@ def getsyncarc(writer, node, isend):
 			if type(srcnode) is type('') and srcnode not in ('prev', 'syncbase') and writer.cleanSMIL:
 				# XPath
 				srcnode = arc.refnode()
+				if srcnode is None:
+					continue
 			if arc.channel is not None:
 				name = writer.ch2name[arc.channel]
 			elif srcnode == 'syncbase':
@@ -592,7 +594,8 @@ def getsyncarc(writer, node, isend):
 				name = 'prev'
 			elif type(srcnode) is type(''):
 				name = 'xpath(%s)' % srcnode
-				if writer.prune and not arc.refnode().WillPlay():
+				refnode = arc.refnode()
+				if writer.prune and refnode is not None and not arc.refnode().WillPlay():
 					continue
 			elif writer.prune and srcnode is not None and not srcnode.WillPlay():
 				continue
@@ -1538,6 +1541,8 @@ class SMILWriter(SMIL):
 						continue
 					# XPath
 					srcnode = arc.refnode()
+					if srcnode is None:
+						continue
 				if arc.channel is not None:
 					pass
 				elif srcnode in ('syncbase', 'prev'):

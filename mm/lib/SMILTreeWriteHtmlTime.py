@@ -1088,6 +1088,8 @@ class SMILHtmlTimeWriter(SMIL):
 				srcnode = arc.srcnode
 				if type(srcnode) is type('') and srcnode not in ('prev', 'syncbase'):
 					srcnode = arc.refnode()
+					if srcnode is None:
+						continue
 				if arc.channel is not None:
 					pass
 				elif arc.srcanchor is not None:

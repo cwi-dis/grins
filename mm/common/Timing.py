@@ -174,6 +174,8 @@ def prep2(node, root):
 			# can't deal with this at the moment
 			continue
 		srcnode = arc.refnode()
+		if srcnode is None:
+			continue
 		# srcnode is a MMNode instance
 		if arc.event in ('begin','end'):
 			if srcnode.CommonAncestor(root) is not root:
