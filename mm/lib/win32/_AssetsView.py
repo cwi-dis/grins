@@ -20,7 +20,14 @@ ICONNAME_TO_RESID={
 	'video': grinsRC.IDI_ICON_ASSET_VIDEO,
 	'audio': grinsRC.IDI_ICON_ASSET_AUDIO,
 	'html': grinsRC.IDI_ICON_ASSET_TEXT,
-	'node': grinsRC.IDI_ICON_ASSET_BLANK,
+##	'node': grinsRC.IDI_ICON_NODE,
+	'imm': grinsRC.IDI_ICON_NODE,
+	'ext': grinsRC.IDI_ICON_NODE,
+	'par': grinsRC.IDI_ICON_PAROPEN,
+	'seq': grinsRC.IDI_ICON_SEQOPEN,
+	'excl': grinsRC.IDI_ICON_EXCLOPEN,
+	'switch': grinsRC.IDI_ICON_SWITCHOPEN,
+	'prio': grinsRC.IDI_ICON_PRIOOPEN,
 }
 
 class _AssetsView(GenView.GenView, docview.ListView):
@@ -34,6 +41,7 @@ class _AssetsView(GenView.GenView, docview.ListView):
 		# add components 
 		self._showAll = components.RadioButton(self._dlgBar, grinsRC.IDC_RADIO_ALL)
 		self._showUnused = components.RadioButton(self._dlgBar, grinsRC.IDC_RADIO_UNUSED)
+		self._showClipboard = components.RadioButton(self._dlgBar, grinsRC.IDC_RADIO_CLIPBOARD)
 		
 		self.listCtrl = None
 		self.initicons()
@@ -51,6 +59,10 @@ class _AssetsView(GenView.GenView, docview.ListView):
 				self.iconlist_small.append(v)
 			self.iconname_to_index[k] = self.iconlist_small.index(v)
 
+	# Sets the acceptable commands. 
+	def set_cmddict(self,cmddict):
+		self._cmddict=cmddict
+
 	def OnCreate(self, cs):
 		# create dialog bar
 		AFX_IDW_DIALOGBAR = 0xE805
@@ -59,6 +71,7 @@ class _AssetsView(GenView.GenView, docview.ListView):
 		# attach components
 		self._showAll.attach_to_parent()
 		self._showUnused.attach_to_parent()
+		self._showClipboard.attach_to_parent()
 
 	# Called by the framework after the OS window has been created
 	def OnInitialUpdate(self):
@@ -78,14 +91,27 @@ class _AssetsView(GenView.GenView, docview.ListView):
 			self.showAll()
 		elif id == self._showUnused._id and code == win32con.BN_CLICKED:
 			self.showUnused()
+		elif id == self._showClipboard._id and code == win32con.BN_CLICKED:
+			self.showClipboard()
 		else:
 			print 'OnCmd', id, code
 
 	def showAll(self):
-		print 'showAll'
+		cb = self._cmddict['setview']
+		cb('all')
 	
 	def showUnused(self):
-		print 'showUnused'
+		cb = self._cmddict['setview']
+		cb('unused')
+
+	def showClipboard(self):
+		cb = self._cmddict['setview']
+		cb('clipboard')
+
+	def setView(self, which):
+		self._showAll.setcheck(which == 'all')
+		self._showUnused.setcheck(which == 'unused')
+		self._showClipboard.setcheck(which == 'clipboard')
 
 	def rebuildList(self):
 		lc = self.listCtrl
@@ -95,6 +121,7 @@ class _AssetsView(GenView.GenView, docview.ListView):
 		lc.setIconLists(self.iconlist_small, self.iconlist_small)
 
 		# insert columns: (align, width, text) list
+		lc.deleteAllColumns()
 		lc.insertColumns(self.columnsTemplate)
 
 		lc.removeAll()
@@ -102,7 +129,7 @@ class _AssetsView(GenView.GenView, docview.ListView):
 		row = 0
 		for item in self.items:
 			imagename = item[0]
-			imageindex = self.iconname_to_index[imagename]
+			imageindex = self.iconname_to_index.get(imagename)
 			if imageindex is None:
 				imageindex = -1 # XXXX
 			text = item[1]
