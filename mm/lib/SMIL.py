@@ -13,8 +13,8 @@ SMIL2 = 'http://www.w3.org/2000/SMIL20/CR/'
 # doesn't generate a warning
 SMIL2ns = ['http://www.w3.org/2000/SMIL20/CR/Language',
 	   'http://www.w3.org/2000/SMIL20/CR/',
-	   'http://www.w3.org/2001/SMIL20/PR/Language',	# should become first in this list when going to PR
-	   'http://www.w3.org/2001/SMIL20/PR/',
+##	   'http://www.w3.org/2001/SMIL20/PR/Language',	# should become first in this list when going to PR
+##	   'http://www.w3.org/2001/SMIL20/PR/',
 	   'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/Language',
 	   'http://www.w3.org/TR/REC-smil/2000/SMIL20/LC/',
 	   'http://www.w3.org/TR/REC-smil/2000/SMIL20/Language',
@@ -588,6 +588,7 @@ class SMIL:
 		'text': __media_content,
 		'animation': __media_content,
 		'textstream': __media_content,
+		'brush': __media_content,
 		__null: __media_content,
 		__cmif: __media_content,
 		__shell: __media_content,
