@@ -260,7 +260,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 			end = 0
 		if duration is not None and duration > 0 and \
 		   (not end or (end > begin and duration < end - begin)):
-			movie.SetEndTime(1000L * (begin + duration), 1000)
+			movie.SetEndTime(long(1000L * (begin + duration)), 1000)
 		elif duration is not None:
 			# XXX need special code to freeze temporarily at
 			# the end of each loop
@@ -297,7 +297,7 @@ class VideoChannel(Channel.ChannelWindowAsync):
 
 	def stopplay(self, node):
 		if node and self._played_node is not node:
-			print 'node was not the playing node '+`self,node,self._played_node`
+##			print 'node was not the playing node '+`self,node,self._played_node`
 			return
 		Channel.ChannelWindowAsync.stopplay(self, node)
 		if self.played_movie:
@@ -313,10 +313,15 @@ class VideoChannel(Channel.ChannelWindowAsync):
 		if self.played_movie:
 			if paused:
 				self.played_movie.Stop()
+				if paused < 0:
+					self.played_movie.UnbindOpenGLWindow()
 				self.__stopped = 1
 			else:
+				if self._paused < 0:
+					self.played_movie.BindOpenGLWindow(self.window._form, self.__context)
 				self.played_movie.Play()
 				self.__stopped = 0
+		self._paused = paused
 
 	def redraw(self):
 		if self.played_movie:
