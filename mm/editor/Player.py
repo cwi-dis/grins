@@ -43,11 +43,13 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 	#
 	# Initialization.
 	#
-	def init(self, root):
+	def init(self, toplevel):
 		self = ViewDialog.init(self, 'player_')
+		self.toplevel = toplevel
+		self.root = self.toplevel.root
+		self.playroot = self.root
 		self.queue = []
 		self.resettimer()
-		self.root = root
 		self.context = self.root.GetContext()
 		self.editmgr = self.context.geteditmgr()
 		self.editmgr.register(self)
@@ -73,7 +75,10 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 	def commit(self):
 		if self.showing:
 			self.checkchannels()
+			if self.playroot.GetRoot() <> self.root:
+				self.playroot = self.root
 		self.locked = 0
+		self.showstate()
 	#
 	def rollback(self):
 		# Nothing has changed after all.
@@ -85,7 +90,7 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 		if self.showing: return
 		self.abcontrol = ()
 		self.makechannels()
-		self.reset()
+		self.fullreset()
 		BasicDialog.show(self)
 		self.showchannels()
 		self.showstate()
@@ -93,7 +98,7 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 	def hide(self):
 		if not self.showing: return
 		self.stop()
-		self.reset()
+		self.fullreset()
 		BasicDialog.hide(self)
 		self.destroychannels()
 	#
@@ -106,6 +111,10 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 		self.setcurrenttime_callback = setcurrenttime
 	#
 	# Internal reset.
+	#
+	def fullreset(self):
+		self.reset()
+		self.playroot = self.root
 	#
 	def reset(self):
 		self.resettimer()
@@ -208,11 +217,17 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 			form.add_button(NORMAL_BUTTON,x,y,w,h, 'A-B')
 		self.abbutton.set_call_back(self.ab_callback, None)
 		#
-		x, y, w, h = 0, 0, 198, 48
+		x, y, w, h = 100, 0, 98, 48
 		self.statebutton = \
 			form.add_button(NORMAL_BUTTON,x,y,w,h, 'T = 0')
 		self.statebutton.boxtype = FLAT_BOX
 		self.statebutton.set_call_back(self.state_callback, None)
+		#
+		x, y, w, h = 0, 0, 98, 48
+		self.partbutton = \
+			form.add_button(NORMAL_BUTTON,x,y,w,h, '')
+		self.partbutton.boxtype = FLAT_BOX
+		self.partbutton.set_call_back(self.part_callback, None)
 		#
 		x, y, w, h = 250, 50, 48, 48
 		self.speedbutton = \
@@ -243,7 +258,7 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 	def stop_callback(self, (obj, arg)):
 		if obj.pushed:
 			if not self.playing:
-				self.reset()
+				self.fullreset()
 				self.showstate()
 			else:
 				self.stop()
@@ -287,6 +302,12 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 		# has to exist anyway, why not let it update the state...
 		self.showstate()
 	#
+	def part_callback(self, (obj, arg)):
+		# This is a button disguised as a button.
+		# The callback needn't do anything, but since it
+		# has to exist anyway, why not let it update the state...
+		self.showstate()
+	#
 	def speed_callback(self, (obj, arg)):
 		# Same comments as for state_callback() above
 		self.showstate()
@@ -311,6 +332,14 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 				return
 		self.setrate(1.0)
 		self.showstate()
+	#
+	def playsubtree(self, node):
+		if not self.showing or self.playing:
+			return
+		if node.GetRoot() <> self.root:
+			raise RuntimeError, 'playsubtree with bad arg'
+		self.playroot = node
+		self.play()
 	#
 	def pause(self):
 		if not self.playing:
@@ -346,6 +375,10 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 			self.playbutton.set_button(0.0 < self.rate <= 1.0)
 			self.pausebutton.set_button(0.0 = self.rate)
 			self.fastbutton.set_button(1.0 < self.rate)
+		if self.playroot is self.root:
+			self.partbutton.label = ''
+		else:
+			self.partbutton.label = '[part]'
 		self.showtime()
 	#
 	def showtime(self):
@@ -436,9 +469,11 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 			return 0
 		self.playing = 1
 		self.reset()
-		Timing.prepare(self.root)
-		self.root.counter[HD] = 1
-		self.decrement(0, self.root, HD)
+		if self.playroot.GetRoot() <> self.root:
+			self.playroot = self.root # In case it's been deleted
+		Timing.prepare(self.playroot)
+		self.playroot.counter[HD] = 1
+		self.decrement(0, self.playroot, HD)
 		return 1
 	#
 	def stop_playing(self):
@@ -478,7 +513,7 @@ class Player() = ViewDialog(), scheduler(), BasicDialog():
 						self.decrement, (0, node, TL))
 		for arg in node.deps[side]:
 			self.decrement(arg)
-		if node.GetParent() = None and side = TL:
+		if node = self.playroot and side = TL:
 			# The whole tree is finished -- stop playing.
 			if self.setcurrenttime_callback:
 				self.setcurrenttime_callback(node.t1)
