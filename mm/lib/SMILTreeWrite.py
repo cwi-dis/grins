@@ -182,6 +182,12 @@ def WriteString(root, cleanSMIL = 0, evallicense = 0):
 	writer.write()
 	return fp.fp.getvalue()
 
+def WriteBareString(node, cleanSMIL = 0):
+	fp = IndentedFile(MyStringIO())
+	writer = SMILWriter(node, fp, '<string>', cleanSMIL)
+	writer.writebare()
+	return fp.fp.getvalue()
+
 #
 # Functions to encode data items
 #
@@ -1088,6 +1094,10 @@ class SMILWriter(SMIL):
 		self.writenode(self.root, root = 1)
 ##		self.pop()
 ##		self.pop()
+		self.close()
+
+	def writebare(self):
+		self.writenode(self.root, root = 1)
 		self.close()
 
 	def calcugrnames(self, node):
