@@ -788,11 +788,15 @@ class DDWndLayer:
 		ddsd.SetCaps(ddraw.DDSCAPS_OFFSCREENPLAIN)
 		ddsd.SetSize(w,h)
 		self._backBuffer = self._ddraw.CreateSurface(ddsd)
-		self._backBuffer.BltFill((0, 0, w, h), 0)
-
+		
 		self._clipper = self._ddraw.CreateClipper(self.GetSafeHwnd())
 		self._frontBuffer.SetClipper(self._clipper)
 		self._pxlfmt = self._frontBuffer.GetPixelFormat()
+
+		# fill back buffer with default player background (white)
+		ddcolor = self._backBuffer.GetColorMatch((255,255,255))
+		self._backBuffer.BltFill((0, 0, w, h), ddcolor)
+
 
 	def destroyDDLayer(self):
 		if self._ddraw:
