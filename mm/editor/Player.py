@@ -291,13 +291,17 @@ class Player(ViewDialog, PlayerCore, PlayerDialog):
 		self.toplevel.setwaiting()
 		title, u_state, override = self.context.usergroups[name]
 		if override == 'allowed':
+			em = self.context.editmgr
+			if not em.transaction():
+				return
 			if u_state == 'RENDERED':
 				u_state = 'NOT_RENDERED'
 			else:
 				u_state = 'RENDERED'
-			self.context.usergroups[name] = title, u_state, override
+			em.delusergroup(name)
+			em.addusergroup(name, (title, u_state, override))
+			em.commit()
 		self.setusergroup(name, u_state == 'RENDERED')
-		self.root.ResetPlayability()
 
 	def channel_callback(self, name):
 		import settings

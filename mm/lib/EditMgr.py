@@ -67,6 +67,7 @@ class EditMgr:
 		MMAttrdefs.flushcache(self.root)
 		Timing.changedtimes(self.root)
 		self.root.clear_infoicon()
+		self.root.ResetPlayability()
 		for x in self.registry[:]:
 			x.commit()
 		self.busy = 0
