@@ -2,7 +2,7 @@ __version__ = "$Id$"
 
 # XXXX Still needs some work, esp. in the callback time calc section
 #
-from Channel import ChannelAsync
+from Channel import ChannelAsync, PLAYING
 import MMAttrdefs
 import windowinterface
 import time
@@ -18,7 +18,7 @@ SECONDS_TO_BUFFER=4
 
 class SoundChannel(ChannelAsync):
 	node_attrs = ChannelAsync.node_attrs + [
-		'clipbegin', 'clipend',
+		'duration', 'clipbegin', 'clipend',
 		'project_audiotype', 'project_targets',
 		'project_perfect', 'project_mobile']
 
@@ -31,7 +31,6 @@ class SoundChannel(ChannelAsync):
 		self.arm_fp = None
 		self.play_fp = None
 		self.__qid = None
-		self.__evid = []
 		self.__rc = None
 		self.__playing = None
 
@@ -58,7 +57,7 @@ class SoundChannel(ChannelAsync):
 					self.__rc = RealChannel(self)
 				except:
 					pass
-			elif self.__rc:
+			if self.__rc:
 				return 1
 			return 0
 		try:
@@ -90,7 +89,7 @@ class SoundChannel(ChannelAsync):
 					# can't do RealAudio
 ##					self.__rc = 0 # don't try again
 					self.errormsg(node, msg)
-			elif self.__rc:
+			if self.__rc:
 				if self.__rc.prepare_player(node):
 					self.__ready = 1
 			return 1
@@ -118,26 +117,14 @@ class SoundChannel(ChannelAsync):
 			self.arm_fp = None
 			self.armed_duration = 0
 			return 1
-		self.armed_duration = duration = node.GetAttrDef('duration', None)
+		self.armed_duration = MMAttrdefs.getattr(node, 'duration')
 		begin = int(self.getclipbegin(node, 'sec') * rate + .5)
 		end = int(self.getclipend(node, 'sec') * rate + .5)
-		self.armed_markers = {}
-		for mid, mpos, mname in self.arm_fp.getmarkers() or []:
-			if mname:
-				self.armed_markers[mname] = mpos - begin
-		if begin or end or duration:
+		if begin or end:
 			from audio.select import select
-			if duration is not None and duration > 0:
-				duration = int(duration * rate + .5)
-				if duration < end - begin:
-					end = begin + duration
 			self.arm_fp = select(self.arm_fp, [(begin, end)])
 		self.__ready = 1
 		return 1
-
-	def __marker(self, node, marker):
-		if self._played_node == node:
-			node.marker(self._scheduler.timefunc(), marker)
 
 	def do_play(self, node):
 		self.__playing = node
@@ -160,38 +147,17 @@ class SoundChannel(ChannelAsync):
 		if debug: print 'SoundChannel: play', node
 		self.play_fp = self.arm_fp
 		self.play_loop = self.arm_loop
-		self.play_markers = self.armed_markers
 		self.arm_fp = None
-		duration = node.GetAttrDef('duration', None)
-		repeatdur = MMAttrdefs.getattr(node, 'repeatdur')
-		if repeatdur and self.play_loop == 1:
-			self.play_loop = 0
-		self.armed_markers = {}
-		rate = self.play_fp.getframerate()
-		for arc in node.sched_children:
-			mark = arc.marker
-			if mark is None or not self.play_markers.has_key(mark):
-				continue
-			t = self.play_markers[mark] / float(rate) + (arc.delay or 0)
-			arc.dstnode.parent.scheduled_children = arc.dstnode.parent.scheduled_children + 1
-			if t <= 0:
-				self._playcontext.trigger(arc)
-			else:
-				qid = self._scheduler.enter(t, 0, self._playcontext.trigger, (arc,))
-				self.__evid.append(qid)
-		for marker, t in self.play_markers.items():
-			qid = self._scheduler.enter(t, 0, self.__marker, (node, marker))
-			self.__evid.append(qid)
-		if repeatdur > 0:
+		if self.armed_duration > 0:
 			self.__qid = self._scheduler.enter(
-				repeatdur, 0, self.__stopplay, ())
+				self.armed_duration, 0, self.__stopplay, ())
 		try:
 			player.play(self.play_fp, (self.my_playdone, ()))
 		except audio.Error, msg:
 			print 'error reading file %s: %s' % (self.getfileurl(node), msg)
 			self.playdone(0)
 			return
-		if self.play_loop == 0 and repeatdur == 0:
+		if self.play_loop == 0 and self.armed_duration == 0:
 			self.playdone(0)
 
 	def __stopplay(self):
@@ -217,12 +183,6 @@ class SoundChannel(ChannelAsync):
 				if self.__rc:
 					self.__rc.stopit()
 			else:
-				for qid in self.__evid:
-					try:
-						self._scheduler.cancel(qid)
-					except:
-						pass
-				self.__evid = []
 				if self.__qid is not None:
 					self._scheduler.cancel(self.__qid)
 					self.__qid = None
@@ -230,7 +190,12 @@ class SoundChannel(ChannelAsync):
 					player.stop(self.play_fp)
 					self.play_fp = None
 			self.__playing = None
-		self.playdone(1)
+		#
+		# There is a race here: the stopit() call above may have resulted in
+		# a playdone() call (as happens on the Mac) and it may not.
+		# We only call playdone if we see it hasn't happened yet.
+		if self._playstate == PLAYING:
+			self.playdone(1)
 
 	def setpaused(self, paused):
 		if debug: print 'setpaused', paused
