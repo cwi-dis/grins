@@ -568,6 +568,37 @@ sdk_send_message_ms(PyObject *self, PyObject *args)
 	return Py_BuildValue("i", lParam);
 	}
 
+// @pymethod |PyWin32Sdk|CharFromPos|return the carret pos from a coordinate
+static PyObject *
+sdk_charfrompos(PyObject *self, PyObject *args)
+	{
+	HWND hwnd;
+	UINT message = EM_CHARFROMPOS;
+	WPARAM wParam = 0;
+	POINTL point;
+	if (!PyArg_ParseTuple(args, "i(ii):CharFromPos",
+			  &hwnd,    // @pyparm handle|handle of destination window 
+	          &point.x, &point.y)) 
+		return NULL;
+	GUI_BGN_SAVE;
+	LPARAM ret = SendMessage(hwnd,message,wParam,(LPARAM)&point);
+	GUI_END_SAVE;
+	return Py_BuildValue("i", ret);
+	}
+
+// @pymethod |PyWin32Sdk|GetCaretPos|return the carret pos from a coordinate
+static PyObject *
+sdk_getcaretpos(PyObject *self, PyObject *args)
+	{
+	POINT point;
+	GUI_BGN_SAVE;
+	BOOL ret;
+	ret = ::GetCaretPos(&point);
+	GUI_END_SAVE;
+	if (ret)
+		return Py_BuildValue("ii",point.x, point.y);
+	return NULL;
+	}
 
 // @pymethod |PyWin32Sdk|SetCursor|The SetCursor function establishes the cursor shape
 // Return Values: A handle to the previous cursor
@@ -1353,6 +1384,7 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"SendMessageGetRect",sdk_send_message_get_rect,1},// @pymeth SendMessageGetRect|A special version of send message for Python that returns a rectangle 
 	{"SendMessageSetRect",sdk_send_message_get_rect,1},// @pymeth SendMessageSetRect|A special version of send message for Python that sets a rectangle 
 	{"SendMessageMS",sdk_send_message_ms,1}, // @pymeth SendMessageMS|A special version of send message for Python. LPARAM is a tuple equivalent to a win32 MSG struct
+
 	
 	{"SetCursor",sdk_set_cursor,1}, // @pymeth SetCursor|Establishes a cursor shape.	
 	{"LoadStandardCursor",sdk_load_standard_cursor,1}, // @pymeth LoadStdCursor|Loads the specified predefined cursor resource.	
@@ -1402,7 +1434,11 @@ BEGIN_PYMETHODDEF(Win32Sdk)
 	{"DelTool",sdk_del_tool,1},
 	{"NewToolRect",sdk_new_tool_rect,1},
 	{"UpdateTipText",sdk_update_tip_text,1},
-	
+
+	// Rich edit support
+	{"CharFromPos", sdk_charfrompos, 1},// @pymethod |PyWin32Sdk|CharFromPos|return the carret pos from a coordinate
+	{"GetCaretPos", sdk_getcaretpos, 1},// @pymethod |PyWin32Sdk|GetCaretPos|return the current caret position
+
 	///////////////////////////////////////////////////// Temporary
 	{"ParseDrawItemStruct",sdk_parse_drawitemstruct,1},// undocumented!
 	{"CrackNMHDR",sdk_crack_nmhdr,1}, // undocumented!
