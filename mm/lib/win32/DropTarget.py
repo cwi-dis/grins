@@ -8,6 +8,7 @@ win32con.MK_ALT = 0x20
 from appcon import DROPEFFECT_NONE, DROPEFFECT_COPY, \
 	DROPEFFECT_MOVE, DROPEFFECT_LINK, DROPEFFECT_SCROLL
 
+# grins registered clipboard formats
 CF_FILE = Sdk.RegisterClipboardFormat('FileName')
 CF_NODE = Sdk.RegisterClipboardFormat('Node')
 CF_TOOL = Sdk.RegisterClipboardFormat('Tool')
@@ -15,6 +16,25 @@ CF_NODEUID = Sdk.RegisterClipboardFormat('NodeUID')
 CF_REGION = Sdk.RegisterClipboardFormat('Region')
 CF_MEDIA = Sdk.RegisterClipboardFormat('Media')
 CF_URL = Sdk.RegisterClipboardFormat('URL')
+
+# map: format_name -> format_id (int)
+formats = {'FileName':CF_FILE,
+	'Node':CF_NODE,
+	'Tool':CF_TOOL,
+	'NodeUID':CF_NODEUID,
+	'Region':CF_REGION,
+	'Media':CF_MEDIA,
+	'URL':CF_URL,}
+
+# extract data from data object and return pair (format_name, data) 
+# or None when not a grins format
+def GetData(dataobj):
+	for name, format in formats.items():
+		data = dataobj.GetGlobalData(format)
+		if data is not None:
+			return name, data
+	return None
+
 
 class DropTarget:
 	cfmap = {'FileName':CF_FILE}
