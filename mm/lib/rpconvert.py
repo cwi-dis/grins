@@ -59,7 +59,15 @@ def rpconvert(node):
 		pass
 	em.setnodeattr(node, 'bgcolor', None)
 	em.setnodeattr(node, 'transparent', None)
-	em.setnodeattr(node, 'duration', rp.duration)
+	if node.GetAttrDef('fill', 'default') == 'default' and node.GetInherAttrDef('fillDefault', 'inherit') == 'inherit':
+		# make default fill behavior explicit
+		em.setnodeattr(node, 'fill', node.GetFill())
+	ndur = node.GetAttrDef('duration', None)
+	if ndur is None:
+		ndur = rp.duration
+	else:
+		ndur = min(ndur, rp.duration)
+	em.setnodeattr(node, 'duration', ndur)
 
 	# First deal with fadein transitions that specify an
 	# associated fadeout.  We just create an explicit fadeout for
