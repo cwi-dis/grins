@@ -778,12 +778,15 @@ class EffectiveAnimator:
 			name = MMAttrdefs.getattr(self.__node, 'name')
 			print 'update area',self.__attr,'of node',name,'to',value		
 	
+
+	# rem: scales = {-1:'slice', 0:'meet',1:'hidden', }
 	def __updatesubregion(self, value):
 		if not self.__chan:
 			return # channel not ready yet
 		attr = self.__attr
 		chan = self.__chan
-		mmchan = chan._attrdict		
+		mmchan = chan._attrdict
+		scale = mmchan['scale']
 		coordinates = mmchan.GetPresentationAttr('base_winoff')
 		if coordinates and attr in ('position','left','top','width','height','right','bottom'):
 			x, y, w, h = coordinates
@@ -791,14 +794,32 @@ class EffectiveAnimator:
 			if attr=='position':
 				x, y = value
 				newcoordinates = x, y, w, h
-			elif attr=='left': newcoordinates = value, y, w, h
-			elif attr=='top': newcoordinates = x, value, w, h
-			elif attr=='width': newcoordinates = x, y, value, h
-			elif attr=='height': newcoordinates = x, y, w, value
-			elif attr=='right': newcoordinates = value-w, y, w, h
-			elif attr=='bottom': newcoordinates = x, value-h, w, h
+			elif attr=='left':
+				if scale==0:
+					newcoordinates = value, y, w-value, h
+				else:
+					newcoordinates = value, y, w, h
+			elif attr=='top':
+				if scale==0:
+					newcoordinates = x, value, w, h-value
+				else:
+					newcoordinates = x, value, w, h
+			elif attr=='right': 
+				if scale==0:
+					newcoordinates = x, y, w-value, h
+				else:
+					newcoordinates = value-w, y, w, h
+			elif attr=='bottom': 
+				if scale==0:
+					newcoordinates = x, y, w, h-value
+				else:
+					newcoordinates = x, value-h, w, h
+			elif attr=='width': 
+				newcoordinates = x, y, value, h
+			elif attr=='height': 
+				newcoordinates = x, y, w, value
 			if chan.window:
-				chan.window.updatecoordinates(newcoordinates, units)
+				chan.window.updatecoordinates(newcoordinates, units, scale)
 		
 		mmchan.SetPresentationAttr(attr, value)
 		if debug:
