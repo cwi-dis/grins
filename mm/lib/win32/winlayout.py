@@ -710,7 +710,8 @@ class LayoutWnd:
 			self.SetScrollSizes(win32con.MM_TEXT, self._canvas[2:])
 
 	def updateCanvasSize(self):
-		pass
+		self._canvas = 0, 0, int(1600/self._device2logical+0.5), int(1200/self._device2logical+0.5)
+		self.SetScrollSizes(win32con.MM_TEXT,self._canvas[2:])
 
 	def setDeviceToLogicalScale(self, device2logical):
 		self._device2logical = device2logical
@@ -740,7 +741,7 @@ class LayoutWnd:
 			self.UpdateWindow()
 		else:
 			if canvas is None:
-				self._canvas = 0, 0, 800, 600
+				self._canvas = 0, 0, 1600, 1200
 			self.CreateWindow(parent)
 			self.SetWindowPos(self.GetSafeHwnd(),rc,
 				win32con.SWP_NOACTIVATE | win32con.SWP_NOZORDER)
@@ -889,23 +890,30 @@ class LayoutWnd:
 	
 	# called by OnDraw or OnPaint
 	def OffscreenPaintOn(self, dc):
-		l, t, w, h = self._canvas
-		r, b = l+w, t+h
-
+		lc, tc, rc, bc = dc.GetClipBox()
+		wc, hc = rc-lc, bc-tc
+			
 		# draw to offscreen bitmap for fast looking repaints
 		dcc = dc.CreateCompatibleDC()
 
 		bmp = win32ui.CreateBitmap()
-		bmp.CreateCompatibleBitmap(dc, w, h)
-		
+		try:
+			bmp.CreateCompatibleBitmap(dc, wc, hc)
+		except:
+			dc.FillSolidRect((lc, tc, rc, bc), win32mu.RGB(self._bgcolor or (255,255,255)))
+			print 'Create offscreen bitmap %d x %d failed' % (wc, hc)
+			return 
+
 		# called by win32ui
 		#self.OnPrepareDC(dcc)
 		
 		# offset origin more because bitmap is just piece of the whole drawing
-		dcc.OffsetViewportOrg((-l, -t))
+		dcc.OffsetViewportOrg((-lc, -tc))
+		dcc.SetWindowOrg((0,0))
 		oldBitmap = dcc.SelectObject(bmp)
-		dcc.SetBrushOrg((l % 8, t % 8))
-		dcc.IntersectClipRect((l, t, r, b))
+		dcc.SetBrushOrg((lc % 8, tc % 8))
+		dcc.IntersectClipRect((lc, tc, rc, bc))
+		# dcc has now the same clip box as the original dc
 
 		# draw objects on dcc
 		self.paintOn(dcc)
@@ -914,7 +922,7 @@ class LayoutWnd:
 		dcc.SetViewportOrg((0, 0))
 		dcc.SetWindowOrg((0,0))
 		dcc.SetMapMode(win32con.MM_TEXT)
-		dc.BitBlt((l,t),(w, h),dcc,(0, 0), win32con.SRCCOPY)
+		dc.BitBlt((lc,tc),(wc, hc), dcc, (0, 0), win32con.SRCCOPY)
 
 		# clean up
 		dcc.SelectObject(oldBitmap)
@@ -922,9 +930,8 @@ class LayoutWnd:
 		del bmp
 
 	def paintOn(self, dc):
-		l, t, w, h = self._canvas
-		r, b = l+w, t+h
-		dc.FillSolidRect((l, t, r, b),win32mu.RGB(self._bgcolor or (255,255,255)))
+		lc, tc, rc, bc = dc.GetClipBox()
+		dc.FillSolidRect((lc, tc, rc, bc), win32mu.RGB(self._bgcolor or (255,255,255)))
 
 	#
 	#   Scrolling/scaling support
@@ -962,7 +969,6 @@ class LayoutWnd:
 		x, y = self.LPtoDP(rc[:2])
 		w, h = self.LPtoDP(rc[2:])
 		return x, y, w, h
-
 
 	#
 	# Scaling support
