@@ -11,12 +11,19 @@ import MMParser
 import MMNode
 import MMCache
 import sys
+import os
 
 
 # Read a CMF file, given by url
 #
 def ReadFile(url):
-	return ReadFileContext(url, _newctx())
+	if os.name == 'mac':
+		import MacOS
+		MacOS.splash(514)	# Show "loading document" splash screen
+	rv = ReadFileContext(url, _newctx())
+	if os.name == 'mac':
+		MacOS.splash(515)	# and "Initializing document" (to be removed in mainloop)
+	return rv
 
 def ReadFileContext(url, context):
 	import os, MMurl, posixpath
