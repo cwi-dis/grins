@@ -138,34 +138,37 @@ class Main(MainDialog):
 		import SMILTreeRead
 		import MMmimetypes
 		import MMurl
+		import settings
 		self.templatedir = findfile('Templates')
-		if not os.path.exists(self.templatedir):
-			self.template_info = ()
-			return
 		names = []
 		descriptions = []
-		files = os.listdir(self.templatedir)
-		files.sort()
-		for file in files:
-			pathname = os.path.join(self.templatedir, file)
-			if not os.path.isfile(pathname):
-				continue
-			url = MMurl.pathname2url(pathname)
-			if MMmimetypes.guess_type(url)[0] != 'application/x-grins-project':
-				continue
-			try:
-				attrs = SMILTreeRead.ReadMetaData(pathname)
-			except IOError:
-				windowinterface.showmessage('Error in template: %s'%file)
-			name = attrs.get('template_name', file)
-			description = attrs.get('template_description', '')
-			image = attrs.get('template_snapshot')
-			if image:
-				image = MMurl.basejoin(url, image)
-				image = MMurl.url2pathname(image)
-			names.append(name)
-			descriptions.append((description, image, pathname))
 		self.template_info = (names, descriptions)
+		for dir in settings.get('templatedirs'):
+			dir = findfile(dir)
+			if not os.path.isdir(dir):
+				continue
+			files = os.listdir(dir)
+			files.sort()
+			for file in files:
+				pathname = os.path.join(dir, file)
+				if not os.path.isfile(pathname):
+					continue
+				url = MMurl.pathname2url(pathname)
+				if MMmimetypes.guess_type(url)[0] != 'application/x-grins-project':
+					continue
+				try:
+					attrs = SMILTreeRead.ReadMetaData(pathname)
+				except IOError:
+					windowinterface.showmessage('Error in template: %s'%file)
+					continue
+				name = attrs.get('template_name', file)
+				description = attrs.get('template_description', '')
+				image = attrs.get('template_snapshot')
+				if image:
+					image = MMurl.basejoin(url, image)
+					image = MMurl.url2pathname(image)
+				names.append(name)
+				descriptions.append((description, image, pathname))
 
 	def never_again(self):
 		# Called when the user selects the "don't show again" in the initial dialog
@@ -181,9 +184,9 @@ class Main(MainDialog):
 			return
 		if self.template_info is None:
 			self.collect_template_info()
-		if self.template_info:
-			names, descriptions = self.template_info
-			windowinterface.TemplateDialog(names, descriptions,self._new_ok_callback, parent=self.getparentwindow())
+		names, descriptions = self.template_info
+		if names:
+			windowinterface.TemplateDialog(names, descriptions, self._new_ok_callback, parent=self.getparentwindow())
 		else:
 			windowinterface.showmessage("Missing templates, creating empty document.")
 			top = TopLevel.TopLevel(self, self.getnewdocumentname(mimetype="application/x-grins-project"), 1)
