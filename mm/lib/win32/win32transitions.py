@@ -49,14 +49,14 @@ class TransitionEngine:
 		if not self.__transitiontype: return
 		self.__unregister_for_timeslices()
 		self.__transitiontype = None
+		topwindow = self.__windows[0]._topwindow
 		for w in self.__windows:
 			w._transition = None
 			w._drawsurf = None
 			if w._frozen  == 'transition':
 				w._passive = None
 				w._frozen = None
-		w = self.__windows[0]
-		w._topwindow.update()
+		topwindow.update()
 
 	def settransitionvalue(self, value):
 		if value<0.0 or value>1.0:
@@ -88,12 +88,9 @@ class TransitionEngine:
 			# i.e. do not paint children
 			wnd._paintOnDDS(self._active, wnd._rect)
 
-		if self.__outtrans:
-			vfrom = self._active
-			vto = wnd._passive
-		else:
-			vfrom = wnd._passive
-			vto = self._active
+		# do not reverse, already done indirectly
+		vfrom = wnd._passive
+		vto = self._active
 
 		tmp  = self._tmp
 		dst  = wnd._drawsurf
