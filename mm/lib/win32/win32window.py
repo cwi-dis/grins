@@ -196,7 +196,7 @@ class Window:
 				 DragURL, DropURL,
 			     DragNode, DropNode,
 			     WindowExit, WindowContentChanged,
-			     MouseMove, DragEnd):
+			     MouseMove, DragEnd, QueryNode):
 			self._callbacks[event] = func, arg
 			if event in (DropFile, PasteFile, DragFile, DragURL, DropURL, DragNode, DropNode):
 				self.registerDropTarget()
