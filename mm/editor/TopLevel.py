@@ -255,7 +255,7 @@ class TopLevel(ViewDialog):
 		utype, url = MMurl.splittype(self.filename)
 		host, url = MMurl.splithost(url)
 		if utype or host:
-			windowinterface.showmessage('Cannot save to URL',
+			windowinterface.showmessage('Cannot save to remote URL',
 						    mtype = 'warning')
 			return
 		file = MMurl.url2pathname(url)
@@ -328,22 +328,22 @@ class TopLevel(ViewDialog):
 
 
 	def save_to_file(self, filename):
-		if os.path.isabs(filename):
-			cwd = self.dirname
-			if not cwd:
-				cwd = os.getcwd()
-			elif not os.path.isabs(cwd):
-				cwd = os.path.join(os.getcwd(), cwd)
-			if os.path.isdir(filename):
-				windowinterface.showmessage('%s is a directory; please select a file' % filename, mtype = 'error')
-				return
-			# XXXX maybe should check that dir gets shorter!
-			dir, file = os.path.split(filename)
-			while len(dir) > len(cwd):
-				dir, f = os.path.split(dir)
-				file = os.path.join(f, file)
-			if dir == cwd:
-				filename = file
+## 		if os.path.isabs(filename):
+## 			cwd = self.dirname
+## 			if not cwd:
+## 				cwd = os.getcwd()
+## 			elif not os.path.isabs(cwd):
+## 				cwd = os.path.join(os.getcwd(), cwd)
+## 			if os.path.isdir(filename):
+## 				windowinterface.showmessage('%s is a directory; please select a file' % filename, mtype = 'error')
+## 				return
+## 			# XXXX maybe should check that dir gets shorter!
+## 			dir, file = os.path.split(filename)
+## 			while len(dir) > len(cwd):
+## 				dir, f = os.path.split(dir)
+## 				file = os.path.join(f, file)
+## 			if dir == cwd:
+## 				filename = file
 		# Get rid of hyperlinks outside the current tree and clipboard
 		# (XXX We shouldn't *save* the links to/from the clipboard,
 		# but we don't want to throw them away either...)
