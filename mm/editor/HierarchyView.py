@@ -25,6 +25,7 @@ import string
 import MMmimetypes
 import features
 import compatibility
+import Interactive;			# mjvdg 13-oct-2000.
 
 # TODO: this is not used properly everywhere in this file.
 grins_snap = features.H_NIPPLES in features.feature_set
@@ -139,17 +140,17 @@ class HierarchyView(HierarchyViewDialog):
 	#################################################
 
 	def __init__(self, toplevel):
-		lightweight = features.lightweight
-		self.sizes = sizes_notime
+		self.toplevel = toplevel
 
-		# These are easier to see near the constructor definition.
-		
 		self.window = None
 		self.displist = None
 		self.new_displist = None
 		self.last_geometry = None
-		self.toplevel = toplevel
+
 		self.root = self.toplevel.root # : MMNode - the root of the MMNode heirachy
+		self.objects = [];	# A list of objects that are displayed on the screen.
+		self.scene_graph = None; # The next generation list of objects that are displayed on the screen
+					# of type EditWindow.
 		self.focusnode = self.prevfocusnode = self.root	# : MMNode
 		self.editmgr = self.root.context.editmgr
 		self.destroynode = None	# node to be destroyed later
@@ -157,10 +158,19 @@ class HierarchyView(HierarchyViewDialog):
 		self.thumbnails = 1
 		self.showplayability = 1
 		self.timescale = 0
+
+		self.sizes = sizes_notime
 		from cmif import findfile
 		self.datadir = findfile('GRiNS-Icons')
-
 		
+		self.__add_commands();
+		self.create_scene_graph();
+		HierarchyViewDialog.__init__(self)		
+
+
+	def __add_commands(self):
+		# Add the user-interface commands that are used for this window.
+		lightweight = features.lightweight
 		self.commands = [
 			CLOSE_WINDOW(callback = (self.hide, ())),
 
@@ -181,11 +191,11 @@ class HierarchyView(HierarchyViewDialog):
 			self.commands.append(TIMESCALE(callback = (self.timescalecall, ())))
 			self.commands.append(PLAYABLE(callback = (self.playablecall, ())))
 
-		self.interiorcommands = self._getmediaundercommands(toplevel.root.context) + [
+		self.interiorcommands = self._getmediaundercommands(self.toplevel.root.context) + [
 			EXPAND(callback = (self.expandcall, ())),
 		]
 
-		self.mediacommands = self._getmediacommands(toplevel.root.context)
+		self.mediacommands = self._getmediacommands(self.toplevel.root.context)
 
 		if features.H_MODIFY_STRUCTURE in features.feature_set: # Allow structure node changes.
 			print "DEBUG: Adding structure modifying commands.";
@@ -218,7 +228,7 @@ class HierarchyView(HierarchyViewDialog):
 				NEW_AFTER_ALT(callback = (self.createafterintcall, ('alt',))),
 				]
 			self.mediacommands = self.mediacommands + self.structure_commands;
-			if toplevel.root.context.attributes.get('project_boston', 0):
+			if self.toplevel.root.context.attributes.get('project_boston', 0):
 				self.structure_commands.append(NEW_AFTER_EXCL(callback = (self.createafterintcall, ('excl',))))
 				self.structure_commands.append(NEW_BEFORE_EXCL(callback = (self.createbeforeintcall, ('excl',))))
 
@@ -232,9 +242,9 @@ class HierarchyView(HierarchyViewDialog):
 				CUT(callback = (self.cutcall, ())),
 				];
 
-		if toplevel.root.context.attributes.get('project_boston', 0):
+		if self.toplevel.root.context.attributes.get('project_boston', 0):
 			self.notatrootcommands.append(NEW_EXCL(callback = (self.createexclcall, ())))
-		self.animatecommands = self._getanimatecommands(toplevel.root.context)
+		self.animatecommands = self._getanimatecommands(self.toplevel.root.context)
 		self.createanchorcommands = [
 			CREATEANCHOR(callback = (self.createanchorcall, ())),
 			]
@@ -250,8 +260,8 @@ class HierarchyView(HierarchyViewDialog):
 
 		if features.H_MODIFY_STRUCTURE in features.feature_set:
 			print "DEBUG: Adding structure modifying commands.";
-			self.slidecommands = self._getmediacommands(toplevel.root.context, slide = 1) + self.notatrootcommands[4:6]
-			self.rpcommands = self._getmediaundercommands(toplevel.root.context, slide = 1)
+			self.slidecommands = self._getmediacommands(self.toplevel.root.context, slide = 1) + self.notatrootcommands[4:6]
+			self.rpcommands = self._getmediaundercommands(self.toplevel.root.context, slide = 1)
 		self.finishlinkcommands = [
 			FINISH_LINK(callback = (self.hyperlinkcall, ())),
 			]
@@ -265,7 +275,7 @@ class HierarchyView(HierarchyViewDialog):
 		if hasattr(Help, 'hashelp') and Help.hashelp():
 			self.commands.append(HELP(callback=(self.helpcall,())))
 
-		HierarchyViewDialog.__init__(self)
+
 
 	def __repr__(self):
 		return '<HierarchyView instance, root=' + `self.root` + '>'
@@ -437,6 +447,17 @@ class HierarchyView(HierarchyViewDialog):
 			if not hasattr(node, 'expanded'):
 				expandnode(node)
 			node = node.GetParent()
+
+	def create_scene_graph(self):
+		# Iterate through the MMNode structure (starting from self.root)
+		# and create a scene graph from it.
+		ntype = self.root.GetType();
+		if ntype == 'seq':
+			print "TODO: HierarchyView:456";
+			# self.scene_graph = SeqView(self.root);
+		else:
+			print "Mildly fatal error: First node is not a sequence.";
+		
 
 	def show(self):
 		if self.is_showing():
