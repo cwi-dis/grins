@@ -1380,22 +1380,32 @@ class MMSyncArc:
 				else:
 					event = 'end'
 		if event is not None:
-			t = refnode.isresolved(sctx)
-			if t is None:
-				self.__isresolvedcalled = 0
-				return 0
+			# try to call refnode.isresolved() only when we really need it
 			if event == 'begin':
+				t = refnode.isresolved(sctx)
 				self.__isresolvedcalled = 0
-				return 1
+				return t is not None
 			if event == 'end':
 				if refnode.playing == MMStates.PLAYED:
 					self.__isresolvedcalled = 0
 					return 1
+				t = refnode.isresolved(sctx)
+				if t is None:
+					self.__isresolvedcalled = 0
+					return 0
 				d = refnode.calcfullduration(sctx)
 				self.__isresolvedcalled = 0
 				if d is None or d < 0:
 					return 0
 				return 1
+			if refnode.playing == MMStates.IDLE:
+				# event on node that never played is not resolved
+				self.__isresolvedcalled = 0
+				return 0
+			t = refnode.isresolved(sctx)
+			if t is None:
+				self.__isresolvedcalled = 0
+				return 0
 			self.__isresolvedcalled = 0
 			return refnode.eventhappened(event)
 		self.__isresolvedcalled = 0
