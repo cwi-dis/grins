@@ -1654,7 +1654,7 @@ class HierarchyView(HierarchyViewDialog):
 	# def an_ode_to_code(self, x, y):
 
 	def tosibling(self, direction):
-		if not self.get_selected_widget():
+		if not self.get_selected_node():
 			windowinterface.beep()
 			return
 		parent = self.get_selected_node().GetParent()
@@ -1662,7 +1662,7 @@ class HierarchyView(HierarchyViewDialog):
 			windowinterface.beep()
 			return
 		siblings = parent.GetChildren()
-		i = siblings.index(self.get_selected_widget()) + direction
+		i = siblings.index(self.get_selected_node()) + direction
 		if not 0 <= i < len(siblings):
 			# XXX Could go to parent instead?
 			windowinterface.beep()
@@ -1671,10 +1671,10 @@ class HierarchyView(HierarchyViewDialog):
 		self.draw()
 
 	def toparent(self):
-		if not self.get_selected_widget():
+		if not self.get_selected_node():
 			windowinterface.beep()
 			return
-		parent = self.get_selected_widget().GetParent()
+		parent = self.get_selected_node().GetParent()
 		if not parent:
 			windowinterface.beep()
 			return
@@ -1682,7 +1682,7 @@ class HierarchyView(HierarchyViewDialog):
 		self.draw()
 
 	def tochild(self, i):
-		node = self.get_selected_widget()
+		node = self.get_selected_node()
 		if not node:
 			windowinterface.beep()
 			return
