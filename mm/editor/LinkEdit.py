@@ -129,10 +129,17 @@ class LinkEdit(LinkEditLight, ViewDialog, LinkBrowserDialog):
 			self.left.focus = None
 			self.reloadanchors(self.left, 0)
 			if aid is None:
+				# if no aid given, select first
+				# destination-only anchor, or, if there is
+				# none, first whole-node anchor
 				for anchor in self.left.anchors:
-					if self.findanchor(anchor)[A_TYPE] == ATYPE_DEST:
+					atype = self.findanchor(anchor)[A_TYPE]
+					if atype == ATYPE_DEST:
 						aid = anchor[1]
 						break
+					if atype == ATYPE_WHOLE and aid is None:
+						aid = anchor[1]
+						# no break, we prefer ATYPE_DEST
 			if aid is not None:
 				for i in range(len(self.left.anchors)):
 					if self.left.anchors[i][1] == aid:
