@@ -118,6 +118,7 @@ from fmtfloat import round
 import math
 import Animators
 import Duration
+import tokenizer
 
 # debug flags
 debug = 1
@@ -182,10 +183,16 @@ class SMILXhtmlSmilWriter(SMIL):
 		self.buildSensitivityList(self.root, self.sensitivityList)
 
 		self.links_target2src = {}
-		self.buildAnchorTargets(node)
+		self.linkssources = {}
+		self.animate_nodes = []
+		self.animate_regions = []
+		self.animate_motion_nodes = []
+		self.animate_motion_regions = []
+		self.buildTargets(node)
 
 		self.freezeSyncDict = {}
-
+		self.seqtimingfixes = {}
+		
 		self.currLayout = []
 
 		self.__isopen = 0
@@ -309,10 +316,12 @@ class SMILXhtmlSmilWriter(SMIL):
 			self.__isopen = 0
 			del self.__stack[-1]
 
-	def pushviewport(self, viewport):
+	def pushviewport(self, viewport, moreattrs = None):
 		style = self.getViewportStyle(viewport)
-		name = self.ch2name[viewport]
-		self.writetag('div', [('id',name), ('style', style),])
+		name = self.registerRegionAlias(viewport)
+		divlist = [('id', name), ('style', style),]
+		if moreattrs: divlist= divlist + moreattrs
+		self.writetag('div', divlist)
 		self.push()
 		self.currLayout = [viewport]
 				
@@ -350,9 +359,8 @@ class SMILXhtmlSmilWriter(SMIL):
 				bgcolor = reg.get('bgcolor', None)
 				if showBackground == 'always' and bgcolor and transparent==0:
 					style = self.getRegionStyle(reg)
-					name = self.ch2name[reg]
+					name = self.registerRegionAlias(reg)
 					self.ids_written[name] = 1
-					self.regions_alias[reg] = [name,]
 					self.writetag('div', [('id', name), ('style', style),])
 					self.push()
 					self.writeRegionBackground(reg)
@@ -441,7 +449,7 @@ class SMILXhtmlSmilWriter(SMIL):
 				if name == 'fill':
 					hasfill = 1
 					fill = value
-
+				
 				# endsync translation
 				if name == 'endsync' and value not in ('first' , 'last'):
 					name = 'end'
@@ -510,11 +518,16 @@ class SMILXhtmlSmilWriter(SMIL):
 		if self.links_target2src.has_key(x):
 			self.fixBeginList(x, attrlist)
 
+		# IE seq children must have an explicit dur or an explicit end condition
+		parent = x.GetParent()
+		if not root and parent.GetType() == 'seq':
+			self.adjustSeqTiming(x, root, attrlist)
+					
 		####
 		if interior:
 			if mtype in not_xhtml_smil_elements:
 				pass # self.showunsupported(mtype)
-
+				
 			if ':' in mtype:
 				self.writetag(mtype, attrlist)
 			else:
@@ -543,13 +556,18 @@ class SMILXhtmlSmilWriter(SMIL):
 	def writemedianode(self, node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill):
 		pushed, regionid = 0, nodeid
 		
-		# write media node layout
-		pushed, regionid  = \
-			self.writeMediaNodeLayout(node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill)
-
-		# apply media style
-		self.applyMediaStyle(node, nodeid, attrlist, mtype)
-
+		if self.needsLayout(node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill):
+			# the normal smil path
+			# write node layout
+			pushed, regionid  = \
+				self.writeMediaNodeLayout(node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill)
+			# and restrict node to its media rectangle
+			self.applyMediaStyle(node, nodeid, attrlist, mtype)
+		else:
+			# shortcut: merge region and node
+			self.applyRegionStyle(node, nodeid, attrlist, mtype, fill)
+			regionid = nodeid
+				
 		# write anchors
 		hasAnchors = self.writeAnchors(node, nodeid)
 		if hasAnchors:
@@ -585,6 +603,7 @@ class SMILXhtmlSmilWriter(SMIL):
 
 		elif mtype == 'text' and node.GetType() == 'imm':
 			self.removeAttr(attrlist, 'src')
+			attrlist.append( ('class','time') )
 			self.writetag('div', attrlist)
 			self.push()
 			self.fp.write('<p>')
@@ -627,6 +646,47 @@ class SMILXhtmlSmilWriter(SMIL):
 			self.pop()
 			pushed = pushed - 1
 
+	# return true if the node needs its SMIL layout and can not be exported as standalone
+	# currently returns true for most of the cases except the trivial ones (backgound image, audio)
+	def needsLayout(self, node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill):
+		# first clean out cases we don't cover
+		sensitive = self.issensitive(node)
+		if self.hasTimeChildren(node) or transIn or transOut or mtype=='brush' or sensitive:
+			return 1
+		if self.hasMultiWindowLayout:
+			return 1
+		if self.linkssources.has_key(node):
+			return 1
+		if node in self.animate_nodes:
+			return 1
+		if self.animate_regions:
+			return 1
+
+		# no hierachy deeper than 2
+		nodeRegion = node.GetChannel().GetLayoutChannel()
+		path = self.getRegionPath(nodeRegion)
+		if path and len(path) > 2:
+			return 1
+
+		# check coordinates of region, subregion and mediaregion
+		if mtype == 'audio':
+			return 0
+		region = node.GetChannel().GetLayoutChannel().getPxGeom()
+		try:
+			geoms = node.getPxGeomMedia()
+		except:
+			subregion, mediaregion = None, None
+		else:
+			subregion, mediaregion = geoms
+		if subregion != mediaregion:
+			return 1
+		if region[2] != subregion[2] or region[3] != subregion[3]:
+			return 1
+		if subregion[0] != 0 or subregion[1] != 0:
+			return 1
+
+		return 0
+
 	# translate and write a media node's SMIL layout to XHTML+SMIL
 	def writeMediaNodeLayout(self, node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill):
 		pushed, regionid = 0, nodeid
@@ -636,24 +696,10 @@ class SMILXhtmlSmilWriter(SMIL):
 		if not path:
 			print 'error: failed to get region path for', regionName
 			return pushed, regionid
-		if len(path) == 1:
-			return pushed, regionid
+		assert len(path) > 1, 'logic error'
 
 		# outmost div attr list
 		divlist = []
-
-		# find/compose/set region id
-		name = self.ch2name[nodeRegion]
-		alias = self.regions_alias.get(nodeRegion)
-		if alias is None:
-			regionid = name
-			self.regions_alias[nodeRegion] = [regionid,]
-		else:
-			counter = len(alias)+1
-			regionid = name + '_%d' % counter
-			self.regions_alias[nodeRegion].append(regionid)
-		self.ids_written[regionid] = 1
-		divlist.append(('id', regionid))
 
 		# outermost region
 		currViewport, currMediaRegion = path[0], path[1]
@@ -666,9 +712,14 @@ class SMILXhtmlSmilWriter(SMIL):
 			currMediaRegion = currViewport
 			prevMediaRegion = prevViewport
 
+		# find/compose/set region id
+		regionid = self.registerRegionAlias(currMediaRegion)
+		self.ids_written[regionid] = 1
+		divlist.append(('id', regionid))
+
 		# apply region style
-		forceTransparent = (prevMediaRegion == currMediaRegion or mtype == 'audio')
-		regstyle = self.getRegionStyle(currMediaRegion, node, forceTransparent)
+		ft = (prevMediaRegion == currMediaRegion or mtype == 'audio')
+		regstyle = self.getRegionStyle(currMediaRegion, forcetransparent = ft)
 		if regstyle is not None:
 			divlist.append(('style', regstyle))
 		divlist.append(('class', 'time'))
@@ -696,9 +747,11 @@ class SMILXhtmlSmilWriter(SMIL):
 		# write inner hierarchy if it exists
 		ix = path.index(currMediaRegion)
 		for region in path[ix+1:]:
-			divlist = []
-			forceTransparent = region in self.currLayout or mtype == 'audio'
-			regstyle = self.getRegionStyle(region, None, forceTransparent)
+			id = self.registerRegionAlias(region)
+			self.ids_written[id] = 1
+			divlist = [('id', id)]
+			ft = region in self.currLayout or mtype == 'audio'
+			regstyle = self.getRegionStyle(region, forcetransparent = ft)
 			divlist.append(('style', regstyle))
 			volume = region.get('soundLevel', None)
 			if volume is not None:
@@ -722,27 +775,44 @@ class SMILXhtmlSmilWriter(SMIL):
 		if subRegGeom is not None and mediaGeom is not None:
 			# possible overrides: fit, z-index, and backgroundColor 
 			divlist = [('id', nodeid)]
-			x, y, w, h = subRegGeom
-			bgcolor = getbgcoloratt(self, node, 'bgcolor')
-			z = getcmifattr(self, node, 'z')
 			fit = MMAttrdefs.getattr(node, 'fit')
-			overflow = self.getoverflow(fit)
-			regstyle = 'position:absolute;overflow:%s;left:%d;top:%d;width:%d;height:%d;' % (overflow, x, y, w, h)
+			if fit != 'hidden':
+				rcparent = nodeRegion.getPxGeom()
+				if node in self.animate_motion_nodes or self.hasAnimateMotionChildren(node):
+					regstyle = self.rc2style_sizerelative(subRegGeom, rcparent, fit=fit)
+				else:
+					regstyle = self.rc2style_relative(subRegGeom, rcparent, fit=fit)
+			else:
+				regstyle = self.rc2style(subRegGeom)
+			bgcolor = getbgcoloratt(self, node, 'bgcolor')
 			if bgcolor: regstyle = regstyle + 'background-color:%s;' % bgcolor
+			z = getcmifattr(self, node, 'z')
 			if z: regstyle = regstyle + 'z-index:%s;' % z
 			divlist.append(('style', regstyle))
 			divlist.append(('class', 'time'))
 			self.writetag('div', divlist)
 			self.push()
 			pushed = pushed + 1
-			#attrlist.insert(0, ('id', nodeid+'_m'))
+			attrlist.insert(0, ('id', nodeid + '_m'))
 		else:
 			attrlist.insert(0, ('id', nodeid))
 			
 		# save current layout and return
 		self.currLayout = path
 		return pushed, regionid
-		
+	
+	def registerRegionAlias(self, region):
+		name = self.ch2name[region]
+		alias = self.regions_alias.get(region)
+		if alias is None:
+			regionid = name
+			self.regions_alias[region] = [regionid,]
+		else:
+			counter = len(alias)+1
+			regionid = name + '_%d' % counter
+			self.regions_alias[region].append(regionid)
+		return regionid
+			
 	# transfer timing attributes to container div and 
 	# traslate SMIL timing rules to IE implementation
 	def resolveMediaNodeTiming(self, node, nodeid, attrlist, mtype, regionName, transIn, transOut, fill, divlist):
@@ -776,30 +846,42 @@ class SMILXhtmlSmilWriter(SMIL):
 				# force smil default behavior in such cases
 				divlist.append(('fill', 'freeze'))
 
-			elif parent.GetType() == 'par' and has_end:
-				# equivalent to timing_spec == 2
-				timing_spec = 2
-
-			elif mtype in ('audio', 'video'):
-				try:
-					dur = Duration.getintrinsicduration(node, 1)
-				except:
-					dur = 2.0
-				pardur = fmtfloat(dur, prec = 2)
-				divlist.append(('dur', pardur))
-				timing_spec = timing_spec + 1
-
-			else:
-				# XXX: overspecification
-				dur = self.getDurHint(node)
-		 		pardur = fmtfloat(dur, prec = 2)
-				divlist.append(('dur', pardur))
-				if dur != 0.0:
-					timing_spec = timing_spec + 1
-
 		# when div has timing extent it to a time container
-		if timing_spec > 0 or self.hasTimeChildren(node) or transIn or transOut:
-			divlist.append( ('timeContainer', 'par'))
+		divlist.append( ('timeContainer', 'par'))
+
+	def adjustSeqTiming(self, x, root, attrlist):
+		# XXX: IE seq children must have an explicit dur or an explicit end condition
+		# XXX: must be done globally and correctly before start writing
+		# this needs a custom scheduler/timing resolver to be implemented correctly
+		# node.GetTimes() section implements one but seems not to be appropriate
+		parent = x.GetParent()
+		if not root and parent.GetType() == 'seq':
+			d = x.attrdict
+			hasendcond = d.get('duration') or d.get('repeatdur') or d.get('endlist')
+			if not hasendcond:
+				next = self.getNextSibling(x)
+				if next:
+					dur = self.getDurHint(x)
+					if not dur or dur < 0.0: 
+						if x.GetType() not in interiortypes:
+							dur = 1.0
+					if dur and dur > 0.0:
+		 				dur = fmtfloat(dur, prec = 2)
+						attrlist.append(('dur', dur))
+						self.seqtimingfixes[x] = dur
+			previous =  self.getPreviousSibling(x)
+			fix = self.seqtimingfixes.get(previous)
+			if previous and fix:
+				# XXX: of course should be changed
+				val = self.removeAttr(attrlist, 'begin')
+				if val:
+					try:
+						diff = string.atof(val) - string.atof(fix)
+					except:
+						pass
+					else:
+						if diff > 0.0:
+							attrlist.append(('begin', fmtfloat(diff, prec = 2)))
 
 	def applyMediaStyle(self, node, nodeid, attrlist, mtype):
 		subRegGeom, mediaGeom = None, None
@@ -810,22 +892,41 @@ class SMILXhtmlSmilWriter(SMIL):
 		if geoms and mtype != 'audio':
 			subRegGeom, mediaGeom = geoms
 		if mediaGeom:
-			style = self.rc2style_relative(mediaGeom, subRegGeom)
+			fit = MMAttrdefs.getattr(node, 'fit')
+			if fit == 'hidden':
+				style = self.rc2style(mediaGeom)
+			else: 
+				style = self.rc2style_relative(mediaGeom, subRegGeom)
 			if mtype == 'brush':
 				color = self.removeAttr(attrlist, 'color')
 				if color is not None:
 					style = style + 'background-color:%s;' % color
 			attrlist.append( ('style', style) )
 
-
-	def rc2style_relative(self, rc, rcref):
-		x, y, w, h = rc
-		width, height = float(rcref[2]), float(rcref[3])
-		x, y, w, h = 100.0*(x/width), 100.0*(y/height), 100.0*(w/width), 100.0*(h/height)
-		x, y, w, h = fmtfloat(x, prec = 2, suffix = '%'),  fmtfloat(y, prec = 2, suffix = '%'),\
-			fmtfloat(w, prec = 2, suffix = '%'), fmtfloat(h, prec = 2, suffix = '%')
-		return 'position:absolute;overflow:hidden;left:%s;top:%s;width:%s;height:%s;' % (x, y, w, h)
-
+	# used when no layout is needed for a media node
+	def applyRegionStyle(self, node, nodeid, attrlist, mtype, fill):
+		nodeRegion = node.GetChannel().GetLayoutChannel()
+		
+		if mtype != 'audio':
+			fit = MMAttrdefs.getattr(node, 'fit')
+			style = self.getRegionStyle(nodeRegion, fit=fit)
+			attrlist.append(('style', style))
+			
+		# apply soundLevel
+		volume = nodeRegion.get('soundLevel', None)
+		if volume is not None:
+			volume = 100.0*string.atof(volume)
+			volume = fmtfloat(volume)
+			attrlist.append(('volume', volume))
+			
+		# apply fill
+		if fill:
+			attrlist.append(('fill', fill))
+			
+		# register nodeid as region alias
+		id = self.registerRegionAlias(nodeRegion)
+		attrlist.insert(0, ('id', nodeid))
+		
 	def getNodeMediaRect(self, node):
 		subRegGeom, mediaGeom = None, None
 		try:
@@ -841,7 +942,11 @@ class SMILXhtmlSmilWriter(SMIL):
 	def writeTransition(self, transIn, transOut, nodeid, regionid):
 		transitions = self.root.GetContext().transitions
 		quotedname = transIn or transOut
-		name = self.name2transition[quotedname]
+		try:
+			name = self.name2transition[quotedname]
+		except Exception, arg:
+			print arg
+			name = quotedname
 		td = transitions.get(name)
 		if not td:
 			trtype = None
@@ -885,6 +990,12 @@ class SMILXhtmlSmilWriter(SMIL):
 		for child in node.GetChildren():
 			type = child.GetType()
 			if type != 'anchor':
+				return 1
+		return 0
+
+	def hasAnimateMotionChildren(self, node):
+		for child in node.GetChildren():
+			if child.GetType() == 'animate' and child.attrdict.get('atag') == 'animateMotion':
 				return 1
 		return 0
 
@@ -942,8 +1053,9 @@ class SMILXhtmlSmilWriter(SMIL):
  			t0, t1, t2, downloadlag, begindelay = node.GetTimes()
  			val = t1 - t0
  		except: 
- 			val = 2.0
- 		return val
+ 			return -1
+		else:
+ 			return val
 
 	def fixBeginList(self, node, attrlist):
 		srcid = self.links_target2src.get(node)
@@ -1123,6 +1235,8 @@ class SMILXhtmlSmilWriter(SMIL):
 							targetElement = self.ch2name[target]
 						else:
 							targetElement = self.getNodeId(target)
+							if tag == 'transitionFilter':
+								targetElement = targetElement + '_m'	
 						value = targetElement
 					else:
 						targetElement = value
@@ -1131,20 +1245,25 @@ class SMILXhtmlSmilWriter(SMIL):
 					elif name == 'to':value = toxy
 					elif name == 'values':value = values
 					elif name == 'path': value = path
-				if name == 'id':
-					hasid = 1
 				if value and value != attributes[name]:
 					if name in ('begin', 'end'):
 						value = event2xhtml(value)
 						value = replacePrevShortcut(value, node)
+					elif name == 'keySplines':
+						vals = value.split(';')
+						value = ''
+						for s in vals:
+							l = tokenizer.splitlist(s)
+							value = value + ' '.join(l) + ';'
+					elif name == 'id':
+						hasid = 1
 					attrlist.append((name, value))
 		if not hasid:
 			id = 'm' + node.GetUID()
-			attrlist.append( ('id', id))
+			attrlist.insert(0, ('id', id))
 
 		# write it
 		if target is None or target.getClassName() not in ('Region', 'Viewport'):
-			# node animation
 			self.writetag('t:'+tag, attrlist)
 		else:
 			# region animation
@@ -1196,16 +1315,48 @@ class SMILXhtmlSmilWriter(SMIL):
 			style = style + 'background-color:%s;' % bgcolor
 		return style
 
-	def getRegionStyle(self, region, node = None, forcetransparent = 0):
+	# used by getRegionStyle
+	def getRegionSizeSpecs(self, region, names):
+		l, w, r = names
+		specs = {}
+		for name in names:
+			s = ''
+			value = region.GetAttrDef(name, None)
+			if type(value) == type(0.0):
+				s = '%d%%' % int(value * 100 + .5)
+			elif type(value) == type(0):
+				s = '%d' % value
+			if s:
+				specs[name] = s
+			if len(specs) > 1:
+				break;
+		if len(specs) == 0:
+			specs[l] = '0'
+			specs[w] = '100%'
+		elif len(specs) == 1:
+			if specs.has_key(l):
+				specs[r] = '0'
+			elif specs.has_key(r):
+				specs[l] = '0'
+			else:
+				specs[l] = '0'
+		return specs
+
+	def getRegionStyle(self, region, forcetransparent = 0, fit='hidden'):
 		if region in self.top_levels:
 			return self.getViewportStyle(region, forcetransparent)
-		x, y, w, h = region.getPxGeom()
-		if node:
-			fit = MMAttrdefs.getattr(node, 'fit')
-		else:
-			fit = 'hidden'
-		overflow = self.getoverflow(fit)
-		style = 'position:absolute;overflow:%s;left:%d;top:%d;width:%d;height:%d;' % (overflow, x, y, w, h)
+		style = 'position:absolute;overflow:%s;' % self.getoverflow(fit)
+		if self.hasMultiWindowLayout:
+			x, y, w, h = region.getPxGeom()
+			style = style + 'left:%d;top:%d;width:%d;height:%d;' % (x, y, w, h)
+		else:	
+			# IE seems to fail with 'right', 'bottom'
+			specs = self.getRegionSizeSpecs(region, ('left', 'width', 'right'))	
+			specs.update(self.getRegionSizeSpecs(region, ('top', 'height', 'bottom')))
+			for name in ('left', 'top', 'width', 'height', 'right', 'bottom'):
+				value = specs.get(name)
+				if value is not None:
+					style = style + name + ':' + value + ';'
 		transparent = region.get('transparent', None)
 		bgcolor = region.get('bgcolor', None)
 		if bgcolor and transparent==0 and not forcetransparent:
@@ -1218,6 +1369,37 @@ class SMILXhtmlSmilWriter(SMIL):
 		if z > 0:
 			style = style + 'z-index:%d;' % z
 		return style
+
+	def rc2style(self, rc, fit = 'hidden'):
+		x, y, w, h = rc
+		overflow = self.getoverflow(fit)
+		return 'position:absolute;overflow:%s;left:%d;top:%d;width:%d;height:%d;' % (overflow, x, y, w, h)
+
+	def rc2style_relative(self, rc, rcref, fit = 'hidden'):
+		x, y, w, h = rc
+		width, height = float(rcref[2]), float(rcref[3])
+		if x:
+			x = 100.0*(x/width)
+			x = fmtfloat(x, prec = 2, suffix = '%')
+		else:
+			x = '0' 
+		if y:
+			y = 100.0*(y/height)
+			y = fmtfloat(y, prec = 2, suffix = '%')
+		else:
+			y = '0' 
+		w, h = 100.0*(w/width), 100.0*(h/height)
+		w, h = fmtfloat(w, prec = 2, suffix = '%'), fmtfloat(h, prec = 2, suffix = '%')
+		overflow = self.getoverflow(fit)
+		return 'position:absolute;overflow:%s;left:%s;top:%s;width:%s;height:%s;' % (overflow, x, y, w, h)
+
+	def rc2style_sizerelative(self, rc, rcref, fit = 'hidden'):
+		x, y, w, h = rc
+		width, height = float(rcref[2]), float(rcref[3])
+		w, h = 100.0*(w/width), 100.0*(h/height)
+		w, h = fmtfloat(w, prec = 2, suffix = '%'), fmtfloat(h, prec = 2, suffix = '%')
+		overflow = self.getoverflow(fit)
+		return 'position:absolute;overflow:%s;left:%d;top:%d;width:%s;height:%s;' % (overflow, x, y, w, h)
 
 	def getoverflow(self, fit):
 		# overflow in ('visible', 'scroll', 'hidden', 'auto')
@@ -1248,6 +1430,10 @@ class SMILXhtmlSmilWriter(SMIL):
 		if path:
 			return path[0]
 		return None
+
+	def getNodeViewport(self, node):
+		region = node.GetChannel().GetLayoutChannel()
+		return self.getRegionViewport(region)
 
 	# temporal for writing empty regions 
 	# XXX: should be avoided 
@@ -1318,20 +1504,18 @@ class SMILXhtmlSmilWriter(SMIL):
 	#
 	#
 	def buildSensitivityList(self, parent, sensitivityList):
-		import MMTypes
 		for node in parent.children:
-			ntype = node.GetType()
 			for arc in node.attrdict.get('beginlist', []) + node.attrdict.get('endlist', []):
 				if arc.event == 'activateEvent':
 					sensitivityList.append(arc.srcnode)
 			self.buildSensitivityList(node, sensitivityList)
 
-	def buildAnchorTargets(self, node):
+	def buildTargets(self, node):
 		ntype = node.GetType()
 		interior = (ntype in interiortypes)
 		if interior:
 			for child in node.GetChildren():
-				self.buildAnchorTargets(child)
+				self.buildTargets(child)
 		elif ntype in ('imm', 'ext', 'brush'):
 			for anchor in node.GetChildren():
 				if anchor.GetType() != 'anchor':
@@ -1345,7 +1529,18 @@ class SMILXhtmlSmilWriter(SMIL):
 					id = 'a' + node.GetUID()
 				if type(a2) is not type(''):
 					self.links_target2src[a2] = id
-					 
+					self.linkssources[node] = 1
+		elif ntype == 'animate':
+			target = node.targetnode
+			if target:
+				motion = node.attrdict.get('atag') == 'animateMotion'
+				if target.getClassName() in ('Region', 'Viewport'):
+					self.animate_regions.append(target)			 
+					if motion: self.animate_motion_regions.append(target)
+				else:
+					self.animate_nodes.append(target)
+					if motion: self.animate_motion_nodes.append(target)
+
 	def calcugrnames(self, node):
 		# Calculate unique names for usergroups
 		usergroups = node.GetContext().usergroups
