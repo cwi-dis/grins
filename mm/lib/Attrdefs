@@ -89,10 +89,10 @@
 	'Channels used in this document (root node only)' normal (cmif))
 
 (clipbegin (string) '' 'Clip begin' default
-	'Start of range of frames to be played. Simplest form is "npt=3s".' raw (g2_pro qt_pro smil10 cmif))
+	'Start of range of frames to be played. Simplest form is "npt=3s".' raw (g2_pro qt_pro smil10 smil2 cmif))
 
 (clipend (string) '' 'Clip end' default
-	'End of range of frames to be played. Simplest form is "npt=3s".' raw (g2_pro qt_pro smil10 cmif))
+	'End of range of frames to be played. Simplest form is "npt=3s".' raw (g2_pro qt_pro smil10 smil2 cmif))
 
 (comment (string) '' 'Comment' default
 	 'A comment (authoring convenience only)' raw (cmif))
