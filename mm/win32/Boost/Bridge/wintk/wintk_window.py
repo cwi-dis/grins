@@ -6,8 +6,6 @@ from WMEVENTS import *
 
 import win32mu
 
-import win32api
-
 from win32ig import win32ig
 from win32displaylist import _DisplayList
 
@@ -1206,7 +1204,7 @@ class Window:
 ########################################
 
 # regions, RGB 
-import win32ui, win32con, win32api
+import win32con
 
 import win32transitions
 
@@ -1276,8 +1274,9 @@ class Region(Window):
 	def CreateOSWindow(self, rect=None, html=0, svg=0):
 		if self._oswnd:
 			return self._oswnd
+		import win32ui
 		from pywinlib.mfc import window
-		Afx=win32ui.GetAfx()
+		Afx = win32ui.GetAfx()
 		Sdk=win32ui.GetWin32Sdk()
 
 		x, y, w, h = self.getwindowpos()
@@ -1291,7 +1290,7 @@ class Region(Window):
 		color = self._bgcolor
 		if not color or svg:
 			color = 255, 255, 255
-		brush=Sdk.CreateBrush(win32con.BS_SOLID,win32mu.RGB(color),0)
+		brush= Sdk.CreateBrush(win32con.BS_SOLID,win32mu.RGB(color),0)
 		cursor=Afx.GetApp().LoadStandardCursor(win32con.IDC_ARROW)
 		icon=0
 		clstyle=win32con.CS_DBLCLKS
@@ -1380,7 +1379,7 @@ class Region(Window):
 	#
 	# detect SVG support
 	def HasSvgSupport(self):
-		return win32ui.HasSvgSupport()
+		return 0
 
 	# set SVG source URL
 	def SetSvgSrc(self, fileOrUrl):
@@ -1471,23 +1470,20 @@ class Region(Window):
 
 	def getClipRgn(self, rel=None):
 		x, y, w, h = self.getwindowpos(rel)
-		rgn = win32ui.CreateRgn()
-		rgn.CreateRectRgn((x,y,x+w,y+h))
+		rgn = CreateRectRgn((x,y,x+w,y+h))
 		if rel==self: return rgn
 		prgn = self._parent.getClipRgn(rel)
-		rgn.CombineRgn(rgn,prgn,win32con.RGN_AND)
+		rgn.CombineRgn(rgn, prgn, win32con.RGN_AND)
 		prgn.DeleteObject()
 		return rgn
 
 	# get reg of children
 	def getChildrenRgn(self, rel=None):
-		rgn = win32ui.CreateRgn()
-		rgn.CreateRectRgn((0,0,0,0))
+		rgn = CreateRectRgn((0,0,0,0))
 		for w in self._subwindows:
-			x, y, w, h = w.getwindowpos(rel);
-			newrgn = win32ui.CreateRgn()
-			newrgn.CreateRectRgn((x,y,x+w,y+h))
-			rgn.CombineRgn(rgn,newrgn,win32con.RGN_OR)
+			x, y, w, h = w.getwindowpos(rel)
+			newrgn = CreateRectRgn((x,y,x+w,y+h))
+			rgn.CombineRgn(rgn, newrgn, win32con.RGN_OR)
 			newrgn.DeleteObject()
 		# finally clip to this
 		argn = self.getClipRgn(rel)
@@ -1504,23 +1500,22 @@ class Region(Window):
 		return rgn
 
 	def clipRect(self, rc, rgn):
-		newrgn = win32ui.CreateRgn()
-		newrgn.CreateRectRgn(self.ltrb(rc))
+		newrgn = CreateRectRgn(self.ltrb(rc))
 		newrgn.CombineRgn(rgn,newrgn,win32con.RGN_AND)
-		ltrb = newrgn.GetRgnBox()[1]
+		ltrb = newrgn.GetRgnBox()
 		newrgn.DeleteObject()
 		return self.xywh(ltrb)
 	
 	def rectAnd(self, rc1, rc2):
 		# until we make calcs
-		rc,ans= win32ui.GetWin32Sdk().IntersectRect(self.ltrb(rc1),self.ltrb(rc2))
+		rc,ans= IntersectRect(self.ltrb(rc1),self.ltrb(rc2))
 		if ans:
 			return self.xywh(rc)
 		return (0, 0, 0, 0)
 
 	def rectOr(self, rc1, rc2):
 		# until we make calcs
-		rc,ans= win32ui.GetWin32Sdk().UnionRect(self.ltrb(rc1),self.ltrb(rc2))
+		rc, ans = UnionRect(self.ltrb(rc1),self.ltrb(rc2))
 		if ans:
 			return self.xywh(rc)
 		return (0, 0, 0, 0)
@@ -1535,7 +1530,7 @@ class Region(Window):
 			return
 		
 		if rgn:
-			xc, yc, wc, hc = self.xywh(rgn.GetRgnBox()[1])
+			xc, yc, wc, hc = self.xywh(rgn.GetRgnBox())
 		else:
 			xc, yc, wc, hc = dst
 
@@ -1601,7 +1596,7 @@ class Region(Window):
 					print arg
 					return
 
-				dc = win32ui.CreateDCFromHandle(hdc)
+				dc = CreateDCFromHandle(hdc)
 				if rgn:
 					dc.SelectClipRgn(rgn)
 				x0, y0 = dc.SetWindowOrg((-x,-y))
@@ -1647,9 +1642,7 @@ class Region(Window):
 	# but rel is not an ancestor
 	def getrelativeClipRgn(self, rel):
 		x, y, w, h = self.getrelativepos(rel);
-		rgn = win32ui.CreateRgn()
-		rgn.CreateRectRgn((x,y,x+w,y+h))
-		return rgn
+		return CreateRectRgn((x,y,x+w,y+h))
 						
 	# paint on surface dds relative to ancestor rel			
 	def paintOnDDS(self, dds, rel=None, exclwnd=None):
@@ -1743,8 +1736,7 @@ class Region(Window):
 		dst = self.getwindowpos(self._topwindow)
 		rgn = self.getClipRgn(self._topwindow)
 		if rc:
-			prgn = win32ui.CreateRgn()
-			prgn.CreateRectRgn(self.ltrb(rc))
+			prg = CreateRectRgn(self.ltrb(rc))
 			rgn.CombineRgn(rgn,prgn,win32con.RGN_AND)
 			prgn.DeleteObject()
 						
@@ -1795,7 +1787,8 @@ class Region(Window):
 	# delta helpers for the next method
 	def __getDC(self, dds):
 		hdc = dds.GetDC()
-		return win32ui.CreateDCFromHandle(hdc)
+		return CreateDCFromHandle(hdc)
+
 	def __releaseDC(self, dds, dc):
 		hdc = dc.Detach()
 		dds.ReleaseDC(hdc)
@@ -1948,7 +1941,6 @@ class Region(Window):
 			self._transition = win32transitions.TransitionEngine(self, outtrans, runit, dict, cb)
 			# uncomment the next line to freeze things
 			# at the moment begintransition is called
-			# win32ui.MessageBox('begintransition')
 			self._transition.begintransition()
 		else:
 			self._multiElement = 0
@@ -2059,9 +2051,7 @@ class Viewport(Region):
 
 	def getClipRgn(self, rel=None):
 		x, y, w, h = self._rectb
-		rgn = win32ui.CreateRgn()
-		rgn.CreateRectRgn((x,y,x+w,y+h))
-		return rgn
+		return CreateRectRgn((x,y,x+w,y+h))
 
 	def getDrawBuffer(self):
 		return self._ctx.getDrawBuffer()
@@ -2161,8 +2151,10 @@ class ViewportContext:
 		self._bgcolor = (0, 0, 0) # should be always black for WMP
 		
 		import winuser
+		desktop = winuser.GetDesktopWindow()
+
 		self._ddraw = ddraw.CreateDirectDraw()
-		self._ddraw.SetCooperativeLevel(winuser.GetDesktopWindow(), ddraw.DDSCL_NORMAL)
+		self._ddraw.SetCooperativeLevel(desktop.GetSafeHwnd(), ddraw.DDSCL_NORMAL)
 
 		ddsd = ddraw.CreateDDSURFACEDESC()
 		ddsd.SetFlags(ddraw.DDSD_CAPS)
@@ -2178,6 +2170,17 @@ class ViewportContext:
 
 		self._ddbgcolor = self._backBuffer.GetColorMatch(self._bgcolor or (255,255,255))
 		self._backBuffer.BltFill((0, 0, w, h), self._ddbgcolor)
+
+	def destroyDDLayer(self):
+		if self._ddraw:
+			del self._frontBuffer
+			del self._backBuffer
+			#del self._clipper
+			del self._ddraw
+			self._ddraw = None
+		import winuser
+		desktop = winuser.GetDesktopWindow()
+		desktop.RedrawWindow(None, 0, 0)
 
 	def update(self, rc=None, exclwnd=None):
 		if self._backBuffer.IsLost():
@@ -2227,6 +2230,7 @@ class ViewportContext:
 
 	def closeViewport(self, viewport):
 		del viewport
+		self.destroyDDLayer()
 
 	def getDrawBuffer(self):
 		return self._backBuffer
@@ -2248,16 +2252,17 @@ class ViewportContext:
 		return dds
 
 	def update_screen(self):
+		import winkernel
 		if not self._ddraw or not self._frontBuffer or not self._backBuffer:
 			return
 		if self._frontBuffer.IsLost():
-			win32api.Sleep(0)
+			winkernel.Sleep(0)
 			if not self._frontBuffer.Restore():
 				# we can't do anything for this
 				# system is busy with video memory
 				return
 		if self._backBuffer.IsLost():
-			win32api.Sleep(0)
+			winkernel.Sleep(0)
 			if not self._backBuffer.Restore():
 				# and for this either
 				# system should be out of memory
@@ -2269,6 +2274,23 @@ class ViewportContext:
 			print 'PlayerView.update', arg
 
 #########################
+# ui section for replacement
+
+import wingdi
+
+def CreateRectRgn(ltrb):
+	return wingdi.CreateRectRgn(ltrb)
+
+def IntersectRect(ltrb1, ltrb2):
+	return wingdi.IntersectRect(ltrb1, ltrb2)
+
+def UnionRect(ltrb1, ltrb2):
+	return wingdi.UnionRect(ltrb1, ltrb2)
+
+def CreateDCFromHandle(hdc):
+	import win32ui
+	return win32ui.CreateDCFromHandle(hdc)
+
 import grinsRC
 def getcursorhandle(strid):
 	if strid == 'hand':
