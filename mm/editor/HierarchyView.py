@@ -748,13 +748,15 @@ class HierarchyView(HierarchyViewDialog):
 		# Handles redraw events, for example when the canvas is resized.
 		self.draw_scene()
 
-	def mousemove(self, dummy, window, event, point):
+	def mousemove(self, dummy, window, event, params):
+		px, py, dummy, modifiers = params
+		point = px, py
+		is_constrained = (modifiers != 'add')
 		if self.__dragside is not None:
 			self.window._dragging = None # XXX win32 specific, should define proper interface
 			obj, side, timemapper, timeline = self.__dragside
 			if timeline is not None:
 				x,y,w,h = timeline.get_box()
-				px, py = point
 				t, is_exact = obj.pixel2time(px, side, timemapper)
 				if t < 0:
 					if side == 'right':
@@ -771,10 +773,16 @@ class HierarchyView(HierarchyViewDialog):
 				apply(self.window.drawxorline, self.__line)
 				if is_exact:
 					color = (255, 0, 0)
-					self.window.setcursor('darrowhit')
+					if is_constrained:
+						self.window.setcursor('constraindarrowhit')
+					else:
+						self.window.setcursor('darrowhit')
 				else:
 					color = (0,0,255)
-					self.window.setcursor('darrow')
+					if is_constrained:
+						self.window.setcursor('constraindarrow')
+					else:
+						self.window.setcursor('darrow')
 				self.__line = (px,py),(px, y+h/2), color
 				apply(self.window.drawxorline, self.__line)
 		elif self.scene_graph is not None:
@@ -782,7 +790,10 @@ class HierarchyView(HierarchyViewDialog):
 			if rv is None or rv[2] is None:
 				self.window.setcursor('')
 				return
-			self.window.setcursor('darrow')
+			if is_constrained:
+				self.window.setcursor('constraindarrow')
+			else:
+				self.window.setcursor('darrow')
 
 	def mouse(self, dummy, window, event, params):
 		x, y, dummy, modifier = params
@@ -802,12 +813,16 @@ class HierarchyView(HierarchyViewDialog):
 				self.click(px, py)
 		else:
 			# start dragging
+			is_constrained = (modifier != 'add')
 			self.mousedrag(1)
 			obj, side, timemapper, timeline = rv
 			if timeline is not None:
 				x,y,w,h = timeline.get_box()
 				color = (255,0,0)
-				self.window.setcursor('darrowhit')
+				if is_constrained:
+					self.window.setcursor('constraindarrowhit')
+				else:
+					self.window.setcursor('darrowhit')
 				self.__line = (px,py),(px, y+h/2), color
 				self.window.drawxorline((px,py),(px, y+h/2), color)
 
