@@ -63,6 +63,9 @@
 (border (int) 1 'Channel border' default
 	'Determines whether channel window has a border (1=yes)' raw)
 
+(center (bool) 1 'Center image' default
+	'Determines whether image is centered' channel)
+
 (channel (name) undefined 'Channel' channelname
 	'Name of channel used to render this node/subtree' inherited)
 

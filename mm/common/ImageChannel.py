@@ -9,7 +9,8 @@ from MMurl import urlretrieve
 
 class ImageChannel(ChannelWindow):
 	node_attrs = ChannelWindow.node_attrs + ['bucolor', 'hicolor', 'scale',
-						 'scalefilter', 'crop']
+						 'scalefilter', 'center',
+						 'crop']
 
 	def __init__(self, name, attrdict, scheduler, ui):
 		ChannelWindow.__init__(self, name, attrdict, scheduler, ui)
@@ -29,8 +30,12 @@ class ImageChannel(ChannelWindow):
 			self.errormsg(node, 'Cannot resolve URL "%s": %s' % (f, arg))
 			return 1
 		# remember coordinates for anchor editing (and only for that!)
+		scale = MMAttrdefs.getattr(node, 'scale')
+		crop = MMAttrdefs.getattr(node, 'crop')
+		center = MMAttrdefs.getattr(node, 'center')
 		try:
-			self._arm_imbox = self.armed_display.display_image_from_file(f, scale = MMAttrdefs.getattr(node, 'scale'), crop = MMAttrdefs.getattr(node, 'crop'))
+			self._arm_imbox = self.armed_display.display_image_from_file(
+				f, scale = scale, crop = crop, center = center)
 		except (windowinterface.error, IOError), msg:
 			if type(msg) is type(self):
 				msg = msg.strerror
