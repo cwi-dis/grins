@@ -368,6 +368,7 @@ class TreeNodeHelper:
 				self.name = nodeRef.name
 			else:
 				self.name = name
+		self.previewShowOption = nodeRef.attrdict.get('previewShowOption')
 
 	def hasChild(self, child):
 		return self.children.has_key(child)
@@ -393,6 +394,10 @@ class TreeNodeHelper:
 			if name != self.name:
 				self.isUpdated = 1
 				self.name = name
+		previewShowOption = nodeRef.attrdict.get('previewShowOption')
+		if self.previewShowOption != previewShowOption:
+			self.isUpdated = 1
+			self.previewShowOption = previewShowOption
 		
 #
 # Main layout view code
@@ -412,8 +417,8 @@ class LayoutView2(LayoutViewDialog2):
 
 		# current state
 		self.currentSelectedNodeList = []
+		self.previousSelectedNodeList = []
 		self.currentFocus = None
-		self.previousFocus = None
 		# allow to identify if the focus has been fixed by this view
 		self.myfocus = None	# used to break recursion in setglobalfocus -> globalfocuschanged
 
@@ -584,7 +589,7 @@ class LayoutView2(LayoutViewDialog2):
 
 		# clear all variables state
 		self.currentSelectedNodeList = []
-		self.previousFocus = None
+		self.previousSelectedNodeList = []
 		self.currentFocus = None
 		self.myfocus = None
 		
@@ -671,6 +676,7 @@ class LayoutView2(LayoutViewDialog2):
 			if self.existRef(nodeRef):
 				# keep only seleted nodes belong to this view
 				targetList.append(nodeRef)
+
 		self.currentSelectedNodeList = targetList
 		
 		# XXX to implement
@@ -764,6 +770,10 @@ class LayoutView2(LayoutViewDialog2):
 				commandlist.append(DELETE(callback = (self.onDelNode, ())))
 				
 		self.setcommandlist(commandlist)
+
+	def updateVisibilityState(self,listToUpdate, state):
+		self.treeWidget.updateVisibilityState(listToUpdate, state)
+		self.previousWidget.updateVisibilityState(listToUpdate, state)
 		
 	def updateFocus(self, keepShowedNodes=0):
 		if debug: print 'LayoutView.updateFocus: focus on List'
@@ -806,13 +816,38 @@ class LayoutView2(LayoutViewDialog2):
 
 		if not enabled or self.currentFocus is None or len(self.currentFocus) != 1:
 			self.setKeyTimeIndex(None, None)
-		elif (self.previousFocus is None or len(self.previousFocus) != 1 or (not self.currentFocus[0] is self.previousFocus[0])):
+		elif (self.previousSelectedNodeList is None or len(self.previousSelectedNodeList) != 1 or (not self.currentFocus[0] is self.previousSelectedNodeList[0])):
 			self.setKeyTimeIndex(0, self.currentFocus[0])
 				
 		if self.timeValueChanged:
-			self.previousWidget.updateRegionTree()
+			self.previousWidget.mustBeUpdated()
 			self.timeValueChanged = 0
-								
+
+		# update the visibility states according to the current and previous selection
+		# XXX to optimize
+		listToUpdate = []
+		for nodeRef in self.previousSelectedNodeList:
+			# force the state to 0
+			list = self.getAllParent(nodeRef)
+			list.append(nodeRef)
+			for nodeRef in list:
+				nodeType = self.getNodeType(nodeRef)
+				optionShow = self.getPreviewOption(nodeRef, nodeType)
+				if optionShow == 'onSelected':				
+					listToUpdate.append(nodeRef)
+		self.updateVisibilityState(listToUpdate, 0)
+		listToUpdate = []
+		for nodeRef in localSelList:
+			# force the state to 1
+			list = self.getAllParent(nodeRef)
+			list.append(nodeRef)
+			for nodeRef in list:
+				nodeType = self.getNodeType(nodeRef)
+				optionShow = self.getPreviewOption(nodeRef, nodeType)
+				if optionShow == 'onSelected':
+					listToUpdate.append(nodeRef)
+		self.updateVisibilityState(listToUpdate, 1)
+													
 		# update widgets
 		for id, widget in self.widgetList.items():
 			widget.selectNodeList(localSelList, keepShowedNodes)
@@ -831,8 +866,11 @@ class LayoutView2(LayoutViewDialog2):
 		else:
 			self.updateCommandList(self.commandMultiSItemList)
 
-		self.previousFocus = self.currentFocus			
-
+		# save the focus for the next time
+		self.previousSelectedNodeList = []
+		for nodeRef in self.currentSelectedNodeList:
+			self.previousSelectedNodeList.append(nodeRef)
+							
 	def globalfocuschanged(self, focusobject):
 		if debug: print 'LayoutView.globalfocuschanged focusobject=',focusobject
 		self.currentFocus = focusobject
@@ -869,6 +907,25 @@ class LayoutView2(LayoutViewDialog2):
 	def getChildren(self, nodeRef):
 		return self.treeHelper.getChildren(nodeRef)
 
+	def getAllChildren(self, nodeRef):
+		list = []
+		return self.__getAllChildren(nodeRef, list)
+
+	def getAllParent(self, nodeRef):
+		list = []
+		parent = self.getParentNodeRef(nodeRef)
+		while parent is not None:
+			list.append(parent)
+			parent = self.getParentNodeRef(parent)
+		return list
+		
+	def __getAllChildren(self, nodeRef, list):
+		children = self.getChildren(nodeRef)
+		for child in children:
+			list.append(child)
+			self.__getAllChildren(child, list)
+		return list
+		
 	def existRef(self, nodeRef):
 		return self.treeHelper.existRef(nodeRef)	
 	
@@ -1982,7 +2039,69 @@ class LayoutView2(LayoutViewDialog2):
 				self.editmgr.commit('REGION_TREE')
 
 		return 'move'
-	
+
+	def getPreviewOption(self, nodeRef, nodeType):
+		# the default value is node type dependent
+		if nodeType == TYPE_MEDIA:
+			return nodeRef.GetAttrDef('previewShowOption', 'onSelected')
+		elif nodeType in (TYPE_VIEWPORT, TYPE_REGION):
+			return nodeRef.GetAttrDef('previewShowOption', 'always')
+
+	def getVisibilityState(self, nodeRef, nodeType):
+		optionValue = self.getPreviewOption(nodeRef, nodeType)
+		if optionValue == 'onSelected':
+			return 0
+		else:
+			return 1
+		
+	def setPreviewShowOptions(self, nodeRefList, optionValue):
+		editmgr = self.editmgr
+		if not editmgr.transaction():
+			return
+		list = []
+		for nodeRef in nodeRefList:
+			list.append(nodeRef)
+			if optionValue == 'onSelected':
+				# set value as well on all children recursivly
+				children = self.getAllChildren(nodeRef)
+				list = list+children
+			elif optionValue == 'always':
+				# set value as well on all parents
+				parents = self.getAllParent(nodeRef)
+				list = list+parents
+
+		# update the visibility
+		if optionValue == 'onSelected':
+			status = 0
+		else:
+			status = 1
+		self.updateVisibilityState(list, status)
+		
+		for nodeRef in list:
+			nodeType = self.getNodeType(nodeRef)
+			# the default value is node type dependent
+			if nodeType in (TYPE_VIEWPORT, TYPE_REGION):
+				if optionValue == 'onSelected':
+					value = 'onSelected'
+				else:
+					value = None
+				editmgr.setchannelattr(nodeRef.name, 'previewShowOption', value)
+			elif nodeType == TYPE_MEDIA:
+				if optionValue == 'always':
+					value = 'always'
+				else:
+					value = None		
+				editmgr.setnodeattr(nodeRef, 'previewShowOption', value)
+
+			if optionValue == 'onSelected':
+				# if the item is selected, unselected it for consistence purpose
+				for nodeRefSel in self.currentSelectedNodeList:
+						if nodeRef is nodeRefSel:
+							self.editmgr.delglobalfocus([nodeRef])
+				
+		self.previousWidget.mustBeUpdated()
+		editmgr.commit()
+
 	# checking if the region/viewport node contains any sub-region or media
 	def isEmpty(self, nodeRef):
 		# checking if has sub-region
@@ -2541,13 +2660,17 @@ class TreeWidget(Widget):
 		ret = self.treeCtrl.insertNode(idx, name, iconname, iconname)
 		self.nodeRefToNodeTreeCtrlId[nodeRef] = ret
 		self.nodeTreeCtrlIdToNodeRef[ret] = nodeRef
-
+		
 	def appendNode(self, pNodeRef, nodeRef, nodeType):
 		self._appendItem(pNodeRef, nodeRef, nodeType)
 		
 		if not nodeType in CHILD_TYPE:
 			# save the new node for expand. The expand operation can't be done here
 			self.__nodeRefListToExpand.append(nodeRef)
+
+		if nodeType in (TYPE_VIEWPORT, TYPE_REGION, TYPE_MEDIA):
+			visibilityState = self._context.getVisibilityState(nodeRef, nodeType)
+			self.updateVisibilityState([nodeRef], visibilityState)
 					
 	def removeNode(self, nodeRef):
 		nodeTreeCtrlId = self.nodeRefToNodeTreeCtrlId.get(nodeRef)
@@ -2605,6 +2728,8 @@ class TreeWidget(Widget):
 		if name == None:
 			name=''
 		self.treeCtrl.updateNode(self.nodeRefToNodeTreeCtrlId[nodeRef], name, type, type)
+		optionShow = self._context.getPreviewOption(nodeRef, nodeType)
+		self.setPreviewShowOptions([nodeRef], optionShow)
 		
 	# selected node handler method
 	def onSelectChanged(self, nodeTreeCtrlIdList):
@@ -2626,6 +2751,32 @@ class TreeWidget(Widget):
 		# update the selection
 		self._context.onSelectUpdated(nodeRefList, state)
 
+	# the image state (check box) has changed
+	# state = 0 means: check box unselected
+	# state = 1 means: check box selected
+	def onStateActivated(self, nodeTreeCtrlId, state):
+		nodeRef = self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
+		if nodeRef:
+			if state:
+				self._context.setPreviewShowOptions([nodeRef], 'onSelected')
+			else:
+				self._context.setPreviewShowOptions([nodeRef], 'always')
+
+	def updateVisibilityState(self, nodeRefList, state):
+		nodeTreeCtrlIdList = []
+		for nodeRef in nodeRefList:
+			nodeTreeCtrlId = self.nodeRefToNodeTreeCtrlId.get(nodeRef)
+			if nodeTreeCtrlId != None:
+				nodeTreeCtrlIdList.append(nodeTreeCtrlId)
+		self.treeCtrl.setStateNodeList(nodeTreeCtrlIdList, state)
+							  
+	def setPreviewShowOptions(self, nodeRefList, optionValue):
+		if optionValue == 'onSelected':
+			state = 0
+		else:
+			state = 1
+		self.updateVisibilityState(nodeRefList, state)
+			
 	def onExpanded(self, nodeTreeCtrlId, isExpanded):
 		nodeRef = self.nodeTreeCtrlIdToNodeRef.get(nodeTreeCtrlId)
 		if nodeRef:
@@ -2759,6 +2910,8 @@ class PreviousWidget(Widget):
 		# to prevent against indefite loop
 		self.__selecting = 0
 
+		self.__mustBeUpdated = 0
+
 	#
 	# inherited methods
 	#
@@ -2781,10 +2934,27 @@ class PreviousWidget(Widget):
 		self.currentRegionNodeListShowed = None
 		self.previousCtrl = None
 
+	def updateVisibilityState(self, nodeRefList, state):
+		for nodeRef in nodeRefList:
+			nodeType = self._context.getNodeType(nodeRef)
+			if state:
+				if nodeType == TYPE_REGION:
+					self.__showRegion(nodeRef)
+				elif nodeType == TYPE_MEDIA:
+					self.__showMedia(nodeRef)
+			else:
+				if nodeType == TYPE_REGION:
+					self.__hideRegion(nodeRef)
+				elif nodeType == TYPE_MEDIA:
+					self.removeMedia(nodeRef)
+
 	def selectNodeList(self, nodeRefList, keepShowedNodes):
 		# to prevent against indefite loop
 		self.__selecting = 1
 
+		if self.__mustBeUpdated:
+			self.updateRegionTree()
+			
 		if not keepShowedNodes:
 			# remove previous medias which are not selected anymore
 			mediaToRemove = []
@@ -2846,6 +3016,8 @@ class PreviousWidget(Widget):
 	
 	def updateRegionTree(self):
 		if debug: print 'LayoutView.updateRegionTree begin'
+		self.__mustBeUpdated = 0
+			
 		# We assume here that no region has been added or supressed
 		viewportRefList = self._context.getViewportRefList()
 		for viewportRef in viewportRefList:
@@ -2906,10 +3078,19 @@ class PreviousWidget(Widget):
 				
 		if regionRef not in self.currentRegionRefListM: 
 			self.currentRegionRefListM.append(regionRef)
+			self.__mustBeUpdated = 1
 		regionNode = self.getNode(regionRef)
-		if regionNode != None:
+		if regionNode is not None:
 			regionNode.toShowedState()									
 
+	def __hideRegion(self, regionRef):
+		if regionRef in self.currentRegionRefListM: 
+			self.currentRegionRefListM.remove(regionRef)
+			self.__mustBeUpdated = 1
+		regionNode = self.getNode(regionRef)
+		if regionNode is not None:
+			regionNode.toHiddenState()									
+		
 	# ensure that the media is in showing state
 	def __showMedia(self, mediaRef):
 		# show only visible medias in the preview area
@@ -2920,6 +3101,7 @@ class PreviousWidget(Widget):
 		
 		appendList = []
 		if mediaRef not in self.currentMediaRefListM:
+			self.__mustBeUpdated = 1
 			appendList.append(mediaRef)
 			self.currentMediaRefListM.append(mediaRef)
 
@@ -2944,6 +3126,7 @@ class PreviousWidget(Widget):
 			if parentNode != None:
 				parentNode.removeNode(node)
 			if mediaRef in self.currentMediaRefListM:
+				self.__mustBeUpdated = 1
 				self.currentMediaRefListM.remove(mediaRef)
 				del self._nodeRefToNodeTree[mediaRef]
 
@@ -3036,7 +3219,10 @@ class PreviousWidget(Widget):
 					break
 
 		self._context.applyGeomList(applyList)
-						
+
+	def mustBeUpdated(self):
+		self.__mustBeUpdated = 1
+		
 class Node:
 	def __init__(self, nodeRef, ctx):
 		self._nodeRef = nodeRef
