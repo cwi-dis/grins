@@ -286,6 +286,7 @@ class ChannelView(ViewDialog, GLDialog):
 		self.objects.append(self.baseobject)
 		self.initchannels(focus)
 		self.initnodes(focus)
+		self.initarcs(focus)
 
 	# Get the current window shape and set the transformation.
 	# Note that the Y axis is made to point down, like X coordinates!
@@ -308,6 +309,8 @@ class ChannelView(ViewDialog, GLDialog):
 
 	def reshape(self):
 		Timing.needtimes(self.viewroot)
+		for c in self.context.channels:
+			c.lowest = 0
 		for obj in self.objects:
 			obj.reshape()
 
@@ -384,15 +387,13 @@ class ChannelView(ViewDialog, GLDialog):
 
 	def initnodes(self, focus):
 		Timing.needtimes(self.viewroot)
-		arcs = []
 		for c in self.context.channels: c.used = 0
-		self.scantree(self.viewroot, focus, arcs)
-		self.objects[len(self.objects):] = self.arcs = arcs
+		self.scantree(self.viewroot, focus)
 		self.usedchannels = []
 		for c in self.context.channels:
 			if c.used: self.usedchannels.append(c)
 
-	def scantree(self, node, focus, arcs):
+	def scantree(self, node, focus):
 		if node.GetType() in leaftypes:
 			channel = node.GetChannel()
 			if channel:
@@ -401,10 +402,23 @@ class ChannelView(ViewDialog, GLDialog):
 				self.objects.append(obj)
 				if focus[0] == 'n' and focus[1] is node:
 					obj.select()
-				self.addarcs(node, arcs)
 		else:
 			for c in node.GetChildren():
-				self.scantree(c, focus, arcs)
+				self.scantree(c, focus)
+
+	# Arc stuff
+
+	def initarcs(self, focus):
+		arcs = []
+		self.scanarcs(self.viewroot, focus, arcs)
+		self.objects[len(self.objects):] = self.arcs = arcs
+	
+	def scanarcs(self, node, focus, arcs):
+		if node.GetType() in leaftypes and node.GetChannel():
+			self.addarcs(node, arcs)
+		else:
+			for c in node.GetChildren():
+				self.scanarcs(c, focus, arcs)
 
 	def addarcs(self, ynode, arcs):
 		for arc in MMAttrdefs.getattr(ynode, 'synctolist'):
@@ -494,7 +508,8 @@ class GO:
 		self.ok = 1
 
 	def draw(self):
-		# Draw everything
+		# Draw everything, if ok
+		if not self.ok: return 0
 		self.drawfocus()
 
 	def drawfocus(self):
@@ -524,7 +539,7 @@ class GO:
 		# Check whether the given mouse coordinates are in this object
 		return 0
 
-	# Subroutine used by ArcBox and NodeBox to calculate a node's position
+	# Subroutine to calculate a node's position
 
 	def nodebox(self, node):
 		# Compute the left/right sides from the channel position
@@ -549,12 +564,19 @@ class GO:
 		top = totaltop + (totalheight * starttime / totaltime)
 		bottom = totaltop + (totalheight * stoptime / totaltime)
 
-		# Compute top/bottom so that normally we keep a
-		# 1 pixel margin above/below, but at the same time
-		# set a minimal size (to fit the label in and so we can
-		# be selected with the mouse)
-		bottom = max(bottom-1, top+f_fontheight)
-		top = top + 1
+		# Move top/bottom inwards by one pixel
+		top = top+1
+		bottom = bottom-1
+
+		# Move top down below the previous node if necessary
+		if top < channel.lowest:
+			top = channel.lowest
+
+		# Keep space for at least one line of text
+		bottom = max(bottom, top+f_fontheight-2)
+
+		# Update channel's lowest node
+		channel.lowest = int(bottom)
 
 		#print top, ':', bottom, '(', margin, ')', top, ':', bottom,
 		#print MMAttrdefs.getattr(node, 'name')
@@ -642,7 +664,7 @@ class GO:
 	c.append('c', 'New channel...',  newchannelcall)
 	c.append('N', 'Next mini-document', nextminicall)
 	c.append('P', 'Previous mini-document', prevminicall)
-	c.append('', 'Toggle showing unused channels', toggleshowcall)
+	c.append('T', 'Toggle showing unused channels', toggleshowcall)
 	menu = MenuMaker.MenuObject().init('Base ops', commandlist)
 
 
@@ -907,6 +929,7 @@ class NodeBox(GO):
 		self.ok = 1
 
 	def ishit(self, x, y):
+		if not self.ok: return 0
 		return self.left <= x <= self.right and \
 		       self.top <= y <= self.bottom
 
@@ -1103,14 +1126,18 @@ class ArcBox(GO):
 		return GO.init(self, mother, 'arc')
 
 	def reshape(self):
-		sbox = self.nodebox(self.snode)
-		dbox = self.nodebox(self.dnode)
-		if self.sside: self.sy = sbox[3]
-		else: self.sy = sbox[1]
-		if self.dside: self.dy = dbox[3]
-		else: self.dy = dbox[1]
-		self.sx = (sbox[0] + sbox[2]) / 2
-		self.dx = (dbox[0] + dbox[2]) / 2
+		try:
+			sobj = self.snode.cv_obj
+			dobj = self.dnode.cv_obj
+		except AttributeError:
+			self.ok = 0
+			return
+		if self.sside: self.sy = sobj.bottom
+		else: self.sy = sobj.top
+		if self.dside: self.dy = dobj.bottom
+		else: self.dy = dobj.top
+		self.sx = (sobj.left + sobj.right) / 2
+		self.dx = (dobj.left + dobj.right) / 2
 		#
 		lx = self.dx - self.sx
 		ly = self.dy - self.sy
@@ -1122,6 +1149,7 @@ class ArcBox(GO):
 		self.ok = 1
 
 	def ishit(self, x, y):
+		if not self.ok: return 0
 		# XXX Shouldn't we be using gl.pick() here?
 		# Translate
 		x, y = x - self.dx, y - self.dy

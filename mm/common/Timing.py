@@ -154,9 +154,24 @@ def cleanup(node):
 # Return a node's nominal duration, in seconds, as a floating point value.
 # Should only be applied to leaf nodes.
 #
+from AnchorDefs import A_TYPE, ATYPE_PAUSE
+#
 def getduration(node):
 	import Duration
-	return Duration.get(node)
+	d = Duration.get(node)
+	if d > 0:
+		return d
+	# Check for pausing anchor
+	try:
+		alist = node.GetRawAttr('anchorlist')
+	except NoSuchAttrError:
+		return d
+	if alist: # Not None and not []
+		for a in alist:
+			if a[A_TYPE] == ATYPE_PAUSE:
+				return d + 10
+	return d
+	
 
 
 ###########################################################
