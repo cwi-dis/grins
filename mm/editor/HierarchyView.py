@@ -1101,7 +1101,7 @@ class HierarchyView(HierarchyViewDialog):
 	#################################################
 
 	# Clear the list of objects
-   	def cleanup(self):
+	def cleanup(self):
 		self.scene_graph.destroy()
 		self.focusobj = None
 		return

@@ -811,7 +811,7 @@ class DocumentWrapper(Wrapper):
 	__qtnames = ['autoplay', 'qttimeslider', 'qtnext', 'qtchaptermode', 'immediateinstantiation']
 
 	def __init__(self, toplevel):
- 		Wrapper.__init__(self, toplevel, toplevel.context)
+		Wrapper.__init__(self, toplevel, toplevel.context)
 
 	def __repr__(self):
 		return '<DocumentWrapper instance, file=%s>' % self.toplevel.filename
@@ -909,7 +909,7 @@ class TransitionWrapper(Wrapper):
 		'horzRepeat', 'vertRepeat', 'borderWidth', 'color', 'multiElement', 'childrenClip']
 
 	def __init__(self, toplevel, trname):
- 		Wrapper.__init__(self, toplevel, toplevel.context)
+		Wrapper.__init__(self, toplevel, toplevel.context)
  		self.__trname = trname
 		
 	def __repr__(self):

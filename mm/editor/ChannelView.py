@@ -69,13 +69,13 @@ PLAYACTIVECOLOR = settings.get('timeline_playactivecolor')
 PLAYINACTIVECOLOR = settings.get('timeline_playinactivecolor')
 PLAYERRORCOLOR = settings.get('timeline_playerrorcolor')
 
-armcolors = { \
-	     ARM_SCHEDULED: (200, 200, 0), \
-	     ARM_ARMING: ARMACTIVECOLOR, \
-	     ARM_ARMED: ARMINACTIVECOLOR, \
-	     ARM_PLAYING: PLAYACTIVECOLOR, \
-	     ARM_WAITSTOP: PLAYINACTIVECOLOR, \
-	     }
+armcolors = {
+	ARM_SCHEDULED: (200, 200, 0),
+	ARM_ARMING: ARMACTIVECOLOR,
+	ARM_ARMED: ARMINACTIVECOLOR,
+	ARM_PLAYING: PLAYACTIVECOLOR,
+	ARM_WAITSTOP: PLAYINACTIVECOLOR,
+	}
 
 
 # Arrowhead dimensions
@@ -1025,39 +1025,39 @@ class ChannelView(ChannelViewDialog):
 		i = 1
 		context = self.context
 		if placement_type in (PLACING_NEW, PLACING_COPY):
-		    base = 'NEW'
-		    name = base + `i`
-		    while context.channeldict.has_key(name):
-			i = i+1
+			base = 'NEW'
 			name = base + `i`
+			while context.channeldict.has_key(name):
+				i = i+1
+				name = base + `i`
 		else:
-		    name = self.placing_orig
+			name = self.placing_orig
 
 		root_layout = None
 		if placement_type == PLACING_NEW:
-		    # find a root window
-		    # if there is one, root_layout will be its name,
-		    # if there are multiple, root_layout will be '',
-		    # if there are none, root_layout will be None.
-		    for key, val in context.channeldict.items():
-			if val.get('base_window') is None:
-			    # we're looking at a top-level channel
-			    if root_layout is None:
-				# first one
-				root_layout = key
-			    else:
-				# multiple root windows
-				root_layout = ''
-		    editmgr.addchannel(name, index, self.placing_type)
-##		    if self.curlayout and self.context.layouts.has_key(self.curlayout):
-##			layoutchannels = self.context.layouts[self.curlayout]
-##			layoutchannels.append(self.context.channeldict[name])
+			# find a root window
+			# if there is one, root_layout will be its name,
+			# if there are multiple, root_layout will be '',
+			# if there are none, root_layout will be None.
+			for key, val in context.channeldict.items():
+				if val.get('base_window') is None:
+					# we're looking at a top-level channel
+					if root_layout is None:
+						# first one
+						root_layout = key
+					else:
+						# multiple root windows
+						root_layout = ''
+			editmgr.addchannel(name, index, self.placing_type)
+##			if self.curlayout and self.context.layouts.has_key(self.curlayout):
+##				layoutchannels = self.context.layouts[self.curlayout]
+##				layoutchannels.append(self.context.channeldict[name])
 		elif placement_type == PLACING_COPY:
-		    editmgr.copychannel(name, index, self.placing_orig)
+			editmgr.copychannel(name, index, self.placing_orig)
 		else:
-		    c = context.channeldict[name]
-		    editmgr.movechannel(name, index)
-		    index = context.channels.index(c)
+			c = context.channeldict[name]
+			editmgr.movechannel(name, index)
+			index = context.channels.index(c)
 		channel = context.channels[index]
 		if placement_type == PLACING_NEW and root_layout:
 			channel['base_window'] = root_layout
@@ -1395,7 +1395,7 @@ class BandwidthStripBox(GO, BandwidthStripBoxCommand):
 		64000: "ISDN",
 		1000000: "T1",
 		10000000: "LAN",
-       }
+		}
 
 	def __init__(self, mother):
 		GO.__init__(self, mother, 'bandwidthstrip')
@@ -1940,8 +1940,8 @@ class NodeBox(GO, NodeBoxCommand):
 		left, right = self.mother.maptimes(self.node.t0, t1)
 		top, bottom = self.mother.mapchannel(channel, self.channelline)
 		if hasattr(self.node,'timing_discont') and self.node.timing_discont:
-		    self.mother.discontinuities.append(
-			self.node.t0+self.node.timing_discont)
+			self.mother.discontinuities.append(
+				self.node.t0+self.node.timing_discont)
 
 		hmargin = self.mother.nodemargin
 		left = left + hmargin
