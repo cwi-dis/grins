@@ -286,10 +286,10 @@ done
 case $freeze in
 no)	;;
 *)
-	macexcl='-x aetools -x mac -x mac_window -x macfs -x MACFS -x MacOS -x macostools -x macpath -x macurl2path -x MACVideoChannel -x MACVideoDuration -x Required_Suite -x audio.devmac -x devmac'
-	ntexcl='-x ntpath -x nturl2path -x dospath -x NTVideoChannel -x NTVideoDuration -x audio.devwin'
+	macexcl='-x aetools -x mac -x mac_window -x macfs -x MACFS -x MacOS -x macostools -x macpath -x macurl2path -x MACVideoChannel -x MACVideoDuration -x Required_Suite -x audio.devmac -x devmac -x greekconv -x ic'
+	ntexcl='-x nt -x ntpath -x nturl2path -x dos -x dospath -x NTVideoChannel -x NTVideoDuration -x audio.devwin -x SOCKS -x msvcrt'
 	GLexcl='-x GL_window -x gl -x fm -x GL -x GET'
-	allexcl='-x pdb -x trace'
+	allexcl='-x pdb -x trace -x os2 -x audio.svx8'
 	case $ARCH in
 	irix*)	extend="-e $CHAMELEON/python/Extensions/midi/build.$ARCH"
 		extpath=":$CHAMELEON/python/Extensions/midi/build.$ARCH"
@@ -298,7 +298,7 @@ no)	;;
 		exclude="$GLexcl $exclthread -x FCNTL
 			-x PseudoHtmlChannel -x audio.devsun"
 		;;
-	sunos*)	exclude="$GLexcl -x glXconst -x glX -x audio.devsgi -x devsgi"
+	sunos*)	exclude="$GLexcl -x glXconst -x glX -x mv -x audio.devsgi -x devsgi -x cl -x sgimidi"
 		extend="-e $CHAMELEON/mm/mmpython/$ARCH"
 		extpath=''
 		;;
