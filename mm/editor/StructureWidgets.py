@@ -187,6 +187,9 @@ class MMNodeWidget(Widgets.Widget):  # Aka the old 'HierarchyView.Object', and t
 				else:
 					icon.add_arrow(otherwidget)
 				otherwidget.add_arrow(icon)
+			else: # no arrow.
+				if icon is None:
+					icon = self.iconbox.add_icon(iconname).set_properties(arrowable=1,initattr=initattr).set_contextmenu(self.mother.event_popupmenu_dest)
 
 	def uncollapse_all(self):
 		# Placeholder for a recursive function.
