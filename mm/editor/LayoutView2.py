@@ -13,6 +13,7 @@ import windowinterface
 ALL_LAYOUTS = '(All Channels)'
 
 debug = 0
+treeVersion = 0
 
 ###########################
 # helper class to build tree from list
@@ -383,12 +384,16 @@ class Viewport(Node):
 		if self.isShowEditBackground():
 			editBackground = self._nodeRef.GetAttrDef('editBackground',None)
 			
-		if editBackground != None:				
-				self._curattrdict['bgcolor'] = editBackground
-				self._curattrdict['transparent'] = 0
+		if not treeVersion:
+			if editBackground != None:				
+					self._curattrdict['bgcolor'] = editBackground
+					self._curattrdict['transparent'] = 0
+			else:
+				self._curattrdict['bgcolor'] = self._nodeRef.GetInherAttrDef('bgcolor', (0,0,0))
+				self._curattrdict['transparent'] = self._nodeRef.GetInherAttrDef('transparent', 1)
 		else:
-			self._curattrdict['bgcolor'] = self._nodeRef.GetInherAttrDef('bgcolor', (0,0,0))
-			self._curattrdict['transparent'] = self._nodeRef.GetInherAttrDef('transparent', 1)
+			self._curattrdict['bgcolor'] = 200,200,200
+			self._curattrdict['transparent'] = 0
 		
 		w,h=self._nodeRef.getPxGeom()
 		self._curattrdict['wingeom'] = (self.currentX,self.currentY,w,h)
@@ -515,8 +520,12 @@ class LayoutView2(LayoutViewDialog2):
 				
 		# init state of different dialog controls
 		self.showName = 1
-		self.asOutLine = 0
-		self.showBgcolor = 1
+		if treeVersion:
+			self.asOutLine = 0
+			self.showBgcolor = 1
+		else:
+			self.asOutLine = 1
+			self.showBgcolor = 1
 		self.showAllRegions = 1
 
 	def fixtitle(self):
@@ -542,6 +551,10 @@ class LayoutView2(LayoutViewDialog2):
 		self.treeMutation()
 		self.initDialogBox()
 
+		# init the tree control with the current datas
+		if treeVersion:
+			self.initTreeCtrl()
+		
 		# show the first viewport in the list		
 		currentViewportList = self.getViewportRefList()
 		viewport = currentViewportList[0]
@@ -1240,13 +1253,14 @@ class LayoutView2(LayoutViewDialog2):
 	
 	def initDialogBox(self):
 		self.fillViewportListOnDialogBox()
-		self.dialogCtrl.setCheckCtrl('ShowNames', self.showName)
-		self.dialogCtrl.setCheckCtrl('AsOutLine', self.asOutLine)
-		self.disableMediaListOnDialogBox()
-		if features.CUSTOM_REGIONS in features.feature_set:
-			self.dialogCtrl.enable('NewView',1)
-			self.dialogCtrl.enable('ShowAllRegions',1)
-			self.dialogCtrl.setCheckCtrl('ShowAllRegions', self.showAllRegions)
+		if not treeVersion:
+			self.dialogCtrl.setCheckCtrl('ShowNames', self.showName)
+			self.dialogCtrl.setCheckCtrl('AsOutLine', self.asOutLine)
+			self.disableMediaListOnDialogBox()
+			if features.CUSTOM_REGIONS in features.feature_set:
+				self.dialogCtrl.enable('NewView',1)
+				self.dialogCtrl.enable('ShowAllRegions',1)
+				self.dialogCtrl.setCheckCtrl('ShowAllRegions', self.showAllRegions)
 		
 	def applyGeomOnViewport(self, viewportRef, geom):
 		# apply new size
@@ -1332,6 +1346,7 @@ class LayoutView2(LayoutViewDialog2):
 			self.editmgr.commit('REGION_TREE')
 
 	def updateUnselectedOnDialogBox(self):
+		if treeVersion: return
 		# clear and disable not valid fields
 #		self.dialogCtrl.setSelecterCtrl('ViewportSel',-1)
 		self.dialogCtrl.setSelecterCtrl('RegionSel',-1)
@@ -1374,6 +1389,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.setcommands(commandList, '')
 		
 	def updateViewportOnDialogBox(self, nodeRef):
+		if treeVersion: return
 		# update region list
 		self.currentRegionRefListSel = self.getRegionRefList(nodeRef)
 			
@@ -1439,6 +1455,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.dialogCtrl.setFieldCtrl('RegionH',"%d"%geom[1])
 		
 	def updateRegionOnDialogBox(self, nodeRef):
+		if treeVersion: return
 		self.dialogCtrl.setSelecterCtrl('MediaSel',-1)
 
 		# enable valid fields
@@ -1498,6 +1515,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.dialogCtrl.setFieldCtrl('RegionH',"%d"%geom[3])
 
 	def fillMediaListOnDialogBox(self, regionRef = None):
+		if treeVersion: return
 		if regionRef == None:
 			self.currentMediaRefListSel = []
 			list = []
@@ -1515,15 +1533,18 @@ class LayoutView2(LayoutViewDialog2):
 			self.disableMediaListOnDialogBox()
 
 	def disableMediaListOnDialogBox(self):
+		if treeVersion: return
 		self.dialogCtrl.setSelecterCtrl('MediaSel',-1)		
 		self.dialogCtrl.enable('MediaSel',0)
 		self.dialogCtrl.enable('MediaCheck', 0)
 
 	def enableMediaListOnDialogBox(self):
+		if treeVersion: return
 		self.dialogCtrl.enable('MediaSel',1)
 		self.dialogCtrl.enable('MediaCheck', 1)
 
 	def fillViewportListOnDialogBox(self):
+		if treeVersion: return
 		self.currentViewportList = self.getViewportRefList()
 		list = []
 		for viewportRef in self.currentViewportList:
@@ -1531,6 +1552,7 @@ class LayoutView2(LayoutViewDialog2):
 		self.dialogCtrl.fillSelecterCtrl('ViewportSel', list)
 		
 	def fillRegionListOnDialogBox(self, viewportRef):
+		if treeVersion: return
 		self.currentRegionRefListSel = self.getRegionRefList(viewportRef)
 						
 		if len(self.currentRegionRefListSel) > 0:
@@ -1543,15 +1565,20 @@ class LayoutView2(LayoutViewDialog2):
 			self.disableRegionListOnDialogBox()
 
 	def disableRegionListOnDialogBox(self):
+		if treeVersion: return
 		self.dialogCtrl.setSelecterCtrl('RegionSel',-1)		
 		self.dialogCtrl.enable('RegionSel',0)
 		self.dialogCtrl.enable('RegionCheck', 0)
 
 	def enableRegionListOnDialogBox(self):
+		if treeVersion: return
 		self.dialogCtrl.enable('RegionSel',1)
 		self.dialogCtrl.enable('RegionCheck', 1)
 		
 	def updateMediaOnDialogBox(self, nodeRef):
+		if treeVersion:
+			return
+		
 		# update the media selecter
 		if len(self.currentMediaRefListSel) > 0:
 			index = self.currentMediaRefListSel.index(nodeRef)
@@ -2043,3 +2070,8 @@ class LayoutView2(LayoutViewDialog2):
 		elif ctrlName == 'HideMedia':
 			self.__hideMedia()
 
+	def initTreeCtrl(self):
+		ret = self.treeCtrl.insertNode(0, 'viewport1', 'viewport', 'viewport')
+		ret2 = self.treeCtrl.insertNode(ret, 'text', 'region', 'region')
+		self.treeCtrl.insertNode(ret2, 'text', 'video', 'video')
+		self.treeCtrl.insertNode(ret2, 'text', 'image', 'image')
