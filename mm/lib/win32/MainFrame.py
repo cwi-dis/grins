@@ -182,13 +182,13 @@ class GRiNSToolbar(window.Wnd):
 		if self._enableToolDrag:
 			msgpos=win32mu.Win32Msg(params).pos()
 			self._dragging = msgpos
-			self.SetCapture()
+		return 1 # continue normal processing
 
 	def onLButtonUp(self, params):
 		if self._enableToolDrag:
 			if self._dragging: 
 				self._dragging = None
-				self.ReleaseCapture()
+		return 1 # continue normal processing
 	
 	def onMouseMove(self, params):
 		if self._enableToolDrag and self._dragging:
@@ -200,6 +200,7 @@ class GRiNSToolbar(window.Wnd):
 				self.DoDragDrop(self.CF_TOOL, str)
 				self._dragging = None
 				self.ReleaseCapture()
+		return 1 # continue normal processing
 
 ###########################################################
 
