@@ -44,10 +44,7 @@ class TopLevelDialog:
 	def mayclose(self):
 		prompt = 'You haven\'t saved your changes yet;\n' + \
 			 'do you want to save them before closing?'
-		b1 = 'Save'
-		b2 = "Don't save"
-		b3 = 'Cancel'
-		return windowinterface.multchoice(prompt, [b1, b2, b3], -1)
+		return windowinterface.GetYesNoCancel(prompt)
 ##		rv = EasyDialogs.AskYesNoCancel(prompt, 1)
 ##		if rv < 0: return 2
 ##		if rv > 0: return 0
