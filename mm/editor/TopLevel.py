@@ -452,12 +452,24 @@ class TopLevel(TopLevelDialog, ViewDialog):
 	def export_SMIL_callback(self):
 		self.export(compatibility.SMIL10)
 
-	def export_WMP_callback(self):	# mjvdg 11-oct-2000
+	def export_WMP_callback(self):
 		import wmpsupport
 		if wmpsupport.haswmpruntimecomponents():
-			wmpsupport.Exporter('output.wmv', self.player)
+			cwd = self.dirname
+			if cwd:
+				cwd = MMurl.url2pathname(cwd)
+				if not os.path.isabs(cwd):
+					cwd = os.path.join(os.getcwd(), cwd)
+			else:
+				cwd = os.getcwd()
+			windowinterface.FileDialog('Export to WMP file:', cwd, 'video/x-ms-wmv',
+						'', self.export_WMP_okcallback, None)
 		else:
 			windowinterface.showmessage('No WMP export components on this system.')
+	
+	def export_WMP_okcallback(self, pathname):
+		import wmpsupport
+		wmpsupport.Exporter(pathname, self.player)
 
 	def export(self, exporttype):
 		self.exporttype = exporttype
