@@ -1,3 +1,5 @@
+# Help window
+
 import fl
 import posix
 import string
@@ -9,7 +11,7 @@ from ViewDialog import ViewDialog
 class HelpWindow(ViewDialog, BasicDialog):
     def init(self, (dirname, toplevel)):
     	self = ViewDialog.init(self, 'help_')
-	self = BasicDialog.init(self, (0, 0, 'Help'))
+	self = BasicDialog.init(self, 0, 0, 'Help')
     	self.toplevel = toplevel
     	self.root = toplevel.root # For ViewDialog
 	self.dirname = dirname + '/'
