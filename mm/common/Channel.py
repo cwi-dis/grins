@@ -130,10 +130,15 @@ class Channel:
 		del self._qid
 		del self._scheduler
 		del self._exporter
-		channels.remove(self)
+		for i in range(len(channels)):
+			if channels[i] is self:
+				del channels[i]
+				break
 		for chan in channels:
-			if self in chan._subchannels:
-				chan._subchannels.remove(self)
+			for i in range(len(chan._subchannels)):
+				if chan._subchannels[i] is self:
+					del chan._subchannels[i]
+					break
 
 	def commit(self, type):
 		try:
