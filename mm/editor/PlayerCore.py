@@ -2,9 +2,10 @@
 
 
 import fl
-from Scheduler import Scheduler, flushchannelcache
+from Scheduler import Scheduler
 from MMExc import *
 import Timing
+import MMAttrdefs
 
 
 # The Player class normally has only a single instance.
@@ -12,7 +13,7 @@ import Timing
 # It implements a queue using "virtual time" using an invisible timer
 # object in its form.
 
-class PlayerCore(Scheduler):
+class PlayerCore():
 	#
 	# Initialization.
 	#
@@ -24,7 +25,8 @@ class PlayerCore(Scheduler):
 		self.context = self.root.GetContext()
 		self.editmgr = self.context.geteditmgr()
 		self.editmgr.register(self)
-		return Scheduler.init(self)
+		self.scheduler = Scheduler().init(self)
+		return self
 	#
 	# EditMgr interface (as dependent client).
 	#
@@ -50,7 +52,6 @@ class PlayerCore(Scheduler):
 				self.userplayroot = self.root
 		self.locked = 0
 		self.measure_armtimes = 1
-		flushchannelcache(self.root)
 		self.showstate()
 	#
 	def rollback(self):
@@ -69,19 +70,20 @@ class PlayerCore(Scheduler):
 		self.measure_armtimes = 0
 	#
 	def reset(self):
-		self.resettimer()
+		self.scheduler.resettimer()
 		self.softresetchannels()
 	#
 	# State transitions.
 	#
 	def play(self):
+		self.reset()
 		self.seeking = 0
 		if not self.playing:
 			self.playroot = self.userplayroot
-			if not self.start_playing(1.0):
+			if not self.scheduler.start_playing(1.0):
 				return
 		else:
-			self.setrate(1.0)
+			self.scheduler.setrate(1.0)
 		self.showstate()
 	#
 	def playsubtree(self, node):
@@ -101,7 +103,7 @@ class PlayerCore(Scheduler):
 			self.show()
 		if self.playing:
 			self.stop()
-		ch = self.getchannel(node)
+		ch = self.scheduler.getchannelbynode(node)
 		if ch == None:
 			fl.show_message('Cannot set internal anchor', \
 				  '(node not on a channel)', '')
@@ -114,20 +116,20 @@ class PlayerCore(Scheduler):
 	def pause(self):
 		self.seeking = 0
 		if self.playing:
-			if self.rate == 0.0:	# Paused: continue
-				self.setrate(1)
+			if self.scheduler.getrate() == 0.0: # Paused: continue
+				self.scheduler.setrate(1)
 			else:			# Running: pause
-				self.setrate(0)
+				self.scheduler.setrate(0)
 				self.setready() # Cancel possible watch cursor
 		else:
-			dummy = self.start_playing(0.0)
+			dummy = self.scheduler.start_playing(0.0)
 			self.setready()
 		self.showstate()
 	#
 	def stop(self):
 		self.seeking = 0
 		if self.playing:
-			self.stop_playing()
+			self.scheduler.stop_playing()
 		else:
 			self.fullreset()
 		self.showstate()
@@ -155,7 +157,6 @@ class PlayerCore(Scheduler):
 				chchanged = 1
 				print 'Detected deleted channel'
 				self.killchannel(name)
-				flushchannelcache(self.root)
 			else:
 				oldtype = self.channeltypes[name]
 				newtype = \
@@ -163,7 +164,6 @@ class PlayerCore(Scheduler):
 				if oldtype <> newtype:
 					print 'Detected retyped channel'
 					self.killchannel(name)
-					flushchannelcache(self.root)
 					chchanged = 1
 		# (2) Add new channels that have appeared
 		for name in self.context.channelnames:
@@ -184,6 +184,16 @@ class PlayerCore(Scheduler):
 		##if chchanged:
 		##	self.toplevel.channelview.channels_changed()
 	#
+	def getchannelbyname(self, name):
+		return self.channels[name]
+	#
+	def getchannelbynode(self, node):
+		cname = MMAttrdefs.getattr(node, 'channel')
+		if self.channels.has_key(cname):
+			return self.channels[cname]
+		else:
+			return None
+	#
 	def showchannels(self):
 		for name in self.channelnames:
 			self.channels[name].show()
@@ -195,7 +205,6 @@ class PlayerCore(Scheduler):
 		self.makemenu()
 	#
 	def destroychannels(self):
-		flushchannelcache(self.root)
 		for name in self.channelnames[:]:
 			self.killchannel(name)
 		self.makemenu()
@@ -216,7 +225,7 @@ class PlayerCore(Scheduler):
 			raise TypeError, \
 				'channel ' +`name`+ ' has bad type ' +`type`
 		chclass = channelmap[type]
-		ch = chclass().init(name, attrdict, self)
+		ch = chclass().init(name, attrdict, self.scheduler)
 		if self.waiting:
 			ch.setwaiting()
 		self.channels[name] = ch

@@ -28,7 +28,7 @@ class SchedulerContext():
 		self.sractions = []
 		self.srevents = {}
 		self.playroot = node
-		self.parent.duration_ind.label = '??:??'
+		self.parent.ui.duration_ind.label = '??:??'
 
 		self.prepare_minidoc(seeknode, end_action)
 		return self
@@ -70,6 +70,10 @@ class SchedulerContext():
 		# Create channel lists
 		#
 		self.channelnames, err = GetAllChannels(self.playroot)
+		self.channels = []
+		for cn in self.channelnames:
+			self.channels.append(\
+				  self.parent.ui.getchannelbyname(cn))
 		if err:
 			enode, echan = err
 			ename = MMAttrdefs.getattr(enode, 'name')
@@ -89,11 +93,14 @@ class SchedulerContext():
 		return 1
 	#
 	def stopchannels(self):
-		for ch in self.channelnames:
-			self.parent.channels[ch].stop()
+		for ch in self.channels:
+			ch.stop()
 	def softresetchannels(self):
-		for ch in self.channelnames:
-			self.parent.channels[ch].softreset()
+		for ch in self.channels:
+			ch.softreset()
+	def setrate(self, rate):
+		for ch in self.channels:
+			ch.setrate(rate)
 	#
 	# getnextprearm returns next prearm event due for given channel
 	#
@@ -132,7 +139,7 @@ class SchedulerContext():
 		for time, ev in prearmlaterlist:
 			self.parent.add_lopriqueue(self, time, ev)
 		d = int(self.playroot.t1 - self.playroot.t0)
-		self.parent.duration_ind.label = `d/60`+':'+`d/10%6`+`d%10`
+		self.parent.ui.duration_ind.label = `d/60`+':'+`d/10%6`+`d%10`
 	#
 	# FutureWork returns true if we may have something to do at some
 	# time in the future (i.e. if we're not done yet)
@@ -216,9 +223,12 @@ class SchedulerContext():
 		return []
 		
 class Scheduler(scheduler):
-	def init(self):
+	def init(self, ui):
+		self.queue = []
+		self.ui = ui
+		self.toplevel = self.ui.toplevel
+		self.context = self.ui.context
 		self.sctx_list = []
-		self.pause_minidoc = 1
 		self.starting_to_play = 0
 		return self
 
@@ -226,39 +236,41 @@ class Scheduler(scheduler):
 	# Playing algorithm.
 	#
 	def start_playing(self, rate):
-		if not self.maystart():
+		if not self.ui.maystart():
 			return 0
-		if self.play_all_bags:
-			self.playroot = self.playroot.FirstMiniDocument()
-		else:
-			while self.playroot.GetType() == 'bag':
-				self.showstate()
-				node = choosebagitem(self.playroot)
+		#if self.ui.play_all_bags:
+		#	self.ui.playroot = self.ui.playroot.FirstMiniDocument()
+		#else:
+		if 1:
+			while self.ui.playroot.GetType() == 'bag':
+				self.ui.showstate()
+				node = choosebagitem(self.ui.playroot)
 				if not node:
 					return 0
-				self.playroot = node
-		self.playing = 1
-		self.reset()
+				self.ui.playroot = node
+		self.ui.playing = 1
+		#self.reset()
 		self.runqueues = []
 		for i in range(N_PRIO):
 			self.runqueues.append([])
 		self.toplevel.setwaiting()
-		if self.sync_cv:
-			self.toplevel.channelview.globalsetfocus(self.playroot)
-		if self.userplayroot != self.root:
+		if self.ui.sync_cv:
+			self.toplevel.channelview.globalsetfocus(self.ui.playroot)
+		if self.ui.userplayroot != self.ui.root:
 			end_action = END_KEEP
-		elif not self.pause_minidoc or self.playroot == self.root:
+		elif not self.ui.pause_minidoc or \
+			  self.ui.playroot == self.ui.root:
 			end_action = END_STOP
 		else:
 			end_action = END_PAUSE
-		sctx = SchedulerContext().init(self, self.playroot, \
+		sctx = SchedulerContext().init(self, self.ui.playroot, \
 			  None, end_action)
 		self.sctx_list.append(sctx)
 		if not sctx.start_minidoc():
 			self.suspend_sctx(sctx)
 			return 0
 		self.setrate(rate)
-		self.showstate() # Give the anxious user a clue...
+		self.ui.showstate() # Give the anxious user a clue...
 		self.starting_to_play = 1
 		return 1
 	#
@@ -291,14 +303,14 @@ class Scheduler(scheduler):
 		print '==============================='
 		
 	def stop_playing(self):
-		if not self.playing:
+		if not self.ui.playing:
 			return
-		self.playing = 0
+		self.ui.playing = 0
 		self.measure_armtimes = 0
 		for sctx in self.sctx_list:
 			self.suspend_sctx(sctx)
 		self.setrate(0.0) # Stop the clock
-		self.showstate()
+		self.ui.showstate()
 		if self.starting_to_play:
 			self.toplevel.setready()
 			self.starting_to_play = 0
@@ -307,7 +319,7 @@ class Scheduler(scheduler):
 	# Return 1 if the anchor fired, 0 if nothing happened.
 	#
 	def anchorfired(self, node, anchorlist):
-		if not self.playing:
+		if not self.ui.playing:
 			fl.show_message('The document is not playing!','','')
 			return 0
 		self.toplevel.setwaiting()
@@ -316,7 +328,7 @@ class Scheduler(scheduler):
 		# Firing an anchor continues the player if it was paused.
 		if self.rate == 0.0:
 			self.setrate(1.0)
-			self.showstate()
+			self.ui.showstate()
 		for i in anchorlist:
 			if i[A_TYPE] == ATYPE_PAUSE:
 				pause_anchor = 1
@@ -345,9 +357,10 @@ class Scheduler(scheduler):
 			fl.show_message('Dangling hyperlink selected', '', '')
 			self.toplevel.setready()
 			return 0
-		if self.play_all_bags:
-			seek_node = seek_node.FirstMiniDocument()
-		else:
+		#if self.ui.play_all_bags:
+		#	seek_node = seek_node.FirstMiniDocument()
+		#else:
+		if 1:
 			while seek_node.GetType() == 'bag':
 				seek_node = choosebagitem(seek_node)
 				if seek_node == None:
@@ -357,7 +370,7 @@ class Scheduler(scheduler):
 			raise 'Uh-oh, not yet implemented (multi-sctx)'
 		old_sctx = self.sctx_list[0]
 		playroot = findminidocument(seek_node)
-		if playroot == self.root or not self.pause_minidoc:
+		if playroot == self.ui.root or not self.ui.pause_minidoc:
 			end_action = END_STOP
 		else:
 			end_action = END_PAUSE
@@ -369,11 +382,11 @@ class Scheduler(scheduler):
 			self.toplevel.setready()
 			return 0
 		self.purge_sctx_queues(old_sctx)
-		if self.sync_cv:
+		if self.ui.sync_cv:
 			self.toplevel.channelview.globalsetfocus(playroot)
 		old_sctx.softresetchannels()
 		self.suspend_sctx(old_sctx)
-		self.playroot = playroot
+		self.ui.playroot = playroot
 		self.updatetimer()
 		self.starting_to_play = 1
 		return 1
@@ -382,7 +395,7 @@ class Scheduler(scheduler):
 	# The timer callback routine, called via a forms timer object.
 	# This is what makes SR's being executed.
 	#
-	def timer_callback(self, obj, arg):
+	def timer_callback(self):
 		#
 		# We have two queues to execute: the timed queue and the
 		# normal SR queue. Currently, we execute the timed queue first.
@@ -402,7 +415,7 @@ class Scheduler(scheduler):
 		for action in queue:
 			self.runone(action)
 		self.updatetimer()
-		#self.showtime()
+		#self.ui.showtime()
 	#
 	# FutureWork returns true if any of the scheduler contexts
 	# has possible future work.
@@ -415,7 +428,7 @@ class Scheduler(scheduler):
 	# Updatetimer restarts the forms timer object. If we have work to do
 	# we set the timeout very short, otherwise we simply stop the clock.
 	def updatetimer(self):
-		if not self.playing:
+		if not self.ui.playing:
 			delay = 0
 			#print 'updatetimer: not playing' #DBG
 		elif self.rate and ( self.runqueues[PRIO_PREARM_NOW] or \
@@ -442,7 +455,7 @@ class Scheduler(scheduler):
 				# fast.
 				delay = 0.001
 			else:
-				self.showtime()
+				self.ui.showtime()
 			#print 'updatetimer: timed events' #DBG
 		elif not self.FutureWork():
 			#
@@ -450,7 +463,7 @@ class Scheduler(scheduler):
 			# We're thru.
 			#
 			#print 'updatetimer: no more work' #DBG
-			self.showtime()
+			self.ui.showtime()
 			self.stop_playing()
 			return
 		else:
@@ -459,10 +472,10 @@ class Scheduler(scheduler):
 			# Tick every second, so we see the timer run.
 			#
 			delay = 1
-			self.showtime()
+			self.ui.showtime()
 			#print 'updatetimer: idle' #DBG
 		#print 'updatetimer: delay=', delay
-		self.timerobject.set_timer(delay)
+		self.ui.set_timer(delay)
 	#
 	# Incoming events from channels, or the start event.
 	#
@@ -553,7 +566,7 @@ class Scheduler(scheduler):
 		if self.starting_to_play:
 			self.toplevel.setready()
 			self.starting_to_play = 0
-		chan = self.getchannel(node)
+		chan = self.ui.getchannelbynode(node)
 		#chan.arm_only(node)
 		ready_ev = (sctx, (SR.PLAY_DONE, node))
 		node.set_armedmode(ARM_PLAYING)
@@ -562,7 +575,7 @@ class Scheduler(scheduler):
 	# Execute a PLAY_STOP SR.
 	#
 	def do_play_stop(self, sctx, node):
-		chan = self.getchannel(node)
+		chan = self.ui.getchannelbynode(node)
 		node.set_armedmode(ARM_DONE)
 		chan.clearnode(node)
 	#
@@ -575,7 +588,7 @@ class Scheduler(scheduler):
 	# Execute an ARM SR
 	#
 	def do_play_arm(self, sctx, node):
-		chan = self.getchannel(node)
+		chan = self.ui.getchannelbynode(node)
 		node.set_armedmode(ARM_ARMING)
 		chan.arm_only(node)
 		node.set_armedmode(ARM_ARMED)
@@ -627,29 +640,13 @@ class Scheduler(scheduler):
 		else:
 			self.time_pause = time.time()
 		self.rate = rate
-		for cname in self.channelnames:
-			self.channels[cname].setrate(self.rate)
+		for sctx in self.sctx_list:
+			sctx.setrate(self.rate)
 		self.updatetimer()
 	#
-	# Channel access utilities.
+	def getrate(self):
+		return self.rate
 	#
-	# The 'node.channel' cache might not be as helpful as it seems. It
-	# does cut down on the number of calls to getattr() (1 per node played
-	# in stead of 3), but the getattr cache also helped before. The saving
-	# is about .1 second per node played.
-	#
-	def getchannel(self, node):
-		try:
-			return node.channel
-		except AttributeError:
-			pass
-		cname = MMAttrdefs.getattr(node, 'channel')
-		if self.channels.has_key(cname):
-			node.channel = self.channels[cname]
-		else:
-			node.channel = None
-		return node.channel
-
 #
 # GenAllSR - Return all (evlist, actionlist) pairs.
 #
@@ -773,20 +770,6 @@ def del_timing(node):
 	children = node.GetChildren()
 	for child in children:
 		del_timing(child)
-
-
-# Flush per-node channel cache
-#
-# See comments for getchannel on the usefulness of the routine.
-#
-def flushchannelcache(node):
-	try:
-		del node.channel
-	except (AttributeError, KeyError):
-		pass
-	children = node.GetChildren()
-	for child in children:
-		flushchannelcache(child)
 #
 # Unarm all nodes
 #

@@ -165,7 +165,7 @@ class Channel:
 
 	def done(self, dummy):
 		self.qid = None
-		if self.haspauseanchor and not self.player.ignore_pauses:
+		if self.haspauseanchor and not self.player.ui.ignore_pauses:
 			return
 		callback, arg = self.cb
 		if not self.did_prearm():
