@@ -169,7 +169,7 @@ MENUBAR=(
 		(ALL, TOGGLE, '&Layout view\tF8', '2', LAYOUTVIEW),
 ##		(ALL, SEP,),
 		(ALL, TOGGLE, 'H&yperlinks', '5', LINKVIEW),
-		(ALL, TOGGLE, 'User &groups', '6', USERGROUPVIEW),
+		(CMIF, TOGGLE, 'User &groups', '6', USERGROUPVIEW),
 ##		(ALL, SEP,),
 		(ALL, TOGGLE, 'Sourc&e', '7', SOURCE),
 		)),
